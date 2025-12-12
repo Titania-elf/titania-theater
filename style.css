@@ -1,0 +1,128 @@
+/* Titania's Theater Base Styles */
+.titania-modal {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    max-height: 800px;
+    gap: 10px;
+}
+
+/* 2.2.1 顶部标题栏 - 粉紫色渐变发光 */
+.titania-title {
+    font-size: 1.8em;
+    font-weight: bold;
+    text-align: center;
+    background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 10px rgba(255, 192, 203, 0.3);
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.titania-settings-icon {
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0.7;
+    -webkit-text-fill-color: var(--smart-text-color);
+}
+.titania-settings-icon:hover { opacity: 1; }
+
+/* 2.2.2 上下文提示区 */
+.titania-context-hint {
+    font-size: 0.9em;
+    color: var(--smart-text-color-dim);
+    text-align: center;
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+/* 2.2.3 控制区域 */
+.titania-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.titania-select {
+    flex-grow: 1;
+}
+.titania-dice {
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: transform 0.5s ease;
+}
+.titania-dice:active { transform: rotate(360deg); }
+
+/* 2.2.5 正文渲染区 (核心) */
+.titania-render-area {
+    flex-grow: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--smart-border-color);
+    border-radius: 5px;
+    padding: 10px;
+    overflow-y: auto;
+    position: relative;
+    min-height: 200px;
+    contain: content; /* CSS 隔离 */
+}
+
+/* 渲染区右上角工具栏 */
+.titania-render-tools {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    gap: 5px;
+    z-index: 10;
+}
+.titania-tool-btn {
+    font-size: 0.8em;
+    padding: 2px 6px;
+    background: var(--smart-background-color);
+    border: 1px solid var(--smart-border-color);
+    cursor: pointer;
+    opacity: 0.6;
+}
+.titania-tool-btn:hover { opacity: 1; }
+
+/* 设置页面布局 */
+.titania-settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+    overflow-y: auto;
+}
+.titania-settings-group {
+    border: 1px solid var(--smart-border-color);
+    padding: 10px;
+    border-radius: 5px;
+}
+.titania-settings-group h3 { margin-top: 0; }
+
+.titania-script-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    border-bottom: 1px solid var(--smart-border-color);
+}
+.titania-badge {
+    font-size: 0.7em;
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: white;
+    margin-left: 5px;
+}
+.badge-preset { background-color: #9c27b0; }
+.badge-modified { background-color: #ff9800; }
+.badge-custom { background-color: #4caf50; }
+
+.titania-api-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 5px;
+}
