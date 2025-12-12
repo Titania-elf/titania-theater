@@ -1,4 +1,4 @@
-# 🎭 Echo Theater (Titania's Little Theater)
+# 🎭 Echo Theater 
 
 ![Version](https://img.shields.io/badge/Version-v3.0-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
@@ -7,7 +7,7 @@
 
 **Echo Theater** adds a draggable floating button to your SillyTavern interface. With a single click, you can generate stylized side stories, secret diaries, letters, or system reports based on your current roleplay context.
 
-**回声小剧场** 会在你的酒馆界面添加一个可拖拽的悬浮球。点击即可基于当前的角色扮演上下文，生成带有精美 CSS 视觉特效的番外剧情、私密日记、信件或系统报告。
+**回声小剧场** 会在你的酒馆界面添加一个可拖拽的悬浮球。点击即可基于当前的角色扮演上下文，生成带有精美 CSS 视觉特效的番外剧情。
 
 ---
 
