@@ -18,7 +18,7 @@
 
 | Floating Button (悬浮球) | Immersive Output (沉浸式输出) |
 | :---: | :---: |
-| ![Button Preview](preview_button.png) | ![Output Preview](preview_output.png) |
+| ![Button Preview](preview_1.png) | ![Output Preview](preview_2.png) |
 
 ---
 
