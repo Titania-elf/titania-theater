@@ -1,9 +1,10 @@
-// 【Titania's 小剧场 - 最终回声版】
+// 【Titania's 小剧场 - 回声收藏版 v3.2】
 // Part 1/2
 
 const PLUGIN_NAME = "Titania_Theater_Echo";
 const STORAGE_KEY_CFG = "Titania_Config_v3";
 const STORAGE_KEY_SCRIPTS = "Titania_UserScripts_v3";
+const STORAGE_KEY_FAVS = "Titania_Favs_v3"; // 【新增】收藏夹存储Key
 
 const DEFAULT_PRESETS = [
     { id: "diary", name: "私密日记", desc: "以日记形式记录角色此刻的心情。", prompt: "请撰写一篇 {{char}} 的私密日记。CSS样式要求：背景使用做旧羊皮纸色(#fdfbf7)，字体使用手写体风格，深褐色字体，内边距20px，带有边框阴影。内容要体现角色对 {{user}} 的真实想法。" },
@@ -14,7 +15,7 @@ const DEFAULT_PRESETS = [
 let runtimeScripts = []; 
 
 $(document).ready(function() {
-    console.log("Titania Echo: Part 1 Loaded...");
+    console.log("Titania Echo v3.2: Part 1 Loaded...");
     injectStyles();
     loadScripts(); 
     createFloatingButton();
@@ -25,22 +26,18 @@ function injectStyles() {
     <style>
         .t-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 20000; backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; }
         .t-box { position: relative; width: 95%; max-width: 650px; height: auto; max-height: 85vh; background: #1a1b26; border: 1px solid #555; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8); color: #eee; font-family: sans-serif; overflow: hidden; }
-        
-        /* 顶部栏布局修正：左右对齐 */
         .t-header { padding: 12px 15px; border-bottom: 1px solid #444; background: #242530; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         
-        /* --- 赛博霓虹标题样式 Start --- */
+        /* 标题样式 */
         .t-title-container { display: flex; flex-direction: column; justify-content: center; position: relative; padding-left: 12px; }
         .t-title-container::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px; background: linear-gradient(to bottom, #ff9a9e, #fad0c4); border-radius: 2px; box-shadow: 0 0 8px rgba(255, 154, 158, 0.6); }
         .t-title-main { font-size: 1.4em; font-weight: 800; line-height: 1.1; background: linear-gradient(135deg, #e0c3fc 0%, #ff9a9e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 2px rgba(255, 154, 158, 0.3)); letter-spacing: 1px; }
         .t-title-sub { font-size: 0.55em; color: #aaa; text-transform: uppercase; letter-spacing: 4px; margin-top: 2px; opacity: 0.7; font-weight: 300; background: linear-gradient(90deg, #ff9a9e, #e0c3fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        /* --- 赛博霓虹标题样式 End --- */
 
-        .t-close { cursor: pointer; font-size: 1.8em; line-height: 1; color: #888; transition:0.2s; padding: 0 5px; }
+        .t-icon-btn { cursor: pointer; font-size: 1.2em; color: #aaa; margin-left: 15px; transition: color 0.3s; }
+        .t-icon-btn:hover { color: #fff; }
+        .t-close { cursor: pointer; font-size: 1.8em; line-height: 1; color: #888; transition:0.2s; padding: 0 5px; margin-left: 15px; }
         .t-close:hover { color: #fff; transform: rotate(90deg); }
-        .t-gear { cursor: pointer; font-size: 1.2em; color: #aaa; margin-right: 15px; transition: color 0.3s; }
-        .t-gear:hover { color: #fff; animation: spin 2s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
         
         .t-body { padding: 15px; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .t-controls { display: flex; gap: 10px; align-items: center; }
@@ -48,17 +45,27 @@ function injectStyles() {
         .t-dice { font-size: 1.5em; cursor: pointer; transition: transform 0.5s ease; user-select: none; }
         .t-dice:active { transform: rotate(360deg) scale(1.2); }
         .t-desc { background: transparent; border: none; color: #888; font-style: italic; font-size: 0.9em; resize: none; width: 100%; outline: none; }
+        
         .t-render { position: relative; flex-grow: 1; background: rgba(0,0,0,0.2); border: 1px solid #444; border-radius: 6px; min-height: 200px; padding: 10px; overflow-y: auto; }
         .t-tools { position: absolute; top: 5px; right: 5px; display: flex; gap: 5px; z-index: 10; }
-        .t-tool-btn { font-size: 0.75em; padding: 2px 8px; background: rgba(0,0,0,0.6); border: 1px solid #666; color: #ccc; cursor: pointer; border-radius: 3px; }
+        .t-tool-btn { font-size: 0.75em; padding: 2px 8px; background: rgba(0,0,0,0.6); border: 1px solid #666; color: #ccc; cursor: pointer; border-radius: 3px; display:flex; align-items:center; gap:4px; }
+        .t-tool-btn:hover { background: #444; color: white; }
+        /* 收藏后的爱心样式 */
+        .t-liked { color: #ff6b6b !important; border-color: #ff6b6b !important; background: rgba(255,107,107,0.1) !important; }
+
         .t-btn-row { display: flex; gap: 10px; margin-top: auto; }
         .t-btn { background: #333; border: 1px solid #555; color: white; padding: 10px 15px; cursor: pointer; border-radius: 6px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .t-btn.primary { background: linear-gradient(90deg, #ff9a9e, #fecfef); color: #444; border: none; }
-        .t-list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #333; }
+        
+        .t-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; }
+        .t-list-item:hover { background: rgba(255,255,255,0.05); }
         .t-badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; margin-left: 5px; }
         .badge-preset { background: #7b1fa2; }
         .badge-user { background: #2e7d32; }
         .t-input { width: 100%; background: #0f0f14; border: 1px solid #555; color: white; padding: 8px; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; }
+        
+        /* 收藏夹专用样式 */
+        .t-fav-meta { font-size: 0.8em; color: #888; margin-top: 2px; }
     </style>`;
     $("head").append(css);
 }
@@ -109,7 +116,7 @@ function saveUserScript(s) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY
 function deleteUserScript(id) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS)||'[]'); u = u.filter(x=>x.id!==id); localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(u)); loadScripts(); }
 
 // Part 1 End
-    // Part 2/2 Start (v3.1 大屏编辑增强版)
+// Part 2/2 Start (v3.2 收藏功能增强版)
 
 function getContextData() {
     if (window.SillyTavern && window.SillyTavern.getContext) {
@@ -131,8 +138,11 @@ function openMainWindow() {
                     <div class="t-title-main">回声小剧场</div>
                     <div class="t-title-sub">ECHO THEATER</div>
                 </div>
-                <div>
-                    <i class="fa-solid fa-gear t-gear" id="t-btn-settings" title="设置"></i>
+                <div style="display:flex; align-items:center;">
+                    <!-- 收藏夹入口 -->
+                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="回声收藏夹"></i>
+                    <!-- 设置入口 -->
+                    <i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="设置"></i>
                     <span class="t-close" id="t-btn-close">&times;</span>
                 </div>
             </div>
@@ -145,6 +155,8 @@ function openMainWindow() {
                 <textarea id="t-txt-desc" class="t-desc" readonly rows="2"></textarea>
                 <div class="t-render">
                     <div class="t-tools">
+                        <!-- 收藏按钮 -->
+                        <button class="t-tool-btn" id="t-btn-like" title="收藏到本地"><i class="fa-regular fa-heart"></i> 收藏</button>
                         <button class="t-tool-btn" id="t-btn-copy">复制</button>
                         <button class="t-tool-btn" id="t-btn-clear">清空</button>
                     </div>
@@ -163,17 +175,22 @@ function openMainWindow() {
     $("#t-btn-settings").on("click", openSettingsWindow);
     $("#t-sel-script").on("change", updateDesc);
     $("#t-btn-dice").on("click", function() {
-        const opts = $("#t-sel-script option");
-        const rnd = Math.floor(Math.random() * opts.length);
+        const opts = $("#t-sel-script option"); const rnd = Math.floor(Math.random() * opts.length);
         $("#t-sel-script").prop('selectedIndex', rnd).trigger('change');
         $(this).css("transform", `rotate(${Math.random() * 360}deg)`);
     });
+    
+    // --- 工具栏事件 ---
     $("#t-btn-copy").on("click", () => {
         navigator.clipboard.writeText($("#t-output-content").text());
         const btn = $("#t-btn-copy"); btn.text("已复制"); setTimeout(() => btn.text("复制"), 1000);
     });
-    $("#t-btn-clear").on("click", () => $("#t-output-content").html(""));
+    $("#t-btn-clear").on("click", () => { $("#t-output-content").html(""); resetLikeBtn(); });
     $("#t-btn-run").on("click", handleGenerate);
+
+    // --- 收藏相关事件 ---
+    $("#t-btn-like").on("click", saveFavorite);
+    $("#t-btn-favs").on("click", openFavsWindow);
 }
 
 function updateDesc() {
@@ -182,10 +199,101 @@ function updateDesc() {
     if(s) $("#t-txt-desc").val(s.desc);
 }
 
+function resetLikeBtn() {
+    const $btn = $("#t-btn-like");
+    $btn.html('<i class="fa-regular fa-heart"></i> 收藏').removeClass("t-liked");
+}
+
+// ==========================================
+// 收藏夹逻辑 (New Feature)
+// ==========================================
+function saveFavorite() {
+    const content = $("#t-output-content").html();
+    if (!content || content.includes("请选择剧本")) return alert("还没有生成内容哦");
+    
+    const scriptName = $("#t-sel-script option:selected").text();
+    const dateStr = new Date().toLocaleString();
+    const ctx = getContextData();
+    
+    const entry = {
+        id: Date.now(),
+        title: `${scriptName} - ${ctx.charName}`,
+        date: dateStr,
+        html: content
+    };
+
+    const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]');
+    favs.unshift(entry); // 加到最前面
+    localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(favs));
+
+    // UI 反馈
+    const $btn = $("#t-btn-like");
+    $btn.html('<i class="fa-solid fa-heart"></i> 已收藏').addClass("t-liked");
+}
+
+function openFavsWindow() {
+    $("#t-main-view").hide();
+    const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]');
+    
+    const html = `
+    <div class="t-box" id="t-favs-view">
+        <div class="t-header"><span class="t-title-main">📖 回声收藏夹</span><span class="t-close" id="t-fav-close">&times;</span></div>
+        <div class="t-body" id="t-fav-list">
+            ${favs.length === 0 ? '<div style="text-align:center; color:#666; margin-top:50px;">暂无收藏，快去生成并点击❤️保存吧~</div>' : ''}
+        </div>
+    </div>`;
+    $("#t-overlay").append(html);
+
+    const list = $("#t-fav-list");
+    favs.forEach(item => {
+        const el = $(`
+            <div class="t-list-item" style="cursor:pointer;">
+                <div style="flex-grow:1;">
+                    <div style="font-weight:bold;">${item.title || '未命名片段'}</div>
+                    <div class="t-fav-meta">${item.date}</div>
+                </div>
+                <div><i class="fa-solid fa-trash" style="color:#ff6b6b; padding:5px;"></i></div>
+            </div>
+        `);
+        // 点击列表项 -> 查看
+        el.find("div:first").on("click", () => openFavViewer(item));
+        // 点击删除 -> 删除
+        el.find(".fa-trash").on("click", (e) => {
+            e.stopPropagation();
+            if(confirm("确定删除这条回忆吗？")) {
+                const newFavs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]').filter(x => x.id !== item.id);
+                localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(newFavs));
+                $("#t-favs-view").remove(); openFavsWindow(); // 刷新
+            }
+        });
+        list.append(el);
+    });
+
+    $("#t-fav-close").on("click", () => { $("#t-favs-view").remove(); $("#t-main-view").show(); });
+}
+
+function openFavViewer(item) {
+    $("#t-favs-view").hide();
+    const html = `
+    <div class="t-box" id="t-reader-view">
+        <div class="t-header">
+            <span class="t-title-main" style="font-size:1em;">${item.title}</span>
+            <span class="t-close" id="t-read-close">&times;</span>
+        </div>
+        <div class="t-body" style="padding:0;">
+            <div class="t-render" style="border:none; border-radius:0; height:100%;">${item.html}</div>
+        </div>
+    </div>`;
+    $("#t-overlay").append(html);
+    $("#t-read-close").on("click", () => { $("#t-reader-view").remove(); $("#t-favs-view").show(); });
+}
+
+// ==========================================
+// 设置 & 编辑器 & 生成逻辑
+// ==========================================
 function openSettingsWindow() {
     const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
     $("#t-main-view").hide();
-
     const settingsHtml = `
         <div class="t-box" id="t-settings-view">
             <div class="t-header"><span class="t-title-main" style="font-size:1.2em;">⚙️ 设置 & 管理</span><span class="t-close" id="t-set-close">&times;</span></div>
@@ -215,7 +323,6 @@ function openSettingsWindow() {
         $("#t-settings-view").remove(); $("#t-main-view").show(); loadScripts();
         const $sel = $("#t-sel-script"); if($sel.length) { $sel.html(runtimeScripts.map(s => `<option value="${s.id}">${s.name}</option>`).join('')); updateDesc(); }
     });
-
     $("#t-btn-fetch").on("click", async () => {
         const url = $("#cfg-url").val().replace(/\/+$/, "").replace(/\/chat\/completions$/, ""); const key = $("#cfg-key").val();
         if(!url) return alert("请先填写 URL");
@@ -249,36 +356,23 @@ function openEditor(id) {
     if (isEdit) data = runtimeScripts.find(s => s.id === id);
     const isPreset = data._type === 'preset';
     $("#t-settings-view").hide();
-    
-    // 【v3.1 新增】增加了 Prompt 栏右侧的“大屏编辑”按钮
     const html = `
     <div class="t-box" id="t-editor-view">
         <div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div>
         <div class="t-body">
             <label>标题:</label><input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}>
             <label>简介:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? 'disabled' : ''}>
-            
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
                 <label>Prompt (支持 {{char}}, {{user}}):</label>
                 ${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏编辑</div>` : ''}
             </div>
             <textarea id="ed-prompt" class="t-input" rows="8" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea>
-            
             <div class="t-btn-row">${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}<button id="ed-cancel" class="t-btn" style="flex:1;">返回</button></div>
         </div>
     </div>`;
     $("#t-overlay").append(html);
-
-    // 绑定基础事件
     $("#ed-cancel").on("click", () => { $("#t-editor-view").remove(); $("#t-settings-view").show(); });
-    
-    // 【v3.1 新增】大屏编辑事件
-    $("#ed-btn-expand").on("click", () => {
-        openLargeEditor($("#ed-prompt").val(), (newVal) => {
-            $("#ed-prompt").val(newVal);
-        });
-    });
-
+    $("#ed-btn-expand").on("click", () => openLargeEditor($("#ed-prompt").val(), (v) => $("#ed-prompt").val(v)));
     if(!isPreset) {
         $("#ed-save").on("click", () => {
             saveUserScript({ id: isEdit ? data.id : "user_" + Date.now(), name: $("#ed-name").val(), desc: $("#ed-desc").val(), prompt: $("#ed-prompt").val() });
@@ -287,33 +381,12 @@ function openEditor(id) {
     }
 }
 
-// 【v3.1 新增】大屏编辑器函数
 function openLargeEditor(text, onSave) {
-    $("#t-editor-view").hide(); // 隐藏小窗口
-    const html = `
-    <div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;">
-         <div class="t-header"><span class="t-title-main">大屏模式</span></div>
-         <div class="t-body" style="height:100%;">
-             <textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${text}</textarea>
-             <div class="t-btn-row">
-                 <button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button>
-                 <button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button>
-             </div>
-         </div>
-    </div>`;
+    $("#t-editor-view").hide();
+    const html = `<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${text}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`;
     $("#t-overlay").append(html);
-
-    $("#ed-large-cancel").on("click", () => {
-        $("#t-large-edit-view").remove();
-        $("#t-editor-view").show(); // 恢复小窗口
-    });
-    
-    $("#ed-large-ok").on("click", () => {
-        const newVal = $("#ed-large-text").val();
-        $("#t-large-edit-view").remove();
-        $("#t-editor-view").show();
-        if(onSave) onSave(newVal); // 回填数据
-    });
+    $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
+    $("#ed-large-ok").on("click", () => { const newVal = $("#ed-large-text").val(); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); if(onSave) onSave(newVal); });
 }
 
 async function handleGenerate() {
@@ -322,6 +395,7 @@ async function handleGenerate() {
     const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
     const ctx = getContextData();
     const $out = $("#t-output-content"); const $btn = $("#t-btn-run");
+    resetLikeBtn(); // 重置收藏按钮状态
     $out.html('<div style="text-align:center; padding-top:20px;">⏳ 正在构思剧情...</div>');
     $btn.prop("disabled", true).css("opacity", 0.6);
 
@@ -337,23 +411,12 @@ async function handleGenerate() {
             body: JSON.stringify({ model: cfg.model, messages: [{ role: "system", content: sys }, { role: "user", content: user }], stream: false })
         });
         const rawText = await res.text();
-        if (rawText.includes('"error"')) {
-            const match = rawText.match(/"message":\s*"(.*?)"/);
-            if (match) throw new Error("API报错: " + JSON.parse(`"${match[1]}"`));
-        }
+        if (rawText.includes('"error"')) { const match = rawText.match(/"message":\s*"(.*?)"/); if (match) throw new Error("API报错: " + JSON.parse(`"${match[1]}"`)); }
         if (!res.ok) throw new Error("HTTP " + res.status);
 
         let finalContent = "";
-        try {
-            finalContent = JSON.parse(rawText).choices[0].message.content;
-        } catch (e) {
-            const lines = rawText.split(/\r?\n/);
-            for (const line of lines) {
-                if (line.includes('"content":')) {
-                    try { finalContent += JSON.parse(line.substring(line.indexOf('{'))).choices[0].delta.content || ""; } catch(err){}
-                }
-            }
-        }
+        try { finalContent = JSON.parse(rawText).choices[0].message.content; } 
+        catch (e) { const lines = rawText.split(/\r?\n/); for (const line of lines) { if (line.includes('"content":')) { try { finalContent += JSON.parse(line.substring(line.indexOf('{'))).choices[0].delta.content || ""; } catch(err){} } } }
         if (!finalContent) throw new Error("解析失败，无内容");
         $out.html(finalContent.replace(/^```html/i, "").replace(/```$/i, ""));
     } catch (e) { $out.html(`<div style="color:#ff6b6b; text-align:center; padding:10px; border:1px solid #ff6b6b; border-radius:5px;">❌ ${e.message}</div>`); } 
