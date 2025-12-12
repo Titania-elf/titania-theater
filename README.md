@@ -1,69 +1,100 @@
-# 🎭 Echo Theater 
+# 🎭 Echo Theater (回声小剧场)
 
-![Version](https://img.shields.io/badge/Version-v3.0-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Version](https://img.shields.io/badge/Version-v3.2-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-> **A standalone, immersive side-story generator for SillyTavern.**  
 > **专为 SillyTavern 打造的独立沉浸式番外/小剧场生成器。**
 
-**Echo Theater** adds a draggable floating button to your SillyTavern interface. With a single click, you can generate stylized side stories, secret diaries, letters, or system reports based on your current roleplay context.
-
-**回声小剧场** 会在你的酒馆界面添加一个可拖拽的悬浮球。点击即可基于当前的角色扮演上下文，生成带有精美 CSS 视觉特效的番外剧情。
+**Echo Theater (回声小剧场)** 会在你的酒馆界面添加一个可拖拽的悬浮球。
+点击即可基于当前的角色扮演上下文，生成带有精美 CSS 视觉特效的**番外剧情、私密日记、信件或系统报告**，并支持将满意的结果永久收藏。
 
 ---
 
-## 🖼️ Preview (预览)
+## 🖼️ 预览
 
-<!-- Please upload screenshots to your repo and update these links -->
-<!-- 请上传截图到仓库，并确保文件名一致，或者修改这里的链接 -->
-
-| Floating Button (悬浮球) | Immersive Output (沉浸式输出) |
+| 悬浮球 & 界面 | 沉浸式输出 & 收藏 |
 | :---: | :---: |
 | ![Button Preview](preview_1.png) | ![Output Preview](preview_2.png) |
 
----
-
-## ✨ Features (功能亮点)
-
-*   **🎭 Immersive Visuals:** Generates content with inline CSS styles (e.g., parchment texture for diaries, neon terminal for sci-fi reports).  
-    **沉浸视觉：** 生成的内容自带样式（如羊皮纸风格的日记、黑客终端风格的报告）。
-*   **🖱️ Draggable Floating Button:** A mobile-friendly floating button that can be dragged anywhere and auto-snaps to screen edges.  
-    **可拖拽悬浮球：** 专为移动端优化的悬浮入口，支持随意拖拽并自动吸附屏幕边缘，不遮挡主界面。
-*   **⚙️ Independent Configuration:** Uses its own API Key/URL settings (stored in LocalStorage). Does not conflict with ST's main API.  
-    **独立配置：** 拥有独立的 API Key/URL 设置，不干扰酒馆主连接。
-*   **📝 Script Management:** Built-in editor to Create, Read, Update, and Delete (CRUD) your own custom scenarios.  
-    **剧本管理：** 内置编辑器，支持增删改查自定义剧本。
-*   **🎲 Context Awareness:** Automatically reads Character Name and Persona to prevent OOC.  
-    **上下文感知：** 自动读取当前角色名和人设，防止 OOC。
-*   **🚀 Zero Dependency:** Pure JS implementation. Works perfectly on Android (Termux) and PC.  
-    **零依赖架构：** 完美支持安卓 Termux 和所有桌面浏览器，解决路径引用报错问题。
+*(请确保仓库根目录下有 preview_button.png 和 preview_output.png 两张预览图)*
 
 ---
 
-## 📥 Installation (安装方法)
+## ✨ 功能亮点
 
-### Method 1: Extension Manager (Recommended)
+*   **📖 回声收藏夹 (New):** 遇到满意的生成结果？点击 ❤️ 即可永久保存到本地收藏夹，随时回顾精彩瞬间。
+*   **🎭 沉浸视觉:** 生成的内容自带 HTML/CSS 样式（如羊皮纸风格的日记、黑客终端风格的报告、优雅的信件），拒绝枯燥的纯文本。
+*   **🖱️ 灵动悬浮球:** 专为手机端优化的悬浮入口，支持随意拖拽并自动吸附屏幕边缘，完全不遮挡主界面。
+*   **✏️ 大屏编辑 (New):** 编写自定义剧本 Prompt 时支持一键切换到全屏模式，手机搓提示词不再痛苦。
+*   **⚙️ 独立配置:** 插件拥有独立的 API Key/URL 设置（存储在本地），不干扰酒馆的主连接，支持 OpenAI 格式的中转服务。
+*   **📝 剧本管理:** 内置编辑器，支持增删改查自定义剧本，发挥你的想象力创造各种场景。
+*   **🚀 零依赖架构:** 纯 JS 实现，不依赖任何外部组件，完美支持安卓 Termux 和所有桌面浏览器，彻底解决路径报错问题。
+
+---
+
+## 📥 安装方法
+
 ### 方法 1：通过扩展管理器安装（推荐）
 
-1.  Open SillyTavern and go to the **Extensions** (Puzzle icon) menu.
-    打开 SillyTavern，点击顶部的 **扩展 (Extensions)** 图标。
-2.  Click **"Install Extension"**.
-    点击 **"Install Extension" (安装扩展)** 按钮。
-3.  Paste the repository URL:
-    粘贴以下仓库地址：
+1.  打开 SillyTavern，点击顶部的 **扩展 (Extensions)** 图标。
+2.  点击 **"Install Extension" (安装扩展)** 按钮。
+3.  粘贴以下仓库地址：
     ```text
     https://github.com/Titania-elf/titania-theater
     ```
-4.  Click **"Install"**.
-    点击 **"Install"**。
-5.  **Reload** SillyTavern page.
-    **刷新** 网页。
+4.  点击 **"Install"**。
+5.  **刷新** 网页即可生效。
 
-### Method 2: Manual Install
 ### 方法 2：手动克隆
 
-Navigate to your SillyTavern directory and run:
 进入你的 SillyTavern 目录并运行：
 
 ```bash
 cd public/scripts/extensions
 git clone https://github.com/Titania-elf/titania-theater
+```
+
+---
+
+## 📖 使用指南
+
+### 1. 基础配置
+*   点击屏幕上的悬浮 **面具图标 (🎭)** 打开面板。
+*   点击面板右上角的 **齿轮图标 (⚙️)** 进入设置。
+*   填入支持 **OpenAI 格式** 的 API URL 和 API Key（可以使用硅基流动、DeepSeek 等中转服务）。
+*   点击“获取”可以自动拉取模型列表，或者手动输入模型名（如 `gpt-4o`, `claude-3-5-sonnet`）。
+
+### 2. 生成剧情
+*   在主界面的下拉框选择一个剧本（如“私密日记”）。
+*   点击 **“🎬 开始演绎”**。
+*   等待片刻，AI 将结合当前对话的上下文（角色名、人设）为你生成专属剧情。
+
+### 3. 收藏与回顾
+*   生成完成后，点击工具栏的 **“❤️ 收藏”** 按钮。
+*   点击顶部标题栏左侧的 **“📖 书本图标”**，即可打开收藏夹，重温所有保存的历史片段。
+
+### 4. 自定义剧本
+*   进入设置页面，点击 **“+ 新建”**。
+*   在 Prompt 编辑框中，你可以使用 `{{char}}` 代表角色名，`{{user}}` 代表用户名。
+*   点击 **“大屏编辑”** 按钮可以获得更好的输入体验。
+
+---
+
+## ❓ 常见问题 (FAQ)
+
+**Q: 启用插件后看不到悬浮球？**
+*   A: 请先刷新页面。如果还没出现，请检查“扩展”列表中是否勾选了本插件。
+
+**Q: 点击生成后提示 API 报错 / Internal Server Error？**
+*   A: 本插件需要标准的 OpenAI 格式 API。如果报错，通常是 Key 额度不足、模型名称填错或服务商接口不稳定。请尝试更换 Key。
+
+**Q: 手机上弹窗显示不全怎么办？**
+*   A: 弹窗高度自适应屏幕的 85%，内容过多时请在弹窗**内部**上下滑动，不要滑动背景。
+
+**Q: 收藏的数据存在哪里？**
+*   A: 存在你浏览器的本地存储 (LocalStorage) 中。清除浏览器缓存可能会导致收藏丢失，请注意备份。
+
+---
+
+## 📜 许可证
+
+本项目采用 [MIT License](LICENSE) 开源。
