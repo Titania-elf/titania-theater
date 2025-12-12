@@ -109,7 +109,7 @@ function saveUserScript(s) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY
 function deleteUserScript(id) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS)||'[]'); u = u.filter(x=>x.id!==id); localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(u)); loadScripts(); }
 
 // Part 1 End
-// Part 2/2 Start
+    // Part 2/2 Start (v3.1 大屏编辑增强版)
 
 function getContextData() {
     if (window.SillyTavern && window.SillyTavern.getContext) {
@@ -123,17 +123,14 @@ function openMainWindow() {
     if ($("#t-overlay").length) return;
     const ctx = getContextData();
 
-    // 修复了这里：现在标题在左，图标在右，没有重复！
     const html = `
     <div id="t-overlay" class="t-overlay">
         <div class="t-box" id="t-main-view">
             <div class="t-header">
-                <!-- 左侧：新设计的标题 -->
                 <div class="t-title-container">
                     <div class="t-title-main">回声小剧场</div>
                     <div class="t-title-sub">ECHO THEATER</div>
                 </div>
-                <!-- 右侧：控制按钮 -->
                 <div>
                     <i class="fa-solid fa-gear t-gear" id="t-btn-settings" title="设置"></i>
                     <span class="t-close" id="t-btn-close">&times;</span>
@@ -252,24 +249,71 @@ function openEditor(id) {
     if (isEdit) data = runtimeScripts.find(s => s.id === id);
     const isPreset = data._type === 'preset';
     $("#t-settings-view").hide();
+    
+    // 【v3.1 新增】增加了 Prompt 栏右侧的“大屏编辑”按钮
     const html = `
     <div class="t-box" id="t-editor-view">
         <div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div>
         <div class="t-body">
             <label>标题:</label><input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}>
             <label>简介:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? 'disabled' : ''}>
-            <label>Prompt (支持 {{char}}, {{user}}):</label><textarea id="ed-prompt" class="t-input" rows="8" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                <label>Prompt (支持 {{char}}, {{user}}):</label>
+                ${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏编辑</div>` : ''}
+            </div>
+            <textarea id="ed-prompt" class="t-input" rows="8" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea>
+            
             <div class="t-btn-row">${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}<button id="ed-cancel" class="t-btn" style="flex:1;">返回</button></div>
         </div>
     </div>`;
     $("#t-overlay").append(html);
+
+    // 绑定基础事件
     $("#ed-cancel").on("click", () => { $("#t-editor-view").remove(); $("#t-settings-view").show(); });
+    
+    // 【v3.1 新增】大屏编辑事件
+    $("#ed-btn-expand").on("click", () => {
+        openLargeEditor($("#ed-prompt").val(), (newVal) => {
+            $("#ed-prompt").val(newVal);
+        });
+    });
+
     if(!isPreset) {
         $("#ed-save").on("click", () => {
             saveUserScript({ id: isEdit ? data.id : "user_" + Date.now(), name: $("#ed-name").val(), desc: $("#ed-desc").val(), prompt: $("#ed-prompt").val() });
             $("#t-editor-view").remove(); $("#t-settings-view").show(); renderScriptList();
         });
     }
+}
+
+// 【v3.1 新增】大屏编辑器函数
+function openLargeEditor(text, onSave) {
+    $("#t-editor-view").hide(); // 隐藏小窗口
+    const html = `
+    <div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;">
+         <div class="t-header"><span class="t-title-main">大屏模式</span></div>
+         <div class="t-body" style="height:100%;">
+             <textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${text}</textarea>
+             <div class="t-btn-row">
+                 <button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button>
+                 <button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button>
+             </div>
+         </div>
+    </div>`;
+    $("#t-overlay").append(html);
+
+    $("#ed-large-cancel").on("click", () => {
+        $("#t-large-edit-view").remove();
+        $("#t-editor-view").show(); // 恢复小窗口
+    });
+    
+    $("#ed-large-ok").on("click", () => {
+        const newVal = $("#ed-large-text").val();
+        $("#t-large-edit-view").remove();
+        $("#t-editor-view").show();
+        if(onSave) onSave(newVal); // 回填数据
+    });
 }
 
 async function handleGenerate() {
