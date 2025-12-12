@@ -11,11 +11,7 @@
 
 ## 🖼️ 预览
 
-| 悬浮球 & 界面 | 沉浸式输出 & 收藏 |
-| :---: | :---: |
-| ![Button Preview](preview_1.png) | ![Output Preview](preview_2.png) |
-
-*(请确保仓库根目录下有 preview_button.png 和 preview_output.png 两张预览图)*
+ ![Button Preview](preview_1.png) 
 
 ---
 
