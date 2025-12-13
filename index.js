@@ -1,4 +1,4 @@
-// 【Echo Theater v3.3 - 纯净分离版】
+// 【Echo Theater v3.4 - 增强审查版】
 // Part 1/2
 
 const PLUGIN_NAME = "Titania_Theater_Echo";
@@ -13,15 +13,15 @@ const DEFAULT_PRESETS = [
 ];
 
 let runtimeScripts = []; 
-let lastGeneratedContent = ""; // 状态记忆
+let lastGeneratedContent = "";
 
 $(document).ready(function() {
-    console.log("Titania Echo v3.3: Loaded.");
+    console.log("Titania Echo v3.4: Loaded.");
     loadScripts(); 
     createFloatingButton();
 });
 
-// 悬浮球逻辑
+// 悬浮球
 function createFloatingButton() {
     $("#titania-float-btn").remove();
     const btn = $(`<div id="titania-float-btn">🎭</div>`);
@@ -61,17 +61,49 @@ function loadScripts() {
 function saveUserScript(s) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS)||'[]'); u = u.filter(x=>x.id!==s.id); u.push(s); localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(u)); loadScripts(); }
 function deleteUserScript(id) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS)||'[]'); u = u.filter(x=>x.id!==id); localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(u)); loadScripts(); }
 
+// part1 end
+// Part 2/2 Start (上下文增强 & 独立审查窗口)
+
+// 【增强版】上下文获取：User设定 + 世界书
 function getContextData() {
+    let data = { charName: "Char", persona: "", userName: "User", userDesc: "", worldInfo: "" };
+    
+    // 尝试从 DOM 获取基础信息 (保底)
+    data.charName = $(".character_name").first().text() || "Char";
+    
     if (window.SillyTavern && window.SillyTavern.getContext) {
         const ctx = window.SillyTavern.getContext();
-        if (ctx) return { charName: ctx.characters[ctx.characterId]?.name || "Unknown", persona: ctx.characters[ctx.characterId]?.description || "", userName: ctx.name1 || "User" };
+        
+        // 1. 获取 ID 和名称
+        data.userName = ctx.name1 || "User";
+        if(ctx.characterId) {
+            data.charName = ctx.characters[ctx.characterId]?.name || data.charName;
+            data.persona = ctx.characters[ctx.characterId]?.description || "";
+        }
+        
+        // 2. 获取 User 设定 (尝试多种路径)
+        // SillyTavern 不同版本存储位置不同，这里做兼容尝试
+        if(ctx.userDescription) data.userDesc = ctx.userDescription; 
+        else if (window.SillyTavern.power_user?.user_description) data.userDesc = window.SillyTavern.power_user.user_description;
+        
+        // 3. 获取世界书 (简单关键词匹配)
+        // 注意：这是简化的前端匹配，不是ST后端的完整逻辑
+        const wiList = ctx.worldInfo || [];
+        if (Array.isArray(wiList) && wiList.length > 0) {
+            // 将 Prompt 和最近聊天记录作为扫描对象
+            const scanText = (data.persona + data.userDesc).toLowerCase(); 
+            const activeEntries = wiList.filter(book => {
+                const keys = (book.keys || "").split(",").map(k => k.trim().toLowerCase()).filter(k=>k);
+                // 只要有一个 Key 出现在文本中，就激活
+                return keys.some(k => scanText.includes(k));
+            });
+            // 拼接世界书内容
+            data.worldInfo = activeEntries.map(e => e.content).join("\n");
+        }
     }
-    return { charName: $(".character_name").first().text() || "Char", persona: "Unknown", userName: "User" };
+    return data;
 }
-// part1 end
-// Part 2/2 Start
 
-// 主界面
 function openMainWindow() {
     if ($("#t-overlay").length) return;
     const ctx = getContextData();
@@ -100,7 +132,7 @@ function openMainWindow() {
                         <button class="t-tool-btn" id="t-btn-debug" title="审查Prompt"><i class="fa-solid fa-eye"></i> 审查</button>
                         <button class="t-tool-btn" id="t-btn-like" title="收藏"><i class="fa-regular fa-heart"></i> 收藏</button>
                         <button class="t-tool-btn" id="t-btn-copy">复制</button>
-                        <button class="t-tool-btn" id="t-btn-clear">清空</button>
+                        <!-- 清空按钮已移除 -->
                     </div>
                     <div id="t-output-content" style="margin-top:20px;">${initialContent}</div>
                 </div>
@@ -112,11 +144,11 @@ function openMainWindow() {
     $("body").append(html);
     updateDesc();
 
-    // 防误触关闭
+    // 事件绑定
     $("#t-btn-close").on("click", () => $("#t-overlay").remove());
     $("#t-overlay").on("click", (e) => { 
         if(e.target === e.currentTarget) {
-            if($("#t-btn-run").prop("disabled")) {
+            if($("#t-btn-run").prop("disabled")) { // 防误触
                 $("#t-main-view").css("transform", "scale(1.02)"); setTimeout(() => $("#t-main-view").css("transform", "scale(1)"), 100); return;
             }
             $("#t-overlay").remove(); 
@@ -130,24 +162,67 @@ function openMainWindow() {
         $("#t-sel-script").prop('selectedIndex', rnd).trigger('change');
         $(this).css("transform", `rotate(${Math.random() * 360}deg)`);
     });
-    
-    // 工具栏
     $("#t-btn-copy").on("click", () => { navigator.clipboard.writeText($("#t-output-content").text()); const btn = $("#t-btn-copy"); btn.text("已复制"); setTimeout(() => btn.text("复制"), 1000); });
-    $("#t-btn-clear").on("click", () => { $("#t-output-content").html(""); lastGeneratedContent = ""; resetLikeBtn(); });
     $("#t-btn-run").on("click", handleGenerate);
     $("#t-btn-like").on("click", saveFavorite);
     $("#t-btn-favs").on("click", openFavsWindow);
 
-    // Prompt 审查
+    // 【新增】打开独立审查窗口
     $("#t-btn-debug").on("click", () => {
-        const s = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
-        const d = getContextData();
-        const sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.";
-        const user = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\nPersona: ${d.persona}\n\n[Scenario Request]\n${s.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName)}`;
-        const info = { "NOTE": "Prompt Preview", "model": $("#cfg-model-list").val() || "gpt-3.5-turbo", "messages": [{ "role": "system", "content": sys }, { "role": "user", "content": user }] };
-        $("#t-output-content").html(`<pre style="font-family:monospace; font-size:12px; color:#aaffaa; background:#111; padding:10px; border-radius:5px; white-space:pre-wrap; word-break:break-all;">${JSON.stringify(info, null, 2)}</pre>`);
-        resetLikeBtn();
+        const promptData = buildPrompt(); // 获取构建好的数据
+        openDebugModal(promptData);
     });
+}
+
+// 【新增】构建 Prompt 数据的辅助函数（供生成和审查共用）
+function buildPrompt() {
+    const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
+    const d = getContextData();
+    
+    const sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.";
+    
+    // 组装 User Prompt，加入 User Persona 和 World Info
+    let user = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\n\n`;
+    
+    if (d.persona) user += `[Character Persona]\n${d.persona}\n\n`;
+    if (d.userDesc) user += `[User Persona]\n${d.userDesc}\n\n`; // 新增
+    if (d.worldInfo) user += `[World Info / Lore]\n${d.worldInfo}\n\n`; // 新增
+    
+    user += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName)}`;
+
+    return { 
+        model: $("#cfg-model-list").val() || "gpt-3.5-turbo", 
+        messages: [{ role: "system", content: sys }, { role: "user", content: user }] 
+    };
+}
+
+// 【新增】独立审查窗口
+function openDebugModal(jsonData) {
+    $("#t-main-view").hide(); // 隐藏主窗口
+    
+    const html = `
+    <div class="t-box" id="t-debug-view" style="height:90vh;">
+        <div class="t-header">
+            <span class="t-title-main" style="font-size:1.2em;">👁️ 提示词审查</span>
+            <span class="t-close" id="t-debug-close">&times;</span>
+        </div>
+        <div class="t-body" style="padding:0;">
+            <!-- 使用 pre 保持格式，样式在 css 中定义 -->
+            <pre class="t-code-block">${JSON.stringify(jsonData, null, 2)}</pre>
+        </div>
+        <div style="padding:10px; border-top:1px solid #444;">
+             <button id="t-debug-back" class="t-btn primary" style="width:100%;">返回主窗口</button>
+        </div>
+    </div>`;
+    
+    $("#t-overlay").append(html);
+    
+    const closeDebug = () => {
+        $("#t-debug-view").remove();
+        $("#t-main-view").show(); // 恢复主窗口
+    };
+    
+    $("#t-debug-close, #t-debug-back").on("click", closeDebug);
 }
 
 function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if(s) $("#t-txt-desc").val(s.desc); }
@@ -156,7 +231,7 @@ function resetLikeBtn() { $("#t-btn-like").html('<i class="fa-regular fa-heart">
 // 收藏夹
 function saveFavorite() {
     const content = $("#t-output-content").html();
-    if (!content || content.includes("请选择剧本") || content.includes('messages": [')) return alert("无法收藏");
+    if (!content || content.includes("请选择剧本")) return alert("无法收藏");
     const scriptName = $("#t-sel-script option:selected").text();
     const entry = { id: Date.now(), title: `${scriptName} - ${getContextData().charName}`, date: new Date().toLocaleString(), html: content };
     const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]');
@@ -209,30 +284,37 @@ function openEditor(id) {
     const html = `<div class="t-box" id="t-editor-view"><div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div><div class="t-body"><label>标题:</label><input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}><label>简介:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? 'disabled' : ''}><div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><label>Prompt (支持 {{char}}, {{user}}):</label>${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏编辑</div>` : ''}</div><textarea id="ed-prompt" class="t-input" rows="8" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea><div class="t-btn-row">${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}<button id="ed-cancel" class="t-btn" style="flex:1;">返回</button></div></div></div>`;
     $("#t-overlay").append(html);
     $("#ed-cancel").on("click", () => { $("#t-editor-view").remove(); $("#t-settings-view").show(); });
-    $("#ed-btn-expand").on("click", () => { $("#t-editor-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${$("#ed-prompt").val()}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`); $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); }); $("#ed-large-ok").on("click", () => { $("#ed-prompt").val($("#ed-large-text").val()); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); }); });
+    $("#ed-btn-expand").on("click", () => openLargeEditor($("#ed-prompt").val(), (v) => $("#ed-prompt").val(v)));
     if(!isPreset) { $("#ed-save").on("click", () => { saveUserScript({ id: isEdit ? data.id : "user_" + Date.now(), name: $("#ed-name").val(), desc: $("#ed-desc").val(), prompt: $("#ed-prompt").val() }); $("#t-editor-view").remove(); $("#t-settings-view").show(); renderScriptList(); }); }
+}
+
+function openLargeEditor(text, onSave) {
+    $("#t-editor-view").hide();
+    const html = `<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${text}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`;
+    $("#t-overlay").append(html);
+    $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
+    $("#ed-large-ok").on("click", () => { const newVal = $("#ed-large-text").val(); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); if(onSave) onSave(newVal); });
 }
 
 async function handleGenerate() {
     const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
     if (!cfg.key) return alert("请先填 API Key！");
-    const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
-    const ctx = getContextData();
     const $out = $("#t-output-content"); const $btn = $("#t-btn-run");
     resetLikeBtn();
     $out.html('<div style="text-align:center; padding-top:20px;">⏳ 正在构思剧情...</div>');
     $btn.prop("disabled", true).css("opacity", 0.6);
 
     try {
-        let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.";
-        let user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\nPersona: ${ctx.persona}\n\n[Scenario Request]\n${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
+        // 使用新的 buildPrompt 获取数据
+        const requestData = buildPrompt(); 
+        
         let endpoint = cfg.url.replace(/\/+$/, "");
         if (!endpoint.endsWith("/chat/completions")) endpoint += "/chat/completions";
 
         const res = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cfg.key}` },
-            body: JSON.stringify({ model: cfg.model, messages: [{ role: "system", content: sys }, { role: "user", content: user }], stream: false })
+            body: JSON.stringify({ ...requestData, stream: false })
         });
         const rawText = await res.text();
         if (rawText.includes('"error"')) { const match = rawText.match(/"message":\s*"(.*?)"/); if (match) throw new Error("API报错: " + JSON.parse(`"${match[1]}"`)); }
