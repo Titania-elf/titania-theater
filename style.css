@@ -1,0 +1,99 @@
+/* style.css - 回声小剧场 v3.3 */
+
+/* 全屏遮罩 */
+.t-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6); z-index: 20000;
+    backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* 主窗口容器 */
+.t-box {
+    position: relative; width: 95%; max-width: 650px;
+    height: auto; max-height: 85vh;
+    background: #1a1b26; border: 1px solid #555; border-radius: 12px;
+    display: flex; flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    color: #eee; font-family: sans-serif; overflow: hidden;
+}
+
+/* 顶部栏 */
+.t-header {
+    padding: 12px 15px; border-bottom: 1px solid #444; background: #242530;
+    display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+
+/* 标题组件 */
+.t-title-container {
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; padding-left: 12px;
+}
+.t-title-container::before {
+    content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px;
+    background: linear-gradient(to bottom, #ff9a9e, #fad0c4);
+    border-radius: 2px; box-shadow: 0 0 8px rgba(255, 154, 158, 0.6);
+}
+.t-title-main {
+    font-size: 1.4em; font-weight: 800; line-height: 1.1;
+    background: linear-gradient(135deg, #e0c3fc 0%, #ff9a9e 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 2px rgba(255, 154, 158, 0.3)); letter-spacing: 1px;
+}
+.t-title-sub {
+    font-size: 0.55em; color: #aaa; text-transform: uppercase;
+    letter-spacing: 4px; margin-top: 2px; opacity: 0.7; font-weight: 300;
+    background: linear-gradient(90deg, #ff9a9e, #e0c3fc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* 顶部图标按钮 */
+.t-icon-btn { cursor: pointer; font-size: 1.2em; color: #aaa; margin-left: 15px; transition: color 0.3s; }
+.t-icon-btn:hover { color: #fff; }
+.t-close { cursor: pointer; font-size: 1.8em; line-height: 1; color: #888; transition:0.2s; padding: 0 5px; margin-left: 15px; }
+.t-close:hover { color: #fff; transform: rotate(90deg); }
+
+/* 主体布局 */
+.t-body { padding: 15px; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.t-controls { display: flex; gap: 10px; align-items: center; }
+
+/* 表单控件 */
+.t-select { flex-grow: 1; background: #0f0f14; border: 1px solid #555; color: white; padding: 8px; border-radius: 6px; outline: none; }
+.t-input { width: 100%; background: #0f0f14; border: 1px solid #555; color: white; padding: 8px; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; }
+.t-desc { background: transparent; border: none; color: #888; font-style: italic; font-size: 0.9em; resize: none; width: 100%; outline: none; }
+
+/* 骰子动画 */
+.t-dice { font-size: 1.5em; cursor: pointer; transition: transform 0.5s ease; user-select: none; }
+.t-dice:active { transform: rotate(360deg) scale(1.2); }
+
+/* 渲染区域 */
+.t-render { position: relative; flex-grow: 1; background: rgba(0,0,0,0.2); border: 1px solid #444; border-radius: 6px; min-height: 200px; padding: 10px; overflow-y: auto; }
+
+/* 渲染区工具栏 */
+.t-tools { position: absolute; top: 5px; right: 5px; display: flex; gap: 5px; z-index: 10; }
+.t-tool-btn { font-size: 0.75em; padding: 2px 8px; background: rgba(0,0,0,0.6); border: 1px solid #666; color: #ccc; cursor: pointer; border-radius: 3px; display:flex; align-items:center; gap:4px; }
+.t-tool-btn:hover { background: #444; color: white; }
+.t-liked { color: #ff6b6b !important; border-color: #ff6b6b !important; background: rgba(255,107,107,0.1) !important; }
+
+/* 底部按钮 */
+.t-btn-row { display: flex; gap: 10px; margin-top: auto; }
+.t-btn { background: #333; border: 1px solid #555; color: white; padding: 10px 15px; cursor: pointer; border-radius: 6px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.t-btn.primary { background: linear-gradient(90deg, #ff9a9e, #fecfef); color: #444; border: none; }
+.t-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* 列表项 */
+.t-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; }
+.t-list-item:hover { background: rgba(255,255,255,0.05); }
+.t-badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; margin-left: 5px; }
+.badge-preset { background: #7b1fa2; }
+.badge-user { background: #2e7d32; }
+.t-fav-meta { font-size: 0.8em; color: #888; margin-top: 2px; }
+
+/* 悬浮球 */
+#titania-float-btn {
+    position: fixed; top: 50%; right: 0px; width: 50px; height: 50px;
+    background: rgba(0,0,0,0.6); color: #ff9a9e; border: 2px solid #ff9a9e; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer;
+    z-index: 2147483647; user-select: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+    transform: translateY(-50%); touch-action: none;
+}
