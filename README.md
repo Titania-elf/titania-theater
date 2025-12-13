@@ -1,6 +1,6 @@
 # 🎭 Echo Theater (回声小剧场)
 
-![Version](https://img.shields.io/badge/Version-v3.2-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Version](https://img.shields.io/badge/Version-v3.3-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 > **专为 SillyTavern 打造的独立沉浸式番外/小剧场生成器。**
 
@@ -8,7 +8,9 @@
 点击即可基于当前的角色扮演上下文，生成带有精美 CSS 视觉特效的**番外剧情、私密日记、信件或系统报告**，并支持将满意的结果永久收藏。
 
 ---
-
+## 更新日志
+*  **2025121新增：**防误触功能，防止点击空白处关闭窗口打断生成；查看后台发送的原始提示词功能。
+---
 ## 🖼️ 预览
 
  ![Button Preview](preview_3.png) 
