@@ -1,9 +1,10 @@
 {
     "display_name": "Echo Theater (回声小剧场)",
     "author": "Titania-elf",
-    "version": "3.0.0",
+    "version": "3.3.0",
     "loading_order": 100,
     "requires": [],
     "js": "index.js",
-    "description": "A standalone side-story generator with immersive visuals. 一个独立的沉浸式番外/小剧场生成器 (悬浮球版)。"
+    "css": "style.css",
+    "description": "A standalone side-story generator with immersive visuals. 一个独立的沉浸式番外/小剧场生成器。"
 }
