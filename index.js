@@ -299,35 +299,83 @@ function openLargeEditor(text, onSave) {
 async function handleGenerate() {
     const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
     if (!cfg.key) return alert("请先填 API Key！");
-    const $out = $("#t-output-content"); const $btn = $("#t-btn-run");
+    
+    const $out = $("#t-output-content"); 
+    const $btn = $("#t-btn-run");
+    
     resetLikeBtn();
     $out.html('<div style="text-align:center; padding-top:20px;">⏳ 正在构思剧情...</div>');
     $btn.prop("disabled", true).css("opacity", 0.6);
 
     try {
-        // 使用新的 buildPrompt 获取数据
         const requestData = buildPrompt(); 
         
-        let endpoint = cfg.url.replace(/\/+$/, "");
-        if (!endpoint.endsWith("/chat/completions")) endpoint += "/chat/completions";
+        // --- 修复 URL 处理逻辑 Start ---
+        // 1. 移除末尾所有斜杠
+        let baseUrl = cfg.url.trim().replace(/\/+$/, "");
+        
+        // 2. 智能判断是否需要拼接
+        // 如果用户已经填了完整路径 (包含 chat/completions)，就直接用
+        let endpoint = baseUrl;
+        if (!baseUrl.endsWith("/chat/completions")) {
+            // 如果没填，再拼接
+            endpoint += "/chat/completions";
+        }
+        // --- 修复 URL 处理逻辑 End ---
 
         const res = await fetch(endpoint, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cfg.key}` },
+            headers: { 
+                "Content-Type": "application/json", 
+                "Authorization": `Bearer ${cfg.key}` 
+            },
             body: JSON.stringify({ ...requestData, stream: false })
         });
+
         const rawText = await res.text();
-        if (rawText.includes('"error"')) { const match = rawText.match(/"message":\s*"(.*?)"/); if (match) throw new Error("API报错: " + JSON.parse(`"${match[1]}"`)); }
-        if (!res.ok) throw new Error("HTTP " + res.status);
+        
+        // 专门处理 404/405/500 等 HTTP 错误
+        if (!res.ok) {
+            let errMsg = `HTTP ${res.status} (${res.statusText})`;
+            // 尝试解析错误体
+            try {
+                const errJson = JSON.parse(rawText);
+                if (errJson.error && errJson.error.message) {
+                    errMsg += `: ${errJson.error.message}`;
+                }
+            } catch (e) {
+                // 如果不是 JSON，截取前 50 个字符
+                errMsg += `: ${rawText.slice(0, 50)}`;
+            }
+            throw new Error(errMsg);
+        }
+
+        if (rawText.includes('"error"')) { 
+            const match = rawText.match(/"message":\s*"(.*?)"/); 
+            if (match) throw new Error("API报错: " + JSON.parse(`"${match[1]}"`)); 
+        }
 
         let finalContent = "";
-        try { finalContent = JSON.parse(rawText).choices[0].message.content; } 
-        catch (e) { const lines = rawText.split(/\r?\n/); for (const line of lines) { if (line.includes('"content":')) { try { finalContent += JSON.parse(line.substring(line.indexOf('{'))).choices[0].delta.content || ""; } catch(err){} } } }
+        try { 
+            finalContent = JSON.parse(rawText).choices[0].message.content; 
+        } catch (e) { 
+            const lines = rawText.split(/\r?\n/); 
+            for (const line of lines) { 
+                if (line.includes('"content":')) { 
+                    try { finalContent += JSON.parse(line.substring(line.indexOf('{'))).choices[0].delta.content || ""; } catch(err){} 
+                } 
+            } 
+        }
+        
         if (!finalContent) throw new Error("解析失败，无内容");
         
         finalContent = finalContent.replace(/^```html/i, "").replace(/```$/i, "");
         lastGeneratedContent = finalContent;
         $out.html(finalContent);
-    } catch (e) { $out.html(`<div style="color:#ff6b6b; text-align:center; padding:10px; border:1px solid #ff6b6b; border-radius:5px;">❌ ${e.message}</div>`); } 
-    finally { $btn.prop("disabled", false).css("opacity", 1); }
+
+    } catch (e) { 
+        $out.html(`<div style="color:#ff6b6b; text-align:center; padding:10px; border:1px solid #ff6b6b; border-radius:5px;">❌ ${e.message}</div>`); 
+    } finally { 
+        $btn.prop("disabled", false).css("opacity", 1); 
+    }
 }
