@@ -1,10 +1,10 @@
-// 【Titania's 小剧场 - 回声收藏版 v3.2】
+// 【Echo Theater v3.3 - 纯净分离版】
 // Part 1/2
 
 const PLUGIN_NAME = "Titania_Theater_Echo";
 const STORAGE_KEY_CFG = "Titania_Config_v3";
 const STORAGE_KEY_SCRIPTS = "Titania_UserScripts_v3";
-const STORAGE_KEY_FAVS = "Titania_Favs_v3"; // 【新增】收藏夹存储Key
+const STORAGE_KEY_FAVS = "Titania_Favs_v3";
 
 const DEFAULT_PRESETS = [
     { id: "diary", name: "私密日记", desc: "以日记形式记录角色此刻的心情。", prompt: "请撰写一篇 {{char}} 的私密日记。CSS样式要求：背景使用做旧羊皮纸色(#fdfbf7)，字体使用手写体风格，深褐色字体，内边距20px，带有边框阴影。内容要体现角色对 {{user}} 的真实想法。" },
@@ -13,73 +13,18 @@ const DEFAULT_PRESETS = [
 ];
 
 let runtimeScripts = []; 
+let lastGeneratedContent = ""; // 状态记忆
 
 $(document).ready(function() {
-    console.log("Titania Echo v3.2: Part 1 Loaded...");
-    injectStyles();
+    console.log("Titania Echo v3.3: Loaded.");
     loadScripts(); 
     createFloatingButton();
 });
 
-function injectStyles() {
-    const css = `
-    <style>
-        .t-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 20000; backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; }
-        .t-box { position: relative; width: 95%; max-width: 650px; height: auto; max-height: 85vh; background: #1a1b26; border: 1px solid #555; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8); color: #eee; font-family: sans-serif; overflow: hidden; }
-        .t-header { padding: 12px 15px; border-bottom: 1px solid #444; background: #242530; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        
-        /* 标题样式 */
-        .t-title-container { display: flex; flex-direction: column; justify-content: center; position: relative; padding-left: 12px; }
-        .t-title-container::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px; background: linear-gradient(to bottom, #ff9a9e, #fad0c4); border-radius: 2px; box-shadow: 0 0 8px rgba(255, 154, 158, 0.6); }
-        .t-title-main { font-size: 1.4em; font-weight: 800; line-height: 1.1; background: linear-gradient(135deg, #e0c3fc 0%, #ff9a9e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 2px rgba(255, 154, 158, 0.3)); letter-spacing: 1px; }
-        .t-title-sub { font-size: 0.55em; color: #aaa; text-transform: uppercase; letter-spacing: 4px; margin-top: 2px; opacity: 0.7; font-weight: 300; background: linear-gradient(90deg, #ff9a9e, #e0c3fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        .t-icon-btn { cursor: pointer; font-size: 1.2em; color: #aaa; margin-left: 15px; transition: color 0.3s; }
-        .t-icon-btn:hover { color: #fff; }
-        .t-close { cursor: pointer; font-size: 1.8em; line-height: 1; color: #888; transition:0.2s; padding: 0 5px; margin-left: 15px; }
-        .t-close:hover { color: #fff; transform: rotate(90deg); }
-        
-        .t-body { padding: 15px; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .t-controls { display: flex; gap: 10px; align-items: center; }
-        .t-select { flex-grow: 1; background: #0f0f14; border: 1px solid #555; color: white; padding: 8px; border-radius: 6px; outline: none; }
-        .t-dice { font-size: 1.5em; cursor: pointer; transition: transform 0.5s ease; user-select: none; }
-        .t-dice:active { transform: rotate(360deg) scale(1.2); }
-        .t-desc { background: transparent; border: none; color: #888; font-style: italic; font-size: 0.9em; resize: none; width: 100%; outline: none; }
-        
-        .t-render { position: relative; flex-grow: 1; background: rgba(0,0,0,0.2); border: 1px solid #444; border-radius: 6px; min-height: 200px; padding: 10px; overflow-y: auto; }
-        .t-tools { position: absolute; top: 5px; right: 5px; display: flex; gap: 5px; z-index: 10; }
-        .t-tool-btn { font-size: 0.75em; padding: 2px 8px; background: rgba(0,0,0,0.6); border: 1px solid #666; color: #ccc; cursor: pointer; border-radius: 3px; display:flex; align-items:center; gap:4px; }
-        .t-tool-btn:hover { background: #444; color: white; }
-        /* 收藏后的爱心样式 */
-        .t-liked { color: #ff6b6b !important; border-color: #ff6b6b !important; background: rgba(255,107,107,0.1) !important; }
-
-        .t-btn-row { display: flex; gap: 10px; margin-top: auto; }
-        .t-btn { background: #333; border: 1px solid #555; color: white; padding: 10px 15px; cursor: pointer; border-radius: 6px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .t-btn.primary { background: linear-gradient(90deg, #ff9a9e, #fecfef); color: #444; border: none; }
-        
-        .t-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; }
-        .t-list-item:hover { background: rgba(255,255,255,0.05); }
-        .t-badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; margin-left: 5px; }
-        .badge-preset { background: #7b1fa2; }
-        .badge-user { background: #2e7d32; }
-        .t-input { width: 100%; background: #0f0f14; border: 1px solid #555; color: white; padding: 8px; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; }
-        
-        /* 收藏夹专用样式 */
-        .t-fav-meta { font-size: 0.8em; color: #888; margin-top: 2px; }
-    </style>`;
-    $("head").append(css);
-}
-
+// 悬浮球逻辑
 function createFloatingButton() {
     $("#titania-float-btn").remove();
     const btn = $(`<div id="titania-float-btn">🎭</div>`);
-    btn.css({
-        position: "fixed", top: "50%", right: "0px", width: "50px", height: "50px",
-        background: "rgba(0,0,0,0.6)", color: "#ff9a9e", border: "2px solid #ff9a9e", borderRadius: "50%",
-        display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", cursor: "pointer",
-        zIndex: "2147483647", userSelect: "none", boxShadow: "0 0 10px rgba(0,0,0,0.5)", backdropFilter: "blur(2px)",
-        transform: "translateY(-50%)", touchAction: "none"
-    });
     $("body").append(btn);
 
     let isDragging = false, startX, startY, initialLeft, initialTop;
@@ -107,6 +52,7 @@ function createFloatingButton() {
     });
 }
 
+// 数据管理
 function loadScripts() {
     const userScripts = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS) || '[]');
     runtimeScripts = DEFAULT_PRESETS.map(p => ({ ...p, _type: 'preset' }));
@@ -115,9 +61,6 @@ function loadScripts() {
 function saveUserScript(s) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS)||'[]'); u = u.filter(x=>x.id!==s.id); u.push(s); localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(u)); loadScripts(); }
 function deleteUserScript(id) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS)||'[]'); u = u.filter(x=>x.id!==id); localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(u)); loadScripts(); }
 
-// Part 1 End
-// Part 2/2 Start (v3.2 收藏功能增强版)
-
 function getContextData() {
     if (window.SillyTavern && window.SillyTavern.getContext) {
         const ctx = window.SillyTavern.getContext();
@@ -125,23 +68,22 @@ function getContextData() {
     }
     return { charName: $(".character_name").first().text() || "Char", persona: "Unknown", userName: "User" };
 }
+// part1 end
+// Part 2/2 Start
 
+// 主界面
 function openMainWindow() {
     if ($("#t-overlay").length) return;
     const ctx = getContextData();
+    const initialContent = lastGeneratedContent ? lastGeneratedContent : '<div style="text-align:center; color:#666; margin-top:40px;">请选择剧本并点击生成...</div>';
 
     const html = `
     <div id="t-overlay" class="t-overlay">
         <div class="t-box" id="t-main-view">
             <div class="t-header">
-                <div class="t-title-container">
-                    <div class="t-title-main">回声小剧场</div>
-                    <div class="t-title-sub">ECHO THEATER</div>
-                </div>
+                <div class="t-title-container"><div class="t-title-main">回声小剧场</div><div class="t-title-sub">ECHO THEATER</div></div>
                 <div style="display:flex; align-items:center;">
-                    <!-- 收藏夹入口 -->
                     <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="回声收藏夹"></i>
-                    <!-- 设置入口 -->
                     <i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="设置"></i>
                     <span class="t-close" id="t-btn-close">&times;</span>
                 </div>
@@ -155,12 +97,12 @@ function openMainWindow() {
                 <textarea id="t-txt-desc" class="t-desc" readonly rows="2"></textarea>
                 <div class="t-render">
                     <div class="t-tools">
-                        <!-- 收藏按钮 -->
-                        <button class="t-tool-btn" id="t-btn-like" title="收藏到本地"><i class="fa-regular fa-heart"></i> 收藏</button>
+                        <button class="t-tool-btn" id="t-btn-debug" title="审查Prompt"><i class="fa-solid fa-eye"></i> 审查</button>
+                        <button class="t-tool-btn" id="t-btn-like" title="收藏"><i class="fa-regular fa-heart"></i> 收藏</button>
                         <button class="t-tool-btn" id="t-btn-copy">复制</button>
                         <button class="t-tool-btn" id="t-btn-clear">清空</button>
                     </div>
-                    <div id="t-output-content" style="margin-top:20px;"><div style="text-align:center; color:#666; margin-top:40px;">请选择剧本并点击生成...</div></div>
+                    <div id="t-output-content" style="margin-top:20px;">${initialContent}</div>
                 </div>
                 <button id="t-btn-run" class="t-btn primary" style="height:45px;"><span>🎬 开始演绎</span></button>
             </div>
@@ -170,8 +112,17 @@ function openMainWindow() {
     $("body").append(html);
     updateDesc();
 
+    // 防误触关闭
     $("#t-btn-close").on("click", () => $("#t-overlay").remove());
-    $("#t-overlay").on("click", (e) => { if(e.target === e.currentTarget) $("#t-overlay").remove(); });
+    $("#t-overlay").on("click", (e) => { 
+        if(e.target === e.currentTarget) {
+            if($("#t-btn-run").prop("disabled")) {
+                $("#t-main-view").css("transform", "scale(1.02)"); setTimeout(() => $("#t-main-view").css("transform", "scale(1)"), 100); return;
+            }
+            $("#t-overlay").remove(); 
+        }
+    });
+
     $("#t-btn-settings").on("click", openSettingsWindow);
     $("#t-sel-script").on("change", updateDesc);
     $("#t-btn-dice").on("click", function() {
@@ -180,162 +131,61 @@ function openMainWindow() {
         $(this).css("transform", `rotate(${Math.random() * 360}deg)`);
     });
     
-    // --- 工具栏事件 ---
-    $("#t-btn-copy").on("click", () => {
-        navigator.clipboard.writeText($("#t-output-content").text());
-        const btn = $("#t-btn-copy"); btn.text("已复制"); setTimeout(() => btn.text("复制"), 1000);
-    });
-    $("#t-btn-clear").on("click", () => { $("#t-output-content").html(""); resetLikeBtn(); });
+    // 工具栏
+    $("#t-btn-copy").on("click", () => { navigator.clipboard.writeText($("#t-output-content").text()); const btn = $("#t-btn-copy"); btn.text("已复制"); setTimeout(() => btn.text("复制"), 1000); });
+    $("#t-btn-clear").on("click", () => { $("#t-output-content").html(""); lastGeneratedContent = ""; resetLikeBtn(); });
     $("#t-btn-run").on("click", handleGenerate);
-
-    // --- 收藏相关事件 ---
     $("#t-btn-like").on("click", saveFavorite);
     $("#t-btn-favs").on("click", openFavsWindow);
+
+    // Prompt 审查
+    $("#t-btn-debug").on("click", () => {
+        const s = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
+        const d = getContextData();
+        const sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.";
+        const user = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\nPersona: ${d.persona}\n\n[Scenario Request]\n${s.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName)}`;
+        const info = { "NOTE": "Prompt Preview", "model": $("#cfg-model-list").val() || "gpt-3.5-turbo", "messages": [{ "role": "system", "content": sys }, { "role": "user", "content": user }] };
+        $("#t-output-content").html(`<pre style="font-family:monospace; font-size:12px; color:#aaffaa; background:#111; padding:10px; border-radius:5px; white-space:pre-wrap; word-break:break-all;">${JSON.stringify(info, null, 2)}</pre>`);
+        resetLikeBtn();
+    });
 }
 
-function updateDesc() {
-    const id = $("#t-sel-script").val();
-    const s = runtimeScripts.find(x => x.id === id);
-    if(s) $("#t-txt-desc").val(s.desc);
-}
+function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if(s) $("#t-txt-desc").val(s.desc); }
+function resetLikeBtn() { $("#t-btn-like").html('<i class="fa-regular fa-heart"></i> 收藏').removeClass("t-liked"); }
 
-function resetLikeBtn() {
-    const $btn = $("#t-btn-like");
-    $btn.html('<i class="fa-regular fa-heart"></i> 收藏').removeClass("t-liked");
-}
-
-// ==========================================
-// 收藏夹逻辑 (New Feature)
-// ==========================================
+// 收藏夹
 function saveFavorite() {
     const content = $("#t-output-content").html();
-    if (!content || content.includes("请选择剧本")) return alert("还没有生成内容哦");
-    
+    if (!content || content.includes("请选择剧本") || content.includes('messages": [')) return alert("无法收藏");
     const scriptName = $("#t-sel-script option:selected").text();
-    const dateStr = new Date().toLocaleString();
-    const ctx = getContextData();
-    
-    const entry = {
-        id: Date.now(),
-        title: `${scriptName} - ${ctx.charName}`,
-        date: dateStr,
-        html: content
-    };
-
+    const entry = { id: Date.now(), title: `${scriptName} - ${getContextData().charName}`, date: new Date().toLocaleString(), html: content };
     const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]');
-    favs.unshift(entry); // 加到最前面
-    localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(favs));
-
-    // UI 反馈
-    const $btn = $("#t-btn-like");
-    $btn.html('<i class="fa-solid fa-heart"></i> 已收藏').addClass("t-liked");
+    favs.unshift(entry); localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(favs));
+    $("#t-btn-like").html('<i class="fa-solid fa-heart"></i> 已收藏').addClass("t-liked");
 }
-
 function openFavsWindow() {
     $("#t-main-view").hide();
     const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]');
-    
-    const html = `
-    <div class="t-box" id="t-favs-view">
-        <div class="t-header"><span class="t-title-main">📖 回声收藏夹</span><span class="t-close" id="t-fav-close">&times;</span></div>
-        <div class="t-body" id="t-fav-list">
-            ${favs.length === 0 ? '<div style="text-align:center; color:#666; margin-top:50px;">暂无收藏，快去生成并点击❤️保存吧~</div>' : ''}
-        </div>
-    </div>`;
+    const html = `<div class="t-box" id="t-favs-view"><div class="t-header"><span class="t-title-main">📖 回声收藏夹</span><span class="t-close" id="t-fav-close">&times;</span></div><div class="t-body" id="t-fav-list">${favs.length === 0 ? '<div style="text-align:center; color:#666; margin-top:50px;">暂无收藏，快去生成并点击❤️保存吧~</div>' : ''}</div></div>`;
     $("#t-overlay").append(html);
-
-    const list = $("#t-fav-list");
     favs.forEach(item => {
-        const el = $(`
-            <div class="t-list-item" style="cursor:pointer;">
-                <div style="flex-grow:1;">
-                    <div style="font-weight:bold;">${item.title || '未命名片段'}</div>
-                    <div class="t-fav-meta">${item.date}</div>
-                </div>
-                <div><i class="fa-solid fa-trash" style="color:#ff6b6b; padding:5px;"></i></div>
-            </div>
-        `);
-        // 点击列表项 -> 查看
-        el.find("div:first").on("click", () => openFavViewer(item));
-        // 点击删除 -> 删除
-        el.find(".fa-trash").on("click", (e) => {
-            e.stopPropagation();
-            if(confirm("确定删除这条回忆吗？")) {
-                const newFavs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]').filter(x => x.id !== item.id);
-                localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(newFavs));
-                $("#t-favs-view").remove(); openFavsWindow(); // 刷新
-            }
-        });
-        list.append(el);
+        const el = $(`<div class="t-list-item" style="cursor:pointer;"><div style="flex-grow:1;"><div style="font-weight:bold;">${item.title||'未命名'}</div><div class="t-fav-meta">${item.date}</div></div><div><i class="fa-solid fa-trash" style="color:#ff6b6b; padding:5px;"></i></div></div>`);
+        el.find("div:first").on("click", () => { $("#t-favs-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-reader-view"><div class="t-header"><span class="t-title-main" style="font-size:1em;">${item.title}</span><span class="t-close" id="t-read-close">&times;</span></div><div class="t-body" style="padding:0;"><div class="t-render" style="border:none; border-radius:0; height:100%;">${item.html}</div></div></div>`); $("#t-read-close").on("click", () => { $("#t-reader-view").remove(); $("#t-favs-view").show(); }); });
+        el.find(".fa-trash").on("click", (e) => { e.stopPropagation(); if(confirm("删除？")) { const newFavs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS)||'[]').filter(x=>x.id!==item.id); localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(newFavs)); $("#t-favs-view").remove(); openFavsWindow(); }});
+        $("#t-fav-list").append(el);
     });
-
     $("#t-fav-close").on("click", () => { $("#t-favs-view").remove(); $("#t-main-view").show(); });
 }
 
-function openFavViewer(item) {
-    $("#t-favs-view").hide();
-    const html = `
-    <div class="t-box" id="t-reader-view">
-        <div class="t-header">
-            <span class="t-title-main" style="font-size:1em;">${item.title}</span>
-            <span class="t-close" id="t-read-close">&times;</span>
-        </div>
-        <div class="t-body" style="padding:0;">
-            <div class="t-render" style="border:none; border-radius:0; height:100%;">${item.html}</div>
-        </div>
-    </div>`;
-    $("#t-overlay").append(html);
-    $("#t-read-close").on("click", () => { $("#t-reader-view").remove(); $("#t-favs-view").show(); });
-}
-
-// ==========================================
-// 设置 & 编辑器 & 生成逻辑
-// ==========================================
+// 设置与编辑
 function openSettingsWindow() {
     const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
     $("#t-main-view").hide();
-    const settingsHtml = `
-        <div class="t-box" id="t-settings-view">
-            <div class="t-header"><span class="t-title-main" style="font-size:1.2em;">⚙️ 设置 & 管理</span><span class="t-close" id="t-set-close">&times;</span></div>
-            <div class="t-body">
-                <h4 style="margin:0; border-bottom:1px solid #444; padding-bottom:5px;">🔌 API 连接</h4>
-                <div><label>API URL:</label><input id="cfg-url" class="t-input" value="${cfg.url || ''}" placeholder="http://.../v1"></div>
-                <div><label>API Key:</label><input id="cfg-key" type="password" class="t-input" value="${cfg.key || ''}"></div>
-                <div style="display:flex; gap:10px;">
-                    <div style="flex-grow:1;"><label>Model:</label><select id="cfg-model-list" class="t-input"><option value="${cfg.model || 'gpt-3.5-turbo'}">${cfg.model || 'gpt-3.5-turbo'}</option></select></div>
-                    <button id="t-btn-fetch" class="t-btn" style="margin-top:24px; padding:0 10px;">🔄 获取</button>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-bottom:1px solid #444; padding-bottom:5px;">
-                    <h4 style="margin:0;">📜 剧本管理</h4><button id="t-btn-new" class="t-tool-btn">+ 新建</button>
-                </div>
-                <div id="t-script-list" style="flex-grow:1; overflow-y:auto; border:1px solid #444; padding:5px; max-height:200px;"></div>
-                <div class="t-btn-row"><button id="t-set-save" class="t-btn primary" style="flex:1;">保存配置并返回</button></div>
-            </div>
-        </div>`;
-
-    if ($("#t-settings-view").length) $("#t-settings-view").remove();
-    $("#t-overlay").append(settingsHtml);
+    const html = `<div class="t-box" id="t-settings-view"><div class="t-header"><span class="t-title-main" style="font-size:1.2em;">⚙️ 设置 & 管理</span><span class="t-close" id="t-set-close">&times;</span></div><div class="t-body"><h4 style="margin:0; border-bottom:1px solid #444; padding-bottom:5px;">🔌 API 连接</h4><div><label>API URL:</label><input id="cfg-url" class="t-input" value="${cfg.url || ''}" placeholder="http://.../v1"></div><div><label>API Key:</label><input id="cfg-key" type="password" class="t-input" value="${cfg.key || ''}"></div><div style="display:flex; gap:10px;"><div style="flex-grow:1;"><label>Model:</label><select id="cfg-model-list" class="t-input"><option value="${cfg.model || 'gpt-3.5-turbo'}">${cfg.model || 'gpt-3.5-turbo'}</option></select></div><button id="t-btn-fetch" class="t-btn" style="margin-top:24px; padding:0 10px;">🔄 获取</button></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-bottom:1px solid #444; padding-bottom:5px;"><h4 style="margin:0;">📜 剧本管理</h4><button id="t-btn-new" class="t-tool-btn">+ 新建</button></div><div id="t-script-list" style="flex-grow:1; overflow-y:auto; border:1px solid #444; padding:5px; max-height:200px;"></div><div class="t-btn-row"><button id="t-set-save" class="t-btn primary" style="flex:1;">保存配置并返回</button></div></div></div>`;
+    $("#t-overlay").append(html);
     renderScriptList();
-
-    $("#t-set-close, #t-set-save").on("click", () => {
-        const newCfg = { url: $("#cfg-url").val().trim(), key: $("#cfg-key").val().trim(), model: $("#cfg-model-list").val() || $("#cfg-model-list").text() };
-        localStorage.setItem(STORAGE_KEY_CFG, JSON.stringify(newCfg));
-        $("#t-settings-view").remove(); $("#t-main-view").show(); loadScripts();
-        const $sel = $("#t-sel-script"); if($sel.length) { $sel.html(runtimeScripts.map(s => `<option value="${s.id}">${s.name}</option>`).join('')); updateDesc(); }
-    });
-    $("#t-btn-fetch").on("click", async () => {
-        const url = $("#cfg-url").val().replace(/\/+$/, "").replace(/\/chat\/completions$/, ""); const key = $("#cfg-key").val();
-        if(!url) return alert("请先填写 URL");
-        $("#t-btn-fetch").text("...").prop("disabled",true);
-        try {
-            const target = url.endsWith("/v1") ? `${url}/models` : `${url}/v1/models`;
-            const res = await fetch(target, { headers: { Authorization: `Bearer ${key}` }});
-            const data = await res.json();
-            const list = Array.isArray(data) ? data : (data.data || []);
-            const $sel = $("#cfg-model-list"); $sel.empty(); list.forEach(m => $sel.append(`<option value="${m.id}">${m.id}</option>`));
-            alert(`成功获取 ${list.length} 个模型`);
-        } catch(e) { alert("获取失败: " + e.message); } finally { $("#t-btn-fetch").text("🔄 获取").prop("disabled",false); }
-    });
+    $("#t-set-close, #t-set-save").on("click", () => { const newCfg = { url: $("#cfg-url").val().trim(), key: $("#cfg-key").val().trim(), model: $("#cfg-model-list").val() || $("#cfg-model-list").text() }; localStorage.setItem(STORAGE_KEY_CFG, JSON.stringify(newCfg)); $("#t-settings-view").remove(); $("#t-main-view").show(); loadScripts(); $("#t-sel-script").html(runtimeScripts.map(s => `<option value="${s.id}">${s.name}</option>`).join('')); updateDesc(); });
+    $("#t-btn-fetch").on("click", async () => { const url = $("#cfg-url").val().replace(/\/+$/, "").replace(/\/chat\/completions$/, ""); const key = $("#cfg-key").val(); if(!url) return alert("请先填写 URL"); $("#t-btn-fetch").text("...").prop("disabled",true); try { const target = url.endsWith("/v1") ? `${url}/models` : `${url}/v1/models`; const res = await fetch(target, { headers: { Authorization: `Bearer ${key}` }}); const data = await res.json(); const list = Array.isArray(data) ? data : (data.data || []); const $sel = $("#cfg-model-list"); $sel.empty(); list.forEach(m => $sel.append(`<option value="${m.id}">${m.id}</option>`)); alert(`成功获取 ${list.length} 个模型`); } catch(e) { alert("获取失败: " + e.message); } finally { $("#t-btn-fetch").text("🔄 获取").prop("disabled",false); }});
     $("#t-btn-new").on("click", () => openEditor(null));
 }
 
@@ -356,37 +206,11 @@ function openEditor(id) {
     if (isEdit) data = runtimeScripts.find(s => s.id === id);
     const isPreset = data._type === 'preset';
     $("#t-settings-view").hide();
-    const html = `
-    <div class="t-box" id="t-editor-view">
-        <div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div>
-        <div class="t-body">
-            <label>标题:</label><input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}>
-            <label>简介:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? 'disabled' : ''}>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                <label>Prompt (支持 {{char}}, {{user}}):</label>
-                ${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏编辑</div>` : ''}
-            </div>
-            <textarea id="ed-prompt" class="t-input" rows="8" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea>
-            <div class="t-btn-row">${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}<button id="ed-cancel" class="t-btn" style="flex:1;">返回</button></div>
-        </div>
-    </div>`;
+    const html = `<div class="t-box" id="t-editor-view"><div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div><div class="t-body"><label>标题:</label><input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}><label>简介:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? 'disabled' : ''}><div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><label>Prompt (支持 {{char}}, {{user}}):</label>${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏编辑</div>` : ''}</div><textarea id="ed-prompt" class="t-input" rows="8" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea><div class="t-btn-row">${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}<button id="ed-cancel" class="t-btn" style="flex:1;">返回</button></div></div></div>`;
     $("#t-overlay").append(html);
     $("#ed-cancel").on("click", () => { $("#t-editor-view").remove(); $("#t-settings-view").show(); });
-    $("#ed-btn-expand").on("click", () => openLargeEditor($("#ed-prompt").val(), (v) => $("#ed-prompt").val(v)));
-    if(!isPreset) {
-        $("#ed-save").on("click", () => {
-            saveUserScript({ id: isEdit ? data.id : "user_" + Date.now(), name: $("#ed-name").val(), desc: $("#ed-desc").val(), prompt: $("#ed-prompt").val() });
-            $("#t-editor-view").remove(); $("#t-settings-view").show(); renderScriptList();
-        });
-    }
-}
-
-function openLargeEditor(text, onSave) {
-    $("#t-editor-view").hide();
-    const html = `<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${text}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`;
-    $("#t-overlay").append(html);
-    $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
-    $("#ed-large-ok").on("click", () => { const newVal = $("#ed-large-text").val(); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); if(onSave) onSave(newVal); });
+    $("#ed-btn-expand").on("click", () => { $("#t-editor-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${$("#ed-prompt").val()}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`); $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); }); $("#ed-large-ok").on("click", () => { $("#ed-prompt").val($("#ed-large-text").val()); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); }); });
+    if(!isPreset) { $("#ed-save").on("click", () => { saveUserScript({ id: isEdit ? data.id : "user_" + Date.now(), name: $("#ed-name").val(), desc: $("#ed-desc").val(), prompt: $("#ed-prompt").val() }); $("#t-editor-view").remove(); $("#t-settings-view").show(); renderScriptList(); }); }
 }
 
 async function handleGenerate() {
@@ -395,7 +219,7 @@ async function handleGenerate() {
     const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
     const ctx = getContextData();
     const $out = $("#t-output-content"); const $btn = $("#t-btn-run");
-    resetLikeBtn(); // 重置收藏按钮状态
+    resetLikeBtn();
     $out.html('<div style="text-align:center; padding-top:20px;">⏳ 正在构思剧情...</div>');
     $btn.prop("disabled", true).css("opacity", 0.6);
 
@@ -418,7 +242,10 @@ async function handleGenerate() {
         try { finalContent = JSON.parse(rawText).choices[0].message.content; } 
         catch (e) { const lines = rawText.split(/\r?\n/); for (const line of lines) { if (line.includes('"content":')) { try { finalContent += JSON.parse(line.substring(line.indexOf('{'))).choices[0].delta.content || ""; } catch(err){} } } }
         if (!finalContent) throw new Error("解析失败，无内容");
-        $out.html(finalContent.replace(/^```html/i, "").replace(/```$/i, ""));
+        
+        finalContent = finalContent.replace(/^```html/i, "").replace(/```$/i, "");
+        lastGeneratedContent = finalContent;
+        $out.html(finalContent);
     } catch (e) { $out.html(`<div style="color:#ff6b6b; text-align:center; padding:10px; border:1px solid #ff6b6b; border-radius:5px;">❌ ${e.message}</div>`); } 
     finally { $btn.prop("disabled", false).css("opacity", 1); }
 }
