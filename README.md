@@ -1,6 +1,6 @@
 # 🎭 Echo Theater (回声小剧场)
 
-![Version](https://img.shields.io/badge/Version-v3.6-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Version](https://img.shields.io/badge/Version-v3.6-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) 
 
 > **专为 SillyTavern 打造的独立沉浸式番外/小剧场生成器。**
 
@@ -93,7 +93,3 @@ git clone https://github.com/Titania-elf/titania-theater
 *   A: 存在你浏览器的本地存储 (LocalStorage) 中。清除浏览器缓存可能会导致收藏丢失，请注意备份。
 
 ---
-
-## 📜 许可证
-
-本项目采用 [MIT License](LICENSE) 开源。
