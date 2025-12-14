@@ -1,6 +1,6 @@
 # 🎭 Echo Theater (回声小剧场)
 
-![Version](https://img.shields.io/badge/Version-v3.3-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Version](https://img.shields.io/badge/Version-v3.6-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 > **专为 SillyTavern 打造的独立沉浸式番外/小剧场生成器。**
 
@@ -9,7 +9,8 @@
 
 ---
 ## 更新日志
-*  **2025121新增：**防误触功能，防止点击空白处关闭窗口打断生成；查看后台发送的原始提示词功能。
+*   **20251213新增：** 防误触功能，防止点击空白处关闭窗口打断生成；查看后台发送的原始提示词功能。
+*   **20251214新增：** 两个模式，回声模式与剧情强相关，平行世界模式顾名思义。
 ---
 ## 🖼️ 预览
 
