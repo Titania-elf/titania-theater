@@ -422,7 +422,146 @@ function showDebugInfo() {
     $("#t-debug-close, #t-debug-back").on("click", close);
 }
 
-// 收藏夹
+// 【Echo Theater v3.6 - Part 3/3 修复版】
+// 修复了聊天记录为空导致的回声模式崩溃问题
+
+function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if(s) $("#t-txt-desc").val(s.desc); }
+function resetLikeBtn() { $("#t-btn-like").html('<i class="fa-regular fa-heart"></i> 收藏').removeClass("t-liked"); }
+
+// 修复点 1：获取最近聊天记录 (增加了空值检查)
+function getChatHistory(limit) {
+    if (!SillyTavern || !SillyTavern.getContext) return "";
+    const ctx = SillyTavern.getContext();
+    const history = ctx.chat || [];
+    const safeLimit = parseInt(limit) || 10;
+    const recent = history.slice(-safeLimit);
+    
+    return recent.map(msg => {
+        // 确保名字存在
+        let name = msg.name;
+        if (msg.is_user) name = ctx.name1 || "User";
+        if (name === "{{user}}") name = ctx.name1 || "User";
+        if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
+        
+        // 修复核心：msg.message 可能是 undefined，这里加了 || "" 保底
+        // 有些版本ST可能用 msg.mes，这里也做了兼容
+        let rawContent = msg.message || msg.mes || "";
+        
+        // 现在可以安全地调用 replace 了
+        let cleanContent = rawContent.replace(/<[^>]*>?/gm, ''); 
+        
+        return `${name}: ${cleanContent}`;
+    }).join("\n");
+}
+
+// 修复点 2：API生成逻辑 (增加了 URL 的空值检查)
+async function handleGenerate() {
+    const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
+    if (!cfg.key) return alert("请先去设置填 API Key！");
+
+    const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
+    if(!script) return alert("请选择剧本");
+
+    const ctx = getContextData();
+    const $out = $("#t-output-content"); 
+    const $btn = $("#t-btn-run");
+    const isEchoMode = $("#t-mode-toggle").is(":checked");
+
+    resetLikeBtn();
+    $out.html('<div style="text-align:center; padding-top:20px;">⏳ 正在构思剧情...</div>');
+    $btn.prop("disabled", true).css("opacity", 0.6);
+
+    try {
+        let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.";
+        let user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\n\n`;
+        
+        if (ctx.persona) user += `[Character Persona]\n${ctx.persona}\n\n`;
+        if (ctx.userDesc) user += `[User Persona]\n${ctx.userDesc}\n\n`;
+        if (ctx.worldInfo) user += `[World Info / Lore]\n${ctx.worldInfo}\n\n`;
+        
+        if (isEchoMode) {
+            const limit = cfg.history_limit || 10;
+            const history = getChatHistory(limit);
+            // 只有当获取到有效的历史记录时才注入
+            if (history && history.trim().length > 0) {
+                user += `[Recent Conversation History (Last ${limit} messages)]\n${history}\n\n`;
+            } else {
+                user += `[Recent Conversation History]\n(History is empty or unavailable)\n\n`;
+            }
+        } else {
+            user += `[Mode Info]\n(Alternate Universe / Ignore previous chat history context)\n\n`;
+        }
+        
+        user += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
+
+        // URL 安全处理
+        let endpoint = (cfg.url || "").trim().replace(/\/+$/, "");
+        if (!endpoint) throw new Error("API URL 未设置");
+        if (!endpoint.endsWith("/chat/completions")) endpoint += "/chat/completions";
+
+        const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cfg.key}` },
+            body: JSON.stringify({ 
+                model: cfg.model || "gpt-3.5-turbo",
+                messages: [{ role: "system", content: sys }, { role: "user", content: user }], 
+                stream: false 
+            })
+        });
+
+        const rawText = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText.slice(0, 100)}`);
+        
+        let finalContent = "";
+        try { finalContent = JSON.parse(rawText).choices[0].message.content; } 
+        catch (e) { const lines = rawText.split(/\r?\n/); for (const line of lines) { if (line.includes('"content":')) { try { finalContent += JSON.parse(line.substring(line.indexOf('{'))).choices[0].delta.content || ""; } catch(err){} } } }
+        
+        if (!finalContent) throw new Error("无内容生成");
+        finalContent = finalContent.replace(/^```html/i, "").replace(/```$/i, "");
+        lastGeneratedContent = finalContent;
+        $out.html(finalContent);
+
+    } catch (e) { $out.html(`<div style="color:#ff6b6b; text-align:center; padding:10px; border:1px solid #ff6b6b; border-radius:5px;">❌ ${e.message}</div>`); } 
+    finally { $btn.prop("disabled", false).css("opacity", 1); }
+}
+
+// 审查功能 (保持之前的无复制版逻辑即可，这里为了完整性再次列出)
+function showDebugInfo() {
+    const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
+    const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
+    if (!script) return alert("请先选择一个剧本");
+
+    const d = getContextData();
+    const isEchoMode = $("#t-mode-toggle").is(":checked");
+    
+    const sysPrompt = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.";
+    let userPrompt = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\n\n`;
+    
+    if (d.persona) userPrompt += `[Character Persona]\n${d.persona}\n\n`;
+    if (d.userDesc) userPrompt += `[User Persona]\n${d.userDesc}\n\n`;
+    if (d.worldInfo) userPrompt += `[World Info / Lore]\n${d.worldInfo}\n\n`;
+
+    if (isEchoMode) {
+        const limit = cfg.history_limit || 10;
+        const hist = getChatHistory(limit);
+        if (hist) {
+            userPrompt += `[Recent Conversation History (Last ${limit} messages)]\n${hist}\n\n`;
+        } else {
+            userPrompt += `[Recent Conversation History]\n(No history found)\n\n`;
+        }
+    } else {
+        userPrompt += `[Mode Info]\n(Alternate Universe / Ignore previous chat history context)\n\n`;
+    }
+    userPrompt += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName)}`;
+
+    $("#t-main-view").hide();
+    const debugHtml = `<div class="t-box" id="t-debug-view" style="height:95vh; display:flex; flex-direction:column;"><div class="t-header"><span class="t-title-main">👁️ Prompt 审查</span><span class="t-close" id="t-debug-close">&times;</span></div><div class="t-body" style="padding:10px; overflow-y:auto; flex-grow:1; font-family:monospace; font-size:12px;"><div style="margin-bottom:10px; padding:5px; background:#222; border:1px solid #444;"><strong style="color:#bfa15f;">[Configuration]</strong><br>Model: ${cfg.model || "Default"}<br>Mode: ${isEchoMode ? "Echo (History ON)" : "Parallel (History OFF)"}</div><div style="margin-bottom:10px;"><strong style="color:#ff6b6b;">[System Message]</strong><pre style="white-space:pre-wrap; color:#aaa; margin:5px 0; background:#111; padding:5px;">${sysPrompt}</pre></div><div><strong style="color:#90cdf4;">[User Message (Final Context)]</strong><pre style="white-space:pre-wrap; color:#ddd; margin:5px 0; background:#111; padding:5px; border-left:3px solid #90cdf4;">${userPrompt}</pre></div></div><div style="padding:10px; border-top:1px solid #444;"><button id="t-debug-back" class="t-btn primary" style="width:100%;">返回主窗口</button></div></div>`;
+    $("#t-overlay").append(debugHtml);
+    const close = () => { $("#t-debug-view").remove(); $("#t-main-view").show(); };
+    $("#t-debug-close, #t-debug-back").on("click", close);
+}
+
+// 收藏夹相关
 function saveFavorite() {
     const content = $("#t-output-content").html();
     if (!content || content.includes("请选择剧本") || content.includes("<pre")) return alert("内容无效");
