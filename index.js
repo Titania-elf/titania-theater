@@ -312,7 +312,7 @@ async function handleGenerate() {
     $btn.prop("disabled", true).css("opacity", 0.6);
 
     try {
-        let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.";
+        let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.Please answer all other content in Chinese";
         let user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\n\n`;
         
         if (ctx.persona) user += `[Character Persona]\n${ctx.persona}\n\n`;
@@ -365,7 +365,7 @@ async function handleGenerate() {
     finally { $btn.prop("disabled", false).css("opacity", 1); }
 }
 
-// 审查功能 (保持之前的无复制版逻辑即可，这里为了完整性再次列出)
+// 审查功能 
 function showDebugInfo() {
     const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
     const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
@@ -374,7 +374,7 @@ function showDebugInfo() {
     const d = getContextData();
     const isEchoMode = $("#t-mode-toggle").is(":checked");
     
-    const sysPrompt = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.";
+    const sysPrompt = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.Please answer all other content in Chinese.";
     let userPrompt = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\n\n`;
     
     if (d.persona) userPrompt += `[Character Persona]\n${d.persona}\n\n`;
