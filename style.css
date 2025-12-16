@@ -150,3 +150,88 @@ input:checked + .t-slider:before {
 .mode-active {
     color: #bfa15f;
 }
+
+/* --- 新增：后台运行状态样式 --- */
+/* --- Titania Echo v3.7 流光特效 --- */
+
+@keyframes t-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 状态：加载中 */
+.t-loading {
+    /* 关键：必须隐藏溢出，利用圆角剪裁出圆形 */
+    overflow: hidden !important;
+    
+    /* 去掉默认的背景和边框，交给伪元素来画 */
+    background: transparent !important;
+    border: none !important;
+    
+    /* 稍微加一点外发光，更有氛围感 */
+    box-shadow: 0 0 15px rgba(191, 161, 95, 0.4);
+    
+    color: #bfa15f !important; /* 字体变成金色 */
+    cursor: wait !important;
+    pointer-events: none; /* 禁止点击 */
+}
+
+/* 伪元素 1：旋转的光带 (底层) */
+.t-loading::before {
+    content: "";
+    position: absolute;
+    /* 让它比按钮大一倍，确保旋转时能覆盖整个区域 */
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    
+    /* 核心：锥形渐变
+       从透明到透明，最后带上一抹金色，形成“彗星拖尾”的效果
+    */
+    background: conic-gradient(transparent, transparent, transparent, #bfa15f);
+    
+    /* 开始旋转 */
+    animation: t-spin 1.2s linear infinite;
+    z-index: -2; /* 放在最底层 */
+}
+
+/* 伪元素 2：中间的遮罩 (夹层) */
+.t-loading::after {
+    content: "";
+    position: absolute;
+    /* inset 控制边框粗细：这里 3px 就是流光边框的宽度 */
+    inset: 3px; 
+    background: #2b2b2b; /* 这是按钮中间的实心背景色，建议深色 */
+    border-radius: 50%;
+    z-index: -1; /* 盖住底层的光带，但垫在文字(🎭)下面 */
+}
+
+/* (保持不变) 新消息：红点提示 */
+.t-notify::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: #ff4757;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 5px rgba(255, 71, 87, 0.8);
+    z-index: 10; /* 确保红点在最上层 */
+}
+
+/* 新消息通知：右上角红点 */
+.t-notify::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background-color: #ff6b6b;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 5px rgba(255,107,107, 0.8);
+}
