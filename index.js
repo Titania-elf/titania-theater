@@ -1,3 +1,14 @@
+// --- 顶部新增 ---
+import { extension_settings, getContext } from "../../../extensions.js";
+import { saveSettingsDebounced } from "../../../../script.js";
+
+const extensionName = "Titania_Theater_Echo";
+const extensionFolderPath = `scripts/extensions/third-party/titania-theater`; // 【必须对应你的文件夹名】
+const defaultSettings = {
+    enabled: true // 默认开启
+};
+// ----------------
+
 // 【Echo Theater v3.8 - Part 1/3】
 // 包含：预设库、悬浮球(含加载拦截)、数据存取
 
@@ -38,15 +49,18 @@ const DEFAULT_PRESETS = [
 let runtimeScripts = []; 
 let lastGeneratedContent = "";
 
-$(document).ready(function() {
-    console.log("Titania Echo v3.8: Loaded.");
-    loadScripts(); 
-    createFloatingButton();
-});
-
+// 修改后的 createFloatingButton
 function createFloatingButton() {
+    // 移除旧按钮（无论启用还是禁用，先清理）
     $("#titania-float-btn").remove();
+
+    // 【新增判断】如果设置里没启用，直接返回，不创建
+    if (!extension_settings[extensionName].enabled) {
+        return;
+    }
+
     const btn = $(`<div id="titania-float-btn">🎭</div>`);
+    // ... 后面的代码保持不变 ...
     $("body").append(btn);
 
     let isDragging = false, startX, startY, initialLeft, initialTop;
@@ -580,3 +594,62 @@ window.t_edit = (id, fromMgr) => openEditor(id, fromMgr);
 // 收藏夹
 function saveFavorite() { const content = $("#t-output-content").html(); if (!content || content.includes("请选择剧本") || content.includes("<pre")) return alert("内容无效"); const scriptName = $("#t-sel-script option:selected").text(); const entry = { id: Date.now(), title: `${scriptName} - ${getContextData().charName}`, date: new Date().toLocaleString(), html: content }; const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]'); favs.unshift(entry); localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(favs)); $("#t-btn-like").html('<i class="fa-solid fa-heart"></i> 已收藏').addClass("t-liked"); }
 function openFavsWindow() { $("#t-main-view").hide(); const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]'); const html = `<div class="t-box" id="t-favs-view"><div class="t-header"><span class="t-title-main">📖 回声收藏夹</span><span class="t-close" id="t-fav-close">&times;</span></div><div class="t-body" id="t-fav-list">${favs.length === 0 ? '<div style="text-align:center; color:#666; margin-top:50px;">暂无收藏~</div>' : ''}</div></div>`; $("#t-overlay").append(html); favs.forEach(item => { const el = $(`<div class="t-list-item" style="cursor:pointer;"><div style="flex-grow:1;"><div style="font-weight:bold;">${item.title||'未命名'}</div><div class="t-fav-meta">${item.date}</div></div><div><i class="fa-solid fa-trash" style="color:#ff6b6b; padding:5px;"></i></div></div>`); el.find("div:first").on("click", () => { $("#t-favs-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-reader-view"><div class="t-header"><span class="t-title-main" style="font-size:1em;">${item.title}</span><span class="t-close" id="t-read-close">&times;</span></div><div class="t-body" style="padding:0;"><div class="t-render" style="border:none; border-radius:0; height:100%;">${item.html}</div></div></div>`); $("#t-read-close").on("click", () => { $("#t-reader-view").remove(); $("#t-favs-view").show(); }); }); el.find(".fa-trash").on("click", (e) => { e.stopPropagation(); if(confirm("删除？")) { const newFavs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS)||'[]').filter(x=>x.id!==item.id); localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(newFavs)); $("#t-favs-view").remove(); openFavsWindow(); }}); $("#t-fav-list").append(el); }); $("#t-fav-close").on("click", () => { $("#t-favs-view").remove(); $("#t-main-view").show(); }); }
+
+// --- 底部新增 ---
+
+// 加载扩展设置
+async function loadExtensionSettings() {
+    // 1. 初始化设置对象
+    extension_settings[extensionName] = extension_settings[extensionName] || {};
+    if (Object.keys(extension_settings[extensionName]).length === 0) {
+        Object.assign(extension_settings[extensionName], defaultSettings);
+    }
+
+    // 2. 更新 UI 复选框状态
+    $("#enable_echo_theater").prop("checked", extension_settings[extensionName].enabled);
+
+    // 3. 根据设置决定是否加载功能
+    if (extension_settings[extensionName].enabled) {
+        initEchoTheater();
+    }
+}
+
+// 实际启动小剧场的函数
+function initEchoTheater() {
+    console.log("Titania Echo v3.8: Enabled.");
+    loadScripts(); // 调用原本的加载脚本函数
+    createFloatingButton(); // 创建悬浮球
+}
+
+// 禁用小剧场的函数
+function disableEchoTheater() {
+    console.log("Titania Echo v3.8: Disabled.");
+    $("#titania-float-btn").remove(); // 移除悬浮球
+    $("#t-overlay").remove(); // 如果主窗口开着，也关掉
+}
+
+// 监听开关变化
+function onEnableChange() {
+    const isEnabled = $(this).prop("checked");
+    extension_settings[extensionName].enabled = isEnabled;
+    saveSettingsDebounced(); // 保存设置到 settings.json
+
+    if (isEnabled) {
+        initEchoTheater();
+    } else {
+        disableEchoTheater();
+    }
+}
+
+// ST 扩展初始化入口
+jQuery(async () => {
+    // 1. 加载 settings.html 并插入到扩展栏
+    const settingsHtml = await $.get(`${extensionFolderPath}/settings.html`);
+    $("#extensions_settings2").append(settingsHtml);
+
+    // 2. 绑定事件
+    $("#enable_echo_theater").on("input", onEnableChange);
+
+    // 3. 加载设置并应用
+    loadExtensionSettings();
+});
