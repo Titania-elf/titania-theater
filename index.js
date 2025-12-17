@@ -1,23 +1,80 @@
+// 【Part 1/5: 核心设置与数据存取封装】
+
 // --- 顶部新增 ---
 import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced } from "../../../../script.js";
 
 const extensionName = "Titania_Theater_Echo";
 const extensionFolderPath = `scripts/extensions/third-party/titania-theater`; // 【必须对应你的文件夹名】
+
+// 【修改点：默认设置包含数据存储结构】
 const defaultSettings = {
-    enabled: true // 默认开启
+    enabled: true,
+    config: {},        // 存储 API Url, Key, Model
+    user_scripts: [],  // 存储自定义剧本
+    favs: []           // 存储收藏夹
 };
 // ----------------
 
-// 【Echo Theater v3.8 - Part 1/3】
-// 包含：预设库、悬浮球(含加载拦截)、数据存取
-
 const PLUGIN_NAME = "Titania_Theater_Echo";
-const STORAGE_KEY_CFG = "Titania_Config_v3";
-const STORAGE_KEY_SCRIPTS = "Titania_UserScripts_v3";
-const STORAGE_KEY_FAVS = "Titania_Favs_v3";
+
+// 旧版 Key，仅用于数据迁移
+const LEGACY_KEY_CFG = "Titania_Config_v3";
+const LEGACY_KEY_SCRIPTS = "Titania_UserScripts_v3";
+const LEGACY_KEY_FAVS = "Titania_Favs_v3";
 
 let isGenerating = false;
+let runtimeScripts = []; 
+let lastGeneratedContent = "";
+
+// --- 新增：数据存取辅助函数 ---
+function getExtData() {
+    if (!extension_settings[extensionName]) {
+        extension_settings[extensionName] = JSON.parse(JSON.stringify(defaultSettings));
+    }
+    return extension_settings[extensionName];
+}
+
+function saveExtData() {
+    saveSettingsDebounced(); // 保存到 public/settings.json
+}
+
+// --- 修改：脚本加载与保存逻辑 ---
+function loadScripts() {
+    const data = getExtData();
+    const userScripts = data.user_scripts || [];
+    
+    // 加载预设
+    runtimeScripts = DEFAULT_PRESETS.map(p => ({ ...p, _type: 'preset' }));
+    
+    // 合并自定义剧本
+    userScripts.forEach(s => { 
+        if (!runtimeScripts.find(r => r.id === s.id)) {
+            runtimeScripts.push({ ...s, _type: 'user' }); 
+        }
+    });
+}
+
+function saveUserScript(s) { 
+    const data = getExtData();
+    let u = data.user_scripts || [];
+    u = u.filter(x => x.id !== s.id); // 移除旧的
+    u.push(s); // 加入新的
+    data.user_scripts = u;
+    saveExtData(); 
+    loadScripts(); 
+}
+
+function deleteUserScript(id) { 
+    const data = getExtData();
+    let u = data.user_scripts || [];
+    u = u.filter(x => x.id !== id);
+    data.user_scripts = u;
+    saveExtData();
+    loadScripts(); 
+}
+
+// 【Part 2/5: 预设库与悬浮球 UI】
 
 // mode: 'echo', 'parallel', 'all'
 const DEFAULT_PRESETS = [
@@ -46,21 +103,11 @@ const DEFAULT_PRESETS = [
     { id: "p_cthulhu", mode: "parallel", name: "🐙 克苏鲁", desc: "【平行】不可名状的恐怖，掉San值的调查员故事。", prompt: "【平行世界：克苏鲁神话】忽略历史背景。1920年代，{{char}} 和 {{user}} 是调查员。你们发现了一本古怪的书或一个诡异的祭坛。{{char}} 的理智值（Sanity）开始下降，说话变得癫狂。CSS样式：暗绿色粘液质感背景，扭曲的字体，文字周围带有模糊的黑雾效果。" }
 ];
 
-let runtimeScripts = []; 
-let lastGeneratedContent = "";
-
-// 修改后的 createFloatingButton
 function createFloatingButton() {
-    // 移除旧按钮（无论启用还是禁用，先清理）
     $("#titania-float-btn").remove();
-
-    // 【新增判断】如果设置里没启用，直接返回，不创建
-    if (!extension_settings[extensionName].enabled) {
-        return;
-    }
+    if (!extension_settings[extensionName].enabled) return;
 
     const btn = $(`<div id="titania-float-btn">🎭</div>`);
-    // ... 后面的代码保持不变 ...
     $("body").append(btn);
 
     let isDragging = false, startX, startY, initialLeft, initialTop;
@@ -96,18 +143,8 @@ function createFloatingButton() {
     });
 }
 
-function loadScripts() {
-    const userScripts = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS) || '[]');
-    runtimeScripts = DEFAULT_PRESETS.map(p => ({ ...p, _type: 'preset' }));
-    userScripts.forEach(s => { if (!runtimeScripts.find(r => r.id === s.id)) runtimeScripts.push({ ...s, _type: 'user' }); });
-}
-function saveUserScript(s) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS)||'[]'); u = u.filter(x=>x.id!==s.id); u.push(s); localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(u)); loadScripts(); }
-function deleteUserScript(id) { let u = JSON.parse(localStorage.getItem(STORAGE_KEY_SCRIPTS)||'[]'); u = u.filter(x=>x.id!==id); localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(u)); loadScripts(); }
+// 【Part 3/5: 上下文获取与主界面】
 
-// 【Echo Theater v3.8 - Part 2/3】
-// 包含：Context获取、主界面、模式开关
-
-// 上下文获取
 function getContextData() {
     let data = { charName: "Char", persona: "", userName: "User", userDesc: "", worldInfo: "" };
     if (typeof SillyTavern === 'undefined' || !SillyTavern.getContext) {
@@ -155,7 +192,6 @@ function getContextData() {
     return data;
 }
 
-// 修改后的 refreshScriptList 函数
 function refreshScriptList(isEchoMode) {
     const $sel = $("#t-sel-script");
     $sel.empty();
@@ -171,15 +207,12 @@ function refreshScriptList(isEchoMode) {
         $sel.append(`<option value="${s.id}">${s.name}</option>`);
     });
 
-    // ▼▼▼ 新增回填逻辑 ▼▼▼
-    // 如果有上次记录的ID，且该ID在当前列表里存在，就选中它
     if (lastUsedScriptId && validScripts.find(s => s.id === lastUsedScriptId)) {
         $sel.val(lastUsedScriptId);
     }
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
     updateDesc(); 
 }
+
 function openMainWindow() {
     if ($("#t-overlay").length) return;
     const ctx = getContextData();
@@ -207,15 +240,13 @@ function openMainWindow() {
     $("#t-btn-debug").on("click", showDebugInfo);
 }
 
-// 【Echo Theater v3.8 - Part 3A】
-// 包含：API生成、历史记录、审查功能
+// 【Part 4/5: 生成逻辑与审查】
 
-let lastUsedScriptId = ""; // 记住上次用的剧本
+let lastUsedScriptId = "";
 
 function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if(s) $("#t-txt-desc").val(s.desc); }
 function resetLikeBtn() { $("#t-btn-like").html('<i class="fa-regular fa-heart"></i> 收藏').removeClass("t-liked"); }
 
-// 获取最近聊天记录
 function getChatHistory(limit) {
     if (!SillyTavern || !SillyTavern.getContext) return "";
     const ctx = SillyTavern.getContext();
@@ -234,9 +265,11 @@ function getChatHistory(limit) {
     }).join("\n");
 }
 
-// 核心：后台生成逻辑
 async function handleGenerate() {
-    const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
+    // 【修改点：从 ext data 读取 config】
+    const data = getExtData();
+    const cfg = data.config || {}; 
+
     if (!cfg.key) return alert("请先去设置填 API Key！");
 
     const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
@@ -248,9 +281,9 @@ async function handleGenerate() {
     const isEchoMode = $("#t-mode-toggle").is(":checked");
     const $floatBtn = $("#titania-float-btn");
 
-    $("#t-overlay").remove(); // 关闭主窗口
-    isGenerating = true;      // 标记全局状态
-    $floatBtn.addClass("t-loading"); // 悬浮球特效
+    $("#t-overlay").remove(); 
+    isGenerating = true;      
+    $floatBtn.addClass("t-loading"); 
     
     if(window.toastr) toastr.info("🚀 剧本已加入后台队列，演绎中...", "Titania Echo");
 
@@ -297,9 +330,9 @@ async function handleGenerate() {
         if (!finalContent) throw new Error("无内容生成");
         finalContent = finalContent.replace(/^```html/i, "").replace(/```$/i, "");
         
-        lastGeneratedContent = finalContent; // 更新全局存储
+        lastGeneratedContent = finalContent; 
         if(window.toastr) toastr.success(`✨ 《${script.name}》演绎完成！点击悬浮球查看。`, "Titania Echo");
-        $floatBtn.addClass("t-notify"); // 亮红点
+        $floatBtn.addClass("t-notify"); 
 
     } catch (e) { 
         lastGeneratedContent = `<div style="color:#ff6b6b; text-align:center; padding:10px; border:1px solid #ff6b6b; border-radius:5px;">❌ 演绎失败: ${e.message}</div>`;
@@ -311,9 +344,10 @@ async function handleGenerate() {
     }
 }
 
-// 审查功能
 function showDebugInfo() {
-    const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
+    // 【修改点：从 ext data 读取 config】
+    const data = getExtData();
+    const cfg = data.config || {}; 
     const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
     if (!script) return alert("请先选择一个剧本");
 
@@ -343,15 +377,14 @@ function showDebugInfo() {
     $("#t-debug-close, #t-debug-back").on("click", close);
 }
 
-// 【Echo Theater v3.8 - Part 3B-1】
-// 包含：简化版设置界面 (剥离了剧本管理功能)
+// 【Part 5/5: 设置、收藏、初始化与数据迁移】
 
-// 简化版设置界面
 function openSettingsWindow() {
-    const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
+    // 【修改点：读取 ext data】
+    const data = getExtData();
+    const cfg = data.config || {}; 
     $("#t-main-view").hide();
     
-    // UI：仅保留核心配置 + 一个大按钮入口
     const html = `
     <div class="t-box" id="t-settings-view">
         <div class="t-header"><span class="t-title-main">⚙️ 设置</span><span class="t-close" id="t-set-close">&times;</span></div>
@@ -367,7 +400,6 @@ function openSettingsWindow() {
             <h4 style="margin:15px 0 5px 0; border-bottom:1px solid #444; padding-bottom:5px;">🧬 模式配置</h4>
             <div><label>回声模式-历史记录条数:</label><input id="cfg-history" type="number" class="t-input" value="${cfg.history_limit || 10}"></div>
 
-            <!-- 关键入口 -->
             <div style="margin-top:20px; border-top:1px solid #444; padding-top:15px;">
                 <button id="t-btn-open-mgr" class="t-btn" style="width:100%; height:45px; background:#444;">📂 打开剧本管理器</button>
             </div>
@@ -380,13 +412,8 @@ function openSettingsWindow() {
     
     $("#t-overlay").append(html);
 
-    // 绑定：打开剧本管理器
-    $("#t-btn-open-mgr").on("click", () => {
-        $("#t-settings-view").remove(); // 关闭设置
-        openScriptManager(); // 打开高级管理器
-    });
+    $("#t-btn-open-mgr").on("click", () => { $("#t-settings-view").remove(); openScriptManager(); });
 
-    // 保存配置
     $("#t-set-close, #t-set-save").on("click", () => { 
         const newCfg = { 
             url: $("#cfg-url").val().trim(), 
@@ -394,262 +421,140 @@ function openSettingsWindow() {
             model: $("#cfg-model-list").val() || $("#cfg-model-list").text(),
             history_limit: parseInt($("#cfg-history").val()) || 10 
         }; 
-        localStorage.setItem(STORAGE_KEY_CFG, JSON.stringify(newCfg)); 
+        
+        // 【修改点：保存到 ext data】
+        const currentData = getExtData();
+        currentData.config = newCfg;
+        saveExtData();
+        
         $("#t-settings-view").remove(); 
         $("#t-main-view").show(); 
         loadScripts(); 
         refreshScriptList($("#t-mode-toggle").is(":checked"));
     });
     
-    // 获取模型列表
-    $("#t-btn-fetch").on("click", async () => { const url = $("#cfg-url").val().replace(/\/+$/, "").replace(/\/chat\/completions$/, ""); const key = $("#cfg-key").val(); if(!url) return alert("请先填写 URL"); $("#t-btn-fetch").text("...").prop("disabled",true); try { const target = url.endsWith("/v1") ? `${url}/models` : `${url}/v1/models`; const res = await fetch(target, { headers: { Authorization: `Bearer ${key}` }}); const data = await res.json(); const list = Array.isArray(data) ? data : (data.data || []); const $sel = $("#cfg-model-list"); $sel.empty(); list.forEach(m => $sel.append(`<option value="${m.id}">${m.id}</option>`)); alert(`成功获取 ${list.length} 个模型`); } catch(e) { alert("获取失败: " + e.message); } finally { $("#t-btn-fetch").text("🔄 获取").prop("disabled",false); }});
+    $("#t-btn-fetch").on("click", async () => { const url = $("#cfg-url").val().replace(/\/+$/, "").replace(/\/chat\/completions$/, ""); const key = $("#cfg-key").val(); if(!url) return alert("请先填写 URL"); $("#t-btn-fetch").text("...").prop("disabled",true); try { const target = url.endsWith("/v1") ? `${url}/models` : `${url}/v1/models`; const res = await fetch(target, { headers: { Authorization: `Bearer ${key}` }}); const d = await res.json(); const list = Array.isArray(d) ? d : (d.data || []); const $sel = $("#cfg-model-list"); $sel.empty(); list.forEach(m => $sel.append(`<option value="${m.id}">${m.id}</option>`)); alert(`成功获取 ${list.length} 个模型`); } catch(e) { alert("获取失败: " + e.message); } finally { $("#t-btn-fetch").text("🔄 获取").prop("disabled",false); }});
 }
 
-// 【Echo Theater v3.8 - Part 3B-2】
-// 包含：高级剧本管理器、编辑器、收藏夹
-
-// 🌟 全新：独立剧本管理器
 function openScriptManager() {
-    const html = `
-    <div class="t-box" id="t-mgr-view" style="height:90vh;">
-        <div class="t-header">
-            <span class="t-title-main">📜 剧本管理器</span>
-            <span class="t-close" id="t-mgr-close">&times;</span>
-        </div>
-        <div class="t-body" style="padding:0; display:flex; flex-direction:column; height:100%;">
-            <!-- 工具栏 -->
-            <div style="padding:10px; background:#222; border-bottom:1px solid #444; display:flex; gap:10px;">
-                <input type="file" id="t-file-import" accept=".txt" style="display:none;" />
-                <button id="t-mgr-import" class="t-tool-btn" style="flex:1;">📥 导入</button>
-                <button id="t-mgr-new" class="t-tool-btn" style="flex:1;">+ 新建</button>
-                <button id="t-mgr-del-batch" class="t-tool-btn" style="flex:1; color:#aaa; pointer-events:none; border-color:#555;">🗑️ 删除选中</button>
-            </div>
-            
-            <!-- 全选行 -->
-            <div style="padding:5px 10px; background:#1a1a1a; font-size:0.85em; display:flex; align-items:center; border-bottom:1px solid #333;">
-                <input type="checkbox" id="t-mgr-select-all" style="margin-right:8px;">
-                <label for="t-mgr-select-all">全选 (仅自定义剧本)</label>
-            </div>
-
-            <!-- 列表区域 -->
-            <div id="t-mgr-list" style="flex-grow:1; overflow-y:auto; padding:5px;"></div>
-        </div>
-    </div>`;
-
+    const html = `<div class="t-box" id="t-mgr-view" style="height:90vh;"><div class="t-header"><span class="t-title-main">📜 剧本管理器</span><span class="t-close" id="t-mgr-close">&times;</span></div><div class="t-body" style="padding:0; display:flex; flex-direction:column; height:100%;"><div style="padding:10px; background:#222; border-bottom:1px solid #444; display:flex; gap:10px;"><input type="file" id="t-file-import" accept=".txt" style="display:none;" /><button id="t-mgr-import" class="t-tool-btn" style="flex:1;">📥 导入</button><button id="t-mgr-new" class="t-tool-btn" style="flex:1;">+ 新建</button><button id="t-mgr-del-batch" class="t-tool-btn" style="flex:1; color:#aaa; pointer-events:none; border-color:#555;">🗑️ 删除选中</button></div><div style="padding:5px 10px; background:#1a1a1a; font-size:0.85em; display:flex; align-items:center; border-bottom:1px solid #333;"><input type="checkbox" id="t-mgr-select-all" style="margin-right:8px;"><label for="t-mgr-select-all">全选 (仅自定义剧本)</label></div><div id="t-mgr-list" style="flex-grow:1; overflow-y:auto; padding:5px;"></div></div></div>`;
     $("#t-overlay").append(html);
     renderManagerList();
 
-    // 关闭逻辑：返回主界面并刷新
     $("#t-mgr-close").on("click", () => { $("#t-mgr-view").remove(); $("#t-main-view").show(); refreshScriptList($("#t-mode-toggle").is(":checked")); });
-    
-    // 全选逻辑
-    $("#t-mgr-select-all").on("change", function() {
-        const checked = $(this).is(":checked");
-        $(".t-mgr-check:not(:disabled)").prop("checked", checked);
-        updateBatchBtn();
-    });
-
-    // 导入逻辑
+    $("#t-mgr-select-all").on("change", function() { const checked = $(this).is(":checked"); $(".t-mgr-check:not(:disabled)").prop("checked", checked); updateBatchBtn(); });
     $("#t-mgr-import").on("click", () => $("#t-file-import").click());
-    $("#t-file-import").on("change", function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            const content = evt.target.result;
-            const fileName = file.name.replace(/\.[^/.]+$/, "");
-            const blocks = content.split(/\r?\n\s*###\s*\r?\n/).filter(b => b.trim().length > 0);
-            let count = 0;
-            blocks.forEach((block, index) => {
-                let scriptName = (blocks.length > 1) ? `${fileName}_${String(index+1).padStart(2, '0')}` : fileName;
-                saveUserScript({
-                    id: "imp_" + Date.now() + "_" + Math.floor(Math.random()*1000),
-                    name: scriptName,
-                    desc: "从TXT导入",
-                    prompt: block.trim(),
-                    mode: "all"
-                });
-                count++;
-            });
-            alert(`成功导入 ${count} 个剧本！`);
-            $("#t-file-import").val("");
-            renderManagerList(); // 刷新列表
-        };
-        reader.readAsText(file);
-    });
-
-    // 新建
+    $("#t-file-import").on("change", function(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(evt) { const content = evt.target.result; const fileName = file.name.replace(/\.[^/.]+$/, ""); const blocks = content.split(/\r?\n\s*###\s*\r?\n/).filter(b => b.trim().length > 0); let count = 0; blocks.forEach((block, index) => { let scriptName = (blocks.length > 1) ? `${fileName}_${String(index+1).padStart(2, '0')}` : fileName; saveUserScript({ id: "imp_" + Date.now() + "_" + Math.floor(Math.random()*1000), name: scriptName, desc: "从TXT导入", prompt: block.trim(), mode: "all" }); count++; }); alert(`成功导入 ${count} 个剧本！`); $("#t-file-import").val(""); renderManagerList(); }; reader.readAsText(file); });
     $("#t-mgr-new").on("click", () => { $("#t-mgr-view").hide(); openEditor(null, true); });
-
-    // 批量删除
-    $("#t-mgr-del-batch").on("click", function() {
-        const ids = [];
-        $(".t-mgr-check:checked").each(function() { ids.push($(this).data("id")); });
-        if(ids.length === 0) return;
-        if(confirm(`确定要删除选中的 ${ids.length} 个剧本吗？`)) {
-            ids.forEach(id => deleteUserScript(id)); 
-            renderManagerList();
-            $("#t-mgr-select-all").prop("checked", false);
-        }
-    });
+    $("#t-mgr-del-batch").on("click", function() { const ids = []; $(".t-mgr-check:checked").each(function() { ids.push($(this).data("id")); }); if(ids.length === 0) return; if(confirm(`确定要删除选中的 ${ids.length} 个剧本吗？`)) { ids.forEach(id => deleteUserScript(id)); renderManagerList(); $("#t-mgr-select-all").prop("checked", false); } });
 }
 
 function renderManagerList() {
-    const list = $("#t-mgr-list");
-    list.empty();
-    
-    runtimeScripts.forEach(s => {
-        const isUser = s._type === 'user';
-        const badge = isUser ? '<span class="t-badge badge-user">自定义</span>' : '<span class="t-badge badge-preset">预设</span>';
-        const modeLabel = s.mode === 'echo' ? '[回声]' : (s.mode === 'parallel' ? '[平行]' : '[通用]');
-        
-        // 只有 user 可以勾选
-        const checkbox = isUser 
-            ? `<input type="checkbox" class="t-mgr-check" data-id="${s.id}" style="margin-right:10px;">`
-            : `<input type="checkbox" disabled style="margin-right:10px; opacity:0.3;">`;
-
-        const btns = isUser 
-            ? `<i class="fa-solid fa-pen" style="cursor:pointer; padding:5px;" onclick="window.t_edit('${s.id}', true)"></i>`
-            : `<i class="fa-solid fa-eye" style="cursor:pointer; opacity:0.5; padding:5px;" onclick="window.t_edit('${s.id}', true)"></i>`;
-
-        const item = $(`
-        <div class="t-list-item" style="display:flex; align-items:center;">
-            <div>${checkbox}</div>
-            <div style="flex-grow:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                <span style="color:#888; font-size:0.8em; margin-right:5px;">${modeLabel}</span>
-                ${s.name} ${badge}
-            </div>
-            <div>${btns}</div>
-        </div>`);
-
-        list.append(item);
-    });
-
-    $(".t-mgr-check").on("change", updateBatchBtn);
-    updateBatchBtn();
+    const list = $("#t-mgr-list"); list.empty();
+    runtimeScripts.forEach(s => { const isUser = s._type === 'user'; const badge = isUser ? '<span class="t-badge badge-user">自定义</span>' : '<span class="t-badge badge-preset">预设</span>'; const modeLabel = s.mode === 'echo' ? '[回声]' : (s.mode === 'parallel' ? '[平行]' : '[通用]'); const checkbox = isUser ? `<input type="checkbox" class="t-mgr-check" data-id="${s.id}" style="margin-right:10px;">` : `<input type="checkbox" disabled style="margin-right:10px; opacity:0.3;">`; const btns = isUser ? `<i class="fa-solid fa-pen" style="cursor:pointer; padding:5px;" onclick="window.t_edit('${s.id}', true)"></i>` : `<i class="fa-solid fa-eye" style="cursor:pointer; opacity:0.5; padding:5px;" onclick="window.t_edit('${s.id}', true)"></i>`; const item = $(`<div class="t-list-item" style="display:flex; align-items:center;"><div>${checkbox}</div><div style="flex-grow:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><span style="color:#888; font-size:0.8em; margin-right:5px;">${modeLabel}</span>${s.name} ${badge}</div><div>${btns}</div></div>`); list.append(item); });
+    $(".t-mgr-check").on("change", updateBatchBtn); updateBatchBtn();
 }
-
-function updateBatchBtn() {
-    const count = $(".t-mgr-check:checked").length;
-    const btn = $("#t-mgr-del-batch");
-    if (count > 0) {
-        btn.css({ "color": "#ff6b6b", "pointer-events": "auto", "border-color": "#ff6b6b" });
-        btn.text(`🗑️ 删除 (${count})`);
-    } else {
-        btn.css({ "color": "#aaa", "pointer-events": "none", "border-color": "#555" });
-        btn.text(`🗑️ 删除选中`);
-    }
-}
-
-// 编辑器 (适配返回路径)
-function openEditor(id, fromMgr = false) { 
-    const isEdit = !!id; 
-    let data = { id: Date.now().toString(), name: "新剧本", desc: "", prompt: "" }; 
-    if (isEdit) data = runtimeScripts.find(s => s.id === id); 
-    const isPreset = data._type === 'preset'; 
-    
-    if(fromMgr) $("#t-mgr-view").hide(); else $("#t-settings-view").hide();
-    
-    const html = `<div class="t-box" id="t-editor-view"><div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div><div class="t-body"><label>标题:</label><input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}><label>简介:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? 'disabled' : ''}><div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><label>Prompt (支持 {{char}}, {{user}}):</label>${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏编辑</div>` : ''}</div><textarea id="ed-prompt" class="t-input" rows="8" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea><div class="t-btn-row">${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}<button id="ed-cancel" class="t-btn" style="flex:1;">返回</button></div></div></div>`; 
-    $("#t-overlay").append(html); 
-    
-    $("#ed-cancel").on("click", () => { 
-        $("#t-editor-view").remove(); 
-        if(fromMgr) $("#t-mgr-view").show(); else $("#t-settings-view").show(); 
-    }); 
-
-    // 大屏逻辑
-    $("#ed-btn-expand").on("click", () => {
-        $("#t-editor-view").hide();
-        $("#t-overlay").append(`
-        <div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;">
-            <div class="t-header"><span class="t-title-main">大屏模式</span></div>
-            <div class="t-body" style="height:100%;">
-                <textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${$("#ed-prompt").val()}</textarea>
-                <div class="t-btn-row">
-                    <button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button>
-                    <button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button>
-                </div>
-            </div>
-        </div>`);
-        $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
-        $("#ed-large-ok").on("click", () => { $("#ed-prompt").val($("#ed-large-text").val()); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
-    });
-
-    if(!isPreset) { 
-        $("#ed-save").on("click", () => { 
-            saveUserScript({ 
-                id: isEdit ? data.id : "user_" + Date.now(), 
-                name: $("#ed-name").val(), 
-                desc: $("#ed-desc").val(), 
-                prompt: $("#ed-prompt").val() 
-            }); 
-            $("#t-editor-view").remove(); 
-            if(fromMgr) { $("#t-mgr-view").show(); renderManagerList(); }
-        }); 
-    } 
-}
+function updateBatchBtn() { const count = $(".t-mgr-check:checked").length; const btn = $("#t-mgr-del-batch"); if (count > 0) { btn.css({ "color": "#ff6b6b", "pointer-events": "auto", "border-color": "#ff6b6b" }); btn.text(`🗑️ 删除 (${count})`); } else { btn.css({ "color": "#aaa", "pointer-events": "none", "border-color": "#555" }); btn.text(`🗑️ 删除选中`); } }
+function openEditor(id, fromMgr = false) { const isEdit = !!id; let data = { id: Date.now().toString(), name: "新剧本", desc: "", prompt: "" }; if (isEdit) data = runtimeScripts.find(s => s.id === id); const isPreset = data._type === 'preset'; if(fromMgr) $("#t-mgr-view").hide(); else $("#t-settings-view").hide(); const html = `<div class="t-box" id="t-editor-view"><div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div><div class="t-body"><label>标题:</label><input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}><label>简介:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? 'disabled' : ''}><div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><label>Prompt (支持 {{char}}, {{user}}):</label>${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏编辑</div>` : ''}</div><textarea id="ed-prompt" class="t-input" rows="8" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea><div class="t-btn-row">${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}<button id="ed-cancel" class="t-btn" style="flex:1;">返回</button></div></div></div>`; $("#t-overlay").append(html); $("#ed-cancel").on("click", () => { $("#t-editor-view").remove(); if(fromMgr) $("#t-mgr-view").show(); else $("#t-settings-view").show(); }); $("#ed-btn-expand").on("click", () => { $("#t-editor-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${$("#ed-prompt").val()}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认修改</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`); $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); }); $("#ed-large-ok").on("click", () => { $("#ed-prompt").val($("#ed-large-text").val()); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); }); }); if(!isPreset) { $("#ed-save").on("click", () => { saveUserScript({ id: isEdit ? data.id : "user_" + Date.now(), name: $("#ed-name").val(), desc: $("#ed-desc").val(), prompt: $("#ed-prompt").val() }); $("#t-editor-view").remove(); if(fromMgr) { $("#t-mgr-view").show(); renderManagerList(); }}); }}
 window.t_edit = (id, fromMgr) => openEditor(id, fromMgr);
 
-// 收藏夹
-function saveFavorite() { const content = $("#t-output-content").html(); if (!content || content.includes("请选择剧本") || content.includes("<pre")) return alert("内容无效"); const scriptName = $("#t-sel-script option:selected").text(); const entry = { id: Date.now(), title: `${scriptName} - ${getContextData().charName}`, date: new Date().toLocaleString(), html: content }; const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]'); favs.unshift(entry); localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(favs)); $("#t-btn-like").html('<i class="fa-solid fa-heart"></i> 已收藏').addClass("t-liked"); }
-function openFavsWindow() { $("#t-main-view").hide(); const favs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS) || '[]'); const html = `<div class="t-box" id="t-favs-view"><div class="t-header"><span class="t-title-main">📖 回声收藏夹</span><span class="t-close" id="t-fav-close">&times;</span></div><div class="t-body" id="t-fav-list">${favs.length === 0 ? '<div style="text-align:center; color:#666; margin-top:50px;">暂无收藏~</div>' : ''}</div></div>`; $("#t-overlay").append(html); favs.forEach(item => { const el = $(`<div class="t-list-item" style="cursor:pointer;"><div style="flex-grow:1;"><div style="font-weight:bold;">${item.title||'未命名'}</div><div class="t-fav-meta">${item.date}</div></div><div><i class="fa-solid fa-trash" style="color:#ff6b6b; padding:5px;"></i></div></div>`); el.find("div:first").on("click", () => { $("#t-favs-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-reader-view"><div class="t-header"><span class="t-title-main" style="font-size:1em;">${item.title}</span><span class="t-close" id="t-read-close">&times;</span></div><div class="t-body" style="padding:0;"><div class="t-render" style="border:none; border-radius:0; height:100%;">${item.html}</div></div></div>`); $("#t-read-close").on("click", () => { $("#t-reader-view").remove(); $("#t-favs-view").show(); }); }); el.find(".fa-trash").on("click", (e) => { e.stopPropagation(); if(confirm("删除？")) { const newFavs = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS)||'[]').filter(x=>x.id!==item.id); localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(newFavs)); $("#t-favs-view").remove(); openFavsWindow(); }}); $("#t-fav-list").append(el); }); $("#t-fav-close").on("click", () => { $("#t-favs-view").remove(); $("#t-main-view").show(); }); }
+function saveFavorite() { 
+    const content = $("#t-output-content").html(); 
+    if (!content || content.includes("请选择剧本") || content.includes("<pre")) return alert("内容无效"); 
+    const scriptName = $("#t-sel-script option:selected").text(); 
+    const entry = { id: Date.now(), title: `${scriptName} - ${getContextData().charName}`, date: new Date().toLocaleString(), html: content }; 
+    
+    // 【修改点：保存到 ext data】
+    const data = getExtData();
+    if (!data.favs) data.favs = [];
+    data.favs.unshift(entry);
+    saveExtData();
+    
+    $("#t-btn-like").html('<i class="fa-solid fa-heart"></i> 已收藏').addClass("t-liked"); 
+}
 
-// --- 底部新增 ---
+function openFavsWindow() { 
+    $("#t-main-view").hide(); 
+    // 【修改点：从 ext data 读取】
+    const data = getExtData();
+    const favs = data.favs || [];
+    
+    const html = `<div class="t-box" id="t-favs-view"><div class="t-header"><span class="t-title-main">📖 回声收藏夹</span><span class="t-close" id="t-fav-close">&times;</span></div><div class="t-body" id="t-fav-list">${favs.length === 0 ? '<div style="text-align:center; color:#666; margin-top:50px;">暂无收藏~</div>' : ''}</div></div>`; 
+    $("#t-overlay").append(html); 
+    
+    favs.forEach(item => { const el = $(`<div class="t-list-item" style="cursor:pointer;"><div style="flex-grow:1;"><div style="font-weight:bold;">${item.title||'未命名'}</div><div class="t-fav-meta">${item.date}</div></div><div><i class="fa-solid fa-trash" style="color:#ff6b6b; padding:5px;"></i></div></div>`); el.find("div:first").on("click", () => { $("#t-favs-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-reader-view"><div class="t-header"><span class="t-title-main" style="font-size:1em;">${item.title}</span><span class="t-close" id="t-read-close">&times;</span></div><div class="t-body" style="padding:0;"><div class="t-render" style="border:none; border-radius:0; height:100%;">${item.html}</div></div></div>`); $("#t-read-close").on("click", () => { $("#t-reader-view").remove(); $("#t-favs-view").show(); }); }); el.find(".fa-trash").on("click", (e) => { e.stopPropagation(); if(confirm("删除？")) { 
+        // 【修改点：删除并保存】
+        const d = getExtData();
+        d.favs = (d.favs || []).filter(x => x.id !== item.id);
+        saveExtData();
+        $("#t-favs-view").remove(); openFavsWindow(); 
+    }}); $("#t-fav-list").append(el); }); 
+    $("#t-fav-close").on("click", () => { $("#t-favs-view").remove(); $("#t-main-view").show(); }); 
+}
 
-// 加载扩展设置
+// --- 底部扩展管理与初始化 ---
+
 async function loadExtensionSettings() {
-    // 1. 初始化设置对象
     extension_settings[extensionName] = extension_settings[extensionName] || {};
     if (Object.keys(extension_settings[extensionName]).length === 0) {
         Object.assign(extension_settings[extensionName], defaultSettings);
     }
-
-    // 2. 更新 UI 复选框状态
     $("#enable_echo_theater").prop("checked", extension_settings[extensionName].enabled);
-
-    // 3. 根据设置决定是否加载功能
     if (extension_settings[extensionName].enabled) {
         initEchoTheater();
     }
 }
 
-// 实际启动小剧场的函数
-function initEchoTheater() {
+// 【重要：初始化函数包含自动迁移逻辑】
+async function initEchoTheater() {
     console.log("Titania Echo v3.8: Enabled.");
-    loadScripts(); // 调用原本的加载脚本函数
-    createFloatingButton(); // 创建悬浮球
+    
+    // --- 自动迁移逻辑 START ---
+    const extData = getExtData();
+    // 如果服务端配置为空，但本地有旧数据，则尝试迁移
+    if ((!extData.config || Object.keys(extData.config).length === 0) && localStorage.getItem(LEGACY_KEY_CFG)) {
+        try {
+            console.log("Titania: 检测到旧版本数据，正在尝试迁移...");
+            const oldCfg = JSON.parse(localStorage.getItem(LEGACY_KEY_CFG));
+            const oldScripts = JSON.parse(localStorage.getItem(LEGACY_KEY_SCRIPTS));
+            const oldFavs = JSON.parse(localStorage.getItem(LEGACY_KEY_FAVS));
+            
+            let migrated = false;
+            if (oldCfg) { extData.config = oldCfg; migrated = true; }
+            if (oldScripts) { extData.user_scripts = oldScripts; migrated = true; }
+            if (oldFavs) { extData.favs = oldFavs; migrated = true; }
+
+            if (migrated) {
+                saveExtData(); // 保存到 settings.json
+                console.log("Titania: ✅ 历史数据已成功迁移到服务端！");
+                if(window.toastr) toastr.success("历史数据已成功迁移至服务端", "Titania Echo");
+            }
+        } catch (e) {
+            console.error("Titania: 数据迁移失败", e);
+        }
+    }
+    // --- 自动迁移逻辑 END ---
+
+    loadScripts(); 
+    createFloatingButton(); 
 }
 
-// 禁用小剧场的函数
 function disableEchoTheater() {
     console.log("Titania Echo v3.8: Disabled.");
-    $("#titania-float-btn").remove(); // 移除悬浮球
-    $("#t-overlay").remove(); // 如果主窗口开着，也关掉
+    $("#titania-float-btn").remove(); 
+    $("#t-overlay").remove(); 
 }
 
-// 监听开关变化
 function onEnableChange() {
     const isEnabled = $(this).prop("checked");
     extension_settings[extensionName].enabled = isEnabled;
-    saveSettingsDebounced(); // 保存设置到 settings.json
-
-    if (isEnabled) {
-        initEchoTheater();
-    } else {
-        disableEchoTheater();
-    }
+    saveSettingsDebounced();
+    if (isEnabled) initEchoTheater(); else disableEchoTheater();
 }
 
-// ST 扩展初始化入口
 jQuery(async () => {
-    // 1. 加载 settings.html 并插入到扩展栏
     const settingsHtml = await $.get(`${extensionFolderPath}/settings.html`);
     $("#extensions_settings2").append(settingsHtml);
-
-    // 2. 绑定事件
     $("#enable_echo_theater").on("input", onEnableChange);
-
-    // 3. 加载设置并应用
     loadExtensionSettings();
 });
