@@ -141,21 +141,31 @@ function getContextData() {
     return data;
 }
 
+// 修改后的 refreshScriptList 函数
 function refreshScriptList(isEchoMode) {
     const $sel = $("#t-sel-script");
     $sel.empty();
+    
     const currentMode = isEchoMode ? "echo" : "parallel";
     const validScripts = runtimeScripts.filter(s => {
         if (s._type === 'user') return true; 
         if (!s.mode || s.mode === 'all') return true; 
         return s.mode === currentMode;
     });
+
     validScripts.forEach(s => {
         $sel.append(`<option value="${s.id}">${s.name}</option>`);
     });
+
+    // ▼▼▼ 新增回填逻辑 ▼▼▼
+    // 如果有上次记录的ID，且该ID在当前列表里存在，就选中它
+    if (lastUsedScriptId && validScripts.find(s => s.id === lastUsedScriptId)) {
+        $sel.val(lastUsedScriptId);
+    }
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
     updateDesc(); 
 }
-
 function openMainWindow() {
     if ($("#t-overlay").length) return;
     const ctx = getContextData();
@@ -186,10 +196,12 @@ function openMainWindow() {
 // 【Echo Theater v3.8 - Part 3A】
 // 包含：API生成、历史记录、审查功能
 
+let lastUsedScriptId = ""; // 记住上次用的剧本
+
 function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if(s) $("#t-txt-desc").val(s.desc); }
 function resetLikeBtn() { $("#t-btn-like").html('<i class="fa-regular fa-heart"></i> 收藏').removeClass("t-liked"); }
 
-// 获取最近聊天记录 (防崩版)
+// 获取最近聊天记录
 function getChatHistory(limit) {
     if (!SillyTavern || !SillyTavern.getContext) return "";
     const ctx = SillyTavern.getContext();
@@ -215,6 +227,8 @@ async function handleGenerate() {
 
     const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
     if(!script) return alert("请选择剧本");
+    
+    lastUsedScriptId = script.id;
 
     const ctx = getContextData();
     const isEchoMode = $("#t-mode-toggle").is(":checked");
@@ -283,7 +297,7 @@ async function handleGenerate() {
     }
 }
 
-// 审查 (完整显示)
+// 审查功能
 function showDebugInfo() {
     const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_CFG) || '{}');
     const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
