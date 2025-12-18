@@ -349,6 +349,85 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         if (useStream) {
             const reader = res.body.getReader();
             const decoder = new TextDecoder("utf-8");
+// 修改 function.js 中的 handleGenerate
+async function handleGenerate(forceScriptId = null, silent = false) {
+    const data = getExtData();
+    const cfg = data.config || {}; 
+
+    if (!cfg.key) return alert("请先去设置填 API Key！");
+
+    const scriptId = forceScriptId || $("#t-sel-script").val();
+    const script = runtimeScripts.find(s => s.id === scriptId);
+    
+    if(!script) {
+        if(!silent) alert("请选择剧本");
+        return;
+    }
+    
+    lastUsedScriptId = script.id;
+    const ctx = getContextData();
+    const $floatBtn = $("#titania-float-btn");
+    const useStream = cfg.stream !== false;
+
+    if (!silent) $("#t-overlay").remove(); 
+    isGenerating = true;      
+    $floatBtn.addClass("t-loading"); 
+    
+    if(!silent && window.toastr) {
+        toastr.info(`🚀 [${useStream ? '流式' : '非流式'}] 剧本演绎中...`, "Titania Echo");
+    }
+
+    try {
+        // 1. 构建 Prompt
+        let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.Please answer all other content in Chinese.";
+        let user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\n\n`;
+        
+        if (ctx.persona) user += `[Character Persona]\n${ctx.persona}\n\n`;
+        if (ctx.userDesc) user += `[User Persona]\n${ctx.userDesc}\n\n`;
+        if (ctx.worldInfo) user += `[World Info / Lore]\n${ctx.worldInfo}\n\n`;
+        
+        if (script.mode === 'echo') {
+            const limit = cfg.history_limit || 10;
+            const history = getChatHistory(limit);
+            if (history && history.trim().length > 0) user += `[Recent Conversation History (Last ${limit} messages)]\n${history}\n\n`;
+            else user += `[Recent Conversation History]\n(History is empty)\n\n`;
+        } else {
+            user += `[Mode Info]\n(Parallel World / AU)\n\n`;
+        }
+        user += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
+
+        // 2. 准备参数
+        let realEndpoint = (cfg.url || "").trim().replace(/\/+$/, "");
+        if (!realEndpoint) throw new Error("API URL 未设置");
+        if (!realEndpoint.endsWith("/chat/completions")) realEndpoint += "/chat/completions";
+
+        const modelPayload = { 
+            model: cfg.model || "gpt-3.5-turbo",
+            messages: [{ role: "system", content: sys }, { role: "user", content: user }], 
+            stream: useStream 
+        };
+
+        // 3. 发送给后端代理 (解决了 CORS 问题)
+        const res = await fetch('/api/titania/proxy', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                target_url: realEndpoint,
+                api_key: cfg.key,
+                model_payload: modelPayload
+            })
+        });
+
+        if (!res.ok) {
+            const rawText = await res.text();
+            throw new Error(`API Error ${res.status}: ${rawText.slice(0, 100)}`);
+        }
+
+        // 4. 处理响应 (代码与之前相同，因为后端透传了流)
+        let finalContent = "";
+        if (useStream) {
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder("utf-8");
             let buffer = "";
             while (true) {
                 const { done, value } = await reader.read();
@@ -374,7 +453,6 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         }
 
         if (!finalContent) throw new Error("无内容生成");
-        
         finalContent = finalContent.replace(/^```html/i, "").replace(/```$/i, "");
         lastGeneratedContent = finalContent; 
         
