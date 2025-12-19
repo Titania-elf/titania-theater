@@ -257,20 +257,35 @@ function openMainWindow() {
 }
 
 // 【Part 4: 生成核心逻辑】
-
+// 获取聊天历史，过滤掉隐藏的
 function getChatHistory(limit) {
     if (!SillyTavern || !SillyTavern.getContext) return "";
     const ctx = SillyTavern.getContext();
     const history = ctx.chat || [];
     const safeLimit = parseInt(limit) || 10;
-    const recent = history.slice(-safeLimit);
+    
+    // 【修复逻辑】先过滤掉被隐藏或禁用的消息，再进行截取
+    const visibleHistory = history.filter(msg => {
+        // 过滤掉点了“眼睛”图标隐藏的消息
+        if (msg.is_hidden) return false;
+        // 过滤掉被禁用的消息
+        if (msg.disabled) return false;
+        // (可选) 如果你也不想让系统指令进入回声分析，可以把下面这行注释取消
+        // if (msg.is_system) return false;
+        return true;
+    });
+
+    // 从过滤后的列表中截取最后 N 条
+    const recent = visibleHistory.slice(-safeLimit);
     
     return recent.map(msg => {
         let name = msg.name;
         if (msg.is_user) name = ctx.name1 || "User";
         if (name === "{{user}}") name = ctx.name1 || "User";
         if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
+        
         let rawContent = msg.message || msg.mes || "";
+        // 简单的 HTML 标签清洗
         let cleanContent = rawContent.replace(/<[^>]*>?/gm, ''); 
         return `${name}: ${cleanContent}`;
     }).join("\n");
