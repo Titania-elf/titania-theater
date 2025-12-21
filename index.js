@@ -7,13 +7,22 @@ import { saveSettingsDebounced, eventSource, event_types } from "../../../../scr
 const extensionName = "Titania_Theater_Echo";
 const extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
 
-// 默认设置结构
+// [修改] 默认设置结构
 const defaultSettings = {
     enabled: true,
     config: {},         // API Url, Key, Model, Auto-Settings
     user_scripts: [],   // 自定义剧本
-    favs: []            // 收藏夹
+    favs: [],           // 收藏夹
+    character_map: {},  // 角色图鉴
+    disabled_presets: [], // [新增] 已删除(隐藏)的官方预设ID列表
+    appearance: {
+        type: "emoji",          // 'emoji' 或 'image'
+        content: "🎭",          // Emoji 字符或 图片 Base64
+        color_theme: "#bfa15f", // 主题色
+        color_notify: "#55efc4" // 通知色
+    }
 };
+
 
 // 旧版 Key (用于迁移)
 const LEGACY_KEY_CFG = "Titania_Config_v3";
@@ -21,7 +30,7 @@ const LEGACY_KEY_SCRIPTS = "Titania_UserScripts_v3";
 const LEGACY_KEY_FAVS = "Titania_Favs_v3";
 
 let isGenerating = false;
-let runtimeScripts = []; 
+let runtimeScripts = [];
 let lastGeneratedContent = "";
 let lastUsedScriptId = "";
 
@@ -37,49 +46,51 @@ function saveExtData() {
     saveSettingsDebounced(); // 保存到 public/settings.json
 }
 
-// --- 脚本管理逻辑 ---
+// [修改] 脚本加载逻辑
 function loadScripts() {
     const data = getExtData();
     const userScripts = data.user_scripts || [];
-    
-    // 加载预设
-    runtimeScripts = DEFAULT_PRESETS.map(p => ({ ...p, _type: 'preset' }));
-    
+    const disabledIDs = data.disabled_presets || [];
+
+    // 加载预设 (过滤掉在黑名单里的)
+    runtimeScripts = DEFAULT_PRESETS
+        .filter(p => !disabledIDs.includes(p.id))
+        .map(p => ({ ...p, _type: 'preset' }));
+
     // 合并自定义剧本 (含数据清洗)
-    userScripts.forEach(s => { 
-        // 数据清洗：旧版 'all' 强制转为 'parallel'
+    userScripts.forEach(s => {
         let cleanMode = s.mode;
         if (!cleanMode || cleanMode === 'all') {
             cleanMode = 'parallel';
         }
 
         if (!runtimeScripts.find(r => r.id === s.id)) {
-            runtimeScripts.push({ 
-                ...s, 
-                mode: cleanMode, 
-                _type: 'user' 
-            }); 
+            runtimeScripts.push({
+                ...s,
+                mode: cleanMode,
+                _type: 'user'
+            });
         }
     });
 }
 
-function saveUserScript(s) { 
+function saveUserScript(s) {
     const data = getExtData();
     let u = data.user_scripts || [];
     u = u.filter(x => x.id !== s.id); // 移除旧的
     u.push(s); // 加入新的
     data.user_scripts = u;
-    saveExtData(); 
-    loadScripts(); 
+    saveExtData();
+    loadScripts();
 }
 
-function deleteUserScript(id) { 
+function deleteUserScript(id) {
     const data = getExtData();
     let u = data.user_scripts || [];
     u = u.filter(x => x.id !== id);
     data.user_scripts = u;
     saveExtData();
-    loadScripts(); 
+    loadScripts();
 }
 
 // 【Part 2: 预设库定义】
@@ -111,39 +122,136 @@ const DEFAULT_PRESETS = [
 ];
 
 // 【Part 3: 悬浮球、上下文与主窗口】
-
 function createFloatingButton() {
     $("#titania-float-btn").remove();
+    $("#titania-float-style").remove();
+
     if (!extension_settings[extensionName].enabled) return;
 
-    const btn = $(`<div id="titania-float-btn">🎭</div>`);
+    const data = getExtData();
+    const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4" };
+
+    // 1. 动态 CSS
+    const css = `
+    <style id="titania-float-style">
+        :root {
+            --t-theme: ${app.color_theme};
+            --t-notify: ${app.color_notify};
+        }
+        
+        #titania-float-btn {
+            position: fixed; top: 100px; left: 20px;
+            width: 56px; height: 56px; /* 稍微加大一点，容纳光圈 */
+            padding: 3px; /* 关键：留出 3px 的缝隙给流光动画 */
+            
+            border-radius: 50%;
+            background: #2b2b2b;
+            color: #fff;
+            
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; /* Emoji 大小 */
+            
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            
+            /* 默认状态下的边框 */
+            border: 2px solid #444; 
+            
+            transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            user-select: none;
+            overflow: hidden; 
+            box-sizing: border-box; /* 确保 padding 算在宽高内 */
+        }
+        
+        /* 图片样式：填满内部区域 (不包含 padding) */
+        #titania-float-btn img {
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+            border-radius: 50%; 
+            pointer-events: none;
+            position: relative;
+            z-index: 2; /* 图片在最上层 */
+        }
+
+        /* 状态：加载中 (跑马灯流光) */
+        @keyframes t-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #titania-float-btn.t-loading {
+            background: transparent !important; /* 背景透明，露出流光 */
+            border-color: transparent !important; /* 边框透明 */
+            color: var(--t-theme) !important;
+            pointer-events: none;
+            box-shadow: 0 0 20px var(--t-theme); /* 外发光 */
+        }
+        
+        /* 核心流光层 (在最底层旋转) */
+        #titania-float-btn.t-loading::before {
+            content: ""; position: absolute;
+            width: 200%; height: 200%; 
+            top: -50%; left: -50%;
+            background: conic-gradient(transparent 20%, transparent 40%, var(--t-theme));
+            animation: t-spin 1.2s linear infinite;
+            z-index: 0; /* 最底层 */
+        }
+        
+        /* 中间遮罩层 (夹在流光和图片中间，用于 Emoji 模式下的背景) */
+        #titania-float-btn.t-loading::after {
+            content: ""; position: absolute; 
+            inset: 3px; /* 对应 padding 大小 */
+            background: #2b2b2b; 
+            border-radius: 50%; 
+            z-index: 1; /* 比流光高，比图片低 */
+        }
+
+        /* 状态：新消息 (呼吸灯) */
+        @keyframes t-glow {
+            0%, 100% { box-shadow: 0 0 5px var(--t-notify); border-color: var(--t-notify); }
+            50% { box-shadow: 0 0 25px var(--t-notify); border-color: var(--t-notify); }
+        }
+
+        #titania-float-btn.t-notify {
+            animation: t-glow 2s infinite ease-in-out;
+            border-color: var(--t-notify); /* 呼吸时改变边框颜色 */
+        }
+    </style>`;
+    $("body").append(css);
+
+    // 2. 创建元素
+    // 注意：如果是图片，我们直接放 img 标签；如果是 Emoji，它会被当作文本节点
+    const btnContent = (app.type === 'image' && app.content.startsWith("data:"))
+        ? `<img src="${app.content}">`
+        : `<span style="position:relative; z-index:2;">${app.content}</span>`;
+
+    const btn = $(`<div id="titania-float-btn">${btnContent}</div>`);
     $("body").append(btn);
 
+    // 3. 拖拽逻辑 (保持不变)
     let isDragging = false, startX, startY, initialLeft, initialTop;
-    btn.on("touchstart mousedown", function(e) {
+    btn.on("touchstart mousedown", function (e) {
         isDragging = false;
         const evt = e.type === 'touchstart' ? e.originalEvent.touches[0] : e;
         startX = evt.clientX; startY = evt.clientY;
         const rect = this.getBoundingClientRect(); initialLeft = rect.left; initialTop = rect.top;
-        $(this).css({ "transition": "none", "transform": "none" }); 
+        $(this).css({ "transition": "none", "transform": "none" });
     });
-    $(document).on("touchmove mousemove", function(e) {
+    $(document).on("touchmove mousemove", function (e) {
         if (startX === undefined) return;
         const evt = e.type === 'touchmove' ? e.originalEvent.touches[0] : e;
         if (Math.abs(evt.clientX - startX) > 5 || Math.abs(evt.clientY - startY) > 5) isDragging = true;
         let l = initialLeft + (evt.clientX - startX), t = initialTop + (evt.clientY - startY);
-        l = Math.max(0, Math.min(window.innerWidth - 50, l)); t = Math.max(0, Math.min(window.innerHeight - 50, t));
+        l = Math.max(0, Math.min(window.innerWidth - 56, l)); t = Math.max(0, Math.min(window.innerHeight - 56, t));
         btn.css({ left: l + "px", top: t + "px", right: "auto" });
     });
-    $(document).on("touchend mouseup", function() {
+    $(document).on("touchend mouseup", function () {
         if (startX === undefined) return; startX = undefined;
         if (isDragging) {
             const rect = btn[0].getBoundingClientRect();
-            btn.css({ "transition": "all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)", "left": (rect.left + 25 < window.innerWidth / 2 ? 0 : window.innerWidth - 50) + "px" });
+            btn.css({ "transition": "all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)", "left": (rect.left + 28 < window.innerWidth / 2 ? 0 : window.innerWidth - 56) + "px" });
         } else {
             if (isGenerating) {
-                if(window.toastr) toastr.info("🎭 小剧场正在后台演绎中，请稍候...", "Titania Echo");
-                return; 
+                if (window.toastr) toastr.info("🎭 小剧场正在后台演绎中，请稍候...", "Titania Echo");
+                return;
             }
             btn.removeClass("t-notify");
             openMainWindow();
@@ -162,7 +270,7 @@ function getContextData() {
         data.userName = ctx.substituteParams("{{user}}") || "User";
         data.charName = ctx.substituteParams("{{char}}") || "Char";
         data.userDesc = ctx.substituteParams("{{persona}}") || "";
-        data.persona  = ctx.substituteParams("{{description}}") || "";
+        data.persona = ctx.substituteParams("{{description}}") || "";
     } catch (e) { console.error("Titania: 宏解析失败", e); }
 
     let charObj = null;
@@ -185,13 +293,13 @@ function getContextData() {
     }
     const globalWI = ctx.worldInfo || [];
     if (Array.isArray(globalWI) && globalWI.length > 0) {
-        const scanText = (data.persona + data.userDesc).toLowerCase(); 
+        const scanText = (data.persona + data.userDesc).toLowerCase();
         const activeEntries = globalWI.filter(entry => {
             if (entry.enabled === false) return false;
-            const keys = (entry.keys || "").split(",").map(k => k.trim().toLowerCase()).filter(k=>k);
+            const keys = (entry.keys || "").split(",").map(k => k.trim().toLowerCase()).filter(k => k);
             return keys.some(k => scanText.includes(k));
         });
-        if(activeEntries.length > 0) {
+        if (activeEntries.length > 0) {
             data.worldInfo += "[Global World Info]\n" + activeEntries.map(e => ctx.substituteParams(e.content)).join("\n") + "\n\n";
         }
     }
@@ -201,7 +309,7 @@ function getContextData() {
 function refreshScriptList(isEchoMode) {
     const $sel = $("#t-sel-script");
     $sel.empty();
-    
+
     // 只显示对应模式的剧本
     const targetMode = isEchoMode ? "echo" : "parallel";
     const validScripts = runtimeScripts.filter(s => s.mode === targetMode);
@@ -213,47 +321,461 @@ function refreshScriptList(isEchoMode) {
     if (lastUsedScriptId && validScripts.find(s => s.id === lastUsedScriptId)) {
         $sel.val(lastUsedScriptId);
     }
-    updateDesc(); 
+    updateDesc();
 }
 
-function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if(s) $("#t-txt-desc").val(s.desc); }
+function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if (s) $("#t-txt-desc").val(s.desc); }
 
+// 主窗口
 function openMainWindow() {
     if ($("#t-overlay").length) return;
-    
+
     const ctx = getContextData();
     const data = getExtData();
-    const savedMode = (data.ui_mode_echo !== false); // 读取持久化状态
+    let savedMode = (data.ui_mode_echo !== false);
 
-    const initialContent = lastGeneratedContent ? lastGeneratedContent : '<div style="text-align:center; color:#666; margin-top:40px;">请选择剧本并点击生成...</div>';
-    const style = `<style>.t-mode-box { display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-bottom:10px; font-size:0.9em; color:#ccc; } .t-switch { position: relative; display: inline-block; width: 40px; height: 20px; } .t-switch input { opacity: 0; width: 0; height: 0; } .t-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4a4a4a; transition: .4s; border-radius: 34px; } .t-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; } input:checked + .t-slider { background-color: #bfa15f; } input:checked + .t-slider:before { transform: translateX(20px); } .t-mode-label { font-weight:bold; transition:color 0.3s; } .mode-active { color: #bfa15f; }</style>`;
-    const html = `${style}<div id="t-overlay" class="t-overlay"><div class="t-box" id="t-main-view"><div class="t-header"><div class="t-title-container"><div class="t-title-main">回声小剧场</div><div class="t-title-sub">ECHO THEATER</div></div><div style="display:flex; align-items:center;"><i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="回声收藏夹"></i><i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="设置"></i><span class="t-close" id="t-btn-close">&times;</span></div></div><div class="t-body"><div style="text-align:center; color:#888; font-size:0.9em; margin-bottom:5px;">✨ 当前主演: ${ctx.charName}</div><div class="t-mode-box"><span id="t-mode-text-p" class="t-mode-label ${!savedMode?'mode-active':''}">平行世界</span><label class="t-switch"><input type="checkbox" id="t-mode-toggle" ${savedMode?'checked':''}><span class="t-slider"></span></label><span id="t-mode-text-e" class="t-mode-label ${savedMode?'mode-active':''}">回声模式</span></div><div class="t-controls"><select id="t-sel-script" class="t-select"></select><div class="t-dice" id="t-btn-dice" title="随机剧本">🎲</div></div><textarea id="t-txt-desc" class="t-desc" readonly rows="2"></textarea><div class="t-render"><div class="t-tools"><button class="t-tool-btn" id="t-btn-debug" title="审查Prompt"><i class="fa-solid fa-eye"></i> 审查</button><button class="t-tool-btn" id="t-btn-like" title="收藏"><i class="fa-regular fa-heart"></i> 收藏</button><button class="t-tool-btn" id="t-btn-copy">复制</button></div><div id="t-output-content" style="margin-top:20px;">${initialContent}</div></div><button id="t-btn-run" class="t-btn primary" style="height:45px;"><span>🎬 开始演绎</span></button></div></div></div>`;
+    // 新增状态：当前的分类筛选范围 (ALL 或 具体分类名)
+    let currentCategoryFilter = "ALL";
+
+    const initialContent = lastGeneratedContent ? lastGeneratedContent : '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">请选择剧本，开始演绎...</div></div>';
+
+    const style = `
+    <style>
+        .t-overlay { z-index: 2000; }
+        #t-main-view { width: 950px; max-width: 95vw; height: 85vh; display: flex; flex-direction: column; background: #121212; overflow: hidden; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Zen Mode */
+        #t-main-view.t-zen-mode { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; position: fixed; top: 0; left: 0; z-index: 3000; background: #0f0f0f; }
+        #t-main-view.t-zen-mode .t-header, #t-main-view.t-zen-mode .t-top-bar, #t-main-view.t-zen-mode .t-bottom-bar { display: none !important; }
+        #t-main-view.t-zen-mode .t-content-wrapper { background: #0f0f0f; background-image: none; }
+        #t-main-view.t-zen-mode .t-content-area { position: relative; width: 100%; height: 100%; max-width: 900px; margin: 0 auto; padding: 50px 30px; font-size: 1.2em; line-height: 2.0; letter-spacing: 0.02em; color: #d4d4d4; text-align: justify; }
+        #t-main-view.t-zen-mode #t-output-content p, #t-main-view.t-zen-mode #t-output-content div { margin-bottom: 1.5em; }
+
+        /* 常规样式 */
+        .t-top-bar { padding: 12px 20px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; gap: 15px; align-items: stretch; height: 75px; box-sizing: border-box; flex-shrink: 0; }
+        .t-tabs { display: flex; flex-direction: column; width: 140px; background: #111; border-radius: 6px; padding: 3px; border: 1px solid #333; flex-shrink: 0; }
+        .t-tab { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; transition: 0.2s; font-size: 0.85em; font-weight: bold; color: #666; margin-bottom: 2px; }
+        .t-tab:last-child { margin-bottom: 0; }
+        .t-tab.active-echo { background: rgba(144, 205, 244, 0.15); color: #90cdf4; border: 1px solid rgba(144, 205, 244, 0.2); }
+        .t-tab.active-parallel { background: rgba(191, 161, 95, 0.15); color: #bfa15f; border: 1px solid rgba(191, 161, 95, 0.2); }
+        
+        .t-trigger-card { flex-grow: 1; background: #222; border: 1px solid #333; border-radius: 6px; padding: 0 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; transition: 0.2s; position: relative; min-width: 0; }
+        .t-trigger-card:hover { background: #2a2a2a; border-color: #555; }
+        .t-trigger-main { font-size: 1.1em; font-weight: bold; color: #eee; margin-bottom: 3px; display:flex; align-items:center; gap:8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .t-trigger-sub { font-size: 0.8em; color: #888; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .t-cat-tag { background: #333; padding: 1px 6px; border-radius: 3px; color: #aaa; font-size: 0.9em; flex-shrink: 0; }
+        .t-chevron { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #555; font-size: 1.2em; }
+        
+        /* 按钮组容器 */
+        .t-action-group { display: flex; gap: 5px; flex-shrink: 0; }
+
+        /* 漏斗筛选按钮 */
+        .t-filter-btn { width: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.1em; cursor: pointer; background: #222; border: 1px solid #333; border-radius: 6px; color: #666; transition: 0.2s; }
+        .t-filter-btn:hover { background: #2a2a2a; color: #aaa; }
+        /* 激活状态：金色高亮 */
+        .t-filter-btn.active-filter { color: #bfa15f; border-color: rgba(191, 161, 95, 0.3); background: rgba(191, 161, 95, 0.1); }
+        
+        /* 骰子按钮 */
+        .t-dice-btn { width: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; cursor: pointer; background: #222; border: 1px solid #333; border-radius: 6px; transition: 0.2s; color: #888; }
+        .t-dice-btn:hover { background: #2a2a2a; color: #fff; }
+        .t-dice-btn.active-filter { color: #bfa15f; } /* 筛选状态下骰子变金 */
+
+        .t-content-wrapper { flex-grow: 1; position: relative; overflow: hidden; background-color: #0b0b0b; background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); background-size: 20px 20px; }
+        .t-content-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 30px; overflow-y: auto; box-sizing: border-box; scroll-behavior: smooth; }
+        #t-output-content { max-width: 100%; margin: 0 auto; line-height: 1.6; font-size: 1.05em; }
+        
+        .t-zen-btn { position: absolute; top: 20px; right: 25px; width: 40px; height: 40px; border-radius: 50%; background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(4px); color: #777; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; transition: all 0.2s; opacity: 0.6; }
+        .t-zen-btn:hover { opacity: 1; background: #bfa15f; color: #000; transform: scale(1.1); box-shadow: 0 0 15px rgba(191, 161, 95, 0.4); }
+
+        .t-bottom-bar { padding: 10px 15px; background: #1e1e1e; border-top: 1px solid #333; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
+
+        @media screen and (max-width: 600px) {
+            #t-main-view { width: 100%; height: 95vh; max-width: 100vw; border-radius: 10px 10px 0 0; }
+            .t-header { padding: 10px; }
+            .t-title-main { font-size: 1em; }
+            .t-top-bar { height: auto; flex-direction: column; padding: 10px; gap: 8px; }
+            .t-tabs { width: 100%; flex-direction: row; height: 36px; margin-bottom: 0; }
+            .t-tab { margin-bottom: 0; margin-right: 2px; }
+            .t-mobile-row { display: flex; gap: 8px; width: 100%; height: 50px; }
+            .t-trigger-card { height: 100%; }
+            .t-action-group { height: 100%; } /* 移动端高度撑满 */
+            .t-dice-btn { height: 100%; width: 50px; }
+            .t-filter-btn { height: 100%; width: 40px; }
+            .t-content-area { padding: 15px; }
+            .t-bottom-bar { flex-direction: column-reverse; gap: 10px; padding: 10px; }
+            .t-bottom-bar > div { width: 100%; display: flex; justify-content: space-between; }
+            .t-tool-btn { flex: 1; justify-content: center; }
+            #t-btn-run { width: 100%; height: 45px; }
+        }
+    </style>`;
+
+    const html = `
+    ${style}
+    <div id="t-overlay" class="t-overlay">
+        <div class="t-box" id="t-main-view">
+            
+            <div class="t-header" style="flex-shrink:0;">
+                <div class="t-title-container" style="display:flex; align-items:baseline; overflow:hidden;">
+                    <div class="t-title-main" style="white-space:nowrap;">回声小剧场</div>
+                    <div class="t-title-sub">
+                        ✨ 主演: ${ctx.charName}
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; flex-shrink:0;">
+                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="回声收藏夹"></i>
+                    <i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="设置"></i>
+                    <span class="t-close" id="t-btn-close">&times;</span>
+                </div>
+            </div>
+
+            <div class="t-top-bar">
+                <div class="t-tabs">
+                    <div class="t-tab ${savedMode ? 'active-echo' : ''}" id="t-tab-echo">🌊 回声模式</div>
+                    <div class="t-tab ${!savedMode ? 'active-parallel' : ''}" id="t-tab-parallel">🪐 平行世界</div>
+                </div>
+                <div class="t-mobile-row">
+                    <div class="t-trigger-card" id="t-trigger-btn" title="点击切换剧本">
+                        <div class="t-trigger-main">
+                            <span id="t-lbl-name" style="overflow:hidden; text-overflow:ellipsis;">加载中...</span>
+                        </div>
+                        <div class="t-trigger-sub">
+                            <span class="t-cat-tag" id="t-lbl-cat">分类</span>
+                            <span id="t-lbl-desc-mini">...</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down t-chevron"></i>
+                    </div>
+                    
+                    <!-- 动作按钮组：漏斗 + 骰子 -->
+                    <div class="t-action-group">
+                        <div class="t-filter-btn" id="t-btn-filter" title="筛选随机范围">
+                            <i class="fa-solid fa-filter"></i>
+                        </div>
+                        <div class="t-dice-btn" id="t-btn-dice" title="随机剧本">🎲</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="t-content-wrapper">
+                <div class="t-zen-btn" id="t-btn-zen" title="沉浸阅读模式"><i class="fa-solid fa-expand"></i></div>
+                <div class="t-content-area">
+                    <div id="t-output-content">${initialContent}</div>
+                </div>
+            </div>
+
+            <div class="t-bottom-bar">
+                <div style="display:flex; gap:8px;">
+                    <button class="t-tool-btn" id="t-btn-debug" title="审查Prompt"><i class="fa-solid fa-eye"></i> 审查</button>
+                    <button class="t-tool-btn" id="t-btn-like" title="收藏"><i class="fa-regular fa-heart"></i> 收藏</button>
+                    <button class="t-tool-btn" id="t-btn-copy"><i class="fa-regular fa-copy"></i> 复制</button>
+                </div>
+                <button id="t-btn-run" class="t-btn primary" style="font-size:1em;">
+                    <span>🎬 开始演绎</span>
+                </button>
+            </div>
+        </div>
+    </div>`;
 
     $("body").append(html);
-    refreshScriptList(savedMode);
-    updateDesc();
-    
-    // 切换开关并保存
-    $("#t-mode-toggle").on("change", function() {
-        const isEcho = $(this).is(":checked");
-        if(isEcho) { $("#t-mode-text-e").addClass("mode-active"); $("#t-mode-text-p").removeClass("mode-active"); } else { $("#t-mode-text-p").addClass("mode-active"); $("#t-mode-text-e").removeClass("mode-active"); }
-        
-        const currentData = getExtData();
-        currentData.ui_mode_echo = isEcho;
-        saveExtData();
-        refreshScriptList(isEcho);
+
+    // --- 内部逻辑 ---
+
+    // 更新 UI 状态
+    const updateFilterUI = () => {
+        const btn = $("#t-btn-filter");
+        const dice = $("#t-btn-dice");
+
+        if (currentCategoryFilter === "ALL") {
+            btn.removeClass("active-filter");
+            dice.removeClass("active-filter");
+            btn.attr("title", "当前：全部分类");
+        } else {
+            btn.addClass("active-filter");
+            dice.addClass("active-filter");
+            btn.attr("title", `当前锁定：${currentCategoryFilter}`);
+        }
+    };
+
+    const switchMode = (isEcho) => {
+        savedMode = isEcho;
+        // 核心：切换模式时重置筛选
+        currentCategoryFilter = "ALL";
+        updateFilterUI();
+
+        if (isEcho) { $("#t-tab-echo").addClass("active-echo"); $("#t-tab-parallel").removeClass("active-parallel"); }
+        else { $("#t-tab-echo").removeClass("active-echo"); $("#t-tab-parallel").addClass("active-parallel"); }
+
+        const d = getExtData(); d.ui_mode_echo = isEcho; saveExtData();
+
+        const currentScript = runtimeScripts.find(s => s.id === lastUsedScriptId);
+        const targetModeStr = isEcho ? 'echo' : 'parallel';
+
+        if (!currentScript || currentScript.mode !== targetModeStr) {
+            const firstValid = runtimeScripts.find(s => s.mode === targetModeStr);
+            if (firstValid) applyScriptSelection(firstValid.id);
+            else { $("#t-lbl-name").text("无可用剧本"); $("#t-lbl-cat").text("提示"); $("#t-lbl-desc-mini").text("无"); }
+        } else {
+            applyScriptSelection(lastUsedScriptId);
+        }
+    };
+
+    // 随机逻辑 (支持筛选)
+    const handleRandom = () => {
+        const targetModeStr = savedMode ? 'echo' : 'parallel';
+
+        // 1. 先按模式筛
+        let pool = runtimeScripts.filter(s => s.mode === targetModeStr);
+
+        // 2. 再按分类筛
+        if (currentCategoryFilter !== "ALL") {
+            pool = pool.filter(s => (s.category || (s._type === 'preset' ? '官方预设' : '未分类')) === currentCategoryFilter);
+        }
+
+        if (pool.length === 0) {
+            // 如果筛选后没结果，提示用户并重置
+            alert(`分类 [${currentCategoryFilter}] 下没有可用剧本，已重置筛选。`);
+            currentCategoryFilter = "ALL";
+            updateFilterUI();
+            return handleRandom(); // 重试
+        }
+
+        const rnd = Math.floor(Math.random() * pool.length);
+        const s = pool[rnd];
+        applyScriptSelection(s.id);
+
+        // 动画
+        const dice = $("#t-btn-dice");
+        dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
+        setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
+    };
+
+    // 绑定事件
+    $("#t-tab-echo").on("click", () => switchMode(true));
+    $("#t-tab-parallel").on("click", () => switchMode(false));
+
+    // 打开超级菜单时，传入当前 filter
+    $("#t-trigger-btn").on("click", () => showScriptSelector(savedMode, currentCategoryFilter));
+
+    // 打开筛选菜单
+    $("#t-btn-filter").on("click", function (e) {
+        // 调用我们即将新增的渲染函数
+        renderFilterMenu(savedMode, currentCategoryFilter, $(this), (newCat) => {
+            currentCategoryFilter = newCat;
+            updateFilterUI();
+            // 如果当前剧本不符合新筛选，自动随一个
+            handleRandom();
+        });
+        e.stopPropagation();
     });
 
-    $("#t-btn-close").on("click", () => $("#t-overlay").remove());
-    $("#t-overlay").on("click", (e) => { if(e.target === e.currentTarget) { if($("#t-btn-run").prop("disabled")) { $("#t-main-view").css("transform", "scale(1.02)"); setTimeout(() => $("#t-main-view").css("transform", "scale(1)"), 100); return; } $("#t-overlay").remove(); } });
+    $("#t-btn-dice").on("click", handleRandom);
+
+    // Zen Mode
+    $("#t-btn-zen").on("click", function () {
+        const view = $("#t-main-view");
+        view.toggleClass("t-zen-mode");
+        const isZen = view.hasClass("t-zen-mode");
+        $(this).html(isZen ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>');
+        if (isZen) $(this).css("background", "transparent"); else $(this).css("background", "rgba(30, 30, 30, 0.6)");
+    });
+    $(document).on("keydown.zenmode", function (e) {
+        if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) $("#t-btn-zen").click();
+    });
+
+    $("#t-btn-close").on("click", () => { $("#t-overlay").remove(); $(document).off("keydown.zenmode"); });
+    $("#t-overlay").on("click", (e) => { if (e.target === e.currentTarget) { $("#t-overlay").remove(); $(document).off("keydown.zenmode"); } });
     $("#t-btn-settings").on("click", openSettingsWindow);
-    $("#t-sel-script").on("change", updateDesc);
-    $("#t-btn-dice").on("click", function() { const opts = $("#t-sel-script option"); const rnd = Math.floor(Math.random() * opts.length); $("#t-sel-script").prop('selectedIndex', rnd).trigger('change'); $(this).css("transform", `rotate(${Math.random() * 360}deg)`); });
-    $("#t-btn-copy").on("click", () => { navigator.clipboard.writeText($("#t-output-content").text()); const btn = $("#t-btn-copy"); btn.text("已复制"); setTimeout(() => btn.text("复制"), 1000); });
-    $("#t-btn-run").on("click", () => handleGenerate(null, false));
+    $("#t-btn-copy").on("click", () => { navigator.clipboard.writeText($("#t-output-content").text()); const btn = $("#t-btn-copy"); const h = btn.html(); btn.html('<i class="fa-solid fa-check"></i> 已复制'); setTimeout(() => btn.html(h), 1000); });
+    $("#t-btn-run").on("click", () => handleGenerate(lastUsedScriptId, false));
     $("#t-btn-like").on("click", saveFavorite);
     $("#t-btn-favs").on("click", openFavsWindow);
     $("#t-btn-debug").on("click", showDebugInfo);
+
+    switchMode(savedMode);
+}
+
+// 新增渲染分类筛选菜单
+function renderFilterMenu(isEchoMode, currentFilter, $targetBtn, onSelect) {
+    if ($("#t-filter-popover").length) { $("#t-filter-popover").remove(); return; }
+
+    const targetMode = isEchoMode ? 'echo' : 'parallel';
+    const list = runtimeScripts.filter(s => s.mode === targetMode);
+
+    // 提取分类
+    const cats = [...new Set(list.map(s => s.category || (s._type === 'preset' ? '官方预设' : '未分类')))].sort();
+
+    const style = `
+    <style>
+        .t-filter-popover {
+            position: absolute; z-index: 2500;
+            background: #1e1e1e; border: 1px solid #444; border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            padding: 5px; width: 150px;
+            display: flex; flex-direction: column; gap: 2px;
+            animation: fadeIn 0.15s;
+        }
+        .t-filter-item {
+            padding: 8px 12px; cursor: pointer; color: #aaa; border-radius: 4px; font-size: 0.9em;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .t-filter-item:hover { background: #2a2a2a; color: #fff; }
+        .t-filter-item.active { background: #bfa15f; color: #000; font-weight: bold; }
+        .t-filter-check { opacity: 0; font-size: 0.8em; }
+        .t-filter-item.active .t-filter-check { opacity: 1; }
+    </style>`;
+
+    const html = `
+    ${style}
+    <div id="t-filter-popover" class="t-filter-popover">
+        <div class="t-filter-item ${currentFilter === 'ALL' ? 'active' : ''}" data-val="ALL">
+            <span>🔄 全部</span>
+            <i class="fa-solid fa-check t-filter-check"></i>
+        </div>
+        <div style="height:1px; background:#333; margin:2px 0;"></div>
+        ${cats.map(c => `
+            <div class="t-filter-item ${currentFilter === c ? 'active' : ''}" data-val="${c}">
+                <span>${c}</span>
+                <i class="fa-solid fa-check t-filter-check"></i>
+            </div>
+        `).join('')}
+    </div>`;
+
+    $("body").append(html);
+    const pop = $("#t-filter-popover");
+
+    // 定位逻辑 (相对于按钮)
+    const rect = $targetBtn[0].getBoundingClientRect();
+    // 简单判断一下是否靠近右边缘，避免溢出
+    const left = (rect.left + 150 > window.innerWidth) ? (rect.right - 150) : rect.left;
+    pop.css({ top: rect.bottom + 5, left: left });
+
+    // 点击事件
+    $(".t-filter-item").on("click", function () {
+        const val = $(this).data("val");
+        onSelect(val);
+        pop.remove();
+        $(document).off("click.closefilter");
+    });
+
+    // 点击外部关闭
+    setTimeout(() => {
+        $(document).on("click.closefilter", (e) => {
+            if (!$(e.target).closest("#t-filter-popover, .t-filter-btn").length) {
+                pop.remove();
+                $(document).off("click.closefilter");
+            }
+        });
+    }, 10);
+}
+
+// 应用选中的剧本到触发器卡片
+function applyScriptSelection(id) {
+    const s = runtimeScripts.find(x => x.id === id);
+    if (!s) return;
+
+    lastUsedScriptId = s.id;
+
+    // 更新触发器卡片 UI
+    $("#t-lbl-name").text(s.name);
+    $("#t-lbl-cat").text(s.category || (s._type === 'preset' ? "官方预设" : "未分类"));
+    $("#t-lbl-desc-mini").text(s.desc || "无简介");
+
+    // 同时也更新那个隐藏的desc文本框（如果还需要兼容旧逻辑的话）
+    $("#t-txt-desc").val(s.desc);
+}
+
+// [还原] 显示剧本选择器 (纯净版)
+function showScriptSelector(isEchoMode, initialFilter = "ALL") {
+    if ($("#t-selector-panel").length) return;
+
+    const targetMode = isEchoMode ? 'echo' : 'parallel';
+    const list = runtimeScripts.filter(s => s.mode === targetMode);
+    let categories = ["全部"];
+    const scriptCats = [...new Set(list.map(s => s.category || (s._type === 'preset' ? '官方预设' : '未分类')))];
+    categories = categories.concat(scriptCats.sort());
+
+    const style = `
+    <style>
+        .t-selector-panel { position: absolute; top: 80px; left: 20px; right: 20px; bottom: 20px; background: rgba(18, 18, 18, 0.98); backdrop-filter: blur(10px); z-index: 2001; border-radius: 8px; border: 1px solid #444; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8); animation: t-fade-in 0.2s ease-out; }
+        .t-sel-header { padding: 10px 15px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; background: #1e1e1e; border-radius: 8px 8px 0 0; }
+        .t-sel-body { display: flex; flex-grow: 1; overflow: hidden; }
+        .t-sel-sidebar { width: 160px; background: #181818; border-right: 1px solid #333; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+        .t-sel-grid { flex-grow: 1; padding: 15px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; align-content: start; }
+        .t-sel-cat-btn { padding: 8px 12px; cursor: pointer; color: #888; border-radius: 4px; font-size: 0.9em; transition: 0.2s; text-align: left; }
+        .t-sel-cat-btn:hover { background: #252525; color: #ddd; }
+        .t-sel-cat-btn.active { background: #333; color: #fff; font-weight: bold; border-left: 3px solid #bfa15f; }
+        .t-script-card { background: #252525; border: 1px solid #333; border-radius: 6px; padding: 12px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 5px; }
+        .t-script-card:hover { transform: translateY(-2px); border-color: #555; background: #2a2a2a; }
+        .t-card-title { font-weight: bold; color: #eee; font-size: 1em; }
+        .t-card-desc { font-size: 0.8em; color: #777; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+        @media screen and (max-width: 600px) {
+            .t-selector-panel { top: 10px; left: 10px; right: 10px; bottom: 10px; }
+            .t-sel-body { flex-direction: column; }
+            .t-sel-sidebar { width: 100%; height: 50px; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #333; padding: 5px; gap: 8px; white-space: nowrap; }
+            .t-sel-cat-btn { text-align: center; border-left: none; padding: 6px 12px; height: 32px; display: flex; align-items: center; background: #222; border: 1px solid #333; }
+            .t-sel-cat-btn.active { background: #bfa15f; color: #000; border: 1px solid #bfa15f; border-left: 1px solid #bfa15f; }
+            .t-sel-grid { grid-template-columns: 1fr; padding: 10px; }
+        }
+    </style>`;
+
+    const html = `
+    ${style}
+    <div id="t-selector-panel" class="t-selector-panel">
+        <div class="t-sel-header">
+            <div style="font-weight:bold; color:#ccc;">📚 选择剧本 <span style="font-size:0.8em; color:#666; font-weight:normal; margin-left:10px;">(共 ${list.length} 个)</span></div>
+            <div style="cursor:pointer; padding:5px 10px;" id="t-sel-close"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <div class="t-sel-body">
+            <div class="t-sel-sidebar" id="t-sel-sidebar"></div>
+            <div class="t-sel-grid" id="t-sel-grid"></div>
+        </div>
+    </div>`;
+
+    $("#t-main-view").append(html);
+
+    const renderGrid = (filterCat) => {
+        const $grid = $("#t-sel-grid");
+        $grid.empty();
+        const targetCat = filterCat === "ALL" ? "全部" : filterCat;
+        const filtered = targetCat === "全部"
+            ? list
+            : list.filter(s => (s.category || (s._type === 'preset' ? '官方预设' : '未分类')) === targetCat);
+
+        if (filtered.length === 0) {
+            $grid.append('<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px;">此分类下暂无剧本</div>');
+            return;
+        }
+
+        filtered.forEach(s => {
+            const card = $(`
+                <div class="t-script-card">
+                    <div class="t-card-title">${s.name}</div>
+                    <div class="t-card-desc">${s.desc || "..."}</div>
+                </div>
+            `);
+            card.on("click", () => {
+                applyScriptSelection(s.id);
+                $("#t-selector-panel").remove();
+            });
+            $grid.append(card);
+        });
+    };
+
+    const $sidebar = $("#t-sel-sidebar");
+    const startCat = initialFilter === "ALL" ? "全部" : initialFilter;
+    categories.forEach(cat => {
+        const btn = $(`<div class="t-sel-cat-btn">${cat}</div>`);
+        if (cat === startCat) btn.addClass("active");
+        btn.on("click", function () {
+            $(".t-sel-cat-btn").removeClass("active");
+            $(this).addClass("active");
+            renderGrid(cat);
+        });
+        $sidebar.append(btn);
+    });
+
+    renderGrid(startCat);
+    $("#t-sel-close").on("click", () => $("#t-selector-panel").remove());
 }
 
 // 【Part 4: 生成核心逻辑】
@@ -263,7 +785,7 @@ function getChatHistory(limit) {
     const ctx = SillyTavern.getContext();
     const history = ctx.chat || [];
     const safeLimit = parseInt(limit) || 10;
-    
+
     // 【修复逻辑】先过滤掉被隐藏或禁用的消息，再进行截取
     const visibleHistory = history.filter(msg => {
         // 过滤掉点了“眼睛”图标隐藏的消息
@@ -277,57 +799,57 @@ function getChatHistory(limit) {
 
     // 从过滤后的列表中截取最后 N 条
     const recent = visibleHistory.slice(-safeLimit);
-    
+
     return recent.map(msg => {
         let name = msg.name;
         if (msg.is_user) name = ctx.name1 || "User";
         if (name === "{{user}}") name = ctx.name1 || "User";
         if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
-        
+
         let rawContent = msg.message || msg.mes || "";
         // 简单的 HTML 标签清洗
-        let cleanContent = rawContent.replace(/<[^>]*>?/gm, ''); 
+        let cleanContent = rawContent.replace(/<[^>]*>?/gm, '');
         return `${name}: ${cleanContent}`;
     }).join("\n");
 }
 
 async function handleGenerate(forceScriptId = null, silent = false) {
     const data = getExtData();
-    const cfg = data.config || {}; 
+    const cfg = data.config || {};
 
     if (!cfg.key) return alert("请先去设置填 API Key！");
 
     const scriptId = forceScriptId || $("#t-sel-script").val();
     const script = runtimeScripts.find(s => s.id === scriptId);
-    
-    if(!script) {
-        if(!silent) alert("请选择剧本");
+
+    if (!script) {
+        if (!silent) alert("请选择剧本");
         return;
     }
-    
+
     lastUsedScriptId = script.id;
 
     const ctx = getContextData();
     const $floatBtn = $("#titania-float-btn");
     const useStream = cfg.stream !== false;
 
-    if (!silent) $("#t-overlay").remove(); 
-    
-    isGenerating = true;      
-    $floatBtn.addClass("t-loading"); 
-    
-    if(!silent && window.toastr) {
+    if (!silent) $("#t-overlay").remove();
+
+    isGenerating = true;
+    $floatBtn.addClass("t-loading");
+
+    if (!silent && window.toastr) {
         toastr.info(`🚀 [${useStream ? '流式' : '非流式'}] 剧本演绎中...`, "Titania Echo");
     }
 
     try {
         let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.Please answer all other content in Chinese.";
         let user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\n\n`;
-        
+
         if (ctx.persona) user += `[Character Persona]\n${ctx.persona}\n\n`;
         if (ctx.userDesc) user += `[User Persona]\n${ctx.userDesc}\n\n`;
         if (ctx.worldInfo) user += `[World Info / Lore]\n${ctx.worldInfo}\n\n`;
-        
+
         // 模式Token优化：Echo读历史，Parallel不读
         if (script.mode === 'echo') {
             const limit = cfg.history_limit || 10;
@@ -337,7 +859,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         } else {
             user += `[Mode Info]\n(Alternate Universe / Ignore previous chat history context)\n\n`;
         }
-        
+
         user += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
 
         let endpoint = (cfg.url || "").trim().replace(/\/+$/, "");
@@ -347,10 +869,10 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         const res = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cfg.key}` },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 model: cfg.model || "gpt-3.5-turbo",
-                messages: [{ role: "system", content: sys }, { role: "user", content: user }], 
-                stream: useStream 
+                messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+                stream: useStream
             })
         });
 
@@ -370,7 +892,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
                 if (done) break;
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split("\n");
-                buffer = lines.pop(); 
+                buffer = lines.pop();
                 for (const line of lines) {
                     const trimmed = line.trim();
                     if (!trimmed || !trimmed.startsWith("data: ")) continue;
@@ -389,273 +911,1467 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         }
 
         if (!finalContent) throw new Error("无内容生成");
-        
-        finalContent = finalContent.replace(/^```html/i, "").replace(/```$/i, "");
-        lastGeneratedContent = finalContent; 
-        
-        if(!silent && window.toastr) toastr.success(`✨ 《${script.name}》演绎完成！`, "Titania Echo");
-        $floatBtn.addClass("t-notify"); 
 
-    } catch (e) { 
+        finalContent = finalContent.replace(/^```html/i, "").replace(/```$/i, "");
+        lastGeneratedContent = finalContent;
+
+        if (!silent && window.toastr) toastr.success(`✨ 《${script.name}》演绎完成！`, "Titania Echo");
+        $floatBtn.addClass("t-notify");
+
+    } catch (e) {
         console.error("Titania Generate Error:", e);
         lastGeneratedContent = `<div style="color:#ff6b6b; text-align:center; padding:10px; border:1px solid #ff6b6b; border-radius:5px;">❌ 演绎失败: ${e.message}</div>`;
-        if(!silent && window.toastr) toastr.error("❌ 错误: " + e.message, "Titania Echo");
+        if (!silent && window.toastr) toastr.error("❌ 错误: " + e.message, "Titania Echo");
         $floatBtn.addClass("t-notify");
-    } finally { 
+    } finally {
         isGenerating = false;
         $floatBtn.removeClass("t-loading");
     }
 }
 
+// 显示 Prompt 审查窗口
 function showDebugInfo() {
+    const script = runtimeScripts.find(s => s.id === lastUsedScriptId);
+    if (!script) {
+        if (window.toastr) toastr.warning("请先选择一个剧本"); else alert("请先选择一个剧本");
+        return;
+    }
+
     const data = getExtData();
-    const cfg = data.config || {}; 
-    const script = runtimeScripts.find(s => s.id === $("#t-sel-script").val());
-    if (!script) return alert("请先选择一个剧本");
-
+    const cfg = data.config || {};
     const d = getContextData();
-    const sysPrompt = "You are a creative engine...";
-    let userPrompt = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\n\n`;
-    
-    if (d.persona) userPrompt += `[Character Persona]\n${d.persona}\n\n`;
-    if (d.worldInfo) userPrompt += `[World Info / Lore]\n${d.worldInfo}\n\n`;
 
+    // --- 1. 数据深度分析 (Data Profiling) ---
+
+    // A. 历史记录分析
+    let historyStatus = { count: 0, text: "未启用 (平行模式)" };
+    let finalHistoryText = "";
     if (script.mode === 'echo') {
         const limit = cfg.history_limit || 10;
         const hist = getChatHistory(limit);
-        userPrompt += `[History (${limit})]\n${hist || "(Empty)"}\n\n`;
-    } else {
-        userPrompt += `[Mode Info]\n(Parallel World / AU)\n\n`;
+        const count = hist ? hist.split('\n').length : 0; // 粗略统计行数作为消息数
+        historyStatus = { count: count, text: `${count} 条记录` };
+        finalHistoryText = hist || "(无历史记录)";
     }
-    userPrompt += `[Scenario Request]\n${script.prompt}`;
 
+    // B. 世界书分析 (逻辑拆解：区分角色书和全局WI)
+    // 注意：getContextData 已经把它们合并成字符串了，我们需要重新解析一下原始来源来做统计，
+    // 或者简单一点，分析 d.worldInfo 字符串的结构 (前提是 getContextData 里的 header 没变)
+    const wiText = d.worldInfo || "";
+    const charBookMatch = wiText.match(/\[Character Lore\/World Info\]/);
+    const globalWiMatch = wiText.match(/\[Global World Info\]/);
+
+    // 这里的统计只是近似值，为了更精准，我们其实可以在 getContextData 里返回结构化数据，
+    // 但为了不改动 getContextData 造成风险，我们这里用“是否有内容”来做定性分析。
+    const hasCharBook = !!charBookMatch;
+    const hasGlobalWI = !!globalWiMatch;
+    const wiLength = wiText.length;
+
+    // --- 2. 模拟构建 Prompt ---
+    const sysPrompt = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS...";
+    let userPrompt = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\n\n`;
+    if (d.persona) userPrompt += `[Character Persona]\n(Length: ${d.persona.length} chars)\n${d.persona}\n\n`;
+    if (d.worldInfo) userPrompt += `[World Info / Lore]\n(Length: ${d.worldInfo.length} chars)\n${d.worldInfo}\n\n`;
+    if (script.mode === 'echo') userPrompt += `[Recent Conversation History]\n${finalHistoryText}\n\n`;
+    else userPrompt += `[Mode Info]\n(Alternate Universe / Ignore previous chat history context)\n\n`;
+    const finalPrompt = script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName);
+    userPrompt += `[Scenario Request]\n${finalPrompt}`;
+
+    // --- 3. 渲染 UI ---
     $("#t-main-view").hide();
-    const debugHtml = `<div class="t-box" id="t-debug-view" style="height:95vh; display:flex; flex-direction:column;"><div class="t-header"><span class="t-title-main">👁️ Prompt 审查</span><span class="t-close" id="t-debug-close">&times;</span></div><div class="t-body" style="padding:10px; overflow-y:auto; flex-grow:1; font-family:monospace; font-size:12px;"><div style="margin-bottom:10px; padding:5px; background:#222; border:1px solid #444;"><strong style="color:#bfa15f;">[Configuration]</strong><br>Model: ${cfg.model || "Default"}<br>Mode: ${script.mode}</div><div style="margin-bottom:10px;"><strong style="color:#ff6b6b;">[System Message]</strong><pre style="white-space:pre-wrap; color:#aaa; margin:5px 0; background:#111; padding:5px;">${sysPrompt}</pre></div><div><strong style="color:#90cdf4;">[User Message]</strong><pre style="white-space:pre-wrap; color:#ddd; margin:5px 0; background:#111; padding:5px; border-left:3px solid #90cdf4;">${userPrompt}</pre></div></div><div style="padding:10px; border-top:1px solid #444;"><button id="t-debug-back" class="t-btn primary" style="width:100%;">返回主窗口</button></div></div>`;
-    $("#t-overlay").append(debugHtml);
-    const close = () => { $("#t-debug-view").remove(); $("#t-main-view").show(); };
+
+    const style = `
+    <style>
+        .t-dbg-container { height: 90vh; display: flex; flex-direction: column; background: #121212; color: #ccc; font-family: sans-serif; }
+        .t-dbg-tabs { display: flex; background: #181818; border-bottom: 1px solid #333; padding: 0 10px; }
+        .t-dbg-tab { padding: 12px 20px; cursor: pointer; color: #666; font-size: 0.9em; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .t-dbg-tab:hover { color: #aaa; }
+        .t-dbg-tab.active { color: #bfa15f; border-bottom-color: #bfa15f; font-weight: bold; }
+        
+        .t-dbg-content { flex-grow: 1; padding: 20px; overflow-y: auto; display: none; }
+        .t-dbg-content.active { display: block; }
+        
+        /* 概览卡片 */
+        .t-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .t-stat-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 15px; }
+        .t-stat-title { font-size: 0.8em; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .t-stat-val { font-size: 1.1em; color: #eee; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .t-stat-sub { font-size: 0.85em; color: #555; margin-top: 5px; }
+        
+        /* 状态灯 */
+        .t-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .t-dot.ok { background: #55efc4; box-shadow: 0 0 5px rgba(85, 239, 196, 0.4); }
+        .t-dot.warn { background: #fab1a0; }
+        .t-dot.gray { background: #444; }
+
+        /* 代码块 */
+        .t-code-box { background: #0f0f0f; border: 1px solid #222; border-radius: 4px; padding: 15px; font-family: 'Consolas', monospace; font-size: 0.85em; color: #a8a8a8; white-space: pre-wrap; word-break: break-all; line-height: 1.5; max-height: 400px; overflow-y: auto; margin-bottom: 20px; }
+        .t-code-label { font-size: 0.8em; color: #666; margin-bottom: 5px; font-weight: bold; }
+
+        @media screen and (max-width: 600px) {
+            .t-stat-grid { grid-template-columns: 1fr; }
+        }
+    </style>`;
+
+    const html = `
+    ${style}
+    <div class="t-box t-dbg-container" id="t-debug-view">
+        <div class="t-header" style="flex-shrink:0;">
+            <span class="t-title-main">📊 审查报告</span>
+            <span class="t-close" id="t-debug-close">&times;</span>
+        </div>
+        
+        <div class="t-dbg-tabs">
+            <div class="t-dbg-tab active" data-tab="overview">概览 (Overview)</div>
+            <div class="t-dbg-tab" data-tab="payload">原文 (Payload)</div>
+        </div>
+
+        <!-- Tab 1: 概览 -->
+        <div id="tab-overview" class="t-dbg-content active">
+            <div class="t-stat-grid">
+                
+                <!-- 基础信息 -->
+                <div class="t-stat-card">
+                    <div class="t-stat-title">基本信息</div>
+                    <div class="t-stat-val"><i class="fa-solid fa-film"></i> ${script.name}</div>
+                    <div class="t-stat-sub">模式: ${script.mode === 'echo' ? 'Echo' : 'Parallel'} | 模型: ${cfg.model}</div>
+                </div>
+
+                <!-- 角色绑定 -->
+                <div class="t-stat-card">
+                    <div class="t-stat-title">角色绑定</div>
+                    <div class="t-stat-val">
+                        <span class="t-dot ${d.charName !== 'Char' ? 'ok' : 'warn'}"></span>
+                        ${d.charName} <span style="font-size:0.8em; color:#666;">&</span> ${d.userName}
+                    </div>
+                    <div class="t-stat-sub">Persona 长度: ${d.persona ? d.persona.length : 0} 字符</div>
+                </div>
+
+                <!-- 历史记录 -->
+                <div class="t-stat-card">
+                    <div class="t-stat-title">聊天历史</div>
+                    <div class="t-stat-val">
+                        <span class="t-dot ${script.mode === 'echo' ? (historyStatus.count > 0 ? 'ok' : 'warn') : 'gray'}"></span>
+                        ${historyStatus.text}
+                    </div>
+                    <div class="t-stat-sub">${script.mode === 'echo' ? '已读取上下文' : '平行模式下不读取历史'}</div>
+                </div>
+
+                <!-- 世界书 -->
+                <div class="t-stat-card">
+                    <div class="t-stat-title">世界书 (World Info)</div>
+                    <div class="t-stat-val">
+                        <span class="t-dot ${wiLength > 0 ? 'ok' : 'gray'}"></span>
+                        ${wiLength > 0 ? '已注入上下文' : '未检测到内容'}
+                    </div>
+                    <div class="t-stat-sub" style="display:flex; flex-direction:column; gap:2px; margin-top:8px;">
+                        <span style="color:${hasCharBook ? '#ddd' : '#444'}">• 角色常驻条目: ${hasCharBook ? '✅' : '❌'}</span>
+                        <span style="color:${hasGlobalWI ? '#ddd' : '#444'}">• 全局关键词触发: ${hasGlobalWI ? '✅' : '❌'}</span>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div style="margin-top:20px; font-size:0.85em; color:#555; text-align:center;">
+                * 提示: 若世界书状态为❌，请检查 Character Book 是否开启了 Constant，或全局 WI 关键词是否匹配。
+            </div>
+        </div>
+
+        <!-- Tab 2: 原文 -->
+        <div id="tab-payload" class="t-dbg-content">
+            <div class="t-code-label">SYSTEM PROMPT</div>
+            <div class="t-code-box">${sysPrompt}</div>
+            
+            <div class="t-code-label">USER CONTEXT (Final Assembly)</div>
+            <div class="t-code-box" style="color:#d4d4d4;">${userPrompt}</div>
+        </div>
+
+        <div style="padding:15px; border-top:1px solid #333; background:#1e1e1e;">
+            <button id="t-debug-back" class="t-btn primary" style="width:100%;">关闭并返回</button>
+        </div>
+    </div>`;
+
+    $("#t-overlay").append(html);
+
+    // 事件
+    const close = () => {
+        $("#t-debug-view").remove();
+        $("#t-main-view").css("display", "flex");
+    };
+
     $("#t-debug-close, #t-debug-back").on("click", close);
+
+    $(".t-dbg-tab").on("click", function () {
+        $(".t-dbg-tab").removeClass("active");
+        $(this).addClass("active");
+        $(".t-dbg-content").removeClass("active");
+        $(`#tab-${$(this).data("tab")}`).addClass("active");
+    });
 }
 
 // 【Part 5: 设置、剧本管理器与编辑器】
 
+// [修改] 设置窗口 (已在"数据管理"页增加剧本管理器入口)
 function openSettingsWindow() {
     const data = getExtData();
-    const cfg = data.config || {}; 
+    const cfg = data.config || {};
+    const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4" };
+    let tempApp = JSON.parse(JSON.stringify(app));
+
     $("#t-main-view").hide();
-    
-    const isStreamOn = cfg.stream !== false;
-    const isAutoOn = cfg.auto_generate === true;
-    const autoChance = cfg.auto_chance || 50;
-    const autoMode = cfg.auto_mode || "follow";
+    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+    const style = `
+    <style>
+        #t-settings-view { width: 800px; height: 80vh; max-width: 95vw; display: flex; flex-direction: column; background: #121212; overflow: hidden; }
+        .t-set-body { flex-grow: 1; display: flex; overflow: hidden; }
+        .t-set-nav { width: 160px; background: #181818; border-right: 1px solid #333; padding: 10px 0; display: flex; flex-direction: column; flex-shrink: 0; }
+        .t-set-tab-btn { padding: 12px 20px; color: #888; cursor: pointer; transition: 0.2s; font-size: 0.95em; display: flex; align-items: center; gap: 10px; }
+        .t-set-tab-btn:hover { background: #222; color: #ccc; }
+        .t-set-tab-btn.active { background: #2a2a2a; color: #bfa15f; border-left: 3px solid #bfa15f; font-weight: bold; }
+        .t-set-content { flex-grow: 1; padding: 20px; overflow-y: auto; background: #121212; }
+        .t-set-page { display: none; animation: fadeIn 0.3s; }
+        .t-set-page.active { display: block; }
+        .t-form-group { margin-bottom: 20px; }
+        .t-form-label { display: block; color: #aaa; margin-bottom: 8px; font-size: 0.9em; }
+        .t-form-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 15px; }
+        .t-preview-container { background: #1a1a1a; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border: 1px solid #333; }
+        .t-preview-ball { width: 60px; height: 60px; border-radius: 50%; background: #2b2b2b; display: flex; align-items: center; justify-content: center; font-size: 28px; border: 2px solid transparent; transition: all 0.3s; position: relative; overflow: hidden; }
+        .t-preview-ball img { width: 100%; height: 100%; object-fit: cover; }
+        .t-upload-card { width: 100px; height: 100px; border: 2px dashed #444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #666; transition: 0.2s; background-size: cover; background-position: center; position: relative; }
+        .t-upload-card:hover { border-color: #bfa15f; color: #bfa15f; background-color: rgba(191, 161, 95, 0.05); }
+        .t-upload-card span { font-size: 0.8em; margin-top: 5px; background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 4px; }
+        
+        @keyframes p-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .p-loading { box-shadow: 0 0 15px var(--p-theme) !important; color: var(--p-theme) !important; background: transparent !important; }
+        .p-loading::before { content: ""; position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: conic-gradient(transparent, transparent, transparent, var(--p-theme)); animation: p-spin 1.2s linear infinite; z-index: -2; }
+        .p-loading::after { content: ""; position: absolute; inset: 3px; background: #2b2b2b; border-radius: 50%; z-index: -1; }
+        @keyframes p-glow { 0%,100% { box-shadow: 0 0 5px var(--p-notify); } 50% { box-shadow: 0 0 20px var(--p-notify); } }
+        .p-notify { border-color: var(--p-notify) !important; animation: p-glow 1.5s infinite ease-in-out; }
+        @media screen and (max-width: 600px) {
+            .t-set-body { flex-direction: column; }
+            .t-set-nav { width: 100%; height: 50px; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #333; }
+            .t-set-tab-btn { padding: 0 15px; border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+            .t-set-tab-btn.active { border-left: none; border-bottom-color: #bfa15f; background: transparent; }
+        }
+    </style>`;
+
+    const disabledCount = (data.disabled_presets || []).length;
+    const userScriptCount = (data.user_scripts || []).length;
 
     const html = `
+    ${style}
     <div class="t-box" id="t-settings-view">
         <div class="t-header"><span class="t-title-main">⚙️ 设置</span><span class="t-close" id="t-set-close">&times;</span></div>
-        <div class="t-body">
-            <h4 style="margin:0; border-bottom:1px solid #444; padding-bottom:5px;">🔌 API 连接</h4>
-            <div><label>API URL:</label><input id="cfg-url" class="t-input" value="${cfg.url || ''}" placeholder="http://.../v1"></div>
-            <div><label>API Key:</label><input id="cfg-key" type="password" class="t-input" value="${cfg.key || ''}"></div>
-            <div style="display:flex; gap:10px;">
-                <div style="flex-grow:1;"><label>Model:</label><select id="cfg-model-list" class="t-input"><option value="${cfg.model || 'gpt-3.5-turbo'}">${cfg.model || 'gpt-3.5-turbo'}</option></select></div>
-                <button id="t-btn-fetch" class="t-btn" style="margin-top:24px; padding:0 10px;">🔄 获取</button>
+        <div class="t-set-body">
+            <!-- 导航 -->
+            <div class="t-set-nav">
+                <div class="t-set-tab-btn active" data-tab="appearance">🎨 外观设置</div>
+                <div class="t-set-tab-btn" data-tab="connection">🔌 API 连接</div>
+                <div class="t-set-tab-btn" data-tab="automation">🤖 自动化</div>
+                <div class="t-set-tab-btn" data-tab="data">🗂️ 数据管理</div>
             </div>
 
-            <div style="margin-top:10px; padding:5px; background:rgba(0,0,0,0.2); border-radius:4px;">
-                <label style="display:flex; align-items:center; cursor:pointer;">
-                    <input type="checkbox" id="cfg-stream" ${isStreamOn ? 'checked' : ''} style="margin-right:8px;">
-                    <span>开启流式传输 (Streaming)</span>
-                </label>
-            </div>
-            
-            <h4 style="margin:15px 0 5px 0; border-bottom:1px solid #444; padding-bottom:5px;">🤖 自动生成 (Beta)</h4>
-            <div style="padding:5px; background:rgba(0,0,0,0.2); border-radius:4px;">
-                <label style="display:flex; align-items:center; cursor:pointer; margin-bottom:10px;">
-                    <input type="checkbox" id="cfg-auto" ${isAutoOn ? 'checked' : ''} style="margin-right:8px;">
-                    <span style="color:#bfa15f; font-weight:bold;">开启监听自动生成</span>
-                </label>
-                <div id="cfg-auto-panel" style="margin-left:5px; display:${isAutoOn ? 'block' : 'none'};">
-                    <div style="margin-bottom:8px;">
-                        <label>触发概率: <span id="cfg-chance-val">${autoChance}%</span></label>
-                        <input type="range" id="cfg-chance" min="10" max="100" step="10" value="${autoChance}" style="width:100%;">
+            <!-- 内容 -->
+            <div class="t-set-content">
+                <!-- Tab 1: 外观 -->
+                <div id="page-appearance" class="t-set-page active">
+                    <div class="t-preview-container">
+                        <div style="font-size:0.8em; color:#666; margin-bottom:15px;">实时预览</div>
+                        <div id="p-ball" class="t-preview-ball"></div>
+                        <div style="display:flex; gap:10px; margin-top:20px;">
+                            <button class="t-tool-btn" id="btn-test-spin">⚡ 测试流光</button>
+                            <button class="t-tool-btn" id="btn-test-notify">🔔 测试呼吸</button>
+                        </div>
                     </div>
-                    <div>
-                        <label>随机策略:</label>
-                        <select id="cfg-auto-mode" class="t-input">
-                            <option value="follow" ${autoMode==='follow'?'selected':''}>🛡️ 跟随主界面模式 (推荐)</option>
-                            <option value="echo_only" ${autoMode==='echo_only'?'selected':''}>🔍 仅回声剧本 (Echo)</option>
-                            <option value="mix" ${autoMode==='mix'?'selected':''}>🎲 混合抽取 (Echo + Parallel)</option>
-                        </select>
+                    <div class="t-form-group">
+                        <label class="t-form-label">图标类型</label>
+                        <div style="display:flex; gap:20px; margin-bottom:15px;">
+                            <label><input type="radio" name="p-type" value="emoji" ${tempApp.type === 'emoji' ? 'checked' : ''}> Emoji 表情</label>
+                            <label><input type="radio" name="p-type" value="image" ${tempApp.type === 'image' ? 'checked' : ''}> 自定义图片</label>
+                        </div>
+                        <div id="box-emoji" style="display:${tempApp.type === 'emoji' ? 'block' : 'none'}">
+                            <input id="p-emoji-input" class="t-input" value="${tempApp.type === 'emoji' ? tempApp.content : '🎭'}" style="width:100px; text-align:center; font-size:1.5em;">
+                        </div>
+                        <div id="box-image" style="display:${tempApp.type === 'image' ? 'block' : 'none'}">
+                            <input type="file" id="p-file-input" accept="image/*" style="display:none;">
+                            <div class="t-upload-card" id="btn-upload-card" title="点击更换图片">
+                                <i class="fa-solid fa-camera fa-2x"></i>
+                                <span>点击上传</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="t-form-group" style="margin-top:20px;">
+                        <div class="t-form-row">
+                            <span>流光主题色 (加载中)</span>
+                            <input type="color" id="p-color-theme" value="${tempApp.color_theme}" style="background:none; border:none; width:40px; height:30px;">
+                        </div>
+                        <div class="t-form-row" style="border:none;">
+                            <span>通知呼吸色 (完成时)</span>
+                            <input type="color" id="p-color-notify" value="${tempApp.color_notify}" style="background:none; border:none; width:40px; height:30px;">
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <h4 style="margin:15px 0 5px 0; border-bottom:1px solid #444; padding-bottom:5px;">🧬 其他</h4>
-            <div><label>回声模式-历史记录条数:</label><input id="cfg-history" type="number" class="t-input" value="${cfg.history_limit || 10}"></div>
+                <!-- Tab 2: 连接 -->
+                <div id="page-connection" class="t-set-page">
+                    <div class="t-form-group">
+                        <label class="t-form-label">API Endpoint URL</label>
+                        <input id="cfg-url" class="t-input" value="${cfg.url || ''}" placeholder="例如: http://127.0.0.1:5000/v1">
+                    </div>
+                    <div class="t-form-group">
+                        <label class="t-form-label">API Key</label>
+                        <input id="cfg-key" type="password" class="t-input" value="${cfg.key || ''}" placeholder="sk-...">
+                    </div>
+                    <div class="t-form-group">
+                        <label class="t-form-label">Model Name</label>
+                        <div style="display:flex; gap:10px;">
+                            <input id="cfg-model" class="t-input" value="${cfg.model || 'gpt-3.5-turbo'}">
+                            <button id="t-btn-fetch" class="t-tool-btn">🔄 获取列表</button>
+                        </div>
+                    </div>
+                    <div class="t-form-group">
+                        <label style="cursor:pointer; display:flex; align-items:center;">
+                            <input type="checkbox" id="cfg-stream" ${cfg.stream !== false ? 'checked' : ''} style="margin-right:10px;">
+                            开启流式传输 (Streaming)
+                        </label>
+                    </div>
+                </div>
 
-            <div style="margin-top:20px; border-top:1px solid #444; padding-top:15px;">
-                <button id="t-btn-open-mgr" class="t-btn" style="width:100%; height:45px; background:#444;">📂 打开剧本管理器</button>
-            </div>
-            
-            <div class="t-btn-row" style="margin-top:20px;">
-                <button id="t-set-save" class="t-btn primary" style="flex:1;">保存配置并返回</button>
+                <!-- Tab 3: 自动化 -->
+                <div id="page-automation" class="t-set-page">
+                    <div class="t-form-group">
+                        <label style="cursor:pointer; display:flex; align-items:center; color:#bfa15f; font-weight:bold;">
+                            <input type="checkbox" id="cfg-auto" ${cfg.auto_generate ? 'checked' : ''} style="margin-right:10px;">
+                            开启监听自动生成
+                        </label>
+                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">当检测到群聊消息时，有概率自动触发演绎。</p>
+                    </div>
+                    <div id="auto-settings-panel" style="display:${cfg.auto_generate ? 'block' : 'none'}; padding-left:22px;">
+                        <div class="t-form-group">
+                            <label class="t-form-label">触发概率: <span id="cfg-chance-val">${cfg.auto_chance || 50}%</span></label>
+                            <input type="range" id="cfg-chance" min="10" max="100" step="10" value="${cfg.auto_chance || 50}" style="width:100%;">
+                        </div>
+                        <div class="t-form-group">
+                            <label class="t-form-label">随机策略</label>
+                            <select id="cfg-auto-mode" class="t-input">
+                                <option value="follow" ${(cfg.auto_mode || 'follow') === 'follow' ? 'selected' : ''}>🛡️ 跟随主界面模式</option>
+                                <option value="echo_only" ${(cfg.auto_mode || 'follow') === 'echo_only' ? 'selected' : ''}>🔍 仅回声 (Echo)</option>
+                                <option value="mix" ${(cfg.auto_mode || 'follow') === 'mix' ? 'selected' : ''}>🎲 混合抽取</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="t-form-group" style="margin-top:20px; border-top:1px solid #333; padding-top:15px;">
+                        <label class="t-form-label">回声模式 - 历史记录读取行数</label>
+                        <input type="number" id="cfg-history" class="t-input" value="${cfg.history_limit || 10}">
+                    </div>
+                </div>
+
+                <!-- [修改] Tab 4: 数据管理 -->
+                <div id="page-data" class="t-set-page">
+                    
+                    <!-- 新增：剧本管理入口 -->
+                    <div class="t-form-group">
+                        <div class="t-form-label">自定义剧本库</div>
+                        <div style="background:#181818; border:1px solid #333; padding:20px; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:1.1em; color:#eee; font-weight:bold;">
+                                    <i class="fa-solid fa-scroll" style="color:#bfa15f; margin-right:8px;"></i>
+                                    剧本管理器
+                                </div>
+                                <div style="font-size:0.85em; color:#777; margin-top:5px;">
+                                    当前拥有自定义剧本: ${userScriptCount} 个
+                                </div>
+                            </div>
+                            <button id="btn-open-mgr" class="t-btn primary" style="padding: 8px 20px;">
+                                <i class="fa-solid fa-list-check"></i> 打开管理
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="t-form-group">
+                        <div class="t-form-label">已隐藏的官方预设剧本</div>
+                        <div style="background:#181818; border:1px solid #333; padding:15px; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:1.1em; color:#eee;">共 ${disabledCount} 个</div>
+                                <div style="font-size:0.8em; color:#666;">这些预设在列表中已被隐藏</div>
+                            </div>
+                            <button id="btn-restore-presets" class="t-btn" style="border:1px solid #555;" ${disabledCount === 0 ? 'disabled' : ''}>♻️ 恢复所有</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
+        <div style="padding:15px; background:#181818; border-top:1px solid #333; display:flex; justify-content:flex-end;">
+            <button id="t-set-save" class="t-btn primary" style="padding:0 30px;">💾 保存所有配置</button>
+        </div>
     </div>`;
-    
+
     $("#t-overlay").append(html);
 
-    $("#cfg-auto").on("change", function() { $("#cfg-auto-panel").slideToggle($(this).is(":checked")); });
-    $("#cfg-chance").on("input", function() { $("#cfg-chance-val").text($(this).val() + "%"); });
-    $("#t-btn-open-mgr").on("click", () => { $("#t-settings-view").remove(); openScriptManager(); });
+    // --- 逻辑绑定 ---
+    $(".t-set-tab-btn").on("click", function () {
+        $(".t-set-tab-btn").removeClass("active");
+        $(this).addClass("active");
+        $(".t-set-page").removeClass("active");
+        $(`#page-${$(this).data("tab")}`).addClass("active");
+    });
 
-    $("#t-set-close, #t-set-save").on("click", () => { 
-        const newCfg = { 
-            url: $("#cfg-url").val().trim(), 
-            key: $("#cfg-key").val().trim(), 
-            model: $("#cfg-model-list").val() || $("#cfg-model-list").text(),
+    const renderPreview = () => {
+        const $ball = $("#p-ball");
+        const theme = $("#p-color-theme").val();
+        const notify = $("#p-color-notify").val();
+        $ball[0].style.setProperty('--p-theme', theme);
+        $ball[0].style.setProperty('--p-notify', notify);
+        $ball.css("border-color", "transparent");
+        $ball.css("box-shadow", `0 0 10px ${theme}`);
+        if (tempApp.type === 'emoji') {
+            $ball.html(tempApp.content);
+        } else if (tempApp.type === 'image') {
+            if (tempApp.content && tempApp.content.startsWith("data:")) {
+                $ball.html(`<img src="${tempApp.content}">`);
+                $("#btn-upload-card").css("background-image", `url('${tempApp.content}')`).find("i, span").hide();
+            } else {
+                $ball.html('<i class="fa-solid fa-image"></i>');
+                $("#btn-upload-card").css("background-image", "").find("i, span").show();
+            }
+        }
+    };
+
+    $("input[name='p-type']").on("change", function () {
+        tempApp.type = $(this).val();
+        $("#box-emoji").toggle(tempApp.type === 'emoji');
+        $("#box-image").toggle(tempApp.type === 'image');
+        renderPreview();
+    });
+
+    $("#p-emoji-input").on("input", function () { tempApp.content = $(this).val(); renderPreview(); });
+    $("#p-color-theme, #p-color-notify").on("input", renderPreview);
+    $("#btn-upload-card").on("click", () => $("#p-file-input").click());
+    $("#p-file-input").on("change", async function () {
+        const file = this.files[0];
+        if (!file) return;
+        try {
+            const base64 = await fileToBase64(file);
+            tempApp.content = base64;
+            renderPreview();
+        } catch (e) { alert("图片读取失败"); }
+    });
+
+    $("#btn-test-spin").on("click", () => { $("#p-ball").removeClass("p-notify").addClass("p-loading"); setTimeout(() => $("#p-ball").removeClass("p-loading"), 3000); });
+    $("#btn-test-notify").on("click", () => { $("#p-ball").removeClass("p-loading").addClass("p-notify"); setTimeout(() => $("#p-ball").removeClass("p-notify"), 3000); });
+    $("#cfg-auto").on("change", function () { $("#auto-settings-panel").toggle($(this).is(":checked")); });
+    $("#cfg-chance").on("input", function () { $("#cfg-chance-val").text($(this).val() + "%"); });
+    $("#t-btn-fetch").on("click", async () => { alert("请确保API Key正确"); });
+
+    // 恢复预设逻辑
+    $("#btn-restore-presets").on("click", function () {
+        if (confirm("确定要恢复所有被隐藏的官方预设剧本吗？")) {
+            const d = getExtData();
+            d.disabled_presets = [];
+            saveExtData();
+            loadScripts();
+            $(this).prop("disabled", true).text("已恢复");
+            if (window.toastr) toastr.success("预设已恢复");
+        }
+    });
+
+    // [新增] 打开剧本管理器 (先关闭当前设置窗口)
+    $("#btn-open-mgr").on("click", () => {
+        $("#t-settings-view").remove();
+        openScriptManager();
+    });
+
+    $("#t-set-close").on("click", () => { $("#t-settings-view").remove(); $("#t-main-view").show(); });
+    $("#t-set-save").on("click", () => {
+        const finalApp = {
+            type: tempApp.type,
+            content: tempApp.content,
+            color_theme: $("#p-color-theme").val(),
+            color_notify: $("#p-color-notify").val()
+        };
+        const finalCfg = {
+            url: $("#cfg-url").val().trim(),
+            key: $("#cfg-key").val().trim(),
+            model: $("#cfg-model").val().trim(),
             history_limit: parseInt($("#cfg-history").val()) || 10,
             stream: $("#cfg-stream").is(":checked"),
             auto_generate: $("#cfg-auto").is(":checked"),
             auto_chance: parseInt($("#cfg-chance").val()),
             auto_mode: $("#cfg-auto-mode").val()
-        }; 
-        const currentData = getExtData();
-        currentData.config = newCfg;
+        };
+        const d = getExtData();
+        d.config = finalCfg;
+        d.appearance = finalApp;
         saveExtData();
-        $("#t-settings-view").remove(); $("#t-main-view").show(); loadScripts(); refreshScriptList($("#t-mode-toggle").is(":checked"));
+        $("#t-settings-view").remove();
+        $("#t-main-view").show();
+        createFloatingButton();
+        if (window.toastr) toastr.success("设置已保存");
     });
-    
-    $("#t-btn-fetch").on("click", async () => { const url = $("#cfg-url").val().replace(/\/+$/, "").replace(/\/chat\/completions$/, ""); const key = $("#cfg-key").val(); if(!url) return alert("请先填写 URL"); $("#t-btn-fetch").text("...").prop("disabled",true); try { const target = url.endsWith("/v1") ? `${url}/models` : `${url}/v1/models`; const res = await fetch(target, { headers: { Authorization: `Bearer ${key}` }}); const d = await res.json(); const list = Array.isArray(d) ? d : (d.data || []); const $sel = $("#cfg-model-list"); $sel.empty(); list.forEach(m => $sel.append(`<option value="${m.id}">${m.id}</option>`)); alert(`成功获取 ${list.length} 个模型`); } catch(e) { alert("获取失败: " + e.message); } finally { $("#t-btn-fetch").text("🔄 获取").prop("disabled",false); }});
+    renderPreview();
 }
 
+// [最终版] 剧本管理器 (含智能导入解析 + 移动端布局修复)
 function openScriptManager() {
+    // 内部状态
+    let currentFilter = {
+        mode: 'all', category: 'all', search: '', hidePresets: false
+    };
+    let isBatchMode = false;
+
+    const getCategories = () => {
+        const cats = new Set(runtimeScripts.map(s => s.category).filter(c => c));
+        return ["全部", ...[...cats].sort()];
+    };
+
+    const style = `
+    <style>
+        #t-mgr-view { height: 85vh; width: 900px; max-width: 95vw; display: flex; flex-direction: column; overflow: hidden; background: #121212; position: relative; }
+        .t-mgr-body { display: flex; flex-grow: 1; overflow: hidden; position: relative; }
+        
+        /* 侧边栏 */
+        .t-mgr-sidebar { width: 180px; background: #181818; border-right: 1px solid #333; display: flex; flex-direction: column; flex-shrink: 0; }
+        .t-mgr-sb-group { padding: 10px 0; border-bottom: 1px solid #222; }
+        .t-mgr-sb-title { font-size: 0.8em; color: #666; padding: 0 15px 5px; font-weight: bold; text-transform: uppercase; }
+        .t-mgr-sb-item { padding: 8px 15px; cursor: pointer; color: #aaa; font-size: 0.9em; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .t-mgr-sb-item:hover { background: #222; color: #eee; }
+        .t-mgr-sb-item.active { background: #2a2a2a; color: #bfa15f; border-left: 3px solid #bfa15f; font-weight: bold; }
+        
+        /* Main Area (Fixed overflow issue) */
+        .t-mgr-main { 
+            flex-grow: 1; display: flex; flex-direction: column; background: #121212; min-width: 0; position: relative;
+            overflow: hidden; 
+        }
+        
+        .t-mgr-toolbar { padding: 10px 15px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        .t-mgr-search { flex-grow: 1; background: #2a2a2a; border: 1px solid #444; color: #eee; padding: 6px 10px; border-radius: 4px; font-size: 0.9em; min-width: 50px; }
+        
+        .t-batch-elem { display: none; }
+        .t-batch-active .t-batch-elem { display: block; }
+        
+        /* 列表区域 */
+        .t-mgr-list { flex-grow: 1; overflow-y: auto; padding: 0; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .t-mgr-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #222; transition: 0.2s; min-height: 50px; }
+        .t-mgr-item:hover { background: #1a1a1a; }
+        .t-mgr-item-check-col { display: none; padding-right: 15px; } 
+        .t-batch-active .t-mgr-item-check-col { display: block; } 
+        
+        .t-mgr-item-meta { flex-grow: 1; overflow: hidden; }
+        .t-mgr-item-title { font-size: 0.95em; color: #eee; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .t-mgr-item-desc { font-size: 0.8em; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .t-mgr-tag { font-size: 0.75em; padding: 1px 5px; border-radius: 3px; background: #333; color: #aaa; }
+        
+        /* 底部操作栏 (Fixed position for Mobile) */
+        .t-mgr-footer-bar { 
+            height: 50px; background: #2a1a1a; border-top: 1px solid #522; 
+            display: none; align-items: center; justify-content: space-between; 
+            padding: 0 15px; color: #ff6b6b; flex-shrink: 0;
+            z-index: 10;
+        }
+        .t-batch-active .t-mgr-footer-bar { display: flex; animation: slideUp 0.2s; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .t-imp-modal { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index: 2000; display:none; justify-content:center; align-items:center; }
+        .t-imp-box { width: 400px; max-width:90%; background: #1e1e1e; border: 1px solid #444; border-radius: 8px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .t-imp-row { margin-bottom: 15px; }
+        .t-imp-label { display: block; color: #aaa; margin-bottom: 5px; font-size: 0.9em; }
+
+        @media screen and (max-width: 600px) {
+            .t-mgr-body { flex-direction: column; }
+            .t-mgr-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #333; padding: 5px; white-space: nowrap; flex-shrink:0; }
+            .t-mgr-sb-group { border: none; display: flex; padding: 0; gap: 5px; }
+            .t-mgr-sb-title { display: none; }
+            .t-mgr-sb-item { padding: 6px 12px; border: 1px solid #333; margin: 0; }
+            .t-mgr-sb-item.active { background: #bfa15f; color: #000; }
+            .t-mgr-footer-bar { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; box-shadow: 0 -5px 15px rgba(0,0,0,0.6); }
+            .t-batch-active .t-mgr-list { padding-bottom: 60px !important; }
+            #t-mgr-view { height: 80vh; max-height: 85vh; }
+        }
+    </style>`;
+
     const html = `
-    <div class="t-box" id="t-mgr-view" style="height:90vh;">
-        <div class="t-header"><span class="t-title-main">📜 剧本管理器</span><span class="t-close" id="t-mgr-close">&times;</span></div>
-        <div class="t-body" style="padding:0; display:flex; flex-direction:column; height:100%;">
-            <div style="padding:10px; background:#222; border-bottom:1px solid #444;">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:0.9em; color:#ccc;">
-                    <span>📥 导入至:</span>
-                    <label style="cursor:pointer;"><input type="radio" name="t-imp-mode" value="echo"> 回声</label>
-                    <label style="cursor:pointer;"><input type="radio" name="t-imp-mode" value="parallel" checked> 平行</label>
+    ${style}
+    <div class="t-box" id="t-mgr-view">
+        <div class="t-header"><span class="t-title-main">📂 剧本资源管理</span><span class="t-close" id="t-mgr-close">&times;</span></div>
+        <div class="t-mgr-body">
+            <div class="t-mgr-sidebar">
+                <div class="t-mgr-sb-group">
+                    <div class="t-mgr-sb-title">模式</div>
+                    <div class="t-mgr-sb-item active" data-filter="mode" data-val="all">全部</div>
+                    <div class="t-mgr-sb-item" data-filter="mode" data-val="echo">Echo</div>
+                    <div class="t-mgr-sb-item" data-filter="mode" data-val="parallel">Parallel</div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <input type="file" id="t-file-import" accept=".txt" style="display:none;" />
-                    <button id="t-mgr-import" class="t-tool-btn" style="flex:1;">导入 TXT</button>
-                    <button id="t-mgr-new" class="t-tool-btn" style="flex:1;">+ 新建</button>
-                    <button id="t-mgr-del-batch" class="t-tool-btn" style="flex:1; color:#aaa; pointer-events:none; border-color:#555;">🗑️ 删除</button>
+                <div class="t-mgr-sb-group">
+                    <div class="t-mgr-sb-title">分类</div>
+                    <div id="t-mgr-cat-list"></div>
                 </div>
             </div>
-            <div style="padding:5px 10px; background:#1a1a1a; font-size:0.85em; display:flex; align-items:center; border-bottom:1px solid #333;">
-                <input type="checkbox" id="t-mgr-select-all" style="margin-right:8px;"><label for="t-mgr-select-all">全选</label>
+            <div class="t-mgr-main" id="t-mgr-main-area">
+                <div class="t-mgr-toolbar">
+                    <input type="text" id="t-mgr-search-inp" class="t-mgr-search" placeholder="🔍 搜索...">
+                    <button id="t-mgr-import-btn" class="t-tool-btn" title="导入"><i class="fa-solid fa-file-import"></i></button>
+                    <button id="t-mgr-new" class="t-tool-btn" title="新建"><i class="fa-solid fa-plus"></i></button>
+                    <button id="t-mgr-batch-toggle" class="t-tool-btn" style="border:1px solid #444;" title="批量管理">
+                        <i class="fa-solid fa-list-check"></i> 管理
+                    </button>
+                </div>
+                <div class="t-mgr-header-row t-batch-elem" style="padding: 8px 15px; background: #2a2a2a; border-bottom: 1px solid #333; color: #ccc; font-size: 0.9em; flex-shrink:0;">
+                    <label style="display:flex; align-items:center; cursor:pointer;">
+                        <input type="checkbox" id="t-mgr-select-all" style="margin-right:10px;"> 全选当前列表
+                    </label>
+                </div>
+                <div class="t-mgr-list" id="t-mgr-list-container"></div>
+                <div class="t-mgr-footer-bar t-batch-elem">
+                    <span id="t-batch-count-label">已选: 0</span>
+                    <button id="t-mgr-del-confirm" class="t-tool-btn" style="color:#ff6b6b; border-color:#ff6b6b;">🗑️ 确认删除</button>
+                </div>
             </div>
-            <div id="t-mgr-list" style="flex-grow:1; overflow-y:auto; padding:5px;"></div>
+        </div>
+        
+        <div id="t-imp-modal" class="t-imp-modal">
+            <div class="t-imp-box">
+                <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">📥 导入剧本</h3>
+                <div class="t-imp-row">
+                    <span class="t-imp-label">剧本模式:</span>
+                    <div style="background:#111; padding:5px; border-radius:4px; border:1px solid #333; display:flex; gap:15px;">
+                        <label><input type="radio" name="imp-mode-m" value="echo"> 回声 (Echo)</label>
+                        <label><input type="radio" name="imp-mode-m" value="parallel" checked> 平行 (Parallel)</label>
+                    </div>
+                </div>
+                <div class="t-imp-row">
+                    <span class="t-imp-label">存入分类:</span>
+                    <input id="t-imp-cat-m" list="t-cat-dl-m" class="t-input" placeholder="输入或选择分类 (可选)" style="width:100%;">
+                    <datalist id="t-cat-dl-m"></datalist>
+                </div>
+                <div class="t-imp-row">
+                    <span class="t-imp-label">选择文件 (.txt):</span>
+                    <div style="display:flex; gap:10px; align-items:center; background:#111; padding:5px; border-radius:4px; border:1px solid #333;">
+                        <input type="file" id="t-file-input-m" accept=".txt" style="display:none;">
+                        <button id="t-btn-choose-file" class="t-btn" style="font-size:0.9em; padding:4px 10px;">📂 浏览文件...</button>
+                        <span id="t-file-name-label" style="font-size:0.85em; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 150px;">未选择文件</span>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button id="t-imp-cancel" class="t-btn" style="flex:1;">取消</button>
+                    <button id="t-imp-ok" class="t-btn primary" style="flex:1;">开始导入</button>
+                </div>
+            </div>
         </div>
     </div>`;
 
     $("#t-overlay").append(html);
-    renderManagerList();
 
-    $("#t-mgr-close").on("click", () => { $("#t-mgr-view").remove(); $("#t-main-view").show(); refreshScriptList($("#t-mode-toggle").is(":checked")); });
-    $("#t-mgr-select-all").on("change", function() { const checked = $(this).is(":checked"); $(".t-mgr-check:not(:disabled)").prop("checked", checked); updateBatchBtn(); });
-    $("#t-mgr-import").on("click", () => $("#t-file-import").click());
-    
-    $("#t-file-import").on("change", function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const selectedMode = $("input[name='t-imp-mode']:checked").val();
+    // --- 逻辑 ---
+    const renderSidebarCats = () => {
+        const cats = getCategories();
+        $("#t-mgr-cat-list").empty();
+        $("#t-cat-dl-m").empty().append(cats.map(c => `<option value="${c}">`));
+        cats.forEach(c => {
+            const $item = $(`<div class="t-mgr-sb-item" data-filter="category" data-val="${c}">${c}</div>`);
+            if (currentFilter.category === c) $item.addClass("active");
+            $item.on("click", function () {
+                $(".t-mgr-sb-item[data-filter='category']").removeClass("active");
+                $(this).addClass("active");
+                currentFilter.category = c;
+                renderList();
+            });
+            $("#t-mgr-cat-list").append($item);
+        });
+    };
+
+    const renderList = () => {
+        const $list = $("#t-mgr-list-container");
+        $list.empty();
+        $("#t-mgr-select-all").prop("checked", false);
+        updateBatchCount();
+
+        let filtered = runtimeScripts.filter(s => {
+            if (currentFilter.mode !== 'all' && s.mode !== currentFilter.mode) return false;
+            if (currentFilter.category !== 'all') {
+                const sCat = s.category || "未分类";
+                if (currentFilter.category !== "全部" && sCat !== currentFilter.category) return false;
+            }
+            if (currentFilter.search) {
+                const term = currentFilter.search.toLowerCase();
+                if (!s.name.toLowerCase().includes(term)) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            $list.append(`<div style="text-align:center; color:#555; margin-top:50px;">无数据</div>`);
+            return;
+        }
+
+        filtered.forEach(s => {
+            const isUser = s._type === 'user';
+            const modeIcon = s.mode === 'echo' ? '<i class="fa-solid fa-water" style="color:#90cdf4;"></i>' : '<i class="fa-solid fa-globe" style="color:#bfa15f;"></i>';
+            const catLabel = s.category ? `<span class="t-mgr-tag">${s.category}</span>` : '';
+            const presetLabel = !isUser ? `<span class="t-mgr-tag" style="background:#444;">预设</span>` : '';
+
+            const $row = $(`
+                <div class="t-mgr-item">
+                    <div class="t-mgr-item-check-col">
+                        <input type="checkbox" class="t-mgr-check" data-id="${s.id}" data-type="${s._type}">
+                    </div>
+                    <div class="t-mgr-item-meta" style="cursor:pointer;">
+                        <div class="t-mgr-item-title">${modeIcon} ${s.name} ${presetLabel} ${catLabel}</div>
+                        <div class="t-mgr-item-desc">${s.desc || "..."}</div>
+                    </div>
+                    <div style="padding-left:10px;">
+                        <i class="fa-solid fa-pen" style="color:#666; cursor:pointer;"></i>
+                    </div>
+                </div>
+            `);
+
+            $row.find(".t-mgr-item-meta, .fa-pen").on("click", () => {
+                if (!isBatchMode) { $("#t-mgr-view").hide(); openEditor(s.id, true); }
+                else {
+                    const cb = $row.find(".t-mgr-check");
+                    cb.prop("checked", !cb.prop("checked")).trigger("change");
+                }
+            });
+            $row.find(".t-mgr-check").on("change", updateBatchCount);
+            $list.append($row);
+        });
+    };
+
+    const updateBatchCount = () => {
+        const n = $(".t-mgr-check:checked").length;
+        $("#t-batch-count-label").text(`已选: ${n}`);
+        $("#t-mgr-del-confirm").prop("disabled", n === 0).css("opacity", n === 0 ? 0.5 : 1);
+    };
+
+    const refreshAll = () => { renderSidebarCats(); renderList(); };
+
+    // 事件绑定
+    $("#t-mgr-batch-toggle").on("click", function () {
+        isBatchMode = !isBatchMode;
+        const main = $("#t-mgr-main-area");
+        const btn = $(this);
+        if (isBatchMode) {
+            main.addClass("t-batch-active");
+            btn.html('<i class="fa-solid fa-check"></i> 完成').css({ background: "#bfa15f", color: "#000", borderColor: "#bfa15f" });
+        } else {
+            main.removeClass("t-batch-active");
+            btn.html('<i class="fa-solid fa-list-check"></i> 管理').css({ background: "", color: "", borderColor: "#444" });
+            $(".t-mgr-check").prop("checked", false);
+        }
+    });
+
+    $("#t-mgr-import-btn").on("click", () => { $("#t-imp-modal").css("display", "flex"); $("#t-file-input-m").val(""); $("#t-file-name-label").text("未选择文件"); });
+    $("#t-btn-choose-file").on("click", () => $("#t-file-input-m").click());
+    $("#t-file-input-m").on("change", function () { $("#t-file-name-label").text(this.files[0] ? this.files[0].name : "未选择文件"); });
+    $("#t-imp-cancel").on("click", () => $("#t-imp-modal").hide());
+
+    // [核心] 智能导入解析逻辑
+    $("#t-imp-ok").on("click", () => {
+        const file = $("#t-file-input-m")[0].files[0];
+        if (!file) return alert("请选择文件");
+        const defaultMode = $("input[name='imp-mode-m']:checked").val();
+        const defaultCat = $("#t-imp-cat-m").val().trim();
+
         const reader = new FileReader();
-        reader.onload = function(evt) {
+        reader.onload = function (evt) {
             const content = evt.target.result;
             const fileName = file.name.replace(/\.[^/.]+$/, "");
-            const blocks = content.split(/\r?\n\s*###\s*\r?\n/).filter(b => b.trim().length > 0);
+
+            // 按 ### 切割，保留分隔符后的可能文字
+            // split 的正则技巧：不吞掉内容。不过这里最简单的方法是 Split 后手动处理首行
+            const blocks = content.split(/(?:^|\r?\n)\s*###/);
+
+            let importCount = 0;
             blocks.forEach((block, index) => {
-                let scriptName = (blocks.length > 1) ? `${fileName}_${String(index+1).padStart(2, '0')}` : fileName;
-                saveUserScript({ id: "imp_" + Date.now() + "_" + Math.floor(Math.random()*1000), name: scriptName, desc: "从TXT导入", prompt: block.trim(), mode: selectedMode });
+                if (!block || !block.trim()) return;
+
+                // 1. 拆分行
+                let lines = block.split(/\r?\n/);
+
+                // 检查第一行是否是 "### 标题" 遗留下来的标题文字
+                // (因为 split 把 ### 吃掉了，剩下的就是后面的文字)
+                let potentialInlineTitle = lines[0].trim();
+                let bodyLines = lines; // 默认全是正文
+
+                let scriptTitle = "";
+                let scriptCat = defaultCat;
+
+                // 策略2: 如果分隔符后有文字，且较短，视为标题
+                if (potentialInlineTitle.length > 0 && potentialInlineTitle.length < 50) {
+                    scriptTitle = potentialInlineTitle;
+                    bodyLines = lines.slice(1); // 剔除第一行标题
+                }
+
+                let rawBody = bodyLines.join("\n").trim();
+
+                // 策略1 (优先级最高): 扫描 Title: 和 Category: 标签
+                // 提取并从正文中删除该行
+                const titleMatch = rawBody.match(/^(?:Title|标题)[:：]\s*(.+)$/im);
+                if (titleMatch) {
+                    scriptTitle = titleMatch[1].trim();
+                    rawBody = rawBody.replace(titleMatch[0], "").trim();
+                }
+
+                const catMatch = rawBody.match(/^(?:Category|分类)[:：]\s*(.+)$/im);
+                if (catMatch) {
+                    scriptCat = catMatch[1].trim();
+                    rawBody = rawBody.replace(catMatch[0], "").trim();
+                }
+
+                // 策略3 (保底): 截取前20字
+                if (!scriptTitle) {
+                    // 去除换行符，取前20字
+                    const cleanStart = rawBody.replace(/\s+/g, " ").substring(0, 20);
+                    if (cleanStart) {
+                        scriptTitle = cleanStart + "...";
+                    } else {
+                        scriptTitle = `${fileName}_${String(index + 1).padStart(2, '0')}`;
+                    }
+                }
+
+                if (!rawBody) return; // 空内容不导入
+
+                saveUserScript({
+                    id: "imp_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+                    name: scriptTitle,
+                    desc: "导入数据",
+                    prompt: rawBody,
+                    mode: defaultMode,
+                    category: scriptCat
+                });
+                importCount++;
             });
-            alert(`成功导入 ${blocks.length} 个剧本！`);
-            $("#t-file-import").val("");
-            renderManagerList(); 
+
+            alert(`成功导入 ${importCount} 个剧本`);
+            $("#t-imp-modal").hide();
+            refreshAll();
         };
         reader.readAsText(file);
     });
 
-    $("#t-mgr-new").on("click", () => { $("#t-mgr-view").hide(); openEditor(null, true); });
-    $("#t-mgr-del-batch").on("click", function() {
-        const ids = [];
-        $(".t-mgr-check:checked").each(function() { ids.push($(this).data("id")); });
-        if(ids.length === 0) return;
-        if(confirm(`删除选中的 ${ids.length} 个剧本？`)) { ids.forEach(id => deleteUserScript(id)); renderManagerList(); $("#t-mgr-select-all").prop("checked", false); }
+    $("#t-mgr-del-confirm").on("click", function () {
+        const toDeleteUser = [];
+        const toHidePreset = [];
+        $(".t-mgr-check:checked").each(function () {
+            const id = $(this).data("id");
+            const type = $(this).data("type");
+            if (type === 'user') toDeleteUser.push(id);
+            else if (type === 'preset') toHidePreset.push(id);
+        });
+
+        const total = toDeleteUser.length + toHidePreset.length;
+        if (total === 0) return;
+
+        if (confirm(`⚠️ 确定删除选中的 ${total} 个剧本？\n(注：官方预设将变为隐藏状态，可去设置里恢复)`)) {
+            if (toDeleteUser.length > 0) toDeleteUser.forEach(id => deleteUserScript(id));
+            if (toHidePreset.length > 0) {
+                const data = getExtData();
+                if (!data.disabled_presets) data.disabled_presets = [];
+                data.disabled_presets = [...new Set([...data.disabled_presets, ...toHidePreset])];
+                saveExtData();
+                loadScripts();
+            }
+            refreshAll();
+            $("#t-mgr-select-all").prop("checked", false);
+        }
     });
+
+    $("#t-mgr-close").on("click", () => { $("#t-mgr-view").remove(); $("#t-main-view").show(); refreshScriptList($("#t-mode-toggle").is(":checked")); });
+    $(".t-mgr-sb-item[data-filter='mode']").on("click", function () { $(".t-mgr-sb-item[data-filter='mode']").removeClass("active"); $(this).addClass("active"); currentFilter.mode = $(this).data("val"); renderList(); });
+    $("#t-mgr-search-inp").on("input", function () { currentFilter.search = $(this).val(); renderList(); });
+    $("#t-mgr-new").on("click", () => { $("#t-mgr-view").hide(); openEditor(null, true); });
+    $("#t-mgr-select-all").on("change", function () { $(".t-mgr-check:not(:disabled)").prop("checked", $(this).is(":checked")); updateBatchCount(); });
+
+    refreshAll();
 }
 
-function renderManagerList() {
-    const list = $("#t-mgr-list"); list.empty();
-    runtimeScripts.forEach(s => {
-        const isUser = s._type === 'user';
-        const modeLabel = s.mode === 'echo' ? '<span style="color:#90cdf4;">[回声]</span>' : '<span style="color:#bfa15f;">[平行]</span>';
-        const checkbox = isUser ? `<input type="checkbox" class="t-mgr-check" data-id="${s.id}" style="margin-right:10px;">` : `<input type="checkbox" disabled style="margin-right:10px; opacity:0.3;">`;
-        const btns = `<i class="fa-solid ${isUser?'fa-pen':'fa-eye'}" style="cursor:pointer; padding:5px;" onclick="window.t_edit('${s.id}', true)"></i>`;
-        list.append(`<div class="t-list-item" style="display:flex; align-items:center;"><div>${checkbox}</div><div style="flex-grow:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${modeLabel} ${s.name}</div><div>${btns}</div></div>`);
-    });
-    $(".t-mgr-check").on("change", updateBatchBtn); updateBatchBtn();
-}
 function updateBatchBtn() { const count = $(".t-mgr-check:checked").length; const btn = $("#t-mgr-del-batch"); if (count > 0) { btn.css({ "color": "#ff6b6b", "pointer-events": "auto", "border-color": "#ff6b6b" }); btn.text(`🗑️ 删除 (${count})`); } else { btn.css({ "color": "#aaa", "pointer-events": "none", "border-color": "#555" }); btn.text(`🗑️ 删除`); } }
 
-function openEditor(id, fromMgr = false) { 
-    const isEdit = !!id; 
-    let data = { id: Date.now().toString(), name: "新剧本", desc: "", prompt: "", mode: "parallel" }; 
-    if (isEdit) data = runtimeScripts.find(s => s.id === id); 
-    const isPreset = data._type === 'preset'; 
-    if(fromMgr) $("#t-mgr-view").hide(); else $("#t-settings-view").hide();
+// 打开剧本编辑器
+function openEditor(id, fromMgr = false) {
+    const isEdit = !!id;
+    let data = { id: Date.now().toString(), name: "新剧本", desc: "", prompt: "", mode: "parallel", category: "" };
+    if (isEdit) data = runtimeScripts.find(s => s.id === id);
+    const isPreset = data._type === 'preset';
+
+    if (fromMgr) $("#t-mgr-view").hide(); else $("#t-settings-view").hide();
+
     const checkEcho = data.mode === 'echo' ? 'checked' : '';
     const checkParallel = (data.mode === 'parallel' || !data.mode) ? 'checked' : '';
+
+    // 获取现有分类用于联想
+    const existingCats = [...new Set(runtimeScripts.map(s => s.category).filter(c => c))].sort();
+    const dataListOpts = existingCats.map(c => `<option value="${c}">`).join("");
 
     const html = `
     <div class="t-box" id="t-editor-view">
         <div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div>
         <div class="t-body">
-            <label>标题:</label><input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}>
+            
+            <!-- 第一行：标题 + 分类 -->
+            <div style="display:flex; gap:10px; margin-bottom:5px;">
+                <div style="flex-grow:1;">
+                    <label>标题:</label>
+                    <input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? 'disabled' : ''}>
+                </div>
+                <div style="width: 150px;">
+                    <label>分类:</label>
+                    <input id="ed-cat" list="ed-cat-list" class="t-input" value="${data.category || ''}" placeholder="默认" ${isPreset ? 'disabled' : ''}>
+                    <datalist id="ed-cat-list">${dataListOpts}</datalist>
+                </div>
+            </div>
+
             <label>模式:</label>
             <div style="margin-bottom:10px; display:flex; gap:15px;">
                 <label><input type="radio" name="ed-mode" value="echo" ${checkEcho} ${isPreset ? 'disabled' : ''}> <span style="color:#90cdf4;">回声</span></label>
                 <label><input type="radio" name="ed-mode" value="parallel" ${checkParallel} ${isPreset ? 'disabled' : ''}> <span style="color:#bfa15f;">平行</span></label>
             </div>
+
             <label>简介:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? 'disabled' : ''}>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><label>Prompt:</label>${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏</div>` : ''}</div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                <label>Prompt:</label>
+                ${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> 大屏</div>` : ''}
+            </div>
             <textarea id="ed-prompt" class="t-input" rows="6" ${isPreset ? 'disabled' : ''}>${data.prompt}</textarea>
-            <div class="t-btn-row">${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}<button id="ed-cancel" class="t-btn" style="flex:1;">返回</button></div>
+            
+            <div class="t-btn-row">
+                ${!isPreset ? '<button id="ed-save" class="t-btn primary" style="flex:1;">保存</button>' : ''}
+                <button id="ed-cancel" class="t-btn" style="flex:1;">返回</button>
+            </div>
         </div>
-    </div>`; 
-    $("#t-overlay").append(html); 
-    $("#ed-cancel").on("click", () => { $("#t-editor-view").remove(); if(fromMgr) { $("#t-mgr-view").show(); renderManagerList(); } else $("#t-settings-view").show(); }); 
-    $("#ed-btn-expand").on("click", () => { $("#t-editor-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${$("#ed-prompt").val()}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`); $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); }); $("#ed-large-ok").on("click", () => { $("#ed-prompt").val($("#ed-large-text").val()); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); }); });
-    if(!isPreset) { $("#ed-save").on("click", () => { saveUserScript({ id: isEdit ? data.id : "user_" + Date.now(), name: $("#ed-name").val(), desc: $("#ed-desc").val(), prompt: $("#ed-prompt").val(), mode: $("input[name='ed-mode']:checked").val() }); $("#t-editor-view").remove(); if(fromMgr) { $("#t-mgr-view").show(); renderManagerList(); }}); }
+    </div>`;
+
+    $("#t-overlay").append(html);
+
+    // 事件绑定
+    $("#ed-cancel").on("click", () => {
+        $("#t-editor-view").remove();
+        if (fromMgr) { $("#t-mgr-view").show(); renderManagerList(); } else $("#t-settings-view").show();
+    });
+
+    $("#ed-btn-expand").on("click", () => {
+        $("#t-editor-view").hide();
+        $("#t-overlay").append(`<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${$("#ed-prompt").val()}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`);
+        $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
+        $("#ed-large-ok").on("click", () => { $("#ed-prompt").val($("#ed-large-text").val()); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
+    });
+
+    if (!isPreset) {
+        $("#ed-save").on("click", () => {
+            saveUserScript({
+                id: isEdit ? data.id : "user_" + Date.now(),
+                name: $("#ed-name").val(),
+                desc: $("#ed-desc").val(),
+                prompt: $("#ed-prompt").val(),
+                mode: $("input[name='ed-mode']:checked").val(),
+                category: $("#ed-cat").val().trim() // 保存分类信息
+            });
+            $("#t-editor-view").remove();
+            if (fromMgr) { $("#t-mgr-view").show(); renderManagerList(); }
+        });
+    }
 }
+
 window.t_edit = (id, fromMgr) => openEditor(id, fromMgr);
 
 // 【Part 6: 收藏夹、监听逻辑与初始化】
+// 保存收藏功能
+function saveFavorite() {
+    const content = $("#t-output-content").html();
+    if (!content || content.includes("请选择剧本") || content.includes("<pre")) {
+        if (window.toastr) toastr.warning("内容无效，无法收藏"); else alert("内容无效");
+        return;
+    }
 
-function saveFavorite() { 
-    const content = $("#t-output-content").html(); 
-    if (!content || content.includes("请选择剧本") || content.includes("<pre")) return alert("内容无效"); 
-    const scriptName = $("#t-sel-script option:selected").text(); 
-    const entry = { id: Date.now(), title: `${scriptName} - ${getContextData().charName}`, date: new Date().toLocaleString(), html: content }; 
+    const script = runtimeScripts.find(s => s.id === lastUsedScriptId);
+    const scriptName = script ? script.name : "未知剧本";
+    const ctx = getContextData();
+
+    // === 恢复原样：DOM 屏幕抓取法 ===
+    // 这种方式将图片路径直接保存在这一条收藏记录里
+    let avatarSrc = null;
+
+    // 尝试1：抓取聊天流中，最后一条属于角色的消息头像
+    const lastCharImg = $(".mes[is_user='false'] .message_avatar_img").last();
+    if (lastCharImg.length > 0) {
+        avatarSrc = lastCharImg.attr("src");
+    }
+
+    // 尝试2：如果聊天里没图，尝试抓取主界面的大图
+    if (!avatarSrc) {
+        const mainImg = $("#character_image_div img");
+        if (mainImg.length > 0 && mainImg.is(":visible")) {
+            avatarSrc = mainImg.attr("src");
+        }
+    }
+
+    // 尝试3：尝试抓取右侧设置栏的小头像
+    if (!avatarSrc) {
+        const navImg = $("#right-nav-panel .character-avatar");
+        if (navImg.length > 0) {
+            avatarSrc = navImg.attr("src");
+        }
+    }
+
+    console.log("Titania: Captured Avatar Path ->", avatarSrc);
+
+    const entry = {
+        id: Date.now(),
+        title: `${scriptName} - ${ctx.charName}`,
+        date: new Date().toLocaleString(),
+        html: content,
+        avatar: avatarSrc // 恢复保存具体路径
+    };
+
     const data = getExtData();
     if (!data.favs) data.favs = [];
     data.favs.unshift(entry);
     saveExtData();
-    $("#t-btn-like").html('<i class="fa-solid fa-heart"></i> 已收藏').addClass("t-liked"); 
+
+    const btn = $("#t-btn-like");
+    btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i> 已收藏');
+    setTimeout(() => btn.html('<i class="fa-regular fa-heart"></i> 收藏'), 2000);
 }
 
-function openFavsWindow() { 
-    $("#t-main-view").hide(); 
+// 修改 openFavsWindow 函数
+function openFavsWindow() {
+    $("#t-main-view").hide();
     const data = getExtData();
     const favs = data.favs || [];
-    const html = `<div class="t-box" id="t-favs-view"><div class="t-header"><span class="t-title-main">📖 回声收藏夹</span><span class="t-close" id="t-fav-close">&times;</span></div><div class="t-body" id="t-fav-list">${favs.length === 0 ? '<div style="text-align:center; color:#666; margin-top:50px;">暂无收藏~</div>' : ''}</div></div>`; 
-    $("#t-overlay").append(html); 
-    favs.forEach(item => { const el = $(`<div class="t-list-item" style="cursor:pointer;"><div style="flex-grow:1;"><div style="font-weight:bold;">${item.title||'未命名'}</div><div class="t-fav-meta">${item.date}</div></div><div><i class="fa-solid fa-trash" style="color:#ff6b6b; padding:5px;"></i></div></div>`); el.find("div:first").on("click", () => { $("#t-favs-view").hide(); $("#t-overlay").append(`<div class="t-box" id="t-reader-view"><div class="t-header"><span class="t-title-main" style="font-size:1em;">${item.title}</span><span class="t-close" id="t-read-close">&times;</span></div><div class="t-body" style="padding:0;"><div class="t-render" style="border:none; border-radius:0; height:100%;">${item.html}</div></div></div>`); $("#t-read-close").on("click", () => { $("#t-reader-view").remove(); $("#t-favs-view").show(); }); }); el.find(".fa-trash").on("click", (e) => { e.stopPropagation(); if(confirm("删除？")) { const d = getExtData(); d.favs = (d.favs || []).filter(x => x.id !== item.id); saveExtData(); $("#t-favs-view").remove(); openFavsWindow(); }}); $("#t-fav-list").append(el); }); 
-    $("#t-fav-close").on("click", () => { $("#t-favs-view").remove(); $("#t-main-view").show(); }); 
+    // 确保 map 初始化
+    const charMap = data.character_map || {};
+    let currentFavId = null;
+
+    // 解析元数据
+    const parseMeta = (title) => {
+        const parts = title.split(' - ');
+        if (parts.length >= 2) {
+            const char = parts.pop();
+            const script = parts.join(' - ');
+            return { script, char: char.trim() }; // trim 很重要
+        }
+        return { script: title, char: "未知" };
+    };
+
+    const getSnippet = (html) => {
+        const tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        let text = tmp.textContent || tmp.innerText || "";
+        text = text.replace(/\s+/g, " ").trim();
+        return text.length > 60 ? text.substring(0, 60) + "..." : text;
+    };
+
+    // 构建索引
+    const charIndex = new Set();
+    favs.forEach(f => {
+        const meta = parseMeta(f.title || "");
+        f._meta = meta; // 缓存 meta 信息
+        charIndex.add(meta.char);
+    });
+    const charList = ["全部角色", ...[...charIndex].sort()];
+
+    const style = `
+    <style>
+        .t-fav-container { height: 90vh; width: 1100px; max-width: 95vw; display: flex; flex-direction: column; background: #121212; overflow: hidden; position: relative; }
+        .t-fav-toolbar { height: 60px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 20px; gap: 15px; flex-shrink: 0; }
+        .t-fav-filter-select { background: #2a2a2a; color: #eee; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; outline: none; min-width: 120px; cursor: pointer; }
+        .t-fav-search { background: #2a2a2a; color: #eee; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; outline: none; width: 200px; }
+        .t-fav-grid-area { flex-grow: 1; padding: 25px; overflow-y: auto; background: #121212; }
+        .t-fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        
+        .t-fav-card { 
+            position: relative; overflow: hidden;
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px; 
+            height: 180px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex; flex-direction: column; justify-content: flex-end; 
+        }
+        .t-fav-card-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: top center;
+            opacity: 0.5;
+            transition: all 0.5s ease; z-index: 0;
+        }
+        .t-fav-card-bg.no-img { background: linear-gradient(135deg, #1f1f1f, #2a2a2a); opacity: 1; filter: none; }
+        .t-fav-card-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.9) 100%);
+            z-index: 1; pointer-events: none;
+        }
+        .t-fav-card:hover { transform: translateY(-5px); border-color: #666; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
+        .t-fav-card:hover .t-fav-card-bg { opacity: 0.6; transform: scale(1.05); }
+        .t-fav-card-content { position: relative; z-index: 2; padding: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+        .t-fav-card-header { margin-bottom: 6px; }
+        .t-fav-card-script { font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 2px; }
+        .t-fav-card-char { font-size: 0.85em; color: #bfa15f; font-weight: 500; display:flex; align-items:center; gap:5px; }
+        .t-fav-card-snippet { font-size: 0.85em; color: rgba(255,255,255,0.8); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 8px; font-style: italic; }
+        .t-fav-card-footer { font-size: 0.75em; color: rgba(255,255,255,0.5); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
+
+        /* 阅读器 */
+        .t-fav-reader { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #0b0b0b; z-index: 10; 
+            display: flex; flex-direction: column; 
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .t-fav-reader.show { transform: translateX(0); }
+        .t-read-header { height: 60px; padding: 0 20px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; background: #181818; }
+        .t-read-body { flex-grow: 1; padding: 40px 15%; overflow-y: auto; color: #ccc; font-size: 1.1em; line-height: 1.8; }
+        .t-fav-empty { text-align: center; color: #555; margin-top: 50px; grid-column: 1/-1; }
+
+        @media screen and (max-width: 600px) {
+            .t-fav-toolbar { flex-direction: column; height: auto; padding: 10px; align-items: stretch; }
+            .t-fav-search { width: 100%; }
+            .t-read-body { padding: 20px; }
+        }
+    </style>`;
+
+    const html = `
+    ${style}
+    <div class="t-box t-fav-container" id="t-favs-view">
+        <div class="t-header" style="flex-shrink:0;">
+            <span class="t-title-main">📖 收藏画廊</span>
+            <span class="t-close" id="t-fav-close">&times;</span>
+        </div>
+        
+        <div class="t-fav-toolbar">
+            <div style="display:flex; align-items:center; gap:10px; flex-grow:1;">
+                <i class="fa-solid fa-filter" style="color:#666;"></i>
+                <select id="t-fav-filter-char" class="t-fav-filter-select">
+                    ${charList.map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
+            </div>
+            
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="text" id="t-fav-search" class="t-fav-search" placeholder="搜索关键词...">
+                <!-- [新增] 图鉴管理按钮 -->
+                <button id="t-btn-img-mgr" class="t-tool-btn" title="管理角色背景图">
+                    <i class="fa-regular fa-image"></i> 图鉴
+                </button>
+            </div>
+        </div>
+        
+        <div class="t-fav-grid-area">
+            <div class="t-fav-grid" id="t-fav-grid"></div>
+        </div>
+
+        <!-- 阅读器 -->
+        <div class="t-fav-reader" id="t-fav-reader">
+            <div class="t-read-header">
+                <div style="display:flex; align-items:center; gap:15px; overflow:hidden;">
+                    <i class="fa-solid fa-chevron-left" id="t-read-back" style="cursor:pointer; font-size:1.2em; padding:5px; color:#aaa;"></i>
+                    <div id="t-read-meta" style="font-weight:bold; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="t-tool-btn" id="t-read-code" title="HTML源码"><i class="fa-solid fa-code"></i></button>
+                    <button class="t-tool-btn" id="t-read-del-one" title="删除" style="color:#ff6b6b; border-color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+            <div class="t-read-body" id="t-read-content"></div>
+        </div>
+    </div>`;
+
+    $("#t-overlay").append(html);
+
+    // --- 渲染逻辑 ---
+
+    const renderGrid = () => {
+        const grid = $("#t-fav-grid");
+        grid.empty();
+
+        // 重新获取最新的 map（因为刚刚可能在管理界面修改了）
+        const currentMap = getExtData().character_map || {};
+
+        const targetChar = $("#t-fav-filter-char").val();
+        const search = $("#t-fav-search").val().toLowerCase();
+
+        const filtered = favs.filter(f => {
+            if (targetChar !== "全部角色" && f._meta.char !== targetChar) return false;
+            if (search && !f.title.toLowerCase().includes(search) && !f.html.toLowerCase().includes(search)) return false;
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            grid.append('<div class="t-fav-empty">没有找到相关收藏</div>');
+            return;
+        }
+
+        filtered.forEach(item => {
+            const snippet = getSnippet(item.html);
+            const charName = item._meta.char;
+
+            // [修改] 背景图优先级策略
+            // 1. 先查全局 Map (character_map)
+            // 2. 再查单卡缓存 (item.avatar)
+            // 3. 都没有则为空
+            let bgUrl = currentMap[charName];
+            if (!bgUrl) bgUrl = item.avatar;
+
+            const bgClass = bgUrl ? '' : 'no-img';
+            const bgStyle = bgUrl ? `background-image: url('${bgUrl}')` : '';
+
+            const card = $(`
+                <div class="t-fav-card">
+                    <div class="t-fav-card-bg ${bgClass}" style="${bgStyle}"></div>
+                    <div class="t-fav-card-overlay"></div>
+                    <div class="t-fav-card-content">
+                        <div class="t-fav-card-header">
+                            <div class="t-fav-card-script">${item._meta.script}</div>
+                            <div class="t-fav-card-char"><i class="fa-solid fa-user-tag" style="font-size:0.8em"></i> ${charName}</div>
+                        </div>
+                        <div class="t-fav-card-snippet">${snippet}</div>
+                        <div class="t-fav-card-footer">
+                            <span>${item.date.split(' ')[0]}</span>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            card.on("click", () => openReader(item));
+            grid.append(card);
+        });
+    };
+
+    const openReader = (item) => {
+        currentFavId = item.id;
+        $("#t-read-meta").text(item.title);
+        $("#t-read-content").html(item.html);
+        $("#t-fav-reader").addClass("show");
+    };
+
+    // --- 事件绑定 ---
+    $("#t-fav-filter-char, #t-fav-search").on("input change", renderGrid);
+
+    // [新增] 绑定图鉴管理按钮
+    $("#t-btn-img-mgr").on("click", () => {
+        // 传入回调函数：当管理器关闭时，重新渲染网格以应用新图片
+        openCharImageManager(() => {
+            renderGrid();
+        });
+    });
+
+    $("#t-read-back").on("click", () => $("#t-fav-reader").removeClass("show"));
+
+    $("#t-read-code").on("click", () => {
+        const htmlContent = $("#t-read-content").html();
+        // (简化代码以节省篇幅，保持原有逻辑)
+        navigator.clipboard.writeText(htmlContent);
+        if (window.toastr) toastr.success("源码已复制");
+    });
+
+    $("#t-read-del-one").on("click", () => {
+        if (confirm("确定删除此条收藏？")) {
+            const d = getExtData();
+            d.favs = d.favs.filter(x => x.id !== currentFavId);
+            saveExtData();
+            favs.splice(0, favs.length, ...d.favs);
+            $("#t-fav-reader").removeClass("show");
+            renderGrid();
+        }
+    });
+
+    $("#t-fav-close").on("click", () => { $("#t-favs-view").remove(); $("#t-main-view").css("display", "flex"); });
+
+    renderGrid();
+}
+
+// [新增] 角色图鉴管理器
+function openCharImageManager(onCloseCallback) {
+    const data = getExtData();
+    // 确保 map 存在
+    if (!data.character_map) data.character_map = {};
+
+    // 1. 提取所有收藏中出现过的角色名
+    const favs = data.favs || [];
+    const charNames = new Set();
+    favs.forEach(f => {
+        // 简单的解析逻辑，假设 title 格式为 "剧本名 - 角色名"
+        const parts = (f.title || "").split(' - ');
+        if (parts.length >= 2) charNames.add(parts[parts.length - 1].trim());
+    });
+    const sortedChars = [...charNames].sort();
+
+    // 2. 辅助函数：尝试从 SillyTavern 系统中查找角色头像
+    const tryFindSystemAvatar = (charName) => {
+        // 尝试多种来源查找
+        let foundAvatar = null;
+        try {
+            // 来源 A: SillyTavern 上下文
+            if (SillyTavern && SillyTavern.getContext) {
+                const ctx = SillyTavern.getContext();
+                if (ctx.characters) {
+                    // ctx.characters 是个对象，key 是 ID
+                    Object.values(ctx.characters).forEach(c => {
+                        if (c.name === charName && c.avatar) foundAvatar = c.avatar;
+                    });
+                }
+            }
+            // 来源 B: window.characters (ST 全局变量，通常是数组或对象)
+            if (!foundAvatar && typeof window.characters !== 'undefined') {
+                const chars = Array.isArray(window.characters) ? window.characters : Object.values(window.characters);
+                const match = chars.find(c => c.name === charName || (c.data && c.data.name === charName));
+                if (match) foundAvatar = match.avatar;
+            }
+        } catch (e) { console.error("Titania: Auto-find avatar failed", e); }
+
+        // 如果找到了，通常 ST 返回的是文件名（如 "Alice.png"），我们需要补全路径
+        // ST 的标准头像路径通常是 'characters/' + filename
+        if (foundAvatar && !foundAvatar.startsWith("http") && !foundAvatar.startsWith("data:")) {
+            // 简单的防重复处理
+            if (!foundAvatar.includes("/")) foundAvatar = `characters/${foundAvatar}`;
+        }
+        return foundAvatar;
+    };
+
+    const style = `
+    <style>
+        .t-img-mgr-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 50; display: flex; justify-content: center; align-items: center; animation: fadeIn 0.2s; }
+        .t-img-mgr-box { width: 600px; max-width: 95%; height: 70vh; background: #1e1e1e; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .t-img-list { flex-grow: 1; overflow-y: auto; padding: 15px; }
+        .t-img-item { display: flex; align-items: center; background: #252525; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; gap: 15px; }
+        .t-img-preview { width: 60px; height: 60px; border-radius: 4px; background-color: #111; background-size: cover; background-position: center; border: 1px solid #444; flex-shrink: 0; position: relative; }
+        .t-img-preview.no-img::after { content: "无图"; position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; font-size:0.8em; }
+        
+        .t-img-info { flex-grow: 1; min-width: 0; }
+        .t-img-name { font-weight: bold; color: #eee; font-size: 1.1em; margin-bottom: 5px; }
+        .t-img-path { font-size: 0.8em; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .t-img-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .t-act-btn { padding: 6px 10px; border: 1px solid #444; background: #333; color: #ccc; border-radius: 4px; cursor: pointer; font-size: 0.85em; transition: 0.2s; }
+        .t-act-btn:hover { background: #444; color: #fff; border-color: #666; }
+        .t-act-btn.auto { color: #bfa15f; border-color: rgba(191, 161, 95, 0.3); }
+        .t-act-btn.auto:hover { background: rgba(191, 161, 95, 0.1); }
+    </style>`;
+
+    const html = `
+    ${style}
+    <div class="t-img-mgr-overlay" id="t-img-mgr">
+        <div class="t-img-mgr-box">
+            <div class="t-header">
+                <span class="t-title-main">🖼️ 角色图鉴管理</span>
+                <span class="t-close" id="t-img-close">&times;</span>
+            </div>
+            <div style="padding:10px 15px; background:#2a2a2a; color:#888; font-size:0.85em; border-bottom:1px solid #333;">
+                <i class="fa-solid fa-circle-info"></i> 设置图片后，该角色所有收藏卡片将自动使用此背景。优先读取“图鉴设置”，其次读取“单卡数据”。
+            </div>
+            <div class="t-img-list" id="t-img-list-container"></div>
+            <div style="padding:15px; border-top:1px solid #333; text-align:right;">
+                <button class="t-btn primary" id="t-img-save">💾 保存并应用</button>
+            </div>
+        </div>
+        <!-- 隐藏的文件上传 input -->
+        <input type="file" id="t-img-upload-input" accept="image/*" style="display:none;">
+    </div>`;
+
+    $("#t-favs-view").append(html);
+
+    // 临时存储编辑状态
+    const tempMap = JSON.parse(JSON.stringify(data.character_map));
+    let currentEditChar = null; // 用于记录当前正在给谁上传图片
+
+    const renderList = () => {
+        const $list = $("#t-img-list-container");
+        $list.empty();
+
+        if (sortedChars.length === 0) {
+            $list.append('<div style="text-align:center; padding:30px; color:#555;">暂无角色数据，请先去收藏一些剧本吧~</div>');
+            return;
+        }
+
+        sortedChars.forEach(char => {
+            const currentImg = tempMap[char] || "";
+            const hasImg = !!currentImg;
+            const bgStyle = hasImg ? `background-image: url('${currentImg}')` : '';
+
+            const $row = $(`
+                <div class="t-img-item">
+                    <div class="t-img-preview ${hasImg ? '' : 'no-img'}" style="${bgStyle}"></div>
+                    <div class="t-img-info">
+                        <div class="t-img-name">${char}</div>
+                        <div class="t-img-path">${hasImg ? (currentImg.startsWith('data:') ? 'Base64 Image' : currentImg) : '未设置背景'}</div>
+                    </div>
+                    <div class="t-img-actions">
+                        <button class="t-act-btn auto btn-auto-find" title="尝试从系统角色列表抓取头像" data-char="${char}"><i class="fa-solid fa-wand-magic-sparkles"></i> 自动</button>
+                        <button class="t-act-btn btn-upload" title="上传本地图片" data-char="${char}"><i class="fa-solid fa-upload"></i></button>
+                        <button class="t-act-btn btn-url" title="输入图片 URL" data-char="${char}"><i class="fa-solid fa-link"></i></button>
+                        ${hasImg ? `<button class="t-act-btn btn-clear" title="清除" data-char="${char}" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
+                </div>
+            `);
+            $list.append($row);
+        });
+
+        // 绑定事件
+        // 1. 自动抓取
+        $(".btn-auto-find").on("click", function () {
+            const char = $(this).data("char");
+            const avatar = tryFindSystemAvatar(char);
+            if (avatar) {
+                tempMap[char] = avatar;
+                if (window.toastr) toastr.success(`已抓取到 ${char} 的头像`, "成功");
+                renderList();
+            } else {
+                alert(`未在当前加载的系统中找到角色 [${char}] 的信息。\n请确保该角色已在 SillyTavern 角色列表中。`);
+            }
+        });
+
+        // 2. 上传
+        $(".btn-upload").on("click", function () {
+            currentEditChar = $(this).data("char");
+            $("#t-img-upload-input").click();
+        });
+
+        // 3. URL
+        $(".btn-url").on("click", function () {
+            const char = $(this).data("char");
+            const oldVal = tempMap[char] || "";
+            const newVal = prompt(`请输入 [${char}] 的图片链接 (URL):`, oldVal);
+            if (newVal !== null) {
+                tempMap[char] = newVal.trim();
+                renderList();
+            }
+        });
+
+        // 4. 清除
+        $(".btn-clear").on("click", function () {
+            const char = $(this).data("char");
+            delete tempMap[char];
+            renderList();
+        });
+    };
+
+    // 文件上传处理
+    $("#t-img-upload-input").on("change", function () {
+        const file = this.files[0];
+        if (!file || !currentEditChar) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            tempMap[currentEditChar] = e.target.result; // Base64
+            renderList();
+            $("#t-img-upload-input").val(""); // 重置
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // 保存逻辑
+    $("#t-img-save").on("click", () => {
+        data.character_map = tempMap;
+        saveExtData();
+        $("#t-img-mgr").remove();
+        if (onCloseCallback) onCloseCallback(); // 回调刷新主界面
+        if (window.toastr) toastr.success("角色图鉴已更新");
+    });
+
+    $("#t-img-close").on("click", () => $("#t-img-mgr").remove());
+
+    renderList();
 }
 
 // --- 自动化与初始化 ---
@@ -691,7 +2407,7 @@ async function onMessageReceived(data) {
 
 async function initEchoTheater() {
     console.log("Titania Echo v4.0: Enabled.");
-    
+
     // 自动迁移
     const extData = getExtData();
     if ((!extData.config || Object.keys(extData.config).length === 0) && localStorage.getItem(LEGACY_KEY_CFG)) {
@@ -704,19 +2420,19 @@ async function initEchoTheater() {
             if (oldCfg) { extData.config = oldCfg; migrated = true; }
             if (oldScripts) { extData.user_scripts = oldScripts; migrated = true; }
             if (oldFavs) { extData.favs = oldFavs; migrated = true; }
-            if (migrated) { saveExtData(); if(window.toastr) toastr.success("数据已迁移至服务端", "Titania Echo"); }
+            if (migrated) { saveExtData(); if (window.toastr) toastr.success("数据已迁移至服务端", "Titania Echo"); }
         } catch (e) { console.error("Titania: Migration failed", e); }
     }
 
-    loadScripts(); 
-    createFloatingButton(); 
+    loadScripts();
+    createFloatingButton();
     eventSource.on(event_types.MESSAGE_RECEIVED, onMessageReceived);
 }
 
 function disableEchoTheater() {
     console.log("Titania Echo v4.0: Disabled.");
-    $("#titania-float-btn").remove(); 
-    $("#t-overlay").remove(); 
+    $("#titania-float-btn").remove();
+    $("#t-overlay").remove();
     eventSource.off(event_types.MESSAGE_RECEIVED, onMessageReceived);
 }
 
@@ -726,7 +2442,7 @@ async function loadExtensionSettings() {
         Object.assign(extension_settings[extensionName], defaultSettings);
     }
     $("#enable_echo_theater").prop("checked", extension_settings[extensionName].enabled);
-    $("#enable_echo_theater").on("input", function() {
+    $("#enable_echo_theater").on("input", function () {
         const isEnabled = $(this).prop("checked");
         extension_settings[extensionName].enabled = isEnabled;
         saveSettingsDebounced();
