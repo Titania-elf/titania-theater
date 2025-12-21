@@ -1794,6 +1794,7 @@ function openScriptManager() {
 function updateBatchBtn() { const count = $(".t-mgr-check:checked").length; const btn = $("#t-mgr-del-batch"); if (count > 0) { btn.css({ "color": "#ff6b6b", "pointer-events": "auto", "border-color": "#ff6b6b" }); btn.text(`🗑️ 删除 (${count})`); } else { btn.css({ "color": "#aaa", "pointer-events": "none", "border-color": "#555" }); btn.text(`🗑️ 删除`); } }
 
 // 打开剧本编辑器
+// [修复] 打开剧本编辑器 (修复亮色主题下输入框看不清的问题)
 function openEditor(id, fromMgr = false) {
     const isEdit = !!id;
     let data = { id: Date.now().toString(), name: "新剧本", desc: "", prompt: "", mode: "parallel", category: "" };
@@ -1809,7 +1810,46 @@ function openEditor(id, fromMgr = false) {
     const existingCats = [...new Set(runtimeScripts.map(s => s.category).filter(c => c))].sort();
     const dataListOpts = existingCats.map(c => `<option value="${c}">`).join("");
 
+    // [核心修复] 强制定义 .t-input 的样式，防止被 ST 主题(亮色)覆盖
+    const style = `
+    <style>
+        /* 强制锁定输入框为暗色风格 */
+        .t-box .t-input {
+            background-color: #1a1a1a !important; /* 强制深灰背景 */
+            color: #eeeeee !important;            /* 强制浅色文字 */
+            border: 1px solid #444 !important;    /* 强制深色边框 */
+            
+            border-radius: 4px;
+            padding: 8px 10px;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.2s;
+        }
+        
+        /* 聚焦时的高亮 */
+        .t-box .t-input:focus {
+            border-color: #bfa15f !important;
+            background-color: #222 !important;
+        }
+
+        /* 禁用状态 */
+        .t-box .t-input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #111 !important;
+        }
+
+        /* 针对大文本域优化字体 */
+        textarea.t-input {
+            font-family: 'Consolas', 'Monaco', monospace; /* 等宽字体方便编辑 */
+            line-height: 1.5;
+            resize: vertical;
+        }
+    </style>`;
+
     const html = `
+    ${style}
     <div class="t-box" id="t-editor-view">
         <div class="t-header"><span class="t-title-main">${isPreset ? '查看' : (isEdit ? '编辑' : '新建')}</span></div>
         <div class="t-body">
@@ -1858,7 +1898,8 @@ function openEditor(id, fromMgr = false) {
 
     $("#ed-btn-expand").on("click", () => {
         $("#t-editor-view").hide();
-        $("#t-overlay").append(`<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px;">${$("#ed-prompt").val()}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`);
+        // 大屏模式同样复用了 .t-input 类，所以上面的 style 也会生效
+        $("#t-overlay").append(`<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">大屏模式</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px; height:100%;">${$("#ed-prompt").val()}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">确认</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">取消</button></div></div></div>`);
         $("#ed-large-cancel").on("click", () => { $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
         $("#ed-large-ok").on("click", () => { $("#ed-prompt").val($("#ed-large-text").val()); $("#t-large-edit-view").remove(); $("#t-editor-view").show(); });
     });
@@ -1871,10 +1912,17 @@ function openEditor(id, fromMgr = false) {
                 desc: $("#ed-desc").val(),
                 prompt: $("#ed-prompt").val(),
                 mode: $("input[name='ed-mode']:checked").val(),
-                category: $("#ed-cat").val().trim() // 保存分类信息
+                category: $("#ed-cat").val().trim()
             });
             $("#t-editor-view").remove();
-            if (fromMgr) { $("#t-mgr-view").show(); renderManagerList(); }
+            // 注意：这里需要重新调用一下 openScriptManager 里的刷新逻辑，但因为 fromMgr 只是个标记
+            // 简单处理是如果来自 Mgr，则刷新整个 Mgr 界面
+            if (fromMgr) {
+                $("#t-mgr-view").remove();
+                openScriptManager();
+            } else {
+                $("#t-settings-view").show();
+            }
         });
     }
 }
