@@ -208,7 +208,7 @@ input:checked + .t-slider:before {
 }
 
 /* (保持不变) 新消息：红点提示 */
-.t-notify::after {
+/.t-notify::after {
     content: "";
     position: absolute;
     top: 0;
@@ -223,7 +223,7 @@ input:checked + .t-slider:before {
 }
 
 /* 新消息通知：右上角红点 */
-.t-notify::after {
+/.t-notify::after {
     content: "";
     position: absolute;
     top: 0;
