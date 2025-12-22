@@ -1111,7 +1111,7 @@ function showDebugInfo() {
 
 // 【Part 5: 设置、剧本管理器与编辑器】
 
-// [修改] 设置窗口 (已在"数据管理"页增加剧本管理器入口)
+// [最终版] 设置窗口 (改为纯下拉列表选择模型)
 function openSettingsWindow() {
     const data = getExtData();
     const cfg = data.config || {};
@@ -1163,6 +1163,9 @@ function openSettingsWindow() {
 
     const disabledCount = (data.disabled_presets || []).length;
     const userScriptCount = (data.user_scripts || []).length;
+
+    // 默认显示当前保存的模型，防止下拉框为空
+    const currentModel = cfg.model || 'gpt-3.5-turbo';
 
     const html = `
     ${style}
@@ -1231,8 +1234,11 @@ function openSettingsWindow() {
                     <div class="t-form-group">
                         <label class="t-form-label">Model Name</label>
                         <div style="display:flex; gap:10px;">
-                            <input id="cfg-model" class="t-input" value="${cfg.model || 'gpt-3.5-turbo'}">
-                            <button id="t-btn-fetch" class="t-tool-btn">🔄 获取列表</button>
+                            <!-- [修改] 改为纯 Select 下拉框 -->
+                            <select id="cfg-model" class="t-input" style="cursor:pointer;">
+                                <option value="${currentModel}" selected>${currentModel} (当前)</option>
+                            </select>
+                            <button id="t-btn-fetch" class="t-tool-btn" title="获取模型列表">🔄 获取列表</button>
                         </div>
                     </div>
                     <div class="t-form-group">
@@ -1272,10 +1278,8 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- [修改] Tab 4: 数据管理 -->
+                <!-- Tab 4: 数据管理 -->
                 <div id="page-data" class="t-set-page">
-                    
-                    <!-- 新增：剧本管理入口 -->
                     <div class="t-form-group">
                         <div class="t-form-label">自定义剧本库</div>
                         <div style="background:#181818; border:1px solid #333; padding:20px; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
@@ -1293,7 +1297,6 @@ function openSettingsWindow() {
                             </button>
                         </div>
                     </div>
-                
                     <div class="t-form-group">
                         <div class="t-form-label">已隐藏的官方预设剧本</div>
                         <div style="background:#181818; border:1px solid #333; padding:15px; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
@@ -1368,9 +1371,66 @@ function openSettingsWindow() {
     $("#btn-test-notify").on("click", () => { $("#p-ball").removeClass("p-loading").addClass("p-notify"); setTimeout(() => $("#p-ball").removeClass("p-notify"), 3000); });
     $("#cfg-auto").on("change", function () { $("#auto-settings-panel").toggle($(this).is(":checked")); });
     $("#cfg-chance").on("input", function () { $("#cfg-chance-val").text($(this).val() + "%"); });
-    $("#t-btn-fetch").on("click", async () => { alert("请确保API Key正确"); });
 
-    // 恢复预设逻辑
+    // [核心修复] 获取模型列表 (改为操作 Select)
+    $("#t-btn-fetch").on("click", async function () {
+        const btn = $(this);
+        const originalText = btn.text();
+        const urlInput = $("#cfg-url").val().trim().replace(/\/+$/, "");
+        const key = $("#cfg-key").val().trim();
+
+        if (!urlInput) return alert("请先填写 API URL");
+
+        let baseUrl = urlInput;
+        if (baseUrl.endsWith("/chat/completions")) {
+            baseUrl = baseUrl.replace(/\/chat\/completions$/, "");
+        }
+        const targetUrl = `${baseUrl}/models`;
+
+        try {
+            btn.prop("disabled", true).text("...");
+            const res = await fetch(targetUrl, {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${key}` }
+            });
+
+            if (!res.ok) throw new Error("连接失败: " + res.status);
+
+            const data = await res.json();
+            const models = data.data || data.models || [];
+
+            const $sel = $("#cfg-model");
+            const oldVal = $sel.val();
+            $sel.empty(); // 清空原有选项
+
+            let count = 0;
+            // 重新填充选项
+            models.forEach(m => {
+                const id = m.id || m;
+                $sel.append(`<option value="${id}">${id}</option>`);
+                count++;
+            });
+
+            if (count > 0) {
+                // 如果原来的模型在列表中，选中它；否则默认选中第一个
+                const exists = models.some(m => (m.id || m) === oldVal);
+                if (exists) $sel.val(oldVal);
+
+                if (window.toastr) toastr.success(`获取成功，共 ${count} 个模型`);
+                else alert(`获取成功，共 ${count} 个模型`);
+            } else {
+                alert("获取成功，但模型列表为空");
+                // 恢复原值
+                $sel.append(`<option value="${oldVal}" selected>${oldVal}</option>`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("获取失败: " + e.message);
+        } finally {
+            btn.prop("disabled", false).text(originalText);
+        }
+    });
+
     $("#btn-restore-presets").on("click", function () {
         if (confirm("确定要恢复所有被隐藏的官方预设剧本吗？")) {
             const d = getExtData();
@@ -1382,7 +1442,6 @@ function openSettingsWindow() {
         }
     });
 
-    // [新增] 打开剧本管理器 (先关闭当前设置窗口)
     $("#btn-open-mgr").on("click", () => {
         $("#t-settings-view").remove();
         openScriptManager();
@@ -1399,7 +1458,7 @@ function openSettingsWindow() {
         const finalCfg = {
             url: $("#cfg-url").val().trim(),
             key: $("#cfg-key").val().trim(),
-            model: $("#cfg-model").val().trim(),
+            model: $("#cfg-model").val().trim(), // 这里直接取 select 的 value
             history_limit: parseInt($("#cfg-history").val()) || 10,
             stream: $("#cfg-stream").is(":checked"),
             auto_generate: $("#cfg-auto").is(":checked"),
