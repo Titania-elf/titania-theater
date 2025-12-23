@@ -1,4 +1,4 @@
-// --- START OF FILE ---回声小剧场v4.6
+// --- START OF FILE ---回声小剧场v4.6.1
 
 // 【Part 1: 头部引用、配置与数据辅助函数】
 import { extension_settings, getContext } from "../../../extensions.js";
@@ -7,25 +7,50 @@ import { saveSettingsDebounced, eventSource, event_types } from "../../../../scr
 const extensionName = "Titania_Theater_Echo";
 const extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
 
-// [修改] 默认设置结构 (新增 director 字段)
+// [修改] 默认设置结构 (新增 profiles 支持多API)
 const defaultSettings = {
     enabled: true,
-    config: {},         // API Url, Key, Model, Auto-Settings
-    user_scripts: [],   // 自定义剧本
-    favs: [],           // 收藏夹
-    character_map: {},  // 角色图鉴
+    config: {
+        // [新增] 多配置方案支持
+        active_profile_id: "default",
+        profiles: [
+            {
+                id: "st_sync",
+                name: "🔗 跟随 SillyTavern (主连接)",
+                type: "internal",
+                readonly: true
+            },
+            {
+                id: "default",
+                name: "默认自定义",
+                type: "custom",
+                url: "",
+                key: "",
+                model: "gpt-3.5-turbo"
+            }
+        ],
+        // 全局通用设置
+        stream: true,
+        auto_generate: false,
+        auto_chance: 50,
+        auto_mode: "follow",
+        history_limit: 10
+    },
+    user_scripts: [],
+    favs: [],
+    character_map: {},
     disabled_presets: [],
     appearance: {
         type: "emoji",
         content: "🎭",
         color_theme: "#bfa15f",
-        color_notify: "#55efc4"
+        color_notify: "#55efc4",
+        size: 56
     },
-    // [新增] 导演模式默认设置
     director: {
-        length: "",             // 默认篇幅建议
-        perspective: "auto",    // auto, 1st, 3rd
-        style_ref: ""           // 风格参考文本
+        length: "",
+        perspective: "auto",
+        style_ref: ""
     }
 };
 
@@ -138,7 +163,10 @@ function createFloatingButton() {
     if (!extension_settings[extensionName].enabled) return;
 
     const data = getExtData();
-    const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4" };
+    // [修改] 获取尺寸，默认为 56
+    const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4", size: 56 };
+    const size = parseInt(app.size) || 56;
+    const fontSize = Math.floor(size * 0.46); // 字体大小约为球体的 46%
 
     // 1. 动态 CSS
     const css = `
@@ -150,70 +178,65 @@ function createFloatingButton() {
         
         #titania-float-btn {
             position: fixed; top: 100px; left: 20px;
-            width: 56px; height: 56px; /* 稍微加大一点，容纳光圈 */
-            padding: 3px; /* 关键：留出 3px 的缝隙给流光动画 */
+            /* [修改] 动态宽高 */
+            width: ${size}px; height: ${size}px; 
+            padding: 3px; 
             
             border-radius: 50%;
             background: #2b2b2b;
             color: #fff;
             
             display: flex; align-items: center; justify-content: center;
-            font-size: 26px; /* Emoji 大小 */
+            /* [修改] 动态字体大小 */
+            font-size: ${fontSize}px; 
             
             cursor: pointer;
             z-index: 9999;
             box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-            
-            /* 默认状态下的边框 */
             border: 2px solid #444; 
             
             transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
             user-select: none;
             overflow: hidden; 
-            box-sizing: border-box; /* 确保 padding 算在宽高内 */
+            box-sizing: border-box; 
         }
         
-        /* 图片样式：填满内部区域 (不包含 padding) */
         #titania-float-btn img {
             width: 100%; height: 100%; 
             object-fit: cover; 
             border-radius: 50%; 
             pointer-events: none;
             position: relative;
-            z-index: 2; /* 图片在最上层 */
+            z-index: 2; 
         }
 
-        /* 状态：加载中 (跑马灯流光) */
         @keyframes t-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         #titania-float-btn.t-loading {
-            background: transparent !important; /* 背景透明，露出流光 */
-            border-color: transparent !important; /* 边框透明 */
+            background: transparent !important; 
+            border-color: transparent !important; 
             color: var(--t-theme) !important;
             pointer-events: none;
-            box-shadow: 0 0 20px var(--t-theme); /* 外发光 */
+            box-shadow: 0 0 20px var(--t-theme); 
         }
         
-        /* 核心流光层 (在最底层旋转) */
         #titania-float-btn.t-loading::before {
             content: ""; position: absolute;
             width: 200%; height: 200%; 
             top: -50%; left: -50%;
             background: conic-gradient(transparent 20%, transparent 40%, var(--t-theme));
             animation: t-spin 1.2s linear infinite;
-            z-index: 0; /* 最底层 */
+            z-index: 0; 
         }
         
-        /* 中间遮罩层 (夹在流光和图片中间，用于 Emoji 模式下的背景) */
         #titania-float-btn.t-loading::after {
             content: ""; position: absolute; 
-            inset: 3px; /* 对应 padding 大小 */
+            inset: 3px; 
             background: #2b2b2b; 
             border-radius: 50%; 
-            z-index: 1; /* 比流光高，比图片低 */
+            z-index: 1; 
         }
 
-        /* 状态：新消息 (呼吸灯) */
         @keyframes t-glow {
             0%, 100% { box-shadow: 0 0 5px var(--t-notify); border-color: var(--t-notify); }
             50% { box-shadow: 0 0 25px var(--t-notify); border-color: var(--t-notify); }
@@ -221,13 +244,12 @@ function createFloatingButton() {
 
         #titania-float-btn.t-notify {
             animation: t-glow 2s infinite ease-in-out;
-            border-color: var(--t-notify); /* 呼吸时改变边框颜色 */
+            border-color: var(--t-notify); 
         }
     </style>`;
     $("body").append(css);
 
     // 2. 创建元素
-    // 注意：如果是图片，我们直接放 img 标签；如果是 Emoji，它会被当作文本节点
     const btnContent = (app.type === 'image' && app.content.startsWith("data:"))
         ? `<img src="${app.content}">`
         : `<span style="position:relative; z-index:2;">${app.content}</span>`;
@@ -235,7 +257,7 @@ function createFloatingButton() {
     const btn = $(`<div id="titania-float-btn">${btnContent}</div>`);
     $("body").append(btn);
 
-    // 3. 拖拽逻辑 (保持不变)
+    // 3. 拖拽逻辑 (修正边界计算)
     let isDragging = false, startX, startY, initialLeft, initialTop;
     btn.on("touchstart mousedown", function (e) {
         isDragging = false;
@@ -249,14 +271,20 @@ function createFloatingButton() {
         const evt = e.type === 'touchmove' ? e.originalEvent.touches[0] : e;
         if (Math.abs(evt.clientX - startX) > 5 || Math.abs(evt.clientY - startY) > 5) isDragging = true;
         let l = initialLeft + (evt.clientX - startX), t = initialTop + (evt.clientY - startY);
-        l = Math.max(0, Math.min(window.innerWidth - 56, l)); t = Math.max(0, Math.min(window.innerHeight - 56, t));
+        // [修改] 使用动态 size 计算边界
+        l = Math.max(0, Math.min(window.innerWidth - size, l));
+        t = Math.max(0, Math.min(window.innerHeight - size, t));
         btn.css({ left: l + "px", top: t + "px", right: "auto" });
     });
     $(document).on("touchend mouseup", function () {
         if (startX === undefined) return; startX = undefined;
         if (isDragging) {
             const rect = btn[0].getBoundingClientRect();
-            btn.css({ "transition": "all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)", "left": (rect.left + 28 < window.innerWidth / 2 ? 0 : window.innerWidth - 56) + "px" });
+            // [修改] 贴边计算也需要用 size
+            const snapThreshold = window.innerWidth / 2;
+            const targetLeft = (rect.left + (size / 2) < snapThreshold) ? 0 : window.innerWidth - size;
+
+            btn.css({ "transition": "all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)", "left": targetLeft + "px" });
         } else {
             if (isGenerating) {
                 if (window.toastr) toastr.info("🎭 小剧场正在后台演绎中，请稍候...", "Titania Echo");
@@ -348,16 +376,70 @@ function openMainWindow() {
     const style = `
     <style>
         .t-overlay { z-index: 2000; }
-        #t-main-view { width: 950px; max-width: 95vw; height: 85vh; display: flex; flex-direction: column; background: #121212; overflow: hidden; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         
-        /* Zen Mode */
-        #t-main-view.t-zen-mode { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; position: fixed; top: 0; left: 0; z-index: 3000; background: #0f0f0f; }
-        #t-main-view.t-zen-mode .t-header, #t-main-view.t-zen-mode .t-top-bar, #t-main-view.t-zen-mode .t-bottom-bar { display: none !important; }
-        #t-main-view.t-zen-mode .t-content-wrapper { background: #0f0f0f; background-image: none; }
-        #t-main-view.t-zen-mode .t-content-area { position: relative; width: 100%; height: 100%; max-width: 900px; margin: 0 auto; padding: 50px 30px; font-size: 1.2em; line-height: 2.0; letter-spacing: 0.02em; color: #d4d4d4; text-align: justify; }
-        #t-main-view.t-zen-mode #t-output-content p, #t-main-view.t-zen-mode #t-output-content div { margin-bottom: 1.5em; }
+        #t-main-view { 
+            width: 950px; max-width: 95vw; height: 85vh; 
+            display: flex; flex-direction: column; 
+            background: #121212; 
+            overflow: hidden; 
+            border-radius: 8px; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            position: relative; 
+        }
+        
+        /* Zen Mode: 仅隐藏UI，保持容器尺寸 */
+        #t-main-view.t-zen-mode .t-header, 
+        #t-main-view.t-zen-mode .t-top-bar, 
+        #t-main-view.t-zen-mode .t-bottom-bar { 
+            display: none !important; 
+        }
+        
+        #t-main-view.t-zen-mode .t-content-wrapper { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+            background-color: #0b0b0b; 
+            background-image: none; 
+        }
+        
+        .t-content-wrapper { flex-grow: 1; position: relative; overflow: hidden; background-color: #0b0b0b; background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); background-size: 20px 20px; }
+        
+        .t-content-area { 
+            position: absolute; top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            padding: 0; /* [修改] 移除内边距，实现全填充 */
+            overflow-y: auto; 
+            box-sizing: border-box; 
+            scroll-behavior: smooth; 
+        }
+        
+        /* [核心修改] 强制内容填满容器 */
+        #t-output-content { 
+            width: 100%; 
+            min-height: 100%; 
+            /* 如果内容是纯文本，保留一点内边距防止贴边 */
+            /* 但如果是 DIV 包装的(绝大多数情况)，下面的规则会生效 */
+            display: flex; 
+            flex-direction: column;
+        }
 
-        /* 常规样式 */
+        /* 暴力修正模型生成的 HTML，使其铺满 */
+        #t-output-content > div {
+            flex-grow: 1;
+            margin: 0 !important;       /* 去除外边距 */
+            width: 100% !important;     /* 强制全宽 */
+            max-width: none !important; /* 解除宽度限制 */
+            border-radius: 0 !important;/* 去除圆角 */
+            border: none !important;    /* 去除边框(可选) */
+            min-height: 100%;           /* 强制全高 */
+            box-sizing: border-box;     /* 确保内边距不撑爆 */
+        }
+
+        /* 滚动条美化 (既然是全填充，原生滚动条可能太丑) */
+        .t-content-area::-webkit-scrollbar { width: 6px; }
+        .t-content-area::-webkit-scrollbar-track { background: transparent; }
+        .t-content-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+        .t-content-area::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+
+        /* 常规样式保持不变 */
         .t-top-bar { padding: 12px 20px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; gap: 15px; align-items: stretch; height: 75px; box-sizing: border-box; flex-shrink: 0; }
         .t-tabs { display: flex; flex-direction: column; width: 140px; background: #111; border-radius: 6px; padding: 3px; border: 1px solid #333; flex-shrink: 0; }
         .t-tab { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; transition: 0.2s; font-size: 0.85em; font-weight: bold; color: #666; margin-bottom: 2px; }
@@ -381,10 +463,6 @@ function openMainWindow() {
         .t-dice-btn:hover { background: #2a2a2a; color: #fff; }
         .t-dice-btn.active-filter { color: #bfa15f; }
 
-        .t-content-wrapper { flex-grow: 1; position: relative; overflow: hidden; background-color: #0b0b0b; background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); background-size: 20px 20px; }
-        .t-content-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 30px; overflow-y: auto; box-sizing: border-box; scroll-behavior: smooth; }
-        #t-output-content { max-width: 100%; margin: 0 auto; line-height: 1.6; font-size: 1.05em; }
-        
         .t-zen-btn { position: absolute; top: 20px; right: 25px; width: 40px; height: 40px; border-radius: 50%; background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(4px); color: #777; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; transition: all 0.2s; opacity: 0.6; }
         .t-zen-btn:hover { opacity: 1; background: #bfa15f; color: #000; transform: scale(1.1); box-shadow: 0 0 15px rgba(191, 161, 95, 0.4); }
 
@@ -477,7 +555,7 @@ function openMainWindow() {
 
     $("body").append(html);
 
-    // --- 内部逻辑 (已移除导演面板相关JS) ---
+    // --- 内部逻辑 ---
 
     const updateFilterUI = () => {
         const btn = $("#t-btn-filter");
@@ -810,12 +888,49 @@ function getChatHistory(limit) {
     }).join("\n");
 }
 
+// 处理生成请求
 async function handleGenerate(forceScriptId = null, silent = false) {
     const data = getExtData();
     const cfg = data.config || {};
     const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
 
-    if (!cfg.key) return alert("配置缺失：请先去设置填 API Key！");
+    // --- [核心] 凭证解析器 (Credentials Resolver) ---
+    // 目的：根据当前选中的 Profile，计算出最终使用的 URL, Key, Model
+
+    // 1. 数据迁移兼容：如果旧数据没有 profiles，临时构造一个
+    let activeProfileId = cfg.active_profile_id || "default";
+    let profiles = cfg.profiles || [
+        { id: "st_sync", name: "🔗 跟随 SillyTavern", type: "internal" },
+        { id: "default", name: "默认自定义", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
+    ];
+
+    let currentProfile = profiles.find(p => p.id === activeProfileId) || profiles[1]; // 找不到就回退到默认自定义
+
+    let finalUrl = "";
+    let finalKey = "";
+    let finalModel = "";
+
+    if (currentProfile.type === 'internal') {
+        // 模式 A: 跟随 SillyTavern 全局设置
+        // 注意：我们只读取 ST 的 OpenAI 兼容设置，这是目前最通用的 Chat Completion 接口标准
+        if (typeof settings !== 'undefined') {
+            finalUrl = settings.api_url_openai || "";
+            finalKey = settings.api_key_openai || "";
+            // ST 的模型 ID 存储变量比较杂，优先尝试 api_model_openai，没有则用 gpt-3.5-turbo 兜底
+            finalModel = settings.api_model_openai || "gpt-3.5-turbo";
+        } else {
+            if (!silent) alert("错误：无法读取 SillyTavern 全局设置");
+            return;
+        }
+    } else {
+        // 模式 B: 自定义设置
+        finalUrl = currentProfile.url || "";
+        finalKey = currentProfile.key || "";
+        finalModel = currentProfile.model || "gpt-3.5-turbo";
+    }
+
+    if (!finalKey && currentProfile.type !== 'internal') return alert("配置缺失：请先去设置填 API Key！");
+    // Internal 模式下允许 Key 为空 (某些本地后端不需要 Key)
 
     const scriptId = forceScriptId || $("#t-sel-script").val();
     const script = runtimeScripts.find(s => s.id === scriptId);
@@ -839,7 +954,8 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     $("#t-btn-like").html('<i class="fa-regular fa-heart"></i> 收藏').prop("disabled", false);
 
     if (!silent && window.toastr) {
-        toastr.info(`🚀 [${useStream ? '流式' : '非流式'}] 正在连接模型...`, "Titania Echo");
+        // 提示信息带上当前使用的方案名
+        toastr.info(`🚀 [${currentProfile.name}] 正在连接模型演绎...`, "Titania Echo");
     }
 
     try {
@@ -877,31 +993,38 @@ async function handleGenerate(forceScriptId = null, silent = false) {
 
         user += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
 
-        // --- 2. 发起请求 ---
-        let endpoint = (cfg.url || "").trim().replace(/\/+$/, "");
+        // --- 2. 发起请求 (使用解析出的 finalUrl) ---
+        let endpoint = finalUrl.trim().replace(/\/+$/, "");
         if (!endpoint) throw new Error("ERR_CONFIG: API URL 未设置");
-        if (!endpoint.endsWith("/chat/completions")) endpoint += "/chat/completions";
+
+        // 智能补全后缀：如果选了 ST Sync，且 ST 里存的是基础域名，我们需要补全
+        // 如果用户自己填了完整路径，就不补全
+        if (!endpoint.endsWith("/chat/completions")) {
+            // 简单判断：如果以 /v1 结尾，加 /chat/completions
+            if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
+            // 如果既没有 /v1 也没有 /chat/completions，尝试补全标准格式
+            else endpoint += "/v1/chat/completions";
+        }
 
         const res = await fetch(endpoint, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cfg.key}` },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
             body: JSON.stringify({
-                model: cfg.model || "gpt-3.5-turbo",
+                model: finalModel,
                 messages: [{ role: "system", content: sys }, { role: "user", content: user }],
                 stream: useStream
             })
         });
 
-        // [增强] HTTP 状态码精细报错 (含安全拦截检测)
+        // [增强] HTTP 状态码精细报错
         if (!res.ok) {
             const rawText = await res.text();
             let errPrefix = `ERR_HTTP_${res.status}`;
 
-            // 400 错误通常是 Azure/OpenAI 的安全拦截
             if (res.status === 400) throw new Error(`${errPrefix}: 请求被拒绝 (可能触发了内容安全/格式过滤)`);
             if (res.status === 401) throw new Error(`${errPrefix}: API Key 无效或过期`);
             if (res.status === 403) throw new Error(`${errPrefix}: 访问被禁止 (可能账户余额不足或无权限)`);
-            if (res.status === 404) throw new Error(`${errPrefix}: 接口地址错误 (404 Not Found)`);
+            if (res.status === 404) throw new Error(`${errPrefix}: 接口地址错误 (404 Not Found) - 请检查 URL`);
             if (res.status === 500) throw new Error(`${errPrefix}: 服务端内部错误`);
             if (res.status === 504) throw new Error(`${errPrefix}: 请求超时 (Timeout)`);
 
@@ -928,7 +1051,6 @@ async function handleGenerate(forceScriptId = null, silent = false) {
                     if (jsonStr === "[DONE]") continue;
                     try {
                         const json = JSON.parse(jsonStr);
-                        // 检查 finish_reason 是否为 content_filter
                         if (json.choices?.[0]?.finish_reason === "content_filter") {
                             throw new Error("ERR_SAFETY_STREAM: 内容生成过程中被安全过滤截断");
                         }
@@ -941,7 +1063,6 @@ async function handleGenerate(forceScriptId = null, silent = false) {
             }
         } else {
             const json = await res.json();
-            // 非流式下的安全拦截检查
             if (json.choices?.[0]?.finish_reason === "content_filter") {
                 throw new Error("ERR_SAFETY_BLOCK: 内容被安全过滤拦截");
             }
@@ -955,8 +1076,6 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         // --- 4. 智能容错与清洗 ---
         let cleanContent = rawContent.replace(/```html/gi, "").replace(/```/g, "").trim();
 
-        // [新增] 拒绝词检测：如果内容很短且包含拒绝关键词
-        // 这种情况下，我们不应该给它加 wrapper，而是应该直接报错
         const refusalRegex = /I cannot|I can't|unable to|policy|safety|violation|sensitive/i;
         if (cleanContent.length < 150 && refusalRegex.test(cleanContent) && !cleanContent.includes("<div")) {
             throw new Error(`ERR_REFUSAL: 模型拒绝生成 (${cleanContent})`);
@@ -1002,14 +1121,12 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     } catch (e) {
         console.error("Titania Generate Error:", e);
 
-        // --- 6. 智能错误提示 ---
         let userTip = "请检查网络或配置";
         let errType = "❌ 演绎失败";
 
         if (e.message.includes("ERR_CONFIG")) userTip = "请前往设置检查配置项";
         else if (e.message.includes("ERR_HTTP_401")) userTip = "API Key 无效，请检查设置";
 
-        // 针对安全/敏感内容的专门提示
         else if (
             e.message.includes("ERR_HTTP_400") ||
             e.message.includes("ERR_SAFETY") ||
@@ -1049,13 +1166,25 @@ function showDebugInfo() {
     const cfg = data.config || {};
     const d = getContextData();
 
-    // [修改] 直接读取保存的导演设置
+    // 导演设置
     const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
     const dLen = dirDefaults.length;
     const dPers = dirDefaults.perspective;
     const dStyle = dirDefaults.style_ref;
 
-    // --- 1. 数据深度分析 (Data Profiling) ---
+    // --- [新增] 解析当前 Profile 信息用于展示 ---
+    let activeProfileId = cfg.active_profile_id || "default";
+    let profiles = cfg.profiles || [
+        { id: "st_sync", name: "🔗 跟随 SillyTavern", type: "internal" },
+        { id: "default", name: "默认自定义", type: "custom", model: cfg.model }
+    ];
+    let currentProfile = profiles.find(p => p.id === activeProfileId) || profiles[1];
+    let displayModel = currentProfile.model;
+    if (currentProfile.type === 'internal' && typeof settings !== 'undefined') {
+        displayModel = (settings.api_model_openai || "gpt-3.5-turbo") + " (ST Sync)";
+    }
+
+    // --- 1. 数据深度分析 ---
     let historyStatus = { count: 0, text: "未启用 (平行模式)" };
     let finalHistoryText = "";
     if (script.mode === 'echo') {
@@ -1073,25 +1202,19 @@ function showDebugInfo() {
     const hasGlobalWI = !!globalWiMatch;
     const wiLength = wiText.length;
 
-    // --- 2. 模拟构建 Prompt (包含导演指令) ---
+    // --- 2. Prompt ---
     let sysPrompt = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Please answer all other content in Chinese.";
-    if (dPers === '1st') {
-        sysPrompt += " Write strictly in First Person perspective (I/Me).";
-    } else if (dPers === '3rd') {
-        sysPrompt += ` Write strictly in Third Person perspective (${d.charName}/He/She).`;
-    }
+    if (dPers === '1st') sysPrompt += " Write strictly in First Person perspective (I/Me).";
+    else if (dPers === '3rd') sysPrompt += ` Write strictly in Third Person perspective (${d.charName}/He/She).`;
 
     let userPrompt = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\n\n`;
-
     let directorInstruction = "";
     if (dLen) directorInstruction += `1. Length Constraint: Keep the response approximately ${dLen}.\n`;
     if (dStyle) {
         const safeStyle = dStyle.substring(0, 1000);
         directorInstruction += `2. Style Mimicry: Analyze and strictly mimic the writing style, tone, and descriptive granularity of the example below. DO NOT copy the content, only the vibe.\n<style_reference>\n${safeStyle}\n</style_reference>\n`;
     }
-    if (directorInstruction) {
-        userPrompt += `[Director's Instructions]\n${directorInstruction}\n`;
-    }
+    if (directorInstruction) userPrompt += `[Director's Instructions]\n${directorInstruction}\n`;
 
     if (d.persona) userPrompt += `[Character Persona]\n(Length: ${d.persona.length} chars)\n${d.persona}\n\n`;
     if (d.worldInfo) userPrompt += `[World Info / Lore]\n(Length: ${d.worldInfo.length} chars)\n${d.worldInfo}\n\n`;
@@ -1101,7 +1224,7 @@ function showDebugInfo() {
     const finalScriptPrompt = script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName);
     userPrompt += `[Scenario Request]\n${finalScriptPrompt}`;
 
-    // --- 3. 渲染 UI ---
+    // --- 3. UI ---
     $("#t-main-view").hide();
 
     const style = `
@@ -1111,22 +1234,18 @@ function showDebugInfo() {
         .t-dbg-tab { padding: 12px 20px; cursor: pointer; color: #666; font-size: 0.9em; border-bottom: 2px solid transparent; transition: 0.2s; }
         .t-dbg-tab:hover { color: #aaa; }
         .t-dbg-tab.active { color: #bfa15f; border-bottom-color: #bfa15f; font-weight: bold; }
-        
         .t-dbg-content { flex-grow: 1; padding: 20px; overflow-y: auto; display: none; }
         .t-dbg-content.active { display: block; }
-        
         .t-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
         .t-stat-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 15px; }
         .t-stat-title { font-size: 0.8em; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .t-stat-val { font-size: 1.1em; color: #eee; font-weight: 500; display: flex; align-items: center; gap: 8px; }
         .t-stat-sub { font-size: 0.85em; color: #555; margin-top: 5px; }
-        
         .t-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .t-dot.ok { background: #55efc4; box-shadow: 0 0 5px rgba(85, 239, 196, 0.4); }
         .t-dot.warn { background: #fab1a0; }
         .t-dot.gray { background: #444; }
         .t-dot.blue { background: #74b9ff; box-shadow: 0 0 5px rgba(116, 185, 255, 0.4); }
-
         .t-code-box { background: #0f0f0f; border: 1px solid #222; border-radius: 4px; padding: 15px; font-family: 'Consolas', monospace; font-size: 0.85em; color: #a8a8a8; white-space: pre-wrap; word-break: break-all; line-height: 1.5; max-height: 400px; overflow-y: auto; margin-bottom: 20px; }
         .t-code-label { font-size: 0.8em; color: #666; margin-bottom: 5px; font-weight: bold; }
     </style>`;
@@ -1154,14 +1273,18 @@ function showDebugInfo() {
                 <div class="t-stat-card">
                     <div class="t-stat-title">基本信息</div>
                     <div class="t-stat-val"><i class="fa-solid fa-film"></i> ${script.name}</div>
-                    <div class="t-stat-sub">模式: ${script.mode === 'echo' ? 'Echo' : 'Parallel'} | 模型: ${cfg.model}</div>
+                    <div class="t-stat-sub">
+                        模式: ${script.mode === 'echo' ? 'Echo' : 'Parallel'} <br>
+                        方案: ${currentProfile.name} <br>
+                        模型: ${displayModel}
+                    </div>
                 </div>
 
                 <div class="t-stat-card">
                     <div class="t-stat-title">导演指令 (Director Mode)</div>
                     <div class="t-stat-val">
                         <span class="t-dot ${dLen || dStyle || dPers !== 'auto' ? 'blue' : 'gray'}"></span>
-                        ${dLen || dStyle || dPers !== 'auto' ? '介入中 (源自设置)' : '默认'}
+                        ${dLen || dStyle || dPers !== 'auto' ? '介入中' : '默认'}
                     </div>
                     <div class="t-stat-sub" style="display:flex; flex-direction:column; gap:2px; margin-top:8px;">
                         <span>• 视角: ${persText}</span>
@@ -1204,10 +1327,9 @@ function showDebugInfo() {
         </div>
 
         <div id="tab-payload" class="t-dbg-content">
-            <div class="t-code-label">SYSTEM PROMPT (Contains Perspective Instruction)</div>
+            <div class="t-code-label">SYSTEM PROMPT</div>
             <div class="t-code-box">${sysPrompt}</div>
-            
-            <div class="t-code-label">USER CONTEXT (Final Assembly with Director's Instructions)</div>
+            <div class="t-code-label">USER CONTEXT</div>
             <div class="t-code-box" style="color:#d4d4d4;">${userPrompt}</div>
         </div>
 
@@ -1239,11 +1361,25 @@ function showDebugInfo() {
 function openSettingsWindow() {
     const data = getExtData();
     const cfg = data.config || {};
-    const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4" };
-    // [新增] 读取导演配置
+    const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4", size: 56 };
     const dirCfg = data.director || { length: "", perspective: "auto", style_ref: "" };
 
+    // --- [新增] 配置数据迁移逻辑 (确保 profiles 存在) ---
+    if (!cfg.profiles || !Array.isArray(cfg.profiles)) {
+        cfg.profiles = [
+            { id: "st_sync", name: "🔗 跟随 SillyTavern (主连接)", type: "internal", readonly: true },
+            { id: "default", name: "默认自定义", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
+        ];
+        cfg.active_profile_id = "default";
+        // 注意：这里暂不 saveExtData，等用户点击保存时一起存
+    }
+
+    // 深度拷贝，防止直接修改原数据
+    let tempProfiles = JSON.parse(JSON.stringify(cfg.profiles));
+    let tempActiveId = cfg.active_profile_id;
+
     let tempApp = JSON.parse(JSON.stringify(app));
+    if (!tempApp.size) tempApp.size = 56;
 
     $("#t-main-view").hide();
     const fileToBase64 = (file) => new Promise((resolve, reject) => {
@@ -1267,13 +1403,19 @@ function openSettingsWindow() {
         .t-form-group { margin-bottom: 20px; }
         .t-form-label { display: block; color: #aaa; margin-bottom: 8px; font-size: 0.9em; }
         .t-form-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 15px; }
+        
         .t-preview-container { background: #1a1a1a; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border: 1px solid #333; }
-        .t-preview-ball { width: 60px; height: 60px; border-radius: 50%; background: #2b2b2b; display: flex; align-items: center; justify-content: center; font-size: 28px; border: 2px solid transparent; transition: all 0.3s; position: relative; overflow: hidden; }
+        .t-preview-ball { border-radius: 50%; background: #2b2b2b; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; transition: all 0.2s; position: relative; overflow: hidden; }
         .t-preview-ball img { width: 100%; height: 100%; object-fit: cover; }
         .t-upload-card { width: 100px; height: 100px; border: 2px dashed #444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #666; transition: 0.2s; background-size: cover; background-position: center; position: relative; }
         .t-upload-card:hover { border-color: #bfa15f; color: #bfa15f; background-color: rgba(191, 161, 95, 0.05); }
         .t-upload-card span { font-size: 0.8em; margin-top: 5px; background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 4px; }
         
+        /* Profile Selector Styles */
+        .t-prof-header { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
+        .t-prof-select { flex-grow: 1; background: #222; color: #eee; border: 1px solid #444; padding: 8px; border-radius: 4px; }
+        .t-read-only-tag { font-size: 0.8em; color: #bfa15f; border: 1px solid #bfa15f; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
+
         @keyframes p-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .p-loading { box-shadow: 0 0 15px var(--p-theme) !important; color: var(--p-theme) !important; background: transparent !important; }
         .p-loading::before { content: ""; position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: conic-gradient(transparent, transparent, transparent, var(--p-theme)); animation: p-spin 1.2s linear infinite; z-index: -2; }
@@ -1290,7 +1432,6 @@ function openSettingsWindow() {
 
     const disabledCount = (data.disabled_presets || []).length;
     const userScriptCount = (data.user_scripts || []).length;
-    const currentModel = cfg.model || 'gpt-3.5-turbo';
 
     const html = `
     ${style}
@@ -1300,7 +1441,7 @@ function openSettingsWindow() {
             <div class="t-set-nav">
                 <div class="t-set-tab-btn active" data-tab="appearance">🎨 外观设置</div>
                 <div class="t-set-tab-btn" data-tab="connection">🔌 API 连接</div>
-                <div class="t-set-tab-btn" data-tab="director">🎬 导演模式</div> <!-- [新增] -->
+                <div class="t-set-tab-btn" data-tab="director">🎬 导演模式</div>
                 <div class="t-set-tab-btn" data-tab="automation">🤖 自动化</div>
                 <div class="t-set-tab-btn" data-tab="data">🗂️ 数据管理</div>
             </div>
@@ -1316,6 +1457,19 @@ function openSettingsWindow() {
                             <button class="t-tool-btn" id="btn-test-notify">🔔 测试呼吸</button>
                         </div>
                     </div>
+                    
+                    <div class="t-form-group">
+                        <div class="t-form-label" style="display:flex; justify-content:space-between;">
+                            <span>悬浮球尺寸</span>
+                            <span id="p-size-val" style="color:#bfa15f;">${tempApp.size}px</span>
+                        </div>
+                        <input type="range" id="p-size-input" min="40" max="100" step="2" value="${tempApp.size}" style="width:100%;">
+                        <div style="font-size:0.8em; color:#666; margin-top:5px; display:flex; justify-content:space-between;">
+                            <span>小 (40px)</span>
+                            <span>大 (100px)</span>
+                        </div>
+                    </div>
+
                     <div class="t-form-group">
                         <label class="t-form-label">图标类型</label>
                         <div style="display:flex; gap:20px; margin-bottom:15px;">
@@ -1345,37 +1499,56 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 2: 连接 -->
+                <!-- Tab 2: 连接 (重构版) -->
                 <div id="page-connection" class="t-set-page">
                     <div class="t-form-group">
-                        <label class="t-form-label">API Endpoint URL</label>
-                        <input id="cfg-url" class="t-input" value="${cfg.url || ''}" placeholder="例如: http://127.0.0.1:5000/v1">
-                    </div>
-                    <div class="t-form-group">
-                        <label class="t-form-label">API Key</label>
-                        <input id="cfg-key" type="password" class="t-input" value="${cfg.key || ''}" placeholder="sk-...">
-                    </div>
-                    <div class="t-form-group">
-                        <label class="t-form-label">Model Name</label>
-                        <div style="display:flex; gap:10px;">
-                            <select id="cfg-model" class="t-input" style="cursor:pointer;">
-                                <option value="${currentModel}" selected>${currentModel} (当前)</option>
-                            </select>
-                            <button id="t-btn-fetch" class="t-tool-btn" title="获取模型列表">🔄 获取列表</button>
+                        <label class="t-form-label">切换配置方案 (Profile)</label>
+                        <div class="t-prof-header">
+                            <select id="cfg-prof-select" class="t-prof-select"></select>
+                            <button id="cfg-prof-add" class="t-tool-btn" title="新建方案"><i class="fa-solid fa-plus"></i></button>
+                            <button id="cfg-prof-del" class="t-tool-btn" title="删除当前方案" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div id="cfg-prof-meta">
+                            <label class="t-form-label">方案名称</label>
+                            <input id="cfg-prof-name" class="t-input" value="">
                         </div>
                     </div>
+                    
+                    <div style="height:1px; background:#333; margin:20px 0;"></div>
+
+                    <div id="cfg-conn-fields">
+                        <div class="t-form-group">
+                            <label class="t-form-label">API Endpoint URL</label>
+                            <input id="cfg-url" class="t-input" placeholder="例如: http://127.0.0.1:5000/v1">
+                            <div id="cfg-url-hint" style="font-size:0.8em; color:#666; margin-top:5px; display:none;">
+                                <i class="fa-solid fa-link"></i> 正在读取 ST 全局设置：<span id="st-url-display"></span>
+                            </div>
+                        </div>
+                        <div class="t-form-group">
+                            <label class="t-form-label">API Key</label>
+                            <input id="cfg-key" type="password" class="t-input" placeholder="sk-...">
+                        </div>
+                        <div class="t-form-group">
+                            <label class="t-form-label">Model Name</label>
+                            <div style="display:flex; gap:10px;">
+                                <select id="cfg-model" class="t-input" style="cursor:pointer;"></select>
+                                <button id="t-btn-fetch" class="t-tool-btn" title="获取模型列表">🔄 获取列表</button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="t-form-group">
                         <label style="cursor:pointer; display:flex; align-items:center;">
                             <input type="checkbox" id="cfg-stream" ${cfg.stream !== false ? 'checked' : ''} style="margin-right:10px;">
-                            开启流式传输 (Streaming)
+                            开启流式传输 (Streaming) - 全局生效
                         </label>
                     </div>
                 </div>
 
-                <!-- [新增] Tab 3: 导演模式 -->
+                <!-- Tab 3: 导演模式 -->
                 <div id="page-director" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px; color:#888; font-size:0.9em;">
-                        <i class="fa-solid fa-circle-info"></i> 这里设置的是“默认值”。
+                        <i class="fa-solid fa-circle-info"></i> 这里设置的是“默认值”。在演绎主界面点击“导演指令”按钮可进行临时调整。
                     </div>
                     <div class="t-form-group">
                         <label class="t-form-label">默认篇幅建议</label>
@@ -1472,11 +1645,98 @@ function openSettingsWindow() {
         $(`#page-${$(this).data("tab")}`).addClass("active");
     });
 
-    // ... 原有外观预览逻辑 ...
+    // --- [新增] Profile 管理逻辑 ---
+
+    // 保存当前 UI 数据到临时内存
+    const saveCurrentProfileToMemory = () => {
+        const pIndex = tempProfiles.findIndex(p => p.id === tempActiveId);
+        if (pIndex === -1) return;
+
+        const p = tempProfiles[pIndex];
+        if (p.type !== 'internal') {
+            p.name = $("#cfg-prof-name").val();
+            p.url = $("#cfg-url").val();
+            p.key = $("#cfg-key").val();
+            p.model = $("#cfg-model").val();
+        }
+    };
+
+    // 渲染 Profile UI
+    const renderProfileUI = () => {
+        const pIndex = tempProfiles.findIndex(p => p.id === tempActiveId);
+        if (pIndex === -1) { tempActiveId = tempProfiles[0].id; return renderProfileUI(); }
+        const p = tempProfiles[pIndex];
+        const isInternal = p.type === 'internal';
+
+        // 1. 下拉框
+        const $sel = $("#cfg-prof-select");
+        $sel.empty();
+        tempProfiles.forEach(prof => {
+            $sel.append(`<option value="${prof.id}" ${prof.id === tempActiveId ? 'selected' : ''}>${prof.name}</option>`);
+        });
+
+        // 2. 名称与删除按钮
+        $("#cfg-prof-name").val(p.name).prop("disabled", isInternal);
+        $("#cfg-prof-del").prop("disabled", isInternal).css("opacity", isInternal ? 0.5 : 1);
+
+        // 3. 连接字段
+        if (isInternal) {
+            $("#cfg-url").val("").prop("disabled", true).prop("placeholder", "(由 SillyTavern 全局托管)");
+            $("#cfg-key").val("").prop("disabled", true).prop("placeholder", "(由 SillyTavern 全局托管)");
+            $("#cfg-model").empty().append('<option selected>(使用 ST 设置)</option>').prop("disabled", true);
+
+            // 显示 ST 当前的设置提示
+            const stUrl = typeof settings !== 'undefined' ? (settings.api_url_openai || "未知") : "未知";
+            $("#st-url-display").text(stUrl);
+            $("#cfg-url-hint").show();
+        } else {
+            $("#cfg-url").val(p.url || "").prop("disabled", false).prop("placeholder", "例如: http://127.0.0.1:5000/v1");
+            $("#cfg-key").val(p.key || "").prop("disabled", false).prop("placeholder", "sk-...");
+            $("#cfg-model").prop("disabled", false);
+            $("#cfg-url-hint").hide();
+
+            // 恢复模型选择
+            const $mSel = $("#cfg-model");
+            $mSel.empty();
+            const currentM = p.model || "gpt-3.5-turbo";
+            $mSel.append(`<option value="${currentM}" selected>${currentM}</option>`);
+        }
+    };
+
+    $("#cfg-prof-select").on("change", function () {
+        saveCurrentProfileToMemory(); // 切换前先保存旧的
+        tempActiveId = $(this).val();
+        renderProfileUI();
+    });
+
+    $("#cfg-prof-add").on("click", function () {
+        saveCurrentProfileToMemory();
+        const newId = "custom_" + Date.now();
+        tempProfiles.push({
+            id: newId,
+            name: "新方案 " + tempProfiles.length,
+            type: "custom",
+            url: "", key: "", model: "gpt-3.5-turbo"
+        });
+        tempActiveId = newId;
+        renderProfileUI();
+    });
+
+    $("#cfg-prof-del").on("click", function () {
+        if (confirm("确定删除当前配置方案吗？")) {
+            tempProfiles = tempProfiles.filter(p => p.id !== tempActiveId);
+            tempActiveId = tempProfiles[0].id;
+            renderProfileUI();
+        }
+    });
+
+    // 预览逻辑
     const renderPreview = () => {
         const $ball = $("#p-ball");
         const theme = $("#p-color-theme").val();
         const notify = $("#p-color-notify").val();
+        const size = parseInt(tempApp.size) || 56;
+        $ball.css({ width: size + "px", height: size + "px", fontSize: Math.floor(size * 0.46) + "px" });
         $ball[0].style.setProperty('--p-theme', theme);
         $ball[0].style.setProperty('--p-notify', notify);
         $ball.css("border-color", "transparent");
@@ -1501,6 +1761,12 @@ function openSettingsWindow() {
         renderPreview();
     });
 
+    $("#p-size-input").on("input", function () {
+        tempApp.size = $(this).val();
+        $("#p-size-val").text(tempApp.size + "px");
+        renderPreview();
+    });
+
     $("#p-emoji-input").on("input", function () { tempApp.content = $(this).val(); renderPreview(); });
     $("#p-color-theme, #p-color-notify").on("input", renderPreview);
     $("#btn-upload-card").on("click", () => $("#p-file-input").click());
@@ -1520,12 +1786,26 @@ function openSettingsWindow() {
     $("#cfg-chance").on("input", function () { $("#cfg-chance-val").text($(this).val() + "%"); });
 
     $("#t-btn-fetch").on("click", async function () {
+        // [修改] 获取列表需兼容 Profile
         const btn = $(this);
         const originalText = btn.text();
-        const urlInput = $("#cfg-url").val().trim().replace(/\/+$/, "");
-        const key = $("#cfg-key").val().trim();
 
-        if (!urlInput) return alert("请先填写 API URL");
+        let urlInput = "";
+        let key = "";
+
+        const p = tempProfiles.find(x => x.id === tempActiveId);
+        if (p.type === 'internal') {
+            if (typeof settings !== 'undefined') {
+                urlInput = (settings.api_url_openai || "").trim();
+                key = settings.api_key_openai || "";
+            }
+        } else {
+            urlInput = ($("#cfg-url").val() || "").trim();
+            key = ($("#cfg-key").val() || "").trim();
+        }
+
+        if (!urlInput) return alert("API URL 为空");
+        urlInput = urlInput.replace(/\/+$/, "");
 
         let baseUrl = urlInput;
         if (baseUrl.endsWith("/chat/completions")) {
@@ -1546,9 +1826,16 @@ function openSettingsWindow() {
             const models = data.data || data.models || [];
 
             const $sel = $("#cfg-model");
-            const oldVal = $sel.val();
-            $sel.empty();
+            const oldVal = $sel.val(); // 如果是 Internal 模式，这里可能是不可选状态，但逻辑通用
 
+            // 如果是 Internal 模式，我们要临时解锁一下让用户能看，或者直接不做 UI 修改仅弹窗
+            // 为了简单起见，Internal 模式下不允许修改模型，只弹窗提示
+            if (p.type === 'internal') {
+                alert(`获取成功! 共有 ${models.length} 个模型可用。\n(ST托管模式下，请在 SillyTavern 主设置中切换模型)`);
+                return;
+            }
+
+            $sel.empty();
             let count = 0;
             models.forEach(m => {
                 const id = m.id || m;
@@ -1557,11 +1844,7 @@ function openSettingsWindow() {
             });
 
             if (count > 0) {
-                const exists = models.some(m => (m.id || m) === oldVal);
-                if (exists) $sel.val(oldVal);
-
                 if (window.toastr) toastr.success(`获取成功，共 ${count} 个模型`);
-                else alert(`获取成功，共 ${count} 个模型`);
             } else {
                 alert("获取成功，但模型列表为空");
                 $sel.append(`<option value="${oldVal}" selected>${oldVal}</option>`);
@@ -1592,18 +1875,23 @@ function openSettingsWindow() {
 
     $("#t-set-close").on("click", () => { $("#t-settings-view").remove(); $("#t-main-view").show(); });
 
-    // [修改] 保存逻辑，包含导演模式配置
+    // [修改] 保存逻辑
     $("#t-set-save").on("click", () => {
+        saveCurrentProfileToMemory(); // 确保最后一次修改被记录
+
         const finalApp = {
             type: tempApp.type,
             content: tempApp.content,
             color_theme: $("#p-color-theme").val(),
-            color_notify: $("#p-color-notify").val()
+            color_notify: $("#p-color-notify").val(),
+            size: tempApp.size || 56
         };
         const finalCfg = {
-            url: $("#cfg-url").val().trim(),
-            key: $("#cfg-key").val().trim(),
-            model: $("#cfg-model").val().trim(),
+            // [新增] 保存 Profiles
+            active_profile_id: tempActiveId,
+            profiles: tempProfiles,
+
+            // 全局设置
             history_limit: parseInt($("#cfg-history").val()) || 10,
             stream: $("#cfg-stream").is(":checked"),
             auto_generate: $("#cfg-auto").is(":checked"),
@@ -1619,7 +1907,7 @@ function openSettingsWindow() {
         const d = getExtData();
         d.config = finalCfg;
         d.appearance = finalApp;
-        d.director = finalDir; // 保存导演配置
+        d.director = finalDir;
 
         saveExtData();
         $("#t-settings-view").remove();
@@ -1627,7 +1915,10 @@ function openSettingsWindow() {
         createFloatingButton();
         if (window.toastr) toastr.success("设置已保存");
     });
+
+    // 初始化渲染
     renderPreview();
+    renderProfileUI();
 }
 
 // 剧本管理器
@@ -2200,13 +2491,17 @@ function saveFavorite() {
     btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i> 已收藏').prop("disabled", true);
 }
 
-// 修改 openFavsWindow 函数
+// [修改] 收藏夹窗口 (移动端触摸滑动、导出图片，阅读器优化)
+// [修改] 收藏夹窗口 (已应用全填充画布逻辑)
 function openFavsWindow() {
     $("#t-main-view").hide();
     const data = getExtData();
     const favs = data.favs || [];
-    // 确保 map 初始化
     const charMap = data.character_map || {};
+
+    // 状态管理
+    let currentFilteredList = [];
+    let currentIndex = -1;
     let currentFavId = null;
 
     // 解析元数据
@@ -2215,7 +2510,7 @@ function openFavsWindow() {
         if (parts.length >= 2) {
             const char = parts.pop();
             const script = parts.join(' - ');
-            return { script, char: char.trim() }; // trim 很重要
+            return { script, char: char.trim() };
         }
         return { script: title, char: "未知" };
     };
@@ -2228,11 +2523,10 @@ function openFavsWindow() {
         return text.length > 60 ? text.substring(0, 60) + "..." : text;
     };
 
-    // 构建索引
     const charIndex = new Set();
     favs.forEach(f => {
         const meta = parseMeta(f.title || "");
-        f._meta = meta; // 缓存 meta 信息
+        f._meta = meta;
         charIndex.add(meta.char);
     });
     const charList = ["全部角色", ...[...charIndex].sort()];
@@ -2282,13 +2576,60 @@ function openFavsWindow() {
         }
         .t-fav-reader.show { transform: translateX(0); }
         .t-read-header { height: 60px; padding: 0 20px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; background: #181818; }
-        .t-read-body { flex-grow: 1; padding: 40px 15%; overflow-y: auto; color: #ccc; font-size: 1.1em; line-height: 1.8; }
+        
+        .t-read-body { 
+            flex-grow: 1; 
+            /* [修改] 移除内边距，实现全填充 */
+            padding: 0; 
+            overflow-y: auto; 
+            color: #ccc; 
+            position: relative;
+            background: #0b0b0b;
+        }
+        
+        /* [修改] 截图/内容区域全宽 */
+        #t-read-capture-zone { 
+            background: transparent; /* 透明背景，让内容决定 */
+            padding: 0; 
+            border-radius: 0; 
+            width: 100%; 
+            min-height: 100%;
+            font-size: 1.05em;
+            line-height: 1.6;
+            text-align: justify;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* [核心] 强制内容样式铺满 */
+        #t-read-content {
+            width: 100%;
+            min-height: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #t-read-content > div {
+            flex-grow: 1;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            border-radius: 0 !important;
+            border: none !important;
+            min-height: 100%;
+            box-sizing: border-box;
+        }
+        
         .t-fav-empty { text-align: center; color: #555; margin-top: 50px; grid-column: 1/-1; }
 
         @media screen and (max-width: 600px) {
             .t-fav-toolbar { flex-direction: column; height: auto; padding: 10px; align-items: stretch; }
             .t-fav-search { width: 100%; }
-            .t-read-body { padding: 20px; }
+            /* 移动端同样保持全填充 */
+            .t-read-body { padding: 0; }
+            #t-read-capture-zone { padding: 0; }
+            .t-read-meta-text { max-width: 120px; }
         }
     </style>`;
 
@@ -2310,7 +2651,6 @@ function openFavsWindow() {
             
             <div style="display:flex; gap:10px; align-items:center;">
                 <input type="text" id="t-fav-search" class="t-fav-search" placeholder="搜索关键词...">
-                <!-- [新增] 图鉴管理按钮 -->
                 <button id="t-btn-img-mgr" class="t-tool-btn" title="管理角色背景图">
                     <i class="fa-regular fa-image"></i> 图鉴
                 </button>
@@ -2324,52 +2664,54 @@ function openFavsWindow() {
         <!-- 阅读器 -->
         <div class="t-fav-reader" id="t-fav-reader">
             <div class="t-read-header">
-                <div style="display:flex; align-items:center; gap:15px; overflow:hidden;">
+                <div style="display:flex; align-items:center; gap:15px; overflow:hidden; flex-grow:1;">
                     <i class="fa-solid fa-chevron-left" id="t-read-back" style="cursor:pointer; font-size:1.2em; padding:5px; color:#aaa;"></i>
-                    <div id="t-read-meta" style="font-weight:bold; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                    <div style="display:flex; flex-direction:column; justify-content:center; overflow:hidden;">
+                        <div id="t-read-meta" class="t-read-meta-text" style="font-weight:bold; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                        <div id="t-read-index" style="font-size:0.75em; color:#666;">0 / 0</div>
+                    </div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="t-tool-btn" id="t-read-code" title="HTML源码"><i class="fa-solid fa-code"></i></button>
+                <div style="display:flex; gap:10px; flex-shrink:0;">
+                    <button class="t-tool-btn" id="t-read-img" title="导出图片"><i class="fa-solid fa-camera"></i></button>
+                    <button class="t-tool-btn" id="t-read-code" title="复制HTML"><i class="fa-solid fa-code"></i></button>
                     <button class="t-tool-btn" id="t-read-del-one" title="删除" style="color:#ff6b6b; border-color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
-            <div class="t-read-body" id="t-read-content"></div>
+            <div class="t-read-body">
+                <div id="t-read-capture-zone">
+                    <div id="t-read-content"></div>
+                </div>
+            </div>
         </div>
     </div>`;
 
     $("#t-overlay").append(html);
 
-    // --- 渲染逻辑 ---
+    // --- 核心逻辑 ---
 
     const renderGrid = () => {
         const grid = $("#t-fav-grid");
         grid.empty();
 
-        // 重新获取最新的 map（因为刚刚可能在管理界面修改了）
         const currentMap = getExtData().character_map || {};
-
         const targetChar = $("#t-fav-filter-char").val();
         const search = $("#t-fav-search").val().toLowerCase();
 
-        const filtered = favs.filter(f => {
+        currentFilteredList = favs.filter(f => {
             if (targetChar !== "全部角色" && f._meta.char !== targetChar) return false;
             if (search && !f.title.toLowerCase().includes(search) && !f.html.toLowerCase().includes(search)) return false;
             return true;
         });
 
-        if (filtered.length === 0) {
+        if (currentFilteredList.length === 0) {
             grid.append('<div class="t-fav-empty">没有找到相关收藏</div>');
             return;
         }
 
-        filtered.forEach(item => {
+        currentFilteredList.forEach((item, idx) => {
             const snippet = getSnippet(item.html);
             const charName = item._meta.char;
 
-            // [修改] 背景图优先级策略
-            // 1. 先查全局 Map (character_map)
-            // 2. 再查单卡缓存 (item.avatar)
-            // 3. 都没有则为空
             let bgUrl = currentMap[charName];
             if (!bgUrl) bgUrl = item.avatar;
 
@@ -2393,36 +2735,95 @@ function openFavsWindow() {
                 </div>
             `);
 
-            card.on("click", () => openReader(item));
+            card.on("click", () => loadReaderItem(idx));
             grid.append(card);
         });
     };
 
-    const openReader = (item) => {
+    const loadReaderItem = (index) => {
+        if (index < 0 || index >= currentFilteredList.length) return;
+
+        currentIndex = index;
+        const item = currentFilteredList[index];
         currentFavId = item.id;
+
         $("#t-read-meta").text(item.title);
+        $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
         $("#t-read-content").html(item.html);
         $("#t-fav-reader").addClass("show");
     };
 
     // --- 事件绑定 ---
+
     $("#t-fav-filter-char, #t-fav-search").on("input change", renderGrid);
 
-    // [新增] 绑定图鉴管理按钮
     $("#t-btn-img-mgr").on("click", () => {
-        // 传入回调函数：当管理器关闭时，重新渲染网格以应用新图片
-        openCharImageManager(() => {
-            renderGrid();
-        });
+        openCharImageManager(() => { renderGrid(); });
     });
 
     $("#t-read-back").on("click", () => $("#t-fav-reader").removeClass("show"));
 
+    // [核心] 触摸滑动支持 (Mobile Swipe)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const readerBody = $(".t-read-body");
+
+    readerBody.on("touchstart", (e) => {
+        touchStartX = e.originalEvent.touches[0].clientX;
+        touchStartY = e.originalEvent.touches[0].clientY;
+    });
+
+    readerBody.on("touchend", (e) => {
+        const touchEndX = e.originalEvent.changedTouches[0].clientX;
+        const touchEndY = e.originalEvent.changedTouches[0].clientY;
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+
+        if (Math.abs(diffX) > 60 && Math.abs(diffX) > Math.abs(diffY) * 2) {
+            if (diffX > 0) { if (currentIndex > 0) loadReaderItem(currentIndex - 1); }
+            else { if (currentIndex < currentFilteredList.length - 1) loadReaderItem(currentIndex + 1); }
+        }
+    });
+
     $("#t-read-code").on("click", () => {
         const htmlContent = $("#t-read-content").html();
-        // (简化代码以节省篇幅，保持原有逻辑)
         navigator.clipboard.writeText(htmlContent);
         if (window.toastr) toastr.success("源码已复制");
+    });
+
+    $("#t-read-img").on("click", async function () {
+        const btn = $(this);
+        const originalHtml = btn.html();
+
+        try {
+            btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
+
+            if (typeof html2canvas === 'undefined') {
+                if (window.toastr) toastr.info("正在加载截图组件...", "Titania");
+                await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+            }
+
+            const element = document.getElementById("t-read-capture-zone");
+            const canvas = await html2canvas(element, {
+                backgroundColor: "#0b0b0b",
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+
+            const link = document.createElement('a');
+            link.download = `Titania_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+
+            if (window.toastr) toastr.success("图片导出成功");
+
+        } catch (e) {
+            console.error(e);
+            alert("导出失败: " + e.message + "\n可能是因为内容包含跨域图片(如网络头像)。");
+        } finally {
+            btn.prop("disabled", false).html(originalHtml);
+        }
     });
 
     $("#t-read-del-one").on("click", () => {
@@ -2430,13 +2831,26 @@ function openFavsWindow() {
             const d = getExtData();
             d.favs = d.favs.filter(x => x.id !== currentFavId);
             saveExtData();
+
             favs.splice(0, favs.length, ...d.favs);
-            $("#t-fav-reader").removeClass("show");
             renderGrid();
+
+            if (currentFilteredList.length === 0) {
+                $("#t-fav-reader").removeClass("show");
+            } else {
+                let newIdx = currentIndex;
+                if (newIdx >= currentFilteredList.length) newIdx = currentFilteredList.length - 1;
+                loadReaderItem(newIdx);
+            }
         }
     });
 
-    $("#t-fav-close").on("click", () => { $("#t-favs-view").remove(); $("#t-main-view").css("display", "flex"); });
+    const closeWindow = () => {
+        $("#t-favs-view").remove();
+        $("#t-main-view").css("display", "flex");
+    };
+
+    $("#t-fav-close").on("click", closeWindow);
 
     renderGrid();
 }
