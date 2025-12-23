@@ -1,4 +1,4 @@
-// --- START OF FILE ---
+// --- START OF FILE ---回声小剧场v4.6
 
 // 【Part 1: 头部引用、配置与数据辅助函数】
 import { extension_settings, getContext } from "../../../extensions.js";
@@ -7,19 +7,25 @@ import { saveSettingsDebounced, eventSource, event_types } from "../../../../scr
 const extensionName = "Titania_Theater_Echo";
 const extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
 
-// [修改] 默认设置结构
+// [修改] 默认设置结构 (新增 director 字段)
 const defaultSettings = {
     enabled: true,
     config: {},         // API Url, Key, Model, Auto-Settings
     user_scripts: [],   // 自定义剧本
     favs: [],           // 收藏夹
     character_map: {},  // 角色图鉴
-    disabled_presets: [], // [新增] 已删除(隐藏)的官方预设ID列表
+    disabled_presets: [],
     appearance: {
-        type: "emoji",          // 'emoji' 或 'image'
-        content: "🎭",          // Emoji 字符或 图片 Base64
-        color_theme: "#bfa15f", // 主题色
-        color_notify: "#55efc4" // 通知色
+        type: "emoji",
+        content: "🎭",
+        color_theme: "#bfa15f",
+        color_notify: "#55efc4"
+    },
+    // [新增] 导演模式默认设置
+    director: {
+        length: "",             // 默认篇幅建议
+        perspective: "auto",    // auto, 1st, 3rd
+        style_ref: ""           // 风格参考文本
     }
 };
 
@@ -33,6 +39,9 @@ let isGenerating = false;
 let runtimeScripts = [];
 let lastGeneratedContent = "";
 let lastUsedScriptId = "";
+
+// [新增] 将筛选状态提升为全局变量，使其在窗口关闭后也能保持
+let currentCategoryFilter = "ALL";
 
 // --- 数据存取辅助函数 ---
 function getExtData() {
@@ -334,9 +343,6 @@ function openMainWindow() {
     const data = getExtData();
     let savedMode = (data.ui_mode_echo !== false);
 
-    // 新增状态：当前的分类筛选范围 (ALL 或 具体分类名)
-    let currentCategoryFilter = "ALL";
-
     const initialContent = lastGeneratedContent ? lastGeneratedContent : '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">请选择剧本，开始演绎...</div></div>';
 
     const style = `
@@ -366,19 +372,14 @@ function openMainWindow() {
         .t-cat-tag { background: #333; padding: 1px 6px; border-radius: 3px; color: #aaa; font-size: 0.9em; flex-shrink: 0; }
         .t-chevron { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #555; font-size: 1.2em; }
         
-        /* 按钮组容器 */
         .t-action-group { display: flex; gap: 5px; flex-shrink: 0; }
-
-        /* 漏斗筛选按钮 */
         .t-filter-btn { width: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.1em; cursor: pointer; background: #222; border: 1px solid #333; border-radius: 6px; color: #666; transition: 0.2s; }
         .t-filter-btn:hover { background: #2a2a2a; color: #aaa; }
-        /* 激活状态：金色高亮 */
         .t-filter-btn.active-filter { color: #bfa15f; border-color: rgba(191, 161, 95, 0.3); background: rgba(191, 161, 95, 0.1); }
         
-        /* 骰子按钮 */
         .t-dice-btn { width: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; cursor: pointer; background: #222; border: 1px solid #333; border-radius: 6px; transition: 0.2s; color: #888; }
         .t-dice-btn:hover { background: #2a2a2a; color: #fff; }
-        .t-dice-btn.active-filter { color: #bfa15f; } /* 筛选状态下骰子变金 */
+        .t-dice-btn.active-filter { color: #bfa15f; }
 
         .t-content-wrapper { flex-grow: 1; position: relative; overflow: hidden; background-color: #0b0b0b; background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); background-size: 20px 20px; }
         .t-content-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 30px; overflow-y: auto; box-sizing: border-box; scroll-behavior: smooth; }
@@ -398,7 +399,7 @@ function openMainWindow() {
             .t-tab { margin-bottom: 0; margin-right: 2px; }
             .t-mobile-row { display: flex; gap: 8px; width: 100%; height: 50px; }
             .t-trigger-card { height: 100%; }
-            .t-action-group { height: 100%; } /* 移动端高度撑满 */
+            .t-action-group { height: 100%; }
             .t-dice-btn { height: 100%; width: 50px; }
             .t-filter-btn { height: 100%; width: 40px; }
             .t-content-area { padding: 15px; }
@@ -445,7 +446,6 @@ function openMainWindow() {
                         <i class="fa-solid fa-chevron-down t-chevron"></i>
                     </div>
                     
-                    <!-- 动作按钮组：漏斗 + 骰子 -->
                     <div class="t-action-group">
                         <div class="t-filter-btn" id="t-btn-filter" title="筛选随机范围">
                             <i class="fa-solid fa-filter"></i>
@@ -477,9 +477,8 @@ function openMainWindow() {
 
     $("body").append(html);
 
-    // --- 内部逻辑 ---
+    // --- 内部逻辑 (已移除导演面板相关JS) ---
 
-    // 更新 UI 状态
     const updateFilterUI = () => {
         const btn = $("#t-btn-filter");
         const dice = $("#t-btn-dice");
@@ -495,10 +494,12 @@ function openMainWindow() {
         }
     };
 
-    const switchMode = (isEcho) => {
+    const switchMode = (isEcho, resetFilter = true) => {
         savedMode = isEcho;
-        // 核心：切换模式时重置筛选
-        currentCategoryFilter = "ALL";
+
+        if (resetFilter) {
+            currentCategoryFilter = "ALL";
+        }
         updateFilterUI();
 
         if (isEcho) { $("#t-tab-echo").addClass("active-echo"); $("#t-tab-parallel").removeClass("active-parallel"); }
@@ -510,66 +511,63 @@ function openMainWindow() {
         const targetModeStr = isEcho ? 'echo' : 'parallel';
 
         if (!currentScript || currentScript.mode !== targetModeStr) {
-            const firstValid = runtimeScripts.find(s => s.mode === targetModeStr);
-            if (firstValid) applyScriptSelection(firstValid.id);
-            else { $("#t-lbl-name").text("无可用剧本"); $("#t-lbl-cat").text("提示"); $("#t-lbl-desc-mini").text("无"); }
+            let pool = runtimeScripts.filter(s => s.mode === targetModeStr);
+            if (currentCategoryFilter !== 'ALL') {
+                pool = pool.filter(s => (s.category || (s._type === 'preset' ? '官方预设' : '未分类')) === currentCategoryFilter);
+            }
+
+            if (pool.length > 0) {
+                applyScriptSelection(pool[0].id);
+            } else {
+                const fallback = runtimeScripts.find(s => s.mode === targetModeStr);
+                if (fallback) applyScriptSelection(fallback.id);
+                else { $("#t-lbl-name").text("无可用剧本"); $("#t-lbl-cat").text("提示"); $("#t-lbl-desc-mini").text("无"); }
+            }
         } else {
             applyScriptSelection(lastUsedScriptId);
         }
     };
 
-    // 随机逻辑 (支持筛选)
     const handleRandom = () => {
         const targetModeStr = savedMode ? 'echo' : 'parallel';
-
-        // 1. 先按模式筛
         let pool = runtimeScripts.filter(s => s.mode === targetModeStr);
 
-        // 2. 再按分类筛
         if (currentCategoryFilter !== "ALL") {
             pool = pool.filter(s => (s.category || (s._type === 'preset' ? '官方预设' : '未分类')) === currentCategoryFilter);
         }
 
         if (pool.length === 0) {
-            // 如果筛选后没结果，提示用户并重置
             alert(`分类 [${currentCategoryFilter}] 下没有可用剧本，已重置筛选。`);
             currentCategoryFilter = "ALL";
             updateFilterUI();
-            return handleRandom(); // 重试
+            return handleRandom();
         }
 
         const rnd = Math.floor(Math.random() * pool.length);
         const s = pool[rnd];
         applyScriptSelection(s.id);
 
-        // 动画
         const dice = $("#t-btn-dice");
         dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
         setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
     };
 
-    // 绑定事件
-    $("#t-tab-echo").on("click", () => switchMode(true));
-    $("#t-tab-parallel").on("click", () => switchMode(false));
-
-    // 打开超级菜单时，传入当前 filter
+    $("#t-tab-echo").on("click", () => switchMode(true, true));
+    $("#t-tab-parallel").on("click", () => switchMode(false, true));
     $("#t-trigger-btn").on("click", () => showScriptSelector(savedMode, currentCategoryFilter));
-
-    // 打开筛选菜单
     $("#t-btn-filter").on("click", function (e) {
-        // 调用我们即将新增的渲染函数
         renderFilterMenu(savedMode, currentCategoryFilter, $(this), (newCat) => {
             currentCategoryFilter = newCat;
             updateFilterUI();
-            // 如果当前剧本不符合新筛选，自动随一个
-            handleRandom();
+            const currentS = runtimeScripts.find(s => s.id === lastUsedScriptId);
+            const sCat = currentS ? (currentS.category || (currentS._type === 'preset' ? '官方预设' : '未分类')) : '';
+            if (newCat !== 'ALL' && sCat !== newCat) {
+                handleRandom();
+            }
         });
         e.stopPropagation();
     });
-
     $("#t-btn-dice").on("click", handleRandom);
-
-    // Zen Mode
     $("#t-btn-zen").on("click", function () {
         const view = $("#t-main-view");
         view.toggleClass("t-zen-mode");
@@ -580,7 +578,6 @@ function openMainWindow() {
     $(document).on("keydown.zenmode", function (e) {
         if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) $("#t-btn-zen").click();
     });
-
     $("#t-btn-close").on("click", () => { $("#t-overlay").remove(); $(document).off("keydown.zenmode"); });
     $("#t-overlay").on("click", (e) => { if (e.target === e.currentTarget) { $("#t-overlay").remove(); $(document).off("keydown.zenmode"); } });
     $("#t-btn-settings").on("click", openSettingsWindow);
@@ -590,7 +587,7 @@ function openMainWindow() {
     $("#t-btn-favs").on("click", openFavsWindow);
     $("#t-btn-debug").on("click", showDebugInfo);
 
-    switchMode(savedMode);
+    switchMode(savedMode, false);
 }
 
 // 新增渲染分类筛选菜单
@@ -816,6 +813,8 @@ function getChatHistory(limit) {
 async function handleGenerate(forceScriptId = null, silent = false) {
     const data = getExtData();
     const cfg = data.config || {};
+    // [修改] 直接读取保存的导演设置
+    const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
 
     if (!cfg.key) return alert("请先去设置填 API Key！");
 
@@ -838,19 +837,46 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     isGenerating = true;
     $floatBtn.addClass("t-loading");
 
+    $("#t-btn-like").html('<i class="fa-regular fa-heart"></i> 收藏').prop("disabled", false);
+
     if (!silent && window.toastr) {
         toastr.info(`🚀 [${useStream ? '流式' : '非流式'}] 剧本演绎中...`, "Titania Echo");
     }
 
     try {
-        let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks.Please answer all other content in Chinese.";
+        // --- 读取导演模式参数 (简化版) ---
+        const dLen = dirDefaults.length;
+        const dPers = dirDefaults.perspective;
+        const dStyle = dirDefaults.style_ref;
+
+        // --- 构建 Prompt ---
+        let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Please answer all other content in Chinese.";
+
+        if (dPers === '1st') {
+            sys += " Write strictly in First Person perspective (I/Me).";
+        } else if (dPers === '3rd') {
+            sys += ` Write strictly in Third Person perspective (${ctx.charName}/He/She).`;
+        }
+
         let user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\n\n`;
+
+        let directorInstruction = "";
+        if (dLen) {
+            directorInstruction += `1. Length Constraint: Keep the response approximately ${dLen}.\n`;
+        }
+        if (dStyle) {
+            const safeStyle = dStyle.substring(0, 1000);
+            directorInstruction += `2. Style Mimicry: Analyze and strictly mimic the writing style, tone, and descriptive granularity of the example below. DO NOT copy the content, only the vibe.\n<style_reference>\n${safeStyle}\n</style_reference>\n`;
+        }
+
+        if (directorInstruction) {
+            user += `[Director's Instructions]\n${directorInstruction}\n`;
+        }
 
         if (ctx.persona) user += `[Character Persona]\n${ctx.persona}\n\n`;
         if (ctx.userDesc) user += `[User Persona]\n${ctx.userDesc}\n\n`;
         if (ctx.worldInfo) user += `[World Info / Lore]\n${ctx.worldInfo}\n\n`;
 
-        // 模式Token优化：Echo读历史，Parallel不读
         if (script.mode === 'echo') {
             const limit = cfg.history_limit || 10;
             const history = getChatHistory(limit);
@@ -929,7 +955,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     }
 }
 
-// 显示 Prompt 审查窗口
+// 显示 Prompt 审查窗口 (已更新支持导演模式)
 function showDebugInfo() {
     const script = runtimeScripts.find(s => s.id === lastUsedScriptId);
     if (!script) {
@@ -941,41 +967,57 @@ function showDebugInfo() {
     const cfg = data.config || {};
     const d = getContextData();
 
-    // --- 1. 数据深度分析 (Data Profiling) ---
+    // [修改] 直接读取保存的导演设置
+    const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
+    const dLen = dirDefaults.length;
+    const dPers = dirDefaults.perspective;
+    const dStyle = dirDefaults.style_ref;
 
-    // A. 历史记录分析
+    // --- 1. 数据深度分析 (Data Profiling) ---
     let historyStatus = { count: 0, text: "未启用 (平行模式)" };
     let finalHistoryText = "";
     if (script.mode === 'echo') {
         const limit = cfg.history_limit || 10;
         const hist = getChatHistory(limit);
-        const count = hist ? hist.split('\n').length : 0; // 粗略统计行数作为消息数
+        const count = hist ? hist.split('\n').length : 0;
         historyStatus = { count: count, text: `${count} 条记录` };
         finalHistoryText = hist || "(无历史记录)";
     }
 
-    // B. 世界书分析 (逻辑拆解：区分角色书和全局WI)
-    // 注意：getContextData 已经把它们合并成字符串了，我们需要重新解析一下原始来源来做统计，
-    // 或者简单一点，分析 d.worldInfo 字符串的结构 (前提是 getContextData 里的 header 没变)
     const wiText = d.worldInfo || "";
     const charBookMatch = wiText.match(/\[Character Lore\/World Info\]/);
     const globalWiMatch = wiText.match(/\[Global World Info\]/);
-
-    // 这里的统计只是近似值，为了更精准，我们其实可以在 getContextData 里返回结构化数据，
-    // 但为了不改动 getContextData 造成风险，我们这里用“是否有内容”来做定性分析。
     const hasCharBook = !!charBookMatch;
     const hasGlobalWI = !!globalWiMatch;
     const wiLength = wiText.length;
 
-    // --- 2. 模拟构建 Prompt ---
-    const sysPrompt = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS...";
+    // --- 2. 模拟构建 Prompt (包含导演指令) ---
+    let sysPrompt = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Please answer all other content in Chinese.";
+    if (dPers === '1st') {
+        sysPrompt += " Write strictly in First Person perspective (I/Me).";
+    } else if (dPers === '3rd') {
+        sysPrompt += ` Write strictly in Third Person perspective (${d.charName}/He/She).`;
+    }
+
     let userPrompt = `[Roleplay Setup]\nCharacter: ${d.charName}\nUser: ${d.userName}\n\n`;
+
+    let directorInstruction = "";
+    if (dLen) directorInstruction += `1. Length Constraint: Keep the response approximately ${dLen}.\n`;
+    if (dStyle) {
+        const safeStyle = dStyle.substring(0, 1000);
+        directorInstruction += `2. Style Mimicry: Analyze and strictly mimic the writing style, tone, and descriptive granularity of the example below. DO NOT copy the content, only the vibe.\n<style_reference>\n${safeStyle}\n</style_reference>\n`;
+    }
+    if (directorInstruction) {
+        userPrompt += `[Director's Instructions]\n${directorInstruction}\n`;
+    }
+
     if (d.persona) userPrompt += `[Character Persona]\n(Length: ${d.persona.length} chars)\n${d.persona}\n\n`;
     if (d.worldInfo) userPrompt += `[World Info / Lore]\n(Length: ${d.worldInfo.length} chars)\n${d.worldInfo}\n\n`;
     if (script.mode === 'echo') userPrompt += `[Recent Conversation History]\n${finalHistoryText}\n\n`;
     else userPrompt += `[Mode Info]\n(Alternate Universe / Ignore previous chat history context)\n\n`;
-    const finalPrompt = script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName);
-    userPrompt += `[Scenario Request]\n${finalPrompt}`;
+
+    const finalScriptPrompt = script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName);
+    userPrompt += `[Scenario Request]\n${finalScriptPrompt}`;
 
     // --- 3. 渲染 UI ---
     $("#t-main-view").hide();
@@ -991,27 +1033,25 @@ function showDebugInfo() {
         .t-dbg-content { flex-grow: 1; padding: 20px; overflow-y: auto; display: none; }
         .t-dbg-content.active { display: block; }
         
-        /* 概览卡片 */
         .t-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
         .t-stat-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 15px; }
         .t-stat-title { font-size: 0.8em; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .t-stat-val { font-size: 1.1em; color: #eee; font-weight: 500; display: flex; align-items: center; gap: 8px; }
         .t-stat-sub { font-size: 0.85em; color: #555; margin-top: 5px; }
         
-        /* 状态灯 */
         .t-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .t-dot.ok { background: #55efc4; box-shadow: 0 0 5px rgba(85, 239, 196, 0.4); }
         .t-dot.warn { background: #fab1a0; }
         .t-dot.gray { background: #444; }
+        .t-dot.blue { background: #74b9ff; box-shadow: 0 0 5px rgba(116, 185, 255, 0.4); }
 
-        /* 代码块 */
         .t-code-box { background: #0f0f0f; border: 1px solid #222; border-radius: 4px; padding: 15px; font-family: 'Consolas', monospace; font-size: 0.85em; color: #a8a8a8; white-space: pre-wrap; word-break: break-all; line-height: 1.5; max-height: 400px; overflow-y: auto; margin-bottom: 20px; }
         .t-code-label { font-size: 0.8em; color: #666; margin-bottom: 5px; font-weight: bold; }
-
-        @media screen and (max-width: 600px) {
-            .t-stat-grid { grid-template-columns: 1fr; }
-        }
     </style>`;
+
+    const persText = dPers === 'auto' ? '自动 (Auto)' : (dPers === '1st' ? '第一人称 (I/Me)' : '第三人称 (He/She)');
+    const styleText = dStyle ? `已启用 (${dStyle.length} 字符)` : '未启用';
+    const lenText = dLen || '默认';
 
     const html = `
     ${style}
@@ -1026,18 +1066,28 @@ function showDebugInfo() {
             <div class="t-dbg-tab" data-tab="payload">原文 (Payload)</div>
         </div>
 
-        <!-- Tab 1: 概览 -->
         <div id="tab-overview" class="t-dbg-content active">
             <div class="t-stat-grid">
                 
-                <!-- 基础信息 -->
                 <div class="t-stat-card">
                     <div class="t-stat-title">基本信息</div>
                     <div class="t-stat-val"><i class="fa-solid fa-film"></i> ${script.name}</div>
                     <div class="t-stat-sub">模式: ${script.mode === 'echo' ? 'Echo' : 'Parallel'} | 模型: ${cfg.model}</div>
                 </div>
 
-                <!-- 角色绑定 -->
+                <div class="t-stat-card">
+                    <div class="t-stat-title">导演指令 (Director Mode)</div>
+                    <div class="t-stat-val">
+                        <span class="t-dot ${dLen || dStyle || dPers !== 'auto' ? 'blue' : 'gray'}"></span>
+                        ${dLen || dStyle || dPers !== 'auto' ? '介入中 (源自设置)' : '默认'}
+                    </div>
+                    <div class="t-stat-sub" style="display:flex; flex-direction:column; gap:2px; margin-top:8px;">
+                        <span>• 视角: ${persText}</span>
+                        <span>• 篇幅: ${lenText}</span>
+                        <span>• 仿写: ${styleText}</span>
+                    </div>
+                </div>
+
                 <div class="t-stat-card">
                     <div class="t-stat-title">角色绑定</div>
                     <div class="t-stat-val">
@@ -1047,7 +1097,6 @@ function showDebugInfo() {
                     <div class="t-stat-sub">Persona 长度: ${d.persona ? d.persona.length : 0} 字符</div>
                 </div>
 
-                <!-- 历史记录 -->
                 <div class="t-stat-card">
                     <div class="t-stat-title">聊天历史</div>
                     <div class="t-stat-val">
@@ -1057,7 +1106,6 @@ function showDebugInfo() {
                     <div class="t-stat-sub">${script.mode === 'echo' ? '已读取上下文' : '平行模式下不读取历史'}</div>
                 </div>
 
-                <!-- 世界书 -->
                 <div class="t-stat-card">
                     <div class="t-stat-title">世界书 (World Info)</div>
                     <div class="t-stat-val">
@@ -1071,18 +1119,13 @@ function showDebugInfo() {
                 </div>
 
             </div>
-            
-            <div style="margin-top:20px; font-size:0.85em; color:#555; text-align:center;">
-                * 提示: 若世界书状态为❌，请检查 Character Book 是否开启了 Constant，或全局 WI 关键词是否匹配。
-            </div>
         </div>
 
-        <!-- Tab 2: 原文 -->
         <div id="tab-payload" class="t-dbg-content">
-            <div class="t-code-label">SYSTEM PROMPT</div>
+            <div class="t-code-label">SYSTEM PROMPT (Contains Perspective Instruction)</div>
             <div class="t-code-box">${sysPrompt}</div>
             
-            <div class="t-code-label">USER CONTEXT (Final Assembly)</div>
+            <div class="t-code-label">USER CONTEXT (Final Assembly with Director's Instructions)</div>
             <div class="t-code-box" style="color:#d4d4d4;">${userPrompt}</div>
         </div>
 
@@ -1093,7 +1136,6 @@ function showDebugInfo() {
 
     $("#t-overlay").append(html);
 
-    // 事件
     const close = () => {
         $("#t-debug-view").remove();
         $("#t-main-view").css("display", "flex");
@@ -1111,11 +1153,14 @@ function showDebugInfo() {
 
 // 【Part 5: 设置、剧本管理器与编辑器】
 
-// [最终版] 设置窗口 (改为纯下拉列表选择模型)
+// 设置窗口（更新导演模式注入的提示词）
 function openSettingsWindow() {
     const data = getExtData();
     const cfg = data.config || {};
     const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4" };
+    // [新增] 读取导演配置
+    const dirCfg = data.director || { length: "", perspective: "auto", style_ref: "" };
+
     let tempApp = JSON.parse(JSON.stringify(app));
 
     $("#t-main-view").hide();
@@ -1163,8 +1208,6 @@ function openSettingsWindow() {
 
     const disabledCount = (data.disabled_presets || []).length;
     const userScriptCount = (data.user_scripts || []).length;
-
-    // 默认显示当前保存的模型，防止下拉框为空
     const currentModel = cfg.model || 'gpt-3.5-turbo';
 
     const html = `
@@ -1172,15 +1215,14 @@ function openSettingsWindow() {
     <div class="t-box" id="t-settings-view">
         <div class="t-header"><span class="t-title-main">⚙️ 设置</span><span class="t-close" id="t-set-close">&times;</span></div>
         <div class="t-set-body">
-            <!-- 导航 -->
             <div class="t-set-nav">
                 <div class="t-set-tab-btn active" data-tab="appearance">🎨 外观设置</div>
                 <div class="t-set-tab-btn" data-tab="connection">🔌 API 连接</div>
+                <div class="t-set-tab-btn" data-tab="director">🎬 导演模式</div> <!-- [新增] -->
                 <div class="t-set-tab-btn" data-tab="automation">🤖 自动化</div>
                 <div class="t-set-tab-btn" data-tab="data">🗂️ 数据管理</div>
             </div>
 
-            <!-- 内容 -->
             <div class="t-set-content">
                 <!-- Tab 1: 外观 -->
                 <div id="page-appearance" class="t-set-page active">
@@ -1234,7 +1276,6 @@ function openSettingsWindow() {
                     <div class="t-form-group">
                         <label class="t-form-label">Model Name</label>
                         <div style="display:flex; gap:10px;">
-                            <!-- [修改] 改为纯 Select 下拉框 -->
                             <select id="cfg-model" class="t-input" style="cursor:pointer;">
                                 <option value="${currentModel}" selected>${currentModel} (当前)</option>
                             </select>
@@ -1249,7 +1290,30 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 3: 自动化 -->
+                <!-- [新增] Tab 3: 导演模式 -->
+                <div id="page-director" class="t-set-page">
+                    <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px; color:#888; font-size:0.9em;">
+                        <i class="fa-solid fa-circle-info"></i> 这里设置的是“默认值”。
+                    </div>
+                    <div class="t-form-group">
+                        <label class="t-form-label">默认篇幅建议</label>
+                        <input id="set-dir-len" class="t-input" value="${dirCfg.length}" placeholder="例如: 300字, 2个段落">
+                    </div>
+                    <div class="t-form-group">
+                        <label class="t-form-label">默认叙事视角</label>
+                        <select id="set-dir-pers" class="t-input">
+                            <option value="auto" ${dirCfg.perspective === 'auto' ? 'selected' : ''}>自动 (跟随剧本)</option>
+                            <option value="1st" ${dirCfg.perspective === '1st' ? 'selected' : ''}>强制第一人称 (我)</option>
+                            <option value="3rd" ${dirCfg.perspective === '3rd' ? 'selected' : ''}>强制第三人称 (他/她)</option>
+                        </select>
+                    </div>
+                    <div class="t-form-group">
+                        <label class="t-form-label">默认文笔参考 (不超过1000字)</label>
+                        <textarea id="set-dir-style" class="t-input" rows="5" placeholder="粘贴你喜欢的文笔段落...">${dirCfg.style_ref}</textarea>
+                    </div>
+                </div>
+
+                <!-- Tab 4: 自动化 -->
                 <div id="page-automation" class="t-set-page">
                     <div class="t-form-group">
                         <label style="cursor:pointer; display:flex; align-items:center; color:#bfa15f; font-weight:bold;">
@@ -1278,7 +1342,7 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 4: 数据管理 -->
+                <!-- Tab 5: 数据管理 -->
                 <div id="page-data" class="t-set-page">
                     <div class="t-form-group">
                         <div class="t-form-label">自定义剧本库</div>
@@ -1326,6 +1390,7 @@ function openSettingsWindow() {
         $(`#page-${$(this).data("tab")}`).addClass("active");
     });
 
+    // ... 原有外观预览逻辑 ...
     const renderPreview = () => {
         const $ball = $("#p-ball");
         const theme = $("#p-color-theme").val();
@@ -1372,7 +1437,6 @@ function openSettingsWindow() {
     $("#cfg-auto").on("change", function () { $("#auto-settings-panel").toggle($(this).is(":checked")); });
     $("#cfg-chance").on("input", function () { $("#cfg-chance-val").text($(this).val() + "%"); });
 
-    // [核心修复] 获取模型列表 (改为操作 Select)
     $("#t-btn-fetch").on("click", async function () {
         const btn = $(this);
         const originalText = btn.text();
@@ -1401,10 +1465,9 @@ function openSettingsWindow() {
 
             const $sel = $("#cfg-model");
             const oldVal = $sel.val();
-            $sel.empty(); // 清空原有选项
+            $sel.empty();
 
             let count = 0;
-            // 重新填充选项
             models.forEach(m => {
                 const id = m.id || m;
                 $sel.append(`<option value="${id}">${id}</option>`);
@@ -1412,7 +1475,6 @@ function openSettingsWindow() {
             });
 
             if (count > 0) {
-                // 如果原来的模型在列表中，选中它；否则默认选中第一个
                 const exists = models.some(m => (m.id || m) === oldVal);
                 if (exists) $sel.val(oldVal);
 
@@ -1420,7 +1482,6 @@ function openSettingsWindow() {
                 else alert(`获取成功，共 ${count} 个模型`);
             } else {
                 alert("获取成功，但模型列表为空");
-                // 恢复原值
                 $sel.append(`<option value="${oldVal}" selected>${oldVal}</option>`);
             }
         } catch (e) {
@@ -1448,6 +1509,8 @@ function openSettingsWindow() {
     });
 
     $("#t-set-close").on("click", () => { $("#t-settings-view").remove(); $("#t-main-view").show(); });
+
+    // [修改] 保存逻辑，包含导演模式配置
     $("#t-set-save").on("click", () => {
         const finalApp = {
             type: tempApp.type,
@@ -1458,16 +1521,24 @@ function openSettingsWindow() {
         const finalCfg = {
             url: $("#cfg-url").val().trim(),
             key: $("#cfg-key").val().trim(),
-            model: $("#cfg-model").val().trim(), // 这里直接取 select 的 value
+            model: $("#cfg-model").val().trim(),
             history_limit: parseInt($("#cfg-history").val()) || 10,
             stream: $("#cfg-stream").is(":checked"),
             auto_generate: $("#cfg-auto").is(":checked"),
             auto_chance: parseInt($("#cfg-chance").val()),
             auto_mode: $("#cfg-auto-mode").val()
         };
+        const finalDir = {
+            length: $("#set-dir-len").val().trim(),
+            perspective: $("#set-dir-pers").val(),
+            style_ref: $("#set-dir-style").val().trim()
+        };
+
         const d = getExtData();
         d.config = finalCfg;
         d.appearance = finalApp;
+        d.director = finalDir; // 保存导演配置
+
         saveExtData();
         $("#t-settings-view").remove();
         $("#t-main-view").show();
@@ -1477,7 +1548,7 @@ function openSettingsWindow() {
     renderPreview();
 }
 
-// [最终版] 剧本管理器 (含智能导入解析 + 移动端布局修复)
+// 剧本管理器
 function openScriptManager() {
     // 内部状态
     let currentFilter = {
@@ -2043,8 +2114,8 @@ function saveFavorite() {
     saveExtData();
 
     const btn = $("#t-btn-like");
-    btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i> 已收藏');
-    setTimeout(() => btn.html('<i class="fa-regular fa-heart"></i> 收藏'), 2000);
+    // [修改] 保持已收藏状态，不设置 setTimeout 还原，并禁用按钮防止重复保存
+    btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i> 已收藏').prop("disabled", true);
 }
 
 // 修改 openFavsWindow 函数
@@ -2482,17 +2553,40 @@ function openCharImageManager(onCloseCallback) {
 }
 
 // --- 自动化与初始化 ---
-
-async function onMessageReceived(data) {
+// [修改] 监听生成结束事件，而非消息接收事件
+async function onGenerationEnded() {
     const extData = getExtData();
     const cfg = extData.config || {};
+
+    // 1. 基础开关检查
     if (!extension_settings[extensionName].enabled || !cfg.auto_generate) return;
-    if (data.is_user) return;
+
+    // 2. 状态检查：如果正在通过本插件生成，则忽略（防止死循环）
     if (isGenerating || $("#t-overlay").length > 0) return;
 
+    // 3. 获取当前聊天上下文的最后一条消息
+    // GENERATION_ENDED 事件不直接携带消息内容，需要手动取
+    if (!SillyTavern || !SillyTavern.getContext) return;
+    const context = SillyTavern.getContext();
+    const chat = context.chat;
+
+    if (!chat || chat.length === 0) return;
+
+    const lastMsg = chat[chat.length - 1];
+
+    // 4. 严格过滤：
+    // - 必须不是用户的消息 (is_user 为 false)
+    // - 必须不是系统消息 (is_system 为 false) (可选，看你是否需要系统指令触发)
+    // - 必须不是隐藏消息 (is_hidden)
+    if (lastMsg.is_user) return;
+    if (lastMsg.is_system) return;
+    if (lastMsg.is_hidden) return;
+
+    // 5. 概率检查
     const chance = cfg.auto_chance || 50;
     if (Math.random() * 100 > chance) return;
 
+    // 6. 抽取剧本并执行
     let pool = [];
     const autoMode = cfg.auto_mode || "follow";
 
@@ -2508,14 +2602,19 @@ async function onMessageReceived(data) {
 
     if (pool.length === 0) return;
     const randomScript = pool[Math.floor(Math.random() * pool.length)];
-    console.log(`Titania Auto: Triggered! [${randomScript.mode}] ${randomScript.name}`);
-    handleGenerate(randomScript.id, true);
+
+    console.log(`Titania Auto: Triggered after generation! [${randomScript.mode}] ${randomScript.name}`);
+
+    // 稍微延迟一点点执行，确保 UI 状态已完全稳固
+    setTimeout(() => {
+        handleGenerate(randomScript.id, true);
+    }, 500);
 }
 
 async function initEchoTheater() {
     console.log("Titania Echo v4.0: Enabled.");
 
-    // 自动迁移
+    // 自动迁移逻辑 (保持不变)
     const extData = getExtData();
     if ((!extData.config || Object.keys(extData.config).length === 0) && localStorage.getItem(LEGACY_KEY_CFG)) {
         try {
@@ -2533,14 +2632,19 @@ async function initEchoTheater() {
 
     loadScripts();
     createFloatingButton();
-    eventSource.on(event_types.MESSAGE_RECEIVED, onMessageReceived);
+
+    // [修改] 监听 GENERATION_ENDED 而非 MESSAGE_RECEIVED
+    eventSource.on(event_types.GENERATION_ENDED, onGenerationEnded);
 }
+
 
 function disableEchoTheater() {
     console.log("Titania Echo v4.0: Disabled.");
     $("#titania-float-btn").remove();
     $("#t-overlay").remove();
-    eventSource.off(event_types.MESSAGE_RECEIVED, onMessageReceived);
+
+    // [修改] 移除监听
+    eventSource.off(event_types.GENERATION_ENDED, onGenerationEnded);
 }
 
 async function loadExtensionSettings() {
