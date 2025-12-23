@@ -813,10 +813,9 @@ function getChatHistory(limit) {
 async function handleGenerate(forceScriptId = null, silent = false) {
     const data = getExtData();
     const cfg = data.config || {};
-    // [修改] 直接读取保存的导演设置
     const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
 
-    if (!cfg.key) return alert("请先去设置填 API Key！");
+    if (!cfg.key) return alert("配置缺失：请先去设置填 API Key！");
 
     const scriptId = forceScriptId || $("#t-sel-script").val();
     const script = runtimeScripts.find(s => s.id === scriptId);
@@ -840,38 +839,28 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     $("#t-btn-like").html('<i class="fa-regular fa-heart"></i> 收藏').prop("disabled", false);
 
     if (!silent && window.toastr) {
-        toastr.info(`🚀 [${useStream ? '流式' : '非流式'}] 剧本演绎中...`, "Titania Echo");
+        toastr.info(`🚀 [${useStream ? '流式' : '非流式'}] 正在连接模型...`, "Titania Echo");
     }
 
     try {
-        // --- 读取导演模式参数 (简化版) ---
+        // --- 1. 准备 Prompt ---
         const dLen = dirDefaults.length;
         const dPers = dirDefaults.perspective;
         const dStyle = dirDefaults.style_ref;
 
-        // --- 构建 Prompt ---
         let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Please answer all other content in Chinese.";
-
-        if (dPers === '1st') {
-            sys += " Write strictly in First Person perspective (I/Me).";
-        } else if (dPers === '3rd') {
-            sys += ` Write strictly in Third Person perspective (${ctx.charName}/He/She).`;
-        }
+        if (dPers === '1st') sys += " Write strictly in First Person perspective (I/Me).";
+        else if (dPers === '3rd') sys += ` Write strictly in Third Person perspective (${ctx.charName}/He/She).`;
 
         let user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\n\n`;
 
         let directorInstruction = "";
-        if (dLen) {
-            directorInstruction += `1. Length Constraint: Keep the response approximately ${dLen}.\n`;
-        }
+        if (dLen) directorInstruction += `1. Length Constraint: Keep the response approximately ${dLen}.\n`;
         if (dStyle) {
             const safeStyle = dStyle.substring(0, 1000);
             directorInstruction += `2. Style Mimicry: Analyze and strictly mimic the writing style, tone, and descriptive granularity of the example below. DO NOT copy the content, only the vibe.\n<style_reference>\n${safeStyle}\n</style_reference>\n`;
         }
-
-        if (directorInstruction) {
-            user += `[Director's Instructions]\n${directorInstruction}\n`;
-        }
+        if (directorInstruction) user += `[Director's Instructions]\n${directorInstruction}\n`;
 
         if (ctx.persona) user += `[Character Persona]\n${ctx.persona}\n\n`;
         if (ctx.userDesc) user += `[User Persona]\n${ctx.userDesc}\n\n`;
@@ -888,8 +877,9 @@ async function handleGenerate(forceScriptId = null, silent = false) {
 
         user += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
 
+        // --- 2. 发起请求 ---
         let endpoint = (cfg.url || "").trim().replace(/\/+$/, "");
-        if (!endpoint) throw new Error("API URL 未设置");
+        if (!endpoint) throw new Error("ERR_CONFIG: API URL 未设置");
         if (!endpoint.endsWith("/chat/completions")) endpoint += "/chat/completions";
 
         const res = await fetch(endpoint, {
@@ -902,12 +892,24 @@ async function handleGenerate(forceScriptId = null, silent = false) {
             })
         });
 
+        // [增强] HTTP 状态码精细报错 (含安全拦截检测)
         if (!res.ok) {
             const rawText = await res.text();
-            throw new Error(`HTTP ${res.status}: ${rawText.slice(0, 100)}`);
+            let errPrefix = `ERR_HTTP_${res.status}`;
+
+            // 400 错误通常是 Azure/OpenAI 的安全拦截
+            if (res.status === 400) throw new Error(`${errPrefix}: 请求被拒绝 (可能触发了内容安全/格式过滤)`);
+            if (res.status === 401) throw new Error(`${errPrefix}: API Key 无效或过期`);
+            if (res.status === 403) throw new Error(`${errPrefix}: 访问被禁止 (可能账户余额不足或无权限)`);
+            if (res.status === 404) throw new Error(`${errPrefix}: 接口地址错误 (404 Not Found)`);
+            if (res.status === 500) throw new Error(`${errPrefix}: 服务端内部错误`);
+            if (res.status === 504) throw new Error(`${errPrefix}: 请求超时 (Timeout)`);
+
+            throw new Error(`${errPrefix}: ${rawText.slice(0, 50)}...`);
         }
 
-        let finalContent = "";
+        // --- 3. 接收内容 ---
+        let rawContent = "";
 
         if (useStream) {
             const reader = res.body.getReader();
@@ -926,28 +928,108 @@ async function handleGenerate(forceScriptId = null, silent = false) {
                     if (jsonStr === "[DONE]") continue;
                     try {
                         const json = JSON.parse(jsonStr);
+                        // 检查 finish_reason 是否为 content_filter
+                        if (json.choices?.[0]?.finish_reason === "content_filter") {
+                            throw new Error("ERR_SAFETY_STREAM: 内容生成过程中被安全过滤截断");
+                        }
                         const chunk = json.choices?.[0]?.delta?.content || "";
-                        if (chunk) finalContent += chunk;
-                    } catch (e) { }
+                        if (chunk) rawContent += chunk;
+                    } catch (e) {
+                        if (e.message.includes("ERR_SAFETY")) throw e;
+                    }
                 }
             }
         } else {
             const json = await res.json();
-            finalContent = json.choices[0].message.content;
+            // 非流式下的安全拦截检查
+            if (json.choices?.[0]?.finish_reason === "content_filter") {
+                throw new Error("ERR_SAFETY_BLOCK: 内容被安全过滤拦截");
+            }
+            rawContent = json.choices?.[0]?.message?.content || "";
         }
 
-        if (!finalContent) throw new Error("无内容生成");
+        if (!rawContent || rawContent.trim().length === 0) {
+            throw new Error("ERR_EMPTY: 模型返回了空内容 (可能被静默过滤)");
+        }
 
-        finalContent = finalContent.replace(/^```html/i, "").replace(/```$/i, "");
-        lastGeneratedContent = finalContent;
+        // --- 4. 智能容错与清洗 ---
+        let cleanContent = rawContent.replace(/```html/gi, "").replace(/```/g, "").trim();
 
-        if (!silent && window.toastr) toastr.success(`✨ 《${script.name}》演绎完成！`, "Titania Echo");
+        // [新增] 拒绝词检测：如果内容很短且包含拒绝关键词
+        // 这种情况下，我们不应该给它加 wrapper，而是应该直接报错
+        const refusalRegex = /I cannot|I can't|unable to|policy|safety|violation|sensitive/i;
+        if (cleanContent.length < 150 && refusalRegex.test(cleanContent) && !cleanContent.includes("<div")) {
+            throw new Error(`ERR_REFUSAL: 模型拒绝生成 (${cleanContent})`);
+        }
+
+        const hasDiv = /<div[\s\S]*?>/i.test(cleanContent);
+        const hasCloseDiv = /<\/div>/i.test(cleanContent);
+
+        let finalOutput = "";
+        let warnMsg = null;
+
+        if (hasDiv && hasCloseDiv) {
+            finalOutput = cleanContent;
+        } else {
+            if (cleanContent.length > 30) {
+                console.warn("Titania: Malformed HTML detected, applying fallback wrapper.");
+                finalOutput = `
+                <div style="
+                    padding: 20px; 
+                    background: #1a1a1a; 
+                    color: #ccc; 
+                    border-left: 3px solid #bfa15f; 
+                    font-family: serif; 
+                    line-height: 1.6; 
+                    border-radius: 5px;">
+                    <div style="font-size:0.8em; color:#666; margin-bottom:10px;">(⚠️ 格式自动修复模式)</div>
+                    ${cleanContent.replace(/\n/g, "<br>")}
+                </div>`;
+                warnMsg = "模型未按格式输出，已自动应用默认样式";
+            } else {
+                throw new Error(`ERR_FORMAT: 内容无法解析且过短: "${cleanContent.slice(0, 20)}..."`);
+            }
+        }
+
+        lastGeneratedContent = finalOutput;
+
+        if (!silent && window.toastr) {
+            toastr.success(`✨ 《${script.name}》演绎完成！`, "Titania Echo");
+            if (warnMsg) toastr.warning(warnMsg, "智能修复");
+        }
         $floatBtn.addClass("t-notify");
 
     } catch (e) {
         console.error("Titania Generate Error:", e);
-        lastGeneratedContent = `<div style="color:#ff6b6b; text-align:center; padding:10px; border:1px solid #ff6b6b; border-radius:5px;">❌ 演绎失败: ${e.message}</div>`;
-        if (!silent && window.toastr) toastr.error("❌ 错误: " + e.message, "Titania Echo");
+
+        // --- 6. 智能错误提示 ---
+        let userTip = "请检查网络或配置";
+        let errType = "❌ 演绎失败";
+
+        if (e.message.includes("ERR_CONFIG")) userTip = "请前往设置检查配置项";
+        else if (e.message.includes("ERR_HTTP_401")) userTip = "API Key 无效，请检查设置";
+
+        // 针对安全/敏感内容的专门提示
+        else if (
+            e.message.includes("ERR_HTTP_400") ||
+            e.message.includes("ERR_SAFETY") ||
+            e.message.includes("ERR_REFUSAL")
+        ) {
+            errType = "🚫 内容被拦截";
+            userTip = "剧本内容可能触发了模型的安全/道德审查机制，请尝试更换剧本或调整提示词";
+        }
+
+        else if (e.message.includes("ERR_EMPTY")) userTip = "模型输出了空内容 (可能被静默过滤)";
+        else if (e.message.includes("ERR_FORMAT")) userTip = "模型输出格式严重错误";
+
+        lastGeneratedContent = `
+            <div style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; border-radius:8px; background:rgba(255, 107, 107, 0.1);">
+                <div style="font-weight:bold; font-size:1.1em; margin-bottom:10px;">${errType}</div>
+                <div style="margin-bottom:5px;">${e.message}</div>
+                <div style="font-size:0.8em; opacity:0.7; margin-top:10px;">💡 建议: ${userTip}</div>
+            </div>`;
+
+        if (!silent && window.toastr) toastr.error(`${e.message}`, "Titania 错误");
         $floatBtn.addClass("t-notify");
     } finally {
         isGenerating = false;
