@@ -7,11 +7,11 @@ import { saveSettingsDebounced, eventSource, event_types } from "../../../../scr
 const extensionName = "Titania_Theater_Echo";
 const extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
 
-// [修改] 默认设置结构 (新增 profiles 支持多API)
+// [修改] 默认设置结构 (新增 profiles 支持多API，重构 automation)
 const defaultSettings = {
     enabled: true,
     config: {
-        // [新增] 多配置方案支持
+        // 多配置方案支持
         active_profile_id: "default",
         profiles: [
             {
@@ -33,7 +33,12 @@ const defaultSettings = {
         stream: true,
         auto_generate: false,
         auto_chance: 50,
-        auto_mode: "follow",
+        
+        // [修改] 自动化模式: 'follow' (跟随) 或 'pool' (自定义池)
+        auto_mode: "follow", 
+        // [新增] 自定义随机池白名单 (存储 script id)
+        auto_pool_ids: [], 
+        
         history_limit: 10
     },
     user_scripts: [],
@@ -1357,29 +1362,30 @@ function showDebugInfo() {
 
 // 【Part 5: 设置、剧本管理器与编辑器】
 
-// 设置窗口（更新导演模式注入的提示词）
+// 设置窗口（Part 1：初始化与样式）
 function openSettingsWindow() {
     const data = getExtData();
     const cfg = data.config || {};
     const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4", size: 56 };
     const dirCfg = data.director || { length: "", perspective: "auto", style_ref: "" };
 
-    // --- [新增] 配置数据迁移逻辑 (确保 profiles 存在) ---
+    // 配置数据迁移逻辑
     if (!cfg.profiles || !Array.isArray(cfg.profiles)) {
         cfg.profiles = [
             { id: "st_sync", name: "🔗 跟随 SillyTavern (主连接)", type: "internal", readonly: true },
             { id: "default", name: "默认自定义", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
         ];
         cfg.active_profile_id = "default";
-        // 注意：这里暂不 saveExtData，等用户点击保存时一起存
     }
 
-    // 深度拷贝，防止直接修改原数据
+    // 深度拷贝
     let tempProfiles = JSON.parse(JSON.stringify(cfg.profiles));
     let tempActiveId = cfg.active_profile_id;
-
     let tempApp = JSON.parse(JSON.stringify(app));
     if (!tempApp.size) tempApp.size = 56;
+    
+    // 临时存储随机池 ID
+    let tempPoolIds = new Set(cfg.auto_pool_ids || []);
 
     $("#t-main-view").hide();
     const fileToBase64 = (file) => new Promise((resolve, reject) => {
@@ -1411,10 +1417,12 @@ function openSettingsWindow() {
         .t-upload-card:hover { border-color: #bfa15f; color: #bfa15f; background-color: rgba(191, 161, 95, 0.05); }
         .t-upload-card span { font-size: 0.8em; margin-top: 5px; background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 4px; }
         
-        /* Profile Selector Styles */
         .t-prof-header { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
         .t-prof-select { flex-grow: 1; background: #222; color: #eee; border: 1px solid #444; padding: 8px; border-radius: 4px; }
-        .t-read-only-tag { font-size: 0.8em; color: #bfa15f; border: 1px solid #bfa15f; padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
+        
+        .t-pool-row:hover { background: #222; }
+        /* 下拉框样式优化 */
+        .t-pool-select { background:#2a2a2a; border:1px solid #444; color:#ccc; font-size:0.8em; border-radius:4px; padding:2px 5px; outline:none; max-width: 120px; }
 
         @keyframes p-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .p-loading { box-shadow: 0 0 15px var(--p-theme) !important; color: var(--p-theme) !important; background: transparent !important; }
@@ -1422,6 +1430,7 @@ function openSettingsWindow() {
         .p-loading::after { content: ""; position: absolute; inset: 3px; background: #2b2b2b; border-radius: 50%; z-index: -1; }
         @keyframes p-glow { 0%,100% { box-shadow: 0 0 5px var(--p-notify); } 50% { box-shadow: 0 0 20px var(--p-notify); } }
         .p-notify { border-color: var(--p-notify) !important; animation: p-glow 1.5s infinite ease-in-out; }
+        
         @media screen and (max-width: 600px) {
             .t-set-body { flex-direction: column; }
             .t-set-nav { width: 100%; height: 50px; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #333; }
@@ -1429,6 +1438,9 @@ function openSettingsWindow() {
             .t-set-tab-btn.active { border-left: none; border-bottom-color: #bfa15f; background: transparent; }
         }
     </style>`;
+
+    /* --- 请继续粘贴第二部分 --- */
+    /* --- 接第一部分 --- */
 
     const disabledCount = (data.disabled_presets || []).length;
     const userScriptCount = (data.user_scripts || []).length;
@@ -1457,19 +1469,13 @@ function openSettingsWindow() {
                             <button class="t-tool-btn" id="btn-test-notify">🔔 测试呼吸</button>
                         </div>
                     </div>
-                    
                     <div class="t-form-group">
                         <div class="t-form-label" style="display:flex; justify-content:space-between;">
                             <span>悬浮球尺寸</span>
                             <span id="p-size-val" style="color:#bfa15f;">${tempApp.size}px</span>
                         </div>
                         <input type="range" id="p-size-input" min="40" max="100" step="2" value="${tempApp.size}" style="width:100%;">
-                        <div style="font-size:0.8em; color:#666; margin-top:5px; display:flex; justify-content:space-between;">
-                            <span>小 (40px)</span>
-                            <span>大 (100px)</span>
-                        </div>
                     </div>
-
                     <div class="t-form-group">
                         <label class="t-form-label">图标类型</label>
                         <div style="display:flex; gap:20px; margin-bottom:15px;">
@@ -1499,7 +1505,7 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 2: 连接 (重构版) -->
+                <!-- Tab 2: 连接 -->
                 <div id="page-connection" class="t-set-page">
                     <div class="t-form-group">
                         <label class="t-form-label">切换配置方案 (Profile)</label>
@@ -1513,9 +1519,7 @@ function openSettingsWindow() {
                             <input id="cfg-prof-name" class="t-input" value="">
                         </div>
                     </div>
-                    
                     <div style="height:1px; background:#333; margin:20px 0;"></div>
-
                     <div id="cfg-conn-fields">
                         <div class="t-form-group">
                             <label class="t-form-label">API Endpoint URL</label>
@@ -1536,7 +1540,6 @@ function openSettingsWindow() {
                             </div>
                         </div>
                     </div>
-                    
                     <div class="t-form-group">
                         <label style="cursor:pointer; display:flex; align-items:center;">
                             <input type="checkbox" id="cfg-stream" ${cfg.stream !== false ? 'checked' : ''} style="margin-right:10px;">
@@ -1563,19 +1566,19 @@ function openSettingsWindow() {
                         </select>
                     </div>
                     <div class="t-form-group">
-                        <label class="t-form-label">默认文笔参考 (不超过1000字)</label>
+                        <label class="t-form-label">默认文笔参考</label>
                         <textarea id="set-dir-style" class="t-input" rows="5" placeholder="粘贴你喜欢的文笔段落...">${dirCfg.style_ref}</textarea>
                     </div>
                 </div>
 
-                <!-- Tab 4: 自动化 -->
+                <!-- Tab 4: 自动化 (重构：带分类选择) -->
                 <div id="page-automation" class="t-set-page">
                     <div class="t-form-group">
                         <label style="cursor:pointer; display:flex; align-items:center; color:#bfa15f; font-weight:bold;">
                             <input type="checkbox" id="cfg-auto" ${cfg.auto_generate ? 'checked' : ''} style="margin-right:10px;">
                             开启监听自动生成
                         </label>
-                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">当检测到群聊消息时，有概率自动触发演绎。</p>
+                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">当检测到群聊消息时，有概率自动后台演绎。</p>
                     </div>
                     <div id="auto-settings-panel" style="display:${cfg.auto_generate ? 'block' : 'none'}; padding-left:22px;">
                         <div class="t-form-group">
@@ -1583,12 +1586,31 @@ function openSettingsWindow() {
                             <input type="range" id="cfg-chance" min="10" max="100" step="10" value="${cfg.auto_chance || 50}" style="width:100%;">
                         </div>
                         <div class="t-form-group">
-                            <label class="t-form-label">随机策略</label>
+                            <label class="t-form-label">抽取策略</label>
                             <select id="cfg-auto-mode" class="t-input">
-                                <option value="follow" ${(cfg.auto_mode || 'follow') === 'follow' ? 'selected' : ''}>🛡️ 跟随主界面模式</option>
-                                <option value="echo_only" ${(cfg.auto_mode || 'follow') === 'echo_only' ? 'selected' : ''}>🔍 仅回声 (Echo)</option>
-                                <option value="mix" ${(cfg.auto_mode || 'follow') === 'mix' ? 'selected' : ''}>🎲 混合抽取</option>
+                                <option value="follow" ${(cfg.auto_mode || 'follow') === 'follow' ? 'selected' : ''}>🛡️ 跟随主界面 (当前选中什么就跑什么)</option>
+                                <option value="pool" ${(cfg.auto_mode || 'follow') === 'pool' ? 'selected' : ''}>🎲 自定义随机池 (指定剧本白名单)</option>
                             </select>
+                        </div>
+                        
+                        <!-- 随机池编辑器 -->
+                        <div id="cfg-pool-editor" style="display:none; margin-top:15px; background:#181818; border:1px solid #333; border-radius:6px; padding:10px;">
+                            <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px; align-items:center;">
+                                <button type="button" class="t-tool-btn" id="pool-sel-echo" style="font-size:0.8em;">All Echo</button>
+                                <button type="button" class="t-tool-btn" id="pool-sel-para" style="font-size:0.8em;">All Para</button>
+                                <div style="width:1px; height:20px; background:#444; margin:0 5px;"></div>
+                                <!-- 按分类添加 -->
+                                <select id="pool-quick-cat" class="t-pool-select">
+                                    <option value="" disabled selected>➕ 按分类添加...</option>
+                                    <!-- populated by JS -->
+                                </select>
+                                <div style="flex-grow:1;"></div>
+                                <button type="button" class="t-tool-btn" id="pool-sel-none" style="font-size:0.8em; color:#bbb;">清空</button>
+                            </div>
+                            <div style="font-size:0.8em; color:#666; margin-bottom:5px; text-align:right;" id="pool-count-lbl">已选: 0</div>
+                            <div id="cfg-pool-list" style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;">
+                                <!-- List populated by JS -->
+                            </div>
                         </div>
                     </div>
                     <div class="t-form-group" style="margin-top:20px; border-top:1px solid #333; padding-top:15px;">
@@ -1637,6 +1659,9 @@ function openSettingsWindow() {
 
     $("#t-overlay").append(html);
 
+    /* --- 请继续粘贴第三部分 --- */
+    /* --- 接第二部分 --- */
+
     // --- 逻辑绑定 ---
     $(".t-set-tab-btn").on("click", function () {
         $(".t-set-tab-btn").removeClass("active");
@@ -1645,13 +1670,10 @@ function openSettingsWindow() {
         $(`#page-${$(this).data("tab")}`).addClass("active");
     });
 
-    // --- [新增] Profile 管理逻辑 ---
-
-    // 保存当前 UI 数据到临时内存
+    // --- Profile Logic ---
     const saveCurrentProfileToMemory = () => {
         const pIndex = tempProfiles.findIndex(p => p.id === tempActiveId);
         if (pIndex === -1) return;
-
         const p = tempProfiles[pIndex];
         if (p.type !== 'internal') {
             p.name = $("#cfg-prof-name").val();
@@ -1661,31 +1683,25 @@ function openSettingsWindow() {
         }
     };
 
-    // 渲染 Profile UI
     const renderProfileUI = () => {
         const pIndex = tempProfiles.findIndex(p => p.id === tempActiveId);
         if (pIndex === -1) { tempActiveId = tempProfiles[0].id; return renderProfileUI(); }
         const p = tempProfiles[pIndex];
         const isInternal = p.type === 'internal';
 
-        // 1. 下拉框
         const $sel = $("#cfg-prof-select");
         $sel.empty();
         tempProfiles.forEach(prof => {
             $sel.append(`<option value="${prof.id}" ${prof.id === tempActiveId ? 'selected' : ''}>${prof.name}</option>`);
         });
 
-        // 2. 名称与删除按钮
         $("#cfg-prof-name").val(p.name).prop("disabled", isInternal);
         $("#cfg-prof-del").prop("disabled", isInternal).css("opacity", isInternal ? 0.5 : 1);
 
-        // 3. 连接字段
         if (isInternal) {
             $("#cfg-url").val("").prop("disabled", true).prop("placeholder", "(由 SillyTavern 全局托管)");
             $("#cfg-key").val("").prop("disabled", true).prop("placeholder", "(由 SillyTavern 全局托管)");
             $("#cfg-model").empty().append('<option selected>(使用 ST 设置)</option>').prop("disabled", true);
-
-            // 显示 ST 当前的设置提示
             const stUrl = typeof settings !== 'undefined' ? (settings.api_url_openai || "未知") : "未知";
             $("#st-url-display").text(stUrl);
             $("#cfg-url-hint").show();
@@ -1694,8 +1710,6 @@ function openSettingsWindow() {
             $("#cfg-key").val(p.key || "").prop("disabled", false).prop("placeholder", "sk-...");
             $("#cfg-model").prop("disabled", false);
             $("#cfg-url-hint").hide();
-
-            // 恢复模型选择
             const $mSel = $("#cfg-model");
             $mSel.empty();
             const currentM = p.model || "gpt-3.5-turbo";
@@ -1703,34 +1717,11 @@ function openSettingsWindow() {
         }
     };
 
-    $("#cfg-prof-select").on("change", function () {
-        saveCurrentProfileToMemory(); // 切换前先保存旧的
-        tempActiveId = $(this).val();
-        renderProfileUI();
-    });
+    $("#cfg-prof-select").on("change", function () { saveCurrentProfileToMemory(); tempActiveId = $(this).val(); renderProfileUI(); });
+    $("#cfg-prof-add").on("click", function () { saveCurrentProfileToMemory(); const newId = "custom_" + Date.now(); tempProfiles.push({ id: newId, name: "新方案 " + tempProfiles.length, type: "custom", url: "", key: "", model: "gpt-3.5-turbo" }); tempActiveId = newId; renderProfileUI(); });
+    $("#cfg-prof-del").on("click", function () { if (confirm("确定删除当前配置方案吗？")) { tempProfiles = tempProfiles.filter(p => p.id !== tempActiveId); tempActiveId = tempProfiles[0].id; renderProfileUI(); } });
 
-    $("#cfg-prof-add").on("click", function () {
-        saveCurrentProfileToMemory();
-        const newId = "custom_" + Date.now();
-        tempProfiles.push({
-            id: newId,
-            name: "新方案 " + tempProfiles.length,
-            type: "custom",
-            url: "", key: "", model: "gpt-3.5-turbo"
-        });
-        tempActiveId = newId;
-        renderProfileUI();
-    });
-
-    $("#cfg-prof-del").on("click", function () {
-        if (confirm("确定删除当前配置方案吗？")) {
-            tempProfiles = tempProfiles.filter(p => p.id !== tempActiveId);
-            tempActiveId = tempProfiles[0].id;
-            renderProfileUI();
-        }
-    });
-
-    // 预览逻辑
+    // --- Appearance & Preview Logic ---
     const renderPreview = () => {
         const $ball = $("#p-ball");
         const theme = $("#p-color-theme").val();
@@ -1739,8 +1730,7 @@ function openSettingsWindow() {
         $ball.css({ width: size + "px", height: size + "px", fontSize: Math.floor(size * 0.46) + "px" });
         $ball[0].style.setProperty('--p-theme', theme);
         $ball[0].style.setProperty('--p-notify', notify);
-        $ball.css("border-color", "transparent");
-        $ball.css("box-shadow", `0 0 10px ${theme}`);
+        $ball.css("border-color", "transparent").css("box-shadow", `0 0 10px ${theme}`);
         if (tempApp.type === 'emoji') {
             $ball.html(tempApp.content);
         } else if (tempApp.type === 'image') {
@@ -1753,173 +1743,123 @@ function openSettingsWindow() {
             }
         }
     };
-
-    $("input[name='p-type']").on("change", function () {
-        tempApp.type = $(this).val();
-        $("#box-emoji").toggle(tempApp.type === 'emoji');
-        $("#box-image").toggle(tempApp.type === 'image');
-        renderPreview();
-    });
-
-    $("#p-size-input").on("input", function () {
-        tempApp.size = $(this).val();
-        $("#p-size-val").text(tempApp.size + "px");
-        renderPreview();
-    });
-
+    $("input[name='p-type']").on("change", function () { tempApp.type = $(this).val(); $("#box-emoji").toggle(tempApp.type === 'emoji'); $("#box-image").toggle(tempApp.type === 'image'); renderPreview(); });
+    $("#p-size-input").on("input", function () { tempApp.size = $(this).val(); $("#p-size-val").text(tempApp.size + "px"); renderPreview(); });
     $("#p-emoji-input").on("input", function () { tempApp.content = $(this).val(); renderPreview(); });
     $("#p-color-theme, #p-color-notify").on("input", renderPreview);
     $("#btn-upload-card").on("click", () => $("#p-file-input").click());
-    $("#p-file-input").on("change", async function () {
-        const file = this.files[0];
-        if (!file) return;
-        try {
-            const base64 = await fileToBase64(file);
-            tempApp.content = base64;
-            renderPreview();
-        } catch (e) { alert("图片读取失败"); }
-    });
-
+    $("#p-file-input").on("change", async function () { const file = this.files[0]; if (!file) return; try { const base64 = await fileToBase64(file); tempApp.content = base64; renderPreview(); } catch (e) { alert("图片读取失败"); } });
     $("#btn-test-spin").on("click", () => { $("#p-ball").removeClass("p-notify").addClass("p-loading"); setTimeout(() => $("#p-ball").removeClass("p-loading"), 3000); });
-    $("#btn-test-notify").on("click", () => { $("#p-ball").removeClass("p-loading").addClass("p-notify"); setTimeout(() => $("#p-ball").removeClass("p-notify"), 3000); });
+    $("#btn-test-notify").on("click", () => { $("#p-ball").removeClass("p-loading").addClass("p-notify"); setTimeout(() => $("#p-ball").removeClass("p-loading"), 3000); });
+
+    // --- [重构] Automation Logic (支持分类) ---
     $("#cfg-auto").on("change", function () { $("#auto-settings-panel").toggle($(this).is(":checked")); });
     $("#cfg-chance").on("input", function () { $("#cfg-chance-val").text($(this).val() + "%"); });
 
-    $("#t-btn-fetch").on("click", async function () {
-        // [修改] 获取列表需兼容 Profile
-        const btn = $(this);
-        const originalText = btn.text();
+    // 随机池渲染与管理
+    const updatePoolCount = () => { $("#pool-count-lbl").text(`已选: ${$(".t-pool-chk:checked").length}`); };
+    const renderPoolList = () => {
+        const $list = $("#cfg-pool-list"); $list.empty();
+        
+        // 1. 渲染列表
+        const sortedScripts = [...runtimeScripts].sort((a, b) => (a._type !== b._type) ? (a._type === 'preset' ? -1 : 1) : a.name.localeCompare(b.name));
+        sortedScripts.forEach(s => {
+            const isChecked = tempPoolIds.has(s.id);
+            const modeColor = s.mode === 'echo' ? '#90cdf4' : '#bfa15f';
+            const icon = s.mode === 'echo' ? '<i class="fa-solid fa-water"></i>' : '<i class="fa-solid fa-globe"></i>';
+            const cat = s.category || (s._type === 'preset' ? 'Official' : 'Uncategorized');
+            const row = $(`<label style="display:flex; align-items:center; padding:5px; cursor:pointer; border-radius:4px; transition:0.2s;" class="t-pool-row"><input type="checkbox" class="t-pool-chk" value="${s.id}" data-mode="${s.mode}" data-cat="${cat}" ${isChecked ? 'checked' : ''} style="margin-right:8px;"><span style="color:${modeColor}; margin-right:5px; font-size:0.9em; width:20px; text-align:center;">${icon}</span><span style="font-size:0.9em; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.name} <span style="font-size:0.8em; color:#666;">(${cat === 'Official' ? '官方' : cat})</span></span></label>`);
+            row.hover(function(){ $(this).css("background", "#222"); }, function(){ $(this).css("background", "transparent"); });
+            $list.append(row);
+        });
+        updatePoolCount();
 
-        let urlInput = "";
-        let key = "";
+        // 2. 动态填充分类下拉框
+        const catSet = new Set();
+        runtimeScripts.forEach(s => catSet.add(s.category || (s._type === 'preset' ? 'Official' : 'Uncategorized')));
+        const $catSel = $("#pool-quick-cat");
+        $catSel.find("option:gt(0)").remove();
+        [...catSet].sort().forEach(c => {
+            const displayC = c === 'Official' ? '官方预设' : (c === 'Uncategorized' ? '未分类' : c);
+            $catSel.append(`<option value="${c}">${displayC}</option>`);
+        });
+    };
 
-        const p = tempProfiles.find(x => x.id === tempActiveId);
-        if (p.type === 'internal') {
-            if (typeof settings !== 'undefined') {
-                urlInput = (settings.api_url_openai || "").trim();
-                key = settings.api_key_openai || "";
-            }
-        } else {
-            urlInput = ($("#cfg-url").val() || "").trim();
-            key = ($("#cfg-key").val() || "").trim();
-        }
+    $("#cfg-auto-mode").on("change", function() {
+        if ($(this).val() === 'pool') { $("#cfg-pool-editor").slideDown(200); renderPoolList(); } 
+        else { $("#cfg-pool-editor").slideUp(200); }
+    });
+    if ((cfg.auto_mode || 'follow') === 'pool') { $("#cfg-pool-editor").show(); renderPoolList(); }
 
+    $("#pool-sel-echo").on("click", () => { $(".t-pool-chk[data-mode='echo']").prop("checked", true); updatePoolCount(); });
+    $("#pool-sel-para").on("click", () => { $(".t-pool-chk[data-mode='parallel']").prop("checked", true); updatePoolCount(); });
+    $("#pool-sel-none").on("click", () => { $(".t-pool-chk").prop("checked", false); updatePoolCount(); });
+    
+    // [新增] 下拉框分类选择逻辑
+    $("#pool-quick-cat").on("change", function() {
+        const cat = $(this).val();
+        if (!cat) return;
+        $(`.t-pool-chk[data-cat='${cat}']`).prop("checked", true);
+        updatePoolCount();
+        $(this).val("");
+    });
+
+    $(document).on("change", ".t-pool-chk", updatePoolCount);
+
+    // --- Misc Logic ---
+    $("#t-btn-fetch").on("click", async function () { 
+        const btn = $(this); const originalText = btn.text();
+        let urlInput = "", key = ""; const p = tempProfiles.find(x => x.id === tempActiveId);
+        if (p.type === 'internal') { if (typeof settings !== 'undefined') { urlInput = (settings.api_url_openai || "").trim(); key = settings.api_key_openai || ""; } } 
+        else { urlInput = ($("#cfg-url").val() || "").trim(); key = ($("#cfg-key").val() || "").trim(); }
         if (!urlInput) return alert("API URL 为空");
-        urlInput = urlInput.replace(/\/+$/, "");
-
-        let baseUrl = urlInput;
-        if (baseUrl.endsWith("/chat/completions")) {
-            baseUrl = baseUrl.replace(/\/chat\/completions$/, "");
-        }
+        let baseUrl = urlInput.replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
         const targetUrl = `${baseUrl}/models`;
-
         try {
-            btn.prop("disabled", true).text("...");
-            const res = await fetch(targetUrl, {
-                method: "GET",
-                headers: { "Authorization": `Bearer ${key}` }
-            });
-
+            btn.prop("disabled", true).text("..."); const res = await fetch(targetUrl, { method: "GET", headers: { "Authorization": `Bearer ${key}` } });
             if (!res.ok) throw new Error("连接失败: " + res.status);
-
-            const data = await res.json();
-            const models = data.data || data.models || [];
-
-            const $sel = $("#cfg-model");
-            const oldVal = $sel.val(); // 如果是 Internal 模式，这里可能是不可选状态，但逻辑通用
-
-            // 如果是 Internal 模式，我们要临时解锁一下让用户能看，或者直接不做 UI 修改仅弹窗
-            // 为了简单起见，Internal 模式下不允许修改模型，只弹窗提示
-            if (p.type === 'internal') {
-                alert(`获取成功! 共有 ${models.length} 个模型可用。\n(ST托管模式下，请在 SillyTavern 主设置中切换模型)`);
-                return;
-            }
-
-            $sel.empty();
-            let count = 0;
-            models.forEach(m => {
-                const id = m.id || m;
-                $sel.append(`<option value="${id}">${id}</option>`);
-                count++;
-            });
-
-            if (count > 0) {
-                if (window.toastr) toastr.success(`获取成功，共 ${count} 个模型`);
-            } else {
-                alert("获取成功，但模型列表为空");
-                $sel.append(`<option value="${oldVal}" selected>${oldVal}</option>`);
-            }
-        } catch (e) {
-            console.error(e);
-            alert("获取失败: " + e.message);
-        } finally {
-            btn.prop("disabled", false).text(originalText);
-        }
+            if (p.type === 'internal') { alert("获取成功! (ST托管模式下，请在 SillyTavern 主设置中切换模型)"); return; }
+            const data = await res.json(); const models = data.data || data.models || [];
+            const $sel = $("#cfg-model"); $sel.empty(); models.forEach(m => $sel.append(`<option value="${m.id || m}">${m.id || m}</option>`));
+            if (window.toastr) toastr.success(`获取成功，共 ${models.length} 个模型`);
+        } catch (e) { alert("获取失败: " + e.message); } finally { btn.prop("disabled", false).text(originalText); }
     });
-
-    $("#btn-restore-presets").on("click", function () {
-        if (confirm("确定要恢复所有被隐藏的官方预设剧本吗？")) {
-            const d = getExtData();
-            d.disabled_presets = [];
-            saveExtData();
-            loadScripts();
-            $(this).prop("disabled", true).text("已恢复");
-            if (window.toastr) toastr.success("预设已恢复");
-        }
-    });
-
-    $("#btn-open-mgr").on("click", () => {
-        $("#t-settings-view").remove();
-        openScriptManager();
-    });
-
+    $("#btn-restore-presets").on("click", function () { if (confirm("确定要恢复所有被隐藏的官方预设剧本吗？")) { const d = getExtData(); d.disabled_presets = []; saveExtData(); loadScripts(); $(this).prop("disabled", true).text("已恢复"); if (window.toastr) toastr.success("预设已恢复"); } });
+    $("#btn-open-mgr").on("click", () => { $("#t-settings-view").remove(); openScriptManager(); });
     $("#t-set-close").on("click", () => { $("#t-settings-view").remove(); $("#t-main-view").show(); });
 
-    // [修改] 保存逻辑
+    // --- Save Logic ---
     $("#t-set-save").on("click", () => {
-        saveCurrentProfileToMemory(); // 确保最后一次修改被记录
+        saveCurrentProfileToMemory();
+        const finalPoolIds = [];
+        if ($("#cfg-auto-mode").val() === 'pool') {
+            $(".t-pool-chk:checked").each(function() { finalPoolIds.push($(this).val()); });
+        } else {
+            finalPoolIds.push(...tempPoolIds);
+        }
 
-        const finalApp = {
-            type: tempApp.type,
-            content: tempApp.content,
-            color_theme: $("#p-color-theme").val(),
-            color_notify: $("#p-color-notify").val(),
-            size: tempApp.size || 56
-        };
+        const finalApp = { type: tempApp.type, content: tempApp.content, color_theme: $("#p-color-theme").val(), color_notify: $("#p-color-notify").val(), size: tempApp.size || 56 };
         const finalCfg = {
-            // [新增] 保存 Profiles
-            active_profile_id: tempActiveId,
-            profiles: tempProfiles,
-
-            // 全局设置
+            active_profile_id: tempActiveId, profiles: tempProfiles,
             history_limit: parseInt($("#cfg-history").val()) || 10,
             stream: $("#cfg-stream").is(":checked"),
             auto_generate: $("#cfg-auto").is(":checked"),
             auto_chance: parseInt($("#cfg-chance").val()),
-            auto_mode: $("#cfg-auto-mode").val()
+            auto_mode: $("#cfg-auto-mode").val(),
+            auto_pool_ids: finalPoolIds
         };
-        const finalDir = {
-            length: $("#set-dir-len").val().trim(),
-            perspective: $("#set-dir-pers").val(),
-            style_ref: $("#set-dir-style").val().trim()
-        };
+        const finalDir = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val(), style_ref: $("#set-dir-style").val().trim() };
 
-        const d = getExtData();
-        d.config = finalCfg;
-        d.appearance = finalApp;
-        d.director = finalDir;
-
+        const d = getExtData(); d.config = finalCfg; d.appearance = finalApp; d.director = finalDir;
         saveExtData();
-        $("#t-settings-view").remove();
-        $("#t-main-view").show();
-        createFloatingButton();
+        $("#t-settings-view").remove(); $("#t-main-view").show(); createFloatingButton();
         if (window.toastr) toastr.success("设置已保存");
     });
 
-    // 初始化渲染
     renderPreview();
     renderProfileUI();
 }
+    
 
 // 剧本管理器
 function openScriptManager() {
@@ -3049,7 +2989,7 @@ function openCharImageManager(onCloseCallback) {
 }
 
 // --- 自动化与初始化 ---
-// [修改] 监听生成结束事件，而非消息接收事件
+// [修改] 监听生成结束事件 (已更新：支持 Follow 和 Pool 两种模式)
 async function onGenerationEnded() {
     const extData = getExtData();
     const cfg = extData.config || {};
@@ -3061,7 +3001,6 @@ async function onGenerationEnded() {
     if (isGenerating || $("#t-overlay").length > 0) return;
 
     // 3. 获取当前聊天上下文的最后一条消息
-    // GENERATION_ENDED 事件不直接携带消息内容，需要手动取
     if (!SillyTavern || !SillyTavern.getContext) return;
     const context = SillyTavern.getContext();
     const chat = context.chat;
@@ -3070,10 +3009,7 @@ async function onGenerationEnded() {
 
     const lastMsg = chat[chat.length - 1];
 
-    // 4. 严格过滤：
-    // - 必须不是用户的消息 (is_user 为 false)
-    // - 必须不是系统消息 (is_system 为 false) (可选，看你是否需要系统指令触发)
-    // - 必须不是隐藏消息 (is_hidden)
+    // 4. 严格过滤：必须不是用户、系统或隐藏消息
     if (lastMsg.is_user) return;
     if (lastMsg.is_system) return;
     if (lastMsg.is_hidden) return;
@@ -3082,28 +3018,48 @@ async function onGenerationEnded() {
     const chance = cfg.auto_chance || 50;
     if (Math.random() * 100 > chance) return;
 
-    // 6. 抽取剧本并执行
-    let pool = [];
+    // 6. [重构] 抽取剧本并执行
+    let targetScriptId = null;
     const autoMode = cfg.auto_mode || "follow";
 
-    if (autoMode === 'mix') {
-        pool = runtimeScripts;
-    } else if (autoMode === 'echo_only') {
-        pool = runtimeScripts.filter(s => s.mode === 'echo');
+    if (autoMode === 'follow') {
+        // 模式 A: 跟随主界面
+        // 这里的 lastUsedScriptId 是全局变量
+        if (lastUsedScriptId) {
+            // 确保该 ID 依然有效 (未被删除)
+            if (runtimeScripts.find(s => s.id === lastUsedScriptId)) {
+                targetScriptId = lastUsedScriptId;
+            }
+        }
+        // 如果没有上次使用的 ID (比如刚安装)，随机选一个
+        if (!targetScriptId && runtimeScripts.length > 0) {
+            targetScriptId = runtimeScripts[0].id;
+        }
     } else {
-        const isEcho = (extData.ui_mode_echo !== false);
-        const targetMode = isEcho ? 'echo' : 'parallel';
-        pool = runtimeScripts.filter(s => s.mode === targetMode);
+        // 模式 B: 自定义随机池 (Pool)
+        const allowedIds = cfg.auto_pool_ids || [];
+        
+        // 过滤出当前有效的剧本 (即在 runtimeScripts 中存在，且在白名单中)
+        const pool = runtimeScripts.filter(s => allowedIds.includes(s.id));
+
+        if (pool.length > 0) {
+            const randomScript = pool[Math.floor(Math.random() * pool.length)];
+            targetScriptId = randomScript.id;
+        } else {
+            console.warn("Titania Auto: Pool mode is selected but no valid scripts are allowed/found.");
+            return;
+        }
     }
 
-    if (pool.length === 0) return;
-    const randomScript = pool[Math.floor(Math.random() * pool.length)];
+    if (!targetScriptId) return;
 
-    console.log(`Titania Auto: Triggered after generation! [${randomScript.mode}] ${randomScript.name}`);
+    // 获取剧本名称用于日志
+    const scriptObj = runtimeScripts.find(s => s.id === targetScriptId);
+    console.log(`Titania Auto: Triggered! [${autoMode}] Executing: ${scriptObj ? scriptObj.name : targetScriptId}`);
 
-    // 稍微延迟一点点执行，确保 UI 状态已完全稳固
+    // 稍微延迟一点点执行
     setTimeout(() => {
-        handleGenerate(randomScript.id, true);
+        handleGenerate(targetScriptId, true);
     }, 500);
 }
 
