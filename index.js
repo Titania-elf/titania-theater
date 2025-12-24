@@ -7,11 +7,11 @@ import { saveSettingsDebounced, eventSource, event_types } from "../../../../scr
 const extensionName = "Titania_Theater_Echo";
 const extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
 
-// [修改] 默认设置结构 (新增 profiles 支持多API，重构 automation)
+// [修改] 默认设置结构 (新增 profiles 支持多API，以及自动化分类白名单)
 const defaultSettings = {
     enabled: true,
     config: {
-        // 多配置方案支持
+        // [新增] 多配置方案支持
         active_profile_id: "default",
         profiles: [
             {
@@ -33,12 +33,13 @@ const defaultSettings = {
         stream: true,
         auto_generate: false,
         auto_chance: 50,
-        
-        // [修改] 自动化模式: 'follow' (跟随) 或 'pool' (自定义池)
-        auto_mode: "follow", 
-        // [新增] 自定义随机池白名单 (存储 script id)
-        auto_pool_ids: [], 
-        
+
+        // [修改] 自动化策略: 'follow'(跟随模式) 或 'category'(指定分类)
+        auto_mode: "follow",
+
+        // [新增] 自动化分类白名单 (仅在 auto_mode 为 'category' 时生效)
+        auto_categories: [],
+
         history_limit: 10
     },
     user_scripts: [],
@@ -369,6 +370,7 @@ function refreshScriptList(isEchoMode) {
 function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if (s) $("#t-txt-desc").val(s.desc); }
 
 // 主窗口
+// [修复] 主窗口 (增加 CSS 隔离沙箱，防止生成内容破坏 UI 布局)
 function openMainWindow() {
     if ($("#t-overlay").length) return;
 
@@ -390,9 +392,11 @@ function openMainWindow() {
             border-radius: 8px; 
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
             position: relative; 
+            /* [修复] 创建层叠上下文，防止子元素跑出去 */
+            isolation: isolate; 
         }
         
-        /* Zen Mode: 仅隐藏UI，保持容器尺寸 */
+        /* Zen Mode */
         #t-main-view.t-zen-mode .t-header, 
         #t-main-view.t-zen-mode .t-top-bar, 
         #t-main-view.t-zen-mode .t-bottom-bar { 
@@ -405,47 +409,58 @@ function openMainWindow() {
             background-image: none; 
         }
         
-        .t-content-wrapper { flex-grow: 1; position: relative; overflow: hidden; background-color: #0b0b0b; background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); background-size: 20px 20px; }
+        .t-content-wrapper { 
+            flex-grow: 1; 
+            position: relative; 
+            overflow: hidden; 
+            background-color: #0b0b0b; 
+            background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); 
+            background-size: 20px 20px;
+            /* [修复] 关键：transform 会让内部 fixed 元素相对于此容器定位，而非相对于屏幕 */
+            transform: translateZ(0); 
+            contain: size layout style;
+        }
         
         .t-content-area { 
             position: absolute; top: 0; left: 0; 
             width: 100%; height: 100%; 
-            padding: 0; /* [修改] 移除内边距，实现全填充 */
+            padding: 0; 
             overflow-y: auto; 
             box-sizing: border-box; 
             scroll-behavior: smooth; 
+            /* [修复] 确保滚动条在最上层 */
+            z-index: 1;
         }
         
-        /* [核心修改] 强制内容填满容器 */
         #t-output-content { 
             width: 100%; 
             min-height: 100%; 
-            /* 如果内容是纯文本，保留一点内边距防止贴边 */
-            /* 但如果是 DIV 包装的(绝大多数情况)，下面的规则会生效 */
             display: flex; 
             flex-direction: column;
+            /* [修复] 防止内部宽元素撑破容器 */
+            overflow-x: hidden; 
         }
 
-        /* 暴力修正模型生成的 HTML，使其铺满 */
+        /* 强制纠正模型生成的 HTML */
         #t-output-content > div {
             flex-grow: 1;
-            margin: 0 !important;       /* 去除外边距 */
-            width: 100% !important;     /* 强制全宽 */
-            max-width: none !important; /* 解除宽度限制 */
-            border-radius: 0 !important;/* 去除圆角 */
-            border: none !important;    /* 去除边框(可选) */
-            min-height: 100%;           /* 强制全高 */
-            box-sizing: border-box;     /* 确保内边距不撑爆 */
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100vw !important; /* 再次防止溢出 */
+            border-radius: 0 !important;
+            border: none !important;
+            min-height: 100%;
+            box-sizing: border-box;
+            /* [修复] 如果模型生成了 fixed 定位，强制改为 absolute 以便被关在笼子里 */
+            /* 注意：配合上面的 transform: translateZ(0)，fixed 其实也会被关住，这里是双保险 */
         }
 
-        /* 滚动条美化 (既然是全填充，原生滚动条可能太丑) */
         .t-content-area::-webkit-scrollbar { width: 6px; }
         .t-content-area::-webkit-scrollbar-track { background: transparent; }
         .t-content-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
         .t-content-area::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
 
-        /* 常规样式保持不变 */
-        .t-top-bar { padding: 12px 20px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; gap: 15px; align-items: stretch; height: 75px; box-sizing: border-box; flex-shrink: 0; }
+        .t-top-bar { padding: 12px 20px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; gap: 15px; align-items: stretch; height: 75px; box-sizing: border-box; flex-shrink: 0; z-index: 20; }
         .t-tabs { display: flex; flex-direction: column; width: 140px; background: #111; border-radius: 6px; padding: 3px; border: 1px solid #333; flex-shrink: 0; }
         .t-tab { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; transition: 0.2s; font-size: 0.85em; font-weight: bold; color: #666; margin-bottom: 2px; }
         .t-tab:last-child { margin-bottom: 0; }
@@ -471,7 +486,8 @@ function openMainWindow() {
         .t-zen-btn { position: absolute; top: 20px; right: 25px; width: 40px; height: 40px; border-radius: 50%; background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(4px); color: #777; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; transition: all 0.2s; opacity: 0.6; }
         .t-zen-btn:hover { opacity: 1; background: #bfa15f; color: #000; transform: scale(1.1); box-shadow: 0 0 15px rgba(191, 161, 95, 0.4); }
 
-        .t-bottom-bar { padding: 10px 15px; background: #1e1e1e; border-top: 1px solid #333; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
+        /* [修复] 提升底部栏 Z-index，防止被内容覆盖 */
+        .t-bottom-bar { padding: 10px 15px; background: #1e1e1e; border-top: 1px solid #333; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; position: relative; z-index: 50; }
 
         @media screen and (max-width: 600px) {
             #t-main-view { width: 100%; height: 95vh; max-width: 100vw; border-radius: 10px 10px 0 0; }
@@ -894,48 +910,38 @@ function getChatHistory(limit) {
 }
 
 // 处理生成请求
+// 处理生成请求
 async function handleGenerate(forceScriptId = null, silent = false) {
     const data = getExtData();
     const cfg = data.config || {};
     const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
 
-    // --- [核心] 凭证解析器 (Credentials Resolver) ---
-    // 目的：根据当前选中的 Profile，计算出最终使用的 URL, Key, Model
-
-    // 1. 数据迁移兼容：如果旧数据没有 profiles，临时构造一个
+    // --- 凭证解析器 ---
     let activeProfileId = cfg.active_profile_id || "default";
     let profiles = cfg.profiles || [
         { id: "st_sync", name: "🔗 跟随 SillyTavern", type: "internal" },
         { id: "default", name: "默认自定义", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
     ];
+    let currentProfile = profiles.find(p => p.id === activeProfileId) || profiles[1];
 
-    let currentProfile = profiles.find(p => p.id === activeProfileId) || profiles[1]; // 找不到就回退到默认自定义
-
-    let finalUrl = "";
-    let finalKey = "";
-    let finalModel = "";
+    let finalUrl = "", finalKey = "", finalModel = "";
 
     if (currentProfile.type === 'internal') {
-        // 模式 A: 跟随 SillyTavern 全局设置
-        // 注意：我们只读取 ST 的 OpenAI 兼容设置，这是目前最通用的 Chat Completion 接口标准
         if (typeof settings !== 'undefined') {
             finalUrl = settings.api_url_openai || "";
             finalKey = settings.api_key_openai || "";
-            // ST 的模型 ID 存储变量比较杂，优先尝试 api_model_openai，没有则用 gpt-3.5-turbo 兜底
             finalModel = settings.api_model_openai || "gpt-3.5-turbo";
         } else {
             if (!silent) alert("错误：无法读取 SillyTavern 全局设置");
             return;
         }
     } else {
-        // 模式 B: 自定义设置
         finalUrl = currentProfile.url || "";
         finalKey = currentProfile.key || "";
         finalModel = currentProfile.model || "gpt-3.5-turbo";
     }
 
     if (!finalKey && currentProfile.type !== 'internal') return alert("配置缺失：请先去设置填 API Key！");
-    // Internal 模式下允许 Key 为空 (某些本地后端不需要 Key)
 
     const scriptId = forceScriptId || $("#t-sel-script").val();
     const script = runtimeScripts.find(s => s.id === scriptId);
@@ -945,7 +951,31 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         return;
     }
 
+    // 更新最后使用的 ID
     lastUsedScriptId = script.id;
+
+    // --- [修复] UI 同步逻辑 Start ---
+    // 1. 无论窗口是否打开，都更新保存的模式状态，确保下次打开时在正确的 Tab
+    const isEchoScript = (script.mode === 'echo');
+    data.ui_mode_echo = isEchoScript;
+    saveExtData();
+
+    // 2. 如果窗口正在显示，强制实时更新 UI (切换 Tab 高亮 + 更新卡片文字)
+    if ($("#t-main-view").length > 0 && $("#t-main-view").is(":visible")) {
+        // 更新 Tab 样式
+        if (isEchoScript) {
+            $("#t-tab-echo").addClass("active-echo");
+            $("#t-tab-parallel").removeClass("active-parallel");
+        } else {
+            $("#t-tab-echo").removeClass("active-echo");
+            $("#t-tab-parallel").addClass("active-parallel");
+        }
+        // 更新卡片文字
+        applyScriptSelection(script.id);
+
+        // [可选] 如果你希望列表筛选也同步重置，可以调用 updateFilterUI，这里暂只更新显示内容
+    }
+    // --- [修复] UI 同步逻辑 End ---
 
     const ctx = getContextData();
     const $floatBtn = $("#titania-float-btn");
@@ -955,11 +985,9 @@ async function handleGenerate(forceScriptId = null, silent = false) {
 
     isGenerating = true;
     $floatBtn.addClass("t-loading");
-
     $("#t-btn-like").html('<i class="fa-regular fa-heart"></i> 收藏').prop("disabled", false);
 
     if (!silent && window.toastr) {
-        // 提示信息带上当前使用的方案名
         toastr.info(`🚀 [${currentProfile.name}] 正在连接模型演绎...`, "Titania Echo");
     }
 
@@ -998,16 +1026,11 @@ async function handleGenerate(forceScriptId = null, silent = false) {
 
         user += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
 
-        // --- 2. 发起请求 (使用解析出的 finalUrl) ---
+        // --- 2. 发起请求 ---
         let endpoint = finalUrl.trim().replace(/\/+$/, "");
         if (!endpoint) throw new Error("ERR_CONFIG: API URL 未设置");
-
-        // 智能补全后缀：如果选了 ST Sync，且 ST 里存的是基础域名，我们需要补全
-        // 如果用户自己填了完整路径，就不补全
         if (!endpoint.endsWith("/chat/completions")) {
-            // 简单判断：如果以 /v1 结尾，加 /chat/completions
             if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
-            // 如果既没有 /v1 也没有 /chat/completions，尝试补全标准格式
             else endpoint += "/v1/chat/completions";
         }
 
@@ -1021,24 +1044,19 @@ async function handleGenerate(forceScriptId = null, silent = false) {
             })
         });
 
-        // [增强] HTTP 状态码精细报错
         if (!res.ok) {
             const rawText = await res.text();
             let errPrefix = `ERR_HTTP_${res.status}`;
-
-            if (res.status === 400) throw new Error(`${errPrefix}: 请求被拒绝 (可能触发了内容安全/格式过滤)`);
-            if (res.status === 401) throw new Error(`${errPrefix}: API Key 无效或过期`);
-            if (res.status === 403) throw new Error(`${errPrefix}: 访问被禁止 (可能账户余额不足或无权限)`);
-            if (res.status === 404) throw new Error(`${errPrefix}: 接口地址错误 (404 Not Found) - 请检查 URL`);
-            if (res.status === 500) throw new Error(`${errPrefix}: 服务端内部错误`);
-            if (res.status === 504) throw new Error(`${errPrefix}: 请求超时 (Timeout)`);
-
+            if (res.status === 400) throw new Error(`${errPrefix}: 请求被拒绝`);
+            if (res.status === 401) throw new Error(`${errPrefix}: API Key 无效`);
+            if (res.status === 403) throw new Error(`${errPrefix}: 访问被禁止`);
+            if (res.status === 404) throw new Error(`${errPrefix}: 接口地址错误`);
+            if (res.status === 500) throw new Error(`${errPrefix}: 服务端错误`);
             throw new Error(`${errPrefix}: ${rawText.slice(0, 50)}...`);
         }
 
         // --- 3. 接收内容 ---
         let rawContent = "";
-
         if (useStream) {
             const reader = res.body.getReader();
             const decoder = new TextDecoder("utf-8");
@@ -1056,101 +1074,42 @@ async function handleGenerate(forceScriptId = null, silent = false) {
                     if (jsonStr === "[DONE]") continue;
                     try {
                         const json = JSON.parse(jsonStr);
-                        if (json.choices?.[0]?.finish_reason === "content_filter") {
-                            throw new Error("ERR_SAFETY_STREAM: 内容生成过程中被安全过滤截断");
-                        }
                         const chunk = json.choices?.[0]?.delta?.content || "";
                         if (chunk) rawContent += chunk;
-                    } catch (e) {
-                        if (e.message.includes("ERR_SAFETY")) throw e;
-                    }
+                    } catch (e) { }
                 }
             }
         } else {
             const json = await res.json();
-            if (json.choices?.[0]?.finish_reason === "content_filter") {
-                throw new Error("ERR_SAFETY_BLOCK: 内容被安全过滤拦截");
-            }
             rawContent = json.choices?.[0]?.message?.content || "";
         }
 
-        if (!rawContent || rawContent.trim().length === 0) {
-            throw new Error("ERR_EMPTY: 模型返回了空内容 (可能被静默过滤)");
-        }
+        if (!rawContent || rawContent.trim().length === 0) throw new Error("ERR_EMPTY: 模型返回空内容");
 
-        // --- 4. 智能容错与清洗 ---
+        // --- 4. 容错清洗 ---
         let cleanContent = rawContent.replace(/```html/gi, "").replace(/```/g, "").trim();
-
-        const refusalRegex = /I cannot|I can't|unable to|policy|safety|violation|sensitive/i;
-        if (cleanContent.length < 150 && refusalRegex.test(cleanContent) && !cleanContent.includes("<div")) {
-            throw new Error(`ERR_REFUSAL: 模型拒绝生成 (${cleanContent})`);
-        }
-
         const hasDiv = /<div[\s\S]*?>/i.test(cleanContent);
         const hasCloseDiv = /<\/div>/i.test(cleanContent);
-
         let finalOutput = "";
-        let warnMsg = null;
 
         if (hasDiv && hasCloseDiv) {
             finalOutput = cleanContent;
         } else {
             if (cleanContent.length > 30) {
-                console.warn("Titania: Malformed HTML detected, applying fallback wrapper.");
-                finalOutput = `
-                <div style="
-                    padding: 20px; 
-                    background: #1a1a1a; 
-                    color: #ccc; 
-                    border-left: 3px solid #bfa15f; 
-                    font-family: serif; 
-                    line-height: 1.6; 
-                    border-radius: 5px;">
-                    <div style="font-size:0.8em; color:#666; margin-bottom:10px;">(⚠️ 格式自动修复模式)</div>
-                    ${cleanContent.replace(/\n/g, "<br>")}
-                </div>`;
-                warnMsg = "模型未按格式输出，已自动应用默认样式";
+                finalOutput = `<div style="padding: 20px; background: #1a1a1a; color: #ccc; border-left: 3px solid #bfa15f; font-family: serif; line-height: 1.6; border-radius: 5px;">${cleanContent.replace(/\n/g, "<br>")}</div>`;
             } else {
-                throw new Error(`ERR_FORMAT: 内容无法解析且过短: "${cleanContent.slice(0, 20)}..."`);
+                throw new Error(`ERR_FORMAT: 内容无法解析: "${cleanContent.slice(0, 20)}..."`);
             }
         }
 
         lastGeneratedContent = finalOutput;
 
-        if (!silent && window.toastr) {
-            toastr.success(`✨ 《${script.name}》演绎完成！`, "Titania Echo");
-            if (warnMsg) toastr.warning(warnMsg, "智能修复");
-        }
+        if (!silent && window.toastr) toastr.success(`✨ 《${script.name}》演绎完成！`, "Titania Echo");
         $floatBtn.addClass("t-notify");
 
     } catch (e) {
         console.error("Titania Generate Error:", e);
-
-        let userTip = "请检查网络或配置";
-        let errType = "❌ 演绎失败";
-
-        if (e.message.includes("ERR_CONFIG")) userTip = "请前往设置检查配置项";
-        else if (e.message.includes("ERR_HTTP_401")) userTip = "API Key 无效，请检查设置";
-
-        else if (
-            e.message.includes("ERR_HTTP_400") ||
-            e.message.includes("ERR_SAFETY") ||
-            e.message.includes("ERR_REFUSAL")
-        ) {
-            errType = "🚫 内容被拦截";
-            userTip = "剧本内容可能触发了模型的安全/道德审查机制，请尝试更换剧本或调整提示词";
-        }
-
-        else if (e.message.includes("ERR_EMPTY")) userTip = "模型输出了空内容 (可能被静默过滤)";
-        else if (e.message.includes("ERR_FORMAT")) userTip = "模型输出格式严重错误";
-
-        lastGeneratedContent = `
-            <div style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; border-radius:8px; background:rgba(255, 107, 107, 0.1);">
-                <div style="font-weight:bold; font-size:1.1em; margin-bottom:10px;">${errType}</div>
-                <div style="margin-bottom:5px;">${e.message}</div>
-                <div style="font-size:0.8em; opacity:0.7; margin-top:10px;">💡 建议: ${userTip}</div>
-            </div>`;
-
+        lastGeneratedContent = `<div style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b;">${e.message}</div>`;
         if (!silent && window.toastr) toastr.error(`${e.message}`, "Titania 错误");
         $floatBtn.addClass("t-notify");
     } finally {
@@ -1362,14 +1321,14 @@ function showDebugInfo() {
 
 // 【Part 5: 设置、剧本管理器与编辑器】
 
-// 设置窗口（Part 1：初始化与样式）
+// 设置窗口（更新导演模式注入的提示词 + 自动化分类白名单）
 function openSettingsWindow() {
     const data = getExtData();
     const cfg = data.config || {};
     const app = data.appearance || { type: "emoji", content: "🎭", color_theme: "#bfa15f", color_notify: "#55efc4", size: 56 };
     const dirCfg = data.director || { length: "", perspective: "auto", style_ref: "" };
 
-    // 配置数据迁移逻辑
+    // 数据迁移兼容
     if (!cfg.profiles || !Array.isArray(cfg.profiles)) {
         cfg.profiles = [
             { id: "st_sync", name: "🔗 跟随 SillyTavern (主连接)", type: "internal", readonly: true },
@@ -1378,14 +1337,11 @@ function openSettingsWindow() {
         cfg.active_profile_id = "default";
     }
 
-    // 深度拷贝
+    // 深度拷贝临时数据
     let tempProfiles = JSON.parse(JSON.stringify(cfg.profiles));
     let tempActiveId = cfg.active_profile_id;
     let tempApp = JSON.parse(JSON.stringify(app));
     if (!tempApp.size) tempApp.size = 56;
-    
-    // 临时存储随机池 ID
-    let tempPoolIds = new Set(cfg.auto_pool_ids || []);
 
     $("#t-main-view").hide();
     const fileToBase64 = (file) => new Promise((resolve, reject) => {
@@ -1409,28 +1365,19 @@ function openSettingsWindow() {
         .t-form-group { margin-bottom: 20px; }
         .t-form-label { display: block; color: #aaa; margin-bottom: 8px; font-size: 0.9em; }
         .t-form-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 15px; }
-        
         .t-preview-container { background: #1a1a1a; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border: 1px solid #333; }
         .t-preview-ball { border-radius: 50%; background: #2b2b2b; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; transition: all 0.2s; position: relative; overflow: hidden; }
         .t-preview-ball img { width: 100%; height: 100%; object-fit: cover; }
         .t-upload-card { width: 100px; height: 100px; border: 2px dashed #444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #666; transition: 0.2s; background-size: cover; background-position: center; position: relative; }
         .t-upload-card:hover { border-color: #bfa15f; color: #bfa15f; background-color: rgba(191, 161, 95, 0.05); }
-        .t-upload-card span { font-size: 0.8em; margin-top: 5px; background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 4px; }
-        
         .t-prof-header { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
         .t-prof-select { flex-grow: 1; background: #222; color: #eee; border: 1px solid #444; padding: 8px; border-radius: 4px; }
-        
-        .t-pool-row:hover { background: #222; }
-        /* 下拉框样式优化 */
-        .t-pool-select { background:#2a2a2a; border:1px solid #444; color:#ccc; font-size:0.8em; border-radius:4px; padding:2px 5px; outline:none; max-width: 120px; }
-
         @keyframes p-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .p-loading { box-shadow: 0 0 15px var(--p-theme) !important; color: var(--p-theme) !important; background: transparent !important; }
         .p-loading::before { content: ""; position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: conic-gradient(transparent, transparent, transparent, var(--p-theme)); animation: p-spin 1.2s linear infinite; z-index: -2; }
         .p-loading::after { content: ""; position: absolute; inset: 3px; background: #2b2b2b; border-radius: 50%; z-index: -1; }
         @keyframes p-glow { 0%,100% { box-shadow: 0 0 5px var(--p-notify); } 50% { box-shadow: 0 0 20px var(--p-notify); } }
         .p-notify { border-color: var(--p-notify) !important; animation: p-glow 1.5s infinite ease-in-out; }
-        
         @media screen and (max-width: 600px) {
             .t-set-body { flex-direction: column; }
             .t-set-nav { width: 100%; height: 50px; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #333; }
@@ -1438,9 +1385,6 @@ function openSettingsWindow() {
             .t-set-tab-btn.active { border-left: none; border-bottom-color: #bfa15f; background: transparent; }
         }
     </style>`;
-
-    /* --- 请继续粘贴第二部分 --- */
-    /* --- 接第一部分 --- */
 
     const disabledCount = (data.disabled_presets || []).length;
     const userScriptCount = (data.user_scripts || []).length;
@@ -1470,10 +1414,7 @@ function openSettingsWindow() {
                         </div>
                     </div>
                     <div class="t-form-group">
-                        <div class="t-form-label" style="display:flex; justify-content:space-between;">
-                            <span>悬浮球尺寸</span>
-                            <span id="p-size-val" style="color:#bfa15f;">${tempApp.size}px</span>
-                        </div>
+                        <div class="t-form-label" style="display:flex; justify-content:space-between;"><span>悬浮球尺寸</span><span id="p-size-val" style="color:#bfa15f;">${tempApp.size}px</span></div>
                         <input type="range" id="p-size-input" min="40" max="100" step="2" value="${tempApp.size}" style="width:100%;">
                     </div>
                     <div class="t-form-group">
@@ -1487,21 +1428,12 @@ function openSettingsWindow() {
                         </div>
                         <div id="box-image" style="display:${tempApp.type === 'image' ? 'block' : 'none'}">
                             <input type="file" id="p-file-input" accept="image/*" style="display:none;">
-                            <div class="t-upload-card" id="btn-upload-card" title="点击更换图片">
-                                <i class="fa-solid fa-camera fa-2x"></i>
-                                <span>点击上传</span>
-                            </div>
+                            <div class="t-upload-card" id="btn-upload-card" title="点击更换图片"><i class="fa-solid fa-camera fa-2x"></i><span>点击上传</span></div>
                         </div>
                     </div>
                     <div class="t-form-group" style="margin-top:20px;">
-                        <div class="t-form-row">
-                            <span>流光主题色 (加载中)</span>
-                            <input type="color" id="p-color-theme" value="${tempApp.color_theme}" style="background:none; border:none; width:40px; height:30px;">
-                        </div>
-                        <div class="t-form-row" style="border:none;">
-                            <span>通知呼吸色 (完成时)</span>
-                            <input type="color" id="p-color-notify" value="${tempApp.color_notify}" style="background:none; border:none; width:40px; height:30px;">
-                        </div>
+                        <div class="t-form-row"><span>流光主题色</span><input type="color" id="p-color-theme" value="${tempApp.color_theme}" style="background:none; border:none; width:40px; height:30px;"></div>
+                        <div class="t-form-row" style="border:none;"><span>通知呼吸色</span><input type="color" id="p-color-notify" value="${tempApp.color_notify}" style="background:none; border:none; width:40px; height:30px;"></div>
                     </div>
                 </div>
 
@@ -1514,38 +1446,22 @@ function openSettingsWindow() {
                             <button id="cfg-prof-add" class="t-tool-btn" title="新建方案"><i class="fa-solid fa-plus"></i></button>
                             <button id="cfg-prof-del" class="t-tool-btn" title="删除当前方案" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <div id="cfg-prof-meta">
-                            <label class="t-form-label">方案名称</label>
-                            <input id="cfg-prof-name" class="t-input" value="">
-                        </div>
+                        <div id="cfg-prof-meta"><label class="t-form-label">方案名称</label><input id="cfg-prof-name" class="t-input" value=""></div>
                     </div>
                     <div style="height:1px; background:#333; margin:20px 0;"></div>
                     <div id="cfg-conn-fields">
                         <div class="t-form-group">
                             <label class="t-form-label">API Endpoint URL</label>
                             <input id="cfg-url" class="t-input" placeholder="例如: http://127.0.0.1:5000/v1">
-                            <div id="cfg-url-hint" style="font-size:0.8em; color:#666; margin-top:5px; display:none;">
-                                <i class="fa-solid fa-link"></i> 正在读取 ST 全局设置：<span id="st-url-display"></span>
-                            </div>
+                            <div id="cfg-url-hint" style="font-size:0.8em; color:#666; margin-top:5px; display:none;"><i class="fa-solid fa-link"></i> 正在读取 ST 全局设置：<span id="st-url-display"></span></div>
                         </div>
-                        <div class="t-form-group">
-                            <label class="t-form-label">API Key</label>
-                            <input id="cfg-key" type="password" class="t-input" placeholder="sk-...">
-                        </div>
+                        <div class="t-form-group"><label class="t-form-label">API Key</label><input id="cfg-key" type="password" class="t-input" placeholder="sk-..."></div>
                         <div class="t-form-group">
                             <label class="t-form-label">Model Name</label>
-                            <div style="display:flex; gap:10px;">
-                                <select id="cfg-model" class="t-input" style="cursor:pointer;"></select>
-                                <button id="t-btn-fetch" class="t-tool-btn" title="获取模型列表">🔄 获取列表</button>
-                            </div>
+                            <div style="display:flex; gap:10px;"><select id="cfg-model" class="t-input" style="cursor:pointer;"></select><button id="t-btn-fetch" class="t-tool-btn" title="获取模型列表">🔄 获取列表</button></div>
                         </div>
                     </div>
-                    <div class="t-form-group">
-                        <label style="cursor:pointer; display:flex; align-items:center;">
-                            <input type="checkbox" id="cfg-stream" ${cfg.stream !== false ? 'checked' : ''} style="margin-right:10px;">
-                            开启流式传输 (Streaming) - 全局生效
-                        </label>
-                    </div>
+                    <div class="t-form-group"><label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="cfg-stream" ${cfg.stream !== false ? 'checked' : ''} style="margin-right:10px;"> 开启流式传输 (Streaming)</label></div>
                 </div>
 
                 <!-- Tab 3: 导演模式 -->
@@ -1553,32 +1469,18 @@ function openSettingsWindow() {
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px; color:#888; font-size:0.9em;">
                         <i class="fa-solid fa-circle-info"></i> 这里设置的是“默认值”。在演绎主界面点击“导演指令”按钮可进行临时调整。
                     </div>
-                    <div class="t-form-group">
-                        <label class="t-form-label">默认篇幅建议</label>
-                        <input id="set-dir-len" class="t-input" value="${dirCfg.length}" placeholder="例如: 300字, 2个段落">
-                    </div>
-                    <div class="t-form-group">
-                        <label class="t-form-label">默认叙事视角</label>
-                        <select id="set-dir-pers" class="t-input">
-                            <option value="auto" ${dirCfg.perspective === 'auto' ? 'selected' : ''}>自动 (跟随剧本)</option>
-                            <option value="1st" ${dirCfg.perspective === '1st' ? 'selected' : ''}>强制第一人称 (我)</option>
-                            <option value="3rd" ${dirCfg.perspective === '3rd' ? 'selected' : ''}>强制第三人称 (他/她)</option>
-                        </select>
-                    </div>
-                    <div class="t-form-group">
-                        <label class="t-form-label">默认文笔参考</label>
-                        <textarea id="set-dir-style" class="t-input" rows="5" placeholder="粘贴你喜欢的文笔段落...">${dirCfg.style_ref}</textarea>
-                    </div>
+                    <div class="t-form-group"><label class="t-form-label">默认篇幅建议</label><input id="set-dir-len" class="t-input" value="${dirCfg.length}" placeholder="例如: 300字, 2个段落"></div>
+                    <div class="t-form-group"><label class="t-form-label">默认叙事视角</label><select id="set-dir-pers" class="t-input"><option value="auto" ${dirCfg.perspective === 'auto' ? 'selected' : ''}>自动 (跟随剧本)</option><option value="1st" ${dirCfg.perspective === '1st' ? 'selected' : ''}>强制第一人称 (我)</option><option value="3rd" ${dirCfg.perspective === '3rd' ? 'selected' : ''}>强制第三人称 (他/她)</option></select></div>
+                    <div class="t-form-group"><label class="t-form-label">默认文笔参考 (不超过1000字)</label><textarea id="set-dir-style" class="t-input" rows="5" placeholder="粘贴你喜欢的文笔段落...">${dirCfg.style_ref}</textarea></div>
                 </div>
-
-                <!-- Tab 4: 自动化 (重构：带分类选择) -->
+                <!-- Tab 4: 自动化 (New) -->
                 <div id="page-automation" class="t-set-page">
                     <div class="t-form-group">
                         <label style="cursor:pointer; display:flex; align-items:center; color:#bfa15f; font-weight:bold;">
                             <input type="checkbox" id="cfg-auto" ${cfg.auto_generate ? 'checked' : ''} style="margin-right:10px;">
-                            开启监听自动生成
+                            开启后台自动演绎
                         </label>
-                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">当检测到群聊消息时，有概率自动后台演绎。</p>
+                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">当检测到群聊消息且不是用户发送时，有概率自动触发。</p>
                     </div>
                     <div id="auto-settings-panel" style="display:${cfg.auto_generate ? 'block' : 'none'}; padding-left:22px;">
                         <div class="t-form-group">
@@ -1588,33 +1490,18 @@ function openSettingsWindow() {
                         <div class="t-form-group">
                             <label class="t-form-label">抽取策略</label>
                             <select id="cfg-auto-mode" class="t-input">
-                                <option value="follow" ${(cfg.auto_mode || 'follow') === 'follow' ? 'selected' : ''}>🛡️ 跟随主界面 (当前选中什么就跑什么)</option>
-                                <option value="pool" ${(cfg.auto_mode || 'follow') === 'pool' ? 'selected' : ''}>🎲 自定义随机池 (指定剧本白名单)</option>
+                                <option value="follow" ${(cfg.auto_mode || 'follow') === 'follow' ? 'selected' : ''}>🛡️ 跟随主界面模式 (默认)</option>
+                                <option value="category" ${(cfg.auto_mode || 'follow') === 'category' ? 'selected' : ''}>🎯 指定分类白名单 (自定义)</option>
                             </select>
                         </div>
-                        
-                        <!-- 随机池编辑器 -->
-                        <div id="cfg-pool-editor" style="display:none; margin-top:15px; background:#181818; border:1px solid #333; border-radius:6px; padding:10px;">
-                            <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px; align-items:center;">
-                                <button type="button" class="t-tool-btn" id="pool-sel-echo" style="font-size:0.8em;">All Echo</button>
-                                <button type="button" class="t-tool-btn" id="pool-sel-para" style="font-size:0.8em;">All Para</button>
-                                <div style="width:1px; height:20px; background:#444; margin:0 5px;"></div>
-                                <!-- 按分类添加 -->
-                                <select id="pool-quick-cat" class="t-pool-select">
-                                    <option value="" disabled selected>➕ 按分类添加...</option>
-                                    <!-- populated by JS -->
-                                </select>
-                                <div style="flex-grow:1;"></div>
-                                <button type="button" class="t-tool-btn" id="pool-sel-none" style="font-size:0.8em; color:#bbb;">清空</button>
-                            </div>
-                            <div style="font-size:0.8em; color:#666; margin-bottom:5px; text-align:right;" id="pool-count-lbl">已选: 0</div>
-                            <div id="cfg-pool-list" style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;">
-                                <!-- List populated by JS -->
-                            </div>
+                        <!-- 分类选择区域 -->
+                        <div id="auto-cat-container" style="display:none; background:#181818; padding:10px; border:1px solid #333; border-radius:6px; margin-top:10px;">
+                            <div style="font-size:0.8em; color:#888; margin-bottom:8px;">请勾选允许随机抽取的分类 (多选):</div>
+                            <div id="auto-cat-list" style="max-height:150px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;"></div>
                         </div>
                     </div>
                     <div class="t-form-group" style="margin-top:20px; border-top:1px solid #333; padding-top:15px;">
-                        <label class="t-form-label">回声模式 - 历史记录读取行数</label>
+                        <label class="t-form-label">回声模式 - 历史读取行数</label>
                         <input type="number" id="cfg-history" class="t-input" value="${cfg.history_limit || 10}">
                     </div>
                 </div>
@@ -1625,26 +1512,16 @@ function openSettingsWindow() {
                         <div class="t-form-label">自定义剧本库</div>
                         <div style="background:#181818; border:1px solid #333; padding:20px; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
                             <div>
-                                <div style="font-size:1.1em; color:#eee; font-weight:bold;">
-                                    <i class="fa-solid fa-scroll" style="color:#bfa15f; margin-right:8px;"></i>
-                                    剧本管理器
-                                </div>
-                                <div style="font-size:0.85em; color:#777; margin-top:5px;">
-                                    当前拥有自定义剧本: ${userScriptCount} 个
-                                </div>
+                                <div style="font-size:1.1em; color:#eee; font-weight:bold;"><i class="fa-solid fa-scroll" style="color:#bfa15f; margin-right:8px;"></i>剧本管理器</div>
+                                <div style="font-size:0.85em; color:#777; margin-top:5px;">当前拥有自定义剧本: ${userScriptCount} 个</div>
                             </div>
-                            <button id="btn-open-mgr" class="t-btn primary" style="padding: 8px 20px;">
-                                <i class="fa-solid fa-list-check"></i> 打开管理
-                            </button>
+                            <button id="btn-open-mgr" class="t-btn primary" style="padding: 8px 20px;"><i class="fa-solid fa-list-check"></i> 打开管理</button>
                         </div>
                     </div>
                     <div class="t-form-group">
                         <div class="t-form-label">已隐藏的官方预设剧本</div>
                         <div style="background:#181818; border:1px solid #333; padding:15px; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
-                            <div>
-                                <div style="font-size:1.1em; color:#eee;">共 ${disabledCount} 个</div>
-                                <div style="font-size:0.8em; color:#666;">这些预设在列表中已被隐藏</div>
-                            </div>
+                            <div><div style="font-size:1.1em; color:#eee;">共 ${disabledCount} 个</div><div style="font-size:0.8em; color:#666;">这些预设在列表中已被隐藏</div></div>
                             <button id="btn-restore-presets" class="t-btn" style="border:1px solid #555;" ${disabledCount === 0 ? 'disabled' : ''}>♻️ 恢复所有</button>
                         </div>
                     </div>
@@ -1659,88 +1536,52 @@ function openSettingsWindow() {
 
     $("#t-overlay").append(html);
 
-    /* --- 请继续粘贴第三部分 --- */
-    /* --- 接第二部分 --- */
-
-    // --- 逻辑绑定 ---
+    // --- Tab 切换 ---
     $(".t-set-tab-btn").on("click", function () {
-        $(".t-set-tab-btn").removeClass("active");
-        $(this).addClass("active");
-        $(".t-set-page").removeClass("active");
-        $(`#page-${$(this).data("tab")}`).addClass("active");
+        $(".t-set-tab-btn").removeClass("active"); $(this).addClass("active");
+        $(".t-set-page").removeClass("active"); $(`#page-${$(this).data("tab")}`).addClass("active");
     });
 
-    // --- Profile Logic ---
+    // --- Profile 逻辑 ---
     const saveCurrentProfileToMemory = () => {
         const pIndex = tempProfiles.findIndex(p => p.id === tempActiveId);
-        if (pIndex === -1) return;
-        const p = tempProfiles[pIndex];
-        if (p.type !== 'internal') {
-            p.name = $("#cfg-prof-name").val();
-            p.url = $("#cfg-url").val();
-            p.key = $("#cfg-key").val();
-            p.model = $("#cfg-model").val();
+        if (pIndex !== -1 && tempProfiles[pIndex].type !== 'internal') {
+            const p = tempProfiles[pIndex]; p.name = $("#cfg-prof-name").val(); p.url = $("#cfg-url").val(); p.key = $("#cfg-key").val(); p.model = $("#cfg-model").val();
         }
     };
-
     const renderProfileUI = () => {
         const pIndex = tempProfiles.findIndex(p => p.id === tempActiveId);
         if (pIndex === -1) { tempActiveId = tempProfiles[0].id; return renderProfileUI(); }
         const p = tempProfiles[pIndex];
         const isInternal = p.type === 'internal';
-
-        const $sel = $("#cfg-prof-select");
-        $sel.empty();
-        tempProfiles.forEach(prof => {
-            $sel.append(`<option value="${prof.id}" ${prof.id === tempActiveId ? 'selected' : ''}>${prof.name}</option>`);
-        });
-
+        const $sel = $("#cfg-prof-select"); $sel.empty();
+        tempProfiles.forEach(prof => $sel.append(`<option value="${prof.id}" ${prof.id === tempActiveId ? 'selected' : ''}>${prof.name}</option>`));
         $("#cfg-prof-name").val(p.name).prop("disabled", isInternal);
         $("#cfg-prof-del").prop("disabled", isInternal).css("opacity", isInternal ? 0.5 : 1);
-
         if (isInternal) {
-            $("#cfg-url").val("").prop("disabled", true).prop("placeholder", "(由 SillyTavern 全局托管)");
-            $("#cfg-key").val("").prop("disabled", true).prop("placeholder", "(由 SillyTavern 全局托管)");
-            $("#cfg-model").empty().append('<option selected>(使用 ST 设置)</option>').prop("disabled", true);
-            const stUrl = typeof settings !== 'undefined' ? (settings.api_url_openai || "未知") : "未知";
-            $("#st-url-display").text(stUrl);
-            $("#cfg-url-hint").show();
+            $("#cfg-url").val("").prop("disabled", true).prop("placeholder", "(由 ST 托管)");
+            $("#cfg-key").val("").prop("disabled", true).prop("placeholder", "(由 ST 托管)");
+            $("#cfg-model").empty().append('<option selected>(ST 设置)</option>').prop("disabled", true);
+            $("#st-url-display").text(typeof settings !== 'undefined' ? (settings.api_url_openai || "未知") : "未知"); $("#cfg-url-hint").show();
         } else {
-            $("#cfg-url").val(p.url || "").prop("disabled", false).prop("placeholder", "例如: http://127.0.0.1:5000/v1");
+            $("#cfg-url").val(p.url || "").prop("disabled", false).prop("placeholder", "http://...");
             $("#cfg-key").val(p.key || "").prop("disabled", false).prop("placeholder", "sk-...");
-            $("#cfg-model").prop("disabled", false);
-            $("#cfg-url-hint").hide();
-            const $mSel = $("#cfg-model");
-            $mSel.empty();
-            const currentM = p.model || "gpt-3.5-turbo";
-            $mSel.append(`<option value="${currentM}" selected>${currentM}</option>`);
+            $("#cfg-model").prop("disabled", false); $("#cfg-url-hint").hide();
+            const $mSel = $("#cfg-model"); $mSel.empty(); const currentM = p.model || "gpt-3.5-turbo"; $mSel.append(`<option value="${currentM}" selected>${currentM}</option>`);
         }
     };
-
     $("#cfg-prof-select").on("change", function () { saveCurrentProfileToMemory(); tempActiveId = $(this).val(); renderProfileUI(); });
     $("#cfg-prof-add").on("click", function () { saveCurrentProfileToMemory(); const newId = "custom_" + Date.now(); tempProfiles.push({ id: newId, name: "新方案 " + tempProfiles.length, type: "custom", url: "", key: "", model: "gpt-3.5-turbo" }); tempActiveId = newId; renderProfileUI(); });
-    $("#cfg-prof-del").on("click", function () { if (confirm("确定删除当前配置方案吗？")) { tempProfiles = tempProfiles.filter(p => p.id !== tempActiveId); tempActiveId = tempProfiles[0].id; renderProfileUI(); } });
-
-    // --- Appearance & Preview Logic ---
+    $("#cfg-prof-del").on("click", function () { if (confirm("删除方案？")) { tempProfiles = tempProfiles.filter(p => p.id !== tempActiveId); tempActiveId = tempProfiles[0].id; renderProfileUI(); } });
+    // --- 预览与外观 ---
     const renderPreview = () => {
-        const $ball = $("#p-ball");
-        const theme = $("#p-color-theme").val();
-        const notify = $("#p-color-notify").val();
-        const size = parseInt(tempApp.size) || 56;
-        $ball.css({ width: size + "px", height: size + "px", fontSize: Math.floor(size * 0.46) + "px" });
-        $ball[0].style.setProperty('--p-theme', theme);
-        $ball[0].style.setProperty('--p-notify', notify);
-        $ball.css("border-color", "transparent").css("box-shadow", `0 0 10px ${theme}`);
-        if (tempApp.type === 'emoji') {
-            $ball.html(tempApp.content);
-        } else if (tempApp.type === 'image') {
-            if (tempApp.content && tempApp.content.startsWith("data:")) {
-                $ball.html(`<img src="${tempApp.content}">`);
-                $("#btn-upload-card").css("background-image", `url('${tempApp.content}')`).find("i, span").hide();
-            } else {
-                $ball.html('<i class="fa-solid fa-image"></i>');
-                $("#btn-upload-card").css("background-image", "").find("i, span").show();
-            }
+        const $ball = $("#p-ball"); const theme = $("#p-color-theme").val(); const notify = $("#p-color-notify").val(); const size = parseInt(tempApp.size) || 56;
+        $ball.css({ width: size + "px", height: size + "px", fontSize: Math.floor(size * 0.46) + "px", borderColor: "transparent", boxShadow: `0 0 10px ${theme}` });
+        $ball[0].style.setProperty('--p-theme', theme); $ball[0].style.setProperty('--p-notify', notify);
+        if (tempApp.type === 'emoji') $ball.html(tempApp.content);
+        else if (tempApp.type === 'image') {
+            if (tempApp.content && tempApp.content.startsWith("data:")) { $ball.html(`<img src="${tempApp.content}">`); $("#btn-upload-card").css("background-image", `url('${tempApp.content}')`).find("i, span").hide(); }
+            else { $ball.html('<i class="fa-solid fa-image"></i>'); $("#btn-upload-card").css("background-image", "").find("i, span").show(); }
         }
     };
     $("input[name='p-type']").on("change", function () { tempApp.type = $(this).val(); $("#box-emoji").toggle(tempApp.type === 'emoji'); $("#box-image").toggle(tempApp.type === 'image'); renderPreview(); });
@@ -1748,97 +1589,58 @@ function openSettingsWindow() {
     $("#p-emoji-input").on("input", function () { tempApp.content = $(this).val(); renderPreview(); });
     $("#p-color-theme, #p-color-notify").on("input", renderPreview);
     $("#btn-upload-card").on("click", () => $("#p-file-input").click());
-    $("#p-file-input").on("change", async function () { const file = this.files[0]; if (!file) return; try { const base64 = await fileToBase64(file); tempApp.content = base64; renderPreview(); } catch (e) { alert("图片读取失败"); } });
+    $("#p-file-input").on("change", async function () { const file = this.files[0]; if (!file) return; try { tempApp.content = await fileToBase64(file); renderPreview(); } catch (e) { alert("Fail"); } });
     $("#btn-test-spin").on("click", () => { $("#p-ball").removeClass("p-notify").addClass("p-loading"); setTimeout(() => $("#p-ball").removeClass("p-loading"), 3000); });
-    $("#btn-test-notify").on("click", () => { $("#p-ball").removeClass("p-loading").addClass("p-notify"); setTimeout(() => $("#p-ball").removeClass("p-loading"), 3000); });
+    $("#btn-test-notify").on("click", () => { $("#p-ball").removeClass("p-loading").addClass("p-notify"); setTimeout(() => $("#p-ball").removeClass("p-notify"), 3000); });
 
-    // --- [重构] Automation Logic (支持分类) ---
+    // --- [新] 自动化设置逻辑 ---
+    const savedCats = cfg.auto_categories || [];
+    const renderAutoCatList = () => {
+        const $list = $("#auto-cat-list"); $list.empty();
+        const allCats = new Set(runtimeScripts.map(s => s.category || (s._type === 'preset' ? '官方预设' : '未分类')));
+        const sortedCats = [...allCats].sort();
+        if (sortedCats.length === 0) { $list.html('<div style="color:#666;">暂无剧本</div>'); return; }
+        sortedCats.forEach(cat => {
+            const isChecked = savedCats.includes(cat) ? 'checked' : '';
+            $list.append(`<label style="display:flex; align-items:center; cursor:pointer; padding:2px 0;"><input type="checkbox" class="auto-cat-chk" value="${cat}" ${isChecked} style="margin-right:8px;"><span style="color:#ccc; font-size:0.9em;">${cat}</span></label>`);
+        });
+    };
+    const updateAutoModeUI = () => {
+        const mode = $("#cfg-auto-mode").val();
+        if (mode === 'category') { $("#auto-cat-container").show(); renderAutoCatList(); }
+        else { $("#auto-cat-container").hide(); }
+    };
+    $("#cfg-auto-mode").on("change", updateAutoModeUI);
+    updateAutoModeUI();
     $("#cfg-auto").on("change", function () { $("#auto-settings-panel").toggle($(this).is(":checked")); });
     $("#cfg-chance").on("input", function () { $("#cfg-chance-val").text($(this).val() + "%"); });
 
-    // 随机池渲染与管理
-    const updatePoolCount = () => { $("#pool-count-lbl").text(`已选: ${$(".t-pool-chk:checked").length}`); };
-    const renderPoolList = () => {
-        const $list = $("#cfg-pool-list"); $list.empty();
-        
-        // 1. 渲染列表
-        const sortedScripts = [...runtimeScripts].sort((a, b) => (a._type !== b._type) ? (a._type === 'preset' ? -1 : 1) : a.name.localeCompare(b.name));
-        sortedScripts.forEach(s => {
-            const isChecked = tempPoolIds.has(s.id);
-            const modeColor = s.mode === 'echo' ? '#90cdf4' : '#bfa15f';
-            const icon = s.mode === 'echo' ? '<i class="fa-solid fa-water"></i>' : '<i class="fa-solid fa-globe"></i>';
-            const cat = s.category || (s._type === 'preset' ? 'Official' : 'Uncategorized');
-            const row = $(`<label style="display:flex; align-items:center; padding:5px; cursor:pointer; border-radius:4px; transition:0.2s;" class="t-pool-row"><input type="checkbox" class="t-pool-chk" value="${s.id}" data-mode="${s.mode}" data-cat="${cat}" ${isChecked ? 'checked' : ''} style="margin-right:8px;"><span style="color:${modeColor}; margin-right:5px; font-size:0.9em; width:20px; text-align:center;">${icon}</span><span style="font-size:0.9em; color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.name} <span style="font-size:0.8em; color:#666;">(${cat === 'Official' ? '官方' : cat})</span></span></label>`);
-            row.hover(function(){ $(this).css("background", "#222"); }, function(){ $(this).css("background", "transparent"); });
-            $list.append(row);
-        });
-        updatePoolCount();
-
-        // 2. 动态填充分类下拉框
-        const catSet = new Set();
-        runtimeScripts.forEach(s => catSet.add(s.category || (s._type === 'preset' ? 'Official' : 'Uncategorized')));
-        const $catSel = $("#pool-quick-cat");
-        $catSel.find("option:gt(0)").remove();
-        [...catSet].sort().forEach(c => {
-            const displayC = c === 'Official' ? '官方预设' : (c === 'Uncategorized' ? '未分类' : c);
-            $catSel.append(`<option value="${c}">${displayC}</option>`);
-        });
-    };
-
-    $("#cfg-auto-mode").on("change", function() {
-        if ($(this).val() === 'pool') { $("#cfg-pool-editor").slideDown(200); renderPoolList(); } 
-        else { $("#cfg-pool-editor").slideUp(200); }
-    });
-    if ((cfg.auto_mode || 'follow') === 'pool') { $("#cfg-pool-editor").show(); renderPoolList(); }
-
-    $("#pool-sel-echo").on("click", () => { $(".t-pool-chk[data-mode='echo']").prop("checked", true); updatePoolCount(); });
-    $("#pool-sel-para").on("click", () => { $(".t-pool-chk[data-mode='parallel']").prop("checked", true); updatePoolCount(); });
-    $("#pool-sel-none").on("click", () => { $(".t-pool-chk").prop("checked", false); updatePoolCount(); });
-    
-    // [新增] 下拉框分类选择逻辑
-    $("#pool-quick-cat").on("change", function() {
-        const cat = $(this).val();
-        if (!cat) return;
-        $(`.t-pool-chk[data-cat='${cat}']`).prop("checked", true);
-        updatePoolCount();
-        $(this).val("");
-    });
-
-    $(document).on("change", ".t-pool-chk", updatePoolCount);
-
-    // --- Misc Logic ---
-    $("#t-btn-fetch").on("click", async function () { 
-        const btn = $(this); const originalText = btn.text();
-        let urlInput = "", key = ""; const p = tempProfiles.find(x => x.id === tempActiveId);
-        if (p.type === 'internal') { if (typeof settings !== 'undefined') { urlInput = (settings.api_url_openai || "").trim(); key = settings.api_key_openai || ""; } } 
-        else { urlInput = ($("#cfg-url").val() || "").trim(); key = ($("#cfg-key").val() || "").trim(); }
-        if (!urlInput) return alert("API URL 为空");
-        let baseUrl = urlInput.replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
-        const targetUrl = `${baseUrl}/models`;
+    // --- API & 数据 ---
+    $("#t-btn-fetch").on("click", async function () {
+        const btn = $(this); const p = tempProfiles.find(x => x.id === tempActiveId);
+        if (p.type === 'internal') { alert("ST托管模式下，请在 SillyTavern 主设置中切换模型"); return; }
+        const urlInput = ($("#cfg-url").val() || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
+        const key = ($("#cfg-key").val() || "").trim();
+        if (!urlInput) return alert("URL Empty");
         try {
-            btn.prop("disabled", true).text("..."); const res = await fetch(targetUrl, { method: "GET", headers: { "Authorization": `Bearer ${key}` } });
-            if (!res.ok) throw new Error("连接失败: " + res.status);
-            if (p.type === 'internal') { alert("获取成功! (ST托管模式下，请在 SillyTavern 主设置中切换模型)"); return; }
+            btn.prop("disabled", true).text("..."); const res = await fetch(`${urlInput}/models`, { method: "GET", headers: { "Authorization": `Bearer ${key}` } });
+            if (!res.ok) throw new Error("Status: " + res.status);
             const data = await res.json(); const models = data.data || data.models || [];
             const $sel = $("#cfg-model"); $sel.empty(); models.forEach(m => $sel.append(`<option value="${m.id || m}">${m.id || m}</option>`));
-            if (window.toastr) toastr.success(`获取成功，共 ${models.length} 个模型`);
-        } catch (e) { alert("获取失败: " + e.message); } finally { btn.prop("disabled", false).text(originalText); }
+            if (window.toastr) toastr.success(`获取成功: ${models.length} 个`);
+        } catch (e) { alert("Fail: " + e.message); } finally { btn.prop("disabled", false).text("🔄 获取列表"); }
     });
-    $("#btn-restore-presets").on("click", function () { if (confirm("确定要恢复所有被隐藏的官方预设剧本吗？")) { const d = getExtData(); d.disabled_presets = []; saveExtData(); loadScripts(); $(this).prop("disabled", true).text("已恢复"); if (window.toastr) toastr.success("预设已恢复"); } });
+    $("#btn-restore-presets").on("click", function () {
+        if (confirm("恢复所有预设？")) { const d = getExtData(); d.disabled_presets = []; saveExtData(); loadScripts(); $(this).prop("disabled", true).text("已恢复"); }
+    });
     $("#btn-open-mgr").on("click", () => { $("#t-settings-view").remove(); openScriptManager(); });
     $("#t-set-close").on("click", () => { $("#t-settings-view").remove(); $("#t-main-view").show(); });
 
-    // --- Save Logic ---
+    // --- [修改] 保存逻辑 (包含自动分类) ---
     $("#t-set-save").on("click", () => {
         saveCurrentProfileToMemory();
-        const finalPoolIds = [];
-        if ($("#cfg-auto-mode").val() === 'pool') {
-            $(".t-pool-chk:checked").each(function() { finalPoolIds.push($(this).val()); });
-        } else {
-            finalPoolIds.push(...tempPoolIds);
-        }
+        const selectedCats = []; $(".auto-cat-chk:checked").each(function () { selectedCats.push($(this).val()); });
 
-        const finalApp = { type: tempApp.type, content: tempApp.content, color_theme: $("#p-color-theme").val(), color_notify: $("#p-color-notify").val(), size: tempApp.size || 56 };
         const finalCfg = {
             active_profile_id: tempActiveId, profiles: tempProfiles,
             history_limit: parseInt($("#cfg-history").val()) || 10,
@@ -1846,20 +1648,20 @@ function openSettingsWindow() {
             auto_generate: $("#cfg-auto").is(":checked"),
             auto_chance: parseInt($("#cfg-chance").val()),
             auto_mode: $("#cfg-auto-mode").val(),
-            auto_pool_ids: finalPoolIds
+            auto_categories: selectedCats // Save cats
         };
-        const finalDir = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val(), style_ref: $("#set-dir-style").val().trim() };
+        const d = getExtData();
+        d.config = finalCfg;
+        d.appearance = { type: tempApp.type, content: tempApp.content, color_theme: $("#p-color-theme").val(), color_notify: $("#p-color-notify").val(), size: tempApp.size || 56 };
+        d.director = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val(), style_ref: $("#set-dir-style").val().trim() };
 
-        const d = getExtData(); d.config = finalCfg; d.appearance = finalApp; d.director = finalDir;
         saveExtData();
         $("#t-settings-view").remove(); $("#t-main-view").show(); createFloatingButton();
         if (window.toastr) toastr.success("设置已保存");
     });
 
-    renderPreview();
-    renderProfileUI();
+    renderPreview(); renderProfileUI();
 }
-    
 
 // 剧本管理器
 function openScriptManager() {
@@ -2431,20 +2233,16 @@ function saveFavorite() {
     btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i> 已收藏').prop("disabled", true);
 }
 
-// [修改] 收藏夹窗口 (移动端触摸滑动、导出图片，阅读器优化)
-// [修改] 收藏夹窗口 (已应用全填充画布逻辑)
+// [修改] 收藏夹窗口 (更换核心：使用 html-to-image 库 + 原地展开截图法)
 function openFavsWindow() {
     $("#t-main-view").hide();
     const data = getExtData();
     const favs = data.favs || [];
-    const charMap = data.character_map || {};
 
-    // 状态管理
     let currentFilteredList = [];
     let currentIndex = -1;
     let currentFavId = null;
 
-    // 解析元数据
     const parseMeta = (title) => {
         const parts = title.split(' - ');
         if (parts.length >= 2) {
@@ -2473,31 +2271,17 @@ function openFavsWindow() {
 
     const style = `
     <style>
-        .t-fav-container { height: 90vh; width: 1100px; max-width: 95vw; display: flex; flex-direction: column; background: #121212; overflow: hidden; position: relative; }
+        .t-fav-container { height: 90vh; width: 1100px; max-width: 95vw; display: flex; flex-direction: column; background: #121212; overflow: hidden; position: relative; isolation: isolate; }
         .t-fav-toolbar { height: 60px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 20px; gap: 15px; flex-shrink: 0; }
         .t-fav-filter-select { background: #2a2a2a; color: #eee; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; outline: none; min-width: 120px; cursor: pointer; }
         .t-fav-search { background: #2a2a2a; color: #eee; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; outline: none; width: 200px; }
         .t-fav-grid-area { flex-grow: 1; padding: 25px; overflow-y: auto; background: #121212; }
         .t-fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         
-        .t-fav-card { 
-            position: relative; overflow: hidden;
-            background: #1a1a1a; border: 1px solid #333; border-radius: 12px; 
-            height: 180px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex; flex-direction: column; justify-content: flex-end; 
-        }
-        .t-fav-card-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover; background-position: top center;
-            opacity: 0.5;
-            transition: all 0.5s ease; z-index: 0;
-        }
+        .t-fav-card { position: relative; overflow: hidden; background: #1a1a1a; border: 1px solid #333; border-radius: 12px; height: 180px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; justify-content: flex-end; }
+        .t-fav-card-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: top center; opacity: 0.5; transition: all 0.5s ease; z-index: 0; }
         .t-fav-card-bg.no-img { background: linear-gradient(135deg, #1f1f1f, #2a2a2a); opacity: 1; filter: none; }
-        .t-fav-card-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.9) 100%);
-            z-index: 1; pointer-events: none;
-        }
+        .t-fav-card-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.9) 100%); z-index: 1; pointer-events: none; }
         .t-fav-card:hover { transform: translateY(-5px); border-color: #666; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
         .t-fav-card:hover .t-fav-card-bg { opacity: 0.6; transform: scale(1.05); }
         .t-fav-card-content { position: relative; z-index: 2; padding: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
@@ -2507,68 +2291,32 @@ function openFavsWindow() {
         .t-fav-card-snippet { font-size: 0.85em; color: rgba(255,255,255,0.8); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 8px; font-style: italic; }
         .t-fav-card-footer { font-size: 0.75em; color: rgba(255,255,255,0.5); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
 
-        /* 阅读器 */
-        .t-fav-reader { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #0b0b0b; z-index: 10; 
-            display: flex; flex-direction: column; 
-            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        .t-fav-reader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0b0b0b; z-index: 10; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .t-fav-reader.show { transform: translateX(0); }
         .t-read-header { height: 60px; padding: 0 20px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; background: #181818; }
         
-        .t-read-body { 
-            flex-grow: 1; 
-            /* [修改] 移除内边距，实现全填充 */
-            padding: 0; 
-            overflow-y: auto; 
-            color: #ccc; 
-            position: relative;
-            background: #0b0b0b;
-        }
+        .t-read-body { flex-grow: 1; padding: 0; overflow-y: auto; color: #ccc; position: relative; background: #0b0b0b; }
         
-        /* [修改] 截图/内容区域全宽 */
         #t-read-capture-zone { 
-            background: transparent; /* 透明背景，让内容决定 */
+            background: #0b0b0b; /* 导出时必须有背景色 */
             padding: 0; 
-            border-radius: 0; 
             width: 100%; 
-            min-height: 100%;
-            font-size: 1.05em;
-            line-height: 1.6;
-            text-align: justify;
-            display: flex;
-            flex-direction: column;
+            min-height: 100%; 
+            font-size: 1.05em; 
+            line-height: 1.6; 
+            text-align: justify; 
+            display: flex; 
+            flex-direction: column; 
         }
 
-        /* [核心] 强制内容样式铺满 */
-        #t-read-content {
-            width: 100%;
-            min-height: 100%;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #t-read-content > div {
-            flex-grow: 1;
-            margin: 0 !important;
-            width: 100% !important;
-            max-width: none !important;
-            border-radius: 0 !important;
-            border: none !important;
-            min-height: 100%;
-            box-sizing: border-box;
-        }
+        #t-read-content { width: 100%; min-height: 100%; flex-grow: 1; display: flex; flex-direction: column; }
+        #t-read-content > div { flex-grow: 1; margin: 0 !important; width: 100% !important; max-width: none !important; border-radius: 0 !important; border: none !important; min-height: 100%; box-sizing: border-box; }
         
         .t-fav-empty { text-align: center; color: #555; margin-top: 50px; grid-column: 1/-1; }
 
         @media screen and (max-width: 600px) {
             .t-fav-toolbar { flex-direction: column; height: auto; padding: 10px; align-items: stretch; }
             .t-fav-search { width: 100%; }
-            /* 移动端同样保持全填充 */
-            .t-read-body { padding: 0; }
-            #t-read-capture-zone { padding: 0; }
             .t-read-meta-text { max-width: 120px; }
         }
     </style>`;
@@ -2588,12 +2336,9 @@ function openFavsWindow() {
                     ${charList.map(c => `<option value="${c}">${c}</option>`).join('')}
                 </select>
             </div>
-            
             <div style="display:flex; gap:10px; align-items:center;">
                 <input type="text" id="t-fav-search" class="t-fav-search" placeholder="搜索关键词...">
-                <button id="t-btn-img-mgr" class="t-tool-btn" title="管理角色背景图">
-                    <i class="fa-regular fa-image"></i> 图鉴
-                </button>
+                <button id="t-btn-img-mgr" class="t-tool-btn" title="管理角色背景图"><i class="fa-regular fa-image"></i> 图鉴</button>
             </div>
         </div>
         
@@ -2601,7 +2346,6 @@ function openFavsWindow() {
             <div class="t-fav-grid" id="t-fav-grid"></div>
         </div>
 
-        <!-- 阅读器 -->
         <div class="t-fav-reader" id="t-fav-reader">
             <div class="t-read-header">
                 <div style="display:flex; align-items:center; gap:15px; overflow:hidden; flex-grow:1;">
@@ -2632,7 +2376,6 @@ function openFavsWindow() {
     const renderGrid = () => {
         const grid = $("#t-fav-grid");
         grid.empty();
-
         const currentMap = getExtData().character_map || {};
         const targetChar = $("#t-fav-filter-char").val();
         const search = $("#t-fav-search").val().toLowerCase();
@@ -2651,10 +2394,8 @@ function openFavsWindow() {
         currentFilteredList.forEach((item, idx) => {
             const snippet = getSnippet(item.html);
             const charName = item._meta.char;
-
             let bgUrl = currentMap[charName];
             if (!bgUrl) bgUrl = item.avatar;
-
             const bgClass = bgUrl ? '' : 'no-img';
             const bgStyle = bgUrl ? `background-image: url('${bgUrl}')` : '';
 
@@ -2668,13 +2409,10 @@ function openFavsWindow() {
                             <div class="t-fav-card-char"><i class="fa-solid fa-user-tag" style="font-size:0.8em"></i> ${charName}</div>
                         </div>
                         <div class="t-fav-card-snippet">${snippet}</div>
-                        <div class="t-fav-card-footer">
-                            <span>${item.date.split(' ')[0]}</span>
-                        </div>
+                        <div class="t-fav-card-footer"><span>${item.date.split(' ')[0]}</span></div>
                     </div>
                 </div>
             `);
-
             card.on("click", () => loadReaderItem(idx));
             grid.append(card);
         });
@@ -2682,11 +2420,9 @@ function openFavsWindow() {
 
     const loadReaderItem = (index) => {
         if (index < 0 || index >= currentFilteredList.length) return;
-
         currentIndex = index;
         const item = currentFilteredList[index];
         currentFavId = item.id;
-
         $("#t-read-meta").text(item.title);
         $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
         $("#t-read-content").html(item.html);
@@ -2694,31 +2430,16 @@ function openFavsWindow() {
     };
 
     // --- 事件绑定 ---
-
     $("#t-fav-filter-char, #t-fav-search").on("input change", renderGrid);
-
-    $("#t-btn-img-mgr").on("click", () => {
-        openCharImageManager(() => { renderGrid(); });
-    });
-
+    $("#t-btn-img-mgr").on("click", () => { openCharImageManager(() => { renderGrid(); }); });
     $("#t-read-back").on("click", () => $("#t-fav-reader").removeClass("show"));
 
-    // [核心] 触摸滑动支持 (Mobile Swipe)
-    let touchStartX = 0;
-    let touchStartY = 0;
+    let touchStartX = 0; let touchStartY = 0;
     const readerBody = $(".t-read-body");
-
-    readerBody.on("touchstart", (e) => {
-        touchStartX = e.originalEvent.touches[0].clientX;
-        touchStartY = e.originalEvent.touches[0].clientY;
-    });
-
+    readerBody.on("touchstart", (e) => { touchStartX = e.originalEvent.touches[0].clientX; touchStartY = e.originalEvent.touches[0].clientY; });
     readerBody.on("touchend", (e) => {
-        const touchEndX = e.originalEvent.changedTouches[0].clientX;
-        const touchEndY = e.originalEvent.changedTouches[0].clientY;
-        const diffX = touchEndX - touchStartX;
-        const diffY = touchEndY - touchStartY;
-
+        const touchEndX = e.originalEvent.changedTouches[0].clientX; const touchEndY = e.originalEvent.changedTouches[0].clientY;
+        const diffX = touchEndX - touchStartX; const diffY = touchEndY - touchStartY;
         if (Math.abs(diffX) > 60 && Math.abs(diffX) > Math.abs(diffY) * 2) {
             if (diffX > 0) { if (currentIndex > 0) loadReaderItem(currentIndex - 1); }
             else { if (currentIndex < currentFilteredList.length - 1) loadReaderItem(currentIndex + 1); }
@@ -2726,11 +2447,11 @@ function openFavsWindow() {
     });
 
     $("#t-read-code").on("click", () => {
-        const htmlContent = $("#t-read-content").html();
-        navigator.clipboard.writeText(htmlContent);
+        navigator.clipboard.writeText($("#t-read-content").html());
         if (window.toastr) toastr.success("源码已复制");
     });
 
+    // [核心修复] 使用 html-to-image 库 + 原地展开截图法
     $("#t-read-img").on("click", async function () {
         const btn = $(this);
         const originalHtml = btn.html();
@@ -2738,29 +2459,61 @@ function openFavsWindow() {
         try {
             btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
 
-            if (typeof html2canvas === 'undefined') {
-                if (window.toastr) toastr.info("正在加载截图组件...", "Titania");
-                await $.getScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+            // 1. 加载 html-to-image (更现代、更稳定的库)
+            if (typeof htmlToImage === 'undefined') {
+                if (window.toastr) toastr.info("正在加载组件...", "Titania");
+                // 注意：这里使用 unpkg 或 cdnjs 加载
+                await $.getScript("https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js");
             }
 
             const element = document.getElementById("t-read-capture-zone");
-            const canvas = await html2canvas(element, {
-                backgroundColor: "#0b0b0b",
-                scale: 2,
-                useCORS: true,
-                logging: false
+
+            // 2. 准备：原地展开 (Expand)
+            // 保存原始样式以便恢复
+            const originalHeight = element.style.height;
+            const originalOverflow = element.style.overflow;
+
+            // 强制展开，以便截取全部内容
+            // 注意：我们要操作的是父容器 .t-read-body 还是 zone？
+            // 实际上 html-to-image 只要目标节点够大就行
+
+            // 我们直接对 zone 进行操作，确保它显示完全
+            // 如果内容很长，我们可能需要临时调整父容器的 overflow
+            const parent = element.parentElement; // .t-read-body
+            const originalParentOverflow = parent.style.overflow;
+
+            parent.style.overflow = "visible"; // 允许溢出显示
+            element.style.height = "auto";     // 自动高度
+
+            // 3. 生成图片
+            // html-to-image 的 toPng 方法
+            const dataUrl = await htmlToImage.toPng(element, {
+                backgroundColor: '#0b0b0b', // 强制背景色
+                pixelRatio: 2,              // 2倍高清
+                skipAutoScale: true
             });
 
+            // 4. 恢复样式 (Restore)
+            parent.style.overflow = originalParentOverflow;
+            element.style.height = originalHeight;
+
+            // 5. 下载
             const link = document.createElement('a');
             link.download = `Titania_${new Date().getTime()}.png`;
-            link.href = canvas.toDataURL("image/png");
+            link.href = dataUrl;
             link.click();
 
             if (window.toastr) toastr.success("图片导出成功");
 
         } catch (e) {
             console.error(e);
-            alert("导出失败: " + e.message + "\n可能是因为内容包含跨域图片(如网络头像)。");
+            alert("导出失败: " + e.message + "\n可能是浏览器不支持 SVG 转换或内存不足。");
+            // 发生错误也要尝试恢复样式
+            const element = document.getElementById("t-read-capture-zone");
+            if (element) {
+                element.parentElement.style.overflow = "";
+                element.style.height = "";
+            }
         } finally {
             btn.prop("disabled", false).html(originalHtml);
         }
@@ -2771,10 +2524,8 @@ function openFavsWindow() {
             const d = getExtData();
             d.favs = d.favs.filter(x => x.id !== currentFavId);
             saveExtData();
-
             favs.splice(0, favs.length, ...d.favs);
             renderGrid();
-
             if (currentFilteredList.length === 0) {
                 $("#t-fav-reader").removeClass("show");
             } else {
@@ -2989,7 +2740,7 @@ function openCharImageManager(onCloseCallback) {
 }
 
 // --- 自动化与初始化 ---
-// [修改] 监听生成结束事件 (已更新：支持 Follow 和 Pool 两种模式)
+// [替换] 监听生成结束事件，根据策略触发自动演绎
 async function onGenerationEnded() {
     const extData = getExtData();
     const cfg = extData.config || {};
@@ -3006,10 +2757,9 @@ async function onGenerationEnded() {
     const chat = context.chat;
 
     if (!chat || chat.length === 0) return;
-
     const lastMsg = chat[chat.length - 1];
 
-    // 4. 严格过滤：必须不是用户、系统或隐藏消息
+    // 4. 严格过滤：不是用户发的、不是系统指令、不是隐藏消息
     if (lastMsg.is_user) return;
     if (lastMsg.is_system) return;
     if (lastMsg.is_hidden) return;
@@ -3018,48 +2768,46 @@ async function onGenerationEnded() {
     const chance = cfg.auto_chance || 50;
     if (Math.random() * 100 > chance) return;
 
-    // 6. [重构] 抽取剧本并执行
-    let targetScriptId = null;
-    const autoMode = cfg.auto_mode || "follow";
+    // --- 核心修改：新的策略池构建逻辑 ---
 
-    if (autoMode === 'follow') {
-        // 模式 A: 跟随主界面
-        // 这里的 lastUsedScriptId 是全局变量
-        if (lastUsedScriptId) {
-            // 确保该 ID 依然有效 (未被删除)
-            if (runtimeScripts.find(s => s.id === lastUsedScriptId)) {
-                targetScriptId = lastUsedScriptId;
-            }
-        }
-        // 如果没有上次使用的 ID (比如刚安装)，随机选一个
-        if (!targetScriptId && runtimeScripts.length > 0) {
-            targetScriptId = runtimeScripts[0].id;
-        }
-    } else {
-        // 模式 B: 自定义随机池 (Pool)
-        const allowedIds = cfg.auto_pool_ids || [];
-        
-        // 过滤出当前有效的剧本 (即在 runtimeScripts 中存在，且在白名单中)
-        const pool = runtimeScripts.filter(s => allowedIds.includes(s.id));
+    // 辅助：获取剧本的统一分类名
+    const getCat = (s) => s.category || (s._type === 'preset' ? '官方预设' : '未分类');
 
-        if (pool.length > 0) {
-            const randomScript = pool[Math.floor(Math.random() * pool.length)];
-            targetScriptId = randomScript.id;
-        } else {
-            console.warn("Titania Auto: Pool mode is selected but no valid scripts are allowed/found.");
+    let pool = [];
+    const autoMode = cfg.auto_mode || "follow"; // 'follow' 或 'category'
+
+    if (autoMode === 'category') {
+        // 【策略B：指定分类白名单】
+        // 获取用户勾选的分类列表 (数组)
+        const allowedCats = cfg.auto_categories || [];
+
+        if (allowedCats.length === 0) {
+            console.log("Titania Auto: Category mode selected but whitelist is empty.");
             return;
         }
+
+        // 筛选出属于白名单分类的剧本
+        pool = runtimeScripts.filter(s => allowedCats.includes(getCat(s)));
+
+    } else {
+        // 【策略A：默认跟随主界面】
+        // 读取当前 UI 的模式（Echo 或 Parallel）
+        // ui_mode_echo 默认为 true (即 Echo)
+        const isEcho = (extData.ui_mode_echo !== false);
+        const targetMode = isEcho ? 'echo' : 'parallel';
+
+        pool = runtimeScripts.filter(s => s.mode === targetMode);
     }
 
-    if (!targetScriptId) return;
+    // 6. 执行抽取
+    if (pool.length === 0) return;
+    const randomScript = pool[Math.floor(Math.random() * pool.length)];
 
-    // 获取剧本名称用于日志
-    const scriptObj = runtimeScripts.find(s => s.id === targetScriptId);
-    console.log(`Titania Auto: Triggered! [${autoMode}] Executing: ${scriptObj ? scriptObj.name : targetScriptId}`);
+    console.log(`Titania Auto: Triggered [${autoMode}] -> Use script: ${randomScript.name}`);
 
-    // 稍微延迟一点点执行
+    // 延迟执行
     setTimeout(() => {
-        handleGenerate(targetScriptId, true);
+        handleGenerate(randomScript.id, true);
     }, 500);
 }
 
