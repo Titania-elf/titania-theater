@@ -397,13 +397,13 @@ function createFloatingButton() {
     });
 }
 
-function getContextData() {
+// [修改] 改为异步函数，以支持 loadWorldInfo
+async function getContextData() {
     let data = { charName: "Char", persona: "", userName: "User", userDesc: "", worldInfo: "" };
-    if (typeof SillyTavern === 'undefined' || !SillyTavern.getContext) {
-        data.charName = $(".character_name").first().text() || "Char";
-        return data;
-    }
+    
+    if (typeof SillyTavern === 'undefined' || !SillyTavern.getContext) return data;
     const ctx = SillyTavern.getContext();
+
     try {
         data.userName = ctx.substituteParams("{{user}}") || "User";
         data.charName = ctx.substituteParams("{{char}}") || "Char";
@@ -411,36 +411,63 @@ function getContextData() {
         data.persona = ctx.substituteParams("{{description}}") || "";
     } catch (e) { console.error("Titania: 宏解析失败", e); }
 
-    let charObj = null;
-    if (typeof window.characters !== 'undefined' && typeof window.this_chid !== 'undefined') {
-        charObj = window.characters[window.this_chid];
-    } else if (ctx.characterId) {
-        charObj = ctx.characters[ctx.characterId];
+    const charId = ctx.characterId;
+    const activeBooks = new Set();
+
+    // --- 1. 收集所有相关的世界书名称 ---
+    
+    // A. 全局开启的世界书 (从 ST 核心变量读取)
+    if (typeof selected_world_info !== 'undefined' && Array.isArray(selected_world_info)) {
+        selected_world_info.forEach(name => activeBooks.add(name));
     }
-    if (charObj) {
-        const charBook = charObj.data?.character_book || charObj.character_book;
-        if (charBook && Array.isArray(charBook.entries)) {
-            const constantEntries = charBook.entries.filter(entry => {
-                return entry.constant === true && entry.enabled === true;
-            });
-            if (constantEntries.length > 0) {
-                const bookContent = constantEntries.map(e => ctx.substituteParams(e.content)).join("\n");
-                data.worldInfo += "[Character Lore/World Info]\n" + bookContent + "\n\n";
+
+    // B. 角色绑定的世界书
+    if (charId !== undefined && ctx.characters && ctx.characters[charId]) {
+        const charObj = ctx.characters[charId];
+        
+        // 主要世界书 (Primary)
+        const primary = charObj.data?.extensions?.world;
+        if (primary) activeBooks.add(primary);
+
+        // 附加世界书 (Auxiliary/Additional)
+        // 逻辑：匹配头像文件名。注意：world_info 变量通常在 ST 全局作用域可用
+        const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
+        if (typeof world_info !== 'undefined' && world_info.charLore) {
+            const loreEntry = world_info.charLore.find(e => e.name === fileName);
+            if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
+                loreEntry.extraBooks.forEach(name => activeBooks.add(name));
             }
         }
     }
-    const globalWI = ctx.worldInfo || [];
-    if (Array.isArray(globalWI) && globalWI.length > 0) {
-        const scanText = (data.persona + data.userDesc).toLowerCase();
-        const activeEntries = globalWI.filter(entry => {
-            if (entry.enabled === false) return false;
-            const keys = (entry.keys || "").split(",").map(k => k.trim().toLowerCase()).filter(k => k);
-            return keys.some(k => scanText.includes(k));
-        });
-        if (activeEntries.length > 0) {
-            data.worldInfo += "[Global World Info]\n" + activeEntries.map(e => ctx.substituteParams(e.content)).join("\n") + "\n\n";
+
+    // --- 2. 加载并筛选蓝灯条目 ---
+    const blueContentParts = [];
+
+    for (const bookName of activeBooks) {
+        try {
+            const bookData = await ctx.loadWorldInfo(bookName);
+            if (!bookData || !bookData.entries) continue;
+
+            // 筛选：!disable (已开启) 且 constant (蓝灯)
+            const blueEntries = Object.values(bookData.entries).filter(entry => 
+                (entry.disable === false || entry.enabled === true) && entry.constant === true
+            );
+
+            blueEntries.forEach(e => {
+                if (e.content && e.content.trim()) {
+                    // 解析内容中的宏并存入数组
+                    blueContentParts.push(ctx.substituteParams(e.content.trim()));
+                }
+            });
+        } catch (err) {
+            console.warn(`Titania: 无法加载世界书 [${bookName}]`, err);
         }
     }
+
+    if (blueContentParts.length > 0) {
+        data.worldInfo = "[World Info / Lore]\n" + blueContentParts.join("\n\n") + "\n\n";
+    }
+
     return data;
 }
 
@@ -799,7 +826,7 @@ function openMainWindow() {
     $("#t-btn-run").on("click", () => handleGenerate(null, false));
     $("#t-btn-like").on("click", saveFavorite);
     $("#t-btn-favs").on("click", openFavsWindow);
-    $("#t-btn-debug").on("click", showDebugInfo);
+    $("#t-btn-debug").on("click", async () => await showDebugInfo());
 
     // --- [初始化阶段] ---
     switchMode(savedMode, false);
@@ -1099,7 +1126,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         applyScriptSelection(script.id);
     }
 
-    const ctx = getContextData();
+    const ctx = await getContextData();
     const $floatBtn = $("#titania-float-btn");
     const useStream = cfg.stream !== false;
 
@@ -1268,7 +1295,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
 }
 
 // 显示 Prompt 审查窗口 (已更新支持导演模式)
-function showDebugInfo() {
+async function showDebugInfo() {
     const script = runtimeScripts.find(s => s.id === lastUsedScriptId);
     if (!script) {
         if (window.toastr) toastr.warning("请先选择一个剧本"); else alert("请先选择一个剧本");
@@ -1277,7 +1304,7 @@ function showDebugInfo() {
 
     const data = getExtData();
     const cfg = data.config || {};
-    const d = getContextData();
+    const d = await getContextData();
 
     // 导演设置
     const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
