@@ -492,10 +492,10 @@ function refreshScriptList(isEchoMode) {
 function updateDesc() { const s = runtimeScripts.find(x => x.id === $("#t-sel-script").val()); if (s) $("#t-txt-desc").val(s.desc); }
 
 // 主窗口逻辑 - 实现了 Tab 模式与剧本内容的逻辑解耦，CSS强力约束，防止生成的宽卡片撑爆移动端界面)
-function openMainWindow() {
+async function openMainWindow() {
     if ($("#t-overlay").length) return;
 
-    const ctx = getContextData();
+    const ctx = await getContextData();
     const data = getExtData();
 
     // 1. 获取持久化的 Tab 模式偏好 (默认为 Echo)
