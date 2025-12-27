@@ -3,6 +3,10 @@
 // 【Part 1: 头部引用、配置与数据辅助函数】
 import { extension_settings, getContext } from "../../../extensions.js";
 import { saveSettingsDebounced, eventSource, event_types } from "../../../../script.js";
+import { 
+    selected_world_info, 
+    world_info 
+} from "../../../world-info.js";
 
 const extensionName = "Titania_Theater_Echo";
 const extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
