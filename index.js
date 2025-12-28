@@ -106,7 +106,7 @@ const TitaniaLogger = {
     info: function (msg, details) { this.add('INFO', msg, details); },
     warn: function (msg, details) { this.add('WARN', msg, details); },
 
-    // 专门用于记录报错，支持传入上下文对象（如包含 Prompt）
+    // 专门用于记录报错，支持传入上下文对象（如包含 Prompt 或 Diagnostics）
     error: function (msg, errObj, contextData = {}) {
         let stack = "Unknown";
         let errMsg = "Unknown Error";
@@ -119,15 +119,20 @@ const TitaniaLogger = {
                 stack = errObj.stack || JSON.stringify(errObj);
             }
         }
+        
+        // 自动提取 fetch 相关的关键信息放到 message 里，方便一眼看到
+        if (contextData && contextData.network && contextData.network.status) {
+            msg += ` [HTTP ${contextData.network.status}]`;
+        }
 
         this.add('ERROR', msg, {
             error_message: errMsg,
             stack_trace: stack,
-            debug_context: contextData // 这里存放 Prompt 等关键信息
+            diagnostics: contextData // 这里存放完整的诊断数据
         });
     },
 
-    // 导出并下载日志
+    // 导出并下载日志 (增强版：增加 ST 环境探针)
     downloadReport: function () {
         const data = getExtData();
 
@@ -144,28 +149,39 @@ const TitaniaLogger = {
                 }
             });
         }
-        // 移除可能存在的旧版单字段 Key
         if (configSnapshot.key) configSnapshot.key = "***(HIDDEN)";
 
-        // 3. 组装报告
+        // 3. 收集宿主环境信息 (新增部分)
+        let stVersion = "Unknown";
+        try {
+            if (typeof SillyTavern !== 'undefined' && SillyTavern.version) stVersion = SillyTavern.version;
+            // 兼容旧版 ST 全局变量写法
+            else if (typeof extension_settings !== 'undefined' && window.SillyTavernVersion) stVersion = window.SillyTavernVersion;
+        } catch (e) {}
+
+        // 4. 组装报告
         const reportObj = {
             meta: {
                 extension: extensionName,
-                version: "v4.6.1",
-                userAgent: navigator.userAgent,
-                time: new Date().toLocaleString()
+                extension_version: "v4.6.1",
+                st_version: stVersion, // ST 版本号
+                userAgent: navigator.userAgent, // 浏览器指纹
+                screen_res: `${window.screen.width}x${window.screen.height}`, // 屏幕分辨率 (排查 UI 挤压问题)
+                viewport: `${window.innerWidth}x${window.innerHeight}`, // 视口大小
+                time: new Date().toLocaleString(),
+                timestamp: Date.now()
             },
             config: configSnapshot,
             logs: this.logs
         };
 
-        // 4. 触发下载
+        // 5. 触发下载
         const content = JSON.stringify(reportObj, null, 2);
         const blob = new Blob([content], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Titania_Debug_Report_${Date.now()}.json`;
+        a.download = `Titania_Debug_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1076,11 +1092,32 @@ function getChatHistory(limit) {
     }).join("\n");
 }
 
-// 处理生成请求 (集成 TitaniaLogger 版)
+// 处理生成请求 (集成 增强版诊断系统)
 async function handleGenerate(forceScriptId = null, silent = false) {
     const data = getExtData();
     const cfg = data.config || {};
     const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
+
+    // --- 0. 诊断数据初始化 (全生命周期跟踪) ---
+    const startTime = Date.now();
+    let diagnostics = {
+        phase: 'init',         // 当前阶段: init, fetch, stream, parsing, complete
+        profile: '',           // 使用的配置名
+        model: '',             // 请求的模型
+        endpoint: '',          // 请求地址
+        input_stats: { sys_len: 0, user_len: 0 }, // 输入长度统计
+        network: {             // 网络层诊断
+            status: 0,         // HTTP状态码
+            statusText: '',    
+            contentType: '',   // 返回头类型 (关键: 区分 JSON 还是 Cloudflare HTML)
+            latency: 0         // 耗时
+        },
+        stream_stats: {        // 流式传输统计
+            chunks: 0,         // 收到多少个包
+            ttft: 0            // 首字时间 (Time To First Token)
+        },
+        raw_response_snippet: '' // 原始返回内容快照 (用于分析非JSON报错)
+    };
 
     // --- 凭证解析器 ---
     let activeProfileId = cfg.active_profile_id || "default";
@@ -1089,6 +1126,10 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         { id: "default", name: "默认自定义", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
     ];
     let currentProfile = profiles.find(p => p.id === activeProfileId) || profiles[1];
+
+    // 记录诊断基本信息
+    diagnostics.profile = currentProfile.name;
+    diagnostics.phase = 'prepare_config';
 
     let finalUrl = "", finalKey = "", finalModel = "";
 
@@ -1100,7 +1141,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         } else {
             const errText = "错误：无法读取 SillyTavern 全局设置";
             if (!silent) alert(errText);
-            TitaniaLogger.error("配置错误", errText);
+            TitaniaLogger.error("配置错误", errText, diagnostics);
             return;
         }
     } else {
@@ -1109,9 +1150,13 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         finalModel = currentProfile.model || "gpt-3.5-turbo";
     }
 
+    // 记录诊断模型信息
+    diagnostics.model = finalModel;
+    diagnostics.endpoint = finalUrl;
+
     if (!finalKey && currentProfile.type !== 'internal') {
         alert("配置缺失：请先去设置填 API Key！");
-        TitaniaLogger.warn("尝试生成但在自定义模式下未检测到 Key");
+        TitaniaLogger.warn("尝试生成但在自定义模式下未检测到 Key", diagnostics);
         return;
     }
 
@@ -1144,22 +1189,19 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         toastr.info(`🚀 [${currentProfile.name}] 正在连接模型演绎...`, "Titania Echo");
     }
 
-    // 预定义变量，确保 catch 块能访问到 prompt 上下文
-    let sys = "";
-    let user = "";
-    let debugPayload = {}; // 用于日志记录
-
     try {
         // --- 1. 准备 Prompt ---
+        diagnostics.phase = 'prepare_prompt';
+        
         const dLen = dirDefaults.length;
         const dPers = dirDefaults.perspective;
         const dStyle = dirDefaults.style_ref;
 
-        sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Please answer all other content in Chinese.";
+        let sys = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Please answer all other content in Chinese.";
         if (dPers === '1st') sys += " Write strictly in First Person perspective (I/Me).";
         else if (dPers === '3rd') sys += ` Write strictly in Third Person perspective (${ctx.charName}/He/She).`;
 
-        user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\n\n`;
+        let user = `[Roleplay Setup]\nCharacter: ${ctx.charName}\nUser: ${ctx.userName}\n\n`;
 
         let directorInstruction = "";
         if (dLen) directorInstruction += `1. Length Constraint: Keep the response approximately ${dLen}.\n`;
@@ -1184,23 +1226,21 @@ async function handleGenerate(forceScriptId = null, silent = false) {
 
         user += `[Scenario Request]\n${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
 
-        // 保存 payload 到 debug 对象，以便报错时记录
-        debugPayload = {
-            model: finalModel,
-            system_prompt: sys,
-            user_prompt: user, // 这里的 user 包含了完整的 prompt 文本
-            endpoint: finalUrl
-        };
+        // 更新输入统计 (用于排查 Context Length Exceeded)
+        diagnostics.input_stats.sys_len = sys.length;
+        diagnostics.input_stats.user_len = user.length;
 
         TitaniaLogger.info(`开始生成: ${script.name}`, { profile: currentProfile.name, model: finalModel });
 
         // --- 2. 发起请求 ---
+        diagnostics.phase = 'fetch_start';
         let endpoint = finalUrl.trim().replace(/\/+$/, "");
         if (!endpoint) throw new Error("ERR_CONFIG: API URL 未设置");
         if (!endpoint.endsWith("/chat/completions")) {
             if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
             else endpoint += "/v1/chat/completions";
         }
+        diagnostics.endpoint = endpoint; // 更新为最终计算出的 endpoint
 
         const res = await fetch(endpoint, {
             method: "POST",
@@ -1212,43 +1252,91 @@ async function handleGenerate(forceScriptId = null, silent = false) {
             })
         });
 
+        // 记录网络握手信息
+        diagnostics.network.status = res.status;
+        diagnostics.network.statusText = res.statusText;
+        diagnostics.network.contentType = res.headers.get("Content-Type") || "unknown";
+        diagnostics.network.latency = Date.now() - startTime;
+
         if (!res.ok) {
-            const rawText = await res.text();
-            throw new Error(`ERR_HTTP_${res.status}: ${rawText.slice(0, 200)}`); // 记录多一点错误信息
+            // [关键] 强行读取错误内容快照
+            try {
+                const errText = await res.text();
+                diagnostics.raw_response_snippet = errText.substring(0, 500); // 只取前500字避免日志爆炸
+            } catch (readErr) {
+                diagnostics.raw_response_snippet = "[无法读取响应体]";
+            }
+            throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
         }
 
         // --- 3. 接收内容 ---
+        diagnostics.phase = useStream ? 'streaming' : 'parsing_json';
         let rawContent = "";
+        
         if (useStream) {
             const reader = res.body.getReader();
             const decoder = new TextDecoder("utf-8");
             let buffer = "";
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split("\n");
-                buffer = lines.pop();
-                for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (!trimmed || !trimmed.startsWith("data: ")) continue;
-                    const jsonStr = trimmed.replace(/^data: /, "").trim();
-                    if (jsonStr === "[DONE]") continue;
-                    try {
-                        const json = JSON.parse(jsonStr);
-                        const chunk = json.choices?.[0]?.delta?.content || "";
-                        if (chunk) rawContent += chunk;
-                    } catch (e) { }
+            let chunkCount = 0;
+            
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    // 记录首字时间
+                    if (chunkCount === 0) {
+                        diagnostics.stream_stats.ttft = Date.now() - startTime;
+                    }
+                    chunkCount++;
+                    diagnostics.stream_stats.chunks = chunkCount;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (!trimmed || !trimmed.startsWith("data: ")) continue;
+                        const jsonStr = trimmed.replace(/^data: /, "").trim();
+                        if (jsonStr === "[DONE]") continue;
+                        try {
+                            const json = JSON.parse(jsonStr);
+                            const chunk = json.choices?.[0]?.delta?.content || "";
+                            if (chunk) rawContent += chunk;
+                        } catch (e) { 
+                            // 流式解析容错，不抛出
+                        }
+                    }
                 }
+            } catch (streamErr) {
+                // 如果是流中断，这里会被捕获
+                throw new Error(`Stream Interrupted: ${streamErr.message}`);
             }
+
+            // 检查流是否为空
+            if (chunkCount === 0) {
+                throw new Error("Stream Empty: 连接成功但未收到任何数据包 (Chunks=0)");
+            }
+
         } else {
-            const json = await res.json();
-            rawContent = json.choices?.[0]?.message?.content || "";
+            // 非流式
+            const jsonText = await res.text();
+            // 保存原始响应以便调试
+            diagnostics.raw_response_snippet = jsonText.substring(0, 200) + "..."; 
+            try {
+                const json = JSON.parse(jsonText);
+                rawContent = json.choices?.[0]?.message?.content || "";
+            } catch (jsonErr) {
+                throw new Error("Invalid JSON: API返回了非JSON格式数据 (可能是HTML报错页)");
+            }
         }
 
-        if (!rawContent || rawContent.trim().length === 0) throw new Error("ERR_EMPTY: 模型返回空内容");
+        if (!rawContent || rawContent.trim().length === 0) {
+            throw new Error("ERR_EMPTY_CONTENT: 模型返回内容为空 (可能是被安全策略过滤)");
+        }
 
         // --- 4. 容错清洗 ---
+        diagnostics.phase = 'validation';
         let cleanContent = rawContent.replace(/```html/gi, "").replace(/```/g, "").trim();
         const hasDiv = /<div[\s\S]*?>/i.test(cleanContent);
         const hasCloseDiv = /<\/div>/i.test(cleanContent);
@@ -1257,31 +1345,46 @@ async function handleGenerate(forceScriptId = null, silent = false) {
         if (hasDiv && hasCloseDiv) {
             finalOutput = cleanContent;
         } else {
+            // 软失败记录
+            TitaniaLogger.warn("内容格式不完整 (Missing <div>)", { preview: cleanContent.substring(0, 50) });
             finalOutput = `<div style="padding: 20px; background: #1a1a1a; color: #ccc; border-left: 3px solid #bfa15f; line-height: 1.6;">${cleanContent.replace(/\n/g, "<br>")}</div>`;
         }
 
         lastGeneratedContent = finalOutput;
+        diagnostics.phase = 'complete';
+        
         if (!silent && window.toastr) toastr.success(`✨ 《${script.name}》演绎完成！`, "Titania Echo");
         $floatBtn.addClass("t-notify");
 
     } catch (e) {
         // 【核心修改】错误捕获与日志记录
         console.error("Titania Generate Error:", e);
+        
+        // 最终更新耗时
+        diagnostics.network.latency = Date.now() - startTime;
+        diagnostics.phase = diagnostics.phase + "_failed";
 
-        // 记录错误日志，附带当时的 Payload
-        TitaniaLogger.error("生成过程发生异常", e, debugPayload);
+        // 记录极其详细的错误日志
+        TitaniaLogger.error("生成过程发生异常", e, diagnostics);
 
         // 构造友好的错误提示 HTML
+        let tips = "未知错误";
+        if(e.message.includes("401")) tips = "API Key 无效或已过期";
+        else if(e.message.includes("404")) tips = "接口地址错误 (404 Not Found)";
+        else if(e.message.includes("429")) tips = "API 调用超频或额度不足";
+        else if(e.message.includes("500") || e.message.includes("502")) tips = "API 服务端或代理服务器崩溃";
+        else if(e.message.includes("Stream Empty")) tips = "连接建立但无数据返回 (可能不支持流式)";
+        else if(e.message.includes("Invalid JSON")) tips = "API 返回了非JSON数据 (通常是代理的报错网页)";
+
         const errHtml = `
         <div style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; background: rgba(255,107,107,0.1); border-radius:8px;">
             <div style="font-size:3em; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div style="font-weight:bold; margin-bottom:5px;">演绎出错了</div>
             <div style="font-size:0.9em; margin-bottom:15px; color:#faa;">${e.message || "未知错误"}</div>
             <div style="font-size:0.8em; color:#ccc; background:#222; padding:10px; border-radius:4px; text-align:left;">
-                💡 建议操作：<br>
-                1. 检查 API Key 和网络连接<br>
-                2. 检查模型是否支持该长度的上下文<br>
-                3. <b>如果是安全审查拦截，请导出日志检查 Prompt</b>
+                🔍 诊断提示：<br>
+                <b>${tips}</b><br><br>
+                详细日志已生成，请去 [设置-诊断] 中导出报告给开发者。
             </div>
         </div>`;
 
@@ -1347,7 +1450,18 @@ async function showDebugInfo() {
     const wiLength = wiText.length;
 
     // --- 2. Prompt ---
-    let sysPrompt = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Please answer all other content in Chinese.";
+    let sysPrompt = `You are a high-level creative engine and an expert CSS artist.
+Your goal is to generate an immersive roleplay snippet wrapped in a visually stunning HTML container using sophisticated Inline CSS.
+
+[Visual Directives]
+1. **Thematic Styling**: The CSS design MUST strictly reflect the scenario's mood (e.g., Cyberpunk = Neon/Glitch/Dark; Ancient = Parchment/Ink/Texture; Modern = Clean/Glassmorphism; Horror = Grimy/Blood/Darkness).
+2. **Advanced CSS**: DO NOT use simple solid colors. You MUST use CSS gradients (linear/radial), complex box-shadows, text-shadows, borders, and variable opacity to create depth.
+3. **Layout**: Treat the output as a UI Card, a Page from a book, or a Movie Subtitle screen. Make it visually unique.
+
+[Constraints]
+- Output ONLY the HTML <div> string.
+- NO markdown code blocks (\`\`\`).
+- Narrative content MUST be in Chinese.`;
     if (dPers === '1st') sysPrompt += " Write strictly in First Person perspective (I/Me).";
     else if (dPers === '3rd') sysPrompt += ` Write strictly in Third Person perspective (${d.charName}/He/She).`;
 
@@ -1837,14 +1951,31 @@ function openSettingsWindow() {
             if (l.type === 'ERROR') colorClass = "t-log-entry-error";
             if (l.type === 'WARN') colorClass = "t-log-entry-warn";
 
-            // 简单格式化详情
+            // 优化诊断信息的显示
             let detailStr = "";
             if (l.details) {
-                try {
-                    // 如果 details 太长，截断显示
-                    const s = JSON.stringify(l.details, null, 2);
-                    detailStr = `\n${s}`;
-                } catch (e) { detailStr = "\n[Circular/Complex Data]"; }
+                // 如果是诊断对象，尝试提取关键信息显示，而不是全部 dump
+                if (l.details.diagnostics) {
+                    const d = l.details.diagnostics;
+                    const net = d.network || {};
+                    // 构造一个精简版的摘要
+                    const summary = {
+                        phase: d.phase,
+                        status: net.status,
+                        latency: net.latency + 'ms',
+                        input: d.input_stats
+                    };
+                    // 如果有原始报错片段，也展示出来
+                    if (d.raw_response_snippet) {
+                        summary.raw_snippet = d.raw_response_snippet.substring(0, 100) + (d.raw_response_snippet.length>100 ? '...' : '');
+                    }
+                    detailStr = `\n[Diagnostics]: ${JSON.stringify(summary, null, 2)}`;
+                } else {
+                    // 旧逻辑
+                    try {
+                        detailStr = `\n${JSON.stringify(l.details, null, 2)}`;
+                    } catch (e) { detailStr = "\n[Complex Data]"; }
+                }
             }
 
             html += `<div class="${colorClass}">[${l.timestamp}] [${l.type}] ${l.message}${detailStr}</div>`;
