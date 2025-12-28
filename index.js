@@ -2549,7 +2549,7 @@ window.t_edit = (id, fromMgr) => openEditor(id, fromMgr);
 
 // 【Part 6: 收藏夹、监听逻辑与初始化】
 // 保存收藏功能 (已放宽校验规则)
-function saveFavorite() {
+async function saveFavorite() {
     const content = $("#t-output-content").html();
 
     // 【修改】仅校验是否为空或长度过短，不再拦截包含特定关键词的内容
@@ -2560,7 +2560,7 @@ function saveFavorite() {
 
     const script = runtimeScripts.find(s => s.id === lastUsedScriptId);
     const scriptName = script ? script.name : "未知剧本";
-    const ctx = getContextData();
+    const ctx = await getContextData();
 
     // === 恢复原样：DOM 屏幕抓取法 ===
     // 这种方式将图片路径直接保存在这一条收藏记录里
