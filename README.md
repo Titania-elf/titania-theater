@@ -1,7 +1,4 @@
 # 🎭 Echo Theater (回声小剧场)
-
-![Version](https://img.shields.io/badge/Version-v4.5.0-pink?style=flat-square) ![SillyTavern](https://img.shields.io/badge/SillyTavern-Extension-blue?style=flat-square) 
-![License](https://img.shields.io/badge/License-Personal%20Restricted-blue)
 本项目由Titania所有，使用需遵守本项目许可协议。
 完整协议内容请查阅：[LICENSE](LICENSE)
 
