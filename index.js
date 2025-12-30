@@ -396,16 +396,34 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 /* === main-window.css === */
 /* css/main-window.css - \u4E3B\u6F14\u7ECE\u7A97\u53E3 */
 
+/*
+ * ===== CSS \u9694\u79BB\u4FDD\u62A4\u5C42 =====
+ * \u4F7F\u7528 all: initial \u91CD\u7F6E\u751F\u6210\u5185\u5BB9\u533A\u57DF\u7684\u6837\u5F0F\u7EE7\u627F
+ * \u9632\u6B62\u6A21\u578B\u751F\u6210\u7684 CSS \u6C61\u67D3\u63D2\u4EF6\u4E3B\u754C\u9762\u5E03\u5C40
+ */
+
+/* \u4E3B\u5BB9\u5668\uFF1A\u5F3A\u5236\u56FA\u5B9A\u5E03\u5C40\uFF0C\u9632\u6B62\u88AB\u5B50\u5143\u7D20 CSS \u6C61\u67D3 */
 #t-main-view {
-    width: 950px;
-    max-width: 95vw;
-    height: 85vh;
-    display: flex;
-    flex-direction: column;
-    background: #121212;
-    position: relative;
+    width: 950px !important;
+    max-width: 95vw !important;
+    height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #121212 !important;
+    position: relative !important;
     /* \u786E\u4FDD\u4E3B\u7A97\u53E3\u5728\u906E\u7F69\u5C42\u4E4B\u4E0A */
-    z-index: 20001;
+    z-index: 20001 !important;
+    /* \u9632\u6B62 flex \u88AB\u8986\u76D6 */
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    /* \u9632\u6B62 box-sizing \u88AB\u8986\u76D6 */
+    box-sizing: border-box !important;
+    /* \u9694\u79BB\u5B57\u4F53\u6837\u5F0F */
+    font-family: sans-serif !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: #eee !important;
 }
 
 /* Zen Mode (\u6C89\u6D78\u6A21\u5F0F) */
@@ -426,39 +444,55 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     background-image: none;
 }
 
-/* \u5185\u5BB9\u5BB9\u5668 */
+/* \u5185\u5BB9\u5BB9\u5668 - \u5F3A\u5316\u9694\u79BB */
 .t-content-wrapper {
-    flex-grow: 1;
-    position: relative;
-    overflow: hidden;
-    background-color: #0b0b0b;
-    background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px);
-    background-size: 20px 20px;
+    flex-grow: 1 !important;
+    flex-shrink: 1 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    background-color: #0b0b0b !important;
+    background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
     transform: translateZ(0);
-    min-height: 0;
+    min-height: 0 !important;
+    /* \u9632\u6B62\u88AB\u63A8\u51FA\u89C6\u53E3 */
+    max-height: 100% !important;
+    /* \u5F3A\u5236 flex \u5C5E\u6027\u4E0D\u88AB\u8986\u76D6 */
+    display: block !important;
 }
 
 .t-content-area {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    overflow-y: auto;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     scroll-behavior: smooth;
-    z-index: 1;
+    z-index: 1 !important;
+    /* CSS \u9694\u79BB\uFF1A\u521B\u5EFA\u65B0\u7684\u5C42\u53E0\u4E0A\u4E0B\u6587 */
+    isolation: isolate;
 }
 
-/* \u751F\u6210\u5185\u5BB9\u7EA6\u675F */
+/*
+ * ===== \u751F\u6210\u5185\u5BB9\u9694\u79BB\u5BB9\u5668 =====
+ * \u8FD9\u4E2A\u5BB9\u5668\u5305\u542B\u6A21\u578B\u751F\u6210\u7684 HTML\uFF0C\u9700\u8981\u4E25\u683C\u9694\u79BB
+ */
 #t-output-content {
-    width: 100%;
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
+    width: 100% !important;
+    min-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    /* \u521B\u5EFA\u72EC\u7ACB\u7684\u5C42\u53E0\u4E0A\u4E0B\u6587\uFF0C\u9632\u6B62 z-index \u6CC4\u6F0F */
+    isolation: isolate !important;
+    /* \u521B\u5EFA\u65B0\u7684 BFC (Block Formatting Context)\uFF0C\u9632\u6B62 margin \u584C\u9677\u7B49\u95EE\u9898 */
+    contain: layout style !important;
 }
 
+/* \u751F\u6210\u5185\u5BB9\u7684\u76F4\u63A5\u5B50\u5143\u7D20\u7EA6\u675F */
 #t-output-content>div {
     flex-grow: 1;
     margin: 0 !important;
@@ -469,25 +503,51 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     min-height: 100%;
     box-sizing: border-box !important;
     overflow-x: hidden !important;
+    /* \u9650\u5236 position: fixed \u7B49\u9003\u9038\u884C\u4E3A */
+    position: relative !important;
+    /* \u9650\u5236 z-index\uFF0C\u9632\u6B62\u906E\u6321\u63D2\u4EF6 UI */
+    z-index: auto !important;
 }
 
+/* \u751F\u6210\u5185\u5BB9\u4E2D\u7684\u56FE\u7247\u7EA6\u675F */
 #t-output-content img {
     max-width: 100% !important;
     height: auto !important;
 }
 
-/* \u9876\u90E8\u64CD\u4F5C\u533A */
+/*
+ * ===== \u751F\u6210\u5185\u5BB9\u5185\u90E8\u6837\u5F0F\u91CD\u7F6E =====
+ * \u9632\u6B62\u751F\u6210\u5185\u5BB9\u5F71\u54CD\u5916\u90E8\u5143\u7D20
+ */
+#t-output-content [style*="position: fixed"],
+#t-output-content [style*="position:fixed"] {
+    position: absolute !important;
+}
+
+#t-output-content [style*="z-index"] {
+    z-index: auto !important;
+}
+
+/* \u9876\u90E8\u64CD\u4F5C\u533A - \u5F3A\u5316\u9632\u62A4 */
 .t-top-bar {
-    padding: 12px 20px;
-    background: #1e1e1e;
-    border-bottom: 1px solid #333;
-    display: flex;
-    gap: 15px;
-    align-items: stretch;
-    height: 75px;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    z-index: 20;
+    padding: 12px 20px !important;
+    background: #1e1e1e !important;
+    border-bottom: 1px solid #333 !important;
+    display: flex !important;
+    gap: 15px !important;
+    align-items: stretch !important;
+    height: 75px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    z-index: 20 !important;
+    /* \u9632\u6B62\u88AB\u8986\u76D6 */
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    position: relative !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    order: 1 !important;
 }
 
 /* === [\u4FEE\u590D] PC\u7AEF\u5E03\u5C40\u6838\u5FC3 === */
@@ -687,21 +747,32 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 }
 
 /* Bottom Bar */
-/* \u5E95\u90E8\u680F\u5BB9\u5668\uFF1A\u9AD8\u5EA6\u589E\u52A0\u4EE5\u5BB9\u7EB3\u4E24\u884C\u6309\u94AE */
+/* \u5E95\u90E8\u680F\u5BB9\u5668\uFF1A\u5F3A\u5316\u9632\u62A4\uFF0C\u9632\u6B62\u88AB\u751F\u6210\u5185\u5BB9 CSS \u8986\u76D6 */
 .t-bottom-bar {
-    padding: 10px 15px;
-    background: #1e1e1e;
-    border-top: 1px solid #333;
-    display: flex;
-    align-items: stretch;
+    padding: 10px 15px !important;
+    background: #1e1e1e !important;
+    border-top: 1px solid #333 !important;
+    display: flex !important;
+    align-items: stretch !important;
     /* \u8BA9\u5DE6\u53F3\u4E24\u8FB9\u9AD8\u5EA6\u81EA\u52A8\u62C9\u4F38\u5BF9\u9F50 */
-    gap: 15px;
-    height: 90px;
+    gap: 15px !important;
+    height: 90px !important;
     /* \u56FA\u5B9A\u9AD8\u5EA6\uFF0C\u786E\u4FDD\u5BB9\u7EB3\u53CC\u5C42\u7ED3\u6784 */
-    flex-shrink: 0;
-    position: relative;
-    z-index: 50;
-    box-sizing: border-box;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    position: relative !important;
+    z-index: 50 !important;
+    box-sizing: border-box !important;
+    /* \u9632\u6B62 flex \u65B9\u5411\u88AB\u8986\u76D6 */
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    /* \u9632\u6B62\u88AB\u63A8\u5230\u9876\u90E8\u6216\u9690\u85CF */
+    order: 999 !important;
+    margin: 0 !important;
+    /* \u5F3A\u5236\u53EF\u89C1\u6027 */
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* \u5DE6\u4FA7\uFF1A\u5DE5\u5177\u533A (2x2 \u7F51\u683C) */
@@ -2555,21 +2626,136 @@ var getSnippet = (html) => {
   return text.length > 60 ? text.substring(0, 60) + "..." : text;
 };
 function scopeAndSanitizeHTML(rawHtml, scopeId) {
-  const styleMatch = rawHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  let cssContent = styleMatch ? styleMatch[1] : "";
-  let bodyContent = rawHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/i, "").trim();
+  const styleMatches = rawHtml.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+  let allCssContent = "";
+  styleMatches.forEach((styleBlock) => {
+    const cssMatch = styleBlock.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+    if (cssMatch) {
+      allCssContent += cssMatch[1] + "\n";
+    }
+  });
+  let bodyContent = rawHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
   if (!bodyContent.includes(`id="${scopeId}"`) && !bodyContent.includes(`id='${scopeId}'`)) {
     bodyContent = `<div id="${scopeId}">${bodyContent}</div>`;
   }
-  if (cssContent) {
-    cssContent = cssContent.replace(/\/\*[\s\S]*?\*\//g, "");
-    cssContent = cssContent.replace(/(^|\})[\s]*\b(body|html)\b/gi, "$1 #" + scopeId);
-  }
+  let sanitizedCss = sanitizeCssForScope(allCssContent, scopeId);
   return `<style>
-/* Scoped CSS for ${scopeId} */
-${cssContent}
+/* Scoped CSS for ${scopeId} - Auto-sanitized */
+${sanitizedCss}
 </style>
 ${bodyContent}`;
+}
+function sanitizeCssForScope(cssContent, scopeId) {
+  if (!cssContent || !cssContent.trim()) return "";
+  let css = cssContent.replace(/\/\*[\s\S]*?\*\//g, "");
+  const dangerousSelectors = [
+    // 全局元素选择器
+    /^\s*\*\s*\{/gm,
+    // * { }
+    /^\s*body\s*\{/gim,
+    // body { }
+    /^\s*html\s*\{/gim,
+    // html { }
+    /^\s*:root\s*\{/gim,
+    // :root { }
+    // Flexbox/Grid 全局污染
+    /^\s*\.t-[a-z-]+\s*\{/gim,
+    // .t-xxx { } (可能与插件类名冲突)
+    /^\s*#t-[a-z-]+\s*\{/gim,
+    // #t-xxx { } (可能与插件 ID 冲突，但不含 scene)
+    // 常见布局相关的危险选择器
+    /^\s*div\s*\{/gim,
+    // div { }
+    /^\s*section\s*\{/gim,
+    // section { }
+    /^\s*main\s*\{/gim,
+    // main { }
+    /^\s*header\s*\{/gim,
+    // header { }
+    /^\s*footer\s*\{/gim,
+    // footer { }
+    /^\s*nav\s*\{/gim,
+    // nav { }
+    /^\s*aside\s*\{/gim,
+    // aside { }
+    /^\s*article\s*\{/gim
+    // article { }
+  ];
+  const processedRules = [];
+  const atRules = [];
+  css = css.replace(/@(keyframes|media|supports|font-face)[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/gi, (match2) => {
+    if (match2.toLowerCase().startsWith("@keyframes")) {
+      match2 = match2.replace(/@keyframes\s+([a-zA-Z0-9_-]+)/i, `@keyframes ${scopeId}-$1`);
+    }
+    atRules.push(match2);
+    return `/*__AT_RULE_${atRules.length - 1}__*/`;
+  });
+  const rulePattern = /([^{}]+)\{([^{}]*)\}/g;
+  let match;
+  while ((match = rulePattern.exec(css)) !== null) {
+    let selector = match[1].trim();
+    let properties = match[2].trim();
+    if (selector.includes("__AT_RULE_")) {
+      processedRules.push(match[0]);
+      continue;
+    }
+    let isDangerous = false;
+    for (const pattern of dangerousSelectors) {
+      if (pattern.test(selector + " {")) {
+        isDangerous = true;
+        break;
+      }
+    }
+    if (isDangerous) {
+      selector = `#${scopeId} ${selector}`;
+    } else if (!selector.includes(scopeId)) {
+      const selectors = selector.split(",").map((s) => {
+        s = s.trim();
+        if (s.includes(scopeId)) return s;
+        return `#${scopeId} ${s}`;
+      });
+      selector = selectors.join(", ");
+    }
+    properties = sanitizeCssProperties(properties, scopeId);
+    processedRules.push(`${selector} { ${properties} }`);
+  }
+  let result = processedRules.join("\n");
+  atRules.forEach((rule, index) => {
+    let scopedRule = rule;
+    if (rule.toLowerCase().startsWith("@media") || rule.toLowerCase().startsWith("@supports")) {
+      scopedRule = rule.replace(/([^{}]+)\{([^{}]*)\}/g, (m, sel, props) => {
+        if (sel.includes("@")) return m;
+        if (!sel.includes(scopeId)) {
+          sel = sel.split(",").map((s) => `#${scopeId} ${s.trim()}`).join(", ");
+        }
+        return `${sel} { ${props} }`;
+      });
+    }
+    result = result.replace(`/*__AT_RULE_${index}__*/`, scopedRule);
+  });
+  return result;
+}
+function sanitizeCssProperties(properties, scopeId) {
+  if (!properties) return "";
+  properties = properties.replace(
+    /animation(-name)?\s*:\s*([a-zA-Z0-9_-]+)/gi,
+    (match, suffix, animName) => {
+      const keywords = ["none", "initial", "inherit", "unset", "ease", "linear", "ease-in", "ease-out", "ease-in-out", "infinite", "forwards", "backwards", "both", "running", "paused", "alternate", "alternate-reverse", "normal", "reverse"];
+      if (keywords.includes(animName.toLowerCase())) return match;
+      return `animation${suffix || ""}: ${scopeId}-${animName}`;
+    }
+  );
+  properties = properties.replace(/position\s*:\s*fixed/gi, "position: absolute");
+  properties = properties.replace(/z-index\s*:\s*(\d+)/gi, (match, value) => {
+    const maxZ = 1e3;
+    const numValue = parseInt(value);
+    if (numValue > maxZ) {
+      return `z-index: ${maxZ}`;
+    }
+    return match;
+  });
+  properties = properties.replace(/!important/gi, "/* !important removed */");
+  return properties;
 }
 function generateScopeId() {
   return "t-scene-" + Date.now().toString(36) + Math.floor(Math.random() * 1e3).toString();

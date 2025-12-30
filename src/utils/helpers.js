@@ -135,43 +135,194 @@ export const getSnippet = (html) => {
 };
 
 /**
- * CSS 作用域净化与注入 (Safeguard B)
+ * CSS 作用域净化与注入 (Safeguard B - 强化版)
+ * 解决模型生成的 CSS 污染插件主界面的问题
+ *
  * @param {string} rawHtml - AI 返回的原始 HTML (可能包含 style 标签)
  * @param {string} scopeId - 当前生成的唯一 ID (例如 "t-scene-123")
  * @returns {string} - 处理后的安全 HTML
  */
 export function scopeAndSanitizeHTML(rawHtml, scopeId) {
-    // 1. 提取 <style> 内容
-    const styleMatch = rawHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-    let cssContent = styleMatch ? styleMatch[1] : "";
-    let bodyContent = rawHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/i, "").trim();
+    // 1. 提取所有 <style> 内容（可能有多个）
+    const styleMatches = rawHtml.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+    let allCssContent = "";
+    styleMatches.forEach(styleBlock => {
+        const cssMatch = styleBlock.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+        if (cssMatch) {
+            allCssContent += cssMatch[1] + "\n";
+        }
+    });
+
+    // 移除所有 style 标签
+    let bodyContent = rawHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
 
     // 2. 如果 AI 忘记了外层容器的 ID，手动加一层保险
-    // 检查开头是否包含该 ID，如果没有，强行包裹
     if (!bodyContent.includes(`id="${scopeId}"`) && !bodyContent.includes(`id='${scopeId}'`)) {
         bodyContent = `<div id="${scopeId}">${bodyContent}</div>`;
     }
 
-    // 3. CSS 净化与作用域强制 (正则魔法)
-    if (cssContent) {
-        // A. 移除注释，避免干扰正则
-        cssContent = cssContent.replace(/\/\*[\s\S]*?\*\//g, "");
+    // 3. CSS 深度净化
+    let sanitizedCss = sanitizeCssForScope(allCssContent, scopeId);
 
-        // B. 保护全局标签：将 body/html 选择器强制替换为宿主 ID
-        // 例如: body { background: black } -> #t-scene-123 { background: black }
-        cssContent = cssContent.replace(/(^|\})[\s]*\b(body|html)\b/gi, "$1 #" + scopeId);
+    // 4. 重新组装，确保 CSS 被严格限制在作用域内
+    return `<style>\n/* Scoped CSS for ${scopeId} - Auto-sanitized */\n${sanitizedCss}\n</style>\n${bodyContent}`;
+}
 
-        // C. 简单粗暴的作用域检查 (可选增强)
-        // 如果选择器不包含 @ (媒体查询/关键帧) 且不包含 ID，尝试前缀 (这步比较激进，先只做上面的全局保护)
+/**
+ * 深度净化 CSS，确保所有选择器都被限制在指定作用域内
+ * @param {string} cssContent - 原始 CSS 内容
+ * @param {string} scopeId - 作用域 ID
+ * @returns {string} - 净化后的 CSS
+ */
+function sanitizeCssForScope(cssContent, scopeId) {
+    if (!cssContent || !cssContent.trim()) return "";
 
-        // D. 确保关键帧动画名不冲突 (给动画名加后缀)
-        // 这一步比较复杂，暂且信任 AI 会使用 scoped ID 内部的动画，
-        // 或者我们假设 AI 足够聪明。为了保险，我们只做基础清洗。
+    // A. 移除注释
+    let css = cssContent.replace(/\/\*[\s\S]*?\*\//g, "");
+
+    // B. 危险选择器黑名单 - 这些可能影响插件布局
+    const dangerousSelectors = [
+        // 全局元素选择器
+        /^\s*\*\s*\{/gm,                    // * { }
+        /^\s*body\s*\{/gim,                 // body { }
+        /^\s*html\s*\{/gim,                 // html { }
+        /^\s*:root\s*\{/gim,                // :root { }
+
+        // Flexbox/Grid 全局污染
+        /^\s*\.t-[a-z-]+\s*\{/gim,          // .t-xxx { } (可能与插件类名冲突)
+        /^\s*#t-[a-z-]+\s*\{/gim,           // #t-xxx { } (可能与插件 ID 冲突，但不含 scene)
+
+        // 常见布局相关的危险选择器
+        /^\s*div\s*\{/gim,                  // div { }
+        /^\s*section\s*\{/gim,              // section { }
+        /^\s*main\s*\{/gim,                 // main { }
+        /^\s*header\s*\{/gim,               // header { }
+        /^\s*footer\s*\{/gim,               // footer { }
+        /^\s*nav\s*\{/gim,                  // nav { }
+        /^\s*aside\s*\{/gim,                // aside { }
+        /^\s*article\s*\{/gim,              // article { }
+    ];
+
+    // C. 处理每个 CSS 规则块
+    // 分割成规则块（按 } 分割，但要保留 @keyframes 等块）
+    const processedRules = [];
+
+    // 先提取并保护 @keyframes 和 @media 块
+    const atRules = [];
+    css = css.replace(/@(keyframes|media|supports|font-face)[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/gi, (match) => {
+        // 对 @keyframes 添加作用域前缀到动画名
+        if (match.toLowerCase().startsWith('@keyframes')) {
+            match = match.replace(/@keyframes\s+([a-zA-Z0-9_-]+)/i, `@keyframes ${scopeId}-$1`);
+        }
+        atRules.push(match);
+        return `/*__AT_RULE_${atRules.length - 1}__*/`;
+    });
+
+    // 处理普通规则
+    const rulePattern = /([^{}]+)\{([^{}]*)\}/g;
+    let match;
+
+    while ((match = rulePattern.exec(css)) !== null) {
+        let selector = match[1].trim();
+        let properties = match[2].trim();
+
+        // 跳过占位符
+        if (selector.includes('__AT_RULE_')) {
+            processedRules.push(match[0]);
+            continue;
+        }
+
+        // 检查是否为危险选择器
+        let isDangerous = false;
+        for (const pattern of dangerousSelectors) {
+            if (pattern.test(selector + ' {')) {
+                isDangerous = true;
+                break;
+            }
+        }
+
+        // 处理选择器
+        if (isDangerous) {
+            // 危险选择器：强制添加作用域前缀
+            selector = `#${scopeId} ${selector}`;
+        } else if (!selector.includes(scopeId)) {
+            // 普通选择器：如果不包含作用域 ID，添加前缀
+            // 处理多个选择器（逗号分隔）
+            const selectors = selector.split(',').map(s => {
+                s = s.trim();
+                // 已经有作用域前缀的跳过
+                if (s.includes(scopeId)) return s;
+                // 给每个选择器添加作用域
+                return `#${scopeId} ${s}`;
+            });
+            selector = selectors.join(', ');
+        }
+
+        // 净化属性值中的危险内容
+        properties = sanitizeCssProperties(properties, scopeId);
+
+        processedRules.push(`${selector} { ${properties} }`);
     }
 
-    // 4. 重新组装
-    // 注意：将 Style 放在 Div 内部在 HTML5 是合法的 (scoped)，但在 ST 里我们通常只要拼在一起就行
-    return `<style>\n/* Scoped CSS for ${scopeId} */\n${cssContent}\n</style>\n${bodyContent}`;
+    // 还原 @规则
+    let result = processedRules.join('\n');
+    atRules.forEach((rule, index) => {
+        // 给 @规则中的选择器也添加作用域
+        let scopedRule = rule;
+        if (rule.toLowerCase().startsWith('@media') || rule.toLowerCase().startsWith('@supports')) {
+            // 处理 @media 和 @supports 内部的选择器
+            scopedRule = rule.replace(/([^{}]+)\{([^{}]*)\}/g, (m, sel, props) => {
+                if (sel.includes('@')) return m; // 跳过 @规则声明本身
+                if (!sel.includes(scopeId)) {
+                    sel = sel.split(',').map(s => `#${scopeId} ${s.trim()}`).join(', ');
+                }
+                return `${sel} { ${props} }`;
+            });
+        }
+        result = result.replace(`/*__AT_RULE_${index}__*/`, scopedRule);
+    });
+
+    return result;
+}
+
+/**
+ * 净化 CSS 属性值，防止通过属性值进行攻击
+ * @param {string} properties - CSS 属性字符串
+ * @param {string} scopeId - 作用域 ID
+ * @returns {string} - 净化后的属性
+ */
+function sanitizeCssProperties(properties, scopeId) {
+    if (!properties) return "";
+
+    // 1. 替换 animation-name 引用，添加作用域前缀
+    properties = properties.replace(
+        /animation(-name)?\s*:\s*([a-zA-Z0-9_-]+)/gi,
+        (match, suffix, animName) => {
+            // 跳过 CSS 关键字
+            const keywords = ['none', 'initial', 'inherit', 'unset', 'ease', 'linear', 'ease-in', 'ease-out', 'ease-in-out', 'infinite', 'forwards', 'backwards', 'both', 'running', 'paused', 'alternate', 'alternate-reverse', 'normal', 'reverse'];
+            if (keywords.includes(animName.toLowerCase())) return match;
+            return `animation${suffix || ''}: ${scopeId}-${animName}`;
+        }
+    );
+
+    // 2. 移除可能导致布局问题的危险属性值
+    // position: fixed 可能让元素跳出容器
+    properties = properties.replace(/position\s*:\s*fixed/gi, 'position: absolute');
+
+    // 3. 限制 z-index 最大值，防止遮挡插件 UI
+    properties = properties.replace(/z-index\s*:\s*(\d+)/gi, (match, value) => {
+        const maxZ = 1000; // 限制最大 z-index
+        const numValue = parseInt(value);
+        if (numValue > maxZ) {
+            return `z-index: ${maxZ}`;
+        }
+        return match;
+    });
+
+    // 4. 移除 !important 声明（可能覆盖插件样式）
+    properties = properties.replace(/!important/gi, '/* !important removed */');
+
+    return properties;
 }
 
 /**

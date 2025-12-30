@@ -1,15 +1,33 @@
 /* css/main-window.css - 主演绎窗口 */
 
+/*
+ * ===== CSS 隔离保护层 =====
+ * 使用 all: initial 重置生成内容区域的样式继承
+ * 防止模型生成的 CSS 污染插件主界面布局
+ */
+
+/* 主容器：强制固定布局，防止被子元素 CSS 污染 */
 #t-main-view {
-    width: 950px;
-    max-width: 95vw;
-    height: 85vh;
-    display: flex;
-    flex-direction: column;
-    background: #121212;
-    position: relative;
+    width: 950px !important;
+    max-width: 95vw !important;
+    height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #121212 !important;
+    position: relative !important;
     /* 确保主窗口在遮罩层之上 */
-    z-index: 20001;
+    z-index: 20001 !important;
+    /* 防止 flex 被覆盖 */
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    /* 防止 box-sizing 被覆盖 */
+    box-sizing: border-box !important;
+    /* 隔离字体样式 */
+    font-family: sans-serif !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: #eee !important;
 }
 
 /* Zen Mode (沉浸模式) */
@@ -30,39 +48,55 @@
     background-image: none;
 }
 
-/* 内容容器 */
+/* 内容容器 - 强化隔离 */
 .t-content-wrapper {
-    flex-grow: 1;
-    position: relative;
-    overflow: hidden;
-    background-color: #0b0b0b;
-    background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px);
-    background-size: 20px 20px;
+    flex-grow: 1 !important;
+    flex-shrink: 1 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    background-color: #0b0b0b !important;
+    background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
     transform: translateZ(0);
-    min-height: 0;
+    min-height: 0 !important;
+    /* 防止被推出视口 */
+    max-height: 100% !important;
+    /* 强制 flex 属性不被覆盖 */
+    display: block !important;
 }
 
 .t-content-area {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    overflow-y: auto;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     scroll-behavior: smooth;
-    z-index: 1;
+    z-index: 1 !important;
+    /* CSS 隔离：创建新的层叠上下文 */
+    isolation: isolate;
 }
 
-/* 生成内容约束 */
+/*
+ * ===== 生成内容隔离容器 =====
+ * 这个容器包含模型生成的 HTML，需要严格隔离
+ */
 #t-output-content {
-    width: 100%;
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
+    width: 100% !important;
+    min-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    /* 创建独立的层叠上下文，防止 z-index 泄漏 */
+    isolation: isolate !important;
+    /* 创建新的 BFC (Block Formatting Context)，防止 margin 塌陷等问题 */
+    contain: layout style !important;
 }
 
+/* 生成内容的直接子元素约束 */
 #t-output-content>div {
     flex-grow: 1;
     margin: 0 !important;
@@ -73,25 +107,51 @@
     min-height: 100%;
     box-sizing: border-box !important;
     overflow-x: hidden !important;
+    /* 限制 position: fixed 等逃逸行为 */
+    position: relative !important;
+    /* 限制 z-index，防止遮挡插件 UI */
+    z-index: auto !important;
 }
 
+/* 生成内容中的图片约束 */
 #t-output-content img {
     max-width: 100% !important;
     height: auto !important;
 }
 
-/* 顶部操作区 */
+/*
+ * ===== 生成内容内部样式重置 =====
+ * 防止生成内容影响外部元素
+ */
+#t-output-content [style*="position: fixed"],
+#t-output-content [style*="position:fixed"] {
+    position: absolute !important;
+}
+
+#t-output-content [style*="z-index"] {
+    z-index: auto !important;
+}
+
+/* 顶部操作区 - 强化防护 */
 .t-top-bar {
-    padding: 12px 20px;
-    background: #1e1e1e;
-    border-bottom: 1px solid #333;
-    display: flex;
-    gap: 15px;
-    align-items: stretch;
-    height: 75px;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    z-index: 20;
+    padding: 12px 20px !important;
+    background: #1e1e1e !important;
+    border-bottom: 1px solid #333 !important;
+    display: flex !important;
+    gap: 15px !important;
+    align-items: stretch !important;
+    height: 75px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    z-index: 20 !important;
+    /* 防止被覆盖 */
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    position: relative !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    order: 1 !important;
 }
 
 /* === [修复] PC端布局核心 === */
@@ -291,21 +351,32 @@
 }
 
 /* Bottom Bar */
-/* 底部栏容器：高度增加以容纳两行按钮 */
+/* 底部栏容器：强化防护，防止被生成内容 CSS 覆盖 */
 .t-bottom-bar {
-    padding: 10px 15px;
-    background: #1e1e1e;
-    border-top: 1px solid #333;
-    display: flex;
-    align-items: stretch;
+    padding: 10px 15px !important;
+    background: #1e1e1e !important;
+    border-top: 1px solid #333 !important;
+    display: flex !important;
+    align-items: stretch !important;
     /* 让左右两边高度自动拉伸对齐 */
-    gap: 15px;
-    height: 90px;
+    gap: 15px !important;
+    height: 90px !important;
     /* 固定高度，确保容纳双层结构 */
-    flex-shrink: 0;
-    position: relative;
-    z-index: 50;
-    box-sizing: border-box;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    position: relative !important;
+    z-index: 50 !important;
+    box-sizing: border-box !important;
+    /* 防止 flex 方向被覆盖 */
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    /* 防止被推到顶部或隐藏 */
+    order: 999 !important;
+    margin: 0 !important;
+    /* 强制可见性 */
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* 左侧：工具区 (2x2 网格) */
