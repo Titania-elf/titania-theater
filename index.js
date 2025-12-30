@@ -5,7 +5,7 @@ import { extension_settings } from "../../../extensions.js";
 import { saveSettingsDebounced, eventSource, event_types } from "../../../../script.js";
 
 // --- 内部模块引用 ---
-import { extensionName, defaultSettings, extensionFolderPath, LEGACY_KEYS, CURRENT_VERSION, CHANGELOG } from "./src/config/defaults.js";
+import { extensionName, defaultSettings, extensionFolderPath, LEGACY_KEYS, CURRENT_VERSION, CHANGELOG, GITHUB_RAW_URL } from "./src/config/defaults.js";
 import { getExtData, saveExtData } from "./src/utils/storage.js";
 import { loadCssFiles } from "./src/utils/dom.js";
 import { GlobalState } from "./src/core/state.js";
@@ -164,21 +164,142 @@ async function loadExtensionSettings() {
 
 /**
  * 检测版本更新并显示 NEW 徽章
+ * 改进：从 GitHub 获取远程版本号，检测是否有可用更新
  */
-function checkVersionUpdate() {
+async function checkVersionUpdate() {
     const extData = getExtData();
+
+    // 首先检查本地版本更新（用户更新后第一次打开时显示更新日志）
     const lastSeenVersion = extData.last_seen_version || "0.0.0";
-
-    // 比较版本号
     if (compareVersions(CURRENT_VERSION, lastSeenVersion) > 0) {
-        // 有新版本，显示 NEW 徽章
-        $("#titania-new-badge").show();
-
-        // 点击徽章显示更新日志
+        // 本地版本比已读版本新，说明用户刚更新了插件
+        $("#titania-new-badge").show().attr("title", "点击查看更新日志");
         $("#titania-new-badge").off("click").on("click", showChangelog);
-    } else {
+        return;
+    }
+
+    // 然后检查远程版本（是否有新版本可供更新）
+    try {
+        const remoteVersion = await fetchRemoteVersion();
+
+        // 检查是否已忽略此版本
+        const ignoredVersion = extData.ignored_version || "0.0.0";
+        if (remoteVersion && remoteVersion === ignoredVersion) {
+            $("#titania-new-badge").hide();
+            return;
+        }
+
+        if (remoteVersion && compareVersions(remoteVersion, CURRENT_VERSION) > 0) {
+            // 远程版本更高，提醒用户更新
+            $("#titania-new-badge")
+                .show()
+                .addClass("update-available")
+                .attr("title", `发现新版本 v${remoteVersion}，点击查看`)
+                .text("UPDATE");
+
+            $("#titania-new-badge").off("click").on("click", () => {
+                showUpdateNotice(remoteVersion);
+            });
+
+            console.log(`Titania: 发现新版本 v${remoteVersion}，当前版本 v${CURRENT_VERSION}`);
+        } else {
+            $("#titania-new-badge").hide();
+        }
+    } catch (e) {
+        console.warn("Titania: 远程版本检测失败", e);
+        // 远程检测失败时不显示徽章
         $("#titania-new-badge").hide();
     }
+}
+
+/**
+ * 从 GitHub 获取远程版本号
+ * @returns {Promise<string|null>} 远程版本号或 null
+ */
+async function fetchRemoteVersion() {
+    try {
+        // 添加时间戳防止缓存
+        const url = `${GITHUB_RAW_URL}?t=${Date.now()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const manifest = await response.json();
+        return manifest.version || null;
+    } catch (e) {
+        console.warn("Titania: 获取远程版本失败", e);
+        return null;
+    }
+}
+
+/**
+ * 显示更新提醒弹窗
+ */
+function showUpdateNotice(remoteVersion) {
+    if ($(".titania-update-overlay").length) return;
+
+    const html = `
+    <div class="titania-changelog-overlay titania-update-overlay">
+        <div class="titania-changelog-box">
+            <div class="titania-changelog-header" style="background: linear-gradient(135deg, #00b894, #00cec9);">
+                <span>🚀 发现新版本 v${remoteVersion}</span>
+                <span class="titania-changelog-close">&times;</span>
+            </div>
+            <div class="titania-changelog-body" style="text-align:center; padding:30px;">
+                <div style="font-size:3em; margin-bottom:15px;">📦</div>
+                <div style="font-size:1.2em; margin-bottom:10px;">
+                    回声小剧场有新版本可用！
+                </div>
+                <div style="color:#888; margin-bottom:20px;">
+                    当前版本: <b>v${CURRENT_VERSION}</b> → 最新版本: <b style="color:#00b894;">v${remoteVersion}</b>
+                </div>
+                <div style="font-size:0.9em; color:#666; margin-bottom:15px;">
+                    请前往 SillyTavern 的 <b>扩展</b> → <b>管理扩展</b> 进行更新
+                </div>
+            </div>
+            <div class="titania-changelog-footer" style="display:flex; gap:10px; justify-content:center;">
+                <button class="titania-changelog-btn" id="titania-update-later" style="background:#555; color:#fff;">稍后提醒</button>
+                <button class="titania-changelog-btn" id="titania-update-ignore" style="background:linear-gradient(90deg, #00b894, #00cec9);">知道了</button>
+            </div>
+        </div>
+    </div>`;
+
+    $("body").append(html);
+
+    // 稍后提醒（关闭弹窗，下次刷新还会显示）
+    $("#titania-update-later").on("click", () => {
+        $(".titania-update-overlay").remove();
+    });
+
+    // 知道了（记录忽略的版本，不再提醒此版本）
+    $("#titania-update-ignore").on("click", () => {
+        const extData = getExtData();
+        extData.ignored_version = remoteVersion;
+        saveExtData();
+
+        $(".titania-update-overlay").remove();
+        $("#titania-new-badge").hide();
+    });
+
+    // 关闭按钮
+    $(".titania-update-overlay .titania-changelog-close").on("click", () => {
+        $(".titania-update-overlay").remove();
+    });
+
+    // 点击遮罩关闭
+    $(".titania-update-overlay").on("click", function (e) {
+        if (e.target === this) {
+            $(".titania-update-overlay").remove();
+        }
+    });
 }
 
 /**

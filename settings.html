@@ -17,125 +17,145 @@
 </div>
 
 <style>
-/* NEW 徽章样式 */
-.titania-new-badge {
-    background: linear-gradient(135deg, #ff6b6b, #feca57);
-    color: #fff;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 8px;
-    cursor: pointer;
-    animation: titania-bounce 1s ease-in-out infinite;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
-}
+    /* NEW/UPDATE 徽章样式 */
+    .titania-new-badge {
+        background: linear-gradient(135deg, #ff6b6b, #feca57);
+        color: #fff;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 8px;
+        cursor: pointer;
+        animation: titania-bounce 1s ease-in-out infinite;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+        min-width: auto;
+        text-align: center;
+    }
 
-@keyframes titania-bounce {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-3px) scale(1.05); }
-}
+    /* UPDATE 状态时的绿色渐变 */
+    .titania-new-badge.update-available {
+        background: linear-gradient(135deg, #00b894, #00cec9);
+        box-shadow: 0 2px 8px rgba(0, 184, 148, 0.4);
+    }
 
-.titania-new-badge:hover {
-    animation: none;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.6);
-}
+    @keyframes titania-bounce {
 
-/* 更新日志弹窗 */
-.titania-changelog-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.7);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.2s;
-}
+        0%,
+        100% {
+            transform: translateY(0) scale(1);
+        }
 
-.titania-changelog-box {
-    background: #1e1e1e;
-    border: 1px solid #444;
-    border-radius: 12px;
-    width: 450px;
-    max-width: 90vw;
-    max-height: 80vh;
-    overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-}
+        50% {
+            transform: translateY(-3px) scale(1.05);
+        }
+    }
 
-.titania-changelog-header {
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #ff6b6b, #feca57);
-    color: #fff;
-    font-weight: bold;
-    font-size: 1.1em;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+    .titania-new-badge:hover {
+        animation: none;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.6);
+    }
 
-.titania-changelog-close {
-    cursor: pointer;
-    font-size: 1.5em;
-    opacity: 0.8;
-}
+    /* 更新日志弹窗 */
+    .titania-changelog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s;
+    }
 
-.titania-changelog-close:hover {
-    opacity: 1;
-}
+    .titania-changelog-box {
+        background: #1e1e1e;
+        border: 1px solid #444;
+        border-radius: 12px;
+        width: 450px;
+        max-width: 90vw;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
 
-.titania-changelog-body {
-    padding: 20px;
-    max-height: 400px;
-    overflow-y: auto;
-    color: #ccc;
-    line-height: 1.6;
-}
+    .titania-changelog-header {
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #ff6b6b, #feca57);
+        color: #fff;
+        font-weight: bold;
+        font-size: 1.1em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-.titania-changelog-body h3 {
-    color: #bfa15f;
-    margin-top: 0;
-    margin-bottom: 10px;
-}
+    .titania-changelog-close {
+        cursor: pointer;
+        font-size: 1.5em;
+        opacity: 0.8;
+    }
 
-.titania-changelog-body ul {
-    margin: 0;
-    padding-left: 20px;
-}
+    .titania-changelog-close:hover {
+        opacity: 1;
+    }
 
-.titania-changelog-body li {
-    margin-bottom: 8px;
-}
+    .titania-changelog-body {
+        padding: 20px;
+        max-height: 400px;
+        overflow-y: auto;
+        color: #ccc;
+        line-height: 1.6;
+    }
 
-.titania-changelog-footer {
-    padding: 15px 20px;
-    background: #181818;
-    border-top: 1px solid #333;
-    text-align: right;
-}
+    .titania-changelog-body h3 {
+        color: #bfa15f;
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
 
-.titania-changelog-btn {
-    background: linear-gradient(90deg, #bfa15f, #d4c08b);
-    color: #1a1a1a;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-}
+    .titania-changelog-body ul {
+        margin: 0;
+        padding-left: 20px;
+    }
 
-.titania-changelog-btn:hover {
-    filter: brightness(1.1);
-}
+    .titania-changelog-body li {
+        margin-bottom: 8px;
+    }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+    .titania-changelog-footer {
+        padding: 15px 20px;
+        background: #181818;
+        border-top: 1px solid #333;
+        text-align: right;
+    }
+
+    .titania-changelog-btn {
+        background: linear-gradient(90deg, #bfa15f, #d4c08b);
+        color: #1a1a1a;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .titania-changelog-btn:hover {
+        filter: brightness(1.1);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
 </style>

@@ -1,9 +1,10 @@
 {
     "display_name": "回声小剧场 (Titania Echo)",
     "name": "Titania Echo Theater",
-    "version": "3.0.0",
+    "version": "3.0.2",
     "author": "Titania",
     "description": "沉浸式角色内心独白与平行世界演绎插件。",
     "type": "module",
-    "js": "index.js"
+    "js": "index.js",
+    "homePage": "https://github.com/Titania-elf/titania-theater"
 }

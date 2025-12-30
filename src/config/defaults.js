@@ -6,6 +6,10 @@ export const extensionFolderPath = `scripts/extensions/third-party/titania-theat
 // 当前版本号 (每次更新时修改这里)
 export const CURRENT_VERSION = "3.0.2";
 
+// GitHub 仓库信息 (用于远程版本检测)
+export const GITHUB_REPO = "Titania-elf/titania-theater";
+export const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/manifest.json`;
+
 // 更新日志 (HTML 格式)
 export const CHANGELOG = `
 <h3>v3.0.2 稳定性修复 🛡️</h3>
