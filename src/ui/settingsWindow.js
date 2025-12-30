@@ -160,6 +160,50 @@ export function openSettingsWindow() {
                             <div id="auto-cat-list" style="max-height:150px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;"></div>
                         </div>
                     </div>
+                    
+                    <!-- 自动续写功能 -->
+                    <div style="margin-top:25px; border-top:1px solid #333; padding-top:20px;">
+                        <div class="t-form-group">
+                            <label style="cursor:pointer; display:flex; align-items:center; color:#90cdf4; font-weight:bold;">
+                                <input type="checkbox" id="cfg-auto-continue" ${(data.auto_continue?.enabled) ? 'checked' : ''} style="margin-right:10px;">
+                                🔄 开启自动续写 (应对 API 超时截断)
+                            </label>
+                            <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">
+                                当检测到生成内容被截断时，自动发送续写请求拼接完整内容。
+                            </p>
+                        </div>
+                        <div id="auto-continue-panel" style="display:${(data.auto_continue?.enabled) ? 'block' : 'none'}; padding-left:22px; background:#181818; border:1px solid #333; border-radius:6px; padding:15px; margin-top:10px;">
+                            <div class="t-form-group">
+                                <label class="t-form-label">最大续写次数</label>
+                                <select id="cfg-continue-retries" class="t-input" style="width:120px;">
+                                    <option value="1" ${(data.auto_continue?.max_retries || 2) === 1 ? 'selected' : ''}>1 次</option>
+                                    <option value="2" ${(data.auto_continue?.max_retries || 2) === 2 ? 'selected' : ''}>2 次 (推荐)</option>
+                                    <option value="3" ${(data.auto_continue?.max_retries || 2) === 3 ? 'selected' : ''}>3 次</option>
+                                    <option value="5" ${(data.auto_continue?.max_retries || 2) === 5 ? 'selected' : ''}>5 次</option>
+                                </select>
+                                <p style="font-size:0.75em; color:#555; margin-top:5px;">超过此次数后将停止续写，显示已获取的内容。</p>
+                            </div>
+                            <div class="t-form-group">
+                                <label class="t-form-label">截断检测模式</label>
+                                <select id="cfg-continue-mode" class="t-input">
+                                    <option value="html" ${(data.auto_continue?.detection_mode || 'html') === 'html' ? 'selected' : ''}>🏷️ HTML 标签检测 (推荐)</option>
+                                    <option value="sentence" ${(data.auto_continue?.detection_mode || 'html') === 'sentence' ? 'selected' : ''}>📝 句子完整性检测</option>
+                                    <option value="both" ${(data.auto_continue?.detection_mode || 'html') === 'both' ? 'selected' : ''}>🔍 双重检测 (更严格)</option>
+                                </select>
+                                <p style="font-size:0.75em; color:#555; margin-top:5px;">
+                                    HTML 检测：检查标签是否闭合<br>
+                                    句子检测：检查是否以完整句子结束
+                                </p>
+                            </div>
+                            <div class="t-form-group" style="margin-bottom:0;">
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-continue-indicator" ${(data.auto_continue?.show_indicator !== false) ? 'checked' : ''} style="margin-right:10px;">
+                                    <span style="color:#ccc;">在内容中显示续写连接标记</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="t-form-group" style="margin-top:20px; border-top:1px solid #333; padding-top:15px;">
                         <label class="t-form-label">回声模式 - 历史读取行数</label>
                         <input type="number" id="cfg-history" class="t-input" value="${cfg.history_limit || 10}">
@@ -223,10 +267,10 @@ export function openSettingsWindow() {
     const saveCurrentProfileToMemory = () => {
         const pIndex = tempProfiles.findIndex(p => p.id === tempActiveId);
         if (pIndex !== -1 && tempProfiles[pIndex].type !== 'internal') {
-            const p = tempProfiles[pIndex]; 
-            p.name = $("#cfg-prof-name").val(); 
-            p.url = $("#cfg-url").val(); 
-            p.key = $("#cfg-key").val(); 
+            const p = tempProfiles[pIndex];
+            p.name = $("#cfg-prof-name").val();
+            p.url = $("#cfg-url").val();
+            p.key = $("#cfg-key").val();
             p.model = $("#cfg-model").val();
         }
     };
@@ -254,20 +298,20 @@ export function openSettingsWindow() {
     $("#cfg-prof-select").on("change", function () { saveCurrentProfileToMemory(); tempActiveId = $(this).val(); renderProfileUI(); });
     $("#cfg-prof-add").on("click", function () { saveCurrentProfileToMemory(); const newId = "custom_" + Date.now(); tempProfiles.push({ id: newId, name: "新方案 " + tempProfiles.length, type: "custom", url: "", key: "", model: "gpt-3.5-turbo" }); tempActiveId = newId; renderProfileUI(); });
     $("#cfg-prof-del").on("click", function () { if (confirm("删除方案？")) { tempProfiles = tempProfiles.filter(p => p.id !== tempActiveId); tempActiveId = tempProfiles[0].id; renderProfileUI(); } });
-    
+
     // --- 预览与外观 ---
     const renderPreview = () => {
-        const $ball = $("#p-ball"); 
-        const theme = $("#p-color-theme").val(); 
-        const notify = $("#p-color-notify").val(); 
+        const $ball = $("#p-ball");
+        const theme = $("#p-color-theme").val();
+        const notify = $("#p-color-notify").val();
         const notifyBg = $("#p-color-notify-bg").val(); // [新增]
         const bg = $("#p-color-bg").val();
         const icon = $("#p-color-icon").val();
         const size = parseInt(tempApp.size) || 56;
-        
+
         $ball.css({ width: size + "px", height: size + "px", fontSize: Math.floor(size * 0.46) + "px", borderColor: "transparent", boxShadow: `0 0 10px ${theme}` });
-        
-        $ball[0].style.setProperty('--p-theme', theme); 
+
+        $ball[0].style.setProperty('--p-theme', theme);
         $ball[0].style.setProperty('--p-notify', notify);
         $ball[0].style.setProperty('--p-notify-bg', notifyBg); // [新增]
         $ball[0].style.setProperty('--p-bg', bg);
@@ -310,6 +354,11 @@ export function openSettingsWindow() {
     $("#cfg-auto").on("change", function () { $("#auto-settings-panel").toggle($(this).is(":checked")); });
     $("#cfg-chance").on("input", function () { $("#cfg-chance-val").text($(this).val() + "%"); });
 
+    // 自动续写设置事件
+    $("#cfg-auto-continue").on("change", function () {
+        $("#auto-continue-panel").toggle($(this).is(":checked"));
+    });
+
     // --- 诊断与日志逻辑 ---
     const renderLogView = () => {
         const logs = TitaniaLogger.logs;
@@ -335,7 +384,7 @@ export function openSettingsWindow() {
                         input: d.input_stats
                     };
                     if (d.raw_response_snippet) {
-                        summary.raw_snippet = d.raw_response_snippet.substring(0, 100) + (d.raw_response_snippet.length>100 ? '...' : '');
+                        summary.raw_snippet = d.raw_response_snippet.substring(0, 100) + (d.raw_response_snippet.length > 100 ? '...' : '');
                     }
                     detailStr = `\n[Diagnostics]: ${JSON.stringify(summary, null, 2)}`;
                 } else {
@@ -368,14 +417,14 @@ export function openSettingsWindow() {
             if (window.toastr) toastr.success(`获取成功: ${models.length} 个`);
         } catch (e) { alert("Fail: " + e.message); TitaniaLogger.error("获取模型列表失败", e); } finally { btn.prop("disabled", false).text("🔄 获取列表"); }
     });
-    
+
     $("#btn-restore-presets").on("click", function () {
-        if (confirm("恢复所有预设？")) { 
-            const d = getExtData(); 
-            d.disabled_presets = []; 
-            saveExtData(); 
-            loadScripts(); 
-            $(this).prop("disabled", true).text("已恢复"); 
+        if (confirm("恢复所有预设？")) {
+            const d = getExtData();
+            d.disabled_presets = [];
+            saveExtData();
+            loadScripts();
+            $(this).prop("disabled", true).text("已恢复");
         }
     });
 
@@ -398,20 +447,28 @@ export function openSettingsWindow() {
         };
         const d = getExtData();
         d.config = finalCfg;
-        d.appearance = { 
-            type: tempApp.type, 
-            content: tempApp.content, 
-            color_theme: $("#p-color-theme").val(), 
-            color_notify: $("#p-color-notify").val(), 
-            color_notify_bg: $("#p-color-notify-bg").val(), // [新增]
+        d.appearance = {
+            type: tempApp.type,
+            content: tempApp.content,
+            color_theme: $("#p-color-theme").val(),
+            color_notify: $("#p-color-notify").val(),
+            color_notify_bg: $("#p-color-notify-bg").val(),
             color_bg: $("#p-color-bg").val(),
             color_icon: $("#p-color-icon").val(),
-            size: tempApp.size || 56 
+            size: tempApp.size || 56
         };
         d.director = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val(), style_ref: $("#set-dir-style").val().trim() };
 
+        // 保存自动续写配置
+        d.auto_continue = {
+            enabled: $("#cfg-auto-continue").is(":checked"),
+            max_retries: parseInt($("#cfg-continue-retries").val()) || 2,
+            detection_mode: $("#cfg-continue-mode").val() || "html",
+            show_indicator: $("#cfg-continue-indicator").is(":checked")
+        };
+
         saveExtData();
-        $("#t-settings-view").remove(); $("#t-main-view").show(); 
+        $("#t-settings-view").remove(); $("#t-main-view").show();
         createFloatingButton(); // 刷新悬浮球外观
         if (window.toastr) toastr.success("设置已保存");
     });

@@ -1,10 +1,17 @@
 // src/core/api.js
 
 import { getExtData } from "../utils/storage.js";
-import { GlobalState } from "./state.js";
+import { GlobalState, resetContinuationState } from "./state.js";
 import { TitaniaLogger } from "./logger.js";
 import { getContextData } from "./context.js";
-import { getChatHistory, scopeAndSanitizeHTML, generateScopeId } from "../utils/helpers.js";
+import {
+    getChatHistory,
+    scopeAndSanitizeHTML,
+    generateScopeId,
+    detectTruncation,
+    extractContinuationContext,
+    mergeContinuationContent
+} from "../utils/helpers.js";
 import { startTimer, stopTimer } from "../ui/floatingBtn.js";
 
 import { applyScriptSelection } from "../ui/mainWindow.js";
@@ -230,6 +237,75 @@ Your task is to generate an immersive HTML scene based on the user's scenario.
         // [新增] 调用 helpers 中的清洗函数，传入生成的 scopeId
         let finalOutput = scopeAndSanitizeHTML(cleanContent, scopeId);
 
+        // --- 5. 自动续写检测与处理 ---
+        const autoContinueCfg = data.auto_continue || {};
+        if (autoContinueCfg.enabled) {
+            const truncationResult = detectTruncation(finalOutput, autoContinueCfg.detection_mode || "html");
+
+            if (truncationResult.isTruncated) {
+                const maxRetries = autoContinueCfg.max_retries || 2;
+                const currentRetry = GlobalState.continuation.retryCount;
+
+                if (currentRetry < maxRetries) {
+                    // 记录截断信息
+                    TitaniaLogger.warn("检测到内容截断，准备自动续写", {
+                        reason: truncationResult.reason,
+                        retryCount: currentRetry + 1,
+                        maxRetries: maxRetries
+                    });
+
+                    // 更新续写状态
+                    if (!GlobalState.continuation.isActive) {
+                        // 首次截断，保存原始内容
+                        GlobalState.continuation.isActive = true;
+                        GlobalState.continuation.originalContent = finalOutput;
+                        GlobalState.continuation.currentScopeId = scopeId;
+                        GlobalState.continuation.accumulatedContent = finalOutput;
+                    } else {
+                        // 续写过程中再次截断，合并内容
+                        GlobalState.continuation.accumulatedContent = mergeContinuationContent(
+                            GlobalState.continuation.accumulatedContent,
+                            finalOutput,
+                            GlobalState.continuation.currentScopeId,
+                            autoContinueCfg.show_indicator !== false
+                        );
+                    }
+                    GlobalState.continuation.retryCount++;
+
+                    // 显示续写提示
+                    if (!silent && window.toastr) {
+                        toastr.info(`🔄 检测到截断，正在自动续写 (${currentRetry + 1}/${maxRetries})...`, "Titania Echo");
+                    }
+
+                    // 发起续写请求
+                    await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId, autoContinueCfg, silent);
+                    return; // 续写逻辑会处理后续流程
+                } else {
+                    // 已达到最大重试次数
+                    TitaniaLogger.warn("已达到最大续写次数", { maxRetries });
+                    if (!silent && window.toastr) {
+                        toastr.warning(`⚠️ 已尝试续写 ${maxRetries} 次，内容可能仍不完整`, "Titania Echo");
+                    }
+                    // 使用累积的内容
+                    if (GlobalState.continuation.accumulatedContent) {
+                        finalOutput = GlobalState.continuation.accumulatedContent;
+                    }
+                }
+            } else if (GlobalState.continuation.isActive) {
+                // 续写成功，合并最终内容
+                finalOutput = mergeContinuationContent(
+                    GlobalState.continuation.accumulatedContent,
+                    finalOutput,
+                    GlobalState.continuation.currentScopeId,
+                    autoContinueCfg.show_indicator !== false
+                );
+                TitaniaLogger.info("自动续写完成", { totalRetries: GlobalState.continuation.retryCount });
+            }
+        }
+
+        // 重置续写状态
+        resetContinuationState();
+
         GlobalState.lastGeneratedContent = finalOutput;
         diagnostics.phase = 'complete';
 
@@ -245,6 +321,9 @@ Your task is to generate an immersive HTML scene based on the user's scenario.
 
         // 出错时也停止计时器
         stopTimer();
+
+        // 重置续写状态
+        resetContinuationState();
 
         diagnostics.network.latency = Date.now() - startTime;
         diagnostics.phase += "_failed";
@@ -262,6 +341,201 @@ Your task is to generate an immersive HTML scene based on the user's scenario.
         GlobalState.lastGeneratedContent = errHtml;
         $floatBtn.addClass("t-notify");
         if (!silent && window.toastr) toastr.error("生成失败", "Titania Error");
+    } finally {
+        GlobalState.isGenerating = false;
+        $floatBtn.removeClass("t-loading");
+    }
+}
+
+/**
+ * 执行续写请求
+ * @param {object} script - 当前剧本
+ * @param {object} ctx - 上下文数据
+ * @param {object} cfg - 配置
+ * @param {string} finalUrl - API URL
+ * @param {string} finalKey - API Key
+ * @param {string} finalModel - 模型名称
+ * @param {string} scopeId - 作用域 ID
+ * @param {object} autoContinueCfg - 自动续写配置
+ * @param {boolean} silent - 是否静默模式
+ */
+async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId, autoContinueCfg, silent) {
+    const $floatBtn = $("#titania-float-btn");
+    const useStream = cfg.stream !== false;
+
+    try {
+        // 提取续写上下文
+        const { lastContent } = extractContinuationContext(
+            GlobalState.continuation.accumulatedContent,
+            800 // 提取最后 800 个字符作为上下文
+        );
+
+        // 构建续写 Prompt
+        const continuationSys = `You are continuing a Visual Scene that was interrupted.
+Your task is to seamlessly continue from where the previous content ended.
+
+[CRITICAL RULES]
+1. **Container ID**: Continue using the SAME container ID: #${GlobalState.continuation.currentScopeId}
+2. **Scoped CSS**: If adding new styles, ALL selectors MUST start with #${GlobalState.continuation.currentScopeId}
+3. **Seamless Connection**: Your content should naturally flow from the last sentence/element
+4. **No Repetition**: Do NOT repeat content that already exists
+5. **Complete the Scene**: Finish any incomplete sentences, paragraphs, or HTML tags
+6. **Format**: Output raw HTML string. No markdown.
+7. **Language**: Continue in Chinese.`;
+
+        const continuationUser = `[Previous Content Ending]
+The scene was interrupted. Here is how it ended:
+
+---
+${lastContent}
+---
+
+[Task]
+Please continue from exactly where this ended. Complete any unfinished sentences or HTML structures, then continue the narrative naturally until a proper conclusion.
+
+Remember: Use the same CSS scope #${GlobalState.continuation.currentScopeId} for any new styles.`;
+
+        // 发起续写请求
+        let endpoint = finalUrl.trim().replace(/\/+$/, "");
+        if (!endpoint.endsWith("/chat/completions")) {
+            if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
+            else endpoint += "/v1/chat/completions";
+        }
+
+        const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+            body: JSON.stringify({
+                model: finalModel,
+                messages: [
+                    { role: "system", content: continuationSys },
+                    { role: "user", content: continuationUser }
+                ],
+                stream: useStream
+            })
+        });
+
+        if (!res.ok) {
+            throw new Error(`Continuation HTTP Error ${res.status}: ${res.statusText}`);
+        }
+
+        // 接收续写内容
+        let rawContent = "";
+
+        if (useStream) {
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop();
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || !trimmed.startsWith("data: ")) continue;
+                    const jsonStr = trimmed.replace(/^data: /, "").trim();
+                    if (jsonStr === "[DONE]") continue;
+                    try {
+                        const json = JSON.parse(jsonStr);
+                        const chunk = json.choices?.[0]?.delta?.content || "";
+                        if (chunk) rawContent += chunk;
+                    } catch (e) { }
+                }
+            }
+        } else {
+            const jsonText = await res.text();
+            try {
+                const json = JSON.parse(jsonText);
+                rawContent = json.choices?.[0]?.message?.content || "";
+            } catch (jsonErr) {
+                throw new Error("Continuation Invalid JSON");
+            }
+        }
+
+        if (!rawContent || rawContent.trim().length === 0) {
+            throw new Error("ERR_EMPTY_CONTINUATION");
+        }
+
+        // 清洗续写内容
+        let cleanContent = rawContent.replace(/```html/gi, "").replace(/```/g, "").trim();
+
+        // 注意：续写内容不需要完整的 scopeAndSanitizeHTML 处理，因为它应该复用原有的 scopeId
+        // 但我们需要确保 CSS 选择器正确
+        let continuationOutput = cleanContent;
+
+        // 检测续写内容是否也被截断
+        const truncationResult = detectTruncation(continuationOutput, autoContinueCfg.detection_mode || "html");
+        const maxRetries = autoContinueCfg.max_retries || 2;
+
+        if (truncationResult.isTruncated && GlobalState.continuation.retryCount < maxRetries) {
+            // 续写内容也被截断，继续合并并再次尝试
+            GlobalState.continuation.accumulatedContent = mergeContinuationContent(
+                GlobalState.continuation.accumulatedContent,
+                continuationOutput,
+                GlobalState.continuation.currentScopeId,
+                autoContinueCfg.show_indicator !== false
+            );
+            GlobalState.continuation.retryCount++;
+
+            if (!silent && window.toastr) {
+                toastr.info(`🔄 续写内容仍被截断，继续尝试 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
+            }
+
+            // 递归续写
+            await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId, autoContinueCfg, silent);
+        } else {
+            // 续写完成，合并最终内容
+            const finalOutput = mergeContinuationContent(
+                GlobalState.continuation.accumulatedContent,
+                continuationOutput,
+                GlobalState.continuation.currentScopeId,
+                autoContinueCfg.show_indicator !== false
+            );
+
+            // 重置续写状态
+            const totalRetries = GlobalState.continuation.retryCount;
+            resetContinuationState();
+
+            GlobalState.lastGeneratedContent = finalOutput;
+
+            // 停止计时器
+            stopTimer();
+
+            const elapsed = GlobalState.lastGenerationTime / 1000;
+            if (!silent && window.toastr) {
+                toastr.success(`✨ 《${script.name}》演绎完成！(含${totalRetries}次续写, ${elapsed.toFixed(1)}s)`, "Titania Echo");
+            }
+            $floatBtn.addClass("t-notify");
+
+            TitaniaLogger.info("自动续写完成", {
+                scriptName: script.name,
+                totalRetries,
+                elapsed: elapsed.toFixed(1) + 's'
+            });
+        }
+
+    } catch (e) {
+        console.error("Titania Continuation Error:", e);
+        TitaniaLogger.error("续写过程发生异常", e);
+
+        // 即使续写失败，也保留已有的内容
+        if (GlobalState.continuation.accumulatedContent) {
+            GlobalState.lastGeneratedContent = GlobalState.continuation.accumulatedContent;
+            if (!silent && window.toastr) {
+                toastr.warning("⚠️ 续写失败，显示已获取的内容", "Titania Echo");
+            }
+        }
+
+        // 重置续写状态
+        resetContinuationState();
+
+        // 停止计时器
+        stopTimer();
+
+        $floatBtn.addClass("t-notify");
     } finally {
         GlobalState.isGenerating = false;
         $floatBtn.removeClass("t-loading");
