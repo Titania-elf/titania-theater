@@ -9,11 +9,17 @@ import { openMainWindow } from "./mainWindow.js";
  * 启动悬浮球计时器
  */
 export function startTimer() {
+    // 检查是否启用计时器显示
+    const settings = getExtData();
+    const app = settings.appearance || {};
+    if (app.show_timer === false) return; // 用户关闭了计时功能
+
     GlobalState.timerStartTime = Date.now();
 
-    // 显示计时器元素
+    // 显示计时器元素并更新位置
     const $timer = $("#titania-timer");
-    $timer.addClass("show").text("0.0s");
+    $timer.addClass("show").text("0.0");
+    updateTimerPosition();
 
     // 清除可能存在的旧计时器
     if (GlobalState.timerInterval) {
@@ -23,7 +29,7 @@ export function startTimer() {
     // 启动新计时器，每 100ms 更新一次
     GlobalState.timerInterval = setInterval(() => {
         const elapsed = (Date.now() - GlobalState.timerStartTime) / 1000;
-        $timer.text(elapsed.toFixed(1) + "s");
+        $timer.text(elapsed.toFixed(1));
     }, 100);
 }
 
@@ -40,13 +46,40 @@ export function stopTimer() {
     const elapsed = Date.now() - GlobalState.timerStartTime;
     GlobalState.lastGenerationTime = elapsed;
 
+    // 检查是否启用计时器显示
+    const settings = getExtData();
+    const app = settings.appearance || {};
+    if (app.show_timer === false) return; // 用户关闭了计时功能
+
     // 显示最终结果，2秒后淡出
     const $timer = $("#titania-timer");
-    $timer.text((elapsed / 1000).toFixed(1) + "s").addClass("done");
+    $timer.text((elapsed / 1000).toFixed(1)).addClass("done");
 
     setTimeout(() => {
         $timer.removeClass("show done");
-    }, 2500);
+    }, 2000);
+}
+
+/**
+ * 更新计时器位置（跟随悬浮球）
+ */
+function updateTimerPosition() {
+    const $btn = $("#titania-float-btn");
+    const $timer = $("#titania-timer");
+
+    if (!$btn.length || !$timer.length) return;
+
+    const btnRect = $btn[0].getBoundingClientRect();
+    const timerWidth = $timer.outerWidth() || 30;
+
+    // 计时器显示在悬浮球正上方
+    const left = btnRect.left + (btnRect.width / 2) - (timerWidth / 2);
+    const top = btnRect.top - 24; // 上方 24px
+
+    $timer.css({
+        left: Math.max(5, left) + "px",
+        top: Math.max(5, top) + "px"
+    });
 }
 
 /**
@@ -115,6 +148,9 @@ export function createFloatingButton() {
         l = Math.max(0, Math.min(window.innerWidth - size, l));
         t = Math.max(0, Math.min(window.innerHeight - size, t));
         btn.css({ left: l + "px", top: t + "px", right: "auto" });
+
+        // 拖动时同步更新计时器位置
+        updateTimerPosition();
     });
 
     $(document).on("touchend mouseup", function () {
@@ -126,6 +162,9 @@ export function createFloatingButton() {
             const targetLeft = (rect.left + (size / 2) < snapThreshold) ? 0 : window.innerWidth - size;
 
             btn.css({ "transition": "all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)", "left": targetLeft + "px" });
+
+            // 贴边动画结束后更新计时器位置
+            setTimeout(updateTimerPosition, 350);
         } else {
             if (GlobalState.isGenerating) {
                 if (window.toastr) toastr.info("🎭 小剧场正在后台演绎中，请稍候...", "Titania Echo");

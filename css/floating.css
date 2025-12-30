@@ -100,57 +100,36 @@
     background: var(--t-notify-bg, #2b2b2b) !important;
 }
 
-/* ===== 计时器 ===== */
+/* ===== 计时器 (极简版) ===== */
 #titania-timer {
     position: fixed;
-    top: 100px;
-    left: 85px;
-    /* 悬浮球右侧 */
-
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    /* 位置由 JS 动态计算，显示在悬浮球正上方 */
+    top: 80px;
+    left: 20px;
+    
+    /* 极简样式：只显示数字 */
+    background: rgba(0, 0, 0, 0.6);
     color: #00d9ff;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 14px;
-    font-weight: bold;
-
-    padding: 6px 12px;
-    border-radius: 20px;
-    border: 1px solid #00d9ff44;
-    box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
+    font-family: monospace;
+    font-size: 11px;
+    
+    padding: 2px 6px;
+    border-radius: 6px;
+    
     z-index: 9998;
     pointer-events: none;
-
+    
     /* 默认隐藏 */
     opacity: 0;
-    transform: translateX(-10px) scale(0.9);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(5px);
+    transition: opacity 0.2s, transform 0.2s;
 }
 
 #titania-timer.show {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0);
 }
 
 #titania-timer.done {
     color: #55efc4;
-    border-color: #55efc444;
-    box-shadow: 0 4px 15px rgba(85, 239, 196, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    animation: timer-pulse 0.5s ease-out;
 }
-
-@keyframes timer-pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* 计时器跟随悬浮球位置 - 通过 JS 动态调整 */

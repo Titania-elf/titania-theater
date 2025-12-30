@@ -8,7 +8,8 @@ export const CURRENT_VERSION = "3.0.2";
 
 // GitHub 仓库信息 (用于远程版本检测)
 export const GITHUB_REPO = "Titania-elf/titania-theater";
-export const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/manifest.json`;
+// 使用 GitHub API 获取文件内容（支持 CORS）
+export const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 
 // 更新日志 (HTML 格式)
 export const CHANGELOG = `
@@ -109,7 +110,8 @@ export const defaultSettings = {
         color_bg: "#2b2b2b",   // [新增] 球体背景色
         color_icon: "#ffffff", // [新增] 图标颜色
         color_notify_bg: "#2b2b2b", // [新增] 通知状态背景色
-        size: 56
+        size: 56,
+        show_timer: true       // 是否显示生成计时统计
     },
     director: {
         length: "",

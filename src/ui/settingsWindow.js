@@ -93,7 +93,14 @@ export function openSettingsWindow() {
                         <div class="t-form-row"><span>流光主题色</span><input type="color" id="p-color-theme" value="${tempApp.color_theme}" style="background:none; border:none; width:40px; height:30px;"></div>
                         <!-- 通知颜色组 -->
                         <div class="t-form-row"><span>通知呼吸色 (光晕)</span><input type="color" id="p-color-notify" value="${tempApp.color_notify}" style="background:none; border:none; width:40px; height:30px;"></div>
-                        <div class="t-form-row" style="border:none;"><span>通知背景色 (球体)</span><input type="color" id="p-color-notify-bg" value="${tempApp.color_notify_bg}" style="background:none; border:none; width:40px; height:30px;"></div>
+                        <div class="t-form-row"><span>通知背景色 (球体)</span><input type="color" id="p-color-notify-bg" value="${tempApp.color_notify_bg}" style="background:none; border:none; width:40px; height:30px;"></div>
+                    </div>
+                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                        <label style="cursor:pointer; display:flex; align-items:center;">
+                            <input type="checkbox" id="p-show-timer" ${tempApp.show_timer !== false ? 'checked' : ''} style="margin-right:10px;">
+                            <span style="color:#ccc;">⏱️ 显示生成计时统计</span>
+                        </label>
+                        <p style="font-size:0.75em; color:#666; margin-top:5px; margin-left:22px;">生成时在悬浮球上方显示耗时</p>
                     </div>
                 </div>
 
@@ -455,7 +462,8 @@ export function openSettingsWindow() {
             color_notify_bg: $("#p-color-notify-bg").val(),
             color_bg: $("#p-color-bg").val(),
             color_icon: $("#p-color-icon").val(),
-            size: tempApp.size || 56
+            size: tempApp.size || 56,
+            show_timer: $("#p-show-timer").is(":checked")
         };
         d.director = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val(), style_ref: $("#set-dir-style").val().trim() };
 
