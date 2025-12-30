@@ -1,0 +1,265 @@
+/* css/debug.css - 极简代码编辑器风格 (含移动端适配) */
+
+/* === 基础样式 (Desktop First) === */
+
+.t-dbg-container {
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: #1e1e1e; /* VS Code 深色背景 */
+    color: #cccccc;
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden;
+    /* 移动端防抖动 */
+    max-width: 100vw;
+}
+
+/* 顶部状态栏 */
+.t-dbg-header-bar {
+    height: 32px;
+    background: #252526;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    font-size: 0.85em;
+    color: #888;
+    gap: 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow-x: auto; /* 防止小屏文字溢出 */
+    scrollbar-width: none; /* 隐藏滚动条 */
+}
+.t-dbg-header-bar::-webkit-scrollbar { display: none; }
+
+.t-dbg-stat-item { display: flex; align-items: center; gap: 6px; }
+.t-dbg-stat-item i { color: #bfa15f; }
+.t-dbg-highlight { color: #eee; font-family: monospace; }
+
+/* 主体布局：左右分栏 */
+.t-dbg-body {
+    flex-grow: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* 左侧：参数侧边栏 */
+.t-dbg-sidebar {
+    width: 220px;
+    background: #252526;
+    border-right: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.t-param-group {
+    padding: 10px 15px;
+    border-bottom: 1px solid #2d2d2d;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.t-param-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+.t-param-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.9em;
+    gap: 10px; /* 防止文字粘连 */
+}
+.t-param-key { color: #999; white-space: nowrap; }
+.t-param-val { color: #ddd; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-param-val.warn { color: #d7ba7d; } 
+.t-param-val.error { color: #f48771; } 
+.t-param-val.ok { color: #89d185; }
+
+/* 右侧：源码主区域 */
+.t-dbg-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: #1e1e1e;
+    overflow: hidden;
+    min-width: 0; /* 防止 Flex 子项溢出 */
+}
+
+.t-editor-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #333;
+    min-height: 0; 
+}
+.t-editor-section:last-child { border-bottom: none; }
+
+.t-section-label {
+    background: #2d2d2d;
+    padding: 4px 15px;
+    font-size: 0.8em;
+    color: #aaa;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.t-code-textarea {
+    flex-grow: 1;
+    background: #1e1e1e;
+    color: #9cdcfe; 
+    border: none;
+    resize: none;
+    padding: 10px 15px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    outline: none;
+    white-space: pre;
+    overflow: auto;
+}
+.t-code-textarea.user-ctx { color: #ce9178; }
+
+/* 底部操作栏 */
+.t-dbg-footer {
+    padding: 10px 15px;
+    background: #252526;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+/* === 📱 移动端适配 (Media Queries) === */
+@media screen and (max-width: 700px) {
+    /* 1. 主体流向改为垂直 */
+    .t-dbg-body {
+        flex-direction: column;
+    }
+
+    /* 2. 侧边栏变身为顶部横向滚动条 */
+    .t-dbg-sidebar {
+        width: 100%;
+        height: 85px; /* 固定高度 */
+        flex-direction: row; /* 内容横排 */
+        overflow-x: auto; /* 允许横向滚动 */
+        overflow-y: hidden;
+        border-right: none;
+        border-bottom: 1px solid #333;
+        background: #222;
+        padding: 0;
+        /* 隐藏滚动条但保留功能 */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .t-dbg-sidebar::-webkit-scrollbar { display: none; }
+
+    /* 3. 参数组变为卡片样式 */
+    .t-param-group {
+        min-width: 140px; /* 最小宽度，防止挤压 */
+        border-bottom: none;
+        border-right: 1px solid #333;
+        padding: 5px 12px;
+        flex-shrink: 0; /* 防止被挤小 */
+    }
+    
+    /* 调整参数文字大小 */
+    .t-param-title { margin-bottom: 4px; font-size: 0.7em; }
+    .t-param-row { margin-bottom: 2px; font-size: 0.8em; }
+
+    /* 4. 代码区域自适应 */
+    .t-dbg-main {
+        height: calc(100% - 85px); /* 减去顶部横条高度 */
+    }
+    
+    /* 5. 头部状态栏精简 */
+    .t-dbg-header-bar {
+        font-size: 0.75em;
+        padding: 0 10px;
+        gap: 12px;
+    }
+}
+
+/* --- 代码折叠列表样式 (新增) --- */
+
+/* 替换原来的 textarea，改为 div 容器 */
+.t-code-viewer {
+    flex-grow: 1;
+    background: #1e1e1e;
+    color: #ce9178; /* User Context 默认色 */
+    overflow-y: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    padding: 0;
+}
+
+/* 每一行的容器 */
+.t-fold-row {
+    border-bottom: 1px solid #2a2a2a;
+}
+
+/* 可点击的标题行 */
+.t-fold-head {
+    padding: 6px 15px;
+    background: #252526;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #cccccc;
+    user-select: none;
+    transition: background 0.2s;
+}
+.t-fold-head:hover { background: #2d2d2d; }
+
+/* 标题里的图标 */
+.t-fold-icon {
+    width: 16px;
+    font-size: 0.8em;
+    color: #888;
+    transition: transform 0.2s;
+    margin-right: 5px;
+}
+/* 展开状态旋转图标 */
+.t-fold-row.open .t-fold-icon { transform: rotate(90deg); }
+
+/* 标题文字 */
+.t-fold-title { font-weight: bold; color: #9cdcfe; margin-right: 10px; }
+.t-fold-meta { font-size: 0.85em; color: #666; font-style: italic; }
+
+/* 隐藏的内容体 */
+.t-fold-body {
+    display: none;
+    padding: 10px 15px;
+    background: #1e1e1e;
+    white-space: pre-wrap; /* 保留换行 */
+    line-height: 1.5;
+    border-left: 3px solid #333; /* 视觉引导线 */
+    color: #d4d4d4;
+}
+/* 激活时显示 */
+.t-fold-row.open .t-fold-body { display: block; }
+
+/* System Prompt 保持原来的 Textarea 样式，但改个名防冲突 */
+.t-simple-editor {
+    flex-grow: 1;
+    background: #1e1e1e;
+    color: #9cdcfe;
+    border: none;
+    resize: none;
+    padding: 10px 15px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    outline: none;
+    white-space: pre-wrap;
+    overflow: auto;
+}

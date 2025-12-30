@@ -1,9 +1,9 @@
 {
-    "display_name": "回声小剧场",
-    "name": "Titania_Echo_Theater",
-    "version": "4.6.2",
-    "description": "沉浸式小剧场生成器。新增【回声模式】（基于历史记录生成日记、书评、弹幕）与【平行世界】（校园PA、西幻、赛博朋克等IF线）。内置20+预设剧本，支持蓝灯世界书读取与宏解析，可自定义历史记录读取条数。",
+    "display_name": "回声小剧场 (Titania Echo)",
+    "name": "Titania Echo Theater",
+    "version": "3.0.0",
     "author": "Titania",
-    "js": "index.js",
-    "css": "style.css"
+    "description": "沉浸式角色内心独白与平行世界演绎插件。",
+    "type": "module",
+    "js": "index.js"
 }

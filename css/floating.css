@@ -1,0 +1,156 @@
+/* css/floating.css - 悬浮球 */
+
+#titania-float-btn {
+    position: fixed;
+    top: 100px;
+    left: 20px;
+    /* 使用 CSS 变量控制尺寸 */
+    width: var(--t-size, 56px);
+    height: var(--t-size, 56px);
+    font-size: calc(var(--t-size, 56px) * 0.46);
+
+    padding: 3px;
+    border-radius: 50%;
+    /* [修改] 支持自定义背景和图标色 */
+    background: var(--t-bg, #2b2b2b);
+    color: var(--t-icon, #fff);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    border: 2px solid #444;
+    transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    user-select: none;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+#titania-float-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    pointer-events: none;
+    position: relative;
+    z-index: 2;
+}
+
+/* 加载动画 */
+@keyframes t-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+#titania-float-btn.t-loading {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--t-theme) !important;
+    pointer-events: none;
+    box-shadow: 0 0 20px var(--t-theme);
+}
+
+#titania-float-btn.t-loading::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: conic-gradient(transparent 20%, transparent 40%, var(--t-theme));
+    animation: t-spin 1.2s linear infinite;
+    z-index: 0;
+}
+
+#titania-float-btn.t-loading::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: #2b2b2b;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* 通知呼吸灯 */
+@keyframes t-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px var(--t-notify);
+        border-color: var(--t-notify);
+    }
+
+    50% {
+        box-shadow: 0 0 25px var(--t-notify);
+        border-color: var(--t-notify);
+    }
+}
+
+#titania-float-btn.t-notify {
+    animation: t-glow 2s infinite ease-in-out;
+    border-color: var(--t-notify);
+    /* [新增] 通知状态强制使用专用背景色 */
+    background: var(--t-notify-bg, #2b2b2b) !important;
+}
+
+/* ===== 计时器 ===== */
+#titania-timer {
+    position: fixed;
+    top: 100px;
+    left: 85px;
+    /* 悬浮球右侧 */
+
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #00d9ff;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    font-weight: bold;
+
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #00d9ff44;
+    box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    z-index: 9998;
+    pointer-events: none;
+
+    /* 默认隐藏 */
+    opacity: 0;
+    transform: translateX(-10px) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#titania-timer.show {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+}
+
+#titania-timer.done {
+    color: #55efc4;
+    border-color: #55efc444;
+    box-shadow: 0 4px 15px rgba(85, 239, 196, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    animation: timer-pulse 0.5s ease-out;
+}
+
+@keyframes timer-pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 计时器跟随悬浮球位置 - 通过 JS 动态调整 */

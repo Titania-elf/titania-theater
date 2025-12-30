@@ -1,0 +1,90 @@
+/* css/base.css - 基础组件与工具类 */
+
+:root {
+    --t-theme: #bfa15f;      /* 主题色 (金色) */
+    --t-notify: #55efc4;     /* 通知色 (青色) */
+    --t-bg-dark: #121212;    /* 深色背景 */
+    --t-bg-panel: #1e1e1e;   /* 面板背景 */
+    --t-border: #333;        /* 边框色 */
+}
+
+/* 遮罩层 */
+.t-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6); z-index: 20000;
+    backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center;
+    isolation: isolate;
+}
+
+/* 通用窗口容器 */
+.t-box {
+    position: relative;
+    width: 95%; max-width: 650px;
+    height: auto; max-height: 85vh;
+    background: var(--t-bg-dark);
+    border: 1px solid #555;
+    border-radius: 12px;
+    display: flex; flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    color: #eee; font-family: sans-serif;
+    overflow: hidden;
+}
+
+/* 顶部标题栏 */
+.t-header {
+    padding: 12px 15px; border-bottom: 1px solid #444;
+    background: #242530; display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+}
+
+.t-title-container { display: flex; flex-direction: column; justify-content: center; position: relative; padding-left: 12px; }
+.t-title-container::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px; background: linear-gradient(to bottom, #ff9a9e, #fad0c4); border-radius: 2px; box-shadow: 0 0 8px rgba(255, 154, 158, 0.6); }
+.t-title-main { font-size: 1.4em; font-weight: 800; line-height: 1.1; background: linear-gradient(135deg, #e0c3fc 0%, #ff9a9e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+.t-title-sub { font-size: 0.55em; color: #aaa; text-transform: uppercase; letter-spacing: 4px; margin-top: 2px; opacity: 0.7; font-weight: 300; background: linear-gradient(90deg, #ff9a9e, #e0c3fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* 按钮 */
+.t-btn {
+    background: #333; border: 1px solid #555; color: white;
+    padding: 10px 15px; cursor: pointer; border-radius: 6px;
+    font-weight: bold; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: 0.2s;
+}
+.t-btn:hover { background: #444; border-color: #666; }
+.t-btn.primary { background: linear-gradient(90deg, #ff9a9e, #fecfef); color: #444; border: none; }
+.t-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.t-tool-btn {
+    font-size: 0.75em; padding: 4px 10px;
+    background: rgba(0,0,0,0.6); border: 1px solid #666; color: #ccc;
+    cursor: pointer; border-radius: 3px;
+    display: flex; align-items: center; gap: 4px;
+    transition: 0.2s;
+}
+.t-tool-btn:hover { background: #444; color: white; }
+.t-icon-btn { cursor: pointer; font-size: 1.2em; color: #aaa; margin-left: 15px; transition: color 0.3s; }
+.t-icon-btn:hover { color: #fff; }
+
+.t-close { cursor: pointer; font-size: 1.8em; line-height: 1; color: #888; transition:0.2s; padding: 0 5px; margin-left: 15px; }
+.t-close:hover { color: #fff; transform: rotate(90deg); }
+
+/* 输入框 (强制覆盖亮色主题) */
+.t-box .t-input {
+    background-color: #1a1a1a !important;
+    color: #eeeeee !important;
+    border: 1px solid #444 !important;
+    border-radius: 4px; padding: 8px 10px; width: 100%; box-sizing: border-box; outline: none; transition: border 0.2s;
+}
+.t-box .t-input:focus { border-color: var(--t-theme) !important; background-color: #222 !important; }
+.t-box .t-input:disabled { opacity: 0.6; cursor: not-allowed; background-color: #111 !important; }
+textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.5; resize: vertical; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+
+/* 动画 */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
