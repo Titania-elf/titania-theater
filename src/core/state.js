@@ -5,7 +5,8 @@ export const GlobalState = {
     isGenerating: false,
     runtimeScripts: [],        // 加载好的剧本列表 (预设 + 自定义)
     lastGeneratedContent: "",  // 上一次生成的结果 HTML
-    lastUsedScriptId: "",      // 上一次使用的剧本 ID
+    lastUsedScriptId: "",      // 上一次用户手动选择的剧本 ID (用于 UI 显示)
+    lastGeneratedScriptId: "", // 上一次生成内容对应的剧本 ID (可能是后台自动生成的)
     currentCategoryFilter: "ALL", // 当前的分类筛选器状态
 
     // 计时器相关
@@ -19,7 +20,11 @@ export const GlobalState = {
         retryCount: 0,         // 当前续写次数
         originalContent: "",   // 原始内容（未被截断前）
         currentScopeId: "",    // 当前使用的 scopeId
-        accumulatedContent: "" // 累积的完整内容
+        accumulatedContent: "", // 累积的完整内容
+        // 优化：保存原始请求上下文，确保续写连贯性
+        originalPrompt: "",    // 原始剧本的 prompt
+        characterName: "",     // 角色名
+        userName: ""           // 用户名
     }
 };
 
@@ -32,6 +37,9 @@ export function resetContinuationState() {
         retryCount: 0,
         originalContent: "",
         currentScopeId: "",
-        accumulatedContent: ""
+        accumulatedContent: "",
+        originalPrompt: "",
+        characterName: "",
+        userName: ""
     };
 }

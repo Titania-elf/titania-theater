@@ -389,7 +389,7 @@ function checkSentenceCompletion(content) {
  * @param {number} contextLength - 上下文长度（字符数）
  * @returns {{ lastContent: string, scopeId: string | null }}
  */
-export function extractContinuationContext(content, contextLength = 500) {
+export function extractContinuationContext(content, contextLength = 800) {
     // 提取 scopeId
     const scopeMatch = content.match(/id=["']?(t-scene-[a-z0-9]+)["']?/i);
     const scopeId = scopeMatch ? scopeMatch[1] : null;
@@ -398,12 +398,74 @@ export function extractContinuationContext(content, contextLength = 500) {
     let bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').trim();
 
     // 获取最后 N 个字符作为上下文
-    const lastContent = bodyContent.slice(-contextLength);
+    let lastContent = bodyContent.slice(-contextLength);
+
+    // 优化：确保不在 HTML 标签中间开始
+    // 检查开头是否有未闭合的标签（即先遇到 > 再遇到 <）
+    const firstTagEnd = lastContent.indexOf('>');
+    const firstTagStart = lastContent.indexOf('<');
+
+    if (firstTagEnd !== -1 && (firstTagStart === -1 || firstTagEnd < firstTagStart)) {
+        // 开头有未闭合的标签，从第一个完整标签开始
+        const nextTagStart = lastContent.indexOf('<', firstTagEnd + 1);
+        if (nextTagStart !== -1) {
+            lastContent = lastContent.substring(nextTagStart);
+        } else {
+            // 没有找到下一个标签，从 > 之后开始
+            lastContent = lastContent.substring(firstTagEnd + 1);
+        }
+    }
 
     return {
         lastContent,
         scopeId
     };
+}
+
+/**
+ * 从 HTML 内容中提取纯文本摘要
+ * 用于续写时帮助 AI 理解已生成内容的叙事脉络
+ * @param {string} htmlContent - HTML 内容
+ * @param {number} maxLength - 最大长度（字符数）
+ * @returns {string} 纯文本摘要
+ */
+export function extractTextSummary(htmlContent, maxLength = 500) {
+    if (!htmlContent) return "";
+
+    // 1. 移除 style 标签及其内容
+    let text = htmlContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+    // 2. 移除所有 HTML 标签
+    text = text.replace(/<[^>]*>/g, ' ');
+
+    // 3. 清理多余空白和换行
+    text = text.replace(/\s+/g, ' ').trim();
+
+    // 4. 如果内容过长，智能截取
+    if (text.length > maxLength) {
+        const truncated = text.substring(0, maxLength);
+
+        // 找到最后一个完整句子的位置（中文或英文标点）
+        const lastPunctuationIndex = Math.max(
+            truncated.lastIndexOf('。'),
+            truncated.lastIndexOf('！'),
+            truncated.lastIndexOf('？'),
+            truncated.lastIndexOf('…'),
+            truncated.lastIndexOf('.'),
+            truncated.lastIndexOf('!'),
+            truncated.lastIndexOf('?')
+        );
+
+        // 如果找到了合适的截断点（在后半部分），使用它
+        if (lastPunctuationIndex > maxLength * 0.5) {
+            return truncated.substring(0, lastPunctuationIndex + 1);
+        }
+
+        // 否则直接截断并添加省略号
+        return truncated + '...';
+    }
+
+    return text;
 }
 
 /**

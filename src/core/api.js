@@ -10,7 +10,8 @@ import {
     generateScopeId,
     detectTruncation,
     extractContinuationContext,
-    mergeContinuationContent
+    mergeContinuationContent,
+    extractTextSummary
 } from "../utils/helpers.js";
 import { startTimer, stopTimer } from "../ui/floatingBtn.js";
 
@@ -256,11 +257,15 @@ Your task is to generate an immersive HTML scene based on the user's scenario.
 
                     // 更新续写状态
                     if (!GlobalState.continuation.isActive) {
-                        // 首次截断，保存原始内容
+                        // 首次截断，保存原始内容和上下文信息
                         GlobalState.continuation.isActive = true;
                         GlobalState.continuation.originalContent = finalOutput;
                         GlobalState.continuation.currentScopeId = scopeId;
                         GlobalState.continuation.accumulatedContent = finalOutput;
+                        // 保存原始请求上下文，用于续写时保持连贯性
+                        GlobalState.continuation.originalPrompt = script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName);
+                        GlobalState.continuation.characterName = ctx.charName;
+                        GlobalState.continuation.userName = ctx.userName;
                     } else {
                         // 续写过程中再次截断，合并内容
                         GlobalState.continuation.accumulatedContent = mergeContinuationContent(
@@ -307,6 +312,7 @@ Your task is to generate an immersive HTML scene based on the user's scenario.
         resetContinuationState();
 
         GlobalState.lastGeneratedContent = finalOutput;
+        GlobalState.lastGeneratedScriptId = script.id; // 记录生成内容对应的剧本ID
         diagnostics.phase = 'complete';
 
         // 停止计时器
@@ -339,6 +345,7 @@ Your task is to generate an immersive HTML scene based on the user's scenario.
         </div>`;
 
         GlobalState.lastGeneratedContent = errHtml;
+        GlobalState.lastGeneratedScriptId = script.id; // 即使出错也记录，便于调试
         $floatBtn.addClass("t-notify");
         if (!silent && window.toastr) toastr.error("生成失败", "Titania Error");
     } finally {
@@ -370,28 +377,44 @@ async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalMo
             800 // 提取最后 800 个字符作为上下文
         );
 
-        // 构建续写 Prompt
-        const continuationSys = `You are continuing a Visual Scene that was interrupted.
-Your task is to seamlessly continue from where the previous content ended.
+        // 提取已生成内容的纯文本摘要，帮助 AI 理解叙事脉络
+        const textSummary = extractTextSummary(GlobalState.continuation.accumulatedContent, 500);
 
-[CRITICAL RULES]
+        // 构建优化后的续写 Prompt（包含原始场景上下文）
+        const continuationSys = `You are continuing a Visual Scene that was interrupted.
+
+[Original Scene Context]
+Character: ${GlobalState.continuation.characterName}
+User: ${GlobalState.continuation.userName}
+Scene Request: ${GlobalState.continuation.originalPrompt}
+
+[Your Task]
+Continue the HTML/CSS scene from where it was cut off. You must maintain:
+- The same visual style and CSS theme
+- The same narrative tone and perspective
+- Consistent character portrayal
+
+[Technical Rules - STRICT]
 1. **Container ID**: Continue using the SAME container ID: #${GlobalState.continuation.currentScopeId}
 2. **Scoped CSS**: If adding new styles, ALL selectors MUST start with #${GlobalState.continuation.currentScopeId}
-3. **Seamless Connection**: Your content should naturally flow from the last sentence/element
-4. **No Repetition**: Do NOT repeat content that already exists
-5. **Complete the Scene**: Finish any incomplete sentences, paragraphs, or HTML tags
-6. **Format**: Output raw HTML string. No markdown.
+3. **No Repetition**: Do NOT repeat any content that already exists
+4. **Complete First**: First complete any unfinished sentences or HTML tags
+5. **Then Continue**: Then continue the narrative naturally until a proper conclusion
+6. **Format**: Output raw HTML string. No markdown (\`\`\`).
 7. **Language**: Continue in Chinese.`;
 
-        const continuationUser = `[Previous Content Ending]
-The scene was interrupted. Here is how it ended:
+        const continuationUser = `[Content Summary - What has been written so far]
+${textSummary || "(No text content extracted)"}
 
+[HTML Ending - Where it was cut off]
 ---
 ${lastContent}
 ---
 
 [Task]
-Please continue from exactly where this ended. Complete any unfinished sentences or HTML structures, then continue the narrative naturally until a proper conclusion.
+1. First, complete any unfinished sentences, paragraphs, or HTML structures from the cut-off point
+2. Then, continue the narrative naturally based on the original scene request
+3. End the scene with a proper conclusion
 
 Remember: Use the same CSS scope #${GlobalState.continuation.currentScopeId} for any new styles.`;
 
@@ -500,6 +523,7 @@ Remember: Use the same CSS scope #${GlobalState.continuation.currentScopeId} for
             resetContinuationState();
 
             GlobalState.lastGeneratedContent = finalOutput;
+            GlobalState.lastGeneratedScriptId = script.id; // 记录生成内容对应的剧本ID
 
             // 停止计时器
             stopTimer();
@@ -524,6 +548,7 @@ Remember: Use the same CSS scope #${GlobalState.continuation.currentScopeId} for
         // 即使续写失败，也保留已有的内容
         if (GlobalState.continuation.accumulatedContent) {
             GlobalState.lastGeneratedContent = GlobalState.continuation.accumulatedContent;
+            GlobalState.lastGeneratedScriptId = script.id; // 记录生成内容对应的剧本ID
             if (!silent && window.toastr) {
                 toastr.warning("⚠️ 续写失败，显示已获取的内容", "Titania Echo");
             }

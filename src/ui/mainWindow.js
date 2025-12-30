@@ -37,6 +37,8 @@ function updateDesc() {
 
 /**
  * 应用选中的剧本到触发器卡片 (供 api.js 和 内部 调用)
+ * 注意：此函数只更新剧本卡片的显示，不影响模式Tab的状态
+ * @param {string} id - 剧本ID
  */
 export function applyScriptSelection(id) {
     const s = GlobalState.runtimeScripts.find(x => x.id === id);
@@ -47,7 +49,7 @@ export function applyScriptSelection(id) {
     // 1. 更新标题
     $("#t-lbl-name").text(s.name);
 
-    // 2. 模式视觉标识
+    // 2. 模式视觉标识 (仅更新卡片上的标签，不影响Tab)
     const isEcho = (s.mode === 'echo');
     const modeName = isEcho ? "🌊 回声" : "🪐 平行";
     const modeColor = isEcho ? "#90cdf4" : "#bfa15f";
@@ -70,11 +72,19 @@ export function applyScriptSelection(id) {
 
 /**
  * 主窗口逻辑
+ * 添加错误边界，确保即使部分数据加载失败也能正常显示界面
  */
 export async function openMainWindow() {
     if ($("#t-overlay").length) return;
 
-    const ctx = await getContextData();
+    // 使用 try-catch 包装上下文获取，确保不会阻塞 UI
+    let ctx = { charName: "Char", userName: "User" };
+    try {
+        ctx = await getContextData();
+    } catch (e) {
+        console.error("Titania: 获取上下文数据失败，使用默认值", e);
+    }
+
     const data = getExtData();
 
     // 1. 获取持久化的 Tab 模式偏好 (默认为 Echo)
@@ -316,31 +326,98 @@ export async function openMainWindow() {
     $("#t-btn-debug").on("click", async () => await showDebugInfo());
 
     // --- [初始化阶段] ---
+    // 1. 首先恢复用户保存的模式偏好（不重置分类筛选器）
     switchMode(savedMode, false);
-    if (GlobalState.lastUsedScriptId) {
-        applyScriptSelection(GlobalState.lastUsedScriptId);
+
+    // 2. 确定要显示的剧本：优先使用 lastGeneratedScriptId（如果有内容的话）
+    let initialScriptId = GlobalState.lastUsedScriptId;
+
+    if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
+        // 有生成内容时，使用生成内容对应的剧本来显示
+        initialScriptId = GlobalState.lastGeneratedScriptId;
+    }
+
+    // 检查是否有可用剧本
+    if (GlobalState.runtimeScripts.length === 0) {
+        // 没有加载到任何剧本，显示错误提示
+        $("#t-lbl-name").text("无可用剧本");
+        $("#t-lbl-cat").text("⚠️ 错误");
+        $("#t-lbl-desc-mini").text("剧本数据未加载，请检查插件安装");
+        console.error("Titania: runtimeScripts 为空，剧本未加载");
+    } else if (initialScriptId) {
+        const initialScript = GlobalState.runtimeScripts.find(s => s.id === initialScriptId);
+        if (initialScript) {
+            // 应用剧本显示（不影响模式Tab）
+            applyScriptSelection(initialScriptId);
+        } else {
+            // 剧本不存在，从当前模式中随机选一个
+            handleRandom();
+        }
     } else {
+        // 没有任何剧本ID，随机选一个
         handleRandom();
     }
 
-    // 初始化世界书徽章
-    updateWorldInfoBadge();
+    // 异步初始化世界书徽章（不阻塞主流程）
+    updateWorldInfoBadge().catch(e => {
+        console.warn("Titania: 更新世界书徽章失败", e);
+    });
 }
 
 /**
- * 更新世界书图标颜色（有条目时变蓝色）
+ * 更新世界书图标颜色（有选中条目时变蓝色）
+ * 添加超时保护，避免长时间阻塞
  */
 async function updateWorldInfoBadge() {
+    const BADGE_TIMEOUT = 8000; // 8秒超时
+
     try {
-        const entries = await getActiveWorldInfoEntries();
+        // 使用 Promise.race 添加超时保护
+        const entriesPromise = getActiveWorldInfoEntries();
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('世界书加载超时')), BADGE_TIMEOUT)
+        );
+
+        const entries = await Promise.race([entriesPromise, timeoutPromise]);
+
+        let ctx;
+        try {
+            ctx = await getContextData();
+        } catch (e) {
+            ctx = { charName: "Char" };
+        }
+
+        const data = getExtData();
+
         let totalCount = 0;
-        entries.forEach(book => totalCount += book.entries.length);
+        let selectedCount = 0;
+
+        const charSelections = data.worldinfo?.char_selections?.[ctx.charName] || null;
+
+        entries.forEach(book => {
+            book.entries.forEach(entry => {
+                totalCount++;
+                // 如果没有保存过选择，默认全选；否则按保存的选择计算
+                if (charSelections === null) {
+                    selectedCount++;
+                } else {
+                    const bookSel = charSelections[book.bookName] || [];
+                    if (bookSel.includes(entry.uid)) {
+                        selectedCount++;
+                    }
+                }
+            });
+        });
 
         const $icon = $("#t-btn-worldinfo");
-        if (totalCount > 0) {
-            // 有条目时：图标变蓝色
+        if (selectedCount > 0) {
+            // 有选中条目时：图标变蓝色
             $icon.css("color", "#90cdf4");
-            $icon.attr("title", `世界书条目筛选 (${totalCount} 条目)`);
+            $icon.attr("title", `世界书条目筛选 (已选 ${selectedCount}/${totalCount})`);
+        } else if (totalCount > 0) {
+            // 有条目但未选中：图标变橙色提醒
+            $icon.css("color", "#bfa15f");
+            $icon.attr("title", `世界书条目筛选 (未选择任何条目)`);
         } else {
             // 无条目时：恢复默认灰色
             $icon.css("color", "");
@@ -354,35 +431,83 @@ async function updateWorldInfoBadge() {
 
 /**
  * 打开世界书条目选择器
+ * 改进版：直接让用户选择条目，不再区分蓝灯/非蓝灯模式
+ * 添加加载状态和错误处理
  */
 async function openWorldInfoSelector() {
     if ($("#t-wi-selector").length) return;
 
-    const ctx = await getContextData();
-    const entries = await getActiveWorldInfoEntries();
+    // 先显示加载状态
+    const loadingHtml = `
+    <div id="t-wi-selector" class="t-wi-selector">
+        <div class="t-wi-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-book-atlas" style="color:#90cdf4;"></i>
+                <span style="font-weight:bold;">世界书条目筛选</span>
+            </div>
+            <div class="t-close" id="t-wi-close">&times;</div>
+        </div>
+        <div class="t-wi-body" style="display:flex; align-items:center; justify-content:center; min-height:200px;">
+            <div style="text-align:center; color:#888;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:2em; margin-bottom:10px;"></i>
+                <div>正在加载世界书数据...</div>
+            </div>
+        </div>
+    </div>`;
+
+    $("#t-main-view").append(loadingHtml);
+    $("#t-wi-close").on("click", () => $("#t-wi-selector").remove());
+
+    // 异步加载数据
+    let ctx, entries;
+    try {
+        const LOAD_TIMEOUT = 10000; // 10秒超时
+
+        const loadPromise = Promise.all([
+            getContextData(),
+            getActiveWorldInfoEntries()
+        ]);
+
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('加载超时')), LOAD_TIMEOUT)
+        );
+
+        [ctx, entries] = await Promise.race([loadPromise, timeoutPromise]);
+    } catch (e) {
+        console.error("Titania: 加载世界书数据失败", e);
+        $("#t-wi-selector .t-wi-body").html(`
+            <div style="text-align:center; color:#e74c3c; padding:20px;">
+                <i class="fa-solid fa-exclamation-triangle" style="font-size:2em; margin-bottom:10px;"></i>
+                <div style="margin-bottom:10px;">加载世界书数据失败</div>
+                <div style="font-size:0.9em; color:#888;">${e.message}</div>
+                <button class="t-btn" style="margin-top:15px;" onclick="$('#t-wi-selector').remove();">关闭</button>
+            </div>
+        `);
+        return;
+    }
+
     const data = getExtData();
 
     // 初始化世界书配置
     if (!data.worldinfo) {
-        data.worldinfo = { mode: "all", char_selections: {} };
+        data.worldinfo = { char_selections: {} };
     }
 
     const charName = ctx.charName;
-    const charSelections = data.worldinfo.char_selections[charName] || {};
-    const isManualMode = data.worldinfo.mode === "manual";
+    // 获取当前角色的已保存选择
+    const charSelections = data.worldinfo.char_selections[charName] || null;
 
-    // 计算总数和选中数
+    // 判断是否是首次使用（没有保存过选择）
+    const isFirstTime = charSelections === null;
+
+    // 计算总数
     let totalCount = 0;
-    let selectedCount = 0;
     entries.forEach(book => {
-        book.entries.forEach(e => {
-            totalCount++;
-            const bookSel = charSelections[book.bookName];
-            if (!isManualMode || !bookSel || bookSel.includes(e.uid)) {
-                selectedCount++;
-            }
-        });
+        totalCount += book.entries.length;
     });
+
+    // 移除加载状态，替换为实际内容
+    $("#t-wi-selector").remove();
 
     const html = `
     <div id="t-wi-selector" class="t-wi-selector">
@@ -395,23 +520,21 @@ async function openWorldInfoSelector() {
             <div class="t-close" id="t-wi-close">&times;</div>
         </div>
         
-        <div class="t-wi-mode-bar">
-            <label class="t-wi-mode-label">
-                <input type="radio" name="wi-mode" value="all" ${!isManualMode ? 'checked' : ''}>
-                <span>📥 读取全部蓝灯条目</span>
-            </label>
-            <label class="t-wi-mode-label">
-                <input type="radio" name="wi-mode" value="manual" ${isManualMode ? 'checked' : ''}>
-                <span>🎯 手动选择条目</span>
-            </label>
+        <div class="t-wi-action-bar" style="display:flex; gap:10px; padding:10px 15px; border-bottom:1px solid #333;">
+            <button class="t-btn" id="t-wi-select-all" style="flex:1;">
+                <i class="fa-solid fa-check-double"></i> 全选
+            </button>
+            <button class="t-btn" id="t-wi-select-none" style="flex:1;">
+                <i class="fa-solid fa-square"></i> 取消全选
+            </button>
         </div>
         
         <div class="t-wi-body" id="t-wi-body">
-            ${entries.length === 0 ? '<div class="t-wi-empty">当前角色没有激活的蓝灯世界书条目</div>' : ''}
+            ${entries.length === 0 ? '<div class="t-wi-empty">当前角色没有激活的世界书条目</div>' : ''}
         </div>
         
         <div class="t-wi-footer">
-            <span id="t-wi-stat">已选: ${selectedCount}/${totalCount}</span>
+            <span id="t-wi-stat">已选: 0/${totalCount}</span>
             <button class="t-btn primary" id="t-wi-save">保存</button>
         </div>
     </div>`;
@@ -424,15 +547,13 @@ async function openWorldInfoSelector() {
         $body.empty();
 
         if (entries.length === 0) {
-            $body.append('<div class="t-wi-empty">当前角色没有激活的蓝灯世界书条目</div>');
+            $body.append('<div class="t-wi-empty">当前角色没有激活的世界书条目</div>');
             return;
         }
 
-        const currentMode = $("input[name='wi-mode']:checked").val();
-        const isManual = currentMode === "manual";
-
         entries.forEach(book => {
-            const bookSel = charSelections[book.bookName] || [];
+            // 获取该世界书的已保存选择，如果是首次则为空数组
+            const bookSel = charSelections ? (charSelections[book.bookName] || []) : [];
 
             const $bookSection = $(`
                 <div class="t-wi-book">
@@ -448,16 +569,24 @@ async function openWorldInfoSelector() {
             const $entriesContainer = $bookSection.find(".t-wi-entries");
 
             book.entries.forEach(entry => {
-                const isSelected = !isManual || bookSel.length === 0 || bookSel.includes(entry.uid);
+                // 首次使用时默认全选，否则按保存的选择
+                const isSelected = isFirstTime ? true : bookSel.includes(entry.uid);
+
+                // 蓝灯条目标记
+                const constantBadge = entry.isConstant
+                    ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">蓝灯</span>'
+                    : '';
+
                 const $entry = $(`
                     <div class="t-wi-entry ${isSelected ? 'selected' : ''}" data-uid="${entry.uid}">
                         <div class="t-wi-entry-check">
-                            <input type="checkbox" ${isSelected ? 'checked' : ''} ${!isManual ? 'disabled' : ''}>
+                            <input type="checkbox" ${isSelected ? 'checked' : ''}>
                         </div>
                         <div class="t-wi-entry-content">
                             <div class="t-wi-entry-title">
                                 <span class="t-wi-uid">[${entry.uid}]</span>
                                 ${entry.comment}
+                                ${constantBadge}
                             </div>
                             <div class="t-wi-entry-preview">${entry.preview}${entry.content.length > 80 ? '...' : ''}</div>
                         </div>
@@ -475,10 +604,6 @@ async function openWorldInfoSelector() {
 
             $body.append($bookSection);
         });
-
-        // 禁用/启用复选框
-        $(".t-wi-entry input[type='checkbox']").prop("disabled", !isManual);
-        $(".t-wi-entry").css("opacity", isManual ? 1 : 0.7);
     };
 
     const updateStat = () => {
@@ -491,35 +616,38 @@ async function openWorldInfoSelector() {
         $("#t-wi-stat").text(`已选: ${selected}/${total}`);
     };
 
-    // 模式切换
-    $("input[name='wi-mode']").on("change", function () {
-        renderEntries();
+    // 全选按钮
+    $("#t-wi-select-all").on("click", () => {
+        $(".t-wi-entry input[type='checkbox']").prop("checked", true);
+        $(".t-wi-entry").addClass("selected");
+        updateStat();
+    });
+
+    // 取消全选按钮
+    $("#t-wi-select-none").on("click", () => {
+        $(".t-wi-entry input[type='checkbox']").prop("checked", false);
+        $(".t-wi-entry").removeClass("selected");
         updateStat();
     });
 
     // 保存
     $("#t-wi-save").on("click", () => {
-        const mode = $("input[name='wi-mode']:checked").val();
-        data.worldinfo.mode = mode;
-
-        if (mode === "manual") {
-            // 收集选中的 UID
-            const selections = {};
-            entries.forEach(book => {
-                const selectedUids = [];
-                $(`.t-wi-entries[data-book="${book.bookName}"] .t-wi-entry`).each(function () {
-                    if ($(this).find("input").is(":checked")) {
-                        selectedUids.push(parseInt($(this).data("uid")));
-                    }
-                });
-                if (selectedUids.length > 0) {
-                    selections[book.bookName] = selectedUids;
+        // 收集选中的 UID
+        const selections = {};
+        entries.forEach(book => {
+            const selectedUids = [];
+            $(`.t-wi-entries[data-book="${book.bookName}"] .t-wi-entry`).each(function () {
+                if ($(this).find("input").is(":checked")) {
+                    selectedUids.push(parseInt($(this).data("uid")));
                 }
             });
-            data.worldinfo.char_selections[charName] = selections;
-        }
+            // 即使没有选中任何条目，也保存空数组，表示用户明确取消了选择
+            selections[book.bookName] = selectedUids;
+        });
 
+        data.worldinfo.char_selections[charName] = selections;
         saveExtData();
+
         $("#t-wi-selector").remove();
         updateWorldInfoBadge();
         if (window.toastr) toastr.success("世界书设置已保存");
@@ -529,6 +657,7 @@ async function openWorldInfoSelector() {
     $("#t-wi-close").on("click", () => $("#t-wi-selector").remove());
 
     renderEntries();
+    updateStat();
 }
 
 /**

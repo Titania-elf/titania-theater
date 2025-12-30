@@ -10,12 +10,62 @@ import {
 import { getExtData } from "../utils/storage.js";
 
 /**
- * 获取当前激活的世界书列表及其蓝灯条目（用于 UI 显示）
+ * 带超时的 Promise 包装器
+ * @param {Promise} promise - 原始 Promise
+ * @param {number} timeout - 超时时间（毫秒）
+ * @param {string} errorMsg - 超时错误信息
+ * @returns {Promise}
+ */
+function withTimeout(promise, timeout = 5000, errorMsg = 'Operation timed out') {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(errorMsg)), timeout)
+        )
+    ]);
+}
+
+/**
+ * 安全地加载世界书数据
+ * @param {object} ctx - SillyTavern context
+ * @param {string} bookName - 世界书名称
+ * @param {number} timeout - 超时时间（毫秒）
+ * @returns {Promise<object|null>} 世界书数据或 null
+ */
+async function safeLoadWorldInfo(ctx, bookName, timeout = 5000) {
+    try {
+        if (!ctx.loadWorldInfo || typeof ctx.loadWorldInfo !== 'function') {
+            console.warn(`Titania: loadWorldInfo 函数不可用`);
+            return null;
+        }
+        const result = await withTimeout(
+            ctx.loadWorldInfo(bookName),
+            timeout,
+            `加载世界书 [${bookName}] 超时`
+        );
+        return result;
+    } catch (err) {
+        console.warn(`Titania: 无法加载世界书 [${bookName}]`, err.message);
+        return null;
+    }
+}
+
+/**
+ * 获取当前激活的世界书列表及其所有启用条目（用于 UI 显示）
+ * 改进：不再限制只读取蓝灯条目，而是读取所有启用的条目
  * @returns {Promise<Array>} 世界书及条目数组
  */
 export async function getActiveWorldInfoEntries() {
     if (typeof SillyTavern === 'undefined' || !SillyTavern.getContext) return [];
-    const ctx = SillyTavern.getContext();
+
+    let ctx;
+    try {
+        ctx = SillyTavern.getContext();
+        if (!ctx) return [];
+    } catch (e) {
+        console.warn("Titania: 无法获取 SillyTavern context", e);
+        return [];
+    }
 
     const charId = ctx.characterId;
     const activeBooks = new Set();
@@ -42,28 +92,25 @@ export async function getActiveWorldInfoEntries() {
     const result = [];
 
     for (const bookName of activeBooks) {
-        try {
-            const bookData = await ctx.loadWorldInfo(bookName);
-            if (!bookData || !bookData.entries) continue;
+        const bookData = await safeLoadWorldInfo(ctx, bookName);
+        if (!bookData || !bookData.entries) continue;
 
-            // 获取所有蓝灯条目
-            const blueEntries = Object.values(bookData.entries).filter(entry =>
-                (entry.disable === false || entry.enabled === true) && entry.constant === true
-            );
+        // 获取所有启用的条目（不再限制蓝灯）
+        const enabledEntries = Object.values(bookData.entries).filter(entry =>
+            entry.disable === false || entry.enabled === true
+        );
 
-            if (blueEntries.length > 0) {
-                result.push({
-                    bookName: bookName,
-                    entries: blueEntries.map(e => ({
-                        uid: e.uid,
-                        comment: e.comment || `条目 ${e.uid}`,
-                        content: e.content || "",
-                        preview: (e.content || "").substring(0, 80).replace(/\n/g, " ")
-                    }))
-                });
-            }
-        } catch (err) {
-            console.warn(`Titania: 无法加载世界书 [${bookName}]`, err);
+        if (enabledEntries.length > 0) {
+            result.push({
+                bookName: bookName,
+                entries: enabledEntries.map(e => ({
+                    uid: e.uid,
+                    comment: e.comment || `条目 ${e.uid}`,
+                    content: e.content || "",
+                    preview: (e.content || "").substring(0, 80).replace(/\n/g, " "),
+                    isConstant: e.constant === true  // 标记是否为蓝灯条目，便于UI显示
+                }))
+            });
         }
     }
 
@@ -72,12 +119,21 @@ export async function getActiveWorldInfoEntries() {
 
 /**
  * 获取当前对话的上下文数据 (角色名、Persona、世界书等)
+ * 添加错误边界，确保即使部分数据获取失败也能返回基础数据
  */
 export async function getContextData() {
     let data = { charName: "Char", persona: "", userName: "User", userDesc: "", worldInfo: "" };
 
     if (typeof SillyTavern === 'undefined' || !SillyTavern.getContext) return data;
-    const ctx = SillyTavern.getContext();
+
+    let ctx;
+    try {
+        ctx = SillyTavern.getContext();
+        if (!ctx) return data;
+    } catch (e) {
+        console.warn("Titania: 无法获取 SillyTavern context", e);
+        return data;
+    }
 
     try {
         data.userName = ctx.substituteParams("{{user}}") || "User";
@@ -115,43 +171,45 @@ export async function getContextData() {
         }
     }
 
-    // --- 2. 加载并筛选蓝灯条目 ---
-    const blueContentParts = [];
+    // --- 2. 加载并筛选世界书条目 ---
+    const contentParts = [];
 
     // 获取世界书筛选配置
     const extData = getExtData();
-    const wiConfig = extData.worldinfo || { mode: "all", char_selections: {} };
+    const wiConfig = extData.worldinfo || { char_selections: {} };
     const charSelections = wiConfig.char_selections[data.charName] || null;
 
     for (const bookName of activeBooks) {
-        try {
-            const bookData = await ctx.loadWorldInfo(bookName);
-            if (!bookData || !bookData.entries) continue;
+        const bookData = await safeLoadWorldInfo(ctx, bookName);
+        if (!bookData || !bookData.entries) continue;
 
-            // 筛选：!disable (已开启) 且 constant (蓝灯)
-            let blueEntries = Object.values(bookData.entries).filter(entry =>
-                (entry.disable === false || entry.enabled === true) && entry.constant === true
-            );
+        // 筛选：!disable (已开启) 的条目
+        let enabledEntries = Object.values(bookData.entries).filter(entry =>
+            entry.disable === false || entry.enabled === true
+        );
 
-            // 如果是手动模式且有针对当前角色的选择配置
-            if (wiConfig.mode === "manual" && charSelections && charSelections[bookName]) {
-                const selectedUids = charSelections[bookName];
-                blueEntries = blueEntries.filter(e => selectedUids.includes(e.uid));
-            }
-
-            blueEntries.forEach(e => {
-                if (e.content && e.content.trim()) {
-                    // 解析内容中的宏并存入数组
-                    blueContentParts.push(ctx.substituteParams(e.content.trim()));
-                }
-            });
-        } catch (err) {
-            console.warn(`Titania: 无法加载世界书 [${bookName}]`, err);
+        // 如果有针对当前角色的选择配置，按用户选择筛选
+        if (charSelections && charSelections[bookName]) {
+            const selectedUids = charSelections[bookName];
+            enabledEntries = enabledEntries.filter(e => selectedUids.includes(e.uid));
         }
+        // 如果没有选择配置，默认使用所有启用的条目（首次使用时的默认行为）
+
+        enabledEntries.forEach(e => {
+            if (e.content && e.content.trim()) {
+                // 解析内容中的宏并存入数组
+                try {
+                    contentParts.push(ctx.substituteParams(e.content.trim()));
+                } catch (subErr) {
+                    // 如果宏解析失败，使用原始内容
+                    contentParts.push(e.content.trim());
+                }
+            }
+        });
     }
 
-    if (blueContentParts.length > 0) {
-        data.worldInfo = "[World Info / Lore]\n" + blueContentParts.join("\n\n") + "\n\n";
+    if (contentParts.length > 0) {
+        data.worldInfo = "[World Info / Lore]\n" + contentParts.join("\n\n") + "\n\n";
     }
 
     return data;
