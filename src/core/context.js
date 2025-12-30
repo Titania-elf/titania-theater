@@ -1,13 +1,33 @@
 // src/core/context.js
 
-// 注意：这里需要向上多跳几级才能找到 scripts/extensions/world-info.js
-// 路径: src/core/context.js -> src/core -> src -> titania -> third-party -> extensions -> [world-info.js]
-import {
-    selected_world_info,
-    world_info
-} from "../../../../../world-info.js";
-
 import { getExtData } from "../utils/storage.js";
+
+// 世界书相关变量（尝试从全局获取，避免静态导入失败导致整个模块崩溃）
+let selected_world_info = [];
+let world_info = null;
+
+// 尝试动态获取世界书模块（兼容云ST和本地ST的不同路径）
+try {
+    // 尝试从全局作用域获取（ST 通常会将这些暴露到全局）
+    if (typeof window !== 'undefined') {
+        if (window.selected_world_info) selected_world_info = window.selected_world_info;
+        if (window.world_info) world_info = window.world_info;
+    }
+} catch (e) {
+    console.warn("Titania: 无法获取世界书全局变量", e);
+}
+
+// 辅助函数：安全获取世界书变量（每次调用时重新获取，确保获取最新值）
+function getWorldInfoVars() {
+    try {
+        return {
+            selected_world_info: window.selected_world_info || [],
+            world_info: window.world_info || null
+        };
+    } catch (e) {
+        return { selected_world_info: [], world_info: null };
+    }
+}
 
 /**
  * 带超时的 Promise 包装器
@@ -70,9 +90,12 @@ export async function getActiveWorldInfoEntries() {
     const charId = ctx.characterId;
     const activeBooks = new Set();
 
+    // 获取世界书变量
+    const wiVars = getWorldInfoVars();
+
     // 收集所有相关的世界书名称
-    if (typeof selected_world_info !== 'undefined' && Array.isArray(selected_world_info)) {
-        selected_world_info.forEach(name => activeBooks.add(name));
+    if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
+        wiVars.selected_world_info.forEach(name => activeBooks.add(name));
     }
 
     if (charId !== undefined && ctx.characters && ctx.characters[charId]) {
@@ -81,8 +104,8 @@ export async function getActiveWorldInfoEntries() {
         if (primary) activeBooks.add(primary);
 
         const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
-        if (typeof world_info !== 'undefined' && world_info.charLore) {
-            const loreEntry = world_info.charLore.find(e => e.name === fileName);
+        if (wiVars.world_info && wiVars.world_info.charLore) {
+            const loreEntry = wiVars.world_info.charLore.find(e => e.name === fileName);
             if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
                 loreEntry.extraBooks.forEach(name => activeBooks.add(name));
             }
@@ -147,9 +170,12 @@ export async function getContextData() {
 
     // --- 1. 收集所有相关的世界书名称 ---
 
+    // 获取世界书变量
+    const wiVars = getWorldInfoVars();
+
     // A. 全局开启的世界书 (从 ST 核心变量读取)
-    if (typeof selected_world_info !== 'undefined' && Array.isArray(selected_world_info)) {
-        selected_world_info.forEach(name => activeBooks.add(name));
+    if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
+        wiVars.selected_world_info.forEach(name => activeBooks.add(name));
     }
 
     // B. 角色绑定的世界书
@@ -163,8 +189,8 @@ export async function getContextData() {
         // 附加世界书 (Auxiliary/Additional)
         // 逻辑：匹配头像文件名。注意：world_info 变量通常在 ST 全局作用域可用
         const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
-        if (typeof world_info !== 'undefined' && world_info.charLore) {
-            const loreEntry = world_info.charLore.find(e => e.name === fileName);
+        if (wiVars.world_info && wiVars.world_info.charLore) {
+            const loreEntry = wiVars.world_info.charLore.find(e => e.name === fileName);
             if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
                 loreEntry.extraBooks.forEach(name => activeBooks.add(name));
             }

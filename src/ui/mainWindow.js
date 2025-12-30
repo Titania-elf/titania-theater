@@ -77,15 +77,29 @@ export function applyScriptSelection(id) {
 export async function openMainWindow() {
     if ($("#t-overlay").length) return;
 
-    // 使用 try-catch 包装上下文获取，确保不会阻塞 UI
+    // 使用 try-catch 和超时包装上下文获取，确保不会阻塞 UI
     let ctx = { charName: "Char", userName: "User" };
     try {
-        ctx = await getContextData();
+        // 添加 3 秒超时保护
+        const ctxPromise = getContextData();
+        const timeoutPromise = new Promise((resolve) =>
+            setTimeout(() => {
+                console.warn("Titania: getContextData 超时，使用默认值");
+                resolve({ charName: "Char", userName: "User" });
+            }, 3000)
+        );
+        ctx = await Promise.race([ctxPromise, timeoutPromise]);
     } catch (e) {
         console.error("Titania: 获取上下文数据失败，使用默认值", e);
     }
 
-    const data = getExtData();
+    let data;
+    try {
+        data = getExtData();
+    } catch (e) {
+        console.error("Titania: 获取扩展数据失败", e);
+        data = { ui_mode_echo: true };
+    }
 
     // 1. 获取持久化的 Tab 模式偏好 (默认为 Echo)
     let savedMode = (data.ui_mode_echo !== false);
