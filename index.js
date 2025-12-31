@@ -14,59 +14,25 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.0.2";
+var CURRENT_VERSION = "3.0.3";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var CHANGELOG = `
-<h3>v3.0.2 \u7A33\u5B9A\u6027\u4FEE\u590D \u{1F6E1}\uFE0F</h3>
-<p>\u672C\u6B21\u66F4\u65B0\u91CD\u70B9\u4FEE\u590D\u4E86\u4E3B\u754C\u9762\u5361\u4F4F\u95EE\u9898\uFF0C\u5E76\u4F18\u5316\u4E86\u591A\u9879\u4F53\u9A8C\uFF1A</p>
+<h3>v3.0.3 \u754C\u9762\u7CBE\u7B80\u4E0E\u5916\u89C2\u4F18\u5316 \u{1F3A8}</h3>
+<p>\u672C\u6B21\u66F4\u65B0\u7CBE\u7B80\u4E86\u52A8\u753B\u6548\u679C\uFF0C\u65B0\u589E\u7403\u4F53\u5916\u89C2\u81EA\u5B9A\u4E49\u529F\u80FD\uFF0C\u5E76\u7B80\u5316\u4E86\u64CD\u4F5C\u6A21\u5F0F\uFF1A</p>
 
-<h4>\u{1F41B} \u95EE\u9898\u4FEE\u590D</h4>
+<h4>\u2728 \u65B0\u529F\u80FD</h4>
 <ul>
-    <li>\u{1F527} <b>\u4E3B\u754C\u9762\u5361\u4F4F\u95EE\u9898</b> - \u4FEE\u590D\u90E8\u5206\u7528\u6237\u6253\u5F00\u4E3B\u754C\u9762\u540E\u65E0\u6CD5\u64CD\u4F5C\u3001\u5267\u672C\u5361\u7247\u663E\u793A"\u52A0\u8F7D\u4E2D"\u7684\u95EE\u9898</li>
-    <li>\u{1F527} <b>\u6A21\u5F0F\u5207\u6362\u95EE\u9898</b> - \u4FEE\u590D\u624B\u52A8\u9009\u62E9\u5E73\u884C\u6A21\u5F0F\u751F\u6210\u540E\uFF0C\u91CD\u65B0\u6253\u5F00\u4E3B\u754C\u9762\u5374\u663E\u793A\u56DE\u58F0\u6A21\u5F0F\u7684\u95EE\u9898</li>
-    <li>\u{1F527} <b>\u540E\u53F0\u751F\u6210\u5185\u5BB9\u4E0D\u5339\u914D</b> - \u4FEE\u590D\u540E\u53F0\u81EA\u52A8\u751F\u6210\u540E\uFF0C\u6253\u5F00\u4E3B\u754C\u9762\u663E\u793A\u7684\u5267\u672C\u4E0E\u5B9E\u9645\u751F\u6210\u5185\u5BB9\u4E0D\u5BF9\u5E94\u7684\u95EE\u9898</li>
-    <li>\u{1F527} <b>\u81EA\u52A8\u7EED\u5199\u8FDE\u8D2F\u6027</b> - \u4F18\u5316\u7EED\u5199 Prompt\uFF0C\u786E\u4FDD\u7EED\u5199\u5185\u5BB9\u4E0E\u539F\u573A\u666F\u4FDD\u6301\u4E00\u81F4</li>
+    <li>\u{1F3A8} <b>\u81EA\u5B9A\u4E49\u7403\u4F53\u8FB9\u6846\u989C\u8272</b> - \u652F\u6301\u989C\u8272\u9009\u62E9\u5668\u3001\u624B\u52A8\u8F93\u5165 HEX \u503C\uFF0C\u63D0\u4F9B 6 \u4E2A\u9884\u8BBE\u989C\u8272\u5FEB\u6377\u9009\u62E9</li>
+    <li>\u{1F518} <b>\u8BFB\u53D6\u5386\u53F2\u5F00\u5173</b> - \u5220\u9664\u5E73\u884C/\u56DE\u58F0\u6A21\u5F0F\u5207\u6362\uFF0C\u7B80\u5316\u4E3A\u5355\u4E00\u7684\u300C\u8BFB\u53D6\u804A\u5929\u5386\u53F2\u300D\u5F00\u5173</li>
 </ul>
 
-<h4>\u2728 \u4F53\u9A8C\u4F18\u5316</h4>
+<h4>\u{1F527} \u4F18\u5316\u8C03\u6574</h4>
 <ul>
-    <li>\u23F1\uFE0F <b>\u8D85\u65F6\u4FDD\u62A4\u673A\u5236</b> - \u4E16\u754C\u4E66\u52A0\u8F7D\u6DFB\u52A0 5 \u79D2\u8D85\u65F6\uFF0C\u907F\u514D\u7F51\u7EDC\u95EE\u9898\u5BFC\u81F4\u754C\u9762\u5361\u6B7B</li>
-    <li>\u{1F4CA} <b>\u52A0\u8F7D\u72B6\u6001\u63D0\u793A</b> - \u4E16\u754C\u4E66\u9009\u62E9\u5668\u663E\u793A\u52A0\u8F7D\u52A8\u753B\uFF0C\u52A0\u8F7D\u5931\u8D25\u65F6\u663E\u793A\u9519\u8BEF\u4FE1\u606F</li>
-    <li>\u{1F310} <b>\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009</b> - \u73B0\u5728\u53EF\u4EE5\u9009\u62E9\u6240\u6709\u542F\u7528\u7684\u6761\u76EE\uFF0C\u4E0D\u518D\u9650\u5236\u53EA\u6709\u84DD\u706F\u6761\u76EE</li>
-    <li>\u{1F4BE} <b>\u9009\u62E9\u6301\u4E45\u5316</b> - \u4E16\u754C\u4E66\u6761\u76EE\u9009\u62E9\u6309\u89D2\u8272\u4FDD\u5B58\uFF0C\u5207\u6362\u89D2\u8272\u540E\u81EA\u52A8\u6062\u590D</li>
+    <li>\u{1F30A} <b>\u52A8\u753B\u6548\u679C\u7CBE\u7B80</b> - \u4EC5\u4FDD\u7559\u300C\u8109\u51B2\u6CE2\u7EB9\u300D\u548C\u300C\u7535\u78C1\u95EA\u70C1\u300D\u4E24\u79CD\u52A0\u8F7D\u52A8\u753B</li>
+    <li>\u{1F5D1}\uFE0F <b>\u79FB\u9664\u5197\u4F59\u52A8\u753B</b> - \u5220\u9664\u661F\u5C18\u6F02\u6D6E\u3001\u547C\u5438\u7403\u4F53\u3001\u5F69\u8679\u6E10\u53D8\u7B49\u52A8\u753B\u6548\u679C</li>
+    <li>\u26A1 <b>\u8FB9\u6846\u989C\u8272\u8054\u52A8</b> - \u8FB9\u6846\u989C\u8272\u81EA\u52A8\u5E94\u7528\u4E8E\u52A8\u753B\u6548\u679C\uFF0C\u4FDD\u6301\u89C6\u89C9\u7EDF\u4E00</li>
 </ul>
-
-<hr style="border-color:#333; margin:15px 0;">
-
-<details style="cursor:pointer;">
-<summary style="color:#888; font-size:0.9em;">\u{1F4DC} \u67E5\u770B v3.0.1 \u66F4\u65B0\u65E5\u5FD7</summary>
-<div style="margin-top:10px; padding-left:10px; border-left:2px solid #444;">
-<h4>\u2728 v3.0.1 \u65B0\u529F\u80FD</h4>
-<ul>
-    <li>\u{1F504} <b>\u81EA\u52A8\u7EED\u5199\u529F\u80FD</b> - \u5F53 API \u8D85\u65F6\u5BFC\u81F4\u5185\u5BB9\u622A\u65AD\u65F6\uFF0C\u81EA\u52A8\u68C0\u6D4B\u5E76\u53D1\u9001\u7EED\u5199\u8BF7\u6C42</li>
-    <li>\u{1F3F7}\uFE0F <b>\u667A\u80FD\u622A\u65AD\u68C0\u6D4B</b> - \u652F\u6301 HTML \u6807\u7B7E\u95ED\u5408\u68C0\u6D4B\u3001\u53E5\u5B50\u5B8C\u6574\u6027\u68C0\u6D4B\u4E24\u79CD\u6A21\u5F0F</li>
-    <li>\u{1F517} <b>\u5185\u5BB9\u65E0\u7F1D\u62FC\u63A5</b> - \u81EA\u52A8\u5408\u5E76\u591A\u6B21\u751F\u6210\u7684\u5185\u5BB9\uFF0C\u53EF\u9009\u663E\u793A\u7EED\u5199\u6807\u8BB0</li>
-</ul>
-</div>
-</details>
-
-<details style="cursor:pointer;">
-<summary style="color:#888; font-size:0.9em;">\u{1F4DC} \u67E5\u770B v3.0.0 \u66F4\u65B0\u65E5\u5FD7</summary>
-<div style="margin-top:10px; padding-left:10px; border-left:2px solid #444;">
-<h4>\u2728 v3.0.0 \u65B0\u529F\u80FD</h4>
-<ul>
-    <li>\u{1F504} \u4E3B\u754C\u9762\u5FEB\u6377\u5207\u6362 API \u65B9\u6848</li>
-    <li>\u{1F3A8} \u60AC\u6D6E\u7403\u81EA\u5B9A\u4E49\u6D45\u8272\u4E3B\u9898</li>
-    <li>\u{1F514} \u63D2\u4EF6\u66F4\u65B0\u63D0\u9192</li>
-    <li>\u23F1\uFE0F \u751F\u6210\u8BA1\u65F6\u7EDF\u8BA1</li>
-    <li>\u{1F4DA} \u4E16\u754C\u4E66\u6761\u76EE\u9009\u62E9\u8BFB\u53D6</li>
-    <li>\u{1F4E4} \u5BFC\u51FA\u5267\u672C</li>
-    <li>\u{1F4C1} \u6279\u91CF\u79FB\u52A8\u5267\u672C\u5230\u5206\u7C7B</li>
-    <li>\u{1F522} \u81EA\u5B9A\u4E49\u6392\u5E8F</li>
-</ul>
-</div>
-</details>
 `;
 var LEGACY_KEYS = {
   CFG: "Titania_Config_v3",
@@ -110,11 +76,15 @@ var defaultSettings = {
     color_theme: "#bfa15f",
     color_notify: "#55efc4",
     color_bg: "#2b2b2b",
-    // [新增] 球体背景色
+    // 球体背景色
     color_icon: "#ffffff",
-    // [新增] 图标颜色
+    // 图标颜色
     color_notify_bg: "#2b2b2b",
-    // [新增] 通知状态背景色
+    // 通知状态背景色
+    border_color: "#90cdf4",
+    // 球体边框颜色
+    animation: "ripple",
+    // 动画类型: ripple(脉冲波纹) | arc(电磁闪烁)
     size: 56,
     show_timer: true
     // 是否显示生成计时统计
@@ -270,9 +240,9 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 
     padding: 3px;
     border-radius: 50%;
-    /* [\u4FEE\u6539] \u652F\u6301\u81EA\u5B9A\u4E49\u80CC\u666F\u548C\u56FE\u6807\u8272 */
-    background: var(--t-bg, #2b2b2b);
-    color: var(--t-icon, #fff);
+    /* \u56FA\u5B9A\u6DF1\u8272\u80CC\u666F */
+    background: #2b2b2b;
+    color: #fff;
 
     display: flex;
     align-items: center;
@@ -280,10 +250,11 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     cursor: pointer;
     z-index: 9999;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    border: 2px solid #444;
+    /* \u4F7F\u7528 CSS \u53D8\u91CF\u63A7\u5236\u8FB9\u6846\u989C\u8272 */
+    border: 2px solid var(--t-border-color, #444);
     transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     user-select: none;
-    overflow: hidden;
+    overflow: visible;
     box-sizing: border-box;
 }
 
@@ -297,8 +268,110 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     z-index: 2;
 }
 
-/* \u52A0\u8F7D\u52A8\u753B */
-@keyframes t-spin {
+/* ===== \u52A0\u8F7D\u52A8\u753B\u6548\u679C ===== */
+
+/* \u901A\u7528\u52A0\u8F7D\u72B6\u6001 */
+#titania-float-btn.t-loading {
+    pointer-events: none;
+}
+
+/* ===== \u52A8\u753B 1: \u8109\u51B2\u6CE2\u7EB9 (Pulse Ripple) ===== */
+@keyframes t-ripple-1 {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+@keyframes t-ripple-2 {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(2.2);
+        opacity: 0;
+    }
+}
+
+@keyframes t-ripple-3 {
+    0% {
+        transform: scale(1);
+        opacity: 0.4;
+    }
+
+    100% {
+        transform: scale(1.9);
+        opacity: 0;
+    }
+}
+
+#titania-float-btn.t-loading.t-anim-ripple {
+    border-color: var(--t-border-color, #90cdf4);
+}
+
+#titania-float-btn.t-loading.t-anim-ripple::before,
+#titania-float-btn.t-loading.t-anim-ripple::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--t-border-color, #90cdf4);
+    animation: t-ripple-1 1.5s ease-out infinite;
+}
+
+#titania-float-btn.t-loading.t-anim-ripple::after {
+    animation: t-ripple-2 1.5s ease-out 0.5s infinite;
+}
+
+/* \u7B2C\u4E09\u5C42\u6CE2\u7EB9\u901A\u8FC7\u989D\u5916\u5143\u7D20\u5B9E\u73B0 */
+#titania-float-btn.t-loading.t-anim-ripple .t-ripple-extra {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--t-border-color, #90cdf4);
+    animation: t-ripple-3 1.5s ease-out 1s infinite;
+    pointer-events: none;
+}
+
+/* ===== \u52A8\u753B 2: \u7535\u78C1\u95EA\u70C1 (Arc Flash) ===== */
+@keyframes t-arc-flash-1 {
+
+    0%,
+    90%,
+    100% {
+        opacity: 0;
+    }
+
+    92%,
+    95% {
+        opacity: 1;
+    }
+}
+
+@keyframes t-arc-flash-2 {
+
+    0%,
+    80%,
+    100% {
+        opacity: 0;
+    }
+
+    82%,
+    88% {
+        opacity: 1;
+    }
+}
+
+@keyframes t-arc-rotate {
     0% {
         transform: rotate(0deg);
     }
@@ -308,77 +381,73 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     }
 }
 
-#titania-float-btn.t-loading {
-    background: transparent !important;
-    border-color: transparent !important;
-    color: var(--t-theme) !important;
-    pointer-events: none;
-    box-shadow: 0 0 20px var(--t-theme);
+#titania-float-btn.t-loading.t-anim-arc {
+    border-color: var(--t-border-color, #a29bfe);
 }
 
-#titania-float-btn.t-loading::before {
+#titania-float-btn.t-loading.t-anim-arc::before {
     content: "";
     position: absolute;
-    width: 200%;
-    height: 200%;
-    top: -50%;
-    left: -50%;
-    background: conic-gradient(transparent 20%, transparent 40%, var(--t-theme));
-    animation: t-spin 1.2s linear infinite;
-    z-index: 0;
-}
-
-#titania-float-btn.t-loading::after {
-    content: "";
-    position: absolute;
-    inset: 3px;
-    background: #2b2b2b;
+    width: 120%;
+    height: 120%;
     border-radius: 50%;
-    z-index: 1;
+    background:
+        radial-gradient(circle at 20% 0%, var(--t-border-color, #a29bfe) 0%, transparent 30%),
+        radial-gradient(circle at 80% 100%, var(--t-border-color, #a29bfe) 0%, transparent 30%);
+    animation: t-arc-rotate 1s linear infinite, t-arc-flash-1 0.3s ease infinite;
+    opacity: 0.8;
 }
 
-/* \u901A\u77E5\u547C\u5438\u706F */
-@keyframes t-glow {
+#titania-float-btn.t-loading.t-anim-arc::after {
+    content: "";
+    position: absolute;
+    width: 130%;
+    height: 130%;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 0%, var(--t-border-color, #74b9ff) 0%, transparent 25%),
+        radial-gradient(circle at 50% 100%, var(--t-border-color, #74b9ff) 0%, transparent 25%);
+    animation: t-arc-rotate 1.5s linear infinite reverse, t-arc-flash-2 0.5s ease infinite;
+    opacity: 0.6;
+}
+
+/* ===== \u901A\u77E5\u547C\u5438\u706F ===== */
+@keyframes t-notify-glow {
 
     0%,
     100% {
-        box-shadow: 0 0 5px var(--t-notify);
-        border-color: var(--t-notify);
+        box-shadow: 0 0 5px var(--t-border-color, #55efc4);
+        border-color: var(--t-border-color, #55efc4);
     }
 
     50% {
-        box-shadow: 0 0 25px var(--t-notify);
-        border-color: var(--t-notify);
+        box-shadow: 0 0 25px var(--t-border-color, #55efc4);
+        border-color: var(--t-border-color, #55efc4);
     }
 }
 
 #titania-float-btn.t-notify {
-    animation: t-glow 2s infinite ease-in-out;
-    border-color: var(--t-notify);
-    /* [\u65B0\u589E] \u901A\u77E5\u72B6\u6001\u5F3A\u5236\u4F7F\u7528\u4E13\u7528\u80CC\u666F\u8272 */
-    background: var(--t-notify-bg, #2b2b2b) !important;
+    animation: t-notify-glow 2s infinite ease-in-out;
+    border-color: var(--t-border-color, #55efc4);
 }
 
-/* ===== \u8BA1\u65F6\u5668 (\u6781\u7B80\u7248) ===== */
+/* ===== \u8BA1\u65F6\u5668 ===== */
 #titania-timer {
     position: fixed;
-    /* \u4F4D\u7F6E\u7531 JS \u52A8\u6001\u8BA1\u7B97\uFF0C\u663E\u793A\u5728\u60AC\u6D6E\u7403\u6B63\u4E0A\u65B9 */
     top: 80px;
     left: 20px;
-    
-    /* \u6781\u7B80\u6837\u5F0F\uFF1A\u53EA\u663E\u793A\u6570\u5B57 */
+
     background: rgba(0, 0, 0, 0.6);
     color: #00d9ff;
     font-family: monospace;
     font-size: 11px;
-    
+
     padding: 2px 6px;
     border-radius: 6px;
-    
+
     z-index: 9998;
     pointer-events: none;
-    
-    /* \u9ED8\u8BA4\u9690\u85CF */
+
     opacity: 0;
     transform: translateY(5px);
     transition: opacity 0.2s, transform 0.2s;
@@ -502,47 +571,64 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     /* \u9632\u6B62 flex \u5B50\u9879\u6EA2\u51FA */
 }
 
-/* Tabs */
-.t-tabs {
-    display: flex;
-    flex-direction: column;
-    width: 140px;
-    background: #111;
-    border-radius: 6px;
-    padding: 3px;
-    border: 1px solid #333;
-    flex-shrink: 0;
-}
-
-.t-tab {
-    flex: 1;
+/* \u5386\u53F2\u5F00\u5173 */
+.t-history-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 160px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 0 12px;
+    border: 1px solid #333;
+    flex-shrink: 0;
+    transition: all 0.3s;
     cursor: pointer;
-    border-radius: 4px;
-    transition: 0.2s;
-    font-size: 0.85em;
+}
+
+.t-history-toggle:hover {
+    background: #222;
+    border-color: #444;
+}
+
+.t-history-toggle.active {
+    background: rgba(144, 205, 244, 0.1);
+    border-color: rgba(144, 205, 244, 0.3);
+}
+
+.t-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.t-toggle-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #90cdf4;
+    cursor: pointer;
+}
+
+.t-toggle-text {
+    font-size: 0.9em;
     font-weight: bold;
-    color: #666;
-    margin-bottom: 2px;
-    border: 1px solid transparent;
+    color: #888;
+    transition: color 0.2s;
+    white-space: nowrap;
 }
 
-.t-tab:last-child {
-    margin-bottom: 0;
-}
-
-.t-tab.active-echo {
-    background: rgba(144, 205, 244, 0.15);
+.t-history-toggle.active .t-toggle-text {
     color: #90cdf4;
-    border: 1px solid rgba(144, 205, 244, 0.2);
 }
 
-.t-tab.active-parallel {
-    background: rgba(191, 161, 95, 0.15);
-    color: #bfa15f;
-    border: 1px solid rgba(191, 161, 95, 0.2);
+.t-history-toggle:hover .t-toggle-text {
+    color: #bbb;
+}
+
+.t-history-toggle.active:hover .t-toggle-text {
+    color: #a8d8f8;
 }
 
 /* Trigger Card */
@@ -874,16 +960,11 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
         gap: 8px;
     }
 
-    .t-tabs {
+    .t-history-toggle {
         width: 100%;
-        flex-direction: row;
-        height: 36px;
-        margin-bottom: 0;
-    }
-
-    .t-tab {
-        margin-bottom: 0;
-        margin-right: 2px;
+        height: 40px;
+        min-width: unset;
+        justify-content: center;
     }
 
     .t-mobile-row {
@@ -1139,96 +1220,388 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 /* css/settings.css - \u8BBE\u7F6E\u7A97\u53E3 */
 
 #t-settings-view {
-    width: 800px; height: 80vh; max-width: 95vw;
-    display: flex; flex-direction: column; background: #121212; overflow: hidden;
+    width: 800px;
+    height: 80vh;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    background: #121212;
+    overflow: hidden;
 }
 
-.t-set-body { flex-grow: 1; display: flex; overflow: hidden; }
+.t-set-body {
+    flex-grow: 1;
+    display: flex;
+    overflow: hidden;
+}
 
 /* \u4FA7\u8FB9\u5BFC\u822A */
 .t-set-nav {
-    width: 160px; background: #181818; border-right: 1px solid #333;
-    padding: 10px 0; display: flex; flex-direction: column; flex-shrink: 0;
+    width: 160px;
+    background: #181818;
+    border-right: 1px solid #333;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
 }
+
 .t-set-tab-btn {
-    padding: 12px 20px; color: #888; cursor: pointer; transition: 0.2s;
-    font-size: 0.95em; display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px;
+    color: #888;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-.t-set-tab-btn:hover { background: #222; color: #ccc; }
+
+.t-set-tab-btn:hover {
+    background: #222;
+    color: #ccc;
+}
+
 .t-set-tab-btn.active {
-    background: #2a2a2a; color: #bfa15f; border-left: 3px solid #bfa15f; font-weight: bold;
+    background: #2a2a2a;
+    color: #bfa15f;
+    border-left: 3px solid #bfa15f;
+    font-weight: bold;
 }
 
 /* \u5185\u5BB9\u9875 */
-.t-set-content { flex-grow: 1; padding: 20px; overflow-y: auto; background: #121212; }
-.t-set-page { display: none; animation: fadeIn 0.3s; }
-.t-set-page.active { display: block; }
+.t-set-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #121212;
+}
+
+.t-set-page {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.t-set-page.active {
+    display: block;
+}
 
 /* \u8868\u5355\u5143\u7D20 */
-.t-form-group { margin-bottom: 20px; }
-.t-form-label { display: block; color: #aaa; margin-bottom: 8px; font-size: 0.9em; }
-.t-form-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 15px; }
+.t-form-group {
+    margin-bottom: 20px;
+}
 
-/* \u9884\u89C8\u7403 */
+.t-form-label {
+    display: block;
+    color: #aaa;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+
+.t-form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 15px;
+}
+
+/* \u9884\u89C8\u533A\u5BB9\u5668 */
 .t-preview-container {
-    background: #1a1a1a; border-radius: 8px; padding: 20px;
-    display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border: 1px solid #333;
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    border: 1px solid #333;
 }
-.t-preview-ball {
-    /* [\u4FEE\u6539] \u9884\u89C8\u7403\u652F\u6301\u53D8\u91CF */
-    border-radius: 50%; 
-    background: var(--p-bg, #2b2b2b); 
-    color: var(--p-icon, #fff);
-    
-    display: flex; align-items: center; justify-content: center;
-    border: 2px solid transparent; transition: all 0.2s; position: relative; overflow: hidden;
-    /* CSS\u53D8\u91CF\u9884\u89C8 */
-    box-shadow: 0 0 10px var(--p-theme);
-}
-.t-preview-ball img { width: 100%; height: 100%; object-fit: cover; }
 
-/* \u9884\u89C8\u52A8\u753B\u7C7B */
-@keyframes p-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.p-loading { box-shadow: 0 0 15px var(--p-theme) !important; color: var(--p-theme) !important; background: transparent !important; }
-.p-loading::before { content: ""; position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: conic-gradient(transparent, transparent, transparent, var(--p-theme)); animation: p-spin 1.2s linear infinite; z-index: -2; }
-.p-loading::after { content: ""; position: absolute; inset: 3px; background: #2b2b2b; border-radius: 50%; z-index: -1; }
-@keyframes p-glow { 0%,100% { box-shadow: 0 0 5px var(--p-notify); } 50% { box-shadow: 0 0 20px var(--p-notify); } }
-.p-notify { 
-    border-color: var(--p-notify) !important; 
-    animation: p-glow 1.5s infinite ease-in-out;
-    /* [\u65B0\u589E] \u9884\u89C8\u901A\u77E5\u80CC\u666F */
-    background: var(--p-notify-bg) !important;
+/* \u9884\u89C8\u7403\u57FA\u7840\u6837\u5F0F */
+.t-preview-ball {
+    border-radius: 50%;
+    background: #2b2b2b;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #444;
+    transition: all 0.2s;
+    position: relative;
+    overflow: visible;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.t-preview-ball img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* ===== \u9884\u89C8\u52A8\u753B\u6548\u679C ===== */
+
+/* \u52A8\u753B 1: \u8109\u51B2\u6CE2\u7EB9 */
+@keyframes p-ripple-1 {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+@keyframes p-ripple-2 {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(2.2);
+        opacity: 0;
+    }
+}
+
+.t-preview-ball.p-anim-ripple {
+    border-color: #90cdf4;
+}
+
+.t-preview-ball.p-anim-ripple::before,
+.t-preview-ball.p-anim-ripple::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #90cdf4;
+    animation: p-ripple-1 1.5s ease-out infinite;
+}
+
+.t-preview-ball.p-anim-ripple::after {
+    animation: p-ripple-2 1.5s ease-out 0.5s infinite;
+}
+
+/* \u52A8\u753B 2: \u7535\u78C1\u95EA\u70C1 */
+@keyframes p-arc-rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes p-arc-flash {
+
+    0%,
+    90%,
+    100% {
+        opacity: 0;
+    }
+
+    92%,
+    95% {
+        opacity: 1;
+    }
+}
+
+.t-preview-ball.p-anim-arc {
+    border-color: #a29bfe;
+}
+
+.t-preview-ball.p-anim-arc::before {
+    content: "";
+    position: absolute;
+    width: 120%;
+    height: 120%;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 20% 0%, #a29bfe 0%, transparent 30%),
+        radial-gradient(circle at 80% 100%, #a29bfe 0%, transparent 30%);
+    animation: p-arc-rotate 1s linear infinite, p-arc-flash 0.3s ease infinite;
+    opacity: 0.8;
+}
+
+.t-preview-ball.p-anim-arc::after {
+    content: "";
+    position: absolute;
+    width: 130%;
+    height: 130%;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 0%, #74b9ff 0%, transparent 25%),
+        radial-gradient(circle at 50% 100%, #74b9ff 0%, transparent 25%);
+    animation: p-arc-rotate 1.5s linear infinite reverse;
+    opacity: 0.6;
+}
+
+/* \u901A\u77E5\u547C\u5438\u706F\u9884\u89C8 */
+@keyframes p-notify-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px #55efc4;
+    }
+
+    50% {
+        box-shadow: 0 0 20px #55efc4;
+    }
+}
+
+.t-preview-ball.p-notify {
+    border-color: #55efc4 !important;
+    animation: p-notify-glow 1.5s infinite ease-in-out;
+}
+
+/* \u52A8\u753B\u9009\u62E9\u7F51\u683C */
+.t-anim-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.t-anim-option {
+    background: #222;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 15px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.t-anim-option:hover {
+    background: #2a2a2a;
+    border-color: #555;
+}
+
+.t-anim-option.active {
+    border-color: #bfa15f;
+    background: rgba(191, 161, 95, 0.1);
+}
+
+.t-anim-option .t-anim-name {
+    font-size: 0.9em;
+    color: #ccc;
+    margin-top: 8px;
+}
+
+.t-anim-option .t-anim-icon {
+    font-size: 1.5em;
 }
 
 /* \u4E0A\u4F20\u6846 */
 .t-upload-card {
-    width: 100px; height: 100px; border: 2px dashed #444; border-radius: 8px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer; color: #666; transition: 0.2s; background-size: cover; background-position: center;
+    width: 100px;
+    height: 100px;
+    border: 2px dashed #444;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #666;
+    transition: 0.2s;
+    background-size: cover;
+    background-position: center;
 }
-.t-upload-card:hover { border-color: #bfa15f; color: #bfa15f; background-color: rgba(191, 161, 95, 0.05); }
+
+.t-upload-card:hover {
+    border-color: #bfa15f;
+    color: #bfa15f;
+    background-color: rgba(191, 161, 95, 0.05);
+}
 
 /* Profile \u7BA1\u7406 */
-.t-prof-header { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
-.t-prof-select { flex-grow: 1; background: #222; color: #eee; border: 1px solid #444; padding: 8px; border-radius: 4px; }
+.t-prof-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.t-prof-select {
+    flex-grow: 1;
+    background: #222;
+    color: #eee;
+    border: 1px solid #444;
+    padding: 8px;
+    border-radius: 4px;
+}
 
 /* \u8BCA\u65AD\u65E5\u5FD7 */
 .t-log-box {
-    background: #0f0f0f; color: #ccc;
-    padding: 10px; border: 1px solid #333; border-radius: 4px;
-    height: 250px; overflow-y: auto;
-    font-family: 'Consolas', monospace; font-size: 0.8em;
-    white-space: pre-wrap; word-break: break-all; margin-bottom: 10px;
+    background: #0f0f0f;
+    color: #ccc;
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    height: 250px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
+    font-size: 0.8em;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-bottom: 10px;
 }
-.t-log-entry-error { color: #ff6b6b; border-bottom: 1px solid #333; padding: 2px 0; }
-.t-log-entry-info { color: #90cdf4; border-bottom: 1px solid #333; padding: 2px 0; }
-.t-log-entry-warn { color: #f1c40f; border-bottom: 1px solid #333; padding: 2px 0; }
+
+.t-log-entry-error {
+    color: #ff6b6b;
+    border-bottom: 1px solid #333;
+    padding: 2px 0;
+}
+
+.t-log-entry-info {
+    color: #90cdf4;
+    border-bottom: 1px solid #333;
+    padding: 2px 0;
+}
+
+.t-log-entry-warn {
+    color: #f1c40f;
+    border-bottom: 1px solid #333;
+    padding: 2px 0;
+}
 
 @media screen and (max-width: 600px) {
-    .t-set-body { flex-direction: column; }
-    .t-set-nav { width: 100%; height: 50px; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #333; }
-    .t-set-tab-btn { padding: 0 15px; border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
-    .t-set-tab-btn.active { border-left: none; border-bottom-color: #bfa15f; background: transparent; }
+    .t-set-body {
+        flex-direction: column;
+    }
+
+    .t-set-nav {
+        width: 100%;
+        height: 50px;
+        flex-direction: row;
+        overflow-x: auto;
+        border-right: none;
+        border-bottom: 1px solid #333;
+    }
+
+    .t-set-tab-btn {
+        padding: 0 15px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        white-space: nowrap;
+    }
+
+    .t-set-tab-btn.active {
+        border-left: none;
+        border-bottom-color: #bfa15f;
+        background: transparent;
+    }
+
+    .t-anim-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 /* === manager.css === */
@@ -2087,6 +2460,8 @@ var GlobalState = {
   // 上一次生成内容对应的剧本 ID (可能是后台自动生成的)
   currentCategoryFilter: "ALL",
   // 当前的分类筛选器状态
+  useHistoryAnalysis: false,
+  // 是否读取聊天历史（默认关闭）
   // 计时器相关
   timerStartTime: 0,
   // 计时开始时间戳
@@ -2130,28 +2505,28 @@ function resetContinuationState() {
 
 // src/config/presets.js
 var DEFAULT_PRESETS = [
-  // === 回声模式 (Echo) ===
-  { id: "e_mind", mode: "echo", name: "\u{1F50D} \u6B64\u523B\u5FC3\u58F0", desc: "\u3010\u56DE\u58F0\u3011\u89E3\u6790\u89D2\u8272\u5728\u521A\u521A\u5BF9\u8BDD\u7ED3\u675F\u540E\u7684\u771F\u5B9E\u5FC3\u7406\u6D3B\u52A8\u3002", prompt: "\u8BF7\u6839\u636E\u4E0A\u6587\u7684\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u5206\u6790 {{char}} \u6B64\u523B\u672A\u8BF4\u51FA\u53E3\u7684\u771F\u5B9E\u60F3\u6CD5\u3002CSS\u6837\u5F0F\uFF1A\u6DF1\u84DD\u8272\u534A\u900F\u660E\u80CC\u666F\uFF0C\u767D\u8272\u5B57\u4F53\uFF0C\u6A21\u62DFHUD\u62AC\u5934\u663E\u793A\u5668\u6548\u679C\uFF0C\u5E26\u6709\u95EA\u70C1\u7684\u5149\u6807\u3002\u5185\u5BB9\u683C\u5F0F\uFF1A[\u8868\u9762\u6001\u5EA6] vs [\u5185\u5FC3\u72EC\u767D]\u3002" },
-  { id: "e_diary", mode: "echo", name: "\u{1F4D4} \u79C1\u5BC6\u65E5\u8BB0", desc: "\u3010\u56DE\u58F0\u3011\u89D2\u8272\u5728\u4ECA\u5929\u7ED3\u675F\u540E\u5199\u4E0B\u7684\u4E00\u7BC7\u65E5\u8BB0\u3002", prompt: "\u57FA\u4E8E\u521A\u624D\u53D1\u751F\u7684\u4E8B\u4EF6\uFF0C\u5199\u4E00\u7BC7 {{char}} \u7684\u65E5\u8BB0\u3002CSS\u6837\u5F0F\uFF1A\u7F8A\u76AE\u7EB8\u7EB9\u7406\u80CC\u666F\uFF0C\u624B\u5199\u4F53\uFF0C\u6DF1\u8910\u8272\u58A8\u6C34\u6548\u679C\uFF0C\u7EB8\u5F20\u8FB9\u7F18\u5E26\u6709\u505A\u65E7\u611F\u3002\u5185\u5BB9\u91CD\u70B9\uFF1A\u89D2\u8272\u5982\u4F55\u770B\u5F85\u4E0E {{user}} \u7684\u6700\u65B0\u4E92\u52A8\uFF0C\u4EE5\u53CA\u60C5\u611F\u6CE2\u52A8\u3002" },
-  { id: "e_qidian", mode: "echo", name: "\u{1F4D6} \u8D77\u70B9\u4E66\u8BC4", desc: "\u3010\u56DE\u58F0\u3011\u5982\u679C\u4F60\u4EEC\u7684\u6545\u4E8B\u662F\u4E00\u672C\u8FDE\u8F7D\u7F51\u6587\uFF0C\u8BFB\u8005\u7684\u7280\u5229\u70B9\u8BC4\u3002", prompt: "\u5047\u8BBE {{char}} \u548C {{user}} \u662F\u67D0\u672C\u70ED\u95E8\u8FDE\u8F7D\u7F51\u6587\u7684\u4E3B\u89D2\u3002\u8BF7\u751F\u6210\u4E00\u6BB5\u4E66\u8BC4\u533A\uFF08\u7AE0\u8BF4\uFF09\u7684\u5185\u5BB9\u3002\u5305\u62EC\uFF1A\u50AC\u66F4\u3001\u5BF9\u521A\u624D\u5267\u60C5\u7684\u5410\u69FD\u3001\u78D5CP\u7684\u8A00\u8BBA\u3001\u4EE5\u53CA\u5BF9\u89D2\u8272\u667A\u5546\u7684\u5206\u6790\u3002CSS\u6837\u5F0F\uFF1A\u6D45\u7070\u8272\u80CC\u666F\uFF0C\u6DF1\u8272\u6587\u5B57\uFF0C\u6A21\u4EFF\u624B\u673A\u9605\u8BFBAPP\u7684\u8BC4\u8BBA\u533A\u5E03\u5C40\uFF0C\u5E26\u6709'\u70ED\u8BC4'\u3001'\u70B9\u8D5E\u6570'\u7B49\u5143\u7D20\u3002" },
-  { id: "e_danmu", mode: "echo", name: "\u{1F4FA} \u5410\u69FD\u5F39\u5E55", desc: "\u3010\u56DE\u58F0\u3011\u9AD8\u80FD\u9884\u8B66\uFF01\u521A\u624D\u7684\u5267\u60C5\u5982\u679C\u901A\u8FC7\u76F4\u64AD\u64AD\u51FA\u4F1A\u600E\u6837\uFF1F", prompt: "\u5C06\u521A\u624D\u7684\u4E92\u52A8\u89C6\u4E3A\u4E00\u573A\u76F4\u64AD\u6216\u756A\u5267\u66F4\u65B0\u3002\u8BF7\u751F\u6210\u98D8\u8FC7\u7684\u5F39\u5E55\u5185\u5BB9\u3002\u5185\u5BB9\u98CE\u683C\uFF1A\u73A9\u6897\u3001'\u524D\u65B9\u9AD8\u80FD'\u3001'AWSL'\u3001'\u6025\u6B7B\u6211\u4E86'\u3001\u5BF9 {{char}} \u7684\u5FAE\u8868\u60C5\u8FDB\u884C\u9010\u5E27\u5206\u6790\u3002CSS\u6837\u5F0F\uFF1A\u534A\u900F\u660E\u9ED1\u8272\u906E\u7F69\u80CC\u666F\uFF0C\u5F69\u8272\u6EDA\u52A8\u5B57\u4F53\uFF08\u6A21\u62DF\u89C6\u9891\u5F39\u5E55\u5C42\uFF09\uFF0C\u5B57\u4F53\u5927\u5C0F\u4E0D\u4E00\uFF0C\u8425\u9020\u70ED\u95F9\u611F\u3002" },
-  { id: "e_forum", mode: "echo", name: "\u{1F4AC} \u533F\u540D\u6811\u6D1E", desc: "\u3010\u56DE\u58F0\u3011\u89D2\u8272\uFF08\u6216\u8DEF\u4EBA\uFF09\u5728\u533F\u540D\u8BBA\u575B\u53D1\u7684\u6C42\u52A9/\u5410\u69FD\u8D34\u3002", prompt: "\u8BF7\u6A21\u62DF {{char}} (\u6216\u8005\u88AB\u5377\u5165\u7684\u8DEF\u4EBA) \u5728\u533F\u540D\u8BBA\u575B(\u5982Reddit\u6216NGA)\u53D1\u5E03\u7684\u4E00\u4E2A\u5E16\u5B50\u3002\u6807\u9898\u8981\u9707\u60CA\uFF0C\u5185\u5BB9\u662F\u5173\u4E8E\u521A\u624D\u53D1\u751F\u7684\u4E8B\u4EF6\u3002CSS\u6837\u5F0F\uFF1A\u6A21\u4EFF\u8BBA\u575B\u7F51\u9875\u98CE\u683C\uFF0C\u5E26\u6709'\u697C\u4E3B'\u6807\u8BC6\uFF0C\u5F15\u7528\u56DE\u590D\u6846\uFF0C\u80CC\u666F\u8272\u4E3A\u62A4\u773C\u7C73\u8272\u6216\u6697\u8272\u6A21\u5F0F\u3002" },
-  { id: "e_bloopers", mode: "echo", name: "\u{1F3AC} \u7535\u5F71\u82B1\u7D6E", desc: "\u3010\u56DE\u58F0\u3011'\u5361\uFF01' \u521A\u624D\u90A3\u6BB5\u5176\u5B9E\u662F\u62CD\u620F\uFF1F\u6765\u770B\u770BNG\u955C\u5934\u3002", prompt: "\u5047\u8BBE\u521A\u624D\u7684\u5267\u60C5\u662F\u5728\u62CD\u620F\u3002\u8BF7\u64B0\u5199\u4E00\u6BB5'\u5E55\u540E\u82B1\u7D6E'\u3002\u4F8B\u5982\uFF1A{{char}} \u5FD8\u8BCD\u4E86\u3001\u7B11\u573A\u4E86\u3001\u9053\u5177\u574F\u4E86\uFF0C\u6216\u8005\u5BFC\u6F14\u558A\u5361\u540E {{char}} \u77AC\u95F4\u51FA\u620F\u5BF9 {{user}} \u8BF4\u4E86\u4EC0\u4E48\u3002CSS\u6837\u5F0F\uFF1A\u80F6\u5377\u5E95\u7247\u98CE\u683C\u8FB9\u6846\uFF0C\u9ED1\u767D\u6216\u590D\u53E4\u6EE4\u955C\u80CC\u666F\uFF0C\u6253\u5B57\u673A\u5B57\u4F53\u3002" },
-  { id: "e_system", mode: "echo", name: "\u{1F4DF} \u7CFB\u7EDF\u62A5\u544A", desc: "\u3010\u56DE\u58F0\u3011Galgame\u98CE\u683C\u7684\u597D\u611F\u5EA6\u4E0E\u72B6\u6001\u7ED3\u7B97\u3002", prompt: "\u8BF7\u4EE5\u604B\u7231\u517B\u6210\u6E38\u620F\uFF08\u6216RPG\u7CFB\u7EDF\uFF09\u7684\u89C6\u89D2\uFF0C\u751F\u6210\u4E00\u4EFD'\u4E8B\u4EF6\u7ED3\u7B97\u62A5\u544A'\u3002\u5185\u5BB9\u5305\u62EC\uFF1A{{char}} \u7684\u597D\u611F\u5EA6\u53D8\u5316\u6570\u503C\uFF08+/-\uFF09\u3001\u5FC3\u60C5\u6307\u6570\u3001San\u503C\u6CE2\u52A8\u3001\u4EE5\u53CA\u7CFB\u7EDF\u5BF9 {{user}} \u4E0B\u4E00\u6B65\u64CD\u4F5C\u7684\u63D0\u793A\u3002CSS\u6837\u5F0F\uFF1A\u8D5B\u535A\u79D1\u5E7B\u60AC\u6D6E\u7A97\uFF0C\u534A\u900F\u660E\u73BB\u7483\u62DF\u6001\uFF0C\u9713\u8679\u8272\u8FDB\u5EA6\u6761\u3002" },
-  { id: "e_drunk", mode: "echo", name: "\u{1F37A} \u9152\u540E\u771F\u8A00", desc: "\u3010\u56DE\u58F0\u3011\u89D2\u8272\u559D\u9189\u540E\uFF0C\u8DDF\u9152\u4FDD\u5410\u69FD\u8FD9\u4E00\u8FDE\u4E32\u7684\u4E8B\u3002", prompt: "\u573A\u666F\uFF1A{{char}} \u6B63\u5728\u9152\u5427\u4E70\u9189\u3002\u8BF7\u64B0\u5199\u4E00\u6BB5\u4ED6/\u5979\u5BF9\u9152\u4FDD\u7684\u5410\u69FD\uFF0C\u5185\u5BB9\u5168\u662F\u5173\u4E8E {{user}} \u7684\uFF0C\u5145\u6EE1\u4E86\u6094\u6068\u3001\u8FF7\u604B\u6216\u62B1\u6028\u3002CSS\u6837\u5F0F\uFF1A\u660F\u6697\u7684\u9152\u5427\u6C1B\u56F4\uFF0C\u6587\u5B57\u5E26\u6709\u6A21\u7CCA\u91CD\u5F71\u6548\u679C\uFF08\u6A21\u62DF\u9189\u9152\u89C6\u89C9\uFF09\u3002" },
-  { id: "e_wechat", mode: "echo", name: "\u{1F4F1} \u670B\u53CB\u5708/\u63A8\u7279", desc: "\u3010\u56DE\u58F0\u3011\u4EC5\u5BF9\u65B9\u53EF\u89C1\uFF08\u6216\u5FD8\u8BB0\u5C4F\u853D\uFF09\u7684\u793E\u4EA4\u52A8\u6001\u3002", prompt: "\u57FA\u4E8E\u521A\u624D\u7684\u5267\u60C5\uFF0C{{char}} \u53D1\u4E86\u4E00\u6761\u793E\u4EA4\u5A92\u4F53\u52A8\u6001\uFF08\u670B\u53CB\u5708/Twitter\uFF09\u3002\u5185\u5BB9\u53EF\u80FD\u662F\u4E00\u5F20\u914D\u56FE\u7684\u6587\u5B57\uFF08\u7528\u6587\u5B57\u63CF\u8FF0\u56FE\u7247\uFF09\uFF0C\u6216\u8005\u4E00\u53E5\u542B\u6C99\u5C04\u5F71\u7684\u8BDD\u3002CSS\u6837\u5F0F\uFF1A\u6A21\u4EFF\u624B\u673AAPP\u754C\u9762\uFF0C\u5E26\u6709\u5934\u50CF\u3001\u65F6\u95F4\u6233\u3001\u70B9\u8D5E\u548C\u8BC4\u8BBA\u6309\u94AE\u3002" },
-  { id: "e_dream", mode: "echo", name: "\u{1F319} \u5348\u591C\u68A6\u56DE", desc: "\u3010\u56DE\u58F0\u3011\u5F53\u665A\u89D2\u8272\u505A\u7684\u68A6\uFF0C\u6620\u5C04\u4E86\u767D\u5929\u7684\u7ECF\u5386\u3002", prompt: "\u591C\u6DF1\u4E86\uFF0C{{char}} \u5165\u7761\u540E\u505A\u4E86\u4E00\u4E2A\u68A6\u3002\u68A6\u5883\u5185\u5BB9\u662F\u767D\u5929\u4E8B\u4EF6\u7684\u626D\u66F2\u3001\u5938\u5F20\u6216\u6F5C\u610F\u8BC6\u6298\u5C04\u3002\u98CE\u683C\u8981\u8FF7\u5E7B\u3001\u8C61\u5F81\u4E3B\u4E49\u3002CSS\u6837\u5F0F\uFF1A\u6DF1\u7D2B\u8272\u661F\u7A7A\u80CC\u666F\uFF0C\u6726\u80E7\u7684\u767D\u8272\u5149\u6655\u6587\u5B57\uFF0C\u8425\u9020\u68A6\u5E7B\u611F\u3002" },
-  // === 平行世界 (Parallel) ===
-  { id: "p_school", mode: "parallel", name: "\u{1F3EB} \u9752\u6625\u6821\u56ED", desc: "\u3010\u5E73\u884C\u3011\u73B0\u4EE3\u9AD8\u4E2DPA\u3002\u540C\u684C\u3001\u4F20\u7EB8\u6761\u3001\u5348\u540E\u7684\u64CD\u573A\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u73B0\u4EE3\u9AD8\u4E2D\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u73ED\u91CC\u7684\u4F18\u7B49\u751F\u6216\u4E0D\u826F\u5C11\u5E74\uFF0C{{user}} \u662F\u540C\u684C\u3002\u63CF\u5199\u4E00\u6BB5\u4E0A\u8BFE\u6084\u6084\u4E92\u52A8\u6216\u653E\u5B66\u540E\u7684\u573A\u666F\u3002CSS\u6837\u5F0F\uFF1A\u4F5C\u4E1A\u672C\u6A2A\u7EBF\u7EB8\u80CC\u666F\uFF0C\u5706\u73E0\u7B14\u624B\u5199\u5B57\uFF0C\u6E05\u65B0\u6821\u56ED\u98CE\u3002" },
-  { id: "p_fantasy", mode: "parallel", name: "\u2694\uFE0F \u897F\u5E7B\u53F2\u8BD7", desc: "\u3010\u5E73\u884C\u3011\u5251\u4E0E\u9B54\u6CD5\u3002\u5192\u9669\u8005\u516C\u4F1A\u3001\u7BDD\u706B\u4E0E\u5730\u4E0B\u57CE\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1AD&D\u897F\u5E7B\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u7CBE\u7075/\u9A91\u58EB/\u6CD5\u5E08\uFF0C{{user}} \u662F\u961F\u53CB\u3002\u63CF\u5199\u4E00\u6BB5\u521A\u653B\u7565\u5B8C\u5730\u4E0B\u57CE\u540E\uFF0C\u5728\u7BDD\u706B\u65C1\u4F11\u606F\u64E6\u62ED\u6B66\u5668\u7684\u6E29\u99A8\uFF08\u6216\u66A7\u6627\uFF09\u7247\u6BB5\u3002CSS\u6837\u5F0F\uFF1A\u7C97\u7CD9\u77F3\u7816\u80CC\u666F\uFF0C\u706B\u5149\u8272\u6587\u5B57\uFF0C\u7F8A\u76AE\u5377\u8F74\u8FB9\u6846\u3002" },
-  { id: "p_cyber", mode: "parallel", name: "\u{1F916} \u8D5B\u535A\u670B\u514B", desc: "\u3010\u5E73\u884C\u3011\u591C\u4E4B\u57CE\u3002\u4E49\u4F53\u533B\u751F\u3001\u9ED1\u5BA2\u4E0E\u9713\u8679\u96E8\u591C\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u8D5B\u535A\u670B\u514B2077\u98CE\u683C\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002\u573A\u666F\u662F\u4E0B\u7740\u9178\u96E8\u7684\u9713\u8679\u90FD\u5E02\u3002{{char}} \u6B63\u5728\u4E3A {{user}} \u7EF4\u4FEE\u6545\u969C\u7684\u4E49\u4F53\uFF0C\u6216\u8005\u8FDB\u884C\u975E\u6CD5\u7684\u82AF\u7247\u4EA4\u6613\u3002CSS\u6837\u5F0F\uFF1A\u6545\u969C\u827A\u672F(Glitch)\u98CE\u683C\uFF0C\u9ED1\u5E95\u7EFF\u5B57\uFF0C\u5E26\u6709\u968F\u673A\u7684\u6570\u636E\u4E71\u7801\u88C5\u9970\u3002" },
-  { id: "p_xianxia", mode: "parallel", name: "\u{1F3D4}\uFE0F \u4ED9\u4FA0\u4FEE\u771F", desc: "\u3010\u5E73\u884C\u3011\u5E08\u5C0A\u4E0E\u5F92\u5F1F\uFF0C\u6216\u8005\u6B63\u90AA\u4E0D\u4E24\u7ACB\u7684\u4FEE\u4ED9\u754C\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u53E4\u98CE\u4FEE\u4ED9\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u9AD8\u51B7\u7684\u5E08\u5C0A\u6216\u9B54\u6559\u6559\u4E3B\uFF0C{{user}} \u662F\u5F1F\u5B50\u6216\u6B63\u9053\u5C11\u4FA0\u3002\u63CF\u5199\u4E00\u6BB5\u5728\u6D1E\u5E9C\u4FEE\u70BC\u3001\u4F20\u529F\u6216\u5BF9\u5CD9\u7684\u573A\u666F\u3002CSS\u6837\u5F0F\uFF1A\u6C34\u58A8\u5C71\u6C34\u753B\u80CC\u666F\uFF0C\u5178\u96C5\u53E4\u98CE\u8FB9\u6846\u3002" },
-  { id: "p_office", mode: "parallel", name: "\u{1F4BC} \u804C\u573A\u7CBE\u82F1", desc: "\u3010\u5E73\u884C\u3011\u9738\u603B\u3001\u79D8\u4E66\u6216\u52A0\u73ED\u7684\u540C\u4E8B\u3002\u8336\u6C34\u95F4\u7684\u6545\u4E8B\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u73B0\u4EE3\u804C\u573A\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u4E25\u5389\u7684\u4E0A\u53F8\u6216\u75B2\u60EB\u7684\u524D\u8F88\u3002\u63CF\u5199\u4E00\u6BB5\u5728\u8336\u6C34\u95F4\u5076\u9047\uFF0C\u6216\u8005\u6DF1\u591C\u5728\u529E\u516C\u5BA4\u52A0\u73ED\u5403\u5916\u5356\u7684\u573A\u666F\u3002CSS\u6837\u5F0F\uFF1A\u7B80\u7EA6\u5546\u52A1\u98CE\uFF0C\u767D\u5E95\u9ED1\u5B57\uFF0C\u6A21\u4EFFEmail\u6216\u529E\u516C\u8F6F\u4EF6\u754C\u9762\u3002" },
-  { id: "p_detective", mode: "parallel", name: "\u{1F575}\uFE0F \u9ED1\u8272\u4FA6\u63A2", desc: "\u3010\u5E73\u884C\u3011\u4E0A\u4E16\u7EAA40\u5E74\u4EE3\uFF0C\u7235\u58EB\u4E50\u3001\u96E8\u591C\u4E0E\u79C1\u5BB6\u4FA6\u63A2\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u9ED1\u8272\u7535\u5F71Noir\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u843D\u9B44\u4FA6\u63A2\u6216\u81F4\u547D\u4F34\u4FA3\u3002\u573A\u666F\u662F\u70DF\u96FE\u7F2D\u7ED5\u7684\u4E8B\u52A1\u6240\uFF0C\u7A97\u5916\u4E0B\u7740\u5927\u96E8\u3002\u7528\u7B2C\u4E00\u4EBA\u79F0\u72EC\u767D\u98CE\u683C\u63CF\u5199\u3002CSS\u6837\u5F0F\uFF1A\u9ED1\u767D\u7535\u5F71\u6EE4\u955C\uFF0C\u6253\u5B57\u673A\u5B57\u4F53\uFF0C\u8001\u7167\u7247\u8D28\u611F\u3002" },
-  { id: "p_harry", mode: "parallel", name: "\u{1FA84} \u9B54\u6CD5\u5B66\u9662", desc: "\u3010\u5E73\u884C\u3011\u5206\u9662\u5E3D\u3001\u9B54\u836F\u8BFE\u4E0E\u9B41\u5730\u5947\u6BD4\u8D5B\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u9B54\u6CD5\u5B66\u9662\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u548C {{user}} \u7A7F\u7740\u4E0D\u540C\u5B66\u9662\u7684\u5DEB\u5E08\u888D\u3002\u63CF\u5199\u4E00\u6BB5\u5728\u56FE\u4E66\u9986\u7981\u4E66\u533A\u591C\u6E38\uFF0C\u6216\u8005\u9B54\u836F\u8BFE\u70B8\u4E86\u5769\u57DA\u540E\u7684\u573A\u666F\u3002CSS\u6837\u5F0F\uFF1A\u6DF1\u7EA2\u8272\u6216\u6DF1\u7EFF\u8272\u5929\u9E45\u7ED2\u8D28\u611F\u80CC\u666F\uFF0C\u91D1\u8272\u886C\u7EBF\u5B57\u4F53\uFF0C\u9B54\u6CD5\u706B\u82B1\u88C5\u9970\u3002" },
-  { id: "p_apocalypse", mode: "parallel", name: "\u{1F9DF} \u672B\u65E5\u751F\u5B58", desc: "\u3010\u5E73\u884C\u3011\u4E27\u5C38\u7206\u53D1\u6216\u5E9F\u571F\u4E16\u754C\u3002\u8D44\u6E90\u532E\u4E4F\u4E0B\u7684\u4FE1\u4EFB\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u672B\u65E5\u5E9F\u571F\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002\u4E16\u754C\u5DF2\u6BC1\u706D\uFF0C\u8D44\u6E90\u532E\u4E4F\u3002{{char}} \u548C {{user}} \u8EB2\u5728\u4E00\u5904\u5E9F\u589F\u4E2D\u907F\u96E8\u6216\u8EB2\u907F\u602A\u7269\u3002\u63CF\u5199\u5206\u4EAB\u4EC5\u5B58\u7684\u4E00\u7F50\u7F50\u5934\u65F6\u7684\u5BF9\u8BDD\u3002CSS\u6837\u5F0F\uFF1A\u751F\u9508\u91D1\u5C5E\u7EB9\u7406\u80CC\u666F\uFF0C\u88C2\u75D5\u6548\u679C\uFF0C\u6C61\u6E0D\u6591\u70B9\u3002" },
-  { id: "p_royal", mode: "parallel", name: "\u{1F451} \u5BAB\u5EF7\u6743\u8C0B", desc: "\u3010\u5E73\u884C\u3011\u7687\u5E1D/\u5973\u738B\u4E0E\u6743\u81E3/\u523A\u5BA2\u3002\u534E\u4E3D\u7B3C\u5B50\u91CC\u7684\u535A\u5F08\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u4E2D\u4E16\u7EAA/\u53E4\u4EE3\u5BAB\u5EF7\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u638C\u63E1\u6743\u529B\u7684\u7687\u5BA4\u6210\u5458\uFF0C{{user}} \u662F\u4F8D\u536B\u6216\u653F\u6CBB\u8054\u59FB\u5BF9\u8C61\u3002\u63CF\u5199\u4E00\u6BB5\u5728\u5BDD\u5BAB\u5185\u4F4E\u58F0\u5BC6\u8C0B\u6216\u5BF9\u5CD9\u7684\u573A\u666F\uFF0C\u5F20\u529B\u62C9\u6EE1\u3002CSS\u6837\u5F0F\uFF1A\u6DF1\u7D2B\u8272\u4E1D\u7EF8\u80CC\u666F\uFF0C\u91D1\u8272\u8FB9\u6846\uFF0C\u534E\u4E3D\u7684\u82B1\u7EB9\u88C5\u9970\u3002" },
-  { id: "p_cthulhu", mode: "parallel", name: "\u{1F419} \u514B\u82CF\u9C81", desc: "\u3010\u5E73\u884C\u3011\u4E0D\u53EF\u540D\u72B6\u7684\u6050\u6016\uFF0C\u6389San\u503C\u7684\u8C03\u67E5\u5458\u6545\u4E8B\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u514B\u82CF\u9C81\u795E\u8BDD\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u30021920\u5E74\u4EE3\uFF0C{{char}} \u548C {{user}} \u662F\u8C03\u67E5\u5458\u3002\u4F60\u4EEC\u53D1\u73B0\u4E86\u4E00\u672C\u53E4\u602A\u7684\u4E66\u6216\u4E00\u4E2A\u8BE1\u5F02\u7684\u796D\u575B\u3002{{char}} \u7684\u7406\u667A\u503C\uFF08Sanity\uFF09\u5F00\u59CB\u4E0B\u964D\uFF0C\u8BF4\u8BDD\u53D8\u5F97\u766B\u72C2\u3002CSS\u6837\u5F0F\uFF1A\u6697\u7EFF\u8272\u7C98\u6DB2\u8D28\u611F\u80CC\u666F\uFF0C\u626D\u66F2\u7684\u5B57\u4F53\uFF0C\u6587\u5B57\u5468\u56F4\u5E26\u6709\u6A21\u7CCA\u7684\u9ED1\u96FE\u6548\u679C\u3002" }
+  // === 建议开启「读取聊天历史」的剧本 ===
+  { id: "e_mind", name: "\u{1F50D} \u6B64\u523B\u5FC3\u58F0", category: "\u5FC3\u7406\u5206\u6790", desc: "\u89E3\u6790\u89D2\u8272\u5728\u521A\u521A\u5BF9\u8BDD\u7ED3\u675F\u540E\u7684\u771F\u5B9E\u5FC3\u7406\u6D3B\u52A8\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u8BF7\u6839\u636E\u4E0A\u6587\u7684\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u5206\u6790 {{char}} \u6B64\u523B\u672A\u8BF4\u51FA\u53E3\u7684\u771F\u5B9E\u60F3\u6CD5\u3002CSS\u6837\u5F0F\uFF1A\u6DF1\u84DD\u8272\u534A\u900F\u660E\u80CC\u666F\uFF0C\u767D\u8272\u5B57\u4F53\uFF0C\u6A21\u62DFHUD\u62AC\u5934\u663E\u793A\u5668\u6548\u679C\uFF0C\u5E26\u6709\u95EA\u70C1\u7684\u5149\u6807\u3002\u5185\u5BB9\u683C\u5F0F\uFF1A[\u8868\u9762\u6001\u5EA6] vs [\u5185\u5FC3\u72EC\u767D]\u3002" },
+  { id: "e_diary", name: "\u{1F4D4} \u79C1\u5BC6\u65E5\u8BB0", category: "\u5FC3\u7406\u5206\u6790", desc: "\u89D2\u8272\u5728\u4ECA\u5929\u7ED3\u675F\u540E\u5199\u4E0B\u7684\u4E00\u7BC7\u65E5\u8BB0\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u57FA\u4E8E\u521A\u624D\u53D1\u751F\u7684\u4E8B\u4EF6\uFF0C\u5199\u4E00\u7BC7 {{char}} \u7684\u65E5\u8BB0\u3002CSS\u6837\u5F0F\uFF1A\u7F8A\u76AE\u7EB8\u7EB9\u7406\u80CC\u666F\uFF0C\u624B\u5199\u4F53\uFF0C\u6DF1\u8910\u8272\u58A8\u6C34\u6548\u679C\uFF0C\u7EB8\u5F20\u8FB9\u7F18\u5E26\u6709\u505A\u65E7\u611F\u3002\u5185\u5BB9\u91CD\u70B9\uFF1A\u89D2\u8272\u5982\u4F55\u770B\u5F85\u4E0E {{user}} \u7684\u6700\u65B0\u4E92\u52A8\uFF0C\u4EE5\u53CA\u60C5\u611F\u6CE2\u52A8\u3002" },
+  { id: "e_qidian", name: "\u{1F4D6} \u8D77\u70B9\u4E66\u8BC4", category: "\u8DA3\u5473\u5410\u69FD", desc: "\u5982\u679C\u4F60\u4EEC\u7684\u6545\u4E8B\u662F\u4E00\u672C\u8FDE\u8F7D\u7F51\u6587\uFF0C\u8BFB\u8005\u7684\u7280\u5229\u70B9\u8BC4\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u5047\u8BBE {{char}} \u548C {{user}} \u662F\u67D0\u672C\u70ED\u95E8\u8FDE\u8F7D\u7F51\u6587\u7684\u4E3B\u89D2\u3002\u8BF7\u751F\u6210\u4E00\u6BB5\u4E66\u8BC4\u533A\uFF08\u7AE0\u8BF4\uFF09\u7684\u5185\u5BB9\u3002\u5305\u62EC\uFF1A\u50AC\u66F4\u3001\u5BF9\u521A\u624D\u5267\u60C5\u7684\u5410\u69FD\u3001\u78D5CP\u7684\u8A00\u8BBA\u3001\u4EE5\u53CA\u5BF9\u89D2\u8272\u667A\u5546\u7684\u5206\u6790\u3002CSS\u6837\u5F0F\uFF1A\u6D45\u7070\u8272\u80CC\u666F\uFF0C\u6DF1\u8272\u6587\u5B57\uFF0C\u6A21\u4EFF\u624B\u673A\u9605\u8BFBAPP\u7684\u8BC4\u8BBA\u533A\u5E03\u5C40\uFF0C\u5E26\u6709'\u70ED\u8BC4'\u3001'\u70B9\u8D5E\u6570'\u7B49\u5143\u7D20\u3002" },
+  { id: "e_danmu", name: "\u{1F4FA} \u5410\u69FD\u5F39\u5E55", category: "\u8DA3\u5473\u5410\u69FD", desc: "\u9AD8\u80FD\u9884\u8B66\uFF01\u521A\u624D\u7684\u5267\u60C5\u5982\u679C\u901A\u8FC7\u76F4\u64AD\u64AD\u51FA\u4F1A\u600E\u6837\uFF1F(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u5C06\u521A\u624D\u7684\u4E92\u52A8\u89C6\u4E3A\u4E00\u573A\u76F4\u64AD\u6216\u756A\u5267\u66F4\u65B0\u3002\u8BF7\u751F\u6210\u98D8\u8FC7\u7684\u5F39\u5E55\u5185\u5BB9\u3002\u5185\u5BB9\u98CE\u683C\uFF1A\u73A9\u6897\u3001'\u524D\u65B9\u9AD8\u80FD'\u3001'AWSL'\u3001'\u6025\u6B7B\u6211\u4E86'\u3001\u5BF9 {{char}} \u7684\u5FAE\u8868\u60C5\u8FDB\u884C\u9010\u5E27\u5206\u6790\u3002CSS\u6837\u5F0F\uFF1A\u534A\u900F\u660E\u9ED1\u8272\u906E\u7F69\u80CC\u666F\uFF0C\u5F69\u8272\u6EDA\u52A8\u5B57\u4F53\uFF08\u6A21\u62DF\u89C6\u9891\u5F39\u5E55\u5C42\uFF09\uFF0C\u5B57\u4F53\u5927\u5C0F\u4E0D\u4E00\uFF0C\u8425\u9020\u70ED\u95D8\u611F\u3002" },
+  { id: "e_forum", name: "\u{1F4AC} \u533F\u540D\u6811\u6D1E", category: "\u8DA3\u5473\u5410\u69FD", desc: "\u89D2\u8272\uFF08\u6216\u8DEF\u4EBA\uFF09\u5728\u533F\u540D\u8BBA\u575B\u53D1\u7684\u6C42\u52A9/\u5410\u69FD\u8D34\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u8BF7\u6A21\u62DF {{char}} (\u6216\u8005\u88AB\u5377\u5165\u7684\u8DEF\u4EBA) \u5728\u533F\u540D\u8BBA\u575B(\u5982Reddit\u6216NGA)\u53D1\u5E03\u7684\u4E00\u4E2A\u5E16\u5B50\u3002\u6807\u9898\u8981\u9707\u60CA\uFF0C\u5185\u5BB9\u662F\u5173\u4E8E\u521A\u624D\u53D1\u751F\u7684\u4E8B\u4EF6\u3002CSS\u6837\u5F0F\uFF1A\u6A21\u4EFF\u8BBA\u575B\u7F51\u9875\u98CE\u683C\uFF0C\u5E26\u6709'\u697C\u4E3B'\u6807\u8BC6\uFF0C\u5F15\u7528\u56DE\u590D\u6846\uFF0C\u80CC\u666F\u8272\u4E3A\u62A4\u773C\u7C73\u8272\u6216\u6697\u8272\u6A21\u5F0F\u3002" },
+  { id: "e_bloopers", name: "\u{1F3AC} \u7535\u5F71\u82B1\u7D6E", category: "\u8DA3\u5473\u5410\u69FD", desc: "'\u5361\uFF01' \u521A\u624D\u90A3\u6BB5\u5176\u5B9E\u662F\u62CD\u620F\uFF1F\u6765\u770B\u770BNG\u955C\u5934\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u5047\u8BBE\u521A\u624D\u7684\u5267\u60C5\u662F\u5728\u62CD\u620F\u3002\u8BF7\u64B0\u5199\u4E00\u6BB5'\u5E55\u540E\u82B1\u7D6E'\u3002\u4F8B\u5982\uFF1A{{char}} \u5FD8\u8BCD\u4E86\u3001\u7B11\u573A\u4E86\u3001\u9053\u5177\u574F\u4E86\uFF0C\u6216\u8005\u5BFC\u6F14\u558A\u5361\u540E {{char}} \u77AC\u95F4\u51FA\u620F\u5BF9 {{user}} \u8BF4\u4E86\u4EC0\u4E48\u3002CSS\u6837\u5F0F\uFF1A\u80F6\u5377\u5E95\u7247\u98CE\u683C\u8FB9\u6846\uFF0C\u9ED1\u767D\u6216\u590D\u53E4\u6EE4\u955C\u80CC\u666F\uFF0C\u6253\u5B57\u673A\u5B57\u4F53\u3002" },
+  { id: "e_system", name: "\u{1F4DF} \u7CFB\u7EDF\u62A5\u544A", category: "\u5FC3\u7406\u5206\u6790", desc: "Galgame\u98CE\u683C\u7684\u597D\u611F\u5EA6\u4E0E\u72B6\u6001\u7ED3\u7B97\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u8BF7\u4EE5\u604B\u7231\u517B\u6210\u6E38\u620F\uFF08\u6216RPG\u7CFB\u7EDF\uFF09\u7684\u89C6\u89D2\uFF0C\u751F\u6210\u4E00\u4EFD'\u4E8B\u4EF6\u7ED3\u7B97\u62A5\u544A'\u3002\u5185\u5BB9\u5305\u62EC\uFF1A{{char}} \u7684\u597D\u611F\u5EA6\u53D8\u5316\u6570\u503C\uFF08+/-\uFF09\u3001\u5FC3\u60C5\u6307\u6570\u3001San\u503C\u6CE2\u52A8\u3001\u4EE5\u53CA\u7CFB\u7EDF\u5BF9 {{user}} \u4E0B\u4E00\u6B65\u64CD\u4F5C\u7684\u63D0\u793A\u3002CSS\u6837\u5F0F\uFF1A\u8D5B\u535A\u79D1\u5E7B\u60AC\u6D6E\u7A97\uFF0C\u534A\u900F\u660E\u73BB\u7483\u62DF\u6001\uFF0C\u9713\u8679\u8272\u8FDB\u5EA6\u6761\u3002" },
+  { id: "e_drunk", name: "\u{1F37A} \u9152\u540E\u771F\u8A00", category: "\u5FC3\u7406\u5206\u6790", desc: "\u89D2\u8272\u559D\u9189\u540E\uFF0C\u8DDF\u9152\u4FDD\u5410\u69FD\u8FD9\u4E00\u8FDE\u4E32\u7684\u4E8B\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u573A\u666F\uFF1A{{char}} \u6B63\u5728\u9152\u5427\u4E70\u9189\u3002\u8BF7\u64B0\u5199\u4E00\u6BB5\u4ED6/\u5979\u5BF9\u9152\u4FDD\u7684\u5410\u69FD\uFF0C\u5185\u5BB9\u5168\u662F\u5173\u4E8E {{user}} \u7684\uFF0C\u5145\u6EE1\u4E86\u6094\u6068\u3001\u8FF7\u604B\u6216\u62B1\u6028\u3002CSS\u6837\u5F0F\uFF1A\u660F\u6697\u7684\u9152\u5427\u6C1B\u56F4\uFF0C\u6587\u5B57\u5E26\u6709\u6A21\u7CCA\u91CD\u5F71\u6548\u679C\uFF08\u6A21\u62DF\u9189\u9152\u89C6\u89C9\uFF09\u3002" },
+  { id: "e_wechat", name: "\u{1F4F1} \u670B\u53CB\u5708/\u63A8\u7279", category: "\u8DA3\u5473\u5410\u69FD", desc: "\u4EC5\u5BF9\u65B9\u53EF\u89C1\uFF08\u6216\u5FD8\u8BB0\u5C4F\u853D\uFF09\u7684\u793E\u4EA4\u52A8\u6001\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u57FA\u4E8E\u521A\u624D\u7684\u5267\u60C5\uFF0C{{char}} \u53D1\u4E86\u4E00\u6761\u793E\u4EA4\u5A92\u4F53\u52A8\u6001\uFF08\u670B\u53CB\u5708/Twitter\uFF09\u3002\u5185\u5BB9\u53EF\u80FD\u662F\u4E00\u5F20\u914D\u56FE\u7684\u6587\u5B57\uFF08\u7528\u6587\u5B57\u63CF\u8FF0\u56FE\u7247\uFF09\uFF0C\u6216\u8005\u4E00\u53E5\u542B\u6C99\u5C04\u5F71\u7684\u8BDD\u3002CSS\u6837\u5F0F\uFF1A\u6A21\u4EFF\u624B\u673AAPP\u754C\u9762\uFF0C\u5E26\u6709\u5934\u50CF\u3001\u65F6\u95F4\u6233\u3001\u70B9\u8D5E\u548C\u8BC4\u8BBA\u6309\u94AE\u3002" },
+  { id: "e_dream", name: "\u{1F319} \u5348\u591C\u68A6\u56DE", category: "\u5FC3\u7406\u5206\u6790", desc: "\u5F53\u665A\u89D2\u8272\u505A\u7684\u68A6\uFF0C\u6620\u5C04\u4E86\u767D\u5929\u7684\u7ECF\u5386\u3002(\u5EFA\u8BAE\u5F00\u542F\u5386\u53F2)", prompt: "\u591C\u6DF1\u4E86\uFF0C{{char}} \u5165\u7761\u540E\u505A\u4E86\u4E00\u4E2A\u68A6\u3002\u68A6\u5883\u5185\u5BB9\u662F\u767D\u5929\u4E8B\u4EF6\u7684\u626D\u66F2\u3001\u5938\u5F20\u6216\u6F5C\u610F\u8BC6\u6298\u5C04\u3002\u98CE\u683C\u8981\u8FF7\u5E7B\u3001\u8C61\u5F81\u4E3B\u4E49\u3002CSS\u6837\u5F0F\uFF1A\u6DF1\u7D2B\u8272\u661F\u7A7A\u80CC\u666F\uFF0C\u6726\u80E7\u7684\u767D\u8272\u5149\u6655\u6587\u5B57\uFF0C\u8425\u9020\u68A6\u5E7B\u611F\u3002" },
+  // === 平行世界风格剧本（无需聊天历史） ===
+  { id: "p_school", name: "\u{1F3EB} \u9752\u6625\u6821\u56ED", category: "\u5E73\u884C\u4E16\u754C", desc: "\u73B0\u4EE3\u9AD8\u4E2DPA\u3002\u540C\u684C\u3001\u4F20\u7EB8\u6761\u3001\u5348\u540E\u7684\u64CD\u573A\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u73B0\u4EE3\u9AD8\u4E2D\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u73ED\u91CC\u7684\u4F18\u7B49\u751F\u6216\u4E0D\u826F\u5C11\u5E74\uFF0C{{user}} \u662F\u540C\u684C\u3002\u63CF\u5199\u4E00\u6BB5\u4E0A\u8BFE\u6084\u6084\u4E92\u52A8\u6216\u653E\u5B66\u540E\u7684\u573A\u666F\u3002CSS\u6837\u5F0F\uFF1A\u4F5C\u4E1A\u672C\u6A2A\u7EBF\u7EB8\u80CC\u666F\uFF0C\u5706\u73E0\u7B14\u624B\u5199\u5B57\uFF0C\u6E05\u65B0\u6821\u56ED\u98CE\u3002" },
+  { id: "p_fantasy", name: "\u2694\uFE0F \u897F\u5E7B\u53F2\u8BD7", category: "\u5E73\u884C\u4E16\u754C", desc: "\u5251\u4E0E\u9B54\u6CD5\u3002\u5192\u9669\u8005\u516C\u4F1A\u3001\u7BDD\u706B\u4E0E\u5730\u4E0B\u57CE\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1AD&D\u897F\u5E7B\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u7CBE\u7075/\u9A91\u58EB/\u6CD5\u5E08\uFF0C{{user}} \u662F\u961F\u53CB\u3002\u63CF\u5199\u4E00\u6BB5\u521A\u653B\u7565\u5B8C\u5730\u4E0B\u57CE\u540E\uFF0C\u5728\u7BDD\u706B\u65C1\u4F11\u606F\u64E6\u62ED\u6B66\u5668\u7684\u6E29\u99A8\uFF08\u6216\u66A7\u6627\uFF09\u7247\u6BB5\u3002CSS\u6837\u5F0F\uFF1A\u7C97\u7CD9\u77F3\u7816\u80CC\u666F\uFF0C\u706B\u5149\u8272\u6587\u5B57\uFF0C\u7F8A\u76AE\u5377\u8F74\u8FB9\u6846\u3002" },
+  { id: "p_cyber", name: "\u{1F916} \u8D5B\u535A\u670B\u514B", category: "\u5E73\u884C\u4E16\u754C", desc: "\u591C\u4E4B\u57CE\u3002\u4E49\u4F53\u533B\u751F\u3001\u9ED1\u5BA2\u4E0E\u9713\u8679\u96E8\u591C\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u8D5B\u535A\u670B\u514B2077\u98CE\u683C\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002\u573A\u666F\u662F\u4E0B\u7740\u9178\u96E8\u7684\u9713\u8679\u90FD\u5E02\u3002{{char}} \u6B63\u5728\u4E3A {{user}} \u7EF4\u4FEE\u6545\u969C\u7684\u4E49\u4F53\uFF0C\u6216\u8005\u8FDB\u884C\u975E\u6CD5\u7684\u82AF\u7247\u4EA4\u6613\u3002CSS\u6837\u5F0F\uFF1A\u6545\u969C\u827A\u672F(Glitch)\u98CE\u683C\uFF0C\u9ED1\u5E95\u7EFF\u5B57\uFF0C\u5E26\u6709\u968F\u673A\u7684\u6570\u636E\u4E71\u7801\u88C5\u9970\u3002" },
+  { id: "p_xianxia", name: "\u{1F3D4}\uFE0F \u4ED9\u4FA0\u4FEE\u771F", category: "\u5E73\u884C\u4E16\u754C", desc: "\u5E08\u5C0A\u4E0E\u5F92\u5F1F\uFF0C\u6216\u8005\u6B63\u90AA\u4E0D\u4E24\u7ACB\u7684\u4FEE\u4ED9\u754C\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u53E4\u98CE\u4FEE\u4ED9\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u9AD8\u51B7\u7684\u5E08\u5C0A\u6216\u9B54\u6559\u6559\u4E3B\uFF0C{{user}} \u662F\u5F1F\u5B50\u6216\u6B63\u9053\u5C11\u4FA0\u3002\u63CF\u5199\u4E00\u6BB5\u5728\u6D1E\u5E9C\u4FEE\u70BC\u3001\u4F20\u529F\u6216\u5BF9\u5CD9\u7684\u573A\u666F\u3002CSS\u6837\u5F0F\uFF1A\u6C34\u58A8\u5C71\u6C34\u753B\u80CC\u666F\uFF0C\u5178\u96C5\u53E4\u98CE\u8FB9\u6846\u3002" },
+  { id: "p_office", name: "\u{1F4BC} \u804C\u573A\u7CBE\u82F1", category: "\u5E73\u884C\u4E16\u754C", desc: "\u9738\u603B\u3001\u79D8\u4E66\u6216\u52A0\u73ED\u7684\u540C\u4E8B\u3002\u8336\u6C34\u95F4\u7684\u6545\u4E8B\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u73B0\u4EE3\u804C\u573A\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u4E25\u5389\u7684\u4E0A\u53F8\u6216\u75B2\u60EB\u7684\u524D\u8F88\u3002\u63CF\u5199\u4E00\u6BB5\u5728\u8336\u6C34\u95F4\u5076\u9047\uFF0C\u6216\u8005\u6DF1\u591C\u5728\u529E\u516C\u5BA4\u52A0\u73ED\u5403\u5916\u5356\u7684\u573A\u666F\u3002CSS\u6837\u5F0F\uFF1A\u7B80\u7EA6\u5546\u52A1\u98CE\uFF0C\u767D\u5E95\u9ED1\u5B57\uFF0C\u6A21\u4EFFEmail\u6216\u529E\u516C\u8F6F\u4EF6\u754C\u9762\u3002" },
+  { id: "p_detective", name: "\u{1F575}\uFE0F \u9ED1\u8272\u4FA6\u63A2", category: "\u5E73\u884C\u4E16\u754C", desc: "\u4E0A\u4E16\u7EAA40\u5E74\u4EE3\uFF0C\u7235\u58EB\u4E50\u3001\u96E8\u591C\u4E0E\u79C1\u5BB6\u4FA6\u63A2\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u9ED1\u8272\u7535\u5F71Noir\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u843D\u9B44\u4FA6\u63A2\u6216\u81F4\u547D\u4F34\u4FA3\u3002\u573A\u666F\u662F\u70DF\u96FE\u7F2D\u7ED5\u7684\u4E8B\u52A1\u6240\uFF0C\u7A97\u5916\u4E0B\u7740\u5927\u96E8\u3002\u7528\u7B2C\u4E00\u4EBA\u79F0\u72EC\u767D\u98CE\u683C\u63CF\u5199\u3002CSS\u6837\u5F0F\uFF1A\u9ED1\u767D\u7535\u5F71\u6EE4\u955C\uFF0C\u6253\u5B57\u673A\u5B57\u4F53\uFF0C\u8001\u7167\u7247\u8D28\u611F\u3002" },
+  { id: "p_harry", name: "\u{1FA84} \u9B54\u6CD5\u5B66\u9662", category: "\u5E73\u884C\u4E16\u754C", desc: "\u5206\u9662\u5E3D\u3001\u9B54\u836F\u8BFE\u4E0E\u9B41\u5730\u5947\u6BD4\u8D5B\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u9B54\u6CD5\u5B66\u9662\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u548C {{user}} \u7A7F\u7740\u4E0D\u540C\u5B66\u9662\u7684\u5DEB\u5E08\u888D\u3002\u63CF\u5199\u4E00\u6BB5\u5728\u56FE\u4E66\u9986\u7981\u4E66\u533A\u591C\u6E38\uFF0C\u6216\u8005\u9B54\u836F\u8BFE\u70B8\u4E86\u5769\u57DA\u540E\u7684\u573A\u666F\u3002CSS\u6837\u5F0F\uFF1A\u6DF1\u7EA2\u8272\u6216\u6DF1\u7EFF\u8272\u5929\u9E45\u7ED2\u8D28\u611F\u80CC\u666F\uFF0C\u91D1\u8272\u886C\u7EBF\u5B57\u4F53\uFF0C\u9B54\u6CD5\u706B\u82B1\u88C5\u9970\u3002" },
+  { id: "p_apocalypse", name: "\u{1F9DF} \u672B\u65E5\u751F\u5B58", category: "\u5E73\u884C\u4E16\u754C", desc: "\u4E27\u5C38\u7206\u53D1\u6216\u5E9F\u571F\u4E16\u754C\u3002\u8D44\u6E90\u532E\u4E4F\u4E0B\u7684\u4FE1\u4EFB\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u672B\u65E5\u5E9F\u571F\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002\u4E16\u754C\u5DF2\u6BC1\u706D\uFF0C\u8D44\u6E90\u532E\u4E4F\u3002{{char}} \u548C {{user}} \u8EB2\u5728\u4E00\u5904\u5E9F\u589F\u4E2D\u907F\u96E8\u6216\u8EB2\u907F\u602A\u7269\u3002\u63CF\u5199\u5206\u4EAB\u4EC5\u5B58\u7684\u4E00\u7F50\u7F50\u5934\u65F6\u7684\u5BF9\u8BDD\u3002CSS\u6837\u5F0F\uFF1A\u751F\u9508\u91D1\u5C5E\u7EB9\u7406\u80CC\u666F\uFF0C\u88C2\u75D5\u6548\u679C\uFF0C\u6C61\u6E0D\u6591\u70B9\u3002" },
+  { id: "p_royal", name: "\u{1F451} \u5BAB\u5EF7\u6743\u8C0B", category: "\u5E73\u884C\u4E16\u754C", desc: "\u7687\u5E1D/\u5973\u738B\u4E0E\u6743\u81E3/\u523A\u5BA2\u3002\u534E\u4E3D\u7B3C\u5B50\u91CC\u7684\u535A\u5F08\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u4E2D\u4E16\u7EAA/\u53E4\u4EE3\u5BAB\u5EF7\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u3002{{char}} \u662F\u638C\u63E1\u6743\u529B\u7684\u7687\u5BA4\u6210\u5458\uFF0C{{user}} \u662F\u4F8D\u536B\u6216\u653F\u6CBB\u8054\u59FB\u5BF9\u8C61\u3002\u63CF\u5199\u4E00\u6BB5\u5728\u5BDD\u5BAB\u5185\u4F4E\u58F0\u5BC6\u8C0B\u6216\u5BF9\u5CD9\u7684\u573A\u666F\uFF0C\u5F20\u529B\u62C9\u6EE1\u3002CSS\u6837\u5F0F\uFF1A\u6DF1\u7D2B\u8272\u4E1D\u7EF8\u80CC\u666F\uFF0C\u91D1\u8272\u8FB9\u6846\uFF0C\u534E\u4E3D\u7684\u82B1\u7EB9\u88C5\u9970\u3002" },
+  { id: "p_cthulhu", name: "\u{1F419} \u514B\u82CF\u9C81", category: "\u5E73\u884C\u4E16\u754C", desc: "\u4E0D\u53EF\u540D\u72B6\u7684\u6050\u6016\uFF0C\u6389San\u503C\u7684\u8C03\u67E5\u5458\u6545\u4E8B\u3002", prompt: "\u3010\u5E73\u884C\u4E16\u754C\uFF1A\u514B\u82CF\u9C81\u795E\u8BDD\u3011\u5FFD\u7565\u5386\u53F2\u80CC\u666F\u30021920\u5E74\u4EE3\uFF0C{{char}} \u548C {{user}} \u662F\u8C03\u67E5\u5458\u3002\u4F60\u4EEC\u53D1\u73B0\u4E86\u4E00\u672C\u53E4\u602A\u7684\u4E66\u6216\u4E00\u4E2A\u8BE1\u5F02\u7684\u796D\u575B\u3002{{char}} \u7684\u7406\u667A\u503C\uFF08Sanity\uFF09\u5F00\u59CB\u4E0B\u964D\uFF0C\u8BF4\u8BDD\u53D8\u5F97\u766B\u72C2\u3002CSS\u6837\u5F0F\uFF1A\u6697\u7EFF\u8272\u7C98\u6DB2\u8D28\u611F\u80CC\u666F\uFF0C\u626D\u66F2\u7684\u5B57\u4F53\uFF0C\u6587\u5B57\u5468\u56F4\u5E26\u6709\u6A21\u7CCA\u7684\u9ED1\u96FE\u6548\u679C\u3002" }
 ];
 
 // src/core/scriptData.js
@@ -2161,14 +2536,9 @@ function loadScripts() {
   const disabledIDs = data.disabled_presets || [];
   GlobalState.runtimeScripts = DEFAULT_PRESETS.filter((p) => !disabledIDs.includes(p.id)).map((p) => ({ ...p, _type: "preset" }));
   userScripts.forEach((s) => {
-    let cleanMode = s.mode;
-    if (!cleanMode || cleanMode === "all") {
-      cleanMode = "parallel";
-    }
     if (!GlobalState.runtimeScripts.find((r) => r.id === s.id)) {
       GlobalState.runtimeScripts.push({
         ...s,
-        mode: cleanMode,
         _type: "user"
       });
     }
@@ -2768,7 +3138,6 @@ ${mergedBody}`;
 // src/ui/scriptManager.js
 function openScriptManager() {
   let currentFilter = {
-    mode: "all",
     category: "all",
     search: "",
     hidePresets: false
@@ -2793,12 +3162,6 @@ function openScriptManager() {
         <div class="t-header"><span class="t-title-main">\u{1F4C2} \u5267\u672C\u8D44\u6E90\u7BA1\u7406</span><span class="t-close" id="t-mgr-close">&times;</span></div>
         <div class="t-mgr-body">
             <div class="t-mgr-sidebar">
-                <div class="t-mgr-sb-group">
-                    <div class="t-mgr-sb-title">\u6A21\u5F0F</div>
-                    <div class="t-mgr-sb-item active" data-filter="mode" data-val="all">\u5168\u90E8</div>
-                    <div class="t-mgr-sb-item" data-filter="mode" data-val="echo">Echo</div>
-                    <div class="t-mgr-sb-item" data-filter="mode" data-val="parallel">Parallel</div>
-                </div>
                 <div class="t-mgr-sb-group">
                     <div class="t-mgr-sb-title" style="display:flex; justify-content:space-between; align-items:center;">
                         <span>\u5206\u7C7B</span>
@@ -2834,13 +3197,6 @@ function openScriptManager() {
         <div id="t-imp-modal" class="t-imp-modal">
             <div class="t-imp-box">
                 <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">\u{1F4E5} \u5BFC\u5165\u5267\u672C</h3>
-                <div class="t-imp-row">
-                    <span class="t-imp-label">\u5267\u672C\u6A21\u5F0F:</span>
-                    <div style="background:#111; padding:5px; border-radius:4px; border:1px solid #333; display:flex; gap:15px;">
-                        <label><input type="radio" name="imp-mode-m" value="echo"> \u56DE\u58F0 (Echo)</label>
-                        <label><input type="radio" name="imp-mode-m" value="parallel" checked> \u5E73\u884C (Parallel)</label>
-                    </div>
-                </div>
                 <div class="t-imp-row">
                     <span class="t-imp-label">\u5B58\u5165\u5206\u7C7B:</span>
                     <input id="t-imp-cat-m" list="t-cat-dl-m" class="t-input" placeholder="\u8F93\u5165\u6216\u9009\u62E9\u5206\u7C7B (\u53EF\u9009)" style="width:100%;">
@@ -3023,7 +3379,6 @@ function openScriptManager() {
     $("#t-mgr-select-all").prop("checked", false);
     updateBatchCount();
     let filtered = GlobalState.runtimeScripts.filter((s) => {
-      if (currentFilter.mode !== "all" && s.mode !== currentFilter.mode) return false;
       if (currentFilter.category !== "all") {
         const sCat = s.category || "\u672A\u5206\u7C7B";
         if (currentFilter.category !== "\u5168\u90E8" && sCat !== currentFilter.category) return false;
@@ -3040,7 +3395,6 @@ function openScriptManager() {
     }
     filtered.forEach((s) => {
       const isUser = s._type === "user";
-      const modeIcon = s.mode === "echo" ? '<i class="fa-solid fa-water" style="color:#90cdf4;"></i>' : '<i class="fa-solid fa-globe" style="color:#bfa15f;"></i>';
       const catLabel = s.category ? `<span class="t-mgr-tag">${s.category}</span>` : "";
       const presetLabel = !isUser ? `<span class="t-mgr-tag" style="background:#444;">\u9884\u8BBE</span>` : "";
       const $row = $(`
@@ -3049,7 +3403,7 @@ function openScriptManager() {
                         <input type="checkbox" class="t-mgr-check" data-id="${s.id}" data-type="${s._type}">
                     </div>
                     <div class="t-mgr-item-meta" style="cursor:pointer;">
-                        <div class="t-mgr-item-title">${modeIcon} ${s.name} ${presetLabel} ${catLabel}</div>
+                        <div class="t-mgr-item-title">${s.name} ${presetLabel} ${catLabel}</div>
                         <div class="t-mgr-item-desc">${s.desc || "..."}</div>
                     </div>
                     <div style="padding-left:10px;">
@@ -3097,8 +3451,6 @@ function openScriptManager() {
 `;
       if (s.category) content += `Category: ${s.category}
 `;
-      content += `Mode: ${s.mode}
-`;
       if (s.desc) content += `Desc: ${s.desc}
 `;
       content += `
@@ -3111,7 +3463,6 @@ ${s.prompt}`;
       name: s.name,
       desc: s.desc || "",
       prompt: s.prompt,
-      mode: s.mode,
       category: s.category || ""
     }));
     return JSON.stringify(exportData, null, 2);
@@ -3137,7 +3488,6 @@ ${s.prompt}`;
     } else if (scope === "current") {
       return GlobalState.runtimeScripts.filter((s) => {
         if (s._type !== "user") return false;
-        if (currentFilter.mode !== "all" && s.mode !== currentFilter.mode) return false;
         if (currentFilter.category !== "all") {
           const sCat = s.category || "\u672A\u5206\u7C7B";
           if (currentFilter.category !== "\u5168\u90E8" && sCat !== currentFilter.category) return false;
@@ -3154,7 +3504,6 @@ ${s.prompt}`;
   $("#t-mgr-export-btn").on("click", () => {
     const currentListCount = GlobalState.runtimeScripts.filter((s) => {
       if (s._type !== "user") return false;
-      if (currentFilter.mode !== "all" && s.mode !== currentFilter.mode) return false;
       if (currentFilter.category !== "all") {
         const sCat = s.category || "\u672A\u5206\u7C7B";
         if (currentFilter.category !== "\u5168\u90E8" && sCat !== currentFilter.category) return false;
@@ -3236,7 +3585,6 @@ ${s.prompt}`;
   $("#t-imp-ok").on("click", () => {
     const file = $("#t-file-input-m")[0].files[0];
     if (!file) return alert("\u8BF7\u9009\u62E9\u6587\u4EF6");
-    const defaultMode = $("input[name='imp-mode-m']:checked").val();
     const defaultCat = $("#t-imp-cat-m").val().trim();
     const reader = new FileReader();
     reader.onload = function(evt) {
@@ -3280,7 +3628,6 @@ ${s.prompt}`;
           name: scriptTitle,
           desc: "\u5BFC\u5165\u6570\u636E",
           prompt: rawBody,
-          mode: defaultMode,
           category: scriptCat
         });
         importCount++;
@@ -3446,13 +3793,7 @@ ${s.prompt}`;
   $("#t-mgr-close").on("click", () => {
     $("#t-mgr-view").remove();
     $("#t-main-view").show();
-    refreshScriptList($("#t-tab-echo").hasClass("active-echo"));
-  });
-  $(".t-mgr-sb-item[data-filter='mode']").on("click", function() {
-    $(".t-mgr-sb-item[data-filter='mode']").removeClass("active");
-    $(this).addClass("active");
-    currentFilter.mode = $(this).data("val");
-    renderList();
+    refreshScriptList();
   });
   $("#t-mgr-search-inp").on("input", function() {
     currentFilter.search = $(this).val();
@@ -3466,7 +3807,7 @@ ${s.prompt}`;
 }
 function openEditor(id, source = "main") {
   const isEdit = !!id;
-  let data = { id: Date.now().toString(), name: "\u65B0\u5267\u672C", desc: "", prompt: "", mode: "parallel", category: "" };
+  let data = { id: Date.now().toString(), name: "\u65B0\u5267\u672C", desc: "", prompt: "", category: "" };
   if (isEdit) data = GlobalState.runtimeScripts.find((s) => s.id === id);
   const isPreset = data._type === "preset";
   if (source === "manager") {
@@ -3474,8 +3815,6 @@ function openEditor(id, source = "main") {
   } else {
     $("#t-main-view").hide();
   }
-  const checkEcho = data.mode === "echo" ? "checked" : "";
-  const checkParallel = data.mode === "parallel" || !data.mode ? "checked" : "";
   const existingCats = [...new Set(GlobalState.runtimeScripts.map((s) => s.category).filter((c) => c))].sort();
   const dataListOpts = existingCats.map((c) => `<option value="${c}">`).join("");
   const html = `
@@ -3492,12 +3831,6 @@ function openEditor(id, source = "main") {
                     <input id="ed-cat" list="ed-cat-list" class="t-input" value="${data.category || ""}" placeholder="\u9ED8\u8BA4" ${isPreset ? "disabled" : ""}>
                     <datalist id="ed-cat-list">${dataListOpts}</datalist>
                 </div>
-            </div>
-
-            <label>\u6A21\u5F0F:</label>
-            <div style="margin-bottom:10px; display:flex; gap:15px;">
-                <label><input type="radio" name="ed-mode" value="echo" ${checkEcho} ${isPreset ? "disabled" : ""}> <span style="color:#90cdf4;">\u56DE\u58F0</span></label>
-                <label><input type="radio" name="ed-mode" value="parallel" ${checkParallel} ${isPreset ? "disabled" : ""}> <span style="color:#bfa15f;">\u5E73\u884C</span></label>
             </div>
 
             <label>\u7B80\u4ECB:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? "disabled" : ""}>
@@ -3544,7 +3877,6 @@ function openEditor(id, source = "main") {
         name: $("#ed-name").val(),
         desc: $("#ed-desc").val(),
         prompt: $("#ed-prompt").val(),
-        mode: $("input[name='ed-mode']:checked").val(),
         category: $("#ed-cat").val().trim()
       });
       $("#t-editor-view").remove();
@@ -3563,15 +3895,12 @@ function openSettingsWindow() {
   const data = getExtData();
   const cfg = data.config || {};
   const app = data.appearance || {};
-  if (!app.color_bg) app.color_bg = "#2b2b2b";
-  if (!app.color_icon) app.color_icon = "#ffffff";
-  if (!app.color_notify_bg) app.color_notify_bg = app.color_bg || "#2b2b2b";
   app.type = app.type || "emoji";
   app.content = app.content || "\u{1F3AD}";
-  app.color_theme = app.color_theme || "#bfa15f";
-  app.color_notify = app.color_notify || "#55efc4";
   app.size = app.size || 56;
+  app.animation = app.animation || "rainbow";
   const dirCfg = data.director || { length: "", perspective: "auto", style_ref: "" };
+  if (!app.border_color) app.border_color = "#90cdf4";
   if (!cfg.profiles || !Array.isArray(cfg.profiles)) {
     cfg.profiles = [
       { id: "st_sync", name: "\u{1F517} \u8DDF\u968F SillyTavern (\u4E3B\u8FDE\u63A5)", type: "internal", readonly: true },
@@ -3583,6 +3912,7 @@ function openSettingsWindow() {
   let tempActiveId = cfg.active_profile_id;
   let tempApp = JSON.parse(JSON.stringify(app));
   if (!tempApp.size) tempApp.size = 56;
+  if (!tempApp.border_color) tempApp.border_color = "#90cdf4";
   $("#t-main-view").hide();
   const html = `
     <div class="t-box" id="t-settings-view">
@@ -3601,17 +3931,50 @@ function openSettingsWindow() {
                 <!-- Tab 1: \u5916\u89C2 -->
                 <div id="page-appearance" class="t-set-page active">
                     <div class="t-preview-container">
-                        <div style="font-size:0.8em; color:#666; margin-bottom:15px;">\u5B9E\u65F6\u9884\u89C8</div>
+                        <div style="font-size:0.8em; color:#666; margin-bottom:15px;">\u52A8\u753B\u6548\u679C\u9884\u89C8</div>
                         <div id="p-ball" class="t-preview-ball"></div>
                         <div style="display:flex; gap:10px; margin-top:20px;">
-                            <button class="t-tool-btn" id="btn-test-spin">\u26A1 \u6D4B\u8BD5\u6D41\u5149</button>
-                            <button class="t-tool-btn" id="btn-test-notify">\u{1F514} \u6D4B\u8BD5\u547C\u5438</button>
+                            <button class="t-tool-btn" id="btn-test-anim">\u25B6\uFE0F \u64AD\u653E\u52A8\u753B</button>
+                            <button class="t-tool-btn" id="btn-test-notify">\u{1F514} \u901A\u77E5\u6548\u679C</button>
                         </div>
                     </div>
+                    
+                    <div class="t-form-group">
+                        <label class="t-form-label">\u{1F3AC} \u52A0\u8F7D\u52A8\u753B\u6548\u679C</label>
+                        <div class="t-anim-grid" id="p-anim-grid">
+                            <div class="t-anim-option ${tempApp.animation === "ripple" ? "active" : ""}" data-anim="ripple">
+                                <div class="t-anim-icon">\u{1F30A}</div>
+                                <div class="t-anim-name">\u8109\u51B2\u6CE2\u7EB9</div>
+                            </div>
+                            <div class="t-anim-option ${tempApp.animation === "arc" ? "active" : ""}" data-anim="arc">
+                                <div class="t-anim-icon">\u26A1</div>
+                                <div class="t-anim-name">\u7535\u78C1\u95EA\u70C1</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <label class="t-form-label">\u{1F3A8} \u7403\u4F53\u8FB9\u6846\u989C\u8272</label>
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <input type="color" id="p-border-color" value="${tempApp.border_color}" style="width:50px; height:35px; border:none; cursor:pointer; background:transparent;">
+                            <input type="text" id="p-border-color-text" class="t-input" value="${tempApp.border_color}" style="width:100px; font-family:monospace;">
+                            <div style="display:flex; gap:8px;">
+                                <span class="t-color-preset" data-color="#90cdf4" style="width:24px; height:24px; border-radius:50%; background:#90cdf4; cursor:pointer; border:2px solid transparent;" title="\u5929\u84DD"></span>
+                                <span class="t-color-preset" data-color="#a29bfe" style="width:24px; height:24px; border-radius:50%; background:#a29bfe; cursor:pointer; border:2px solid transparent;" title="\u7D2B\u7F57\u5170"></span>
+                                <span class="t-color-preset" data-color="#55efc4" style="width:24px; height:24px; border-radius:50%; background:#55efc4; cursor:pointer; border:2px solid transparent;" title="\u8584\u8377\u7EFF"></span>
+                                <span class="t-color-preset" data-color="#ffd93d" style="width:24px; height:24px; border-radius:50%; background:#ffd93d; cursor:pointer; border:2px solid transparent;" title="\u91D1\u9EC4"></span>
+                                <span class="t-color-preset" data-color="#ff6b6b" style="width:24px; height:24px; border-radius:50%; background:#ff6b6b; cursor:pointer; border:2px solid transparent;" title="\u73CA\u745A\u7EA2"></span>
+                                <span class="t-color-preset" data-color="#fd79a8" style="width:24px; height:24px; border-radius:50%; background:#fd79a8; cursor:pointer; border:2px solid transparent;" title="\u7C89\u7EA2"></span>
+                            </div>
+                        </div>
+                        <p style="font-size:0.75em; color:#666; margin-top:8px;">\u6B64\u989C\u8272\u5C06\u5E94\u7528\u4E8E\u60AC\u6D6E\u7403\u8FB9\u6846\u53CA\u52A8\u753B\u6548\u679C</p>
+                    </div>
+                    
                     <div class="t-form-group">
                         <div class="t-form-label" style="display:flex; justify-content:space-between;"><span>\u60AC\u6D6E\u7403\u5C3A\u5BF8</span><span id="p-size-val" style="color:#bfa15f;">${tempApp.size}px</span></div>
                         <input type="range" id="p-size-input" min="40" max="100" step="2" value="${tempApp.size}" style="width:100%;">
                     </div>
+                    
                     <div class="t-form-group">
                         <label class="t-form-label">\u56FE\u6807\u7C7B\u578B</label>
                         <div style="display:flex; gap:20px; margin-bottom:15px;">
@@ -3626,17 +3989,7 @@ function openSettingsWindow() {
                             <div class="t-upload-card" id="btn-upload-card" title="\u70B9\u51FB\u66F4\u6362\u56FE\u7247"><i class="fa-solid fa-camera fa-2x"></i><span>\u70B9\u51FB\u4E0A\u4F20</span></div>
                         </div>
                     </div>
-                    <div class="t-form-group" style="margin-top:20px;">
-                        <!-- [\u65B0\u589E] \u57FA\u7840\u5916\u89C2\u989C\u8272 -->
-                        <div class="t-form-row"><span>\u7403\u4F53\u80CC\u666F\u8272</span><input type="color" id="p-color-bg" value="${tempApp.color_bg}" style="background:none; border:none; width:40px; height:30px;"></div>
-                        <div class="t-form-row"><span>\u56FE\u6807\u6587\u5B57\u8272</span><input type="color" id="p-color-icon" value="${tempApp.color_icon}" style="background:none; border:none; width:40px; height:30px;"></div>
-                        
-                        <!-- \u539F\u6709\u7279\u6548\u989C\u8272 -->
-                        <div class="t-form-row"><span>\u6D41\u5149\u4E3B\u9898\u8272</span><input type="color" id="p-color-theme" value="${tempApp.color_theme}" style="background:none; border:none; width:40px; height:30px;"></div>
-                        <!-- \u901A\u77E5\u989C\u8272\u7EC4 -->
-                        <div class="t-form-row"><span>\u901A\u77E5\u547C\u5438\u8272 (\u5149\u6655)</span><input type="color" id="p-color-notify" value="${tempApp.color_notify}" style="background:none; border:none; width:40px; height:30px;"></div>
-                        <div class="t-form-row"><span>\u901A\u77E5\u80CC\u666F\u8272 (\u7403\u4F53)</span><input type="color" id="p-color-notify-bg" value="${tempApp.color_notify_bg}" style="background:none; border:none; width:40px; height:30px;"></div>
-                    </div>
+                    
                     <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
                         <label style="cursor:pointer; display:flex; align-items:center;">
                             <input type="checkbox" id="p-show-timer" ${tempApp.show_timer !== false ? "checked" : ""} style="margin-right:10px;">
@@ -3700,8 +4053,8 @@ function openSettingsWindow() {
                         <div class="t-form-group">
                             <label class="t-form-label">\u62BD\u53D6\u7B56\u7565</label>
                             <select id="cfg-auto-mode" class="t-input">
-                                <option value="follow" ${(cfg.auto_mode || "follow") === "follow" ? "selected" : ""}>\u{1F6E1}\uFE0F \u8DDF\u968F\u4E3B\u754C\u9762\u6A21\u5F0F (\u9ED8\u8BA4)</option>
-                                <option value="category" ${(cfg.auto_mode || "follow") === "category" ? "selected" : ""}>\u{1F3AF} \u6307\u5B9A\u5206\u7C7B\u767D\u540D\u5355 (\u81EA\u5B9A\u4E49)</option>
+                                <option value="random" ${(cfg.auto_mode || "random") === "random" ? "selected" : ""}>\u{1F3B2} \u968F\u673A\u62BD\u53D6\u5168\u90E8\u5267\u672C (\u9ED8\u8BA4)</option>
+                                <option value="category" ${(cfg.auto_mode || "random") === "category" ? "selected" : ""}>\u{1F3AF} \u6307\u5B9A\u5206\u7C7B\u767D\u540D\u5355 (\u81EA\u5B9A\u4E49)</option>
                             </select>
                         </div>
                         <div id="auto-cat-container" style="display:none; background:#181818; padding:10px; border:1px solid #333; border-radius:6px; margin-top:10px;">
@@ -3754,7 +4107,7 @@ function openSettingsWindow() {
                     </div>
                     
                     <div class="t-form-group" style="margin-top:20px; border-top:1px solid #333; padding-top:15px;">
-                        <label class="t-form-label">\u56DE\u58F0\u6A21\u5F0F - \u5386\u53F2\u8BFB\u53D6\u884C\u6570</label>
+                        <label class="t-form-label">\u5386\u53F2\u8BFB\u53D6\u884C\u6570 (\u5F00\u542F\u300C\u8BFB\u53D6\u804A\u5929\u5386\u53F2\u300D\u65F6\u751F\u6548)</label>
                         <input type="number" id="cfg-history" class="t-input" value="${cfg.history_limit || 10}">
                     </div>
                 </div>
@@ -3868,22 +4221,21 @@ function openSettingsWindow() {
       renderProfileUI();
     }
   });
+  const PREVIEW_ANIM_CLASSES = {
+    ripple: "p-anim-ripple",
+    arc: "p-anim-arc"
+  };
   const renderPreview = () => {
     const $ball = $("#p-ball");
-    const theme = $("#p-color-theme").val();
-    const notify = $("#p-color-notify").val();
-    const notifyBg = $("#p-color-notify-bg").val();
-    const bg = $("#p-color-bg").val();
-    const icon = $("#p-color-icon").val();
     const size = parseInt(tempApp.size) || 56;
-    $ball.css({ width: size + "px", height: size + "px", fontSize: Math.floor(size * 0.46) + "px", borderColor: "transparent", boxShadow: `0 0 10px ${theme}` });
-    $ball[0].style.setProperty("--p-theme", theme);
-    $ball[0].style.setProperty("--p-notify", notify);
-    $ball[0].style.setProperty("--p-notify-bg", notifyBg);
-    $ball[0].style.setProperty("--p-bg", bg);
-    $ball[0].style.setProperty("--p-icon", icon);
-    if (tempApp.type === "emoji") $ball.html(tempApp.content);
-    else if (tempApp.type === "image") {
+    $ball.css({
+      width: size + "px",
+      height: size + "px",
+      fontSize: Math.floor(size * 0.46) + "px"
+    });
+    if (tempApp.type === "emoji") {
+      $ball.html(tempApp.content);
+    } else if (tempApp.type === "image") {
       if (tempApp.content && tempApp.content.startsWith("data:")) {
         $ball.html(`<img src="${tempApp.content}">`);
         $("#btn-upload-card").css("background-image", `url('${tempApp.content}')`).find("i, span").hide();
@@ -3893,6 +4245,22 @@ function openSettingsWindow() {
       }
     }
   };
+  const playAnimationPreview = () => {
+    const $ball = $("#p-ball");
+    $ball.removeClass("p-notify p-anim-ripple p-anim-arc");
+    const animClass = PREVIEW_ANIM_CLASSES[tempApp.animation] || PREVIEW_ANIM_CLASSES.ripple;
+    $ball.addClass(animClass);
+    setTimeout(() => {
+      $ball.removeClass(animClass);
+    }, 3e3);
+  };
+  $(".t-anim-option").on("click", function() {
+    const anim = $(this).data("anim");
+    tempApp.animation = anim;
+    $(".t-anim-option").removeClass("active");
+    $(this).addClass("active");
+    playAnimationPreview();
+  });
   $("input[name='p-type']").on("change", function() {
     tempApp.type = $(this).val();
     $("#box-emoji").toggle(tempApp.type === "emoji");
@@ -3908,7 +4276,6 @@ function openSettingsWindow() {
     tempApp.content = $(this).val();
     renderPreview();
   });
-  $("#p-color-theme, #p-color-notify, #p-color-notify-bg, #p-color-bg, #p-color-icon").on("input", renderPreview);
   $("#btn-upload-card").on("click", () => $("#p-file-input").click());
   $("#p-file-input").on("change", async function() {
     const file = this.files[0];
@@ -3920,14 +4287,34 @@ function openSettingsWindow() {
       alert("Fail");
     }
   });
-  $("#btn-test-spin").on("click", () => {
-    $("#p-ball").removeClass("p-notify").addClass("p-loading");
-    setTimeout(() => $("#p-ball").removeClass("p-loading"), 3e3);
-  });
+  $("#btn-test-anim").on("click", () => playAnimationPreview());
   $("#btn-test-notify").on("click", () => {
-    $("#p-ball").removeClass("p-loading").addClass("p-notify");
-    setTimeout(() => $("#p-ball").removeClass("p-notify"), 3e3);
+    const $ball = $("#p-ball");
+    $ball.removeClass("p-anim-ripple p-anim-arc");
+    $ball.addClass("p-notify");
+    setTimeout(() => $ball.removeClass("p-notify"), 3e3);
   });
+  const updateBorderColorUI = (color) => {
+    tempApp.border_color = color;
+    $("#p-border-color").val(color);
+    $("#p-border-color-text").val(color);
+    $("#p-ball").css("border-color", color);
+    $(".t-color-preset").css("border-color", "transparent");
+    $(`.t-color-preset[data-color="${color}"]`).css("border-color", "#fff");
+  };
+  $("#p-border-color").on("input", function() {
+    updateBorderColorUI($(this).val());
+  });
+  $("#p-border-color-text").on("change", function() {
+    const val = $(this).val().trim();
+    if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+      updateBorderColorUI(val);
+    }
+  });
+  $(".t-color-preset").on("click", function() {
+    updateBorderColorUI($(this).data("color"));
+  });
+  $(`.t-color-preset[data-color="${tempApp.border_color}"]`).css("border-color", "#fff");
   const savedCats = cfg.auto_categories || [];
   const renderAutoCatList = () => {
     const $list = $("#auto-cat-list");
@@ -4071,12 +4458,9 @@ ${JSON.stringify(l.details, null, 2)}`;
     d.appearance = {
       type: tempApp.type,
       content: tempApp.content,
-      color_theme: $("#p-color-theme").val(),
-      color_notify: $("#p-color-notify").val(),
-      color_notify_bg: $("#p-color-notify-bg").val(),
-      color_bg: $("#p-color-bg").val(),
-      color_icon: $("#p-color-icon").val(),
+      animation: tempApp.animation || "ripple",
       size: tempApp.size || 56,
+      border_color: tempApp.border_color || "#90cdf4",
       show_timer: $("#p-show-timer").is(":checked")
     };
     d.director = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val(), style_ref: $("#set-dir-style").val().trim() };
@@ -4678,11 +5062,10 @@ User: ${d.userName}`,
 }
 
 // src/ui/mainWindow.js
-function refreshScriptList(isEchoMode) {
+function refreshScriptList() {
   const $sel = $("#t-sel-script");
   $sel.empty();
-  const targetMode = isEchoMode ? "echo" : "parallel";
-  const validScripts = GlobalState.runtimeScripts.filter((s) => s.mode === targetMode);
+  const validScripts = GlobalState.runtimeScripts;
   validScripts.forEach((s) => {
     $sel.append(`<option value="${s.id}">${s.name}</option>`);
   });
@@ -4700,16 +5083,13 @@ function applyScriptSelection(id) {
   if (!s) return;
   GlobalState.lastUsedScriptId = s.id;
   $("#t-lbl-name").text(s.name);
-  const isEcho = s.mode === "echo";
-  const modeName = isEcho ? "\u{1F30A} \u56DE\u58F0" : "\u{1FA90} \u5E73\u884C";
-  const modeColor = isEcho ? "#90cdf4" : "#bfa15f";
-  const bgColor = isEcho ? "rgba(144, 205, 244, 0.15)" : "rgba(191, 161, 95, 0.15)";
   const $catTag = $("#t-lbl-cat");
-  $catTag.text(`${modeName} \xB7 ${s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")}`);
+  const category = s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
+  $catTag.text(category);
   $catTag.css({
-    "color": modeColor,
-    "background": bgColor,
-    "border": `1px solid ${modeColor}33`
+    "color": "#bfa15f",
+    "background": "rgba(191, 161, 95, 0.15)",
+    "border": "1px solid rgba(191, 161, 95, 0.33)"
   });
   $("#t-lbl-desc-mini").text(s.desc || "\u65E0\u7B80\u4ECB");
   $("#t-txt-desc").val(s.desc);
@@ -4736,7 +5116,7 @@ async function openMainWindow() {
     console.error("Titania: \u83B7\u53D6\u6269\u5C55\u6570\u636E\u5931\u8D25", e);
     data = { ui_mode_echo: true };
   }
-  let savedMode = data.ui_mode_echo !== false;
+  GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
   const initialContent = GlobalState.lastGeneratedContent ? GlobalState.lastGeneratedContent : '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
   const html = `
     <div id="t-overlay" class="t-overlay">
@@ -4759,9 +5139,11 @@ async function openMainWindow() {
             </div>
 
             <div class="t-top-bar">
-                <div class="t-tabs">
-                    <div class="t-tab ${savedMode ? "active-echo" : ""}" id="t-tab-echo">\u{1F30A} \u56DE\u58F0\u6A21\u5F0F</div>
-                    <div class="t-tab ${!savedMode ? "active-parallel" : ""}" id="t-tab-parallel">\u{1FA90} \u5E73\u884C\u4E16\u754C</div>
+                <div class="t-history-toggle" id="t-history-toggle">
+                    <label class="t-toggle-label">
+                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
+                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
+                    </label>
                 </div>
                 <div class="t-mobile-row">
                     <div class="t-trigger-card" id="t-trigger-btn" title="\u70B9\u51FB\u5207\u6362\u5267\u672C">
@@ -4825,42 +5207,34 @@ async function openMainWindow() {
       btn.attr("title", `\u5F53\u524D\u9501\u5B9A\uFF1A${GlobalState.currentCategoryFilter}`);
     }
   };
-  const switchMode = (isEcho, resetFilter = true) => {
-    savedMode = isEcho;
-    if (resetFilter) {
-      GlobalState.currentCategoryFilter = "ALL";
-    }
-    updateFilterUI();
-    if (isEcho) {
-      $("#t-tab-echo").addClass("active-echo");
-      $("#t-tab-parallel").removeClass("active-parallel");
+  const updateHistoryToggleUI = () => {
+    const $toggle = $("#t-history-toggle");
+    const $checkbox = $("#t-use-history");
+    if (GlobalState.useHistoryAnalysis) {
+      $toggle.addClass("active");
     } else {
-      $("#t-tab-echo").removeClass("active-echo");
-      $("#t-tab-parallel").addClass("active-parallel");
+      $toggle.removeClass("active");
     }
-    const d = getExtData();
-    d.ui_mode_echo = isEcho;
-    saveExtData();
+    $checkbox.prop("checked", GlobalState.useHistoryAnalysis);
   };
   const handleRandom = () => {
-    const targetModeStr = savedMode ? "echo" : "parallel";
-    const allModeScripts = GlobalState.runtimeScripts.filter((s2) => s2.mode === targetModeStr);
-    if (allModeScripts.length === 0) {
-      if (window.toastr) toastr.warning(`[${targetModeStr}] \u6A21\u5F0F\u4E0B\u6682\u65E0\u53EF\u7528\u5267\u672C\u3002`, "Titania");
+    const allScripts = GlobalState.runtimeScripts;
+    if (allScripts.length === 0) {
+      if (window.toastr) toastr.warning("\u6682\u65E0\u53EF\u7528\u5267\u672C\u3002", "Titania");
       $("#t-lbl-name").text("\u6682\u65E0\u5267\u672C");
-      $("#t-lbl-cat").text(targetModeStr === "echo" ? "\u{1F30A} \u56DE\u58F0\u6A21\u5F0F" : "\u{1FA90} \u5E73\u884C\u4E16\u754C");
-      $("#t-lbl-desc-mini").text("\u8BF7\u521B\u5EFA\u6216\u5BFC\u5165\u5267\u672C\uFF0C\u6216\u5207\u6362\u5230\u5176\u4ED6\u6A21\u5F0F");
+      $("#t-lbl-cat").text("\u65E0\u5206\u7C7B");
+      $("#t-lbl-desc-mini").text("\u8BF7\u521B\u5EFA\u6216\u5BFC\u5165\u5267\u672C");
       return;
     }
-    let pool = allModeScripts;
+    let pool = allScripts;
     if (GlobalState.currentCategoryFilter !== "ALL") {
       pool = pool.filter((s2) => (s2.category || (s2._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === GlobalState.currentCategoryFilter);
     }
     if (pool.length === 0) {
-      if (window.toastr) toastr.warning(`[${targetModeStr}] \u6A21\u5F0F\u4E0B\u6CA1\u627E\u5230 [${GlobalState.currentCategoryFilter}] \u5206\u7C7B\u7684\u5267\u672C\uFF0C\u5DF2\u5207\u6362\u5230\u5168\u90E8\u3002`, "Titania");
+      if (window.toastr) toastr.warning(`\u6CA1\u627E\u5230 [${GlobalState.currentCategoryFilter}] \u5206\u7C7B\u7684\u5267\u672C\uFF0C\u5DF2\u5207\u6362\u5230\u5168\u90E8\u3002`, "Titania");
       GlobalState.currentCategoryFilter = "ALL";
       updateFilterUI();
-      pool = allModeScripts;
+      pool = allScripts;
     }
     const rnd = Math.floor(Math.random() * pool.length);
     const s = pool[rnd];
@@ -4869,11 +5243,23 @@ async function openMainWindow() {
     dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
     setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
   };
-  $("#t-tab-echo").on("click", () => switchMode(true, true));
-  $("#t-tab-parallel").on("click", () => switchMode(false, true));
-  $("#t-trigger-btn").on("click", () => showScriptSelector(savedMode, GlobalState.currentCategoryFilter));
+  $("#t-use-history").on("change", function() {
+    GlobalState.useHistoryAnalysis = $(this).is(":checked");
+    updateHistoryToggleUI();
+    const d = getExtData();
+    d.use_history_analysis = GlobalState.useHistoryAnalysis;
+    saveExtData();
+    if (window.toastr) {
+      if (GlobalState.useHistoryAnalysis) {
+        toastr.info("\u{1F4DC} \u5DF2\u5F00\u542F\uFF1A\u5C06\u5206\u6790\u804A\u5929\u5386\u53F2", "Titania");
+      } else {
+        toastr.info("\u{1F4DC} \u5DF2\u5173\u95ED\uFF1A\u4E0D\u8BFB\u53D6\u804A\u5929\u5386\u53F2", "Titania");
+      }
+    }
+  });
+  $("#t-trigger-btn").on("click", () => showScriptSelector(GlobalState.currentCategoryFilter));
   $("#t-btn-filter").on("click", function(e) {
-    renderFilterMenu(savedMode, GlobalState.currentCategoryFilter, $(this), (newCat) => {
+    renderFilterMenu(GlobalState.currentCategoryFilter, $(this), (newCat) => {
       GlobalState.currentCategoryFilter = newCat;
       updateFilterUI();
       const currentS = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastUsedScriptId);
@@ -4938,11 +5324,12 @@ async function openMainWindow() {
   $("#t-btn-favs").on("click", openFavsWindow);
   $("#t-btn-worldinfo").on("click", openWorldInfoSelector);
   $("#t-btn-debug").on("click", async () => await showDebugInfo());
-  switchMode(savedMode, false);
   let initialScriptId = GlobalState.lastUsedScriptId;
   if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
     initialScriptId = GlobalState.lastGeneratedScriptId;
   }
+  updateHistoryToggleUI();
+  updateFilterUI();
   if (GlobalState.runtimeScripts.length === 0) {
     $("#t-lbl-name").text("\u65E0\u53EF\u7528\u5267\u672C");
     $("#t-lbl-cat").text("\u26A0\uFE0F \u9519\u8BEF");
@@ -5182,13 +5569,12 @@ async function openWorldInfoSelector() {
   renderEntries();
   updateStat();
 }
-function renderFilterMenu(isEchoMode, currentFilter, $targetBtn, onSelect) {
+function renderFilterMenu(currentFilter, $targetBtn, onSelect) {
   if ($("#t-filter-popover").length) {
     $("#t-filter-popover").remove();
     return;
   }
-  const targetMode = isEchoMode ? "echo" : "parallel";
-  const list = GlobalState.runtimeScripts.filter((s) => s.mode === targetMode);
+  const list = GlobalState.runtimeScripts;
   const cats = [...new Set(list.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")))].sort();
   const html = `
     <div id="t-filter-popover" class="t-filter-popover">
@@ -5224,10 +5610,9 @@ function renderFilterMenu(isEchoMode, currentFilter, $targetBtn, onSelect) {
     });
   }, 10);
 }
-function showScriptSelector(isEchoMode, initialFilter = "ALL") {
+function showScriptSelector(initialFilter = "ALL") {
   if ($("#t-selector-panel").length) return;
-  const targetMode = isEchoMode ? "echo" : "parallel";
-  const list = GlobalState.runtimeScripts.filter((s) => s.mode === targetMode);
+  const list = GlobalState.runtimeScripts;
   let categories = ["\u5168\u90E8"];
   const scriptCats = [...new Set(list.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")))];
   categories = categories.concat(scriptCats.sort());
@@ -5330,8 +5715,11 @@ function renderProfileMenu($targetBtn) {
 function startTimer() {
   const settings2 = getExtData();
   const app = settings2.appearance || {};
-  if (app.show_timer === false) return;
   GlobalState.timerStartTime = Date.now();
+  const $btn = $("#titania-float-btn");
+  const animClass = getCurrentAnimationClass();
+  $btn.addClass("t-loading " + animClass);
+  if (app.show_timer === false) return;
   const $timer = $("#titania-timer");
   $timer.addClass("show").text("0.0");
   updateTimerPosition();
@@ -5350,6 +5738,8 @@ function stopTimer() {
   }
   const elapsed = Date.now() - GlobalState.timerStartTime;
   GlobalState.lastGenerationTime = elapsed;
+  const $btn = $("#titania-float-btn");
+  $btn.removeClass("t-loading t-anim-ripple t-anim-arc");
   const settings2 = getExtData();
   const app = settings2.appearance || {};
   if (app.show_timer === false) return;
@@ -5372,6 +5762,16 @@ function updateTimerPosition() {
     top: Math.max(5, top) + "px"
   });
 }
+var ANIMATION_CLASSES = {
+  ripple: "t-anim-ripple",
+  arc: "t-anim-arc"
+};
+function getCurrentAnimationClass() {
+  const settings2 = getExtData();
+  const app = settings2.appearance || {};
+  const animationType = app.animation || "ripple";
+  return ANIMATION_CLASSES[animationType] || ANIMATION_CLASSES.ripple;
+}
 function createFloatingButton() {
   $("#titania-float-btn").remove();
   $("#titania-timer").remove();
@@ -5380,19 +5780,16 @@ function createFloatingButton() {
   if (typeof extension_settings !== "undefined" && extension_settings[extensionName] && !extension_settings[extensionName].enabled) {
     return;
   }
-  const app = settings2.appearance || { type: "emoji", content: "\u{1F3AD}", color_theme: "#bfa15f", color_notify: "#55efc4", size: 56 };
+  const app = settings2.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: "#90cdf4" };
   const size = parseInt(app.size) || 56;
+  const animationType = app.animation || "ripple";
+  const borderColor = app.border_color || "#90cdf4";
   const btnContent = app.type === "image" && app.content.startsWith("data:") ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${app.content}</span>`;
-  const btn = $(`<div id="titania-float-btn">${btnContent}</div>`);
+  const btn = $(`<div id="titania-float-btn" data-animation="${animationType}">${btnContent}</div>`);
   const timer = $(`<div id="titania-timer">0.0s</div>`);
   btn.css({
     "--t-size": `${size}px`,
-    "--t-theme": app.color_theme,
-    "--t-notify": app.color_notify,
-    "--t-bg": app.color_bg || "#2b2b2b",
-    "--t-icon": app.color_icon || "#ffffff",
-    "--t-notify-bg": app.color_notify_bg || app.color_bg || "#2b2b2b"
-    // [新增]
+    "--t-border-color": borderColor
   });
   $("body").append(btn);
   $("body").append(timer);
@@ -5550,7 +5947,7 @@ ${ctx.persona}
 ${ctx.worldInfo}
 
 `;
-    if (script.mode === "echo") {
+    if (GlobalState.useHistoryAnalysis) {
       const limit = cfg.history_limit || 10;
       const history = getChatHistory(limit);
       user += history && history.trim().length > 0 ? `[Conversation History]
