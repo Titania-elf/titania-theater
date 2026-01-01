@@ -1,10 +1,15 @@
 {
     "display_name": "回声小剧场 (Titania Echo)",
     "name": "Titania Echo Theater",
-    "version": "3.0.3",
+    "version": "3.0.4",
     "author": "Titania",
     "description": "沉浸式角色内心独白与平行世界演绎插件。",
     "type": "module",
     "js": "index.js",
-    "homePage": "https://github.com/Titania-elf/titania-theater"
+    "homePage": "https://github.com/Titania-elf/titania-theater",
+    "changelog": {
+        "3.0.4": "🛡️ 使用 Shadow DOM 隔离模型生成的 CSS，防止污染插件 UI；📜 prompt 新增用户人设信息；🎨 新增浮动球背景色自定义；🔍 剧本选择器新增搜索功能；💚 复制按钮反馈改为图标变色",
+        "3.0.3": "🔧 修复移动端分类栏样式问题；优化 UI 交互体验",
+        "3.0.2": "🚀 初始版本发布"
+    }
 }

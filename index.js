@@ -14,24 +14,25 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.0.3";
+var CURRENT_VERSION = "3.0.4";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var CHANGELOG = `
-<h3>v3.0.3 \u754C\u9762\u7CBE\u7B80\u4E0E\u5916\u89C2\u4F18\u5316 \u{1F3A8}</h3>
-<p>\u672C\u6B21\u66F4\u65B0\u7CBE\u7B80\u4E86\u52A8\u753B\u6548\u679C\uFF0C\u65B0\u589E\u7403\u4F53\u5916\u89C2\u81EA\u5B9A\u4E49\u529F\u80FD\uFF0C\u5E76\u7B80\u5316\u4E86\u64CD\u4F5C\u6A21\u5F0F\uFF1A</p>
+<h3>v3.0.4 CSS \u9694\u79BB\u4E0E\u4F53\u9A8C\u4F18\u5316 \u{1F6E1}\uFE0F</h3>
+<p>\u672C\u6B21\u66F4\u65B0\u91CD\u70B9\u89E3\u51B3\u6A21\u578B\u751F\u6210\u5185\u5BB9\u7684 CSS \u6C61\u67D3\u95EE\u9898\uFF0C\u5E76\u4F18\u5316\u4E86\u591A\u9879\u4EA4\u4E92\u4F53\u9A8C\uFF1A</p>
 
 <h4>\u2728 \u65B0\u529F\u80FD</h4>
 <ul>
-    <li>\u{1F3A8} <b>\u81EA\u5B9A\u4E49\u7403\u4F53\u8FB9\u6846\u989C\u8272</b> - \u652F\u6301\u989C\u8272\u9009\u62E9\u5668\u3001\u624B\u52A8\u8F93\u5165 HEX \u503C\uFF0C\u63D0\u4F9B 6 \u4E2A\u9884\u8BBE\u989C\u8272\u5FEB\u6377\u9009\u62E9</li>
-    <li>\u{1F518} <b>\u8BFB\u53D6\u5386\u53F2\u5F00\u5173</b> - \u5220\u9664\u5E73\u884C/\u56DE\u58F0\u6A21\u5F0F\u5207\u6362\uFF0C\u7B80\u5316\u4E3A\u5355\u4E00\u7684\u300C\u8BFB\u53D6\u804A\u5929\u5386\u53F2\u300D\u5F00\u5173</li>
+    <li>\u{1F6E1}\uFE0F <b>Shadow DOM CSS \u9694\u79BB</b> - \u6A21\u578B\u751F\u6210\u7684 CSS \u4E0D\u518D\u5F71\u54CD\u63D2\u4EF6\u754C\u9762\uFF0C\u5F7B\u5E95\u89E3\u51B3\u6837\u5F0F\u6C61\u67D3\u95EE\u9898</li>
+    
+    <li>\u{1F3A8} <b>\u6D6E\u52A8\u7403\u80CC\u666F\u8272</b> - \u65B0\u589E\u7403\u4F53\u80CC\u666F\u8272\u81EA\u5B9A\u4E49\u9009\u9879</li>
+    <li>\u{1F50D} <b>\u5267\u672C\u641C\u7D22</b> - \u5267\u672C\u9009\u62E9\u5668\u652F\u6301\u6309\u540D\u79F0\u548C\u63CF\u8FF0\u641C\u7D22</li>
 </ul>
 
 <h4>\u{1F527} \u4F18\u5316\u8C03\u6574</h4>
 <ul>
-    <li>\u{1F30A} <b>\u52A8\u753B\u6548\u679C\u7CBE\u7B80</b> - \u4EC5\u4FDD\u7559\u300C\u8109\u51B2\u6CE2\u7EB9\u300D\u548C\u300C\u7535\u78C1\u95EA\u70C1\u300D\u4E24\u79CD\u52A0\u8F7D\u52A8\u753B</li>
-    <li>\u{1F5D1}\uFE0F <b>\u79FB\u9664\u5197\u4F59\u52A8\u753B</b> - \u5220\u9664\u661F\u5C18\u6F02\u6D6E\u3001\u547C\u5438\u7403\u4F53\u3001\u5F69\u8679\u6E10\u53D8\u7B49\u52A8\u753B\u6548\u679C</li>
-    <li>\u26A1 <b>\u8FB9\u6846\u989C\u8272\u8054\u52A8</b> - \u8FB9\u6846\u989C\u8272\u81EA\u52A8\u5E94\u7528\u4E8E\u52A8\u753B\u6548\u679C\uFF0C\u4FDD\u6301\u89C6\u89C9\u7EDF\u4E00</li>
+    <li>\u{1F49A} <b>\u590D\u5236\u53CD\u9988\u4F18\u5316</b> - \u590D\u5236\u6309\u94AE\u6210\u529F\u540E\u56FE\u6807\u53D8\u7EFF\u8272\uFF0C\u66FF\u4EE3\u6587\u5B57\u53CD\u9988</li>
+    <li>\u{1F4DC} <b>\u7528\u6237\u4EBA\u8BBE\u652F\u6301</b> - Prompt \u4E2D\u4FEE\u590D\u4EBA\u8BBE\u4FE1\u606F\u8BA9\u6F14\u7ECE\u66F4\u8D34\u5408\u89D2\u8272\u8BBE\u5B9A</li>
 </ul>
 `;
 var LEGACY_KEYS = {
@@ -240,8 +241,8 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 
     padding: 3px;
     border-radius: 50%;
-    /* \u56FA\u5B9A\u6DF1\u8272\u80CC\u666F */
-    background: #2b2b2b;
+    /* \u4F7F\u7528 CSS \u53D8\u91CF\u63A7\u5236\u80CC\u666F\u989C\u8272 */
+    background: var(--t-bg-color, #2b2b2b);
     color: #fff;
 
     display: flex;
@@ -1827,6 +1828,30 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     justify-content: space-between;
     background: #1e1e1e;
     border-radius: 8px 8px 0 0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* \u5267\u672C\u9009\u62E9\u5668\u641C\u7D22\u6846 */
+.t-sel-search-input {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #eee;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    width: 150px;
+    transition: 0.2s;
+}
+
+.t-sel-search-input:focus {
+    outline: none;
+    border-color: #bfa15f;
+    width: 180px;
+}
+
+.t-sel-search-input::placeholder {
+    color: #666;
 }
 
 .t-sel-body {
@@ -2018,11 +2043,13 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     .t-mgr-sidebar {
         width: 100%;
         height: auto;
+        max-height: none;
         flex-direction: row;
         overflow-x: auto;
+        overflow-y: hidden;
         border-right: none;
         border-bottom: 1px solid #333;
-        padding: 5px;
+        padding: 8px 5px;
         white-space: nowrap;
         flex-shrink: 0;
     }
@@ -2041,12 +2068,20 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     .t-mgr-sb-item {
         padding: 6px 12px;
         border: 1px solid #333;
+        border-radius: 4px;
         margin: 0;
+        background: #222;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        border-left: 1px solid #333;
     }
 
     .t-mgr-sb-item.active {
         background: #bfa15f;
         color: #000;
+        border: 1px solid #bfa15f;
+        border-left: 1px solid #bfa15f;
     }
 
     .t-mgr-footer-bar {
@@ -2080,14 +2115,25 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 
     .t-sel-sidebar {
         width: 100%;
-        height: 50px;
+        max-height: 50px;
         flex-direction: row;
         overflow-x: auto;
+        overflow-y: hidden;
         border-right: none;
         border-bottom: 1px solid #333;
         padding: 5px;
         gap: 8px;
         white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* \u79FB\u52A8\u7AEF\u641C\u7D22\u6846\u9002\u914D */
+    .t-sel-search-input {
+        width: 120px;
+    }
+
+    .t-sel-search-input:focus {
+        width: 140px;
     }
 
     .t-sel-cat-btn {
@@ -2943,6 +2989,60 @@ ${bodyContent}`;
 }
 function generateScopeId() {
   return "t-scene-" + Date.now().toString(36) + Math.floor(Math.random() * 1e3).toString();
+}
+function renderToShadowDOM(container, html, options = {}) {
+  const {
+    baseStyles = true,
+    // 是否注入基础样式
+    mode = "open"
+    // Shadow DOM 模式
+  } = options;
+  container.innerHTML = "";
+  const host = document.createElement("div");
+  host.className = "t-shadow-host";
+  host.style.display = "block";
+  host.style.width = "100%";
+  const shadow = host.attachShadow({ mode });
+  const baseStyleSheet = baseStyles ? `
+        <style>
+            :host {
+                display: block;
+                width: 100%;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            img, video {
+                max-width: 100%;
+                height: auto;
+            }
+        </style>
+    ` : "";
+  shadow.innerHTML = baseStyleSheet + html;
+  container.appendChild(host);
+  return shadow;
+}
+function extractFromShadowDOM(container) {
+  const host = container.querySelector(".t-shadow-host");
+  if (!host || !host.shadowRoot) {
+    return container.innerHTML;
+  }
+  const shadow = host.shadowRoot;
+  let html = "";
+  shadow.childNodes.forEach((node) => {
+    if (node.nodeType === 1) {
+      if (node.tagName === "STYLE" && node.textContent.includes(":host")) {
+        return;
+      }
+      html += node.outerHTML;
+    } else if (node.nodeType === 3) {
+      html += node.textContent;
+    }
+  });
+  return html;
+}
+function canUseShadowDOM() {
+  return !!Element.prototype.attachShadow;
 }
 function estimateTokens(text) {
   if (!text) return 0;
@@ -3901,6 +4001,7 @@ function openSettingsWindow() {
   app.animation = app.animation || "rainbow";
   const dirCfg = data.director || { length: "", perspective: "auto", style_ref: "" };
   if (!app.border_color) app.border_color = "#90cdf4";
+  if (!app.bg_color) app.bg_color = "#2b2b2b";
   if (!cfg.profiles || !Array.isArray(cfg.profiles)) {
     cfg.profiles = [
       { id: "st_sync", name: "\u{1F517} \u8DDF\u968F SillyTavern (\u4E3B\u8FDE\u63A5)", type: "internal", readonly: true },
@@ -3913,6 +4014,7 @@ function openSettingsWindow() {
   let tempApp = JSON.parse(JSON.stringify(app));
   if (!tempApp.size) tempApp.size = 56;
   if (!tempApp.border_color) tempApp.border_color = "#90cdf4";
+  if (!tempApp.bg_color) tempApp.bg_color = "#2b2b2b";
   $("#t-main-view").hide();
   const html = `
     <div class="t-box" id="t-settings-view">
@@ -3968,6 +4070,23 @@ function openSettingsWindow() {
                             </div>
                         </div>
                         <p style="font-size:0.75em; color:#666; margin-top:8px;">\u6B64\u989C\u8272\u5C06\u5E94\u7528\u4E8E\u60AC\u6D6E\u7403\u8FB9\u6846\u53CA\u52A8\u753B\u6548\u679C</p>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <label class="t-form-label">\u{1F58C}\uFE0F \u7403\u4F53\u80CC\u666F\u989C\u8272</label>
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <input type="color" id="p-bg-color" value="${tempApp.bg_color}" style="width:50px; height:35px; border:none; cursor:pointer; background:transparent;">
+                            <input type="text" id="p-bg-color-text" class="t-input" value="${tempApp.bg_color}" style="width:100px; font-family:monospace;">
+                            <div style="display:flex; gap:8px;">
+                                <span class="t-bg-preset" data-color="#2b2b2b" style="width:24px; height:24px; border-radius:50%; background:#2b2b2b; cursor:pointer; border:2px solid transparent;" title="\u6DF1\u7070 (\u9ED8\u8BA4)"></span>
+                                <span class="t-bg-preset" data-color="#1a1a2e" style="width:24px; height:24px; border-radius:50%; background:#1a1a2e; cursor:pointer; border:2px solid transparent;" title="\u6DF1\u84DD"></span>
+                                <span class="t-bg-preset" data-color="#16213e" style="width:24px; height:24px; border-radius:50%; background:#16213e; cursor:pointer; border:2px solid transparent;" title="\u85CF\u9752"></span>
+                                <span class="t-bg-preset" data-color="#1e272e" style="width:24px; height:24px; border-radius:50%; background:#1e272e; cursor:pointer; border:2px solid transparent;" title="\u70AD\u9ED1"></span>
+                                <span class="t-bg-preset" data-color="#2d132c" style="width:24px; height:24px; border-radius:50%; background:#2d132c; cursor:pointer; border:2px solid transparent;" title="\u6DF1\u7D2B"></span>
+                                <span class="t-bg-preset" data-color="#0a3d62" style="width:24px; height:24px; border-radius:50%; background:#0a3d62; cursor:pointer; border:2px solid transparent;" title="\u6D77\u84DD"></span>
+                            </div>
+                        </div>
+                        <p style="font-size:0.75em; color:#666; margin-top:8px;">\u7403\u4F53\u7684\u80CC\u666F\u586B\u5145\u989C\u8272</p>
                     </div>
                     
                     <div class="t-form-group">
@@ -4231,7 +4350,9 @@ function openSettingsWindow() {
     $ball.css({
       width: size + "px",
       height: size + "px",
-      fontSize: Math.floor(size * 0.46) + "px"
+      fontSize: Math.floor(size * 0.46) + "px",
+      background: tempApp.bg_color || "#2b2b2b",
+      borderColor: tempApp.border_color || "#90cdf4"
     });
     if (tempApp.type === "emoji") {
       $ball.html(tempApp.content);
@@ -4315,6 +4436,27 @@ function openSettingsWindow() {
     updateBorderColorUI($(this).data("color"));
   });
   $(`.t-color-preset[data-color="${tempApp.border_color}"]`).css("border-color", "#fff");
+  const updateBgColorUI = (color) => {
+    tempApp.bg_color = color;
+    $("#p-bg-color").val(color);
+    $("#p-bg-color-text").val(color);
+    $("#p-ball").css("background", color);
+    $(".t-bg-preset").css("border-color", "transparent");
+    $(`.t-bg-preset[data-color="${color}"]`).css("border-color", "#fff");
+  };
+  $("#p-bg-color").on("input", function() {
+    updateBgColorUI($(this).val());
+  });
+  $("#p-bg-color-text").on("change", function() {
+    const val = $(this).val().trim();
+    if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+      updateBgColorUI(val);
+    }
+  });
+  $(".t-bg-preset").on("click", function() {
+    updateBgColorUI($(this).data("color"));
+  });
+  $(`.t-bg-preset[data-color="${tempApp.bg_color}"]`).css("border-color", "#fff");
   const savedCats = cfg.auto_categories || [];
   const renderAutoCatList = () => {
     const $list = $("#auto-cat-list");
@@ -4461,6 +4603,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       animation: tempApp.animation || "ripple",
       size: tempApp.size || 56,
       border_color: tempApp.border_color || "#90cdf4",
+      bg_color: tempApp.bg_color || "#2b2b2b",
       show_timer: $("#p-show-timer").is(":checked")
     };
     d.director = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val(), style_ref: $("#set-dir-style").val().trim() };
@@ -4482,7 +4625,8 @@ ${JSON.stringify(l.details, null, 2)}`;
 
 // src/ui/favsWindow.js
 async function saveFavorite() {
-  const content = $("#t-output-content").html();
+  const container = document.getElementById("t-output-content");
+  const content = extractFromShadowDOM(container);
   if (!content || content.trim().length < 10) {
     if (window.toastr) toastr.warning("\u5185\u5BB9\u4E3A\u7A7A\u6216\u8FC7\u77ED\uFF0C\u65E0\u6CD5\u6536\u85CF");
     else alert("\u5185\u5BB9\u65E0\u6548");
@@ -4633,19 +4777,24 @@ function openFavsWindow() {
     currentFavId = item.id;
     $("#t-read-meta").text(item.title);
     $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
-    const $content = $("#t-read-content");
-    $content.empty();
-    setTimeout(() => {
-      $content.html(item.html);
-      $content.find("*").each(function() {
-        const el = this;
-        const style = window.getComputedStyle(el);
-        if (style.animationName && style.animationName !== "none") {
-          const clone = el.cloneNode(true);
-          el.parentNode.replaceChild(clone, el);
-        }
-      });
-    }, 10);
+    const container = document.getElementById("t-read-content");
+    if (canUseShadowDOM()) {
+      const shadow = renderToShadowDOM(container, item.html);
+      setTimeout(() => {
+        shadow.querySelectorAll("*").forEach((el) => {
+          const style = window.getComputedStyle(el);
+          if (style.animationName && style.animationName !== "none") {
+            const clone = el.cloneNode(true);
+            el.parentNode.replaceChild(clone, el);
+          }
+        });
+      }, 10);
+    } else {
+      container.innerHTML = "";
+      setTimeout(() => {
+        container.innerHTML = item.html;
+      }, 10);
+    }
     $("#t-fav-reader").addClass("show");
   };
   $("#t-fav-filter-char, #t-fav-search").on("input change", renderGrid);
@@ -4676,7 +4825,9 @@ function openFavsWindow() {
     }
   });
   $("#t-read-code").on("click", () => {
-    navigator.clipboard.writeText($("#t-read-content").html());
+    const container = document.getElementById("t-read-content");
+    const htmlCode = extractFromShadowDOM(container);
+    navigator.clipboard.writeText(htmlCode);
     if (window.toastr) toastr.success("\u6E90\u7801\u5DF2\u590D\u5236");
   });
   $("#t-read-img").on("click", async function() {
@@ -4950,7 +5101,7 @@ User: ${d.userName}`,
       detail: "\u4E16\u754C\u4E66/Lore"
     });
   }
-  if (script.mode === "echo") {
+  if (GlobalState.useHistoryAnalysis) {
     const limit = cfg.history_limit || 10;
     const hist = getChatHistory(limit);
     const histLines = hist ? hist.split("\n").length : 0;
@@ -4958,12 +5109,6 @@ User: ${d.userName}`,
       title: "[Conversation History]",
       content: hist && hist.trim() ? hist : "(\u65E0\u5386\u53F2\u8BB0\u5F55)",
       detail: `\u804A\u5929\u8BB0\u5F55 (${histLines} \u884C)`
-    });
-  } else {
-    contextBlocks.push({
-      title: "[Mode Info]",
-      content: "Alternate Universe (Ignore chat history)",
-      detail: "\u5E73\u884C\u4E16\u754C\u6A21\u5F0F"
     });
   }
   const finalScriptPrompt = script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName);
@@ -5009,7 +5154,6 @@ User: ${d.userName}`,
                 <div class="t-param-group">
                     <div class="t-param-title">\u57FA\u672C\u4FE1\u606F</div>
                     <div class="t-param-row"><span class="t-param-key">\u5267\u672C</span><span class="t-param-val" style="color:#bfa15f; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${script.name}</span></div>
-                    <div class="t-param-row"><span class="t-param-key">\u6A21\u5F0F</span><span class="t-param-val">${script.mode === "echo" ? "\u56DE\u58F0" : "\u5E73\u884C"}</span></div>
                 </div>
                 <div class="t-param-group">
                     <div class="t-param-title">\u5BFC\u6F14\u53C2\u6570</div>
@@ -5117,7 +5261,7 @@ async function openMainWindow() {
     data = { ui_mode_echo: true };
   }
   GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
-  const initialContent = GlobalState.lastGeneratedContent ? GlobalState.lastGeneratedContent : '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
+  const placeholderContent = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
   const html = `
     <div id="t-overlay" class="t-overlay">
         <div class="t-box" id="t-main-view">
@@ -5169,7 +5313,7 @@ async function openMainWindow() {
             <div class="t-content-wrapper">
                 <div class="t-zen-btn" id="t-btn-zen" title="\u6C89\u6D78\u9605\u8BFB\u6A21\u5F0F"><i class="fa-solid fa-expand"></i></div>
                 <div class="t-content-area">
-                    <div id="t-output-content">${initialContent}</div>
+                    <div id="t-output-content"></div>
                 </div>
             </div>
 
@@ -5194,6 +5338,16 @@ async function openMainWindow() {
         </div>
     </div>`;
   $("body").append(html);
+  const outputContainer = document.getElementById("t-output-content");
+  if (GlobalState.lastGeneratedContent) {
+    if (canUseShadowDOM()) {
+      renderToShadowDOM(outputContainer, GlobalState.lastGeneratedContent);
+    } else {
+      outputContainer.innerHTML = GlobalState.lastGeneratedContent;
+    }
+  } else {
+    outputContainer.innerHTML = placeholderContent;
+  }
   const updateFilterUI = () => {
     const btn = $("#t-btn-filter");
     const dice = $("#t-btn-dice");
@@ -5308,12 +5462,13 @@ async function openMainWindow() {
     openEditor(GlobalState.lastUsedScriptId, "main");
   });
   $("#t-btn-copy").on("click", () => {
-    const htmlCode = $("#t-output-content").html();
+    const container = document.getElementById("t-output-content");
+    const htmlCode = extractFromShadowDOM(container);
     navigator.clipboard.writeText(htmlCode);
     const btn = $("#t-btn-copy");
-    const h = btn.html();
-    btn.html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
-    setTimeout(() => btn.html(h), 1e3);
+    const originalHtml = btn.html();
+    btn.html('<i class="fa-solid fa-check" style="color:#55efc4;"></i>');
+    setTimeout(() => btn.html(originalHtml), 1e3);
   });
   $("#t-btn-run").on("click", () => handleGenerate(null, false));
   $("#t-btn-like").on("click", saveFavorite);
@@ -5616,11 +5771,15 @@ function showScriptSelector(initialFilter = "ALL") {
   let categories = ["\u5168\u90E8"];
   const scriptCats = [...new Set(list.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")))];
   categories = categories.concat(scriptCats.sort());
+  let currentSearch = "";
   const html = `
     <div id="t-selector-panel" class="t-selector-panel">
         <div class="t-sel-header">
             <div style="font-weight:bold; color:#ccc;">\u{1F4DA} \u9009\u62E9\u5267\u672C <span style="font-size:0.8em; color:#666; font-weight:normal; margin-left:10px;">(\u5171 ${list.length} \u4E2A)</span></div>
-            <div style="cursor:pointer; padding:5px 10px;" id="t-sel-close"><i class="fa-solid fa-xmark"></i></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <input type="text" id="t-sel-search" class="t-sel-search-input" placeholder="\u{1F50D} \u641C\u7D22\u5267\u672C...">
+                <div style="cursor:pointer; padding:5px 10px;" id="t-sel-close"><i class="fa-solid fa-xmark"></i></div>
+            </div>
         </div>
         <div class="t-sel-body">
             <div class="t-sel-sidebar" id="t-sel-sidebar"></div>
@@ -5628,13 +5787,23 @@ function showScriptSelector(initialFilter = "ALL") {
         </div>
     </div>`;
   $("#t-main-view").append(html);
-  const renderGrid = (filterCat) => {
+  let currentCat = initialFilter === "ALL" ? "\u5168\u90E8" : initialFilter;
+  const renderGrid = () => {
     const $grid = $("#t-sel-grid");
     $grid.empty();
-    const targetCat = filterCat === "ALL" ? "\u5168\u90E8" : filterCat;
-    const filtered = targetCat === "\u5168\u90E8" ? list : list.filter((s) => (s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === targetCat);
+    let filtered = list;
+    if (currentCat !== "\u5168\u90E8") {
+      filtered = filtered.filter((s) => (s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === currentCat);
+    }
+    if (currentSearch.trim()) {
+      const term = currentSearch.toLowerCase();
+      filtered = filtered.filter(
+        (s) => s.name.toLowerCase().includes(term) || s.desc && s.desc.toLowerCase().includes(term)
+      );
+    }
     if (filtered.length === 0) {
-      $grid.append('<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px;">\u6B64\u5206\u7C7B\u4E0B\u6682\u65E0\u5267\u672C</div>');
+      const msg = currentSearch.trim() ? `\u672A\u627E\u5230\u5305\u542B "${currentSearch}" \u7684\u5267\u672C` : "\u6B64\u5206\u7C7B\u4E0B\u6682\u65E0\u5267\u672C";
+      $grid.append(`<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px;">${msg}</div>`);
       return;
     }
     filtered.forEach((s) => {
@@ -5652,18 +5821,22 @@ function showScriptSelector(initialFilter = "ALL") {
     });
   };
   const $sidebar = $("#t-sel-sidebar");
-  const startCat = initialFilter === "ALL" ? "\u5168\u90E8" : initialFilter;
   categories.forEach((cat) => {
     const btn = $(`<div class="t-sel-cat-btn">${cat}</div>`);
-    if (cat === startCat) btn.addClass("active");
+    if (cat === currentCat) btn.addClass("active");
     btn.on("click", function() {
       $(".t-sel-cat-btn").removeClass("active");
       $(this).addClass("active");
-      renderGrid(cat);
+      currentCat = cat;
+      renderGrid();
     });
     $sidebar.append(btn);
   });
-  renderGrid(startCat);
+  $("#t-sel-search").on("input", function() {
+    currentSearch = $(this).val();
+    renderGrid();
+  });
+  renderGrid();
   $("#t-sel-close").on("click", () => $("#t-selector-panel").remove());
 }
 function renderProfileMenu($targetBtn) {
@@ -5780,16 +5953,18 @@ function createFloatingButton() {
   if (typeof extension_settings !== "undefined" && extension_settings[extensionName] && !extension_settings[extensionName].enabled) {
     return;
   }
-  const app = settings2.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: "#90cdf4" };
+  const app = settings2.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: "#90cdf4", bg_color: "#2b2b2b" };
   const size = parseInt(app.size) || 56;
   const animationType = app.animation || "ripple";
   const borderColor = app.border_color || "#90cdf4";
+  const bgColor = app.bg_color || "#2b2b2b";
   const btnContent = app.type === "image" && app.content.startsWith("data:") ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${app.content}</span>`;
   const btn = $(`<div id="titania-float-btn" data-animation="${animationType}">${btnContent}</div>`);
   const timer = $(`<div id="titania-timer">0.0s</div>`);
   btn.css({
     "--t-size": `${size}px`,
-    "--t-border-color": borderColor
+    "--t-border-color": borderColor,
+    "--t-bg-color": bgColor
   });
   $("body").append(btn);
   $("body").append(timer);
@@ -5835,6 +6010,15 @@ function createFloatingButton() {
 }
 
 // src/core/api.js
+function renderGeneratedContent(content) {
+  const container = document.getElementById("t-output-content");
+  if (!container) return;
+  if (canUseShadowDOM()) {
+    renderToShadowDOM(container, content);
+  } else {
+    container.innerHTML = content;
+  }
+}
 async function handleGenerate(forceScriptId = null, silent = false) {
   const data = getExtData();
   const cfg = data.config || {};
@@ -5943,6 +6127,10 @@ ${directorInstruction}
 ${ctx.persona}
 
 `;
+    if (ctx.userDesc) user += `[User Persona]
+${ctx.userDesc}
+
+`;
     if (ctx.worldInfo) user += `[World Info]
 ${ctx.worldInfo}
 
@@ -5955,11 +6143,6 @@ ${history}
 
 ` : `[Conversation History]
 (Empty)
-
-`;
-    } else {
-      user += `[Mode]
-Alternate Universe (Ignore chat history)
 
 `;
     }
@@ -6098,6 +6281,9 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
     GlobalState.lastGeneratedContent = finalOutput;
     GlobalState.lastGeneratedScriptId = script.id;
     diagnostics.phase = "complete";
+    if ($("#t-output-content").length > 0) {
+      renderGeneratedContent(finalOutput);
+    }
     stopTimer();
     const elapsed = GlobalState.lastGenerationTime / 1e3;
     if (!silent && window.toastr) toastr.success(`\u2728 \u300A${script.name}\u300B\u6F14\u7ECE\u5B8C\u6210\uFF01(${elapsed.toFixed(1)}s)`, "Titania Echo");
@@ -6254,6 +6440,9 @@ Remember: Use the same CSS scope #${GlobalState.continuation.currentScopeId} for
       resetContinuationState();
       GlobalState.lastGeneratedContent = finalOutput;
       GlobalState.lastGeneratedScriptId = script.id;
+      if ($("#t-output-content").length > 0) {
+        renderGeneratedContent(finalOutput);
+      }
       stopTimer();
       const elapsed = GlobalState.lastGenerationTime / 1e3;
       if (!silent && window.toastr) {
