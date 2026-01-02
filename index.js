@@ -2567,6 +2567,8 @@ var GlobalState = {
   // 生成模式: "narrative"(内容优先) | "visual"(氛围美化)
   useHistoryAnalysis: false,
   // 是否读取聊天历史（默认关闭）
+  skipWorldBookCheck: false,
+  // 跳过世界书空检查（本次会话内有效）
   // 计时器相关
   timerStartTime: 0,
   // 计时开始时间戳
@@ -6184,39 +6186,48 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   const ctx = await getContextData();
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
-  if (!ctx.worldInfo || ctx.worldInfo.trim() === "" || ctx.worldInfo.trim() === "[World Info / Lore]\n\n") {
-    const confirmMsg = "\u4E16\u754C\u4E66\u5DF2\u9009\u4E2D\u7684\u6761\u76EE\u4E3A 0\uFF0C\u662F\u5426\u7EE7\u7EED\u751F\u6210\uFF1F";
-    const userConfirmed = await new Promise((resolve) => {
-      const confirmHtml = `
-            <div id="t-confirm-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99999; display:flex; align-items:center; justify-content:center;">
-                <div style="background:#1e1e1e; border:1px solid #444; border-radius:10px; padding:25px; max-width:400px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                    <div style="font-size:2em; margin-bottom:15px;">\u{1F4DA}</div>
-                    <div style="color:#fff; margin-bottom:20px; font-size:1.1em;">${confirmMsg}</div>
-                    <div style="display:flex; gap:15px; justify-content:center;">
-                        <button id="t-confirm-yes" style="padding:10px 30px; background:#4a9eff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:1em;">\u662F</button>
-                        <button id="t-confirm-no" style="padding:10px 30px; background:#555; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:1em;">\u5426</button>
+  if (!GlobalState.skipWorldBookCheck) {
+    if (!ctx.worldInfo || ctx.worldInfo.trim() === "" || ctx.worldInfo.trim() === "[World Info / Lore]\n\n") {
+      const confirmMsg = "\u4E16\u754C\u4E66\u5DF2\u9009\u4E2D\u7684\u6761\u76EE\u4E3A 0\uFF0C\u662F\u5426\u7EE7\u7EED\u751F\u6210\uFF1F";
+      const userConfirmed = await new Promise((resolve) => {
+        const confirmHtml = `
+                <div id="t-confirm-overlay" style="position:fixed; inset:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); z-index:99999; display:flex; align-items:center; justify-content:center;">
+                    <div style="background:#1e1e1e; border:1px solid #444; border-radius:10px; padding:25px; max-width:400px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5); margin:auto;">
+                        <div style="font-size:2em; margin-bottom:15px;">\u{1F4DA}</div>
+                        <div style="color:#fff; margin-bottom:20px; font-size:1.1em;">${confirmMsg}</div>
+                        <label style="display:flex; align-items:center; justify-content:center; gap:8px; color:#aaa; font-size:0.9em; margin-bottom:20px; cursor:pointer;">
+                            <input type="checkbox" id="t-confirm-skip" style="width:16px; height:16px; cursor:pointer;">
+                            <span>\u672C\u6B21\u4F1A\u8BDD\u5185\u4E0D\u518D\u63D0\u793A</span>
+                        </label>
+                        <div style="display:flex; gap:15px; justify-content:center;">
+                            <button id="t-confirm-yes" style="padding:10px 30px; background:#4a9eff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:1em;">\u662F</button>
+                            <button id="t-confirm-no" style="padding:10px 30px; background:#555; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:1em;">\u5426</button>
+                        </div>
                     </div>
-                </div>
-            </div>`;
-      $("body").append(confirmHtml);
-      $("#t-confirm-yes").on("click", () => {
-        $("#t-confirm-overlay").remove();
-        resolve(true);
-      });
-      $("#t-confirm-no").on("click", () => {
-        $("#t-confirm-overlay").remove();
-        resolve(false);
-      });
-      $("#t-confirm-overlay").on("click", (e) => {
-        if (e.target === e.currentTarget) {
+                </div>`;
+        $("body").append(confirmHtml);
+        $("#t-confirm-yes").on("click", () => {
+          if ($("#t-confirm-skip").is(":checked")) {
+            GlobalState.skipWorldBookCheck = true;
+          }
+          $("#t-confirm-overlay").remove();
+          resolve(true);
+        });
+        $("#t-confirm-no").on("click", () => {
           $("#t-confirm-overlay").remove();
           resolve(false);
-        }
+        });
+        $("#t-confirm-overlay").on("click", (e) => {
+          if (e.target === e.currentTarget) {
+            $("#t-confirm-overlay").remove();
+            resolve(false);
+          }
+        });
       });
-    });
-    if (!userConfirmed) {
-      TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u751F\u6210\uFF08\u4E16\u754C\u4E66\u6761\u76EE\u4E3A\u7A7A\uFF09");
-      return;
+      if (!userConfirmed) {
+        TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u751F\u6210\uFF08\u4E16\u754C\u4E66\u6761\u76EE\u4E3A\u7A7A\uFF09");
+        return;
+      }
     }
   }
   if (!silent) $("#t-overlay").remove();
