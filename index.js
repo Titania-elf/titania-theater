@@ -2582,8 +2582,6 @@ var GlobalState = {
     // 当前续写次数
     originalContent: "",
     // 原始内容（未被截断前）
-    currentScopeId: "",
-    // 当前使用的 scopeId
     accumulatedContent: "",
     // 累积的完整内容
     // 优化：保存原始请求上下文，确保续写连贯性
@@ -2600,7 +2598,6 @@ function resetContinuationState() {
     isActive: false,
     retryCount: 0,
     originalContent: "",
-    currentScopeId: "",
     accumulatedContent: "",
     originalPrompt: "",
     characterName: "",
@@ -3025,23 +3022,6 @@ var getSnippet = (html) => {
   text = text.replace(/\s+/g, " ").trim();
   return text.length > 60 ? text.substring(0, 60) + "..." : text;
 };
-function scopeAndSanitizeHTML(rawHtml, scopeId2) {
-  const styleMatch = rawHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  let cssContent = styleMatch ? styleMatch[1] : "";
-  let bodyContent = rawHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/i, "").trim();
-  if (!bodyContent.includes(`id="${scopeId2}"`) && !bodyContent.includes(`id='${scopeId2}'`)) {
-    bodyContent = `<div id="${scopeId2}">${bodyContent}</div>`;
-  }
-  if (cssContent) {
-    cssContent = cssContent.replace(/\/\*[\s\S]*?\*\//g, "");
-    cssContent = cssContent.replace(/(^|\})[\s]*\b(body|html)\b/gi, "$1 #" + scopeId2);
-  }
-  return `<style>
-/* Scoped CSS for ${scopeId2} */
-${cssContent}
-</style>
-${bodyContent}`;
-}
 function renderToShadowDOM(container, html, options = {}) {
   const {
     baseStyles = true,
@@ -3223,7 +3203,7 @@ function checkSentenceCompletion(content) {
 }
 function extractContinuationContext(content, contextLength = 800) {
   const scopeMatch = content.match(/id=["']?(t-scene-[a-z0-9]+)["']?/i);
-  const scopeId2 = scopeMatch ? scopeMatch[1] : null;
+  const scopeId = scopeMatch ? scopeMatch[1] : null;
   let bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
   let lastContent = bodyContent.slice(-contextLength);
   const firstTagEnd = lastContent.indexOf(">");
@@ -3238,7 +3218,7 @@ function extractContinuationContext(content, contextLength = 800) {
   }
   return {
     lastContent,
-    scopeId: scopeId2
+    scopeId
   };
 }
 function extractTextSummary(htmlContent, maxLength = 500) {
@@ -3264,13 +3244,12 @@ function extractTextSummary(htmlContent, maxLength = 500) {
   }
   return text;
 }
-function mergeContinuationContent(originalContent, continuationContent, scopeId2, showIndicator = true) {
+function mergeContinuationContent(originalContent, continuationContent, showIndicator = true) {
   const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
   const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   const contStyle = contStyleMatch ? contStyleMatch[1] : "";
   let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  contBody = contBody.replace(new RegExp(`<div[^>]*id=["']?${scopeId2}["']?[^>]*>`, "gi"), "");
   let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
   let indicator = "";
   if (showIndicator) {
@@ -3278,13 +3257,15 @@ function mergeContinuationContent(originalContent, continuationContent, scopeId2
             <i class="fa-solid fa-link"></i> \u2500\u2500\u2500 \u7EED\u5199\u8FDE\u63A5 \u2500\u2500\u2500
         </div>`;
   }
-  const mergedStyle = originalStyle + "\n/* Continuation CSS */\n" + contStyle;
+  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
   const mergedBody = originalBody + indicator + contBody;
-  return `<style>
-/* Scoped CSS for ${scopeId2} */
+  if (mergedStyle.trim()) {
+    return `<style>
 ${mergedStyle}
 </style>
 ${mergedBody}`;
+  }
+  return mergedBody;
 }
 
 // src/ui/scriptManager.js
@@ -6319,7 +6300,7 @@ ${history}
 ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
     diagnostics.input_stats.sys_len = sys.length;
     diagnostics.input_stats.user_len = user.length;
-    TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: currentProfile.name, scopeId });
+    TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: currentProfile.name });
     diagnostics.phase = "fetch_start";
     let endpoint = finalUrl.trim().replace(/\/+$/, "");
     if (!endpoint) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
@@ -6392,7 +6373,7 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
     if (!rawContent || rawContent.trim().length === 0) throw new Error("ERR_EMPTY_CONTENT");
     diagnostics.phase = "validation";
     let cleanContent = rawContent.replace(/```html/gi, "").replace(/```/g, "").trim();
-    let finalOutput = scopeAndSanitizeHTML(cleanContent, scopeId);
+    let finalOutput = cleanContent;
     const autoContinueCfg = data.auto_continue || {};
     if (autoContinueCfg.enabled) {
       const truncationResult = detectTruncation(finalOutput, autoContinueCfg.detection_mode || "html");
@@ -6408,7 +6389,6 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
           if (!GlobalState.continuation.isActive) {
             GlobalState.continuation.isActive = true;
             GlobalState.continuation.originalContent = finalOutput;
-            GlobalState.continuation.currentScopeId = scopeId;
             GlobalState.continuation.accumulatedContent = finalOutput;
             GlobalState.continuation.originalPrompt = script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName);
             GlobalState.continuation.characterName = ctx.charName;
@@ -6417,7 +6397,6 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
             GlobalState.continuation.accumulatedContent = mergeContinuationContent(
               GlobalState.continuation.accumulatedContent,
               finalOutput,
-              GlobalState.continuation.currentScopeId,
               autoContinueCfg.show_indicator !== false
             );
           }
@@ -6425,7 +6404,7 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
           if (!silent && window.toastr) {
             toastr.info(`\u{1F504} \u68C0\u6D4B\u5230\u622A\u65AD\uFF0C\u6B63\u5728\u81EA\u52A8\u7EED\u5199 (${currentRetry + 1}/${maxRetries})...`, "Titania Echo");
           }
-          await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId, autoContinueCfg, silent);
+          await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent);
           return;
         } else {
           TitaniaLogger.warn("\u5DF2\u8FBE\u5230\u6700\u5927\u7EED\u5199\u6B21\u6570", { maxRetries });
@@ -6440,7 +6419,6 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
         finalOutput = mergeContinuationContent(
           GlobalState.continuation.accumulatedContent,
           finalOutput,
-          GlobalState.continuation.currentScopeId,
           autoContinueCfg.show_indicator !== false
         );
         TitaniaLogger.info("\u81EA\u52A8\u7EED\u5199\u5B8C\u6210", { totalRetries: GlobalState.continuation.retryCount });
@@ -6481,7 +6459,7 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
     $floatBtn.removeClass("t-loading");
   }
 }
-async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId2, autoContinueCfg, silent) {
+async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent) {
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   try {
@@ -6491,7 +6469,7 @@ async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalMo
       // 提取最后 800 个字符作为上下文
     );
     const textSummary = extractTextSummary(GlobalState.continuation.accumulatedContent, 500);
-    const continuationSys = `You are continuing a Visual Scene that was interrupted.
+    const continuationSys = `You are continuing a scene that was interrupted.
 
 [Original Scene Context]
 Character: ${GlobalState.continuation.characterName}
@@ -6499,19 +6477,17 @@ User: ${GlobalState.continuation.userName}
 Scene Request: ${GlobalState.continuation.originalPrompt}
 
 [Your Task]
-Continue the HTML/CSS scene from where it was cut off. You must maintain:
-- The same visual style and CSS theme
+Continue the HTML scene from where it was cut off. You must maintain:
+- The same visual style
 - The same narrative tone and perspective
 - Consistent character portrayal
 
-[Technical Rules - STRICT]
-1. **Container ID**: Continue using the SAME container ID: #${GlobalState.continuation.currentScopeId}
-2. **Scoped CSS**: If adding new styles, ALL selectors MUST start with #${GlobalState.continuation.currentScopeId}
-3. **No Repetition**: Do NOT repeat any content that already exists
-4. **Complete First**: First complete any unfinished sentences or HTML tags
-5. **Then Continue**: Then continue the narrative naturally until a proper conclusion
-6. **Format**: Output raw HTML string. No markdown (\`\`\`).
-7. **Language**: Continue in Chinese.`;
+[Technical Rules]
+1. **No Repetition**: Do NOT repeat any content that already exists
+2. **Complete First**: First complete any unfinished sentences or HTML tags
+3. **Then Continue**: Then continue the narrative naturally until a proper conclusion
+4. **Format**: Output raw HTML string. No markdown code blocks.
+5. **Language**: Continue in Chinese.`;
     const continuationUser = `[Content Summary - What has been written so far]
 ${textSummary || "(No text content extracted)"}
 
@@ -6523,9 +6499,7 @@ ${lastContent}
 [Task]
 1. First, complete any unfinished sentences, paragraphs, or HTML structures from the cut-off point
 2. Then, continue the narrative naturally based on the original scene request
-3. End the scene with a proper conclusion
-
-Remember: Use the same CSS scope #${GlobalState.continuation.currentScopeId} for any new styles.`;
+3. End the scene with a proper conclusion`;
     let endpoint = finalUrl.trim().replace(/\/+$/, "");
     if (!endpoint.endsWith("/chat/completions")) {
       if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
@@ -6590,19 +6564,17 @@ Remember: Use the same CSS scope #${GlobalState.continuation.currentScopeId} for
       GlobalState.continuation.accumulatedContent = mergeContinuationContent(
         GlobalState.continuation.accumulatedContent,
         continuationOutput,
-        GlobalState.continuation.currentScopeId,
         autoContinueCfg.show_indicator !== false
       );
       GlobalState.continuation.retryCount++;
       if (!silent && window.toastr) {
         toastr.info(`\u{1F504} \u7EED\u5199\u5185\u5BB9\u4ECD\u88AB\u622A\u65AD\uFF0C\u7EE7\u7EED\u5C1D\u8BD5 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
       }
-      await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId2, autoContinueCfg, silent);
+      await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent);
     } else {
       const finalOutput = mergeContinuationContent(
         GlobalState.continuation.accumulatedContent,
         continuationOutput,
-        GlobalState.continuation.currentScopeId,
         autoContinueCfg.show_indicator !== false
       );
       const totalRetries = GlobalState.continuation.retryCount;
