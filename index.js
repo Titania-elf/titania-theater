@@ -14,25 +14,26 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.0.4";
+var CURRENT_VERSION = "3.0.5";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var CHANGELOG = `
-<h3>v3.0.4 CSS \u9694\u79BB\u4E0E\u4F53\u9A8C\u4F18\u5316 \u{1F6E1}\uFE0F</h3>
-<p>\u672C\u6B21\u66F4\u65B0\u91CD\u70B9\u89E3\u51B3\u6A21\u578B\u751F\u6210\u5185\u5BB9\u7684 CSS \u6C61\u67D3\u95EE\u9898\uFF0C\u5E76\u4F18\u5316\u4E86\u591A\u9879\u4EA4\u4E92\u4F53\u9A8C\uFF1A</p>
+<h3>v3.0.5 \u53CC\u6A21\u5F0F\u4E0E\u4E16\u754C\u4E66\u4F18\u5316 \u{1F4D6}</h3>
+<p>\u672C\u6B21\u66F4\u65B0\u65B0\u589E\u751F\u6210\u6A21\u5F0F\u5207\u6362\u529F\u80FD\uFF0C\u5E76\u4FEE\u590D\u4E86\u4E16\u754C\u4E66\u76F8\u5173\u95EE\u9898\uFF1A</p>
 
 <h4>\u2728 \u65B0\u529F\u80FD</h4>
 <ul>
-    <li>\u{1F6E1}\uFE0F <b>Shadow DOM CSS \u9694\u79BB</b> - \u6A21\u578B\u751F\u6210\u7684 CSS \u4E0D\u518D\u5F71\u54CD\u63D2\u4EF6\u754C\u9762\uFF0C\u5F7B\u5E95\u89E3\u51B3\u6837\u5F0F\u6C61\u67D3\u95EE\u9898</li>
-    
-    <li>\u{1F3A8} <b>\u6D6E\u52A8\u7403\u80CC\u666F\u8272</b> - \u65B0\u589E\u7403\u4F53\u80CC\u666F\u8272\u81EA\u5B9A\u4E49\u9009\u9879</li>
-    <li>\u{1F50D} <b>\u5267\u672C\u641C\u7D22</b> - \u5267\u672C\u9009\u62E9\u5668\u652F\u6301\u6309\u540D\u79F0\u548C\u63CF\u8FF0\u641C\u7D22</li>
+    <li>\u{1F4D6} <b>\u53CC\u6A21\u5F0F\u5207\u6362</b> - \u65B0\u589E\u300C\u5185\u5BB9\u4F18\u5148\u300D\u4E0E\u300C\u6C1B\u56F4\u7F8E\u5316\u300D\u4E24\u79CD\u751F\u6210\u6A21\u5F0F\uFF0C\u53EF\u5728\u4E3B\u7A97\u53E3\u9876\u90E8\u5207\u6362</li>
+    <li>\u2764\uFE0F <b>\u53D6\u6D88\u6536\u85CF</b> - \u8BEF\u89E6\u6536\u85CF\u540E\u53EF\u7ACB\u5373\u518D\u6B21\u70B9\u51FB\u53D6\u6D88\uFF0C\u65E0\u9700\u8FDB\u5165\u6536\u85CF\u5939\u5220\u9664</li>
+    <li>\u{1F4DA} <b>\u4E16\u754C\u4E66\u786E\u8BA4</b> - \u5F53\u4E16\u754C\u4E66\u6761\u76EE\u4E3A\u7A7A\u65F6\u4F1A\u5F39\u51FA\u786E\u8BA4\u6846\uFF0C\u907F\u514D\u65E0\u4E0A\u4E0B\u6587\u751F\u6210</li>
 </ul>
 
-<h4>\u{1F527} \u4F18\u5316\u8C03\u6574</h4>
+<h4>\u{1F527} \u4FEE\u590D\u4E0E\u4F18\u5316</h4>
 <ul>
-    <li>\u{1F49A} <b>\u590D\u5236\u53CD\u9988\u4F18\u5316</b> - \u590D\u5236\u6309\u94AE\u6210\u529F\u540E\u56FE\u6807\u53D8\u7EFF\u8272\uFF0C\u66FF\u4EE3\u6587\u5B57\u53CD\u9988</li>
-    <li>\u{1F4DC} <b>\u7528\u6237\u4EBA\u8BBE\u652F\u6301</b> - Prompt \u4E2D\u4FEE\u590D\u4EBA\u8BBE\u4FE1\u606F\u8BA9\u6F14\u7ECE\u66F4\u8D34\u5408\u89D2\u8272\u8BBE\u5B9A</li>
+    <li>\u{1F4DA} <b>\u4E16\u754C\u4E66\u83B7\u53D6\u4FEE\u590D</b> - \u4FEE\u590D\u65E0\u6CD5\u6B63\u786E\u8BFB\u53D6\u5168\u5C40\u4E16\u754C\u4E66\u7684\u95EE\u9898</li>
+    <li>\u{1F3AF} <b>\u9ED8\u8BA4\u4E0D\u5168\u9009</b> - \u9996\u6B21\u4F7F\u7528\u65F6\u4E16\u754C\u4E66\u6761\u76EE\u9ED8\u8BA4\u4E0D\u9009\u62E9\uFF0C\u9700\u624B\u52A8\u52FE\u9009</li>
+    <li>\u{1F50D} <b>\u5BA1\u67E5\u7A97\u53E3\u540C\u6B65</b> - \u8C03\u8BD5\u63A7\u5236\u53F0\u73B0\u5728\u4F1A\u663E\u793A\u5F53\u524D\u4F7F\u7528\u7684\u751F\u6210\u6A21\u5F0F</li>
+    <li>\u{1F3A8} <b>\u60AC\u6D6E\u7403\u4F18\u5316</b> - \u79FB\u9664\u60AC\u6D6E\u7403\u9634\u5F71\u6837\u5F0F\uFF0C\u89C6\u89C9\u66F4\u7B80\u6D01</li>
 </ul>
 `;
 var LEGACY_KEYS = {
@@ -250,7 +251,6 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     justify-content: center;
     cursor: pointer;
     z-index: 9999;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     /* \u4F7F\u7528 CSS \u53D8\u91CF\u63A7\u5236\u8FB9\u6846\u989C\u8272 */
     border: 2px solid var(--t-border-color, #444);
     transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
@@ -632,6 +632,50 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     color: #a8d8f8;
 }
 
+/* \u751F\u6210\u6A21\u5F0F\u5207\u6362 */
+.t-mode-toggle {
+    display: flex;
+    align-items: center;
+    background: #1a1a1a;
+    border-radius: 6px;
+    border: 1px solid #333;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.t-mode-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    height: 100%;
+    cursor: pointer;
+    color: #666;
+    font-size: 0.85em;
+    font-weight: bold;
+    transition: all 0.2s;
+    white-space: nowrap;
+    border-right: 1px solid #333;
+}
+
+.t-mode-btn:last-child {
+    border-right: none;
+}
+
+.t-mode-btn:hover {
+    background: #222;
+    color: #aaa;
+}
+
+.t-mode-btn.active {
+    background: rgba(191, 161, 95, 0.15);
+    color: #bfa15f;
+}
+
+.t-mode-btn.active:hover {
+    background: rgba(191, 161, 95, 0.2);
+}
+
 /* Trigger Card */
 .t-trigger-card {
     flex-grow: 1;
@@ -966,6 +1010,17 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
         height: 40px;
         min-width: unset;
         justify-content: center;
+    }
+
+    .t-mode-toggle {
+        width: 100%;
+        height: 40px;
+    }
+
+    .t-mode-btn {
+        flex: 1;
+        font-size: 0.8em;
+        padding: 0 10px;
     }
 
     .t-mobile-row {
@@ -2504,8 +2559,12 @@ var GlobalState = {
   // 上一次用户手动选择的剧本 ID (用于 UI 显示)
   lastGeneratedScriptId: "",
   // 上一次生成内容对应的剧本 ID (可能是后台自动生成的)
+  lastFavId: null,
+  // 当前内容对应的收藏 ID（null 表示未收藏）
   currentCategoryFilter: "ALL",
   // 当前的分类筛选器状态
+  generationMode: "narrative",
+  // 生成模式: "narrative"(内容优先) | "visual"(氛围美化)
   useHistoryAnalysis: false,
   // 是否读取聊天历史（默认关闭）
   // 计时器相关
@@ -2705,23 +2764,15 @@ var TitaniaLogger = {
 };
 
 // src/core/context.js
-var selected_world_info = [];
-var world_info = null;
-try {
-  if (typeof window !== "undefined") {
-    if (window.selected_world_info) selected_world_info = window.selected_world_info;
-    if (window.world_info) world_info = window.world_info;
-  }
-} catch (e) {
-  console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6\u4E16\u754C\u4E66\u5168\u5C40\u53D8\u91CF", e);
-}
+import { world_info, selected_world_info } from "../../../world-info.js";
 function getWorldInfoVars() {
   try {
     return {
-      selected_world_info: window.selected_world_info || [],
-      world_info: window.world_info || null
+      selected_world_info: selected_world_info || [],
+      world_info: world_info || null
     };
   } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u4E16\u754C\u4E66\u53D8\u91CF\u5931\u8D25", e);
     return { selected_world_info: [], world_info: null };
   }
 }
@@ -2851,6 +2902,10 @@ async function getContextData() {
     if (charSelections && charSelections[bookName]) {
       const selectedUids = charSelections[bookName];
       enabledEntries = enabledEntries.filter((e) => selectedUids.includes(e.uid));
+    } else if (charSelections === null) {
+      enabledEntries = [];
+    } else if (!charSelections[bookName]) {
+      enabledEntries = [];
     }
     enabledEntries.forEach((e) => {
       if (e.content && e.content.trim()) {
@@ -2970,25 +3025,22 @@ var getSnippet = (html) => {
   text = text.replace(/\s+/g, " ").trim();
   return text.length > 60 ? text.substring(0, 60) + "..." : text;
 };
-function scopeAndSanitizeHTML(rawHtml, scopeId) {
+function scopeAndSanitizeHTML(rawHtml, scopeId2) {
   const styleMatch = rawHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   let cssContent = styleMatch ? styleMatch[1] : "";
   let bodyContent = rawHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/i, "").trim();
-  if (!bodyContent.includes(`id="${scopeId}"`) && !bodyContent.includes(`id='${scopeId}'`)) {
-    bodyContent = `<div id="${scopeId}">${bodyContent}</div>`;
+  if (!bodyContent.includes(`id="${scopeId2}"`) && !bodyContent.includes(`id='${scopeId2}'`)) {
+    bodyContent = `<div id="${scopeId2}">${bodyContent}</div>`;
   }
   if (cssContent) {
     cssContent = cssContent.replace(/\/\*[\s\S]*?\*\//g, "");
-    cssContent = cssContent.replace(/(^|\})[\s]*\b(body|html)\b/gi, "$1 #" + scopeId);
+    cssContent = cssContent.replace(/(^|\})[\s]*\b(body|html)\b/gi, "$1 #" + scopeId2);
   }
   return `<style>
-/* Scoped CSS for ${scopeId} */
+/* Scoped CSS for ${scopeId2} */
 ${cssContent}
 </style>
 ${bodyContent}`;
-}
-function generateScopeId() {
-  return "t-scene-" + Date.now().toString(36) + Math.floor(Math.random() * 1e3).toString();
 }
 function renderToShadowDOM(container, html, options = {}) {
   const {
@@ -3171,7 +3223,7 @@ function checkSentenceCompletion(content) {
 }
 function extractContinuationContext(content, contextLength = 800) {
   const scopeMatch = content.match(/id=["']?(t-scene-[a-z0-9]+)["']?/i);
-  const scopeId = scopeMatch ? scopeMatch[1] : null;
+  const scopeId2 = scopeMatch ? scopeMatch[1] : null;
   let bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
   let lastContent = bodyContent.slice(-contextLength);
   const firstTagEnd = lastContent.indexOf(">");
@@ -3186,7 +3238,7 @@ function extractContinuationContext(content, contextLength = 800) {
   }
   return {
     lastContent,
-    scopeId
+    scopeId: scopeId2
   };
 }
 function extractTextSummary(htmlContent, maxLength = 500) {
@@ -3212,13 +3264,13 @@ function extractTextSummary(htmlContent, maxLength = 500) {
   }
   return text;
 }
-function mergeContinuationContent(originalContent, continuationContent, scopeId, showIndicator = true) {
+function mergeContinuationContent(originalContent, continuationContent, scopeId2, showIndicator = true) {
   const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
   const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   const contStyle = contStyleMatch ? contStyleMatch[1] : "";
   let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  contBody = contBody.replace(new RegExp(`<div[^>]*id=["']?${scopeId}["']?[^>]*>`, "gi"), "");
+  contBody = contBody.replace(new RegExp(`<div[^>]*id=["']?${scopeId2}["']?[^>]*>`, "gi"), "");
   let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
   let indicator = "";
   if (showIndicator) {
@@ -3229,7 +3281,7 @@ function mergeContinuationContent(originalContent, continuationContent, scopeId,
   const mergedStyle = originalStyle + "\n/* Continuation CSS */\n" + contStyle;
   const mergedBody = originalBody + indicator + contBody;
   return `<style>
-/* Scoped CSS for ${scopeId} */
+/* Scoped CSS for ${scopeId2} */
 ${mergedStyle}
 </style>
 ${mergedBody}`;
@@ -4665,9 +4717,32 @@ async function saveFavorite() {
   if (!data.favs) data.favs = [];
   data.favs.unshift(entry);
   saveExtData();
+  GlobalState.lastFavId = entry.id;
   const btn = $("#t-btn-like");
-  btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i>').prop("disabled", true);
+  btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i>').prop("disabled", false);
   if (window.toastr) toastr.success("\u6536\u85CF\u6210\u529F\uFF01");
+}
+function unsaveFavorite() {
+  if (!GlobalState.lastFavId) {
+    if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u672A\u6536\u85CF");
+    return false;
+  }
+  const data = getExtData();
+  if (!data.favs) {
+    GlobalState.lastFavId = null;
+    return false;
+  }
+  const originalLength = data.favs.length;
+  data.favs = data.favs.filter((f) => f.id !== GlobalState.lastFavId);
+  if (data.favs.length < originalLength) {
+    saveExtData();
+    GlobalState.lastFavId = null;
+    const btn = $("#t-btn-like");
+    btn.html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
+    if (window.toastr) toastr.info("\u5DF2\u53D6\u6D88\u6536\u85CF");
+    return true;
+  }
+  return false;
 }
 function openFavsWindow() {
   $("#t-main-view").hide();
@@ -5048,22 +5123,35 @@ async function showDebugInfo() {
   let profiles = cfg.profiles || [];
   let currentProfile = profiles.find((p) => p.id === activeProfileId) || { name: "\u672A\u77E5", model: "unknown" };
   let displayModel = currentProfile.type === "internal" ? "(\u8DDF\u968F ST)" : currentProfile.model || "gpt-3.5-turbo";
-  const scopeId = generateScopeId();
-  let sysPrompt = `You are a Visual Director and CSS Artist.
-Your task is to generate an immersive HTML scene based on the user's scenario.
+  const currentMode = GlobalState.generationMode || "narrative";
+  const modeDisplay = currentMode === "visual" ? "\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316" : "\u{1F4D6} \u5185\u5BB9\u4F18\u5148";
+  let sysPrompt;
+  if (currentMode === "visual") {
+    sysPrompt = `You are a Visual Director creating an immersive HTML scene.
 
 [Process]
-1. **Atmosphere Analysis**: Analyze the mood/emotion.
-2. **Visual Metaphor**: Choose CSS effects.
-3. **Coding**: Generate HTML and CSS.
+1. Analyze the mood/emotion of the scenario
+2. Choose visual effects that represent the mood
+3. Generate HTML with embedded <style>
 
-[Technical Constraints - STRICT]
-1. **Container ID**: Wrap content in <div id="${scopeId}">.
-2. **Scoped CSS**: ALL selectors MUST start with #${scopeId}.
-3. **Format**: Raw HTML string.
-4. **Language**: Chinese.`;
-  if (dirDefaults.perspective === "1st") sysPrompt += " Write in First Person (I/Me).";
-  else if (dirDefaults.perspective === "3rd") sysPrompt += ` Write in Third Person (${d.charName}).`;
+[Technical Rules]
+1. Output HTML with <style> block
+2. Use CSS animations, gradients, shadows freely
+3. No markdown code blocks
+4. Language: Chinese`;
+  } else {
+    sysPrompt = `You are a Narrative Writer creating immersive roleplay content.
+Focus on: story depth, character emotions, detailed descriptions.
+
+[Technical Rules]
+1. Output HTML with embedded <style> for formatting
+2. Keep visual effects minimal, focus on narrative quality
+3. No markdown code blocks
+4. Language: Chinese`;
+  }
+  if (dirDefaults.perspective === "1st") sysPrompt += "\nWrite in First Person (I/Me).";
+  else if (dirDefaults.perspective === "3rd") sysPrompt += `
+Write in Third Person (${d.charName}).`;
   const sysTokens = estimateTokens(sysPrompt);
   let contextBlocks = [];
   contextBlocks.push({
@@ -5144,7 +5232,7 @@ User: ${d.userName}`,
         
         <div class="t-dbg-header-bar">
             <div class="t-dbg-stat-item"><i class="fa-solid fa-server"></i> <span class="t-dbg-highlight">${displayModel}</span></div>
-            <div class="t-dbg-stat-item"><i class="fa-solid fa-fingerprint"></i> Scope: <span class="t-dbg-highlight">${scopeId}</span></div>
+            <div class="t-dbg-stat-item"><i class="fa-solid fa-wand-magic-sparkles"></i> \u6A21\u5F0F: <span class="t-dbg-highlight">${modeDisplay}</span></div>
             <div class="t-dbg-stat-item" style="margin-left:auto; color:#bfa15f;"><i class="fa-solid fa-coins"></i> Total Est: ${sysTokens + totalUserTokens} tokens</div>
         </div>
 
@@ -5154,6 +5242,7 @@ User: ${d.userName}`,
                 <div class="t-param-group">
                     <div class="t-param-title">\u57FA\u672C\u4FE1\u606F</div>
                     <div class="t-param-row"><span class="t-param-key">\u5267\u672C</span><span class="t-param-val" style="color:#bfa15f; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${script.name}</span></div>
+                    <div class="t-param-row"><span class="t-param-key">\u6A21\u5F0F</span><span class="t-param-val" style="color:${currentMode === "visual" ? "#90cdf4" : "#bfa15f"};">${modeDisplay}</span></div>
                 </div>
                 <div class="t-param-group">
                     <div class="t-param-title">\u5BFC\u6F14\u53C2\u6570</div>
@@ -5261,6 +5350,7 @@ async function openMainWindow() {
     data = { ui_mode_echo: true };
   }
   GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
+  GlobalState.generationMode = data.config?.generation_mode || "narrative";
   const placeholderContent = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
   const html = `
     <div id="t-overlay" class="t-overlay">
@@ -5288,6 +5378,14 @@ async function openMainWindow() {
                         <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
                         <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
                     </label>
+                </div>
+                <div class="t-mode-toggle" id="t-mode-toggle">
+                    <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
+                        <span>\u{1F4D6} \u5185\u5BB9\u4F18\u5148</span>
+                    </div>
+                    <div class="t-mode-btn ${GlobalState.generationMode === "visual" ? "active" : ""}" data-mode="visual">
+                        <span>\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316</span>
+                    </div>
                 </div>
                 <div class="t-mobile-row">
                     <div class="t-trigger-card" id="t-trigger-btn" title="\u70B9\u51FB\u5207\u6362\u5267\u672C">
@@ -5371,6 +5469,10 @@ async function openMainWindow() {
     }
     $checkbox.prop("checked", GlobalState.useHistoryAnalysis);
   };
+  const updateModeToggleUI = () => {
+    $(".t-mode-btn").removeClass("active");
+    $(`.t-mode-btn[data-mode="${GlobalState.generationMode}"]`).addClass("active");
+  };
   const handleRandom = () => {
     const allScripts = GlobalState.runtimeScripts;
     if (allScripts.length === 0) {
@@ -5408,6 +5510,23 @@ async function openMainWindow() {
         toastr.info("\u{1F4DC} \u5DF2\u5F00\u542F\uFF1A\u5C06\u5206\u6790\u804A\u5929\u5386\u53F2", "Titania");
       } else {
         toastr.info("\u{1F4DC} \u5DF2\u5173\u95ED\uFF1A\u4E0D\u8BFB\u53D6\u804A\u5929\u5386\u53F2", "Titania");
+      }
+    }
+  });
+  $(".t-mode-btn").on("click", function() {
+    const newMode = $(this).data("mode");
+    if (newMode === GlobalState.generationMode) return;
+    GlobalState.generationMode = newMode;
+    updateModeToggleUI();
+    const d = getExtData();
+    if (!d.config) d.config = {};
+    d.config.generation_mode = newMode;
+    saveExtData();
+    if (window.toastr) {
+      if (newMode === "narrative") {
+        toastr.info("\u{1F4D6} \u5DF2\u5207\u6362\u81F3\u5185\u5BB9\u4F18\u5148\u6A21\u5F0F", "Titania");
+      } else {
+        toastr.info("\u{1F3A8} \u5DF2\u5207\u6362\u81F3\u6C1B\u56F4\u7F8E\u5316\u6A21\u5F0F", "Titania");
       }
     }
   });
@@ -5471,7 +5590,13 @@ async function openMainWindow() {
     setTimeout(() => btn.html(originalHtml), 1e3);
   });
   $("#t-btn-run").on("click", () => handleGenerate(null, false));
-  $("#t-btn-like").on("click", saveFavorite);
+  $("#t-btn-like").on("click", () => {
+    if (GlobalState.lastFavId) {
+      unsaveFavorite();
+    } else {
+      saveFavorite();
+    }
+  });
   $("#t-btn-profiles").on("click", function(e) {
     renderProfileMenu($(this));
     e.stopPropagation();
@@ -5484,6 +5609,7 @@ async function openMainWindow() {
     initialScriptId = GlobalState.lastGeneratedScriptId;
   }
   updateHistoryToggleUI();
+  updateModeToggleUI();
   updateFilterUI();
   if (GlobalState.runtimeScripts.length === 0) {
     $("#t-lbl-name").text("\u65E0\u53EF\u7528\u5267\u672C");
@@ -5657,7 +5783,7 @@ async function openWorldInfoSelector() {
             `);
       const $entriesContainer = $bookSection.find(".t-wi-entries");
       book.entries.forEach((entry) => {
-        const isSelected = isFirstTime ? true : bookSel.includes(entry.uid);
+        const isSelected = isFirstTime ? false : bookSel.includes(entry.uid);
         const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
         const $entry = $(`
                     <div class="t-wi-entry ${isSelected ? "selected" : ""}" data-uid="${entry.uid}">
@@ -6077,34 +6203,77 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   const ctx = await getContextData();
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
+  if (!ctx.worldInfo || ctx.worldInfo.trim() === "" || ctx.worldInfo.trim() === "[World Info / Lore]\n\n") {
+    const confirmMsg = "\u4E16\u754C\u4E66\u5DF2\u9009\u4E2D\u7684\u6761\u76EE\u4E3A 0\uFF0C\u662F\u5426\u7EE7\u7EED\u751F\u6210\uFF1F";
+    const userConfirmed = await new Promise((resolve) => {
+      const confirmHtml = `
+            <div id="t-confirm-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99999; display:flex; align-items:center; justify-content:center;">
+                <div style="background:#1e1e1e; border:1px solid #444; border-radius:10px; padding:25px; max-width:400px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <div style="font-size:2em; margin-bottom:15px;">\u{1F4DA}</div>
+                    <div style="color:#fff; margin-bottom:20px; font-size:1.1em;">${confirmMsg}</div>
+                    <div style="display:flex; gap:15px; justify-content:center;">
+                        <button id="t-confirm-yes" style="padding:10px 30px; background:#4a9eff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:1em;">\u662F</button>
+                        <button id="t-confirm-no" style="padding:10px 30px; background:#555; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:1em;">\u5426</button>
+                    </div>
+                </div>
+            </div>`;
+      $("body").append(confirmHtml);
+      $("#t-confirm-yes").on("click", () => {
+        $("#t-confirm-overlay").remove();
+        resolve(true);
+      });
+      $("#t-confirm-no").on("click", () => {
+        $("#t-confirm-overlay").remove();
+        resolve(false);
+      });
+      $("#t-confirm-overlay").on("click", (e) => {
+        if (e.target === e.currentTarget) {
+          $("#t-confirm-overlay").remove();
+          resolve(false);
+        }
+      });
+    });
+    if (!userConfirmed) {
+      TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u751F\u6210\uFF08\u4E16\u754C\u4E66\u6761\u76EE\u4E3A\u7A7A\uFF09");
+      return;
+    }
+  }
   if (!silent) $("#t-overlay").remove();
   GlobalState.isGenerating = true;
   $floatBtn.addClass("t-loading");
+  GlobalState.lastFavId = null;
   $("#t-btn-like").html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
   startTimer();
   if (!silent && window.toastr) toastr.info(`\u{1F680} [${currentProfile.name}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
   try {
     diagnostics.phase = "prepare_prompt";
-    const scopeId = generateScopeId();
     const dLen = dirDefaults.length;
     const dPers = dirDefaults.perspective;
     const dStyle = dirDefaults.style_ref;
-    let sys = `You are a Visual Director and CSS Artist.
-Your task is to generate an immersive HTML scene based on the user's scenario.
+    let sys;
+    if (GlobalState.generationMode === "visual") {
+      sys = `You are a Visual Director creating an immersive HTML scene.
 
 [Process]
-1. **Atmosphere Analysis**: Analyze the mood/emotion of the scenario. (e.g., Sadness -> Cold colors, blur; Joy -> Warm colors, bounce).
-2. **Visual Metaphor**: Choose CSS effects that represent the mood (e.g., gradients, shadows, borders, transparency).
-3. **Coding**: Generate the HTML and CSS.
+1. Analyze the mood/emotion of the scenario
+2. Choose visual effects that represent the mood
+3. Generate HTML with embedded <style>
 
-[Technical Constraints - STRICT]
-1. **Container ID**: You MUST wrap your entire HTML content inside <div id="${scopeId}">...</div>.
-2. **Scoped CSS**: Output a <style> block. ALL CSS selectors MUST start with #${scopeId} to prevent global pollution.
-   - CORRECT: #${scopeId} .text { color: red; }
-   - WRONG: .text { color: red; } / body { background: black; }
-3. **Advanced Styling**: Use @keyframes for subtle animations (fade-in, floating, glow). Use pseudo-elements (::before/::after) for decorations.
-4. **Format**: Output raw HTML string. No markdown (\`\`\`).
-5. **Language**: Narrative content MUST be in Chinese.`;
+[Technical Rules]
+1. Output HTML with <style> block
+2. Use CSS animations, gradients, shadows freely
+3. No markdown code blocks
+4. Language: Chinese`;
+    } else {
+      sys = `You are a Narrative Writer creating immersive roleplay content.
+Focus on: story depth, character emotions, detailed descriptions.
+
+[Technical Rules]
+1. Output HTML with embedded <style> for formatting
+2. Keep visual effects minimal, focus on narrative quality
+3. No markdown code blocks
+4. Language: Chinese`;
+    }
     if (dPers === "1st") sys += " Write strictly in First Person perspective (I/Me).";
     else if (dPers === "3rd") sys += ` Write strictly in Third Person perspective (${ctx.charName}/He/She).`;
     let user = `[Roleplay Context]
@@ -6312,7 +6481,7 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
     $floatBtn.removeClass("t-loading");
   }
 }
-async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId, autoContinueCfg, silent) {
+async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId2, autoContinueCfg, silent) {
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   try {
@@ -6428,7 +6597,7 @@ Remember: Use the same CSS scope #${GlobalState.continuation.currentScopeId} for
       if (!silent && window.toastr) {
         toastr.info(`\u{1F504} \u7EED\u5199\u5185\u5BB9\u4ECD\u88AB\u622A\u65AD\uFF0C\u7EE7\u7EED\u5C1D\u8BD5 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
       }
-      await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId, autoContinueCfg, silent);
+      await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, scopeId2, autoContinueCfg, silent);
     } else {
       const finalOutput = mergeContinuationContent(
         GlobalState.continuation.accumulatedContent,
@@ -6574,24 +6743,18 @@ async function loadExtensionSettings() {
 async function checkVersionUpdate() {
   const extData = getExtData();
   const lastSeenVersion = extData.last_seen_version || "0.0.0";
-  if (compareVersions(CURRENT_VERSION, lastSeenVersion) > 0) {
-    $("#titania-new-badge").show().attr("title", "\u70B9\u51FB\u67E5\u770B\u66F4\u65B0\u65E5\u5FD7");
-    $("#titania-new-badge").off("click").on("click", showChangelog);
-    return;
-  }
   try {
     const remoteVersion = await fetchRemoteVersion();
-    const ignoredVersion = extData.ignored_version || "0.0.0";
-    if (remoteVersion && remoteVersion === ignoredVersion) {
+    if (!remoteVersion) {
       $("#titania-new-badge").hide();
       return;
     }
-    if (remoteVersion && compareVersions(remoteVersion, CURRENT_VERSION) > 0) {
-      $("#titania-new-badge").show().addClass("update-available").attr("title", `\u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}\uFF0C\u70B9\u51FB\u67E5\u770B`).text("UPDATE");
+    if (compareVersions(remoteVersion, lastSeenVersion) > 0) {
+      $("#titania-new-badge").show().removeClass("update-available").attr("title", "\u70B9\u51FB\u67E5\u770B\u66F4\u65B0\u65E5\u5FD7").text("NEW");
       $("#titania-new-badge").off("click").on("click", () => {
-        showUpdateNotice(remoteVersion);
+        showChangelog(remoteVersion);
       });
-      console.log(`Titania: \u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
+      console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u4E0A\u6B21\u5DF2\u8BFB v${lastSeenVersion}`);
     } else {
       $("#titania-new-badge").hide();
     }
@@ -6624,53 +6787,6 @@ async function fetchRemoteVersion() {
     return null;
   }
 }
-function showUpdateNotice(remoteVersion) {
-  if ($(".titania-update-overlay").length) return;
-  const html = `
-    <div class="titania-changelog-overlay titania-update-overlay">
-        <div class="titania-changelog-box">
-            <div class="titania-changelog-header" style="background: linear-gradient(135deg, #00b894, #00cec9);">
-                <span>\u{1F680} \u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}</span>
-                <span class="titania-changelog-close">&times;</span>
-            </div>
-            <div class="titania-changelog-body" style="text-align:center; padding:30px;">
-                <div style="font-size:3em; margin-bottom:15px;">\u{1F4E6}</div>
-                <div style="font-size:1.2em; margin-bottom:10px;">
-                    \u56DE\u58F0\u5C0F\u5267\u573A\u6709\u65B0\u7248\u672C\u53EF\u7528\uFF01
-                </div>
-                <div style="color:#888; margin-bottom:20px;">
-                    \u5F53\u524D\u7248\u672C: <b>v${CURRENT_VERSION}</b> \u2192 \u6700\u65B0\u7248\u672C: <b style="color:#00b894;">v${remoteVersion}</b>
-                </div>
-                <div style="font-size:0.9em; color:#666; margin-bottom:15px;">
-                    \u8BF7\u524D\u5F80 SillyTavern \u7684 <b>\u6269\u5C55</b> \u2192 <b>\u7BA1\u7406\u6269\u5C55</b> \u8FDB\u884C\u66F4\u65B0
-                </div>
-            </div>
-            <div class="titania-changelog-footer" style="display:flex; gap:10px; justify-content:center;">
-                <button class="titania-changelog-btn" id="titania-update-later" style="background:#555; color:#fff;">\u7A0D\u540E\u63D0\u9192</button>
-                <button class="titania-changelog-btn" id="titania-update-ignore" style="background:linear-gradient(90deg, #00b894, #00cec9);">\u77E5\u9053\u4E86</button>
-            </div>
-        </div>
-    </div>`;
-  $("body").append(html);
-  $("#titania-update-later").on("click", () => {
-    $(".titania-update-overlay").remove();
-  });
-  $("#titania-update-ignore").on("click", () => {
-    const extData = getExtData();
-    extData.ignored_version = remoteVersion;
-    saveExtData();
-    $(".titania-update-overlay").remove();
-    $("#titania-new-badge").hide();
-  });
-  $(".titania-update-overlay .titania-changelog-close").on("click", () => {
-    $(".titania-update-overlay").remove();
-  });
-  $(".titania-update-overlay").on("click", function(e) {
-    if (e.target === this) {
-      $(".titania-update-overlay").remove();
-    }
-  });
-}
 function compareVersions(v1, v2) {
   const parts1 = v1.split(".").map(Number);
   const parts2 = v2.split(".").map(Number);
@@ -6682,13 +6798,14 @@ function compareVersions(v1, v2) {
   }
   return 0;
 }
-function showChangelog() {
+function showChangelog(versionToMark) {
   if ($(".titania-changelog-overlay").length) return;
+  const displayVersion = versionToMark || CURRENT_VERSION;
   const html = `
     <div class="titania-changelog-overlay">
         <div class="titania-changelog-box">
             <div class="titania-changelog-header">
-                <span>\u{1F389} \u56DE\u58F0\u5C0F\u5267\u573A v${CURRENT_VERSION} \u66F4\u65B0</span>
+                <span>\u{1F389} \u56DE\u58F0\u5C0F\u5267\u573A v${displayVersion} \u66F4\u65B0</span>
                 <span class="titania-changelog-close">&times;</span>
             </div>
             <div class="titania-changelog-body">
@@ -6702,7 +6819,7 @@ function showChangelog() {
   $("body").append(html);
   $(".titania-changelog-close, .titania-changelog-btn").on("click", () => {
     const extData = getExtData();
-    extData.last_seen_version = CURRENT_VERSION;
+    extData.last_seen_version = versionToMark || CURRENT_VERSION;
     saveExtData();
     $("#titania-new-badge").hide();
     $(".titania-changelog-overlay").remove();
