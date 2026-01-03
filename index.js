@@ -18,21 +18,20 @@ var CURRENT_VERSION = "3.0.6";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var CHANGELOG = `
-<h3>v3.0.6 ST\u4E3B\u8FDE\u63A5\u4FEE\u590D\u4E0E\u6587\u7B14\u65B9\u6848 \u{1F517}</h3>
-<p>\u672C\u6B21\u66F4\u65B0\u91CD\u70B9\u4FEE\u590D\u300C\u8DDF\u968FST\u4E3B\u8FDE\u63A5\u300D\u529F\u80FD\uFF0C\u5E76\u65B0\u589E\u6587\u7B14\u53C2\u8003\u591A\u65B9\u6848\u7BA1\u7406\uFF1A</p>
+<h3>v3.0.6 ST\u4E3B\u8FDE\u63A5\u4FEE\u590D\u4E0E\u5BFC\u6F14\u6A21\u5F0F\u91CD\u6784 \u{1F517}</h3>
+<p>\u672C\u6B21\u66F4\u65B0\u91CD\u70B9\u4FEE\u590D\u300C\u8DDF\u968FST\u4E3B\u8FDE\u63A5\u300D\u529F\u80FD\uFF0C\u5E76\u91CD\u6784\u5BFC\u6F14\u6A21\u5F0F\u4E3A\u81EA\u7531\u7F16\u8F91\uFF1A</p>
 
 <h4>\u2728 \u65B0\u529F\u80FD</h4>
 <ul>
+    <li>\u{1F3AC} <b>\u5BFC\u6F14\u6A21\u5F0F\u81EA\u7531\u7F16\u8F91</b> - \u539F\u6709\u7684"\u7BC7\u5E45/\u89C6\u89D2"\u4E0B\u62C9\u6846\u6539\u4E3A\u81EA\u7531\u6587\u672C\u533A\u57DF\uFF0C\u53EF\u81EA\u5B9A\u4E49\u4EFB\u610F\u6307\u4EE4</li>
     <li>\u270D\uFE0F <b>\u6587\u7B14\u53C2\u8003\u591A\u65B9\u6848</b> - \u53EF\u4FDD\u5B58\u6700\u591A10\u4E2A\u5199\u4F5C\u98CE\u683C\u65B9\u6848\uFF0C\u5FEB\u901F\u5207\u6362\u4E0D\u540C\u6587\u7B14</li>
     
-</ul>
 
 <h4>\u{1F527} \u4FEE\u590D\u4E0E\u4F18\u5316</h4>
 <ul>
     <li>\u{1F517} <b>ST\u4E3B\u8FDE\u63A5\u4FEE\u590D</b> - \u73B0\u901A\u8FC7 ST \u540E\u7AEF\u4EE3\u7406\u53D1\u9001\u8BF7\u6C42\uFF0C\u652F\u6301\u6240\u6709 API \u6E90\uFF08OpenAI/Claude/OpenRouter/\u81EA\u5B9A\u4E49\u7B49\uFF09\u548C\u53CD\u5411\u4EE3\u7406\u914D\u7F6E</li>
     <li>\u26A1 <b>\u52A0\u8F7D\u4F18\u5316</b> - UI \u9AA8\u67B6\u5148\u6E32\u67D3\uFF0C\u6570\u636E\u5F02\u6B65\u52A0\u8F7D\uFF0C\u907F\u514D\u6253\u5F00\u63D2\u4EF6\u65F6\u754C\u9762\u5361\u987F</li>
     
-</ul>
 `;
 var LEGACY_KEYS = {
   CFG: "Titania_Config_v3",
@@ -90,9 +89,8 @@ var defaultSettings = {
     // 是否显示生成计时统计
   },
   director: {
-    length: "",
-    perspective: "auto",
-    style_ref: ""
+    instruction: ""
+    // 自由编辑的导演指令
   },
   // 世界书条目筛选配置
   worldinfo: {
@@ -4188,10 +4186,17 @@ function openSettingsWindow() {
                 <!-- Tab 3: \u5BFC\u6F14\u6A21\u5F0F -->
                 <div id="page-director" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px; color:#888; font-size:0.9em;">
-                        <i class="fa-solid fa-circle-info"></i> \u8FD9\u91CC\u8BBE\u7F6E\u7684\u662F"\u9ED8\u8BA4\u503C"\u3002\u652F\u6301\u53D8\u91CF\uFF1A<code style="background:#333; padding:2px 5px; border-radius:3px;">{{char}}</code> \u89D2\u8272\u540D\u3001<code style="background:#333; padding:2px 5px; border-radius:3px;">{{user}}</code> \u7528\u6237\u540D
+                        <i class="fa-solid fa-circle-info"></i> \u81EA\u5B9A\u4E49\u5BFC\u6F14\u6307\u4EE4\uFF0C\u7528\u4E8E\u63A7\u5236\u751F\u6210\u5185\u5BB9\u7684\u98CE\u683C\u3001\u7BC7\u5E45\u3001\u89C6\u89D2\u7B49\u3002\u652F\u6301\u53D8\u91CF\uFF1A<code style="background:#333; padding:2px 5px; border-radius:3px;">{{char}}</code> \u89D2\u8272\u540D\u3001<code style="background:#333; padding:2px 5px; border-radius:3px;">{{user}}</code> \u7528\u6237\u540D
                     </div>
-                    <div class="t-form-group"><label class="t-form-label">\u9ED8\u8BA4\u7BC7\u5E45\u5EFA\u8BAE</label><input id="set-dir-len" class="t-input" value="${dirCfg.length}" placeholder="\u4F8B\u5982: 300\u5B57, 2\u4E2A\u6BB5\u843D"></div>
-                    <div class="t-form-group"><label class="t-form-label">\u9ED8\u8BA4\u53D9\u4E8B\u89C6\u89D2</label><select id="set-dir-pers" class="t-input"><option value="auto" ${dirCfg.perspective === "auto" ? "selected" : ""}>\u81EA\u52A8 (\u8DDF\u968F\u5267\u672C)</option><option value="1st" ${dirCfg.perspective === "1st" ? "selected" : ""}>\u5F3A\u5236\u7B2C\u4E00\u4EBA\u79F0 (\u6211)</option><option value="3rd" ${dirCfg.perspective === "3rd" ? "selected" : ""}>\u5F3A\u5236\u7B2C\u4E09\u4EBA\u79F0 (\u4ED6/\u5979)</option></select></div>
+                    
+                    <div class="t-form-group">
+                        <label class="t-form-label">\u{1F3AC} \u5BFC\u6F14\u6307\u4EE4 (\u81EA\u7531\u7F16\u8F91)</label>
+                        <textarea id="set-dir-instruction" class="t-input" rows="5" placeholder="\u4F8B\u5982\uFF1A&#10;- \u7BC7\u5E45\u63A7\u5236\u5728300\u5B57\u5DE6\u53F3&#10;- \u4F7F\u7528\u7B2C\u4E00\u4EBA\u79F0\u53D9\u4E8B&#10;- \u591A\u63CF\u5199\u5185\u5FC3\u6D3B\u52A8\u548C\u73AF\u5883\u6C1B\u56F4&#10;- \u8BED\u8A00\u98CE\u683C\u504F\u5411\u8BD7\u610F\u6587\u827A">${dirCfg.instruction || ""}</textarea>
+                        <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                            <span style="font-size:0.75em; color:#666;">\u6B64\u6307\u4EE4\u5C06\u4F5C\u4E3A [Director Instructions] \u6DFB\u52A0\u5230 Prompt \u4E2D</span>
+                            <span id="dir-char-count" style="font-size:0.75em; color:#666;">0/500</span>
+                        </div>
+                    </div>
                     
                     <!-- \u6587\u7B14\u53C2\u8003\u65B9\u6848\u7BA1\u7406 -->
                     <div class="t-form-group">
@@ -4515,6 +4520,17 @@ function openSettingsWindow() {
     updateBgColorUI($(this).data("color"));
   });
   $(`.t-bg-preset[data-color="${tempApp.bg_color}"]`).css("border-color", "#fff");
+  const updateDirCharCount = () => {
+    const len = ($("#set-dir-instruction").val() || "").length;
+    $("#dir-char-count").text(`${len}/500`);
+    if (len > 450) {
+      $("#dir-char-count").css("color", "#ff6b6b");
+    } else {
+      $("#dir-char-count").css("color", "#666");
+    }
+  };
+  $("#set-dir-instruction").on("input", updateDirCharCount);
+  updateDirCharCount();
   const MAX_STYLE_PROFILES = 10;
   const renderStyleProfileUI = () => {
     const $sel = $("#set-style-select");
@@ -4775,7 +4791,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       bg_color: tempApp.bg_color || "#2b2b2b",
       show_timer: $("#p-show-timer").is(":checked")
     };
-    d.director = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val() };
+    d.director = { instruction: $("#set-dir-instruction").val().trim() };
     d.style_profiles = tempStyleProfiles;
     d.active_style_id = tempActiveStyleId;
     d.auto_continue = {
@@ -6262,7 +6278,7 @@ function renderGeneratedContent(content) {
 async function handleGenerate(forceScriptId = null, silent = false) {
   const data = getExtData();
   const cfg = data.config || {};
-  const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
+  const dirDefaults = data.director || { instruction: "" };
   const startTime = Date.now();
   let diagnostics = {
     phase: "init",
@@ -6375,8 +6391,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   if (!silent && window.toastr) toastr.info(`\u{1F680} [${currentProfile.name}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
   try {
     diagnostics.phase = "prepare_prompt";
-    const dLen = dirDefaults.length;
-    const dPers = dirDefaults.perspective;
+    const dirInstruction = dirDefaults.instruction || "";
     const styleProfiles = data.style_profiles || [{ id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }];
     const activeStyleId = data.active_style_id || "default";
     const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId) || styleProfiles[0];
@@ -6398,24 +6413,27 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     } else {
       sys = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
     }
-    if (dPers === "1st") sys += " Write strictly in First Person perspective (I/Me).";
-    else if (dPers === "3rd") sys += ` Write strictly in Third Person perspective (${ctx.charName}/He/She).`;
     let user = `[Roleplay Context]
 Character: ${ctx.charName}
 User: ${ctx.userName}
 
 `;
-    let directorInstruction = "";
-    if (dLen) directorInstruction += `1. Length: Keep response around ${dLen}.
-`;
-    if (dStyle) directorInstruction += `2. Style Reference: Mimic this vibe (do not copy text):
+    let directorSection = "";
+    if (dirInstruction.trim()) {
+      directorSection += dirInstruction.trim() + "\n";
+    }
+    if (dStyle) {
+      directorSection += `Style Reference: Mimic this vibe (do not copy text):
 <style_ref>
 ${dStyle.substring(0, 1e3)}
 </style_ref>
 `;
-    if (directorInstruction) user += `[Director Instructions]
-${directorInstruction}
+    }
+    if (directorSection) {
+      user += `[Director Instructions]
+${directorSection}
 `;
+    }
     if (ctx.persona) user += `[Character Persona]
 ${ctx.persona}
 
@@ -6924,19 +6942,21 @@ async function loadExtensionSettings() {
   }
   checkVersionUpdate();
 }
+var remoteManifestCache = null;
 async function checkVersionUpdate() {
   const extData = getExtData();
   const lastSeenVersion = extData.last_seen_version || "0.0.0";
   try {
-    const remoteVersion = await fetchRemoteVersion();
-    if (!remoteVersion) {
+    const remoteManifest = await fetchRemoteManifest();
+    if (!remoteManifest || !remoteManifest.version) {
       $("#titania-new-badge").hide();
       return;
     }
+    const remoteVersion = remoteManifest.version;
     if (compareVersions(remoteVersion, lastSeenVersion) > 0) {
       $("#titania-new-badge").show().removeClass("update-available").attr("title", "\u70B9\u51FB\u67E5\u770B\u66F4\u65B0\u65E5\u5FD7").text("NEW");
       $("#titania-new-badge").off("click").on("click", () => {
-        showChangelog(remoteVersion);
+        showChangelog(remoteVersion, remoteManifest.changelog);
       });
       console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u4E0A\u6B21\u5DF2\u8BFB v${lastSeenVersion}`);
     } else {
@@ -6947,7 +6967,8 @@ async function checkVersionUpdate() {
     $("#titania-new-badge").hide();
   }
 }
-async function fetchRemoteVersion() {
+async function fetchRemoteManifest() {
+  if (remoteManifestCache) return remoteManifestCache;
   try {
     const url = `${GITHUB_API_URL}?t=${Date.now()}`;
     const response = await fetch(url, {
@@ -6963,11 +6984,12 @@ async function fetchRemoteVersion() {
     if (data.content) {
       const decodedContent = atob(data.content.replace(/\n/g, ""));
       const manifest = JSON.parse(decodedContent);
-      return manifest.version || null;
+      remoteManifestCache = manifest;
+      return manifest;
     }
     return null;
   } catch (e) {
-    console.warn("Titania: \u83B7\u53D6\u8FDC\u7A0B\u7248\u672C\u5931\u8D25", e);
+    console.warn("Titania: \u83B7\u53D6\u8FDC\u7A0B manifest \u5931\u8D25", e);
     return null;
   }
 }
@@ -6982,9 +7004,21 @@ function compareVersions(v1, v2) {
   }
   return 0;
 }
-function showChangelog(versionToMark) {
+function showChangelog(versionToMark, remoteChangelog) {
   if ($(".titania-changelog-overlay").length) return;
   const displayVersion = versionToMark || CURRENT_VERSION;
+  let changelogContent = "";
+  if (remoteChangelog && typeof remoteChangelog === "object") {
+    const versions = Object.keys(remoteChangelog).sort((a, b) => compareVersions(b, a));
+    const recentVersions = versions.slice(0, 3);
+    recentVersions.forEach((ver) => {
+      const desc = remoteChangelog[ver];
+      changelogContent += `<h4 style="color:#bfa15f; margin-top:15px; margin-bottom:8px;">v${ver}</h4>`;
+      changelogContent += `<p style="margin:0; padding-left:10px; border-left:2px solid #444;">${desc}</p>`;
+    });
+  } else {
+    changelogContent = CHANGELOG;
+  }
   const html = `
     <div class="titania-changelog-overlay">
         <div class="titania-changelog-box">
@@ -6993,7 +7027,7 @@ function showChangelog(versionToMark) {
                 <span class="titania-changelog-close">&times;</span>
             </div>
             <div class="titania-changelog-body">
-                ${CHANGELOG}
+                ${changelogContent}
             </div>
             <div class="titania-changelog-footer">
                 <button class="titania-changelog-btn">\u6211\u77E5\u9053\u4E86</button>
