@@ -14,26 +14,24 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.0.5";
+var CURRENT_VERSION = "3.0.6";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var CHANGELOG = `
-<h3>v3.0.5 \u53CC\u6A21\u5F0F\u4E0E\u4E16\u754C\u4E66\u4F18\u5316 \u{1F4D6}</h3>
-<p>\u672C\u6B21\u66F4\u65B0\u65B0\u589E\u751F\u6210\u6A21\u5F0F\u5207\u6362\u529F\u80FD\uFF0C\u5E76\u4FEE\u590D\u4E86\u4E16\u754C\u4E66\u76F8\u5173\u95EE\u9898\uFF1A</p>
+<h3>v3.0.6 ST\u4E3B\u8FDE\u63A5\u4FEE\u590D\u4E0E\u6587\u7B14\u65B9\u6848 \u{1F517}</h3>
+<p>\u672C\u6B21\u66F4\u65B0\u91CD\u70B9\u4FEE\u590D\u300C\u8DDF\u968FST\u4E3B\u8FDE\u63A5\u300D\u529F\u80FD\uFF0C\u5E76\u65B0\u589E\u6587\u7B14\u53C2\u8003\u591A\u65B9\u6848\u7BA1\u7406\uFF1A</p>
 
 <h4>\u2728 \u65B0\u529F\u80FD</h4>
 <ul>
-    <li>\u{1F4D6} <b>\u53CC\u6A21\u5F0F\u5207\u6362</b> - \u65B0\u589E\u300C\u5185\u5BB9\u4F18\u5148\u300D\u4E0E\u300C\u6C1B\u56F4\u7F8E\u5316\u300D\u4E24\u79CD\u751F\u6210\u6A21\u5F0F\uFF0C\u53EF\u5728\u4E3B\u7A97\u53E3\u9876\u90E8\u5207\u6362</li>
-    <li>\u2764\uFE0F <b>\u53D6\u6D88\u6536\u85CF</b> - \u8BEF\u89E6\u6536\u85CF\u540E\u53EF\u7ACB\u5373\u518D\u6B21\u70B9\u51FB\u53D6\u6D88\uFF0C\u65E0\u9700\u8FDB\u5165\u6536\u85CF\u5939\u5220\u9664</li>
-    <li>\u{1F4DA} <b>\u4E16\u754C\u4E66\u786E\u8BA4</b> - \u5F53\u4E16\u754C\u4E66\u6761\u76EE\u4E3A\u7A7A\u65F6\u4F1A\u5F39\u51FA\u786E\u8BA4\u6846\uFF0C\u907F\u514D\u65E0\u4E0A\u4E0B\u6587\u751F\u6210</li>
+    <li>\u270D\uFE0F <b>\u6587\u7B14\u53C2\u8003\u591A\u65B9\u6848</b> - \u53EF\u4FDD\u5B58\u6700\u591A10\u4E2A\u5199\u4F5C\u98CE\u683C\u65B9\u6848\uFF0C\u5FEB\u901F\u5207\u6362\u4E0D\u540C\u6587\u7B14</li>
+    
 </ul>
 
 <h4>\u{1F527} \u4FEE\u590D\u4E0E\u4F18\u5316</h4>
 <ul>
-    <li>\u{1F4DA} <b>\u4E16\u754C\u4E66\u83B7\u53D6\u4FEE\u590D</b> - \u4FEE\u590D\u65E0\u6CD5\u6B63\u786E\u8BFB\u53D6\u5168\u5C40\u4E16\u754C\u4E66\u7684\u95EE\u9898</li>
-    <li>\u{1F3AF} <b>\u9ED8\u8BA4\u4E0D\u5168\u9009</b> - \u9996\u6B21\u4F7F\u7528\u65F6\u4E16\u754C\u4E66\u6761\u76EE\u9ED8\u8BA4\u4E0D\u9009\u62E9\uFF0C\u9700\u624B\u52A8\u52FE\u9009</li>
-    <li>\u{1F50D} <b>\u5BA1\u67E5\u7A97\u53E3\u540C\u6B65</b> - \u8C03\u8BD5\u63A7\u5236\u53F0\u73B0\u5728\u4F1A\u663E\u793A\u5F53\u524D\u4F7F\u7528\u7684\u751F\u6210\u6A21\u5F0F</li>
-    <li>\u{1F3A8} <b>\u60AC\u6D6E\u7403\u4F18\u5316</b> - \u79FB\u9664\u60AC\u6D6E\u7403\u9634\u5F71\u6837\u5F0F\uFF0C\u89C6\u89C9\u66F4\u7B80\u6D01</li>
+    <li>\u{1F517} <b>ST\u4E3B\u8FDE\u63A5\u4FEE\u590D</b> - \u73B0\u901A\u8FC7 ST \u540E\u7AEF\u4EE3\u7406\u53D1\u9001\u8BF7\u6C42\uFF0C\u652F\u6301\u6240\u6709 API \u6E90\uFF08OpenAI/Claude/OpenRouter/\u81EA\u5B9A\u4E49\u7B49\uFF09\u548C\u53CD\u5411\u4EE3\u7406\u914D\u7F6E</li>
+    <li>\u26A1 <b>\u52A0\u8F7D\u4F18\u5316</b> - UI \u9AA8\u67B6\u5148\u6E32\u67D3\uFF0C\u6570\u636E\u5F02\u6B65\u52A0\u8F7D\uFF0C\u907F\u514D\u6253\u5F00\u63D2\u4EF6\u65F6\u754C\u9762\u5361\u987F</li>
+    
 </ul>
 `;
 var LEGACY_KEYS = {
@@ -4035,6 +4033,10 @@ function openSettingsWindow() {
   app.size = app.size || 56;
   app.animation = app.animation || "rainbow";
   const dirCfg = data.director || { length: "", perspective: "auto", style_ref: "" };
+  const styleProfiles = data.style_profiles || [
+    { id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }
+  ];
+  const activeStyleId = data.active_style_id || "default";
   if (!app.border_color) app.border_color = "#90cdf4";
   if (!app.bg_color) app.bg_color = "#2b2b2b";
   if (!cfg.profiles || !Array.isArray(cfg.profiles)) {
@@ -4050,6 +4052,9 @@ function openSettingsWindow() {
   if (!tempApp.size) tempApp.size = 56;
   if (!tempApp.border_color) tempApp.border_color = "#90cdf4";
   if (!tempApp.bg_color) tempApp.bg_color = "#2b2b2b";
+  let tempStyleProfiles = JSON.parse(JSON.stringify(styleProfiles));
+  let tempActiveStyleId = activeStyleId;
+  let styleContentModified = false;
   $("#t-main-view").hide();
   const html = `
     <div class="t-box" id="t-settings-view">
@@ -4183,11 +4188,29 @@ function openSettingsWindow() {
                 <!-- Tab 3: \u5BFC\u6F14\u6A21\u5F0F -->
                 <div id="page-director" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px; color:#888; font-size:0.9em;">
-                        <i class="fa-solid fa-circle-info"></i> \u8FD9\u91CC\u8BBE\u7F6E\u7684\u662F\u201C\u9ED8\u8BA4\u503C\u201D\u3002\u5728\u6F14\u7ECE\u4E3B\u754C\u9762\u70B9\u51FB\u201C\u5BFC\u6F14\u6307\u4EE4\u201D\u6309\u94AE\u53EF\u8FDB\u884C\u4E34\u65F6\u8C03\u6574\u3002
+                        <i class="fa-solid fa-circle-info"></i> \u8FD9\u91CC\u8BBE\u7F6E\u7684\u662F"\u9ED8\u8BA4\u503C"\u3002\u652F\u6301\u53D8\u91CF\uFF1A<code style="background:#333; padding:2px 5px; border-radius:3px;">{{char}}</code> \u89D2\u8272\u540D\u3001<code style="background:#333; padding:2px 5px; border-radius:3px;">{{user}}</code> \u7528\u6237\u540D
                     </div>
                     <div class="t-form-group"><label class="t-form-label">\u9ED8\u8BA4\u7BC7\u5E45\u5EFA\u8BAE</label><input id="set-dir-len" class="t-input" value="${dirCfg.length}" placeholder="\u4F8B\u5982: 300\u5B57, 2\u4E2A\u6BB5\u843D"></div>
                     <div class="t-form-group"><label class="t-form-label">\u9ED8\u8BA4\u53D9\u4E8B\u89C6\u89D2</label><select id="set-dir-pers" class="t-input"><option value="auto" ${dirCfg.perspective === "auto" ? "selected" : ""}>\u81EA\u52A8 (\u8DDF\u968F\u5267\u672C)</option><option value="1st" ${dirCfg.perspective === "1st" ? "selected" : ""}>\u5F3A\u5236\u7B2C\u4E00\u4EBA\u79F0 (\u6211)</option><option value="3rd" ${dirCfg.perspective === "3rd" ? "selected" : ""}>\u5F3A\u5236\u7B2C\u4E09\u4EBA\u79F0 (\u4ED6/\u5979)</option></select></div>
-                    <div class="t-form-group"><label class="t-form-label">\u9ED8\u8BA4\u6587\u7B14\u53C2\u8003 (\u4E0D\u8D85\u8FC71000\u5B57)</label><textarea id="set-dir-style" class="t-input" rows="5" placeholder="\u7C98\u8D34\u4F60\u559C\u6B22\u7684\u6587\u7B14\u6BB5\u843D...">${dirCfg.style_ref}</textarea></div>
+                    
+                    <!-- \u6587\u7B14\u53C2\u8003\u65B9\u6848\u7BA1\u7406 -->
+                    <div class="t-form-group">
+                        <label class="t-form-label">\u{1F4DD} \u6587\u7B14\u53C2\u8003\u65B9\u6848</label>
+                        <div style="display:flex; gap:8px; margin-bottom:10px;">
+                            <select id="set-style-select" class="t-input" style="flex:1;"></select>
+                            <button id="btn-style-add" class="t-tool-btn" title="\u4FDD\u5B58\u4E3A\u65B0\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
+                            <button id="btn-style-rename" class="t-tool-btn" title="\u91CD\u547D\u540D\u5F53\u524D\u65B9\u6848"><i class="fa-solid fa-pen"></i></button>
+                            <button id="btn-style-del" class="t-tool-btn" title="\u5220\u9664\u5F53\u524D\u65B9\u6848" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div id="style-unsaved-hint" style="display:none; color:#feca57; font-size:0.8em; margin-bottom:8px;">
+                            <i class="fa-solid fa-circle-exclamation"></i> \u5F53\u524D\u5185\u5BB9\u6709\u4FEE\u6539\uFF0C\u5207\u6362\u65B9\u6848\u524D\u8BF7\u5148\u4FDD\u5B58
+                        </div>
+                        <textarea id="set-dir-style" class="t-input" rows="6" placeholder="\u7C98\u8D34\u4F60\u559C\u6B22\u7684\u6587\u7B14\u6BB5\u843D...\uFF08\u6700\u591A1000\u5B57\uFF09" maxlength="1000"></textarea>
+                        <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                            <span style="font-size:0.75em; color:#666;">\u65B9\u6848\u6570\u91CF: <span id="style-count">0</span>/10</span>
+                            <span id="style-char-count" style="font-size:0.75em; color:#666;">0/1000</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tab 4: \u81EA\u52A8\u5316 -->
@@ -4492,6 +4515,116 @@ function openSettingsWindow() {
     updateBgColorUI($(this).data("color"));
   });
   $(`.t-bg-preset[data-color="${tempApp.bg_color}"]`).css("border-color", "#fff");
+  const MAX_STYLE_PROFILES = 10;
+  const renderStyleProfileUI = () => {
+    const $sel = $("#set-style-select");
+    $sel.empty();
+    tempStyleProfiles.forEach((p) => {
+      $sel.append(`<option value="${p.id}" ${p.id === tempActiveStyleId ? "selected" : ""}>${p.name}</option>`);
+    });
+    const currentProfile = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
+    if (currentProfile) {
+      $("#set-dir-style").val(currentProfile.content);
+    }
+    updateStyleCharCount();
+    $("#style-count").text(tempStyleProfiles.length);
+    const isDefault = tempActiveStyleId === "default";
+    $("#btn-style-del").prop("disabled", isDefault).css("opacity", isDefault ? 0.5 : 1);
+    $("#btn-style-rename").prop("disabled", isDefault).css("opacity", isDefault ? 0.5 : 1);
+    styleContentModified = false;
+    $("#style-unsaved-hint").hide();
+  };
+  const updateStyleCharCount = () => {
+    const len = ($("#set-dir-style").val() || "").length;
+    $("#style-char-count").text(`${len}/1000`);
+    if (len > 900) {
+      $("#style-char-count").css("color", "#ff6b6b");
+    } else {
+      $("#style-char-count").css("color", "#666");
+    }
+  };
+  const saveCurrentStyleToMemory = () => {
+    const pIndex = tempStyleProfiles.findIndex((p) => p.id === tempActiveStyleId);
+    if (pIndex !== -1) {
+      tempStyleProfiles[pIndex].content = $("#set-dir-style").val() || "";
+    }
+    styleContentModified = false;
+    $("#style-unsaved-hint").hide();
+  };
+  const checkUnsavedStyleChanges = () => {
+    const currentProfile = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
+    if (!currentProfile) return false;
+    const currentContent = $("#set-dir-style").val() || "";
+    return currentContent !== currentProfile.content;
+  };
+  $("#set-dir-style").on("input", function() {
+    updateStyleCharCount();
+    const hasChanges = checkUnsavedStyleChanges();
+    styleContentModified = hasChanges;
+    $("#style-unsaved-hint").toggle(hasChanges);
+  });
+  $("#set-style-select").on("change", function() {
+    if (styleContentModified) {
+      const confirmSwitch = confirm("\u5F53\u524D\u5185\u5BB9\u6709\u672A\u4FDD\u5B58\u7684\u4FEE\u6539\uFF0C\u662F\u5426\u653E\u5F03\u4FEE\u6539\u5E76\u5207\u6362\u65B9\u6848\uFF1F");
+      if (!confirmSwitch) {
+        $(this).val(tempActiveStyleId);
+        return;
+      }
+    }
+    tempActiveStyleId = $(this).val();
+    renderStyleProfileUI();
+  });
+  $("#btn-style-add").on("click", function() {
+    if (tempStyleProfiles.length >= MAX_STYLE_PROFILES) {
+      if (window.toastr) toastr.warning(`\u6700\u591A\u53EA\u80FD\u4FDD\u5B58 ${MAX_STYLE_PROFILES} \u4E2A\u65B9\u6848`);
+      return;
+    }
+    const currentContent = $("#set-dir-style").val() || "";
+    if (!currentContent.trim()) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u8F93\u5165\u6587\u7B14\u53C2\u8003\u5185\u5BB9");
+      return;
+    }
+    const newName = prompt("\u8BF7\u8F93\u5165\u65B0\u65B9\u6848\u7684\u540D\u79F0\uFF1A", `\u65B9\u6848 ${tempStyleProfiles.length}`);
+    if (!newName || !newName.trim()) return;
+    const newId = "style_" + Date.now();
+    tempStyleProfiles.push({
+      id: newId,
+      name: newName.trim(),
+      content: currentContent
+    });
+    tempActiveStyleId = newId;
+    styleContentModified = false;
+    renderStyleProfileUI();
+    if (window.toastr) toastr.success(`\u5DF2\u4FDD\u5B58\u4E3A\u65B0\u65B9\u6848: ${newName.trim()}`);
+  });
+  $("#btn-style-rename").on("click", function() {
+    if (tempActiveStyleId === "default") {
+      if (window.toastr) toastr.warning("\u9ED8\u8BA4\u65B9\u6848\u4E0D\u53EF\u91CD\u547D\u540D");
+      return;
+    }
+    const currentProfile = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
+    if (!currentProfile) return;
+    const newName = prompt("\u8BF7\u8F93\u5165\u65B0\u7684\u65B9\u6848\u540D\u79F0\uFF1A", currentProfile.name);
+    if (!newName || !newName.trim()) return;
+    currentProfile.name = newName.trim();
+    renderStyleProfileUI();
+    if (window.toastr) toastr.success(`\u65B9\u6848\u5DF2\u91CD\u547D\u540D\u4E3A: ${newName.trim()}`);
+  });
+  $("#btn-style-del").on("click", function() {
+    if (tempActiveStyleId === "default") {
+      if (window.toastr) toastr.warning("\u9ED8\u8BA4\u65B9\u6848\u4E0D\u53EF\u5220\u9664");
+      return;
+    }
+    const currentProfile = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
+    if (!currentProfile) return;
+    if (!confirm(`\u786E\u5B9A\u8981\u5220\u9664\u65B9\u6848 "${currentProfile.name}" \u5417\uFF1F`)) return;
+    tempStyleProfiles = tempStyleProfiles.filter((p) => p.id !== tempActiveStyleId);
+    tempActiveStyleId = "default";
+    styleContentModified = false;
+    renderStyleProfileUI();
+    if (window.toastr) toastr.success("\u65B9\u6848\u5DF2\u5220\u9664");
+  });
+  renderStyleProfileUI();
   const savedCats = cfg.auto_categories || [];
   const renderAutoCatList = () => {
     const $list = $("#auto-cat-list");
@@ -4616,6 +4749,7 @@ ${JSON.stringify(l.details, null, 2)}`;
   });
   $("#t-set-save").on("click", () => {
     saveCurrentProfileToMemory();
+    saveCurrentStyleToMemory();
     const selectedCats = [];
     $(".auto-cat-chk:checked").each(function() {
       selectedCats.push($(this).val());
@@ -4641,7 +4775,9 @@ ${JSON.stringify(l.details, null, 2)}`;
       bg_color: tempApp.bg_color || "#2b2b2b",
       show_timer: $("#p-show-timer").is(":checked")
     };
-    d.director = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val(), style_ref: $("#set-dir-style").val().trim() };
+    d.director = { length: $("#set-dir-len").val().trim(), perspective: $("#set-dir-pers").val() };
+    d.style_profiles = tempStyleProfiles;
+    d.active_style_id = tempActiveStyleId;
     d.auto_continue = {
       enabled: $("#cfg-auto-continue").is(":checked"),
       max_retries: parseInt($("#cfg-continue-retries").val()) || 2,
@@ -5123,14 +5259,7 @@ async function showDebugInfo() {
 3. No markdown code blocks
 4. Language: Chinese`;
   } else {
-    sysPrompt = `You are a Narrative Writer creating immersive roleplay content.
-Focus on: story depth, character emotions, detailed descriptions.
-
-[Technical Rules]
-1. Output HTML with embedded <style> for formatting
-2. Keep visual effects minimal, focus on narrative quality
-3. No markdown code blocks
-4. Language: Chinese`;
+    sysPrompt = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
   }
   if (dirDefaults.perspective === "1st") sysPrompt += "\nWrite in First Person (I/Me).";
   else if (dirDefaults.perspective === "3rd") sysPrompt += `
@@ -5312,19 +5441,7 @@ function applyScriptSelection(id) {
 }
 async function openMainWindow() {
   if ($("#t-overlay").length) return;
-  let ctx = { charName: "Char", userName: "User" };
-  try {
-    const ctxPromise = getContextData();
-    const timeoutPromise = new Promise(
-      (resolve) => setTimeout(() => {
-        console.warn("Titania: getContextData \u8D85\u65F6\uFF0C\u4F7F\u7528\u9ED8\u8BA4\u503C");
-        resolve({ charName: "Char", userName: "User" });
-      }, 3e3)
-    );
-    ctx = await Promise.race([ctxPromise, timeoutPromise]);
-  } catch (e) {
-    console.error("Titania: \u83B7\u53D6\u4E0A\u4E0B\u6587\u6570\u636E\u5931\u8D25\uFF0C\u4F7F\u7528\u9ED8\u8BA4\u503C", e);
-  }
+  const defaultCtx = { charName: "\u52A0\u8F7D\u4E2D...", userName: "\u7528\u6237" };
   let data;
   try {
     data = getExtData();
@@ -5342,8 +5459,8 @@ async function openMainWindow() {
             <div class="t-header" style="flex-shrink:0;">
                 <div class="t-title-container" style="display:flex; align-items:baseline; overflow:hidden;">
                     <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
-                    <div class="t-title-sub">
-                        \u2728 \u4E3B\u6F14: ${ctx.charName}
+                    <div class="t-title-sub" id="t-title-sub">
+                        \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; flex-shrink:0;">
@@ -5609,6 +5726,18 @@ async function openMainWindow() {
   } else {
     handleRandom();
   }
+  loadContextDataAsync();
+}
+function loadContextDataAsync() {
+  getContextData().then((ctx) => {
+    const $charName = $("#t-char-name");
+    if ($charName.length) {
+      $charName.text(ctx.charName || "\u672A\u77E5\u89D2\u8272");
+    }
+  }).catch((e) => {
+    console.warn("Titania: \u5F02\u6B65\u52A0\u8F7D\u4E0A\u4E0B\u6587\u5931\u8D25", e);
+    $("#t-char-name").text("\u672A\u77E5\u89D2\u8272");
+  });
   updateWorldInfoBadge().catch((e) => {
     console.warn("Titania: \u66F4\u65B0\u4E16\u754C\u4E66\u5FBD\u7AE0\u5931\u8D25", e);
   });
@@ -6119,6 +6248,8 @@ function createFloatingButton() {
 }
 
 // src/core/api.js
+import { ChatCompletionService } from "../../../custom-request.js";
+import { oai_settings, getChatCompletionModel } from "../../../openai.js";
 function renderGeneratedContent(content) {
   const container = document.getElementById("t-output-content");
   if (!container) return;
@@ -6150,14 +6281,19 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   ];
   let currentProfile = profiles.find((p) => p.id === activeProfileId) || profiles[1];
   diagnostics.profile = currentProfile.name;
+  const useSTConnection = currentProfile.type === "internal";
   let finalUrl = "", finalKey = "", finalModel = "";
-  if (currentProfile.type === "internal") {
-    if (typeof settings !== "undefined") {
-      finalUrl = settings.api_url_openai || "";
-      finalKey = settings.api_key_openai || "";
-      finalModel = settings.api_model_openai || "gpt-3.5-turbo";
-    } else {
-      const errText = "\u9519\u8BEF\uFF1A\u65E0\u6CD5\u8BFB\u53D6 SillyTavern \u5168\u5C40\u8BBE\u7F6E";
+  if (useSTConnection) {
+    try {
+      finalModel = getChatCompletionModel() || "gpt-3.5-turbo";
+      finalUrl = oai_settings.custom_url || oai_settings.reverse_proxy || `[${oai_settings.chat_completion_source}]`;
+      finalKey = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
+      TitaniaLogger.info("\u4F7F\u7528 ST \u4E3B\u8FDE\u63A5", {
+        source: oai_settings.chat_completion_source,
+        model: finalModel
+      });
+    } catch (e) {
+      const errText = "\u9519\u8BEF\uFF1A\u65E0\u6CD5\u8BFB\u53D6 SillyTavern API \u914D\u7F6E\uFF0C\u8BF7\u786E\u4FDD\u5DF2\u5728 ST \u4E2D\u914D\u7F6E\u597D API \u8FDE\u63A5";
       if (!silent) alert(errText);
       TitaniaLogger.error("\u914D\u7F6E\u9519\u8BEF", errText, diagnostics);
       return;
@@ -6169,7 +6305,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   }
   diagnostics.model = finalModel;
   diagnostics.endpoint = finalUrl;
-  if (!finalKey && currentProfile.type !== "internal") {
+  if (!useSTConnection && !finalKey) {
     alert("\u914D\u7F6E\u7F3A\u5931\uFF1A\u8BF7\u5148\u53BB\u8BBE\u7F6E\u586B API Key\uFF01");
     return;
   }
@@ -6241,7 +6377,10 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     diagnostics.phase = "prepare_prompt";
     const dLen = dirDefaults.length;
     const dPers = dirDefaults.perspective;
-    const dStyle = dirDefaults.style_ref;
+    const styleProfiles = data.style_profiles || [{ id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }];
+    const activeStyleId = data.active_style_id || "default";
+    const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId) || styleProfiles[0];
+    const dStyle = activeStyleProfile ? activeStyleProfile.content : "";
     let sys;
     if (GlobalState.generationMode === "visual") {
       sys = `You are a Visual Director creating an immersive HTML scene.
@@ -6257,14 +6396,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
 3. No markdown code blocks
 4. Language: Chinese`;
     } else {
-      sys = `You are a Narrative Writer creating immersive roleplay content.
-Focus on: story depth, character emotions, detailed descriptions.
-
-[Technical Rules]
-1. Output HTML with embedded <style> for formatting
-2. Keep visual effects minimal, focus on narrative quality
-3. No markdown code blocks
-4. Language: Chinese`;
+      sys = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
     }
     if (dPers === "1st") sys += " Write strictly in First Person perspective (I/Me).";
     else if (dPers === "3rd") sys += ` Write strictly in Third Person perspective (${ctx.charName}/He/She).`;
@@ -6313,72 +6445,110 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
     diagnostics.input_stats.user_len = user.length;
     TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: currentProfile.name });
     diagnostics.phase = "fetch_start";
-    let endpoint = finalUrl.trim().replace(/\/+$/, "");
-    if (!endpoint) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
-    if (!endpoint.endsWith("/chat/completions")) {
-      if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
-      else endpoint += "/v1/chat/completions";
-    }
-    diagnostics.endpoint = endpoint;
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-      body: JSON.stringify({
-        model: finalModel,
-        messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-        stream: useStream
-      })
-    });
-    diagnostics.network.status = res.status;
-    diagnostics.network.latency = Date.now() - startTime;
-    if (!res.ok) {
-      try {
-        diagnostics.raw_response_snippet = (await res.text()).substring(0, 500);
-      } catch (e) {
-      }
-      throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
-    }
-    diagnostics.phase = useStream ? "streaming" : "parsing_json";
     let rawContent = "";
-    if (useStream) {
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-      let chunkCount = 0;
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
-          chunkCount++;
-          diagnostics.stream_stats.chunks = chunkCount;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop();
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed || !trimmed.startsWith("data: ")) continue;
-            const jsonStr = trimmed.replace(/^data: /, "").trim();
-            if (jsonStr === "[DONE]") continue;
-            try {
-              const json = JSON.parse(jsonStr);
-              const chunk = json.choices?.[0]?.delta?.content || "";
-              if (chunk) rawContent += chunk;
-            } catch (e) {
+    if (useSTConnection) {
+      diagnostics.endpoint = `[ST Backend: ${oai_settings.chat_completion_source}]`;
+      const requestData = ChatCompletionService.createRequestData({
+        stream: useStream,
+        messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+        chat_completion_source: oai_settings.chat_completion_source,
+        model: finalModel,
+        max_tokens: oai_settings.openai_max_tokens || 2048,
+        temperature: oai_settings.temp_openai || 0.7,
+        // 传递反代/自定义配置
+        custom_url: oai_settings.custom_url,
+        reverse_proxy: oai_settings.reverse_proxy,
+        proxy_password: oai_settings.proxy_password,
+        custom_prompt_post_processing: oai_settings.custom_prompt_post_processing
+      });
+      diagnostics.phase = useStream ? "streaming" : "parsing_json";
+      if (useStream) {
+        const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, null);
+        if (typeof streamGenerator === "function") {
+          let chunkCount = 0;
+          for await (const chunk of streamGenerator()) {
+            if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
+            chunkCount++;
+            diagnostics.stream_stats.chunks = chunkCount;
+            rawContent = chunk.text || "";
+          }
+          if (chunkCount === 0) throw new Error("Stream Empty");
+        } else {
+          rawContent = streamGenerator?.content || "";
+        }
+      } else {
+        const result = await ChatCompletionService.sendRequest(requestData, true, null);
+        rawContent = result?.content || "";
+      }
+      diagnostics.network.latency = Date.now() - startTime;
+      diagnostics.network.status = 200;
+    } else {
+      let endpoint = finalUrl.trim().replace(/\/+$/, "");
+      if (!endpoint) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
+      if (!endpoint.endsWith("/chat/completions")) {
+        if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
+        else endpoint += "/v1/chat/completions";
+      }
+      diagnostics.endpoint = endpoint;
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+        body: JSON.stringify({
+          model: finalModel,
+          messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+          stream: useStream
+        })
+      });
+      diagnostics.network.status = res.status;
+      diagnostics.network.latency = Date.now() - startTime;
+      if (!res.ok) {
+        try {
+          diagnostics.raw_response_snippet = (await res.text()).substring(0, 500);
+        } catch (e) {
+        }
+        throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+      }
+      diagnostics.phase = useStream ? "streaming" : "parsing_json";
+      if (useStream) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+        let chunkCount = 0;
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
+            chunkCount++;
+            diagnostics.stream_stats.chunks = chunkCount;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || !trimmed.startsWith("data: ")) continue;
+              const jsonStr = trimmed.replace(/^data: /, "").trim();
+              if (jsonStr === "[DONE]") continue;
+              try {
+                const json = JSON.parse(jsonStr);
+                const chunk = json.choices?.[0]?.delta?.content || "";
+                if (chunk) rawContent += chunk;
+              } catch (e) {
+              }
             }
           }
+        } catch (streamErr) {
+          throw new Error(`Stream Interrupted: ${streamErr.message}`);
         }
-      } catch (streamErr) {
-        throw new Error(`Stream Interrupted: ${streamErr.message}`);
-      }
-      if (chunkCount === 0) throw new Error("Stream Empty");
-    } else {
-      const jsonText = await res.text();
-      try {
-        const json = JSON.parse(jsonText);
-        rawContent = json.choices?.[0]?.message?.content || "";
-      } catch (jsonErr) {
-        throw new Error("Invalid JSON");
+        if (chunkCount === 0) throw new Error("Stream Empty");
+      } else {
+        const jsonText = await res.text();
+        try {
+          const json = JSON.parse(jsonText);
+          rawContent = json.choices?.[0]?.message?.content || "";
+        } catch (jsonErr) {
+          throw new Error("Invalid JSON");
+        }
       }
     }
     if (!rawContent || rawContent.trim().length === 0) throw new Error("ERR_EMPTY_CONTENT");
@@ -6415,7 +6585,7 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
           if (!silent && window.toastr) {
             toastr.info(`\u{1F504} \u68C0\u6D4B\u5230\u622A\u65AD\uFF0C\u6B63\u5728\u81EA\u52A8\u7EED\u5199 (${currentRetry + 1}/${maxRetries})...`, "Titania Echo");
           }
-          await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent);
+          await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
           return;
         } else {
           TitaniaLogger.warn("\u5DF2\u8FBE\u5230\u6700\u5927\u7EED\u5199\u6B21\u6570", { maxRetries });
@@ -6470,7 +6640,7 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
     $floatBtn.removeClass("t-loading");
   }
 }
-async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent) {
+async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false) {
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   try {
@@ -6511,57 +6681,88 @@ ${lastContent}
 1. First, complete any unfinished sentences, paragraphs, or HTML structures from the cut-off point
 2. Then, continue the narrative naturally based on the original scene request
 3. End the scene with a proper conclusion`;
-    let endpoint = finalUrl.trim().replace(/\/+$/, "");
-    if (!endpoint.endsWith("/chat/completions")) {
-      if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
-      else endpoint += "/v1/chat/completions";
-    }
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-      body: JSON.stringify({
-        model: finalModel,
+    let rawContent = "";
+    if (useSTConnection) {
+      const requestData = ChatCompletionService.createRequestData({
+        stream: useStream,
         messages: [
           { role: "system", content: continuationSys },
           { role: "user", content: continuationUser }
         ],
-        stream: useStream
-      })
-    });
-    if (!res.ok) {
-      throw new Error(`Continuation HTTP Error ${res.status}: ${res.statusText}`);
-    }
-    let rawContent = "";
-    if (useStream) {
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith("data: ")) continue;
-          const jsonStr = trimmed.replace(/^data: /, "").trim();
-          if (jsonStr === "[DONE]") continue;
-          try {
-            const json = JSON.parse(jsonStr);
-            const chunk = json.choices?.[0]?.delta?.content || "";
-            if (chunk) rawContent += chunk;
-          } catch (e) {
+        chat_completion_source: oai_settings.chat_completion_source,
+        model: finalModel,
+        max_tokens: oai_settings.openai_max_tokens || 2048,
+        temperature: oai_settings.temp_openai || 0.7,
+        custom_url: oai_settings.custom_url,
+        reverse_proxy: oai_settings.reverse_proxy,
+        proxy_password: oai_settings.proxy_password,
+        custom_prompt_post_processing: oai_settings.custom_prompt_post_processing
+      });
+      if (useStream) {
+        const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, null);
+        if (typeof streamGenerator === "function") {
+          for await (const chunk of streamGenerator()) {
+            rawContent = chunk.text || "";
           }
+        } else {
+          rawContent = streamGenerator?.content || "";
         }
+      } else {
+        const result = await ChatCompletionService.sendRequest(requestData, true, null);
+        rawContent = result?.content || "";
       }
     } else {
-      const jsonText = await res.text();
-      try {
-        const json = JSON.parse(jsonText);
-        rawContent = json.choices?.[0]?.message?.content || "";
-      } catch (jsonErr) {
-        throw new Error("Continuation Invalid JSON");
+      let endpoint = finalUrl.trim().replace(/\/+$/, "");
+      if (!endpoint.endsWith("/chat/completions")) {
+        if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
+        else endpoint += "/v1/chat/completions";
+      }
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+        body: JSON.stringify({
+          model: finalModel,
+          messages: [
+            { role: "system", content: continuationSys },
+            { role: "user", content: continuationUser }
+          ],
+          stream: useStream
+        })
+      });
+      if (!res.ok) {
+        throw new Error(`Continuation HTTP Error ${res.status}: ${res.statusText}`);
+      }
+      if (useStream) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop();
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith("data: ")) continue;
+            const jsonStr = trimmed.replace(/^data: /, "").trim();
+            if (jsonStr === "[DONE]") continue;
+            try {
+              const json = JSON.parse(jsonStr);
+              const chunk = json.choices?.[0]?.delta?.content || "";
+              if (chunk) rawContent += chunk;
+            } catch (e) {
+            }
+          }
+        }
+      } else {
+        const jsonText = await res.text();
+        try {
+          const json = JSON.parse(jsonText);
+          rawContent = json.choices?.[0]?.message?.content || "";
+        } catch (jsonErr) {
+          throw new Error("Continuation Invalid JSON");
+        }
       }
     }
     if (!rawContent || rawContent.trim().length === 0) {
@@ -6581,7 +6782,7 @@ ${lastContent}
       if (!silent && window.toastr) {
         toastr.info(`\u{1F504} \u7EED\u5199\u5185\u5BB9\u4ECD\u88AB\u622A\u65AD\uFF0C\u7EE7\u7EED\u5C1D\u8BD5 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
       }
-      await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent);
+      await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
     } else {
       const finalOutput = mergeContinuationContent(
         GlobalState.continuation.accumulatedContent,
