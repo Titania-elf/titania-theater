@@ -5251,9 +5251,9 @@ async function showDebugInfo() {
   const data = getExtData();
   const cfg = data.config || {};
   const d = await getContextData();
-  const dirDefaults = data.director || { length: "", perspective: "auto", style_ref: "" };
-  const dLen = dirDefaults.length ? "\u5DF2\u4ECB\u5165" : "\u9ED8\u8BA4";
-  const dPers = dirDefaults.perspective === "auto" ? "\u81EA\u52A8" : dirDefaults.perspective === "1st" ? "\u7B2C\u4E00\u4EBA\u79F0" : "\u7B2C\u4E09\u4EBA\u79F0";
+  const dirDefaults = data.director || { instruction: "" };
+  const dirInstruction = dirDefaults.instruction || "";
+  const hasDirector = dirInstruction.trim().length > 0;
   let activeProfileId = cfg.active_profile_id || "default";
   let profiles = cfg.profiles || [];
   let currentProfile = profiles.find((p) => p.id === activeProfileId) || { name: "\u672A\u77E5", model: "unknown" };
@@ -5277,9 +5277,6 @@ async function showDebugInfo() {
   } else {
     sysPrompt = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
   }
-  if (dirDefaults.perspective === "1st") sysPrompt += "\nWrite in First Person (I/Me).";
-  else if (dirDefaults.perspective === "3rd") sysPrompt += `
-Write in Third Person (${d.charName}).`;
   const sysTokens = estimateTokens(sysPrompt);
   let contextBlocks = [];
   contextBlocks.push({
@@ -5288,13 +5285,24 @@ Write in Third Person (${d.charName}).`;
 User: ${d.userName}`,
     detail: "\u89D2\u8272\u4E0E\u7528\u6237\u7ED1\u5B9A"
   });
-  let dirContent = "";
-  if (data.director.length) dirContent += `[Director] Length: ${data.director.length}
-`;
-  if (data.director.style_ref) dirContent += `[Director] Style Ref: (Provided)
-`;
-  if (dirContent) {
-    contextBlocks.push({ title: "[Director]", content: dirContent.trim(), detail: "\u5BFC\u6F14\u989D\u5916\u6307\u4EE4" });
+  if (dirInstruction.trim()) {
+    contextBlocks.push({
+      title: "[Director Instructions]",
+      content: dirInstruction,
+      detail: "\u81EA\u5B9A\u4E49\u5BFC\u6F14\u6307\u4EE4"
+    });
+  }
+  const styleProfiles = data.style_profiles || [];
+  const activeStyleId = data.active_style_id || "default";
+  const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId);
+  if (activeStyleProfile && activeStyleProfile.content && activeStyleProfile.content.trim()) {
+    contextBlocks.push({
+      title: "[Style Reference]",
+      content: `\u65B9\u6848: ${activeStyleProfile.name}
+---
+${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.length > 200 ? "..." : ""}`,
+      detail: "\u6587\u7B14\u53C2\u8003"
+    });
   }
   if (d.persona) {
     contextBlocks.push({
@@ -5374,8 +5382,8 @@ User: ${d.userName}`,
                 </div>
                 <div class="t-param-group">
                     <div class="t-param-title">\u5BFC\u6F14\u53C2\u6570</div>
-                    <div class="t-param-row"><span class="t-param-key">\u89C6\u89D2</span><span class="t-param-val">${dPers}</span></div>
-                    <div class="t-param-row"><span class="t-param-key">\u7BC7\u5E45</span><span class="t-param-val">${dLen}</span></div>
+                    <div class="t-param-row"><span class="t-param-key">\u81EA\u5B9A\u4E49\u6307\u4EE4</span><span class="t-param-val">${hasDirector ? "\u5DF2\u8BBE\u7F6E" : "\u65E0"}</span></div>
+                    <div class="t-param-row"><span class="t-param-key">\u6587\u7B14\u65B9\u6848</span><span class="t-param-val">${activeStyleProfile ? activeStyleProfile.name : "\u9ED8\u8BA4"}</span></div>
                 </div>
                 <div style="padding:15px; font-size:0.8em; color:#666; line-height:1.5;">
                     <i class="fa-solid fa-circle-info"></i> \u53F3\u4FA7\u4E3A\u5B9E\u9645\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u5B8C\u6574 Payload\u3002\u70B9\u51FB\u6807\u9898\u53EF\u6298\u53E0/\u5C55\u5F00\u67E5\u770B\u8BE6\u60C5\u3002
