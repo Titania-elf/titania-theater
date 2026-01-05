@@ -3180,12 +3180,6 @@ function canUseShadowDOM() {
   const iframe = document.createElement("iframe");
   return "srcdoc" in iframe;
 }
-function cleanupIframe(container) {
-  const iframe = container?.querySelector(".t-content-iframe");
-  if (iframe && iframe._cleanupHandler) {
-    iframe._cleanupHandler();
-  }
-}
 function estimateTokens(text) {
   if (!text) return 0;
   const clean = text.trim();
@@ -5752,11 +5746,7 @@ async function openMainWindow() {
   $("body").append(html);
   const outputContainer = document.getElementById("t-output-content");
   if (GlobalState.lastGeneratedContent) {
-    if (canUseShadowDOM()) {
-      renderToShadowDOM(outputContainer, GlobalState.lastGeneratedContent);
-    } else {
-      outputContainer.innerHTML = GlobalState.lastGeneratedContent;
-    }
+    outputContainer.innerHTML = GlobalState.lastGeneratedContent;
   } else {
     outputContainer.innerHTML = placeholderContent;
   }
@@ -5870,10 +5860,6 @@ async function openMainWindow() {
     if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) $("#t-btn-zen").click();
   });
   const closeWindow = () => {
-    const outputContainer2 = document.getElementById("t-output-content");
-    if (outputContainer2) {
-      cleanupIframe(outputContainer2);
-    }
     $("#t-overlay").remove();
     $(document).off("keydown.zenmode");
   };
@@ -5901,7 +5887,7 @@ async function openMainWindow() {
     const btn = $("#t-btn-copy");
     const originalHtml = btn.html();
     try {
-      const htmlCode = extractFromShadowDOM(container);
+      const htmlCode = container.innerHTML;
       if (!htmlCode || htmlCode.trim().length === 0) {
         throw new Error("\u6CA1\u6709\u53EF\u590D\u5236\u7684\u5185\u5BB9");
       }
@@ -6497,11 +6483,7 @@ import { oai_settings, getChatCompletionModel } from "../../../openai.js";
 function renderGeneratedContent(content) {
   const container = document.getElementById("t-output-content");
   if (!container) return;
-  if (canUseShadowDOM()) {
-    renderToShadowDOM(container, content);
-  } else {
-    container.innerHTML = content;
-  }
+  container.innerHTML = content;
 }
 async function handleGenerate(forceScriptId = null, silent = false) {
   const data = getExtData();
