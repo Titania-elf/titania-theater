@@ -14,25 +14,9 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.0.6";
+var CURRENT_VERSION = "3.0.7";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
-var CHANGELOG = `
-<h3>v3.0.6 ST\u4E3B\u8FDE\u63A5\u4FEE\u590D\u4E0E\u5BFC\u6F14\u6A21\u5F0F\u91CD\u6784 \u{1F517}</h3>
-<p>\u672C\u6B21\u66F4\u65B0\u91CD\u70B9\u4FEE\u590D\u300C\u8DDF\u968FST\u4E3B\u8FDE\u63A5\u300D\u529F\u80FD\uFF0C\u5E76\u91CD\u6784\u5BFC\u6F14\u6A21\u5F0F\u4E3A\u81EA\u7531\u7F16\u8F91\uFF1A</p>
-
-<h4>\u2728 \u65B0\u529F\u80FD</h4>
-<ul>
-    <li>\u{1F3AC} <b>\u5BFC\u6F14\u6A21\u5F0F\u81EA\u7531\u7F16\u8F91</b> - \u539F\u6709\u7684"\u7BC7\u5E45/\u89C6\u89D2"\u4E0B\u62C9\u6846\u6539\u4E3A\u81EA\u7531\u6587\u672C\u533A\u57DF\uFF0C\u53EF\u81EA\u5B9A\u4E49\u4EFB\u610F\u6307\u4EE4</li>
-    <li>\u270D\uFE0F <b>\u6587\u7B14\u53C2\u8003\u591A\u65B9\u6848</b> - \u53EF\u4FDD\u5B58\u6700\u591A10\u4E2A\u5199\u4F5C\u98CE\u683C\u65B9\u6848\uFF0C\u5FEB\u901F\u5207\u6362\u4E0D\u540C\u6587\u7B14</li>
-    
-
-<h4>\u{1F527} \u4FEE\u590D\u4E0E\u4F18\u5316</h4>
-<ul>
-    <li>\u{1F517} <b>ST\u4E3B\u8FDE\u63A5\u4FEE\u590D</b> - \u73B0\u901A\u8FC7 ST \u540E\u7AEF\u4EE3\u7406\u53D1\u9001\u8BF7\u6C42\uFF0C\u652F\u6301\u6240\u6709 API \u6E90\uFF08OpenAI/Claude/OpenRouter/\u81EA\u5B9A\u4E49\u7B49\uFF09\u548C\u53CD\u5411\u4EE3\u7406\u914D\u7F6E</li>
-    <li>\u26A1 <b>\u52A0\u8F7D\u4F18\u5316</b> - UI \u9AA8\u67B6\u5148\u6E32\u67D3\uFF0C\u6570\u636E\u5F02\u6B65\u52A0\u8F7D\uFF0C\u907F\u514D\u6253\u5F00\u63D2\u4EF6\u65F6\u754C\u9762\u5361\u987F</li>
-    
-`;
 var LEGACY_KEYS = {
   CFG: "Titania_Config_v3",
   SCRIPTS: "Titania_UserScripts_v3",
@@ -1117,6 +1101,20 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     justify-content: space-between;
     align-items: center;
     border-radius: 10px 10px 0 0;
+    flex-shrink: 0;
+}
+
+/* \u7248\u672C\u53F7\u5FBD\u7AE0 */
+.t-version-badge {
+    font-size: 0.65em;
+    color: #666;
+    background: #252525;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    border: 1px solid #333;
+    font-weight: normal;
+    white-space: nowrap;
     flex-shrink: 0;
 }
 
@@ -3022,57 +3020,133 @@ var getSnippet = (html) => {
 };
 function renderToShadowDOM(container, html, options = {}) {
   const {
-    baseStyles = true,
-    // 是否注入基础样式
-    mode = "open"
-    // Shadow DOM 模式
+    minHeight = 200,
+    // 最小高度
+    maxHeight = 800
+    // 最大高度（防止无限扩展）
   } = options;
   container.innerHTML = "";
-  const host = document.createElement("div");
-  host.className = "t-shadow-host";
-  host.style.display = "block";
-  host.style.width = "100%";
-  const shadow = host.attachShadow({ mode });
-  const baseStyleSheet = baseStyles ? `
-        <style>
-            :host {
-                display: block;
-                width: 100%;
-            }
-            * {
-                box-sizing: border-box;
-            }
-            img, video {
-                max-width: 100%;
-                height: auto;
-            }
-        </style>
-    ` : "";
-  shadow.innerHTML = baseStyleSheet + html;
-  container.appendChild(host);
-  return shadow;
+  const iframe = document.createElement("iframe");
+  iframe.className = "t-content-iframe";
+  iframe.sandbox = "allow-scripts";
+  iframe.style.cssText = `
+        width: 100%;
+        border: none;
+        min-height: ${minHeight}px;
+        max-height: ${maxHeight}px;
+        background: transparent;
+        display: block;
+    `;
+  const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* \u57FA\u7840\u91CD\u7F6E\u6837\u5F0F */
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        body {
+            padding: 10px;
+        }
+        img, video {
+            max-width: 100%;
+            height: auto;
+        }
+        a { color: #90cdf4; }
+        /* \u6EDA\u52A8\u6761\u6837\u5F0F */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+    </style>
+</head>
+<body>
+${html}
+<script>
+    // \u81EA\u52A8\u9AD8\u5EA6\u8C03\u6574
+    function updateHeight() {
+        const height = Math.max(
+            document.body.scrollHeight,
+            document.body.offsetHeight,
+            document.documentElement.scrollHeight
+        );
+        window.parent.postMessage({ type: 'titania-iframe-height', height: height }, '*');
+    }
+    
+    // \u521D\u59CB\u5316\u65F6\u66F4\u65B0\u9AD8\u5EA6
+    updateHeight();
+    
+    // \u76D1\u542C DOM \u53D8\u5316
+    const observer = new MutationObserver(updateHeight);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    
+    // \u76D1\u542C\u56FE\u7247\u52A0\u8F7D
+    document.querySelectorAll('img').forEach(img => {
+        img.addEventListener('load', updateHeight);
+    });
+    
+    // \u7A97\u53E3\u8C03\u6574\u65F6\u66F4\u65B0
+    window.addEventListener('resize', updateHeight);
+<\/script>
+</body>
+</html>`;
+  iframe.srcdoc = fullHtml;
+  container.appendChild(iframe);
+  const heightHandler = (event) => {
+    if (event.data && event.data.type === "titania-iframe-height") {
+      const newHeight = Math.min(Math.max(event.data.height, minHeight), maxHeight);
+      iframe.style.height = newHeight + "px";
+    }
+  };
+  window.addEventListener("message", heightHandler);
+  iframe._cleanupHandler = () => {
+    window.removeEventListener("message", heightHandler);
+  };
+  return iframe;
 }
 function extractFromShadowDOM(container) {
-  const host = container.querySelector(".t-shadow-host");
-  if (!host || !host.shadowRoot) {
+  const iframe = container.querySelector(".t-content-iframe");
+  if (!iframe) {
     return container.innerHTML;
   }
-  const shadow = host.shadowRoot;
-  let html = "";
-  shadow.childNodes.forEach((node) => {
-    if (node.nodeType === 1) {
-      if (node.tagName === "STYLE" && node.textContent.includes(":host")) {
-        return;
-      }
-      html += node.outerHTML;
-    } else if (node.nodeType === 3) {
-      html += node.textContent;
+  try {
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc || !doc.body) {
+      return container.innerHTML;
     }
-  });
-  return html;
+    const bodyClone = doc.body.cloneNode(true);
+    bodyClone.querySelectorAll("script").forEach((s) => s.remove());
+    let userStyles = "";
+    doc.querySelectorAll("head style").forEach((style) => {
+      const text = style.textContent || "";
+      if (!text.includes("box-sizing: border-box") || text.length > 500) {
+        userStyles += `<style>${text}</style>
+`;
+      }
+    });
+    return userStyles + bodyClone.innerHTML;
+  } catch (e) {
+    console.warn("Titania: \u65E0\u6CD5\u4ECE iframe \u63D0\u53D6\u5185\u5BB9", e);
+    return container.innerHTML;
+  }
 }
 function canUseShadowDOM() {
-  return !!Element.prototype.attachShadow;
+  const iframe = document.createElement("iframe");
+  return "srcdoc" in iframe;
+}
+function cleanupIframe(container) {
+  const iframe = container?.querySelector(".t-content-iframe");
+  if (iframe && iframe._cleanupHandler) {
+    iframe._cleanupHandler();
+  }
 }
 function estimateTokens(text) {
   if (!text) return 0;
@@ -3199,48 +3273,123 @@ function checkSentenceCompletion(content) {
   }
   return result;
 }
-function extractContinuationContext(content, contextLength = 800) {
-  const scopeMatch = content.match(/id=["']?(t-scene-[a-z0-9]+)["']?/i);
-  const scopeId = scopeMatch ? scopeMatch[1] : null;
-  let bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  let lastContent = bodyContent.slice(-contextLength);
-  const firstTagEnd = lastContent.indexOf(">");
-  const firstTagStart = lastContent.indexOf("<");
-  if (firstTagEnd !== -1 && (firstTagStart === -1 || firstTagEnd < firstTagStart)) {
-    const nextTagStart = lastContent.indexOf("<", firstTagEnd + 1);
-    if (nextTagStart !== -1) {
-      lastContent = lastContent.substring(nextTagStart);
-    } else {
-      lastContent = lastContent.substring(firstTagEnd + 1);
+function buildContinuationContext(accumulatedContent, originalPrompt = "") {
+  const bodyContent = accumulatedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  const plainText = bodyContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const paragraphs = plainText.split(/\n\n+|。(?=[^。]*$)/);
+  const plotPoints = paragraphs.map((p) => {
+    const firstSentence = p.trim().split(/[。！？]/)[0];
+    return firstSentence && firstSentence.length > 5 ? firstSentence.trim() : null;
+  }).filter(Boolean).slice(-5).join(" \u2192 ");
+  const htmlBlocks = bodyContent.split(/(<\/p>|<\/div>)/i);
+  let recentHtml = "";
+  let blockCount = 0;
+  for (let i = htmlBlocks.length - 1; i >= 0 && blockCount < 4; i--) {
+    recentHtml = htmlBlocks[i] + recentHtml;
+    if (htmlBlocks[i].match(/<\/p>|<\/div>/i)) {
+      blockCount++;
     }
   }
+  recentHtml = recentHtml.trim().slice(-1e3);
+  const sentences = plainText.match(/[^。！？]*[。！？]/g) || [];
+  const lastCompleteSentence = sentences.length > 0 ? sentences[sentences.length - 1].trim() : "";
+  const lastPart = plainText.slice(-100);
+  const endsWithPunctuation = /[。！？"」』]$/.test(lastPart.trim());
+  const incompleteText = endsWithPunctuation ? "" : lastPart.split(/[。！？]/).pop()?.trim() || "";
+  const unclosedTags = detectUnclosedTags(bodyContent);
   return {
-    lastContent,
-    scopeId
+    plotSummary: plotPoints || "(\u65E0\u60C5\u8282\u6458\u8981)",
+    // 情节进展摘要
+    recentHtml,
+    // 最后2段完整HTML
+    lastCompleteSentence,
+    // 最后完整句子
+    incompleteText,
+    // 未完成的句子片段
+    unclosedTags,
+    // 未闭合标签列表
+    totalLength: plainText.length,
+    // 已生成总字数
+    endsWithPunctuation,
+    // 是否以标点结束
+    originalPrompt: (originalPrompt || "").slice(0, 300)
+    // 原始请求摘要
   };
 }
-function extractTextSummary(htmlContent, maxLength = 500) {
-  if (!htmlContent) return "";
-  let text = htmlContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
-  text = text.replace(/<[^>]*>/g, " ");
-  text = text.replace(/\s+/g, " ").trim();
-  if (text.length > maxLength) {
-    const truncated = text.substring(0, maxLength);
-    const lastPunctuationIndex = Math.max(
-      truncated.lastIndexOf("\u3002"),
-      truncated.lastIndexOf("\uFF01"),
-      truncated.lastIndexOf("\uFF1F"),
-      truncated.lastIndexOf("\u2026"),
-      truncated.lastIndexOf("."),
-      truncated.lastIndexOf("!"),
-      truncated.lastIndexOf("?")
-    );
-    if (lastPunctuationIndex > maxLength * 0.5) {
-      return truncated.substring(0, lastPunctuationIndex + 1);
+function detectUnclosedTags(html) {
+  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
+  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
+  const stack = [];
+  let match;
+  while ((match = tagPattern.exec(html)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
+      continue;
     }
-    return truncated + "...";
+    if (fullTag.startsWith("</")) {
+      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
+        stack.pop();
+      }
+    } else {
+      stack.push(tagName);
+    }
   }
-  return text;
+  const importantTags = ["div", "p", "span", "section", "article", "blockquote"];
+  return stack.filter((tag) => importantTags.includes(tag));
+}
+function smartMergeContinuation(originalContent, continuationContent, showIndicator = false) {
+  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
+  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
+  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  contBody = removeOverlap(originalBody, contBody);
+  let indicator = "";
+  if (showIndicator) {
+    indicator = `<!-- continuation-point -->`;
+  }
+  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
+  const mergedBody = originalBody + indicator + contBody;
+  if (mergedStyle.trim()) {
+    return `<style>
+${mergedStyle}
+</style>
+${mergedBody}`;
+  }
+  return mergedBody;
+}
+function removeOverlap(original, continuation) {
+  if (!original || !continuation) return continuation;
+  const originalText = original.replace(/<[^>]*>/g, "").trim();
+  const contText = continuation.replace(/<[^>]*>/g, "").trim();
+  const originalEnd = originalText.slice(-100);
+  let maxOverlap = 0;
+  const minOverlapLength = 10;
+  const maxCheckLength = Math.min(80, contText.length, originalEnd.length);
+  for (let len = maxCheckLength; len >= minOverlapLength; len--) {
+    const originalSuffix = originalEnd.slice(-len);
+    const contPrefix = contText.slice(0, len);
+    const normalizedSuffix = originalSuffix.replace(/[，。！？、\s]/g, "");
+    const normalizedPrefix = contPrefix.replace(/[，。！？、\s]/g, "");
+    if (normalizedSuffix === normalizedPrefix) {
+      maxOverlap = len;
+      break;
+    }
+  }
+  if (maxOverlap >= minOverlapLength) {
+    const overlapText = contText.slice(0, maxOverlap);
+    const overlapIndex = continuation.indexOf(overlapText.slice(-20));
+    if (overlapIndex !== -1) {
+      const afterOverlap = continuation.slice(overlapIndex + 20);
+      const nextStart = afterOverlap.search(/[。！？]|<[a-z]/i);
+      if (nextStart !== -1) {
+        return afterOverlap.slice(nextStart).replace(/^[。！？]/, "");
+      }
+    }
+  }
+  return continuation;
 }
 function mergeContinuationContent(originalContent, continuationContent, showIndicator = true) {
   const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
@@ -5483,6 +5632,7 @@ async function openMainWindow() {
             <div class="t-header" style="flex-shrink:0;">
                 <div class="t-title-container" style="display:flex; align-items:baseline; overflow:hidden;">
                     <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
+                    <span class="t-version-badge" title="\u5F53\u524D\u7248\u672C">v${CURRENT_VERSION}</span>
                     <div class="t-title-sub" id="t-title-sub">
                         \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
                     </div>
@@ -5679,15 +5829,17 @@ async function openMainWindow() {
   $(document).on("keydown.zenmode", function(e) {
     if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) $("#t-btn-zen").click();
   });
-  $("#t-btn-close").on("click", () => {
+  const closeWindow = () => {
+    const outputContainer2 = document.getElementById("t-output-content");
+    if (outputContainer2) {
+      cleanupIframe(outputContainer2);
+    }
     $("#t-overlay").remove();
     $(document).off("keydown.zenmode");
-  });
+  };
+  $("#t-btn-close").on("click", closeWindow);
   $("#t-overlay").on("click", (e) => {
-    if (e.target === e.currentTarget) {
-      $("#t-overlay").remove();
-      $(document).off("keydown.zenmode");
-    }
+    if (e.target === e.currentTarget) closeWindow();
   });
   $("#t-btn-profile").on("click", function(e) {
     renderProfileMenu($(this));
@@ -5704,14 +5856,42 @@ async function openMainWindow() {
     }
     openEditor(GlobalState.lastUsedScriptId, "main");
   });
-  $("#t-btn-copy").on("click", () => {
+  $("#t-btn-copy").on("click", async () => {
     const container = document.getElementById("t-output-content");
-    const htmlCode = extractFromShadowDOM(container);
-    navigator.clipboard.writeText(htmlCode);
     const btn = $("#t-btn-copy");
     const originalHtml = btn.html();
-    btn.html('<i class="fa-solid fa-check" style="color:#55efc4;"></i>');
-    setTimeout(() => btn.html(originalHtml), 1e3);
+    try {
+      const htmlCode = extractFromShadowDOM(container);
+      if (!htmlCode || htmlCode.trim().length === 0) {
+        throw new Error("\u6CA1\u6709\u53EF\u590D\u5236\u7684\u5185\u5BB9");
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(htmlCode);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = htmlCode;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand("copy");
+        document.body.removeChild(textArea);
+        if (!successful) {
+          throw new Error("\u590D\u5236\u547D\u4EE4\u6267\u884C\u5931\u8D25");
+        }
+      }
+      btn.html('<i class="fa-solid fa-check" style="color:#55efc4;"></i>');
+      setTimeout(() => btn.html(originalHtml), 1e3);
+    } catch (err) {
+      console.error("Titania: \u590D\u5236\u5931\u8D25", err);
+      btn.html('<i class="fa-solid fa-xmark" style="color:#ff6b6b;"></i>');
+      setTimeout(() => btn.html(originalHtml), 1500);
+      if (window.toastr) {
+        toastr.error("\u590D\u5236\u5931\u8D25\uFF1A" + (err.message || "\u8BF7\u68C0\u67E5\u6D4F\u89C8\u5668\u6743\u9650"), "Titania");
+      }
+    }
   });
   $("#t-btn-run").on("click", () => handleGenerate(null, false));
   $("#t-btn-like").on("click", () => {
@@ -6670,43 +6850,42 @@ async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalMo
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   try {
-    const { lastContent } = extractContinuationContext(
+    const context = buildContinuationContext(
       GlobalState.continuation.accumulatedContent,
-      800
-      // 提取最后 800 个字符作为上下文
+      GlobalState.continuation.originalPrompt
     );
-    const textSummary = extractTextSummary(GlobalState.continuation.accumulatedContent, 500);
-    const continuationSys = `You are continuing a scene that was interrupted.
+    const continuationSys = `You are seamlessly continuing an interrupted HTML scene.
 
-[Original Scene Context]
+[Story Context]
 Character: ${GlobalState.continuation.characterName}
 User: ${GlobalState.continuation.userName}
-Scene Request: ${GlobalState.continuation.originalPrompt}
+Original Request: ${context.originalPrompt}
 
-[Your Task]
-Continue the HTML scene from where it was cut off. You must maintain:
-- The same visual style
-- The same narrative tone and perspective
-- Consistent character portrayal
+[Story Progress]
+Plot so far: ${context.plotSummary}
+Total written: ~${context.totalLength} characters
 
-[Technical Rules]
-1. **No Repetition**: Do NOT repeat any content that already exists
-2. **Complete First**: First complete any unfinished sentences or HTML tags
-3. **Then Continue**: Then continue the narrative naturally until a proper conclusion
-4. **Format**: Output raw HTML string. No markdown code blocks.
-5. **Language**: Continue in Chinese.`;
-    const continuationUser = `[Content Summary - What has been written so far]
-${textSummary || "(No text content extracted)"}
+[Technical State]
+Unclosed HTML tags: ${context.unclosedTags.length > 0 ? context.unclosedTags.join(", ") : "None"}
+Ends with punctuation: ${context.endsWithPunctuation ? "Yes" : "No"}
+${context.incompleteText ? `Incomplete sentence fragment: "${context.incompleteText}"` : ""}
 
-[HTML Ending - Where it was cut off]
----
-${lastContent}
----
+[Critical Rules]
+1. **SEAMLESS JOIN**: Your output will be DIRECTLY APPENDED. Do NOT repeat any existing content.
+2. **COMPLETE FIRST**: ${context.unclosedTags.length > 0 ? `Close these tags first: </${context.unclosedTags.join(">, </")}>` : context.incompleteText ? "Complete the unfinished sentence first." : "Start with new content."}
+3. **CONTINUE NATURALLY**: Write 300-500 more characters to reach a natural conclusion.
+4. **FORMAT**: Output raw HTML only. No markdown code blocks. Language: Chinese.
 
-[Task]
-1. First, complete any unfinished sentences, paragraphs, or HTML structures from the cut-off point
-2. Then, continue the narrative naturally based on the original scene request
-3. End the scene with a proper conclusion`;
+[IMPORTANT - DO NOT REPEAT]
+The last complete sentence was: "${context.lastCompleteSentence}"
+Do NOT write this sentence again. Start from what comes AFTER it.`;
+    const continuationUser = `[Recent HTML - For Style Matching]
+${context.recentHtml}
+
+[Continue from here]
+${context.incompleteText ? `Complete this first: "...${context.incompleteText}"` : `Start after: "${context.lastCompleteSentence.slice(-30)}"`}
+
+Generate ONLY the continuation (no repetition):`;
     let rawContent = "";
     if (useSTConnection) {
       const requestData = ChatCompletionService.createRequestData({
@@ -6799,10 +6978,11 @@ ${lastContent}
     const truncationResult = detectTruncation(continuationOutput, autoContinueCfg.detection_mode || "html");
     const maxRetries = autoContinueCfg.max_retries || 2;
     if (truncationResult.isTruncated && GlobalState.continuation.retryCount < maxRetries) {
-      GlobalState.continuation.accumulatedContent = mergeContinuationContent(
+      GlobalState.continuation.accumulatedContent = smartMergeContinuation(
         GlobalState.continuation.accumulatedContent,
         continuationOutput,
-        autoContinueCfg.show_indicator !== false
+        false
+        // 内部合并不显示标记
       );
       GlobalState.continuation.retryCount++;
       if (!silent && window.toastr) {
@@ -6810,10 +6990,11 @@ ${lastContent}
       }
       await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
     } else {
-      const finalOutput = mergeContinuationContent(
+      const finalOutput = smartMergeContinuation(
         GlobalState.continuation.accumulatedContent,
         continuationOutput,
-        autoContinueCfg.show_indicator !== false
+        autoContinueCfg.show_indicator === true
+        // 只有明确开启时才显示标记
       );
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
@@ -6871,7 +7052,7 @@ async function onGenerationEnded() {
   if (Math.random() * 100 > chance) return;
   const getCat = (s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
   let pool = [];
-  const autoMode = cfg.auto_mode || "follow";
+  const autoMode = cfg.auto_mode || "random";
   if (autoMode === "category") {
     const allowedCats = cfg.auto_categories || [];
     if (allowedCats.length === 0) {
@@ -6880,9 +7061,7 @@ async function onGenerationEnded() {
     }
     pool = GlobalState.runtimeScripts.filter((s) => allowedCats.includes(getCat(s)));
   } else {
-    const isEcho = extData.ui_mode_echo !== false;
-    const targetMode = isEcho ? "echo" : "parallel";
-    pool = GlobalState.runtimeScripts.filter((s) => s.mode === targetMode);
+    pool = GlobalState.runtimeScripts;
   }
   if (pool.length === 0) return;
   const randomScript = pool[Math.floor(Math.random() * pool.length)];
@@ -6952,27 +7131,37 @@ async function loadExtensionSettings() {
 }
 var remoteManifestCache = null;
 async function checkVersionUpdate() {
-  const extData = getExtData();
-  const lastSeenVersion = extData.last_seen_version || "0.0.0";
   try {
     const remoteManifest = await fetchRemoteManifest();
     if (!remoteManifest || !remoteManifest.version) {
       $("#titania-new-badge").hide();
+      $("#titania-update-section").hide();
       return;
     }
     const remoteVersion = remoteManifest.version;
-    if (compareVersions(remoteVersion, lastSeenVersion) > 0) {
-      $("#titania-new-badge").show().removeClass("update-available").attr("title", "\u70B9\u51FB\u67E5\u770B\u66F4\u65B0\u65E5\u5FD7").text("NEW");
-      $("#titania-new-badge").off("click").on("click", () => {
-        showChangelog(remoteVersion, remoteManifest.changelog);
+    if (compareVersions(remoteVersion, CURRENT_VERSION) > 0) {
+      $("#titania-new-badge").show().addClass("update-available").attr("title", `\u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}`).text("NEW");
+      $("#titania-update-section").show();
+      $("#titania-remote-version").text(`v${remoteVersion}`);
+      $("#titania-new-badge").off("click").on("click", (e) => {
+        e.stopPropagation();
+        const drawer = $("#titania-settings-drawer");
+        if (!drawer.hasClass("open")) {
+          drawer.find(".inline-drawer-toggle").click();
+        }
       });
-      console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u4E0A\u6B21\u5DF2\u8BFB v${lastSeenVersion}`);
+      $("#titania-update-btn").off("click").on("click", () => {
+        showUpdateConfirmDialog(remoteVersion, remoteManifest.changelog);
+      });
+      console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
     } else {
       $("#titania-new-badge").hide();
+      $("#titania-update-section").hide();
     }
   } catch (e) {
     console.warn("Titania: \u8FDC\u7A0B\u7248\u672C\u68C0\u6D4B\u5931\u8D25", e);
     $("#titania-new-badge").hide();
+    $("#titania-update-section").hide();
   }
 }
 async function fetchRemoteManifest() {
@@ -7012,49 +7201,110 @@ function compareVersions(v1, v2) {
   }
   return 0;
 }
-function showChangelog(versionToMark, remoteChangelog) {
+function showUpdateConfirmDialog(remoteVersion, remoteChangelog) {
   if ($(".titania-changelog-overlay").length) return;
-  const displayVersion = versionToMark || CURRENT_VERSION;
   let changelogContent = "";
   if (remoteChangelog && typeof remoteChangelog === "object") {
     const versions = Object.keys(remoteChangelog).sort((a, b) => compareVersions(b, a));
-    const recentVersions = versions.slice(0, 3);
-    recentVersions.forEach((ver) => {
-      const desc = remoteChangelog[ver];
-      changelogContent += `<h4 style="color:#bfa15f; margin-top:15px; margin-bottom:8px;">v${ver}</h4>`;
-      changelogContent += `<p style="margin:0; padding-left:10px; border-left:2px solid #444;">${desc}</p>`;
-    });
+    const newVersions = versions.filter((v) => compareVersions(v, CURRENT_VERSION) > 0);
+    if (newVersions.length > 0) {
+      newVersions.forEach((ver) => {
+        const desc = remoteChangelog[ver];
+        changelogContent += `<h4 style="color:#00b894; margin-top:15px; margin-bottom:8px;">v${ver}</h4>`;
+        changelogContent += `<p style="margin:0; padding-left:10px; border-left:2px solid #00b894;">${desc}</p>`;
+      });
+    } else {
+      changelogContent = `<p>v${remoteVersion} \u5DF2\u53D1\u5E03</p>`;
+    }
   } else {
-    changelogContent = CHANGELOG;
+    changelogContent = `<p>v${remoteVersion} \u5DF2\u53D1\u5E03</p>`;
   }
   const html = `
     <div class="titania-changelog-overlay">
-        <div class="titania-changelog-box">
-            <div class="titania-changelog-header">
-                <span>\u{1F389} \u56DE\u58F0\u5C0F\u5267\u573A v${displayVersion} \u66F4\u65B0</span>
+        <div class="titania-update-confirm-box">
+            <div class="titania-update-confirm-header">
+                <span><i class="fa-solid fa-arrow-up-right-from-square"></i> \u53D1\u73B0\u65B0\u7248\u672C</span>
                 <span class="titania-changelog-close">&times;</span>
             </div>
-            <div class="titania-changelog-body">
+            <div class="titania-update-confirm-body">
+                <div class="titania-version-compare">
+                    <div class="titania-version-box">
+                        <div class="titania-version-label">\u5F53\u524D\u7248\u672C</div>
+                        <div class="titania-version-num old">v${CURRENT_VERSION}</div>
+                    </div>
+                    <div class="titania-version-arrow">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                    <div class="titania-version-box">
+                        <div class="titania-version-label">\u6700\u65B0\u7248\u672C</div>
+                        <div class="titania-version-num new">v${remoteVersion}</div>
+                    </div>
+                </div>
+                <div style="font-weight:bold; margin-bottom:10px; color:#ccc;">\u{1F4CB} \u66F4\u65B0\u5185\u5BB9\uFF1A</div>
                 ${changelogContent}
             </div>
-            <div class="titania-changelog-footer">
-                <button class="titania-changelog-btn">\u6211\u77E5\u9053\u4E86</button>
+            <div class="titania-update-confirm-footer">
+                <button class="titania-btn-cancel" id="titania-update-cancel">\u7A0D\u540E\u518D\u8BF4</button>
+                <button class="titania-btn-confirm" id="titania-update-confirm">
+                    <i class="fa-solid fa-download"></i> \u7ACB\u5373\u66F4\u65B0
+                </button>
             </div>
         </div>
     </div>`;
   $("body").append(html);
-  $(".titania-changelog-close, .titania-changelog-btn").on("click", () => {
-    const extData = getExtData();
-    extData.last_seen_version = versionToMark || CURRENT_VERSION;
-    saveExtData();
-    $("#titania-new-badge").hide();
+  $("#titania-update-cancel, .titania-changelog-close").on("click", () => {
     $(".titania-changelog-overlay").remove();
+  });
+  $("#titania-update-confirm").on("click", async function() {
+    const $btn = $(this);
+    const originalHtml = $btn.html();
+    try {
+      $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u66F4\u65B0\u4E2D...');
+      $("#titania-update-cancel").prop("disabled", true);
+      await performExtensionUpdate();
+      $btn.html('<i class="fa-solid fa-check"></i> \u66F4\u65B0\u6210\u529F\uFF01');
+      if (window.toastr) {
+        toastr.success("\u66F4\u65B0\u6210\u529F\uFF0C\u5373\u5C06\u5237\u65B0\u9875\u9762...", "Titania Echo");
+      }
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
+    } catch (e) {
+      console.error("Titania: \u66F4\u65B0\u5931\u8D25", e);
+      $btn.prop("disabled", false).html(originalHtml);
+      $("#titania-update-cancel").prop("disabled", false);
+      if (window.toastr) {
+        toastr.error("\u66F4\u65B0\u5931\u8D25\uFF1A" + (e.message || "\u8BF7\u68C0\u67E5\u7F51\u7EDC\u8FDE\u63A5"), "Titania Echo");
+      }
+    }
   });
   $(".titania-changelog-overlay").on("click", function(e) {
     if (e.target === this) {
-      $(".titania-changelog-close").click();
+      $(".titania-changelog-overlay").remove();
     }
   });
+}
+async function performExtensionUpdate() {
+  const response = await fetch("/api/extensions/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      name: "titania-theater"
+      // 扩展文件夹名称
+    })
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP ${response.status}: ${errorText}`);
+  }
+  const result = await response.json();
+  if (result.error) {
+    throw new Error(result.error);
+  }
+  console.log("Titania: \u66F4\u65B0\u6210\u529F", result);
+  return result;
 }
 jQuery(async () => {
   loadCssFiles();

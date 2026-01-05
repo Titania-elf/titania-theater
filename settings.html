@@ -13,6 +13,16 @@
                 <small>开启后，屏幕上会出现 🎭 悬浮球。</small>
             </label>
         </div>
+        <!-- 更新提示区域 (有更新时显示) -->
+        <div id="titania-update-section" class="titania-update-section" style="display:none;">
+            <div class="titania-update-info">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>发现新版本 <b id="titania-remote-version"></b></span>
+            </div>
+            <button id="titania-update-btn" class="titania-update-btn">
+                <i class="fa-solid fa-download"></i> 去更新
+            </button>
+        </div>
     </div>
 </div>
 
@@ -157,5 +167,175 @@
         to {
             opacity: 1;
         }
+    }
+
+    /* 更新提示区域样式 */
+    .titania-update-section {
+        margin-top: 10px;
+        padding: 10px;
+        background: linear-gradient(135deg, rgba(0, 184, 148, 0.1), rgba(0, 206, 201, 0.1));
+        border: 1px solid rgba(0, 184, 148, 0.3);
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .titania-update-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #00b894;
+        font-size: 0.9em;
+    }
+
+    .titania-update-info i {
+        font-size: 1.1em;
+    }
+
+    .titania-update-btn {
+        background: linear-gradient(135deg, #00b894, #00cec9);
+        color: #fff;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.85em;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+    }
+
+    .titania-update-btn:hover {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(0, 184, 148, 0.4);
+    }
+
+    .titania-update-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .titania-update-btn.updating {
+        background: linear-gradient(135deg, #636e72, #b2bec3);
+    }
+
+    /* 更新确认弹窗样式 */
+    .titania-update-confirm-box {
+        background: #1e1e1e;
+        border: 1px solid #444;
+        border-radius: 12px;
+        width: 480px;
+        max-width: 90vw;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .titania-update-confirm-header {
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #00b894, #00cec9);
+        color: #fff;
+        font-weight: bold;
+        font-size: 1.1em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .titania-update-confirm-body {
+        padding: 20px;
+        max-height: 350px;
+        overflow-y: auto;
+        color: #ccc;
+        line-height: 1.6;
+    }
+
+    .titania-update-confirm-footer {
+        padding: 15px 20px;
+        background: #181818;
+        border-top: 1px solid #333;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .titania-btn-cancel {
+        background: #444;
+        color: #ccc;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .titania-btn-cancel:hover {
+        background: #555;
+    }
+
+    .titania-btn-confirm {
+        background: linear-gradient(135deg, #00b894, #00cec9);
+        color: #fff;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .titania-btn-confirm:hover {
+        filter: brightness(1.1);
+    }
+
+    .titania-btn-confirm:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .titania-version-compare {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        padding: 15px;
+        background: #252525;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .titania-version-box {
+        text-align: center;
+    }
+
+    .titania-version-label {
+        font-size: 0.8em;
+        color: #888;
+        margin-bottom: 5px;
+    }
+
+    .titania-version-num {
+        font-size: 1.3em;
+        font-weight: bold;
+    }
+
+    .titania-version-num.old {
+        color: #888;
+    }
+
+    .titania-version-num.new {
+        color: #00b894;
+    }
+
+    .titania-version-arrow {
+        color: #00b894;
+        font-size: 1.5em;
     }
 </style>
