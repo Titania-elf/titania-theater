@@ -526,6 +526,15 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     height: auto !important;
 }
 
+/* iframe \u5185\u5BB9\u6837\u5F0F - \u79FB\u9664\u591A\u4F59\u6EDA\u52A8\u6761 */
+#t-output-content .t-content-iframe {
+    width: 100%;
+    border: none;
+    background: transparent;
+    display: block;
+    /* \u9AD8\u5EA6\u7531 JS \u52A8\u6001\u8BBE\u7F6E */
+}
+
 /* \u9876\u90E8\u64CD\u4F5C\u533A */
 .t-top-bar {
     padding: 12px 20px;
@@ -3019,12 +3028,6 @@ var getSnippet = (html) => {
   return text.length > 60 ? text.substring(0, 60) + "..." : text;
 };
 function renderToShadowDOM(container, html, options = {}) {
-  const {
-    minHeight = 200,
-    // 最小高度
-    maxHeight = 800
-    // 最大高度（防止无限扩展）
-  } = options;
   container.innerHTML = "";
   const iframe = document.createElement("iframe");
   iframe.className = "t-content-iframe";
@@ -3032,10 +3035,9 @@ function renderToShadowDOM(container, html, options = {}) {
   iframe.style.cssText = `
         width: 100%;
         border: none;
-        min-height: ${minHeight}px;
-        max-height: ${maxHeight}px;
         background: transparent;
         display: block;
+        height: 100%;
     `;
   const fullHtml = `<!DOCTYPE html>
 <html>
@@ -3053,48 +3055,84 @@ function renderToShadowDOM(container, html, options = {}) {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 14px;
             line-height: 1.6;
+            /* \u7981\u7528 iframe \u5185\u90E8\u6EDA\u52A8\uFF0C\u7531\u5916\u5C42\u5BB9\u5668\u63A7\u5236 */
+            overflow: hidden;
+            height: auto;
+            min-height: 100%;
         }
         body {
-            padding: 10px;
+            padding: 15px 20px;
+            min-height: 100%;
         }
         img, video {
             max-width: 100%;
             height: auto;
         }
         a { color: #90cdf4; }
-        /* \u6EDA\u52A8\u6761\u6837\u5F0F */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        /* \u9690\u85CF\u6EDA\u52A8\u6761 */
+        ::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; }
     </style>
 </head>
 <body>
 ${html}
 <script>
-    // \u81EA\u52A8\u9AD8\u5EA6\u8C03\u6574
+    // \u81EA\u52A8\u9AD8\u5EA6\u8C03\u6574 - \u66F4\u7CBE\u786E\u7684\u8BA1\u7B97
     function updateHeight() {
-        const height = Math.max(
-            document.body.scrollHeight,
-            document.body.offsetHeight,
-            document.documentElement.scrollHeight
-        );
-        window.parent.postMessage({ type: 'titania-iframe-height', height: height }, '*');
+        // \u83B7\u53D6\u5185\u5BB9\u5B9E\u9645\u9AD8\u5EA6
+        const bodyHeight = document.body.scrollHeight;
+        const docHeight = document.documentElement.scrollHeight;
+        
+        // \u53D6\u6700\u5927\u503C\u786E\u4FDD\u5185\u5BB9\u5B8C\u5168\u663E\u793A
+        const contentHeight = Math.max(bodyHeight, docHeight);
+        
+        // \u6DFB\u52A0\u5C11\u91CF\u8FB9\u8DDD
+        const finalHeight = contentHeight + 10;
+        
+        window.parent.postMessage({
+            type: 'titania-iframe-height',
+            height: finalHeight
+        }, '*');
     }
     
-    // \u521D\u59CB\u5316\u65F6\u66F4\u65B0\u9AD8\u5EA6
-    updateHeight();
+    // \u521D\u59CB\u5316\u65F6\u5EF6\u8FDF\u66F4\u65B0\uFF08\u7B49\u5F85\u6E32\u67D3\u5B8C\u6210\uFF09
+    setTimeout(updateHeight, 50);
+    setTimeout(updateHeight, 200);
+    setTimeout(updateHeight, 500);
     
     // \u76D1\u542C DOM \u53D8\u5316
-    const observer = new MutationObserver(updateHeight);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
-    
-    // \u76D1\u542C\u56FE\u7247\u52A0\u8F7D
-    document.querySelectorAll('img').forEach(img => {
-        img.addEventListener('load', updateHeight);
+    const observer = new MutationObserver(() => {
+        setTimeout(updateHeight, 50);
     });
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        characterData: true
+    });
+    
+    // \u76D1\u542C\u6240\u6709\u56FE\u7247\u52A0\u8F7D
+    function observeImages() {
+        document.querySelectorAll('img').forEach(img => {
+            if (!img.complete) {
+                img.addEventListener('load', updateHeight);
+                img.addEventListener('error', updateHeight);
+            }
+        });
+    }
+    observeImages();
+    
+    // \u76D1\u542C\u52A8\u6001\u6DFB\u52A0\u7684\u56FE\u7247
+    const imgObserver = new MutationObserver(observeImages);
+    imgObserver.observe(document.body, { childList: true, subtree: true });
     
     // \u7A97\u53E3\u8C03\u6574\u65F6\u66F4\u65B0
     window.addEventListener('resize', updateHeight);
+    
+    // \u5B57\u4F53\u52A0\u8F7D\u5B8C\u6210\u540E\u66F4\u65B0
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(updateHeight);
+    }
 <\/script>
 </body>
 </html>`;
@@ -3102,7 +3140,7 @@ ${html}
   container.appendChild(iframe);
   const heightHandler = (event) => {
     if (event.data && event.data.type === "titania-iframe-height") {
-      const newHeight = Math.min(Math.max(event.data.height, minHeight), maxHeight);
+      const newHeight = Math.max(event.data.height, 100);
       iframe.style.height = newHeight + "px";
     }
   };
