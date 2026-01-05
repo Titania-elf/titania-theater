@@ -5630,9 +5630,11 @@ async function openMainWindow() {
         <div class="t-box" id="t-main-view">
             
             <div class="t-header" style="flex-shrink:0;">
-                <div class="t-title-container" style="display:flex; align-items:baseline; overflow:hidden;">
-                    <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
-                    <span class="t-version-badge" title="\u5F53\u524D\u7248\u672C">v${CURRENT_VERSION}</span>
+                <div class="t-title-container" style="display:flex; flex-direction:column; overflow:hidden;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
+                        <span class="t-version-badge" title="\u5F53\u524D\u7248\u672C">v${CURRENT_VERSION}</span>
+                    </div>
                     <div class="t-title-sub" id="t-title-sub">
                         \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
                     </div>
