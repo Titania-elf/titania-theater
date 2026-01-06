@@ -17,6 +17,7 @@ var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
 var CURRENT_VERSION = "3.0.8";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
+var CHANGELOG_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/CHANGELOG.md`;
 var LEGACY_KEYS = {
   CFG: "Titania_Config_v3",
   SCRIPTS: "Titania_UserScripts_v3",
@@ -7842,8 +7843,9 @@ async function checkVersionUpdate() {
           drawer.find(".inline-drawer-toggle").click();
         }
       });
-      $("#titania-update-btn").off("click").on("click", () => {
-        showUpdateConfirmDialog(remoteVersion, remoteManifest.changelog);
+      $("#titania-update-btn").off("click").on("click", async () => {
+        const changelog = await fetchRemoteChangelog();
+        showUpdateConfirmDialog(remoteVersion, changelog);
       });
       console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
     } else {
@@ -7884,6 +7886,34 @@ async function fetchRemoteManifest() {
     return null;
   } catch (e) {
     console.warn("Titania: \u83B7\u53D6\u8FDC\u7A0B manifest \u5931\u8D25", e);
+    return null;
+  }
+}
+var remoteChangelogCache = null;
+async function fetchRemoteChangelog() {
+  if (remoteChangelogCache) return remoteChangelogCache;
+  try {
+    const url = `${CHANGELOG_RAW_URL}?t=${Date.now()}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const markdown = await response.text();
+    const changelog = {};
+    const versionRegex = /^## v?(\d+\.\d+\.\d+)\s*$/gm;
+    const sections = markdown.split(versionRegex);
+    for (let i = 1; i < sections.length; i += 2) {
+      const version = sections[i];
+      const content = sections[i + 1];
+      if (version && content) {
+        const cleanContent = content.trim().split("\n").filter((line) => line.trim()).join("<br>");
+        changelog[version] = cleanContent;
+      }
+    }
+    remoteChangelogCache = changelog;
+    return changelog;
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u8FDC\u7A0B CHANGELOG \u5931\u8D25", e);
     return null;
   }
 }
