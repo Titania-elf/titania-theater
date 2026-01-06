@@ -17,7 +17,6 @@ var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
 var CURRENT_VERSION = "3.0.8";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
-var CHANGELOG_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/CHANGELOG.md`;
 var LEGACY_KEYS = {
   CFG: "Titania_Config_v3",
   SCRIPTS: "Titania_UserScripts_v3",
@@ -7843,8 +7842,8 @@ async function checkVersionUpdate() {
           drawer.find(".inline-drawer-toggle").click();
         }
       });
-      $("#titania-update-btn").off("click").on("click", async () => {
-        const changelog = await fetchRemoteChangelog();
+      $("#titania-update-btn").off("click").on("click", () => {
+        const changelog = getLocalChangelog();
         showUpdateConfirmDialog(remoteVersion, changelog);
       });
       console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
@@ -7889,33 +7888,13 @@ async function fetchRemoteManifest() {
     return null;
   }
 }
-var remoteChangelogCache = null;
-async function fetchRemoteChangelog() {
-  if (remoteChangelogCache) return remoteChangelogCache;
-  try {
-    const url = `${CHANGELOG_RAW_URL}?t=${Date.now()}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const markdown = await response.text();
-    const changelog = {};
-    const versionRegex = /^## v?(\d+\.\d+\.\d+)\s*$/gm;
-    const sections = markdown.split(versionRegex);
-    for (let i = 1; i < sections.length; i += 2) {
-      const version = sections[i];
-      const content = sections[i + 1];
-      if (version && content) {
-        const cleanContent = content.trim().split("\n").filter((line) => line.trim()).join("<br>");
-        changelog[version] = cleanContent;
-      }
-    }
-    remoteChangelogCache = changelog;
-    return changelog;
-  } catch (e) {
-    console.warn("Titania: \u83B7\u53D6\u8FDC\u7A0B CHANGELOG \u5931\u8D25", e);
-    return null;
-  }
+function getLocalChangelog() {
+  return {
+    "3.0.8": "\u{1F3AE} \u4E92\u52A8\u5267\u672C\u589E\u5F3A\uFF1A\u68C0\u6D4B\u5230\u4E92\u52A8\u5185\u5BB9\u65F6\u663E\u793A\u6D6E\u52A8\u6309\u94AE(FAB)\uFF0C\u652F\u6301\u65B0\u7A97\u53E3\u4F53\u9A8C\u548C\u5BFC\u51FAHTML<br>\u{1F3B2} \u65B0\u589E\u5B8F\u5904\u7406\u652F\u6301\uFF1A\u5267\u672C\u63D0\u793A\u8BCD\u73B0\u652F\u6301 {{random::A::B::C}} \u7B49 ST \u5185\u7F6E\u5B8F<br>\u{1F4C2} \u5267\u672C\u7BA1\u7406\u5668\u4F18\u5316\uFF1A\u79FB\u9664\u81EA\u5B9A\u4E49\u6392\u5E8F\uFF0C\u79FB\u52A8\u7AEF\u65B0\u589E\u4E0B\u62C9\u9009\u62E9\u5668<br>\u{1F527} \u4FEE\u590D\u6279\u91CF\u79FB\u52A8\u5267\u672C\u540E\u539F\u5206\u7C7B\u4ECD\u4FDD\u7559\u95EE\u9898<br>\u{1F4CA} \u5BA1\u67E5\u7A97\u53E3\u540C\u6B65\u663E\u793A\u5904\u7406\u540E\u7684\u63D0\u793A\u8BCD",
+    "3.0.7": "\u{1F6E1}\uFE0F \u5B89\u5168\u6027\u5347\u7EA7\uFF1A\u91C7\u7528 iframe \u6C99\u7BB1\u9694\u79BB\u6E32\u67D3\uFF0C\u4FEE\u590D\u4EA4\u4E92\u5931\u6548\u95EE\u9898<br>\u{1F504} \u81EA\u52A8\u66F4\u65B0\u4F18\u5316\uFF1A\u6269\u5C55\u680F\u65B0\u589E\u7248\u672C\u68C0\u6D4B\u4E0E\u4E00\u952E\u66F4\u65B0\u529F\u80FD<br>\u270D\uFE0F \u81EA\u52A8\u7EED\u5199\u589E\u5F3A\uFF1A\u4F18\u5316\u4E0A\u4E0B\u6587\u62FC\u63A5\u7B56\u7565\uFF0C\u667A\u80FD\u53BB\u91CD\uFF0C\u63D0\u5347\u957F\u6587\u8FDE\u8D2F\u6027<br>\u{1F41B} \u4FEE\u590D\u5DF2\u77E5 Bug",
+    "3.0.6": "\u{1F517} \u4FEE\u590D\u300C\u8DDF\u968FST\u4E3B\u8FDE\u63A5\u300D\u529F\u80FD\uFF1A\u73B0\u901A\u8FC7 ST \u540E\u7AEF\u4EE3\u7406\u53D1\u9001\u8BF7\u6C42\uFF0C\u652F\u6301\u6240\u6709 API \u6E90\u548C\u53CD\u5411\u4EE3\u7406<br>\u{1F3AC} \u5BFC\u6F14\u6A21\u5F0F\u6539\u4E3A\u81EA\u7531\u7F16\u8F91\u533A\u57DF\uFF0C\u53EF\u81EA\u5B9A\u4E49\u4EFB\u610F\u6307\u4EE4<br>\u270D\uFE0F \u65B0\u589E\u6587\u7B14\u53C2\u8003\u591A\u65B9\u6848\u529F\u80FD\uFF08\u6700\u591A10\u4E2A\uFF09<br>\u{1F4DA} \u4E16\u754C\u4E66\u7A7A\u6761\u76EE\u786E\u8BA4\u5BF9\u8BDD\u6846<br>\u26A1 \u63D2\u4EF6\u52A0\u8F7D\u4F18\u5316",
+    "3.0.5": "\u{1F4D6} \u65B0\u589E\u53CC\u6A21\u5F0F\u5207\u6362\uFF08\u5185\u5BB9\u4F18\u5148/\u6C1B\u56F4\u7F8E\u5316\uFF09<br>\u{1F4DA} \u4FEE\u590D\u4E16\u754C\u4E66\u83B7\u53D6\u95EE\u9898<br>\u2764\uFE0F \u652F\u6301\u53D6\u6D88\u6536\u85CF<br>\u{1F3A8} \u4F18\u5316\u60AC\u6D6E\u7403\u6837\u5F0F"
+  };
 }
 function compareVersions(v1, v2) {
   const parts1 = v1.split(".").map(Number);
