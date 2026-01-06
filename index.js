@@ -14,7 +14,7 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.0.7";
+var CURRENT_VERSION = "3.0.8";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var LEGACY_KEYS = {
@@ -498,12 +498,14 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     overflow-y: auto;
     scroll-behavior: smooth;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* \u751F\u6210\u5185\u5BB9\u7EA6\u675F */
 #t-output-content {
     width: 100%;
-    min-height: 100%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
@@ -1273,6 +1275,143 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
         flex-direction: column;
         gap: 10px;
     }
+}
+
+/* ===== \u4E92\u52A8\u5185\u5BB9\u63D0\u793A\u680F ===== */
+
+.t-interactive-hint {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(25, 25, 35, 0.98), rgba(25, 25, 35, 0.92));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-top: 1px solid rgba(144, 205, 244, 0.3);
+    z-index: 100;
+    animation: t-slideUp 0.3s ease;
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+@keyframes t-slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.t-hint-icon {
+    font-size: 1.5em;
+    flex-shrink: 0;
+}
+
+.t-hint-text {
+    flex: 1;
+    color: #90cdf4;
+    font-size: 0.95em;
+    line-height: 1.4;
+}
+
+.t-hint-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.t-hint-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.t-hint-btn:hover {
+    background: #3a3a3a;
+    border-color: #666;
+    color: #fff;
+}
+
+.t-hint-btn.primary {
+    background: linear-gradient(90deg, #4a9eff, #6ab0ff);
+    border-color: transparent;
+    color: #fff;
+    font-weight: bold;
+}
+
+.t-hint-btn.primary:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 2px 10px rgba(74, 158, 255, 0.3);
+}
+
+.t-hint-btn.dismiss {
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 1.1em;
+}
+
+.t-hint-btn.dismiss:hover {
+    color: #fff;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media screen and (max-width: 600px) {
+    .t-interactive-hint {
+        flex-direction: column;
+        padding: 12px 15px;
+        gap: 10px;
+    }
+
+    .t-hint-icon {
+        display: none;
+    }
+
+    .t-hint-text {
+        text-align: center;
+        font-size: 0.9em;
+    }
+
+    .t-hint-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .t-hint-btn {
+        padding: 10px 14px;
+        font-size: 0.85em;
+    }
+
+    .t-hint-btn.dismiss {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+    }
+}
+
+/* Shadow DOM \u5BBF\u4E3B\u6837\u5F0F */
+.t-shadow-host {
+    display: block;
+    width: 100%;
+    min-height: 100%;
 }
 
 /* === settings.css === */
@@ -2093,53 +2232,51 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     flex-shrink: 0;
 }
 
+/* \u79FB\u52A8\u7AEF\u5206\u7C7B\u4E0B\u62C9\u9009\u62E9\u5668 - \u9ED8\u8BA4\u9690\u85CF */
+.t-mgr-mobile-cat {
+    display: none;
+}
+
+.t-mgr-cat-dropdown {
+    width: 100%;
+    padding: 10px 15px;
+    background: #1e1e1e;
+    border: none;
+    border-bottom: 1px solid #333;
+    color: #eee;
+    font-size: 1em;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+}
+
+.t-mgr-cat-dropdown:focus {
+    outline: none;
+    background-color: #252525;
+}
+
+.t-mgr-cat-dropdown option {
+    background: #1e1e1e;
+    color: #eee;
+    padding: 10px;
+}
+
 @media screen and (max-width: 600px) {
     .t-mgr-body {
         flex-direction: column;
     }
 
+    /* \u79FB\u52A8\u7AEF\u9690\u85CF\u684C\u9762\u4FA7\u8FB9\u680F\uFF0C\u663E\u793A\u4E0B\u62C9\u9009\u62E9\u5668 */
     .t-mgr-sidebar {
-        width: 100%;
-        height: auto;
-        max-height: none;
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: hidden;
-        border-right: none;
-        border-bottom: 1px solid #333;
-        padding: 8px 5px;
-        white-space: nowrap;
+        display: none !important;
+    }
+
+    .t-mgr-mobile-cat {
+        display: block;
         flex-shrink: 0;
-    }
-
-    .t-mgr-sb-group {
-        border: none;
-        display: flex;
-        padding: 0;
-        gap: 5px;
-    }
-
-    .t-mgr-sb-title {
-        display: none;
-    }
-
-    .t-mgr-sb-item {
-        padding: 6px 12px;
-        border: 1px solid #333;
-        border-radius: 4px;
-        margin: 0;
-        background: #222;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        border-left: 1px solid #333;
-    }
-
-    .t-mgr-sb-item.active {
-        background: #bfa15f;
-        color: #000;
-        border: 1px solid #bfa15f;
-        border-left: 1px solid #bfa15f;
     }
 
     .t-mgr-footer-bar {
@@ -2221,63 +2358,401 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 /* === favs.css === */
 /* css/favs.css - \u6536\u85CF\u4E0E\u56FE\u9274 */
 
-.t-fav-container { height: 90vh; width: 1100px; max-width: 95vw; display: flex; flex-direction: column; background: #121212; overflow: hidden; position: relative; isolation: isolate; }
-.t-fav-toolbar { height: 60px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 20px; gap: 15px; flex-shrink: 0; }
-.t-fav-filter-select, .t-fav-search { background: #2a2a2a; color: #eee; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; outline: none; }
-.t-fav-filter-select { min-width: 120px; cursor: pointer; }
-.t-fav-search { width: 200px; }
+.t-fav-container {
+    height: 90vh;
+    width: 1100px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    background: #121212;
+    overflow: hidden;
+    position: relative;
+    isolation: isolate;
+}
+
+.t-fav-toolbar {
+    height: 60px;
+    background: #1e1e1e;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.t-fav-filter-select,
+.t-fav-search {
+    background: #2a2a2a;
+    color: #eee;
+    border: 1px solid #444;
+    padding: 6px 10px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.t-fav-filter-select {
+    min-width: 120px;
+    cursor: pointer;
+}
+
+.t-fav-search {
+    width: 200px;
+}
 
 /* \u7F51\u683C */
-.t-fav-grid-area { flex-grow: 1; padding: 25px; overflow-y: auto; background: #121212; }
-.t-fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.t-fav-empty { text-align: center; color: #555; margin-top: 50px; grid-column: 1/-1; }
+.t-fav-grid-area {
+    flex-grow: 1;
+    padding: 25px;
+    overflow-y: auto;
+    background: #121212;
+}
+
+.t-fav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.t-fav-empty {
+    text-align: center;
+    color: #555;
+    margin-top: 50px;
+    grid-column: 1/-1;
+}
 
 /* \u5361\u7247 */
-.t-fav-card { position: relative; overflow: hidden; background: #1a1a1a; border: 1px solid #333; border-radius: 12px; height: 180px; cursor: pointer; transition: all 0.3s; display: flex; flex-direction: column; justify-content: flex-end; }
-.t-fav-card-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: top center; opacity: 0.5; transition: all 0.5s ease; z-index: 0; }
-.t-fav-card-bg.no-img { background: linear-gradient(135deg, #1f1f1f, #2a2a2a); opacity: 1; filter: none; }
-.t-fav-card-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.9) 100%); z-index: 1; pointer-events: none; }
-.t-fav-card:hover { transform: translateY(-5px); border-color: #666; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
-.t-fav-card:hover .t-fav-card-bg { opacity: 0.6; transform: scale(1.05); }
-.t-fav-card-content { position: relative; z-index: 2; padding: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
-.t-fav-card-script { font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 2px; }
-.t-fav-card-char { font-size: 0.85em; color: #bfa15f; font-weight: 500; display:flex; align-items:center; gap:5px; }
-.t-fav-card-snippet { font-size: 0.85em; color: rgba(255,255,255,0.8); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 8px; font-style: italic; }
-.t-fav-card-footer { font-size: 0.75em; color: rgba(255,255,255,0.5); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
+.t-fav-card {
+    position: relative;
+    overflow: hidden;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    height: 180px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.t-fav-card-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: top center;
+    opacity: 0.5;
+    transition: all 0.5s ease;
+    z-index: 0;
+}
+
+.t-fav-card-bg.no-img {
+    background: linear-gradient(135deg, #1f1f1f, #2a2a2a);
+    opacity: 1;
+    filter: none;
+}
+
+.t-fav-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.9) 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.t-fav-card:hover {
+    transform: translateY(-5px);
+    border-color: #666;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+}
+
+.t-fav-card:hover .t-fav-card-bg {
+    opacity: 0.6;
+    transform: scale(1.05);
+}
+
+.t-fav-card-content {
+    position: relative;
+    z-index: 2;
+    padding: 15px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+.t-fav-card-script {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.t-fav-card-char {
+    font-size: 0.85em;
+    color: #bfa15f;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.t-fav-card-snippet {
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 8px;
+    font-style: italic;
+}
+
+.t-fav-card-footer {
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 8px;
+}
 
 /* \u9605\u8BFB\u5668 overlay */
 .t-fav-reader {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0b0b0b;
-    z-index: 10; display: flex; flex-direction: column;
-    transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0b0b0b;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.t-fav-reader.show { transform: translateX(0); }
-.t-read-header { height: 60px; padding: 0 20px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; background: #181818; }
-.t-read-body { flex-grow: 1; padding: 0; overflow-y: auto; color: #ccc; position: relative; background: #0b0b0b; }
-#t-read-capture-zone { background: #0b0b0b; padding: 0; width: 100%; min-height: 100%; font-size: 1.05em; line-height: 1.6; text-align: justify; display: flex; flex-direction: column; }
-#t-read-content { width: 100%; min-height: 100%; flex-grow: 1; display: flex; flex-direction: column; }
-#t-read-content > div { flex-grow: 1; margin: 0 !important; width: 100% !important; max-width: none !important; border-radius: 0 !important; border: none !important; min-height: 100%; box-sizing: border-box; }
+
+.t-fav-reader.show {
+    transform: translateX(0);
+}
+
+.t-read-header {
+    height: 60px;
+    padding: 0 20px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #181818;
+}
+
+.t-read-body {
+    flex-grow: 1;
+    padding: 0;
+    overflow-y: auto;
+    color: #ccc;
+    position: relative;
+    background: #0b0b0b;
+}
+
+#t-read-capture-zone {
+    background: #0b0b0b;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    font-size: 1.05em;
+    line-height: 1.6;
+    text-align: justify;
+    display: flex;
+    flex-direction: column;
+}
+
+#t-read-content {
+    width: 100%;
+    min-height: 100%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#t-read-content>div {
+    flex-grow: 1;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    min-height: 100%;
+    box-sizing: border-box;
+}
 
 /* \u56FE\u9274\u7BA1\u7406 overlay */
-.t-img-mgr-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 50; display: flex; justify-content: center; align-items: center; animation: fadeIn 0.2s; }
-.t-img-mgr-box { width: 600px; max-width: 95%; height: 70vh; background: #1e1e1e; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-.t-img-list { flex-grow: 1; overflow-y: auto; padding: 15px; }
-.t-img-item { display: flex; align-items: center; background: #252525; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; gap: 15px; }
-.t-img-preview { width: 60px; height: 60px; border-radius: 4px; background-color: #111; background-size: cover; background-position: center; border: 1px solid #444; flex-shrink: 0; position: relative; }
-.t-img-preview.no-img::after { content: "\u65E0\u56FE"; position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; font-size:0.8em; }
-.t-img-info { flex-grow: 1; min-width: 0; }
-.t-img-name { font-weight: bold; color: #eee; font-size: 1.1em; margin-bottom: 5px; }
-.t-img-path { font-size: 0.8em; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.t-img-actions { display: flex; gap: 8px; flex-shrink: 0; }
-.t-act-btn { padding: 6px 10px; border: 1px solid #444; background: #333; color: #ccc; border-radius: 4px; cursor: pointer; font-size: 0.85em; transition: 0.2s; }
-.t-act-btn:hover { background: #444; color: #fff; border-color: #666; }
-.t-act-btn.auto { color: #bfa15f; border-color: rgba(191, 161, 95, 0.3); }
-.t-act-btn.auto:hover { background: rgba(191, 161, 95, 0.1); }
+.t-img-mgr-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s;
+}
+
+.t-img-mgr-box {
+    width: 600px;
+    max-width: 95%;
+    height: 70vh;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.t-img-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.t-img-item {
+    display: flex;
+    align-items: center;
+    background: #252525;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    gap: 15px;
+}
+
+.t-img-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    background-color: #111;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #444;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.t-img-preview.no-img::after {
+    content: "\u65E0\u56FE";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 0.8em;
+}
+
+.t-img-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.t-img-name {
+    font-weight: bold;
+    color: #eee;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+
+.t-img-path {
+    font-size: 0.8em;
+    color: #777;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.t-img-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.t-act-btn {
+    padding: 6px 10px;
+    border: 1px solid #444;
+    background: #333;
+    color: #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: 0.2s;
+}
+
+.t-act-btn:hover {
+    background: #444;
+    color: #fff;
+    border-color: #666;
+}
+
+.t-act-btn.auto {
+    color: #bfa15f;
+    border-color: rgba(191, 161, 95, 0.3);
+}
+
+.t-act-btn.auto:hover {
+    background: rgba(191, 161, 95, 0.1);
+}
+
+/* \u65B0\u7A97\u53E3\u6253\u5F00\u6309\u94AE - \u4E92\u52A8\u5185\u5BB9\u9AD8\u4EAE */
+#t-read-open-window.has-interactive {
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.4);
+    background: rgba(74, 222, 128, 0.1);
+    animation: pulse-green 2s infinite;
+}
+
+#t-read-open-window.has-interactive:hover {
+    background: rgba(74, 222, 128, 0.2);
+    border-color: rgba(74, 222, 128, 0.6);
+}
+
+@keyframes pulse-green {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 8px 2px rgba(74, 222, 128, 0.2);
+    }
+}
 
 @media screen and (max-width: 600px) {
-    .t-fav-toolbar { flex-direction: column; height: auto; padding: 10px; align-items: stretch; }
-    .t-fav-search { width: 100%; }
-    .t-read-meta-text { max-width: 120px; }
+    .t-fav-toolbar {
+        flex-direction: column;
+        height: auto;
+        padding: 10px;
+        align-items: stretch;
+    }
+
+    .t-fav-search {
+        width: 100%;
+    }
+
+    .t-read-meta-text {
+        max-width: 120px;
+    }
 }
 
 /* === debug.css === */
@@ -2572,6 +3047,8 @@ var GlobalState = {
   // 是否读取聊天历史（默认关闭）
   skipWorldBookCheck: false,
   // 跳过世界书空检查（本次会话内有效）
+  skipInteractiveHint: false,
+  // 跳过互动内容提示弹窗（本次会话内有效）
   // 计时器相关
   timerStartTime: 0,
   // 计时开始时间戳
@@ -2926,6 +3403,175 @@ async function getContextData() {
 }
 
 // src/utils/helpers.js
+function detectInteractiveContent(html) {
+  if (!html) return { isInteractive: false, reasons: [] };
+  const reasons = [];
+  if (/<script[\s>]/i.test(html)) {
+    reasons.push("\u5305\u542B <script> \u6807\u7B7E");
+  }
+  const eventHandlers = [
+    "onclick",
+    "ondblclick",
+    "onmousedown",
+    "onmouseup",
+    "onmouseover",
+    "onmouseout",
+    "onmousemove",
+    "onmouseenter",
+    "onmouseleave",
+    "onkeydown",
+    "onkeyup",
+    "onkeypress",
+    "onchange",
+    "oninput",
+    "onsubmit",
+    "onreset",
+    "onfocus",
+    "onblur",
+    "onload",
+    "onerror",
+    "onscroll",
+    "onresize",
+    "ontouchstart",
+    "ontouchmove",
+    "ontouchend",
+    "ontouchcancel"
+  ];
+  const eventPattern = new RegExp(`\\s(${eventHandlers.join("|")})\\s*=`, "i");
+  if (eventPattern.test(html)) {
+    reasons.push("\u5305\u542B\u4E8B\u4EF6\u5904\u7406\u5668\u5C5E\u6027");
+  }
+  if (/<button[^>]*onclick/i.test(html) || /<input[^>]*type\s*=\s*["']?(button|submit)/i.test(html)) {
+    reasons.push("\u5305\u542B\u4EA4\u4E92\u5F0F\u6309\u94AE");
+  }
+  if (/javascript:/i.test(html)) {
+    reasons.push("\u5305\u542B javascript: \u534F\u8BAE");
+  }
+  if (/<form[\s>]/i.test(html) && /<input[\s>]/i.test(html)) {
+    reasons.push("\u5305\u542B\u8868\u5355\u5143\u7D20");
+  }
+  return {
+    isInteractive: reasons.length > 0,
+    reasons
+  };
+}
+function buildFullHtmlDocument(content, title = "Titania Echo - \u4E92\u52A8\u573A\u666F") {
+  const styleMatch = content.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+  const styles = styleMatch ? styleMatch.join("\n") : "";
+  const bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(title)}</title>
+    <style>
+        /* \u57FA\u7840\u6837\u5F0F */
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        body {
+            padding: 20px;
+        }
+        a { color: #90cdf4; }
+        img, video { max-width: 100%; height: auto; }
+        
+        /* \u7528\u6237\u81EA\u5B9A\u4E49\u6837\u5F0F */
+    </style>
+    ${styles}
+</head>
+<body>
+${bodyContent}
+</body>
+</html>`;
+}
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
+  console.log("[Titania] openInNewWindow \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
+  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
+  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
+  console.log("[Titania] \u5B8C\u6574HTML\u524D500\u5B57\u7B26:", fullHtml?.substring(0, 500));
+  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const newWindow = window.open(
+    url,
+    "_blank",
+    "width=900,height=700,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes"
+  );
+  if (newWindow) {
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1e3);
+  } else {
+    console.warn("Titania: \u5F39\u7A97\u88AB\u62E6\u622A\uFF0C\u5C1D\u8BD5\u65B0\u6807\u7B7E\u9875");
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1e3);
+  }
+  return newWindow;
+}
+function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
+  console.log("[Titania] exportAsHtmlFile \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
+  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
+  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
+  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const safeFileName = scriptName.replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_").substring(0, 50);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${safeFileName}_\u4E92\u52A8\u573A\u666F.html`;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+function renderToShadowDOMReal(container, html) {
+  container.innerHTML = "";
+  const host = document.createElement("div");
+  host.className = "t-shadow-host";
+  host.style.cssText = "width:100%; min-height:100%;";
+  const shadow = host.attachShadow({ mode: "open" });
+  const baseStyles = `
+        <style>
+            :host {
+                display: block;
+                width: 100%;
+                min-height: 100%;
+            }
+            * { box-sizing: border-box; }
+            :host, .t-shadow-content {
+                background: transparent;
+                color: #e0e0e0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+            .t-shadow-content {
+                padding: 15px 20px;
+                min-height: 100%;
+            }
+            img, video { max-width: 100%; height: auto; }
+            a { color: #90cdf4; }
+        </style>
+    `;
+  shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
+  container.appendChild(host);
+  return shadow;
+}
 function extractContent(text) {
   if (!text) return "";
   const contentMatch = text.match(/<content[^>]*>([\s\S]*?)<\/content>/i);
@@ -3027,158 +3673,49 @@ var getSnippet = (html) => {
   text = text.replace(/\s+/g, " ").trim();
   return text.length > 60 ? text.substring(0, 60) + "..." : text;
 };
-function renderToShadowDOM(container, html, options = {}) {
-  container.innerHTML = "";
-  const iframe = document.createElement("iframe");
-  iframe.className = "t-content-iframe";
-  iframe.sandbox = "allow-scripts";
-  iframe.style.cssText = `
-        width: 100%;
-        border: none;
-        background: transparent;
-        display: block;
-        height: 100%;
-    `;
-  const fullHtml = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* \u57FA\u7840\u91CD\u7F6E\u6837\u5F0F */
-        * { box-sizing: border-box; }
-        html, body {
-            margin: 0;
-            padding: 0;
-            background: transparent;
-            color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
-            /* \u7981\u7528 iframe \u5185\u90E8\u6EDA\u52A8\uFF0C\u7531\u5916\u5C42\u5BB9\u5668\u63A7\u5236 */
-            overflow: hidden;
-            height: auto;
-            min-height: 100%;
-        }
-        body {
-            padding: 15px 20px;
-            min-height: 100%;
-        }
-        img, video {
-            max-width: 100%;
-            height: auto;
-        }
-        a { color: #90cdf4; }
-        /* \u9690\u85CF\u6EDA\u52A8\u6761 */
-        ::-webkit-scrollbar { display: none; }
-        * { scrollbar-width: none; }
-    </style>
-</head>
-<body>
-${html}
-<script>
-    // \u81EA\u52A8\u9AD8\u5EA6\u8C03\u6574 - \u66F4\u7CBE\u786E\u7684\u8BA1\u7B97
-    function updateHeight() {
-        // \u83B7\u53D6\u5185\u5BB9\u5B9E\u9645\u9AD8\u5EA6
-        const bodyHeight = document.body.scrollHeight;
-        const docHeight = document.documentElement.scrollHeight;
-        
-        // \u53D6\u6700\u5927\u503C\u786E\u4FDD\u5185\u5BB9\u5B8C\u5168\u663E\u793A
-        const contentHeight = Math.max(bodyHeight, docHeight);
-        
-        // \u6DFB\u52A0\u5C11\u91CF\u8FB9\u8DDD
-        const finalHeight = contentHeight + 10;
-        
-        window.parent.postMessage({
-            type: 'titania-iframe-height',
-            height: finalHeight
-        }, '*');
-    }
-    
-    // \u521D\u59CB\u5316\u65F6\u5EF6\u8FDF\u66F4\u65B0\uFF08\u7B49\u5F85\u6E32\u67D3\u5B8C\u6210\uFF09
-    setTimeout(updateHeight, 50);
-    setTimeout(updateHeight, 200);
-    setTimeout(updateHeight, 500);
-    
-    // \u76D1\u542C DOM \u53D8\u5316
-    const observer = new MutationObserver(() => {
-        setTimeout(updateHeight, 50);
-    });
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        characterData: true
-    });
-    
-    // \u76D1\u542C\u6240\u6709\u56FE\u7247\u52A0\u8F7D
-    function observeImages() {
-        document.querySelectorAll('img').forEach(img => {
-            if (!img.complete) {
-                img.addEventListener('load', updateHeight);
-                img.addEventListener('error', updateHeight);
-            }
-        });
-    }
-    observeImages();
-    
-    // \u76D1\u542C\u52A8\u6001\u6DFB\u52A0\u7684\u56FE\u7247
-    const imgObserver = new MutationObserver(observeImages);
-    imgObserver.observe(document.body, { childList: true, subtree: true });
-    
-    // \u7A97\u53E3\u8C03\u6574\u65F6\u66F4\u65B0
-    window.addEventListener('resize', updateHeight);
-    
-    // \u5B57\u4F53\u52A0\u8F7D\u5B8C\u6210\u540E\u66F4\u65B0
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(updateHeight);
-    }
-<\/script>
-</body>
-</html>`;
-  iframe.srcdoc = fullHtml;
-  container.appendChild(iframe);
-  const heightHandler = (event) => {
-    if (event.data && event.data.type === "titania-iframe-height") {
-      const newHeight = Math.max(event.data.height, 100);
-      iframe.style.height = newHeight + "px";
-    }
-  };
-  window.addEventListener("message", heightHandler);
-  iframe._cleanupHandler = () => {
-    window.removeEventListener("message", heightHandler);
-  };
-  return iframe;
-}
 function extractFromShadowDOM(container) {
-  const iframe = container.querySelector(".t-content-iframe");
-  if (!iframe) {
-    return container.innerHTML;
-  }
-  try {
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc || !doc.body) {
-      return container.innerHTML;
-    }
-    const bodyClone = doc.body.cloneNode(true);
-    bodyClone.querySelectorAll("script").forEach((s) => s.remove());
-    let userStyles = "";
-    doc.querySelectorAll("head style").forEach((style) => {
-      const text = style.textContent || "";
-      if (!text.includes("box-sizing: border-box") || text.length > 500) {
-        userStyles += `<style>${text}</style>
+  const shadowHost = container.querySelector(".t-shadow-host");
+  if (shadowHost && shadowHost.shadowRoot) {
+    try {
+      const shadow = shadowHost.shadowRoot;
+      const contentDiv = shadow.querySelector(".t-shadow-content");
+      if (contentDiv) {
+        let userStyles = "";
+        shadow.querySelectorAll("style").forEach((style) => {
+          const text = style.textContent || "";
+          if (!text.includes(":host")) {
+            userStyles += `<style>${text}</style>
 `;
+          }
+        });
+        return userStyles + contentDiv.innerHTML;
       }
-    });
-    return userStyles + bodyClone.innerHTML;
-  } catch (e) {
-    console.warn("Titania: \u65E0\u6CD5\u4ECE iframe \u63D0\u53D6\u5185\u5BB9", e);
-    return container.innerHTML;
+    } catch (e) {
+      console.warn("Titania: \u65E0\u6CD5\u4ECE Shadow DOM \u63D0\u53D6\u5185\u5BB9", e);
+    }
   }
-}
-function canUseShadowDOM() {
-  const iframe = document.createElement("iframe");
-  return "srcdoc" in iframe;
+  const iframe = container.querySelector(".t-content-iframe");
+  if (iframe) {
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (doc && doc.body) {
+        const bodyClone = doc.body.cloneNode(true);
+        bodyClone.querySelectorAll("script").forEach((s) => s.remove());
+        let userStyles = "";
+        doc.querySelectorAll("head style").forEach((style) => {
+          const text = style.textContent || "";
+          if (!text.includes("box-sizing: border-box") || text.length > 500) {
+            userStyles += `<style>${text}</style>
+`;
+          }
+        });
+        return userStyles + bodyClone.innerHTML;
+      }
+    } catch (e) {
+      console.warn("Titania: \u65E0\u6CD5\u4ECE iframe \u63D0\u53D6\u5185\u5BB9", e);
+    }
+  }
+  return container.innerHTML;
 }
 function estimateTokens(text) {
   if (!text) return 0;
@@ -3456,31 +3993,25 @@ function openScriptManager() {
   };
   let isBatchMode = false;
   const getCategories = () => {
-    const data = getExtData();
-    const categoryOrder = data.category_order || [];
     const cats = new Set(GlobalState.runtimeScripts.map((s) => s.category).filter((c) => c));
-    const sortedCats = [...cats].sort((a, b) => {
-      const idxA = categoryOrder.indexOf(a);
-      const idxB = categoryOrder.indexOf(b);
-      if (idxA === -1 && idxB === -1) return a.localeCompare(b);
-      if (idxA === -1) return 1;
-      if (idxB === -1) return -1;
-      return idxA - idxB;
-    });
+    const sortedCats = [...cats].sort((a, b) => a.localeCompare(b, "zh-CN"));
     return ["\u5168\u90E8", ...sortedCats];
   };
   const html = `
     <div class="t-box" id="t-mgr-view">
         <div class="t-header"><span class="t-title-main">\u{1F4C2} \u5267\u672C\u8D44\u6E90\u7BA1\u7406</span><span class="t-close" id="t-mgr-close">&times;</span></div>
         <div class="t-mgr-body">
-            <div class="t-mgr-sidebar">
+            <div class="t-mgr-sidebar" id="t-mgr-sidebar-desktop">
                 <div class="t-mgr-sb-group">
-                    <div class="t-mgr-sb-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="t-mgr-sb-title">
                         <span>\u5206\u7C7B</span>
-                        <i class="fa-solid fa-arrows-up-down" id="t-cat-sort-btn" style="cursor:pointer; color:#666; font-size:0.9em;" title="\u5206\u7C7B\u6392\u5E8F"></i>
                     </div>
                     <div id="t-mgr-cat-list"></div>
                 </div>
+            </div>
+            <!-- \u79FB\u52A8\u7AEF\u5206\u7C7B\u4E0B\u62C9\u9009\u62E9\u5668 -->
+            <div class="t-mgr-mobile-cat" id="t-mgr-sidebar-mobile">
+                <select id="t-mgr-cat-select" class="t-mgr-cat-dropdown"></select>
             </div>
             <div class="t-mgr-main" id="t-mgr-main-area">
                 <div class="t-mgr-toolbar">
@@ -3573,20 +4104,6 @@ function openScriptManager() {
             </div>
         </div>
         
-        <div id="t-cat-sort-modal" class="t-imp-modal">
-            <div class="t-imp-box" style="max-height: 70vh; display: flex; flex-direction: column;">
-                <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; flex-shrink:0;">\u2195\uFE0F \u5206\u7C7B\u6392\u5E8F</h3>
-                <div style="font-size:0.85em; color:#888; margin-bottom:10px; flex-shrink:0;">
-                    \u62D6\u62FD\u8C03\u6574\u5206\u7C7B\u987A\u5E8F\uFF0C\u6392\u5728\u524D\u9762\u7684\u5206\u7C7B\u4F1A\u4F18\u5148\u663E\u793A
-                </div>
-                <div id="t-cat-sort-list" style="flex-grow:1; overflow-y:auto; max-height: 300px;"></div>
-                <div style="display:flex; gap:10px; margin-top:20px; flex-shrink:0;">
-                    <button id="t-cat-sort-cancel" class="t-btn" style="flex:1;">\u53D6\u6D88</button>
-                    <button id="t-cat-sort-ok" class="t-btn primary" style="flex:1;">\u4FDD\u5B58\u987A\u5E8F</button>
-                </div>
-            </div>
-        </div>
-        
         <div id="t-cat-rename-modal" class="t-imp-modal">
             <div class="t-imp-box">
                 <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">\u270F\uFE0F \u91CD\u547D\u540D\u5206\u7C7B</h3>
@@ -3622,6 +4139,7 @@ function openScriptManager() {
         $(".t-mgr-sb-item[data-filter='category']").removeClass("active");
         $item.addClass("active");
         currentFilter.category = c;
+        $("#t-mgr-cat-select").val(c);
         renderList();
       });
       $item.find(".t-cat-edit").on("click", function(e) {
@@ -3635,7 +4153,20 @@ function openScriptManager() {
       });
       $("#t-mgr-cat-list").append($item);
     });
+    const $select = $("#t-mgr-cat-select");
+    $select.empty();
+    cats.forEach((c) => {
+      const selected = currentFilter.category === c ? "selected" : "";
+      $select.append(`<option value="${c}" ${selected}>${c}</option>`);
+    });
   };
+  $("#t-mgr-cat-select").on("change", function() {
+    const selectedCat = $(this).val();
+    currentFilter.category = selectedCat;
+    $(".t-mgr-sb-item[data-filter='category']").removeClass("active");
+    $(`.t-mgr-sb-item[data-val="${selectedCat}"]`).addClass("active");
+    renderList();
+  });
   const openRenameCategoryModal = (oldName) => {
     $("#t-rename-old").text(oldName);
     $("#t-rename-new").val(oldName);
@@ -4010,97 +4541,15 @@ ${s.prompt}`;
       }
     });
     const data = getExtData();
-    let movedCount = 0;
-    (data.user_scripts || []).forEach((s) => {
-      if (selectedIds.includes(s.id)) {
-        s.category = targetCat;
-        movedCount++;
-      }
+    const scriptsToMove = (data.user_scripts || []).filter((s) => selectedIds.includes(s.id));
+    scriptsToMove.forEach((s) => {
+      saveUserScript({ ...s, category: targetCat });
     });
-    saveExtData();
-    loadScripts();
     refreshAll();
     $("#t-move-modal").hide();
     $(".t-mgr-check").prop("checked", false);
     updateBatchCount();
-    if (window.toastr) toastr.success(`\u5DF2\u5C06 ${movedCount} \u4E2A\u5267\u672C\u79FB\u81F3 "${targetCat}"`);
-  });
-  $("#t-cat-sort-btn").on("click", () => {
-    const cats = getCategories().filter((c) => c !== "\u5168\u90E8");
-    const $list = $("#t-cat-sort-list");
-    $list.empty();
-    if (cats.length === 0) {
-      $list.append('<div style="text-align:center; color:#666; padding:20px;">\u6682\u65E0\u5206\u7C7B</div>');
-      return;
-    }
-    cats.forEach((cat, idx) => {
-      const $item = $(`
-                <div class="t-cat-sort-item" data-cat="${cat}" style="
-                    display: flex;
-                    align-items: center;
-                    padding: 10px 15px;
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 4px;
-                    margin-bottom: 5px;
-                    cursor: move;
-                ">
-                    <i class="fa-solid fa-grip-vertical" style="color:#666; margin-right:15px;"></i>
-                    <span style="flex-grow:1;">${cat}</span>
-                    <span style="color:#666; font-size:0.8em;">#${idx + 1}</span>
-                </div>
-            `);
-      $list.append($item);
-    });
-    if (typeof Sortable !== "undefined") {
-      new Sortable($list[0], {
-        animation: 150,
-        ghostClass: "t-sort-ghost"
-      });
-    } else {
-      let draggedItem = null;
-      $list.find(".t-cat-sort-item").each(function() {
-        $(this).attr("draggable", "true");
-        $(this).on("dragstart", function(e) {
-          draggedItem = this;
-          $(this).css("opacity", "0.5");
-        });
-        $(this).on("dragend", function() {
-          $(this).css("opacity", "1");
-          draggedItem = null;
-        });
-        $(this).on("dragover", function(e) {
-          e.preventDefault();
-        });
-        $(this).on("drop", function(e) {
-          e.preventDefault();
-          if (draggedItem && draggedItem !== this) {
-            const items = $list.find(".t-cat-sort-item").toArray();
-            const fromIdx = items.indexOf(draggedItem);
-            const toIdx = items.indexOf(this);
-            if (fromIdx < toIdx) {
-              $(this).after(draggedItem);
-            } else {
-              $(this).before(draggedItem);
-            }
-          }
-        });
-      });
-    }
-    $("#t-cat-sort-modal").css("display", "flex");
-  });
-  $("#t-cat-sort-cancel").on("click", () => $("#t-cat-sort-modal").hide());
-  $("#t-cat-sort-ok").on("click", () => {
-    const newOrder = [];
-    $("#t-cat-sort-list .t-cat-sort-item").each(function() {
-      newOrder.push($(this).data("cat"));
-    });
-    const data = getExtData();
-    data.category_order = newOrder;
-    saveExtData();
-    refreshAll();
-    $("#t-cat-sort-modal").hide();
-    if (window.toastr) toastr.success("\u5206\u7C7B\u987A\u5E8F\u5DF2\u4FDD\u5B58");
+    if (window.toastr) toastr.success(`\u5DF2\u5C06 ${scriptsToMove.length} \u4E2A\u5267\u672C\u79FB\u81F3 "${targetCat}"`);
   });
   $("#t-mgr-close").on("click", () => {
     $("#t-mgr-view").remove();
@@ -5110,6 +5559,7 @@ function openFavsWindow() {
                 <div style="display:flex; gap:10px; flex-shrink:0;">
                     <button class="t-tool-btn" id="t-read-img" title="\u5BFC\u51FA\u56FE\u7247"><i class="fa-solid fa-camera"></i></button>
                     <button class="t-tool-btn" id="t-read-code" title="\u590D\u5236HTML"><i class="fa-solid fa-code"></i></button>
+                    <button class="t-tool-btn" id="t-read-open-window" title="\u65B0\u7A97\u53E3\u6253\u5F00(\u4E92\u52A8\u6A21\u5F0F)"><i class="fa-solid fa-up-right-from-square"></i></button>
                     <button class="t-tool-btn" id="t-read-del-one" title="\u5220\u9664" style="color:#ff6b6b; border-color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
@@ -5161,16 +5611,27 @@ function openFavsWindow() {
       grid.append(card);
     });
   };
+  let currentViewingHtml = "";
+  let currentViewingTitle = "";
   const loadReaderItem = (index) => {
     if (index < 0 || index >= currentFilteredList.length) return;
     currentIndex = index;
     const item = currentFilteredList[index];
     currentFavId = item.id;
+    currentViewingHtml = item.html;
+    currentViewingTitle = item.title;
     $("#t-read-meta").text(item.title);
     $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
     const container = document.getElementById("t-read-content");
-    if (canUseShadowDOM()) {
-      const shadow = renderToShadowDOM(container, item.html);
+    const { isInteractive, reasons } = detectInteractiveContent(item.html);
+    const openWindowBtn = $("#t-read-open-window");
+    if (isInteractive) {
+      openWindowBtn.addClass("has-interactive").attr("title", `\u65B0\u7A97\u53E3\u6253\u5F00(${reasons.join(", ")})`);
+    } else {
+      openWindowBtn.removeClass("has-interactive").attr("title", "\u65B0\u7A97\u53E3\u6253\u5F00");
+    }
+    try {
+      const shadow = renderToShadowDOMReal(container, item.html);
       setTimeout(() => {
         shadow.querySelectorAll("*").forEach((el) => {
           const style = window.getComputedStyle(el);
@@ -5180,7 +5641,8 @@ function openFavsWindow() {
           }
         });
       }, 10);
-    } else {
+    } catch (e) {
+      console.warn("Titania: Shadow DOM \u6E32\u67D3\u5931\u8D25\uFF0C\u964D\u7EA7\u5230 innerHTML", e);
       container.innerHTML = "";
       setTimeout(() => {
         container.innerHTML = item.html;
@@ -5216,10 +5678,23 @@ function openFavsWindow() {
     }
   });
   $("#t-read-code").on("click", () => {
-    const container = document.getElementById("t-read-content");
-    const htmlCode = extractFromShadowDOM(container);
-    navigator.clipboard.writeText(htmlCode);
-    if (window.toastr) toastr.success("\u6E90\u7801\u5DF2\u590D\u5236");
+    if (currentViewingHtml) {
+      navigator.clipboard.writeText(currentViewingHtml);
+      if (window.toastr) toastr.success("\u6E90\u7801\u5DF2\u590D\u5236");
+    } else {
+      const container = document.getElementById("t-read-content");
+      const htmlCode = extractFromShadowDOM(container);
+      navigator.clipboard.writeText(htmlCode);
+      if (window.toastr) toastr.success("\u6E90\u7801\u5DF2\u590D\u5236");
+    }
+  });
+  $("#t-read-open-window").on("click", () => {
+    if (currentViewingHtml) {
+      openInNewWindow(currentViewingHtml, currentViewingTitle);
+      if (window.toastr) toastr.success("\u5DF2\u5728\u65B0\u7A97\u53E3\u6253\u5F00");
+    } else {
+      if (window.toastr) toastr.warning("\u5F53\u524D\u65E0\u5185\u5BB9");
+    }
   });
   $("#t-read-img").on("click", async function() {
     const btn = $(this);
@@ -5422,6 +5897,7 @@ function openCharImageManager(onCloseCallback) {
 }
 
 // src/ui/debugWindow.js
+import { evaluateMacros } from "../../../macros.js";
 async function showDebugInfo() {
   const script = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastUsedScriptId);
   if (!script) {
@@ -5516,11 +5992,21 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
       detail: `\u804A\u5929\u8BB0\u5F55 (${histLines} \u884C)`
     });
   }
-  const finalScriptPrompt = script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName);
+  let finalScriptPrompt;
+  try {
+    const macroEnv = {
+      char: d.charName,
+      user: d.userName
+    };
+    finalScriptPrompt = evaluateMacros(script.prompt, macroEnv);
+  } catch (e) {
+    console.warn("Titania Debug: \u5B8F\u5904\u7406\u5931\u8D25\uFF0C\u4F7F\u7528\u7B80\u5355\u66FF\u6362", e);
+    finalScriptPrompt = script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName);
+  }
   contextBlocks.push({
     title: "[Scenario Request]",
     content: finalScriptPrompt,
-    detail: "\u5267\u672C\u6838\u5FC3\u6307\u4EE4",
+    detail: "\u5267\u672C\u6838\u5FC3\u6307\u4EE4 (\u5B8F\u5DF2\u5C55\u5F00)",
     isOpen: true
     // 默认展开这个
   });
@@ -5746,7 +6232,9 @@ async function openMainWindow() {
   $("body").append(html);
   const outputContainer = document.getElementById("t-output-content");
   if (GlobalState.lastGeneratedContent) {
-    outputContainer.innerHTML = GlobalState.lastGeneratedContent;
+    const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
+    const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
+    renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
   } else {
     outputContainer.innerHTML = placeholderContent;
   }
@@ -5887,7 +6375,21 @@ async function openMainWindow() {
     const btn = $("#t-btn-copy");
     const originalHtml = btn.html();
     try {
-      const htmlCode = container.innerHTML;
+      let htmlCode = "";
+      if (GlobalState.lastGeneratedContent) {
+        htmlCode = GlobalState.lastGeneratedContent;
+      } else {
+        const shadowHost = container.querySelector(".t-shadow-host");
+        if (shadowHost && shadowHost.shadowRoot) {
+          const shadowContent = shadowHost.shadowRoot.querySelector(".t-shadow-content");
+          if (shadowContent) {
+            htmlCode = shadowContent.innerHTML;
+          }
+        }
+        if (!htmlCode) {
+          htmlCode = container.innerHTML;
+        }
+      }
       if (!htmlCode || htmlCode.trim().length === 0) {
         throw new Error("\u6CA1\u6709\u53EF\u590D\u5236\u7684\u5185\u5BB9");
       }
@@ -6480,10 +6982,162 @@ function createFloatingButton() {
 // src/core/api.js
 import { ChatCompletionService } from "../../../custom-request.js";
 import { oai_settings, getChatCompletionModel } from "../../../openai.js";
-function renderGeneratedContent(content) {
+import { evaluateMacros as evaluateMacros2 } from "../../../macros.js";
+function renderGeneratedContent(content, scriptName = "\u573A\u666F") {
   const container = document.getElementById("t-output-content");
-  if (!container) return;
-  container.innerHTML = content;
+  if (!container) {
+    TitaniaLogger.warn("renderGeneratedContent: \u5BB9\u5668\u4E0D\u5B58\u5728");
+    return;
+  }
+  TitaniaLogger.info("renderGeneratedContent \u5F00\u59CB", {
+    contentLength: content?.length || 0,
+    scriptName
+  });
+  $("#t-interactive-fab").remove();
+  try {
+    renderToShadowDOMReal(container, content);
+    TitaniaLogger.info("Shadow DOM \u6E32\u67D3\u5B8C\u6210");
+  } catch (e) {
+    TitaniaLogger.error("Shadow DOM \u6E32\u67D3\u5931\u8D25", e);
+    container.innerHTML = content;
+  }
+  const interactiveResult = detectInteractiveContent(content);
+  TitaniaLogger.info("\u4E92\u52A8\u68C0\u6D4B\u7ED3\u679C", interactiveResult);
+  if (interactiveResult.isInteractive) {
+    showInteractiveFAB(scriptName, content, interactiveResult.reasons);
+  }
+}
+function showInteractiveFAB(scriptName, html, reasons) {
+  $("#t-interactive-fab").remove();
+  const reasonText = reasons.slice(0, 2).join("\u3001");
+  const fabHtml = `
+    <div id="t-interactive-fab" style="
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    ">
+        <div id="t-fab-menu" style="
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 8px;
+        ">
+            <div id="t-fab-open" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 14px;
+                background: linear-gradient(90deg, #4a9eff, #6ab0ff);
+                border-radius: 20px;
+                color: #fff;
+                font-size: 0.9em;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 3px 12px rgba(74, 158, 255, 0.4);
+                white-space: nowrap;
+                transition: transform 0.2s, box-shadow 0.2s;
+            " title="\u5728\u65B0\u7A97\u53E3\u4E2D\u4F53\u9A8C\u5B8C\u6574\u4EA4\u4E92">
+                <i class="fa-solid fa-up-right-from-square"></i>
+                <span>\u65B0\u7A97\u53E3\u4F53\u9A8C</span>
+            </div>
+            <div id="t-fab-export" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 14px;
+                background: #2a2a2a;
+                border: 1px solid #444;
+                border-radius: 20px;
+                color: #ccc;
+                font-size: 0.9em;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                white-space: nowrap;
+                transition: transform 0.2s, background 0.2s;
+            " title="\u5BFC\u51FA\u4E3AHTML\u6587\u4EF6">
+                <i class="fa-solid fa-download"></i>
+                <span>\u5BFC\u51FAHTML</span>
+            </div>
+        </div>
+        <div id="t-fab-main" style="
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4a9eff, #2d7fd3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.5);
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-size: 1.5em;
+        " title="\u68C0\u6D4B\u5230\u4E92\u52A8\u5185\u5BB9\uFF08${reasonText}\uFF09">
+            <span>\u{1F3AE}</span>
+        </div>
+    </div>`;
+  const contentWrapper = document.querySelector(".t-content-wrapper");
+  if (contentWrapper) {
+    $(contentWrapper).append(fabHtml);
+  } else {
+    $("#t-main-view").append(fabHtml);
+  }
+  let isExpanded = false;
+  $("#t-fab-main").on("click", function(e) {
+    e.stopPropagation();
+    isExpanded = !isExpanded;
+    if (isExpanded) {
+      $("#t-fab-menu").css("display", "flex");
+      $(this).css({ "transform": "rotate(45deg)", "background": "#ff6b6b" });
+    } else {
+      $("#t-fab-menu").css("display", "none");
+      $(this).css({ "transform": "rotate(0deg)", "background": "linear-gradient(135deg, #4a9eff, #2d7fd3)" });
+    }
+  });
+  $("#t-fab-main").hover(
+    function() {
+      if (!isExpanded) $(this).css({ "transform": "scale(1.1)", "box-shadow": "0 6px 20px rgba(74, 158, 255, 0.6)" });
+    },
+    function() {
+      if (!isExpanded) $(this).css({ "transform": "scale(1)", "box-shadow": "0 4px 15px rgba(74, 158, 255, 0.5)" });
+    }
+  );
+  $("#t-fab-open").on("click", function(e) {
+    e.stopPropagation();
+    openInNewWindow(html, scriptName);
+    if (window.toastr) toastr.info("\u5DF2\u5728\u65B0\u7A97\u53E3\u4E2D\u6253\u5F00", "Titania");
+  }).hover(
+    function() {
+      $(this).css({ "transform": "scale(1.05)" });
+    },
+    function() {
+      $(this).css({ "transform": "scale(1)" });
+    }
+  );
+  $("#t-fab-export").on("click", function(e) {
+    e.stopPropagation();
+    exportAsHtmlFile(html, scriptName);
+    if (window.toastr) toastr.success("HTML \u5DF2\u4E0B\u8F7D", "Titania");
+  }).hover(
+    function() {
+      $(this).css({ "background": "#383838" });
+    },
+    function() {
+      $(this).css({ "background": "#2a2a2a" });
+    }
+  );
+  $(document).on("click.fabclose", function(e) {
+    if (!$(e.target).closest("#t-interactive-fab").length && isExpanded) {
+      isExpanded = false;
+      $("#t-fab-menu").css("display", "none");
+      $("#t-fab-main").css({ "transform": "rotate(0deg)", "background": "linear-gradient(135deg, #4a9eff, #2d7fd3)" });
+    }
+  });
+  TitaniaLogger.info("\u4E92\u52A8\u5185\u5BB9FAB\u5DF2\u663E\u793A", { reasons });
 }
 async function handleGenerate(forceScriptId = null, silent = false) {
   const data = getExtData();
@@ -6667,8 +7321,24 @@ ${history}
 
 `;
     }
+    let processedPrompt = script.prompt;
+    try {
+      const macroEnv = {
+        char: ctx.charName,
+        user: ctx.userName
+        // 可以根据需要添加更多环境变量
+      };
+      processedPrompt = evaluateMacros2(script.prompt, macroEnv);
+      TitaniaLogger.info("\u5B8F\u5904\u7406\u5B8C\u6210", {
+        original: script.prompt.substring(0, 100),
+        processed: processedPrompt.substring(0, 100)
+      });
+    } catch (e) {
+      TitaniaLogger.warn("ST \u5B8F\u5904\u7406\u5931\u8D25\uFF0C\u4F7F\u7528\u7B80\u5355\u66FF\u6362", e);
+      processedPrompt = script.prompt.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
+    }
     user += `[Scenario Request]
-${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName)}`;
+${processedPrompt}`;
     diagnostics.input_stats.sys_len = sys.length;
     diagnostics.input_stats.user_len = user.length;
     TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: currentProfile.name });
@@ -6838,7 +7508,7 @@ ${script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.user
     GlobalState.lastGeneratedScriptId = script.id;
     diagnostics.phase = "complete";
     if ($("#t-output-content").length > 0) {
-      renderGeneratedContent(finalOutput);
+      renderGeneratedContent(finalOutput, script.name);
     }
     stopTimer();
     const elapsed = GlobalState.lastGenerationTime / 1e3;
@@ -7023,7 +7693,7 @@ Generate ONLY the continuation (no repetition):`;
       GlobalState.lastGeneratedContent = finalOutput;
       GlobalState.lastGeneratedScriptId = script.id;
       if ($("#t-output-content").length > 0) {
-        renderGeneratedContent(finalOutput);
+        renderGeneratedContent(finalOutput, script.name);
       }
       stopTimer();
       const elapsed = GlobalState.lastGenerationTime / 1e3;
