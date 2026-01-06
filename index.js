@@ -7871,7 +7871,12 @@ async function fetchRemoteManifest() {
     }
     const data = await response.json();
     if (data.content) {
-      const decodedContent = atob(data.content.replace(/\n/g, ""));
+      const binaryString = atob(data.content.replace(/\n/g, ""));
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const decodedContent = new TextDecoder("utf-8").decode(bytes);
       const manifest = JSON.parse(decodedContent);
       remoteManifestCache = manifest;
       return manifest;
