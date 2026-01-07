@@ -14,11 +14,13 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.1.1";
+var CURRENT_VERSION = "3.1.3";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
 var CHANGELOG = {
+  "3.1.3": "\u{1F527} \u4FEE\u590D\u66F4\u65B0\u529F\u80FD\u62A5\u9519\u95EE\u9898\uFF08\u4F18\u5316 API \u54CD\u5E94\u5904\u7406\uFF0C\u517C\u5BB9\u4E0D\u540C SillyTavern \u7248\u672C\uFF09",
+  "3.1.2": "\u{1F524} \u4FEE\u590D\u81EA\u5B9A\u4E49\u5B57\u4F53\u5728\u6E32\u67D3\u533A\u57DF\u4E0D\u751F\u6548\u7684\u95EE\u9898\uFF08Shadow DOM \u5185\u6CE8\u5165\u5B57\u4F53\u5B9A\u4E49\uFF09",
   "3.1.1": "\u{1F41B} \u4FEE\u590D\u66F4\u65B0\u5F39\u7A97\u65E0\u6CD5\u663E\u793A\u66F4\u65B0\u65E5\u5FD7\u7684\u95EE\u9898\uFF08\u73B0\u4ECE\u8FDC\u7A0B\u83B7\u53D6 changelog.json\uFF09<br>\u{1F527} \u4FEE\u590D Base64 \u89E3\u7801 UTF-8 \u4E2D\u6587\u4E71\u7801\u95EE\u9898",
   "3.1.0": "\u{1F524} \u5168\u5C40\u5B57\u4F53\u8BBE\u7F6E\uFF1A\u652F\u6301\u7CFB\u7EDF\u9ED8\u8BA4\u3001\u5728\u7EBF\u5B57\u4F53(@import)\u3001\u672C\u5730\u4E0A\u4F20(.woff2/.ttf)\u4E09\u79CD\u5B57\u4F53\u6765\u6E90<br>\u{1F3A8} \u7B80\u5316\u5B57\u4F53\u914D\u7F6E\uFF1A\u7EDF\u4E00\u4E3A\u5355\u4E00\u5168\u5C40\u5B57\u4F53\u53D8\u91CF\uFF0C\u4EE3\u7801\u7F16\u8F91\u5668\u4FDD\u6301\u7B49\u5BBD\u5B57\u4F53",
   "3.0.9": "\u{1F3A8} \u65B0\u589E\u81EA\u5B9A\u4E49\u4E3B\u9898\u6837\u5F0F\uFF1A\u8BBE\u7F6E\u4E2D\u65B0\u589E\u300C\u4E3B\u9898\u6837\u5F0F\u300D\u9875\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49 CSS \u8986\u76D6\u9ED8\u8BA4\u6837\u5F0F\uFF0C\u63D0\u4F9B\u5E38\u7528\u9009\u62E9\u5668\u53C2\u8003<br>\u{1F527} \u60AC\u6D6E\u7403\u900F\u660E\u5EA6\u63A7\u5236\uFF1A\u8FB9\u6846\u548C\u80CC\u666F\u8272\u5747\u652F\u6301 0-100% \u900F\u660E\u5EA6\u8C03\u8282<br>\u{1F4D0} \u6E32\u67D3\u533A\u57DF\u4F18\u5316\uFF1A\u79FB\u9664 Shadow DOM \u5185\u5BB9\u533A\u57DF\u9ED8\u8BA4\u5185\u8FB9\u8DDD\uFF0C\u751F\u6210\u5185\u5BB9\u53EF\u5B8C\u5168\u586B\u5145<br>\u{1F41B} \u4FEE\u590D\u79FB\u52A8\u7AEF\u5206\u7C7B\u91CD\u547D\u540D\u548C\u6279\u91CF\u79FB\u52A8\u5267\u672C\u95EE\u9898",
@@ -3877,14 +3879,44 @@ function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 100);
 }
+function buildFontStylesForShadowDOM() {
+  try {
+    const extData = getExtData();
+    const fontSettings = extData.font_settings;
+    if (!fontSettings || fontSettings.source === "default" || !fontSettings.source) {
+      return "";
+    }
+    if (fontSettings.source === "online" && fontSettings.import_url && fontSettings.font_name) {
+      return `@import url('${fontSettings.import_url}');`;
+    }
+    if (fontSettings.source === "upload" && fontSettings.font_data) {
+      const fontName = fontSettings.font_name || "TitaniaCustomFont";
+      return `
+                @font-face {
+                    font-family: '${fontName}';
+                    src: url('${fontSettings.font_data}') format('woff2');
+                    font-weight: normal;
+                    font-style: normal;
+                    font-display: swap;
+                }
+            `;
+    }
+    return "";
+  } catch (e) {
+    console.warn("Titania: \u6784\u5EFA Shadow DOM \u5B57\u4F53\u6837\u5F0F\u5931\u8D25", e);
+    return "";
+  }
+}
 function renderToShadowDOMReal(container, html) {
   container.innerHTML = "";
   const host = document.createElement("div");
   host.className = "t-shadow-host";
   host.style.cssText = "width:100%; min-height:100%;";
   const shadow = host.attachShadow({ mode: "open" });
+  const fontStyles = buildFontStylesForShadowDOM();
   const baseStyles = `
         <style>
+            ${fontStyles}
             :host {
                 display: block;
                 width: 100%;
@@ -8782,11 +8814,27 @@ async function performExtensionUpdate() {
       // 扩展文件夹名称
     })
   });
+  const responseText = await response.text();
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`HTTP ${response.status}: ${errorText}`);
+    if (responseText.trim().startsWith("<!") || responseText.trim().startsWith("<html")) {
+      throw new Error(`\u670D\u52A1\u5668\u8FD4\u56DE\u9519\u8BEF\u9875\u9762 (HTTP ${response.status})\uFF0C\u8BF7\u68C0\u67E5 SillyTavern \u7248\u672C\u662F\u5426\u652F\u6301\u6269\u5C55\u66F4\u65B0 API`);
+    }
+    throw new Error(`HTTP ${response.status}: ${responseText.substring(0, 200)}`);
   }
-  const result = await response.json();
+  const contentType = response.headers.get("content-type") || "";
+  if (responseText.trim().startsWith("<!") || responseText.trim().startsWith("<html")) {
+    throw new Error("\u670D\u52A1\u5668\u8FD4\u56DE HTML \u800C\u975E JSON\uFF0C\u8BF7\u68C0\u67E5 SillyTavern \u7248\u672C\u662F\u5426\u652F\u6301\u6269\u5C55\u66F4\u65B0 API");
+  }
+  let result;
+  try {
+    result = JSON.parse(responseText);
+  } catch (e) {
+    if (responseText.toLowerCase().includes("success") || responseText.toLowerCase().includes("updated")) {
+      console.log("Titania: \u66F4\u65B0\u6210\u529F (\u7EAF\u6587\u672C\u54CD\u5E94)", responseText);
+      return { success: true, message: responseText };
+    }
+    throw new Error(`\u65E0\u6CD5\u89E3\u6790\u54CD\u5E94: ${responseText.substring(0, 200)}`);
+  }
   if (result.error) {
     throw new Error(result.error);
   }
