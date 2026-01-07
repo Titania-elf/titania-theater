@@ -14,10 +14,12 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.1.0";
+var CURRENT_VERSION = "3.1.1";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
+var GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
 var CHANGELOG = {
+  "3.1.1": "\u{1F41B} \u4FEE\u590D\u66F4\u65B0\u5F39\u7A97\u65E0\u6CD5\u663E\u793A\u66F4\u65B0\u65E5\u5FD7\u7684\u95EE\u9898\uFF08\u73B0\u4ECE\u8FDC\u7A0B\u83B7\u53D6 changelog.json\uFF09<br>\u{1F527} \u4FEE\u590D Base64 \u89E3\u7801 UTF-8 \u4E2D\u6587\u4E71\u7801\u95EE\u9898",
   "3.1.0": "\u{1F524} \u5168\u5C40\u5B57\u4F53\u8BBE\u7F6E\uFF1A\u652F\u6301\u7CFB\u7EDF\u9ED8\u8BA4\u3001\u5728\u7EBF\u5B57\u4F53(@import)\u3001\u672C\u5730\u4E0A\u4F20(.woff2/.ttf)\u4E09\u79CD\u5B57\u4F53\u6765\u6E90<br>\u{1F3A8} \u7B80\u5316\u5B57\u4F53\u914D\u7F6E\uFF1A\u7EDF\u4E00\u4E3A\u5355\u4E00\u5168\u5C40\u5B57\u4F53\u53D8\u91CF\uFF0C\u4EE3\u7801\u7F16\u8F91\u5668\u4FDD\u6301\u7B49\u5BBD\u5B57\u4F53",
   "3.0.9": "\u{1F3A8} \u65B0\u589E\u81EA\u5B9A\u4E49\u4E3B\u9898\u6837\u5F0F\uFF1A\u8BBE\u7F6E\u4E2D\u65B0\u589E\u300C\u4E3B\u9898\u6837\u5F0F\u300D\u9875\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49 CSS \u8986\u76D6\u9ED8\u8BA4\u6837\u5F0F\uFF0C\u63D0\u4F9B\u5E38\u7528\u9009\u62E9\u5668\u53C2\u8003<br>\u{1F527} \u60AC\u6D6E\u7403\u900F\u660E\u5EA6\u63A7\u5236\uFF1A\u8FB9\u6846\u548C\u80CC\u666F\u8272\u5747\u652F\u6301 0-100% \u900F\u660E\u5EA6\u8C03\u8282<br>\u{1F4D0} \u6E32\u67D3\u533A\u57DF\u4F18\u5316\uFF1A\u79FB\u9664 Shadow DOM \u5185\u5BB9\u533A\u57DF\u9ED8\u8BA4\u5185\u8FB9\u8DDD\uFF0C\u751F\u6210\u5185\u5BB9\u53EF\u5B8C\u5168\u586B\u5145<br>\u{1F41B} \u4FEE\u590D\u79FB\u52A8\u7AEF\u5206\u7C7B\u91CD\u547D\u540D\u548C\u6279\u91CF\u79FB\u52A8\u5267\u672C\u95EE\u9898",
   "3.0.8": "\u{1F3AE} \u4E92\u52A8\u5267\u672C\u589E\u5F3A\uFF1A\u68C0\u6D4B\u5230\u4E92\u52A8\u5185\u5BB9\u65F6\u663E\u793A\u6D6E\u52A8\u6309\u94AE(FAB)\uFF0C\u652F\u6301\u65B0\u7A97\u53E3\u4F53\u9A8C\u548C\u5BFC\u51FAHTML<br>\u{1F3B2} \u65B0\u589E\u5B8F\u5904\u7406\u652F\u6301\uFF1A\u5267\u672C\u63D0\u793A\u8BCD\u73B0\u652F\u6301 {{random::A::B::C}} \u7B49 ST \u5185\u7F6E\u5B8F<br>\u{1F4C2} \u5267\u672C\u7BA1\u7406\u5668\u4F18\u5316\uFF1A\u79FB\u9664\u81EA\u5B9A\u4E49\u6392\u5E8F\uFF0C\u79FB\u52A8\u7AEF\u65B0\u589E\u4E0B\u62C9\u9009\u62E9\u5668<br>\u{1F527} \u4FEE\u590D\u6279\u91CF\u79FB\u52A8\u5267\u672C\u540E\u539F\u5206\u7C7B\u4ECD\u4FDD\u7559\u95EE\u9898<br>\u{1F4CA} \u5BA1\u67E5\u7A97\u53E3\u540C\u6B65\u663E\u793A\u5904\u7406\u540E\u7684\u63D0\u793A\u8BCD",
@@ -8594,7 +8596,13 @@ async function fetchRemoteVersion() {
     }
     const data = await response.json();
     if (data.content) {
-      const decodedContent = atob(data.content.replace(/\n/g, ""));
+      const base64 = data.content.replace(/\n/g, "");
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const decodedContent = new TextDecoder("utf-8").decode(bytes);
       const manifest = JSON.parse(decodedContent);
       remoteVersionCache = manifest.version;
       return manifest.version;
@@ -8616,22 +8624,76 @@ function compareVersions(v1, v2) {
   }
   return 0;
 }
-function getChangelogSinceVersion(currentVersion, remoteVersion) {
+var remoteChangelogCache = null;
+async function fetchRemoteChangelog() {
+  if (remoteChangelogCache) return remoteChangelogCache;
+  try {
+    const url = `${GITHUB_CHANGELOG_API_URL}?t=${Date.now()}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Accept": "application/vnd.github.v3+json"
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    if (data.content) {
+      const base64 = data.content.replace(/\n/g, "");
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const decodedContent = new TextDecoder("utf-8").decode(bytes);
+      const changelog = JSON.parse(decodedContent);
+      remoteChangelogCache = changelog;
+      return changelog;
+    }
+    return null;
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u8FDC\u7A0B changelog \u5931\u8D25", e);
+    return null;
+  }
+}
+function getChangelogSinceVersion(currentVersion, remoteVersion, changelog) {
   const updates = [];
-  const versions = Object.keys(CHANGELOG).sort((a, b) => compareVersions(b, a));
+  const versions = Object.keys(changelog).sort((a, b) => compareVersions(b, a));
   for (const ver of versions) {
     if (compareVersions(ver, currentVersion) > 0 && compareVersions(ver, remoteVersion) <= 0) {
       updates.push({
         version: ver,
-        content: CHANGELOG[ver]
+        content: changelog[ver]
       });
     }
   }
   return updates;
 }
-function showUpdateConfirmDialog(remoteVersion) {
+async function showUpdateConfirmDialog(remoteVersion) {
   if ($(".titania-update-overlay").length) return;
-  const updates = getChangelogSinceVersion(CURRENT_VERSION, remoteVersion);
+  const loadingHtml = `
+    <div class="titania-update-overlay">
+        <div class="titania-update-dialog">
+            <div class="titania-update-header">
+                <span><i class="fa-solid fa-arrow-up-right-from-square"></i> \u53D1\u73B0\u65B0\u7248\u672C</span>
+                <span class="titania-update-close">&times;</span>
+            </div>
+            <div class="titania-update-body" style="text-align: center; padding: 40px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #90cdf4;"></i>
+                <p style="margin-top: 15px; color: #a0aec0;">\u6B63\u5728\u83B7\u53D6\u66F4\u65B0\u65E5\u5FD7...</p>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(loadingHtml);
+  $(".titania-update-close").on("click", () => {
+    $(".titania-update-overlay").remove();
+  });
+  let changelog = await fetchRemoteChangelog();
+  if (!changelog) {
+    changelog = CHANGELOG;
+  }
+  const updates = getChangelogSinceVersion(CURRENT_VERSION, remoteVersion, changelog);
   let changelogContent = "";
   if (updates.length > 0) {
     updates.forEach((item) => {
@@ -8641,6 +8703,7 @@ function showUpdateConfirmDialog(remoteVersion) {
   } else {
     changelogContent = `<p>v${remoteVersion} \u5DF2\u53D1\u5E03</p>`;
   }
+  $(".titania-update-overlay").remove();
   const html = `
     <div class="titania-update-overlay">
         <div class="titania-update-dialog">
