@@ -14,7 +14,7 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.0.8";
+var CURRENT_VERSION = "3.0.9";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var LEGACY_KEYS = {
@@ -222,7 +222,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 
     padding: 3px;
     border-radius: 50%;
-    /* \u4F7F\u7528 CSS \u53D8\u91CF\u63A7\u5236\u80CC\u666F\u989C\u8272 */
+    /* \u4F7F\u7528 CSS \u53D8\u91CF\u63A7\u5236\u80CC\u666F\u989C\u8272\uFF08\u652F\u6301\u900F\u660E\u5EA6\uFF09 */
     background: var(--t-bg-color, #2b2b2b);
     color: #fff;
 
@@ -231,8 +231,8 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     justify-content: center;
     cursor: pointer;
     z-index: 9999;
-    /* \u4F7F\u7528 CSS \u53D8\u91CF\u63A7\u5236\u8FB9\u6846\u989C\u8272 */
-    border: 2px solid var(--t-border-color, #444);
+    /* \u4F7F\u7528 CSS \u53D8\u91CF\u63A7\u5236\u8FB9\u6846\u989C\u8272\uFF08\u652F\u6301\u900F\u660E\u5EA6\uFF09 */
+    border: 2px solid var(--t-border-color-rgba, var(--t-border-color, #444));
     transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     user-select: none;
     overflow: visible;
@@ -294,7 +294,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 }
 
 #titania-float-btn.t-loading.t-anim-ripple {
-    border-color: var(--t-border-color, #90cdf4);
+    border-color: var(--t-border-color-rgba, var(--t-border-color, #90cdf4));
 }
 
 #titania-float-btn.t-loading.t-anim-ripple::before,
@@ -304,6 +304,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     width: 100%;
     height: 100%;
     border-radius: 50%;
+    /* \u52A8\u753B\u6CE2\u7EB9\u4F7F\u7528\u4E0D\u900F\u660E\u7684\u8FB9\u6846\u989C\u8272\u4EE5\u4FDD\u6301\u53EF\u89C1\u6027 */
     border: 2px solid var(--t-border-color, #90cdf4);
     animation: t-ripple-1 1.5s ease-out infinite;
 }
@@ -363,7 +364,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 }
 
 #titania-float-btn.t-loading.t-anim-arc {
-    border-color: var(--t-border-color, #a29bfe);
+    border-color: var(--t-border-color-rgba, var(--t-border-color, #a29bfe));
 }
 
 #titania-float-btn.t-loading.t-anim-arc::before {
@@ -409,7 +410,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 
 #titania-float-btn.t-notify {
     animation: t-notify-glow 2s infinite ease-in-out;
-    border-color: var(--t-border-color, #55efc4);
+    border-color: var(--t-border-color-rgba, var(--t-border-color, #55efc4));
 }
 
 /* ===== \u8BA1\u65F6\u5668 ===== */
@@ -1770,6 +1771,63 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     padding: 2px 0;
 }
 
+/* ===== \u4E3B\u9898\u6837\u5F0F Tab ===== */
+
+/* CSS \u4EE3\u7801\u7F16\u8F91\u5668 */
+.t-code-editor {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.5;
+    tab-size: 4;
+    resize: vertical;
+    min-height: 200px;
+    background: #0f0f0f;
+    border-color: #333;
+    color: #ccc;
+}
+
+.t-code-editor::placeholder {
+    color: #555;
+}
+
+/* CSS \u9009\u62E9\u5668\u63D0\u793A\u5217\u8868 */
+.t-css-hints {
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.t-css-hint-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 8px 0;
+    border-bottom: 1px solid #222;
+    font-size: 0.85em;
+}
+
+.t-css-hint-item:last-child {
+    border-bottom: none;
+}
+
+.t-css-hint-item code {
+    background: #2a2a2a;
+    color: #90cdf4;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.95em;
+    min-width: 180px;
+    display: inline-block;
+}
+
+.t-css-hint-item span {
+    color: #888;
+}
+
 @media screen and (max-width: 600px) {
     .t-set-body {
         flex-direction: column;
@@ -2235,6 +2293,31 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 /* \u79FB\u52A8\u7AEF\u5206\u7C7B\u4E0B\u62C9\u9009\u62E9\u5668 - \u9ED8\u8BA4\u9690\u85CF */
 .t-mgr-mobile-cat {
     display: none;
+    position: relative;
+}
+
+/* \u79FB\u52A8\u7AEF\u5206\u7C7B\u7F16\u8F91\u6309\u94AE */
+.t-mgr-cat-edit-btn {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: 0.2s;
+    z-index: 1;
+}
+
+.t-mgr-cat-edit-btn:hover {
+    color: #bfa15f;
+}
+
+.t-mgr-cat-edit-btn:active {
+    color: #fff;
 }
 
 .t-mgr-cat-dropdown {
@@ -3561,7 +3644,7 @@ function renderToShadowDOMReal(container, html) {
                 line-height: 1.6;
             }
             .t-shadow-content {
-                padding: 15px 20px;
+                padding: 0;
                 min-height: 100%;
             }
             img, video { max-width: 100%; height: auto; }
@@ -4012,6 +4095,9 @@ function openScriptManager() {
             <!-- \u79FB\u52A8\u7AEF\u5206\u7C7B\u4E0B\u62C9\u9009\u62E9\u5668 -->
             <div class="t-mgr-mobile-cat" id="t-mgr-sidebar-mobile">
                 <select id="t-mgr-cat-select" class="t-mgr-cat-dropdown"></select>
+                <button id="t-mgr-cat-edit-mobile" class="t-mgr-cat-edit-btn" title="\u91CD\u547D\u540D\u5206\u7C7B" style="display:none;">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
             </div>
             <div class="t-mgr-main" id="t-mgr-main-area">
                 <div class="t-mgr-toolbar">
@@ -4159,13 +4245,29 @@ function openScriptManager() {
       const selected = currentFilter.category === c ? "selected" : "";
       $select.append(`<option value="${c}" ${selected}>${c}</option>`);
     });
+    if (currentFilter.category === "\u5168\u90E8" || currentFilter.category === "all") {
+      $("#t-mgr-cat-edit-mobile").hide();
+    } else {
+      $("#t-mgr-cat-edit-mobile").show();
+    }
   };
   $("#t-mgr-cat-select").on("change", function() {
     const selectedCat = $(this).val();
     currentFilter.category = selectedCat;
     $(".t-mgr-sb-item[data-filter='category']").removeClass("active");
     $(`.t-mgr-sb-item[data-val="${selectedCat}"]`).addClass("active");
+    if (selectedCat === "\u5168\u90E8") {
+      $("#t-mgr-cat-edit-mobile").hide();
+    } else {
+      $("#t-mgr-cat-edit-mobile").show();
+    }
     renderList();
+  });
+  $("#t-mgr-cat-edit-mobile").on("click", function() {
+    const selectedCat = $("#t-mgr-cat-select").val();
+    if (selectedCat && selectedCat !== "\u5168\u90E8") {
+      openRenameCategoryModal(selectedCat);
+    }
   });
   const openRenameCategoryModal = (oldName) => {
     $("#t-rename-old").text(oldName);
@@ -4652,10 +4754,20 @@ function openEditor(id, source = "main") {
 }
 
 // src/ui/settingsWindow.js
+function applyCustomCSS(cssText) {
+  let styleEl = document.getElementById("t-custom-style");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "t-custom-style";
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = cssText || "";
+}
 function openSettingsWindow() {
   const data = getExtData();
   const cfg = data.config || {};
   const app = data.appearance || {};
+  const customCSS = data.custom_css || "";
   app.type = app.type || "emoji";
   app.content = app.content || "\u{1F3AD}";
   app.size = app.size || 56;
@@ -4667,6 +4779,8 @@ function openSettingsWindow() {
   const activeStyleId = data.active_style_id || "default";
   if (!app.border_color) app.border_color = "#90cdf4";
   if (!app.bg_color) app.bg_color = "#2b2b2b";
+  if (app.border_opacity === void 0) app.border_opacity = 100;
+  if (app.bg_opacity === void 0) app.bg_opacity = 100;
   if (!cfg.profiles || !Array.isArray(cfg.profiles)) {
     cfg.profiles = [
       { id: "st_sync", name: "\u{1F517} \u8DDF\u968F SillyTavern (\u4E3B\u8FDE\u63A5)", type: "internal", readonly: true },
@@ -4680,6 +4794,8 @@ function openSettingsWindow() {
   if (!tempApp.size) tempApp.size = 56;
   if (!tempApp.border_color) tempApp.border_color = "#90cdf4";
   if (!tempApp.bg_color) tempApp.bg_color = "#2b2b2b";
+  if (tempApp.border_opacity === void 0) tempApp.border_opacity = 100;
+  if (tempApp.bg_opacity === void 0) tempApp.bg_opacity = 100;
   let tempStyleProfiles = JSON.parse(JSON.stringify(styleProfiles));
   let tempActiveStyleId = activeStyleId;
   let styleContentModified = false;
@@ -4690,6 +4806,7 @@ function openSettingsWindow() {
         <div class="t-set-body">
             <div class="t-set-nav">
                 <div class="t-set-tab-btn active" data-tab="appearance">\u{1F3A8} \u5916\u89C2\u8BBE\u7F6E</div>
+                <div class="t-set-tab-btn" data-tab="theme">\u{1F58C}\uFE0F \u4E3B\u9898\u6837\u5F0F</div>
                 <div class="t-set-tab-btn" data-tab="connection">\u{1F50C} API \u8FDE\u63A5</div>
                 <div class="t-set-tab-btn" data-tab="director">\u{1F3AC} \u5BFC\u6F14\u6A21\u5F0F</div>
                 <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
@@ -4737,6 +4854,11 @@ function openSettingsWindow() {
                                 <span class="t-color-preset" data-color="#fd79a8" style="width:24px; height:24px; border-radius:50%; background:#fd79a8; cursor:pointer; border:2px solid transparent;" title="\u7C89\u7EA2"></span>
                             </div>
                         </div>
+                        <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                            <span style="font-size:0.85em; color:#888; min-width:60px;">\u900F\u660E\u5EA6:</span>
+                            <input type="range" id="p-border-opacity" min="0" max="100" step="5" value="${tempApp.border_opacity}" style="flex:1;">
+                            <span id="p-border-opacity-val" style="font-size:0.85em; color:#bfa15f; min-width:40px;">${tempApp.border_opacity}%</span>
+                        </div>
                         <p style="font-size:0.75em; color:#666; margin-top:8px;">\u6B64\u989C\u8272\u5C06\u5E94\u7528\u4E8E\u60AC\u6D6E\u7403\u8FB9\u6846\u53CA\u52A8\u753B\u6548\u679C</p>
                     </div>
                     
@@ -4754,7 +4876,12 @@ function openSettingsWindow() {
                                 <span class="t-bg-preset" data-color="#0a3d62" style="width:24px; height:24px; border-radius:50%; background:#0a3d62; cursor:pointer; border:2px solid transparent;" title="\u6D77\u84DD"></span>
                             </div>
                         </div>
-                        <p style="font-size:0.75em; color:#666; margin-top:8px;">\u7403\u4F53\u7684\u80CC\u666F\u586B\u5145\u989C\u8272</p>
+                        <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                            <span style="font-size:0.85em; color:#888; min-width:60px;">\u900F\u660E\u5EA6:</span>
+                            <input type="range" id="p-bg-opacity" min="0" max="100" step="5" value="${tempApp.bg_opacity}" style="flex:1;">
+                            <span id="p-bg-opacity-val" style="font-size:0.85em; color:#bfa15f; min-width:40px;">${tempApp.bg_opacity}%</span>
+                        </div>
+                        <p style="font-size:0.75em; color:#666; margin-top:8px;">\u7403\u4F53\u7684\u80CC\u666F\u586B\u5145\u989C\u8272\uFF08\u900F\u660E\u5EA6\u4E3A0\u65F6\u5B8C\u5168\u900F\u660E\uFF09</p>
                     </div>
                     
                     <div class="t-form-group">
@@ -4786,7 +4913,82 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 2: \u8FDE\u63A5 -->
+                <!-- Tab 2: \u4E3B\u9898\u6837\u5F0F -->
+                <div id="page-theme" class="t-set-page">
+                    <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
+                        <div style="font-weight:bold; color:#bfa15f; margin-bottom:10px;"><i class="fa-solid fa-palette"></i> \u81EA\u5B9A\u4E49 CSS \u6837\u5F0F</div>
+                        <div style="font-size:0.85em; color:#888; line-height:1.6;">
+                            \u5728\u6B64\u8F93\u5165\u81EA\u5B9A\u4E49 CSS \u4EE3\u7801\uFF0C\u53EF\u4EE5\u8986\u76D6\u63D2\u4EF6\u9ED8\u8BA4\u6837\u5F0F\u3002<br>
+                            \u4F5C\u7528\u8303\u56F4\uFF1A\u63D2\u4EF6 UI\uFF08\u7A97\u53E3\u3001\u6309\u94AE\u7B49\uFF09\u548C\u5267\u672C\u6E32\u67D3\u533A\u57DF\u3002
+                        </div>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <label class="t-form-label" style="margin:0;">CSS \u4EE3\u7801</label>
+                            <div style="display:flex; gap:8px;">
+                                <button id="btn-css-import" class="t-tool-btn" title="\u5BFC\u5165\u914D\u7F6E"><i class="fa-solid fa-file-import"></i> \u5BFC\u5165</button>
+                                <button id="btn-css-export" class="t-tool-btn" title="\u5BFC\u51FA\u914D\u7F6E"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA</button>
+                                <button id="btn-css-reset" class="t-tool-btn" title="\u6E05\u7A7A\u5185\u5BB9" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i> \u6E05\u7A7A</button>
+                            </div>
+                        </div>
+                        <textarea id="t-custom-css-input" class="t-input t-code-editor" rows="12" placeholder="/* \u5728\u6B64\u8F93\u5165\u81EA\u5B9A\u4E49 CSS */&#10;&#10;/* \u4F8B\u5982\uFF1A\u4FEE\u6539\u4E3B\u7A97\u53E3\u80CC\u666F\u8272 */&#10;.t-box {&#10;    background: #1a1a2e;&#10;}&#10;&#10;/* \u4FEE\u6539\u6807\u9898\u989C\u8272 */&#10;.t-title-main {&#10;    color: #ff6b6b;&#10;}">${customCSS}</textarea>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                            <span id="css-char-count" style="font-size:0.75em; color:#666;">0 \u5B57\u7B26</span>
+                            <span style="font-size:0.75em; color:#666;">\u70B9\u51FB\u300C\u4FDD\u5B58\u6240\u6709\u914D\u7F6E\u300D\u540E\u751F\u6548</span>
+                        </div>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <div style="font-weight:bold; color:#90cdf4; margin-bottom:10px;"><i class="fa-solid fa-lightbulb"></i> \u5E38\u7528\u9009\u62E9\u5668\u53C2\u8003</div>
+                        <div class="t-css-hints">
+                            <div class="t-css-hint-item">
+                                <code>.t-box</code>
+                                <span>\u6240\u6709\u5F39\u7A97\u5BB9\u5668\uFF08\u4E3B\u7A97\u53E3\u3001\u8BBE\u7F6E\u3001\u7BA1\u7406\u5668\u7B49\uFF09</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>.t-header</code>
+                                <span>\u5F39\u7A97\u6807\u9898\u680F</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>.t-title-main</code>
+                                <span>\u6807\u9898\u6587\u5B57</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>.t-btn</code>
+                                <span>\u6309\u94AE\u57FA\u7840\u6837\u5F0F</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>.t-btn.primary</code>
+                                <span>\u4E3B\u8981\u6309\u94AE\uFF08\u91D1\u8272\uFF09</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>.t-input</code>
+                                <span>\u8F93\u5165\u6846\u3001\u4E0B\u62C9\u6846\u3001\u6587\u672C\u57DF</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>#t-output-content</code>
+                                <span>\u5267\u672C\u6E32\u67D3\u533A\u57DF\u5BB9\u5668</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>#titania-float-btn</code>
+                                <span>\u60AC\u6D6E\u7403</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>.t-mgr-item</code>
+                                <span>\u5267\u672C\u7BA1\u7406\u5668\u5217\u8868\u9879</span>
+                            </div>
+                            <div class="t-css-hint-item">
+                                <code>.t-fav-item</code>
+                                <span>\u6536\u85CF\u5217\u8868\u9879</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <input type="file" id="t-css-file-input" accept=".json" style="display:none;">
+                </div>
+
+                <!-- Tab 3: \u8FDE\u63A5 -->
                 <div id="page-connection" class="t-set-page">
                     <div class="t-form-group">
                         <label class="t-form-label">\u5207\u6362\u914D\u7F6E\u65B9\u6848 (Profile)</label>
@@ -5037,15 +5239,27 @@ function openSettingsWindow() {
     ripple: "p-anim-ripple",
     arc: "p-anim-arc"
   };
+  const hexToRgba = (hex, opacity) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!result) return hex;
+    const r = parseInt(result[1], 16);
+    const g = parseInt(result[2], 16);
+    const b = parseInt(result[3], 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+  };
   const renderPreview = () => {
     const $ball = $("#p-ball");
     const size = parseInt(tempApp.size) || 56;
+    const bgOpacity = tempApp.bg_opacity !== void 0 ? tempApp.bg_opacity : 100;
+    const borderOpacity = tempApp.border_opacity !== void 0 ? tempApp.border_opacity : 100;
+    const bgColor = hexToRgba(tempApp.bg_color || "#2b2b2b", bgOpacity);
+    const borderColor = hexToRgba(tempApp.border_color || "#90cdf4", borderOpacity);
     $ball.css({
       width: size + "px",
       height: size + "px",
       fontSize: Math.floor(size * 0.46) + "px",
-      background: tempApp.bg_color || "#2b2b2b",
-      borderColor: tempApp.border_color || "#90cdf4"
+      background: bgColor,
+      borderColor
     });
     if (tempApp.type === "emoji") {
       $ball.html(tempApp.content);
@@ -5150,6 +5364,16 @@ function openSettingsWindow() {
     updateBgColorUI($(this).data("color"));
   });
   $(`.t-bg-preset[data-color="${tempApp.bg_color}"]`).css("border-color", "#fff");
+  $("#p-border-opacity").on("input", function() {
+    tempApp.border_opacity = parseInt($(this).val());
+    $("#p-border-opacity-val").text(tempApp.border_opacity + "%");
+    renderPreview();
+  });
+  $("#p-bg-opacity").on("input", function() {
+    tempApp.bg_opacity = parseInt($(this).val());
+    $("#p-bg-opacity-val").text(tempApp.bg_opacity + "%");
+    renderPreview();
+  });
   const updateDirCharCount = () => {
     const len = ($("#set-dir-instruction").val() || "").length;
     $("#dir-char-count").text(`${len}/500`);
@@ -5271,6 +5495,62 @@ function openSettingsWindow() {
     if (window.toastr) toastr.success("\u65B9\u6848\u5DF2\u5220\u9664");
   });
   renderStyleProfileUI();
+  const updateCSSCharCount = () => {
+    const len = ($("#t-custom-css-input").val() || "").length;
+    $("#css-char-count").text(`${len} \u5B57\u7B26`);
+  };
+  $("#t-custom-css-input").on("input", updateCSSCharCount);
+  updateCSSCharCount();
+  $("#btn-css-export").on("click", () => {
+    const cssContent = $("#t-custom-css-input").val() || "";
+    const exportData = {
+      type: "titania_custom_css",
+      version: "1.0",
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      css: cssContent
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `titania_theme_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10).replace(/-/g, "")}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if (window.toastr) toastr.success("\u4E3B\u9898\u914D\u7F6E\u5DF2\u5BFC\u51FA");
+  });
+  $("#btn-css-import").on("click", () => {
+    $("#t-css-file-input").click();
+  });
+  $("#t-css-file-input").on("change", function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const importData = JSON.parse(e.target.result);
+        if (importData.type !== "titania_custom_css") {
+          throw new Error("\u65E0\u6548\u7684\u4E3B\u9898\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F");
+        }
+        const importedCSS = importData.css || "";
+        $("#t-custom-css-input").val(importedCSS);
+        updateCSSCharCount();
+        if (window.toastr) toastr.success("\u4E3B\u9898\u914D\u7F6E\u5DF2\u5BFC\u5165\uFF0C\u8BF7\u70B9\u51FB\u300C\u4FDD\u5B58\u6240\u6709\u914D\u7F6E\u300D\u751F\u6548");
+      } catch (err) {
+        console.error("Titania: CSS \u5BFC\u5165\u5931\u8D25", err);
+        if (window.toastr) toastr.error("\u5BFC\u5165\u5931\u8D25\uFF1A" + err.message);
+      }
+    };
+    reader.readAsText(file);
+    $(this).val("");
+  });
+  $("#btn-css-reset").on("click", () => {
+    if (!confirm("\u786E\u5B9A\u8981\u6E05\u7A7A\u6240\u6709\u81EA\u5B9A\u4E49 CSS \u5417\uFF1F")) return;
+    $("#t-custom-css-input").val("");
+    updateCSSCharCount();
+    if (window.toastr) toastr.info("\u5DF2\u6E05\u7A7A\uFF0C\u8BF7\u70B9\u51FB\u300C\u4FDD\u5B58\u6240\u6709\u914D\u7F6E\u300D\u751F\u6548");
+  });
   const savedCats = cfg.auto_categories || [];
   const renderAutoCatList = () => {
     const $list = $("#auto-cat-list");
@@ -5419,9 +5699,12 @@ ${JSON.stringify(l.details, null, 2)}`;
       size: tempApp.size || 56,
       border_color: tempApp.border_color || "#90cdf4",
       bg_color: tempApp.bg_color || "#2b2b2b",
+      border_opacity: tempApp.border_opacity !== void 0 ? tempApp.border_opacity : 100,
+      bg_opacity: tempApp.bg_opacity !== void 0 ? tempApp.bg_opacity : 100,
       show_timer: $("#p-show-timer").is(":checked")
     };
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
+    d.custom_css = $("#t-custom-css-input").val() || "";
     d.style_profiles = tempStyleProfiles;
     d.active_style_id = tempActiveStyleId;
     d.auto_continue = {
@@ -5434,6 +5717,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     $("#t-settings-view").remove();
     $("#t-main-view").show();
     createFloatingButton();
+    applyCustomCSS(d.custom_css);
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   renderPreview();
@@ -6923,18 +7207,33 @@ function createFloatingButton() {
   if (typeof extension_settings !== "undefined" && extension_settings[extensionName] && !extension_settings[extensionName].enabled) {
     return;
   }
-  const app = settings2.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: "#90cdf4", bg_color: "#2b2b2b" };
+  const app = settings2.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: "#90cdf4", bg_color: "#2b2b2b", border_opacity: 100, bg_opacity: 100 };
   const size = parseInt(app.size) || 56;
   const animationType = app.animation || "ripple";
   const borderColor = app.border_color || "#90cdf4";
   const bgColor = app.bg_color || "#2b2b2b";
+  const borderOpacity = app.border_opacity !== void 0 ? app.border_opacity : 100;
+  const bgOpacity = app.bg_opacity !== void 0 ? app.bg_opacity : 100;
+  const hexToRgba = (hex, opacity) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!result) return hex;
+    const r = parseInt(result[1], 16);
+    const g = parseInt(result[2], 16);
+    const b = parseInt(result[3], 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+  };
+  const borderColorRgba = hexToRgba(borderColor, borderOpacity);
+  const bgColorRgba = hexToRgba(bgColor, bgOpacity);
   const btnContent = app.type === "image" && app.content.startsWith("data:") ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${app.content}</span>`;
   const btn = $(`<div id="titania-float-btn" data-animation="${animationType}">${btnContent}</div>`);
   const timer = $(`<div id="titania-timer">0.0s</div>`);
   btn.css({
     "--t-size": `${size}px`,
     "--t-border-color": borderColor,
-    "--t-bg-color": bgColor
+    "--t-border-color-rgba": borderColorRgba,
+    "--t-bg-color": bgColorRgba,
+    "--t-border-opacity": borderOpacity / 100,
+    "--t-bg-opacity": bgOpacity / 100
   });
   $("body").append(btn);
   $("body").append(timer);
@@ -7794,6 +8093,9 @@ async function initEchoTheater() {
   }
   loadScripts();
   createFloatingButton();
+  if (extData.custom_css) {
+    applyCustomCSS(extData.custom_css);
+  }
   eventSource.on(event_types.GENERATION_ENDED, onGenerationEnded);
 }
 function disableEchoTheater() {
@@ -7890,6 +8192,7 @@ async function fetchRemoteManifest() {
 }
 function getLocalChangelog() {
   return {
+    "3.0.9": "\u{1F3A8} \u65B0\u589E\u81EA\u5B9A\u4E49\u4E3B\u9898\u6837\u5F0F\uFF1A\u8BBE\u7F6E\u4E2D\u65B0\u589E\u300C\u4E3B\u9898\u6837\u5F0F\u300D\u9875\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49 CSS \u8986\u76D6\u9ED8\u8BA4\u6837\u5F0F\uFF0C\u63D0\u4F9B\u5E38\u7528\u9009\u62E9\u5668\u53C2\u8003<br>\u{1F527} \u60AC\u6D6E\u7403\u900F\u660E\u5EA6\u63A7\u5236\uFF1A\u8FB9\u6846\u548C\u80CC\u666F\u8272\u5747\u652F\u6301 0-100% \u900F\u660E\u5EA6\u8C03\u8282<br>\u{1F4D0} \u6E32\u67D3\u533A\u57DF\u4F18\u5316\uFF1A\u79FB\u9664 Shadow DOM \u5185\u5BB9\u533A\u57DF\u9ED8\u8BA4\u5185\u8FB9\u8DDD\uFF0C\u751F\u6210\u5185\u5BB9\u53EF\u5B8C\u5168\u586B\u5145<br>\u{1F41B} \u4FEE\u590D\u79FB\u52A8\u7AEF\u5206\u7C7B\u91CD\u547D\u540D\u548C\u6279\u91CF\u79FB\u52A8\u5267\u672C\u95EE\u9898",
     "3.0.8": "\u{1F3AE} \u4E92\u52A8\u5267\u672C\u589E\u5F3A\uFF1A\u68C0\u6D4B\u5230\u4E92\u52A8\u5185\u5BB9\u65F6\u663E\u793A\u6D6E\u52A8\u6309\u94AE(FAB)\uFF0C\u652F\u6301\u65B0\u7A97\u53E3\u4F53\u9A8C\u548C\u5BFC\u51FAHTML<br>\u{1F3B2} \u65B0\u589E\u5B8F\u5904\u7406\u652F\u6301\uFF1A\u5267\u672C\u63D0\u793A\u8BCD\u73B0\u652F\u6301 {{random::A::B::C}} \u7B49 ST \u5185\u7F6E\u5B8F<br>\u{1F4C2} \u5267\u672C\u7BA1\u7406\u5668\u4F18\u5316\uFF1A\u79FB\u9664\u81EA\u5B9A\u4E49\u6392\u5E8F\uFF0C\u79FB\u52A8\u7AEF\u65B0\u589E\u4E0B\u62C9\u9009\u62E9\u5668<br>\u{1F527} \u4FEE\u590D\u6279\u91CF\u79FB\u52A8\u5267\u672C\u540E\u539F\u5206\u7C7B\u4ECD\u4FDD\u7559\u95EE\u9898<br>\u{1F4CA} \u5BA1\u67E5\u7A97\u53E3\u540C\u6B65\u663E\u793A\u5904\u7406\u540E\u7684\u63D0\u793A\u8BCD",
     "3.0.7": "\u{1F6E1}\uFE0F \u5B89\u5168\u6027\u5347\u7EA7\uFF1A\u91C7\u7528 iframe \u6C99\u7BB1\u9694\u79BB\u6E32\u67D3\uFF0C\u4FEE\u590D\u4EA4\u4E92\u5931\u6548\u95EE\u9898<br>\u{1F504} \u81EA\u52A8\u66F4\u65B0\u4F18\u5316\uFF1A\u6269\u5C55\u680F\u65B0\u589E\u7248\u672C\u68C0\u6D4B\u4E0E\u4E00\u952E\u66F4\u65B0\u529F\u80FD<br>\u270D\uFE0F \u81EA\u52A8\u7EED\u5199\u589E\u5F3A\uFF1A\u4F18\u5316\u4E0A\u4E0B\u6587\u62FC\u63A5\u7B56\u7565\uFF0C\u667A\u80FD\u53BB\u91CD\uFF0C\u63D0\u5347\u957F\u6587\u8FDE\u8D2F\u6027<br>\u{1F41B} \u4FEE\u590D\u5DF2\u77E5 Bug",
     "3.0.6": "\u{1F517} \u4FEE\u590D\u300C\u8DDF\u968FST\u4E3B\u8FDE\u63A5\u300D\u529F\u80FD\uFF1A\u73B0\u901A\u8FC7 ST \u540E\u7AEF\u4EE3\u7406\u53D1\u9001\u8BF7\u6C42\uFF0C\u652F\u6301\u6240\u6709 API \u6E90\u548C\u53CD\u5411\u4EE3\u7406<br>\u{1F3AC} \u5BFC\u6F14\u6A21\u5F0F\u6539\u4E3A\u81EA\u7531\u7F16\u8F91\u533A\u57DF\uFF0C\u53EF\u81EA\u5B9A\u4E49\u4EFB\u610F\u6307\u4EE4<br>\u270D\uFE0F \u65B0\u589E\u6587\u7B14\u53C2\u8003\u591A\u65B9\u6848\u529F\u80FD\uFF08\u6700\u591A10\u4E2A\uFF09<br>\u{1F4DA} \u4E16\u754C\u4E66\u7A7A\u6761\u76EE\u786E\u8BA4\u5BF9\u8BDD\u6846<br>\u26A1 \u63D2\u4EF6\u52A0\u8F7D\u4F18\u5316",
