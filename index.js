@@ -14,11 +14,12 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.1.3";
+var CURRENT_VERSION = "3.1.4";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
 var CHANGELOG = {
+  "3.1.4": "\u26A1 \u65B0\u589E\u300C\u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53\u300D\u9009\u9879\uFF1A\u5F00\u542F\u540E\u81EA\u5B9A\u4E49\u5B57\u4F53\u5C06\u4F7F\u7528 !important \u8986\u76D6\u6A21\u578B\u751F\u6210\u7684\u5185\u8054 font-family \u6837\u5F0F",
   "3.1.3": "\u{1F527} \u4FEE\u590D\u66F4\u65B0\u529F\u80FD\u62A5\u9519\u95EE\u9898\uFF08\u4F18\u5316 API \u54CD\u5E94\u5904\u7406\uFF0C\u517C\u5BB9\u4E0D\u540C SillyTavern \u7248\u672C\uFF09",
   "3.1.2": "\u{1F524} \u4FEE\u590D\u81EA\u5B9A\u4E49\u5B57\u4F53\u5728\u6E32\u67D3\u533A\u57DF\u4E0D\u751F\u6548\u7684\u95EE\u9898\uFF08Shadow DOM \u5185\u6CE8\u5165\u5B57\u4F53\u5B9A\u4E49\uFF09",
   "3.1.1": "\u{1F41B} \u4FEE\u590D\u66F4\u65B0\u5F39\u7A97\u65E0\u6CD5\u663E\u793A\u66F4\u65B0\u65E5\u5FD7\u7684\u95EE\u9898\uFF08\u73B0\u4ECE\u8FDC\u7A0B\u83B7\u53D6 changelog.json\uFF09<br>\u{1F527} \u4FEE\u590D Base64 \u89E3\u7801 UTF-8 \u4E2D\u6587\u4E71\u7801\u95EE\u9898",
@@ -3884,27 +3885,36 @@ function buildFontStylesForShadowDOM() {
     const extData = getExtData();
     const fontSettings = extData.font_settings;
     if (!fontSettings || fontSettings.source === "default" || !fontSettings.source) {
-      return "";
+      return { fontImport: "", forceOverride: false, fontFamily: "" };
     }
+    const forceOverride = fontSettings.force_override === true;
     if (fontSettings.source === "online" && fontSettings.import_url && fontSettings.font_name) {
-      return `@import url('${fontSettings.import_url}');`;
+      return {
+        fontImport: `@import url('${fontSettings.import_url}');`,
+        forceOverride,
+        fontFamily: `'${fontSettings.font_name}'`
+      };
     }
     if (fontSettings.source === "upload" && fontSettings.font_data) {
       const fontName = fontSettings.font_name || "TitaniaCustomFont";
-      return `
-                @font-face {
-                    font-family: '${fontName}';
-                    src: url('${fontSettings.font_data}') format('woff2');
-                    font-weight: normal;
-                    font-style: normal;
-                    font-display: swap;
-                }
-            `;
+      return {
+        fontImport: `
+                    @font-face {
+                        font-family: '${fontName}';
+                        src: url('${fontSettings.font_data}') format('woff2');
+                        font-weight: normal;
+                        font-style: normal;
+                        font-display: swap;
+                    }
+                `,
+        forceOverride,
+        fontFamily: `'${fontName}'`
+      };
     }
-    return "";
+    return { fontImport: "", forceOverride: false, fontFamily: "" };
   } catch (e) {
     console.warn("Titania: \u6784\u5EFA Shadow DOM \u5B57\u4F53\u6837\u5F0F\u5931\u8D25", e);
-    return "";
+    return { fontImport: "", forceOverride: false, fontFamily: "" };
   }
 }
 function renderToShadowDOMReal(container, html) {
@@ -3913,10 +3923,23 @@ function renderToShadowDOMReal(container, html) {
   host.className = "t-shadow-host";
   host.style.cssText = "width:100%; min-height:100%;";
   const shadow = host.attachShadow({ mode: "open" });
-  const fontStyles = buildFontStylesForShadowDOM();
+  const fontInfo = buildFontStylesForShadowDOM();
+  const forceOverrideStyles = fontInfo.forceOverride && fontInfo.fontFamily ? `
+            /* \u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53\u6837\u5F0F */
+            .t-shadow-content * {
+                font-family: ${fontInfo.fontFamily}, var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
+            }
+            /* \u4FDD\u7559\u7B49\u5BBD\u5B57\u4F53\u5143\u7D20 */
+            .t-shadow-content code,
+            .t-shadow-content pre,
+            .t-shadow-content kbd,
+            .t-shadow-content samp {
+                font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            }
+        ` : "";
   const baseStyles = `
         <style>
-            ${fontStyles}
+            ${fontInfo.fontImport}
             :host {
                 display: block;
                 width: 100%;
@@ -3936,6 +3959,7 @@ function renderToShadowDOMReal(container, html) {
             }
             img, video { max-width: 100%; height: auto; }
             a { color: #90cdf4; }
+            ${forceOverrideStyles}
         </style>
     `;
   shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
@@ -5099,8 +5123,10 @@ function openSettingsWindow() {
     // "default" | "online" | "upload"
     import_url: "",
     font_name: "",
-    font_data: ""
+    font_data: "",
     // base64 字体数据 (上传时使用)
+    force_override: false
+    // 是否强制覆盖内联样式
   };
   app.type = app.type || "emoji";
   app.content = app.content || "\u{1F3AD}";
@@ -5320,6 +5346,20 @@ function openSettingsWindow() {
                                 <label class="t-form-label">\u5B57\u4F53\u540D\u79F0\uFF08\u53EF\u9009\uFF09</label>
                                 <input id="t-font-name-upload" class="t-input" value="${fontSettings.source === "upload" ? fontSettings.font_name || "" : ""}" placeholder="\u7559\u7A7A\u5219\u81EA\u52A8\u547D\u540D\u4E3A TitaniaCustomFont">
                             </div>
+                        </div>
+                        
+                        <!-- \u5F3A\u5236\u8986\u76D6\u9009\u9879 -->
+                        <div id="t-font-force-section" style="display:${fontSettings.source !== "default" ? "block" : "none"}; margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                            <label style="cursor:pointer; display:flex; align-items:flex-start; gap:12px;">
+                                <input type="checkbox" id="t-font-force-override" ${fontSettings.force_override ? "checked" : ""} style="margin-top:3px;">
+                                <div>
+                                    <div style="color:#feca57; font-weight:bold;">\u26A1 \u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53</div>
+                                    <div style="font-size:0.8em; color:#888; margin-top:3px;">
+                                        \u5F00\u542F\u540E\uFF0C\u81EA\u5B9A\u4E49\u5B57\u4F53\u5C06\u4F7F\u7528 !important \u8986\u76D6\u6A21\u578B\u751F\u6210\u7684\u5185\u8054 font-family \u6837\u5F0F\u3002<br>
+                                        <span style="color:#ff6b6b;">\u6CE8\u610F\uFF1A\u8FD9\u53EF\u80FD\u7834\u574F\u6A21\u578B\u523B\u610F\u8BBE\u8BA1\u7684\u7279\u6B8A\u5B57\u4F53\u6548\u679C\u3002</span>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
                         
                         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px; padding-top:10px; border-top:1px solid #333;">
@@ -5914,6 +5954,7 @@ function openSettingsWindow() {
     $(`[data-font-source="${source}"]`).css("border-color", "#bfa15f");
     $("#t-font-online-options").toggle(source === "online");
     $("#t-font-upload-options").toggle(source === "upload");
+    $("#t-font-force-section").toggle(source !== "default");
   });
   $("#btn-font-upload").on("click", () => $("#t-font-file-input").click());
   $("#t-font-file-input").on("change", async function() {
@@ -6157,7 +6198,8 @@ ${JSON.stringify(l.details, null, 2)}`;
       source: fontSource,
       import_url: fontSource === "online" ? $("#t-font-import-url").val().trim() : "",
       font_name: fontSource === "online" ? $("#t-font-name-online").val().trim() : fontSource === "upload" ? $("#t-font-name-upload").val().trim() : "",
-      font_data: fontSource === "upload" ? tempFontData : ""
+      font_data: fontSource === "upload" ? tempFontData : "",
+      force_override: fontSource !== "default" && $("#t-font-force-override").is(":checked")
     };
     d.style_profiles = tempStyleProfiles;
     d.active_style_id = tempActiveStyleId;
