@@ -14,10 +14,11 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.0.9";
+var CURRENT_VERSION = "3.1.0";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var CHANGELOG = {
+  "3.1.0": "\u{1F524} \u5168\u5C40\u5B57\u4F53\u8BBE\u7F6E\uFF1A\u652F\u6301\u7CFB\u7EDF\u9ED8\u8BA4\u3001\u5728\u7EBF\u5B57\u4F53(@import)\u3001\u672C\u5730\u4E0A\u4F20(.woff2/.ttf)\u4E09\u79CD\u5B57\u4F53\u6765\u6E90<br>\u{1F3A8} \u7B80\u5316\u5B57\u4F53\u914D\u7F6E\uFF1A\u7EDF\u4E00\u4E3A\u5355\u4E00\u5168\u5C40\u5B57\u4F53\u53D8\u91CF\uFF0C\u4EE3\u7801\u7F16\u8F91\u5668\u4FDD\u6301\u7B49\u5BBD\u5B57\u4F53",
   "3.0.9": "\u{1F3A8} \u65B0\u589E\u81EA\u5B9A\u4E49\u4E3B\u9898\u6837\u5F0F\uFF1A\u8BBE\u7F6E\u4E2D\u65B0\u589E\u300C\u4E3B\u9898\u6837\u5F0F\u300D\u9875\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49 CSS \u8986\u76D6\u9ED8\u8BA4\u6837\u5F0F\uFF0C\u63D0\u4F9B\u5E38\u7528\u9009\u62E9\u5668\u53C2\u8003<br>\u{1F527} \u60AC\u6D6E\u7403\u900F\u660E\u5EA6\u63A7\u5236\uFF1A\u8FB9\u6846\u548C\u80CC\u666F\u8272\u5747\u652F\u6301 0-100% \u900F\u660E\u5EA6\u8C03\u8282<br>\u{1F4D0} \u6E32\u67D3\u533A\u57DF\u4F18\u5316\uFF1A\u79FB\u9664 Shadow DOM \u5185\u5BB9\u533A\u57DF\u9ED8\u8BA4\u5185\u8FB9\u8DDD\uFF0C\u751F\u6210\u5185\u5BB9\u53EF\u5B8C\u5168\u586B\u5145<br>\u{1F41B} \u4FEE\u590D\u79FB\u52A8\u7AEF\u5206\u7C7B\u91CD\u547D\u540D\u548C\u6279\u91CF\u79FB\u52A8\u5267\u672C\u95EE\u9898",
   "3.0.8": "\u{1F3AE} \u4E92\u52A8\u5267\u672C\u589E\u5F3A\uFF1A\u68C0\u6D4B\u5230\u4E92\u52A8\u5185\u5BB9\u65F6\u663E\u793A\u6D6E\u52A8\u6309\u94AE(FAB)\uFF0C\u652F\u6301\u65B0\u7A97\u53E3\u4F53\u9A8C\u548C\u5BFC\u51FAHTML<br>\u{1F3B2} \u65B0\u589E\u5B8F\u5904\u7406\u652F\u6301\uFF1A\u5267\u672C\u63D0\u793A\u8BCD\u73B0\u652F\u6301 {{random::A::B::C}} \u7B49 ST \u5185\u7F6E\u5B8F<br>\u{1F4C2} \u5267\u672C\u7BA1\u7406\u5668\u4F18\u5316\uFF1A\u79FB\u9664\u81EA\u5B9A\u4E49\u6392\u5E8F\uFF0C\u79FB\u52A8\u7AEF\u65B0\u589E\u4E0B\u62C9\u9009\u62E9\u5668<br>\u{1F527} \u4FEE\u590D\u6279\u91CF\u79FB\u52A8\u5267\u672C\u540E\u539F\u5206\u7C7B\u4ECD\u4FDD\u7559\u95EE\u9898<br>\u{1F4CA} \u5BA1\u67E5\u7A97\u53E3\u540C\u6B65\u663E\u793A\u5904\u7406\u540E\u7684\u63D0\u793A\u8BCD",
   "3.0.7": "\u{1F6E1}\uFE0F \u5B89\u5168\u6027\u5347\u7EA7\uFF1A\u91C7\u7528 iframe \u6C99\u7BB1\u9694\u79BB\u6E32\u67D3\uFF0C\u4FEE\u590D\u4EA4\u4E92\u5931\u6548\u95EE\u9898<br>\u{1F504} \u81EA\u52A8\u66F4\u65B0\u4F18\u5316\uFF1A\u6269\u5C55\u680F\u65B0\u589E\u7248\u672C\u68C0\u6D4B\u4E0E\u4E00\u952E\u66F4\u65B0\u529F\u80FD<br>\u270D\uFE0F \u81EA\u52A8\u7EED\u5199\u589E\u5F3A\uFF1A\u4F18\u5316\u4E0A\u4E0B\u6587\u62FC\u63A5\u7B56\u7565\uFF0C\u667A\u80FD\u53BB\u91CD\uFF0C\u63D0\u5347\u957F\u6587\u8FDE\u8D2F\u6027<br>\u{1F41B} \u4FEE\u590D\u5DF2\u77E5 Bug",
@@ -127,93 +128,253 @@ function loadCssFiles() {
 /* css/base.css - \u57FA\u7840\u7EC4\u4EF6\u4E0E\u5DE5\u5177\u7C7B */
 
 :root {
-    --t-theme: #bfa15f;      /* \u4E3B\u9898\u8272 (\u91D1\u8272) */
-    --t-notify: #55efc4;     /* \u901A\u77E5\u8272 (\u9752\u8272) */
-    --t-bg-dark: #121212;    /* \u6DF1\u8272\u80CC\u666F */
-    --t-bg-panel: #1e1e1e;   /* \u9762\u677F\u80CC\u666F */
-    --t-border: #333;        /* \u8FB9\u6846\u8272 */
+    /* \u989C\u8272\u53D8\u91CF */
+    --t-theme: #bfa15f;
+    /* \u4E3B\u9898\u8272 (\u91D1\u8272) */
+    --t-notify: #55efc4;
+    /* \u901A\u77E5\u8272 (\u9752\u8272) */
+    --t-bg-dark: #121212;
+    /* \u6DF1\u8272\u80CC\u666F */
+    --t-bg-panel: #1e1e1e;
+    /* \u9762\u677F\u80CC\u666F */
+    --t-border: #333;
+    /* \u8FB9\u6846\u8272 */
+
+    /* \u5B57\u4F53\u53D8\u91CF */
+    /* \u5168\u5C40\u5B57\u4F53 - \u7528\u6237\u53EF\u81EA\u5B9A\u4E49\uFF0C\u5E94\u7528\u4E8E UI \u548C\u5185\u5BB9\u533A\u57DF */
+    --t-font-global: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* \u7B49\u5BBD\u5B57\u4F53 - \u56FA\u5B9A\u7528\u4E8E\u4EE3\u7801\u7F16\u8F91\u5668\u548C\u65E5\u5FD7\uFF0C\u4E0D\u53D7\u7528\u6237\u8BBE\u7F6E\u5F71\u54CD */
+    --t-font-mono: "Consolas", "Monaco", "Courier New", monospace;
 }
 
 /* \u906E\u7F69\u5C42 */
 .t-overlay {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.6); z-index: 20000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 20000;
     backdrop-filter: blur(2px);
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     isolation: isolate;
 }
 
 /* \u901A\u7528\u7A97\u53E3\u5BB9\u5668 */
 .t-box {
     position: relative;
-    width: 95%; max-width: 650px;
-    height: auto; max-height: 85vh;
+    width: 95%;
+    max-width: 650px;
+    height: auto;
+    max-height: 85vh;
     background: var(--t-bg-dark);
     border: 1px solid #555;
     border-radius: 12px;
-    display: flex; flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    color: #eee; font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    color: #eee;
+    font-family: var(--t-font-global);
     overflow: hidden;
 }
 
 /* \u9876\u90E8\u6807\u9898\u680F */
 .t-header {
-    padding: 12px 15px; border-bottom: 1px solid #444;
-    background: #242530; display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #444;
+    background: #242530;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     flex-shrink: 0;
 }
 
-.t-title-container { display: flex; flex-direction: column; justify-content: center; position: relative; padding-left: 12px; }
-.t-title-container::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px; background: linear-gradient(to bottom, #ff9a9e, #fad0c4); border-radius: 2px; box-shadow: 0 0 8px rgba(255, 154, 158, 0.6); }
-.t-title-main { font-size: 1.4em; font-weight: 800; line-height: 1.1; background: linear-gradient(135deg, #e0c3fc 0%, #ff9a9e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-.t-title-sub { font-size: 0.55em; color: #aaa; text-transform: uppercase; letter-spacing: 4px; margin-top: 2px; opacity: 0.7; font-weight: 300; background: linear-gradient(90deg, #ff9a9e, #e0c3fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.t-title-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    padding-left: 12px;
+}
+
+.t-title-container::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10%;
+    height: 80%;
+    width: 4px;
+    background: linear-gradient(to bottom, #ff9a9e, #fad0c4);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(255, 154, 158, 0.6);
+}
+
+.t-title-main {
+    font-size: 1.4em;
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e0c3fc 0%, #ff9a9e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+}
+
+.t-title-sub {
+    font-size: 0.55em;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-top: 2px;
+    opacity: 0.7;
+    font-weight: 300;
+    background: linear-gradient(90deg, #ff9a9e, #e0c3fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
 /* \u6309\u94AE */
 .t-btn {
-    background: #333; border: 1px solid #555; color: white;
-    padding: 10px 15px; cursor: pointer; border-radius: 6px;
-    font-weight: bold; text-align: center;
-    display: flex; align-items: center; justify-content: center; gap: 5px;
+    background: #333;
+    border: 1px solid #555;
+    color: white;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     transition: 0.2s;
 }
-.t-btn:hover { background: #444; border-color: #666; }
-.t-btn.primary { background: linear-gradient(90deg, #ff9a9e, #fecfef); color: #444; border: none; }
-.t-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.t-btn:hover {
+    background: #444;
+    border-color: #666;
+}
+
+.t-btn.primary {
+    background: linear-gradient(90deg, #ff9a9e, #fecfef);
+    color: #444;
+    border: none;
+}
+
+.t-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 
 .t-tool-btn {
-    font-size: 0.75em; padding: 4px 10px;
-    background: rgba(0,0,0,0.6); border: 1px solid #666; color: #ccc;
-    cursor: pointer; border-radius: 3px;
-    display: flex; align-items: center; gap: 4px;
+    font-size: 0.75em;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #666;
+    color: #ccc;
+    cursor: pointer;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
     transition: 0.2s;
 }
-.t-tool-btn:hover { background: #444; color: white; }
-.t-icon-btn { cursor: pointer; font-size: 1.2em; color: #aaa; margin-left: 15px; transition: color 0.3s; }
-.t-icon-btn:hover { color: #fff; }
 
-.t-close { cursor: pointer; font-size: 1.8em; line-height: 1; color: #888; transition:0.2s; padding: 0 5px; margin-left: 15px; }
-.t-close:hover { color: #fff; transform: rotate(90deg); }
+.t-tool-btn:hover {
+    background: #444;
+    color: white;
+}
+
+.t-icon-btn {
+    cursor: pointer;
+    font-size: 1.2em;
+    color: #aaa;
+    margin-left: 15px;
+    transition: color 0.3s;
+}
+
+.t-icon-btn:hover {
+    color: #fff;
+}
+
+.t-close {
+    cursor: pointer;
+    font-size: 1.8em;
+    line-height: 1;
+    color: #888;
+    transition: 0.2s;
+    padding: 0 5px;
+    margin-left: 15px;
+}
+
+.t-close:hover {
+    color: #fff;
+    transform: rotate(90deg);
+}
 
 /* \u8F93\u5165\u6846 (\u5F3A\u5236\u8986\u76D6\u4EAE\u8272\u4E3B\u9898) */
 .t-box .t-input {
     background-color: #1a1a1a !important;
     color: #eeeeee !important;
     border: 1px solid #444 !important;
-    border-radius: 4px; padding: 8px 10px; width: 100%; box-sizing: border-box; outline: none; transition: border 0.2s;
+    border-radius: 4px;
+    padding: 8px 10px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: border 0.2s;
 }
-.t-box .t-input:focus { border-color: var(--t-theme) !important; background-color: #222 !important; }
-.t-box .t-input:disabled { opacity: 0.6; cursor: not-allowed; background-color: #111 !important; }
-textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.5; resize: vertical; }
+
+.t-box .t-input:focus {
+    border-color: var(--t-theme) !important;
+    background-color: #222 !important;
+}
+
+.t-box .t-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #111 !important;
+}
+
+textarea.t-input {
+    font-family: var(--t-font-mono);
+    line-height: 1.5;
+    resize: vertical;
+}
 
 /* \u6EDA\u52A8\u6761 */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
 
 /* \u52A8\u753B */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 /* === floating.css === */
 /* css/floating.css - \u60AC\u6D6E\u7403 */
@@ -428,7 +589,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 
     background: rgba(0, 0, 0, 0.6);
     color: #00d9ff;
-    font-family: monospace;
+    font-family: var(--t-font-mono);
     font-size: 11px;
 
     padding: 2px 6px;
@@ -1753,7 +1914,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     border-radius: 4px;
     height: 250px;
     overflow-y: auto;
-    font-family: 'Consolas', monospace;
+    font-family: var(--t-font-mono);
     font-size: 0.8em;
     white-space: pre-wrap;
     word-break: break-all;
@@ -1782,7 +1943,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 
 /* CSS \u4EE3\u7801\u7F16\u8F91\u5668 */
 .t-code-editor {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: var(--t-font-mono);
     font-size: 0.9em;
     line-height: 1.5;
     tab-size: 4;
@@ -1825,7 +1986,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     color: #90cdf4;
     padding: 3px 8px;
     border-radius: 4px;
-    font-family: 'Consolas', monospace;
+    font-family: var(--t-font-mono);
     font-size: 0.95em;
     min-width: 180px;
     display: inline-block;
@@ -2854,9 +3015,10 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     height: 90vh;
     display: flex;
     flex-direction: column;
-    background: #1e1e1e; /* VS Code \u6DF1\u8272\u80CC\u666F */
+    background: #1e1e1e;
+    /* VS Code \u6DF1\u8272\u80CC\u666F */
     color: #cccccc;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: var(--t-font-global);
     overflow: hidden;
     /* \u79FB\u52A8\u7AEF\u9632\u6296\u52A8 */
     max-width: 100vw;
@@ -2875,14 +3037,30 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     gap: 20px;
     flex-shrink: 0;
     white-space: nowrap;
-    overflow-x: auto; /* \u9632\u6B62\u5C0F\u5C4F\u6587\u5B57\u6EA2\u51FA */
-    scrollbar-width: none; /* \u9690\u85CF\u6EDA\u52A8\u6761 */
+    overflow-x: auto;
+    /* \u9632\u6B62\u5C0F\u5C4F\u6587\u5B57\u6EA2\u51FA */
+    scrollbar-width: none;
+    /* \u9690\u85CF\u6EDA\u52A8\u6761 */
 }
-.t-dbg-header-bar::-webkit-scrollbar { display: none; }
 
-.t-dbg-stat-item { display: flex; align-items: center; gap: 6px; }
-.t-dbg-stat-item i { color: #bfa15f; }
-.t-dbg-highlight { color: #eee; font-family: monospace; }
+.t-dbg-header-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.t-dbg-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.t-dbg-stat-item i {
+    color: #bfa15f;
+}
+
+.t-dbg-highlight {
+    color: #eee;
+    font-family: var(--t-font-mono);
+}
 
 /* \u4E3B\u4F53\u5E03\u5C40\uFF1A\u5DE6\u53F3\u5206\u680F */
 .t-dbg-body {
@@ -2910,6 +3088,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     flex-direction: column;
     justify-content: center;
 }
+
 .t-param-title {
     font-size: 0.75em;
     text-transform: uppercase;
@@ -2918,18 +3097,40 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     font-weight: bold;
     letter-spacing: 0.5px;
 }
+
 .t-param-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 6px;
     font-size: 0.9em;
-    gap: 10px; /* \u9632\u6B62\u6587\u5B57\u7C98\u8FDE */
+    gap: 10px;
+    /* \u9632\u6B62\u6587\u5B57\u7C98\u8FDE */
 }
-.t-param-key { color: #999; white-space: nowrap; }
-.t-param-val { color: #ddd; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.t-param-val.warn { color: #d7ba7d; } 
-.t-param-val.error { color: #f48771; } 
-.t-param-val.ok { color: #89d185; }
+
+.t-param-key {
+    color: #999;
+    white-space: nowrap;
+}
+
+.t-param-val {
+    color: #ddd;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.t-param-val.warn {
+    color: #d7ba7d;
+}
+
+.t-param-val.error {
+    color: #f48771;
+}
+
+.t-param-val.ok {
+    color: #89d185;
+}
 
 /* \u53F3\u4FA7\uFF1A\u6E90\u7801\u4E3B\u533A\u57DF */
 .t-dbg-main {
@@ -2938,7 +3139,8 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     flex-direction: column;
     background: #1e1e1e;
     overflow: hidden;
-    min-width: 0; /* \u9632\u6B62 Flex \u5B50\u9879\u6EA2\u51FA */
+    min-width: 0;
+    /* \u9632\u6B62 Flex \u5B50\u9879\u6EA2\u51FA */
 }
 
 .t-editor-section {
@@ -2946,9 +3148,12 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     display: flex;
     flex-direction: column;
     border-bottom: 1px solid #333;
-    min-height: 0; 
+    min-height: 0;
 }
-.t-editor-section:last-child { border-bottom: none; }
+
+.t-editor-section:last-child {
+    border-bottom: none;
+}
 
 .t-section-label {
     background: #2d2d2d;
@@ -2965,18 +3170,21 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 .t-code-textarea {
     flex-grow: 1;
     background: #1e1e1e;
-    color: #9cdcfe; 
+    color: #9cdcfe;
     border: none;
     resize: none;
     padding: 10px 15px;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: var(--t-font-mono);
     font-size: 13px;
     line-height: 1.5;
     outline: none;
     white-space: pre;
     overflow: auto;
 }
-.t-code-textarea.user-ctx { color: #ce9178; }
+
+.t-code-textarea.user-ctx {
+    color: #ce9178;
+}
 
 /* \u5E95\u90E8\u64CD\u4F5C\u680F */
 .t-dbg-footer {
@@ -2990,6 +3198,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 
 /* === \u{1F4F1} \u79FB\u52A8\u7AEF\u9002\u914D (Media Queries) === */
 @media screen and (max-width: 700px) {
+
     /* 1. \u4E3B\u4F53\u6D41\u5411\u6539\u4E3A\u5782\u76F4 */
     .t-dbg-body {
         flex-direction: column;
@@ -2998,9 +3207,12 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     /* 2. \u4FA7\u8FB9\u680F\u53D8\u8EAB\u4E3A\u9876\u90E8\u6A2A\u5411\u6EDA\u52A8\u6761 */
     .t-dbg-sidebar {
         width: 100%;
-        height: 85px; /* \u56FA\u5B9A\u9AD8\u5EA6 */
-        flex-direction: row; /* \u5185\u5BB9\u6A2A\u6392 */
-        overflow-x: auto; /* \u5141\u8BB8\u6A2A\u5411\u6EDA\u52A8 */
+        height: 85px;
+        /* \u56FA\u5B9A\u9AD8\u5EA6 */
+        flex-direction: row;
+        /* \u5185\u5BB9\u6A2A\u6392 */
+        overflow-x: auto;
+        /* \u5141\u8BB8\u6A2A\u5411\u6EDA\u52A8 */
         overflow-y: hidden;
         border-right: none;
         border-bottom: 1px solid #333;
@@ -3010,26 +3222,39 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
         scrollbar-width: none;
         -ms-overflow-style: none;
     }
-    .t-dbg-sidebar::-webkit-scrollbar { display: none; }
+
+    .t-dbg-sidebar::-webkit-scrollbar {
+        display: none;
+    }
 
     /* 3. \u53C2\u6570\u7EC4\u53D8\u4E3A\u5361\u7247\u6837\u5F0F */
     .t-param-group {
-        min-width: 140px; /* \u6700\u5C0F\u5BBD\u5EA6\uFF0C\u9632\u6B62\u6324\u538B */
+        min-width: 140px;
+        /* \u6700\u5C0F\u5BBD\u5EA6\uFF0C\u9632\u6B62\u6324\u538B */
         border-bottom: none;
         border-right: 1px solid #333;
         padding: 5px 12px;
-        flex-shrink: 0; /* \u9632\u6B62\u88AB\u6324\u5C0F */
+        flex-shrink: 0;
+        /* \u9632\u6B62\u88AB\u6324\u5C0F */
     }
-    
+
     /* \u8C03\u6574\u53C2\u6570\u6587\u5B57\u5927\u5C0F */
-    .t-param-title { margin-bottom: 4px; font-size: 0.7em; }
-    .t-param-row { margin-bottom: 2px; font-size: 0.8em; }
+    .t-param-title {
+        margin-bottom: 4px;
+        font-size: 0.7em;
+    }
+
+    .t-param-row {
+        margin-bottom: 2px;
+        font-size: 0.8em;
+    }
 
     /* 4. \u4EE3\u7801\u533A\u57DF\u81EA\u9002\u5E94 */
     .t-dbg-main {
-        height: calc(100% - 85px); /* \u51CF\u53BB\u9876\u90E8\u6A2A\u6761\u9AD8\u5EA6 */
+        height: calc(100% - 85px);
+        /* \u51CF\u53BB\u9876\u90E8\u6A2A\u6761\u9AD8\u5EA6 */
     }
-    
+
     /* 5. \u5934\u90E8\u72B6\u6001\u680F\u7CBE\u7B80 */
     .t-dbg-header-bar {
         font-size: 0.75em;
@@ -3044,9 +3269,10 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
 .t-code-viewer {
     flex-grow: 1;
     background: #1e1e1e;
-    color: #ce9178; /* User Context \u9ED8\u8BA4\u8272 */
+    color: #ce9178;
+    /* User Context \u9ED8\u8BA4\u8272 */
     overflow-y: auto;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: var(--t-font-mono);
     font-size: 13px;
     padding: 0;
 }
@@ -3067,7 +3293,10 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     user-select: none;
     transition: background 0.2s;
 }
-.t-fold-head:hover { background: #2d2d2d; }
+
+.t-fold-head:hover {
+    background: #2d2d2d;
+}
 
 /* \u6807\u9898\u91CC\u7684\u56FE\u6807 */
 .t-fold-icon {
@@ -3077,25 +3306,42 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     transition: transform 0.2s;
     margin-right: 5px;
 }
+
 /* \u5C55\u5F00\u72B6\u6001\u65CB\u8F6C\u56FE\u6807 */
-.t-fold-row.open .t-fold-icon { transform: rotate(90deg); }
+.t-fold-row.open .t-fold-icon {
+    transform: rotate(90deg);
+}
 
 /* \u6807\u9898\u6587\u5B57 */
-.t-fold-title { font-weight: bold; color: #9cdcfe; margin-right: 10px; }
-.t-fold-meta { font-size: 0.85em; color: #666; font-style: italic; }
+.t-fold-title {
+    font-weight: bold;
+    color: #9cdcfe;
+    margin-right: 10px;
+}
+
+.t-fold-meta {
+    font-size: 0.85em;
+    color: #666;
+    font-style: italic;
+}
 
 /* \u9690\u85CF\u7684\u5185\u5BB9\u4F53 */
 .t-fold-body {
     display: none;
     padding: 10px 15px;
     background: #1e1e1e;
-    white-space: pre-wrap; /* \u4FDD\u7559\u6362\u884C */
+    white-space: pre-wrap;
+    /* \u4FDD\u7559\u6362\u884C */
     line-height: 1.5;
-    border-left: 3px solid #333; /* \u89C6\u89C9\u5F15\u5BFC\u7EBF */
+    border-left: 3px solid #333;
+    /* \u89C6\u89C9\u5F15\u5BFC\u7EBF */
     color: #d4d4d4;
 }
+
 /* \u6FC0\u6D3B\u65F6\u663E\u793A */
-.t-fold-row.open .t-fold-body { display: block; }
+.t-fold-row.open .t-fold-body {
+    display: block;
+}
 
 /* System Prompt \u4FDD\u6301\u539F\u6765\u7684 Textarea \u6837\u5F0F\uFF0C\u4F46\u6539\u4E2A\u540D\u9632\u51B2\u7A81 */
 .t-simple-editor {
@@ -3105,7 +3351,7 @@ textarea.t-input { font-family: 'Consolas', 'Monaco', monospace; line-height: 1.
     border: none;
     resize: none;
     padding: 10px 15px;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: var(--t-font-mono);
     font-size: 13px;
     outline: none;
     white-space: pre-wrap;
@@ -3646,7 +3892,7 @@ function renderToShadowDOMReal(container, html) {
             :host, .t-shadow-content {
                 background: transparent;
                 color: #e0e0e0;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                font-family: var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
                 font-size: 14px;
                 line-height: 1.6;
             }
@@ -4770,11 +5016,58 @@ function applyCustomCSS(cssText) {
   }
   styleEl.textContent = cssText || "";
 }
+function applyFontSettings(fontSettings) {
+  if (!fontSettings) return;
+  const root = document.documentElement;
+  const oldFontStyle = document.getElementById("t-custom-font-style");
+  if (oldFontStyle) oldFontStyle.remove();
+  if (fontSettings.source === "default" || !fontSettings.source) {
+    root.style.removeProperty("--t-font-global");
+    return;
+  }
+  if (fontSettings.source === "online") {
+    if (fontSettings.import_url && fontSettings.font_name) {
+      const styleEl = document.createElement("style");
+      styleEl.id = "t-custom-font-style";
+      styleEl.textContent = `@import url('${fontSettings.import_url}');`;
+      document.head.appendChild(styleEl);
+      root.style.setProperty("--t-font-global", `'${fontSettings.font_name}', -apple-system, BlinkMacSystemFont, sans-serif`);
+    }
+    return;
+  }
+  if (fontSettings.source === "upload") {
+    if (fontSettings.font_data) {
+      const fontName = fontSettings.font_name || "TitaniaCustomFont";
+      const styleEl = document.createElement("style");
+      styleEl.id = "t-custom-font-style";
+      styleEl.textContent = `
+                @font-face {
+                    font-family: '${fontName}';
+                    src: url('${fontSettings.font_data}') format('woff2');
+                    font-weight: normal;
+                    font-style: normal;
+                    font-display: swap;
+                }
+            `;
+      document.head.appendChild(styleEl);
+      root.style.setProperty("--t-font-global", `'${fontName}', -apple-system, BlinkMacSystemFont, sans-serif`);
+    }
+    return;
+  }
+}
 function openSettingsWindow() {
   const data = getExtData();
   const cfg = data.config || {};
   const app = data.appearance || {};
   const customCSS = data.custom_css || "";
+  const fontSettings = data.font_settings || {
+    source: "default",
+    // "default" | "online" | "upload"
+    import_url: "",
+    font_name: "",
+    font_data: ""
+    // base64 字体数据 (上传时使用)
+  };
   app.type = app.type || "emoji";
   app.content = app.content || "\u{1F3AD}";
   app.size = app.size || 56;
@@ -4922,6 +5215,84 @@ function openSettingsWindow() {
 
                 <!-- Tab 2: \u4E3B\u9898\u6837\u5F0F -->
                 <div id="page-theme" class="t-set-page">
+                    <!-- \u5B57\u4F53\u8BBE\u7F6E\u533A\u57DF -->
+                    <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
+                        <div style="font-weight:bold; color:#90cdf4; margin-bottom:15px;"><i class="fa-solid fa-font"></i> \u5168\u5C40\u5B57\u4F53\u8BBE\u7F6E</div>
+                        <p style="font-size:0.85em; color:#888; margin-bottom:15px;">
+                            \u81EA\u5B9A\u4E49\u63D2\u4EF6 UI \u548C\u6E32\u67D3\u5185\u5BB9\u7684\u5B57\u4F53\u3002<br>
+                            <span style="color:#666;">\u6CE8\uFF1A\u4EE3\u7801\u7F16\u8F91\u5668\u548C\u65E5\u5FD7\u4FDD\u6301\u7B49\u5BBD\u5B57\u4F53\u4E0D\u53D7\u5F71\u54CD\u3002</span>
+                        </p>
+                        
+                        <div class="t-form-group" style="margin-bottom:15px;">
+                            <label class="t-form-label">\u5B57\u4F53\u6765\u6E90</label>
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                <label style="cursor:pointer; display:flex; align-items:center; padding:10px; background:#222; border-radius:6px; border:2px solid ${fontSettings.source === "default" || !fontSettings.source ? "#bfa15f" : "#333"};" data-font-source="default">
+                                    <input type="radio" name="t-font-source" value="default" ${fontSettings.source === "default" || !fontSettings.source ? "checked" : ""} style="margin-right:12px;">
+                                    <div>
+                                        <div style="color:#eee; font-weight:bold;">\u{1F5A5}\uFE0F \u7CFB\u7EDF\u9ED8\u8BA4</div>
+                                        <div style="font-size:0.8em; color:#888;">\u4F7F\u7528\u7CFB\u7EDF\u9ED8\u8BA4\u5B57\u4F53\u6808</div>
+                                    </div>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center; padding:10px; background:#222; border-radius:6px; border:2px solid ${fontSettings.source === "online" ? "#bfa15f" : "#333"};" data-font-source="online">
+                                    <input type="radio" name="t-font-source" value="online" ${fontSettings.source === "online" ? "checked" : ""} style="margin-right:12px;">
+                                    <div>
+                                        <div style="color:#eee; font-weight:bold;">\u{1F310} \u5728\u7EBF\u5B57\u4F53</div>
+                                        <div style="font-size:0.8em; color:#888;">\u4F7F\u7528 Google Fonts \u7B49\u5728\u7EBF\u670D\u52A1</div>
+                                    </div>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center; padding:10px; background:#222; border-radius:6px; border:2px solid ${fontSettings.source === "upload" ? "#bfa15f" : "#333"};" data-font-source="upload">
+                                    <input type="radio" name="t-font-source" value="upload" ${fontSettings.source === "upload" ? "checked" : ""} style="margin-right:12px;">
+                                    <div>
+                                        <div style="color:#eee; font-weight:bold;">\u{1F4C1} \u4E0A\u4F20\u5B57\u4F53</div>
+                                        <div style="font-size:0.8em; color:#888;">\u4E0A\u4F20\u672C\u5730\u5B57\u4F53\u6587\u4EF6 (.woff2, .ttf)</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- \u5728\u7EBF\u5B57\u4F53\u9009\u9879 -->
+                        <div id="t-font-online-options" style="display:${fontSettings.source === "online" ? "block" : "none"}; background:#1a1a1a; padding:15px; border-radius:6px; margin-top:15px; border:1px solid #333;">
+                            <div class="t-form-group" style="margin-bottom:15px;">
+                                <label class="t-form-label">@import URL</label>
+                                <input id="t-font-import-url" class="t-input" value="${fontSettings.import_url || ""}" placeholder="https://fonts.googleapis.com/css2?family=Noto+Sans+SC">
+                                <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                                    \u4ECE <a href="https://fonts.google.com/" target="_blank" style="color:#90cdf4;">Google Fonts</a> \u590D\u5236 @import \u4E2D\u7684 URL
+                                </p>
+                            </div>
+                            <div class="t-form-group" style="margin-bottom:0;">
+                                <label class="t-form-label">\u5B57\u4F53\u540D\u79F0</label>
+                                <input id="t-font-name-online" class="t-input" value="${fontSettings.source === "online" ? fontSettings.font_name || "" : ""}" placeholder="Noto Sans SC">
+                                <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                                    \u5B57\u4F53\u7684 font-family \u540D\u79F0\uFF0C\u4F8B\u5982\uFF1ANoto Sans SC, LXGW WenKai
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- \u4E0A\u4F20\u5B57\u4F53\u9009\u9879 -->
+                        <div id="t-font-upload-options" style="display:${fontSettings.source === "upload" ? "block" : "none"}; background:#1a1a1a; padding:15px; border-radius:6px; margin-top:15px; border:1px solid #333;">
+                            <div class="t-form-group" style="margin-bottom:15px;">
+                                <label class="t-form-label">\u9009\u62E9\u5B57\u4F53\u6587\u4EF6</label>
+                                <input type="file" id="t-font-file-input" accept=".woff2,.woff,.ttf,.otf" style="display:none;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <button id="btn-font-upload" class="t-tool-btn" style="padding:8px 15px;"><i class="fa-solid fa-upload"></i> \u9009\u62E9\u6587\u4EF6</button>
+                                    <span id="t-font-file-name" style="color:#888; font-size:0.9em;">${fontSettings.font_data ? "\u5DF2\u4E0A\u4F20\u5B57\u4F53\u6587\u4EF6" : "\u672A\u9009\u62E9\u6587\u4EF6"}</span>
+                                </div>
+                                <p style="font-size:0.75em; color:#666; margin-top:8px;">
+                                    \u652F\u6301 .woff2 (\u63A8\u8350)\u3001.woff\u3001.ttf\u3001.otf \u683C\u5F0F<br>
+                                    <span style="color:#f1c40f;">\u26A0\uFE0F \u5B57\u4F53\u6587\u4EF6\u5C06\u4EE5 Base64 \u5B58\u50A8\uFF0C\u5EFA\u8BAE\u4E0D\u8D85\u8FC7 2MB</span>
+                                </p>
+                            </div>
+                            <div class="t-form-group" style="margin-bottom:0;">
+                                <label class="t-form-label">\u5B57\u4F53\u540D\u79F0\uFF08\u53EF\u9009\uFF09</label>
+                                <input id="t-font-name-upload" class="t-input" value="${fontSettings.source === "upload" ? fontSettings.font_name || "" : ""}" placeholder="\u7559\u7A7A\u5219\u81EA\u52A8\u547D\u540D\u4E3A TitaniaCustomFont">
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px; padding-top:10px; border-top:1px solid #333;">
+                            <button id="btn-font-reset" class="t-tool-btn" style="color:#ff6b6b;"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u9ED8\u8BA4</button>
+                        </div>
+                    </div>
+                    
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
                         <div style="font-weight:bold; color:#bfa15f; margin-bottom:10px;"><i class="fa-solid fa-palette"></i> \u81EA\u5B9A\u4E49 CSS \u6837\u5F0F</div>
                         <div style="font-size:0.85em; color:#888; line-height:1.6;">
@@ -5502,6 +5873,41 @@ function openSettingsWindow() {
     if (window.toastr) toastr.success("\u65B9\u6848\u5DF2\u5220\u9664");
   });
   renderStyleProfileUI();
+  let tempFontData = fontSettings.font_data || "";
+  $("input[name='t-font-source']").on("change", function() {
+    const source = $(this).val();
+    $("[data-font-source]").css("border-color", "#333");
+    $(`[data-font-source="${source}"]`).css("border-color", "#bfa15f");
+    $("#t-font-online-options").toggle(source === "online");
+    $("#t-font-upload-options").toggle(source === "upload");
+  });
+  $("#btn-font-upload").on("click", () => $("#t-font-file-input").click());
+  $("#t-font-file-input").on("change", async function() {
+    const file = this.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      if (window.toastr) toastr.error("\u5B57\u4F53\u6587\u4EF6\u8FC7\u5927\uFF0C\u8BF7\u9009\u62E9\u5C0F\u4E8E 5MB \u7684\u6587\u4EF6");
+      return;
+    }
+    try {
+      tempFontData = await fileToBase64(file);
+      $("#t-font-file-name").text(file.name).css("color", "#55efc4");
+      if (window.toastr) toastr.success(`\u5DF2\u52A0\u8F7D\u5B57\u4F53: ${file.name}`);
+    } catch (e) {
+      console.error("Titania: \u5B57\u4F53\u52A0\u8F7D\u5931\u8D25", e);
+      if (window.toastr) toastr.error("\u5B57\u4F53\u52A0\u8F7D\u5931\u8D25");
+    }
+  });
+  $("#btn-font-reset").on("click", () => {
+    if (!confirm("\u786E\u5B9A\u8981\u6062\u590D\u9ED8\u8BA4\u5B57\u4F53\u8BBE\u7F6E\u5417\uFF1F")) return;
+    $("input[name='t-font-source'][value='default']").prop("checked", true).trigger("change");
+    $("#t-font-import-url").val("");
+    $("#t-font-name-online").val("");
+    $("#t-font-name-upload").val("");
+    tempFontData = "";
+    $("#t-font-file-name").text("\u672A\u9009\u62E9\u6587\u4EF6").css("color", "#888");
+    if (window.toastr) toastr.info("\u5DF2\u6062\u590D\u9ED8\u8BA4\u5B57\u4F53\uFF0C\u8BF7\u70B9\u51FB\u300C\u4FDD\u5B58\u6240\u6709\u914D\u7F6E\u300D\u751F\u6548");
+  });
   const updateCSSCharCount = () => {
     const len = ($("#t-custom-css-input").val() || "").length;
     $("#css-char-count").text(`${len} \u5B57\u7B26`);
@@ -5712,6 +6118,13 @@ ${JSON.stringify(l.details, null, 2)}`;
     };
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
     d.custom_css = $("#t-custom-css-input").val() || "";
+    const fontSource = $("input[name='t-font-source']:checked").val() || "default";
+    d.font_settings = {
+      source: fontSource,
+      import_url: fontSource === "online" ? $("#t-font-import-url").val().trim() : "",
+      font_name: fontSource === "online" ? $("#t-font-name-online").val().trim() : fontSource === "upload" ? $("#t-font-name-upload").val().trim() : "",
+      font_data: fontSource === "upload" ? tempFontData : ""
+    };
     d.style_profiles = tempStyleProfiles;
     d.active_style_id = tempActiveStyleId;
     d.auto_continue = {
@@ -5725,6 +6138,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     $("#t-main-view").show();
     createFloatingButton();
     applyCustomCSS(d.custom_css);
+    applyFontSettings(d.font_settings);
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   renderPreview();
@@ -8099,6 +8513,9 @@ async function initEchoTheater() {
   createFloatingButton();
   if (extData.custom_css) {
     applyCustomCSS(extData.custom_css);
+  }
+  if (extData.font_settings) {
+    applyFontSettings(extData.font_settings);
   }
   eventSource.on(event_types.GENERATION_ENDED, onGenerationEnded);
 }
