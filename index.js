@@ -9,7 +9,7 @@
 
 // src/entry.js
 import { extension_settings as extension_settings3 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_types, getRequestHeaders } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_types } from "../../../../script.js";
 
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
@@ -1413,16 +1413,18 @@ textarea.t-input {
     flex-direction: column;
     gap: 6px;
     padding: 8px 0 0 20px;
-    max-height: 1000px;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    /* \u5C55\u5F00\u65F6\u4E0D\u9650\u5236\u9AD8\u5EA6\uFF0C\u8BA9\u7236\u5BB9\u5668 .t-wi-body \u8D1F\u8D23\u6EDA\u52A8 */
+    max-height: none;
+    overflow: visible;
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
 }
 
 /* \u6298\u53E0\u72B6\u6001 */
 .t-wi-entries.t-wi-collapsed {
-    max-height: 0;
+    max-height: 0 !important;
     padding-top: 0;
     opacity: 0;
+    overflow: hidden;
 }
 
 .t-wi-entry {
@@ -9126,7 +9128,7 @@ async function showUpdateConfirmDialog(remoteVersion) {
             <div class="titania-update-footer">
                 <button class="titania-btn-cancel" id="titania-update-cancel">\u7A0D\u540E\u518D\u8BF4</button>
                 <button class="titania-btn-confirm" id="titania-update-confirm">
-                    <i class="fa-solid fa-download"></i> \u7ACB\u5373\u66F4\u65B0
+                    <i class="fa-solid fa-puzzle-piece"></i> \u6253\u5F00\u6269\u5C55\u7BA1\u7406\u5668
                 </button>
             </div>
         </div>
@@ -9135,27 +9137,11 @@ async function showUpdateConfirmDialog(remoteVersion) {
   $("#titania-update-cancel, .titania-update-close").on("click", () => {
     $(".titania-update-overlay").remove();
   });
-  $("#titania-update-confirm").on("click", async function() {
-    const $btn = $(this);
-    const originalHtml = $btn.html();
-    try {
-      $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u66F4\u65B0\u4E2D...');
-      $("#titania-update-cancel").prop("disabled", true);
-      await performExtensionUpdate();
-      $btn.html('<i class="fa-solid fa-check"></i> \u66F4\u65B0\u6210\u529F\uFF01');
-      if (window.toastr) {
-        toastr.success("\u66F4\u65B0\u6210\u529F\uFF0C\u5373\u5C06\u5237\u65B0\u9875\u9762...", "Titania Echo");
-      }
-      setTimeout(() => {
-        location.reload();
-      }, 1500);
-    } catch (e) {
-      console.error("Titania: \u66F4\u65B0\u5931\u8D25", e);
-      $btn.prop("disabled", false).html(originalHtml);
-      $("#titania-update-cancel").prop("disabled", false);
-      if (window.toastr) {
-        toastr.error("\u66F4\u65B0\u5931\u8D25\uFF1A" + (e.message || "\u8BF7\u68C0\u67E5\u7F51\u7EDC\u8FDE\u63A5"), "Titania Echo");
-      }
+  $("#titania-update-confirm").on("click", function() {
+    $(".titania-update-overlay").remove();
+    $("#extensions_details").click();
+    if (window.toastr) {
+      toastr.info("\u8BF7\u5728\u6269\u5C55\u7BA1\u7406\u5668\u4E2D\u627E\u5230 Titania Echo \u5E76\u70B9\u51FB\u66F4\u65B0\u6309\u94AE", "Titania Echo");
     }
   });
   $(".titania-update-overlay").on("click", function(e) {
@@ -9163,36 +9149,6 @@ async function showUpdateConfirmDialog(remoteVersion) {
       $(".titania-update-overlay").remove();
     }
   });
-}
-async function performExtensionUpdate() {
-  const response = await fetch("/api/extensions/update", {
-    method: "POST",
-    headers: getRequestHeaders(),
-    // 使用 ST 的请求头函数，包含必要的认证信息
-    body: JSON.stringify({
-      extensionName: "titania-theater",
-      // 扩展文件夹名称（不含 third-party/ 前缀）
-      global: false
-      // 是否为全局扩展
-    })
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    if (errorText.trim().startsWith("<!") || errorText.trim().startsWith("<html")) {
-      throw new Error(`\u670D\u52A1\u5668\u8FD4\u56DE\u9519\u8BEF\u9875\u9762 (HTTP ${response.status})\uFF0C\u8BF7\u68C0\u67E5 SillyTavern \u7248\u672C\u662F\u5426\u652F\u6301\u6269\u5C55\u66F4\u65B0 API`);
-    }
-    throw new Error(errorText || `HTTP ${response.status}`);
-  }
-  const result = await response.json();
-  if (result.error) {
-    throw new Error(result.error);
-  }
-  if (result.isUpToDate) {
-    console.log("Titania: \u6269\u5C55\u5DF2\u662F\u6700\u65B0\u7248\u672C");
-  } else {
-    console.log("Titania: \u66F4\u65B0\u6210\u529F", result);
-  }
-  return result;
 }
 jQuery(async () => {
   loadCssFiles();
