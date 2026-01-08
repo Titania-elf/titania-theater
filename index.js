@@ -1389,6 +1389,25 @@ textarea.t-input {
     font-weight: normal;
 }
 
+/* \u4E16\u754C\u4E66\u5206\u7EC4\u5168\u9009\u6309\u94AE */
+.t-wi-book-toggle {
+    margin-left: auto;
+    padding: 2px 8px;
+    font-size: 0.75em;
+    font-weight: normal;
+    color: #90cdf4;
+    background: rgba(144, 205, 244, 0.1);
+    border: 1px solid rgba(144, 205, 244, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-wi-book-toggle:hover {
+    background: rgba(144, 205, 244, 0.2);
+    color: #fff;
+}
+
 .t-wi-entries {
     display: flex;
     flex-direction: column;
@@ -7643,6 +7662,7 @@ async function openWorldInfoSelector() {
                         <i class="fa-solid fa-book" style="color:#bfa15f;"></i>
                         <span class="t-wi-book-name">${book.bookName}</span>
                         <span class="t-wi-book-stat">(${selectedInBook}/${book.entries.length})</span>
+                        <span class="t-wi-book-toggle" title="\u5168\u9009/\u53D6\u6D88">\u5168\u9009</span>
                     </div>
                     <div class="t-wi-entries t-wi-collapsed" data-book="${book.bookName}"></div>
                 </div>
@@ -7682,11 +7702,22 @@ async function openWorldInfoSelector() {
         });
         $entriesContainer.append($entry);
       });
-      $bookSection.find(".t-wi-book-header").on("click", function() {
+      $bookSection.find(".t-wi-book-header").on("click", function(e) {
+        if ($(e.target).hasClass("t-wi-book-toggle")) return;
         const $entries = $bookSection.find(".t-wi-entries");
         const $icon = $bookSection.find(".t-wi-collapse-icon");
         $entries.toggleClass("t-wi-collapsed");
         $icon.toggleClass("t-wi-expanded");
+      });
+      $bookSection.find(".t-wi-book-toggle").on("click", function(e) {
+        e.stopPropagation();
+        const $entries = $bookSection.find(".t-wi-entry");
+        const allChecked = $entries.length === $entries.find("input:checked").length;
+        $entries.find("input").prop("checked", !allChecked);
+        $entries.toggleClass("selected", !allChecked);
+        $(this).text(allChecked ? "\u5168\u9009" : "\u53D6\u6D88");
+        updateStat();
+        updateBookStat(book.bookName);
       });
       $body.append($bookSection);
     });
