@@ -9,7 +9,7 @@
 
 // src/entry.js
 import { extension_settings as extension_settings3 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_types } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_types, getRequestHeaders } from "../../../../script.js";
 
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
@@ -9167,39 +9167,31 @@ async function showUpdateConfirmDialog(remoteVersion) {
 async function performExtensionUpdate() {
   const response = await fetch("/api/extensions/update", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: getRequestHeaders(),
+    // 使用 ST 的请求头函数，包含必要的认证信息
     body: JSON.stringify({
-      name: "titania-theater"
-      // 扩展文件夹名称
+      extensionName: "titania-theater",
+      // 扩展文件夹名称（不含 third-party/ 前缀）
+      global: false
+      // 是否为全局扩展
     })
   });
-  const responseText = await response.text();
   if (!response.ok) {
-    if (responseText.trim().startsWith("<!") || responseText.trim().startsWith("<html")) {
+    const errorText = await response.text();
+    if (errorText.trim().startsWith("<!") || errorText.trim().startsWith("<html")) {
       throw new Error(`\u670D\u52A1\u5668\u8FD4\u56DE\u9519\u8BEF\u9875\u9762 (HTTP ${response.status})\uFF0C\u8BF7\u68C0\u67E5 SillyTavern \u7248\u672C\u662F\u5426\u652F\u6301\u6269\u5C55\u66F4\u65B0 API`);
     }
-    throw new Error(`HTTP ${response.status}: ${responseText.substring(0, 200)}`);
+    throw new Error(errorText || `HTTP ${response.status}`);
   }
-  const contentType = response.headers.get("content-type") || "";
-  if (responseText.trim().startsWith("<!") || responseText.trim().startsWith("<html")) {
-    throw new Error("\u670D\u52A1\u5668\u8FD4\u56DE HTML \u800C\u975E JSON\uFF0C\u8BF7\u68C0\u67E5 SillyTavern \u7248\u672C\u662F\u5426\u652F\u6301\u6269\u5C55\u66F4\u65B0 API");
-  }
-  let result;
-  try {
-    result = JSON.parse(responseText);
-  } catch (e) {
-    if (responseText.toLowerCase().includes("success") || responseText.toLowerCase().includes("updated")) {
-      console.log("Titania: \u66F4\u65B0\u6210\u529F (\u7EAF\u6587\u672C\u54CD\u5E94)", responseText);
-      return { success: true, message: responseText };
-    }
-    throw new Error(`\u65E0\u6CD5\u89E3\u6790\u54CD\u5E94: ${responseText.substring(0, 200)}`);
-  }
+  const result = await response.json();
   if (result.error) {
     throw new Error(result.error);
   }
-  console.log("Titania: \u66F4\u65B0\u6210\u529F", result);
+  if (result.isUpToDate) {
+    console.log("Titania: \u6269\u5C55\u5DF2\u662F\u6700\u65B0\u7248\u672C");
+  } else {
+    console.log("Titania: \u66F4\u65B0\u6210\u529F", result);
+  }
   return result;
 }
 jQuery(async () => {
