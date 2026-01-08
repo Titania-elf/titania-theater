@@ -1342,26 +1342,68 @@ textarea.t-input {
 }
 
 .t-wi-book {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .t-wi-book-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 10px;
+    padding: 10px 12px;
     background: #252525;
     border-radius: 6px;
-    margin-bottom: 8px;
     font-weight: bold;
     color: #ddd;
+}
+
+/* \u53EF\u6298\u53E0\u7684\u4E16\u754C\u4E66\u6807\u9898 */
+.t-wi-book-header.t-wi-collapsible {
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.t-wi-book-header.t-wi-collapsible:hover {
+    background: #2a2a2a;
+}
+
+/* \u6298\u53E0\u7BAD\u5934\u56FE\u6807 */
+.t-wi-collapse-icon {
+    color: #666;
+    font-size: 0.9em;
+    transition: transform 0.2s;
+    width: 12px;
+}
+
+.t-wi-collapse-icon.t-wi-expanded {
+    transform: rotate(90deg);
+}
+
+.t-wi-book-name {
+    flex-grow: 1;
+}
+
+.t-wi-book-stat {
+    color: #888;
+    font-size: 0.8em;
+    font-weight: normal;
 }
 
 .t-wi-entries {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding-left: 10px;
+    padding: 8px 0 0 20px;
+    max-height: 1000px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* \u6298\u53E0\u72B6\u6001 */
+.t-wi-entries.t-wi-collapsed {
+    max-height: 0;
+    padding-top: 0;
+    opacity: 0;
 }
 
 .t-wi-entry {
@@ -1403,6 +1445,7 @@ textarea.t-input {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
 }
 
 .t-wi-uid {
@@ -1419,6 +1462,97 @@ textarea.t-input {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+}
+
+/* \u6761\u76EE\u64CD\u4F5C\u6309\u94AE\u533A */
+.t-wi-entry-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+/* \u773C\u775B\u9884\u89C8\u6309\u94AE */
+.t-wi-preview-btn {
+    color: #666;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.t-wi-preview-btn:hover {
+    color: #90cdf4;
+    background: rgba(144, 205, 244, 0.1);
+}
+
+/* \u9884\u89C8\u5F39\u7A97 */
+.t-wi-preview-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3100;
+    animation: fadeIn 0.15s;
+}
+
+.t-wi-preview-box {
+    width: 90%;
+    max-width: 550px;
+    max-height: 70%;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.t-wi-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #252525;
+    border-bottom: 1px solid #333;
+    border-radius: 8px 8px 0 0;
+}
+
+.t-wi-preview-title {
+    font-weight: bold;
+    color: #eee;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-wi-preview-close {
+    font-size: 1.5em;
+    color: #888;
+    cursor: pointer;
+    padding: 0 5px;
+    line-height: 1;
+}
+
+.t-wi-preview-close:hover {
+    color: #fff;
+}
+
+.t-wi-preview-content {
+    padding: 15px;
+    overflow-y: auto;
+    color: #ccc;
+    font-size: 0.9em;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .t-wi-footer {
@@ -3966,62 +4100,37 @@ function renderToShadowDOMReal(container, html) {
   container.appendChild(host);
   return shadow;
 }
-function extractContent(text) {
+function parseWhitelistInput(input) {
+  if (!input || !input.trim()) return [];
+  return input.split(/[,，\n]/).map((tag) => tag.trim()).map((tag) => tag.replace(/^<|>$/g, "")).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
+}
+function extractContent(text, whitelist = []) {
   if (!text) return "";
-  const contentMatch = text.match(/<content[^>]*>([\s\S]*?)<\/content>/i);
-  if (contentMatch) {
-    return extractContent(contentMatch[1]);
+  if (whitelist && whitelist.length > 0) {
+    const extracted = [];
+    for (const tag of whitelist) {
+      const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        const innerContent = match[1].trim();
+        if (innerContent) {
+          extracted.push(innerContent);
+        }
+      }
+    }
+    if (extracted.length > 0) {
+      let result = extracted.join("\n");
+      result = result.replace(/<[^>]*>?/gm, "");
+      result = result.replace(/\n{3,}/g, "\n\n").trim();
+      return result;
+    }
   }
-  const tagsToRemove = [
-    "thinking",
-    // 思考过程
-    "think",
-    // 思考过程变体
-    "status",
-    // 状态栏
-    "state",
-    // 状态变体
-    "mood",
-    // 情绪标签
-    "emotion",
-    // 情绪变体
-    "inner",
-    // 内心独白
-    "inner_thought",
-    // 内心想法
-    "monologue",
-    // 独白
-    "system",
-    // 系统信息
-    "ooc",
-    // Out of Character
-    "note",
-    // 笔记
-    "stat",
-    // 属性栏
-    "stats",
-    // 属性栏变体
-    "bar",
-    // 状态条
-    "statusbar",
-    // 状态条
-    "panel",
-    // 面板
-    "info",
-    // 信息面板
-    "debug"
-    // 调试信息
-  ];
   let cleaned = text;
-  tagsToRemove.forEach((tag) => {
-    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, "gi");
-    cleaned = cleaned.replace(regex, "");
-  });
   cleaned = cleaned.replace(/<[^>]*>?/gm, "");
   cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
   return cleaned;
 }
-function getChatHistory(limit) {
+function getChatHistory(limit, whitelist = []) {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
   const ctx = SillyTavern.getContext();
   const history = ctx.chat || [];
@@ -4038,7 +4147,7 @@ function getChatHistory(limit) {
     if (name === "{{user}}") name = ctx.name1 || "User";
     if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
     let rawContent = msg.message || msg.mes || "";
-    let cleanContent = extractContent(rawContent);
+    let cleanContent = extractContent(rawContent, whitelist);
     if (!cleanContent.trim()) {
       cleanContent = rawContent.replace(/<[^>]*>?/gm, "").trim();
     }
@@ -4067,6 +4176,125 @@ var getSnippet = (html) => {
   text = text.replace(/\s+/g, " ").trim();
   return text.length > 60 ? text.substring(0, 60) + "..." : text;
 };
+function sanitizeAIOutput(rawContent) {
+  if (!rawContent || typeof rawContent !== "string") return "";
+  let content = rawContent;
+  const originalContent = rawContent;
+  const tagsToRemove = [
+    "thinking",
+    "think",
+    // 思考过程
+    "system",
+    "note",
+    "notes",
+    // 系统/笔记
+    "ooc",
+    "OOC",
+    // Out of Character
+    "debug",
+    "meta",
+    // 调试/元信息
+    "comment",
+    "aside",
+    // 注释/旁白
+    "reflection",
+    "planning",
+    // 反思/规划
+    "internal",
+    "analysis"
+    // 内部思考/分析
+  ];
+  tagsToRemove.forEach((tag) => {
+    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, "gi");
+    content = content.replace(regex, "");
+  });
+  content = content.replace(/```html\s*/gi, "");
+  content = content.replace(/```\s*/g, "");
+  const htmlStartPatterns = [
+    /<!DOCTYPE\s+html/i,
+    // DOCTYPE 声明
+    /<html[\s>]/i,
+    // <html> 标签
+    /<head[\s>]/i,
+    // <head> 标签
+    /<body[\s>]/i,
+    // <body> 标签
+    /<style[\s>]/i,
+    // <style> 标签（很多 AI 会以此开头）
+    /<div[\s>]/i,
+    // <div> 标签
+    /<section[\s>]/i,
+    // <section> 标签
+    /<article[\s>]/i,
+    // <article> 标签
+    /<main[\s>]/i,
+    // <main> 标签
+    /<header[\s>]/i,
+    // <header> 标签
+    /<p[\s>]/i,
+    // <p> 标签
+    /<span[\s>]/i,
+    // <span> 标签
+    /<h[1-6][\s>]/i
+    // 标题标签
+  ];
+  let firstHtmlIndex = -1;
+  for (const pattern of htmlStartPatterns) {
+    const match = content.search(pattern);
+    if (match !== -1) {
+      if (firstHtmlIndex === -1 || match < firstHtmlIndex) {
+        firstHtmlIndex = match;
+      }
+    }
+  }
+  if (firstHtmlIndex > 0) {
+    content = content.substring(firstHtmlIndex);
+  }
+  const htmlEndPatterns = [
+    /<\/html>\s*$/i,
+    /<\/body>\s*$/i,
+    /<\/div>\s*$/i,
+    /<\/section>\s*$/i,
+    /<\/article>\s*$/i,
+    /<\/main>\s*$/i,
+    /<\/style>\s*$/i,
+    /<\/p>\s*$/i,
+    /<\/span>\s*$/i,
+    /<\/h[1-6]>\s*$/i
+  ];
+  let lastHtmlEndIndex = -1;
+  for (const pattern of htmlEndPatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      const endIndex = content.lastIndexOf(match[0]) + match[0].length;
+      if (endIndex > lastHtmlEndIndex) {
+        lastHtmlEndIndex = endIndex;
+      }
+    }
+  }
+  if (lastHtmlEndIndex === -1) {
+    const allClosingTags = content.match(/<\/[a-zA-Z][a-zA-Z0-9]*>\s*$/);
+    if (allClosingTags) {
+      lastHtmlEndIndex = content.lastIndexOf(allClosingTags[0]) + allClosingTags[0].length;
+    }
+  }
+  if (lastHtmlEndIndex > 0 && lastHtmlEndIndex < content.length) {
+    content = content.substring(0, lastHtmlEndIndex);
+  }
+  content = content.replace(/(\s|>)\*\*([^*<>]+)\*\*(\s|<)/g, "$1$2$3");
+  content = content.replace(/(\s|>)__([^_<>]+)__(\s|<)/g, "$1$2$3");
+  content = content.replace(/(\s|>)\*([^*<>\n]+)\*(\s|<)/g, "$1$2$3");
+  content = content.replace(/^\s*#{1,6}\s+/gm, "");
+  content = content.replace(/^\s*[-*+]\s+(?=[^\s<])/gm, "");
+  content = content.replace(/^\s*\d+\.\s+(?=[^\s<])/gm, "");
+  content = content.replace(/\n{3,}/g, "\n\n");
+  content = content.trim();
+  if (!content || content.length < 10) {
+    console.warn("Titania: \u6E05\u6D17\u540E\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u56DE\u9000\u5230\u539F\u59CB\u5185\u5BB9");
+    return originalContent.replace(/```html\s*/gi, "").replace(/```\s*/g, "").trim();
+  }
+  return content;
+}
 function extractFromShadowDOM(container) {
   const shadowHost = container.querySelector(".t-shadow-host");
   if (shadowHost && shadowHost.shadowRoot) {
@@ -5576,6 +5804,17 @@ function openSettingsWindow() {
                         <label class="t-form-label">\u5386\u53F2\u8BFB\u53D6\u884C\u6570 (\u5F00\u542F\u300C\u8BFB\u53D6\u804A\u5929\u5386\u53F2\u300D\u65F6\u751F\u6548)</label>
                         <input type="number" id="cfg-history" class="t-input" value="${cfg.history_limit || 10}">
                     </div>
+                    
+                    <!-- \u804A\u5929\u5386\u53F2\u63D0\u53D6\u767D\u540D\u5355 -->
+                    <div class="t-form-group" style="margin-top:15px;">
+                        <label class="t-form-label">\u{1F4DD} \u804A\u5929\u5386\u53F2\u63D0\u53D6\u6807\u7B7E (\u767D\u540D\u5355)</label>
+                        <input type="text" id="cfg-history-whitelist" class="t-input" value="${data.history_extraction?.whitelist || ""}" placeholder="\u4F8B\u5982: content, dialogue, narration">
+                        <p style="font-size:0.75em; color:#666; margin-top:5px; line-height:1.5;">
+                            \u7528\u9017\u53F7\u5206\u9694\u591A\u4E2A\u6807\u7B7E\u540D\u3002\u53EA\u63D0\u53D6\u8FD9\u4E9B\u6807\u7B7E\u5185\u7684\u6587\u672C\u4F5C\u4E3A\u5386\u53F2\u4E0A\u4E0B\u6587\u3002<br>
+                            <span style="color:#888;">\u7559\u7A7A\u5219\u5168\u6587\u63D0\u53D6\uFF08\u79FB\u9664\u6240\u6709 HTML \u6807\u7B7E\u540E\u7684\u7EAF\u6587\u672C\uFF09</span><br>
+                            <span style="color:#55efc4;">\u793A\u4F8B\uFF1A\u586B\u5199 <code style="background:#333; padding:1px 4px; border-radius:2px;">content</code> \u5219\u53EA\u63D0\u53D6 <code style="background:#333; padding:1px 4px; border-radius:2px;">&lt;content&gt;...&lt;/content&gt;</code> \u4E2D\u7684\u5185\u5BB9</span>
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Tab 5: \u6570\u636E\u7BA1\u7406 -->
@@ -6208,6 +6447,9 @@ ${JSON.stringify(l.details, null, 2)}`;
       max_retries: parseInt($("#cfg-continue-retries").val()) || 2,
       detection_mode: $("#cfg-continue-mode").val() || "html",
       show_indicator: $("#cfg-continue-indicator").is(":checked")
+    };
+    d.history_extraction = {
+      whitelist: $("#cfg-history-whitelist").val().trim()
     };
     saveExtData();
     $("#t-settings-view").remove();
@@ -7391,16 +7633,18 @@ async function openWorldInfoSelector() {
       $body.append('<div class="t-wi-empty">\u5F53\u524D\u89D2\u8272\u6CA1\u6709\u6FC0\u6D3B\u7684\u4E16\u754C\u4E66\u6761\u76EE</div>');
       return;
     }
-    entries.forEach((book) => {
+    entries.forEach((book, bookIdx) => {
       const bookSel = charSelections ? charSelections[book.bookName] || [] : [];
+      const selectedInBook = isFirstTime ? 0 : book.entries.filter((e) => bookSel.includes(e.uid)).length;
       const $bookSection = $(`
-                <div class="t-wi-book">
-                    <div class="t-wi-book-header">
+                <div class="t-wi-book" data-book-idx="${bookIdx}">
+                    <div class="t-wi-book-header t-wi-collapsible" title="\u70B9\u51FB\u5C55\u5F00/\u6536\u8D77">
+                        <i class="fa-solid fa-caret-right t-wi-collapse-icon"></i>
                         <i class="fa-solid fa-book" style="color:#bfa15f;"></i>
-                        <span>${book.bookName}</span>
-                        <span style="color:#666; font-size:0.8em;">(${book.entries.length} \u6761\u76EE)</span>
+                        <span class="t-wi-book-name">${book.bookName}</span>
+                        <span class="t-wi-book-stat">(${selectedInBook}/${book.entries.length})</span>
                     </div>
-                    <div class="t-wi-entries" data-book="${book.bookName}"></div>
+                    <div class="t-wi-entries t-wi-collapsed" data-book="${book.bookName}"></div>
                 </div>
             `);
       const $entriesContainer = $bookSection.find(".t-wi-entries");
@@ -7420,17 +7664,59 @@ async function openWorldInfoSelector() {
                             </div>
                             <div class="t-wi-entry-preview">${entry.preview}${entry.content.length > 80 ? "..." : ""}</div>
                         </div>
+                        <div class="t-wi-entry-actions">
+                            <i class="fa-solid fa-eye t-wi-preview-btn" title="\u9884\u89C8\u5B8C\u6574\u5185\u5BB9"></i>
+                        </div>
                     </div>
                 `);
-        $entry.find("input").on("change", function() {
+        $entry.find("input").on("change", function(e) {
+          e.stopPropagation();
           const checked = $(this).is(":checked");
           $entry.toggleClass("selected", checked);
           updateStat();
+          updateBookStat(book.bookName);
+        });
+        $entry.find(".t-wi-preview-btn").on("click", function(e) {
+          e.stopPropagation();
+          showEntryPreview(entry.comment, entry.content);
         });
         $entriesContainer.append($entry);
       });
+      $bookSection.find(".t-wi-book-header").on("click", function() {
+        const $entries = $bookSection.find(".t-wi-entries");
+        const $icon = $bookSection.find(".t-wi-collapse-icon");
+        $entries.toggleClass("t-wi-collapsed");
+        $icon.toggleClass("t-wi-expanded");
+      });
       $body.append($bookSection);
     });
+  };
+  const updateBookStat = (bookName) => {
+    const $book = $(`.t-wi-entries[data-book="${bookName}"]`).closest(".t-wi-book");
+    const total = $book.find(".t-wi-entry").length;
+    const selected = $book.find(".t-wi-entry input:checked").length;
+    $book.find(".t-wi-book-stat").text(`(${selected}/${total})`);
+  };
+  const showEntryPreview = (title, content) => {
+    $(".t-wi-preview-modal").remove();
+    const $modal = $(`
+            <div class="t-wi-preview-modal">
+                <div class="t-wi-preview-box">
+                    <div class="t-wi-preview-header">
+                        <span class="t-wi-preview-title">${title}</span>
+                        <span class="t-wi-preview-close">&times;</span>
+                    </div>
+                    <div class="t-wi-preview-content">${content.replace(/\n/g, "<br>")}</div>
+                </div>
+            </div>
+        `);
+    $modal.on("click", function(e) {
+      if (e.target === this) $modal.remove();
+    });
+    $modal.find(".t-wi-preview-close").on("click", function() {
+      $modal.remove();
+    });
+    $("#t-wi-selector").append($modal);
   };
   const updateStat = () => {
     let total = 0;
@@ -8105,7 +8391,9 @@ ${ctx.worldInfo}
 `;
     if (GlobalState.useHistoryAnalysis) {
       const limit = cfg.history_limit || 10;
-      const history = getChatHistory(limit);
+      const historyWhitelistStr = data.history_extraction?.whitelist || "";
+      const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
+      const history = getChatHistory(limit, historyWhitelist);
       user += history && history.trim().length > 0 ? `[Conversation History]
 ${history}
 
@@ -8244,7 +8532,7 @@ ${processedPrompt}`;
     }
     if (!rawContent || rawContent.trim().length === 0) throw new Error("ERR_EMPTY_CONTENT");
     diagnostics.phase = "validation";
-    let cleanContent = rawContent.replace(/```html/gi, "").replace(/```/g, "").trim();
+    let cleanContent = sanitizeAIOutput(rawContent);
     let finalOutput = cleanContent;
     const autoContinueCfg = data.auto_continue || {};
     if (autoContinueCfg.enabled) {
@@ -8458,7 +8746,7 @@ Generate ONLY the continuation (no repetition):`;
     if (!rawContent || rawContent.trim().length === 0) {
       throw new Error("ERR_EMPTY_CONTINUATION");
     }
-    let cleanContent = rawContent.replace(/```html/gi, "").replace(/```/g, "").trim();
+    let cleanContent = sanitizeAIOutput(rawContent);
     let continuationOutput = cleanContent;
     const truncationResult = detectTruncation(continuationOutput, autoContinueCfg.detection_mode || "html");
     const maxRetries = autoContinueCfg.max_retries || 2;
