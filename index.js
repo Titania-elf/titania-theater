@@ -14,11 +14,12 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_typ
 // src/config/defaults.js
 var extensionName = "Titania_Theater_Echo";
 var extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-var CURRENT_VERSION = "3.1.7";
+var CURRENT_VERSION = "3.1.8";
 var GITHUB_REPO = "Titania-elf/titania-theater";
 var GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
 var GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
 var CHANGELOG = {
+  "3.1.8": "\u{1F680} \u65B0\u589E\u53CC\u5165\u53E3\u7CFB\u7EDF\uFF1A\u5DE6\u4FA7\u83DC\u5355\u6DFB\u52A0\u63D2\u4EF6\u4E3B\u5165\u53E3\uFF08\u59CB\u7EC8\u53EF\u7528\uFF09\uFF0C\u60AC\u6D6E\u7403\u4F5C\u4E3A\u8F85\u52A9\u5165\u53E3\uFF08\u53EF\u5728\u8BBE\u7F6E\u4E2D\u9690\u85CF\uFF09<br>\u{1F6E1}\uFE0F \u4FEE\u590D\u9690\u85CF\u6D88\u606F\u8FC7\u6EE4\uFF1A\u4F7F\u7528 is_system \u5C5E\u6027\u6B63\u786E\u8BC6\u522B\u7CFB\u7EDF\u6D88\u606F<br>\u270D\uFE0F \u65B0\u589E\u5185\u5BB9\u7F16\u8F91\u5DE5\u5177\uFF1A\u652F\u6301\u76F4\u63A5\u7F16\u8F91\u5DF2\u751F\u6210\u7684 HTML \u5185\u5BB9<br>\u{1F4D6} \u6C89\u6D78\u9605\u8BFB\u6A21\u5F0F\uFF1AZen \u6A21\u5F0F\u9690\u85CFUI\u5143\u7D20\uFF0C\u4E13\u6CE8\u5185\u5BB9\u9605\u8BFB",
   "3.1.7": "\u{1F527} \u4F18\u5316\u7B5B\u9009\u952E\u4E0B\u62C9\u5217\u8868\uFF1A\u56FA\u5B9A\u6700\u5927\u9AD8\u5EA6\uFF0C\u8D85\u8FC75\u4E2A\u5206\u7C7B\u65F6\u663E\u793A\u6EDA\u52A8\u6761<br>\u{1F4CF} \u4FEE\u590D\u63D2\u4EF6\u5B57\u4F53\u5927\u5C0F\u53D7ST\u5168\u5C40\u8BBE\u7F6E\u5F71\u54CD\u7684\u95EE\u9898",
   "3.1.6": "\u{1F4DA} \u4E16\u754C\u4E66\u9009\u62E9\u5668\u589E\u5F3A\uFF1A\u4E16\u754C\u4E66\u6807\u9898\u53F3\u4FA7\u6DFB\u52A0\u300C\u5168\u9009\u300D\u6309\u94AE\uFF0C\u70B9\u51FB\u53EF\u5FEB\u901F\u5168\u9009/\u53D6\u6D88\u8BE5\u5206\u7EC4\u6240\u6709\u6761\u76EE<br>\u{1F504} \u4F18\u5316\u66F4\u65B0\u6D41\u7A0B\uFF1A\u70B9\u51FB\u300C\u53BB\u66F4\u65B0\u300D\u6309\u94AE\u73B0\u5728\u76F4\u63A5\u6253\u5F00 ST \u6269\u5C55\u7BA1\u7406\u5668\uFF0C\u66F4\u52A0\u53EF\u9760",
   "3.1.5": "\u{1F4DA} \u4E16\u754C\u4E66\u9009\u62E9\u5668\u4F18\u5316\uFF1A\u4E16\u754C\u4E66\u5206\u7EC4\u53EF\u6298\u53E0\u3001\u6761\u76EE\u6DFB\u52A0\u9884\u89C8\u6309\u94AE\u67E5\u770B\u5B8C\u6574\u5185\u5BB9<br>\u{1F4DD} \u804A\u5929\u5386\u53F2\u63D0\u53D6\u767D\u540D\u5355\uFF1A\u53EF\u81EA\u5B9A\u4E49\u53EA\u63D0\u53D6\u6307\u5B9A\u6807\u7B7E\u5185\u7684\u6587\u672C\u4F5C\u4E3A\u5386\u53F2\u4E0A\u4E0B\u6587"
@@ -948,8 +949,8 @@ textarea.t-input {
     color: #fff;
 }
 
-/* Zen Button */
-.t-zen-btn {
+/* Tools Button (\u66FF\u4EE3\u539F Zen Button) */
+.t-tools-btn {
     position: absolute;
     top: 20px;
     right: 25px;
@@ -969,12 +970,65 @@ textarea.t-input {
     opacity: 0.6;
 }
 
-.t-zen-btn:hover {
+.t-tools-btn:hover {
+    opacity: 1;
+    background: #333;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.t-tools-btn.active {
     opacity: 1;
     background: #bfa15f;
     color: #000;
-    transform: scale(1.1);
-    box-shadow: 0 0 15px rgba(191, 161, 95, 0.4);
+}
+
+.t-tools-btn.zen-active {
+    opacity: 1;
+    background: transparent;
+    color: #bfa15f;
+}
+
+/* Tools Panel (\u5F39\u51FA\u83DC\u5355) */
+.t-tools-panel {
+    position: absolute;
+    top: 65px;
+    right: 25px;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 101;
+    min-width: 140px;
+    padding: 5px;
+    animation: fadeIn 0.15s ease;
+}
+
+.t-tools-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.t-tools-item:hover {
+    background: #2a2a2a;
+    color: #fff;
+}
+
+.t-tools-item i {
+    width: 18px;
+    text-align: center;
+    color: #888;
+}
+
+.t-tools-item:hover i {
+    color: #bfa15f;
 }
 
 /* Bottom Bar */
@@ -1758,6 +1812,129 @@ textarea.t-input {
     display: block;
     width: 100%;
     min-height: 100%;
+}
+
+/* ===== \u5185\u5BB9\u7F16\u8F91\u5668 ===== */
+
+.t-content-editor {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 800px;
+    height: calc(100% - 80px);
+    max-height: 600px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.2s;
+}
+
+.t-ce-header {
+    padding: 12px 15px;
+    background: #242424;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px 10px 0 0;
+    flex-shrink: 0;
+}
+
+.t-ce-body {
+    flex-grow: 1;
+    padding: 10px;
+    overflow: hidden;
+    display: flex;
+    min-height: 0;
+}
+
+.t-ce-textarea {
+    width: 100%;
+    height: 100%;
+    background: #0d0d0d;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #e0e0e0;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 12px;
+    resize: none;
+    outline: none;
+    overflow-y: auto;
+}
+
+.t-ce-textarea:focus {
+    border-color: #bfa15f;
+}
+
+/* \u7F16\u8F91\u5668\u6EDA\u52A8\u6761\u7F8E\u5316 */
+.t-ce-textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+.t-ce-textarea::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.t-ce-textarea::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.t-ce-textarea::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.t-ce-footer {
+    padding: 12px 15px;
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0 0 10px 10px;
+    flex-shrink: 0;
+}
+
+.t-ce-stats {
+    color: #666;
+    font-size: 0.85em;
+}
+
+.t-ce-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media screen and (max-width: 600px) {
+    .t-content-editor {
+        width: 98%;
+        top: 50px;
+        max-height: none;
+        height: calc(100% - 60px);
+    }
+
+    .t-ce-textarea {
+        font-size: 12px;
+    }
+
+    .t-ce-actions {
+        gap: 6px;
+    }
+
+    .t-ce-actions .t-btn {
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
 }
 
 /* === settings.css === */
@@ -4173,11 +4350,32 @@ function getChatHistory(limit, whitelist = []) {
   const ctx = SillyTavern.getContext();
   const history = ctx.chat || [];
   const safeLimit = parseInt(limit) || 10;
-  const visibleHistory = history.filter((msg) => {
-    if (msg.is_hidden) return false;
-    if (msg.disabled) return false;
+  const domMessages = document.querySelectorAll("#chat .mes");
+  const useDomCheck = domMessages.length === history.length;
+  if (!useDomCheck) {
+    console.warn(`Titania: DOM messages count (${domMessages.length}) != History count (${history.length}). Fallback to property check.`);
+  }
+  const visibleHistory = history.filter((msg, index) => {
+    let isHidden = !!(msg.is_hidden || msg.isHidden || msg.is_system || // ST 使用 is_system 来标记隐藏的消息
+    msg.extra && msg.extra.is_hidden);
+    if (!isHidden && useDomCheck) {
+      const el = domMessages[index];
+      if (el) {
+        if (el.hasAttribute("hidden") || el.style.display === "none" || el.classList.contains("hidden") || el.getAttribute("is_system") === "true") {
+          isHidden = true;
+        }
+      }
+    }
+    const isDisabled = !!msg.disabled;
+    if (isHidden) {
+      return false;
+    }
+    if (isDisabled) {
+      return false;
+    }
     return true;
   });
+  console.log(`Titania: History Analysis - Total: ${history.length}, Visible: ${visibleHistory.length}, Filtered: ${history.length - visibleHistory.length}`);
   const recent = visibleHistory.slice(-safeLimit);
   return recent.map((msg) => {
     let name = msg.name;
@@ -7261,7 +7459,17 @@ async function openMainWindow() {
             </div>
 
             <div class="t-content-wrapper">
-                <div class="t-zen-btn" id="t-btn-zen" title="\u6C89\u6D78\u9605\u8BFB\u6A21\u5F0F"><i class="fa-solid fa-expand"></i></div>
+                <div class="t-tools-btn" id="t-btn-tools" title="\u5185\u5BB9\u5DE5\u5177"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+                <div class="t-tools-panel" id="t-tools-panel" style="display:none;">
+                    <div class="t-tools-item" id="t-tool-zen">
+                        <i class="fa-solid fa-expand"></i>
+                        <span>\u6C89\u6D78\u9605\u8BFB</span>
+                    </div>
+                    <div class="t-tools-item" id="t-tool-edit-content">
+                        <i class="fa-solid fa-pen-nib"></i>
+                        <span>\u7F16\u8F91\u5185\u5BB9</span>
+                    </div>
+                </div>
                 <div class="t-content-area">
                     <div id="t-output-content"></div>
                 </div>
@@ -7394,16 +7602,45 @@ async function openMainWindow() {
     e.stopPropagation();
   });
   $("#t-btn-dice").on("click", handleRandom);
-  $("#t-btn-zen").on("click", function() {
+  const $toolsPanel = $("#t-tools-panel");
+  const $toolsBtn = $("#t-btn-tools");
+  $toolsBtn.on("click", function(e) {
+    e.stopPropagation();
+    const isVisible = $toolsPanel.is(":visible");
+    $toolsPanel.toggle(!isVisible);
+    $(this).toggleClass("active", !isVisible);
+  });
+  $(document).on("click.toolspanel", function(e) {
+    if (!$(e.target).closest("#t-tools-panel, #t-btn-tools").length) {
+      $toolsPanel.hide();
+      $toolsBtn.removeClass("active");
+    }
+  });
+  $("#t-tool-zen").on("click", function() {
+    $toolsPanel.hide();
+    $toolsBtn.removeClass("active");
     const view = $("#t-main-view");
     view.toggleClass("t-zen-mode");
     const isZen = view.hasClass("t-zen-mode");
-    $(this).html(isZen ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>');
-    if (isZen) $(this).css("background", "transparent");
-    else $(this).css("background", "rgba(30, 30, 30, 0.6)");
+    if (isZen) {
+      $toolsBtn.addClass("zen-active");
+    } else {
+      $toolsBtn.removeClass("zen-active");
+    }
+  });
+  $("#t-tool-edit-content").on("click", function() {
+    $toolsPanel.hide();
+    $toolsBtn.removeClass("active");
+    if (!GlobalState.lastGeneratedContent) {
+      if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7F16\u8F91\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F");
+      return;
+    }
+    openContentEditor();
   });
   $(document).on("keydown.zenmode", function(e) {
-    if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) $("#t-btn-zen").click();
+    if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) {
+      $("#t-tool-zen").click();
+    }
   });
   const closeWindow = () => {
     $("#t-overlay").remove();
@@ -7966,6 +8203,61 @@ function renderProfileMenu($targetBtn) {
       }
     });
   }, 10);
+}
+function openContentEditor() {
+  if ($("#t-content-editor").length) return;
+  const currentContent = GlobalState.lastGeneratedContent || "";
+  const html = `
+    <div id="t-content-editor" class="t-content-editor">
+        <div class="t-ce-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-pen-nib" style="color:#bfa15f;"></i>
+                <span style="font-weight:bold;">\u7F16\u8F91\u5185\u5BB9</span>
+                <span style="font-size:0.8em; color:#666;">\u76F4\u63A5\u7F16\u8F91 HTML \u6E90\u7801</span>
+            </div>
+            <div class="t-close" id="t-ce-close">&times;</div>
+        </div>
+        <div class="t-ce-body">
+            <textarea id="t-ce-textarea" class="t-ce-textarea" spellcheck="false"></textarea>
+        </div>
+        <div class="t-ce-footer">
+            <div class="t-ce-stats">
+                <span id="t-ce-char-count">\u5B57\u7B26: ${currentContent.length}</span>
+            </div>
+            <div class="t-ce-actions">
+                <button class="t-btn" id="t-ce-cancel">\u53D6\u6D88</button>
+                <button class="t-btn" id="t-ce-preview">\u9884\u89C8</button>
+                <button class="t-btn primary" id="t-ce-save">\u4FDD\u5B58</button>
+            </div>
+        </div>
+    </div>`;
+  $("#t-main-view").append(html);
+  const $textarea = $("#t-ce-textarea");
+  $textarea.val(currentContent);
+  $textarea.on("input", function() {
+    const len = $(this).val().length;
+    $("#t-ce-char-count").text(`\u5B57\u7B26: ${len}`);
+  });
+  $("#t-ce-cancel, #t-ce-close").on("click", () => {
+    $("#t-content-editor").remove();
+  });
+  $("#t-ce-preview").on("click", () => {
+    const newContent = $textarea.val();
+    const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
+    const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
+    renderGeneratedContent(newContent, scriptName);
+    if (window.toastr) toastr.info("\u9884\u89C8\u5DF2\u66F4\u65B0\uFF0C\u70B9\u51FB\u4FDD\u5B58\u786E\u8BA4\u4FEE\u6539");
+  });
+  $("#t-ce-save").on("click", () => {
+    const newContent = $textarea.val();
+    GlobalState.lastGeneratedContent = newContent;
+    const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
+    const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
+    renderGeneratedContent(newContent, scriptName);
+    $("#t-content-editor").remove();
+    if (window.toastr) toastr.success("\u5185\u5BB9\u5DF2\u66F4\u65B0");
+  });
+  setTimeout(() => $textarea.focus(), 100);
 }
 
 // src/ui/floatingBtn.js
@@ -8861,7 +9153,7 @@ Generate ONLY the continuation (no repetition):`;
 async function onGenerationEnded() {
   const extData = getExtData();
   const cfg = extData.config || {};
-  if (!extension_settings3[extensionName].enabled || !cfg.auto_generate) return;
+  if (!cfg.auto_generate) return;
   if (GlobalState.isGenerating || $("#t-overlay").length > 0) return;
   if (!SillyTavern || !SillyTavern.getContext) return;
   const context = SillyTavern.getContext();
@@ -8893,8 +9185,27 @@ async function onGenerationEnded() {
     handleGenerate(randomScript.id, true);
   }, 500);
 }
-async function initEchoTheater() {
-  console.log(`Titania Echo v${CURRENT_VERSION}: Enabled.`);
+function injectOptionsMenuItem() {
+  if ($("#option_titania_theater").length > 0) return;
+  const menuItem = `
+        <hr class="titania-divider">
+        <a id="option_titania_theater" title="\u6253\u5F00\u56DE\u58F0\u5C0F\u5267\u573A">
+            <i class="fa-lg fa-solid fa-masks-theater"></i>
+            <span>\u56DE\u58F0\u5C0F\u5267\u573A</span>
+        </a>
+    `;
+  $("#options .options-content").append(menuItem);
+  $("#option_titania_theater").on("click", function() {
+    if (GlobalState.isGenerating) {
+      if (window.toastr) toastr.info("\u{1F3AD} \u5C0F\u5267\u573A\u6B63\u5728\u540E\u53F0\u6F14\u7ECE\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania Echo");
+      return;
+    }
+    openMainWindow();
+  });
+  console.log("Titania: \u83DC\u5355\u5165\u53E3\u5DF2\u6CE8\u5165");
+}
+function initCoreFeatures() {
+  console.log(`Titania Echo v${CURRENT_VERSION}: Core initialized.`);
   const extData = getExtData();
   if ((!extData.config || Object.keys(extData.config).length === 0) && localStorage.getItem(LEGACY_KEYS.CFG)) {
     try {
@@ -8924,7 +9235,7 @@ async function initEchoTheater() {
     }
   }
   loadScripts();
-  createFloatingButton();
+  injectOptionsMenuItem();
   if (extData.custom_css) {
     applyCustomCSS(extData.custom_css);
   }
@@ -8933,12 +9244,14 @@ async function initEchoTheater() {
   }
   eventSource.on(event_types.GENERATION_ENDED, onGenerationEnded);
 }
-function disableEchoTheater() {
-  console.log(`Titania Echo v${CURRENT_VERSION}: Disabled.`);
+function showFloatingButton() {
+  createFloatingButton();
+  console.log("Titania: \u60AC\u6D6E\u7403\u5DF2\u663E\u793A");
+}
+function hideFloatingButton() {
   $("#titania-float-btn").remove();
-  $("#titania-float-style").remove();
-  $("#t-overlay").remove();
-  eventSource.off(event_types.GENERATION_ENDED, onGenerationEnded);
+  $("#titania-timer").remove();
+  console.log("Titania: \u60AC\u6D6E\u7403\u5DF2\u9690\u85CF");
 }
 async function loadExtensionSettings() {
   extension_settings3[extensionName] = extension_settings3[extensionName] || {};
@@ -8946,16 +9259,20 @@ async function loadExtensionSettings() {
     Object.assign(extension_settings3[extensionName], defaultSettings);
   }
   $("#titania-version-badge").text(`v${CURRENT_VERSION}`);
+  initCoreFeatures();
   $("#enable_echo_theater").prop("checked", extension_settings3[extensionName].enabled);
   $("#enable_echo_theater").on("input", function() {
-    const isEnabled = $(this).prop("checked");
-    extension_settings3[extensionName].enabled = isEnabled;
+    const showFloatBtn = $(this).prop("checked");
+    extension_settings3[extensionName].enabled = showFloatBtn;
     saveSettingsDebounced2();
-    if (isEnabled) initEchoTheater();
-    else disableEchoTheater();
+    if (showFloatBtn) {
+      showFloatingButton();
+    } else {
+      hideFloatingButton();
+    }
   });
   if (extension_settings3[extensionName].enabled) {
-    initEchoTheater();
+    showFloatingButton();
   }
   checkVersionUpdate();
 }
@@ -9082,31 +9399,6 @@ function getChangelogSinceVersion(currentVersion, remoteVersion, changelog) {
   }
   return updates;
 }
-async function performExtensionUpdate(remoteVersion) {
-  try {
-    const response = await fetch("/api/extensions/update", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        extensionName: "titania-theater"
-      })
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
-    const result = await response.json();
-    if (result.error) {
-      throw new Error(result.error);
-    }
-    return true;
-  } catch (e) {
-    console.error("Titania: \u66F4\u65B0\u5931\u8D25", e);
-    throw e;
-  }
-}
 async function showUpdateConfirmDialog(remoteVersion) {
   if ($(".titania-update-overlay").length) return;
   const loadingHtml = `
@@ -9170,7 +9462,7 @@ async function showUpdateConfirmDialog(remoteVersion) {
             <div class="titania-update-footer">
                 <button class="titania-btn-cancel" id="titania-update-cancel">\u7A0D\u540E\u518D\u8BF4</button>
                 <button class="titania-btn-confirm" id="titania-update-confirm">
-                    <i class="fa-solid fa-download"></i> \u7ACB\u5373\u66F4\u65B0
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> \u524D\u5F80\u66F4\u65B0
                 </button>
             </div>
         </div>
@@ -9179,41 +9471,11 @@ async function showUpdateConfirmDialog(remoteVersion) {
   $("#titania-update-cancel, .titania-update-close").on("click", () => {
     $(".titania-update-overlay").remove();
   });
-  $("#titania-update-confirm").on("click", async function() {
-    const $btn = $(this);
-    const originalHtml = $btn.html();
-    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u66F4\u65B0\u4E2D...');
-    try {
-      await performExtensionUpdate(remoteVersion);
-      $btn.html('<i class="fa-solid fa-check"></i> \u66F4\u65B0\u6210\u529F\uFF01');
-      if (window.toastr) {
-        toastr.success("\u66F4\u65B0\u6210\u529F\uFF01\u8BF7\u5237\u65B0\u9875\u9762\u4EE5\u5E94\u7528\u66F4\u65B0\u3002", "Titania Echo");
-      }
-      setTimeout(() => {
-        $btn.html('<i class="fa-solid fa-rotate-right"></i> \u5237\u65B0\u9875\u9762').prop("disabled", false);
-        $btn.off("click").on("click", () => {
-          location.reload();
-        });
-      }, 1500);
-    } catch (e) {
-      console.error("Titania: \u66F4\u65B0\u5931\u8D25", e);
-      $btn.prop("disabled", false).html(originalHtml);
-      if (window.toastr) {
-        toastr.error(`\u66F4\u65B0\u5931\u8D25\uFF1A${e.message}`, "Titania Echo");
-      }
-      const $footer = $(".titania-update-footer");
-      if (!$footer.find(".titania-fallback-hint").length) {
-        $footer.prepend(`
-                    <div class="titania-fallback-hint" style="width:100%; text-align:center; margin-bottom:10px; font-size:0.85em; color:#888;">
-                        <span>\u81EA\u52A8\u66F4\u65B0\u5931\u8D25\uFF1F</span>
-                        <a href="javascript:void(0)" id="titania-fallback-link" style="color:#90cdf4; margin-left:5px;">\u6253\u5F00\u6269\u5C55\u7BA1\u7406\u5668\u624B\u52A8\u66F4\u65B0</a>
-                    </div>
-                `);
-        $("#titania-fallback-link").on("click", () => {
-          $(".titania-update-overlay").remove();
-          $("#extensions_details").click();
-        });
-      }
+  $("#titania-update-confirm").on("click", function() {
+    $(".titania-update-overlay").remove();
+    $("#extensions_details").click();
+    if (window.toastr) {
+      toastr.info("\u8BF7\u5728\u6269\u5C55\u7BA1\u7406\u5668\u4E2D\u627E\u5230\u300C\u56DE\u58F0\u5C0F\u5267\u573A\u300D\u5E76\u70B9\u51FB\u66F4\u65B0\u6309\u94AE", "Titania Echo");
     }
   });
   $(".titania-update-overlay").on("click", function(e) {
