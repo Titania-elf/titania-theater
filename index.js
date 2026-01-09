@@ -9065,6 +9065,31 @@ function getChangelogSinceVersion(currentVersion, remoteVersion, changelog) {
   }
   return updates;
 }
+async function performExtensionUpdate(remoteVersion) {
+  try {
+    const response = await fetch("/api/extensions/update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        extensionName: "titania-theater"
+      })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    const result = await response.json();
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    return true;
+  } catch (e) {
+    console.error("Titania: \u66F4\u65B0\u5931\u8D25", e);
+    throw e;
+  }
+}
 async function showUpdateConfirmDialog(remoteVersion) {
   if ($(".titania-update-overlay").length) return;
   const loadingHtml = `
@@ -9128,7 +9153,7 @@ async function showUpdateConfirmDialog(remoteVersion) {
             <div class="titania-update-footer">
                 <button class="titania-btn-cancel" id="titania-update-cancel">\u7A0D\u540E\u518D\u8BF4</button>
                 <button class="titania-btn-confirm" id="titania-update-confirm">
-                    <i class="fa-solid fa-puzzle-piece"></i> \u6253\u5F00\u6269\u5C55\u7BA1\u7406\u5668
+                    <i class="fa-solid fa-download"></i> \u7ACB\u5373\u66F4\u65B0
                 </button>
             </div>
         </div>
@@ -9137,11 +9162,41 @@ async function showUpdateConfirmDialog(remoteVersion) {
   $("#titania-update-cancel, .titania-update-close").on("click", () => {
     $(".titania-update-overlay").remove();
   });
-  $("#titania-update-confirm").on("click", function() {
-    $(".titania-update-overlay").remove();
-    $("#extensions_details").click();
-    if (window.toastr) {
-      toastr.info("\u8BF7\u5728\u6269\u5C55\u7BA1\u7406\u5668\u4E2D\u627E\u5230 Titania Echo \u5E76\u70B9\u51FB\u66F4\u65B0\u6309\u94AE", "Titania Echo");
+  $("#titania-update-confirm").on("click", async function() {
+    const $btn = $(this);
+    const originalHtml = $btn.html();
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u66F4\u65B0\u4E2D...');
+    try {
+      await performExtensionUpdate(remoteVersion);
+      $btn.html('<i class="fa-solid fa-check"></i> \u66F4\u65B0\u6210\u529F\uFF01');
+      if (window.toastr) {
+        toastr.success("\u66F4\u65B0\u6210\u529F\uFF01\u8BF7\u5237\u65B0\u9875\u9762\u4EE5\u5E94\u7528\u66F4\u65B0\u3002", "Titania Echo");
+      }
+      setTimeout(() => {
+        $btn.html('<i class="fa-solid fa-rotate-right"></i> \u5237\u65B0\u9875\u9762').prop("disabled", false);
+        $btn.off("click").on("click", () => {
+          location.reload();
+        });
+      }, 1500);
+    } catch (e) {
+      console.error("Titania: \u66F4\u65B0\u5931\u8D25", e);
+      $btn.prop("disabled", false).html(originalHtml);
+      if (window.toastr) {
+        toastr.error(`\u66F4\u65B0\u5931\u8D25\uFF1A${e.message}`, "Titania Echo");
+      }
+      const $footer = $(".titania-update-footer");
+      if (!$footer.find(".titania-fallback-hint").length) {
+        $footer.prepend(`
+                    <div class="titania-fallback-hint" style="width:100%; text-align:center; margin-bottom:10px; font-size:0.85em; color:#888;">
+                        <span>\u81EA\u52A8\u66F4\u65B0\u5931\u8D25\uFF1F</span>
+                        <a href="javascript:void(0)" id="titania-fallback-link" style="color:#90cdf4; margin-left:5px;">\u6253\u5F00\u6269\u5C55\u7BA1\u7406\u5668\u624B\u52A8\u66F4\u65B0</a>
+                    </div>
+                `);
+        $("#titania-fallback-link").on("click", () => {
+          $(".titania-update-overlay").remove();
+          $("#extensions_details").click();
+        });
+      }
     }
   });
   $(".titania-update-overlay").on("click", function(e) {
