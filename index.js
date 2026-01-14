@@ -22,14 +22,14 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.1.9";
+    CURRENT_VERSION = "3.2.0";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
-      "3.1.9": "\u{1F4BE} \u65B0\u589E\u6570\u636E\u5907\u4EFD\u529F\u80FD\uFF1A\u652F\u6301\u5B8C\u6574\u5BFC\u51FA/\u5BFC\u5165\u6240\u6709\u63D2\u4EF6\u6570\u636E\uFF08\u542BAPI\u914D\u7F6E\u3001\u811A\u672C\u3001\u6536\u85CF\u7B49\uFF09<br>\u{1F527} \u4FEE\u590D\u5BA1\u67E5\u7A97\u53E3\u804A\u5929\u5386\u53F2\u767D\u540D\u5355\uFF1A\u73B0\u4E0E\u5B9E\u9645\u751F\u6210\u4FDD\u6301\u4E00\u81F4\uFF0C\u6B63\u786E\u663E\u793A\u8FC7\u6EE4\u540E\u7684\u5185\u5BB9<br>\u{1F520} \u4F18\u5316\u63D2\u4EF6\u57FA\u7840\u5B57\u53F7\uFF1A\u9ED8\u8BA4 12px\uFF0C\u66F4\u7D27\u51D1\u7684 UI \u5E03\u5C40",
-      "3.1.8": "\u{1F680} \u65B0\u589E\u53CC\u5165\u53E3\u7CFB\u7EDF\uFF1A\u5DE6\u4FA7\u83DC\u5355\u6DFB\u52A0\u63D2\u4EF6\u4E3B\u5165\u53E3\uFF08\u59CB\u7EC8\u53EF\u7528\uFF09\uFF0C\u60AC\u6D6E\u7403\u4F5C\u4E3A\u8F85\u52A9\u5165\u53E3\uFF08\u53EF\u5728\u8BBE\u7F6E\u4E2D\u9690\u85CF\uFF09<br>\u{1F6E1}\uFE0F \u4FEE\u590D\u9690\u85CF\u6D88\u606F\u8FC7\u6EE4\uFF1A\u4F7F\u7528 is_system \u5C5E\u6027\u6B63\u786E\u8BC6\u522B\u7CFB\u7EDF\u6D88\u606F<br>\u270D\uFE0F \u65B0\u589E\u5185\u5BB9\u7F16\u8F91\u5DE5\u5177\uFF1A\u652F\u6301\u76F4\u63A5\u7F16\u8F91\u5DF2\u751F\u6210\u7684 HTML \u5185\u5BB9<br>\u{1F4D6} \u6C89\u6D78\u9605\u8BFB\u6A21\u5F0F\uFF1AZen \u6A21\u5F0F\u9690\u85CFUI\u5143\u7D20\uFF0C\u4E13\u6CE8\u5185\u5BB9\u9605\u8BFB",
-      "3.1.7": "\u{1F527} \u4F18\u5316\u7B5B\u9009\u952E\u4E0B\u62C9\u5217\u8868\uFF1A\u56FA\u5B9A\u6700\u5927\u9AD8\u5EA6\uFF0C\u8D85\u8FC75\u4E2A\u5206\u7C7B\u65F6\u663E\u793A\u6EDA\u52A8\u6761<br>\u{1F4CF} \u4FEE\u590D\u63D2\u4EF6\u5B57\u4F53\u5927\u5C0F\u53D7ST\u5168\u5C40\u8BBE\u7F6E\u5F71\u54CD\u7684\u95EE\u9898"
+      "3.2.0": "\u{1F4DC} \u65B0\u589E\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD\uFF1A\u53EF\u5206\u522B\u4E3A\u300C\u5185\u5BB9\u4F18\u5148\u300D\u548C\u300C\u6C1B\u56F4\u7F8E\u5316\u300D\u6A21\u5F0F\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD<br>\u23F9\uFE0F \u4FA7\u8FB9\u6ED1\u51FA\u5F0F\u4E2D\u6B62\u6309\u94AE\uFF1A\u751F\u6210\u65F6\u60AC\u6D6E\u7403\u53F3\u4FA7\u5C55\u5F00\u4E2D\u6B62\u6309\u94AE\uFF0C\u64CD\u4F5C\u66F4\u4FBF\u6377<br>\u{1F3A8} \u8BA1\u65F6\u5668\u6BDB\u73BB\u7483\u6837\u5F0F\uFF1A\u751F\u6210\u8BA1\u65F6\u5668\u6539\u4E3A\u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C<br>\u26A1 \u8BBE\u7F6E\u9875\u5207\u6362\u52A8\u753B\u4F18\u5316\uFF1A\u79FB\u9664\u6DE1\u5165\u52A8\u753B\uFF0C\u54CD\u5E94\u66F4\u5373\u65F6",
+      "3.1.9": "\u{1F4BE} \u65B0\u589E\u6570\u636E\u5907\u4EFD\u529F\u80FD\uFF1A\u652F\u6301\u5B8C\u6574\u5BFC\u51FA/\u5BFC\u5165\u6240\u6709\u63D2\u4EF6\u6570\u636E\uFF08\u542BAPI\u914D\u7F6E\u3001\u811A\u672C\u3001\u6536\u85CF\u7B49\uFF09<br>\u{1F527} \u4FEE\u590D\u5BA1\u67E5\u7A97\u53E3\u804A\u5929\u5386\u53F2\u767D\u540D\u5355\uFF1A\u73B0\u4E0E\u5B9E\u9645\u751F\u6210\u4FDD\u6301\u4E00\u81F4\uFF0C\u6B63\u786E\u663E\u793A\u8FC7\u6EE4\u540E\u7684\u5185\u5BB9<br>\u23F9\uFE0F \u4FA7\u8FB9\u6ED1\u51FA\u5F0F\u4E2D\u6B62\u6309\u94AE\uFF1A\u751F\u6210\u65F6\u60AC\u6D6E\u7403\u4E0A\u65B9\u5C55\u5F00\u4E2D\u6B62\u6309\u94AE",
+      "3.1.8": "\u{1F680} \u65B0\u589E\u53CC\u5165\u53E3\u7CFB\u7EDF\uFF1A\u5DE6\u4FA7\u83DC\u5355\u6DFB\u52A0\u63D2\u4EF6\u4E3B\u5165\u53E3\uFF08\u59CB\u7EC8\u53EF\u7528\uFF09\uFF0C\u60AC\u6D6E\u7403\u4F5C\u4E3A\u8F85\u52A9\u5165\u53E3\uFF08\u53EF\u5728\u8BBE\u7F6E\u4E2D\u9690\u85CF\uFF09<br>\u{1F6E1}\uFE0F \u4FEE\u590D\u9690\u85CF\u6D88\u606F\u8FC7\u6EE4\uFF1A\u4F7F\u7528 is_system \u5C5E\u6027\u6B63\u786E\u8BC6\u522B\u7CFB\u7EDF\u6D88\u606F<br>\u270D\uFE0F \u65B0\u589E\u5185\u5BB9\u7F16\u8F91\u5DE5\u5177\uFF1A\u652F\u6301\u76F4\u63A5\u7F16\u8F91\u5DF2\u751F\u6210\u7684 HTML \u5185\u5BB9<br>\u{1F4D6} \u6C89\u6D78\u9605\u8BFB\u6A21\u5F0F\uFF1AZen \u6A21\u5F0F\u9690\u85CFUI\u5143\u7D20\uFF0C\u4E13\u6CE8\u5185\u5BB9\u9605\u8BFB"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -106,6 +106,15 @@ var init_defaults = __esm({
         // 检测模式: "html" | "sentence" | "both"
         show_indicator: true
         // 是否在内容中显示续写标记
+      },
+      // 自定义系统提示词配置
+      custom_prompts: {
+        override_enabled: false,
+        // 是否启用覆盖
+        content_mode: "",
+        // 内容优先模式的自定义系统提示词
+        visual_mode: ""
+        // 氛围美化模式的自定义系统提示词
       }
     };
   }
@@ -2094,6 +2103,7 @@ function openSettingsWindow() {
                 <div class="t-set-tab-btn" data-tab="connection">\u{1F50C} API \u8FDE\u63A5</div>
                 <div class="t-set-tab-btn" data-tab="director">\u{1F3AC} \u5BFC\u6F14\u6A21\u5F0F</div>
                 <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
+                <div class="t-set-tab-btn" data-tab="prompts">\u{1F4DC} \u7CFB\u7EDF\u63D0\u793A\u8BCD</div>
                 <div class="t-set-tab-btn" data-tab="data">\u{1F5C2}\uFE0F \u6570\u636E\u7BA1\u7406</div>
                 <div class="t-set-tab-btn" data-tab="diagnostics" style="color:#ff9f43;"><i class="fa-solid fa-stethoscope"></i> \u8BCA\u65AD</div>
             </div>
@@ -2513,7 +2523,65 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 5: \u6570\u636E\u7BA1\u7406 -->
+                <!-- Tab 5: \u7CFB\u7EDF\u63D0\u793A\u8BCD -->
+                <div id="page-prompts" class="t-set-page">
+                    <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
+                        <div style="font-weight:bold; color:#90cdf4; margin-bottom:10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> \u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD</div>
+                        <div style="font-size:0.85em; color:#888; line-height:1.6;">
+                            \u8986\u76D6\u63D2\u4EF6\u5185\u7F6E\u7684\u7CFB\u7EDF\u63D0\u793A\u8BCD\uFF0C\u81EA\u5B9A\u4E49 AI \u7684\u884C\u4E3A\u65B9\u5F0F\u548C\u8F93\u51FA\u683C\u5F0F\u3002<br>
+                            <span style="color:#feca57;">\u26A0\uFE0F \u9AD8\u7EA7\u529F\u80FD\uFF1A\u4FEE\u6539\u4E0D\u5F53\u53EF\u80FD\u5BFC\u81F4\u751F\u6210\u5931\u8D25\u6216\u683C\u5F0F\u9519\u4E71\u3002</span>
+                        </div>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <label style="cursor:pointer; display:flex; align-items:center; color:#55efc4; font-weight:bold;">
+                            <input type="checkbox" id="cfg-prompt-override" ${data.custom_prompts?.override_enabled ? "checked" : ""} style="margin-right:10px;">
+                            \u542F\u7528\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD
+                        </label>
+                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">\u542F\u7528\u540E\u5C06\u4F7F\u7528\u4E0B\u65B9\u7684\u81EA\u5B9A\u4E49\u63D0\u793A\u8BCD\u66FF\u4EE3\u5185\u7F6E\u63D0\u793A\u8BCD\u3002</p>
+                    </div>
+                    
+                    <div id="custom-prompts-panel" style="display:${data.custom_prompts?.override_enabled ? "block" : "none"};">
+                        <!-- \u5185\u5BB9\u4F18\u5148\u6A21\u5F0F\u63D0\u793A\u8BCD -->
+                        <div class="t-form-group" style="background:#1a1a2e; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <label class="t-form-label" style="margin:0; color:#90cdf4;">\u{1F4DD} \u5185\u5BB9\u4F18\u5148\u6A21\u5F0F (Content Mode)</label>
+                                <button id="btn-prompt-content-reset" class="t-tool-btn" title="\u6062\u590D\u9ED8\u8BA4" style="font-size:0.8em; padding:4px 8px;"><i class="fa-solid fa-rotate-left"></i> \u9ED8\u8BA4</button>
+                            </div>
+                            <textarea id="cfg-prompt-content" class="t-input t-code-editor" rows="6" placeholder="You are a creative engine...">${data.custom_prompts?.content_mode || ""}</textarea>
+                            <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                <span style="font-size:0.75em; color:#666;">\u9ED8\u8BA4\u7528\u4E8E\u5927\u591A\u6570\u5267\u672C\u751F\u6210</span>
+                                <span id="prompt-content-count" style="font-size:0.75em; color:#666;">0 \u5B57\u7B26</span>
+                            </div>
+                        </div>
+                        
+                        <!-- \u6C1B\u56F4\u7F8E\u5316\u6A21\u5F0F\u63D0\u793A\u8BCD -->
+                        <div class="t-form-group" style="background:#2e1a2e; padding:15px; border-radius:6px; border:1px solid #333;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <label class="t-form-label" style="margin:0; color:#ff79c6;">\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316\u6A21\u5F0F (Visual Mode)</label>
+                                <button id="btn-prompt-visual-reset" class="t-tool-btn" title="\u6062\u590D\u9ED8\u8BA4" style="font-size:0.8em; padding:4px 8px;"><i class="fa-solid fa-rotate-left"></i> \u9ED8\u8BA4</button>
+                            </div>
+                            <textarea id="cfg-prompt-visual" class="t-input t-code-editor" rows="8" placeholder="You are a Visual Director...">${data.custom_prompts?.visual_mode || ""}</textarea>
+                            <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                <span style="font-size:0.75em; color:#666;">\u7528\u4E8E\u89C6\u89C9\u6548\u679C\u4F18\u5148\u7684\u573A\u666F</span>
+                                <span id="prompt-visual-count" style="font-size:0.75em; color:#666;">0 \u5B57\u7B26</span>
+                            </div>
+                        </div>
+                        
+                        <!-- \u63D0\u793A\u4FE1\u606F -->
+                        <div style="background:rgba(255,159,67,0.1); border:1px solid rgba(255,159,67,0.3); padding:12px; border-radius:6px; margin-top:15px;">
+                            <div style="font-size:0.85em; color:#feca57; margin-bottom:8px;"><i class="fa-solid fa-lightbulb"></i> \u7F16\u5199\u63D0\u793A\u8BCD\u7684\u5EFA\u8BAE</div>
+                            <ul style="font-size:0.8em; color:#888; margin:0; padding-left:18px; line-height:1.7;">
+                                <li>\u660E\u786E\u6307\u5B9A\u8F93\u51FA\u683C\u5F0F\uFF08\u5982\uFF1AHTML\u3001\u4F7F\u7528\u5185\u8054CSS\u7B49\uFF09</li>
+                                <li>\u6307\u5B9A\u8BED\u8A00\uFF08\u5982\uFF1ALanguage: Chinese\uFF09</li>
+                                <li>\u7981\u6B62 Markdown \u4EE3\u7801\u5757\uFF08No markdown code blocks\uFF09</li>
+                                <li>\u7559\u7A7A\u5219\u4F7F\u7528\u5185\u7F6E\u9ED8\u8BA4\u63D0\u793A\u8BCD</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 6: \u6570\u636E\u7BA1\u7406 -->
                 <div id="page-data" class="t-set-page">
                     <div class="t-form-group">
                         <div class="t-form-label">\u81EA\u5B9A\u4E49\u5267\u672C\u5E93</div>
@@ -2559,7 +2627,7 @@ function openSettingsWindow() {
                     </div>
                 </div>
                 
-                <!-- Tab 6: \u8BCA\u65AD (\u65B0\u589E) -->
+                <!-- Tab 7: \u8BCA\u65AD -->
                 <div id="page-diagnostics" class="t-set-page">
                     <div style="margin-bottom:15px; background: rgba(255, 159, 67, 0.1); border:1px solid rgba(255, 159, 67, 0.3); padding:10px; border-radius:6px;">
                         <div style="font-weight:bold; color:#feca57; font-size:0.9em; margin-bottom:5px;"><i class="fa-solid fa-triangle-exclamation"></i> \u62A5\u9519\u6392\u67E5\u6307\u5357</div>
@@ -3034,6 +3102,44 @@ function openSettingsWindow() {
   $("#cfg-auto-continue").on("change", function() {
     $("#auto-continue-panel").toggle($(this).is(":checked"));
   });
+  const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
+  const DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
+
+[Process]
+1. Analyze the mood/emotion of the scenario
+2. Choose visual effects that represent the mood
+3. Generate HTML with embedded <style>
+
+[Technical Rules]
+1. Output HTML with <style> block
+2. Use CSS animations, gradients, shadows freely
+3. No markdown code blocks
+4. Language: Chinese`;
+  const updatePromptContentCount = () => {
+    const len = ($("#cfg-prompt-content").val() || "").length;
+    $("#prompt-content-count").text(`${len} \u5B57\u7B26`);
+  };
+  const updatePromptVisualCount = () => {
+    const len = ($("#cfg-prompt-visual").val() || "").length;
+    $("#prompt-visual-count").text(`${len} \u5B57\u7B26`);
+  };
+  $("#cfg-prompt-content").on("input", updatePromptContentCount);
+  $("#cfg-prompt-visual").on("input", updatePromptVisualCount);
+  updatePromptContentCount();
+  updatePromptVisualCount();
+  $("#cfg-prompt-override").on("change", function() {
+    $("#custom-prompts-panel").toggle($(this).is(":checked"));
+  });
+  $("#btn-prompt-content-reset").on("click", function() {
+    $("#cfg-prompt-content").val(DEFAULT_CONTENT_PROMPT);
+    updatePromptContentCount();
+    if (window.toastr) toastr.info("\u5DF2\u6062\u590D\u5185\u5BB9\u6A21\u5F0F\u9ED8\u8BA4\u63D0\u793A\u8BCD");
+  });
+  $("#btn-prompt-visual-reset").on("click", function() {
+    $("#cfg-prompt-visual").val(DEFAULT_VISUAL_PROMPT);
+    updatePromptVisualCount();
+    if (window.toastr) toastr.info("\u5DF2\u6062\u590D\u6C1B\u56F4\u6A21\u5F0F\u9ED8\u8BA4\u63D0\u793A\u8BCD");
+  });
   const renderLogView = () => {
     const logs = TitaniaLogger.logs;
     if (!logs || logs.length === 0) {
@@ -3234,6 +3340,11 @@ ${JSON.stringify(l.details, null, 2)}`;
     };
     d.history_extraction = {
       whitelist: $("#cfg-history-whitelist").val().trim()
+    };
+    d.custom_prompts = {
+      override_enabled: $("#cfg-prompt-override").is(":checked"),
+      content_mode: $("#cfg-prompt-content").val().trim(),
+      visual_mode: $("#cfg-prompt-visual").val().trim()
     };
     saveExtData();
     $("#t-settings-view").remove();
@@ -4850,37 +4961,76 @@ var init_mainWindow = __esm({
 });
 
 // src/ui/floatingBtn.js
-function showCancelButton() {
-  $("#titania-cancel-btn").remove();
+function showSlideMenu() {
+  if (slideMenuVisible) return;
   const $btn = $("#titania-float-btn");
   if (!$btn.length) return;
   const btnRect = $btn[0].getBoundingClientRect();
-  const cancelSize = 28;
-  const gap = 3;
-  const cancelBtn = $(`
-        <div id="titania-cancel-btn" title="\u4E2D\u6B62\u6F14\u7ECE">
-            <i class="fa-solid fa-stop"></i>
+  const btnSize = $btn.outerWidth() || 56;
+  const isOnLeft = btnRect.left < window.innerWidth / 2;
+  const backdrop = $(`<div id="titania-menu-backdrop"></div>`);
+  const slideMenu = $(`
+        <div id="titania-slide-menu">
+            <div id="titania-cancel-btn" title="\u4E2D\u6B62\u6F14\u7ECE">
+                <i class="fa-solid fa-stop"></i>
+            </div>
+            <span id="titania-cancel-label">\u4E2D\u6B62</span>
         </div>
     `);
-  cancelBtn.css({
-    left: btnRect.left + btnRect.width / 2 - cancelSize / 2 + "px",
-    top: btnRect.top - cancelSize - gap + "px"
+  const menuTop = btnRect.top + btnSize / 2 - 18;
+  const gap = 8;
+  if (isOnLeft) {
+    slideMenu.css({
+      left: btnRect.right + gap + "px",
+      top: menuTop + "px",
+      flexDirection: "row"
+    });
+  } else {
+    slideMenu.css({
+      right: window.innerWidth - btnRect.left + gap + "px",
+      top: menuTop + "px",
+      flexDirection: "row-reverse"
+    });
+  }
+  $("body").append(backdrop);
+  $("body").append(slideMenu);
+  requestAnimationFrame(() => {
+    backdrop.addClass("show");
+    slideMenu.addClass("show");
   });
-  $("body").append(cancelBtn);
-  updateTimerPosition();
-  cancelBtn.on("click", async function(e) {
+  slideMenuVisible = true;
+  slideMenu.find("#titania-cancel-btn").on("click", async function(e) {
     e.stopPropagation();
     const { cancelGeneration: cancelGeneration2 } = await Promise.resolve().then(() => (init_api(), api_exports));
     cancelGeneration2();
+    hideSlideMenu();
+  });
+  backdrop.on("click", function() {
+    hideSlideMenu();
   });
 }
-function hideCancelButton() {
-  const $cancelBtn = $("#titania-cancel-btn");
-  if ($cancelBtn.length) {
-    $cancelBtn.fadeOut(150, function() {
-      $(this).remove();
-    });
+function hideSlideMenu() {
+  const $menu = $("#titania-slide-menu");
+  const $backdrop = $("#titania-menu-backdrop");
+  $menu.removeClass("show");
+  $backdrop.removeClass("show");
+  setTimeout(() => {
+    $menu.remove();
+    $backdrop.remove();
+  }, 300);
+  slideMenuVisible = false;
+}
+function toggleSlideMenu() {
+  if (slideMenuVisible) {
+    hideSlideMenu();
+  } else {
+    showSlideMenu();
   }
+}
+function showCancelButton() {
+}
+function hideCancelButton() {
+  hideSlideMenu();
 }
 function startTimer() {
   const settings2 = getExtData();
@@ -4926,17 +5076,9 @@ function updateTimerPosition() {
   const btnRect = $btn[0].getBoundingClientRect();
   const timerWidth = $timer.outerWidth() || 40;
   const timerHeight = $timer.outerHeight() || 20;
-  const cancelSize = 28;
   const gap = 6;
-  const $cancel = $("#titania-cancel-btn");
-  const hasCancelBtn = $cancel.length > 0;
   const left = btnRect.left + btnRect.width / 2 - timerWidth / 2;
-  let top;
-  if (hasCancelBtn) {
-    top = btnRect.top - cancelSize - gap - timerHeight - gap;
-  } else {
-    top = btnRect.top - timerHeight - gap;
-  }
+  const top = btnRect.top - timerHeight - gap;
   $timer.css({
     left: Math.max(5, left) + "px",
     top: Math.max(5, top) + "px"
@@ -5015,10 +5157,13 @@ function createFloatingButton() {
       const snapThreshold = window.innerWidth / 2;
       const targetLeft = rect.left + size / 2 < snapThreshold ? 0 : window.innerWidth - size;
       btn.css({ "transition": "all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)", "left": targetLeft + "px" });
-      setTimeout(updateTimerPosition, 350);
+      setTimeout(() => {
+        updateTimerPosition();
+        hideSlideMenu();
+      }, 350);
     } else {
       if (GlobalState.isGenerating) {
-        if (window.toastr) toastr.info("\u{1F3AD} \u5C0F\u5267\u573A\u6B63\u5728\u540E\u53F0\u6F14\u7ECE\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania Echo");
+        toggleSlideMenu();
         return;
       }
       btn.removeClass("t-notify");
@@ -5026,13 +5171,14 @@ function createFloatingButton() {
     }
   });
 }
-var ANIMATION_CLASSES;
+var slideMenuVisible, ANIMATION_CLASSES;
 var init_floatingBtn = __esm({
   "src/ui/floatingBtn.js"() {
     init_storage();
     init_state();
     init_defaults();
     init_mainWindow();
+    slideMenuVisible = false;
     ANIMATION_CLASSES = {
       ripple: "t-anim-ripple",
       arc: "t-anim-arc"
@@ -5345,8 +5491,10 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId) || styleProfiles[0];
     const dStyle = activeStyleProfile ? activeStyleProfile.content : "";
     let sys;
-    if (GlobalState.generationMode === "visual") {
-      sys = `You are a Visual Director creating an immersive HTML scene.
+    const customPrompts = data.custom_prompts || {};
+    const useCustomPrompts = customPrompts.override_enabled === true;
+    const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
+    const DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
 
 [Process]
 1. Analyze the mood/emotion of the scenario
@@ -5358,8 +5506,10 @@ async function handleGenerate(forceScriptId = null, silent = false) {
 2. Use CSS animations, gradients, shadows freely
 3. No markdown code blocks
 4. Language: Chinese`;
+    if (GlobalState.generationMode === "visual") {
+      sys = useCustomPrompts && customPrompts.visual_mode?.trim() ? customPrompts.visual_mode.trim() : DEFAULT_VISUAL_PROMPT;
     } else {
-      sys = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
+      sys = useCustomPrompts && customPrompts.content_mode?.trim() ? customPrompts.content_mode.trim() : DEFAULT_CONTENT_PROMPT;
     }
     let user = `[Roleplay Context]
 Character: ${ctx.charName}
@@ -6156,9 +6306,9 @@ textarea.t-input {
 
 /* ===== \u52A0\u8F7D\u52A8\u753B\u6548\u679C ===== */
 
-/* \u901A\u7528\u52A0\u8F7D\u72B6\u6001 */
+/* \u901A\u7528\u52A0\u8F7D\u72B6\u6001 - \u4FDD\u6301\u53EF\u4EA4\u4E92\u4EE5\u652F\u6301\u4FA7\u8FB9\u83DC\u5355 */
 #titania-float-btn.t-loading {
-    pointer-events: none;
+    /* pointer-events: none; \u79FB\u9664\uFF0C\u6539\u4E3A\u5141\u8BB8\u70B9\u51FB\u5C55\u5F00\u4FA7\u8FB9\u83DC\u5355 */
 }
 
 /* ===== \u52A8\u753B 1: \u8109\u51B2\u6CE2\u7EB9 (Pulse Ripple) ===== */
@@ -6324,13 +6474,19 @@ textarea.t-input {
     top: 80px;
     left: 20px;
 
-    background: rgba(0, 0, 0, 0.7);
+    /* \u6BDB\u73BB\u7483\u6548\u679C */
+    background: rgba(30, 30, 30, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
     color: #00d9ff;
     font-family: var(--t-font-mono);
     font-size: 11px;
 
-    padding: 3px 8px;
-    border-radius: 10px;
+    padding: 3px 10px;
+    border-radius: 12px;
     min-width: 36px;
     text-align: center;
 
@@ -6351,11 +6507,24 @@ textarea.t-input {
     color: #55efc4;
 }
 
-/* ===== \u4E2D\u6B62\u6309\u94AE ===== */
-#titania-cancel-btn {
+/* ===== \u4FA7\u8FB9\u6ED1\u51FA\u83DC\u5355\u5BB9\u5668 ===== */
+#titania-slide-menu {
     position: fixed;
-    width: 28px;
-    height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+#titania-slide-menu.show {
+    pointer-events: auto;
+}
+
+/* ===== \u4E2D\u6B62\u6309\u94AE\uFF08\u4FA7\u8FB9\u6ED1\u51FA\u5F0F\uFF09 ===== */
+#titania-cancel-btn {
+    width: 36px;
+    height: 36px;
     background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
     color: #fff;
     border-radius: 50%;
@@ -6363,35 +6532,76 @@ textarea.t-input {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 14px;
     cursor: pointer;
-    z-index: 10000;
-    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
-    transition: transform 0.2s, box-shadow 0.2s;
-    animation: t-cancel-pulse 1s ease-in-out infinite;
+    box-shadow: 0 2px 10px rgba(255, 71, 87, 0.5);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s,
+        opacity 0.2s;
+    opacity: 0;
+    transform: scale(0.3);
+}
+
+#titania-slide-menu.show #titania-cancel-btn {
+    opacity: 1;
+    transform: scale(1);
+    animation: t-cancel-pulse 1.5s ease-in-out infinite;
 }
 
 #titania-cancel-btn:hover {
-    transform: scale(1.15);
-    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.6);
+    transform: scale(1.15) !important;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.7);
 }
 
 #titania-cancel-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.95) !important;
 }
 
 @keyframes t-cancel-pulse {
 
     0%,
     100% {
-        opacity: 1;
-        box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+        box-shadow: 0 2px 10px rgba(255, 71, 87, 0.5);
     }
 
     50% {
-        opacity: 0.85;
-        box-shadow: 0 2px 15px rgba(255, 71, 87, 0.7);
+        box-shadow: 0 2px 20px rgba(255, 71, 87, 0.8);
     }
+}
+
+/* ===== \u4E2D\u6B62\u6309\u94AE\u6807\u7B7E ===== */
+#titania-cancel-label {
+    background: rgba(0, 0, 0, 0.75);
+    color: #ff6b6b;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 0.2s 0.1s, transform 0.25s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#titania-slide-menu.show #titania-cancel-label {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ===== \u70B9\u51FB\u5916\u90E8\u533A\u57DF\u5173\u95ED\u83DC\u5355\u7684\u906E\u7F69 ===== */
+#titania-menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9998;
+    background: transparent;
+    display: none;
+}
+
+#titania-menu-backdrop.show {
+    display: block;
 }
 
 /* === main-window.css === */
@@ -7781,7 +7991,6 @@ textarea.t-input {
 
 .t-set-page {
     display: none;
-    animation: fadeIn 0.3s;
 }
 
 .t-set-page.active {
