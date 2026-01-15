@@ -447,6 +447,9 @@ async function getActiveWorldInfoEntries() {
       }
     }
   }
+  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
+    activeBooks.add(ctx.chatMetadata.world_info);
+  }
   const result = [];
   for (const bookName of activeBooks) {
     const bookData = await safeLoadWorldInfo(ctx, bookName);
