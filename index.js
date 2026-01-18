@@ -22,14 +22,14 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.2.0";
+    CURRENT_VERSION = "3.2.1";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.2.1": "\u{1F512} \u5BFC\u5165\u524D\u81EA\u52A8\u5907\u4EFD\uFF1A\u5BFC\u5165\u5907\u4EFD\u65F6\u81EA\u52A8\u4E0B\u8F7D\u5F53\u524D\u6570\u636E\uFF0C\u9632\u6B62\u8BEF\u64CD\u4F5C\u8986\u76D6<br>\u{1F4DA} \u65B0\u589E User Persona \u4E16\u754C\u4E66\u652F\u6301\uFF1A\u83B7\u53D6\u7528\u6237\u89D2\u8272\u7ED1\u5B9A\u7684\u4E16\u754C\u4E66\u6761\u76EE<br>\u{1F4BE} \u4FEE\u590D\u6570\u636E\u5907\u4EFD\u529F\u80FD\uFF1A\u4F7F\u7528\u7ACB\u5373\u4FDD\u5B58\u786E\u4FDD\u6570\u636E\u6301\u4E45\u5316<br>\u{1F527} \u60AC\u6D6E\u7403\u79FB\u9664\u5F3A\u5236\u8D34\u8FB9\u5438\u9644\uFF1A\u53EF\u81EA\u7531\u62D6\u52A8\u5230\u4EFB\u610F\u4F4D\u7F6E",
       "3.2.0": "\u{1F4DC} \u65B0\u589E\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD\uFF1A\u53EF\u5206\u522B\u4E3A\u300C\u5185\u5BB9\u4F18\u5148\u300D\u548C\u300C\u6C1B\u56F4\u7F8E\u5316\u300D\u6A21\u5F0F\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD<br>\u23F9\uFE0F \u4FA7\u8FB9\u6ED1\u51FA\u5F0F\u4E2D\u6B62\u6309\u94AE\uFF1A\u751F\u6210\u65F6\u60AC\u6D6E\u7403\u53F3\u4FA7\u5C55\u5F00\u4E2D\u6B62\u6309\u94AE\uFF0C\u64CD\u4F5C\u66F4\u4FBF\u6377<br>\u{1F3A8} \u8BA1\u65F6\u5668\u6BDB\u73BB\u7483\u6837\u5F0F\uFF1A\u751F\u6210\u8BA1\u65F6\u5668\u6539\u4E3A\u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C<br>\u26A1 \u8BBE\u7F6E\u9875\u5207\u6362\u52A8\u753B\u4F18\u5316\uFF1A\u79FB\u9664\u6DE1\u5165\u52A8\u753B\uFF0C\u54CD\u5E94\u66F4\u5373\u65F6",
-      "3.1.9": "\u{1F4BE} \u65B0\u589E\u6570\u636E\u5907\u4EFD\u529F\u80FD\uFF1A\u652F\u6301\u5B8C\u6574\u5BFC\u51FA/\u5BFC\u5165\u6240\u6709\u63D2\u4EF6\u6570\u636E\uFF08\u542BAPI\u914D\u7F6E\u3001\u811A\u672C\u3001\u6536\u85CF\u7B49\uFF09<br>\u{1F527} \u4FEE\u590D\u5BA1\u67E5\u7A97\u53E3\u804A\u5929\u5386\u53F2\u767D\u540D\u5355\uFF1A\u73B0\u4E0E\u5B9E\u9645\u751F\u6210\u4FDD\u6301\u4E00\u81F4\uFF0C\u6B63\u786E\u663E\u793A\u8FC7\u6EE4\u540E\u7684\u5185\u5BB9<br>\u23F9\uFE0F \u4FA7\u8FB9\u6ED1\u51FA\u5F0F\u4E2D\u6B62\u6309\u94AE\uFF1A\u751F\u6210\u65F6\u60AC\u6D6E\u7403\u4E0A\u65B9\u5C55\u5F00\u4E2D\u6B62\u6309\u94AE",
-      "3.1.8": "\u{1F680} \u65B0\u589E\u53CC\u5165\u53E3\u7CFB\u7EDF\uFF1A\u5DE6\u4FA7\u83DC\u5355\u6DFB\u52A0\u63D2\u4EF6\u4E3B\u5165\u53E3\uFF08\u59CB\u7EC8\u53EF\u7528\uFF09\uFF0C\u60AC\u6D6E\u7403\u4F5C\u4E3A\u8F85\u52A9\u5165\u53E3\uFF08\u53EF\u5728\u8BBE\u7F6E\u4E2D\u9690\u85CF\uFF09<br>\u{1F6E1}\uFE0F \u4FEE\u590D\u9690\u85CF\u6D88\u606F\u8FC7\u6EE4\uFF1A\u4F7F\u7528 is_system \u5C5E\u6027\u6B63\u786E\u8BC6\u522B\u7CFB\u7EDF\u6D88\u606F<br>\u270D\uFE0F \u65B0\u589E\u5185\u5BB9\u7F16\u8F91\u5DE5\u5177\uFF1A\u652F\u6301\u76F4\u63A5\u7F16\u8F91\u5DF2\u751F\u6210\u7684 HTML \u5185\u5BB9<br>\u{1F4D6} \u6C89\u6D78\u9605\u8BFB\u6A21\u5F0F\uFF1AZen \u6A21\u5F0F\u9690\u85CFUI\u5143\u7D20\uFF0C\u4E13\u6CE8\u5185\u5BB9\u9605\u8BFB"
+      "3.1.9": "\u{1F4BE} \u65B0\u589E\u6570\u636E\u5907\u4EFD\u529F\u80FD\uFF1A\u652F\u6301\u5B8C\u6574\u5BFC\u51FA/\u5BFC\u5165\u6240\u6709\u63D2\u4EF6\u6570\u636E\uFF08\u542BAPI\u914D\u7F6E\u3001\u811A\u672C\u3001\u6536\u85CF\u7B49\uFF09<br>\u{1F527} \u4FEE\u590D\u5BA1\u67E5\u7A97\u53E3\u804A\u5929\u5386\u53F2\u767D\u540D\u5355\uFF1A\u73B0\u4E0E\u5B9E\u9645\u751F\u6210\u4FDD\u6301\u4E00\u81F4\uFF0C\u6B63\u786E\u663E\u793A\u8FC7\u6EE4\u540E\u7684\u5185\u5BB9<br>\u23F9\uFE0F \u4FA7\u8FB9\u6ED1\u51FA\u5F0F\u4E2D\u6B62\u6309\u94AE\uFF1A\u751F\u6210\u65F6\u60AC\u6D6E\u7403\u4E0A\u65B9\u5C55\u5F00\u4E2D\u6B62\u6309\u94AE"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -3280,6 +3280,25 @@ ${JSON.stringify(l.details, null, 2)}`;
   $("#btn-backup-import").on("click", () => {
     $("#t-backup-file-input").click();
   });
+  const downloadAutoBackup = (dataToBackup) => {
+    const backupData = {
+      type: "titania_theater_backup",
+      version: "1.0",
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      auto_backup: true,
+      // 标记为自动备份
+      data: dataToBackup
+    };
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `titania_auto_backup_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 19).replace(/[-:]/g, "").replace("T", "_")}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   $("#t-backup-file-input").on("change", function() {
     const file = this.files[0];
     if (!file) return;
@@ -3293,14 +3312,26 @@ ${JSON.stringify(l.details, null, 2)}`;
         if (!importData.data || typeof importData.data !== "object") {
           throw new Error("\u5907\u4EFD\u6570\u636E\u65E0\u6548");
         }
+        const currentDataSnapshot = JSON.parse(JSON.stringify(getExtData()));
         const confirmMsg = `\u786E\u5B9A\u8981\u5BFC\u5165\u6B64\u5907\u4EFD\u5417\uFF1F
 
 \u5907\u4EFD\u65F6\u95F4: ${importData.timestamp || "\u672A\u77E5"}
 \u7528\u6237\u811A\u672C: ${(importData.data.user_scripts || []).length} \u4E2A
 \u6536\u85CF\u5185\u5BB9: ${(importData.data.favs || []).length} \u4E2A
 
+\u2705 \u5BFC\u5165\u524D\u5C06\u81EA\u52A8\u4E0B\u8F7D\u5F53\u524D\u6570\u636E\u5907\u4EFD
 \u26A0\uFE0F \u5BFC\u5165\u5C06\u8986\u76D6\u5F53\u524D\u6240\u6709\u8BBE\u7F6E\uFF01`;
         if (!confirm(confirmMsg)) return;
+        try {
+          downloadAutoBackup(currentDataSnapshot);
+          TitaniaLogger.info("\u5DF2\u81EA\u52A8\u5907\u4EFD\u5F53\u524D\u6570\u636E");
+          if (window.toastr) toastr.info("\u5DF2\u81EA\u52A8\u5907\u4EFD\u5F53\u524D\u6570\u636E\uFF0C\u8BF7\u4FDD\u5B58\u4E0B\u8F7D\u7684\u6587\u4EF6");
+        } catch (backupErr) {
+          console.warn("Titania: \u81EA\u52A8\u5907\u4EFD\u5931\u8D25", backupErr);
+          if (!confirm("\u26A0\uFE0F \u81EA\u52A8\u5907\u4EFD\u5931\u8D25\uFF01\u662F\u5426\u4ECD\u8981\u7EE7\u7EED\u5BFC\u5165\uFF1F\n\n\u5982\u679C\u7EE7\u7EED\uFF0C\u5F53\u524D\u6570\u636E\u53EF\u80FD\u65E0\u6CD5\u6062\u590D\u3002")) {
+            return;
+          }
+        }
         const currentData = getExtData();
         Object.assign(currentData, importData.data);
         const saveSuccess = await saveExtDataImmediate();
