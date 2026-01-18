@@ -392,7 +392,7 @@ var init_logger = __esm({
 
 // src/core/context.js
 import { world_info, selected_world_info } from "../../../world-info.js";
-import { user_avatar, power_user } from "../../../../script.js";
+import { power_user } from "../../../power-user.js";
 function getWorldInfoVars() {
   try {
     return {
@@ -461,26 +461,12 @@ async function getActiveWorldInfoEntries() {
     activeBooks.add(ctx.chatMetadata.world_info);
   }
   try {
-    if (power_user && power_user.personas && user_avatar) {
-      const currentPersona = power_user.personas[user_avatar];
-      if (currentPersona && currentPersona.world) {
-        activeBooks.add(currentPersona.world);
-      }
-    }
-    if (wiVars.world_info && wiVars.world_info.charLore && user_avatar) {
-      const personaFileName = user_avatar.replace(/\.[^/.]+$/, "");
-      const personaLoreEntry = wiVars.world_info.charLore.find((e) => e.name === personaFileName);
-      if (personaLoreEntry) {
-        if (personaLoreEntry.world) {
-          activeBooks.add(personaLoreEntry.world);
-        }
-        if (Array.isArray(personaLoreEntry.extraBooks)) {
-          personaLoreEntry.extraBooks.forEach((name) => activeBooks.add(name));
-        }
-      }
+    const personaWorld = power_user?.persona_description_lorebook;
+    if (personaWorld) {
+      activeBooks.add(personaWorld);
     }
   } catch (e) {
-    console.warn("Titania: \u83B7\u53D6\u7528\u6237\u4E16\u754C\u4E66\u5931\u8D25", e);
+    console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
   }
   const result = [];
   for (const bookName of activeBooks) {
@@ -546,26 +532,12 @@ async function getContextData() {
     activeBooks.add(ctx.chatMetadata.world_info);
   }
   try {
-    if (power_user && power_user.personas && user_avatar) {
-      const currentPersona = power_user.personas[user_avatar];
-      if (currentPersona && currentPersona.world) {
-        activeBooks.add(currentPersona.world);
-      }
-    }
-    if (wiVars.world_info && wiVars.world_info.charLore && user_avatar) {
-      const personaFileName = user_avatar.replace(/\.[^/.]+$/, "");
-      const personaLoreEntry = wiVars.world_info.charLore.find((e) => e.name === personaFileName);
-      if (personaLoreEntry) {
-        if (personaLoreEntry.world) {
-          activeBooks.add(personaLoreEntry.world);
-        }
-        if (Array.isArray(personaLoreEntry.extraBooks)) {
-          personaLoreEntry.extraBooks.forEach((name) => activeBooks.add(name));
-        }
-      }
+    const personaWorld = power_user?.persona_description_lorebook;
+    if (personaWorld) {
+      activeBooks.add(personaWorld);
     }
   } catch (e) {
-    console.warn("Titania: \u83B7\u53D6\u7528\u6237\u4E16\u754C\u4E66\u5931\u8D25", e);
+    console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
   }
   const contentParts = [];
   const extData = getExtData();
