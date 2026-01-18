@@ -122,7 +122,7 @@ var init_defaults = __esm({
 
 // src/utils/storage.js
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
-import { saveSettingsDebounced } from "../../../../script.js";
+import { saveSettingsDebounced, saveSettings } from "../../../../script.js";
 function getExtData() {
   if (!extension_settings2[extensionName]) {
     extension_settings2[extensionName] = JSON.parse(JSON.stringify(defaultSettings));
@@ -131,6 +131,15 @@ function getExtData() {
 }
 function saveExtData() {
   saveSettingsDebounced();
+}
+async function saveExtDataImmediate() {
+  try {
+    await saveSettings();
+    return true;
+  } catch (e) {
+    console.error("Titania: \u7ACB\u5373\u4FDD\u5B58\u5931\u8D25", e);
+    return false;
+  }
 }
 var init_storage = __esm({
   "src/utils/storage.js"() {
@@ -383,6 +392,7 @@ var init_logger = __esm({
 
 // src/core/context.js
 import { world_info, selected_world_info } from "../../../world-info.js";
+import { user_avatar, power_user } from "../../../../script.js";
 function getWorldInfoVars() {
   try {
     return {
@@ -450,6 +460,28 @@ async function getActiveWorldInfoEntries() {
   if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
     activeBooks.add(ctx.chatMetadata.world_info);
   }
+  try {
+    if (power_user && power_user.personas && user_avatar) {
+      const currentPersona = power_user.personas[user_avatar];
+      if (currentPersona && currentPersona.world) {
+        activeBooks.add(currentPersona.world);
+      }
+    }
+    if (wiVars.world_info && wiVars.world_info.charLore && user_avatar) {
+      const personaFileName = user_avatar.replace(/\.[^/.]+$/, "");
+      const personaLoreEntry = wiVars.world_info.charLore.find((e) => e.name === personaFileName);
+      if (personaLoreEntry) {
+        if (personaLoreEntry.world) {
+          activeBooks.add(personaLoreEntry.world);
+        }
+        if (Array.isArray(personaLoreEntry.extraBooks)) {
+          personaLoreEntry.extraBooks.forEach((name) => activeBooks.add(name));
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u7528\u6237\u4E16\u754C\u4E66\u5931\u8D25", e);
+  }
   const result = [];
   for (const bookName of activeBooks) {
     const bookData = await safeLoadWorldInfo(ctx, bookName);
@@ -509,6 +541,31 @@ async function getContextData() {
         loreEntry.extraBooks.forEach((name) => activeBooks.add(name));
       }
     }
+  }
+  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
+    activeBooks.add(ctx.chatMetadata.world_info);
+  }
+  try {
+    if (power_user && power_user.personas && user_avatar) {
+      const currentPersona = power_user.personas[user_avatar];
+      if (currentPersona && currentPersona.world) {
+        activeBooks.add(currentPersona.world);
+      }
+    }
+    if (wiVars.world_info && wiVars.world_info.charLore && user_avatar) {
+      const personaFileName = user_avatar.replace(/\.[^/.]+$/, "");
+      const personaLoreEntry = wiVars.world_info.charLore.find((e) => e.name === personaFileName);
+      if (personaLoreEntry) {
+        if (personaLoreEntry.world) {
+          activeBooks.add(personaLoreEntry.world);
+        }
+        if (Array.isArray(personaLoreEntry.extraBooks)) {
+          personaLoreEntry.extraBooks.forEach((name) => activeBooks.add(name));
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u7528\u6237\u4E16\u754C\u4E66\u5931\u8D25", e);
   }
   const contentParts = [];
   const extData = getExtData();
@@ -1797,6 +1854,12 @@ ${s.prompt}`;
           scriptCat = catMatch[1].trim();
           rawBody = rawBody.replace(catMatch[0], "").trim();
         }
+        let scriptDesc = "";
+        const descMatch = rawBody.match(/^(?:Desc|简介|描述)[:：]\s*(.+)$/im);
+        if (descMatch) {
+          scriptDesc = descMatch[1].trim();
+          rawBody = rawBody.replace(descMatch[0], "").trim();
+        }
         if (!scriptTitle) {
           const cleanStart = rawBody.replace(/\s+/g, " ").substring(0, 20);
           if (cleanStart) {
@@ -1809,7 +1872,7 @@ ${s.prompt}`;
         saveUserScript({
           id: "imp_" + Date.now() + "_" + Math.floor(Math.random() * 1e4),
           name: scriptTitle,
-          desc: "\u5BFC\u5165\u6570\u636E",
+          desc: scriptDesc || "\u5BFC\u5165\u6570\u636E",
           prompt: rawBody,
           category: scriptCat
         });
@@ -3249,7 +3312,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     const file = this.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
       try {
         const importData = JSON.parse(e.target.result);
         if (importData.type !== "titania_theater_backup") {
@@ -3268,14 +3331,18 @@ ${JSON.stringify(l.details, null, 2)}`;
         if (!confirm(confirmMsg)) return;
         const currentData = getExtData();
         Object.assign(currentData, importData.data);
-        saveExtData();
-        if (window.toastr) toastr.success("\u5907\u4EFD\u5DF2\u6062\u590D\uFF0C\u8BF7\u5237\u65B0\u9875\u9762\u4EE5\u5E94\u7528\u66F4\u6539");
-        TitaniaLogger.info("\u6570\u636E\u5907\u4EFD\u5DF2\u6062\u590D", { timestamp: importData.timestamp });
-        setTimeout(() => {
-          if (confirm("\u5907\u4EFD\u5DF2\u6062\u590D\u6210\u529F\uFF01\u662F\u5426\u7ACB\u5373\u5237\u65B0\u9875\u9762\uFF1F")) {
-            location.reload();
-          }
-        }, 500);
+        const saveSuccess = await saveExtDataImmediate();
+        if (saveSuccess) {
+          if (window.toastr) toastr.success("\u5907\u4EFD\u5DF2\u6062\u590D\uFF0C\u8BF7\u5237\u65B0\u9875\u9762\u4EE5\u5E94\u7528\u66F4\u6539");
+          TitaniaLogger.info("\u6570\u636E\u5907\u4EFD\u5DF2\u6062\u590D", { timestamp: importData.timestamp });
+          setTimeout(() => {
+            if (confirm("\u5907\u4EFD\u5DF2\u6062\u590D\u6210\u529F\uFF01\u662F\u5426\u7ACB\u5373\u5237\u65B0\u9875\u9762\uFF1F")) {
+              location.reload();
+            }
+          }, 500);
+        } else {
+          throw new Error("\u4FDD\u5B58\u6570\u636E\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5");
+        }
       } catch (err) {
         console.error("Titania: \u5907\u4EFD\u5BFC\u5165\u5931\u8D25", err);
         if (window.toastr) toastr.error("\u5BFC\u5165\u5931\u8D25\uFF1A" + err.message);
@@ -5156,14 +5223,9 @@ function createFloatingButton() {
     if (startX === void 0) return;
     startX = void 0;
     if (isDragging) {
-      const rect = btn[0].getBoundingClientRect();
-      const snapThreshold = window.innerWidth / 2;
-      const targetLeft = rect.left + size / 2 < snapThreshold ? 0 : window.innerWidth - size;
-      btn.css({ "transition": "all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)", "left": targetLeft + "px" });
-      setTimeout(() => {
-        updateTimerPosition();
-        hideSlideMenu();
-      }, 350);
+      btn.css({ "transition": "none" });
+      updateTimerPosition();
+      hideSlideMenu();
     } else {
       if (GlobalState.isGenerating) {
         toggleSlideMenu();
