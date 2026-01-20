@@ -1337,7 +1337,7 @@ var init_helpers = __esm({
 // src/ui/scriptManager.js
 function openScriptManager() {
   let currentFilter = {
-    category: "all",
+    category: "\u5168\u90E8",
     search: "",
     hidePresets: false
   };
@@ -1488,7 +1488,8 @@ function openScriptManager() {
                 </div>
             `);
       if (currentFilter.category === c) $item.addClass("active");
-      $item.find(".t-cat-name").on("click", function() {
+      $item.on("click", function(e) {
+        if ($(e.target).hasClass("t-cat-edit")) return;
         $(".t-mgr-sb-item[data-filter='category']").removeClass("active");
         $item.addClass("active");
         currentFilter.category = c;
@@ -1591,9 +1592,9 @@ function openScriptManager() {
     $("#t-mgr-select-all").prop("checked", false);
     updateBatchCount();
     let filtered = GlobalState.runtimeScripts.filter((s) => {
-      if (currentFilter.category !== "all") {
+      if (currentFilter.category && currentFilter.category !== "\u5168\u90E8") {
         const sCat = s.category || "\u672A\u5206\u7C7B";
-        if (currentFilter.category !== "\u5168\u90E8" && sCat !== currentFilter.category) return false;
+        if (sCat !== currentFilter.category) return false;
       }
       if (currentFilter.search) {
         const term = currentFilter.search.toLowerCase();
@@ -1700,9 +1701,9 @@ ${s.prompt}`;
     } else if (scope === "current") {
       return GlobalState.runtimeScripts.filter((s) => {
         if (s._type !== "user") return false;
-        if (currentFilter.category !== "all") {
+        if (currentFilter.category && currentFilter.category !== "\u5168\u90E8") {
           const sCat = s.category || "\u672A\u5206\u7C7B";
-          if (currentFilter.category !== "\u5168\u90E8" && sCat !== currentFilter.category) return false;
+          if (sCat !== currentFilter.category) return false;
         }
         if (currentFilter.search) {
           const term = currentFilter.search.toLowerCase();
@@ -1716,9 +1717,9 @@ ${s.prompt}`;
   $("#t-mgr-export-btn").on("click", () => {
     const currentListCount = GlobalState.runtimeScripts.filter((s) => {
       if (s._type !== "user") return false;
-      if (currentFilter.category !== "all") {
+      if (currentFilter.category && currentFilter.category !== "\u5168\u90E8") {
         const sCat = s.category || "\u672A\u5206\u7C7B";
-        if (currentFilter.category !== "\u5168\u90E8" && sCat !== currentFilter.category) return false;
+        if (sCat !== currentFilter.category) return false;
       }
       if (currentFilter.search) {
         const term = currentFilter.search.toLowerCase();
@@ -8469,11 +8470,21 @@ textarea.t-input {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    overflow-y: auto;
 }
 
 .t-mgr-sb-group {
     padding: 10px 0;
     border-bottom: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#t-mgr-cat-list {
+    overflow-y: auto;
+    flex-grow: 1;
+    min-height: 0;
 }
 
 .t-mgr-sb-title {
