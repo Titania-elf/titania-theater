@@ -22,14 +22,14 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.2.1";
+    CURRENT_VERSION = "3.2.2";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.2.2": "\u{1F3A8} CSS \u4E3B\u9898\u65B9\u6848\u7BA1\u7406\uFF1A\u652F\u6301\u4FDD\u5B58\u591A\u4E2A\u81EA\u5B9A\u4E49 CSS \u4E3B\u9898\uFF0C\u968F\u65F6\u5207\u6362<br>\u{1F4CA} \u5BA1\u67E5\u7A97\u53E3\u5B9E\u65F6\u663E\u793A\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD<br>\u{1F527} \u4FEE\u590D\u5267\u672C\u7BA1\u7406\u5668\u5206\u7C7B\u6EDA\u52A8\u548C\u7B5B\u9009\u95EE\u9898<br>\u{1F4DD} \u5927\u5C4F\u7F16\u8F91\u6A21\u5F0F\u4F18\u5316\uFF1A\u9632\u6B62\u8BEF\u89E6\u5173\u95ED\u4E22\u5931\u5185\u5BB9\uFF0C\u624B\u673A\u7AEF\u5C45\u4E2D\u663E\u793A<br>\u{1F4E5} CSS \u5BFC\u5165\u4F18\u5148\u4F7F\u7528\u6587\u4EF6\u540D\u4F5C\u4E3A\u4E3B\u9898\u540D\u79F0",
       "3.2.1": "\u{1F512} \u5BFC\u5165\u524D\u81EA\u52A8\u5907\u4EFD\uFF1A\u5BFC\u5165\u5907\u4EFD\u65F6\u81EA\u52A8\u4E0B\u8F7D\u5F53\u524D\u6570\u636E\uFF0C\u9632\u6B62\u8BEF\u64CD\u4F5C\u8986\u76D6<br>\u{1F4DA} \u65B0\u589E User Persona \u4E16\u754C\u4E66\u652F\u6301\uFF1A\u83B7\u53D6\u7528\u6237\u89D2\u8272\u7ED1\u5B9A\u7684\u4E16\u754C\u4E66\u6761\u76EE<br>\u{1F4BE} \u4FEE\u590D\u6570\u636E\u5907\u4EFD\u529F\u80FD\uFF1A\u4F7F\u7528\u7ACB\u5373\u4FDD\u5B58\u786E\u4FDD\u6570\u636E\u6301\u4E45\u5316<br>\u{1F527} \u60AC\u6D6E\u7403\u79FB\u9664\u5F3A\u5236\u8D34\u8FB9\u5438\u9644\uFF1A\u53EF\u81EA\u7531\u62D6\u52A8\u5230\u4EFB\u610F\u4F4D\u7F6E",
-      "3.2.0": "\u{1F4DC} \u65B0\u589E\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD\uFF1A\u53EF\u5206\u522B\u4E3A\u300C\u5185\u5BB9\u4F18\u5148\u300D\u548C\u300C\u6C1B\u56F4\u7F8E\u5316\u300D\u6A21\u5F0F\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD<br>\u23F9\uFE0F \u4FA7\u8FB9\u6ED1\u51FA\u5F0F\u4E2D\u6B62\u6309\u94AE\uFF1A\u751F\u6210\u65F6\u60AC\u6D6E\u7403\u53F3\u4FA7\u5C55\u5F00\u4E2D\u6B62\u6309\u94AE\uFF0C\u64CD\u4F5C\u66F4\u4FBF\u6377<br>\u{1F3A8} \u8BA1\u65F6\u5668\u6BDB\u73BB\u7483\u6837\u5F0F\uFF1A\u751F\u6210\u8BA1\u65F6\u5668\u6539\u4E3A\u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C<br>\u26A1 \u8BBE\u7F6E\u9875\u5207\u6362\u52A8\u753B\u4F18\u5316\uFF1A\u79FB\u9664\u6DE1\u5165\u52A8\u753B\uFF0C\u54CD\u5E94\u66F4\u5373\u65F6",
-      "3.1.9": "\u{1F4BE} \u65B0\u589E\u6570\u636E\u5907\u4EFD\u529F\u80FD\uFF1A\u652F\u6301\u5B8C\u6574\u5BFC\u51FA/\u5BFC\u5165\u6240\u6709\u63D2\u4EF6\u6570\u636E\uFF08\u542BAPI\u914D\u7F6E\u3001\u811A\u672C\u3001\u6536\u85CF\u7B49\uFF09<br>\u{1F527} \u4FEE\u590D\u5BA1\u67E5\u7A97\u53E3\u804A\u5929\u5386\u53F2\u767D\u540D\u5355\uFF1A\u73B0\u4E0E\u5B9E\u9645\u751F\u6210\u4FDD\u6301\u4E00\u81F4\uFF0C\u6B63\u786E\u663E\u793A\u8FC7\u6EE4\u540E\u7684\u5185\u5BB9<br>\u23F9\uFE0F \u4FA7\u8FB9\u6ED1\u51FA\u5F0F\u4E2D\u6B62\u6309\u94AE\uFF1A\u751F\u6210\u65F6\u60AC\u6D6E\u7403\u4E0A\u65B9\u5C55\u5F00\u4E2D\u6B62\u6309\u94AE"
+      "3.2.0": "\u{1F4DC} \u65B0\u589E\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD\uFF1A\u53EF\u5206\u522B\u4E3A\u300C\u5185\u5BB9\u4F18\u5148\u300D\u548C\u300C\u6C1B\u56F4\u7F8E\u5316\u300D\u6A21\u5F0F\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD<br>\u23F9\uFE0F \u4FA7\u8FB9\u6ED1\u51FA\u5F0F\u4E2D\u6B62\u6309\u94AE\uFF1A\u751F\u6210\u65F6\u60AC\u6D6E\u7403\u53F3\u4FA7\u5C55\u5F00\u4E2D\u6B62\u6309\u94AE\uFF0C\u64CD\u4F5C\u66F4\u4FBF\u6377<br>\u{1F3A8} \u8BA1\u65F6\u5668\u6BDB\u73BB\u7483\u6837\u5F0F\uFF1A\u751F\u6210\u8BA1\u65F6\u5668\u6539\u4E3A\u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C<br>\u26A1 \u8BBE\u7F6E\u9875\u5207\u6362\u52A8\u753B\u4F18\u5316\uFF1A\u79FB\u9664\u6DE1\u5165\u52A8\u753B\uFF0C\u54CD\u5E94\u66F4\u5373\u65F6"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -115,6 +115,13 @@ var init_defaults = __esm({
         // 内容优先模式的自定义系统提示词
         visual_mode: ""
         // 氛围美化模式的自定义系统提示词
+      },
+      // CSS 主题方案配置
+      css_themes: {
+        profiles: [
+          { id: "default", name: "\u9ED8\u8BA4\u4E3B\u9898", css: "" }
+        ],
+        active_profile_id: "default"
       }
     };
   }
@@ -1995,16 +2002,61 @@ function openEditor(id, source = "main") {
     }
   });
   $("#ed-btn-expand").on("click", () => {
+    const originalContent = $("#ed-prompt").val();
     $("#t-editor-view").hide();
-    $("#t-overlay").append(`<div class="t-box" id="t-large-edit-view" style="height:90vh; max-height:95vh; max-width:800px;"><div class="t-header"><span class="t-title-main">\u5927\u5C4F\u6A21\u5F0F</span></div><div class="t-body" style="height:100%;"><textarea id="ed-large-text" class="t-input" style="flex-grow:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px; height:100%;">${$("#ed-prompt").val()}</textarea><div class="t-btn-row"><button id="ed-large-ok" class="t-btn primary" style="flex:1;">\u786E\u8BA4</button><button id="ed-large-cancel" class="t-btn" style="flex:1;">\u53D6\u6D88</button></div></div></div>`);
-    $("#ed-large-cancel").on("click", () => {
-      $("#t-large-edit-view").remove();
+    const largeEditHtml = `
+        <div id="t-large-edit-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:20000; display:flex; align-items:center; justify-content:center; padding:10px; box-sizing:border-box;">
+            <div class="t-box" id="t-large-edit-view" style="width:100%; max-width:800px; height:90vh; max-height:90vh; margin:auto; display:flex; flex-direction:column;">
+                <div class="t-header" style="flex-shrink:0;">
+                    <span class="t-title-main">\u5927\u5C4F\u7F16\u8F91\u6A21\u5F0F</span>
+                    <span class="t-close" id="ed-large-close">&times;</span>
+                </div>
+                <div class="t-body" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+                    <textarea id="ed-large-text" class="t-input" style="flex:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px; min-height:0;">${originalContent}</textarea>
+                    <div class="t-btn-row" style="flex-shrink:0; margin-top:10px;">
+                        <button id="ed-large-ok" class="t-btn primary" style="flex:1;">\u786E\u8BA4\u4FDD\u5B58</button>
+                        <button id="ed-large-cancel" class="t-btn" style="flex:1;">\u53D6\u6D88</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    $("body").append(largeEditHtml);
+    const checkUnsavedChanges = () => {
+      const currentContent = $("#ed-large-text").val();
+      return currentContent !== originalContent;
+    };
+    const closeLargeEdit = (saveChanges = false) => {
+      if (saveChanges) {
+        $("#ed-prompt").val($("#ed-large-text").val());
+      }
+      $("#t-large-edit-overlay").remove();
       $("#t-editor-view").show();
+    };
+    const confirmClose = () => {
+      if (checkUnsavedChanges()) {
+        if (confirm("\u60A8\u6709\u672A\u4FDD\u5B58\u7684\u4FEE\u6539\uFF0C\u786E\u5B9A\u8981\u653E\u5F03\u5417\uFF1F")) {
+          closeLargeEdit(false);
+        }
+      } else {
+        closeLargeEdit(false);
+      }
+    };
+    $("#t-large-edit-overlay").on("click", function(e) {
+      if (e.target === this) {
+        confirmClose();
+      }
     });
-    $("#ed-large-ok").on("click", () => {
-      $("#ed-prompt").val($("#ed-large-text").val());
-      $("#t-large-edit-view").remove();
-      $("#t-editor-view").show();
+    $("#ed-large-close").on("click", confirmClose);
+    $("#ed-large-cancel").on("click", confirmClose);
+    $("#ed-large-ok").on("click", () => closeLargeEdit(true));
+    $(document).on("keydown.largeedit", function(e) {
+      if (e.key === "Escape") {
+        confirmClose();
+        e.preventDefault();
+      }
+    });
+    $("#t-large-edit-overlay").on("remove", function() {
+      $(document).off("keydown.largeedit");
     });
   });
   if (!isPreset) {
@@ -2090,6 +2142,13 @@ function openSettingsWindow() {
   const cfg = data.config || {};
   const app = data.appearance || {};
   const customCSS = data.custom_css || "";
+  const cssThemes = data.css_themes || {
+    profiles: [{ id: "default", name: "\u9ED8\u8BA4\u4E3B\u9898", css: customCSS }],
+    active_profile_id: "default"
+  };
+  if (customCSS && cssThemes.profiles.length === 1 && !cssThemes.profiles[0].css) {
+    cssThemes.profiles[0].css = customCSS;
+  }
   const fontSettings = data.font_settings || {
     source: "default",
     // "default" | "online" | "upload"
@@ -2131,6 +2190,9 @@ function openSettingsWindow() {
   let tempStyleProfiles = JSON.parse(JSON.stringify(styleProfiles));
   let tempActiveStyleId = activeStyleId;
   let styleContentModified = false;
+  let tempCssThemes = JSON.parse(JSON.stringify(cssThemes.profiles));
+  let tempActiveCssThemeId = cssThemes.active_profile_id || "default";
+  let cssThemeModified = false;
   $("#t-main-view").hide();
   const html = `
     <div class="t-box" id="t-settings-view">
@@ -2344,7 +2406,22 @@ function openSettingsWindow() {
                         <div style="font-weight:bold; color:#bfa15f; margin-bottom:10px;"><i class="fa-solid fa-palette"></i> \u81EA\u5B9A\u4E49 CSS \u6837\u5F0F</div>
                         <div style="font-size:0.85em; color:#888; line-height:1.6;">
                             \u5728\u6B64\u8F93\u5165\u81EA\u5B9A\u4E49 CSS \u4EE3\u7801\uFF0C\u53EF\u4EE5\u8986\u76D6\u63D2\u4EF6\u9ED8\u8BA4\u6837\u5F0F\u3002<br>
-                            \u4F5C\u7528\u8303\u56F4\uFF1A\u63D2\u4EF6 UI\uFF08\u7A97\u53E3\u3001\u6309\u94AE\u7B49\uFF09\u548C\u5267\u672C\u6E32\u67D3\u533A\u57DF\u3002
+                            \u4F5C\u7528\u8303\u56F4\uFF1A\u63D2\u4EF6 UI\uFF08\u7A97\u53E3\u3001\u6309\u94AE\u7B49\uFF09\u548C\u5267\u672C\u6E32\u67D3\u533A\u57DF\u3002<br>
+                            <span style="color:#55efc4;">\u2728 \u652F\u6301\u4FDD\u5B58\u591A\u4E2A\u4E3B\u9898\u65B9\u6848\uFF0C\u968F\u65F6\u5207\u6362\uFF01</span>
+                        </div>
+                    </div>
+                    
+                    <!-- CSS \u4E3B\u9898\u65B9\u6848\u7BA1\u7406 -->
+                    <div class="t-form-group">
+                        <label class="t-form-label">\u{1F3A8} CSS \u4E3B\u9898\u65B9\u6848</label>
+                        <div style="display:flex; gap:8px; margin-bottom:10px;">
+                            <select id="t-css-theme-select" class="t-input" style="flex:1;"></select>
+                            <button id="btn-css-theme-add" class="t-tool-btn" title="\u4FDD\u5B58\u4E3A\u65B0\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
+                            <button id="btn-css-theme-rename" class="t-tool-btn" title="\u91CD\u547D\u540D\u5F53\u524D\u65B9\u6848"><i class="fa-solid fa-pen"></i></button>
+                            <button id="btn-css-theme-del" class="t-tool-btn" title="\u5220\u9664\u5F53\u524D\u65B9\u6848" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div id="css-theme-unsaved-hint" style="display:none; color:#feca57; font-size:0.8em; margin-bottom:8px;">
+                            <i class="fa-solid fa-circle-exclamation"></i> \u5F53\u524D\u5185\u5BB9\u6709\u4FEE\u6539\uFF0C\u5207\u6362\u65B9\u6848\u524D\u8BF7\u5148\u4FDD\u5B58
                         </div>
                     </div>
                     
@@ -2352,15 +2429,15 @@ function openSettingsWindow() {
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                             <label class="t-form-label" style="margin:0;">CSS \u4EE3\u7801</label>
                             <div style="display:flex; gap:8px;">
-                                <button id="btn-css-import" class="t-tool-btn" title="\u5BFC\u5165\u914D\u7F6E"><i class="fa-solid fa-file-import"></i> \u5BFC\u5165</button>
-                                <button id="btn-css-export" class="t-tool-btn" title="\u5BFC\u51FA\u914D\u7F6E"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA</button>
+                                <button id="btn-css-import" class="t-tool-btn" title="\u5BFC\u5165\u65B9\u6848"><i class="fa-solid fa-file-import"></i> \u5BFC\u5165</button>
+                                <button id="btn-css-export" class="t-tool-btn" title="\u5BFC\u51FA\u65B9\u6848"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA</button>
                                 <button id="btn-css-reset" class="t-tool-btn" title="\u6E05\u7A7A\u5185\u5BB9" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i> \u6E05\u7A7A</button>
                             </div>
                         </div>
-                        <textarea id="t-custom-css-input" class="t-input t-code-editor" rows="12" placeholder="/* \u5728\u6B64\u8F93\u5165\u81EA\u5B9A\u4E49 CSS */&#10;&#10;/* \u4F8B\u5982\uFF1A\u4FEE\u6539\u4E3B\u7A97\u53E3\u80CC\u666F\u8272 */&#10;.t-box {&#10;    background: #1a1a2e;&#10;}&#10;&#10;/* \u4FEE\u6539\u6807\u9898\u989C\u8272 */&#10;.t-title-main {&#10;    color: #ff6b6b;&#10;}">${customCSS}</textarea>
+                        <textarea id="t-custom-css-input" class="t-input t-code-editor" rows="12" placeholder="/* \u5728\u6B64\u8F93\u5165\u81EA\u5B9A\u4E49 CSS */&#10;&#10;/* \u4F8B\u5982\uFF1A\u4FEE\u6539\u4E3B\u7A97\u53E3\u80CC\u666F\u8272 */&#10;.t-box {&#10;    background: #1a1a2e;&#10;}&#10;&#10;/* \u4FEE\u6539\u6807\u9898\u989C\u8272 */&#10;.t-title-main {&#10;    color: #ff6b6b;&#10;}"></textarea>
                         <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                            <span style="font-size:0.75em; color:#666;">\u65B9\u6848\u6570\u91CF: <span id="css-theme-count">0</span>/10</span>
                             <span id="css-char-count" style="font-size:0.75em; color:#666;">0 \u5B57\u7B26</span>
-                            <span style="font-size:0.75em; color:#666;">\u70B9\u51FB\u300C\u4FDD\u5B58\u6240\u6709\u914D\u7F6E\u300D\u540E\u751F\u6548</span>
                         </div>
                     </div>
                     
@@ -3050,30 +3127,136 @@ function openSettingsWindow() {
     $("#t-font-file-name").text("\u672A\u9009\u62E9\u6587\u4EF6").css("color", "#888");
     if (window.toastr) toastr.info("\u5DF2\u6062\u590D\u9ED8\u8BA4\u5B57\u4F53\uFF0C\u8BF7\u70B9\u51FB\u300C\u4FDD\u5B58\u6240\u6709\u914D\u7F6E\u300D\u751F\u6548");
   });
+  const MAX_CSS_THEMES = 10;
+  const renderCssThemeUI = () => {
+    const $sel = $("#t-css-theme-select");
+    $sel.empty();
+    tempCssThemes.forEach((p) => {
+      $sel.append(`<option value="${p.id}" ${p.id === tempActiveCssThemeId ? "selected" : ""}>${p.name}</option>`);
+    });
+    const currentTheme = tempCssThemes.find((p) => p.id === tempActiveCssThemeId);
+    if (currentTheme) {
+      $("#t-custom-css-input").val(currentTheme.css || "");
+    }
+    updateCSSCharCount();
+    $("#css-theme-count").text(tempCssThemes.length);
+    const isDefault = tempActiveCssThemeId === "default";
+    const isOnlyOne = tempCssThemes.length <= 1;
+    $("#btn-css-theme-del").prop("disabled", isDefault || isOnlyOne).css("opacity", isDefault || isOnlyOne ? 0.5 : 1);
+    cssThemeModified = false;
+    $("#css-theme-unsaved-hint").hide();
+  };
   const updateCSSCharCount = () => {
     const len = ($("#t-custom-css-input").val() || "").length;
     $("#css-char-count").text(`${len} \u5B57\u7B26`);
   };
-  $("#t-custom-css-input").on("input", updateCSSCharCount);
-  updateCSSCharCount();
+  const saveCurrentCssThemeToMemory = () => {
+    const pIndex = tempCssThemes.findIndex((p) => p.id === tempActiveCssThemeId);
+    if (pIndex !== -1) {
+      tempCssThemes[pIndex].css = $("#t-custom-css-input").val() || "";
+    }
+    cssThemeModified = false;
+    $("#css-theme-unsaved-hint").hide();
+  };
+  const checkUnsavedCssChanges = () => {
+    const currentTheme = tempCssThemes.find((p) => p.id === tempActiveCssThemeId);
+    if (!currentTheme) return false;
+    const currentContent = $("#t-custom-css-input").val() || "";
+    return currentContent !== (currentTheme.css || "");
+  };
+  $("#t-custom-css-input").on("input", function() {
+    updateCSSCharCount();
+    const hasChanges = checkUnsavedCssChanges();
+    cssThemeModified = hasChanges;
+    $("#css-theme-unsaved-hint").toggle(hasChanges);
+  });
+  $("#t-css-theme-select").on("change", function() {
+    if (cssThemeModified) {
+      const confirmSwitch = confirm("\u5F53\u524D\u5185\u5BB9\u6709\u672A\u4FDD\u5B58\u7684\u4FEE\u6539\uFF0C\u662F\u5426\u4FDD\u5B58\u540E\u518D\u5207\u6362\uFF1F\n\n\u70B9\u51FB\u300C\u786E\u5B9A\u300D\u4FDD\u5B58\u5E76\u5207\u6362\n\u70B9\u51FB\u300C\u53D6\u6D88\u300D\u653E\u5F03\u4FEE\u6539\u5E76\u5207\u6362");
+      if (confirmSwitch) {
+        saveCurrentCssThemeToMemory();
+      }
+    }
+    tempActiveCssThemeId = $(this).val();
+    renderCssThemeUI();
+    const currentTheme = tempCssThemes.find((p) => p.id === tempActiveCssThemeId);
+    if (currentTheme) {
+      applyCustomCSS(currentTheme.css || "");
+    }
+  });
+  $("#btn-css-theme-add").on("click", function() {
+    if (tempCssThemes.length >= MAX_CSS_THEMES) {
+      if (window.toastr) toastr.warning(`\u6700\u591A\u53EA\u80FD\u4FDD\u5B58 ${MAX_CSS_THEMES} \u4E2A\u4E3B\u9898\u65B9\u6848`);
+      return;
+    }
+    const currentContent = $("#t-custom-css-input").val() || "";
+    const newName = prompt("\u8BF7\u8F93\u5165\u65B0\u4E3B\u9898\u65B9\u6848\u7684\u540D\u79F0\uFF1A", `\u4E3B\u9898 ${tempCssThemes.length + 1}`);
+    if (!newName || !newName.trim()) return;
+    const newId = "css_theme_" + Date.now();
+    tempCssThemes.push({
+      id: newId,
+      name: newName.trim(),
+      css: currentContent
+    });
+    tempActiveCssThemeId = newId;
+    cssThemeModified = false;
+    renderCssThemeUI();
+    if (window.toastr) toastr.success(`\u5DF2\u4FDD\u5B58\u4E3A\u65B0\u4E3B\u9898: ${newName.trim()}`);
+  });
+  $("#btn-css-theme-rename").on("click", function() {
+    const currentTheme = tempCssThemes.find((p) => p.id === tempActiveCssThemeId);
+    if (!currentTheme) return;
+    const newName = prompt("\u8BF7\u8F93\u5165\u65B0\u7684\u4E3B\u9898\u540D\u79F0\uFF1A", currentTheme.name);
+    if (!newName || !newName.trim()) return;
+    currentTheme.name = newName.trim();
+    renderCssThemeUI();
+    if (window.toastr) toastr.success(`\u4E3B\u9898\u5DF2\u91CD\u547D\u540D\u4E3A: ${newName.trim()}`);
+  });
+  $("#btn-css-theme-del").on("click", function() {
+    if (tempActiveCssThemeId === "default") {
+      if (window.toastr) toastr.warning("\u9ED8\u8BA4\u4E3B\u9898\u4E0D\u53EF\u5220\u9664");
+      return;
+    }
+    if (tempCssThemes.length <= 1) {
+      if (window.toastr) toastr.warning("\u81F3\u5C11\u9700\u8981\u4FDD\u7559\u4E00\u4E2A\u4E3B\u9898\u65B9\u6848");
+      return;
+    }
+    const currentTheme = tempCssThemes.find((p) => p.id === tempActiveCssThemeId);
+    if (!currentTheme) return;
+    if (!confirm(`\u786E\u5B9A\u8981\u5220\u9664\u4E3B\u9898 "${currentTheme.name}" \u5417\uFF1F`)) return;
+    tempCssThemes = tempCssThemes.filter((p) => p.id !== tempActiveCssThemeId);
+    tempActiveCssThemeId = tempCssThemes[0]?.id || "default";
+    cssThemeModified = false;
+    renderCssThemeUI();
+    const newTheme = tempCssThemes.find((p) => p.id === tempActiveCssThemeId);
+    if (newTheme) {
+      applyCustomCSS(newTheme.css || "");
+    }
+    if (window.toastr) toastr.success("\u4E3B\u9898\u5DF2\u5220\u9664");
+  });
+  renderCssThemeUI();
   $("#btn-css-export").on("click", () => {
+    const currentTheme = tempCssThemes.find((p) => p.id === tempActiveCssThemeId);
     const cssContent = $("#t-custom-css-input").val() || "";
+    const themeName = currentTheme?.name || "\u672A\u547D\u540D\u4E3B\u9898";
     const exportData = {
       type: "titania_custom_css",
-      version: "1.0",
+      version: "1.1",
       timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      theme_name: themeName,
       css: cssContent
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `titania_theme_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10).replace(/-/g, "")}.json`;
+    const safeFileName = themeName.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, "_");
+    a.download = `titania_theme_${safeFileName}_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10).replace(/-/g, "")}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    if (window.toastr) toastr.success("\u4E3B\u9898\u914D\u7F6E\u5DF2\u5BFC\u51FA");
+    if (window.toastr) toastr.success(`\u4E3B\u9898\u300C${themeName}\u300D\u5DF2\u5BFC\u51FA`);
   });
   $("#btn-css-import").on("click", () => {
     $("#t-css-file-input").click();
@@ -3081,6 +3264,9 @@ function openSettingsWindow() {
   $("#t-css-file-input").on("change", function() {
     const file = this.files[0];
     if (!file) return;
+    let fileBaseName = file.name.replace(/\.json$/i, "");
+    fileBaseName = fileBaseName.replace(/^titania_theme_/i, "").replace(/_\d{8}$/, "");
+    fileBaseName = fileBaseName.replace(/_/g, " ").trim();
     const reader = new FileReader();
     reader.onload = function(e) {
       try {
@@ -3089,9 +3275,39 @@ function openSettingsWindow() {
           throw new Error("\u65E0\u6548\u7684\u4E3B\u9898\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F");
         }
         const importedCSS = importData.css || "";
-        $("#t-custom-css-input").val(importedCSS);
-        updateCSSCharCount();
-        if (window.toastr) toastr.success("\u4E3B\u9898\u914D\u7F6E\u5DF2\u5BFC\u5165\uFF0C\u8BF7\u70B9\u51FB\u300C\u4FDD\u5B58\u6240\u6709\u914D\u7F6E\u300D\u751F\u6548");
+        const importedName = fileBaseName || importData.theme_name || "\u5BFC\u5165\u7684\u4E3B\u9898";
+        const action = confirm(`\u5BFC\u5165\u4E3B\u9898\u300C${importedName}\u300D
+
+\u70B9\u51FB\u300C\u786E\u5B9A\u300D\u521B\u5EFA\u4E3A\u65B0\u4E3B\u9898
+\u70B9\u51FB\u300C\u53D6\u6D88\u300D\u8986\u76D6\u5F53\u524D\u4E3B\u9898`);
+        if (action) {
+          if (tempCssThemes.length >= MAX_CSS_THEMES) {
+            if (window.toastr) toastr.warning(`\u5DF2\u8FBE\u5230\u6700\u5927\u4E3B\u9898\u6570\u91CF (${MAX_CSS_THEMES})\uFF0C\u5C06\u8986\u76D6\u5F53\u524D\u4E3B\u9898`);
+            $("#t-custom-css-input").val(importedCSS);
+            updateCSSCharCount();
+            cssThemeModified = true;
+            $("#css-theme-unsaved-hint").show();
+          } else {
+            const newId = "css_theme_" + Date.now();
+            tempCssThemes.push({
+              id: newId,
+              name: importedName,
+              css: importedCSS
+            });
+            tempActiveCssThemeId = newId;
+            cssThemeModified = false;
+            renderCssThemeUI();
+            applyCustomCSS(importedCSS);
+            if (window.toastr) toastr.success(`\u5DF2\u521B\u5EFA\u65B0\u4E3B\u9898\u300C${importedName}\u300D`);
+          }
+        } else {
+          $("#t-custom-css-input").val(importedCSS);
+          updateCSSCharCount();
+          cssThemeModified = true;
+          $("#css-theme-unsaved-hint").show();
+          applyCustomCSS(importedCSS);
+          if (window.toastr) toastr.success("\u5DF2\u5BFC\u5165\u5E76\u8986\u76D6\u5F53\u524D\u4E3B\u9898\u5185\u5BB9");
+        }
       } catch (err) {
         console.error("Titania: CSS \u5BFC\u5165\u5931\u8D25", err);
         if (window.toastr) toastr.error("\u5BFC\u5165\u5931\u8D25\uFF1A" + err.message);
@@ -3101,9 +3317,11 @@ function openSettingsWindow() {
     $(this).val("");
   });
   $("#btn-css-reset").on("click", () => {
-    if (!confirm("\u786E\u5B9A\u8981\u6E05\u7A7A\u6240\u6709\u81EA\u5B9A\u4E49 CSS \u5417\uFF1F")) return;
+    if (!confirm("\u786E\u5B9A\u8981\u6E05\u7A7A\u5F53\u524D\u4E3B\u9898\u7684 CSS \u5185\u5BB9\u5417\uFF1F")) return;
     $("#t-custom-css-input").val("");
     updateCSSCharCount();
+    cssThemeModified = true;
+    $("#css-theme-unsaved-hint").show();
     if (window.toastr) toastr.info("\u5DF2\u6E05\u7A7A\uFF0C\u8BF7\u70B9\u51FB\u300C\u4FDD\u5B58\u6240\u6709\u914D\u7F6E\u300D\u751F\u6548");
   });
   const savedCats = cfg.auto_categories || [];
@@ -3395,7 +3613,13 @@ ${JSON.stringify(l.details, null, 2)}`;
       show_timer: $("#p-show-timer").is(":checked")
     };
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
-    d.custom_css = $("#t-custom-css-input").val() || "";
+    saveCurrentCssThemeToMemory();
+    d.css_themes = {
+      profiles: tempCssThemes,
+      active_profile_id: tempActiveCssThemeId
+    };
+    const activeTheme = tempCssThemes.find((p) => p.id === tempActiveCssThemeId);
+    d.custom_css = activeTheme?.css || "";
     const fontSource = $("input[name='t-font-source']:checked").val() || "default";
     d.font_settings = {
       source: fontSource,
@@ -3928,9 +4152,8 @@ async function showDebugInfo() {
   let displayModel = currentProfile.type === "internal" ? "(\u8DDF\u968F ST)" : currentProfile.model || "gpt-3.5-turbo";
   const currentMode = GlobalState.generationMode || "narrative";
   const modeDisplay = currentMode === "visual" ? "\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316" : "\u{1F4D6} \u5185\u5BB9\u4F18\u5148";
-  let sysPrompt;
-  if (currentMode === "visual") {
-    sysPrompt = `You are a Visual Director creating an immersive HTML scene.
+  const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
+  const DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
 
 [Process]
 1. Analyze the mood/emotion of the scenario
@@ -3942,8 +4165,24 @@ async function showDebugInfo() {
 2. Use CSS animations, gradients, shadows freely
 3. No markdown code blocks
 4. Language: Chinese`;
+  const customPrompts = data.custom_prompts || {};
+  const useCustomPrompts = customPrompts.override_enabled === true;
+  let sysPrompt;
+  let isUsingCustomPrompt = false;
+  if (currentMode === "visual") {
+    if (useCustomPrompts && customPrompts.visual_mode && customPrompts.visual_mode.trim()) {
+      sysPrompt = customPrompts.visual_mode;
+      isUsingCustomPrompt = true;
+    } else {
+      sysPrompt = DEFAULT_VISUAL_PROMPT;
+    }
   } else {
-    sysPrompt = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
+    if (useCustomPrompts && customPrompts.content_mode && customPrompts.content_mode.trim()) {
+      sysPrompt = customPrompts.content_mode;
+      isUsingCustomPrompt = true;
+    } else {
+      sysPrompt = DEFAULT_CONTENT_PROMPT;
+    }
   }
   const sysTokens = estimateTokens(sysPrompt);
   let contextBlocks = [];
@@ -4075,7 +4314,7 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
                 <!-- System -->
                 <div class="t-editor-section" style="flex: 3;">
                     <div class="t-section-label">
-                        <span><i class="fa-solid fa-microchip"></i> System Instruction</span>
+                        <span><i class="fa-solid fa-microchip"></i> System Instruction ${isUsingCustomPrompt ? '<span style="color:#55efc4; font-size:0.8em;">(\u81EA\u5B9A\u4E49)</span>' : ""}</span>
                         <span style="font-size:0.8em; opacity:0.5;">${sysTokens} tokens</span>
                     </div>
                     <textarea class="t-simple-editor" readonly>${sysPrompt}</textarea>
