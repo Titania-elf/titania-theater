@@ -4357,6 +4357,1071 @@ var init_debugWindow = __esm({
   }
 });
 
+// src/core/loreExtractor.js
+import { ChatCompletionService } from "../../../custom-request.js";
+import { oai_settings, getChatCompletionModel } from "../../../openai.js";
+function getCurrentModel() {
+  const data = getExtData();
+  const cfg = data.config || {};
+  let activeProfileId = cfg.active_profile_id || "default";
+  let profiles = cfg.profiles || [
+    { id: "st_sync", name: "\u{1F517} \u8DDF\u968F SillyTavern", type: "internal" },
+    { id: "default", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
+  ];
+  let currentProfile = profiles.find((p) => p.id === activeProfileId) || profiles[1];
+  if (currentProfile.type === "internal") {
+    return getChatCompletionModel() || "gpt-3.5-turbo";
+  } else {
+    return currentProfile.model || "gpt-3.5-turbo";
+  }
+}
+async function getAvailableModels() {
+  const data = getExtData();
+  const cfg = data.config || {};
+  let activeProfileId = cfg.active_profile_id || "default";
+  let profiles = cfg.profiles || [
+    { id: "st_sync", name: "\u{1F517} \u8DDF\u968F SillyTavern", type: "internal" },
+    { id: "default", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
+  ];
+  let currentProfile = profiles.find((p) => p.id === activeProfileId) || profiles[1];
+  if (currentProfile.type === "internal") {
+    try {
+      const selectors = [
+        "#model_openai_select",
+        // OpenAI / OAI Compatible
+        "#model_claude_select",
+        // Claude
+        "#model_openrouter_select",
+        // OpenRouter
+        "#model_mistral_select",
+        // Mistral
+        "#api_button_text_generation_webui_model",
+        // TextGen WebUI
+        ".model_select",
+        // 通用类名
+        "select[id*='model']"
+        // 宽泛的 ID 匹配
+      ];
+      let models = [];
+      for (const sel of selectors) {
+        const $sel = $(sel);
+        if ($sel.length > 0 && $sel.is("select")) {
+          $sel.find("option").each(function() {
+            const val = $(this).val();
+            if (val && val !== "null" && typeof val === "string" && val.trim() !== "") {
+              models.push(val);
+            }
+          });
+        }
+      }
+      if (models.length === 0 && window.SillyTavern) {
+      }
+      if (models.length > 0) {
+        const uniqueModels = [...new Set(models)].sort();
+        const current2 = getChatCompletionModel();
+        if (current2 && !uniqueModels.includes(current2)) {
+          uniqueModels.unshift(current2);
+        }
+        return uniqueModels;
+      }
+    } catch (e) {
+      TitaniaLogger.warn("\u4ECE ST DOM \u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
+    }
+    const current = getChatCompletionModel();
+    return current ? [current] : ["gpt-3.5-turbo"];
+  } else {
+    const url = currentProfile.url || "";
+    const key = currentProfile.key || "";
+    if (!url) return ["gpt-3.5-turbo"];
+    try {
+      let endpoint = url.trim().replace(/\/+$/, "");
+      if (!endpoint.endsWith("/models")) {
+        if (endpoint.endsWith("/v1")) endpoint += "/models";
+        else endpoint += "/v1/models";
+      }
+      const res = await fetch(endpoint, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${key}` }
+      });
+      if (!res.ok) return ["gpt-3.5-turbo"];
+      const json = await res.json();
+      if (Array.isArray(json.data)) {
+        return json.data.map((m) => m.id).sort();
+      } else if (Array.isArray(json)) {
+        return json.map((m) => m.id || m).sort();
+      }
+      return ["gpt-3.5-turbo"];
+    } catch (e) {
+      TitaniaLogger.warn("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
+      return ["gpt-3.5-turbo"];
+    }
+  }
+}
+async function extractLoreFromHistory(historyLimit = 20, modelOverride = null) {
+  TitaniaLogger.info("\u5F00\u59CB\u63D0\u53D6\u8BBE\u5B9A...", { historyLimit, modelOverride });
+  const ctx = await getContextData();
+  const history = getChatHistory(historyLimit);
+  if (!history || history.trim().length === 0) {
+    throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u63D0\u53D6\u8BBE\u5B9A");
+  }
+  let existingLoreSummary = "";
+  try {
+    const activeEntries = await getActiveWorldInfoEntries();
+    const summaryList = [];
+    activeEntries.forEach((book) => {
+      book.entries.forEach((e) => {
+        const keys = Array.isArray(e.keys) ? e.keys.join(", ") : e.keys;
+        summaryList.push(`UID: ${e.uid} | Keys: ${keys} | Book: ${book.bookName}`);
+      });
+    });
+    if (summaryList.length > 0) {
+      existingLoreSummary = summaryList.join("\n");
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u73B0\u6709\u4E16\u754C\u4E66\u5931\u8D25\uFF0C\u5C06\u8DF3\u8FC7\u81EA\u52A8\u5339\u914D", e);
+  }
+  const sysPrompt = `You are an expert Lorekeeper and World Builder. Your task is to analyze the provided roleplay chat history and extract key information into a structured JSON format for a World Info (Lorebook) database.
+
+[Target Information]
+Identify and extract:
+1. **Locations**: New places visited or mentioned (Name, Description, Atmosphere).
+2. **Characters**: New NPCs or significant character developments (Name, Appearance, Personality, Role).
+3. **Items/Artifacts**: Important objects (Name, Function, Origin).
+4. **Events/Lore**: Historical events, rules of the world, or plot-critical facts.
+
+[Existing Lorebook Entries]
+The following entries already exist in the database. Check if the extracted information updates any of them:
+${existingLoreSummary || "(None)"}
+
+[Output Format]
+Return ONLY a valid JSON object with the following structure:
+{
+  "entries": [
+    {
+      "keys": ["Primary Keyword", "Alias 1", "Alias 2"],
+      "category": "Location" | "Character" | "Item" | "Event" | "Other",
+      "content": "Comprehensive description suitable for a lorebook entry. Write in the same language as the chat history (Chinese).",
+      "reason": "Brief explanation of why this was extracted.",
+      "confidence": "High" | "Medium" | "Low",
+      "action": "new" | "update",
+      "matched_uid": 12345 (Only if action is "update", provide the UID from Existing Lorebook Entries),
+      "matched_book": "Book Name" (Only if action is "update")
+    }
+  ]
+}
+
+[Rules]
+1. **Update vs New**: If the extracted entity matches an existing entry (by Keys or context), set "action" to "update" and provide the "matched_uid". The "content" should be the NEW updated version (merging old knowledge with new facts).
+2. **Ignore Trivial Details**: Only extract information that is likely to be relevant for future context.
+3. **Consolidate**: If an entity is mentioned multiple times, combine the information into a single entry.
+4. **Language**: The 'content' field MUST be in Chinese (if the chat is in Chinese).
+5. **JSON Only**: Do not output any markdown formatting, explanations, or code blocks outside the JSON.`;
+  const userPrompt = `[Context]
+Character: ${ctx.charName}
+User: ${ctx.userName}
+
+[Chat History to Analyze]
+${history}
+
+[Task]
+Extract new lore entries from the above history. Return JSON only.`;
+  const data = getExtData();
+  const cfg = data.config || {};
+  let activeProfileId = cfg.active_profile_id || "default";
+  let profiles = cfg.profiles || [
+    { id: "st_sync", name: "\u{1F517} \u8DDF\u968F SillyTavern", type: "internal" },
+    { id: "default", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
+  ];
+  let currentProfile = profiles.find((p) => p.id === activeProfileId) || profiles[1];
+  const useSTConnection = currentProfile.type === "internal";
+  let finalUrl = "", finalKey = "", finalModel = "";
+  if (useSTConnection) {
+    finalModel = modelOverride || getChatCompletionModel() || "gpt-3.5-turbo";
+    TitaniaLogger.info("\u4F7F\u7528 ST \u4E3B\u8FDE\u63A5\u63D0\u53D6\u8BBE\u5B9A", { model: finalModel });
+  } else {
+    finalUrl = currentProfile.url || "";
+    finalKey = currentProfile.key || "";
+    finalModel = modelOverride || currentProfile.model || "gpt-3.5-turbo";
+    TitaniaLogger.info("\u4F7F\u7528\u81EA\u5B9A\u4E49\u8FDE\u63A5\u63D0\u53D6\u8BBE\u5B9A", { url: finalUrl, model: finalModel });
+    if (!finalKey) {
+      throw new Error("\u914D\u7F6E\u7F3A\u5931\uFF1A\u8BF7\u5148\u53BB\u8BBE\u7F6E\u586B API Key\uFF01");
+    }
+  }
+  let rawContent = "";
+  try {
+    if (useSTConnection) {
+      const requestData = ChatCompletionService.createRequestData({
+        stream: false,
+        messages: [
+          { role: "system", content: sysPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        chat_completion_source: oai_settings.chat_completion_source,
+        model: finalModel,
+        max_tokens: 2e3,
+        temperature: 0.3,
+        custom_url: oai_settings.custom_url,
+        reverse_proxy: oai_settings.reverse_proxy,
+        proxy_password: oai_settings.proxy_password,
+        custom_prompt_post_processing: oai_settings.custom_prompt_post_processing
+      });
+      const result = await ChatCompletionService.sendRequest(requestData, true, null);
+      rawContent = result?.content || "";
+    } else {
+      let endpoint = finalUrl.trim().replace(/\/+$/, "");
+      if (!endpoint) throw new Error("API URL \u672A\u8BBE\u7F6E");
+      if (!endpoint.endsWith("/chat/completions")) {
+        if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
+        else endpoint += "/v1/chat/completions";
+      }
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+        body: JSON.stringify({
+          model: finalModel,
+          messages: [
+            { role: "system", content: sysPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          stream: false,
+          max_tokens: 2e3,
+          temperature: 0.3
+        })
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
+      }
+      const json = await res.json();
+      rawContent = json.choices?.[0]?.message?.content || "";
+    }
+  } catch (e) {
+    TitaniaLogger.error("API \u8BF7\u6C42\u5931\u8D25", e);
+    let errorMsg = e.message || "\u672A\u77E5\u9519\u8BEF";
+    if (e.stack_trace) {
+      try {
+        const stack = JSON.parse(e.stack_trace);
+        if (stack.error && stack.error.message) {
+          errorMsg = stack.error.message;
+        }
+      } catch (jsonErr) {
+      }
+    }
+    throw new Error("API \u8BF7\u6C42\u5931\u8D25: " + errorMsg);
+  }
+  if (!rawContent) {
+    throw new Error("API \u8FD4\u56DE\u5185\u5BB9\u4E3A\u7A7A");
+  }
+  try {
+    let jsonStr = rawContent.trim();
+    if (jsonStr.startsWith("```json")) {
+      jsonStr = jsonStr.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+    } else if (jsonStr.startsWith("```")) {
+      jsonStr = jsonStr.replace(/^```\s*/, "").replace(/\s*```$/, "");
+    }
+    const data2 = JSON.parse(jsonStr);
+    if (!data2 || !Array.isArray(data2.entries)) {
+      throw new Error("\u8FD4\u56DE\u7684 JSON \u683C\u5F0F\u4E0D\u6B63\u786E (\u7F3A\u5C11 entries \u6570\u7EC4)");
+    }
+    TitaniaLogger.info(`\u63D0\u53D6\u5B8C\u6210\uFF0C\u5171\u627E\u5230 ${data2.entries.length} \u4E2A\u6761\u76EE`);
+    return data2;
+  } catch (e) {
+    TitaniaLogger.error("JSON \u89E3\u6790\u5931\u8D25", { rawContent, error: e });
+    throw new Error("\u65E0\u6CD5\u89E3\u6790 AI \u8FD4\u56DE\u7684\u6570\u636E\uFF0C\u8BF7\u91CD\u8BD5");
+  }
+}
+var init_loreExtractor = __esm({
+  "src/core/loreExtractor.js"() {
+    init_helpers();
+    init_context();
+    init_logger();
+    init_storage();
+  }
+});
+
+// src/core/worldInfoManager.js
+import { world_info as world_info2, selected_world_info as selected_world_info2, saveWorldInfo } from "../../../world-info.js";
+function getAvailableWorldBooks() {
+  try {
+    if (Array.isArray(world_info2.loreBookNames)) {
+      return world_info2.loreBookNames;
+    }
+    return selected_world_info2 || [];
+  } catch (e) {
+    TitaniaLogger.error("\u83B7\u53D6\u4E16\u754C\u4E66\u5217\u8868\u5931\u8D25", e);
+    return [];
+  }
+}
+async function getCharacterWorldBook() {
+  const ctx = await getContextData();
+  if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+    const stCtx = SillyTavern.getContext();
+    const charId = stCtx.characterId;
+    if (charId !== void 0 && stCtx.characters && stCtx.characters[charId]) {
+      return stCtx.characters[charId].data?.extensions?.world || null;
+    }
+  }
+  return null;
+}
+async function getWorldInfoEntries(bookName) {
+  try {
+    if (!bookName) throw new Error("\u672A\u6307\u5B9A\u4E16\u754C\u4E66\u540D\u79F0");
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
+      throw new Error("SillyTavern Context \u4E0D\u53EF\u7528");
+    }
+    const ctx = SillyTavern.getContext();
+    let book = null;
+    if (ctx.loadWorldInfo && typeof ctx.loadWorldInfo === "function") {
+      book = await ctx.loadWorldInfo(bookName);
+    }
+    if (!book && world_info2.loadedWorldInfo && world_info2.loadedWorldInfo.name === bookName) {
+      book = world_info2.loadedWorldInfo;
+    }
+    if (!book || !book.entries) {
+      return [];
+    }
+    return Object.values(book.entries).sort((a, b) => {
+      return (a.order || 100) - (b.order || 100);
+    });
+  } catch (e) {
+    TitaniaLogger.error("\u83B7\u53D6\u4E16\u754C\u4E66\u6761\u76EE\u5931\u8D25", e);
+    throw e;
+  }
+}
+function refreshSillyTavernUI(bookName) {
+  try {
+    const ctx = SillyTavern.getContext();
+    if (ctx.updateWorldInfoList) {
+      ctx.updateWorldInfoList();
+    }
+    if (world_info2.selected_world_info === bookName) {
+      if (typeof window.loadWorldInfo === "function") {
+        window.loadWorldInfo(bookName);
+      } else if (ctx.loadWorldInfo) {
+        if (typeof window.printWorldInfo === "function") {
+          window.printWorldInfo();
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Titania: Failed to refresh ST UI", e);
+  }
+}
+async function toggleLoreEntry(bookName, uid, disable) {
+  try {
+    const ctx = SillyTavern.getContext();
+    let book = await ctx.loadWorldInfo(bookName);
+    if (!book || !book.entries || !book.entries[uid]) {
+      throw new Error("\u6761\u76EE\u4E0D\u5B58\u5728");
+    }
+    book.entries[uid].disable = disable;
+    await ctx.saveWorldInfo(bookName, book, true);
+    refreshSillyTavernUI(bookName);
+    return true;
+  } catch (e) {
+    TitaniaLogger.error("\u5207\u6362\u6761\u76EE\u72B6\u6001\u5931\u8D25", e);
+    return false;
+  }
+}
+async function saveLoreEntry(bookName, entryData, isFullUpdate = false) {
+  try {
+    if (!bookName) throw new Error("\u672A\u6307\u5B9A\u4E16\u754C\u4E66\u540D\u79F0");
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
+      throw new Error("SillyTavern Context \u4E0D\u53EF\u7528");
+    }
+    const ctx = SillyTavern.getContext();
+    let book = null;
+    if (ctx.loadWorldInfo && typeof ctx.loadWorldInfo === "function") {
+      book = await ctx.loadWorldInfo(bookName);
+    }
+    if (!book && world_info2.loadedWorldInfo && world_info2.loadedWorldInfo.name === bookName) {
+      book = world_info2.loadedWorldInfo;
+    }
+    if (!book) {
+      throw new Error(`\u65E0\u6CD5\u52A0\u8F7D\u4E16\u754C\u4E66: ${bookName}`);
+    }
+    const uid = entryData.uid || Date.now();
+    if (!book.entries) book.entries = {};
+    if (isFullUpdate && book.entries[uid]) {
+      Object.assign(book.entries[uid], entryData);
+    } else {
+      const newEntry = {
+        uid,
+        key: Array.isArray(entryData.keys) ? entryData.keys : [entryData.keys],
+        keysecondary: entryData.keysecondary || [],
+        comment: entryData.comment || entryData.keys[0] || "New Entry",
+        content: entryData.content || "",
+        constant: entryData.constant || false,
+        selective: entryData.selective !== void 0 ? entryData.selective : true,
+        order: entryData.order || 100,
+        position: entryData.position !== void 0 ? entryData.position : 1,
+        disable: entryData.disable || false,
+        excludeRecursion: false,
+        probability: 100,
+        useProbability: true,
+        depth: 4,
+        group: ""
+      };
+      if (book.entries[uid]) {
+        Object.assign(book.entries[uid], newEntry);
+      } else {
+        book.entries[uid] = newEntry;
+      }
+    }
+    if (ctx.saveWorldInfo && typeof ctx.saveWorldInfo === "function") {
+      await ctx.saveWorldInfo(bookName, book, true);
+    } else if (typeof saveWorldInfo === "function") {
+      await saveWorldInfo(bookName, book, true);
+    } else if (typeof window.saveWorldInfo === "function") {
+      await window.saveWorldInfo(bookName, book, true);
+    } else {
+      throw new Error("\u627E\u4E0D\u5230 saveWorldInfo \u65B9\u6CD5");
+    }
+    TitaniaLogger.info(`\u4E16\u754C\u4E66\u6761\u76EE\u5DF2\u4FDD\u5B58: ${bookName} / UID:${uid}`);
+    refreshSillyTavernUI(bookName);
+    return true;
+  } catch (e) {
+    TitaniaLogger.error("\u4FDD\u5B58\u4E16\u754C\u4E66\u6761\u76EE\u5931\u8D25", e);
+    return false;
+  }
+}
+var init_worldInfoManager = __esm({
+  "src/core/worldInfoManager.js"() {
+    init_context();
+    init_logger();
+  }
+});
+
+// src/ui/worldInfoEditor.js
+function ensureCssLoaded() {
+  const id = "titania-css-wi-editor";
+  if (!document.getElementById(id)) {
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.href = `${extensionFolderPath}/css/lore-review.css`;
+    document.head.appendChild(link);
+  }
+}
+async function showWorldInfoEditor() {
+  ensureCssLoaded();
+  $("#t-wi-editor-overlay").remove();
+  currentBookName = await getCharacterWorldBook();
+  if (!currentBookName) {
+    if (window.toastr) toastr.warning("\u5F53\u524D\u89D2\u8272\u672A\u7ED1\u5B9A\u4E16\u754C\u4E66", "Titania");
+    return;
+  }
+  const html = `
+    <div id="t-wi-editor-overlay" class="t-overlay">
+        <div class="t-window t-lore-review-window">
+            <div class="t-window-header">
+                <div class="t-window-title">
+                    <i class="fa-solid fa-book-atlas"></i> \u4E16\u754C\u4E66\u7F16\u8F91\u5668: ${currentBookName}
+                </div>
+                <div class="t-window-controls">
+                    <div class="t-window-close" id="t-wi-editor-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="t-window-body">
+                <!-- \u9876\u90E8\u63A7\u5236\u680F -->
+                <div class="t-lore-controls">
+                    <div class="t-control-group" style="flex: 1;">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" id="t-wi-search" placeholder="\u641C\u7D22\u5173\u952E\u8BCD\u6216\u5185\u5BB9..." style="width: 100%;">
+                    </div>
+                    <button id="t-btn-refresh-wi" class="t-btn t-btn-primary">
+                        <i class="fa-solid fa-sync"></i> \u5237\u65B0
+                    </button>
+                </div>
+
+                <!-- \u4E3B\u5185\u5BB9\u533A -->
+                <div class="t-lore-content">
+                    <!-- \u5DE6\u4FA7\uFF1A\u6761\u76EE\u5217\u8868 -->
+                    <div class="t-lore-list-container">
+                        <div class="t-list-header">
+                            <span>\u6761\u76EE\u5217\u8868</span>
+                            <span id="t-wi-count" style="font-weight: normal; opacity: 0.7;">(0)</span>
+                        </div>
+                        <div id="t-wi-entries-list" class="t-lore-list">
+                            <div class="t-loading-state">
+                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                <p>\u6B63\u5728\u52A0\u8F7D...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- \u53F3\u4FA7\uFF1A\u8BE6\u60C5\u7F16\u8F91 -->
+                    <div class="t-lore-editor-container">
+                        <div class="t-editor-header">
+                            <span>\u7F16\u8F91\u6761\u76EE</span>
+                            <div class="t-editor-actions">
+                                <button id="t-btn-save-entry" class="t-btn t-btn-success" disabled>
+                                    <i class="fa-solid fa-save"></i> \u4FDD\u5B58\u4FEE\u6539
+                                </button>
+                            </div>
+                        </div>
+                        <div id="t-wi-editor" class="t-lore-editor" style="display:none;">
+                            <div class="t-form-group">
+                                <label>UID</label>
+                                <input type="text" id="t-wi-uid" disabled style="opacity: 0.6;">
+                            </div>
+                            <div class="t-form-group">
+                                <label>\u6CE8\u91CA (Comment)</label>
+                                <input type="text" id="t-wi-comment">
+                            </div>
+                            <div class="t-form-group">
+                                <label>\u5173\u952E\u8BCD (Keys)</label>
+                                <input type="text" id="t-wi-keys" placeholder="Key1, Key2, ...">
+                                <small>\u7528\u9017\u53F7\u5206\u9694\u591A\u4E2A\u5173\u952E\u8BCD</small>
+                            </div>
+                            <div class="t-form-group">
+                                <label>\u6B21\u8981\u5173\u952E\u8BCD (Secondary Keys)</label>
+                                <input type="text" id="t-wi-secondary-keys" placeholder="SecKey1, SecKey2, ...">
+                            </div>
+                            <div class="t-form-group">
+                                <label>\u5185\u5BB9 (Content)</label>
+                                <textarea id="t-wi-content" rows="10"></textarea>
+                            </div>
+                            <div class="t-form-group">
+                                <label>\u89E6\u53D1\u65B9\u5F0F (Trigger Strategy)</label>
+                                <div style="display: flex; gap: 20px; margin-top: 5px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="t-wi-strategy" value="constant"> \u5E38\u9A7B (Constant)
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="t-wi-strategy" value="selective"> \u5173\u952E\u8BCD\u89E6\u53D1 (Keywords)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="t-editor-placeholder" class="t-empty-state">
+                            <p>\u8BF7\u5728\u5DE6\u4FA7\u9009\u62E9\u4E00\u4E2A\u6761\u76EE\u8FDB\u884C\u7F16\u8F91</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  await loadEntries();
+  bindEvents();
+}
+async function loadEntries() {
+  try {
+    $("#t-wi-entries-list").html('<div class="t-loading-state"><i class="fa-solid fa-spinner fa-spin"></i><p>\u6B63\u5728\u52A0\u8F7D...</p></div>');
+    currentEntries = await getWorldInfoEntries(currentBookName);
+    filterEntries();
+  } catch (e) {
+    TitaniaLogger.error("\u52A0\u8F7D\u4E16\u754C\u4E66\u6761\u76EE\u5931\u8D25", e);
+    $("#t-wi-entries-list").html(`<div class="t-error-state"><i class="fa-solid fa-exclamation-triangle"></i> \u52A0\u8F7D\u5931\u8D25: ${e.message}</div>`);
+  }
+}
+function filterEntries() {
+  const keyword = $("#t-wi-search").val().toLowerCase().trim();
+  if (!keyword) {
+    filteredEntries = [...currentEntries];
+  } else {
+    filteredEntries = currentEntries.filter((entry) => {
+      const keys = Array.isArray(entry.key) ? entry.key.join(" ") : entry.key || "";
+      const content = entry.content || "";
+      const comment = entry.comment || "";
+      return keys.toLowerCase().includes(keyword) || content.toLowerCase().includes(keyword) || comment.toLowerCase().includes(keyword);
+    });
+  }
+  renderEntriesList();
+}
+function renderEntriesList() {
+  const $list = $("#t-wi-entries-list");
+  $list.empty();
+  $("#t-wi-count").text(`(${filteredEntries.length})`);
+  if (filteredEntries.length === 0) {
+    $list.html('<div class="t-empty-state"><p>\u6CA1\u6709\u627E\u5230\u5339\u914D\u7684\u6761\u76EE</p></div>');
+    return;
+  }
+  filteredEntries.forEach((entry, index) => {
+    const keysStr = Array.isArray(entry.key) ? entry.key.join(", ") : entry.key;
+    const isDisabled = entry.disable === true;
+    const html = `
+        <div class="t-lore-entry-item ${isDisabled ? "t-is-disabled" : ""}" data-uid="${entry.uid}">
+            <div class="t-entry-header">
+                <div class="t-wi-status-toggle" title="${isDisabled ? "\u70B9\u51FB\u542F\u7528" : "\u70B9\u51FB\u7981\u7528"}" data-uid="${entry.uid}">
+                    <i class="fa-solid ${isDisabled ? "fa-toggle-off" : "fa-toggle-on"}"></i>
+                </div>
+                <span class="t-entry-keys" title="${keysStr}">
+                    ${entry.comment || keysStr || "\u65E0\u6807\u9898"}
+                </span>
+                ${entry.constant ? '<span class="t-entry-tag">\u5E38\u9A7B</span>' : ""}
+            </div>
+            <div class="t-entry-preview">${entry.content || ""}</div>
+        </div>
+        `;
+    $list.append(html);
+  });
+}
+function showEntryDetail(uid) {
+  const entry = currentEntries.find((e) => e.uid == uid);
+  if (!entry) return;
+  $("#t-editor-placeholder").hide();
+  $("#t-wi-editor").show();
+  $("#t-btn-save-entry").prop("disabled", false).data("uid", uid);
+  $("#t-wi-uid").val(entry.uid);
+  $("#t-wi-comment").val(entry.comment || "");
+  $("#t-wi-keys").val(Array.isArray(entry.key) ? entry.key.join(", ") : entry.key);
+  $("#t-wi-secondary-keys").val(Array.isArray(entry.keysecondary) ? entry.keysecondary.join(", ") : entry.keysecondary || "");
+  $("#t-wi-content").val(entry.content || "");
+  const isConstant = entry.constant === true;
+  $("input[name='t-wi-strategy'][value='constant']").prop("checked", isConstant);
+  $("input[name='t-wi-strategy'][value='selective']").prop("checked", !isConstant);
+}
+function bindEvents() {
+  $("#t-wi-editor-close").on("click", () => {
+    $("#t-wi-editor-overlay").remove();
+  });
+  $("#t-btn-refresh-wi").on("click", loadEntries);
+  $("#t-wi-search").on("input", filterEntries);
+  $(document).on("click", ".t-lore-entry-item", function(e) {
+    if ($(e.target).closest(".t-wi-status-toggle").length > 0) return;
+    $(".t-lore-entry-item").removeClass("active");
+    $(this).addClass("active");
+    const uid = $(this).data("uid");
+    showEntryDetail(uid);
+  });
+  $(document).on("click", ".t-wi-status-toggle", async function(e) {
+    e.stopPropagation();
+    const uid = $(this).data("uid");
+    const entry = currentEntries.find((e2) => e2.uid == uid);
+    if (entry) {
+      const newStatus = !entry.disable;
+      const success = await toggleLoreEntry(currentBookName, uid, newStatus);
+      if (success) {
+        entry.disable = newStatus;
+        $(this).html(`<i class="fa-solid ${newStatus ? "fa-toggle-off" : "fa-toggle-on"}"></i>`);
+        $(this).attr("title", newStatus ? "\u70B9\u51FB\u542F\u7528" : "\u70B9\u51FB\u7981\u7528");
+        const $item = $(this).closest(".t-lore-entry-item");
+        if (newStatus) $item.addClass("t-is-disabled");
+        else $item.removeClass("t-is-disabled");
+      }
+    }
+  });
+  $("#t-btn-save-entry").on("click", async function() {
+    const uid = $(this).data("uid");
+    const entry = currentEntries.find((e) => e.uid == uid);
+    if (!entry) return;
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u4FDD\u5B58\u4E2D...');
+    const updatedData = {
+      uid,
+      comment: $("#t-wi-comment").val(),
+      keys: $("#t-wi-keys").val().split(/,|，/).map((s) => s.trim()).filter((s) => s),
+      keysecondary: $("#t-wi-secondary-keys").val().split(/,|，/).map((s) => s.trim()).filter((s) => s),
+      content: $("#t-wi-content").val(),
+      constant: $("input[name='t-wi-strategy']:checked").val() === "constant",
+      selective: true,
+      // 始终启用选择性逻辑（如果是常驻，此项会被忽略；如果是关键词，此项必须为真）
+      disable: entry.disable
+      // 保持原状态
+    };
+    const success = await saveLoreEntry(currentBookName, updatedData, true);
+    if (success) {
+      Object.assign(entry, {
+        comment: updatedData.comment,
+        key: updatedData.keys,
+        keysecondary: updatedData.keysecondary,
+        content: updatedData.content,
+        constant: updatedData.constant,
+        selective: updatedData.selective
+      });
+      renderEntriesList();
+      renderEntriesList();
+      $(`.t-lore-entry-item[data-uid="${uid}"]`).addClass("active");
+      if (window.toastr) toastr.success("\u6761\u76EE\u5DF2\u4FDD\u5B58", "Titania");
+    } else {
+      if (window.toastr) toastr.error("\u4FDD\u5B58\u5931\u8D25", "Titania");
+    }
+    $btn.prop("disabled", false).html('<i class="fa-solid fa-save"></i> \u4FDD\u5B58\u4FEE\u6539');
+  });
+}
+var currentBookName, currentEntries, filteredEntries;
+var init_worldInfoEditor = __esm({
+  "src/ui/worldInfoEditor.js"() {
+    init_worldInfoManager();
+    init_logger();
+    init_defaults();
+    currentBookName = null;
+    currentEntries = [];
+    filteredEntries = [];
+  }
+});
+
+// src/ui/loreReviewWindow.js
+function ensureCssLoaded2() {
+  const id = "titania-css-lore-review";
+  if (!document.getElementById(id)) {
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.href = `${extensionFolderPath}/css/lore-review.css`;
+    document.head.appendChild(link);
+  }
+}
+async function showLoreReviewWindow() {
+  ensureCssLoaded2();
+  $("#t-lore-review-overlay").remove();
+  const html = `
+    <div id="t-lore-review-overlay" class="t-overlay">
+        <div class="t-window t-lore-review-window">
+            <div class="t-window-header">
+                <div class="t-window-title">
+                    <i class="fa-solid fa-brain"></i> \u667A\u80FD\u8BBE\u5B9A\u63D0\u53D6
+                </div>
+                <div class="t-window-controls">
+                    <div class="t-window-close" id="t-lore-review-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+            
+            <div class="t-window-body">
+                <!-- \u9876\u90E8\u63A7\u5236\u680F -->
+                <div class="t-lore-controls">
+                    <div class="t-control-group">
+                        <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
+                        <input type="number" id="t-lore-history-limit" value="2" min="1" max="100" style="width: 60px;">
+                    </div>
+                    <div class="t-control-group">
+                        <label><i class="fa-solid fa-microchip"></i> \u6A21\u578B:</label>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <select id="t-lore-model" style="width: 160px;">
+                                <option value="" selected>Auto (Default)</option>
+                            </select>
+                            <button id="t-btn-refresh-models" class="t-btn t-btn-xs" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
+                                <i class="fa-solid fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="t-btn-start-extract" class="t-btn t-btn-primary">
+                        <i class="fa-solid fa-search"></i> \u5F00\u59CB\u5206\u6790
+                    </button>
+                </div>
+
+                <!-- \u4E3B\u5185\u5BB9\u533A -->
+                <div class="t-lore-content">
+                    <!-- \u5DE6\u4FA7\uFF1A\u6761\u76EE\u5217\u8868 -->
+                    <div class="t-lore-list-container">
+                        <div class="t-list-header">
+                            <span>\u63D0\u53D6\u7ED3\u679C</span>
+                            <div class="t-list-actions">
+                                <button id="t-btn-select-all" class="t-btn t-btn-xs">\u5168\u9009</button>
+                                <button id="t-btn-deselect-all" class="t-btn t-btn-xs">\u5168\u4E0D\u9009</button>
+                            </div>
+                        </div>
+                        <div id="t-lore-entries-list" class="t-lore-list">
+                            <div class="t-empty-state">
+                                <i class="fa-solid fa-robot"></i>
+                                <p>\u70B9\u51FB\u201C\u5F00\u59CB\u5206\u6790\u201D\u4EE5\u63D0\u53D6\u8BBE\u5B9A</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- \u53F3\u4FA7\uFF1A\u8BE6\u60C5\u7F16\u8F91 -->
+                    <div class="t-lore-editor-container">
+                        <div class="t-editor-header">
+                            <span>\u6761\u76EE\u8BE6\u60C5</span>
+                        </div>
+                        <div id="t-lore-editor" class="t-lore-editor" style="display:none;">
+                            <div class="t-form-group">
+                                <label>\u5173\u952E\u8BCD (Keys)</label>
+                                <input type="text" id="t-edit-keys" placeholder="Key1, Key2, ...">
+                                <small>\u7528\u9017\u53F7\u5206\u9694\u591A\u4E2A\u5173\u952E\u8BCD</small>
+                            </div>
+                            <div class="t-form-group">
+                                <label>\u5206\u7C7B (Category)</label>
+                                <select id="t-edit-category">
+                                    <option value="Location">\u5730\u70B9 (Location)</option>
+                                    <option value="Character">\u4EBA\u7269 (Character)</option>
+                                    <option value="Item">\u7269\u54C1 (Item)</option>
+                                    <option value="Event">\u4E8B\u4EF6 (Event)</option>
+                                    <option value="Other">\u5176\u4ED6 (Other)</option>
+                                </select>
+                            </div>
+                            <div class="t-form-group">
+                                <label>\u5185\u5BB9 (Content)</label>
+                                <textarea id="t-edit-content" rows="8"></textarea>
+                            </div>
+                            <div class="t-form-group">
+                                <label>\u63D0\u53D6\u7406\u7531 (Reason)</label>
+                                <div id="t-edit-reason" class="t-static-text"></div>
+                            </div>
+                            <div class="t-form-group" id="t-update-info-group" style="display:none;">
+                                <label>\u5173\u8054\u66F4\u65B0 (Matched Entry)</label>
+                                <div class="t-update-info-box">
+                                    <div id="t-matched-entry-info"></div>
+                                    <button id="t-btn-change-match" class="t-btn t-btn-xs">\u66F4\u6539\u5173\u8054</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="t-editor-placeholder" class="t-empty-state">
+                            <p>\u8BF7\u5728\u5DE6\u4FA7\u9009\u62E9\u4E00\u4E2A\u6761\u76EE\u8FDB\u884C\u7F16\u8F91</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- \u5E95\u90E8\u64CD\u4F5C\u680F -->
+                <div class="t-window-footer">
+                    <div class="t-target-select">
+                        <label>\u4FDD\u5B58\u5230:</label>
+                        <select id="t-target-book">
+                            <option value="" disabled selected>\u52A0\u8F7D\u4E2D...</option>
+                        </select>
+                    </div>
+                    <div class="t-footer-actions">
+                        <button id="t-btn-open-wi-editor" class="t-btn t-btn-primary" style="margin-right: 10px;">
+                            <i class="fa-solid fa-book-atlas"></i> \u7F16\u8F91\u4E16\u754C\u4E66
+                        </button>
+                        <button id="t-btn-save-selected" class="t-btn t-btn-success" disabled>
+                            <i class="fa-solid fa-save"></i> \u4FDD\u5B58\u9009\u4E2D\u6761\u76EE
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  await initWorldBookSelect();
+  const currentModel = getCurrentModel();
+  await loadModelList(currentModel);
+  if (currentModel) {
+    const $select = $("#t-lore-model");
+    if ($select.find(`option[value="${currentModel}"]`).length > 0) {
+      $select.val(currentModel);
+    } else {
+      $select.append(`<option value="${currentModel}">${currentModel}</option>`);
+      $select.val(currentModel);
+    }
+  }
+  bindEvents2();
+}
+async function loadModelList(currentModel) {
+  const $btn = $("#t-btn-refresh-models");
+  const $icon = $btn.find("i");
+  const $select = $("#t-lore-model");
+  try {
+    $icon.addClass("fa-spin");
+    $btn.prop("disabled", true);
+    const currentVal = $select.val() || currentModel;
+    const models = await getAvailableModels();
+    $select.empty();
+    $select.append('<option value="">Auto (Default)</option>');
+    const uniqueModels = [...new Set(models)].sort();
+    uniqueModels.forEach((model) => {
+      $select.append(`<option value="${model}">${model}</option>`);
+    });
+    if (currentVal && uniqueModels.includes(currentVal)) {
+      $select.val(currentVal);
+    } else if (currentVal && currentVal !== "gpt-3.5-turbo") {
+      $select.append(`<option value="${currentVal}">${currentVal}</option>`);
+      $select.val(currentVal);
+    }
+    if (window.toastr && models.length > 0) {
+      if (event && event.type === "click") {
+        toastr.success(`\u5DF2\u5237\u65B0\u6A21\u578B\u5217\u8868\uFF0C\u5171\u627E\u5230 ${models.length} \u4E2A\u6A21\u578B`, "Titania");
+      }
+    }
+  } catch (e) {
+    console.warn("Titania: Failed to load model list", e);
+    if (window.toastr) toastr.error("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25: " + e.message, "Titania");
+  } finally {
+    $icon.removeClass("fa-spin");
+    $btn.prop("disabled", false);
+  }
+}
+async function initWorldBookSelect() {
+  const books = getAvailableWorldBooks();
+  const charBook = await getCharacterWorldBook();
+  const $select = $("#t-target-book");
+  $select.empty();
+  if (charBook) {
+    $select.append(`<option value="${charBook}">[\u5F53\u524D\u89D2\u8272] ${charBook}</option>`);
+  }
+  books.forEach((book) => {
+    if (book !== charBook) {
+      $select.append(`<option value="${book}">${book}</option>`);
+    }
+  });
+  if (books.length === 0 && !charBook) {
+    $select.append(`<option value="" disabled>\u672A\u627E\u5230\u4E16\u754C\u4E66</option>`);
+  }
+}
+function bindEvents2() {
+  $("#t-lore-review-close").on("click", () => {
+    $("#t-lore-review-overlay").remove();
+  });
+  $("#t-btn-refresh-models").on("click", function() {
+    const current = $("#t-lore-model").val();
+    loadModelList(current);
+  });
+  $("#t-btn-start-extract").on("click", async function() {
+    let limit = parseInt($("#t-lore-history-limit").val());
+    if (isNaN(limit) || limit < 1) limit = 2;
+    const model = $("#t-lore-model").val().trim() || null;
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5206\u6790\u4E2D...');
+    $("#t-lore-entries-list").html('<div class="t-loading-state"><i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u8BFB\u53D6\u8BB0\u5FC6\u5E76\u63D0\u53D6\u8BBE\u5B9A...</div>');
+    try {
+      const result = await extractLoreFromHistory(limit, model);
+      currentEntries2 = result.entries || [];
+      renderEntriesList2();
+      if (currentEntries2.length > 0) {
+        $("#t-btn-save-selected").prop("disabled", false);
+        if (window.toastr) toastr.success(`\u6210\u529F\u63D0\u53D6 ${currentEntries2.length} \u4E2A\u6761\u76EE`, "Titania");
+      } else {
+        $("#t-lore-entries-list").html('<div class="t-empty-state"><p>\u672A\u63D0\u53D6\u5230\u65B0\u7684\u8BBE\u5B9A\u4FE1\u606F</p></div>');
+      }
+    } catch (e) {
+      TitaniaLogger.error("\u63D0\u53D6\u5931\u8D25", e);
+      $("#t-lore-entries-list").html(`<div class="t-error-state"><i class="fa-solid fa-exclamation-triangle"></i> \u63D0\u53D6\u5931\u8D25: ${e.message}</div>`);
+      if (window.toastr) toastr.error(e.message, "\u63D0\u53D6\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-search"></i> \u5F00\u59CB\u5206\u6790');
+    }
+  });
+  $("#t-btn-select-all").on("click", () => {
+    $(".t-lore-entry-checkbox").prop("checked", true);
+  });
+  $("#t-btn-deselect-all").on("click", () => {
+    $(".t-lore-entry-checkbox").prop("checked", false);
+  });
+  $("#t-btn-open-wi-editor").on("click", function() {
+    showWorldInfoEditor();
+  });
+  $("#t-btn-save-selected").on("click", async function() {
+    const targetBook = $("#t-target-book").val();
+    if (!targetBook) {
+      alert("\u8BF7\u9009\u62E9\u76EE\u6807\u4E16\u754C\u4E66");
+      return;
+    }
+    const selectedIndices = [];
+    $(".t-lore-entry-checkbox:checked").each(function() {
+      selectedIndices.push($(this).data("index"));
+    });
+    if (selectedIndices.length === 0) {
+      alert("\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u6761\u76EE");
+      return;
+    }
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u4FDD\u5B58\u4E2D...');
+    let successCount = 0;
+    for (const index of selectedIndices) {
+      const entry = currentEntries2[index];
+      if (entry) {
+        const entryToSave = { ...entry };
+        if (entry.action === "update" && entry.matched_uid) {
+          entryToSave.uid = entry.matched_uid;
+        }
+        const success = await saveLoreEntry(targetBook, entryToSave);
+        if (success) successCount++;
+      }
+    }
+    $btn.prop("disabled", false).html('<i class="fa-solid fa-save"></i> \u4FDD\u5B58\u9009\u4E2D\u6761\u76EE');
+    if (window.toastr) toastr.success(`\u6210\u529F\u4FDD\u5B58 ${successCount} \u4E2A\u6761\u76EE\u5230 [${targetBook}]`, "Titania");
+  });
+  $(document).on("click", ".t-lore-entry-item", function(e) {
+    if ($(e.target).is("input[type='checkbox']")) return;
+    $(".t-lore-entry-item").removeClass("active");
+    $(this).addClass("active");
+    const index = $(this).data("index");
+    showEntryDetail2(index);
+  });
+  $("#t-edit-keys").on("input", function() {
+    const index = $(".t-lore-entry-item.active").data("index");
+    if (index !== void 0 && currentEntries2[index]) {
+      const val = $(this).val();
+      currentEntries2[index].keys = val.split(/,|，/).map((s) => s.trim()).filter((s) => s);
+      $(`.t-lore-entry-item[data-index="${index}"] .t-entry-keys`).text(currentEntries2[index].keys.join(", "));
+    }
+  });
+  $("#t-edit-content").on("input", function() {
+    const index = $(".t-lore-entry-item.active").data("index");
+    if (index !== void 0 && currentEntries2[index]) {
+      currentEntries2[index].content = $(this).val();
+      $(`.t-lore-entry-item[data-index="${index}"] .t-entry-preview`).text(currentEntries2[index].content);
+    }
+  });
+  $("#t-edit-category").on("change", function() {
+    const index = $(".t-lore-entry-item.active").data("index");
+    if (index !== void 0 && currentEntries2[index]) {
+      const newCat = $(this).val();
+      currentEntries2[index].category = newCat;
+      const $item = $(`.t-lore-entry-item[data-index="${index}"]`);
+      $item.find(".t-entry-tag").text(newCat);
+      $item.attr("data-cat", newCat);
+    }
+  });
+}
+function renderEntriesList2() {
+  const $list = $("#t-lore-entries-list");
+  $list.empty();
+  currentEntries2.forEach((entry, index) => {
+    const keysStr = Array.isArray(entry.keys) ? entry.keys.join(", ") : entry.keys;
+    const category = entry.category || "Other";
+    const isUpdate = entry.action === "update";
+    const html = `
+        <div class="t-lore-entry-item ${isUpdate ? "t-is-update" : ""}" data-index="${index}" data-cat="${category}">
+            <div class="t-entry-header">
+                <input type="checkbox" class="t-lore-entry-checkbox" data-index="${index}" checked>
+                <span class="t-entry-keys" title="${keysStr}">
+                    ${isUpdate ? '<i class="fa-solid fa-rotate" title="\u66F4\u65B0\u73B0\u6709\u6761\u76EE"></i> ' : ""}${keysStr}
+                </span>
+                <span class="t-entry-tag">${category}</span>
+            </div>
+            <div class="t-entry-preview">${entry.content || ""}</div>
+        </div>
+        `;
+    $list.append(html);
+  });
+  if (currentEntries2.length > 0) {
+    showEntryDetail2(0);
+    $(".t-lore-entry-item").first().addClass("active");
+  } else {
+    $("#t-lore-editor").hide();
+    $("#t-editor-placeholder").show();
+  }
+}
+function showEntryDetail2(index) {
+  const entry = currentEntries2[index];
+  if (!entry) return;
+  $("#t-editor-placeholder").hide();
+  $("#t-lore-editor").show();
+  $("#t-edit-keys").val(Array.isArray(entry.keys) ? entry.keys.join(", ") : entry.keys);
+  $("#t-edit-category").val(entry.category || "Other");
+  $("#t-edit-content").val(entry.content || "");
+  $("#t-edit-reason").text(entry.reason || "\u65E0");
+  if (entry.action === "update" && entry.matched_uid) {
+    $("#t-update-info-group").show();
+    $("#t-matched-entry-info").html(`
+            <i class="fa-solid fa-link"></i>
+            UID: ${entry.matched_uid}
+            ${entry.matched_book ? `(${entry.matched_book})` : ""}
+        `);
+  } else {
+    $("#t-update-info-group").hide();
+  }
+}
+var currentEntries2;
+var init_loreReviewWindow = __esm({
+  "src/ui/loreReviewWindow.js"() {
+    init_loreExtractor();
+    init_worldInfoManager();
+    init_logger();
+    init_defaults();
+    init_worldInfoEditor();
+    currentEntries2 = [];
+  }
+});
+
 // src/ui/mainWindow.js
 function refreshScriptList() {
   const $sel = $("#t-sel-script");
@@ -5270,6 +6335,7 @@ var init_mainWindow = __esm({
     init_favsWindow();
     init_debugWindow();
     init_scriptManager();
+    init_loreReviewWindow();
   }
 });
 
@@ -5282,27 +6348,48 @@ function showSlideMenu() {
   const btnSize = $btn.outerWidth() || 56;
   const isOnLeft = btnRect.left < window.innerWidth / 2;
   const backdrop = $(`<div id="titania-menu-backdrop"></div>`);
+  let menuContent = "";
+  if (GlobalState.isGenerating) {
+    menuContent = `
+            <div class="t-menu-item" id="titania-cancel-btn" title="\u4E2D\u6B62\u6F14\u7ECE">
+                <div class="t-menu-icon cancel"><i class="fa-solid fa-stop"></i></div>
+                <span class="t-menu-label">\u4E2D\u6B62</span>
+            </div>
+        `;
+  } else {
+    menuContent = `
+            <div class="t-menu-item" id="titania-open-main" title="\u6253\u5F00\u5267\u573A">
+                <div class="t-menu-icon main"><i class="fa-solid fa-masks-theater"></i></div>
+                <span class="t-menu-label">\u5267\u573A</span>
+            </div>
+            <div class="t-menu-item" id="titania-open-lore" title="\u63D0\u53D6\u8BBE\u5B9A">
+                <div class="t-menu-icon lore"><i class="fa-solid fa-brain"></i></div>
+                <span class="t-menu-label">\u8BBE\u5B9A</span>
+            </div>
+        `;
+  }
   const slideMenu = $(`
         <div id="titania-slide-menu">
-            <div id="titania-cancel-btn" title="\u4E2D\u6B62\u6F14\u7ECE">
-                <i class="fa-solid fa-stop"></i>
-            </div>
-            <span id="titania-cancel-label">\u4E2D\u6B62</span>
+            ${menuContent}
         </div>
     `);
-  const menuTop = btnRect.top + btnSize / 2 - 18;
-  const gap = 8;
+  const itemCount = GlobalState.isGenerating ? 1 : 2;
+  const menuHeight = itemCount * 40 + (itemCount - 1) * 8;
+  const menuTop = btnRect.top + btnSize / 2 - menuHeight / 2;
+  const gap = 12;
   if (isOnLeft) {
     slideMenu.css({
       left: btnRect.right + gap + "px",
       top: menuTop + "px",
-      flexDirection: "row"
+      flexDirection: "column",
+      alignItems: "flex-start"
     });
   } else {
     slideMenu.css({
       right: window.innerWidth - btnRect.left + gap + "px",
       top: menuTop + "px",
-      flexDirection: "row-reverse"
+      flexDirection: "column",
+      alignItems: "flex-end"
     });
   }
   $("body").append(backdrop);
@@ -5310,15 +6397,32 @@ function showSlideMenu() {
   requestAnimationFrame(() => {
     backdrop.addClass("show");
     slideMenu.addClass("show");
+    slideMenu.find(".t-menu-item").each(function(index) {
+      setTimeout(() => $(this).addClass("show"), index * 50);
+    });
   });
   slideMenuVisible = true;
-  slideMenu.find("#titania-cancel-btn").on("click", async function(e) {
-    e.stopPropagation();
+  const bindClick = ($el, handler) => {
+    $el.on("click touchend", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handler(e);
+    });
+  };
+  bindClick(slideMenu.find("#titania-cancel-btn"), async () => {
     const { cancelGeneration: cancelGeneration2 } = await Promise.resolve().then(() => (init_api(), api_exports));
     cancelGeneration2();
     hideSlideMenu();
   });
-  backdrop.on("click", function() {
+  bindClick(slideMenu.find("#titania-open-main"), () => {
+    openMainWindow();
+    hideSlideMenu();
+  });
+  bindClick(slideMenu.find("#titania-open-lore"), () => {
+    showLoreReviewWindow();
+    hideSlideMenu();
+  });
+  bindClick(backdrop, () => {
     hideSlideMenu();
   });
 }
@@ -5462,20 +6566,29 @@ function createFloatingButton() {
     btn.css({ left: l + "px", top: t + "px", right: "auto" });
     updateTimerPosition();
   });
-  $(document).on("touchend mouseup", function() {
+  btn.on("touchend mouseup", function(e) {
     if (startX === void 0) return;
-    startX = void 0;
     if (isDragging) {
+      isDragging = false;
+      startX = void 0;
       btn.css({ "transition": "none" });
       updateTimerPosition();
       hideSlideMenu();
-    } else {
-      if (GlobalState.isGenerating) {
-        toggleSlideMenu();
-        return;
-      }
-      btn.removeClass("t-notify");
-      openMainWindow();
+      return;
+    }
+    startX = void 0;
+    e.stopPropagation();
+    if (e.type === "touchend") e.preventDefault();
+    btn.removeClass("t-notify");
+    toggleSlideMenu();
+  });
+  $(document).on("touchend mouseup", function(e) {
+    if (startX !== void 0 && isDragging) {
+      startX = void 0;
+      isDragging = false;
+      btn.css({ "transition": "none" });
+      updateTimerPosition();
+      hideSlideMenu();
     }
   });
 }
@@ -5486,6 +6599,7 @@ var init_floatingBtn = __esm({
     init_state();
     init_defaults();
     init_mainWindow();
+    init_loreReviewWindow();
     slideMenuVisible = false;
     ANIMATION_CLASSES = {
       ripple: "t-anim-ripple",
@@ -5501,8 +6615,8 @@ __export(api_exports, {
   handleGenerate: () => handleGenerate,
   renderGeneratedContent: () => renderGeneratedContent
 });
-import { ChatCompletionService } from "../../../custom-request.js";
-import { oai_settings, getChatCompletionModel } from "../../../openai.js";
+import { ChatCompletionService as ChatCompletionService2 } from "../../../custom-request.js";
+import { oai_settings as oai_settings2, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
 import { evaluateMacros as evaluateMacros2 } from "../../../macros.js";
 function renderGeneratedContent(content, scriptName = "\u573A\u666F") {
   const container = document.getElementById("t-output-content");
@@ -5700,11 +6814,11 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   let finalUrl = "", finalKey = "", finalModel = "";
   if (useSTConnection) {
     try {
-      finalModel = getChatCompletionModel() || "gpt-3.5-turbo";
-      finalUrl = oai_settings.custom_url || oai_settings.reverse_proxy || `[${oai_settings.chat_completion_source}]`;
+      finalModel = getChatCompletionModel2() || "gpt-3.5-turbo";
+      finalUrl = oai_settings2.custom_url || oai_settings2.reverse_proxy || `[${oai_settings2.chat_completion_source}]`;
       finalKey = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
       TitaniaLogger.info("\u4F7F\u7528 ST \u4E3B\u8FDE\u63A5", {
-        source: oai_settings.chat_completion_source,
+        source: oai_settings2.chat_completion_source,
         model: finalModel
       });
     } catch (e) {
@@ -5889,23 +7003,23 @@ ${processedPrompt}`;
     diagnostics.phase = "fetch_start";
     let rawContent = "";
     if (useSTConnection) {
-      diagnostics.endpoint = `[ST Backend: ${oai_settings.chat_completion_source}]`;
-      const requestData = ChatCompletionService.createRequestData({
+      diagnostics.endpoint = `[ST Backend: ${oai_settings2.chat_completion_source}]`;
+      const requestData = ChatCompletionService2.createRequestData({
         stream: useStream,
         messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-        chat_completion_source: oai_settings.chat_completion_source,
+        chat_completion_source: oai_settings2.chat_completion_source,
         model: finalModel,
-        max_tokens: oai_settings.openai_max_tokens || 2048,
-        temperature: oai_settings.temp_openai || 0.7,
+        max_tokens: oai_settings2.openai_max_tokens || 2048,
+        temperature: oai_settings2.temp_openai || 0.7,
         // 传递反代/自定义配置
-        custom_url: oai_settings.custom_url,
-        reverse_proxy: oai_settings.reverse_proxy,
-        proxy_password: oai_settings.proxy_password,
-        custom_prompt_post_processing: oai_settings.custom_prompt_post_processing
+        custom_url: oai_settings2.custom_url,
+        reverse_proxy: oai_settings2.reverse_proxy,
+        proxy_password: oai_settings2.proxy_password,
+        custom_prompt_post_processing: oai_settings2.custom_prompt_post_processing
       });
       diagnostics.phase = useStream ? "streaming" : "parsing_json";
       if (useStream) {
-        const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, null);
+        const streamGenerator = await ChatCompletionService2.sendRequest(requestData, false, null);
         if (typeof streamGenerator === "function") {
           let chunkCount = 0;
           for await (const chunk of streamGenerator()) {
@@ -5919,7 +7033,7 @@ ${processedPrompt}`;
           rawContent = streamGenerator?.content || "";
         }
       } else {
-        const result = await ChatCompletionService.sendRequest(requestData, true, null);
+        const result = await ChatCompletionService2.sendRequest(requestData, true, null);
         rawContent = result?.content || "";
       }
       diagnostics.network.latency = Date.now() - startTime;
@@ -6136,23 +7250,23 @@ ${context.incompleteText ? `Complete this first: "...${context.incompleteText}"`
 Generate ONLY the continuation (no repetition):`;
     let rawContent = "";
     if (useSTConnection) {
-      const requestData = ChatCompletionService.createRequestData({
+      const requestData = ChatCompletionService2.createRequestData({
         stream: useStream,
         messages: [
           { role: "system", content: continuationSys },
           { role: "user", content: continuationUser }
         ],
-        chat_completion_source: oai_settings.chat_completion_source,
+        chat_completion_source: oai_settings2.chat_completion_source,
         model: finalModel,
-        max_tokens: oai_settings.openai_max_tokens || 2048,
-        temperature: oai_settings.temp_openai || 0.7,
-        custom_url: oai_settings.custom_url,
-        reverse_proxy: oai_settings.reverse_proxy,
-        proxy_password: oai_settings.proxy_password,
-        custom_prompt_post_processing: oai_settings.custom_prompt_post_processing
+        max_tokens: oai_settings2.openai_max_tokens || 2048,
+        temperature: oai_settings2.temp_openai || 0.7,
+        custom_url: oai_settings2.custom_url,
+        reverse_proxy: oai_settings2.reverse_proxy,
+        proxy_password: oai_settings2.proxy_password,
+        custom_prompt_post_processing: oai_settings2.custom_prompt_post_processing
       });
       if (useStream) {
-        const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, null);
+        const streamGenerator = await ChatCompletionService2.sendRequest(requestData, false, null);
         if (typeof streamGenerator === "function") {
           for await (const chunk of streamGenerator()) {
             rawContent = chunk.text || "";
@@ -6161,7 +7275,7 @@ Generate ONLY the continuation (no repetition):`;
           rawContent = streamGenerator?.content || "";
         }
       } else {
-        const result = await ChatCompletionService.sendRequest(requestData, true, null);
+        const result = await ChatCompletionService2.sendRequest(requestData, true, null);
         rawContent = result?.content || "";
       }
     } else {
@@ -6819,8 +7933,8 @@ textarea.t-input {
 #titania-slide-menu {
     position: fixed;
     display: flex;
-    align-items: center;
-    gap: 6px;
+    flex-direction: column;
+    gap: 8px;
     z-index: 10000;
     pointer-events: none;
 }
@@ -6829,71 +7943,76 @@ textarea.t-input {
     pointer-events: auto;
 }
 
-/* ===== \u4E2D\u6B62\u6309\u94AE\uFF08\u4FA7\u8FB9\u6ED1\u51FA\u5F0F\uFF09 ===== */
-#titania-cancel-btn {
+/* ===== \u83DC\u5355\u9879 ===== */
+.t-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+}
+
+.t-menu-item.show {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+.t-menu-item:hover .t-menu-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.t-menu-icon {
     width: 36px;
     height: 36px;
-    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-    color: #fff;
     border-radius: 50%;
-    border: 2px solid #ff4757;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    cursor: pointer;
-    box-shadow: 0 2px 10px rgba(255, 71, 87, 0.5);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.2s,
-        opacity 0.2s;
-    opacity: 0;
-    transform: scale(0.3);
+    font-size: 16px;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
 }
 
-#titania-slide-menu.show #titania-cancel-btn {
-    opacity: 1;
-    transform: scale(1);
+.t-menu-icon.main {
+    background: linear-gradient(135deg, #4a9eff, #2d7fd3);
+    border: 2px solid #74b9ff;
+}
+
+.t-menu-icon.lore {
+    background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+    border: 2px solid #a29bfe;
+}
+
+.t-menu-icon.cancel {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+    border: 2px solid #ff4757;
     animation: t-cancel-pulse 1.5s ease-in-out infinite;
 }
 
-#titania-cancel-btn:hover {
-    transform: scale(1.15) !important;
-    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.7);
-}
-
-#titania-cancel-btn:active {
-    transform: scale(0.95) !important;
+.t-menu-label {
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
 }
 
 @keyframes t-cancel-pulse {
 
     0%,
     100% {
-        box-shadow: 0 2px 10px rgba(255, 71, 87, 0.5);
+        box-shadow: 0 0 5px rgba(255, 71, 87, 0.5);
     }
 
     50% {
-        box-shadow: 0 2px 20px rgba(255, 71, 87, 0.8);
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.8);
     }
-}
-
-/* ===== \u4E2D\u6B62\u6309\u94AE\u6807\u7B7E ===== */
-#titania-cancel-label {
-    background: rgba(0, 0, 0, 0.75);
-    color: #ff6b6b;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 4px 10px;
-    border-radius: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    transform: translateX(-10px);
-    transition: opacity 0.2s 0.1s, transform 0.25s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-#titania-slide-menu.show #titania-cancel-label {
-    opacity: 1;
-    transform: translateX(0);
 }
 
 /* ===== \u70B9\u51FB\u5916\u90E8\u533A\u57DF\u5173\u95ED\u83DC\u5355\u7684\u906E\u7F69 ===== */
@@ -10018,6 +11137,559 @@ textarea.t-input {
     outline: none;
     white-space: pre-wrap;
     overflow: auto;
+}
+
+/* === lore-review.css === */
+/* css/lore-review.css */
+
+/* \u7A97\u53E3\u5BB9\u5668 */
+.t-lore-review-window {
+    width: 950px;
+    height: 750px;
+    max-width: 95vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(30, 30, 35, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.t-window-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* \u5173\u952E\uFF1A\u9632\u6B62 body \u6EA2\u51FA */
+}
+
+/* \u7A97\u53E3\u5934\u90E8 */
+.t-window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.t-window-title {
+    font-size: 1.2em;
+    font-weight: 700;
+    background: linear-gradient(90deg, #90cdf4, #bfa15f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 0 20px rgba(144, 205, 244, 0.3);
+}
+
+.t-window-title i {
+    -webkit-text-fill-color: initial;
+    color: #90cdf4;
+}
+
+.t-window-controls {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.t-window-close {
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    color: #a0aec0;
+}
+
+.t-window-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* \u9876\u90E8\u63A7\u5236\u680F */
+.t-lore-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.t-control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.t-control-group label {
+    color: #a0aec0;
+    font-size: 0.9em;
+}
+
+.t-control-group select,
+.t-control-group input[type="number"],
+.t-control-group input[type="text"] {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.t-control-group select:focus,
+.t-control-group input[type="number"]:focus,
+.t-control-group input[type="text"]:focus {
+    border-color: #90cdf4;
+}
+
+/* \u9488\u5BF9 datalist \u7684\u8F93\u5165\u6846\u6837\u5F0F\u5FAE\u8C03 */
+input[list]::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    filter: invert(1);
+    cursor: pointer;
+}
+
+input[list]:hover::-webkit-calendar-picker-indicator {
+    opacity: 1;
+}
+
+/* \u4E3B\u5185\u5BB9\u533A */
+.t-lore-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* \u5DE6\u4FA7\u5217\u8868\u5BB9\u5668 */
+.t-lore-list-container {
+    width: 380px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.t-list-header {
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.03);
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #cbd5e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.t-list-actions .t-btn {
+    padding: 2px 8px;
+    font-size: 0.8em;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #a0aec0;
+}
+
+.t-list-actions .t-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.t-lore-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* \u5217\u8868\u9879\u5361\u7247 */
+.t-lore-entry-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.t-lore-entry-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.t-lore-entry-item.active {
+    background: rgba(144, 205, 244, 0.1);
+    border-color: rgba(144, 205, 244, 0.4);
+}
+
+/* \u5DE6\u4FA7\u6307\u793A\u6761 */
+.t-lore-entry-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #718096;
+    /* \u9ED8\u8BA4\u989C\u8272 */
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.t-lore-entry-item.active::before {
+    opacity: 1;
+    background: #90cdf4;
+}
+
+/* \u5206\u7C7B\u989C\u8272\u6307\u793A */
+.t-lore-entry-item[data-cat="Location"]::before {
+    background: #48bb78;
+}
+
+.t-lore-entry-item[data-cat="Character"]::before {
+    background: #f6ad55;
+}
+
+.t-lore-entry-item[data-cat="Item"]::before {
+    background: #9f7aea;
+}
+
+.t-lore-entry-item[data-cat="Event"]::before {
+    background: #f56565;
+}
+
+/* \u66F4\u65B0\u72B6\u6001\u6837\u5F0F */
+.t-lore-entry-item.t-is-update {
+    border-left: 1px solid #ecc94b;
+}
+
+.t-lore-entry-item.t-is-update::before {
+    background: #ecc94b !important;
+}
+
+.t-lore-entry-item.t-is-update .t-entry-keys i {
+    color: #ecc94b;
+    animation: t-spin 2s linear infinite;
+    animation-play-state: paused;
+}
+
+.t-lore-entry-item.t-is-update:hover .t-entry-keys i {
+    animation-play-state: running;
+}
+
+@keyframes t-spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.t-entry-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.t-entry-keys {
+    font-weight: 600;
+    color: #e2e8f0;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.95em;
+}
+
+.t-entry-tag {
+    font-size: 0.7em;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    color: #a0aec0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.t-entry-preview {
+    font-size: 0.85em;
+    color: #a0aec0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* \u53F3\u4FA7\u7F16\u8F91\u5668 */
+.t-lore-editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.t-editor-header {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #90cdf4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.t-lore-editor .t-form-group {
+    margin-bottom: 25px;
+}
+
+.t-lore-editor label {
+    display: block;
+    margin-bottom: 8px;
+    color: #cbd5e0;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.t-lore-editor input[type="text"],
+.t-lore-editor select,
+.t-lore-editor textarea {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
+
+.t-lore-editor input[type="text"]:focus,
+.t-lore-editor select:focus,
+.t-lore-editor textarea:focus {
+    border-color: #90cdf4;
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 0 3px rgba(144, 205, 244, 0.1);
+    outline: none;
+}
+
+.t-lore-editor textarea {
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.t-static-text {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    color: #a0aec0;
+    font-size: 0.9em;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.t-update-info-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background: rgba(236, 201, 75, 0.1);
+    border: 1px solid rgba(236, 201, 75, 0.3);
+    border-radius: 8px;
+    color: #ecc94b;
+    font-size: 0.9em;
+}
+
+.t-btn-xs {
+    padding: 2px 8px;
+    font-size: 0.8em;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #a0aec0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.t-btn-xs:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+/* \u5E95\u90E8\u64CD\u4F5C\u680F */
+.t-window-footer {
+    padding: 15px 25px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.t-target-select {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.t-target-select select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    min-width: 220px;
+}
+
+.t-btn-success {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+    transition: all 0.2s;
+}
+
+.t-btn-success:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(72, 187, 120, 0.4);
+}
+
+.t-btn-success:disabled {
+    background: #4a5568;
+    color: #a0aec0;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.t-btn-primary {
+    background: linear-gradient(135deg, #4299e1, #3182ce);
+    border: none;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+    transition: all 0.2s;
+}
+
+.t-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(66, 153, 225, 0.4);
+}
+
+/* \u72B6\u6001\u63D0\u793A */
+.t-loading-state,
+.t-empty-state,
+.t-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #718096;
+    text-align: center;
+    padding: 40px;
+}
+
+.t-loading-state i,
+.t-empty-state i,
+.t-error-state i {
+    font-size: 3em;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.t-error-state {
+    color: #fc8181;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media (max-width: 768px) {
+    .t-lore-review-window {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 0;
+        border: none;
+        position: fixed;
+        /* \u5F3A\u5236\u56FA\u5B9A */
+        top: 0;
+        left: 0;
+    }
+
+    .t-lore-content {
+        flex-direction: column;
+        overflow: hidden;
+        /* \u786E\u4FDD\u5185\u5BB9\u533A\u4E0D\u6EA2\u51FA */
+    }
+
+    .t-lore-list-container {
+        width: 100%;
+        height: 35%;
+        /* \u5217\u8868\u5360 35% */
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+        /* \u9632\u6B62\u88AB\u538B\u7F29 */
+        overflow-y: auto;
+        /* \u786E\u4FDD\u5217\u8868\u53EF\u6EDA\u52A8 */
+    }
+
+    .t-lore-editor-container {
+        height: 65%;
+        /* \u8BE6\u60C5\u5360 65% */
+        padding: 15px;
+        overflow-y: auto;
+        /* \u786E\u4FDD\u8BE6\u60C5\u53EF\u6EDA\u52A8 */
+    }
+
+    .t-window-footer {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 15px;
+    }
+
+    .t-target-select {
+        width: 100%;
+    }
+
+    .t-target-select select {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .t-footer-actions {
+        width: 100%;
+    }
+
+    .t-footer-actions button {
+        width: 100%;
+    }
+
+    .t-lore-controls {
+        padding: 10px 15px;
+    }
 }
 
 `;
