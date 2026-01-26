@@ -4641,6 +4641,7 @@ var init_loreExtractor = __esm({
 
 // src/core/worldInfoManager.js
 import { world_info as world_info2, selected_world_info as selected_world_info2, saveWorldInfo } from "../../../world-info.js";
+import { eventSource, event_types } from "../../../../script.js";
 function getAvailableWorldBooks() {
   try {
     if (Array.isArray(world_info2.loreBookNames)) {
@@ -4677,79 +4678,79 @@ async function getWorldInfoEntries(bookName) {
     if (!book && world_info2.loadedWorldInfo && world_info2.loadedWorldInfo.name === bookName) {
       book = world_info2.loadedWorldInfo;
     }
-    if (!book || !book.entries) {
+    if (!book) {
       return [];
     }
-    return Object.values(book.entries).sort((a, b) => {
+    SYNC_STATE.currentBookName = bookName;
+    const safeEntries = book.entries ? structuredClone(book.entries) : {};
+    const entriesArray = Object.values(safeEntries).sort((a, b) => {
       return (a.order || 100) - (b.order || 100);
     });
+    SYNC_STATE.localEntries = entriesArray;
+    return entriesArray;
   } catch (e) {
     TitaniaLogger.error("\u83B7\u53D6\u4E16\u754C\u4E66\u6761\u76EE\u5931\u8D25", e);
     throw e;
   }
 }
-function refreshSillyTavernUI(bookName) {
-  try {
-    const ctx = SillyTavern.getContext();
-    if (ctx.updateWorldInfoList) {
-      ctx.updateWorldInfoList();
-    }
-    if (world_info2.selected_world_info === bookName) {
-      if (typeof window.loadWorldInfo === "function") {
-        window.loadWorldInfo(bookName);
-      } else if (ctx.loadWorldInfo) {
-        if (typeof window.printWorldInfo === "function") {
-          window.printWorldInfo();
-        }
+function triggerSave() {
+  if (SYNC_STATE.debouncer) clearTimeout(SYNC_STATE.debouncer);
+  SYNC_STATE.debouncer = setTimeout(async () => {
+    const name = SYNC_STATE.currentBookName;
+    const entries = SYNC_STATE.localEntries;
+    if (!name || !entries) return;
+    try {
+      const ctx = SillyTavern.getContext();
+      SYNC_STATE.isSelfSaving = true;
+      const entriesObj = {};
+      entries.forEach((e) => {
+        if (e.uid !== void 0) entriesObj[e.uid] = e;
+      });
+      if (ctx.saveWorldInfo) {
+        await ctx.saveWorldInfo(name, { entries: entriesObj }, false);
+      } else if (typeof saveWorldInfo === "function") {
+        await saveWorldInfo(name, { entries: entriesObj }, false);
       }
+      console.log(`[Titania] Auto-saved: ${name}`);
+    } catch (e) {
+      console.error("[Titania] Save failed:", e);
+    } finally {
+      setTimeout(() => {
+        SYNC_STATE.isSelfSaving = false;
+      }, 500);
     }
-  } catch (e) {
-    console.warn("Titania: Failed to refresh ST UI", e);
-  }
+  }, SYNC_STATE.saveDelay);
 }
-async function toggleLoreEntry(bookName, uid, disable) {
-  try {
-    const ctx = SillyTavern.getContext();
-    let book = await ctx.loadWorldInfo(bookName);
-    if (!book || !book.entries || !book.entries[uid]) {
-      throw new Error("\u6761\u76EE\u4E0D\u5B58\u5728");
+function initSyncListener() {
+  eventSource.on(event_types.WORLDINFO_UPDATED, (name, data) => {
+    if (SYNC_STATE.currentBookName !== name) return;
+    if (SYNC_STATE.isSelfSaving) {
+      return;
     }
-    book.entries[uid].disable = disable;
-    await ctx.saveWorldInfo(bookName, book, true);
-    refreshSillyTavernUI(bookName);
-    return true;
-  } catch (e) {
-    TitaniaLogger.error("\u5207\u6362\u6761\u76EE\u72B6\u6001\u5931\u8D25", e);
-    return false;
-  }
+    console.log(`[Titania] External change detected, reloading: ${name}`);
+    getWorldInfoEntries(name).then(() => {
+      const event2 = new CustomEvent("titania-worldbook-updated", { detail: { name } });
+      document.dispatchEvent(event2);
+    });
+  });
+  console.log("[Titania] Sync listener registered.");
 }
 async function saveLoreEntry(bookName, entryData, isFullUpdate = false) {
   try {
     if (!bookName) throw new Error("\u672A\u6307\u5B9A\u4E16\u754C\u4E66\u540D\u79F0");
-    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
-      throw new Error("SillyTavern Context \u4E0D\u53EF\u7528");
-    }
-    const ctx = SillyTavern.getContext();
-    let book = null;
-    if (ctx.loadWorldInfo && typeof ctx.loadWorldInfo === "function") {
-      book = await ctx.loadWorldInfo(bookName);
-    }
-    if (!book && world_info2.loadedWorldInfo && world_info2.loadedWorldInfo.name === bookName) {
-      book = world_info2.loadedWorldInfo;
-    }
-    if (!book) {
-      throw new Error(`\u65E0\u6CD5\u52A0\u8F7D\u4E16\u754C\u4E66: ${bookName}`);
+    if (SYNC_STATE.currentBookName !== bookName) {
+      await getWorldInfoEntries(bookName);
     }
     const uid = entryData.uid || Date.now();
-    if (!book.entries) book.entries = {};
-    if (isFullUpdate && book.entries[uid]) {
-      Object.assign(book.entries[uid], entryData);
+    let entry = SYNC_STATE.localEntries.find((e) => e.uid == uid);
+    if (isFullUpdate && entry) {
+      Object.assign(entry, entryData);
     } else {
-      const newEntry = {
+      const newEntryData = {
         uid,
-        key: Array.isArray(entryData.keys) ? entryData.keys : [entryData.keys],
+        key: Array.isArray(entryData.keys) ? entryData.keys : entryData.keys ? [entryData.keys] : [],
         keysecondary: entryData.keysecondary || [],
-        comment: entryData.comment || entryData.keys[0] || "New Entry",
+        comment: entryData.comment || entryData.keys && entryData.keys[0] || "New Entry",
         content: entryData.content || "",
         constant: entryData.constant || false,
         selective: entryData.selective !== void 0 ? entryData.selective : true,
@@ -4762,302 +4763,43 @@ async function saveLoreEntry(bookName, entryData, isFullUpdate = false) {
         depth: 4,
         group: ""
       };
-      if (book.entries[uid]) {
-        Object.assign(book.entries[uid], newEntry);
+      if (entry) {
+        Object.assign(entry, newEntryData);
       } else {
-        book.entries[uid] = newEntry;
+        entry = newEntryData;
+        SYNC_STATE.localEntries.push(entry);
       }
     }
-    if (ctx.saveWorldInfo && typeof ctx.saveWorldInfo === "function") {
-      await ctx.saveWorldInfo(bookName, book, true);
-    } else if (typeof saveWorldInfo === "function") {
-      await saveWorldInfo(bookName, book, true);
-    } else if (typeof window.saveWorldInfo === "function") {
-      await window.saveWorldInfo(bookName, book, true);
-    } else {
-      throw new Error("\u627E\u4E0D\u5230 saveWorldInfo \u65B9\u6CD5");
-    }
-    TitaniaLogger.info(`\u4E16\u754C\u4E66\u6761\u76EE\u5DF2\u4FDD\u5B58: ${bookName} / UID:${uid}`);
-    refreshSillyTavernUI(bookName);
+    triggerSave();
+    TitaniaLogger.info(`\u4E16\u754C\u4E66\u6761\u76EE\u5DF2\u66F4\u65B0(\u672C\u5730): ${bookName} / UID:${uid}`);
     return true;
   } catch (e) {
     TitaniaLogger.error("\u4FDD\u5B58\u4E16\u754C\u4E66\u6761\u76EE\u5931\u8D25", e);
     return false;
   }
 }
+var SYNC_STATE;
 var init_worldInfoManager = __esm({
   "src/core/worldInfoManager.js"() {
     init_context();
     init_logger();
-  }
-});
-
-// src/ui/worldInfoEditor.js
-function ensureCssLoaded() {
-  const id = "titania-css-wi-editor";
-  if (!document.getElementById(id)) {
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.type = "text/css";
-    link.href = `${extensionFolderPath}/css/lore-review.css`;
-    document.head.appendChild(link);
-  }
-}
-async function showWorldInfoEditor() {
-  ensureCssLoaded();
-  $("#t-wi-editor-overlay").remove();
-  currentBookName = await getCharacterWorldBook();
-  if (!currentBookName) {
-    if (window.toastr) toastr.warning("\u5F53\u524D\u89D2\u8272\u672A\u7ED1\u5B9A\u4E16\u754C\u4E66", "Titania");
-    return;
-  }
-  const html = `
-    <div id="t-wi-editor-overlay" class="t-overlay">
-        <div class="t-window t-lore-review-window">
-            <div class="t-window-header">
-                <div class="t-window-title">
-                    <i class="fa-solid fa-book-atlas"></i> \u4E16\u754C\u4E66\u7F16\u8F91\u5668: ${currentBookName}
-                </div>
-                <div class="t-window-controls">
-                    <div class="t-window-close" id="t-wi-editor-close"><i class="fa-solid fa-times"></i></div>
-                </div>
-            </div>
-            
-            <div class="t-window-body">
-                <!-- \u9876\u90E8\u63A7\u5236\u680F -->
-                <div class="t-lore-controls">
-                    <div class="t-control-group" style="flex: 1;">
-                        <i class="fa-solid fa-search"></i>
-                        <input type="text" id="t-wi-search" placeholder="\u641C\u7D22\u5173\u952E\u8BCD\u6216\u5185\u5BB9..." style="width: 100%;">
-                    </div>
-                    <button id="t-btn-refresh-wi" class="t-btn t-btn-primary">
-                        <i class="fa-solid fa-sync"></i> \u5237\u65B0
-                    </button>
-                </div>
-
-                <!-- \u4E3B\u5185\u5BB9\u533A -->
-                <div class="t-lore-content">
-                    <!-- \u5DE6\u4FA7\uFF1A\u6761\u76EE\u5217\u8868 -->
-                    <div class="t-lore-list-container">
-                        <div class="t-list-header">
-                            <span>\u6761\u76EE\u5217\u8868</span>
-                            <span id="t-wi-count" style="font-weight: normal; opacity: 0.7;">(0)</span>
-                        </div>
-                        <div id="t-wi-entries-list" class="t-lore-list">
-                            <div class="t-loading-state">
-                                <i class="fa-solid fa-spinner fa-spin"></i>
-                                <p>\u6B63\u5728\u52A0\u8F7D...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- \u53F3\u4FA7\uFF1A\u8BE6\u60C5\u7F16\u8F91 -->
-                    <div class="t-lore-editor-container">
-                        <div class="t-editor-header">
-                            <span>\u7F16\u8F91\u6761\u76EE</span>
-                            <div class="t-editor-actions">
-                                <button id="t-btn-save-entry" class="t-btn t-btn-success" disabled>
-                                    <i class="fa-solid fa-save"></i> \u4FDD\u5B58\u4FEE\u6539
-                                </button>
-                            </div>
-                        </div>
-                        <div id="t-wi-editor" class="t-lore-editor" style="display:none;">
-                            <div class="t-form-group">
-                                <label>UID</label>
-                                <input type="text" id="t-wi-uid" disabled style="opacity: 0.6;">
-                            </div>
-                            <div class="t-form-group">
-                                <label>\u6CE8\u91CA (Comment)</label>
-                                <input type="text" id="t-wi-comment">
-                            </div>
-                            <div class="t-form-group">
-                                <label>\u5173\u952E\u8BCD (Keys)</label>
-                                <input type="text" id="t-wi-keys" placeholder="Key1, Key2, ...">
-                                <small>\u7528\u9017\u53F7\u5206\u9694\u591A\u4E2A\u5173\u952E\u8BCD</small>
-                            </div>
-                            <div class="t-form-group">
-                                <label>\u6B21\u8981\u5173\u952E\u8BCD (Secondary Keys)</label>
-                                <input type="text" id="t-wi-secondary-keys" placeholder="SecKey1, SecKey2, ...">
-                            </div>
-                            <div class="t-form-group">
-                                <label>\u5185\u5BB9 (Content)</label>
-                                <textarea id="t-wi-content" rows="10"></textarea>
-                            </div>
-                            <div class="t-form-group">
-                                <label>\u89E6\u53D1\u65B9\u5F0F (Trigger Strategy)</label>
-                                <div style="display: flex; gap: 20px; margin-top: 5px;">
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="t-wi-strategy" value="constant"> \u5E38\u9A7B (Constant)
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="t-wi-strategy" value="selective"> \u5173\u952E\u8BCD\u89E6\u53D1 (Keywords)
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="t-editor-placeholder" class="t-empty-state">
-                            <p>\u8BF7\u5728\u5DE6\u4FA7\u9009\u62E9\u4E00\u4E2A\u6761\u76EE\u8FDB\u884C\u7F16\u8F91</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-  $("body").append(html);
-  await loadEntries();
-  bindEvents();
-}
-async function loadEntries() {
-  try {
-    $("#t-wi-entries-list").html('<div class="t-loading-state"><i class="fa-solid fa-spinner fa-spin"></i><p>\u6B63\u5728\u52A0\u8F7D...</p></div>');
-    currentEntries = await getWorldInfoEntries(currentBookName);
-    filterEntries();
-  } catch (e) {
-    TitaniaLogger.error("\u52A0\u8F7D\u4E16\u754C\u4E66\u6761\u76EE\u5931\u8D25", e);
-    $("#t-wi-entries-list").html(`<div class="t-error-state"><i class="fa-solid fa-exclamation-triangle"></i> \u52A0\u8F7D\u5931\u8D25: ${e.message}</div>`);
-  }
-}
-function filterEntries() {
-  const keyword = $("#t-wi-search").val().toLowerCase().trim();
-  if (!keyword) {
-    filteredEntries = [...currentEntries];
-  } else {
-    filteredEntries = currentEntries.filter((entry) => {
-      const keys = Array.isArray(entry.key) ? entry.key.join(" ") : entry.key || "";
-      const content = entry.content || "";
-      const comment = entry.comment || "";
-      return keys.toLowerCase().includes(keyword) || content.toLowerCase().includes(keyword) || comment.toLowerCase().includes(keyword);
-    });
-  }
-  renderEntriesList();
-}
-function renderEntriesList() {
-  const $list = $("#t-wi-entries-list");
-  $list.empty();
-  $("#t-wi-count").text(`(${filteredEntries.length})`);
-  if (filteredEntries.length === 0) {
-    $list.html('<div class="t-empty-state"><p>\u6CA1\u6709\u627E\u5230\u5339\u914D\u7684\u6761\u76EE</p></div>');
-    return;
-  }
-  filteredEntries.forEach((entry, index) => {
-    const keysStr = Array.isArray(entry.key) ? entry.key.join(", ") : entry.key;
-    const isDisabled = entry.disable === true;
-    const html = `
-        <div class="t-lore-entry-item ${isDisabled ? "t-is-disabled" : ""}" data-uid="${entry.uid}">
-            <div class="t-entry-header">
-                <div class="t-wi-status-toggle" title="${isDisabled ? "\u70B9\u51FB\u542F\u7528" : "\u70B9\u51FB\u7981\u7528"}" data-uid="${entry.uid}">
-                    <i class="fa-solid ${isDisabled ? "fa-toggle-off" : "fa-toggle-on"}"></i>
-                </div>
-                <span class="t-entry-keys" title="${keysStr}">
-                    ${entry.comment || keysStr || "\u65E0\u6807\u9898"}
-                </span>
-                ${entry.constant ? '<span class="t-entry-tag">\u5E38\u9A7B</span>' : ""}
-            </div>
-            <div class="t-entry-preview">${entry.content || ""}</div>
-        </div>
-        `;
-    $list.append(html);
-  });
-}
-function showEntryDetail(uid) {
-  const entry = currentEntries.find((e) => e.uid == uid);
-  if (!entry) return;
-  $("#t-editor-placeholder").hide();
-  $("#t-wi-editor").show();
-  $("#t-btn-save-entry").prop("disabled", false).data("uid", uid);
-  $("#t-wi-uid").val(entry.uid);
-  $("#t-wi-comment").val(entry.comment || "");
-  $("#t-wi-keys").val(Array.isArray(entry.key) ? entry.key.join(", ") : entry.key);
-  $("#t-wi-secondary-keys").val(Array.isArray(entry.keysecondary) ? entry.keysecondary.join(", ") : entry.keysecondary || "");
-  $("#t-wi-content").val(entry.content || "");
-  const isConstant = entry.constant === true;
-  $("input[name='t-wi-strategy'][value='constant']").prop("checked", isConstant);
-  $("input[name='t-wi-strategy'][value='selective']").prop("checked", !isConstant);
-}
-function bindEvents() {
-  $("#t-wi-editor-close").on("click", () => {
-    $("#t-wi-editor-overlay").remove();
-  });
-  $("#t-btn-refresh-wi").on("click", loadEntries);
-  $("#t-wi-search").on("input", filterEntries);
-  $(document).on("click", ".t-lore-entry-item", function(e) {
-    if ($(e.target).closest(".t-wi-status-toggle").length > 0) return;
-    $(".t-lore-entry-item").removeClass("active");
-    $(this).addClass("active");
-    const uid = $(this).data("uid");
-    showEntryDetail(uid);
-  });
-  $(document).on("click", ".t-wi-status-toggle", async function(e) {
-    e.stopPropagation();
-    const uid = $(this).data("uid");
-    const entry = currentEntries.find((e2) => e2.uid == uid);
-    if (entry) {
-      const newStatus = !entry.disable;
-      const success = await toggleLoreEntry(currentBookName, uid, newStatus);
-      if (success) {
-        entry.disable = newStatus;
-        $(this).html(`<i class="fa-solid ${newStatus ? "fa-toggle-off" : "fa-toggle-on"}"></i>`);
-        $(this).attr("title", newStatus ? "\u70B9\u51FB\u542F\u7528" : "\u70B9\u51FB\u7981\u7528");
-        const $item = $(this).closest(".t-lore-entry-item");
-        if (newStatus) $item.addClass("t-is-disabled");
-        else $item.removeClass("t-is-disabled");
-      }
-    }
-  });
-  $("#t-btn-save-entry").on("click", async function() {
-    const uid = $(this).data("uid");
-    const entry = currentEntries.find((e) => e.uid == uid);
-    if (!entry) return;
-    const $btn = $(this);
-    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u4FDD\u5B58\u4E2D...');
-    const updatedData = {
-      uid,
-      comment: $("#t-wi-comment").val(),
-      keys: $("#t-wi-keys").val().split(/,|，/).map((s) => s.trim()).filter((s) => s),
-      keysecondary: $("#t-wi-secondary-keys").val().split(/,|，/).map((s) => s.trim()).filter((s) => s),
-      content: $("#t-wi-content").val(),
-      constant: $("input[name='t-wi-strategy']:checked").val() === "constant",
-      selective: true,
-      // 始终启用选择性逻辑（如果是常驻，此项会被忽略；如果是关键词，此项必须为真）
-      disable: entry.disable
-      // 保持原状态
+    SYNC_STATE = {
+      currentBookName: null,
+      // 当前选中的世界书名称
+      localEntries: [],
+      // 插件持有的数据副本（数组格式）
+      isSelfSaving: false,
+      // 【核心锁】标记是否正在执行插件自身的保存操作
+      debouncer: null,
+      // 防抖计时器句柄
+      saveDelay: 500
+      // 自动保存延迟 (ms)
     };
-    const success = await saveLoreEntry(currentBookName, updatedData, true);
-    if (success) {
-      Object.assign(entry, {
-        comment: updatedData.comment,
-        key: updatedData.keys,
-        keysecondary: updatedData.keysecondary,
-        content: updatedData.content,
-        constant: updatedData.constant,
-        selective: updatedData.selective
-      });
-      renderEntriesList();
-      renderEntriesList();
-      $(`.t-lore-entry-item[data-uid="${uid}"]`).addClass("active");
-      if (window.toastr) toastr.success("\u6761\u76EE\u5DF2\u4FDD\u5B58", "Titania");
-    } else {
-      if (window.toastr) toastr.error("\u4FDD\u5B58\u5931\u8D25", "Titania");
-    }
-    $btn.prop("disabled", false).html('<i class="fa-solid fa-save"></i> \u4FDD\u5B58\u4FEE\u6539');
-  });
-}
-var currentBookName, currentEntries, filteredEntries;
-var init_worldInfoEditor = __esm({
-  "src/ui/worldInfoEditor.js"() {
-    init_worldInfoManager();
-    init_logger();
-    init_defaults();
-    currentBookName = null;
-    currentEntries = [];
-    filteredEntries = [];
   }
 });
 
 // src/ui/loreReviewWindow.js
-function ensureCssLoaded2() {
+function ensureCssLoaded() {
   const id = "titania-css-lore-review";
   if (!document.getElementById(id)) {
     const link = document.createElement("link");
@@ -5069,7 +4811,7 @@ function ensureCssLoaded2() {
   }
 }
 async function showLoreReviewWindow() {
-  ensureCssLoaded2();
+  ensureCssLoaded();
   $("#t-lore-review-overlay").remove();
   const html = `
     <div id="t-lore-review-overlay" class="t-overlay">
@@ -5079,27 +4821,32 @@ async function showLoreReviewWindow() {
                     <i class="fa-solid fa-brain"></i> \u667A\u80FD\u8BBE\u5B9A\u63D0\u53D6
                 </div>
                 <div class="t-window-controls">
+                    <div class="t-window-icon" id="t-model-dropdown-toggle" title="\u9009\u62E9\u6A21\u578B">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
                     <div class="t-window-close" id="t-lore-review-close"><i class="fa-solid fa-times"></i></div>
                 </div>
             </div>
             
+            <!-- \u6A21\u578B\u4E0B\u62C9\u83DC\u5355 (\u9690\u85CF) -->
+            <div id="t-model-dropdown" class="t-model-dropdown" style="display: none;">
+                <div class="t-dropdown-header">
+                    <span><i class="fa-solid fa-microchip"></i> \u9009\u62E9\u6A21\u578B</span>
+                    <button id="t-btn-refresh-models" class="t-btn t-btn-xs" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
+                        <i class="fa-solid fa-sync"></i> \u5237\u65B0
+                    </button>
+                </div>
+                <select id="t-lore-model" size="8" style="width: 100%; margin-top: 8px; font-family: monospace;">
+                    <option value="" selected>Auto (Default)</option>
+                </select>
+            </div>
+
             <div class="t-window-body">
                 <!-- \u9876\u90E8\u63A7\u5236\u680F -->
                 <div class="t-lore-controls">
                     <div class="t-control-group">
                         <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
                         <input type="number" id="t-lore-history-limit" value="2" min="1" max="100" style="width: 60px;">
-                    </div>
-                    <div class="t-control-group">
-                        <label><i class="fa-solid fa-microchip"></i> \u6A21\u578B:</label>
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <select id="t-lore-model" style="width: 160px;">
-                                <option value="" selected>Auto (Default)</option>
-                            </select>
-                            <button id="t-btn-refresh-models" class="t-btn t-btn-xs" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
-                                <i class="fa-solid fa-sync"></i>
-                            </button>
-                        </div>
                     </div>
                     <button id="t-btn-start-extract" class="t-btn t-btn-primary">
                         <i class="fa-solid fa-search"></i> \u5F00\u59CB\u5206\u6790
@@ -5177,9 +4924,6 @@ async function showLoreReviewWindow() {
                         </select>
                     </div>
                     <div class="t-footer-actions">
-                        <button id="t-btn-open-wi-editor" class="t-btn t-btn-primary" style="margin-right: 10px;">
-                            <i class="fa-solid fa-book-atlas"></i> \u7F16\u8F91\u4E16\u754C\u4E66
-                        </button>
                         <button id="t-btn-save-selected" class="t-btn t-btn-success" disabled>
                             <i class="fa-solid fa-save"></i> \u4FDD\u5B58\u9009\u4E2D\u6761\u76EE
                         </button>
@@ -5202,7 +4946,7 @@ async function showLoreReviewWindow() {
       $select.val(currentModel);
     }
   }
-  bindEvents2();
+  bindEvents();
 }
 async function loadModelList(currentModel) {
   const $btn = $("#t-btn-refresh-models");
@@ -5255,11 +4999,29 @@ async function initWorldBookSelect() {
     $select.append(`<option value="" disabled>\u672A\u627E\u5230\u4E16\u754C\u4E66</option>`);
   }
 }
-function bindEvents2() {
+function bindEvents() {
   $("#t-lore-review-close").on("click", () => {
     $("#t-lore-review-overlay").remove();
   });
-  $("#t-btn-refresh-models").on("click", function() {
+  function toggleModelDropdown(show) {
+    dropdownVisible = show !== void 0 ? show : !dropdownVisible;
+    if (dropdownVisible) {
+      $("#t-model-dropdown").show();
+    } else {
+      $("#t-model-dropdown").hide();
+    }
+  }
+  $("#t-model-dropdown-toggle").on("click", function(e) {
+    e.stopPropagation();
+    toggleModelDropdown();
+  });
+  $(document).on("click", function(e) {
+    if (dropdownVisible && !$(e.target).closest("#t-model-dropdown, #t-model-dropdown-toggle").length) {
+      toggleModelDropdown(false);
+    }
+  });
+  $("#t-btn-refresh-models").on("click", function(e) {
+    e.stopPropagation();
     const current = $("#t-lore-model").val();
     loadModelList(current);
   });
@@ -5267,16 +5029,17 @@ function bindEvents2() {
     let limit = parseInt($("#t-lore-history-limit").val());
     if (isNaN(limit) || limit < 1) limit = 2;
     const model = $("#t-lore-model").val().trim() || null;
+    toggleModelDropdown(false);
     const $btn = $(this);
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5206\u6790\u4E2D...');
     $("#t-lore-entries-list").html('<div class="t-loading-state"><i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u8BFB\u53D6\u8BB0\u5FC6\u5E76\u63D0\u53D6\u8BBE\u5B9A...</div>');
     try {
       const result = await extractLoreFromHistory(limit, model);
-      currentEntries2 = result.entries || [];
-      renderEntriesList2();
-      if (currentEntries2.length > 0) {
+      currentEntries = result.entries || [];
+      renderEntriesList();
+      if (currentEntries.length > 0) {
         $("#t-btn-save-selected").prop("disabled", false);
-        if (window.toastr) toastr.success(`\u6210\u529F\u63D0\u53D6 ${currentEntries2.length} \u4E2A\u6761\u76EE`, "Titania");
+        if (window.toastr) toastr.success(`\u6210\u529F\u63D0\u53D6 ${currentEntries.length} \u4E2A\u6761\u76EE`, "Titania");
       } else {
         $("#t-lore-entries-list").html('<div class="t-empty-state"><p>\u672A\u63D0\u53D6\u5230\u65B0\u7684\u8BBE\u5B9A\u4FE1\u606F</p></div>');
       }
@@ -5293,9 +5056,6 @@ function bindEvents2() {
   });
   $("#t-btn-deselect-all").on("click", () => {
     $(".t-lore-entry-checkbox").prop("checked", false);
-  });
-  $("#t-btn-open-wi-editor").on("click", function() {
-    showWorldInfoEditor();
   });
   $("#t-btn-save-selected").on("click", async function() {
     const targetBook = $("#t-target-book").val();
@@ -5315,7 +5075,7 @@ function bindEvents2() {
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u4FDD\u5B58\u4E2D...');
     let successCount = 0;
     for (const index of selectedIndices) {
-      const entry = currentEntries2[index];
+      const entry = currentEntries[index];
       if (entry) {
         const entryToSave = { ...entry };
         if (entry.action === "update" && entry.matched_uid) {
@@ -5333,38 +5093,38 @@ function bindEvents2() {
     $(".t-lore-entry-item").removeClass("active");
     $(this).addClass("active");
     const index = $(this).data("index");
-    showEntryDetail2(index);
+    showEntryDetail(index);
   });
   $("#t-edit-keys").on("input", function() {
     const index = $(".t-lore-entry-item.active").data("index");
-    if (index !== void 0 && currentEntries2[index]) {
+    if (index !== void 0 && currentEntries[index]) {
       const val = $(this).val();
-      currentEntries2[index].keys = val.split(/,|，/).map((s) => s.trim()).filter((s) => s);
-      $(`.t-lore-entry-item[data-index="${index}"] .t-entry-keys`).text(currentEntries2[index].keys.join(", "));
+      currentEntries[index].keys = val.split(/,|，/).map((s) => s.trim()).filter((s) => s);
+      $(`.t-lore-entry-item[data-index="${index}"] .t-entry-keys`).text(currentEntries[index].keys.join(", "));
     }
   });
   $("#t-edit-content").on("input", function() {
     const index = $(".t-lore-entry-item.active").data("index");
-    if (index !== void 0 && currentEntries2[index]) {
-      currentEntries2[index].content = $(this).val();
-      $(`.t-lore-entry-item[data-index="${index}"] .t-entry-preview`).text(currentEntries2[index].content);
+    if (index !== void 0 && currentEntries[index]) {
+      currentEntries[index].content = $(this).val();
+      $(`.t-lore-entry-item[data-index="${index}"] .t-entry-preview`).text(currentEntries[index].content);
     }
   });
   $("#t-edit-category").on("change", function() {
     const index = $(".t-lore-entry-item.active").data("index");
-    if (index !== void 0 && currentEntries2[index]) {
+    if (index !== void 0 && currentEntries[index]) {
       const newCat = $(this).val();
-      currentEntries2[index].category = newCat;
+      currentEntries[index].category = newCat;
       const $item = $(`.t-lore-entry-item[data-index="${index}"]`);
       $item.find(".t-entry-tag").text(newCat);
       $item.attr("data-cat", newCat);
     }
   });
 }
-function renderEntriesList2() {
+function renderEntriesList() {
   const $list = $("#t-lore-entries-list");
   $list.empty();
-  currentEntries2.forEach((entry, index) => {
+  currentEntries.forEach((entry, index) => {
     const keysStr = Array.isArray(entry.keys) ? entry.keys.join(", ") : entry.keys;
     const category = entry.category || "Other";
     const isUpdate = entry.action === "update";
@@ -5382,16 +5142,16 @@ function renderEntriesList2() {
         `;
     $list.append(html);
   });
-  if (currentEntries2.length > 0) {
-    showEntryDetail2(0);
+  if (currentEntries.length > 0) {
+    showEntryDetail(0);
     $(".t-lore-entry-item").first().addClass("active");
   } else {
     $("#t-lore-editor").hide();
     $("#t-editor-placeholder").show();
   }
 }
-function showEntryDetail2(index) {
-  const entry = currentEntries2[index];
+function showEntryDetail(index) {
+  const entry = currentEntries[index];
   if (!entry) return;
   $("#t-editor-placeholder").hide();
   $("#t-lore-editor").show();
@@ -5410,15 +5170,15 @@ function showEntryDetail2(index) {
     $("#t-update-info-group").hide();
   }
 }
-var currentEntries2;
+var currentEntries, dropdownVisible;
 var init_loreReviewWindow = __esm({
   "src/ui/loreReviewWindow.js"() {
     init_loreExtractor();
     init_worldInfoManager();
     init_logger();
     init_defaults();
-    init_worldInfoEditor();
-    currentEntries2 = [];
+    currentEntries = [];
+    dropdownVisible = false;
   }
 });
 
@@ -7421,7 +7181,7 @@ var init_api = __esm({
 init_defaults();
 init_storage();
 import { extension_settings as extension_settings3 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource, event_types } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 
 // src/utils/dom.js
 function loadCssFiles() {
@@ -11159,6 +10919,8 @@ textarea.t-input {
     overflow: hidden;
     color: #e2e8f0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    /* \u4E3A\u4E0B\u62C9\u83DC\u5355\u63D0\u4F9B\u5B9A\u4F4D\u4E0A\u4E0B\u6587 */
 }
 
 .t-window-body {
@@ -11623,6 +11385,69 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     color: #fc8181;
 }
 
+/* \u6A21\u578B\u4E0B\u62C9\u83DC\u5355\u6837\u5F0F */
+.t-window-icon {
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    color: #a0aec0;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.t-window-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.t-model-dropdown {
+    position: absolute;
+    top: 55px;
+    /* \u7A0D\u5FAE\u4F4E\u4E8E\u6807\u9898\u680F\u5E95\u90E8 */
+    right: 20px;
+    width: 300px;
+    background: rgba(30, 30, 35, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 12px;
+    z-index: 10000;
+    /* \u63D0\u9AD8 z-index \u786E\u4FDD\u5728\u6700\u4E0A\u5C42 */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.t-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    color: #cbd5e0;
+}
+
+.t-dropdown-header button {
+    padding: 4px 8px;
+    font-size: 0.8em;
+}
+
+.t-model-dropdown select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.t-model-dropdown select:focus {
+    border-color: #90cdf4;
+}
+
 /* \u79FB\u52A8\u7AEF\u9002\u914D */
 @media (max-width: 768px) {
     .t-lore-review-window {
@@ -11690,6 +11515,12 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     .t-lore-controls {
         padding: 10px 15px;
     }
+
+    .t-model-dropdown {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+    }
 }
 
 `;
@@ -11700,6 +11531,7 @@ input[list]:hover::-webkit-calendar-picker-indicator {
 init_state();
 init_scriptData();
 init_api();
+init_worldInfoManager();
 init_floatingBtn();
 init_settingsWindow();
 init_mainWindow();
@@ -11795,7 +11627,8 @@ function initCoreFeatures() {
   if (extData.font_settings) {
     applyFontSettings(extData.font_settings);
   }
-  eventSource.on(event_types.GENERATION_ENDED, onGenerationEnded);
+  eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
+  initSyncListener();
 }
 function showFloatingButton() {
   createFloatingButton();
