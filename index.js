@@ -6751,8 +6751,8 @@ async function showDebugInfo() {
   const hasDirector = dirInstruction.trim().length > 0;
   let activeProfileId = cfg.active_profile_id || "default";
   let profiles = cfg.profiles || [];
-  let currentProfile2 = profiles.find((p) => p.id === activeProfileId) || { name: "\u672A\u77E5", model: "unknown" };
-  let displayModel = currentProfile2.type === "internal" ? "(\u8DDF\u968F ST)" : currentProfile2.model || "gpt-3.5-turbo";
+  let currentProfile = profiles.find((p) => p.id === activeProfileId) || { name: "\u672A\u77E5", model: "unknown" };
+  let displayModel = currentProfile.type === "internal" ? "(\u8DDF\u968F ST)" : currentProfile.model || "gpt-3.5-turbo";
   const currentMode = GlobalState.generationMode || "narrative";
   const modeDisplay = currentMode === "visual" ? "\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316" : "\u{1F4D6} \u5185\u5BB9\u4F18\u5148";
   const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
@@ -7865,9 +7865,9 @@ function openSettingsWindow() {
     tempStyleProfiles.forEach((p) => {
       $sel.append(`<option value="${p.id}" ${p.id === tempActiveStyleId ? "selected" : ""}>${p.name}</option>`);
     });
-    const currentProfile2 = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
-    if (currentProfile2) {
-      $("#set-dir-style").val(currentProfile2.content);
+    const currentProfile = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
+    if (currentProfile) {
+      $("#set-dir-style").val(currentProfile.content);
     }
     updateStyleCharCount();
     $("#style-count").text(tempStyleProfiles.length);
@@ -7895,10 +7895,10 @@ function openSettingsWindow() {
     $("#style-unsaved-hint").hide();
   };
   const checkUnsavedStyleChanges = () => {
-    const currentProfile2 = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
-    if (!currentProfile2) return false;
+    const currentProfile = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
+    if (!currentProfile) return false;
     const currentContent = $("#set-dir-style").val() || "";
-    return currentContent !== currentProfile2.content;
+    return currentContent !== currentProfile.content;
   };
   $("#set-dir-style").on("input", function() {
     updateStyleCharCount();
@@ -7945,11 +7945,11 @@ function openSettingsWindow() {
       if (window.toastr) toastr.warning("\u9ED8\u8BA4\u65B9\u6848\u4E0D\u53EF\u91CD\u547D\u540D");
       return;
     }
-    const currentProfile2 = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
-    if (!currentProfile2) return;
-    const newName = prompt("\u8BF7\u8F93\u5165\u65B0\u7684\u65B9\u6848\u540D\u79F0\uFF1A", currentProfile2.name);
+    const currentProfile = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
+    if (!currentProfile) return;
+    const newName = prompt("\u8BF7\u8F93\u5165\u65B0\u7684\u65B9\u6848\u540D\u79F0\uFF1A", currentProfile.name);
     if (!newName || !newName.trim()) return;
-    currentProfile2.name = newName.trim();
+    currentProfile.name = newName.trim();
     renderStyleProfileUI();
     if (window.toastr) toastr.success(`\u65B9\u6848\u5DF2\u91CD\u547D\u540D\u4E3A: ${newName.trim()}`);
   });
@@ -7958,9 +7958,9 @@ function openSettingsWindow() {
       if (window.toastr) toastr.warning("\u9ED8\u8BA4\u65B9\u6848\u4E0D\u53EF\u5220\u9664");
       return;
     }
-    const currentProfile2 = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
-    if (!currentProfile2) return;
-    if (!confirm(`\u786E\u5B9A\u8981\u5220\u9664\u65B9\u6848 "${currentProfile2.name}" \u5417\uFF1F`)) return;
+    const currentProfile = tempStyleProfiles.find((p) => p.id === tempActiveStyleId);
+    if (!currentProfile) return;
+    if (!confirm(`\u786E\u5B9A\u8981\u5220\u9664\u65B9\u6848 "${currentProfile.name}" \u5417\uFF1F`)) return;
     tempStyleProfiles = tempStyleProfiles.filter((p) => p.id !== tempActiveStyleId);
     tempActiveStyleId = "default";
     styleContentModified = false;
@@ -9310,8 +9310,8 @@ function getActiveConnection() {
   const cfg = data.config || {};
   const activeProfileId = cfg.active_profile_id || "default";
   const profiles = cfg.profiles || DEFAULT_PROFILES;
-  const currentProfile2 = profiles.find((p) => p.id === activeProfileId) || profiles[1] || DEFAULT_PROFILES[1];
-  const useSTConnection = currentProfile2.type === "internal";
+  const currentProfile = profiles.find((p) => p.id === activeProfileId) || profiles[1] || DEFAULT_PROFILES[1];
+  const useSTConnection = currentProfile.type === "internal";
   const stream = cfg.stream !== false;
   let url = "";
   let key = "";
@@ -9326,18 +9326,18 @@ function getActiveConnection() {
       model = "gpt-3.5-turbo";
     }
   } else {
-    url = currentProfile2.url || "";
-    key = currentProfile2.key || "";
-    model = currentProfile2.model || "gpt-3.5-turbo";
+    url = currentProfile.url || "";
+    key = currentProfile.key || "";
+    model = currentProfile.model || "gpt-3.5-turbo";
   }
   return {
     useSTConnection,
-    profileName: currentProfile2.name,
+    profileName: currentProfile.name,
     url,
     key,
     model,
     stream,
-    rawProfile: currentProfile2
+    rawProfile: currentProfile
   };
 }
 function getCurrentModel() {
@@ -11858,7 +11858,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   $("#t-btn-like").html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
   showCancelButton();
   startTimer();
-  if (!silent && window.toastr) toastr.info(`\u{1F680} [${currentProfile.name}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
+  if (!silent && window.toastr) toastr.info(`\u{1F680} [${conn.profileName}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
   try {
     diagnostics.phase = "prepare_prompt";
     const dirInstruction = dirDefaults.instruction || "";
@@ -11953,7 +11953,7 @@ ${history}
 ${processedPrompt}`;
     diagnostics.input_stats.sys_len = sys.length;
     diagnostics.input_stats.user_len = user.length;
-    TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: currentProfile.name });
+    TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: conn.profileName });
     diagnostics.phase = "fetch_start";
     let rawContent = "";
     if (useSTConnection) {
