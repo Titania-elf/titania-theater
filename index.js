@@ -145,7 +145,7 @@ var init_defaults = __esm({
           scripts: false,
           // 剧本管理
           debug: false
-          // 调试日志
+          // 提示词组成窗口
         },
         max_items: 5
         // 最多显示按钮数量
@@ -1214,13 +1214,26 @@ textarea.t-input {
 /* \u79FB\u52A8\u7AEF\u6A21\u578B\u5F39\u7A97\u9002\u914D */
 @media (max-width: 768px) {
     .t-model-dialog-overlay {
-        padding: 10px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .t-model-dialog-box {
-        width: 95%;
-        max-width: 95%;
-        max-height: 90vh;
+        width: 100%;
+        max-width: 100%;
+        max-height: 85vh;
+        margin: auto;
+        position: relative;
     }
 }
 
@@ -5604,6 +5617,62 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     gap: 10px;
 }
 
+/* \u697C\u5C42\u4FE1\u606F\u663E\u793A */
+.t-floor-info {
+    color: #718096;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+/* \u5FEB\u6377\u6309\u94AE\u7EC4 */
+.t-quick-btns {
+    display: flex;
+    gap: 4px;
+    margin-left: 8px;
+}
+
+.t-quick-btn {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    color: #a0aec0;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.t-quick-btn:hover {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+}
+
+.t-quick-btn.active {
+    background: rgba(144, 205, 244, 0.2);
+    border-color: rgba(144, 205, 244, 0.5);
+    color: #90cdf4;
+}
+
+.t-quick-btn-all {
+    background: rgba(72, 187, 120, 0.1);
+    border-color: rgba(72, 187, 120, 0.3);
+    color: #48bb78;
+}
+
+.t-quick-btn-all:hover {
+    background: rgba(72, 187, 120, 0.2);
+    border-color: rgba(72, 187, 120, 0.5);
+    color: #68d391;
+}
+
+.t-quick-btn-all.active {
+    background: rgba(72, 187, 120, 0.25);
+    border-color: rgba(72, 187, 120, 0.6);
+    color: #68d391;
+}
+
 /* \u9519\u8BEF\u72B6\u6001\u5F39\u7A97\u5934\u90E8 */
 .t-dialog-header-error {
     background: rgba(231, 76, 60, 0.15);
@@ -5697,7 +5766,26 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* \u9762\u677F\u6EDA\u52A8\u6761\u6837\u5F0F */
+.t-mode-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.t-mode-panel::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.t-mode-panel::-webkit-scrollbar-thumb {
+    background: rgba(144, 205, 244, 0.3);
+    border-radius: 4px;
+}
+
+.t-mode-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(144, 205, 244, 0.5);
 }
 
 .t-mode-panel:not(.active) {
@@ -5710,7 +5798,7 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .t-summary-header {
@@ -6208,6 +6296,22 @@ input[list]:hover::-webkit-calendar-picker-indicator {
         flex-wrap: wrap;
     }
 
+    /* \u79FB\u52A8\u7AEF\u5FEB\u6377\u6309\u94AE\u8C03\u6574 */
+    .t-quick-btns {
+        margin-left: 0;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+
+    .t-quick-btn {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+
+    .t-floor-info {
+        margin-left: 5px;
+    }
+
     .t-custom-prompt-section {
         margin: 0 10px 10px 10px;
     }
@@ -6236,6 +6340,708 @@ input[list]:hover::-webkit-calendar-picker-indicator {
 
     #t-prompt-view-dialog .t-dialog-footer>div .t-btn {
         flex: 1;
+    }
+}
+
+/* ========== \u9690\u85CF\u697C\u5C42\u529F\u80FD\u533A\u6837\u5F0F ========== */
+.t-hide-floors-section {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 10px;
+    margin: 15px 20px;
+    overflow: hidden;
+}
+
+.t-hide-floors-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: rgba(245, 158, 11, 0.1);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+.t-hide-floors-header i {
+    font-size: 1.1em;
+}
+
+.t-hidden-status {
+    margin-left: auto;
+    font-weight: 400;
+    font-size: 0.85em;
+}
+
+.t-hidden-status .t-status-warn {
+    color: #f59e0b;
+}
+
+.t-hidden-status .t-status-ok {
+    color: #48bb78;
+}
+
+.t-hide-floors-body {
+    padding: 15px;
+}
+
+.t-hide-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.t-hide-range-inputs label {
+    color: #a0aec0;
+    font-size: 0.9em;
+}
+
+.t-hide-range-inputs input[type="number"] {
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.t-hide-range-inputs input[type="number"]:focus {
+    border-color: #f59e0b;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+}
+
+.t-hide-count {
+    color: #718096;
+    font-size: 0.85em;
+    margin-left: 5px;
+}
+
+.t-hide-quick-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.t-hide-quick-btns .t-quick-btn {
+    padding: 6px 12px;
+    font-size: 0.85em;
+}
+
+.t-hide-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.t-hide-actions .t-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 16px;
+    font-size: 0.9em;
+}
+
+.t-hide-actions .t-btn-primary {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.t-hide-actions .t-btn-primary:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+/* \u79FB\u52A8\u7AEF\u9690\u85CF\u529F\u80FD\u533A\u9002\u914D */
+@media (max-width: 768px) {
+    .t-hide-floors-section {
+        margin: 10px;
+    }
+
+    .t-hide-floors-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .t-hidden-status {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 5px;
+    }
+
+    .t-hide-range-inputs {
+        gap: 6px;
+    }
+
+    .t-hide-range-inputs input[type="number"] {
+        width: 60px;
+        padding: 10px 8px;
+        font-size: 16px;
+        /* \u9632\u6B62 iOS \u7F29\u653E */
+    }
+
+    .t-hide-quick-btns {
+        gap: 5px;
+    }
+
+    .t-hide-quick-btns .t-quick-btn {
+        flex: 1;
+        min-width: 70px;
+        text-align: center;
+        padding: 8px 10px;
+    }
+
+    .t-hide-actions {
+        flex-direction: column;
+    }
+
+    .t-hide-actions .t-btn {
+        width: 100%;
+    }
+}
+
+/* === memory-recall.css === */
+/* css/memory-recall.css */
+/* \u8BB0\u5FC6\u53EC\u56DE\u529F\u80FD\u6837\u5F0F */
+
+/* ===== \u8BB0\u5FC6\u53EC\u56DE\u8986\u76D6\u5C42 ===== */
+.titania-recall-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+}
+
+/* ===== \u5FEB\u6377\u5DE5\u5177\u680F\u4E2D\u7684\u8BB0\u5FC6\u53EC\u56DE\u6309\u94AE\u6837\u5F0F ===== */
+/* \u6309\u94AE\u4F7F\u7528 fa-brain \u56FE\u6807\uFF0C\u7D2B\u8272\u6E10\u53D8\u80CC\u666F */
+.t-menu-icon-btn.recall {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.t-menu-icon-btn.recall:hover {
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+}
+
+/* ===== \u8BB0\u5FC6\u53EC\u56DE\u9762\u677F ===== */
+.titania-recall-panel {
+    position: relative !important;
+    width: 100%;
+    max-width: 480px;
+    max-height: 80vh;
+    background: var(--SmartThemeBlurTintColor, #1a1a2e) !important;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(102, 126, 234, 0.5) !important;
+}
+
+/* \u9762\u677F\u5934\u90E8 */
+.t-recall-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    gap: 10px;
+}
+
+.t-recall-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-recall-status {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.t-recall-status.available {
+    background: rgba(0, 255, 127, 0.3);
+}
+
+.t-recall-status.unavailable {
+    background: rgba(255, 107, 107, 0.3);
+}
+
+.t-recall-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    padding: 5px;
+    font-size: 16px;
+    transition: color 0.2s;
+}
+
+.t-recall-close:hover {
+    color: #fff;
+}
+
+/* \u9762\u677F\u4E3B\u4F53 */
+.t-recall-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* \u68C0\u7D22\u533A\u57DF */
+.t-recall-search-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.t-recall-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.t-recall-query-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--SmartThemeBodyColor, #e0e0e0);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.t-recall-query-input:focus {
+    border-color: #667eea;
+}
+
+.t-recall-query-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.t-recall-search-btn {
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.t-recall-search-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.t-recall-search-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.t-recall-options {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+    color: var(--SmartThemeBodyColor, #a0a0a0);
+}
+
+.t-recall-options label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.t-recall-options select {
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--SmartThemeBodyColor, #e0e0e0);
+    font-size: 12px;
+    outline: none;
+}
+
+/* \u7ED3\u679C\u533A\u57DF */
+.t-recall-results-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+}
+
+.t-recall-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+    color: var(--SmartThemeBodyColor, #a0a0a0);
+}
+
+.t-recall-results-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.t-recall-action-btn {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 4px;
+    color: var(--SmartThemeBodyColor, #e0e0e0);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.t-recall-action-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.t-recall-action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#t-recall-selected-count {
+    font-size: 11px;
+    color: #667eea;
+    font-weight: 500;
+}
+
+/* \u7ED3\u679C\u5217\u8868 */
+.t-recall-results-list {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 250px;
+}
+
+.t-recall-empty-state,
+.t-recall-loading,
+.t-recall-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 13px;
+    text-align: center;
+}
+
+.t-recall-loading {
+    gap: 8px;
+}
+
+.t-recall-error {
+    color: #ff6b6b;
+}
+
+/* \u7ED3\u679C\u9879 */
+.t-recall-result-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.t-recall-result-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.t-recall-result-item.selected {
+    background: rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.4);
+}
+
+.t-recall-result-checkbox {
+    display: flex;
+    align-items: flex-start;
+    padding-top: 2px;
+}
+
+.t-recall-result-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #667eea;
+}
+
+.t-recall-result-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.t-recall-result-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.t-recall-result-index {
+    font-size: 12px;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.t-recall-result-score {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: linear-gradient(90deg,
+            rgba(102, 126, 234, 0.3) 0%,
+            rgba(102, 126, 234, 0.3) var(--score, 50%),
+            rgba(255, 255, 255, 0.1) var(--score, 50%));
+    color: #667eea;
+    font-weight: 500;
+}
+
+.t-recall-result-text {
+    font-size: 12px;
+    color: var(--SmartThemeBodyColor, #c0c0c0);
+    line-height: 1.5;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* \u9762\u677F\u5E95\u90E8 */
+.t-recall-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.t-recall-btn-secondary {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--SmartThemeBodyColor, #e0e0e0);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.t-recall-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.t-recall-btn-primary {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.t-recall-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.t-recall-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== \u9690\u85CF\u6CE8\u5165\u7684\u8BB0\u5FC6\u6807\u7B7E ===== */
+.mes_text titania-memory,
+.mes_text .titania-memory,
+#chat titania-memory {
+    display: none !important;
+}
+
+/* \u8C03\u8BD5\u6A21\u5F0F\u4E0B\u663E\u793A\uFF08\u53EF\u9009\uFF09 */
+body.titania-debug-mode .mes_text titania-memory,
+body.titania-debug-mode .mes_text .titania-memory,
+body.titania-debug-mode #chat titania-memory {
+    display: block !important;
+    background: rgba(102, 126, 234, 0.1);
+    border-left: 3px solid #667eea;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    border-radius: 0 8px 8px 0;
+    font-size: 12px;
+    color: #a0a0a0;
+    white-space: pre-wrap;
+}
+
+body.titania-debug-mode .mes_text titania-memory::before,
+body.titania-debug-mode .mes_text .titania-memory::before,
+body.titania-debug-mode #chat titania-memory::before {
+    content: "\u{1F9E0} \u8BB0\u5FC6\u6CE8\u5165";
+    display: block;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 6px;
+    font-size: 11px;
+}
+
+/* ===== \u79FB\u52A8\u7AEF\u9002\u914D - \u5168\u5C4F\u8986\u76D6\u5F0F ===== */
+@media (max-width: 768px) {
+    .titania-recall-overlay {
+        padding: 0 !important;
+        align-items: stretch !important;
+    }
+
+    .titania-recall-panel {
+        /* \u5168\u5C4F\u8986\u76D6 */
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+        border: none !important;
+    }
+
+    .t-recall-header {
+        padding: 15px 16px;
+        padding-top: max(15px, env(safe-area-inset-top));
+    }
+
+    .t-recall-body {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+    }
+
+    .t-recall-input-row {
+        flex-direction: column;
+    }
+
+    .t-recall-search-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
+    }
+
+    .t-recall-options {
+        flex-wrap: wrap;
+    }
+
+    .t-recall-results-section {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .t-recall-results-list {
+        flex: 1;
+        max-height: none;
+        overflow-y: auto;
+    }
+
+    .t-recall-result-text {
+        -webkit-line-clamp: 2;
+    }
+
+    .t-recall-footer {
+        padding: 12px 16px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .t-recall-btn-primary,
+    .t-recall-btn-secondary {
+        flex: 1;
+        justify-content: center;
+        padding: 12px;
+    }
+
+    /* \u6309\u94AE\u6837\u5F0F */
+    .titania-recall-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .titania-recall-btn i {
+        font-size: 14px;
+    }
+}
+
+/* ===== \u5C0F\u5C4F\u5E55\u624B\u673A\u8FDB\u4E00\u6B65\u4F18\u5316 ===== */
+@media (max-width: 480px) {
+    .t-recall-header {
+        padding: 12px 14px;
+        padding-top: max(12px, env(safe-area-inset-top));
+    }
+
+    .t-recall-title {
+        font-size: 14px;
+    }
+
+    .t-recall-status {
+        font-size: 10px;
+    }
+
+    .t-recall-body {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .t-recall-query-input {
+        padding: 10px 12px;
+        font-size: 16px;
+        /* \u9632\u6B62 iOS \u7F29\u653E */
+    }
+
+    .t-recall-options select {
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+
+    .t-recall-footer {
+        padding: 10px 14px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
     }
 }
 
@@ -6758,7 +7564,23 @@ async function getContextData() {
   if (contentParts.length > 0) {
     data.worldInfo = "[World Info / Lore]\n" + contentParts.join("\n\n") + "\n\n";
   }
+  data.charId = ctx.characterId;
   return data;
+}
+function getChatHistory() {
+  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
+    return [];
+  }
+  try {
+    const ctx = SillyTavern.getContext();
+    if (!ctx || !ctx.chat) {
+      return [];
+    }
+    return ctx.chat;
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u804A\u5929\u5386\u53F2\u5931\u8D25", e);
+    return [];
+  }
 }
 var init_context = __esm({
   "src/core/context.js"() {
@@ -7019,7 +7841,7 @@ function extractContent(text, whitelist = []) {
   cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
   return cleaned;
 }
-function getChatHistory(limit, whitelist = []) {
+function getChatHistory2(limit, whitelist = []) {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
   const ctx = SillyTavern.getContext();
   const history = ctx.chat || [];
@@ -8254,7 +9076,7 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
     const limit = cfg.history_limit || 10;
     const historyWhitelistStr = data.history_extraction?.whitelist || "";
     const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
-    const hist = getChatHistory(limit, historyWhitelist);
+    const hist = getChatHistory2(limit, historyWhitelist);
     const histLines = hist ? hist.split("\n").length : 0;
     contextBlocks.push({
       title: "[Conversation History]",
@@ -8299,7 +9121,7 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
   const html = `
     <div class="t-box t-dbg-container" id="t-debug-view">
         <div class="t-header" style="flex-shrink:0;">
-            <span class="t-title-main">\u{1F4CA} \u8C03\u8BD5\u63A7\u5236\u53F0</span>
+            <span class="t-title-main">\u{1F4CA} \u63D0\u793A\u8BCD\u7EC4\u6210\u7A97\u53E3</span>
             <span class="t-close" id="t-debug-close">&times;</span>
         </div>
         
@@ -8351,9 +9173,6 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
             </div>
         </div>
 
-        <div class="t-dbg-footer">
-            <button id="t-debug-back" class="t-btn primary" style="padding: 6px 20px;">\u5173\u95ED\u63A7\u5236\u53F0</button>
-        </div>
     </div>`;
   $("#t-overlay").append(html);
   const close = () => {
@@ -8365,7 +9184,7 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
       $("#t-overlay").remove();
     }
   };
-  $("#t-debug-close, #t-debug-back").on("click", close);
+  $("#t-debug-close").on("click", close);
   $(".t-fold-head").on("click", function() {
     const row = $(this).parent(".t-fold-row");
     row.toggleClass("open");
@@ -8668,7 +9487,12 @@ function openSettingsWindow() {
                                 <label class="t-toolbar-item">
                                     <input type="checkbox" class="t-toolbar-chk" data-btn-id="debug">
                                     <i class="fa-solid fa-bug" style="color:#ff9f43;"></i>
-                                    <span>\u8C03\u8BD5\u65E5\u5FD7</span>
+                                    <span>\u63D0\u793A\u8BCD\u7EC4\u6210\u7A97\u53E3</span>
+                                </label>
+                                <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="recall">
+                                    <i class="fa-solid fa-lightbulb" style="color:#a29bfe;"></i>
+                                    <span>\u8BB0\u5FC6\u53EC\u56DE</span>
                                 </label>
                             </div>
                             <div id="t-toolbar-count" style="font-size:0.8em; color:#666; margin-top:10px;">
@@ -10028,7 +10852,8 @@ function openSettingsWindow() {
     settings: true,
     favs: false,
     scripts: false,
-    debug: false
+    debug: false,
+    recall: false
   };
   const MAX_TOOLBAR_ITEMS = 5;
   const initToolbarCheckboxes = () => {
@@ -11637,7 +12462,7 @@ Extract new lore entries from the above history. Return JSON only.`;
 async function previewExtractPrompt(historyLimit = 20) {
   TitaniaLogger.info("\u9884\u89C8\u8BBE\u5B9A\u63D0\u53D6\u63D0\u793A\u8BCD...", { historyLimit });
   const ctx = await getContextData();
-  const history = getChatHistory(historyLimit);
+  const history = getChatHistory2(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A");
   }
@@ -11680,7 +12505,7 @@ async function extractLoreFromHistory(historyLimit = 20) {
     model: conn.model
   });
   const ctx = await getContextData();
-  const history = getChatHistory(historyLimit);
+  const history = getChatHistory2(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u63D0\u53D6\u8BBE\u5B9A");
   }
@@ -12654,7 +13479,7 @@ async function previewSummaryPrompt(characterId, options = {}) {
     hasCustomPrompt: !!customPrompt
   });
   const ctx = await getContextData();
-  const history = getChatHistory(historyLimit);
+  const history = getChatHistory2(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A");
   }
@@ -12710,7 +13535,7 @@ async function generateSummary(characterId, options = {}) {
     hasCustomPrompt: !!customPrompt
   });
   const ctx = await getContextData();
-  const history = getChatHistory(historyLimit);
+  const history = getChatHistory2(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u751F\u6210\u603B\u7ED3");
   }
@@ -12792,7 +13617,7 @@ async function buildVectorIndex(characterId, options = {}) {
   const onProgress = options.onProgress;
   TitaniaLogger.info(`\u5F00\u59CB\u4E3A\u89D2\u8272 ${characterId} \u5EFA\u7ACB\u5411\u91CF\u7D22\u5F15...`);
   if (onProgress) onProgress(0, 0, "\u6B63\u5728\u83B7\u53D6\u804A\u5929\u5386\u53F2...");
-  const history = getChatHistory(limit);
+  const history = getChatHistory2(limit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u5EFA\u7ACB\u7D22\u5F15");
   }
@@ -12867,6 +13692,18 @@ var init_summarizer = __esm({
 });
 
 // src/ui/loreReviewWindow.js
+async function getHideChatMessageRange() {
+  if (!_hideChatMessageRange) {
+    try {
+      const chatsModule = await import("../../../chats.js");
+      _hideChatMessageRange = chatsModule.hideChatMessageRange;
+    } catch (e) {
+      console.warn("Failed to import hideChatMessageRange:", e);
+      _hideChatMessageRange = null;
+    }
+  }
+  return _hideChatMessageRange;
+}
 function ensureCssLoaded() {
   const id = "titania-css-lore-review";
   if (!document.getElementById(id)) {
@@ -13181,6 +14018,13 @@ async function showLoreReviewWindow() {
   } catch (e) {
     TitaniaLogger.warn("\u83B7\u53D6\u5411\u91CF\u7D22\u5F15\u72B6\u6001\u5931\u8D25", e);
   }
+  try {
+    const chatHistory = getChatHistory();
+    currentTotalFloors = chatHistory?.length || 0;
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u804A\u5929\u5386\u53F2\u5931\u8D25", e);
+    currentTotalFloors = 0;
+  }
   const savedSettings = getSavedAnalysisSettings();
   const extractLimit = savedSettings.extractLimit || 2;
   const summaryLimit = savedSettings.summaryLimit || 20;
@@ -13232,8 +14076,15 @@ async function showLoreReviewWindow() {
                     <!-- \u9876\u90E8\u63A7\u5236\u680F -->
                     <div class="t-lore-controls">
                         <div class="t-control-group">
-                            <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
-                            <input type="number" id="t-lore-history-limit" value="${extractLimit}" min="1" max="100" style="width: 60px;">
+                            <label>\u5206\u6790\u8303\u56F4:</label>
+                            <input type="number" id="t-lore-history-limit" value="${extractLimit}" min="1" max="${currentTotalFloors || 100}" style="width: 60px;">
+                            <span class="t-floor-info">/ ${currentTotalFloors} \u697C</span>
+                            <div class="t-quick-btns">
+                                <button class="t-quick-btn" data-target="extract" data-value="10" title="\u6700\u8FD110\u697C">10</button>
+                                <button class="t-quick-btn" data-target="extract" data-value="50" title="\u6700\u8FD150\u697C">50</button>
+                                <button class="t-quick-btn" data-target="extract" data-value="100" title="\u6700\u8FD1100\u697C">100</button>
+                                <button class="t-quick-btn t-quick-btn-all" data-target="extract" data-value="all" title="\u5168\u90E8\u697C\u5C42">\u5168\u90E8</button>
+                            </div>
                         </div>
                         <div class="t-control-buttons">
                             <button id="t-btn-preview-extract-prompt" class="t-btn" title="\u9884\u89C8\u5C06\u8981\u53D1\u9001\u7ED9 AI \u7684\u5B8C\u6574\u63D0\u793A\u8BCD\uFF08\u4E0D\u4F1A\u53D1\u9001\u8BF7\u6C42\uFF09">
@@ -13345,8 +14196,15 @@ async function showLoreReviewWindow() {
                 <div id="t-panel-summary" class="t-mode-panel" style="display: none;">
                     <div class="t-lore-controls">
                         <div class="t-control-group">
-                            <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
-                            <input type="number" id="t-summary-history-limit" value="${summaryLimit}" min="1" max="200" style="width: 60px;">
+                            <label>\u5206\u6790\u8303\u56F4:</label>
+                            <input type="number" id="t-summary-history-limit" value="${summaryLimit}" min="1" max="${currentTotalFloors || 200}" style="width: 60px;">
+                            <span class="t-floor-info">/ ${currentTotalFloors} \u697C</span>
+                            <div class="t-quick-btns">
+                                <button class="t-quick-btn" data-target="summary" data-value="20" title="\u6700\u8FD120\u697C">20</button>
+                                <button class="t-quick-btn" data-target="summary" data-value="50" title="\u6700\u8FD150\u697C">50</button>
+                                <button class="t-quick-btn" data-target="summary" data-value="100" title="\u6700\u8FD1100\u697C">100</button>
+                                <button class="t-quick-btn t-quick-btn-all" data-target="summary" data-value="all" title="\u5168\u90E8\u697C\u5C42">\u5168\u90E8</button>
+                            </div>
                         </div>
                         <div class="t-control-group">
                             <label>\u603B\u7ED3\u6A21\u677F:</label>
@@ -13407,6 +14265,39 @@ async function showLoreReviewWindow() {
                                 <i class="fa-solid fa-file-alt"></i>
                                 <p>\u70B9\u51FB\u300C\u751F\u6210\u603B\u7ED3\u300D\u5F00\u59CB\u5206\u6790\u804A\u5929\u5386\u53F2</p>
                                 <small style="color: #666;">\u542F\u7528\u300C\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A\u300D\u53EF\u4EE5\u53EC\u56DE\u76F8\u5173\u7684\u5386\u53F2\u4E8B\u4EF6</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- \u9690\u85CF/\u53D6\u6D88\u9690\u85CF\u697C\u5C42\u64CD\u4F5C\u533A -->
+                    <div id="t-hide-floors-section" class="t-hide-floors-section">
+                        <div class="t-hide-floors-header">
+                            <i class="fa-solid fa-eye-slash"></i>
+                            <span>\u9690\u85CF/\u53D6\u6D88\u9690\u85CF\u697C\u5C42</span>
+                            <span id="t-hidden-status" class="t-hidden-status"></span>
+                        </div>
+                        <div class="t-hide-floors-body">
+                            <div class="t-hide-range-inputs">
+                                <label>\u4ECE\u7B2C</label>
+                                <input type="number" id="t-hide-start" min="1" value="1" style="width: 70px;">
+                                <label>\u697C \u5230\u7B2C</label>
+                                <input type="number" id="t-hide-end" min="1" value="1" style="width: 70px;">
+                                <label>\u697C</label>
+                                <span class="t-hide-count">(\u5171 <span id="t-hide-count-num">0</span> \u697C)</span>
+                            </div>
+                            <div class="t-hide-quick-btns">
+                                <button class="t-quick-btn t-hide-quick" data-value="50" title="\u6700\u8FD150\u697C">\u6700\u8FD150\u697C</button>
+                                <button class="t-quick-btn t-hide-quick" data-value="100" title="\u6700\u8FD1100\u697C">\u6700\u8FD1100\u697C</button>
+                                <button class="t-quick-btn t-hide-quick" data-value="analyzed" title="\u6062\u590D\u4E3A\u5206\u6790\u7684\u8303\u56F4">\u5206\u6790\u8303\u56F4</button>
+                                <button class="t-quick-btn t-quick-btn-all t-hide-quick" data-value="all" title="\u5168\u90E8\u697C\u5C42">\u5168\u90E8</button>
+                            </div>
+                            <div class="t-hide-actions">
+                                <button id="t-btn-hide-floors" class="t-btn t-btn-primary">
+                                    <i class="fa-solid fa-eye-slash"></i> \u4E00\u952E\u9690\u85CF
+                                </button>
+                                <button id="t-btn-unhide-floors" class="t-btn">
+                                    <i class="fa-solid fa-eye"></i> \u53D6\u6D88\u9690\u85CF
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -13542,6 +14433,27 @@ function bindEvents() {
       saveAnalysisSettings({ summaryLimit: val });
     }
   });
+  $(document).on("click", ".t-quick-btn", function() {
+    const target = $(this).data("target");
+    const value = $(this).data("value");
+    let inputSelector;
+    if (target === "extract") {
+      inputSelector = "#t-lore-history-limit";
+    } else if (target === "summary") {
+      inputSelector = "#t-summary-history-limit";
+    }
+    if (inputSelector) {
+      let newValue;
+      if (value === "all") {
+        newValue = currentTotalFloors;
+      } else {
+        newValue = Math.min(parseInt(value), currentTotalFloors);
+      }
+      $(inputSelector).val(newValue).trigger("change");
+      $(this).siblings(".t-quick-btn").removeClass("active");
+      $(this).addClass("active");
+    }
+  });
   $("#t-btn-preview-extract-prompt").on("click", async function() {
     let limit = parseInt($("#t-lore-history-limit").val());
     if (isNaN(limit) || limit < 1) limit = 2;
@@ -13615,18 +14527,18 @@ function bindEvents() {
       alert("\u8BF7\u9009\u62E9\u76EE\u6807\u4E16\u754C\u4E66");
       return;
     }
-    const selectedIndices = [];
+    const selectedIndices2 = [];
     $(".t-lore-entry-checkbox:checked").each(function() {
-      selectedIndices.push($(this).data("index"));
+      selectedIndices2.push($(this).data("index"));
     });
-    if (selectedIndices.length === 0) {
+    if (selectedIndices2.length === 0) {
       alert("\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u6761\u76EE");
       return;
     }
     const $btn = $(this);
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u4FDD\u5B58\u4E2D...');
     let successCount = 0;
-    for (const index of selectedIndices) {
+    for (const index of selectedIndices2) {
       const entry = currentEntries[index];
       if (entry) {
         const entryToSave = { ...entry };
@@ -13709,6 +14621,7 @@ function bindEvents() {
     $(`#t-panel-${mode}`).show();
     if (mode === "summary") {
       initSummaryWorldBookSelect();
+      initHideFloorsSection();
     }
   });
   $("#t-summary-template").on("change", function() {
@@ -13774,6 +14687,7 @@ function bindEvents() {
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u751F\u6210\u4E2D...');
     $("#t-summary-result").html('<div class="t-loading-state"><i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u5206\u6790\u804A\u5929\u5386\u53F2\u5E76\u751F\u6210\u603B\u7ED3...</div>');
     $("#t-btn-copy-summary, #t-btn-save-summary").hide();
+    $("#t-hide-floors-section").hide();
     try {
       const result = await generateSummary(currentCharacterId, {
         historyLimit: limit,
@@ -13783,10 +14697,16 @@ function bindEvents() {
       });
       lastSummary = result.summary;
       lastSummaryMessages = result.messages;
+      const actualLimit = Math.min(limit, currentTotalFloors);
+      lastAnalyzedRange = {
+        start: Math.max(0, currentTotalFloors - actualLimit),
+        end: currentTotalFloors - 1
+      };
       $("#t-summary-result").html(`
                 <div class="t-summary-text">${formatSummaryAsHtml(lastSummary)}</div>
             `);
       $("#t-btn-copy-summary, #t-btn-save-summary").show();
+      showHideFloorsSection(lastAnalyzedRange.start, lastAnalyzedRange.end);
       if (window.toastr) toastr.success("\u603B\u7ED3\u751F\u6210\u6210\u529F", "Titania");
     } catch (e) {
       TitaniaLogger.error("\u603B\u7ED3\u751F\u6210\u5931\u8D25", e);
@@ -13932,6 +14852,122 @@ function bindEvents() {
       $btn.prop("disabled", false).html('<i class="fa-solid fa-vial"></i> \u6D4B\u8BD5 Embedding \u8FDE\u63A5');
     }
   });
+  $("#t-hide-start, #t-hide-end").on("input change", function() {
+    updateHideFloorCount();
+  });
+  $(document).on("click", ".t-hide-quick", function() {
+    const value = $(this).data("value");
+    if (value === "analyzed") {
+      if (lastAnalyzedRange.end > 0) {
+        $("#t-hide-start").val(lastAnalyzedRange.start + 1);
+        $("#t-hide-end").val(lastAnalyzedRange.end + 1);
+      }
+    } else if (value === "all") {
+      $("#t-hide-start").val(1);
+      $("#t-hide-end").val(currentTotalFloors);
+    } else {
+      const count = parseInt(value);
+      const start = Math.max(1, currentTotalFloors - count + 1);
+      $("#t-hide-start").val(start);
+      $("#t-hide-end").val(currentTotalFloors);
+    }
+    updateHideFloorCount();
+  });
+  $("#t-btn-hide-floors").on("click", async function() {
+    const start = parseInt($("#t-hide-start").val());
+    const end = parseInt($("#t-hide-end").val());
+    if (isNaN(start) || isNaN(end) || start < 1 || end < start) {
+      if (window.toastr) toastr.error("\u8BF7\u8F93\u5165\u6709\u6548\u7684\u697C\u5C42\u8303\u56F4", "\u53C2\u6570\u9519\u8BEF");
+      return;
+    }
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5904\u7406\u4E2D...');
+    try {
+      const hideChatMessageRange = await getHideChatMessageRange();
+      if (!hideChatMessageRange) {
+        throw new Error("\u65E0\u6CD5\u83B7\u53D6\u9690\u85CF\u6D88\u606F\u529F\u80FD\uFF0C\u53EF\u80FD\u662F SillyTavern \u7248\u672C\u4E0D\u517C\u5BB9");
+      }
+      await hideChatMessageRange(start - 1, end - 1, false);
+      const count = end - start + 1;
+      if (window.toastr) toastr.success(`\u5DF2\u9690\u85CF ${count} \u6761\u6D88\u606F\uFF08${start} ~ ${end} \u697C\uFF09`, "\u64CD\u4F5C\u6210\u529F");
+      updateHiddenStatus();
+    } catch (e) {
+      TitaniaLogger.error("\u9690\u85CF\u6D88\u606F\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u9690\u85CF\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-eye-slash"></i> \u4E00\u952E\u9690\u85CF');
+    }
+  });
+  $("#t-btn-unhide-floors").on("click", async function() {
+    const start = parseInt($("#t-hide-start").val());
+    const end = parseInt($("#t-hide-end").val());
+    if (isNaN(start) || isNaN(end) || start < 1 || end < start) {
+      if (window.toastr) toastr.error("\u8BF7\u8F93\u5165\u6709\u6548\u7684\u697C\u5C42\u8303\u56F4", "\u53C2\u6570\u9519\u8BEF");
+      return;
+    }
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5904\u7406\u4E2D...');
+    try {
+      const hideChatMessageRange = await getHideChatMessageRange();
+      if (!hideChatMessageRange) {
+        throw new Error("\u65E0\u6CD5\u83B7\u53D6\u9690\u85CF\u6D88\u606F\u529F\u80FD\uFF0C\u53EF\u80FD\u662F SillyTavern \u7248\u672C\u4E0D\u517C\u5BB9");
+      }
+      await hideChatMessageRange(start - 1, end - 1, true);
+      const count = end - start + 1;
+      if (window.toastr) toastr.success(`\u5DF2\u53D6\u6D88\u9690\u85CF ${count} \u6761\u6D88\u606F\uFF08${start} ~ ${end} \u697C\uFF09`, "\u64CD\u4F5C\u6210\u529F");
+      updateHiddenStatus();
+    } catch (e) {
+      TitaniaLogger.error("\u53D6\u6D88\u9690\u85CF\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u53D6\u6D88\u9690\u85CF\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-eye"></i> \u53D6\u6D88\u9690\u85CF');
+    }
+  });
+}
+function showHideFloorsSection(startIndex, endIndex) {
+  const start = startIndex + 1;
+  const end = endIndex + 1;
+  $("#t-hide-start").val(start).attr("max", currentTotalFloors);
+  $("#t-hide-end").val(end).attr("max", currentTotalFloors);
+  updateHideFloorCount();
+  updateHiddenStatus();
+  $("#t-hide-floors-section").slideDown(200);
+}
+function updateHideFloorCount() {
+  const start = parseInt($("#t-hide-start").val()) || 0;
+  const end = parseInt($("#t-hide-end").val()) || 0;
+  const count = Math.max(0, end - start + 1);
+  $("#t-hide-count-num").text(count);
+}
+function updateHiddenStatus() {
+  try {
+    const chat = window.SillyTavern?.getContext?.()?.chat;
+    if (!chat || !Array.isArray(chat)) {
+      $("#t-hidden-status").text("");
+      return;
+    }
+    let hiddenCount = 0;
+    chat.forEach((msg) => {
+      if (msg.is_system === true) {
+        hiddenCount++;
+      }
+    });
+    if (hiddenCount > 0) {
+      $("#t-hidden-status").html(`<span class="t-status-warn">\uFF08\u5F53\u524D\u5DF2\u9690\u85CF ${hiddenCount} \u6761\uFF09</span>`);
+    } else {
+      $("#t-hidden-status").html(`<span class="t-status-ok">\uFF08\u65E0\u9690\u85CF\u6D88\u606F\uFF09</span>`);
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u9690\u85CF\u72B6\u6001\u5931\u8D25", e);
+    $("#t-hidden-status").text("");
+  }
+}
+function initHideFloorsSection() {
+  const totalFloors = currentTotalFloors || 1;
+  $("#t-hide-start").val(1).attr("max", totalFloors);
+  $("#t-hide-end").val(totalFloors).attr("max", totalFloors);
+  updateHideFloorCount();
+  updateHiddenStatus();
 }
 async function initSummaryWorldBookSelect() {
   const books = getAvailableWorldBooks();
@@ -14211,7 +15247,7 @@ function showPromptPreviewDialog(messages, stats = {}) {
     });
   });
 }
-var FEATURE_KEY3, currentEntries, lastRawResponse, lastSummary, lastSummaryMessages, currentCharacterId, currentMode;
+var FEATURE_KEY3, _hideChatMessageRange, currentEntries, lastRawResponse, lastSummary, lastSummaryMessages, currentCharacterId, currentMode, currentTotalFloors, lastAnalyzedRange;
 var init_loreReviewWindow = __esm({
   "src/ui/loreReviewWindow.js"() {
     init_loreExtractor();
@@ -14225,12 +15261,15 @@ var init_loreReviewWindow = __esm({
     init_embeddings();
     init_vectorStore();
     FEATURE_KEY3 = "lore_extractor";
+    _hideChatMessageRange = null;
     currentEntries = [];
     lastRawResponse = "";
     lastSummary = "";
     lastSummaryMessages = null;
     currentCharacterId = "";
     currentMode = "extract";
+    currentTotalFloors = 0;
+    lastAnalyzedRange = { start: 0, end: 0 };
   }
 });
 
@@ -15206,6 +16245,391 @@ var init_mainWindow = __esm({
   }
 });
 
+// src/core/memoryRecall.js
+function getCurrentCharacterId() {
+  try {
+    if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+      const ctx = SillyTavern.getContext();
+      return ctx?.characterId?.toString() || null;
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u89D2\u8272 ID \u5931\u8D25", e);
+  }
+  return null;
+}
+async function recallMemories(query, options = {}) {
+  const characterId = getCurrentCharacterId();
+  if (!characterId) {
+    throw new Error("\u65E0\u6CD5\u83B7\u53D6\u5F53\u524D\u89D2\u8272 ID\uFF0C\u8BF7\u786E\u4FDD\u5DF2\u6253\u5F00\u89D2\u8272\u5BF9\u8BDD");
+  }
+  const indexStatus = await getIndexStatus(characterId);
+  if (!indexStatus || indexStatus.actualVectorCount === 0) {
+    throw new Error("\u5F53\u524D\u89D2\u8272\u6CA1\u6709\u5411\u91CF\u7D22\u5F15\uFF0C\u8BF7\u5148\u5728\u300C\u667A\u80FD\u603B\u7ED3\u300D\u9762\u677F\u4E2D\u5EFA\u7ACB\u5411\u91CF\u7D22\u5F15");
+  }
+  const maxResults = options.maxResults || 10;
+  const minScore = options.minScore || 0.5;
+  TitaniaLogger.info("\u5F00\u59CB\u8BB0\u5FC6\u68C0\u7D22", { query: query.substring(0, 50), maxResults, minScore });
+  try {
+    const results = await semanticSearch(query, characterId, {
+      topK: maxResults,
+      minScore
+    });
+    TitaniaLogger.info(`\u68C0\u7D22\u5230 ${results.length} \u6761\u76F8\u5173\u8BB0\u5FC6`);
+    return results.map((r) => ({
+      messageIndex: r.messageIndex,
+      text: r.text,
+      score: r.score
+    }));
+  } catch (e) {
+    TitaniaLogger.error("\u8BB0\u5FC6\u68C0\u7D22\u5931\u8D25", e);
+    throw new Error("\u68C0\u7D22\u5931\u8D25: " + e.message);
+  }
+}
+function formatMemoryBlock(memories) {
+  if (!memories || memories.length === 0) return "";
+  const lines = memories.map(
+    (m) => `[\u76F8\u5173\u8BB0\u5FC6 #${m.messageIndex}] ${m.text}`
+  );
+  return `<titania-memory>
+${lines.join("\n")}
+</titania-memory>
+
+`;
+}
+function appendMemoriesToInput(memories) {
+  const input = document.querySelector("#send_textarea");
+  if (!input) {
+    TitaniaLogger.error("\u672A\u627E\u5230 SillyTavern \u8F93\u5165\u6846");
+    if (window.toastr) {
+      toastr.error("\u672A\u627E\u5230\u8F93\u5165\u6846", "Titania");
+    }
+    return false;
+  }
+  if (!memories || memories.length === 0) {
+    TitaniaLogger.warn("\u6CA1\u6709\u9009\u4E2D\u7684\u8BB0\u5FC6");
+    return false;
+  }
+  const memoryBlock = formatMemoryBlock(memories);
+  const currentValue = input.value || "";
+  input.value = memoryBlock + currentValue;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
+  TitaniaLogger.info(`\u5DF2\u5C06 ${memories.length} \u6761\u8BB0\u5FC6\u9644\u52A0\u5230\u8F93\u5165\u6846`);
+  if (window.toastr) {
+    toastr.success(`\u5DF2\u9644\u52A0 ${memories.length} \u6761\u8BB0\u5FC6`, "Titania");
+  }
+  return true;
+}
+function getDefaultQuery() {
+  try {
+    const chat = getChatHistory();
+    if (!chat || chat.length === 0) return "";
+    for (let i = chat.length - 1; i >= 0; i--) {
+      const msg = chat[i];
+      if (msg.is_user && msg.mes) {
+        return msg.mes.substring(0, 500);
+      }
+    }
+    const lastMsg = chat[chat.length - 1];
+    if (lastMsg && lastMsg.mes) {
+      return lastMsg.mes.substring(0, 500);
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u9ED8\u8BA4\u67E5\u8BE2\u5931\u8D25", e);
+  }
+  return "";
+}
+async function getRecallStatus() {
+  const characterId = getCurrentCharacterId();
+  if (!characterId) {
+    return {
+      available: false,
+      vectorCount: 0,
+      message: "\u8BF7\u5148\u6253\u5F00\u89D2\u8272\u5BF9\u8BDD"
+    };
+  }
+  try {
+    const indexStatus = await getIndexStatus(characterId);
+    if (!indexStatus || indexStatus.actualVectorCount === 0) {
+      return {
+        available: false,
+        vectorCount: 0,
+        message: "\u672A\u5EFA\u7ACB\u5411\u91CF\u7D22\u5F15"
+      };
+    }
+    return {
+      available: true,
+      vectorCount: indexStatus.actualVectorCount,
+      message: `\u5DF2\u7D22\u5F15 ${indexStatus.actualVectorCount} \u6761\u8BB0\u5F55`
+    };
+  } catch (e) {
+    return {
+      available: false,
+      vectorCount: 0,
+      message: "\u68C0\u67E5\u72B6\u6001\u5931\u8D25"
+    };
+  }
+}
+var init_memoryRecall = __esm({
+  "src/core/memoryRecall.js"() {
+    init_logger();
+    init_semanticSearch();
+    init_vectorStore();
+    init_context();
+  }
+});
+
+// src/ui/memoryRecallPanel.js
+async function openRecallPanel() {
+  $("#t-main-view").hide();
+  ensureOverlay();
+  if ($("#t-recall-view").length > 0) {
+    $("#t-recall-view").show();
+    return;
+  }
+  let status = { available: false, vectorCount: 0, message: "\u6B63\u5728\u68C0\u67E5..." };
+  try {
+    status = await getRecallStatus();
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u53EC\u56DE\u72B6\u6001\u5931\u8D25", e);
+    status = { available: false, vectorCount: 0, message: "\u72B6\u6001\u68C0\u67E5\u5931\u8D25" };
+  }
+  const html = `
+    <div class="t-box t-recall-container" id="t-recall-view">
+        <div class="t-header" style="flex-shrink:0;">
+            <span class="t-title-main"><i class="fa-solid fa-lightbulb"></i> \u8BB0\u5FC6\u53EC\u56DE</span>
+            <span class="t-recall-status-badge ${status.available ? "available" : "unavailable"}" style="margin-left: auto; margin-right: 15px; font-size: 0.85em; padding: 4px 10px; border-radius: 12px; background: ${status.available ? "#2a4a3a" : "#4a2a2a"}; color: ${status.available ? "#4caf50" : "#ff6b6b"};">
+                ${status.message}
+            </span>
+            <span class="t-close" id="t-recall-close">&times;</span>
+        </div>
+        
+        <div class="t-recall-toolbar" style="padding: 15px; border-bottom: 1px solid #333; background: #1a1a1a;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text"
+                       id="t-recall-query"
+                       class="t-input"
+                       placeholder="\u8F93\u5165\u8981\u68C0\u7D22\u7684\u5185\u5BB9\uFF08\u7559\u7A7A\u4F7F\u7528\u6700\u8FD1\u6D88\u606F\uFF09..."
+                       style="flex: 1;"
+                       ${!status.available ? "disabled" : ""}>
+                <button id="t-recall-search-btn"
+                        class="t-btn t-btn-primary"
+                        ${!status.available ? "disabled" : ""}>
+                    <i class="fa-solid fa-search"></i> \u68C0\u7D22
+                </button>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-top: 10px;">
+                <label style="display: flex; align-items: center; gap: 5px; color: #aaa; font-size: 0.9em;">
+                    \u6700\u5927\u6570\u91CF:
+                    <select id="t-recall-max-results" class="t-input" style="width: 70px; padding: 4px;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; color: #aaa; font-size: 0.9em;">
+                    \u6700\u5C0F\u76F8\u4F3C\u5EA6:
+                    <select id="t-recall-min-score" class="t-input" style="width: 70px; padding: 4px;">
+                        <option value="0.4">40%</option>
+                        <option value="0.5" selected>50%</option>
+                        <option value="0.6">60%</option>
+                        <option value="0.7">70%</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        
+        <div style="padding: 10px 15px; background: #2a2a2a; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #888;">\u68C0\u7D22\u7ED3\u679C</span>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="t-recall-select-all" class="t-tool-btn" disabled>\u5168\u9009</button>
+                <button id="t-recall-deselect-all" class="t-tool-btn" disabled>\u53D6\u6D88</button>
+                <span id="t-recall-selected-count" style="color: #888; font-size: 0.9em;">\u5DF2\u9009: 0</span>
+            </div>
+        </div>
+        
+        <div class="t-recall-results-area" style="flex: 1; overflow-y: auto; padding: 10px;">
+            <div id="t-recall-results-list">
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    ${status.available ? "\u8F93\u5165\u5173\u952E\u8BCD\u5E76\u70B9\u51FB\u68C0\u7D22" : "\u8BF7\u5148\u5EFA\u7ACB\u5411\u91CF\u7D22\u5F15"}
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 15px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; background: #1a1a1a;">
+            <button id="t-recall-cancel" class="t-btn">\u53D6\u6D88</button>
+            <button id="t-recall-append" class="t-btn t-btn-primary" disabled>
+                <i class="fa-solid fa-paperclip"></i> \u9644\u52A0\u5230\u8F93\u5165\u6846
+            </button>
+        </div>
+    </div>`;
+  $("#t-overlay").append(html);
+  searchResults = [];
+  selectedIndices.clear();
+  bindRecallEvents();
+  try {
+    const defaultQuery = getDefaultQuery();
+    if (defaultQuery) {
+      $("#t-recall-query").val(defaultQuery.substring(0, 200));
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u586B\u5145\u9ED8\u8BA4\u67E5\u8BE2\u5931\u8D25", e);
+  }
+}
+function closeRecallPanel() {
+  $("#t-recall-view").remove();
+  const $mainView = $("#t-main-view");
+  if ($mainView.length > 0) {
+    $mainView.css("display", "flex");
+  } else {
+    $("#t-overlay").remove();
+  }
+}
+function bindRecallEvents() {
+  $("#t-recall-close").on("click", closeRecallPanel);
+  $("#t-recall-cancel").on("click", closeRecallPanel);
+  $("#t-recall-search-btn").on("click", handleSearch);
+  $("#t-recall-query").on("keypress", (e) => {
+    if (e.key === "Enter" && !isSearching) {
+      handleSearch();
+    }
+  });
+  $("#t-recall-select-all").on("click", () => {
+    selectedIndices = new Set(searchResults.map((_, i) => i));
+    updateResultsSelection();
+  });
+  $("#t-recall-deselect-all").on("click", () => {
+    selectedIndices.clear();
+    updateResultsSelection();
+  });
+  $("#t-recall-append").on("click", handleAppend);
+}
+async function handleSearch() {
+  if (isSearching) return;
+  let query = $("#t-recall-query").val()?.trim() || "";
+  if (!query) {
+    query = getDefaultQuery();
+    if (!query) {
+      if (window.toastr) {
+        toastr.warning("\u8BF7\u8F93\u5165\u68C0\u7D22\u5185\u5BB9", "Titania");
+      }
+      return;
+    }
+  }
+  const maxResults = parseInt($("#t-recall-max-results").val()) || 10;
+  const minScore = parseFloat($("#t-recall-min-score").val()) || 0.5;
+  isSearching = true;
+  $("#t-recall-search-btn").html('<i class="fa-solid fa-spinner fa-spin"></i> \u68C0\u7D22\u4E2D...').prop("disabled", true);
+  $("#t-recall-results-list").html('<div style="text-align: center; padding: 40px; color: #888;"><i class="fa-solid fa-spinner fa-spin"></i> \u68C0\u7D22\u4E2D...</div>');
+  try {
+    searchResults = await recallMemories(query, { maxResults, minScore });
+    selectedIndices.clear();
+    if (searchResults.length === 0) {
+      $("#t-recall-results-list").html('<div style="text-align: center; padding: 40px; color: #666;">\u672A\u627E\u5230\u76F8\u5173\u8BB0\u5FC6</div>');
+    } else {
+      renderResults();
+    }
+  } catch (e) {
+    TitaniaLogger.error("\u68C0\u7D22\u5931\u8D25", e);
+    $("#t-recall-results-list").html('<div style="text-align: center; padding: 40px; color: #ff6b6b;">' + e.message + "</div>");
+    if (window.toastr) {
+      toastr.error(e.message, "\u68C0\u7D22\u5931\u8D25");
+    }
+  } finally {
+    isSearching = false;
+    $("#t-recall-search-btn").html('<i class="fa-solid fa-search"></i> \u68C0\u7D22').prop("disabled", false);
+  }
+}
+function renderResults() {
+  const $resultsList = $("#t-recall-results-list");
+  if (!$resultsList.length) return;
+  const html = searchResults.map((result, index) => {
+    const scorePercent = Math.round(result.score * 100);
+    const isSelected = selectedIndices.has(index);
+    const scoreColor = scorePercent >= 70 ? "#4caf50" : scorePercent >= 50 ? "#ff9800" : "#888";
+    const displayText = escapeHtml3(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
+    return '<div class="t-recall-result-item" data-index="' + index + '" style="display: flex; gap: 10px; padding: 12px; margin-bottom: 8px; background: ' + (isSelected ? "#2a3a4a" : "#1e1e1e") + "; border: 1px solid " + (isSelected ? "#4a9eff" : "#333") + '; border-radius: 8px; cursor: pointer; transition: all 0.2s;"><div style="flex-shrink: 0; padding-top: 2px;"><input type="checkbox" ' + (isSelected ? "checked" : "") + ' style="cursor: pointer;"></div><div style="flex: 1; min-width: 0;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="color: #888; font-size: 0.85em;">#' + result.messageIndex + '</span><span style="color: ' + scoreColor + '; font-weight: bold; font-size: 0.9em;">' + scorePercent + '%</span></div><div style="color: #ccc; font-size: 0.9em; line-height: 1.5; word-break: break-word;">' + displayText + "</div></div></div>";
+  }).join("");
+  $resultsList.html(html);
+  $resultsList.find(".t-recall-result-item").each(function() {
+    const $item = $(this);
+    const index = parseInt($item.data("index"));
+    $item.on("click", function(e) {
+      if (e.target.tagName === "INPUT") return;
+      if (selectedIndices.has(index)) {
+        selectedIndices.delete(index);
+      } else {
+        selectedIndices.add(index);
+      }
+      updateResultsSelection();
+    });
+    $item.find("input[type='checkbox']").on("change", function() {
+      if (this.checked) {
+        selectedIndices.add(index);
+      } else {
+        selectedIndices.delete(index);
+      }
+      updateResultsSelection();
+    });
+  });
+  updateButtonStates();
+}
+function updateResultsSelection() {
+  $(".t-recall-result-item").each(function() {
+    const $item = $(this);
+    const index = parseInt($item.data("index"));
+    const isSelected = selectedIndices.has(index);
+    $item.css({
+      "background": isSelected ? "#2a3a4a" : "#1e1e1e",
+      "border-color": isSelected ? "#4a9eff" : "#333"
+    });
+    $item.find("input[type='checkbox']").prop("checked", isSelected);
+  });
+  updateButtonStates();
+}
+function updateButtonStates() {
+  const hasResults = searchResults.length > 0;
+  const hasSelection = selectedIndices.size > 0;
+  $("#t-recall-select-all").prop("disabled", !hasResults);
+  $("#t-recall-deselect-all").prop("disabled", !hasSelection);
+  $("#t-recall-append").prop("disabled", !hasSelection);
+  $("#t-recall-selected-count").text("\u5DF2\u9009: " + selectedIndices.size);
+}
+function handleAppend() {
+  if (selectedIndices.size === 0) {
+    if (window.toastr) {
+      toastr.warning("\u8BF7\u5148\u9009\u62E9\u8981\u9644\u52A0\u7684\u8BB0\u5FC6", "Titania");
+    }
+    return;
+  }
+  const selectedMemories = Array.from(selectedIndices).sort((a, b) => a - b).map((i) => searchResults[i]);
+  const success = appendMemoriesToInput(selectedMemories);
+  if (success) {
+    closeRecallPanel();
+    if (window.toastr) {
+      toastr.success("\u5DF2\u9644\u52A0 " + selectedMemories.length + " \u6761\u8BB0\u5FC6\u5230\u8F93\u5165\u6846", "Titania");
+    }
+  }
+}
+function escapeHtml3(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+var searchResults, selectedIndices, isSearching;
+var init_memoryRecallPanel = __esm({
+  "src/ui/memoryRecallPanel.js"() {
+    init_logger();
+    init_dom();
+    init_memoryRecall();
+    searchResults = [];
+    selectedIndices = /* @__PURE__ */ new Set();
+    isSearching = false;
+  }
+});
+
 // src/ui/floatingBtn.js
 function ensureModelDialogCss() {
   const id = "titania-css-model-dialog";
@@ -15618,6 +17042,7 @@ var init_floatingBtn = __esm({
     init_loreReviewWindow();
     init_settingsWindow();
     init_connection();
+    init_memoryRecallPanel();
     slideMenuVisible = false;
     TOOLBAR_BUTTONS = [
       {
@@ -15674,7 +17099,7 @@ var init_floatingBtn = __esm({
       },
       {
         id: "debug",
-        title: "\u8C03\u8BD5\u65E5\u5FD7",
+        title: "\u63D0\u793A\u8BCD\u5BA1\u67E5",
         icon: "fa-solid fa-bug",
         cssClass: "debug",
         handler: async () => {
@@ -15683,6 +17108,13 @@ var init_floatingBtn = __esm({
           ensureOverlay2();
           showDebugInfo2();
         }
+      },
+      {
+        id: "recall",
+        title: "\u8BB0\u5FC6\u53EC\u56DE",
+        icon: "fa-solid fa-lightbulb",
+        cssClass: "recall",
+        handler: () => openRecallPanel()
       }
     ];
     ANIMATION_CLASSES = {
@@ -16044,7 +17476,7 @@ ${ctx.worldInfo}
       const limit = cfg.history_limit || 10;
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
-      const history = getChatHistory(limit, historyWhitelist);
+      const history = getChatHistory2(limit, historyWhitelist);
       user += history && history.trim().length > 0 ? `[Conversation History]
 ${history}
 
