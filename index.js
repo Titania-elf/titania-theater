@@ -515,11 +515,7 @@ textarea.t-input {
 }
 
 /* ===== \u52A0\u8F7D\u52A8\u753B\u6548\u679C ===== */
-
-/* \u901A\u7528\u52A0\u8F7D\u72B6\u6001 - \u4FDD\u6301\u53EF\u4EA4\u4E92\u4EE5\u652F\u6301\u4FA7\u8FB9\u83DC\u5355 */
-#titania-float-btn.t-loading {
-    /* pointer-events: none; \u79FB\u9664\uFF0C\u6539\u4E3A\u5141\u8BB8\u70B9\u51FB\u5C55\u5F00\u4FA7\u8FB9\u83DC\u5355 */
-}
+/* \u6CE8\uFF1A\u901A\u7528\u52A0\u8F7D\u72B6\u6001\u4FDD\u6301\u53EF\u4EA4\u4E92\u4EE5\u652F\u6301\u4FA7\u8FB9\u83DC\u5355\uFF08\u65E0\u9700\u989D\u5916\u6837\u5F0F\uFF09 */
 
 /* ===== \u52A8\u753B 1: \u8109\u51B2\u6CE2\u7EB9 (Pulse Ripple) ===== */
 @keyframes t-ripple-1 {
@@ -5186,7 +5182,7 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     border-color: #90cdf4;
 }
 
-/* \u79FB\u52A8\u7AEF\u9002\u914D */
+/* \u79FB\u52A8\u7AEF\u9002\u914D - \u5168\u5C4F\u5207\u6362\u5F0F\u5E03\u5C40 */
 @media (max-width: 768px) {
     .t-lore-review-window {
         width: 100%;
@@ -5196,37 +5192,167 @@ input[list]:hover::-webkit-calendar-picker-indicator {
         border-radius: 0;
         border: none;
         position: fixed;
-        /* \u5F3A\u5236\u56FA\u5B9A */
         top: 0;
         left: 0;
     }
 
+    /* \u8BBE\u5B9A\u63D0\u53D6\u4E3B\u5185\u5BB9\u533A - \u79FB\u52A8\u7AEF\u4F7F\u7528\u76F8\u5BF9\u5B9A\u4F4D\u5B9E\u73B0\u5207\u6362 */
     .t-lore-content {
-        flex-direction: column;
+        flex-direction: row;
         overflow: hidden;
-        /* \u786E\u4FDD\u5185\u5BB9\u533A\u4E0D\u6EA2\u51FA */
+        position: relative;
     }
 
+    /* \u79FB\u52A8\u7AEF\u5217\u8868\u5BB9\u5668 - \u9ED8\u8BA4\u663E\u793A\uFF0C\u5360\u6EE1\u5BBD\u5EA6 */
     .t-lore-list-container {
         width: 100%;
-        height: 35%;
-        /* \u5217\u8868\u5360 35% */
+        height: 100%;
         border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
         flex-shrink: 0;
-        /* \u9632\u6B62\u88AB\u538B\u7F29 */
         overflow-y: auto;
-        /* \u786E\u4FDD\u5217\u8868\u53EF\u6EDA\u52A8 */
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        background: rgba(30, 30, 35, 1);
+        transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
+    /* \u79FB\u52A8\u7AEF\u7F16\u8F91\u5BB9\u5668 - \u9ED8\u8BA4\u9690\u85CF\u5728\u53F3\u4FA7 */
     .t-lore-editor-container {
-        height: 65%;
-        /* \u8BE6\u60C5\u5360 65% */
-        padding: 15px;
+        width: 100%;
+        height: 100%;
+        padding: 0;
         overflow-y: auto;
-        /* \u786E\u4FDD\u8BE6\u60C5\u53EF\u6EDA\u52A8 */
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+        background: rgba(30, 30, 35, 1);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
     }
 
+    /* \u79FB\u52A8\u7AEF\u7F16\u8F91\u533A\u6FC0\u6D3B\u72B6\u6001 - \u6ED1\u5165\u663E\u793A */
+    .t-lore-content.t-mobile-edit-mode .t-lore-list-container {
+        transform: translateX(-100%);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .t-lore-content.t-mobile-edit-mode .t-lore-editor-container {
+        transform: translateX(0);
+        z-index: 2;
+    }
+
+    /* \u79FB\u52A8\u7AEF\u7F16\u8F91\u533A\u5185\u90E8\u5E03\u5C40 */
+    .t-lore-editor-container .t-editor-header {
+        display: none;
+        /* \u9690\u85CF\u539F\u6709\u6807\u9898\uFF0C\u4F7F\u7528\u65B0\u7684\u79FB\u52A8\u7AEF\u6807\u9898\u680F */
+    }
+
+    /* \u79FB\u52A8\u7AEF\u8FD4\u56DE\u6309\u94AE\u680F */
+    .t-mobile-editor-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .t-mobile-back-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        color: #90cdf4;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .t-mobile-back-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .t-mobile-editor-title {
+        flex: 1;
+        font-weight: 600;
+        color: #e2e8f0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .t-mobile-nav-btns {
+        display: flex;
+        gap: 5px;
+    }
+
+    .t-mobile-nav-btn {
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: #a0aec0;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .t-mobile-nav-btn:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+    }
+
+    .t-mobile-nav-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    /* \u79FB\u52A8\u7AEF\u7F16\u8F91\u8868\u5355\u5185\u8FB9\u8DDD */
+    .t-lore-editor {
+        padding: 15px;
+    }
+
+    /* \u79FB\u52A8\u7AEF placeholder \u9690\u85CF */
+    #t-editor-placeholder {
+        display: none !important;
+    }
+
+    /* \u79FB\u52A8\u7AEF textarea \u589E\u5927\u9AD8\u5EA6 */
+    .t-lore-editor textarea#t-edit-content {
+        min-height: 200px;
+        font-size: 16px;
+        /* \u9632\u6B62 iOS \u81EA\u52A8\u7F29\u653E */
+    }
+
+    /* \u79FB\u52A8\u7AEF\u8868\u5355\u7EC4\u95F4\u8DDD\u8C03\u6574 */
+    .t-lore-editor .t-form-group {
+        margin-bottom: 20px;
+    }
+
+    .t-lore-editor .t-form-group label {
+        font-size: 0.95em;
+        margin-bottom: 10px;
+    }
+
+    .t-lore-editor input[type="text"],
+    .t-lore-editor select,
+    .t-lore-editor textarea {
+        padding: 14px;
+        font-size: 16px;
+        /* \u9632\u6B62 iOS \u81EA\u52A8\u7F29\u653E */
+    }
+
+    /* \u5E95\u90E8\u64CD\u4F5C\u680F */
     .t-window-footer {
         flex-direction: column;
         gap: 10px;
@@ -5259,6 +5385,23 @@ input[list]:hover::-webkit-calendar-picker-indicator {
         right: 20px;
         left: 20px;
     }
+
+    /* \u79FB\u52A8\u7AEF\u663E\u793A\u8FD4\u56DE\u6309\u94AE\u680F */
+    .t-mobile-editor-header {
+        display: flex !important;
+    }
+}
+
+/* \u684C\u9762\u7AEF\u9690\u85CF\u79FB\u52A8\u7AEF\u4E13\u7528\u5143\u7D20 */
+@media (min-width: 769px) {
+    .t-mobile-editor-header {
+        display: none !important;
+    }
+}
+
+/* \u9ED8\u8BA4\u9690\u85CF\u79FB\u52A8\u7AEF\u4E13\u7528\u5143\u7D20\uFF08\u684C\u9762\u7AEF\uFF09 */
+.t-mobile-editor-header {
+    display: none;
 }
 
 /* \u914D\u7F6E\u4FE1\u606F\u680F */
@@ -5804,6 +5947,218 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     cursor: not-allowed;
 }
 
+/* ========== \u81EA\u5B9A\u4E49\u63D0\u793A\u8BCD\u533A\u57DF\u6837\u5F0F ========== */
+.t-custom-prompt-section {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    margin: 0 20px 15px 20px;
+    overflow: hidden;
+}
+
+.t-custom-prompt-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: background 0.2s;
+    color: #cbd5e0;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.t-custom-prompt-header:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.t-custom-prompt-header i:first-child {
+    transition: transform 0.2s;
+    color: #90cdf4;
+}
+
+.t-custom-prompt-header .t-btn {
+    margin-left: auto;
+}
+
+.t-custom-prompt-body {
+    padding: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.t-custom-prompt-body textarea {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 150px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.t-custom-prompt-body textarea:focus {
+    border-color: #90cdf4;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(144, 205, 244, 0.1);
+}
+
+.t-custom-prompt-body textarea::placeholder {
+    color: #666;
+}
+
+.t-prompt-hint {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(144, 205, 244, 0.08);
+    border-radius: 6px;
+    font-size: 0.85em;
+    color: #a0aec0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.t-prompt-hint i {
+    color: #90cdf4;
+    margin-top: 2px;
+}
+
+/* ========== \u63D0\u793A\u8BCD\u9884\u89C8\u5F39\u7A97\u7EDF\u8BA1\u4FE1\u606F\u680F ========== */
+.t-prompt-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 15px 20px;
+    background: rgba(144, 205, 244, 0.08);
+    border-bottom: 1px solid rgba(144, 205, 244, 0.15);
+}
+
+.t-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    color: #a0aec0;
+}
+
+.t-stat-item i {
+    font-size: 1em;
+}
+
+.t-stat-item strong {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+/* \u79FB\u52A8\u7AEF\u7EDF\u8BA1\u4FE1\u606F\u680F\u9002\u914D */
+@media (max-width: 768px) {
+    .t-prompt-stats {
+        padding: 12px 15px;
+        gap: 10px;
+    }
+
+    .t-stat-item {
+        font-size: 0.8em;
+        flex: 1 1 45%;
+        min-width: 0;
+    }
+}
+
+/* ========== \u63D0\u793A\u8BCD\u67E5\u770B\u5F39\u7A97\u6837\u5F0F ========== */
+.t-prompt-tabs {
+    display: flex;
+    gap: 5px;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.t-prompt-tab {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #a0aec0;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.t-prompt-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+.t-prompt-tab.active {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+}
+
+.t-prompt-content-container {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.t-prompt-content {
+    flex: 1;
+    padding: 15px 20px;
+    overflow: auto;
+    max-height: 50vh;
+}
+
+.t-prompt-pre {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.85em;
+    color: #ddd;
+    line-height: 1.6;
+    max-height: 45vh;
+    overflow: auto;
+}
+
+/* \u81EA\u5B9A\u4E49\u6EDA\u52A8\u6761 */
+.t-prompt-pre::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.t-prompt-pre::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.t-prompt-pre::-webkit-scrollbar-thumb {
+    background: rgba(144, 205, 244, 0.3);
+    border-radius: 4px;
+}
+
+.t-prompt-pre::-webkit-scrollbar-thumb:hover {
+    background: rgba(144, 205, 244, 0.5);
+}
+
+/* \u5F39\u7A97 footer \u8C03\u6574 */
+#t-prompt-view-dialog .t-dialog-footer {
+    justify-content: space-between;
+}
+
 /* \u79FB\u52A8\u7AEF\u9002\u914D\u65B0\u5143\u7D20 */
 @media (max-width: 768px) {
     .t-mode-tabs {
@@ -5851,6 +6206,36 @@ input[list]:hover::-webkit-calendar-picker-indicator {
 
     .t-control-group {
         flex-wrap: wrap;
+    }
+
+    .t-custom-prompt-section {
+        margin: 0 10px 10px 10px;
+    }
+
+    .t-prompt-tabs {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .t-prompt-tab {
+        flex: 1;
+        justify-content: center;
+        min-width: 80px;
+    }
+
+    #t-prompt-view-dialog .t-dialog-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #t-prompt-view-dialog .t-dialog-footer>div {
+        width: 100%;
+        display: flex;
+        gap: 5px;
+    }
+
+    #t-prompt-view-dialog .t-dialog-footer>div .t-btn {
+        flex: 1;
     }
 }
 
@@ -11191,37 +11576,7 @@ async function sendFeatureRequest(messages, options = {}) {
     return json.choices?.[0]?.message?.content || "";
   }
 }
-async function extractLoreFromHistory(historyLimit = 20) {
-  const conn = getFeatureConnection(FEATURE_KEY);
-  if (!conn) {
-    throw new Error("\u672A\u914D\u7F6E API \u8FDE\u63A5\uFF0C\u8BF7\u5148\u914D\u7F6E\u540E\u518D\u4F7F\u7528");
-  }
-  TitaniaLogger.info("\u5F00\u59CB\u63D0\u53D6\u8BBE\u5B9A...", {
-    historyLimit,
-    profile: conn.profileName,
-    model: conn.model
-  });
-  const ctx = await getContextData();
-  const history = getChatHistory(historyLimit);
-  if (!history || history.trim().length === 0) {
-    throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u63D0\u53D6\u8BBE\u5B9A");
-  }
-  let existingLoreSummary = "";
-  try {
-    const activeEntries = await getActiveWorldInfoEntries();
-    const summaryList = [];
-    activeEntries.forEach((book) => {
-      book.entries.forEach((e) => {
-        const keys = Array.isArray(e.keys) ? e.keys.join(", ") : e.keys;
-        summaryList.push(`UID: ${e.uid} | Keys: ${keys} | Book: ${book.bookName}`);
-      });
-    });
-    if (summaryList.length > 0) {
-      existingLoreSummary = summaryList.join("\n");
-    }
-  } catch (e) {
-    TitaniaLogger.warn("\u83B7\u53D6\u73B0\u6709\u4E16\u754C\u4E66\u5931\u8D25\uFF0C\u5C06\u8DF3\u8FC7\u81EA\u52A8\u5339\u914D", e);
-  }
+function buildExtractPrompt(ctx, history, existingLoreSummary) {
   const sysPrompt = `You are an expert Lorekeeper and World Builder. Your task is to analyze the provided roleplay chat history and extract key information into a structured JSON format for a World Info (Lorebook) database.
 
 [Target Information]
@@ -11274,18 +11629,83 @@ ${history}
 
 [Task]
 Extract new lore entries from the above history. Return JSON only.`;
+  return [
+    { role: "system", content: sysPrompt },
+    { role: "user", content: userPrompt }
+  ];
+}
+async function previewExtractPrompt(historyLimit = 20) {
+  TitaniaLogger.info("\u9884\u89C8\u8BBE\u5B9A\u63D0\u53D6\u63D0\u793A\u8BCD...", { historyLimit });
+  const ctx = await getContextData();
+  const history = getChatHistory(historyLimit);
+  if (!history || history.trim().length === 0) {
+    throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A");
+  }
+  const messagePattern = /(?:^|\n)(?:\*\*[^*]+\*\*:|[^:\n]+:)/g;
+  const matches = history.match(messagePattern);
+  const actualHistoryCount = matches ? matches.length : historyLimit;
+  let existingLoreSummary = "";
+  let existingEntriesCount = 0;
+  try {
+    const activeEntries = await getActiveWorldInfoEntries();
+    const summaryList = [];
+    activeEntries.forEach((book) => {
+      book.entries.forEach((e) => {
+        const keys = Array.isArray(e.keys) ? e.keys.join(", ") : e.keys;
+        summaryList.push(`UID: ${e.uid} | Keys: ${keys} | Book: ${book.bookName}`);
+      });
+    });
+    existingEntriesCount = summaryList.length;
+    if (summaryList.length > 0) {
+      existingLoreSummary = summaryList.join("\n");
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u73B0\u6709\u4E16\u754C\u4E66\u5931\u8D25", e);
+  }
+  const messages = buildExtractPrompt(ctx, history, existingLoreSummary);
+  return {
+    messages,
+    historyCount: actualHistoryCount,
+    existingEntriesCount
+  };
+}
+async function extractLoreFromHistory(historyLimit = 20) {
+  const conn = getFeatureConnection(FEATURE_KEY);
+  if (!conn) {
+    throw new Error("\u672A\u914D\u7F6E API \u8FDE\u63A5\uFF0C\u8BF7\u5148\u914D\u7F6E\u540E\u518D\u4F7F\u7528");
+  }
+  TitaniaLogger.info("\u5F00\u59CB\u63D0\u53D6\u8BBE\u5B9A...", {
+    historyLimit,
+    profile: conn.profileName,
+    model: conn.model
+  });
+  const ctx = await getContextData();
+  const history = getChatHistory(historyLimit);
+  if (!history || history.trim().length === 0) {
+    throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u63D0\u53D6\u8BBE\u5B9A");
+  }
+  let existingLoreSummary = "";
+  try {
+    const activeEntries = await getActiveWorldInfoEntries();
+    const summaryList = [];
+    activeEntries.forEach((book) => {
+      book.entries.forEach((e) => {
+        const keys = Array.isArray(e.keys) ? e.keys.join(", ") : e.keys;
+        summaryList.push(`UID: ${e.uid} | Keys: ${keys} | Book: ${book.bookName}`);
+      });
+    });
+    if (summaryList.length > 0) {
+      existingLoreSummary = summaryList.join("\n");
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u73B0\u6709\u4E16\u754C\u4E66\u5931\u8D25\uFF0C\u5C06\u8DF3\u8FC7\u81EA\u52A8\u5339\u914D", e);
+  }
+  const messages = buildExtractPrompt(ctx, history, existingLoreSummary);
   let rawContent = "";
   try {
-    rawContent = await sendFeatureRequest(
-      [
-        { role: "system", content: sysPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      {
-        // 使用全局配置的 max_tokens（在 sendFeatureRequest 中读取）
-        temperature: 0.3
-      }
-    );
+    rawContent = await sendFeatureRequest(messages, {
+      temperature: 0.3
+    });
   } catch (e) {
     TitaniaLogger.error("API \u8BF7\u6C42\u5931\u8D25", e);
     throw new Error("API \u8BF7\u6C42\u5931\u8D25: " + (e.message || "\u672A\u77E5\u9519\u8BEF"));
@@ -12220,16 +12640,74 @@ Please write a narrative summary of this session (2-3 paragraphs).`;
     { role: "user", content: userPrompt }
   ];
 }
+async function previewSummaryPrompt(characterId, options = {}) {
+  const summarizerCfg = getSummarizerConfig();
+  const historyLimit = options.historyLimit || 20;
+  const template = options.template || summarizerCfg.template || "structured";
+  const useVectorSearch = options.useVectorSearch !== void 0 ? options.useVectorSearch : summarizerCfg.use_vector_search;
+  const customPrompt = options.customPrompt || summarizerCfg.custom_prompt || "";
+  TitaniaLogger.info("\u9884\u89C8\u63D0\u793A\u8BCD...", {
+    characterId,
+    historyLimit,
+    template,
+    useVectorSearch,
+    hasCustomPrompt: !!customPrompt
+  });
+  const ctx = await getContextData();
+  const history = getChatHistory(historyLimit);
+  if (!history || history.trim().length === 0) {
+    throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A");
+  }
+  const messagePattern = /(?:^|\n)(?:\*\*[^*]+\*\*:|[^:\n]+:)/g;
+  const matches = history.match(messagePattern);
+  const actualHistoryCount = matches ? matches.length : historyLimit;
+  let relevantHistory = "";
+  let relevantHistoryFound = false;
+  if (useVectorSearch && characterId) {
+    try {
+      const indexStatus = await getIndexStatus(characterId);
+      if (indexStatus && indexStatus.actualVectorCount > 0) {
+        const queryText = history.substring(0, 1e3);
+        relevantHistory = await getRelevantContext(queryText, characterId, {
+          maxTokens: 1500,
+          topK: 10,
+          minScore: 0.5
+        });
+        if (relevantHistory) {
+          relevantHistoryFound = true;
+          TitaniaLogger.info("\u5DF2\u83B7\u53D6\u76F8\u5173\u5386\u53F2\u8BB0\u5F55");
+        }
+      }
+    } catch (e) {
+      TitaniaLogger.warn("\u83B7\u53D6\u76F8\u5173\u5386\u53F2\u5931\u8D25", e);
+    }
+  }
+  let messages;
+  if (customPrompt) {
+    messages = buildCustomPrompt(ctx, history, relevantHistory, customPrompt);
+  } else if (template === "narrative") {
+    messages = buildNarrativePrompt(ctx, history, relevantHistory);
+  } else {
+    messages = buildStructuredPrompt(ctx, history, relevantHistory);
+  }
+  return {
+    messages,
+    historyCount: actualHistoryCount,
+    relevantHistoryFound
+  };
+}
 async function generateSummary(characterId, options = {}) {
   const summarizerCfg = getSummarizerConfig();
   const historyLimit = options.historyLimit || 20;
   const template = options.template || summarizerCfg.template || "structured";
   const useVectorSearch = options.useVectorSearch !== void 0 ? options.useVectorSearch : summarizerCfg.use_vector_search;
+  const customPrompt = options.customPrompt || summarizerCfg.custom_prompt || "";
   TitaniaLogger.info("\u5F00\u59CB\u751F\u6210\u603B\u7ED3...", {
     characterId,
     historyLimit,
     template,
-    useVectorSearch
+    useVectorSearch,
+    hasCustomPrompt: !!customPrompt
   });
   const ctx = await getContextData();
   const history = getChatHistory(historyLimit);
@@ -12256,7 +12734,9 @@ async function generateSummary(characterId, options = {}) {
     }
   }
   let messages;
-  if (template === "narrative") {
+  if (customPrompt) {
+    messages = buildCustomPrompt(ctx, history, relevantHistory, customPrompt);
+  } else if (template === "narrative") {
     messages = buildNarrativePrompt(ctx, history, relevantHistory);
   } else {
     messages = buildStructuredPrompt(ctx, history, relevantHistory);
@@ -12268,16 +12748,44 @@ async function generateSummary(characterId, options = {}) {
     });
   } catch (e) {
     TitaniaLogger.error("\u603B\u7ED3\u8BF7\u6C42\u5931\u8D25", e);
-    throw new Error("\u603B\u7ED3\u751F\u6210\u5931\u8D25: " + (e.message || "\u672A\u77E5\u9519\u8BEF"));
+    const error = new Error("\u603B\u7ED3\u751F\u6210\u5931\u8D25: " + (e.message || "\u672A\u77E5\u9519\u8BEF"));
+    error.messages = messages;
+    throw error;
   }
   if (!rawContent) {
-    throw new Error("API \u8FD4\u56DE\u5185\u5BB9\u4E3A\u7A7A");
+    const error = new Error("API \u8FD4\u56DE\u5185\u5BB9\u4E3A\u7A7A");
+    error.messages = messages;
+    throw error;
   }
   TitaniaLogger.info("\u603B\u7ED3\u751F\u6210\u5B8C\u6210");
   return {
     summary: rawContent,
-    rawResponse: rawContent
+    rawResponse: rawContent,
+    messages
+    // 返回发送的 messages 供查看
   };
+}
+function buildCustomPrompt(context, history, relevantHistory, customSystemPrompt) {
+  let userPrompt = `[Context]
+Character: ${context.charName}
+User: ${context.userName}
+
+[Chat History to Summarize]
+${history}`;
+  if (relevantHistory) {
+    userPrompt += `
+
+[Semantically Related Past Events]
+${relevantHistory}`;
+  }
+  userPrompt += `
+
+[Task]
+Please generate a summary based on the above content.`;
+  return [
+    { role: "system", content: customSystemPrompt },
+    { role: "user", content: userPrompt }
+  ];
 }
 async function buildVectorIndex(characterId, options = {}) {
   const limit = options.limit || 1e3;
@@ -12373,6 +12881,18 @@ function ensureCssLoaded() {
 function getFeatureConfig() {
   const data = getExtData();
   return data[`${FEATURE_KEY3}_config`] || null;
+}
+function getSavedAnalysisSettings() {
+  const data = getExtData();
+  return data.analysis_settings || {};
+}
+function saveAnalysisSettings(settings2) {
+  const data = getExtData();
+  data.analysis_settings = {
+    ...data.analysis_settings || {},
+    ...settings2
+  };
+  saveExtData();
 }
 function saveFeatureConfig(config) {
   const data = getExtData();
@@ -12661,6 +13181,9 @@ async function showLoreReviewWindow() {
   } catch (e) {
     TitaniaLogger.warn("\u83B7\u53D6\u5411\u91CF\u7D22\u5F15\u72B6\u6001\u5931\u8D25", e);
   }
+  const savedSettings = getSavedAnalysisSettings();
+  const extractLimit = savedSettings.extractLimit || 2;
+  const summaryLimit = savedSettings.summaryLimit || 20;
   const indexStatusHtml = indexStatus ? `<span class="t-index-status t-index-ready">\u2705 ${indexStatus.actualVectorCount} \u6761</span>` : `<span class="t-index-status t-index-empty">\u274C \u672A\u5EFA\u7ACB</span>`;
   const lastExportTime = indexStatus?.lastExportedAt ? new Date(indexStatus.lastExportedAt).toLocaleString() : "\u4ECE\u672A\u5BFC\u51FA";
   const html = `
@@ -12710,9 +13233,12 @@ async function showLoreReviewWindow() {
                     <div class="t-lore-controls">
                         <div class="t-control-group">
                             <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
-                            <input type="number" id="t-lore-history-limit" value="2" min="1" max="100" style="width: 60px;">
+                            <input type="number" id="t-lore-history-limit" value="${extractLimit}" min="1" max="100" style="width: 60px;">
                         </div>
                         <div class="t-control-buttons">
+                            <button id="t-btn-preview-extract-prompt" class="t-btn" title="\u9884\u89C8\u5C06\u8981\u53D1\u9001\u7ED9 AI \u7684\u5B8C\u6574\u63D0\u793A\u8BCD\uFF08\u4E0D\u4F1A\u53D1\u9001\u8BF7\u6C42\uFF09">
+                                <i class="fa-solid fa-eye"></i> \u9884\u89C8\u63D0\u793A\u8BCD
+                            </button>
                             <button id="t-btn-start-extract" class="t-btn t-btn-primary">
                                 <i class="fa-solid fa-search"></i> \u5F00\u59CB\u5206\u6790
                             </button>
@@ -12743,6 +13269,21 @@ async function showLoreReviewWindow() {
 
                     <!-- \u53F3\u4FA7\uFF1A\u8BE6\u60C5\u7F16\u8F91 -->
                     <div class="t-lore-editor-container">
+                        <!-- \u79FB\u52A8\u7AEF\u8FD4\u56DE\u6309\u94AE\u680F -->
+                        <div class="t-mobile-editor-header">
+                            <button class="t-mobile-back-btn" id="t-mobile-back-to-list">
+                                <i class="fa-solid fa-arrow-left"></i> \u8FD4\u56DE\u5217\u8868
+                            </button>
+                            <span class="t-mobile-editor-title" id="t-mobile-edit-title">\u7F16\u8F91\u6761\u76EE</span>
+                            <div class="t-mobile-nav-btns">
+                                <button class="t-mobile-nav-btn" id="t-mobile-prev-entry" title="\u4E0A\u4E00\u6761">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <button class="t-mobile-nav-btn" id="t-mobile-next-entry" title="\u4E0B\u4E00\u6761">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div class="t-editor-header">
                             <span>\u6761\u76EE\u8BE6\u60C5</span>
                         </div>
@@ -12805,13 +13346,14 @@ async function showLoreReviewWindow() {
                     <div class="t-lore-controls">
                         <div class="t-control-group">
                             <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
-                            <input type="number" id="t-summary-history-limit" value="20" min="1" max="200" style="width: 60px;">
+                            <input type="number" id="t-summary-history-limit" value="${summaryLimit}" min="1" max="200" style="width: 60px;">
                         </div>
                         <div class="t-control-group">
                             <label>\u603B\u7ED3\u6A21\u677F:</label>
                             <select id="t-summary-template" style="width: 120px;">
                                 <option value="structured">\u7ED3\u6784\u5316\u6458\u8981</option>
                                 <option value="narrative">\u53D9\u4E8B\u6027\u603B\u7ED3</option>
+                                <option value="custom">\u81EA\u5B9A\u4E49\u63D0\u793A\u8BCD</option>
                             </select>
                         </div>
                         <div class="t-control-group">
@@ -12821,9 +13363,30 @@ async function showLoreReviewWindow() {
                             </label>
                         </div>
                         <div class="t-control-buttons">
+                            <button id="t-btn-preview-prompt" class="t-btn" title="\u9884\u89C8\u5C06\u8981\u53D1\u9001\u7ED9 AI \u7684\u5B8C\u6574\u63D0\u793A\u8BCD\uFF08\u4E0D\u4F1A\u53D1\u9001\u8BF7\u6C42\uFF09">
+                                <i class="fa-solid fa-eye"></i> \u9884\u89C8\u63D0\u793A\u8BCD
+                            </button>
                             <button id="t-btn-generate-summary" class="t-btn t-btn-primary">
                                 <i class="fa-solid fa-magic"></i> \u751F\u6210\u603B\u7ED3
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- \u81EA\u5B9A\u4E49\u63D0\u793A\u8BCD\u533A\u57DF\uFF08\u53EF\u6298\u53E0\uFF09 -->
+                    <div id="t-custom-prompt-section" class="t-custom-prompt-section" style="display: none;">
+                        <div class="t-custom-prompt-header" id="t-toggle-custom-prompt">
+                            <i class="fa-solid fa-chevron-down"></i>
+                            <span>\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD</span>
+                            <button id="t-btn-reset-prompt" class="t-btn t-btn-xs" title="\u6062\u590D\u9ED8\u8BA4\u63D0\u793A\u8BCD">
+                                <i class="fa-solid fa-undo"></i> \u6062\u590D\u9ED8\u8BA4
+                            </button>
+                        </div>
+                        <div class="t-custom-prompt-body">
+                            <textarea id="t-custom-prompt-input" rows="8" placeholder="\u5728\u6B64\u8F93\u5165\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD...&#10;&#10;\u53EF\u7528\u53D8\u91CF\uFF1A&#10;- \u804A\u5929\u5386\u53F2\u4F1A\u81EA\u52A8\u9644\u52A0\u5728 user \u6D88\u606F\u4E2D&#10;- \u76F8\u5173\u5386\u53F2\uFF08\u5982\u542F\u7528\u8BED\u4E49\u68C0\u7D22\uFF09\u4E5F\u4F1A\u9644\u52A0"></textarea>
+                            <div class="t-prompt-hint">
+                                <i class="fa-solid fa-info-circle"></i>
+                                \u63D0\u793A\uFF1A\u7CFB\u7EDF\u63D0\u793A\u8BCD\u5B9A\u4E49 AI \u7684\u89D2\u8272\u548C\u4EFB\u52A1\u3002\u804A\u5929\u5386\u53F2\u4F1A\u4F5C\u4E3A user \u6D88\u606F\u53D1\u9001\u3002
+                            </div>
                         </div>
                     </div>
 
@@ -12967,6 +13530,38 @@ function bindEvents() {
       }
     });
   });
+  $("#t-lore-history-limit").on("change", function() {
+    const val = parseInt($(this).val());
+    if (!isNaN(val) && val > 0) {
+      saveAnalysisSettings({ extractLimit: val });
+    }
+  });
+  $("#t-summary-history-limit").on("change", function() {
+    const val = parseInt($(this).val());
+    if (!isNaN(val) && val > 0) {
+      saveAnalysisSettings({ summaryLimit: val });
+    }
+  });
+  $("#t-btn-preview-extract-prompt").on("click", async function() {
+    let limit = parseInt($("#t-lore-history-limit").val());
+    if (isNaN(limit) || limit < 1) limit = 2;
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u52A0\u8F7D\u4E2D...');
+    try {
+      const result = await previewExtractPrompt(limit);
+      showPromptPreviewDialog(result.messages, {
+        historyCount: result.historyCount,
+        existingEntriesCount: result.existingEntriesCount,
+        requestedLimit: limit,
+        isExtractMode: true
+      });
+    } catch (e) {
+      TitaniaLogger.error("\u9884\u89C8\u63D0\u793A\u8BCD\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u9884\u89C8\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-eye"></i> \u9884\u89C8\u63D0\u793A\u8BCD');
+    }
+  });
   $("#t-btn-start-extract").on("click", async function() {
     let limit = parseInt($("#t-lore-history-limit").val());
     if (isNaN(limit) || limit < 1) limit = 2;
@@ -13051,6 +13646,33 @@ function bindEvents() {
     $(this).addClass("active");
     const index = $(this).data("index");
     showEntryDetail(index);
+    if (window.innerWidth <= 768) {
+      $(".t-lore-content").addClass("t-mobile-edit-mode");
+      updateMobileNavButtons(index);
+    }
+  });
+  $(document).on("click", "#t-mobile-back-to-list", function() {
+    $(".t-lore-content").removeClass("t-mobile-edit-mode");
+  });
+  $(document).on("click", "#t-mobile-prev-entry", function() {
+    const currentIndex = $(".t-lore-entry-item.active").data("index");
+    if (currentIndex > 0) {
+      const newIndex = currentIndex - 1;
+      $(".t-lore-entry-item").removeClass("active");
+      $(`.t-lore-entry-item[data-index="${newIndex}"]`).addClass("active");
+      showEntryDetail(newIndex);
+      updateMobileNavButtons(newIndex);
+    }
+  });
+  $(document).on("click", "#t-mobile-next-entry", function() {
+    const currentIndex = $(".t-lore-entry-item.active").data("index");
+    if (currentIndex < currentEntries.length - 1) {
+      const newIndex = currentIndex + 1;
+      $(".t-lore-entry-item").removeClass("active");
+      $(`.t-lore-entry-item[data-index="${newIndex}"]`).addClass("active");
+      showEntryDetail(newIndex);
+      updateMobileNavButtons(newIndex);
+    }
   });
   $("#t-edit-keys").on("input", function() {
     const index = $(".t-lore-entry-item.active").data("index");
@@ -13089,10 +13711,65 @@ function bindEvents() {
       initSummaryWorldBookSelect();
     }
   });
+  $("#t-summary-template").on("change", function() {
+    const template = $(this).val();
+    if (template === "custom") {
+      $("#t-custom-prompt-section").show();
+      const data = getExtData();
+      const savedPrompt = data.summarizer_config?.custom_prompt || "";
+      $("#t-custom-prompt-input").val(savedPrompt);
+    } else {
+      $("#t-custom-prompt-section").hide();
+    }
+  });
+  $("#t-toggle-custom-prompt").on("click", function(e) {
+    if ($(e.target).closest("#t-btn-reset-prompt").length) return;
+    $(this).find("i:first").toggleClass("fa-chevron-down fa-chevron-up");
+    $(this).siblings(".t-custom-prompt-body").slideToggle(200);
+  });
+  $("#t-btn-reset-prompt").on("click", function(e) {
+    e.stopPropagation();
+    const defaultPrompt = getDefaultSummaryPrompt();
+    $("#t-custom-prompt-input").val(defaultPrompt);
+    if (window.toastr) toastr.info("\u5DF2\u6062\u590D\u9ED8\u8BA4\u63D0\u793A\u8BCD");
+  });
+  $("#t-custom-prompt-input").on("change", function() {
+    const data = getExtData();
+    if (!data.summarizer_config) data.summarizer_config = {};
+    data.summarizer_config.custom_prompt = $(this).val();
+    saveExtData();
+  });
+  $("#t-btn-preview-prompt").on("click", async function() {
+    const limit = parseInt($("#t-summary-history-limit").val()) || 20;
+    const template = $("#t-summary-template").val();
+    const useVectorSearch = $("#t-use-vector-search").is(":checked");
+    const customPrompt = template === "custom" ? $("#t-custom-prompt-input").val() : "";
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u52A0\u8F7D\u4E2D...');
+    try {
+      const result = await previewSummaryPrompt(currentCharacterId, {
+        historyLimit: limit,
+        template,
+        useVectorSearch,
+        customPrompt
+      });
+      showPromptPreviewDialog(result.messages, {
+        historyCount: result.historyCount,
+        relevantHistoryFound: result.relevantHistoryFound,
+        requestedLimit: limit
+      });
+    } catch (e) {
+      TitaniaLogger.error("\u9884\u89C8\u63D0\u793A\u8BCD\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u9884\u89C8\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-eye"></i> \u9884\u89C8\u63D0\u793A\u8BCD');
+    }
+  });
   $("#t-btn-generate-summary").on("click", async function() {
     const limit = parseInt($("#t-summary-history-limit").val()) || 20;
     const template = $("#t-summary-template").val();
     const useVectorSearch = $("#t-use-vector-search").is(":checked");
+    const customPrompt = template === "custom" ? $("#t-custom-prompt-input").val() : "";
     const $btn = $(this);
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u751F\u6210\u4E2D...');
     $("#t-summary-result").html('<div class="t-loading-state"><i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u5206\u6790\u804A\u5929\u5386\u53F2\u5E76\u751F\u6210\u603B\u7ED3...</div>');
@@ -13101,9 +13778,11 @@ function bindEvents() {
       const result = await generateSummary(currentCharacterId, {
         historyLimit: limit,
         template,
-        useVectorSearch
+        useVectorSearch,
+        customPrompt
       });
       lastSummary = result.summary;
+      lastSummaryMessages = result.messages;
       $("#t-summary-result").html(`
                 <div class="t-summary-text">${formatSummaryAsHtml(lastSummary)}</div>
             `);
@@ -13111,6 +13790,9 @@ function bindEvents() {
       if (window.toastr) toastr.success("\u603B\u7ED3\u751F\u6210\u6210\u529F", "Titania");
     } catch (e) {
       TitaniaLogger.error("\u603B\u7ED3\u751F\u6210\u5931\u8D25", e);
+      if (e.messages) {
+        lastSummaryMessages = e.messages;
+      }
       $("#t-summary-result").html(`<div class="t-error-state"><i class="fa-solid fa-exclamation-triangle"></i> \u751F\u6210\u5931\u8D25: ${e.message}</div>`);
       if (window.toastr) toastr.error(e.message, "\u751F\u6210\u5931\u8D25");
     } finally {
@@ -13352,8 +14034,184 @@ function showEntryDetail(index) {
   } else {
     $("#t-update-info-group").hide();
   }
+  const keysStr = Array.isArray(entry.keys) ? entry.keys.join(", ") : entry.keys;
+  $("#t-mobile-edit-title").text(keysStr || `\u6761\u76EE ${index + 1}`);
 }
-var FEATURE_KEY3, currentEntries, lastRawResponse, lastSummary, currentCharacterId, currentMode;
+function updateMobileNavButtons(currentIndex) {
+  const total = currentEntries.length;
+  if (currentIndex <= 0) {
+    $("#t-mobile-prev-entry").prop("disabled", true);
+  } else {
+    $("#t-mobile-prev-entry").prop("disabled", false);
+  }
+  if (currentIndex >= total - 1) {
+    $("#t-mobile-next-entry").prop("disabled", true);
+  } else {
+    $("#t-mobile-next-entry").prop("disabled", false);
+  }
+}
+function getDefaultSummaryPrompt() {
+  return `\u4F60\u662F\u4E00\u4F4D\u4E13\u4E1A\u7684\u6545\u4E8B\u5206\u6790\u5E08\u548C\u4F1A\u8BDD\u8BB0\u5F55\u5458\u3002\u4F60\u7684\u4EFB\u52A1\u662F\u5206\u6790\u63D0\u4F9B\u7684\u89D2\u8272\u626E\u6F14\u804A\u5929\u5386\u53F2\uFF0C\u5E76\u751F\u6210\u4E00\u4EFD\u7ED3\u6784\u5316\u7684\u603B\u7ED3\u3002
+
+[\u4F60\u7684\u76EE\u6807]
+1. \u51C6\u786E\u6355\u6349\u6545\u4E8B\u7684\u5F53\u524D\u72B6\u6001
+2. \u8BB0\u5F55\u53EF\u80FD\u9700\u8981\u540E\u7EED\u53C2\u8003\u7684\u91CD\u8981\u7EC6\u8282
+3. \u8FFD\u8E2A\u89D2\u8272\u53D1\u5C55\u548C\u4EBA\u7269\u5173\u7CFB
+4. \u6807\u6CE8\u4EFB\u4F55\u672A\u89E3\u51B3\u7684\u60C5\u8282\u7EBF\u6216\u4F0F\u7B14
+
+[\u8F93\u51FA\u683C\u5F0F]
+\u8BF7\u4F7F\u7528\u4EE5\u4E0B\u683C\u5F0F\u751F\u6210\u603B\u7ED3\uFF1A
+
+## \u{1F4CD} \u5F53\u524D\u573A\u666F
+[\u63CF\u8FF0\u5F53\u524D\u6240\u5728\u4F4D\u7F6E\u3001\u65F6\u95F4\u3001\u73AF\u5883\u6C1B\u56F4]
+
+## \u{1F465} \u89D2\u8272\u72B6\u6001
+[\u5217\u51FA\u4E3B\u8981\u89D2\u8272\u7684\u5F53\u524D\u72B6\u6001\u3001\u4F4D\u7F6E\u3001\u60C5\u7EEA\u3001\u88C5\u5907\u7B49]
+- **\u89D2\u8272\u540D**: \u72B6\u6001\u63CF\u8FF0
+
+## \u{1F4DC} \u60C5\u8282\u56DE\u987E
+[\u6309\u65F6\u95F4\u987A\u5E8F\u5217\u51FA\u672C\u6BB5\u5BF9\u8BDD\u4E2D\u53D1\u751F\u7684\u91CD\u8981\u4E8B\u4EF6]
+1. \u4E8B\u4EF6\u63CF\u8FF0
+2. \u4E8B\u4EF6\u63CF\u8FF0
+
+## \u{1F4AC} \u91CD\u8981\u5BF9\u8BDD/\u4FE1\u606F
+[\u8BB0\u5F55\u4EFB\u4F55\u91CD\u8981\u7684\u5BF9\u8BDD\u5185\u5BB9\u3001\u63ED\u793A\u7684\u4FE1\u606F\u3001\u7EA6\u5B9A\u7B49]
+
+## \u{1F52E} \u60AC\u5FF5/\u5F85\u529E
+[\u5217\u51FA\u4EFB\u4F55\u672A\u89E3\u51B3\u7684\u95EE\u9898\u3001\u4F0F\u7B14\u3001\u5F85\u5904\u7406\u4E8B\u9879]
+
+[\u89C4\u5219]
+1. \u7B80\u6D01\u4F46\u5168\u9762 - \u4E0D\u8981\u9057\u6F0F\u91CD\u8981\u7EC6\u8282
+2. \u4E13\u6CE8\u4E8E\u6587\u672C\u4E2D\u7684\u4E8B\u5B9E\uFF0C\u4E0D\u8981\u6DFB\u52A0\u63A8\u6D4B
+3. \u5982\u679C\u4FE1\u606F\u4E0D\u660E\u786E\uFF0C\u4F7F\u7528 [?] \u6807\u8BB0\u4E0D\u786E\u5B9A\u6027
+4. \u4FDD\u6301\u603B\u7ED3\u7684\u53EF\u64CD\u4F5C\u6027\uFF0C\u4FBF\u4E8E\u5C06\u6765\u53C2\u8003`;
+}
+function showPromptPreviewDialog(messages, stats = {}) {
+  $("#t-prompt-view-dialog").remove();
+  const systemMsg = messages.find((m) => m.role === "system");
+  const userMsg = messages.find((m) => m.role === "user");
+  const userContentLength = userMsg?.content?.length || 0;
+  let statsHtml;
+  if (stats.isExtractMode) {
+    statsHtml = `
+            <div class="t-stat-item">
+                <i class="fa-solid fa-comments"></i>
+                <span>\u8BF7\u6C42\u6761\u6570: <strong>${stats.requestedLimit || "?"}</strong></span>
+            </div>
+            <div class="t-stat-item">
+                <i class="fa-solid fa-check-circle" style="color: ${stats.historyCount > 0 ? "#2ecc71" : "#e74c3c"};"></i>
+                <span>\u5B9E\u9645\u8BFB\u53D6: <strong>${stats.historyCount || 0}</strong> \u6761</span>
+            </div>
+            <div class="t-stat-item">
+                <i class="fa-solid fa-book" style="color: ${stats.existingEntriesCount > 0 ? "#2ecc71" : "#888"};"></i>
+                <span>\u73B0\u6709\u6761\u76EE: <strong>${stats.existingEntriesCount || 0}</strong> \u6761</span>
+            </div>
+            <div class="t-stat-item">
+                <i class="fa-solid fa-text-width"></i>
+                <span>User \u5185\u5BB9: <strong>${userContentLength.toLocaleString()}</strong> \u5B57\u7B26</span>
+            </div>
+        `;
+  } else {
+    statsHtml = `
+            <div class="t-stat-item">
+                <i class="fa-solid fa-comments"></i>
+                <span>\u8BF7\u6C42\u6761\u6570: <strong>${stats.requestedLimit || "?"}</strong></span>
+            </div>
+            <div class="t-stat-item">
+                <i class="fa-solid fa-check-circle" style="color: ${stats.historyCount > 0 ? "#2ecc71" : "#e74c3c"};"></i>
+                <span>\u5B9E\u9645\u8BFB\u53D6: <strong>${stats.historyCount || 0}</strong> \u6761</span>
+            </div>
+            <div class="t-stat-item">
+                <i class="fa-solid fa-database" style="color: ${stats.relevantHistoryFound ? "#2ecc71" : "#888"};"></i>
+                <span>\u76F8\u5173\u5386\u53F2: <strong>${stats.relevantHistoryFound ? "\u5DF2\u53EC\u56DE" : "\u65E0"}</strong></span>
+            </div>
+            <div class="t-stat-item">
+                <i class="fa-solid fa-text-width"></i>
+                <span>User \u5185\u5BB9: <strong>${userContentLength.toLocaleString()}</strong> \u5B57\u7B26</span>
+            </div>
+        `;
+  }
+  const html = `
+    <div id="t-prompt-view-dialog" class="t-dialog-overlay">
+        <div class="t-dialog-box" style="max-width: 900px; max-height: 85vh;">
+            <div class="t-dialog-header">
+                <span><i class="fa-solid fa-eye"></i> \u63D0\u793A\u8BCD\u9884\u89C8${stats.isExtractMode ? " (\u8BBE\u5B9A\u63D0\u53D6)" : " (\u667A\u80FD\u603B\u7ED3)"}</span>
+                <div class="t-dialog-close" id="t-prompt-view-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-dialog-body" style="padding: 0; overflow: hidden;">
+                <!-- \u7EDF\u8BA1\u4FE1\u606F\u680F -->
+                <div class="t-prompt-stats">
+                    ${statsHtml}
+                </div>
+
+                <div class="t-prompt-tabs">
+                    <button class="t-prompt-tab active" data-role="system">
+                        <i class="fa-solid fa-robot"></i> System Prompt
+                    </button>
+                    <button class="t-prompt-tab" data-role="user">
+                        <i class="fa-solid fa-user"></i> User Prompt
+                    </button>
+                    <button class="t-prompt-tab" data-role="raw">
+                        <i class="fa-solid fa-file-code"></i> \u539F\u59CB JSON
+                    </button>
+                </div>
+                <div class="t-prompt-content-container">
+                    <div id="t-prompt-content-system" class="t-prompt-content active"></div>
+                    <div id="t-prompt-content-user" class="t-prompt-content" style="display: none;"></div>
+                    <div id="t-prompt-content-raw" class="t-prompt-content" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="t-dialog-footer">
+                <div style="display: flex; gap: 8px;">
+                    <button id="t-btn-copy-system-prompt" class="t-btn t-btn-xs">
+                        <i class="fa-solid fa-copy"></i> \u590D\u5236 System
+                    </button>
+                    <button id="t-btn-copy-user-prompt" class="t-btn t-btn-xs">
+                        <i class="fa-solid fa-copy"></i> \u590D\u5236 User
+                    </button>
+                    <button id="t-btn-copy-all-prompt" class="t-btn t-btn-xs">
+                        <i class="fa-solid fa-copy"></i> \u590D\u5236\u5168\u90E8 JSON
+                    </button>
+                </div>
+                <button id="t-btn-close-prompt-view" class="t-btn">\u5173\u95ED</button>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml2(systemMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml2(userMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml2(JSON.stringify(messages, null, 2))}</pre>`);
+  $("#t-prompt-view-dialog .t-prompt-tab").on("click", function() {
+    const role = $(this).data("role");
+    $("#t-prompt-view-dialog .t-prompt-tab").removeClass("active");
+    $(this).addClass("active");
+    $("#t-prompt-view-dialog .t-prompt-content").hide();
+    $(`#t-prompt-content-${role}`).show();
+  });
+  $("#t-prompt-view-close, #t-btn-close-prompt-view").on("click", () => {
+    $("#t-prompt-view-dialog").remove();
+  });
+  $("#t-btn-copy-system-prompt").on("click", function() {
+    navigator.clipboard.writeText(systemMsg?.content || "").then(() => {
+      $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
+      setTimeout(() => $(this).html('<i class="fa-solid fa-copy"></i> \u590D\u5236 System'), 2e3);
+    });
+  });
+  $("#t-btn-copy-user-prompt").on("click", function() {
+    navigator.clipboard.writeText(userMsg?.content || "").then(() => {
+      $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
+      setTimeout(() => $(this).html('<i class="fa-solid fa-copy"></i> \u590D\u5236 User'), 2e3);
+    });
+  });
+  $("#t-btn-copy-all-prompt").on("click", function() {
+    navigator.clipboard.writeText(JSON.stringify(messages, null, 2)).then(() => {
+      $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
+      setTimeout(() => $(this).html('<i class="fa-solid fa-copy"></i> \u590D\u5236\u5168\u90E8 JSON'), 2e3);
+    });
+  });
+}
+var FEATURE_KEY3, currentEntries, lastRawResponse, lastSummary, lastSummaryMessages, currentCharacterId, currentMode;
 var init_loreReviewWindow = __esm({
   "src/ui/loreReviewWindow.js"() {
     init_loreExtractor();
@@ -13370,6 +14228,7 @@ var init_loreReviewWindow = __esm({
     currentEntries = [];
     lastRawResponse = "";
     lastSummary = "";
+    lastSummaryMessages = null;
     currentCharacterId = "";
     currentMode = "extract";
   }
