@@ -22,14 +22,14 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.2.3";
+    CURRENT_VERSION = "3.2.4";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.2.4": "\u{1F9E0} \u667A\u80FD\u603B\u7ED3\uFF1AAI \u5206\u6790\u5BF9\u8BDD\u5386\u53F2\u751F\u6210\u89D2\u8272\u603B\u7ED3\uFF0C\u652F\u6301\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A<br>\u{1F4CA} \u5411\u91CF\u7D22\u5F15\u7BA1\u7406\uFF1AEmbedding API \u72EC\u7ACB\u914D\u7F6E\uFF0C\u652F\u6301\u5411\u91CF\u7D22\u5F15\u6784\u5EFA/\u5BFC\u5165/\u5BFC\u51FA<br>\u{1F518} \u5FEB\u6377\u5DE5\u5177\u680F\uFF1A\u60AC\u6D6E\u7403\u70B9\u51FB\u5C55\u5F00\u6A2A\u5411\u5DE5\u5177\u680F\uFF0C\u53EF\u81EA\u5B9A\u4E49\u663E\u793A\u6309\u94AE<br>\u26A1 \u5FEB\u901F\u5207\u6362\u6A21\u578B\uFF1A\u5DE5\u5177\u680F\u65B0\u589E\u6A21\u578B\u5207\u6362\u5F39\u7A97\uFF0C\u652F\u6301\u6A21\u578B\u8986\u76D6",
       "3.2.3": "\u{1F9E0} \u667A\u80FD\u8BBE\u5B9A\u63D0\u53D6\uFF1AAI \u5206\u6790\u5BF9\u8BDD\u5185\u5BB9\u81EA\u52A8\u63D0\u53D6\u4E16\u754C\u89C2\u8BBE\u5B9A\uFF0C\u5BA1\u6838\u540E\u5BFC\u5165\u4E16\u754C\u4E66<br>\u2B50 \u6536\u85CF\u5939\u589E\u5F3A\uFF1A\u652F\u6301\u6279\u91CF\u5220\u9664\u3001\u91CD\u547D\u540D\u6536\u85CF\u6761\u76EE<br>\u{1F3AF} \u60AC\u6D6E\u83DC\u5355\u91CD\u8BBE\u8BA1\uFF1A\u6C34\u5E73\u56FE\u6807\u680F\u5E03\u5C40\uFF0C\u65B0\u589E\u8BBE\u7F6E\u5FEB\u6377\u5165\u53E3<br>\u{1F4DC} \u573A\u666F\u5386\u53F2\u961F\u5217\uFF1A\u4FDD\u5B58\u6700\u8FD1\u4F7F\u7528\u7684\u573A\u666F\uFF0C\u5FEB\u901F\u5207\u6362",
-      "3.2.2": "\u{1F3A8} CSS \u4E3B\u9898\u65B9\u6848\u7BA1\u7406\uFF1A\u652F\u6301\u4FDD\u5B58\u591A\u4E2A\u81EA\u5B9A\u4E49 CSS \u4E3B\u9898\uFF0C\u968F\u65F6\u5207\u6362<br>\u{1F4CA} \u5BA1\u67E5\u7A97\u53E3\u5B9E\u65F6\u663E\u793A\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD<br>\u{1F527} \u4FEE\u590D\u5267\u672C\u7BA1\u7406\u5668\u5206\u7C7B\u6EDA\u52A8\u548C\u7B5B\u9009\u95EE\u9898<br>\u{1F4DD} \u5927\u5C4F\u7F16\u8F91\u6A21\u5F0F\u4F18\u5316\uFF1A\u9632\u6B62\u8BEF\u89E6\u5173\u95ED\u4E22\u5931\u5185\u5BB9\uFF0C\u624B\u673A\u7AEF\u5C45\u4E2D\u663E\u793A<br>\u{1F4E5} CSS \u5BFC\u5165\u4F18\u5148\u4F7F\u7528\u6587\u4EF6\u540D\u4F5C\u4E3A\u4E3B\u9898\u540D\u79F0",
-      "3.2.1": "\u{1F512} \u5BFC\u5165\u524D\u81EA\u52A8\u5907\u4EFD\uFF1A\u5BFC\u5165\u5907\u4EFD\u65F6\u81EA\u52A8\u4E0B\u8F7D\u5F53\u524D\u6570\u636E\uFF0C\u9632\u6B62\u8BEF\u64CD\u4F5C\u8986\u76D6<br>\u{1F4DA} \u65B0\u589E User Persona \u4E16\u754C\u4E66\u652F\u6301\uFF1A\u83B7\u53D6\u7528\u6237\u89D2\u8272\u7ED1\u5B9A\u7684\u4E16\u754C\u4E66\u6761\u76EE<br>\u{1F4BE} \u4FEE\u590D\u6570\u636E\u5907\u4EFD\u529F\u80FD\uFF1A\u4F7F\u7528\u7ACB\u5373\u4FDD\u5B58\u786E\u4FDD\u6570\u636E\u6301\u4E45\u5316<br>\u{1F527} \u60AC\u6D6E\u7403\u79FB\u9664\u5F3A\u5236\u8D34\u8FB9\u5438\u9644\uFF1A\u53EF\u81EA\u7531\u62D6\u52A8\u5230\u4EFB\u610F\u4F4D\u7F6E"
+      "3.2.2": "\u{1F3A8} CSS \u4E3B\u9898\u65B9\u6848\u7BA1\u7406\uFF1A\u652F\u6301\u4FDD\u5B58\u591A\u4E2A\u81EA\u5B9A\u4E49 CSS \u4E3B\u9898\uFF0C\u968F\u65F6\u5207\u6362<br>\u{1F4CA} \u5BA1\u67E5\u7A97\u53E3\u5B9E\u65F6\u663E\u793A\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD<br>\u{1F527} \u4FEE\u590D\u5267\u672C\u7BA1\u7406\u5668\u5206\u7C7B\u6EDA\u52A8\u548C\u7B5B\u9009\u95EE\u9898<br>\u{1F4DD} \u5927\u5C4F\u7F16\u8F91\u6A21\u5F0F\u4F18\u5316\uFF1A\u9632\u6B62\u8BEF\u89E6\u5173\u95ED\u4E22\u5931\u5185\u5BB9\uFF0C\u624B\u673A\u7AEF\u5C45\u4E2D\u663E\u793A<br>\u{1F4E5} CSS \u5BFC\u5165\u4F18\u5148\u4F7F\u7528\u6587\u4EF6\u540D\u4F5C\u4E3A\u4E3B\u9898\u540D\u79F0"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -57,6 +57,8 @@ var init_defaults = __esm({
           }
         ],
         stream: true,
+        max_tokens: 4096,
+        // 输出 Token 限制（仅自定义 API 生效）
         auto_generate: false,
         auto_chance: 50,
         auto_mode: "follow",
@@ -122,6 +124,56 @@ var init_defaults = __esm({
           { id: "default", name: "\u9ED8\u8BA4\u4E3B\u9898", css: "" }
         ],
         active_profile_id: "default"
+      },
+      // 快捷工具栏配置
+      quick_toolbar: {
+        enabled: false,
+        // 是否启用快捷工具栏（禁用时点击悬浮球直接打开主窗口）
+        // 各按钮的启用状态，按固定顺序排列
+        // 可用按钮: main(剧场), lore(设定提取), model(切换模型), settings(设置), favs(收藏夹), scripts(剧本管理), debug(调试)
+        enabled_items: {
+          main: true,
+          // 打开剧场
+          lore: true,
+          // 提取设定
+          model: false,
+          // 快速切换模型
+          settings: true,
+          // 设置
+          favs: false,
+          // 收藏夹
+          scripts: false,
+          // 剧本管理
+          debug: false
+          // 调试日志
+        },
+        max_items: 5
+        // 最多显示按钮数量
+      },
+      // 剧场模型覆盖配置（仅影响场景生成，不影响设定提取等其他功能）
+      theater_model_override: null,
+      // null 表示使用当前方案的默认模型，设置后覆盖
+      // Embedding API 独立配置（用于向量化）
+      embedding_config: {
+        url: "",
+        // API URL (如 https://api.openai.com/v1)
+        key: "",
+        // API Key
+        model: "text-embedding-3-small",
+        // 默认模型
+        dimensions: null
+        // 向量维度（null 表示使用模型默认值）
+      },
+      // 智能总结功能配置
+      summarizer_config: {
+        selected_profile_id: null,
+        // 使用哪个 Chat API 方案（复用 profiles）
+        model_override: null,
+        // 模型覆盖
+        template: "structured",
+        // 模板类型: structured | narrative
+        use_vector_search: true
+        // 是否使用向量化语义检索增强
       }
     };
   }
@@ -155,6 +207,11 @@ var init_storage = __esm({
 });
 
 // src/utils/dom.js
+var dom_exports = {};
+__export(dom_exports, {
+  ensureOverlay: () => ensureOverlay,
+  loadCssFiles: () => loadCssFiles
+});
 function loadCssFiles() {
   const styleId = "titania-theater-bundled-css";
   if (document.getElementById(styleId)) return;
@@ -665,23 +722,34 @@ textarea.t-input {
     position: fixed;
     display: flex;
     flex-direction: row;
-    gap: 6px;
+    gap: 4px;
     z-index: 10000;
     pointer-events: none;
 
-    /* \u6BDB\u73BB\u7483\u80CC\u666F\u5BB9\u5668 */
-    background: rgba(20, 20, 20, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 25px;
-    padding: 6px 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    /* \u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C */
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.03) 50%,
+            rgba(255, 255, 255, 0.06) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    /* \u8FB9\u6846 */
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50px;
+    padding: 5px 6px;
+
+    /* \u67D4\u548C\u9634\u5F71 */
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
     opacity: 0;
     transform: scale(0.8);
-    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 
 #titania-slide-menu.t-horizontal {
     flex-direction: row;
@@ -695,36 +763,38 @@ textarea.t-input {
 
 /* ===== \u6A2A\u5411\u56FE\u6807\u6309\u94AE ===== */
 .t-menu-icon-btn {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
-    color: #fff;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.85);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
     opacity: 0;
-    transform: scale(0.5);
+    transform: scale(0.5) rotate(-10deg);
 
-    /* \u9ED8\u8BA4\u65E0\u80CC\u666F\uFF0Chover \u65F6\u663E\u793A */
-    background: transparent;
-    border: 2px solid transparent;
+    /* \u5FAE\u5999\u7684\u73BB\u7483\u8D28\u611F */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
 }
 
 .t-menu-icon-btn.show {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
 }
 
 .t-menu-icon-btn:hover {
-    transform: scale(1.15);
+    transform: scale(1.12);
+    color: #fff;
 }
 
 .t-menu-icon-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 /* \u5267\u573A\u6309\u94AE */
@@ -733,9 +803,11 @@ textarea.t-input {
 }
 
 .t-menu-icon-btn.main:hover {
-    background: rgba(74, 158, 255, 0.2);
-    border-color: rgba(74, 158, 255, 0.4);
-    box-shadow: 0 0 12px rgba(74, 158, 255, 0.3);
+    background: radial-gradient(circle at center, rgba(74, 158, 255, 0.25) 0%, rgba(74, 158, 255, 0.1) 70%);
+    border-color: rgba(74, 158, 255, 0.5);
+    box-shadow:
+        0 0 15px rgba(74, 158, 255, 0.4),
+        inset 0 0 10px rgba(74, 158, 255, 0.1);
 }
 
 /* \u8BBE\u5B9A\u63D0\u53D6\u6309\u94AE */
@@ -744,21 +816,64 @@ textarea.t-input {
 }
 
 .t-menu-icon-btn.lore:hover {
-    background: rgba(162, 155, 254, 0.2);
-    border-color: rgba(162, 155, 254, 0.4);
-    box-shadow: 0 0 12px rgba(162, 155, 254, 0.3);
+    background: radial-gradient(circle at center, rgba(162, 155, 254, 0.25) 0%, rgba(162, 155, 254, 0.1) 70%);
+    border-color: rgba(162, 155, 254, 0.5);
+    box-shadow:
+        0 0 15px rgba(162, 155, 254, 0.4),
+        inset 0 0 10px rgba(162, 155, 254, 0.1);
 }
 
 /* \u8BBE\u7F6E\u6309\u94AE */
 .t-menu-icon-btn.settings {
-    color: #aaa;
+    color: #b0bec5;
 }
 
 .t-menu-icon-btn.settings:hover {
-    background: rgba(170, 170, 170, 0.2);
-    border-color: rgba(170, 170, 170, 0.4);
-    box-shadow: 0 0 12px rgba(170, 170, 170, 0.3);
+    background: radial-gradient(circle at center, rgba(176, 190, 197, 0.2) 0%, rgba(176, 190, 197, 0.08) 70%);
+    border-color: rgba(176, 190, 197, 0.4);
+    box-shadow:
+        0 0 15px rgba(176, 190, 197, 0.3),
+        inset 0 0 10px rgba(176, 190, 197, 0.1);
     color: #fff;
+}
+
+/* \u6536\u85CF\u5939\u6309\u94AE */
+.t-menu-icon-btn.favs {
+    color: #ffd93d;
+}
+
+.t-menu-icon-btn.favs:hover {
+    background: radial-gradient(circle at center, rgba(255, 217, 61, 0.25) 0%, rgba(255, 217, 61, 0.1) 70%);
+    border-color: rgba(255, 217, 61, 0.5);
+    box-shadow:
+        0 0 15px rgba(255, 217, 61, 0.4),
+        inset 0 0 10px rgba(255, 217, 61, 0.1);
+}
+
+/* \u5267\u672C\u7BA1\u7406\u6309\u94AE */
+.t-menu-icon-btn.scripts {
+    color: #d4a574;
+}
+
+.t-menu-icon-btn.scripts:hover {
+    background: radial-gradient(circle at center, rgba(212, 165, 116, 0.25) 0%, rgba(212, 165, 116, 0.1) 70%);
+    border-color: rgba(212, 165, 116, 0.5);
+    box-shadow:
+        0 0 15px rgba(212, 165, 116, 0.4),
+        inset 0 0 10px rgba(212, 165, 116, 0.1);
+}
+
+/* \u8C03\u8BD5\u6309\u94AE */
+.t-menu-icon-btn.debug {
+    color: #ff9f43;
+}
+
+.t-menu-icon-btn.debug:hover {
+    background: radial-gradient(circle at center, rgba(255, 159, 67, 0.25) 0%, rgba(255, 159, 67, 0.1) 70%);
+    border-color: rgba(255, 159, 67, 0.5);
+    box-shadow:
+        0 0 15px rgba(255, 159, 67, 0.4),
+        inset 0 0 10px rgba(255, 159, 67, 0.1);
 }
 
 /* \u4E2D\u6B62\u6309\u94AE */
@@ -768,9 +883,11 @@ textarea.t-input {
 }
 
 .t-menu-icon-btn.cancel:hover {
-    background: rgba(255, 107, 107, 0.2);
-    border-color: rgba(255, 107, 107, 0.4);
-    box-shadow: 0 0 12px rgba(255, 107, 107, 0.4);
+    background: radial-gradient(circle at center, rgba(255, 107, 107, 0.3) 0%, rgba(255, 107, 107, 0.12) 70%);
+    border-color: rgba(255, 107, 107, 0.6);
+    box-shadow:
+        0 0 18px rgba(255, 107, 107, 0.5),
+        inset 0 0 12px rgba(255, 107, 107, 0.15);
 }
 
 @keyframes t-cancel-pulse-icon {
@@ -871,6 +988,244 @@ textarea.t-input {
 
 #titania-menu-backdrop.show {
     display: block;
+}
+
+/* ===== \u5207\u6362\u6A21\u578B\u6309\u94AE ===== */
+.t-menu-icon-btn.model {
+    color: #00cec9;
+}
+
+.t-menu-icon-btn.model:hover {
+    background: radial-gradient(circle at center, rgba(0, 206, 201, 0.25) 0%, rgba(0, 206, 201, 0.1) 70%);
+    border-color: rgba(0, 206, 201, 0.5);
+    box-shadow:
+        0 0 15px rgba(0, 206, 201, 0.4),
+        inset 0 0 10px rgba(0, 206, 201, 0.1);
+}
+
+/* ===== \u6A21\u578B\u5207\u6362\u5F39\u7A97 ===== */
+.t-model-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20001;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.t-model-dialog-box {
+    background: rgba(30, 30, 35, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #e2e8f0;
+}
+
+.t-model-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 206, 201, 0.1);
+    border-bottom: 1px solid rgba(0, 206, 201, 0.2);
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.t-model-dialog-header i {
+    margin-right: 8px;
+    color: #00cec9;
+}
+
+.t-model-dialog-close {
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    color: #a0aec0;
+}
+
+.t-model-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.t-model-dialog-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.t-model-dialog-hint {
+    color: #888;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    border-left: 3px solid #00cec9;
+}
+
+.t-model-dialog-hint i {
+    color: #00cec9;
+    margin-right: 6px;
+}
+
+.t-model-current-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    font-size: 0.9em;
+}
+
+.t-model-label {
+    color: #718096;
+}
+
+.t-model-value {
+    color: #90cdf4;
+    font-weight: 500;
+}
+
+.t-model-dialog-body .t-form-group {
+    margin-bottom: 15px;
+}
+
+.t-model-dialog-body .t-form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #cbd5e0;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.t-model-dialog-body .t-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
+
+.t-model-dialog-body .t-input:focus {
+    border-color: #00cec9;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 206, 201, 0.1);
+}
+
+.t-model-override-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(0, 206, 201, 0.1);
+    border: 1px solid rgba(0, 206, 201, 0.3);
+    border-radius: 6px;
+    color: #00cec9;
+    font-size: 0.9em;
+}
+
+.t-model-override-status i {
+    color: #00cec9;
+}
+
+.t-model-dialog-footer {
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.t-model-dialog-footer .t-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.t-model-dialog-footer .t-btn:not(.t-btn-primary) {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #a0aec0;
+}
+
+.t-model-dialog-footer .t-btn:not(.t-btn-primary):hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.t-model-dialog-footer .t-btn-primary {
+    background: linear-gradient(135deg, #00cec9, #00b894);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 206, 201, 0.3);
+}
+
+.t-model-dialog-footer .t-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 206, 201, 0.4);
+}
+
+.t-btn-xs {
+    padding: 4px 10px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #a0aec0;
+}
+
+.t-btn-xs:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.t-btn-danger {
+    background: rgba(231, 76, 60, 0.2) !important;
+    border-color: rgba(231, 76, 60, 0.4) !important;
+    color: #e74c3c !important;
+}
+
+.t-btn-danger:hover {
+    background: rgba(231, 76, 60, 0.3) !important;
+}
+
+/* \u79FB\u52A8\u7AEF\u6A21\u578B\u5F39\u7A97\u9002\u914D */
+@media (max-width: 768px) {
+    .t-model-dialog-overlay {
+        padding: 10px;
+    }
+
+    .t-model-dialog-box {
+        width: 95%;
+        max-width: 95%;
+        max-height: 90vh;
+    }
 }
 
 /* === main-window.css === */
@@ -2738,6 +3093,72 @@ textarea.t-input {
 
 .t-css-hint-item span {
     color: #888;
+}
+
+/* ===== \u5FEB\u6377\u5DE5\u5177\u680F\u914D\u7F6E ===== */
+.t-toolbar-config {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.t-toolbar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #222;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.t-toolbar-item:hover {
+    background: #2a2a2a;
+}
+
+.t-toolbar-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #bfa15f;
+}
+
+.t-toolbar-item input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.t-toolbar-item i {
+    font-size: 1.1em;
+    width: 24px;
+    text-align: center;
+}
+
+.t-toolbar-item span {
+    color: #ccc;
+    font-size: 0.95em;
+}
+
+.t-toolbar-item .t-toolbar-hint {
+    color: #666;
+    font-size: 0.8em;
+    margin-left: auto;
+}
+
+/* \u7981\u7528\u72B6\u6001\u7684\u5DE5\u5177\u680F\u9879 */
+.t-toolbar-item:has(input:disabled) {
+    opacity: 0.7;
+}
+
+.t-toolbar-item:has(input:disabled):hover {
+    background: #222;
+    cursor: default;
 }
 
 @media screen and (max-width: 600px) {
@@ -4840,6 +5261,599 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     }
 }
 
+/* \u914D\u7F6E\u4FE1\u606F\u680F */
+.t-config-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(144, 205, 244, 0.08);
+    border-bottom: 1px solid rgba(144, 205, 244, 0.15);
+    font-size: 0.85em;
+    flex-wrap: wrap;
+}
+
+.t-config-label {
+    color: #718096;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.t-config-label i {
+    font-size: 0.9em;
+}
+
+.t-config-value {
+    color: #90cdf4;
+    font-weight: 500;
+}
+
+.t-config-separator {
+    color: #4a5568;
+    margin: 0 5px;
+}
+
+/* \u914D\u7F6E\u5F39\u7A97\u6837\u5F0F */
+.t-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20001;
+    /* \u9AD8\u4E8E\u4E3B overlay (20000) */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.t-dialog-box {
+    background: rgba(30, 30, 35, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.t-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.t-dialog-header i {
+    margin-right: 8px;
+    color: #90cdf4;
+}
+
+.t-dialog-close {
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    color: #a0aec0;
+}
+
+.t-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.t-dialog-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.t-dialog-body .t-form-group {
+    margin-bottom: 20px;
+}
+
+.t-dialog-body .t-form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #cbd5e0;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.t-dialog-body .t-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
+
+.t-dialog-body .t-input:focus {
+    border-color: #90cdf4;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(144, 205, 244, 0.1);
+}
+
+.t-dialog-body small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.8em;
+}
+
+.t-dialog-footer {
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.t-dialog-footer .t-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-dialog-footer .t-btn:not(.t-btn-primary) {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #a0aec0;
+}
+
+.t-dialog-footer .t-btn:not(.t-btn-primary):hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* \u65B9\u6848\u4FE1\u606F\u6846 */
+.t-profile-info-box {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 10px;
+}
+
+.t-info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.85em;
+}
+
+.t-info-row:last-child {
+    margin-bottom: 0;
+}
+
+.t-info-label {
+    color: #718096;
+    min-width: 70px;
+}
+
+.t-info-row span:last-child {
+    color: #e2e8f0;
+    word-break: break-all;
+}
+
+/* \u63A7\u5236\u6309\u94AE\u7EC4 */
+.t-control-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* \u9519\u8BEF\u72B6\u6001\u5F39\u7A97\u5934\u90E8 */
+.t-dialog-header-error {
+    background: rgba(231, 76, 60, 0.15);
+    border-bottom-color: rgba(231, 76, 60, 0.3);
+}
+
+.t-dialog-header-error i {
+    color: #e74c3c !important;
+}
+
+/* \u79FB\u52A8\u7AEF\u914D\u7F6E\u5F39\u7A97\u9002\u914D */
+@media (max-width: 768px) {
+
+    /* \u786E\u4FDD\u5F39\u7A97\u8986\u76D6\u5C42\u5728\u79FB\u52A8\u7AEF\u6B63\u786E\u5C45\u4E2D */
+    .t-dialog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    .t-dialog-box {
+        width: 95%;
+        max-width: 95%;
+        max-height: 85vh;
+        margin: auto;
+        position: relative;
+        /* \u786E\u4FDD\u4E0D\u53D7\u7236\u5143\u7D20\u5F71\u54CD */
+    }
+
+    .t-config-info-bar {
+        padding: 8px 15px;
+        font-size: 0.8em;
+    }
+
+    .t-control-buttons {
+        flex-wrap: wrap;
+    }
+}
+
+/* ========== \u65B0\u589E\uFF1ATab \u5207\u6362\u6837\u5F0F ========== */
+.t-mode-tabs {
+    display: flex;
+    gap: 5px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.t-mode-tab {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px 8px 0 0;
+    color: #a0aec0;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-mode-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+.t-mode-tab.active {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+    border-bottom-color: transparent;
+}
+
+.t-mode-tab i {
+    font-size: 0.95em;
+}
+
+/* \u9762\u677F\u5BB9\u5668 */
+.t-mode-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.t-mode-panel:not(.active) {
+    display: none;
+}
+
+/* ========== \u667A\u80FD\u603B\u7ED3\u9762\u677F\u6837\u5F0F ========== */
+.t-summary-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.t-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #90cdf4;
+    font-weight: 600;
+}
+
+.t-summary-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.t-summary-result {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    line-height: 1.7;
+    min-height: 200px;
+    max-height: calc(100vh - 400px);
+}
+
+/* \u603B\u7ED3\u7ED3\u679C\u533A\u57DF\u7684\u6EDA\u52A8\u6761\u6837\u5F0F */
+.t-summary-result::-webkit-scrollbar {
+    width: 8px;
+}
+
+.t-summary-result::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.t-summary-result::-webkit-scrollbar-thumb {
+    background: rgba(144, 205, 244, 0.4);
+    border-radius: 4px;
+}
+
+.t-summary-result::-webkit-scrollbar-thumb:hover {
+    background: rgba(144, 205, 244, 0.6);
+}
+
+.t-summary-text {
+    color: #e2e8f0;
+}
+
+.t-summary-text h3.t-summary-h3 {
+    color: #90cdf4;
+    font-size: 1.1em;
+    margin: 20px 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(144, 205, 244, 0.2);
+}
+
+.t-summary-text h3.t-summary-h3:first-child {
+    margin-top: 0;
+}
+
+.t-summary-text h4.t-summary-h4 {
+    color: #bfa15f;
+    font-size: 1em;
+    margin: 15px 0 8px 0;
+}
+
+.t-summary-text strong {
+    color: #feca57;
+}
+
+.t-summary-text li {
+    margin-left: 20px;
+    margin-bottom: 5px;
+}
+
+.t-summary-text p {
+    margin-bottom: 12px;
+}
+
+/* ========== \u5411\u91CF\u7D22\u5F15\u7BA1\u7406\u9762\u677F\u6837\u5F0F ========== */
+.t-vector-status-card,
+.t-vector-actions-card {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 20px;
+}
+
+.t-vector-status-card h3,
+.t-vector-actions-card h3 {
+    color: #90cdf4;
+    font-size: 1em;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-vector-info {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.t-vector-info .t-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.t-vector-info .t-info-row:last-child {
+    border-bottom: none;
+}
+
+.t-vector-info .t-info-label {
+    color: #a0aec0;
+}
+
+.t-vector-info .t-info-value {
+    color: #e2e8f0;
+    font-weight: 500;
+}
+
+.t-action-group {
+    margin-bottom: 15px;
+}
+
+.t-action-group h4 {
+    color: #cbd5e0;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-action-item {
+    margin-bottom: 10px;
+}
+
+.t-action-item small {
+    display: block;
+    margin-top: 8px;
+    color: #666;
+    font-size: 0.8em;
+}
+
+.t-action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.t-action-row .t-btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* \u8FDB\u5EA6\u6761 */
+.t-progress-bar {
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.t-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4299e1, #90cdf4);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.t-progress-text {
+    margin-top: 8px;
+    font-size: 0.85em;
+    color: #a0aec0;
+    text-align: center;
+}
+
+/* \u7D22\u5F15\u72B6\u6001\u6807\u7B7E */
+.t-index-status {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.t-index-status.t-index-ready {
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+}
+
+.t-index-status.t-index-empty {
+    background: rgba(245, 101, 101, 0.2);
+    color: #f56565;
+}
+
+/* \u5371\u9669\u6309\u94AE */
+.t-btn-danger {
+    background: rgba(245, 101, 101, 0.2);
+    border: 1px solid rgba(245, 101, 101, 0.4);
+    color: #f56565;
+}
+
+.t-btn-danger:hover:not(:disabled) {
+    background: rgba(245, 101, 101, 0.3);
+    color: #fff;
+}
+
+.t-btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Checkbox \u6837\u5F0F\u4F18\u5316 */
+.t-control-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.t-control-group input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D\u65B0\u5143\u7D20 */
+@media (max-width: 768px) {
+    .t-mode-tabs {
+        padding: 8px 10px;
+        overflow-x: auto;
+        gap: 3px;
+    }
+
+    .t-mode-tab {
+        padding: 8px 12px;
+        font-size: 0.8em;
+        white-space: nowrap;
+    }
+
+    .t-mode-tab i {
+        font-size: 1em;
+    }
+
+    .t-mode-tab span {
+        display: none;
+    }
+
+    .t-summary-content {
+        padding: 15px;
+    }
+
+    .t-vector-status-card,
+    .t-vector-actions-card {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    .t-action-row {
+        flex-direction: column;
+    }
+
+    .t-action-row .t-btn {
+        width: 100%;
+    }
+
+    .t-lore-controls {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .t-control-group {
+        flex-wrap: wrap;
+    }
+}
+
 `;
   document.head.appendChild(style);
 }
@@ -6124,6 +7138,13 @@ var init_helpers = __esm({
 });
 
 // src/ui/favsWindow.js
+var favsWindow_exports = {};
+__export(favsWindow_exports, {
+  openCharImageManager: () => openCharImageManager,
+  openFavsWindow: () => openFavsWindow,
+  saveFavorite: () => saveFavorite,
+  unsaveFavorite: () => unsaveFavorite
+});
 async function saveFavorite() {
   const container = document.getElementById("t-output-content");
   const content = extractFromShadowDOM(container);
@@ -6581,7 +7602,12 @@ function openFavsWindow() {
   });
   const closeWindow = () => {
     $("#t-favs-view").remove();
-    $("#t-main-view").css("display", "flex");
+    const $mainView = $("#t-main-view");
+    if ($mainView.length > 0) {
+      $mainView.css("display", "flex");
+    } else {
+      $("#t-overlay").remove();
+    }
   };
   $("#t-fav-close").on("click", closeWindow);
   renderGrid();
@@ -6735,6 +7761,10 @@ var init_favsWindow = __esm({
 });
 
 // src/ui/debugWindow.js
+var debugWindow_exports = {};
+__export(debugWindow_exports, {
+  showDebugInfo: () => showDebugInfo
+});
 import { evaluateMacros } from "../../../macros.js";
 async function showDebugInfo() {
   const script = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastUsedScriptId);
@@ -6753,8 +7783,8 @@ async function showDebugInfo() {
   let profiles = cfg.profiles || [];
   let currentProfile = profiles.find((p) => p.id === activeProfileId) || { name: "\u672A\u77E5", model: "unknown" };
   let displayModel = currentProfile.type === "internal" ? "(\u8DDF\u968F ST)" : currentProfile.model || "gpt-3.5-turbo";
-  const currentMode = GlobalState.generationMode || "narrative";
-  const modeDisplay = currentMode === "visual" ? "\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316" : "\u{1F4D6} \u5185\u5BB9\u4F18\u5148";
+  const currentMode2 = GlobalState.generationMode || "narrative";
+  const modeDisplay = currentMode2 === "visual" ? "\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316" : "\u{1F4D6} \u5185\u5BB9\u4F18\u5148";
   const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
   const DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
 
@@ -6772,7 +7802,7 @@ async function showDebugInfo() {
   const useCustomPrompts = customPrompts.override_enabled === true;
   let sysPrompt;
   let isUsingCustomPrompt = false;
-  if (currentMode === "visual") {
+  if (currentMode2 === "visual") {
     if (useCustomPrompts && customPrompts.visual_mode && customPrompts.visual_mode.trim()) {
       sysPrompt = customPrompts.visual_mode;
       isUsingCustomPrompt = true;
@@ -6900,7 +7930,7 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
                 <div class="t-param-group">
                     <div class="t-param-title">\u57FA\u672C\u4FE1\u606F</div>
                     <div class="t-param-row"><span class="t-param-key">\u5267\u672C</span><span class="t-param-val" style="color:#bfa15f; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${script.name}</span></div>
-                    <div class="t-param-row"><span class="t-param-key">\u6A21\u5F0F</span><span class="t-param-val" style="color:${currentMode === "visual" ? "#90cdf4" : "#bfa15f"};">${modeDisplay}</span></div>
+                    <div class="t-param-row"><span class="t-param-key">\u6A21\u5F0F</span><span class="t-param-val" style="color:${currentMode2 === "visual" ? "#90cdf4" : "#bfa15f"};">${modeDisplay}</span></div>
                 </div>
                 <div class="t-param-group">
                     <div class="t-param-title">\u5BFC\u6F14\u53C2\u6570</div>
@@ -6943,7 +7973,12 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
   $("#t-overlay").append(html);
   const close = () => {
     $("#t-debug-view").remove();
-    $("#t-main-view").css("display", "flex");
+    const $mainView = $("#t-main-view");
+    if ($mainView.length > 0) {
+      $mainView.css("display", "flex");
+    } else {
+      $("#t-overlay").remove();
+    }
   };
   $("#t-debug-close, #t-debug-back").on("click", close);
   $(".t-fold-head").on("click", function() {
@@ -7077,8 +8112,10 @@ function openSettingsWindow() {
         <div class="t-set-body">
             <div class="t-set-nav">
                 <div class="t-set-tab-btn active" data-tab="appearance">\u{1F3A8} \u5916\u89C2\u8BBE\u7F6E</div>
+                <div class="t-set-tab-btn" data-tab="toolbar">\u{1F6E0}\uFE0F \u5FEB\u6377\u5DE5\u5177\u680F</div>
                 <div class="t-set-tab-btn" data-tab="theme">\u{1F58C}\uFE0F \u4E3B\u9898\u6837\u5F0F</div>
                 <div class="t-set-tab-btn" data-tab="connection">\u{1F50C} API \u8FDE\u63A5</div>
+                <div class="t-set-tab-btn" data-tab="embedding">\u{1F9E0} Embedding</div>
                 <div class="t-set-tab-btn" data-tab="director">\u{1F3AC} \u5BFC\u6F14\u6A21\u5F0F</div>
                 <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
                 <div class="t-set-tab-btn" data-tab="prompts">\u{1F4DC} \u7CFB\u7EDF\u63D0\u793A\u8BCD</div>
@@ -7182,6 +8219,77 @@ function openSettingsWindow() {
                             <span style="color:#ccc;">\u23F1\uFE0F \u663E\u793A\u751F\u6210\u8BA1\u65F6\u7EDF\u8BA1</span>
                         </label>
                         <p style="font-size:0.75em; color:#666; margin-top:5px; margin-left:22px;">\u751F\u6210\u65F6\u5728\u60AC\u6D6E\u7403\u4E0A\u65B9\u663E\u793A\u8017\u65F6</p>
+                    </div>
+                </div>
+
+                <!-- Tab 2: \u5FEB\u6377\u5DE5\u5177\u680F -->
+                <div id="page-toolbar" class="t-set-page">
+                    <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
+                        <div style="font-weight:bold; color:#bfa15f; margin-bottom:10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> \u5FEB\u6377\u5DE5\u5177\u680F</div>
+                        <div style="font-size:0.85em; color:#888; line-height:1.6;">
+                            \u542F\u7528\u540E\uFF0C\u70B9\u51FB\u60AC\u6D6E\u7403\u5C06\u5C55\u5F00\u5FEB\u6377\u83DC\u5355\u800C\u975E\u76F4\u63A5\u6253\u5F00\u4E3B\u7A97\u53E3\u3002<br>
+                            \u4F60\u53EF\u4EE5\u81EA\u5B9A\u4E49\u83DC\u5355\u4E2D\u663E\u793A\u54EA\u4E9B\u529F\u80FD\u6309\u94AE\u3002
+                        </div>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <label style="cursor:pointer; display:flex; align-items:center; color:#55efc4; font-weight:bold;">
+                            <input type="checkbox" id="cfg-toolbar-enabled" ${data.quick_toolbar?.enabled ? "checked" : ""} style="margin-right:10px;">
+                            \u542F\u7528\u5FEB\u6377\u5DE5\u5177\u680F
+                        </label>
+                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">
+                            \u7981\u7528\u65F6\uFF0C\u70B9\u51FB\u60AC\u6D6E\u7403\u5C06\u76F4\u63A5\u6253\u5F00\u4E3B\u7A97\u53E3
+                        </p>
+                    </div>
+                    
+                    <div id="toolbar-settings-panel" style="display:${data.quick_toolbar?.enabled ? "block" : "none"}; margin-top:20px; padding-top:20px; border-top:1px solid #333;">
+                        <div class="t-form-group">
+                            <label class="t-form-label">\u53EF\u7528\u6309\u94AE</label>
+                            <p style="font-size:0.8em; color:#888; margin-bottom:15px;">
+                                \u52FE\u9009\u8981\u663E\u793A\u7684\u529F\u80FD\u6309\u94AE\uFF08\u6700\u591A5\u4E2A\uFF09
+                            </p>
+                            <div class="t-toolbar-config" id="t-toolbar-config">
+                                <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="main" checked disabled>
+                                    <i class="fa-solid fa-masks-theater" style="color:#74b9ff;"></i>
+                                    <span>\u6253\u5F00\u5267\u573A</span>
+                                    <span class="t-toolbar-hint">(\u5FC5\u9009)</span>
+                                </label>
+                                <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="lore">
+                                    <i class="fa-solid fa-brain" style="color:#a29bfe;"></i>
+                                    <span>\u63D0\u53D6\u8BBE\u5B9A</span>
+                                </label>
+                                <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="model">
+                                    <i class="fa-solid fa-microchip" style="color:#00cec9;"></i>
+                                    <span>\u5207\u6362\u6A21\u578B</span>
+                                </label>
+                                <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="settings">
+                                    <i class="fa-solid fa-gear" style="color:#aaa;"></i>
+                                    <span>\u8BBE\u7F6E</span>
+                                </label>
+                                <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="favs">
+                                    <i class="fa-solid fa-star" style="color:#ffd93d;"></i>
+                                    <span>\u6536\u85CF\u5939</span>
+                                </label>
+                                <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="scripts">
+                                    <i class="fa-solid fa-scroll" style="color:#bfa15f;"></i>
+                                    <span>\u5267\u672C\u7BA1\u7406</span>
+                                </label>
+                                <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="debug">
+                                    <i class="fa-solid fa-bug" style="color:#ff9f43;"></i>
+                                    <span>\u8C03\u8BD5\u65E5\u5FD7</span>
+                                </label>
+                            </div>
+                            <div id="t-toolbar-count" style="font-size:0.8em; color:#666; margin-top:10px;">
+                                \u5DF2\u9009\u62E9 3 / 5 \u4E2A\u6309\u94AE
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -7392,6 +8500,111 @@ function openSettingsWindow() {
                         </div>
                     </div>
                     <div class="t-form-group"><label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="cfg-stream" ${cfg.stream !== false ? "checked" : ""} style="margin-right:10px;"> \u5F00\u542F\u6D41\u5F0F\u4F20\u8F93 (Streaming)</label></div>
+                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                        <label class="t-form-label">\u{1F3AF} \u8F93\u51FA Token \u9650\u5236 (max_tokens)</label>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="number" id="cfg-max-tokens" class="t-input" value="${cfg.max_tokens || 4096}" min="256" max="32768" step="256" style="width:120px;">
+                            <span style="font-size:0.85em; color:#888;">\u8303\u56F4: 256 ~ 32768</span>
+                        </div>
+                        <p style="font-size:0.75em; color:#666; margin-top:5px; line-height:1.5;">
+                            \u63A7\u5236 AI \u5355\u6B21\u8F93\u51FA\u7684\u6700\u5927 Token \u6570\u91CF\u3002<br>
+                            <span style="color:#55efc4;">\u2713 \u4EC5\u5BF9\u81EA\u5B9A\u4E49 API \u65B9\u6848\u751F\u6548</span>\uFF0CST \u4E3B\u8FDE\u63A5\u4F7F\u7528\u5168\u5C40\u8BBE\u7F6E\u3002<br>
+                            <span style="color:#feca57;">\u26A0\uFE0F \u8BBE\u7F6E\u8FC7\u9AD8\u53EF\u80FD\u8D85\u51FA\u6A21\u578B\u9650\u5236\u5BFC\u81F4\u62A5\u9519</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tab: Embedding API -->
+                <div id="page-embedding" class="t-set-page">
+                    <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
+                        <div style="font-weight:bold; color:#a29bfe; margin-bottom:10px;"><i class="fa-solid fa-brain"></i> Embedding API \u914D\u7F6E</div>
+                        <div style="font-size:0.85em; color:#888; line-height:1.6;">
+                            \u914D\u7F6E\u5411\u91CF\u5316\u6A21\u578B API\uFF0C\u7528\u4E8E\u667A\u80FD\u603B\u7ED3\u529F\u80FD\u4E2D\u7684\u8BED\u4E49\u68C0\u7D22\u3002<br>
+                            <span style="color:#55efc4;">\u2728 \u5411\u91CF\u5316\u540E\u53EF\u4EE5\u667A\u80FD\u5339\u914D\u6700\u76F8\u5173\u7684\u5386\u53F2\u5185\u5BB9\uFF0C\u63D0\u5347\u603B\u7ED3\u8D28\u91CF\u3002</span>
+                        </div>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <label class="t-form-label">API Endpoint URL</label>
+                        <input id="cfg-embed-url" class="t-input" value="${data.embedding_config?.url || ""}" placeholder="\u4F8B\u5982: https://api.openai.com/v1">
+                        <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                            Embedding API \u5730\u5740\uFF0C\u652F\u6301 OpenAI \u517C\u5BB9\u683C\u5F0F<br>
+                            <span style="color:#888;">\u5C06\u8C03\u7528 <code style="background:#333; padding:1px 4px; border-radius:2px;">/embeddings</code> \u63A5\u53E3</span>
+                        </p>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <label class="t-form-label">API Key</label>
+                        <input id="cfg-embed-key" type="password" class="t-input" value="${data.embedding_config?.key || ""}" placeholder="sk-...">
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <label class="t-form-label">Model Name</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="cfg-embed-model" class="t-input" style="flex:1; cursor:pointer;"></select>
+                            <button id="t-btn-fetch-embed" class="t-tool-btn" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button>
+                        </div>
+                        <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                            \u5E38\u7528\u6A21\u578B\uFF1A<code style="background:#333; padding:1px 4px; border-radius:2px;">text-embedding-3-small</code>\u3001
+                            <code style="background:#333; padding:1px 4px; border-radius:2px;">text-embedding-ada-002</code>
+                        </p>
+                    </div>
+                    
+                    <div class="t-form-group">
+                        <label class="t-form-label">\u5411\u91CF\u7EF4\u5EA6 (\u53EF\u9009)</label>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="number" id="cfg-embed-dimensions" class="t-input" value="${data.embedding_config?.dimensions || ""}" min="256" max="3072" step="256" style="width:120px;" placeholder="\u81EA\u52A8">
+                            <span style="font-size:0.85em; color:#888;">\u7559\u7A7A\u4F7F\u7528\u6A21\u578B\u9ED8\u8BA4\u503C</span>
+                        </div>
+                        <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                            <span style="color:#feca57;">\u26A0\uFE0F \u90E8\u5206\u6A21\u578B\u4E0D\u652F\u6301\u81EA\u5B9A\u4E49\u7EF4\u5EA6</span>
+                        </p>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; margin-top:20px; padding-top:15px; border-top:1px solid #333;">
+                        <button id="btn-test-embed" class="t-btn" style="border:1px solid #a29bfe; color:#a29bfe;">
+                            <i class="fa-solid fa-vial"></i> \u6D4B\u8BD5\u8FDE\u63A5
+                        </button>
+                        <span id="embed-test-result" style="font-size:0.9em; line-height:32px;"></span>
+                    </div>
+                    
+                    <!-- \u667A\u80FD\u603B\u7ED3\u8BBE\u7F6E -->
+                    <div style="margin-top:25px; border-top:1px solid #333; padding-top:20px;">
+                        <div style="font-weight:bold; color:#ff79c6; margin-bottom:15px;"><i class="fa-solid fa-wand-magic-sparkles"></i> \u667A\u80FD\u603B\u7ED3\u8BBE\u7F6E</div>
+                        
+                        <div class="t-form-group">
+                            <label class="t-form-label">\u9ED8\u8BA4\u603B\u7ED3\u6A21\u677F</label>
+                            <select id="cfg-summary-template" class="t-input">
+                                <option value="structured" ${(data.summarizer_config?.template || "structured") === "structured" ? "selected" : ""}>\u{1F4CB} \u7ED3\u6784\u5316 (\u5206\u7AE0\u8282)</option>
+                                <option value="narrative" ${(data.summarizer_config?.template || "structured") === "narrative" ? "selected" : ""}>\u{1F4D6} \u53D9\u4E8B\u6027 (\u6545\u4E8B\u98CE\u683C)</option>
+                            </select>
+                            <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                                \u7ED3\u6784\u5316\uFF1A\u6309\u4E8B\u4EF6/\u573A\u666F\u5206\u7AE0\u8282\u6574\u7406<br>
+                                \u53D9\u4E8B\u6027\uFF1A\u4EE5\u6545\u4E8B\u53D9\u8FF0\u65B9\u5F0F\u603B\u7ED3
+                            </p>
+                        </div>
+                        
+                        <div class="t-form-group">
+                            <label style="cursor:pointer; display:flex; align-items:center;">
+                                <input type="checkbox" id="cfg-use-vector" ${data.summarizer_config?.use_vector_search !== false ? "checked" : ""} style="margin-right:10px;">
+                                <span style="color:#ccc;">\u{1F50D} \u4F7F\u7528\u5411\u91CF\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A</span>
+                            </label>
+                            <p style="font-size:0.75em; color:#666; margin-top:5px; margin-left:22px;">
+                                \u5F00\u542F\u540E\uFF0C\u603B\u7ED3\u65F6\u4F1A\u57FA\u4E8E\u5F53\u524D\u60C5\u5883\u667A\u80FD\u5339\u914D\u76F8\u5173\u5386\u53F2\u5185\u5BB9<br>
+                                <span style="color:#feca57;">\u26A0\uFE0F \u9700\u8981\u5148\u914D\u7F6E Embedding API \u5E76\u5EFA\u7ACB\u5411\u91CF\u7D22\u5F15</span>
+                            </p>
+                        </div>
+                        
+                        <div class="t-form-group">
+                            <label class="t-form-label">\u603B\u7ED3\u4F7F\u7528\u7684 API \u914D\u7F6E</label>
+                            <select id="cfg-summary-profile" class="t-input">
+                                <option value="">\u8DDF\u968F\u5F53\u524D\u6FC0\u6D3B\u7684\u914D\u7F6E</option>
+                            </select>
+                            <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                                \u9009\u62E9\u7528\u4E8E\u751F\u6210\u603B\u7ED3\u7684 API \u914D\u7F6E\uFF08\u53EF\u9009\u62E9\u4E0D\u540C\u4E8E\u4E3B\u914D\u7F6E\u7684\u6A21\u578B\uFF09
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tab 3: \u5BFC\u6F14\u6A21\u5F0F -->
@@ -7644,10 +8857,19 @@ function openSettingsWindow() {
     </div>`;
   $("#t-overlay").append(html);
   $(".t-set-tab-btn").on("click", function() {
+    const tabName = $(this).data("tab");
     $(".t-set-tab-btn").removeClass("active");
     $(this).addClass("active");
     $(".t-set-page").removeClass("active");
-    $(`#page-${$(this).data("tab")}`).addClass("active");
+    $(`#page-${tabName}`).addClass("active");
+    if (tabName === "connection") {
+      setTimeout(() => {
+        const p = tempProfiles.find((x) => x.id === tempActiveId);
+        if (p && p.type !== "internal") {
+          fetchModelList(false);
+        }
+      }, 100);
+    }
   });
   const saveCurrentProfileToMemory = () => {
     const pIndex = tempProfiles.findIndex((p) => p.id === tempActiveId);
@@ -7693,6 +8915,10 @@ function openSettingsWindow() {
     saveCurrentProfileToMemory();
     tempActiveId = $(this).val();
     renderProfileUI();
+    const newProfile = tempProfiles.find((x) => x.id === tempActiveId);
+    if (newProfile && newProfile.type !== "internal") {
+      setTimeout(() => fetchModelList(false), 100);
+    }
   });
   $("#cfg-prof-add").on("click", function() {
     saveCurrentProfileToMemory();
@@ -8274,6 +9500,182 @@ function openSettingsWindow() {
     updatePromptVisualCount();
     if (window.toastr) toastr.info("\u5DF2\u6062\u590D\u6C1B\u56F4\u6A21\u5F0F\u9ED8\u8BA4\u63D0\u793A\u8BCD");
   });
+  const initEmbedModelSelect = () => {
+    const $sel = $("#cfg-embed-model");
+    $sel.empty();
+    const currentModel = data.embedding_config?.model || "text-embedding-3-small";
+    const commonModels = [
+      "text-embedding-3-small",
+      "text-embedding-3-large",
+      "text-embedding-ada-002"
+    ];
+    commonModels.forEach((model) => {
+      const isSelected = model === currentModel;
+      $sel.append(`<option value="${model}" ${isSelected ? "selected" : ""}>${model}</option>`);
+    });
+    if (!commonModels.includes(currentModel)) {
+      $sel.prepend(`<option value="${currentModel}" selected>${currentModel} (\u5F53\u524D)</option>`);
+    }
+  };
+  const fetchEmbedModelList = async (showSuccessToast = true) => {
+    const btn = $("#t-btn-fetch-embed");
+    const urlInput = ($("#cfg-embed-url").val() || "").trim().replace(/\/+$/, "");
+    const key = ($("#cfg-embed-key").val() || "").trim();
+    if (!urlInput) {
+      if (showSuccessToast && window.toastr) toastr.warning("\u8BF7\u5148\u586B\u5199 API \u5730\u5740");
+      return;
+    }
+    try {
+      btn.prop("disabled", true).text("...");
+      const res = await fetch(`${urlInput}/models`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${key}` }
+      });
+      if (!res.ok) throw new Error("Status: " + res.status);
+      const responseData = await res.json();
+      const models = responseData.data || responseData.models || [];
+      const embedKeywords = ["embed", "ada", "vector", "bge", "e5", "gte", "jina", "cohere", "voyage", "nomic"];
+      const embedModels = models.filter((m) => {
+        const id = (m.id || m).toLowerCase();
+        return embedKeywords.some((kw) => id.includes(kw));
+      });
+      const currentModel = $("#cfg-embed-model").val();
+      const $sel = $("#cfg-embed-model");
+      $sel.empty();
+      const sortedModels = [...embedModels];
+      const otherModels = models.filter((m) => !embedModels.includes(m));
+      if (embedModels.length > 0) {
+        $sel.append('<optgroup label="\u{1F4CA} \u5411\u91CF\u5316\u6A21\u578B (\u63A8\u8350)">');
+        embedModels.forEach((m) => {
+          const modelId = m.id || m;
+          const isSelected = modelId === currentModel;
+          $sel.append(`<option value="${modelId}" ${isSelected ? "selected" : ""}>${modelId}</option>`);
+        });
+        $sel.append("</optgroup>");
+      }
+      if (otherModels.length > 0) {
+        $sel.append('<optgroup label="\u{1F916} \u5176\u4ED6\u6A21\u578B">');
+        otherModels.forEach((m) => {
+          const modelId = m.id || m;
+          const isSelected = modelId === currentModel;
+          $sel.append(`<option value="${modelId}" ${isSelected ? "selected" : ""}>${modelId}</option>`);
+        });
+        $sel.append("</optgroup>");
+      }
+      const allModelIds = models.map((m) => m.id || m);
+      if (currentModel && !allModelIds.includes(currentModel)) {
+        $sel.prepend(`<option value="${currentModel}" selected>${currentModel} (\u5F53\u524D)</option>`);
+      }
+      if (showSuccessToast && window.toastr) {
+        toastr.success(`\u83B7\u53D6\u6210\u529F: ${models.length} \u4E2A\u6A21\u578B (${embedModels.length} \u4E2A\u5411\u91CF\u5316\u6A21\u578B)`);
+      }
+    } catch (e) {
+      if (showSuccessToast) {
+        if (window.toastr) toastr.error("\u83B7\u53D6\u5931\u8D25: " + e.message);
+      }
+      console.warn("Titania: \u83B7\u53D6 Embedding \u6A21\u578B\u5217\u8868\u5931\u8D25", e.message);
+    } finally {
+      btn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+    }
+  };
+  const testEmbeddingConnection2 = async () => {
+    const btn = $("#btn-test-embed");
+    const $result = $("#embed-test-result");
+    const url = ($("#cfg-embed-url").val() || "").trim().replace(/\/+$/, "");
+    const key = ($("#cfg-embed-key").val() || "").trim();
+    const model = $("#cfg-embed-model").val();
+    const dimensions = parseInt($("#cfg-embed-dimensions").val()) || null;
+    if (!url) {
+      $result.html('<span style="color:#ff6b6b;">\u274C \u8BF7\u586B\u5199 API \u5730\u5740</span>');
+      return;
+    }
+    try {
+      btn.prop("disabled", true);
+      $result.html('<span style="color:#888;"><i class="fa-solid fa-spinner fa-spin"></i> \u6D4B\u8BD5\u4E2D...</span>');
+      const requestBody = {
+        model,
+        input: "Hello, this is a test message for embedding."
+      };
+      if (dimensions) {
+        requestBody.dimensions = dimensions;
+      }
+      const res = await fetch(`${url}/embeddings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${key}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Status ${res.status}: ${errText.substring(0, 100)}`);
+      }
+      const data2 = await res.json();
+      if (data2.data && data2.data[0] && data2.data[0].embedding) {
+        const dims = data2.data[0].embedding.length;
+        $result.html(`<span style="color:#55efc4;">\u2705 \u8FDE\u63A5\u6210\u529F\uFF01\u5411\u91CF\u7EF4\u5EA6: ${dims}</span>`);
+      } else {
+        throw new Error("\u54CD\u5E94\u683C\u5F0F\u5F02\u5E38");
+      }
+    } catch (e) {
+      $result.html(`<span style="color:#ff6b6b;">\u274C ${e.message}</span>`);
+    } finally {
+      btn.prop("disabled", false);
+    }
+  };
+  const initSummaryProfileSelect = () => {
+    const $sel = $("#cfg-summary-profile");
+    const currentProfileId = data.summarizer_config?.selected_profile_id || "";
+    tempProfiles.forEach((profile) => {
+      const isSelected = profile.id === currentProfileId;
+      $sel.append(`<option value="${profile.id}" ${isSelected ? "selected" : ""}>${profile.name}</option>`);
+    });
+  };
+  initEmbedModelSelect();
+  initSummaryProfileSelect();
+  $("#t-btn-fetch-embed").on("click", () => fetchEmbedModelList(true));
+  $("#btn-test-embed").on("click", testEmbeddingConnection2);
+  const toolbarConfig = data.quick_toolbar || {};
+  const enabledItems = toolbarConfig.enabled_items || {
+    main: true,
+    lore: true,
+    settings: true,
+    favs: false,
+    scripts: false,
+    debug: false
+  };
+  const MAX_TOOLBAR_ITEMS = 5;
+  const initToolbarCheckboxes = () => {
+    $(".t-toolbar-chk").each(function() {
+      const btnId = $(this).data("btn-id");
+      if (btnId === "main") {
+        $(this).prop("checked", true).prop("disabled", true);
+      } else {
+        $(this).prop("checked", enabledItems[btnId] === true);
+      }
+    });
+    updateToolbarCount();
+  };
+  const updateToolbarCount = () => {
+    const count = $(".t-toolbar-chk:checked").length;
+    const $countEl = $("#t-toolbar-count");
+    $countEl.text(`\u5DF2\u9009\u62E9 ${count} / ${MAX_TOOLBAR_ITEMS} \u4E2A\u6309\u94AE`);
+    if (count >= MAX_TOOLBAR_ITEMS) {
+      $(".t-toolbar-chk:not(:checked):not([data-btn-id='main'])").prop("disabled", true);
+      $countEl.css("color", "#ff9f43");
+    } else {
+      $(".t-toolbar-chk:not([data-btn-id='main'])").prop("disabled", false);
+      $countEl.css("color", "#666");
+    }
+  };
+  $(".t-toolbar-chk").on("change", function() {
+    updateToolbarCount();
+  });
+  $("#cfg-toolbar-enabled").on("change", function() {
+    $("#toolbar-settings-panel").toggle($(this).is(":checked"));
+  });
+  initToolbarCheckboxes();
   const renderLogView = () => {
     const logs = TitaniaLogger.logs;
     if (!logs || logs.length === 0) {
@@ -8317,33 +9719,48 @@ ${JSON.stringify(l.details, null, 2)}`;
   renderLogView();
   $("#btn-refresh-log").on("click", renderLogView);
   $("#btn-export-log").on("click", () => TitaniaLogger.downloadReport());
-  $("#t-btn-fetch").on("click", async function() {
-    const btn = $(this);
+  const fetchModelList = async (showSuccessToast = true) => {
+    const btn = $("#t-btn-fetch");
     const p = tempProfiles.find((x) => x.id === tempActiveId);
-    if (p.type === "internal") {
-      alert("ST\u6258\u7BA1\u6A21\u5F0F\u4E0B\uFF0C\u8BF7\u5728 SillyTavern \u4E3B\u8BBE\u7F6E\u4E2D\u5207\u6362\u6A21\u578B");
-      return;
-    }
+    if (!p || p.type === "internal") return;
     const urlInput = ($("#cfg-url").val() || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
     const key = ($("#cfg-key").val() || "").trim();
-    if (!urlInput) return alert("URL Empty");
+    if (!urlInput) return;
     try {
       btn.prop("disabled", true).text("...");
-      const res = await fetch(`${urlInput}/models`, { method: "GET", headers: { "Authorization": `Bearer ${key}` } });
+      const res = await fetch(`${urlInput}/models`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${key}` }
+      });
       if (!res.ok) throw new Error("Status: " + res.status);
       const data2 = await res.json();
       const models = data2.data || data2.models || [];
+      const currentModel = p.model || $("#cfg-model").val();
       const $sel = $("#cfg-model");
       $sel.empty();
-      models.forEach((m) => $sel.append(`<option value="${m.id || m}">${m.id || m}</option>`));
-      if (window.toastr) toastr.success(`\u83B7\u53D6\u6210\u529F: ${models.length} \u4E2A`);
+      models.forEach((m) => {
+        const modelId = m.id || m;
+        const isSelected = modelId === currentModel;
+        $sel.append(`<option value="${modelId}" ${isSelected ? "selected" : ""}>${modelId}</option>`);
+      });
+      if (currentModel && !models.some((m) => (m.id || m) === currentModel)) {
+        $sel.prepend(`<option value="${currentModel}" selected>${currentModel} (\u5F53\u524D)</option>`);
+      }
+      if (showSuccessToast && window.toastr) {
+        toastr.success(`\u83B7\u53D6\u6210\u529F: ${models.length} \u4E2A\u6A21\u578B`);
+      }
     } catch (e) {
-      alert("Fail: " + e.message);
-      TitaniaLogger.error("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
+      if (showSuccessToast) {
+        alert("\u83B7\u53D6\u5931\u8D25: " + e.message);
+        TitaniaLogger.error("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
+      } else {
+        console.warn("Titania: \u81EA\u52A8\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e.message);
+      }
     } finally {
       btn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
     }
-  });
+  };
+  $("#t-btn-fetch").on("click", () => fetchModelList(true));
   $("#btn-restore-presets").on("click", function() {
     if (confirm("\u6062\u590D\u6240\u6709\u9884\u8BBE\uFF1F")) {
       const d = getExtData();
@@ -8476,6 +9893,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       profiles: tempProfiles,
       history_limit: parseInt($("#cfg-history").val()) || 10,
       stream: $("#cfg-stream").is(":checked"),
+      max_tokens: parseInt($("#cfg-max-tokens").val()) || 4096,
       auto_generate: $("#cfg-auto").is(":checked"),
       auto_chance: parseInt($("#cfg-chance").val()),
       auto_mode: $("#cfg-auto-mode").val(),
@@ -8526,6 +9944,27 @@ ${JSON.stringify(l.details, null, 2)}`;
       content_mode: $("#cfg-prompt-content").val().trim(),
       visual_mode: $("#cfg-prompt-visual").val().trim()
     };
+    const toolbarEnabledItems = {};
+    $(".t-toolbar-chk").each(function() {
+      const btnId = $(this).data("btn-id");
+      toolbarEnabledItems[btnId] = $(this).is(":checked");
+    });
+    d.quick_toolbar = {
+      enabled: $("#cfg-toolbar-enabled").is(":checked"),
+      enabled_items: toolbarEnabledItems,
+      max_items: MAX_TOOLBAR_ITEMS
+    };
+    d.embedding_config = {
+      url: $("#cfg-embed-url").val().trim(),
+      key: $("#cfg-embed-key").val().trim(),
+      model: $("#cfg-embed-model").val() || "text-embedding-3-small",
+      dimensions: parseInt($("#cfg-embed-dimensions").val()) || null
+    };
+    d.summarizer_config = {
+      selected_profile_id: $("#cfg-summary-profile").val() || null,
+      template: $("#cfg-summary-template").val() || "structured",
+      use_vector_search: $("#cfg-use-vector").is(":checked")
+    };
     saveExtData();
     $("#t-settings-view").remove();
     const $mainViewOnSave = $("#t-main-view");
@@ -8556,6 +9995,11 @@ var init_settingsWindow = __esm({
 });
 
 // src/ui/scriptManager.js
+var scriptManager_exports = {};
+__export(scriptManager_exports, {
+  openEditor: () => openEditor,
+  openScriptManager: () => openScriptManager
+});
 function openScriptManager() {
   let currentFilter = {
     category: "\u5168\u90E8",
@@ -9150,8 +10594,16 @@ ${s.prompt}`;
   });
   $("#t-mgr-close").on("click", () => {
     $("#t-mgr-view").remove();
-    $("#t-main-view").show();
-    refreshScriptList();
+    const $mainView = $("#t-main-view");
+    if ($mainView.length > 0) {
+      $mainView.show();
+      refreshScriptList();
+    } else {
+      const $overlay = $("#t-overlay");
+      if ($overlay.length > 0 && $overlay.children(":visible").length === 0) {
+        $overlay.remove();
+      }
+    }
   });
   $("#t-mgr-search-inp").on("input", function() {
     currentFilter.search = $(this).val();
@@ -9340,10 +10792,6 @@ function getActiveConnection() {
     rawProfile: currentProfile
   };
 }
-function getCurrentModel() {
-  const conn = getActiveConnection();
-  return conn.model;
-}
 async function getAvailableModels() {
   const conn = getActiveConnection();
   if (conn.useSTConnection) {
@@ -9408,127 +10856,6 @@ async function getAvailableModels() {
     }
   }
 }
-function normalizeEndpoint(url, suffix = "/chat/completions") {
-  if (!url) return "";
-  let endpoint = url.trim().replace(/\/+$/, "");
-  if (!endpoint.endsWith(suffix)) {
-    if (endpoint.endsWith("/v1")) {
-      endpoint += suffix;
-    } else {
-      endpoint += "/v1" + suffix;
-    }
-  }
-  return endpoint;
-}
-async function sendChatRequest(messages, options = {}) {
-  const conn = getActiveConnection();
-  const data = getExtData();
-  const model = options.model || conn.model;
-  const useStream = options.stream !== void 0 ? options.stream : conn.stream;
-  const maxTokens = options.maxTokens || 2048;
-  const temperature = options.temperature || 0.7;
-  const signal = options.signal;
-  let rawContent = "";
-  if (conn.useSTConnection) {
-    const requestData = ChatCompletionService.createRequestData({
-      stream: useStream,
-      messages,
-      chat_completion_source: oai_settings.chat_completion_source,
-      model,
-      max_tokens: oai_settings.openai_max_tokens || maxTokens,
-      temperature: oai_settings.temp_openai || temperature,
-      custom_url: oai_settings.custom_url,
-      reverse_proxy: oai_settings.reverse_proxy,
-      proxy_password: oai_settings.proxy_password,
-      custom_prompt_post_processing: oai_settings.custom_prompt_post_processing
-    });
-    if (useStream) {
-      const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, null);
-      if (typeof streamGenerator === "function") {
-        for await (const chunk of streamGenerator()) {
-          rawContent = chunk.text || "";
-        }
-      } else {
-        rawContent = streamGenerator?.content || "";
-      }
-    } else {
-      const result = await ChatCompletionService.sendRequest(requestData, true, null);
-      rawContent = result?.content || "";
-    }
-  } else {
-    if (!conn.key) {
-      throw new Error("\u914D\u7F6E\u7F3A\u5931\uFF1A\u8BF7\u5148\u53BB\u8BBE\u7F6E\u586B API Key\uFF01");
-    }
-    const endpoint = normalizeEndpoint(conn.url, "/chat/completions");
-    if (!endpoint) {
-      throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
-    }
-    const fetchOptions = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${conn.key}`
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: useStream,
-        max_tokens: maxTokens,
-        temperature
-      })
-    };
-    if (signal) {
-      fetchOptions.signal = signal;
-    }
-    const res = await fetch(endpoint, fetchOptions);
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
-    }
-    if (useStream) {
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-      try {
-        while (true) {
-          if (signal?.aborted) {
-            await reader.cancel();
-            throw new DOMException("Request aborted", "AbortError");
-          }
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop();
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed || !trimmed.startsWith("data: ")) continue;
-            const jsonStr = trimmed.replace(/^data: /, "").trim();
-            if (jsonStr === "[DONE]") continue;
-            try {
-              const json = JSON.parse(jsonStr);
-              const chunk = json.choices?.[0]?.delta?.content || "";
-              if (chunk) rawContent += chunk;
-            } catch (e) {
-            }
-          }
-        }
-      } catch (streamErr) {
-        if (streamErr.name === "AbortError") throw streamErr;
-        throw new Error(`Stream Interrupted: ${streamErr.message}`);
-      }
-    } else {
-      const jsonText = await res.text();
-      try {
-        const json = JSON.parse(jsonText);
-        rawContent = json.choices?.[0]?.message?.content || "";
-      } catch (jsonErr) {
-        throw new Error("Invalid JSON response");
-      }
-    }
-  }
-  return rawContent;
-}
 function validateConnection() {
   const conn = getActiveConnection();
   if (conn.useSTConnection) {
@@ -9541,6 +10868,149 @@ function validateConnection() {
     return { valid: false, error: "API Key \u672A\u8BBE\u7F6E" };
   }
   return { valid: true };
+}
+function getAllProfiles() {
+  const data = getExtData();
+  const cfg = data.config || {};
+  return cfg.profiles || DEFAULT_PROFILES;
+}
+function getConnectionByProfileId(profileId, modelOverride = null) {
+  const data = getExtData();
+  const cfg = data.config || {};
+  const profiles = cfg.profiles || DEFAULT_PROFILES;
+  const profile = profiles.find((p) => p.id === profileId);
+  if (!profile) return null;
+  const useSTConnection = profile.type === "internal";
+  const stream = cfg.stream !== false;
+  let url = "";
+  let key = "";
+  let model = "";
+  if (useSTConnection) {
+    try {
+      model = modelOverride || getChatCompletionModel() || "gpt-3.5-turbo";
+      url = oai_settings.custom_url || oai_settings.reverse_proxy || `[${oai_settings.chat_completion_source}]`;
+      key = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
+    } catch (e) {
+      TitaniaLogger.warn("\u65E0\u6CD5\u8BFB\u53D6 ST API \u914D\u7F6E", e);
+      model = modelOverride || "gpt-3.5-turbo";
+    }
+  } else {
+    url = profile.url || "";
+    key = profile.key || "";
+    model = modelOverride || profile.model || "gpt-3.5-turbo";
+  }
+  return {
+    useSTConnection,
+    profileName: profile.name,
+    profileId: profile.id,
+    url,
+    key,
+    model,
+    stream,
+    rawProfile: profile
+  };
+}
+function getFeatureConnection(featureKey) {
+  const data = getExtData();
+  const featureConfig = data[`${featureKey}_config`];
+  if (!featureConfig || !featureConfig.selected_profile_id) {
+    return null;
+  }
+  const conn = getConnectionByProfileId(
+    featureConfig.selected_profile_id,
+    featureConfig.model_override || null
+  );
+  if (!conn) {
+    TitaniaLogger.warn(`\u529F\u80FD ${featureKey} \u914D\u7F6E\u7684\u65B9\u6848 ${featureConfig.selected_profile_id} \u4E0D\u5B58\u5728`);
+    return null;
+  }
+  return conn;
+}
+function validateFeatureConnection(featureKey) {
+  const conn = getFeatureConnection(featureKey);
+  if (!conn) {
+    return { configured: false, valid: false, error: "\u672A\u914D\u7F6E API \u65B9\u6848" };
+  }
+  if (conn.useSTConnection) {
+    return { configured: true, valid: true };
+  }
+  if (!conn.url) {
+    return { configured: true, valid: false, error: "API URL \u672A\u8BBE\u7F6E" };
+  }
+  if (!conn.key) {
+    return { configured: true, valid: false, error: "API Key \u672A\u8BBE\u7F6E" };
+  }
+  return { configured: true, valid: true };
+}
+async function getAvailableModelsForProfile(profileId) {
+  const data = getExtData();
+  const cfg = data.config || {};
+  const profiles = cfg.profiles || DEFAULT_PROFILES;
+  const profile = profiles.find((p) => p.id === profileId);
+  if (!profile) {
+    return ["gpt-3.5-turbo"];
+  }
+  if (profile.type === "internal") {
+    try {
+      const selectors = [
+        "#model_openai_select",
+        "#model_claude_select",
+        "#model_openrouter_select",
+        "#model_mistral_select",
+        "#api_button_text_generation_webui_model",
+        ".model_select",
+        "select[id*='model']"
+      ];
+      let models = [];
+      for (const sel of selectors) {
+        const $sel = $(sel);
+        if ($sel.length > 0 && $sel.is("select")) {
+          $sel.find("option").each(function() {
+            const val = $(this).val();
+            if (val && val !== "null" && typeof val === "string" && val.trim() !== "") {
+              models.push(val);
+            }
+          });
+        }
+      }
+      if (models.length > 0) {
+        const uniqueModels = [...new Set(models)].sort();
+        const current2 = getChatCompletionModel();
+        if (current2 && !uniqueModels.includes(current2)) {
+          uniqueModels.unshift(current2);
+        }
+        return uniqueModels;
+      }
+    } catch (e) {
+      TitaniaLogger.warn("\u4ECE ST DOM \u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
+    }
+    const current = getChatCompletionModel();
+    return current ? [current] : ["gpt-3.5-turbo"];
+  } else {
+    if (!profile.url) return [profile.model || "gpt-3.5-turbo"];
+    try {
+      let endpoint = profile.url.trim().replace(/\/+$/, "");
+      if (!endpoint.endsWith("/models")) {
+        if (endpoint.endsWith("/v1")) endpoint += "/models";
+        else endpoint += "/v1/models";
+      }
+      const res = await fetch(endpoint, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${profile.key || ""}` }
+      });
+      if (!res.ok) return [profile.model || "gpt-3.5-turbo"];
+      const json = await res.json();
+      if (Array.isArray(json.data)) {
+        return json.data.map((m) => m.id).sort();
+      } else if (Array.isArray(json)) {
+        return json.map((m) => m.id || m).sort();
+      }
+      return [profile.model || "gpt-3.5-turbo"];
+    } catch (e) {
+      TitaniaLogger.warn("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
+      return [profile.model || "gpt-3.5-turbo"];
+    }
+  }
 }
 var DEFAULT_PROFILES;
 var init_connection = __esm({
@@ -9555,6 +11025,8 @@ var init_connection = __esm({
 });
 
 // src/core/loreExtractor.js
+import { oai_settings as oai_settings2 } from "../../../openai.js";
+import { ChatCompletionService as ChatCompletionService2 } from "../../../custom-request.js";
 function extractJSONFromAIOutput(rawContent) {
   if (!rawContent || typeof rawContent !== "string") {
     return "";
@@ -9650,7 +11122,7 @@ function parseAIJSON(rawContent) {
   for (const strategy of strategies) {
     try {
       const result = strategy.fn(rawContent);
-      TitaniaLogger.debug(`JSON \u89E3\u6790\u6210\u529F\uFF0C\u4F7F\u7528\u7B56\u7565: ${strategy.name}`);
+      console.log(`[Titania] JSON \u89E3\u6790\u6210\u529F\uFF0C\u4F7F\u7528\u7B56\u7565: ${strategy.name}`);
       return result;
     } catch (e) {
       errors.push({ strategy: strategy.name, error: e.message });
@@ -9662,8 +11134,73 @@ function parseAIJSON(rawContent) {
   });
   throw new Error(`\u65E0\u6CD5\u89E3\u6790 AI \u8FD4\u56DE\u7684 JSON \u6570\u636E\u3002\u5C1D\u8BD5\u4E86 ${strategies.length} \u79CD\u7B56\u7565\u5747\u5931\u8D25\u3002`);
 }
-async function extractLoreFromHistory(historyLimit = 20, modelOverride = null) {
-  TitaniaLogger.info("\u5F00\u59CB\u63D0\u53D6\u8BBE\u5B9A...", { historyLimit, modelOverride });
+async function sendFeatureRequest(messages, options = {}) {
+  const conn = getFeatureConnection(FEATURE_KEY);
+  if (!conn) {
+    throw new Error("\u672A\u914D\u7F6E API \u8FDE\u63A5\uFF0C\u8BF7\u5148\u5728\u8BBE\u5B9A\u63D0\u53D6\u7A97\u53E3\u4E2D\u914D\u7F6E");
+  }
+  const data = getExtData();
+  const cfg = data.config || {};
+  const configMaxTokens = cfg.max_tokens || 4096;
+  const model = options.model || conn.model;
+  const maxTokens = options.maxTokens || configMaxTokens;
+  const temperature = options.temperature || 0.3;
+  if (conn.useSTConnection) {
+    const requestData = ChatCompletionService2.createRequestData({
+      stream: false,
+      messages,
+      chat_completion_source: oai_settings2.chat_completion_source,
+      model,
+      max_tokens: oai_settings2.openai_max_tokens || maxTokens,
+      temperature,
+      custom_url: oai_settings2.custom_url,
+      reverse_proxy: oai_settings2.reverse_proxy,
+      proxy_password: oai_settings2.proxy_password,
+      custom_prompt_post_processing: oai_settings2.custom_prompt_post_processing
+    });
+    const result = await ChatCompletionService2.sendRequest(requestData, true, null);
+    return result?.content || "";
+  } else {
+    if (!conn.key) {
+      throw new Error("API Key \u672A\u8BBE\u7F6E");
+    }
+    let endpoint = conn.url.trim().replace(/\/+$/, "");
+    if (!endpoint.endsWith("/chat/completions")) {
+      if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
+      else endpoint += "/v1/chat/completions";
+    }
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${conn.key}`
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: false,
+        max_tokens: maxTokens,
+        temperature
+      })
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
+    }
+    const json = await res.json();
+    return json.choices?.[0]?.message?.content || "";
+  }
+}
+async function extractLoreFromHistory(historyLimit = 20) {
+  const conn = getFeatureConnection(FEATURE_KEY);
+  if (!conn) {
+    throw new Error("\u672A\u914D\u7F6E API \u8FDE\u63A5\uFF0C\u8BF7\u5148\u914D\u7F6E\u540E\u518D\u4F7F\u7528");
+  }
+  TitaniaLogger.info("\u5F00\u59CB\u63D0\u53D6\u8BBE\u5B9A...", {
+    historyLimit,
+    profile: conn.profileName,
+    model: conn.model
+  });
   const ctx = await getContextData();
   const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
@@ -9737,25 +11274,15 @@ ${history}
 
 [Task]
 Extract new lore entries from the above history. Return JSON only.`;
-  const conn = getActiveConnection();
-  const finalModel = modelOverride || conn.model;
-  TitaniaLogger.info("\u63D0\u53D6\u8BBE\u5B9A\u4F7F\u7528\u8FDE\u63A5", {
-    profile: conn.profileName,
-    model: finalModel,
-    useSTConnection: conn.useSTConnection
-  });
   let rawContent = "";
   try {
-    rawContent = await sendChatRequest(
+    rawContent = await sendFeatureRequest(
       [
         { role: "system", content: sysPrompt },
         { role: "user", content: userPrompt }
       ],
       {
-        model: finalModel,
-        stream: false,
-        // 设定提取不使用流式
-        maxTokens: 2e3,
+        // 使用全局配置的 max_tokens（在 sendFeatureRequest 中读取）
         temperature: 0.3
       }
     );
@@ -9767,31 +11294,48 @@ Extract new lore entries from the above history. Return JSON only.`;
     throw new Error("API \u8FD4\u56DE\u5185\u5BB9\u4E3A\u7A7A");
   }
   try {
-    TitaniaLogger.debug("\u5F00\u59CB\u89E3\u6790 AI \u8FD4\u56DE\u5185\u5BB9", {
+    console.log("[Titania] \u539F\u59CB\u54CD\u5E94\u7C7B\u578B:", typeof rawContent);
+    console.log("[Titania] \u539F\u59CB\u54CD\u5E94\u957F\u5EA6:", rawContent?.length);
+    console.log("[Titania] \u539F\u59CB\u54CD\u5E94\u524D200\u5B57\u7B26:", rawContent?.substring(0, 200));
+    console.log("[Titania] \u539F\u59CB\u54CD\u5E94\u540E100\u5B57\u7B26:", rawContent?.substring(rawContent.length - 100));
+    console.log("[Titania] \u5F00\u59CB\u89E3\u6790 AI \u8FD4\u56DE\u5185\u5BB9", {
       contentLength: rawContent.length,
       contentPreview: rawContent.substring(0, 200)
     });
     const data = parseAIJSON(rawContent);
+    console.log("[Titania] \u89E3\u6790\u540E\u7684\u6570\u636E:", data);
+    console.log("[Titania] entries \u7C7B\u578B:", typeof data?.entries);
+    console.log("[Titania] entries \u662F\u5426\u4E3A\u6570\u7EC4:", Array.isArray(data?.entries));
     if (!data || !Array.isArray(data.entries)) {
       throw new Error("\u8FD4\u56DE\u7684 JSON \u683C\u5F0F\u4E0D\u6B63\u786E (\u7F3A\u5C11 entries \u6570\u7EC4)");
     }
     TitaniaLogger.info(`\u63D0\u53D6\u5B8C\u6210\uFF0C\u5171\u627E\u5230 ${data.entries.length} \u4E2A\u6761\u76EE`);
-    return data;
+    return {
+      entries: data.entries,
+      rawResponse: rawContent
+    };
   } catch (e) {
+    console.error("[Titania] JSON \u89E3\u6790\u5F02\u5E38:", e);
+    console.error("[Titania] \u5F02\u5E38\u5806\u6808:", e.stack);
     TitaniaLogger.error("JSON \u89E3\u6790\u5931\u8D25", {
       rawContentFull: rawContent,
       rawContentLength: rawContent.length,
       error: e.message
     });
-    throw new Error(`\u65E0\u6CD5\u89E3\u6790 AI \u8FD4\u56DE\u7684\u6570\u636E: ${e.message}`);
+    const error = new Error(`\u65E0\u6CD5\u89E3\u6790 AI \u8FD4\u56DE\u7684\u6570\u636E: ${e.message}`);
+    error.rawResponse = rawContent;
+    throw error;
   }
 }
+var FEATURE_KEY;
 var init_loreExtractor = __esm({
   "src/core/loreExtractor.js"() {
     init_helpers();
     init_context();
     init_logger();
     init_connection();
+    init_storage();
+    FEATURE_KEY = "lore_extractor";
   }
 });
 
@@ -9885,8 +11429,8 @@ function initSyncListener() {
     }
     console.log(`[Titania] External change detected, reloading: ${name}`);
     getWorldInfoEntries(name).then(() => {
-      const event2 = new CustomEvent("titania-worldbook-updated", { detail: { name } });
-      document.dispatchEvent(event2);
+      const event = new CustomEvent("titania-worldbook-updated", { detail: { name } });
+      document.dispatchEvent(event);
     });
   });
   console.log("[Titania] Sync listener registered.");
@@ -9954,6 +11498,866 @@ var init_worldInfoManager = __esm({
   }
 });
 
+// src/core/embeddings.js
+function getEmbeddingConfig() {
+  const data = getExtData();
+  return data.embedding_config || {
+    url: "",
+    key: "",
+    model: "text-embedding-3-small",
+    dimensions: null
+  };
+}
+function validateEmbeddingConfig() {
+  const cfg = getEmbeddingConfig();
+  if (!cfg.url || cfg.url.trim() === "") {
+    return { valid: false, error: "Embedding API URL \u672A\u8BBE\u7F6E" };
+  }
+  if (!cfg.key || cfg.key.trim() === "") {
+    return { valid: false, error: "Embedding API Key \u672A\u8BBE\u7F6E" };
+  }
+  if (!cfg.model || cfg.model.trim() === "") {
+    return { valid: false, error: "Embedding \u6A21\u578B\u672A\u8BBE\u7F6E" };
+  }
+  return { valid: true };
+}
+function normalizeEmbeddingEndpoint(url) {
+  if (!url) return "";
+  let endpoint = url.trim().replace(/\/+$/, "");
+  if (endpoint.endsWith("/embeddings")) {
+    return endpoint;
+  }
+  if (endpoint.endsWith("/v1")) {
+    return endpoint + "/embeddings";
+  }
+  return endpoint + "/v1/embeddings";
+}
+async function getEmbedding(text) {
+  const cfg = getEmbeddingConfig();
+  const validation = validateEmbeddingConfig();
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+  const endpoint = normalizeEmbeddingEndpoint(cfg.url);
+  const requestBody = {
+    model: cfg.model,
+    input: text
+  };
+  if (cfg.dimensions && typeof cfg.dimensions === "number") {
+    requestBody.dimensions = cfg.dimensions;
+  }
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${cfg.key}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Embedding API Error ${res.status}: ${errText.substring(0, 200)}`);
+    }
+    const json = await res.json();
+    if (json.data && Array.isArray(json.data) && json.data[0]?.embedding) {
+      return json.data[0].embedding;
+    }
+    if (json.embedding && Array.isArray(json.embedding)) {
+      return json.embedding;
+    }
+    if (json.embeddings && Array.isArray(json.embeddings) && json.embeddings[0]) {
+      return json.embeddings[0];
+    }
+    throw new Error("\u65E0\u6CD5\u89E3\u6790 Embedding API \u54CD\u5E94\u683C\u5F0F");
+  } catch (e) {
+    TitaniaLogger.error("\u83B7\u53D6 Embedding \u5931\u8D25", e);
+    throw e;
+  }
+}
+async function getBatchEmbeddings(texts, options = {}) {
+  const cfg = getEmbeddingConfig();
+  const validation = validateEmbeddingConfig();
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+  if (!texts || texts.length === 0) {
+    return [];
+  }
+  const endpoint = normalizeEmbeddingEndpoint(cfg.url);
+  const batchSize = options.batchSize || 20;
+  const onProgress = options.onProgress;
+  const results = [];
+  let processed = 0;
+  for (let i = 0; i < texts.length; i += batchSize) {
+    const batch = texts.slice(i, i + batchSize);
+    const requestBody = {
+      model: cfg.model,
+      input: batch
+    };
+    if (cfg.dimensions && typeof cfg.dimensions === "number") {
+      requestBody.dimensions = cfg.dimensions;
+    }
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${cfg.key}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Embedding API Error ${res.status}: ${errText.substring(0, 200)}`);
+      }
+      const json = await res.json();
+      if (json.data && Array.isArray(json.data)) {
+        const sorted = json.data.sort((a, b) => a.index - b.index);
+        for (const item of sorted) {
+          results.push(item.embedding);
+        }
+      } else if (json.embeddings && Array.isArray(json.embeddings)) {
+        results.push(...json.embeddings);
+      } else {
+        throw new Error("\u65E0\u6CD5\u89E3\u6790\u6279\u91CF Embedding \u54CD\u5E94\u683C\u5F0F");
+      }
+      processed += batch.length;
+      if (onProgress) {
+        onProgress(processed, texts.length);
+      }
+    } catch (e) {
+      TitaniaLogger.error(`\u6279\u91CF Embedding \u5931\u8D25 (batch ${i}-${i + batch.length})`, e);
+      throw e;
+    }
+    if (i + batchSize < texts.length) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+  return results;
+}
+async function testEmbeddingConnection() {
+  const validation = validateEmbeddingConfig();
+  if (!validation.valid) {
+    return { success: false, message: validation.error };
+  }
+  try {
+    const testText = "This is a test for embedding API connection.";
+    const embedding = await getEmbedding(testText);
+    if (!Array.isArray(embedding) || embedding.length === 0) {
+      return { success: false, message: "API \u8FD4\u56DE\u7684\u5411\u91CF\u683C\u5F0F\u65E0\u6548" };
+    }
+    return {
+      success: true,
+      message: `\u8FDE\u63A5\u6210\u529F\uFF01\u5411\u91CF\u7EF4\u5EA6: ${embedding.length}`,
+      dimensions: embedding.length
+    };
+  } catch (e) {
+    return {
+      success: false,
+      message: `\u8FDE\u63A5\u5931\u8D25: ${e.message}`
+    };
+  }
+}
+var init_embeddings = __esm({
+  "src/core/embeddings.js"() {
+    init_storage();
+    init_logger();
+  }
+});
+
+// src/core/vectorStore.js
+async function initVectorDB() {
+  if (dbInstance) {
+    return dbInstance;
+  }
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => {
+      TitaniaLogger.error("\u6253\u5F00\u5411\u91CF\u6570\u636E\u5E93\u5931\u8D25", request.error);
+      reject(request.error);
+    };
+    request.onsuccess = () => {
+      dbInstance = request.result;
+      TitaniaLogger.info("\u5411\u91CF\u6570\u636E\u5E93\u5DF2\u8FDE\u63A5");
+      resolve(dbInstance);
+    };
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_EMBEDDINGS)) {
+        const embeddingsStore = db.createObjectStore(STORE_EMBEDDINGS, { keyPath: "id" });
+        embeddingsStore.createIndex("characterId", "characterId", { unique: false });
+        embeddingsStore.createIndex("messageIndex", "messageIndex", { unique: false });
+        embeddingsStore.createIndex("charMessage", ["characterId", "messageIndex"], { unique: true });
+      }
+      if (!db.objectStoreNames.contains(STORE_METADATA)) {
+        db.createObjectStore(STORE_METADATA, { keyPath: "characterId" });
+      }
+      TitaniaLogger.info("\u5411\u91CF\u6570\u636E\u5E93\u7ED3\u6784\u5DF2\u521B\u5EFA/\u66F4\u65B0");
+    };
+  });
+}
+async function saveBatchEmbeddings(characterId, entries) {
+  const db = await initVectorDB();
+  const cfg = getEmbeddingConfig();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_EMBEDDINGS], "readwrite");
+    const store = transaction.objectStore(STORE_EMBEDDINGS);
+    let successCount = 0;
+    for (const entry of entries) {
+      const data = {
+        id: `${characterId}_${entry.messageIndex}`,
+        characterId,
+        messageIndex: entry.messageIndex,
+        text: entry.text.substring(0, 500),
+        vector: entry.vector,
+        timestamp: Date.now(),
+        modelUsed: cfg.model
+      };
+      const request = store.put(data);
+      request.onsuccess = () => successCount++;
+    }
+    transaction.oncomplete = () => resolve(successCount);
+    transaction.onerror = () => {
+      TitaniaLogger.error("\u6279\u91CF\u4FDD\u5B58 Embeddings \u5931\u8D25", transaction.error);
+      reject(transaction.error);
+    };
+  });
+}
+async function getCharacterVectors(characterId) {
+  const db = await initVectorDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_EMBEDDINGS], "readonly");
+    const store = transaction.objectStore(STORE_EMBEDDINGS);
+    const index = store.index("characterId");
+    const request = index.getAll(characterId);
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => {
+      TitaniaLogger.error("\u83B7\u53D6\u89D2\u8272\u5411\u91CF\u5931\u8D25", request.error);
+      reject(request.error);
+    };
+  });
+}
+async function clearCharacterVectors(characterId) {
+  const db = await initVectorDB();
+  const vectors = await getCharacterVectors(characterId);
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_EMBEDDINGS, STORE_METADATA], "readwrite");
+    const embeddingsStore = transaction.objectStore(STORE_EMBEDDINGS);
+    const metadataStore = transaction.objectStore(STORE_METADATA);
+    let deleteCount = 0;
+    for (const vector of vectors) {
+      const request = embeddingsStore.delete(vector.id);
+      request.onsuccess = () => deleteCount++;
+    }
+    metadataStore.delete(characterId);
+    transaction.oncomplete = () => {
+      TitaniaLogger.info(`\u5DF2\u6E05\u9664\u89D2\u8272 ${characterId} \u7684 ${deleteCount} \u6761\u5411\u91CF\u7D22\u5F15`);
+      resolve(deleteCount);
+    };
+    transaction.onerror = () => {
+      TitaniaLogger.error("\u6E05\u9664\u5411\u91CF\u7D22\u5F15\u5931\u8D25", transaction.error);
+      reject(transaction.error);
+    };
+  });
+}
+async function updateIndexMetadata(characterId, metadata) {
+  const db = await initVectorDB();
+  const cfg = getEmbeddingConfig();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_METADATA], "readwrite");
+    const store = transaction.objectStore(STORE_METADATA);
+    const data = {
+      characterId,
+      ...metadata,
+      embeddingModel: cfg.model,
+      lastUpdatedAt: Date.now()
+    };
+    const request = store.put(data);
+    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      TitaniaLogger.error("\u66F4\u65B0\u7D22\u5F15\u5143\u6570\u636E\u5931\u8D25", request.error);
+      reject(request.error);
+    };
+  });
+}
+async function getIndexStatus(characterId) {
+  const db = await initVectorDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_METADATA], "readonly");
+    const store = transaction.objectStore(STORE_METADATA);
+    const request = store.get(characterId);
+    request.onsuccess = async () => {
+      const metadata = request.result;
+      if (!metadata) {
+        resolve(null);
+        return;
+      }
+      const vectors = await getCharacterVectors(characterId);
+      resolve({
+        ...metadata,
+        actualVectorCount: vectors.length
+      });
+    };
+    request.onerror = () => {
+      TitaniaLogger.error("\u83B7\u53D6\u7D22\u5F15\u72B6\u6001\u5931\u8D25", request.error);
+      reject(request.error);
+    };
+  });
+}
+async function exportVectors(characterId) {
+  const vectors = await getCharacterVectors(characterId);
+  const metadata = await getIndexStatus(characterId);
+  const exportData = {
+    version: 1,
+    exportedAt: Date.now(),
+    characterId,
+    metadata: metadata || {},
+    vectors: vectors.map((v) => ({
+      messageIndex: v.messageIndex,
+      text: v.text,
+      vector: v.vector,
+      timestamp: v.timestamp,
+      modelUsed: v.modelUsed
+    }))
+  };
+  await updateIndexMetadata(characterId, {
+    ...metadata || {},
+    lastExportedAt: Date.now()
+  });
+  return exportData;
+}
+async function importVectors(characterId, data, clearExisting = true) {
+  if (!data || !data.vectors || !Array.isArray(data.vectors)) {
+    throw new Error("\u65E0\u6548\u7684\u5BFC\u5165\u6570\u636E\u683C\u5F0F");
+  }
+  if (data.version !== 1) {
+    TitaniaLogger.warn(`\u5BFC\u5165\u6570\u636E\u7248\u672C\u4E0D\u5339\u914D: ${data.version}`);
+  }
+  if (clearExisting) {
+    await clearCharacterVectors(characterId);
+  }
+  const db = await initVectorDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_EMBEDDINGS, STORE_METADATA], "readwrite");
+    const embeddingsStore = transaction.objectStore(STORE_EMBEDDINGS);
+    const metadataStore = transaction.objectStore(STORE_METADATA);
+    let imported = 0;
+    let skipped = 0;
+    for (const item of data.vectors) {
+      if (!item.vector || !Array.isArray(item.vector)) {
+        skipped++;
+        continue;
+      }
+      const entry = {
+        id: `${characterId}_${item.messageIndex}`,
+        characterId,
+        messageIndex: item.messageIndex,
+        text: item.text || "",
+        vector: item.vector,
+        timestamp: item.timestamp || Date.now(),
+        modelUsed: item.modelUsed || "unknown"
+      };
+      const request = embeddingsStore.put(entry);
+      request.onsuccess = () => imported++;
+    }
+    const metadataEntry = {
+      characterId,
+      importedAt: Date.now(),
+      importedFrom: data.exportedAt || null,
+      totalVectors: data.vectors.length,
+      embeddingModel: data.metadata?.embeddingModel || "unknown"
+    };
+    metadataStore.put(metadataEntry);
+    transaction.oncomplete = () => {
+      TitaniaLogger.info(`\u5BFC\u5165\u5B8C\u6210: ${imported} \u6761\u6210\u529F, ${skipped} \u6761\u8DF3\u8FC7`);
+      resolve({ imported, skipped });
+    };
+    transaction.onerror = () => {
+      TitaniaLogger.error("\u5BFC\u5165\u5411\u91CF\u7D22\u5F15\u5931\u8D25", transaction.error);
+      reject(transaction.error);
+    };
+  });
+}
+async function downloadVectorExport(characterId, filename) {
+  const data = await exportVectors(characterId);
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename || `titania-vectors-${characterId}-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  TitaniaLogger.info(`\u5411\u91CF\u7D22\u5F15\u5DF2\u5BFC\u51FA: ${a.download}`);
+}
+async function checkCharacterUnsavedVectors(characterId) {
+  const metadata = await getIndexStatus(characterId);
+  if (!metadata) {
+    return { hasNew: false, count: 0 };
+  }
+  const vectors = await getCharacterVectors(characterId);
+  const lastExported = metadata.lastExportedAt || 0;
+  const newVectors = vectors.filter((v) => v.timestamp > lastExported);
+  return {
+    hasNew: newVectors.length > 0,
+    count: newVectors.length
+  };
+}
+async function checkUnsavedVectors() {
+  try {
+    const characters = await getAllIndexedCharacters();
+    if (characters.length === 0) {
+      return false;
+    }
+    for (const charId of characters) {
+      const result = await checkCharacterUnsavedVectors(charId);
+      if (result.hasNew) {
+        TitaniaLogger.info(`\u68C0\u6D4B\u5230\u89D2\u8272 ${charId} \u6709 ${result.count} \u6761\u672A\u5BFC\u51FA\u7684\u5411\u91CF`);
+        return true;
+      }
+    }
+    return false;
+  } catch (e) {
+    TitaniaLogger.warn("\u68C0\u67E5\u672A\u4FDD\u5B58\u5411\u91CF\u5931\u8D25", e);
+    return false;
+  }
+}
+async function getAllIndexedCharacters() {
+  const db = await initVectorDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_METADATA], "readonly");
+    const store = transaction.objectStore(STORE_METADATA);
+    const request = store.getAllKeys();
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => {
+      TitaniaLogger.error("\u83B7\u53D6\u7D22\u5F15\u89D2\u8272\u5217\u8868\u5931\u8D25", request.error);
+      reject(request.error);
+    };
+  });
+}
+var DB_NAME, DB_VERSION, STORE_EMBEDDINGS, STORE_METADATA, dbInstance;
+var init_vectorStore = __esm({
+  "src/core/vectorStore.js"() {
+    init_logger();
+    init_embeddings();
+    DB_NAME = "TitaniaVectorDB";
+    DB_VERSION = 1;
+    STORE_EMBEDDINGS = "embeddings";
+    STORE_METADATA = "metadata";
+    dbInstance = null;
+  }
+});
+
+// src/core/semanticSearch.js
+function cosineSimilarity(vecA, vecB) {
+  if (!vecA || !vecB || vecA.length !== vecB.length) {
+    return 0;
+  }
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+  normA = Math.sqrt(normA);
+  normB = Math.sqrt(normB);
+  if (normA === 0 || normB === 0) {
+    return 0;
+  }
+  return dotProduct / (normA * normB);
+}
+function euclideanDistance(vecA, vecB) {
+  if (!vecA || !vecB || vecA.length !== vecB.length) {
+    return Infinity;
+  }
+  let sum = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    const diff = vecA[i] - vecB[i];
+    sum += diff * diff;
+  }
+  return Math.sqrt(sum);
+}
+async function semanticSearch(query, characterId, options = {}) {
+  const topK = options.topK || 10;
+  const minScore = options.minScore || 0.3;
+  const metric = options.metric || "cosine";
+  let queryVector;
+  try {
+    queryVector = await getEmbedding(query);
+  } catch (e) {
+    TitaniaLogger.error("\u83B7\u53D6\u67E5\u8BE2\u5411\u91CF\u5931\u8D25", e);
+    throw new Error(`\u8BED\u4E49\u641C\u7D22\u5931\u8D25: ${e.message}`);
+  }
+  const vectors = await getCharacterVectors(characterId);
+  if (vectors.length === 0) {
+    TitaniaLogger.info("\u89D2\u8272\u6CA1\u6709\u5411\u91CF\u7D22\u5F15\uFF0C\u65E0\u6CD5\u8FDB\u884C\u8BED\u4E49\u641C\u7D22");
+    return [];
+  }
+  const results = vectors.map((v) => {
+    let score;
+    if (metric === "euclidean") {
+      const distance = euclideanDistance(queryVector, v.vector);
+      score = 1 / (1 + distance);
+    } else {
+      score = cosineSimilarity(queryVector, v.vector);
+    }
+    return {
+      messageIndex: v.messageIndex,
+      text: v.text,
+      score,
+      timestamp: v.timestamp
+    };
+  });
+  const filtered = results.filter((r) => r.score >= minScore);
+  filtered.sort((a, b) => b.score - a.score);
+  return filtered.slice(0, topK);
+}
+async function getRelevantContext(currentContext, characterId, options = {}) {
+  const maxTokens = options.maxTokens || 2e3;
+  const topK = options.topK || 20;
+  const minScore = options.minScore || 0.4;
+  const results = await semanticSearch(currentContext, characterId, {
+    topK,
+    minScore
+  });
+  if (results.length === 0) {
+    return "";
+  }
+  results.sort((a, b) => a.messageIndex - b.messageIndex);
+  const segments = [];
+  let estimatedTokens = 0;
+  const avgTokensPerChar = 0.3;
+  for (const result of results) {
+    const text = result.text;
+    const tokenEstimate = Math.ceil(text.length * avgTokensPerChar);
+    if (estimatedTokens + tokenEstimate > maxTokens) {
+      break;
+    }
+    segments.push({
+      index: result.messageIndex,
+      text,
+      score: result.score
+    });
+    estimatedTokens += tokenEstimate;
+  }
+  return segments.map((s) => `[#${s.index} \u76F8\u5173\u5EA6:${(s.score * 100).toFixed(0)}%] ${s.text}`).join("\n\n");
+}
+var init_semanticSearch = __esm({
+  "src/core/semanticSearch.js"() {
+    init_embeddings();
+    init_vectorStore();
+    init_logger();
+  }
+});
+
+// src/core/summarizer.js
+import { oai_settings as oai_settings3 } from "../../../openai.js";
+import { ChatCompletionService as ChatCompletionService3 } from "../../../custom-request.js";
+function getSummarizerConfig() {
+  const data = getExtData();
+  return data.summarizer_config || {
+    selected_profile_id: null,
+    model_override: null,
+    template: "structured",
+    use_vector_search: true
+  };
+}
+async function sendSummaryRequest(messages, options = {}) {
+  const summarizerCfg = getSummarizerConfig();
+  let conn = getFeatureConnection(FEATURE_KEY2);
+  if (!conn) {
+    conn = getFeatureConnection("lore_extractor");
+  }
+  if (!conn) {
+    throw new Error("\u672A\u914D\u7F6E API \u8FDE\u63A5\uFF0C\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E");
+  }
+  const data = getExtData();
+  const cfg = data.config || {};
+  const configMaxTokens = cfg.max_tokens || 4096;
+  const model = options.model || summarizerCfg.model_override || conn.model;
+  const maxTokens = options.maxTokens || configMaxTokens;
+  const temperature = options.temperature || 0.5;
+  if (conn.useSTConnection) {
+    const requestData = ChatCompletionService3.createRequestData({
+      stream: false,
+      messages,
+      chat_completion_source: oai_settings3.chat_completion_source,
+      model,
+      max_tokens: oai_settings3.openai_max_tokens || maxTokens,
+      temperature,
+      custom_url: oai_settings3.custom_url,
+      reverse_proxy: oai_settings3.reverse_proxy,
+      proxy_password: oai_settings3.proxy_password,
+      custom_prompt_post_processing: oai_settings3.custom_prompt_post_processing
+    });
+    const result = await ChatCompletionService3.sendRequest(requestData, true, null);
+    return result?.content || "";
+  } else {
+    if (!conn.key) {
+      throw new Error("API Key \u672A\u8BBE\u7F6E");
+    }
+    let endpoint = conn.url.trim().replace(/\/+$/, "");
+    if (!endpoint.endsWith("/chat/completions")) {
+      if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
+      else endpoint += "/v1/chat/completions";
+    }
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${conn.key}`
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: false,
+        max_tokens: maxTokens,
+        temperature
+      })
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
+    }
+    const json = await res.json();
+    return json.choices?.[0]?.message?.content || "";
+  }
+}
+function buildStructuredPrompt(context, history, relevantHistory = "") {
+  const sysPrompt = `You are an expert Story Analyst and Session Recorder. Your task is to analyze the provided roleplay chat history and generate a comprehensive, structured summary.
+
+[Your Goals]
+1. Capture the current state of the story accurately
+2. Record important details that may be referenced later
+3. Track character development and relationships
+4. Note any unresolved plot threads or foreshadowing
+
+[Output Structure]
+Generate a summary in the following format (use the same language as the chat history):
+
+## \u{1F4CD} \u5F53\u524D\u573A\u666F
+[\u63CF\u8FF0\u5F53\u524D\u6240\u5728\u4F4D\u7F6E\u3001\u65F6\u95F4\u3001\u73AF\u5883\u6C1B\u56F4]
+
+## \u{1F465} \u89D2\u8272\u72B6\u6001
+[\u5217\u51FA\u4E3B\u8981\u89D2\u8272\u7684\u5F53\u524D\u72B6\u6001\u3001\u4F4D\u7F6E\u3001\u60C5\u7EEA\u3001\u88C5\u5907\u7B49]
+- **\u89D2\u8272\u540D**: \u72B6\u6001\u63CF\u8FF0
+
+## \u{1F4DC} \u60C5\u8282\u56DE\u987E
+[\u6309\u65F6\u95F4\u987A\u5E8F\u5217\u51FA\u672C\u6BB5\u5BF9\u8BDD\u4E2D\u53D1\u751F\u7684\u91CD\u8981\u4E8B\u4EF6]
+1. \u4E8B\u4EF6\u63CF\u8FF0
+2. \u4E8B\u4EF6\u63CF\u8FF0
+...
+
+## \u{1F4AC} \u91CD\u8981\u5BF9\u8BDD/\u4FE1\u606F
+[\u8BB0\u5F55\u4EFB\u4F55\u91CD\u8981\u7684\u5BF9\u8BDD\u5185\u5BB9\u3001\u63ED\u793A\u7684\u4FE1\u606F\u3001\u7EA6\u5B9A\u7B49]
+
+## \u{1F52E} \u60AC\u5FF5/\u5F85\u529E
+[\u5217\u51FA\u4EFB\u4F55\u672A\u89E3\u51B3\u7684\u95EE\u9898\u3001\u4F0F\u7B14\u3001\u5F85\u5904\u7406\u4E8B\u9879]
+
+[Rules]
+1. Be concise but thorough - don't omit important details
+2. Use the SAME LANGUAGE as the chat history (likely Chinese)
+3. Focus on facts from the text, don't add assumptions
+4. If information is unclear, use [?] to mark uncertainty
+5. Keep the summary actionable and useful for future reference`;
+  let userPrompt = `[Context]
+Character: ${context.charName}
+User: ${context.userName}
+
+[Chat History to Summarize]
+${history}`;
+  if (relevantHistory) {
+    userPrompt += `
+
+[Semantically Related Past Events]
+The following are past events that may be relevant to the current context:
+${relevantHistory}`;
+  }
+  userPrompt += `
+
+[Task]
+Please generate a structured summary based on the above content.`;
+  return [
+    { role: "system", content: sysPrompt },
+    { role: "user", content: userPrompt }
+  ];
+}
+function buildNarrativePrompt(context, history, relevantHistory = "") {
+  const sysPrompt = `You are a skilled Narrator and Story Chronicler. Your task is to write a narrative summary of the roleplay session, as if writing a story recap.
+
+[Style Guidelines]
+- Write in a flowing, narrative prose style
+- Maintain the tone and atmosphere of the original story
+- Use past tense for recounting events
+- Include sensory details and emotional beats
+- Keep it concise but evocative
+
+[Rules]
+1. Use the SAME LANGUAGE as the chat history
+2. Stay faithful to the events as they occurred
+3. Don't add events that didn't happen
+4. Highlight character moments and plot developments`;
+  let userPrompt = `[Context]
+Story featuring: ${context.charName} and ${context.userName}
+
+[Session Log]
+${history}`;
+  if (relevantHistory) {
+    userPrompt += `
+
+[Related Background]
+${relevantHistory}`;
+  }
+  userPrompt += `
+
+Please write a narrative summary of this session (2-3 paragraphs).`;
+  return [
+    { role: "system", content: sysPrompt },
+    { role: "user", content: userPrompt }
+  ];
+}
+async function generateSummary(characterId, options = {}) {
+  const summarizerCfg = getSummarizerConfig();
+  const historyLimit = options.historyLimit || 20;
+  const template = options.template || summarizerCfg.template || "structured";
+  const useVectorSearch = options.useVectorSearch !== void 0 ? options.useVectorSearch : summarizerCfg.use_vector_search;
+  TitaniaLogger.info("\u5F00\u59CB\u751F\u6210\u603B\u7ED3...", {
+    characterId,
+    historyLimit,
+    template,
+    useVectorSearch
+  });
+  const ctx = await getContextData();
+  const history = getChatHistory(historyLimit);
+  if (!history || history.trim().length === 0) {
+    throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u751F\u6210\u603B\u7ED3");
+  }
+  let relevantHistory = "";
+  if (useVectorSearch && characterId) {
+    try {
+      const indexStatus = await getIndexStatus(characterId);
+      if (indexStatus && indexStatus.actualVectorCount > 0) {
+        const queryText = history.substring(0, 1e3);
+        relevantHistory = await getRelevantContext(queryText, characterId, {
+          maxTokens: 1500,
+          topK: 10,
+          minScore: 0.5
+        });
+        if (relevantHistory) {
+          TitaniaLogger.info("\u5DF2\u83B7\u53D6\u76F8\u5173\u5386\u53F2\u8BB0\u5F55\u7528\u4E8E\u589E\u5F3A\u603B\u7ED3");
+        }
+      }
+    } catch (e) {
+      TitaniaLogger.warn("\u83B7\u53D6\u76F8\u5173\u5386\u53F2\u5931\u8D25\uFF0C\u5C06\u7EE7\u7EED\u751F\u6210\u666E\u901A\u603B\u7ED3", e);
+    }
+  }
+  let messages;
+  if (template === "narrative") {
+    messages = buildNarrativePrompt(ctx, history, relevantHistory);
+  } else {
+    messages = buildStructuredPrompt(ctx, history, relevantHistory);
+  }
+  let rawContent = "";
+  try {
+    rawContent = await sendSummaryRequest(messages, {
+      temperature: template === "narrative" ? 0.7 : 0.4
+    });
+  } catch (e) {
+    TitaniaLogger.error("\u603B\u7ED3\u8BF7\u6C42\u5931\u8D25", e);
+    throw new Error("\u603B\u7ED3\u751F\u6210\u5931\u8D25: " + (e.message || "\u672A\u77E5\u9519\u8BEF"));
+  }
+  if (!rawContent) {
+    throw new Error("API \u8FD4\u56DE\u5185\u5BB9\u4E3A\u7A7A");
+  }
+  TitaniaLogger.info("\u603B\u7ED3\u751F\u6210\u5B8C\u6210");
+  return {
+    summary: rawContent,
+    rawResponse: rawContent
+  };
+}
+async function buildVectorIndex(characterId, options = {}) {
+  const limit = options.limit || 1e3;
+  const onProgress = options.onProgress;
+  TitaniaLogger.info(`\u5F00\u59CB\u4E3A\u89D2\u8272 ${characterId} \u5EFA\u7ACB\u5411\u91CF\u7D22\u5F15...`);
+  if (onProgress) onProgress(0, 0, "\u6B63\u5728\u83B7\u53D6\u804A\u5929\u5386\u53F2...");
+  const history = getChatHistory(limit);
+  if (!history || history.trim().length === 0) {
+    throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u5EFA\u7ACB\u7D22\u5F15");
+  }
+  const messagePattern = /(?:^|\n)(?:\*\*[^*]+\*\*:|[^:\n]+:)/g;
+  const segments = history.split(messagePattern).filter((s) => s.trim().length > 20);
+  if (segments.length === 0) {
+    const paragraphs = history.split(/\n\n+/).filter((s) => s.trim().length > 20);
+    segments.push(...paragraphs);
+  }
+  TitaniaLogger.info(`\u627E\u5230 ${segments.length} \u4E2A\u6587\u672C\u7247\u6BB5`);
+  if (onProgress) onProgress(0, segments.length, `\u51C6\u5907\u5904\u7406 ${segments.length} \u4E2A\u7247\u6BB5...`);
+  let vectors;
+  try {
+    vectors = await getBatchEmbeddings(segments, {
+      onProgress: (current, total) => {
+        if (onProgress) onProgress(current, total, `\u5411\u91CF\u5316\u4E2D... ${current}/${total}`);
+      },
+      batchSize: 10
+    });
+  } catch (e) {
+    TitaniaLogger.error("\u6279\u91CF\u5411\u91CF\u5316\u5931\u8D25", e);
+    throw new Error("\u5411\u91CF\u5316\u5931\u8D25: " + e.message);
+  }
+  if (onProgress) onProgress(segments.length, segments.length, "\u6B63\u5728\u4FDD\u5B58\u5230\u6570\u636E\u5E93...");
+  const entries = segments.map((text, index) => ({
+    messageIndex: index,
+    text,
+    vector: vectors[index]
+  }));
+  const savedCount = await saveBatchEmbeddings(characterId, entries);
+  await updateIndexMetadata(characterId, {
+    totalMessages: segments.length,
+    indexedMessages: savedCount,
+    lastIndexedAt: Date.now()
+  });
+  TitaniaLogger.info(`\u5411\u91CF\u7D22\u5F15\u5EFA\u7ACB\u5B8C\u6210: ${savedCount} \u6761\u5DF2\u7D22\u5F15`);
+  return {
+    indexed: savedCount,
+    skipped: segments.length - savedCount
+  };
+}
+function summaryToLoreEntry(summary, options = {}) {
+  const now = /* @__PURE__ */ new Date();
+  const dateStr = now.toISOString().split("T")[0];
+  return {
+    keys: [
+      `\u603B\u7ED3_${dateStr}`,
+      `Summary_${dateStr}`,
+      options.customKey || `session_${now.getTime()}`
+    ],
+    category: "Event",
+    content: summary,
+    reason: "\u7531\u667A\u80FD\u603B\u7ED3\u529F\u80FD\u81EA\u52A8\u751F\u6210",
+    confidence: "High",
+    action: "new"
+  };
+}
+var FEATURE_KEY2;
+var init_summarizer = __esm({
+  "src/core/summarizer.js"() {
+    init_helpers();
+    init_context();
+    init_logger();
+    init_connection();
+    init_storage();
+    init_semanticSearch();
+    init_vectorStore();
+    init_embeddings();
+    init_vectorStore();
+    FEATURE_KEY2 = "summarizer";
+  }
+});
+
 // src/ui/loreReviewWindow.js
 function ensureCssLoaded() {
   const id = "titania-css-lore-review";
@@ -9966,48 +12370,357 @@ function ensureCssLoaded() {
     document.head.appendChild(link);
   }
 }
-async function showLoreReviewWindow() {
-  ensureCssLoaded();
+function getFeatureConfig() {
+  const data = getExtData();
+  return data[`${FEATURE_KEY3}_config`] || null;
+}
+function saveFeatureConfig(config) {
+  const data = getExtData();
+  data[`${FEATURE_KEY3}_config`] = config;
+  saveExtData();
+}
+async function showProfileConfigDialog(onSave) {
+  $("#t-lore-profile-dialog").remove();
+  const profiles = getAllProfiles();
+  const currentConfig = getFeatureConfig();
+  const currentProfileId = currentConfig?.selected_profile_id || "";
+  const currentModelOverride = currentConfig?.model_override || "";
+  const html = `
+    <div id="t-lore-profile-dialog" class="t-dialog-overlay">
+        <div class="t-dialog-box" style="max-width: 450px;">
+            <div class="t-dialog-header">
+                <span><i class="fa-solid fa-plug"></i> \u914D\u7F6E API \u8FDE\u63A5</span>
+                <div class="t-dialog-close" id="t-profile-dialog-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-dialog-body">
+                <p style="color: #888; font-size: 0.9em; margin-bottom: 15px;">
+                    \u9009\u62E9\u7528\u4E8E\u300C\u667A\u80FD\u8BBE\u5B9A\u63D0\u53D6\u300D\u529F\u80FD\u7684 API \u65B9\u6848\u3002<br>
+                    <span style="color: #feca57;">\u5982\u9700\u6DFB\u52A0\u65B0\u65B9\u6848\uFF0C\u8BF7\u524D\u5F80\u300C\u8BBE\u7F6E \u2192 API \u8FDE\u63A5\u300D\u3002</span>
+                </p>
+                
+                <div class="t-form-group">
+                    <label class="t-form-label">\u9009\u62E9 API \u65B9\u6848</label>
+                    <select id="t-profile-select" class="t-input" style="width: 100%;">
+                        <option value="" disabled ${!currentProfileId ? "selected" : ""}>-- \u8BF7\u9009\u62E9 --</option>
+                        ${profiles.map((p) => `
+                            <option value="${p.id}" ${p.id === currentProfileId ? "selected" : ""}>
+                                ${p.name} ${p.type === "internal" ? "" : `(${p.model || "N/A"})`}
+                            </option>
+                        `).join("")}
+                    </select>
+                </div>
+                
+                <div id="t-profile-info" class="t-profile-info-box" style="display: none;">
+                    <div class="t-info-row"><span class="t-info-label">\u7C7B\u578B:</span><span id="t-info-type">-</span></div>
+                    <div class="t-info-row"><span class="t-info-label">URL:</span><span id="t-info-url">-</span></div>
+                    <div class="t-info-row"><span class="t-info-label">\u9ED8\u8BA4\u6A21\u578B:</span><span id="t-info-model">-</span></div>
+                </div>
+                
+                <div class="t-form-group" style="margin-top: 15px;">
+                    <label class="t-form-label">
+                        \u8986\u76D6\u6A21\u578B <span style="color: #888; font-weight: normal;">(\u53EF\u9009)</span>
+                    </label>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="t-model-override-select" class="t-input" style="flex: 1;">
+                            <option value="">\u4F7F\u7528\u65B9\u6848\u9ED8\u8BA4\u6A21\u578B</option>
+                        </select>
+                        <button id="t-btn-refresh-profile-models" class="t-btn t-btn-xs" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
+                            <i class="fa-solid fa-sync"></i>
+                        </button>
+                    </div>
+                    <small style="color: #666;">\u9009\u62E9\u540E\u5C06\u8986\u76D6\u65B9\u6848\u7684\u9ED8\u8BA4\u6A21\u578B</small>
+                </div>
+            </div>
+            <div class="t-dialog-footer">
+                <button id="t-btn-cancel-profile" class="t-btn">\u53D6\u6D88</button>
+                <button id="t-btn-save-profile" class="t-btn t-btn-primary" disabled>
+                    <i class="fa-solid fa-check"></i> \u4FDD\u5B58\u914D\u7F6E
+                </button>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  if (currentProfileId) {
+    updateProfileInfo(currentProfileId);
+    await loadModelsForProfile(currentProfileId, currentModelOverride);
+    $("#t-btn-save-profile").prop("disabled", false);
+  }
+  $("#t-profile-dialog-close, #t-btn-cancel-profile").on("click", () => {
+    $("#t-lore-profile-dialog").remove();
+  });
+  $("#t-profile-select").on("change", async function() {
+    const profileId = $(this).val();
+    if (profileId) {
+      updateProfileInfo(profileId);
+      await loadModelsForProfile(profileId, "");
+      $("#t-btn-save-profile").prop("disabled", false);
+    } else {
+      $("#t-profile-info").hide();
+      $("#t-btn-save-profile").prop("disabled", true);
+    }
+  });
+  $("#t-btn-refresh-profile-models").on("click", async function() {
+    const profileId = $("#t-profile-select").val();
+    if (profileId) {
+      const $icon = $(this).find("i");
+      $icon.addClass("fa-spin");
+      await loadModelsForProfile(profileId, $("#t-model-override-select").val());
+      $icon.removeClass("fa-spin");
+    }
+  });
+  $("#t-btn-save-profile").on("click", function() {
+    const profileId = $("#t-profile-select").val();
+    const modelOverride = $("#t-model-override-select").val();
+    if (!profileId) {
+      if (window.toastr) toastr.warning("\u8BF7\u9009\u62E9\u4E00\u4E2A API \u65B9\u6848");
+      return;
+    }
+    saveFeatureConfig({
+      selected_profile_id: profileId,
+      model_override: modelOverride || null
+    });
+    $("#t-lore-profile-dialog").remove();
+    if (window.toastr) {
+      const profiles2 = getAllProfiles();
+      const selectedProfile = profiles2.find((p) => p.id === profileId);
+      toastr.success(`\u5DF2\u914D\u7F6E: ${selectedProfile?.name || profileId}`);
+    }
+    if (onSave) onSave();
+  });
+}
+function updateProfileInfo(profileId) {
+  const profiles = getAllProfiles();
+  const profile = profiles.find((p) => p.id === profileId);
+  if (!profile) {
+    $("#t-profile-info").hide();
+    return;
+  }
+  $("#t-profile-info").show();
+  $("#t-info-type").text(profile.type === "internal" ? "\u8DDF\u968F SillyTavern" : "\u81EA\u5B9A\u4E49");
+  $("#t-info-url").text(profile.type === "internal" ? "(\u7531 ST \u7BA1\u7406)" : profile.url || "\u672A\u8BBE\u7F6E");
+  $("#t-info-model").text(profile.model || "(\u7531 ST \u7BA1\u7406)");
+}
+async function loadModelsForProfile(profileId, currentOverride) {
+  const $select = $("#t-model-override-select");
+  $select.empty();
+  $select.append('<option value="">\u4F7F\u7528\u65B9\u6848\u9ED8\u8BA4\u6A21\u578B</option>');
+  $select.append('<option value="" disabled>\u52A0\u8F7D\u4E2D...</option>');
+  try {
+    const models = await getAvailableModelsForProfile(profileId);
+    $select.find("option[disabled]").remove();
+    const uniqueModels = [...new Set(models)].sort();
+    uniqueModels.forEach((model) => {
+      $select.append(`<option value="${model}" ${model === currentOverride ? "selected" : ""}>${model}</option>`);
+    });
+    if (uniqueModels.length === 0) {
+      $select.append('<option value="" disabled>\u65E0\u53EF\u7528\u6A21\u578B</option>');
+    }
+  } catch (e) {
+    console.warn("Titania: \u52A0\u8F7D\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
+    $select.find("option[disabled]").remove();
+    $select.append('<option value="" disabled>\u52A0\u8F7D\u5931\u8D25</option>');
+  }
+}
+function showFirstTimeSetup() {
   $("#t-lore-review-overlay").remove();
   const html = `
     <div id="t-lore-review-overlay" class="t-overlay">
-        <div class="t-window t-lore-review-window">
+        <div class="t-window t-lore-review-window" style="max-width: 500px;">
             <div class="t-window-header">
                 <div class="t-window-title">
                     <i class="fa-solid fa-brain"></i> \u667A\u80FD\u8BBE\u5B9A\u63D0\u53D6
                 </div>
                 <div class="t-window-controls">
-                    <div class="t-window-icon" id="t-model-dropdown-toggle" title="\u9009\u62E9\u6A21\u578B">
-                        <i class="fa-solid fa-microchip"></i>
+                    <div class="t-window-close" id="t-lore-review-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+            <div class="t-window-body" style="text-align: center; padding: 40px 30px;">
+                <div style="font-size: 3em; margin-bottom: 20px;">\u{1F50C}</div>
+                <h3 style="color: #eee; margin-bottom: 15px;">\u9996\u6B21\u4F7F\u7528\u914D\u7F6E</h3>
+                <p style="color: #888; line-height: 1.6; margin-bottom: 25px;">
+                    \u5728\u4F7F\u7528\u300C\u667A\u80FD\u8BBE\u5B9A\u63D0\u53D6\u300D\u529F\u80FD\u524D\uFF0C<br>
+                    \u8BF7\u5148\u9009\u62E9\u7528\u4E8E\u6B64\u529F\u80FD\u7684 API \u8FDE\u63A5\u65B9\u6848\u3002
+                </p>
+                <button id="t-btn-setup-profile" class="t-btn t-btn-primary" style="padding: 12px 30px; font-size: 1.1em;">
+                    <i class="fa-solid fa-plug"></i> \u914D\u7F6E API \u8FDE\u63A5
+                </button>
+                <p style="color: #666; font-size: 0.85em; margin-top: 20px;">
+                    \u63D0\u793A\uFF1A\u5982\u679C\u8FD8\u6CA1\u6709 API \u65B9\u6848\uFF0C\u8BF7\u5148\u524D\u5F80\u300C\u8BBE\u7F6E \u2192 API \u8FDE\u63A5\u300D\u521B\u5EFA\u3002
+                </p>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  $("#t-lore-review-close").on("click", () => {
+    $("#t-lore-review-overlay").remove();
+  });
+  $("#t-btn-setup-profile").on("click", () => {
+    $("#t-lore-review-overlay").remove();
+    showProfileConfigDialog(() => {
+      showLoreReviewWindow();
+    });
+  });
+}
+function showRawResponseDialog(rawContent, isError = false) {
+  $("#t-raw-response-dialog").remove();
+  const title = isError ? "\u89E3\u6790\u5931\u8D25 - \u539F\u59CB\u54CD\u5E94" : "AI \u539F\u59CB\u54CD\u5E94";
+  const headerClass = isError ? "t-dialog-header-error" : "";
+  const html = `
+    <div id="t-raw-response-dialog" class="t-dialog-overlay">
+        <div class="t-dialog-box" style="max-width: 800px; max-height: 80vh;">
+            <div class="t-dialog-header ${headerClass}">
+                <span><i class="fa-solid fa-code"></i> ${title}</span>
+                <div class="t-dialog-close" id="t-raw-response-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-dialog-body" style="padding: 0;">
+                ${isError ? `
+                <div style="padding: 15px; background: rgba(231, 76, 60, 0.1); border-bottom: 1px solid rgba(231, 76, 60, 0.3);">
+                    <i class="fa-solid fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                    <span style="color: #e74c3c;">JSON \u89E3\u6790\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u4E0B\u65B9\u539F\u59CB\u5185\u5BB9\u662F\u5426\u7B26\u5408\u9884\u671F\u683C\u5F0F</span>
+                </div>
+                ` : ""}
+                <div style="padding: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #888; font-size: 0.9em;">
+                            <i class="fa-solid fa-file-lines"></i> \u54CD\u5E94\u957F\u5EA6: ${rawContent?.length || 0} \u5B57\u7B26
+                        </span>
+                        <button id="t-btn-copy-raw" class="t-btn t-btn-xs">
+                            <i class="fa-solid fa-copy"></i> \u590D\u5236\u5185\u5BB9
+                        </button>
+                    </div>
+                    <pre id="t-raw-response-content" style="
+                        background: #1a1a2e;
+                        border: 1px solid #333;
+                        border-radius: 6px;
+                        padding: 15px;
+                        max-height: 50vh;
+                        overflow: auto;
+                        white-space: pre-wrap;
+                        word-break: break-word;
+                        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                        font-size: 0.9em;
+                        color: #ddd;
+                        line-height: 1.5;
+                    ">${escapeHtml2(rawContent || "(\u7A7A)")}</pre>
+                </div>
+            </div>
+            <div class="t-dialog-footer">
+                <button id="t-btn-close-raw" class="t-btn">\u5173\u95ED</button>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  $("#t-raw-response-close, #t-btn-close-raw").on("click", () => {
+    $("#t-raw-response-dialog").remove();
+  });
+  $("#t-btn-copy-raw").on("click", function() {
+    const content = rawContent || "";
+    navigator.clipboard.writeText(content).then(() => {
+      $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
+      setTimeout(() => {
+        $(this).html('<i class="fa-solid fa-copy"></i> \u590D\u5236\u5185\u5BB9');
+      }, 2e3);
+    }).catch(() => {
+      if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25");
+    });
+  });
+}
+function escapeHtml2(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+async function showLoreReviewWindow() {
+  ensureCssLoaded();
+  const validation = validateFeatureConnection(FEATURE_KEY3);
+  if (!validation.configured) {
+    showFirstTimeSetup();
+    return;
+  }
+  if (!validation.valid) {
+    if (window.toastr) toastr.error(validation.error, "\u914D\u7F6E\u9519\u8BEF");
+    showFirstTimeSetup();
+    return;
+  }
+  $("#t-lore-review-overlay").remove();
+  const featureConn = getFeatureConnection(FEATURE_KEY3);
+  const currentModel = featureConn?.model || "\u672A\u77E5";
+  const currentProfileName = featureConn?.profileName || "\u672A\u77E5";
+  try {
+    const ctx = await getContextData();
+    currentCharacterId = ctx.charId || ctx.charName || "unknown";
+  } catch (e) {
+    currentCharacterId = "unknown";
+  }
+  let indexStatus = null;
+  try {
+    indexStatus = await getIndexStatus(currentCharacterId);
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u5411\u91CF\u7D22\u5F15\u72B6\u6001\u5931\u8D25", e);
+  }
+  const indexStatusHtml = indexStatus ? `<span class="t-index-status t-index-ready">\u2705 ${indexStatus.actualVectorCount} \u6761</span>` : `<span class="t-index-status t-index-empty">\u274C \u672A\u5EFA\u7ACB</span>`;
+  const lastExportTime = indexStatus?.lastExportedAt ? new Date(indexStatus.lastExportedAt).toLocaleString() : "\u4ECE\u672A\u5BFC\u51FA";
+  const html = `
+    <div id="t-lore-review-overlay" class="t-overlay">
+        <div class="t-window t-lore-review-window" style="max-width: 1000px;">
+            <div class="t-window-header">
+                <div class="t-window-title">
+                    <i class="fa-solid fa-brain"></i> \u667A\u80FD\u63D0\u53D6\u4E0E\u603B\u7ED3
+                </div>
+                <div class="t-window-controls">
+                    <div class="t-window-icon" id="t-config-btn" title="\u914D\u7F6E API \u8FDE\u63A5">
+                        <i class="fa-solid fa-plug"></i>
                     </div>
                     <div class="t-window-close" id="t-lore-review-close"><i class="fa-solid fa-times"></i></div>
                 </div>
             </div>
             
-            <!-- \u6A21\u578B\u4E0B\u62C9\u83DC\u5355 (\u9690\u85CF) -->
-            <div id="t-model-dropdown" class="t-model-dropdown" style="display: none;">
-                <div class="t-dropdown-header">
-                    <span><i class="fa-solid fa-microchip"></i> \u9009\u62E9\u6A21\u578B</span>
-                    <button id="t-btn-refresh-models" class="t-btn t-btn-xs" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
-                        <i class="fa-solid fa-sync"></i> \u5237\u65B0
-                    </button>
-                </div>
-                <select id="t-lore-model" size="8" style="width: 100%; margin-top: 8px; font-family: monospace;">
-                    <option value="" selected>Auto (Default)</option>
-                </select>
+            <!-- \u5F53\u524D\u914D\u7F6E\u4FE1\u606F\u680F -->
+            <div class="t-config-info-bar">
+                <span class="t-config-label"><i class="fa-solid fa-link"></i> \u914D\u7F6E:</span>
+                <span class="t-config-value" id="t-current-profile">${currentProfileName}</span>
+                <span class="t-config-separator">|</span>
+                <span class="t-config-label"><i class="fa-solid fa-microchip"></i> \u6A21\u578B:</span>
+                <span class="t-config-value" id="t-current-model">${currentModel}</span>
+                <span class="t-config-separator">|</span>
+                <span class="t-config-label"><i class="fa-solid fa-database"></i> \u5411\u91CF\u7D22\u5F15:</span>
+                <span id="t-index-status-display">${indexStatusHtml}</span>
             </div>
 
             <div class="t-window-body">
-                <!-- \u9876\u90E8\u63A7\u5236\u680F -->
-                <div class="t-lore-controls">
-                    <div class="t-control-group">
-                        <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
-                        <input type="number" id="t-lore-history-limit" value="2" min="1" max="100" style="width: 60px;">
-                    </div>
-                    <button id="t-btn-start-extract" class="t-btn t-btn-primary">
-                        <i class="fa-solid fa-search"></i> \u5F00\u59CB\u5206\u6790
+                <!-- \u529F\u80FD\u5207\u6362\u680F -->
+                <div class="t-mode-tabs">
+                    <button class="t-mode-tab active" data-mode="extract">
+                        <i class="fa-solid fa-search"></i> \u8BBE\u5B9A\u63D0\u53D6
+                    </button>
+                    <button class="t-mode-tab" data-mode="summary">
+                        <i class="fa-solid fa-file-alt"></i> \u667A\u80FD\u603B\u7ED3
+                    </button>
+                    <button class="t-mode-tab" data-mode="vector">
+                        <i class="fa-solid fa-database"></i> \u5411\u91CF\u7D22\u5F15
                     </button>
                 </div>
+
+                <!-- \u8BBE\u5B9A\u63D0\u53D6\u9762\u677F -->
+                <div id="t-panel-extract" class="t-mode-panel active">
+                    <!-- \u9876\u90E8\u63A7\u5236\u680F -->
+                    <div class="t-lore-controls">
+                        <div class="t-control-group">
+                            <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
+                            <input type="number" id="t-lore-history-limit" value="2" min="1" max="100" style="width: 60px;">
+                        </div>
+                        <div class="t-control-buttons">
+                            <button id="t-btn-start-extract" class="t-btn t-btn-primary">
+                                <i class="fa-solid fa-search"></i> \u5F00\u59CB\u5206\u6790
+                            </button>
+                            <button id="t-btn-view-raw" class="t-btn" style="display: none;" title="\u67E5\u770B AI \u8FD4\u56DE\u7684\u539F\u59CB\u5185\u5BB9">
+                                <i class="fa-solid fa-code"></i> \u67E5\u770B\u539F\u59CB\u54CD\u5E94
+                            </button>
+                        </div>
+                    </div>
 
                 <!-- \u4E3B\u5185\u5BB9\u533A -->
                 <div class="t-lore-content">
@@ -10071,19 +12784,150 @@ async function showLoreReviewWindow() {
                     </div>
                 </div>
 
-                <!-- \u5E95\u90E8\u64CD\u4F5C\u680F -->
-                <div class="t-window-footer">
-                    <div class="t-target-select">
-                        <label>\u4FDD\u5B58\u5230:</label>
-                        <select id="t-target-book">
-                            <option value="" disabled selected>\u52A0\u8F7D\u4E2D...</option>
-                        </select>
+                    <!-- \u5E95\u90E8\u64CD\u4F5C\u680F -->
+                    <div class="t-window-footer">
+                        <div class="t-target-select">
+                            <label>\u4FDD\u5B58\u5230:</label>
+                            <select id="t-target-book">
+                                <option value="" disabled selected>\u52A0\u8F7D\u4E2D...</option>
+                            </select>
+                        </div>
+                        <div class="t-footer-actions">
+                            <button id="t-btn-save-selected" class="t-btn t-btn-success" disabled>
+                                <i class="fa-solid fa-save"></i> \u4FDD\u5B58\u9009\u4E2D\u6761\u76EE
+                            </button>
+                        </div>
                     </div>
-                    <div class="t-footer-actions">
-                        <button id="t-btn-save-selected" class="t-btn t-btn-success" disabled>
-                            <i class="fa-solid fa-save"></i> \u4FDD\u5B58\u9009\u4E2D\u6761\u76EE
-                        </button>
+                </div>
+
+                <!-- \u667A\u80FD\u603B\u7ED3\u9762\u677F -->
+                <div id="t-panel-summary" class="t-mode-panel" style="display: none;">
+                    <div class="t-lore-controls">
+                        <div class="t-control-group">
+                            <label>\u5206\u6790\u8303\u56F4 (\u6761):</label>
+                            <input type="number" id="t-summary-history-limit" value="20" min="1" max="200" style="width: 60px;">
+                        </div>
+                        <div class="t-control-group">
+                            <label>\u603B\u7ED3\u6A21\u677F:</label>
+                            <select id="t-summary-template" style="width: 120px;">
+                                <option value="structured">\u7ED3\u6784\u5316\u6458\u8981</option>
+                                <option value="narrative">\u53D9\u4E8B\u6027\u603B\u7ED3</option>
+                            </select>
+                        </div>
+                        <div class="t-control-group">
+                            <label>
+                                <input type="checkbox" id="t-use-vector-search" ${indexStatus ? "checked" : "disabled"}>
+                                \u4F7F\u7528\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A
+                            </label>
+                        </div>
+                        <div class="t-control-buttons">
+                            <button id="t-btn-generate-summary" class="t-btn t-btn-primary">
+                                <i class="fa-solid fa-magic"></i> \u751F\u6210\u603B\u7ED3
+                            </button>
+                        </div>
                     </div>
+
+                    <div class="t-summary-content">
+                        <div class="t-summary-header">
+                            <span>\u603B\u7ED3\u7ED3\u679C</span>
+                            <div class="t-summary-actions">
+                                <button id="t-btn-copy-summary" class="t-btn t-btn-xs" style="display: none;">
+                                    <i class="fa-solid fa-copy"></i> \u590D\u5236
+                                </button>
+                                <button id="t-btn-save-summary" class="t-btn t-btn-xs t-btn-success" style="display: none;">
+                                    <i class="fa-solid fa-save"></i> \u4FDD\u5B58\u4E3A\u6761\u76EE
+                                </button>
+                            </div>
+                        </div>
+                        <div id="t-summary-result" class="t-summary-result">
+                            <div class="t-empty-state">
+                                <i class="fa-solid fa-file-alt"></i>
+                                <p>\u70B9\u51FB\u300C\u751F\u6210\u603B\u7ED3\u300D\u5F00\u59CB\u5206\u6790\u804A\u5929\u5386\u53F2</p>
+                                <small style="color: #666;">\u542F\u7528\u300C\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A\u300D\u53EF\u4EE5\u53EC\u56DE\u76F8\u5173\u7684\u5386\u53F2\u4E8B\u4EF6</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="t-window-footer">
+                        <div class="t-target-select">
+                            <label>\u4FDD\u5B58\u5230:</label>
+                            <select id="t-summary-target-book">
+                                <option value="" disabled selected>\u52A0\u8F7D\u4E2D...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- \u5411\u91CF\u7D22\u5F15\u7BA1\u7406\u9762\u677F -->
+                <div id="t-panel-vector" class="t-mode-panel" style="display: none;">
+                    <div class="t-vector-status-card">
+                        <h3><i class="fa-solid fa-database"></i> \u5411\u91CF\u7D22\u5F15\u72B6\u6001</h3>
+                        <div class="t-vector-info">
+                            <div class="t-info-row">
+                                <span class="t-info-label">\u5F53\u524D\u89D2\u8272:</span>
+                                <span class="t-info-value" id="t-vector-char-id">${currentCharacterId}</span>
+                            </div>
+                            <div class="t-info-row">
+                                <span class="t-info-label">\u7D22\u5F15\u72B6\u6001:</span>
+                                <span class="t-info-value" id="t-vector-status">${indexStatus ? `\u5DF2\u5EFA\u7ACB (${indexStatus.actualVectorCount} \u6761)` : "\u672A\u5EFA\u7ACB"}</span>
+                            </div>
+                            <div class="t-info-row">
+                                <span class="t-info-label">Embedding \u6A21\u578B:</span>
+                                <span class="t-info-value" id="t-vector-model">${indexStatus?.embeddingModel || "\u672A\u77E5"}</span>
+                            </div>
+                            <div class="t-info-row">
+                                <span class="t-info-label">\u4E0A\u6B21\u5BFC\u51FA:</span>
+                                <span class="t-info-value" id="t-vector-last-export">${lastExportTime}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="t-vector-actions-card">
+                        <h3><i class="fa-solid fa-tools"></i> \u64CD\u4F5C</h3>
+                        
+                        <div class="t-action-group">
+                            <div class="t-action-item">
+                                <button id="t-btn-build-index" class="t-btn t-btn-primary" style="width: 100%;">
+                                    <i class="fa-solid fa-hammer"></i> \u5EFA\u7ACB/\u91CD\u5EFA\u7D22\u5F15
+                                </button>
+                                <small>\u5C06\u804A\u5929\u5386\u53F2\u5411\u91CF\u5316\uFF0C\u7528\u4E8E\u8BED\u4E49\u68C0\u7D22</small>
+                            </div>
+                            
+                            <div id="t-index-progress" style="display: none; margin-top: 10px;">
+                                <div class="t-progress-bar">
+                                    <div class="t-progress-fill" style="width: 0%;"></div>
+                                </div>
+                                <div class="t-progress-text">\u51C6\u5907\u4E2D...</div>
+                            </div>
+                        </div>
+
+                        <div class="t-action-group" style="margin-top: 20px;">
+                            <div class="t-action-row">
+                                <button id="t-btn-export-vectors" class="t-btn" ${!indexStatus ? "disabled" : ""}>
+                                    <i class="fa-solid fa-download"></i> \u5BFC\u51FA\u7D22\u5F15
+                                </button>
+                                <button id="t-btn-import-vectors" class="t-btn">
+                                    <i class="fa-solid fa-upload"></i> \u5BFC\u5165\u7D22\u5F15
+                                </button>
+                                <button id="t-btn-clear-vectors" class="t-btn t-btn-danger" ${!indexStatus ? "disabled" : ""}>
+                                    <i class="fa-solid fa-trash"></i> \u6E05\u9664\u7D22\u5F15
+                                </button>
+                            </div>
+                            <small>\u5BFC\u51FA\u7684\u7D22\u5F15\u6587\u4EF6\u53EF\u7528\u4E8E\u5907\u4EFD\u6216\u8FC1\u79FB</small>
+                        </div>
+
+                        <div class="t-action-group" style="margin-top: 20px;">
+                            <h4><i class="fa-solid fa-plug"></i> Embedding API \u914D\u7F6E</h4>
+                            <p style="color: #888; font-size: 0.85em; margin-bottom: 10px;">
+                                \u5411\u91CF\u5316\u9700\u8981\u4E13\u7528\u7684 Embedding API\uFF0C\u8BF7\u5728\u300C\u8BBE\u7F6E\u300D\u4E2D\u914D\u7F6E\u3002
+                            </p>
+                            <button id="t-btn-test-embedding" class="t-btn">
+                                <i class="fa-solid fa-vial"></i> \u6D4B\u8BD5 Embedding \u8FDE\u63A5
+                            </button>
+                        </div>
+                    </div>
+
+                    <input type="file" id="t-import-vector-file" accept=".json" style="display: none;">
                 </div>
             </div>
         </div>
@@ -10091,52 +12935,7 @@ async function showLoreReviewWindow() {
     `;
   $("body").append(html);
   await initWorldBookSelect();
-  const currentModel = getCurrentModel();
-  await loadModelList(currentModel);
-  if (currentModel) {
-    const $select = $("#t-lore-model");
-    if ($select.find(`option[value="${currentModel}"]`).length > 0) {
-      $select.val(currentModel);
-    } else {
-      $select.append(`<option value="${currentModel}">${currentModel}</option>`);
-      $select.val(currentModel);
-    }
-  }
   bindEvents();
-}
-async function loadModelList(currentModel) {
-  const $btn = $("#t-btn-refresh-models");
-  const $icon = $btn.find("i");
-  const $select = $("#t-lore-model");
-  try {
-    $icon.addClass("fa-spin");
-    $btn.prop("disabled", true);
-    const currentVal = $select.val() || currentModel;
-    const models = await getAvailableModels();
-    $select.empty();
-    $select.append('<option value="">Auto (Default)</option>');
-    const uniqueModels = [...new Set(models)].sort();
-    uniqueModels.forEach((model) => {
-      $select.append(`<option value="${model}">${model}</option>`);
-    });
-    if (currentVal && uniqueModels.includes(currentVal)) {
-      $select.val(currentVal);
-    } else if (currentVal && currentVal !== "gpt-3.5-turbo") {
-      $select.append(`<option value="${currentVal}">${currentVal}</option>`);
-      $select.val(currentVal);
-    }
-    if (window.toastr && models.length > 0) {
-      if (event && event.type === "click") {
-        toastr.success(`\u5DF2\u5237\u65B0\u6A21\u578B\u5217\u8868\uFF0C\u5171\u627E\u5230 ${models.length} \u4E2A\u6A21\u578B`, "Titania");
-      }
-    }
-  } catch (e) {
-    console.warn("Titania: Failed to load model list", e);
-    if (window.toastr) toastr.error("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25: " + e.message, "Titania");
-  } finally {
-    $icon.removeClass("fa-spin");
-    $btn.prop("disabled", false);
-  }
 }
 async function initWorldBookSelect() {
   const books = getAvailableWorldBooks();
@@ -10159,40 +12958,30 @@ function bindEvents() {
   $("#t-lore-review-close").on("click", () => {
     $("#t-lore-review-overlay").remove();
   });
-  function toggleModelDropdown(show) {
-    dropdownVisible = show !== void 0 ? show : !dropdownVisible;
-    if (dropdownVisible) {
-      $("#t-model-dropdown").show();
-    } else {
-      $("#t-model-dropdown").hide();
-    }
-  }
-  $("#t-model-dropdown-toggle").on("click", function(e) {
-    e.stopPropagation();
-    toggleModelDropdown();
-  });
-  $(document).on("click", function(e) {
-    if (dropdownVisible && !$(e.target).closest("#t-model-dropdown, #t-model-dropdown-toggle").length) {
-      toggleModelDropdown(false);
-    }
-  });
-  $("#t-btn-refresh-models").on("click", function(e) {
-    e.stopPropagation();
-    const current = $("#t-lore-model").val();
-    loadModelList(current);
+  $("#t-config-btn").on("click", function() {
+    showProfileConfigDialog(() => {
+      const conn = getFeatureConnection(FEATURE_KEY3);
+      if (conn) {
+        $("#t-current-profile").text(conn.profileName);
+        $("#t-current-model").text(conn.model);
+      }
+    });
   });
   $("#t-btn-start-extract").on("click", async function() {
     let limit = parseInt($("#t-lore-history-limit").val());
     if (isNaN(limit) || limit < 1) limit = 2;
-    const model = $("#t-lore-model").val().trim() || null;
-    toggleModelDropdown(false);
     const $btn = $(this);
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5206\u6790\u4E2D...');
     $("#t-lore-entries-list").html('<div class="t-loading-state"><i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u8BFB\u53D6\u8BB0\u5FC6\u5E76\u63D0\u53D6\u8BBE\u5B9A...</div>');
+    $("#t-btn-view-raw").hide();
     try {
-      const result = await extractLoreFromHistory(limit, model);
+      const result = await extractLoreFromHistory(limit);
       currentEntries = result.entries || [];
+      lastRawResponse = result.rawResponse || "";
       renderEntriesList();
+      if (lastRawResponse) {
+        $("#t-btn-view-raw").show();
+      }
       if (currentEntries.length > 0) {
         $("#t-btn-save-selected").prop("disabled", false);
         if (window.toastr) toastr.success(`\u6210\u529F\u63D0\u53D6 ${currentEntries.length} \u4E2A\u6761\u76EE`, "Titania");
@@ -10201,10 +12990,22 @@ function bindEvents() {
       }
     } catch (e) {
       TitaniaLogger.error("\u63D0\u53D6\u5931\u8D25", e);
+      if (e.rawResponse) {
+        lastRawResponse = e.rawResponse;
+        $("#t-btn-view-raw").show();
+        showRawResponseDialog(lastRawResponse, true);
+      }
       $("#t-lore-entries-list").html(`<div class="t-error-state"><i class="fa-solid fa-exclamation-triangle"></i> \u63D0\u53D6\u5931\u8D25: ${e.message}</div>`);
       if (window.toastr) toastr.error(e.message, "\u63D0\u53D6\u5931\u8D25");
     } finally {
       $btn.prop("disabled", false).html('<i class="fa-solid fa-search"></i> \u5F00\u59CB\u5206\u6790');
+    }
+  });
+  $("#t-btn-view-raw").on("click", function() {
+    if (lastRawResponse) {
+      showRawResponseDialog(lastRawResponse, false);
+    } else {
+      if (window.toastr) toastr.info("\u6682\u65E0\u539F\u59CB\u54CD\u5E94\u6570\u636E");
     }
   });
   $("#t-btn-select-all").on("click", () => {
@@ -10276,6 +13077,232 @@ function bindEvents() {
       $item.attr("data-cat", newCat);
     }
   });
+  $(".t-mode-tab").on("click", function() {
+    const mode = $(this).data("mode");
+    if (mode === currentMode) return;
+    currentMode = mode;
+    $(".t-mode-tab").removeClass("active");
+    $(this).addClass("active");
+    $(".t-mode-panel").hide();
+    $(`#t-panel-${mode}`).show();
+    if (mode === "summary") {
+      initSummaryWorldBookSelect();
+    }
+  });
+  $("#t-btn-generate-summary").on("click", async function() {
+    const limit = parseInt($("#t-summary-history-limit").val()) || 20;
+    const template = $("#t-summary-template").val();
+    const useVectorSearch = $("#t-use-vector-search").is(":checked");
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u751F\u6210\u4E2D...');
+    $("#t-summary-result").html('<div class="t-loading-state"><i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u5206\u6790\u804A\u5929\u5386\u53F2\u5E76\u751F\u6210\u603B\u7ED3...</div>');
+    $("#t-btn-copy-summary, #t-btn-save-summary").hide();
+    try {
+      const result = await generateSummary(currentCharacterId, {
+        historyLimit: limit,
+        template,
+        useVectorSearch
+      });
+      lastSummary = result.summary;
+      $("#t-summary-result").html(`
+                <div class="t-summary-text">${formatSummaryAsHtml(lastSummary)}</div>
+            `);
+      $("#t-btn-copy-summary, #t-btn-save-summary").show();
+      if (window.toastr) toastr.success("\u603B\u7ED3\u751F\u6210\u6210\u529F", "Titania");
+    } catch (e) {
+      TitaniaLogger.error("\u603B\u7ED3\u751F\u6210\u5931\u8D25", e);
+      $("#t-summary-result").html(`<div class="t-error-state"><i class="fa-solid fa-exclamation-triangle"></i> \u751F\u6210\u5931\u8D25: ${e.message}</div>`);
+      if (window.toastr) toastr.error(e.message, "\u751F\u6210\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-magic"></i> \u751F\u6210\u603B\u7ED3');
+    }
+  });
+  $("#t-btn-copy-summary").on("click", function() {
+    if (!lastSummary) {
+      if (window.toastr) toastr.info("\u6682\u65E0\u603B\u7ED3\u5185\u5BB9");
+      return;
+    }
+    navigator.clipboard.writeText(lastSummary).then(() => {
+      $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
+      setTimeout(() => {
+        $(this).html('<i class="fa-solid fa-copy"></i> \u590D\u5236');
+      }, 2e3);
+    }).catch(() => {
+      if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25");
+    });
+  });
+  $("#t-btn-save-summary").on("click", async function() {
+    if (!lastSummary) {
+      if (window.toastr) toastr.info("\u6682\u65E0\u603B\u7ED3\u5185\u5BB9");
+      return;
+    }
+    const targetBook = $("#t-summary-target-book").val();
+    if (!targetBook) {
+      if (window.toastr) toastr.warning("\u8BF7\u9009\u62E9\u76EE\u6807\u4E16\u754C\u4E66");
+      return;
+    }
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u4FDD\u5B58\u4E2D...');
+    try {
+      const entry = summaryToLoreEntry(lastSummary);
+      const success = await saveLoreEntry(targetBook, entry);
+      if (success) {
+        if (window.toastr) toastr.success(`\u603B\u7ED3\u5DF2\u4FDD\u5B58\u5230 [${targetBook}]`, "Titania");
+      } else {
+        throw new Error("\u4FDD\u5B58\u5931\u8D25");
+      }
+    } catch (e) {
+      TitaniaLogger.error("\u4FDD\u5B58\u603B\u7ED3\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u4FDD\u5B58\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-save"></i> \u4FDD\u5B58\u4E3A\u6761\u76EE');
+    }
+  });
+  $("#t-btn-build-index").on("click", async function() {
+    const embeddingValidation = validateEmbeddingConfig();
+    if (!embeddingValidation.valid) {
+      if (window.toastr) toastr.error(embeddingValidation.error, "Embedding \u914D\u7F6E\u9519\u8BEF");
+      return;
+    }
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u7D22\u5F15\u4E2D...');
+    $("#t-index-progress").show();
+    try {
+      const result = await buildVectorIndex(currentCharacterId, {
+        onProgress: (current, total, status) => {
+          const percent = total > 0 ? Math.round(current / total * 100) : 0;
+          $(".t-progress-fill").css("width", `${percent}%`);
+          $(".t-progress-text").text(status || `${current}/${total}`);
+        }
+      });
+      await refreshVectorStatus();
+      if (window.toastr) toastr.success(`\u7D22\u5F15\u5EFA\u7ACB\u5B8C\u6210: ${result.indexed} \u6761`, "Titania");
+    } catch (e) {
+      TitaniaLogger.error("\u5EFA\u7ACB\u7D22\u5F15\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u7D22\u5F15\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-hammer"></i> \u5EFA\u7ACB/\u91CD\u5EFA\u7D22\u5F15');
+      $("#t-index-progress").hide();
+    }
+  });
+  $("#t-btn-export-vectors").on("click", async function() {
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5BFC\u51FA\u4E2D...');
+    try {
+      await downloadVectorExport(currentCharacterId);
+      await refreshVectorStatus();
+      if (window.toastr) toastr.success("\u5411\u91CF\u7D22\u5F15\u5DF2\u5BFC\u51FA", "Titania");
+    } catch (e) {
+      TitaniaLogger.error("\u5BFC\u51FA\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u5BFC\u51FA\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-download"></i> \u5BFC\u51FA\u7D22\u5F15');
+    }
+  });
+  $("#t-btn-import-vectors").on("click", function() {
+    $("#t-import-vector-file").click();
+  });
+  $("#t-import-vector-file").on("change", async function() {
+    const file = this.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const result = await importVectors(currentCharacterId, data, true);
+      await refreshVectorStatus();
+      if (window.toastr) toastr.success(`\u5BFC\u5165\u5B8C\u6210: ${result.imported} \u6761`, "Titania");
+    } catch (e) {
+      TitaniaLogger.error("\u5BFC\u5165\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u5BFC\u5165\u5931\u8D25");
+    }
+    $(this).val("");
+  });
+  $("#t-btn-clear-vectors").on("click", async function() {
+    if (!confirm("\u786E\u5B9A\u8981\u6E05\u9664\u5F53\u524D\u89D2\u8272\u7684\u6240\u6709\u5411\u91CF\u7D22\u5F15\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u6062\u590D\uFF01")) {
+      return;
+    }
+    const $btn = $(this);
+    $btn.prop("disabled", true);
+    try {
+      const count = await clearCharacterVectors(currentCharacterId);
+      await refreshVectorStatus();
+      if (window.toastr) toastr.success(`\u5DF2\u6E05\u9664 ${count} \u6761\u5411\u91CF\u7D22\u5F15`, "Titania");
+    } catch (e) {
+      TitaniaLogger.error("\u6E05\u9664\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u6E05\u9664\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false);
+    }
+  });
+  $("#t-btn-test-embedding").on("click", async function() {
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u6D4B\u8BD5\u4E2D...');
+    try {
+      const result = await testEmbeddingConnection();
+      if (result.success) {
+        if (window.toastr) toastr.success(result.message, "\u8FDE\u63A5\u6210\u529F");
+      } else {
+        if (window.toastr) toastr.error(result.message, "\u8FDE\u63A5\u5931\u8D25");
+      }
+    } catch (e) {
+      if (window.toastr) toastr.error(e.message, "\u6D4B\u8BD5\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-vial"></i> \u6D4B\u8BD5 Embedding \u8FDE\u63A5');
+    }
+  });
+}
+async function initSummaryWorldBookSelect() {
+  const books = getAvailableWorldBooks();
+  const charBook = await getCharacterWorldBook();
+  const $select = $("#t-summary-target-book");
+  $select.empty();
+  if (charBook) {
+    $select.append(`<option value="${charBook}">[\u5F53\u524D\u89D2\u8272] ${charBook}</option>`);
+  }
+  books.forEach((book) => {
+    if (book !== charBook) {
+      $select.append(`<option value="${book}">${book}</option>`);
+    }
+  });
+  if (books.length === 0 && !charBook) {
+    $select.append(`<option value="" disabled>\u672A\u627E\u5230\u4E16\u754C\u4E66</option>`);
+  }
+}
+async function refreshVectorStatus() {
+  try {
+    const status = await getIndexStatus(currentCharacterId);
+    if (status) {
+      $("#t-vector-status").text(`\u5DF2\u5EFA\u7ACB (${status.actualVectorCount} \u6761)`);
+      $("#t-vector-model").text(status.embeddingModel || "\u672A\u77E5");
+      $("#t-vector-last-export").text(
+        status.lastExportedAt ? new Date(status.lastExportedAt).toLocaleString() : "\u4ECE\u672A\u5BFC\u51FA"
+      );
+      $("#t-index-status-display").html(`<span class="t-index-status t-index-ready">\u2705 ${status.actualVectorCount} \u6761</span>`);
+      $("#t-btn-export-vectors, #t-btn-clear-vectors").prop("disabled", false);
+      $("#t-use-vector-search").prop("disabled", false).prop("checked", true);
+    } else {
+      $("#t-vector-status").text("\u672A\u5EFA\u7ACB");
+      $("#t-vector-model").text("\u672A\u77E5");
+      $("#t-vector-last-export").text("\u4ECE\u672A\u5BFC\u51FA");
+      $("#t-index-status-display").html(`<span class="t-index-status t-index-empty">\u274C \u672A\u5EFA\u7ACB</span>`);
+      $("#t-btn-export-vectors, #t-btn-clear-vectors").prop("disabled", true);
+      $("#t-use-vector-search").prop("disabled", true).prop("checked", false);
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u5237\u65B0\u5411\u91CF\u72B6\u6001\u5931\u8D25", e);
+  }
+}
+function formatSummaryAsHtml(text) {
+  if (!text) return "";
+  let html = escapeHtml2(text);
+  html = html.replace(/^## (.+)$/gm, '<h3 class="t-summary-h3">$1</h3>');
+  html = html.replace(/^### (.+)$/gm, '<h4 class="t-summary-h4">$1</h4>');
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
+  html = html.replace(/^(\d+)\. (.+)$/gm, "<li>$2</li>");
+  html = html.replace(/\n\n/g, "</p><p>");
+  html = html.replace(/\n/g, "<br>");
+  return `<p>${html}</p>`;
 }
 function renderEntriesList() {
   const $list = $("#t-lore-entries-list");
@@ -10326,15 +13353,25 @@ function showEntryDetail(index) {
     $("#t-update-info-group").hide();
   }
 }
-var currentEntries, dropdownVisible;
+var FEATURE_KEY3, currentEntries, lastRawResponse, lastSummary, currentCharacterId, currentMode;
 var init_loreReviewWindow = __esm({
   "src/ui/loreReviewWindow.js"() {
     init_loreExtractor();
     init_worldInfoManager();
     init_logger();
     init_defaults();
+    init_connection();
+    init_storage();
+    init_context();
+    init_summarizer();
+    init_embeddings();
+    init_vectorStore();
+    FEATURE_KEY3 = "lore_extractor";
     currentEntries = [];
-    dropdownVisible = false;
+    lastRawResponse = "";
+    lastSummary = "";
+    currentCharacterId = "";
+    currentMode = "extract";
   }
 });
 
@@ -10399,6 +13436,7 @@ async function openMainWindow() {
                     <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
                     <i class="fa-solid fa-book-atlas t-icon-btn" id="t-btn-worldinfo" title="\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009"></i>
                     <i class="fa-solid fa-network-wired t-icon-btn" id="t-btn-profiles" title="\u5FEB\u901F\u5207\u6362API\u65B9\u6848"></i>
+                    <i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="\u8BBE\u7F6E"></i>
                     <span class="t-close" id="t-btn-close">&times;</span>
                 </div>
             </div>
@@ -10722,6 +13760,7 @@ async function openMainWindow() {
   });
   $("#t-btn-favs").on("click", openFavsWindow);
   $("#t-btn-worldinfo").on("click", openWorldInfoSelector);
+  $("#t-btn-settings").on("click", openSettingsWindow);
   $("#t-btn-debug").on("click", async () => await showDebugInfo());
   $("#t-nav-prev").on("click", function() {
     if ($(this).prop("disabled")) return;
@@ -11304,10 +14343,167 @@ var init_mainWindow = __esm({
     init_debugWindow();
     init_scriptManager();
     init_loreReviewWindow();
+    init_settingsWindow();
   }
 });
 
 // src/ui/floatingBtn.js
+function ensureModelDialogCss() {
+  const id = "titania-css-model-dialog";
+  if (!document.getElementById(id)) {
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.href = `${extensionFolderPath}/css/floating.css`;
+    document.head.appendChild(link);
+  }
+}
+async function showModelSwitchDialog() {
+  ensureModelDialogCss();
+  $("#t-model-switch-dialog").remove();
+  const conn = getActiveConnection();
+  const data = getExtData();
+  const currentOverride = data.theater_model_override || "";
+  const currentModel = currentOverride || conn.model;
+  const html = `
+    <div id="t-model-switch-dialog" class="t-model-dialog-overlay">
+        <div class="t-model-dialog-box">
+            <div class="t-model-dialog-header">
+                <span><i class="fa-solid fa-microchip"></i> \u5FEB\u901F\u5207\u6362\u6A21\u578B</span>
+                <div class="t-model-dialog-close" id="t-model-dialog-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-model-dialog-body">
+                <p class="t-model-dialog-hint">
+                    <i class="fa-solid fa-info-circle"></i>
+                    \u6B64\u8BBE\u7F6E\u4EC5\u5F71\u54CD\u5267\u573A\u573A\u666F\u751F\u6210\uFF0C\u4E0D\u5F71\u54CD\u8BBE\u5B9A\u63D0\u53D6\u7B49\u5176\u4ED6\u529F\u80FD\u3002
+                </p>
+                
+                <div class="t-model-current-info">
+                    <span class="t-model-label">\u5F53\u524D\u65B9\u6848:</span>
+                    <span class="t-model-value">${conn.profileName}</span>
+                </div>
+                
+                <div class="t-form-group">
+                    <label class="t-form-label">\u9009\u62E9\u6A21\u578B</label>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="t-model-select" class="t-input" style="flex: 1;">
+                            <option value="">\u52A0\u8F7D\u4E2D...</option>
+                        </select>
+                        <button id="t-btn-refresh-models" class="t-btn t-btn-xs" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
+                            <i class="fa-solid fa-sync"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="t-model-override-status" id="t-override-status" style="display: none;">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span>\u5DF2\u8BBE\u7F6E\u6A21\u578B\u8986\u76D6</span>
+                    <button id="t-btn-clear-override" class="t-btn t-btn-xs t-btn-danger">\u6E05\u9664\u8986\u76D6</button>
+                </div>
+            </div>
+            <div class="t-model-dialog-footer">
+                <button id="t-btn-cancel-model" class="t-btn">\u53D6\u6D88</button>
+                <button id="t-btn-save-model" class="t-btn t-btn-primary">
+                    <i class="fa-solid fa-check"></i> \u5E94\u7528
+                </button>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  await loadModelList(currentModel);
+  if (currentOverride) {
+    $("#t-override-status").show();
+  }
+  $("#t-model-dialog-close, #t-btn-cancel-model").on("click", () => {
+    $("#t-model-switch-dialog").remove();
+  });
+  $("#t-btn-refresh-models").on("click", async function() {
+    const $icon = $(this).find("i");
+    $icon.addClass("fa-spin");
+    await loadModelList($("#t-model-select").val());
+    $icon.removeClass("fa-spin");
+  });
+  $("#t-btn-clear-override").on("click", function() {
+    const data2 = getExtData();
+    data2.theater_model_override = null;
+    saveExtData();
+    const conn2 = getActiveConnection();
+    loadModelList(conn2.model);
+    $("#t-override-status").hide();
+    if (window.toastr) toastr.info("\u5DF2\u6E05\u9664\u6A21\u578B\u8986\u76D6\uFF0C\u5C06\u4F7F\u7528\u65B9\u6848\u9ED8\u8BA4\u6A21\u578B");
+  });
+  $("#t-btn-save-model").on("click", function() {
+    const selectedModel = $("#t-model-select").val();
+    const conn2 = getActiveConnection();
+    if (!selectedModel) {
+      if (window.toastr) toastr.warning("\u8BF7\u9009\u62E9\u4E00\u4E2A\u6A21\u578B");
+      return;
+    }
+    const data2 = getExtData();
+    if (selectedModel === conn2.model) {
+      data2.theater_model_override = null;
+      if (window.toastr) toastr.success(`\u4F7F\u7528\u65B9\u6848\u9ED8\u8BA4\u6A21\u578B: ${selectedModel}`);
+    } else {
+      data2.theater_model_override = selectedModel;
+      if (window.toastr) toastr.success(`\u5267\u573A\u6A21\u578B\u5DF2\u5207\u6362\u4E3A: ${selectedModel}`);
+    }
+    saveExtData();
+    $("#t-model-switch-dialog").remove();
+  });
+}
+async function loadModelList(currentSelection) {
+  const $select = $("#t-model-select");
+  $select.empty();
+  $select.append('<option value="" disabled>\u52A0\u8F7D\u4E2D...</option>');
+  try {
+    const models = await getAvailableModels();
+    $select.empty();
+    const conn = getActiveConnection();
+    const uniqueModels = [...new Set(models)].sort();
+    uniqueModels.forEach((model) => {
+      const isDefault = model === conn.model;
+      const label = isDefault ? `${model} (\u65B9\u6848\u9ED8\u8BA4)` : model;
+      const selected = model === currentSelection ? "selected" : "";
+      $select.append(`<option value="${model}" ${selected}>${label}</option>`);
+    });
+    if (uniqueModels.length === 0) {
+      $select.append('<option value="" disabled>\u65E0\u53EF\u7528\u6A21\u578B</option>');
+    }
+  } catch (e) {
+    console.warn("Titania: \u52A0\u8F7D\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
+    $select.empty();
+    $select.append('<option value="" disabled>\u52A0\u8F7D\u5931\u8D25</option>');
+  }
+}
+function isToolbarEnabled() {
+  const settings2 = getExtData();
+  const toolbarConfig = settings2.quick_toolbar || {};
+  return toolbarConfig.enabled === true;
+}
+function getEnabledToolbarButtons() {
+  const settings2 = getExtData();
+  const toolbarConfig = settings2.quick_toolbar || {};
+  const enabledItems = toolbarConfig.enabled_items || {
+    main: true,
+    lore: true,
+    settings: true,
+    favs: false,
+    scripts: false,
+    debug: false
+  };
+  const maxItems = toolbarConfig.max_items || 5;
+  const enabledButtons = TOOLBAR_BUTTONS.filter((btn) => enabledItems[btn.id] === true);
+  return enabledButtons.slice(0, maxItems);
+}
+function handleFloatingButtonClick() {
+  if (isToolbarEnabled()) {
+    toggleSlideMenu();
+  } else {
+    openMainWindow();
+  }
+}
 function showSlideMenu() {
   if (slideMenuVisible) return;
   const $btn = $("#titania-float-btn");
@@ -11324,17 +14520,12 @@ function showSlideMenu() {
             </div>
         `;
   } else {
-    menuContent = `
-            <div class="t-menu-icon-btn main" id="titania-open-main" title="\u6253\u5F00\u5267\u573A">
-                <i class="fa-solid fa-masks-theater"></i>
+    const enabledButtons = getEnabledToolbarButtons();
+    menuContent = enabledButtons.map((btn) => `
+            <div class="t-menu-icon-btn ${btn.cssClass}" data-btn-id="${btn.id}" title="${btn.title}">
+                <i class="${btn.icon}"></i>
             </div>
-            <div class="t-menu-icon-btn lore" id="titania-open-lore" title="\u63D0\u53D6\u8BBE\u5B9A">
-                <i class="fa-solid fa-brain"></i>
-            </div>
-            <div class="t-menu-icon-btn settings" id="titania-open-settings" title="\u8BBE\u7F6E">
-                <i class="fa-solid fa-gear"></i>
-            </div>
-        `;
+        `).join("");
   }
   const slideMenu = $(`
         <div id="titania-slide-menu" class="t-horizontal">
@@ -11378,17 +14569,15 @@ function showSlideMenu() {
     cancelGeneration2();
     hideSlideMenu();
   });
-  bindClick(slideMenu.find("#titania-open-main"), () => {
-    openMainWindow();
-    hideSlideMenu();
-  });
-  bindClick(slideMenu.find("#titania-open-lore"), () => {
-    showLoreReviewWindow();
-    hideSlideMenu();
-  });
-  bindClick(slideMenu.find("#titania-open-settings"), () => {
-    openSettingsWindow();
-    hideSlideMenu();
+  slideMenu.find(".t-menu-icon-btn[data-btn-id]").each(function() {
+    const btnId = $(this).data("btn-id");
+    const btnDef = TOOLBAR_BUTTONS.find((b) => b.id === btnId);
+    if (btnDef && btnDef.handler) {
+      bindClick($(this), async () => {
+        hideSlideMenu();
+        await btnDef.handler();
+      });
+    }
   });
   bindClick(backdrop, () => {
     hideSlideMenu();
@@ -11548,7 +14737,7 @@ function createFloatingButton() {
     e.stopPropagation();
     if (e.type === "touchend") e.preventDefault();
     btn.removeClass("t-notify");
-    toggleSlideMenu();
+    handleFloatingButtonClick();
   });
   $(document).on("touchend mouseup", function(e) {
     if (startX !== void 0 && isDragging) {
@@ -11560,7 +14749,7 @@ function createFloatingButton() {
     }
   });
 }
-var slideMenuVisible, ANIMATION_CLASSES;
+var slideMenuVisible, TOOLBAR_BUTTONS, ANIMATION_CLASSES;
 var init_floatingBtn = __esm({
   "src/ui/floatingBtn.js"() {
     init_storage();
@@ -11569,7 +14758,74 @@ var init_floatingBtn = __esm({
     init_mainWindow();
     init_loreReviewWindow();
     init_settingsWindow();
+    init_connection();
     slideMenuVisible = false;
+    TOOLBAR_BUTTONS = [
+      {
+        id: "main",
+        title: "\u6253\u5F00\u5267\u573A",
+        icon: "fa-solid fa-masks-theater",
+        cssClass: "main",
+        handler: () => openMainWindow()
+      },
+      {
+        id: "lore",
+        title: "\u63D0\u53D6\u8BBE\u5B9A",
+        icon: "fa-solid fa-brain",
+        cssClass: "lore",
+        handler: () => showLoreReviewWindow()
+      },
+      {
+        id: "model",
+        title: "\u5207\u6362\u6A21\u578B",
+        icon: "fa-solid fa-microchip",
+        cssClass: "model",
+        handler: () => showModelSwitchDialog()
+      },
+      {
+        id: "settings",
+        title: "\u8BBE\u7F6E",
+        icon: "fa-solid fa-gear",
+        cssClass: "settings",
+        handler: () => openSettingsWindow()
+      },
+      {
+        id: "favs",
+        title: "\u6536\u85CF\u5939",
+        icon: "fa-solid fa-star",
+        cssClass: "favs",
+        handler: async () => {
+          const { openFavsWindow: openFavsWindow2 } = await Promise.resolve().then(() => (init_favsWindow(), favsWindow_exports));
+          const { ensureOverlay: ensureOverlay2 } = await Promise.resolve().then(() => (init_dom(), dom_exports));
+          ensureOverlay2();
+          openFavsWindow2();
+        }
+      },
+      {
+        id: "scripts",
+        title: "\u5267\u672C\u7BA1\u7406",
+        icon: "fa-solid fa-scroll",
+        cssClass: "scripts",
+        handler: async () => {
+          const { openScriptManager: openScriptManager2 } = await Promise.resolve().then(() => (init_scriptManager(), scriptManager_exports));
+          const { ensureOverlay: ensureOverlay2 } = await Promise.resolve().then(() => (init_dom(), dom_exports));
+          ensureOverlay2();
+          openScriptManager2();
+        }
+      },
+      {
+        id: "debug",
+        title: "\u8C03\u8BD5\u65E5\u5FD7",
+        icon: "fa-solid fa-bug",
+        cssClass: "debug",
+        handler: async () => {
+          const { showDebugInfo: showDebugInfo2 } = await Promise.resolve().then(() => (init_debugWindow(), debugWindow_exports));
+          const { ensureOverlay: ensureOverlay2 } = await Promise.resolve().then(() => (init_dom(), dom_exports));
+          ensureOverlay2();
+          showDebugInfo2();
+        }
+      }
+    ];
     ANIMATION_CLASSES = {
       ripple: "t-anim-ripple",
       arc: "t-anim-arc"
@@ -11584,8 +14840,8 @@ __export(api_exports, {
   handleGenerate: () => handleGenerate,
   renderGeneratedContent: () => renderGeneratedContent
 });
-import { ChatCompletionService as ChatCompletionService2 } from "../../../custom-request.js";
-import { oai_settings as oai_settings2, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
+import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
+import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
 import { evaluateMacros as evaluateMacros2 } from "../../../macros.js";
 function renderGeneratedContent(content, scriptName = "\u573A\u666F") {
   const container = document.getElementById("t-output-content");
@@ -11773,9 +15029,14 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     raw_response_snippet: ""
   };
   const conn = getActiveConnection();
+  const theaterModelOverride = data.theater_model_override;
+  const effectiveModel = theaterModelOverride || conn.model;
   diagnostics.profile = conn.profileName;
-  diagnostics.model = conn.model;
+  diagnostics.model = effectiveModel;
   diagnostics.endpoint = conn.url;
+  if (theaterModelOverride) {
+    TitaniaLogger.info("\u4F7F\u7528\u5267\u573A\u6A21\u578B\u8986\u76D6", { override: theaterModelOverride, original: conn.model });
+  }
   const validation = validateConnection();
   if (!validation.valid) {
     const errText = `\u914D\u7F6E\u7F3A\u5931\uFF1A${validation.error}`;
@@ -11791,7 +15052,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   const useSTConnection = conn.useSTConnection;
   const finalUrl = conn.url;
   const finalKey = conn.key;
-  const finalModel = conn.model;
+  const finalModel = effectiveModel;
   const scriptId = forceScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
   if (!script) {
@@ -11957,23 +15218,23 @@ ${processedPrompt}`;
     diagnostics.phase = "fetch_start";
     let rawContent = "";
     if (useSTConnection) {
-      diagnostics.endpoint = `[ST Backend: ${oai_settings2.chat_completion_source}]`;
-      const requestData = ChatCompletionService2.createRequestData({
+      diagnostics.endpoint = `[ST Backend: ${oai_settings4.chat_completion_source}]`;
+      const requestData = ChatCompletionService4.createRequestData({
         stream: useStream,
         messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-        chat_completion_source: oai_settings2.chat_completion_source,
+        chat_completion_source: oai_settings4.chat_completion_source,
         model: finalModel,
-        max_tokens: oai_settings2.openai_max_tokens || 2048,
-        temperature: oai_settings2.temp_openai || 0.7,
+        max_tokens: oai_settings4.openai_max_tokens || 2048,
+        temperature: oai_settings4.temp_openai || 0.7,
         // 传递反代/自定义配置
-        custom_url: oai_settings2.custom_url,
-        reverse_proxy: oai_settings2.reverse_proxy,
-        proxy_password: oai_settings2.proxy_password,
-        custom_prompt_post_processing: oai_settings2.custom_prompt_post_processing
+        custom_url: oai_settings4.custom_url,
+        reverse_proxy: oai_settings4.reverse_proxy,
+        proxy_password: oai_settings4.proxy_password,
+        custom_prompt_post_processing: oai_settings4.custom_prompt_post_processing
       });
       diagnostics.phase = useStream ? "streaming" : "parsing_json";
       if (useStream) {
-        const streamGenerator = await ChatCompletionService2.sendRequest(requestData, false, null);
+        const streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, null);
         if (typeof streamGenerator === "function") {
           let chunkCount = 0;
           for await (const chunk of streamGenerator()) {
@@ -11987,7 +15248,7 @@ ${processedPrompt}`;
           rawContent = streamGenerator?.content || "";
         }
       } else {
-        const result = await ChatCompletionService2.sendRequest(requestData, true, null);
+        const result = await ChatCompletionService4.sendRequest(requestData, true, null);
         rawContent = result?.content || "";
       }
       diagnostics.network.latency = Date.now() - startTime;
@@ -12006,7 +15267,8 @@ ${processedPrompt}`;
         body: JSON.stringify({
           model: finalModel,
           messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-          stream: useStream
+          stream: useStream,
+          max_tokens: cfg.max_tokens || 4096
         }),
         signal
       });
@@ -12206,23 +15468,23 @@ ${context.incompleteText ? `Complete this first: "...${context.incompleteText}"`
 Generate ONLY the continuation (no repetition):`;
     let rawContent = "";
     if (useSTConnection) {
-      const requestData = ChatCompletionService2.createRequestData({
+      const requestData = ChatCompletionService4.createRequestData({
         stream: useStream,
         messages: [
           { role: "system", content: continuationSys },
           { role: "user", content: continuationUser }
         ],
-        chat_completion_source: oai_settings2.chat_completion_source,
+        chat_completion_source: oai_settings4.chat_completion_source,
         model: finalModel,
-        max_tokens: oai_settings2.openai_max_tokens || 2048,
-        temperature: oai_settings2.temp_openai || 0.7,
-        custom_url: oai_settings2.custom_url,
-        reverse_proxy: oai_settings2.reverse_proxy,
-        proxy_password: oai_settings2.proxy_password,
-        custom_prompt_post_processing: oai_settings2.custom_prompt_post_processing
+        max_tokens: oai_settings4.openai_max_tokens || 2048,
+        temperature: oai_settings4.temp_openai || 0.7,
+        custom_url: oai_settings4.custom_url,
+        reverse_proxy: oai_settings4.reverse_proxy,
+        proxy_password: oai_settings4.proxy_password,
+        custom_prompt_post_processing: oai_settings4.custom_prompt_post_processing
       });
       if (useStream) {
-        const streamGenerator = await ChatCompletionService2.sendRequest(requestData, false, null);
+        const streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, null);
         if (typeof streamGenerator === "function") {
           for await (const chunk of streamGenerator()) {
             rawContent = chunk.text || "";
@@ -12231,7 +15493,7 @@ Generate ONLY the continuation (no repetition):`;
           rawContent = streamGenerator?.content || "";
         }
       } else {
-        const result = await ChatCompletionService2.sendRequest(requestData, true, null);
+        const result = await ChatCompletionService4.sendRequest(requestData, true, null);
         rawContent = result?.content || "";
       }
     } else {
@@ -12249,7 +15511,8 @@ Generate ONLY the continuation (no repetition):`;
             { role: "system", content: continuationSys },
             { role: "user", content: continuationUser }
           ],
-          stream: useStream
+          stream: useStream,
+          max_tokens: cfg.max_tokens || 4096
         }),
         signal
       });
@@ -12387,6 +15650,7 @@ init_worldInfoManager();
 init_floatingBtn();
 init_settingsWindow();
 init_mainWindow();
+init_vectorStore();
 import { extension_settings as extension_settings3 } from "../../../extensions.js";
 import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 async function onGenerationEnded() {
@@ -12483,6 +15747,22 @@ function initCoreFeatures() {
   }
   eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
   initSyncListener();
+  initVectorUnsavedWarning();
+}
+function initVectorUnsavedWarning() {
+  window.addEventListener("beforeunload", async (e) => {
+    try {
+      const hasUnsaved = await checkUnsavedVectors();
+      if (hasUnsaved) {
+        e.preventDefault();
+        e.returnValue = "\u60A8\u6709\u672A\u5BFC\u51FA\u7684\u5411\u91CF\u7D22\u5F15\u6570\u636E\uFF0C\u5173\u95ED\u9875\u9762\u540E\u8FD9\u4E9B\u6570\u636E\u53EF\u80FD\u4E22\u5931\u3002\u662F\u5426\u786E\u5B9A\u79BB\u5F00\uFF1F";
+        return e.returnValue;
+      }
+    } catch (err) {
+      console.warn("Titania: \u68C0\u67E5\u672A\u4FDD\u5B58\u5411\u91CF\u6570\u636E\u5931\u8D25", err);
+    }
+  });
+  console.log("Titania: \u5411\u91CF\u7D22\u5F15\u672A\u4FDD\u5B58\u63D0\u9192\u5DF2\u521D\u59CB\u5316");
 }
 function showFloatingButton() {
   createFloatingButton();
@@ -12639,6 +15919,75 @@ function getChangelogSinceVersion(currentVersion, remoteVersion, changelog) {
   }
   return updates;
 }
+function showRefreshPrompt() {
+  if ($("#titania-refresh-prompt").length) return;
+  const promptHtml = `
+    <div id="titania-refresh-prompt" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100000;
+        background: linear-gradient(90deg, #1a472a, #2d5a3d);
+        color: #fff;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        font-size: 14px;
+    ">
+        <i class="fa-solid fa-circle-check" style="color: #55efc4; font-size: 18px;"></i>
+        <span>\u6269\u5C55\u7BA1\u7406\u5668\u5DF2\u6253\u5F00\uFF0C\u66F4\u65B0\u5B8C\u6210\u540E\u8BF7\u70B9\u51FB\u5237\u65B0\u6309\u94AE</span>
+        <button id="titania-refresh-btn" style="
+            background: #55efc4;
+            color: #1a472a;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        ">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>\u5237\u65B0\u9875\u9762</span>
+        </button>
+        <button id="titania-refresh-close" style="
+            background: transparent;
+            color: #aaa;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-left: 10px;
+        " title="\u5173\u95ED\u63D0\u793A">&times;</button>
+    </div>`;
+  $("body").prepend(promptHtml);
+  $("#titania-refresh-btn").on("click", function() {
+    $(this).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5237\u65B0\u4E2D...');
+    $(this).prop("disabled", true);
+    setTimeout(() => {
+      location.reload();
+    }, 300);
+  });
+  $("#titania-refresh-btn").hover(
+    function() {
+      $(this).css({ "transform": "scale(1.05)", "box-shadow": "0 2px 8px rgba(85, 239, 196, 0.4)" });
+    },
+    function() {
+      $(this).css({ "transform": "scale(1)", "box-shadow": "none" });
+    }
+  );
+  $("#titania-refresh-close").on("click", function() {
+    $("#titania-refresh-prompt").slideUp(200, function() {
+      $(this).remove();
+    });
+  });
+}
 async function showUpdateConfirmDialog(remoteVersion) {
   if ($(".titania-update-overlay").length) return;
   const loadingHtml = `
@@ -12717,6 +16066,7 @@ async function showUpdateConfirmDialog(remoteVersion) {
     if (window.toastr) {
       toastr.info("\u8BF7\u5728\u6269\u5C55\u7BA1\u7406\u5668\u4E2D\u627E\u5230\u300C\u56DE\u58F0\u5C0F\u5267\u573A\u300D\u5E76\u70B9\u51FB\u66F4\u65B0\u6309\u94AE", "Titania Echo");
     }
+    showRefreshPrompt();
   });
   $(".titania-update-overlay").on("click", function(e) {
     if (e.target === this) {
