@@ -2431,6 +2431,108 @@ textarea.t-input {
     }
 }
 
+/* ===== \u5185\u5BB9\u7EDF\u8BA1 HUD (\u6E38\u620F FPS \u98CE\u683C) ===== */
+
+.t-stats-hud {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 100;
+
+    /* \u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C */
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    /* \u8FB9\u6846\u548C\u5706\u89D2 */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+
+    /* \u5185\u8FB9\u8DDD */
+    padding: 8px 12px;
+
+    /* \u5B57\u4F53\u8BBE\u7F6E */
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+
+    /* \u9634\u5F71 */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
+    /* \u4E0D\u963B\u6321\u9F20\u6807\u4E8B\u4EF6 */
+    pointer-events: none;
+
+    /* \u52A8\u753B */
+    animation: t-stats-fadeIn 0.3s ease;
+}
+
+@keyframes t-stats-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.t-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.t-stats-row+.t-stats-row {
+    margin-top: 3px;
+}
+
+.t-stats-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.t-stats-value {
+    color: #55efc4;
+    font-weight: bold;
+    font-size: 13px;
+    text-shadow: 0 0 8px rgba(85, 239, 196, 0.3);
+}
+
+/* Token \u503C\u4F7F\u7528\u4E0D\u540C\u989C\u8272\uFF08\u5982\u679C\u662F\u4F30\u7B97\u503C\uFF09 */
+#t-stat-tokens {
+    color: #ffeaa7;
+    text-shadow: 0 0 8px rgba(255, 234, 167, 0.3);
+}
+
+/* Zen \u6A21\u5F0F\u4E0B\u9690\u85CF\u7EDF\u8BA1 HUD */
+#t-main-view.t-zen-mode .t-stats-hud {
+    display: none !important;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media screen and (max-width: 600px) {
+    .t-stats-hud {
+        top: 10px;
+        left: 10px;
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .t-stats-label {
+        font-size: 10px;
+    }
+
+    .t-stats-value {
+        font-size: 12px;
+    }
+}
+
 /* Shadow DOM \u5BBF\u4E3B\u6837\u5F0F */
 .t-shadow-host {
     display: block;
@@ -2464,6 +2566,7 @@ textarea.t-input {
         opacity: 0;
         transform: translateX(-50%) translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
@@ -2531,9 +2634,12 @@ textarea.t-input {
 }
 
 @keyframes t-unread-pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.1);
     }
@@ -2551,17 +2657,17 @@ textarea.t-input {
         padding: 5px 10px;
         gap: 5px;
     }
-    
+
     .t-nav-btn {
         width: 28px;
         height: 28px;
         font-size: 0.85em;
     }
-    
+
     .t-nav-indicator {
         font-size: 0.8em;
     }
-    
+
     .t-nav-unread {
         min-width: 16px;
         height: 16px;
@@ -7204,6 +7310,17 @@ var init_state = __esm({
         // 当前查看的索引 (-1 表示没有历史)
         maxItems: 5
         // 最多保留的历史记录数量
+      },
+      // 生成内容统计信息
+      contentStats: {
+        totalChars: 0,
+        // 总字符数
+        chineseChars: 0,
+        // 中文字符数
+        tokens: 0,
+        // Token 数量
+        isEstimated: true
+        // Token 是否为估算值
       }
     };
   }
@@ -8291,6 +8408,23 @@ function removeOverlap(original, continuation) {
     }
   }
   return continuation;
+}
+function countContentStats(htmlContent) {
+  if (!htmlContent) {
+    return { totalChars: 0, chineseChars: 0, estimatedTokens: 0 };
+  }
+  let plainText = htmlContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<[^>]*>/g, "").trim();
+  const totalChars = plainText.replace(/\s+/g, " ").length;
+  const chineseMatches = plainText.match(/[\u4e00-\u9fa5]/g);
+  const chineseChars = chineseMatches ? chineseMatches.length : 0;
+  const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, "");
+  const wordCount = nonChineseText.split(/\s+/).filter((w) => w.length > 0).length;
+  const estimatedTokens = Math.ceil(chineseChars / 1.5 + wordCount * 1.3);
+  return {
+    totalChars,
+    chineseChars,
+    estimatedTokens
+  };
 }
 function mergeContinuationContent(originalContent, continuationContent, showIndicator = true) {
   const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
@@ -13027,28 +13161,42 @@ async function updateIndexMetadata(characterId, metadata) {
   });
 }
 async function getIndexStatus(characterId) {
-  const db = await initVectorDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_METADATA], "readonly");
-    const store = transaction.objectStore(STORE_METADATA);
-    const request = store.get(characterId);
-    request.onsuccess = async () => {
-      const metadata = request.result;
-      if (!metadata) {
-        resolve(null);
-        return;
-      }
-      const vectors = await getCharacterVectors(characterId);
-      resolve({
-        ...metadata,
-        actualVectorCount: vectors.length
-      });
-    };
-    request.onerror = () => {
-      TitaniaLogger.error("\u83B7\u53D6\u7D22\u5F15\u72B6\u6001\u5931\u8D25", request.error);
-      reject(request.error);
-    };
-  });
+  try {
+    const db = await initVectorDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_METADATA, STORE_EMBEDDINGS], "readonly");
+      const metadataStore = transaction.objectStore(STORE_METADATA);
+      const embeddingsStore = transaction.objectStore(STORE_EMBEDDINGS);
+      const embeddingsIndex = embeddingsStore.index("characterId");
+      let metadata = null;
+      let vectorCount = 0;
+      const metadataRequest = metadataStore.get(characterId);
+      metadataRequest.onsuccess = () => {
+        metadata = metadataRequest.result;
+      };
+      const countRequest = embeddingsIndex.count(characterId);
+      countRequest.onsuccess = () => {
+        vectorCount = countRequest.result || 0;
+      };
+      transaction.oncomplete = () => {
+        if (!metadata) {
+          resolve(null);
+          return;
+        }
+        resolve({
+          ...metadata,
+          actualVectorCount: vectorCount
+        });
+      };
+      transaction.onerror = () => {
+        TitaniaLogger.error("\u83B7\u53D6\u7D22\u5F15\u72B6\u6001\u5931\u8D25", transaction.error);
+        reject(transaction.error);
+      };
+    });
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u7D22\u5F15\u72B6\u6001\u65F6\u53D1\u751F\u9519\u8BEF", e);
+    return null;
+  }
 }
 async function exportVectors(characterId) {
   const vectors = await getCharacterVectors(characterId);
@@ -13692,6 +13840,10 @@ var init_summarizer = __esm({
 });
 
 // src/ui/loreReviewWindow.js
+var loreReviewWindow_exports = {};
+__export(loreReviewWindow_exports, {
+  showLoreReviewWindow: () => showLoreReviewWindow
+});
 async function getHideChatMessageRange() {
   if (!_hideChatMessageRange) {
     try {
@@ -14007,18 +14159,6 @@ async function showLoreReviewWindow() {
   const currentModel = featureConn?.model || "\u672A\u77E5";
   const currentProfileName = featureConn?.profileName || "\u672A\u77E5";
   try {
-    const ctx = await getContextData();
-    currentCharacterId = ctx.charId || ctx.charName || "unknown";
-  } catch (e) {
-    currentCharacterId = "unknown";
-  }
-  let indexStatus = null;
-  try {
-    indexStatus = await getIndexStatus(currentCharacterId);
-  } catch (e) {
-    TitaniaLogger.warn("\u83B7\u53D6\u5411\u91CF\u7D22\u5F15\u72B6\u6001\u5931\u8D25", e);
-  }
-  try {
     const chatHistory = getChatHistory();
     currentTotalFloors = chatHistory?.length || 0;
   } catch (e) {
@@ -14028,8 +14168,10 @@ async function showLoreReviewWindow() {
   const savedSettings = getSavedAnalysisSettings();
   const extractLimit = savedSettings.extractLimit || 2;
   const summaryLimit = savedSettings.summaryLimit || 20;
-  const indexStatusHtml = indexStatus ? `<span class="t-index-status t-index-ready">\u2705 ${indexStatus.actualVectorCount} \u6761</span>` : `<span class="t-index-status t-index-empty">\u274C \u672A\u5EFA\u7ACB</span>`;
-  const lastExportTime = indexStatus?.lastExportedAt ? new Date(indexStatus.lastExportedAt).toLocaleString() : "\u4ECE\u672A\u5BFC\u51FA";
+  const indexStatusHtml = `<span class="t-index-status t-index-loading"><i class="fa-solid fa-spinner fa-spin"></i> \u68C0\u67E5\u4E2D...</span>`;
+  const lastExportTime = "\u52A0\u8F7D\u4E2D...";
+  currentCharacterId = "loading...";
+  currentCharacterName = "\u52A0\u8F7D\u4E2D...";
   const html = `
     <div id="t-lore-review-overlay" class="t-overlay">
         <div class="t-window t-lore-review-window" style="max-width: 1000px;">
@@ -14216,7 +14358,7 @@ async function showLoreReviewWindow() {
                         </div>
                         <div class="t-control-group">
                             <label>
-                                <input type="checkbox" id="t-use-vector-search" ${indexStatus ? "checked" : "disabled"}>
+                                <input type="checkbox" id="t-use-vector-search" disabled>
                                 \u4F7F\u7528\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A
                             </label>
                         </div>
@@ -14319,15 +14461,15 @@ async function showLoreReviewWindow() {
                         <div class="t-vector-info">
                             <div class="t-info-row">
                                 <span class="t-info-label">\u5F53\u524D\u89D2\u8272:</span>
-                                <span class="t-info-value" id="t-vector-char-id">${currentCharacterId}</span>
+                                <span class="t-info-value" id="t-vector-char-name">${currentCharacterName}</span>
                             </div>
                             <div class="t-info-row">
                                 <span class="t-info-label">\u7D22\u5F15\u72B6\u6001:</span>
-                                <span class="t-info-value" id="t-vector-status">${indexStatus ? `\u5DF2\u5EFA\u7ACB (${indexStatus.actualVectorCount} \u6761)` : "\u672A\u5EFA\u7ACB"}</span>
+                                <span class="t-info-value" id="t-vector-status">\u52A0\u8F7D\u4E2D...</span>
                             </div>
                             <div class="t-info-row">
                                 <span class="t-info-label">Embedding \u6A21\u578B:</span>
-                                <span class="t-info-value" id="t-vector-model">${indexStatus?.embeddingModel || "\u672A\u77E5"}</span>
+                                <span class="t-info-value" id="t-vector-model">\u52A0\u8F7D\u4E2D...</span>
                             </div>
                             <div class="t-info-row">
                                 <span class="t-info-label">\u4E0A\u6B21\u5BFC\u51FA:</span>
@@ -14357,13 +14499,13 @@ async function showLoreReviewWindow() {
 
                         <div class="t-action-group" style="margin-top: 20px;">
                             <div class="t-action-row">
-                                <button id="t-btn-export-vectors" class="t-btn" ${!indexStatus ? "disabled" : ""}>
+                                <button id="t-btn-export-vectors" class="t-btn" disabled>
                                     <i class="fa-solid fa-download"></i> \u5BFC\u51FA\u7D22\u5F15
                                 </button>
                                 <button id="t-btn-import-vectors" class="t-btn">
                                     <i class="fa-solid fa-upload"></i> \u5BFC\u5165\u7D22\u5F15
                                 </button>
-                                <button id="t-btn-clear-vectors" class="t-btn t-btn-danger" ${!indexStatus ? "disabled" : ""}>
+                                <button id="t-btn-clear-vectors" class="t-btn t-btn-danger" disabled>
                                     <i class="fa-solid fa-trash"></i> \u6E05\u9664\u7D22\u5F15
                                 </button>
                             </div>
@@ -14388,8 +14530,49 @@ async function showLoreReviewWindow() {
     </div>
     `;
   $("body").append(html);
-  await initWorldBookSelect();
   bindEvents();
+  setTimeout(async () => {
+    try {
+      let ctx = { charId: "unknown", charName: "\u672A\u77E5\u89D2\u8272" };
+      try {
+        ctx = await getContextData();
+      } catch (e) {
+        TitaniaLogger.warn("\u83B7\u53D6\u4E0A\u4E0B\u6587\u5931\u8D25", e);
+      }
+      currentCharacterId = ctx.charId || ctx.charName || "unknown";
+      currentCharacterName = ctx.charName || ctx.charId || "\u672A\u77E5\u89D2\u8272";
+      $("#t-vector-char-name").text(currentCharacterName);
+      getIndexStatus(currentCharacterId).then((indexStatus) => {
+        if (indexStatus) {
+          const statusHtml = `<span class="t-index-status t-index-ready">\u2705 ${indexStatus.actualVectorCount} \u6761</span>`;
+          $("#t-index-status-display").html(statusHtml);
+          $("#t-vector-status").text(`\u5DF2\u5EFA\u7ACB (${indexStatus.actualVectorCount} \u6761)`);
+          $("#t-vector-model").text(indexStatus.embeddingModel || "\u672A\u77E5");
+          $("#t-vector-last-export").text(
+            indexStatus.lastExportedAt ? new Date(indexStatus.lastExportedAt).toLocaleString() : "\u4ECE\u672A\u5BFC\u51FA"
+          );
+          $("#t-btn-export-vectors, #t-btn-clear-vectors").prop("disabled", false);
+          $("#t-use-vector-search").prop("disabled", false);
+        } else {
+          const statusHtml = `<span class="t-index-status t-index-empty">\u274C \u672A\u5EFA\u7ACB</span>`;
+          $("#t-index-status-display").html(statusHtml);
+          $("#t-vector-status").text("\u672A\u5EFA\u7ACB");
+          $("#t-vector-model").text("\u672A\u77E5");
+          $("#t-vector-last-export").text("\u4ECE\u672A\u5BFC\u51FA");
+          $("#t-btn-export-vectors, #t-btn-clear-vectors").prop("disabled", true);
+          $("#t-use-vector-search").prop("disabled", true).prop("checked", false);
+        }
+      }).catch((e) => {
+        TitaniaLogger.warn("\u83B7\u53D6\u5411\u91CF\u7D22\u5F15\u72B6\u6001\u5931\u8D25", e);
+        $("#t-index-status-display").html(`<span class="t-index-status t-index-empty">\u26A0\uFE0F \u52A0\u8F7D\u5931\u8D25</span>`);
+      });
+      initWorldBookSelect().catch((e) => {
+        TitaniaLogger.warn("\u521D\u59CB\u5316\u4E16\u754C\u4E66\u5217\u8868\u5931\u8D25", e);
+      });
+    } catch (e) {
+      TitaniaLogger.error("\u52A0\u8F7D\u9875\u9762\u6570\u636E\u5931\u8D25", e);
+    }
+  }, 0);
 }
 async function initWorldBookSelect() {
   const books = getAvailableWorldBooks();
@@ -15247,7 +15430,7 @@ function showPromptPreviewDialog(messages, stats = {}) {
     });
   });
 }
-var FEATURE_KEY3, _hideChatMessageRange, currentEntries, lastRawResponse, lastSummary, lastSummaryMessages, currentCharacterId, currentMode, currentTotalFloors, lastAnalyzedRange;
+var FEATURE_KEY3, _hideChatMessageRange, currentEntries, lastRawResponse, lastSummary, lastSummaryMessages, currentCharacterId, currentCharacterName, currentMode, currentTotalFloors, lastAnalyzedRange;
 var init_loreReviewWindow = __esm({
   "src/ui/loreReviewWindow.js"() {
     init_loreExtractor();
@@ -15267,6 +15450,7 @@ var init_loreReviewWindow = __esm({
     lastSummary = "";
     lastSummaryMessages = null;
     currentCharacterId = "";
+    currentCharacterName = "";
     currentMode = "extract";
     currentTotalFloors = 0;
     lastAnalyzedRange = { start: 0, end: 0 };
@@ -15376,6 +15560,20 @@ async function openMainWindow() {
             </div>
 
             <div class="t-content-wrapper">
+                <div class="t-stats-hud" id="t-stats-hud" style="display:none;">
+                    <div class="t-stats-row">
+                        <span class="t-stats-label">\u5B57\u7B26</span>
+                        <span class="t-stats-value" id="t-stat-total">0</span>
+                    </div>
+                    <div class="t-stats-row">
+                        <span class="t-stats-label">\u4E2D\u6587</span>
+                        <span class="t-stats-value" id="t-stat-chinese">0</span>
+                    </div>
+                    <div class="t-stats-row">
+                        <span class="t-stats-label">Token</span>
+                        <span class="t-stats-value" id="t-stat-tokens">~0</span>
+                    </div>
+                </div>
                 <div class="t-tools-btn" id="t-btn-tools" title="\u5185\u5BB9\u5DE5\u5177"><i class="fa-solid fa-ellipsis-vertical"></i></div>
                 <div class="t-tools-panel" id="t-tools-panel" style="display:none;">
                     <div class="t-tools-item" id="t-tool-zen">
@@ -15430,6 +15628,7 @@ async function openMainWindow() {
     const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
     const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
     renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
+    updateContentStatsDisplay(GlobalState.contentStats);
   } else {
     outputContainer.innerHTML = placeholderContent;
   }
@@ -15703,6 +15902,20 @@ async function openMainWindow() {
   }
   loadContextDataAsync();
   updateSceneHistoryNav();
+}
+function updateContentStatsDisplay(stats) {
+  const $hud = $("#t-stats-hud");
+  if (!$hud.length) return;
+  if (!stats || stats.totalChars === 0) {
+    $hud.hide();
+    return;
+  }
+  const formatNumber = (num) => num.toLocaleString();
+  $("#t-stat-total").text(formatNumber(stats.totalChars));
+  $("#t-stat-chinese").text(formatNumber(stats.chineseChars));
+  const tokenText = stats.isEstimated ? `~${formatNumber(stats.tokens)}` : formatNumber(stats.tokens);
+  $("#t-stat-tokens").text(tokenText);
+  $hud.show();
 }
 function updateSceneHistoryNav() {
   const navState = getHistoryNavState();
@@ -16242,6 +16455,7 @@ var init_mainWindow = __esm({
     init_scriptManager();
     init_loreReviewWindow();
     init_settingsWindow();
+    init_helpers();
   }
 });
 
@@ -16380,6 +16594,28 @@ var init_memoryRecall = __esm({
 });
 
 // src/ui/memoryRecallPanel.js
+var memoryRecallPanel_exports = {};
+__export(memoryRecallPanel_exports, {
+  closeRecallPanel: () => closeRecallPanel,
+  createMemoryRecallButton: () => createMemoryRecallButton,
+  destroyRecallPanel: () => destroyRecallPanel,
+  openRecallPanel: () => openRecallPanel,
+  removeMemoryRecallButton: () => removeMemoryRecallButton,
+  toggleRecallPanel: () => toggleRecallPanel
+});
+function createMemoryRecallButton() {
+}
+function removeMemoryRecallButton() {
+  closeRecallPanel();
+}
+function toggleRecallPanel() {
+  const $view = $("#t-recall-view");
+  if ($view.length > 0 && $view.is(":visible")) {
+    closeRecallPanel();
+  } else {
+    openRecallPanel();
+  }
+}
 async function openRecallPanel() {
   $("#t-main-view").hide();
   ensureOverlay();
@@ -16617,6 +16853,11 @@ function escapeHtml3(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+function destroyRecallPanel() {
+  $("#t-recall-view").remove();
+  searchResults = [];
+  selectedIndices.clear();
 }
 var searchResults, selectedIndices, isSearching;
 var init_memoryRecallPanel = __esm({
@@ -17039,10 +17280,8 @@ var init_floatingBtn = __esm({
     init_state();
     init_defaults();
     init_mainWindow();
-    init_loreReviewWindow();
     init_settingsWindow();
     init_connection();
-    init_memoryRecallPanel();
     slideMenuVisible = false;
     TOOLBAR_BUTTONS = [
       {
@@ -17057,7 +17296,11 @@ var init_floatingBtn = __esm({
         title: "\u63D0\u53D6\u8BBE\u5B9A",
         icon: "fa-solid fa-brain",
         cssClass: "lore",
-        handler: () => showLoreReviewWindow()
+        // 改为动态导入，只在点击时才加载 loreReviewWindow 及其依赖
+        handler: async () => {
+          const { showLoreReviewWindow: showLoreReviewWindow2 } = await Promise.resolve().then(() => (init_loreReviewWindow(), loreReviewWindow_exports));
+          showLoreReviewWindow2();
+        }
       },
       {
         id: "model",
@@ -17114,7 +17357,11 @@ var init_floatingBtn = __esm({
         title: "\u8BB0\u5FC6\u53EC\u56DE",
         icon: "fa-solid fa-lightbulb",
         cssClass: "recall",
-        handler: () => openRecallPanel()
+        // 改为动态导入，只在点击时才加载 memoryRecallPanel 及其依赖
+        handler: async () => {
+          const { openRecallPanel: openRecallPanel2 } = await Promise.resolve().then(() => (init_memoryRecallPanel(), memoryRecallPanel_exports));
+          openRecallPanel2();
+        }
       }
     ];
     ANIMATION_CLASSES = {
@@ -17676,6 +17923,17 @@ ${processedPrompt}`;
     resetContinuationState();
     pushSceneToHistory(finalOutput, script.id, script.name);
     diagnostics.phase = "complete";
+    const stats = countContentStats(finalOutput);
+    GlobalState.contentStats = {
+      totalChars: stats.totalChars,
+      chineseChars: stats.chineseChars,
+      tokens: stats.estimatedTokens,
+      isEstimated: true
+      // 默认为估算值
+    };
+    if ($("#t-stats-hud").length > 0) {
+      updateContentStatsDisplay(GlobalState.contentStats);
+    }
     if ($("#t-output-content").length > 0) {
       renderGeneratedContent(finalOutput, script.name);
       if (typeof window.updateSceneHistoryNav === "function") {
@@ -17876,10 +18134,20 @@ Generate ONLY the continuation (no repetition):`;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
       pushSceneToHistory(finalOutput, script.id, script.name);
+      const stats = countContentStats(finalOutput);
+      GlobalState.contentStats = {
+        totalChars: stats.totalChars,
+        chineseChars: stats.chineseChars,
+        tokens: stats.estimatedTokens,
+        isEstimated: true
+      };
       if ($("#t-output-content").length > 0) {
         renderGeneratedContent(finalOutput, script.name);
         if (typeof window.updateSceneHistoryNav === "function") {
           window.updateSceneHistoryNav();
+        }
+        if ($("#t-stats-hud").length > 0) {
+          updateContentStatsDisplay(GlobalState.contentStats);
         }
       }
       stopTimer();
