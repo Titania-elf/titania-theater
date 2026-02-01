@@ -181,6 +181,8 @@ var init_defaults = __esm({
           // 移除宏残留 {{user}} {{char}} 等
           remove_bracket_markers: true,
           // 移除方括号标记 [System] [OOC] 等
+          remove_bracket_content: true,
+          // 移除方括号及其内容 [...] (全部)
           custom_tags_to_remove: "",
           // 自定义要移除的标签（逗号分隔，如 "internal,debug"）
           min_text_length: 20
@@ -10305,6 +10307,10 @@ function openSettingsWindow() {
                                     <span style="color:#ccc;">\u{1F532} \u79FB\u9664 [System] \u7B49\u6807\u8BB0</span>
                                 </label>
                                 <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-bracket-all" ${data.embedding_config?.text_cleaning?.remove_bracket_content !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4E6} \u79FB\u9664\u6240\u6709 [...] \u5185\u5BB9</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
                                     <input type="checkbox" id="cfg-clean-markdown" ${data.embedding_config?.text_cleaning?.remove_markdown === true ? "checked" : ""} style="margin-right:8px;">
                                     <span style="color:#ccc;">\u{1F4C4} \u79FB\u9664 Markdown \u683C\u5F0F</span>
                                 </label>
@@ -11761,6 +11767,7 @@ ${JSON.stringify(l.details, null, 2)}`;
         remove_markdown: $("#cfg-clean-markdown").is(":checked"),
         remove_macro_residue: $("#cfg-clean-macro").is(":checked"),
         remove_bracket_markers: $("#cfg-clean-bracket").is(":checked"),
+        remove_bracket_content: $("#cfg-clean-bracket-all").is(":checked"),
         custom_tags_to_remove: $("#cfg-clean-custom-tags").val().trim(),
         min_text_length: parseInt($("#cfg-clean-min-length").val()) || 20
       },
@@ -13981,6 +13988,7 @@ function getTextCleaningConfig() {
     remove_markdown: false,
     remove_macro_residue: true,
     remove_bracket_markers: true,
+    remove_bracket_content: true,
     custom_tags_to_remove: "",
     min_text_length: 20
   };
@@ -14022,6 +14030,10 @@ function removeMacroResidue(text) {
 function removeBracketMarkers(text) {
   if (!text) return text;
   return text.replace(/\[(System|OOC|Note|Author'?s?\s*Note|TL|T\/L|Narrator|A\/N)[^\]]*\]/gi, "");
+}
+function removeBracketContent(text) {
+  if (!text) return text;
+  return text.replace(/\[[^\]]*\]/g, "");
 }
 function normalizeWhitespace(text) {
   if (!text) return text;
@@ -14077,6 +14089,9 @@ function cleanTextForEmbedding(text, customConfig = null) {
   }
   if (config.remove_bracket_markers) {
     cleaned = removeBracketMarkers(cleaned);
+  }
+  if (config.remove_bracket_content) {
+    cleaned = removeBracketContent(cleaned);
   }
   cleaned = normalizeWhitespace(cleaned);
   return cleaned;
