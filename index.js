@@ -22,14 +22,14 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.2.5";
+    CURRENT_VERSION = "3.2.6";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.2.6": "\u{1F9F9} \u5411\u91CF\u5316\u6587\u672C\u6E05\u6D17\uFF1A\u65B0\u589E\u6587\u672C\u6E05\u6D17\u6A21\u5757\uFF0C\u5411\u91CF\u5316\u524D\u81EA\u52A8\u79FB\u9664 HTML/\u601D\u8003\u6807\u7B7E/OOC \u7B49\u65E0\u5173\u5185\u5BB9<br>\u{1F504} \u81EA\u52A8\u5411\u91CF\u5316\uFF1A\u652F\u6301\u7D2F\u79EF\u6D88\u606F\u81EA\u52A8\u89E6\u53D1\u5411\u91CF\u5316\uFF0C\u53EF\u914D\u7F6E\u89E6\u53D1\u9608\u503C<br>\u{1F441}\uFE0F \u6E05\u6D17\u6548\u679C\u9884\u89C8\uFF1A\u5411\u91CF\u7D22\u5F15\u9762\u677F\u65B0\u589E\u300C\u9884\u89C8\u6E05\u6D17\u6548\u679C\u300D\u529F\u80FD\uFF0C\u67E5\u770B\u539F\u6587\u4E0E\u6E05\u6D17\u540E\u5BF9\u6BD4<br>\u{1F4CA} \u7EDF\u8BA1\u680F\u4F18\u5316\uFF1A\u4E3B\u754C\u9762\u5B57\u6570\u7EDF\u8BA1\u6539\u4E3A\u7D27\u51D1\u6C34\u5E73\u6761\u6837\u5F0F\uFF0C\u65B0\u589E\u6A21\u578B\u540D\u79F0\u663E\u793A",
       "3.2.5": "\u{1F504} \u6D41\u5F0F\u91CD\u8BD5\u673A\u5236\uFF1A\u6D41\u5F0F\u8BF7\u6C42\u5931\u8D25\u81EA\u52A8\u91CD\u8BD51\u6B21\uFF0C\u51CF\u5C11 Stream Interrupted \u9519\u8BEF<br>\u{1F4D6} \u4E16\u754C\u4E66\u66F4\u65B0\u589E\u5F3A\uFF1A\u667A\u80FD\u63D0\u53D6\u652F\u6301\u66F4\u65B0\u73B0\u6709\u6761\u76EE\uFF0C\u63D0\u4F9B\u539F\u6709\u5185\u5BB9\u5BF9\u6BD4\u548C\u591A\u79CD\u4FDD\u5B58\u6A21\u5F0F<br>\u{1F6E1}\uFE0F \u9875\u9762\u52A0\u8F7D\u4FDD\u62A4\uFF1A\u667A\u80FD\u63D0\u53D6\u9875\u9762\u52A0\u8F7D\u64CD\u4F5C\u6DFB\u52A08\u79D2\u8D85\u65F6\u4FDD\u62A4\uFF0C\u907F\u514D\u5361\u6B7B<br>\u{1F527} \u589E\u91CF\u5411\u91CF\u5316\u4FEE\u590D\uFF1A\u4FEE\u590D\u589E\u91CF\u66F4\u65B0\u65F6\u91CD\u590D\u7D22\u5F15\u95EE\u9898",
-      "3.2.4": "\u{1F9E0} \u667A\u80FD\u603B\u7ED3\uFF1AAI \u5206\u6790\u5BF9\u8BDD\u5386\u53F2\u751F\u6210\u89D2\u8272\u603B\u7ED3\uFF0C\u652F\u6301\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A<br>\u{1F4CA} \u5411\u91CF\u7D22\u5F15\u7BA1\u7406\uFF1AEmbedding API \u72EC\u7ACB\u914D\u7F6E\uFF0C\u652F\u6301\u5411\u91CF\u7D22\u5F15\u6784\u5EFA/\u5BFC\u5165/\u5BFC\u51FA<br>\u{1F518} \u5FEB\u6377\u5DE5\u5177\u680F\uFF1A\u60AC\u6D6E\u7403\u70B9\u51FB\u5C55\u5F00\u6A2A\u5411\u5DE5\u5177\u680F\uFF0C\u53EF\u81EA\u5B9A\u4E49\u663E\u793A\u6309\u94AE<br>\u26A1 \u5FEB\u901F\u5207\u6362\u6A21\u578B\uFF1A\u5DE5\u5177\u680F\u65B0\u589E\u6A21\u578B\u5207\u6362\u5F39\u7A97\uFF0C\u652F\u6301\u6A21\u578B\u8986\u76D6",
-      "3.2.3": "\u{1F9E0} \u667A\u80FD\u8BBE\u5B9A\u63D0\u53D6\uFF1AAI \u5206\u6790\u5BF9\u8BDD\u5185\u5BB9\u81EA\u52A8\u63D0\u53D6\u4E16\u754C\u89C2\u8BBE\u5B9A\uFF0C\u5BA1\u6838\u540E\u5BFC\u5165\u4E16\u754C\u4E66<br>\u2B50 \u6536\u85CF\u5939\u589E\u5F3A\uFF1A\u652F\u6301\u6279\u91CF\u5220\u9664\u3001\u91CD\u547D\u540D\u6536\u85CF\u6761\u76EE<br>\u{1F3AF} \u60AC\u6D6E\u83DC\u5355\u91CD\u8BBE\u8BA1\uFF1A\u6C34\u5E73\u56FE\u6807\u680F\u5E03\u5C40\uFF0C\u65B0\u589E\u8BBE\u7F6E\u5FEB\u6377\u5165\u53E3<br>\u{1F4DC} \u573A\u666F\u5386\u53F2\u961F\u5217\uFF1A\u4FDD\u5B58\u6700\u8FD1\u4F7F\u7528\u7684\u573A\u666F\uFF0C\u5FEB\u901F\u5207\u6362"
+      "3.2.4": "\u{1F9E0} \u667A\u80FD\u603B\u7ED3\uFF1AAI \u5206\u6790\u5BF9\u8BDD\u5386\u53F2\u751F\u6210\u89D2\u8272\u603B\u7ED3\uFF0C\u652F\u6301\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A<br>\u{1F4CA} \u5411\u91CF\u7D22\u5F15\u7BA1\u7406\uFF1AEmbedding API \u72EC\u7ACB\u914D\u7F6E\uFF0C\u652F\u6301\u5411\u91CF\u7D22\u5F15\u6784\u5EFA/\u5BFC\u5165/\u5BFC\u51FA<br>\u{1F518} \u5FEB\u6377\u5DE5\u5177\u680F\uFF1A\u60AC\u6D6E\u7403\u70B9\u51FB\u5C55\u5F00\u6A2A\u5411\u5DE5\u5177\u680F\uFF0C\u53EF\u81EA\u5B9A\u4E49\u663E\u793A\u6309\u94AE<br>\u26A1 \u5FEB\u901F\u5207\u6362\u6A21\u578B\uFF1A\u5DE5\u5177\u680F\u65B0\u589E\u6A21\u578B\u5207\u6362\u5F39\u7A97\uFF0C\u652F\u6301\u6A21\u578B\u8986\u76D6"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -161,8 +161,40 @@ var init_defaults = __esm({
         // API Key
         model: "text-embedding-3-small",
         // 默认模型
-        dimensions: null
+        dimensions: null,
         // 向量维度（null 表示使用模型默认值）
+        // 文本清洗选项（向量化前处理）
+        text_cleaning: {
+          remove_html_tags: true,
+          // 移除 HTML 标签（保留文本内容）
+          remove_style_tags: true,
+          // 移除 <style> 标签及其内容
+          remove_thinking_tags: true,
+          // 移除 <thinking>/<think> 标签及内容
+          remove_ooc_tags: true,
+          // 移除 <ooc>/<OOC> 标签及内容
+          remove_system_tags: true,
+          // 移除 <system>/<note> 等系统标签及内容
+          remove_markdown: false,
+          // 移除 Markdown 格式（**粗体** 等）
+          remove_macro_residue: true,
+          // 移除宏残留 {{user}} {{char}} 等
+          remove_bracket_markers: true,
+          // 移除方括号标记 [System] [OOC] 等
+          custom_tags_to_remove: "",
+          // 自定义要移除的标签（逗号分隔，如 "internal,debug"）
+          min_text_length: 20
+          // 清洗后低于此长度的消息跳过向量化
+        },
+        // 自动向量化配置
+        auto_vectorize: {
+          enabled: false,
+          // 是否启用自动向量化
+          batch_threshold: 5,
+          // 累积多少条消息后触发向量化
+          notify_user: true
+          // 是否显示通知
+        }
       },
       // 智能总结功能配置
       summarizer_config: {
@@ -2431,33 +2463,35 @@ textarea.t-input {
     }
 }
 
-/* ===== \u5185\u5BB9\u7EDF\u8BA1 HUD (\u6E38\u620F FPS \u98CE\u683C) ===== */
+/* ===== \u5185\u5BB9\u7EDF\u8BA1 HUD (\u7D27\u51D1\u6C34\u5E73\u6761) ===== */
 
 .t-stats-hud {
     position: absolute;
-    top: 15px;
-    left: 15px;
+    top: 10px;
+    left: 10px;
     z-index: 100;
 
     /* \u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C */
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 
     /* \u8FB9\u6846\u548C\u5706\u89D2 */
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
 
-    /* \u5185\u8FB9\u8DDD */
-    padding: 8px 12px;
+    /* \u5185\u8FB9\u8DDD - \u66F4\u7D27\u51D1 */
+    padding: 4px 8px;
 
-    /* \u5B57\u4F53\u8BBE\u7F6E */
+    /* \u6C34\u5E73\u6392\u5217 */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    /* \u5B57\u4F53\u8BBE\u7F6E - \u6700\u5C0F\u53EF\u8BFB\u5B57\u53F7 */
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 12px;
-    line-height: 1.4;
-
-    /* \u9634\u5F71 */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    font-size: 10px;
+    line-height: 1;
 
     /* \u4E0D\u963B\u6321\u9F20\u6807\u4E8B\u4EF6 */
     pointer-events: none;
@@ -2469,7 +2503,7 @@ textarea.t-input {
 @keyframes t-stats-fadeIn {
     from {
         opacity: 0;
-        transform: translateY(-5px);
+        transform: translateY(-3px);
     }
 
     to {
@@ -2478,36 +2512,42 @@ textarea.t-input {
     }
 }
 
-.t-stats-row {
-    display: flex;
+.t-stats-item {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 3px;
     white-space: nowrap;
 }
 
-.t-stats-row+.t-stats-row {
-    margin-top: 3px;
+.t-stats-sep {
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 9px;
 }
 
 .t-stats-label {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 9px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .t-stats-value {
     color: #55efc4;
     font-weight: bold;
-    font-size: 13px;
-    text-shadow: 0 0 8px rgba(85, 239, 196, 0.3);
+    font-size: 10px;
 }
 
-/* Token \u503C\u4F7F\u7528\u4E0D\u540C\u989C\u8272\uFF08\u5982\u679C\u662F\u4F30\u7B97\u503C\uFF09 */
+/* \u6A21\u578B\u540D\u79F0\u4F7F\u7528\u4E0D\u540C\u989C\u8272 */
+#t-stat-model {
+    color: #90cdf4;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Token \u503C\u4F7F\u7528\u4E0D\u540C\u989C\u8272 */
 #t-stat-tokens {
     color: #ffeaa7;
-    text-shadow: 0 0 8px rgba(255, 234, 167, 0.3);
 }
 
 /* Zen \u6A21\u5F0F\u4E0B\u9690\u85CF\u7EDF\u8BA1 HUD */
@@ -2518,18 +2558,23 @@ textarea.t-input {
 /* \u79FB\u52A8\u7AEF\u9002\u914D */
 @media screen and (max-width: 600px) {
     .t-stats-hud {
-        top: 10px;
-        left: 10px;
-        padding: 6px 10px;
-        font-size: 11px;
+        top: 8px;
+        left: 8px;
+        padding: 3px 6px;
+        font-size: 9px;
+        gap: 4px;
     }
 
     .t-stats-label {
-        font-size: 10px;
+        font-size: 8px;
     }
 
     .t-stats-value {
-        font-size: 12px;
+        font-size: 9px;
+    }
+
+    #t-stat-model {
+        max-width: 80px;
     }
 }
 
@@ -7555,6 +7600,8 @@ var init_state = __esm({
       // 上一次用户手动选择的剧本 ID (用于 UI 显示)
       lastGeneratedScriptId: "",
       // 上一次生成内容对应的剧本 ID (可能是后台自动生成的)
+      lastUsedModelName: "",
+      // 上一次生成使用的模型名称
       lastFavId: null,
       // 当前内容对应的收藏 ID（null 表示未收藏）
       currentCategoryFilter: "ALL",
@@ -10162,6 +10209,19 @@ function openSettingsWindow() {
                         </div>
                     </div>
                     
+                    <!-- \u6A21\u578B\u5207\u6362\u8B66\u544A\uFF08\u52A8\u6001\u663E\u793A\uFF09 -->
+                    <div id="embed-model-warning" style="display:none; background:rgba(255,107,107,0.1); border:1px solid rgba(255,107,107,0.4); padding:12px; border-radius:6px; margin-bottom:15px;">
+                        <div style="color:#ff6b6b; font-weight:bold; margin-bottom:5px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> \u68C0\u6D4B\u5230\u6A21\u578B\u5DF2\u66F4\u6539
+                        </div>
+                        <div style="font-size:0.85em; color:#ccc;">
+                            \u5F53\u524D\u914D\u7F6E\u7684\u6A21\u578B\u4E0E\u73B0\u6709\u5411\u91CF\u7D22\u5F15\u4F7F\u7528\u7684\u6A21\u578B\u4E0D\u540C\u3002<br>
+                            <span style="color:#feca57;">\u65E7\u6A21\u578B: <span id="embed-old-model">-</span></span> \u2192
+                            <span style="color:#55efc4;">\u65B0\u6A21\u578B: <span id="embed-new-model">-</span></span><br>
+                            <span style="color:#ff6b6b;">\u26A0\uFE0F \u5EFA\u8BAE\u91CD\u5EFA\u5411\u91CF\u7D22\u5F15\u4EE5\u83B7\u5F97\u6700\u4F73\u6548\u679C</span>
+                        </div>
+                    </div>
+                    
                     <div class="t-form-group">
                         <label class="t-form-label">API Endpoint URL</label>
                         <input id="cfg-embed-url" class="t-input" value="${data.embedding_config?.url || ""}" placeholder="\u4F8B\u5982: https://api.openai.com/v1">
@@ -10204,6 +10264,96 @@ function openSettingsWindow() {
                             <i class="fa-solid fa-vial"></i> \u6D4B\u8BD5\u8FDE\u63A5
                         </button>
                         <span id="embed-test-result" style="font-size:0.9em; line-height:32px;"></span>
+                    </div>
+                    
+                    <!-- \u6587\u672C\u6E05\u6D17\u8BBE\u7F6E -->
+                    <div style="margin-top:25px; border-top:1px solid #333; padding-top:20px;">
+                        <div style="font-weight:bold; color:#55efc4; margin-bottom:10px;"><i class="fa-solid fa-broom"></i> \u6587\u672C\u6E05\u6D17\u8BBE\u7F6E</div>
+                        <div style="font-size:0.85em; color:#888; margin-bottom:15px;">
+                            \u5411\u91CF\u5316\u524D\u5BF9\u6587\u672C\u8FDB\u884C\u6E05\u6D17\u5904\u7406\uFF0C\u79FB\u9664\u5E72\u6270\u5185\u5BB9\uFF0C\u63D0\u9AD8\u8BED\u4E49\u5339\u914D\u8D28\u91CF\u3002<br>
+                            <span style="color:#feca57;">\u52FE\u9009\u8981\u6E05\u6D17\u7684\u5185\u5BB9\u7C7B\u578B\uFF0C\u4EC5\u5F71\u54CD\u65B0\u5411\u91CF\u5316\u7684\u6D88\u606F\u3002</span>
+                        </div>
+                        
+                        <div class="t-form-group" style="background:#1a1a1a; padding:15px; border-radius:6px; border:1px solid #333;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-html" ${data.embedding_config?.text_cleaning?.remove_html_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F3F7}\uFE0F \u79FB\u9664 HTML \u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-style" ${data.embedding_config?.text_cleaning?.remove_style_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F3A8} \u79FB\u9664 &lt;style&gt; \u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-thinking" ${data.embedding_config?.text_cleaning?.remove_thinking_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4AD} \u79FB\u9664 &lt;thinking&gt; \u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-ooc" ${data.embedding_config?.text_cleaning?.remove_ooc_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4AC} \u79FB\u9664 &lt;ooc&gt; \u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-system" ${data.embedding_config?.text_cleaning?.remove_system_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u2699\uFE0F \u79FB\u9664\u7CFB\u7EDF\u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-macro" ${data.embedding_config?.text_cleaning?.remove_macro_residue !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4DD} \u79FB\u9664\u5B8F\u6B8B\u7559 {{}}</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-bracket" ${data.embedding_config?.text_cleaning?.remove_bracket_markers !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F532} \u79FB\u9664 [System] \u7B49\u6807\u8BB0</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-markdown" ${data.embedding_config?.text_cleaning?.remove_markdown === true ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4C4} \u79FB\u9664 Markdown \u683C\u5F0F</span>
+                                </label>
+                            </div>
+                            
+                            <div style="margin-top:15px; padding-top:12px; border-top:1px solid #333;">
+                                <div class="t-form-group" style="margin-bottom:10px;">
+                                    <label class="t-form-label" style="font-size:0.85em;">\u81EA\u5B9A\u4E49\u79FB\u9664\u6807\u7B7E\uFF08\u9017\u53F7\u5206\u9694\uFF09</label>
+                                    <input id="cfg-clean-custom-tags" class="t-input" value="${data.embedding_config?.text_cleaning?.custom_tags_to_remove || ""}" placeholder="\u4F8B\u5982: internal, debug, author_note" style="font-size:0.9em;">
+                                </div>
+                                <div class="t-form-group" style="margin-bottom:0;">
+                                    <label class="t-form-label" style="font-size:0.85em;">\u6700\u5C0F\u6587\u672C\u957F\u5EA6\uFF08\u8FC7\u77ED\u5219\u8DF3\u8FC7\uFF09</label>
+                                    <input type="number" id="cfg-clean-min-length" class="t-input" value="${data.embedding_config?.text_cleaning?.min_text_length || 20}" min="10" max="200" style="width:100px; font-size:0.9em;">
+                                    <span style="font-size:0.75em; color:#666; margin-left:8px;">\u5B57\u7B26</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- \u81EA\u52A8\u5411\u91CF\u5316\u8BBE\u7F6E -->
+                    <div style="margin-top:25px; border-top:1px solid #333; padding-top:20px;">
+                        <div class="t-form-group">
+                            <label style="cursor:pointer; display:flex; align-items:center; color:#90cdf4; font-weight:bold;">
+                                <input type="checkbox" id="cfg-auto-vectorize" ${data.embedding_config?.auto_vectorize?.enabled ? "checked" : ""} style="margin-right:10px;">
+                                \u26A1 \u542F\u7528\u81EA\u52A8\u5411\u91CF\u5316
+                            </label>
+                            <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">
+                                \u5F53\u65B0\u6D88\u606F\u7D2F\u79EF\u5230\u8BBE\u5B9A\u6570\u91CF\u540E\uFF0C\u81EA\u52A8\u5728\u540E\u53F0\u6267\u884C\u5411\u91CF\u5316\u3002
+                            </p>
+                        </div>
+                        
+                        <div id="auto-vectorize-panel" style="display:${data.embedding_config?.auto_vectorize?.enabled ? "block" : "none"}; padding-left:22px; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:15px; margin-top:10px;">
+                            <div class="t-form-group" style="margin-bottom:12px;">
+                                <label class="t-form-label">\u7D2F\u79EF\u6D88\u606F\u9608\u503C</label>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <input type="number" id="cfg-auto-vectorize-threshold" class="t-input" value="${data.embedding_config?.auto_vectorize?.batch_threshold || 5}" min="3" max="50" style="width:80px;">
+                                    <span style="font-size:0.85em; color:#888;">\u6761\u6D88\u606F\u540E\u81EA\u52A8\u5411\u91CF\u5316</span>
+                                </div>
+                                <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                                    \u5EFA\u8BAE\u503C\uFF1A5-10 \u6761\u3002\u8FC7\u5C0F\u4F1A\u9891\u7E41\u8C03\u7528 API\uFF0C\u8FC7\u5927\u53EF\u80FD\u5BFC\u81F4\u5EF6\u8FDF\u3002
+                                </p>
+                            </div>
+                            <div class="t-form-group" style="margin-bottom:0;">
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-auto-vectorize-notify" ${data.embedding_config?.auto_vectorize?.notify_user !== false ? "checked" : ""} style="margin-right:10px;">
+                                    <span style="color:#ccc;">\u{1F514} \u663E\u793A\u5411\u91CF\u5316\u5B8C\u6210\u901A\u77E5</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- \u667A\u80FD\u603B\u7ED3\u8BBE\u7F6E -->
@@ -11274,6 +11424,9 @@ function openSettingsWindow() {
   initSummaryProfileSelect();
   $("#t-btn-fetch-embed").on("click", () => fetchEmbedModelList(true));
   $("#btn-test-embed").on("click", testEmbeddingConnection2);
+  $("#cfg-auto-vectorize").on("change", function() {
+    $("#auto-vectorize-panel").toggle($(this).is(":checked"));
+  });
   const toolbarConfig = data.quick_toolbar || {};
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
@@ -11597,7 +11750,26 @@ ${JSON.stringify(l.details, null, 2)}`;
       url: $("#cfg-embed-url").val().trim(),
       key: $("#cfg-embed-key").val().trim(),
       model: $("#cfg-embed-model").val() || "text-embedding-3-small",
-      dimensions: parseInt($("#cfg-embed-dimensions").val()) || null
+      dimensions: parseInt($("#cfg-embed-dimensions").val()) || null,
+      // 文本清洗设置
+      text_cleaning: {
+        remove_html_tags: $("#cfg-clean-html").is(":checked"),
+        remove_style_tags: $("#cfg-clean-style").is(":checked"),
+        remove_thinking_tags: $("#cfg-clean-thinking").is(":checked"),
+        remove_ooc_tags: $("#cfg-clean-ooc").is(":checked"),
+        remove_system_tags: $("#cfg-clean-system").is(":checked"),
+        remove_markdown: $("#cfg-clean-markdown").is(":checked"),
+        remove_macro_residue: $("#cfg-clean-macro").is(":checked"),
+        remove_bracket_markers: $("#cfg-clean-bracket").is(":checked"),
+        custom_tags_to_remove: $("#cfg-clean-custom-tags").val().trim(),
+        min_text_length: parseInt($("#cfg-clean-min-length").val()) || 20
+      },
+      // 自动向量化设置
+      auto_vectorize: {
+        enabled: $("#cfg-auto-vectorize").is(":checked"),
+        batch_threshold: parseInt($("#cfg-auto-vectorize-threshold").val()) || 5,
+        notify_user: $("#cfg-auto-vectorize-notify").is(":checked")
+      }
     };
     d.summarizer_config = {
       selected_profile_id: $("#cfg-summary-profile").val() || null,
@@ -13796,6 +13968,144 @@ var init_semanticSearch = __esm({
   }
 });
 
+// src/core/textCleaner.js
+function getTextCleaningConfig() {
+  const data = getExtData();
+  const embeddingConfig = data.embedding_config || {};
+  return embeddingConfig.text_cleaning || {
+    remove_html_tags: true,
+    remove_style_tags: true,
+    remove_thinking_tags: true,
+    remove_ooc_tags: true,
+    remove_system_tags: true,
+    remove_markdown: false,
+    remove_macro_residue: true,
+    remove_bracket_markers: true,
+    custom_tags_to_remove: "",
+    min_text_length: 20
+  };
+}
+function removeTagsWithContent(text, tags) {
+  if (!text || !tags || tags.length === 0) return text;
+  let result = text;
+  for (const tag of tags) {
+    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, "gi");
+    result = result.replace(regex, "");
+  }
+  return result;
+}
+function removeHtmlTagsKeepContent(text) {
+  if (!text) return text;
+  return text.replace(/<[^>]*>/g, "");
+}
+function removeMarkdownFormatting(text) {
+  if (!text) return text;
+  let result = text;
+  result = result.replace(/\*\*([^*]+)\*\*/g, "$1");
+  result = result.replace(/__([^_]+)__/g, "$1");
+  result = result.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "$1");
+  result = result.replace(/(?<!_)_([^_\n]+)_(?!_)/g, "$1");
+  result = result.replace(/~~([^~]+)~~/g, "$1");
+  result = result.replace(/`([^`]+)`/g, "$1");
+  result = result.replace(/```[\s\S]*?```/g, "");
+  result = result.replace(/^#{1,6}\s+/gm, "");
+  result = result.replace(/^\s*[-*+]\s+/gm, "");
+  result = result.replace(/^\s*\d+\.\s+/gm, "");
+  result = result.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  result = result.replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1");
+  return result;
+}
+function removeMacroResidue(text) {
+  if (!text) return text;
+  return text.replace(/\{\{[^}]+\}\}/g, "");
+}
+function removeBracketMarkers(text) {
+  if (!text) return text;
+  return text.replace(/\[(System|OOC|Note|Author'?s?\s*Note|TL|T\/L|Narrator|A\/N)[^\]]*\]/gi, "");
+}
+function normalizeWhitespace(text) {
+  if (!text) return text;
+  let result = text;
+  result = result.replace(/\n{3,}/g, "\n\n");
+  result = result.replace(/[ \t]+/g, " ");
+  result = result.split("\n").map((line) => line.trim()).join("\n");
+  return result.trim();
+}
+function cleanTextForEmbedding(text, customConfig = null) {
+  if (!text || typeof text !== "string") return "";
+  const config = customConfig || getTextCleaningConfig();
+  let cleaned = text;
+  if (config.remove_style_tags) {
+    cleaned = removeTagsWithContent(cleaned, ["style", "script"]);
+  }
+  if (config.remove_thinking_tags) {
+    cleaned = removeTagsWithContent(cleaned, ["thinking", "think", "thought", "thoughts"]);
+  }
+  if (config.remove_ooc_tags) {
+    cleaned = removeTagsWithContent(cleaned, ["ooc", "OOC"]);
+  }
+  if (config.remove_system_tags) {
+    cleaned = removeTagsWithContent(cleaned, [
+      "system",
+      "note",
+      "notes",
+      "meta",
+      "debug",
+      "comment",
+      "aside",
+      "internal",
+      "analysis",
+      "reflection",
+      "planning",
+      "author_note"
+    ]);
+  }
+  if (config.custom_tags_to_remove && config.custom_tags_to_remove.trim()) {
+    const customTags = config.custom_tags_to_remove.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
+    if (customTags.length > 0) {
+      cleaned = removeTagsWithContent(cleaned, customTags);
+    }
+  }
+  if (config.remove_html_tags) {
+    cleaned = removeHtmlTagsKeepContent(cleaned);
+  }
+  if (config.remove_markdown) {
+    cleaned = removeMarkdownFormatting(cleaned);
+  }
+  if (config.remove_macro_residue) {
+    cleaned = removeMacroResidue(cleaned);
+  }
+  if (config.remove_bracket_markers) {
+    cleaned = removeBracketMarkers(cleaned);
+  }
+  cleaned = normalizeWhitespace(cleaned);
+  return cleaned;
+}
+function isValidCleanedText(cleanedText, minLength = null) {
+  if (!cleanedText || typeof cleanedText !== "string") return false;
+  const config = getTextCleaningConfig();
+  const threshold = minLength !== null ? minLength : config.min_text_length || 20;
+  return cleanedText.trim().length >= threshold;
+}
+function getCleaningStats(original, cleaned) {
+  const originalLength = original ? original.length : 0;
+  const cleanedLength = cleaned ? cleaned.length : 0;
+  const removedChars = originalLength - cleanedLength;
+  const reductionPercent = originalLength > 0 ? Math.round(removedChars / originalLength * 100) : 0;
+  return {
+    originalLength,
+    cleanedLength,
+    removedChars,
+    reductionPercent
+  };
+}
+var init_textCleaner = __esm({
+  "src/core/textCleaner.js"() {
+    init_storage();
+    init_logger();
+  }
+});
+
 // src/core/summarizer.js
 import { oai_settings as oai_settings3 } from "../../../openai.js";
 import { ChatCompletionService as ChatCompletionService3 } from "../../../custom-request.js";
@@ -14188,13 +14498,39 @@ async function buildVectorIndex(characterId, options = {}) {
   }
   TitaniaLogger.info(`\u627E\u5230 ${messagesToProcess.length} \u6761\u6D88\u606F\u9700\u8981\u5904\u7406 (\u4ECE\u7D22\u5F15 ${startIndex} \u5F00\u59CB)`);
   if (onProgress) onProgress(0, messagesToProcess.length, `\u51C6\u5907\u5904\u7406 ${messagesToProcess.length} \u6761\u6D88\u606F...`);
-  const segments = messagesToProcess.map(({ msg }) => {
+  const segments = [];
+  const cleaningStats = { total: 0, cleaned: 0, skipped: 0, totalRemoved: 0 };
+  for (const { msg } of messagesToProcess) {
     const sender = msg.is_user ? "User" : msg.name || "Character";
-    return `${sender}: ${msg.mes}`;
-  });
+    const rawText = `${sender}: ${msg.mes}`;
+    const cleanedText = cleanTextForEmbedding(rawText);
+    cleaningStats.total++;
+    if (isValidCleanedText(cleanedText)) {
+      segments.push(cleanedText);
+      cleaningStats.cleaned++;
+      const stats = getCleaningStats(rawText, cleanedText);
+      cleaningStats.totalRemoved += stats.removedChars;
+    } else {
+      cleaningStats.skipped++;
+      segments.push(null);
+    }
+  }
+  TitaniaLogger.info(`\u6587\u672C\u6E05\u6D17\u5B8C\u6210: ${cleaningStats.cleaned} \u6761\u6709\u6548, ${cleaningStats.skipped} \u6761\u8DF3\u8FC7, \u5171\u79FB\u9664 ${cleaningStats.totalRemoved} \u5B57\u7B26`);
+  const validIndices = segments.map((s, i) => s !== null ? i : -1).filter((i) => i !== -1);
+  const validSegments = segments.filter((s) => s !== null);
+  const validMessagesToProcess = validIndices.map((i) => messagesToProcess[i]);
+  if (validSegments.length === 0) {
+    TitaniaLogger.info("\u6E05\u6D17\u540E\u6CA1\u6709\u6709\u6548\u6D88\u606F\u9700\u8981\u5904\u7406");
+    return {
+      indexed: 0,
+      skipped: cleaningStats.skipped,
+      mode,
+      message: "\u6E05\u6D17\u540E\u6CA1\u6709\u6709\u6548\u6D88\u606F\u9700\u8981\u5411\u91CF\u5316"
+    };
+  }
   let vectors;
   try {
-    vectors = await getBatchEmbeddings(segments, {
+    vectors = await getBatchEmbeddings(validSegments, {
       onProgress: (current, total) => {
         if (onProgress) onProgress(current, total, `\u5411\u91CF\u5316\u4E2D... ${current}/${total}`);
       },
@@ -14204,15 +14540,16 @@ async function buildVectorIndex(characterId, options = {}) {
     TitaniaLogger.error("\u6279\u91CF\u5411\u91CF\u5316\u5931\u8D25", e);
     throw new Error("\u5411\u91CF\u5316\u5931\u8D25: " + e.message);
   }
-  if (onProgress) onProgress(messagesToProcess.length, messagesToProcess.length, "\u6B63\u5728\u4FDD\u5B58\u5230\u6570\u636E\u5E93...");
-  const entries = messagesToProcess.map(({ msg, originalIndex }, i) => ({
+  if (onProgress) onProgress(validMessagesToProcess.length, validMessagesToProcess.length, "\u6B63\u5728\u4FDD\u5B58\u5230\u6570\u636E\u5E93...");
+  const entries = validMessagesToProcess.map(({ msg, originalIndex }, i) => ({
     messageIndex: originalIndex,
     // 使用聊天历史中的真实索引
-    text: segments[i],
+    text: validSegments[i],
     vector: vectors[i]
   }));
   const savedCount = await saveBatchEmbeddings(characterId, entries);
   const lastProcessedIndex = messagesToProcess.length > 0 ? messagesToProcess[messagesToProcess.length - 1].originalIndex : startIndex - 1;
+  const currentEmbeddingModel = getEmbeddingConfig().model;
   const existingMetadata = await getIndexStatus(characterId);
   const previousIndexedCount = existingMetadata?.actualVectorCount || 0;
   await updateIndexMetadata(characterId, {
@@ -14220,16 +14557,103 @@ async function buildVectorIndex(characterId, options = {}) {
     lastMessageIndex: lastProcessedIndex,
     // 记录最后处理的消息索引
     lastIndexedAt: Date.now(),
-    indexMode: mode
+    indexMode: mode,
+    embeddingModel: currentEmbeddingModel
+    // 记录使用的模型
   });
   TitaniaLogger.info(`\u5411\u91CF\u7D22\u5F15${mode === "incremental" ? "\u589E\u91CF\u66F4\u65B0" : "\u5EFA\u7ACB"}\u5B8C\u6210: ${savedCount} \u6761\u5DF2\u7D22\u5F15`);
   return {
     indexed: savedCount,
-    skipped: messagesToProcess.length - savedCount,
+    skipped: cleaningStats.skipped + (validMessagesToProcess.length - savedCount),
     mode,
     totalInDatabase: previousIndexedCount + savedCount,
+    cleaningStats,
     message: mode === "incremental" ? `\u589E\u91CF\u6DFB\u52A0 ${savedCount} \u6761\u5411\u91CF\uFF08\u603B\u8BA1 ${previousIndexedCount + savedCount} \u6761\uFF09` : `\u5DF2\u7D22\u5F15 ${savedCount} \u6761\u6D88\u606F`
   };
+}
+function getAutoVectorizeConfig() {
+  const data = getExtData();
+  const embeddingConfig = data.embedding_config || {};
+  return embeddingConfig.auto_vectorize || {
+    enabled: false,
+    batch_threshold: 5,
+    notify_user: true
+  };
+}
+async function checkAutoVectorizeNeeded(characterId) {
+  const config = getAutoVectorizeConfig();
+  if (!config.enabled) {
+    return { needsVectorize: false, pendingCount: 0 };
+  }
+  let currentTotalMessages = 0;
+  try {
+    if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+      const ctx = SillyTavern.getContext();
+      currentTotalMessages = ctx.chat?.length || 0;
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u5F53\u524D\u6D88\u606F\u603B\u6570\u5931\u8D25", e);
+    return { needsVectorize: false, pendingCount: 0 };
+  }
+  const indexStatus = await getIndexStatus(characterId);
+  const lastIndexedMessage = indexStatus?.lastMessageIndex ?? -1;
+  const pendingCount = currentTotalMessages - lastIndexedMessage - 1;
+  const needsVectorize = pendingCount >= config.batch_threshold;
+  return { needsVectorize, pendingCount };
+}
+async function autoVectorizeIfNeeded(characterId) {
+  const config = getAutoVectorizeConfig();
+  if (!config.enabled) {
+    return null;
+  }
+  if (autoVectorizeState.isProcessing) {
+    TitaniaLogger.info("\u81EA\u52A8\u5411\u91CF\u5316\u6B63\u5728\u8FDB\u884C\u4E2D\uFF0C\u8DF3\u8FC7");
+    return null;
+  }
+  const { needsVectorize, pendingCount } = await checkAutoVectorizeNeeded(characterId);
+  if (!needsVectorize) {
+    TitaniaLogger.info(`\u672A\u8FBE\u5230\u81EA\u52A8\u5411\u91CF\u5316\u9608\u503C (${pendingCount}/${config.batch_threshold})`);
+    return null;
+  }
+  autoVectorizeState.isProcessing = true;
+  autoVectorizeState.lastCharacterId = characterId;
+  try {
+    TitaniaLogger.info(`\u89E6\u53D1\u81EA\u52A8\u5411\u91CF\u5316: ${pendingCount} \u6761\u5F85\u5904\u7406\u6D88\u606F`);
+    const result = await buildVectorIndex(characterId, {
+      incremental: true,
+      onProgress: (current, total, status) => {
+      }
+    });
+    if (config.notify_user && result.indexed > 0 && window.toastr) {
+      toastr.success(
+        `\u81EA\u52A8\u7D22\u5F15\u4E86 ${result.indexed} \u6761\u6D88\u606F`,
+        "Titania \u5411\u91CF\u5316",
+        { timeOut: 3e3 }
+      );
+    }
+    return result;
+  } catch (e) {
+    TitaniaLogger.error("\u81EA\u52A8\u5411\u91CF\u5316\u5931\u8D25", e);
+    if (config.notify_user && window.toastr) {
+      toastr.warning("\u81EA\u52A8\u5411\u91CF\u5316\u5931\u8D25: " + e.message, "Titania");
+    }
+    return null;
+  } finally {
+    autoVectorizeState.isProcessing = false;
+  }
+}
+async function incrementAutoVectorizeCounter(characterId) {
+  const config = getAutoVectorizeConfig();
+  if (!config.enabled) return;
+  if (autoVectorizeState.lastCharacterId !== characterId) {
+    autoVectorizeState.pendingCount = 0;
+    autoVectorizeState.lastCharacterId = characterId;
+  }
+  autoVectorizeState.pendingCount++;
+  if (autoVectorizeState.pendingCount >= config.batch_threshold) {
+    autoVectorizeState.pendingCount = 0;
+    await autoVectorizeIfNeeded(characterId);
+  }
 }
 function summaryToLoreEntry(summary, options = {}) {
   const now = /* @__PURE__ */ new Date();
@@ -14247,7 +14671,7 @@ function summaryToLoreEntry(summary, options = {}) {
     action: "new"
   };
 }
-var FEATURE_KEY2;
+var FEATURE_KEY2, autoVectorizeState;
 var init_summarizer = __esm({
   "src/core/summarizer.js"() {
     init_helpers();
@@ -14259,7 +14683,13 @@ var init_summarizer = __esm({
     init_vectorStore();
     init_embeddings();
     init_vectorStore();
+    init_textCleaner();
     FEATURE_KEY2 = "summarizer";
+    autoVectorizeState = {
+      pendingCount: 0,
+      lastCharacterId: null,
+      isProcessing: false
+    };
   }
 });
 
@@ -15005,6 +15435,16 @@ async function showLoreReviewWindow() {
                         </div>
 
                         <div class="t-action-group" style="margin-top: 20px;">
+                            <h4><i class="fa-solid fa-broom"></i> \u6587\u672C\u6E05\u6D17\u9884\u89C8</h4>
+                            <p style="color: #888; font-size: 0.85em; margin-bottom: 10px;">
+                                \u9884\u89C8\u5411\u91CF\u5316\u524D\u7684\u6587\u672C\u6E05\u6D17\u6548\u679C\uFF0C\u67E5\u770B\u54EA\u4E9B\u5185\u5BB9\u4F1A\u88AB\u79FB\u9664\u3002
+                            </p>
+                            <button id="t-btn-preview-cleaning" class="t-btn">
+                                <i class="fa-solid fa-eye"></i> \u9884\u89C8\u6E05\u6D17\u6548\u679C
+                            </button>
+                        </div>
+
+                        <div class="t-action-group" style="margin-top: 20px;">
                             <h4><i class="fa-solid fa-plug"></i> Embedding API \u914D\u7F6E</h4>
                             <p style="color: #888; font-size: 0.85em; margin-bottom: 10px;">
                                 \u5411\u91CF\u5316\u9700\u8981\u4E13\u7528\u7684 Embedding API\uFF0C\u8BF7\u5728\u300C\u8BBE\u7F6E\u300D\u4E2D\u914D\u7F6E\u3002
@@ -15583,6 +16023,25 @@ function bindEvents() {
       $btn.prop("disabled", false);
     }
   });
+  $("#t-btn-preview-cleaning").on("click", async function() {
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u52A0\u8F7D\u4E2D...');
+    try {
+      const chatHistory = getChatHistory();
+      if (!chatHistory || chatHistory.length === 0) {
+        if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u9884\u89C8\u7684\u804A\u5929\u5386\u53F2", "\u65E0\u6570\u636E");
+        return;
+      }
+      const sampleCount = Math.min(5, chatHistory.length);
+      const samples = chatHistory.slice(-sampleCount);
+      showCleaningPreviewDialog(samples);
+    } catch (e) {
+      TitaniaLogger.error("\u9884\u89C8\u6E05\u6D17\u6548\u679C\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u9884\u89C8\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-eye"></i> \u9884\u89C8\u6E05\u6D17\u6548\u679C');
+    }
+  });
   $("#t-btn-test-embedding").on("click", async function() {
     const $btn = $(this);
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u6D4B\u8BD5\u4E2D...');
@@ -16027,6 +16486,340 @@ function showPromptPreviewDialog(messages, stats = {}) {
     });
   });
 }
+function showCleaningPreviewDialog(samples) {
+  $("#t-cleaning-preview-dialog").remove();
+  const config = getTextCleaningConfig();
+  const cleanedSamples = samples.map((msg, index) => {
+    const originalText = msg.mes || msg.message || "";
+    const role = msg.is_user ? "user" : "char";
+    const cleaned = cleanTextForEmbedding(originalText);
+    const stats = getCleaningStats(originalText, cleaned);
+    return {
+      index: samples.length - index,
+      // 倒序编号，最新的消息编号最大
+      role,
+      roleName: msg.is_user ? "\u7528\u6237" : msg.name || "\u89D2\u8272",
+      original: originalText,
+      cleaned,
+      stats,
+      isValid: cleaned.trim().length >= (config.min_text_length || 20)
+    };
+  });
+  const totalOriginalLength = cleanedSamples.reduce((sum, s) => sum + s.stats.originalLength, 0);
+  const totalCleanedLength = cleanedSamples.reduce((sum, s) => sum + s.stats.cleanedLength, 0);
+  const totalReduction = totalOriginalLength > 0 ? Math.round((totalOriginalLength - totalCleanedLength) / totalOriginalLength * 100) : 0;
+  const validCount = cleanedSamples.filter((s) => s.isValid).length;
+  const configItems = [
+    { name: "HTML\u6807\u7B7E", enabled: config.remove_html_tags },
+    { name: "Style\u6807\u7B7E", enabled: config.remove_style_tags },
+    { name: "\u601D\u8003\u6807\u7B7E", enabled: config.remove_thinking_tags },
+    { name: "OOC\u6807\u7B7E", enabled: config.remove_ooc_tags },
+    { name: "\u7CFB\u7EDF\u6807\u7B7E", enabled: config.remove_system_tags },
+    { name: "Markdown", enabled: config.remove_markdown },
+    { name: "\u5B8F\u6B8B\u7559", enabled: config.remove_macro_residue },
+    { name: "\u65B9\u62EC\u53F7\u6807\u8BB0", enabled: config.remove_bracket_markers }
+  ];
+  const configHtml = configItems.map(
+    (item) => `<span class="t-config-tag ${item.enabled ? "t-config-enabled" : "t-config-disabled"}">
+            <i class="fa-solid ${item.enabled ? "fa-check" : "fa-times"}"></i> ${item.name}
+        </span>`
+  ).join("");
+  const messagesHtml = cleanedSamples.map((sample) => `
+        <div class="t-cleaning-sample ${sample.isValid ? "" : "t-sample-invalid"}">
+            <div class="t-sample-header">
+                <span class="t-sample-role ${sample.role === "user" ? "t-role-user" : "t-role-char"}">
+                    <i class="fa-solid ${sample.role === "user" ? "fa-user" : "fa-robot"}"></i>
+                    ${sample.roleName}
+                </span>
+                <span class="t-sample-stats">
+                    ${sample.stats.originalLength} \u2192 ${sample.stats.cleanedLength} \u5B57\u7B26
+                    <span class="t-reduction ${sample.stats.reductionPercent > 0 ? "t-has-reduction" : ""}">
+                        (-${sample.stats.reductionPercent}%)
+                    </span>
+                    ${!sample.isValid ? '<span class="t-invalid-badge"><i class="fa-solid fa-exclamation-triangle"></i> \u8FC7\u77ED</span>' : ""}
+                </span>
+            </div>
+            <div class="t-sample-content">
+                <div class="t-sample-pane t-pane-original">
+                    <div class="t-pane-header"><i class="fa-solid fa-file-alt"></i> \u539F\u59CB\u6587\u672C</div>
+                    <div class="t-pane-body">${escapeHtml2(sample.original || "(\u7A7A)")}</div>
+                </div>
+                <div class="t-sample-pane t-pane-cleaned">
+                    <div class="t-pane-header"><i class="fa-solid fa-broom"></i> \u6E05\u6D17\u540E</div>
+                    <div class="t-pane-body">${escapeHtml2(sample.cleaned || "(\u7A7A)")}</div>
+                </div>
+            </div>
+        </div>
+    `).join("");
+  const html = `
+    <div id="t-cleaning-preview-dialog" class="t-dialog-overlay">
+        <div class="t-dialog-box t-cleaning-preview-box" style="max-width: 1000px; max-height: 85vh;">
+            <div class="t-dialog-header">
+                <span><i class="fa-solid fa-broom"></i> \u6587\u672C\u6E05\u6D17\u9884\u89C8</span>
+                <div class="t-dialog-close" id="t-cleaning-preview-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-dialog-body" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                <!-- \u7EDF\u8BA1\u4FE1\u606F\u680F -->
+                <div class="t-cleaning-stats-bar">
+                    <div class="t-cleaning-stat">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>\u6837\u672C\u6D88\u606F: <strong>${cleanedSamples.length}</strong> \u6761</span>
+                    </div>
+                    <div class="t-cleaning-stat">
+                        <i class="fa-solid fa-compress-arrows-alt"></i>
+                        <span>\u603B\u538B\u7F29\u7387: <strong>${totalReduction}%</strong></span>
+                    </div>
+                    <div class="t-cleaning-stat">
+                        <i class="fa-solid fa-check-circle" style="color: ${validCount === cleanedSamples.length ? "#2ecc71" : "#f39c12"};"></i>
+                        <span>\u6709\u6548\u6D88\u606F: <strong>${validCount}/${cleanedSamples.length}</strong></span>
+                    </div>
+                    <div class="t-cleaning-stat">
+                        <i class="fa-solid fa-ruler"></i>
+                        <span>\u6700\u5C0F\u957F\u5EA6: <strong>${config.min_text_length || 20}</strong> \u5B57\u7B26</span>
+                    </div>
+                </div>
+
+                <!-- \u5F53\u524D\u914D\u7F6E\u5C55\u793A -->
+                <div class="t-cleaning-config-bar">
+                    <span class="t-config-label"><i class="fa-solid fa-cog"></i> \u5F53\u524D\u6E05\u6D17\u89C4\u5219:</span>
+                    <div class="t-config-tags">${configHtml}</div>
+                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml2(config.custom_tags_to_remove)}</span>` : ""}
+                </div>
+
+                <!-- \u6D88\u606F\u9884\u89C8\u5217\u8868 -->
+                <div class="t-cleaning-samples-container">
+                    ${messagesHtml}
+                </div>
+            </div>
+            <div class="t-dialog-footer">
+                <div class="t-footer-hint">
+                    <i class="fa-solid fa-info-circle"></i>
+                    <span>\u9884\u89C8\u663E\u793A\u6700\u8FD1 ${cleanedSamples.length} \u6761\u6D88\u606F\u7684\u6E05\u6D17\u6548\u679C\u3002\u53EF\u5728\u300C\u8BBE\u7F6E \u2192 Embedding\u300D\u4E2D\u8C03\u6574\u6E05\u6D17\u89C4\u5219\u3002</span>
+                </div>
+                <button id="t-btn-close-cleaning-preview" class="t-btn">\u5173\u95ED</button>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  if (!document.getElementById("t-cleaning-preview-styles")) {
+    const styles = `
+        <style id="t-cleaning-preview-styles">
+            .t-cleaning-preview-box {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .t-cleaning-stats-bar {
+                display: flex;
+                gap: 20px;
+                padding: 12px 16px;
+                background: rgba(0, 0, 0, 0.2);
+                border-bottom: 1px solid #333;
+                flex-wrap: wrap;
+            }
+
+            .t-cleaning-stat {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                color: #aaa;
+                font-size: 0.9em;
+            }
+
+            .t-cleaning-stat i {
+                color: #666;
+            }
+
+            .t-cleaning-stat strong {
+                color: #fff;
+            }
+
+            .t-cleaning-config-bar {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 16px;
+                background: rgba(0, 0, 0, 0.1);
+                border-bottom: 1px solid #333;
+                flex-wrap: wrap;
+            }
+
+            .t-cleaning-config-bar .t-config-label {
+                color: #888;
+                font-size: 0.85em;
+            }
+
+            .t-config-tags {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .t-config-tag {
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.8em;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .t-config-enabled {
+                background: rgba(46, 204, 113, 0.2);
+                color: #2ecc71;
+            }
+
+            .t-config-disabled {
+                background: rgba(136, 136, 136, 0.2);
+                color: #666;
+            }
+
+            .t-custom-tags {
+                color: #f39c12;
+                font-size: 0.8em;
+                margin-left: auto;
+            }
+
+            .t-cleaning-samples-container {
+                flex: 1;
+                overflow-y: auto;
+                padding: 16px;
+            }
+
+            .t-cleaning-sample {
+                margin-bottom: 16px;
+                border: 1px solid #333;
+                border-radius: 8px;
+                overflow: hidden;
+                background: rgba(0, 0, 0, 0.2);
+            }
+
+            .t-cleaning-sample.t-sample-invalid {
+                border-color: rgba(243, 156, 18, 0.5);
+            }
+
+            .t-sample-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 14px;
+                background: rgba(0, 0, 0, 0.3);
+                border-bottom: 1px solid #333;
+            }
+
+            .t-sample-role {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-weight: 500;
+            }
+
+            .t-role-user {
+                color: #3498db;
+            }
+
+            .t-role-char {
+                color: #9b59b6;
+            }
+
+            .t-sample-stats {
+                color: #888;
+                font-size: 0.85em;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .t-reduction {
+                color: #666;
+            }
+
+            .t-reduction.t-has-reduction {
+                color: #2ecc71;
+            }
+
+            .t-invalid-badge {
+                background: rgba(243, 156, 18, 0.2);
+                color: #f39c12;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85em;
+            }
+
+            .t-sample-content {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1px;
+                background: #333;
+            }
+
+            .t-sample-pane {
+                background: #1e1e2e;
+            }
+
+            .t-pane-header {
+                padding: 8px 12px;
+                background: rgba(0, 0, 0, 0.2);
+                color: #888;
+                font-size: 0.8em;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .t-pane-original .t-pane-header {
+                color: #e74c3c;
+            }
+
+            .t-pane-cleaned .t-pane-header {
+                color: #2ecc71;
+            }
+
+            .t-pane-body {
+                padding: 12px;
+                font-size: 0.9em;
+                line-height: 1.5;
+                color: #ccc;
+                max-height: 200px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+
+            .t-footer-hint {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #666;
+                font-size: 0.85em;
+            }
+
+            .t-footer-hint i {
+                color: #3498db;
+            }
+
+            @media (max-width: 768px) {
+                .t-sample-content {
+                    grid-template-columns: 1fr;
+                }
+
+                .t-cleaning-stats-bar {
+                    gap: 12px;
+                }
+
+                .t-cleaning-stat {
+                    font-size: 0.8em;
+                }
+            }
+        </style>
+        `;
+    $("head").append(styles);
+  }
+  $("#t-cleaning-preview-close, #t-btn-close-cleaning-preview").on("click", () => {
+    $("#t-cleaning-preview-dialog").remove();
+  });
+}
 var FEATURE_KEY3, _hideChatMessageRange, currentEntries, lastRawResponse, lastSummary, lastSummaryMessages, currentCharacterId, currentCharacterName, currentMode, currentTotalFloors, lastAnalyzedRange;
 var init_loreReviewWindow = __esm({
   "src/ui/loreReviewWindow.js"() {
@@ -16038,6 +16831,7 @@ var init_loreReviewWindow = __esm({
     init_storage();
     init_context();
     init_summarizer();
+    init_textCleaner();
     init_embeddings();
     init_vectorStore();
     FEATURE_KEY3 = "lore_extractor";
@@ -16158,18 +16952,13 @@ async function openMainWindow() {
 
             <div class="t-content-wrapper">
                 <div class="t-stats-hud" id="t-stats-hud" style="display:none;">
-                    <div class="t-stats-row">
-                        <span class="t-stats-label">\u5B57\u7B26</span>
-                        <span class="t-stats-value" id="t-stat-total">0</span>
-                    </div>
-                    <div class="t-stats-row">
-                        <span class="t-stats-label">\u4E2D\u6587</span>
-                        <span class="t-stats-value" id="t-stat-chinese">0</span>
-                    </div>
-                    <div class="t-stats-row">
-                        <span class="t-stats-label">Token</span>
-                        <span class="t-stats-value" id="t-stat-tokens">~0</span>
-                    </div>
+                    <span class="t-stats-item"><span class="t-stats-label">\u6A21\u578B</span><span class="t-stats-value" id="t-stat-model">-</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u5B57\u7B26</span><span class="t-stats-value" id="t-stat-total">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u4E2D\u6587</span><span class="t-stats-value" id="t-stat-chinese">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">Token</span><span class="t-stats-value" id="t-stat-tokens">~0</span></span>
                 </div>
                 <div class="t-tools-btn" id="t-btn-tools" title="\u5185\u5BB9\u5DE5\u5177"><i class="fa-solid fa-ellipsis-vertical"></i></div>
                 <div class="t-tools-panel" id="t-tools-panel" style="display:none;">
@@ -16508,6 +17297,9 @@ function updateContentStatsDisplay(stats) {
     return;
   }
   const formatNumber = (num) => num.toLocaleString();
+  const modelName = stats.modelName || GlobalState.lastUsedModelName || "-";
+  const displayModelName = modelName.length > 20 ? modelName.substring(0, 18) + "\u2026" : modelName;
+  $("#t-stat-model").text(displayModelName).attr("title", modelName);
   $("#t-stat-total").text(formatNumber(stats.totalChars));
   $("#t-stat-chinese").text(formatNumber(stats.chineseChars));
   const tokenText = stats.isEstimated ? `~${formatNumber(stats.tokens)}` : formatNumber(stats.tokens);
@@ -18583,13 +19375,16 @@ ${processedPrompt}`;
     resetContinuationState();
     pushSceneToHistory(finalOutput, script.id, script.name);
     diagnostics.phase = "complete";
+    GlobalState.lastUsedModelName = finalModel;
     const stats = countContentStats(finalOutput);
     GlobalState.contentStats = {
       totalChars: stats.totalChars,
       chineseChars: stats.chineseChars,
       tokens: stats.estimatedTokens,
-      isEstimated: true
+      isEstimated: true,
       // 默认为估算值
+      modelName: finalModel
+      // 添加模型名称
     };
     if ($("#t-stats-hud").length > 0) {
       updateContentStatsDisplay(GlobalState.contentStats);
@@ -18845,7 +19640,9 @@ Generate ONLY the continuation (no repetition):`;
         totalChars: stats.totalChars,
         chineseChars: stats.chineseChars,
         tokens: stats.estimatedTokens,
-        isEstimated: true
+        isEstimated: true,
+        modelName: finalModel
+        // 添加模型名称
       };
       if ($("#t-output-content").length > 0) {
         renderGeneratedContent(finalOutput, script.name);
@@ -18916,6 +19713,7 @@ init_floatingBtn();
 init_settingsWindow();
 init_mainWindow();
 init_vectorStore();
+init_summarizer();
 import { extension_settings as extension_settings3 } from "../../../extensions.js";
 import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 async function onGenerationEnded() {
@@ -19013,6 +19811,33 @@ function initCoreFeatures() {
   eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
   initSyncListener();
   initVectorUnsavedWarning();
+  initAutoVectorizeListener();
+}
+function initAutoVectorizeListener() {
+  eventSource2.on(event_types2.MESSAGE_RECEIVED, onMessageForAutoVectorize);
+  eventSource2.on(event_types2.MESSAGE_SENT, onMessageForAutoVectorize);
+  console.log("Titania: \u81EA\u52A8\u5411\u91CF\u5316\u76D1\u542C\u5668\u5DF2\u521D\u59CB\u5316");
+}
+async function onMessageForAutoVectorize() {
+  const config = getAutoVectorizeConfig();
+  if (!config.enabled) return;
+  if (!SillyTavern || !SillyTavern.getContext) return;
+  let characterId;
+  try {
+    const context = SillyTavern.getContext();
+    characterId = context?.characterId?.toString();
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u89D2\u8272 ID \u5931\u8D25", e);
+    return;
+  }
+  if (!characterId) return;
+  setTimeout(async () => {
+    try {
+      await incrementAutoVectorizeCounter(characterId);
+    } catch (e) {
+      console.warn("Titania: \u81EA\u52A8\u5411\u91CF\u5316\u68C0\u67E5\u5931\u8D25", e);
+    }
+  }, 1e3);
 }
 function initVectorUnsavedWarning() {
   window.addEventListener("beforeunload", async (e) => {
