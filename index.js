@@ -22,14 +22,14 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.2.7";
+    CURRENT_VERSION = "3.2.8";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.2.8": "\u{1F3AD} \u961F\u5217\u751F\u6210\uFF1A\u6279\u91CF\u521B\u4F5C\u591A\u4E2A\u5267\u672C\u573A\u666F\uFF0C\u652F\u6301\u968F\u673A\u62BD\u53D6\u6216\u624B\u52A8\u9009\u62E9\u6A21\u5F0F<br>\u{1F518} \u53CC\u6309\u94AE\u8BBE\u8BA1\uFF1A\u5355\u6B21\u6F14\u7ECE\u4E0E\u961F\u5217\u751F\u6210\u5E76\u5217\u6309\u94AE\uFF0C\u64CD\u4F5C\u66F4\u76F4\u89C2<br>\u{1F4BE} \u8BBE\u7F6E\u8BB0\u5FC6\uFF1A\u961F\u5217\u914D\u7F6E\u81EA\u52A8\u4FDD\u5B58\uFF0C\u4E0B\u6B21\u6253\u5F00\u65E0\u9700\u91CD\u65B0\u8BBE\u7F6E<br>\u{1FA7A} \u8BCA\u65AD\u65E5\u5FD7\u5165\u53E3\uFF1A\u4E3B\u7A97\u53E3\u5E95\u90E8\u65B0\u589E\u8BCA\u65AD\u6309\u94AE\uFF0C\u5B9E\u65F6\u67E5\u770B\u63D2\u4EF6\u65E5\u5FD7",
       "3.2.7": "\u{1F527} \u4FEE\u590D\u957F\u54CD\u5E94\u622A\u65AD\uFF1A\u4F7F\u7528 ST \u7684 EventSourceStream \u6B63\u786E\u5904\u7406 SSE \u6D41\uFF0C\u652F\u6301\u63A5\u6536\u4E0A\u4E07 token \u7684\u5B8C\u6574\u54CD\u5E94<br>\u26A1 \u5B9E\u65F6\u6D41\u5F0F\u6E32\u67D3\uFF1A\u5185\u5BB9\u8FB9\u751F\u6210\u8FB9\u663E\u793A\uFF0C\u65E0\u9700\u7B49\u5F85\u5B8C\u6574\u54CD\u5E94\uFF0C\u5927\u5E45\u63D0\u5347\u4F53\u9A8C<br>\u23F1\uFE0F \u7EDF\u8BA1 HUD \u4F18\u5316\uFF1A\u5220\u9664 Token \u4F30\u7B97\uFF0C\u6539\u4E3A\u663E\u793A\u751F\u6210\u8017\u65F6<br>\u{1F3AF} \u7FFB\u9875\u6309\u94AE\u4F18\u5316\uFF1A\u6539\u4E3A\u5185\u5BB9\u533A\u5DE6\u53F3\u4E24\u4FA7\u7B80\u6D01\u7684 < > \u6309\u94AE\uFF0C\u51CF\u5C11\u89C6\u89C9\u5E72\u6270",
-      "3.2.6": "\u{1F9F9} \u5411\u91CF\u5316\u6587\u672C\u6E05\u6D17\uFF1A\u65B0\u589E\u6587\u672C\u6E05\u6D17\u6A21\u5757\uFF0C\u5411\u91CF\u5316\u524D\u81EA\u52A8\u79FB\u9664 HTML/\u601D\u8003\u6807\u7B7E/OOC \u7B49\u65E0\u5173\u5185\u5BB9<br>\u{1F504} \u81EA\u52A8\u5411\u91CF\u5316\uFF1A\u652F\u6301\u7D2F\u79EF\u6D88\u606F\u81EA\u52A8\u89E6\u53D1\u5411\u91CF\u5316\uFF0C\u53EF\u914D\u7F6E\u89E6\u53D1\u9608\u503C<br>\u{1F441}\uFE0F \u6E05\u6D17\u6548\u679C\u9884\u89C8\uFF1A\u5411\u91CF\u7D22\u5F15\u9762\u677F\u65B0\u589E\u300C\u9884\u89C8\u6E05\u6D17\u6548\u679C\u300D\u529F\u80FD\uFF0C\u67E5\u770B\u539F\u6587\u4E0E\u6E05\u6D17\u540E\u5BF9\u6BD4<br>\u{1F4CA} \u7EDF\u8BA1\u680F\u4F18\u5316\uFF1A\u4E3B\u754C\u9762\u5B57\u6570\u7EDF\u8BA1\u6539\u4E3A\u7D27\u51D1\u6C34\u5E73\u6761\u6837\u5F0F\uFF0C\u65B0\u589E\u6A21\u578B\u540D\u79F0\u663E\u793A",
-      "3.2.5": "\u{1F504} \u6D41\u5F0F\u91CD\u8BD5\u673A\u5236\uFF1A\u6D41\u5F0F\u8BF7\u6C42\u5931\u8D25\u81EA\u52A8\u91CD\u8BD51\u6B21\uFF0C\u51CF\u5C11 Stream Interrupted \u9519\u8BEF<br>\u{1F4D6} \u4E16\u754C\u4E66\u66F4\u65B0\u589E\u5F3A\uFF1A\u667A\u80FD\u63D0\u53D6\u652F\u6301\u66F4\u65B0\u73B0\u6709\u6761\u76EE\uFF0C\u63D0\u4F9B\u539F\u6709\u5185\u5BB9\u5BF9\u6BD4\u548C\u591A\u79CD\u4FDD\u5B58\u6A21\u5F0F<br>\u{1F6E1}\uFE0F \u9875\u9762\u52A0\u8F7D\u4FDD\u62A4\uFF1A\u667A\u80FD\u63D0\u53D6\u9875\u9762\u52A0\u8F7D\u64CD\u4F5C\u6DFB\u52A08\u79D2\u8D85\u65F6\u4FDD\u62A4\uFF0C\u907F\u514D\u5361\u6B7B<br>\u{1F527} \u589E\u91CF\u5411\u91CF\u5316\u4FEE\u590D\uFF1A\u4FEE\u590D\u589E\u91CF\u66F4\u65B0\u65F6\u91CD\u590D\u7D22\u5F15\u95EE\u9898"
+      "3.2.6": "\u{1F9F9} \u5411\u91CF\u5316\u6587\u672C\u6E05\u6D17\uFF1A\u65B0\u589E\u6587\u672C\u6E05\u6D17\u6A21\u5757\uFF0C\u5411\u91CF\u5316\u524D\u81EA\u52A8\u79FB\u9664 HTML/\u601D\u8003\u6807\u7B7E/OOC \u7B49\u65E0\u5173\u5185\u5BB9<br>\u{1F504} \u81EA\u52A8\u5411\u91CF\u5316\uFF1A\u652F\u6301\u7D2F\u79EF\u6D88\u606F\u81EA\u52A8\u89E6\u53D1\u5411\u91CF\u5316\uFF0C\u53EF\u914D\u7F6E\u89E6\u53D1\u9608\u503C<br>\u{1F441}\uFE0F \u6E05\u6D17\u6548\u679C\u9884\u89C8\uFF1A\u5411\u91CF\u7D22\u5F15\u9762\u677F\u65B0\u589E\u300C\u9884\u89C8\u6E05\u6D17\u6548\u679C\u300D\u529F\u80FD\uFF0C\u67E5\u770B\u539F\u6587\u4E0E\u6E05\u6D17\u540E\u5BF9\u6BD4<br>\u{1F4CA} \u7EDF\u8BA1\u680F\u4F18\u5316\uFF1A\u4E3B\u754C\u9762\u5B57\u6570\u7EDF\u8BA1\u6539\u4E3A\u7D27\u51D1\u6C34\u5E73\u6761\u6837\u5F0F\uFF0C\u65B0\u589E\u6A21\u578B\u540D\u79F0\u663E\u793A"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -1689,18 +1689,17 @@ textarea.t-input {
     color: #bfa15f;
 }
 
-/* Bottom Bar */
-/* \u5E95\u90E8\u680F\u5BB9\u5668\uFF1A\u9AD8\u5EA6\u589E\u52A0\u4EE5\u5BB9\u7EB3\u4E24\u884C\u6309\u94AE */
+/* Bottom Bar - \u65B0\u5E03\u5C40 */
+/* \u5E95\u90E8\u680F\u5BB9\u5668\uFF1A\u4E09\u5217\u5E03\u5C40 (\u5DE5\u5177\u533A | \u4E3B\u6309\u94AE | \u8F85\u52A9\u533A) */
 .t-bottom-bar {
-    padding: 10px 15px;
+    padding: 12px 15px;
     background: #1e1e1e;
     border-top: 1px solid #333;
     display: flex;
-    align-items: stretch;
-    /* \u8BA9\u5DE6\u53F3\u4E24\u8FB9\u9AD8\u5EA6\u81EA\u52A8\u62C9\u4F38\u5BF9\u9F50 */
+    align-items: center;
+    justify-content: space-between;
     gap: 15px;
-    height: 90px;
-    /* \u56FA\u5B9A\u9AD8\u5EA6\uFF0C\u786E\u4FDD\u5BB9\u7EB3\u53CC\u5C42\u7ED3\u6784 */
+    height: 85px;
     flex-shrink: 0;
     position: relative;
     z-index: 50;
@@ -1711,12 +1710,10 @@ textarea.t-input {
 .t-bot-left {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    /* \u4E24\u5217 */
     grid-template-rows: 1fr 1fr;
-    /* \u4E24\u884C */
     gap: 6px;
-    width: 100px;
-    /* \u56FA\u5B9A\u5BBD\u5EA6\uFF0C\u9632\u6B62\u88AB\u6324\u538B */
+    width: 95px;
+    height: 60px;
     flex-shrink: 0;
 }
 
@@ -1744,60 +1741,175 @@ textarea.t-input {
     transform: scale(0.95);
 }
 
-/* \u53F3\u4FA7\uFF1A\u64CD\u4F5C\u533A (\u4E0A\u4E0B\u5782\u76F4\u6392\u5217) */
-.t-bot-right {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-/* \u53F3\u4FA7\u6309\u94AE\u901A\u7528\u6837\u5F0F */
-.t-btn-action {
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
+/* \u4E2D\u95F4\uFF1A\u4E3B\u64CD\u4F5C\u533A (\u53CC\u6309\u94AE\u7EC4) */
+.t-bot-center {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+}
+
+/* \u53CC\u6309\u94AE\u7EC4\u5BB9\u5668 */
+.t-run-group {
+    display: flex;
+    gap: 0;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* \u901A\u7528\u6F14\u7ECE\u6309\u94AE\u6837\u5F0F */
+.t-run-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 18px;
+    min-width: 90px;
+    height: 55px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.75em;
     transition: all 0.2s;
-    border: 1px solid transparent;
+    line-height: 1.2;
 }
 
-/* \u4E0A\u65B9\uFF1A\u5F00\u59CB\u6F14\u7ECE (\u4E3B\u6309\u94AE) */
-#t-btn-run {
-    flex: 3;
-    /* \u5360\u636E\u66F4\u591A\u9AD8\u5EA6 (60%) */
-    background: linear-gradient(90deg, #bfa15f, #d4c08b);
+.t-run-btn i {
+    font-size: 1.3em;
+}
+
+.t-run-btn span {
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.t-run-btn:active {
+    transform: scale(0.98);
+}
+
+.t-run-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* \u5355\u6B21\u6F14\u7ECE\u6309\u94AE - \u9EC4\u8272\u4E3B\u9898 */
+.t-run-single {
+    background: linear-gradient(135deg, #bfa15f, #d4c08b);
     color: #1a1a1a;
-    font-size: 1.1em;
-    box-shadow: 0 2px 10px rgba(191, 161, 95, 0.2);
+    border-radius: 30px 0 0 30px;
 }
 
-#t-btn-run:hover {
-    filter: brightness(1.1);
-    box-shadow: 0 4px 15px rgba(191, 161, 95, 0.4);
+.t-run-single:hover:not(:disabled) {
+    background: linear-gradient(135deg, #d4b06b, #e5d1a0);
+    box-shadow: 0 0 15px rgba(191, 161, 95, 0.4);
 }
 
-#t-btn-run:active {
-    transform: translateY(1px);
+/* \u961F\u5217\u751F\u6210\u6309\u94AE - \u84DD\u8272\u4E3B\u9898 */
+.t-run-queue {
+    background: linear-gradient(135deg, #4a9eff, #6ab0ff);
+    color: #fff;
+    border-radius: 0 30px 30px 0;
 }
 
-/* \u4E0B\u65B9\uFF1A\u91CD\u65B0\u7F16\u8F91 (\u6B21\u6309\u94AE) */
-#t-btn-edit {
-    flex: 2;
-    /* \u5360\u636E\u8F83\u5C11\u9AD8\u5EA6 (40%) */
-    background: #252525;
-    border-color: #444;
-    color: #ccc;
+.t-run-queue:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5aafff, #7ac0ff);
+    box-shadow: 0 0 15px rgba(74, 158, 255, 0.4);
+}
+
+/* \u961F\u5217\u6309\u94AE\u6FC0\u6D3B\u72B6\u6001\uFF08\u961F\u5217\u5DF2\u914D\u7F6E\uFF09 */
+.t-run-queue.active {
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+}
+
+/* \u961F\u5217\u6309\u94AE\u672A\u6FC0\u6D3B\u63D0\u793A\u6837\u5F0F */
+.t-run-queue.inactive {
+    background: linear-gradient(135deg, #3a3a3a, #4a4a4a);
+    color: #888;
+}
+
+.t-run-queue.inactive:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4a4a4a, #5a5a5a);
+    box-shadow: none;
+}
+
+/* \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A (2x2 \u7F51\u683C\u5E03\u5C40) */
+.t-bot-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 4px;
+    width: 75px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+/* \u53F3\u4FA7\u8F85\u52A9\u6309\u94AE\u901A\u7528\u6837\u5F0F */
+.t-btn-aux {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 5px;
+    color: #aaa;
     font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-btn-aux:hover {
+    background: #383838;
+    color: #fff;
+    border-color: #666;
+}
+
+.t-btn-aux:active {
+    transform: scale(0.95);
+}
+
+/* \u961F\u5217\u8BBE\u7F6E\u6309\u94AE\u7279\u6B8A\u6837\u5F0F */
+#t-btn-queue-settings.active {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+}
+
+/* \u8BCA\u65AD\u6309\u94AE - \u6A59\u8272\u4E3B\u9898 */
+.t-btn-diag {
+    color: #f59e0b;
+}
+
+.t-btn-diag:hover {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+}
+
+/* \u7F16\u8F91\u6309\u94AE */
+#t-btn-edit {
+    color: #bfa15f;
 }
 
 #t-btn-edit:hover {
-    background: #333;
-    color: #fff;
-    border-color: #666;
+    background: rgba(191, 161, 95, 0.15);
+    border-color: rgba(191, 161, 95, 0.4);
+}
+
+/* \u4E2D\u6B62\u6309\u94AE - \u7EA2\u8272\u4E3B\u9898 */
+.t-btn-stop {
+    color: #ff6b6b;
+}
+
+.t-btn-stop:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.4);
+    color: #ff8a8a;
+}
+
+.t-btn-stop:active {
+    background: rgba(255, 107, 107, 0.25);
 }
 
 /* ... (\u4FDD\u7559 Media Query \u9002\u914D) ... */
@@ -1948,40 +2060,55 @@ textarea.t-input {
 
     /* --- [\u91CD\u70B9\u4FEE\u6539] \u5E95\u90E8\u64CD\u4F5C\u680F\u9002\u914D --- */
     .t-bottom-bar {
-        /* \u4FDD\u6301\u6A2A\u5411\u6392\u5217\uFF0C\u4E0D\u6298\u53E0 */
         flex-direction: row;
-        height: 85px;
-        /* \u7A0D\u5FAE\u964D\u4F4E\u9AD8\u5EA6\u9002\u914D\u624B\u673A */
+        height: 80px;
         padding: 8px 10px;
-        /* \u51CF\u5C11\u5185\u8FB9\u8DDD */
-        gap: 8px;
-        /* \u51CF\u5C11\u5DE6\u53F3\u533A\u57DF\u95F4\u8DDD */
+        gap: 10px;
     }
 
     /* \u5DE6\u4FA7\u7F51\u683C\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
     .t-bot-left {
-        width: 90px;
-        /* \u5BBD\u5EA6\u5FAE\u8C03 */
+        width: 80px;
+        height: 55px;
         gap: 4px;
-        /* \u7F51\u683C\u95F4\u9699\u5FAE\u8C03 */
     }
 
     .t-btn-grid {
-        font-size: 1em;
-        /* \u56FE\u6807\u7A0D\u5FAE\u8C03\u5C0F */
+        font-size: 0.95em;
     }
 
-    /* \u53F3\u4FA7\u64CD\u4F5C\u533A\uFF1A\u5360\u6EE1\u5269\u4F59\u7A7A\u95F4 */
+    /* \u4E2D\u95F4\u53CC\u6309\u94AE\u7EC4\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
+    .t-run-group {
+        border-radius: 25px;
+    }
+
+    .t-run-btn {
+        min-width: 75px;
+        height: 50px;
+        padding: 8px 12px;
+        font-size: 0.7em;
+    }
+
+    .t-run-btn i {
+        font-size: 1.2em;
+    }
+
+    .t-run-single {
+        border-radius: 25px 0 0 25px;
+    }
+
+    .t-run-queue {
+        border-radius: 0 25px 25px 0;
+    }
+
+    /* \u53F3\u4FA7\u8F85\u52A9\u533A\uFF1A\u79FB\u52A8\u7AEF\u9002\u914D */
     .t-bot-right {
-        gap: 4px;
+        width: 65px;
+        height: 55px;
+        gap: 3px;
     }
 
-    /* \u53F3\u4FA7\u6309\u94AE\u6587\u5B57\u9002\u914D */
-    #t-btn-run {
-        font-size: 1em;
-    }
-
-    #t-btn-edit {
+    .t-btn-aux {
         font-size: 0.85em;
     }
 }
@@ -2663,6 +2790,346 @@ textarea.t-input {
     .t-page-indicator {
         font-size: 9px;
     }
+}
+
+/* ===== \u961F\u5217\u751F\u6210\u8BBE\u7F6E\u7A97\u53E3 ===== */
+
+.t-queue-settings {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 450px;
+    max-height: 75vh;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.2s;
+}
+
+.t-queue-header {
+    padding: 12px 15px;
+    background: #242424;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px 10px 0 0;
+    flex-shrink: 0;
+}
+
+.t-queue-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.t-queue-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.t-queue-label {
+    font-size: 0.9em;
+    color: #aaa;
+    font-weight: bold;
+}
+
+.t-queue-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* \u6A21\u5F0F\u5207\u6362\u6309\u94AE\u7EC4 */
+.t-queue-mode-toggle {
+    display: flex;
+    gap: 8px;
+}
+
+.t-queue-mode-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: #252525;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #888;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-queue-mode-btn:hover {
+    background: #2a2a2a;
+    color: #ccc;
+    border-color: #555;
+}
+
+.t-queue-mode-btn.active {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+}
+
+.t-queue-mode-btn i {
+    font-size: 1.1em;
+}
+
+/* \u6570\u5B57\u63A7\u5236\u5668 */
+.t-queue-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-queue-num-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #ccc;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.t-queue-num-btn:hover {
+    background: #383838;
+    color: #fff;
+    border-color: #666;
+}
+
+.t-queue-num-btn:active {
+    transform: scale(0.95);
+}
+
+.t-queue-num-value {
+    min-width: 30px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #90cdf4;
+}
+
+/* \u4E0B\u62C9\u9009\u62E9\u6846 */
+.t-queue-select {
+    flex: 1;
+    padding: 8px 12px;
+    background: #252525;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #ccc;
+    font-size: 0.9em;
+    cursor: pointer;
+    outline: none;
+}
+
+.t-queue-select:focus {
+    border-color: #90cdf4;
+}
+
+/* \u5267\u672C\u5217\u8868 */
+.t-queue-script-list {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 5px;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+.t-queue-script-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.t-queue-script-list::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.t-queue-script-list::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.t-queue-script-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #252525;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-queue-script-item:hover {
+    background: #2a2a2a;
+}
+
+.t-queue-script-item.selected {
+    background: rgba(144, 205, 244, 0.1);
+    border-color: rgba(144, 205, 244, 0.3);
+}
+
+.t-queue-script-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #90cdf4;
+    cursor: pointer;
+}
+
+.t-queue-script-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.t-queue-script-name {
+    font-size: 0.9em;
+    color: #eee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.t-queue-script-cat {
+    font-size: 0.75em;
+    color: #666;
+}
+
+.t-queue-script-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.t-queue-script-actions .t-btn {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 0.85em;
+}
+
+/* \u5E95\u90E8 */
+.t-queue-footer {
+    padding: 12px 15px;
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0 0 10px 10px;
+    flex-shrink: 0;
+}
+
+.t-queue-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85em;
+    color: #888;
+}
+
+.t-queue-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media screen and (max-width: 600px) {
+    .t-queue-settings {
+        width: 95%;
+        top: 50px;
+        max-height: 80vh;
+    }
+
+    .t-queue-mode-btn {
+        padding: 10px;
+        font-size: 0.85em;
+    }
+
+    .t-queue-script-list {
+        max-height: 150px;
+    }
+}
+
+/* ===== \u961F\u5217\u8FDB\u5EA6\u6761 ===== */
+
+.t-queue-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #333;
+    z-index: 200;
+    overflow: hidden;
+}
+
+.t-queue-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #90cdf4, #4a9eff);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.t-queue-progress-bar.animated {
+    animation: t-queue-progress-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes t-queue-progress-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* \u961F\u5217\u8FD0\u884C\u65F6\u7684\u72B6\u6001\u6307\u793A */
+.t-queue-running-indicator {
+    position: absolute;
+    top: 10px;
+    right: 70px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(144, 205, 244, 0.15);
+    border: 1px solid rgba(144, 205, 244, 0.3);
+    border-radius: 20px;
+    font-size: 0.8em;
+    color: #90cdf4;
+    z-index: 150;
+    animation: fadeIn 0.3s;
+}
+
+.t-queue-running-indicator i {
+    animation: fa-spin 1s linear infinite;
 }
 
 /* ===== \u5185\u5BB9\u7F16\u8F91\u5668 ===== */
@@ -7527,6 +7994,53 @@ function getHistoryNavState() {
     total: history.items.length
   };
 }
+function resetQueueState() {
+  GlobalState.queueState.isRunning = false;
+  GlobalState.queueState.currentIndex = 0;
+  GlobalState.queueState.totalCount = 0;
+  GlobalState.queueState.completedCount = 0;
+  GlobalState.queueState.failedCount = 0;
+  GlobalState.queueState.results = [];
+}
+function initQueueTasks(scriptIds) {
+  GlobalState.queueState.isRunning = true;
+  GlobalState.queueState.currentIndex = 0;
+  GlobalState.queueState.totalCount = scriptIds.length;
+  GlobalState.queueState.completedCount = 0;
+  GlobalState.queueState.failedCount = 0;
+  GlobalState.queueState.results = [];
+}
+function recordQueueResult(scriptId, scriptName, success, error = null) {
+  GlobalState.queueState.results.push({
+    scriptId,
+    scriptName,
+    success,
+    error,
+    timestamp: Date.now()
+  });
+  if (success) {
+    GlobalState.queueState.completedCount++;
+  } else {
+    GlobalState.queueState.failedCount++;
+  }
+  GlobalState.queueState.currentIndex++;
+}
+function getQueueProgress() {
+  const q = GlobalState.queueState;
+  return {
+    current: q.currentIndex,
+    total: q.totalCount,
+    completed: q.completedCount,
+    failed: q.failedCount,
+    isRunning: q.isRunning
+  };
+}
+function setHistoryMaxItems(maxItems) {
+  GlobalState.sceneHistory.maxItems = maxItems;
+  while (GlobalState.sceneHistory.items.length > maxItems) {
+    GlobalState.sceneHistory.items.pop();
+  }
+}
 var GlobalState;
 var init_state = __esm({
   "src/core/state.js"() {
@@ -7600,6 +8114,33 @@ var init_state = __esm({
         // Token 数量
         isEstimated: true
         // Token 是否为估算值
+      },
+      // 队列生成状态
+      queueState: {
+        enabled: false,
+        // 队列模式是否激活
+        mode: "random",
+        // 队列模式: "random"(随机抽取) | "manual"(手动选择)
+        count: 3,
+        // 随机模式下的生成数量
+        categoryFilter: "ALL",
+        // 分类筛选
+        manualItems: [],
+        // 手动模式下选择的剧本ID列表
+        interval: 2,
+        // 生成间隔（秒）
+        isRunning: false,
+        // 队列是否正在运行
+        currentIndex: 0,
+        // 当前生成到第几个
+        totalCount: 0,
+        // 总任务数
+        completedCount: 0,
+        // 已完成数
+        failedCount: 0,
+        // 失败数
+        results: []
+        // 生成结果记录 { scriptId, scriptName, success, error? }
       }
     };
   }
@@ -8773,7 +9314,7 @@ async function saveFavorite() {
     else alert("\u5185\u5BB9\u65E0\u6548");
     return;
   }
-  const script = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastUsedScriptId);
+  const script = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
   const scriptName = script ? script.name : "\u672A\u77E5\u5267\u672C";
   const ctx = await getContextData();
   let avatarSrc = null;
@@ -8811,8 +9352,7 @@ async function saveFavorite() {
   data.favs.unshift(entry);
   saveExtData();
   GlobalState.lastFavId = entry.id;
-  const btn = $("#t-btn-like");
-  btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i>').prop("disabled", false);
+  updateFavButtonUI();
   if (window.toastr) toastr.success("\u6536\u85CF\u6210\u529F\uFF01");
 }
 function unsaveFavorite() {
@@ -8830,8 +9370,7 @@ function unsaveFavorite() {
   if (data.favs.length < originalLength) {
     saveExtData();
     GlobalState.lastFavId = null;
-    const btn = $("#t-btn-like");
-    btn.html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
+    updateFavButtonUI();
     if (window.toastr) toastr.info("\u5DF2\u53D6\u6D88\u6536\u85CF");
     return true;
   }
@@ -9377,13 +9916,15 @@ var init_favsWindow = __esm({
     init_state();
     init_context();
     init_helpers();
+    init_mainWindow();
   }
 });
 
 // src/ui/debugWindow.js
 var debugWindow_exports = {};
 __export(debugWindow_exports, {
-  showDebugInfo: () => showDebugInfo
+  showDebugInfo: () => showDebugInfo,
+  showDiagnosticsWindow: () => showDiagnosticsWindow
 });
 import { evaluateMacros } from "../../../macros.js";
 async function showDebugInfo() {
@@ -9608,12 +10149,137 @@ ${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.leng
     row.toggleClass("open");
   });
 }
+function showDiagnosticsWindow() {
+  if ($("#t-diagnostics-view").length) return;
+  ensureOverlay();
+  const $mainView = $("#t-main-view");
+  const hasMainView = $mainView.length > 0;
+  if (hasMainView) {
+    $mainView.hide();
+  }
+  const html = `
+    <div class="t-box t-diagnostics-container" id="t-diagnostics-view">
+        <div class="t-header" style="flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-stethoscope" style="color:#ff9f43;"></i>
+                <span class="t-title-main">\u8BCA\u65AD\u65E5\u5FD7</span>
+            </div>
+            <span class="t-close" id="t-diag-close">&times;</span>
+        </div>
+        
+        <div style="padding:15px; background:#181818; border-bottom:1px solid #333;">
+            <div style="background: rgba(255, 159, 67, 0.1); border:1px solid rgba(255, 159, 67, 0.3); padding:12px; border-radius:6px;">
+                <div style="font-weight:bold; color:#feca57; font-size:0.9em; margin-bottom:5px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> \u62A5\u9519\u6392\u67E5\u6307\u5357
+                </div>
+                <div style="font-size:0.85em; color:#ccc; line-height:1.5;">
+                    \u5982\u679C\u60A8\u9047\u5230\u751F\u6210\u5931\u8D25\u6216\u5185\u5BB9\u88AB\u622A\u65AD\u7684\u60C5\u51B5\uFF0C\u8BF7\u70B9\u51FB\u4E0B\u65B9"\u5BFC\u51FA\u5B8C\u6574\u62A5\u544A"\u6309\u94AE\uFF0C\u5C06\u751F\u6210\u7684 JSON \u6587\u4EF6\u53D1\u9001\u7ED9\u5F00\u53D1\u8005\u3002
+                    \u62A5\u544A\u4E2D\u5305\u542B\u60A8\u7684 Prompt\uFF08\u7528\u4E8E\u6392\u67E5\u5B89\u5168\u5BA1\u67E5\uFF09\uFF0C\u4F46 <b>API Key \u5DF2\u81EA\u52A8\u8131\u654F</b>\u3002
+                </div>
+            </div>
+        </div>
+        
+        <div style="flex:1; overflow:hidden; display:flex; flex-direction:column; padding:15px;">
+            <div style="font-weight:bold; color:#aaa; margin-bottom:10px;">
+                <i class="fa-solid fa-scroll"></i> \u5B9E\u65F6\u65E5\u5FD7 <span style="font-size:0.8em; color:#666;">(\u5185\u5B58\u7F13\u5B58 50 \u6761)</span>
+            </div>
+            <div class="t-log-box" id="t-diag-log-viewer" style="flex:1; overflow-y:auto;"></div>
+        </div>
+        
+        <div style="padding:15px; background:#181818; border-top:1px solid #333; display:flex; gap:10px;">
+            <button id="t-diag-refresh" class="t-btn">
+                <i class="fa-solid fa-rotate-right"></i> \u5237\u65B0\u65E5\u5FD7
+            </button>
+            <button id="t-diag-clear" class="t-btn" style="color:#ff6b6b; border-color:#ff6b6b;">
+                <i class="fa-solid fa-trash"></i> \u6E05\u7A7A\u65E5\u5FD7
+            </button>
+            <button id="t-diag-export" class="t-btn primary" style="margin-left:auto;">
+                <i class="fa-solid fa-download"></i> \u5BFC\u51FA\u5B8C\u6574\u62A5\u544A (.json)
+            </button>
+        </div>
+    </div>`;
+  $("#t-overlay").append(html);
+  const renderLogView = () => {
+    const logs = TitaniaLogger.logs;
+    const $viewer = $("#t-diag-log-viewer");
+    if (!logs || logs.length === 0) {
+      $viewer.html('<div style="text-align:center; margin-top:50px; color:#555;"><i class="fa-solid fa-inbox" style="font-size:2em; margin-bottom:10px;"></i><br>\u6682\u65E0\u65E5\u5FD7</div>');
+      return;
+    }
+    let html2 = "";
+    logs.forEach((l) => {
+      let colorClass = "t-log-entry-info";
+      if (l.type === "ERROR") colorClass = "t-log-entry-error";
+      if (l.type === "WARN") colorClass = "t-log-entry-warn";
+      let detailStr = "";
+      if (l.details) {
+        if (l.details.diagnostics) {
+          const d = l.details.diagnostics;
+          const net = d.network || {};
+          const summary = {
+            phase: d.phase,
+            status: net.status,
+            latency: net.latency + "ms",
+            input: d.input_stats
+          };
+          if (d.raw_response_snippet) {
+            summary.raw_snippet = d.raw_response_snippet.substring(0, 100) + (d.raw_response_snippet.length > 100 ? "..." : "");
+          }
+          detailStr = `
+[Diagnostics]: ${JSON.stringify(summary, null, 2)}`;
+        } else {
+          try {
+            detailStr = `
+${JSON.stringify(l.details, null, 2)}`;
+          } catch (e) {
+            detailStr = "\n[Complex Data]";
+          }
+        }
+      }
+      html2 += `<div class="${colorClass}">[${l.timestamp}] [${l.type}] ${l.message}${detailStr}</div>`;
+    });
+    $viewer.html(html2);
+    $viewer.scrollTop($viewer[0].scrollHeight);
+  };
+  renderLogView();
+  const closeWindow = () => {
+    $("#t-diagnostics-view").remove();
+    if (hasMainView) {
+      $mainView.show();
+    } else {
+      $("#t-overlay").remove();
+    }
+  };
+  $("#t-diag-close").on("click", closeWindow);
+  $("#t-diag-refresh").on("click", () => {
+    renderLogView();
+    if (window.toastr) toastr.info("\u65E5\u5FD7\u5DF2\u5237\u65B0", "Titania");
+  });
+  $("#t-diag-clear").on("click", () => {
+    if (!confirm("\u786E\u5B9A\u8981\u6E05\u7A7A\u6240\u6709\u65E5\u5FD7\u5417\uFF1F")) return;
+    TitaniaLogger.logs.length = 0;
+    renderLogView();
+    if (window.toastr) toastr.success("\u65E5\u5FD7\u5DF2\u6E05\u7A7A", "Titania");
+  });
+  $("#t-diag-export").on("click", () => {
+    TitaniaLogger.downloadReport();
+  });
+  const autoRefreshInterval = setInterval(() => {
+    if ($("#t-diagnostics-view").length === 0) {
+      clearInterval(autoRefreshInterval);
+      return;
+    }
+    renderLogView();
+  }, 3e3);
+}
 var init_debugWindow = __esm({
   "src/ui/debugWindow.js"() {
     init_storage();
     init_state();
     init_context();
     init_helpers();
+    init_logger();
+    init_dom();
   }
 });
 
@@ -9742,7 +10408,6 @@ function openSettingsWindow() {
                 <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
                 <div class="t-set-tab-btn" data-tab="prompts">\u{1F4DC} \u7CFB\u7EDF\u63D0\u793A\u8BCD</div>
                 <div class="t-set-tab-btn" data-tab="data">\u{1F5C2}\uFE0F \u6570\u636E\u7BA1\u7406</div>
-                <div class="t-set-tab-btn" data-tab="diagnostics" style="color:#ff9f43;"><i class="fa-solid fa-stethoscope"></i> \u8BCA\u65AD</div>
             </div>
 
             <div class="t-set-content">
@@ -10567,22 +11232,6 @@ function openSettingsWindow() {
                     </div>
                 </div>
                 
-                <!-- Tab 7: \u8BCA\u65AD -->
-                <div id="page-diagnostics" class="t-set-page">
-                    <div style="margin-bottom:15px; background: rgba(255, 159, 67, 0.1); border:1px solid rgba(255, 159, 67, 0.3); padding:10px; border-radius:6px;">
-                        <div style="font-weight:bold; color:#feca57; font-size:0.9em; margin-bottom:5px;"><i class="fa-solid fa-triangle-exclamation"></i> \u62A5\u9519\u6392\u67E5\u6307\u5357</div>
-                        <div style="font-size:0.85em; color:#ccc;">\u5982\u679C\u60A8\u9047\u5230\u751F\u6210\u5931\u8D25\u6216\u5185\u5BB9\u88AB\u622A\u65AD\u7684\u60C5\u51B5\uFF0C\u8BF7\u70B9\u51FB\u4E0B\u65B9\u201C\u5BFC\u51FA\u5B8C\u6574\u62A5\u544A\u201D\u6309\u94AE\uFF0C\u5C06\u751F\u6210\u7684 JSON \u6587\u4EF6\u53D1\u9001\u7ED9\u5F00\u53D1\u8005\u3002\u62A5\u544A\u4E2D\u5305\u542B\u60A8\u7684 Prompt\uFF08\u7528\u4E8E\u6392\u67E5\u5B89\u5168\u5BA1\u67E5\uFF09\uFF0C\u4F46 <b>API Key \u5DF2\u81EA\u52A8\u8131\u654F</b>\u3002</div>
-                    </div>
-                    <div class="t-form-group">
-                        <div class="t-form-label">\u5B9E\u65F6\u65E5\u5FD7 (\u5185\u5B58\u7F13\u5B58 50 \u6761)</div>
-                        <div class="t-log-box" id="t-log-viewer"></div>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <button id="btn-refresh-log" class="t-btn">\u{1F504} \u5237\u65B0\u663E\u793A</button>
-                        <button id="btn-export-log" class="t-btn primary"><i class="fa-solid fa-download"></i> \u5BFC\u51FA\u5B8C\u6574\u62A5\u544A (.json)</button>
-                    </div>
-                </div>
-
             </div>
         </div>
         <div style="padding:15px; background:#181818; border-top:1px solid #333; display:flex; justify-content:flex-end;">
@@ -16944,13 +17593,33 @@ async function openMainWindow() {
                 <button class="t-btn-grid" id="t-btn-new" title="\u65B0\u5EFA\u5267\u672C"><i class="fa-solid fa-plus"></i></button>
             </div>
 
-            <!-- \u53F3\u4FA7\uFF1A\u4E0A\u4E0B\u5806\u53E0\u64CD\u4F5C\u533A -->
+            <!-- \u4E2D\u95F4\uFF1A\u53CC\u6309\u94AE\u6F14\u7ECE\u533A -->
+            <div class="t-bot-center">
+                <div class="t-run-group">
+                    <button class="t-run-btn t-run-single" id="t-btn-run-single" title="\u5355\u6B21\u6F14\u7ECE\u5F53\u524D\u5267\u672C">
+                        <i class="fa-solid fa-clapperboard"></i>
+                        <span>\u5355\u6B21\u6F14\u7ECE</span>
+                    </button>
+                    <button class="t-run-btn t-run-queue" id="t-btn-run-queue" title="\u6279\u91CF\u961F\u5217\u751F\u6210">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>\u961F\u5217\u751F\u6210</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A -->
             <div class="t-bot-right">
-                <button id="t-btn-run" class="t-btn-action">
-                    <i class="fa-solid fa-clapperboard"></i> <span>\u5F00\u59CB\u6F14\u7ECE</span>
+                <button class="t-btn-aux" id="t-btn-queue-settings" title="\u961F\u5217\u8BBE\u7F6E">
+                    <i class="fa-solid fa-sliders"></i>
                 </button>
-                <button id="t-btn-edit" class="t-btn-action">
-                    <i class="fa-solid fa-pen-to-square"></i> <span>\u91CD\u65B0\u7F16\u8F91</span>
+                <button class="t-btn-aux" id="t-btn-edit" title="\u7F16\u8F91\u5F53\u524D\u5267\u672C">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="t-btn-aux t-btn-stop" id="t-btn-stop" title="\u4E2D\u6B62\u751F\u6210">
+                    <i class="fa-solid fa-stop"></i>
+                </button>
+                <button class="t-btn-aux t-btn-diag" id="t-btn-diagnostics" title="\u8BCA\u65AD\u65E5\u5FD7">
+                    <i class="fa-solid fa-stethoscope"></i>
                 </button>
             </div>
         </div>
@@ -17176,7 +17845,33 @@ async function openMainWindow() {
       }
     }
   });
-  $("#t-btn-run").on("click", () => handleGenerate(null, false));
+  $("#t-btn-run-single").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    closeWindow();
+    handleGenerate(null, false);
+  });
+  $("#t-btn-run-queue").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    if (!GlobalState.queueState.enabled) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u961F\u5217\u8BBE\u7F6E\u4E2D\u6FC0\u6D3B\u961F\u5217\u751F\u6210", "Titania");
+      openQueueSettingsWindow();
+      return;
+    }
+    const scripts = getQueueScripts();
+    if (scripts.length > 0) {
+      closeWindow();
+      executeQueueGeneration(scripts);
+    } else {
+      if (window.toastr) toastr.warning("\u961F\u5217\u4E3A\u7A7A\uFF0C\u8BF7\u5148\u914D\u7F6E\u961F\u5217", "Titania");
+      openQueueSettingsWindow();
+    }
+  });
   $("#t-btn-like").on("click", () => {
     if (GlobalState.lastFavId) {
       unsaveFavorite();
@@ -17192,6 +17887,19 @@ async function openMainWindow() {
   $("#t-btn-worldinfo").on("click", openWorldInfoSelector);
   $("#t-btn-settings").on("click", openSettingsWindow);
   $("#t-btn-debug").on("click", async () => await showDebugInfo());
+  $("#t-btn-queue-settings").on("click", openQueueSettingsWindow);
+  $("#t-btn-stop").on("click", () => {
+    if (GlobalState.isGenerating) {
+      cancelGeneration();
+    } else if (GlobalState.queueState.isRunning) {
+      cancelQueueGeneration();
+    } else {
+      if (window.toastr) toastr.info("\u5F53\u524D\u6CA1\u6709\u6B63\u5728\u8FDB\u884C\u7684\u751F\u6210\u4EFB\u52A1", "Titania");
+    }
+  });
+  $("#t-btn-diagnostics").on("click", () => {
+    showDiagnosticsWindow();
+  });
   $("#t-nav-prev").on("click", function() {
     if ($(this).prop("disabled")) return;
     if (navigateToPrevHistory()) {
@@ -17199,6 +17907,8 @@ async function openMainWindow() {
       const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
       renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
       updateSceneHistoryNav();
+      updateFavButtonUI();
+      updateScriptTitleDisplay();
     }
   });
   $("#t-nav-next").on("click", function() {
@@ -17208,9 +17918,12 @@ async function openMainWindow() {
       const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
       renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
       updateSceneHistoryNav();
+      updateFavButtonUI();
+      updateScriptTitleDisplay();
     }
   });
   window.updateSceneHistoryNav = updateSceneHistoryNav;
+  window.updateRunButtonsState = updateRunButtonsState;
   let initialScriptId = GlobalState.lastUsedScriptId;
   if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
     initialScriptId = GlobalState.lastGeneratedScriptId;
@@ -17235,6 +17948,34 @@ async function openMainWindow() {
   }
   loadContextDataAsync();
   updateSceneHistoryNav();
+  updateRunButtonsState();
+  updateQueueButtonUI();
+}
+function updateRunButtonsState() {
+  const $singleBtn = $("#t-btn-run-single");
+  const $queueBtn = $("#t-btn-run-queue");
+  if (!$singleBtn.length || !$queueBtn.length) return;
+  const isGenerating = GlobalState.isGenerating;
+  const isQueueRunning = GlobalState.queueState.isRunning;
+  if (isGenerating || isQueueRunning) {
+    $singleBtn.prop("disabled", true);
+    $queueBtn.prop("disabled", true);
+  } else {
+    $singleBtn.prop("disabled", false);
+    $queueBtn.prop("disabled", false);
+  }
+}
+function updateQueueButtonUI() {
+  const $queueBtn = $("#t-btn-run-queue");
+  const $settingsBtn = $("#t-btn-queue-settings");
+  if (!$queueBtn.length) return;
+  if (GlobalState.queueState.enabled) {
+    $queueBtn.removeClass("inactive").addClass("active");
+    $settingsBtn.addClass("active");
+  } else {
+    $queueBtn.removeClass("active").addClass("inactive");
+    $settingsBtn.removeClass("active");
+  }
 }
 function updateContentStatsDisplay(stats) {
   const $hud = $("#t-stats-hud");
@@ -17257,6 +17998,38 @@ function updateContentStatsDisplay(stats) {
     $("#t-stat-time").text("-");
   }
   $hud.show();
+}
+function updateFavButtonUI() {
+  const btn = $("#t-btn-like");
+  if (!btn.length) return;
+  if (GlobalState.lastFavId) {
+    btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i>');
+  } else {
+    btn.html('<i class="fa-regular fa-heart"></i>');
+  }
+}
+function updateScriptTitleDisplay() {
+  const scriptId = GlobalState.lastGeneratedScriptId;
+  if (!scriptId) return;
+  const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
+  if (!script) {
+    $("#t-lbl-name").text("\u672A\u77E5\u5267\u672C");
+    $("#t-lbl-cat").text("\u5DF2\u5220\u9664").css({
+      "color": "#888",
+      "background": "rgba(136, 136, 136, 0.15)",
+      "border": "1px solid rgba(136, 136, 136, 0.33)"
+    });
+    $("#t-lbl-desc-mini").text("\u8BE5\u5267\u672C\u53EF\u80FD\u5DF2\u88AB\u5220\u9664");
+    return;
+  }
+  $("#t-lbl-name").text(script.name);
+  const category = script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
+  $("#t-lbl-cat").text(category).css({
+    "color": "#bfa15f",
+    "background": "rgba(191, 161, 95, 0.15)",
+    "border": "1px solid rgba(191, 161, 95, 0.33)"
+  });
+  $("#t-lbl-desc-mini").text(script.desc || "\u65E0\u7B80\u4ECB");
 }
 function updateSceneHistoryNav() {
   const navState = getHistoryNavState();
@@ -17780,6 +18553,237 @@ function openContentEditor() {
     if (window.toastr) toastr.success("\u5185\u5BB9\u5DF2\u66F4\u65B0");
   });
   setTimeout(() => $textarea.focus(), 100);
+}
+function openQueueSettingsWindow() {
+  if ($("#t-queue-settings").length) return;
+  const data = getExtData();
+  const queueCfg = data.queue_config || {};
+  const qState = GlobalState.queueState;
+  const categories = ["\u5168\u90E8", ...new Set(
+    GlobalState.runtimeScripts.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B"))
+  )].sort((a, b) => a === "\u5168\u90E8" ? -1 : b === "\u5168\u90E8" ? 1 : a.localeCompare(b));
+  const html = `
+    <div id="t-queue-settings" class="t-queue-settings">
+        <div class="t-queue-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-layer-group" style="color:#90cdf4;"></i>
+                <span style="font-weight:bold;">\u961F\u5217\u751F\u6210\u8BBE\u7F6E</span>
+            </div>
+            <div class="t-close" id="t-queue-close">&times;</div>
+        </div>
+        
+        <div class="t-queue-body">
+            <!-- \u6A21\u5F0F\u5207\u6362 -->
+            <div class="t-queue-section">
+                <div class="t-queue-label">\u751F\u6210\u6A21\u5F0F</div>
+                <div class="t-queue-mode-toggle">
+                    <div class="t-queue-mode-btn ${qState.mode === "random" ? "active" : ""}" data-mode="random">
+                        <i class="fa-solid fa-dice"></i>
+                        <span>\u968F\u673A\u62BD\u53D6</span>
+                    </div>
+                    <div class="t-queue-mode-btn ${qState.mode === "manual" ? "active" : ""}" data-mode="manual">
+                        <i class="fa-solid fa-hand-pointer"></i>
+                        <span>\u624B\u52A8\u9009\u62E9</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- \u968F\u673A\u6A21\u5F0F\u8BBE\u7F6E -->
+            <div class="t-queue-random-panel" id="t-queue-random-panel" style="${qState.mode === "random" ? "" : "display:none;"}">
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u751F\u6210\u6570\u91CF</div>
+                    <div class="t-queue-control">
+                        <button class="t-queue-num-btn" id="t-queue-count-dec">-</button>
+                        <span class="t-queue-num-value" id="t-queue-count-value">${qState.count}</span>
+                        <button class="t-queue-num-btn" id="t-queue-count-inc">+</button>
+                    </div>
+                </div>
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u5206\u7C7B\u8303\u56F4</div>
+                    <select class="t-queue-select" id="t-queue-category">
+                        ${categories.map((c) => `<option value="${c === "\u5168\u90E8" ? "ALL" : c}" ${qState.categoryFilter === "ALL" && c === "\u5168\u90E8" || qState.categoryFilter === c ? "selected" : ""}>${c}</option>`).join("")}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- \u624B\u52A8\u6A21\u5F0F\u8BBE\u7F6E -->
+            <div class="t-queue-manual-panel" id="t-queue-manual-panel" style="${qState.mode === "manual" ? "" : "display:none;"}">
+                <div class="t-queue-label">\u9009\u62E9\u5267\u672C <span style="color:#666; font-size:0.85em;">(\u5DF2\u9009 <span id="t-queue-selected-count">${qState.manualItems.length}</span> \u4E2A)</span></div>
+                <div class="t-queue-script-list" id="t-queue-script-list">
+                    ${GlobalState.runtimeScripts.map((s) => `
+                        <div class="t-queue-script-item ${qState.manualItems.includes(s.id) ? "selected" : ""}" data-id="${s.id}">
+                            <input type="checkbox" ${qState.manualItems.includes(s.id) ? "checked" : ""}>
+                            <div class="t-queue-script-info">
+                                <div class="t-queue-script-name">${s.name}</div>
+                                <div class="t-queue-script-cat">${s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")}</div>
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+                <div class="t-queue-script-actions">
+                    <button class="t-btn" id="t-queue-select-all">\u5168\u9009</button>
+                    <button class="t-btn" id="t-queue-select-none">\u6E05\u7A7A</button>
+                </div>
+            </div>
+            
+            <!-- \u901A\u7528\u8BBE\u7F6E -->
+            <div class="t-queue-section" style="border-top:1px solid #333; padding-top:12px; margin-top:5px;">
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u751F\u6210\u95F4\u9694 <span style="color:#666; font-size:0.85em;">(\u79D2)</span></div>
+                    <div class="t-queue-control">
+                        <button class="t-queue-num-btn" id="t-queue-interval-dec">-</button>
+                        <span class="t-queue-num-value" id="t-queue-interval-value">${qState.interval}</span>
+                        <button class="t-queue-num-btn" id="t-queue-interval-inc">+</button>
+                    </div>
+                </div>
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u5386\u53F2\u5BB9\u91CF</div>
+                    <div class="t-queue-control">
+                        <button class="t-queue-num-btn" id="t-queue-history-dec">-</button>
+                        <span class="t-queue-num-value" id="t-queue-history-value">${GlobalState.sceneHistory.maxItems}</span>
+                        <button class="t-queue-num-btn" id="t-queue-history-inc">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="t-queue-footer">
+            <div class="t-queue-status" id="t-queue-status">
+                ${qState.enabled ? '<i class="fa-solid fa-check-circle" style="color:#55efc4;"></i> \u961F\u5217\u5DF2\u6FC0\u6D3B' : '<i class="fa-solid fa-circle" style="color:#666;"></i> \u961F\u5217\u672A\u6FC0\u6D3B'}
+            </div>
+            <div class="t-queue-actions">
+                <button class="t-btn" id="t-queue-cancel">\u53D6\u6D88</button>
+                <button class="t-btn primary" id="t-queue-save">${qState.enabled ? "\u66F4\u65B0\u8BBE\u7F6E" : "\u6FC0\u6D3B\u961F\u5217"}</button>
+            </div>
+        </div>
+    </div>`;
+  $("#t-main-view").append(html);
+  $(".t-queue-mode-btn").on("click", function() {
+    const mode = $(this).data("mode");
+    $(".t-queue-mode-btn").removeClass("active");
+    $(this).addClass("active");
+    if (mode === "random") {
+      $("#t-queue-random-panel").show();
+      $("#t-queue-manual-panel").hide();
+    } else {
+      $("#t-queue-random-panel").hide();
+      $("#t-queue-manual-panel").show();
+    }
+  });
+  $("#t-queue-count-dec").on("click", function() {
+    const $val = $("#t-queue-count-value");
+    let v = parseInt($val.text()) || 3;
+    if (v > 1) $val.text(v - 1);
+  });
+  $("#t-queue-count-inc").on("click", function() {
+    const $val = $("#t-queue-count-value");
+    let v = parseInt($val.text()) || 3;
+    if (v < 20) $val.text(v + 1);
+  });
+  $("#t-queue-interval-dec").on("click", function() {
+    const $val = $("#t-queue-interval-value");
+    let v = parseInt($val.text()) || 2;
+    if (v > 0) $val.text(v - 1);
+  });
+  $("#t-queue-interval-inc").on("click", function() {
+    const $val = $("#t-queue-interval-value");
+    let v = parseInt($val.text()) || 2;
+    if (v < 30) $val.text(v + 1);
+  });
+  $("#t-queue-history-dec").on("click", function() {
+    const $val = $("#t-queue-history-value");
+    let v = parseInt($val.text()) || 5;
+    if (v > 5) $val.text(v - 5);
+  });
+  $("#t-queue-history-inc").on("click", function() {
+    const $val = $("#t-queue-history-value");
+    let v = parseInt($val.text()) || 5;
+    if (v < 50) $val.text(v + 5);
+  });
+  $(".t-queue-script-item").on("click", function(e) {
+    if ($(e.target).is("input")) return;
+    const $checkbox = $(this).find("input");
+    $checkbox.prop("checked", !$checkbox.prop("checked"));
+    $(this).toggleClass("selected", $checkbox.prop("checked"));
+    updateSelectedCount();
+  });
+  $(".t-queue-script-item input").on("change", function() {
+    $(this).closest(".t-queue-script-item").toggleClass("selected", $(this).prop("checked"));
+    updateSelectedCount();
+  });
+  function updateSelectedCount() {
+    const count = $(".t-queue-script-item.selected").length;
+    $("#t-queue-selected-count").text(count);
+  }
+  $("#t-queue-select-all").on("click", function() {
+    $(".t-queue-script-item").addClass("selected").find("input").prop("checked", true);
+    updateSelectedCount();
+  });
+  $("#t-queue-select-none").on("click", function() {
+    $(".t-queue-script-item").removeClass("selected").find("input").prop("checked", false);
+    updateSelectedCount();
+  });
+  $("#t-queue-save").on("click", function() {
+    const mode = $(".t-queue-mode-btn.active").data("mode");
+    const count = parseInt($("#t-queue-count-value").text()) || 3;
+    const category = $("#t-queue-category").val();
+    const interval = parseInt($("#t-queue-interval-value").text()) || 2;
+    const historyMax = parseInt($("#t-queue-history-value").text()) || 5;
+    const manualItems = [];
+    $(".t-queue-script-item.selected").each(function() {
+      manualItems.push($(this).data("id"));
+    });
+    if (mode === "manual" && manualItems.length === 0) {
+      if (window.toastr) toastr.warning("\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u5267\u672C", "Titania");
+      return;
+    }
+    GlobalState.queueState.enabled = true;
+    GlobalState.queueState.mode = mode;
+    GlobalState.queueState.count = count;
+    GlobalState.queueState.categoryFilter = category;
+    GlobalState.queueState.manualItems = manualItems;
+    GlobalState.queueState.interval = interval;
+    setHistoryMaxItems(historyMax);
+    const d = getExtData();
+    d.queue_config = {
+      enabled: true,
+      mode,
+      count,
+      categoryFilter: category,
+      manualItems,
+      interval,
+      historyMax
+    };
+    saveExtData();
+    updateQueueButtonUI();
+    $("#t-queue-settings").remove();
+    if (window.toastr) toastr.success(`\u2728 \u961F\u5217\u5DF2\u6FC0\u6D3B\uFF1A${mode === "random" ? `\u968F\u673A ${count} \u4E2A` : `${manualItems.length} \u4E2A\u5267\u672C`}`, "Titania");
+  });
+  $("#t-queue-cancel").on("click", function() {
+    $("#t-queue-settings").remove();
+  });
+  $("#t-queue-close").on("click", function() {
+    $("#t-queue-settings").remove();
+  });
+}
+function getQueueScripts() {
+  const qState = GlobalState.queueState;
+  if (!qState.enabled) {
+    return [];
+  }
+  if (qState.mode === "manual") {
+    return qState.manualItems.map((id) => GlobalState.runtimeScripts.find((s) => s.id === id)).filter((s) => s).map((s) => ({ id: s.id, name: s.name }));
+  } else {
+    let pool = GlobalState.runtimeScripts;
+    if (qState.categoryFilter !== "ALL") {
+      pool = pool.filter(
+        (s) => (s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === qState.categoryFilter
+      );
+    }
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, Math.min(qState.count, shuffled.length));
+    return selected.map((s) => ({ id: s.id, name: s.name }));
+  }
 }
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
@@ -18359,10 +19363,6 @@ function getEnabledToolbarButtons() {
   return enabledButtons.slice(0, maxItems);
 }
 function handleFloatingButtonClick() {
-  if (GlobalState.isGenerating) {
-    toggleSlideMenu();
-    return;
-  }
   if (isToolbarEnabled()) {
     toggleSlideMenu();
   } else {
@@ -18377,21 +19377,12 @@ function showSlideMenu() {
   const btnSize = $btn.outerWidth() || 56;
   const isOnLeft = btnRect.left < window.innerWidth / 2;
   const backdrop = $(`<div id="titania-menu-backdrop"></div>`);
-  let menuContent = "";
-  if (GlobalState.isGenerating) {
-    menuContent = `
-            <div class="t-menu-icon-btn cancel" id="titania-cancel-btn" title="\u4E2D\u6B62\u6F14\u7ECE">
-                <i class="fa-solid fa-stop"></i>
-            </div>
-        `;
-  } else {
-    const enabledButtons = getEnabledToolbarButtons();
-    menuContent = enabledButtons.map((btn) => `
-            <div class="t-menu-icon-btn ${btn.cssClass}" data-btn-id="${btn.id}" title="${btn.title}">
-                <i class="${btn.icon}"></i>
-            </div>
-        `).join("");
-  }
+  const enabledButtons = getEnabledToolbarButtons();
+  const menuContent = enabledButtons.map((btn) => `
+        <div class="t-menu-icon-btn ${btn.cssClass}" data-btn-id="${btn.id}" title="${btn.title}">
+            <i class="${btn.icon}"></i>
+        </div>
+    `).join("");
   const slideMenu = $(`
         <div id="titania-slide-menu" class="t-horizontal">
             ${menuContent}
@@ -18429,11 +19420,6 @@ function showSlideMenu() {
       handler(e);
     });
   };
-  bindClick(slideMenu.find("#titania-cancel-btn"), async () => {
-    const { cancelGeneration: cancelGeneration2 } = await Promise.resolve().then(() => (init_api(), api_exports));
-    cancelGeneration2();
-    hideSlideMenu();
-  });
   slideMenu.find(".t-menu-icon-btn[data-btn-id]").each(function() {
     const btnId = $(this).data("btn-id");
     const btnDef = TOOLBAR_BUTTONS.find((b) => b.id === btnId);
@@ -18713,14 +19699,8 @@ var init_floatingBtn = __esm({
 });
 
 // src/core/api.js
-var api_exports = {};
-__export(api_exports, {
-  cancelGeneration: () => cancelGeneration,
-  handleGenerate: () => handleGenerate,
-  renderGeneratedContent: () => renderGeneratedContent
-});
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
-import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
+import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError } from "../../../openai.js";
 import EventSourceStream from "../../../sse-stream.js";
 import { evaluateMacros as evaluateMacros2 } from "../../../macros.js";
 function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
@@ -19029,6 +20009,9 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   const signal = GlobalState.abortController.signal;
   GlobalState.isGenerating = true;
   $floatBtn.addClass("t-loading");
+  if (typeof window.updateRunButtonsState === "function") {
+    window.updateRunButtonsState();
+  }
   GlobalState.lastFavId = null;
   $("#t-btn-like").html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
   showCancelButton();
@@ -19153,22 +20136,43 @@ ${processedPrompt}`;
         const streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, signal);
         if (typeof streamGenerator === "function") {
           let chunkCount = 0;
-          for await (const chunk of streamGenerator()) {
-            if (signal.aborted) {
-              throw new DOMException("Generation aborted", "AbortError");
+          try {
+            for await (const chunk of streamGenerator()) {
+              if (signal.aborted) {
+                throw new DOMException("Generation aborted", "AbortError");
+              }
+              if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
+              chunkCount++;
+              diagnostics.stream_stats.chunks = chunkCount;
+              rawContent = chunk.text || "";
+              if ($("#t-output-content").length > 0 && rawContent.length > 0) {
+                const streamCleanContent = sanitizeAIOutput(rawContent);
+                scheduleStreamRender(streamCleanContent, script.name);
+              }
             }
-            if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
-            chunkCount++;
-            diagnostics.stream_stats.chunks = chunkCount;
-            rawContent = chunk.text || "";
-            if ($("#t-output-content").length > 0 && rawContent.length > 0) {
-              const streamCleanContent = sanitizeAIOutput(rawContent);
-              scheduleStreamRender(streamCleanContent, script.name);
+          } catch (streamErr) {
+            if (streamErr.name === "AbortError") {
+              throw streamErr;
+            }
+            TitaniaLogger.warn("ST \u6D41\u5F0F\u4F20\u8F93\u5F02\u5E38", {
+              error: streamErr.message,
+              contentSoFar: rawContent.length,
+              chunks: chunkCount
+            });
+            if (rawContent.length === 0) {
+              throw new Error(`ERR_ST_STREAM: ${streamErr.message}`);
             }
           }
-          if (chunkCount === 0) throw new Error("Stream Empty");
-        } else {
+          if (chunkCount === 0) {
+            throw new Error("ERR_STREAM_NO_CHUNKS: \u672A\u4ECE ST \u540E\u7AEF\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E\u5757");
+          }
+        } else if (streamGenerator && typeof streamGenerator === "object") {
           rawContent = streamGenerator?.content || "";
+          if (!rawContent) {
+            TitaniaLogger.warn("ST \u8FD4\u56DE\u975E\u751F\u6210\u5668\u54CD\u5E94\u4F46\u5185\u5BB9\u4E3A\u7A7A", { response: typeof streamGenerator });
+          }
+        } else {
+          throw new Error("ERR_INVALID_ST_RESPONSE: ST \u540E\u7AEF\u8FD4\u56DE\u4E86\u610F\u5916\u7684\u54CD\u5E94\u683C\u5F0F");
         }
       } else {
         const result = await ChatCompletionService4.sendRequest(requestData, true, null);
@@ -19218,13 +20222,19 @@ ${processedPrompt}`;
             if (!res.ok) {
               const errText = await res.text().catch(() => "");
               diagnostics.raw_response_snippet = errText.substring(0, 500);
-              throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+              try {
+                tryParseStreamingError(res, errText, { quiet: true });
+              } catch (parsedErr) {
+                throw parsedErr;
+              }
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             }
             diagnostics.phase = "streaming";
             const eventStream = new EventSourceStream();
             res.body.pipeThrough(eventStream);
             const reader = eventStream.readable.getReader();
             let chunkCount = 0;
+            let parseFailCount = 0;
             while (true) {
               if (signal.aborted) {
                 await reader.cancel();
@@ -19234,6 +20244,11 @@ ${processedPrompt}`;
               if (done) break;
               const data2 = value.data;
               if (data2 === "[DONE]") break;
+              try {
+                tryParseStreamingError(res, data2, { quiet: true });
+              } catch (streamParseErr) {
+                throw streamParseErr;
+              }
               if (chunkCount === 0) {
                 diagnostics.stream_stats.ttft = Date.now() - attemptStartTime;
                 TitaniaLogger.info(`\u6D41\u5F0F\u54CD\u5E94\u5F00\u59CB (TTFT: ${diagnostics.stream_stats.ttft}ms)`);
@@ -19250,16 +20265,27 @@ ${processedPrompt}`;
                     scheduleStreamRender(streamCleanContent, script.name);
                   }
                 }
-              } catch (e) {
+              } catch (parseErr) {
+                parseFailCount++;
+                if (parseFailCount <= 3) {
+                  TitaniaLogger.warn(`\u6D41\u5F0F chunk \u89E3\u6790\u5931\u8D25 (#${parseFailCount})`, {
+                    data: data2.substring(0, 100),
+                    error: parseErr.message
+                  });
+                }
               }
             }
             if (chunkCount === 0) {
-              throw new Error("Stream Empty: \u672A\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E");
+              throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
+            }
+            if (parseFailCount > 0 && rawContent.length === 0) {
+              throw new Error(`ERR_STREAM_PARSE_FAILED: \u63A5\u6536\u5230 ${chunkCount} \u4E2A\u6570\u636E\u5757\uFF0C\u4F46\u5168\u90E8\u89E3\u6790\u5931\u8D25`);
             }
             streamSuccess = true;
             TitaniaLogger.info(`\u6D41\u5F0F\u4F20\u8F93\u5B8C\u6210`, {
               chunks: chunkCount,
               contentLength: rawContent.length,
+              parseFailures: parseFailCount,
               attempt: attempt + 1
             });
           } catch (streamErr) {
@@ -19274,6 +20300,13 @@ ${processedPrompt}`;
               attempt: attempt + 1,
               contentSoFar: rawContent.length
             });
+            if (rawContent.length > 100 && attempt === maxRetries) {
+              TitaniaLogger.warn("\u6D41\u5F0F\u4F20\u8F93\u4E2D\u65AD\u4F46\u5DF2\u6709\u90E8\u5206\u5185\u5BB9\uFF0C\u5C1D\u8BD5\u4F7F\u7528\u5DF2\u83B7\u53D6\u7684\u5185\u5BB9", {
+                contentLength: rawContent.length
+              });
+              streamSuccess = true;
+              break;
+            }
             if (attempt < maxRetries) {
               rawContent = "";
               await new Promise((r) => setTimeout(r, retryDelay));
@@ -19281,7 +20314,7 @@ ${processedPrompt}`;
           }
         }
         if (!streamSuccess) {
-          throw new Error(`Stream Interrupted (\u5DF2\u91CD\u8BD5 ${maxRetries} \u6B21): ${lastError?.message || "\u672A\u77E5\u9519\u8BEF"}`);
+          throw new Error(`ERR_STREAM_FAILED: ${lastError?.message || "\u672A\u77E5\u6D41\u5F0F\u4F20\u8F93\u9519\u8BEF"}`);
         }
       } else {
         const res = await fetch(endpoint, {
@@ -19307,9 +20340,22 @@ ${processedPrompt}`;
         }
       }
     }
-    if (!rawContent || rawContent.trim().length === 0) throw new Error("ERR_EMPTY_CONTENT");
     diagnostics.phase = "validation";
+    if (!rawContent) {
+      throw new Error("ERR_EMPTY_RESPONSE: API \u672A\u8FD4\u56DE\u4EFB\u4F55\u5185\u5BB9");
+    }
+    const trimmedRaw = rawContent.trim();
+    if (trimmedRaw.length === 0) {
+      throw new Error("ERR_EMPTY_RESPONSE: API \u8FD4\u56DE\u4E86\u7A7A\u767D\u5185\u5BB9");
+    }
     let cleanContent = sanitizeAIOutput(rawContent);
+    if (!cleanContent || cleanContent.trim().length === 0) {
+      TitaniaLogger.warn("\u5185\u5BB9\u6E05\u6D17\u540E\u4E3A\u7A7A", {
+        rawLength: rawContent.length,
+        rawPreview: rawContent.substring(0, 200)
+      });
+      throw new Error("ERR_CONTENT_FILTERED: AI \u8FD4\u56DE\u7684\u5185\u5BB9\u7ECF\u8FC7\u6E05\u6D17\u540E\u4E3A\u7A7A\uFF08\u53EF\u80FD\u53EA\u5305\u542B\u601D\u8003\u6807\u7B7E\u6216\u5143\u4FE1\u606F\uFF09");
+    }
     let finalOutput = cleanContent;
     const autoContinueCfg = data.auto_continue || {};
     if (autoContinueCfg.enabled) {
@@ -19398,12 +20444,33 @@ ${processedPrompt}`;
     diagnostics.network.latency = Date.now() - startTime;
     diagnostics.phase += "_failed";
     TitaniaLogger.error("\u751F\u6210\u8FC7\u7A0B\u53D1\u751F\u5F02\u5E38", e, diagnostics);
+    let diagnosisHint = "API\u8C03\u7528\u5931\u8D25\u6216\u5185\u5BB9\u89E3\u6790\u9519\u8BEF\u3002\u8BF7\u68C0\u67E5 Key \u4F59\u989D\u6216\u7F51\u7EDC\u8FDE\u63A5\u3002";
+    const errMsg = e.message || "\u672A\u77E5\u9519\u8BEF";
+    if (errMsg.includes("ERR_STREAM_NO_CHUNKS")) {
+      diagnosisHint = "\u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u3002\u53EF\u80FD\u539F\u56E0\uFF1AAPI \u914D\u989D\u7528\u5C3D\u3001\u6A21\u578B\u8FC7\u8F7D\u3001\u7F51\u7EDC\u95EE\u9898\u3002";
+    } else if (errMsg.includes("ERR_STREAM_PARSE_FAILED")) {
+      diagnosisHint = "\u6570\u636E\u89E3\u6790\u5931\u8D25\u3002\u53EF\u80FD\u539F\u56E0\uFF1AAPI \u8FD4\u56DE\u683C\u5F0F\u5F02\u5E38\uFF0C\u5C1D\u8BD5\u5207\u6362\u6A21\u578B\u6216\u68C0\u67E5 API \u517C\u5BB9\u6027\u3002";
+    } else if (errMsg.includes("ERR_STREAM_FAILED")) {
+      diagnosisHint = "\u6D41\u5F0F\u4F20\u8F93\u5931\u8D25\u3002\u53EF\u80FD\u539F\u56E0\uFF1A\u7F51\u7EDC\u4E0D\u7A33\u5B9A\uFF0C\u5C1D\u8BD5\u5173\u95ED\u6D41\u5F0F\u4F20\u8F93\u6216\u91CD\u8BD5\u3002";
+    } else if (errMsg.includes("ERR_EMPTY_RESPONSE")) {
+      diagnosisHint = "API \u8FD4\u56DE\u7A7A\u5185\u5BB9\u3002\u53EF\u80FD\u539F\u56E0\uFF1A\u8BF7\u6C42\u88AB\u62D2\u7EDD\u3001\u5185\u5BB9\u5BA1\u6838\u89E6\u53D1\u3001\u6A21\u578B\u65E0\u54CD\u5E94\u3002";
+    } else if (errMsg.includes("ERR_CONTENT_FILTERED")) {
+      diagnosisHint = "AI \u8F93\u51FA\u88AB\u8FC7\u6EE4\u3002AI \u53EF\u80FD\u53EA\u8FD4\u56DE\u4E86\u601D\u8003\u8FC7\u7A0B\u800C\u65E0\u5B9E\u9645\u5185\u5BB9\uFF0C\u5C1D\u8BD5\u8C03\u6574\u63D0\u793A\u8BCD\u3002";
+    } else if (errMsg.includes("ERR_INVALID_ST_RESPONSE")) {
+      diagnosisHint = "ST \u540E\u7AEF\u54CD\u5E94\u5F02\u5E38\u3002\u5C1D\u8BD5\u5237\u65B0\u9875\u9762\u6216\u68C0\u67E5 SillyTavern \u65E5\u5FD7\u3002";
+    } else if (errMsg.includes("ERR_ST_STREAM")) {
+      diagnosisHint = "ST \u6D41\u5F0F\u4F20\u8F93\u9519\u8BEF\u3002\u8BF7\u68C0\u67E5 SillyTavern \u7684 API \u914D\u7F6E\u662F\u5426\u6B63\u786E\u3002";
+    } else if (errMsg.includes("HTTP")) {
+      diagnosisHint = "HTTP \u8BF7\u6C42\u5931\u8D25\u3002\u8BF7\u68C0\u67E5 API \u5730\u5740\u548C\u5BC6\u94A5\u662F\u5426\u6B63\u786E\u3002";
+    } else if (errMsg.includes("quota") || errMsg.includes("limit") || errMsg.includes("429")) {
+      diagnosisHint = "API \u914D\u989D\u4E0D\u8DB3\u6216\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\u3002\u8BF7\u7A0D\u540E\u91CD\u8BD5\u6216\u68C0\u67E5\u8D26\u6237\u4F59\u989D\u3002";
+    }
     const errHtml = `<div style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; background: rgba(255,107,107,0.1); border-radius:8px;">
             <div style="font-size:3em; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div style="font-weight:bold; margin-bottom:5px;">\u6F14\u7ECE\u51FA\u9519\u4E86</div>
-            <div style="font-size:0.9em; margin-bottom:15px; color:#faa;">${e.message || "\u672A\u77E5\u9519\u8BEF"}</div>
+            <div style="font-size:0.9em; margin-bottom:15px; color:#faa;">${errMsg}</div>
             <div style="font-size:0.8em; color:#ccc; background:#222; padding:10px; border-radius:4px; text-align:left;">
-                \u8BCA\u65AD\u63D0\u793A\uFF1AAPI\u8C03\u7528\u5931\u8D25\u6216\u5185\u5BB9\u89E3\u6790\u9519\u8BEF\u3002<br>\u8BF7\u68C0\u67E5 Key \u4F59\u989D\u6216\u7F51\u7EDC\u8FDE\u63A5\u3002
+                \u8BCA\u65AD\u63D0\u793A\uFF1A${diagnosisHint}
             </div>
         </div>`;
     GlobalState.lastGeneratedContent = errHtml;
@@ -19415,6 +20482,118 @@ ${processedPrompt}`;
     GlobalState.abortController = null;
     $floatBtn.removeClass("t-loading");
     hideCancelButton();
+    if (typeof window.updateRunButtonsState === "function") {
+      window.updateRunButtonsState();
+    }
+  }
+}
+async function executeQueueGeneration(scripts) {
+  if (!scripts || scripts.length === 0) {
+    if (window.toastr) toastr.warning("\u961F\u5217\u4E3A\u7A7A\uFF0C\u6CA1\u6709\u8981\u751F\u6210\u7684\u5267\u672C", "Titania");
+    return;
+  }
+  const qState = GlobalState.queueState;
+  const interval = (qState.interval || 2) * 1e3;
+  initQueueTasks(scripts.map((s) => s.id));
+  TitaniaLogger.info("\u5F00\u59CB\u961F\u5217\u751F\u6210", {
+    total: scripts.length,
+    interval: qState.interval,
+    mode: qState.mode
+  });
+  showQueueProgressIndicator(scripts.length);
+  if (window.toastr) {
+    toastr.info(`\u{1F680} \u5F00\u59CB\u961F\u5217\u751F\u6210\uFF1A${scripts.length} \u4E2A\u5267\u672C`, "Titania Queue");
+  }
+  for (let i = 0; i < scripts.length; i++) {
+    const script = scripts[i];
+    const progress = getQueueProgress();
+    if (!qState.isRunning) {
+      TitaniaLogger.info("\u961F\u5217\u751F\u6210\u88AB\u4E2D\u65AD", { completed: progress.completed });
+      break;
+    }
+    updateQueueProgressIndicator(i + 1, scripts.length, script.name);
+    TitaniaLogger.info(`\u961F\u5217\u751F\u6210 (${i + 1}/${scripts.length}): ${script.name}`);
+    try {
+      await handleGenerate(script.id, true);
+      recordQueueResult(script.id, script.name, true);
+      if (window.toastr) {
+        toastr.success(`\u2705 (${i + 1}/${scripts.length}) ${script.name}`, "Titania Queue", { timeOut: 2e3 });
+      }
+    } catch (e) {
+      recordQueueResult(script.id, script.name, false, e.message);
+      TitaniaLogger.warn(`\u961F\u5217\u751F\u6210\u5931\u8D25: ${script.name}`, { error: e.message });
+      if (window.toastr) {
+        toastr.warning(`\u26A0\uFE0F (${i + 1}/${scripts.length}) ${script.name} \u5931\u8D25`, "Titania Queue", { timeOut: 2e3 });
+      }
+    }
+    if (i < scripts.length - 1 && qState.isRunning) {
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
+  }
+  const finalProgress = getQueueProgress();
+  resetQueueState();
+  hideQueueProgressIndicator();
+  if (window.toastr) {
+    const msg = `\u961F\u5217\u5B8C\u6210\uFF1A${finalProgress.completed} \u6210\u529F\uFF0C${finalProgress.failed} \u5931\u8D25`;
+    if (finalProgress.failed === 0) {
+      toastr.success(`\u{1F389} ${msg}`, "Titania Queue");
+    } else {
+      toastr.warning(`\u26A0\uFE0F ${msg}`, "Titania Queue");
+    }
+  }
+  TitaniaLogger.info("\u961F\u5217\u751F\u6210\u5B8C\u6210", {
+    completed: finalProgress.completed,
+    failed: finalProgress.failed,
+    total: finalProgress.total
+  });
+  GlobalState.queueState.enabled = false;
+  if (typeof window.updateRunButtonsState === "function") {
+    window.updateRunButtonsState();
+  }
+  if (typeof window.updateQueueButtonUI === "function") {
+    window.updateQueueButtonUI();
+  }
+}
+function showQueueProgressIndicator(total) {
+  $(".t-queue-progress").remove();
+  $(".t-queue-running-indicator").remove();
+  const progressHtml = `
+        <div class="t-queue-progress">
+            <div class="t-queue-progress-bar animated" style="width: 0%;"></div>
+        </div>
+    `;
+  const indicatorHtml = `
+        <div class="t-queue-running-indicator">
+            <i class="fa-solid fa-spinner"></i>
+            <span>\u961F\u5217: <span id="t-queue-current">0</span>/<span id="t-queue-total">${total}</span></span>
+        </div>
+    `;
+  $("#t-main-view").prepend(progressHtml);
+  $(".t-content-wrapper").append(indicatorHtml);
+}
+function updateQueueProgressIndicator(current, total, scriptName) {
+  const percent = current / total * 100;
+  $(".t-queue-progress-bar").css("width", `${percent}%`);
+  $("#t-queue-current").text(current);
+  $(".t-queue-running-indicator").attr("title", `\u6B63\u5728\u751F\u6210: ${scriptName}`);
+}
+function hideQueueProgressIndicator() {
+  $(".t-queue-progress").fadeOut(300, function() {
+    $(this).remove();
+  });
+  $(".t-queue-running-indicator").fadeOut(300, function() {
+    $(this).remove();
+  });
+}
+function cancelQueueGeneration() {
+  if (GlobalState.queueState.isRunning) {
+    GlobalState.queueState.isRunning = false;
+    cancelGeneration();
+    hideQueueProgressIndicator();
+    if (window.toastr) {
+      toastr.info("\u23F9\uFE0F \u961F\u5217\u5DF2\u505C\u6B62", "Titania Queue");
+    }
+    TitaniaLogger.info("\u961F\u5217\u751F\u6210\u5DF2\u53D6\u6D88");
   }
 }
 async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false) {
@@ -19667,6 +20846,9 @@ Generate ONLY the continuation (no repetition):`;
     GlobalState.abortController = null;
     $floatBtn.removeClass("t-loading");
     hideCancelButton();
+    if (typeof window.updateRunButtonsState === "function") {
+      window.updateRunButtonsState();
+    }
   }
 }
 var streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
@@ -19787,6 +20969,7 @@ function initCoreFeatures() {
     }
   }
   loadScripts();
+  loadQueueConfig();
   injectOptionsMenuItem();
   if (extData.custom_css) {
     applyCustomCSS(extData.custom_css);
@@ -19798,6 +20981,26 @@ function initCoreFeatures() {
   initSyncListener();
   initVectorUnsavedWarning();
   initAutoVectorizeListener();
+}
+function loadQueueConfig() {
+  try {
+    const extData = getExtData();
+    const queueCfg = extData.queue_config;
+    if (queueCfg) {
+      GlobalState.queueState.mode = queueCfg.mode || "random";
+      GlobalState.queueState.count = queueCfg.count || 3;
+      GlobalState.queueState.categoryFilter = queueCfg.categoryFilter || "ALL";
+      GlobalState.queueState.manualItems = queueCfg.manualItems || [];
+      GlobalState.queueState.interval = queueCfg.interval || 2;
+      GlobalState.queueState.enabled = queueCfg.enabled === true;
+      if (queueCfg.historyMax) {
+        GlobalState.sceneHistory.maxItems = queueCfg.historyMax;
+      }
+      console.log("Titania: \u961F\u5217\u914D\u7F6E\u5DF2\u52A0\u8F7D", GlobalState.queueState);
+    }
+  } catch (e) {
+    console.warn("Titania: \u52A0\u8F7D\u961F\u5217\u914D\u7F6E\u5931\u8D25", e);
+  }
 }
 function initAutoVectorizeListener() {
   eventSource2.on(event_types2.MESSAGE_RECEIVED, onMessageForAutoVectorize);
