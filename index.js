@@ -22,14 +22,14 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.2.8";
+    CURRENT_VERSION = "3.2.9";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.2.9": "\u{1F4FA} \u663E\u793A\u5C42\u5206\u79BB\uFF1A\u751F\u6210\u8FC7\u7A0B\u4E2D\u53EF\u81EA\u7531\u5207\u6362\u67E5\u770B\u5386\u53F2\u5267\u573A\uFF0C\u65B0\u5185\u5BB9\u5728\u540E\u53F0\u751F\u6210\u4E0D\u5E72\u6270\u9605\u8BFB<br>\u{1F514} \u65B0\u5185\u5BB9\u901A\u77E5\uFF1A\u67E5\u770B\u5386\u53F2\u65F6\u663E\u793A\u751F\u6210\u4E2D\u6307\u793A\u5668\uFF0C\u5B8C\u6210\u540E\u5F39\u51FA\u901A\u77E5\u53EF\u4E00\u952E\u8DF3\u8F6C<br>\u26A1 \u5BFC\u822A\u589E\u5F3A\uFF1A\u5386\u53F2\u5BFC\u822A\u6307\u793A\u5668\u5B9E\u65F6\u663E\u793A\u751F\u6210\u72B6\u6001\uFF0C\u652F\u6301\u5728\u751F\u6210\u4E2D\u5207\u6362",
       "3.2.8": "\u{1F3AD} \u961F\u5217\u751F\u6210\uFF1A\u6279\u91CF\u521B\u4F5C\u591A\u4E2A\u5267\u672C\u573A\u666F\uFF0C\u652F\u6301\u968F\u673A\u62BD\u53D6\u6216\u624B\u52A8\u9009\u62E9\u6A21\u5F0F<br>\u{1F518} \u53CC\u6309\u94AE\u8BBE\u8BA1\uFF1A\u5355\u6B21\u6F14\u7ECE\u4E0E\u961F\u5217\u751F\u6210\u5E76\u5217\u6309\u94AE\uFF0C\u64CD\u4F5C\u66F4\u76F4\u89C2<br>\u{1F4BE} \u8BBE\u7F6E\u8BB0\u5FC6\uFF1A\u961F\u5217\u914D\u7F6E\u81EA\u52A8\u4FDD\u5B58\uFF0C\u4E0B\u6B21\u6253\u5F00\u65E0\u9700\u91CD\u65B0\u8BBE\u7F6E<br>\u{1FA7A} \u8BCA\u65AD\u65E5\u5FD7\u5165\u53E3\uFF1A\u4E3B\u7A97\u53E3\u5E95\u90E8\u65B0\u589E\u8BCA\u65AD\u6309\u94AE\uFF0C\u5B9E\u65F6\u67E5\u770B\u63D2\u4EF6\u65E5\u5FD7",
-      "3.2.7": "\u{1F527} \u4FEE\u590D\u957F\u54CD\u5E94\u622A\u65AD\uFF1A\u4F7F\u7528 ST \u7684 EventSourceStream \u6B63\u786E\u5904\u7406 SSE \u6D41\uFF0C\u652F\u6301\u63A5\u6536\u4E0A\u4E07 token \u7684\u5B8C\u6574\u54CD\u5E94<br>\u26A1 \u5B9E\u65F6\u6D41\u5F0F\u6E32\u67D3\uFF1A\u5185\u5BB9\u8FB9\u751F\u6210\u8FB9\u663E\u793A\uFF0C\u65E0\u9700\u7B49\u5F85\u5B8C\u6574\u54CD\u5E94\uFF0C\u5927\u5E45\u63D0\u5347\u4F53\u9A8C<br>\u23F1\uFE0F \u7EDF\u8BA1 HUD \u4F18\u5316\uFF1A\u5220\u9664 Token \u4F30\u7B97\uFF0C\u6539\u4E3A\u663E\u793A\u751F\u6210\u8017\u65F6<br>\u{1F3AF} \u7FFB\u9875\u6309\u94AE\u4F18\u5316\uFF1A\u6539\u4E3A\u5185\u5BB9\u533A\u5DE6\u53F3\u4E24\u4FA7\u7B80\u6D01\u7684 < > \u6309\u94AE\uFF0C\u51CF\u5C11\u89C6\u89C9\u5E72\u6270",
-      "3.2.6": "\u{1F9F9} \u5411\u91CF\u5316\u6587\u672C\u6E05\u6D17\uFF1A\u65B0\u589E\u6587\u672C\u6E05\u6D17\u6A21\u5757\uFF0C\u5411\u91CF\u5316\u524D\u81EA\u52A8\u79FB\u9664 HTML/\u601D\u8003\u6807\u7B7E/OOC \u7B49\u65E0\u5173\u5185\u5BB9<br>\u{1F504} \u81EA\u52A8\u5411\u91CF\u5316\uFF1A\u652F\u6301\u7D2F\u79EF\u6D88\u606F\u81EA\u52A8\u89E6\u53D1\u5411\u91CF\u5316\uFF0C\u53EF\u914D\u7F6E\u89E6\u53D1\u9608\u503C<br>\u{1F441}\uFE0F \u6E05\u6D17\u6548\u679C\u9884\u89C8\uFF1A\u5411\u91CF\u7D22\u5F15\u9762\u677F\u65B0\u589E\u300C\u9884\u89C8\u6E05\u6D17\u6548\u679C\u300D\u529F\u80FD\uFF0C\u67E5\u770B\u539F\u6587\u4E0E\u6E05\u6D17\u540E\u5BF9\u6BD4<br>\u{1F4CA} \u7EDF\u8BA1\u680F\u4F18\u5316\uFF1A\u4E3B\u754C\u9762\u5B57\u6570\u7EDF\u8BA1\u6539\u4E3A\u7D27\u51D1\u6C34\u5E73\u6761\u6837\u5F0F\uFF0C\u65B0\u589E\u6A21\u578B\u540D\u79F0\u663E\u793A"
+      "3.2.7": "\u{1F527} \u4FEE\u590D\u957F\u54CD\u5E94\u622A\u65AD\uFF1A\u4F7F\u7528 ST \u7684 EventSourceStream \u6B63\u786E\u5904\u7406 SSE \u6D41\uFF0C\u652F\u6301\u63A5\u6536\u4E0A\u4E07 token \u7684\u5B8C\u6574\u54CD\u5E94<br>\u26A1 \u5B9E\u65F6\u6D41\u5F0F\u6E32\u67D3\uFF1A\u5185\u5BB9\u8FB9\u751F\u6210\u8FB9\u663E\u793A\uFF0C\u65E0\u9700\u7B49\u5F85\u5B8C\u6574\u54CD\u5E94\uFF0C\u5927\u5E45\u63D0\u5347\u4F53\u9A8C<br>\u23F1\uFE0F \u7EDF\u8BA1 HUD \u4F18\u5316\uFF1A\u5220\u9664 Token \u4F30\u7B97\uFF0C\u6539\u4E3A\u663E\u793A\u751F\u6210\u8017\u65F6<br>\u{1F3AF} \u7FFB\u9875\u6309\u94AE\u4F18\u5316\uFF1A\u6539\u4E3A\u5185\u5BB9\u533A\u5DE6\u53F3\u4E24\u4FA7\u7B80\u6D01\u7684 < > \u6309\u94AE\uFF0C\u51CF\u5C11\u89C6\u89C9\u5E72\u6270"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -3252,6 +3252,181 @@ textarea.t-input {
     .t-ce-actions .t-btn {
         padding: 8px 12px;
         font-size: 0.85em;
+    }
+}
+
+/* ===== \u65B0\u5185\u5BB9\u751F\u6210\u4E2D\u6307\u793A\u5668 ===== */
+
+.t-new-content-indicator {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(25, 25, 35, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(144, 205, 244, 0.3);
+    border-radius: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    animation: t-indicator-slideUp 0.3s ease;
+}
+
+@keyframes t-indicator-slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.t-new-content-indicator i {
+    color: #90cdf4;
+    font-size: 1em;
+}
+
+.t-new-content-indicator span {
+    color: #ccc;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.t-goto-live-btn {
+    padding: 5px 12px;
+    background: linear-gradient(90deg, #4a9eff, #6ab0ff);
+    border: none;
+    border-radius: 15px;
+    color: #fff;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-goto-live-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 2px 10px rgba(74, 158, 255, 0.4);
+}
+
+.t-goto-live-btn:active {
+    transform: scale(0.95);
+}
+
+/* ===== \u751F\u6210\u5B8C\u6210\u901A\u77E5 ===== */
+
+.t-generation-complete-notification {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: rgba(25, 35, 25, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(85, 239, 196, 0.3);
+    border-radius: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    animation: t-gcn-slideUp 0.3s ease;
+}
+
+@keyframes t-gcn-slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.t-gcn-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-gcn-content i {
+    color: #55efc4;
+    font-size: 1.1em;
+}
+
+.t-gcn-content span {
+    color: #ccc;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.t-gcn-view-btn {
+    padding: 6px 14px;
+    background: linear-gradient(90deg, #55efc4, #00b894);
+    border: none;
+    border-radius: 15px;
+    color: #000;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-gcn-view-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 2px 10px rgba(85, 239, 196, 0.4);
+}
+
+.t-gcn-view-btn:active {
+    transform: scale(0.95);
+}
+
+.t-gcn-close-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: #666;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-gcn-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media screen and (max-width: 600px) {
+    .t-new-content-indicator,
+    .t-generation-complete-notification {
+        bottom: 10px;
+        padding: 8px 14px;
+        gap: 8px;
+    }
+
+    .t-new-content-indicator span,
+    .t-gcn-content span {
+        font-size: 0.85em;
+    }
+
+    .t-goto-live-btn,
+    .t-gcn-view-btn {
+        padding: 5px 10px;
+        font-size: 0.8em;
     }
 }
 
@@ -7952,47 +8127,11 @@ function getCurrentHistoryItem() {
   }
   return history.items[history.currentIndex];
 }
-function navigateToPrevHistory() {
-  const history = GlobalState.sceneHistory;
-  if (history.currentIndex < history.items.length - 1) {
-    history.currentIndex++;
-    syncCurrentHistoryToState();
-    return true;
-  }
-  return false;
-}
-function navigateToNextHistory() {
-  const history = GlobalState.sceneHistory;
-  if (history.currentIndex > 0) {
-    history.currentIndex--;
-    syncCurrentHistoryToState();
-    return true;
-  }
-  return false;
-}
-function syncCurrentHistoryToState() {
-  const item = getCurrentHistoryItem();
-  if (item) {
-    GlobalState.lastGeneratedContent = item.content;
-    GlobalState.lastGeneratedScriptId = item.scriptId;
-    GlobalState.lastFavId = null;
-    item.isRead = true;
-  }
-}
 function markCurrentAsRead() {
   const item = getCurrentHistoryItem();
   if (item) {
     item.isRead = true;
   }
-}
-function getHistoryNavState() {
-  const history = GlobalState.sceneHistory;
-  return {
-    hasPrev: history.currentIndex < history.items.length - 1,
-    hasNext: history.currentIndex > 0,
-    current: history.items.length > 0 ? history.currentIndex + 1 : 0,
-    total: history.items.length
-  };
 }
 function resetQueueState() {
   GlobalState.queueState.isRunning = false;
@@ -8041,6 +8180,47 @@ function setHistoryMaxItems(maxItems) {
     GlobalState.sceneHistory.items.pop();
   }
 }
+function lockDisplayToHistory(historyIndex) {
+  const history = GlobalState.sceneHistory;
+  if (historyIndex < 0 || historyIndex >= history.items.length) return;
+  const item = history.items[historyIndex];
+  GlobalState.displayState.isViewingHistory = true;
+  GlobalState.displayState.currentViewIndex = historyIndex;
+  GlobalState.displayState.lockedContent = item.content;
+  GlobalState.displayState.lockedScriptId = item.scriptId;
+  GlobalState.displayState.lockedScriptName = item.scriptName;
+  item.isRead = true;
+  console.log(`[Titania] \u663E\u793A\u5C42\u9501\u5B9A\u5230\u5386\u53F2 #${historyIndex + 1}`);
+}
+function unlockDisplay() {
+  GlobalState.displayState.isViewingHistory = false;
+  GlobalState.displayState.currentViewIndex = -1;
+  GlobalState.displayState.lockedContent = null;
+  GlobalState.displayState.lockedScriptId = null;
+  GlobalState.displayState.lockedScriptName = null;
+  console.log(`[Titania] \u663E\u793A\u5C42\u5DF2\u89E3\u9501\uFF0C\u8FD4\u56DE\u5B9E\u65F6\u72B6\u6001`);
+}
+function shouldRenderStreamToUI() {
+  return !GlobalState.displayState.isViewingHistory;
+}
+function startStreamingCache(scriptId, scriptName) {
+  GlobalState.streamingCache.content = "";
+  GlobalState.streamingCache.scriptId = scriptId;
+  GlobalState.streamingCache.scriptName = scriptName;
+  GlobalState.streamingCache.isActive = true;
+}
+function updateStreamingCache(content) {
+  GlobalState.streamingCache.content = content;
+}
+function endStreamingCache() {
+  GlobalState.streamingCache.isActive = false;
+}
+function clearStreamingCache() {
+  GlobalState.streamingCache.content = "";
+  GlobalState.streamingCache.scriptId = null;
+  GlobalState.streamingCache.scriptName = null;
+  GlobalState.streamingCache.isActive = false;
+}
 var GlobalState;
 var init_state = __esm({
   "src/core/state.js"() {
@@ -8077,6 +8257,30 @@ var init_state = __esm({
       // 计时器 interval ID
       lastGenerationTime: 0,
       // 上次生成耗时 (毫秒)
+      // 显示层状态 (用于分离显示与生成)
+      displayState: {
+        isViewingHistory: false,
+        // 是否正在查看历史（非最新）
+        currentViewIndex: -1,
+        // 当前查看的历史索引 (-1 表示查看最新/实时)
+        lockedContent: null,
+        // 锁定显示的内容（用户切换历史时）
+        lockedScriptId: null,
+        // 锁定显示的剧本ID
+        lockedScriptName: null
+        // 锁定显示的剧本名称
+      },
+      // 流式生成缓存 (后台生成时暂存)
+      streamingCache: {
+        content: "",
+        // 正在生成的内容
+        scriptId: null,
+        // 正在生成的剧本ID
+        scriptName: null,
+        // 正在生成的剧本名称
+        isActive: false
+        // 是否有活跃的流式生成
+      },
       // 自动续写相关
       continuation: {
         isActive: false,
@@ -17902,10 +18106,18 @@ async function openMainWindow() {
   });
   $("#t-nav-prev").on("click", function() {
     if ($(this).prop("disabled")) return;
-    if (navigateToPrevHistory()) {
-      const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
-      const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
-      renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
+    const history = GlobalState.sceneHistory;
+    const display = GlobalState.displayState;
+    let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    if (effectiveIndex < history.items.length - 1) {
+      const newIndex = effectiveIndex + 1;
+      lockDisplayToHistory(newIndex);
+      const item = history.items[newIndex];
+      if (item) {
+        renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
+        GlobalState.lastGeneratedContent = item.content;
+        GlobalState.lastGeneratedScriptId = item.scriptId;
+      }
       updateSceneHistoryNav();
       updateFavButtonUI();
       updateScriptTitleDisplay();
@@ -17913,17 +18125,40 @@ async function openMainWindow() {
   });
   $("#t-nav-next").on("click", function() {
     if ($(this).prop("disabled")) return;
-    if (navigateToNextHistory()) {
-      const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
-      const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
-      renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
+    const history = GlobalState.sceneHistory;
+    const display = GlobalState.displayState;
+    const streaming = GlobalState.streamingCache;
+    let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    if (effectiveIndex > 0) {
+      const newIndex = effectiveIndex - 1;
+      if (newIndex === 0 && !streaming.isActive) {
+        unlockDisplay();
+        history.currentIndex = 0;
+      } else {
+        lockDisplayToHistory(newIndex);
+      }
+      const item = history.items[newIndex];
+      if (item) {
+        renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
+        GlobalState.lastGeneratedContent = item.content;
+        GlobalState.lastGeneratedScriptId = item.scriptId;
+      }
       updateSceneHistoryNav();
       updateFavButtonUI();
       updateScriptTitleDisplay();
+    } else if (effectiveIndex === 0 && streaming.isActive && display.isViewingHistory) {
+      unlockDisplay();
+      if (streaming.content) {
+        renderGeneratedContent(streaming.content, streaming.scriptName || "\u573A\u666F", true);
+      }
+      $("#t-new-content-indicator").remove();
+      updateSceneHistoryNav();
     }
   });
   window.updateSceneHistoryNav = updateSceneHistoryNav;
   window.updateRunButtonsState = updateRunButtonsState;
+  window.updateFavButtonUI = updateFavButtonUI;
+  window.updateScriptTitleDisplay = updateScriptTitleDisplay;
   let initialScriptId = GlobalState.lastUsedScriptId;
   if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
     initialScriptId = GlobalState.lastGeneratedScriptId;
@@ -18032,17 +18267,33 @@ function updateScriptTitleDisplay() {
   $("#t-lbl-desc-mini").text(script.desc || "\u65E0\u7B80\u4ECB");
 }
 function updateSceneHistoryNav() {
-  const navState = getHistoryNavState();
   const $prevBtn = $("#t-nav-prev");
   const $nextBtn = $("#t-nav-next");
   const $indicator = $("#t-page-indicator");
-  if (navState.total > 1) {
+  const history = GlobalState.sceneHistory;
+  const display = GlobalState.displayState;
+  const streaming = GlobalState.streamingCache;
+  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+  const virtualTotal = streaming.isActive && display.isViewingHistory ? history.items.length + 1 : history.items.length;
+  const displayCurrent = display.isViewingHistory ? effectiveIndex + 1 : streaming.isActive ? 0 : effectiveIndex + 1;
+  const hasPrev = effectiveIndex < history.items.length - 1;
+  const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
+  if (history.items.length > 1 || history.items.length >= 1 && streaming.isActive) {
     $prevBtn.show();
     $nextBtn.show();
     $indicator.show();
-    $prevBtn.prop("disabled", !navState.hasPrev);
-    $nextBtn.prop("disabled", !navState.hasNext);
-    $indicator.text(`${navState.current}/${navState.total}`);
+    $prevBtn.prop("disabled", !hasPrev);
+    $nextBtn.prop("disabled", !hasNext);
+    if (streaming.isActive && !display.isViewingHistory) {
+      $indicator.text(`\u23F3/${history.items.length}`);
+      $indicator.css("color", "#90cdf4");
+    } else if (display.isViewingHistory && streaming.isActive) {
+      $indicator.text(`${effectiveIndex + 1}/${history.items.length} \u26A1`);
+      $indicator.css("color", "#ffeaa7");
+    } else {
+      $indicator.text(`${effectiveIndex + 1}/${history.items.length}`);
+      $indicator.css("color", "rgba(255, 255, 255, 0.3)");
+    }
     markCurrentAsRead();
   } else {
     $prevBtn.hide();
@@ -19737,6 +19988,11 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
 }
 function scheduleStreamRender(content, scriptName) {
   pendingStreamContent = content;
+  updateStreamingCache(content);
+  if (!shouldRenderStreamToUI()) {
+    updateNewContentIndicator();
+    return;
+  }
   const now = Date.now();
   const timeSinceLastRender = now - lastRenderTime;
   if (timeSinceLastRender >= STREAM_RENDER_INTERVAL) {
@@ -19748,9 +20004,91 @@ function scheduleStreamRender(content, scriptName) {
     streamRenderTimer = setTimeout(() => {
       streamRenderTimer = null;
       lastRenderTime = Date.now();
-      renderGeneratedContent(pendingStreamContent, scriptName, true);
+      if (shouldRenderStreamToUI()) {
+        renderGeneratedContent(pendingStreamContent, scriptName, true);
+      }
     }, STREAM_RENDER_INTERVAL - timeSinceLastRender);
   }
+}
+function updateNewContentIndicator() {
+  const $indicator = $("#t-new-content-indicator");
+  if ($indicator.length === 0 && $("#t-main-view").length > 0) {
+    const indicatorHtml = `
+            <div id="t-new-content-indicator" class="t-new-content-indicator">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>\u65B0\u5185\u5BB9\u751F\u6210\u4E2D...</span>
+                <button id="t-goto-live" class="t-goto-live-btn">\u67E5\u770B</button>
+            </div>
+        `;
+    $(".t-content-wrapper").append(indicatorHtml);
+    $("#t-goto-live").on("click", function() {
+      unlockDisplay();
+      GlobalState.sceneHistory.currentIndex = 0;
+      if (GlobalState.streamingCache.content) {
+        renderGeneratedContent(
+          GlobalState.streamingCache.content,
+          GlobalState.streamingCache.scriptName || "\u573A\u666F",
+          true
+        );
+      }
+      if (typeof window.updateSceneHistoryNav === "function") {
+        window.updateSceneHistoryNav();
+      }
+      $("#t-new-content-indicator").remove();
+    });
+  }
+}
+function removeNewContentIndicator() {
+  $("#t-new-content-indicator").fadeOut(200, function() {
+    $(this).remove();
+  });
+}
+function showGenerationCompleteNotification(scriptName) {
+  removeNewContentIndicator();
+  const $notification = $(`
+        <div id="t-generation-complete-notification" class="t-generation-complete-notification">
+            <div class="t-gcn-content">
+                <i class="fa-solid fa-check-circle"></i>
+                <span>\u300A${scriptName}\u300B\u751F\u6210\u5B8C\u6210</span>
+            </div>
+            <button id="t-gcn-view" class="t-gcn-view-btn">\u7ACB\u5373\u67E5\u770B</button>
+            <button id="t-gcn-close" class="t-gcn-close-btn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    `);
+  $("#t-generation-complete-notification").remove();
+  $(".t-content-wrapper").append($notification);
+  $("#t-gcn-view").on("click", function() {
+    unlockDisplay();
+    GlobalState.sceneHistory.currentIndex = 0;
+    const latestItem = GlobalState.sceneHistory.items[0];
+    if (latestItem) {
+      renderGeneratedContent(latestItem.content, latestItem.scriptName || "\u573A\u666F", false);
+      GlobalState.lastGeneratedContent = latestItem.content;
+      GlobalState.lastGeneratedScriptId = latestItem.scriptId;
+    }
+    if (typeof window.updateSceneHistoryNav === "function") {
+      window.updateSceneHistoryNav();
+    }
+    updateScriptTitleDisplay();
+    updateFavButtonUI();
+    $notification.fadeOut(200, function() {
+      $(this).remove();
+    });
+  });
+  $("#t-gcn-close").on("click", function() {
+    $notification.fadeOut(200, function() {
+      $(this).remove();
+    });
+  });
+  setTimeout(() => {
+    if ($("#t-generation-complete-notification").length > 0) {
+      $("#t-generation-complete-notification").fadeOut(300, function() {
+        $(this).remove();
+      });
+    }
+  }, 5e3);
 }
 function finalizeStreamRender(content, scriptName) {
   if (streamRenderTimer) {
@@ -20009,6 +20347,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   const signal = GlobalState.abortController.signal;
   GlobalState.isGenerating = true;
   $floatBtn.addClass("t-loading");
+  startStreamingCache(script.id, script.name);
   if (typeof window.updateRunButtonsState === "function") {
     window.updateRunButtonsState();
   }
@@ -20145,7 +20484,7 @@ ${processedPrompt}`;
               chunkCount++;
               diagnostics.stream_stats.chunks = chunkCount;
               rawContent = chunk.text || "";
-              if ($("#t-output-content").length > 0 && rawContent.length > 0) {
+              if (($("#t-output-content").length > 0 || $("#t-main-view").length > 0) && rawContent.length > 0) {
                 const streamCleanContent = sanitizeAIOutput(rawContent);
                 scheduleStreamRender(streamCleanContent, script.name);
               }
@@ -20260,7 +20599,7 @@ ${processedPrompt}`;
                 const chunk = json.choices?.[0]?.delta?.content || "";
                 if (chunk) {
                   rawContent += chunk;
-                  if ($("#t-output-content").length > 0) {
+                  if ($("#t-output-content").length > 0 || $("#t-main-view").length > 0) {
                     const streamCleanContent = sanitizeAIOutput(rawContent);
                     scheduleStreamRender(streamCleanContent, script.name);
                   }
@@ -20408,8 +20747,10 @@ ${processedPrompt}`;
       }
     }
     resetContinuationState();
+    endStreamingCache();
     pushSceneToHistory(finalOutput, script.id, script.name);
     diagnostics.phase = "complete";
+    removeNewContentIndicator();
     GlobalState.lastUsedModelName = finalModel;
     const stats = countContentStats(finalOutput);
     GlobalState.contentStats = {
@@ -20424,7 +20765,11 @@ ${processedPrompt}`;
       updateContentStatsDisplay(GlobalState.contentStats);
     }
     if ($("#t-output-content").length > 0) {
-      finalizeStreamRender(finalOutput, script.name);
+      if (shouldRenderStreamToUI()) {
+        finalizeStreamRender(finalOutput, script.name);
+      } else {
+        showGenerationCompleteNotification(script.name);
+      }
       if (typeof window.updateSceneHistoryNav === "function") {
         window.updateSceneHistoryNav();
       }
@@ -20441,6 +20786,8 @@ ${processedPrompt}`;
     stopTimer();
     hideCancelButton();
     resetContinuationState();
+    clearStreamingCache();
+    removeNewContentIndicator();
     diagnostics.network.latency = Date.now() - startTime;
     diagnostics.phase += "_failed";
     TitaniaLogger.error("\u751F\u6210\u8FC7\u7A0B\u53D1\u751F\u5F02\u5E38", e, diagnostics);
