@@ -8107,8 +8107,10 @@ function pushSceneToHistory(content, scriptId, scriptName) {
     scriptId,
     scriptName: scriptName || "\u672A\u77E5\u5267\u672C",
     timestamp: Date.now(),
-    isRead: false
+    isRead: false,
     // 新生成的默认未读
+    favId: null
+    // 该记录对应的收藏 ID（null 表示未收藏）
   };
   history.items.unshift(newItem);
   while (history.items.length > history.maxItems) {
@@ -8126,6 +8128,14 @@ function getCurrentHistoryItem() {
     return null;
   }
   return history.items[history.currentIndex];
+}
+function syncFavIdToCurrentHistory(favId) {
+  const display = GlobalState.displayState;
+  const history = GlobalState.sceneHistory;
+  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+  if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
+    history.items[effectiveIndex].favId = favId;
+  }
 }
 function markCurrentAsRead() {
   const item = getCurrentHistoryItem();
@@ -9556,6 +9566,7 @@ async function saveFavorite() {
   data.favs.unshift(entry);
   saveExtData();
   GlobalState.lastFavId = entry.id;
+  syncFavIdToCurrentHistory(entry.id);
   updateFavButtonUI();
   if (window.toastr) toastr.success("\u6536\u85CF\u6210\u529F\uFF01");
 }
@@ -9574,6 +9585,7 @@ function unsaveFavorite() {
   if (data.favs.length < originalLength) {
     saveExtData();
     GlobalState.lastFavId = null;
+    syncFavIdToCurrentHistory(null);
     updateFavButtonUI();
     if (window.toastr) toastr.info("\u5DF2\u53D6\u6D88\u6536\u85CF");
     return true;
@@ -18117,6 +18129,7 @@ async function openMainWindow() {
         renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
         GlobalState.lastGeneratedContent = item.content;
         GlobalState.lastGeneratedScriptId = item.scriptId;
+        GlobalState.lastFavId = item.favId || null;
       }
       updateSceneHistoryNav();
       updateFavButtonUI();
@@ -18142,6 +18155,7 @@ async function openMainWindow() {
         renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
         GlobalState.lastGeneratedContent = item.content;
         GlobalState.lastGeneratedScriptId = item.scriptId;
+        GlobalState.lastFavId = item.favId || null;
       }
       updateSceneHistoryNav();
       updateFavButtonUI();
@@ -20067,6 +20081,7 @@ function showGenerationCompleteNotification(scriptName) {
       renderGeneratedContent(latestItem.content, latestItem.scriptName || "\u573A\u666F", false);
       GlobalState.lastGeneratedContent = latestItem.content;
       GlobalState.lastGeneratedScriptId = latestItem.scriptId;
+      GlobalState.lastFavId = latestItem.favId || null;
     }
     if (typeof window.updateSceneHistoryNav === "function") {
       window.updateSceneHistoryNav();
