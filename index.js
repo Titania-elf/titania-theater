@@ -22,14 +22,13 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.2.9";
+    CURRENT_VERSION = "3.3.0";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
-      "3.2.9": "\u{1F4FA} \u663E\u793A\u5C42\u5206\u79BB\uFF1A\u751F\u6210\u8FC7\u7A0B\u4E2D\u53EF\u81EA\u7531\u5207\u6362\u67E5\u770B\u5386\u53F2\u5267\u573A\uFF0C\u65B0\u5185\u5BB9\u5728\u540E\u53F0\u751F\u6210\u4E0D\u5E72\u6270\u9605\u8BFB<br>\u{1F514} \u65B0\u5185\u5BB9\u901A\u77E5\uFF1A\u67E5\u770B\u5386\u53F2\u65F6\u663E\u793A\u751F\u6210\u4E2D\u6307\u793A\u5668\uFF0C\u5B8C\u6210\u540E\u5F39\u51FA\u901A\u77E5\u53EF\u4E00\u952E\u8DF3\u8F6C<br>\u26A1 \u5BFC\u822A\u589E\u5F3A\uFF1A\u5386\u53F2\u5BFC\u822A\u6307\u793A\u5668\u5B9E\u65F6\u663E\u793A\u751F\u6210\u72B6\u6001\uFF0C\u652F\u6301\u5728\u751F\u6210\u4E2D\u5207\u6362",
-      "3.2.8": "\u{1F3AD} \u961F\u5217\u751F\u6210\uFF1A\u6279\u91CF\u521B\u4F5C\u591A\u4E2A\u5267\u672C\u573A\u666F\uFF0C\u652F\u6301\u968F\u673A\u62BD\u53D6\u6216\u624B\u52A8\u9009\u62E9\u6A21\u5F0F<br>\u{1F518} \u53CC\u6309\u94AE\u8BBE\u8BA1\uFF1A\u5355\u6B21\u6F14\u7ECE\u4E0E\u961F\u5217\u751F\u6210\u5E76\u5217\u6309\u94AE\uFF0C\u64CD\u4F5C\u66F4\u76F4\u89C2<br>\u{1F4BE} \u8BBE\u7F6E\u8BB0\u5FC6\uFF1A\u961F\u5217\u914D\u7F6E\u81EA\u52A8\u4FDD\u5B58\uFF0C\u4E0B\u6B21\u6253\u5F00\u65E0\u9700\u91CD\u65B0\u8BBE\u7F6E<br>\u{1FA7A} \u8BCA\u65AD\u65E5\u5FD7\u5165\u53E3\uFF1A\u4E3B\u7A97\u53E3\u5E95\u90E8\u65B0\u589E\u8BCA\u65AD\u6309\u94AE\uFF0C\u5B9E\u65F6\u67E5\u770B\u63D2\u4EF6\u65E5\u5FD7",
-      "3.2.7": "\u{1F527} \u4FEE\u590D\u957F\u54CD\u5E94\u622A\u65AD\uFF1A\u4F7F\u7528 ST \u7684 EventSourceStream \u6B63\u786E\u5904\u7406 SSE \u6D41\uFF0C\u652F\u6301\u63A5\u6536\u4E0A\u4E07 token \u7684\u5B8C\u6574\u54CD\u5E94<br>\u26A1 \u5B9E\u65F6\u6D41\u5F0F\u6E32\u67D3\uFF1A\u5185\u5BB9\u8FB9\u751F\u6210\u8FB9\u663E\u793A\uFF0C\u65E0\u9700\u7B49\u5F85\u5B8C\u6574\u54CD\u5E94\uFF0C\u5927\u5E45\u63D0\u5347\u4F53\u9A8C<br>\u23F1\uFE0F \u7EDF\u8BA1 HUD \u4F18\u5316\uFF1A\u5220\u9664 Token \u4F30\u7B97\uFF0C\u6539\u4E3A\u663E\u793A\u751F\u6210\u8017\u65F6<br>\u{1F3AF} \u7FFB\u9875\u6309\u94AE\u4F18\u5316\uFF1A\u6539\u4E3A\u5185\u5BB9\u533A\u5DE6\u53F3\u4E24\u4FA7\u7B80\u6D01\u7684 < > \u6309\u94AE\uFF0C\u51CF\u5C11\u89C6\u89C9\u5E72\u6270"
+      "3.3.0": "\u{1F575}\uFE0F \u56FE\u7247\u5BFC\u51FA\u6253\u7801\uFF1A\u6536\u85CF\u9605\u8BFB\u5668\u5BFC\u51FA\u56FE\u7247\u65F6\uFF0C\u5BF9 {{user}} \u5B8F\u5C55\u5F00\u540E\u7684\u7528\u6237\u540D\u8FDB\u884C\u7B49\u957F\u6253\u7801\uFF08\u4EC5\u5F71\u54CD\u5BFC\u51FA\uFF0C\u4E0D\u5F71\u54CD\u754C\u9762\u663E\u793A\uFF09",
+      "3.2.9": "\u{1F4FA} \u663E\u793A\u5C42\u5206\u79BB\uFF1A\u751F\u6210\u8FC7\u7A0B\u4E2D\u53EF\u81EA\u7531\u5207\u6362\u67E5\u770B\u5386\u53F2\u5267\u573A\uFF0C\u65B0\u5185\u5BB9\u5728\u540E\u53F0\u751F\u6210\u4E0D\u5E72\u6270\u9605\u8BFB<br>\u{1F514} \u65B0\u5185\u5BB9\u901A\u77E5\uFF1A\u67E5\u770B\u5386\u53F2\u65F6\u663E\u793A\u751F\u6210\u4E2D\u6307\u793A\u5668\uFF0C\u5B8C\u6210\u540E\u5F39\u51FA\u901A\u77E5\u53EF\u4E00\u952E\u8DF3\u8F6C<br>\u26A1 \u5BFC\u822A\u589E\u5F3A\uFF1A\u5386\u53F2\u5BFC\u822A\u6307\u793A\u5668\u5B9E\u65F6\u663E\u793A\u751F\u6210\u72B6\u6001\uFF0C\u652F\u6301\u5728\u751F\u6210\u4E2D\u5207\u6362"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -9520,6 +9519,129 @@ __export(favsWindow_exports, {
   saveFavorite: () => saveFavorite,
   unsaveFavorite: () => unsaveFavorite
 });
+function replaceAllLiteral(str, search, replacement) {
+  if (!str || !search) return str;
+  return str.split(search).join(replacement);
+}
+function maskStringSameLength(value, maskChar = "\u2588") {
+  if (!value) return value;
+  return Array.from(value).map((ch) => /\s/.test(ch) ? ch : maskChar).join("");
+}
+function maskHtmlByToken(html, token, replacement) {
+  if (!html || !token || !replacement) return html;
+  if (!html.includes(token)) return html;
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div id="titania-mask-root">${html}</div>`, "text/html");
+    const root = doc.getElementById("titania-mask-root");
+    if (!root) return html;
+    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    let node;
+    while (node = walker.nextNode()) {
+      const v = node.nodeValue;
+      if (v && v.includes(token)) {
+        node.nodeValue = replaceAllLiteral(v, token, replacement);
+      }
+    }
+    root.querySelectorAll("style").forEach((styleEl) => {
+      const css = styleEl.textContent || "";
+      if (css && css.includes(token)) {
+        styleEl.textContent = replaceAllLiteral(css, token, replacement);
+      }
+    });
+    return root.innerHTML;
+  } catch (e) {
+    console.warn("Titania: maskHtmlByToken failed, fallback to string replace", e);
+    return replaceAllLiteral(html, token, replacement);
+  }
+}
+async function getExpandedUserNameForMasking() {
+  try {
+    if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+      const ctx = SillyTavern.getContext();
+      const u = ctx?.substituteParams?.("{{user}}");
+      if (u && typeof u === "string") return u;
+    }
+  } catch (e) {
+  }
+  try {
+    const d = await getContextData();
+    return d?.userName || "";
+  } catch (e) {
+    return "";
+  }
+}
+function createOffscreenExportDom(widthPx) {
+  const root = document.createElement("div");
+  root.className = "titania-offscreen-export";
+  root.style.cssText = `position:fixed; left:-10000px; top:0; width:${widthPx}px; background:#0b0b0b; z-index:0; overflow:visible;`;
+  const zone = document.createElement("div");
+  zone.style.cssText = "width:100%; height:auto; overflow:visible;";
+  const content = document.createElement("div");
+  zone.appendChild(content);
+  root.appendChild(zone);
+  document.body.appendChild(root);
+  return { root, zone, content };
+}
+function waitForNextPaint(frames = 2) {
+  return new Promise((resolve) => {
+    const step = (n) => {
+      if (n <= 0) return resolve();
+      requestAnimationFrame(() => step(n - 1));
+    };
+    step(frames);
+  });
+}
+async function waitForFontsReady(timeoutMs = 1500) {
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await Promise.race([
+        document.fonts.ready,
+        new Promise((r) => setTimeout(r, timeoutMs))
+      ]);
+    }
+  } catch (e) {
+  }
+}
+function collectImagesDeep(rootEl) {
+  const imgs = [];
+  try {
+    rootEl.querySelectorAll?.("img")?.forEach((img) => imgs.push(img));
+    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host) => {
+      const shadow = host.shadowRoot;
+      if (shadow) {
+        shadow.querySelectorAll("img").forEach((img) => imgs.push(img));
+      }
+    });
+  } catch (e) {
+  }
+  return imgs;
+}
+function waitForImagesLoadedDeep(rootEl, timeoutMs = 5e3) {
+  const imgs = collectImagesDeep(rootEl).filter((img) => !img.complete);
+  if (imgs.length === 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    let done = false;
+    const timer = setTimeout(() => {
+      if (done) return;
+      done = true;
+      resolve();
+    }, timeoutMs);
+    let remaining = imgs.length;
+    const finishOne = () => {
+      remaining--;
+      if (remaining <= 0 && !done) {
+        done = true;
+        clearTimeout(timer);
+        resolve();
+      }
+    };
+    imgs.forEach((img) => {
+      img.addEventListener("load", finishOne, { once: true });
+      img.addEventListener("error", finishOne, { once: true });
+    });
+  });
+}
 async function saveFavorite() {
   const container = document.getElementById("t-output-content");
   const content = extractFromShadowDOM(container);
@@ -9897,28 +10019,41 @@ function openFavsWindow() {
   });
   $("#t-read-img").on("click", async function() {
     const btn = $(this);
-    const originalHtml = btn.html();
+    const originalBtnHtml = btn.html();
+    let offscreen = null;
     try {
       btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
       if (typeof htmlToImage === "undefined") {
         if (window.toastr) toastr.info("\u6B63\u5728\u52A0\u8F7D\u7EC4\u4EF6...", "Titania");
         await $.getScript("https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js");
       }
-      const element = document.getElementById("t-read-capture-zone");
-      const originalHeight = element.style.height;
-      const parent = element.parentElement;
-      const originalParentOverflow = parent.style.overflow;
-      parent.style.overflow = "visible";
-      element.style.height = "auto";
-      const dataUrl = await htmlToImage.toPng(element, {
+      let sourceHtml = currentViewingHtml;
+      if (!sourceHtml) {
+        const container = document.getElementById("t-read-content");
+        sourceHtml = extractFromShadowDOM(container);
+      }
+      if (!sourceHtml || sourceHtml.trim().length < 10) {
+        throw new Error("\u5F53\u524D\u65E0\u53EF\u5BFC\u51FA\u7684\u5185\u5BB9");
+      }
+      const userName = await getExpandedUserNameForMasking();
+      let maskedHtml = sourceHtml;
+      if (userName && typeof userName === "string" && userName.trim()) {
+        const replacement = maskStringSameLength(userName, "\u2588");
+        maskedHtml = maskHtmlByToken(sourceHtml, userName, replacement);
+      }
+      const onScreenZone = document.getElementById("t-read-capture-zone");
+      const widthPx = Math.ceil(onScreenZone?.getBoundingClientRect?.().width || 900);
+      offscreen = createOffscreenExportDom(widthPx);
+      renderToShadowDOMReal(offscreen.content, maskedHtml);
+      await waitForFontsReady(1500);
+      await waitForNextPaint(2);
+      await waitForImagesLoadedDeep(offscreen.root, 5e3);
+      await waitForNextPaint(1);
+      const dataUrl = await htmlToImage.toPng(offscreen.zone, {
         backgroundColor: "#0b0b0b",
-        // 强制背景色
         pixelRatio: 2,
-        // 2倍高清
         skipAutoScale: true
       });
-      parent.style.overflow = originalParentOverflow;
-      element.style.height = originalHeight;
       const link = document.createElement("a");
       link.download = `Titania_${(/* @__PURE__ */ new Date()).getTime()}.png`;
       link.href = dataUrl;
@@ -9926,14 +10061,13 @@ function openFavsWindow() {
       if (window.toastr) toastr.success("\u56FE\u7247\u5BFC\u51FA\u6210\u529F");
     } catch (e) {
       console.error(e);
-      alert("\u5BFC\u51FA\u5931\u8D25: " + e.message + "\n\u53EF\u80FD\u662F\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 SVG \u8F6C\u6362\u6216\u5185\u5B58\u4E0D\u8DB3\u3002");
-      const element = document.getElementById("t-read-capture-zone");
-      if (element) {
-        element.parentElement.style.overflow = "";
-        element.style.height = "";
-      }
+      alert("\u5BFC\u51FA\u5931\u8D25: " + (e?.message || e) + "\n\u53EF\u80FD\u539F\u56E0\uFF1A\u8DE8\u57DF\u56FE\u7247/\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 SVG \u8F6C\u6362/\u5185\u5B58\u4E0D\u8DB3\u3002");
     } finally {
-      btn.prop("disabled", false).html(originalHtml);
+      try {
+        if (offscreen?.root) offscreen.root.remove();
+      } catch (e) {
+      }
+      btn.prop("disabled", false).html(originalBtnHtml);
     }
   });
   $("#t-read-rename").on("click", () => {
