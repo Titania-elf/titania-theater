@@ -9529,7 +9529,6 @@ function maskStringSameLength(value, maskChar = "\u2588") {
 }
 function maskHtmlByToken(html, token, replacement) {
   if (!html || !token || !replacement) return html;
-  if (!html.includes(token)) return html;
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(`<div id="titania-mask-root">${html}</div>`, "text/html");
@@ -9543,6 +9542,21 @@ function maskHtmlByToken(html, token, replacement) {
         node.nodeValue = replaceAllLiteral(v, token, replacement);
       }
     }
+    root.querySelectorAll("*").forEach((el) => {
+      try {
+        const attrs = Array.from(el.attributes || []);
+        attrs.forEach((attr) => {
+          const name = (attr.name || "").toLowerCase();
+          const shouldMask = name === "title" || name === "alt" || name === "placeholder" || name === "value" || name === "style" || name.startsWith("aria-") || name.startsWith("data-");
+          if (!shouldMask) return;
+          const v = attr.value;
+          if (v && v.includes(token)) {
+            el.setAttribute(attr.name, replaceAllLiteral(v, token, replacement));
+          }
+        });
+      } catch (e) {
+      }
+    });
     root.querySelectorAll("style").forEach((styleEl) => {
       const css = styleEl.textContent || "";
       if (css && css.includes(token)) {
@@ -9560,13 +9574,18 @@ async function getExpandedUserNameForMasking() {
     if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
       const ctx = SillyTavern.getContext();
       const u = ctx?.substituteParams?.("{{user}}");
-      if (u && typeof u === "string") return u;
+      const name1 = ctx?.name1;
+      if (u && typeof u === "string" && u.trim() && u !== "{{user}}" && u !== "User") return u;
+      if (name1 && typeof name1 === "string" && name1.trim() && name1 !== "{{user}}") return name1;
+      if (u && typeof u === "string" && u.trim() && u !== "{{user}}") return u;
     }
   } catch (e) {
   }
   try {
     const d = await getContextData();
-    return d?.userName || "";
+    const u2 = d?.userName;
+    if (u2 && typeof u2 === "string" && u2.trim() && u2 !== "{{user}}") return u2;
+    return "";
   } catch (e) {
     return "";
   }
