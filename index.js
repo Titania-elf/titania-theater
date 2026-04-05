@@ -22,11 +22,12 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.3.0";
+    CURRENT_VERSION = "3.3.1";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.3.1": "\u{1F4CA} \u5267\u672C\u6392\u5E8F\u4E0E\u4F7F\u7528\u7EDF\u8BA1\uFF1A\u65B0\u589E\u667A\u80FD/\u6700\u8FD1/\u6700\u5E38\u7528\u6392\u5E8F\uFF0C\u652F\u6301\u624B\u52A8\u9009\u62E9\u4E0E\u751F\u6210\u6B21\u6570\u8FFD\u8E2A\uFF08\u542B\u961F\u5217\u7EDF\u8BA1\uFF09<br>\u{1F5C2}\uFE0F \u7BA1\u7406\u5668\u589E\u5F3A\uFF1A\u65B0\u589E\u7EDF\u8BA1\u6982\u89C8\uFF08Top5\u30017\u5929\u6D3B\u8DC3\u3001\u5206\u7C7B\u70ED\u5EA6\uFF09\u4E0E\u884C\u5185\u4F7F\u7528\u4FE1\u606F<br>\u{1F524} \u5916\u89C2\u8BBE\u7F6E\u65B0\u589E UI \u5B57\u4F53\u5927\u5C0F\u8C03\u8282\uFF1A\u7EDF\u4E00\u7F29\u653E\u63D2\u4EF6\u754C\u9762\u5B57\u4F53\uFF0C\u4E0D\u5F71\u54CD\u5185\u5BB9\u533A\u6E32\u67D3\u5B57\u53F7",
       "3.3.0": "\u{1F575}\uFE0F \u56FE\u7247\u5BFC\u51FA\u6253\u7801\uFF1A\u6536\u85CF\u9605\u8BFB\u5668\u5BFC\u51FA\u56FE\u7247\u65F6\uFF0C\u5BF9 {{user}} \u5B8F\u5C55\u5F00\u540E\u7684\u7528\u6237\u540D\u8FDB\u884C\u7B49\u957F\u6253\u7801\uFF08\u4EC5\u5F71\u54CD\u5BFC\u51FA\uFF0C\u4E0D\u5F71\u54CD\u754C\u9762\u663E\u793A\uFF09",
       "3.2.9": "\u{1F4FA} \u663E\u793A\u5C42\u5206\u79BB\uFF1A\u751F\u6210\u8FC7\u7A0B\u4E2D\u53EF\u81EA\u7531\u5207\u6362\u67E5\u770B\u5386\u53F2\u5267\u573A\uFF0C\u65B0\u5185\u5BB9\u5728\u540E\u53F0\u751F\u6210\u4E0D\u5E72\u6270\u9605\u8BFB<br>\u{1F514} \u65B0\u5185\u5BB9\u901A\u77E5\uFF1A\u67E5\u770B\u5386\u53F2\u65F6\u663E\u793A\u751F\u6210\u4E2D\u6307\u793A\u5668\uFF0C\u5B8C\u6210\u540E\u5F39\u51FA\u901A\u77E5\u53EF\u4E00\u952E\u8DF3\u8F6C<br>\u26A1 \u5BFC\u822A\u589E\u5F3A\uFF1A\u5386\u53F2\u5BFC\u822A\u6307\u793A\u5668\u5B9E\u65F6\u663E\u793A\u751F\u6210\u72B6\u6001\uFF0C\u652F\u6301\u5728\u751F\u6210\u4E2D\u5207\u6362"
     };
@@ -68,6 +69,14 @@ var init_defaults = __esm({
       favs: [],
       character_map: {},
       disabled_presets: [],
+      script_stats: {},
+      script_stats_meta: {
+        version: 1,
+        last_cleanup_at: 0
+      },
+      ui_prefs: {
+        script_sort_mode: "smart"
+      },
       appearance: {
         type: "emoji",
         content: "\u{1F3AD}",
@@ -84,6 +93,7 @@ var init_defaults = __esm({
         animation: "ripple",
         // 动画类型: ripple(脉冲波纹) | arc(电磁闪烁)
         size: 56,
+        ui_font_scale: 100,
         show_timer: true
         // 是否显示生成计时统计
       },
@@ -273,6 +283,7 @@ function loadCssFiles() {
     --t-font-global: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     /* \u7B49\u5BBD\u5B57\u4F53 - \u56FA\u5B9A\u7528\u4E8E\u4EE3\u7801\u7F16\u8F91\u5668\u548C\u65E5\u5FD7\uFF0C\u4E0D\u53D7\u7528\u6237\u8BBE\u7F6E\u5F71\u54CD */
     --t-font-mono: "Consolas", "Monaco", "Courier New", monospace;
+    --t-ui-font-scale: 1;
 }
 
 /* \u906E\u7F69\u5C42 */
@@ -289,8 +300,8 @@ function loadCssFiles() {
     align-items: center;
     justify-content: center;
     isolation: isolate;
-    /* \u5F3A\u5236\u56FA\u5B9A\u57FA\u51C6\u5B57\u53F7\uFF0C\u907F\u514D\u53D7 ST \u5168\u5C40\u5B57\u4F53\u5927\u5C0F\u8BBE\u7F6E\u5F71\u54CD */
-    font-size: 12px !important;
+    /* \u63D2\u4EF6 UI \u57FA\u51C6\u5B57\u53F7\uFF08\u53EF\u901A\u8FC7\u8BBE\u7F6E\u7F29\u653E\uFF09 */
+    font-size: calc(12px * var(--t-ui-font-scale)) !important;
 }
 
 /* \u901A\u7528\u7A97\u53E3\u5BB9\u5668 */
@@ -308,6 +319,7 @@ function loadCssFiles() {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
     color: #eee;
     font-family: var(--t-font-global);
+    font-size: calc(12px * var(--t-ui-font-scale));
     overflow: hidden;
 }
 
@@ -505,6 +517,7 @@ textarea.t-input {
         transform: translateY(0);
     }
 }
+
 
 /* === floating.css === */
 /* css/floating.css - \u60AC\u6D6E\u7403 */
@@ -4048,6 +4061,59 @@ textarea.t-input {
     min-width: 50px;
 }
 
+.t-mgr-sort {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #eee;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    min-width: 130px;
+}
+
+.t-mgr-overview {
+    padding: 8px 15px;
+    background: #171717;
+    border-bottom: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.t-mgr-ov-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8em;
+    color: #8b8b8b;
+}
+
+.t-mgr-ov-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8em;
+    color: #9d9d9d;
+    flex-wrap: wrap;
+}
+
+.t-mgr-ov-item {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(191, 161, 95, 0.12);
+    border: 1px solid rgba(191, 161, 95, 0.3);
+    color: #d3bf8f;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-mgr-ov-empty {
+    color: #666;
+}
+
 /* \u5217\u8868 */
 .t-mgr-list {
     flex-grow: 1;
@@ -4090,6 +4156,15 @@ textarea.t-input {
     overflow: hidden;
     text-overflow: ellipsis;
     margin-top: 2px;
+}
+
+.t-mgr-item-stats {
+    font-size: 0.75em;
+    color: #7a7a7a;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .t-mgr-tag {
@@ -4188,6 +4263,15 @@ textarea.t-input {
     transition: 0.2s;
 }
 
+.t-sel-sort-select {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #eee;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
 .t-sel-search-input:focus {
     outline: none;
     border-color: #bfa15f;
@@ -4280,6 +4364,21 @@ textarea.t-input {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+}
+
+.t-card-stats {
+    font-size: 0.74em;
+    color: #8e8e8e;
+    margin-top: 2px;
+}
+
+.t-sel-footer {
+    padding: 7px 12px;
+    font-size: 0.78em;
+    color: #7f7f7f;
+    border-top: 1px solid #333;
+    background: #1a1a1a;
+    border-radius: 0 0 8px 8px;
 }
 
 /* \u5BFC\u5165 Modal */
@@ -4464,6 +4563,15 @@ textarea.t-input {
         padding-bottom: 60px !important;
     }
 
+    .t-mgr-overview {
+        padding: 8px 10px;
+    }
+
+    .t-mgr-ov-meta,
+    .t-mgr-ov-top {
+        font-size: 0.75em;
+    }
+
     #t-mgr-view {
         height: 80vh;
         max-height: 85vh;
@@ -4503,6 +4611,11 @@ textarea.t-input {
         width: 140px;
     }
 
+    .t-sel-sort-select {
+        min-width: 100px;
+        max-width: 120px;
+    }
+
     .t-sel-cat-btn {
         text-align: center;
         border-left: none;
@@ -4526,6 +4639,7 @@ textarea.t-input {
         padding: 10px;
     }
 }
+
 
 /* === favs.css === */
 /* css/favs.css - \u6536\u85CF\u4E0E\u56FE\u9274 */
@@ -8391,8 +8505,248 @@ var init_presets = __esm({
 });
 
 // src/core/scriptData.js
+function ensureStatsStore(data) {
+  if (!data.script_stats || typeof data.script_stats !== "object") {
+    data.script_stats = {};
+  }
+  if (!data.script_stats_meta || typeof data.script_stats_meta !== "object") {
+    data.script_stats_meta = { version: 1, last_cleanup_at: 0 };
+  }
+  if (!data.ui_prefs || typeof data.ui_prefs !== "object") {
+    data.ui_prefs = {};
+  }
+}
+function getEmptyStats() {
+  return {
+    selected_count: 0,
+    generated_count: 0,
+    queue_generated_count: 0,
+    last_selected_at: 0,
+    last_generated_at: 0,
+    first_used_at: 0,
+    last_mode: "",
+    category_snapshot: ""
+  };
+}
+function normalizeStats(raw) {
+  const base = getEmptyStats();
+  if (!raw || typeof raw !== "object") return base;
+  return {
+    selected_count: Number(raw.selected_count) || 0,
+    generated_count: Number(raw.generated_count) || 0,
+    queue_generated_count: Number(raw.queue_generated_count) || 0,
+    last_selected_at: Number(raw.last_selected_at) || 0,
+    last_generated_at: Number(raw.last_generated_at) || 0,
+    first_used_at: Number(raw.first_used_at) || 0,
+    last_mode: typeof raw.last_mode === "string" ? raw.last_mode : "",
+    category_snapshot: typeof raw.category_snapshot === "string" ? raw.category_snapshot : ""
+  };
+}
+function upsertStatsUnsafe(data, scriptId) {
+  ensureStatsStore(data);
+  const normalized = normalizeStats(data.script_stats[scriptId]);
+  data.script_stats[scriptId] = normalized;
+  return normalized;
+}
+function getScriptCategory(script) {
+  if (!script) return "";
+  return script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
+}
+function getSmartScore(stats, nowTs) {
+  const generated = Math.max(0, Number(stats.generated_count) || 0);
+  const lastTs = Math.max(0, Number(stats.last_generated_at) || 0);
+  const usageScore = Math.log(1 + generated);
+  if (!lastTs) {
+    return usageScore * 0.65;
+  }
+  const days = Math.max(0, (nowTs - lastTs) / 864e5);
+  const recencyDecay = Math.exp(-days / 7);
+  return usageScore * 0.65 + recencyDecay * 0.35;
+}
+function compareByMode(a, b, mode, nowTs) {
+  const aName = (a.name || "").toString();
+  const bName = (b.name || "").toString();
+  const aStats = a._stats || getEmptyStats();
+  const bStats = b._stats || getEmptyStats();
+  if (mode === "name_asc") {
+    const n = aName.localeCompare(bName, "zh-CN");
+    return n !== 0 ? n : (a.id || "").localeCompare(b.id || "");
+  }
+  if (mode === "name_desc") {
+    const n = bName.localeCompare(aName, "zh-CN");
+    return n !== 0 ? n : (a.id || "").localeCompare(b.id || "");
+  }
+  if (mode === "recent_generated") {
+    const t = (bStats.last_generated_at || 0) - (aStats.last_generated_at || 0);
+    if (t !== 0) return t;
+    return aName.localeCompare(bName, "zh-CN");
+  }
+  if (mode === "most_used") {
+    const c = (bStats.generated_count || 0) - (aStats.generated_count || 0);
+    if (c !== 0) return c;
+    const t = (bStats.last_generated_at || 0) - (aStats.last_generated_at || 0);
+    if (t !== 0) return t;
+    return aName.localeCompare(bName, "zh-CN");
+  }
+  if (mode === "smart") {
+    const bScore = getSmartScore(bStats, nowTs);
+    const aScore = getSmartScore(aStats, nowTs);
+    const diff = bScore - aScore;
+    if (Math.abs(diff) > 1e-6) return diff;
+    const c = (bStats.generated_count || 0) - (aStats.generated_count || 0);
+    if (c !== 0) return c;
+    const t = (bStats.last_generated_at || 0) - (aStats.last_generated_at || 0);
+    if (t !== 0) return t;
+    return aName.localeCompare(bName, "zh-CN");
+  }
+  return 0;
+}
+function getScriptStats(scriptId) {
+  const data = getExtData();
+  ensureStatsStore(data);
+  return normalizeStats(data.script_stats[scriptId]);
+}
+function getScriptSortMode() {
+  const data = getExtData();
+  ensureStatsStore(data);
+  const mode = data.ui_prefs.script_sort_mode;
+  return SCRIPT_SORT_MODES.has(mode) ? mode : "smart";
+}
+function setScriptSortMode(mode) {
+  const validMode = SCRIPT_SORT_MODES.has(mode) ? mode : "smart";
+  const data = getExtData();
+  ensureStatsStore(data);
+  data.ui_prefs.script_sort_mode = validMode;
+  saveExtData();
+  return validMode;
+}
+function recordScriptSelected(scriptId) {
+  if (!scriptId) return;
+  const data = getExtData();
+  const stats = upsertStatsUnsafe(data, scriptId);
+  stats.selected_count += 1;
+  stats.last_selected_at = Date.now();
+  saveExtData();
+}
+function recordScriptGenerated(scriptId, options = {}) {
+  if (!scriptId) return;
+  const {
+    isQueue = false,
+    mode = "",
+    category = ""
+  } = options;
+  const data = getExtData();
+  const stats = upsertStatsUnsafe(data, scriptId);
+  const nowTs = Date.now();
+  stats.generated_count += 1;
+  stats.last_generated_at = nowTs;
+  if (!stats.first_used_at) {
+    stats.first_used_at = nowTs;
+  }
+  if (isQueue) {
+    stats.queue_generated_count += 1;
+  }
+  if (typeof mode === "string" && mode) {
+    stats.last_mode = mode;
+  }
+  if (typeof category === "string" && category) {
+    stats.category_snapshot = category;
+  }
+  saveExtData();
+}
+function cleanupOrphanScriptStats() {
+  const data = getExtData();
+  ensureStatsStore(data);
+  const activeIds = /* @__PURE__ */ new Set();
+  DEFAULT_PRESETS.forEach((p) => activeIds.add(p.id));
+  (data.user_scripts || []).forEach((s) => activeIds.add(s.id));
+  let removed = 0;
+  Object.keys(data.script_stats).forEach((scriptId) => {
+    if (!activeIds.has(scriptId)) {
+      delete data.script_stats[scriptId];
+      removed++;
+    }
+  });
+  data.script_stats_meta.last_cleanup_at = Date.now();
+  if (removed > 0) {
+    saveExtData();
+  }
+  return removed;
+}
+function sortScripts(list, mode = "smart") {
+  const validMode = SCRIPT_SORT_MODES.has(mode) ? mode : "smart";
+  if (!Array.isArray(list) || list.length <= 1) return Array.isArray(list) ? [...list] : [];
+  if (validMode === "default") {
+    return [...list];
+  }
+  const data = getExtData();
+  ensureStatsStore(data);
+  const nowTs = Date.now();
+  return [...list].map((script, index) => ({
+    ...script,
+    _sortIndex: index,
+    _stats: normalizeStats(data.script_stats[script.id])
+  })).sort((a, b) => {
+    const primary = compareByMode(a, b, validMode, nowTs);
+    if (primary !== 0) return primary;
+    return a._sortIndex - b._sortIndex;
+  }).map((script) => {
+    const { _sortIndex, _stats, ...rest } = script;
+    return rest;
+  });
+}
+function buildScriptStatsOverview(runtimeScripts, options = {}) {
+  const days = Number(options.days) > 0 ? Number(options.days) : 7;
+  const nowTs = Date.now();
+  const rangeStart = nowTs - days * 864e5;
+  const data = getExtData();
+  ensureStatsStore(data);
+  const allStats = data.script_stats || {};
+  const scriptMap = new Map((runtimeScripts || []).map((s) => [s.id, s]));
+  const entries = Object.entries(allStats).map(([scriptId, raw]) => {
+    const stats = normalizeStats(raw);
+    const script = scriptMap.get(scriptId);
+    const name = script?.name || `\u5DF2\u5220\u9664\u5267\u672C(${scriptId})`;
+    const category = script ? getScriptCategory(script) : stats.category_snapshot || "\u672A\u77E5";
+    return {
+      scriptId,
+      name,
+      category,
+      stats
+    };
+  });
+  const topUsed = entries.filter((e) => e.stats.generated_count > 0).sort((a, b) => {
+    const countDiff = b.stats.generated_count - a.stats.generated_count;
+    if (countDiff !== 0) return countDiff;
+    return b.stats.last_generated_at - a.stats.last_generated_at;
+  }).slice(0, 5).map((e) => ({
+    scriptId: e.scriptId,
+    name: e.name,
+    category: e.category,
+    generated_count: e.stats.generated_count,
+    last_generated_at: e.stats.last_generated_at
+  }));
+  const recentActiveSet = new Set(
+    entries.filter((e) => e.stats.last_generated_at >= rangeStart).map((e) => e.scriptId)
+  );
+  const categoryMap = /* @__PURE__ */ new Map();
+  entries.forEach((e) => {
+    const key = e.category || "\u672A\u77E5";
+    const prev = categoryMap.get(key) || 0;
+    categoryMap.set(key, prev + (e.stats.generated_count || 0));
+  });
+  const categoryRanking = [...categoryMap.entries()].filter(([, count]) => count > 0).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([category, generated_count]) => ({ category, generated_count }));
+  return {
+    total_tracked_scripts: entries.length,
+    active_last_days: recentActiveSet.size,
+    days,
+    top_used: topUsed,
+    category_ranking: categoryRanking
+  };
+}
 function loadScripts() {
   const data = getExtData();
+  ensureStatsStore(data);
   const userScripts = data.user_scripts || [];
   const disabledIDs = data.disabled_presets || [];
   GlobalState.runtimeScripts = DEFAULT_PRESETS.filter((p) => !disabledIDs.includes(p.id)).map((p) => ({ ...p, _type: "preset" }));
@@ -8407,6 +8761,7 @@ function loadScripts() {
 }
 function saveUserScript(s) {
   const data = getExtData();
+  ensureStatsStore(data);
   let u = data.user_scripts || [];
   u = u.filter((x) => x.id !== s.id);
   u.push(s);
@@ -8416,17 +8771,28 @@ function saveUserScript(s) {
 }
 function deleteUserScript(id) {
   const data = getExtData();
+  ensureStatsStore(data);
   let u = data.user_scripts || [];
   u = u.filter((x) => x.id !== id);
   data.user_scripts = u;
+  delete data.script_stats[id];
   saveExtData();
   loadScripts();
 }
+var SCRIPT_SORT_MODES;
 var init_scriptData = __esm({
   "src/core/scriptData.js"() {
     init_storage();
     init_state();
     init_presets();
+    SCRIPT_SORT_MODES = /* @__PURE__ */ new Set([
+      "default",
+      "name_asc",
+      "name_desc",
+      "recent_generated",
+      "most_used",
+      "smart"
+    ]);
   }
 });
 
@@ -8947,6 +9313,11 @@ function renderToShadowDOMReal(container, html) {
                 font-family: var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
                 font-size: 14px;
                 line-height: 1.6;
+            }
+            /* \u5185\u5BB9\u533A\u4FDD\u6301\u56FA\u5B9A\u5B57\u53F7\uFF0C\u4E0D\u53D7 UI \u7F29\u653E\u53D8\u91CF\u5F71\u54CD */
+            .t-shadow-content,
+            .t-shadow-content * {
+                font-size: 14px;
             }
             .t-shadow-content {
                 padding: 0;
@@ -10751,6 +11122,7 @@ function openSettingsWindow() {
   if (!tempApp.bg_color) tempApp.bg_color = "#2b2b2b";
   if (tempApp.border_opacity === void 0) tempApp.border_opacity = 100;
   if (tempApp.bg_opacity === void 0) tempApp.bg_opacity = 100;
+  if (tempApp.ui_font_scale === void 0) tempApp.ui_font_scale = 100;
   let tempStyleProfiles = JSON.parse(JSON.stringify(styleProfiles));
   let tempActiveStyleId = activeStyleId;
   let styleContentModified = false;
@@ -10852,6 +11224,12 @@ function openSettingsWindow() {
                     <div class="t-form-group">
                         <div class="t-form-label" style="display:flex; justify-content:space-between;"><span>\u60AC\u6D6E\u7403\u5C3A\u5BF8</span><span id="p-size-val" style="color:#bfa15f;">${tempApp.size}px</span></div>
                         <input type="range" id="p-size-input" min="40" max="100" step="2" value="${tempApp.size}" style="width:100%;">
+                    </div>
+
+                    <div class="t-form-group">
+                        <div class="t-form-label" style="display:flex; justify-content:space-between;"><span>UI \u5B57\u4F53\u5927\u5C0F</span><span id="p-ui-font-scale-val" style="color:#bfa15f;">${tempApp.ui_font_scale}%</span></div>
+                        <input type="range" id="p-ui-font-scale" min="80" max="130" step="5" value="${tempApp.ui_font_scale}" style="width:100%;">
+                        <p style="font-size:0.75em; color:#666; margin-top:6px;">\u5F71\u54CD\u63D2\u4EF6\u5168\u90E8\u754C\u9762\u5B57\u4F53\uFF08\u4E0D\u5F71\u54CD\u5185\u5BB9\u533A\u6E32\u67D3\u6587\u672C\uFF09\u3002</p>
                     </div>
                     
                     <div class="t-form-group">
@@ -11750,6 +12128,10 @@ function openSettingsWindow() {
     tempApp.size = $(this).val();
     $("#p-size-val").text(tempApp.size + "px");
     renderPreview();
+  });
+  $("#p-ui-font-scale").on("input", function() {
+    tempApp.ui_font_scale = parseInt($(this).val()) || 100;
+    $("#p-ui-font-scale-val").text(tempApp.ui_font_scale + "%");
   });
   $("#p-emoji-input").on("input", function() {
     tempApp.content = $(this).val();
@@ -12662,6 +13044,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       content: tempApp.content,
       animation: tempApp.animation || "ripple",
       size: tempApp.size || 56,
+      ui_font_scale: tempApp.ui_font_scale !== void 0 ? tempApp.ui_font_scale : 100,
       border_color: tempApp.border_color || "#90cdf4",
       bg_color: tempApp.bg_color || "#2b2b2b",
       border_opacity: tempApp.border_opacity !== void 0 ? tempApp.border_opacity : 100,
@@ -12752,10 +13135,16 @@ ${JSON.stringify(l.details, null, 2)}`;
     createFloatingButton();
     applyCustomCSS(d.custom_css);
     applyFontSettings(d.font_settings);
+    applyUIFontScale(d.appearance?.ui_font_scale);
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   renderPreview();
   renderProfileUI();
+}
+function applyUIFontScale(scalePercent = 100) {
+  const n = Number(scalePercent);
+  const clamped = Number.isFinite(n) ? Math.max(80, Math.min(130, n)) : 100;
+  document.documentElement.style.setProperty("--t-ui-font-scale", (clamped / 100).toFixed(2));
 }
 var init_settingsWindow = __esm({
   "src/ui/settingsWindow.js"() {
@@ -12776,13 +13165,25 @@ __export(scriptManager_exports, {
   openEditor: () => openEditor,
   openScriptManager: () => openScriptManager
 });
+function formatRelativeTime(ts) {
+  const time = Number(ts) || 0;
+  if (!time) return "\u672A\u4F7F\u7528";
+  const diff = Date.now() - time;
+  if (diff < 6e4) return "\u521A\u521A";
+  if (diff < 36e5) return `${Math.floor(diff / 6e4)} \u5206\u949F\u524D`;
+  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
+  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
+  return new Date(time).toLocaleDateString("zh-CN");
+}
 function openScriptManager() {
   let currentFilter = {
     category: "\u5168\u90E8",
     search: "",
     hidePresets: false
   };
+  let currentSortMode = getScriptSortMode();
   let isBatchMode = false;
+  cleanupOrphanScriptStats();
   const getCategories = () => {
     const cats = new Set(GlobalState.runtimeScripts.map((s) => s.category).filter((c) => c));
     const sortedCats = [...cats].sort((a, b) => a.localeCompare(b, "zh-CN"));
@@ -12807,15 +13208,24 @@ function openScriptManager() {
                     <i class="fa-solid fa-pen"></i>
                 </button>
             </div>
-            <div class="t-mgr-main" id="t-mgr-main-area">
+                <div class="t-mgr-main" id="t-mgr-main-area">
                 <div class="t-mgr-toolbar">
                     <input type="text" id="t-mgr-search-inp" class="t-mgr-search" placeholder="\u{1F50D} \u641C\u7D22...">
+                    <select id="t-mgr-sort" class="t-mgr-sort" title="\u6392\u5E8F\u65B9\u5F0F">
+                        <option value="smart">\u667A\u80FD\u6392\u5E8F</option>
+                        <option value="recent_generated">\u6700\u8FD1\u4F7F\u7528</option>
+                        <option value="most_used">\u6700\u5E38\u4F7F\u7528</option>
+                        <option value="name_asc">\u540D\u79F0 A-Z</option>
+                        <option value="name_desc">\u540D\u79F0 Z-A</option>
+                        <option value="default">\u9ED8\u8BA4\u987A\u5E8F</option>
+                    </select>
                     <button id="t-mgr-import-btn" class="t-tool-btn" title="\u5BFC\u5165"><i class="fa-solid fa-file-import"></i></button>
                     <button id="t-mgr-export-btn" class="t-tool-btn" title="\u5BFC\u51FA"><i class="fa-solid fa-file-export"></i></button>
                     <button id="t-mgr-batch-toggle" class="t-tool-btn" style="border:1px solid #444;" title="\u6279\u91CF\u7BA1\u7406">
                         <i class="fa-solid fa-list-check"></i> \u7BA1\u7406
                     </button>
                 </div>
+                <div class="t-mgr-overview" id="t-mgr-overview"></div>
                 <div class="t-mgr-header-row t-batch-elem" style="padding: 8px 15px; background: #2a2a2a; border-bottom: 1px solid #333; color: #ccc; font-size: 0.9em; flex-shrink:0;">
                     <label style="display:flex; align-items:center; cursor:pointer;">
                         <input type="checkbox" id="t-mgr-select-all" style="margin-right:10px;"> \u5168\u9009\u5F53\u524D\u5217\u8868
@@ -13027,12 +13437,31 @@ function openScriptManager() {
     $("#t-batch-count-label").text(`\u5DF2\u9009: ${n}`);
     $("#t-mgr-del-confirm").prop("disabled", n === 0).css("opacity", n === 0 ? 0.5 : 1);
   };
+  const renderOverview = () => {
+    const overview = buildScriptStatsOverview(GlobalState.runtimeScripts, { days: 7 });
+    const $box = $("#t-mgr-overview");
+    if (!$box.length) return;
+    const topUsed = overview.top_used || [];
+    const topItems = topUsed.length > 0 ? topUsed.map((item) => `<span class="t-mgr-ov-item" title="${item.name}">${item.name} (${item.generated_count})</span>`).join("") : '<span class="t-mgr-ov-empty">\u6682\u65E0\u4F7F\u7528\u6570\u636E</span>';
+    const categoryTop = (overview.category_ranking || []).slice(0, 3);
+    const categoryText = categoryTop.length > 0 ? categoryTop.map((x) => `${x.category}(${x.generated_count})`).join(" \xB7 ") : "\u6682\u65E0";
+    $box.html(`
+            <div class="t-mgr-ov-meta">
+                <span>\u6392\u5E8F\uFF1A${SORT_MODE_LABELS[currentSortMode] || currentSortMode}</span>
+                <span>\u5DF2\u8FFD\u8E2A\uFF1A${overview.total_tracked_scripts || 0}</span>
+                <span>${overview.days || 7}\u5929\u6D3B\u8DC3\uFF1A${overview.active_last_days || 0}</span>
+                <span>\u5206\u7C7B\u70ED\u5EA6\uFF1A${categoryText}</span>
+            </div>
+            <div class="t-mgr-ov-top">Top5\uFF1A${topItems}</div>
+        `);
+  };
   const renderList = () => {
     const $list = $("#t-mgr-list-container");
     $list.empty();
     $("#t-mgr-select-all").prop("checked", false);
     updateBatchCount();
-    let filtered = GlobalState.runtimeScripts.filter((s) => {
+    const sortedScripts = sortScripts(GlobalState.runtimeScripts, currentSortMode);
+    let filtered = sortedScripts.filter((s) => {
       if (currentFilter.category && currentFilter.category !== "\u5168\u90E8") {
         const sCat = s.category || "\u672A\u5206\u7C7B";
         if (sCat !== currentFilter.category) return false;
@@ -13051,6 +13480,8 @@ function openScriptManager() {
       const isUser = s._type === "user";
       const catLabel = s.category ? `<span class="t-mgr-tag">${s.category}</span>` : "";
       const presetLabel = !isUser ? `<span class="t-mgr-tag" style="background:#444;">\u9884\u8BBE</span>` : "";
+      const stats = getScriptStats(s.id);
+      const statsLine = `\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 \u9009\u62E9 ${stats.selected_count || 0} \u6B21 \xB7 \u6700\u8FD1 ${formatRelativeTime(stats.last_generated_at || stats.last_selected_at)}`;
       const $row = $(`
                 <div class="t-mgr-item">
                     <div class="t-mgr-item-check-col">
@@ -13059,6 +13490,7 @@ function openScriptManager() {
                     <div class="t-mgr-item-meta" style="cursor:pointer;">
                         <div class="t-mgr-item-title">${s.name} ${presetLabel} ${catLabel}</div>
                         <div class="t-mgr-item-desc">${s.desc || "..."}</div>
+                        <div class="t-mgr-item-stats">${statsLine}</div>
                     </div>
                     <div style="padding-left:10px;">
                         <i class="fa-solid fa-pen" style="color:#666; cursor:pointer;"></i>
@@ -13080,6 +13512,7 @@ function openScriptManager() {
   };
   const refreshAll = () => {
     renderSidebarCats();
+    renderOverview();
     renderList();
   };
   $("#t-mgr-batch-toggle").on("click", function() {
@@ -13389,6 +13822,11 @@ ${s.prompt}`;
     $(".t-mgr-check:not(:disabled)").prop("checked", $(this).is(":checked"));
     updateBatchCount();
   });
+  $("#t-mgr-sort").val(currentSortMode).on("change", function() {
+    currentSortMode = setScriptSortMode($(this).val());
+    renderOverview();
+    renderList();
+  });
   refreshAll();
 }
 function openEditor(id, source = "main") {
@@ -13520,6 +13958,7 @@ function openEditor(id, source = "main") {
     });
   }
 }
+var SORT_MODE_LABELS;
 var init_scriptManager = __esm({
   "src/ui/scriptManager.js"() {
     init_storage();
@@ -13527,6 +13966,14 @@ var init_scriptManager = __esm({
     init_scriptData();
     init_mainWindow();
     init_settingsWindow();
+    SORT_MODE_LABELS = {
+      default: "\u9ED8\u8BA4\u987A\u5E8F",
+      smart: "\u667A\u80FD\u6392\u5E8F",
+      recent_generated: "\u6700\u8FD1\u4F7F\u7528",
+      most_used: "\u6700\u5E38\u4F7F\u7528",
+      name_asc: "\u540D\u79F0 A-Z",
+      name_desc: "\u540D\u79F0 Z-A"
+    };
   }
 });
 
@@ -17822,10 +18269,20 @@ var init_loreReviewWindow = __esm({
 });
 
 // src/ui/mainWindow.js
+function formatRelativeTime2(ts) {
+  const time = Number(ts) || 0;
+  if (!time) return "\u672A\u4F7F\u7528";
+  const diff = Date.now() - time;
+  if (diff < 6e4) return "\u521A\u521A";
+  if (diff < 36e5) return `${Math.floor(diff / 6e4)} \u5206\u949F\u524D`;
+  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
+  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
+  return new Date(time).toLocaleDateString("zh-CN");
+}
 function refreshScriptList() {
   const $sel = $("#t-sel-script");
   $sel.empty();
-  const validScripts = GlobalState.runtimeScripts;
+  const validScripts = sortScripts(GlobalState.runtimeScripts, getScriptSortMode());
   validScripts.forEach((s) => {
     $sel.append(`<option value="${s.id}">${s.name}</option>`);
   });
@@ -17838,9 +18295,13 @@ function updateDesc() {
   const s = GlobalState.runtimeScripts.find((x) => x.id === $("#t-sel-script").val());
   if (s) $("#t-txt-desc").val(s.desc);
 }
-function applyScriptSelection(id) {
+function applyScriptSelection(id, options = {}) {
   const s = GlobalState.runtimeScripts.find((x) => x.id === id);
   if (!s) return;
+  const shouldTrackSelection = options.trackSelection === true;
+  if (shouldTrackSelection) {
+    recordScriptSelected(s.id);
+  }
   GlobalState.lastUsedScriptId = s.id;
   $("#t-lbl-name").text(s.name);
   const $catTag = $("#t-lbl-cat");
@@ -18051,7 +18512,7 @@ async function openMainWindow() {
     }
     const rnd = Math.floor(Math.random() * pool.length);
     const s = pool[rnd];
-    applyScriptSelection(s.id);
+    applyScriptSelection(s.id, { trackSelection: false });
     const dice = $("#t-btn-dice");
     dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
     setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
@@ -18341,7 +18802,7 @@ async function openMainWindow() {
   } else if (initialScriptId) {
     const initialScript = GlobalState.runtimeScripts.find((s) => s.id === initialScriptId);
     if (initialScript) {
-      applyScriptSelection(initialScriptId);
+      applyScriptSelection(initialScriptId, { trackSelection: false });
     } else {
       handleRandom();
     }
@@ -18763,7 +19224,10 @@ function renderFilterMenu(currentFilter, $targetBtn, onSelect) {
     $("#t-filter-popover").remove();
     return;
   }
-  const list = GlobalState.runtimeScripts;
+  const baseList = GlobalState.runtimeScripts;
+  let currentSortMode = getScriptSortMode();
+  const getSortedList = () => sortScripts(baseList, currentSortMode);
+  let list = getSortedList();
   const cats = [...new Set(list.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")))].sort();
   const html = `
     <div id="t-filter-popover" class="t-filter-popover">
@@ -18801,7 +19265,9 @@ function renderFilterMenu(currentFilter, $targetBtn, onSelect) {
 }
 function showScriptSelector(initialFilter = "ALL") {
   if ($("#t-selector-panel").length) return;
-  const list = GlobalState.runtimeScripts;
+  let currentSortMode = getScriptSortMode();
+  const getSortedList = () => sortScripts(GlobalState.runtimeScripts, currentSortMode);
+  let list = getSortedList();
   let categories = ["\u5168\u90E8"];
   const scriptCats = [...new Set(list.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")))];
   categories = categories.concat(scriptCats.sort());
@@ -18811,6 +19277,14 @@ function showScriptSelector(initialFilter = "ALL") {
         <div class="t-sel-header">
             <div style="font-weight:bold; color:#ccc;">\u{1F4DA} \u9009\u62E9\u5267\u672C <span style="font-size:0.8em; color:#666; font-weight:normal; margin-left:10px;">(\u5171 ${list.length} \u4E2A)</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
+                <select id="t-sel-sort" class="t-sel-sort-select" title="\u6392\u5E8F\u65B9\u5F0F">
+                    <option value="smart">\u667A\u80FD\u6392\u5E8F</option>
+                    <option value="recent_generated">\u6700\u8FD1\u4F7F\u7528</option>
+                    <option value="most_used">\u6700\u5E38\u4F7F\u7528</option>
+                    <option value="name_asc">\u540D\u79F0 A-Z</option>
+                    <option value="name_desc">\u540D\u79F0 Z-A</option>
+                    <option value="default">\u9ED8\u8BA4\u987A\u5E8F</option>
+                </select>
                 <input type="text" id="t-sel-search" class="t-sel-search-input" placeholder="\u{1F50D} \u641C\u7D22\u5267\u672C...">
                 <div style="cursor:pointer; padding:5px 10px;" id="t-sel-close"><i class="fa-solid fa-xmark"></i></div>
             </div>
@@ -18819,10 +19293,12 @@ function showScriptSelector(initialFilter = "ALL") {
             <div class="t-sel-sidebar" id="t-sel-sidebar"></div>
             <div class="t-sel-grid" id="t-sel-grid"></div>
         </div>
+        <div class="t-sel-footer" id="t-sel-footer-tip"></div>
     </div>`;
   $("#t-main-view").append(html);
   let currentCat = initialFilter === "ALL" ? "\u5168\u90E8" : initialFilter;
   const renderGrid = () => {
+    list = getSortedList();
     const $grid = $("#t-sel-grid");
     $grid.empty();
     let filtered = list;
@@ -18841,18 +19317,22 @@ function showScriptSelector(initialFilter = "ALL") {
       return;
     }
     filtered.forEach((s) => {
+      const stats = getScriptStats(s.id);
       const card = $(`
                 <div class="t-script-card">
                     <div class="t-card-title">${s.name}</div>
                     <div class="t-card-desc">${s.desc || "..."}</div>
+                    <div class="t-card-stats">\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 ${formatRelativeTime2(stats.last_generated_at)}</div>
                 </div>
             `);
       card.on("click", () => {
-        applyScriptSelection(s.id);
+        applyScriptSelection(s.id, { trackSelection: true });
         $("#t-selector-panel").remove();
       });
       $grid.append(card);
     });
+    const tip = `\u5F53\u524D\u6392\u5E8F\uFF1A${SORT_MODE_LABELS2[currentSortMode] || currentSortMode}`;
+    $("#t-sel-footer-tip").text(tip);
   };
   const $sidebar = $("#t-sel-sidebar");
   categories.forEach((cat) => {
@@ -18868,6 +19348,10 @@ function showScriptSelector(initialFilter = "ALL") {
   });
   $("#t-sel-search").on("input", function() {
     currentSearch = $(this).val();
+    renderGrid();
+  });
+  $("#t-sel-sort").val(currentSortMode).on("change", function() {
+    currentSortMode = setScriptSortMode($(this).val());
     renderGrid();
   });
   renderGrid();
@@ -19203,6 +19687,7 @@ function getQueueScripts() {
     return selected.map((s) => ({ id: s.id, name: s.name }));
   }
 }
+var SORT_MODE_LABELS2;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -19215,6 +19700,15 @@ var init_mainWindow = __esm({
     init_loreReviewWindow();
     init_settingsWindow();
     init_helpers();
+    init_scriptData();
+    SORT_MODE_LABELS2 = {
+      default: "\u9ED8\u8BA4\u987A\u5E8F",
+      smart: "\u667A\u80FD\u6392\u5E8F",
+      recent_generated: "\u6700\u8FD1\u4F7F\u7528",
+      most_used: "\u6700\u5E38\u4F7F\u7528",
+      name_asc: "\u540D\u79F0 A-Z",
+      name_desc: "\u540D\u79F0 Z-A"
+    };
   }
 });
 
@@ -20442,7 +20936,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     const errText = `\u914D\u7F6E\u7F3A\u5931\uFF1A${validation.error}`;
     if (!silent) alert(errText);
     TitaniaLogger.error("\u914D\u7F6E\u9519\u8BEF", errText, diagnostics);
-    return;
+    return false;
   }
   TitaniaLogger.info("\u4F7F\u7528\u8FDE\u63A5\u914D\u7F6E", {
     profile: conn.profileName,
@@ -20457,7 +20951,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
   if (!script) {
     if (!silent) alert("\u8BF7\u9009\u62E9\u5267\u672C");
-    return;
+    return false;
   }
   if (!silent) {
     GlobalState.lastUsedScriptId = script.id;
@@ -20506,7 +21000,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
       });
       if (!userConfirmed) {
         TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u751F\u6210\uFF08\u4E16\u754C\u4E66\u6761\u76EE\u4E3A\u7A7A\uFF09");
-        return;
+        return false;
       }
     }
   }
@@ -20894,8 +21388,8 @@ ${processedPrompt}`;
           if (!silent && window.toastr) {
             toastr.info(`\u{1F504} \u68C0\u6D4B\u5230\u622A\u65AD\uFF0C\u6B63\u5728\u81EA\u52A8\u7EED\u5199 (${currentRetry + 1}/${maxRetries})...`, "Titania Echo");
           }
-          await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
-          return;
+          const continuationSuccess = await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
+          return continuationSuccess;
         } else {
           TitaniaLogger.warn("\u5DF2\u8FBE\u5230\u6700\u5927\u7EED\u5199\u6B21\u6570", { maxRetries });
           if (!silent && window.toastr) {
@@ -20917,6 +21411,11 @@ ${processedPrompt}`;
     resetContinuationState();
     endStreamingCache();
     pushSceneToHistory(finalOutput, script.id, script.name);
+    recordScriptGenerated(script.id, {
+      isQueue: silent === true && GlobalState.queueState.isRunning,
+      mode: GlobalState.generationMode,
+      category: script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")
+    });
     diagnostics.phase = "complete";
     removeNewContentIndicator();
     GlobalState.lastUsedModelName = finalModel;
@@ -20946,9 +21445,10 @@ ${processedPrompt}`;
     const elapsed = GlobalState.lastGenerationTime / 1e3;
     if (!silent && window.toastr) toastr.success(`\u2728 \u300A${script.name}\u300B\u6F14\u7ECE\u5B8C\u6210\uFF01(${elapsed.toFixed(1)}s)`, "Titania Echo");
     $floatBtn.addClass("t-notify");
+    return true;
   } catch (e) {
     if (e.name === "AbortError") {
-      return;
+      return false;
     }
     console.error("Titania Generate Error:", e);
     stopTimer();
@@ -20992,6 +21492,7 @@ ${processedPrompt}`;
     GlobalState.lastGeneratedScriptId = script.id;
     $floatBtn.addClass("t-notify");
     if (!silent && window.toastr) toastr.error("\u751F\u6210\u5931\u8D25", "Titania Error");
+    return false;
   } finally {
     GlobalState.isGenerating = false;
     GlobalState.abortController = null;
@@ -21029,10 +21530,17 @@ async function executeQueueGeneration(scripts) {
     updateQueueProgressIndicator(i + 1, scripts.length, script.name);
     TitaniaLogger.info(`\u961F\u5217\u751F\u6210 (${i + 1}/${scripts.length}): ${script.name}`);
     try {
-      await handleGenerate(script.id, true);
-      recordQueueResult(script.id, script.name, true);
-      if (window.toastr) {
-        toastr.success(`\u2705 (${i + 1}/${scripts.length}) ${script.name}`, "Titania Queue", { timeOut: 2e3 });
+      const ok = await handleGenerate(script.id, true);
+      if (ok) {
+        recordQueueResult(script.id, script.name, true);
+        if (window.toastr) {
+          toastr.success(`\u2705 (${i + 1}/${scripts.length}) ${script.name}`, "Titania Queue", { timeOut: 2e3 });
+        }
+      } else {
+        recordQueueResult(script.id, script.name, false, "\u751F\u6210\u5931\u8D25");
+        if (window.toastr) {
+          toastr.warning(`\u26A0\uFE0F (${i + 1}/${scripts.length}) ${script.name} \u5931\u8D25`, "Titania Queue", { timeOut: 2e3 });
+        }
       }
     } catch (e) {
       recordQueueResult(script.id, script.name, false, e.message);
@@ -21299,7 +21807,7 @@ Generate ONLY the continuation (no repetition):`;
       if (!silent && window.toastr) {
         toastr.info(`\u{1F504} \u7EED\u5199\u5185\u5BB9\u4ECD\u88AB\u622A\u65AD\uFF0C\u7EE7\u7EED\u5C1D\u8BD5 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
       }
-      await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
+      return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
     } else {
       const finalOutput = smartMergeContinuation(
         GlobalState.continuation.accumulatedContent,
@@ -21310,6 +21818,11 @@ Generate ONLY the continuation (no repetition):`;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
       pushSceneToHistory(finalOutput, script.id, script.name);
+      recordScriptGenerated(script.id, {
+        isQueue: silent === true && GlobalState.queueState.isRunning,
+        mode: GlobalState.generationMode,
+        category: script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")
+      });
       const stats = countContentStats(finalOutput);
       GlobalState.contentStats = {
         totalChars: stats.totalChars,
@@ -21339,10 +21852,11 @@ Generate ONLY the continuation (no repetition):`;
         totalRetries,
         elapsed: elapsed.toFixed(1) + "s"
       });
+      return true;
     }
   } catch (e) {
     if (e.name === "AbortError") {
-      return;
+      return false;
     }
     console.error("Titania Continuation Error:", e);
     TitaniaLogger.error("\u7EED\u5199\u8FC7\u7A0B\u53D1\u751F\u5F02\u5E38", e);
@@ -21356,6 +21870,7 @@ Generate ONLY the continuation (no repetition):`;
     resetContinuationState();
     stopTimer();
     $floatBtn.addClass("t-notify");
+    return false;
   } finally {
     GlobalState.isGenerating = false;
     GlobalState.abortController = null;
@@ -21377,6 +21892,7 @@ var init_api = __esm({
     init_floatingBtn();
     init_mainWindow();
     init_connection();
+    init_scriptData();
     streamRenderTimer = null;
     pendingStreamContent = "";
     lastRenderTime = 0;
@@ -21492,6 +22008,7 @@ function initCoreFeatures() {
   if (extData.font_settings) {
     applyFontSettings(extData.font_settings);
   }
+  applyUIFontScale(extData.appearance?.ui_font_scale);
   eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
   initSyncListener();
   initVectorUnsavedWarning();
