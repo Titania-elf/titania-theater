@@ -22,11 +22,12 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.3.1";
+    CURRENT_VERSION = "3.3.2";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.3.2": "\u2728 \u65B0\u589E\u4E3B\u52A8\u7EED\u5199\u529F\u80FD\uFF0C\u5165\u53E3\u5728\u53F3\u4E0A\u89D2\u4E09\u4E2A\u70B9\u7684\u83DC\u5355\uFF0C\u53EF\u5BF9\u5F53\u524D\u5267\u573A\u5185\u5BB9\u8FDB\u884C\u7EED\u5199\u3002 \u{1F527} \u6539\u52A8\u4E86\u4E00\u4E9B\u5C0Fbug",
       "3.3.1": "\u{1F4CA} \u5267\u672C\u6392\u5E8F\u4E0E\u4F7F\u7528\u7EDF\u8BA1\uFF1A\u65B0\u589E\u667A\u80FD/\u6700\u8FD1/\u6700\u5E38\u7528\u6392\u5E8F\uFF0C\u652F\u6301\u624B\u52A8\u9009\u62E9\u4E0E\u751F\u6210\u6B21\u6570\u8FFD\u8E2A\uFF08\u542B\u961F\u5217\u7EDF\u8BA1\uFF09<br>\u{1F5C2}\uFE0F \u7BA1\u7406\u5668\u589E\u5F3A\uFF1A\u65B0\u589E\u7EDF\u8BA1\u6982\u89C8\uFF08Top5\u30017\u5929\u6D3B\u8DC3\u3001\u5206\u7C7B\u70ED\u5EA6\uFF09\u4E0E\u884C\u5185\u4F7F\u7528\u4FE1\u606F<br>\u{1F524} \u5916\u89C2\u8BBE\u7F6E\u65B0\u589E UI \u5B57\u4F53\u5927\u5C0F\u8C03\u8282\uFF1A\u7EDF\u4E00\u7F29\u653E\u63D2\u4EF6\u754C\u9762\u5B57\u4F53\uFF0C\u4E0D\u5F71\u54CD\u5185\u5BB9\u533A\u6E32\u67D3\u5B57\u53F7",
       "3.3.0": "\u{1F575}\uFE0F \u56FE\u7247\u5BFC\u51FA\u6253\u7801\uFF1A\u6536\u85CF\u9605\u8BFB\u5668\u5BFC\u51FA\u56FE\u7247\u65F6\uFF0C\u5BF9 {{user}} \u5B8F\u5C55\u5F00\u540E\u7684\u7528\u6237\u540D\u8FDB\u884C\u7B49\u957F\u6253\u7801\uFF08\u4EC5\u5F71\u54CD\u5BFC\u51FA\uFF0C\u4E0D\u5F71\u54CD\u754C\u9762\u663E\u793A\uFF09",
       "3.2.9": "\u{1F4FA} \u663E\u793A\u5C42\u5206\u79BB\uFF1A\u751F\u6210\u8FC7\u7A0B\u4E2D\u53EF\u81EA\u7531\u5207\u6362\u67E5\u770B\u5386\u53F2\u5267\u573A\uFF0C\u65B0\u5185\u5BB9\u5728\u540E\u53F0\u751F\u6210\u4E0D\u5E72\u6270\u9605\u8BFB<br>\u{1F514} \u65B0\u5185\u5BB9\u901A\u77E5\uFF1A\u67E5\u770B\u5386\u53F2\u65F6\u663E\u793A\u751F\u6210\u4E2D\u6307\u793A\u5668\uFF0C\u5B8C\u6210\u540E\u5F39\u51FA\u901A\u77E5\u53EF\u4E00\u952E\u8DF3\u8F6C<br>\u26A1 \u5BFC\u822A\u589E\u5F3A\uFF1A\u5386\u53F2\u5BFC\u822A\u6307\u793A\u5668\u5B9E\u65F6\u663E\u793A\u751F\u6210\u72B6\u6001\uFF0C\u652F\u6301\u5728\u751F\u6210\u4E2D\u5207\u6362"
@@ -117,6 +118,10 @@ var init_defaults = __esm({
         // 检测模式: "html" | "sentence" | "both"
         show_indicator: true
         // 是否在内容中显示续写标记
+      },
+      // 主动续写 UI 配置
+      continuation_ui: {
+        recent_instructions: []
       },
       // 自定义系统提示词配置
       custom_prompts: {
@@ -1283,6 +1288,7 @@ textarea.t-input {
     }
 }
 
+
 /* === main-window.css === */
 /* css/main-window.css - \u4E3B\u6F14\u7ECE\u7A97\u53E3 */
 
@@ -1721,10 +1727,10 @@ textarea.t-input {
 /* \u5DE6\u4FA7\uFF1A\u5DE5\u5177\u533A (2x2 \u7F51\u683C) */
 .t-bot-left {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
     gap: 6px;
-    width: 95px;
+    width: 92px;
     height: 60px;
     flex-shrink: 0;
 }
@@ -1734,11 +1740,16 @@ textarea.t-input {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
     background: #2b2b2b;
     border: 1px solid #444;
     border-radius: 6px;
     color: #aaa;
-    font-size: 1.1em;
+    font-size: 1em;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -1849,10 +1860,10 @@ textarea.t-input {
 /* \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A (2x2 \u7F51\u683C\u5E03\u5C40) */
 .t-bot-right {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 4px;
-    width: 75px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 92px;
     height: 60px;
     flex-shrink: 0;
 }
@@ -1862,11 +1873,16 @@ textarea.t-input {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
     background: #2b2b2b;
     border: 1px solid #444;
-    border-radius: 5px;
+    border-radius: 6px;
     color: #aaa;
-    font-size: 0.9em;
+    font-size: 1em;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -2080,7 +2096,7 @@ textarea.t-input {
 
     /* \u5DE6\u4FA7\u7F51\u683C\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
     .t-bot-left {
-        width: 80px;
+        width: 76px;
         height: 55px;
         gap: 4px;
     }
@@ -2115,9 +2131,9 @@ textarea.t-input {
 
     /* \u53F3\u4FA7\u8F85\u52A9\u533A\uFF1A\u79FB\u52A8\u7AEF\u9002\u914D */
     .t-bot-right {
-        width: 65px;
+        width: 76px;
         height: 55px;
-        gap: 3px;
+        gap: 4px;
     }
 
     .t-btn-aux {
@@ -3442,6 +3458,7 @@ textarea.t-input {
     }
 }
 
+
 /* === settings.css === */
 /* css/settings.css - \u8BBE\u7F6E\u7A97\u53E3 */
 
@@ -3459,6 +3476,7 @@ textarea.t-input {
     flex-grow: 1;
     display: flex;
     overflow: hidden;
+    min-height: 0;
 }
 
 /* \u4FA7\u8FB9\u5BFC\u822A */
@@ -3470,6 +3488,13 @@ textarea.t-input {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
 }
 
 .t-set-tab-btn {
@@ -8326,6 +8351,31 @@ function unlockDisplay() {
 function shouldRenderStreamToUI() {
   return !GlobalState.displayState.isViewingHistory;
 }
+function getCurrentDisplayContent() {
+  const display = GlobalState.displayState;
+  if (display.isViewingHistory && display.lockedContent) {
+    return {
+      content: display.lockedContent,
+      scriptId: display.lockedScriptId,
+      scriptName: display.lockedScriptName,
+      isLive: false
+    };
+  }
+  if (GlobalState.streamingCache.isActive && GlobalState.streamingCache.content) {
+    return {
+      content: GlobalState.streamingCache.content,
+      scriptId: GlobalState.streamingCache.scriptId,
+      scriptName: GlobalState.streamingCache.scriptName,
+      isLive: true
+    };
+  }
+  return {
+    content: GlobalState.lastGeneratedContent,
+    scriptId: GlobalState.lastGeneratedScriptId,
+    scriptName: GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId)?.name || "\u573A\u666F",
+    isLive: false
+  };
+}
 function startStreamingCache(scriptId, scriptName) {
   GlobalState.streamingCache.content = "";
   GlobalState.streamingCache.scriptId = scriptId;
@@ -9696,6 +9746,8 @@ function checkSentenceCompletion(content) {
   return result;
 }
 function buildContinuationContext(accumulatedContent, originalPrompt = "") {
+  const styleBlocks = accumulatedContent.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+  const styleGuide = styleBlocks.map((block) => block.replace(/<\/?style[^>]*>/gi, "").trim()).join("\n").slice(0, 1600);
   const bodyContent = accumulatedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
   const plainText = bodyContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const paragraphs = plainText.split(/\n\n+|。(?=[^。]*$)/);
@@ -9719,11 +9771,27 @@ function buildContinuationContext(accumulatedContent, originalPrompt = "") {
   const endsWithPunctuation = /[。！？"」』]$/.test(lastPart.trim());
   const incompleteText = endsWithPunctuation ? "" : lastPart.split(/[。！？]/).pop()?.trim() || "";
   const unclosedTags = detectUnclosedTags(bodyContent);
+  const classMatches = bodyContent.match(/class=["']([^"']+)["']/gi) || [];
+  const classSet = /* @__PURE__ */ new Set();
+  classMatches.forEach((item) => {
+    const m = item.match(/class=["']([^"']+)["']/i);
+    if (m && m[1]) {
+      m[1].split(/\s+/).forEach((cls) => {
+        const c = cls.trim();
+        if (c) classSet.add(c);
+      });
+    }
+  });
+  const recentClasses = Array.from(classSet).slice(0, 20);
   return {
     plotSummary: plotPoints || "(\u65E0\u60C5\u8282\u6458\u8981)",
     // 情节进展摘要
     recentHtml,
     // 最后2段完整HTML
+    styleGuide,
+    // 原有样式片段
+    recentClasses,
+    // 近期使用类名
     lastCompleteSentence,
     // 最后完整句子
     incompleteText,
@@ -11123,6 +11191,10 @@ function openSettingsWindow() {
   if (tempApp.border_opacity === void 0) tempApp.border_opacity = 100;
   if (tempApp.bg_opacity === void 0) tempApp.bg_opacity = 100;
   if (tempApp.ui_font_scale === void 0) tempApp.ui_font_scale = 100;
+  const isTempAppImageData = typeof tempApp.content === "string" && tempApp.content.trim().toLowerCase().startsWith("data:image/");
+  if (isTempAppImageData) {
+    tempApp.type = "image";
+  }
   let tempStyleProfiles = JSON.parse(JSON.stringify(styleProfiles));
   let tempActiveStyleId = activeStyleId;
   let styleContentModified = false;
@@ -12090,16 +12162,17 @@ function openSettingsWindow() {
       background: bgColor,
       borderColor
     });
-    if (tempApp.type === "emoji") {
-      $ball.html(tempApp.content);
+    const contentStr = typeof tempApp.content === "string" ? tempApp.content.trim() : "";
+    const hasImageDataUri = contentStr.toLowerCase().startsWith("data:image/");
+    if (hasImageDataUri) {
+      $ball.html(`<img src="${tempApp.content}">`);
+      $("#btn-upload-card").css("background-image", `url('${tempApp.content}')`).find("i, span").hide();
     } else if (tempApp.type === "image") {
-      if (tempApp.content && tempApp.content.startsWith("data:")) {
-        $ball.html(`<img src="${tempApp.content}">`);
-        $("#btn-upload-card").css("background-image", `url('${tempApp.content}')`).find("i, span").hide();
-      } else {
-        $ball.html('<i class="fa-solid fa-image"></i>');
-        $("#btn-upload-card").css("background-image", "").find("i, span").show();
-      }
+      $ball.html('<i class="fa-solid fa-image"></i>');
+      $("#btn-upload-card").css("background-image", "").find("i, span").show();
+    } else {
+      $ball.html(tempApp.content || "\u{1F3AD}");
+      $("#btn-upload-card").css("background-image", "").find("i, span").show();
     }
   };
   const playAnimationPreview = () => {
@@ -12143,6 +12216,10 @@ function openSettingsWindow() {
     if (!file) return;
     try {
       tempApp.content = await fileToBase64(file);
+      tempApp.type = "image";
+      $("input[name='p-type'][value='image']").prop("checked", true);
+      $("#box-emoji").hide();
+      $("#box-image").show();
       renderPreview();
     } catch (e) {
       alert("Fail");
@@ -12777,6 +12854,7 @@ function openSettingsWindow() {
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
     lore: true,
+    model: false,
     settings: true,
     favs: false,
     scripts: false,
@@ -13979,7 +14057,8 @@ var init_scriptManager = __esm({
 
 // src/core/connection.js
 import { ChatCompletionService } from "../../../custom-request.js";
-import { oai_settings, getChatCompletionModel } from "../../../openai.js";
+import { oai_settings, getChatCompletionModel, tryParseStreamingError } from "../../../openai.js";
+import EventSourceStream from "../../../sse-stream.js";
 function getActiveConnection() {
   const data = getExtData();
   const cfg = data.config || {};
@@ -14979,6 +15058,27 @@ var init_embeddings = __esm({
 });
 
 // src/core/vectorStore.js
+function readUnsavedCacheFromStorage() {
+  try {
+    return localStorage.getItem(UNSAVED_CACHE_KEY) === "1";
+  } catch (_e) {
+    return false;
+  }
+}
+function writeUnsavedCacheToStorage(value) {
+  try {
+    localStorage.setItem(UNSAVED_CACHE_KEY, value ? "1" : "0");
+  } catch (_e) {
+  }
+}
+function setUnsavedCache(value) {
+  hasUnsavedVectorsCache = Boolean(value);
+  unsavedCacheInitialized = true;
+  writeUnsavedCacheToStorage(hasUnsavedVectorsCache);
+}
+function resetUnsavedCacheFromMetadataChange() {
+  void refreshUnsavedVectorsCache();
+}
 async function initVectorDB() {
   if (dbInstance) {
     return dbInstance;
@@ -15029,7 +15129,12 @@ async function saveBatchEmbeddings(characterId, entries) {
       const request = store.put(data);
       request.onsuccess = () => successCount++;
     }
-    transaction.oncomplete = () => resolve(successCount);
+    transaction.oncomplete = () => {
+      if (successCount > 0) {
+        setUnsavedCache(true);
+      }
+      resolve(successCount);
+    };
     transaction.onerror = () => {
       TitaniaLogger.error("\u6279\u91CF\u4FDD\u5B58 Embeddings \u5931\u8D25", transaction.error);
       reject(transaction.error);
@@ -15065,6 +15170,7 @@ async function clearCharacterVectors(characterId) {
     metadataStore.delete(characterId);
     transaction.oncomplete = () => {
       TitaniaLogger.info(`\u5DF2\u6E05\u9664\u89D2\u8272 ${characterId} \u7684 ${deleteCount} \u6761\u5411\u91CF\u7D22\u5F15`);
+      resetUnsavedCacheFromMetadataChange();
       resolve(deleteCount);
     };
     transaction.onerror = () => {
@@ -15151,6 +15257,7 @@ async function exportVectors(characterId) {
     ...metadata || {},
     lastExportedAt: Date.now()
   });
+  resetUnsavedCacheFromMetadataChange();
   return exportData;
 }
 async function importVectors(characterId, data, clearExisting = true) {
@@ -15197,6 +15304,11 @@ async function importVectors(characterId, data, clearExisting = true) {
     metadataStore.put(metadataEntry);
     transaction.oncomplete = () => {
       TitaniaLogger.info(`\u5BFC\u5165\u5B8C\u6210: ${imported} \u6761\u6210\u529F, ${skipped} \u6761\u8DF3\u8FC7`);
+      if (imported > 0) {
+        setUnsavedCache(true);
+      } else {
+        resetUnsavedCacheFromMetadataChange();
+      }
       resolve({ imported, skipped });
     };
     transaction.onerror = () => {
@@ -15235,20 +15347,33 @@ async function checkUnsavedVectors() {
   try {
     const characters = await getAllIndexedCharacters();
     if (characters.length === 0) {
+      setUnsavedCache(false);
       return false;
     }
     for (const charId of characters) {
       const result = await checkCharacterUnsavedVectors(charId);
       if (result.hasNew) {
         TitaniaLogger.info(`\u68C0\u6D4B\u5230\u89D2\u8272 ${charId} \u6709 ${result.count} \u6761\u672A\u5BFC\u51FA\u7684\u5411\u91CF`);
+        setUnsavedCache(true);
         return true;
       }
     }
+    setUnsavedCache(false);
     return false;
   } catch (e) {
     TitaniaLogger.warn("\u68C0\u67E5\u672A\u4FDD\u5B58\u5411\u91CF\u5931\u8D25", e);
+    unsavedCacheInitialized = true;
     return false;
   }
+}
+function hasUnsavedVectorsSync() {
+  return hasUnsavedVectorsCache;
+}
+async function refreshUnsavedVectorsCache() {
+  return checkUnsavedVectors();
+}
+function isUnsavedCacheInitialized() {
+  return unsavedCacheInitialized;
 }
 async function getAllIndexedCharacters() {
   const db = await initVectorDB();
@@ -15263,7 +15388,7 @@ async function getAllIndexedCharacters() {
     };
   });
 }
-var DB_NAME, DB_VERSION, STORE_EMBEDDINGS, STORE_METADATA, dbInstance;
+var DB_NAME, DB_VERSION, STORE_EMBEDDINGS, STORE_METADATA, UNSAVED_CACHE_KEY, dbInstance, hasUnsavedVectorsCache, unsavedCacheInitialized;
 var init_vectorStore = __esm({
   "src/core/vectorStore.js"() {
     init_logger();
@@ -15272,7 +15397,10 @@ var init_vectorStore = __esm({
     DB_VERSION = 1;
     STORE_EMBEDDINGS = "embeddings";
     STORE_METADATA = "metadata";
+    UNSAVED_CACHE_KEY = "titania_has_unsaved_vectors";
     dbInstance = null;
+    hasUnsavedVectorsCache = readUnsavedCacheFromStorage();
+    unsavedCacheInitialized = true;
   }
 });
 
@@ -18279,6 +18407,232 @@ function formatRelativeTime2(ts) {
   if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
   return new Date(time).toLocaleDateString("zh-CN");
 }
+function escapeHtmlText(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function getContinuationRecentInstructions() {
+  const data = getExtData();
+  const list = data.continuation_ui?.recent_instructions;
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => String(item || "").trim()).filter((item) => item.length > 0).slice(0, CONTINUATION_RECENT_MAX);
+}
+function saveContinuationRecentInstruction(instruction) {
+  const text = String(instruction || "").trim();
+  if (!text) return;
+  const data = getExtData();
+  if (!data.continuation_ui) data.continuation_ui = {};
+  const prev = Array.isArray(data.continuation_ui.recent_instructions) ? data.continuation_ui.recent_instructions : [];
+  const normalizedPrev = prev.map((item) => String(item || "").trim()).filter((item) => item.length > 0);
+  const deduped = normalizedPrev.filter((item) => item !== text);
+  data.continuation_ui.recent_instructions = [text, ...deduped].slice(0, CONTINUATION_RECENT_MAX);
+  saveExtData();
+}
+function openContinuationComposer(initialText = "") {
+  return new Promise((resolve) => {
+    const recent = getContinuationRecentInstructions();
+    $("#t-continuation-dialog").remove();
+    $(document).off("keydown.tcontinuecomposer");
+    const recentHtml = recent.length > 0 ? recent.map((item) => {
+      const encoded = encodeURIComponent(item);
+      const display = item.length > 24 ? `${item.slice(0, 24)}\u2026` : item;
+      return `<button class="t-cont-recent-item" data-text="${encoded}" style="
+                            border:1px solid #3d3d3d;
+                            background:#262626;
+                            color:#ddd;
+                            border-radius:999px;
+                            padding:6px 12px;
+                            font-size:12px;
+                            cursor:pointer;
+                            max-width:100%;
+                            overflow:hidden;
+                            text-overflow:ellipsis;
+                            white-space:nowrap;
+                        " title="${escapeHtmlText(item)}">${escapeHtmlText(display)}</button>`;
+    }).join("") : `<div style="color:#777; font-size:12px;">\u6682\u65E0\u6700\u8FD1\u7EED\u5199\u6307\u4EE4</div>`;
+    const html = `
+        <div id="t-continuation-dialog" style="
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.65);
+            z-index:22000;
+            display:block;
+            overflow:auto;
+            -webkit-overflow-scrolling:touch;
+            padding:0;
+        ">
+            <div id="t-cont-panel" style="
+                position:fixed;
+                top:50%;
+                left:50%;
+                transform:translate(-50%, -50%);
+                width:min(760px, calc(100vw - 16px));
+                max-height:min(88vh, calc(100dvh - 16px));
+                background:#1e1e1e;
+                border:1px solid #3a3a3a;
+                border-radius:12px;
+                box-shadow:0 18px 40px rgba(0,0,0,0.45);
+                display:flex;
+                flex-direction:column;
+                overflow:hidden;
+            ">
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    padding:14px 16px;
+                    border-bottom:1px solid #333;
+                ">
+                    <div style="display:flex; align-items:center; gap:8px; color:#ddd;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color:#bfa15f;"></i>
+                        <span style="font-weight:600;">\u4E3B\u52A8\u7EED\u5199\u6307\u4EE4</span>
+                    </div>
+                    <button id="t-cont-close" style="
+                        border:none;
+                        background:transparent;
+                        color:#999;
+                        font-size:20px;
+                        cursor:pointer;
+                        line-height:1;
+                        padding:2px 6px;
+                    " title="\u5173\u95ED">\xD7</button>
+                </div>
+
+                <div style="padding:14px 16px; display:flex; flex-direction:column; gap:10px; overflow:auto;">
+                    <div style="color:#888; font-size:12px;">\u53EF\u7559\u7A7A\u8868\u793A\u201C\u81EA\u7136\u7EED\u5199\u201D\uFF1B\u652F\u6301\u591A\u884C\u8F93\u5165\uFF0C\u6309 Ctrl+Enter \u5FEB\u901F\u53D1\u9001\u3002</div>
+
+                    <textarea id="t-cont-input" placeholder="\u4F8B\u5982\uFF1A\u8BA9\u4E24\u4EBA\u77DB\u76FE\u5347\u7EA7\uFF0C\u4F46\u4FDD\u6301\u514B\u5236\uFF0C\u4E0D\u8981\u7ACB\u523B\u548C\u89E3\u3002" style="
+                        width:100%;
+                        min-height:150px;
+                        resize:vertical;
+                        border:1px solid #3a3a3a;
+                        border-radius:8px;
+                        background:#141414;
+                        color:#eee;
+                        padding:12px;
+                        font-size:13px;
+                        line-height:1.5;
+                        outline:none;
+                    "></textarea>
+
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button id="t-cont-expand" style="
+                                border:1px solid #3d3d3d;
+                                background:#262626;
+                                color:#ddd;
+                                border-radius:8px;
+                                padding:6px 10px;
+                                cursor:pointer;
+                                font-size:12px;
+                            "><i class="fa-solid fa-expand"></i> \u5C55\u5F00\u7F16\u8F91\u5668</button>
+                        </div>
+                        <div id="t-cont-char-count" style="color:#777; font-size:12px;">0 \u5B57</div>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="color:#aaa; font-size:12px;">\u6700\u8FD1\u4F7F\u7528\uFF08\u6700\u591A ${CONTINUATION_RECENT_MAX} \u6761\uFF0C\u70B9\u51FB\u590D\u7528\uFF09</div>
+                        <div id="t-cont-recent-list" style="display:flex; gap:8px; flex-wrap:wrap; max-height:88px; overflow:auto;">${recentHtml}</div>
+                    </div>
+                </div>
+
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:flex-end;
+                    gap:10px;
+                    padding:12px 16px;
+                    border-top:1px solid #333;
+                    background:#1a1a1a;
+                ">
+                    <button id="t-cont-cancel" style="
+                        border:1px solid #4a4a4a;
+                        background:#2a2a2a;
+                        color:#ddd;
+                        border-radius:8px;
+                        padding:8px 14px;
+                        cursor:pointer;
+                    ">\u53D6\u6D88</button>
+                    <button id="t-cont-submit" style="
+                        border:1px solid #4a9eff;
+                        background:#2f74c9;
+                        color:#fff;
+                        border-radius:8px;
+                        padding:8px 14px;
+                        cursor:pointer;
+                    ">\u53D1\u9001\u7EED\u5199</button>
+                </div>
+            </div>
+        </div>`;
+    $("body").append(html);
+    const $dialog = $("#t-continuation-dialog");
+    const $panel = $("#t-cont-panel");
+    const $input = $("#t-cont-input");
+    const $charCount = $("#t-cont-char-count");
+    const $expandBtn = $("#t-cont-expand");
+    let resolved = false;
+    let expanded = false;
+    const finalize = (value) => {
+      if (resolved) return;
+      resolved = true;
+      $(document).off("keydown.tcontinuecomposer");
+      $dialog.remove();
+      resolve(value);
+    };
+    const updateCharCount = () => {
+      $charCount.text(`${$input.val().length} \u5B57`);
+    };
+    const applyExpandState = () => {
+      if (expanded) {
+        $panel.css({
+          width: "min(1100px, calc(100vw - 12px))",
+          maxHeight: "min(94vh, calc(100dvh - 12px))"
+        });
+        $input.css({ minHeight: "52vh" });
+        $expandBtn.html('<i class="fa-solid fa-compress"></i> \u6536\u8D77\u7F16\u8F91\u5668');
+      } else {
+        $panel.css({
+          width: "min(760px, calc(100vw - 16px))",
+          maxHeight: "min(88vh, calc(100dvh - 16px))"
+        });
+        $input.css({ minHeight: "150px" });
+        $expandBtn.html('<i class="fa-solid fa-expand"></i> \u5C55\u5F00\u7F16\u8F91\u5668');
+      }
+    };
+    $input.val(initialText || "");
+    updateCharCount();
+    setTimeout(() => $input.trigger("focus"), 0);
+    $input.on("input", updateCharCount);
+    $input.on("keydown", function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        finalize($input.val());
+      }
+    });
+    $(document).on("keydown.tcontinuecomposer", function(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        finalize(null);
+      }
+    });
+    $dialog.on("click", function(e) {
+      if (e.target === this) {
+        finalize(null);
+      }
+    });
+    $("#t-cont-close, #t-cont-cancel").on("click", () => finalize(null));
+    $("#t-cont-submit").on("click", () => finalize($input.val()));
+    $expandBtn.on("click", function() {
+      expanded = !expanded;
+      applyExpandState();
+    });
+    $("#t-cont-recent-list").on("click", ".t-cont-recent-item", function() {
+      const text = decodeURIComponent($(this).attr("data-text") || "");
+      $input.val(text);
+      updateCharCount();
+      $input.trigger("focus");
+    });
+  });
+}
 function refreshScriptList() {
   const $sel = $("#t-sel-script");
   $sel.empty();
@@ -18399,6 +18753,10 @@ async function openMainWindow() {
                     <div class="t-tools-item" id="t-tool-zen">
                         <i class="fa-solid fa-expand"></i>
                         <span>\u6C89\u6D78\u9605\u8BFB</span>
+                    </div>
+                    <div class="t-tools-item" id="t-tool-continue">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>\u4E3B\u52A8\u7EED\u5199</span>
                     </div>
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
@@ -18596,6 +18954,29 @@ async function openMainWindow() {
       return;
     }
     openContentEditor();
+  });
+  $("#t-tool-continue").on("click", async function() {
+    $toolsPanel.hide();
+    $toolsBtn.removeClass("active");
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    const displayContent = getCurrentDisplayContent();
+    if (!displayContent?.content || displayContent.content.trim().length === 0) {
+      if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7EED\u5199\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F", "Titania");
+      return;
+    }
+    const instruction = await openContinuationComposer("");
+    if (instruction === null) return;
+    const normalizedInstruction = instruction.trim();
+    if (normalizedInstruction) {
+      saveContinuationRecentInstruction(normalizedInstruction);
+    }
+    await handleUserContinuation({
+      instruction: normalizedInstruction,
+      fromCurrentView: true
+    });
   });
   $(document).on("keydown.zenmode", function(e) {
     if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) {
@@ -19687,7 +20068,7 @@ function getQueueScripts() {
     return selected.map((s) => ({ id: s.id, name: s.name }));
   }
 }
-var SORT_MODE_LABELS2;
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -19709,6 +20090,7 @@ var init_mainWindow = __esm({
       name_asc: "\u540D\u79F0 A-Z",
       name_desc: "\u540D\u79F0 Z-A"
     };
+    CONTINUATION_RECENT_MAX = 10;
   }
 });
 
@@ -20265,10 +20647,12 @@ function getEnabledToolbarButtons() {
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
     lore: true,
+    model: false,
     settings: true,
     favs: false,
     scripts: false,
-    debug: false
+    debug: false,
+    recall: false
   };
   const maxItems = toolbarConfig.max_items || 5;
   const enabledButtons = TOOLBAR_BUTTONS.filter((btn) => enabledItems[btn.id] === true);
@@ -20442,6 +20826,15 @@ function createFloatingButton() {
   const bgColor = app.bg_color || "#2b2b2b";
   const borderOpacity = app.border_opacity !== void 0 ? app.border_opacity : 100;
   const bgOpacity = app.bg_opacity !== void 0 ? app.bg_opacity : 100;
+  const rawAppContent = typeof app.content === "string" ? app.content.trim() : "";
+  const isImageDataUri = rawAppContent.toLowerCase().startsWith("data:image/");
+  if (isImageDataUri && app.type !== "image") {
+    app.type = "image";
+    if (!settings2.appearance) {
+      settings2.appearance = app;
+    }
+    saveExtData();
+  }
   const hexToRgba = (hex, opacity) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     if (!result) return hex;
@@ -20452,7 +20845,8 @@ function createFloatingButton() {
   };
   const borderColorRgba = hexToRgba(borderColor, borderOpacity);
   const bgColorRgba = hexToRgba(bgColor, bgOpacity);
-  const btnContent = app.type === "image" && app.content.startsWith("data:") ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${app.content}</span>`;
+  const btnText = app.content ?? "\u{1F3AD}";
+  const btnContent = isImageDataUri ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${btnText}</span>`;
   const btn = $(`<div id="titania-float-btn" data-animation="${animationType}">${btnContent}</div>`);
   const timer = $(`<div id="titania-timer">0.0s</div>`);
   btn.css({
@@ -20612,8 +21006,8 @@ var init_floatingBtn = __esm({
 
 // src/core/api.js
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
-import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError } from "../../../openai.js";
-import EventSourceStream from "../../../sse-stream.js";
+import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
+import EventSourceStream2 from "../../../sse-stream.js";
 import { evaluateMacros as evaluateMacros2 } from "../../../macros.js";
 function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
   const container = document.getElementById("t-output-content");
@@ -20621,6 +21015,13 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
     TitaniaLogger.warn("renderGeneratedContent: \u5BB9\u5668\u4E0D\u5B58\u5728");
     return;
   }
+  const scrollContainer = document.querySelector(".t-content-area");
+  const streamScrollState = isStreaming && scrollContainer ? {
+    top: scrollContainer.scrollTop,
+    height: scrollContainer.scrollHeight,
+    // 当用户已经接近底部时，维持自动跟随
+    stickToBottom: scrollContainer.scrollHeight - scrollContainer.clientHeight - scrollContainer.scrollTop <= 24
+  } : null;
   if (!isStreaming) {
     TitaniaLogger.info("renderGeneratedContent \u5F00\u59CB", {
       contentLength: content?.length || 0,
@@ -20638,6 +21039,16 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
   } catch (e) {
     TitaniaLogger.error("Shadow DOM \u6E32\u67D3\u5931\u8D25", e);
     container.innerHTML = content;
+  }
+  if (streamScrollState && scrollContainer) {
+    requestAnimationFrame(() => {
+      if (streamScrollState.stickToBottom) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      } else {
+        const maxTop = Math.max(0, scrollContainer.scrollHeight - scrollContainer.clientHeight);
+        scrollContainer.scrollTop = Math.min(streamScrollState.top, maxTop);
+      }
+    });
   }
   if (!isStreaming) {
     const interactiveResult = detectInteractiveContent(content);
@@ -20907,7 +21318,7 @@ function cancelGeneration() {
   TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u4E86\u751F\u6210");
   if (window.toastr) toastr.info("\u23F9\uFE0F \u6F14\u7ECE\u5DF2\u4E2D\u65AD", "Titania");
 }
-async function handleGenerate(forceScriptId = null, silent = false) {
+async function handleGenerate(forceScriptId = null, silent = false, generationOverrides = null) {
   const data = getExtData();
   const cfg = data.config || {};
   const dirDefaults = data.director || { instruction: "" };
@@ -20953,6 +21364,8 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     if (!silent) alert("\u8BF7\u9009\u62E9\u5267\u672C");
     return false;
   }
+  const promptOverride = generationOverrides?.promptOverride;
+  const scriptPromptSource = typeof promptOverride === "string" && promptOverride.trim().length > 0 ? promptOverride : script.prompt;
   if (!silent) {
     GlobalState.lastUsedScriptId = script.id;
     if ($("#t-main-view").length > 0) applyScriptSelection(script.id);
@@ -21004,7 +21417,8 @@ async function handleGenerate(forceScriptId = null, silent = false) {
       }
     }
   }
-  if (!silent) $("#t-overlay").remove();
+  const keepOverlayOpen = generationOverrides?.keepOverlayOpen === true;
+  if (!silent && !keepOverlayOpen) $("#t-overlay").remove();
   GlobalState.abortController = new AbortController();
   const signal = GlobalState.abortController.signal;
   GlobalState.isGenerating = true;
@@ -21093,21 +21507,26 @@ ${history}
 
 `;
     }
-    let processedPrompt = script.prompt;
-    try {
-      const macroEnv = {
-        char: ctx.charName,
-        user: ctx.userName
-        // 可以根据需要添加更多环境变量
-      };
-      processedPrompt = evaluateMacros2(script.prompt, macroEnv);
-      TitaniaLogger.info("\u5B8F\u5904\u7406\u5B8C\u6210", {
-        original: script.prompt.substring(0, 100),
-        processed: processedPrompt.substring(0, 100)
-      });
-    } catch (e) {
-      TitaniaLogger.warn("ST \u5B8F\u5904\u7406\u5931\u8D25\uFF0C\u4F7F\u7528\u7B80\u5355\u66FF\u6362", e);
-      processedPrompt = script.prompt.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
+    const skipMacroEvaluation = generationOverrides?.skipMacroEvaluation === true;
+    let processedPrompt = scriptPromptSource;
+    if (!skipMacroEvaluation) {
+      try {
+        const macroEnv = {
+          char: ctx.charName,
+          user: ctx.userName
+          // 可以根据需要添加更多环境变量
+        };
+        processedPrompt = evaluateMacros2(scriptPromptSource, macroEnv);
+        TitaniaLogger.info("\u5B8F\u5904\u7406\u5B8C\u6210", {
+          original: scriptPromptSource.substring(0, 100),
+          processed: processedPrompt.substring(0, 100)
+        });
+      } catch (e) {
+        TitaniaLogger.warn("ST \u5B8F\u5904\u7406\u5931\u8D25\uFF0C\u4F7F\u7528\u7B80\u5355\u66FF\u6362", e);
+        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
+      }
+    } else {
+      TitaniaLogger.info("\u5DF2\u8DF3\u8FC7\u5B8F\u5904\u7406\uFF08\u4F7F\u7528\u91CD\u6784\u540E\u7684\u4E3B\u52A8\u7EED\u5199\u6D88\u606F\u6784\u5305\uFF09");
     }
     user += `[\u5267\u672C\u6307\u4EE4]
 \uFF08\u8FD9\u662F\u4F60\u7684\u4E3B\u8981\u4EFB\u52A1\uFF01\u8BF7\u6839\u636E\u4EE5\u4E0B\u6307\u4EE4\u751F\u6210\u521B\u610F\u5185\u5BB9\uFF0C\u5FFD\u7565\u4E0A\u65B9\u7684\u804A\u5929\u5386\u53F2\uFF0C\u4E13\u6CE8\u4E8E\u5B8C\u6210\u6B64\u521B\u4F5C\u8BF7\u6C42\uFF09
@@ -21224,14 +21643,14 @@ ${processedPrompt}`;
               const errText = await res.text().catch(() => "");
               diagnostics.raw_response_snippet = errText.substring(0, 500);
               try {
-                tryParseStreamingError(res, errText, { quiet: true });
+                tryParseStreamingError2(res, errText, { quiet: true });
               } catch (parsedErr) {
                 throw parsedErr;
               }
               throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             }
             diagnostics.phase = "streaming";
-            const eventStream = new EventSourceStream();
+            const eventStream = new EventSourceStream2();
             res.body.pipeThrough(eventStream);
             const reader = eventStream.readable.getReader();
             let chunkCount = 0;
@@ -21246,7 +21665,7 @@ ${processedPrompt}`;
               const data2 = value.data;
               if (data2 === "[DONE]") break;
               try {
-                tryParseStreamingError(res, data2, { quiet: true });
+                tryParseStreamingError2(res, data2, { quiet: true });
               } catch (streamParseErr) {
                 throw streamParseErr;
               }
@@ -21374,7 +21793,7 @@ ${processedPrompt}`;
             GlobalState.continuation.isActive = true;
             GlobalState.continuation.originalContent = finalOutput;
             GlobalState.continuation.accumulatedContent = finalOutput;
-            GlobalState.continuation.originalPrompt = script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName);
+            GlobalState.continuation.originalPrompt = scriptPromptSource.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName);
             GlobalState.continuation.characterName = ctx.charName;
             GlobalState.continuation.userName = ctx.userName;
           } else {
@@ -21388,7 +21807,7 @@ ${processedPrompt}`;
           if (!silent && window.toastr) {
             toastr.info(`\u{1F504} \u68C0\u6D4B\u5230\u622A\u65AD\uFF0C\u6B63\u5728\u81EA\u52A8\u7EED\u5199 (${currentRetry + 1}/${maxRetries})...`, "Titania Echo");
           }
-          const continuationSuccess = await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
+          const continuationSuccess = await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, "", "auto", false);
           return continuationSuccess;
         } else {
           TitaniaLogger.warn("\u5DF2\u8FBE\u5230\u6700\u5927\u7EED\u5199\u6B21\u6570", { maxRetries });
@@ -21619,7 +22038,7 @@ function cancelQueueGeneration() {
     TitaniaLogger.info("\u961F\u5217\u751F\u6210\u5DF2\u53D6\u6D88");
   }
 }
-async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false) {
+async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false) {
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   const signal = GlobalState.abortController?.signal;
@@ -21634,10 +22053,17 @@ async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalMo
 Character: ${GlobalState.continuation.characterName}
 User: ${GlobalState.continuation.userName}
 Original Request: ${context.originalPrompt}
+${userInstruction ? `User continuation intent: ${userInstruction}` : ""}
 
 [Story Progress]
 Plot so far: ${context.plotSummary}
 Total written: ~${context.totalLength} characters
+
+[Visual Style Continuity]
+Existing CSS excerpt (follow this style language, do not replace it):
+${context.styleGuide ? context.styleGuide : "(No explicit style block found)"}
+Existing class names you should prefer reusing:
+${context.recentClasses && context.recentClasses.length > 0 ? context.recentClasses.join(", ") : "(No class names found)"}
 
 [Technical State]
 Unclosed HTML tags: ${context.unclosedTags.length > 0 ? context.unclosedTags.join(", ") : "None"}
@@ -21647,8 +22073,10 @@ ${context.incompleteText ? `Incomplete sentence fragment: "${context.incompleteT
 [Critical Rules]
 1. **SEAMLESS JOIN**: Your output will be DIRECTLY APPENDED. Do NOT repeat any existing content.
 2. **COMPLETE FIRST**: ${context.unclosedTags.length > 0 ? `Close these tags first: </${context.unclosedTags.join(">, </")}>` : context.incompleteText ? "Complete the unfinished sentence first." : "Start with new content."}
-3. **CONTINUE NATURALLY**: Write 300-500 more characters to reach a natural conclusion.
-4. **FORMAT**: Output raw HTML only. No markdown code blocks. Language: Chinese.
+3. **CONTINUE NATURALLY**: ${userInstruction ? "Strictly follow the user's continuation intent while keeping tone and continuity." : "Write 300-500 more characters to reach a natural conclusion."}
+4. **STYLE INHERITANCE**: Reuse existing HTML structure/classes. Do NOT introduce a brand-new visual system.
+5. **STYLE TAG RULE**: Do NOT output a new <style> block unless absolutely necessary; if needed, only add minimal incremental rules compatible with existing CSS.
+6. **FORMAT**: Output raw HTML only. No markdown code blocks. Language: Chinese.
 
 [IMPORTANT - DO NOT REPEAT]
 The last complete sentence was: "${context.lastCompleteSentence}"
@@ -21706,10 +22134,11 @@ Generate ONLY the continuation (no repetition):`;
         max_tokens: cfg.max_tokens || 4096
       };
       if (useStream) {
-        const maxRetries2 = 1;
-        const retryDelay = 1e3;
+        const maxRetries2 = 2;
+        const retryDelayBase = 1200;
         let lastError = null;
         let streamSuccess = false;
+        let shouldFallbackToNonStream = false;
         for (let attempt = 0; attempt <= maxRetries2 && !streamSuccess; attempt++) {
           try {
             if (attempt > 0) {
@@ -21725,9 +22154,21 @@ Generate ONLY the continuation (no repetition):`;
               signal
             });
             if (!res.ok) {
-              throw new Error(`Continuation HTTP Error ${res.status}: ${res.statusText}`);
+              let errorDetail = "";
+              try {
+                const errorText = (await res.text() || "").trim();
+                if (errorText) {
+                  errorDetail = ` | ${errorText.slice(0, 180)}`;
+                }
+              } catch (e) {
+              }
+              if (res.status >= 500) {
+                shouldFallbackToNonStream = true;
+              }
+              const statusPart = res.statusText ? `${res.status}: ${res.statusText}` : `${res.status}`;
+              throw new Error(`Continuation HTTP Error ${statusPart}${errorDetail}`);
             }
-            const eventStream = new EventSourceStream();
+            const eventStream = new EventSourceStream2();
             res.body.pipeThrough(eventStream);
             const reader = eventStream.readable.getReader();
             let chunkCount = 0;
@@ -21763,8 +22204,44 @@ Generate ONLY the continuation (no repetition):`;
             });
             if (attempt < maxRetries2) {
               rawContent = "";
+              const retryDelay = retryDelayBase * (attempt + 1);
               await new Promise((r) => setTimeout(r, retryDelay));
             }
+          }
+        }
+        if (!streamSuccess && shouldFallbackToNonStream) {
+          TitaniaLogger.warn("\u7EED\u5199\u6D41\u5F0F\u5931\u8D25\uFF0C\u5C1D\u8BD5\u975E\u6D41\u5F0F\u964D\u7EA7", {
+            reason: lastError?.message || "unknown"
+          });
+          if (!silent && window.toastr) {
+            toastr.info("\u{1F501} \u7EED\u5199\u670D\u52A1\u7E41\u5FD9\uFF0C\u5C1D\u8BD5\u975E\u6D41\u5F0F\u6A21\u5F0F...", "Titania Echo");
+          }
+          const fallbackBody = { ...requestBody, stream: false };
+          const fallbackRes = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+            body: JSON.stringify(fallbackBody),
+            signal
+          });
+          if (!fallbackRes.ok) {
+            let fallbackDetail = "";
+            try {
+              const fallbackText = (await fallbackRes.text() || "").trim();
+              if (fallbackText) {
+                fallbackDetail = ` | ${fallbackText.slice(0, 180)}`;
+              }
+            } catch (e) {
+            }
+            const fallbackStatus = fallbackRes.statusText ? `${fallbackRes.status}: ${fallbackRes.statusText}` : `${fallbackRes.status}`;
+            throw new Error(`Continuation Fallback HTTP Error ${fallbackStatus}${fallbackDetail}`);
+          }
+          const fallbackJsonText = await fallbackRes.text();
+          try {
+            const fallbackJson = JSON.parse(fallbackJsonText);
+            rawContent = fallbackJson.choices?.[0]?.message?.content || "";
+            streamSuccess = rawContent.trim().length > 0;
+          } catch (jsonErr) {
+            throw new Error("Continuation Fallback Invalid JSON");
           }
         }
         if (!streamSuccess) {
@@ -21807,7 +22284,7 @@ Generate ONLY the continuation (no repetition):`;
       if (!silent && window.toastr) {
         toastr.info(`\u{1F504} \u7EED\u5199\u5185\u5BB9\u4ECD\u88AB\u622A\u65AD\uFF0C\u7EE7\u7EED\u5C1D\u8BD5 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
       }
-      return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
+      return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, userInstruction, continuationType, autoLocate);
     } else {
       const finalOutput = smartMergeContinuation(
         GlobalState.continuation.accumulatedContent,
@@ -21832,8 +22309,19 @@ Generate ONLY the continuation (no repetition):`;
         modelName: finalModel
         // 添加模型名称
       };
+      if (continuationType === "user" && autoLocate) {
+        unlockDisplay();
+      }
       if ($("#t-output-content").length > 0) {
         renderGeneratedContent(finalOutput, script.name);
+        if (continuationType === "user" && autoLocate) {
+          requestAnimationFrame(() => {
+            const scrollContainer = document.querySelector(".t-content-area");
+            if (scrollContainer) {
+              scrollContainer.scrollTop = scrollContainer.scrollHeight;
+            }
+          });
+        }
         if (typeof window.updateSceneHistoryNav === "function") {
           window.updateSceneHistoryNav();
         }
@@ -21844,11 +22332,13 @@ Generate ONLY the continuation (no repetition):`;
       stopTimer();
       const elapsed = GlobalState.lastGenerationTime / 1e3;
       if (!silent && window.toastr) {
-        toastr.success(`\u2728 \u300A${script.name}\u300B\u6F14\u7ECE\u5B8C\u6210\uFF01(\u542B${totalRetries}\u6B21\u7EED\u5199, ${elapsed.toFixed(1)}s)`, "Titania Echo");
+        const successMsg = continuationType === "user" ? `\u2728 \u4E3B\u52A8\u7EED\u5199\u5B8C\u6210\uFF01(${totalRetries}\u6B21\u8865\u7EED\u5199, ${elapsed.toFixed(1)}s)` : `\u2728 \u300A${script.name}\u300B\u6F14\u7ECE\u5B8C\u6210\uFF01(\u542B${totalRetries}\u6B21\u7EED\u5199, ${elapsed.toFixed(1)}s)`;
+        toastr.success(successMsg, "Titania Echo");
       }
       $floatBtn.addClass("t-notify");
-      TitaniaLogger.info("\u81EA\u52A8\u7EED\u5199\u5B8C\u6210", {
+      TitaniaLogger.info("\u7EED\u5199\u5B8C\u6210", {
         scriptName: script.name,
+        continuationType,
         totalRetries,
         elapsed: elapsed.toFixed(1) + "s"
       });
@@ -21864,7 +22354,10 @@ Generate ONLY the continuation (no repetition):`;
       GlobalState.lastGeneratedContent = GlobalState.continuation.accumulatedContent;
       GlobalState.lastGeneratedScriptId = script.id;
       if (!silent && window.toastr) {
-        toastr.warning("\u26A0\uFE0F \u7EED\u5199\u5931\u8D25\uFF0C\u663E\u793A\u5DF2\u83B7\u53D6\u7684\u5185\u5BB9", "Titania Echo");
+        const errorHint = String(e?.message || "");
+        const isServerBusy = errorHint.includes("503") || errorHint.includes("429");
+        const tip = isServerBusy ? "\u26A0\uFE0F \u7EED\u5199\u5931\u8D25\uFF08\u670D\u52A1\u7E41\u5FD9\uFF09\uFF0C\u5DF2\u4FDD\u7559\u5F53\u524D\u5185\u5BB9\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5" : "\u26A0\uFE0F \u7EED\u5199\u5931\u8D25\uFF0C\u663E\u793A\u5DF2\u83B7\u53D6\u7684\u5185\u5BB9";
+        toastr.warning(tip, "Titania Echo");
       }
     }
     resetContinuationState();
@@ -21880,6 +22373,66 @@ Generate ONLY the continuation (no repetition):`;
       window.updateRunButtonsState();
     }
   }
+}
+async function handleUserContinuation(options = {}) {
+  const { instruction = "", fromCurrentView = true, autoLocate = true } = options;
+  if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+    if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+    return false;
+  }
+  const display = fromCurrentView ? getCurrentDisplayContent() : {
+    content: GlobalState.lastGeneratedContent,
+    scriptId: GlobalState.lastGeneratedScriptId,
+    scriptName: "\u573A\u666F"
+  };
+  const baseContent = (display?.content || "").trim();
+  if (!baseContent) {
+    if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7EED\u5199\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F", "Titania");
+    return false;
+  }
+  const validation = validateConnection();
+  if (!validation.valid) {
+    const errText = `\u914D\u7F6E\u7F3A\u5931\uFF1A${validation.error}`;
+    alert(errText);
+    TitaniaLogger.error("\u4E3B\u52A8\u7EED\u5199\u914D\u7F6E\u9519\u8BEF", errText);
+    return false;
+  }
+  const scriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
+  const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
+  if (!script) {
+    if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5185\u5BB9\u5BF9\u5E94\u7684\u5267\u672C\uFF0C\u65E0\u6CD5\u7EED\u5199", "Titania");
+    return false;
+  }
+  const userInstruction = (instruction || "").trim() || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
+  const promptOverride = `[\u7EED\u5199\u6A21\u5F0F]
+\u4F60\u5C06\u57FA\u4E8E\u201C\u5DF2\u5B8C\u6210\u5267\u573A\u5185\u5BB9\u201D\u8FDB\u884C\u65B0\u4E00\u8F6E\u751F\u6210\u3002
+\u8BF7\u4FDD\u6301\u4EBA\u7269\u3001\u8BED\u6C14\u3001\u8BBE\u5B9A\u4E0E\u89C6\u89C9\u98CE\u683C\u4E00\u81F4\uFF0C\u5728\u4E0D\u91CD\u590D\u5DF2\u6709\u6587\u672C\u7684\u524D\u63D0\u4E0B\u63A8\u8FDB\u5267\u60C5\u3002
+\u8F93\u51FA\u8981\u6C42\u4E0E\u666E\u901A\u751F\u6210\u4E00\u81F4\uFF1A\u8F93\u51FA\u53EF\u76F4\u63A5\u6E32\u67D3\u7684\u539F\u59CB HTML\uFF0C\u4E0D\u8981 Markdown \u4EE3\u7801\u5757\u3002
+
+[\u5DF2\u5B8C\u6210\u5267\u573A\u5185\u5BB9]
+${baseContent}
+
+[\u7528\u6237\u7EED\u5199\u6307\u4EE4]
+${userInstruction}
+
+[\u539F\u59CB\u5267\u672C\u6307\u4EE4]
+${script.prompt}`;
+  TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u5207\u6362\u5230\u65B0\u56DE\u5408\u751F\u6210\u6A21\u5F0F", {
+    scriptId: script.id,
+    scriptName: script.name,
+    baseContentLength: baseContent.length,
+    instructionLength: userInstruction.length
+  });
+  if (autoLocate === true) {
+    unlockDisplay();
+  }
+  if (window.toastr) toastr.info("\u{1F504} \u6B63\u5728\u57FA\u4E8E\u5F53\u524D\u5267\u573A\u4E0E\u7EED\u5199\u6307\u4EE4\u751F\u6210\u65B0\u56DE\u5408...", "Titania Echo");
+  return await handleGenerate(script.id, false, {
+    promptOverride,
+    skipMacroEvaluation: true,
+    keepOverlayOpen: true,
+    source: "user_continuation"
+  });
 }
 var streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
@@ -22061,16 +22614,24 @@ async function onMessageForAutoVectorize() {
   }, 1e3);
 }
 function initVectorUnsavedWarning() {
-  window.addEventListener("beforeunload", async (e) => {
-    try {
-      const hasUnsaved = await checkUnsavedVectors();
-      if (hasUnsaved) {
-        e.preventDefault();
-        e.returnValue = "\u60A8\u6709\u672A\u5BFC\u51FA\u7684\u5411\u91CF\u7D22\u5F15\u6570\u636E\uFF0C\u5173\u95ED\u9875\u9762\u540E\u8FD9\u4E9B\u6570\u636E\u53EF\u80FD\u4E22\u5931\u3002\u662F\u5426\u786E\u5B9A\u79BB\u5F00\uFF1F";
-        return e.returnValue;
-      }
-    } catch (err) {
-      console.warn("Titania: \u68C0\u67E5\u672A\u4FDD\u5B58\u5411\u91CF\u6570\u636E\u5931\u8D25", err);
+  void refreshUnsavedVectorsCache();
+  window.addEventListener("focus", () => {
+    void refreshUnsavedVectorsCache();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      void refreshUnsavedVectorsCache();
+    }
+  });
+  window.addEventListener("beforeunload", (e) => {
+    const hasUnsaved = hasUnsavedVectorsSync();
+    if (!isUnsavedCacheInitialized()) {
+      void refreshUnsavedVectorsCache();
+    }
+    if (hasUnsaved) {
+      e.preventDefault();
+      e.returnValue = "\u60A8\u6709\u672A\u5BFC\u51FA\u7684\u5411\u91CF\u7D22\u5F15\u6570\u636E\uFF0C\u5173\u95ED\u9875\u9762\u540E\u8FD9\u4E9B\u6570\u636E\u53EF\u80FD\u4E22\u5931\u3002\u662F\u5426\u786E\u5B9A\u79BB\u5F00\uFF1F";
+      return e.returnValue;
     }
   });
   console.log("Titania: \u5411\u91CF\u7D22\u5F15\u672A\u4FDD\u5B58\u63D0\u9192\u5DF2\u521D\u59CB\u5316");
