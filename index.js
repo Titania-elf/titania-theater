@@ -22,14 +22,15 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.2.4";
+    CURRENT_VERSION = "3.3.2";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
-      "3.2.4": "\u{1F9E0} \u667A\u80FD\u603B\u7ED3\uFF1AAI \u5206\u6790\u5BF9\u8BDD\u5386\u53F2\u751F\u6210\u89D2\u8272\u603B\u7ED3\uFF0C\u652F\u6301\u8BED\u4E49\u68C0\u7D22\u589E\u5F3A<br>\u{1F4CA} \u5411\u91CF\u7D22\u5F15\u7BA1\u7406\uFF1AEmbedding API \u72EC\u7ACB\u914D\u7F6E\uFF0C\u652F\u6301\u5411\u91CF\u7D22\u5F15\u6784\u5EFA/\u5BFC\u5165/\u5BFC\u51FA<br>\u{1F518} \u5FEB\u6377\u5DE5\u5177\u680F\uFF1A\u60AC\u6D6E\u7403\u70B9\u51FB\u5C55\u5F00\u6A2A\u5411\u5DE5\u5177\u680F\uFF0C\u53EF\u81EA\u5B9A\u4E49\u663E\u793A\u6309\u94AE<br>\u26A1 \u5FEB\u901F\u5207\u6362\u6A21\u578B\uFF1A\u5DE5\u5177\u680F\u65B0\u589E\u6A21\u578B\u5207\u6362\u5F39\u7A97\uFF0C\u652F\u6301\u6A21\u578B\u8986\u76D6",
-      "3.2.3": "\u{1F9E0} \u667A\u80FD\u8BBE\u5B9A\u63D0\u53D6\uFF1AAI \u5206\u6790\u5BF9\u8BDD\u5185\u5BB9\u81EA\u52A8\u63D0\u53D6\u4E16\u754C\u89C2\u8BBE\u5B9A\uFF0C\u5BA1\u6838\u540E\u5BFC\u5165\u4E16\u754C\u4E66<br>\u2B50 \u6536\u85CF\u5939\u589E\u5F3A\uFF1A\u652F\u6301\u6279\u91CF\u5220\u9664\u3001\u91CD\u547D\u540D\u6536\u85CF\u6761\u76EE<br>\u{1F3AF} \u60AC\u6D6E\u83DC\u5355\u91CD\u8BBE\u8BA1\uFF1A\u6C34\u5E73\u56FE\u6807\u680F\u5E03\u5C40\uFF0C\u65B0\u589E\u8BBE\u7F6E\u5FEB\u6377\u5165\u53E3<br>\u{1F4DC} \u573A\u666F\u5386\u53F2\u961F\u5217\uFF1A\u4FDD\u5B58\u6700\u8FD1\u4F7F\u7528\u7684\u573A\u666F\uFF0C\u5FEB\u901F\u5207\u6362",
-      "3.2.2": "\u{1F3A8} CSS \u4E3B\u9898\u65B9\u6848\u7BA1\u7406\uFF1A\u652F\u6301\u4FDD\u5B58\u591A\u4E2A\u81EA\u5B9A\u4E49 CSS \u4E3B\u9898\uFF0C\u968F\u65F6\u5207\u6362<br>\u{1F4CA} \u5BA1\u67E5\u7A97\u53E3\u5B9E\u65F6\u663E\u793A\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD<br>\u{1F527} \u4FEE\u590D\u5267\u672C\u7BA1\u7406\u5668\u5206\u7C7B\u6EDA\u52A8\u548C\u7B5B\u9009\u95EE\u9898<br>\u{1F4DD} \u5927\u5C4F\u7F16\u8F91\u6A21\u5F0F\u4F18\u5316\uFF1A\u9632\u6B62\u8BEF\u89E6\u5173\u95ED\u4E22\u5931\u5185\u5BB9\uFF0C\u624B\u673A\u7AEF\u5C45\u4E2D\u663E\u793A<br>\u{1F4E5} CSS \u5BFC\u5165\u4F18\u5148\u4F7F\u7528\u6587\u4EF6\u540D\u4F5C\u4E3A\u4E3B\u9898\u540D\u79F0"
+      "3.3.2": "\u2728 \u65B0\u589E\u4E3B\u52A8\u7EED\u5199\u529F\u80FD\uFF0C\u5165\u53E3\u5728\u53F3\u4E0A\u89D2\u4E09\u4E2A\u70B9\u7684\u83DC\u5355\uFF0C\u53EF\u5BF9\u5F53\u524D\u5267\u573A\u5185\u5BB9\u8FDB\u884C\u7EED\u5199\u3002 \u{1F527} \u6539\u52A8\u4E86\u4E00\u4E9B\u5C0Fbug",
+      "3.3.1": "\u{1F4CA} \u5267\u672C\u6392\u5E8F\u4E0E\u4F7F\u7528\u7EDF\u8BA1\uFF1A\u65B0\u589E\u667A\u80FD/\u6700\u8FD1/\u6700\u5E38\u7528\u6392\u5E8F\uFF0C\u652F\u6301\u624B\u52A8\u9009\u62E9\u4E0E\u751F\u6210\u6B21\u6570\u8FFD\u8E2A\uFF08\u542B\u961F\u5217\u7EDF\u8BA1\uFF09<br>\u{1F5C2}\uFE0F \u7BA1\u7406\u5668\u589E\u5F3A\uFF1A\u65B0\u589E\u7EDF\u8BA1\u6982\u89C8\uFF08Top5\u30017\u5929\u6D3B\u8DC3\u3001\u5206\u7C7B\u70ED\u5EA6\uFF09\u4E0E\u884C\u5185\u4F7F\u7528\u4FE1\u606F<br>\u{1F524} \u5916\u89C2\u8BBE\u7F6E\u65B0\u589E UI \u5B57\u4F53\u5927\u5C0F\u8C03\u8282\uFF1A\u7EDF\u4E00\u7F29\u653E\u63D2\u4EF6\u754C\u9762\u5B57\u4F53\uFF0C\u4E0D\u5F71\u54CD\u5185\u5BB9\u533A\u6E32\u67D3\u5B57\u53F7",
+      "3.3.0": "\u{1F575}\uFE0F \u56FE\u7247\u5BFC\u51FA\u6253\u7801\uFF1A\u6536\u85CF\u9605\u8BFB\u5668\u5BFC\u51FA\u56FE\u7247\u65F6\uFF0C\u5BF9 {{user}} \u5B8F\u5C55\u5F00\u540E\u7684\u7528\u6237\u540D\u8FDB\u884C\u7B49\u957F\u6253\u7801\uFF08\u4EC5\u5F71\u54CD\u5BFC\u51FA\uFF0C\u4E0D\u5F71\u54CD\u754C\u9762\u663E\u793A\uFF09",
+      "3.2.9": "\u{1F4FA} \u663E\u793A\u5C42\u5206\u79BB\uFF1A\u751F\u6210\u8FC7\u7A0B\u4E2D\u53EF\u81EA\u7531\u5207\u6362\u67E5\u770B\u5386\u53F2\u5267\u573A\uFF0C\u65B0\u5185\u5BB9\u5728\u540E\u53F0\u751F\u6210\u4E0D\u5E72\u6270\u9605\u8BFB<br>\u{1F514} \u65B0\u5185\u5BB9\u901A\u77E5\uFF1A\u67E5\u770B\u5386\u53F2\u65F6\u663E\u793A\u751F\u6210\u4E2D\u6307\u793A\u5668\uFF0C\u5B8C\u6210\u540E\u5F39\u51FA\u901A\u77E5\u53EF\u4E00\u952E\u8DF3\u8F6C<br>\u26A1 \u5BFC\u822A\u589E\u5F3A\uFF1A\u5386\u53F2\u5BFC\u822A\u6307\u793A\u5668\u5B9E\u65F6\u663E\u793A\u751F\u6210\u72B6\u6001\uFF0C\u652F\u6301\u5728\u751F\u6210\u4E2D\u5207\u6362"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -69,6 +70,14 @@ var init_defaults = __esm({
       favs: [],
       character_map: {},
       disabled_presets: [],
+      script_stats: {},
+      script_stats_meta: {
+        version: 1,
+        last_cleanup_at: 0
+      },
+      ui_prefs: {
+        script_sort_mode: "smart"
+      },
       appearance: {
         type: "emoji",
         content: "\u{1F3AD}",
@@ -85,6 +94,7 @@ var init_defaults = __esm({
         animation: "ripple",
         // 动画类型: ripple(脉冲波纹) | arc(电磁闪烁)
         size: 56,
+        ui_font_scale: 100,
         show_timer: true
         // 是否显示生成计时统计
       },
@@ -108,6 +118,11 @@ var init_defaults = __esm({
         // 检测模式: "html" | "sentence" | "both"
         show_indicator: true
         // 是否在内容中显示续写标记
+      },
+      // 主动续写 UI 配置
+      continuation_ui: {
+        recent_instructions: [],
+        inject_rounds_count: 3
       },
       // 自定义系统提示词配置
       custom_prompts: {
@@ -161,8 +176,42 @@ var init_defaults = __esm({
         // API Key
         model: "text-embedding-3-small",
         // 默认模型
-        dimensions: null
+        dimensions: null,
         // 向量维度（null 表示使用模型默认值）
+        // 文本清洗选项（向量化前处理）
+        text_cleaning: {
+          remove_html_tags: true,
+          // 移除 HTML 标签（保留文本内容）
+          remove_style_tags: true,
+          // 移除 <style> 标签及其内容
+          remove_thinking_tags: true,
+          // 移除 <thinking>/<think> 标签及内容
+          remove_ooc_tags: true,
+          // 移除 <ooc>/<OOC> 标签及内容
+          remove_system_tags: true,
+          // 移除 <system>/<note> 等系统标签及内容
+          remove_markdown: false,
+          // 移除 Markdown 格式（**粗体** 等）
+          remove_macro_residue: true,
+          // 移除宏残留 {{user}} {{char}} 等
+          remove_bracket_markers: true,
+          // 移除方括号标记 [System] [OOC] 等
+          remove_bracket_content: true,
+          // 移除方括号及其内容 [...] (全部)
+          custom_tags_to_remove: "",
+          // 自定义要移除的标签（逗号分隔，如 "internal,debug"）
+          min_text_length: 20
+          // 清洗后低于此长度的消息跳过向量化
+        },
+        // 自动向量化配置
+        auto_vectorize: {
+          enabled: false,
+          // 是否启用自动向量化
+          batch_threshold: 5,
+          // 累积多少条消息后触发向量化
+          notify_user: true
+          // 是否显示通知
+        }
       },
       // 智能总结功能配置
       summarizer_config: {
@@ -240,6 +289,7 @@ function loadCssFiles() {
     --t-font-global: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     /* \u7B49\u5BBD\u5B57\u4F53 - \u56FA\u5B9A\u7528\u4E8E\u4EE3\u7801\u7F16\u8F91\u5668\u548C\u65E5\u5FD7\uFF0C\u4E0D\u53D7\u7528\u6237\u8BBE\u7F6E\u5F71\u54CD */
     --t-font-mono: "Consolas", "Monaco", "Courier New", monospace;
+    --t-ui-font-scale: 1;
 }
 
 /* \u906E\u7F69\u5C42 */
@@ -256,8 +306,8 @@ function loadCssFiles() {
     align-items: center;
     justify-content: center;
     isolation: isolate;
-    /* \u5F3A\u5236\u56FA\u5B9A\u57FA\u51C6\u5B57\u53F7\uFF0C\u907F\u514D\u53D7 ST \u5168\u5C40\u5B57\u4F53\u5927\u5C0F\u8BBE\u7F6E\u5F71\u54CD */
-    font-size: 12px !important;
+    /* \u63D2\u4EF6 UI \u57FA\u51C6\u5B57\u53F7\uFF08\u53EF\u901A\u8FC7\u8BBE\u7F6E\u7F29\u653E\uFF09 */
+    font-size: calc(12px * var(--t-ui-font-scale)) !important;
 }
 
 /* \u901A\u7528\u7A97\u53E3\u5BB9\u5668 */
@@ -275,6 +325,7 @@ function loadCssFiles() {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
     color: #eee;
     font-family: var(--t-font-global);
+    font-size: calc(12px * var(--t-ui-font-scale));
     overflow: hidden;
 }
 
@@ -472,6 +523,7 @@ textarea.t-input {
         transform: translateY(0);
     }
 }
+
 
 /* === floating.css === */
 /* css/floating.css - \u60AC\u6D6E\u7403 */
@@ -1237,6 +1289,7 @@ textarea.t-input {
     }
 }
 
+
 /* === main-window.css === */
 /* css/main-window.css - \u4E3B\u6F14\u7ECE\u7A97\u53E3 */
 
@@ -1655,18 +1708,17 @@ textarea.t-input {
     color: #bfa15f;
 }
 
-/* Bottom Bar */
-/* \u5E95\u90E8\u680F\u5BB9\u5668\uFF1A\u9AD8\u5EA6\u589E\u52A0\u4EE5\u5BB9\u7EB3\u4E24\u884C\u6309\u94AE */
+/* Bottom Bar - \u65B0\u5E03\u5C40 */
+/* \u5E95\u90E8\u680F\u5BB9\u5668\uFF1A\u4E09\u5217\u5E03\u5C40 (\u5DE5\u5177\u533A | \u4E3B\u6309\u94AE | \u8F85\u52A9\u533A) */
 .t-bottom-bar {
-    padding: 10px 15px;
+    padding: 12px 15px;
     background: #1e1e1e;
     border-top: 1px solid #333;
     display: flex;
-    align-items: stretch;
-    /* \u8BA9\u5DE6\u53F3\u4E24\u8FB9\u9AD8\u5EA6\u81EA\u52A8\u62C9\u4F38\u5BF9\u9F50 */
+    align-items: center;
+    justify-content: space-between;
     gap: 15px;
-    height: 90px;
-    /* \u56FA\u5B9A\u9AD8\u5EA6\uFF0C\u786E\u4FDD\u5BB9\u7EB3\u53CC\u5C42\u7ED3\u6784 */
+    height: 85px;
     flex-shrink: 0;
     position: relative;
     z-index: 50;
@@ -1676,13 +1728,11 @@ textarea.t-input {
 /* \u5DE6\u4FA7\uFF1A\u5DE5\u5177\u533A (2x2 \u7F51\u683C) */
 .t-bot-left {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    /* \u4E24\u5217 */
-    grid-template-rows: 1fr 1fr;
-    /* \u4E24\u884C */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
     gap: 6px;
-    width: 100px;
-    /* \u56FA\u5B9A\u5BBD\u5EA6\uFF0C\u9632\u6B62\u88AB\u6324\u538B */
+    width: 92px;
+    height: 60px;
     flex-shrink: 0;
 }
 
@@ -1691,11 +1741,16 @@ textarea.t-input {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
     background: #2b2b2b;
     border: 1px solid #444;
     border-radius: 6px;
     color: #aaa;
-    font-size: 1.1em;
+    font-size: 1em;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -1710,60 +1765,180 @@ textarea.t-input {
     transform: scale(0.95);
 }
 
-/* \u53F3\u4FA7\uFF1A\u64CD\u4F5C\u533A (\u4E0A\u4E0B\u5782\u76F4\u6392\u5217) */
-.t-bot-right {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-/* \u53F3\u4FA7\u6309\u94AE\u901A\u7528\u6837\u5F0F */
-.t-btn-action {
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
+/* \u4E2D\u95F4\uFF1A\u4E3B\u64CD\u4F5C\u533A (\u53CC\u6309\u94AE\u7EC4) */
+.t-bot-center {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+}
+
+/* \u53CC\u6309\u94AE\u7EC4\u5BB9\u5668 */
+.t-run-group {
+    display: flex;
+    gap: 0;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* \u901A\u7528\u6F14\u7ECE\u6309\u94AE\u6837\u5F0F */
+.t-run-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 18px;
+    min-width: 90px;
+    height: 55px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.75em;
     transition: all 0.2s;
-    border: 1px solid transparent;
+    line-height: 1.2;
 }
 
-/* \u4E0A\u65B9\uFF1A\u5F00\u59CB\u6F14\u7ECE (\u4E3B\u6309\u94AE) */
-#t-btn-run {
-    flex: 3;
-    /* \u5360\u636E\u66F4\u591A\u9AD8\u5EA6 (60%) */
-    background: linear-gradient(90deg, #bfa15f, #d4c08b);
+.t-run-btn i {
+    font-size: 1.3em;
+}
+
+.t-run-btn span {
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.t-run-btn:active {
+    transform: scale(0.98);
+}
+
+.t-run-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* \u5355\u6B21\u6F14\u7ECE\u6309\u94AE - \u9EC4\u8272\u4E3B\u9898 */
+.t-run-single {
+    background: linear-gradient(135deg, #bfa15f, #d4c08b);
     color: #1a1a1a;
-    font-size: 1.1em;
-    box-shadow: 0 2px 10px rgba(191, 161, 95, 0.2);
+    border-radius: 30px 0 0 30px;
 }
 
-#t-btn-run:hover {
-    filter: brightness(1.1);
-    box-shadow: 0 4px 15px rgba(191, 161, 95, 0.4);
+.t-run-single:hover:not(:disabled) {
+    background: linear-gradient(135deg, #d4b06b, #e5d1a0);
+    box-shadow: 0 0 15px rgba(191, 161, 95, 0.4);
 }
 
-#t-btn-run:active {
-    transform: translateY(1px);
+/* \u961F\u5217\u751F\u6210\u6309\u94AE - \u84DD\u8272\u4E3B\u9898 */
+.t-run-queue {
+    background: linear-gradient(135deg, #4a9eff, #6ab0ff);
+    color: #fff;
+    border-radius: 0 30px 30px 0;
 }
 
-/* \u4E0B\u65B9\uFF1A\u91CD\u65B0\u7F16\u8F91 (\u6B21\u6309\u94AE) */
+.t-run-queue:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5aafff, #7ac0ff);
+    box-shadow: 0 0 15px rgba(74, 158, 255, 0.4);
+}
+
+/* \u961F\u5217\u6309\u94AE\u6FC0\u6D3B\u72B6\u6001\uFF08\u961F\u5217\u5DF2\u914D\u7F6E\uFF09 */
+.t-run-queue.active {
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+}
+
+/* \u961F\u5217\u6309\u94AE\u672A\u6FC0\u6D3B\u63D0\u793A\u6837\u5F0F */
+.t-run-queue.inactive {
+    background: linear-gradient(135deg, #3a3a3a, #4a4a4a);
+    color: #888;
+}
+
+.t-run-queue.inactive:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4a4a4a, #5a5a5a);
+    box-shadow: none;
+}
+
+/* \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A (2x2 \u7F51\u683C\u5E03\u5C40) */
+.t-bot-right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 92px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+/* \u53F3\u4FA7\u8F85\u52A9\u6309\u94AE\u901A\u7528\u6837\u5F0F */
+.t-btn-aux {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #aaa;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-btn-aux:hover {
+    background: #383838;
+    color: #fff;
+    border-color: #666;
+}
+
+.t-btn-aux:active {
+    transform: scale(0.95);
+}
+
+/* \u961F\u5217\u8BBE\u7F6E\u6309\u94AE\u7279\u6B8A\u6837\u5F0F */
+#t-btn-queue-settings.active {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+}
+
+/* \u8BCA\u65AD\u6309\u94AE - \u6A59\u8272\u4E3B\u9898 */
+.t-btn-diag {
+    color: #f59e0b;
+}
+
+.t-btn-diag:hover {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+}
+
+/* \u7F16\u8F91\u6309\u94AE */
 #t-btn-edit {
-    flex: 2;
-    /* \u5360\u636E\u8F83\u5C11\u9AD8\u5EA6 (40%) */
-    background: #252525;
-    border-color: #444;
-    color: #ccc;
-    font-size: 0.9em;
+    color: #bfa15f;
 }
 
 #t-btn-edit:hover {
-    background: #333;
-    color: #fff;
-    border-color: #666;
+    background: rgba(191, 161, 95, 0.15);
+    border-color: rgba(191, 161, 95, 0.4);
+}
+
+/* \u4E2D\u6B62\u6309\u94AE - \u7EA2\u8272\u4E3B\u9898 */
+.t-btn-stop {
+    color: #ff6b6b;
+}
+
+.t-btn-stop:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.4);
+    color: #ff8a8a;
+}
+
+.t-btn-stop:active {
+    background: rgba(255, 107, 107, 0.25);
 }
 
 /* ... (\u4FDD\u7559 Media Query \u9002\u914D) ... */
@@ -1914,40 +2089,55 @@ textarea.t-input {
 
     /* --- [\u91CD\u70B9\u4FEE\u6539] \u5E95\u90E8\u64CD\u4F5C\u680F\u9002\u914D --- */
     .t-bottom-bar {
-        /* \u4FDD\u6301\u6A2A\u5411\u6392\u5217\uFF0C\u4E0D\u6298\u53E0 */
         flex-direction: row;
-        height: 85px;
-        /* \u7A0D\u5FAE\u964D\u4F4E\u9AD8\u5EA6\u9002\u914D\u624B\u673A */
+        height: 80px;
         padding: 8px 10px;
-        /* \u51CF\u5C11\u5185\u8FB9\u8DDD */
-        gap: 8px;
-        /* \u51CF\u5C11\u5DE6\u53F3\u533A\u57DF\u95F4\u8DDD */
+        gap: 10px;
     }
 
     /* \u5DE6\u4FA7\u7F51\u683C\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
     .t-bot-left {
-        width: 90px;
-        /* \u5BBD\u5EA6\u5FAE\u8C03 */
+        width: 76px;
+        height: 55px;
         gap: 4px;
-        /* \u7F51\u683C\u95F4\u9699\u5FAE\u8C03 */
     }
 
     .t-btn-grid {
-        font-size: 1em;
-        /* \u56FE\u6807\u7A0D\u5FAE\u8C03\u5C0F */
+        font-size: 0.95em;
     }
 
-    /* \u53F3\u4FA7\u64CD\u4F5C\u533A\uFF1A\u5360\u6EE1\u5269\u4F59\u7A7A\u95F4 */
+    /* \u4E2D\u95F4\u53CC\u6309\u94AE\u7EC4\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
+    .t-run-group {
+        border-radius: 25px;
+    }
+
+    .t-run-btn {
+        min-width: 75px;
+        height: 50px;
+        padding: 8px 12px;
+        font-size: 0.7em;
+    }
+
+    .t-run-btn i {
+        font-size: 1.2em;
+    }
+
+    .t-run-single {
+        border-radius: 25px 0 0 25px;
+    }
+
+    .t-run-queue {
+        border-radius: 0 25px 25px 0;
+    }
+
+    /* \u53F3\u4FA7\u8F85\u52A9\u533A\uFF1A\u79FB\u52A8\u7AEF\u9002\u914D */
     .t-bot-right {
+        width: 76px;
+        height: 55px;
         gap: 4px;
     }
 
-    /* \u53F3\u4FA7\u6309\u94AE\u6587\u5B57\u9002\u914D */
-    #t-btn-run {
-        font-size: 1em;
-    }
-
-    #t-btn-edit {
+    .t-btn-aux {
         font-size: 0.85em;
     }
 }
@@ -2431,33 +2621,35 @@ textarea.t-input {
     }
 }
 
-/* ===== \u5185\u5BB9\u7EDF\u8BA1 HUD (\u6E38\u620F FPS \u98CE\u683C) ===== */
+/* ===== \u5185\u5BB9\u7EDF\u8BA1 HUD (\u7D27\u51D1\u6C34\u5E73\u6761) ===== */
 
 .t-stats-hud {
     position: absolute;
-    top: 15px;
-    left: 15px;
+    top: 10px;
+    left: 10px;
     z-index: 100;
 
     /* \u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C */
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 
     /* \u8FB9\u6846\u548C\u5706\u89D2 */
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
 
-    /* \u5185\u8FB9\u8DDD */
-    padding: 8px 12px;
+    /* \u5185\u8FB9\u8DDD - \u66F4\u7D27\u51D1 */
+    padding: 4px 8px;
 
-    /* \u5B57\u4F53\u8BBE\u7F6E */
+    /* \u6C34\u5E73\u6392\u5217 */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    /* \u5B57\u4F53\u8BBE\u7F6E - \u6700\u5C0F\u53EF\u8BFB\u5B57\u53F7 */
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 12px;
-    line-height: 1.4;
-
-    /* \u9634\u5F71 */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    font-size: 10px;
+    line-height: 1;
 
     /* \u4E0D\u963B\u6321\u9F20\u6807\u4E8B\u4EF6 */
     pointer-events: none;
@@ -2469,7 +2661,7 @@ textarea.t-input {
 @keyframes t-stats-fadeIn {
     from {
         opacity: 0;
-        transform: translateY(-5px);
+        transform: translateY(-3px);
     }
 
     to {
@@ -2478,36 +2670,42 @@ textarea.t-input {
     }
 }
 
-.t-stats-row {
-    display: flex;
+.t-stats-item {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 3px;
     white-space: nowrap;
 }
 
-.t-stats-row+.t-stats-row {
-    margin-top: 3px;
+.t-stats-sep {
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 9px;
 }
 
 .t-stats-label {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 9px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .t-stats-value {
     color: #55efc4;
     font-weight: bold;
-    font-size: 13px;
-    text-shadow: 0 0 8px rgba(85, 239, 196, 0.3);
+    font-size: 10px;
 }
 
-/* Token \u503C\u4F7F\u7528\u4E0D\u540C\u989C\u8272\uFF08\u5982\u679C\u662F\u4F30\u7B97\u503C\uFF09 */
-#t-stat-tokens {
+/* \u6A21\u578B\u540D\u79F0\u4F7F\u7528\u4E0D\u540C\u989C\u8272 */
+#t-stat-model {
+    color: #90cdf4;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* \u751F\u6210\u65F6\u95F4\u4F7F\u7528\u4E0D\u540C\u989C\u8272 */
+#t-stat-time {
     color: #ffeaa7;
-    text-shadow: 0 0 8px rgba(255, 234, 167, 0.3);
 }
 
 /* Zen \u6A21\u5F0F\u4E0B\u9690\u85CF\u7EDF\u8BA1 HUD */
@@ -2518,18 +2716,23 @@ textarea.t-input {
 /* \u79FB\u52A8\u7AEF\u9002\u914D */
 @media screen and (max-width: 600px) {
     .t-stats-hud {
-        top: 10px;
-        left: 10px;
-        padding: 6px 10px;
-        font-size: 11px;
+        top: 8px;
+        left: 8px;
+        padding: 3px 6px;
+        font-size: 9px;
+        gap: 4px;
     }
 
     .t-stats-label {
-        font-size: 10px;
+        font-size: 8px;
     }
 
     .t-stats-value {
-        font-size: 12px;
+        font-size: 9px;
+    }
+
+    #t-stat-model {
+        max-width: 80px;
     }
 }
 
@@ -2540,47 +2743,197 @@ textarea.t-input {
     min-height: 100%;
 }
 
-/* ===== \u5267\u573A\u5386\u53F2\u5BFC\u822A ===== */
+/* ===== \u5267\u573A\u5386\u53F2\u7FFB\u9875\u6309\u94AE\uFF08\u7B80\u6D01\u7248\uFF09 ===== */
 
-.t-scene-nav {
+/* \u7FFB\u9875\u6309\u94AE - \u4F4D\u4E8E\u5185\u5BB9\u533A\u5DE6\u53F3\u4E24\u4FA7 */
+.t-page-nav {
     position: absolute;
-    bottom: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 150;
+    width: 28px;
+    height: 50px;
+    border: none;
+    background: rgba(0, 0, 0, 0.3);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.4;
+}
+
+.t-page-nav:hover:not(:disabled) {
+    opacity: 1;
+    background: rgba(191, 161, 95, 0.3);
+    color: #bfa15f;
+}
+
+.t-page-nav:active:not(:disabled) {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.t-page-nav:disabled {
+    opacity: 0.15;
+    cursor: not-allowed;
+}
+
+/* \u5DE6\u4FA7\u6309\u94AE */
+.t-page-prev {
+    left: 0;
+    border-radius: 0 4px 4px 0;
+}
+
+/* \u53F3\u4FA7\u6309\u94AE */
+.t-page-next {
+    right: 0;
+    border-radius: 4px 0 0 4px;
+}
+
+/* \u9875\u7801\u6307\u793A\u5668 - \u53F3\u4E0B\u89D2\u5C0F\u5B57 */
+.t-page-indicator {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 150;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'Consolas', 'Monaco', monospace;
+    pointer-events: none;
+}
+
+/* Zen \u6A21\u5F0F\u4E0B\u9690\u85CF\u7FFB\u9875\u6309\u94AE */
+#t-main-view.t-zen-mode .t-page-nav,
+#t-main-view.t-zen-mode .t-page-indicator {
+    display: none !important;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media screen and (max-width: 600px) {
+    .t-page-nav {
+        width: 24px;
+        height: 40px;
+        font-size: 14px;
+    }
+
+    .t-page-indicator {
+        font-size: 9px;
+    }
+}
+
+/* ===== \u961F\u5217\u751F\u6210\u8BBE\u7F6E\u7A97\u53E3 ===== */
+
+.t-queue-settings {
+    position: absolute;
+    top: 60px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 150;
+    width: 90%;
+    max-width: 450px;
+    max-height: 75vh;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.2s;
+}
+
+.t-queue-header {
+    padding: 12px 15px;
+    background: #242424;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px 10px 0 0;
+    flex-shrink: 0;
+}
+
+.t-queue-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.t-queue-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.t-queue-label {
+    font-size: 0.9em;
+    color: #aaa;
+    font-weight: bold;
+}
+
+.t-queue-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* \u6A21\u5F0F\u5207\u6362\u6309\u94AE\u7EC4 */
+.t-queue-mode-toggle {
+    display: flex;
+    gap: 8px;
+}
+
+.t-queue-mode-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: #252525;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #888;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-queue-mode-btn:hover {
+    background: #2a2a2a;
+    color: #ccc;
+    border-color: #555;
+}
+
+.t-queue-mode-btn.active {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+}
+
+.t-queue-mode-btn i {
+    font-size: 1.1em;
+}
+
+/* \u6570\u5B57\u63A7\u5236\u5668 */
+.t-queue-control {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(30, 30, 30, 0.9);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 25px;
-    padding: 6px 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    animation: t-nav-fadeIn 0.3s ease;
 }
 
-@keyframes t-nav-fadeIn {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-}
-
-.t-nav-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: #aaa;
-    font-size: 0.9em;
+.t-queue-num-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #ccc;
+    font-size: 1em;
+    font-weight: bold;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -2588,91 +2941,224 @@ textarea.t-input {
     transition: all 0.2s;
 }
 
-.t-nav-btn:hover:not(:disabled) {
-    background: rgba(191, 161, 95, 0.2);
-    color: #bfa15f;
+.t-queue-num-btn:hover {
+    background: #383838;
+    color: #fff;
+    border-color: #666;
 }
 
-.t-nav-btn:active:not(:disabled) {
+.t-queue-num-btn:active {
     transform: scale(0.95);
 }
 
-.t-nav-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.t-nav-info {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0 8px;
-}
-
-.t-nav-indicator {
-    font-size: 0.85em;
-    color: #ccc;
-    font-weight: bold;
+.t-queue-num-value {
     min-width: 30px;
     text-align: center;
-}
-
-.t-nav-unread {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-    color: #fff;
-    font-size: 0.7em;
+    font-size: 1.1em;
     font-weight: bold;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
-    animation: t-unread-pulse 2s infinite;
+    color: #90cdf4;
 }
 
-@keyframes t-unread-pulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
+/* \u4E0B\u62C9\u9009\u62E9\u6846 */
+.t-queue-select {
+    flex: 1;
+    padding: 8px 12px;
+    background: #252525;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #ccc;
+    font-size: 0.9em;
+    cursor: pointer;
+    outline: none;
 }
 
-/* Zen \u6A21\u5F0F\u4E0B\u9690\u85CF\u5BFC\u822A */
-#t-main-view.t-zen-mode .t-scene-nav {
-    display: none !important;
+.t-queue-select:focus {
+    border-color: #90cdf4;
+}
+
+/* \u5267\u672C\u5217\u8868 */
+.t-queue-script-list {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 5px;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+.t-queue-script-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.t-queue-script-list::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.t-queue-script-list::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.t-queue-script-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #252525;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-queue-script-item:hover {
+    background: #2a2a2a;
+}
+
+.t-queue-script-item.selected {
+    background: rgba(144, 205, 244, 0.1);
+    border-color: rgba(144, 205, 244, 0.3);
+}
+
+.t-queue-script-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #90cdf4;
+    cursor: pointer;
+}
+
+.t-queue-script-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.t-queue-script-name {
+    font-size: 0.9em;
+    color: #eee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.t-queue-script-cat {
+    font-size: 0.75em;
+    color: #666;
+}
+
+.t-queue-script-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.t-queue-script-actions .t-btn {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 0.85em;
+}
+
+/* \u5E95\u90E8 */
+.t-queue-footer {
+    padding: 12px 15px;
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0 0 10px 10px;
+    flex-shrink: 0;
+}
+
+.t-queue-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85em;
+    color: #888;
+}
+
+.t-queue-actions {
+    display: flex;
+    gap: 10px;
 }
 
 /* \u79FB\u52A8\u7AEF\u9002\u914D */
 @media screen and (max-width: 600px) {
-    .t-scene-nav {
-        bottom: 15px;
-        padding: 5px 10px;
-        gap: 5px;
+    .t-queue-settings {
+        width: 95%;
+        top: 50px;
+        max-height: 80vh;
     }
 
-    .t-nav-btn {
-        width: 28px;
-        height: 28px;
+    .t-queue-mode-btn {
+        padding: 10px;
         font-size: 0.85em;
     }
 
-    .t-nav-indicator {
-        font-size: 0.8em;
+    .t-queue-script-list {
+        max-height: 150px;
+    }
+}
+
+/* ===== \u961F\u5217\u8FDB\u5EA6\u6761 ===== */
+
+.t-queue-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #333;
+    z-index: 200;
+    overflow: hidden;
+}
+
+.t-queue-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #90cdf4, #4a9eff);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.t-queue-progress-bar.animated {
+    animation: t-queue-progress-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes t-queue-progress-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
     }
 
-    .t-nav-unread {
-        min-width: 16px;
-        height: 16px;
-        font-size: 0.65em;
+    50% {
+        opacity: 0.6;
     }
+}
+
+/* \u961F\u5217\u8FD0\u884C\u65F6\u7684\u72B6\u6001\u6307\u793A */
+.t-queue-running-indicator {
+    position: absolute;
+    top: 10px;
+    right: 70px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(144, 205, 244, 0.15);
+    border: 1px solid rgba(144, 205, 244, 0.3);
+    border-radius: 20px;
+    font-size: 0.8em;
+    color: #90cdf4;
+    z-index: 150;
+    animation: fadeIn 0.3s;
+}
+
+.t-queue-running-indicator i {
+    animation: fa-spin 1s linear infinite;
 }
 
 /* ===== \u5185\u5BB9\u7F16\u8F91\u5668 ===== */
@@ -2798,6 +3284,182 @@ textarea.t-input {
     }
 }
 
+/* ===== \u65B0\u5185\u5BB9\u751F\u6210\u4E2D\u6307\u793A\u5668 ===== */
+
+.t-new-content-indicator {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(25, 25, 35, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(144, 205, 244, 0.3);
+    border-radius: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    animation: t-indicator-slideUp 0.3s ease;
+}
+
+@keyframes t-indicator-slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.t-new-content-indicator i {
+    color: #90cdf4;
+    font-size: 1em;
+}
+
+.t-new-content-indicator span {
+    color: #ccc;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.t-goto-live-btn {
+    padding: 5px 12px;
+    background: linear-gradient(90deg, #4a9eff, #6ab0ff);
+    border: none;
+    border-radius: 15px;
+    color: #fff;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-goto-live-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 2px 10px rgba(74, 158, 255, 0.4);
+}
+
+.t-goto-live-btn:active {
+    transform: scale(0.95);
+}
+
+/* ===== \u751F\u6210\u5B8C\u6210\u901A\u77E5 ===== */
+
+.t-generation-complete-notification {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: rgba(25, 35, 25, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(85, 239, 196, 0.3);
+    border-radius: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    animation: t-gcn-slideUp 0.3s ease;
+}
+
+@keyframes t-gcn-slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.t-gcn-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-gcn-content i {
+    color: #55efc4;
+    font-size: 1.1em;
+}
+
+.t-gcn-content span {
+    color: #ccc;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.t-gcn-view-btn {
+    padding: 6px 14px;
+    background: linear-gradient(90deg, #55efc4, #00b894);
+    border: none;
+    border-radius: 15px;
+    color: #000;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-gcn-view-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 2px 10px rgba(85, 239, 196, 0.4);
+}
+
+.t-gcn-view-btn:active {
+    transform: scale(0.95);
+}
+
+.t-gcn-close-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: #666;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-gcn-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media screen and (max-width: 600px) {
+    .t-new-content-indicator,
+    .t-generation-complete-notification {
+        bottom: 10px;
+        padding: 8px 14px;
+        gap: 8px;
+    }
+
+    .t-new-content-indicator span,
+    .t-gcn-content span {
+        font-size: 0.85em;
+    }
+
+    .t-goto-live-btn,
+    .t-gcn-view-btn {
+        padding: 5px 10px;
+        font-size: 0.8em;
+    }
+}
+
+
 /* === settings.css === */
 /* css/settings.css - \u8BBE\u7F6E\u7A97\u53E3 */
 
@@ -2815,6 +3477,7 @@ textarea.t-input {
     flex-grow: 1;
     display: flex;
     overflow: hidden;
+    min-height: 0;
 }
 
 /* \u4FA7\u8FB9\u5BFC\u822A */
@@ -2826,6 +3489,13 @@ textarea.t-input {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
 }
 
 .t-set-tab-btn {
@@ -3417,6 +4087,59 @@ textarea.t-input {
     min-width: 50px;
 }
 
+.t-mgr-sort {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #eee;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    min-width: 130px;
+}
+
+.t-mgr-overview {
+    padding: 8px 15px;
+    background: #171717;
+    border-bottom: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.t-mgr-ov-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8em;
+    color: #8b8b8b;
+}
+
+.t-mgr-ov-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8em;
+    color: #9d9d9d;
+    flex-wrap: wrap;
+}
+
+.t-mgr-ov-item {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(191, 161, 95, 0.12);
+    border: 1px solid rgba(191, 161, 95, 0.3);
+    color: #d3bf8f;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-mgr-ov-empty {
+    color: #666;
+}
+
 /* \u5217\u8868 */
 .t-mgr-list {
     flex-grow: 1;
@@ -3459,6 +4182,15 @@ textarea.t-input {
     overflow: hidden;
     text-overflow: ellipsis;
     margin-top: 2px;
+}
+
+.t-mgr-item-stats {
+    font-size: 0.75em;
+    color: #7a7a7a;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .t-mgr-tag {
@@ -3557,6 +4289,15 @@ textarea.t-input {
     transition: 0.2s;
 }
 
+.t-sel-sort-select {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #eee;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
 .t-sel-search-input:focus {
     outline: none;
     border-color: #bfa15f;
@@ -3649,6 +4390,21 @@ textarea.t-input {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+}
+
+.t-card-stats {
+    font-size: 0.74em;
+    color: #8e8e8e;
+    margin-top: 2px;
+}
+
+.t-sel-footer {
+    padding: 7px 12px;
+    font-size: 0.78em;
+    color: #7f7f7f;
+    border-top: 1px solid #333;
+    background: #1a1a1a;
+    border-radius: 0 0 8px 8px;
 }
 
 /* \u5BFC\u5165 Modal */
@@ -3833,6 +4589,15 @@ textarea.t-input {
         padding-bottom: 60px !important;
     }
 
+    .t-mgr-overview {
+        padding: 8px 10px;
+    }
+
+    .t-mgr-ov-meta,
+    .t-mgr-ov-top {
+        font-size: 0.75em;
+    }
+
     #t-mgr-view {
         height: 80vh;
         max-height: 85vh;
@@ -3872,6 +4637,11 @@ textarea.t-input {
         width: 140px;
     }
 
+    .t-sel-sort-select {
+        min-width: 100px;
+        max-width: 120px;
+    }
+
     .t-sel-cat-btn {
         text-align: center;
         border-left: none;
@@ -3895,6 +4665,7 @@ textarea.t-input {
         padding: 10px;
     }
 }
+
 
 /* === favs.css === */
 /* css/favs.css - \u6536\u85CF\u4E0E\u56FE\u9274 */
@@ -6608,6 +7379,296 @@ input[list]:hover::-webkit-calendar-picker-indicator {
     }
 }
 
+/* ========== \u539F\u6709\u5185\u5BB9\u5BF9\u6BD4\u533A\u57DF\u6837\u5F0F ========== */
+.t-original-content-section {
+    margin-top: 15px;
+    border: 1px solid rgba(144, 205, 244, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(144, 205, 244, 0.05);
+}
+
+.t-original-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(144, 205, 244, 0.1);
+    border-bottom: 1px solid rgba(144, 205, 244, 0.15);
+    color: #90cdf4;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.t-original-header span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-original-content-box {
+    padding: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.t-original-content-text {
+    font-size: 0.9em;
+    color: #a0aec0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* \u539F\u6709\u5185\u5BB9\u533A\u6EDA\u52A8\u6761 */
+.t-original-content-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+.t-original-content-box::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.t-original-content-box::-webkit-scrollbar-thumb {
+    background: rgba(144, 205, 244, 0.3);
+    border-radius: 3px;
+}
+
+.t-original-content-box::-webkit-scrollbar-thumb:hover {
+    background: rgba(144, 205, 244, 0.5);
+}
+
+/* ========== \u4FDD\u5B58\u6A21\u5F0F\u9009\u62E9\u6837\u5F0F ========== */
+.t-save-mode-section {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+}
+
+.t-save-mode-section>label {
+    display: block;
+    color: #cbd5e0;
+    font-weight: 500;
+    font-size: 0.9em;
+    margin-bottom: 12px;
+}
+
+.t-save-mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.t-radio-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.t-radio-label:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.t-radio-label input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    margin-top: 2px;
+    cursor: pointer;
+    accent-color: #90cdf4;
+}
+
+.t-radio-label input[type="radio"]:checked+span {
+    color: #90cdf4;
+}
+
+.t-radio-label span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #e2e8f0;
+    font-weight: 500;
+    font-size: 0.95em;
+}
+
+.t-radio-label span i {
+    font-size: 0.9em;
+    width: 16px;
+    text-align: center;
+}
+
+.t-radio-label small {
+    display: block;
+    color: #718096;
+    font-size: 0.8em;
+    margin-top: 4px;
+    margin-left: 28px;
+}
+
+/* \u9009\u4E2D\u72B6\u6001 */
+.t-radio-label:has(input[type="radio"]:checked) {
+    background: rgba(144, 205, 244, 0.1);
+    border-color: rgba(144, 205, 244, 0.3);
+}
+
+/* \u66FF\u6362\u6A21\u5F0F - \u6A59\u8272 */
+.t-radio-label:has(input[value="replace"]:checked) {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.t-radio-label:has(input[value="replace"]:checked) span {
+    color: #f59e0b;
+}
+
+/* \u8FFD\u52A0\u6A21\u5F0F - \u7EFF\u8272 */
+.t-radio-label:has(input[value="append"]:checked) {
+    background: rgba(72, 187, 120, 0.1);
+    border-color: rgba(72, 187, 120, 0.3);
+}
+
+.t-radio-label:has(input[value="append"]:checked) span {
+    color: #48bb78;
+}
+
+/* \u524D\u7F6E\u6A21\u5F0F - \u84DD\u8272 */
+.t-radio-label:has(input[value="prepend"]:checked) {
+    background: rgba(144, 205, 244, 0.1);
+    border-color: rgba(144, 205, 244, 0.3);
+}
+
+.t-radio-label:has(input[value="prepend"]:checked) span {
+    color: #90cdf4;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media (max-width: 768px) {
+    .t-original-content-section {
+        margin-top: 12px;
+    }
+
+    .t-original-content-box {
+        max-height: 150px;
+    }
+
+    .t-save-mode-section {
+        padding: 12px;
+        margin-top: 12px;
+    }
+
+    .t-radio-label {
+        padding: 10px;
+    }
+
+    .t-radio-label small {
+        margin-left: 0;
+        margin-top: 6px;
+    }
+}
+
+/* ========== \u589E\u91CF\u5411\u91CF\u5316\u72B6\u6001\u6837\u5F0F ========== */
+.t-incremental-status {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.t-incremental-status.t-status-new {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.t-incremental-status.t-status-ok {
+    background: rgba(72, 187, 120, 0.1);
+    border: 1px solid rgba(72, 187, 120, 0.3);
+}
+
+.t-incremental-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9em;
+}
+
+.t-incremental-status.t-status-new .t-incremental-info {
+    color: #f59e0b;
+}
+
+.t-incremental-status.t-status-new .t-incremental-info i {
+    color: #f59e0b;
+}
+
+.t-incremental-status.t-status-ok .t-incremental-info {
+    color: #48bb78;
+}
+
+.t-incremental-status.t-status-ok .t-incremental-info i {
+    color: #48bb78;
+}
+
+.t-incremental-info strong {
+    font-weight: 700;
+}
+
+.t-incremental-info small {
+    color: #718096;
+    font-size: 0.85em;
+}
+
+/* \u6784\u5EFA\u7D22\u5F15\u6309\u94AE\u7EC4 */
+.t-build-index-buttons {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.t-build-index-buttons .t-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.t-build-index-buttons .t-btn-primary {
+    flex: 1;
+}
+
+/* \u79FB\u52A8\u7AEF\u9002\u914D */
+@media (max-width: 768px) {
+    .t-incremental-status {
+        padding: 10px 12px;
+    }
+
+    .t-incremental-info {
+        flex-wrap: wrap;
+        font-size: 0.85em;
+    }
+
+    .t-build-index-buttons {
+        flex-direction: column;
+    }
+
+    .t-build-index-buttons .t-btn {
+        width: 100%;
+    }
+}
+
 /* === memory-recall.css === */
 /* css/memory-recall.css */
 /* \u8BB0\u5FC6\u53EC\u56DE\u529F\u80FD\u6837\u5F0F */
@@ -7167,6 +8228,72 @@ var init_dom = __esm({
 });
 
 // src/core/state.js
+function clonePromptTraceData(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+function getPromptTraceRecord(traceId) {
+  return GlobalState.promptTrace.traces.find((t) => t.id === traceId) || null;
+}
+function createPromptTrace(meta = {}) {
+  const traceId = `trace_${Date.now()}_${Math.floor(Math.random() * 1e5)}`;
+  const trace = {
+    id: traceId,
+    startedAt: Date.now(),
+    endedAt: null,
+    status: "running",
+    // running | success | failed | aborted
+    source: meta.source || "manual",
+    mode: meta.mode || "narrative",
+    scriptId: meta.scriptId || "",
+    scriptName: meta.scriptName || "\u672A\u77E5\u5267\u672C",
+    profile: meta.profile || "",
+    model: meta.model || "",
+    extraMeta: clonePromptTraceData(meta.extraMeta || {}),
+    stages: [],
+    finalMessages: null,
+    error: null
+  };
+  GlobalState.promptTrace.traces.unshift(trace);
+  while (GlobalState.promptTrace.traces.length > GlobalState.promptTrace.maxItems) {
+    GlobalState.promptTrace.traces.pop();
+  }
+  GlobalState.promptTrace.activeTraceId = traceId;
+  return traceId;
+}
+function appendPromptTraceStage(traceId, stage, payload = {}) {
+  const trace = getPromptTraceRecord(traceId);
+  if (!trace) return;
+  trace.stages.push({
+    at: Date.now(),
+    stage: stage || "unknown",
+    payload: clonePromptTraceData(payload)
+  });
+}
+function setPromptTraceFinalMessages(traceId, messages, meta = {}) {
+  const trace = getPromptTraceRecord(traceId);
+  if (!trace) return;
+  trace.finalMessages = {
+    messages: clonePromptTraceData(messages || []),
+    meta: clonePromptTraceData(meta)
+  };
+}
+function finishPromptTrace(traceId, status = "success", details = {}) {
+  const trace = getPromptTraceRecord(traceId);
+  if (!trace) return;
+  trace.status = status;
+  trace.endedAt = Date.now();
+  trace.error = details?.error || null;
+  if (GlobalState.promptTrace.activeTraceId === traceId) {
+    GlobalState.promptTrace.activeTraceId = null;
+  }
+}
+function getPromptTraceList() {
+  return clonePromptTraceData(GlobalState.promptTrace.traces);
+}
+function getPromptTraceById(traceId) {
+  const trace = getPromptTraceRecord(traceId);
+  return trace ? clonePromptTraceData(trace) : null;
+}
 function resetContinuationState() {
   GlobalState.continuation = {
     isActive: false,
@@ -7185,8 +8312,10 @@ function pushSceneToHistory(content, scriptId, scriptName) {
     scriptId,
     scriptName: scriptName || "\u672A\u77E5\u5267\u672C",
     timestamp: Date.now(),
-    isRead: false
+    isRead: false,
     // 新生成的默认未读
+    favId: null
+    // 该记录对应的收藏 ID（null 表示未收藏）
   };
   history.items.unshift(newItem);
   while (history.items.length > history.maxItems) {
@@ -7205,31 +8334,12 @@ function getCurrentHistoryItem() {
   }
   return history.items[history.currentIndex];
 }
-function navigateToPrevHistory() {
+function syncFavIdToCurrentHistory(favId) {
+  const display = GlobalState.displayState;
   const history = GlobalState.sceneHistory;
-  if (history.currentIndex < history.items.length - 1) {
-    history.currentIndex++;
-    syncCurrentHistoryToState();
-    return true;
-  }
-  return false;
-}
-function navigateToNextHistory() {
-  const history = GlobalState.sceneHistory;
-  if (history.currentIndex > 0) {
-    history.currentIndex--;
-    syncCurrentHistoryToState();
-    return true;
-  }
-  return false;
-}
-function syncCurrentHistoryToState() {
-  const item = getCurrentHistoryItem();
-  if (item) {
-    GlobalState.lastGeneratedContent = item.content;
-    GlobalState.lastGeneratedScriptId = item.scriptId;
-    GlobalState.lastFavId = null;
-    item.isRead = true;
+  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+  if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
+    history.items[effectiveIndex].favId = favId;
   }
 }
 function markCurrentAsRead() {
@@ -7238,17 +8348,118 @@ function markCurrentAsRead() {
     item.isRead = true;
   }
 }
-function getUnreadCount() {
-  return GlobalState.sceneHistory.items.filter((item) => !item.isRead).length;
+function resetQueueState() {
+  GlobalState.queueState.isRunning = false;
+  GlobalState.queueState.currentIndex = 0;
+  GlobalState.queueState.totalCount = 0;
+  GlobalState.queueState.completedCount = 0;
+  GlobalState.queueState.failedCount = 0;
+  GlobalState.queueState.results = [];
 }
-function getHistoryNavState() {
-  const history = GlobalState.sceneHistory;
+function initQueueTasks(scriptIds) {
+  GlobalState.queueState.isRunning = true;
+  GlobalState.queueState.currentIndex = 0;
+  GlobalState.queueState.totalCount = scriptIds.length;
+  GlobalState.queueState.completedCount = 0;
+  GlobalState.queueState.failedCount = 0;
+  GlobalState.queueState.results = [];
+}
+function recordQueueResult(scriptId, scriptName, success, error = null) {
+  GlobalState.queueState.results.push({
+    scriptId,
+    scriptName,
+    success,
+    error,
+    timestamp: Date.now()
+  });
+  if (success) {
+    GlobalState.queueState.completedCount++;
+  } else {
+    GlobalState.queueState.failedCount++;
+  }
+  GlobalState.queueState.currentIndex++;
+}
+function getQueueProgress() {
+  const q = GlobalState.queueState;
   return {
-    hasPrev: history.currentIndex < history.items.length - 1,
-    hasNext: history.currentIndex > 0,
-    current: history.items.length > 0 ? history.currentIndex + 1 : 0,
-    total: history.items.length
+    current: q.currentIndex,
+    total: q.totalCount,
+    completed: q.completedCount,
+    failed: q.failedCount,
+    isRunning: q.isRunning
   };
+}
+function setHistoryMaxItems(maxItems) {
+  GlobalState.sceneHistory.maxItems = maxItems;
+  while (GlobalState.sceneHistory.items.length > maxItems) {
+    GlobalState.sceneHistory.items.pop();
+  }
+}
+function lockDisplayToHistory(historyIndex) {
+  const history = GlobalState.sceneHistory;
+  if (historyIndex < 0 || historyIndex >= history.items.length) return;
+  const item = history.items[historyIndex];
+  GlobalState.displayState.isViewingHistory = true;
+  GlobalState.displayState.currentViewIndex = historyIndex;
+  GlobalState.displayState.lockedContent = item.content;
+  GlobalState.displayState.lockedScriptId = item.scriptId;
+  GlobalState.displayState.lockedScriptName = item.scriptName;
+  item.isRead = true;
+  console.log(`[Titania] \u663E\u793A\u5C42\u9501\u5B9A\u5230\u5386\u53F2 #${historyIndex + 1}`);
+}
+function unlockDisplay() {
+  GlobalState.displayState.isViewingHistory = false;
+  GlobalState.displayState.currentViewIndex = -1;
+  GlobalState.displayState.lockedContent = null;
+  GlobalState.displayState.lockedScriptId = null;
+  GlobalState.displayState.lockedScriptName = null;
+  console.log(`[Titania] \u663E\u793A\u5C42\u5DF2\u89E3\u9501\uFF0C\u8FD4\u56DE\u5B9E\u65F6\u72B6\u6001`);
+}
+function shouldRenderStreamToUI() {
+  return !GlobalState.displayState.isViewingHistory;
+}
+function getCurrentDisplayContent() {
+  const display = GlobalState.displayState;
+  if (display.isViewingHistory && display.lockedContent) {
+    return {
+      content: display.lockedContent,
+      scriptId: display.lockedScriptId,
+      scriptName: display.lockedScriptName,
+      isLive: false
+    };
+  }
+  if (GlobalState.streamingCache.isActive && GlobalState.streamingCache.content) {
+    return {
+      content: GlobalState.streamingCache.content,
+      scriptId: GlobalState.streamingCache.scriptId,
+      scriptName: GlobalState.streamingCache.scriptName,
+      isLive: true
+    };
+  }
+  return {
+    content: GlobalState.lastGeneratedContent,
+    scriptId: GlobalState.lastGeneratedScriptId,
+    scriptName: GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId)?.name || "\u573A\u666F",
+    isLive: false
+  };
+}
+function startStreamingCache(scriptId, scriptName) {
+  GlobalState.streamingCache.content = "";
+  GlobalState.streamingCache.scriptId = scriptId;
+  GlobalState.streamingCache.scriptName = scriptName;
+  GlobalState.streamingCache.isActive = true;
+}
+function updateStreamingCache(content) {
+  GlobalState.streamingCache.content = content;
+}
+function endStreamingCache() {
+  GlobalState.streamingCache.isActive = false;
+}
+function clearStreamingCache() {
+  GlobalState.streamingCache.content = "";
+  GlobalState.streamingCache.scriptId = null;
+  GlobalState.streamingCache.scriptName = null;
+  GlobalState.streamingCache.isActive = false;
 }
 var GlobalState;
 var init_state = __esm({
@@ -7265,6 +8476,8 @@ var init_state = __esm({
       // 上一次用户手动选择的剧本 ID (用于 UI 显示)
       lastGeneratedScriptId: "",
       // 上一次生成内容对应的剧本 ID (可能是后台自动生成的)
+      lastUsedModelName: "",
+      // 上一次生成使用的模型名称
       lastFavId: null,
       // 当前内容对应的收藏 ID（null 表示未收藏）
       currentCategoryFilter: "ALL",
@@ -7284,6 +8497,30 @@ var init_state = __esm({
       // 计时器 interval ID
       lastGenerationTime: 0,
       // 上次生成耗时 (毫秒)
+      // 显示层状态 (用于分离显示与生成)
+      displayState: {
+        isViewingHistory: false,
+        // 是否正在查看历史（非最新）
+        currentViewIndex: -1,
+        // 当前查看的历史索引 (-1 表示查看最新/实时)
+        lockedContent: null,
+        // 锁定显示的内容（用户切换历史时）
+        lockedScriptId: null,
+        // 锁定显示的剧本ID
+        lockedScriptName: null
+        // 锁定显示的剧本名称
+      },
+      // 流式生成缓存 (后台生成时暂存)
+      streamingCache: {
+        content: "",
+        // 正在生成的内容
+        scriptId: null,
+        // 正在生成的剧本ID
+        scriptName: null,
+        // 正在生成的剧本名称
+        isActive: false
+        // 是否有活跃的流式生成
+      },
       // 自动续写相关
       continuation: {
         isActive: false,
@@ -7321,6 +8558,42 @@ var init_state = __esm({
         // Token 数量
         isEstimated: true
         // Token 是否为估算值
+      },
+      // 队列生成状态
+      queueState: {
+        enabled: false,
+        // 队列模式是否激活
+        mode: "random",
+        // 队列模式: "random"(随机抽取) | "manual"(手动选择)
+        count: 3,
+        // 随机模式下的生成数量
+        categoryFilter: "ALL",
+        // 分类筛选
+        manualItems: [],
+        // 手动模式下选择的剧本ID列表
+        interval: 2,
+        // 生成间隔（秒）
+        isRunning: false,
+        // 队列是否正在运行
+        currentIndex: 0,
+        // 当前生成到第几个
+        totalCount: 0,
+        // 总任务数
+        completedCount: 0,
+        // 已完成数
+        failedCount: 0,
+        // 失败数
+        results: []
+        // 生成结果记录 { scriptId, scriptName, success, error? }
+      },
+      // 提示词构包追踪（用于提示词实时组成窗口）
+      promptTrace: {
+        traces: [],
+        // 最近生成记录（最新在前）
+        activeTraceId: null,
+        // 当前正在构建的 trace ID
+        maxItems: 30
+        // 最多保留条数
       }
     };
   }
@@ -7358,8 +8631,248 @@ var init_presets = __esm({
 });
 
 // src/core/scriptData.js
+function ensureStatsStore(data) {
+  if (!data.script_stats || typeof data.script_stats !== "object") {
+    data.script_stats = {};
+  }
+  if (!data.script_stats_meta || typeof data.script_stats_meta !== "object") {
+    data.script_stats_meta = { version: 1, last_cleanup_at: 0 };
+  }
+  if (!data.ui_prefs || typeof data.ui_prefs !== "object") {
+    data.ui_prefs = {};
+  }
+}
+function getEmptyStats() {
+  return {
+    selected_count: 0,
+    generated_count: 0,
+    queue_generated_count: 0,
+    last_selected_at: 0,
+    last_generated_at: 0,
+    first_used_at: 0,
+    last_mode: "",
+    category_snapshot: ""
+  };
+}
+function normalizeStats(raw) {
+  const base = getEmptyStats();
+  if (!raw || typeof raw !== "object") return base;
+  return {
+    selected_count: Number(raw.selected_count) || 0,
+    generated_count: Number(raw.generated_count) || 0,
+    queue_generated_count: Number(raw.queue_generated_count) || 0,
+    last_selected_at: Number(raw.last_selected_at) || 0,
+    last_generated_at: Number(raw.last_generated_at) || 0,
+    first_used_at: Number(raw.first_used_at) || 0,
+    last_mode: typeof raw.last_mode === "string" ? raw.last_mode : "",
+    category_snapshot: typeof raw.category_snapshot === "string" ? raw.category_snapshot : ""
+  };
+}
+function upsertStatsUnsafe(data, scriptId) {
+  ensureStatsStore(data);
+  const normalized = normalizeStats(data.script_stats[scriptId]);
+  data.script_stats[scriptId] = normalized;
+  return normalized;
+}
+function getScriptCategory(script) {
+  if (!script) return "";
+  return script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
+}
+function getSmartScore(stats, nowTs) {
+  const generated = Math.max(0, Number(stats.generated_count) || 0);
+  const lastTs = Math.max(0, Number(stats.last_generated_at) || 0);
+  const usageScore = Math.log(1 + generated);
+  if (!lastTs) {
+    return usageScore * 0.65;
+  }
+  const days = Math.max(0, (nowTs - lastTs) / 864e5);
+  const recencyDecay = Math.exp(-days / 7);
+  return usageScore * 0.65 + recencyDecay * 0.35;
+}
+function compareByMode(a, b, mode, nowTs) {
+  const aName = (a.name || "").toString();
+  const bName = (b.name || "").toString();
+  const aStats = a._stats || getEmptyStats();
+  const bStats = b._stats || getEmptyStats();
+  if (mode === "name_asc") {
+    const n = aName.localeCompare(bName, "zh-CN");
+    return n !== 0 ? n : (a.id || "").localeCompare(b.id || "");
+  }
+  if (mode === "name_desc") {
+    const n = bName.localeCompare(aName, "zh-CN");
+    return n !== 0 ? n : (a.id || "").localeCompare(b.id || "");
+  }
+  if (mode === "recent_generated") {
+    const t = (bStats.last_generated_at || 0) - (aStats.last_generated_at || 0);
+    if (t !== 0) return t;
+    return aName.localeCompare(bName, "zh-CN");
+  }
+  if (mode === "most_used") {
+    const c = (bStats.generated_count || 0) - (aStats.generated_count || 0);
+    if (c !== 0) return c;
+    const t = (bStats.last_generated_at || 0) - (aStats.last_generated_at || 0);
+    if (t !== 0) return t;
+    return aName.localeCompare(bName, "zh-CN");
+  }
+  if (mode === "smart") {
+    const bScore = getSmartScore(bStats, nowTs);
+    const aScore = getSmartScore(aStats, nowTs);
+    const diff = bScore - aScore;
+    if (Math.abs(diff) > 1e-6) return diff;
+    const c = (bStats.generated_count || 0) - (aStats.generated_count || 0);
+    if (c !== 0) return c;
+    const t = (bStats.last_generated_at || 0) - (aStats.last_generated_at || 0);
+    if (t !== 0) return t;
+    return aName.localeCompare(bName, "zh-CN");
+  }
+  return 0;
+}
+function getScriptStats(scriptId) {
+  const data = getExtData();
+  ensureStatsStore(data);
+  return normalizeStats(data.script_stats[scriptId]);
+}
+function getScriptSortMode() {
+  const data = getExtData();
+  ensureStatsStore(data);
+  const mode = data.ui_prefs.script_sort_mode;
+  return SCRIPT_SORT_MODES.has(mode) ? mode : "smart";
+}
+function setScriptSortMode(mode) {
+  const validMode = SCRIPT_SORT_MODES.has(mode) ? mode : "smart";
+  const data = getExtData();
+  ensureStatsStore(data);
+  data.ui_prefs.script_sort_mode = validMode;
+  saveExtData();
+  return validMode;
+}
+function recordScriptSelected(scriptId) {
+  if (!scriptId) return;
+  const data = getExtData();
+  const stats = upsertStatsUnsafe(data, scriptId);
+  stats.selected_count += 1;
+  stats.last_selected_at = Date.now();
+  saveExtData();
+}
+function recordScriptGenerated(scriptId, options = {}) {
+  if (!scriptId) return;
+  const {
+    isQueue = false,
+    mode = "",
+    category = ""
+  } = options;
+  const data = getExtData();
+  const stats = upsertStatsUnsafe(data, scriptId);
+  const nowTs = Date.now();
+  stats.generated_count += 1;
+  stats.last_generated_at = nowTs;
+  if (!stats.first_used_at) {
+    stats.first_used_at = nowTs;
+  }
+  if (isQueue) {
+    stats.queue_generated_count += 1;
+  }
+  if (typeof mode === "string" && mode) {
+    stats.last_mode = mode;
+  }
+  if (typeof category === "string" && category) {
+    stats.category_snapshot = category;
+  }
+  saveExtData();
+}
+function cleanupOrphanScriptStats() {
+  const data = getExtData();
+  ensureStatsStore(data);
+  const activeIds = /* @__PURE__ */ new Set();
+  DEFAULT_PRESETS.forEach((p) => activeIds.add(p.id));
+  (data.user_scripts || []).forEach((s) => activeIds.add(s.id));
+  let removed = 0;
+  Object.keys(data.script_stats).forEach((scriptId) => {
+    if (!activeIds.has(scriptId)) {
+      delete data.script_stats[scriptId];
+      removed++;
+    }
+  });
+  data.script_stats_meta.last_cleanup_at = Date.now();
+  if (removed > 0) {
+    saveExtData();
+  }
+  return removed;
+}
+function sortScripts(list, mode = "smart") {
+  const validMode = SCRIPT_SORT_MODES.has(mode) ? mode : "smart";
+  if (!Array.isArray(list) || list.length <= 1) return Array.isArray(list) ? [...list] : [];
+  if (validMode === "default") {
+    return [...list];
+  }
+  const data = getExtData();
+  ensureStatsStore(data);
+  const nowTs = Date.now();
+  return [...list].map((script, index) => ({
+    ...script,
+    _sortIndex: index,
+    _stats: normalizeStats(data.script_stats[script.id])
+  })).sort((a, b) => {
+    const primary = compareByMode(a, b, validMode, nowTs);
+    if (primary !== 0) return primary;
+    return a._sortIndex - b._sortIndex;
+  }).map((script) => {
+    const { _sortIndex, _stats, ...rest } = script;
+    return rest;
+  });
+}
+function buildScriptStatsOverview(runtimeScripts, options = {}) {
+  const days = Number(options.days) > 0 ? Number(options.days) : 7;
+  const nowTs = Date.now();
+  const rangeStart = nowTs - days * 864e5;
+  const data = getExtData();
+  ensureStatsStore(data);
+  const allStats = data.script_stats || {};
+  const scriptMap = new Map((runtimeScripts || []).map((s) => [s.id, s]));
+  const entries = Object.entries(allStats).map(([scriptId, raw]) => {
+    const stats = normalizeStats(raw);
+    const script = scriptMap.get(scriptId);
+    const name = script?.name || `\u5DF2\u5220\u9664\u5267\u672C(${scriptId})`;
+    const category = script ? getScriptCategory(script) : stats.category_snapshot || "\u672A\u77E5";
+    return {
+      scriptId,
+      name,
+      category,
+      stats
+    };
+  });
+  const topUsed = entries.filter((e) => e.stats.generated_count > 0).sort((a, b) => {
+    const countDiff = b.stats.generated_count - a.stats.generated_count;
+    if (countDiff !== 0) return countDiff;
+    return b.stats.last_generated_at - a.stats.last_generated_at;
+  }).slice(0, 5).map((e) => ({
+    scriptId: e.scriptId,
+    name: e.name,
+    category: e.category,
+    generated_count: e.stats.generated_count,
+    last_generated_at: e.stats.last_generated_at
+  }));
+  const recentActiveSet = new Set(
+    entries.filter((e) => e.stats.last_generated_at >= rangeStart).map((e) => e.scriptId)
+  );
+  const categoryMap = /* @__PURE__ */ new Map();
+  entries.forEach((e) => {
+    const key = e.category || "\u672A\u77E5";
+    const prev = categoryMap.get(key) || 0;
+    categoryMap.set(key, prev + (e.stats.generated_count || 0));
+  });
+  const categoryRanking = [...categoryMap.entries()].filter(([, count]) => count > 0).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([category, generated_count]) => ({ category, generated_count }));
+  return {
+    total_tracked_scripts: entries.length,
+    active_last_days: recentActiveSet.size,
+    days,
+    top_used: topUsed,
+    category_ranking: categoryRanking
+  };
+}
 function loadScripts() {
   const data = getExtData();
+  ensureStatsStore(data);
   const userScripts = data.user_scripts || [];
   const disabledIDs = data.disabled_presets || [];
   GlobalState.runtimeScripts = DEFAULT_PRESETS.filter((p) => !disabledIDs.includes(p.id)).map((p) => ({ ...p, _type: "preset" }));
@@ -7374,6 +8887,7 @@ function loadScripts() {
 }
 function saveUserScript(s) {
   const data = getExtData();
+  ensureStatsStore(data);
   let u = data.user_scripts || [];
   u = u.filter((x) => x.id !== s.id);
   u.push(s);
@@ -7383,17 +8897,28 @@ function saveUserScript(s) {
 }
 function deleteUserScript(id) {
   const data = getExtData();
+  ensureStatsStore(data);
   let u = data.user_scripts || [];
   u = u.filter((x) => x.id !== id);
   data.user_scripts = u;
+  delete data.script_stats[id];
   saveExtData();
   loadScripts();
 }
+var SCRIPT_SORT_MODES;
 var init_scriptData = __esm({
   "src/core/scriptData.js"() {
     init_storage();
     init_state();
     init_presets();
+    SCRIPT_SORT_MODES = /* @__PURE__ */ new Set([
+      "default",
+      "name_asc",
+      "name_desc",
+      "recent_generated",
+      "most_used",
+      "smart"
+    ]);
   }
 });
 
@@ -7915,6 +9440,11 @@ function renderToShadowDOMReal(container, html) {
                 font-size: 14px;
                 line-height: 1.6;
             }
+            /* \u5185\u5BB9\u533A\u4FDD\u6301\u56FA\u5B9A\u5B57\u53F7\uFF0C\u4E0D\u53D7 UI \u7F29\u653E\u53D8\u91CF\u5F71\u54CD */
+            .t-shadow-content,
+            .t-shadow-content * {
+                font-size: 14px;
+            }
             .t-shadow-content {
                 padding: 0;
                 min-height: 100%;
@@ -8292,6 +9822,8 @@ function checkSentenceCompletion(content) {
   return result;
 }
 function buildContinuationContext(accumulatedContent, originalPrompt = "") {
+  const styleBlocks = accumulatedContent.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+  const styleGuide = styleBlocks.map((block) => block.replace(/<\/?style[^>]*>/gi, "").trim()).join("\n").slice(0, 1600);
   const bodyContent = accumulatedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
   const plainText = bodyContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const paragraphs = plainText.split(/\n\n+|。(?=[^。]*$)/);
@@ -8315,11 +9847,27 @@ function buildContinuationContext(accumulatedContent, originalPrompt = "") {
   const endsWithPunctuation = /[。！？"」』]$/.test(lastPart.trim());
   const incompleteText = endsWithPunctuation ? "" : lastPart.split(/[。！？]/).pop()?.trim() || "";
   const unclosedTags = detectUnclosedTags(bodyContent);
+  const classMatches = bodyContent.match(/class=["']([^"']+)["']/gi) || [];
+  const classSet = /* @__PURE__ */ new Set();
+  classMatches.forEach((item) => {
+    const m = item.match(/class=["']([^"']+)["']/i);
+    if (m && m[1]) {
+      m[1].split(/\s+/).forEach((cls) => {
+        const c = cls.trim();
+        if (c) classSet.add(c);
+      });
+    }
+  });
+  const recentClasses = Array.from(classSet).slice(0, 20);
   return {
     plotSummary: plotPoints || "(\u65E0\u60C5\u8282\u6458\u8981)",
     // 情节进展摘要
     recentHtml,
     // 最后2段完整HTML
+    styleGuide,
+    // 原有样式片段
+    recentClasses,
+    // 近期使用类名
     lastCompleteSentence,
     // 最后完整句子
     incompleteText,
@@ -8486,6 +10034,148 @@ __export(favsWindow_exports, {
   saveFavorite: () => saveFavorite,
   unsaveFavorite: () => unsaveFavorite
 });
+function replaceAllLiteral(str, search, replacement) {
+  if (!str || !search) return str;
+  return str.split(search).join(replacement);
+}
+function maskStringSameLength(value, maskChar = "\u2588") {
+  if (!value) return value;
+  return Array.from(value).map((ch) => /\s/.test(ch) ? ch : maskChar).join("");
+}
+function maskHtmlByToken(html, token, replacement) {
+  if (!html || !token || !replacement) return html;
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div id="titania-mask-root">${html}</div>`, "text/html");
+    const root = doc.getElementById("titania-mask-root");
+    if (!root) return html;
+    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    let node;
+    while (node = walker.nextNode()) {
+      const v = node.nodeValue;
+      if (v && v.includes(token)) {
+        node.nodeValue = replaceAllLiteral(v, token, replacement);
+      }
+    }
+    root.querySelectorAll("*").forEach((el) => {
+      try {
+        const attrs = Array.from(el.attributes || []);
+        attrs.forEach((attr) => {
+          const name = (attr.name || "").toLowerCase();
+          const shouldMask = name === "title" || name === "alt" || name === "placeholder" || name === "value" || name === "style" || name.startsWith("aria-") || name.startsWith("data-");
+          if (!shouldMask) return;
+          const v = attr.value;
+          if (v && v.includes(token)) {
+            el.setAttribute(attr.name, replaceAllLiteral(v, token, replacement));
+          }
+        });
+      } catch (e) {
+      }
+    });
+    root.querySelectorAll("style").forEach((styleEl) => {
+      const css = styleEl.textContent || "";
+      if (css && css.includes(token)) {
+        styleEl.textContent = replaceAllLiteral(css, token, replacement);
+      }
+    });
+    return root.innerHTML;
+  } catch (e) {
+    console.warn("Titania: maskHtmlByToken failed, fallback to string replace", e);
+    return replaceAllLiteral(html, token, replacement);
+  }
+}
+async function getExpandedUserNameForMasking() {
+  try {
+    if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+      const ctx = SillyTavern.getContext();
+      const u = ctx?.substituteParams?.("{{user}}");
+      const name1 = ctx?.name1;
+      if (u && typeof u === "string" && u.trim() && u !== "{{user}}" && u !== "User") return u;
+      if (name1 && typeof name1 === "string" && name1.trim() && name1 !== "{{user}}") return name1;
+      if (u && typeof u === "string" && u.trim() && u !== "{{user}}") return u;
+    }
+  } catch (e) {
+  }
+  try {
+    const d = await getContextData();
+    const u2 = d?.userName;
+    if (u2 && typeof u2 === "string" && u2.trim() && u2 !== "{{user}}") return u2;
+    return "";
+  } catch (e) {
+    return "";
+  }
+}
+function createOffscreenExportDom(widthPx) {
+  const root = document.createElement("div");
+  root.className = "titania-offscreen-export";
+  root.style.cssText = `position:fixed; left:-10000px; top:0; width:${widthPx}px; background:#0b0b0b; z-index:0; overflow:visible;`;
+  const zone = document.createElement("div");
+  zone.style.cssText = "width:100%; height:auto; overflow:visible;";
+  const content = document.createElement("div");
+  zone.appendChild(content);
+  root.appendChild(zone);
+  document.body.appendChild(root);
+  return { root, zone, content };
+}
+function waitForNextPaint(frames = 2) {
+  return new Promise((resolve) => {
+    const step = (n) => {
+      if (n <= 0) return resolve();
+      requestAnimationFrame(() => step(n - 1));
+    };
+    step(frames);
+  });
+}
+async function waitForFontsReady(timeoutMs = 1500) {
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await Promise.race([
+        document.fonts.ready,
+        new Promise((r) => setTimeout(r, timeoutMs))
+      ]);
+    }
+  } catch (e) {
+  }
+}
+function collectImagesDeep(rootEl) {
+  const imgs = [];
+  try {
+    rootEl.querySelectorAll?.("img")?.forEach((img) => imgs.push(img));
+    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host) => {
+      const shadow = host.shadowRoot;
+      if (shadow) {
+        shadow.querySelectorAll("img").forEach((img) => imgs.push(img));
+      }
+    });
+  } catch (e) {
+  }
+  return imgs;
+}
+function waitForImagesLoadedDeep(rootEl, timeoutMs = 5e3) {
+  const imgs = collectImagesDeep(rootEl).filter((img) => !img.complete);
+  if (imgs.length === 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    let done = false;
+    const timer = setTimeout(() => {
+      if (done) return;
+      done = true;
+      resolve();
+    }, timeoutMs);
+    let remaining = imgs.length;
+    const finishOne = () => {
+      remaining--;
+      if (remaining <= 0 && !done) {
+        done = true;
+        clearTimeout(timer);
+        resolve();
+      }
+    };
+    imgs.forEach((img) => {
+      img.addEventListener("load", finishOne, { once: true });
+      img.addEventListener("error", finishOne, { once: true });
+    });
+  });
+}
 async function saveFavorite() {
   const container = document.getElementById("t-output-content");
   const content = extractFromShadowDOM(container);
@@ -8494,7 +10184,7 @@ async function saveFavorite() {
     else alert("\u5185\u5BB9\u65E0\u6548");
     return;
   }
-  const script = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastUsedScriptId);
+  const script = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
   const scriptName = script ? script.name : "\u672A\u77E5\u5267\u672C";
   const ctx = await getContextData();
   let avatarSrc = null;
@@ -8532,8 +10222,8 @@ async function saveFavorite() {
   data.favs.unshift(entry);
   saveExtData();
   GlobalState.lastFavId = entry.id;
-  const btn = $("#t-btn-like");
-  btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i>').prop("disabled", false);
+  syncFavIdToCurrentHistory(entry.id);
+  updateFavButtonUI();
   if (window.toastr) toastr.success("\u6536\u85CF\u6210\u529F\uFF01");
 }
 function unsaveFavorite() {
@@ -8551,8 +10241,8 @@ function unsaveFavorite() {
   if (data.favs.length < originalLength) {
     saveExtData();
     GlobalState.lastFavId = null;
-    const btn = $("#t-btn-like");
-    btn.html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
+    syncFavIdToCurrentHistory(null);
+    updateFavButtonUI();
     if (window.toastr) toastr.info("\u5DF2\u53D6\u6D88\u6536\u85CF");
     return true;
   }
@@ -8863,28 +10553,41 @@ function openFavsWindow() {
   });
   $("#t-read-img").on("click", async function() {
     const btn = $(this);
-    const originalHtml = btn.html();
+    const originalBtnHtml = btn.html();
+    let offscreen = null;
     try {
       btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
       if (typeof htmlToImage === "undefined") {
         if (window.toastr) toastr.info("\u6B63\u5728\u52A0\u8F7D\u7EC4\u4EF6...", "Titania");
         await $.getScript("https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js");
       }
-      const element = document.getElementById("t-read-capture-zone");
-      const originalHeight = element.style.height;
-      const parent = element.parentElement;
-      const originalParentOverflow = parent.style.overflow;
-      parent.style.overflow = "visible";
-      element.style.height = "auto";
-      const dataUrl = await htmlToImage.toPng(element, {
+      let sourceHtml = currentViewingHtml;
+      if (!sourceHtml) {
+        const container = document.getElementById("t-read-content");
+        sourceHtml = extractFromShadowDOM(container);
+      }
+      if (!sourceHtml || sourceHtml.trim().length < 10) {
+        throw new Error("\u5F53\u524D\u65E0\u53EF\u5BFC\u51FA\u7684\u5185\u5BB9");
+      }
+      const userName = await getExpandedUserNameForMasking();
+      let maskedHtml = sourceHtml;
+      if (userName && typeof userName === "string" && userName.trim()) {
+        const replacement = maskStringSameLength(userName, "\u2588");
+        maskedHtml = maskHtmlByToken(sourceHtml, userName, replacement);
+      }
+      const onScreenZone = document.getElementById("t-read-capture-zone");
+      const widthPx = Math.ceil(onScreenZone?.getBoundingClientRect?.().width || 900);
+      offscreen = createOffscreenExportDom(widthPx);
+      renderToShadowDOMReal(offscreen.content, maskedHtml);
+      await waitForFontsReady(1500);
+      await waitForNextPaint(2);
+      await waitForImagesLoadedDeep(offscreen.root, 5e3);
+      await waitForNextPaint(1);
+      const dataUrl = await htmlToImage.toPng(offscreen.zone, {
         backgroundColor: "#0b0b0b",
-        // 强制背景色
         pixelRatio: 2,
-        // 2倍高清
         skipAutoScale: true
       });
-      parent.style.overflow = originalParentOverflow;
-      element.style.height = originalHeight;
       const link = document.createElement("a");
       link.download = `Titania_${(/* @__PURE__ */ new Date()).getTime()}.png`;
       link.href = dataUrl;
@@ -8892,14 +10595,13 @@ function openFavsWindow() {
       if (window.toastr) toastr.success("\u56FE\u7247\u5BFC\u51FA\u6210\u529F");
     } catch (e) {
       console.error(e);
-      alert("\u5BFC\u51FA\u5931\u8D25: " + e.message + "\n\u53EF\u80FD\u662F\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 SVG \u8F6C\u6362\u6216\u5185\u5B58\u4E0D\u8DB3\u3002");
-      const element = document.getElementById("t-read-capture-zone");
-      if (element) {
-        element.parentElement.style.overflow = "";
-        element.style.height = "";
-      }
+      alert("\u5BFC\u51FA\u5931\u8D25: " + (e?.message || e) + "\n\u53EF\u80FD\u539F\u56E0\uFF1A\u8DE8\u57DF\u56FE\u7247/\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 SVG \u8F6C\u6362/\u5185\u5B58\u4E0D\u8DB3\u3002");
     } finally {
-      btn.prop("disabled", false).html(originalHtml);
+      try {
+        if (offscreen?.root) offscreen.root.remove();
+      } catch (e) {
+      }
+      btn.prop("disabled", false).html(originalBtnHtml);
     }
   });
   $("#t-read-rename").on("click", () => {
@@ -9098,237 +10800,404 @@ var init_favsWindow = __esm({
     init_state();
     init_context();
     init_helpers();
+    init_mainWindow();
   }
 });
 
 // src/ui/debugWindow.js
 var debugWindow_exports = {};
 __export(debugWindow_exports, {
-  showDebugInfo: () => showDebugInfo
+  showDebugInfo: () => showDebugInfo,
+  showDiagnosticsWindow: () => showDiagnosticsWindow
 });
-import { evaluateMacros } from "../../../macros.js";
-async function showDebugInfo() {
-  const script = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastUsedScriptId);
-  if (!script) {
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u5267\u672C");
-    else alert("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u5267\u672C");
-    return;
-  }
-  const data = getExtData();
-  const cfg = data.config || {};
-  const d = await getContextData();
-  const dirDefaults = data.director || { instruction: "" };
-  const dirInstruction = dirDefaults.instruction || "";
-  const hasDirector = dirInstruction.trim().length > 0;
-  let activeProfileId = cfg.active_profile_id || "default";
-  let profiles = cfg.profiles || [];
-  let currentProfile = profiles.find((p) => p.id === activeProfileId) || { name: "\u672A\u77E5", model: "unknown" };
-  let displayModel = currentProfile.type === "internal" ? "(\u8DDF\u968F ST)" : currentProfile.model || "gpt-3.5-turbo";
-  const currentMode2 = GlobalState.generationMode || "narrative";
-  const modeDisplay = currentMode2 === "visual" ? "\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316" : "\u{1F4D6} \u5185\u5BB9\u4F18\u5148";
-  const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
-  const DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
-
-[Process]
-1. Analyze the mood/emotion of the scenario
-2. Choose visual effects that represent the mood
-3. Generate HTML with embedded <style>
-
-[Technical Rules]
-1. Output HTML with <style> block
-2. Use CSS animations, gradients, shadows freely
-3. No markdown code blocks
-4. Language: Chinese`;
-  const customPrompts = data.custom_prompts || {};
-  const useCustomPrompts = customPrompts.override_enabled === true;
-  let sysPrompt;
-  let isUsingCustomPrompt = false;
-  if (currentMode2 === "visual") {
-    if (useCustomPrompts && customPrompts.visual_mode && customPrompts.visual_mode.trim()) {
-      sysPrompt = customPrompts.visual_mode;
-      isUsingCustomPrompt = true;
-    } else {
-      sysPrompt = DEFAULT_VISUAL_PROMPT;
-    }
-  } else {
-    if (useCustomPrompts && customPrompts.content_mode && customPrompts.content_mode.trim()) {
-      sysPrompt = customPrompts.content_mode;
-      isUsingCustomPrompt = true;
-    } else {
-      sysPrompt = DEFAULT_CONTENT_PROMPT;
-    }
-  }
-  const sysTokens = estimateTokens(sysPrompt);
-  let contextBlocks = [];
-  contextBlocks.push({
-    title: "[Roleplay Context]",
-    content: `Character: ${d.charName}
-User: ${d.userName}`,
-    detail: "\u89D2\u8272\u4E0E\u7528\u6237\u7ED1\u5B9A"
-  });
-  if (dirInstruction.trim()) {
-    contextBlocks.push({
-      title: "[Director Instructions]",
-      content: dirInstruction,
-      detail: "\u81EA\u5B9A\u4E49\u5BFC\u6F14\u6307\u4EE4"
+function escapeHtml2(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function getTraceStatusColor(status) {
+  if (status === "success") return "#55efc4";
+  if (status === "failed") return "#ff7675";
+  if (status === "aborted") return "#feca57";
+  return "#74b9ff";
+}
+function makePreview(text, maxLen = 260) {
+  const normalized = String(text || "").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLen) return normalized;
+  return `${normalized.slice(0, maxLen)}...`;
+}
+function extractUserSections(userText, includeContent = false) {
+  const text = String(userText || "").trim();
+  if (!text) return [];
+  const sectionRegex = /^\[(.+?)\]/gm;
+  const markers = [];
+  let match;
+  while ((match = sectionRegex.exec(text)) !== null) {
+    markers.push({
+      title: String(match[1] || "\u672A\u547D\u540D\u533A\u5757").trim(),
+      index: match.index,
+      markerLen: match[0].length
     });
   }
-  const styleProfiles = data.style_profiles || [];
-  const activeStyleId = data.active_style_id || "default";
-  const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId);
-  if (activeStyleProfile && activeStyleProfile.content && activeStyleProfile.content.trim()) {
-    contextBlocks.push({
-      title: "[Style Reference]",
-      content: `\u65B9\u6848: ${activeStyleProfile.name}
----
-${activeStyleProfile.content.substring(0, 200)}${activeStyleProfile.content.length > 200 ? "..." : ""}`,
-      detail: "\u6587\u7B14\u53C2\u8003"
-    });
-  }
-  if (d.persona) {
-    contextBlocks.push({
-      title: "[Character Persona]",
-      content: d.persona,
-      detail: "\u89D2\u8272\u4EBA\u8BBE"
-    });
-  }
-  if (d.userDesc) {
-    contextBlocks.push({
-      title: "[User Persona]",
-      content: d.userDesc,
-      detail: "\u7528\u6237\u8BBE\u5B9A"
-    });
-  }
-  if (d.worldInfo) {
-    contextBlocks.push({
-      title: "[World Info]",
-      content: d.worldInfo,
-      detail: "\u4E16\u754C\u4E66/Lore"
-    });
-  }
-  if (GlobalState.useHistoryAnalysis) {
-    const limit = cfg.history_limit || 10;
-    const historyWhitelistStr = data.history_extraction?.whitelist || "";
-    const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
-    const hist = getChatHistory2(limit, historyWhitelist);
-    const histLines = hist ? hist.split("\n").length : 0;
-    contextBlocks.push({
-      title: "[Conversation History]",
-      content: hist && hist.trim() ? hist : "(\u65E0\u5386\u53F2\u8BB0\u5F55)",
-      detail: `\u804A\u5929\u8BB0\u5F55 (${histLines} \u884C)${historyWhitelist.length > 0 ? ` [\u767D\u540D\u5355: ${historyWhitelist.join(", ")}]` : ""}`
-    });
-  }
-  let finalScriptPrompt;
-  try {
-    const macroEnv = {
-      char: d.charName,
-      user: d.userName
+  if (markers.length === 0) {
+    const chars = text.length;
+    const base = {
+      title: "\u6B63\u6587",
+      chars,
+      tokens_est: estimateTokens(text),
+      preview: makePreview(text)
     };
-    finalScriptPrompt = evaluateMacros(script.prompt, macroEnv);
-  } catch (e) {
-    console.warn("Titania Debug: \u5B8F\u5904\u7406\u5931\u8D25\uFF0C\u4F7F\u7528\u7B80\u5355\u66FF\u6362", e);
-    finalScriptPrompt = script.prompt.replace(/{{char}}/g, d.charName).replace(/{{user}}/g, d.userName);
+    if (includeContent) base.content = text;
+    return [base];
   }
-  contextBlocks.push({
-    title: "[Scenario Request]",
-    content: finalScriptPrompt,
-    detail: "\u5267\u672C\u6838\u5FC3\u6307\u4EE4 (\u5B8F\u5DF2\u5C55\u5F00)",
-    isOpen: true
-    // 默认展开这个
-  });
-  let totalUserTokens = 0;
-  contextBlocks.forEach((b) => totalUserTokens += estimateTokens(b.content));
-  $("#t-main-view").hide();
-  const contextHtml = contextBlocks.map((b, idx) => {
-    const t = estimateTokens(b.content);
-    const openClass = b.isOpen ? "open" : "";
-    return `
-        <div class="t-fold-row ${openClass}" data-idx="${idx}">
-            <div class="t-fold-head">
-                <i class="fa-solid fa-caret-right t-fold-icon"></i>
-                <span class="t-fold-title">${b.title}</span>
-                <span class="t-fold-meta">${b.detail} \xB7 ${t} tokens</span>
-            </div>
-            <div class="t-fold-body">${b.content}</div>
-        </div>`;
-  }).join("");
+  const sections = [];
+  for (let i = 0; i < markers.length; i++) {
+    const current = markers[i];
+    const next = markers[i + 1];
+    const contentStart = current.index + current.markerLen;
+    const contentEnd = next ? next.index : text.length;
+    const content = text.slice(contentStart, contentEnd).trim();
+    const chars = content.length;
+    const row = {
+      title: current.title,
+      chars,
+      tokens_est: estimateTokens(content),
+      preview: makePreview(content)
+    };
+    if (includeContent) {
+      row.content = content;
+    }
+    sections.push(row);
+  }
+  return sections;
+}
+function toTraceJson(trace, compact = false) {
+  if (!trace) return {};
+  const finalMeta = trace.finalMessages?.meta || {};
+  const messages = trace.finalMessages?.messages || [];
+  const system = messages.find((m) => m.role === "system")?.content || "";
+  const user = messages.find((m) => m.role === "user")?.content || "";
+  const userSections = extractUserSections(user, !compact);
+  const sectionLengths = finalMeta.sectionLengths || {};
+  const continuation = finalMeta.continuation || null;
+  const base = {
+    trace_id: trace.id,
+    status: trace.status,
+    source: trace.source,
+    started_at: trace.startedAt,
+    ended_at: trace.endedAt,
+    elapsed_ms: trace.startedAt ? Math.max(0, (trace.endedAt || Date.now()) - trace.startedAt) : 0,
+    script: {
+      id: trace.scriptId || "",
+      name: trace.scriptName || "\u672A\u77E5\u5267\u672C"
+    },
+    connection: {
+      profile: trace.profile || "",
+      model: trace.model || "",
+      use_st: !!trace.extraMeta?.useSTConnection
+    },
+    meta: {
+      mode: trace.mode,
+      has_prompt_override: !!finalMeta.hasPromptOverride,
+      prompt_override_length: finalMeta.promptOverrideLength || 0,
+      skip_macro_evaluation: !!finalMeta.skipMacroEvaluation,
+      estimated_tokens: finalMeta.estimatedTokens || { system: 0, user: 0 }
+    },
+    continuation: continuation ? {
+      inject_rounds_count: continuation.injectRoundsCount,
+      injected_round_items: continuation.injectedRoundItems,
+      injected_chars: continuation.injectedChars,
+      injected_tokens_estimated: continuation.injectedTokensEstimated
+    } : null,
+    sections: {
+      director: sectionLengths.director || 0,
+      persona: sectionLengths.persona || 0,
+      user_desc: sectionLengths.userDesc || 0,
+      world_info: sectionLengths.worldInfo || 0,
+      history: sectionLengths.history || 0,
+      script_instruction: sectionLengths.scriptInstruction || 0
+    },
+    messages: compact ? {
+      system_length: system.length,
+      user_length: user.length,
+      system_preview: system.slice(0, 320),
+      user_preview: makePreview(user, 320),
+      user_sections: userSections.map((item) => ({
+        title: item.title,
+        chars: item.chars,
+        tokens_est: item.tokens_est,
+        preview: item.preview
+      }))
+    } : {
+      system,
+      user_raw: user,
+      user_sections: userSections
+    },
+    stages: (trace.stages || []).map((item) => ({
+      stage: item.stage,
+      at: item.at,
+      payload: item.payload
+    })),
+    error: trace.error || null
+  };
+  return base;
+}
+async function showDebugInfo() {
+  if ($("#t-debug-view").length) return;
+  ensureOverlay();
+  const $mainView = $("#t-main-view");
+  const hasMainView = $mainView.length > 0;
+  if (hasMainView) {
+    $mainView.hide();
+  }
   const html = `
-    <div class="t-box t-dbg-container" id="t-debug-view">
+    <div class="t-box" id="t-debug-view" style="max-width:1400px; width:95vw; height:92vh; display:flex; flex-direction:column;">
+        <style>
+            @media (max-width: 900px) {
+                #t-debug-view {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: none !important;
+                    border-radius: 0 !important;
+                }
+                #t-debug-view #t-json-layout {
+                    grid-template-columns: 1fr !important;
+                }
+                #t-debug-view #t-json-list-pane {
+                    max-height: 32vh;
+                }
+            }
+        </style>
         <div class="t-header" style="flex-shrink:0;">
-            <span class="t-title-main">\u{1F4CA} \u63D0\u793A\u8BCD\u7EC4\u6210\u7A97\u53E3</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-code" style="color:#74b9ff;"></i>
+                <span class="t-title-main">\u63D0\u793A\u8BCD\u5B9E\u65F6\u7EC4\u6210\uFF08JSON\uFF09</span>
+            </div>
             <span class="t-close" id="t-debug-close">&times;</span>
         </div>
-        
-        <div class="t-dbg-header-bar">
-            <div class="t-dbg-stat-item"><i class="fa-solid fa-server"></i> <span class="t-dbg-highlight">${displayModel}</span></div>
-            <div class="t-dbg-stat-item"><i class="fa-solid fa-wand-magic-sparkles"></i> \u6A21\u5F0F: <span class="t-dbg-highlight">${modeDisplay}</span></div>
-            <div class="t-dbg-stat-item" style="margin-left:auto; color:#bfa15f;"><i class="fa-solid fa-coins"></i> Total Est: ${sysTokens + totalUserTokens} tokens</div>
+
+        <div style="padding:10px 14px; border-bottom:1px solid #2e2e2e; display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:#171717;">
+            <button id="t-debug-refresh" class="t-btn" style="padding:6px 10px; font-size:12px;"><i class="fa-solid fa-rotate-right"></i> \u5237\u65B0</button>
+            <button id="t-debug-toggle-json" class="t-btn" style="padding:6px 10px; font-size:12px;"><i class="fa-solid fa-down-left-and-up-right-to-center"></i> \u5207\u6362\u7CBE\u7B80/\u5B8C\u6574</button>
+            <button id="t-debug-copy-json" class="t-btn" style="padding:6px 10px; font-size:12px;"><i class="fa-solid fa-copy"></i> \u590D\u5236\u5F53\u524D JSON</button>
+            <span style="margin-left:auto; color:#74b9ff; font-size:12px;"><i class="fa-solid fa-circle"></i> \u5B9E\u65F6\u66F4\u65B0\u4E2D</span>
         </div>
 
-        <div class="t-dbg-body">
-            <!-- \u5DE6\u4FA7\uFF1A\u53C2\u6570\u8868 -->
-            <div class="t-dbg-sidebar">
-                <div class="t-param-group">
-                    <div class="t-param-title">\u57FA\u672C\u4FE1\u606F</div>
-                    <div class="t-param-row"><span class="t-param-key">\u5267\u672C</span><span class="t-param-val" style="color:#bfa15f; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${script.name}</span></div>
-                    <div class="t-param-row"><span class="t-param-key">\u6A21\u5F0F</span><span class="t-param-val" style="color:${currentMode2 === "visual" ? "#90cdf4" : "#bfa15f"};">${modeDisplay}</span></div>
-                </div>
-                <div class="t-param-group">
-                    <div class="t-param-title">\u5BFC\u6F14\u53C2\u6570</div>
-                    <div class="t-param-row"><span class="t-param-key">\u81EA\u5B9A\u4E49\u6307\u4EE4</span><span class="t-param-val">${hasDirector ? "\u5DF2\u8BBE\u7F6E" : "\u65E0"}</span></div>
-                    <div class="t-param-row"><span class="t-param-key">\u6587\u7B14\u65B9\u6848</span><span class="t-param-val">${activeStyleProfile ? activeStyleProfile.name : "\u9ED8\u8BA4"}</span></div>
-                </div>
-                <div style="padding:15px; font-size:0.8em; color:#666; line-height:1.5;">
-                    <i class="fa-solid fa-circle-info"></i> \u53F3\u4FA7\u4E3A\u5B9E\u9645\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u5B8C\u6574 Payload\u3002\u70B9\u51FB\u6807\u9898\u53EF\u6298\u53E0/\u5C55\u5F00\u67E5\u770B\u8BE6\u60C5\u3002
-                </div>
+        <div id="t-json-layout" style="flex:1; min-height:0; display:grid; grid-template-columns:320px 1fr; gap:10px; padding:10px;">
+            <div id="t-json-list-pane" style="border:1px solid #2f2f2f; border-radius:8px; background:#151515; display:flex; flex-direction:column; min-height:0;">
+                <div style="padding:10px; border-bottom:1px solid #2a2a2a; color:#bfa15f; font-weight:bold;">\u751F\u6210\u8BB0\u5F55\uFF08\u6700\u8FD130\u6761\uFF09</div>
+                <div id="t-trace-list" style="flex:1; overflow:auto; padding:8px;"></div>
             </div>
-
-            <!-- \u53F3\u4FA7\uFF1A\u5206\u680F\u7F16\u8F91\u5668 -->
-            <div class="t-dbg-main">
-                <!-- System -->
-                <div class="t-editor-section" style="flex: 3;">
-                    <div class="t-section-label">
-                        <span><i class="fa-solid fa-microchip"></i> System Instruction ${isUsingCustomPrompt ? '<span style="color:#55efc4; font-size:0.8em;">(\u81EA\u5B9A\u4E49)</span>' : ""}</span>
-                        <span style="font-size:0.8em; opacity:0.5;">${sysTokens} tokens</span>
-                    </div>
-                    <textarea class="t-simple-editor" readonly>${sysPrompt}</textarea>
-                </div>
-                
-                <!-- User Context (\u53EF\u6298\u53E0) -->
-                <div class="t-editor-section" style="flex: 7; overflow:hidden;">
-                    <div class="t-section-label">
-                        <span><i class="fa-solid fa-user"></i> User Context Chain</span>
-                        <span style="font-size:0.8em; opacity:0.5;">${totalUserTokens} tokens</span>
-                    </div>
-                    <div class="t-code-viewer">
-                        ${contextHtml}
-                    </div>
-                </div>
+            <div style="border:1px solid #2f2f2f; border-radius:8px; background:#151515; display:flex; flex-direction:column; min-height:0;">
+                <div id="t-json-title" style="padding:10px; border-bottom:1px solid #2a2a2a; color:#7ed6df; font-weight:bold;">JSON \u8BE6\u60C5</div>
+                <pre id="t-trace-json-view" style="margin:0; flex:1; min-height:0; overflow:auto; padding:12px; color:#ddd; font-size:12px; line-height:1.5; white-space:pre-wrap; word-break:break-word;"></pre>
             </div>
         </div>
-
     </div>`;
   $("#t-overlay").append(html);
+  let selectedTraceId = null;
+  let compactMode = true;
+  const renderTraceList = () => {
+    const traces = getPromptTraceList();
+    const $list = $("#t-trace-list");
+    if (!Array.isArray(traces) || traces.length === 0) {
+      $list.html('<div style="color:#777; padding:10px;">\u6682\u65E0\u751F\u6210\u8BB0\u5F55\uFF0C\u5148\u6267\u884C\u4E00\u6B21\u5185\u5BB9\u751F\u6210\u3002</div>');
+      $("#t-json-title").text("JSON \u8BE6\u60C5");
+      $("#t-trace-json-view").text("{}");
+      selectedTraceId = null;
+      return;
+    }
+    if (!selectedTraceId || !traces.some((t) => t.id === selectedTraceId)) {
+      selectedTraceId = traces[0].id;
+    }
+    const listHtml = traces.map((t) => {
+      const active = selectedTraceId === t.id;
+      const statusColor = getTraceStatusColor(t.status);
+      const timeText = t.startedAt ? new Date(t.startedAt).toLocaleTimeString("zh-CN", { hour12: false }) : "-";
+      return `
+            <div class="t-trace-item" data-trace-id="${escapeHtml2(t.id)}" style="padding:8px; border:1px solid ${active ? "#4a4a4a" : "#2b2b2b"}; background:${active ? "#202020" : "#181818"}; border-radius:8px; margin-bottom:8px; cursor:pointer;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <span style="font-size:12px; color:#ddd; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml2(t.scriptName || "\u672A\u77E5\u5267\u672C")}</span>
+                    <span style="font-size:11px; color:${statusColor};">${escapeHtml2(t.status || "running")}</span>
+                </div>
+                <div style="margin-top:4px; color:#9aa; font-size:11px; display:flex; justify-content:space-between; gap:8px;">
+                    <span>${escapeHtml2(t.source || "manual")} \xB7 ${escapeHtml2(t.mode || "narrative")}</span>
+                    <span>${escapeHtml2(timeText)}</span>
+                </div>
+            </div>`;
+    }).join("");
+    $list.html(listHtml);
+    const trace = getPromptTraceById(selectedTraceId);
+    const jsonObj = toTraceJson(trace, compactMode);
+    const jsonText = JSON.stringify(jsonObj, null, 2);
+    $("#t-json-title").text(`JSON \u8BE6\u60C5 - ${trace?.scriptName || "\u672A\u77E5\u5267\u672C"}${compactMode ? " (\u7CBE\u7B80)" : " (\u5B8C\u6574)"}`);
+    $("#t-trace-json-view").text(jsonText);
+  };
+  renderTraceList();
+  $("#t-trace-list").on("click", ".t-trace-item", function() {
+    selectedTraceId = $(this).attr("data-trace-id") || null;
+    renderTraceList();
+  });
+  $("#t-debug-refresh").on("click", () => {
+    renderTraceList();
+    if (window.toastr) toastr.info("\u63D0\u793A\u8BCD JSON \u8BB0\u5F55\u5DF2\u5237\u65B0", "Titania");
+  });
+  $("#t-debug-toggle-json").on("click", () => {
+    compactMode = !compactMode;
+    renderTraceList();
+  });
+  $("#t-debug-copy-json").on("click", async () => {
+    try {
+      const text = $("#t-trace-json-view").text() || "{}";
+      await navigator.clipboard.writeText(text);
+      if (window.toastr) toastr.success("\u5DF2\u590D\u5236\u5F53\u524D JSON", "Titania");
+    } catch (e) {
+      if (window.toastr) toastr.warning("\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u590D\u5236", "Titania");
+    }
+  });
   const close = () => {
     $("#t-debug-view").remove();
-    const $mainView = $("#t-main-view");
-    if ($mainView.length > 0) {
-      $mainView.css("display", "flex");
+    if (hasMainView) {
+      $mainView.show();
     } else {
       $("#t-overlay").remove();
     }
   };
   $("#t-debug-close").on("click", close);
-  $(".t-fold-head").on("click", function() {
-    const row = $(this).parent(".t-fold-row");
-    row.toggleClass("open");
+  const autoRefreshInterval = setInterval(() => {
+    if ($("#t-debug-view").length === 0) {
+      clearInterval(autoRefreshInterval);
+      return;
+    }
+    renderTraceList();
+  }, 1500);
+}
+function showDiagnosticsWindow() {
+  if ($("#t-diagnostics-view").length) return;
+  ensureOverlay();
+  const $mainView = $("#t-main-view");
+  const hasMainView = $mainView.length > 0;
+  if (hasMainView) {
+    $mainView.hide();
+  }
+  const html = `
+    <div class="t-box t-diagnostics-container" id="t-diagnostics-view">
+        <div class="t-header" style="flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-stethoscope" style="color:#ff9f43;"></i>
+                <span class="t-title-main">\u8BCA\u65AD\u65E5\u5FD7</span>
+            </div>
+            <span class="t-close" id="t-diag-close">&times;</span>
+        </div>
+        
+        <div style="padding:15px; background:#181818; border-bottom:1px solid #333;">
+            <div style="background: rgba(255, 159, 67, 0.1); border:1px solid rgba(255, 159, 67, 0.3); padding:12px; border-radius:6px;">
+                <div style="font-weight:bold; color:#feca57; font-size:0.9em; margin-bottom:5px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> \u62A5\u9519\u6392\u67E5\u6307\u5357
+                </div>
+                <div style="font-size:0.85em; color:#ccc; line-height:1.5;">
+                    \u5982\u679C\u60A8\u9047\u5230\u751F\u6210\u5931\u8D25\u6216\u5185\u5BB9\u88AB\u622A\u65AD\u7684\u60C5\u51B5\uFF0C\u8BF7\u70B9\u51FB\u4E0B\u65B9"\u5BFC\u51FA\u5B8C\u6574\u62A5\u544A"\u6309\u94AE\uFF0C\u5C06\u751F\u6210\u7684 JSON \u6587\u4EF6\u53D1\u9001\u7ED9\u5F00\u53D1\u8005\u3002
+                    \u62A5\u544A\u4E2D\u5305\u542B\u60A8\u7684 Prompt\uFF08\u7528\u4E8E\u6392\u67E5\u5B89\u5168\u5BA1\u67E5\uFF09\uFF0C\u4F46 <b>API Key \u5DF2\u81EA\u52A8\u8131\u654F</b>\u3002
+                </div>
+            </div>
+        </div>
+        
+        <div style="flex:1; overflow:hidden; display:flex; flex-direction:column; padding:15px;">
+            <div style="font-weight:bold; color:#aaa; margin-bottom:10px;">
+                <i class="fa-solid fa-scroll"></i> \u5B9E\u65F6\u65E5\u5FD7 <span style="font-size:0.8em; color:#666;">(\u5185\u5B58\u7F13\u5B58 50 \u6761)</span>
+            </div>
+            <div class="t-log-box" id="t-diag-log-viewer" style="flex:1; overflow-y:auto;"></div>
+        </div>
+        
+        <div style="padding:15px; background:#181818; border-top:1px solid #333; display:flex; gap:10px;">
+            <button id="t-diag-refresh" class="t-btn">
+                <i class="fa-solid fa-rotate-right"></i> \u5237\u65B0\u65E5\u5FD7
+            </button>
+            <button id="t-diag-clear" class="t-btn" style="color:#ff6b6b; border-color:#ff6b6b;">
+                <i class="fa-solid fa-trash"></i> \u6E05\u7A7A\u65E5\u5FD7
+            </button>
+            <button id="t-diag-export" class="t-btn primary" style="margin-left:auto;">
+                <i class="fa-solid fa-download"></i> \u5BFC\u51FA\u5B8C\u6574\u62A5\u544A (.json)
+            </button>
+        </div>
+    </div>`;
+  $("#t-overlay").append(html);
+  const renderLogView = () => {
+    const logs = TitaniaLogger.logs;
+    const $viewer = $("#t-diag-log-viewer");
+    if (!logs || logs.length === 0) {
+      $viewer.html('<div style="text-align:center; margin-top:50px; color:#555;"><i class="fa-solid fa-inbox" style="font-size:2em; margin-bottom:10px;"></i><br>\u6682\u65E0\u65E5\u5FD7</div>');
+      return;
+    }
+    let html2 = "";
+    logs.forEach((l) => {
+      let colorClass = "t-log-entry-info";
+      if (l.type === "ERROR") colorClass = "t-log-entry-error";
+      if (l.type === "WARN") colorClass = "t-log-entry-warn";
+      let detailStr = "";
+      if (l.details) {
+        if (l.details.diagnostics) {
+          const d = l.details.diagnostics;
+          const net = d.network || {};
+          const summary = {
+            phase: d.phase,
+            status: net.status,
+            latency: net.latency + "ms",
+            input: d.input_stats
+          };
+          if (d.raw_response_snippet) {
+            summary.raw_snippet = d.raw_response_snippet.substring(0, 100) + (d.raw_response_snippet.length > 100 ? "..." : "");
+          }
+          detailStr = `
+[Diagnostics]: ${JSON.stringify(summary, null, 2)}`;
+        } else {
+          try {
+            detailStr = `
+${JSON.stringify(l.details, null, 2)}`;
+          } catch (e) {
+            detailStr = "\n[Complex Data]";
+          }
+        }
+      }
+      html2 += `<div class="${colorClass}">[${l.timestamp}] [${l.type}] ${l.message}${detailStr}</div>`;
+    });
+    $viewer.html(html2);
+    $viewer.scrollTop($viewer[0].scrollHeight);
+  };
+  renderLogView();
+  const closeWindow = () => {
+    $("#t-diagnostics-view").remove();
+    if (hasMainView) {
+      $mainView.show();
+    } else {
+      $("#t-overlay").remove();
+    }
+  };
+  $("#t-diag-close").on("click", closeWindow);
+  $("#t-diag-refresh").on("click", () => {
+    renderLogView();
+    if (window.toastr) toastr.info("\u65E5\u5FD7\u5DF2\u5237\u65B0", "Titania");
   });
+  $("#t-diag-clear").on("click", () => {
+    if (!confirm("\u786E\u5B9A\u8981\u6E05\u7A7A\u6240\u6709\u65E5\u5FD7\u5417\uFF1F")) return;
+    TitaniaLogger.logs.length = 0;
+    renderLogView();
+    if (window.toastr) toastr.success("\u65E5\u5FD7\u5DF2\u6E05\u7A7A", "Titania");
+  });
+  $("#t-diag-export").on("click", () => {
+    TitaniaLogger.downloadReport();
+  });
+  const autoRefreshInterval = setInterval(() => {
+    if ($("#t-diagnostics-view").length === 0) {
+      clearInterval(autoRefreshInterval);
+      return;
+    }
+    renderLogView();
+  }, 3e3);
 }
 var init_debugWindow = __esm({
   "src/ui/debugWindow.js"() {
-    init_storage();
     init_state();
-    init_context();
+    init_logger();
+    init_dom();
     init_helpers();
   }
 });
@@ -9432,6 +11301,11 @@ function openSettingsWindow() {
   if (!tempApp.bg_color) tempApp.bg_color = "#2b2b2b";
   if (tempApp.border_opacity === void 0) tempApp.border_opacity = 100;
   if (tempApp.bg_opacity === void 0) tempApp.bg_opacity = 100;
+  if (tempApp.ui_font_scale === void 0) tempApp.ui_font_scale = 100;
+  const isTempAppImageData = typeof tempApp.content === "string" && tempApp.content.trim().toLowerCase().startsWith("data:image/");
+  if (isTempAppImageData) {
+    tempApp.type = "image";
+  }
   let tempStyleProfiles = JSON.parse(JSON.stringify(styleProfiles));
   let tempActiveStyleId = activeStyleId;
   let styleContentModified = false;
@@ -9458,7 +11332,6 @@ function openSettingsWindow() {
                 <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
                 <div class="t-set-tab-btn" data-tab="prompts">\u{1F4DC} \u7CFB\u7EDF\u63D0\u793A\u8BCD</div>
                 <div class="t-set-tab-btn" data-tab="data">\u{1F5C2}\uFE0F \u6570\u636E\u7BA1\u7406</div>
-                <div class="t-set-tab-btn" data-tab="diagnostics" style="color:#ff9f43;"><i class="fa-solid fa-stethoscope"></i> \u8BCA\u65AD</div>
             </div>
 
             <div class="t-set-content">
@@ -9534,6 +11407,12 @@ function openSettingsWindow() {
                     <div class="t-form-group">
                         <div class="t-form-label" style="display:flex; justify-content:space-between;"><span>\u60AC\u6D6E\u7403\u5C3A\u5BF8</span><span id="p-size-val" style="color:#bfa15f;">${tempApp.size}px</span></div>
                         <input type="range" id="p-size-input" min="40" max="100" step="2" value="${tempApp.size}" style="width:100%;">
+                    </div>
+
+                    <div class="t-form-group">
+                        <div class="t-form-label" style="display:flex; justify-content:space-between;"><span>UI \u5B57\u4F53\u5927\u5C0F</span><span id="p-ui-font-scale-val" style="color:#bfa15f;">${tempApp.ui_font_scale}%</span></div>
+                        <input type="range" id="p-ui-font-scale" min="80" max="130" step="5" value="${tempApp.ui_font_scale}" style="width:100%;">
+                        <p style="font-size:0.75em; color:#666; margin-top:6px;">\u5F71\u54CD\u63D2\u4EF6\u5168\u90E8\u754C\u9762\u5B57\u4F53\uFF08\u4E0D\u5F71\u54CD\u5185\u5BB9\u533A\u6E32\u67D3\u6587\u672C\uFF09\u3002</p>
                     </div>
                     
                     <div class="t-form-group">
@@ -9867,6 +11746,19 @@ function openSettingsWindow() {
                         </div>
                     </div>
                     
+                    <!-- \u6A21\u578B\u5207\u6362\u8B66\u544A\uFF08\u52A8\u6001\u663E\u793A\uFF09 -->
+                    <div id="embed-model-warning" style="display:none; background:rgba(255,107,107,0.1); border:1px solid rgba(255,107,107,0.4); padding:12px; border-radius:6px; margin-bottom:15px;">
+                        <div style="color:#ff6b6b; font-weight:bold; margin-bottom:5px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> \u68C0\u6D4B\u5230\u6A21\u578B\u5DF2\u66F4\u6539
+                        </div>
+                        <div style="font-size:0.85em; color:#ccc;">
+                            \u5F53\u524D\u914D\u7F6E\u7684\u6A21\u578B\u4E0E\u73B0\u6709\u5411\u91CF\u7D22\u5F15\u4F7F\u7528\u7684\u6A21\u578B\u4E0D\u540C\u3002<br>
+                            <span style="color:#feca57;">\u65E7\u6A21\u578B: <span id="embed-old-model">-</span></span> \u2192
+                            <span style="color:#55efc4;">\u65B0\u6A21\u578B: <span id="embed-new-model">-</span></span><br>
+                            <span style="color:#ff6b6b;">\u26A0\uFE0F \u5EFA\u8BAE\u91CD\u5EFA\u5411\u91CF\u7D22\u5F15\u4EE5\u83B7\u5F97\u6700\u4F73\u6548\u679C</span>
+                        </div>
+                    </div>
+                    
                     <div class="t-form-group">
                         <label class="t-form-label">API Endpoint URL</label>
                         <input id="cfg-embed-url" class="t-input" value="${data.embedding_config?.url || ""}" placeholder="\u4F8B\u5982: https://api.openai.com/v1">
@@ -9909,6 +11801,100 @@ function openSettingsWindow() {
                             <i class="fa-solid fa-vial"></i> \u6D4B\u8BD5\u8FDE\u63A5
                         </button>
                         <span id="embed-test-result" style="font-size:0.9em; line-height:32px;"></span>
+                    </div>
+                    
+                    <!-- \u6587\u672C\u6E05\u6D17\u8BBE\u7F6E -->
+                    <div style="margin-top:25px; border-top:1px solid #333; padding-top:20px;">
+                        <div style="font-weight:bold; color:#55efc4; margin-bottom:10px;"><i class="fa-solid fa-broom"></i> \u6587\u672C\u6E05\u6D17\u8BBE\u7F6E</div>
+                        <div style="font-size:0.85em; color:#888; margin-bottom:15px;">
+                            \u5411\u91CF\u5316\u524D\u5BF9\u6587\u672C\u8FDB\u884C\u6E05\u6D17\u5904\u7406\uFF0C\u79FB\u9664\u5E72\u6270\u5185\u5BB9\uFF0C\u63D0\u9AD8\u8BED\u4E49\u5339\u914D\u8D28\u91CF\u3002<br>
+                            <span style="color:#feca57;">\u52FE\u9009\u8981\u6E05\u6D17\u7684\u5185\u5BB9\u7C7B\u578B\uFF0C\u4EC5\u5F71\u54CD\u65B0\u5411\u91CF\u5316\u7684\u6D88\u606F\u3002</span>
+                        </div>
+                        
+                        <div class="t-form-group" style="background:#1a1a1a; padding:15px; border-radius:6px; border:1px solid #333;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-html" ${data.embedding_config?.text_cleaning?.remove_html_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F3F7}\uFE0F \u79FB\u9664 HTML \u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-style" ${data.embedding_config?.text_cleaning?.remove_style_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F3A8} \u79FB\u9664 &lt;style&gt; \u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-thinking" ${data.embedding_config?.text_cleaning?.remove_thinking_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4AD} \u79FB\u9664 &lt;thinking&gt; \u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-ooc" ${data.embedding_config?.text_cleaning?.remove_ooc_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4AC} \u79FB\u9664 &lt;ooc&gt; \u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-system" ${data.embedding_config?.text_cleaning?.remove_system_tags !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u2699\uFE0F \u79FB\u9664\u7CFB\u7EDF\u6807\u7B7E</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-macro" ${data.embedding_config?.text_cleaning?.remove_macro_residue !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4DD} \u79FB\u9664\u5B8F\u6B8B\u7559 {{}}</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-bracket" ${data.embedding_config?.text_cleaning?.remove_bracket_markers !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F532} \u79FB\u9664 [System] \u7B49\u6807\u8BB0</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-bracket-all" ${data.embedding_config?.text_cleaning?.remove_bracket_content !== false ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4E6} \u79FB\u9664\u6240\u6709 [...] \u5185\u5BB9</span>
+                                </label>
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-clean-markdown" ${data.embedding_config?.text_cleaning?.remove_markdown === true ? "checked" : ""} style="margin-right:8px;">
+                                    <span style="color:#ccc;">\u{1F4C4} \u79FB\u9664 Markdown \u683C\u5F0F</span>
+                                </label>
+                            </div>
+                            
+                            <div style="margin-top:15px; padding-top:12px; border-top:1px solid #333;">
+                                <div class="t-form-group" style="margin-bottom:10px;">
+                                    <label class="t-form-label" style="font-size:0.85em;">\u81EA\u5B9A\u4E49\u79FB\u9664\u6807\u7B7E\uFF08\u9017\u53F7\u5206\u9694\uFF09</label>
+                                    <input id="cfg-clean-custom-tags" class="t-input" value="${data.embedding_config?.text_cleaning?.custom_tags_to_remove || ""}" placeholder="\u4F8B\u5982: internal, debug, author_note" style="font-size:0.9em;">
+                                </div>
+                                <div class="t-form-group" style="margin-bottom:0;">
+                                    <label class="t-form-label" style="font-size:0.85em;">\u6700\u5C0F\u6587\u672C\u957F\u5EA6\uFF08\u8FC7\u77ED\u5219\u8DF3\u8FC7\uFF09</label>
+                                    <input type="number" id="cfg-clean-min-length" class="t-input" value="${data.embedding_config?.text_cleaning?.min_text_length || 20}" min="10" max="200" style="width:100px; font-size:0.9em;">
+                                    <span style="font-size:0.75em; color:#666; margin-left:8px;">\u5B57\u7B26</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- \u81EA\u52A8\u5411\u91CF\u5316\u8BBE\u7F6E -->
+                    <div style="margin-top:25px; border-top:1px solid #333; padding-top:20px;">
+                        <div class="t-form-group">
+                            <label style="cursor:pointer; display:flex; align-items:center; color:#90cdf4; font-weight:bold;">
+                                <input type="checkbox" id="cfg-auto-vectorize" ${data.embedding_config?.auto_vectorize?.enabled ? "checked" : ""} style="margin-right:10px;">
+                                \u26A1 \u542F\u7528\u81EA\u52A8\u5411\u91CF\u5316
+                            </label>
+                            <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">
+                                \u5F53\u65B0\u6D88\u606F\u7D2F\u79EF\u5230\u8BBE\u5B9A\u6570\u91CF\u540E\uFF0C\u81EA\u52A8\u5728\u540E\u53F0\u6267\u884C\u5411\u91CF\u5316\u3002
+                            </p>
+                        </div>
+                        
+                        <div id="auto-vectorize-panel" style="display:${data.embedding_config?.auto_vectorize?.enabled ? "block" : "none"}; padding-left:22px; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:15px; margin-top:10px;">
+                            <div class="t-form-group" style="margin-bottom:12px;">
+                                <label class="t-form-label">\u7D2F\u79EF\u6D88\u606F\u9608\u503C</label>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <input type="number" id="cfg-auto-vectorize-threshold" class="t-input" value="${data.embedding_config?.auto_vectorize?.batch_threshold || 5}" min="3" max="50" style="width:80px;">
+                                    <span style="font-size:0.85em; color:#888;">\u6761\u6D88\u606F\u540E\u81EA\u52A8\u5411\u91CF\u5316</span>
+                                </div>
+                                <p style="font-size:0.75em; color:#666; margin-top:5px;">
+                                    \u5EFA\u8BAE\u503C\uFF1A5-10 \u6761\u3002\u8FC7\u5C0F\u4F1A\u9891\u7E41\u8C03\u7528 API\uFF0C\u8FC7\u5927\u53EF\u80FD\u5BFC\u81F4\u5EF6\u8FDF\u3002
+                                </p>
+                            </div>
+                            <div class="t-form-group" style="margin-bottom:0;">
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="cfg-auto-vectorize-notify" ${data.embedding_config?.auto_vectorize?.notify_user !== false ? "checked" : ""} style="margin-right:10px;">
+                                    <span style="color:#ccc;">\u{1F514} \u663E\u793A\u5411\u91CF\u5316\u5B8C\u6210\u901A\u77E5</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- \u667A\u80FD\u603B\u7ED3\u8BBE\u7F6E -->
@@ -10176,22 +12162,6 @@ function openSettingsWindow() {
                     </div>
                 </div>
                 
-                <!-- Tab 7: \u8BCA\u65AD -->
-                <div id="page-diagnostics" class="t-set-page">
-                    <div style="margin-bottom:15px; background: rgba(255, 159, 67, 0.1); border:1px solid rgba(255, 159, 67, 0.3); padding:10px; border-radius:6px;">
-                        <div style="font-weight:bold; color:#feca57; font-size:0.9em; margin-bottom:5px;"><i class="fa-solid fa-triangle-exclamation"></i> \u62A5\u9519\u6392\u67E5\u6307\u5357</div>
-                        <div style="font-size:0.85em; color:#ccc;">\u5982\u679C\u60A8\u9047\u5230\u751F\u6210\u5931\u8D25\u6216\u5185\u5BB9\u88AB\u622A\u65AD\u7684\u60C5\u51B5\uFF0C\u8BF7\u70B9\u51FB\u4E0B\u65B9\u201C\u5BFC\u51FA\u5B8C\u6574\u62A5\u544A\u201D\u6309\u94AE\uFF0C\u5C06\u751F\u6210\u7684 JSON \u6587\u4EF6\u53D1\u9001\u7ED9\u5F00\u53D1\u8005\u3002\u62A5\u544A\u4E2D\u5305\u542B\u60A8\u7684 Prompt\uFF08\u7528\u4E8E\u6392\u67E5\u5B89\u5168\u5BA1\u67E5\uFF09\uFF0C\u4F46 <b>API Key \u5DF2\u81EA\u52A8\u8131\u654F</b>\u3002</div>
-                    </div>
-                    <div class="t-form-group">
-                        <div class="t-form-label">\u5B9E\u65F6\u65E5\u5FD7 (\u5185\u5B58\u7F13\u5B58 50 \u6761)</div>
-                        <div class="t-log-box" id="t-log-viewer"></div>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <button id="btn-refresh-log" class="t-btn">\u{1F504} \u5237\u65B0\u663E\u793A</button>
-                        <button id="btn-export-log" class="t-btn primary"><i class="fa-solid fa-download"></i> \u5BFC\u51FA\u5B8C\u6574\u62A5\u544A (.json)</button>
-                    </div>
-                </div>
-
             </div>
         </div>
         <div style="padding:15px; background:#181818; border-top:1px solid #333; display:flex; justify-content:flex-end;">
@@ -10303,16 +12273,17 @@ function openSettingsWindow() {
       background: bgColor,
       borderColor
     });
-    if (tempApp.type === "emoji") {
-      $ball.html(tempApp.content);
+    const contentStr = typeof tempApp.content === "string" ? tempApp.content.trim() : "";
+    const hasImageDataUri = contentStr.toLowerCase().startsWith("data:image/");
+    if (hasImageDataUri) {
+      $ball.html(`<img src="${tempApp.content}">`);
+      $("#btn-upload-card").css("background-image", `url('${tempApp.content}')`).find("i, span").hide();
     } else if (tempApp.type === "image") {
-      if (tempApp.content && tempApp.content.startsWith("data:")) {
-        $ball.html(`<img src="${tempApp.content}">`);
-        $("#btn-upload-card").css("background-image", `url('${tempApp.content}')`).find("i, span").hide();
-      } else {
-        $ball.html('<i class="fa-solid fa-image"></i>');
-        $("#btn-upload-card").css("background-image", "").find("i, span").show();
-      }
+      $ball.html('<i class="fa-solid fa-image"></i>');
+      $("#btn-upload-card").css("background-image", "").find("i, span").show();
+    } else {
+      $ball.html(tempApp.content || "\u{1F3AD}");
+      $("#btn-upload-card").css("background-image", "").find("i, span").show();
     }
   };
   const playAnimationPreview = () => {
@@ -10342,6 +12313,10 @@ function openSettingsWindow() {
     $("#p-size-val").text(tempApp.size + "px");
     renderPreview();
   });
+  $("#p-ui-font-scale").on("input", function() {
+    tempApp.ui_font_scale = parseInt($(this).val()) || 100;
+    $("#p-ui-font-scale-val").text(tempApp.ui_font_scale + "%");
+  });
   $("#p-emoji-input").on("input", function() {
     tempApp.content = $(this).val();
     renderPreview();
@@ -10352,6 +12327,10 @@ function openSettingsWindow() {
     if (!file) return;
     try {
       tempApp.content = await fileToBase64(file);
+      tempApp.type = "image";
+      $("input[name='p-type'][value='image']").prop("checked", true);
+      $("#box-emoji").hide();
+      $("#box-image").show();
       renderPreview();
     } catch (e) {
       alert("Fail");
@@ -10979,10 +12958,14 @@ function openSettingsWindow() {
   initSummaryProfileSelect();
   $("#t-btn-fetch-embed").on("click", () => fetchEmbedModelList(true));
   $("#btn-test-embed").on("click", testEmbeddingConnection2);
+  $("#cfg-auto-vectorize").on("change", function() {
+    $("#auto-vectorize-panel").toggle($(this).is(":checked"));
+  });
   const toolbarConfig = data.quick_toolbar || {};
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
     lore: true,
+    model: false,
     settings: true,
     favs: false,
     scripts: false,
@@ -11250,6 +13233,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       content: tempApp.content,
       animation: tempApp.animation || "ripple",
       size: tempApp.size || 56,
+      ui_font_scale: tempApp.ui_font_scale !== void 0 ? tempApp.ui_font_scale : 100,
       border_color: tempApp.border_color || "#90cdf4",
       bg_color: tempApp.bg_color || "#2b2b2b",
       border_opacity: tempApp.border_opacity !== void 0 ? tempApp.border_opacity : 100,
@@ -11302,7 +13286,27 @@ ${JSON.stringify(l.details, null, 2)}`;
       url: $("#cfg-embed-url").val().trim(),
       key: $("#cfg-embed-key").val().trim(),
       model: $("#cfg-embed-model").val() || "text-embedding-3-small",
-      dimensions: parseInt($("#cfg-embed-dimensions").val()) || null
+      dimensions: parseInt($("#cfg-embed-dimensions").val()) || null,
+      // 文本清洗设置
+      text_cleaning: {
+        remove_html_tags: $("#cfg-clean-html").is(":checked"),
+        remove_style_tags: $("#cfg-clean-style").is(":checked"),
+        remove_thinking_tags: $("#cfg-clean-thinking").is(":checked"),
+        remove_ooc_tags: $("#cfg-clean-ooc").is(":checked"),
+        remove_system_tags: $("#cfg-clean-system").is(":checked"),
+        remove_markdown: $("#cfg-clean-markdown").is(":checked"),
+        remove_macro_residue: $("#cfg-clean-macro").is(":checked"),
+        remove_bracket_markers: $("#cfg-clean-bracket").is(":checked"),
+        remove_bracket_content: $("#cfg-clean-bracket-all").is(":checked"),
+        custom_tags_to_remove: $("#cfg-clean-custom-tags").val().trim(),
+        min_text_length: parseInt($("#cfg-clean-min-length").val()) || 20
+      },
+      // 自动向量化设置
+      auto_vectorize: {
+        enabled: $("#cfg-auto-vectorize").is(":checked"),
+        batch_threshold: parseInt($("#cfg-auto-vectorize-threshold").val()) || 5,
+        notify_user: $("#cfg-auto-vectorize-notify").is(":checked")
+      }
     };
     d.summarizer_config = {
       selected_profile_id: $("#cfg-summary-profile").val() || null,
@@ -11320,10 +13324,16 @@ ${JSON.stringify(l.details, null, 2)}`;
     createFloatingButton();
     applyCustomCSS(d.custom_css);
     applyFontSettings(d.font_settings);
+    applyUIFontScale(d.appearance?.ui_font_scale);
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   renderPreview();
   renderProfileUI();
+}
+function applyUIFontScale(scalePercent = 100) {
+  const n = Number(scalePercent);
+  const clamped = Number.isFinite(n) ? Math.max(80, Math.min(130, n)) : 100;
+  document.documentElement.style.setProperty("--t-ui-font-scale", (clamped / 100).toFixed(2));
 }
 var init_settingsWindow = __esm({
   "src/ui/settingsWindow.js"() {
@@ -11344,13 +13354,25 @@ __export(scriptManager_exports, {
   openEditor: () => openEditor,
   openScriptManager: () => openScriptManager
 });
+function formatRelativeTime(ts) {
+  const time = Number(ts) || 0;
+  if (!time) return "\u672A\u4F7F\u7528";
+  const diff = Date.now() - time;
+  if (diff < 6e4) return "\u521A\u521A";
+  if (diff < 36e5) return `${Math.floor(diff / 6e4)} \u5206\u949F\u524D`;
+  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
+  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
+  return new Date(time).toLocaleDateString("zh-CN");
+}
 function openScriptManager() {
   let currentFilter = {
     category: "\u5168\u90E8",
     search: "",
     hidePresets: false
   };
+  let currentSortMode = getScriptSortMode();
   let isBatchMode = false;
+  cleanupOrphanScriptStats();
   const getCategories = () => {
     const cats = new Set(GlobalState.runtimeScripts.map((s) => s.category).filter((c) => c));
     const sortedCats = [...cats].sort((a, b) => a.localeCompare(b, "zh-CN"));
@@ -11375,15 +13397,24 @@ function openScriptManager() {
                     <i class="fa-solid fa-pen"></i>
                 </button>
             </div>
-            <div class="t-mgr-main" id="t-mgr-main-area">
+                <div class="t-mgr-main" id="t-mgr-main-area">
                 <div class="t-mgr-toolbar">
                     <input type="text" id="t-mgr-search-inp" class="t-mgr-search" placeholder="\u{1F50D} \u641C\u7D22...">
+                    <select id="t-mgr-sort" class="t-mgr-sort" title="\u6392\u5E8F\u65B9\u5F0F">
+                        <option value="smart">\u667A\u80FD\u6392\u5E8F</option>
+                        <option value="recent_generated">\u6700\u8FD1\u4F7F\u7528</option>
+                        <option value="most_used">\u6700\u5E38\u4F7F\u7528</option>
+                        <option value="name_asc">\u540D\u79F0 A-Z</option>
+                        <option value="name_desc">\u540D\u79F0 Z-A</option>
+                        <option value="default">\u9ED8\u8BA4\u987A\u5E8F</option>
+                    </select>
                     <button id="t-mgr-import-btn" class="t-tool-btn" title="\u5BFC\u5165"><i class="fa-solid fa-file-import"></i></button>
                     <button id="t-mgr-export-btn" class="t-tool-btn" title="\u5BFC\u51FA"><i class="fa-solid fa-file-export"></i></button>
                     <button id="t-mgr-batch-toggle" class="t-tool-btn" style="border:1px solid #444;" title="\u6279\u91CF\u7BA1\u7406">
                         <i class="fa-solid fa-list-check"></i> \u7BA1\u7406
                     </button>
                 </div>
+                <div class="t-mgr-overview" id="t-mgr-overview"></div>
                 <div class="t-mgr-header-row t-batch-elem" style="padding: 8px 15px; background: #2a2a2a; border-bottom: 1px solid #333; color: #ccc; font-size: 0.9em; flex-shrink:0;">
                     <label style="display:flex; align-items:center; cursor:pointer;">
                         <input type="checkbox" id="t-mgr-select-all" style="margin-right:10px;"> \u5168\u9009\u5F53\u524D\u5217\u8868
@@ -11595,12 +13626,31 @@ function openScriptManager() {
     $("#t-batch-count-label").text(`\u5DF2\u9009: ${n}`);
     $("#t-mgr-del-confirm").prop("disabled", n === 0).css("opacity", n === 0 ? 0.5 : 1);
   };
+  const renderOverview = () => {
+    const overview = buildScriptStatsOverview(GlobalState.runtimeScripts, { days: 7 });
+    const $box = $("#t-mgr-overview");
+    if (!$box.length) return;
+    const topUsed = overview.top_used || [];
+    const topItems = topUsed.length > 0 ? topUsed.map((item) => `<span class="t-mgr-ov-item" title="${item.name}">${item.name} (${item.generated_count})</span>`).join("") : '<span class="t-mgr-ov-empty">\u6682\u65E0\u4F7F\u7528\u6570\u636E</span>';
+    const categoryTop = (overview.category_ranking || []).slice(0, 3);
+    const categoryText = categoryTop.length > 0 ? categoryTop.map((x) => `${x.category}(${x.generated_count})`).join(" \xB7 ") : "\u6682\u65E0";
+    $box.html(`
+            <div class="t-mgr-ov-meta">
+                <span>\u6392\u5E8F\uFF1A${SORT_MODE_LABELS[currentSortMode] || currentSortMode}</span>
+                <span>\u5DF2\u8FFD\u8E2A\uFF1A${overview.total_tracked_scripts || 0}</span>
+                <span>${overview.days || 7}\u5929\u6D3B\u8DC3\uFF1A${overview.active_last_days || 0}</span>
+                <span>\u5206\u7C7B\u70ED\u5EA6\uFF1A${categoryText}</span>
+            </div>
+            <div class="t-mgr-ov-top">Top5\uFF1A${topItems}</div>
+        `);
+  };
   const renderList = () => {
     const $list = $("#t-mgr-list-container");
     $list.empty();
     $("#t-mgr-select-all").prop("checked", false);
     updateBatchCount();
-    let filtered = GlobalState.runtimeScripts.filter((s) => {
+    const sortedScripts = sortScripts(GlobalState.runtimeScripts, currentSortMode);
+    let filtered = sortedScripts.filter((s) => {
       if (currentFilter.category && currentFilter.category !== "\u5168\u90E8") {
         const sCat = s.category || "\u672A\u5206\u7C7B";
         if (sCat !== currentFilter.category) return false;
@@ -11619,6 +13669,8 @@ function openScriptManager() {
       const isUser = s._type === "user";
       const catLabel = s.category ? `<span class="t-mgr-tag">${s.category}</span>` : "";
       const presetLabel = !isUser ? `<span class="t-mgr-tag" style="background:#444;">\u9884\u8BBE</span>` : "";
+      const stats = getScriptStats(s.id);
+      const statsLine = `\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 \u9009\u62E9 ${stats.selected_count || 0} \u6B21 \xB7 \u6700\u8FD1 ${formatRelativeTime(stats.last_generated_at || stats.last_selected_at)}`;
       const $row = $(`
                 <div class="t-mgr-item">
                     <div class="t-mgr-item-check-col">
@@ -11627,6 +13679,7 @@ function openScriptManager() {
                     <div class="t-mgr-item-meta" style="cursor:pointer;">
                         <div class="t-mgr-item-title">${s.name} ${presetLabel} ${catLabel}</div>
                         <div class="t-mgr-item-desc">${s.desc || "..."}</div>
+                        <div class="t-mgr-item-stats">${statsLine}</div>
                     </div>
                     <div style="padding-left:10px;">
                         <i class="fa-solid fa-pen" style="color:#666; cursor:pointer;"></i>
@@ -11648,6 +13701,7 @@ function openScriptManager() {
   };
   const refreshAll = () => {
     renderSidebarCats();
+    renderOverview();
     renderList();
   };
   $("#t-mgr-batch-toggle").on("click", function() {
@@ -11957,6 +14011,11 @@ ${s.prompt}`;
     $(".t-mgr-check:not(:disabled)").prop("checked", $(this).is(":checked"));
     updateBatchCount();
   });
+  $("#t-mgr-sort").val(currentSortMode).on("change", function() {
+    currentSortMode = setScriptSortMode($(this).val());
+    renderOverview();
+    renderList();
+  });
   refreshAll();
 }
 function openEditor(id, source = "main") {
@@ -12088,6 +14147,7 @@ function openEditor(id, source = "main") {
     });
   }
 }
+var SORT_MODE_LABELS;
 var init_scriptManager = __esm({
   "src/ui/scriptManager.js"() {
     init_storage();
@@ -12095,12 +14155,21 @@ var init_scriptManager = __esm({
     init_scriptData();
     init_mainWindow();
     init_settingsWindow();
+    SORT_MODE_LABELS = {
+      default: "\u9ED8\u8BA4\u987A\u5E8F",
+      smart: "\u667A\u80FD\u6392\u5E8F",
+      recent_generated: "\u6700\u8FD1\u4F7F\u7528",
+      most_used: "\u6700\u5E38\u4F7F\u7528",
+      name_asc: "\u540D\u79F0 A-Z",
+      name_desc: "\u540D\u79F0 Z-A"
+    };
   }
 });
 
 // src/core/connection.js
 import { ChatCompletionService } from "../../../custom-request.js";
-import { oai_settings, getChatCompletionModel } from "../../../openai.js";
+import { oai_settings, getChatCompletionModel, tryParseStreamingError } from "../../../openai.js";
+import EventSourceStream from "../../../sse-stream.js";
 function getActiveConnection() {
   const data = getExtData();
   const cfg = data.config || {};
@@ -12371,6 +14440,39 @@ var init_connection = __esm({
 // src/core/loreExtractor.js
 import { oai_settings as oai_settings2 } from "../../../openai.js";
 import { ChatCompletionService as ChatCompletionService2 } from "../../../custom-request.js";
+async function getCachedWorldInfoEntries() {
+  const now = Date.now();
+  if (_cachedWorldInfoEntries && now - _cacheTimestamp < CACHE_TTL) {
+    return _cachedWorldInfoEntries;
+  }
+  _cachedWorldInfoEntries = await getActiveWorldInfoEntries();
+  _cacheTimestamp = now;
+  return _cachedWorldInfoEntries;
+}
+async function enrichEntriesWithOriginalContent(entries) {
+  if (!entries || entries.length === 0) return entries;
+  const activeEntries = await getCachedWorldInfoEntries();
+  const uidToContent = /* @__PURE__ */ new Map();
+  const uidToKeys = /* @__PURE__ */ new Map();
+  activeEntries.forEach((book) => {
+    book.entries.forEach((e) => {
+      uidToContent.set(e.uid, e.content || "");
+      uidToKeys.set(e.uid, Array.isArray(e.keys) ? e.keys : e.keys ? [e.keys] : []);
+    });
+  });
+  return entries.map((entry) => {
+    if (entry.action === "update" && entry.matched_uid) {
+      const originalContent = uidToContent.get(entry.matched_uid);
+      const originalKeys = uidToKeys.get(entry.matched_uid);
+      return {
+        ...entry,
+        originalContent: originalContent || null,
+        originalKeys: originalKeys || null
+      };
+    }
+    return entry;
+  });
+}
 function extractJSONFromAIOutput(rawContent) {
   if (!rawContent || typeof rawContent !== "string") {
     return "";
@@ -12546,7 +14648,8 @@ Identify and extract:
 4. **Events/Lore**: Historical events, rules of the world, or plot-critical facts.
 
 [Existing Lorebook Entries]
-The following entries already exist in the database. Check if the extracted information updates any of them:
+The following entries already exist in the database. If you extract information that relates to an existing entry, set "action" to "update" and include the "matched_uid". Your updated "content" should MERGE the existing information with any new facts (do not simply overwrite).
+
 ${existingLoreSummary || "(None)"}
 
 [Output Format]
@@ -12567,7 +14670,11 @@ Return ONLY a valid JSON object with the following structure:
 }
 
 [Rules]
-1. **Update vs New**: If the extracted entity matches an existing entry (by Keys or context), set "action" to "update" and provide the "matched_uid". The "content" should be the NEW updated version (merging old knowledge with new facts).
+1. **Update vs New**: If the extracted entity matches an existing entry (by Keys or context), set "action" to "update" and provide the "matched_uid". The "content" should be a MERGED version that:
+   - Preserves all important information from the existing entry
+   - Adds or updates with new facts from the chat history
+   - Resolves any contradictions by preferring newer information
+   - Maintains coherent organization
 2. **Ignore Trivial Details**: Only extract information that is likely to be relevant for future context.
 3. **Consolidate**: If an entity is mentioned multiple times, combine the information into a single entry.
 4. **Language**: The 'content' field MUST be in Chinese (if the chat is in Chinese).
@@ -12605,18 +14712,24 @@ async function previewExtractPrompt(historyLimit = 20) {
   const actualHistoryCount = matches ? matches.length : historyLimit;
   let existingLoreSummary = "";
   let existingEntriesCount = 0;
+  const CONTENT_PREVIEW_LENGTH = 300;
   try {
     const activeEntries = await getActiveWorldInfoEntries();
     const summaryList = [];
     activeEntries.forEach((book) => {
       book.entries.forEach((e) => {
         const keys = Array.isArray(e.keys) ? e.keys.join(", ") : e.keys;
-        summaryList.push(`UID: ${e.uid} | Keys: ${keys} | Book: ${book.bookName}`);
+        let contentPreview = e.content || "";
+        if (contentPreview.length > CONTENT_PREVIEW_LENGTH) {
+          contentPreview = contentPreview.substring(0, CONTENT_PREVIEW_LENGTH) + "...";
+        }
+        summaryList.push(`[UID: ${e.uid}] [Keys: ${keys}] [Book: ${book.bookName}]
+Content: ${contentPreview}`);
       });
     });
     existingEntriesCount = summaryList.length;
     if (summaryList.length > 0) {
-      existingLoreSummary = summaryList.join("\n");
+      existingLoreSummary = summaryList.join("\n---\n");
     }
   } catch (e) {
     TitaniaLogger.warn("\u83B7\u53D6\u73B0\u6709\u4E16\u754C\u4E66\u5931\u8D25", e);
@@ -12644,17 +14757,23 @@ async function extractLoreFromHistory(historyLimit = 20) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u63D0\u53D6\u8BBE\u5B9A");
   }
   let existingLoreSummary = "";
+  const CONTENT_PREVIEW_LENGTH = 300;
   try {
     const activeEntries = await getActiveWorldInfoEntries();
     const summaryList = [];
     activeEntries.forEach((book) => {
       book.entries.forEach((e) => {
         const keys = Array.isArray(e.keys) ? e.keys.join(", ") : e.keys;
-        summaryList.push(`UID: ${e.uid} | Keys: ${keys} | Book: ${book.bookName}`);
+        let contentPreview = e.content || "";
+        if (contentPreview.length > CONTENT_PREVIEW_LENGTH) {
+          contentPreview = contentPreview.substring(0, CONTENT_PREVIEW_LENGTH) + "...";
+        }
+        summaryList.push(`[UID: ${e.uid}] [Keys: ${keys}] [Book: ${book.bookName}]
+Content: ${contentPreview}`);
       });
     });
     if (summaryList.length > 0) {
-      existingLoreSummary = summaryList.join("\n");
+      existingLoreSummary = summaryList.join("\n---\n");
     }
   } catch (e) {
     TitaniaLogger.warn("\u83B7\u53D6\u73B0\u6709\u4E16\u754C\u4E66\u5931\u8D25\uFF0C\u5C06\u8DF3\u8FC7\u81EA\u52A8\u5339\u914D", e);
@@ -12688,9 +14807,10 @@ async function extractLoreFromHistory(historyLimit = 20) {
     if (!data || !Array.isArray(data.entries)) {
       throw new Error("\u8FD4\u56DE\u7684 JSON \u683C\u5F0F\u4E0D\u6B63\u786E (\u7F3A\u5C11 entries \u6570\u7EC4)");
     }
-    TitaniaLogger.info(`\u63D0\u53D6\u5B8C\u6210\uFF0C\u5171\u627E\u5230 ${data.entries.length} \u4E2A\u6761\u76EE`);
+    const entriesWithOriginal = await enrichEntriesWithOriginalContent(data.entries);
+    TitaniaLogger.info(`\u63D0\u53D6\u5B8C\u6210\uFF0C\u5171\u627E\u5230 ${entriesWithOriginal.length} \u4E2A\u6761\u76EE`);
     return {
-      entries: data.entries,
+      entries: entriesWithOriginal,
       rawResponse: rawContent
     };
   } catch (e) {
@@ -12706,7 +14826,7 @@ async function extractLoreFromHistory(historyLimit = 20) {
     throw error;
   }
 }
-var FEATURE_KEY;
+var FEATURE_KEY, _cachedWorldInfoEntries, _cacheTimestamp, CACHE_TTL;
 var init_loreExtractor = __esm({
   "src/core/loreExtractor.js"() {
     init_helpers();
@@ -12715,6 +14835,9 @@ var init_loreExtractor = __esm({
     init_connection();
     init_storage();
     FEATURE_KEY = "lore_extractor";
+    _cachedWorldInfoEntries = null;
+    _cacheTimestamp = 0;
+    CACHE_TTL = 3e4;
   }
 });
 
@@ -13046,6 +15169,27 @@ var init_embeddings = __esm({
 });
 
 // src/core/vectorStore.js
+function readUnsavedCacheFromStorage() {
+  try {
+    return localStorage.getItem(UNSAVED_CACHE_KEY) === "1";
+  } catch (_e) {
+    return false;
+  }
+}
+function writeUnsavedCacheToStorage(value) {
+  try {
+    localStorage.setItem(UNSAVED_CACHE_KEY, value ? "1" : "0");
+  } catch (_e) {
+  }
+}
+function setUnsavedCache(value) {
+  hasUnsavedVectorsCache = Boolean(value);
+  unsavedCacheInitialized = true;
+  writeUnsavedCacheToStorage(hasUnsavedVectorsCache);
+}
+function resetUnsavedCacheFromMetadataChange() {
+  void refreshUnsavedVectorsCache();
+}
 async function initVectorDB() {
   if (dbInstance) {
     return dbInstance;
@@ -13096,7 +15240,12 @@ async function saveBatchEmbeddings(characterId, entries) {
       const request = store.put(data);
       request.onsuccess = () => successCount++;
     }
-    transaction.oncomplete = () => resolve(successCount);
+    transaction.oncomplete = () => {
+      if (successCount > 0) {
+        setUnsavedCache(true);
+      }
+      resolve(successCount);
+    };
     transaction.onerror = () => {
       TitaniaLogger.error("\u6279\u91CF\u4FDD\u5B58 Embeddings \u5931\u8D25", transaction.error);
       reject(transaction.error);
@@ -13132,6 +15281,7 @@ async function clearCharacterVectors(characterId) {
     metadataStore.delete(characterId);
     transaction.oncomplete = () => {
       TitaniaLogger.info(`\u5DF2\u6E05\u9664\u89D2\u8272 ${characterId} \u7684 ${deleteCount} \u6761\u5411\u91CF\u7D22\u5F15`);
+      resetUnsavedCacheFromMetadataChange();
       resolve(deleteCount);
     };
     transaction.onerror = () => {
@@ -13218,6 +15368,7 @@ async function exportVectors(characterId) {
     ...metadata || {},
     lastExportedAt: Date.now()
   });
+  resetUnsavedCacheFromMetadataChange();
   return exportData;
 }
 async function importVectors(characterId, data, clearExisting = true) {
@@ -13264,6 +15415,11 @@ async function importVectors(characterId, data, clearExisting = true) {
     metadataStore.put(metadataEntry);
     transaction.oncomplete = () => {
       TitaniaLogger.info(`\u5BFC\u5165\u5B8C\u6210: ${imported} \u6761\u6210\u529F, ${skipped} \u6761\u8DF3\u8FC7`);
+      if (imported > 0) {
+        setUnsavedCache(true);
+      } else {
+        resetUnsavedCacheFromMetadataChange();
+      }
       resolve({ imported, skipped });
     };
     transaction.onerror = () => {
@@ -13302,20 +15458,33 @@ async function checkUnsavedVectors() {
   try {
     const characters = await getAllIndexedCharacters();
     if (characters.length === 0) {
+      setUnsavedCache(false);
       return false;
     }
     for (const charId of characters) {
       const result = await checkCharacterUnsavedVectors(charId);
       if (result.hasNew) {
         TitaniaLogger.info(`\u68C0\u6D4B\u5230\u89D2\u8272 ${charId} \u6709 ${result.count} \u6761\u672A\u5BFC\u51FA\u7684\u5411\u91CF`);
+        setUnsavedCache(true);
         return true;
       }
     }
+    setUnsavedCache(false);
     return false;
   } catch (e) {
     TitaniaLogger.warn("\u68C0\u67E5\u672A\u4FDD\u5B58\u5411\u91CF\u5931\u8D25", e);
+    unsavedCacheInitialized = true;
     return false;
   }
+}
+function hasUnsavedVectorsSync() {
+  return hasUnsavedVectorsCache;
+}
+async function refreshUnsavedVectorsCache() {
+  return checkUnsavedVectors();
+}
+function isUnsavedCacheInitialized() {
+  return unsavedCacheInitialized;
 }
 async function getAllIndexedCharacters() {
   const db = await initVectorDB();
@@ -13330,7 +15499,7 @@ async function getAllIndexedCharacters() {
     };
   });
 }
-var DB_NAME, DB_VERSION, STORE_EMBEDDINGS, STORE_METADATA, dbInstance;
+var DB_NAME, DB_VERSION, STORE_EMBEDDINGS, STORE_METADATA, UNSAVED_CACHE_KEY, dbInstance, hasUnsavedVectorsCache, unsavedCacheInitialized;
 var init_vectorStore = __esm({
   "src/core/vectorStore.js"() {
     init_logger();
@@ -13339,7 +15508,10 @@ var init_vectorStore = __esm({
     DB_VERSION = 1;
     STORE_EMBEDDINGS = "embeddings";
     STORE_METADATA = "metadata";
+    UNSAVED_CACHE_KEY = "titania_has_unsaved_vectors";
     dbInstance = null;
+    hasUnsavedVectorsCache = readUnsavedCacheFromStorage();
+    unsavedCacheInitialized = true;
   }
 });
 
@@ -13443,6 +15615,152 @@ var init_semanticSearch = __esm({
   "src/core/semanticSearch.js"() {
     init_embeddings();
     init_vectorStore();
+    init_logger();
+  }
+});
+
+// src/core/textCleaner.js
+function getTextCleaningConfig() {
+  const data = getExtData();
+  const embeddingConfig = data.embedding_config || {};
+  return embeddingConfig.text_cleaning || {
+    remove_html_tags: true,
+    remove_style_tags: true,
+    remove_thinking_tags: true,
+    remove_ooc_tags: true,
+    remove_system_tags: true,
+    remove_markdown: false,
+    remove_macro_residue: true,
+    remove_bracket_markers: true,
+    remove_bracket_content: true,
+    custom_tags_to_remove: "",
+    min_text_length: 20
+  };
+}
+function removeTagsWithContent(text, tags) {
+  if (!text || !tags || tags.length === 0) return text;
+  let result = text;
+  for (const tag of tags) {
+    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, "gi");
+    result = result.replace(regex, "");
+  }
+  return result;
+}
+function removeHtmlTagsKeepContent(text) {
+  if (!text) return text;
+  return text.replace(/<[^>]*>/g, "");
+}
+function removeMarkdownFormatting(text) {
+  if (!text) return text;
+  let result = text;
+  result = result.replace(/\*\*([^*]+)\*\*/g, "$1");
+  result = result.replace(/__([^_]+)__/g, "$1");
+  result = result.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "$1");
+  result = result.replace(/(?<!_)_([^_\n]+)_(?!_)/g, "$1");
+  result = result.replace(/~~([^~]+)~~/g, "$1");
+  result = result.replace(/`([^`]+)`/g, "$1");
+  result = result.replace(/```[\s\S]*?```/g, "");
+  result = result.replace(/^#{1,6}\s+/gm, "");
+  result = result.replace(/^\s*[-*+]\s+/gm, "");
+  result = result.replace(/^\s*\d+\.\s+/gm, "");
+  result = result.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  result = result.replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1");
+  return result;
+}
+function removeMacroResidue(text) {
+  if (!text) return text;
+  return text.replace(/\{\{[^}]+\}\}/g, "");
+}
+function removeBracketMarkers(text) {
+  if (!text) return text;
+  return text.replace(/\[(System|OOC|Note|Author'?s?\s*Note|TL|T\/L|Narrator|A\/N)[^\]]*\]/gi, "");
+}
+function removeBracketContent(text) {
+  if (!text) return text;
+  return text.replace(/\[[^\]]*\]/g, "");
+}
+function normalizeWhitespace(text) {
+  if (!text) return text;
+  let result = text;
+  result = result.replace(/\n{3,}/g, "\n\n");
+  result = result.replace(/[ \t]+/g, " ");
+  result = result.split("\n").map((line) => line.trim()).join("\n");
+  return result.trim();
+}
+function cleanTextForEmbedding(text, customConfig = null) {
+  if (!text || typeof text !== "string") return "";
+  const config = customConfig || getTextCleaningConfig();
+  let cleaned = text;
+  if (config.remove_style_tags) {
+    cleaned = removeTagsWithContent(cleaned, ["style", "script"]);
+  }
+  if (config.remove_thinking_tags) {
+    cleaned = removeTagsWithContent(cleaned, ["thinking", "think", "thought", "thoughts"]);
+  }
+  if (config.remove_ooc_tags) {
+    cleaned = removeTagsWithContent(cleaned, ["ooc", "OOC"]);
+  }
+  if (config.remove_system_tags) {
+    cleaned = removeTagsWithContent(cleaned, [
+      "system",
+      "note",
+      "notes",
+      "meta",
+      "debug",
+      "comment",
+      "aside",
+      "internal",
+      "analysis",
+      "reflection",
+      "planning",
+      "author_note"
+    ]);
+  }
+  if (config.custom_tags_to_remove && config.custom_tags_to_remove.trim()) {
+    const customTags = config.custom_tags_to_remove.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
+    if (customTags.length > 0) {
+      cleaned = removeTagsWithContent(cleaned, customTags);
+    }
+  }
+  if (config.remove_html_tags) {
+    cleaned = removeHtmlTagsKeepContent(cleaned);
+  }
+  if (config.remove_markdown) {
+    cleaned = removeMarkdownFormatting(cleaned);
+  }
+  if (config.remove_macro_residue) {
+    cleaned = removeMacroResidue(cleaned);
+  }
+  if (config.remove_bracket_markers) {
+    cleaned = removeBracketMarkers(cleaned);
+  }
+  if (config.remove_bracket_content) {
+    cleaned = removeBracketContent(cleaned);
+  }
+  cleaned = normalizeWhitespace(cleaned);
+  return cleaned;
+}
+function isValidCleanedText(cleanedText, minLength = null) {
+  if (!cleanedText || typeof cleanedText !== "string") return false;
+  const config = getTextCleaningConfig();
+  const threshold = minLength !== null ? minLength : config.min_text_length || 20;
+  return cleanedText.trim().length >= threshold;
+}
+function getCleaningStats(original, cleaned) {
+  const originalLength = original ? original.length : 0;
+  const cleanedLength = cleaned ? cleaned.length : 0;
+  const removedChars = originalLength - cleanedLength;
+  const reductionPercent = originalLength > 0 ? Math.round(removedChars / originalLength * 100) : 0;
+  return {
+    originalLength,
+    cleanedLength,
+    removedChars,
+    reductionPercent
+  };
+}
+var init_textCleaner = __esm({
+  "src/core/textCleaner.js"() {
+    init_storage();
     init_logger();
   }
 });
@@ -13760,26 +16078,118 @@ Please generate a summary based on the above content.`;
     { role: "user", content: userPrompt }
   ];
 }
+async function getVectorIndexStatus(characterId) {
+  const metadata = await getIndexStatus(characterId);
+  let currentTotalMessages = 0;
+  try {
+    if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+      const ctx = SillyTavern.getContext();
+      currentTotalMessages = ctx.chat?.length || 0;
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u5F53\u524D\u6D88\u606F\u603B\u6570\u5931\u8D25", e);
+  }
+  if (!metadata) {
+    return {
+      hasIndex: false,
+      totalIndexed: 0,
+      lastMessageIndex: -1,
+      newMessagesCount: currentTotalMessages
+    };
+  }
+  const lastMessageIndex = metadata.lastMessageIndex || -1;
+  const newMessagesCount = Math.max(0, currentTotalMessages - lastMessageIndex - 1);
+  return {
+    hasIndex: true,
+    totalIndexed: metadata.actualVectorCount || 0,
+    lastMessageIndex,
+    newMessagesCount
+  };
+}
 async function buildVectorIndex(characterId, options = {}) {
   const limit = options.limit || 1e3;
+  const incremental = options.incremental !== false;
+  const rebuild = options.rebuild === true;
   const onProgress = options.onProgress;
-  TitaniaLogger.info(`\u5F00\u59CB\u4E3A\u89D2\u8272 ${characterId} \u5EFA\u7ACB\u5411\u91CF\u7D22\u5F15...`);
+  TitaniaLogger.info(`\u5F00\u59CB\u4E3A\u89D2\u8272 ${characterId} \u5EFA\u7ACB\u5411\u91CF\u7D22\u5F15...`, { incremental, rebuild });
   if (onProgress) onProgress(0, 0, "\u6B63\u5728\u83B7\u53D6\u804A\u5929\u5386\u53F2...");
-  const history = getChatHistory2(limit);
-  if (!history || history.trim().length === 0) {
+  let chatMessages = [];
+  try {
+    if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+      const ctx = SillyTavern.getContext();
+      chatMessages = ctx.chat || [];
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u804A\u5929\u5386\u53F2\u5931\u8D25", e);
+  }
+  if (chatMessages.length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u5EFA\u7ACB\u7D22\u5F15");
   }
-  const messagePattern = /(?:^|\n)(?:\*\*[^*]+\*\*:|[^:\n]+:)/g;
-  const segments = history.split(messagePattern).filter((s) => s.trim().length > 20);
-  if (segments.length === 0) {
-    const paragraphs = history.split(/\n\n+/).filter((s) => s.trim().length > 20);
-    segments.push(...paragraphs);
+  let startIndex = 0;
+  let mode = "full";
+  if (rebuild) {
+    if (onProgress) onProgress(0, 0, "\u6E05\u9664\u73B0\u6709\u7D22\u5F15...");
+    await clearCharacterVectors(characterId);
+    mode = "rebuild";
+    TitaniaLogger.info("\u5DF2\u6E05\u9664\u73B0\u6709\u7D22\u5F15\uFF0C\u5F00\u59CB\u5B8C\u6574\u91CD\u5EFA");
+  } else if (incremental) {
+    const metadata = await getIndexStatus(characterId);
+    if (metadata && typeof metadata.lastMessageIndex === "number") {
+      startIndex = metadata.lastMessageIndex + 1;
+      mode = "incremental";
+      TitaniaLogger.info(`\u589E\u91CF\u6A21\u5F0F\uFF1A\u4ECE\u6D88\u606F ${startIndex} \u5F00\u59CB`);
+    }
   }
-  TitaniaLogger.info(`\u627E\u5230 ${segments.length} \u4E2A\u6587\u672C\u7247\u6BB5`);
-  if (onProgress) onProgress(0, segments.length, `\u51C6\u5907\u5904\u7406 ${segments.length} \u4E2A\u7247\u6BB5...`);
+  const messagesToProcess = chatMessages.map((msg, index) => ({ msg, originalIndex: index })).filter(({ msg, originalIndex }) => {
+    if (originalIndex < startIndex) return false;
+    if (msg.is_system) return false;
+    if (!msg.mes || msg.mes.trim().length < 20) return false;
+    return true;
+  }).slice(0, limit);
+  if (messagesToProcess.length === 0) {
+    TitaniaLogger.info("\u6CA1\u6709\u65B0\u6D88\u606F\u9700\u8981\u5904\u7406");
+    return {
+      indexed: 0,
+      skipped: 0,
+      mode,
+      message: "\u6CA1\u6709\u65B0\u6D88\u606F\u9700\u8981\u5411\u91CF\u5316"
+    };
+  }
+  TitaniaLogger.info(`\u627E\u5230 ${messagesToProcess.length} \u6761\u6D88\u606F\u9700\u8981\u5904\u7406 (\u4ECE\u7D22\u5F15 ${startIndex} \u5F00\u59CB)`);
+  if (onProgress) onProgress(0, messagesToProcess.length, `\u51C6\u5907\u5904\u7406 ${messagesToProcess.length} \u6761\u6D88\u606F...`);
+  const segments = [];
+  const cleaningStats = { total: 0, cleaned: 0, skipped: 0, totalRemoved: 0 };
+  for (const { msg } of messagesToProcess) {
+    const sender = msg.is_user ? "User" : msg.name || "Character";
+    const rawText = `${sender}: ${msg.mes}`;
+    const cleanedText = cleanTextForEmbedding(rawText);
+    cleaningStats.total++;
+    if (isValidCleanedText(cleanedText)) {
+      segments.push(cleanedText);
+      cleaningStats.cleaned++;
+      const stats = getCleaningStats(rawText, cleanedText);
+      cleaningStats.totalRemoved += stats.removedChars;
+    } else {
+      cleaningStats.skipped++;
+      segments.push(null);
+    }
+  }
+  TitaniaLogger.info(`\u6587\u672C\u6E05\u6D17\u5B8C\u6210: ${cleaningStats.cleaned} \u6761\u6709\u6548, ${cleaningStats.skipped} \u6761\u8DF3\u8FC7, \u5171\u79FB\u9664 ${cleaningStats.totalRemoved} \u5B57\u7B26`);
+  const validIndices = segments.map((s, i) => s !== null ? i : -1).filter((i) => i !== -1);
+  const validSegments = segments.filter((s) => s !== null);
+  const validMessagesToProcess = validIndices.map((i) => messagesToProcess[i]);
+  if (validSegments.length === 0) {
+    TitaniaLogger.info("\u6E05\u6D17\u540E\u6CA1\u6709\u6709\u6548\u6D88\u606F\u9700\u8981\u5904\u7406");
+    return {
+      indexed: 0,
+      skipped: cleaningStats.skipped,
+      mode,
+      message: "\u6E05\u6D17\u540E\u6CA1\u6709\u6709\u6548\u6D88\u606F\u9700\u8981\u5411\u91CF\u5316"
+    };
+  }
   let vectors;
   try {
-    vectors = await getBatchEmbeddings(segments, {
+    vectors = await getBatchEmbeddings(validSegments, {
       onProgress: (current, total) => {
         if (onProgress) onProgress(current, total, `\u5411\u91CF\u5316\u4E2D... ${current}/${total}`);
       },
@@ -13789,23 +16199,120 @@ async function buildVectorIndex(characterId, options = {}) {
     TitaniaLogger.error("\u6279\u91CF\u5411\u91CF\u5316\u5931\u8D25", e);
     throw new Error("\u5411\u91CF\u5316\u5931\u8D25: " + e.message);
   }
-  if (onProgress) onProgress(segments.length, segments.length, "\u6B63\u5728\u4FDD\u5B58\u5230\u6570\u636E\u5E93...");
-  const entries = segments.map((text, index) => ({
-    messageIndex: index,
-    text,
-    vector: vectors[index]
+  if (onProgress) onProgress(validMessagesToProcess.length, validMessagesToProcess.length, "\u6B63\u5728\u4FDD\u5B58\u5230\u6570\u636E\u5E93...");
+  const entries = validMessagesToProcess.map(({ msg, originalIndex }, i) => ({
+    messageIndex: originalIndex,
+    // 使用聊天历史中的真实索引
+    text: validSegments[i],
+    vector: vectors[i]
   }));
   const savedCount = await saveBatchEmbeddings(characterId, entries);
+  const lastProcessedIndex = messagesToProcess.length > 0 ? messagesToProcess[messagesToProcess.length - 1].originalIndex : startIndex - 1;
+  const currentEmbeddingModel = getEmbeddingConfig().model;
+  const existingMetadata = await getIndexStatus(characterId);
+  const previousIndexedCount = existingMetadata?.actualVectorCount || 0;
   await updateIndexMetadata(characterId, {
-    totalMessages: segments.length,
-    indexedMessages: savedCount,
-    lastIndexedAt: Date.now()
+    totalMessages: chatMessages.length,
+    lastMessageIndex: lastProcessedIndex,
+    // 记录最后处理的消息索引
+    lastIndexedAt: Date.now(),
+    indexMode: mode,
+    embeddingModel: currentEmbeddingModel
+    // 记录使用的模型
   });
-  TitaniaLogger.info(`\u5411\u91CF\u7D22\u5F15\u5EFA\u7ACB\u5B8C\u6210: ${savedCount} \u6761\u5DF2\u7D22\u5F15`);
+  TitaniaLogger.info(`\u5411\u91CF\u7D22\u5F15${mode === "incremental" ? "\u589E\u91CF\u66F4\u65B0" : "\u5EFA\u7ACB"}\u5B8C\u6210: ${savedCount} \u6761\u5DF2\u7D22\u5F15`);
   return {
     indexed: savedCount,
-    skipped: segments.length - savedCount
+    skipped: cleaningStats.skipped + (validMessagesToProcess.length - savedCount),
+    mode,
+    totalInDatabase: previousIndexedCount + savedCount,
+    cleaningStats,
+    message: mode === "incremental" ? `\u589E\u91CF\u6DFB\u52A0 ${savedCount} \u6761\u5411\u91CF\uFF08\u603B\u8BA1 ${previousIndexedCount + savedCount} \u6761\uFF09` : `\u5DF2\u7D22\u5F15 ${savedCount} \u6761\u6D88\u606F`
   };
+}
+function getAutoVectorizeConfig() {
+  const data = getExtData();
+  const embeddingConfig = data.embedding_config || {};
+  return embeddingConfig.auto_vectorize || {
+    enabled: false,
+    batch_threshold: 5,
+    notify_user: true
+  };
+}
+async function checkAutoVectorizeNeeded(characterId) {
+  const config = getAutoVectorizeConfig();
+  if (!config.enabled) {
+    return { needsVectorize: false, pendingCount: 0 };
+  }
+  let currentTotalMessages = 0;
+  try {
+    if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+      const ctx = SillyTavern.getContext();
+      currentTotalMessages = ctx.chat?.length || 0;
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u83B7\u53D6\u5F53\u524D\u6D88\u606F\u603B\u6570\u5931\u8D25", e);
+    return { needsVectorize: false, pendingCount: 0 };
+  }
+  const indexStatus = await getIndexStatus(characterId);
+  const lastIndexedMessage = indexStatus?.lastMessageIndex ?? -1;
+  const pendingCount = currentTotalMessages - lastIndexedMessage - 1;
+  const needsVectorize = pendingCount >= config.batch_threshold;
+  return { needsVectorize, pendingCount };
+}
+async function autoVectorizeIfNeeded(characterId) {
+  const config = getAutoVectorizeConfig();
+  if (!config.enabled) {
+    return null;
+  }
+  if (autoVectorizeState.isProcessing) {
+    TitaniaLogger.info("\u81EA\u52A8\u5411\u91CF\u5316\u6B63\u5728\u8FDB\u884C\u4E2D\uFF0C\u8DF3\u8FC7");
+    return null;
+  }
+  const { needsVectorize, pendingCount } = await checkAutoVectorizeNeeded(characterId);
+  if (!needsVectorize) {
+    TitaniaLogger.info(`\u672A\u8FBE\u5230\u81EA\u52A8\u5411\u91CF\u5316\u9608\u503C (${pendingCount}/${config.batch_threshold})`);
+    return null;
+  }
+  autoVectorizeState.isProcessing = true;
+  autoVectorizeState.lastCharacterId = characterId;
+  try {
+    TitaniaLogger.info(`\u89E6\u53D1\u81EA\u52A8\u5411\u91CF\u5316: ${pendingCount} \u6761\u5F85\u5904\u7406\u6D88\u606F`);
+    const result = await buildVectorIndex(characterId, {
+      incremental: true,
+      onProgress: (current, total, status) => {
+      }
+    });
+    if (config.notify_user && result.indexed > 0 && window.toastr) {
+      toastr.success(
+        `\u81EA\u52A8\u7D22\u5F15\u4E86 ${result.indexed} \u6761\u6D88\u606F`,
+        "Titania \u5411\u91CF\u5316",
+        { timeOut: 3e3 }
+      );
+    }
+    return result;
+  } catch (e) {
+    TitaniaLogger.error("\u81EA\u52A8\u5411\u91CF\u5316\u5931\u8D25", e);
+    if (config.notify_user && window.toastr) {
+      toastr.warning("\u81EA\u52A8\u5411\u91CF\u5316\u5931\u8D25: " + e.message, "Titania");
+    }
+    return null;
+  } finally {
+    autoVectorizeState.isProcessing = false;
+  }
+}
+async function incrementAutoVectorizeCounter(characterId) {
+  const config = getAutoVectorizeConfig();
+  if (!config.enabled) return;
+  if (autoVectorizeState.lastCharacterId !== characterId) {
+    autoVectorizeState.pendingCount = 0;
+    autoVectorizeState.lastCharacterId = characterId;
+  }
+  autoVectorizeState.pendingCount++;
+  if (autoVectorizeState.pendingCount >= config.batch_threshold) {
+    autoVectorizeState.pendingCount = 0;
+    await autoVectorizeIfNeeded(characterId);
+  }
 }
 function summaryToLoreEntry(summary, options = {}) {
   const now = /* @__PURE__ */ new Date();
@@ -13823,7 +16330,7 @@ function summaryToLoreEntry(summary, options = {}) {
     action: "new"
   };
 }
-var FEATURE_KEY2;
+var FEATURE_KEY2, autoVectorizeState;
 var init_summarizer = __esm({
   "src/core/summarizer.js"() {
     init_helpers();
@@ -13835,7 +16342,13 @@ var init_summarizer = __esm({
     init_vectorStore();
     init_embeddings();
     init_vectorStore();
+    init_textCleaner();
     FEATURE_KEY2 = "summarizer";
+    autoVectorizeState = {
+      pendingCount: 0,
+      lastCharacterId: null,
+      isProcessing: false
+    };
   }
 });
 
@@ -13844,6 +16357,26 @@ var loreReviewWindow_exports = {};
 __export(loreReviewWindow_exports, {
   showLoreReviewWindow: () => showLoreReviewWindow
 });
+function withTimeout2(promise, timeout = 5e3, errorMsg = "Operation timed out") {
+  return Promise.race([
+    promise,
+    new Promise(
+      (_, reject) => setTimeout(() => reject(new Error(errorMsg)), timeout)
+    )
+  ]);
+}
+async function safeAsyncOperation(asyncFn, timeout, fallbackValue, operationName) {
+  try {
+    return await withTimeout2(
+      asyncFn(),
+      timeout,
+      `${operationName} \u8D85\u65F6`
+    );
+  } catch (e) {
+    TitaniaLogger.warn(`${operationName} \u5931\u8D25`, e.message);
+    return fallbackValue;
+  }
+}
 async function getHideChatMessageRange() {
   if (!_hideChatMessageRange) {
     try {
@@ -14112,7 +16645,7 @@ function showRawResponseDialog(rawContent, isError = false) {
                         font-size: 0.9em;
                         color: #ddd;
                         line-height: 1.5;
-                    ">${escapeHtml2(rawContent || "(\u7A7A)")}</pre>
+                    ">${escapeHtml3(rawContent || "(\u7A7A)")}</pre>
                 </div>
             </div>
             <div class="t-dialog-footer">
@@ -14137,7 +16670,7 @@ function showRawResponseDialog(rawContent, isError = false) {
     });
   });
 }
-function escapeHtml2(text) {
+function escapeHtml3(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -14310,6 +16843,41 @@ async function showLoreReviewWindow() {
                                     <div id="t-matched-entry-info"></div>
                                     <button id="t-btn-change-match" class="t-btn t-btn-xs">\u66F4\u6539\u5173\u8054</button>
                                 </div>
+                                
+                                <!-- \u539F\u6709\u5185\u5BB9\u5BF9\u6BD4\u533A\u57DF -->
+                                <div class="t-original-content-section">
+                                    <div class="t-original-header">
+                                        <span><i class="fa-solid fa-history"></i> \u539F\u6709\u5185\u5BB9</span>
+                                        <button id="t-btn-toggle-original" class="t-btn t-btn-xs" title="\u5C55\u5F00/\u6536\u8D77">
+                                            <i class="fa-solid fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                    <div id="t-original-content-box" class="t-original-content-box">
+                                        <div id="t-original-content-text" class="t-original-content-text"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- \u4FDD\u5B58\u6A21\u5F0F\u9009\u62E9 -->
+                                <div class="t-save-mode-section">
+                                    <label>\u4FDD\u5B58\u6A21\u5F0F:</label>
+                                    <div class="t-save-mode-options">
+                                        <label class="t-radio-label">
+                                            <input type="radio" name="t-save-mode" value="replace" checked>
+                                            <span><i class="fa-solid fa-exchange-alt"></i> \u66FF\u6362</span>
+                                            <small>\u7528\u65B0\u5185\u5BB9\u66FF\u6362\u539F\u6709\u5185\u5BB9</small>
+                                        </label>
+                                        <label class="t-radio-label">
+                                            <input type="radio" name="t-save-mode" value="append">
+                                            <span><i class="fa-solid fa-plus"></i> \u8FFD\u52A0</span>
+                                            <small>\u5728\u539F\u6709\u5185\u5BB9\u540E\u8FFD\u52A0\u65B0\u5185\u5BB9</small>
+                                        </label>
+                                        <label class="t-radio-label">
+                                            <input type="radio" name="t-save-mode" value="prepend">
+                                            <span><i class="fa-solid fa-arrow-up"></i> \u524D\u7F6E</span>
+                                            <small>\u5728\u539F\u6709\u5185\u5BB9\u524D\u63D2\u5165\u65B0\u5185\u5BB9</small>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div id="t-editor-placeholder" class="t-empty-state">
@@ -14481,12 +17049,25 @@ async function showLoreReviewWindow() {
                     <div class="t-vector-actions-card">
                         <h3><i class="fa-solid fa-tools"></i> \u64CD\u4F5C</h3>
                         
+                        <!-- \u589E\u91CF\u72B6\u6001\u63D0\u793A -->
+                        <div id="t-incremental-status" class="t-incremental-status" style="display: none;">
+                            <div class="t-incremental-info">
+                                <i class="fa-solid fa-info-circle"></i>
+                                <span id="t-incremental-message">\u68C0\u6D4B\u5230\u65B0\u6D88\u606F</span>
+                            </div>
+                        </div>
+                        
                         <div class="t-action-group">
                             <div class="t-action-item">
-                                <button id="t-btn-build-index" class="t-btn t-btn-primary" style="width: 100%;">
-                                    <i class="fa-solid fa-hammer"></i> \u5EFA\u7ACB/\u91CD\u5EFA\u7D22\u5F15
-                                </button>
-                                <small>\u5C06\u804A\u5929\u5386\u53F2\u5411\u91CF\u5316\uFF0C\u7528\u4E8E\u8BED\u4E49\u68C0\u7D22</small>
+                                <div class="t-build-index-buttons">
+                                    <button id="t-btn-build-index" class="t-btn t-btn-primary" style="flex: 1;">
+                                        <i class="fa-solid fa-plus"></i> \u589E\u91CF\u66F4\u65B0
+                                    </button>
+                                    <button id="t-btn-rebuild-index" class="t-btn" title="\u6E05\u9664\u73B0\u6709\u7D22\u5F15\u5E76\u5B8C\u6574\u91CD\u5EFA">
+                                        <i class="fa-solid fa-redo"></i> \u91CD\u5EFA
+                                    </button>
+                                </div>
+                                <small>\u589E\u91CF\u66F4\u65B0\u53EA\u5904\u7406\u65B0\u6D88\u606F\uFF0C\u91CD\u5EFA\u4F1A\u6E05\u9664\u73B0\u6709\u7D22\u5F15</small>
                             </div>
                             
                             <div id="t-index-progress" style="display: none; margin-top: 10px;">
@@ -14513,6 +17094,16 @@ async function showLoreReviewWindow() {
                         </div>
 
                         <div class="t-action-group" style="margin-top: 20px;">
+                            <h4><i class="fa-solid fa-broom"></i> \u6587\u672C\u6E05\u6D17\u9884\u89C8</h4>
+                            <p style="color: #888; font-size: 0.85em; margin-bottom: 10px;">
+                                \u9884\u89C8\u5411\u91CF\u5316\u524D\u7684\u6587\u672C\u6E05\u6D17\u6548\u679C\uFF0C\u67E5\u770B\u54EA\u4E9B\u5185\u5BB9\u4F1A\u88AB\u79FB\u9664\u3002
+                            </p>
+                            <button id="t-btn-preview-cleaning" class="t-btn">
+                                <i class="fa-solid fa-eye"></i> \u9884\u89C8\u6E05\u6D17\u6548\u679C
+                            </button>
+                        </div>
+
+                        <div class="t-action-group" style="margin-top: 20px;">
                             <h4><i class="fa-solid fa-plug"></i> Embedding API \u914D\u7F6E</h4>
                             <p style="color: #888; font-size: 0.85em; margin-bottom: 10px;">
                                 \u5411\u91CF\u5316\u9700\u8981\u4E13\u7528\u7684 Embedding API\uFF0C\u8BF7\u5728\u300C\u8BBE\u7F6E\u300D\u4E2D\u914D\u7F6E\u3002
@@ -14531,46 +17122,65 @@ async function showLoreReviewWindow() {
     `;
   $("body").append(html);
   bindEvents();
+  const LOAD_TIMEOUT = 8e3;
   setTimeout(async () => {
     try {
-      let ctx = { charId: "unknown", charName: "\u672A\u77E5\u89D2\u8272" };
-      try {
-        ctx = await getContextData();
-      } catch (e) {
-        TitaniaLogger.warn("\u83B7\u53D6\u4E0A\u4E0B\u6587\u5931\u8D25", e);
-      }
+      const ctx = await safeAsyncOperation(
+        () => getContextData(),
+        LOAD_TIMEOUT,
+        { charId: "unknown", charName: "\u672A\u77E5\u89D2\u8272" },
+        "\u83B7\u53D6\u4E0A\u4E0B\u6587"
+      );
       currentCharacterId = ctx.charId || ctx.charName || "unknown";
       currentCharacterName = ctx.charName || ctx.charId || "\u672A\u77E5\u89D2\u8272";
       $("#t-vector-char-name").text(currentCharacterName);
-      getIndexStatus(currentCharacterId).then((indexStatus) => {
-        if (indexStatus) {
-          const statusHtml = `<span class="t-index-status t-index-ready">\u2705 ${indexStatus.actualVectorCount} \u6761</span>`;
-          $("#t-index-status-display").html(statusHtml);
-          $("#t-vector-status").text(`\u5DF2\u5EFA\u7ACB (${indexStatus.actualVectorCount} \u6761)`);
-          $("#t-vector-model").text(indexStatus.embeddingModel || "\u672A\u77E5");
-          $("#t-vector-last-export").text(
-            indexStatus.lastExportedAt ? new Date(indexStatus.lastExportedAt).toLocaleString() : "\u4ECE\u672A\u5BFC\u51FA"
-          );
-          $("#t-btn-export-vectors, #t-btn-clear-vectors").prop("disabled", false);
-          $("#t-use-vector-search").prop("disabled", false);
-        } else {
-          const statusHtml = `<span class="t-index-status t-index-empty">\u274C \u672A\u5EFA\u7ACB</span>`;
-          $("#t-index-status-display").html(statusHtml);
-          $("#t-vector-status").text("\u672A\u5EFA\u7ACB");
-          $("#t-vector-model").text("\u672A\u77E5");
-          $("#t-vector-last-export").text("\u4ECE\u672A\u5BFC\u51FA");
-          $("#t-btn-export-vectors, #t-btn-clear-vectors").prop("disabled", true);
-          $("#t-use-vector-search").prop("disabled", true).prop("checked", false);
-        }
-      }).catch((e) => {
-        TitaniaLogger.warn("\u83B7\u53D6\u5411\u91CF\u7D22\u5F15\u72B6\u6001\u5931\u8D25", e);
-        $("#t-index-status-display").html(`<span class="t-index-status t-index-empty">\u26A0\uFE0F \u52A0\u8F7D\u5931\u8D25</span>`);
-      });
-      initWorldBookSelect().catch((e) => {
-        TitaniaLogger.warn("\u521D\u59CB\u5316\u4E16\u754C\u4E66\u5217\u8868\u5931\u8D25", e);
-      });
+      const results = await Promise.allSettled([
+        // 2a. 获取索引状态
+        safeAsyncOperation(
+          () => getIndexStatus(currentCharacterId),
+          LOAD_TIMEOUT,
+          null,
+          "\u83B7\u53D6\u5411\u91CF\u7D22\u5F15\u72B6\u6001"
+        ),
+        // 2b. 初始化世界书列表
+        safeAsyncOperation(
+          () => initWorldBookSelect(),
+          LOAD_TIMEOUT,
+          null,
+          "\u521D\u59CB\u5316\u4E16\u754C\u4E66\u5217\u8868"
+        ),
+        // 2c. 更新增量向量化状态
+        safeAsyncOperation(
+          () => updateIncrementalStatus(),
+          LOAD_TIMEOUT,
+          null,
+          "\u66F4\u65B0\u589E\u91CF\u72B6\u6001"
+        )
+      ]);
+      const indexStatus = results[0].status === "fulfilled" ? results[0].value : null;
+      if (indexStatus) {
+        const statusHtml = `<span class="t-index-status t-index-ready">\u2705 ${indexStatus.actualVectorCount} \u6761</span>`;
+        $("#t-index-status-display").html(statusHtml);
+        $("#t-vector-status").text(`\u5DF2\u5EFA\u7ACB (${indexStatus.actualVectorCount} \u6761)`);
+        $("#t-vector-model").text(indexStatus.embeddingModel || "\u672A\u77E5");
+        $("#t-vector-last-export").text(
+          indexStatus.lastExportedAt ? new Date(indexStatus.lastExportedAt).toLocaleString() : "\u4ECE\u672A\u5BFC\u51FA"
+        );
+        $("#t-btn-export-vectors, #t-btn-clear-vectors").prop("disabled", false);
+        $("#t-use-vector-search").prop("disabled", false);
+      } else {
+        const statusHtml = `<span class="t-index-status t-index-empty">\u274C \u672A\u5EFA\u7ACB</span>`;
+        $("#t-index-status-display").html(statusHtml);
+        $("#t-vector-status").text("\u672A\u5EFA\u7ACB");
+        $("#t-vector-model").text("\u672A\u77E5");
+        $("#t-vector-last-export").text("\u4ECE\u672A\u5BFC\u51FA");
+        $("#t-btn-export-vectors, #t-btn-clear-vectors").prop("disabled", true);
+        $("#t-use-vector-search").prop("disabled", true).prop("checked", false);
+      }
+      TitaniaLogger.info("\u667A\u80FD\u63D0\u53D6\u9875\u9762\u52A0\u8F7D\u5B8C\u6210");
     } catch (e) {
       TitaniaLogger.error("\u52A0\u8F7D\u9875\u9762\u6570\u636E\u5931\u8D25", e);
+      $("#t-index-status-display").html(`<span class="t-index-status t-index-empty">\u26A0\uFE0F \u52A0\u8F7D\u8D85\u65F6</span>`);
     }
   }, 0);
 }
@@ -14727,6 +17337,14 @@ function bindEvents() {
         const entryToSave = { ...entry };
         if (entry.action === "update" && entry.matched_uid) {
           entryToSave.uid = entry.matched_uid;
+          const saveMode = entry.saveMode || "replace";
+          if (entry.originalContent && saveMode !== "replace") {
+            if (saveMode === "append") {
+              entryToSave.content = entry.originalContent + "\n\n---\n\n" + entry.content;
+            } else if (saveMode === "prepend") {
+              entryToSave.content = entry.content + "\n\n---\n\n" + entry.originalContent;
+            }
+          }
         }
         const success = await saveLoreEntry(targetBook, entryToSave);
         if (success) successCount++;
@@ -14792,6 +17410,23 @@ function bindEvents() {
       const $item = $(`.t-lore-entry-item[data-index="${index}"]`);
       $item.find(".t-entry-tag").text(newCat);
       $item.attr("data-cat", newCat);
+    }
+  });
+  $(document).on("click", "#t-btn-toggle-original", function() {
+    const $box = $("#t-original-content-box");
+    const $icon = $(this).find("i");
+    if ($box.is(":visible")) {
+      $box.slideUp(200);
+      $icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
+    } else {
+      $box.slideDown(200);
+      $icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
+    }
+  });
+  $(document).on("change", "input[name='t-save-mode']", function() {
+    const index = $(".t-lore-entry-item.active").data("index");
+    if (index !== void 0 && currentEntries[index]) {
+      currentEntries[index].saveMode = $(this).val();
     }
   });
   $(".t-mode-tab").on("click", function() {
@@ -14944,16 +17579,35 @@ function bindEvents() {
     }
   });
   $("#t-btn-build-index").on("click", async function() {
+    await doBuildIndex(false);
+  });
+  $("#t-btn-rebuild-index").on("click", async function() {
+    if (!confirm("\u786E\u5B9A\u8981\u6E05\u9664\u73B0\u6709\u7D22\u5F15\u5E76\u5B8C\u6574\u91CD\u5EFA\u5417\uFF1F\u8FD9\u5C06\u5904\u7406\u6240\u6709\u6D88\u606F\uFF0C\u53EF\u80FD\u9700\u8981\u8F83\u957F\u65F6\u95F4\u3002")) {
+      return;
+    }
+    await doBuildIndex(true);
+  });
+  async function doBuildIndex(rebuild = false) {
     const embeddingValidation = validateEmbeddingConfig();
     if (!embeddingValidation.valid) {
       if (window.toastr) toastr.error(embeddingValidation.error, "Embedding \u914D\u7F6E\u9519\u8BEF");
       return;
     }
-    const $btn = $(this);
-    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u7D22\u5F15\u4E2D...');
+    const $btnIncremental = $("#t-btn-build-index");
+    const $btnRebuild = $("#t-btn-rebuild-index");
+    $btnIncremental.prop("disabled", true);
+    $btnRebuild.prop("disabled", true);
+    if (rebuild) {
+      $btnRebuild.html('<i class="fa-solid fa-spinner fa-spin"></i>');
+    } else {
+      $btnIncremental.html('<i class="fa-solid fa-spinner fa-spin"></i> \u5904\u7406\u4E2D...');
+    }
     $("#t-index-progress").show();
+    $("#t-incremental-status").hide();
     try {
       const result = await buildVectorIndex(currentCharacterId, {
+        rebuild,
+        incremental: !rebuild,
         onProgress: (current, total, status) => {
           const percent = total > 0 ? Math.round(current / total * 100) : 0;
           $(".t-progress-fill").css("width", `${percent}%`);
@@ -14961,15 +17615,24 @@ function bindEvents() {
         }
       });
       await refreshVectorStatus();
-      if (window.toastr) toastr.success(`\u7D22\u5F15\u5EFA\u7ACB\u5B8C\u6210: ${result.indexed} \u6761`, "Titania");
+      await updateIncrementalStatus();
+      const message = result.message || `\u5DF2\u7D22\u5F15 ${result.indexed} \u6761`;
+      if (window.toastr) {
+        if (result.indexed > 0) {
+          toastr.success(message, rebuild ? "\u91CD\u5EFA\u5B8C\u6210" : "\u589E\u91CF\u66F4\u65B0\u5B8C\u6210");
+        } else {
+          toastr.info(message, "\u65E0\u9700\u66F4\u65B0");
+        }
+      }
     } catch (e) {
       TitaniaLogger.error("\u5EFA\u7ACB\u7D22\u5F15\u5931\u8D25", e);
       if (window.toastr) toastr.error(e.message, "\u7D22\u5F15\u5931\u8D25");
     } finally {
-      $btn.prop("disabled", false).html('<i class="fa-solid fa-hammer"></i> \u5EFA\u7ACB/\u91CD\u5EFA\u7D22\u5F15');
+      $btnIncremental.prop("disabled", false).html('<i class="fa-solid fa-plus"></i> \u589E\u91CF\u66F4\u65B0');
+      $btnRebuild.prop("disabled", false).html('<i class="fa-solid fa-redo"></i> \u91CD\u5EFA');
       $("#t-index-progress").hide();
     }
-  });
+  }
   $("#t-btn-export-vectors").on("click", async function() {
     const $btn = $(this);
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5BFC\u51FA\u4E2D...');
@@ -15017,6 +17680,25 @@ function bindEvents() {
       if (window.toastr) toastr.error(e.message, "\u6E05\u9664\u5931\u8D25");
     } finally {
       $btn.prop("disabled", false);
+    }
+  });
+  $("#t-btn-preview-cleaning").on("click", async function() {
+    const $btn = $(this);
+    $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u52A0\u8F7D\u4E2D...');
+    try {
+      const chatHistory = getChatHistory();
+      if (!chatHistory || chatHistory.length === 0) {
+        if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u9884\u89C8\u7684\u804A\u5929\u5386\u53F2", "\u65E0\u6570\u636E");
+        return;
+      }
+      const sampleCount = Math.min(5, chatHistory.length);
+      const samples = chatHistory.slice(-sampleCount);
+      showCleaningPreviewDialog(samples);
+    } catch (e) {
+      TitaniaLogger.error("\u9884\u89C8\u6E05\u6D17\u6548\u679C\u5931\u8D25", e);
+      if (window.toastr) toastr.error(e.message, "\u9884\u89C8\u5931\u8D25");
+    } finally {
+      $btn.prop("disabled", false).html('<i class="fa-solid fa-eye"></i> \u9884\u89C8\u6E05\u6D17\u6548\u679C');
     }
   });
   $("#t-btn-test-embedding").on("click", async function() {
@@ -15193,9 +17875,30 @@ async function refreshVectorStatus() {
     TitaniaLogger.warn("\u5237\u65B0\u5411\u91CF\u72B6\u6001\u5931\u8D25", e);
   }
 }
+async function updateIncrementalStatus() {
+  try {
+    const status = await getVectorIndexStatus(currentCharacterId);
+    if (status.hasIndex && status.newMessagesCount > 0) {
+      $("#t-incremental-message").html(
+        `<strong>${status.newMessagesCount}</strong> \u6761\u65B0\u6D88\u606F\u672A\u5411\u91CF\u5316 <small>(\u5DF2\u7D22\u5F15 ${status.totalIndexed} \u6761\uFF0C\u4E0A\u6B21\u5230\u7B2C ${status.lastMessageIndex + 1} \u697C)</small>`
+      );
+      $("#t-incremental-status").show().removeClass("t-status-ok").addClass("t-status-new");
+    } else if (status.hasIndex && status.newMessagesCount === 0) {
+      $("#t-incremental-message").html(
+        `\u6240\u6709\u6D88\u606F\u5DF2\u5411\u91CF\u5316 <small>(\u5171 ${status.totalIndexed} \u6761)</small>`
+      );
+      $("#t-incremental-status").show().removeClass("t-status-new").addClass("t-status-ok");
+    } else {
+      $("#t-incremental-status").hide();
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u66F4\u65B0\u589E\u91CF\u72B6\u6001\u5931\u8D25", e);
+    $("#t-incremental-status").hide();
+  }
+}
 function formatSummaryAsHtml(text) {
   if (!text) return "";
-  let html = escapeHtml2(text);
+  let html = escapeHtml3(text);
   html = html.replace(/^## (.+)$/gm, '<h3 class="t-summary-h3">$1</h3>');
   html = html.replace(/^### (.+)$/gm, '<h4 class="t-summary-h4">$1</h4>');
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -15250,8 +17953,20 @@ function showEntryDetail(index) {
             UID: ${entry.matched_uid}
             ${entry.matched_book ? `(${entry.matched_book})` : ""}
         `);
+    if (entry.originalContent) {
+      $("#t-original-content-text").text(entry.originalContent);
+      $(".t-original-content-section").show();
+      $("#t-original-content-box").hide();
+      $("#t-btn-toggle-original i").removeClass("fa-chevron-up").addClass("fa-chevron-down");
+    } else {
+      $(".t-original-content-section").hide();
+    }
+    $(".t-save-mode-section").show();
+    $("input[name='t-save-mode'][value='replace']").prop("checked", true);
   } else {
     $("#t-update-info-group").hide();
+    $(".t-original-content-section").hide();
+    $(".t-save-mode-section").hide();
   }
   const keysStr = Array.isArray(entry.keys) ? entry.keys.join(", ") : entry.keys;
   $("#t-mobile-edit-title").text(keysStr || `\u6761\u76EE ${index + 1}`);
@@ -15398,9 +18113,9 @@ function showPromptPreviewDialog(messages, stats = {}) {
     </div>
     `;
   $("body").append(html);
-  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml2(systemMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml2(userMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml2(JSON.stringify(messages, null, 2))}</pre>`);
+  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml3(systemMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml3(userMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml3(JSON.stringify(messages, null, 2))}</pre>`);
   $("#t-prompt-view-dialog .t-prompt-tab").on("click", function() {
     const role = $(this).data("role");
     $("#t-prompt-view-dialog .t-prompt-tab").removeClass("active");
@@ -15430,6 +18145,340 @@ function showPromptPreviewDialog(messages, stats = {}) {
     });
   });
 }
+function showCleaningPreviewDialog(samples) {
+  $("#t-cleaning-preview-dialog").remove();
+  const config = getTextCleaningConfig();
+  const cleanedSamples = samples.map((msg, index) => {
+    const originalText = msg.mes || msg.message || "";
+    const role = msg.is_user ? "user" : "char";
+    const cleaned = cleanTextForEmbedding(originalText);
+    const stats = getCleaningStats(originalText, cleaned);
+    return {
+      index: samples.length - index,
+      // 倒序编号，最新的消息编号最大
+      role,
+      roleName: msg.is_user ? "\u7528\u6237" : msg.name || "\u89D2\u8272",
+      original: originalText,
+      cleaned,
+      stats,
+      isValid: cleaned.trim().length >= (config.min_text_length || 20)
+    };
+  });
+  const totalOriginalLength = cleanedSamples.reduce((sum, s) => sum + s.stats.originalLength, 0);
+  const totalCleanedLength = cleanedSamples.reduce((sum, s) => sum + s.stats.cleanedLength, 0);
+  const totalReduction = totalOriginalLength > 0 ? Math.round((totalOriginalLength - totalCleanedLength) / totalOriginalLength * 100) : 0;
+  const validCount = cleanedSamples.filter((s) => s.isValid).length;
+  const configItems = [
+    { name: "HTML\u6807\u7B7E", enabled: config.remove_html_tags },
+    { name: "Style\u6807\u7B7E", enabled: config.remove_style_tags },
+    { name: "\u601D\u8003\u6807\u7B7E", enabled: config.remove_thinking_tags },
+    { name: "OOC\u6807\u7B7E", enabled: config.remove_ooc_tags },
+    { name: "\u7CFB\u7EDF\u6807\u7B7E", enabled: config.remove_system_tags },
+    { name: "Markdown", enabled: config.remove_markdown },
+    { name: "\u5B8F\u6B8B\u7559", enabled: config.remove_macro_residue },
+    { name: "\u65B9\u62EC\u53F7\u6807\u8BB0", enabled: config.remove_bracket_markers }
+  ];
+  const configHtml = configItems.map(
+    (item) => `<span class="t-config-tag ${item.enabled ? "t-config-enabled" : "t-config-disabled"}">
+            <i class="fa-solid ${item.enabled ? "fa-check" : "fa-times"}"></i> ${item.name}
+        </span>`
+  ).join("");
+  const messagesHtml = cleanedSamples.map((sample) => `
+        <div class="t-cleaning-sample ${sample.isValid ? "" : "t-sample-invalid"}">
+            <div class="t-sample-header">
+                <span class="t-sample-role ${sample.role === "user" ? "t-role-user" : "t-role-char"}">
+                    <i class="fa-solid ${sample.role === "user" ? "fa-user" : "fa-robot"}"></i>
+                    ${sample.roleName}
+                </span>
+                <span class="t-sample-stats">
+                    ${sample.stats.originalLength} \u2192 ${sample.stats.cleanedLength} \u5B57\u7B26
+                    <span class="t-reduction ${sample.stats.reductionPercent > 0 ? "t-has-reduction" : ""}">
+                        (-${sample.stats.reductionPercent}%)
+                    </span>
+                    ${!sample.isValid ? '<span class="t-invalid-badge"><i class="fa-solid fa-exclamation-triangle"></i> \u8FC7\u77ED</span>' : ""}
+                </span>
+            </div>
+            <div class="t-sample-content">
+                <div class="t-sample-pane t-pane-original">
+                    <div class="t-pane-header"><i class="fa-solid fa-file-alt"></i> \u539F\u59CB\u6587\u672C</div>
+                    <div class="t-pane-body">${escapeHtml3(sample.original || "(\u7A7A)")}</div>
+                </div>
+                <div class="t-sample-pane t-pane-cleaned">
+                    <div class="t-pane-header"><i class="fa-solid fa-broom"></i> \u6E05\u6D17\u540E</div>
+                    <div class="t-pane-body">${escapeHtml3(sample.cleaned || "(\u7A7A)")}</div>
+                </div>
+            </div>
+        </div>
+    `).join("");
+  const html = `
+    <div id="t-cleaning-preview-dialog" class="t-dialog-overlay">
+        <div class="t-dialog-box t-cleaning-preview-box" style="max-width: 1000px; max-height: 85vh;">
+            <div class="t-dialog-header">
+                <span><i class="fa-solid fa-broom"></i> \u6587\u672C\u6E05\u6D17\u9884\u89C8</span>
+                <div class="t-dialog-close" id="t-cleaning-preview-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-dialog-body" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                <!-- \u7EDF\u8BA1\u4FE1\u606F\u680F -->
+                <div class="t-cleaning-stats-bar">
+                    <div class="t-cleaning-stat">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>\u6837\u672C\u6D88\u606F: <strong>${cleanedSamples.length}</strong> \u6761</span>
+                    </div>
+                    <div class="t-cleaning-stat">
+                        <i class="fa-solid fa-compress-arrows-alt"></i>
+                        <span>\u603B\u538B\u7F29\u7387: <strong>${totalReduction}%</strong></span>
+                    </div>
+                    <div class="t-cleaning-stat">
+                        <i class="fa-solid fa-check-circle" style="color: ${validCount === cleanedSamples.length ? "#2ecc71" : "#f39c12"};"></i>
+                        <span>\u6709\u6548\u6D88\u606F: <strong>${validCount}/${cleanedSamples.length}</strong></span>
+                    </div>
+                    <div class="t-cleaning-stat">
+                        <i class="fa-solid fa-ruler"></i>
+                        <span>\u6700\u5C0F\u957F\u5EA6: <strong>${config.min_text_length || 20}</strong> \u5B57\u7B26</span>
+                    </div>
+                </div>
+
+                <!-- \u5F53\u524D\u914D\u7F6E\u5C55\u793A -->
+                <div class="t-cleaning-config-bar">
+                    <span class="t-config-label"><i class="fa-solid fa-cog"></i> \u5F53\u524D\u6E05\u6D17\u89C4\u5219:</span>
+                    <div class="t-config-tags">${configHtml}</div>
+                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml3(config.custom_tags_to_remove)}</span>` : ""}
+                </div>
+
+                <!-- \u6D88\u606F\u9884\u89C8\u5217\u8868 -->
+                <div class="t-cleaning-samples-container">
+                    ${messagesHtml}
+                </div>
+            </div>
+            <div class="t-dialog-footer">
+                <div class="t-footer-hint">
+                    <i class="fa-solid fa-info-circle"></i>
+                    <span>\u9884\u89C8\u663E\u793A\u6700\u8FD1 ${cleanedSamples.length} \u6761\u6D88\u606F\u7684\u6E05\u6D17\u6548\u679C\u3002\u53EF\u5728\u300C\u8BBE\u7F6E \u2192 Embedding\u300D\u4E2D\u8C03\u6574\u6E05\u6D17\u89C4\u5219\u3002</span>
+                </div>
+                <button id="t-btn-close-cleaning-preview" class="t-btn">\u5173\u95ED</button>
+            </div>
+        </div>
+    </div>
+    `;
+  $("body").append(html);
+  if (!document.getElementById("t-cleaning-preview-styles")) {
+    const styles = `
+        <style id="t-cleaning-preview-styles">
+            .t-cleaning-preview-box {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .t-cleaning-stats-bar {
+                display: flex;
+                gap: 20px;
+                padding: 12px 16px;
+                background: rgba(0, 0, 0, 0.2);
+                border-bottom: 1px solid #333;
+                flex-wrap: wrap;
+            }
+
+            .t-cleaning-stat {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                color: #aaa;
+                font-size: 0.9em;
+            }
+
+            .t-cleaning-stat i {
+                color: #666;
+            }
+
+            .t-cleaning-stat strong {
+                color: #fff;
+            }
+
+            .t-cleaning-config-bar {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 16px;
+                background: rgba(0, 0, 0, 0.1);
+                border-bottom: 1px solid #333;
+                flex-wrap: wrap;
+            }
+
+            .t-cleaning-config-bar .t-config-label {
+                color: #888;
+                font-size: 0.85em;
+            }
+
+            .t-config-tags {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .t-config-tag {
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.8em;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .t-config-enabled {
+                background: rgba(46, 204, 113, 0.2);
+                color: #2ecc71;
+            }
+
+            .t-config-disabled {
+                background: rgba(136, 136, 136, 0.2);
+                color: #666;
+            }
+
+            .t-custom-tags {
+                color: #f39c12;
+                font-size: 0.8em;
+                margin-left: auto;
+            }
+
+            .t-cleaning-samples-container {
+                flex: 1;
+                overflow-y: auto;
+                padding: 16px;
+            }
+
+            .t-cleaning-sample {
+                margin-bottom: 16px;
+                border: 1px solid #333;
+                border-radius: 8px;
+                overflow: hidden;
+                background: rgba(0, 0, 0, 0.2);
+            }
+
+            .t-cleaning-sample.t-sample-invalid {
+                border-color: rgba(243, 156, 18, 0.5);
+            }
+
+            .t-sample-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 14px;
+                background: rgba(0, 0, 0, 0.3);
+                border-bottom: 1px solid #333;
+            }
+
+            .t-sample-role {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-weight: 500;
+            }
+
+            .t-role-user {
+                color: #3498db;
+            }
+
+            .t-role-char {
+                color: #9b59b6;
+            }
+
+            .t-sample-stats {
+                color: #888;
+                font-size: 0.85em;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .t-reduction {
+                color: #666;
+            }
+
+            .t-reduction.t-has-reduction {
+                color: #2ecc71;
+            }
+
+            .t-invalid-badge {
+                background: rgba(243, 156, 18, 0.2);
+                color: #f39c12;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85em;
+            }
+
+            .t-sample-content {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1px;
+                background: #333;
+            }
+
+            .t-sample-pane {
+                background: #1e1e2e;
+            }
+
+            .t-pane-header {
+                padding: 8px 12px;
+                background: rgba(0, 0, 0, 0.2);
+                color: #888;
+                font-size: 0.8em;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .t-pane-original .t-pane-header {
+                color: #e74c3c;
+            }
+
+            .t-pane-cleaned .t-pane-header {
+                color: #2ecc71;
+            }
+
+            .t-pane-body {
+                padding: 12px;
+                font-size: 0.9em;
+                line-height: 1.5;
+                color: #ccc;
+                max-height: 200px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+
+            .t-footer-hint {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #666;
+                font-size: 0.85em;
+            }
+
+            .t-footer-hint i {
+                color: #3498db;
+            }
+
+            @media (max-width: 768px) {
+                .t-sample-content {
+                    grid-template-columns: 1fr;
+                }
+
+                .t-cleaning-stats-bar {
+                    gap: 12px;
+                }
+
+                .t-cleaning-stat {
+                    font-size: 0.8em;
+                }
+            }
+        </style>
+        `;
+    $("head").append(styles);
+  }
+  $("#t-cleaning-preview-close, #t-btn-close-cleaning-preview").on("click", () => {
+    $("#t-cleaning-preview-dialog").remove();
+  });
+}
 var FEATURE_KEY3, _hideChatMessageRange, currentEntries, lastRawResponse, lastSummary, lastSummaryMessages, currentCharacterId, currentCharacterName, currentMode, currentTotalFloors, lastAnalyzedRange;
 var init_loreReviewWindow = __esm({
   "src/ui/loreReviewWindow.js"() {
@@ -15441,6 +18490,7 @@ var init_loreReviewWindow = __esm({
     init_storage();
     init_context();
     init_summarizer();
+    init_textCleaner();
     init_embeddings();
     init_vectorStore();
     FEATURE_KEY3 = "lore_extractor";
@@ -15458,10 +18508,260 @@ var init_loreReviewWindow = __esm({
 });
 
 // src/ui/mainWindow.js
+function formatRelativeTime2(ts) {
+  const time = Number(ts) || 0;
+  if (!time) return "\u672A\u4F7F\u7528";
+  const diff = Date.now() - time;
+  if (diff < 6e4) return "\u521A\u521A";
+  if (diff < 36e5) return `${Math.floor(diff / 6e4)} \u5206\u949F\u524D`;
+  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
+  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
+  return new Date(time).toLocaleDateString("zh-CN");
+}
+function clampInjectRoundsCount(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 3;
+  return Math.max(1, Math.min(CONTINUATION_MAX_INJECT_ROUNDS, Math.floor(num)));
+}
+function getContinuationDefaultInjectCount() {
+  const data = getExtData();
+  const saved = data.continuation_ui?.inject_rounds_count;
+  return clampInjectRoundsCount(saved ?? 3);
+}
+function saveContinuationDefaultInjectCount(count) {
+  const data = getExtData();
+  if (!data.continuation_ui) data.continuation_ui = {};
+  data.continuation_ui.inject_rounds_count = clampInjectRoundsCount(count);
+  saveExtData();
+}
+function escapeHtmlText(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function getContinuationRecentInstructions() {
+  const data = getExtData();
+  const list = data.continuation_ui?.recent_instructions;
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => String(item || "").trim()).filter((item) => item.length > 0).slice(0, CONTINUATION_RECENT_MAX);
+}
+function saveContinuationRecentInstruction(instruction) {
+  const text = String(instruction || "").trim();
+  if (!text) return;
+  const data = getExtData();
+  if (!data.continuation_ui) data.continuation_ui = {};
+  const prev = Array.isArray(data.continuation_ui.recent_instructions) ? data.continuation_ui.recent_instructions : [];
+  const normalizedPrev = prev.map((item) => String(item || "").trim()).filter((item) => item.length > 0);
+  const deduped = normalizedPrev.filter((item) => item !== text);
+  data.continuation_ui.recent_instructions = [text, ...deduped].slice(0, CONTINUATION_RECENT_MAX);
+  saveExtData();
+}
+function openContinuationComposer(initialText = "") {
+  return new Promise((resolve) => {
+    const recent = getContinuationRecentInstructions();
+    const display = getCurrentDisplayContent();
+    const activeScriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
+    let selectedInjectRounds = getContinuationDefaultInjectCount();
+    $("#t-continuation-dialog").remove();
+    $("#t-continuation-editor").remove();
+    $(document).off("keydown.tcontinuecomposer");
+    const recentHtml = recent.length > 0 ? recent.map((item) => {
+      const encoded = encodeURIComponent(item);
+      const display2 = item.length > 24 ? `${item.slice(0, 24)}\u2026` : item;
+      return `<button class="t-cont-recent-item" data-text="${encoded}" style="
+                            border:1px solid #3d3d3d;
+                            background:#262626;
+                            color:#ddd;
+                            border-radius:999px;
+                            padding:6px 12px;
+                            font-size:12px;
+                            cursor:pointer;
+                            max-width:100%;
+                            overflow:hidden;
+                            text-overflow:ellipsis;
+                            white-space:nowrap;
+                        " title="${escapeHtmlText(item)}">${escapeHtmlText(display2)}</button>`;
+    }).join("") : `<div style="color:#777; font-size:12px;">\u6682\u65E0\u6700\u8FD1\u7EED\u5199\u6307\u4EE4</div>`;
+    const html = `
+        <div id="t-continuation-editor" class="t-content-editor">
+            <div class="t-ce-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color:#bfa15f;"></i>
+                    <span style="font-weight:bold;">\u4E3B\u52A8\u7EED\u5199\u6307\u4EE4</span>
+                    <span style="font-size:0.8em; color:#666;">\u652F\u6301 Ctrl+Enter \u5FEB\u901F\u53D1\u9001</span>
+                </div>
+                <div class="t-close" id="t-cont-close">&times;</div>
+            </div>
+
+            <div class="t-ce-body" style="display:flex; flex-direction:column; gap:10px; overflow:auto;">
+                <div style="color:#888; font-size:12px;">\u53EF\u7559\u7A7A\u8868\u793A\u201C\u81EA\u7136\u7EED\u5199\u201D\uFF1B\u4F1A\u57FA\u4E8E\u5F53\u524D\u5267\u573A\u4E0A\u4E0B\u6587\u7EE7\u7EED\u751F\u6210\u3002</div>
+
+                <textarea id="t-cont-input" class="t-ce-textarea" placeholder="\u4F8B\u5982\uFF1A\u8BA9\u4E24\u4EBA\u77DB\u76FE\u5347\u7EA7\uFF0C\u4F46\u4FDD\u6301\u514B\u5236\uFF0C\u4E0D\u8981\u7ACB\u523B\u548C\u89E3\u3002" spellcheck="false" style="height:auto; min-height:160px; flex:1;"></textarea>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                    <button id="t-cont-expand" class="t-btn" style="padding:6px 10px; font-size:12px;">
+                        <i class="fa-solid fa-expand"></i> \u5C55\u5F00\u7F16\u8F91\u5668
+                    </button>
+                    <div id="t-cont-char-count" style="color:#777; font-size:12px;">0 \u5B57</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="color:#aaa; font-size:12px;">\u6700\u8FD1\u4F7F\u7528\uFF08\u6700\u591A ${CONTINUATION_RECENT_MAX} \u6761\uFF0C\u70B9\u51FB\u590D\u7528\uFF09</div>
+                    <div id="t-cont-recent-list" style="display:flex; gap:8px; flex-wrap:wrap; max-height:88px; overflow:auto;">${recentHtml}</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px; border:1px solid #333; border-radius:8px; padding:10px; background:#1e1e1e;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                        <div style="color:#ddd; font-size:12px;">\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u6761\u6570\uFF08\u6B63\u6587+\u6307\u4EE4\uFF09</div>
+                        <div id="t-cont-rounds-total" style="color:#9aa; font-size:12px;">\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A0</div>
+                    </div>
+                    <div id="t-cont-inject-buttons" style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="t-btn t-cont-inject-btn" data-count="1" style="padding:4px 10px; font-size:12px;">1 \u6761</button>
+                        <button type="button" class="t-btn t-cont-inject-btn" data-count="2" style="padding:4px 10px; font-size:12px;">2 \u6761</button>
+                        <button type="button" class="t-btn t-cont-inject-btn" data-count="3" style="padding:4px 10px; font-size:12px;">3 \u6761</button>
+                        <button type="button" class="t-btn t-cont-inject-btn" data-count="4" style="padding:4px 10px; font-size:12px;">4 \u6761</button>
+                        <button type="button" class="t-btn t-cont-inject-btn" data-count="5" style="padding:4px 10px; font-size:12px;">5 \u6761</button>
+                    </div>
+                    <div id="t-cont-context-estimate" style="color:#9aa; font-size:12px;">\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A0 \u5B57\u7B26 (~0 tokens)</div>
+                </div>
+            </div>
+
+            <div class="t-ce-footer">
+                <div class="t-ce-stats"><span id="t-cont-char-count-footer">0 \u5B57</span></div>
+                <div class="t-ce-actions">
+                    <button class="t-btn" id="t-cont-cancel">\u53D6\u6D88</button>
+                    <button class="t-btn primary" id="t-cont-submit">\u53D1\u9001\u7EED\u5199</button>
+                </div>
+            </div>
+        </div>`;
+    const $host = $("#t-main-view");
+    if ($host.length) {
+      $host.append(html);
+    } else {
+      $("body").append(html);
+    }
+    const $dialog = $("#t-continuation-editor");
+    const $input = $("#t-cont-input");
+    const $charCount = $("#t-cont-char-count");
+    const $charCountFooter = $("#t-cont-char-count-footer");
+    const $expandBtn = $("#t-cont-expand");
+    const $injectButtons = $("#t-cont-inject-buttons");
+    const $roundsTotal = $("#t-cont-rounds-total");
+    const $contextEstimate = $("#t-cont-context-estimate");
+    let resolved = false;
+    let expanded = false;
+    const finalize = (value) => {
+      if (resolved) return;
+      resolved = true;
+      $(document).off("keydown.tcontinuecomposer");
+      $dialog.remove();
+      resolve(value);
+    };
+    const updateCharCount = () => {
+      const count = `${$input.val().length} \u5B57`;
+      $charCount.text(count);
+      $charCountFooter.text(count);
+    };
+    const ensureHasBaseContent = () => {
+      const displayContent = getCurrentDisplayContent();
+      const hasContent = Boolean(displayContent?.content && displayContent.content.trim().length > 0);
+      if (!hasContent) {
+        if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7EED\u5199\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F", "Titania");
+        return false;
+      }
+      return true;
+    };
+    const trySubmit = () => {
+      if (!ensureHasBaseContent()) return;
+      finalize({
+        instruction: $input.val(),
+        injectRoundsCount: selectedInjectRounds
+      });
+    };
+    const updateInjectButtonsVisual = () => {
+      $injectButtons.find(".t-cont-inject-btn").each(function() {
+        const count = Number($(this).attr("data-count") || 0);
+        const isActive = count === selectedInjectRounds;
+        $(this).toggleClass("primary", isActive);
+        if (isActive) {
+          $(this).css({ borderColor: "#bfa15f", color: "#f3e3b2" });
+        } else {
+          $(this).css({ borderColor: "", color: "" });
+        }
+      });
+    };
+    const updateContextEstimate = () => {
+      const stats = getContinuationSessionStats(activeScriptId, selectedInjectRounds);
+      $roundsTotal.text(`\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A${stats.totalRounds}`);
+      $contextEstimate.text(`\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A${stats.estimatedChars} \u5B57\u7B26 (~${stats.estimatedTokens} tokens)`);
+      if (stats.estimatedTokens > CONTINUATION_TOKEN_WARN_THRESHOLD) {
+        $contextEstimate.css({ color: "#ff7675", fontWeight: "bold" });
+      } else {
+        $contextEstimate.css({ color: "#9aa", fontWeight: "" });
+      }
+    };
+    const applyExpandState = () => {
+      if (expanded) {
+        $dialog.css({
+          width: "98%",
+          maxWidth: "1100px",
+          height: "calc(100% - 20px)",
+          maxHeight: "none"
+        });
+        $input.css({ minHeight: "52vh" });
+        $expandBtn.html('<i class="fa-solid fa-compress"></i> \u6536\u8D77\u7F16\u8F91\u5668');
+      } else {
+        $dialog.css({
+          width: "",
+          maxWidth: "",
+          height: "",
+          maxHeight: ""
+        });
+        $input.css({ minHeight: "160px" });
+        $expandBtn.html('<i class="fa-solid fa-expand"></i> \u5C55\u5F00\u7F16\u8F91\u5668');
+      }
+    };
+    $input.val(initialText || "");
+    updateCharCount();
+    applyExpandState();
+    updateInjectButtonsVisual();
+    updateContextEstimate();
+    setTimeout(() => $input.trigger("focus"), 0);
+    $input.on("input", updateCharCount);
+    $input.on("keydown", function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        trySubmit();
+      }
+    });
+    $(document).on("keydown.tcontinuecomposer", function(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        finalize(null);
+      }
+    });
+    $("#t-cont-close, #t-cont-cancel").on("click", () => finalize(null));
+    $("#t-cont-submit").on("click", () => trySubmit());
+    $expandBtn.on("click", function() {
+      expanded = !expanded;
+      applyExpandState();
+    });
+    $injectButtons.on("click", ".t-cont-inject-btn", function() {
+      selectedInjectRounds = clampInjectRoundsCount($(this).attr("data-count"));
+      saveContinuationDefaultInjectCount(selectedInjectRounds);
+      updateInjectButtonsVisual();
+      updateContextEstimate();
+    });
+    $("#t-cont-recent-list").on("click", ".t-cont-recent-item", function() {
+      const text = decodeURIComponent($(this).attr("data-text") || "");
+      $input.val(text);
+      updateCharCount();
+      $input.trigger("focus");
+    });
+  });
+}
 function refreshScriptList() {
   const $sel = $("#t-sel-script");
   $sel.empty();
-  const validScripts = GlobalState.runtimeScripts;
+  const validScripts = sortScripts(GlobalState.runtimeScripts, getScriptSortMode());
   validScripts.forEach((s) => {
     $sel.append(`<option value="${s.id}">${s.name}</option>`);
   });
@@ -15474,9 +18774,13 @@ function updateDesc() {
   const s = GlobalState.runtimeScripts.find((x) => x.id === $("#t-sel-script").val());
   if (s) $("#t-txt-desc").val(s.desc);
 }
-function applyScriptSelection(id) {
+function applyScriptSelection(id, options = {}) {
   const s = GlobalState.runtimeScripts.find((x) => x.id === id);
   if (!s) return;
+  const shouldTrackSelection = options.trackSelection === true;
+  if (shouldTrackSelection) {
+    recordScriptSelected(s.id);
+  }
   GlobalState.lastUsedScriptId = s.id;
   $("#t-lbl-name").text(s.name);
   const $catTag = $("#t-lbl-cat");
@@ -15561,18 +18865,13 @@ async function openMainWindow() {
 
             <div class="t-content-wrapper">
                 <div class="t-stats-hud" id="t-stats-hud" style="display:none;">
-                    <div class="t-stats-row">
-                        <span class="t-stats-label">\u5B57\u7B26</span>
-                        <span class="t-stats-value" id="t-stat-total">0</span>
-                    </div>
-                    <div class="t-stats-row">
-                        <span class="t-stats-label">\u4E2D\u6587</span>
-                        <span class="t-stats-value" id="t-stat-chinese">0</span>
-                    </div>
-                    <div class="t-stats-row">
-                        <span class="t-stats-label">Token</span>
-                        <span class="t-stats-value" id="t-stat-tokens">~0</span>
-                    </div>
+                    <span class="t-stats-item"><span class="t-stats-label">\u6A21\u578B</span><span class="t-stats-value" id="t-stat-model">-</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u5B57\u7B26</span><span class="t-stats-value" id="t-stat-total">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u4E2D\u6587</span><span class="t-stats-value" id="t-stat-chinese">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u8017\u65F6</span><span class="t-stats-value" id="t-stat-time">-</span></span>
                 </div>
                 <div class="t-tools-btn" id="t-btn-tools" title="\u5185\u5BB9\u5DE5\u5177"><i class="fa-solid fa-ellipsis-vertical"></i></div>
                 <div class="t-tools-panel" id="t-tools-panel" style="display:none;">
@@ -15580,24 +18879,20 @@ async function openMainWindow() {
                         <i class="fa-solid fa-expand"></i>
                         <span>\u6C89\u6D78\u9605\u8BFB</span>
                     </div>
+                    <div class="t-tools-item" id="t-tool-continue">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>\u4E3B\u52A8\u7EED\u5199</span>
+                    </div>
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
                     </div>
                 </div>
-                <div class="t-scene-nav" id="t-scene-nav" style="display:none;">
-                    <button class="t-nav-btn t-nav-prev" id="t-nav-prev" title="\u4E0A\u4E00\u4E2A\u5267\u573A\uFF08\u66F4\u65E7\uFF09" disabled>
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </button>
-                    <div class="t-nav-info">
-                        <span class="t-nav-indicator" id="t-nav-indicator">1/1</span>
-                        <span class="t-nav-unread" id="t-nav-unread" style="display:none;"></span>
-                    </div>
-                    <button class="t-nav-btn t-nav-next" id="t-nav-next" title="\u4E0B\u4E00\u4E2A\u5267\u573A\uFF08\u66F4\u65B0\uFF09" disabled>
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </button>
-                </div>
                 <div class="t-content-area">
+                    <!-- \u7FFB\u9875\u6309\u94AE\u79FB\u5230\u5185\u5BB9\u533A\u4E24\u4FA7 -->
+                    <button class="t-page-nav t-page-prev" id="t-nav-prev" title="\u4E0A\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&lt;</button>
+                    <button class="t-page-nav t-page-next" id="t-nav-next" title="\u4E0B\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&gt;</button>
+                    <div class="t-page-indicator" id="t-page-indicator" style="display:none;">1/1</div>
                     <div id="t-output-content"></div>
                 </div>
             </div>
@@ -15611,13 +18906,33 @@ async function openMainWindow() {
                 <button class="t-btn-grid" id="t-btn-new" title="\u65B0\u5EFA\u5267\u672C"><i class="fa-solid fa-plus"></i></button>
             </div>
 
-            <!-- \u53F3\u4FA7\uFF1A\u4E0A\u4E0B\u5806\u53E0\u64CD\u4F5C\u533A -->
+            <!-- \u4E2D\u95F4\uFF1A\u53CC\u6309\u94AE\u6F14\u7ECE\u533A -->
+            <div class="t-bot-center">
+                <div class="t-run-group">
+                    <button class="t-run-btn t-run-single" id="t-btn-run-single" title="\u5355\u6B21\u6F14\u7ECE\u5F53\u524D\u5267\u672C">
+                        <i class="fa-solid fa-clapperboard"></i>
+                        <span>\u5355\u6B21\u6F14\u7ECE</span>
+                    </button>
+                    <button class="t-run-btn t-run-queue" id="t-btn-run-queue" title="\u6279\u91CF\u961F\u5217\u751F\u6210">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>\u961F\u5217\u751F\u6210</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A -->
             <div class="t-bot-right">
-                <button id="t-btn-run" class="t-btn-action">
-                    <i class="fa-solid fa-clapperboard"></i> <span>\u5F00\u59CB\u6F14\u7ECE</span>
+                <button class="t-btn-aux" id="t-btn-queue-settings" title="\u961F\u5217\u8BBE\u7F6E">
+                    <i class="fa-solid fa-sliders"></i>
                 </button>
-                <button id="t-btn-edit" class="t-btn-action">
-                    <i class="fa-solid fa-pen-to-square"></i> <span>\u91CD\u65B0\u7F16\u8F91</span>
+                <button class="t-btn-aux" id="t-btn-edit" title="\u7F16\u8F91\u5F53\u524D\u5267\u672C">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="t-btn-aux t-btn-stop" id="t-btn-stop" title="\u4E2D\u6B62\u751F\u6210">
+                    <i class="fa-solid fa-stop"></i>
+                </button>
+                <button class="t-btn-aux t-btn-diag" id="t-btn-diagnostics" title="\u8BCA\u65AD\u65E5\u5FD7">
+                    <i class="fa-solid fa-stethoscope"></i>
                 </button>
             </div>
         </div>
@@ -15680,7 +18995,7 @@ async function openMainWindow() {
     }
     const rnd = Math.floor(Math.random() * pool.length);
     const s = pool[rnd];
-    applyScriptSelection(s.id);
+    applyScriptSelection(s.id, { trackSelection: false });
     const dice = $("#t-btn-dice");
     dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
     setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
@@ -15765,6 +19080,26 @@ async function openMainWindow() {
     }
     openContentEditor();
   });
+  $("#t-tool-continue").on("click", async function() {
+    $toolsPanel.hide();
+    $toolsBtn.removeClass("active");
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    const composeResult = await openContinuationComposer("");
+    if (composeResult === null) return;
+    const normalizedInstruction = String(composeResult?.instruction || "").trim();
+    const injectRoundsCount = clampInjectRoundsCount(composeResult?.injectRoundsCount ?? getContinuationDefaultInjectCount());
+    if (normalizedInstruction) {
+      saveContinuationRecentInstruction(normalizedInstruction);
+    }
+    await handleUserContinuation({
+      instruction: normalizedInstruction,
+      injectRoundsCount,
+      fromCurrentView: true
+    });
+  });
   $(document).on("keydown.zenmode", function(e) {
     if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) {
       $("#t-tool-zen").click();
@@ -15843,7 +19178,33 @@ async function openMainWindow() {
       }
     }
   });
-  $("#t-btn-run").on("click", () => handleGenerate(null, false));
+  $("#t-btn-run-single").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    closeWindow();
+    handleGenerate(null, false);
+  });
+  $("#t-btn-run-queue").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    if (!GlobalState.queueState.enabled) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u961F\u5217\u8BBE\u7F6E\u4E2D\u6FC0\u6D3B\u961F\u5217\u751F\u6210", "Titania");
+      openQueueSettingsWindow();
+      return;
+    }
+    const scripts = getQueueScripts();
+    if (scripts.length > 0) {
+      closeWindow();
+      executeQueueGeneration(scripts);
+    } else {
+      if (window.toastr) toastr.warning("\u961F\u5217\u4E3A\u7A7A\uFF0C\u8BF7\u5148\u914D\u7F6E\u961F\u5217", "Titania");
+      openQueueSettingsWindow();
+    }
+  });
   $("#t-btn-like").on("click", () => {
     if (GlobalState.lastFavId) {
       unsaveFavorite();
@@ -15859,25 +19220,76 @@ async function openMainWindow() {
   $("#t-btn-worldinfo").on("click", openWorldInfoSelector);
   $("#t-btn-settings").on("click", openSettingsWindow);
   $("#t-btn-debug").on("click", async () => await showDebugInfo());
+  $("#t-btn-queue-settings").on("click", openQueueSettingsWindow);
+  $("#t-btn-stop").on("click", () => {
+    if (GlobalState.isGenerating) {
+      cancelGeneration();
+    } else if (GlobalState.queueState.isRunning) {
+      cancelQueueGeneration();
+    } else {
+      if (window.toastr) toastr.info("\u5F53\u524D\u6CA1\u6709\u6B63\u5728\u8FDB\u884C\u7684\u751F\u6210\u4EFB\u52A1", "Titania");
+    }
+  });
+  $("#t-btn-diagnostics").on("click", () => {
+    showDiagnosticsWindow();
+  });
   $("#t-nav-prev").on("click", function() {
     if ($(this).prop("disabled")) return;
-    if (navigateToPrevHistory()) {
-      const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
-      const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
-      renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
+    const history = GlobalState.sceneHistory;
+    const display = GlobalState.displayState;
+    let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    if (effectiveIndex < history.items.length - 1) {
+      const newIndex = effectiveIndex + 1;
+      lockDisplayToHistory(newIndex);
+      const item = history.items[newIndex];
+      if (item) {
+        renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
+        GlobalState.lastGeneratedContent = item.content;
+        GlobalState.lastGeneratedScriptId = item.scriptId;
+        GlobalState.lastFavId = item.favId || null;
+      }
       updateSceneHistoryNav();
+      updateFavButtonUI();
+      updateScriptTitleDisplay();
     }
   });
   $("#t-nav-next").on("click", function() {
     if ($(this).prop("disabled")) return;
-    if (navigateToNextHistory()) {
-      const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
-      const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
-      renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
+    const history = GlobalState.sceneHistory;
+    const display = GlobalState.displayState;
+    const streaming = GlobalState.streamingCache;
+    let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    if (effectiveIndex > 0) {
+      const newIndex = effectiveIndex - 1;
+      if (newIndex === 0 && !streaming.isActive) {
+        unlockDisplay();
+        history.currentIndex = 0;
+      } else {
+        lockDisplayToHistory(newIndex);
+      }
+      const item = history.items[newIndex];
+      if (item) {
+        renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
+        GlobalState.lastGeneratedContent = item.content;
+        GlobalState.lastGeneratedScriptId = item.scriptId;
+        GlobalState.lastFavId = item.favId || null;
+      }
+      updateSceneHistoryNav();
+      updateFavButtonUI();
+      updateScriptTitleDisplay();
+    } else if (effectiveIndex === 0 && streaming.isActive && display.isViewingHistory) {
+      unlockDisplay();
+      if (streaming.content) {
+        renderGeneratedContent(streaming.content, streaming.scriptName || "\u573A\u666F", true);
+      }
+      $("#t-new-content-indicator").remove();
       updateSceneHistoryNav();
     }
   });
   window.updateSceneHistoryNav = updateSceneHistoryNav;
+  window.updateRunButtonsState = updateRunButtonsState;
+  window.updateFavButtonUI = updateFavButtonUI;
+  window.updateScriptTitleDisplay = updateScriptTitleDisplay;
   let initialScriptId = GlobalState.lastUsedScriptId;
   if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
     initialScriptId = GlobalState.lastGeneratedScriptId;
@@ -15893,7 +19305,7 @@ async function openMainWindow() {
   } else if (initialScriptId) {
     const initialScript = GlobalState.runtimeScripts.find((s) => s.id === initialScriptId);
     if (initialScript) {
-      applyScriptSelection(initialScriptId);
+      applyScriptSelection(initialScriptId, { trackSelection: false });
     } else {
       handleRandom();
     }
@@ -15902,6 +19314,34 @@ async function openMainWindow() {
   }
   loadContextDataAsync();
   updateSceneHistoryNav();
+  updateRunButtonsState();
+  updateQueueButtonUI();
+}
+function updateRunButtonsState() {
+  const $singleBtn = $("#t-btn-run-single");
+  const $queueBtn = $("#t-btn-run-queue");
+  if (!$singleBtn.length || !$queueBtn.length) return;
+  const isGenerating = GlobalState.isGenerating;
+  const isQueueRunning = GlobalState.queueState.isRunning;
+  if (isGenerating || isQueueRunning) {
+    $singleBtn.prop("disabled", true);
+    $queueBtn.prop("disabled", true);
+  } else {
+    $singleBtn.prop("disabled", false);
+    $queueBtn.prop("disabled", false);
+  }
+}
+function updateQueueButtonUI() {
+  const $queueBtn = $("#t-btn-run-queue");
+  const $settingsBtn = $("#t-btn-queue-settings");
+  if (!$queueBtn.length) return;
+  if (GlobalState.queueState.enabled) {
+    $queueBtn.removeClass("inactive").addClass("active");
+    $settingsBtn.addClass("active");
+  } else {
+    $queueBtn.removeClass("active").addClass("inactive");
+    $settingsBtn.removeClass("active");
+  }
 }
 function updateContentStatsDisplay(stats) {
   const $hud = $("#t-stats-hud");
@@ -15911,33 +19351,85 @@ function updateContentStatsDisplay(stats) {
     return;
   }
   const formatNumber = (num) => num.toLocaleString();
+  const modelName = stats.modelName || GlobalState.lastUsedModelName || "-";
+  const displayModelName = modelName.length > 20 ? modelName.substring(0, 18) + "\u2026" : modelName;
+  $("#t-stat-model").text(displayModelName).attr("title", modelName);
   $("#t-stat-total").text(formatNumber(stats.totalChars));
   $("#t-stat-chinese").text(formatNumber(stats.chineseChars));
-  const tokenText = stats.isEstimated ? `~${formatNumber(stats.tokens)}` : formatNumber(stats.tokens);
-  $("#t-stat-tokens").text(tokenText);
+  const genTime = stats.generationTime || GlobalState.lastGenerationTime || 0;
+  if (genTime > 0) {
+    const seconds = (genTime / 1e3).toFixed(1);
+    $("#t-stat-time").text(`${seconds}s`);
+  } else {
+    $("#t-stat-time").text("-");
+  }
   $hud.show();
 }
+function updateFavButtonUI() {
+  const btn = $("#t-btn-like");
+  if (!btn.length) return;
+  if (GlobalState.lastFavId) {
+    btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i>');
+  } else {
+    btn.html('<i class="fa-regular fa-heart"></i>');
+  }
+}
+function updateScriptTitleDisplay() {
+  const scriptId = GlobalState.lastGeneratedScriptId;
+  if (!scriptId) return;
+  const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
+  if (!script) {
+    $("#t-lbl-name").text("\u672A\u77E5\u5267\u672C");
+    $("#t-lbl-cat").text("\u5DF2\u5220\u9664").css({
+      "color": "#888",
+      "background": "rgba(136, 136, 136, 0.15)",
+      "border": "1px solid rgba(136, 136, 136, 0.33)"
+    });
+    $("#t-lbl-desc-mini").text("\u8BE5\u5267\u672C\u53EF\u80FD\u5DF2\u88AB\u5220\u9664");
+    return;
+  }
+  $("#t-lbl-name").text(script.name);
+  const category = script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
+  $("#t-lbl-cat").text(category).css({
+    "color": "#bfa15f",
+    "background": "rgba(191, 161, 95, 0.15)",
+    "border": "1px solid rgba(191, 161, 95, 0.33)"
+  });
+  $("#t-lbl-desc-mini").text(script.desc || "\u65E0\u7B80\u4ECB");
+}
 function updateSceneHistoryNav() {
-  const navState = getHistoryNavState();
-  const $nav = $("#t-scene-nav");
   const $prevBtn = $("#t-nav-prev");
   const $nextBtn = $("#t-nav-next");
-  const $indicator = $("#t-nav-indicator");
-  const $unread = $("#t-nav-unread");
-  if (navState.total > 0) {
-    $nav.show();
-    $prevBtn.prop("disabled", !navState.hasPrev);
-    $nextBtn.prop("disabled", !navState.hasNext);
-    $indicator.text(`${navState.current}/${navState.total}`);
-    const unreadCount = getUnreadCount();
-    if (unreadCount > 0) {
-      $unread.text(unreadCount).show();
+  const $indicator = $("#t-page-indicator");
+  const history = GlobalState.sceneHistory;
+  const display = GlobalState.displayState;
+  const streaming = GlobalState.streamingCache;
+  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+  const virtualTotal = streaming.isActive && display.isViewingHistory ? history.items.length + 1 : history.items.length;
+  const displayCurrent = display.isViewingHistory ? effectiveIndex + 1 : streaming.isActive ? 0 : effectiveIndex + 1;
+  const hasPrev = effectiveIndex < history.items.length - 1;
+  const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
+  if (history.items.length > 1 || history.items.length >= 1 && streaming.isActive) {
+    $prevBtn.show();
+    $nextBtn.show();
+    $indicator.show();
+    $prevBtn.prop("disabled", !hasPrev);
+    $nextBtn.prop("disabled", !hasNext);
+    if (streaming.isActive && !display.isViewingHistory) {
+      $indicator.text(`\u23F3/${history.items.length}`);
+      $indicator.css("color", "#90cdf4");
+    } else if (display.isViewingHistory && streaming.isActive) {
+      $indicator.text(`${effectiveIndex + 1}/${history.items.length} \u26A1`);
+      $indicator.css("color", "#ffeaa7");
     } else {
-      $unread.hide();
+      $indicator.text(`${effectiveIndex + 1}/${history.items.length}`);
+      $indicator.css("color", "rgba(255, 255, 255, 0.3)");
     }
     markCurrentAsRead();
   } else {
-    $nav.hide();
+    $prevBtn.hide();
+    $nextBtn.hide();
+    $indicator.hide();
   }
 }
 function loadContextDataAsync() {
@@ -16235,7 +19727,10 @@ function renderFilterMenu(currentFilter, $targetBtn, onSelect) {
     $("#t-filter-popover").remove();
     return;
   }
-  const list = GlobalState.runtimeScripts;
+  const baseList = GlobalState.runtimeScripts;
+  let currentSortMode = getScriptSortMode();
+  const getSortedList = () => sortScripts(baseList, currentSortMode);
+  let list = getSortedList();
   const cats = [...new Set(list.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")))].sort();
   const html = `
     <div id="t-filter-popover" class="t-filter-popover">
@@ -16273,7 +19768,9 @@ function renderFilterMenu(currentFilter, $targetBtn, onSelect) {
 }
 function showScriptSelector(initialFilter = "ALL") {
   if ($("#t-selector-panel").length) return;
-  const list = GlobalState.runtimeScripts;
+  let currentSortMode = getScriptSortMode();
+  const getSortedList = () => sortScripts(GlobalState.runtimeScripts, currentSortMode);
+  let list = getSortedList();
   let categories = ["\u5168\u90E8"];
   const scriptCats = [...new Set(list.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")))];
   categories = categories.concat(scriptCats.sort());
@@ -16283,6 +19780,14 @@ function showScriptSelector(initialFilter = "ALL") {
         <div class="t-sel-header">
             <div style="font-weight:bold; color:#ccc;">\u{1F4DA} \u9009\u62E9\u5267\u672C <span style="font-size:0.8em; color:#666; font-weight:normal; margin-left:10px;">(\u5171 ${list.length} \u4E2A)</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
+                <select id="t-sel-sort" class="t-sel-sort-select" title="\u6392\u5E8F\u65B9\u5F0F">
+                    <option value="smart">\u667A\u80FD\u6392\u5E8F</option>
+                    <option value="recent_generated">\u6700\u8FD1\u4F7F\u7528</option>
+                    <option value="most_used">\u6700\u5E38\u4F7F\u7528</option>
+                    <option value="name_asc">\u540D\u79F0 A-Z</option>
+                    <option value="name_desc">\u540D\u79F0 Z-A</option>
+                    <option value="default">\u9ED8\u8BA4\u987A\u5E8F</option>
+                </select>
                 <input type="text" id="t-sel-search" class="t-sel-search-input" placeholder="\u{1F50D} \u641C\u7D22\u5267\u672C...">
                 <div style="cursor:pointer; padding:5px 10px;" id="t-sel-close"><i class="fa-solid fa-xmark"></i></div>
             </div>
@@ -16291,10 +19796,12 @@ function showScriptSelector(initialFilter = "ALL") {
             <div class="t-sel-sidebar" id="t-sel-sidebar"></div>
             <div class="t-sel-grid" id="t-sel-grid"></div>
         </div>
+        <div class="t-sel-footer" id="t-sel-footer-tip"></div>
     </div>`;
   $("#t-main-view").append(html);
   let currentCat = initialFilter === "ALL" ? "\u5168\u90E8" : initialFilter;
   const renderGrid = () => {
+    list = getSortedList();
     const $grid = $("#t-sel-grid");
     $grid.empty();
     let filtered = list;
@@ -16313,18 +19820,22 @@ function showScriptSelector(initialFilter = "ALL") {
       return;
     }
     filtered.forEach((s) => {
+      const stats = getScriptStats(s.id);
       const card = $(`
                 <div class="t-script-card">
                     <div class="t-card-title">${s.name}</div>
                     <div class="t-card-desc">${s.desc || "..."}</div>
+                    <div class="t-card-stats">\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 ${formatRelativeTime2(stats.last_generated_at)}</div>
                 </div>
             `);
       card.on("click", () => {
-        applyScriptSelection(s.id);
+        applyScriptSelection(s.id, { trackSelection: true });
         $("#t-selector-panel").remove();
       });
       $grid.append(card);
     });
+    const tip = `\u5F53\u524D\u6392\u5E8F\uFF1A${SORT_MODE_LABELS2[currentSortMode] || currentSortMode}`;
+    $("#t-sel-footer-tip").text(tip);
   };
   const $sidebar = $("#t-sel-sidebar");
   categories.forEach((cat) => {
@@ -16340,6 +19851,10 @@ function showScriptSelector(initialFilter = "ALL") {
   });
   $("#t-sel-search").on("input", function() {
     currentSearch = $(this).val();
+    renderGrid();
+  });
+  $("#t-sel-sort").val(currentSortMode).on("change", function() {
+    currentSortMode = setScriptSortMode($(this).val());
     renderGrid();
   });
   renderGrid();
@@ -16444,6 +19959,238 @@ function openContentEditor() {
   });
   setTimeout(() => $textarea.focus(), 100);
 }
+function openQueueSettingsWindow() {
+  if ($("#t-queue-settings").length) return;
+  const data = getExtData();
+  const queueCfg = data.queue_config || {};
+  const qState = GlobalState.queueState;
+  const categories = ["\u5168\u90E8", ...new Set(
+    GlobalState.runtimeScripts.map((s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B"))
+  )].sort((a, b) => a === "\u5168\u90E8" ? -1 : b === "\u5168\u90E8" ? 1 : a.localeCompare(b));
+  const html = `
+    <div id="t-queue-settings" class="t-queue-settings">
+        <div class="t-queue-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-layer-group" style="color:#90cdf4;"></i>
+                <span style="font-weight:bold;">\u961F\u5217\u751F\u6210\u8BBE\u7F6E</span>
+            </div>
+            <div class="t-close" id="t-queue-close">&times;</div>
+        </div>
+        
+        <div class="t-queue-body">
+            <!-- \u6A21\u5F0F\u5207\u6362 -->
+            <div class="t-queue-section">
+                <div class="t-queue-label">\u751F\u6210\u6A21\u5F0F</div>
+                <div class="t-queue-mode-toggle">
+                    <div class="t-queue-mode-btn ${qState.mode === "random" ? "active" : ""}" data-mode="random">
+                        <i class="fa-solid fa-dice"></i>
+                        <span>\u968F\u673A\u62BD\u53D6</span>
+                    </div>
+                    <div class="t-queue-mode-btn ${qState.mode === "manual" ? "active" : ""}" data-mode="manual">
+                        <i class="fa-solid fa-hand-pointer"></i>
+                        <span>\u624B\u52A8\u9009\u62E9</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- \u968F\u673A\u6A21\u5F0F\u8BBE\u7F6E -->
+            <div class="t-queue-random-panel" id="t-queue-random-panel" style="${qState.mode === "random" ? "" : "display:none;"}">
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u751F\u6210\u6570\u91CF</div>
+                    <div class="t-queue-control">
+                        <button class="t-queue-num-btn" id="t-queue-count-dec">-</button>
+                        <span class="t-queue-num-value" id="t-queue-count-value">${qState.count}</span>
+                        <button class="t-queue-num-btn" id="t-queue-count-inc">+</button>
+                    </div>
+                </div>
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u5206\u7C7B\u8303\u56F4</div>
+                    <select class="t-queue-select" id="t-queue-category">
+                        ${categories.map((c) => `<option value="${c === "\u5168\u90E8" ? "ALL" : c}" ${qState.categoryFilter === "ALL" && c === "\u5168\u90E8" || qState.categoryFilter === c ? "selected" : ""}>${c}</option>`).join("")}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- \u624B\u52A8\u6A21\u5F0F\u8BBE\u7F6E -->
+            <div class="t-queue-manual-panel" id="t-queue-manual-panel" style="${qState.mode === "manual" ? "" : "display:none;"}">
+                <div class="t-queue-label">\u9009\u62E9\u5267\u672C <span style="color:#666; font-size:0.85em;">(\u5DF2\u9009 <span id="t-queue-selected-count">${qState.manualItems.length}</span> \u4E2A)</span></div>
+                <div class="t-queue-script-list" id="t-queue-script-list">
+                    ${GlobalState.runtimeScripts.map((s) => `
+                        <div class="t-queue-script-item ${qState.manualItems.includes(s.id) ? "selected" : ""}" data-id="${s.id}">
+                            <input type="checkbox" ${qState.manualItems.includes(s.id) ? "checked" : ""}>
+                            <div class="t-queue-script-info">
+                                <div class="t-queue-script-name">${s.name}</div>
+                                <div class="t-queue-script-cat">${s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")}</div>
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+                <div class="t-queue-script-actions">
+                    <button class="t-btn" id="t-queue-select-all">\u5168\u9009</button>
+                    <button class="t-btn" id="t-queue-select-none">\u6E05\u7A7A</button>
+                </div>
+            </div>
+            
+            <!-- \u901A\u7528\u8BBE\u7F6E -->
+            <div class="t-queue-section" style="border-top:1px solid #333; padding-top:12px; margin-top:5px;">
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u751F\u6210\u95F4\u9694 <span style="color:#666; font-size:0.85em;">(\u79D2)</span></div>
+                    <div class="t-queue-control">
+                        <button class="t-queue-num-btn" id="t-queue-interval-dec">-</button>
+                        <span class="t-queue-num-value" id="t-queue-interval-value">${qState.interval}</span>
+                        <button class="t-queue-num-btn" id="t-queue-interval-inc">+</button>
+                    </div>
+                </div>
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u5386\u53F2\u5BB9\u91CF</div>
+                    <div class="t-queue-control">
+                        <button class="t-queue-num-btn" id="t-queue-history-dec">-</button>
+                        <span class="t-queue-num-value" id="t-queue-history-value">${GlobalState.sceneHistory.maxItems}</span>
+                        <button class="t-queue-num-btn" id="t-queue-history-inc">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="t-queue-footer">
+            <div class="t-queue-status" id="t-queue-status">
+                ${qState.enabled ? '<i class="fa-solid fa-check-circle" style="color:#55efc4;"></i> \u961F\u5217\u5DF2\u6FC0\u6D3B' : '<i class="fa-solid fa-circle" style="color:#666;"></i> \u961F\u5217\u672A\u6FC0\u6D3B'}
+            </div>
+            <div class="t-queue-actions">
+                <button class="t-btn" id="t-queue-cancel">\u53D6\u6D88</button>
+                <button class="t-btn primary" id="t-queue-save">${qState.enabled ? "\u66F4\u65B0\u8BBE\u7F6E" : "\u6FC0\u6D3B\u961F\u5217"}</button>
+            </div>
+        </div>
+    </div>`;
+  $("#t-main-view").append(html);
+  $(".t-queue-mode-btn").on("click", function() {
+    const mode = $(this).data("mode");
+    $(".t-queue-mode-btn").removeClass("active");
+    $(this).addClass("active");
+    if (mode === "random") {
+      $("#t-queue-random-panel").show();
+      $("#t-queue-manual-panel").hide();
+    } else {
+      $("#t-queue-random-panel").hide();
+      $("#t-queue-manual-panel").show();
+    }
+  });
+  $("#t-queue-count-dec").on("click", function() {
+    const $val = $("#t-queue-count-value");
+    let v = parseInt($val.text()) || 3;
+    if (v > 1) $val.text(v - 1);
+  });
+  $("#t-queue-count-inc").on("click", function() {
+    const $val = $("#t-queue-count-value");
+    let v = parseInt($val.text()) || 3;
+    if (v < 20) $val.text(v + 1);
+  });
+  $("#t-queue-interval-dec").on("click", function() {
+    const $val = $("#t-queue-interval-value");
+    let v = parseInt($val.text()) || 2;
+    if (v > 0) $val.text(v - 1);
+  });
+  $("#t-queue-interval-inc").on("click", function() {
+    const $val = $("#t-queue-interval-value");
+    let v = parseInt($val.text()) || 2;
+    if (v < 30) $val.text(v + 1);
+  });
+  $("#t-queue-history-dec").on("click", function() {
+    const $val = $("#t-queue-history-value");
+    let v = parseInt($val.text()) || 5;
+    if (v > 5) $val.text(v - 5);
+  });
+  $("#t-queue-history-inc").on("click", function() {
+    const $val = $("#t-queue-history-value");
+    let v = parseInt($val.text()) || 5;
+    if (v < 50) $val.text(v + 5);
+  });
+  $(".t-queue-script-item").on("click", function(e) {
+    if ($(e.target).is("input")) return;
+    const $checkbox = $(this).find("input");
+    $checkbox.prop("checked", !$checkbox.prop("checked"));
+    $(this).toggleClass("selected", $checkbox.prop("checked"));
+    updateSelectedCount();
+  });
+  $(".t-queue-script-item input").on("change", function() {
+    $(this).closest(".t-queue-script-item").toggleClass("selected", $(this).prop("checked"));
+    updateSelectedCount();
+  });
+  function updateSelectedCount() {
+    const count = $(".t-queue-script-item.selected").length;
+    $("#t-queue-selected-count").text(count);
+  }
+  $("#t-queue-select-all").on("click", function() {
+    $(".t-queue-script-item").addClass("selected").find("input").prop("checked", true);
+    updateSelectedCount();
+  });
+  $("#t-queue-select-none").on("click", function() {
+    $(".t-queue-script-item").removeClass("selected").find("input").prop("checked", false);
+    updateSelectedCount();
+  });
+  $("#t-queue-save").on("click", function() {
+    const mode = $(".t-queue-mode-btn.active").data("mode");
+    const count = parseInt($("#t-queue-count-value").text()) || 3;
+    const category = $("#t-queue-category").val();
+    const interval = parseInt($("#t-queue-interval-value").text()) || 2;
+    const historyMax = parseInt($("#t-queue-history-value").text()) || 5;
+    const manualItems = [];
+    $(".t-queue-script-item.selected").each(function() {
+      manualItems.push($(this).data("id"));
+    });
+    if (mode === "manual" && manualItems.length === 0) {
+      if (window.toastr) toastr.warning("\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u5267\u672C", "Titania");
+      return;
+    }
+    GlobalState.queueState.enabled = true;
+    GlobalState.queueState.mode = mode;
+    GlobalState.queueState.count = count;
+    GlobalState.queueState.categoryFilter = category;
+    GlobalState.queueState.manualItems = manualItems;
+    GlobalState.queueState.interval = interval;
+    setHistoryMaxItems(historyMax);
+    const d = getExtData();
+    d.queue_config = {
+      enabled: true,
+      mode,
+      count,
+      categoryFilter: category,
+      manualItems,
+      interval,
+      historyMax
+    };
+    saveExtData();
+    updateQueueButtonUI();
+    $("#t-queue-settings").remove();
+    if (window.toastr) toastr.success(`\u2728 \u961F\u5217\u5DF2\u6FC0\u6D3B\uFF1A${mode === "random" ? `\u968F\u673A ${count} \u4E2A` : `${manualItems.length} \u4E2A\u5267\u672C`}`, "Titania");
+  });
+  $("#t-queue-cancel").on("click", function() {
+    $("#t-queue-settings").remove();
+  });
+  $("#t-queue-close").on("click", function() {
+    $("#t-queue-settings").remove();
+  });
+}
+function getQueueScripts() {
+  const qState = GlobalState.queueState;
+  if (!qState.enabled) {
+    return [];
+  }
+  if (qState.mode === "manual") {
+    return qState.manualItems.map((id) => GlobalState.runtimeScripts.find((s) => s.id === id)).filter((s) => s).map((s) => ({ id: s.id, name: s.name }));
+  } else {
+    let pool = GlobalState.runtimeScripts;
+    if (qState.categoryFilter !== "ALL") {
+      pool = pool.filter(
+        (s) => (s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === qState.categoryFilter
+      );
+    }
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, Math.min(qState.count, shuffled.length));
+    return selected.map((s) => ({ id: s.id, name: s.name }));
+  }
+}
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -16456,6 +20203,18 @@ var init_mainWindow = __esm({
     init_loreReviewWindow();
     init_settingsWindow();
     init_helpers();
+    init_scriptData();
+    SORT_MODE_LABELS2 = {
+      default: "\u9ED8\u8BA4\u987A\u5E8F",
+      smart: "\u667A\u80FD\u6392\u5E8F",
+      recent_generated: "\u6700\u8FD1\u4F7F\u7528",
+      most_used: "\u6700\u5E38\u4F7F\u7528",
+      name_asc: "\u540D\u79F0 A-Z",
+      name_desc: "\u540D\u79F0 Z-A"
+    };
+    CONTINUATION_RECENT_MAX = 10;
+    CONTINUATION_MAX_INJECT_ROUNDS = 5;
+    CONTINUATION_TOKEN_WARN_THRESHOLD = 6e4;
   }
 });
 
@@ -16785,7 +20544,7 @@ function renderResults() {
     const scorePercent = Math.round(result.score * 100);
     const isSelected = selectedIndices.has(index);
     const scoreColor = scorePercent >= 70 ? "#4caf50" : scorePercent >= 50 ? "#ff9800" : "#888";
-    const displayText = escapeHtml3(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
+    const displayText = escapeHtml4(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
     return '<div class="t-recall-result-item" data-index="' + index + '" style="display: flex; gap: 10px; padding: 12px; margin-bottom: 8px; background: ' + (isSelected ? "#2a3a4a" : "#1e1e1e") + "; border: 1px solid " + (isSelected ? "#4a9eff" : "#333") + '; border-radius: 8px; cursor: pointer; transition: all 0.2s;"><div style="flex-shrink: 0; padding-top: 2px;"><input type="checkbox" ' + (isSelected ? "checked" : "") + ' style="cursor: pointer;"></div><div style="flex: 1; min-width: 0;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="color: #888; font-size: 0.85em;">#' + result.messageIndex + '</span><span style="color: ' + scoreColor + '; font-weight: bold; font-size: 0.9em;">' + scorePercent + '%</span></div><div style="color: #ccc; font-size: 0.9em; line-height: 1.5; word-break: break-word;">' + displayText + "</div></div></div>";
   }).join("");
   $resultsList.html(html);
@@ -16849,7 +20608,7 @@ function handleAppend() {
     }
   }
 }
-function escapeHtml3(text) {
+function escapeHtml4(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -17012,10 +20771,12 @@ function getEnabledToolbarButtons() {
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
     lore: true,
+    model: false,
     settings: true,
     favs: false,
     scripts: false,
-    debug: false
+    debug: false,
+    recall: false
   };
   const maxItems = toolbarConfig.max_items || 5;
   const enabledButtons = TOOLBAR_BUTTONS.filter((btn) => enabledItems[btn.id] === true);
@@ -17036,21 +20797,12 @@ function showSlideMenu() {
   const btnSize = $btn.outerWidth() || 56;
   const isOnLeft = btnRect.left < window.innerWidth / 2;
   const backdrop = $(`<div id="titania-menu-backdrop"></div>`);
-  let menuContent = "";
-  if (GlobalState.isGenerating) {
-    menuContent = `
-            <div class="t-menu-icon-btn cancel" id="titania-cancel-btn" title="\u4E2D\u6B62\u6F14\u7ECE">
-                <i class="fa-solid fa-stop"></i>
-            </div>
-        `;
-  } else {
-    const enabledButtons = getEnabledToolbarButtons();
-    menuContent = enabledButtons.map((btn) => `
-            <div class="t-menu-icon-btn ${btn.cssClass}" data-btn-id="${btn.id}" title="${btn.title}">
-                <i class="${btn.icon}"></i>
-            </div>
-        `).join("");
-  }
+  const enabledButtons = getEnabledToolbarButtons();
+  const menuContent = enabledButtons.map((btn) => `
+        <div class="t-menu-icon-btn ${btn.cssClass}" data-btn-id="${btn.id}" title="${btn.title}">
+            <i class="${btn.icon}"></i>
+        </div>
+    `).join("");
   const slideMenu = $(`
         <div id="titania-slide-menu" class="t-horizontal">
             ${menuContent}
@@ -17088,11 +20840,6 @@ function showSlideMenu() {
       handler(e);
     });
   };
-  bindClick(slideMenu.find("#titania-cancel-btn"), async () => {
-    const { cancelGeneration: cancelGeneration2 } = await Promise.resolve().then(() => (init_api(), api_exports));
-    cancelGeneration2();
-    hideSlideMenu();
-  });
   slideMenu.find(".t-menu-icon-btn[data-btn-id]").each(function() {
     const btnId = $(this).data("btn-id");
     const btnDef = TOOLBAR_BUTTONS.find((b) => b.id === btnId);
@@ -17203,6 +20950,15 @@ function createFloatingButton() {
   const bgColor = app.bg_color || "#2b2b2b";
   const borderOpacity = app.border_opacity !== void 0 ? app.border_opacity : 100;
   const bgOpacity = app.bg_opacity !== void 0 ? app.bg_opacity : 100;
+  const rawAppContent = typeof app.content === "string" ? app.content.trim() : "";
+  const isImageDataUri = rawAppContent.toLowerCase().startsWith("data:image/");
+  if (isImageDataUri && app.type !== "image") {
+    app.type = "image";
+    if (!settings2.appearance) {
+      settings2.appearance = app;
+    }
+    saveExtData();
+  }
   const hexToRgba = (hex, opacity) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     if (!result) return hex;
@@ -17213,7 +20969,8 @@ function createFloatingButton() {
   };
   const borderColorRgba = hexToRgba(borderColor, borderOpacity);
   const bgColorRgba = hexToRgba(bgColor, bgOpacity);
-  const btnContent = app.type === "image" && app.content.startsWith("data:") ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${app.content}</span>`;
+  const btnText = app.content ?? "\u{1F3AD}";
+  const btnContent = isImageDataUri ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${btnText}</span>`;
   const btn = $(`<div id="titania-float-btn" data-animation="${animationType}">${btnContent}</div>`);
   const timer = $(`<div id="titania-timer">0.0s</div>`);
   btn.css({
@@ -17372,38 +21129,288 @@ var init_floatingBtn = __esm({
 });
 
 // src/core/api.js
-var api_exports = {};
-__export(api_exports, {
-  cancelGeneration: () => cancelGeneration,
-  handleGenerate: () => handleGenerate,
-  renderGeneratedContent: () => renderGeneratedContent
-});
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
-import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
-import { evaluateMacros as evaluateMacros2 } from "../../../macros.js";
-function renderGeneratedContent(content, scriptName = "\u573A\u666F") {
+import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
+import EventSourceStream2 from "../../../sse-stream.js";
+import { evaluateMacros } from "../../../macros.js";
+function clampContinuationInjectRounds(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 3;
+  return Math.max(1, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
+}
+function estimateTokensByChars(charCount) {
+  return Math.ceil((Number(charCount) || 0) / 4);
+}
+function getContinuationRuntimeStore() {
+  if (!GlobalState.continuationRuntime || typeof GlobalState.continuationRuntime !== "object") {
+    GlobalState.continuationRuntime = { byScript: {} };
+  }
+  if (!GlobalState.continuationRuntime.byScript || typeof GlobalState.continuationRuntime.byScript !== "object") {
+    GlobalState.continuationRuntime.byScript = {};
+  }
+  return GlobalState.continuationRuntime.byScript;
+}
+function getContinuationSessionRounds(scriptId) {
+  const byScript = getContinuationRuntimeStore();
+  const rounds = byScript[scriptId]?.rounds;
+  if (!Array.isArray(rounds)) return [];
+  return rounds.map((item, idx) => ({
+    round: Number(item?.round) || idx + 1,
+    instruction: String(item?.instruction || "").trim(),
+    content: String(item?.content || "").trim(),
+    timestamp: Number(item?.timestamp) || 0
+  })).filter((item) => item.content.length > 0);
+}
+function appendContinuationSessionRound(scriptId, scriptName, instruction, content) {
+  if (!scriptId) return;
+  const textContent = String(content || "").trim();
+  if (!textContent) return;
+  const byScript = getContinuationRuntimeStore();
+  if (!byScript[scriptId] || typeof byScript[scriptId] !== "object") {
+    byScript[scriptId] = {
+      scriptId,
+      scriptName: scriptName || "\u573A\u666F",
+      rounds: []
+    };
+  }
+  if (!Array.isArray(byScript[scriptId].rounds)) {
+    byScript[scriptId].rounds = [];
+  }
+  const rounds = byScript[scriptId].rounds;
+  rounds.push({
+    round: rounds.length + 1,
+    instruction: String(instruction || "").trim(),
+    content: textContent,
+    timestamp: Date.now()
+  });
+  while (rounds.length > CONTINUATION_SESSION_MAX_ROUNDS) {
+    rounds.shift();
+  }
+  rounds.forEach((item, index) => {
+    item.round = index + 1;
+  });
+  byScript[scriptId].scriptName = scriptName || byScript[scriptId].scriptName || "\u573A\u666F";
+}
+function resetContinuationSessionRounds(scriptId, scriptName = "\u573A\u666F") {
+  if (!scriptId) return;
+  const byScript = getContinuationRuntimeStore();
+  byScript[scriptId] = {
+    scriptId,
+    scriptName: scriptName || "\u573A\u666F",
+    rounds: [],
+    resetAt: Date.now()
+  };
+}
+function buildContinuationSessionInjection(scriptId, injectRoundsCount) {
+  const rounds = getContinuationSessionRounds(scriptId);
+  const takeCount = clampContinuationInjectRounds(injectRoundsCount);
+  const selectedRounds = rounds.slice(-takeCount);
+  if (selectedRounds.length === 0) {
+    return {
+      totalRounds: 0,
+      selectedRounds: [],
+      text: "\uFF08\u65E0\u5386\u53F2\u7EED\u5199\u8F6E\u6B21\uFF0C\u8FD9\u662F\u9996\u8F6E\u4E3B\u52A8\u7EED\u5199\uFF09",
+      estimatedChars: 0,
+      estimatedTokens: 0
+    };
+  }
+  const block = selectedRounds.map((item) => {
+    const roundLabel = `\u7B2C${item.round}\u8F6E`;
+    const instructionText = item.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
+    return `[${roundLabel} \u6307\u4EE4]
+${instructionText}
+
+[${roundLabel} \u7ED3\u679C]
+${item.content}`;
+  }).join("\n\n");
+  const estimatedChars = block.length;
+  return {
+    totalRounds: rounds.length,
+    selectedRounds,
+    text: block,
+    estimatedChars,
+    estimatedTokens: estimateTokensByChars(estimatedChars)
+  };
+}
+function getContinuationSessionStats(scriptId, injectRoundsCount = 3) {
+  if (!scriptId) {
+    return {
+      totalRounds: 0,
+      selectedRounds: 0,
+      estimatedChars: 0,
+      estimatedTokens: 0
+    };
+  }
+  const injection = buildContinuationSessionInjection(scriptId, injectRoundsCount);
+  return {
+    totalRounds: injection.totalRounds,
+    selectedRounds: injection.selectedRounds.length,
+    estimatedChars: injection.estimatedChars,
+    estimatedTokens: injection.estimatedTokens
+  };
+}
+function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
   const container = document.getElementById("t-output-content");
   if (!container) {
     TitaniaLogger.warn("renderGeneratedContent: \u5BB9\u5668\u4E0D\u5B58\u5728");
     return;
   }
-  TitaniaLogger.info("renderGeneratedContent \u5F00\u59CB", {
-    contentLength: content?.length || 0,
-    scriptName
-  });
-  $("#t-interactive-fab").remove();
+  const scrollContainer = document.querySelector(".t-content-area");
+  const streamScrollState = isStreaming && scrollContainer ? {
+    top: scrollContainer.scrollTop,
+    height: scrollContainer.scrollHeight,
+    // 当用户已经接近底部时，维持自动跟随
+    stickToBottom: scrollContainer.scrollHeight - scrollContainer.clientHeight - scrollContainer.scrollTop <= 24
+  } : null;
+  if (!isStreaming) {
+    TitaniaLogger.info("renderGeneratedContent \u5F00\u59CB", {
+      contentLength: content?.length || 0,
+      scriptName
+    });
+  }
+  if (!isStreaming) {
+    $("#t-interactive-fab").remove();
+  }
   try {
     renderToShadowDOMReal(container, content);
-    TitaniaLogger.info("Shadow DOM \u6E32\u67D3\u5B8C\u6210");
+    if (!isStreaming) {
+      TitaniaLogger.info("Shadow DOM \u6E32\u67D3\u5B8C\u6210");
+    }
   } catch (e) {
     TitaniaLogger.error("Shadow DOM \u6E32\u67D3\u5931\u8D25", e);
     container.innerHTML = content;
   }
-  const interactiveResult = detectInteractiveContent(content);
-  TitaniaLogger.info("\u4E92\u52A8\u68C0\u6D4B\u7ED3\u679C", interactiveResult);
-  if (interactiveResult.isInteractive) {
-    showInteractiveFAB(scriptName, content, interactiveResult.reasons);
+  if (streamScrollState && scrollContainer) {
+    requestAnimationFrame(() => {
+      if (streamScrollState.stickToBottom) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      } else {
+        const maxTop = Math.max(0, scrollContainer.scrollHeight - scrollContainer.clientHeight);
+        scrollContainer.scrollTop = Math.min(streamScrollState.top, maxTop);
+      }
+    });
   }
+  if (!isStreaming) {
+    const interactiveResult = detectInteractiveContent(content);
+    TitaniaLogger.info("\u4E92\u52A8\u68C0\u6D4B\u7ED3\u679C", interactiveResult);
+    if (interactiveResult.isInteractive) {
+      showInteractiveFAB(scriptName, content, interactiveResult.reasons);
+    }
+  }
+}
+function scheduleStreamRender(content, scriptName) {
+  pendingStreamContent = content;
+  updateStreamingCache(content);
+  if (!shouldRenderStreamToUI()) {
+    updateNewContentIndicator();
+    return;
+  }
+  const now = Date.now();
+  const timeSinceLastRender = now - lastRenderTime;
+  if (timeSinceLastRender >= STREAM_RENDER_INTERVAL) {
+    lastRenderTime = now;
+    renderGeneratedContent(pendingStreamContent, scriptName, true);
+    return;
+  }
+  if (!streamRenderTimer) {
+    streamRenderTimer = setTimeout(() => {
+      streamRenderTimer = null;
+      lastRenderTime = Date.now();
+      if (shouldRenderStreamToUI()) {
+        renderGeneratedContent(pendingStreamContent, scriptName, true);
+      }
+    }, STREAM_RENDER_INTERVAL - timeSinceLastRender);
+  }
+}
+function updateNewContentIndicator() {
+  const $indicator = $("#t-new-content-indicator");
+  if ($indicator.length === 0 && $("#t-main-view").length > 0) {
+    const indicatorHtml = `
+            <div id="t-new-content-indicator" class="t-new-content-indicator">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>\u65B0\u5185\u5BB9\u751F\u6210\u4E2D...</span>
+                <button id="t-goto-live" class="t-goto-live-btn">\u67E5\u770B</button>
+            </div>
+        `;
+    $(".t-content-wrapper").append(indicatorHtml);
+    $("#t-goto-live").on("click", function() {
+      unlockDisplay();
+      GlobalState.sceneHistory.currentIndex = 0;
+      if (GlobalState.streamingCache.content) {
+        renderGeneratedContent(
+          GlobalState.streamingCache.content,
+          GlobalState.streamingCache.scriptName || "\u573A\u666F",
+          true
+        );
+      }
+      if (typeof window.updateSceneHistoryNav === "function") {
+        window.updateSceneHistoryNav();
+      }
+      $("#t-new-content-indicator").remove();
+    });
+  }
+}
+function removeNewContentIndicator() {
+  $("#t-new-content-indicator").fadeOut(200, function() {
+    $(this).remove();
+  });
+}
+function showGenerationCompleteNotification(scriptName) {
+  removeNewContentIndicator();
+  const $notification = $(`
+        <div id="t-generation-complete-notification" class="t-generation-complete-notification">
+            <div class="t-gcn-content">
+                <i class="fa-solid fa-check-circle"></i>
+                <span>\u300A${scriptName}\u300B\u751F\u6210\u5B8C\u6210</span>
+            </div>
+            <button id="t-gcn-view" class="t-gcn-view-btn">\u7ACB\u5373\u67E5\u770B</button>
+            <button id="t-gcn-close" class="t-gcn-close-btn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    `);
+  $("#t-generation-complete-notification").remove();
+  $(".t-content-wrapper").append($notification);
+  $("#t-gcn-view").on("click", function() {
+    unlockDisplay();
+    GlobalState.sceneHistory.currentIndex = 0;
+    const latestItem = GlobalState.sceneHistory.items[0];
+    if (latestItem) {
+      renderGeneratedContent(latestItem.content, latestItem.scriptName || "\u573A\u666F", false);
+      GlobalState.lastGeneratedContent = latestItem.content;
+      GlobalState.lastGeneratedScriptId = latestItem.scriptId;
+      GlobalState.lastFavId = latestItem.favId || null;
+    }
+    if (typeof window.updateSceneHistoryNav === "function") {
+      window.updateSceneHistoryNav();
+    }
+    updateScriptTitleDisplay();
+    updateFavButtonUI();
+    $notification.fadeOut(200, function() {
+      $(this).remove();
+    });
+  });
+  $("#t-gcn-close").on("click", function() {
+    $notification.fadeOut(200, function() {
+      $(this).remove();
+    });
+  });
+  setTimeout(() => {
+    if ($("#t-generation-complete-notification").length > 0) {
+      $("#t-generation-complete-notification").fadeOut(300, function() {
+        $(this).remove();
+      });
+    }
+  }, 5e3);
+}
+function finalizeStreamRender(content, scriptName) {
+  if (streamRenderTimer) {
+    clearTimeout(streamRenderTimer);
+    streamRenderTimer = null;
+  }
+  pendingStreamContent = "";
+  lastRenderTime = 0;
+  renderGeneratedContent(content, scriptName, false);
 }
 function showInteractiveFAB(scriptName, html, reasons) {
   $("#t-interactive-fab").remove();
@@ -17551,7 +21558,7 @@ function cancelGeneration() {
   TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u4E86\u751F\u6210");
   if (window.toastr) toastr.info("\u23F9\uFE0F \u6F14\u7ECE\u5DF2\u4E2D\u65AD", "Titania");
 }
-async function handleGenerate(forceScriptId = null, silent = false) {
+async function handleGenerate(forceScriptId = null, silent = false, generationOverrides = null) {
   const data = getExtData();
   const cfg = data.config || {};
   const dirDefaults = data.director || { instruction: "" };
@@ -17580,7 +21587,7 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     const errText = `\u914D\u7F6E\u7F3A\u5931\uFF1A${validation.error}`;
     if (!silent) alert(errText);
     TitaniaLogger.error("\u914D\u7F6E\u9519\u8BEF", errText, diagnostics);
-    return;
+    return false;
   }
   TitaniaLogger.info("\u4F7F\u7528\u8FDE\u63A5\u914D\u7F6E", {
     profile: conn.profileName,
@@ -17595,8 +21602,40 @@ async function handleGenerate(forceScriptId = null, silent = false) {
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
   if (!script) {
     if (!silent) alert("\u8BF7\u9009\u62E9\u5267\u672C");
-    return;
+    return false;
   }
+  const promptOverride = generationOverrides?.promptOverride;
+  const scriptPromptSource = typeof promptOverride === "string" && promptOverride.trim().length > 0 ? promptOverride : script.prompt;
+  const generationSource = generationOverrides?.source || (silent ? "queue" : "manual");
+  if (generationSource !== "user_continuation") {
+    resetContinuationSessionRounds(script.id, script.name);
+  }
+  let promptTraceId = createPromptTrace({
+    source: generationSource,
+    mode: GlobalState.generationMode,
+    scriptId: script.id,
+    scriptName: script.name,
+    profile: conn.profileName,
+    model: finalModel,
+    extraMeta: {
+      silent,
+      useSTConnection,
+      hasPromptOverride: typeof promptOverride === "string" && promptOverride.trim().length > 0,
+      keepOverlayOpen: generationOverrides?.keepOverlayOpen === true,
+      skipMacroEvaluation: generationOverrides?.skipMacroEvaluation === true
+    }
+  });
+  appendPromptTraceStage(promptTraceId, "init", {
+    connection: {
+      profile: conn.profileName,
+      endpoint: conn.url,
+      useSTConnection
+    },
+    script: {
+      id: script.id,
+      name: script.name
+    }
+  });
   if (!silent) {
     GlobalState.lastUsedScriptId = script.id;
     if ($("#t-main-view").length > 0) applyScriptSelection(script.id);
@@ -17644,15 +21683,23 @@ async function handleGenerate(forceScriptId = null, silent = false) {
       });
       if (!userConfirmed) {
         TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u751F\u6210\uFF08\u4E16\u754C\u4E66\u6761\u76EE\u4E3A\u7A7A\uFF09");
-        return;
+        finishPromptTrace(promptTraceId, "aborted", {
+          reason: "worldinfo_empty_user_cancel"
+        });
+        return false;
       }
     }
   }
-  if (!silent) $("#t-overlay").remove();
+  const keepOverlayOpen = generationOverrides?.keepOverlayOpen === true;
+  if (!silent && !keepOverlayOpen) $("#t-overlay").remove();
   GlobalState.abortController = new AbortController();
   const signal = GlobalState.abortController.signal;
   GlobalState.isGenerating = true;
   $floatBtn.addClass("t-loading");
+  startStreamingCache(script.id, script.name);
+  if (typeof window.updateRunButtonsState === "function") {
+    window.updateRunButtonsState();
+  }
   GlobalState.lastFavId = null;
   $("#t-btn-like").html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
   showCancelButton();
@@ -17686,72 +21733,164 @@ async function handleGenerate(forceScriptId = null, silent = false) {
     } else {
       sys = useCustomPrompts && customPrompts.content_mode?.trim() ? customPrompts.content_mode.trim() : DEFAULT_CONTENT_PROMPT;
     }
-    let user = `[Roleplay Context]
-Character: ${ctx.charName}
-User: ${ctx.userName}
-
-`;
+    appendPromptTraceStage(promptTraceId, "system_selected", {
+      mode: GlobalState.generationMode,
+      customPromptEnabled: useCustomPrompts,
+      usedCustomPrompt: GlobalState.generationMode === "visual" ? !!(useCustomPrompts && customPrompts.visual_mode?.trim()) : !!(useCustomPrompts && customPrompts.content_mode?.trim()),
+      length: sys.length,
+      estimatedTokens: estimateTokens(sys),
+      preview: sys.substring(0, 240)
+    });
+    let user = "";
+    const sectionLengths = {
+      director: 0,
+      persona: 0,
+      userDesc: 0,
+      worldInfo: 0,
+      history: 0,
+      scriptInstruction: 0
+    };
     let directorSection = "";
     if (dirInstruction.trim()) {
       directorSection += dirInstruction.trim() + "\n";
     }
     if (dStyle) {
-      directorSection += `Style Reference: Mimic this vibe (do not copy text):
+      directorSection += `\u6587\u7B14\u53C2\u8003\uFF1A\u6A21\u4EFF\u4EE5\u4E0B\u6587\u98CE\uFF08\u4E0D\u8981\u590D\u5236\u539F\u6587\uFF09:
 <style_ref>
 ${dStyle.substring(0, 1e3)}
 </style_ref>
 `;
     }
     if (directorSection) {
-      user += `[Director Instructions]
+      const block = `[\u5BFC\u6F14\u6307\u4EE4]
+\uFF08\u4EE5\u4E0B\u662F\u5199\u4F5C\u98CE\u683C\u548C\u683C\u5F0F\u8981\u6C42\uFF0C\u8BF7\u6309\u6B64\u98CE\u683C\u751F\u6210\u5185\u5BB9\uFF09
 ${directorSection}
 `;
+      sectionLengths.director = block.length;
+      user += block;
     }
-    if (ctx.persona) user += `[Character Persona]
+    if (ctx.persona) {
+      const block = `[\u89D2\u8272\u4EBA\u8BBE]
+\uFF08\u4EE5\u4E0B\u662F\u89D2\u8272\u7684\u6027\u683C\u8BBE\u5B9A\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u91CD\u590D\u8FD9\u4E9B\u5185\u5BB9\uFF09
 ${ctx.persona}
 
 `;
-    if (ctx.userDesc) user += `[User Persona]
+      sectionLengths.persona = block.length;
+      user += block;
+    }
+    if (ctx.userDesc) {
+      const block = `[\u7528\u6237\u8BBE\u5B9A]
+\uFF08\u4EE5\u4E0B\u662F\u7528\u6237\u7684\u63CF\u8FF0\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u80CC\u666F\u53C2\u8003\uFF09
 ${ctx.userDesc}
 
 `;
-    if (ctx.worldInfo) user += `[World Info]
+      sectionLengths.userDesc = block.length;
+      user += block;
+    }
+    if (ctx.worldInfo) {
+      const block = `[\u4E16\u754C\u89C2\u8BBE\u5B9A]
+\uFF08\u4EE5\u4E0B\u662F\u80CC\u666F\u8BBE\u5B9A\u548C\u4E16\u754C\u89C2\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u76F4\u63A5\u590D\u5236\uFF09
 ${ctx.worldInfo}
 
 `;
+      sectionLengths.worldInfo = block.length;
+      user += block;
+    }
     if (GlobalState.useHistoryAnalysis) {
       const limit = cfg.history_limit || 10;
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
       const history = getChatHistory2(limit, historyWhitelist);
-      user += history && history.trim().length > 0 ? `[Conversation History]
+      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
+\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
 ${history}
 
-` : `[Conversation History]
-(Empty)
+` : `[\u804A\u5929\u5386\u53F2]
+\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
 
 `;
+      sectionLengths.history = historyBlock.length;
+      user += historyBlock;
     }
-    let processedPrompt = script.prompt;
-    try {
-      const macroEnv = {
-        char: ctx.charName,
-        user: ctx.userName
-        // 可以根据需要添加更多环境变量
-      };
-      processedPrompt = evaluateMacros2(script.prompt, macroEnv);
-      TitaniaLogger.info("\u5B8F\u5904\u7406\u5B8C\u6210", {
-        original: script.prompt.substring(0, 100),
-        processed: processedPrompt.substring(0, 100)
+    const skipMacroEvaluation = generationOverrides?.skipMacroEvaluation === true;
+    let processedPrompt = scriptPromptSource;
+    if (!skipMacroEvaluation) {
+      try {
+        const macroEnv = {
+          char: ctx.charName,
+          user: ctx.userName
+          // 可以根据需要添加更多环境变量
+        };
+        processedPrompt = evaluateMacros(scriptPromptSource, macroEnv);
+        TitaniaLogger.info("\u5B8F\u5904\u7406\u5B8C\u6210", {
+          original: scriptPromptSource.substring(0, 100),
+          processed: processedPrompt.substring(0, 100)
+        });
+        appendPromptTraceStage(promptTraceId, "macro_processed", {
+          skipped: false,
+          fallback: false,
+          beforeLength: scriptPromptSource.length,
+          afterLength: processedPrompt.length,
+          beforePreview: scriptPromptSource.substring(0, 240),
+          afterPreview: processedPrompt.substring(0, 240)
+        });
+      } catch (e) {
+        TitaniaLogger.warn("ST \u5B8F\u5904\u7406\u5931\u8D25\uFF0C\u4F7F\u7528\u7B80\u5355\u66FF\u6362", e);
+        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
+        appendPromptTraceStage(promptTraceId, "macro_processed", {
+          skipped: false,
+          fallback: true,
+          error: e?.message || "macro_failed",
+          beforeLength: scriptPromptSource.length,
+          afterLength: processedPrompt.length,
+          beforePreview: scriptPromptSource.substring(0, 240),
+          afterPreview: processedPrompt.substring(0, 240)
+        });
+      }
+    } else {
+      TitaniaLogger.info("\u5DF2\u8DF3\u8FC7\u5B8F\u5904\u7406\uFF08\u4F7F\u7528\u91CD\u6784\u540E\u7684\u4E3B\u52A8\u7EED\u5199\u6D88\u606F\u6784\u5305\uFF09");
+      appendPromptTraceStage(promptTraceId, "macro_processed", {
+        skipped: true,
+        fallback: false,
+        beforeLength: scriptPromptSource.length,
+        afterLength: scriptPromptSource.length,
+        beforePreview: scriptPromptSource.substring(0, 240),
+        afterPreview: scriptPromptSource.substring(0, 240)
       });
-    } catch (e) {
-      TitaniaLogger.warn("ST \u5B8F\u5904\u7406\u5931\u8D25\uFF0C\u4F7F\u7528\u7B80\u5355\u66FF\u6362", e);
-      processedPrompt = script.prompt.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
     }
-    user += `[Scenario Request]
+    const scriptBlock = `[\u5267\u672C\u6307\u4EE4]
+\uFF08\u8FD9\u662F\u4F60\u7684\u4E3B\u8981\u4EFB\u52A1\uFF01\u8BF7\u6839\u636E\u4EE5\u4E0B\u6307\u4EE4\u751F\u6210\u521B\u610F\u5185\u5BB9\uFF0C\u5FFD\u7565\u4E0A\u65B9\u7684\u804A\u5929\u5386\u53F2\uFF0C\u4E13\u6CE8\u4E8E\u5B8C\u6210\u6B64\u521B\u4F5C\u8BF7\u6C42\uFF09
 ${processedPrompt}`;
+    sectionLengths.scriptInstruction = scriptBlock.length;
+    user += scriptBlock;
     diagnostics.input_stats.sys_len = sys.length;
     diagnostics.input_stats.user_len = user.length;
+    const traceMeta = {
+      source: generationSource,
+      hasPromptOverride: typeof promptOverride === "string" && promptOverride.trim().length > 0,
+      promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
+      skipMacroEvaluation,
+      sectionLengths,
+      estimatedTokens: {
+        system: estimateTokens(sys),
+        user: estimateTokens(user)
+      }
+    };
+    if (generationSource === "user_continuation") {
+      traceMeta.continuation = {
+        injectRoundsCount: generationOverrides?.injectRoundsCount || null,
+        injectedRoundItems: generationOverrides?.injectedRoundItems || null,
+        injectedChars: generationOverrides?.injectedChars || null,
+        injectedTokensEstimated: generationOverrides?.injectedTokensEstimated || null
+      };
+    }
+    appendPromptTraceStage(promptTraceId, "user_composed", traceMeta);
+    setPromptTraceFinalMessages(promptTraceId, [{ role: "system", content: sys }, { role: "user", content: user }], traceMeta);
+    appendPromptTraceStage(promptTraceId, "request_ready", {
+      useStream,
+      useSTConnection,
+      endpoint: diagnostics.endpoint
+    });
     TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: conn.profileName });
     diagnostics.phase = "fetch_start";
     let rawContent = "";
@@ -17772,18 +21911,46 @@ ${processedPrompt}`;
       });
       diagnostics.phase = useStream ? "streaming" : "parsing_json";
       if (useStream) {
-        const streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, null);
+        const streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, signal);
         if (typeof streamGenerator === "function") {
           let chunkCount = 0;
-          for await (const chunk of streamGenerator()) {
-            if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
-            chunkCount++;
-            diagnostics.stream_stats.chunks = chunkCount;
-            rawContent = chunk.text || "";
+          try {
+            for await (const chunk of streamGenerator()) {
+              if (signal.aborted) {
+                throw new DOMException("Generation aborted", "AbortError");
+              }
+              if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
+              chunkCount++;
+              diagnostics.stream_stats.chunks = chunkCount;
+              rawContent = chunk.text || "";
+              if (($("#t-output-content").length > 0 || $("#t-main-view").length > 0) && rawContent.length > 0) {
+                const streamCleanContent = sanitizeAIOutput(rawContent);
+                scheduleStreamRender(streamCleanContent, script.name);
+              }
+            }
+          } catch (streamErr) {
+            if (streamErr.name === "AbortError") {
+              throw streamErr;
+            }
+            TitaniaLogger.warn("ST \u6D41\u5F0F\u4F20\u8F93\u5F02\u5E38", {
+              error: streamErr.message,
+              contentSoFar: rawContent.length,
+              chunks: chunkCount
+            });
+            if (rawContent.length === 0) {
+              throw new Error(`ERR_ST_STREAM: ${streamErr.message}`);
+            }
           }
-          if (chunkCount === 0) throw new Error("Stream Empty");
-        } else {
+          if (chunkCount === 0) {
+            throw new Error("ERR_STREAM_NO_CHUNKS: \u672A\u4ECE ST \u540E\u7AEF\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E\u5757");
+          }
+        } else if (streamGenerator && typeof streamGenerator === "object") {
           rawContent = streamGenerator?.content || "";
+          if (!rawContent) {
+            TitaniaLogger.warn("ST \u8FD4\u56DE\u975E\u751F\u6210\u5668\u54CD\u5E94\u4F46\u5185\u5BB9\u4E3A\u7A7A", { response: typeof streamGenerator });
+          }
+        } else {
+          throw new Error("ERR_INVALID_ST_RESPONSE: ST \u540E\u7AEF\u8FD4\u56DE\u4E86\u610F\u5916\u7684\u54CD\u5E94\u683C\u5F0F");
         }
       } else {
         const result = await ChatCompletionService4.sendRequest(requestData, true, null);
@@ -17799,64 +21966,149 @@ ${processedPrompt}`;
         else endpoint += "/v1/chat/completions";
       }
       diagnostics.endpoint = endpoint;
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-        body: JSON.stringify({
-          model: finalModel,
-          messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-          stream: useStream,
-          max_tokens: cfg.max_tokens || 4096
-        }),
-        signal
-      });
-      diagnostics.network.status = res.status;
-      diagnostics.network.latency = Date.now() - startTime;
-      if (!res.ok) {
-        try {
-          diagnostics.raw_response_snippet = (await res.text()).substring(0, 500);
-        } catch (e) {
-        }
-        throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
-      }
-      diagnostics.phase = useStream ? "streaming" : "parsing_json";
+      const requestBody = {
+        model: finalModel,
+        messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+        stream: useStream,
+        max_tokens: cfg.max_tokens || 4096
+      };
       if (useStream) {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let buffer = "";
-        let chunkCount = 0;
-        try {
-          while (true) {
-            if (signal.aborted) {
-              await reader.cancel();
-              throw new DOMException("Generation aborted", "AbortError");
-            }
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
-            chunkCount++;
-            diagnostics.stream_stats.chunks = chunkCount;
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop();
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed || !trimmed.startsWith("data: ")) continue;
-              const jsonStr = trimmed.replace(/^data: /, "").trim();
-              if (jsonStr === "[DONE]") continue;
-              try {
-                const json = JSON.parse(jsonStr);
-                const chunk = json.choices?.[0]?.delta?.content || "";
-                if (chunk) rawContent += chunk;
-              } catch (e) {
+        const maxRetries = 1;
+        const retryDelay = 1e3;
+        let lastError = null;
+        let streamSuccess = false;
+        for (let attempt = 0; attempt <= maxRetries && !streamSuccess; attempt++) {
+          try {
+            if (attempt > 0) {
+              TitaniaLogger.info(`\u6D41\u5F0F\u8BF7\u6C42\u91CD\u8BD5 (${attempt}/${maxRetries})`, {
+                endpoint,
+                lastError: lastError?.message
+              });
+              if (!silent && window.toastr) {
+                toastr.info(`\u{1F504} \u7F51\u7EDC\u6CE2\u52A8\uFF0C\u6B63\u5728\u91CD\u8BD5 (${attempt}/${maxRetries})...`, "Titania");
               }
             }
+            const attemptStartTime = Date.now();
+            const res = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+              body: JSON.stringify(requestBody),
+              signal
+            });
+            diagnostics.network.status = res.status;
+            diagnostics.network.latency = Date.now() - startTime;
+            if (!res.ok) {
+              const errText = await res.text().catch(() => "");
+              diagnostics.raw_response_snippet = errText.substring(0, 500);
+              try {
+                tryParseStreamingError2(res, errText, { quiet: true });
+              } catch (parsedErr) {
+                throw parsedErr;
+              }
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            diagnostics.phase = "streaming";
+            const eventStream = new EventSourceStream2();
+            res.body.pipeThrough(eventStream);
+            const reader = eventStream.readable.getReader();
+            let chunkCount = 0;
+            let parseFailCount = 0;
+            while (true) {
+              if (signal.aborted) {
+                await reader.cancel();
+                throw new DOMException("Generation aborted", "AbortError");
+              }
+              const { done, value } = await reader.read();
+              if (done) break;
+              const data2 = value.data;
+              if (data2 === "[DONE]") break;
+              try {
+                tryParseStreamingError2(res, data2, { quiet: true });
+              } catch (streamParseErr) {
+                throw streamParseErr;
+              }
+              if (chunkCount === 0) {
+                diagnostics.stream_stats.ttft = Date.now() - attemptStartTime;
+                TitaniaLogger.info(`\u6D41\u5F0F\u54CD\u5E94\u5F00\u59CB (TTFT: ${diagnostics.stream_stats.ttft}ms)`);
+              }
+              chunkCount++;
+              diagnostics.stream_stats.chunks = chunkCount;
+              try {
+                const json = JSON.parse(data2);
+                const chunk = json.choices?.[0]?.delta?.content || "";
+                if (chunk) {
+                  rawContent += chunk;
+                  if ($("#t-output-content").length > 0 || $("#t-main-view").length > 0) {
+                    const streamCleanContent = sanitizeAIOutput(rawContent);
+                    scheduleStreamRender(streamCleanContent, script.name);
+                  }
+                }
+              } catch (parseErr) {
+                parseFailCount++;
+                if (parseFailCount <= 3) {
+                  TitaniaLogger.warn(`\u6D41\u5F0F chunk \u89E3\u6790\u5931\u8D25 (#${parseFailCount})`, {
+                    data: data2.substring(0, 100),
+                    error: parseErr.message
+                  });
+                }
+              }
+            }
+            if (chunkCount === 0) {
+              throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
+            }
+            if (parseFailCount > 0 && rawContent.length === 0) {
+              throw new Error(`ERR_STREAM_PARSE_FAILED: \u63A5\u6536\u5230 ${chunkCount} \u4E2A\u6570\u636E\u5757\uFF0C\u4F46\u5168\u90E8\u89E3\u6790\u5931\u8D25`);
+            }
+            streamSuccess = true;
+            TitaniaLogger.info(`\u6D41\u5F0F\u4F20\u8F93\u5B8C\u6210`, {
+              chunks: chunkCount,
+              contentLength: rawContent.length,
+              parseFailures: parseFailCount,
+              attempt: attempt + 1
+            });
+          } catch (streamErr) {
+            lastError = streamErr;
+            if (streamErr.name === "AbortError") {
+              throw streamErr;
+            }
+            TitaniaLogger.warn(`\u6D41\u5F0F\u8BF7\u6C42\u5931\u8D25 (\u5C1D\u8BD5 ${attempt + 1}/${maxRetries + 1})`, {
+              error: streamErr.message,
+              errorType: streamErr.name || "Error",
+              endpoint,
+              attempt: attempt + 1,
+              contentSoFar: rawContent.length
+            });
+            if (rawContent.length > 100 && attempt === maxRetries) {
+              TitaniaLogger.warn("\u6D41\u5F0F\u4F20\u8F93\u4E2D\u65AD\u4F46\u5DF2\u6709\u90E8\u5206\u5185\u5BB9\uFF0C\u5C1D\u8BD5\u4F7F\u7528\u5DF2\u83B7\u53D6\u7684\u5185\u5BB9", {
+                contentLength: rawContent.length
+              });
+              streamSuccess = true;
+              break;
+            }
+            if (attempt < maxRetries) {
+              rawContent = "";
+              await new Promise((r) => setTimeout(r, retryDelay));
+            }
           }
-        } catch (streamErr) {
-          throw new Error(`Stream Interrupted: ${streamErr.message}`);
         }
-        if (chunkCount === 0) throw new Error("Stream Empty");
+        if (!streamSuccess) {
+          throw new Error(`ERR_STREAM_FAILED: ${lastError?.message || "\u672A\u77E5\u6D41\u5F0F\u4F20\u8F93\u9519\u8BEF"}`);
+        }
       } else {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+          body: JSON.stringify(requestBody),
+          signal
+        });
+        diagnostics.network.status = res.status;
+        diagnostics.network.latency = Date.now() - startTime;
+        diagnostics.phase = "parsing_json";
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          diagnostics.raw_response_snippet = errText.substring(0, 500);
+          throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+        }
         const jsonText = await res.text();
         try {
           const json = JSON.parse(jsonText);
@@ -17866,9 +22118,22 @@ ${processedPrompt}`;
         }
       }
     }
-    if (!rawContent || rawContent.trim().length === 0) throw new Error("ERR_EMPTY_CONTENT");
     diagnostics.phase = "validation";
+    if (!rawContent) {
+      throw new Error("ERR_EMPTY_RESPONSE: API \u672A\u8FD4\u56DE\u4EFB\u4F55\u5185\u5BB9");
+    }
+    const trimmedRaw = rawContent.trim();
+    if (trimmedRaw.length === 0) {
+      throw new Error("ERR_EMPTY_RESPONSE: API \u8FD4\u56DE\u4E86\u7A7A\u767D\u5185\u5BB9");
+    }
     let cleanContent = sanitizeAIOutput(rawContent);
+    if (!cleanContent || cleanContent.trim().length === 0) {
+      TitaniaLogger.warn("\u5185\u5BB9\u6E05\u6D17\u540E\u4E3A\u7A7A", {
+        rawLength: rawContent.length,
+        rawPreview: rawContent.substring(0, 200)
+      });
+      throw new Error("ERR_CONTENT_FILTERED: AI \u8FD4\u56DE\u7684\u5185\u5BB9\u7ECF\u8FC7\u6E05\u6D17\u540E\u4E3A\u7A7A\uFF08\u53EF\u80FD\u53EA\u5305\u542B\u601D\u8003\u6807\u7B7E\u6216\u5143\u4FE1\u606F\uFF09");
+    }
     let finalOutput = cleanContent;
     const autoContinueCfg = data.auto_continue || {};
     if (autoContinueCfg.enabled) {
@@ -17886,7 +22151,7 @@ ${processedPrompt}`;
             GlobalState.continuation.isActive = true;
             GlobalState.continuation.originalContent = finalOutput;
             GlobalState.continuation.accumulatedContent = finalOutput;
-            GlobalState.continuation.originalPrompt = script.prompt.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName);
+            GlobalState.continuation.originalPrompt = scriptPromptSource.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName);
             GlobalState.continuation.characterName = ctx.charName;
             GlobalState.continuation.userName = ctx.userName;
           } else {
@@ -17900,8 +22165,12 @@ ${processedPrompt}`;
           if (!silent && window.toastr) {
             toastr.info(`\u{1F504} \u68C0\u6D4B\u5230\u622A\u65AD\uFF0C\u6B63\u5728\u81EA\u52A8\u7EED\u5199 (${currentRetry + 1}/${maxRetries})...`, "Titania Echo");
           }
-          await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
-          return;
+          const continuationSuccess = await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, "", "auto", false);
+          finishPromptTrace(promptTraceId, continuationSuccess ? "success" : "failed", {
+            reason: "auto_continuation",
+            continuationRetryCount: GlobalState.continuation.retryCount
+          });
+          return continuationSuccess;
         } else {
           TitaniaLogger.warn("\u5DF2\u8FBE\u5230\u6700\u5927\u7EED\u5199\u6B21\u6570", { maxRetries });
           if (!silent && window.toastr) {
@@ -17921,21 +22190,34 @@ ${processedPrompt}`;
       }
     }
     resetContinuationState();
+    endStreamingCache();
     pushSceneToHistory(finalOutput, script.id, script.name);
+    recordScriptGenerated(script.id, {
+      isQueue: silent === true && GlobalState.queueState.isRunning,
+      mode: GlobalState.generationMode,
+      category: script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")
+    });
     diagnostics.phase = "complete";
+    removeNewContentIndicator();
+    GlobalState.lastUsedModelName = finalModel;
     const stats = countContentStats(finalOutput);
     GlobalState.contentStats = {
       totalChars: stats.totalChars,
       chineseChars: stats.chineseChars,
-      tokens: stats.estimatedTokens,
-      isEstimated: true
-      // 默认为估算值
+      generationTime: GlobalState.lastGenerationTime,
+      // 记录生成耗时
+      modelName: finalModel
+      // 添加模型名称
     };
     if ($("#t-stats-hud").length > 0) {
       updateContentStatsDisplay(GlobalState.contentStats);
     }
     if ($("#t-output-content").length > 0) {
-      renderGeneratedContent(finalOutput, script.name);
+      if (shouldRenderStreamToUI()) {
+        finalizeStreamRender(finalOutput, script.name);
+      } else {
+        showGenerationCompleteNotification(script.name);
+      }
       if (typeof window.updateSceneHistoryNav === "function") {
         window.updateSceneHistoryNav();
       }
@@ -17944,37 +22226,192 @@ ${processedPrompt}`;
     const elapsed = GlobalState.lastGenerationTime / 1e3;
     if (!silent && window.toastr) toastr.success(`\u2728 \u300A${script.name}\u300B\u6F14\u7ECE\u5B8C\u6210\uFF01(${elapsed.toFixed(1)}s)`, "Titania Echo");
     $floatBtn.addClass("t-notify");
+    finishPromptTrace(promptTraceId, "success", {
+      outputLength: finalOutput.length,
+      elapsedMs: Date.now() - startTime
+    });
+    return true;
   } catch (e) {
     if (e.name === "AbortError") {
-      return;
+      finishPromptTrace(promptTraceId, "aborted", {
+        error: e.message || "aborted"
+      });
+      return false;
     }
     console.error("Titania Generate Error:", e);
     stopTimer();
     hideCancelButton();
     resetContinuationState();
+    clearStreamingCache();
+    removeNewContentIndicator();
     diagnostics.network.latency = Date.now() - startTime;
     diagnostics.phase += "_failed";
     TitaniaLogger.error("\u751F\u6210\u8FC7\u7A0B\u53D1\u751F\u5F02\u5E38", e, diagnostics);
+    let diagnosisHint = "API\u8C03\u7528\u5931\u8D25\u6216\u5185\u5BB9\u89E3\u6790\u9519\u8BEF\u3002\u8BF7\u68C0\u67E5 Key \u4F59\u989D\u6216\u7F51\u7EDC\u8FDE\u63A5\u3002";
+    const errMsg = e.message || "\u672A\u77E5\u9519\u8BEF";
+    if (errMsg.includes("ERR_STREAM_NO_CHUNKS")) {
+      diagnosisHint = "\u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u3002\u53EF\u80FD\u539F\u56E0\uFF1AAPI \u914D\u989D\u7528\u5C3D\u3001\u6A21\u578B\u8FC7\u8F7D\u3001\u7F51\u7EDC\u95EE\u9898\u3002";
+    } else if (errMsg.includes("ERR_STREAM_PARSE_FAILED")) {
+      diagnosisHint = "\u6570\u636E\u89E3\u6790\u5931\u8D25\u3002\u53EF\u80FD\u539F\u56E0\uFF1AAPI \u8FD4\u56DE\u683C\u5F0F\u5F02\u5E38\uFF0C\u5C1D\u8BD5\u5207\u6362\u6A21\u578B\u6216\u68C0\u67E5 API \u517C\u5BB9\u6027\u3002";
+    } else if (errMsg.includes("ERR_STREAM_FAILED")) {
+      diagnosisHint = "\u6D41\u5F0F\u4F20\u8F93\u5931\u8D25\u3002\u53EF\u80FD\u539F\u56E0\uFF1A\u7F51\u7EDC\u4E0D\u7A33\u5B9A\uFF0C\u5C1D\u8BD5\u5173\u95ED\u6D41\u5F0F\u4F20\u8F93\u6216\u91CD\u8BD5\u3002";
+    } else if (errMsg.includes("ERR_EMPTY_RESPONSE")) {
+      diagnosisHint = "API \u8FD4\u56DE\u7A7A\u5185\u5BB9\u3002\u53EF\u80FD\u539F\u56E0\uFF1A\u8BF7\u6C42\u88AB\u62D2\u7EDD\u3001\u5185\u5BB9\u5BA1\u6838\u89E6\u53D1\u3001\u6A21\u578B\u65E0\u54CD\u5E94\u3002";
+    } else if (errMsg.includes("ERR_CONTENT_FILTERED")) {
+      diagnosisHint = "AI \u8F93\u51FA\u88AB\u8FC7\u6EE4\u3002AI \u53EF\u80FD\u53EA\u8FD4\u56DE\u4E86\u601D\u8003\u8FC7\u7A0B\u800C\u65E0\u5B9E\u9645\u5185\u5BB9\uFF0C\u5C1D\u8BD5\u8C03\u6574\u63D0\u793A\u8BCD\u3002";
+    } else if (errMsg.includes("ERR_INVALID_ST_RESPONSE")) {
+      diagnosisHint = "ST \u540E\u7AEF\u54CD\u5E94\u5F02\u5E38\u3002\u5C1D\u8BD5\u5237\u65B0\u9875\u9762\u6216\u68C0\u67E5 SillyTavern \u65E5\u5FD7\u3002";
+    } else if (errMsg.includes("ERR_ST_STREAM")) {
+      diagnosisHint = "ST \u6D41\u5F0F\u4F20\u8F93\u9519\u8BEF\u3002\u8BF7\u68C0\u67E5 SillyTavern \u7684 API \u914D\u7F6E\u662F\u5426\u6B63\u786E\u3002";
+    } else if (errMsg.includes("HTTP")) {
+      diagnosisHint = "HTTP \u8BF7\u6C42\u5931\u8D25\u3002\u8BF7\u68C0\u67E5 API \u5730\u5740\u548C\u5BC6\u94A5\u662F\u5426\u6B63\u786E\u3002";
+    } else if (errMsg.includes("quota") || errMsg.includes("limit") || errMsg.includes("429")) {
+      diagnosisHint = "API \u914D\u989D\u4E0D\u8DB3\u6216\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\u3002\u8BF7\u7A0D\u540E\u91CD\u8BD5\u6216\u68C0\u67E5\u8D26\u6237\u4F59\u989D\u3002";
+    }
     const errHtml = `<div style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; background: rgba(255,107,107,0.1); border-radius:8px;">
             <div style="font-size:3em; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div style="font-weight:bold; margin-bottom:5px;">\u6F14\u7ECE\u51FA\u9519\u4E86</div>
-            <div style="font-size:0.9em; margin-bottom:15px; color:#faa;">${e.message || "\u672A\u77E5\u9519\u8BEF"}</div>
+            <div style="font-size:0.9em; margin-bottom:15px; color:#faa;">${errMsg}</div>
             <div style="font-size:0.8em; color:#ccc; background:#222; padding:10px; border-radius:4px; text-align:left;">
-                \u8BCA\u65AD\u63D0\u793A\uFF1AAPI\u8C03\u7528\u5931\u8D25\u6216\u5185\u5BB9\u89E3\u6790\u9519\u8BEF\u3002<br>\u8BF7\u68C0\u67E5 Key \u4F59\u989D\u6216\u7F51\u7EDC\u8FDE\u63A5\u3002
+                \u8BCA\u65AD\u63D0\u793A\uFF1A${diagnosisHint}
             </div>
         </div>`;
     GlobalState.lastGeneratedContent = errHtml;
     GlobalState.lastGeneratedScriptId = script.id;
     $floatBtn.addClass("t-notify");
     if (!silent && window.toastr) toastr.error("\u751F\u6210\u5931\u8D25", "Titania Error");
+    finishPromptTrace(promptTraceId, "failed", {
+      error: e.message || "unknown_error",
+      phase: diagnostics.phase
+    });
+    return false;
   } finally {
     GlobalState.isGenerating = false;
     GlobalState.abortController = null;
     $floatBtn.removeClass("t-loading");
     hideCancelButton();
+    if (typeof window.updateRunButtonsState === "function") {
+      window.updateRunButtonsState();
+    }
   }
 }
-async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false) {
+async function executeQueueGeneration(scripts) {
+  if (!scripts || scripts.length === 0) {
+    if (window.toastr) toastr.warning("\u961F\u5217\u4E3A\u7A7A\uFF0C\u6CA1\u6709\u8981\u751F\u6210\u7684\u5267\u672C", "Titania");
+    return;
+  }
+  const qState = GlobalState.queueState;
+  const interval = (qState.interval || 2) * 1e3;
+  initQueueTasks(scripts.map((s) => s.id));
+  TitaniaLogger.info("\u5F00\u59CB\u961F\u5217\u751F\u6210", {
+    total: scripts.length,
+    interval: qState.interval,
+    mode: qState.mode
+  });
+  showQueueProgressIndicator(scripts.length);
+  if (window.toastr) {
+    toastr.info(`\u{1F680} \u5F00\u59CB\u961F\u5217\u751F\u6210\uFF1A${scripts.length} \u4E2A\u5267\u672C`, "Titania Queue");
+  }
+  for (let i = 0; i < scripts.length; i++) {
+    const script = scripts[i];
+    const progress = getQueueProgress();
+    if (!qState.isRunning) {
+      TitaniaLogger.info("\u961F\u5217\u751F\u6210\u88AB\u4E2D\u65AD", { completed: progress.completed });
+      break;
+    }
+    updateQueueProgressIndicator(i + 1, scripts.length, script.name);
+    TitaniaLogger.info(`\u961F\u5217\u751F\u6210 (${i + 1}/${scripts.length}): ${script.name}`);
+    try {
+      const ok = await handleGenerate(script.id, true);
+      if (ok) {
+        recordQueueResult(script.id, script.name, true);
+        if (window.toastr) {
+          toastr.success(`\u2705 (${i + 1}/${scripts.length}) ${script.name}`, "Titania Queue", { timeOut: 2e3 });
+        }
+      } else {
+        recordQueueResult(script.id, script.name, false, "\u751F\u6210\u5931\u8D25");
+        if (window.toastr) {
+          toastr.warning(`\u26A0\uFE0F (${i + 1}/${scripts.length}) ${script.name} \u5931\u8D25`, "Titania Queue", { timeOut: 2e3 });
+        }
+      }
+    } catch (e) {
+      recordQueueResult(script.id, script.name, false, e.message);
+      TitaniaLogger.warn(`\u961F\u5217\u751F\u6210\u5931\u8D25: ${script.name}`, { error: e.message });
+      if (window.toastr) {
+        toastr.warning(`\u26A0\uFE0F (${i + 1}/${scripts.length}) ${script.name} \u5931\u8D25`, "Titania Queue", { timeOut: 2e3 });
+      }
+    }
+    if (i < scripts.length - 1 && qState.isRunning) {
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
+  }
+  const finalProgress = getQueueProgress();
+  resetQueueState();
+  hideQueueProgressIndicator();
+  if (window.toastr) {
+    const msg = `\u961F\u5217\u5B8C\u6210\uFF1A${finalProgress.completed} \u6210\u529F\uFF0C${finalProgress.failed} \u5931\u8D25`;
+    if (finalProgress.failed === 0) {
+      toastr.success(`\u{1F389} ${msg}`, "Titania Queue");
+    } else {
+      toastr.warning(`\u26A0\uFE0F ${msg}`, "Titania Queue");
+    }
+  }
+  TitaniaLogger.info("\u961F\u5217\u751F\u6210\u5B8C\u6210", {
+    completed: finalProgress.completed,
+    failed: finalProgress.failed,
+    total: finalProgress.total
+  });
+  GlobalState.queueState.enabled = false;
+  if (typeof window.updateRunButtonsState === "function") {
+    window.updateRunButtonsState();
+  }
+  if (typeof window.updateQueueButtonUI === "function") {
+    window.updateQueueButtonUI();
+  }
+}
+function showQueueProgressIndicator(total) {
+  $(".t-queue-progress").remove();
+  $(".t-queue-running-indicator").remove();
+  const progressHtml = `
+        <div class="t-queue-progress">
+            <div class="t-queue-progress-bar animated" style="width: 0%;"></div>
+        </div>
+    `;
+  const indicatorHtml = `
+        <div class="t-queue-running-indicator">
+            <i class="fa-solid fa-spinner"></i>
+            <span>\u961F\u5217: <span id="t-queue-current">0</span>/<span id="t-queue-total">${total}</span></span>
+        </div>
+    `;
+  $("#t-main-view").prepend(progressHtml);
+  $(".t-content-wrapper").append(indicatorHtml);
+}
+function updateQueueProgressIndicator(current, total, scriptName) {
+  const percent = current / total * 100;
+  $(".t-queue-progress-bar").css("width", `${percent}%`);
+  $("#t-queue-current").text(current);
+  $(".t-queue-running-indicator").attr("title", `\u6B63\u5728\u751F\u6210: ${scriptName}`);
+}
+function hideQueueProgressIndicator() {
+  $(".t-queue-progress").fadeOut(300, function() {
+    $(this).remove();
+  });
+  $(".t-queue-running-indicator").fadeOut(300, function() {
+    $(this).remove();
+  });
+}
+function cancelQueueGeneration() {
+  if (GlobalState.queueState.isRunning) {
+    GlobalState.queueState.isRunning = false;
+    cancelGeneration();
+    hideQueueProgressIndicator();
+    if (window.toastr) {
+      toastr.info("\u23F9\uFE0F \u961F\u5217\u5DF2\u505C\u6B62", "Titania Queue");
+    }
+    TitaniaLogger.info("\u961F\u5217\u751F\u6210\u5DF2\u53D6\u6D88");
+  }
+}
+async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false) {
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   const signal = GlobalState.abortController?.signal;
@@ -17989,10 +22426,17 @@ async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalMo
 Character: ${GlobalState.continuation.characterName}
 User: ${GlobalState.continuation.userName}
 Original Request: ${context.originalPrompt}
+${userInstruction ? `User continuation intent: ${userInstruction}` : ""}
 
 [Story Progress]
 Plot so far: ${context.plotSummary}
 Total written: ~${context.totalLength} characters
+
+[Visual Style Continuity]
+Existing CSS excerpt (follow this style language, do not replace it):
+${context.styleGuide ? context.styleGuide : "(No explicit style block found)"}
+Existing class names you should prefer reusing:
+${context.recentClasses && context.recentClasses.length > 0 ? context.recentClasses.join(", ") : "(No class names found)"}
 
 [Technical State]
 Unclosed HTML tags: ${context.unclosedTags.length > 0 ? context.unclosedTags.join(", ") : "None"}
@@ -18002,8 +22446,10 @@ ${context.incompleteText ? `Incomplete sentence fragment: "${context.incompleteT
 [Critical Rules]
 1. **SEAMLESS JOIN**: Your output will be DIRECTLY APPENDED. Do NOT repeat any existing content.
 2. **COMPLETE FIRST**: ${context.unclosedTags.length > 0 ? `Close these tags first: </${context.unclosedTags.join(">, </")}>` : context.incompleteText ? "Complete the unfinished sentence first." : "Start with new content."}
-3. **CONTINUE NATURALLY**: Write 300-500 more characters to reach a natural conclusion.
-4. **FORMAT**: Output raw HTML only. No markdown code blocks. Language: Chinese.
+3. **CONTINUE NATURALLY**: ${userInstruction ? "Strictly follow the user's continuation intent while keeping tone and continuity." : "Write 300-500 more characters to reach a natural conclusion."}
+4. **STYLE INHERITANCE**: Reuse existing HTML structure/classes. Do NOT introduce a brand-new visual system.
+5. **STYLE TAG RULE**: Do NOT output a new <style> block unless absolutely necessary; if needed, only add minimal incremental rules compatible with existing CSS.
+6. **FORMAT**: Output raw HTML only. No markdown code blocks. Language: Chinese.
 
 [IMPORTANT - DO NOT REPEAT]
 The last complete sentence was: "${context.lastCompleteSentence}"
@@ -18051,51 +22497,139 @@ Generate ONLY the continuation (no repetition):`;
         if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
         else endpoint += "/v1/chat/completions";
       }
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-        body: JSON.stringify({
-          model: finalModel,
-          messages: [
-            { role: "system", content: continuationSys },
-            { role: "user", content: continuationUser }
-          ],
-          stream: useStream,
-          max_tokens: cfg.max_tokens || 4096
-        }),
-        signal
-      });
-      if (!res.ok) {
-        throw new Error(`Continuation HTTP Error ${res.status}: ${res.statusText}`);
-      }
+      const requestBody = {
+        model: finalModel,
+        messages: [
+          { role: "system", content: continuationSys },
+          { role: "user", content: continuationUser }
+        ],
+        stream: useStream,
+        max_tokens: cfg.max_tokens || 4096
+      };
       if (useStream) {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let buffer = "";
-        while (true) {
-          if (signal?.aborted) {
-            await reader.cancel();
-            throw new DOMException("Continuation aborted", "AbortError");
-          }
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop();
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed || !trimmed.startsWith("data: ")) continue;
-            const jsonStr = trimmed.replace(/^data: /, "").trim();
-            if (jsonStr === "[DONE]") continue;
-            try {
-              const json = JSON.parse(jsonStr);
-              const chunk = json.choices?.[0]?.delta?.content || "";
-              if (chunk) rawContent += chunk;
-            } catch (e) {
+        const maxRetries2 = 2;
+        const retryDelayBase = 1200;
+        let lastError = null;
+        let streamSuccess = false;
+        let shouldFallbackToNonStream = false;
+        for (let attempt = 0; attempt <= maxRetries2 && !streamSuccess; attempt++) {
+          try {
+            if (attempt > 0) {
+              TitaniaLogger.info(`\u7EED\u5199\u6D41\u5F0F\u8BF7\u6C42\u91CD\u8BD5 (${attempt}/${maxRetries2})`);
+              if (!silent && window.toastr) {
+                toastr.info(`\u{1F504} \u7EED\u5199\u91CD\u8BD5\u4E2D (${attempt}/${maxRetries2})...`, "Titania");
+              }
+            }
+            const res = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+              body: JSON.stringify(requestBody),
+              signal
+            });
+            if (!res.ok) {
+              let errorDetail = "";
+              try {
+                const errorText = (await res.text() || "").trim();
+                if (errorText) {
+                  errorDetail = ` | ${errorText.slice(0, 180)}`;
+                }
+              } catch (e) {
+              }
+              if (res.status >= 500) {
+                shouldFallbackToNonStream = true;
+              }
+              const statusPart = res.statusText ? `${res.status}: ${res.statusText}` : `${res.status}`;
+              throw new Error(`Continuation HTTP Error ${statusPart}${errorDetail}`);
+            }
+            const eventStream = new EventSourceStream2();
+            res.body.pipeThrough(eventStream);
+            const reader = eventStream.readable.getReader();
+            let chunkCount = 0;
+            while (true) {
+              if (signal?.aborted) {
+                await reader.cancel();
+                throw new DOMException("Continuation aborted", "AbortError");
+              }
+              const { done, value } = await reader.read();
+              if (done) break;
+              const data = value.data;
+              if (data === "[DONE]") break;
+              chunkCount++;
+              try {
+                const json = JSON.parse(data);
+                const chunk = json.choices?.[0]?.delta?.content || "";
+                if (chunk) rawContent += chunk;
+              } catch (e) {
+              }
+            }
+            if (chunkCount === 0) {
+              throw new Error("Continuation Stream Empty");
+            }
+            streamSuccess = true;
+          } catch (streamErr) {
+            lastError = streamErr;
+            if (streamErr.name === "AbortError") {
+              throw streamErr;
+            }
+            TitaniaLogger.warn(`\u7EED\u5199\u6D41\u5F0F\u8BF7\u6C42\u5931\u8D25 (\u5C1D\u8BD5 ${attempt + 1}/${maxRetries2 + 1})`, {
+              error: streamErr.message,
+              attempt: attempt + 1
+            });
+            if (attempt < maxRetries2) {
+              rawContent = "";
+              const retryDelay = retryDelayBase * (attempt + 1);
+              await new Promise((r) => setTimeout(r, retryDelay));
             }
           }
         }
+        if (!streamSuccess && shouldFallbackToNonStream) {
+          TitaniaLogger.warn("\u7EED\u5199\u6D41\u5F0F\u5931\u8D25\uFF0C\u5C1D\u8BD5\u975E\u6D41\u5F0F\u964D\u7EA7", {
+            reason: lastError?.message || "unknown"
+          });
+          if (!silent && window.toastr) {
+            toastr.info("\u{1F501} \u7EED\u5199\u670D\u52A1\u7E41\u5FD9\uFF0C\u5C1D\u8BD5\u975E\u6D41\u5F0F\u6A21\u5F0F...", "Titania Echo");
+          }
+          const fallbackBody = { ...requestBody, stream: false };
+          const fallbackRes = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+            body: JSON.stringify(fallbackBody),
+            signal
+          });
+          if (!fallbackRes.ok) {
+            let fallbackDetail = "";
+            try {
+              const fallbackText = (await fallbackRes.text() || "").trim();
+              if (fallbackText) {
+                fallbackDetail = ` | ${fallbackText.slice(0, 180)}`;
+              }
+            } catch (e) {
+            }
+            const fallbackStatus = fallbackRes.statusText ? `${fallbackRes.status}: ${fallbackRes.statusText}` : `${fallbackRes.status}`;
+            throw new Error(`Continuation Fallback HTTP Error ${fallbackStatus}${fallbackDetail}`);
+          }
+          const fallbackJsonText = await fallbackRes.text();
+          try {
+            const fallbackJson = JSON.parse(fallbackJsonText);
+            rawContent = fallbackJson.choices?.[0]?.message?.content || "";
+            streamSuccess = rawContent.trim().length > 0;
+          } catch (jsonErr) {
+            throw new Error("Continuation Fallback Invalid JSON");
+          }
+        }
+        if (!streamSuccess) {
+          throw new Error(`Continuation Stream Interrupted (\u5DF2\u91CD\u8BD5 ${maxRetries2} \u6B21): ${lastError?.message || "\u672A\u77E5\u9519\u8BEF"}`);
+        }
       } else {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
+          body: JSON.stringify(requestBody),
+          signal
+        });
+        if (!res.ok) {
+          throw new Error(`Continuation HTTP Error ${res.status}: ${res.statusText}`);
+        }
         const jsonText = await res.text();
         try {
           const json = JSON.parse(jsonText);
@@ -18123,7 +22657,7 @@ Generate ONLY the continuation (no repetition):`;
       if (!silent && window.toastr) {
         toastr.info(`\u{1F504} \u7EED\u5199\u5185\u5BB9\u4ECD\u88AB\u622A\u65AD\uFF0C\u7EE7\u7EED\u5C1D\u8BD5 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
       }
-      await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection);
+      return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, userInstruction, continuationType, autoLocate);
     } else {
       const finalOutput = smartMergeContinuation(
         GlobalState.continuation.accumulatedContent,
@@ -18134,15 +22668,33 @@ Generate ONLY the continuation (no repetition):`;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
       pushSceneToHistory(finalOutput, script.id, script.name);
+      recordScriptGenerated(script.id, {
+        isQueue: silent === true && GlobalState.queueState.isRunning,
+        mode: GlobalState.generationMode,
+        category: script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")
+      });
       const stats = countContentStats(finalOutput);
       GlobalState.contentStats = {
         totalChars: stats.totalChars,
         chineseChars: stats.chineseChars,
-        tokens: stats.estimatedTokens,
-        isEstimated: true
+        generationTime: GlobalState.lastGenerationTime,
+        // 记录生成耗时
+        modelName: finalModel
+        // 添加模型名称
       };
+      if (continuationType === "user" && autoLocate) {
+        unlockDisplay();
+      }
       if ($("#t-output-content").length > 0) {
         renderGeneratedContent(finalOutput, script.name);
+        if (continuationType === "user" && autoLocate) {
+          requestAnimationFrame(() => {
+            const scrollContainer = document.querySelector(".t-content-area");
+            if (scrollContainer) {
+              scrollContainer.scrollTop = scrollContainer.scrollHeight;
+            }
+          });
+        }
         if (typeof window.updateSceneHistoryNav === "function") {
           window.updateSceneHistoryNav();
         }
@@ -18153,18 +22705,21 @@ Generate ONLY the continuation (no repetition):`;
       stopTimer();
       const elapsed = GlobalState.lastGenerationTime / 1e3;
       if (!silent && window.toastr) {
-        toastr.success(`\u2728 \u300A${script.name}\u300B\u6F14\u7ECE\u5B8C\u6210\uFF01(\u542B${totalRetries}\u6B21\u7EED\u5199, ${elapsed.toFixed(1)}s)`, "Titania Echo");
+        const successMsg = continuationType === "user" ? `\u2728 \u4E3B\u52A8\u7EED\u5199\u5B8C\u6210\uFF01(${totalRetries}\u6B21\u8865\u7EED\u5199, ${elapsed.toFixed(1)}s)` : `\u2728 \u300A${script.name}\u300B\u6F14\u7ECE\u5B8C\u6210\uFF01(\u542B${totalRetries}\u6B21\u7EED\u5199, ${elapsed.toFixed(1)}s)`;
+        toastr.success(successMsg, "Titania Echo");
       }
       $floatBtn.addClass("t-notify");
-      TitaniaLogger.info("\u81EA\u52A8\u7EED\u5199\u5B8C\u6210", {
+      TitaniaLogger.info("\u7EED\u5199\u5B8C\u6210", {
         scriptName: script.name,
+        continuationType,
         totalRetries,
         elapsed: elapsed.toFixed(1) + "s"
       });
+      return true;
     }
   } catch (e) {
     if (e.name === "AbortError") {
-      return;
+      return false;
     }
     console.error("Titania Continuation Error:", e);
     TitaniaLogger.error("\u7EED\u5199\u8FC7\u7A0B\u53D1\u751F\u5F02\u5E38", e);
@@ -18172,19 +22727,105 @@ Generate ONLY the continuation (no repetition):`;
       GlobalState.lastGeneratedContent = GlobalState.continuation.accumulatedContent;
       GlobalState.lastGeneratedScriptId = script.id;
       if (!silent && window.toastr) {
-        toastr.warning("\u26A0\uFE0F \u7EED\u5199\u5931\u8D25\uFF0C\u663E\u793A\u5DF2\u83B7\u53D6\u7684\u5185\u5BB9", "Titania Echo");
+        const errorHint = String(e?.message || "");
+        const isServerBusy = errorHint.includes("503") || errorHint.includes("429");
+        const tip = isServerBusy ? "\u26A0\uFE0F \u7EED\u5199\u5931\u8D25\uFF08\u670D\u52A1\u7E41\u5FD9\uFF09\uFF0C\u5DF2\u4FDD\u7559\u5F53\u524D\u5185\u5BB9\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5" : "\u26A0\uFE0F \u7EED\u5199\u5931\u8D25\uFF0C\u663E\u793A\u5DF2\u83B7\u53D6\u7684\u5185\u5BB9";
+        toastr.warning(tip, "Titania Echo");
       }
     }
     resetContinuationState();
     stopTimer();
     $floatBtn.addClass("t-notify");
+    return false;
   } finally {
     GlobalState.isGenerating = false;
     GlobalState.abortController = null;
     $floatBtn.removeClass("t-loading");
     hideCancelButton();
+    if (typeof window.updateRunButtonsState === "function") {
+      window.updateRunButtonsState();
+    }
   }
 }
+async function handleUserContinuation(options = {}) {
+  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3 } = options;
+  if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+    if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+    return false;
+  }
+  const display = fromCurrentView ? getCurrentDisplayContent() : {
+    content: GlobalState.lastGeneratedContent,
+    scriptId: GlobalState.lastGeneratedScriptId,
+    scriptName: "\u573A\u666F"
+  };
+  const baseContent = (display?.content || "").trim();
+  if (!baseContent) {
+    if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7EED\u5199\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F", "Titania");
+    return false;
+  }
+  const validation = validateConnection();
+  if (!validation.valid) {
+    const errText = `\u914D\u7F6E\u7F3A\u5931\uFF1A${validation.error}`;
+    alert(errText);
+    TitaniaLogger.error("\u4E3B\u52A8\u7EED\u5199\u914D\u7F6E\u9519\u8BEF", errText);
+    return false;
+  }
+  const scriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
+  const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
+  if (!script) {
+    if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5185\u5BB9\u5BF9\u5E94\u7684\u5267\u672C\uFF0C\u65E0\u6CD5\u7EED\u5199", "Titania");
+    return false;
+  }
+  const userInstruction = (instruction || "").trim() || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
+  const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
+  const sessionInjection = buildContinuationSessionInjection(script.id, effectiveInjectCount);
+  const promptOverride = `[\u7EED\u5199\u6A21\u5F0F]
+\u4F60\u5C06\u57FA\u4E8E\u5DF2\u6709\u5267\u60C5\u8FDB\u884C\u591A\u8F6E\u7EED\u5199\u751F\u6210\u3002
+\u8BF7\u4FDD\u6301\u4EBA\u7269\u3001\u8BED\u6C14\u3001\u8BBE\u5B9A\u4E0E\u89C6\u89C9\u98CE\u683C\u4E00\u81F4\uFF0C\u5728\u4E0D\u91CD\u590D\u5DF2\u6709\u6587\u672C\u7684\u524D\u63D0\u4E0B\u63A8\u8FDB\u5267\u60C5\u3002
+\u8F93\u51FA\u8981\u6C42\u4E0E\u666E\u901A\u751F\u6210\u4E00\u81F4\uFF1A\u8F93\u51FA\u53EF\u76F4\u63A5\u6E32\u67D3\u7684\u539F\u59CB HTML\uFF0C\u4E0D\u8981 Markdown \u4EE3\u7801\u5757\u3002
+
+[\u7EED\u5199\u4F1A\u8BDD\u4E0A\u4E0B\u6587]
+\uFF08\u4EE5\u4E0B\u4E3A\u5386\u53F2\u7EED\u5199\u8F6E\u6B21\uFF0C\u5305\u542B\u201C\u6307\u4EE4+\u7ED3\u679C\u201D\uFF0C\u7528\u4E8E\u4FDD\u6301\u591A\u8F6E\u8FDE\u7EED\u6027\uFF09
+${sessionInjection.text}
+
+[\u5F53\u524D\u57FA\u51C6\u5185\u5BB9]
+${baseContent}
+
+[\u672C\u8F6E\u7EED\u5199\u6307\u4EE4]
+${userInstruction}
+
+[\u539F\u59CB\u5267\u672C\u6307\u4EE4]
+${script.prompt}`;
+  TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u5207\u6362\u5230\u65B0\u56DE\u5408\u751F\u6210\u6A21\u5F0F", {
+    scriptId: script.id,
+    scriptName: script.name,
+    baseContentLength: baseContent.length,
+    instructionLength: userInstruction.length,
+    injectRoundsCount: effectiveInjectCount,
+    injectedRoundItems: sessionInjection.selectedRounds.length,
+    injectedChars: sessionInjection.estimatedChars,
+    injectedTokensEstimated: sessionInjection.estimatedTokens
+  });
+  if (autoLocate === true) {
+    unlockDisplay();
+  }
+  if (window.toastr) toastr.info("\u{1F504} \u6B63\u5728\u57FA\u4E8E\u5F53\u524D\u5267\u573A\u4E0E\u7EED\u5199\u6307\u4EE4\u751F\u6210\u65B0\u56DE\u5408...", "Titania Echo");
+  const success = await handleGenerate(script.id, false, {
+    promptOverride,
+    skipMacroEvaluation: true,
+    keepOverlayOpen: true,
+    source: "user_continuation",
+    injectRoundsCount: effectiveInjectCount,
+    injectedRoundItems: sessionInjection.selectedRounds.length,
+    injectedChars: sessionInjection.estimatedChars,
+    injectedTokensEstimated: sessionInjection.estimatedTokens
+  });
+  if (success) {
+    appendContinuationSessionRound(script.id, script.name, userInstruction, GlobalState.lastGeneratedContent);
+  }
+  return success;
+}
+var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
@@ -18195,6 +22836,13 @@ var init_api = __esm({
     init_floatingBtn();
     init_mainWindow();
     init_connection();
+    init_scriptData();
+    CONTINUATION_SESSION_MAX_ROUNDS = 30;
+    CONTINUATION_INJECT_MAX = 5;
+    streamRenderTimer = null;
+    pendingStreamContent = "";
+    lastRenderTime = 0;
+    STREAM_RENDER_INTERVAL = 100;
   }
 });
 
@@ -18210,6 +22858,7 @@ init_floatingBtn();
 init_settingsWindow();
 init_mainWindow();
 init_vectorStore();
+init_summarizer();
 import { extension_settings as extension_settings3 } from "../../../extensions.js";
 import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 async function onGenerationEnded() {
@@ -18297,6 +22946,7 @@ function initCoreFeatures() {
     }
   }
   loadScripts();
+  loadQueueConfig();
   injectOptionsMenuItem();
   if (extData.custom_css) {
     applyCustomCSS(extData.custom_css);
@@ -18304,21 +22954,77 @@ function initCoreFeatures() {
   if (extData.font_settings) {
     applyFontSettings(extData.font_settings);
   }
+  applyUIFontScale(extData.appearance?.ui_font_scale);
   eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
   initSyncListener();
   initVectorUnsavedWarning();
+  initAutoVectorizeListener();
+}
+function loadQueueConfig() {
+  try {
+    const extData = getExtData();
+    const queueCfg = extData.queue_config;
+    if (queueCfg) {
+      GlobalState.queueState.mode = queueCfg.mode || "random";
+      GlobalState.queueState.count = queueCfg.count || 3;
+      GlobalState.queueState.categoryFilter = queueCfg.categoryFilter || "ALL";
+      GlobalState.queueState.manualItems = queueCfg.manualItems || [];
+      GlobalState.queueState.interval = queueCfg.interval || 2;
+      GlobalState.queueState.enabled = queueCfg.enabled === true;
+      if (queueCfg.historyMax) {
+        GlobalState.sceneHistory.maxItems = queueCfg.historyMax;
+      }
+      console.log("Titania: \u961F\u5217\u914D\u7F6E\u5DF2\u52A0\u8F7D", GlobalState.queueState);
+    }
+  } catch (e) {
+    console.warn("Titania: \u52A0\u8F7D\u961F\u5217\u914D\u7F6E\u5931\u8D25", e);
+  }
+}
+function initAutoVectorizeListener() {
+  eventSource2.on(event_types2.MESSAGE_RECEIVED, onMessageForAutoVectorize);
+  eventSource2.on(event_types2.MESSAGE_SENT, onMessageForAutoVectorize);
+  console.log("Titania: \u81EA\u52A8\u5411\u91CF\u5316\u76D1\u542C\u5668\u5DF2\u521D\u59CB\u5316");
+}
+async function onMessageForAutoVectorize() {
+  const config = getAutoVectorizeConfig();
+  if (!config.enabled) return;
+  if (!SillyTavern || !SillyTavern.getContext) return;
+  let characterId;
+  try {
+    const context = SillyTavern.getContext();
+    characterId = context?.characterId?.toString();
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u89D2\u8272 ID \u5931\u8D25", e);
+    return;
+  }
+  if (!characterId) return;
+  setTimeout(async () => {
+    try {
+      await incrementAutoVectorizeCounter(characterId);
+    } catch (e) {
+      console.warn("Titania: \u81EA\u52A8\u5411\u91CF\u5316\u68C0\u67E5\u5931\u8D25", e);
+    }
+  }, 1e3);
 }
 function initVectorUnsavedWarning() {
-  window.addEventListener("beforeunload", async (e) => {
-    try {
-      const hasUnsaved = await checkUnsavedVectors();
-      if (hasUnsaved) {
-        e.preventDefault();
-        e.returnValue = "\u60A8\u6709\u672A\u5BFC\u51FA\u7684\u5411\u91CF\u7D22\u5F15\u6570\u636E\uFF0C\u5173\u95ED\u9875\u9762\u540E\u8FD9\u4E9B\u6570\u636E\u53EF\u80FD\u4E22\u5931\u3002\u662F\u5426\u786E\u5B9A\u79BB\u5F00\uFF1F";
-        return e.returnValue;
-      }
-    } catch (err) {
-      console.warn("Titania: \u68C0\u67E5\u672A\u4FDD\u5B58\u5411\u91CF\u6570\u636E\u5931\u8D25", err);
+  void refreshUnsavedVectorsCache();
+  window.addEventListener("focus", () => {
+    void refreshUnsavedVectorsCache();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      void refreshUnsavedVectorsCache();
+    }
+  });
+  window.addEventListener("beforeunload", (e) => {
+    const hasUnsaved = hasUnsavedVectorsSync();
+    if (!isUnsavedCacheInitialized()) {
+      void refreshUnsavedVectorsCache();
+    }
+    if (hasUnsaved) {
+      e.preventDefault();
+      e.returnValue = "\u60A8\u6709\u672A\u5BFC\u51FA\u7684\u5411\u91CF\u7D22\u5F15\u6570\u636E\uFF0C\u5173\u95ED\u9875\u9762\u540E\u8FD9\u4E9B\u6570\u636E\u53EF\u80FD\u4E22\u5931\u3002\u662F\u5426\u786E\u5B9A\u79BB\u5F00\uFF1F";
+      return e.returnValue;
     }
   });
   console.log("Titania: \u5411\u91CF\u7D22\u5F15\u672A\u4FDD\u5B58\u63D0\u9192\u5DF2\u521D\u59CB\u5316");
