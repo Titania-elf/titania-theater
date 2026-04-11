@@ -145,12 +145,14 @@ var init_defaults = __esm({
         enabled: false,
         // 是否启用快捷工具栏（禁用时点击悬浮球直接打开主窗口）
         // 各按钮的启用状态，按固定顺序排列
-        // 可用按钮: main(剧场), lore(设定提取), model(切换模型), settings(设置), favs(收藏夹), scripts(剧本管理), debug(调试)
+        // 可用按钮: main(剧场), lore(设定提取), outline(故事大纲), model(切换模型), settings(设置), favs(收藏夹), scripts(剧本管理), debug(调试), recall(记忆召回)
         enabled_items: {
           main: true,
           // 打开剧场
           lore: true,
           // 提取设定
+          outline: false,
+          // 故事大纲
           model: false,
           // 快速切换模型
           settings: true,
@@ -159,8 +161,10 @@ var init_defaults = __esm({
           // 收藏夹
           scripts: false,
           // 剧本管理
-          debug: false
+          debug: false,
           // 提示词组成窗口
+          recall: false
+          // 记忆召回
         },
         max_items: 5
         // 最多显示按钮数量
@@ -869,6 +873,19 @@ textarea.t-input {
     box-shadow:
         0 0 15px rgba(162, 155, 254, 0.4),
         inset 0 0 10px rgba(162, 155, 254, 0.1);
+}
+
+/* \u6545\u4E8B\u5927\u7EB2\u6309\u94AE */
+.t-menu-icon-btn.outline {
+    color: #81ecec;
+}
+
+.t-menu-icon-btn.outline:hover {
+    background: radial-gradient(circle at center, rgba(129, 236, 236, 0.25) 0%, rgba(129, 236, 236, 0.1) 70%);
+    border-color: rgba(129, 236, 236, 0.5);
+    box-shadow:
+        0 0 15px rgba(129, 236, 236, 0.35),
+        inset 0 0 10px rgba(129, 236, 236, 0.1);
 }
 
 /* \u8BBE\u7F6E\u6309\u94AE */
@@ -5134,7 +5151,28 @@ textarea.t-input {
     transform: translateY(-1px);
 }
 
-/* ========== \u54CD\u5E94\u5F0F\u5E03\u5C40 ========== */
+
+.t-fav-card-chain {
+    border-color: rgba(191, 161, 95, 0.6);
+}
+
+.t-fav-card-chain .t-fav-card-overlay {
+    background: linear-gradient(to bottom, rgba(191, 161, 95, 0.08) 0%, rgba(0, 0, 0, 0.62) 52%, rgba(0, 0, 0, 0.92) 100%);
+}
+
+.t-fav-chain-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(191, 161, 95, 0.45);
+    background: rgba(191, 161, 95, 0.13);
+    color: #f3e3b2;
+    font-size: 0.72em;
+    line-height: 1.2;
+}
+
 
 @media screen and (max-width: 600px) {
     .t-fav-toolbar {
@@ -8212,6 +8250,878 @@ body.titania-debug-mode #chat titania-memory::before {
     }
 }
 
+/* === story-outline.css === */
+/* css/story-outline.css */
+
+.t-story-outline-window {
+    max-width: 1120px;
+    width: min(1120px, 96vw);
+    max-height: min(92vh, 900px);
+}
+
+.t-outline-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: hidden;
+}
+
+.t-outline-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.t-outline-nav .t-btn.active {
+    border-color: rgba(129, 236, 236, 0.65);
+    background: rgba(129, 236, 236, 0.2);
+}
+
+.t-outline-nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-outline-plan-name {
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(10, 14, 18, 0.75);
+    color: #f0f2f4;
+    padding: 7px 10px;
+    min-width: 210px;
+}
+
+.t-outline-editor-view,
+.t-outline-hub-view {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.t-outline-hub-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 10px;
+    min-height: 0;
+}
+
+.t-outline-plan-list,
+.t-outline-plan-preview {
+    border: 1px solid rgba(120, 150, 170, 0.25);
+    border-radius: 10px;
+    background: rgba(12, 16, 20, 0.7);
+}
+
+.t-outline-plan-list {
+    overflow: auto;
+    max-height: min(70vh, 660px);
+}
+
+.t-plan-item {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+}
+
+.t-plan-item:hover {
+    background: rgba(129, 236, 236, 0.08);
+}
+
+.t-plan-item.active {
+    background: rgba(129, 236, 236, 0.14);
+    border-left: 3px solid rgba(129, 236, 236, 0.8);
+    padding-left: 7px;
+}
+
+.t-plan-name {
+    color: #d8e8f6;
+    font-weight: 600;
+}
+
+.t-plan-meta {
+    margin-top: 2px;
+    color: #92a7bb;
+    font-size: 12px;
+}
+
+.t-plan-preview {
+    overflow: auto;
+    max-height: min(70vh, 660px);
+}
+
+.t-plan-preview-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(16, 24, 32, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.t-plan-preview-title {
+    color: #d8e8f6;
+    font-weight: 700;
+}
+
+.t-plan-preview-meta {
+    color: #8ea0b3;
+    font-size: 12px;
+}
+
+.t-plan-preview-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.t-plan-preview-body {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.t-plan-item-block {
+    border: 1px solid rgba(120, 150, 170, 0.25);
+    border-radius: 8px;
+    padding: 10px;
+    background: rgba(12, 18, 24, 0.7);
+}
+
+.t-plan-item-head {
+    color: #d8e8f6;
+    font-weight: 700;
+}
+
+.t-plan-item-text,
+.t-plan-item-foreshadow,
+.t-plan-scene-text,
+.t-plan-scene-head,
+.t-plan-scene-empty,
+.t-plan-empty {
+    color: #a8bfd3;
+    margin-top: 6px;
+}
+
+.t-plan-scenes-wrap {
+    margin-top: 10px;
+    display: grid;
+    gap: 8px;
+}
+
+.t-plan-scene {
+    border: 1px dashed rgba(129, 236, 236, 0.35);
+    border-radius: 8px;
+    padding: 8px;
+    background: rgba(10, 16, 22, 0.65);
+}
+
+.t-plan-scene.used {
+    border-color: rgba(255, 255, 255, 0.2);
+    border-style: solid;
+    background: rgba(58, 62, 68, 0.35);
+    opacity: 0.72;
+}
+
+.t-plan-scene-head.used,
+.t-plan-scene-text.used {
+    color: #93a1af;
+}
+
+.t-plan-used-tag {
+    margin-left: 8px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #c6d0db;
+    font-size: 11px;
+}
+
+.t-outline-top {
+    background: rgba(20, 24, 28, 0.75);
+    border: 1px solid rgba(120, 150, 170, 0.25);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.t-outline-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #e7edf4;
+    font-weight: 600;
+}
+
+.t-outline-story-input {
+    width: 100%;
+    resize: vertical;
+    border-radius: 8px;
+    border: 1px solid rgba(116, 185, 255, 0.35);
+    background: rgba(8, 12, 16, 0.75);
+    color: #f2f5f8;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.t-outline-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.t-outline-mode {
+    margin-left: auto;
+    color: #c8d7e6;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.t-outline-select {
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(10, 14, 18, 0.75);
+    color: #f0f2f4;
+    padding: 6px 8px;
+}
+
+.t-outline-table-wrap {
+    border: 1px solid rgba(120, 150, 170, 0.25);
+    border-radius: 10px;
+    overflow: auto;
+    background: rgba(12, 16, 20, 0.7);
+    max-height: min(55vh, 560px);
+}
+
+.t-outline-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.t-outline-table th,
+.t-outline-table td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px;
+    vertical-align: top;
+}
+
+.t-outline-table tbody tr[data-index] {
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.t-outline-table tbody tr[data-index]:hover {
+    background: rgba(129, 236, 236, 0.08);
+}
+
+.t-outline-table th {
+    background: rgba(31, 44, 58, 0.75);
+    color: #d7e5f3;
+    font-weight: 600;
+    text-align: left;
+}
+
+.t-outline-col-index {
+    width: 58px;
+    text-align: center;
+    color: #9cc3ea;
+    font-weight: 700;
+}
+
+.t-outline-op-indicator {
+    width: 64px;
+    text-align: center;
+    color: #a9bfd3;
+}
+
+.t-outline-op-row {
+    display: none;
+}
+
+.t-outline-op-row.show {
+    display: table-row;
+}
+
+.t-outline-op-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.t-outline-input,
+.t-outline-textarea {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(10, 14, 18, 0.72);
+    color: #f0f2f4;
+    box-sizing: border-box;
+    padding: 8px;
+}
+
+.t-outline-textarea {
+    resize: vertical;
+}
+
+.t-outline-plot-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.t-outline-mini-btn,
+.t-outline-row-btn {
+    border: 1px solid rgba(130, 170, 200, 0.45);
+    background: rgba(28, 40, 52, 0.78);
+    color: #d7e5f3;
+    border-radius: 6px;
+    cursor: pointer;
+    min-width: 34px;
+    height: 34px;
+}
+
+.t-outline-row-btn {
+    margin-right: 4px;
+}
+
+.t-outline-scene-row {
+    display: none;
+}
+
+.t-outline-scene-row.show {
+    display: table-row;
+}
+
+.t-outline-scene-wrap {
+    border: 1px dashed rgba(129, 236, 236, 0.32);
+    border-radius: 8px;
+    padding: 10px;
+    background: rgba(10, 16, 22, 0.66);
+}
+
+.t-outline-scene-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    color: #a9dff5;
+}
+
+.t-outline-scene-table-wrap {
+    overflow: auto;
+}
+
+.t-outline-scene-table {
+    width: 100%;
+    min-width: 1040px;
+    border-collapse: collapse;
+}
+
+.t-outline-scene-table th,
+.t-outline-scene-table td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 6px;
+    vertical-align: top;
+}
+
+.t-outline-scene-table th {
+    text-align: left;
+    font-weight: 600;
+    color: #d4e9f6;
+    background: rgba(20, 34, 47, 0.68);
+}
+
+.t-scene-col-index {
+    width: 56px;
+    text-align: center;
+    color: #9cc3ea;
+    font-weight: 700;
+}
+
+.t-outline-row-btn.danger {
+    border-color: rgba(255, 107, 107, 0.5);
+    color: #ff9d9d;
+    background: rgba(62, 24, 24, 0.7);
+}
+
+.t-outline-empty {
+    text-align: center;
+    color: #8ea0b3;
+    padding: 26px 12px;
+}
+
+.t-outline-raw-pre {
+    margin: 0;
+    max-height: 56vh;
+    overflow: auto;
+    background: #0d141d;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #d6e2ef;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 12px;
+}
+
+.t-outline-mobile-list {
+    display: none;
+}
+
+.t-outline-mobile-drawer {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    #t-story-outline-overlay {
+        align-items: flex-start;
+        justify-content: center;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 2vh 0;
+    }
+
+    .t-story-outline-window {
+        width: 98vw;
+        max-width: 98vw;
+        max-height: 96vh;
+        margin: 0 auto;
+    }
+
+    .t-outline-body {
+        gap: 10px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px;
+        min-height: 0;
+    }
+
+    .t-outline-top {
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .t-outline-nav {
+        gap: 6px;
+    }
+
+    .t-outline-nav .t-btn {
+        min-height: 38px;
+        flex: 1;
+    }
+
+    .t-outline-nav-right {
+        width: 100%;
+        margin-left: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .t-outline-plan-name {
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 38px;
+        font-size: 16px;
+    }
+
+    .t-outline-hub-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .t-outline-plan-list,
+    .t-outline-plan-preview {
+        max-height: none;
+    }
+
+    .t-plan-preview-head {
+        position: static;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .t-plan-preview-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .t-plan-preview-actions .t-btn {
+        min-height: 38px;
+    }
+
+    .t-outline-story-input {
+        min-height: 96px;
+        font-size: 16px;
+        line-height: 1.4;
+    }
+
+    .t-outline-actions {
+        gap: 6px;
+    }
+
+    .t-outline-actions > .t-btn {
+        flex: 1 1 calc(50% - 6px);
+        min-height: 40px;
+    }
+
+    .t-outline-mode {
+        margin-left: 0;
+        width: 100%;
+        justify-content: space-between;
+        order: 3;
+    }
+
+    #t-outline-view-raw {
+        width: 100%;
+        min-height: 38px;
+    }
+
+    .t-outline-select {
+        min-height: 36px;
+        font-size: 14px;
+    }
+
+    .t-outline-table-wrap {
+        display: none;
+    }
+
+    .t-outline-mobile-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-bottom: 76px;
+    }
+
+    .t-outline-mobile-empty {
+        text-align: center;
+        color: #8ea0b3;
+        padding: 16px 12px;
+        border: 1px dashed rgba(120, 150, 170, 0.35);
+        border-radius: 8px;
+    }
+
+    .t-outline-mobile-card {
+        border: 1px solid rgba(120, 150, 170, 0.28);
+        border-radius: 10px;
+        background: rgba(12, 16, 20, 0.82);
+        padding: 10px;
+    }
+
+    .t-outline-mobile-head {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+        color: #9cc3ea;
+        font-size: 12px;
+    }
+
+    .t-outline-mobile-head .idx {
+        font-weight: 700;
+        color: #81ecec;
+    }
+
+    .t-outline-mobile-head .scene-count {
+        margin-left: auto;
+        color: #a6bfda;
+    }
+
+    .t-outline-mobile-title {
+        color: #e8f0f8;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .t-outline-mobile-plot {
+        color: #c6d3df;
+        font-size: 13px;
+        line-height: 1.4;
+        margin-bottom: 8px;
+    }
+
+    .t-outline-mobile-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .t-outline-mobile-actions .t-btn {
+        flex: 1;
+        min-height: 36px;
+    }
+
+    .t-outline-mobile-drawer {
+        display: block;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 20020;
+        background: rgba(15, 20, 26, 0.98);
+        border-top: 1px solid rgba(120, 150, 170, 0.35);
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45);
+        transition: transform 0.22s ease, visibility 0.22s ease;
+        max-height: 88vh;
+        border-top-left-radius: 14px;
+        border-top-right-radius: 14px;
+        overflow: hidden;
+        transform: translateY(110%);
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .t-outline-mobile-drawer.show {
+        transform: translateY(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .t-outline-mobile-drawer-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e8f0f8;
+        font-weight: 600;
+    }
+
+    .t-outline-mobile-drawer-body {
+        padding: 10px 12px 4px;
+        max-height: 52vh;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .t-outline-mobile-drawer-body label {
+        color: #a9bfd3;
+        font-size: 12px;
+    }
+
+    .t-outline-mobile-drawer-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        padding: 10px 12px 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(11, 15, 20, 0.94);
+    }
+
+    .t-outline-mobile-drawer-actions .t-btn {
+        min-height: 40px;
+    }
+
+    .t-mobile-scene-head {
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #b8d5eb;
+        font-size: 12px;
+    }
+
+    .t-mobile-scenes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 6px;
+        padding-bottom: 8px;
+    }
+
+    .t-mobile-scene-empty {
+        border: 1px dashed rgba(129, 236, 236, 0.3);
+        border-radius: 8px;
+        color: #8ea0b3;
+        font-size: 12px;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .t-mobile-scene-card {
+        border: 1px solid rgba(129, 236, 236, 0.24);
+        border-radius: 8px;
+        background: rgba(12, 18, 24, 0.86);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .t-mobile-scene-title {
+        color: #d3e9f9;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+
+    .t-mobile-scene-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 4px;
+    }
+
+    .t-mobile-scene-actions .t-btn {
+        flex: 1;
+        min-height: 36px;
+    }
+
+    .t-outline-table {
+        min-width: 100%;
+        display: block;
+    }
+
+    .t-outline-op-row,
+    .t-outline-op-row.show {
+        display: none;
+    }
+
+    .t-outline-table thead {
+        display: none;
+    }
+
+    .t-outline-table tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .t-outline-table tr {
+        display: block;
+        margin-bottom: 10px;
+        border: 1px solid rgba(120, 150, 170, 0.28);
+        border-radius: 10px;
+        background: rgba(12, 16, 20, 0.82);
+        padding: 8px;
+    }
+
+    .t-outline-table td {
+        display: block;
+        border: none;
+        padding: 5px 2px;
+    }
+
+    .t-outline-col-index {
+        width: auto;
+        text-align: left;
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+
+    .t-outline-col-index::before {
+        content: "\u5E8F\u53F7";
+        color: #a6bfda;
+        margin-right: 8px;
+        font-weight: 500;
+    }
+
+    .t-outline-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        color: #a6bfda;
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    .t-outline-input,
+    .t-outline-textarea {
+        font-size: 16px;
+        min-height: 38px;
+    }
+
+    .t-outline-textarea {
+        min-height: 82px;
+    }
+
+    .t-outline-plot-wrap {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .t-outline-mini-btn,
+    .t-outline-row-btn {
+        width: 100%;
+        min-width: 100%;
+        height: 38px;
+        border-radius: 8px;
+    }
+
+    .t-outline-row-btn {
+        margin-right: 0;
+        margin-bottom: 6px;
+    }
+
+    .t-outline-scene-row.show {
+        display: block;
+    }
+
+    .t-outline-scene-wrap {
+        padding: 8px;
+    }
+
+    .t-outline-scene-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .t-outline-scene-header .t-btn {
+        width: 100%;
+        min-height: 36px;
+    }
+
+    .t-outline-scene-table-wrap {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .t-outline-scene-table {
+        min-width: 100%;
+        display: block;
+    }
+
+    .t-outline-scene-table thead {
+        display: none;
+    }
+
+    .t-outline-scene-table tbody,
+    .t-outline-scene-table tr,
+    .t-outline-scene-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .t-outline-scene-table tr {
+        border: 1px solid rgba(129, 236, 236, 0.28);
+        border-radius: 8px;
+        padding: 8px;
+        margin-bottom: 8px;
+        background: rgba(14, 20, 27, 0.82);
+    }
+
+    .t-scene-col-index {
+        width: auto;
+        text-align: left;
+        margin-bottom: 4px;
+    }
+}
+
+
 `;
   document.head.appendChild(style);
 }
@@ -10031,9 +10941,64 @@ var favsWindow_exports = {};
 __export(favsWindow_exports, {
   openCharImageManager: () => openCharImageManager,
   openFavsWindow: () => openFavsWindow,
+  saveContinuationChainFavorite: () => saveContinuationChainFavorite,
   saveFavorite: () => saveFavorite,
   unsaveFavorite: () => unsaveFavorite
 });
+function getCurrentAvatarSrc() {
+  let avatarSrc = null;
+  const lastCharImg = $(".mes[is_user='false'] .message_avatar_img").last();
+  if (lastCharImg.length > 0) {
+    avatarSrc = lastCharImg.attr("src");
+  }
+  if (!avatarSrc) {
+    const mainImg = $("#character_image_div img");
+    if (mainImg.length > 0 && mainImg.is(":visible")) {
+      avatarSrc = mainImg.attr("src");
+    }
+  }
+  if (!avatarSrc) {
+    const navImg = $("#right-nav-panel .character-avatar");
+    if (navImg.length > 0) {
+      avatarSrc = navImg.attr("src");
+    }
+  }
+  console.log("Titania: Captured Avatar Path ->", avatarSrc);
+  return avatarSrc;
+}
+function escapeHtmlText(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function buildChainMergedHtml(chainItems) {
+  const items = Array.isArray(chainItems) ? chainItems : [];
+  if (items.length === 0) return "";
+  return items.map((item, idx) => {
+    const roundNo = Number(item?.round) || idx + 1;
+    const type = String(item?.type || (idx === 0 ? "initial" : "continuation"));
+    const instruction = String(item?.instruction || "").trim() || (type === "initial" ? "\uFF08\u9996\u6B21\u751F\u6210\uFF09" : "\uFF08\u81EA\u7136\u7EED\u5199\uFF09");
+    const html = String(item?.html || "").trim();
+    const title = type === "initial" ? "\u9996\u6B21\u751F\u6210" : `\u7B2C ${roundNo} \u6BB5\u7EED\u5199`;
+    const instructionLabel = type === "initial" ? "\u751F\u6210\u8BF4\u660E" : "\u7EED\u5199\u6307\u4EE4";
+    return `
+            <section class="t-chain-segment" data-round="${roundNo}">
+                <div class="t-chain-segment-head">
+                    <div class="t-chain-segment-title">${escapeHtmlText(title)}</div>
+                    <div class="t-chain-segment-instruction">${instructionLabel}\uFF1A${escapeHtmlText(instruction)}</div>
+                </div>
+                <div class="t-chain-segment-body">${html}</div>
+            </section>
+        `;
+  }).join("\n");
+}
+function buildChainSignature(scriptId, rounds) {
+  const payload = `${String(scriptId || "")}|${(Array.isArray(rounds) ? rounds : []).map((r) => `${r.round}#${String(r.type || "continuation").trim()}#${String(r.instruction || "").trim()}#${String(r.content || "").trim()}`).join("|")}`;
+  let hash = 0;
+  for (let i = 0; i < payload.length; i++) {
+    hash = (hash << 5) - hash + payload.charCodeAt(i);
+    hash |= 0;
+  }
+  return `chain:${scriptId || "none"}:${Math.abs(hash)}`;
+}
 function replaceAllLiteral(str, search, replacement) {
   if (!str || !search) return str;
   return str.split(search).join(replacement);
@@ -10177,54 +11142,74 @@ function waitForImagesLoadedDeep(rootEl, timeoutMs = 5e3) {
   });
 }
 async function saveFavorite() {
-  const container = document.getElementById("t-output-content");
-  const content = extractFromShadowDOM(container);
-  if (!content || content.trim().length < 10) {
-    if (window.toastr) toastr.warning("\u5185\u5BB9\u4E3A\u7A7A\u6216\u8FC7\u77ED\uFF0C\u65E0\u6CD5\u6536\u85CF");
-    else alert("\u5185\u5BB9\u65E0\u6548");
-    return;
+  await saveContinuationChainFavorite();
+}
+async function saveContinuationChainFavorite() {
+  const display = GlobalState.displayState?.isViewingHistory ? GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex] || null : {
+    scriptId: GlobalState.lastGeneratedScriptId,
+    scriptName: ""
+  };
+  const scriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
+  if (!scriptId) {
+    if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5267\u672C\uFF0C\u65E0\u6CD5\u6536\u85CF\u7EED\u5199\u94FE");
+    return false;
   }
-  const script = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
-  const scriptName = script ? script.name : "\u672A\u77E5\u5267\u672C";
   const ctx = await getContextData();
-  let avatarSrc = null;
-  const lastCharImg = $(".mes[is_user='false'] .message_avatar_img").last();
-  if (lastCharImg.length > 0) {
-    avatarSrc = lastCharImg.attr("src");
+  const chainData = getContinuationRoundsForFav(scriptId);
+  const rounds = Array.isArray(chainData?.rounds) ? chainData.rounds : [];
+  const currentDisplayContent = GlobalState.displayState?.isViewingHistory ? String(GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex]?.content || "").trim() : String(GlobalState.lastGeneratedContent || "").trim();
+  const normalizedRounds = rounds.length > 0 ? rounds : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, timestamp: Date.now() }] : [];
+  if (normalizedRounds.length === 0) {
+    if (window.toastr) toastr.warning("\u5F53\u524D\u5267\u573A\u6CA1\u6709\u53EF\u6536\u85CF\u5185\u5BB9");
+    return false;
   }
-  if (!avatarSrc) {
-    const mainImg = $("#character_image_div img");
-    if (mainImg.length > 0 && mainImg.is(":visible")) {
-      avatarSrc = mainImg.attr("src");
-    }
+  const items = normalizedRounds.map((item, idx) => ({
+    round: Number(item?.round) || idx + 1,
+    type: String(item?.type || (idx === 0 ? "initial" : "continuation")),
+    instruction: String(item?.instruction || "").trim(),
+    html: String(item?.content || "").trim(),
+    timestamp: Number(item?.timestamp) || Date.now()
+  })).filter((item) => item.html.length > 0);
+  if (items.length === 0) {
+    if (window.toastr) toastr.warning("\u7EED\u5199\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6536\u85CF");
+    return false;
   }
-  if (!avatarSrc) {
-    const navImg = $("#right-nav-panel .character-avatar");
-    if (navImg.length > 0) {
-      avatarSrc = navImg.attr("src");
-    }
+  const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
+  const scriptName = String(chainData?.scriptName || script?.name || display?.scriptName || "\u573A\u666F");
+  const avatarSrc = getCurrentAvatarSrc();
+  const chainSignature = buildChainSignature(scriptId, normalizedRounds);
+  const data = getExtData();
+  if (!Array.isArray(data.favs)) data.favs = [];
+  const duplicated = data.favs.find((f) => f?.type === "chain" && f?.chainSignature === chainSignature);
+  if (duplicated) {
+    GlobalState.lastFavId = duplicated.id;
+    syncFavIdToCurrentHistory(duplicated.id);
+    updateFavButtonUI();
+    if (window.toastr) toastr.info("\u5F53\u524D\u5267\u573A\u5206\u7EC4\u5DF2\u6536\u85CF\uFF0C\u65E0\u9700\u91CD\u590D\u6536\u85CF");
+    return true;
   }
-  console.log("Titania: Captured Avatar Path ->", avatarSrc);
+  const mergedHtml = buildChainMergedHtml(items);
+  const now = Date.now();
   const entry = {
-    id: Date.now(),
+    id: now,
+    type: "chain",
     title: `${scriptName} - ${ctx.charName}`,
     charName: ctx.charName,
-    // 独立存储角色名，用于筛选
     scriptName,
-    // 独立存储剧本名，用于显示
-    date: (/* @__PURE__ */ new Date()).toLocaleString(),
-    html: content,
-    avatar: avatarSrc
-    // 恢复保存具体路径
+    scriptId,
+    date: new Date(now).toLocaleString(),
+    html: mergedHtml,
+    avatar: avatarSrc,
+    chainSignature,
+    items
   };
-  const data = getExtData();
-  if (!data.favs) data.favs = [];
   data.favs.unshift(entry);
   saveExtData();
   GlobalState.lastFavId = entry.id;
   syncFavIdToCurrentHistory(entry.id);
   updateFavButtonUI();
-  if (window.toastr) toastr.success("\u6536\u85CF\u6210\u529F\uFF01");
+  if (window.toastr) toastr.success(`\u5DF2\u6536\u85CF\u5F53\u524D\u5267\u573A\u5206\u7EC4\uFF08\u5171 ${items.length} \u6BB5\uFF09`);
+  return true;
 }
 function unsaveFavorite() {
   if (!GlobalState.lastFavId) {
@@ -10376,15 +11361,26 @@ function openFavsWindow() {
       return;
     }
     currentFilteredList.forEach((item, idx) => {
-      const snippet = getSnippet(item.html);
+      const isChain = item?.type === "chain";
+      const chainItems = Array.isArray(item?.items) ? item.items : [];
+      const chainCount = chainItems.length;
+      const chainSnippetSource = isChain ? chainItems.map((seg) => {
+        const instruction = String(seg?.instruction || "").trim();
+        const html2 = String(seg?.html || "").trim();
+        return `${instruction}
+${html2}`;
+      }).join("\n") : "";
+      const snippet = getSnippet(isChain ? chainSnippetSource || item.html : item.html);
       const charName = item._meta.char;
       let bgUrl = currentMap[charName];
       if (!bgUrl) bgUrl = item.avatar;
       const bgClass = bgUrl ? "" : "no-img";
       const bgStyle = bgUrl ? `background-image: url('${bgUrl}')` : "";
       const isSelected = selectedIds.has(item.id);
+      const displayDate = String(item.date || "").split(" ")[0] || "-";
+      const chainBadge = isChain ? `<span class="t-fav-chain-badge">\u5267\u573A\u5206\u7EC4 \xB7 ${chainCount}\u6BB5</span>` : "";
       const card = $(`
-                <div class="t-fav-card ${isSelected ? "selected" : ""}" data-fav-id="${item.id}">
+                <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""}" data-fav-id="${item.id}">
                     <div class="t-fav-card-checkbox">
                         <i class="fa-${isSelected ? "solid fa-square-check" : "regular fa-square"}"></i>
                     </div>
@@ -10396,7 +11392,7 @@ function openFavsWindow() {
                             <div class="t-fav-card-char"><i class="fa-solid fa-user-tag" style="font-size:0.8em"></i> ${charName}</div>
                         </div>
                         <div class="t-fav-card-snippet">${snippet}</div>
-                        <div class="t-fav-card-footer"><span>${item.date.split(" ")[0]}</span></div>
+                        <div class="t-fav-card-footer"><span>${displayDate}</span>${chainBadge}</div>
                     </div>
                 </div>
             `);
@@ -10432,8 +11428,15 @@ function openFavsWindow() {
     currentFavId = item.id;
     currentViewingHtml = item.html;
     currentViewingTitle = item.title;
-    $("#t-read-meta").text(item.title);
-    $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
+    if (item?.type === "chain") {
+      const chainItems = Array.isArray(item.items) ? item.items : [];
+      const chainCount = chainItems.length;
+      $("#t-read-meta").text(`${item.title}\uFF08\u5267\u573A\u5206\u7EC4\uFF09`);
+      $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length} \xB7 ${chainCount} \u6BB5`);
+    } else {
+      $("#t-read-meta").text(item.title);
+      $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
+    }
     const container = document.getElementById("t-read-content");
     const { isInteractive, reasons } = detectInteractiveContent(item.html);
     const openWindowBtn = $("#t-read-open-window");
@@ -10801,6 +11804,7 @@ var init_favsWindow = __esm({
     init_context();
     init_helpers();
     init_mainWindow();
+    init_api();
   }
 });
 
@@ -11478,6 +12482,11 @@ function openSettingsWindow() {
                                     <span>\u63D0\u53D6\u8BBE\u5B9A</span>
                                 </label>
                                 <label class="t-toolbar-item">
+                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="outline">
+                                    <i class="fa-solid fa-list-check" style="color:#81ecec;"></i>
+                                    <span>\u6545\u4E8B\u5927\u7EB2</span>
+                                </label>
+                                <label class="t-toolbar-item">
                                     <input type="checkbox" class="t-toolbar-chk" data-btn-id="model">
                                     <i class="fa-solid fa-microchip" style="color:#00cec9;"></i>
                                     <span>\u5207\u6362\u6A21\u578B</span>
@@ -12058,7 +13067,7 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 5: \u7CFB\u7EDF\u63D0\u793A\u8BCD -->
+                <!-- Tab 6: \u7CFB\u7EDF\u63D0\u793A\u8BCD -->
                 <div id="page-prompts" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
                         <div style="font-weight:bold; color:#90cdf4; margin-bottom:10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> \u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD</div>
@@ -12965,6 +13974,7 @@ function openSettingsWindow() {
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
     lore: true,
+    outline: false,
     model: false,
     settings: true,
     favs: false,
@@ -13241,6 +14251,16 @@ ${JSON.stringify(l.details, null, 2)}`;
       show_timer: $("#p-show-timer").is(":checked")
     };
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
+    const clampInt = (value, min, max, fallback) => {
+      const n = parseInt(value, 10);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.max(min, Math.min(max, n));
+    };
+    const clampFloat = (value, min, max, fallback) => {
+      const n = parseFloat(value);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.max(min, Math.min(max, n));
+    };
     saveCurrentCssThemeToMemory();
     d.css_themes = {
       profiles: tempCssThemes,
@@ -14268,6 +15288,184 @@ async function getAvailableModels() {
       return [conn.model || "gpt-3.5-turbo"];
     }
   }
+}
+function normalizeEndpoint(url, suffix = "/chat/completions") {
+  if (!url) return "";
+  let endpoint = url.trim().replace(/\/+$/, "");
+  if (!endpoint.endsWith(suffix)) {
+    if (endpoint.endsWith("/v1")) {
+      endpoint += suffix;
+    } else {
+      endpoint += "/v1" + suffix;
+    }
+  }
+  return endpoint;
+}
+async function sendChatRequest(messages, options = {}) {
+  const conn = getActiveConnection();
+  const data = getExtData();
+  const model = options.model || conn.model;
+  const useStream = options.stream !== void 0 ? options.stream : conn.stream;
+  const maxTokens = options.maxTokens || 2048;
+  const temperature = options.temperature || 0.7;
+  const signal = options.signal;
+  let rawContent = "";
+  if (conn.useSTConnection) {
+    const requestData = ChatCompletionService.createRequestData({
+      stream: useStream,
+      messages,
+      chat_completion_source: oai_settings.chat_completion_source,
+      model,
+      max_tokens: oai_settings.openai_max_tokens || maxTokens,
+      temperature: oai_settings.temp_openai || temperature,
+      custom_url: oai_settings.custom_url,
+      reverse_proxy: oai_settings.reverse_proxy,
+      proxy_password: oai_settings.proxy_password,
+      custom_prompt_post_processing: oai_settings.custom_prompt_post_processing
+    });
+    if (useStream) {
+      const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, null);
+      if (typeof streamGenerator === "function") {
+        for await (const chunk of streamGenerator()) {
+          rawContent = chunk.text || "";
+        }
+      } else {
+        rawContent = streamGenerator?.content || "";
+      }
+    } else {
+      const result = await ChatCompletionService.sendRequest(requestData, true, null);
+      rawContent = result?.content || "";
+    }
+  } else {
+    if (!conn.key) {
+      throw new Error("\u914D\u7F6E\u7F3A\u5931\uFF1A\u8BF7\u5148\u53BB\u8BBE\u7F6E\u586B API Key\uFF01");
+    }
+    const endpoint = normalizeEndpoint(conn.url, "/chat/completions");
+    if (!endpoint) {
+      throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
+    }
+    const requestBody = {
+      model,
+      messages,
+      stream: useStream,
+      max_tokens: maxTokens,
+      temperature
+    };
+    if (useStream) {
+      const maxRetries = 1;
+      const retryDelay = 1e3;
+      let lastError = null;
+      let streamSuccess = false;
+      for (let attempt = 0; attempt <= maxRetries && !streamSuccess; attempt++) {
+        try {
+          if (attempt > 0) {
+            TitaniaLogger.info(`\u6D41\u5F0F\u8BF7\u6C42\u91CD\u8BD5 (${attempt}/${maxRetries})`);
+          }
+          const fetchOptions = {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${conn.key}`
+            },
+            body: JSON.stringify(requestBody)
+          };
+          if (signal) {
+            fetchOptions.signal = signal;
+          }
+          const res = await fetch(endpoint, fetchOptions);
+          if (!res.ok) {
+            const errText = await res.text().catch(() => "");
+            throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
+          }
+          if (!res.body) {
+            throw new Error("Stream Empty Body: \u54CD\u5E94\u4F53\u4E3A\u7A7A");
+          }
+          const eventStream = new EventSourceStream();
+          res.body.pipeThrough(eventStream);
+          const reader = eventStream.readable.getReader();
+          let chunkCount = 0;
+          let parseFailCount = 0;
+          while (true) {
+            if (signal?.aborted) {
+              await reader.cancel();
+              throw new DOMException("Request aborted", "AbortError");
+            }
+            const { done, value } = await reader.read();
+            if (done) break;
+            const data2 = value.data;
+            if (data2 === "[DONE]") break;
+            try {
+              tryParseStreamingError(res, data2, { quiet: true });
+            } catch (streamParseErr) {
+              throw streamParseErr;
+            }
+            chunkCount++;
+            try {
+              const json = JSON.parse(data2);
+              const chunk = json.choices?.[0]?.delta?.content || "";
+              if (chunk) rawContent += chunk;
+            } catch (e) {
+              parseFailCount++;
+              if (parseFailCount <= 3) {
+                TitaniaLogger.warn(`\u6D41\u5F0F chunk \u89E3\u6790\u5931\u8D25 (#${parseFailCount})`, {
+                  data: data2.substring(0, 100),
+                  error: e.message
+                });
+              }
+            }
+          }
+          if (chunkCount === 0) {
+            throw new Error("Stream Empty: \u672A\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E");
+          }
+          if (parseFailCount > 0 && rawContent.length === 0) {
+            throw new Error(`Stream Parse Failed: \u63A5\u6536\u5230 ${chunkCount} \u4E2A\u6570\u636E\u5757\uFF0C\u4F46\u5168\u90E8\u89E3\u6790\u5931\u8D25`);
+          }
+          streamSuccess = true;
+        } catch (streamErr) {
+          lastError = streamErr;
+          if (streamErr.name === "AbortError") {
+            throw streamErr;
+          }
+          TitaniaLogger.warn(`\u6D41\u5F0F\u8BF7\u6C42\u5931\u8D25 (\u5C1D\u8BD5 ${attempt + 1}/${maxRetries + 1})`, {
+            error: streamErr.message,
+            attempt: attempt + 1
+          });
+          if (attempt < maxRetries) {
+            rawContent = "";
+            await new Promise((r) => setTimeout(r, retryDelay));
+          }
+        }
+      }
+      if (!streamSuccess) {
+        throw new Error(`Stream Interrupted (\u5DF2\u91CD\u8BD5 ${maxRetries} \u6B21): ${lastError?.message || "\u672A\u77E5\u9519\u8BEF"}`);
+      }
+    } else {
+      const fetchOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${conn.key}`
+        },
+        body: JSON.stringify(requestBody)
+      };
+      if (signal) {
+        fetchOptions.signal = signal;
+      }
+      const res = await fetch(endpoint, fetchOptions);
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
+      }
+      const jsonText = await res.text();
+      try {
+        const json = JSON.parse(jsonText);
+        rawContent = json.choices?.[0]?.message?.content || "";
+      } catch (jsonErr) {
+        throw new Error("Invalid JSON response");
+      }
+    }
+  }
+  return rawContent;
 }
 function validateConnection() {
   const conn = getActiveConnection();
@@ -18534,7 +19732,7 @@ function saveContinuationDefaultInjectCount(count) {
   data.continuation_ui.inject_rounds_count = clampInjectRoundsCount(count);
   saveExtData();
 }
-function escapeHtmlText(str) {
+function escapeHtmlText2(str) {
   return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function getContinuationRecentInstructions() {
@@ -18578,7 +19776,7 @@ function openContinuationComposer(initialText = "") {
                             overflow:hidden;
                             text-overflow:ellipsis;
                             white-space:nowrap;
-                        " title="${escapeHtmlText(item)}">${escapeHtmlText(display2)}</button>`;
+                        " title="${escapeHtmlText2(item)}">${escapeHtmlText2(display2)}</button>`;
     }).join("") : `<div style="color:#777; font-size:12px;">\u6682\u65E0\u6700\u8FD1\u7EED\u5199\u6307\u4EE4</div>`;
     const html = `
         <div id="t-continuation-editor" class="t-content-editor">
@@ -18883,6 +20081,10 @@ async function openMainWindow() {
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                         <span>\u4E3B\u52A8\u7EED\u5199</span>
                     </div>
+                    <div class="t-tools-item" id="t-tool-continue-fav-chain">
+                        <i class="fa-solid fa-bookmark"></i>
+                        <span>\u6536\u85CF\u5F53\u524D\u5267\u573A\u5206\u7EC4</span>
+                    </div>
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
@@ -19070,6 +20272,15 @@ async function openMainWindow() {
     } else {
       $toolsBtn.removeClass("zen-active");
     }
+  });
+  $("#t-tool-continue-fav-chain").on("click", async function() {
+    $toolsPanel.hide();
+    $toolsBtn.removeClass("active");
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    await saveContinuationChainFavorite();
   });
   $("#t-tool-edit-content").on("click", function() {
     $toolsPanel.hide();
@@ -20218,6 +21429,1070 @@ var init_mainWindow = __esm({
   }
 });
 
+// src/ui/storyOutlineWindow.js
+var storyOutlineWindow_exports = {};
+__export(storyOutlineWindow_exports, {
+  openStoryOutlineWindow: () => openStoryOutlineWindow
+});
+function ensureCssLoaded2() {
+  const id = "titania-css-story-outline";
+  if (!document.getElementById(id)) {
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.href = `${extensionFolderPath}/css/story-outline.css`;
+    document.head.appendChild(link);
+  }
+}
+function escapeHtml4(text) {
+  const div = document.createElement("div");
+  div.textContent = text == null ? "" : String(text);
+  return div.innerHTML;
+}
+function getOpeningFromContext() {
+  try {
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
+    const stCtx = SillyTavern.getContext();
+    const charObj = stCtx?.characters?.[stCtx?.characterId] || null;
+    const data = charObj?.data || {};
+    const candidates = [
+      data.first_mes,
+      data.first_message,
+      charObj?.first_mes,
+      charObj?.first_message,
+      data.scenario,
+      charObj?.scenario
+    ];
+    for (const item of candidates) {
+      if (typeof item === "string" && item.trim()) return item.trim();
+    }
+    const firstChat = Array.isArray(stCtx?.chat) ? stCtx.chat[0] : null;
+    if (firstChat?.mes && typeof firstChat.mes === "string") return firstChat.mes.trim();
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u5F00\u573A\u767D\u5931\u8D25", e);
+  }
+  return "";
+}
+function buildPrompt(ctx, userStoryInput, openingText) {
+  const sys = `\u4F60\u662F\u8D44\u6DF1\u53D9\u4E8B\u7B56\u5212\u3002\u8BF7\u57FA\u4E8E\u7ED9\u5B9A\u4FE1\u606F\u8BBE\u8BA1\u5267\u60C5\u5927\u7EB2\u3002
+
+[\u786C\u6027\u8981\u6C42]
+1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
+2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u662F\uFF1A
+{
+  "version": "1.0",
+  "story_summary": "\u4E00\u53E5\u8BDD\u6982\u62EC",
+  "items": [
+    {
+      "index": 1,
+      "time": "\u65F6\u95F4\u70B9",
+      "title": "\u6807\u9898",
+      "plot": "\u5177\u4F53\u60C5\u8282",
+      "foreshadowing": "\u4F0F\u7B14\uFF0C\u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32"
+    }
+  ]
+}
+3) items \u6570\u91CF\u5EFA\u8BAE 6-12 \u6761\u3002
+4) foreshadowing \u5B57\u6BB5\u5FC5\u987B\u5B58\u5728\uFF0C\u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32\u3002
+5) \u60C5\u8282\u9700\u8981\u8FDE\u8D2F\uFF0C\u5141\u8BB8\u9636\u6BB5\u6027\u8F6C\u6298\u3002
+6) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`;
+  const user = `[\u89D2\u8272\u8BBE\u5B9A]
+${ctx.persona || "(\u7A7A)"}
+
+[\u7528\u6237\u8BBE\u5B9A]
+${ctx.userDesc || "(\u7A7A)"}
+
+[\u5F00\u573A\u767D]
+${openingText || "(\u7A7A)"}
+
+[\u8FD9\u5F20\u5361\u7684\u6545\u4E8B\u9700\u6C42]
+${userStoryInput || "\u672A\u586B\u5199\u6545\u4E8B\u65B9\u5411\uFF0C\u8BF7\u7ED3\u5408\u4E0A\u65B9\u8BBE\u5B9A\u751F\u6210"}
+
+[\u4EFB\u52A1]
+\u8BF7\u8BBE\u8BA1\u6545\u4E8B\u5927\u7EB2\uFF0C\u5E76\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`;
+  return [
+    { role: "system", content: sys },
+    { role: "user", content: user }
+  ];
+}
+function parseOutlineResponse(raw) {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
+  }
+  const attempts = [];
+  attempts.push(raw.trim());
+  const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (codeBlockMatch?.[1]) attempts.push(codeBlockMatch[1].trim());
+  const objMatch = raw.match(/\{[\s\S]*\}/);
+  if (objMatch?.[0]) attempts.push(objMatch[0].trim());
+  for (const content of attempts) {
+    try {
+      const fixed = content.replace(/,\s*([}\]])/g, "$1");
+      const data = JSON.parse(fixed);
+      if (!data || !Array.isArray(data.items)) continue;
+      return data;
+    } catch {
+    }
+  }
+  throw new Error("\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON");
+}
+function getDraft() {
+  const data = getExtData();
+  return data[DRAFT_KEY] || null;
+}
+function saveDraft(storyInput, insertMode) {
+  const data = getExtData();
+  data[DRAFT_KEY] = {
+    storyInput: storyInput || "",
+    insertMode: insertMode || "overwrite",
+    items: outlineItems,
+    updatedAt: Date.now()
+  };
+  saveExtData();
+}
+function loadDraft() {
+  const draft = getDraft();
+  if (!draft) {
+    return { storyInput: "", insertMode: "overwrite", items: [] };
+  }
+  return {
+    storyInput: typeof draft.storyInput === "string" ? draft.storyInput : "",
+    insertMode: draft.insertMode === "append" ? "append" : "overwrite",
+    items: normalizeItems(draft.items)
+  };
+}
+function getPlans() {
+  const data = getExtData();
+  if (!Array.isArray(data[PLANS_KEY])) data[PLANS_KEY] = [];
+  return data[PLANS_KEY];
+}
+function getActivePlanId() {
+  const data = getExtData();
+  return typeof data[ACTIVE_PLAN_KEY] === "string" ? data[ACTIVE_PLAN_KEY] : "";
+}
+function setActivePlanId(planId) {
+  const data = getExtData();
+  data[ACTIVE_PLAN_KEY] = planId || "";
+  saveExtData();
+}
+function createPlanName() {
+  const now = /* @__PURE__ */ new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `\u65B9\u6848-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+}
+function upsertCurrentAsPlan(nameInput = "") {
+  const plans = getPlans();
+  const planId = `plan_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const now = Date.now();
+  const plan = {
+    id: planId,
+    name: (nameInput || "").trim() || createPlanName(),
+    storyInput: $("#t-outline-story-input").val() || "",
+    items: normalizeItems(outlineItems),
+    used_scene_keys: [],
+    createdAt: now,
+    updatedAt: now
+  };
+  plans.unshift(plan);
+  activePlanId = plan.id;
+  setActivePlanId(plan.id);
+  saveExtData();
+  return plan;
+}
+function getCurrentInsertMode() {
+  return $("#t-hub-insert-mode").val() || $("#t-outline-insert-mode").val() || "overwrite";
+}
+function getSceneUsageKey(itemIndex, sceneIndex) {
+  return `${itemIndex}:${sceneIndex}`;
+}
+function isSceneUsed(plan, itemIndex, sceneIndex) {
+  if (!plan || !Array.isArray(plan.used_scene_keys)) return false;
+  return plan.used_scene_keys.includes(getSceneUsageKey(itemIndex, sceneIndex));
+}
+function markSceneUsed(planId, itemIndex, sceneIndex) {
+  const plans = getPlans();
+  const plan = plans.find((p) => p.id === planId);
+  if (!plan) return;
+  if (!Array.isArray(plan.used_scene_keys)) plan.used_scene_keys = [];
+  const key = getSceneUsageKey(itemIndex, sceneIndex);
+  if (!plan.used_scene_keys.includes(key)) {
+    plan.used_scene_keys.push(key);
+    plan.updatedAt = Date.now();
+    saveExtData();
+  }
+}
+function syncInsertMode(mode) {
+  const value = mode === "append" ? "append" : "overwrite";
+  $("#t-hub-insert-mode").val(value);
+  $("#t-outline-insert-mode").val(value);
+  saveDraft($("#t-outline-story-input").val() || "", value);
+}
+function showOutlineView(view) {
+  currentView = view === "editor" ? "editor" : "hub";
+  $("#t-outline-hub-view").toggle(currentView === "hub");
+  $("#t-outline-editor-view").toggle(currentView === "editor");
+  $("[data-view='hub']").toggleClass("active", currentView === "hub");
+  $("[data-view='editor']").toggleClass("active", currentView === "editor");
+  if (currentView === "hub") {
+    closeMobileEditor();
+  }
+}
+function renderPlanHub() {
+  const plans = getPlans();
+  if (!activePlanId) activePlanId = getActivePlanId();
+  const $list = $("#t-outline-plan-list");
+  const $preview = $("#t-outline-plan-preview");
+  if ($list.length === 0 || $preview.length === 0) return;
+  if (plans.length === 0) {
+    $list.html('<div class="t-plan-empty">\u6682\u65E0\u65B9\u6848\uFF0C\u5148\u5230\u7F16\u8F91\u9875\u751F\u6210\u5E76\u4FDD\u5B58</div>');
+    $preview.html('<div class="t-plan-empty">\u6682\u65E0\u53EF\u5C55\u793A\u7EC6\u7EB2</div>');
+    return;
+  }
+  $list.html(plans.map((plan2) => {
+    const active = plan2.id === activePlanId;
+    const updated = new Date(plan2.updatedAt || Date.now());
+    const timeText = `${updated.getMonth() + 1}/${updated.getDate()} ${String(updated.getHours()).padStart(2, "0")}:${String(updated.getMinutes()).padStart(2, "0")}`;
+    return `
+            <div class="t-plan-item ${active ? "active" : ""}" data-plan-id="${plan2.id}">
+                <div class="t-plan-name">${escapeHtml4(plan2.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
+                <div class="t-plan-meta">${timeText} \xB7 ${Array.isArray(plan2.items) ? plan2.items.length : 0} \u6761</div>
+            </div>
+        `;
+  }).join(""));
+  const plan = plans.find((p) => p.id === activePlanId) || null;
+  if (!plan) {
+    $preview.html('<div class="t-plan-empty">\u70B9\u51FB\u5DE6\u4FA7\u65B9\u6848\u540D\u5C55\u5F00\u7EC6\u7EB2</div>');
+    return;
+  }
+  const items = normalizeItems(plan.items || []);
+  const blocks = items.map((item, itemIndex) => {
+    const scenes = Array.isArray(item.scenes) ? item.scenes : [];
+    const sortedScenes = scenes.map((scene, sceneIndex) => ({
+      scene,
+      sceneIndex,
+      used: isSceneUsed(plan, itemIndex, sceneIndex)
+    })).sort((a, b) => {
+      if (a.used === b.used) return a.scene.scene_index - b.scene.scene_index;
+      return a.used ? 1 : -1;
+    });
+    const sceneBlocks = sortedScenes.map(({ scene, sceneIndex, used }) => `
+            <div class="t-plan-scene ${used ? "used" : ""}">
+                <div class="t-plan-scene-head ${used ? "used" : ""}">\u573A\u666F ${scene.scene_index} \xB7 ${escapeHtml4(scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml4(scene.scene_location || "\u672A\u8BBE\u5730\u70B9")} ${used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}</div>
+                <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u76EE\u6807</b> ${escapeHtml4(scene.scene_goal || "(\u7A7A)")}</div>
+                <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u51B2\u7A81</b> ${escapeHtml4(scene.conflict || "(\u7A7A)")}</div>
+                <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u5173\u952E\u8282\u70B9</b><br>${escapeHtml4(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</div>
+                <button class="t-btn t-btn-xs" data-action="hub-send-scene" data-scene-index="${sceneIndex}" data-item-index="${itemIndex}" data-plan-id="${plan.id}"><i class="fa-solid fa-paper-plane"></i> \u53D1\u9001\u573A\u666F</button>
+            </div>
+        `).join("");
+    return `
+            <div class="t-plan-item-block">
+                <div class="t-plan-item-head">#${item.index} [${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml4(item.title || "\u672A\u547D\u540D")}</div>
+                <div class="t-plan-item-text">${escapeHtml4(item.plot || "(\u7A7A)")}</div>
+                ${item.foreshadowing ? `<div class="t-plan-item-foreshadow">\u4F0F\u7B14\uFF1A${escapeHtml4(item.foreshadowing)}</div>` : ""}
+                <div class="t-plan-scenes-wrap">${sceneBlocks || '<div class="t-plan-scene-empty">\u6682\u65E0\u573A\u666F\u7EC6\u7EB2</div>'}</div>
+            </div>
+        `;
+  }).join("");
+  $preview.html(`
+        <div class="t-plan-preview-head">
+            <div>
+                <div class="t-plan-preview-title">${escapeHtml4(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
+                <div class="t-plan-preview-meta">\u5171 ${items.length} \u6761\u5927\u7EB2</div>
+            </div>
+            <div class="t-plan-preview-actions">
+                <label class="t-outline-mode" style="margin:0;">
+                    \u5199\u5165\u65B9\u5F0F
+                    <select id="t-hub-insert-mode" class="t-outline-select">
+                        <option value="overwrite">\u8986\u76D6\u8F93\u5165\u6846</option>
+                        <option value="append">\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="t-plan-preview-body">${blocks || '<div class="t-plan-empty">\u8BE5\u65B9\u6848\u4E3A\u7A7A</div>'}</div>
+    `);
+  $("#t-hub-insert-mode").val($("#t-outline-insert-mode").val() || "overwrite");
+}
+function normalizeItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items.map((item, idx) => ({
+    index: idx + 1,
+    time: typeof item?.time === "string" ? item.time : "",
+    title: typeof item?.title === "string" ? item.title : "",
+    plot: typeof item?.plot === "string" ? item.plot : "",
+    foreshadowing: typeof item?.foreshadowing === "string" ? item.foreshadowing : "",
+    scenes: normalizeScenes(item?.scenes)
+  }));
+}
+function normalizeScenes(scenes) {
+  if (!Array.isArray(scenes)) return [];
+  return scenes.map((scene, idx) => ({
+    scene_index: idx + 1,
+    scene_time: typeof scene?.scene_time === "string" ? scene.scene_time : "",
+    scene_location: typeof scene?.scene_location === "string" ? scene.scene_location : "",
+    scene_goal: typeof scene?.scene_goal === "string" ? scene.scene_goal : "",
+    conflict: typeof scene?.conflict === "string" ? scene.conflict : "",
+    key_beats: Array.isArray(scene?.key_beats) ? scene.key_beats.filter(Boolean).join("\n") : typeof scene?.key_beats === "string" ? scene.key_beats : "",
+    sendable_prompt: typeof scene?.sendable_prompt === "string" ? scene.sendable_prompt : "",
+    notes: typeof scene?.notes === "string" ? scene.notes : ""
+  }));
+}
+function reindexItems() {
+  outlineItems = outlineItems.map((item, idx) => ({ ...item, index: idx + 1 }));
+}
+function reindexScenes(item) {
+  if (!item || !Array.isArray(item.scenes)) return;
+  item.scenes = item.scenes.map((scene, idx) => ({ ...scene, scene_index: idx + 1 }));
+}
+function writePlotToInput(text, mode = "overwrite") {
+  const input = document.querySelector("#send_textarea");
+  if (!input) {
+    if (window.toastr) toastr.error("\u672A\u627E\u5230\u9152\u9986\u8F93\u5165\u6846");
+    return;
+  }
+  const payload = text || "";
+  const current = input.value || "";
+  if (mode === "append" && current.trim()) {
+    input.value = `${current}
+${payload}`;
+  } else {
+    input.value = payload;
+  }
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
+  if (window.toastr) toastr.success(`\u5DF2${mode === "append" ? "\u8FFD\u52A0" : "\u586B\u5165"}\u53D1\u9001\u8F93\u5165\u6846\uFF08\u672A\u81EA\u52A8\u53D1\u9001\uFF09`, "\u6545\u4E8B\u5927\u7EB2");
+}
+function showRawResponseDialog2(rawContent) {
+  $("#t-outline-raw-dialog").remove();
+  const html = `
+    <div id="t-outline-raw-dialog" class="t-dialog-overlay">
+        <div class="t-dialog-box" style="max-width: 820px; max-height: 82vh;">
+            <div class="t-dialog-header">
+                <span><i class="fa-solid fa-code"></i> \u5927\u7EB2\u539F\u59CB\u54CD\u5E94</span>
+                <div class="t-dialog-close" id="t-outline-raw-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-dialog-body" style="padding: 12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="color:#8ea0b3;">\u957F\u5EA6: ${(rawContent || "").length} \u5B57\u7B26</span>
+                    <button id="t-outline-copy-raw" class="t-btn t-btn-xs"><i class="fa-solid fa-copy"></i> \u590D\u5236</button>
+                </div>
+                <pre class="t-outline-raw-pre">${escapeHtml4(rawContent || "(\u7A7A)")}</pre>
+            </div>
+            <div class="t-dialog-footer">
+                <button id="t-outline-raw-close-btn" class="t-btn">\u5173\u95ED</button>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  $("#t-outline-raw-close, #t-outline-raw-close-btn").on("click", () => {
+    $("#t-outline-raw-dialog").remove();
+  });
+  $("#t-outline-copy-raw").on("click", async function() {
+    try {
+      await navigator.clipboard.writeText(rawContent || "");
+      $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
+    } catch {
+      if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25");
+    }
+  });
+}
+function parseSceneResponse(raw) {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
+  }
+  const attempts = [raw.trim()];
+  const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (codeBlockMatch?.[1]) attempts.push(codeBlockMatch[1].trim());
+  const objMatch = raw.match(/\{[\s\S]*\}/);
+  if (objMatch?.[0]) attempts.push(objMatch[0].trim());
+  for (const content of attempts) {
+    try {
+      const fixed = content.replace(/,\s*([}\]])/g, "$1");
+      const data = JSON.parse(fixed);
+      if (data && Array.isArray(data.scenes)) {
+        return data;
+      }
+    } catch {
+    }
+  }
+  throw new Error("\u7EC6\u7EB2\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON");
+}
+function buildScenePrompt(ctx, userStoryInput, openingText, targetIndex) {
+  const current = outlineItems[targetIndex];
+  if (!current) throw new Error("\u672A\u627E\u5230\u76EE\u6807\u60C5\u8282");
+  const prev = targetIndex > 0 ? outlineItems[targetIndex - 1] : null;
+  const next = targetIndex < outlineItems.length - 1 ? outlineItems[targetIndex + 1] : null;
+  const outlineSummary = outlineItems.map((item) => `${item.index}. [${item.time}] ${item.title} - ${item.plot}`).join("\n");
+  const sys = `\u4F60\u662F\u5267\u60C5\u5206\u955C\u7B56\u5212\uFF0C\u8BF7\u5C06\u5355\u6761\u60C5\u8282\u62C6\u5206\u4E3A\u53EF\u6267\u884C\u7684\u573A\u666F\u7EC6\u7EB2\u3002
+
+[\u786C\u6027\u8981\u6C42]
+1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002
+2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u662F\uFF1A
+{
+  "scenes": [
+    {
+      "scene_index": 1,
+      "scene_time": "\u65F6\u95F4\u70B9",
+      "scene_location": "\u5730\u70B9",
+      "scene_goal": "\u672C\u573A\u76EE\u6807",
+      "conflict": "\u51B2\u7A81",
+      "key_beats": ["\u5173\u952E\u8282\u70B91", "\u5173\u952E\u8282\u70B92"],
+      "sendable_prompt": "\u53EF\u76F4\u63A5\u53D1\u9001\u5230\u804A\u5929\u6846\u63A8\u8FDB\u5267\u60C5\u7684\u6587\u672C",
+      "notes": "\u53EF\u4E3A\u7A7A"
+    }
+  ]
+}
+3) \u573A\u666F\u6570\u91CF 3-6\u3002
+4) \u6BCF\u4E2A\u573A\u666F\u5FC5\u987B\u6709 scene_goal\u3001conflict\u3001sendable_prompt\u3002
+5) \u573A\u666F\u4E4B\u95F4\u5E94\u524D\u540E\u8FDE\u8D2F\uFF0C\u4E2D\u6587\u8F93\u51FA\u3002`;
+  const user = `[\u89D2\u8272\u8BBE\u5B9A]
+${ctx.persona || "(\u7A7A)"}
+
+[\u7528\u6237\u8BBE\u5B9A]
+${ctx.userDesc || "(\u7A7A)"}
+
+[\u5F00\u573A\u767D]
+${openingText || "(\u7A7A)"}
+
+[\u6545\u4E8B\u9700\u6C42]
+${userStoryInput || "(\u7A7A)"}
+
+[\u5F53\u524D\u603B\u7EB2]
+${outlineSummary || "(\u7A7A)"}
+
+[\u5F85\u7EC6\u5316\u60C5\u8282]
+\u5E8F\u53F7: ${current.index}
+\u65F6\u95F4: ${current.time}
+\u6807\u9898: ${current.title}
+\u60C5\u8282: ${current.plot}
+\u4F0F\u7B14: ${current.foreshadowing || "(\u65E0)"}
+
+[\u524D\u540E\u6587]
+\u4E0A\u4E00\u6761: ${prev ? `[${prev.time}] ${prev.title} - ${prev.plot}` : "(\u65E0)"}
+\u4E0B\u4E00\u6761: ${next ? `[${next.time}] ${next.title} - ${next.plot}` : "(\u65E0)"}
+
+[\u4EFB\u52A1]
+\u628A\u201C\u5F85\u7EC6\u5316\u60C5\u8282\u201D\u62C6\u6210\u573A\u666F\u7EC6\u7EB2\uFF0C\u53EA\u8FD4\u56DE JSON\u3002`;
+  return [
+    { role: "system", content: sys },
+    { role: "user", content: user }
+  ];
+}
+function renderRows() {
+  const $tbody = $("#t-outline-tbody");
+  if ($tbody.length === 0) return;
+  if (outlineItems.length === 0) {
+    $tbody.html(`
+            <tr>
+                <td colspan="6" class="t-outline-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u70B9\u51FB\u201C\u8BBE\u8BA1\u5927\u7EB2\u201D\u751F\u6210</td>
+            </tr>
+        `);
+    return;
+  }
+  const rows = outlineItems.map((item, idx) => {
+    const scenes = Array.isArray(item.scenes) ? item.scenes : [];
+    const sceneRows = scenes.length > 0 ? scenes.map((scene, sceneIdx) => `
+                <tr data-plot-index="${idx}" data-scene-index="${sceneIdx}">
+                    <td class="t-scene-col-index">${scene.scene_index}</td>
+                    <td><input class="t-outline-input" data-scene-field="scene_time" value="${escapeHtml4(scene.scene_time)}"></td>
+                    <td><input class="t-outline-input" data-scene-field="scene_location" value="${escapeHtml4(scene.scene_location)}"></td>
+                    <td><textarea class="t-outline-textarea" data-scene-field="scene_goal" rows="2">${escapeHtml4(scene.scene_goal)}</textarea></td>
+                    <td><textarea class="t-outline-textarea" data-scene-field="conflict" rows="2">${escapeHtml4(scene.conflict)}</textarea></td>
+                    <td><textarea class="t-outline-textarea" data-scene-field="key_beats" rows="3">${escapeHtml4(scene.key_beats)}</textarea></td>
+                    <td><textarea class="t-outline-textarea" data-scene-field="sendable_prompt" rows="3">${escapeHtml4(scene.sendable_prompt)}</textarea></td>
+                    <td><textarea class="t-outline-textarea" data-scene-field="notes" rows="2">${escapeHtml4(scene.notes)}</textarea></td>
+                    <td>
+                        <button class="t-outline-row-btn danger" data-action="delete-scene" title="\u5220\u9664\u8BE5\u573A\u666F">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join("") : `<tr><td colspan="9" class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\uFF0C\u70B9\u51FB\u201C\u751F\u6210\u7EC6\u7EB2\u201D</td></tr>`;
+    return `
+            <tr data-index="${idx}">
+                <td class="t-outline-col-index">${item.index}</td>
+                <td data-label="\u65F6\u95F4"><input class="t-outline-input" data-field="time" value="${escapeHtml4(item.time)}"></td>
+                <td data-label="\u6807\u9898"><input class="t-outline-input" data-field="title" value="${escapeHtml4(item.title)}"></td>
+                <td data-label="\u60C5\u8282">
+                    <div class="t-outline-plot-wrap">
+                        <textarea class="t-outline-textarea" data-field="plot" rows="3">${escapeHtml4(item.plot)}</textarea>
+                    </div>
+                </td>
+                <td data-label="\u4F0F\u7B14"><textarea class="t-outline-textarea" data-field="foreshadowing" rows="2">${escapeHtml4(item.foreshadowing)}</textarea></td>
+                <td data-label="\u64CD\u4F5C" class="t-outline-op-indicator" title="\u70B9\u51FB\u884C\u5C55\u5F00\u64CD\u4F5C">
+                    <i class="fa-solid ${selectedRowIndex === idx ? "fa-chevron-up" : "fa-chevron-down"}"></i>
+                </td>
+            </tr>
+            <tr class="t-outline-op-row ${selectedRowIndex === idx ? "show" : ""}" data-op-parent="${idx}">
+                <td colspan="6">
+                    <div class="t-outline-op-panel">
+                        <button class="t-btn t-btn-xs" data-action="generate-scenes" title="\u4E3A\u8BE5\u60C5\u8282\u751F\u6210\u7EC6\u7EB2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> \u751F\u6210\u7EC6\u7EB2
+                        </button>
+                        <button class="t-btn t-btn-xs" data-action="toggle-scenes" title="\u5C55\u5F00/\u6536\u8D77\u8BE5\u884C\u60C5\u8282\u7EC6\u7EB2">
+                            <i class="fa-solid fa-layer-group"></i> \u5C55\u5F00\u7EC6\u7EB2
+                        </button>
+                        <button class="t-btn t-btn-xs" data-action="delete" title="\u5220\u9664\u672C\u884C" style="color:#ff9d9d;">
+                            <i class="fa-solid fa-trash"></i> \u5220\u9664
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr class="t-outline-scene-row ${sceneExpandedMap[idx] ? "show" : ""}" data-scene-parent="${idx}">
+                <td colspan="6">
+                    <div class="t-outline-scene-wrap">
+                        <div class="t-outline-scene-header">
+                            <span><i class="fa-solid fa-clapperboard"></i> \u60C5\u8282 ${item.index} \u7EC6\u7EB2\uFF08\u573A\u666F\uFF09</span>
+                            <button class="t-btn t-btn-xs" data-action="add-scene" data-plot-index="${idx}">
+                                <i class="fa-solid fa-plus"></i> \u65B0\u589E\u573A\u666F
+                            </button>
+                        </div>
+                        <div class="t-outline-scene-table-wrap">
+                            <table class="t-outline-scene-table">
+                                <thead>
+                                    <tr>
+                                        <th>\u5E8F\u53F7</th>
+                                        <th>\u65F6\u95F4</th>
+                                        <th>\u5730\u70B9</th>
+                                        <th>\u76EE\u6807</th>
+                                        <th>\u51B2\u7A81</th>
+                                        <th>\u5173\u952E\u8282\u70B9</th>
+                                        <th>\u53D1\u9001\u6307\u4EE4</th>
+                                        <th>\u5907\u6CE8</th>
+                                        <th>\u64CD\u4F5C</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${sceneRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+  }).join("");
+  $tbody.html(rows);
+  renderMobileCards();
+}
+function getBriefText(text, maxLen = 38) {
+  const s = (text || "").replace(/\s+/g, " ").trim();
+  if (!s) return "(\u7A7A)";
+  return s.length > maxLen ? `${s.slice(0, maxLen)}...` : s;
+}
+function renderMobileCards() {
+  const $list = $("#t-outline-mobile-list");
+  if ($list.length === 0) return;
+  if (outlineItems.length === 0) {
+    $list.html('<div class="t-outline-mobile-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u70B9\u51FB\u201C\u8BBE\u8BA1\u5927\u7EB2\u201D\u751F\u6210</div>');
+    return;
+  }
+  const cards = outlineItems.map((item, idx) => {
+    const sceneCount = Array.isArray(item.scenes) ? item.scenes.length : 0;
+    return `
+            <div class="t-outline-mobile-card" data-index="${idx}">
+                <div class="t-outline-mobile-head">
+                    <span class="idx">#${item.index}</span>
+                    <span class="time">${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}</span>
+                    <span class="scene-count">\u7EC6\u7EB2 ${sceneCount}</span>
+                </div>
+                <div class="t-outline-mobile-title">${escapeHtml4(item.title || "\u672A\u547D\u540D\u6807\u9898")}</div>
+                <div class="t-outline-mobile-plot">${escapeHtml4(getBriefText(item.plot))}</div>
+                <div class="t-outline-mobile-actions">
+                    <button class="t-btn t-btn-xs" data-action="mobile-edit" data-index="${idx}"><i class="fa-solid fa-pen"></i> \u7F16\u8F91</button>
+                    <button class="t-btn t-btn-xs" data-action="mobile-generate-scenes" data-index="${idx}"><i class="fa-solid fa-wand-magic-sparkles"></i> \u7EC6\u7EB2</button>
+                </div>
+            </div>
+        `;
+  }).join("");
+  $list.html(cards);
+}
+function openMobileEditor(index) {
+  const item = outlineItems[index];
+  if (!item) return;
+  const $drawer = $("#t-outline-mobile-drawer");
+  $drawer.attr("data-index", index);
+  $drawer.find("#t-mobile-field-time").val(item.time || "");
+  $drawer.find("#t-mobile-field-title").val(item.title || "");
+  $drawer.find("#t-mobile-field-plot").val(item.plot || "");
+  $drawer.find("#t-mobile-field-foreshadowing").val(item.foreshadowing || "");
+  renderMobileDrawerScenes(index);
+  $drawer.addClass("show");
+}
+function closeMobileEditor() {
+  $("#t-outline-mobile-drawer").removeClass("show").attr("data-index", "");
+}
+function saveMobileEditor() {
+  const $drawer = $("#t-outline-mobile-drawer");
+  const index = Number($drawer.attr("data-index"));
+  const item = outlineItems[index];
+  if (!item) return;
+  item.time = $drawer.find("#t-mobile-field-time").val() || "";
+  item.title = $drawer.find("#t-mobile-field-title").val() || "";
+  item.plot = $drawer.find("#t-mobile-field-plot").val() || "";
+  item.foreshadowing = $drawer.find("#t-mobile-field-foreshadowing").val() || "";
+  renderRows();
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  if (window.toastr) toastr.success("\u5DF2\u4FDD\u5B58\u5F53\u524D\u60C5\u8282", "\u6545\u4E8B\u5927\u7EB2");
+}
+function getMobileDrawerIndex() {
+  return Number($("#t-outline-mobile-drawer").attr("data-index"));
+}
+function renderMobileDrawerScenes(index) {
+  const item = outlineItems[index];
+  const $list = $("#t-mobile-scenes-list");
+  if (!item || $list.length === 0) return;
+  const scenes = Array.isArray(item.scenes) ? item.scenes : [];
+  $("#t-mobile-scene-count").text(String(scenes.length));
+  if (scenes.length === 0) {
+    $list.html('<div class="t-mobile-scene-empty">\u6682\u65E0\u7EC6\u7EB2\u573A\u666F\uFF0C\u53EF\u70B9\u51FB\u201C\u751F\u6210\u7EC6\u7EB2\u201D\u6216\u201C\u65B0\u589E\u573A\u666F\u201D</div>');
+    return;
+  }
+  const html = scenes.map((scene, sceneIndex) => `
+        <div class="t-mobile-scene-card" data-scene-index="${sceneIndex}">
+            <div class="t-mobile-scene-title">\u573A\u666F ${scene.scene_index}</div>
+            <label>\u65F6\u95F4</label>
+            <input class="t-outline-input" data-mobile-scene-field="scene_time" value="${escapeHtml4(scene.scene_time)}">
+            <label>\u5730\u70B9</label>
+            <input class="t-outline-input" data-mobile-scene-field="scene_location" value="${escapeHtml4(scene.scene_location)}">
+            <label>\u76EE\u6807</label>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="scene_goal">${escapeHtml4(scene.scene_goal)}</textarea>
+            <label>\u51B2\u7A81</label>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="conflict">${escapeHtml4(scene.conflict)}</textarea>
+            <label>\u5173\u952E\u8282\u70B9</label>
+            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="key_beats">${escapeHtml4(scene.key_beats)}</textarea>
+            <label>\u53D1\u9001\u6307\u4EE4</label>
+            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="sendable_prompt">${escapeHtml4(scene.sendable_prompt)}</textarea>
+            <label>\u5907\u6CE8</label>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="notes">${escapeHtml4(scene.notes)}</textarea>
+            <div class="t-mobile-scene-actions">
+                <button class="t-btn t-btn-xs" data-action="mobile-delete-scene" data-scene-index="${sceneIndex}" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u573A\u666F</button>
+            </div>
+        </div>
+    `).join("");
+  $list.html(html);
+}
+async function generateScenesForPlot(plotIndex) {
+  const item = outlineItems[plotIndex];
+  if (!item) return;
+  const $btn = $(`#t-outline-tbody tr[data-index='${plotIndex}'] [data-action='generate-scenes']`);
+  const originHtml = $btn.html();
+  $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
+  try {
+    const ctx = await getContextData();
+    const opening = getOpeningFromContext();
+    const storyInput = ($("#t-outline-story-input").val() || "").trim();
+    const messages = buildScenePrompt(ctx, storyInput, opening, plotIndex);
+    const raw = await sendChatRequest(messages, {
+      stream: false,
+      temperature: 0.5,
+      maxTokens: 4096
+    });
+    const parsed = parseSceneResponse(raw);
+    item.scenes = normalizeScenes(parsed.scenes);
+    reindexScenes(item);
+    sceneExpandedMap[plotIndex] = true;
+    renderRows();
+    if (getMobileDrawerIndex() === plotIndex) {
+      renderMobileDrawerScenes(plotIndex);
+    }
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+    if (window.toastr) toastr.success(`\u60C5\u8282 ${item.index} \u5DF2\u751F\u6210 ${item.scenes.length} \u4E2A\u573A\u666F`, "\u6545\u4E8B\u7EC6\u7EB2");
+  } catch (e) {
+    console.error("Titania: \u751F\u6210\u7EC6\u7EB2\u5931\u8D25", e);
+    if (window.toastr) toastr.error(e.message || "\u7EC6\u7EB2\u751F\u6210\u5931\u8D25", "\u6545\u4E8B\u7EC6\u7EB2");
+  } finally {
+    $btn.prop("disabled", false).html(originHtml);
+  }
+}
+async function generateOutline() {
+  const $btn = $("#t-outline-generate");
+  const storyInput = ($("#t-outline-story-input").val() || "").trim();
+  const insertMode = $("#t-outline-insert-mode").val() || "overwrite";
+  $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u751F\u6210\u4E2D...');
+  try {
+    const ctx = await getContextData();
+    const opening = getOpeningFromContext();
+    const messages = buildPrompt(ctx, storyInput, opening);
+    const raw = await sendChatRequest(messages, {
+      stream: false,
+      temperature: 0.4,
+      maxTokens: 4096
+    });
+    lastRawResponse2 = raw || "";
+    $("#t-outline-view-raw").prop("disabled", !lastRawResponse2);
+    const parsed = parseOutlineResponse(raw);
+    outlineItems = normalizeItems(parsed.items);
+    sceneExpandedMap = {};
+    renderRows();
+    saveDraft(storyInput, insertMode);
+    if (window.toastr) toastr.success(`\u5DF2\u751F\u6210 ${outlineItems.length} \u6761\u5927\u7EB2`, "\u6545\u4E8B\u5927\u7EB2");
+  } catch (e) {
+    console.error("Titania: \u8BBE\u8BA1\u5927\u7EB2\u5931\u8D25", e);
+    if (window.toastr) toastr.error(e.message || "\u751F\u6210\u5931\u8D25", "\u6545\u4E8B\u5927\u7EB2");
+  } finally {
+    $btn.prop("disabled", false).html('<i class="fa-solid fa-wand-magic-sparkles"></i> \u8BBE\u8BA1\u5927\u7EB2');
+  }
+}
+function bindEvents2() {
+  const $overlay = $("#t-story-outline-overlay");
+  $overlay.on("click", "#t-outline-go-hub", () => {
+    renderPlanHub();
+    showOutlineView("hub");
+  });
+  $overlay.on("click", "#t-outline-go-editor", () => {
+    showOutlineView("editor");
+  });
+  $overlay.on("click", "#t-outline-save-plan", () => {
+    const plan = upsertCurrentAsPlan($("#t-outline-plan-name").val() || "");
+    renderPlanHub();
+    showOutlineView("hub");
+    if (window.toastr) toastr.success(`\u5DF2\u4FDD\u5B58\u65B9\u6848\uFF1A${plan.name}`, "\u6545\u4E8B\u5927\u7EB2");
+  });
+  $overlay.on("click", ".t-plan-item", function() {
+    const planId = $(this).data("plan-id");
+    if (!planId) return;
+    const clicked = String(planId);
+    activePlanId = activePlanId === clicked ? "" : clicked;
+    setActivePlanId(activePlanId);
+    renderPlanHub();
+  });
+  $overlay.on("change", "#t-hub-insert-mode", function() {
+    syncInsertMode($(this).val());
+  });
+  $overlay.on("click", "[data-action='hub-send-scene']", function() {
+    const planId = String($(this).data("plan-id") || "");
+    const sceneIndex = Number($(this).data("scene-index"));
+    const itemIndex = Number($(this).data("item-index"));
+    const plan = getPlans().find((p) => p.id === planId);
+    const items = normalizeItems(plan?.items || []);
+    const scene = items[itemIndex]?.scenes?.[sceneIndex];
+    if (!scene) return;
+    writePlotToInput(scene.sendable_prompt || "", getCurrentInsertMode());
+    markSceneUsed(planId, itemIndex, sceneIndex);
+    renderPlanHub();
+    $("#t-story-outline-overlay").remove();
+  });
+  $overlay.on("click", "#t-story-outline-close", () => {
+    $("#t-story-outline-overlay").remove();
+  });
+  $overlay.on("click", "#t-outline-generate", async () => {
+    await generateOutline();
+  });
+  $overlay.on("click", "#t-outline-add-row", () => {
+    outlineItems.push({
+      index: outlineItems.length + 1,
+      time: "",
+      title: "",
+      plot: "",
+      foreshadowing: "",
+      scenes: []
+    });
+    renderRows();
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "#t-outline-view-raw", () => {
+    showRawResponseDialog2(lastRawResponse2);
+  });
+  $overlay.on("change", "#t-outline-insert-mode", function() {
+    saveDraft($("#t-outline-story-input").val(), $(this).val());
+  });
+  $overlay.on("input", "#t-outline-story-input", function() {
+    saveDraft($(this).val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("input", "#t-outline-tbody [data-field]", function() {
+    const $tr = $(this).closest("tr");
+    const rowIndex = Number($tr.data("index"));
+    const field = $(this).data("field");
+    if (!outlineItems[rowIndex]) return;
+    outlineItems[rowIndex][field] = $(this).val();
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "#t-outline-tbody [data-action='delete']", function() {
+    const rowIndex = Number($(this).closest("tr").data("index"));
+    const fallbackIndex = Number($(this).closest("tr").data("op-parent"));
+    const resolvedIndex = Number.isNaN(rowIndex) ? fallbackIndex : rowIndex;
+    if (Number.isNaN(resolvedIndex)) return;
+    outlineItems.splice(resolvedIndex, 1);
+    const nextMap = {};
+    outlineItems.forEach((_, idx) => {
+      nextMap[idx] = sceneExpandedMap[idx] || sceneExpandedMap[idx + 1] || false;
+    });
+    sceneExpandedMap = nextMap;
+    if (selectedRowIndex === resolvedIndex) {
+      selectedRowIndex = -1;
+    } else if (selectedRowIndex > resolvedIndex) {
+      selectedRowIndex -= 1;
+    }
+    reindexItems();
+    renderRows();
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "#t-outline-tbody tr[data-index]", function(e) {
+    if ($(e.target).closest("button,.t-outline-input,.t-outline-textarea").length > 0) return;
+    const idx = Number($(this).data("index"));
+    if (Number.isNaN(idx)) return;
+    selectedRowIndex = selectedRowIndex === idx ? -1 : idx;
+    renderRows();
+  });
+  $overlay.on("click", "#t-outline-tbody [data-action='toggle-scenes']", function() {
+    const rowIndex = Number($(this).closest("tr").data("index"));
+    const fallbackIndex = Number($(this).closest("tr").data("op-parent"));
+    const resolvedIndex = Number.isNaN(rowIndex) ? fallbackIndex : rowIndex;
+    if (Number.isNaN(resolvedIndex)) return;
+    sceneExpandedMap[resolvedIndex] = !sceneExpandedMap[resolvedIndex];
+    renderRows();
+  });
+  $overlay.on("click", "#t-outline-tbody [data-action='generate-scenes']", async function() {
+    const rowIndex = Number($(this).closest("tr").data("index"));
+    const fallbackIndex = Number($(this).closest("tr").data("op-parent"));
+    const resolvedIndex = Number.isNaN(rowIndex) ? fallbackIndex : rowIndex;
+    if (Number.isNaN(resolvedIndex)) return;
+    await generateScenesForPlot(resolvedIndex);
+  });
+  $overlay.on("click", "#t-outline-tbody [data-action='add-scene']", function() {
+    const plotIndex = Number($(this).data("plot-index"));
+    const item = outlineItems[plotIndex];
+    if (!item) return;
+    if (!Array.isArray(item.scenes)) item.scenes = [];
+    item.scenes.push({
+      scene_index: item.scenes.length + 1,
+      scene_time: "",
+      scene_location: "",
+      scene_goal: "",
+      conflict: "",
+      key_beats: "",
+      sendable_prompt: "",
+      notes: ""
+    });
+    sceneExpandedMap[plotIndex] = true;
+    renderRows();
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("input", "#t-outline-tbody [data-scene-field]", function() {
+    const $row = $(this).closest("tr");
+    const plotIndex = Number($row.data("plot-index"));
+    const sceneIndex = Number($row.data("scene-index"));
+    const field = $(this).data("scene-field");
+    const item = outlineItems[plotIndex];
+    if (!item || !item.scenes || !item.scenes[sceneIndex]) return;
+    item.scenes[sceneIndex][field] = $(this).val();
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "#t-outline-tbody [data-action='delete-scene']", function() {
+    const $row = $(this).closest("tr");
+    const plotIndex = Number($row.data("plot-index"));
+    const sceneIndex = Number($row.data("scene-index"));
+    const item = outlineItems[plotIndex];
+    if (!item || !Array.isArray(item.scenes)) return;
+    item.scenes.splice(sceneIndex, 1);
+    reindexScenes(item);
+    renderRows();
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "[data-action='mobile-edit']", function() {
+    const index = Number($(this).data("index"));
+    if (Number.isNaN(index)) return;
+    openMobileEditor(index);
+  });
+  $overlay.on("click", "[data-action='mobile-generate-scenes']", async function() {
+    const index = Number($(this).data("index"));
+    if (Number.isNaN(index)) return;
+    await generateScenesForPlot(index);
+  });
+  $overlay.on("click", "#t-mobile-drawer-close", () => {
+    closeMobileEditor();
+  });
+  $overlay.on("click", "#t-mobile-drawer-save", () => {
+    saveMobileEditor();
+    closeMobileEditor();
+  });
+  $overlay.on("click", "#t-mobile-drawer-generate-scenes", async function() {
+    const index = Number($("#t-outline-mobile-drawer").attr("data-index"));
+    if (Number.isNaN(index)) return;
+    await generateScenesForPlot(index);
+    renderMobileDrawerScenes(index);
+  });
+  $overlay.on("click", "#t-mobile-drawer-delete", function() {
+    const index = Number($("#t-outline-mobile-drawer").attr("data-index"));
+    if (Number.isNaN(index)) return;
+    outlineItems.splice(index, 1);
+    reindexItems();
+    closeMobileEditor();
+    renderRows();
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "#t-mobile-add-scene", function() {
+    const plotIndex = getMobileDrawerIndex();
+    const item = outlineItems[plotIndex];
+    if (!item) return;
+    if (!Array.isArray(item.scenes)) item.scenes = [];
+    item.scenes.push({
+      scene_index: item.scenes.length + 1,
+      scene_time: "",
+      scene_location: "",
+      scene_goal: "",
+      conflict: "",
+      key_beats: "",
+      sendable_prompt: "",
+      notes: ""
+    });
+    reindexScenes(item);
+    renderRows();
+    renderMobileDrawerScenes(plotIndex);
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("input", "#t-mobile-scenes-list [data-mobile-scene-field]", function() {
+    const plotIndex = getMobileDrawerIndex();
+    const item = outlineItems[plotIndex];
+    if (!item || !Array.isArray(item.scenes)) return;
+    const sceneIndex = Number($(this).closest(".t-mobile-scene-card").data("scene-index"));
+    const field = $(this).data("mobile-scene-field");
+    if (Number.isNaN(sceneIndex) || !item.scenes[sceneIndex]) return;
+    item.scenes[sceneIndex][field] = $(this).val();
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "#t-mobile-scenes-list [data-action='mobile-delete-scene']", function() {
+    const plotIndex = getMobileDrawerIndex();
+    const item = outlineItems[plotIndex];
+    if (!item || !Array.isArray(item.scenes)) return;
+    const sceneIndex = Number($(this).data("scene-index"));
+    if (Number.isNaN(sceneIndex)) return;
+    item.scenes.splice(sceneIndex, 1);
+    reindexScenes(item);
+    renderRows();
+    renderMobileDrawerScenes(plotIndex);
+    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+}
+function openStoryOutlineWindow() {
+  ensureCssLoaded2();
+  $("#t-story-outline-overlay").remove();
+  const draft = loadDraft();
+  outlineItems = draft.items;
+  lastRawResponse2 = "";
+  sceneExpandedMap = {};
+  selectedRowIndex = -1;
+  activePlanId = "";
+  const html = `
+    <div id="t-story-outline-overlay" class="t-overlay">
+        <div class="t-window t-story-outline-window">
+            <div class="t-window-header">
+                <div class="t-window-title"><i class="fa-solid fa-list-check"></i> \u6545\u4E8B\u5927\u7EB2\u8BBE\u8BA1</div>
+                <div class="t-window-controls">
+                    <div class="t-window-close" id="t-story-outline-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+            <div class="t-window-body t-outline-body">
+                <div class="t-outline-nav">
+                    <button class="t-btn t-btn-xs active" data-view="hub" id="t-outline-go-hub"><i class="fa-solid fa-folder-tree"></i> \u65B9\u6848\u9875</button>
+                    <button class="t-btn t-btn-xs" data-view="editor" id="t-outline-go-editor"><i class="fa-solid fa-table"></i> \u7F16\u8F91\u9875</button>
+                    <div class="t-outline-nav-right">
+                        <input id="t-outline-plan-name" class="t-outline-plan-name" placeholder="\u65B9\u6848\u540D\u79F0\uFF08\u53EF\u9009\uFF09">
+                        <button id="t-outline-save-plan" class="t-btn t-btn-primary"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58\u4E3A\u65B9\u6848</button>
+                    </div>
+                </div>
+
+                <div id="t-outline-hub-view" class="t-outline-hub-view">
+                    <div class="t-outline-hub-layout">
+                        <div id="t-outline-plan-list" class="t-outline-plan-list"></div>
+                        <div id="t-outline-plan-preview" class="t-outline-plan-preview"></div>
+                    </div>
+                </div>
+
+                <div id="t-outline-editor-view" class="t-outline-editor-view">
+                    <div class="t-outline-top">
+                        <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B</label>
+                        <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml4(draft.storyInput)}</textarea>
+                        <div class="t-outline-actions">
+                            <button id="t-outline-generate" class="t-btn t-btn-primary">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> \u8BBE\u8BA1\u5927\u7EB2
+                            </button>
+                            <button id="t-outline-add-row" class="t-btn">
+                                <i class="fa-solid fa-plus"></i> \u65B0\u589E\u884C
+                            </button>
+                            <label class="t-outline-mode">
+                                \u5199\u5165\u65B9\u5F0F
+                                <select id="t-outline-insert-mode" class="t-outline-select">
+                                    <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
+                                    <option value="append" ${draft.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                                </select>
+                            </label>
+                            <button id="t-outline-view-raw" class="t-btn" disabled>
+                                <i class="fa-solid fa-code"></i> \u67E5\u770B\u539F\u59CB\u54CD\u5E94
+                            </button>
+                        </div>
+                    </div>
+                    <div class="t-outline-table-wrap">
+                        <table class="t-outline-table">
+                            <thead>
+                                <tr>
+                                    <th>\u5E8F\u53F7</th>
+                                    <th>\u65F6\u95F4</th>
+                                    <th>\u6807\u9898</th>
+                                    <th>\u60C5\u8282</th>
+                                    <th>\u4F0F\u7B14</th>
+                                    <th>\u64CD\u4F5C</th>
+                                </tr>
+                            </thead>
+                            <tbody id="t-outline-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div id="t-outline-mobile-list" class="t-outline-mobile-list"></div>
+                    <div id="t-outline-mobile-drawer" class="t-outline-mobile-drawer" data-index="">
+                        <div class="t-outline-mobile-drawer-head">
+                            <span><i class="fa-solid fa-pen-to-square"></i> \u7F16\u8F91\u60C5\u8282</span>
+                            <button id="t-mobile-drawer-close" class="t-btn t-btn-xs"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                        <div class="t-outline-mobile-drawer-body">
+                            <label>\u65F6\u95F4</label>
+                            <input id="t-mobile-field-time" class="t-outline-input" placeholder="\u4F8B\u5982\uFF1A\u7B2C1\u5929\u591C\u665A">
+                            <label>\u6807\u9898</label>
+                            <input id="t-mobile-field-title" class="t-outline-input" placeholder="\u4F8B\u5982\uFF1A\u4E0D\u901F\u4E4B\u5BA2">
+                            <label>\u60C5\u8282</label>
+                            <textarea id="t-mobile-field-plot" class="t-outline-textarea" rows="5"></textarea>
+                            <label>\u4F0F\u7B14</label>
+                            <textarea id="t-mobile-field-foreshadowing" class="t-outline-textarea" rows="3"></textarea>
+                            <div class="t-mobile-scene-head">
+                                <span><i class="fa-solid fa-clapperboard"></i> \u573A\u666F\u7EC6\u7EB2\uFF08<span id="t-mobile-scene-count">0</span>\uFF09</span>
+                                <button id="t-mobile-add-scene" class="t-btn t-btn-xs"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u573A\u666F</button>
+                            </div>
+                            <div id="t-mobile-scenes-list" class="t-mobile-scenes-list"></div>
+                        </div>
+                        <div class="t-outline-mobile-drawer-actions">
+                            <button id="t-mobile-drawer-save" class="t-btn t-btn-primary"><i class="fa-solid fa-check"></i> \u4FDD\u5B58</button>
+                            <button id="t-mobile-drawer-generate-scenes" class="t-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> \u751F\u6210\u7EC6\u7EB2</button>
+                            <button id="t-mobile-drawer-delete" class="t-btn" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u672C\u6761</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  renderRows();
+  bindEvents2();
+  renderPlanHub();
+  showOutlineView(getPlans().length > 0 ? "hub" : "editor");
+}
+var outlineItems, lastRawResponse2, sceneExpandedMap, selectedRowIndex, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, currentView, activePlanId;
+var init_storyOutlineWindow = __esm({
+  "src/ui/storyOutlineWindow.js"() {
+    init_context();
+    init_connection();
+    init_defaults();
+    init_storage();
+    outlineItems = [];
+    lastRawResponse2 = "";
+    sceneExpandedMap = {};
+    selectedRowIndex = -1;
+    DRAFT_KEY = "story_outline_draft";
+    PLANS_KEY = "story_outline_plans";
+    ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
+    currentView = "hub";
+    activePlanId = "";
+  }
+});
+
 // src/core/memoryRecall.js
 function getCurrentCharacterId() {
   try {
@@ -20544,7 +22819,7 @@ function renderResults() {
     const scorePercent = Math.round(result.score * 100);
     const isSelected = selectedIndices.has(index);
     const scoreColor = scorePercent >= 70 ? "#4caf50" : scorePercent >= 50 ? "#ff9800" : "#888";
-    const displayText = escapeHtml4(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
+    const displayText = escapeHtml5(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
     return '<div class="t-recall-result-item" data-index="' + index + '" style="display: flex; gap: 10px; padding: 12px; margin-bottom: 8px; background: ' + (isSelected ? "#2a3a4a" : "#1e1e1e") + "; border: 1px solid " + (isSelected ? "#4a9eff" : "#333") + '; border-radius: 8px; cursor: pointer; transition: all 0.2s;"><div style="flex-shrink: 0; padding-top: 2px;"><input type="checkbox" ' + (isSelected ? "checked" : "") + ' style="cursor: pointer;"></div><div style="flex: 1; min-width: 0;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="color: #888; font-size: 0.85em;">#' + result.messageIndex + '</span><span style="color: ' + scoreColor + '; font-weight: bold; font-size: 0.9em;">' + scorePercent + '%</span></div><div style="color: #ccc; font-size: 0.9em; line-height: 1.5; word-break: break-word;">' + displayText + "</div></div></div>";
   }).join("");
   $resultsList.html(html);
@@ -20608,7 +22883,7 @@ function handleAppend() {
     }
   }
 }
-function escapeHtml4(text) {
+function escapeHtml5(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -20771,6 +23046,7 @@ function getEnabledToolbarButtons() {
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
     lore: true,
+    outline: false,
     model: false,
     settings: true,
     favs: false,
@@ -21060,6 +23336,16 @@ var init_floatingBtn = __esm({
         }
       },
       {
+        id: "outline",
+        title: "\u6545\u4E8B\u5927\u7EB2",
+        icon: "fa-solid fa-list-check",
+        cssClass: "outline",
+        handler: async () => {
+          const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+          openStoryOutlineWindow2();
+        }
+      },
+      {
         id: "model",
         title: "\u5207\u6362\u6A21\u578B",
         icon: "fa-solid fa-microchip",
@@ -21156,10 +23442,39 @@ function getContinuationSessionRounds(scriptId) {
   if (!Array.isArray(rounds)) return [];
   return rounds.map((item, idx) => ({
     round: Number(item?.round) || idx + 1,
+    type: String(item?.type || "continuation"),
     instruction: String(item?.instruction || "").trim(),
     content: String(item?.content || "").trim(),
     timestamp: Number(item?.timestamp) || 0
   })).filter((item) => item.content.length > 0);
+}
+function setContinuationSessionBaseRound(scriptId, scriptName, content) {
+  if (!scriptId) return;
+  const textContent = String(content || "").trim();
+  if (!textContent) return;
+  const byScript = getContinuationRuntimeStore();
+  const current = byScript[scriptId];
+  const oldRounds = Array.isArray(current?.rounds) ? current.rounds : [];
+  const continuationRounds = oldRounds.filter((item) => String(item?.type || "continuation") !== "initial");
+  byScript[scriptId] = {
+    scriptId,
+    scriptName: scriptName || current?.scriptName || "\u573A\u666F",
+    rounds: [
+      {
+        round: 1,
+        type: "initial",
+        instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
+        content: textContent,
+        timestamp: Date.now()
+      },
+      ...continuationRounds
+    ]
+  };
+  byScript[scriptId].rounds = byScript[scriptId].rounds.slice(0, CONTINUATION_SESSION_MAX_ROUNDS).map((item, index) => ({
+    ...item,
+    round: index + 1,
+    type: String(item?.type || (index === 0 ? "initial" : "continuation"))
+  }));
 }
 function appendContinuationSessionRound(scriptId, scriptName, instruction, content) {
   if (!scriptId) return;
@@ -21179,6 +23494,7 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
   const rounds = byScript[scriptId].rounds;
   rounds.push({
     round: rounds.length + 1,
+    type: "continuation",
     instruction: String(instruction || "").trim(),
     content: textContent,
     timestamp: Date.now()
@@ -21247,6 +23563,22 @@ function getContinuationSessionStats(scriptId, injectRoundsCount = 3) {
     selectedRounds: injection.selectedRounds.length,
     estimatedChars: injection.estimatedChars,
     estimatedTokens: injection.estimatedTokens
+  };
+}
+function getContinuationRoundsForFav(scriptId) {
+  if (!scriptId) {
+    return {
+      scriptId: null,
+      scriptName: "",
+      rounds: []
+    };
+  }
+  const byScript = getContinuationRuntimeStore();
+  const entry = byScript[scriptId];
+  return {
+    scriptId,
+    scriptName: String(entry?.scriptName || "\u573A\u666F"),
+    rounds: getContinuationSessionRounds(scriptId)
   };
 }
 function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
@@ -22192,6 +24524,9 @@ ${processedPrompt}`;
     resetContinuationState();
     endStreamingCache();
     pushSceneToHistory(finalOutput, script.id, script.name);
+    if (generationSource !== "user_continuation") {
+      setContinuationSessionBaseRound(script.id, script.name, finalOutput);
+    }
     recordScriptGenerated(script.id, {
       isQueue: silent === true && GlobalState.queueState.isRunning,
       mode: GlobalState.generationMode,
@@ -22665,15 +25000,16 @@ Generate ONLY the continuation (no repetition):`;
         autoContinueCfg.show_indicator === true
         // 只有明确开启时才显示标记
       );
+      const rewrittenOutput = finalOutput;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
-      pushSceneToHistory(finalOutput, script.id, script.name);
+      pushSceneToHistory(rewrittenOutput, script.id, script.name);
       recordScriptGenerated(script.id, {
         isQueue: silent === true && GlobalState.queueState.isRunning,
         mode: GlobalState.generationMode,
         category: script.category || (script._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")
       });
-      const stats = countContentStats(finalOutput);
+      const stats = countContentStats(rewrittenOutput);
       GlobalState.contentStats = {
         totalChars: stats.totalChars,
         chineseChars: stats.chineseChars,
@@ -22686,7 +25022,7 @@ Generate ONLY the continuation (no repetition):`;
         unlockDisplay();
       }
       if ($("#t-output-content").length > 0) {
-        renderGeneratedContent(finalOutput, script.name);
+        renderGeneratedContent(rewrittenOutput, script.name);
         if (continuationType === "user" && autoLocate) {
           requestAnimationFrame(() => {
             const scrollContainer = document.querySelector(".t-content-area");
