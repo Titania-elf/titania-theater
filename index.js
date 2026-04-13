@@ -13073,12 +13073,30 @@ __export(storyOutlineWindow_exports, {
 });
 function ensureCssLoaded() {
   const id = "titania-css-story-outline";
+  const inlineId = "titania-css-story-outline-inline";
   if (!document.getElementById(id)) {
+    const href = `/${extensionFolderPath}/css/story-outline.css`.replace(/\/+/g, "/");
     const link = document.createElement("link");
     link.id = id;
     link.rel = "stylesheet";
     link.type = "text/css";
-    link.href = `${extensionFolderPath}/css/story-outline.css`;
+    link.href = href;
+    link.addEventListener("error", async () => {
+      try {
+        const resp = await fetch(href, { cache: "no-store" });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const cssText = await resp.text();
+        let style = document.getElementById(inlineId);
+        if (!style) {
+          style = document.createElement("style");
+          style.id = inlineId;
+          document.head.appendChild(style);
+        }
+        style.textContent = cssText;
+      } catch (err) {
+        console.warn("Titania: \u52A0\u8F7D story-outline.css \u5931\u8D25", err);
+      }
+    });
     document.head.appendChild(link);
   }
 }
