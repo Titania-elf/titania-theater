@@ -13091,6 +13091,7 @@ function ensureCssLoaded() {
   if (document.getElementById(inlineId)) return;
   let style = document.createElement("style");
   style.id = inlineId;
+  style.textContent = INLINE_OUTLINE_FALLBACK_CSS;
   document.head.appendChild(style);
   (async () => {
     for (const url of fallbackUrls) {
@@ -14983,7 +14984,7 @@ function openStoryOutlineWindow() {
   renderPlanHub();
   showOutlineView(getPlans().length > 0 ? "hub" : "editor");
 }
-var outlineItems, lastRawResponse, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, PROMPT_TEMPLATES_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey;
+var outlineItems, lastRawResponse, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, PROMPT_TEMPLATES_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, INLINE_OUTLINE_FALLBACK_CSS;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -15009,6 +15010,30 @@ var init_storyOutlineWindow = __esm({
     editingPlanBaseline = "";
     planItemCursorMap = {};
     sceneHubSelectedKey = "";
+    INLINE_OUTLINE_FALLBACK_CSS = `
+#t-story-outline-overlay.t-overlay { position: fixed; inset: 0; z-index: 30000; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; }
+#t-story-outline-overlay .t-story-outline-window { width: min(1120px, 96vw); max-height: min(92vh, 900px); display: flex; flex-direction: column; overflow: hidden; }
+#t-story-outline-overlay .t-window-body.t-outline-body { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+#t-story-outline-overlay .t-outline-top { background: rgba(20, 24, 28, 0.75); border: 1px solid rgba(120, 150, 170, 0.25); border-radius: 10px; padding: 12px; }
+#t-story-outline-overlay .t-outline-story-input, #t-story-outline-overlay .t-outline-input, #t-story-outline-overlay .t-outline-textarea, #t-story-outline-overlay .t-outline-select { width: 100%; box-sizing: border-box; border-radius: 8px; border: 1px solid rgba(116, 185, 255, 0.35); background: rgba(8, 12, 16, 0.75); color: #f2f5f8; padding: 8px; }
+#t-story-outline-overlay .t-outline-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+#t-story-outline-overlay .t-outline-plan-list { border: 1px solid rgba(120, 150, 170, 0.25); border-radius: 10px; background: rgba(12, 16, 20, 0.7); flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+#t-story-outline-overlay .t-plan-accordion-item { border: 1px solid rgba(120, 150, 170, 0.28); border-radius: 10px; background: rgba(12, 16, 20, 0.84); overflow: hidden; }
+#t-story-outline-overlay .t-plan-accordion-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; background: rgba(16, 24, 32, 0.92); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+#t-story-outline-overlay .t-plan-name-btn { border: 0; background: transparent; color: #d8e8f6; font-weight: 600; padding: 0; cursor: pointer; text-align: left; }
+#t-story-outline-overlay .t-plan-meta { margin-top: 2px; color: #92a7bb; font-size: 12px; }
+#t-story-outline-overlay .t-plan-tip { margin-top: 3px; color: #7f96aa; font-size: 11px; }
+#t-story-outline-overlay .t-plan-accordion-actions { display: flex; gap: 6px; align-items: center; }
+#t-story-outline-overlay .t-plan-delete-btn { color: #ff9d9d; }
+#t-story-outline-overlay .t-plan-action-label { display: inline; }
+@media (max-width: 768px) {
+  #t-story-outline-overlay .t-plan-accordion-head { flex-direction: column; align-items: stretch; }
+  #t-story-outline-overlay .t-plan-accordion-actions { width: 100%; flex-wrap: nowrap; justify-content: flex-end; }
+  #t-story-outline-overlay .t-plan-accordion-actions .t-plan-action-btn { width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 36px; }
+  #t-story-outline-overlay .t-plan-accordion-actions .t-plan-action-btn i { margin: 0; font-size: 14px; }
+  #t-story-outline-overlay .t-plan-accordion-actions .t-plan-action-label { display: none; }
+}
+`;
   }
 });
 
