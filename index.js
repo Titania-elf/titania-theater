@@ -8294,13 +8294,36 @@ body.titania-debug-mode #chat titania-memory::before {
     gap: 8px;
 }
 
+.t-plan-name-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(131, 170, 196, 0.32);
+    background: linear-gradient(180deg, rgba(14, 22, 30, 0.92), rgba(10, 16, 22, 0.92));
+}
+
 .t-outline-plan-name {
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(10, 14, 18, 0.75);
-    color: #f0f2f4;
-    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(168, 201, 224, 0.32);
+    background: rgba(8, 14, 20, 0.82);
+    color: #f1f6fb;
+    padding: 7px 12px;
     min-width: 210px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.t-outline-plan-name.is-readonly {
+    border-color: transparent;
+    background: rgba(13, 20, 28, 0.75);
+    color: #dbe9f6;
+}
+
+.t-outline-plan-name:not(.is-readonly):focus {
+    outline: none;
+    border-color: rgba(129, 236, 236, 0.75);
+    box-shadow: 0 0 0 2px rgba(129, 236, 236, 0.2);
 }
 
 .t-outline-editor-view,
@@ -8397,6 +8420,49 @@ body.titania-debug-mode #chat titania-memory::before {
     gap: 8px;
 }
 
+.t-hub-toolbar,
+.t-hub-footerbar {
+    border: 1px solid rgba(120, 150, 170, 0.25);
+    border-radius: 10px;
+    background: rgba(12, 16, 20, 0.7);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.t-hub-primary-action {
+    background: linear-gradient(135deg, rgba(52, 148, 172, 0.95), rgba(84, 192, 172, 0.95));
+    border: 1px solid rgba(133, 238, 220, 0.8);
+    color: #f4ffff;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(52, 148, 172, 0.35);
+}
+
+.t-hub-primary-action:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow: 0 6px 16px rgba(52, 148, 172, 0.45);
+}
+
+.t-hub-primary-action:disabled {
+    opacity: 0.55;
+    box-shadow: none;
+}
+
+.t-hub-footerbar {
+    justify-content: space-between;
+}
+
+.t-hub-selected {
+    min-width: 0;
+}
+
+.t-hub-footer-actions {
+    display: flex;
+    gap: 8px;
+}
+
 .t-plan-accordion-item {
     border: 1px solid rgba(120, 150, 170, 0.28);
     border-radius: 10px;
@@ -8418,6 +8484,7 @@ body.titania-debug-mode #chat titania-memory::before {
     padding: 10px;
     background: rgba(16, 24, 32, 0.92);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
 }
 
 .t-plan-accordion-main {
@@ -8946,6 +9013,29 @@ body.titania-debug-mode #chat titania-memory::before {
     font-size: 12px;
 }
 
+.t-outline-raw-editor {
+    width: 100%;
+    min-height: 320px;
+    max-height: 56vh;
+    resize: vertical;
+    background: #0d141d;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #d6e2ef;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.t-outline-raw-hint {
+    margin-top: 8px;
+    color: #9bb0c4;
+    font-size: 12px;
+}
+
 .t-outline-mobile-list {
     display: none;
 }
@@ -9086,6 +9176,11 @@ body.titania-debug-mode #chat titania-memory::before {
         gap: 6px;
     }
 
+    .t-plan-name-wrap {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
     .t-outline-plan-name {
         min-width: 0;
         width: 100%;
@@ -9119,16 +9214,22 @@ body.titania-debug-mode #chat titania-memory::before {
         align-items: stretch;
     }
 
-    .t-plan-accordion-actions {
-        width: 100%;
-        justify-content: flex-start;
+    .t-hub-toolbar .t-btn,
+    .t-hub-footer-actions .t-btn {
+        min-height: 36px;
     }
 
-    .t-plan-accordion-actions .t-btn {
-        flex: 0 0 auto;
-        min-height: 34px;
-        padding: 0 10px;
-        font-size: 12px;
+    .t-hub-footerbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .t-hub-footer-actions {
+        width: 100%;
+    }
+
+    .t-hub-footer-actions .t-btn {
+        flex: 1;
     }
 
     .t-plan-item-carousel {
@@ -13437,8 +13538,8 @@ async function openPromptTemplateManager() {
   const working = JSON.parse(JSON.stringify(getPromptTemplates()));
   const currentStoryInput = String($("#t-outline-story-input").val() || "").trim();
   const entries = getChatHistoryEntries();
-  let openingMode = getOpeningSourceMode();
-  let openingSourceRef = getOpeningSourceRef();
+  const openingMode = getOpeningSourceMode();
+  const openingSourceRef = getOpeningSourceRef();
   let opening = openingMode === "chat_selected" ? getOpeningFromSelectedRef(openingSourceRef, entries) || getOpeningFromContext() : getOpeningFromContext();
   let ctx = { persona: "(\u7A7A)", userDesc: "(\u7A7A)" };
   try {
@@ -13472,18 +13573,6 @@ async function openPromptTemplateManager() {
                     <button id="t-prompt-save" class="t-btn t-btn-primary t-btn-xs"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58\u6A21\u677F</button>
                 </div>
 
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                    <label class="t-outline-mode" style="margin:0;">
-                        \u5F00\u573A\u767D\u6765\u6E90
-                        <select id="t-opening-source-mode" class="t-outline-select">
-                            <option value="auto_first">\u81EA\u52A8\uFF08\u89D2\u8272\u5361\u9996\u6761/\u5F00\u573A\u767D\uFF09</option>
-                            <option value="chat_selected">\u804A\u5929\u8BB0\u5F55\u6307\u5B9A\u6761\u76EE</option>
-                        </select>
-                    </label>
-                    <button id="t-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
-                    <span id="t-opening-source-label" class="t-plan-tip"></span>
-                </div>
-
                 <div class="t-plan-tip">\u53EF\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{openingText}} {{storyInput}} {{outlineItemsJson}}</div>
 
                 <label>System \u6A21\u677F</label>
@@ -13513,11 +13602,6 @@ async function openPromptTemplateManager() {
     </div>`;
   $("body").append(html);
   const close = () => $("#t-outline-prompt-manager").remove();
-  const refreshOpeningLabel = () => {
-    const label = formatOpeningSourceLabel(openingMode, openingSourceRef, entries);
-    $("#t-opening-source-label").text(`\u5F53\u524D\uFF1A${label}`);
-    $("#t-opening-source-pick").prop("disabled", openingMode !== "chat_selected");
-  };
   const syncToEditor = () => {
     const type = String($("#t-prompt-target").val() || "outline");
     const section = getPromptTemplateSection(working, type);
@@ -13545,9 +13629,7 @@ async function openPromptTemplateManager() {
     const unique = Array.from(new Set(unknown));
     $("#t-prompt-var-warning").text(unique.length > 0 ? `\u672A\u77E5\u53D8\u91CF\uFF1A${unique.join(", ")}` : "");
   };
-  $("#t-opening-source-mode").val(openingMode);
   syncToEditor();
-  refreshOpeningLabel();
   preview();
   $("#t-prompt-target").on("change", () => {
     syncToEditor();
@@ -13557,25 +13639,6 @@ async function openPromptTemplateManager() {
     syncFromEditor();
   });
   $("#t-prompt-preview").on("click", preview);
-  $("#t-opening-source-mode").on("change", function() {
-    openingMode = String($(this).val() || "auto_first") === "chat_selected" ? "chat_selected" : "auto_first";
-    if (openingMode !== "chat_selected") {
-      setOpeningSourceMode("auto_first");
-    } else {
-      setOpeningSourceMode("chat_selected");
-    }
-    refreshOpeningLabel();
-    preview();
-  });
-  $("#t-opening-source-pick").on("click", async () => {
-    const picked = await openOpeningSourcePickerDialog(openingSourceRef?.chatIndex ?? -1);
-    if (!picked) return;
-    openingSourceRef = picked;
-    setOpeningSourceRef(picked);
-    if (window.toastr) toastr.success("\u5DF2\u8BBE\u7F6E\u5F00\u573A\u767D\u6765\u6E90", "\u63D0\u793A\u8BCD\u7BA1\u7406");
-    refreshOpeningLabel();
-    preview();
-  });
   $("#t-prompt-reset-current").on("click", () => {
     const type = String($("#t-prompt-target").val() || "outline");
     working[type] = JSON.parse(JSON.stringify(defaults[type]));
@@ -13586,11 +13649,18 @@ async function openPromptTemplateManager() {
   $("#t-prompt-save").on("click", () => {
     syncFromEditor();
     savePromptTemplates(working);
-    setOpeningSourceMode(openingMode);
-    setOpeningSourceRef(openingSourceRef);
     if (window.toastr) toastr.success("\u63D0\u793A\u8BCD\u6A21\u677F\u5DF2\u4FDD\u5B58", "\u63D0\u793A\u8BCD\u7BA1\u7406");
   });
   $("#t-prompt-manager-close, #t-prompt-manager-close-btn").on("click", close);
+}
+function refreshOutlineOpeningSourceControls() {
+  const mode = getOpeningSourceMode();
+  const sourceRef = getOpeningSourceRef();
+  const entries = getChatHistoryEntries();
+  $("#t-outline-opening-source-mode").val(mode);
+  $("#t-outline-opening-source-pick").prop("disabled", mode !== "chat_selected");
+  const label = formatOpeningSourceLabel(mode, sourceRef, entries);
+  $("#t-outline-opening-source-label").text(`\u5F53\u524D\uFF1A${label}`);
 }
 function buildPrompt(ctx, userStoryInput, openingText) {
   const templates = getPromptTemplates();
@@ -13637,6 +13707,7 @@ function saveDraft(storyInput, insertMode) {
     updatedAt: Date.now()
   };
   saveExtData();
+  scheduleAutoSaveCurrentPlan();
 }
 function loadDraft() {
   const draft = getDraft();
@@ -13771,6 +13842,163 @@ function createNewPlan(nameInput = "", defaultName = "") {
   setEditingPlan(plan);
   return plan;
 }
+function createEmptyPlan(nameInput = "", defaultName = "") {
+  const plans = getPlans();
+  const planId = `plan_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const now = Date.now();
+  const instruction = String($("#t-outline-story-input").val() || "").trim();
+  const plan = {
+    id: planId,
+    name: (nameInput || "").trim() || defaultName || createPlanName(getCurrentCharCardName()),
+    storyInput: instruction,
+    instruction,
+    items: [],
+    used_scene_keys: [],
+    createdAt: now,
+    updatedAt: now
+  };
+  plans.unshift(plan);
+  activePlanId = plan.id;
+  setActivePlanId(plan.id);
+  if (!getSceneSourcePlanId()) {
+    setSceneSourcePlanId(plan.id);
+  }
+  saveExtData();
+  setEditingPlan(plan);
+  return plan;
+}
+function createBranchPlanFromSource(sourcePlan) {
+  if (!sourcePlan?.id) return null;
+  const plans = getPlans();
+  const now = Date.now();
+  const baseName = String(sourcePlan.name || createPlanName(getCurrentCharCardName())).trim() || "\u672A\u547D\u540D\u65B9\u6848";
+  let candidateName = `${baseName}\uFF08\u5206\u652F\uFF09`;
+  let suffix = 2;
+  while (plans.some((p) => String(p?.name || "").trim() === candidateName)) {
+    candidateName = `${baseName}\uFF08\u5206\u652F${suffix}\uFF09`;
+    suffix += 1;
+  }
+  const instruction = getPlanInstruction(sourcePlan);
+  const plan = {
+    id: `plan_${now}_${Math.random().toString(36).slice(2, 8)}`,
+    name: candidateName,
+    storyInput: instruction,
+    instruction,
+    items: [],
+    used_scene_keys: [],
+    createdAt: now,
+    updatedAt: now
+  };
+  plans.unshift(plan);
+  activePlanId = plan.id;
+  setActivePlanId(plan.id);
+  if (!getSceneSourcePlanId()) {
+    setSceneSourcePlanId(plan.id);
+  }
+  saveExtData();
+  setEditingPlan(plan);
+  return plan;
+}
+function persistCurrentEditingPlan() {
+  if (!editingPlanId) return;
+  const plans = getPlans();
+  const target = plans.find((p) => p.id === editingPlanId);
+  if (!target) return;
+  const payload = createPlanPayloadFromEditor();
+  target.storyInput = payload.storyInput;
+  target.instruction = payload.instruction;
+  target.items = payload.items;
+  target.updatedAt = Date.now();
+  saveExtData();
+  setEditingPlan(target);
+}
+function scheduleAutoSaveCurrentPlan() {
+  if (!editingPlanId) return;
+  if (autoSavePlanTimer) clearTimeout(autoSavePlanTimer);
+  autoSavePlanTimer = setTimeout(() => {
+    autoSavePlanTimer = null;
+    persistCurrentEditingPlan();
+  }, 260);
+}
+function flushAutoSaveCurrentPlan() {
+  if (autoSavePlanTimer) {
+    clearTimeout(autoSavePlanTimer);
+    autoSavePlanTimer = null;
+  }
+  persistCurrentEditingPlan();
+}
+function ensureEditingPlanContext() {
+  if (editingPlanId) return true;
+  const active = getActivePlan();
+  if (active) {
+    loadPlanToEditor(active);
+    return true;
+  }
+  if (window.toastr) toastr.warning("\u8BF7\u5148\u65B0\u5EFA\u6216\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
+  return false;
+}
+function updatePlanWorkflowUI() {
+  const hasPlans = getPlans().length > 0;
+  const inEditor = currentView === "editor";
+  $("#t-outline-plan-name-wrap").toggle(hasPlans && inEditor);
+  $("#t-outline-save-plan").toggle(hasPlans && inEditor);
+  $("#t-outline-top").toggle(inEditor);
+  $("#t-outline-hub-view").toggle(currentView === "hub");
+  refreshPlanNameDisplay();
+}
+function updatePlanHubActionState() {
+  const plans = getPlans();
+  const selected = plans.find((p) => p.id === activePlanId) || null;
+  const hasSelected = !!selected;
+  const sourceId = getSceneSourcePlanId();
+  $("#t-hub-selected-name").text(hasSelected ? selected.name || "\u672A\u547D\u540D\u65B9\u6848" : "\u672A\u9009\u62E9\u65B9\u6848");
+  $("#t-hub-selected-meta").text(hasSelected ? `\u5171 ${normalizeItems(selected.items || []).length} \u6761` : "\u8BF7\u5148\u9009\u62E9\u65B9\u6848\u5361\u7247");
+  $("#t-hub-set-source").text(hasSelected && sourceId === selected.id ? "\u5DF2\u8BBE\u4E3A\u7EC6\u7EB2\u6765\u6E90" : "\u8BBE\u4E3A\u7EC6\u7EB2\u6765\u6E90");
+  $("#t-hub-edit-plan, #t-hub-create-branch, #t-hub-view-detail, #t-hub-view-instruction, #t-hub-delete-plan, #t-hub-set-source").prop("disabled", !hasSelected);
+}
+function openPlanCreationDialog() {
+  ensureCssLoaded();
+  $("#t-outline-create-plan-dialog").remove();
+  const defaultPlanName = createPlanName(getCurrentCharCardName());
+  const draftStoryInput = String($("#t-outline-story-input").val() || "").trim();
+  const html = `
+    <div id="t-outline-create-plan-dialog" class="t-dialog-overlay">
+        <div class="t-dialog-box" style="max-width: 620px; max-height: 84vh;">
+            <div class="t-dialog-header">
+                <span><i class="fa-solid fa-folder-plus"></i> \u65B0\u5EFA\u65B9\u6848</span>
+                <div class="t-dialog-close" id="t-create-plan-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-dialog-body" style="padding: 12px;">
+                <div class="t-plan-tip" style="font-size:13px; margin-bottom:10px;">\u521B\u5EFA\u540E\u4F1A\u76F4\u63A5\u8FDB\u5165\u300C\u6545\u4E8B\u5927\u7EB2\u8BBE\u8BA1\u300D\u7F16\u8F91\u9875\u3002</div>
+                <label class="t-outline-label">\u65B9\u6848\u540D\u79F0</label>
+                <input id="t-create-plan-name" class="t-outline-input" value="${escapeHtml3(defaultPlanName)}" />
+                <label class="t-outline-label" style="margin-top:10px;">\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09</label>
+                <textarea id="t-create-plan-story" class="t-outline-story-input" rows="4" placeholder="\u53EF\u5148\u5199\u4E00\u4E2A\u65B9\u5411\uFF0C\u540E\u7EED\u4ECD\u53EF\u968F\u65F6\u4FEE\u6539">${escapeHtml3(draftStoryInput)}</textarea>
+                <div class="t-plan-tip" style="margin-top:8px;">\u63D0\u793A\uFF1A\u5982\u679C\u7559\u7A7A\uFF0C\u4F1A\u521B\u5EFA\u4E00\u4E2A\u7A7A\u767D\u65B9\u6848\u3002</div>
+                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+                    <button id="t-create-plan-cancel" class="t-btn">\u53D6\u6D88</button>
+                    <button id="t-create-plan-confirm" class="t-btn t-btn-primary"><i class="fa-solid fa-check"></i> \u521B\u5EFA\u5E76\u8FDB\u5165\u7F16\u8F91</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  const close = () => $("#t-outline-create-plan-dialog").remove();
+  $("#t-create-plan-close, #t-create-plan-cancel").on("click", close);
+  $("#t-create-plan-confirm").on("click", () => {
+    const planName = String($("#t-create-plan-name").val() || "").trim();
+    const planStory = String($("#t-create-plan-story").val() || "").trim();
+    $("#t-outline-story-input").val(planStory);
+    const created = createEmptyPlan(planName);
+    close();
+    if (window.toastr) toastr.success(`\u5DF2\u65B0\u5EFA\u65B9\u6848\uFF1A${created.name}`, "\u6545\u4E8B\u5927\u7EB2");
+    loadPlanToEditor(created);
+    renderPlanHub();
+    showOutlineView("editor");
+    setEditorSubView("outline");
+    updatePlanWorkflowUI();
+  });
+}
 function overwritePlan(planId, nameInput = "") {
   const plans = getPlans();
   const target = plans.find((p) => p.id === planId);
@@ -13816,8 +14044,71 @@ function getActivePlan() {
   }
   return plans.find((p) => p.id === activePlanId) || plans[0] || null;
 }
+function getCurrentPlanForEditor() {
+  const plans = getPlans();
+  if (editingPlanId) {
+    const editing = plans.find((p) => p.id === editingPlanId);
+    if (editing) return editing;
+  }
+  if (activePlanId) {
+    const active = plans.find((p) => p.id === activePlanId);
+    if (active) return active;
+  }
+  return plans[0] || null;
+}
+function refreshPlanNameDisplay() {
+  const $wrap = $("#t-outline-plan-name-wrap");
+  const $input = $("#t-outline-plan-name");
+  const $rename = $("#t-outline-plan-rename-trigger");
+  const $ok = $("#t-outline-plan-rename-confirm");
+  const $cancel = $("#t-outline-plan-rename-cancel");
+  if ($input.length === 0) return;
+  const plan = getCurrentPlanForEditor();
+  const hasPlan = !!plan;
+  $wrap.toggle(hasPlan);
+  $rename.prop("disabled", !hasPlan).toggle(!planRenameMode);
+  $ok.toggle(planRenameMode);
+  $cancel.toggle(planRenameMode);
+  $input.prop("readonly", !planRenameMode);
+  $input.toggleClass("is-readonly", !planRenameMode);
+  if (!planRenameMode) {
+    $input.val(hasPlan ? plan.name || "\u672A\u547D\u540D\u65B9\u6848" : "");
+  }
+}
+function setPlanRenameMode(enabled) {
+  const on = !!enabled;
+  if (on) {
+    const plan = getCurrentPlanForEditor();
+    if (!plan) return;
+    planRenameSnapshot = String(plan.name || "");
+  }
+  planRenameMode = on;
+  refreshPlanNameDisplay();
+  if (on) {
+    const input = document.querySelector("#t-outline-plan-name");
+    if (input) {
+      input.focus();
+      if (typeof input.select === "function") input.select();
+    }
+  }
+}
+function confirmPlanRename() {
+  const plan = getCurrentPlanForEditor();
+  if (!plan) return;
+  const nextName = String($("#t-outline-plan-name").val() || "").trim() || createPlanName(getCurrentCharCardName());
+  plan.name = nextName;
+  plan.updatedAt = Date.now();
+  saveExtData();
+  setPlanRenameMode(false);
+  renderPlanHub();
+  if (window.toastr) toastr.success(`\u5DF2\u91CD\u547D\u540D\u65B9\u6848\uFF1A${nextName}`, "\u6545\u4E8B\u5927\u7EB2");
+}
+function cancelPlanRename() {
+  $("#t-outline-plan-name").val(planRenameSnapshot || "");
+  setPlanRenameMode(false);
+}
 function getCurrentInsertMode() {
-  return $("#t-outline-insert-mode").val() || "overwrite";
+  return $("#t-scene-hub-insert-mode").val() || $("#t-outline-insert-mode").val() || loadDraft().insertMode || "overwrite";
 }
 function getSceneUsageKey(itemIndex, sceneIndex) {
   return `${itemIndex}:${sceneIndex}`;
@@ -13853,10 +14144,11 @@ function loadPlanToEditor(plan) {
   outlineItems = normalizeItems(plan.items || []);
   const planInstruction = getPlanInstruction(plan);
   $("#t-outline-story-input").val(planInstruction);
-  $("#t-outline-plan-name").val("");
   setEditingPlan(plan);
+  planRenameMode = false;
   saveDraft(planInstruction, $("#t-outline-insert-mode").val() || "overwrite");
   renderRows();
+  refreshPlanNameDisplay();
   return true;
 }
 function getPlanItemCursor(planId, totalItems) {
@@ -13964,6 +14256,13 @@ function openSceneHubWindow() {
             <div class="t-window-body t-outline-body">
                 <div id="t-scene-hub-list" class="t-scene-hub-list"></div>
                 <div class="t-scene-hub-footer">
+                    <label class="t-outline-mode" style="margin-right:auto;">
+                        \u5199\u5165\u65B9\u5F0F
+                        <select id="t-scene-hub-insert-mode" class="t-outline-select">
+                            <option value="overwrite" ${getCurrentInsertMode() === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
+                            <option value="append" ${getCurrentInsertMode() === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                        </select>
+                    </label>
                     <button id="t-scene-hub-send" class="t-btn t-btn-primary" disabled><i class="fa-solid fa-paper-plane"></i> \u53D1\u9001\u573A\u666F</button>
                 </div>
             </div>
@@ -13980,6 +14279,11 @@ function openSceneHubWindow() {
     if (!key) return;
     sceneHubSelectedKey = key;
     renderSceneHubWindow();
+  });
+  $overlay.on("change", "#t-scene-hub-insert-mode", function() {
+    const mode = String($(this).val() || "overwrite") === "append" ? "append" : "overwrite";
+    $("#t-outline-insert-mode").val(mode);
+    saveDraft($("#t-outline-story-input").val() || "", mode);
   });
   $overlay.on("click", "#t-scene-hub-send", () => {
     const rows = collectAllPlanScenes();
@@ -14112,7 +14416,9 @@ function renderPlanHub() {
   if ($list.length === 0) return;
   if (plans.length === 0) {
     if (sceneSourcePlanId) setSceneSourcePlanId("");
-    $list.html('<div class="t-plan-empty">\u6682\u65E0\u65B9\u6848\uFF0C\u5148\u751F\u6210\u5E76\u4FDD\u5B58</div>');
+    $list.html('<div class="t-plan-empty">\u6682\u65E0\u65B9\u6848\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u65B0\u5EFA\u65B9\u6848\u201D</div>');
+    updatePlanWorkflowUI();
+    updatePlanHubActionState();
     return;
   }
   if (!sceneSourcePlanId || !plans.some((p) => p.id === sceneSourcePlanId)) {
@@ -14130,25 +14436,18 @@ function renderPlanHub() {
     const items = normalizeItems(plan.items || []);
     return `
             <div class="t-plan-accordion-item ${active ? "expanded" : ""}" data-plan-id="${plan.id}">
-                <div class="t-plan-accordion-head">
+                <div class="t-plan-accordion-head" data-action="select-plan" data-plan-id="${plan.id}">
                     <div class="t-plan-accordion-main">
-                        <button class="t-plan-name-btn" data-action="open-plan-detail" data-plan-id="${plan.id}">${escapeHtml3(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</button>
+                        <div class="t-plan-name">${escapeHtml3(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
                         <div class="t-plan-meta">${timeText} \xB7 ${items.length} \u6761</div>
-                        <label class="t-plan-source-radio">
-                            <input type="radio" name="t-scene-source-plan" data-action="set-scene-source-plan" data-plan-id="${plan.id}" ${sceneSourcePlanId === plan.id ? "checked" : ""}>
-                            <span>\u52FE\u9009\u4F7F\u7528\uFF08\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\uFF09</span>
-                        </label>
-                        <div class="t-plan-tip">\u5355\u51FB\u65B9\u6848\u540D\u8FDB\u5165\u8BE6\u60C5\u9875</div>
-                    </div>
-                    <div class="t-plan-accordion-actions">
-                        <button class="t-btn t-btn-xs" data-action="edit-plan" data-plan-id="${plan.id}"><i class="fa-solid fa-pen-to-square"></i> \u7F16\u8F91\u65B9\u6848</button>
-                        <button class="t-btn t-btn-xs" data-action="view-plan-instruction" data-plan-id="${plan.id}"><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4</button>
-                        <button class="t-btn t-btn-xs t-plan-delete-btn" data-action="delete-plan" data-plan-id="${plan.id}"><i class="fa-solid fa-trash"></i> \u5220\u9664\u65B9\u6848</button>
+                        <div class="t-plan-tip">${sceneSourcePlanId === plan.id ? "\u5F53\u524D\u7EC6\u7EB2\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
                     </div>
                 </div>
             </div>
         `;
   }).join(""));
+  updatePlanWorkflowUI();
+  updatePlanHubActionState();
 }
 function showPlanInstructionDialog(plan) {
   if (!plan) return;
@@ -14216,9 +14515,11 @@ function clearEditorDraft() {
   closeMobileEditor();
   $("#t-outline-story-input").val("");
   $("#t-outline-plan-name").val("");
+  planRenameMode = false;
   setEditingPlan(null);
   renderRows();
   saveDraft("", insertMode);
+  refreshPlanNameDisplay();
 }
 function writePlotToInput(text, mode = "overwrite") {
   const input = document.querySelector("#send_textarea");
@@ -14238,13 +14539,20 @@ ${payload}`;
   input.focus();
   if (window.toastr) toastr.success(`\u5DF2${mode === "append" ? "\u8FFD\u52A0" : "\u586B\u5165"}\u53D1\u9001\u8F93\u5165\u6846\uFF08\u672A\u81EA\u52A8\u53D1\u9001\uFF09`, "\u6545\u4E8B\u5927\u7EB2");
 }
-function showRawResponseDialog(rawContent) {
+function showRawResponseDialog(rawContent, options = {}) {
+  const {
+    title = "\u5927\u7EB2\u539F\u59CB\u54CD\u5E94",
+    editable = false,
+    parseAction = null,
+    parseButtonLabel = "\u91CD\u65B0\u89E3\u6790\u5E76\u5E94\u7528",
+    parseHint = ""
+  } = options || {};
   $("#t-outline-raw-dialog").remove();
   const html = `
     <div id="t-outline-raw-dialog" class="t-dialog-overlay">
         <div class="t-dialog-box" style="max-width: 820px; max-height: 82vh;">
             <div class="t-dialog-header">
-                <span><i class="fa-solid fa-code"></i> \u5927\u7EB2\u539F\u59CB\u54CD\u5E94</span>
+                <span><i class="fa-solid fa-code"></i> ${escapeHtml3(title)}</span>
                 <div class="t-dialog-close" id="t-outline-raw-close"><i class="fa-solid fa-times"></i></div>
             </div>
             <div class="t-dialog-body" style="padding: 12px;">
@@ -14252,9 +14560,11 @@ function showRawResponseDialog(rawContent) {
                     <span style="color:#8ea0b3;">\u957F\u5EA6: ${(rawContent || "").length} \u5B57\u7B26</span>
                     <button id="t-outline-copy-raw" class="t-btn t-btn-xs"><i class="fa-solid fa-copy"></i> \u590D\u5236</button>
                 </div>
-                <pre class="t-outline-raw-pre">${escapeHtml3(rawContent || "(\u7A7A)")}</pre>
+                ${editable ? `<textarea id="t-outline-raw-editor" class="t-outline-raw-editor">${escapeHtml3(rawContent || "")}</textarea>` : `<pre class="t-outline-raw-pre">${escapeHtml3(rawContent || "(\u7A7A)")}</pre>`}
+                ${parseHint ? `<div class="t-outline-raw-hint">${escapeHtml3(parseHint)}</div>` : ""}
             </div>
             <div class="t-dialog-footer">
+                ${editable ? `<button id="t-outline-raw-reparse" class="t-btn t-btn-primary">${escapeHtml3(parseButtonLabel)}</button>` : ""}
                 <button id="t-outline-raw-close-btn" class="t-btn">\u5173\u95ED</button>
             </div>
         </div>
@@ -14267,25 +14577,79 @@ function showRawResponseDialog(rawContent) {
   });
   $("#t-outline-copy-raw").on("click", async function() {
     try {
-      await navigator.clipboard.writeText(rawContent || "");
+      const value = editable ? String($("#t-outline-raw-editor").val() || "") : rawContent || "";
+      await navigator.clipboard.writeText(value);
       $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
     } catch {
       if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25");
     }
   });
+  if (editable && typeof parseAction === "function") {
+    $("#t-outline-raw-reparse").on("click", async function() {
+      const $btn = $(this);
+      const originalHtml = $btn.html();
+      const editedText = String($("#t-outline-raw-editor").val() || "").trim();
+      lastRawResponse = editedText;
+      $("#t-outline-view-raw").prop("disabled", !lastRawResponse);
+      if (!editedText) {
+        if (window.toastr) toastr.error("\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u89E3\u6790", "\u6545\u4E8B\u5927\u7EB2");
+        return;
+      }
+      $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u89E3\u6790\u4E2D...');
+      try {
+        await parseAction(editedText);
+        $("#t-outline-raw-dialog").remove();
+        isRawDialogOpen = false;
+      } catch (e) {
+        if (window.toastr) toastr.error(e.message || "\u91CD\u65B0\u89E3\u6790\u5931\u8D25", "\u6545\u4E8B\u5927\u7EB2");
+      } finally {
+        $btn.prop("disabled", false).html(originalHtml);
+      }
+    });
+  }
 }
 function updateRawPreview(statusText = "") {
   if (!isRawDialogOpen || $("#t-outline-raw-dialog").length === 0) return;
   if (statusText) {
     $("#t-outline-raw-dialog .t-dialog-header span").html(`<i class="fa-solid fa-code"></i> ${statusText}`);
   }
-  $("#t-outline-raw-dialog .t-outline-raw-pre").text(lastRawResponse || "(\u7A7A)");
+  const $pre = $("#t-outline-raw-dialog .t-outline-raw-pre");
+  if ($pre.length > 0) {
+    $pre.text(lastRawResponse || "(\u7A7A)");
+  }
+  const $editor = $("#t-outline-raw-editor");
+  if ($editor.length > 0) {
+    $editor.val(lastRawResponse || "");
+  }
 }
 function ensureRawDialogForStreaming(title = "\u6D41\u5F0F\u751F\u6210\u4E2D...") {
   if (!isRawDialogOpen || $("#t-outline-raw-dialog").length === 0) {
     showRawResponseDialog(lastRawResponse || "");
   }
   updateRawPreview(title);
+}
+function applyParsedScenes(parsed) {
+  const incomingItems = Array.isArray(parsed?.items) ? parsed.items : [];
+  for (let i = 0; i < outlineItems.length; i++) {
+    const source = incomingItems.find((x) => Number(x?.index) === outlineItems[i].index) || incomingItems[i];
+    outlineItems[i].scenes = normalizeScenes(source?.scenes || []);
+    reindexScenes(outlineItems[i]);
+    sceneExpandedMap[i] = true;
+  }
+  renderRows();
+  const mobileIdx = getMobileDrawerIndex();
+  if (!Number.isNaN(mobileIdx) && mobileIdx >= 0 && outlineItems[mobileIdx]) {
+    renderMobileDrawerScenes(mobileIdx);
+  }
+  persistCurrentEditingPlan();
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+}
+function applyParsedOutline(parsed, storyInput, insertMode) {
+  outlineItems = normalizeItems(parsed.items);
+  sceneExpandedMap = {};
+  renderRows();
+  persistCurrentEditingPlan();
+  saveDraft(storyInput, insertMode);
 }
 function parseAllScenesResponse(raw) {
   if (!raw || typeof raw !== "string") {
@@ -14635,6 +14999,7 @@ function renderMobileDrawerScenes(index) {
   $list.html(html);
 }
 async function generateAllScenes() {
+  if (!ensureEditingPlanContext()) return;
   if (!Array.isArray(outlineItems) || outlineItems.length === 0) {
     if (window.toastr) toastr.warning("\u8BF7\u5148\u751F\u6210\u6216\u586B\u5199\u603B\u7EB2", "\u6545\u4E8B\u7EC6\u7EB2");
     return;
@@ -14666,20 +15031,23 @@ async function generateAllScenes() {
     });
     lastRawResponse = raw || lastRawResponse || "";
     if (useStream) updateRawPreview("\u7EC6\u7EB2\u751F\u6210\u5B8C\u6210");
-    const parsed = parseAllScenesResponse(raw);
-    const incomingItems = Array.isArray(parsed.items) ? parsed.items : [];
-    for (let i = 0; i < outlineItems.length; i++) {
-      const source = incomingItems.find((x) => Number(x?.index) === outlineItems[i].index) || incomingItems[i];
-      outlineItems[i].scenes = normalizeScenes(source?.scenes || []);
-      reindexScenes(outlineItems[i]);
-      sceneExpandedMap[i] = true;
+    try {
+      const parsed = parseAllScenesResponse(raw);
+      applyParsedScenes(parsed);
+    } catch (parseError) {
+      showRawResponseDialog(lastRawResponse || raw || "", {
+        title: "\u7EC6\u7EB2\u89E3\u6790\u5931\u8D25 - \u53EF\u624B\u52A8\u4FEE\u590D",
+        editable: true,
+        parseButtonLabel: "\u91CD\u65B0\u89E3\u6790\u7EC6\u7EB2\u5E76\u5E94\u7528",
+        parseHint: "\u4F60\u53EF\u4EE5\u76F4\u63A5\u4FEE\u6B63 JSON \u540E\u70B9\u51FB\u6309\u94AE\u91CD\u65B0\u89E3\u6790\uFF0C\u65E0\u9700\u91CD\u65B0\u8BF7\u6C42\u6A21\u578B\u3002",
+        parseAction: async (editedText) => {
+          const reparsed = parseAllScenesResponse(editedText);
+          applyParsedScenes(reparsed);
+          if (window.toastr) toastr.success(`\u4FEE\u590D\u6210\u529F\uFF0C\u5DF2\u5E94\u7528 ${outlineItems.length} \u6761\u60C5\u8282\u7EC6\u7EB2`, "\u6545\u4E8B\u7EC6\u7EB2");
+        }
+      });
+      throw parseError;
     }
-    renderRows();
-    const mobileIdx = getMobileDrawerIndex();
-    if (!Number.isNaN(mobileIdx) && mobileIdx >= 0 && outlineItems[mobileIdx]) {
-      renderMobileDrawerScenes(mobileIdx);
-    }
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
     if (window.toastr) toastr.success(`\u5DF2\u4E00\u6B21\u6027\u751F\u6210 ${outlineItems.length} \u6761\u60C5\u8282\u7684\u7EC6\u7EB2`, "\u6545\u4E8B\u7EC6\u7EB2");
   } catch (e) {
     console.error("Titania: \u6279\u91CF\u751F\u6210\u7EC6\u7EB2\u5931\u8D25", e);
@@ -14692,6 +15060,7 @@ async function generateAllScenes() {
   }
 }
 async function generateOutline() {
+  if (!ensureEditingPlanContext()) return;
   const $btn = $("#t-outline-generate");
   const storyInput = ($("#t-outline-story-input").val() || "").trim();
   const insertMode = $("#t-outline-insert-mode").val() || "overwrite";
@@ -14717,11 +15086,23 @@ async function generateOutline() {
     lastRawResponse = raw || lastRawResponse || "";
     if (useStream) updateRawPreview("\u5927\u7EB2\u751F\u6210\u5B8C\u6210");
     $("#t-outline-view-raw").prop("disabled", !lastRawResponse);
-    const parsed = parseOutlineResponse(raw);
-    outlineItems = normalizeItems(parsed.items);
-    sceneExpandedMap = {};
-    renderRows();
-    saveDraft(storyInput, insertMode);
+    try {
+      const parsed = parseOutlineResponse(raw);
+      applyParsedOutline(parsed, storyInput, insertMode);
+    } catch (parseError) {
+      showRawResponseDialog(lastRawResponse || raw || "", {
+        title: "\u5927\u7EB2\u89E3\u6790\u5931\u8D25 - \u53EF\u624B\u52A8\u4FEE\u590D",
+        editable: true,
+        parseButtonLabel: "\u91CD\u65B0\u89E3\u6790\u5927\u7EB2\u5E76\u5E94\u7528",
+        parseHint: "\u4F60\u53EF\u4EE5\u76F4\u63A5\u4FEE\u6B63 JSON \u540E\u70B9\u51FB\u6309\u94AE\u91CD\u65B0\u89E3\u6790\uFF0C\u65E0\u9700\u91CD\u65B0\u8BF7\u6C42\u6A21\u578B\u3002",
+        parseAction: async (editedText) => {
+          const reparsed = parseOutlineResponse(editedText);
+          applyParsedOutline(reparsed, storyInput, insertMode);
+          if (window.toastr) toastr.success(`\u4FEE\u590D\u6210\u529F\uFF0C\u5DF2\u751F\u6210 ${outlineItems.length} \u6761\u5927\u7EB2`, "\u6545\u4E8B\u5927\u7EB2");
+        }
+      });
+      throw parseError;
+    }
     if (window.toastr) toastr.success(`\u5DF2\u751F\u6210 ${outlineItems.length} \u6761\u5927\u7EB2`, "\u6545\u4E8B\u5927\u7EB2");
   } catch (e) {
     console.error("Titania: \u8BBE\u8BA1\u5927\u7EB2\u5931\u8D25", e);
@@ -14734,32 +15115,94 @@ async function generateOutline() {
 function bindEvents() {
   const $overlay = $("#t-story-outline-overlay");
   $overlay.on("click", "#t-outline-save-plan", () => {
-    const plan = upsertCurrentAsPlan($("#t-outline-plan-name").val() || "");
+    const plan = upsertCurrentAsPlan("");
     if (plan) {
       const copyName = createDistinctPlanName(plan.name || createPlanName(getCurrentCharCardName()));
-      $("#t-outline-plan-name").val(copyName);
+      planRenameSnapshot = copyName;
+      refreshPlanNameDisplay();
     }
     renderPlanHub();
     showOutlineView("hub");
+    updatePlanWorkflowUI();
     if (window.toastr) toastr.success(`\u5DF2\u4FDD\u5B58\u65B9\u6848\uFF1A${plan.name}`, "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "#t-outline-back-hub", () => {
+    if (planRenameMode) {
+      cancelPlanRename();
+    }
     closeDesktopEditor();
     closeMobileEditor();
     renderPlanHub();
     showOutlineView("hub");
+    updatePlanWorkflowUI();
   });
-  $overlay.on("click", "[data-action='open-plan-detail']", function() {
+  $overlay.on("click", "#t-outline-plan-rename-trigger", () => {
+    setPlanRenameMode(true);
+  });
+  $overlay.on("click", "#t-outline-plan-rename-confirm", () => {
+    confirmPlanRename();
+  });
+  $overlay.on("click", "#t-outline-plan-rename-cancel", () => {
+    cancelPlanRename();
+  });
+  $overlay.on("keydown", "#t-outline-plan-name", function(e) {
+    if (!planRenameMode) return;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      confirmPlanRename();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancelPlanRename();
+    }
+  });
+  $overlay.on("click", "[data-action='select-plan']", function() {
     const planId = String($(this).data("plan-id") || "").trim();
     if (!planId) return;
     activePlanId = planId;
     setActivePlanId(activePlanId);
     renderPlanHub();
-    showPlanDetailDialog(planId);
   });
-  $overlay.on("click", "[data-action='delete-plan']", function(e) {
-    e.stopPropagation();
-    const planId = String($(this).data("plan-id") || "").trim();
+  $overlay.on("click", "#t-hub-edit-plan", function() {
+    const plan = getPlans().find((p) => p.id === activePlanId) || getActivePlan();
+    if (!plan) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
+      return;
+    }
+    loadPlanToEditor(plan);
+    showOutlineView("editor");
+    setEditorSubView("outline");
+    updatePlanWorkflowUI();
+  });
+  $overlay.on("click", "#t-hub-create-plan", function() {
+    openPlanCreationDialog();
+  });
+  $overlay.on("click", "#t-hub-create-branch", function() {
+    const source = getPlans().find((p) => p.id === activePlanId) || null;
+    if (!source) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
+      return;
+    }
+    const created = createBranchPlanFromSource(source);
+    if (!created) return;
+    loadPlanToEditor(created);
+    renderPlanHub();
+    showOutlineView("editor");
+    setEditorSubView("outline");
+    updatePlanWorkflowUI();
+    if (window.toastr) toastr.success(`\u5DF2\u521B\u5EFA\u5206\u652F\u65B9\u6848\uFF1A${created.name}`, "\u6545\u4E8B\u5927\u7EB2");
+  });
+  $overlay.on("click", "#t-hub-view-detail", function() {
+    const plan = getPlans().find((p) => p.id === activePlanId) || null;
+    if (!plan) return;
+    showPlanDetailDialog(plan.id);
+  });
+  $overlay.on("click", "#t-hub-view-instruction", function() {
+    const plan = getPlans().find((p) => p.id === activePlanId) || null;
+    if (!plan) return;
+    showPlanInstructionDialog(plan);
+  });
+  $overlay.on("click", "#t-hub-delete-plan", function() {
+    const planId = String(activePlanId || "").trim();
     if (!planId) return;
     const plans = getPlans();
     const index = plans.findIndex((p) => p.id === planId);
@@ -14768,42 +15211,19 @@ function bindEvents() {
     if (!window.confirm(`\u786E\u8BA4\u5220\u9664\u65B9\u6848\u300C${planName}\u300D\uFF1F`)) return;
     plans.splice(index, 1);
     delete planItemCursorMap[planId];
-    if (getSceneSourcePlanId() === planId) {
-      setSceneSourcePlanId("");
-    }
-    if (activePlanId === planId) {
-      activePlanId = plans[0]?.id || "";
-    }
-    clearEditorDraft();
+    if (getSceneSourcePlanId() === planId) setSceneSourcePlanId("");
+    activePlanId = plans[0]?.id || "";
     setActivePlanId(activePlanId);
+    if (!activePlanId) clearEditorDraft();
     renderPlanHub();
     if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u65B9\u6848\uFF1A${planName}`, "\u6545\u4E8B\u5927\u7EB2");
   });
-  $overlay.on("click", "[data-action='edit-plan']", function(e) {
-    e.stopPropagation();
-    const planId = String($(this).data("plan-id") || "").trim();
-    const plan = getPlans().find((p) => p.id === planId) || getActivePlan();
-    if (!plan) {
-      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
-      return;
-    }
-    loadPlanToEditor(plan);
-    showOutlineView("editor");
-    setEditorSubView("outline");
-  });
-  $overlay.on("change", "[data-action='set-scene-source-plan']", function() {
-    const planId = String($(this).data("plan-id") || "").trim();
+  $overlay.on("click", "#t-hub-set-source", function() {
+    const planId = String(activePlanId || "").trim();
     if (!planId) return;
     setSceneSourcePlanId(planId);
     renderPlanHub();
     if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
-  });
-  $overlay.on("click", "[data-action='view-plan-instruction']", function(e) {
-    e.stopPropagation();
-    const planId = String($(this).data("plan-id") || "").trim();
-    const plan = getPlans().find((p) => p.id === planId) || null;
-    if (!plan) return;
-    showPlanInstructionDialog(plan);
   });
   $overlay.on("click", "[data-action='hub-send-scene']", function() {
     const planId = String($(this).data("plan-id") || "");
@@ -14861,6 +15281,7 @@ function bindEvents() {
   });
   $overlay.on("click", "#t-story-outline-close", () => {
     closeDesktopEditor();
+    flushAutoSaveCurrentPlan();
     $("#t-story-outline-overlay").remove();
   });
   $overlay.on("click", "#t-outline-generate", async () => {
@@ -14869,20 +15290,25 @@ function bindEvents() {
   $overlay.on("click", "#t-outline-generate-all-scenes", async () => {
     await generateAllScenes();
   });
-  $overlay.on("click", "#t-outline-add-row", () => {
-    outlineItems.push({
-      index: outlineItems.length + 1,
-      time: "",
-      title: "",
-      plot: "",
-      foreshadowing: "",
-      scenes: []
-    });
-    renderRows();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  });
   $overlay.on("click", "#t-outline-view-raw", () => {
     showRawResponseDialog(lastRawResponse);
+  });
+  $overlay.on("change", "#t-outline-opening-source-mode", function() {
+    const mode = String($(this).val() || "auto_first") === "chat_selected" ? "chat_selected" : "auto_first";
+    setOpeningSourceMode(mode);
+    if (mode !== "chat_selected") {
+      refreshOutlineOpeningSourceControls();
+      return;
+    }
+    refreshOutlineOpeningSourceControls();
+  });
+  $overlay.on("click", "#t-outline-opening-source-pick", async () => {
+    const sourceRef = getOpeningSourceRef();
+    const picked = await openOpeningSourcePickerDialog(sourceRef?.chatIndex ?? -1);
+    if (!picked) return;
+    setOpeningSourceRef(picked);
+    refreshOutlineOpeningSourceControls();
+    if (window.toastr) toastr.success("\u5DF2\u8BBE\u7F6E\u5F00\u573A\u767D\u6765\u6E90", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("change", "#t-outline-insert-mode", function() {
     saveDraft($("#t-outline-story-input").val(), $(this).val());
@@ -15077,10 +15503,11 @@ function bindEvents() {
   });
 }
 function openStoryOutlineWindow() {
+  const plans = getPlans();
   ensureCssLoaded();
   $("#t-story-outline-overlay").remove();
   const draft = loadDraft();
-  outlineItems = draft.items;
+  outlineItems = [];
   lastRawResponse = "";
   sceneExpandedMap = {};
   selectedRowIndex = -1;
@@ -15088,7 +15515,7 @@ function openStoryOutlineWindow() {
   planItemCursorMap = {};
   setEditingPlan(null);
   editorSubView = "outline";
-  sceneEditorItemIndex = outlineItems.length > 0 ? 0 : -1;
+  sceneEditorItemIndex = -1;
   const defaultPlanName = createPlanName(getCurrentCharCardName());
   const html = `
     <div id="t-story-outline-overlay" class="t-overlay">
@@ -15100,33 +15527,25 @@ function openStoryOutlineWindow() {
                 </div>
             </div>
             <div class="t-window-body t-outline-body">
-                <div class="t-outline-nav">
-                    <div class="t-outline-nav-right">
-                        <input id="t-outline-plan-name" class="t-outline-plan-name" placeholder="${escapeHtml3(defaultPlanName)}">
-                        <button id="t-outline-save-plan" class="t-btn t-btn-primary"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58\u4E3A\u65B9\u6848</button>
-                    </div>
-                </div>
-
-                <div class="t-outline-top">
-                    <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B</label>
+                <div id="t-outline-top" class="t-outline-top">
+                    <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml3(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
                     <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml3(draft.storyInput)}</textarea>
                     <div class="t-outline-actions">
                         <button id="t-outline-generate" class="t-btn t-btn-primary">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> \u8BBE\u8BA1\u5927\u7EB2
                         </button>
-                        <button id="t-outline-add-row" class="t-btn">
-                            <i class="fa-solid fa-plus"></i> \u65B0\u589E\u884C
-                        </button>
                         <button id="t-outline-generate-all-scenes" class="t-btn" disabled>
                             <i class="fa-solid fa-clapperboard"></i> \u4E00\u952E\u751F\u6210\u5168\u90E8\u7EC6\u7EB2
                         </button>
-                            <label class="t-outline-mode">
-                                \u5199\u5165\u65B9\u5F0F
-                                <select id="t-outline-insert-mode" class="t-outline-select">
-                                    <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
-                                    <option value="append" ${draft.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                            <label class="t-outline-mode" style="margin-left:4px;">
+                                \u5F00\u573A\u767D\u6765\u6E90
+                                <select id="t-outline-opening-source-mode" class="t-outline-select">
+                                    <option value="auto_first">\u81EA\u52A8</option>
+                                    <option value="chat_selected">\u804A\u5929\u8BB0\u5F55</option>
                                 </select>
                             </label>
+                            <button id="t-outline-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
+                            <span id="t-outline-opening-source-label" class="t-plan-tip"></span>
                             <label class="t-outline-mode">
                                 <input id="t-outline-stream-enabled" type="checkbox" ${draft.streamEnabled ? "checked" : ""}>
                                 \u542F\u7528\u6D41\u5F0F
@@ -15135,10 +15554,43 @@ function openStoryOutlineWindow() {
                                 <i class="fa-solid fa-code"></i> \u67E5\u770B\u539F\u59CB\u54CD\u5E94
                             </button>
                     </div>
+                    <select id="t-outline-insert-mode" class="t-outline-select" style="display:none;">
+                        <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
+                        <option value="append" ${draft.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                    </select>
+                </div>
+
+                <div class="t-outline-nav">
+                    <div class="t-outline-nav-right">
+                        <div id="t-outline-plan-name-wrap" class="t-plan-name-wrap">
+                            <input id="t-outline-plan-name" class="t-outline-plan-name is-readonly" placeholder="${escapeHtml3(defaultPlanName)}" readonly>
+                            <button id="t-outline-plan-rename-trigger" class="t-btn t-btn-xs" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
+                            <button id="t-outline-plan-rename-cancel" class="t-btn t-btn-xs" title="\u53D6\u6D88" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+                            <button id="t-outline-plan-rename-confirm" class="t-btn t-btn-xs t-btn-primary" title="\u786E\u8BA4" style="display:none;"><i class="fa-solid fa-check"></i></button>
+                        </div>
+                        <button id="t-outline-save-plan" class="t-btn t-btn-primary"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58</button>
+                    </div>
                 </div>
 
                 <div id="t-outline-hub-view" class="t-outline-hub-view">
+                    <div class="t-hub-toolbar">
+                        <button id="t-hub-create-plan" class="t-btn t-btn-xs"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
+                        <button id="t-hub-create-branch" class="t-btn t-btn-xs"><i class="fa-solid fa-code-branch"></i> \u65B0\u5EFA\u5206\u652F</button>
+                        <button id="t-hub-edit-plan" class="t-btn t-btn-xs t-hub-primary-action"><i class="fa-solid fa-wand-magic-sparkles"></i> \u7F16\u8F91&\u751F\u6210\u5927\u7EB2</button>
+                        <button id="t-hub-view-detail" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u67E5\u770B\u60C5\u8282&\u7EC6\u7EB2</button>
+                        <button id="t-hub-view-instruction" class="t-btn t-btn-xs"><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4</button>
+                    </div>
                     <div id="t-outline-plan-list" class="t-outline-plan-list"></div>
+                    <div class="t-hub-footerbar">
+                        <div class="t-hub-selected">
+                            <div id="t-hub-selected-name" class="t-plan-name">\u672A\u9009\u62E9\u65B9\u6848</div>
+                            <div id="t-hub-selected-meta" class="t-plan-meta">\u8BF7\u5148\u9009\u62E9\u65B9\u6848\u5361\u7247</div>
+                        </div>
+                        <div class="t-hub-footer-actions">
+                            <button id="t-hub-set-source" class="t-btn t-btn-xs">\u8BBE\u4E3A\u7EC6\u7EB2\u6765\u6E90</button>
+                            <button id="t-hub-delete-plan" class="t-btn t-btn-xs t-plan-delete-btn"><i class="fa-solid fa-trash"></i> \u5220\u9664\u65B9\u6848</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="t-outline-editor-view" class="t-outline-editor-view">
@@ -15210,12 +15662,19 @@ function openStoryOutlineWindow() {
         </div>
     </div>`;
   $("body").append(html);
-  renderRows();
+  const preferred = plans.find((p) => p.id === getActivePlanId()) || plans[0] || null;
+  if (preferred) {
+    loadPlanToEditor(preferred);
+  } else {
+    $("#t-outline-story-input").val(draft.storyInput || "");
+    renderRows();
+  }
   bindEvents();
   renderPlanHub();
-  showOutlineView(getPlans().length > 0 ? "hub" : "editor");
+  showOutlineView(plans.length > 0 ? "hub" : "editor");
+  refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey;
+var outlineItems, lastRawResponse, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -15244,6 +15703,9 @@ var init_storyOutlineWindow = __esm({
     editingPlanBaseline = "";
     planItemCursorMap = {};
     sceneHubSelectedKey = "";
+    autoSavePlanTimer = null;
+    planRenameMode = false;
+    planRenameSnapshot = "";
   }
 });
 
