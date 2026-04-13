@@ -13074,31 +13074,38 @@ __export(storyOutlineWindow_exports, {
 function ensureCssLoaded() {
   const id = "titania-css-story-outline";
   const inlineId = "titania-css-story-outline-inline";
+  const normalizedPath = `/${extensionFolderPath}/css/story-outline.css`.replace(/\/+/g, "/");
+  const fallbackUrls = [
+    normalizedPath,
+    `${extensionFolderPath}/css/story-outline.css`,
+    new URL(normalizedPath, window.location.origin).href
+  ];
   if (!document.getElementById(id)) {
-    const href = `/${extensionFolderPath}/css/story-outline.css`.replace(/\/+/g, "/");
     const link = document.createElement("link");
     link.id = id;
     link.rel = "stylesheet";
     link.type = "text/css";
-    link.href = href;
-    link.addEventListener("error", async () => {
-      try {
-        const resp = await fetch(href, { cache: "no-store" });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const cssText = await resp.text();
-        let style = document.getElementById(inlineId);
-        if (!style) {
-          style = document.createElement("style");
-          style.id = inlineId;
-          document.head.appendChild(style);
-        }
-        style.textContent = cssText;
-      } catch (err) {
-        console.warn("Titania: \u52A0\u8F7D story-outline.css \u5931\u8D25", err);
-      }
-    });
+    link.href = normalizedPath;
     document.head.appendChild(link);
   }
+  if (document.getElementById(inlineId)) return;
+  let style = document.createElement("style");
+  style.id = inlineId;
+  document.head.appendChild(style);
+  (async () => {
+    for (const url of fallbackUrls) {
+      try {
+        const resp = await fetch(url, { cache: "no-store" });
+        if (!resp.ok) continue;
+        const cssText = await resp.text();
+        if (!cssText || !cssText.includes(".t-story-outline-window")) continue;
+        style.textContent = cssText;
+        return;
+      } catch {
+      }
+    }
+    console.warn("Titania: story-outline.css \u5185\u8054\u515C\u5E95\u52A0\u8F7D\u5931\u8D25");
+  })();
 }
 function escapeHtml3(text) {
   const div = document.createElement("div");
