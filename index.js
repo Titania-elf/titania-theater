@@ -8462,6 +8462,19 @@ body.titania-debug-mode #chat titania-memory::before {
     font-size: 11px;
 }
 
+.t-plan-source-radio {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #a9bfd3;
+    font-size: 12px;
+}
+
+.t-plan-source-radio input[type="radio"] {
+    accent-color: #75d8d8;
+}
+
 .t-plan-accordion-body {
     padding: 10px;
     max-height: min(62vh, 560px);
@@ -8593,6 +8606,43 @@ body.titania-debug-mode #chat titania-memory::before {
     display: flex;
     justify-content: flex-end;
     margin-top: 8px;
+}
+
+.t-opening-picker-list {
+    border: 1px solid rgba(120, 150, 170, 0.28);
+    border-radius: 10px;
+    background: rgba(12, 18, 24, 0.75);
+    max-height: min(62vh, 560px);
+    overflow: auto;
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+}
+
+.t-opening-picker-item {
+    border: 1px solid rgba(120, 150, 170, 0.28);
+    border-radius: 8px;
+    background: rgba(14, 21, 28, 0.86);
+    padding: 8px;
+    cursor: pointer;
+}
+
+.t-opening-picker-item.active {
+    border-color: rgba(129, 236, 236, 0.68);
+    box-shadow: 0 0 0 1px rgba(129, 236, 236, 0.2) inset;
+}
+
+.t-opening-picker-head {
+    color: #cfe4f6;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.t-opening-picker-text {
+    color: #a8bfd3;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .t-plan-item-block {
@@ -13090,6 +13140,150 @@ function getOpeningFromContext() {
   }
   return "";
 }
+function getOpeningSourceMode() {
+  const data = getExtData();
+  return data?.[OPENING_SOURCE_MODE_KEY] === "chat_selected" ? "chat_selected" : "auto_first";
+}
+function setOpeningSourceMode(mode) {
+  const data = getExtData();
+  data[OPENING_SOURCE_MODE_KEY] = mode === "chat_selected" ? "chat_selected" : "auto_first";
+  saveExtData();
+}
+function getOpeningSourceRef() {
+  const data = getExtData();
+  const raw = data?.[OPENING_SOURCE_REF_KEY];
+  if (!raw || typeof raw !== "object") return null;
+  const chatIndex = Number(raw.chatIndex);
+  if (Number.isNaN(chatIndex) || chatIndex < 0) return null;
+  return {
+    chatIndex,
+    preview: String(raw.preview || "")
+  };
+}
+function setOpeningSourceRef(ref) {
+  const data = getExtData();
+  if (!ref || Number.isNaN(Number(ref.chatIndex))) {
+    data[OPENING_SOURCE_REF_KEY] = null;
+  } else {
+    data[OPENING_SOURCE_REF_KEY] = {
+      chatIndex: Number(ref.chatIndex),
+      preview: String(ref.preview || "")
+    };
+  }
+  saveExtData();
+}
+function getChatHistoryEntries() {
+  try {
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
+    const stCtx = SillyTavern.getContext();
+    const chat = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
+    return chat.map((msg, idx) => {
+      const text = typeof msg?.mes === "string" ? msg.mes.trim() : "";
+      if (!text) return null;
+      if (msg?.is_system || msg?.is_hidden) return null;
+      return {
+        chatIndex: idx,
+        role: msg?.is_user ? "\u7528\u6237" : "\u89D2\u8272",
+        text
+      };
+    }).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+function getOpeningFromSelectedRef(sourceRef, entries) {
+  if (!sourceRef) return "";
+  const chatIndex = Number(sourceRef.chatIndex);
+  if (Number.isNaN(chatIndex)) return "";
+  const target = (entries || []).find((entry) => entry.chatIndex === chatIndex);
+  return target?.text || "";
+}
+function formatOpeningSourceLabel(mode, sourceRef, entries) {
+  if (mode !== "chat_selected") return "\u81EA\u52A8\uFF08\u89D2\u8272\u5361\u9996\u6761/\u5F00\u573A\u767D\uFF09";
+  const selected = getOpeningFromSelectedRef(sourceRef, entries);
+  if (!selected) return "\u672A\u9009\u62E9\u804A\u5929\u8BB0\u5F55";
+  return `${String(sourceRef?.preview || selected).slice(0, 48)}${selected.length > 48 ? "..." : ""}`;
+}
+function openOpeningSourcePickerDialog(initialChatIndex = -1) {
+  const entries = getChatHistoryEntries();
+  return new Promise((resolve) => {
+    $("#t-outline-opening-picker").remove();
+    const html = `
+        <div id="t-outline-opening-picker" class="t-dialog-overlay">
+            <div class="t-dialog-box" style="max-width: 760px; max-height: 86vh;">
+                <div class="t-dialog-header">
+                    <span><i class="fa-solid fa-comment-dots"></i> \u9009\u62E9\u5F00\u573A\u767D\u6765\u6E90</span>
+                    <div class="t-dialog-close" id="t-opening-picker-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+                <div class="t-dialog-body" style="padding: 12px;">
+                    <div id="t-opening-picker-list" class="t-opening-picker-list"></div>
+                </div>
+                <div class="t-dialog-footer">
+                    <button id="t-opening-picker-cancel" class="t-btn">\u53D6\u6D88</button>
+                    <button id="t-opening-picker-confirm" class="t-btn t-btn-primary" disabled>\u786E\u8BA4\u4F7F\u7528</button>
+                </div>
+            </div>
+        </div>`;
+    $("body").append(html);
+    const $dialog = $("#t-outline-opening-picker");
+    const $list = $("#t-opening-picker-list");
+    const $confirm = $("#t-opening-picker-confirm");
+    let selectedIndex = Number(initialChatIndex);
+    if (!Array.isArray(entries) || entries.length === 0) {
+      $list.html('<div class="t-plan-empty">\u5F53\u524D\u804A\u5929\u5386\u53F2\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u9009\u62E9\u6765\u6E90</div>');
+    } else {
+      const rows = entries.map((entry) => {
+        const selected = entry.chatIndex === selectedIndex;
+        return `
+                    <div class="t-opening-picker-item ${selected ? "active" : ""}" data-chat-index="${entry.chatIndex}">
+                        <div class="t-opening-picker-head">#${entry.chatIndex + 1} \xB7 ${entry.role}</div>
+                        <div class="t-opening-picker-text">${escapeHtml3(entry.text)}</div>
+                    </div>
+                `;
+      }).join("");
+      $list.html(rows);
+      $confirm.prop("disabled", Number.isNaN(selectedIndex) || selectedIndex < 0);
+    }
+    const close = (result = null) => {
+      $dialog.remove();
+      resolve(result);
+    };
+    $dialog.on("click", "#t-opening-picker-close, #t-opening-picker-cancel", () => close(null));
+    $dialog.on("click", ".t-opening-picker-item", function() {
+      selectedIndex = Number($(this).data("chat-index"));
+      $dialog.find(".t-opening-picker-item").removeClass("active");
+      $(this).addClass("active");
+      $confirm.prop("disabled", Number.isNaN(selectedIndex) || selectedIndex < 0);
+    });
+    $dialog.on("click", "#t-opening-picker-confirm", () => {
+      if (Number.isNaN(selectedIndex) || selectedIndex < 0) return;
+      const picked = entries.find((entry) => entry.chatIndex === selectedIndex);
+      if (!picked) return;
+      close({
+        chatIndex: picked.chatIndex,
+        preview: picked.text.slice(0, 60)
+      });
+    });
+  });
+}
+async function ensureOpeningTextForGeneration() {
+  const mode = getOpeningSourceMode();
+  if (mode !== "chat_selected") {
+    return getOpeningFromContext();
+  }
+  const entries = getChatHistoryEntries();
+  let sourceRef = getOpeningSourceRef();
+  let openingText = getOpeningFromSelectedRef(sourceRef, entries);
+  if (openingText) return openingText;
+  const picked = await openOpeningSourcePickerDialog(sourceRef?.chatIndex ?? -1);
+  if (!picked) {
+    throw new Error("\u672A\u9009\u62E9\u5F00\u573A\u767D\u6765\u6E90\uFF0C\u5DF2\u53D6\u6D88\u751F\u6210");
+  }
+  setOpeningSourceRef(picked);
+  sourceRef = picked;
+  openingText = getOpeningFromSelectedRef(sourceRef, entries);
+  return openingText || "";
+}
 function getDefaultPromptTemplates() {
   return {
     outline: {
@@ -13242,7 +13436,10 @@ async function openPromptTemplateManager() {
   const defaults = getDefaultPromptTemplates();
   const working = JSON.parse(JSON.stringify(getPromptTemplates()));
   const currentStoryInput = String($("#t-outline-story-input").val() || "").trim();
-  const opening = getOpeningFromContext();
+  const entries = getChatHistoryEntries();
+  let openingMode = getOpeningSourceMode();
+  let openingSourceRef = getOpeningSourceRef();
+  let opening = openingMode === "chat_selected" ? getOpeningFromSelectedRef(openingSourceRef, entries) || getOpeningFromContext() : getOpeningFromContext();
   let ctx = { persona: "(\u7A7A)", userDesc: "(\u7A7A)" };
   try {
     ctx = await getContextData();
@@ -13255,7 +13452,6 @@ async function openPromptTemplateManager() {
     plot: item.plot || "",
     foreshadowing: item.foreshadowing || ""
   }));
-  const vars = buildPromptTemplateVars(ctx, currentStoryInput, opening, outlinePayload);
   const html = `
     <div id="t-outline-prompt-manager" class="t-dialog-overlay">
         <div class="t-dialog-box" style="max-width: 980px; max-height: 88vh;">
@@ -13274,6 +13470,18 @@ async function openPromptTemplateManager() {
                     </label>
                     <button id="t-prompt-reset-current" class="t-btn t-btn-xs"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u5F53\u524D\u9ED8\u8BA4</button>
                     <button id="t-prompt-save" class="t-btn t-btn-primary t-btn-xs"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58\u6A21\u677F</button>
+                </div>
+
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <label class="t-outline-mode" style="margin:0;">
+                        \u5F00\u573A\u767D\u6765\u6E90
+                        <select id="t-opening-source-mode" class="t-outline-select">
+                            <option value="auto_first">\u81EA\u52A8\uFF08\u89D2\u8272\u5361\u9996\u6761/\u5F00\u573A\u767D\uFF09</option>
+                            <option value="chat_selected">\u804A\u5929\u8BB0\u5F55\u6307\u5B9A\u6761\u76EE</option>
+                        </select>
+                    </label>
+                    <button id="t-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
+                    <span id="t-opening-source-label" class="t-plan-tip"></span>
                 </div>
 
                 <div class="t-plan-tip">\u53EF\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{openingText}} {{storyInput}} {{outlineItemsJson}}</div>
@@ -13305,6 +13513,11 @@ async function openPromptTemplateManager() {
     </div>`;
   $("body").append(html);
   const close = () => $("#t-outline-prompt-manager").remove();
+  const refreshOpeningLabel = () => {
+    const label = formatOpeningSourceLabel(openingMode, openingSourceRef, entries);
+    $("#t-opening-source-label").text(`\u5F53\u524D\uFF1A${label}`);
+    $("#t-opening-source-pick").prop("disabled", openingMode !== "chat_selected");
+  };
   const syncToEditor = () => {
     const type = String($("#t-prompt-target").val() || "outline");
     const section = getPromptTemplateSection(working, type);
@@ -13322,15 +13535,19 @@ async function openPromptTemplateManager() {
     syncFromEditor();
     const type = String($("#t-prompt-target").val() || "outline");
     const section = getPromptTemplateSection(working, type);
-    const renderedSys = renderPromptTemplate(section.system, vars);
-    const renderedUser = renderPromptTemplate(section.user, vars);
+    opening = openingMode === "chat_selected" ? getOpeningFromSelectedRef(openingSourceRef, entries) || getOpeningFromContext() : getOpeningFromContext();
+    const varsLocal = buildPromptTemplateVars(ctx, currentStoryInput, opening, outlinePayload);
+    const renderedSys = renderPromptTemplate(section.system, varsLocal);
+    const renderedUser = renderPromptTemplate(section.user, varsLocal);
     $("#t-prompt-preview-system").text(renderedSys);
     $("#t-prompt-preview-user").text(renderedUser);
     const unknown = [...getUnknownPromptVars(section.system), ...getUnknownPromptVars(section.user)];
     const unique = Array.from(new Set(unknown));
     $("#t-prompt-var-warning").text(unique.length > 0 ? `\u672A\u77E5\u53D8\u91CF\uFF1A${unique.join(", ")}` : "");
   };
+  $("#t-opening-source-mode").val(openingMode);
   syncToEditor();
+  refreshOpeningLabel();
   preview();
   $("#t-prompt-target").on("change", () => {
     syncToEditor();
@@ -13340,6 +13557,25 @@ async function openPromptTemplateManager() {
     syncFromEditor();
   });
   $("#t-prompt-preview").on("click", preview);
+  $("#t-opening-source-mode").on("change", function() {
+    openingMode = String($(this).val() || "auto_first") === "chat_selected" ? "chat_selected" : "auto_first";
+    if (openingMode !== "chat_selected") {
+      setOpeningSourceMode("auto_first");
+    } else {
+      setOpeningSourceMode("chat_selected");
+    }
+    refreshOpeningLabel();
+    preview();
+  });
+  $("#t-opening-source-pick").on("click", async () => {
+    const picked = await openOpeningSourcePickerDialog(openingSourceRef?.chatIndex ?? -1);
+    if (!picked) return;
+    openingSourceRef = picked;
+    setOpeningSourceRef(picked);
+    if (window.toastr) toastr.success("\u5DF2\u8BBE\u7F6E\u5F00\u573A\u767D\u6765\u6E90", "\u63D0\u793A\u8BCD\u7BA1\u7406");
+    refreshOpeningLabel();
+    preview();
+  });
   $("#t-prompt-reset-current").on("click", () => {
     const type = String($("#t-prompt-target").val() || "outline");
     working[type] = JSON.parse(JSON.stringify(defaults[type]));
@@ -13350,6 +13586,8 @@ async function openPromptTemplateManager() {
   $("#t-prompt-save").on("click", () => {
     syncFromEditor();
     savePromptTemplates(working);
+    setOpeningSourceMode(openingMode);
+    setOpeningSourceRef(openingSourceRef);
     if (window.toastr) toastr.success("\u63D0\u793A\u8BCD\u6A21\u677F\u5DF2\u4FDD\u5B58", "\u63D0\u793A\u8BCD\u7BA1\u7406");
   });
   $("#t-prompt-manager-close, #t-prompt-manager-close-btn").on("click", close);
@@ -13423,6 +13661,15 @@ function getPlans() {
 function getActivePlanId() {
   const data = getExtData();
   return typeof data[ACTIVE_PLAN_KEY] === "string" ? data[ACTIVE_PLAN_KEY] : "";
+}
+function getSceneSourcePlanId() {
+  const data = getExtData();
+  return typeof data[SCENE_SOURCE_PLAN_KEY] === "string" ? data[SCENE_SOURCE_PLAN_KEY] : "";
+}
+function setSceneSourcePlanId(planId) {
+  const data = getExtData();
+  data[SCENE_SOURCE_PLAN_KEY] = planId || "";
+  saveExtData();
 }
 function setActivePlanId(planId) {
   const data = getExtData();
@@ -13517,6 +13764,9 @@ function createNewPlan(nameInput = "", defaultName = "") {
   plans.unshift(plan);
   activePlanId = plan.id;
   setActivePlanId(plan.id);
+  if (!getSceneSourcePlanId()) {
+    setSceneSourcePlanId(plan.id);
+  }
   saveExtData();
   setEditingPlan(plan);
   return plan;
@@ -13634,8 +13884,11 @@ function movePlanItemCursor(planId, delta, totalItems) {
 }
 function collectAllPlanScenes() {
   const plans = getPlans();
+  const sourcePlanId = getSceneSourcePlanId();
+  const sourcePlan = plans.find((p) => p.id === sourcePlanId) || null;
   const rows = [];
-  plans.forEach((plan) => {
+  if (!sourcePlan) return rows;
+  [sourcePlan].forEach((plan) => {
     const items = normalizeItems(plan?.items || []);
     items.forEach((item, itemIndex) => {
       const scenes = Array.isArray(item.scenes) ? item.scenes : [];
@@ -13669,7 +13922,12 @@ function renderSceneHubWindow() {
   if ($list.length === 0 || $sendBtn.length === 0) return;
   if (rows.length === 0) {
     sceneHubSelectedKey = "";
-    $list.html('<div class="t-plan-empty">\u6682\u65E0\u53EF\u7528\u7EC6\u7EB2\u573A\u666F\uFF0C\u8BF7\u5148\u4FDD\u5B58\u5E76\u751F\u6210\u7EC6\u7EB2</div>');
+    const sourcePlanId = getSceneSourcePlanId();
+    if (!sourcePlanId) {
+      $list.html('<div class="t-plan-empty">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u4E00\u4E2A\u7528\u4E8E\u7EC6\u7EB2\u60C5\u8282\u7684\u65B9\u6848</div>');
+    } else {
+      $list.html('<div class="t-plan-empty">\u5F53\u524D\u9009\u4E2D\u65B9\u6848\u6682\u65E0\u53EF\u7528\u7EC6\u7EB2\u573A\u666F\uFF0C\u8BF7\u5148\u751F\u6210\u7EC6\u7EB2</div>');
+    }
     $sendBtn.prop("disabled", true);
     return;
   }
@@ -13849,11 +14107,17 @@ function showPlanDetailDialog(planId) {
 function renderPlanHub() {
   const plans = getPlans();
   if (!activePlanId) activePlanId = getActivePlanId();
+  let sceneSourcePlanId = getSceneSourcePlanId();
   const $list = $("#t-outline-plan-list");
   if ($list.length === 0) return;
   if (plans.length === 0) {
+    if (sceneSourcePlanId) setSceneSourcePlanId("");
     $list.html('<div class="t-plan-empty">\u6682\u65E0\u65B9\u6848\uFF0C\u5148\u751F\u6210\u5E76\u4FDD\u5B58</div>');
     return;
+  }
+  if (!sceneSourcePlanId || !plans.some((p) => p.id === sceneSourcePlanId)) {
+    sceneSourcePlanId = plans[0]?.id || "";
+    setSceneSourcePlanId(sceneSourcePlanId);
   }
   if (activePlanId && !plans.some((p) => p.id === activePlanId)) {
     activePlanId = plans[0]?.id || "";
@@ -13870,6 +14134,10 @@ function renderPlanHub() {
                     <div class="t-plan-accordion-main">
                         <button class="t-plan-name-btn" data-action="open-plan-detail" data-plan-id="${plan.id}">${escapeHtml3(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</button>
                         <div class="t-plan-meta">${timeText} \xB7 ${items.length} \u6761</div>
+                        <label class="t-plan-source-radio">
+                            <input type="radio" name="t-scene-source-plan" data-action="set-scene-source-plan" data-plan-id="${plan.id}" ${sceneSourcePlanId === plan.id ? "checked" : ""}>
+                            <span>\u52FE\u9009\u4F7F\u7528\uFF08\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\uFF09</span>
+                        </label>
                         <div class="t-plan-tip">\u5355\u51FB\u65B9\u6848\u540D\u8FDB\u5165\u8BE6\u60C5\u9875</div>
                     </div>
                     <div class="t-plan-accordion-actions">
@@ -14379,7 +14647,7 @@ async function generateAllScenes() {
   });
   try {
     const ctx = await getContextData();
-    const opening = getOpeningFromContext();
+    const opening = await ensureOpeningTextForGeneration();
     const storyInput = ($("#t-outline-story-input").val() || "").trim();
     const useStream = isStreamingEnabled();
     if (useStream) {
@@ -14430,7 +14698,7 @@ async function generateOutline() {
   $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u751F\u6210\u4E2D...');
   try {
     const ctx = await getContextData();
-    const opening = getOpeningFromContext();
+    const opening = await ensureOpeningTextForGeneration();
     const useStream = isStreamingEnabled();
     if (useStream) {
       lastRawResponse = "";
@@ -14500,6 +14768,9 @@ function bindEvents() {
     if (!window.confirm(`\u786E\u8BA4\u5220\u9664\u65B9\u6848\u300C${planName}\u300D\uFF1F`)) return;
     plans.splice(index, 1);
     delete planItemCursorMap[planId];
+    if (getSceneSourcePlanId() === planId) {
+      setSceneSourcePlanId("");
+    }
     if (activePlanId === planId) {
       activePlanId = plans[0]?.id || "";
     }
@@ -14519,6 +14790,13 @@ function bindEvents() {
     loadPlanToEditor(plan);
     showOutlineView("editor");
     setEditorSubView("outline");
+  });
+  $overlay.on("change", "[data-action='set-scene-source-plan']", function() {
+    const planId = String($(this).data("plan-id") || "").trim();
+    if (!planId) return;
+    setSceneSourcePlanId(planId);
+    renderPlanHub();
+    if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "[data-action='view-plan-instruction']", function(e) {
     e.stopPropagation();
@@ -14937,7 +15215,7 @@ function openStoryOutlineWindow() {
   renderPlanHub();
   showOutlineView(getPlans().length > 0 ? "hub" : "editor");
 }
-var outlineItems, lastRawResponse, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, PROMPT_TEMPLATES_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey;
+var outlineItems, lastRawResponse, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -14956,7 +15234,10 @@ var init_storyOutlineWindow = __esm({
     DRAFT_KEY = "story_outline_draft";
     PLANS_KEY = "story_outline_plans";
     ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
+    SCENE_SOURCE_PLAN_KEY = "story_outline_scene_source_plan_id";
     PROMPT_TEMPLATES_KEY = "story_outline_prompt_templates";
+    OPENING_SOURCE_MODE_KEY = "story_outline_opening_source_mode";
+    OPENING_SOURCE_REF_KEY = "story_outline_opening_source_ref";
     currentView = "hub";
     activePlanId = "";
     editingPlanId = "";
@@ -15027,22 +15308,28 @@ function getSavedPlanCount() {
   const plans = data?.[SCENE_PLANS_KEY];
   return Array.isArray(plans) ? plans.length : 0;
 }
+function hasSceneSourcePlan() {
+  const data = getExtData();
+  return typeof data?.[SCENE_SOURCE_PLAN_KEY2] === "string" && data[SCENE_SOURCE_PLAN_KEY2].trim().length > 0;
+}
 async function openMenu($btn) {
   ensureMenuStyle();
   closeMenu();
   const hasPlans = getSavedPlanCount() > 0;
+  const hasSource = hasSceneSourcePlan();
+  const canOpenScenes = hasPlans && hasSource;
   const menuHtml = `
     <div id="${MENU_ID}" role="menu" aria-label="\u6545\u4E8B\u5927\u7EB2\u5165\u53E3">
         <button class="t-outline-entry-item" id="t-outline-entry-open-outline" role="menuitem">
             <i class="fa-solid fa-list-check"></i> \u6545\u4E8B\u5927\u7EB2
         </button>
-        <button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${hasPlans ? "" : "disabled"}>
+        <button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${canOpenScenes ? "" : "disabled"}>
             <i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2\u60C5\u8282
         </button>
         <button class="t-outline-entry-item" id="t-outline-entry-open-prompts" role="menuitem">
-            <i class="fa-solid fa-sliders"></i> \u63D0\u793A\u8BCD\u7BA1\u7406
+            <i class="fa-solid fa-sliders"></i> \u8BBE\u7F6E
         </button>
-        ${hasPlans ? "" : '<div class="t-outline-entry-tip">\u8BF7\u5148\u4FDD\u5B58\u81F3\u5C11\u4E00\u4E2A\u65B9\u6848</div>'}
+        ${hasPlans ? hasSource ? "" : '<div class="t-outline-entry-tip">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\u65B9\u6848</div>' : '<div class="t-outline-entry-tip">\u8BF7\u5148\u4FDD\u5B58\u81F3\u5C11\u4E00\u4E2A\u65B9\u6848</div>'}
     </div>`;
   $("body").append(menuHtml);
   const $menu = $(`#${MENU_ID}`);
@@ -15064,7 +15351,7 @@ async function openMenu($btn) {
   $("#t-outline-entry-open-scenes").on("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!hasPlans) return;
+    if (!canOpenScenes) return;
     closeMenu();
     const { openSceneHubWindow: openSceneHubWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
     openSceneHubWindow2();
@@ -15134,7 +15421,7 @@ function initOutlineEntryButton() {
 function refreshOutlineEntryButton() {
   syncEntryButton();
 }
-var BTN_ID, ANCHOR_SELECTOR, MENU_ID, MENU_STYLE_ID, SCENE_PLANS_KEY, observerBound;
+var BTN_ID, ANCHOR_SELECTOR, MENU_ID, MENU_STYLE_ID, SCENE_PLANS_KEY, SCENE_SOURCE_PLAN_KEY2, observerBound;
 var init_outlineEntryButton = __esm({
   "src/ui/outlineEntryButton.js"() {
     init_storage();
@@ -15143,6 +15430,7 @@ var init_outlineEntryButton = __esm({
     MENU_ID = "titania-outline-entry-menu";
     MENU_STYLE_ID = "titania-outline-entry-menu-style";
     SCENE_PLANS_KEY = "story_outline_plans";
+    SCENE_SOURCE_PLAN_KEY2 = "story_outline_scene_source_plan_id";
     observerBound = false;
   }
 });
