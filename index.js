@@ -8311,6 +8311,11 @@ body.titania-debug-mode #chat titania-memory::before {
     gap: 10px;
 }
 
+.t-outline-hub-view {
+    flex: 1;
+    overflow: hidden;
+}
+
 .t-editor-tabs {
     display: flex;
     gap: 8px;
@@ -8381,8 +8386,11 @@ body.titania-debug-mode #chat titania-memory::before {
     border: 1px solid rgba(120, 150, 170, 0.25);
     border-radius: 10px;
     background: rgba(12, 16, 20, 0.7);
-    overflow: auto;
-    max-height: min(70vh, 660px);
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: none;
     padding: 8px;
     display: flex;
     flex-direction: column;
@@ -8394,6 +8402,7 @@ body.titania-debug-mode #chat titania-memory::before {
     border-radius: 10px;
     background: rgba(12, 16, 20, 0.84);
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .t-plan-accordion-item.expanded {
@@ -8433,6 +8442,7 @@ body.titania-debug-mode #chat titania-memory::before {
     display: flex;
     gap: 6px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .t-plan-name {
@@ -9061,11 +9071,14 @@ body.titania-debug-mode #chat titania-memory::before {
 
     .t-plan-accordion-actions {
         width: 100%;
+        justify-content: flex-start;
     }
 
     .t-plan-accordion-actions .t-btn {
-        flex: 1;
-        min-height: 38px;
+        flex: 0 0 auto;
+        min-height: 34px;
+        padding: 0 10px;
+        font-size: 12px;
     }
 
     .t-plan-item-carousel {
@@ -9112,7 +9125,7 @@ body.titania-debug-mode #chat titania-memory::before {
     }
 
     #t-story-outline-overlay.t-outline-mobile-hub-compact .t-outline-plan-list {
-        max-height: min(72vh, 640px);
+        max-height: none;
     }
 
     .t-outline-actions {
