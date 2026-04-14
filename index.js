@@ -173,6 +173,18 @@ var init_defaults = __esm({
       outline_entry: {
         enabled: false
       },
+      // 文本改写入口按钮（注入到 #qr--bar）
+      rewrite_entry: {
+        enabled: false,
+        api_url: "",
+        api_key: "",
+        model: "",
+        rules_text: "",
+        split_mode: "sentence",
+        rules: [],
+        stream_live: true,
+        auto_trigger: false
+      },
       // 剧场模型覆盖配置（仅影响场景生成，不影响设定提取等其他功能）
       theater_model_override: null,
       // null 表示使用当前方案的默认模型，设置后覆盖
@@ -8264,6 +8276,31 @@ body.titania-debug-mode #chat titania-memory::before {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: linear-gradient(180deg, rgba(12, 18, 24, 0.96), rgba(9, 14, 20, 0.96));
+}
+
+.t-dialog-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 20040;
+}
+
+.t-dialog-box {
+    width: min(920px, 96vw);
+    margin: 0 auto;
+    max-height: min(82dvh, 82vh);
 }
 
 .t-outline-body {
@@ -8294,13 +8331,36 @@ body.titania-debug-mode #chat titania-memory::before {
     gap: 8px;
 }
 
+.t-plan-name-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(131, 170, 196, 0.32);
+    background: linear-gradient(180deg, rgba(14, 22, 30, 0.92), rgba(10, 16, 22, 0.92));
+}
+
 .t-outline-plan-name {
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(10, 14, 18, 0.75);
-    color: #f0f2f4;
-    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(168, 201, 224, 0.32);
+    background: rgba(8, 14, 20, 0.82);
+    color: #f1f6fb;
+    padding: 7px 12px;
     min-width: 210px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.t-outline-plan-name.is-readonly {
+    border-color: transparent;
+    background: rgba(13, 20, 28, 0.75);
+    color: #dbe9f6;
+}
+
+.t-outline-plan-name:not(.is-readonly):focus {
+    outline: none;
+    border-color: rgba(129, 236, 236, 0.75);
+    box-shadow: 0 0 0 2px rgba(129, 236, 236, 0.2);
 }
 
 .t-outline-editor-view,
@@ -8397,11 +8457,41 @@ body.titania-debug-mode #chat titania-memory::before {
     gap: 8px;
 }
 
+.t-hub-toolbar {
+    border: 1px solid rgba(120, 150, 170, 0.25);
+    border-radius: 10px;
+    background: rgba(12, 16, 20, 0.7);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.t-hub-primary-action {
+    background: linear-gradient(135deg, rgba(52, 148, 172, 0.95), rgba(84, 192, 172, 0.95));
+    border: 1px solid rgba(133, 238, 220, 0.8);
+    color: #f4ffff;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(52, 148, 172, 0.35);
+}
+
+.t-hub-primary-action:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow: 0 6px 16px rgba(52, 148, 172, 0.45);
+}
+
+.t-hub-primary-action:disabled {
+    opacity: 0.55;
+    box-shadow: none;
+}
+
 .t-plan-accordion-item {
     border: 1px solid rgba(120, 150, 170, 0.28);
     border-radius: 10px;
     background: rgba(12, 16, 20, 0.84);
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .t-plan-accordion-item.expanded {
@@ -8417,6 +8507,7 @@ body.titania-debug-mode #chat titania-memory::before {
     padding: 10px;
     background: rgba(16, 24, 32, 0.92);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
 }
 
 .t-plan-accordion-main {
@@ -8441,14 +8532,7 @@ body.titania-debug-mode #chat titania-memory::before {
     display: flex;
     gap: 6px;
     align-items: center;
-}
-
-.t-plan-action-btn {
-    min-width: 0;
-}
-
-.t-plan-action-label {
-    display: inline;
+    flex-wrap: wrap;
 }
 
 .t-plan-name {
@@ -8466,6 +8550,38 @@ body.titania-debug-mode #chat titania-memory::before {
     margin-top: 3px;
     color: #7f96aa;
     font-size: 11px;
+}
+
+.t-plan-source-radio {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #a9bfd3;
+    font-size: 12px;
+}
+
+.t-plan-source-radio input[type="radio"] {
+    accent-color: #75d8d8;
+}
+
+.t-plan-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 8px 10px 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(10, 16, 22, 0.55);
+}
+
+.t-plan-source-note {
+    color: #8ea7bc;
+    font-size: 11px;
+}
+
+.t-plan-card-actions .t-plan-delete-btn {
+    margin-left: auto;
 }
 
 .t-plan-accordion-body {
@@ -8601,6 +8717,99 @@ body.titania-debug-mode #chat titania-memory::before {
     margin-top: 8px;
 }
 
+.t-opening-picker-list {
+    border: 1px solid rgba(120, 150, 170, 0.28);
+    border-radius: 10px;
+    background: rgba(12, 18, 24, 0.75);
+    max-height: min(62vh, 560px);
+    overflow: auto;
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+}
+
+.t-opening-picker-item {
+    border: 1px solid rgba(120, 150, 170, 0.28);
+    border-radius: 8px;
+    background: rgba(14, 21, 28, 0.86);
+    padding: 8px;
+    cursor: pointer;
+}
+
+.t-opening-picker-item.active {
+    border-color: rgba(129, 236, 236, 0.68);
+    box-shadow: 0 0 0 1px rgba(129, 236, 236, 0.2) inset;
+}
+
+.t-opening-picker-head {
+    color: #cfe4f6;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.t-opening-picker-text {
+    color: #a8bfd3;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.t-opening-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.t-opening-card {
+    border: 1px solid rgba(120, 150, 170, 0.3);
+    border-radius: 10px;
+    background: rgba(14, 21, 28, 0.9);
+    padding: 10px;
+    cursor: pointer;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.t-opening-card:hover {
+    border-color: rgba(129, 236, 236, 0.5);
+    transform: translateY(-1px);
+}
+
+.t-opening-card.active {
+    border-color: rgba(129, 236, 236, 0.75);
+    box-shadow: 0 0 0 1px rgba(129, 236, 236, 0.2) inset;
+}
+
+.t-opening-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.t-opening-card-title {
+    color: #d5e9f9;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.t-opening-card-detail {
+    flex-shrink: 0;
+}
+
+.t-opening-card-text {
+    color: #acc2d6;
+    font-size: 12px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .t-plan-item-block {
     border: 1px solid rgba(120, 150, 170, 0.25);
     border-radius: 8px;
@@ -8690,6 +8899,78 @@ body.titania-debug-mode #chat titania-memory::before {
     align-items: center;
 }
 
+.t-outline-primary-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 176px));
+    gap: 8px;
+    align-items: center;
+    justify-content: start;
+}
+
+.t-outline-primary-actions #t-outline-generate {
+    min-height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(114, 228, 209, 0.75);
+    background: linear-gradient(135deg, rgba(48, 166, 173, 0.96), rgba(74, 206, 172, 0.96));
+    box-shadow: 0 8px 18px rgba(44, 150, 152, 0.32);
+    font-weight: 700;
+}
+
+.t-outline-primary-actions #t-outline-generate-all-scenes {
+    min-height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(154, 192, 216, 0.42);
+    background: linear-gradient(180deg, rgba(30, 45, 58, 0.92), rgba(23, 36, 49, 0.92));
+    color: #d9e8f7;
+}
+
+.t-outline-primary-actions #t-outline-generate:hover:not(:disabled),
+.t-outline-primary-actions #t-outline-generate-all-scenes:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+.t-outline-primary-actions #t-outline-generate:disabled,
+.t-outline-primary-actions #t-outline-generate-all-scenes:disabled {
+    opacity: 0.58;
+    box-shadow: none;
+}
+
+#t-outline-mobile-tools-toggle {
+    display: none;
+}
+
+.t-outline-secondary-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.t-outline-source-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#t-outline-view-raw {
+    min-height: 32px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(150, 185, 210, 0.4);
+    background: rgba(24, 36, 48, 0.88);
+    color: #cfe0f1;
+    width: auto;
+}
+
+#t-outline-view-raw:hover:not(:disabled) {
+    border-color: rgba(129, 236, 236, 0.55);
+    background: rgba(26, 44, 60, 0.92);
+}
+
 .t-outline-mode {
     margin-left: auto;
     color: #c8d7e6;
@@ -8697,6 +8978,26 @@ body.titania-debug-mode #chat titania-memory::before {
     align-items: center;
     gap: 8px;
     font-size: 13px;
+}
+
+.t-outline-mode-hint {
+    color: #8ea7bc;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.t-outline-mode-source {
+    margin-left: 0;
+    align-items: center;
+    flex-direction: row;
+    gap: 6px;
+}
+
+.t-outline-mode-source .t-outline-select {
+    min-height: 30px;
+    padding: 4px 8px;
+    font-size: 12px;
+    width: auto;
 }
 
 .t-outline-select {
@@ -8902,6 +9203,73 @@ body.titania-debug-mode #chat titania-memory::before {
     font-size: 12px;
 }
 
+.t-outline-raw-editor {
+    width: 100%;
+    min-height: 320px;
+    max-height: 56vh;
+    resize: vertical;
+    background: #0d141d;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #d6e2ef;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.t-outline-raw-hint {
+    margin-top: 8px;
+    color: #9bb0c4;
+    font-size: 12px;
+}
+
+.t-raw-wait-anim {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transform: translateY(1px);
+    transition: opacity 0.18s ease;
+}
+
+.t-raw-wait-anim span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #81ecec;
+    box-shadow: 0 0 0 0 rgba(129, 236, 236, 0.45);
+    animation: tRawPulse 1s ease-in-out infinite;
+}
+
+.t-raw-wait-anim span:nth-child(2) {
+    animation-delay: 0.16s;
+}
+
+.t-raw-wait-anim span:nth-child(3) {
+    animation-delay: 0.32s;
+}
+
+.t-raw-wait-anim.is-active {
+    opacity: 1;
+}
+
+@keyframes tRawPulse {
+    0%,
+    80%,
+    100% {
+        transform: translateY(0) scale(0.85);
+        box-shadow: 0 0 0 0 rgba(129, 236, 236, 0.0);
+    }
+
+    40% {
+        transform: translateY(-2px) scale(1);
+        box-shadow: 0 0 0 4px rgba(129, 236, 236, 0.12);
+    }
+}
+
 .t-outline-mobile-list {
     display: none;
 }
@@ -8992,6 +9360,24 @@ body.titania-debug-mode #chat titania-memory::before {
 }
 
 @media (max-width: 768px) {
+    .t-dialog-overlay {
+        align-items: center !important;
+        justify-content: center !important;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        min-height: 100dvh;
+        overflow: auto;
+    }
+
+    .t-dialog-box {
+        margin: auto;
+        max-height: min(82dvh, 82vh);
+    }
+
     #t-story-outline-overlay {
         align-items: flex-start;
         justify-content: center;
@@ -9017,7 +9403,7 @@ body.titania-debug-mode #chat titania-memory::before {
     }
 
     .t-outline-top {
-        padding: 10px;
+        padding: 8px;
         border-radius: 8px;
     }
 
@@ -9040,6 +9426,11 @@ body.titania-debug-mode #chat titania-memory::before {
         display: grid;
         grid-template-columns: 1fr;
         gap: 6px;
+    }
+
+    .t-plan-name-wrap {
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .t-outline-plan-name {
@@ -9075,31 +9466,8 @@ body.titania-debug-mode #chat titania-memory::before {
         align-items: stretch;
     }
 
-    .t-plan-accordion-actions {
-        width: 100%;
-        flex-wrap: nowrap;
-        justify-content: flex-end;
-    }
-
-    .t-plan-accordion-actions .t-plan-action-btn {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
+    .t-hub-toolbar .t-btn {
         min-height: 36px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 36px;
-    }
-
-    .t-plan-accordion-actions .t-plan-action-btn i {
-        margin: 0;
-        font-size: 14px;
-    }
-
-    .t-plan-accordion-actions .t-plan-action-label {
-        display: none;
     }
 
     .t-plan-item-carousel {
@@ -9112,7 +9480,7 @@ body.titania-debug-mode #chat titania-memory::before {
     }
 
     .t-outline-story-input {
-        min-height: 96px;
+        min-height: 76px;
         font-size: 16px;
         line-height: 1.4;
     }
@@ -9146,28 +9514,77 @@ body.titania-debug-mode #chat titania-memory::before {
     }
 
     #t-story-outline-overlay.t-outline-mobile-hub-compact .t-outline-plan-list {
-        max-height: min(72vh, 640px);
+        max-height: none;
     }
 
     .t-outline-actions {
+        margin-top: 6px;
         gap: 6px;
     }
 
-    .t-outline-actions > .t-btn {
-        flex: 1 1 calc(50% - 6px);
+    .t-outline-primary-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(120px, 152px));
+        gap: 6px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .t-outline-primary-actions #t-outline-generate,
+    .t-outline-primary-actions #t-outline-generate-all-scenes {
         min-height: 40px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    #t-outline-mobile-tools-toggle {
+        display: inline-flex;
+        width: fit-content;
+        min-height: 34px;
+        padding: 0 14px;
+        justify-content: center;
+        grid-column: 1 / -1;
+        justify-self: center;
+    }
+
+    .t-outline-secondary-controls {
+        display: none;
+        width: 100%;
+        padding-top: 6px;
+        border-top: 1px dashed rgba(255, 255, 255, 0.14);
+        gap: 6px;
+    }
+
+    .t-outline-top.mobile-tools-open .t-outline-secondary-controls {
+        display: flex;
+    }
+
+    .t-outline-top.mobile-tools-open .t-outline-story-input {
+        min-height: 96px;
     }
 
     .t-outline-mode {
         margin-left: 0;
         width: 100%;
         justify-content: space-between;
-        order: 3;
+        font-size: 12px;
+    }
+
+    #t-outline-opening-source-pick {
+        width: 100%;
+        min-height: 36px;
     }
 
     #t-outline-view-raw {
+        width: fit-content;
+        min-height: 30px;
+        padding: 3px 10px;
+        margin-left: auto;
+    }
+
+    #t-outline-opening-source-label {
         width: 100%;
-        min-height: 38px;
+        margin-top: 0;
     }
 
     .t-outline-select {
@@ -13071,42 +13488,150 @@ __export(storyOutlineWindow_exports, {
   openSceneHubWindow: () => openSceneHubWindow,
   openStoryOutlineWindow: () => openStoryOutlineWindow
 });
+function pushRawResponseHistory(content, typeLabel = "\u6A21\u578B\u54CD\u5E94") {
+  const text = String(content || "").trim();
+  if (!text) return;
+  const charName = getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272";
+  if (rawResponseHistory[0]?.content === text) {
+    lastRawResponse = text;
+    return;
+  }
+  rawResponseHistory.unshift({
+    id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    typeLabel,
+    charName,
+    createdAt: Date.now(),
+    content: text
+  });
+  if (rawResponseHistory.length > MAX_RAW_HISTORY) {
+    rawResponseHistory = rawResponseHistory.slice(0, MAX_RAW_HISTORY);
+  }
+  lastRawResponse = text;
+  persistRawResponseHistory();
+}
+function loadRawResponseHistory() {
+  const data = getExtData();
+  const list = Array.isArray(data?.[RAW_HISTORY_KEY]) ? data[RAW_HISTORY_KEY] : [];
+  return list.map((entry) => ({
+    id: String(entry?.id || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
+    typeLabel: String(entry?.typeLabel || "\u6A21\u578B\u54CD\u5E94"),
+    charName: String(entry?.charName || "\u672A\u547D\u540D\u89D2\u8272"),
+    createdAt: Number(entry?.createdAt) || Date.now(),
+    content: String(entry?.content || "")
+  })).filter((entry) => entry.content.trim()).slice(0, MAX_RAW_HISTORY);
+}
+function persistRawResponseHistory() {
+  const data = getExtData();
+  data[RAW_HISTORY_KEY] = Array.isArray(rawResponseHistory) ? rawResponseHistory.slice(0, MAX_RAW_HISTORY) : [];
+  saveExtData();
+}
+function formatRawHistoryTime(ts) {
+  const d = new Date(ts || Date.now());
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
+}
+function formatElapsedDuration(ms) {
+  const totalSec = Math.max(0, Math.floor((Number(ms) || 0) / 1e3));
+  const hour = Math.floor(totalSec / 3600);
+  const minute = Math.floor(totalSec % 3600 / 60);
+  const second = totalSec % 60;
+  if (hour > 0) {
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+  }
+  return `${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+}
+function sanitizeFileNamePart(name) {
+  const raw = String(name || "").trim();
+  const safe = raw.replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "_");
+  return safe || "\u672A\u547D\u540D\u89D2\u8272";
+}
+function formatFileTimestamp(ts = Date.now()) {
+  const d = new Date(ts);
+  const yyyy = d.getFullYear();
+  const MM = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${yyyy}${MM}${dd}_${hh}${mm}${ss}`;
+}
+function exportRawResponseHistory() {
+  const history = Array.isArray(rawResponseHistory) ? rawResponseHistory : [];
+  if (history.length === 0) {
+    if (window.toastr) toastr.warning("\u6682\u65E0\u53EF\u5BFC\u51FA\u7684\u751F\u6210\u5386\u53F2", "\u6545\u4E8B\u5927\u7EB2");
+    return;
+  }
+  const charName = sanitizeFileNamePart(history[0]?.charName || getCurrentCharCardName());
+  const timestamp = formatFileTimestamp();
+  const payload = {
+    version: "1.0",
+    exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    charName,
+    count: history.length,
+    items: history.map((entry) => ({
+      id: entry.id,
+      typeLabel: entry.typeLabel,
+      charName: entry.charName || charName,
+      createdAt: new Date(entry.createdAt || Date.now()).toISOString(),
+      content: entry.content || ""
+    }))
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `titania_outline_history_${charName}_${timestamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 0);
+  if (window.toastr) toastr.success(`\u5DF2\u5BFC\u51FA\u751F\u6210\u5386\u53F2\uFF1A${a.download}`, "\u6545\u4E8B\u5927\u7EB2");
+}
+function getCurrentElapsedMs() {
+  if (!responseTimerRunning) return responseElapsedMs;
+  return Math.max(0, Date.now() - responseTimerStartAt);
+}
+function updateResponseTimerUI() {
+  if ($("#t-outline-raw-elapsed").length === 0) return;
+  $("#t-outline-raw-elapsed").text(`\u8017\u65F6: ${formatElapsedDuration(getCurrentElapsedMs())}`);
+}
+function setRawWaitingAnimation(active) {
+  const $anim = $("#t-outline-raw-mood");
+  if ($anim.length === 0) return;
+  $anim.toggleClass("is-active", !!active);
+}
+function startResponseTimer(reset = true) {
+  if (reset) responseElapsedMs = 0;
+  responseTimerStartAt = Date.now() - (reset ? 0 : responseElapsedMs);
+  responseTimerRunning = true;
+  if (responseTimerId) clearInterval(responseTimerId);
+  responseTimerId = setInterval(updateResponseTimerUI, 250);
+  updateResponseTimerUI();
+  setRawWaitingAnimation(true);
+}
+function stopResponseTimer() {
+  if (responseTimerRunning) {
+    responseElapsedMs = getCurrentElapsedMs();
+  }
+  responseTimerRunning = false;
+  if (responseTimerId) {
+    clearInterval(responseTimerId);
+    responseTimerId = null;
+  }
+  updateResponseTimerUI();
+  setRawWaitingAnimation(false);
+}
 function ensureCssLoaded() {
   const id = "titania-css-story-outline";
-  const inlineId = "titania-css-story-outline-inline";
-  const normalizedPath = `/${extensionFolderPath}/css/story-outline.css`.replace(/\/+/g, "/");
-  const fallbackUrls = [
-    normalizedPath,
-    `${extensionFolderPath}/css/story-outline.css`,
-    new URL(normalizedPath, window.location.origin).href
-  ];
   if (!document.getElementById(id)) {
     const link = document.createElement("link");
     link.id = id;
     link.rel = "stylesheet";
     link.type = "text/css";
-    link.href = normalizedPath;
+    link.href = `${extensionFolderPath}/css/story-outline.css`;
     document.head.appendChild(link);
   }
-  if (document.getElementById(inlineId)) return;
-  let style = document.createElement("style");
-  style.id = inlineId;
-  style.textContent = INLINE_OUTLINE_FALLBACK_CSS;
-  document.head.appendChild(style);
-  (async () => {
-    for (const url of fallbackUrls) {
-      try {
-        const resp = await fetch(url, { cache: "no-store" });
-        if (!resp.ok) continue;
-        const cssText = await resp.text();
-        if (!cssText || !cssText.includes(".t-story-outline-window")) continue;
-        style.textContent = cssText;
-        return;
-      } catch {
-      }
-    }
-    console.warn("Titania: story-outline.css \u5185\u8054\u515C\u5E95\u52A0\u8F7D\u5931\u8D25");
-  })();
 }
 function escapeHtml3(text) {
   const div = document.createElement("div");
@@ -13136,6 +13661,336 @@ function getOpeningFromContext() {
     console.warn("Titania: \u83B7\u53D6\u5F00\u573A\u767D\u5931\u8D25", e);
   }
   return "";
+}
+function getOpeningSourceMode() {
+  const data = getExtData();
+  return data?.[OPENING_SOURCE_MODE_KEY] === "chat_selected" ? "chat_selected" : "auto_first";
+}
+function setOpeningSourceMode(mode) {
+  const data = getExtData();
+  data[OPENING_SOURCE_MODE_KEY] = mode === "chat_selected" ? "chat_selected" : "auto_first";
+  saveExtData();
+}
+function getOpeningSourceRef() {
+  const data = getExtData();
+  const raw = data?.[OPENING_SOURCE_REF_KEY];
+  if (!raw || typeof raw !== "object") return null;
+  if (raw.type === "card_opening") {
+    const openingIndex = Number(raw.openingIndex);
+    if (Number.isNaN(openingIndex) || openingIndex < 0) return null;
+    return {
+      type: "card_opening",
+      openingIndex,
+      preview: String(raw.preview || "")
+    };
+  }
+  if (raw.type === "chat" || typeof raw.chatIndex !== "undefined") {
+    const chatIndex = Number(raw.chatIndex);
+    if (Number.isNaN(chatIndex) || chatIndex < 0) return null;
+    return {
+      type: "chat",
+      chatIndex,
+      preview: String(raw.preview || "")
+    };
+  }
+  return null;
+}
+function setOpeningSourceRef(ref) {
+  const data = getExtData();
+  if (!ref || typeof ref !== "object") {
+    data[OPENING_SOURCE_REF_KEY] = null;
+  } else if (ref.type === "card_opening" && !Number.isNaN(Number(ref.openingIndex))) {
+    data[OPENING_SOURCE_REF_KEY] = {
+      type: "card_opening",
+      openingIndex: Number(ref.openingIndex),
+      preview: String(ref.preview || "")
+    };
+  } else if (!Number.isNaN(Number(ref.chatIndex))) {
+    data[OPENING_SOURCE_REF_KEY] = {
+      type: "chat",
+      chatIndex: Number(ref.chatIndex),
+      preview: String(ref.preview || "")
+    };
+  } else {
+    data[OPENING_SOURCE_REF_KEY] = null;
+  }
+  saveExtData();
+}
+function getCardOpeningEntries() {
+  try {
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
+    const stCtx = SillyTavern.getContext();
+    const charObj = stCtx?.characters?.[stCtx?.characterId] || null;
+    const data = charObj?.data || {};
+    const list = [];
+    const pushText = (text) => {
+      const value = String(text || "").trim();
+      if (!value) return;
+      if (list.includes(value)) return;
+      list.push(value);
+    };
+    pushText(data.first_mes);
+    pushText(data.first_message);
+    pushText(charObj?.first_mes);
+    pushText(charObj?.first_message);
+    const arrays = [
+      data.alternate_greetings,
+      data.alternateGreetings,
+      data.greetings,
+      charObj?.alternate_greetings,
+      charObj?.alternateGreetings,
+      charObj?.greetings
+    ];
+    arrays.forEach((arr) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((item) => {
+        if (typeof item === "string") {
+          pushText(item);
+          return;
+        }
+        if (item && typeof item === "object") {
+          pushText(item.mes);
+          pushText(item.message);
+          pushText(item.text);
+          pushText(item.content);
+        }
+      });
+    });
+    return list.map((text, idx) => ({
+      openingIndex: idx,
+      text
+    }));
+  } catch {
+    return [];
+  }
+}
+function getChatHistoryEntries() {
+  try {
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
+    const stCtx = SillyTavern.getContext();
+    const chat = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
+    return chat.map((msg, idx) => {
+      const text = typeof msg?.mes === "string" ? msg.mes.trim() : "";
+      if (!text) return null;
+      if (msg?.is_system || msg?.is_hidden) return null;
+      return {
+        chatIndex: idx,
+        role: msg?.is_user ? "\u7528\u6237" : "\u89D2\u8272",
+        text
+      };
+    }).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+function getOpeningFromSelectedRef(sourceRef, entries) {
+  if (!sourceRef) return "";
+  if (sourceRef.type !== "chat") return "";
+  const chatIndex = Number(sourceRef.chatIndex);
+  if (Number.isNaN(chatIndex)) return "";
+  const target = (entries || []).find((entry) => entry.chatIndex === chatIndex);
+  return target?.text || "";
+}
+function getOpeningFromCardRef(sourceRef, entries) {
+  if (!sourceRef || sourceRef.type !== "card_opening") return "";
+  const openingIndex = Number(sourceRef.openingIndex);
+  if (Number.isNaN(openingIndex)) return "";
+  const target = (entries || []).find((entry) => entry.openingIndex === openingIndex);
+  return target?.text || "";
+}
+function getOpeningTextForPreview(mode, sourceRef) {
+  if (mode === "chat_selected") {
+    const chatEntries = getChatHistoryEntries();
+    return getOpeningFromSelectedRef(sourceRef, chatEntries) || getOpeningFromContext();
+  }
+  const cardEntries = getCardOpeningEntries();
+  return getOpeningFromCardRef(sourceRef, cardEntries) || cardEntries[0]?.text || getOpeningFromContext();
+}
+function openOpeningSourcePickerDialog(initialChatIndex = -1) {
+  const entries = getChatHistoryEntries();
+  return new Promise((resolve) => {
+    $("#t-outline-opening-picker").remove();
+    const html = `
+        <div id="t-outline-opening-picker" class="t-dialog-overlay">
+            <div class="t-dialog-box" style="max-width: 760px; max-height: 86vh;">
+                <div class="t-dialog-header">
+                    <span><i class="fa-solid fa-comment-dots"></i> \u9009\u62E9\u804A\u5929\u8BB0\u5F55\u53C2\u8003\u6765\u6E90</span>
+                    <div class="t-dialog-close" id="t-opening-picker-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+                <div class="t-dialog-body" style="padding: 12px;">
+                    <div id="t-opening-picker-list" class="t-opening-picker-list"></div>
+                </div>
+                <div class="t-dialog-footer">
+                    <button id="t-opening-picker-cancel" class="t-btn">\u53D6\u6D88</button>
+                    <button id="t-opening-picker-confirm" class="t-btn t-btn-primary" disabled>\u786E\u8BA4\u4F7F\u7528</button>
+                </div>
+            </div>
+        </div>`;
+    $("body").append(html);
+    const $dialog = $("#t-outline-opening-picker");
+    const $list = $("#t-opening-picker-list");
+    const $confirm = $("#t-opening-picker-confirm");
+    let selectedIndex = Number(initialChatIndex);
+    if (!Array.isArray(entries) || entries.length === 0) {
+      $list.html('<div class="t-plan-empty">\u5F53\u524D\u804A\u5929\u5386\u53F2\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u9009\u62E9\u6765\u6E90</div>');
+    } else {
+      const rows = entries.map((entry) => {
+        const selected = entry.chatIndex === selectedIndex;
+        return `
+                    <div class="t-opening-picker-item ${selected ? "active" : ""}" data-chat-index="${entry.chatIndex}">
+                        <div class="t-opening-picker-head">#${entry.chatIndex + 1} \xB7 ${entry.role}</div>
+                        <div class="t-opening-picker-text">${escapeHtml3(entry.text)}</div>
+                    </div>
+                `;
+      }).join("");
+      $list.html(rows);
+      $confirm.prop("disabled", Number.isNaN(selectedIndex) || selectedIndex < 0);
+    }
+    const close = (result = null) => {
+      $dialog.remove();
+      resolve(result);
+    };
+    $dialog.on("click", "#t-opening-picker-close, #t-opening-picker-cancel", () => close(null));
+    $dialog.on("click", ".t-opening-picker-item", function() {
+      selectedIndex = Number($(this).data("chat-index"));
+      $dialog.find(".t-opening-picker-item").removeClass("active");
+      $(this).addClass("active");
+      $confirm.prop("disabled", Number.isNaN(selectedIndex) || selectedIndex < 0);
+    });
+    $dialog.on("click", "#t-opening-picker-confirm", () => {
+      if (Number.isNaN(selectedIndex) || selectedIndex < 0) return;
+      const picked = entries.find((entry) => entry.chatIndex === selectedIndex);
+      if (!picked) return;
+      close({
+        chatIndex: picked.chatIndex,
+        preview: picked.text.slice(0, 60)
+      });
+    });
+  });
+}
+function openCardOpeningPickerDialog(initialOpeningIndex = -1) {
+  const entries = getCardOpeningEntries();
+  return new Promise((resolve) => {
+    $("#t-outline-opening-picker").remove();
+    $("#t-opening-detail-dialog").remove();
+    const html = `
+        <div id="t-outline-opening-picker" class="t-dialog-overlay">
+            <div class="t-dialog-box" style="max-width: 760px; max-height: 86vh;">
+                <div class="t-dialog-header">
+                    <span><i class="fa-solid fa-book-open"></i> \u9009\u62E9\u53C2\u8003\u5F00\u573A\u767D</span>
+                    <div class="t-dialog-close" id="t-opening-picker-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+                <div class="t-dialog-body" style="padding: 12px;">
+                    <div id="t-opening-picker-list" class="t-opening-card-grid"></div>
+                </div>
+                <div class="t-dialog-footer">
+                    <button id="t-opening-picker-cancel" class="t-btn">\u53D6\u6D88</button>
+                    <button id="t-opening-picker-confirm" class="t-btn t-btn-primary" disabled>\u786E\u8BA4\u4F7F\u7528</button>
+                </div>
+            </div>
+        </div>`;
+    $("body").append(html);
+    const $dialog = $("#t-outline-opening-picker");
+    const $list = $("#t-opening-picker-list");
+    const $confirm = $("#t-opening-picker-confirm");
+    let selectedIndex = Number(initialOpeningIndex);
+    const openDetail = (entry) => {
+      if (!entry) return;
+      $("#t-opening-detail-dialog").remove();
+      const detailHtml = `
+            <div id="t-opening-detail-dialog" class="t-dialog-overlay">
+                <div class="t-dialog-box" style="max-width: 780px; max-height: 84vh;">
+                    <div class="t-dialog-header">
+                        <span><i class="fa-solid fa-file-lines"></i> \u5F00\u573A\u767D ${entry.openingIndex + 1} \u8BE6\u60C5</span>
+                        <div class="t-dialog-close" id="t-opening-detail-close"><i class="fa-solid fa-times"></i></div>
+                    </div>
+                    <div class="t-dialog-body" style="padding: 12px;">
+                        <pre class="t-outline-raw-pre">${escapeHtml3(entry.text || "")}</pre>
+                    </div>
+                    <div class="t-dialog-footer">
+                        <button id="t-opening-detail-close-btn" class="t-btn">\u5173\u95ED</button>
+                    </div>
+                </div>
+            </div>`;
+      $("body").append(detailHtml);
+      $("#t-opening-detail-close, #t-opening-detail-close-btn").on("click", () => {
+        $("#t-opening-detail-dialog").remove();
+      });
+    };
+    if (!Array.isArray(entries) || entries.length === 0) {
+      $list.html('<div class="t-plan-empty">\u5F53\u524D\u89D2\u8272\u5361\u6CA1\u6709\u53EF\u9009\u5F00\u573A\u767D</div>');
+    } else {
+      const rows = entries.map((entry) => {
+        const selected = entry.openingIndex === selectedIndex;
+        const brief = String(entry.text || "").replace(/\s+/g, " ").trim();
+        return `
+                    <div class="t-opening-card ${selected ? "active" : ""}" data-opening-index="${entry.openingIndex}">
+                        <div class="t-opening-card-head">
+                            <span class="t-opening-card-title">\u5F00\u573A\u767D ${entry.openingIndex + 1}</span>
+                            <button class="t-btn t-btn-xs t-opening-card-detail" data-action="opening-card-detail" data-opening-index="${entry.openingIndex}"><i class="fa-solid fa-eye"></i> \u67E5\u770B\u8BE6\u60C5</button>
+                        </div>
+                        <div class="t-opening-card-text">${escapeHtml3(brief)}</div>
+                    </div>
+                `;
+      }).join("");
+      $list.html(rows);
+      $confirm.prop("disabled", Number.isNaN(selectedIndex) || selectedIndex < 0);
+    }
+    const close = (result = null) => {
+      $dialog.remove();
+      $("#t-opening-detail-dialog").remove();
+      resolve(result);
+    };
+    $dialog.on("click", "#t-opening-picker-close, #t-opening-picker-cancel", () => close(null));
+    $dialog.on("click", ".t-opening-card", function() {
+      selectedIndex = Number($(this).data("opening-index"));
+      $dialog.find(".t-opening-card").removeClass("active");
+      $(this).addClass("active");
+      $confirm.prop("disabled", Number.isNaN(selectedIndex) || selectedIndex < 0);
+    });
+    $dialog.on("click", "[data-action='opening-card-detail']", function(e) {
+      e.stopPropagation();
+      const openingIndex = Number($(this).data("opening-index"));
+      const entry = entries.find((item) => item.openingIndex === openingIndex);
+      openDetail(entry || null);
+    });
+    $dialog.on("click", "#t-opening-picker-confirm", () => {
+      if (Number.isNaN(selectedIndex) || selectedIndex < 0) return;
+      const picked = entries.find((entry) => entry.openingIndex === selectedIndex);
+      if (!picked) return;
+      close({
+        type: "card_opening",
+        openingIndex: picked.openingIndex,
+        preview: picked.text.slice(0, 60)
+      });
+    });
+  });
+}
+async function ensureOpeningTextForGeneration() {
+  const mode = getOpeningSourceMode();
+  if (mode === "chat_selected") {
+    const entries = getChatHistoryEntries();
+    let sourceRef2 = getOpeningSourceRef();
+    let openingText2 = getOpeningFromSelectedRef(sourceRef2, entries);
+    if (openingText2) return openingText2;
+    const picked2 = await openOpeningSourcePickerDialog(sourceRef2?.chatIndex ?? -1);
+    if (!picked2) throw new Error("\u672A\u9009\u62E9\u53C2\u8003\u6765\u6E90\uFF0C\u5DF2\u53D6\u6D88\u751F\u6210");
+    setOpeningSourceRef({ type: "chat", ...picked2 });
+    sourceRef2 = getOpeningSourceRef();
+    openingText2 = getOpeningFromSelectedRef(sourceRef2, entries);
+    return openingText2 || "";
+  }
+  const cardEntries = getCardOpeningEntries();
+  if (cardEntries.length === 0) return getOpeningFromContext();
+  let sourceRef = getOpeningSourceRef();
+  let openingText = getOpeningFromCardRef(sourceRef, cardEntries);
+  if (openingText) return openingText;
+  const picked = await openCardOpeningPickerDialog(sourceRef?.openingIndex ?? 0);
+  if (!picked) throw new Error("\u672A\u9009\u62E9\u53C2\u8003\u6765\u6E90\uFF0C\u5DF2\u53D6\u6D88\u751F\u6210");
+  setOpeningSourceRef(picked);
+  sourceRef = getOpeningSourceRef();
+  openingText = getOpeningFromCardRef(sourceRef, cardEntries);
+  return openingText || cardEntries[0]?.text || getOpeningFromContext();
 }
 function getDefaultPromptTemplates() {
   return {
@@ -13178,21 +14033,16 @@ function getDefaultPromptTemplates() {
 \u8BF7\u8BBE\u8BA1\u6545\u4E8B\u5927\u7EB2\uFF0C\u5E76\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     },
     scenes: {
-      system: `\u4F60\u662F\u5267\u60C5\u5206\u955C\u7B56\u5212\u3002\u8BF7\u57FA\u4E8E\u8F93\u5165\u7684\u201C\u603B\u7EB2 items\u201D\u4E00\u6B21\u6027\u751F\u6210\u5168\u90E8\u6761\u76EE\u7684\u573A\u666F\u7EC6\u7EB2\u3002
+      system: `\u4F60\u662F\u5267\u60C5\u5206\u955C\u7B56\u5212\u3002\u57FA\u4E8E\u8F93\u5165\u201C\u603B\u7EB2 items\u201D\uFF0C\u4E3A\u6BCF\u4E2A\u6761\u76EE\u8865\u5168 scenes\u3002
 
 [\u786C\u6027\u8981\u6C42]
-1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002
-2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u4E3A\uFF1A
+1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
+2) \u53EA\u5141\u8BB8\u8FD4\u56DE\u4EE5\u4E0B\u7ED3\u6784\uFF1A
 {
-  "version": "1.1",
-  "story_summary": "\u4E00\u53E5\u8BDD\u6982\u62EC",
+  "version": "1.2",
   "items": [
     {
       "index": 1,
-      "time": "...",
-      "title": "...",
-      "plot": "...",
-      "foreshadowing": "...",
       "scenes": [
         {
           "scene_index": 1,
@@ -13201,20 +14051,21 @@ function getDefaultPromptTemplates() {
           "scene_goal": "\u672C\u573A\u76EE\u6807",
           "conflict": "\u51B2\u7A81",
           "key_beats": ["\u5173\u952E\u8282\u70B91", "\u5173\u952E\u8282\u70B92"],
-          "sendable_prompt": "\u7528\u4E8E\u6A21\u578B\u4E8C\u6B21\u52A0\u5DE5\u7684\u573A\u666F\u6458\u8981\u8349\u7A3F",
-          "notes": "\u53EF\u4E3A\u7A7A"
+          "sendable_prompt": "\u53EF\u4F9B\u6269\u5199\u7684\u573A\u666F\u6458\u8981\u6BB5\u843D",
+          "notes": ""
         }
       ]
     }
   ]
 }
-3) items \u6570\u91CF\u5FC5\u987B\u4E0E\u8F93\u5165\u603B\u7EB2\u4E00\u81F4\uFF0C\u4E14 index \u4E00\u4E00\u5BF9\u5E94\uFF0C\u4E0D\u53EF\u7F3A\u5931\u3001\u4E0D\u53EF\u65B0\u589E\u3001\u4E0D\u53EF\u91CD\u6392\u3002
-4) \u6BCF\u4E2A item \u5FC5\u987B\u751F\u6210 3-6 \u4E2A scenes\u3002
-5) \u6BCF\u4E2A scene \u5FC5\u987B\u5305\u542B scene_goal\u3001conflict\u3001key_beats\u3001sendable_prompt\u3002
-6) sendable_prompt \u4E0D\u662F\u547D\u4EE4\u53E5\uFF0C\u4E0D\u5199\u201C\u8BF7\u4F60/\u4F60\u9700\u8981\u201D\uFF1B\u5B83\u662F\u53EF\u4F9B\u6A21\u578B\u6269\u5199/\u8F6C\u8FF0/\u6DA6\u8272\u7684\u5267\u60C5\u6458\u8981\u6BB5\u843D\u3002
-7) sendable_prompt \u5FC5\u987B\u878D\u5408 conflict \u4E0E key_beats\uFF08\u81F3\u5C112\u4E2A\u5173\u952E\u8282\u70B9\uFF09\uFF0C\u5E76\u4F53\u73B0\u76EE\u6807\u63A8\u8FDB\u3002
-8) sendable_prompt \u5EFA\u8BAE 120-260 \u5B57\uFF0C\u4FE1\u606F\u5177\u4F53\u3001\u53EF\u5EF6\u5C55\uFF0C\u7ED3\u5C3E\u4FDD\u7559\u53EF\u7EE7\u7EED\u5C55\u5F00\u7684\u94A9\u5B50\u3002
-9) \u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\uFF0C\u4FDD\u8BC1\u524D\u540E\u8FDE\u8D2F\uFF0C\u907F\u514D\u4E0E\u524D\u540E\u6761\u76EE\u51B2\u7A81\u3002`,
+3) items \u6570\u91CF\u5FC5\u987B\u4E0E\u8F93\u5165\u603B\u7EB2\u4E00\u81F4\uFF1Bindex \u5FC5\u987B\u4E00\u4E00\u5BF9\u5E94\uFF1B\u4E0D\u5F97\u7F3A\u5931\u3001\u4E0D\u5F97\u65B0\u589E\u3001\u4E0D\u5F97\u91CD\u6392\u3002
+4) \u4EC5\u8865\u5168 scenes\uFF0C\u7981\u6B62\u6539\u5199\u603B\u7EB2\u4E3B\u7EBF\u542B\u4E49\u3002
+5) \u6BCF\u4E2A item \u751F\u6210 3-5 \u4E2A scenes\uFF08\u9ED8\u8BA4 4 \u4E2A\uFF0C\u9664\u975E\u5185\u5BB9\u4E0D\u8DB3\uFF09\u3002
+6) \u6BCF\u4E2A scene \u5FC5\u987B\u5305\u542B scene_goal\u3001conflict\u3001key_beats\u3001sendable_prompt\u3002
+7) key_beats \u81F3\u5C11 2 \u6761\uFF0C\u5355\u6761\u4E0D\u8D85\u8FC7 24 \u5B57\u3002
+8) sendable_prompt \u5FC5\u987B\u878D\u5408 conflict \u4E0E key_beats\uFF0C120-220 \u5B57\uFF0C\u4E2D\u6587\uFF0C\u5177\u4F53\u53EF\u5EF6\u5C55\uFF0C\u4E0D\u5199\u201C\u8BF7\u4F60/\u4F60\u9700\u8981\u201D\u3002
+9) \u82E5\u4FE1\u606F\u4E0D\u8DB3\uFF0Cnotes \u586B\u7A7A\u5B57\u7B26\u4E32\uFF0C\u4E0D\u8981\u7F16\u9020\u989D\u5916\u5B57\u6BB5\u3002
+10) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
       user: `[\u89D2\u8272\u8BBE\u5B9A]
 {{persona}}
 
@@ -13233,6 +14084,7 @@ function getDefaultPromptTemplates() {
 [\u4EFB\u52A1]
 \u8BF7\u5BF9\u6BCF\u4E2A item \u4E00\u6B21\u6027\u751F\u6210 scenes\u3002
 \u4FDD\u6301\u603B\u7EB2\u4E3B\u7EBF\u4E0E\u987A\u5E8F\u4E0D\u53D8\uFF0C\u53EA\u8865\u5168\u7EC6\u7EB2\u5185\u5BB9\u3002
+\u4E25\u683C\u4F7F\u7528 version 1.2 \u7684\u7CBE\u7B80\u7ED3\u6784\uFF0C\u4EC5\u8FD4\u56DE index \u548C scenes\uFF0C\u4E0D\u8981\u8FD4\u56DE time/title/plot/foreshadowing/story_summary\u3002
 sendable_prompt \u5FC5\u987B\u5199\u6210\u53EF\u4F9B\u6A21\u578B\u6269\u5199/\u8F6C\u8FF0/\u6DA6\u8272\u7684\u5177\u4F53\u6458\u8981\u6BB5\u843D\uFF0C\u5E76\u878D\u5408 conflict \u4E0E key_beats\u3002
 \u53EA\u8FD4\u56DE JSON\u3002`
     }
@@ -13289,7 +14141,10 @@ async function openPromptTemplateManager() {
   const defaults = getDefaultPromptTemplates();
   const working = JSON.parse(JSON.stringify(getPromptTemplates()));
   const currentStoryInput = String($("#t-outline-story-input").val() || "").trim();
-  const opening = getOpeningFromContext();
+  const entries = getChatHistoryEntries();
+  const openingMode = getOpeningSourceMode();
+  const openingSourceRef = getOpeningSourceRef();
+  let opening = getOpeningTextForPreview(openingMode, openingSourceRef);
   let ctx = { persona: "(\u7A7A)", userDesc: "(\u7A7A)" };
   try {
     ctx = await getContextData();
@@ -13302,7 +14157,6 @@ async function openPromptTemplateManager() {
     plot: item.plot || "",
     foreshadowing: item.foreshadowing || ""
   }));
-  const vars = buildPromptTemplateVars(ctx, currentStoryInput, opening, outlinePayload);
   const html = `
     <div id="t-outline-prompt-manager" class="t-dialog-overlay">
         <div class="t-dialog-box" style="max-width: 980px; max-height: 88vh;">
@@ -13369,8 +14223,10 @@ async function openPromptTemplateManager() {
     syncFromEditor();
     const type = String($("#t-prompt-target").val() || "outline");
     const section = getPromptTemplateSection(working, type);
-    const renderedSys = renderPromptTemplate(section.system, vars);
-    const renderedUser = renderPromptTemplate(section.user, vars);
+    opening = getOpeningTextForPreview(openingMode, openingSourceRef);
+    const varsLocal = buildPromptTemplateVars(ctx, currentStoryInput, opening, outlinePayload);
+    const renderedSys = renderPromptTemplate(section.system, varsLocal);
+    const renderedUser = renderPromptTemplate(section.user, varsLocal);
     $("#t-prompt-preview-system").text(renderedSys);
     $("#t-prompt-preview-user").text(renderedUser);
     const unknown = [...getUnknownPromptVars(section.system), ...getUnknownPromptVars(section.user)];
@@ -13400,6 +14256,11 @@ async function openPromptTemplateManager() {
     if (window.toastr) toastr.success("\u63D0\u793A\u8BCD\u6A21\u677F\u5DF2\u4FDD\u5B58", "\u63D0\u793A\u8BCD\u7BA1\u7406");
   });
   $("#t-prompt-manager-close, #t-prompt-manager-close-btn").on("click", close);
+}
+function refreshOutlineOpeningSourceControls() {
+  const mode = getOpeningSourceMode();
+  $("#t-outline-opening-source-mode").val(mode);
+  $("#t-outline-opening-source-pick").prop("disabled", false);
 }
 function buildPrompt(ctx, userStoryInput, openingText) {
   const templates = getPromptTemplates();
@@ -13446,6 +14307,7 @@ function saveDraft(storyInput, insertMode) {
     updatedAt: Date.now()
   };
   saveExtData();
+  scheduleAutoSaveCurrentPlan();
 }
 function loadDraft() {
   const draft = getDraft();
@@ -13470,6 +14332,15 @@ function getPlans() {
 function getActivePlanId() {
   const data = getExtData();
   return typeof data[ACTIVE_PLAN_KEY] === "string" ? data[ACTIVE_PLAN_KEY] : "";
+}
+function getSceneSourcePlanId() {
+  const data = getExtData();
+  return typeof data[SCENE_SOURCE_PLAN_KEY] === "string" ? data[SCENE_SOURCE_PLAN_KEY] : "";
+}
+function setSceneSourcePlanId(planId) {
+  const data = getExtData();
+  data[SCENE_SOURCE_PLAN_KEY] = planId || "";
+  saveExtData();
 }
 function setActivePlanId(planId) {
   const data = getExtData();
@@ -13564,9 +14435,165 @@ function createNewPlan(nameInput = "", defaultName = "") {
   plans.unshift(plan);
   activePlanId = plan.id;
   setActivePlanId(plan.id);
+  if (!getSceneSourcePlanId()) {
+    setSceneSourcePlanId(plan.id);
+  }
   saveExtData();
   setEditingPlan(plan);
   return plan;
+}
+function createEmptyPlan(nameInput = "", defaultName = "") {
+  const plans = getPlans();
+  const planId = `plan_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const now = Date.now();
+  const instruction = String($("#t-outline-story-input").val() || "").trim();
+  const plan = {
+    id: planId,
+    name: (nameInput || "").trim() || defaultName || createPlanName(getCurrentCharCardName()),
+    storyInput: instruction,
+    instruction,
+    items: [],
+    used_scene_keys: [],
+    createdAt: now,
+    updatedAt: now
+  };
+  plans.unshift(plan);
+  activePlanId = plan.id;
+  setActivePlanId(plan.id);
+  if (!getSceneSourcePlanId()) {
+    setSceneSourcePlanId(plan.id);
+  }
+  saveExtData();
+  setEditingPlan(plan);
+  return plan;
+}
+function createBranchPlanFromSource(sourcePlan) {
+  if (!sourcePlan?.id) return null;
+  const plans = getPlans();
+  const now = Date.now();
+  const baseName = String(sourcePlan.name || createPlanName(getCurrentCharCardName())).trim() || "\u672A\u547D\u540D\u65B9\u6848";
+  let candidateName = `${baseName}\uFF08\u5206\u652F\uFF09`;
+  let suffix = 2;
+  while (plans.some((p) => String(p?.name || "").trim() === candidateName)) {
+    candidateName = `${baseName}\uFF08\u5206\u652F${suffix}\uFF09`;
+    suffix += 1;
+  }
+  const instruction = getPlanInstruction(sourcePlan);
+  const plan = {
+    id: `plan_${now}_${Math.random().toString(36).slice(2, 8)}`,
+    name: candidateName,
+    storyInput: instruction,
+    instruction,
+    items: [],
+    used_scene_keys: [],
+    createdAt: now,
+    updatedAt: now
+  };
+  plans.unshift(plan);
+  activePlanId = plan.id;
+  setActivePlanId(plan.id);
+  if (!getSceneSourcePlanId()) {
+    setSceneSourcePlanId(plan.id);
+  }
+  saveExtData();
+  setEditingPlan(plan);
+  return plan;
+}
+function persistCurrentEditingPlan() {
+  if (!editingPlanId) return;
+  const plans = getPlans();
+  const target = plans.find((p) => p.id === editingPlanId);
+  if (!target) return;
+  const payload = createPlanPayloadFromEditor();
+  target.storyInput = payload.storyInput;
+  target.instruction = payload.instruction;
+  target.items = payload.items;
+  target.updatedAt = Date.now();
+  saveExtData();
+  setEditingPlan(target);
+}
+function scheduleAutoSaveCurrentPlan() {
+  if (!editingPlanId) return;
+  if (autoSavePlanTimer) clearTimeout(autoSavePlanTimer);
+  autoSavePlanTimer = setTimeout(() => {
+    autoSavePlanTimer = null;
+    persistCurrentEditingPlan();
+  }, 260);
+}
+function flushAutoSaveCurrentPlan() {
+  if (autoSavePlanTimer) {
+    clearTimeout(autoSavePlanTimer);
+    autoSavePlanTimer = null;
+  }
+  persistCurrentEditingPlan();
+}
+function ensureEditingPlanContext() {
+  if (editingPlanId) return true;
+  const active = getActivePlan();
+  if (active) {
+    loadPlanToEditor(active);
+    return true;
+  }
+  if (window.toastr) toastr.warning("\u8BF7\u5148\u65B0\u5EFA\u6216\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
+  return false;
+}
+function updatePlanWorkflowUI() {
+  const hasPlans = getPlans().length > 0;
+  const inEditor = currentView === "editor";
+  $("#t-outline-plan-name-wrap").toggle(hasPlans && inEditor);
+  $("#t-outline-save-plan").toggle(hasPlans && inEditor);
+  $("#t-outline-top").toggle(inEditor);
+  $("#t-outline-hub-view").toggle(currentView === "hub");
+  refreshPlanNameDisplay();
+}
+function updatePlanHubActionState() {
+  const plans = getPlans();
+  const selected = plans.find((p) => p.id === activePlanId) || null;
+  const hasSelected = !!selected;
+  $("#t-hub-edit-plan, #t-hub-create-branch, #t-hub-view-detail, #t-hub-view-instruction").prop("disabled", !hasSelected);
+}
+function openPlanCreationDialog() {
+  ensureCssLoaded();
+  $("#t-outline-create-plan-dialog").remove();
+  const defaultPlanName = createPlanName(getCurrentCharCardName());
+  const draftStoryInput = String($("#t-outline-story-input").val() || "").trim();
+  const html = `
+    <div id="t-outline-create-plan-dialog" class="t-dialog-overlay">
+        <div class="t-dialog-box" style="max-width: 620px; max-height: 84vh;">
+            <div class="t-dialog-header">
+                <span><i class="fa-solid fa-folder-plus"></i> \u65B0\u5EFA\u65B9\u6848</span>
+                <div class="t-dialog-close" id="t-create-plan-close"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="t-dialog-body" style="padding: 12px;">
+                <div class="t-plan-tip" style="font-size:13px; margin-bottom:10px;">\u521B\u5EFA\u540E\u4F1A\u76F4\u63A5\u8FDB\u5165\u300C\u5927\u7EB2\u751F\u6210\u300D\u7F16\u8F91\u9875\u3002</div>
+                <label class="t-outline-label">\u65B9\u6848\u540D\u79F0</label>
+                <input id="t-create-plan-name" class="t-outline-input" value="${escapeHtml3(defaultPlanName)}" />
+                <label class="t-outline-label" style="margin-top:10px;">\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09</label>
+                <textarea id="t-create-plan-story" class="t-outline-story-input" rows="4" placeholder="\u53EF\u5148\u5199\u4E00\u4E2A\u65B9\u5411\uFF0C\u540E\u7EED\u4ECD\u53EF\u968F\u65F6\u4FEE\u6539">${escapeHtml3(draftStoryInput)}</textarea>
+                <div class="t-plan-tip" style="margin-top:8px;">\u63D0\u793A\uFF1A\u5982\u679C\u7559\u7A7A\uFF0C\u4F1A\u521B\u5EFA\u4E00\u4E2A\u7A7A\u767D\u65B9\u6848\u3002</div>
+                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+                    <button id="t-create-plan-cancel" class="t-btn">\u53D6\u6D88</button>
+                    <button id="t-create-plan-confirm" class="t-btn t-btn-primary"><i class="fa-solid fa-check"></i> \u521B\u5EFA\u5E76\u8FDB\u5165\u7F16\u8F91</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  const close = () => $("#t-outline-create-plan-dialog").remove();
+  $("#t-create-plan-close, #t-create-plan-cancel").on("click", close);
+  $("#t-create-plan-confirm").on("click", () => {
+    const planName = String($("#t-create-plan-name").val() || "").trim();
+    const planStory = String($("#t-create-plan-story").val() || "").trim();
+    $("#t-outline-story-input").val(planStory);
+    const created = createEmptyPlan(planName);
+    close();
+    if (window.toastr) toastr.success(`\u5DF2\u65B0\u5EFA\u65B9\u6848\uFF1A${created.name}`, "\u6545\u4E8B\u5927\u7EB2");
+    loadPlanToEditor(created);
+    renderPlanHub();
+    showOutlineView("editor");
+    setEditorSubView("outline");
+    updatePlanWorkflowUI();
+  });
 }
 function overwritePlan(planId, nameInput = "") {
   const plans = getPlans();
@@ -13613,8 +14640,71 @@ function getActivePlan() {
   }
   return plans.find((p) => p.id === activePlanId) || plans[0] || null;
 }
+function getCurrentPlanForEditor() {
+  const plans = getPlans();
+  if (editingPlanId) {
+    const editing = plans.find((p) => p.id === editingPlanId);
+    if (editing) return editing;
+  }
+  if (activePlanId) {
+    const active = plans.find((p) => p.id === activePlanId);
+    if (active) return active;
+  }
+  return plans[0] || null;
+}
+function refreshPlanNameDisplay() {
+  const $wrap = $("#t-outline-plan-name-wrap");
+  const $input = $("#t-outline-plan-name");
+  const $rename = $("#t-outline-plan-rename-trigger");
+  const $ok = $("#t-outline-plan-rename-confirm");
+  const $cancel = $("#t-outline-plan-rename-cancel");
+  if ($input.length === 0) return;
+  const plan = getCurrentPlanForEditor();
+  const hasPlan = !!plan;
+  $wrap.toggle(hasPlan);
+  $rename.prop("disabled", !hasPlan).toggle(!planRenameMode);
+  $ok.toggle(planRenameMode);
+  $cancel.toggle(planRenameMode);
+  $input.prop("readonly", !planRenameMode);
+  $input.toggleClass("is-readonly", !planRenameMode);
+  if (!planRenameMode) {
+    $input.val(hasPlan ? plan.name || "\u672A\u547D\u540D\u65B9\u6848" : "");
+  }
+}
+function setPlanRenameMode(enabled) {
+  const on = !!enabled;
+  if (on) {
+    const plan = getCurrentPlanForEditor();
+    if (!plan) return;
+    planRenameSnapshot = String(plan.name || "");
+  }
+  planRenameMode = on;
+  refreshPlanNameDisplay();
+  if (on) {
+    const input = document.querySelector("#t-outline-plan-name");
+    if (input) {
+      input.focus();
+      if (typeof input.select === "function") input.select();
+    }
+  }
+}
+function confirmPlanRename() {
+  const plan = getCurrentPlanForEditor();
+  if (!plan) return;
+  const nextName = String($("#t-outline-plan-name").val() || "").trim() || createPlanName(getCurrentCharCardName());
+  plan.name = nextName;
+  plan.updatedAt = Date.now();
+  saveExtData();
+  setPlanRenameMode(false);
+  renderPlanHub();
+  if (window.toastr) toastr.success(`\u5DF2\u91CD\u547D\u540D\u65B9\u6848\uFF1A${nextName}`, "\u6545\u4E8B\u5927\u7EB2");
+}
+function cancelPlanRename() {
+  $("#t-outline-plan-name").val(planRenameSnapshot || "");
+  setPlanRenameMode(false);
+}
 function getCurrentInsertMode() {
-  return $("#t-outline-insert-mode").val() || "overwrite";
+  return $("#t-scene-hub-insert-mode").val() || $("#t-outline-insert-mode").val() || loadDraft().insertMode || "overwrite";
 }
 function getSceneUsageKey(itemIndex, sceneIndex) {
   return `${itemIndex}:${sceneIndex}`;
@@ -13650,10 +14740,11 @@ function loadPlanToEditor(plan) {
   outlineItems = normalizeItems(plan.items || []);
   const planInstruction = getPlanInstruction(plan);
   $("#t-outline-story-input").val(planInstruction);
-  $("#t-outline-plan-name").val("");
   setEditingPlan(plan);
+  planRenameMode = false;
   saveDraft(planInstruction, $("#t-outline-insert-mode").val() || "overwrite");
   renderRows();
+  refreshPlanNameDisplay();
   return true;
 }
 function getPlanItemCursor(planId, totalItems) {
@@ -13681,8 +14772,11 @@ function movePlanItemCursor(planId, delta, totalItems) {
 }
 function collectAllPlanScenes() {
   const plans = getPlans();
+  const sourcePlanId = getSceneSourcePlanId();
+  const sourcePlan = plans.find((p) => p.id === sourcePlanId) || null;
   const rows = [];
-  plans.forEach((plan) => {
+  if (!sourcePlan) return rows;
+  [sourcePlan].forEach((plan) => {
     const items = normalizeItems(plan?.items || []);
     items.forEach((item, itemIndex) => {
       const scenes = Array.isArray(item.scenes) ? item.scenes : [];
@@ -13716,7 +14810,12 @@ function renderSceneHubWindow() {
   if ($list.length === 0 || $sendBtn.length === 0) return;
   if (rows.length === 0) {
     sceneHubSelectedKey = "";
-    $list.html('<div class="t-plan-empty">\u6682\u65E0\u53EF\u7528\u7EC6\u7EB2\u573A\u666F\uFF0C\u8BF7\u5148\u4FDD\u5B58\u5E76\u751F\u6210\u7EC6\u7EB2</div>');
+    const sourcePlanId = getSceneSourcePlanId();
+    if (!sourcePlanId) {
+      $list.html('<div class="t-plan-empty">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u4E00\u4E2A\u7528\u4E8E\u7EC6\u7EB2\u60C5\u8282\u7684\u65B9\u6848</div>');
+    } else {
+      $list.html('<div class="t-plan-empty">\u5F53\u524D\u9009\u4E2D\u65B9\u6848\u6682\u65E0\u53EF\u7528\u7EC6\u7EB2\u573A\u666F\uFF0C\u8BF7\u5148\u751F\u6210\u7EC6\u7EB2</div>');
+    }
     $sendBtn.prop("disabled", true);
     return;
   }
@@ -13753,6 +14852,13 @@ function openSceneHubWindow() {
             <div class="t-window-body t-outline-body">
                 <div id="t-scene-hub-list" class="t-scene-hub-list"></div>
                 <div class="t-scene-hub-footer">
+                    <label class="t-outline-mode" style="margin-right:auto;">
+                        \u5199\u5165\u65B9\u5F0F
+                        <select id="t-scene-hub-insert-mode" class="t-outline-select">
+                            <option value="overwrite" ${getCurrentInsertMode() === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
+                            <option value="append" ${getCurrentInsertMode() === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                        </select>
+                    </label>
                     <button id="t-scene-hub-send" class="t-btn t-btn-primary" disabled><i class="fa-solid fa-paper-plane"></i> \u53D1\u9001\u573A\u666F</button>
                 </div>
             </div>
@@ -13769,6 +14875,11 @@ function openSceneHubWindow() {
     if (!key) return;
     sceneHubSelectedKey = key;
     renderSceneHubWindow();
+  });
+  $overlay.on("change", "#t-scene-hub-insert-mode", function() {
+    const mode = String($(this).val() || "overwrite") === "append" ? "append" : "overwrite";
+    $("#t-outline-insert-mode").val(mode);
+    saveDraft($("#t-outline-story-input").val() || "", mode);
   });
   $overlay.on("click", "#t-scene-hub-send", () => {
     const rows = collectAllPlanScenes();
@@ -13896,11 +15007,19 @@ function showPlanDetailDialog(planId) {
 function renderPlanHub() {
   const plans = getPlans();
   if (!activePlanId) activePlanId = getActivePlanId();
+  let sceneSourcePlanId = getSceneSourcePlanId();
   const $list = $("#t-outline-plan-list");
   if ($list.length === 0) return;
   if (plans.length === 0) {
-    $list.html('<div class="t-plan-empty">\u6682\u65E0\u65B9\u6848\uFF0C\u5148\u751F\u6210\u5E76\u4FDD\u5B58</div>');
+    if (sceneSourcePlanId) setSceneSourcePlanId("");
+    $list.html('<div class="t-plan-empty">\u6682\u65E0\u65B9\u6848\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u65B0\u5EFA\u65B9\u6848\u201D</div>');
+    updatePlanWorkflowUI();
+    updatePlanHubActionState();
     return;
+  }
+  if (!sceneSourcePlanId || !plans.some((p) => p.id === sceneSourcePlanId)) {
+    sceneSourcePlanId = plans[0]?.id || "";
+    setSceneSourcePlanId(sceneSourcePlanId);
   }
   if (activePlanId && !plans.some((p) => p.id === activePlanId)) {
     activePlanId = plans[0]?.id || "";
@@ -13911,23 +15030,29 @@ function renderPlanHub() {
     const updated = new Date(plan.updatedAt || Date.now());
     const timeText = `${updated.getMonth() + 1}/${updated.getDate()} ${String(updated.getHours()).padStart(2, "0")}:${String(updated.getMinutes()).padStart(2, "0")}`;
     const items = normalizeItems(plan.items || []);
+    const isSource = sceneSourcePlanId === plan.id;
     return `
             <div class="t-plan-accordion-item ${active ? "expanded" : ""}" data-plan-id="${plan.id}">
-                <div class="t-plan-accordion-head">
+                <div class="t-plan-accordion-head" data-action="select-plan" data-plan-id="${plan.id}">
                     <div class="t-plan-accordion-main">
-                        <button class="t-plan-name-btn" data-action="open-plan-detail" data-plan-id="${plan.id}">${escapeHtml3(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</button>
+                        <div class="t-plan-name">${escapeHtml3(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
                         <div class="t-plan-meta">${timeText} \xB7 ${items.length} \u6761</div>
-                        <div class="t-plan-tip">\u5355\u51FB\u65B9\u6848\u540D\u8FDB\u5165\u8BE6\u60C5\u9875</div>
+                        <div class="t-plan-tip">${isSource ? "\u5F53\u524D\u7EC6\u7EB2\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
                     </div>
-                    <div class="t-plan-accordion-actions">
-                        <button class="t-btn t-btn-xs t-plan-action-btn" data-action="edit-plan" data-plan-id="${plan.id}" title="\u7F16\u8F91\u65B9\u6848" aria-label="\u7F16\u8F91\u65B9\u6848"><i class="fa-solid fa-pen-to-square"></i><span class="t-plan-action-label"> \u7F16\u8F91\u65B9\u6848</span></button>
-                        <button class="t-btn t-btn-xs t-plan-action-btn" data-action="view-plan-instruction" data-plan-id="${plan.id}" title="\u6545\u4E8B\u6307\u4EE4" aria-label="\u6545\u4E8B\u6307\u4EE4"><i class="fa-solid fa-file-lines"></i><span class="t-plan-action-label"> \u6545\u4E8B\u6307\u4EE4</span></button>
-                        <button class="t-btn t-btn-xs t-plan-delete-btn t-plan-action-btn" data-action="delete-plan" data-plan-id="${plan.id}" title="\u5220\u9664\u65B9\u6848" aria-label="\u5220\u9664\u65B9\u6848"><i class="fa-solid fa-trash"></i><span class="t-plan-action-label"> \u5220\u9664\u65B9\u6848</span></button>
-                    </div>
+                </div>
+                <div class="t-plan-card-actions">
+                    <label class="t-plan-source-radio" title="\u9009\u62E9\u540E\uFF0C\u7EC6\u7EB2\u60C5\u8282\u9875\u5C06\u4ECE\u8BE5\u65B9\u6848\u8BFB\u53D6\u5E76\u4F7F\u7528\u573A\u666F\u5185\u5BB9">
+                        <input type="radio" name="t-plan-scene-source" data-action="set-scene-source" data-plan-id="${plan.id}" ${isSource ? "checked" : ""}>
+                        <span>\u4F5C\u4E3A\u7EC6\u7EB2\u6765\u6E90</span>
+                    </label>
+                    <div class="t-plan-source-note">\u8BF4\u660E\uFF1A\u52FE\u9009\u540E\uFF0C\u7EC6\u7EB2\u60C5\u8282\u9875\u4F1A\u4F18\u5148\u4F7F\u7528\u8BE5\u65B9\u6848\u4E2D\u7684\u573A\u666F\u3002</div>
+                    <button class="t-btn t-btn-xs t-plan-delete-btn" data-action="delete-plan" data-plan-id="${plan.id}"><i class="fa-solid fa-trash"></i> \u5220\u9664\u65B9\u6848</button>
                 </div>
             </div>
         `;
   }).join(""));
+  updatePlanWorkflowUI();
+  updatePlanHubActionState();
 }
 function showPlanInstructionDialog(plan) {
   if (!plan) return;
@@ -13995,9 +15120,11 @@ function clearEditorDraft() {
   closeMobileEditor();
   $("#t-outline-story-input").val("");
   $("#t-outline-plan-name").val("");
+  planRenameMode = false;
   setEditingPlan(null);
   renderRows();
   saveDraft("", insertMode);
+  refreshPlanNameDisplay();
 }
 function writePlotToInput(text, mode = "overwrite") {
   const input = document.querySelector("#send_textarea");
@@ -14017,54 +15144,155 @@ ${payload}`;
   input.focus();
   if (window.toastr) toastr.success(`\u5DF2${mode === "append" ? "\u8FFD\u52A0" : "\u586B\u5165"}\u53D1\u9001\u8F93\u5165\u6846\uFF08\u672A\u81EA\u52A8\u53D1\u9001\uFF09`, "\u6545\u4E8B\u5927\u7EB2");
 }
-function showRawResponseDialog(rawContent) {
+function showRawResponseDialog(rawContent, options = {}) {
+  const {
+    title = "\u751F\u6210\uFF06\u5386\u53F2\u54CD\u5E94",
+    editable = false,
+    parseAction = null,
+    parseButtonLabel = "\u91CD\u65B0\u89E3\u6790\u5E76\u5E94\u7528",
+    parseHint = ""
+  } = options || {};
+  const historyOptions = rawResponseHistory.map((entry, idx) => {
+    const label = `${idx + 1}. ${entry.typeLabel} \xB7 ${entry.charName || "\u672A\u547D\u540D\u89D2\u8272"} \xB7 ${formatRawHistoryTime(entry.createdAt)}`;
+    return `<option value="${escapeHtml3(entry.id)}">${escapeHtml3(label)}</option>`;
+  }).join("");
+  const defaultContent = String(rawContent || lastRawResponse || rawResponseHistory[0]?.content || "");
   $("#t-outline-raw-dialog").remove();
   const html = `
     <div id="t-outline-raw-dialog" class="t-dialog-overlay">
         <div class="t-dialog-box" style="max-width: 820px; max-height: 82vh;">
             <div class="t-dialog-header">
-                <span><i class="fa-solid fa-code"></i> \u5927\u7EB2\u539F\u59CB\u54CD\u5E94</span>
+                <span><i class="fa-solid fa-code"></i> ${escapeHtml3(title)}</span>
                 <div class="t-dialog-close" id="t-outline-raw-close"><i class="fa-solid fa-times"></i></div>
             </div>
             <div class="t-dialog-body" style="padding: 12px;">
+                ${historyOptions ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:#9eb4c8;white-space:nowrap;">\u5386\u53F2\u8BB0\u5F55</span><select id="t-outline-raw-history" class="t-outline-select" style="flex:1;">${historyOptions}</select></div>` : ""}
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <span style="color:#8ea0b3;">\u957F\u5EA6: ${(rawContent || "").length} \u5B57\u7B26</span>
-                    <button id="t-outline-copy-raw" class="t-btn t-btn-xs"><i class="fa-solid fa-copy"></i> \u590D\u5236</button>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span id="t-outline-raw-length" style="color:#8ea0b3;">\u957F\u5EA6: ${defaultContent.length} \u5B57\u7B26</span>
+                        <span id="t-outline-raw-elapsed" style="color:#8ea0b3;">\u8017\u65F6: ${formatElapsedDuration(getCurrentElapsedMs())}</span>
+                        <span id="t-outline-raw-mood" class="t-raw-wait-anim" aria-live="polite" aria-label="\u6A21\u578B\u751F\u6210\u4E2D\u52A8\u753B">
+                            <span></span><span></span><span></span>
+                        </span>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <button id="t-outline-export-raw-history" class="t-btn t-btn-xs"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA\u5386\u53F2</button>
+                    </div>
                 </div>
-                <pre class="t-outline-raw-pre">${escapeHtml3(rawContent || "(\u7A7A)")}</pre>
+                ${editable ? `<textarea id="t-outline-raw-editor" class="t-outline-raw-editor">${escapeHtml3(defaultContent)}</textarea>` : `<pre class="t-outline-raw-pre">${escapeHtml3(defaultContent || "(\u7A7A)")}</pre>`}
+                ${parseHint ? `<div class="t-outline-raw-hint">${escapeHtml3(parseHint)}</div>` : ""}
             </div>
             <div class="t-dialog-footer">
+                ${editable ? `<button id="t-outline-raw-reparse" class="t-btn t-btn-primary">${escapeHtml3(parseButtonLabel)}</button>` : ""}
                 <button id="t-outline-raw-close-btn" class="t-btn">\u5173\u95ED</button>
             </div>
         </div>
     </div>`;
   $("body").append(html);
   isRawDialogOpen = true;
+  updateResponseTimerUI();
+  setRawWaitingAnimation(responseTimerRunning);
+  if (historyOptions) {
+    const firstId = rawResponseHistory[0]?.id || "";
+    if (firstId) $("#t-outline-raw-history").val(firstId);
+  }
+  function setDialogRawContent(content) {
+    const value = String(content || "");
+    const $pre = $("#t-outline-raw-dialog .t-outline-raw-pre");
+    const $editor = $("#t-outline-raw-editor");
+    if ($pre.length > 0) $pre.text(value || "(\u7A7A)");
+    if ($editor.length > 0) $editor.val(value);
+    $("#t-outline-raw-length").text(`\u957F\u5EA6: ${value.length} \u5B57\u7B26`);
+  }
+  function getDialogRawContent() {
+    const $editor = $("#t-outline-raw-editor");
+    if ($editor.length > 0) return String($editor.val() || "");
+    const $pre = $("#t-outline-raw-dialog .t-outline-raw-pre");
+    return String($pre.text() || "");
+  }
   $("#t-outline-raw-close, #t-outline-raw-close-btn").on("click", () => {
     $("#t-outline-raw-dialog").remove();
     isRawDialogOpen = false;
   });
-  $("#t-outline-copy-raw").on("click", async function() {
-    try {
-      await navigator.clipboard.writeText(rawContent || "");
-      $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
-    } catch {
-      if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25");
-    }
+  $("#t-outline-raw-history").on("change", function() {
+    const id = String($(this).val() || "");
+    const picked = rawResponseHistory.find((entry) => entry.id === id);
+    if (!picked) return;
+    setDialogRawContent(picked.content || "");
   });
+  $("#t-outline-export-raw-history").on("click", () => {
+    exportRawResponseHistory();
+  });
+  if (editable && typeof parseAction === "function") {
+    $("#t-outline-raw-reparse").on("click", async function() {
+      const $btn = $(this);
+      const originalHtml = $btn.html();
+      const editedText = String($("#t-outline-raw-editor").val() || "").trim();
+      pushRawResponseHistory(editedText, "\u624B\u52A8\u4FEE\u590D");
+      if (!editedText) {
+        if (window.toastr) toastr.error("\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u89E3\u6790", "\u6545\u4E8B\u5927\u7EB2");
+        return;
+      }
+      $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u89E3\u6790\u4E2D...');
+      try {
+        await parseAction(editedText);
+        $("#t-outline-raw-dialog").remove();
+        isRawDialogOpen = false;
+      } catch (e) {
+        if (window.toastr) toastr.error(e.message || "\u91CD\u65B0\u89E3\u6790\u5931\u8D25", "\u6545\u4E8B\u5927\u7EB2");
+      } finally {
+        $btn.prop("disabled", false).html(originalHtml);
+      }
+    });
+  }
 }
 function updateRawPreview(statusText = "") {
   if (!isRawDialogOpen || $("#t-outline-raw-dialog").length === 0) return;
   if (statusText) {
     $("#t-outline-raw-dialog .t-dialog-header span").html(`<i class="fa-solid fa-code"></i> ${statusText}`);
   }
-  $("#t-outline-raw-dialog .t-outline-raw-pre").text(lastRawResponse || "(\u7A7A)");
+  const $pre = $("#t-outline-raw-dialog .t-outline-raw-pre");
+  if ($pre.length > 0) {
+    $pre.text(lastRawResponse || "(\u7A7A)");
+  }
+  const $editor = $("#t-outline-raw-editor");
+  if ($editor.length > 0) {
+    $editor.val(lastRawResponse || "");
+  }
+  $("#t-outline-raw-length").text(`\u957F\u5EA6: ${(lastRawResponse || "").length} \u5B57\u7B26`);
+  updateResponseTimerUI();
+  const status = String(statusText || "");
+  const waiting = responseTimerRunning && (!status || /生成中|流式生成/.test(status));
+  setRawWaitingAnimation(waiting);
 }
 function ensureRawDialogForStreaming(title = "\u6D41\u5F0F\u751F\u6210\u4E2D...") {
   if (!isRawDialogOpen || $("#t-outline-raw-dialog").length === 0) {
     showRawResponseDialog(lastRawResponse || "");
   }
   updateRawPreview(title);
+}
+function applyParsedScenes(parsed) {
+  const incomingItems = Array.isArray(parsed?.items) ? parsed.items : [];
+  for (let i = 0; i < outlineItems.length; i++) {
+    const source = incomingItems.find((x) => Number(x?.index) === outlineItems[i].index) || incomingItems[i];
+    outlineItems[i].scenes = normalizeScenes(source?.scenes || []);
+    reindexScenes(outlineItems[i]);
+    sceneExpandedMap[i] = true;
+  }
+  renderRows();
+  const mobileIdx = getMobileDrawerIndex();
+  if (!Number.isNaN(mobileIdx) && mobileIdx >= 0 && outlineItems[mobileIdx]) {
+    renderMobileDrawerScenes(mobileIdx);
+  }
+  persistCurrentEditingPlan();
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+}
+function applyParsedOutline(parsed, storyInput, insertMode) {
+  outlineItems = normalizeItems(parsed.items);
+  sceneExpandedMap = {};
+  renderRows();
+  persistCurrentEditingPlan();
+  saveDraft(storyInput, insertMode);
 }
 function parseAllScenesResponse(raw) {
   if (!raw || typeof raw !== "string") {
@@ -14129,7 +15357,7 @@ function renderRows() {
                     <td>${escapeHtml3(scene.sendable_prompt || "(\u7A7A)")}</td>
                     <td>${escapeHtml3(scene.notes || "(\u7A7A)")}</td>
                 </tr>
-            `).join("") : `<tr><td colspan="8" class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\uFF0C\u70B9\u51FB\u201C\u4E00\u952E\u751F\u6210\u5168\u90E8\u7EC6\u7EB2\u201D</td></tr>`;
+            `).join("") : `<tr><td colspan="8" class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\uFF0C\u70B9\u51FB\u201C\u7EC6\u7EB2\u751F\u6210\u201D</td></tr>`;
     return `
             <tr data-index="${idx}">
                 <td class="t-outline-col-index">${item.index}</td>
@@ -14414,6 +15642,7 @@ function renderMobileDrawerScenes(index) {
   $list.html(html);
 }
 async function generateAllScenes() {
+  if (!ensureEditingPlanContext()) return;
   if (!Array.isArray(outlineItems) || outlineItems.length === 0) {
     if (window.toastr) toastr.warning("\u8BF7\u5148\u751F\u6210\u6216\u586B\u5199\u603B\u7EB2", "\u6545\u4E8B\u7EC6\u7EB2");
     return;
@@ -14426,9 +15655,10 @@ async function generateAllScenes() {
   });
   try {
     const ctx = await getContextData();
-    const opening = getOpeningFromContext();
+    const opening = await ensureOpeningTextForGeneration();
     const storyInput = ($("#t-outline-story-input").val() || "").trim();
     const useStream = isStreamingEnabled();
+    startResponseTimer(true);
     if (useStream) {
       lastRawResponse = "";
       ensureRawDialogForStreaming("\u6D41\u5F0F\u751F\u6210\u7EC6\u7EB2\u4E2D...");
@@ -14436,49 +15666,56 @@ async function generateAllScenes() {
     const messages = buildAllScenesPrompt(ctx, storyInput, opening);
     const raw = await sendChatRequest(messages, {
       stream: useStream,
-      temperature: 0.5,
-      maxTokens: 2e4,
+      temperature: 0.8,
+      maxTokens: 6e4,
       onProgress: useStream ? (partial) => {
         lastRawResponse = partial || "";
         updateRawPreview("\u6D41\u5F0F\u751F\u6210\u7EC6\u7EB2\u4E2D...");
       } : void 0
     });
     lastRawResponse = raw || lastRawResponse || "";
+    pushRawResponseHistory(lastRawResponse, "\u7EC6\u7EB2\u751F\u6210");
     if (useStream) updateRawPreview("\u7EC6\u7EB2\u751F\u6210\u5B8C\u6210");
-    const parsed = parseAllScenesResponse(raw);
-    const incomingItems = Array.isArray(parsed.items) ? parsed.items : [];
-    for (let i = 0; i < outlineItems.length; i++) {
-      const source = incomingItems.find((x) => Number(x?.index) === outlineItems[i].index) || incomingItems[i];
-      outlineItems[i].scenes = normalizeScenes(source?.scenes || []);
-      reindexScenes(outlineItems[i]);
-      sceneExpandedMap[i] = true;
+    try {
+      const parsed = parseAllScenesResponse(raw);
+      applyParsedScenes(parsed);
+    } catch (parseError) {
+      showRawResponseDialog(lastRawResponse || raw || "", {
+        title: "\u7EC6\u7EB2\u89E3\u6790\u5931\u8D25 - \u53EF\u624B\u52A8\u4FEE\u590D",
+        editable: true,
+        parseButtonLabel: "\u91CD\u65B0\u89E3\u6790\u7EC6\u7EB2\u5E76\u5E94\u7528",
+        parseHint: "\u4F60\u53EF\u4EE5\u76F4\u63A5\u4FEE\u6B63 JSON \u540E\u70B9\u51FB\u6309\u94AE\u91CD\u65B0\u89E3\u6790\uFF0C\u65E0\u9700\u91CD\u65B0\u8BF7\u6C42\u6A21\u578B\u3002",
+        parseAction: async (editedText) => {
+          const reparsed = parseAllScenesResponse(editedText);
+          applyParsedScenes(reparsed);
+          if (window.toastr) toastr.success(`\u4FEE\u590D\u6210\u529F\uFF0C\u5DF2\u5E94\u7528 ${outlineItems.length} \u6761\u60C5\u8282\u7EC6\u7EB2`, "\u6545\u4E8B\u7EC6\u7EB2");
+        }
+      });
+      throw parseError;
     }
-    renderRows();
-    const mobileIdx = getMobileDrawerIndex();
-    if (!Number.isNaN(mobileIdx) && mobileIdx >= 0 && outlineItems[mobileIdx]) {
-      renderMobileDrawerScenes(mobileIdx);
-    }
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
     if (window.toastr) toastr.success(`\u5DF2\u4E00\u6B21\u6027\u751F\u6210 ${outlineItems.length} \u6761\u60C5\u8282\u7684\u7EC6\u7EB2`, "\u6545\u4E8B\u7EC6\u7EB2");
   } catch (e) {
     console.error("Titania: \u6279\u91CF\u751F\u6210\u7EC6\u7EB2\u5931\u8D25", e);
     if (isStreamingEnabled()) updateRawPreview("\u7EC6\u7EB2\u751F\u6210\u5931\u8D25");
     if (window.toastr) toastr.error(e.message || "\u6279\u91CF\u7EC6\u7EB2\u751F\u6210\u5931\u8D25", "\u6545\u4E8B\u7EC6\u7EB2");
   } finally {
+    stopResponseTimer();
     $buttons.each(function(idx) {
       $(this).prop("disabled", false).html(originTexts[idx] || '<i class="fa-solid fa-wand-magic-sparkles"></i>');
     });
   }
 }
 async function generateOutline() {
+  if (!ensureEditingPlanContext()) return;
   const $btn = $("#t-outline-generate");
   const storyInput = ($("#t-outline-story-input").val() || "").trim();
   const insertMode = $("#t-outline-insert-mode").val() || "overwrite";
   $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u751F\u6210\u4E2D...');
   try {
     const ctx = await getContextData();
-    const opening = getOpeningFromContext();
+    const opening = await ensureOpeningTextForGeneration();
     const useStream = isStreamingEnabled();
+    startResponseTimer(true);
     if (useStream) {
       lastRawResponse = "";
       ensureRawDialogForStreaming("\u6D41\u5F0F\u751F\u6210\u5927\u7EB2\u4E2D...");
@@ -14494,47 +15731,123 @@ async function generateOutline() {
       } : void 0
     });
     lastRawResponse = raw || lastRawResponse || "";
+    pushRawResponseHistory(lastRawResponse, "\u5927\u7EB2\u751F\u6210");
     if (useStream) updateRawPreview("\u5927\u7EB2\u751F\u6210\u5B8C\u6210");
-    $("#t-outline-view-raw").prop("disabled", !lastRawResponse);
-    const parsed = parseOutlineResponse(raw);
-    outlineItems = normalizeItems(parsed.items);
-    sceneExpandedMap = {};
-    renderRows();
-    saveDraft(storyInput, insertMode);
+    try {
+      const parsed = parseOutlineResponse(raw);
+      applyParsedOutline(parsed, storyInput, insertMode);
+    } catch (parseError) {
+      showRawResponseDialog(lastRawResponse || raw || "", {
+        title: "\u5927\u7EB2\u89E3\u6790\u5931\u8D25 - \u53EF\u624B\u52A8\u4FEE\u590D",
+        editable: true,
+        parseButtonLabel: "\u91CD\u65B0\u89E3\u6790\u5927\u7EB2\u5E76\u5E94\u7528",
+        parseHint: "\u4F60\u53EF\u4EE5\u76F4\u63A5\u4FEE\u6B63 JSON \u540E\u70B9\u51FB\u6309\u94AE\u91CD\u65B0\u89E3\u6790\uFF0C\u65E0\u9700\u91CD\u65B0\u8BF7\u6C42\u6A21\u578B\u3002",
+        parseAction: async (editedText) => {
+          const reparsed = parseOutlineResponse(editedText);
+          applyParsedOutline(reparsed, storyInput, insertMode);
+          if (window.toastr) toastr.success(`\u4FEE\u590D\u6210\u529F\uFF0C\u5DF2\u751F\u6210 ${outlineItems.length} \u6761\u5927\u7EB2`, "\u6545\u4E8B\u5927\u7EB2");
+        }
+      });
+      throw parseError;
+    }
     if (window.toastr) toastr.success(`\u5DF2\u751F\u6210 ${outlineItems.length} \u6761\u5927\u7EB2`, "\u6545\u4E8B\u5927\u7EB2");
   } catch (e) {
     console.error("Titania: \u8BBE\u8BA1\u5927\u7EB2\u5931\u8D25", e);
     if (isStreamingEnabled()) updateRawPreview("\u5927\u7EB2\u751F\u6210\u5931\u8D25");
     if (window.toastr) toastr.error(e.message || "\u751F\u6210\u5931\u8D25", "\u6545\u4E8B\u5927\u7EB2");
   } finally {
-    $btn.prop("disabled", false).html('<i class="fa-solid fa-wand-magic-sparkles"></i> \u8BBE\u8BA1\u5927\u7EB2');
+    stopResponseTimer();
+    $btn.prop("disabled", false).html('<i class="fa-solid fa-wand-magic-sparkles"></i> \u5927\u7EB2\u751F\u6210');
   }
 }
 function bindEvents() {
   const $overlay = $("#t-story-outline-overlay");
   $overlay.on("click", "#t-outline-save-plan", () => {
-    const plan = upsertCurrentAsPlan($("#t-outline-plan-name").val() || "");
+    const plan = upsertCurrentAsPlan("");
     if (plan) {
       const copyName = createDistinctPlanName(plan.name || createPlanName(getCurrentCharCardName()));
-      $("#t-outline-plan-name").val(copyName);
+      planRenameSnapshot = copyName;
+      refreshPlanNameDisplay();
     }
     renderPlanHub();
     showOutlineView("hub");
+    updatePlanWorkflowUI();
     if (window.toastr) toastr.success(`\u5DF2\u4FDD\u5B58\u65B9\u6848\uFF1A${plan.name}`, "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "#t-outline-back-hub", () => {
+    if (planRenameMode) {
+      cancelPlanRename();
+    }
     closeDesktopEditor();
     closeMobileEditor();
     renderPlanHub();
     showOutlineView("hub");
+    updatePlanWorkflowUI();
   });
-  $overlay.on("click", "[data-action='open-plan-detail']", function() {
+  $overlay.on("click", "#t-outline-plan-rename-trigger", () => {
+    setPlanRenameMode(true);
+  });
+  $overlay.on("click", "#t-outline-plan-rename-confirm", () => {
+    confirmPlanRename();
+  });
+  $overlay.on("click", "#t-outline-plan-rename-cancel", () => {
+    cancelPlanRename();
+  });
+  $overlay.on("keydown", "#t-outline-plan-name", function(e) {
+    if (!planRenameMode) return;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      confirmPlanRename();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancelPlanRename();
+    }
+  });
+  $overlay.on("click", "[data-action='select-plan']", function() {
     const planId = String($(this).data("plan-id") || "").trim();
     if (!planId) return;
     activePlanId = planId;
     setActivePlanId(activePlanId);
     renderPlanHub();
-    showPlanDetailDialog(planId);
+  });
+  $overlay.on("click", "#t-hub-edit-plan", function() {
+    const plan = getPlans().find((p) => p.id === activePlanId) || getActivePlan();
+    if (!plan) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
+      return;
+    }
+    loadPlanToEditor(plan);
+    showOutlineView("editor");
+    setEditorSubView("outline");
+    updatePlanWorkflowUI();
+  });
+  $overlay.on("click", "#t-hub-create-plan", function() {
+    openPlanCreationDialog();
+  });
+  $overlay.on("click", "#t-hub-create-branch", function() {
+    const source = getPlans().find((p) => p.id === activePlanId) || null;
+    if (!source) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
+      return;
+    }
+    const created = createBranchPlanFromSource(source);
+    if (!created) return;
+    loadPlanToEditor(created);
+    renderPlanHub();
+    showOutlineView("editor");
+    setEditorSubView("outline");
+    updatePlanWorkflowUI();
+    if (window.toastr) toastr.success(`\u5DF2\u521B\u5EFA\u5206\u652F\u65B9\u6848\uFF1A${created.name}`, "\u6545\u4E8B\u5927\u7EB2");
+  });
+  $overlay.on("click", "#t-hub-view-detail", function() {
+    const plan = getPlans().find((p) => p.id === activePlanId) || null;
+    if (!plan) return;
+    showPlanDetailDialog(plan.id);
+  });
+  $overlay.on("click", "#t-hub-view-instruction", function() {
+    const plan = getPlans().find((p) => p.id === activePlanId) || null;
+    if (!plan) return;
+    showPlanInstructionDialog(plan);
   });
   $overlay.on("click", "[data-action='delete-plan']", function(e) {
     e.stopPropagation();
@@ -14545,34 +15858,27 @@ function bindEvents() {
     if (index < 0) return;
     const planName = plans[index]?.name || "\u672A\u547D\u540D\u65B9\u6848";
     if (!window.confirm(`\u786E\u8BA4\u5220\u9664\u65B9\u6848\u300C${planName}\u300D\uFF1F`)) return;
+    const deletingActive = activePlanId === planId;
     plans.splice(index, 1);
     delete planItemCursorMap[planId];
-    if (activePlanId === planId) {
+    if (getSceneSourcePlanId() === planId) setSceneSourcePlanId("");
+    if (deletingActive || !plans.some((p) => p.id === activePlanId)) {
       activePlanId = plans[0]?.id || "";
     }
-    clearEditorDraft();
     setActivePlanId(activePlanId);
+    if (!activePlanId) clearEditorDraft();
     renderPlanHub();
     if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u65B9\u6848\uFF1A${planName}`, "\u6545\u4E8B\u5927\u7EB2");
   });
-  $overlay.on("click", "[data-action='edit-plan']", function(e) {
+  $overlay.on("change", "[data-action='set-scene-source']", function(e) {
     e.stopPropagation();
     const planId = String($(this).data("plan-id") || "").trim();
-    const plan = getPlans().find((p) => p.id === planId) || getActivePlan();
-    if (!plan) {
-      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
-      return;
-    }
-    loadPlanToEditor(plan);
-    showOutlineView("editor");
-    setEditorSubView("outline");
-  });
-  $overlay.on("click", "[data-action='view-plan-instruction']", function(e) {
-    e.stopPropagation();
-    const planId = String($(this).data("plan-id") || "").trim();
-    const plan = getPlans().find((p) => p.id === planId) || null;
-    if (!plan) return;
-    showPlanInstructionDialog(plan);
+    if (!planId) return;
+    setSceneSourcePlanId(planId);
+    activePlanId = planId;
+    setActivePlanId(activePlanId);
+    renderPlanHub();
+    if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "[data-action='hub-send-scene']", function() {
     const planId = String($(this).data("plan-id") || "");
@@ -14630,6 +15936,7 @@ function bindEvents() {
   });
   $overlay.on("click", "#t-story-outline-close", () => {
     closeDesktopEditor();
+    flushAutoSaveCurrentPlan();
     $("#t-story-outline-overlay").remove();
   });
   $overlay.on("click", "#t-outline-generate", async () => {
@@ -14638,20 +15945,28 @@ function bindEvents() {
   $overlay.on("click", "#t-outline-generate-all-scenes", async () => {
     await generateAllScenes();
   });
-  $overlay.on("click", "#t-outline-add-row", () => {
-    outlineItems.push({
-      index: outlineItems.length + 1,
-      time: "",
-      title: "",
-      plot: "",
-      foreshadowing: "",
-      scenes: []
-    });
-    renderRows();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  });
   $overlay.on("click", "#t-outline-view-raw", () => {
     showRawResponseDialog(lastRawResponse);
+  });
+  $overlay.on("click", "#t-outline-mobile-tools-toggle", function() {
+    const $top = $("#t-outline-top");
+    const expanded = !$top.hasClass("mobile-tools-open");
+    $top.toggleClass("mobile-tools-open", expanded);
+    $(this).html(expanded ? '<i class="fa-solid fa-chevron-up"></i> \u6536\u8D77\u8BBE\u7F6E' : '<i class="fa-solid fa-sliders"></i> \u66F4\u591A\u8BBE\u7F6E');
+  });
+  $overlay.on("change", "#t-outline-opening-source-mode", function() {
+    const mode = String($(this).val() || "auto_first") === "chat_selected" ? "chat_selected" : "auto_first";
+    setOpeningSourceMode(mode);
+    refreshOutlineOpeningSourceControls();
+  });
+  $overlay.on("click", "#t-outline-opening-source-pick", async () => {
+    const mode = getOpeningSourceMode();
+    const sourceRef = getOpeningSourceRef();
+    const picked = mode === "chat_selected" ? await openOpeningSourcePickerDialog(sourceRef?.chatIndex ?? -1) : await openCardOpeningPickerDialog(sourceRef?.openingIndex ?? 0);
+    if (!picked) return;
+    setOpeningSourceRef(picked);
+    refreshOutlineOpeningSourceControls();
+    if (window.toastr) toastr.success("\u5DF2\u8BBE\u7F6E\u53C2\u8003\u6765\u6E90", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("change", "#t-outline-insert-mode", function() {
     saveDraft($("#t-outline-story-input").val(), $(this).val());
@@ -14846,67 +16161,95 @@ function bindEvents() {
   });
 }
 function openStoryOutlineWindow() {
+  const plans = getPlans();
   ensureCssLoaded();
   $("#t-story-outline-overlay").remove();
   const draft = loadDraft();
-  outlineItems = draft.items;
+  outlineItems = [];
   lastRawResponse = "";
+  rawResponseHistory = loadRawResponseHistory();
+  if (!lastRawResponse && rawResponseHistory[0]?.content) {
+    lastRawResponse = String(rawResponseHistory[0].content || "");
+  }
+  responseElapsedMs = 0;
+  stopResponseTimer();
   sceneExpandedMap = {};
   selectedRowIndex = -1;
   activePlanId = "";
   planItemCursorMap = {};
   setEditingPlan(null);
   editorSubView = "outline";
-  sceneEditorItemIndex = outlineItems.length > 0 ? 0 : -1;
+  sceneEditorItemIndex = -1;
   const defaultPlanName = createPlanName(getCurrentCharCardName());
   const html = `
     <div id="t-story-outline-overlay" class="t-overlay">
         <div class="t-window t-story-outline-window">
             <div class="t-window-header">
-                <div class="t-window-title"><i class="fa-solid fa-list-check"></i> \u6545\u4E8B\u5927\u7EB2\u8BBE\u8BA1</div>
+                <div class="t-window-title"><i class="fa-solid fa-list-check"></i> \u5927\u7EB2\u751F\u6210</div>
                 <div class="t-window-controls">
                     <div class="t-window-close" id="t-story-outline-close"><i class="fa-solid fa-times"></i></div>
                 </div>
             </div>
             <div class="t-window-body t-outline-body">
-                <div class="t-outline-nav">
-                    <div class="t-outline-nav-right">
-                        <input id="t-outline-plan-name" class="t-outline-plan-name" placeholder="${escapeHtml3(defaultPlanName)}">
-                        <button id="t-outline-save-plan" class="t-btn t-btn-primary"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58\u4E3A\u65B9\u6848</button>
-                    </div>
-                </div>
-
-                <div class="t-outline-top">
-                    <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B</label>
+                <div id="t-outline-top" class="t-outline-top">
+                    <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml3(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
                     <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml3(draft.storyInput)}</textarea>
                     <div class="t-outline-actions">
-                        <button id="t-outline-generate" class="t-btn t-btn-primary">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> \u8BBE\u8BA1\u5927\u7EB2
-                        </button>
-                        <button id="t-outline-add-row" class="t-btn">
-                            <i class="fa-solid fa-plus"></i> \u65B0\u589E\u884C
-                        </button>
-                        <button id="t-outline-generate-all-scenes" class="t-btn" disabled>
-                            <i class="fa-solid fa-clapperboard"></i> \u4E00\u952E\u751F\u6210\u5168\u90E8\u7EC6\u7EB2
-                        </button>
-                            <label class="t-outline-mode">
-                                \u5199\u5165\u65B9\u5F0F
-                                <select id="t-outline-insert-mode" class="t-outline-select">
-                                    <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
-                                    <option value="append" ${draft.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
-                                </select>
-                            </label>
+                        <div class="t-outline-primary-actions">
+                            <button id="t-outline-generate" class="t-btn t-btn-primary">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> \u5927\u7EB2\u751F\u6210
+                            </button>
+                            <button id="t-outline-generate-all-scenes" class="t-btn" disabled>
+                                <i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2\u751F\u6210
+                            </button>
+                            <button id="t-outline-mobile-tools-toggle" class="t-btn t-btn-xs"><i class="fa-solid fa-sliders"></i> \u66F4\u591A\u8BBE\u7F6E</button>
+                        </div>
+                        <div id="t-outline-secondary-controls" class="t-outline-secondary-controls">
+                            <div class="t-outline-source-inline">
+                                <label class="t-outline-mode t-outline-mode-source">
+                                    \u53C2\u8003\u6765\u6E90
+                                    <select id="t-outline-opening-source-mode" class="t-outline-select">
+                                        <option value="auto_first">\u5F00\u573A\u767D</option>
+                                        <option value="chat_selected">\u804A\u5929\u8BB0\u5F55</option>
+                                    </select>
+                                </label>
+                                <button id="t-outline-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
+                            </div>
                             <label class="t-outline-mode">
                                 <input id="t-outline-stream-enabled" type="checkbox" ${draft.streamEnabled ? "checked" : ""}>
                                 \u542F\u7528\u6D41\u5F0F
                             </label>
-                            <button id="t-outline-view-raw" class="t-btn" disabled>
-                                <i class="fa-solid fa-code"></i> \u67E5\u770B\u539F\u59CB\u54CD\u5E94
+                            <button id="t-outline-view-raw" class="t-btn">
+                                <i class="fa-solid fa-code"></i> \u67E5\u770B\u751F\u6210\uFF06\u5386\u53F2\u54CD\u5E94
                             </button>
+                        </div>
+                    </div>
+                    <select id="t-outline-insert-mode" class="t-outline-select" style="display:none;">
+                        <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
+                        <option value="append" ${draft.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                    </select>
+                </div>
+
+                <div class="t-outline-nav">
+                    <div class="t-outline-nav-right">
+                        <div id="t-outline-plan-name-wrap" class="t-plan-name-wrap">
+                            <input id="t-outline-plan-name" class="t-outline-plan-name is-readonly" placeholder="${escapeHtml3(defaultPlanName)}" readonly>
+                            <button id="t-outline-plan-rename-trigger" class="t-btn t-btn-xs" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
+                            <button id="t-outline-plan-rename-cancel" class="t-btn t-btn-xs" title="\u53D6\u6D88" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+                            <button id="t-outline-plan-rename-confirm" class="t-btn t-btn-xs t-btn-primary" title="\u786E\u8BA4" style="display:none;"><i class="fa-solid fa-check"></i></button>
+                        </div>
+                        <button id="t-outline-save-plan" class="t-btn t-btn-primary"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58</button>
                     </div>
                 </div>
 
                 <div id="t-outline-hub-view" class="t-outline-hub-view">
+                    <div class="t-hub-toolbar">
+                        <button id="t-hub-create-plan" class="t-btn t-btn-xs"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
+                        <button id="t-hub-create-branch" class="t-btn t-btn-xs"><i class="fa-solid fa-code-branch"></i> \u65B0\u5EFA\u5206\u652F</button>
+                        <button id="t-hub-edit-plan" class="t-btn t-btn-xs t-hub-primary-action"><i class="fa-solid fa-wand-magic-sparkles"></i> \u7F16\u8F91&\u751F\u6210\u5927\u7EB2</button>
+                        <button id="t-hub-view-detail" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u67E5\u770B\u60C5\u8282&\u7EC6\u7EB2</button>
+                        <button id="t-hub-view-instruction" class="t-btn t-btn-xs"><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4</button>
+                    </div>
                     <div id="t-outline-plan-list" class="t-outline-plan-list"></div>
                 </div>
 
@@ -14979,12 +16322,19 @@ function openStoryOutlineWindow() {
         </div>
     </div>`;
   $("body").append(html);
-  renderRows();
+  const preferred = plans.find((p) => p.id === getActivePlanId()) || plans[0] || null;
+  if (preferred) {
+    loadPlanToEditor(preferred);
+  } else {
+    $("#t-outline-story-input").val(draft.storyInput || "");
+    renderRows();
+  }
   bindEvents();
   renderPlanHub();
-  showOutlineView(getPlans().length > 0 ? "hub" : "editor");
+  showOutlineView(plans.length > 0 ? "hub" : "editor");
+  refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, PROMPT_TEMPLATES_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, INLINE_OUTLINE_FALLBACK_CSS;
+var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, RAW_HISTORY_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -14993,6 +16343,7 @@ var init_storyOutlineWindow = __esm({
     init_storage();
     outlineItems = [];
     lastRawResponse = "";
+    rawResponseHistory = [];
     sceneExpandedMap = {};
     selectedRowIndex = -1;
     desktopEditorIndex = -1;
@@ -15000,40 +16351,28 @@ var init_storyOutlineWindow = __esm({
     editorSubView = "outline";
     sceneEditorItemIndex = -1;
     mobileEditorSubView = "outline";
+    responseTimerStartAt = 0;
+    responseElapsedMs = 0;
+    responseTimerId = null;
+    responseTimerRunning = false;
     DRAFT_KEY = "story_outline_draft";
     PLANS_KEY = "story_outline_plans";
     ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
+    SCENE_SOURCE_PLAN_KEY = "story_outline_scene_source_plan_id";
     PROMPT_TEMPLATES_KEY = "story_outline_prompt_templates";
+    OPENING_SOURCE_MODE_KEY = "story_outline_opening_source_mode";
+    OPENING_SOURCE_REF_KEY = "story_outline_opening_source_ref";
+    RAW_HISTORY_KEY = "story_outline_raw_history";
     currentView = "hub";
     activePlanId = "";
     editingPlanId = "";
     editingPlanBaseline = "";
     planItemCursorMap = {};
     sceneHubSelectedKey = "";
-    INLINE_OUTLINE_FALLBACK_CSS = `
-#t-story-outline-overlay.t-overlay { position: fixed; inset: 0; z-index: 30000; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; }
-#t-story-outline-overlay .t-story-outline-window { width: min(1120px, 96vw); max-height: min(92vh, 900px); display: flex; flex-direction: column; overflow: hidden; }
-#t-story-outline-overlay .t-window-body.t-outline-body { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overflow-x: hidden; }
-#t-story-outline-overlay .t-outline-top { background: rgba(20, 24, 28, 0.75); border: 1px solid rgba(120, 150, 170, 0.25); border-radius: 10px; padding: 12px; }
-#t-story-outline-overlay .t-outline-story-input, #t-story-outline-overlay .t-outline-input, #t-story-outline-overlay .t-outline-textarea, #t-story-outline-overlay .t-outline-select { width: 100%; box-sizing: border-box; border-radius: 8px; border: 1px solid rgba(116, 185, 255, 0.35); background: rgba(8, 12, 16, 0.75); color: #f2f5f8; padding: 8px; }
-#t-story-outline-overlay .t-outline-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-#t-story-outline-overlay .t-outline-plan-list { border: 1px solid rgba(120, 150, 170, 0.25); border-radius: 10px; background: rgba(12, 16, 20, 0.7); flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
-#t-story-outline-overlay .t-plan-accordion-item { border: 1px solid rgba(120, 150, 170, 0.28); border-radius: 10px; background: rgba(12, 16, 20, 0.84); overflow: hidden; }
-#t-story-outline-overlay .t-plan-accordion-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px; background: rgba(16, 24, 32, 0.92); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-#t-story-outline-overlay .t-plan-name-btn { border: 0; background: transparent; color: #d8e8f6; font-weight: 600; padding: 0; cursor: pointer; text-align: left; }
-#t-story-outline-overlay .t-plan-meta { margin-top: 2px; color: #92a7bb; font-size: 12px; }
-#t-story-outline-overlay .t-plan-tip { margin-top: 3px; color: #7f96aa; font-size: 11px; }
-#t-story-outline-overlay .t-plan-accordion-actions { display: flex; gap: 6px; align-items: center; }
-#t-story-outline-overlay .t-plan-delete-btn { color: #ff9d9d; }
-#t-story-outline-overlay .t-plan-action-label { display: inline; }
-@media (max-width: 768px) {
-  #t-story-outline-overlay .t-plan-accordion-head { flex-direction: column; align-items: stretch; }
-  #t-story-outline-overlay .t-plan-accordion-actions { width: 100%; flex-wrap: nowrap; justify-content: flex-end; }
-  #t-story-outline-overlay .t-plan-accordion-actions .t-plan-action-btn { width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 36px; }
-  #t-story-outline-overlay .t-plan-accordion-actions .t-plan-action-btn i { margin: 0; font-size: 14px; }
-  #t-story-outline-overlay .t-plan-accordion-actions .t-plan-action-label { display: none; }
-}
-`;
+    autoSavePlanTimer = null;
+    planRenameMode = false;
+    planRenameSnapshot = "";
+    MAX_RAW_HISTORY = 24;
   }
 });
 
@@ -15098,22 +16437,28 @@ function getSavedPlanCount() {
   const plans = data?.[SCENE_PLANS_KEY];
   return Array.isArray(plans) ? plans.length : 0;
 }
+function hasSceneSourcePlan() {
+  const data = getExtData();
+  return typeof data?.[SCENE_SOURCE_PLAN_KEY2] === "string" && data[SCENE_SOURCE_PLAN_KEY2].trim().length > 0;
+}
 async function openMenu($btn) {
   ensureMenuStyle();
   closeMenu();
   const hasPlans = getSavedPlanCount() > 0;
+  const hasSource = hasSceneSourcePlan();
+  const canOpenScenes = hasPlans && hasSource;
   const menuHtml = `
     <div id="${MENU_ID}" role="menu" aria-label="\u6545\u4E8B\u5927\u7EB2\u5165\u53E3">
         <button class="t-outline-entry-item" id="t-outline-entry-open-outline" role="menuitem">
             <i class="fa-solid fa-list-check"></i> \u6545\u4E8B\u5927\u7EB2
         </button>
-        <button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${hasPlans ? "" : "disabled"}>
+        <button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${canOpenScenes ? "" : "disabled"}>
             <i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2\u60C5\u8282
         </button>
         <button class="t-outline-entry-item" id="t-outline-entry-open-prompts" role="menuitem">
-            <i class="fa-solid fa-sliders"></i> \u63D0\u793A\u8BCD\u7BA1\u7406
+            <i class="fa-solid fa-sliders"></i> \u8BBE\u7F6E
         </button>
-        ${hasPlans ? "" : '<div class="t-outline-entry-tip">\u8BF7\u5148\u4FDD\u5B58\u81F3\u5C11\u4E00\u4E2A\u65B9\u6848</div>'}
+        ${hasPlans ? hasSource ? "" : '<div class="t-outline-entry-tip">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\u65B9\u6848</div>' : '<div class="t-outline-entry-tip">\u8BF7\u5148\u4FDD\u5B58\u81F3\u5C11\u4E00\u4E2A\u65B9\u6848</div>'}
     </div>`;
   $("body").append(menuHtml);
   const $menu = $(`#${MENU_ID}`);
@@ -15135,7 +16480,7 @@ async function openMenu($btn) {
   $("#t-outline-entry-open-scenes").on("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!hasPlans) return;
+    if (!canOpenScenes) return;
     closeMenu();
     const { openSceneHubWindow: openSceneHubWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
     openSceneHubWindow2();
@@ -15205,7 +16550,7 @@ function initOutlineEntryButton() {
 function refreshOutlineEntryButton() {
   syncEntryButton();
 }
-var BTN_ID, ANCHOR_SELECTOR, MENU_ID, MENU_STYLE_ID, SCENE_PLANS_KEY, observerBound;
+var BTN_ID, ANCHOR_SELECTOR, MENU_ID, MENU_STYLE_ID, SCENE_PLANS_KEY, SCENE_SOURCE_PLAN_KEY2, observerBound;
 var init_outlineEntryButton = __esm({
   "src/ui/outlineEntryButton.js"() {
     init_storage();
@@ -15214,7 +16559,1214 @@ var init_outlineEntryButton = __esm({
     MENU_ID = "titania-outline-entry-menu";
     MENU_STYLE_ID = "titania-outline-entry-menu-style";
     SCENE_PLANS_KEY = "story_outline_plans";
+    SCENE_SOURCE_PLAN_KEY2 = "story_outline_scene_source_plan_id";
     observerBound = false;
+  }
+});
+
+// src/ui/rewriteEntryButton.js
+import { saveChatConditional, reloadCurrentChat, eventSource, event_types } from "../../../../script.js";
+function ensureRewriteCssLoaded() {
+  const cssId = "titania-css-rewrite-panel";
+  const href = `${extensionFolderPath}/css/rewrite-panel.css?t=${Date.now()}`;
+  let link = document.getElementById(cssId);
+  if (!link) {
+    link = document.createElement("link");
+    link.id = cssId;
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    document.head.appendChild(link);
+  }
+  link.href = href;
+}
+function isEnabled2() {
+  const data = getExtData();
+  return data?.rewrite_entry?.enabled === true;
+}
+function escapeHtml4(text) {
+  return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function normalizeApiBaseUrl(inputUrl) {
+  return String(inputUrl || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "").replace(/\/v1\/models$/, "").replace(/\/models$/, "");
+}
+function normalizeChatEndpoint(inputUrl) {
+  const base = normalizeApiBaseUrl(inputUrl);
+  if (!base) return "";
+  if (base.endsWith("/chat/completions")) return base;
+  if (base.endsWith("/v1")) return `${base}/chat/completions`;
+  return `${base}/v1/chat/completions`;
+}
+function normalizeToken(s) {
+  return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+function normalizePunctuation(s) {
+  return String(s || "").replace(/，/g, ",").replace(/；/g, ";").replace(/：/g, ":").replace(/[\t\f\v]+/g, " ");
+}
+function parseCommaList(input) {
+  return normalizePunctuation(input).split(",").map((x) => normalizeToken(x)).filter(Boolean);
+}
+function uniq(arr) {
+  return [...new Set(arr)];
+}
+function cleanupRules(rules) {
+  if (!Array.isArray(rules)) return [];
+  return rules.map((item) => {
+    const anchor = normalizeToken(item?.anchor || "");
+    const extras = uniq(parseCommaList(item?.extras || ""));
+    return { anchor, extras };
+  }).filter((rule) => rule.anchor);
+}
+function rulesToLegacyText(rules) {
+  if (!Array.isArray(rules) || rules.length === 0) return "";
+  return rules.map((r) => {
+    if (!r.extras || r.extras.length === 0) return r.anchor;
+    return `${r.anchor} => ${r.extras.join(", ")}`;
+  }).join("\n");
+}
+function ensureRewriteDataShape() {
+  const data = getExtData();
+  if (!data.rewrite_entry || typeof data.rewrite_entry !== "object") {
+    data.rewrite_entry = {
+      enabled: false,
+      api_url: "",
+      api_key: "",
+      model: "",
+      rules_text: "",
+      split_mode: "sentence",
+      rules: []
+    };
+  }
+  const item = data.rewrite_entry;
+  if (!item.split_mode || !["sentence", "paragraph"].includes(item.split_mode)) item.split_mode = "sentence";
+  if (!Array.isArray(item.rules)) item.rules = [];
+  if (typeof item.stream_live !== "boolean") item.stream_live = true;
+  if (typeof item.auto_trigger !== "boolean") item.auto_trigger = false;
+  if (typeof item.rules_text !== "string") item.rules_text = "";
+  item.rules = cleanupRules(item.rules);
+  return item;
+}
+function getOverlay() {
+  return $(`#${OVERLAY_ID}`);
+}
+function getSettingsOverlay() {
+  return $(`#${SETTINGS_OVERLAY_ID}`);
+}
+function closePanel() {
+  closeSettingsPanel();
+  getOverlay().remove();
+}
+function closeSettingsPanel() {
+  getSettingsOverlay().remove();
+}
+function removeButton2(closePanelToo = true) {
+  $(`#${BTN_ID2}`).remove();
+  if (closePanelToo) closePanel();
+}
+function setStatus(text, tone = "muted") {
+  const $targets = $("#t-rewrite-status, #t-rewrite-settings-status");
+  if (!$targets.length) return;
+  $targets.each((_, el) => {
+    $(el).removeClass("ok warn err muted").addClass(tone).text(text || "");
+  });
+}
+function splitBySentence(text) {
+  const src = String(text || "");
+  if (!src.trim()) return [];
+  const lines = src.split(/\r?\n/);
+  const chunks = [];
+  lines.forEach((line) => {
+    if (!line.trim()) return;
+    const arr = line.split(/(?<=[。！？!?])/u).filter((s) => s.trim());
+    if (arr.length === 0) {
+      chunks.push(line);
+    } else {
+      chunks.push(...arr);
+    }
+  });
+  return chunks;
+}
+function splitByParagraph(text) {
+  return String(text || "").split(/\r?\n\s*\r?\n+/).map((s) => s.trim()).filter(Boolean);
+}
+function splitText(text, splitMode) {
+  return splitMode === "paragraph" ? splitByParagraph(text) : splitBySentence(text);
+}
+function evaluateUnit(unitText, rules) {
+  const source = normalizeToken(unitText);
+  const hits = [];
+  rules.forEach((rule, idx) => {
+    const anchorHit = source.includes(rule.anchor);
+    if (!anchorHit) return;
+    if (!Array.isArray(rule.extras) || rule.extras.length === 0) {
+      hits.push({ ruleIndex: idx + 1, anchor: rule.anchor, matchedExtra: null });
+      return;
+    }
+    const matchedExtra = rule.extras.find((extra) => source.includes(extra));
+    if (matchedExtra) {
+      hits.push({ ruleIndex: idx + 1, anchor: rule.anchor, matchedExtra });
+    }
+  });
+  return hits;
+}
+function evaluateRules(payload, sourceText = null) {
+  const splitMode = payload?.split_mode === "paragraph" ? "paragraph" : "sentence";
+  const rules = cleanupRules(payload?.rules || []);
+  const testText = String(sourceText || "");
+  const units = splitText(testText, splitMode);
+  const unitResults = units.map((unit, idx) => {
+    const hits = evaluateUnit(unit, rules);
+    return {
+      unitIndex: idx + 1,
+      text: unit,
+      hit: hits.length > 0,
+      hits
+    };
+  });
+  const hitUnits = unitResults.filter((item) => item.hit);
+  return {
+    splitMode,
+    unitCount: unitResults.length,
+    hitCount: hitUnits.length,
+    rules,
+    unitResults
+  };
+}
+function renderDiffRows(rows = []) {
+  const $body = $("#t-rewrite-diff-body");
+  if (!$body.length) return;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    $body.html('<div class="t-rewrite-diff-empty">\u7B49\u5F85\u6267\u884C\u6539\u5199\u540E\u5C55\u793A Diff \u5BF9\u6BD4</div>');
+    return;
+  }
+  const html = rows.map((item, idx) => {
+    const before = escapeHtml4(item.before || "");
+    const after = escapeHtml4(item.after || "");
+    const ruleHint = escapeHtml4(item.ruleHint || "");
+    return `
+            <div class="t-rewrite-diff-row">
+                <div class="t-rewrite-diff-cell t-rewrite-diff-before">
+                    <div class="t-rewrite-diff-label">\u539F\u53E5 #${idx + 1}${ruleHint ? ` \xB7 ${ruleHint}` : ""}</div>
+                    <div class="t-rewrite-diff-text">${before}</div>
+                </div>
+                <div class="t-rewrite-diff-cell t-rewrite-diff-after">
+                    <div class="t-rewrite-diff-label">\u6539\u5199 #${idx + 1}</div>
+                    <div class="t-rewrite-diff-text">${after}</div>
+                </div>
+            </div>
+        `;
+  }).join("");
+  $body.html(html);
+}
+function setRawResponse(text) {
+  const $el = $("#t-rewrite-raw-response");
+  if (!$el.length) return;
+  $el.text(String(text || ""));
+  const dom = $el.get(0);
+  if (dom) dom.scrollTop = dom.scrollHeight;
+}
+function setRawMeta(text) {
+  const $el = $("#t-rewrite-raw-meta");
+  if (!$el.length) return;
+  $el.text(String(text || ""));
+}
+function updateAbortBtnState(isRunning) {
+  $("#t-rewrite-abort").prop("disabled", !isRunning);
+}
+function stripCodeFence(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+  return raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+}
+function extractJsonCandidate(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    return raw.slice(start, end + 1).trim();
+  }
+  return raw;
+}
+function sanitizeJsonLike(text) {
+  let s = String(text || "");
+  s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  s = s.replace(/,\s*([}\]])/g, "$1");
+  s = s.replace(/([{,]\s*)'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, '$1"$2":');
+  s = s.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_m, p1) => {
+    return `: "${String(p1).replace(/\"/g, '"').replace(/"/g, '\\"')}"`;
+  });
+  return s.trim();
+}
+function stabilizeBrokenJson(text) {
+  const raw = String(text || "");
+  if (!raw) return "";
+  const fixed = raw.replace(/\"([^\"]*?)\"\s*:\s*\"([\s\S]*?)(?=\n\s*\"[A-Za-z0-9_]+\"\s*:|\n\s*[}\]]|\s*}\s*$|\s*]\s*$)/g, (m, key, value) => {
+    const safe = String(value).replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/\"/g, '\\"');
+    return `"${key}":"${safe}"`;
+  });
+  let out = "";
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < fixed.length; i += 1) {
+    const ch = fixed[i];
+    if (inString) {
+      if (escaped) {
+        out += ch;
+        escaped = false;
+        continue;
+      }
+      if (ch === "\\") {
+        out += ch;
+        escaped = true;
+        continue;
+      }
+      if (ch === '"') {
+        out += ch;
+        inString = false;
+        continue;
+      }
+      if (ch === "\n" || ch === "\r") {
+        out += "\\n";
+        continue;
+      }
+      out += ch;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    }
+    out += ch;
+  }
+  if (inString) {
+    out += '"';
+  }
+  out = out.replace(/,\s*([}\]])/g, "$1");
+  let braceOpen = 0;
+  let bracketOpen = 0;
+  for (let i = 0; i < out.length; i += 1) {
+    const ch = out[i];
+    if (ch === "{") braceOpen += 1;
+    else if (ch === "}") braceOpen = Math.max(0, braceOpen - 1);
+    else if (ch === "[") bracketOpen += 1;
+    else if (ch === "]") bracketOpen = Math.max(0, bracketOpen - 1);
+  }
+  if (bracketOpen > 0) out += "]".repeat(bracketOpen);
+  if (braceOpen > 0) out += "}".repeat(braceOpen);
+  return out.trim();
+}
+function parseRewriteJson(raw) {
+  const base = extractJsonCandidate(stripCodeFence(raw));
+  const candidates = [
+    base,
+    sanitizeJsonLike(base),
+    stabilizeBrokenJson(base),
+    stabilizeBrokenJson(sanitizeJsonLike(base))
+  ].filter(Boolean);
+  let lastErr = null;
+  for (const c of candidates) {
+    try {
+      return JSON.parse(c);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("Invalid JSON response");
+}
+function buildRewritePayload(data, sourceText) {
+  const evaluated = evaluateRules(data, sourceText || "");
+  const targets = [];
+  evaluated.unitResults.forEach((unit) => {
+    if (!unit.hit) return;
+    targets.push({
+      segment_id: `s_${unit.unitIndex}`,
+      unit_index: unit.unitIndex,
+      original_text: unit.text,
+      matched_rules: unit.hits.map((h) => ({
+        rule_index: h.ruleIndex,
+        anchor: h.anchor,
+        matched_extra: h.matchedExtra
+      }))
+    });
+  });
+  return {
+    evaluated,
+    request: {
+      task_id: `rewrite_${Date.now()}`,
+      split_mode: evaluated.splitMode,
+      style_hint: "\u4FDD\u6301\u539F\u6587\u8BED\u6C14\u3001\u4EBA\u79F0\u3001\u53D9\u4E8B\u89C6\u89D2\uFF0C\u4EC5\u505A\u5FC5\u8981\u6539\u5199",
+      rules: evaluated.rules,
+      targets
+    }
+  };
+}
+function getLatestAssistantMessageFromChat() {
+  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return null;
+  const ctx = SillyTavern.getContext();
+  const chat = Array.isArray(ctx?.chat) ? ctx.chat : [];
+  if (chat.length === 0) return null;
+  for (let i = chat.length - 1; i >= 0; i -= 1) {
+    const msg = chat[i];
+    if (!msg || msg.is_user || msg.is_system || msg.is_hidden || msg.disabled) continue;
+    const content = String(msg.mes || msg.message || "");
+    if (!content.trim()) continue;
+    return { index: i, msg, content };
+  }
+  return null;
+}
+function applyRewriteToFullText(sourceText, evaluated, parsed) {
+  const map = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
+  let rewritten = String(sourceText || "");
+  let cursor = 0;
+  let replaced = 0;
+  evaluated.unitResults.filter((u) => u.hit).forEach((unit) => {
+    const segmentId = `s_${unit.unitIndex}`;
+    const after = map.get(segmentId);
+    if (typeof after !== "string") return;
+    const before = String(unit.text || "");
+    if (!before) return;
+    const idx = rewritten.indexOf(before, cursor);
+    if (idx < 0) return;
+    rewritten = `${rewritten.slice(0, idx)}${after}${rewritten.slice(idx + before.length)}`;
+    cursor = idx + after.length;
+    replaced += 1;
+  });
+  return { text: rewritten, replaced };
+}
+function writeBackMessageContent(targetMsg, rewrittenText) {
+  const text = String(rewrittenText || "");
+  targetMsg.mes = text;
+  targetMsg.message = text;
+  if (Array.isArray(targetMsg.swipes) && targetMsg.swipes.length > 0) {
+    const swipeId = Number(targetMsg.swipe_id);
+    const idx = Number.isInteger(swipeId) && swipeId >= 0 && swipeId < targetMsg.swipes.length ? swipeId : targetMsg.swipes.length - 1;
+    targetMsg.swipes[idx] = text;
+  }
+}
+function buildRewriteMessages(payload) {
+  const systemPrompt = [
+    "\u4F60\u662F\u4E00\u4E2A\u4E25\u683C\u7684\u6587\u672C\u6539\u5199\u5668\u3002",
+    "\u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8981\u8F93\u51FA\u4EFB\u4F55\u89E3\u91CA\u6216 Markdown\u3002",
+    "\u53EA\u6539\u5199 targets \u4E2D\u7684\u6587\u672C\uFF0C\u6761\u76EE\u6570\u4E0E segment_id \u5FC5\u987B\u5B8C\u5168\u4E00\u81F4\u3002",
+    "\u4FDD\u6301\u539F\u6587\u8BED\u8A00\u3001\u4EBA\u79F0\u3001\u65F6\u6001\u548C\u53D9\u4E8B\u89C6\u89D2\u3002",
+    "\u6BCF\u6761 rewritten_text \u7981\u6B62\u5305\u542B\u8BE5\u6761 target \u7684\u547D\u4E2D\u8BCD\uFF08anchor \u4E0E matched_extra\uFF09\u3002"
+  ].join("\n");
+  const userPrompt = [
+    "\u8FD4\u56DE JSON schema\uFF1A",
+    '{"task_id":"string","results":[{"segment_id":"string","rewritten_text":"string"}]}',
+    "\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A",
+    '{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}',
+    "\u786C\u7EA6\u675F\uFF1A",
+    "1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570",
+    "2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D",
+    "3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE",
+    "4) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9",
+    "",
+    "\u8F93\u5165\u6570\u636E\uFF1A",
+    JSON.stringify(payload)
+  ].join("\n");
+  return [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userPrompt }
+  ];
+}
+function buildFixJsonMessages(rawOutput, payload) {
+  return [
+    {
+      role: "system",
+      content: "\u4F60\u662F JSON \u4FEE\u590D\u5668\u3002\u53EA\u8F93\u51FA\u5408\u6CD5 JSON\uFF0C\u4E0D\u8981\u8F93\u51FA\u5176\u4ED6\u5185\u5BB9\u3002JSON \u5FC5\u987B\u4F7F\u7528\u53CC\u5F15\u53F7\uFF0C\u4E0D\u5141\u8BB8\u5C3E\u9017\u53F7\u3002"
+    },
+    {
+      role: "user",
+      content: [
+        "\u628A\u4E0B\u9762\u5185\u5BB9\u4FEE\u6B63\u6210\u5408\u6CD5 JSON\uFF0C\u4E14\u4E25\u683C\u6EE1\u8DB3 schema\uFF1A",
+        '{"task_id":"string","results":[{"segment_id":"string","rewritten_text":"string"}]}',
+        "\u5FC5\u987B\u5305\u542B\u952E\u540D\uFF1Atask_id \u548C results\uFF08\u4E0D\u80FD\u6539\u540D\u4E3A data/items/rewrites\uFF09",
+        "\u5FC5\u987B\u4E0E\u4EE5\u4E0B\u8F93\u5165 payload \u5BF9\u9F50\uFF08segment_id \u548C\u6570\u91CF\u4E00\u81F4\uFF09\uFF1A",
+        JSON.stringify(payload),
+        "\u5F85\u4FEE\u590D\u5185\u5BB9\uFF1A",
+        String(rawOutput || "")
+      ].join("\n")
+    }
+  ];
+}
+function estimateMaxTokens(payload) {
+  return REWRITE_MAX_TOKENS;
+}
+function validateRewriteResponse(parsed, payload) {
+  if (!parsed || typeof parsed !== "object") {
+    return { ok: false, reason: "\u8FD4\u56DE\u4E0D\u662F\u5BF9\u8C61" };
+  }
+  const taskId = String(parsed.task_id || "").trim();
+  if (!taskId) return { ok: false, reason: "\u7F3A\u5C11 task_id" };
+  if (!Array.isArray(parsed.results)) return { ok: false, reason: "\u7F3A\u5C11 results \u6570\u7EC4" };
+  const targets = Array.isArray(payload?.targets) ? payload.targets : [];
+  if (parsed.results.length !== targets.length) {
+    return { ok: false, reason: `results \u6570\u91CF\u4E0D\u5339\u914D: ${parsed.results.length}/${targets.length}` };
+  }
+  const targetSet = new Set(targets.map((t) => t.segment_id));
+  const seen = /* @__PURE__ */ new Set();
+  for (const row of parsed.results) {
+    const segmentId = String(row?.segment_id || "").trim();
+    const rewrittenText = String(row?.rewritten_text || "").trim();
+    if (!segmentId) return { ok: false, reason: "\u5B58\u5728\u7A7A segment_id" };
+    if (!targetSet.has(segmentId)) return { ok: false, reason: `segment_id \u4E0D\u5728\u8F93\u5165\u4E2D: ${segmentId}` };
+    if (seen.has(segmentId)) return { ok: false, reason: `segment_id \u91CD\u590D: ${segmentId}` };
+    if (!rewrittenText) return { ok: false, reason: `rewritten_text \u4E3A\u7A7A: ${segmentId}` };
+    seen.add(segmentId);
+  }
+  return { ok: true };
+}
+function buildRewriteJsonSchema() {
+  return {
+    type: "json_schema",
+    json_schema: {
+      name: "rewrite_response",
+      strict: true,
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          task_id: { type: "string" },
+          results: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                segment_id: { type: "string" },
+                rewritten_text: { type: "string" }
+              },
+              required: ["segment_id", "rewritten_text"]
+            }
+          }
+        },
+        required: ["task_id", "results"]
+      }
+    }
+  };
+}
+function shouldFallbackWithoutSchema(status, bodyText) {
+  if (status !== 400 && status !== 422) return false;
+  const msg = String(bodyText || "").toLowerCase();
+  return msg.includes("response_format") || msg.includes("json_schema") || msg.includes("unsupported") || msg.includes("invalid_request_error");
+}
+async function requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, options = {}) {
+  const endpoint = normalizeChatEndpoint(apiUrl);
+  if (!endpoint) throw new Error("API \u5730\u5740\u65E0\u6548");
+  const headers = { "Content-Type": "application/json" };
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  const temperature = Number.isFinite(options.temperature) ? options.temperature : REWRITE_TEMPERATURE;
+  const stream = options.stream === true;
+  const signal = options.signal;
+  const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
+  const body = {
+    model,
+    messages,
+    stream,
+    temperature,
+    max_tokens: maxTokens,
+    response_format: buildRewriteJsonSchema()
+  };
+  let res = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    signal
+  });
+  if (!res.ok) {
+    const firstErrText = await res.text().catch(() => "");
+    if (shouldFallbackWithoutSchema(res.status, firstErrText)) {
+      const fallbackBody = {
+        model,
+        messages,
+        stream,
+        temperature,
+        max_tokens: maxTokens
+      };
+      res = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(fallbackBody),
+        signal
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status}: ${errText.slice(0, 200)}`);
+      }
+      if (stream) {
+        return await consumeStreamResponse(res, onProgress);
+      }
+      const json2 = await res.json();
+      const content2 = json2?.choices?.[0]?.message?.content || "";
+      return String(content2 || "");
+    }
+    throw new Error(`HTTP ${res.status}: ${firstErrText.slice(0, 200)}`);
+  }
+  if (stream) {
+    return await consumeStreamResponse(res, onProgress);
+  }
+  const json = await res.json();
+  const content = json?.choices?.[0]?.message?.content || "";
+  return String(content || "");
+}
+async function consumeStreamResponse(res, onProgress) {
+  if (!res.body) throw new Error("Stream Empty Body: \u54CD\u5E94\u4F53\u4E3A\u7A7A");
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let aggregated = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    while (true) {
+      const idx = buffer.indexOf("\n");
+      if (idx < 0) break;
+      const line = buffer.slice(0, idx).trim();
+      buffer = buffer.slice(idx + 1);
+      if (!line || !line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+      try {
+        const json = JSON.parse(data);
+        const chunk = json?.choices?.[0]?.delta?.content || json?.choices?.[0]?.message?.content || "";
+        if (!chunk) continue;
+        aggregated += chunk;
+        if (onProgress) onProgress(chunk, aggregated);
+      } catch {
+      }
+    }
+  }
+  if (!aggregated.trim()) {
+    throw new Error("\u6D41\u5F0F\u8FD4\u56DE\u4E3A\u7A7A");
+  }
+  return aggregated;
+}
+function normalizeRewriteResponseShape(parsed, payload) {
+  const input = parsed && typeof parsed === "object" ? parsed : {};
+  const taskId = String(
+    input.task_id || input.taskId || payload?.task_id || `rewrite_${Date.now()}`
+  ).trim();
+  const list = (() => {
+    if (Array.isArray(input.results)) return input.results;
+    if (Array.isArray(input.data)) return input.data;
+    if (Array.isArray(input.items)) return input.items;
+    if (Array.isArray(input.rewrites)) return input.rewrites;
+    if (Array.isArray(input.output)) return input.output;
+    if (Array.isArray(input.result)) return input.result;
+    if (input.result && Array.isArray(input.result.results)) return input.result.results;
+    if (Array.isArray(input)) return input;
+    return [];
+  })();
+  const results = list.map((row, idx) => {
+    const segmentId = String(
+      row?.segment_id || row?.segmentId || row?.target_id || row?.targetId || row?.id || ""
+    ).trim() || String(payload?.targets?.[idx]?.segment_id || "");
+    const rewrittenText = String(
+      row?.rewritten_text || row?.rewrittenText || row?.rewrite || row?.text || row?.content || ""
+    );
+    return { segment_id: segmentId, rewritten_text: rewrittenText };
+  });
+  return {
+    task_id: taskId,
+    results
+  };
+}
+function buildDiffRowsFromResults(evaluated, payload, parsed) {
+  const rewrittenMap = new Map(parsed.results.map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
+  const targetMap = new Map(payload.targets.map((t) => [t.segment_id, t]));
+  return evaluated.unitResults.filter((u) => u.hit).map((u) => {
+    const segmentId = `s_${u.unitIndex}`;
+    const target = targetMap.get(segmentId);
+    const after = rewrittenMap.get(segmentId) || u.text;
+    const ruleHint = (target?.matched_rules || []).map((x) => {
+      return x.matched_extra ? `${x.anchor}+${x.matched_extra}` : `${x.anchor}`;
+    }).join(" | ");
+    return {
+      before: u.text,
+      after,
+      ruleHint
+    };
+  });
+}
+async function runRewrite(options = {}) {
+  persistPanelState();
+  const data = ensureRewriteDataShape();
+  const apiUrl = String(data.api_url || "").trim();
+  const apiKey = String(data.api_key || "").trim();
+  const model = String(data.model || "").trim();
+  if (!apiUrl) {
+    setStatus("\u8BF7\u5148\u586B\u5199 API \u5730\u5740", "warn");
+    return;
+  }
+  if (!model) {
+    setStatus("\u8BF7\u5148\u9009\u62E9\u6A21\u578B", "warn");
+    return;
+  }
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    return;
+  }
+  const { evaluated, request } = buildRewritePayload(data, latest.content);
+  renderMatchResult(evaluated, latest.content);
+  if (!String(latest.content || "").trim()) {
+    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
+    return;
+  }
+  if (!Array.isArray(request.targets) || request.targets.length === 0) {
+    setStatus("\u6CA1\u6709\u547D\u4E2D\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF0C\u672A\u53D1\u8D77\u6539\u5199", "warn");
+    renderDiffRows([]);
+    return;
+  }
+  const maxTokens = estimateMaxTokens(request);
+  const messages = buildRewriteMessages(request);
+  const $btn = $("#t-rewrite-trigger");
+  const streamLive = data.stream_live === true;
+  const source = options.source || "manual";
+  $btn.prop("disabled", true);
+  updateAbortBtnState(true);
+  const abortController = new AbortController();
+  activeRewriteAbortController = abortController;
+  setRawResponse("");
+  setRawMeta(streamLive ? `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u6D41\u5F0F\u5F00\u542F\uFF08${source}\uFF09` : `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u975E\u6D41\u5F0F\uFF08${source}\uFF09`);
+  try {
+    setStatus(`\u6B63\u5728\u8BF7\u6C42\u6539\u5199\uFF08${request.targets.length} \u4E2A\u76EE\u6807\uFF09...`, "muted");
+    let raw = await requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, {
+      temperature: REWRITE_TEMPERATURE,
+      stream: streamLive,
+      signal: abortController.signal,
+      onProgress: (_chunk, all) => {
+        if (streamLive) {
+          setRawResponse(all);
+        }
+      }
+    });
+    if (!streamLive) setRawResponse(raw);
+    let parsed = null;
+    try {
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+    } catch (e) {
+      const fixMessages = buildFixJsonMessages(raw, request);
+      raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+        temperature: REWRITE_FIX_TEMPERATURE
+      });
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+    }
+    let valid = validateRewriteResponse(parsed, request);
+    if (!valid.ok) {
+      const fixMessages = buildFixJsonMessages(raw, request);
+      setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
+      const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+        temperature: REWRITE_FIX_TEMPERATURE
+      });
+      setRawResponse(fixedRaw);
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
+      valid = validateRewriteResponse(parsed, request);
+      if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
+    }
+    const rows = buildDiffRowsFromResults(evaluated, request, parsed);
+    renderDiffRows(rows);
+    const applied = applyRewriteToFullText(latest.content, evaluated, parsed);
+    writeBackMessageContent(latest.msg, applied.text);
+    if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
+    latest.msg.extra.titania_rewrite_done = true;
+    await saveChatConditional();
+    await reloadCurrentChat();
+    setStatus(`\u6539\u5199\u5B8C\u6210\uFF1A${rows.length} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+  } catch (e) {
+    renderDiffRows([]);
+    if (e?.name === "AbortError") {
+      setStatus("\u6539\u5199\u5DF2\u624B\u52A8\u7EC8\u6B62", "warn");
+    } else {
+      setStatus(`\u6539\u5199\u5931\u8D25: ${e.message}`, "err");
+      if (window.toastr) toastr.error(e.message || "\u6539\u5199\u5931\u8D25", "\u6587\u672C\u6539\u5199");
+    }
+  } finally {
+    activeRewriteAbortController = null;
+    $btn.prop("disabled", false);
+    updateAbortBtnState(false);
+  }
+}
+async function runManualRewrite() {
+  return runRewrite({ source: "manual" });
+}
+async function onAutoTriggerRewrite() {
+  const data = ensureRewriteDataShape();
+  if (!data.auto_trigger) return;
+  if (!isEnabled2()) return;
+  if (isAutoRewriting) return;
+  if (activeRewriteAbortController) return;
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest || !latest.msg) return;
+  if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
+  if (latest.msg.extra.titania_rewrite_done === true) return;
+  try {
+    isAutoRewriting = true;
+    await runRewrite({ source: "auto" });
+  } finally {
+    isAutoRewriting = false;
+  }
+}
+function bindAutoTriggerEvents() {
+  if (autoTriggerBound) return;
+  autoTriggerBound = true;
+  eventSource.on(event_types.MESSAGE_RECEIVED, onAutoTriggerRewrite);
+  eventSource.on(event_types.GENERATION_ENDED, onAutoTriggerRewrite);
+}
+function renderSettingsRules(rows) {
+  const $box = $("#t-rewrite-settings-rules-list");
+  if (!$box.length) return;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    $box.html('<div class="t-rewrite-empty-rule">\u6682\u65E0\u89C4\u5219\uFF0C\u70B9\u51FB\u201C\u65B0\u589E\u89C4\u5219\u201D\u5F00\u59CB</div>');
+    return;
+  }
+  const html = rows.map((rule, idx) => `
+        <div class="t-rewrite-rule-row" data-rule-idx="${idx}">
+            <div class="t-rewrite-rule-no">#${idx + 1}</div>
+            <input class="text_pole t-rewrite-rule-anchor" type="text" value="${escapeHtml4(rule.anchor || "")}" placeholder="\u4E3B\u8BCD\uFF08\u5FC5\u586B\uFF09" maxlength="120">
+            <input class="text_pole t-rewrite-rule-extras" type="text" value="${escapeHtml4((rule.extras || []).join(", "))}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u547D\u4E2D\u4EFB\u610F\u4E00\u4E2A\uFF09" maxlength="500">
+            <button class="t-btn t-rewrite-rule-del" type="button" title="\u5220\u9664\u89C4\u5219"><i class="fa-solid fa-trash"></i></button>
+        </div>
+    `).join("");
+  $box.html(html);
+  $("#t-rewrite-settings-rule-count").text(String(rows.filter((r) => String(r.anchor || "").trim()).length));
+}
+function getRulesFromDom(containerSelector = "#t-rewrite-rules-list") {
+  const rows = [];
+  $(`${containerSelector} .t-rewrite-rule-row`).each((_, el) => {
+    const $row = $(el);
+    const anchor = normalizeToken($row.find(".t-rewrite-rule-anchor").val());
+    const extrasInput = String($row.find(".t-rewrite-rule-extras").val() || "");
+    const extras = uniq(parseCommaList(extrasInput));
+    rows.push({ anchor, extras });
+  });
+  return cleanupRules(rows);
+}
+function persistPanelState() {
+  const $overlay = getOverlay();
+  if (!$overlay.length) return;
+  const data = getExtData();
+  const prev = ensureRewriteDataShape();
+  const rules = $overlay.find("#t-rewrite-rules-list").length > 0 ? getRulesFromDom() : prev.rules;
+  const readValue = (selector, fallback = "") => {
+    const $el = $overlay.find(selector);
+    return $el.length > 0 ? String($el.val() || "").trim() : fallback;
+  };
+  const readChecked = (selector, fallback = false) => {
+    const $el = $overlay.find(selector);
+    return $el.length > 0 ? $el.prop("checked") === true : fallback;
+  };
+  data.rewrite_entry = {
+    enabled: prev.enabled === true,
+    api_url: readValue("#t-rewrite-api-url", prev.api_url || ""),
+    api_key: readValue("#t-rewrite-api-key", prev.api_key || ""),
+    model: readValue("#t-rewrite-model", prev.model || ""),
+    rules_text: rulesToLegacyText(rules),
+    split_mode: readValue("input[name='t-rewrite-split-mode']:checked", prev.split_mode || "sentence"),
+    rules,
+    stream_live: readChecked("#t-rewrite-stream-live", prev.stream_live === true),
+    auto_trigger: prev.auto_trigger === true
+  };
+  saveExtData();
+  $("#t-rewrite-rule-count").text(String(rules.length));
+}
+function persistSettingsPanelState() {
+  const $overlay = getSettingsOverlay();
+  if (!$overlay.length) return;
+  const data = getExtData();
+  const prev = ensureRewriteDataShape();
+  const rules = getRulesFromDom("#t-rewrite-settings-rules-list");
+  data.rewrite_entry = {
+    enabled: prev.enabled === true,
+    api_url: String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim(),
+    api_key: String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim(),
+    model: String($overlay.find("#t-rewrite-settings-model").val() || "").trim(),
+    rules_text: rulesToLegacyText(rules),
+    split_mode: String($overlay.find("input[name='t-rewrite-settings-split-mode']:checked").val() || "sentence"),
+    rules,
+    stream_live: $overlay.find("#t-rewrite-settings-stream-live").prop("checked") === true,
+    auto_trigger: $overlay.find("#t-rewrite-settings-auto-trigger").prop("checked") === true
+  };
+  saveExtData();
+  $("#t-rewrite-settings-rule-count").text(String(rules.length));
+}
+function renderMatchResult(result, sourceText = "") {
+  const $body = $("#t-rewrite-match-body");
+  if (!$body.length) return;
+  if (!result || !Array.isArray(result.unitResults) || result.unitResults.length === 0) {
+    $body.html('<div class="t-rewrite-diff-empty">\u7B49\u5F85\u6267\u884C\u6539\u5199\u540E\u5C55\u793A\u547D\u4E2D\u7ED3\u679C</div>');
+    return;
+  }
+  const html = result.unitResults.map((item) => {
+    const cls = item.hit ? "hit" : "miss";
+    const tag = result.splitMode === "paragraph" ? "\u6BB5" : "\u53E5";
+    const hits = item.hit ? item.hits.map((h) => {
+      const extraText = h.matchedExtra ? ` + ${escapeHtml4(h.matchedExtra)}` : " + (\u65E0\u9644\u52A0\u8BCD)";
+      return `<span class="t-rewrite-hit-tag">\u89C4\u5219#${h.ruleIndex}: ${escapeHtml4(h.anchor)}${extraText}</span>`;
+    }).join("") : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
+    return `
+            <div class="t-rewrite-match-row ${cls}">
+                <div class="t-rewrite-match-head">
+                    <div>${tag} #${item.unitIndex}</div>
+                    <div class="t-rewrite-match-tags">${hits}</div>
+                </div>
+                <div class="t-rewrite-match-text">${escapeHtml4(item.text)}</div>
+            </div>
+        `;
+  }).join("");
+  const header = `<div class="t-rewrite-hit-summary">\u5207\u5206 ${result.unitCount} \u4E2A\u5355\u5143\uFF0C\u547D\u4E2D ${result.hitCount} \u4E2A</div>`;
+  const src = sourceText ? `<div class="t-rewrite-hit-source">\u6765\u6E90\uFF1A\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF08\u957F\u5EA6 ${sourceText.length}\uFF09</div>` : "";
+  $body.html(`${header}${src}${html}`);
+}
+async function fetchModelList(showToast = false, scope = "main") {
+  const $overlay = scope === "settings" ? getSettingsOverlay() : getOverlay();
+  if (!$overlay.length) return;
+  const idApiUrl = scope === "settings" ? "#t-rewrite-settings-api-url" : "#t-rewrite-api-url";
+  const idApiKey = scope === "settings" ? "#t-rewrite-settings-api-key" : "#t-rewrite-api-key";
+  const idModel = scope === "settings" ? "#t-rewrite-settings-model" : "#t-rewrite-model";
+  const rawUrl = $overlay.find(idApiUrl).val();
+  const apiUrl = normalizeApiBaseUrl(rawUrl);
+  const apiKey = String($overlay.find(idApiKey).val() || "").trim();
+  const $model = $overlay.find(idModel);
+  if (!apiUrl) {
+    $model.html('<option value="">\u8BF7\u5148\u586B\u5199 API \u5730\u5740</option>');
+    setStatus("\u8BF7\u8F93\u5165 API \u5730\u5740\u540E\u81EA\u52A8\u83B7\u53D6\u6A21\u578B\u5217\u8868", "warn");
+    return;
+  }
+  try {
+    setStatus("\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...", "muted");
+    $model.html('<option value="">\u52A0\u8F7D\u4E2D...</option>');
+    const headers = {};
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+    const res = await fetch(`${apiUrl}/models`, { method: "GET", headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
+    const models = list.map((item) => typeof item === "string" ? item : item?.id).filter(Boolean);
+    const unique = [...new Set(models)].sort();
+    const savedModel = String(getExtData()?.rewrite_entry?.model || "");
+    $model.empty();
+    if (unique.length === 0) {
+      $model.append('<option value="">\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B</option>');
+      setStatus("\u6A21\u578B\u5217\u8868\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u670D\u52A1\u7AEF\u8FD4\u56DE", "warn");
+      return;
+    }
+    unique.forEach((m) => {
+      const selected = savedModel === m ? "selected" : "";
+      $model.append(`<option value="${escapeHtml4(m)}" ${selected}>${escapeHtml4(m)}</option>`);
+    });
+    if (!savedModel) $model.val(unique[0]);
+    if (scope === "settings") persistSettingsPanelState();
+    else persistPanelState();
+    setStatus(`\u5DF2\u83B7\u53D6 ${unique.length} \u4E2A\u6A21\u578B`, "ok");
+    if (showToast && window.toastr) toastr.success(`\u6A21\u578B\u5217\u8868\u5DF2\u66F4\u65B0\uFF08${unique.length} \u4E2A\uFF09`, "\u6587\u672C\u6539\u5199");
+  } catch (e) {
+    $model.html('<option value="">\u83B7\u53D6\u5931\u8D25</option>');
+    setStatus(`\u6A21\u578B\u5217\u8868\u83B7\u53D6\u5931\u8D25: ${e.message}`, "err");
+    if (showToast && window.toastr) toastr.error(e.message || "\u83B7\u53D6\u5931\u8D25", "\u6587\u672C\u6539\u5199");
+  }
+}
+function bindPanelEvents() {
+  const $overlay = getOverlay();
+  if (!$overlay.length) return;
+  $overlay.on("click", "#t-rewrite-close", (e) => {
+    e.preventDefault();
+    closePanel();
+  });
+  $overlay.on("click", "#t-rewrite-trigger", () => {
+    runManualRewrite();
+  });
+  $overlay.on("click", "#t-rewrite-open-settings", (e) => {
+    e.preventDefault();
+    openSettingsPanel();
+  });
+  $overlay.on("click", "#t-rewrite-abort", (e) => {
+    e.preventDefault();
+    if (activeRewriteAbortController) {
+      activeRewriteAbortController.abort();
+    }
+  });
+}
+function bindSettingsPanelEvents() {
+  const $overlay = getSettingsOverlay();
+  if (!$overlay.length) return;
+  $overlay.on("click", "#t-rewrite-settings-close", (e) => {
+    e.preventDefault();
+    closeSettingsPanel();
+  });
+  $overlay.on("input", "#t-rewrite-settings-api-url, #t-rewrite-settings-api-key", () => {
+    persistSettingsPanelState();
+    if (autoFetchTimer) clearTimeout(autoFetchTimer);
+    autoFetchTimer = setTimeout(() => {
+      fetchModelList(false, "settings");
+    }, 500);
+  });
+  $overlay.on("change", "#t-rewrite-settings-model, input[name='t-rewrite-settings-split-mode'], #t-rewrite-settings-stream-live", () => {
+    persistSettingsPanelState();
+  });
+  $overlay.on("change", "#t-rewrite-settings-auto-trigger", () => {
+    persistSettingsPanelState();
+  });
+  $overlay.on("input", ".t-rewrite-rule-anchor, .t-rewrite-rule-extras", () => {
+    persistSettingsPanelState();
+  });
+  $overlay.on("click", "#t-rewrite-settings-fetch-models", async (e) => {
+    e.preventDefault();
+    await fetchModelList(true, "settings");
+  });
+  $overlay.on("click", "#t-rewrite-settings-add-rule", (e) => {
+    e.preventDefault();
+    const current = getRulesFromDom("#t-rewrite-settings-rules-list");
+    current.push({ anchor: "", extras: [] });
+    renderSettingsRules(current);
+    persistSettingsPanelState();
+  });
+  $overlay.on("click", ".t-rewrite-rule-del", (e) => {
+    e.preventDefault();
+    const idx = Number($(e.currentTarget).closest(".t-rewrite-rule-row").attr("data-rule-idx"));
+    const current = getRulesFromDom("#t-rewrite-settings-rules-list");
+    if (Number.isInteger(idx) && idx >= 0 && idx < current.length) {
+      current.splice(idx, 1);
+    }
+    renderSettingsRules(current);
+    persistSettingsPanelState();
+  });
+}
+function openSettingsPanel() {
+  closeSettingsPanel();
+  const rewriteData = ensureRewriteDataShape();
+  const modeSentence = rewriteData.split_mode !== "paragraph";
+  const modeParagraph = rewriteData.split_mode === "paragraph";
+  const rules = cleanupRules(rewriteData.rules);
+  const html = `
+    <div id="${SETTINGS_OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
+        <div class="t-window t-rewrite-settings-window">
+            <div class="t-window-header t-rewrite-head">
+                <div class="t-window-title t-rewrite-title"><i class="fa-solid fa-sliders"></i> \u6587\u672C\u6539\u5199\u8BBE\u7F6E</div>
+                <div class="t-window-controls">
+                    <div class="t-window-close" id="t-rewrite-settings-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+            <div class="t-window-body t-rewrite-settings-body">
+                <div class="t-rewrite-settings-grid">
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-api">
+                        <div class="t-rewrite-section-title">API \u914D\u7F6E</div>
+                        <label class="t-rewrite-label">API \u5730\u5740</label>
+                        <input id="t-rewrite-settings-api-url" class="text_pole" type="text" placeholder="https://api.example.com/v1" value="${escapeHtml4(rewriteData.api_url || "")}">
+
+                        <label class="t-rewrite-label">API Key</label>
+                        <input id="t-rewrite-settings-api-key" class="text_pole" type="password" placeholder="\u53EF\u9009\uFF0C\u6309\u4F60\u7684\u670D\u52A1\u7AEF\u8981\u6C42\u586B\u5199" value="${escapeHtml4(rewriteData.api_key || "")}">
+
+                        <div class="t-rewrite-model-row">
+                            <div class="t-rewrite-model-col">
+                                <label class="t-rewrite-label">\u6A21\u578B</label>
+                                <select id="t-rewrite-settings-model" class="text_pole">
+                                    <option value="${escapeHtml4(rewriteData.model || "")}">${rewriteData.model ? escapeHtml4(rewriteData.model) : "\u7B49\u5F85\u81EA\u52A8\u83B7\u53D6"}</option>
+                                </select>
+                            </div>
+                            <button id="t-rewrite-settings-fetch-models" class="t-btn" type="button" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                        </div>
+                        <div id="t-rewrite-settings-status" class="t-rewrite-status muted">\u586B\u5199 API \u540E\u4F1A\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5217\u8868</div>
+                    </div>
+
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-split">
+                        <div class="t-rewrite-section-title">\u5207\u5206\u6A21\u5F0F</div>
+                        <div class="t-rewrite-split-options t-rewrite-split-options-vertical">
+                            <label><input type="radio" name="t-rewrite-settings-split-mode" value="sentence" ${modeSentence ? "checked" : ""}> \u6309\u53E5\u5B50\u5207\u5206</label>
+                            <label><input type="radio" name="t-rewrite-settings-split-mode" value="paragraph" ${modeParagraph ? "checked" : ""}> \u6309\u6BB5\u843D\u5207\u5206</label>
+                        </div>
+                        <div class="t-rewrite-rule-guide">\u5339\u914D\u53EA\u5728\u5355\u4E2A\u5207\u5206\u5355\u5143\u5185\u5B8C\u6210\uFF0C\u4E0D\u8DE8\u53E5/\u6BB5\u3002</div>
+                    </div>
+
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-stream">
+                        <div class="t-rewrite-section-title">\u8BF7\u6C42\u884C\u4E3A</div>
+                        <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
+                            <label><input id="t-rewrite-settings-stream-live" type="checkbox" ${rewriteData.stream_live === false ? "" : "checked"}> \u542F\u7528\u6D41\u5F0F\u5E76\u663E\u793A\u5B9E\u65F6\u54CD\u5E94</label>
+                        </div>
+                        <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
+                            <label><input id="t-rewrite-settings-auto-trigger" type="checkbox" ${rewriteData.auto_trigger ? "checked" : ""}> \u81EA\u52A8\u89E6\u53D1\u6539\u5199\uFF08\u65B0\u56DE\u590D\u751F\u6210\u540E\uFF09</label>
+                        </div>
+                        <div class="t-rewrite-rule-guide">\u5EFA\u8BAE\u4FDD\u6301\u5F00\u542F\uFF0C\u4FBF\u4E8E\u6392\u67E5\u8FD4\u56DE\u683C\u5F0F\u95EE\u9898\u3002</div>
+                    </div>
+
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-rules">
+                        <div class="t-rewrite-rule-head">
+                            <div class="t-rewrite-section-title">\u89C4\u5219\u914D\u7F6E</div>
+                            <button id="t-rewrite-settings-add-rule" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u89C4\u5219</button>
+                        </div>
+                        <div class="t-rewrite-rule-guide">\u547D\u4E2D\u903B\u8F91\uFF1A\u4E3B\u8BCD AND\uFF08\u9644\u52A0\u8BCD\u4EFB\u610F\u4E00\u4E2A\uFF1B\u82E5\u9644\u52A0\u8BCD\u4E3A\u7A7A\u5219\u4EC5\u4E3B\u8BCD\uFF09</div>
+                        <div id="t-rewrite-settings-rules-list" class="t-rewrite-rules-list"></div>
+                        <div class="t-rewrite-rule-meta">\u6709\u6548\u89C4\u5219\u6570\uFF1A<span id="t-rewrite-settings-rule-count">${rules.length}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  renderSettingsRules(rules.length > 0 ? rules : [{ anchor: "", extras: [] }]);
+  bindSettingsPanelEvents();
+  persistSettingsPanelState();
+  if (rewriteData.api_url) fetchModelList(false, "settings");
+}
+function openPanel() {
+  closePanel();
+  ensureRewriteCssLoaded();
+  const rewriteData = ensureRewriteDataShape();
+  const rules = cleanupRules(rewriteData.rules);
+  const html = `
+    <div id="${OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
+        <div class="t-window t-rewrite-window">
+            <div class="t-window-header t-rewrite-head">
+                <div class="t-window-title t-rewrite-title"><i class="fa-solid fa-highlighter"></i> \u6587\u672C\u6539\u5199\u9762\u677F</div>
+                <div class="t-window-controls">
+                    <div class="t-window-close t-rewrite-settings-btn" id="t-rewrite-open-settings" title="\u6253\u5F00\u8BBE\u7F6E"><i class="fa-solid fa-sliders"></i></div>
+                    <div class="t-window-close" id="t-rewrite-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+
+            <div class="t-window-body t-rewrite-body">
+                <div class="t-rewrite-left">
+                    <div class="t-rewrite-section">
+                        <div class="t-rewrite-section-title">\u8FD0\u884C\u72B6\u6001</div>
+                        <div class="t-rewrite-runtime-meta">
+                            <div>\u5F53\u524D\u6A21\u578B\uFF1A<b>${escapeHtml4(rewriteData.model || "\u672A\u8BBE\u7F6E")}</b></div>
+                            <div>\u5207\u5206\u6A21\u5F0F\uFF1A<b>${rewriteData.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50"}</b></div>
+                            <div>\u6709\u6548\u89C4\u5219\uFF1A<b id="t-rewrite-rule-count">${rules.length}</b></div>
+                            <div>\u6D41\u5F0F\u663E\u793A\uFF1A<b>${rewriteData.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F"}</b></div>
+                            <div>\u81EA\u52A8\u89E6\u53D1\uFF1A<b>${rewriteData.auto_trigger ? "\u5F00\u542F" : "\u5173\u95ED"}</b></div>
+                        </div>
+                        <div id="t-rewrite-status" class="t-rewrite-status muted">\u6539\u5199\u4F1A\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u5E76\u56DE\u5199\u539F\u6D88\u606F</div>
+                    </div>
+
+                    <div class="t-rewrite-section">
+                        <div class="t-rewrite-actions">
+                            <button id="t-rewrite-trigger" class="t-btn" type="button">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> \u624B\u52A8\u89E6\u53D1\u6539\u5199
+                            </button>
+                            <span class="t-rewrite-action-hint">\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u6539\u5199\u540E\u56DE\u5199\u5230\u539F\u6D88\u606F</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="t-rewrite-right">
+                    <div class="t-rewrite-section t-rewrite-test-section">
+                        <div class="t-rewrite-diff-head">
+                            <div class="t-rewrite-section-title">\u547D\u4E2D\u7ED3\u679C\u9884\u89C8</div>
+                        </div>
+                        <div id="t-rewrite-match-body" class="t-rewrite-diff-body"></div>
+                    </div>
+
+                    <div class="t-rewrite-section t-rewrite-raw-section">
+                        <div class="t-rewrite-diff-head">
+                            <div class="t-rewrite-section-title">\u5B9E\u65F6\u54CD\u5E94</div>
+                            <div class="t-rewrite-diff-tools">
+                                <button id="t-rewrite-abort" class="t-btn" type="button" disabled>\u7EC8\u6B62</button>
+                            </div>
+                        </div>
+                        <div id="t-rewrite-raw-meta" class="t-rewrite-status muted">\u7B49\u5F85\u8BF7\u6C42</div>
+                        <pre id="t-rewrite-raw-response" class="t-rewrite-json-box"></pre>
+                    </div>
+
+                    <div class="t-rewrite-section">
+                        <div class="t-rewrite-diff-head">
+                            <div class="t-rewrite-section-title">\u6539\u5199\u7ED3\u679C Diff</div>
+                        </div>
+                        <div id="t-rewrite-diff-body" class="t-rewrite-diff-body"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  bindPanelEvents();
+  renderMatchResult(null, "");
+  renderDiffRows([]);
+  setRawResponse("");
+  setRawMeta("\u7B49\u5F85\u8BF7\u6C42");
+  updateAbortBtnState(false);
+}
+function togglePanel() {
+  if (getOverlay().length > 0) {
+    closePanel();
+  } else {
+    openPanel();
+  }
+}
+function bindGlobalEvents() {
+  if (docEventBound) return;
+  docEventBound = true;
+  $(document).on("keydown.titaniaRewritePanel", (evt) => {
+    if (evt.key === "Escape") closePanel();
+  });
+}
+function ensureButton2() {
+  const $anchor = $(ANCHOR_SELECTOR2);
+  if ($anchor.length === 0) {
+    removeButton2(false);
+    return;
+  }
+  let $btn = $(`#${BTN_ID2}`);
+  if ($btn.length === 0) {
+    $btn = $(`
+            <button id="${BTN_ID2}" class="menu_button" type="button" title="\u6587\u672C\u6539\u5199" aria-label="\u6587\u672C\u6539\u5199">
+                <i class="fa-solid fa-highlighter"></i>
+            </button>
+        `);
+    $anchor.append($btn);
+  }
+  $btn.off("click.titaniaRewriteEntry").on("click.titaniaRewriteEntry", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    togglePanel();
+  });
+}
+function syncEntryButton2() {
+  if (!isEnabled2()) {
+    removeButton2(true);
+    return;
+  }
+  ensureButton2();
+}
+function bindDomObserver2() {
+  if (observerBound2) return;
+  observerBound2 = true;
+  const obs = new MutationObserver(() => {
+    syncEntryButton2();
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+}
+function initRewriteEntryButton() {
+  ensureRewriteCssLoaded();
+  bindGlobalEvents();
+  bindDomObserver2();
+  bindAutoTriggerEvents();
+  syncEntryButton2();
+}
+function refreshRewriteEntryButton() {
+  syncEntryButton2();
+}
+var BTN_ID2, ANCHOR_SELECTOR2, OVERLAY_ID, SETTINGS_OVERLAY_ID, observerBound2, docEventBound, autoTriggerBound, autoFetchTimer, activeRewriteAbortController, isAutoRewriting, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS;
+var init_rewriteEntryButton = __esm({
+  "src/ui/rewriteEntryButton.js"() {
+    init_storage();
+    init_defaults();
+    BTN_ID2 = "titania-rewrite-entry-btn";
+    ANCHOR_SELECTOR2 = "#qr--bar";
+    OVERLAY_ID = "t-rewrite-overlay";
+    SETTINGS_OVERLAY_ID = "t-rewrite-settings-overlay";
+    observerBound2 = false;
+    docEventBound = false;
+    autoTriggerBound = false;
+    autoFetchTimer = null;
+    activeRewriteAbortController = null;
+    isAutoRewriting = false;
+    REWRITE_TEMPERATURE = 0.8;
+    REWRITE_FIX_TEMPERATURE = 0;
+    REWRITE_MAX_TOKENS = 4e4;
   }
 });
 
@@ -15542,6 +18094,16 @@ function openSettingsWindow() {
                         </label>
                         <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">
                             \u542F\u7528\u540E\uFF0C\u4F1A\u5728\u9152\u9986\u53D1\u9001\u6309\u94AE\u65C1\u6CE8\u5165\u5927\u7EB2\u5165\u53E3\u6309\u94AE
+                        </p>
+                    </div>
+
+                    <div class="t-form-group" style="margin-top:12px; padding-top:12px; border-top:1px solid #333;">
+                        <label style="cursor:pointer; display:flex; align-items:center; color:#9ad0ff; font-weight:bold;">
+                            <input type="checkbox" id="cfg-rewrite-entry-enabled" ${data.rewrite_entry?.enabled ? "checked" : ""} style="margin-right:10px;">
+                            \u5728 #qr--bar \u663E\u793A\u300C\u6587\u672C\u6539\u5199\u300D\u5165\u53E3
+                        </label>
+                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">
+                            \u542F\u7528\u540E\uFF0C\u4F1A\u5728\u9152\u9986\u5FEB\u6377\u680F\u6CE8\u5165\u6539\u5199\u9762\u677F\u5165\u53E3\u6309\u94AE
                         </p>
                     </div>
                 </div>
@@ -16210,7 +18772,7 @@ function openSettingsWindow() {
       setTimeout(() => {
         const p = tempProfiles.find((x) => x.id === tempActiveId);
         if (p && p.type !== "internal") {
-          fetchModelList(false);
+          fetchModelList2(false);
         }
       }, 100);
     }
@@ -16261,7 +18823,7 @@ function openSettingsWindow() {
     renderProfileUI();
     const newProfile = tempProfiles.find((x) => x.id === tempActiveId);
     if (newProfile && newProfile.type !== "internal") {
-      setTimeout(() => fetchModelList(false), 100);
+      setTimeout(() => fetchModelList2(false), 100);
     }
   });
   $("#cfg-prof-add").on("click", function() {
@@ -17078,7 +19640,7 @@ ${JSON.stringify(l.details, null, 2)}`;
   renderLogView();
   $("#btn-refresh-log").on("click", renderLogView);
   $("#btn-export-log").on("click", () => TitaniaLogger.downloadReport());
-  const fetchModelList = async (showSuccessToast = true) => {
+  const fetchModelList2 = async (showSuccessToast = true) => {
     const btn = $("#t-btn-fetch");
     const p = tempProfiles.find((x) => x.id === tempActiveId);
     if (!p || p.type === "internal") return;
@@ -17119,7 +19681,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       btn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
     }
   };
-  $("#t-btn-fetch").on("click", () => fetchModelList(true));
+  $("#t-btn-fetch").on("click", () => fetchModelList2(true));
   $("#btn-restore-presets").on("click", function() {
     if (confirm("\u6062\u590D\u6240\u6709\u9884\u8BBE\uFF1F")) {
       const d = getExtData();
@@ -17327,6 +19889,14 @@ ${JSON.stringify(l.details, null, 2)}`;
     d.outline_entry = {
       enabled: $("#cfg-outline-entry-enabled").is(":checked")
     };
+    const prevRewriteEntry = d.rewrite_entry || {};
+    d.rewrite_entry = {
+      enabled: $("#cfg-rewrite-entry-enabled").is(":checked"),
+      api_url: String(prevRewriteEntry.api_url || ""),
+      api_key: String(prevRewriteEntry.api_key || ""),
+      model: String(prevRewriteEntry.model || ""),
+      rules_text: String(prevRewriteEntry.rules_text || "")
+    };
     d.embedding_config = {
       url: $("#cfg-embed-url").val().trim(),
       key: $("#cfg-embed-key").val().trim(),
@@ -17368,6 +19938,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     }
     createFloatingButton();
     refreshOutlineEntryButton();
+    refreshRewriteEntryButton();
     applyCustomCSS(d.custom_css);
     applyFontSettings(d.font_settings);
     applyUIFontScale(d.appearance?.ui_font_scale);
@@ -17392,6 +19963,7 @@ var init_settingsWindow = __esm({
     init_scriptManager();
     init_dom();
     init_outlineEntryButton();
+    init_rewriteEntryButton();
   }
 });
 
@@ -18619,7 +21191,7 @@ var init_loreExtractor = __esm({
 
 // src/core/worldInfoManager.js
 import { world_info as world_info2, selected_world_info as selected_world_info2, saveWorldInfo } from "../../../world-info.js";
-import { eventSource, event_types } from "../../../../script.js";
+import { eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 function getAvailableWorldBooks() {
   try {
     if (Array.isArray(world_info2.loreBookNames)) {
@@ -18700,7 +21272,7 @@ function triggerSave() {
   }, SYNC_STATE.saveDelay);
 }
 function initSyncListener() {
-  eventSource.on(event_types.WORLDINFO_UPDATED, (name, data) => {
+  eventSource2.on(event_types2.WORLDINFO_UPDATED, (name, data) => {
     if (SYNC_STATE.currentBookName !== name) return;
     if (SYNC_STATE.isSelfSaving) {
       return;
@@ -20421,7 +22993,7 @@ function showRawResponseDialog2(rawContent, isError = false) {
                         font-size: 0.9em;
                         color: #ddd;
                         line-height: 1.5;
-                    ">${escapeHtml4(rawContent || "(\u7A7A)")}</pre>
+                    ">${escapeHtml5(rawContent || "(\u7A7A)")}</pre>
                 </div>
             </div>
             <div class="t-dialog-footer">
@@ -20446,7 +23018,7 @@ function showRawResponseDialog2(rawContent, isError = false) {
     });
   });
 }
-function escapeHtml4(text) {
+function escapeHtml5(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -21674,7 +24246,7 @@ async function updateIncrementalStatus() {
 }
 function formatSummaryAsHtml(text) {
   if (!text) return "";
-  let html = escapeHtml4(text);
+  let html = escapeHtml5(text);
   html = html.replace(/^## (.+)$/gm, '<h3 class="t-summary-h3">$1</h3>');
   html = html.replace(/^### (.+)$/gm, '<h4 class="t-summary-h4">$1</h4>');
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -21889,9 +24461,9 @@ function showPromptPreviewDialog(messages, stats = {}) {
     </div>
     `;
   $("body").append(html);
-  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml4(systemMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml4(userMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml4(JSON.stringify(messages, null, 2))}</pre>`);
+  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml5(systemMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml5(userMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml5(JSON.stringify(messages, null, 2))}</pre>`);
   $("#t-prompt-view-dialog .t-prompt-tab").on("click", function() {
     const role = $(this).data("role");
     $("#t-prompt-view-dialog .t-prompt-tab").removeClass("active");
@@ -21977,11 +24549,11 @@ function showCleaningPreviewDialog(samples) {
             <div class="t-sample-content">
                 <div class="t-sample-pane t-pane-original">
                     <div class="t-pane-header"><i class="fa-solid fa-file-alt"></i> \u539F\u59CB\u6587\u672C</div>
-                    <div class="t-pane-body">${escapeHtml4(sample.original || "(\u7A7A)")}</div>
+                    <div class="t-pane-body">${escapeHtml5(sample.original || "(\u7A7A)")}</div>
                 </div>
                 <div class="t-sample-pane t-pane-cleaned">
                     <div class="t-pane-header"><i class="fa-solid fa-broom"></i> \u6E05\u6D17\u540E</div>
-                    <div class="t-pane-body">${escapeHtml4(sample.cleaned || "(\u7A7A)")}</div>
+                    <div class="t-pane-body">${escapeHtml5(sample.cleaned || "(\u7A7A)")}</div>
                 </div>
             </div>
         </div>
@@ -22018,7 +24590,7 @@ function showCleaningPreviewDialog(samples) {
                 <div class="t-cleaning-config-bar">
                     <span class="t-config-label"><i class="fa-solid fa-cog"></i> \u5F53\u524D\u6E05\u6D17\u89C4\u5219:</span>
                     <div class="t-config-tags">${configHtml}</div>
-                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml4(config.custom_tags_to_remove)}</span>` : ""}
+                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml5(config.custom_tags_to_remove)}</span>` : ""}
                 </div>
 
                 <!-- \u6D88\u606F\u9884\u89C8\u5217\u8868 -->
@@ -24333,7 +26905,7 @@ function renderResults() {
     const scorePercent = Math.round(result.score * 100);
     const isSelected = selectedIndices.has(index);
     const scoreColor = scorePercent >= 70 ? "#4caf50" : scorePercent >= 50 ? "#ff9800" : "#888";
-    const displayText = escapeHtml5(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
+    const displayText = escapeHtml6(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
     return '<div class="t-recall-result-item" data-index="' + index + '" style="display: flex; gap: 10px; padding: 12px; margin-bottom: 8px; background: ' + (isSelected ? "#2a3a4a" : "#1e1e1e") + "; border: 1px solid " + (isSelected ? "#4a9eff" : "#333") + '; border-radius: 8px; cursor: pointer; transition: all 0.2s;"><div style="flex-shrink: 0; padding-top: 2px;"><input type="checkbox" ' + (isSelected ? "checked" : "") + ' style="cursor: pointer;"></div><div style="flex: 1; min-width: 0;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="color: #888; font-size: 0.85em;">#' + result.messageIndex + '</span><span style="color: ' + scoreColor + '; font-weight: bold; font-size: 0.9em;">' + scorePercent + '%</span></div><div style="color: #ccc; font-size: 0.9em; line-height: 1.5; word-break: break-word;">' + displayText + "</div></div></div>";
   }).join("");
   $resultsList.html(html);
@@ -24397,7 +26969,7 @@ function handleAppend() {
     }
   }
 }
-function escapeHtml5(text) {
+function escapeHtml6(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -26666,10 +29238,11 @@ init_floatingBtn();
 init_settingsWindow();
 init_mainWindow();
 init_outlineEntryButton();
+init_rewriteEntryButton();
 init_vectorStore();
 init_summarizer();
 import { extension_settings as extension_settings3 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
 async function onGenerationEnded() {
   const extData = getExtData();
   const cfg = extData.config || {};
@@ -26764,11 +29337,12 @@ function initCoreFeatures() {
     applyFontSettings(extData.font_settings);
   }
   applyUIFontScale(extData.appearance?.ui_font_scale);
-  eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
+  eventSource3.on(event_types3.GENERATION_ENDED, onGenerationEnded);
   initSyncListener();
   initVectorUnsavedWarning();
   initAutoVectorizeListener();
   initOutlineEntryButton();
+  initRewriteEntryButton();
 }
 function loadQueueConfig() {
   try {
@@ -26791,8 +29365,8 @@ function loadQueueConfig() {
   }
 }
 function initAutoVectorizeListener() {
-  eventSource2.on(event_types2.MESSAGE_RECEIVED, onMessageForAutoVectorize);
-  eventSource2.on(event_types2.MESSAGE_SENT, onMessageForAutoVectorize);
+  eventSource3.on(event_types3.MESSAGE_RECEIVED, onMessageForAutoVectorize);
+  eventSource3.on(event_types3.MESSAGE_SENT, onMessageForAutoVectorize);
   console.log("Titania: \u81EA\u52A8\u5411\u91CF\u5316\u76D1\u542C\u5668\u5DF2\u521D\u59CB\u5316");
 }
 async function onMessageForAutoVectorize() {
