@@ -16567,77 +16567,15 @@ var init_outlineEntryButton = __esm({
 // src/ui/rewriteEntryButton.js
 import { saveChatConditional, reloadCurrentChat, eventSource, event_types } from "../../../../script.js";
 function ensureRewriteCssLoaded() {
-  const cssId = "titania-css-rewrite-panel";
-  const inlineStyleId = "titania-css-rewrite-panel-inline";
-  const candidates = [
-    "/scripts/extensions/third-party/titania-theater/css/rewrite-panel.css",
-    `${extensionFolderPath}/css/rewrite-panel.css`,
-    "scripts/extensions/third-party/titania-theater/css/rewrite-panel.css"
-  ];
-  let link = document.getElementById(cssId);
-  if (!link) {
-    link = document.createElement("link");
-    link.id = cssId;
-    link.rel = "stylesheet";
-    link.type = "text/css";
-    document.head.appendChild(link);
-  } else if (link.sheet && link.href && link.href.includes("rewrite-panel.css")) {
-    return;
+  const cssId = "titania-css-rewrite-panel-inline";
+  let style = document.getElementById(cssId);
+  if (!style) {
+    style = document.createElement("style");
+    style.id = cssId;
+    style.type = "text/css";
+    document.head.appendChild(style);
   }
-  const cleanupInline = () => {
-    const stale = document.getElementById(inlineStyleId);
-    if (stale) stale.remove();
-  };
-  const injectInlineFromFetch = async () => {
-    for (const href of candidates) {
-      try {
-        const res = await fetch(href, { cache: "no-cache" });
-        if (!res.ok) continue;
-        const text = await res.text();
-        if (!text || !text.includes("#t-rewrite-overlay")) continue;
-        let style = document.getElementById(inlineStyleId);
-        if (!style) {
-          style = document.createElement("style");
-          style.id = inlineStyleId;
-          document.head.appendChild(style);
-        }
-        style.textContent = text;
-        console.warn("Titania Rewrite: \u4F7F\u7528 inline CSS \u56DE\u9000\u52A0\u8F7D", { href, origin: location.origin });
-        return;
-      } catch {
-      }
-    }
-    console.warn("Titania Rewrite: rewrite-panel.css \u6240\u6709\u8DEF\u5F84\u5747\u52A0\u8F7D\u5931\u8D25", {
-      origin: location.origin,
-      candidates
-    });
-  };
-  let idx = 0;
-  const tryNext = () => {
-    if (idx >= candidates.length) {
-      void injectInlineFromFetch();
-      return;
-    }
-    const href = candidates[idx++];
-    link.href = href;
-  };
-  link.onload = () => {
-    let valid = false;
-    try {
-      valid = !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length > 0);
-    } catch {
-      valid = false;
-    }
-    if (valid) {
-      cleanupInline();
-    } else {
-      tryNext();
-    }
-  };
-  link.onerror = () => {
-    tryNext();
-  };
-  tryNext();
+  style.textContent = REWRITE_PANEL_CSS;
 }
 function isEnabled2() {
   const data = getExtData();
@@ -16981,14 +16919,12 @@ function getChatMessageElementByIndex(index) {
   return $();
 }
 function clearAutoRewriteIndicator() {
-  $("#chat .mes.t-rewrite-auto-pending").removeClass("t-rewrite-auto-pending");
   $("#chat .t-rewrite-auto-badge").remove();
 }
 function applyAutoRewriteIndicator(messageIndex) {
   clearAutoRewriteIndicator();
   const $target = getChatMessageElementByIndex(messageIndex);
   if (!$target.length) return false;
-  $target.addClass("t-rewrite-auto-pending");
   if ($target.find(".t-rewrite-auto-badge").length === 0) {
     $target.append('<div class="t-rewrite-auto-badge"><i class="fa-solid fa-wand-magic-sparkles"></i><span>\u81EA\u52A8\u6539\u5199\u4E2D</span></div>');
   }
@@ -17707,6 +17643,7 @@ function openSettingsPanel() {
 }
 function openPanel() {
   closePanel();
+  ensureRewriteCssLoaded();
   const rewriteData = ensureRewriteDataShape();
   const rules = cleanupRules(rewriteData.rules);
   const html = `
@@ -17842,11 +17779,10 @@ function initRewriteEntryButton() {
 function refreshRewriteEntryButton() {
   syncEntryButton2();
 }
-var BTN_ID2, ANCHOR_SELECTOR2, OVERLAY_ID, SETTINGS_OVERLAY_ID, observerBound2, docEventBound, autoTriggerBound, autoFetchTimer, activeRewriteAbortController, isAutoRewriting, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS;
+var BTN_ID2, ANCHOR_SELECTOR2, OVERLAY_ID, SETTINGS_OVERLAY_ID, observerBound2, docEventBound, autoTriggerBound, autoFetchTimer, activeRewriteAbortController, isAutoRewriting, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_PANEL_CSS;
 var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
-    init_defaults();
     BTN_ID2 = "titania-rewrite-entry-btn";
     ANCHOR_SELECTOR2 = "#qr--bar";
     OVERLAY_ID = "t-rewrite-overlay";
@@ -17860,6 +17796,83 @@ var init_rewriteEntryButton = __esm({
     REWRITE_TEMPERATURE = 0.8;
     REWRITE_FIX_TEMPERATURE = 0;
     REWRITE_MAX_TOKENS = 4e4;
+    REWRITE_PANEL_CSS = `
+#titania-rewrite-entry-btn { margin-left: 6px; }
+#titania-rewrite-entry-btn i { color: #90cdf4; }
+#titania-rewrite-entry-btn:hover i { color: #b9def8; }
+#t-rewrite-overlay { z-index: 30060; }
+#t-rewrite-overlay .t-rewrite-window { width: 980px; max-width: 96vw; max-height: 90vh; height: 86vh; display: flex; flex-direction: column; overflow: hidden; background: rgba(19, 22, 30, 0.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 22px 58px rgba(0, 0, 0, 0.56); }
+#t-rewrite-overlay .t-rewrite-head { padding: 14px 18px; background: linear-gradient(180deg, rgba(18, 30, 44, 0.9) 0%, rgba(16, 22, 31, 0.85) 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.09); }
+#t-rewrite-overlay .t-rewrite-settings-btn i { color: #b9d8ee; }
+#t-rewrite-overlay .t-rewrite-settings-btn:hover i { color: #d2e6f7; }
+#t-rewrite-overlay .t-rewrite-title { font-size: 1.08em; font-weight: 700; letter-spacing: 0.2px; display: flex; align-items: center; gap: 8px; }
+#t-rewrite-overlay .t-rewrite-title i { color: #90cdf4; }
+#t-rewrite-overlay .t-window-close { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.18s ease; }
+#t-rewrite-overlay .t-window-close:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(144, 205, 244, 0.45); }
+#t-rewrite-overlay .t-rewrite-body { flex: 1; overflow: hidden; display: grid; grid-template-columns: minmax(320px, 0.92fr) minmax(380px, 1.08fr); gap: 14px; padding: 14px; background: radial-gradient(circle at 100% 0%, rgba(144, 205, 244, 0.1) 0%, rgba(144, 205, 244, 0) 36%), radial-gradient(circle at 0% 100%, rgba(191, 161, 95, 0.08) 0%, rgba(191, 161, 95, 0) 32%), #12161d; }
+#t-rewrite-overlay .t-rewrite-left, #t-rewrite-overlay .t-rewrite-right { min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+#t-rewrite-overlay .t-rewrite-section { border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; background: rgba(13, 19, 28, 0.78); padding: 12px; }
+#t-rewrite-overlay .t-rewrite-section-title { font-size: 0.9em; font-weight: 700; color: #b8d8ee; margin-bottom: 10px; }
+#t-rewrite-overlay .t-rewrite-label { display: block; font-size: 0.8em; color: #8da3b6; margin-bottom: 6px; }
+#t-rewrite-overlay #t-rewrite-api-url, #t-rewrite-overlay #t-rewrite-api-key, #t-rewrite-overlay #t-rewrite-model { width: 100%; box-sizing: border-box; background: rgba(10, 15, 22, 0.9); border: 1px solid rgba(255, 255, 255, 0.12); color: #dde9f4; border-radius: 8px; padding: 9px 11px; outline: none; transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+#t-rewrite-overlay #t-rewrite-api-url:focus, #t-rewrite-overlay #t-rewrite-api-key:focus, #t-rewrite-overlay #t-rewrite-model:focus { border-color: rgba(144, 205, 244, 0.55); box-shadow: 0 0 0 2px rgba(144, 205, 244, 0.16); }
+#t-rewrite-overlay .t-rewrite-model-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+#t-rewrite-overlay .t-rewrite-model-col { min-width: 0; }
+#t-rewrite-overlay #t-rewrite-trigger { height: 36px; min-height: 36px; line-height: 1; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.14); color: #dbe8f4; font-weight: 600; transition: all 0.18s ease; white-space: nowrap; letter-spacing: 0.1px; min-width: 164px; padding: 0 16px; background: linear-gradient(135deg, rgba(144, 205, 244, 0.18), rgba(191, 161, 95, 0.16)); border-color: rgba(144, 205, 244, 0.42); justify-content: center; display: inline-flex; align-items: center; gap: 6px; }
+#t-rewrite-overlay #t-rewrite-trigger:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(144, 205, 244, 0.44); }
+#t-rewrite-overlay .t-rewrite-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+#t-rewrite-overlay .t-rewrite-runtime-meta { display: grid; gap: 6px; font-size: 0.82em; color: #a9bfd1; }
+#t-rewrite-overlay .t-rewrite-rule-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+#t-rewrite-overlay .t-rewrite-rule-guide { font-size: 0.78em; color: #8ea5b7; margin-bottom: 8px; }
+#t-rewrite-overlay .t-rewrite-split-options { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; font-size: 0.82em; color: #c5d7e5; }
+#t-rewrite-overlay .t-rewrite-split-options label { display: inline-flex; align-items: center; gap: 6px; }
+#t-rewrite-overlay .t-rewrite-rule-row, #t-rewrite-settings-overlay .t-rewrite-rule-row { display: grid; grid-template-columns: auto minmax(120px, 0.5fr) auto minmax(180px, 1fr) auto; gap: 8px; align-items: center; }
+#t-rewrite-overlay .t-rewrite-rule-and, #t-rewrite-settings-overlay .t-rewrite-rule-and { font-size: 0.8em; color: #9cb2c4; font-weight: 700; letter-spacing: 0.2px; text-align: center; min-width: 18px; }
+#t-rewrite-overlay .t-rewrite-rule-no, #t-rewrite-settings-overlay .t-rewrite-rule-no { min-width: 30px; font-size: 0.78em; color: #89a3b8; }
+#t-rewrite-overlay .t-rewrite-rule-del, #t-rewrite-settings-overlay .t-rewrite-rule-del { width: 34px; min-width: 34px; padding: 0; justify-content: center; }
+#t-rewrite-overlay .t-rewrite-status { font-size: 0.8em; margin-top: 4px; }
+#t-rewrite-overlay .t-rewrite-status.muted { color: #7f95a8; }
+#t-rewrite-overlay .t-rewrite-status.ok { color: #79d9a8; }
+#t-rewrite-overlay .t-rewrite-status.warn { color: #f2c27d; }
+#t-rewrite-overlay .t-rewrite-status.err { color: #f08f8f; }
+#t-rewrite-overlay .t-rewrite-diff-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+#t-rewrite-overlay .t-rewrite-diff-tools { display: flex; gap: 6px; flex-wrap: nowrap; }
+#t-rewrite-overlay .t-rewrite-diff-body { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 8px; padding-right: 2px; }
+#t-rewrite-overlay .t-rewrite-match-row { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; background: rgba(8, 13, 20, 0.8); padding: 10px; }
+#t-rewrite-overlay .t-rewrite-match-row.hit { border-color: rgba(122, 203, 159, 0.4); background: linear-gradient(180deg, rgba(24, 68, 51, 0.28) 0%, rgba(14, 22, 18, 0.74) 100%); }
+#t-rewrite-overlay .t-rewrite-match-row.miss { border-color: rgba(176, 188, 201, 0.28); }
+#t-rewrite-overlay .t-rewrite-match-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 0.78em; color: #c5d8e8; flex-wrap: wrap; }
+#t-rewrite-overlay .t-rewrite-match-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+#t-rewrite-overlay .t-rewrite-hit-tag { border: 1px solid rgba(122, 203, 159, 0.45); background: rgba(122, 203, 159, 0.12); color: #c2eed9; border-radius: 999px; padding: 2px 8px; font-size: 0.95em; }
+#t-rewrite-overlay .t-rewrite-hit-tag.miss { border-color: rgba(189, 199, 210, 0.35); background: rgba(177, 189, 201, 0.12); color: #c8d3dd; }
+#t-rewrite-overlay .t-rewrite-match-text, #t-rewrite-overlay .t-rewrite-diff-text { font-size: 0.88em; line-height: 1.5; color: #e2edf7; white-space: pre-wrap; word-break: break-word; }
+#t-rewrite-overlay .t-rewrite-hit-summary { font-size: 0.82em; color: #b9d8ee; margin-bottom: 6px; }
+#t-rewrite-overlay .t-rewrite-hit-source { font-size: 0.78em; color: #8da5b8; margin-bottom: 8px; }
+#t-rewrite-overlay .t-rewrite-json-box { margin: 0; padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(7, 11, 18, 0.9); color: #b8d8ee; max-height: 180px; overflow: auto; font-size: 0.76em; line-height: 1.45; }
+#t-rewrite-overlay #t-rewrite-raw-response { max-height: 240px; min-height: 120px; white-space: pre-wrap; word-break: break-word; }
+#t-rewrite-settings-overlay { z-index: 30070; }
+#t-rewrite-settings-overlay .t-rewrite-settings-window { width: 960px; max-width: 96vw; max-height: 92vh; height: 88vh; display: flex; flex-direction: column; overflow: hidden; background: rgba(19, 22, 30, 0.96); border: 1px solid rgba(255, 255, 255, 0.14); box-shadow: 0 22px 58px rgba(0, 0, 0, 0.56); }
+#chat .mes .t-rewrite-auto-badge { position: absolute; right: 10px; top: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #dff0ff; background: rgba(15, 24, 35, 0.88); border: 1px solid rgba(144, 205, 244, 0.45); border-radius: 999px; padding: 3px 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); background-image: linear-gradient(120deg, rgba(144, 205, 244, 0.15) 0%, rgba(191, 161, 95, 0.22) 35%, rgba(122, 203, 159, 0.2) 70%, rgba(144, 205, 244, 0.15) 100%); background-size: 220% 220%; animation: titania-rewrite-badge-flow 1.4s linear infinite; }
+#chat .mes .t-rewrite-auto-badge i { color: #90cdf4; animation: titania-rewrite-badge-icon 0.95s ease-in-out infinite; }
+@keyframes titania-rewrite-badge-flow { 0% { background-position: 0% 50%; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); } 50% { background-position: 100% 50%; box-shadow: 0 6px 22px rgba(100, 168, 214, 0.3); } 100% { background-position: 200% 50%; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); } }
+@keyframes titania-rewrite-badge-icon { 0%,100% { transform: scale(1) rotate(0deg); opacity: 0.9; } 50% { transform: scale(1.12) rotate(8deg); opacity: 1; } }
+#t-rewrite-settings-overlay .t-rewrite-settings-body { flex: 1; overflow: auto; display: block; padding: 14px; background: radial-gradient(circle at 100% 0%, rgba(144, 205, 244, 0.1) 0%, rgba(144, 205, 244, 0) 36%), radial-gradient(circle at 0% 100%, rgba(191, 161, 95, 0.08) 0%, rgba(191, 161, 95, 0) 32%), #12161d; }
+#t-rewrite-settings-overlay .t-rewrite-settings-grid { display: grid; gap: 12px; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+#t-rewrite-settings-overlay .t-rewrite-settings-card { min-height: 0; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.14); background: linear-gradient(170deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015) 55%), rgba(10, 15, 22, 0.86); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
+#t-rewrite-settings-overlay .t-rewrite-card-api { grid-column: span 7; }
+#t-rewrite-settings-overlay .t-rewrite-card-split, #t-rewrite-settings-overlay .t-rewrite-card-stream { grid-column: span 5; }
+#t-rewrite-settings-overlay .t-rewrite-card-rules { grid-column: span 7; }
+#t-rewrite-settings-overlay .t-rewrite-split-options-vertical { flex-direction: column; align-items: flex-start; gap: 8px; }
+#t-rewrite-settings-overlay .t-rewrite-debug-row-block label { display: flex; align-items: flex-start; gap: 8px; }
+#t-rewrite-settings-overlay #t-rewrite-settings-rules-list { max-height: 320px; overflow: auto; padding-right: 2px; }
+#t-rewrite-overlay .t-rewrite-diff-empty, #t-rewrite-overlay .t-rewrite-empty-rule { border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 12px; text-align: center; color: #6f8698; background: rgba(255, 255, 255, 0.02); }
+#t-rewrite-overlay .t-rewrite-diff-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#t-rewrite-overlay .t-rewrite-diff-cell { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 10px; background: rgba(8, 13, 20, 0.8); }
+#t-rewrite-overlay .t-rewrite-diff-before { border-color: rgba(224, 136, 136, 0.35); background: linear-gradient(180deg, rgba(78, 26, 31, 0.4) 0%, rgba(26, 16, 18, 0.74) 100%); }
+#t-rewrite-overlay .t-rewrite-diff-after { border-color: rgba(122, 203, 159, 0.35); background: linear-gradient(180deg, rgba(24, 68, 51, 0.38) 0%, rgba(14, 22, 18, 0.74) 100%); }
+@media (max-width: 980px) { #t-rewrite-settings-overlay .t-rewrite-settings-grid { grid-template-columns: 1fr; } #t-rewrite-settings-overlay .t-rewrite-card-api, #t-rewrite-settings-overlay .t-rewrite-card-split, #t-rewrite-settings-overlay .t-rewrite-card-stream, #t-rewrite-settings-overlay .t-rewrite-card-rules { grid-column: span 1; } #t-rewrite-overlay .t-rewrite-window { width: 96vw; height: auto; max-height: 92vh; } #t-rewrite-overlay .t-rewrite-body { grid-template-columns: 1fr; overflow: auto; } }
+@media (max-width: 640px) { #t-rewrite-overlay { align-items: flex-end; padding: 0; } #t-rewrite-overlay .t-rewrite-window { width: 100vw; max-width: 100vw; max-height: 96vh; height: auto; border-radius: 12px 12px 0 0; border-left: none; border-right: none; border-bottom: none; } #t-rewrite-overlay .t-rewrite-body { padding: 10px; gap: 10px; } #t-rewrite-overlay .t-rewrite-diff-row { grid-template-columns: 1fr; } #t-rewrite-overlay .t-rewrite-rule-row, #t-rewrite-settings-overlay .t-rewrite-rule-row { grid-template-columns: minmax(88px, 0.6fr) auto minmax(128px, 1fr) auto; gap: 6px; } #t-rewrite-overlay .t-rewrite-rule-and, #t-rewrite-settings-overlay .t-rewrite-rule-and { display: block; min-width: 14px; font-size: 0.74em; } #t-rewrite-overlay .t-rewrite-rule-no, #t-rewrite-settings-overlay .t-rewrite-rule-no { display: none; } #t-rewrite-overlay .t-rewrite-rule-del, #t-rewrite-settings-overlay .t-rewrite-rule-del { width: 30px; min-width: 30px; height: 32px; min-height: 32px; } #t-rewrite-overlay .t-rewrite-rule-anchor, #t-rewrite-settings-overlay .t-rewrite-rule-anchor, #t-rewrite-overlay .t-rewrite-rule-extras, #t-rewrite-settings-overlay .t-rewrite-rule-extras { padding: 7px 8px; font-size: 0.84em; } #t-rewrite-overlay #t-rewrite-trigger { width: 100%; min-width: 0; } }
+`;
   }
 });
 
