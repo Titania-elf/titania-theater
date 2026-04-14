@@ -16569,11 +16569,10 @@ import { saveChatConditional, reloadCurrentChat, eventSource, event_types } from
 function ensureRewriteCssLoaded() {
   const cssId = "titania-css-rewrite-panel";
   const inlineStyleId = "titania-css-rewrite-panel-inline";
-  const ts = Date.now();
   const candidates = [
-    `/scripts/extensions/third-party/titania-theater/css/rewrite-panel.css?t=${ts}`,
-    `${extensionFolderPath}/css/rewrite-panel.css?t=${ts}`,
-    `scripts/extensions/third-party/titania-theater/css/rewrite-panel.css?t=${ts}`
+    "/scripts/extensions/third-party/titania-theater/css/rewrite-panel.css",
+    `${extensionFolderPath}/css/rewrite-panel.css`,
+    "scripts/extensions/third-party/titania-theater/css/rewrite-panel.css"
   ];
   let link = document.getElementById(cssId);
   if (!link) {
@@ -16582,6 +16581,8 @@ function ensureRewriteCssLoaded() {
     link.rel = "stylesheet";
     link.type = "text/css";
     document.head.appendChild(link);
+  } else if (link.sheet && link.href && link.href.includes("rewrite-panel.css")) {
+    return;
   }
   const cleanupInline = () => {
     const stale = document.getElementById(inlineStyleId);
@@ -16590,7 +16591,7 @@ function ensureRewriteCssLoaded() {
   const injectInlineFromFetch = async () => {
     for (const href of candidates) {
       try {
-        const res = await fetch(href, { cache: "no-store" });
+        const res = await fetch(href, { cache: "no-cache" });
         if (!res.ok) continue;
         const text = await res.text();
         if (!text || !text.includes("#t-rewrite-overlay")) continue;
@@ -16601,12 +16602,15 @@ function ensureRewriteCssLoaded() {
           document.head.appendChild(style);
         }
         style.textContent = text;
-        console.warn("Titania Rewrite: \u4F7F\u7528 inline CSS \u56DE\u9000\u52A0\u8F7D", href);
+        console.warn("Titania Rewrite: \u4F7F\u7528 inline CSS \u56DE\u9000\u52A0\u8F7D", { href, origin: location.origin });
         return;
       } catch {
       }
     }
-    console.warn("Titania Rewrite: rewrite-panel.css \u6240\u6709\u8DEF\u5F84\u5747\u52A0\u8F7D\u5931\u8D25", candidates);
+    console.warn("Titania Rewrite: rewrite-panel.css \u6240\u6709\u8DEF\u5F84\u5747\u52A0\u8F7D\u5931\u8D25", {
+      origin: location.origin,
+      candidates
+    });
   };
   let idx = 0;
   const tryNext = () => {
@@ -17703,7 +17707,6 @@ function openSettingsPanel() {
 }
 function openPanel() {
   closePanel();
-  ensureRewriteCssLoaded();
   const rewriteData = ensureRewriteDataShape();
   const rules = cleanupRules(rewriteData.rules);
   const html = `
