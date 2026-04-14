@@ -15654,8 +15654,8 @@ async function generateAllScenes() {
     const messages = buildAllScenesPrompt(ctx, storyInput, opening);
     const raw = await sendChatRequest(messages, {
       stream: useStream,
-      temperature: 0.5,
-      maxTokens: 2e4,
+      temperature: 0.8,
+      maxTokens: 6e4,
       onProgress: useStream ? (partial) => {
         lastRawResponse = partial || "";
         updateRawPreview("\u6D41\u5F0F\u751F\u6210\u7EC6\u7EB2\u4E2D...");
