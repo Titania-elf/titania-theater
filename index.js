@@ -16568,9 +16568,13 @@ var init_outlineEntryButton = __esm({
 import { saveChatConditional, reloadCurrentChat, eventSource, event_types } from "../../../../script.js";
 function ensureRewriteCssLoaded() {
   const cssId = "titania-css-rewrite-panel";
+  const inlineStyleId = "titania-css-rewrite-panel-inline";
   const ts = Date.now();
-  const primaryHref = `${extensionFolderPath}/css/rewrite-panel.css?t=${ts}`;
-  const fallbackHref = `/scripts/extensions/third-party/titania-theater/css/rewrite-panel.css?t=${ts}`;
+  const candidates = [
+    `/scripts/extensions/third-party/titania-theater/css/rewrite-panel.css?t=${ts}`,
+    `${extensionFolderPath}/css/rewrite-panel.css?t=${ts}`,
+    `scripts/extensions/third-party/titania-theater/css/rewrite-panel.css?t=${ts}`
+  ];
   let link = document.getElementById(cssId);
   if (!link) {
     link = document.createElement("link");
@@ -16579,19 +16583,57 @@ function ensureRewriteCssLoaded() {
     link.type = "text/css";
     document.head.appendChild(link);
   }
-  link.dataset.rewriteCssFallback = "0";
-  link.onerror = () => {
-    if (link.dataset.rewriteCssFallback !== "1") {
-      link.dataset.rewriteCssFallback = "1";
-      link.href = fallbackHref;
+  const cleanupInline = () => {
+    const stale = document.getElementById(inlineStyleId);
+    if (stale) stale.remove();
+  };
+  const injectInlineFromFetch = async () => {
+    for (const href of candidates) {
+      try {
+        const res = await fetch(href, { cache: "no-store" });
+        if (!res.ok) continue;
+        const text = await res.text();
+        if (!text || !text.includes("#t-rewrite-overlay")) continue;
+        let style = document.getElementById(inlineStyleId);
+        if (!style) {
+          style = document.createElement("style");
+          style.id = inlineStyleId;
+          document.head.appendChild(style);
+        }
+        style.textContent = text;
+        console.warn("Titania Rewrite: \u4F7F\u7528 inline CSS \u56DE\u9000\u52A0\u8F7D", href);
+        return;
+      } catch {
+      }
+    }
+    console.warn("Titania Rewrite: rewrite-panel.css \u6240\u6709\u8DEF\u5F84\u5747\u52A0\u8F7D\u5931\u8D25", candidates);
+  };
+  let idx = 0;
+  const tryNext = () => {
+    if (idx >= candidates.length) {
+      void injectInlineFromFetch();
       return;
     }
-    console.warn("Titania Rewrite: rewrite-panel.css \u52A0\u8F7D\u5931\u8D25", {
-      primaryHref,
-      fallbackHref
-    });
+    const href = candidates[idx++];
+    link.href = href;
   };
-  link.href = primaryHref;
+  link.onload = () => {
+    let valid = false;
+    try {
+      valid = !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length > 0);
+    } catch {
+      valid = false;
+    }
+    if (valid) {
+      cleanupInline();
+    } else {
+      tryNext();
+    }
+  };
+  link.onerror = () => {
+    tryNext();
+  };
+  tryNext();
 }
 function isEnabled2() {
   const data = getExtData();
