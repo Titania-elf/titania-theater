@@ -16568,7 +16568,9 @@ var init_outlineEntryButton = __esm({
 import { saveChatConditional, reloadCurrentChat, eventSource, event_types } from "../../../../script.js";
 function ensureRewriteCssLoaded() {
   const cssId = "titania-css-rewrite-panel";
-  const href = `${extensionFolderPath}/css/rewrite-panel.css?t=${Date.now()}`;
+  const ts = Date.now();
+  const primaryHref = `${extensionFolderPath}/css/rewrite-panel.css?t=${ts}`;
+  const fallbackHref = `/scripts/extensions/third-party/titania-theater/css/rewrite-panel.css?t=${ts}`;
   let link = document.getElementById(cssId);
   if (!link) {
     link = document.createElement("link");
@@ -16577,7 +16579,19 @@ function ensureRewriteCssLoaded() {
     link.type = "text/css";
     document.head.appendChild(link);
   }
-  link.href = href;
+  link.dataset.rewriteCssFallback = "0";
+  link.onerror = () => {
+    if (link.dataset.rewriteCssFallback !== "1") {
+      link.dataset.rewriteCssFallback = "1";
+      link.href = fallbackHref;
+      return;
+    }
+    console.warn("Titania Rewrite: rewrite-panel.css \u52A0\u8F7D\u5931\u8D25", {
+      primaryHref,
+      fallbackHref
+    });
+  };
+  link.href = primaryHref;
 }
 function isEnabled2() {
   const data = getExtData();
@@ -16913,6 +16927,27 @@ function getLatestAssistantMessageFromChat() {
   }
   return null;
 }
+function getChatMessageElementByIndex(index) {
+  const $byId = $(`#chat .mes[mesid='${index}']`).last();
+  if ($byId.length) return $byId;
+  const $fallback = $("#chat > div.mes.reasoning.last_mes").last();
+  if ($fallback.length) return $fallback;
+  return $();
+}
+function clearAutoRewriteIndicator() {
+  $("#chat .mes.t-rewrite-auto-pending").removeClass("t-rewrite-auto-pending");
+  $("#chat .t-rewrite-auto-badge").remove();
+}
+function applyAutoRewriteIndicator(messageIndex) {
+  clearAutoRewriteIndicator();
+  const $target = getChatMessageElementByIndex(messageIndex);
+  if (!$target.length) return false;
+  $target.addClass("t-rewrite-auto-pending");
+  if ($target.find(".t-rewrite-auto-badge").length === 0) {
+    $target.append('<div class="t-rewrite-auto-badge"><i class="fa-solid fa-wand-magic-sparkles"></i><span>\u81EA\u52A8\u6539\u5199\u4E2D</span></div>');
+  }
+  return true;
+}
 function applyRewriteToFullText(sourceText, evaluated, parsed) {
   const map = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
   let rewritten = String(sourceText || "");
@@ -17224,6 +17259,7 @@ async function runRewrite(options = {}) {
   const $btn = $("#t-rewrite-trigger");
   const streamLive = data.stream_live === true;
   const source = options.source || "manual";
+  let success = false;
   $btn.prop("disabled", true);
   updateAbortBtnState(true);
   const abortController = new AbortController();
@@ -17274,19 +17310,21 @@ async function runRewrite(options = {}) {
     await saveChatConditional();
     await reloadCurrentChat();
     setStatus(`\u6539\u5199\u5B8C\u6210\uFF1A${rows.length} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+    success = true;
   } catch (e) {
     renderDiffRows([]);
     if (e?.name === "AbortError") {
       setStatus("\u6539\u5199\u5DF2\u624B\u52A8\u7EC8\u6B62", "warn");
     } else {
       setStatus(`\u6539\u5199\u5931\u8D25: ${e.message}`, "err");
-      if (window.toastr) toastr.error(e.message || "\u6539\u5199\u5931\u8D25", "\u6587\u672C\u6539\u5199");
+      if (source !== "auto" && window.toastr) toastr.error(e.message || "\u6539\u5199\u5931\u8D25", "\u6587\u672C\u6539\u5199");
     }
   } finally {
     activeRewriteAbortController = null;
     $btn.prop("disabled", false);
     updateAbortBtnState(false);
   }
+  return success;
 }
 async function runManualRewrite() {
   return runRewrite({ source: "manual" });
@@ -17301,10 +17339,20 @@ async function onAutoTriggerRewrite() {
   if (!latest || !latest.msg) return;
   if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
   if (latest.msg.extra.titania_rewrite_done === true) return;
+  const { evaluated } = buildRewritePayload(data, latest.content);
+  if (!evaluated || evaluated.hitCount <= 0) return;
   try {
     isAutoRewriting = true;
-    await runRewrite({ source: "auto" });
+    applyAutoRewriteIndicator(latest.index);
+    if (window.toastr) toastr.info("\u68C0\u6D4B\u5230\u547D\u4E2D\u89C4\u5219\uFF0C\u6B63\u5728\u81EA\u52A8\u6539\u5199...", "\u6587\u672C\u6539\u5199");
+    const ok = await runRewrite({ source: "auto" });
+    if (ok) {
+      if (window.toastr) toastr.success("\u81EA\u52A8\u6539\u5199\u5B8C\u6210\uFF0C\u5DF2\u56DE\u5199\u5F53\u524D\u56DE\u590D", "\u6587\u672C\u6539\u5199");
+    } else {
+      if (window.toastr) toastr.error("\u81EA\u52A8\u6539\u5199\u5931\u8D25\uFF0C\u5DF2\u4FDD\u7559\u539F\u6587", "\u6587\u672C\u6539\u5199");
+    }
   } finally {
+    clearAutoRewriteIndicator();
     isAutoRewriting = false;
   }
 }
