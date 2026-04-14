@@ -8264,6 +8264,31 @@ body.titania-debug-mode #chat titania-memory::before {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: linear-gradient(180deg, rgba(12, 18, 24, 0.96), rgba(9, 14, 20, 0.96));
+}
+
+.t-dialog-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 20040;
+}
+
+.t-dialog-box {
+    width: min(920px, 96vw);
+    margin: 0 auto;
+    max-height: min(82dvh, 82vh);
 }
 
 .t-outline-body {
@@ -8420,8 +8445,7 @@ body.titania-debug-mode #chat titania-memory::before {
     gap: 8px;
 }
 
-.t-hub-toolbar,
-.t-hub-footerbar {
+.t-hub-toolbar {
     border: 1px solid rgba(120, 150, 170, 0.25);
     border-radius: 10px;
     background: rgba(12, 16, 20, 0.7);
@@ -8448,19 +8472,6 @@ body.titania-debug-mode #chat titania-memory::before {
 .t-hub-primary-action:disabled {
     opacity: 0.55;
     box-shadow: none;
-}
-
-.t-hub-footerbar {
-    justify-content: space-between;
-}
-
-.t-hub-selected {
-    min-width: 0;
-}
-
-.t-hub-footer-actions {
-    display: flex;
-    gap: 8px;
 }
 
 .t-plan-accordion-item {
@@ -8540,6 +8551,25 @@ body.titania-debug-mode #chat titania-memory::before {
 
 .t-plan-source-radio input[type="radio"] {
     accent-color: #75d8d8;
+}
+
+.t-plan-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 8px 10px 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(10, 16, 22, 0.55);
+}
+
+.t-plan-source-note {
+    color: #8ea7bc;
+    font-size: 11px;
+}
+
+.t-plan-card-actions .t-plan-delete-btn {
+    margin-left: auto;
 }
 
 .t-plan-accordion-body {
@@ -8712,6 +8742,62 @@ body.titania-debug-mode #chat titania-memory::before {
     word-break: break-word;
 }
 
+.t-opening-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.t-opening-card {
+    border: 1px solid rgba(120, 150, 170, 0.3);
+    border-radius: 10px;
+    background: rgba(14, 21, 28, 0.9);
+    padding: 10px;
+    cursor: pointer;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.t-opening-card:hover {
+    border-color: rgba(129, 236, 236, 0.5);
+    transform: translateY(-1px);
+}
+
+.t-opening-card.active {
+    border-color: rgba(129, 236, 236, 0.75);
+    box-shadow: 0 0 0 1px rgba(129, 236, 236, 0.2) inset;
+}
+
+.t-opening-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.t-opening-card-title {
+    color: #d5e9f9;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.t-opening-card-detail {
+    flex-shrink: 0;
+}
+
+.t-opening-card-text {
+    color: #acc2d6;
+    font-size: 12px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .t-plan-item-block {
     border: 1px solid rgba(120, 150, 170, 0.25);
     border-radius: 8px;
@@ -8801,6 +8887,78 @@ body.titania-debug-mode #chat titania-memory::before {
     align-items: center;
 }
 
+.t-outline-primary-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 176px));
+    gap: 8px;
+    align-items: center;
+    justify-content: start;
+}
+
+.t-outline-primary-actions #t-outline-generate {
+    min-height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(114, 228, 209, 0.75);
+    background: linear-gradient(135deg, rgba(48, 166, 173, 0.96), rgba(74, 206, 172, 0.96));
+    box-shadow: 0 8px 18px rgba(44, 150, 152, 0.32);
+    font-weight: 700;
+}
+
+.t-outline-primary-actions #t-outline-generate-all-scenes {
+    min-height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(154, 192, 216, 0.42);
+    background: linear-gradient(180deg, rgba(30, 45, 58, 0.92), rgba(23, 36, 49, 0.92));
+    color: #d9e8f7;
+}
+
+.t-outline-primary-actions #t-outline-generate:hover:not(:disabled),
+.t-outline-primary-actions #t-outline-generate-all-scenes:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+.t-outline-primary-actions #t-outline-generate:disabled,
+.t-outline-primary-actions #t-outline-generate-all-scenes:disabled {
+    opacity: 0.58;
+    box-shadow: none;
+}
+
+#t-outline-mobile-tools-toggle {
+    display: none;
+}
+
+.t-outline-secondary-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.t-outline-source-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#t-outline-view-raw {
+    min-height: 32px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(150, 185, 210, 0.4);
+    background: rgba(24, 36, 48, 0.88);
+    color: #cfe0f1;
+    width: auto;
+}
+
+#t-outline-view-raw:hover:not(:disabled) {
+    border-color: rgba(129, 236, 236, 0.55);
+    background: rgba(26, 44, 60, 0.92);
+}
+
 .t-outline-mode {
     margin-left: auto;
     color: #c8d7e6;
@@ -8808,6 +8966,26 @@ body.titania-debug-mode #chat titania-memory::before {
     align-items: center;
     gap: 8px;
     font-size: 13px;
+}
+
+.t-outline-mode-hint {
+    color: #8ea7bc;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.t-outline-mode-source {
+    margin-left: 0;
+    align-items: center;
+    flex-direction: row;
+    gap: 6px;
+}
+
+.t-outline-mode-source .t-outline-select {
+    min-height: 30px;
+    padding: 4px 8px;
+    font-size: 12px;
+    width: auto;
 }
 
 .t-outline-select {
@@ -9036,6 +9214,50 @@ body.titania-debug-mode #chat titania-memory::before {
     font-size: 12px;
 }
 
+.t-raw-wait-anim {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transform: translateY(1px);
+    transition: opacity 0.18s ease;
+}
+
+.t-raw-wait-anim span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #81ecec;
+    box-shadow: 0 0 0 0 rgba(129, 236, 236, 0.45);
+    animation: tRawPulse 1s ease-in-out infinite;
+}
+
+.t-raw-wait-anim span:nth-child(2) {
+    animation-delay: 0.16s;
+}
+
+.t-raw-wait-anim span:nth-child(3) {
+    animation-delay: 0.32s;
+}
+
+.t-raw-wait-anim.is-active {
+    opacity: 1;
+}
+
+@keyframes tRawPulse {
+    0%,
+    80%,
+    100% {
+        transform: translateY(0) scale(0.85);
+        box-shadow: 0 0 0 0 rgba(129, 236, 236, 0.0);
+    }
+
+    40% {
+        transform: translateY(-2px) scale(1);
+        box-shadow: 0 0 0 4px rgba(129, 236, 236, 0.12);
+    }
+}
+
 .t-outline-mobile-list {
     display: none;
 }
@@ -9126,6 +9348,24 @@ body.titania-debug-mode #chat titania-memory::before {
 }
 
 @media (max-width: 768px) {
+    .t-dialog-overlay {
+        align-items: center !important;
+        justify-content: center !important;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        min-height: 100dvh;
+        overflow: auto;
+    }
+
+    .t-dialog-box {
+        margin: auto;
+        max-height: min(82dvh, 82vh);
+    }
+
     #t-story-outline-overlay {
         align-items: flex-start;
         justify-content: center;
@@ -9151,7 +9391,7 @@ body.titania-debug-mode #chat titania-memory::before {
     }
 
     .t-outline-top {
-        padding: 10px;
+        padding: 8px;
         border-radius: 8px;
     }
 
@@ -9214,22 +9454,8 @@ body.titania-debug-mode #chat titania-memory::before {
         align-items: stretch;
     }
 
-    .t-hub-toolbar .t-btn,
-    .t-hub-footer-actions .t-btn {
+    .t-hub-toolbar .t-btn {
         min-height: 36px;
-    }
-
-    .t-hub-footerbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .t-hub-footer-actions {
-        width: 100%;
-    }
-
-    .t-hub-footer-actions .t-btn {
-        flex: 1;
     }
 
     .t-plan-item-carousel {
@@ -9242,7 +9468,7 @@ body.titania-debug-mode #chat titania-memory::before {
     }
 
     .t-outline-story-input {
-        min-height: 96px;
+        min-height: 76px;
         font-size: 16px;
         line-height: 1.4;
     }
@@ -9280,24 +9506,73 @@ body.titania-debug-mode #chat titania-memory::before {
     }
 
     .t-outline-actions {
+        margin-top: 6px;
         gap: 6px;
     }
 
-    .t-outline-actions > .t-btn {
-        flex: 1 1 calc(50% - 6px);
+    .t-outline-primary-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(120px, 152px));
+        gap: 6px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .t-outline-primary-actions #t-outline-generate,
+    .t-outline-primary-actions #t-outline-generate-all-scenes {
         min-height: 40px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    #t-outline-mobile-tools-toggle {
+        display: inline-flex;
+        width: fit-content;
+        min-height: 34px;
+        padding: 0 14px;
+        justify-content: center;
+        grid-column: 1 / -1;
+        justify-self: center;
+    }
+
+    .t-outline-secondary-controls {
+        display: none;
+        width: 100%;
+        padding-top: 6px;
+        border-top: 1px dashed rgba(255, 255, 255, 0.14);
+        gap: 6px;
+    }
+
+    .t-outline-top.mobile-tools-open .t-outline-secondary-controls {
+        display: flex;
+    }
+
+    .t-outline-top.mobile-tools-open .t-outline-story-input {
+        min-height: 96px;
     }
 
     .t-outline-mode {
         margin-left: 0;
         width: 100%;
         justify-content: space-between;
-        order: 3;
+        font-size: 12px;
+    }
+
+    #t-outline-opening-source-pick {
+        width: 100%;
+        min-height: 36px;
     }
 
     #t-outline-view-raw {
+        width: fit-content;
+        min-height: 30px;
+        padding: 3px 10px;
+        margin-left: auto;
+    }
+
+    #t-outline-opening-source-label {
         width: 100%;
-        min-height: 38px;
+        margin-top: 0;
     }
 
     .t-outline-select {
@@ -13201,6 +13476,140 @@ __export(storyOutlineWindow_exports, {
   openSceneHubWindow: () => openSceneHubWindow,
   openStoryOutlineWindow: () => openStoryOutlineWindow
 });
+function pushRawResponseHistory(content, typeLabel = "\u6A21\u578B\u54CD\u5E94") {
+  const text = String(content || "").trim();
+  if (!text) return;
+  const charName = getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272";
+  if (rawResponseHistory[0]?.content === text) {
+    lastRawResponse = text;
+    return;
+  }
+  rawResponseHistory.unshift({
+    id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    typeLabel,
+    charName,
+    createdAt: Date.now(),
+    content: text
+  });
+  if (rawResponseHistory.length > MAX_RAW_HISTORY) {
+    rawResponseHistory = rawResponseHistory.slice(0, MAX_RAW_HISTORY);
+  }
+  lastRawResponse = text;
+  persistRawResponseHistory();
+}
+function loadRawResponseHistory() {
+  const data = getExtData();
+  const list = Array.isArray(data?.[RAW_HISTORY_KEY]) ? data[RAW_HISTORY_KEY] : [];
+  return list.map((entry) => ({
+    id: String(entry?.id || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
+    typeLabel: String(entry?.typeLabel || "\u6A21\u578B\u54CD\u5E94"),
+    charName: String(entry?.charName || "\u672A\u547D\u540D\u89D2\u8272"),
+    createdAt: Number(entry?.createdAt) || Date.now(),
+    content: String(entry?.content || "")
+  })).filter((entry) => entry.content.trim()).slice(0, MAX_RAW_HISTORY);
+}
+function persistRawResponseHistory() {
+  const data = getExtData();
+  data[RAW_HISTORY_KEY] = Array.isArray(rawResponseHistory) ? rawResponseHistory.slice(0, MAX_RAW_HISTORY) : [];
+  saveExtData();
+}
+function formatRawHistoryTime(ts) {
+  const d = new Date(ts || Date.now());
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
+}
+function formatElapsedDuration(ms) {
+  const totalSec = Math.max(0, Math.floor((Number(ms) || 0) / 1e3));
+  const hour = Math.floor(totalSec / 3600);
+  const minute = Math.floor(totalSec % 3600 / 60);
+  const second = totalSec % 60;
+  if (hour > 0) {
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+  }
+  return `${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+}
+function sanitizeFileNamePart(name) {
+  const raw = String(name || "").trim();
+  const safe = raw.replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "_");
+  return safe || "\u672A\u547D\u540D\u89D2\u8272";
+}
+function formatFileTimestamp(ts = Date.now()) {
+  const d = new Date(ts);
+  const yyyy = d.getFullYear();
+  const MM = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${yyyy}${MM}${dd}_${hh}${mm}${ss}`;
+}
+function exportRawResponseHistory() {
+  const history = Array.isArray(rawResponseHistory) ? rawResponseHistory : [];
+  if (history.length === 0) {
+    if (window.toastr) toastr.warning("\u6682\u65E0\u53EF\u5BFC\u51FA\u7684\u751F\u6210\u5386\u53F2", "\u6545\u4E8B\u5927\u7EB2");
+    return;
+  }
+  const charName = sanitizeFileNamePart(history[0]?.charName || getCurrentCharCardName());
+  const timestamp = formatFileTimestamp();
+  const payload = {
+    version: "1.0",
+    exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    charName,
+    count: history.length,
+    items: history.map((entry) => ({
+      id: entry.id,
+      typeLabel: entry.typeLabel,
+      charName: entry.charName || charName,
+      createdAt: new Date(entry.createdAt || Date.now()).toISOString(),
+      content: entry.content || ""
+    }))
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `titania_outline_history_${charName}_${timestamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 0);
+  if (window.toastr) toastr.success(`\u5DF2\u5BFC\u51FA\u751F\u6210\u5386\u53F2\uFF1A${a.download}`, "\u6545\u4E8B\u5927\u7EB2");
+}
+function getCurrentElapsedMs() {
+  if (!responseTimerRunning) return responseElapsedMs;
+  return Math.max(0, Date.now() - responseTimerStartAt);
+}
+function updateResponseTimerUI() {
+  if ($("#t-outline-raw-elapsed").length === 0) return;
+  $("#t-outline-raw-elapsed").text(`\u8017\u65F6: ${formatElapsedDuration(getCurrentElapsedMs())}`);
+}
+function setRawWaitingAnimation(active) {
+  const $anim = $("#t-outline-raw-mood");
+  if ($anim.length === 0) return;
+  $anim.toggleClass("is-active", !!active);
+}
+function startResponseTimer(reset = true) {
+  if (reset) responseElapsedMs = 0;
+  responseTimerStartAt = Date.now() - (reset ? 0 : responseElapsedMs);
+  responseTimerRunning = true;
+  if (responseTimerId) clearInterval(responseTimerId);
+  responseTimerId = setInterval(updateResponseTimerUI, 250);
+  updateResponseTimerUI();
+  setRawWaitingAnimation(true);
+}
+function stopResponseTimer() {
+  if (responseTimerRunning) {
+    responseElapsedMs = getCurrentElapsedMs();
+  }
+  responseTimerRunning = false;
+  if (responseTimerId) {
+    clearInterval(responseTimerId);
+    responseTimerId = null;
+  }
+  updateResponseTimerUI();
+  setRawWaitingAnimation(false);
+}
 function ensureCssLoaded() {
   const id = "titania-css-story-outline";
   if (!document.getElementById(id)) {
@@ -13254,24 +13663,94 @@ function getOpeningSourceRef() {
   const data = getExtData();
   const raw = data?.[OPENING_SOURCE_REF_KEY];
   if (!raw || typeof raw !== "object") return null;
-  const chatIndex = Number(raw.chatIndex);
-  if (Number.isNaN(chatIndex) || chatIndex < 0) return null;
-  return {
-    chatIndex,
-    preview: String(raw.preview || "")
-  };
+  if (raw.type === "card_opening") {
+    const openingIndex = Number(raw.openingIndex);
+    if (Number.isNaN(openingIndex) || openingIndex < 0) return null;
+    return {
+      type: "card_opening",
+      openingIndex,
+      preview: String(raw.preview || "")
+    };
+  }
+  if (raw.type === "chat" || typeof raw.chatIndex !== "undefined") {
+    const chatIndex = Number(raw.chatIndex);
+    if (Number.isNaN(chatIndex) || chatIndex < 0) return null;
+    return {
+      type: "chat",
+      chatIndex,
+      preview: String(raw.preview || "")
+    };
+  }
+  return null;
 }
 function setOpeningSourceRef(ref) {
   const data = getExtData();
-  if (!ref || Number.isNaN(Number(ref.chatIndex))) {
+  if (!ref || typeof ref !== "object") {
     data[OPENING_SOURCE_REF_KEY] = null;
-  } else {
+  } else if (ref.type === "card_opening" && !Number.isNaN(Number(ref.openingIndex))) {
     data[OPENING_SOURCE_REF_KEY] = {
+      type: "card_opening",
+      openingIndex: Number(ref.openingIndex),
+      preview: String(ref.preview || "")
+    };
+  } else if (!Number.isNaN(Number(ref.chatIndex))) {
+    data[OPENING_SOURCE_REF_KEY] = {
+      type: "chat",
       chatIndex: Number(ref.chatIndex),
       preview: String(ref.preview || "")
     };
+  } else {
+    data[OPENING_SOURCE_REF_KEY] = null;
   }
   saveExtData();
+}
+function getCardOpeningEntries() {
+  try {
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
+    const stCtx = SillyTavern.getContext();
+    const charObj = stCtx?.characters?.[stCtx?.characterId] || null;
+    const data = charObj?.data || {};
+    const list = [];
+    const pushText = (text) => {
+      const value = String(text || "").trim();
+      if (!value) return;
+      if (list.includes(value)) return;
+      list.push(value);
+    };
+    pushText(data.first_mes);
+    pushText(data.first_message);
+    pushText(charObj?.first_mes);
+    pushText(charObj?.first_message);
+    const arrays = [
+      data.alternate_greetings,
+      data.alternateGreetings,
+      data.greetings,
+      charObj?.alternate_greetings,
+      charObj?.alternateGreetings,
+      charObj?.greetings
+    ];
+    arrays.forEach((arr) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((item) => {
+        if (typeof item === "string") {
+          pushText(item);
+          return;
+        }
+        if (item && typeof item === "object") {
+          pushText(item.mes);
+          pushText(item.message);
+          pushText(item.text);
+          pushText(item.content);
+        }
+      });
+    });
+    return list.map((text, idx) => ({
+      openingIndex: idx,
+      text
+    }));
+  } catch {
+    return [];
+  }
 }
 function getChatHistoryEntries() {
   try {
@@ -13294,16 +13773,26 @@ function getChatHistoryEntries() {
 }
 function getOpeningFromSelectedRef(sourceRef, entries) {
   if (!sourceRef) return "";
+  if (sourceRef.type !== "chat") return "";
   const chatIndex = Number(sourceRef.chatIndex);
   if (Number.isNaN(chatIndex)) return "";
   const target = (entries || []).find((entry) => entry.chatIndex === chatIndex);
   return target?.text || "";
 }
-function formatOpeningSourceLabel(mode, sourceRef, entries) {
-  if (mode !== "chat_selected") return "\u81EA\u52A8\uFF08\u89D2\u8272\u5361\u9996\u6761/\u5F00\u573A\u767D\uFF09";
-  const selected = getOpeningFromSelectedRef(sourceRef, entries);
-  if (!selected) return "\u672A\u9009\u62E9\u804A\u5929\u8BB0\u5F55";
-  return `${String(sourceRef?.preview || selected).slice(0, 48)}${selected.length > 48 ? "..." : ""}`;
+function getOpeningFromCardRef(sourceRef, entries) {
+  if (!sourceRef || sourceRef.type !== "card_opening") return "";
+  const openingIndex = Number(sourceRef.openingIndex);
+  if (Number.isNaN(openingIndex)) return "";
+  const target = (entries || []).find((entry) => entry.openingIndex === openingIndex);
+  return target?.text || "";
+}
+function getOpeningTextForPreview(mode, sourceRef) {
+  if (mode === "chat_selected") {
+    const chatEntries = getChatHistoryEntries();
+    return getOpeningFromSelectedRef(sourceRef, chatEntries) || getOpeningFromContext();
+  }
+  const cardEntries = getCardOpeningEntries();
+  return getOpeningFromCardRef(sourceRef, cardEntries) || cardEntries[0]?.text || getOpeningFromContext();
 }
 function openOpeningSourcePickerDialog(initialChatIndex = -1) {
   const entries = getChatHistoryEntries();
@@ -13313,7 +13802,7 @@ function openOpeningSourcePickerDialog(initialChatIndex = -1) {
         <div id="t-outline-opening-picker" class="t-dialog-overlay">
             <div class="t-dialog-box" style="max-width: 760px; max-height: 86vh;">
                 <div class="t-dialog-header">
-                    <span><i class="fa-solid fa-comment-dots"></i> \u9009\u62E9\u5F00\u573A\u767D\u6765\u6E90</span>
+                    <span><i class="fa-solid fa-comment-dots"></i> \u9009\u62E9\u804A\u5929\u8BB0\u5F55\u53C2\u8003\u6765\u6E90</span>
                     <div class="t-dialog-close" id="t-opening-picker-close"><i class="fa-solid fa-times"></i></div>
                 </div>
                 <div class="t-dialog-body" style="padding: 12px;">
@@ -13367,23 +13856,129 @@ function openOpeningSourcePickerDialog(initialChatIndex = -1) {
     });
   });
 }
+function openCardOpeningPickerDialog(initialOpeningIndex = -1) {
+  const entries = getCardOpeningEntries();
+  return new Promise((resolve) => {
+    $("#t-outline-opening-picker").remove();
+    $("#t-opening-detail-dialog").remove();
+    const html = `
+        <div id="t-outline-opening-picker" class="t-dialog-overlay">
+            <div class="t-dialog-box" style="max-width: 760px; max-height: 86vh;">
+                <div class="t-dialog-header">
+                    <span><i class="fa-solid fa-book-open"></i> \u9009\u62E9\u53C2\u8003\u5F00\u573A\u767D</span>
+                    <div class="t-dialog-close" id="t-opening-picker-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+                <div class="t-dialog-body" style="padding: 12px;">
+                    <div id="t-opening-picker-list" class="t-opening-card-grid"></div>
+                </div>
+                <div class="t-dialog-footer">
+                    <button id="t-opening-picker-cancel" class="t-btn">\u53D6\u6D88</button>
+                    <button id="t-opening-picker-confirm" class="t-btn t-btn-primary" disabled>\u786E\u8BA4\u4F7F\u7528</button>
+                </div>
+            </div>
+        </div>`;
+    $("body").append(html);
+    const $dialog = $("#t-outline-opening-picker");
+    const $list = $("#t-opening-picker-list");
+    const $confirm = $("#t-opening-picker-confirm");
+    let selectedIndex = Number(initialOpeningIndex);
+    const openDetail = (entry) => {
+      if (!entry) return;
+      $("#t-opening-detail-dialog").remove();
+      const detailHtml = `
+            <div id="t-opening-detail-dialog" class="t-dialog-overlay">
+                <div class="t-dialog-box" style="max-width: 780px; max-height: 84vh;">
+                    <div class="t-dialog-header">
+                        <span><i class="fa-solid fa-file-lines"></i> \u5F00\u573A\u767D ${entry.openingIndex + 1} \u8BE6\u60C5</span>
+                        <div class="t-dialog-close" id="t-opening-detail-close"><i class="fa-solid fa-times"></i></div>
+                    </div>
+                    <div class="t-dialog-body" style="padding: 12px;">
+                        <pre class="t-outline-raw-pre">${escapeHtml3(entry.text || "")}</pre>
+                    </div>
+                    <div class="t-dialog-footer">
+                        <button id="t-opening-detail-close-btn" class="t-btn">\u5173\u95ED</button>
+                    </div>
+                </div>
+            </div>`;
+      $("body").append(detailHtml);
+      $("#t-opening-detail-close, #t-opening-detail-close-btn").on("click", () => {
+        $("#t-opening-detail-dialog").remove();
+      });
+    };
+    if (!Array.isArray(entries) || entries.length === 0) {
+      $list.html('<div class="t-plan-empty">\u5F53\u524D\u89D2\u8272\u5361\u6CA1\u6709\u53EF\u9009\u5F00\u573A\u767D</div>');
+    } else {
+      const rows = entries.map((entry) => {
+        const selected = entry.openingIndex === selectedIndex;
+        const brief = String(entry.text || "").replace(/\s+/g, " ").trim();
+        return `
+                    <div class="t-opening-card ${selected ? "active" : ""}" data-opening-index="${entry.openingIndex}">
+                        <div class="t-opening-card-head">
+                            <span class="t-opening-card-title">\u5F00\u573A\u767D ${entry.openingIndex + 1}</span>
+                            <button class="t-btn t-btn-xs t-opening-card-detail" data-action="opening-card-detail" data-opening-index="${entry.openingIndex}"><i class="fa-solid fa-eye"></i> \u67E5\u770B\u8BE6\u60C5</button>
+                        </div>
+                        <div class="t-opening-card-text">${escapeHtml3(brief)}</div>
+                    </div>
+                `;
+      }).join("");
+      $list.html(rows);
+      $confirm.prop("disabled", Number.isNaN(selectedIndex) || selectedIndex < 0);
+    }
+    const close = (result = null) => {
+      $dialog.remove();
+      $("#t-opening-detail-dialog").remove();
+      resolve(result);
+    };
+    $dialog.on("click", "#t-opening-picker-close, #t-opening-picker-cancel", () => close(null));
+    $dialog.on("click", ".t-opening-card", function() {
+      selectedIndex = Number($(this).data("opening-index"));
+      $dialog.find(".t-opening-card").removeClass("active");
+      $(this).addClass("active");
+      $confirm.prop("disabled", Number.isNaN(selectedIndex) || selectedIndex < 0);
+    });
+    $dialog.on("click", "[data-action='opening-card-detail']", function(e) {
+      e.stopPropagation();
+      const openingIndex = Number($(this).data("opening-index"));
+      const entry = entries.find((item) => item.openingIndex === openingIndex);
+      openDetail(entry || null);
+    });
+    $dialog.on("click", "#t-opening-picker-confirm", () => {
+      if (Number.isNaN(selectedIndex) || selectedIndex < 0) return;
+      const picked = entries.find((entry) => entry.openingIndex === selectedIndex);
+      if (!picked) return;
+      close({
+        type: "card_opening",
+        openingIndex: picked.openingIndex,
+        preview: picked.text.slice(0, 60)
+      });
+    });
+  });
+}
 async function ensureOpeningTextForGeneration() {
   const mode = getOpeningSourceMode();
-  if (mode !== "chat_selected") {
-    return getOpeningFromContext();
+  if (mode === "chat_selected") {
+    const entries = getChatHistoryEntries();
+    let sourceRef2 = getOpeningSourceRef();
+    let openingText2 = getOpeningFromSelectedRef(sourceRef2, entries);
+    if (openingText2) return openingText2;
+    const picked2 = await openOpeningSourcePickerDialog(sourceRef2?.chatIndex ?? -1);
+    if (!picked2) throw new Error("\u672A\u9009\u62E9\u53C2\u8003\u6765\u6E90\uFF0C\u5DF2\u53D6\u6D88\u751F\u6210");
+    setOpeningSourceRef({ type: "chat", ...picked2 });
+    sourceRef2 = getOpeningSourceRef();
+    openingText2 = getOpeningFromSelectedRef(sourceRef2, entries);
+    return openingText2 || "";
   }
-  const entries = getChatHistoryEntries();
+  const cardEntries = getCardOpeningEntries();
+  if (cardEntries.length === 0) return getOpeningFromContext();
   let sourceRef = getOpeningSourceRef();
-  let openingText = getOpeningFromSelectedRef(sourceRef, entries);
+  let openingText = getOpeningFromCardRef(sourceRef, cardEntries);
   if (openingText) return openingText;
-  const picked = await openOpeningSourcePickerDialog(sourceRef?.chatIndex ?? -1);
-  if (!picked) {
-    throw new Error("\u672A\u9009\u62E9\u5F00\u573A\u767D\u6765\u6E90\uFF0C\u5DF2\u53D6\u6D88\u751F\u6210");
-  }
+  const picked = await openCardOpeningPickerDialog(sourceRef?.openingIndex ?? 0);
+  if (!picked) throw new Error("\u672A\u9009\u62E9\u53C2\u8003\u6765\u6E90\uFF0C\u5DF2\u53D6\u6D88\u751F\u6210");
   setOpeningSourceRef(picked);
-  sourceRef = picked;
-  openingText = getOpeningFromSelectedRef(sourceRef, entries);
-  return openingText || "";
+  sourceRef = getOpeningSourceRef();
+  openingText = getOpeningFromCardRef(sourceRef, cardEntries);
+  return openingText || cardEntries[0]?.text || getOpeningFromContext();
 }
 function getDefaultPromptTemplates() {
   return {
@@ -13426,21 +14021,16 @@ function getDefaultPromptTemplates() {
 \u8BF7\u8BBE\u8BA1\u6545\u4E8B\u5927\u7EB2\uFF0C\u5E76\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     },
     scenes: {
-      system: `\u4F60\u662F\u5267\u60C5\u5206\u955C\u7B56\u5212\u3002\u8BF7\u57FA\u4E8E\u8F93\u5165\u7684\u201C\u603B\u7EB2 items\u201D\u4E00\u6B21\u6027\u751F\u6210\u5168\u90E8\u6761\u76EE\u7684\u573A\u666F\u7EC6\u7EB2\u3002
+      system: `\u4F60\u662F\u5267\u60C5\u5206\u955C\u7B56\u5212\u3002\u57FA\u4E8E\u8F93\u5165\u201C\u603B\u7EB2 items\u201D\uFF0C\u4E3A\u6BCF\u4E2A\u6761\u76EE\u8865\u5168 scenes\u3002
 
 [\u786C\u6027\u8981\u6C42]
-1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002
-2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u4E3A\uFF1A
+1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
+2) \u53EA\u5141\u8BB8\u8FD4\u56DE\u4EE5\u4E0B\u7ED3\u6784\uFF1A
 {
-  "version": "1.1",
-  "story_summary": "\u4E00\u53E5\u8BDD\u6982\u62EC",
+  "version": "1.2",
   "items": [
     {
       "index": 1,
-      "time": "...",
-      "title": "...",
-      "plot": "...",
-      "foreshadowing": "...",
       "scenes": [
         {
           "scene_index": 1,
@@ -13449,20 +14039,21 @@ function getDefaultPromptTemplates() {
           "scene_goal": "\u672C\u573A\u76EE\u6807",
           "conflict": "\u51B2\u7A81",
           "key_beats": ["\u5173\u952E\u8282\u70B91", "\u5173\u952E\u8282\u70B92"],
-          "sendable_prompt": "\u7528\u4E8E\u6A21\u578B\u4E8C\u6B21\u52A0\u5DE5\u7684\u573A\u666F\u6458\u8981\u8349\u7A3F",
-          "notes": "\u53EF\u4E3A\u7A7A"
+          "sendable_prompt": "\u53EF\u4F9B\u6269\u5199\u7684\u573A\u666F\u6458\u8981\u6BB5\u843D",
+          "notes": ""
         }
       ]
     }
   ]
 }
-3) items \u6570\u91CF\u5FC5\u987B\u4E0E\u8F93\u5165\u603B\u7EB2\u4E00\u81F4\uFF0C\u4E14 index \u4E00\u4E00\u5BF9\u5E94\uFF0C\u4E0D\u53EF\u7F3A\u5931\u3001\u4E0D\u53EF\u65B0\u589E\u3001\u4E0D\u53EF\u91CD\u6392\u3002
-4) \u6BCF\u4E2A item \u5FC5\u987B\u751F\u6210 3-6 \u4E2A scenes\u3002
-5) \u6BCF\u4E2A scene \u5FC5\u987B\u5305\u542B scene_goal\u3001conflict\u3001key_beats\u3001sendable_prompt\u3002
-6) sendable_prompt \u4E0D\u662F\u547D\u4EE4\u53E5\uFF0C\u4E0D\u5199\u201C\u8BF7\u4F60/\u4F60\u9700\u8981\u201D\uFF1B\u5B83\u662F\u53EF\u4F9B\u6A21\u578B\u6269\u5199/\u8F6C\u8FF0/\u6DA6\u8272\u7684\u5267\u60C5\u6458\u8981\u6BB5\u843D\u3002
-7) sendable_prompt \u5FC5\u987B\u878D\u5408 conflict \u4E0E key_beats\uFF08\u81F3\u5C112\u4E2A\u5173\u952E\u8282\u70B9\uFF09\uFF0C\u5E76\u4F53\u73B0\u76EE\u6807\u63A8\u8FDB\u3002
-8) sendable_prompt \u5EFA\u8BAE 120-260 \u5B57\uFF0C\u4FE1\u606F\u5177\u4F53\u3001\u53EF\u5EF6\u5C55\uFF0C\u7ED3\u5C3E\u4FDD\u7559\u53EF\u7EE7\u7EED\u5C55\u5F00\u7684\u94A9\u5B50\u3002
-9) \u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\uFF0C\u4FDD\u8BC1\u524D\u540E\u8FDE\u8D2F\uFF0C\u907F\u514D\u4E0E\u524D\u540E\u6761\u76EE\u51B2\u7A81\u3002`,
+3) items \u6570\u91CF\u5FC5\u987B\u4E0E\u8F93\u5165\u603B\u7EB2\u4E00\u81F4\uFF1Bindex \u5FC5\u987B\u4E00\u4E00\u5BF9\u5E94\uFF1B\u4E0D\u5F97\u7F3A\u5931\u3001\u4E0D\u5F97\u65B0\u589E\u3001\u4E0D\u5F97\u91CD\u6392\u3002
+4) \u4EC5\u8865\u5168 scenes\uFF0C\u7981\u6B62\u6539\u5199\u603B\u7EB2\u4E3B\u7EBF\u542B\u4E49\u3002
+5) \u6BCF\u4E2A item \u751F\u6210 3-5 \u4E2A scenes\uFF08\u9ED8\u8BA4 4 \u4E2A\uFF0C\u9664\u975E\u5185\u5BB9\u4E0D\u8DB3\uFF09\u3002
+6) \u6BCF\u4E2A scene \u5FC5\u987B\u5305\u542B scene_goal\u3001conflict\u3001key_beats\u3001sendable_prompt\u3002
+7) key_beats \u81F3\u5C11 2 \u6761\uFF0C\u5355\u6761\u4E0D\u8D85\u8FC7 24 \u5B57\u3002
+8) sendable_prompt \u5FC5\u987B\u878D\u5408 conflict \u4E0E key_beats\uFF0C120-220 \u5B57\uFF0C\u4E2D\u6587\uFF0C\u5177\u4F53\u53EF\u5EF6\u5C55\uFF0C\u4E0D\u5199\u201C\u8BF7\u4F60/\u4F60\u9700\u8981\u201D\u3002
+9) \u82E5\u4FE1\u606F\u4E0D\u8DB3\uFF0Cnotes \u586B\u7A7A\u5B57\u7B26\u4E32\uFF0C\u4E0D\u8981\u7F16\u9020\u989D\u5916\u5B57\u6BB5\u3002
+10) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
       user: `[\u89D2\u8272\u8BBE\u5B9A]
 {{persona}}
 
@@ -13481,6 +14072,7 @@ function getDefaultPromptTemplates() {
 [\u4EFB\u52A1]
 \u8BF7\u5BF9\u6BCF\u4E2A item \u4E00\u6B21\u6027\u751F\u6210 scenes\u3002
 \u4FDD\u6301\u603B\u7EB2\u4E3B\u7EBF\u4E0E\u987A\u5E8F\u4E0D\u53D8\uFF0C\u53EA\u8865\u5168\u7EC6\u7EB2\u5185\u5BB9\u3002
+\u4E25\u683C\u4F7F\u7528 version 1.2 \u7684\u7CBE\u7B80\u7ED3\u6784\uFF0C\u4EC5\u8FD4\u56DE index \u548C scenes\uFF0C\u4E0D\u8981\u8FD4\u56DE time/title/plot/foreshadowing/story_summary\u3002
 sendable_prompt \u5FC5\u987B\u5199\u6210\u53EF\u4F9B\u6A21\u578B\u6269\u5199/\u8F6C\u8FF0/\u6DA6\u8272\u7684\u5177\u4F53\u6458\u8981\u6BB5\u843D\uFF0C\u5E76\u878D\u5408 conflict \u4E0E key_beats\u3002
 \u53EA\u8FD4\u56DE JSON\u3002`
     }
@@ -13540,7 +14132,7 @@ async function openPromptTemplateManager() {
   const entries = getChatHistoryEntries();
   const openingMode = getOpeningSourceMode();
   const openingSourceRef = getOpeningSourceRef();
-  let opening = openingMode === "chat_selected" ? getOpeningFromSelectedRef(openingSourceRef, entries) || getOpeningFromContext() : getOpeningFromContext();
+  let opening = getOpeningTextForPreview(openingMode, openingSourceRef);
   let ctx = { persona: "(\u7A7A)", userDesc: "(\u7A7A)" };
   try {
     ctx = await getContextData();
@@ -13619,7 +14211,7 @@ async function openPromptTemplateManager() {
     syncFromEditor();
     const type = String($("#t-prompt-target").val() || "outline");
     const section = getPromptTemplateSection(working, type);
-    opening = openingMode === "chat_selected" ? getOpeningFromSelectedRef(openingSourceRef, entries) || getOpeningFromContext() : getOpeningFromContext();
+    opening = getOpeningTextForPreview(openingMode, openingSourceRef);
     const varsLocal = buildPromptTemplateVars(ctx, currentStoryInput, opening, outlinePayload);
     const renderedSys = renderPromptTemplate(section.system, varsLocal);
     const renderedUser = renderPromptTemplate(section.user, varsLocal);
@@ -13655,12 +14247,8 @@ async function openPromptTemplateManager() {
 }
 function refreshOutlineOpeningSourceControls() {
   const mode = getOpeningSourceMode();
-  const sourceRef = getOpeningSourceRef();
-  const entries = getChatHistoryEntries();
   $("#t-outline-opening-source-mode").val(mode);
-  $("#t-outline-opening-source-pick").prop("disabled", mode !== "chat_selected");
-  const label = formatOpeningSourceLabel(mode, sourceRef, entries);
-  $("#t-outline-opening-source-label").text(`\u5F53\u524D\uFF1A${label}`);
+  $("#t-outline-opening-source-pick").prop("disabled", false);
 }
 function buildPrompt(ctx, userStoryInput, openingText) {
   const templates = getPromptTemplates();
@@ -13950,11 +14538,7 @@ function updatePlanHubActionState() {
   const plans = getPlans();
   const selected = plans.find((p) => p.id === activePlanId) || null;
   const hasSelected = !!selected;
-  const sourceId = getSceneSourcePlanId();
-  $("#t-hub-selected-name").text(hasSelected ? selected.name || "\u672A\u547D\u540D\u65B9\u6848" : "\u672A\u9009\u62E9\u65B9\u6848");
-  $("#t-hub-selected-meta").text(hasSelected ? `\u5171 ${normalizeItems(selected.items || []).length} \u6761` : "\u8BF7\u5148\u9009\u62E9\u65B9\u6848\u5361\u7247");
-  $("#t-hub-set-source").text(hasSelected && sourceId === selected.id ? "\u5DF2\u8BBE\u4E3A\u7EC6\u7EB2\u6765\u6E90" : "\u8BBE\u4E3A\u7EC6\u7EB2\u6765\u6E90");
-  $("#t-hub-edit-plan, #t-hub-create-branch, #t-hub-view-detail, #t-hub-view-instruction, #t-hub-delete-plan, #t-hub-set-source").prop("disabled", !hasSelected);
+  $("#t-hub-edit-plan, #t-hub-create-branch, #t-hub-view-detail, #t-hub-view-instruction").prop("disabled", !hasSelected);
 }
 function openPlanCreationDialog() {
   ensureCssLoaded();
@@ -13969,7 +14553,7 @@ function openPlanCreationDialog() {
                 <div class="t-dialog-close" id="t-create-plan-close"><i class="fa-solid fa-times"></i></div>
             </div>
             <div class="t-dialog-body" style="padding: 12px;">
-                <div class="t-plan-tip" style="font-size:13px; margin-bottom:10px;">\u521B\u5EFA\u540E\u4F1A\u76F4\u63A5\u8FDB\u5165\u300C\u6545\u4E8B\u5927\u7EB2\u8BBE\u8BA1\u300D\u7F16\u8F91\u9875\u3002</div>
+                <div class="t-plan-tip" style="font-size:13px; margin-bottom:10px;">\u521B\u5EFA\u540E\u4F1A\u76F4\u63A5\u8FDB\u5165\u300C\u5927\u7EB2\u751F\u6210\u300D\u7F16\u8F91\u9875\u3002</div>
                 <label class="t-outline-label">\u65B9\u6848\u540D\u79F0</label>
                 <input id="t-create-plan-name" class="t-outline-input" value="${escapeHtml3(defaultPlanName)}" />
                 <label class="t-outline-label" style="margin-top:10px;">\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09</label>
@@ -14434,14 +15018,23 @@ function renderPlanHub() {
     const updated = new Date(plan.updatedAt || Date.now());
     const timeText = `${updated.getMonth() + 1}/${updated.getDate()} ${String(updated.getHours()).padStart(2, "0")}:${String(updated.getMinutes()).padStart(2, "0")}`;
     const items = normalizeItems(plan.items || []);
+    const isSource = sceneSourcePlanId === plan.id;
     return `
             <div class="t-plan-accordion-item ${active ? "expanded" : ""}" data-plan-id="${plan.id}">
                 <div class="t-plan-accordion-head" data-action="select-plan" data-plan-id="${plan.id}">
                     <div class="t-plan-accordion-main">
                         <div class="t-plan-name">${escapeHtml3(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
                         <div class="t-plan-meta">${timeText} \xB7 ${items.length} \u6761</div>
-                        <div class="t-plan-tip">${sceneSourcePlanId === plan.id ? "\u5F53\u524D\u7EC6\u7EB2\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
+                        <div class="t-plan-tip">${isSource ? "\u5F53\u524D\u7EC6\u7EB2\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
                     </div>
+                </div>
+                <div class="t-plan-card-actions">
+                    <label class="t-plan-source-radio" title="\u9009\u62E9\u540E\uFF0C\u7EC6\u7EB2\u60C5\u8282\u9875\u5C06\u4ECE\u8BE5\u65B9\u6848\u8BFB\u53D6\u5E76\u4F7F\u7528\u573A\u666F\u5185\u5BB9">
+                        <input type="radio" name="t-plan-scene-source" data-action="set-scene-source" data-plan-id="${plan.id}" ${isSource ? "checked" : ""}>
+                        <span>\u4F5C\u4E3A\u7EC6\u7EB2\u6765\u6E90</span>
+                    </label>
+                    <div class="t-plan-source-note">\u8BF4\u660E\uFF1A\u52FE\u9009\u540E\uFF0C\u7EC6\u7EB2\u60C5\u8282\u9875\u4F1A\u4F18\u5148\u4F7F\u7528\u8BE5\u65B9\u6848\u4E2D\u7684\u573A\u666F\u3002</div>
+                    <button class="t-btn t-btn-xs t-plan-delete-btn" data-action="delete-plan" data-plan-id="${plan.id}"><i class="fa-solid fa-trash"></i> \u5220\u9664\u65B9\u6848</button>
                 </div>
             </div>
         `;
@@ -14541,12 +15134,17 @@ ${payload}`;
 }
 function showRawResponseDialog(rawContent, options = {}) {
   const {
-    title = "\u5927\u7EB2\u539F\u59CB\u54CD\u5E94",
+    title = "\u751F\u6210\uFF06\u5386\u53F2\u54CD\u5E94",
     editable = false,
     parseAction = null,
     parseButtonLabel = "\u91CD\u65B0\u89E3\u6790\u5E76\u5E94\u7528",
     parseHint = ""
   } = options || {};
+  const historyOptions = rawResponseHistory.map((entry, idx) => {
+    const label = `${idx + 1}. ${entry.typeLabel} \xB7 ${entry.charName || "\u672A\u547D\u540D\u89D2\u8272"} \xB7 ${formatRawHistoryTime(entry.createdAt)}`;
+    return `<option value="${escapeHtml3(entry.id)}">${escapeHtml3(label)}</option>`;
+  }).join("");
+  const defaultContent = String(rawContent || lastRawResponse || rawResponseHistory[0]?.content || "");
   $("#t-outline-raw-dialog").remove();
   const html = `
     <div id="t-outline-raw-dialog" class="t-dialog-overlay">
@@ -14556,11 +15154,20 @@ function showRawResponseDialog(rawContent, options = {}) {
                 <div class="t-dialog-close" id="t-outline-raw-close"><i class="fa-solid fa-times"></i></div>
             </div>
             <div class="t-dialog-body" style="padding: 12px;">
+                ${historyOptions ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:#9eb4c8;white-space:nowrap;">\u5386\u53F2\u8BB0\u5F55</span><select id="t-outline-raw-history" class="t-outline-select" style="flex:1;">${historyOptions}</select></div>` : ""}
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <span style="color:#8ea0b3;">\u957F\u5EA6: ${(rawContent || "").length} \u5B57\u7B26</span>
-                    <button id="t-outline-copy-raw" class="t-btn t-btn-xs"><i class="fa-solid fa-copy"></i> \u590D\u5236</button>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span id="t-outline-raw-length" style="color:#8ea0b3;">\u957F\u5EA6: ${defaultContent.length} \u5B57\u7B26</span>
+                        <span id="t-outline-raw-elapsed" style="color:#8ea0b3;">\u8017\u65F6: ${formatElapsedDuration(getCurrentElapsedMs())}</span>
+                        <span id="t-outline-raw-mood" class="t-raw-wait-anim" aria-live="polite" aria-label="\u6A21\u578B\u751F\u6210\u4E2D\u52A8\u753B">
+                            <span></span><span></span><span></span>
+                        </span>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <button id="t-outline-export-raw-history" class="t-btn t-btn-xs"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA\u5386\u53F2</button>
+                    </div>
                 </div>
-                ${editable ? `<textarea id="t-outline-raw-editor" class="t-outline-raw-editor">${escapeHtml3(rawContent || "")}</textarea>` : `<pre class="t-outline-raw-pre">${escapeHtml3(rawContent || "(\u7A7A)")}</pre>`}
+                ${editable ? `<textarea id="t-outline-raw-editor" class="t-outline-raw-editor">${escapeHtml3(defaultContent)}</textarea>` : `<pre class="t-outline-raw-pre">${escapeHtml3(defaultContent || "(\u7A7A)")}</pre>`}
                 ${parseHint ? `<div class="t-outline-raw-hint">${escapeHtml3(parseHint)}</div>` : ""}
             </div>
             <div class="t-dialog-footer">
@@ -14571,26 +15178,45 @@ function showRawResponseDialog(rawContent, options = {}) {
     </div>`;
   $("body").append(html);
   isRawDialogOpen = true;
+  updateResponseTimerUI();
+  setRawWaitingAnimation(responseTimerRunning);
+  if (historyOptions) {
+    const firstId = rawResponseHistory[0]?.id || "";
+    if (firstId) $("#t-outline-raw-history").val(firstId);
+  }
+  function setDialogRawContent(content) {
+    const value = String(content || "");
+    const $pre = $("#t-outline-raw-dialog .t-outline-raw-pre");
+    const $editor = $("#t-outline-raw-editor");
+    if ($pre.length > 0) $pre.text(value || "(\u7A7A)");
+    if ($editor.length > 0) $editor.val(value);
+    $("#t-outline-raw-length").text(`\u957F\u5EA6: ${value.length} \u5B57\u7B26`);
+  }
+  function getDialogRawContent() {
+    const $editor = $("#t-outline-raw-editor");
+    if ($editor.length > 0) return String($editor.val() || "");
+    const $pre = $("#t-outline-raw-dialog .t-outline-raw-pre");
+    return String($pre.text() || "");
+  }
   $("#t-outline-raw-close, #t-outline-raw-close-btn").on("click", () => {
     $("#t-outline-raw-dialog").remove();
     isRawDialogOpen = false;
   });
-  $("#t-outline-copy-raw").on("click", async function() {
-    try {
-      const value = editable ? String($("#t-outline-raw-editor").val() || "") : rawContent || "";
-      await navigator.clipboard.writeText(value);
-      $(this).html('<i class="fa-solid fa-check"></i> \u5DF2\u590D\u5236');
-    } catch {
-      if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25");
-    }
+  $("#t-outline-raw-history").on("change", function() {
+    const id = String($(this).val() || "");
+    const picked = rawResponseHistory.find((entry) => entry.id === id);
+    if (!picked) return;
+    setDialogRawContent(picked.content || "");
+  });
+  $("#t-outline-export-raw-history").on("click", () => {
+    exportRawResponseHistory();
   });
   if (editable && typeof parseAction === "function") {
     $("#t-outline-raw-reparse").on("click", async function() {
       const $btn = $(this);
       const originalHtml = $btn.html();
       const editedText = String($("#t-outline-raw-editor").val() || "").trim();
-      lastRawResponse = editedText;
-      $("#t-outline-view-raw").prop("disabled", !lastRawResponse);
+      pushRawResponseHistory(editedText, "\u624B\u52A8\u4FEE\u590D");
       if (!editedText) {
         if (window.toastr) toastr.error("\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u89E3\u6790", "\u6545\u4E8B\u5927\u7EB2");
         return;
@@ -14621,6 +15247,11 @@ function updateRawPreview(statusText = "") {
   if ($editor.length > 0) {
     $editor.val(lastRawResponse || "");
   }
+  $("#t-outline-raw-length").text(`\u957F\u5EA6: ${(lastRawResponse || "").length} \u5B57\u7B26`);
+  updateResponseTimerUI();
+  const status = String(statusText || "");
+  const waiting = responseTimerRunning && (!status || /生成中|流式生成/.test(status));
+  setRawWaitingAnimation(waiting);
 }
 function ensureRawDialogForStreaming(title = "\u6D41\u5F0F\u751F\u6210\u4E2D...") {
   if (!isRawDialogOpen || $("#t-outline-raw-dialog").length === 0) {
@@ -14714,7 +15345,7 @@ function renderRows() {
                     <td>${escapeHtml3(scene.sendable_prompt || "(\u7A7A)")}</td>
                     <td>${escapeHtml3(scene.notes || "(\u7A7A)")}</td>
                 </tr>
-            `).join("") : `<tr><td colspan="8" class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\uFF0C\u70B9\u51FB\u201C\u4E00\u952E\u751F\u6210\u5168\u90E8\u7EC6\u7EB2\u201D</td></tr>`;
+            `).join("") : `<tr><td colspan="8" class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\uFF0C\u70B9\u51FB\u201C\u7EC6\u7EB2\u751F\u6210\u201D</td></tr>`;
     return `
             <tr data-index="${idx}">
                 <td class="t-outline-col-index">${item.index}</td>
@@ -15015,6 +15646,7 @@ async function generateAllScenes() {
     const opening = await ensureOpeningTextForGeneration();
     const storyInput = ($("#t-outline-story-input").val() || "").trim();
     const useStream = isStreamingEnabled();
+    startResponseTimer(true);
     if (useStream) {
       lastRawResponse = "";
       ensureRawDialogForStreaming("\u6D41\u5F0F\u751F\u6210\u7EC6\u7EB2\u4E2D...");
@@ -15030,6 +15662,7 @@ async function generateAllScenes() {
       } : void 0
     });
     lastRawResponse = raw || lastRawResponse || "";
+    pushRawResponseHistory(lastRawResponse, "\u7EC6\u7EB2\u751F\u6210");
     if (useStream) updateRawPreview("\u7EC6\u7EB2\u751F\u6210\u5B8C\u6210");
     try {
       const parsed = parseAllScenesResponse(raw);
@@ -15054,6 +15687,7 @@ async function generateAllScenes() {
     if (isStreamingEnabled()) updateRawPreview("\u7EC6\u7EB2\u751F\u6210\u5931\u8D25");
     if (window.toastr) toastr.error(e.message || "\u6279\u91CF\u7EC6\u7EB2\u751F\u6210\u5931\u8D25", "\u6545\u4E8B\u7EC6\u7EB2");
   } finally {
+    stopResponseTimer();
     $buttons.each(function(idx) {
       $(this).prop("disabled", false).html(originTexts[idx] || '<i class="fa-solid fa-wand-magic-sparkles"></i>');
     });
@@ -15069,6 +15703,7 @@ async function generateOutline() {
     const ctx = await getContextData();
     const opening = await ensureOpeningTextForGeneration();
     const useStream = isStreamingEnabled();
+    startResponseTimer(true);
     if (useStream) {
       lastRawResponse = "";
       ensureRawDialogForStreaming("\u6D41\u5F0F\u751F\u6210\u5927\u7EB2\u4E2D...");
@@ -15084,8 +15719,8 @@ async function generateOutline() {
       } : void 0
     });
     lastRawResponse = raw || lastRawResponse || "";
+    pushRawResponseHistory(lastRawResponse, "\u5927\u7EB2\u751F\u6210");
     if (useStream) updateRawPreview("\u5927\u7EB2\u751F\u6210\u5B8C\u6210");
-    $("#t-outline-view-raw").prop("disabled", !lastRawResponse);
     try {
       const parsed = parseOutlineResponse(raw);
       applyParsedOutline(parsed, storyInput, insertMode);
@@ -15109,7 +15744,8 @@ async function generateOutline() {
     if (isStreamingEnabled()) updateRawPreview("\u5927\u7EB2\u751F\u6210\u5931\u8D25");
     if (window.toastr) toastr.error(e.message || "\u751F\u6210\u5931\u8D25", "\u6545\u4E8B\u5927\u7EB2");
   } finally {
-    $btn.prop("disabled", false).html('<i class="fa-solid fa-wand-magic-sparkles"></i> \u8BBE\u8BA1\u5927\u7EB2');
+    stopResponseTimer();
+    $btn.prop("disabled", false).html('<i class="fa-solid fa-wand-magic-sparkles"></i> \u5927\u7EB2\u751F\u6210');
   }
 }
 function bindEvents() {
@@ -15201,27 +15837,34 @@ function bindEvents() {
     if (!plan) return;
     showPlanInstructionDialog(plan);
   });
-  $overlay.on("click", "#t-hub-delete-plan", function() {
-    const planId = String(activePlanId || "").trim();
+  $overlay.on("click", "[data-action='delete-plan']", function(e) {
+    e.stopPropagation();
+    const planId = String($(this).data("plan-id") || "").trim();
     if (!planId) return;
     const plans = getPlans();
     const index = plans.findIndex((p) => p.id === planId);
     if (index < 0) return;
     const planName = plans[index]?.name || "\u672A\u547D\u540D\u65B9\u6848";
     if (!window.confirm(`\u786E\u8BA4\u5220\u9664\u65B9\u6848\u300C${planName}\u300D\uFF1F`)) return;
+    const deletingActive = activePlanId === planId;
     plans.splice(index, 1);
     delete planItemCursorMap[planId];
     if (getSceneSourcePlanId() === planId) setSceneSourcePlanId("");
-    activePlanId = plans[0]?.id || "";
+    if (deletingActive || !plans.some((p) => p.id === activePlanId)) {
+      activePlanId = plans[0]?.id || "";
+    }
     setActivePlanId(activePlanId);
     if (!activePlanId) clearEditorDraft();
     renderPlanHub();
     if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u65B9\u6848\uFF1A${planName}`, "\u6545\u4E8B\u5927\u7EB2");
   });
-  $overlay.on("click", "#t-hub-set-source", function() {
-    const planId = String(activePlanId || "").trim();
+  $overlay.on("change", "[data-action='set-scene-source']", function(e) {
+    e.stopPropagation();
+    const planId = String($(this).data("plan-id") || "").trim();
     if (!planId) return;
     setSceneSourcePlanId(planId);
+    activePlanId = planId;
+    setActivePlanId(activePlanId);
     renderPlanHub();
     if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
   });
@@ -15293,22 +15936,25 @@ function bindEvents() {
   $overlay.on("click", "#t-outline-view-raw", () => {
     showRawResponseDialog(lastRawResponse);
   });
+  $overlay.on("click", "#t-outline-mobile-tools-toggle", function() {
+    const $top = $("#t-outline-top");
+    const expanded = !$top.hasClass("mobile-tools-open");
+    $top.toggleClass("mobile-tools-open", expanded);
+    $(this).html(expanded ? '<i class="fa-solid fa-chevron-up"></i> \u6536\u8D77\u8BBE\u7F6E' : '<i class="fa-solid fa-sliders"></i> \u66F4\u591A\u8BBE\u7F6E');
+  });
   $overlay.on("change", "#t-outline-opening-source-mode", function() {
     const mode = String($(this).val() || "auto_first") === "chat_selected" ? "chat_selected" : "auto_first";
     setOpeningSourceMode(mode);
-    if (mode !== "chat_selected") {
-      refreshOutlineOpeningSourceControls();
-      return;
-    }
     refreshOutlineOpeningSourceControls();
   });
   $overlay.on("click", "#t-outline-opening-source-pick", async () => {
+    const mode = getOpeningSourceMode();
     const sourceRef = getOpeningSourceRef();
-    const picked = await openOpeningSourcePickerDialog(sourceRef?.chatIndex ?? -1);
+    const picked = mode === "chat_selected" ? await openOpeningSourcePickerDialog(sourceRef?.chatIndex ?? -1) : await openCardOpeningPickerDialog(sourceRef?.openingIndex ?? 0);
     if (!picked) return;
     setOpeningSourceRef(picked);
     refreshOutlineOpeningSourceControls();
-    if (window.toastr) toastr.success("\u5DF2\u8BBE\u7F6E\u5F00\u573A\u767D\u6765\u6E90", "\u6545\u4E8B\u5927\u7EB2");
+    if (window.toastr) toastr.success("\u5DF2\u8BBE\u7F6E\u53C2\u8003\u6765\u6E90", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("change", "#t-outline-insert-mode", function() {
     saveDraft($("#t-outline-story-input").val(), $(this).val());
@@ -15509,6 +16155,12 @@ function openStoryOutlineWindow() {
   const draft = loadDraft();
   outlineItems = [];
   lastRawResponse = "";
+  rawResponseHistory = loadRawResponseHistory();
+  if (!lastRawResponse && rawResponseHistory[0]?.content) {
+    lastRawResponse = String(rawResponseHistory[0].content || "");
+  }
+  responseElapsedMs = 0;
+  stopResponseTimer();
   sceneExpandedMap = {};
   selectedRowIndex = -1;
   activePlanId = "";
@@ -15521,7 +16173,7 @@ function openStoryOutlineWindow() {
     <div id="t-story-outline-overlay" class="t-overlay">
         <div class="t-window t-story-outline-window">
             <div class="t-window-header">
-                <div class="t-window-title"><i class="fa-solid fa-list-check"></i> \u6545\u4E8B\u5927\u7EB2\u8BBE\u8BA1</div>
+                <div class="t-window-title"><i class="fa-solid fa-list-check"></i> \u5927\u7EB2\u751F\u6210</div>
                 <div class="t-window-controls">
                     <div class="t-window-close" id="t-story-outline-close"><i class="fa-solid fa-times"></i></div>
                 </div>
@@ -15531,28 +16183,34 @@ function openStoryOutlineWindow() {
                     <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml3(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
                     <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml3(draft.storyInput)}</textarea>
                     <div class="t-outline-actions">
-                        <button id="t-outline-generate" class="t-btn t-btn-primary">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> \u8BBE\u8BA1\u5927\u7EB2
-                        </button>
-                        <button id="t-outline-generate-all-scenes" class="t-btn" disabled>
-                            <i class="fa-solid fa-clapperboard"></i> \u4E00\u952E\u751F\u6210\u5168\u90E8\u7EC6\u7EB2
-                        </button>
-                            <label class="t-outline-mode" style="margin-left:4px;">
-                                \u5F00\u573A\u767D\u6765\u6E90
-                                <select id="t-outline-opening-source-mode" class="t-outline-select">
-                                    <option value="auto_first">\u81EA\u52A8</option>
-                                    <option value="chat_selected">\u804A\u5929\u8BB0\u5F55</option>
-                                </select>
-                            </label>
-                            <button id="t-outline-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
-                            <span id="t-outline-opening-source-label" class="t-plan-tip"></span>
+                        <div class="t-outline-primary-actions">
+                            <button id="t-outline-generate" class="t-btn t-btn-primary">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> \u5927\u7EB2\u751F\u6210
+                            </button>
+                            <button id="t-outline-generate-all-scenes" class="t-btn" disabled>
+                                <i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2\u751F\u6210
+                            </button>
+                            <button id="t-outline-mobile-tools-toggle" class="t-btn t-btn-xs"><i class="fa-solid fa-sliders"></i> \u66F4\u591A\u8BBE\u7F6E</button>
+                        </div>
+                        <div id="t-outline-secondary-controls" class="t-outline-secondary-controls">
+                            <div class="t-outline-source-inline">
+                                <label class="t-outline-mode t-outline-mode-source">
+                                    \u53C2\u8003\u6765\u6E90
+                                    <select id="t-outline-opening-source-mode" class="t-outline-select">
+                                        <option value="auto_first">\u5F00\u573A\u767D</option>
+                                        <option value="chat_selected">\u804A\u5929\u8BB0\u5F55</option>
+                                    </select>
+                                </label>
+                                <button id="t-outline-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
+                            </div>
                             <label class="t-outline-mode">
                                 <input id="t-outline-stream-enabled" type="checkbox" ${draft.streamEnabled ? "checked" : ""}>
                                 \u542F\u7528\u6D41\u5F0F
                             </label>
-                            <button id="t-outline-view-raw" class="t-btn" disabled>
-                                <i class="fa-solid fa-code"></i> \u67E5\u770B\u539F\u59CB\u54CD\u5E94
+                            <button id="t-outline-view-raw" class="t-btn">
+                                <i class="fa-solid fa-code"></i> \u67E5\u770B\u751F\u6210\uFF06\u5386\u53F2\u54CD\u5E94
                             </button>
+                        </div>
                     </div>
                     <select id="t-outline-insert-mode" class="t-outline-select" style="display:none;">
                         <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
@@ -15581,16 +16239,6 @@ function openStoryOutlineWindow() {
                         <button id="t-hub-view-instruction" class="t-btn t-btn-xs"><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4</button>
                     </div>
                     <div id="t-outline-plan-list" class="t-outline-plan-list"></div>
-                    <div class="t-hub-footerbar">
-                        <div class="t-hub-selected">
-                            <div id="t-hub-selected-name" class="t-plan-name">\u672A\u9009\u62E9\u65B9\u6848</div>
-                            <div id="t-hub-selected-meta" class="t-plan-meta">\u8BF7\u5148\u9009\u62E9\u65B9\u6848\u5361\u7247</div>
-                        </div>
-                        <div class="t-hub-footer-actions">
-                            <button id="t-hub-set-source" class="t-btn t-btn-xs">\u8BBE\u4E3A\u7EC6\u7EB2\u6765\u6E90</button>
-                            <button id="t-hub-delete-plan" class="t-btn t-btn-xs t-plan-delete-btn"><i class="fa-solid fa-trash"></i> \u5220\u9664\u65B9\u6848</button>
-                        </div>
-                    </div>
                 </div>
 
                 <div id="t-outline-editor-view" class="t-outline-editor-view">
@@ -15674,7 +16322,7 @@ function openStoryOutlineWindow() {
   showOutlineView(plans.length > 0 ? "hub" : "editor");
   refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot;
+var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, RAW_HISTORY_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -15683,6 +16331,7 @@ var init_storyOutlineWindow = __esm({
     init_storage();
     outlineItems = [];
     lastRawResponse = "";
+    rawResponseHistory = [];
     sceneExpandedMap = {};
     selectedRowIndex = -1;
     desktopEditorIndex = -1;
@@ -15690,6 +16339,10 @@ var init_storyOutlineWindow = __esm({
     editorSubView = "outline";
     sceneEditorItemIndex = -1;
     mobileEditorSubView = "outline";
+    responseTimerStartAt = 0;
+    responseElapsedMs = 0;
+    responseTimerId = null;
+    responseTimerRunning = false;
     DRAFT_KEY = "story_outline_draft";
     PLANS_KEY = "story_outline_plans";
     ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
@@ -15697,6 +16350,7 @@ var init_storyOutlineWindow = __esm({
     PROMPT_TEMPLATES_KEY = "story_outline_prompt_templates";
     OPENING_SOURCE_MODE_KEY = "story_outline_opening_source_mode";
     OPENING_SOURCE_REF_KEY = "story_outline_opening_source_ref";
+    RAW_HISTORY_KEY = "story_outline_raw_history";
     currentView = "hub";
     activePlanId = "";
     editingPlanId = "";
@@ -15706,6 +16360,7 @@ var init_storyOutlineWindow = __esm({
     autoSavePlanTimer = null;
     planRenameMode = false;
     planRenameSnapshot = "";
+    MAX_RAW_HISTORY = 24;
   }
 });
 
