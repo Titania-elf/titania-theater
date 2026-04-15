@@ -1,89 +1,169 @@
 <!-- settings.html -->
 <div class="inline-drawer" id="titania-settings-drawer">
     <div class="inline-drawer-toggle inline-drawer-header">
-        <b>回声小剧场 (Echo Theater)</b>
-        <span id="titania-version-badge" class="titania-version-badge"></span>
-        <span id="titania-new-badge" class="titania-new-badge" style="display:none;">NEW</span>
+        <div class="titania-header-main">
+            <b>回声工具箱</b>
+            <span id="titania-version-badge" class="titania-version-badge"></span>
+            <span id="titania-new-badge" class="titania-new-badge" style="display:none;">NEW</span>
+        </div>
         <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
     </div>
+
     <div class="inline-drawer-content">
-        <div class="flex-container">
-            <label class="checkbox_label flex1">
-                <input id="enable_echo_theater" type="checkbox" />
-                显示悬浮球
-                <small>开启后在屏幕边缘显示 🎭 悬浮球。你也可以从左下角菜单进入小剧场。</small>
-            </label>
-        </div>
-        <!-- 更新提示区域 (有更新时显示) -->
-        <div id="titania-update-section" class="titania-update-section" style="display:none;">
-            <div class="titania-update-info">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                <span>发现新版本 <b id="titania-remote-version"></b></span>
-            </div>
-            <button id="titania-update-btn" class="titania-update-btn">
-                <i class="fa-solid fa-eye"></i> 查看更新
-            </button>
+        <div class="titania-panel-grid">
+            <section class="titania-panel-card">
+                <div class="titania-card-title"><i class="fa-solid fa-sliders"></i> 快速开关</div>
+
+                <label class="checkbox_label titania-switch-row">
+                    <input id="enable_echo_theater" type="checkbox" />
+                    <span class="titania-switch-text">
+                        <span class="titania-switch-main">显示悬浮球</span>
+                        <small>开启后在屏幕边缘显示 🎭 悬浮球，也可从发送键菜单进入回声小剧场。</small>
+                    </span>
+                </label>
+
+                <label class="checkbox_label titania-switch-row">
+                    <input id="cfg-outline-entry-enabled" type="checkbox" />
+                    <span class="titania-switch-text">
+                        <span class="titania-switch-main">启用发送键菜单入口</span>
+                        <small>在发送按钮旁显示菜单入口，故事大纲/细纲情节/回声小剧场等功能从该菜单进入。</small>
+                    </span>
+                </label>
+
+                <label class="checkbox_label titania-switch-row">
+                    <input id="cfg-rewrite-entry-enabled" type="checkbox" />
+                    <span class="titania-switch-text">
+                        <span class="titania-switch-main">启用文本改写入口</span>
+                        <small>在发送键菜单中显示「文本改写」项。</small>
+                    </span>
+                </label>
+
+                <label class="checkbox_label titania-switch-row">
+                    <input id="cfg-toolbar-lore-enabled" type="checkbox" />
+                    <span class="titania-switch-text">
+                        <span class="titania-switch-main">启用提取设定快捷入口</span>
+                        <small>在发送键菜单中显示「提取设定」项。</small>
+                    </span>
+                </label>
+
+                <label class="checkbox_label titania-switch-row">
+                    <input id="cfg-toolbar-recall-enabled" type="checkbox" />
+                    <span class="titania-switch-text">
+                        <span class="titania-switch-main">启用记忆召回快捷入口</span>
+                        <small>在发送键菜单中显示「记忆召回」项。</small>
+                    </span>
+                </label>
+            </section>
+
+            <section class="titania-panel-card" id="titania-update-section" style="display:none;">
+                <div class="titania-card-title"><i class="fa-solid fa-rocket"></i> 版本更新</div>
+                <div class="titania-update-info">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>发现新版本 <b id="titania-remote-version"></b></span>
+                </div>
+                <button id="titania-update-btn" class="titania-update-btn">
+                    <i class="fa-solid fa-eye"></i> 查看更新
+                </button>
+            </section>
         </div>
     </div>
 </div>
 
 <style>
-    /* 版本号徽章样式 */
+    #titania-settings-drawer .inline-drawer-content {
+        padding-top: 10px;
+    }
+
+    .titania-header-main {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .titania-panel-grid {
+        display: grid;
+        gap: 10px;
+    }
+
+    .titania-panel-card {
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+    }
+
+    .titania-card-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #d8e4f0;
+    }
+
+    .titania-switch-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .titania-switch-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .titania-switch-text {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .titania-switch-main {
+        color: #dce7f3;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+
+    .titania-switch-text small {
+        color: #93a8bb;
+        line-height: 1.4;
+        font-size: 11px;
+    }
+
     .titania-version-badge {
         background: rgba(100, 100, 100, 0.3);
         color: #888;
         font-size: 10px;
         padding: 2px 6px;
         border-radius: 4px;
-        margin-left: 8px;
     }
 
-    /* NEW/UPDATE 徽章样式 */
     .titania-new-badge {
         background: linear-gradient(135deg, #00b894, #00cec9);
         color: #fff;
         font-size: 10px;
-        font-weight: bold;
+        font-weight: 700;
         padding: 2px 6px;
         border-radius: 4px;
-        margin-left: 8px;
         cursor: pointer;
         animation: titania-bounce 1s ease-in-out infinite;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-        box-shadow: 0 2px 8px rgba(0, 184, 148, 0.4);
-        min-width: auto;
-        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 184, 148, 0.35);
     }
 
     @keyframes titania-bounce {
-
         0%,
         100% {
             transform: translateY(0) scale(1);
         }
 
         50% {
-            transform: translateY(-3px) scale(1.05);
+            transform: translateY(-2px) scale(1.04);
         }
-    }
-
-    .titania-new-badge:hover {
-        animation: none;
-        transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(0, 184, 148, 0.6);
-    }
-
-    /* 更新提示区域样式 */
-    .titania-update-section {
-        margin-top: 10px;
-        padding: 10px;
-        background: linear-gradient(135deg, rgba(0, 184, 148, 0.1), rgba(0, 206, 201, 0.1));
-        border: 1px solid rgba(0, 184, 148, 0.3);
-        border-radius: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
     }
 
     .titania-update-info {
@@ -91,35 +171,29 @@
         align-items: center;
         gap: 8px;
         color: #00b894;
-        font-size: 0.9em;
-    }
-
-    .titania-update-info i {
-        font-size: 1.1em;
+        font-size: 12px;
+        margin-bottom: 8px;
     }
 
     .titania-update-btn {
         background: linear-gradient(135deg, #00b894, #00cec9);
         color: #fff;
         border: none;
-        padding: 6px 14px;
+        padding: 6px 12px;
         border-radius: 6px;
-        font-size: 0.85em;
-        font-weight: bold;
+        font-size: 12px;
+        font-weight: 700;
         cursor: pointer;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 5px;
         transition: all 0.2s;
     }
 
     .titania-update-btn:hover {
-        filter: brightness(1.1);
-        transform: translateY(-1px);
-        box-shadow: 0 3px 10px rgba(0, 184, 148, 0.4);
+        filter: brightness(1.08);
     }
 
-    /* 更新弹窗样式 */
     .titania-update-overlay {
         position: fixed;
         top: 0;
@@ -135,13 +209,8 @@
     }
 
     @keyframes titania-fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 
     .titania-update-dialog {
@@ -159,7 +228,7 @@
         padding: 15px 20px;
         background: linear-gradient(135deg, #00b894, #00cec9);
         color: #fff;
-        font-weight: bold;
+        font-weight: 700;
         font-size: 1.1em;
         display: flex;
         justify-content: space-between;
@@ -170,7 +239,6 @@
         cursor: pointer;
         font-size: 1.5em;
         opacity: 0.8;
-        transition: opacity 0.2s;
     }
 
     .titania-update-close:hover {
@@ -196,36 +264,15 @@
         margin-bottom: 15px;
     }
 
-    .titania-version-box {
-        text-align: center;
-    }
-
-    .titania-version-label {
-        font-size: 0.8em;
-        color: #888;
-        margin-bottom: 5px;
-    }
-
-    .titania-version-num {
-        font-size: 1.3em;
-        font-weight: bold;
-    }
-
-    .titania-version-num.old {
-        color: #888;
-    }
-
-    .titania-version-num.new {
-        color: #00b894;
-    }
-
-    .titania-version-arrow {
-        color: #00b894;
-        font-size: 1.5em;
-    }
+    .titania-version-box { text-align: center; }
+    .titania-version-label { font-size: 0.8em; color: #888; margin-bottom: 5px; }
+    .titania-version-num { font-size: 1.3em; font-weight: 700; }
+    .titania-version-num.old { color: #888; }
+    .titania-version-num.new { color: #00b894; }
+    .titania-version-arrow { color: #00b894; font-size: 1.5em; }
 
     .titania-changelog-title {
-        font-weight: bold;
+        font-weight: 700;
         margin-bottom: 10px;
         color: #ccc;
     }
@@ -240,7 +287,7 @@
 
     .titania-changelog-version {
         color: #00b894;
-        font-weight: bold;
+        font-weight: 700;
         margin-top: 10px;
         margin-bottom: 8px;
     }
@@ -272,7 +319,6 @@
         padding: 8px 20px;
         border-radius: 6px;
         cursor: pointer;
-        transition: background 0.2s;
     }
 
     .titania-btn-cancel:hover {
@@ -285,12 +331,11 @@
         border: none;
         padding: 8px 20px;
         border-radius: 6px;
-        font-weight: bold;
+        font-weight: 700;
         cursor: pointer;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 6px;
-        transition: all 0.2s;
     }
 
     .titania-btn-confirm:hover {
