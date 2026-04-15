@@ -22,15 +22,14 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "3.3.3";
+    CURRENT_VERSION = "3.3.4";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "3.3.4": "\u{1F514} \u65B0\u589E\u6587\u672C\u6539\u5199\u529F\u80FD\uFF0C\u53EF\u4EE5\u5BF9\u9152\u9986\u804A\u5929\u6700\u65B0\u56DE\u590D\u751F\u6210\u7684\u5185\u5BB9\u8FDB\u884C\u6539\u5199\u548C\u4F18\u5316\uFF0C\u5165\u53E3\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u3002\u76EE\u524D\u53EA\u505A\u4E86\u7B80\u5355\u7684\u5173\u952E\u8BCD\u5339\u914D\uFF0C\u540E\u7EED\u4F1A\u6269\u5C55\u66F4\u591A\u89C4\u5219\u3002",
       "3.3.3": "\u2728 \u65B0\u589E\u4E00\u952E\u6536\u85CF\u529F\u80FD\uFF0C\u53EF\u4EE5\u5C06\u540C\u4E2A\u5267\u573A\u4E0B\u7684\u6240\u6709\u7EED\u5199\u5185\u5BB9\u6536\u85CF\u5230\u4E00\u8D77\uFF0C\u65B9\u4FBF\u56DE\u987E\u3002<br>\u65B0\u589E\u5927\u7EB2\u4E0E\u7EC6\u7EB2\u751F\u6210\u529F\u80FD\uFF08\u9700\u8981\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u542F\u7528\uFF0C\u5165\u53E3\u5728\u9152\u9986\u53D1\u9001\u952E\u65C1\u8FB9\uFF09\uFF0C\u61D2\u5F97\u81EA\u5DF1\u60F3\u60C5\u8282\u53EA\u60F3\u770B\u5C0F\u8BF4\u7684\u53EF\u4EE5\u5C1D\u8BD5\u8FD9\u4E2A\uFF0C\u4F5C\u8005\u60F3\u73A9\u5C31\u52A0\u4E86\u3002<br>\u{1F527}\u4F18\u5316\u4E86\u5267\u573A\u751F\u6210\u65F6\u6253\u5F00\u6536\u85CF\u9986\u53EF\u80FD\u4EA7\u751F\u7684\u5361\u6B7B\u73B0\u8C61\u3002",
-      "3.3.2": "\u2728 \u65B0\u589E\u4E3B\u52A8\u7EED\u5199\u529F\u80FD\uFF0C\u5165\u53E3\u5728\u53F3\u4E0A\u89D2\u4E09\u4E2A\u70B9\u7684\u83DC\u5355\uFF0C\u53EF\u5BF9\u5F53\u524D\u5267\u573A\u5185\u5BB9\u8FDB\u884C\u7EED\u5199\u3002 \u{1F527} \u6539\u52A8\u4E86\u4E00\u4E9B\u5C0Fbug",
-      "3.3.1": "\u{1F4CA} \u5267\u672C\u6392\u5E8F\u4E0E\u4F7F\u7528\u7EDF\u8BA1\uFF1A\u65B0\u589E\u667A\u80FD/\u6700\u8FD1/\u6700\u5E38\u7528\u6392\u5E8F\uFF0C\u652F\u6301\u624B\u52A8\u9009\u62E9\u4E0E\u751F\u6210\u6B21\u6570\u8FFD\u8E2A\uFF08\u542B\u961F\u5217\u7EDF\u8BA1\uFF09<br>\u{1F5C2}\uFE0F \u7BA1\u7406\u5668\u589E\u5F3A\uFF1A\u65B0\u589E\u7EDF\u8BA1\u6982\u89C8\uFF08Top5\u30017\u5929\u6D3B\u8DC3\u3001\u5206\u7C7B\u70ED\u5EA6\uFF09\u4E0E\u884C\u5185\u4F7F\u7528\u4FE1\u606F<br>\u{1F524} \u5916\u89C2\u8BBE\u7F6E\u65B0\u589E UI \u5B57\u4F53\u5927\u5C0F\u8C03\u8282\uFF1A\u7EDF\u4E00\u7F29\u653E\u63D2\u4EF6\u754C\u9762\u5B57\u4F53\uFF0C\u4E0D\u5F71\u54CD\u5185\u5BB9\u533A\u6E32\u67D3\u5B57\u53F7",
-      "3.3.0": "\u{1F575}\uFE0F \u56FE\u7247\u5BFC\u51FA\u6253\u7801\uFF1A\u6536\u85CF\u9605\u8BFB\u5668\u5BFC\u51FA\u56FE\u7247\u65F6\uFF0C\u5BF9 {{user}} \u5B8F\u5C55\u5F00\u540E\u7684\u7528\u6237\u540D\u8FDB\u884C\u7B49\u957F\u6253\u7801\uFF08\u4EC5\u5F71\u54CD\u5BFC\u51FA\uFF0C\u4E0D\u5F71\u54CD\u754C\u9762\u663E\u793A\uFF09"
+      "3.3.2": "\u2728 \u65B0\u589E\u4E3B\u52A8\u7EED\u5199\u529F\u80FD\uFF0C\u5165\u53E3\u5728\u53F3\u4E0A\u89D2\u4E09\u4E2A\u70B9\u7684\u83DC\u5355\uFF0C\u53EF\u5BF9\u5F53\u524D\u5267\u573A\u5185\u5BB9\u8FDB\u884C\u7EED\u5199\u3002 \u{1F527} \u6539\u52A8\u4E86\u4E00\u4E9B\u5C0Fbug"
     };
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
@@ -172,6 +171,22 @@ var init_defaults = __esm({
       // 大纲入口按钮（注入到发送按钮旁边）
       outline_entry: {
         enabled: false
+      },
+      // 文本改写入口按钮（注入到 #qr--bar）
+      rewrite_entry: {
+        enabled: false,
+        api_url: "",
+        api_key: "",
+        model: "",
+        rules_text: "",
+        split_mode: "sentence",
+        rules: [],
+        stream_live: true,
+        auto_trigger: false,
+        tag_whitelist: "",
+        prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u3002\u4EC5\u6839\u636E\u8F93\u5165 targets \u5BF9\u547D\u4E2D\u7247\u6BB5\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u547D\u4E2D\u4FE1\u606F\u3002\u4FDD\u6301\u8BED\u4E49\u4E00\u81F4\u3001\u8BED\u6C14\u81EA\u7136\u3001\u8FDE\u8D2F\uFF0C\u5E76\u4E0E\u539F\u4E0A\u4E0B\u6587\u98CE\u683C\u4E00\u81F4\u3002",
+        prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE\n4) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
+        prompt_json_rule: "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09"
       },
       // 剧场模型覆盖配置（仅影响场景生成，不影响设定提取等其他功能）
       theater_model_override: null,
@@ -8939,7 +8954,18 @@ body.titania-debug-mode #chat titania-memory::before {
 .t-outline-source-inline {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
+}
+
+.t-outline-whitelist-inline {
+    margin-left: 0;
+    gap: 6px;
+}
+
+#t-outline-chat-tag-whitelist {
+    min-width: 200px;
+    padding: 5px 8px;
 }
 
 #t-outline-view-raw {
@@ -9561,6 +9587,15 @@ body.titania-debug-mode #chat titania-memory::before {
     #t-outline-opening-source-pick {
         width: 100%;
         min-height: 36px;
+    }
+
+    .t-outline-whitelist-inline {
+        width: 100%;
+    }
+
+    #t-outline-chat-tag-whitelist {
+        width: 100%;
+        min-width: 0;
     }
 
     #t-outline-view-raw {
@@ -13468,6 +13503,34 @@ var init_connection = __esm({
   }
 });
 
+// src/utils/chatTagWhitelist.js
+function parseTagWhitelistInput(input) {
+  return String(input || "").split(/[,，\n]/).map((tag) => tag.trim()).map((tag) => tag.replace(/^<|>$/g, "").toLowerCase()).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
+}
+function extractTextByWhitelist(rawHtml, whitelist = []) {
+  const src = String(rawHtml || "");
+  if (!src.trim()) return "";
+  if (Array.isArray(whitelist) && whitelist.length > 0) {
+    const extracted = [];
+    for (const tag of whitelist) {
+      const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
+      let match;
+      while ((match = regex.exec(src)) !== null) {
+        const inner = String(match[1] || "").trim();
+        if (inner) extracted.push(inner);
+      }
+    }
+    if (extracted.length > 0) {
+      return extracted.join("\n").replace(/<[^>]*>?/gm, "").replace(/\n{3,}/g, "\n\n").trim();
+    }
+  }
+  return src.replace(/<[^>]*>?/gm, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+var init_chatTagWhitelist = __esm({
+  "src/utils/chatTagWhitelist.js"() {
+  }
+});
+
 // src/ui/storyOutlineWindow.js
 var storyOutlineWindow_exports = {};
 __export(storyOutlineWindow_exports, {
@@ -13683,6 +13746,15 @@ function getOpeningSourceRef() {
   }
   return null;
 }
+function getOutlineChatTagWhitelistRaw() {
+  const data = getExtData();
+  return String(data?.[OUTLINE_CHAT_TAG_WHITELIST_KEY] || "").trim();
+}
+function setOutlineChatTagWhitelistRaw(rawInput) {
+  const data = getExtData();
+  data[OUTLINE_CHAT_TAG_WHITELIST_KEY] = String(rawInput || "").trim();
+  saveExtData();
+}
 function setOpeningSourceRef(ref) {
   const data = getExtData();
   if (!ref || typeof ref !== "object") {
@@ -13757,8 +13829,10 @@ function getChatHistoryEntries() {
     if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
     const stCtx = SillyTavern.getContext();
     const chat = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
+    const whitelist = parseTagWhitelistInput(getOutlineChatTagWhitelistRaw());
     return chat.map((msg, idx) => {
-      const text = typeof msg?.mes === "string" ? msg.mes.trim() : "";
+      const raw = typeof msg?.mes === "string" ? msg.mes : "";
+      const text = extractTextByWhitelist(raw, whitelist);
       if (!text) return null;
       if (msg?.is_system || msg?.is_hidden) return null;
       return {
@@ -14249,6 +14323,7 @@ function refreshOutlineOpeningSourceControls() {
   const mode = getOpeningSourceMode();
   $("#t-outline-opening-source-mode").val(mode);
   $("#t-outline-opening-source-pick").prop("disabled", false);
+  $("#t-outline-chat-tag-whitelist").val(getOutlineChatTagWhitelistRaw());
 }
 function buildPrompt(ctx, userStoryInput, openingText) {
   const templates = getPromptTemplates();
@@ -15956,6 +16031,12 @@ function bindEvents() {
     refreshOutlineOpeningSourceControls();
     if (window.toastr) toastr.success("\u5DF2\u8BBE\u7F6E\u53C2\u8003\u6765\u6E90", "\u6545\u4E8B\u5927\u7EB2");
   });
+  $overlay.on("input", "#t-outline-chat-tag-whitelist", function() {
+    setOutlineChatTagWhitelistRaw($(this).val());
+  });
+  $overlay.on("change", "#t-outline-chat-tag-whitelist", function() {
+    setOutlineChatTagWhitelistRaw($(this).val());
+  });
   $overlay.on("change", "#t-outline-insert-mode", function() {
     saveDraft($("#t-outline-story-input").val(), $(this).val());
   });
@@ -16202,6 +16283,10 @@ function openStoryOutlineWindow() {
                                     </select>
                                 </label>
                                 <button id="t-outline-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
+                                <label class="t-outline-mode t-outline-mode-source t-outline-whitelist-inline">
+                                    \u804A\u5929\u63D0\u53D6\u767D\u540D\u5355
+                                    <input id="t-outline-chat-tag-whitelist" class="t-outline-select" type="text" placeholder="content, dialogue" value="${escapeHtml3(getOutlineChatTagWhitelistRaw())}">
+                                </label>
                             </div>
                             <label class="t-outline-mode">
                                 <input id="t-outline-stream-enabled" type="checkbox" ${draft.streamEnabled ? "checked" : ""}>
@@ -16322,13 +16407,14 @@ function openStoryOutlineWindow() {
   showOutlineView(plans.length > 0 ? "hub" : "editor");
   refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, RAW_HISTORY_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
+var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
     init_connection();
     init_defaults();
     init_storage();
+    init_chatTagWhitelist();
     outlineItems = [];
     lastRawResponse = "";
     rawResponseHistory = [];
@@ -16350,6 +16436,7 @@ var init_storyOutlineWindow = __esm({
     PROMPT_TEMPLATES_KEY = "story_outline_prompt_templates";
     OPENING_SOURCE_MODE_KEY = "story_outline_opening_source_mode";
     OPENING_SOURCE_REF_KEY = "story_outline_opening_source_ref";
+    OUTLINE_CHAT_TAG_WHITELIST_KEY = "story_outline_chat_tag_whitelist";
     RAW_HISTORY_KEY = "story_outline_raw_history";
     currentView = "hub";
     activePlanId = "";
@@ -16549,6 +16636,1668 @@ var init_outlineEntryButton = __esm({
     SCENE_PLANS_KEY = "story_outline_plans";
     SCENE_SOURCE_PLAN_KEY2 = "story_outline_scene_source_plan_id";
     observerBound = false;
+  }
+});
+
+// src/ui/rewriteEntryButton.js
+import { saveChatConditional, reloadCurrentChat, eventSource, event_types } from "../../../../script.js";
+function ensureRewriteCssLoaded() {
+  const cssId = "titania-css-rewrite-panel-inline";
+  let style = document.getElementById(cssId);
+  if (!style) {
+    style = document.createElement("style");
+    style.id = cssId;
+    style.type = "text/css";
+    document.head.appendChild(style);
+  }
+  style.textContent = `${REWRITE_PANEL_CSS}
+${REWRITE_SETTINGS_BUTTON_CSS}`;
+}
+function isEnabled2() {
+  const data = getExtData();
+  return data?.rewrite_entry?.enabled === true;
+}
+function escapeHtml4(text) {
+  return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function normalizeApiBaseUrl(inputUrl) {
+  return String(inputUrl || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "").replace(/\/v1\/models$/, "").replace(/\/models$/, "");
+}
+function normalizeChatEndpoint(inputUrl) {
+  const base = normalizeApiBaseUrl(inputUrl);
+  if (!base) return "";
+  if (base.endsWith("/chat/completions")) return base;
+  if (base.endsWith("/v1")) return `${base}/chat/completions`;
+  return `${base}/v1/chat/completions`;
+}
+function normalizeToken(s) {
+  return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+function normalizePunctuation(s) {
+  return String(s || "").replace(/，/g, ",").replace(/；/g, ";").replace(/：/g, ":").replace(/[\t\f\v]+/g, " ");
+}
+function parseCommaList(input) {
+  return normalizePunctuation(input).split(",").map((x) => normalizeToken(x)).filter(Boolean);
+}
+function uniq(arr) {
+  return [...new Set(arr)];
+}
+function cleanupRules(rules) {
+  if (!Array.isArray(rules)) return [];
+  return rules.map((item) => {
+    const anchor = normalizeToken(item?.anchor || "");
+    const extras = uniq(parseCommaList(item?.extras || ""));
+    return { anchor, extras };
+  }).filter((rule) => rule.anchor);
+}
+function rulesToLegacyText(rules) {
+  if (!Array.isArray(rules) || rules.length === 0) return "";
+  return rules.map((r) => {
+    if (!r.extras || r.extras.length === 0) return r.anchor;
+    return `${r.anchor} => ${r.extras.join(", ")}`;
+  }).join("\n");
+}
+function ensureRewriteDataShape() {
+  const data = getExtData();
+  if (!data.rewrite_entry || typeof data.rewrite_entry !== "object") {
+    data.rewrite_entry = {
+      enabled: false,
+      api_url: "",
+      api_key: "",
+      model: "",
+      rules_text: "",
+      split_mode: "sentence",
+      rules: []
+    };
+  }
+  const item = data.rewrite_entry;
+  if (!item.split_mode || !["sentence", "paragraph"].includes(item.split_mode)) item.split_mode = "sentence";
+  if (!Array.isArray(item.rules)) item.rules = [];
+  if (typeof item.stream_live !== "boolean") item.stream_live = true;
+  if (typeof item.auto_trigger !== "boolean") item.auto_trigger = false;
+  if (typeof item.tag_whitelist !== "string") item.tag_whitelist = "";
+  if (typeof item.rules_text !== "string") item.rules_text = "";
+  if (typeof item.prompt_system !== "string") item.prompt_system = REWRITE_DEFAULT_PROMPT_SYSTEM;
+  if (typeof item.prompt_user !== "string") item.prompt_user = REWRITE_DEFAULT_PROMPT_USER;
+  if (typeof item.prompt_json_rule !== "string") item.prompt_json_rule = REWRITE_DEFAULT_PROMPT_JSON_RULE;
+  item.rules = cleanupRules(item.rules);
+  return item;
+}
+function getRewritePromptState() {
+  const item = ensureRewriteDataShape();
+  return {
+    prompt_system: String(item.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM),
+    prompt_user: String(item.prompt_user || REWRITE_DEFAULT_PROMPT_USER),
+    prompt_json_rule: String(item.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
+  };
+}
+function persistLivePromptState() {
+  const $overlay = getLiveOverlay();
+  if (!$overlay.length) return;
+  const data = getExtData();
+  const prev = ensureRewriteDataShape();
+  data.rewrite_entry = {
+    ...prev,
+    prompt_system: String($overlay.find("#t-rewrite-live-prompt-system").val() || "").trim() || REWRITE_DEFAULT_PROMPT_SYSTEM,
+    prompt_user: String($overlay.find("#t-rewrite-live-prompt-user").val() || "").trim() || REWRITE_DEFAULT_PROMPT_USER,
+    prompt_json_rule: String($overlay.find("#t-rewrite-live-prompt-json").val() || "").trim() || REWRITE_DEFAULT_PROMPT_JSON_RULE
+  };
+  saveExtData();
+}
+function getOverlay() {
+  return $(`#${OVERLAY_ID}`);
+}
+function getSettingsOverlay() {
+  return $(`#${SETTINGS_OVERLAY_ID}`);
+}
+function getLiveOverlay() {
+  return $(`#${LIVE_OVERLAY_ID}`);
+}
+function closePanel() {
+  closeSettingsPanel();
+  closeLivePanel();
+  getOverlay().remove();
+}
+function closeSettingsPanel() {
+  getSettingsOverlay().remove();
+}
+function closeLivePanel() {
+  getLiveOverlay().remove();
+}
+function syncRuntimeCollapseUi() {
+  const $body = $("#t-rewrite-runtime-body");
+  const $btn = $("#t-rewrite-runtime-toggle");
+  if ($body.length) {
+    $body.toggleClass("is-collapsed", runtimeCollapsed === true);
+  }
+  if ($btn.length) {
+    $btn.text(runtimeCollapsed ? "\u5C55\u5F00" : "\u6298\u53E0");
+  }
+}
+function removeButton2(closePanelToo = true) {
+  $(`#${BTN_ID2}`).remove();
+  if (closePanelToo) closePanel();
+}
+function setStatus(text, tone = "muted") {
+  const $targets = $("#t-rewrite-status, #t-rewrite-settings-status");
+  if (!$targets.length) return;
+  $targets.each((_, el) => {
+    $(el).removeClass("ok warn err muted").addClass(tone).text(text || "");
+  });
+}
+function splitBySentence(text) {
+  const src = String(text || "");
+  if (!src.trim()) return [];
+  const lines = src.split(/\r?\n/);
+  const chunks = [];
+  lines.forEach((line) => {
+    if (!line.trim()) return;
+    const arr = line.split(/(?<=[。！？!?])/u).filter((s) => s.trim());
+    if (arr.length === 0) {
+      chunks.push(line);
+    } else {
+      chunks.push(...arr);
+    }
+  });
+  return chunks;
+}
+function splitByParagraph(text) {
+  return String(text || "").split(/\r?\n\s*\r?\n+/).map((s) => s.trim()).filter(Boolean);
+}
+function splitText(text, splitMode) {
+  return splitMode === "paragraph" ? splitByParagraph(text) : splitBySentence(text);
+}
+function evaluateUnit(unitText, rules) {
+  const source = normalizeToken(unitText);
+  const hits = [];
+  rules.forEach((rule, idx) => {
+    const anchorHit = source.includes(rule.anchor);
+    if (!anchorHit) return;
+    if (!Array.isArray(rule.extras) || rule.extras.length === 0) {
+      hits.push({ ruleIndex: idx + 1, anchor: rule.anchor, matchedExtra: null });
+      return;
+    }
+    const matchedExtra = rule.extras.find((extra) => source.includes(extra));
+    if (matchedExtra) {
+      hits.push({ ruleIndex: idx + 1, anchor: rule.anchor, matchedExtra });
+    }
+  });
+  return hits;
+}
+function evaluateRules(payload, sourceText = null) {
+  const splitMode = payload?.split_mode === "paragraph" ? "paragraph" : "sentence";
+  const rules = cleanupRules(payload?.rules || []);
+  const testText = String(sourceText || "");
+  const units = splitText(testText, splitMode);
+  const unitResults = units.map((unit, idx) => {
+    const hits = evaluateUnit(unit, rules);
+    return {
+      unitIndex: idx + 1,
+      text: unit,
+      hit: hits.length > 0,
+      hits
+    };
+  });
+  const hitUnits = unitResults.filter((item) => item.hit);
+  return {
+    splitMode,
+    unitCount: unitResults.length,
+    hitCount: hitUnits.length,
+    rules,
+    unitResults
+  };
+}
+function renderDiffRows(rows = []) {
+  const $body = $("#t-rewrite-diff-body");
+  if (!$body.length) return;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    $body.html('<div class="t-rewrite-diff-empty">\u7B49\u5F85\u6267\u884C\u6539\u5199\u540E\u5C55\u793A Diff \u5BF9\u6BD4</div>');
+    return;
+  }
+  const html = rows.map((item, idx) => {
+    const before = escapeHtml4(item.before || "");
+    const after = escapeHtml4(item.after || "");
+    const ruleHint = escapeHtml4(item.ruleHint || "");
+    return `
+            <div class="t-rewrite-diff-row">
+                <div class="t-rewrite-diff-cell t-rewrite-diff-before">
+                    <div class="t-rewrite-diff-label">\u539F\u53E5 #${idx + 1}${ruleHint ? ` \xB7 ${ruleHint}` : ""}</div>
+                    <div class="t-rewrite-diff-text">${before}</div>
+                </div>
+                <div class="t-rewrite-diff-cell t-rewrite-diff-after">
+                    <div class="t-rewrite-diff-label">\u6539\u5199 #${idx + 1}</div>
+                    <div class="t-rewrite-diff-text">${after}</div>
+                </div>
+            </div>
+        `;
+  }).join("");
+  $body.html(html);
+}
+function setRawResponse(text) {
+  lastRawResponseText = String(text || "");
+  const $targets = $("#t-rewrite-raw-response");
+  if (!$targets.length) return;
+  $targets.each((_, el) => {
+    const $el = $(el);
+    $el.text(lastRawResponseText);
+    const dom = $el.get(0);
+    if (dom) dom.scrollTop = dom.scrollHeight;
+  });
+}
+function setRawMeta(text) {
+  lastRawMetaText = String(text || "");
+  const $targets = $("#t-rewrite-raw-meta");
+  if (!$targets.length) return;
+  $targets.each((_, el) => {
+    $(el).text(lastRawMetaText);
+  });
+}
+function updateAbortBtnState(isRunning) {
+  $("#t-rewrite-abort").prop("disabled", !isRunning);
+}
+function stripCodeFence(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+  return raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+}
+function extractJsonCandidate(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    return raw.slice(start, end + 1).trim();
+  }
+  return raw;
+}
+function sanitizeJsonLike(text) {
+  let s = String(text || "");
+  s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  s = s.replace(/,\s*([}\]])/g, "$1");
+  s = s.replace(/([{,]\s*)'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, '$1"$2":');
+  s = s.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_m, p1) => {
+    return `: "${String(p1).replace(/\"/g, '"').replace(/"/g, '\\"')}"`;
+  });
+  return s.trim();
+}
+function stabilizeBrokenJson(text) {
+  const raw = String(text || "");
+  if (!raw) return "";
+  const fixed = raw.replace(/\"([^\"]*?)\"\s*:\s*\"([\s\S]*?)(?=\n\s*\"[A-Za-z0-9_]+\"\s*:|\n\s*[}\]]|\s*}\s*$|\s*]\s*$)/g, (m, key, value) => {
+    const safe = String(value).replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/\"/g, '\\"');
+    return `"${key}":"${safe}"`;
+  });
+  let out = "";
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < fixed.length; i += 1) {
+    const ch = fixed[i];
+    if (inString) {
+      if (escaped) {
+        out += ch;
+        escaped = false;
+        continue;
+      }
+      if (ch === "\\") {
+        out += ch;
+        escaped = true;
+        continue;
+      }
+      if (ch === '"') {
+        out += ch;
+        inString = false;
+        continue;
+      }
+      if (ch === "\n" || ch === "\r") {
+        out += "\\n";
+        continue;
+      }
+      out += ch;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    }
+    out += ch;
+  }
+  if (inString) {
+    out += '"';
+  }
+  out = out.replace(/,\s*([}\]])/g, "$1");
+  let braceOpen = 0;
+  let bracketOpen = 0;
+  for (let i = 0; i < out.length; i += 1) {
+    const ch = out[i];
+    if (ch === "{") braceOpen += 1;
+    else if (ch === "}") braceOpen = Math.max(0, braceOpen - 1);
+    else if (ch === "[") bracketOpen += 1;
+    else if (ch === "]") bracketOpen = Math.max(0, bracketOpen - 1);
+  }
+  if (bracketOpen > 0) out += "]".repeat(bracketOpen);
+  if (braceOpen > 0) out += "}".repeat(braceOpen);
+  return out.trim();
+}
+function parseRewriteJson(raw) {
+  const base = extractJsonCandidate(stripCodeFence(raw));
+  const candidates = [
+    base,
+    sanitizeJsonLike(base),
+    stabilizeBrokenJson(base),
+    stabilizeBrokenJson(sanitizeJsonLike(base))
+  ].filter(Boolean);
+  let lastErr = null;
+  for (const c of candidates) {
+    try {
+      return JSON.parse(c);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("Invalid JSON response");
+}
+function buildRewritePayload(data, sourceText) {
+  const evaluated = evaluateRules(data, sourceText || "");
+  const targets = [];
+  evaluated.unitResults.forEach((unit) => {
+    if (!unit.hit) return;
+    targets.push({
+      segment_id: `s_${unit.unitIndex}`,
+      unit_index: unit.unitIndex,
+      original_text: unit.text,
+      matched_rules: unit.hits.map((h) => ({
+        rule_index: h.ruleIndex,
+        anchor: h.anchor,
+        matched_extra: h.matchedExtra
+      }))
+    });
+  });
+  return {
+    evaluated,
+    request: {
+      task_id: `rewrite_${Date.now()}`,
+      split_mode: evaluated.splitMode,
+      style_hint: "\u4FDD\u6301\u539F\u6587\u8BED\u6C14\u3001\u4EBA\u79F0\u3001\u53D9\u4E8B\u89C6\u89D2\uFF0C\u4EC5\u505A\u5FC5\u8981\u6539\u5199",
+      rules: evaluated.rules,
+      targets
+    }
+  };
+}
+function getLatestAssistantMessageFromChat() {
+  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return null;
+  const ctx = SillyTavern.getContext();
+  const chat = Array.isArray(ctx?.chat) ? ctx.chat : [];
+  const whitelist = parseTagWhitelistInput(ensureRewriteDataShape().tag_whitelist || "");
+  if (chat.length === 0) return null;
+  for (let i = chat.length - 1; i >= 0; i -= 1) {
+    const msg = chat[i];
+    if (!msg || msg.is_user || msg.is_system || msg.is_hidden || msg.disabled) continue;
+    const raw = String(msg.mes || msg.message || "");
+    const content = extractTextByWhitelist(raw, whitelist);
+    if (!content.trim()) continue;
+    return { index: i, msg, content, raw };
+  }
+  return null;
+}
+function getChatMessageElementByIndex(index) {
+  const $byId = $(`#chat .mes[mesid='${index}']`).last();
+  if ($byId.length) return $byId;
+  const $fallback = $("#chat > div.mes.reasoning.last_mes").last();
+  if ($fallback.length) return $fallback;
+  return $();
+}
+function clearAutoRewriteIndicator() {
+  $("#chat .t-rewrite-auto-badge").remove();
+}
+function applyAutoRewriteIndicator(messageIndex) {
+  clearAutoRewriteIndicator();
+  const $target = getChatMessageElementByIndex(messageIndex);
+  if (!$target.length) return false;
+  if ($target.find(".t-rewrite-auto-badge").length === 0) {
+    $target.append('<div class="t-rewrite-auto-badge"><i class="fa-solid fa-wand-magic-sparkles"></i><span>\u81EA\u52A8\u6539\u5199\u4E2D</span></div>');
+  }
+  return true;
+}
+function applyRewriteToFullText(sourceText, evaluated, parsed) {
+  const map = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
+  let rewritten = String(sourceText || "");
+  let cursor = 0;
+  let replaced = 0;
+  evaluated.unitResults.filter((u) => u.hit).forEach((unit) => {
+    const segmentId = `s_${unit.unitIndex}`;
+    const after = map.get(segmentId);
+    if (typeof after !== "string") return;
+    const before = String(unit.text || "");
+    if (!before) return;
+    const idx = rewritten.indexOf(before, cursor);
+    if (idx < 0) return;
+    rewritten = `${rewritten.slice(0, idx)}${after}${rewritten.slice(idx + before.length)}`;
+    cursor = idx + after.length;
+    replaced += 1;
+  });
+  return { text: rewritten, replaced };
+}
+function writeBackMessageContent(targetMsg, rewrittenText) {
+  const text = String(rewrittenText || "");
+  targetMsg.mes = text;
+  targetMsg.message = text;
+  if (Array.isArray(targetMsg.swipes) && targetMsg.swipes.length > 0) {
+    const swipeId = Number(targetMsg.swipe_id);
+    const idx = Number.isInteger(swipeId) && swipeId >= 0 && swipeId < targetMsg.swipes.length ? swipeId : targetMsg.swipes.length - 1;
+    targetMsg.swipes[idx] = text;
+  }
+}
+function buildRewriteMessages(payload, promptState = null) {
+  const schemaText = '{"task_id":"string","results":[{"segment_id":"string","rewritten_text":"string"}]}';
+  const prompts = promptState || getRewritePromptState();
+  let systemPrompt = String(prompts.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM).trim() || REWRITE_DEFAULT_PROMPT_SYSTEM;
+  const jsonRuleText = String(prompts.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE).trim() || REWRITE_DEFAULT_PROMPT_JSON_RULE;
+  if (systemPrompt.includes("{{json_rule}}")) {
+    systemPrompt = systemPrompt.split("{{json_rule}}").join(jsonRuleText);
+  } else {
+    systemPrompt = `${systemPrompt}
+${jsonRuleText}`;
+  }
+  let userPrompt = String(prompts.prompt_user || REWRITE_DEFAULT_PROMPT_USER).trim() || REWRITE_DEFAULT_PROMPT_USER;
+  userPrompt = userPrompt.split("{{schema}}").join(schemaText).split("{{payload}}").join(JSON.stringify(payload));
+  return [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userPrompt }
+  ];
+}
+function buildFixJsonMessages(rawOutput, payload) {
+  return [
+    {
+      role: "system",
+      content: "\u4F60\u662F JSON \u4FEE\u590D\u5668\u3002\u53EA\u8F93\u51FA\u5408\u6CD5 JSON\uFF0C\u4E0D\u8981\u8F93\u51FA\u5176\u4ED6\u5185\u5BB9\u3002JSON \u5FC5\u987B\u4F7F\u7528\u53CC\u5F15\u53F7\uFF0C\u4E0D\u5141\u8BB8\u5C3E\u9017\u53F7\u3002"
+    },
+    {
+      role: "user",
+      content: [
+        "\u628A\u4E0B\u9762\u5185\u5BB9\u4FEE\u6B63\u6210\u5408\u6CD5 JSON\uFF0C\u4E14\u4E25\u683C\u6EE1\u8DB3 schema\uFF1A",
+        '{"task_id":"string","results":[{"segment_id":"string","rewritten_text":"string"}]}',
+        "\u5FC5\u987B\u5305\u542B\u952E\u540D\uFF1Atask_id \u548C results\uFF08\u4E0D\u80FD\u6539\u540D\u4E3A data/items/rewrites\uFF09",
+        "\u5FC5\u987B\u4E0E\u4EE5\u4E0B\u8F93\u5165 payload \u5BF9\u9F50\uFF08segment_id \u548C\u6570\u91CF\u4E00\u81F4\uFF09\uFF1A",
+        JSON.stringify(payload),
+        "\u5F85\u4FEE\u590D\u5185\u5BB9\uFF1A",
+        String(rawOutput || "")
+      ].join("\n")
+    }
+  ];
+}
+function estimateMaxTokens(payload) {
+  return REWRITE_MAX_TOKENS;
+}
+function validateRewriteResponse(parsed, payload) {
+  if (!parsed || typeof parsed !== "object") {
+    return { ok: false, reason: "\u8FD4\u56DE\u4E0D\u662F\u5BF9\u8C61" };
+  }
+  const taskId = String(parsed.task_id || "").trim();
+  if (!taskId) return { ok: false, reason: "\u7F3A\u5C11 task_id" };
+  if (!Array.isArray(parsed.results)) return { ok: false, reason: "\u7F3A\u5C11 results \u6570\u7EC4" };
+  const targets = Array.isArray(payload?.targets) ? payload.targets : [];
+  if (parsed.results.length !== targets.length) {
+    return { ok: false, reason: `results \u6570\u91CF\u4E0D\u5339\u914D: ${parsed.results.length}/${targets.length}` };
+  }
+  const targetSet = new Set(targets.map((t) => t.segment_id));
+  const seen = /* @__PURE__ */ new Set();
+  for (const row of parsed.results) {
+    const segmentId = String(row?.segment_id || "").trim();
+    const rewrittenText = String(row?.rewritten_text || "").trim();
+    if (!segmentId) return { ok: false, reason: "\u5B58\u5728\u7A7A segment_id" };
+    if (!targetSet.has(segmentId)) return { ok: false, reason: `segment_id \u4E0D\u5728\u8F93\u5165\u4E2D: ${segmentId}` };
+    if (seen.has(segmentId)) return { ok: false, reason: `segment_id \u91CD\u590D: ${segmentId}` };
+    if (!rewrittenText) return { ok: false, reason: `rewritten_text \u4E3A\u7A7A: ${segmentId}` };
+    seen.add(segmentId);
+  }
+  return { ok: true };
+}
+function buildRewriteJsonSchema() {
+  return {
+    type: "json_schema",
+    json_schema: {
+      name: "rewrite_response",
+      strict: true,
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          task_id: { type: "string" },
+          results: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                segment_id: { type: "string" },
+                rewritten_text: { type: "string" }
+              },
+              required: ["segment_id", "rewritten_text"]
+            }
+          }
+        },
+        required: ["task_id", "results"]
+      }
+    }
+  };
+}
+function shouldFallbackWithoutSchema(status, bodyText) {
+  if (status !== 400 && status !== 422) return false;
+  const msg = String(bodyText || "").toLowerCase();
+  return msg.includes("response_format") || msg.includes("json_schema") || msg.includes("unsupported") || msg.includes("invalid_request_error");
+}
+async function requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, options = {}) {
+  const endpoint = normalizeChatEndpoint(apiUrl);
+  if (!endpoint) throw new Error("API \u5730\u5740\u65E0\u6548");
+  const headers = { "Content-Type": "application/json" };
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  const temperature = Number.isFinite(options.temperature) ? options.temperature : REWRITE_TEMPERATURE;
+  const stream = options.stream === true;
+  const signal = options.signal;
+  const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
+  const body = {
+    model,
+    messages,
+    stream,
+    temperature,
+    max_tokens: maxTokens,
+    response_format: buildRewriteJsonSchema()
+  };
+  let res = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    signal
+  });
+  if (!res.ok) {
+    const firstErrText = await res.text().catch(() => "");
+    if (shouldFallbackWithoutSchema(res.status, firstErrText)) {
+      const fallbackBody = {
+        model,
+        messages,
+        stream,
+        temperature,
+        max_tokens: maxTokens
+      };
+      res = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(fallbackBody),
+        signal
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status}: ${errText.slice(0, 200)}`);
+      }
+      if (stream) {
+        return await consumeStreamResponse(res, onProgress);
+      }
+      const json2 = await res.json();
+      const content2 = json2?.choices?.[0]?.message?.content || "";
+      return String(content2 || "");
+    }
+    throw new Error(`HTTP ${res.status}: ${firstErrText.slice(0, 200)}`);
+  }
+  if (stream) {
+    return await consumeStreamResponse(res, onProgress);
+  }
+  const json = await res.json();
+  const content = json?.choices?.[0]?.message?.content || "";
+  return String(content || "");
+}
+async function consumeStreamResponse(res, onProgress) {
+  if (!res.body) throw new Error("Stream Empty Body: \u54CD\u5E94\u4F53\u4E3A\u7A7A");
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let aggregated = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    while (true) {
+      const idx = buffer.indexOf("\n");
+      if (idx < 0) break;
+      const line = buffer.slice(0, idx).trim();
+      buffer = buffer.slice(idx + 1);
+      if (!line || !line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+      try {
+        const json = JSON.parse(data);
+        const chunk = json?.choices?.[0]?.delta?.content || json?.choices?.[0]?.message?.content || "";
+        if (!chunk) continue;
+        aggregated += chunk;
+        if (onProgress) onProgress(chunk, aggregated);
+      } catch {
+      }
+    }
+  }
+  if (!aggregated.trim()) {
+    throw new Error("\u6D41\u5F0F\u8FD4\u56DE\u4E3A\u7A7A");
+  }
+  return aggregated;
+}
+function normalizeRewriteResponseShape(parsed, payload) {
+  const input = parsed && typeof parsed === "object" ? parsed : {};
+  const taskId = String(
+    input.task_id || input.taskId || payload?.task_id || `rewrite_${Date.now()}`
+  ).trim();
+  const list = (() => {
+    if (Array.isArray(input.results)) return input.results;
+    if (Array.isArray(input.data)) return input.data;
+    if (Array.isArray(input.items)) return input.items;
+    if (Array.isArray(input.rewrites)) return input.rewrites;
+    if (Array.isArray(input.output)) return input.output;
+    if (Array.isArray(input.result)) return input.result;
+    if (input.result && Array.isArray(input.result.results)) return input.result.results;
+    if (Array.isArray(input)) return input;
+    return [];
+  })();
+  const results = list.map((row, idx) => {
+    const segmentId = String(
+      row?.segment_id || row?.segmentId || row?.target_id || row?.targetId || row?.id || ""
+    ).trim() || String(payload?.targets?.[idx]?.segment_id || "");
+    const rewrittenText = String(
+      row?.rewritten_text || row?.rewrittenText || row?.rewrite || row?.text || row?.content || ""
+    );
+    return { segment_id: segmentId, rewritten_text: rewrittenText };
+  });
+  return {
+    task_id: taskId,
+    results
+  };
+}
+function buildDiffRowsFromResults(evaluated, payload, parsed) {
+  const rewrittenMap = new Map(parsed.results.map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
+  const targetMap = new Map(payload.targets.map((t) => [t.segment_id, t]));
+  return evaluated.unitResults.filter((u) => u.hit).map((u) => {
+    const segmentId = `s_${u.unitIndex}`;
+    const target = targetMap.get(segmentId);
+    const after = rewrittenMap.get(segmentId) || u.text;
+    const ruleHint = (target?.matched_rules || []).map((x) => {
+      return x.matched_extra ? `${x.anchor}+${x.matched_extra}` : `${x.anchor}`;
+    }).join(" | ");
+    return {
+      before: u.text,
+      after,
+      ruleHint
+    };
+  });
+}
+async function runRewrite(options = {}) {
+  persistPanelState();
+  const data = ensureRewriteDataShape();
+  const apiUrl = String(data.api_url || "").trim();
+  const apiKey = String(data.api_key || "").trim();
+  const model = String(data.model || "").trim();
+  if (!apiUrl) {
+    setStatus("\u8BF7\u5148\u586B\u5199 API \u5730\u5740", "warn");
+    return;
+  }
+  if (!model) {
+    setStatus("\u8BF7\u5148\u9009\u62E9\u6A21\u578B", "warn");
+    return;
+  }
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    return;
+  }
+  const { evaluated, request } = buildRewritePayload(data, latest.content);
+  renderMatchResult(evaluated, latest.content);
+  if (!String(latest.content || "").trim()) {
+    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
+    return;
+  }
+  if (!Array.isArray(request.targets) || request.targets.length === 0) {
+    setStatus("\u6CA1\u6709\u547D\u4E2D\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF0C\u672A\u53D1\u8D77\u6539\u5199", "warn");
+    renderDiffRows([]);
+    return;
+  }
+  const maxTokens = estimateMaxTokens(request);
+  const messages = buildRewriteMessages(request, getRewritePromptState());
+  const $btn = $("#t-rewrite-trigger");
+  const streamLive = data.stream_live === true;
+  const source = options.source || "manual";
+  let success = false;
+  $btn.prop("disabled", true);
+  updateAbortBtnState(true);
+  const abortController = new AbortController();
+  activeRewriteAbortController = abortController;
+  setRawResponse("");
+  setRawMeta(streamLive ? `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u6D41\u5F0F\u5F00\u542F\uFF08${source}\uFF09` : `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u975E\u6D41\u5F0F\uFF08${source}\uFF09`);
+  try {
+    setStatus(`\u6B63\u5728\u8BF7\u6C42\u6539\u5199\uFF08${request.targets.length} \u4E2A\u76EE\u6807\uFF09...`, "muted");
+    let raw = await requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, {
+      temperature: REWRITE_TEMPERATURE,
+      stream: streamLive,
+      signal: abortController.signal,
+      onProgress: (_chunk, all) => {
+        if (streamLive) {
+          setRawResponse(all);
+        }
+      }
+    });
+    if (!streamLive) setRawResponse(raw);
+    let parsed = null;
+    try {
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+    } catch (e) {
+      const fixMessages = buildFixJsonMessages(raw, request);
+      raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+        temperature: REWRITE_FIX_TEMPERATURE
+      });
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+    }
+    let valid = validateRewriteResponse(parsed, request);
+    if (!valid.ok) {
+      const fixMessages = buildFixJsonMessages(raw, request);
+      setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
+      const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+        temperature: REWRITE_FIX_TEMPERATURE
+      });
+      setRawResponse(fixedRaw);
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
+      valid = validateRewriteResponse(parsed, request);
+      if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
+    }
+    const rows = buildDiffRowsFromResults(evaluated, request, parsed);
+    renderDiffRows(rows);
+    const applied = applyRewriteToFullText(latest.content, evaluated, parsed);
+    writeBackMessageContent(latest.msg, applied.text);
+    if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
+    latest.msg.extra.titania_rewrite_done = true;
+    await saveChatConditional();
+    await reloadCurrentChat();
+    setStatus(`\u6539\u5199\u5B8C\u6210\uFF1A${rows.length} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+    success = true;
+  } catch (e) {
+    renderDiffRows([]);
+    if (e?.name === "AbortError") {
+      setStatus("\u6539\u5199\u5DF2\u624B\u52A8\u7EC8\u6B62", "warn");
+    } else {
+      setStatus(`\u6539\u5199\u5931\u8D25: ${e.message}`, "err");
+      if (source !== "auto" && window.toastr) toastr.error(e.message || "\u6539\u5199\u5931\u8D25", "\u6587\u672C\u6539\u5199");
+    }
+  } finally {
+    activeRewriteAbortController = null;
+    $btn.prop("disabled", false);
+    updateAbortBtnState(false);
+  }
+  return success;
+}
+async function runManualRewrite() {
+  return runRewrite({ source: "manual" });
+}
+async function onAutoTriggerRewrite() {
+  const data = ensureRewriteDataShape();
+  if (!data.auto_trigger) return;
+  if (!isEnabled2()) return;
+  if (isAutoRewriting) return;
+  if (activeRewriteAbortController) return;
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest || !latest.msg) return;
+  if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
+  if (latest.msg.extra.titania_rewrite_done === true) return;
+  const { evaluated } = buildRewritePayload(data, latest.content);
+  if (!evaluated || evaluated.hitCount <= 0) return;
+  try {
+    isAutoRewriting = true;
+    applyAutoRewriteIndicator(latest.index);
+    if (window.toastr) toastr.info("\u68C0\u6D4B\u5230\u547D\u4E2D\u89C4\u5219\uFF0C\u6B63\u5728\u81EA\u52A8\u6539\u5199...", "\u6587\u672C\u6539\u5199");
+    const ok = await runRewrite({ source: "auto" });
+    if (ok) {
+      if (window.toastr) toastr.success("\u81EA\u52A8\u6539\u5199\u5B8C\u6210\uFF0C\u5DF2\u56DE\u5199\u5F53\u524D\u56DE\u590D", "\u6587\u672C\u6539\u5199");
+    } else {
+      if (window.toastr) toastr.error("\u81EA\u52A8\u6539\u5199\u5931\u8D25\uFF0C\u5DF2\u4FDD\u7559\u539F\u6587", "\u6587\u672C\u6539\u5199");
+    }
+  } finally {
+    clearAutoRewriteIndicator();
+    isAutoRewriting = false;
+  }
+}
+function bindAutoTriggerEvents() {
+  if (autoTriggerBound) return;
+  autoTriggerBound = true;
+  eventSource.on(event_types.MESSAGE_RECEIVED, onAutoTriggerRewrite);
+  eventSource.on(event_types.GENERATION_ENDED, onAutoTriggerRewrite);
+}
+function renderSettingsRules(rows) {
+  const $box = $("#t-rewrite-settings-rules-list");
+  if (!$box.length) return;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    $box.html('<div class="t-rewrite-empty-rule">\u6682\u65E0\u89C4\u5219\uFF0C\u70B9\u51FB\u201C\u65B0\u589E\u89C4\u5219\u201D\u5F00\u59CB</div>');
+    return;
+  }
+  const html = rows.map((rule, idx) => `
+        <div class="t-rewrite-rule-row" data-rule-idx="${idx}">
+            <div class="t-rewrite-rule-no">#${idx + 1}</div>
+            <input class="text_pole t-rewrite-rule-anchor" type="text" value="${escapeHtml4(rule.anchor || "")}" placeholder="\u4E3B\u8BCD\uFF08\u5FC5\u586B\uFF09" maxlength="120">
+            <input class="text_pole t-rewrite-rule-extras" type="text" value="${escapeHtml4((rule.extras || []).join(", "))}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u547D\u4E2D\u4EFB\u610F\u4E00\u4E2A\uFF09" maxlength="500">
+            <button class="t-btn t-rewrite-rule-del" type="button" title="\u5220\u9664\u89C4\u5219"><i class="fa-solid fa-trash"></i></button>
+        </div>
+    `).join("");
+  $box.html(html);
+  $("#t-rewrite-settings-rule-count").text(String(rows.filter((r) => String(r.anchor || "").trim()).length));
+}
+function getRulesFromDom(containerSelector = "#t-rewrite-rules-list") {
+  const rows = [];
+  $(`${containerSelector} .t-rewrite-rule-row`).each((_, el) => {
+    const $row = $(el);
+    const anchor = normalizeToken($row.find(".t-rewrite-rule-anchor").val());
+    const extrasInput = String($row.find(".t-rewrite-rule-extras").val() || "");
+    const extras = uniq(parseCommaList(extrasInput));
+    rows.push({ anchor, extras });
+  });
+  return cleanupRules(rows);
+}
+function persistPanelState() {
+  const $overlay = getOverlay();
+  if (!$overlay.length) return;
+  const data = getExtData();
+  const prev = ensureRewriteDataShape();
+  const rules = $overlay.find("#t-rewrite-rules-list").length > 0 ? getRulesFromDom() : prev.rules;
+  const readValue = (selector, fallback = "") => {
+    const $el = $overlay.find(selector);
+    return $el.length > 0 ? String($el.val() || "").trim() : fallback;
+  };
+  const readChecked = (selector, fallback = false) => {
+    const $el = $overlay.find(selector);
+    return $el.length > 0 ? $el.prop("checked") === true : fallback;
+  };
+  data.rewrite_entry = {
+    enabled: prev.enabled === true,
+    api_url: readValue("#t-rewrite-api-url", prev.api_url || ""),
+    api_key: readValue("#t-rewrite-api-key", prev.api_key || ""),
+    model: readValue("#t-rewrite-model", prev.model || ""),
+    rules_text: rulesToLegacyText(rules),
+    split_mode: readValue("input[name='t-rewrite-split-mode']:checked", prev.split_mode || "sentence"),
+    rules,
+    stream_live: readChecked("#t-rewrite-stream-live", prev.stream_live === true),
+    auto_trigger: prev.auto_trigger === true,
+    tag_whitelist: prev.tag_whitelist || "",
+    prompt_system: prev.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM,
+    prompt_user: prev.prompt_user || REWRITE_DEFAULT_PROMPT_USER,
+    prompt_json_rule: prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE
+  };
+  saveExtData();
+  $("#t-rewrite-rule-count").text(String(rules.length));
+}
+function persistSettingsPanelState() {
+  const $overlay = getSettingsOverlay();
+  if (!$overlay.length) return;
+  const data = getExtData();
+  const prev = ensureRewriteDataShape();
+  const rules = getRulesFromDom("#t-rewrite-settings-rules-list");
+  data.rewrite_entry = {
+    enabled: prev.enabled === true,
+    api_url: String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim(),
+    api_key: String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim(),
+    model: String($overlay.find("#t-rewrite-settings-model").val() || "").trim(),
+    rules_text: rulesToLegacyText(rules),
+    split_mode: String($overlay.find("input[name='t-rewrite-settings-split-mode']:checked").val() || "sentence"),
+    rules,
+    stream_live: $overlay.find("#t-rewrite-settings-stream-live").prop("checked") === true,
+    auto_trigger: $overlay.find("#t-rewrite-settings-auto-trigger").prop("checked") === true,
+    tag_whitelist: String($overlay.find("#t-rewrite-settings-tag-whitelist").val() || "").trim(),
+    prompt_system: prev.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM,
+    prompt_user: prev.prompt_user || REWRITE_DEFAULT_PROMPT_USER,
+    prompt_json_rule: prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE
+  };
+  saveExtData();
+  $("#t-rewrite-settings-rule-count").text(String(rules.length));
+}
+function renderMatchResult(result, sourceText = "") {
+  const $body = $("#t-rewrite-match-body");
+  if (!$body.length) return;
+  if (!result || !Array.isArray(result.unitResults) || result.unitResults.length === 0) {
+    $body.html('<div class="t-rewrite-diff-empty">\u7B49\u5F85\u6267\u884C\u6539\u5199\u540E\u5C55\u793A\u547D\u4E2D\u7ED3\u679C</div>');
+    return;
+  }
+  const html = result.unitResults.map((item) => {
+    const cls = item.hit ? "hit" : "miss";
+    const tag = result.splitMode === "paragraph" ? "\u6BB5" : "\u53E5";
+    const hits = item.hit ? item.hits.map((h) => {
+      const extraText = h.matchedExtra ? ` + ${escapeHtml4(h.matchedExtra)}` : " + (\u65E0\u9644\u52A0\u8BCD)";
+      return `<span class="t-rewrite-hit-tag">\u89C4\u5219#${h.ruleIndex}: ${escapeHtml4(h.anchor)}${extraText}</span>`;
+    }).join("") : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
+    return `
+            <div class="t-rewrite-match-row ${cls}">
+                <div class="t-rewrite-match-head">
+                    <div>${tag} #${item.unitIndex}</div>
+                    <div class="t-rewrite-match-tags">${hits}</div>
+                </div>
+                <div class="t-rewrite-match-text">${escapeHtml4(item.text)}</div>
+            </div>
+        `;
+  }).join("");
+  const header = `<div class="t-rewrite-hit-summary">\u5207\u5206 ${result.unitCount} \u4E2A\u5355\u5143\uFF0C\u547D\u4E2D ${result.hitCount} \u4E2A</div>`;
+  const src = sourceText ? `<div class="t-rewrite-hit-source">\u6765\u6E90\uFF1A\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF08\u957F\u5EA6 ${sourceText.length}\uFF09</div>` : "";
+  $body.html(`${header}${src}${html}`);
+}
+async function fetchModelList(showToast = false, scope = "main") {
+  const $overlay = scope === "settings" ? getSettingsOverlay() : getOverlay();
+  if (!$overlay.length) return;
+  const idApiUrl = scope === "settings" ? "#t-rewrite-settings-api-url" : "#t-rewrite-api-url";
+  const idApiKey = scope === "settings" ? "#t-rewrite-settings-api-key" : "#t-rewrite-api-key";
+  const idModel = scope === "settings" ? "#t-rewrite-settings-model" : "#t-rewrite-model";
+  const rawUrl = $overlay.find(idApiUrl).val();
+  const apiUrl = normalizeApiBaseUrl(rawUrl);
+  const apiKey = String($overlay.find(idApiKey).val() || "").trim();
+  const $model = $overlay.find(idModel);
+  if (!apiUrl) {
+    $model.html('<option value="">\u8BF7\u5148\u586B\u5199 API \u5730\u5740</option>');
+    setStatus("\u8BF7\u8F93\u5165 API \u5730\u5740\u540E\u81EA\u52A8\u83B7\u53D6\u6A21\u578B\u5217\u8868", "warn");
+    return;
+  }
+  try {
+    setStatus("\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...", "muted");
+    $model.html('<option value="">\u52A0\u8F7D\u4E2D...</option>');
+    const headers = {};
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+    const res = await fetch(`${apiUrl}/models`, { method: "GET", headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
+    const models = list.map((item) => typeof item === "string" ? item : item?.id).filter(Boolean);
+    const unique = [...new Set(models)].sort();
+    const savedModel = String(getExtData()?.rewrite_entry?.model || "");
+    $model.empty();
+    if (unique.length === 0) {
+      $model.append('<option value="">\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B</option>');
+      setStatus("\u6A21\u578B\u5217\u8868\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u670D\u52A1\u7AEF\u8FD4\u56DE", "warn");
+      return;
+    }
+    unique.forEach((m) => {
+      const selected = savedModel === m ? "selected" : "";
+      $model.append(`<option value="${escapeHtml4(m)}" ${selected}>${escapeHtml4(m)}</option>`);
+    });
+    if (!savedModel) $model.val(unique[0]);
+    if (scope === "settings") persistSettingsPanelState();
+    else persistPanelState();
+    setStatus(`\u5DF2\u83B7\u53D6 ${unique.length} \u4E2A\u6A21\u578B`, "ok");
+    if (showToast && window.toastr) toastr.success(`\u6A21\u578B\u5217\u8868\u5DF2\u66F4\u65B0\uFF08${unique.length} \u4E2A\uFF09`, "\u6587\u672C\u6539\u5199");
+  } catch (e) {
+    $model.html('<option value="">\u83B7\u53D6\u5931\u8D25</option>');
+    setStatus(`\u6A21\u578B\u5217\u8868\u83B7\u53D6\u5931\u8D25: ${e.message}`, "err");
+    if (showToast && window.toastr) toastr.error(e.message || "\u83B7\u53D6\u5931\u8D25", "\u6587\u672C\u6539\u5199");
+  }
+}
+function bindPanelEvents() {
+  const $overlay = getOverlay();
+  if (!$overlay.length) return;
+  $overlay.on("click", "#t-rewrite-close", (e) => {
+    e.preventDefault();
+    closePanel();
+  });
+  $overlay.on("click", "#t-rewrite-trigger", () => {
+    runManualRewrite();
+  });
+  $overlay.on("click", "#t-rewrite-open-settings", (e) => {
+    e.preventDefault();
+    openSettingsPanel();
+  });
+  $overlay.on("click", "#t-rewrite-open-live", (e) => {
+    e.preventDefault();
+    openLivePanel();
+  });
+  $overlay.on("click", "#t-rewrite-runtime-toggle", (e) => {
+    e.preventDefault();
+    runtimeCollapsed = !runtimeCollapsed;
+    syncRuntimeCollapseUi();
+  });
+}
+function bindLivePanelEvents() {
+  const $overlay = getLiveOverlay();
+  if (!$overlay.length) return;
+  $overlay.on("click", "#t-rewrite-live-close", (e) => {
+    e.preventDefault();
+    closeLivePanel();
+  });
+  $overlay.on("click", "#t-rewrite-abort", (e) => {
+    e.preventDefault();
+    if (activeRewriteAbortController) {
+      activeRewriteAbortController.abort();
+    }
+  });
+  $overlay.on("input", "#t-rewrite-live-prompt-system, #t-rewrite-live-prompt-user, #t-rewrite-live-prompt-json", () => {
+    persistLivePromptState();
+  });
+  $overlay.on("click", "#t-rewrite-live-prompt-reset", (e) => {
+    e.preventDefault();
+    $overlay.find("#t-rewrite-live-prompt-system").val(REWRITE_DEFAULT_PROMPT_SYSTEM);
+    $overlay.find("#t-rewrite-live-prompt-user").val(REWRITE_DEFAULT_PROMPT_USER);
+    $overlay.find("#t-rewrite-live-prompt-json").val(REWRITE_DEFAULT_PROMPT_JSON_RULE);
+    persistLivePromptState();
+    if (window.toastr) toastr.success("\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
+  });
+}
+function openLivePanel() {
+  closeLivePanel();
+  const promptState = getRewritePromptState();
+  const html = `
+    <div id="${LIVE_OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
+        <div class="t-window t-rewrite-live-window">
+            <div class="t-window-header t-rewrite-head">
+                <div class="t-window-title t-rewrite-title"><i class="fa-solid fa-wave-square"></i> \u5B9E\u65F6\u54CD\u5E94</div>
+                <div class="t-window-controls">
+                    <div class="t-window-close" id="t-rewrite-live-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+            <div class="t-window-body t-rewrite-live-body">
+                <div class="t-rewrite-live-tools">
+                    <div id="t-rewrite-raw-meta" class="t-rewrite-status muted">${escapeHtml4(lastRawMetaText || "\u7B49\u5F85\u8BF7\u6C42")}</div>
+                    <button id="t-rewrite-abort" class="t-btn" type="button" ${activeRewriteAbortController ? "" : "disabled"}>\u7EC8\u6B62</button>
+                </div>
+                <div class="t-rewrite-live-meta">\u5C55\u793A\u6700\u8FD1\u4E00\u6B21\u6539\u5199\u8BF7\u6C42\u7684\u5B9E\u65F6\u8FD4\u56DE\u5185\u5BB9\uFF08\u652F\u6301\u6D41\u5F0F\u6EDA\u52A8\uFF09\u3002</div>
+                <pre id="t-rewrite-raw-response" class="t-rewrite-json-box">${escapeHtml4(lastRawResponseText || "")}</pre>
+
+                <div class="t-rewrite-live-prompt-card">
+                    <div class="t-rewrite-live-prompt-head">
+                        <div class="t-rewrite-live-prompt-title">\u63D0\u793A\u8BCD\u7BA1\u7406</div>
+                        <button id="t-rewrite-live-prompt-reset" class="t-btn" type="button">\u6062\u590D\u9ED8\u8BA4</button>
+                    </div>
+                    <label class="t-rewrite-label" for="t-rewrite-live-prompt-system">System \u63D0\u793A\u8BCD</label>
+                    <textarea id="t-rewrite-live-prompt-system" class="t-rewrite-live-textarea" placeholder="system prompt">${escapeHtml4(promptState.prompt_system)}</textarea>
+
+                    <label class="t-rewrite-label" for="t-rewrite-live-prompt-user">User \u63D0\u793A\u8BCD\u6A21\u677F\uFF08\u652F\u6301 {{schema}} / {{payload}}\uFF09</label>
+                    <textarea id="t-rewrite-live-prompt-user" class="t-rewrite-live-textarea" placeholder="user prompt template">${escapeHtml4(promptState.prompt_user)}</textarea>
+
+                    <label class="t-rewrite-label" for="t-rewrite-live-prompt-json">JSON\u683C\u5F0F\u6307\u4EE4</label>
+                    <div class="t-rewrite-live-prompt-tip warn">json\u683C\u5F0F\u6307\u4EE4\u4E0D\u63A8\u8350\u4FEE\u6539\uFF0C\u4F1A\u5F71\u54CD\u89E3\u6790</div>
+                    <textarea id="t-rewrite-live-prompt-json" class="t-rewrite-live-textarea" placeholder="json rule">${escapeHtml4(promptState.prompt_json_rule)}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  bindLivePanelEvents();
+}
+function bindSettingsPanelEvents() {
+  const $overlay = getSettingsOverlay();
+  if (!$overlay.length) return;
+  $overlay.on("click", "#t-rewrite-settings-close", (e) => {
+    e.preventDefault();
+    closeSettingsPanel();
+  });
+  $overlay.on("input", "#t-rewrite-settings-api-url, #t-rewrite-settings-api-key", () => {
+    persistSettingsPanelState();
+    if (autoFetchTimer) clearTimeout(autoFetchTimer);
+    autoFetchTimer = setTimeout(() => {
+      fetchModelList(false, "settings");
+    }, 500);
+  });
+  $overlay.on("change", "#t-rewrite-settings-model, input[name='t-rewrite-settings-split-mode'], #t-rewrite-settings-stream-live", () => {
+    persistSettingsPanelState();
+  });
+  $overlay.on("input", "#t-rewrite-settings-tag-whitelist", () => {
+    persistSettingsPanelState();
+  });
+  $overlay.on("change", "#t-rewrite-settings-auto-trigger", () => {
+    persistSettingsPanelState();
+  });
+  $overlay.on("input", ".t-rewrite-rule-anchor, .t-rewrite-rule-extras", () => {
+    persistSettingsPanelState();
+  });
+  $overlay.on("click", "#t-rewrite-settings-fetch-models", async (e) => {
+    e.preventDefault();
+    await fetchModelList(true, "settings");
+  });
+  $overlay.on("click", "#t-rewrite-settings-add-rule", (e) => {
+    e.preventDefault();
+    const current = getRulesFromDom("#t-rewrite-settings-rules-list");
+    current.push({ anchor: "", extras: [] });
+    renderSettingsRules(current);
+    persistSettingsPanelState();
+  });
+  $overlay.on("click", ".t-rewrite-rule-del", (e) => {
+    e.preventDefault();
+    const idx = Number($(e.currentTarget).closest(".t-rewrite-rule-row").attr("data-rule-idx"));
+    const current = getRulesFromDom("#t-rewrite-settings-rules-list");
+    if (Number.isInteger(idx) && idx >= 0 && idx < current.length) {
+      current.splice(idx, 1);
+    }
+    renderSettingsRules(current);
+    persistSettingsPanelState();
+  });
+}
+function openSettingsPanel() {
+  closeSettingsPanel();
+  const rewriteData = ensureRewriteDataShape();
+  const modeSentence = rewriteData.split_mode !== "paragraph";
+  const modeParagraph = rewriteData.split_mode === "paragraph";
+  const rules = cleanupRules(rewriteData.rules);
+  const html = `
+    <div id="${SETTINGS_OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
+        <div class="t-window t-rewrite-settings-window">
+            <div class="t-window-header t-rewrite-head">
+                <div class="t-window-title t-rewrite-title"><i class="fa-solid fa-sliders"></i> \u6587\u672C\u6539\u5199\u8BBE\u7F6E</div>
+                <div class="t-window-controls">
+                    <div class="t-window-close" id="t-rewrite-settings-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+            <div class="t-window-body t-rewrite-settings-body">
+                <div class="t-rewrite-settings-grid">
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-api">
+                        <div class="t-rewrite-section-title"><i class="fa-solid fa-plug"></i> API \u914D\u7F6E</div>
+                        <label class="t-rewrite-label">API \u5730\u5740</label>
+                        <input id="t-rewrite-settings-api-url" class="text_pole" type="text" placeholder="https://api.example.com/v1" value="${escapeHtml4(rewriteData.api_url || "")}">
+
+                        <label class="t-rewrite-label">API Key</label>
+                        <input id="t-rewrite-settings-api-key" class="text_pole" type="password" placeholder="\u53EF\u9009\uFF0C\u6309\u4F60\u7684\u670D\u52A1\u7AEF\u8981\u6C42\u586B\u5199" value="${escapeHtml4(rewriteData.api_key || "")}">
+
+                        <label class="t-rewrite-label">\u6A21\u578B</label>
+                        <div class="t-rewrite-model-row">
+                            <select id="t-rewrite-settings-model" class="text_pole">
+                                <option value="${escapeHtml4(rewriteData.model || "")}">${rewriteData.model ? escapeHtml4(rewriteData.model) : "\u7B49\u5F85\u81EA\u52A8\u83B7\u53D6"}</option>
+                            </select>
+                            <button id="t-rewrite-settings-fetch-models" class="t-btn" type="button" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                        </div>
+                        <div id="t-rewrite-settings-status" class="t-rewrite-status muted">\u586B\u5199 API \u540E\u4F1A\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5217\u8868</div>
+                    </div>
+
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-split">
+                        <div class="t-rewrite-section-title"><i class="fa-solid fa-scissors"></i> \u5207\u5206\u6A21\u5F0F</div>
+                        <div class="t-rewrite-split-options t-rewrite-split-options-vertical">
+                            <label><input type="radio" name="t-rewrite-settings-split-mode" value="sentence" ${modeSentence ? "checked" : ""}> \u6309\u53E5\u5B50\u5207\u5206</label>
+                            <label><input type="radio" name="t-rewrite-settings-split-mode" value="paragraph" ${modeParagraph ? "checked" : ""}> \u6309\u6BB5\u843D\u5207\u5206</label>
+                        </div>
+                        <div class="t-rewrite-rule-guide">\u5339\u914D\u53EA\u5728\u5355\u4E2A\u5207\u5206\u5355\u5143\u5185\u5B8C\u6210\uFF0C\u4E0D\u8DE8\u53E5/\u6BB5\u3002</div>
+                    </div>
+
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-stream">
+                        <div class="t-rewrite-section-title"><i class="fa-solid fa-signal"></i> \u8BF7\u6C42\u884C\u4E3A</div>
+                        <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
+                            <label><input id="t-rewrite-settings-stream-live" type="checkbox" ${rewriteData.stream_live === false ? "" : "checked"}> \u542F\u7528\u6D41\u5F0F\u5E76\u663E\u793A\u5B9E\u65F6\u54CD\u5E94</label>
+                        </div>
+                        <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
+                            <label><input id="t-rewrite-settings-auto-trigger" type="checkbox" ${rewriteData.auto_trigger ? "checked" : ""}> \u81EA\u52A8\u89E6\u53D1\u6539\u5199\uFF08\u65B0\u56DE\u590D\u751F\u6210\u540E\uFF09</label>
+                        </div>
+                        <div class="t-rewrite-rule-guide">\u5EFA\u8BAE\u4FDD\u6301\u5F00\u542F\uFF0C\u4FBF\u4E8E\u6392\u67E5\u8FD4\u56DE\u683C\u5F0F\u95EE\u9898\u3002</div>
+                    </div>
+
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-whitelist">
+                        <div class="t-rewrite-section-title"><i class="fa-solid fa-filter"></i> \u804A\u5929\u63D0\u53D6\u767D\u540D\u5355</div>
+                        <label class="t-rewrite-label">\u5141\u8BB8\u63D0\u53D6\u7684\u6807\u7B7E\u540D\uFF08\u9017\u53F7\u5206\u9694\uFF09</label>
+                        <input id="t-rewrite-settings-tag-whitelist" class="text_pole" type="text" placeholder="\u4F8B\u5982: content, dialogue, narration" value="${escapeHtml4(rewriteData.tag_whitelist || "")}">
+                        <div class="t-rewrite-rule-guide">\u4EC5\u63D0\u53D6\u767D\u540D\u5355\u6807\u7B7E\u4E2D\u7684\u6587\u672C\u7528\u4E8E\u5207\u5206\u548C\u89C4\u5219\u5339\u914D\uFF1B\u7559\u7A7A\u5219\u63D0\u53D6\u5168\u6587\u7EAF\u6587\u672C\u3002</div>
+                    </div>
+
+                    <div class="t-rewrite-section t-rewrite-settings-card t-rewrite-card-rules">
+                        <div class="t-rewrite-rule-head">
+                            <div class="t-rewrite-section-title"><i class="fa-solid fa-list-check"></i> \u89C4\u5219\u914D\u7F6E</div>
+                            <button id="t-rewrite-settings-add-rule" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u89C4\u5219</button>
+                        </div>
+                        <div class="t-rewrite-rule-guide">\u547D\u4E2D\u903B\u8F91\uFF1A\u4E3B\u8BCD AND\uFF08\u9644\u52A0\u8BCD\u4EFB\u610F\u4E00\u4E2A\uFF1B\u82E5\u9644\u52A0\u8BCD\u4E3A\u7A7A\u5219\u4EC5\u4E3B\u8BCD\uFF09</div>
+                        <div id="t-rewrite-settings-rules-list" class="t-rewrite-rules-list"></div>
+                        <div class="t-rewrite-rule-meta">\u6709\u6548\u89C4\u5219\u6570\uFF1A<span id="t-rewrite-settings-rule-count">${rules.length}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  renderSettingsRules(rules.length > 0 ? rules : [{ anchor: "", extras: [] }]);
+  bindSettingsPanelEvents();
+  persistSettingsPanelState();
+  if (rewriteData.api_url) fetchModelList(false, "settings");
+}
+function openPanel() {
+  closePanel();
+  ensureRewriteCssLoaded();
+  const rewriteData = ensureRewriteDataShape();
+  const rules = cleanupRules(rewriteData.rules);
+  const html = `
+    <div id="${OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
+        <div class="t-window t-rewrite-window">
+            <div class="t-window-header t-rewrite-head">
+                <div class="t-window-title t-rewrite-title"><i class="fa-solid fa-highlighter"></i> \u6587\u672C\u6539\u5199\u9762\u677F</div>
+                <div class="t-window-controls">
+                    <button class="t-rewrite-head-text-btn" id="t-rewrite-open-live" type="button" title="\u6253\u5F00\u5B9E\u65F6\u54CD\u5E94">\u5B9E\u65F6\u54CD\u5E94</button>
+                    <div class="t-window-close t-rewrite-settings-btn" id="t-rewrite-open-settings" title="\u6253\u5F00\u8BBE\u7F6E"><i class="fa-solid fa-sliders"></i></div>
+                    <div class="t-window-close" id="t-rewrite-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+
+            <div class="t-window-body t-rewrite-body">
+                <div class="t-rewrite-left">
+                    <div class="t-rewrite-section">
+                        <div class="t-rewrite-runtime-head">
+                            <div class="t-rewrite-section-title">\u8FD0\u884C\u72B6\u6001</div>
+                            <button id="t-rewrite-runtime-toggle" class="t-btn" type="button">\u6298\u53E0</button>
+                        </div>
+                        <div id="t-rewrite-runtime-body" class="t-rewrite-runtime-meta">
+                            <div>\u5F53\u524D\u6A21\u578B\uFF1A<b>${escapeHtml4(rewriteData.model || "\u672A\u8BBE\u7F6E")}</b></div>
+                            <div>\u5207\u5206\u6A21\u5F0F\uFF1A<b>${rewriteData.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50"}</b></div>
+                            <div>\u6709\u6548\u89C4\u5219\uFF1A<b id="t-rewrite-rule-count">${rules.length}</b></div>
+                            <div>\u6D41\u5F0F\u663E\u793A\uFF1A<b>${rewriteData.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F"}</b></div>
+                            <div>\u81EA\u52A8\u89E6\u53D1\uFF1A<b>${rewriteData.auto_trigger ? "\u5F00\u542F" : "\u5173\u95ED"}</b></div>
+                            <div>\u63D0\u53D6\u767D\u540D\u5355\uFF1A<b>${rewriteData.tag_whitelist ? escapeHtml4(rewriteData.tag_whitelist) : "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09"}</b></div>
+                        </div>
+                        <div id="t-rewrite-status" class="t-rewrite-status muted">\u6539\u5199\u4F1A\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u5E76\u56DE\u5199\u539F\u6D88\u606F</div>
+                    </div>
+
+                    <div class="t-rewrite-section">
+                        <div class="t-rewrite-actions">
+                            <button id="t-rewrite-trigger" class="t-btn" type="button">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> \u624B\u52A8\u89E6\u53D1\u6539\u5199
+                            </button>
+                            <span class="t-rewrite-action-hint">\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u6539\u5199\u540E\u56DE\u5199\u5230\u539F\u6D88\u606F</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="t-rewrite-right">
+                    <div class="t-rewrite-section t-rewrite-test-section">
+                        <div class="t-rewrite-diff-head">
+                            <div class="t-rewrite-section-title">\u547D\u4E2D\u7ED3\u679C\u9884\u89C8</div>
+                        </div>
+                        <div id="t-rewrite-match-body" class="t-rewrite-diff-body"></div>
+                    </div>
+
+                    <div class="t-rewrite-section">
+                        <div class="t-rewrite-diff-head">
+                            <div class="t-rewrite-section-title">\u6539\u5199\u7ED3\u679C Diff</div>
+                        </div>
+                        <div id="t-rewrite-diff-body" class="t-rewrite-diff-body"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  bindPanelEvents();
+  syncRuntimeCollapseUi();
+  renderMatchResult(null, "");
+  renderDiffRows([]);
+  setRawResponse("");
+  setRawMeta("\u7B49\u5F85\u8BF7\u6C42");
+  updateAbortBtnState(false);
+}
+function togglePanel() {
+  if (getOverlay().length > 0) {
+    closePanel();
+  } else {
+    openPanel();
+  }
+}
+function bindGlobalEvents() {
+  if (docEventBound) return;
+  docEventBound = true;
+  $(document).on("keydown.titaniaRewritePanel", (evt) => {
+    if (evt.key === "Escape") closePanel();
+  });
+}
+function ensureButton2() {
+  const $anchor = $(ANCHOR_SELECTOR2);
+  if ($anchor.length === 0) {
+    removeButton2(false);
+    return;
+  }
+  let $btn = $(`#${BTN_ID2}`);
+  if ($btn.length === 0) {
+    $btn = $(`
+            <button id="${BTN_ID2}" class="menu_button" type="button" title="\u6587\u672C\u6539\u5199" aria-label="\u6587\u672C\u6539\u5199">
+                <i class="fa-solid fa-highlighter"></i>
+            </button>
+        `);
+    $anchor.append($btn);
+  }
+  $btn.off("click.titaniaRewriteEntry").on("click.titaniaRewriteEntry", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    togglePanel();
+  });
+}
+function syncEntryButton2() {
+  if (!isEnabled2()) {
+    removeButton2(true);
+    return;
+  }
+  ensureButton2();
+}
+function bindDomObserver2() {
+  if (observerBound2) return;
+  observerBound2 = true;
+  const obs = new MutationObserver(() => {
+    syncEntryButton2();
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+}
+function initRewriteEntryButton() {
+  ensureRewriteCssLoaded();
+  bindGlobalEvents();
+  bindDomObserver2();
+  bindAutoTriggerEvents();
+  syncEntryButton2();
+}
+function refreshRewriteEntryButton() {
+  syncEntryButton2();
+}
+var BTN_ID2, ANCHOR_SELECTOR2, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound2, docEventBound, autoTriggerBound, autoFetchTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
+var init_rewriteEntryButton = __esm({
+  "src/ui/rewriteEntryButton.js"() {
+    init_storage();
+    init_chatTagWhitelist();
+    BTN_ID2 = "titania-rewrite-entry-btn";
+    ANCHOR_SELECTOR2 = "#qr--bar";
+    OVERLAY_ID = "t-rewrite-overlay";
+    SETTINGS_OVERLAY_ID = "t-rewrite-settings-overlay";
+    LIVE_OVERLAY_ID = "t-rewrite-live-overlay";
+    observerBound2 = false;
+    docEventBound = false;
+    autoTriggerBound = false;
+    autoFetchTimer = null;
+    activeRewriteAbortController = null;
+    isAutoRewriting = false;
+    runtimeCollapsed = false;
+    lastRawResponseText = "";
+    lastRawMetaText = "\u7B49\u5F85\u8BF7\u6C42";
+    REWRITE_TEMPERATURE = 0.8;
+    REWRITE_FIX_TEMPERATURE = 0;
+    REWRITE_MAX_TOKENS = 4e4;
+    REWRITE_DEFAULT_PROMPT_SYSTEM = "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u3002\u4EC5\u6839\u636E\u8F93\u5165 targets \u5BF9\u547D\u4E2D\u7247\u6BB5\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u547D\u4E2D\u4FE1\u606F\u3002\u4FDD\u6301\u8BED\u4E49\u4E00\u81F4\u3001\u8BED\u6C14\u81EA\u7136\u3001\u8FDE\u8D2F\uFF0C\u5E76\u4E0E\u539F\u4E0A\u4E0B\u6587\u98CE\u683C\u4E00\u81F4\u3002";
+    REWRITE_DEFAULT_PROMPT_USER = '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE\n4) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}';
+    REWRITE_DEFAULT_PROMPT_JSON_RULE = "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09";
+    REWRITE_PANEL_CSS = `
+#titania-rewrite-entry-btn { margin-left: 6px; }
+#titania-rewrite-entry-btn i { color: #90cdf4; }
+#titania-rewrite-entry-btn:hover i { color: #b9def8; }
+#t-rewrite-overlay { z-index: 30060; }
+#t-rewrite-overlay .t-rewrite-window { width: min(1180px, 96vw); max-width: 96vw; max-height: 90vh; height: min(88vh, 920px); display: flex; flex-direction: column; overflow: hidden; background: rgba(19, 22, 30, 0.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 22px 58px rgba(0, 0, 0, 0.56); border-radius: 14px; }
+#t-rewrite-overlay .t-rewrite-head { padding: 14px 18px; background: linear-gradient(180deg, rgba(18, 30, 44, 0.9) 0%, rgba(16, 22, 31, 0.85) 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.09); }
+#t-rewrite-overlay .t-rewrite-settings-btn i { color: #b9d8ee; }
+#t-rewrite-overlay .t-rewrite-settings-btn:hover i { color: #d2e6f7; }
+#t-rewrite-overlay .t-rewrite-head-text-btn { height: 32px; min-height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.14); color: #dbe8f4; font-size: 0.78em; font-weight: 600; letter-spacing: 0.15px; background: linear-gradient(140deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.18); transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease; }
+#t-rewrite-overlay .t-rewrite-head-text-btn:hover { transform: translateY(-1px); border-color: rgba(144, 205, 244, 0.5); background: linear-gradient(140deg, rgba(144, 205, 244, 0.22), rgba(255, 255, 255, 0.06)); box-shadow: 0 10px 20px rgba(17, 34, 54, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
+#t-rewrite-overlay .t-rewrite-head-text-btn:active { transform: translateY(0); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.14); }
+#t-rewrite-overlay .t-rewrite-title { font-size: 1.08em; font-weight: 700; letter-spacing: 0.2px; display: flex; align-items: center; gap: 8px; }
+#t-rewrite-overlay .t-rewrite-title i { color: #90cdf4; }
+#t-rewrite-overlay .t-window-close { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.18s ease; }
+#t-rewrite-overlay .t-window-close:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(144, 205, 244, 0.45); }
+#t-rewrite-overlay .t-rewrite-body { flex: 1; overflow: hidden; display: grid; grid-template-columns: minmax(340px, 0.92fr) minmax(440px, 1.08fr); gap: 16px; padding: 16px; background: radial-gradient(circle at 100% 0%, rgba(144, 205, 244, 0.1) 0%, rgba(144, 205, 244, 0) 36%), radial-gradient(circle at 0% 100%, rgba(191, 161, 95, 0.08) 0%, rgba(191, 161, 95, 0) 32%), #12161d; }
+#t-rewrite-overlay .t-rewrite-left, #t-rewrite-overlay .t-rewrite-right { min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+#t-rewrite-overlay .t-rewrite-section { border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; background: rgba(13, 19, 28, 0.78); padding: 12px; }
+#t-rewrite-overlay .t-rewrite-section-title { font-size: 0.9em; font-weight: 700; color: #b8d8ee; margin-bottom: 10px; }
+#t-rewrite-overlay .t-rewrite-label { display: block; font-size: 0.8em; color: #8da3b6; margin-bottom: 6px; }
+#t-rewrite-overlay #t-rewrite-api-url, #t-rewrite-overlay #t-rewrite-api-key, #t-rewrite-overlay #t-rewrite-model { width: 100%; box-sizing: border-box; background: rgba(10, 15, 22, 0.9); border: 1px solid rgba(255, 255, 255, 0.12); color: #dde9f4; border-radius: 8px; padding: 9px 11px; outline: none; transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+#t-rewrite-overlay #t-rewrite-api-url:focus, #t-rewrite-overlay #t-rewrite-api-key:focus, #t-rewrite-overlay #t-rewrite-model:focus { border-color: rgba(144, 205, 244, 0.55); box-shadow: 0 0 0 2px rgba(144, 205, 244, 0.16); }
+#t-rewrite-overlay .t-rewrite-model-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+#t-rewrite-overlay .t-rewrite-model-col { min-width: 0; }
+#t-rewrite-overlay #t-rewrite-trigger { height: 36px; min-height: 36px; line-height: 1; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.14); color: #dbe8f4; font-weight: 600; transition: all 0.18s ease; white-space: nowrap; letter-spacing: 0.1px; min-width: 164px; padding: 0 16px; background: linear-gradient(135deg, rgba(144, 205, 244, 0.18), rgba(191, 161, 95, 0.16)); border-color: rgba(144, 205, 244, 0.42); justify-content: center; display: inline-flex; align-items: center; gap: 6px; }
+#t-rewrite-overlay #t-rewrite-trigger:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(144, 205, 244, 0.44); }
+#t-rewrite-overlay .t-rewrite-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+#t-rewrite-overlay .t-rewrite-action-hint { font-size: 0.8em; color: #90a9bc; line-height: 1.45; }
+#t-rewrite-overlay .t-rewrite-runtime-meta { display: grid; gap: 6px; font-size: 0.82em; color: #a9bfd1; }
+#t-rewrite-overlay .t-rewrite-runtime-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+#t-rewrite-overlay #t-rewrite-runtime-toggle { height: 28px; min-height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.05); color: #d4e4f2; font-size: 0.76em; font-weight: 600; letter-spacing: 0.12px; }
+#t-rewrite-overlay #t-rewrite-runtime-toggle:hover { border-color: rgba(144, 205, 244, 0.45); background: rgba(144, 205, 244, 0.12); }
+#t-rewrite-overlay #t-rewrite-runtime-body.is-collapsed { display: none; }
+#t-rewrite-overlay .t-rewrite-rule-head, #t-rewrite-settings-overlay .t-rewrite-rule-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+#t-rewrite-overlay .t-rewrite-rule-guide { font-size: 0.78em; color: #8ea5b7; margin-bottom: 8px; }
+#t-rewrite-overlay .t-rewrite-split-options { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; font-size: 0.82em; color: #c5d7e5; }
+#t-rewrite-overlay .t-rewrite-split-options label { display: inline-flex; align-items: center; gap: 6px; }
+#t-rewrite-overlay .t-rewrite-rule-row { display: grid; grid-template-columns: auto minmax(120px, 0.5fr) auto minmax(180px, 1fr) auto; gap: 8px; align-items: center; }
+#t-rewrite-settings-overlay .t-rewrite-rule-row { display: grid; grid-template-columns: auto minmax(140px, 0.56fr) minmax(240px, 1fr) auto; gap: 8px; align-items: center; }
+#t-rewrite-overlay .t-rewrite-rule-and, #t-rewrite-settings-overlay .t-rewrite-rule-and { font-size: 0.8em; color: #9cb2c4; font-weight: 700; letter-spacing: 0.2px; text-align: center; min-width: 18px; }
+#t-rewrite-overlay .t-rewrite-rule-no, #t-rewrite-settings-overlay .t-rewrite-rule-no { min-width: 30px; font-size: 0.78em; color: #89a3b8; }
+#t-rewrite-overlay .t-rewrite-rule-del, #t-rewrite-settings-overlay .t-rewrite-rule-del { width: 34px; min-width: 34px; padding: 0; justify-content: center; }
+#t-rewrite-overlay .t-rewrite-status { font-size: 0.8em; margin-top: 4px; }
+#t-rewrite-overlay .t-rewrite-status.muted { color: #7f95a8; }
+#t-rewrite-overlay .t-rewrite-status.ok { color: #79d9a8; }
+#t-rewrite-overlay .t-rewrite-status.warn { color: #f2c27d; }
+#t-rewrite-overlay .t-rewrite-status.err { color: #f08f8f; }
+#t-rewrite-overlay .t-rewrite-diff-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+#t-rewrite-overlay .t-rewrite-diff-tools { display: flex; gap: 6px; flex-wrap: nowrap; }
+#t-rewrite-overlay .t-rewrite-diff-body { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 8px; padding-right: 2px; }
+#t-rewrite-overlay .t-rewrite-match-row { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; background: rgba(8, 13, 20, 0.8); padding: 10px; }
+#t-rewrite-overlay .t-rewrite-match-row.hit { border-color: rgba(122, 203, 159, 0.4); background: linear-gradient(180deg, rgba(24, 68, 51, 0.28) 0%, rgba(14, 22, 18, 0.74) 100%); }
+#t-rewrite-overlay .t-rewrite-match-row.miss { border-color: rgba(176, 188, 201, 0.28); }
+#t-rewrite-overlay .t-rewrite-match-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 0.78em; color: #c5d8e8; flex-wrap: wrap; }
+#t-rewrite-overlay .t-rewrite-match-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+#t-rewrite-overlay .t-rewrite-hit-tag { border: 1px solid rgba(122, 203, 159, 0.45); background: rgba(122, 203, 159, 0.12); color: #c2eed9; border-radius: 999px; padding: 2px 8px; font-size: 0.95em; }
+#t-rewrite-overlay .t-rewrite-hit-tag.miss { border-color: rgba(189, 199, 210, 0.35); background: rgba(177, 189, 201, 0.12); color: #c8d3dd; }
+#t-rewrite-overlay .t-rewrite-match-text, #t-rewrite-overlay .t-rewrite-diff-text { font-size: 0.88em; line-height: 1.5; color: #e2edf7; white-space: pre-wrap; word-break: break-word; }
+#t-rewrite-overlay .t-rewrite-hit-summary { font-size: 0.82em; color: #b9d8ee; margin-bottom: 6px; }
+#t-rewrite-overlay .t-rewrite-hit-source { font-size: 0.78em; color: #8da5b8; margin-bottom: 8px; }
+#t-rewrite-overlay .t-rewrite-json-box { margin: 0; padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(7, 11, 18, 0.9); color: #b8d8ee; max-height: 180px; overflow: auto; font-size: 0.76em; line-height: 1.45; }
+#t-rewrite-overlay #t-rewrite-raw-response { max-height: 240px; min-height: 120px; white-space: pre-wrap; word-break: break-word; }
+#t-rewrite-settings-overlay { z-index: 30070; }
+#t-rewrite-live-overlay { z-index: 30075; }
+#t-rewrite-settings-overlay .t-rewrite-settings-window { width: min(1100px, 96vw); max-width: 96vw; max-height: 92vh; height: min(90vh, 940px); display: flex; flex-direction: column; overflow: hidden; background: rgba(19, 22, 30, 0.96); border: 1px solid rgba(255, 255, 255, 0.14); box-shadow: 0 22px 58px rgba(0, 0, 0, 0.56); border-radius: 14px; }
+#t-rewrite-live-overlay .t-rewrite-live-window { width: min(980px, 96vw); max-width: 96vw; max-height: 92vh; height: min(86vh, 900px); display: flex; flex-direction: column; overflow: hidden; background: rgba(19, 22, 30, 0.96); border: 1px solid rgba(255, 255, 255, 0.14); box-shadow: 0 22px 58px rgba(0, 0, 0, 0.56); border-radius: 14px; }
+#t-rewrite-live-overlay .t-rewrite-live-body { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px; background: radial-gradient(circle at 100% 0%, rgba(144, 205, 244, 0.1) 0%, rgba(144, 205, 244, 0) 36%), radial-gradient(circle at 0% 100%, rgba(191, 161, 95, 0.08) 0%, rgba(191, 161, 95, 0) 32%), #12161d; }
+#t-rewrite-live-overlay .t-rewrite-live-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+#t-rewrite-live-overlay .t-rewrite-live-meta { font-size: 0.8em; color: #8ea8bc; }
+#t-rewrite-live-overlay .t-rewrite-live-prompt-card { border: 1px solid rgba(255, 255, 255, 0.13); border-radius: 12px; padding: 10px; background: linear-gradient(170deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015) 55%), rgba(10, 15, 22, 0.84); }
+#t-rewrite-live-overlay .t-rewrite-live-prompt-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+#t-rewrite-live-overlay .t-rewrite-live-prompt-title { font-size: 0.86em; font-weight: 700; color: #c5ddee; }
+#t-rewrite-live-overlay .t-rewrite-live-prompt-tip { font-size: 0.74em; color: #90a7ba; margin: 4px 0 8px; }
+#t-rewrite-live-overlay .t-rewrite-live-prompt-tip.warn { color: #f2c27d; }
+#t-rewrite-live-overlay .t-rewrite-live-textarea { width: 100%; min-height: 78px; resize: vertical; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(7, 11, 18, 0.9); color: #dce9f4; padding: 8px 10px; font-size: 0.8em; line-height: 1.45; box-sizing: border-box; }
+#t-rewrite-live-overlay #t-rewrite-live-prompt-json { min-height: 92px; }
+#t-rewrite-live-overlay .t-rewrite-live-textarea:focus { outline: none; border-color: rgba(144, 205, 244, 0.55); box-shadow: 0 0 0 2px rgba(144, 205, 244, 0.16); }
+#t-rewrite-live-overlay #t-rewrite-raw-response { flex: 1; max-height: none; min-height: 280px; }
+#chat .mes .t-rewrite-auto-badge { position: absolute; right: 10px; top: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #dff0ff; background: rgba(15, 24, 35, 0.88); border: 1px solid rgba(144, 205, 244, 0.45); border-radius: 999px; padding: 3px 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); background-image: linear-gradient(120deg, rgba(144, 205, 244, 0.15) 0%, rgba(191, 161, 95, 0.22) 35%, rgba(122, 203, 159, 0.2) 70%, rgba(144, 205, 244, 0.15) 100%); background-size: 220% 220%; animation: titania-rewrite-badge-flow 1.4s linear infinite; }
+#chat .mes .t-rewrite-auto-badge i { color: #90cdf4; animation: titania-rewrite-badge-icon 0.95s ease-in-out infinite; }
+@keyframes titania-rewrite-badge-flow { 0% { background-position: 0% 50%; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); } 50% { background-position: 100% 50%; box-shadow: 0 6px 22px rgba(100, 168, 214, 0.3); } 100% { background-position: 200% 50%; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); } }
+@keyframes titania-rewrite-badge-icon { 0%,100% { transform: scale(1) rotate(0deg); opacity: 0.9; } 50% { transform: scale(1.12) rotate(8deg); opacity: 1; } }
+#t-rewrite-settings-overlay .t-rewrite-settings-body { flex: 1; overflow: auto; display: block; padding: 16px; background: radial-gradient(circle at 100% 0%, rgba(144, 205, 244, 0.1) 0%, rgba(144, 205, 244, 0) 36%), radial-gradient(circle at 0% 100%, rgba(191, 161, 95, 0.08) 0%, rgba(191, 161, 95, 0) 32%), #12161d; }
+#t-rewrite-settings-overlay .t-rewrite-settings-grid { display: grid; gap: 14px; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+#t-rewrite-settings-overlay .t-rewrite-settings-card { min-height: 0; border-radius: 0; border: 1px solid rgba(255, 255, 255, 0.14); background: linear-gradient(170deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015) 55%), rgba(10, 15, 22, 0.86); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
+#t-rewrite-settings-overlay .t-rewrite-settings-card { position: relative; overflow: hidden; }
+#t-rewrite-settings-overlay .t-rewrite-settings-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, var(--t-rewrite-accent, rgba(144, 205, 244, 0.7)) 0%, rgba(255, 255, 255, 0.05) 100%); }
+#t-rewrite-settings-overlay .t-rewrite-section-title { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 12px; padding: 4px 10px; border-radius: 999px; font-size: 0.82em; letter-spacing: 0.2px; border: 1px solid var(--t-rewrite-accent-border, rgba(144, 205, 244, 0.45)); color: var(--t-rewrite-accent-text, #d9ecfb); background: linear-gradient(135deg, var(--t-rewrite-accent-bg, rgba(144, 205, 244, 0.22)) 0%, rgba(255, 255, 255, 0.03) 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14); }
+#t-rewrite-settings-overlay .t-rewrite-label { display: block; font-size: 0.8em; color: #8da3b6; margin: 2px 0 6px; }
+#t-rewrite-settings-overlay .t-rewrite-card-api { --t-rewrite-accent: rgba(95, 183, 233, 0.9); }
+#t-rewrite-settings-overlay .t-rewrite-card-stream { --t-rewrite-accent: rgba(125, 204, 161, 0.88); }
+#t-rewrite-settings-overlay .t-rewrite-card-split { --t-rewrite-accent: rgba(215, 179, 95, 0.92); }
+#t-rewrite-settings-overlay .t-rewrite-card-whitelist { --t-rewrite-accent: rgba(177, 149, 238, 0.88); }
+#t-rewrite-settings-overlay .t-rewrite-card-rules { --t-rewrite-accent: rgba(233, 136, 136, 0.9); }
+#t-rewrite-settings-overlay .t-rewrite-card-api { --t-rewrite-accent-bg: rgba(95, 183, 233, 0.18); --t-rewrite-accent-border: rgba(95, 183, 233, 0.5); --t-rewrite-accent-text: #cfe9fb; }
+#t-rewrite-settings-overlay .t-rewrite-card-stream { --t-rewrite-accent-bg: rgba(125, 204, 161, 0.18); --t-rewrite-accent-border: rgba(125, 204, 161, 0.5); --t-rewrite-accent-text: #d3f3e1; }
+#t-rewrite-settings-overlay .t-rewrite-card-split { --t-rewrite-accent-bg: rgba(215, 179, 95, 0.2); --t-rewrite-accent-border: rgba(215, 179, 95, 0.5); --t-rewrite-accent-text: #f4e7c8; }
+#t-rewrite-settings-overlay .t-rewrite-card-whitelist { --t-rewrite-accent-bg: rgba(177, 149, 238, 0.2); --t-rewrite-accent-border: rgba(177, 149, 238, 0.52); --t-rewrite-accent-text: #e7dcff; }
+#t-rewrite-settings-overlay .t-rewrite-card-rules { --t-rewrite-accent-bg: rgba(233, 136, 136, 0.2); --t-rewrite-accent-border: rgba(233, 136, 136, 0.52); --t-rewrite-accent-text: #ffdcdc; }
+#t-rewrite-settings-overlay .t-rewrite-model-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+#t-rewrite-settings-overlay #t-rewrite-settings-model { width: 100%; }
+#t-rewrite-settings-overlay #t-rewrite-settings-fetch-models { align-self: center; }
+#t-rewrite-settings-overlay .t-rewrite-card-api { grid-column: span 8; }
+#t-rewrite-settings-overlay .t-rewrite-card-split, #t-rewrite-settings-overlay .t-rewrite-card-stream { grid-column: span 4; }
+#t-rewrite-settings-overlay .t-rewrite-card-whitelist { grid-column: span 4; }
+#t-rewrite-settings-overlay .t-rewrite-card-rules { grid-column: span 8; }
+#t-rewrite-settings-overlay .t-rewrite-split-options-vertical { flex-direction: column; align-items: flex-start; gap: 8px; }
+#t-rewrite-settings-overlay .t-rewrite-debug-row-block label { display: flex; align-items: flex-start; gap: 8px; }
+#t-rewrite-settings-overlay #t-rewrite-settings-rules-list { max-height: 320px; overflow: auto; padding-right: 2px; }
+#t-rewrite-overlay .t-rewrite-diff-empty, #t-rewrite-overlay .t-rewrite-empty-rule { border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 12px; text-align: center; color: #6f8698; background: rgba(255, 255, 255, 0.02); }
+#t-rewrite-overlay .t-rewrite-diff-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#t-rewrite-overlay .t-rewrite-diff-cell { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 10px; background: rgba(8, 13, 20, 0.8); }
+#t-rewrite-overlay .t-rewrite-diff-before { border-color: rgba(224, 136, 136, 0.35); background: linear-gradient(180deg, rgba(78, 26, 31, 0.4) 0%, rgba(26, 16, 18, 0.74) 100%); }
+#t-rewrite-overlay .t-rewrite-diff-after { border-color: rgba(122, 203, 159, 0.35); background: linear-gradient(180deg, rgba(24, 68, 51, 0.38) 0%, rgba(14, 22, 18, 0.74) 100%); }
+#t-rewrite-overlay .t-rewrite-test-section,
+#t-rewrite-overlay .t-rewrite-raw-section,
+#t-rewrite-overlay .t-rewrite-right > .t-rewrite-section { min-height: 0; display: flex; flex-direction: column; }
+#t-rewrite-overlay .t-rewrite-test-section { flex: 1.1; }
+#t-rewrite-overlay .t-rewrite-raw-section { flex: 0.95; }
+#t-rewrite-overlay .t-rewrite-right > .t-rewrite-section:last-child { flex: 1.15; }
+
+@media (max-width: 1200px) {
+    #t-rewrite-overlay .t-rewrite-window { width: min(1080px, 97vw); }
+    #t-rewrite-overlay .t-rewrite-body { grid-template-columns: 1fr; overflow: auto; }
+    #t-rewrite-overlay .t-rewrite-right { gap: 10px; }
+}
+
+@media (max-width: 980px) {
+    #t-rewrite-settings-overlay .t-rewrite-settings-window { width: 97vw; max-height: 94vh; height: auto; }
+    #t-rewrite-settings-overlay .t-rewrite-settings-body { padding: 12px; }
+    #t-rewrite-settings-overlay .t-rewrite-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #t-rewrite-settings-overlay .t-rewrite-card-api,
+    #t-rewrite-settings-overlay .t-rewrite-card-rules { grid-column: span 2; }
+    #t-rewrite-settings-overlay .t-rewrite-card-split,
+    #t-rewrite-settings-overlay .t-rewrite-card-stream,
+    #t-rewrite-settings-overlay .t-rewrite-card-whitelist { grid-column: span 1; }
+    #t-rewrite-overlay .t-rewrite-window { width: 97vw; height: auto; max-height: 94vh; }
+    #t-rewrite-overlay .t-rewrite-body { padding: 12px; gap: 12px; }
+}
+
+@media (max-width: 700px) {
+    #t-rewrite-overlay,
+    #t-rewrite-settings-overlay,
+    #t-rewrite-live-overlay {
+        align-items: center;
+        justify-content: center;
+        padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+    }
+
+    #t-rewrite-overlay .t-rewrite-window,
+    #t-rewrite-settings-overlay .t-rewrite-settings-window,
+    #t-rewrite-live-overlay .t-rewrite-live-window {
+        width: min(96vw, 760px);
+        max-width: min(96vw, 760px);
+        max-height: min(96dvh, 96vh);
+        height: auto;
+        border-radius: 14px;
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        border-right: 1px solid rgba(255, 255, 255, 0.12);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    #t-rewrite-overlay .t-rewrite-window {
+        width: min(96vw, 780px);
+        max-width: min(96vw, 780px);
+    }
+
+    #t-rewrite-overlay .t-rewrite-head,
+    #t-rewrite-settings-overlay .t-rewrite-head,
+    #t-rewrite-live-overlay .t-rewrite-head { padding: 12px 14px; }
+    #t-rewrite-overlay .t-rewrite-title,
+    #t-rewrite-settings-overlay .t-rewrite-title,
+    #t-rewrite-live-overlay .t-rewrite-title { font-size: 1em; }
+    #t-rewrite-overlay .t-rewrite-body,
+    #t-rewrite-settings-overlay .t-rewrite-settings-body { padding: 10px; gap: 10px; }
+    #t-rewrite-live-overlay .t-rewrite-live-body { padding: 10px; gap: 10px; }
+    #t-rewrite-settings-overlay .t-rewrite-settings-grid { grid-template-columns: 1fr; gap: 10px; }
+    #t-rewrite-settings-overlay .t-rewrite-card-api,
+    #t-rewrite-settings-overlay .t-rewrite-card-split,
+    #t-rewrite-settings-overlay .t-rewrite-card-stream,
+    #t-rewrite-settings-overlay .t-rewrite-card-whitelist,
+    #t-rewrite-settings-overlay .t-rewrite-card-rules { grid-column: span 1; }
+    #t-rewrite-settings-overlay .t-rewrite-model-row { grid-template-columns: minmax(0, 1fr) auto; }
+
+    #t-rewrite-overlay .t-rewrite-actions { flex-direction: column; align-items: stretch; }
+    #t-rewrite-overlay .t-rewrite-action-hint { width: 100%; }
+    #t-rewrite-overlay #t-rewrite-trigger { width: 100%; min-width: 0; }
+    #t-rewrite-overlay .t-rewrite-head-text-btn { height: 30px; min-height: 30px; padding: 0 10px; font-size: 0.75em; }
+    #t-rewrite-overlay .t-rewrite-diff-head { gap: 8px; }
+    #t-rewrite-overlay .t-rewrite-diff-row { grid-template-columns: 1fr; }
+
+    #t-rewrite-overlay .t-rewrite-rule-row { grid-template-columns: minmax(88px, 0.62fr) auto minmax(132px, 1fr) auto; gap: 6px; }
+    #t-rewrite-settings-overlay .t-rewrite-rule-row { grid-template-columns: minmax(94px, 0.72fr) minmax(132px, 1fr) auto; gap: 6px; }
+    #t-rewrite-overlay .t-rewrite-rule-and,
+    #t-rewrite-settings-overlay .t-rewrite-rule-and { display: block; min-width: 14px; font-size: 0.74em; }
+    #t-rewrite-overlay .t-rewrite-rule-no,
+    #t-rewrite-settings-overlay .t-rewrite-rule-no { display: none; }
+    #t-rewrite-overlay .t-rewrite-rule-del,
+    #t-rewrite-settings-overlay .t-rewrite-rule-del { width: 30px; min-width: 30px; height: 32px; min-height: 32px; }
+    #t-rewrite-overlay .t-rewrite-rule-anchor,
+    #t-rewrite-settings-overlay .t-rewrite-rule-anchor,
+    #t-rewrite-overlay .t-rewrite-rule-extras,
+    #t-rewrite-settings-overlay .t-rewrite-rule-extras { padding: 7px 8px; font-size: 0.84em; }
+}
+
+@media (max-width: 420px) {
+    #t-rewrite-overlay .t-window-close,
+    #t-rewrite-settings-overlay .t-window-close,
+    #t-rewrite-live-overlay .t-window-close { width: 28px; height: 28px; border-radius: 8px; }
+    #t-rewrite-overlay #t-rewrite-trigger { height: 34px; min-height: 34px; font-size: 0.84em; padding: 0 12px; }
+    #t-rewrite-overlay .t-rewrite-json-box { font-size: 0.72em; }
+    #t-rewrite-overlay,
+    #t-rewrite-settings-overlay,
+    #t-rewrite-live-overlay {
+        padding: max(6px, env(safe-area-inset-top)) 6px max(6px, env(safe-area-inset-bottom));
+    }
+    #t-rewrite-overlay .t-rewrite-window,
+    #t-rewrite-settings-overlay .t-rewrite-settings-window,
+    #t-rewrite-live-overlay .t-rewrite-live-window {
+        width: 97vw;
+        max-width: 97vw;
+        max-height: min(97dvh, 97vh);
+        border-radius: 12px;
+    }
+}
+`;
+    REWRITE_SETTINGS_BUTTON_CSS = `
+#t-rewrite-settings-overlay .t-btn,
+#t-rewrite-live-overlay .t-btn {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #e6f1fb;
+    font-size: 0.8em;
+    font-weight: 600;
+    letter-spacing: 0.15px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+#t-rewrite-settings-overlay .t-btn:hover,
+#t-rewrite-live-overlay .t-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(144, 205, 244, 0.55);
+    background: linear-gradient(140deg, rgba(144, 205, 244, 0.22), rgba(255, 255, 255, 0.06));
+    box-shadow: 0 10px 22px rgba(17, 34, 54, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+#t-rewrite-settings-overlay .t-btn:active,
+#t-rewrite-live-overlay .t-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+#t-rewrite-live-overlay .t-btn:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+#t-rewrite-settings-overlay #t-rewrite-settings-fetch-models {
+    min-width: 30px;
+    width: 30px;
+    height: 28px;
+    min-height: 28px;
+    padding: 0;
+    justify-content: center;
+}
+#t-rewrite-settings-overlay #t-rewrite-settings-add-rule {
+    height: 28px;
+    min-height: 28px;
+    padding: 0 9px;
+    font-size: 0.78em;
+}
+#t-rewrite-live-overlay #t-rewrite-abort,
+#t-rewrite-live-overlay #t-rewrite-live-prompt-reset {
+    min-width: 86px;
+}
+#t-rewrite-settings-overlay .t-window-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+#t-rewrite-settings-overlay .t-window-close:hover {
+    border-color: rgba(144, 205, 244, 0.6);
+    background: linear-gradient(145deg, rgba(144, 205, 244, 0.24), rgba(255, 255, 255, 0.07));
+}
+`;
   }
 });
 
@@ -16876,6 +18625,16 @@ function openSettingsWindow() {
                         </label>
                         <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">
                             \u542F\u7528\u540E\uFF0C\u4F1A\u5728\u9152\u9986\u53D1\u9001\u6309\u94AE\u65C1\u6CE8\u5165\u5927\u7EB2\u5165\u53E3\u6309\u94AE
+                        </p>
+                    </div>
+
+                    <div class="t-form-group" style="margin-top:12px; padding-top:12px; border-top:1px solid #333;">
+                        <label style="cursor:pointer; display:flex; align-items:center; color:#9ad0ff; font-weight:bold;">
+                            <input type="checkbox" id="cfg-rewrite-entry-enabled" ${data.rewrite_entry?.enabled ? "checked" : ""} style="margin-right:10px;">
+                            \u5728 #qr--bar \u663E\u793A\u300C\u6587\u672C\u6539\u5199\u300D\u5165\u53E3
+                        </label>
+                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">
+                            \u542F\u7528\u540E\uFF0C\u4F1A\u5728\u9152\u9986\u5FEB\u6377\u680F\u6CE8\u5165\u6539\u5199\u9762\u677F\u5165\u53E3\u6309\u94AE
                         </p>
                     </div>
                 </div>
@@ -17544,7 +19303,7 @@ function openSettingsWindow() {
       setTimeout(() => {
         const p = tempProfiles.find((x) => x.id === tempActiveId);
         if (p && p.type !== "internal") {
-          fetchModelList(false);
+          fetchModelList2(false);
         }
       }, 100);
     }
@@ -17595,7 +19354,7 @@ function openSettingsWindow() {
     renderProfileUI();
     const newProfile = tempProfiles.find((x) => x.id === tempActiveId);
     if (newProfile && newProfile.type !== "internal") {
-      setTimeout(() => fetchModelList(false), 100);
+      setTimeout(() => fetchModelList2(false), 100);
     }
   });
   $("#cfg-prof-add").on("click", function() {
@@ -18412,7 +20171,7 @@ ${JSON.stringify(l.details, null, 2)}`;
   renderLogView();
   $("#btn-refresh-log").on("click", renderLogView);
   $("#btn-export-log").on("click", () => TitaniaLogger.downloadReport());
-  const fetchModelList = async (showSuccessToast = true) => {
+  const fetchModelList2 = async (showSuccessToast = true) => {
     const btn = $("#t-btn-fetch");
     const p = tempProfiles.find((x) => x.id === tempActiveId);
     if (!p || p.type === "internal") return;
@@ -18453,7 +20212,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       btn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
     }
   };
-  $("#t-btn-fetch").on("click", () => fetchModelList(true));
+  $("#t-btn-fetch").on("click", () => fetchModelList2(true));
   $("#btn-restore-presets").on("click", function() {
     if (confirm("\u6062\u590D\u6240\u6709\u9884\u8BBE\uFF1F")) {
       const d = getExtData();
@@ -18661,6 +20420,14 @@ ${JSON.stringify(l.details, null, 2)}`;
     d.outline_entry = {
       enabled: $("#cfg-outline-entry-enabled").is(":checked")
     };
+    const prevRewriteEntry = d.rewrite_entry || {};
+    d.rewrite_entry = {
+      enabled: $("#cfg-rewrite-entry-enabled").is(":checked"),
+      api_url: String(prevRewriteEntry.api_url || ""),
+      api_key: String(prevRewriteEntry.api_key || ""),
+      model: String(prevRewriteEntry.model || ""),
+      rules_text: String(prevRewriteEntry.rules_text || "")
+    };
     d.embedding_config = {
       url: $("#cfg-embed-url").val().trim(),
       key: $("#cfg-embed-key").val().trim(),
@@ -18702,6 +20469,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     }
     createFloatingButton();
     refreshOutlineEntryButton();
+    refreshRewriteEntryButton();
     applyCustomCSS(d.custom_css);
     applyFontSettings(d.font_settings);
     applyUIFontScale(d.appearance?.ui_font_scale);
@@ -18726,6 +20494,7 @@ var init_settingsWindow = __esm({
     init_scriptManager();
     init_dom();
     init_outlineEntryButton();
+    init_rewriteEntryButton();
   }
 });
 
@@ -19953,7 +21722,7 @@ var init_loreExtractor = __esm({
 
 // src/core/worldInfoManager.js
 import { world_info as world_info2, selected_world_info as selected_world_info2, saveWorldInfo } from "../../../world-info.js";
-import { eventSource, event_types } from "../../../../script.js";
+import { eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 function getAvailableWorldBooks() {
   try {
     if (Array.isArray(world_info2.loreBookNames)) {
@@ -20034,7 +21803,7 @@ function triggerSave() {
   }, SYNC_STATE.saveDelay);
 }
 function initSyncListener() {
-  eventSource.on(event_types.WORLDINFO_UPDATED, (name, data) => {
+  eventSource2.on(event_types2.WORLDINFO_UPDATED, (name, data) => {
     if (SYNC_STATE.currentBookName !== name) return;
     if (SYNC_STATE.isSelfSaving) {
       return;
@@ -21755,7 +23524,7 @@ function showRawResponseDialog2(rawContent, isError = false) {
                         font-size: 0.9em;
                         color: #ddd;
                         line-height: 1.5;
-                    ">${escapeHtml4(rawContent || "(\u7A7A)")}</pre>
+                    ">${escapeHtml5(rawContent || "(\u7A7A)")}</pre>
                 </div>
             </div>
             <div class="t-dialog-footer">
@@ -21780,7 +23549,7 @@ function showRawResponseDialog2(rawContent, isError = false) {
     });
   });
 }
-function escapeHtml4(text) {
+function escapeHtml5(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -23008,7 +24777,7 @@ async function updateIncrementalStatus() {
 }
 function formatSummaryAsHtml(text) {
   if (!text) return "";
-  let html = escapeHtml4(text);
+  let html = escapeHtml5(text);
   html = html.replace(/^## (.+)$/gm, '<h3 class="t-summary-h3">$1</h3>');
   html = html.replace(/^### (.+)$/gm, '<h4 class="t-summary-h4">$1</h4>');
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -23223,9 +24992,9 @@ function showPromptPreviewDialog(messages, stats = {}) {
     </div>
     `;
   $("body").append(html);
-  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml4(systemMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml4(userMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml4(JSON.stringify(messages, null, 2))}</pre>`);
+  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml5(systemMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml5(userMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml5(JSON.stringify(messages, null, 2))}</pre>`);
   $("#t-prompt-view-dialog .t-prompt-tab").on("click", function() {
     const role = $(this).data("role");
     $("#t-prompt-view-dialog .t-prompt-tab").removeClass("active");
@@ -23311,11 +25080,11 @@ function showCleaningPreviewDialog(samples) {
             <div class="t-sample-content">
                 <div class="t-sample-pane t-pane-original">
                     <div class="t-pane-header"><i class="fa-solid fa-file-alt"></i> \u539F\u59CB\u6587\u672C</div>
-                    <div class="t-pane-body">${escapeHtml4(sample.original || "(\u7A7A)")}</div>
+                    <div class="t-pane-body">${escapeHtml5(sample.original || "(\u7A7A)")}</div>
                 </div>
                 <div class="t-sample-pane t-pane-cleaned">
                     <div class="t-pane-header"><i class="fa-solid fa-broom"></i> \u6E05\u6D17\u540E</div>
-                    <div class="t-pane-body">${escapeHtml4(sample.cleaned || "(\u7A7A)")}</div>
+                    <div class="t-pane-body">${escapeHtml5(sample.cleaned || "(\u7A7A)")}</div>
                 </div>
             </div>
         </div>
@@ -23352,7 +25121,7 @@ function showCleaningPreviewDialog(samples) {
                 <div class="t-cleaning-config-bar">
                     <span class="t-config-label"><i class="fa-solid fa-cog"></i> \u5F53\u524D\u6E05\u6D17\u89C4\u5219:</span>
                     <div class="t-config-tags">${configHtml}</div>
-                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml4(config.custom_tags_to_remove)}</span>` : ""}
+                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml5(config.custom_tags_to_remove)}</span>` : ""}
                 </div>
 
                 <!-- \u6D88\u606F\u9884\u89C8\u5217\u8868 -->
@@ -25667,7 +27436,7 @@ function renderResults() {
     const scorePercent = Math.round(result.score * 100);
     const isSelected = selectedIndices.has(index);
     const scoreColor = scorePercent >= 70 ? "#4caf50" : scorePercent >= 50 ? "#ff9800" : "#888";
-    const displayText = escapeHtml5(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
+    const displayText = escapeHtml6(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
     return '<div class="t-recall-result-item" data-index="' + index + '" style="display: flex; gap: 10px; padding: 12px; margin-bottom: 8px; background: ' + (isSelected ? "#2a3a4a" : "#1e1e1e") + "; border: 1px solid " + (isSelected ? "#4a9eff" : "#333") + '; border-radius: 8px; cursor: pointer; transition: all 0.2s;"><div style="flex-shrink: 0; padding-top: 2px;"><input type="checkbox" ' + (isSelected ? "checked" : "") + ' style="cursor: pointer;"></div><div style="flex: 1; min-width: 0;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="color: #888; font-size: 0.85em;">#' + result.messageIndex + '</span><span style="color: ' + scoreColor + '; font-weight: bold; font-size: 0.9em;">' + scorePercent + '%</span></div><div style="color: #ccc; font-size: 0.9em; line-height: 1.5; word-break: break-word;">' + displayText + "</div></div></div>";
   }).join("");
   $resultsList.html(html);
@@ -25731,7 +27500,7 @@ function handleAppend() {
     }
   }
 }
-function escapeHtml5(text) {
+function escapeHtml6(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -28000,10 +29769,11 @@ init_floatingBtn();
 init_settingsWindow();
 init_mainWindow();
 init_outlineEntryButton();
+init_rewriteEntryButton();
 init_vectorStore();
 init_summarizer();
 import { extension_settings as extension_settings3 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
 async function onGenerationEnded() {
   const extData = getExtData();
   const cfg = extData.config || {};
@@ -28098,11 +29868,12 @@ function initCoreFeatures() {
     applyFontSettings(extData.font_settings);
   }
   applyUIFontScale(extData.appearance?.ui_font_scale);
-  eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
+  eventSource3.on(event_types3.GENERATION_ENDED, onGenerationEnded);
   initSyncListener();
   initVectorUnsavedWarning();
   initAutoVectorizeListener();
   initOutlineEntryButton();
+  initRewriteEntryButton();
 }
 function loadQueueConfig() {
   try {
@@ -28125,8 +29896,8 @@ function loadQueueConfig() {
   }
 }
 function initAutoVectorizeListener() {
-  eventSource2.on(event_types2.MESSAGE_RECEIVED, onMessageForAutoVectorize);
-  eventSource2.on(event_types2.MESSAGE_SENT, onMessageForAutoVectorize);
+  eventSource3.on(event_types3.MESSAGE_RECEIVED, onMessageForAutoVectorize);
+  eventSource3.on(event_types3.MESSAGE_SENT, onMessageForAutoVectorize);
   console.log("Titania: \u81EA\u52A8\u5411\u91CF\u5316\u76D1\u542C\u5668\u5DF2\u521D\u59CB\u5316");
 }
 async function onMessageForAutoVectorize() {
