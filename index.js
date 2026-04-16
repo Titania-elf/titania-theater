@@ -18281,7 +18281,6 @@ async function onAutoTriggerRewrite() {
 function bindAutoTriggerEvents() {
   if (autoTriggerBound) return;
   autoTriggerBound = true;
-  eventSource.on(event_types.MESSAGE_RECEIVED, onAutoTriggerRewrite);
   eventSource.on(event_types.GENERATION_ENDED, onAutoTriggerRewrite);
 }
 function renderSettingsRules(rows) {
