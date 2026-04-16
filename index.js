@@ -31667,42 +31667,37 @@ async function loadExtensionSettings() {
   bindDrawerBackupControls();
 }
 var remoteVersionCache = null;
-var FORCE_SHOW_UPDATE_NOTICE = true;
 async function checkVersionUpdate() {
-  let remoteVersion = CURRENT_VERSION;
-  let hasRealUpdate = false;
   try {
-    const fetchedVersion = await fetchRemoteVersion();
-    if (typeof fetchedVersion === "string" && fetchedVersion.trim()) {
-      remoteVersion = fetchedVersion.trim();
+    const remoteVersion = await fetchRemoteVersion();
+    if (!remoteVersion) {
+      $("#titania-new-badge").hide();
+      $("#titania-update-section").hide();
+      return;
     }
-    hasRealUpdate = compareVersions(remoteVersion, CURRENT_VERSION) > 0;
+    if (compareVersions(remoteVersion, CURRENT_VERSION) > 0) {
+      $("#titania-new-badge").show().addClass("update-available").attr("title", `\u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}`).text("NEW");
+      $("#titania-update-section").show();
+      $("#titania-remote-version").text(`v${remoteVersion}`);
+      $("#titania-new-badge").off("click").on("click", (e) => {
+        e.stopPropagation();
+        const drawer = $("#titania-settings-drawer");
+        if (!drawer.hasClass("open")) {
+          drawer.find(".inline-drawer-toggle").click();
+        }
+      });
+      $("#titania-update-btn").off("click").on("click", () => {
+        showUpdateConfirmDialog(remoteVersion);
+      });
+      console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
+    } else {
+      $("#titania-new-badge").hide();
+      $("#titania-update-section").hide();
+    }
   } catch (e) {
-    console.warn("Titania: \u8FDC\u7A0B\u7248\u672C\u68C0\u6D4B\u5931\u8D25\uFF0C\u5DF2\u56DE\u9000\u4E3A\u56FA\u5B9A\u663E\u793A\u66F4\u65B0\u63D0\u793A", e);
-  }
-  const shouldShowUpdateNotice = FORCE_SHOW_UPDATE_NOTICE || hasRealUpdate;
-  if (!shouldShowUpdateNotice) {
+    console.warn("Titania: \u8FDC\u7A0B\u7248\u672C\u68C0\u6D4B\u5931\u8D25", e);
     $("#titania-new-badge").hide();
     $("#titania-update-section").hide();
-    return;
-  }
-  $("#titania-new-badge").show().addClass("update-available").attr("title", hasRealUpdate ? `\u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}` : "\u5DF2\u542F\u7528\u56FA\u5B9A\u66F4\u65B0\u63D0\u793A").text("NEW");
-  $("#titania-update-section").show();
-  $("#titania-remote-version").text(`v${remoteVersion}`);
-  $("#titania-new-badge").off("click").on("click", (e) => {
-    e.stopPropagation();
-    const drawer = $("#titania-settings-drawer");
-    if (!drawer.hasClass("open")) {
-      drawer.find(".inline-drawer-toggle").click();
-    }
-  });
-  $("#titania-update-btn").off("click").on("click", () => {
-    showUpdateConfirmDialog(remoteVersion);
-  });
-  if (hasRealUpdate) {
-    console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
-  } else if (FORCE_SHOW_UPDATE_NOTICE) {
-    console.log(`Titania: \u5DF2\u542F\u7528\u56FA\u5B9A\u66F4\u65B0\u63D0\u793A\uFF08\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}\uFF09`);
   }
 }
 async function fetchRemoteVersion() {
