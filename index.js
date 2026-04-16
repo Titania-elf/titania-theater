@@ -18263,20 +18263,40 @@ async function onAutoTriggerRewrite() {
   if (latest.msg.extra.titania_rewrite_done === true) return;
   const { evaluated } = buildRewritePayload(data, latest.content);
   if (!evaluated || evaluated.hitCount <= 0) return;
-  try {
-    isAutoRewriting = true;
-    applyAutoRewriteIndicator(latest.index);
-    if (window.toastr) toastr.info("\u68C0\u6D4B\u5230\u547D\u4E2D\u89C4\u5219\uFF0C\u6B63\u5728\u81EA\u52A8\u6539\u5199...", "\u6587\u672C\u6539\u5199");
-    const ok = await runRewrite({ source: "auto" });
-    if (ok) {
-      if (window.toastr) toastr.success("\u81EA\u52A8\u6539\u5199\u5B8C\u6210\uFF0C\u5DF2\u56DE\u5199\u5F53\u524D\u56DE\u590D", "\u6587\u672C\u6539\u5199");
-    } else {
-      if (window.toastr) toastr.error("\u81EA\u52A8\u6539\u5199\u5931\u8D25\uFF0C\u5DF2\u4FDD\u7559\u539F\u6587", "\u6587\u672C\u6539\u5199");
-    }
-  } finally {
-    clearAutoRewriteIndicator();
-    isAutoRewriting = false;
+  if (autoRewriteTimer) {
+    clearTimeout(autoRewriteTimer);
+    autoRewriteTimer = null;
   }
+  const targetIndex = latest.index;
+  autoRewriteTimer = setTimeout(async () => {
+    autoRewriteTimer = null;
+    const freshData = ensureRewriteDataShape();
+    if (!freshData.auto_trigger) return;
+    if (!isEnabled()) return;
+    if (isAutoRewriting) return;
+    if (activeRewriteAbortController) return;
+    const freshLatest = getLatestAssistantMessageFromChat();
+    if (!freshLatest || !freshLatest.msg) return;
+    if (freshLatest.index !== targetIndex) return;
+    if (!freshLatest.msg.extra || typeof freshLatest.msg.extra !== "object") freshLatest.msg.extra = {};
+    if (freshLatest.msg.extra.titania_rewrite_done === true) return;
+    const freshEval = buildRewritePayload(freshData, freshLatest.content);
+    if (!freshEval?.evaluated || freshEval.evaluated.hitCount <= 0) return;
+    try {
+      isAutoRewriting = true;
+      applyAutoRewriteIndicator(freshLatest.index);
+      if (window.toastr) toastr.info(`\u68C0\u6D4B\u5230\u547D\u4E2D\u89C4\u5219\uFF0C${AUTO_REWRITE_DELAY_MS / 1e3} \u79D2\u540E\u81EA\u52A8\u6539\u5199...`, "\u6587\u672C\u6539\u5199");
+      const ok = await runRewrite({ source: "auto" });
+      if (ok) {
+        if (window.toastr) toastr.success("\u81EA\u52A8\u6539\u5199\u5B8C\u6210\uFF0C\u5DF2\u56DE\u5199\u5F53\u524D\u56DE\u590D", "\u6587\u672C\u6539\u5199");
+      } else {
+        if (window.toastr) toastr.error("\u81EA\u52A8\u6539\u5199\u5931\u8D25\uFF0C\u5DF2\u4FDD\u7559\u539F\u6587", "\u6587\u672C\u6539\u5199");
+      }
+    } finally {
+      clearAutoRewriteIndicator();
+      isAutoRewriting = false;
+    }
+  }, AUTO_REWRITE_DELAY_MS);
 }
 function bindAutoTriggerEvents() {
   if (autoTriggerBound) return;
@@ -18995,7 +19015,7 @@ function openRewritePanelFromMenu() {
   if (!isEnabled()) return;
   openPanel();
 }
-var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, autoFetchTimer, rewriteDecorTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, LIVE_RESPONSE_HISTORY_MAX, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
+var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, autoFetchTimer, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
 var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
@@ -19011,6 +19031,7 @@ var init_rewriteEntryButton = __esm({
     rewriteDecorBound = false;
     autoFetchTimer = null;
     rewriteDecorTimer = null;
+    autoRewriteTimer = null;
     activeRewriteAbortController = null;
     isAutoRewriting = false;
     runtimeCollapsed = false;
@@ -19022,6 +19043,7 @@ var init_rewriteEntryButton = __esm({
     lastMatchSourceText = "";
     lastDiffRows = [];
     LIVE_RESPONSE_HISTORY_MAX = 20;
+    AUTO_REWRITE_DELAY_MS = 3e3;
     REWRITE_TEMPERATURE = 0.8;
     REWRITE_FIX_TEMPERATURE = 0;
     REWRITE_MAX_TOKENS = 4e4;
