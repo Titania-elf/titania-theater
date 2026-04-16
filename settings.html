@@ -65,6 +65,19 @@
                     <i class="fa-solid fa-eye"></i> 查看更新
                 </button>
             </section>
+
+            <section class="titania-panel-card">
+                <div class="titania-card-title"><i class="fa-solid fa-database"></i> 数据备份与恢复</div>
+                <div class="titania-backup-desc">
+                    导出包含：API 配置、用户脚本、收藏内容、外观设置、导演指令、世界书筛选、向量索引等所有插件数据。
+                    <br><span style="color:#feca57;">⚠️ 导出文件包含 API 密钥，请妥善保管！</span>
+                </div>
+                <div class="titania-backup-actions">
+                    <button id="titania-backup-export" class="titania-mini-btn is-export"><i class="fa-solid fa-download"></i> 导出备份</button>
+                    <button id="titania-backup-import" class="titania-mini-btn is-import"><i class="fa-solid fa-upload"></i> 导入备份</button>
+                    <input type="file" id="titania-backup-file-input" accept=".json" style="display:none;">
+                </div>
+            </section>
         </div>
     </div>
 </div>
@@ -192,6 +205,53 @@
 
     .titania-update-btn:hover {
         filter: brightness(1.08);
+    }
+
+    .titania-backup-desc {
+        color: #93a8bb;
+        line-height: 1.45;
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+
+    .titania-backup-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .titania-mini-btn {
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.03);
+        color: #d5e2ef;
+        border-radius: 8px;
+        min-height: 30px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .titania-mini-btn.is-export {
+        border-color: rgba(85, 239, 196, 0.65);
+        color: #72efd0;
+    }
+
+    .titania-mini-btn.is-import {
+        border-color: rgba(144, 205, 244, 0.65);
+        color: #9acff5;
+    }
+
+    .titania-mini-btn:hover:not(:disabled) {
+        filter: brightness(1.06);
+    }
+
+    .titania-mini-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
     .titania-update-overlay {
