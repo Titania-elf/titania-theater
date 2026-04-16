@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.0";
+    CURRENT_VERSION = "5.0.1";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
@@ -13967,16 +13967,6 @@ function saveOutlineSelectedProfileId(profileId) {
   data[OUTLINE_SELECTED_PROFILE_KEY] = String(profileId || "").trim();
   saveExtData();
 }
-function getOutlineProfileMode() {
-  const data = getExtData();
-  const mode = String(data?.[OUTLINE_PROFILE_MODE_KEY] || "custom").trim();
-  return mode === "st" ? "st" : "custom";
-}
-function saveOutlineProfileMode(mode) {
-  const data = getExtData();
-  data[OUTLINE_PROFILE_MODE_KEY] = mode === "st" ? "st" : "custom";
-  saveExtData();
-}
 function getOutlineCustomProfiles() {
   const data = getExtData();
   const fallback = {
@@ -13991,76 +13981,42 @@ function saveOutlineCustomProfiles(profiles) {
   data[OUTLINE_CUSTOM_PROFILES_KEY] = normalizeRewriteCustomProfiles(profiles, null);
   saveExtData();
 }
-function getOutlineStApiKey() {
-  const data = getExtData();
-  return String(data?.[OUTLINE_ST_API_KEY_KEY] || "").trim();
-}
-function saveOutlineStApiKey(apiKey) {
-  const data = getExtData();
-  data[OUTLINE_ST_API_KEY_KEY] = String(apiKey || "").trim();
-  saveExtData();
-}
-function getOutlineProfilesByMode(mode = null) {
-  const m = mode || getOutlineProfileMode();
-  if (m === "st") {
-    return getStPresetProfiles().map((p) => ({
-      id: String(p.id || "").trim(),
-      name: String(p.name || "").trim() || "\u9152\u9986\u65B9\u6848",
-      api_url: normalizeApiBaseUrl(String(p.api_url || "")),
-      api_key: "",
-      model: String(p.model || "").trim()
-    })).filter((p) => p.id);
-  }
+function getOutlineProfilesByMode() {
   return getOutlineCustomProfiles();
 }
-function resolveOutlineProfileSelection(mode = null, profileId = null) {
-  const m = mode || getOutlineProfileMode();
-  const profiles = getOutlineProfilesByMode(m);
-  if (profiles.length === 0) return { mode: m, profileId: "", profiles };
+function resolveOutlineProfileSelection(profileId = null) {
+  const profiles = getOutlineProfilesByMode();
+  if (profiles.length === 0) return { profileId: "", profiles };
   const preferred = String(profileId || getOutlineSelectedProfileId() || "").trim();
   const selected = profiles.some((p) => p.id === preferred) ? preferred : profiles[0]?.id || "";
-  return { mode: m, profileId: selected, profiles };
+  return { profileId: selected, profiles };
 }
 function getOutlineActiveProfile() {
   const resolved = resolveOutlineProfileSelection();
   const selected = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
   if (!selected) return null;
-  if (resolved.mode === "st") {
-    return {
-      ...selected,
-      api_key: getOutlineStApiKey()
-    };
-  }
   return selected;
 }
 function syncOutlineProfileFields($root, options = {}) {
   const force = options.force === true;
-  const mode = String($root.find("#t-outline-settings-profile-mode").val() || getOutlineProfileMode());
   const selectedId = String($root.find("#t-outline-settings-profile-select").val() || getOutlineSelectedProfileId() || "").trim();
-  const resolved = resolveOutlineProfileSelection(mode, selectedId);
+  const resolved = resolveOutlineProfileSelection(selectedId);
   const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-  const manualStKey = getOutlineStApiKey();
   if (!force) {
-    if (mode !== getOutlineProfileMode()) saveOutlineProfileMode(mode);
     if (resolved.profileId !== getOutlineSelectedProfileId()) saveOutlineSelectedProfileId(resolved.profileId);
   }
-  const isStMode = mode === "st";
-  $root.find("#t-outline-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", isStMode);
-  $root.find("#t-outline-settings-api-key").val(isStMode ? manualStKey : String(profile?.api_key || "")).prop("readonly", false);
-  $root.find("#t-outline-settings-model").val(String(profile?.model || "")).prop("disabled", isStMode);
-  $root.find("#t-outline-settings-new-profile").prop("disabled", isStMode);
-  const hint = isStMode ? "\u5F53\u524D\u4F7F\u7528\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848\u3002API Key \u4E3A\u624B\u52A8\u586B\u5199\u9879\uFF08\u7528\u4E8E\u76F4\u8FDE\u8BF7\u6C42\uFF09\u3002" : "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002";
-  $root.find("#t-outline-settings-profile-tip").text(hint);
+  $root.find("#t-outline-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", false);
+  $root.find("#t-outline-settings-api-key").val(String(profile?.api_key || "")).prop("readonly", false);
+  $root.find("#t-outline-settings-model").val(String(profile?.model || "")).prop("disabled", false);
+  $root.find("#t-outline-settings-new-profile").prop("disabled", false);
+  $root.find("#t-outline-settings-profile-tip").text("\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002");
 }
 function renderOutlineProfileOptions($root = null) {
   const $scope = $root && $root.length ? $root : $("#t-outline-prompt-manager");
   if (!$scope.length) return;
-  const mode = getOutlineProfileMode();
-  const resolved = resolveOutlineProfileSelection(mode);
-  const $mode = $scope.find("#t-outline-settings-profile-mode");
+  const resolved = resolveOutlineProfileSelection();
   const $select = $scope.find("#t-outline-settings-profile-select");
-  if (!$mode.length || !$select.length) return;
-  $mode.val(mode);
+  if (!$select.length) return;
   $select.empty();
   if (resolved.profiles.length === 0) {
     $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
@@ -14697,10 +14653,8 @@ async function openPromptTemplateManager() {
   $("#t-outline-prompt-manager").remove();
   const defaults = getDefaultPromptTemplates();
   const settingsDraft = {
-    profileMode: getOutlineProfileMode(),
     selectedProfileId: getOutlineSelectedProfileId(),
     customProfiles: getOutlineCustomProfiles(),
-    stApiKey: getOutlineStApiKey(),
     openingSourceMode: getOpeningSourceMode(),
     openingSourceRef: getOpeningSourceRef(),
     chatTagWhitelist: getOutlineChatTagWhitelistRaw(),
@@ -14737,12 +14691,8 @@ async function openPromptTemplateManager() {
                 <div class="t-set-content">
                     <div id="t-outline-page-runtime" class="t-set-page active">
                         <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848\u6765\u6E90</label>
+                            <label class="t-form-label">API \u65B9\u6848</label>
                             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <select id="t-outline-settings-profile-mode" class="t-outline-select">
-                                    <option value="custom">\u81EA\u5B9A\u4E49\u65B9\u6848</option>
-                                    <option value="st">\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848</option>
-                                </select>
                                 <select id="t-outline-settings-profile-select" class="t-outline-select" style="min-width:220px;"></select>
                                 <button id="t-outline-settings-new-profile" class="t-btn t-btn-xs" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
                             </div>
@@ -14845,20 +14795,11 @@ async function openPromptTemplateManager() {
     </div>`;
   $("body").append(html);
   const close = () => $("#t-outline-prompt-manager").remove();
-  const getDraftProfilesByMode = (mode) => {
-    if (mode === "st") {
-      return getStPresetProfiles().map((p) => ({
-        id: String(p.id || "").trim(),
-        name: String(p.name || "").trim() || "\u9152\u9986\u65B9\u6848",
-        api_url: normalizeApiBaseUrl(String(p.api_url || "")),
-        api_key: "",
-        model: String(p.model || "").trim()
-      })).filter((p) => p.id);
-    }
+  const getDraftProfiles = () => {
     return Array.isArray(settingsDraft.customProfiles) ? settingsDraft.customProfiles : [];
   };
-  const resolveProfileSelectionDraft = (mode, profileId) => {
-    const profiles = getDraftProfilesByMode(mode);
+  const resolveProfileSelectionDraft = (profileId) => {
+    const profiles = getDraftProfiles();
     if (!profiles.length) return { profileId: "", profiles };
     const preferred = String(profileId || "").trim();
     const selected = profiles.some((p) => p.id === preferred) ? preferred : profiles[0].id;
@@ -14866,25 +14807,19 @@ async function openPromptTemplateManager() {
   };
   const syncProfileFieldsDraft = () => {
     const $root = $("#t-outline-prompt-manager");
-    const mode = settingsDraft.profileMode === "st" ? "st" : "custom";
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
+    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
     settingsDraft.selectedProfileId = resolved.profileId;
     const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    const isStMode = mode === "st";
-    $root.find("#t-outline-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", isStMode);
-    $root.find("#t-outline-settings-api-key").val(isStMode ? settingsDraft.stApiKey : String(profile?.api_key || "")).prop("readonly", false);
-    $root.find("#t-outline-settings-model").val(String(profile?.model || "")).prop("disabled", isStMode);
-    $root.find("#t-outline-settings-new-profile").prop("disabled", isStMode);
-    const hint = isStMode ? "\u5F53\u524D\u4F7F\u7528\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848\u3002API Key \u4E3A\u624B\u52A8\u586B\u5199\u9879\uFF08\u7528\u4E8E\u76F4\u8FDE\u8BF7\u6C42\uFF09\u3002" : "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002";
-    $root.find("#t-outline-settings-profile-tip").text(hint);
+    $root.find("#t-outline-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", false);
+    $root.find("#t-outline-settings-api-key").val(String(profile?.api_key || "")).prop("readonly", false);
+    $root.find("#t-outline-settings-model").val(String(profile?.model || "")).prop("disabled", false);
+    $root.find("#t-outline-settings-new-profile").prop("disabled", false);
+    $root.find("#t-outline-settings-profile-tip").text("\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002");
   };
   const renderProfileOptionsDraft = () => {
     const $root = $("#t-outline-prompt-manager");
-    const mode = settingsDraft.profileMode === "st" ? "st" : "custom";
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
-    const $mode = $root.find("#t-outline-settings-profile-mode");
+    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
     const $select = $root.find("#t-outline-settings-profile-select");
-    $mode.val(mode);
     $select.empty();
     if (!resolved.profiles.length) {
       $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
@@ -14901,22 +14836,16 @@ async function openPromptTemplateManager() {
   };
   const persistCurrentProfileInputsToDraft = () => {
     const $root = $("#t-outline-prompt-manager");
-    const mode = String($root.find("#t-outline-settings-profile-mode").val() || settingsDraft.profileMode || "custom");
     const selectedId = String($root.find("#t-outline-settings-profile-select").val() || settingsDraft.selectedProfileId || "").trim();
     const url = normalizeApiBaseUrl(String($root.find("#t-outline-settings-api-url").val() || "").trim());
     const key = String($root.find("#t-outline-settings-api-key").val() || "").trim();
     const model = String($root.find("#t-outline-settings-model").val() || "").trim();
-    settingsDraft.profileMode = mode === "st" ? "st" : "custom";
     settingsDraft.selectedProfileId = selectedId;
-    if (settingsDraft.profileMode === "custom") {
-      const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-      if (current) {
-        current.api_url = url;
-        current.api_key = key;
-        current.model = model;
-      }
-    } else {
-      settingsDraft.stApiKey = key;
+    const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
+    if (current) {
+      current.api_url = url;
+      current.api_key = key;
+      current.model = model;
     }
   };
   const refreshOpeningSourceControlsDraft = () => {
@@ -14930,8 +14859,7 @@ async function openPromptTemplateManager() {
     const $root = $("#t-outline-prompt-manager");
     const $status = $root.find("#t-outline-settings-status");
     persistCurrentProfileInputsToDraft();
-    const mode = settingsDraft.profileMode;
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
+    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
     settingsDraft.selectedProfileId = resolved.profileId;
     const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
     const apiUrl = normalizeApiBaseUrl(String($root.find("#t-outline-settings-api-url").val() || profile?.api_url || "").trim());
@@ -14958,15 +14886,11 @@ async function openPromptTemplateManager() {
         $model.append(`<option value="${escapeHtml3(modelId)}">${escapeHtml3(modelId)}</option>`);
       });
       $model.val(selectedModel);
-      if (mode === "custom") {
-        const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-        if (current) {
-          current.api_url = apiUrl;
-          current.api_key = apiKey;
-          current.model = selectedModel;
-        }
-      } else {
-        settingsDraft.stApiKey = apiKey;
+      const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
+      if (current) {
+        current.api_url = apiUrl;
+        current.api_key = apiKey;
+        current.model = selectedModel;
       }
       $status.text(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`).removeClass("muted warn err").addClass("ok");
       if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`, "\u6545\u4E8B\u5927\u7EB2");
@@ -15041,12 +14965,6 @@ async function openPromptTemplateManager() {
     if (window.toastr) toastr.success("\u5DF2\u6062\u590D\u5F53\u524D\u6A21\u677F\u9ED8\u8BA4\u503C", "\u6545\u4E8B\u5927\u7EB2\u8BBE\u7F6E");
   });
   const $settingsRoot = $("#t-outline-prompt-manager");
-  $settingsRoot.on("change", "#t-outline-settings-profile-mode", () => {
-    persistCurrentProfileInputsToDraft();
-    const mode = String($settingsRoot.find("#t-outline-settings-profile-mode").val() || "custom");
-    settingsDraft.profileMode = mode === "st" ? "st" : "custom";
-    renderProfileOptionsDraft();
-  });
   $settingsRoot.on("change", "#t-outline-settings-profile-select", () => {
     persistCurrentProfileInputsToDraft();
     settingsDraft.selectedProfileId = String($settingsRoot.find("#t-outline-settings-profile-select").val() || "").trim();
@@ -15055,7 +14973,6 @@ async function openPromptTemplateManager() {
   $settingsRoot.on("click", "#t-outline-settings-new-profile", (e) => {
     e.preventDefault();
     persistCurrentProfileInputsToDraft();
-    if (settingsDraft.profileMode !== "custom") return;
     const nextName = `\u65B9\u6848 ${settingsDraft.customProfiles.length + 1}`;
     const created = {
       id: `outline_custom_${Date.now()}`,
@@ -15108,10 +15025,8 @@ async function openPromptTemplateManager() {
   $("#t-prompt-manager-save-btn").on("click", () => {
     syncFromEditor();
     persistCurrentProfileInputsToDraft();
-    saveOutlineProfileMode(settingsDraft.profileMode);
     saveOutlineSelectedProfileId(settingsDraft.selectedProfileId);
     saveOutlineCustomProfiles(settingsDraft.customProfiles);
-    saveOutlineStApiKey(settingsDraft.stApiKey);
     setOpeningSourceMode(settingsDraft.openingSourceMode);
     setOpeningSourceRef(settingsDraft.openingSourceRef);
     setOutlineChatTagWhitelistRaw(settingsDraft.chatTagWhitelist);
@@ -17164,7 +17079,7 @@ function openStoryOutlineWindow() {
   showOutlineView(plans.length > 0 ? "hub" : "editor");
   refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_PROFILE_MODE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, OUTLINE_ST_API_KEY_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
+var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -17196,9 +17111,7 @@ var init_storyOutlineWindow = __esm({
     OUTLINE_CHAT_TAG_WHITELIST_KEY = "story_outline_chat_tag_whitelist";
     RAW_HISTORY_KEY = "story_outline_raw_history";
     OUTLINE_SELECTED_PROFILE_KEY = "story_outline_selected_profile_id";
-    OUTLINE_PROFILE_MODE_KEY = "story_outline_profile_mode";
     OUTLINE_CUSTOM_PROFILES_KEY = "story_outline_custom_profiles";
-    OUTLINE_ST_API_KEY_KEY = "story_outline_st_api_key";
     currentView = "hub";
     activePlanId = "";
     editingPlanId = "";
@@ -17290,7 +17203,7 @@ function ensureRewriteDataShape() {
     };
   }
   const item = data.rewrite_entry;
-  if (typeof item.profile_mode !== "string" || !["custom", "st"].includes(item.profile_mode)) item.profile_mode = "custom";
+  item.profile_mode = "custom";
   if (typeof item.profile_id !== "string") item.profile_id = "";
   item.custom_profiles = normalizeRewriteCustomProfiles(item.custom_profiles, item);
   if (!item.profile_id) {
@@ -18373,25 +18286,20 @@ function persistSettingsPanelState() {
   const data = getExtData();
   const prev = ensureRewriteDataShape();
   const rules = getRulesFromDom("#t-rewrite-settings-rules-list");
-  const modeInput = String($overlay.find("#t-rewrite-settings-profile-mode").val() || prev.profile_mode || "custom");
-  const profileMode = ["custom", "st"].includes(modeInput) ? modeInput : "custom";
   const rawProfileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || prev.profile_id || "").trim();
   const customProfilesRaw = $overlay.data("rewriteCustomProfiles");
   const customProfiles = normalizeRewriteCustomProfiles(Array.isArray(customProfilesRaw) ? customProfilesRaw : prev.custom_profiles, prev);
-  let profileId = rawProfileId;
-  if (profileMode === "custom") {
-    const currentId = rawProfileId || customProfiles[0]?.id || "";
-    const current = customProfiles.find((p) => p.id === currentId);
-    if (current) {
-      current.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
-      current.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
-      current.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
-      profileId = current.id;
-    }
+  let profileId = rawProfileId || customProfiles[0]?.id || "";
+  const current = customProfiles.find((p) => p.id === profileId);
+  if (current) {
+    current.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
+    current.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
+    current.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
+    profileId = current.id;
   }
   data.rewrite_entry = {
     enabled: prev.enabled === true,
-    profile_mode: profileMode,
+    profile_mode: "custom",
     profile_id: profileId,
     custom_profiles: customProfiles,
     api_url: String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim(),
@@ -18421,20 +18329,18 @@ function persistSettingsPanelState() {
 }
 function renderRewriteProfileOptions($overlay) {
   if (!$overlay || !$overlay.length) return;
-  const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
   const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-  const stProfiles = Array.isArray($overlay.data("rewriteStProfiles")) ? $overlay.data("rewriteStProfiles") : [];
   const $select = $overlay.find("#t-rewrite-settings-profile-select");
   const oldValue = String($select.val() || "").trim();
   $overlay.data("rewriteCustomProfiles", customProfiles);
   $select.empty();
-  const list = mode === "st" ? stProfiles : customProfiles;
+  const list = customProfiles;
   if (!Array.isArray(list) || list.length === 0) {
-    $select.append(`<option value="">${mode === "st" ? "\u672A\u53D1\u73B0\u9152\u9986\u9884\u8BBE" : "\u6682\u65E0\u81EA\u5B9A\u4E49\u65B9\u6848"}</option>`);
+    $select.append('<option value="">\u6682\u65E0\u81EA\u5B9A\u4E49\u65B9\u6848</option>');
     return;
   }
   list.forEach((item, idx) => {
-    const name = mode === "st" ? `${item.name}${item.source ? ` \xB7 ${item.source}` : ""}` : item.name || `\u65B9\u6848 ${idx + 1}`;
+    const name = item.name || `\u65B9\u6848 ${idx + 1}`;
     $select.append(`<option value="${escapeHtml4(item.id)}">${escapeHtml4(name)}</option>`);
   });
   const hasOld = list.some((item) => item.id === oldValue);
@@ -18442,23 +18348,19 @@ function renderRewriteProfileOptions($overlay) {
 }
 function syncRewriteProfileFields($overlay, opts = {}) {
   if (!$overlay || !$overlay.length) return;
-  const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
   const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
   const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-  const stProfiles = Array.isArray($overlay.data("rewriteStProfiles")) ? $overlay.data("rewriteStProfiles") : [];
-  const isSt = mode === "st";
-  const current = isSt ? stProfiles.find((p) => p.id === profileId) : customProfiles.find((p) => p.id === profileId);
+  const current = customProfiles.find((p) => p.id === profileId);
   const keepApiKey = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
   const shouldReplace = opts.force === true;
   if (current && shouldReplace) {
     $overlay.find("#t-rewrite-settings-api-url").val(current.api_url || "");
     $overlay.find("#t-rewrite-settings-model").val(current.model || "");
-    const keyToSet = isSt ? current.api_key || keepApiKey : current.api_key || "";
+    const keyToSet = current.api_key || keepApiKey;
     $overlay.find("#t-rewrite-settings-api-key").val(keyToSet);
   }
-  const tip = isSt ? "\u9152\u9986\u9884\u8BBE\u5DF2\u8F7D\u5165\uFF1AURL/\u6A21\u578B\u4F1A\u81EA\u52A8\u56DE\u586B\uFF1BAPI Key \u53D7\u5B89\u5168\u673A\u5236\u5F71\u54CD\u53EF\u80FD\u4E0D\u53EF\u8BFB\u53D6\u3002" : "\u81EA\u5B9A\u4E49\u65B9\u6848\u53EF\u7F16\u8F91 URL/API Key/\u6A21\u578B\uFF0C\u4FDD\u5B58\u540E\u6301\u4E45\u5316\u5230\u63D2\u4EF6\u914D\u7F6E\u3002";
-  $overlay.find("#t-rewrite-settings-profile-tip").text(tip);
-  $overlay.find("#t-rewrite-settings-new-profile").prop("disabled", isSt);
+  $overlay.find("#t-rewrite-settings-profile-tip").text("\u81EA\u5B9A\u4E49\u65B9\u6848\u53EF\u7F16\u8F91 URL/API Key/\u6A21\u578B\uFF0C\u4FDD\u5B58\u540E\u6301\u4E45\u5316\u5230\u63D2\u4EF6\u914D\u7F6E\u3002");
+  $overlay.find("#t-rewrite-settings-new-profile").prop("disabled", false);
 }
 function refreshRuntimeStateView() {
   const $overlay = getOverlay();
@@ -18655,17 +18557,11 @@ function bindSettingsPanelEvents() {
     persistSettingsPanelState();
     if (window.toastr) toastr.success("\u6587\u672C\u6539\u5199\u8BBE\u7F6E\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
   });
-  $overlay.on("change", "#t-rewrite-settings-profile-mode", () => {
-    renderRewriteProfileOptions($overlay);
-    syncRewriteProfileFields($overlay, { force: true });
-  });
   $overlay.on("change", "#t-rewrite-settings-profile-select", () => {
     syncRewriteProfileFields($overlay, { force: true });
   });
   $overlay.on("click", "#t-rewrite-settings-new-profile", (e) => {
     e.preventDefault();
-    const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
-    if (mode !== "custom") return;
     const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
     const newName = `\u65B9\u6848 ${customProfiles.length + 1}`;
     const newProfile = {
@@ -18682,17 +18578,14 @@ function bindSettingsPanelEvents() {
     syncRewriteProfileFields($overlay, { force: true });
   });
   $overlay.on("input", "#t-rewrite-settings-api-url, #t-rewrite-settings-api-key", () => {
-    const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
-    if (mode === "custom") {
-      const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
-      const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-      const current = customProfiles.find((p) => p.id === profileId);
-      if (current) {
-        current.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
-        current.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
-      }
-      $overlay.data("rewriteCustomProfiles", customProfiles);
+    const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
+    const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
+    const current = customProfiles.find((p) => p.id === profileId);
+    if (current) {
+      current.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
+      current.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
     }
+    $overlay.data("rewriteCustomProfiles", customProfiles);
     if (autoFetchTimer) clearTimeout(autoFetchTimer);
     autoFetchTimer = setTimeout(() => {
       fetchModelList(false, "settings");
@@ -18703,8 +18596,6 @@ function bindSettingsPanelEvents() {
     await fetchModelList(true, "settings");
   });
   $overlay.on("change", "#t-rewrite-settings-model", () => {
-    const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
-    if (mode !== "custom") return;
     const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
     const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
     const current = customProfiles.find((p) => p.id === profileId);
@@ -18756,23 +18647,13 @@ function openSettingsPanel() {
   const modeParagraph = rewriteData.split_mode === "paragraph";
   const rules = cleanupRules(rewriteData.rules);
   const customProfiles = normalizeRewriteCustomProfiles(rewriteData.custom_profiles, rewriteData);
-  const stProfiles = getStPresetProfiles();
-  const profileMode = ["custom", "st"].includes(rewriteData.profile_mode) ? rewriteData.profile_mode : "custom";
   let activeProfileId = String(rewriteData.profile_id || "").trim();
-  if (profileMode === "custom") {
-    const fallback = customProfiles[0]?.id || "";
-    const existing = customProfiles.find((p) => p.id === activeProfileId);
-    activeProfileId = existing ? existing.id : fallback;
-  } else {
-    const fallback = stProfiles[0]?.id || "";
-    const existing = stProfiles.find((p) => p.id === activeProfileId);
-    activeProfileId = existing ? existing.id : fallback;
-  }
-  const activeCustom = customProfiles.find((p) => p.id === activeProfileId) || customProfiles[0];
-  const activeSt = stProfiles.find((p) => p.id === activeProfileId) || stProfiles[0];
-  const initProfile = profileMode === "st" ? activeSt : activeCustom;
+  const fallback = customProfiles[0]?.id || "";
+  const existing = customProfiles.find((p) => p.id === activeProfileId);
+  activeProfileId = existing ? existing.id : fallback;
+  const initProfile = customProfiles.find((p) => p.id === activeProfileId) || customProfiles[0];
   const initApiUrl = String(initProfile?.api_url || rewriteData.api_url || "");
-  const initApiKey = profileMode === "st" ? String(rewriteData.api_key || "").trim() || String(initProfile?.api_key || "") : String(initProfile?.api_key || rewriteData.api_key || "");
+  const initApiKey = String(initProfile?.api_key || rewriteData.api_key || "");
   const initModel = String(initProfile?.model || rewriteData.model || "");
   const promptState = getRewritePromptState();
   const html = `
@@ -18796,12 +18677,8 @@ function openSettingsPanel() {
                 <div class="t-set-content">
                     <div id="t-rewrite-page-api" class="t-set-page active">
                         <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848\u6765\u6E90</label>
+                            <label class="t-form-label">API \u65B9\u6848</label>
                             <div class="t-rewrite-profile-row">
-                                <select id="t-rewrite-settings-profile-mode" class="text_pole">
-                                    <option value="custom" ${profileMode === "custom" ? "selected" : ""}>\u81EA\u5B9A\u4E49\u65B9\u6848</option>
-                                    <option value="st" ${profileMode === "st" ? "selected" : ""}>\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848</option>
-                                </select>
                                 <select id="t-rewrite-settings-profile-select" class="text_pole"></select>
                                 <button id="t-rewrite-settings-new-profile" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
                             </div>
@@ -18896,10 +18773,8 @@ function openSettingsPanel() {
   $("body").append(html);
   const $overlay = getSettingsOverlay();
   $overlay.data("rewriteCustomProfiles", customProfiles);
-  $overlay.data("rewriteStProfiles", stProfiles);
   renderSettingsRules(rules.length > 0 ? rules : [{ anchor: "", extras: [] }]);
   renderRewriteProfileOptions($overlay);
-  $overlay.find("#t-rewrite-settings-profile-mode").val(profileMode);
   $overlay.find("#t-rewrite-settings-profile-select").val(activeProfileId);
   syncRewriteProfileFields($overlay, { force: true });
   bindSettingsPanelEvents();
@@ -21686,11 +21561,6 @@ function saveAnalysisSettings(settings2) {
   };
   saveExtData();
 }
-function getLoreProfileMode() {
-  const cfg = getFeatureConfig();
-  const mode = String(cfg?.profile_mode || "custom").trim();
-  return mode === "st" ? "st" : "custom";
-}
 function getLoreSelectedProfileId() {
   const cfg = getFeatureConfig();
   return String(cfg?.profile_id || cfg?.selected_profile_id || "").trim();
@@ -21705,17 +21575,11 @@ function getLoreCustomProfiles() {
   };
   return normalizeRewriteCustomProfiles(cfg?.custom_profiles, fallback);
 }
-function getLoreStApiKey() {
-  const cfg = getFeatureConfig();
-  return String(cfg?.st_api_key || "").trim();
-}
 async function showProfileConfigDialog(onSave) {
   $("#t-lore-settings-dialog").remove();
   const settingsDraft = {
-    profileMode: getLoreProfileMode(),
     selectedProfileId: getLoreSelectedProfileId(),
     customProfiles: getLoreCustomProfiles(),
-    stApiKey: getLoreStApiKey(),
     embedding: {
       url: String(getExtData()?.embedding_config?.url || "").trim(),
       key: String(getExtData()?.embedding_config?.key || "").trim(),
@@ -21760,12 +21624,8 @@ async function showProfileConfigDialog(onSave) {
                 <div class="t-set-content">
                     <div class="t-set-page active" data-page="api">
                         <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848\u6765\u6E90</label>
+                            <label class="t-form-label">API \u65B9\u6848</label>
                             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <select id="t-lore-settings-profile-mode" class="t-input" style="max-width:220px;">
-                                    <option value="custom">\u81EA\u5B9A\u4E49\u65B9\u6848</option>
-                                    <option value="st">\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848</option>
-                                </select>
                                 <select id="t-lore-settings-profile-select" class="t-input" style="min-width:220px;"></select>
                                 <button id="t-lore-settings-new-profile" class="t-btn t-btn-xs" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
                             </div>
@@ -21864,20 +21724,11 @@ async function showProfileConfigDialog(onSave) {
     </div>
     `;
   $("body").append(html);
-  const getDraftProfilesByMode = (mode) => {
-    if (mode === "st") {
-      return getStPresetProfiles().map((p) => ({
-        id: String(p.id || "").trim(),
-        name: String(p.name || "").trim() || "\u9152\u9986\u65B9\u6848",
-        api_url: normalizeApiBaseUrl(String(p.api_url || "")),
-        api_key: "",
-        model: String(p.model || "").trim()
-      })).filter((p) => p.id);
-    }
+  const getDraftProfiles = () => {
     return Array.isArray(settingsDraft.customProfiles) ? settingsDraft.customProfiles : [];
   };
-  const resolveProfileSelectionDraft = (mode, profileId) => {
-    const profiles = getDraftProfilesByMode(mode);
+  const resolveProfileSelectionDraft = (profileId) => {
+    const profiles = getDraftProfiles();
     if (!profiles.length) return { profileId: "", profiles };
     const preferred = String(profileId || "").trim();
     const selected = profiles.some((p) => p.id === preferred) ? preferred : profiles[0].id;
@@ -21885,46 +21736,34 @@ async function showProfileConfigDialog(onSave) {
   };
   const persistCurrentProfileInputsToDraft = () => {
     const $root = $("#t-lore-settings-dialog");
-    const mode = String($root.find("#t-lore-settings-profile-mode").val() || settingsDraft.profileMode || "custom");
     const selectedId = String($root.find("#t-lore-settings-profile-select").val() || settingsDraft.selectedProfileId || "").trim();
     const url = normalizeApiBaseUrl(String($root.find("#t-lore-settings-api-url").val() || "").trim());
     const key = String($root.find("#t-lore-settings-api-key").val() || "").trim();
     const model = String($root.find("#t-lore-settings-model").val() || "").trim();
-    settingsDraft.profileMode = mode === "st" ? "st" : "custom";
     settingsDraft.selectedProfileId = selectedId;
-    if (settingsDraft.profileMode === "custom") {
-      const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-      if (current) {
-        current.api_url = url;
-        current.api_key = key;
-        current.model = model;
-      }
-    } else {
-      settingsDraft.stApiKey = key;
+    const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
+    if (current) {
+      current.api_url = url;
+      current.api_key = key;
+      current.model = model;
     }
   };
   const syncProfileFieldsDraft = () => {
     const $root = $("#t-lore-settings-dialog");
-    const mode = settingsDraft.profileMode === "st" ? "st" : "custom";
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
+    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
     settingsDraft.selectedProfileId = resolved.profileId;
     const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    const isStMode = mode === "st";
-    $root.find("#t-lore-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", isStMode);
-    $root.find("#t-lore-settings-api-key").val(isStMode ? settingsDraft.stApiKey : String(profile?.api_key || "")).prop("readonly", false);
-    $root.find("#t-lore-settings-model").val(String(profile?.model || "")).prop("disabled", isStMode);
-    $root.find("#t-lore-settings-new-profile").prop("disabled", isStMode);
-    const hint = isStMode ? "\u5F53\u524D\u4F7F\u7528\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848\u3002API Key \u4E3A\u624B\u52A8\u586B\u5199\u9879\uFF08\u7528\u4E8E\u76F4\u8FDE\u8BF7\u6C42\uFF09\u3002" : "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002";
-    $root.find("#t-lore-settings-profile-tip").text(hint);
+    $root.find("#t-lore-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", false);
+    $root.find("#t-lore-settings-api-key").val(String(profile?.api_key || "")).prop("readonly", false);
+    $root.find("#t-lore-settings-model").val(String(profile?.model || "")).prop("disabled", false);
+    $root.find("#t-lore-settings-new-profile").prop("disabled", false);
+    $root.find("#t-lore-settings-profile-tip").text("\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002");
     $("#t-btn-save-profile").prop("disabled", !settingsDraft.selectedProfileId);
   };
   const renderProfileOptionsDraft = () => {
     const $root = $("#t-lore-settings-dialog");
-    const mode = settingsDraft.profileMode === "st" ? "st" : "custom";
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
-    const $mode = $root.find("#t-lore-settings-profile-mode");
+    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
     const $select = $root.find("#t-lore-settings-profile-select");
-    $mode.val(mode);
     $select.empty();
     if (!resolved.profiles.length) {
       $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
@@ -21943,8 +21782,7 @@ async function showProfileConfigDialog(onSave) {
     const $root = $("#t-lore-settings-dialog");
     const $status = $root.find("#t-lore-settings-status");
     persistCurrentProfileInputsToDraft();
-    const mode = settingsDraft.profileMode;
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
+    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
     settingsDraft.selectedProfileId = resolved.profileId;
     const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
     const apiUrl = normalizeApiBaseUrl(String($root.find("#t-lore-settings-api-url").val() || profile?.api_url || "").trim());
@@ -21971,15 +21809,11 @@ async function showProfileConfigDialog(onSave) {
         $model.append(`<option value="${escapeHtml5(modelId)}">${escapeHtml5(modelId)}</option>`);
       });
       $model.val(selectedModel);
-      if (mode === "custom") {
-        const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-        if (current) {
-          current.api_url = apiUrl;
-          current.api_key = apiKey;
-          current.model = selectedModel;
-        }
-      } else {
-        settingsDraft.stApiKey = apiKey;
+      const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
+      if (current) {
+        current.api_url = apiUrl;
+        current.api_key = apiKey;
+        current.model = selectedModel;
       }
       $status.text(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`);
       if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`, "\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3");
@@ -22103,12 +21937,6 @@ async function showProfileConfigDialog(onSave) {
     $("#t-lore-settings-dialog .t-set-page").removeClass("active");
     $(`#t-lore-settings-dialog .t-set-page[data-page='${tab}']`).addClass("active");
   });
-  $("#t-lore-settings-profile-mode").on("change", function() {
-    persistCurrentProfileInputsToDraft();
-    const mode = String($(this).val() || "custom");
-    settingsDraft.profileMode = mode === "st" ? "st" : "custom";
-    renderProfileOptionsDraft();
-  });
   $("#t-lore-settings-profile-select").on("change", function() {
     persistCurrentProfileInputsToDraft();
     settingsDraft.selectedProfileId = String($(this).val() || "").trim();
@@ -22117,7 +21945,6 @@ async function showProfileConfigDialog(onSave) {
   $("#t-lore-settings-new-profile").on("click", function(e) {
     e.preventDefault();
     persistCurrentProfileInputsToDraft();
-    if (settingsDraft.profileMode !== "custom") return;
     const created = {
       id: `lore_custom_${Date.now()}`,
       name: `\u65B9\u6848 ${settingsDraft.customProfiles.length + 1}`,
@@ -22161,10 +21988,9 @@ async function showProfileConfigDialog(onSave) {
     }
     const data = getExtData();
     data[`${FEATURE_KEY3}_config`] = {
-      profile_mode: settingsDraft.profileMode,
+      profile_mode: "custom",
       profile_id: settingsDraft.selectedProfileId,
       custom_profiles: settingsDraft.customProfiles,
-      st_api_key: settingsDraft.stApiKey,
       selected_profile_id: settingsDraft.selectedProfileId,
       model_override: null
     };
@@ -24879,8 +24705,6 @@ function openSettingsWindow() {
   cfg.active_profile_id = normalizedApiConfig.active_profile_id;
   let tempProfiles = JSON.parse(JSON.stringify(cfg.profiles));
   let tempActiveId = cfg.active_profile_id;
-  let tempApiSourceMode = "custom";
-  const tempStProfiles = getStPresetProfiles();
   let tempApp = JSON.parse(JSON.stringify(app));
   if (!tempApp.size) tempApp.size = 56;
   if (!tempApp.border_color) tempApp.border_color = "#90cdf4";
@@ -25271,17 +25095,6 @@ function openSettingsWindow() {
                 <!-- Tab 3: \u8FDE\u63A5 -->
                 <div id="page-connection" class="t-set-page">
                     <div class="t-form-group">
-                        <label class="t-form-label">API \u65B9\u6848\u6765\u6E90</label>
-                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <select id="cfg-api-source-mode" class="t-input" style="max-width:220px;">
-                                <option value="custom" selected>\u81EA\u5B9A\u4E49\u65B9\u6848</option>
-                                <option value="st">\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848</option>
-                            </select>
-                            <select id="cfg-st-profile-select" class="t-input" style="display:none; min-width:260px;"></select>
-                        </div>
-                        <div id="cfg-api-source-tip" style="font-size:0.8em; color:#888; margin-top:6px;">\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\u6C60\u8FDB\u884C\u5207\u6362\u4E0E\u7F16\u8F91\u3002</div>
-                    </div>
-                    <div class="t-form-group">
                         <label class="t-form-label">\u5207\u6362\u914D\u7F6E\u65B9\u6848 (Profile)</label>
                         <div class="t-prof-header">
                             <select id="cfg-prof-select" class="t-prof-select"></select>
@@ -25581,59 +25394,6 @@ function openSettingsWindow() {
       $mSel.append(`<option value="${currentM}" selected>${currentM}</option>`);
     }
   };
-  const ensureEditableCustomProfile = () => {
-    let custom = tempProfiles.find((p) => p.id === tempActiveId && p.type !== "internal");
-    if (custom) return custom;
-    custom = tempProfiles.find((p) => p.type !== "internal");
-    if (custom) {
-      tempActiveId = custom.id;
-      return custom;
-    }
-    const newId = "custom_" + Date.now();
-    const created = { id: newId, name: "\u65B0\u65B9\u6848 1", type: "custom", url: "", key: "", model: "gpt-3.5-turbo" };
-    tempProfiles.push(created);
-    tempActiveId = newId;
-    return created;
-  };
-  const renderStPresetSelector = () => {
-    const $sel = $("#cfg-st-profile-select");
-    if ($sel.length === 0) return;
-    $sel.empty();
-    if (!Array.isArray(tempStProfiles) || tempStProfiles.length === 0) {
-      $sel.append('<option value="">\u672A\u53D1\u73B0\u9152\u9986\u9884\u8BBE</option>');
-      return;
-    }
-    tempStProfiles.forEach((p, idx) => {
-      const label = `${p.name}${p.source ? ` \xB7 ${p.source}` : ""}`;
-      $sel.append(`<option value="${p.id}" ${idx === 0 ? "selected" : ""}>${label}</option>`);
-    });
-  };
-  const applySelectedStPresetToCurrentProfile = () => {
-    const stId = $("#cfg-st-profile-select").val();
-    const preset = tempStProfiles.find((p) => p.id === stId);
-    if (!preset) return;
-    const target = ensureEditableCustomProfile();
-    target.url = preset.api_url || "";
-    target.model = preset.model || target.model || "gpt-3.5-turbo";
-    renderProfileUI();
-    if (preset.model) {
-      const $mSel = $("#cfg-model");
-      if ($mSel.find(`option[value="${preset.model}"]`).length === 0) {
-        $mSel.prepend(`<option value="${preset.model}" selected>${preset.model}</option>`);
-      } else {
-        $mSel.val(preset.model);
-      }
-    }
-  };
-  const syncApiSourceModeUI = () => {
-    const isSt = tempApiSourceMode === "st";
-    $("#cfg-st-profile-select").toggle(isSt);
-    $("#cfg-prof-add, #cfg-prof-del, #cfg-prof-meta").toggle(!isSt);
-    $("#cfg-api-source-tip").text(isSt ? "\u4ECE\u9152\u9986\u9884\u8BBE\u56DE\u586B URL/\u6A21\u578B\u5230\u5F53\u524D\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CAPI Key \u8BF7\u6309\u9700\u8865\u5145\u3002" : "\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\u6C60\u8FDB\u884C\u5207\u6362\u4E0E\u7F16\u8F91\u3002");
-    if (isSt) {
-      applySelectedStPresetToCurrentProfile();
-    }
-  };
   $("#cfg-prof-select").on("change", function() {
     saveCurrentProfileToMemory();
     tempActiveId = $(this).val();
@@ -25656,16 +25416,6 @@ function openSettingsWindow() {
       tempActiveId = tempProfiles[0].id;
       renderProfileUI();
     }
-  });
-  renderStPresetSelector();
-  syncApiSourceModeUI();
-  $("#cfg-api-source-mode").on("change", function() {
-    tempApiSourceMode = $(this).val() === "st" ? "st" : "custom";
-    syncApiSourceModeUI();
-  });
-  $("#cfg-st-profile-select").on("change", function() {
-    if (tempApiSourceMode !== "st") return;
-    applySelectedStPresetToCurrentProfile();
   });
   const PREVIEW_ANIM_CLASSES = {
     ripple: "p-anim-ripple",
