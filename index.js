@@ -22,11 +22,12 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.0";
+    CURRENT_VERSION = "5.0.1";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "5.0.1": "\u4FEE\u590D\u4E86\u4E00\u4E2Abug\uFF0C\u4F18\u5316\u4E86\u90E8\u5206\u754C\u9762\u7EC6\u8282\u3002",
       "5.0.0": "\u8DE8\u5165\u5230\u5168\u65B0\u76845.0\u7248\u672C\uFF0C\u56DE\u58F0\u5C0F\u5267\u573A\u6B63\u5F0F\u66F4\u540D\u4E3A\u56DE\u58F0\u5DE5\u5177\u7BB1\uFF0C\u65B0\u5165\u53E3\u4E3A\u53D1\u9001\u952E\u5DE6\u8FB9\u7684\u56FE\u6807\u3002\u66F4\u591A\u529F\u80FD\u6B63\u5728\u9646\u7EED\u8D76\u6765\u7684\u8DEF\u4E0A~",
       "3.3.4": "\u{1F514} \u65B0\u589E\u6587\u672C\u6539\u5199\u529F\u80FD\uFF0C\u53EF\u4EE5\u5BF9\u9152\u9986\u804A\u5929\u6700\u65B0\u56DE\u590D\u751F\u6210\u7684\u5185\u5BB9\u8FDB\u884C\u6539\u5199\u548C\u4F18\u5316\uFF0C\u5165\u53E3\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u3002\u76EE\u524D\u53EA\u505A\u4E86\u7B80\u5355\u7684\u5173\u952E\u8BCD\u5339\u914D\uFF0C\u540E\u7EED\u4F1A\u6269\u5C55\u66F4\u591A\u89C4\u5219\u3002",
       "3.3.3": "\u2728 \u65B0\u589E\u4E00\u952E\u6536\u85CF\u529F\u80FD\uFF0C\u53EF\u4EE5\u5C06\u540C\u4E2A\u5267\u573A\u4E0B\u7684\u6240\u6709\u7EED\u5199\u5185\u5BB9\u6536\u85CF\u5230\u4E00\u8D77\uFF0C\u65B9\u4FBF\u56DE\u987E\u3002<br>\u65B0\u589E\u5927\u7EB2\u4E0E\u7EC6\u7EB2\u751F\u6210\u529F\u80FD\uFF08\u9700\u8981\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u542F\u7528\uFF0C\u5165\u53E3\u5728\u9152\u9986\u53D1\u9001\u952E\u65C1\u8FB9\uFF09\uFF0C\u61D2\u5F97\u81EA\u5DF1\u60F3\u60C5\u8282\u53EA\u60F3\u770B\u5C0F\u8BF4\u7684\u53EF\u4EE5\u5C1D\u8BD5\u8FD9\u4E2A\uFF0C\u4F5C\u8005\u60F3\u73A9\u5C31\u52A0\u4E86\u3002<br>\u{1F527}\u4F18\u5316\u4E86\u5267\u573A\u751F\u6210\u65F6\u6253\u5F00\u6536\u85CF\u9986\u53EF\u80FD\u4EA7\u751F\u7684\u5361\u6B7B\u73B0\u8C61\u3002"
@@ -13842,6 +13843,414 @@ var init_chatTagWhitelist = __esm({
   }
 });
 
+// src/ui/shared/apiConnectionEditor.js
+function escapeHtml3(value) {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function getById($root, id) {
+  if (!$root || !$root.length || !id) return $();
+  return $root.find(`#${id}`);
+}
+function uniqStrings(values) {
+  return [...new Set((Array.isArray(values) ? values : []).map((v) => String(v || "").trim()).filter(Boolean))];
+}
+function defaultModelFetcher({ apiUrl, apiKey }) {
+  const headers = {};
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  return fetch(`${apiUrl}/models`, { method: "GET", headers }).then((res) => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }).then((json) => {
+    const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
+    return uniqStrings(list.map((item) => typeof item === "string" ? item : item?.id));
+  });
+}
+function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
+  const type = profile?.type === "internal" ? "internal" : "custom";
+  const id = String(profile?.id || `profile_${Date.now()}_${idx}`).trim();
+  const name = String(profile?.name || (type === "internal" ? "\u8DDF\u968F\u4E3B\u8FDE\u63A5" : `\u65B9\u6848 ${idx + 1}`)).trim() || `\u65B9\u6848 ${idx + 1}`;
+  return {
+    id,
+    type,
+    readonly: profile?.readonly === true,
+    name,
+    url: String(profile?.url || "").trim(),
+    key: String(profile?.key || "").trim(),
+    model: String(profile?.model || defaultModel).trim() || defaultModel
+  };
+}
+function mapCustomProfilesToConnectionProfiles(customProfiles, defaultModel = "gpt-3.5-turbo") {
+  const list = Array.isArray(customProfiles) ? customProfiles : [];
+  return list.map((profile, idx) => normalizeProfile({
+    id: profile?.id,
+    name: profile?.name,
+    type: "custom",
+    readonly: false,
+    url: profile?.api_url,
+    key: profile?.api_key,
+    model: profile?.model || defaultModel
+  }, idx, defaultModel));
+}
+function mapConnectionProfilesToCustomProfiles(connectionProfiles, defaultModel = "gpt-3.5-turbo") {
+  return (Array.isArray(connectionProfiles) ? connectionProfiles : []).filter((profile) => String(profile?.type || "custom") !== "internal").map((profile, idx) => {
+    const normalized = normalizeProfile(profile, idx, defaultModel);
+    return {
+      id: normalized.id,
+      name: normalized.name,
+      api_url: normalized.url,
+      api_key: normalized.key,
+      model: normalized.model
+    };
+  });
+}
+function renderApiConnectionEditorHTML(options = {}) {
+  const ids = options.ids || {};
+  const labels = {
+    profile: "API \u65B9\u6848",
+    profileName: "\u65B9\u6848\u540D\u79F0",
+    apiUrl: "API \u5730\u5740",
+    apiKey: "API Key",
+    model: "\u6A21\u578B",
+    stream: "\u5F00\u542F\u6D41\u5F0F\u4F20\u8F93 (Streaming)",
+    maxTokens: "\u8F93\u51FA Token \u9650\u5236 (max_tokens)",
+    ...options.labels || {}
+  };
+  const placeholders = {
+    apiUrl: "https://api.example.com/v1",
+    apiKey: "sk-...",
+    profileName: "\u65B9\u6848\u540D\u79F0",
+    ...options.placeholders || {}
+  };
+  const classes = {
+    input: "t-input",
+    select: "t-input",
+    profileSelect: "t-input",
+    button: "t-btn",
+    ...options.classes || {}
+  };
+  const flags = {
+    showProfileName: true,
+    showDeleteProfile: true,
+    showStream: false,
+    showMaxTokens: false,
+    ...options.flags || {}
+  };
+  const values = {
+    stream: true,
+    maxTokens: 4096,
+    statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868",
+    ...options.values || {}
+  };
+  const profileNameBlock = flags.showProfileName ? `<div id="${escapeHtml3(ids.profileMetaId || "")}"><label class="t-form-label">${escapeHtml3(labels.profileName)}</label><input id="${escapeHtml3(ids.profileNameId || "")}" class="${escapeHtml3(classes.input)}" value="" placeholder="${escapeHtml3(placeholders.profileName)}"></div>` : "";
+  const streamBlock = flags.showStream ? `<div class="t-form-group"><label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="${escapeHtml3(ids.streamId || "")}" ${values.stream ? "checked" : ""} style="margin-right:10px;"> ${escapeHtml3(labels.stream)}</label></div>` : "";
+  const maxTokensBlock = flags.showMaxTokens ? `<div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                <label class="t-form-label">${escapeHtml3(labels.maxTokens)}</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="number" id="${escapeHtml3(ids.maxTokensId || "")}" class="${escapeHtml3(classes.input)}" value="${escapeHtml3(values.maxTokens)}" min="256" max="32768" step="256" style="width:120px;">
+                    <span style="font-size:0.85em; color:#888;">\u8303\u56F4: 256 ~ 32768</span>
+                </div>
+                ${values.maxTokensHintHtml || ""}
+            </div>` : "";
+  return `
+        <div class="t-form-group">
+            <label class="t-form-label">${escapeHtml3(labels.profile)}</label>
+            <div class="t-prof-header">
+                <select id="${escapeHtml3(ids.profileSelectId || "")}" class="${escapeHtml3(classes.profileSelect)}"></select>
+                <button id="${escapeHtml3(ids.profileAddId || "")}" class="${escapeHtml3(classes.button)}" title="\u65B0\u5EFA\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
+                ${flags.showDeleteProfile ? `<button id="${escapeHtml3(ids.profileDeleteId || "")}" class="${escapeHtml3(classes.button)}" title="\u5220\u9664\u5F53\u524D\u65B9\u6848" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>` : ""}
+            </div>
+            ${profileNameBlock}
+            <div id="${escapeHtml3(ids.profileTipId || "")}" style="margin-top:8px; font-size:0.8em; color:#8da5b8;"></div>
+        </div>
+        <div style="height:1px; background:#333; margin:20px 0;"></div>
+        <div id="${escapeHtml3(ids.fieldsWrapId || "")}">
+            <div class="t-form-group">
+                <label class="t-form-label">${escapeHtml3(labels.apiUrl)}</label>
+                <input id="${escapeHtml3(ids.apiUrlId || "")}" class="${escapeHtml3(classes.input)}" placeholder="${escapeHtml3(placeholders.apiUrl)}">
+                <div id="${escapeHtml3(ids.urlHintId || "")}" style="font-size:0.8em; color:#666; margin-top:5px; display:none;"><i class="fa-solid fa-link"></i> \u6B63\u5728\u8BFB\u53D6 ST \u5168\u5C40\u8BBE\u7F6E\uFF1A<span id="${escapeHtml3(ids.stUrlDisplayId || "")}"></span></div>
+            </div>
+            <div class="t-form-group"><label class="t-form-label">${escapeHtml3(labels.apiKey)}</label><input id="${escapeHtml3(ids.apiKeyId || "")}" type="password" class="${escapeHtml3(classes.input)}" placeholder="${escapeHtml3(placeholders.apiKey)}"></div>
+            <div class="t-form-group">
+                <label class="t-form-label">${escapeHtml3(labels.model)}</label>
+                <div style="display:flex; gap:10px;"><select id="${escapeHtml3(ids.modelId || "")}" class="${escapeHtml3(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml3(ids.fetchModelsId || "")}" class="${escapeHtml3(classes.button)}" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
+                <div id="${escapeHtml3(ids.statusId || "")}" style="margin-top:8px; font-size:0.8em; color:#8da5b8;">${escapeHtml3(values.statusText)}</div>
+            </div>
+        </div>
+        ${streamBlock}
+        ${maxTokensBlock}
+    `;
+}
+function createApiConnectionEditor(options = {}) {
+  const $root = options.root;
+  const ids = options.ids || {};
+  const defaultModel = String(options.defaultModel || "gpt-3.5-turbo").trim() || "gpt-3.5-turbo";
+  const normalizeUrl = typeof options.normalizeUrl === "function" ? options.normalizeUrl : normalizeApiBaseUrl;
+  const modelFetcher = typeof options.modelFetcher === "function" ? options.modelFetcher : defaultModelFetcher;
+  const autoFetchDelay = Number.isFinite(Number(options.autoFetchDelayMs)) ? Number(options.autoFetchDelayMs) : 500;
+  const createProfileIdPrefix = String(options.profileIdPrefix || "custom").trim() || "custom";
+  const statusTexts = {
+    default: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868",
+    missingUrl: "\u8BF7\u5148\u586B\u5199 API \u5730\u5740",
+    loading: "\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...",
+    empty: "\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B",
+    success: (count) => `\u5DF2\u83B7\u53D6 ${count} \u4E2A\u6A21\u578B`,
+    failed: (msg) => `\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${msg}`,
+    internalTip: "\u5F53\u524D\u4F7F\u7528 ST \u4E3B\u8FDE\u63A5\uFF0C\u8FDE\u63A5\u53C2\u6570\u7531 ST \u7BA1\u7406\u3002",
+    customTip: "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002",
+    ...options.statusTexts || {}
+  };
+  let state = {
+    profiles: (Array.isArray(options.profiles) ? options.profiles : []).map((p, idx) => normalizeProfile(p, idx, defaultModel)),
+    activeProfileId: String(options.activeProfileId || "").trim()
+  };
+  if (state.profiles.length === 0) {
+    state.profiles = [normalizeProfile({ id: `${createProfileIdPrefix}_${Date.now()}`, name: "\u65B9\u6848 1", type: "custom", url: "", key: "", model: defaultModel }, 0, defaultModel)];
+  }
+  if (!state.profiles.some((p) => p.id === state.activeProfileId)) {
+    state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
+  }
+  let autoFetchTimer = null;
+  const emitChange = () => {
+    if (typeof options.onChange === "function") {
+      options.onChange({ profiles: state.profiles.map((p) => ({ ...p })), activeProfileId: state.activeProfileId });
+    }
+  };
+  const setStatus2 = (text, tone = "muted") => {
+    const $status = getById($root, ids.statusId);
+    if (!$status.length) return;
+    $status.text(String(text || ""));
+    if ($status.hasClass("t-rewrite-status")) {
+      $status.removeClass("ok err muted warn").addClass(tone);
+    }
+  };
+  const findActiveProfileIndex = () => state.profiles.findIndex((p) => p.id === state.activeProfileId);
+  const findActiveProfile = () => state.profiles[findActiveProfileIndex()] || null;
+  const persistCurrentProfileInputs = () => {
+    const idx = findActiveProfileIndex();
+    if (idx === -1) return;
+    const profile = state.profiles[idx];
+    if (profile.type === "internal" || profile.readonly) return;
+    const $name = getById($root, ids.profileNameId);
+    const $url = getById($root, ids.apiUrlId);
+    const $key = getById($root, ids.apiKeyId);
+    const $model = getById($root, ids.modelId);
+    if ($name.length) {
+      profile.name = String($name.val() || "").trim() || profile.name;
+    }
+    if ($url.length) {
+      profile.url = normalizeUrl($url.val());
+    }
+    if ($key.length) {
+      profile.key = String($key.val() || "").trim();
+    }
+    if ($model.length) {
+      profile.model = String($model.val() || "").trim() || defaultModel;
+    }
+    emitChange();
+  };
+  const render = () => {
+    const $select = getById($root, ids.profileSelectId);
+    const $name = getById($root, ids.profileNameId);
+    const $del = getById($root, ids.profileDeleteId);
+    const $url = getById($root, ids.apiUrlId);
+    const $key = getById($root, ids.apiKeyId);
+    const $model = getById($root, ids.modelId);
+    const $urlHint = getById($root, ids.urlHintId);
+    const $stUrlDisplay = getById($root, ids.stUrlDisplayId);
+    const $tip = getById($root, ids.profileTipId);
+    $select.empty();
+    state.profiles.forEach((profile2) => {
+      $select.append(`<option value="${escapeHtml3(profile2.id)}">${escapeHtml3(profile2.name)}</option>`);
+    });
+    $select.val(state.activeProfileId);
+    const profile = findActiveProfile();
+    if (!profile) return;
+    const isInternal = profile.type === "internal";
+    if ($name.length) {
+      $name.val(profile.name || "").prop("disabled", isInternal || profile.readonly === true);
+    }
+    if ($del.length) {
+      $del.prop("disabled", isInternal || profile.readonly === true).css("opacity", isInternal || profile.readonly ? 0.5 : 1);
+    }
+    if (isInternal) {
+      $url.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
+      $key.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
+      $model.empty().append("<option selected>(ST \u8BBE\u7F6E)</option>").prop("disabled", true);
+      if ($urlHint.length) {
+        const stUrl = typeof options.getInternalUrl === "function" ? String(options.getInternalUrl() || "\u672A\u77E5") : "\u672A\u77E5";
+        if ($stUrlDisplay.length) $stUrlDisplay.text(stUrl || "\u672A\u77E5");
+        $urlHint.show();
+      }
+      if ($tip.length) $tip.text(statusTexts.internalTip);
+      setStatus2(statusTexts.default, "muted");
+      return;
+    }
+    $url.val(profile.url || "").prop("disabled", false).prop("placeholder", options.apiUrlPlaceholder || "https://api.example.com/v1");
+    $key.val(profile.key || "").prop("disabled", false).prop("placeholder", options.apiKeyPlaceholder || "sk-...");
+    $model.prop("disabled", false);
+    if ($urlHint.length) $urlHint.hide();
+    if ($tip.length) $tip.text(statusTexts.customTip);
+    const currentModel = profile.model || defaultModel;
+    if ($model.find(`option[value="${currentModel.replace(/\"/g, '\\"')}"]`).length === 0) {
+      $model.empty().append(`<option value="${escapeHtml3(currentModel)}" selected>${escapeHtml3(currentModel)}</option>`);
+    }
+    $model.val(currentModel);
+  };
+  const createProfile = () => {
+    const customCount = state.profiles.filter((p) => p.type !== "internal").length;
+    return normalizeProfile({
+      id: `${createProfileIdPrefix}_${Date.now()}`,
+      name: `\u65B0\u65B9\u6848 ${customCount + 1}`,
+      type: "custom",
+      url: "",
+      key: "",
+      model: defaultModel
+    }, customCount, defaultModel);
+  };
+  const fetchModels = async (showToast = false) => {
+    persistCurrentProfileInputs();
+    const profile = findActiveProfile();
+    const $model = getById($root, ids.modelId);
+    const $fetchBtn = getById($root, ids.fetchModelsId);
+    if (!profile || profile.type === "internal") return [];
+    const apiUrl = normalizeUrl(profile.url);
+    if (!apiUrl) {
+      $model.empty().append("<option value=''>\u8BF7\u5148\u586B\u5199 API \u5730\u5740</option>");
+      setStatus2(statusTexts.missingUrl, "warn");
+      if (showToast && window.toastr) window.toastr.warning(statusTexts.missingUrl);
+      return [];
+    }
+    try {
+      $fetchBtn.prop("disabled", true).text("...");
+      setStatus2(statusTexts.loading, "muted");
+      const models = uniqStrings(await modelFetcher({ apiUrl, apiKey: profile.key, profile, state: { ...state } }));
+      $model.empty();
+      if (!models.length) {
+        $model.append("<option value=''>\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B</option>");
+        setStatus2(statusTexts.empty, "warn");
+        return [];
+      }
+      const selectedModel = models.includes(profile.model) ? profile.model : models[0];
+      models.forEach((m) => {
+        $model.append(`<option value="${escapeHtml3(m)}" ${m === selectedModel ? "selected" : ""}>${escapeHtml3(m)}</option>`);
+      });
+      profile.model = selectedModel;
+      setStatus2(typeof statusTexts.success === "function" ? statusTexts.success(models.length) : statusTexts.success, "ok");
+      emitChange();
+      if (showToast && window.toastr) {
+        window.toastr.success(typeof statusTexts.success === "function" ? statusTexts.success(models.length) : statusTexts.success);
+      }
+      return models;
+    } catch (error) {
+      const msg = error?.message || "\u672A\u77E5\u9519\u8BEF";
+      $model.empty().append("<option value=''>\u83B7\u53D6\u5931\u8D25</option>");
+      setStatus2(typeof statusTexts.failed === "function" ? statusTexts.failed(msg) : statusTexts.failed, "err");
+      if (showToast && window.toastr) {
+        window.toastr.error(msg);
+      }
+      return [];
+    } finally {
+      $fetchBtn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+    }
+  };
+  const bind = () => {
+    const $select = getById($root, ids.profileSelectId);
+    const $add = getById($root, ids.profileAddId);
+    const $del = getById($root, ids.profileDeleteId);
+    const $fetch = getById($root, ids.fetchModelsId);
+    const $name = getById($root, ids.profileNameId);
+    const $url = getById($root, ids.apiUrlId);
+    const $key = getById($root, ids.apiKeyId);
+    const $model = getById($root, ids.modelId);
+    $select.on("change", () => {
+      persistCurrentProfileInputs();
+      state.activeProfileId = String($select.val() || "").trim();
+      render();
+      emitChange();
+      const active = findActiveProfile();
+      if (active && active.type !== "internal" && options.autoFetchOnProfileSwitch !== false) {
+        setTimeout(() => {
+          fetchModels(false);
+        }, 100);
+      }
+    });
+    $add.on("click", (e) => {
+      e.preventDefault();
+      persistCurrentProfileInputs();
+      const profile = typeof options.createProfile === "function" ? normalizeProfile(options.createProfile({ state: { ...state } }) || createProfile(), state.profiles.length, defaultModel) : createProfile();
+      state.profiles.push(profile);
+      state.activeProfileId = profile.id;
+      render();
+      emitChange();
+    });
+    $del.on("click", (e) => {
+      e.preventDefault();
+      const active = findActiveProfile();
+      if (!active || active.type === "internal" || active.readonly) return;
+      if (!window.confirm("\u5220\u9664\u65B9\u6848\uFF1F")) return;
+      state.profiles = state.profiles.filter((p) => p.id !== active.id);
+      if (state.profiles.length === 0) state.profiles.push(createProfile());
+      state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
+      render();
+      emitChange();
+    });
+    $name.on("input", persistCurrentProfileInputs);
+    $model.on("change", persistCurrentProfileInputs);
+    $url.on("input", () => {
+      persistCurrentProfileInputs();
+      if (autoFetchTimer) clearTimeout(autoFetchTimer);
+      if (options.autoFetchOnInput === true) {
+        autoFetchTimer = setTimeout(() => {
+          fetchModels(false);
+        }, autoFetchDelay);
+      }
+    });
+    $key.on("input", () => {
+      persistCurrentProfileInputs();
+      if (autoFetchTimer) clearTimeout(autoFetchTimer);
+      if (options.autoFetchOnInput === true) {
+        autoFetchTimer = setTimeout(() => {
+          fetchModels(false);
+        }, autoFetchDelay);
+      }
+    });
+    $fetch.on("click", (e) => {
+      e.preventDefault();
+      fetchModels(true);
+    });
+    render();
+    emitChange();
+  };
+  const setState = (nextState = {}) => {
+    const nextProfiles = Array.isArray(nextState.profiles) ? nextState.profiles : state.profiles;
+    state.profiles = nextProfiles.map((p, idx) => normalizeProfile(p, idx, defaultModel));
+    state.activeProfileId = String(nextState.activeProfileId || state.activeProfileId || "").trim();
+    if (!state.profiles.some((p) => p.id === state.activeProfileId)) {
+      state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
+    }
+    render();
+    emitChange();
+  };
+  const getState = () => ({
+    profiles: state.profiles.map((p) => ({ ...p })),
+    activeProfileId: state.activeProfileId
+  });
+  return {
+    bind,
+    render,
+    setState,
+    getState,
+    fetchModels,
+    persistCurrentProfileInputs,
+    setStatus: setStatus2
+  };
+}
+var init_apiConnectionEditor = __esm({
+  "src/ui/shared/apiConnectionEditor.js"() {
+    init_apiProfileRegistry();
+  }
+});
+
 // src/ui/storyOutlineWindow.js
 var storyOutlineWindow_exports = {};
 __export(storyOutlineWindow_exports, {
@@ -13967,16 +14376,6 @@ function saveOutlineSelectedProfileId(profileId) {
   data[OUTLINE_SELECTED_PROFILE_KEY] = String(profileId || "").trim();
   saveExtData();
 }
-function getOutlineProfileMode() {
-  const data = getExtData();
-  const mode = String(data?.[OUTLINE_PROFILE_MODE_KEY] || "custom").trim();
-  return mode === "st" ? "st" : "custom";
-}
-function saveOutlineProfileMode(mode) {
-  const data = getExtData();
-  data[OUTLINE_PROFILE_MODE_KEY] = mode === "st" ? "st" : "custom";
-  saveExtData();
-}
 function getOutlineCustomProfiles() {
   const data = getExtData();
   const fallback = {
@@ -13991,90 +14390,21 @@ function saveOutlineCustomProfiles(profiles) {
   data[OUTLINE_CUSTOM_PROFILES_KEY] = normalizeRewriteCustomProfiles(profiles, null);
   saveExtData();
 }
-function getOutlineStApiKey() {
-  const data = getExtData();
-  return String(data?.[OUTLINE_ST_API_KEY_KEY] || "").trim();
-}
-function saveOutlineStApiKey(apiKey) {
-  const data = getExtData();
-  data[OUTLINE_ST_API_KEY_KEY] = String(apiKey || "").trim();
-  saveExtData();
-}
-function getOutlineProfilesByMode(mode = null) {
-  const m = mode || getOutlineProfileMode();
-  if (m === "st") {
-    return getStPresetProfiles().map((p) => ({
-      id: String(p.id || "").trim(),
-      name: String(p.name || "").trim() || "\u9152\u9986\u65B9\u6848",
-      api_url: normalizeApiBaseUrl(String(p.api_url || "")),
-      api_key: "",
-      model: String(p.model || "").trim()
-    })).filter((p) => p.id);
-  }
+function getOutlineProfilesByMode() {
   return getOutlineCustomProfiles();
 }
-function resolveOutlineProfileSelection(mode = null, profileId = null) {
-  const m = mode || getOutlineProfileMode();
-  const profiles = getOutlineProfilesByMode(m);
-  if (profiles.length === 0) return { mode: m, profileId: "", profiles };
+function resolveOutlineProfileSelection(profileId = null) {
+  const profiles = getOutlineProfilesByMode();
+  if (profiles.length === 0) return { profileId: "", profiles };
   const preferred = String(profileId || getOutlineSelectedProfileId() || "").trim();
   const selected = profiles.some((p) => p.id === preferred) ? preferred : profiles[0]?.id || "";
-  return { mode: m, profileId: selected, profiles };
+  return { profileId: selected, profiles };
 }
 function getOutlineActiveProfile() {
   const resolved = resolveOutlineProfileSelection();
   const selected = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
   if (!selected) return null;
-  if (resolved.mode === "st") {
-    return {
-      ...selected,
-      api_key: getOutlineStApiKey()
-    };
-  }
   return selected;
-}
-function syncOutlineProfileFields($root, options = {}) {
-  const force = options.force === true;
-  const mode = String($root.find("#t-outline-settings-profile-mode").val() || getOutlineProfileMode());
-  const selectedId = String($root.find("#t-outline-settings-profile-select").val() || getOutlineSelectedProfileId() || "").trim();
-  const resolved = resolveOutlineProfileSelection(mode, selectedId);
-  const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-  const manualStKey = getOutlineStApiKey();
-  if (!force) {
-    if (mode !== getOutlineProfileMode()) saveOutlineProfileMode(mode);
-    if (resolved.profileId !== getOutlineSelectedProfileId()) saveOutlineSelectedProfileId(resolved.profileId);
-  }
-  const isStMode = mode === "st";
-  $root.find("#t-outline-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", isStMode);
-  $root.find("#t-outline-settings-api-key").val(isStMode ? manualStKey : String(profile?.api_key || "")).prop("readonly", false);
-  $root.find("#t-outline-settings-model").val(String(profile?.model || "")).prop("disabled", isStMode);
-  $root.find("#t-outline-settings-new-profile").prop("disabled", isStMode);
-  const hint = isStMode ? "\u5F53\u524D\u4F7F\u7528\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848\u3002API Key \u4E3A\u624B\u52A8\u586B\u5199\u9879\uFF08\u7528\u4E8E\u76F4\u8FDE\u8BF7\u6C42\uFF09\u3002" : "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002";
-  $root.find("#t-outline-settings-profile-tip").text(hint);
-}
-function renderOutlineProfileOptions($root = null) {
-  const $scope = $root && $root.length ? $root : $("#t-outline-prompt-manager");
-  if (!$scope.length) return;
-  const mode = getOutlineProfileMode();
-  const resolved = resolveOutlineProfileSelection(mode);
-  const $mode = $scope.find("#t-outline-settings-profile-mode");
-  const $select = $scope.find("#t-outline-settings-profile-select");
-  if (!$mode.length || !$select.length) return;
-  $mode.val(mode);
-  $select.empty();
-  if (resolved.profiles.length === 0) {
-    $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
-    syncOutlineProfileFields($scope, { force: true });
-    return;
-  }
-  resolved.profiles.forEach((profile) => {
-    $select.append(`<option value="${escapeHtml3(profile.id)}">${escapeHtml3(profile.name)}</option>`);
-  });
-  $select.val(resolved.profileId);
-  if (resolved.profileId !== getOutlineSelectedProfileId()) {
-    saveOutlineSelectedProfileId(resolved.profileId);
-  }
-  syncOutlineProfileFields($scope, { force: true });
 }
 async function sendOutlineRequest(messages, options = {}) {
   const profile = getOutlineActiveProfile();
@@ -14179,7 +14509,7 @@ function ensureCssLoaded() {
     document.head.appendChild(link);
   }
 }
-function escapeHtml3(text) {
+function escapeHtml4(text) {
   const div = document.createElement("div");
   div.textContent = text == null ? "" : String(text);
   return div.innerHTML;
@@ -14396,7 +14726,7 @@ function openOpeningSourcePickerDialog(initialChatIndex = -1) {
         return `
                     <div class="t-opening-picker-item ${selected ? "active" : ""}" data-chat-index="${entry.chatIndex}">
                         <div class="t-opening-picker-head">#${entry.chatIndex + 1} \xB7 ${entry.role}</div>
-                        <div class="t-opening-picker-text">${escapeHtml3(entry.text)}</div>
+                        <div class="t-opening-picker-text">${escapeHtml4(entry.text)}</div>
                     </div>
                 `;
       }).join("");
@@ -14462,7 +14792,7 @@ function openCardOpeningPickerDialog(initialOpeningIndex = -1) {
                         <div class="t-dialog-close" id="t-opening-detail-close"><i class="fa-solid fa-times"></i></div>
                     </div>
                     <div class="t-dialog-body" style="padding: 12px;">
-                        <pre class="t-outline-raw-pre">${escapeHtml3(entry.text || "")}</pre>
+                        <pre class="t-outline-raw-pre">${escapeHtml4(entry.text || "")}</pre>
                     </div>
                     <div class="t-dialog-footer">
                         <button id="t-opening-detail-close-btn" class="t-btn">\u5173\u95ED</button>
@@ -14486,7 +14816,7 @@ function openCardOpeningPickerDialog(initialOpeningIndex = -1) {
                             <span class="t-opening-card-title">\u5F00\u573A\u767D ${entry.openingIndex + 1}</span>
                             <button class="t-btn t-btn-xs t-opening-card-detail" data-action="opening-card-detail" data-opening-index="${entry.openingIndex}"><i class="fa-solid fa-eye"></i> \u67E5\u770B\u8BE6\u60C5</button>
                         </div>
-                        <div class="t-opening-card-text">${escapeHtml3(brief)}</div>
+                        <div class="t-opening-card-text">${escapeHtml4(brief)}</div>
                     </div>
                 `;
       }).join("");
@@ -14697,10 +15027,8 @@ async function openPromptTemplateManager() {
   $("#t-outline-prompt-manager").remove();
   const defaults = getDefaultPromptTemplates();
   const settingsDraft = {
-    profileMode: getOutlineProfileMode(),
     selectedProfileId: getOutlineSelectedProfileId(),
     customProfiles: getOutlineCustomProfiles(),
-    stApiKey: getOutlineStApiKey(),
     openingSourceMode: getOpeningSourceMode(),
     openingSourceRef: getOpeningSourceRef(),
     chatTagWhitelist: getOutlineChatTagWhitelistRaw(),
@@ -14736,33 +15064,45 @@ async function openPromptTemplateManager() {
 
                 <div class="t-set-content">
                     <div id="t-outline-page-runtime" class="t-set-page active">
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848\u6765\u6E90</label>
-                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <select id="t-outline-settings-profile-mode" class="t-outline-select">
-                                    <option value="custom">\u81EA\u5B9A\u4E49\u65B9\u6848</option>
-                                    <option value="st">\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848</option>
-                                </select>
-                                <select id="t-outline-settings-profile-select" class="t-outline-select" style="min-width:220px;"></select>
-                                <button id="t-outline-settings-new-profile" class="t-btn t-btn-xs" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
-                            </div>
-                            <div id="t-outline-settings-profile-tip" class="t-plan-tip" style="margin-top:8px;"></div>
-                        </div>
-
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u5730\u5740</label>
-                            <input id="t-outline-settings-api-url" class="t-outline-select" type="text" placeholder="https://api.example.com/v1">
-
-                            <label class="t-form-label" style="margin-top:8px;">API Key</label>
-                            <input id="t-outline-settings-api-key" class="t-outline-select" type="password" placeholder="\u53EF\u9009\uFF0C\u6309\u4F60\u7684\u670D\u52A1\u7AEF\u8981\u6C42\u586B\u5199">
-
-                            <label class="t-form-label" style="margin-top:8px;">\u6A21\u578B</label>
-                            <div style="display:flex; gap:8px; align-items:center;">
-                                <select id="t-outline-settings-model" class="t-outline-select" style="flex:1;"></select>
-                                <button id="t-outline-settings-fetch-models" class="t-btn t-btn-xs" type="button" title="\u5237\u65B0\u6A21\u578B\u5217\u8868"><i class="fa-solid fa-rotate"></i></button>
-                            </div>
-                            <div id="t-outline-settings-status" class="t-plan-tip" style="margin-top:8px;">\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868</div>
-                        </div>
+                        ${renderApiConnectionEditorHTML({
+    ids: {
+      profileSelectId: "t-outline-settings-profile-select",
+      profileAddId: "t-outline-settings-new-profile",
+      profileDeleteId: "t-outline-settings-delete-profile",
+      profileNameId: "t-outline-settings-profile-name",
+      profileMetaId: "t-outline-settings-profile-meta",
+      profileTipId: "t-outline-settings-profile-tip",
+      fieldsWrapId: "t-outline-settings-conn-fields",
+      apiUrlId: "t-outline-settings-api-url",
+      apiKeyId: "t-outline-settings-api-key",
+      modelId: "t-outline-settings-model",
+      fetchModelsId: "t-outline-settings-fetch-models",
+      statusId: "t-outline-settings-status",
+      urlHintId: "t-outline-settings-url-hint",
+      stUrlDisplayId: "t-outline-settings-st-url"
+    },
+    classes: {
+      input: "t-outline-select",
+      select: "t-outline-select",
+      profileSelect: "t-outline-select",
+      button: "t-btn t-btn-xs"
+    },
+    labels: {
+      profile: "API \u65B9\u6848",
+      profileName: "\u65B9\u6848\u540D\u79F0",
+      apiUrl: "API \u5730\u5740",
+      model: "\u6A21\u578B"
+    },
+    flags: {
+      showProfileName: true,
+      showDeleteProfile: true,
+      showStream: false,
+      showMaxTokens: false
+    },
+    values: {
+      statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868"
+    }
+  })}
 
                         <div class="t-form-group">
                             <label class="t-form-label">\u8BF7\u6C42\u884C\u4E3A</label>
@@ -14845,135 +15185,39 @@ async function openPromptTemplateManager() {
     </div>`;
   $("body").append(html);
   const close = () => $("#t-outline-prompt-manager").remove();
-  const getDraftProfilesByMode = (mode) => {
-    if (mode === "st") {
-      return getStPresetProfiles().map((p) => ({
-        id: String(p.id || "").trim(),
-        name: String(p.name || "").trim() || "\u9152\u9986\u65B9\u6848",
-        api_url: normalizeApiBaseUrl(String(p.api_url || "")),
-        api_key: "",
-        model: String(p.model || "").trim()
-      })).filter((p) => p.id);
+  const $settingsRoot = $("#t-outline-prompt-manager");
+  const outlineSettingsConnectionEditor = createApiConnectionEditor({
+    root: $settingsRoot,
+    ids: {
+      profileSelectId: "t-outline-settings-profile-select",
+      profileAddId: "t-outline-settings-new-profile",
+      profileDeleteId: "t-outline-settings-delete-profile",
+      profileNameId: "t-outline-settings-profile-name",
+      profileTipId: "t-outline-settings-profile-tip",
+      apiUrlId: "t-outline-settings-api-url",
+      apiKeyId: "t-outline-settings-api-key",
+      modelId: "t-outline-settings-model",
+      fetchModelsId: "t-outline-settings-fetch-models",
+      statusId: "t-outline-settings-status"
+    },
+    profiles: mapCustomProfilesToConnectionProfiles(settingsDraft.customProfiles, "gpt-3.5-turbo"),
+    activeProfileId: settingsDraft.selectedProfileId,
+    profileIdPrefix: "outline_custom",
+    autoFetchOnInput: false,
+    autoFetchOnProfileSwitch: false,
+    onChange: (nextState) => {
+      settingsDraft.customProfiles = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+      settingsDraft.selectedProfileId = nextState.activeProfileId;
     }
-    return Array.isArray(settingsDraft.customProfiles) ? settingsDraft.customProfiles : [];
-  };
-  const resolveProfileSelectionDraft = (mode, profileId) => {
-    const profiles = getDraftProfilesByMode(mode);
-    if (!profiles.length) return { profileId: "", profiles };
-    const preferred = String(profileId || "").trim();
-    const selected = profiles.some((p) => p.id === preferred) ? preferred : profiles[0].id;
-    return { profileId: selected, profiles };
-  };
-  const syncProfileFieldsDraft = () => {
-    const $root = $("#t-outline-prompt-manager");
-    const mode = settingsDraft.profileMode === "st" ? "st" : "custom";
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
-    settingsDraft.selectedProfileId = resolved.profileId;
-    const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    const isStMode = mode === "st";
-    $root.find("#t-outline-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", isStMode);
-    $root.find("#t-outline-settings-api-key").val(isStMode ? settingsDraft.stApiKey : String(profile?.api_key || "")).prop("readonly", false);
-    $root.find("#t-outline-settings-model").val(String(profile?.model || "")).prop("disabled", isStMode);
-    $root.find("#t-outline-settings-new-profile").prop("disabled", isStMode);
-    const hint = isStMode ? "\u5F53\u524D\u4F7F\u7528\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848\u3002API Key \u4E3A\u624B\u52A8\u586B\u5199\u9879\uFF08\u7528\u4E8E\u76F4\u8FDE\u8BF7\u6C42\uFF09\u3002" : "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002";
-    $root.find("#t-outline-settings-profile-tip").text(hint);
-  };
-  const renderProfileOptionsDraft = () => {
-    const $root = $("#t-outline-prompt-manager");
-    const mode = settingsDraft.profileMode === "st" ? "st" : "custom";
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
-    const $mode = $root.find("#t-outline-settings-profile-mode");
-    const $select = $root.find("#t-outline-settings-profile-select");
-    $mode.val(mode);
-    $select.empty();
-    if (!resolved.profiles.length) {
-      $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
-      settingsDraft.selectedProfileId = "";
-      syncProfileFieldsDraft();
-      return;
-    }
-    resolved.profiles.forEach((profile) => {
-      $select.append(`<option value="${escapeHtml3(profile.id)}">${escapeHtml3(profile.name)}</option>`);
-    });
-    settingsDraft.selectedProfileId = resolved.profileId;
-    $select.val(resolved.profileId);
-    syncProfileFieldsDraft();
-  };
-  const persistCurrentProfileInputsToDraft = () => {
-    const $root = $("#t-outline-prompt-manager");
-    const mode = String($root.find("#t-outline-settings-profile-mode").val() || settingsDraft.profileMode || "custom");
-    const selectedId = String($root.find("#t-outline-settings-profile-select").val() || settingsDraft.selectedProfileId || "").trim();
-    const url = normalizeApiBaseUrl(String($root.find("#t-outline-settings-api-url").val() || "").trim());
-    const key = String($root.find("#t-outline-settings-api-key").val() || "").trim();
-    const model = String($root.find("#t-outline-settings-model").val() || "").trim();
-    settingsDraft.profileMode = mode === "st" ? "st" : "custom";
-    settingsDraft.selectedProfileId = selectedId;
-    if (settingsDraft.profileMode === "custom") {
-      const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-      if (current) {
-        current.api_url = url;
-        current.api_key = key;
-        current.model = model;
-      }
-    } else {
-      settingsDraft.stApiKey = key;
-    }
-  };
+  });
+  outlineSettingsConnectionEditor.bind();
+  outlineSettingsConnectionEditor.render();
   const refreshOpeningSourceControlsDraft = () => {
     const mode = settingsDraft.openingSourceMode === "chat_selected" ? "chat_selected" : "auto_first";
     const whitelist = settingsDraft.chatTagWhitelist || "";
     $("#t-outline-settings-opening-source-mode").val(mode);
     $("#t-outline-settings-opening-source-pick").prop("disabled", false);
     $("#t-outline-settings-chat-tag-whitelist").val(whitelist);
-  };
-  const fetchOutlineModelListDraft = async (showToast = false) => {
-    const $root = $("#t-outline-prompt-manager");
-    const $status = $root.find("#t-outline-settings-status");
-    persistCurrentProfileInputsToDraft();
-    const mode = settingsDraft.profileMode;
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
-    settingsDraft.selectedProfileId = resolved.profileId;
-    const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    const apiUrl = normalizeApiBaseUrl(String($root.find("#t-outline-settings-api-url").val() || profile?.api_url || "").trim());
-    const apiKey = String($root.find("#t-outline-settings-api-key").val() || "").trim();
-    if (!apiUrl) {
-      $status.text("\u8BF7\u5148\u586B\u5199 API \u5730\u5740").removeClass("ok err muted").addClass("warn");
-      return;
-    }
-    try {
-      $status.text("\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...").removeClass("ok err warn").addClass("muted");
-      const headers = {};
-      if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-      const res = await fetch(`${apiUrl}/models`, { method: "GET", headers });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data?.models) ? data.models : [];
-      const ids = [...new Set(rows.map((m) => String(m?.id || m || "").trim()).filter(Boolean))];
-      if (!ids.length) throw new Error("\u672A\u8FD4\u56DE\u6A21\u578B\u5217\u8868");
-      const prevModel = String($root.find("#t-outline-settings-model").val() || profile?.model || "").trim();
-      const selectedModel = ids.includes(prevModel) ? prevModel : ids[0];
-      const $model = $root.find("#t-outline-settings-model");
-      $model.empty();
-      ids.forEach((modelId) => {
-        $model.append(`<option value="${escapeHtml3(modelId)}">${escapeHtml3(modelId)}</option>`);
-      });
-      $model.val(selectedModel);
-      if (mode === "custom") {
-        const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-        if (current) {
-          current.api_url = apiUrl;
-          current.api_key = apiKey;
-          current.model = selectedModel;
-        }
-      } else {
-        settingsDraft.stApiKey = apiKey;
-      }
-      $status.text(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`).removeClass("muted warn err").addClass("ok");
-      if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`, "\u6545\u4E8B\u5927\u7EB2");
-    } catch (e) {
-      $status.text(`\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${e.message || "\u672A\u77E5\u9519\u8BEF"}`).removeClass("muted ok warn").addClass("err");
-      if (showToast && window.toastr) toastr.error(e.message || "\u6A21\u578B\u83B7\u53D6\u5931\u8D25", "\u6545\u4E8B\u5927\u7EB2");
-    }
   };
   const switchTab = (tab) => {
     const next = tab === "prompt" ? "prompt" : "runtime";
@@ -15014,7 +15258,7 @@ async function openPromptTemplateManager() {
     $("#t-prompt-var-warning").text(unique.length > 0 ? `\u672A\u77E5\u53D8\u91CF\uFF1A${unique.join(", ")}` : "");
   };
   const syncRuntimeSettings = () => {
-    renderProfileOptionsDraft();
+    outlineSettingsConnectionEditor.render();
     refreshOpeningSourceControlsDraft();
     $("#t-outline-settings-stream-enabled").prop("checked", settingsDraft.streamEnabled === true);
   };
@@ -15039,45 +15283,6 @@ async function openPromptTemplateManager() {
     syncToEditor();
     preview();
     if (window.toastr) toastr.success("\u5DF2\u6062\u590D\u5F53\u524D\u6A21\u677F\u9ED8\u8BA4\u503C", "\u6545\u4E8B\u5927\u7EB2\u8BBE\u7F6E");
-  });
-  const $settingsRoot = $("#t-outline-prompt-manager");
-  $settingsRoot.on("change", "#t-outline-settings-profile-mode", () => {
-    persistCurrentProfileInputsToDraft();
-    const mode = String($settingsRoot.find("#t-outline-settings-profile-mode").val() || "custom");
-    settingsDraft.profileMode = mode === "st" ? "st" : "custom";
-    renderProfileOptionsDraft();
-  });
-  $settingsRoot.on("change", "#t-outline-settings-profile-select", () => {
-    persistCurrentProfileInputsToDraft();
-    settingsDraft.selectedProfileId = String($settingsRoot.find("#t-outline-settings-profile-select").val() || "").trim();
-    syncProfileFieldsDraft();
-  });
-  $settingsRoot.on("click", "#t-outline-settings-new-profile", (e) => {
-    e.preventDefault();
-    persistCurrentProfileInputsToDraft();
-    if (settingsDraft.profileMode !== "custom") return;
-    const nextName = `\u65B9\u6848 ${settingsDraft.customProfiles.length + 1}`;
-    const created = {
-      id: `outline_custom_${Date.now()}`,
-      name: nextName,
-      api_url: String($settingsRoot.find("#t-outline-settings-api-url").val() || "").trim(),
-      api_key: String($settingsRoot.find("#t-outline-settings-api-key").val() || "").trim(),
-      model: String($settingsRoot.find("#t-outline-settings-model").val() || "").trim()
-    };
-    settingsDraft.customProfiles.push(created);
-    settingsDraft.selectedProfileId = created.id;
-    renderProfileOptionsDraft();
-    if (window.toastr) toastr.success(`\u5DF2\u65B0\u5EFA\u65B9\u6848\uFF1A${created.name}`, "\u6545\u4E8B\u5927\u7EB2");
-  });
-  $settingsRoot.on("input", "#t-outline-settings-api-url, #t-outline-settings-api-key", () => {
-    persistCurrentProfileInputsToDraft();
-  });
-  $settingsRoot.on("change", "#t-outline-settings-model", () => {
-    persistCurrentProfileInputsToDraft();
-  });
-  $settingsRoot.on("click", "#t-outline-settings-fetch-models", async (e) => {
-    e.preventDefault();
-    await fetchOutlineModelListDraft(true);
   });
   $("#t-outline-settings-opening-source-mode").on("change", function() {
     const mode = String($(this).val() || "auto_first") === "chat_selected" ? "chat_selected" : "auto_first";
@@ -15107,11 +15312,12 @@ async function openPromptTemplateManager() {
   $("#t-prompt-manager-close").on("click", close);
   $("#t-prompt-manager-save-btn").on("click", () => {
     syncFromEditor();
-    persistCurrentProfileInputsToDraft();
-    saveOutlineProfileMode(settingsDraft.profileMode);
+    outlineSettingsConnectionEditor.persistCurrentProfileInputs();
+    const nextState = outlineSettingsConnectionEditor.getState();
+    settingsDraft.customProfiles = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+    settingsDraft.selectedProfileId = nextState.activeProfileId;
     saveOutlineSelectedProfileId(settingsDraft.selectedProfileId);
     saveOutlineCustomProfiles(settingsDraft.customProfiles);
-    saveOutlineStApiKey(settingsDraft.stApiKey);
     setOpeningSourceMode(settingsDraft.openingSourceMode);
     setOpeningSourceRef(settingsDraft.openingSourceRef);
     setOutlineChatTagWhitelistRaw(settingsDraft.chatTagWhitelist);
@@ -15452,9 +15658,9 @@ function openPlanCreationDialog() {
             <div class="t-dialog-body" style="padding: 12px;">
                 <div class="t-plan-tip" style="font-size:13px; margin-bottom:10px;">\u521B\u5EFA\u540E\u4F1A\u76F4\u63A5\u8FDB\u5165\u300C\u5927\u7EB2\u751F\u6210\u300D\u7F16\u8F91\u9875\u3002</div>
                 <label class="t-outline-label">\u65B9\u6848\u540D\u79F0</label>
-                <input id="t-create-plan-name" class="t-outline-input" value="${escapeHtml3(defaultPlanName)}" />
+                <input id="t-create-plan-name" class="t-outline-input" value="${escapeHtml4(defaultPlanName)}" />
                 <label class="t-outline-label" style="margin-top:10px;">\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09</label>
-                <textarea id="t-create-plan-story" class="t-outline-story-input" rows="4" placeholder="\u53EF\u5148\u5199\u4E00\u4E2A\u65B9\u5411\uFF0C\u540E\u7EED\u4ECD\u53EF\u968F\u65F6\u4FEE\u6539">${escapeHtml3(draftStoryInput)}</textarea>
+                <textarea id="t-create-plan-story" class="t-outline-story-input" rows="4" placeholder="\u53EF\u5148\u5199\u4E00\u4E2A\u65B9\u5411\uFF0C\u540E\u7EED\u4ECD\u53EF\u968F\u65F6\u4FEE\u6539">${escapeHtml4(draftStoryInput)}</textarea>
                 <div class="t-plan-tip" style="margin-top:8px;">\u63D0\u793A\uFF1A\u5982\u679C\u7559\u7A7A\uFF0C\u4F1A\u521B\u5EFA\u4E00\u4E2A\u7A7A\u767D\u65B9\u6848\u3002</div>
                 <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
                     <button id="t-create-plan-cancel" class="t-btn">\u53D6\u6D88</button>
@@ -15711,11 +15917,11 @@ function renderSceneHubWindow() {
         <div class="t-scene-hub-item ${row.used ? "used" : ""} ${sceneHubSelectedKey === row.key ? "active" : ""}" data-scene-key="${row.key}">
             <div class="t-scene-hub-head">
                 <span class="t-scene-hub-no">#${row.number}</span>
-                <span class="t-scene-hub-plan">${escapeHtml3(row.planName)} / ${escapeHtml3(row.itemTitle)}</span>
+                <span class="t-scene-hub-plan">${escapeHtml4(row.planName)} / ${escapeHtml4(row.itemTitle)}</span>
                 ${row.used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}
             </div>
-            <div class="t-scene-hub-meta">${escapeHtml3(row.scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml3(row.scene.scene_location || "\u672A\u8BBE\u5730\u70B9")}</div>
-            <div class="t-scene-hub-text">${escapeHtml3(row.scene.sendable_prompt || row.scene.key_beats || "(\u7A7A)")}</div>
+            <div class="t-scene-hub-meta">${escapeHtml4(row.scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml4(row.scene.scene_location || "\u672A\u8BBE\u5730\u70B9")}</div>
+            <div class="t-scene-hub-text">${escapeHtml4(row.scene.sendable_prompt || row.scene.key_beats || "(\u7A7A)")}</div>
         </div>
     `).join("");
   $list.html(html);
@@ -15823,10 +16029,10 @@ function renderPlanDetailCarousel(plan) {
   });
   const sceneBlocks = sortedScenes.map(({ scene, sceneIndex, used }) => `
         <div class="t-plan-scene ${used ? "used" : ""}">
-            <div class="t-plan-scene-head ${used ? "used" : ""}">\u573A\u666F ${scene.scene_index} \xB7 ${escapeHtml3(scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml3(scene.scene_location || "\u672A\u8BBE\u5730\u70B9")} ${used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u76EE\u6807</b> ${escapeHtml3(scene.scene_goal || "(\u7A7A)")}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u51B2\u7A81</b> ${escapeHtml3(scene.conflict || "(\u7A7A)")}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u5173\u952E\u8282\u70B9</b><br>${escapeHtml3(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</div>
+            <div class="t-plan-scene-head ${used ? "used" : ""}">\u573A\u666F ${scene.scene_index} \xB7 ${escapeHtml4(scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml4(scene.scene_location || "\u672A\u8BBE\u5730\u70B9")} ${used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}</div>
+            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u76EE\u6807</b> ${escapeHtml4(scene.scene_goal || "(\u7A7A)")}</div>
+            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u51B2\u7A81</b> ${escapeHtml4(scene.conflict || "(\u7A7A)")}</div>
+            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u5173\u952E\u8282\u70B9</b><br>${escapeHtml4(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</div>
         </div>
     `).join("");
   if (!item) return '<div class="t-plan-empty">\u8BE5\u65B9\u6848\u4E3A\u7A7A</div>';
@@ -15836,9 +16042,9 @@ function renderPlanDetailCarousel(plan) {
             <div class="t-plan-item-view" data-plan-id="${plan.id}">
                 <div class="t-plan-item-pager">${itemCursor + 1} / ${items.length}</div>
                 <div class="t-plan-item-block">
-                    <div class="t-plan-item-head">#${item.index} [${escapeHtml3(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml3(item.title || "\u672A\u547D\u540D")}</div>
-                    <div class="t-plan-item-text">${escapeHtml3(item.plot || "(\u7A7A)")}</div>
-                    ${item.foreshadowing ? `<div class="t-plan-item-foreshadow">\u4F0F\u7B14\uFF1A${escapeHtml3(item.foreshadowing)}</div>` : ""}
+                    <div class="t-plan-item-head">#${item.index} [${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml4(item.title || "\u672A\u547D\u540D")}</div>
+                    <div class="t-plan-item-text">${escapeHtml4(item.plot || "(\u7A7A)")}</div>
+                    ${item.foreshadowing ? `<div class="t-plan-item-foreshadow">\u4F0F\u7B14\uFF1A${escapeHtml4(item.foreshadowing)}</div>` : ""}
                     <div class="t-plan-scenes-wrap">${sceneBlocks || '<div class="t-plan-scene-empty">\u6682\u65E0\u573A\u666F\u7EC6\u7EB2</div>'}</div>
                 </div>
             </div>
@@ -15919,7 +16125,7 @@ function renderPlanHub() {
             <div class="t-plan-accordion-item ${active ? "expanded" : ""}" data-plan-id="${plan.id}">
                 <div class="t-plan-accordion-head" data-action="select-plan" data-plan-id="${plan.id}">
                     <div class="t-plan-accordion-main">
-                        <div class="t-plan-name">${escapeHtml3(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
+                        <div class="t-plan-name">${escapeHtml4(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
                         <div class="t-plan-meta">${timeText} \xB7 ${items.length} \u6761</div>
                         <div class="t-plan-tip">${isSource ? "\u5F53\u524D\u7EC6\u7EB2\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
                     </div>
@@ -15947,11 +16153,11 @@ function showPlanInstructionDialog(plan) {
     <div id="t-outline-plan-instruction-dialog" class="t-dialog-overlay">
         <div class="t-dialog-box" style="max-width: 780px; max-height: 82vh;">
             <div class="t-dialog-header">
-                <span><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4 \xB7 ${escapeHtml3(planName)}</span>
+                <span><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4 \xB7 ${escapeHtml4(planName)}</span>
                 <div class="t-dialog-close" id="t-plan-instruction-close"><i class="fa-solid fa-times"></i></div>
             </div>
             <div class="t-dialog-body" style="padding: 12px;">
-                <pre class="t-outline-raw-pre">${escapeHtml3(instructionText || "\uFF08\u65E0\uFF09")}</pre>
+                <pre class="t-outline-raw-pre">${escapeHtml4(instructionText || "\uFF08\u65E0\uFF09")}</pre>
             </div>
             <div class="t-dialog-footer">
                 <button id="t-plan-instruction-close-btn" class="t-btn">\u5173\u95ED</button>
@@ -16038,7 +16244,7 @@ function showRawResponseDialog(rawContent, options = {}) {
   } = options || {};
   const historyOptions = rawResponseHistory.map((entry, idx) => {
     const label = `${idx + 1}. ${entry.typeLabel} \xB7 ${entry.charName || "\u672A\u547D\u540D\u89D2\u8272"} \xB7 ${formatRawHistoryTime(entry.createdAt)}`;
-    return `<option value="${escapeHtml3(entry.id)}">${escapeHtml3(label)}</option>`;
+    return `<option value="${escapeHtml4(entry.id)}">${escapeHtml4(label)}</option>`;
   }).join("");
   const defaultContent = String(rawContent || lastRawResponse || rawResponseHistory[0]?.content || "");
   $("#t-outline-raw-dialog").remove();
@@ -16046,7 +16252,7 @@ function showRawResponseDialog(rawContent, options = {}) {
     <div id="t-outline-raw-dialog" class="t-dialog-overlay">
         <div class="t-dialog-box" style="max-width: 820px; max-height: 82vh;">
             <div class="t-dialog-header">
-                <span><i class="fa-solid fa-code"></i> ${escapeHtml3(title)}</span>
+                <span><i class="fa-solid fa-code"></i> ${escapeHtml4(title)}</span>
                 <div class="t-dialog-close" id="t-outline-raw-close"><i class="fa-solid fa-times"></i></div>
             </div>
             <div class="t-dialog-body" style="padding: 12px;">
@@ -16063,11 +16269,11 @@ function showRawResponseDialog(rawContent, options = {}) {
                         <button id="t-outline-export-raw-history" class="t-btn t-btn-xs"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA\u5386\u53F2</button>
                     </div>
                 </div>
-                ${editable ? `<textarea id="t-outline-raw-editor" class="t-outline-raw-editor">${escapeHtml3(defaultContent)}</textarea>` : `<pre class="t-outline-raw-pre">${escapeHtml3(defaultContent || "(\u7A7A)")}</pre>`}
-                ${parseHint ? `<div class="t-outline-raw-hint">${escapeHtml3(parseHint)}</div>` : ""}
+                ${editable ? `<textarea id="t-outline-raw-editor" class="t-outline-raw-editor">${escapeHtml4(defaultContent)}</textarea>` : `<pre class="t-outline-raw-pre">${escapeHtml4(defaultContent || "(\u7A7A)")}</pre>`}
+                ${parseHint ? `<div class="t-outline-raw-hint">${escapeHtml4(parseHint)}</div>` : ""}
             </div>
             <div class="t-dialog-footer">
-                ${editable ? `<button id="t-outline-raw-reparse" class="t-btn t-btn-primary">${escapeHtml3(parseButtonLabel)}</button>` : ""}
+                ${editable ? `<button id="t-outline-raw-reparse" class="t-btn t-btn-primary">${escapeHtml4(parseButtonLabel)}</button>` : ""}
                 <button id="t-outline-raw-close-btn" class="t-btn">\u5173\u95ED</button>
             </div>
         </div>
@@ -16233,22 +16439,22 @@ function renderRows() {
     const sceneRows = scenes.length > 0 ? scenes.map((scene, sceneIdx) => `
                 <tr data-plot-index="${idx}" data-scene-index="${sceneIdx}">
                     <td class="t-scene-col-index">${scene.scene_index}</td>
-                    <td>${escapeHtml3(scene.scene_time || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.scene_location || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.scene_goal || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.conflict || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</td>
-                    <td>${escapeHtml3(scene.sendable_prompt || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.notes || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.scene_time || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.scene_location || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.scene_goal || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.conflict || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</td>
+                    <td>${escapeHtml4(scene.sendable_prompt || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.notes || "(\u7A7A)")}</td>
                 </tr>
             `).join("") : `<tr><td colspan="8" class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\uFF0C\u70B9\u51FB\u201C\u7EC6\u7EB2\u751F\u6210\u201D</td></tr>`;
     return `
             <tr data-index="${idx}">
                 <td class="t-outline-col-index">${item.index}</td>
-                <td data-label="\u65F6\u95F4" data-edit-field="time"><div class="t-cell-text">${escapeHtml3(item.time || "(\u7A7A)")}</div></td>
-                <td data-label="\u6807\u9898" data-edit-field="title"><div class="t-cell-text">${escapeHtml3(item.title || "(\u7A7A)")}</div></td>
-                <td data-label="\u60C5\u8282" data-edit-field="plot"><div class="t-cell-text t-cell-long">${escapeHtml3(getBriefText(item.plot, 70))}</div></td>
-                <td data-label="\u4F0F\u7B14" data-edit-field="foreshadowing"><div class="t-cell-text t-cell-long">${escapeHtml3(getBriefText(item.foreshadowing, 52))}</div></td>
+                <td data-label="\u65F6\u95F4" data-edit-field="time"><div class="t-cell-text">${escapeHtml4(item.time || "(\u7A7A)")}</div></td>
+                <td data-label="\u6807\u9898" data-edit-field="title"><div class="t-cell-text">${escapeHtml4(item.title || "(\u7A7A)")}</div></td>
+                <td data-label="\u60C5\u8282" data-edit-field="plot"><div class="t-cell-text t-cell-long">${escapeHtml4(getBriefText(item.plot, 70))}</div></td>
+                <td data-label="\u4F0F\u7B14" data-edit-field="foreshadowing"><div class="t-cell-text t-cell-long">${escapeHtml4(getBriefText(item.foreshadowing, 52))}</div></td>
                 <td data-label="\u64CD\u4F5C" class="t-outline-op-indicator" title="\u70B9\u51FB\u884C\u5C55\u5F00\u64CD\u4F5C">
                     <i class="fa-solid ${selectedRowIndex === idx ? "fa-chevron-up" : "fa-chevron-down"}"></i>
                 </td>
@@ -16320,25 +16526,25 @@ function renderSceneEditorPage() {
         <div class="t-scene-page-card" data-scene-index="${sceneIdx}">
             <div class="t-scene-page-title">\u573A\u666F ${scene.scene_index}</div>
             <label>\u65F6\u95F4</label>
-            <input class="t-outline-input" data-scene-page-field="scene_time" value="${escapeHtml3(scene.scene_time)}">
+            <input class="t-outline-input" data-scene-page-field="scene_time" value="${escapeHtml4(scene.scene_time)}">
             <label>\u5730\u70B9</label>
-            <input class="t-outline-input" data-scene-page-field="scene_location" value="${escapeHtml3(scene.scene_location)}">
+            <input class="t-outline-input" data-scene-page-field="scene_location" value="${escapeHtml4(scene.scene_location)}">
             <label>\u76EE\u6807</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="scene_goal">${escapeHtml3(scene.scene_goal)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="scene_goal">${escapeHtml4(scene.scene_goal)}</textarea>
             <label>\u51B2\u7A81</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="conflict">${escapeHtml3(scene.conflict)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="conflict">${escapeHtml4(scene.conflict)}</textarea>
             <label>\u5173\u952E\u8282\u70B9</label>
-            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="key_beats">${escapeHtml3(scene.key_beats)}</textarea>
+            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="key_beats">${escapeHtml4(scene.key_beats)}</textarea>
             <label>\u53D1\u9001\u6458\u8981</label>
-            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="sendable_prompt">${escapeHtml3(scene.sendable_prompt)}</textarea>
+            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="sendable_prompt">${escapeHtml4(scene.sendable_prompt)}</textarea>
             <label>\u5907\u6CE8</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="notes">${escapeHtml3(scene.notes)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="notes">${escapeHtml4(scene.notes)}</textarea>
             <button class="t-btn t-btn-xs" data-action="scene-page-delete" data-scene-index="${sceneIdx}" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u573A\u666F</button>
         </div>
     `).join("") || '<div class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\u573A\u666F\uFF0C\u70B9\u51FB\u65B0\u589E\u573A\u666F</div>';
   $container.html(`
         <div class="t-scene-page-head">
-            <div class="t-scene-page-main">#${item.index} [${escapeHtml3(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml3(item.title || "\u672A\u547D\u540D")}</div>
+            <div class="t-scene-page-main">#${item.index} [${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml4(item.title || "\u672A\u547D\u540D")}</div>
             <div class="t-scene-page-nav">
                 <button class="t-btn t-btn-xs" data-action="scene-page-prev"><i class="fa-solid fa-chevron-left"></i> \u4E0A\u4E00\u6761</button>
                 <button class="t-btn t-btn-xs" data-action="scene-page-next">\u4E0B\u4E00\u6761 <i class="fa-solid fa-chevron-right"></i></button>
@@ -16379,11 +16585,11 @@ function renderMobileCards() {
             <div class="t-outline-mobile-card" data-index="${idx}">
                 <div class="t-outline-mobile-head">
                     <span class="idx">#${item.index}</span>
-                    <span class="time">${escapeHtml3(item.time || "\u672A\u8BBE\u65F6\u95F4")}</span>
+                    <span class="time">${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}</span>
                     <span class="scene-count">\u7EC6\u7EB2 ${sceneCount}</span>
                 </div>
-                <div class="t-outline-mobile-title">${escapeHtml3(item.title || "\u672A\u547D\u540D\u6807\u9898")}</div>
-                <div class="t-outline-mobile-plot">${escapeHtml3(getBriefText(item.plot))}</div>
+                <div class="t-outline-mobile-title">${escapeHtml4(item.title || "\u672A\u547D\u540D\u6807\u9898")}</div>
+                <div class="t-outline-mobile-plot">${escapeHtml4(getBriefText(item.plot))}</div>
             </div>
         `;
   }).join("");
@@ -16437,13 +16643,13 @@ function renderDesktopEditor(index, focusField = "") {
         </div>
         <div class="t-desk-editor-body">
             <label>\u65F6\u95F4</label>
-            <input id="t-desk-field-time" class="t-outline-input" value="${escapeHtml3(item.time)}">
+            <input id="t-desk-field-time" class="t-outline-input" value="${escapeHtml4(item.time)}">
             <label>\u6807\u9898</label>
-            <input id="t-desk-field-title" class="t-outline-input" value="${escapeHtml3(item.title)}">
+            <input id="t-desk-field-title" class="t-outline-input" value="${escapeHtml4(item.title)}">
             <label>\u60C5\u8282</label>
-            <textarea id="t-desk-field-plot" class="t-outline-textarea" rows="4">${escapeHtml3(item.plot)}</textarea>
+            <textarea id="t-desk-field-plot" class="t-outline-textarea" rows="4">${escapeHtml4(item.plot)}</textarea>
             <label>\u4F0F\u7B14</label>
-            <textarea id="t-desk-field-foreshadowing" class="t-outline-textarea" rows="3">${escapeHtml3(item.foreshadowing)}</textarea>
+            <textarea id="t-desk-field-foreshadowing" class="t-outline-textarea" rows="3">${escapeHtml4(item.foreshadowing)}</textarea>
             <div class="t-outline-empty" style="margin-top:6px;">\u7EC6\u7EB2\u7F16\u8F91\u8BF7\u5207\u6362\u5230\u4E0A\u65B9\u201C\u7EC6\u7EB2\u7F16\u8F91\u201D\u9875</div>
         </div>
         <div class="t-desk-editor-actions">
@@ -16505,19 +16711,19 @@ function renderMobileDrawerScenes(index) {
         <div class="t-mobile-scene-card" data-scene-index="${sceneIndex}">
             <div class="t-mobile-scene-title">\u573A\u666F ${scene.scene_index}</div>
             <label>\u65F6\u95F4</label>
-            <input class="t-outline-input" data-mobile-scene-field="scene_time" value="${escapeHtml3(scene.scene_time)}">
+            <input class="t-outline-input" data-mobile-scene-field="scene_time" value="${escapeHtml4(scene.scene_time)}">
             <label>\u5730\u70B9</label>
-            <input class="t-outline-input" data-mobile-scene-field="scene_location" value="${escapeHtml3(scene.scene_location)}">
+            <input class="t-outline-input" data-mobile-scene-field="scene_location" value="${escapeHtml4(scene.scene_location)}">
             <label>\u76EE\u6807</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="scene_goal">${escapeHtml3(scene.scene_goal)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="scene_goal">${escapeHtml4(scene.scene_goal)}</textarea>
             <label>\u51B2\u7A81</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="conflict">${escapeHtml3(scene.conflict)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="conflict">${escapeHtml4(scene.conflict)}</textarea>
             <label>\u5173\u952E\u8282\u70B9</label>
-            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="key_beats">${escapeHtml3(scene.key_beats)}</textarea>
+            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="key_beats">${escapeHtml4(scene.key_beats)}</textarea>
             <label>\u53D1\u9001\u6307\u4EE4</label>
-            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="sendable_prompt">${escapeHtml3(scene.sendable_prompt)}</textarea>
+            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="sendable_prompt">${escapeHtml4(scene.sendable_prompt)}</textarea>
             <label>\u5907\u6CE8</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="notes">${escapeHtml3(scene.notes)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="notes">${escapeHtml4(scene.notes)}</textarea>
             <div class="t-mobile-scene-actions">
                 <button class="t-btn t-btn-xs" data-action="mobile-delete-scene" data-scene-index="${sceneIndex}" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u573A\u666F</button>
             </div>
@@ -17041,8 +17247,8 @@ function openStoryOutlineWindow() {
             </div>
             <div class="t-window-body t-outline-body">
                 <div id="t-outline-top" class="t-outline-top">
-                    <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml3(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
-                    <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml3(draft.storyInput)}</textarea>
+                    <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml4(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
+                    <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml4(draft.storyInput)}</textarea>
                     <div class="t-outline-actions">
                         <div class="t-outline-primary-actions">
                             <button id="t-outline-generate" class="t-btn t-btn-primary">
@@ -17062,7 +17268,7 @@ function openStoryOutlineWindow() {
                 <div class="t-outline-nav">
                     <div class="t-outline-nav-right">
                         <div id="t-outline-plan-name-wrap" class="t-plan-name-wrap">
-                            <input id="t-outline-plan-name" class="t-outline-plan-name is-readonly" placeholder="${escapeHtml3(defaultPlanName)}" readonly>
+                            <input id="t-outline-plan-name" class="t-outline-plan-name is-readonly" placeholder="${escapeHtml4(defaultPlanName)}" readonly>
                             <button id="t-outline-plan-rename-trigger" class="t-btn t-btn-xs" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
                             <button id="t-outline-plan-rename-cancel" class="t-btn t-btn-xs" title="\u53D6\u6D88" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
                             <button id="t-outline-plan-rename-confirm" class="t-btn t-btn-xs t-btn-primary" title="\u786E\u8BA4" style="display:none;"><i class="fa-solid fa-check"></i></button>
@@ -17159,12 +17365,11 @@ function openStoryOutlineWindow() {
     renderRows();
   }
   bindEvents();
-  renderOutlineProfileOptions();
   renderPlanHub();
   showOutlineView(plans.length > 0 ? "hub" : "editor");
   refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_PROFILE_MODE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, OUTLINE_ST_API_KEY_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
+var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -17172,6 +17377,7 @@ var init_storyOutlineWindow = __esm({
     init_defaults();
     init_storage();
     init_chatTagWhitelist();
+    init_apiConnectionEditor();
     outlineItems = [];
     lastRawResponse = "";
     rawResponseHistory = [];
@@ -17196,9 +17402,7 @@ var init_storyOutlineWindow = __esm({
     OUTLINE_CHAT_TAG_WHITELIST_KEY = "story_outline_chat_tag_whitelist";
     RAW_HISTORY_KEY = "story_outline_raw_history";
     OUTLINE_SELECTED_PROFILE_KEY = "story_outline_selected_profile_id";
-    OUTLINE_PROFILE_MODE_KEY = "story_outline_profile_mode";
     OUTLINE_CUSTOM_PROFILES_KEY = "story_outline_custom_profiles";
-    OUTLINE_ST_API_KEY_KEY = "story_outline_st_api_key";
     currentView = "hub";
     activePlanId = "";
     editingPlanId = "";
@@ -17236,7 +17440,7 @@ function isEnabled() {
   const data = getExtData();
   return data?.rewrite_entry?.enabled === true;
 }
-function escapeHtml4(text) {
+function escapeHtml5(text) {
   return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function normalizeChatEndpoint(inputUrl) {
@@ -17290,7 +17494,7 @@ function ensureRewriteDataShape() {
     };
   }
   const item = data.rewrite_entry;
-  if (typeof item.profile_mode !== "string" || !["custom", "st"].includes(item.profile_mode)) item.profile_mode = "custom";
+  item.profile_mode = "custom";
   if (typeof item.profile_id !== "string") item.profile_id = "";
   item.custom_profiles = normalizeRewriteCustomProfiles(item.custom_profiles, item);
   if (!item.profile_id) {
@@ -17500,9 +17704,9 @@ function renderDiffRows(rows = []) {
     return;
   }
   const html = lastDiffRows.map((item, idx) => {
-    const before = escapeHtml4(item.before || "");
-    const after = escapeHtml4(item.after || "");
-    const ruleHint = escapeHtml4(item.ruleHint || "");
+    const before = escapeHtml5(item.before || "");
+    const after = escapeHtml5(item.after || "");
+    const ruleHint = escapeHtml5(item.ruleHint || "");
     return `
             <div class="t-rewrite-diff-row">
                 <div class="t-rewrite-diff-cell t-rewrite-diff-before">
@@ -17575,14 +17779,14 @@ function renderLiveHistory() {
   const html = liveResponseHistory.map((item) => {
     const active = String(item.text || "") === String(lastRawResponseText || "");
     const streamText = item.stream ? "\u6D41\u5F0F" : "\u975E\u6D41\u5F0F";
-    const modelText = item.model ? ` \xB7 ${escapeHtml4(item.model)}` : "";
+    const modelText = item.model ? ` \xB7 ${escapeHtml5(item.model)}` : "";
     return `
-            <div class="t-rewrite-live-history-item ${active ? "active" : ""}" data-history-id="${escapeHtml4(item.id)}">
+            <div class="t-rewrite-live-history-item ${active ? "active" : ""}" data-history-id="${escapeHtml5(item.id)}">
                 <div class="t-rewrite-live-history-head">
-                    <span>${escapeHtml4(formatHistoryTime(item.at))} \xB7 ${escapeHtml4(item.source)} \xB7 ${escapeHtml4(item.phase)} \xB7 ${streamText}${modelText}</span>
+                    <span>${escapeHtml5(formatHistoryTime(item.at))} \xB7 ${escapeHtml5(item.source)} \xB7 ${escapeHtml5(item.phase)} \xB7 ${streamText}${modelText}</span>
                     <span>${item.chars} chars</span>
                 </div>
-                <div class="t-rewrite-live-history-preview">${escapeHtml4(makeHistoryPreview(item.text))}</div>
+                <div class="t-rewrite-live-history-preview">${escapeHtml5(makeHistoryPreview(item.text))}</div>
             </div>
         `;
   }).join("");
@@ -18057,6 +18261,20 @@ async function consumeStreamResponse(res, onProgress) {
   const decoder = new TextDecoder();
   let buffer = "";
   let aggregated = "";
+  const processSseLine = (rawLine) => {
+    const line = String(rawLine || "").trim();
+    if (!line || !line.startsWith("data:")) return;
+    const data = line.slice(5).trim();
+    if (!data || data === "[DONE]") return;
+    try {
+      const json = JSON.parse(data);
+      const chunk = json?.choices?.[0]?.delta?.content || json?.choices?.[0]?.message?.content || "";
+      if (!chunk) return;
+      aggregated += chunk;
+      if (onProgress) onProgress(chunk, aggregated);
+    } catch {
+    }
+  };
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -18064,20 +18282,14 @@ async function consumeStreamResponse(res, onProgress) {
     while (true) {
       const idx = buffer.indexOf("\n");
       if (idx < 0) break;
-      const line = buffer.slice(0, idx).trim();
+      const line = buffer.slice(0, idx);
       buffer = buffer.slice(idx + 1);
-      if (!line || !line.startsWith("data:")) continue;
-      const data = line.slice(5).trim();
-      if (!data || data === "[DONE]") continue;
-      try {
-        const json = JSON.parse(data);
-        const chunk = json?.choices?.[0]?.delta?.content || json?.choices?.[0]?.message?.content || "";
-        if (!chunk) continue;
-        aggregated += chunk;
-        if (onProgress) onProgress(chunk, aggregated);
-      } catch {
-      }
+      processSseLine(line);
     }
+  }
+  if (buffer) {
+    const tailLines = buffer.split(/\r?\n/);
+    tailLines.forEach((line) => processSseLine(line));
   }
   if (!aggregated.trim()) {
     throw new Error("\u6D41\u5F0F\u8FD4\u56DE\u4E3A\u7A7A");
@@ -18255,25 +18467,44 @@ async function onAutoTriggerRewrite() {
   if (latest.msg.extra.titania_rewrite_done === true) return;
   const { evaluated } = buildRewritePayload(data, latest.content);
   if (!evaluated || evaluated.hitCount <= 0) return;
-  try {
-    isAutoRewriting = true;
-    applyAutoRewriteIndicator(latest.index);
-    if (window.toastr) toastr.info("\u68C0\u6D4B\u5230\u547D\u4E2D\u89C4\u5219\uFF0C\u6B63\u5728\u81EA\u52A8\u6539\u5199...", "\u6587\u672C\u6539\u5199");
-    const ok = await runRewrite({ source: "auto" });
-    if (ok) {
-      if (window.toastr) toastr.success("\u81EA\u52A8\u6539\u5199\u5B8C\u6210\uFF0C\u5DF2\u56DE\u5199\u5F53\u524D\u56DE\u590D", "\u6587\u672C\u6539\u5199");
-    } else {
-      if (window.toastr) toastr.error("\u81EA\u52A8\u6539\u5199\u5931\u8D25\uFF0C\u5DF2\u4FDD\u7559\u539F\u6587", "\u6587\u672C\u6539\u5199");
-    }
-  } finally {
-    clearAutoRewriteIndicator();
-    isAutoRewriting = false;
+  if (autoRewriteTimer) {
+    clearTimeout(autoRewriteTimer);
+    autoRewriteTimer = null;
   }
+  const targetIndex = latest.index;
+  autoRewriteTimer = setTimeout(async () => {
+    autoRewriteTimer = null;
+    const freshData = ensureRewriteDataShape();
+    if (!freshData.auto_trigger) return;
+    if (!isEnabled()) return;
+    if (isAutoRewriting) return;
+    if (activeRewriteAbortController) return;
+    const freshLatest = getLatestAssistantMessageFromChat();
+    if (!freshLatest || !freshLatest.msg) return;
+    if (freshLatest.index !== targetIndex) return;
+    if (!freshLatest.msg.extra || typeof freshLatest.msg.extra !== "object") freshLatest.msg.extra = {};
+    if (freshLatest.msg.extra.titania_rewrite_done === true) return;
+    const freshEval = buildRewritePayload(freshData, freshLatest.content);
+    if (!freshEval?.evaluated || freshEval.evaluated.hitCount <= 0) return;
+    try {
+      isAutoRewriting = true;
+      applyAutoRewriteIndicator(freshLatest.index);
+      if (window.toastr) toastr.info(`\u68C0\u6D4B\u5230\u547D\u4E2D\u89C4\u5219\uFF0C${AUTO_REWRITE_DELAY_MS / 1e3} \u79D2\u540E\u81EA\u52A8\u6539\u5199...`, "\u6587\u672C\u6539\u5199");
+      const ok = await runRewrite({ source: "auto" });
+      if (ok) {
+        if (window.toastr) toastr.success("\u81EA\u52A8\u6539\u5199\u5B8C\u6210\uFF0C\u5DF2\u56DE\u5199\u5F53\u524D\u56DE\u590D", "\u6587\u672C\u6539\u5199");
+      } else {
+        if (window.toastr) toastr.error("\u81EA\u52A8\u6539\u5199\u5931\u8D25\uFF0C\u5DF2\u4FDD\u7559\u539F\u6587", "\u6587\u672C\u6539\u5199");
+      }
+    } finally {
+      clearAutoRewriteIndicator();
+      isAutoRewriting = false;
+    }
+  }, AUTO_REWRITE_DELAY_MS);
 }
 function bindAutoTriggerEvents() {
   if (autoTriggerBound) return;
   autoTriggerBound = true;
-  eventSource.on(event_types.MESSAGE_RECEIVED, onAutoTriggerRewrite);
   eventSource.on(event_types.GENERATION_ENDED, onAutoTriggerRewrite);
 }
 function renderSettingsRules(rows) {
@@ -18286,8 +18517,8 @@ function renderSettingsRules(rows) {
   const html = rows.map((rule, idx) => `
         <div class="t-rewrite-rule-row" data-rule-idx="${idx}">
             <div class="t-rewrite-rule-no">#${idx + 1}</div>
-            <input class="text_pole t-rewrite-rule-anchor" type="text" value="${escapeHtml4(rule.anchor || "")}" placeholder="\u4E3B\u8BCD\u5217\u8868\uFF08\u9017\u53F7\u5206\u9694\uFF09">
-            <input class="text_pole t-rewrite-rule-extras" type="text" value="${escapeHtml4((rule.extras || []).join(", "))}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u547D\u4E2D\u4EFB\u610F\u4E00\u4E2A\uFF09" maxlength="500">
+            <input class="text_pole t-rewrite-rule-anchor" type="text" value="${escapeHtml5(rule.anchor || "")}" placeholder="\u4E3B\u8BCD\u5217\u8868\uFF08\u9017\u53F7\u5206\u9694\uFF09">
+            <input class="text_pole t-rewrite-rule-extras" type="text" value="${escapeHtml5((rule.extras || []).join(", "))}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u547D\u4E2D\u4EFB\u610F\u4E00\u4E2A\uFF09" maxlength="500">
             <button class="t-btn t-rewrite-rule-del" type="button" title="\u5220\u9664\u89C4\u5219"><i class="fa-solid fa-trash"></i></button>
         </div>
     `).join("");
@@ -18346,25 +18577,20 @@ function persistSettingsPanelState() {
   const data = getExtData();
   const prev = ensureRewriteDataShape();
   const rules = getRulesFromDom("#t-rewrite-settings-rules-list");
-  const modeInput = String($overlay.find("#t-rewrite-settings-profile-mode").val() || prev.profile_mode || "custom");
-  const profileMode = ["custom", "st"].includes(modeInput) ? modeInput : "custom";
   const rawProfileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || prev.profile_id || "").trim();
   const customProfilesRaw = $overlay.data("rewriteCustomProfiles");
   const customProfiles = normalizeRewriteCustomProfiles(Array.isArray(customProfilesRaw) ? customProfilesRaw : prev.custom_profiles, prev);
-  let profileId = rawProfileId;
-  if (profileMode === "custom") {
-    const currentId = rawProfileId || customProfiles[0]?.id || "";
-    const current = customProfiles.find((p) => p.id === currentId);
-    if (current) {
-      current.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
-      current.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
-      current.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
-      profileId = current.id;
-    }
+  let profileId = rawProfileId || customProfiles[0]?.id || "";
+  const current = customProfiles.find((p) => p.id === profileId);
+  if (current) {
+    current.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
+    current.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
+    current.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
+    profileId = current.id;
   }
   data.rewrite_entry = {
     enabled: prev.enabled === true,
-    profile_mode: profileMode,
+    profile_mode: "custom",
     profile_id: profileId,
     custom_profiles: customProfiles,
     api_url: String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim(),
@@ -18391,47 +18617,6 @@ function persistSettingsPanelState() {
   saveExtData();
   $("#t-rewrite-settings-rule-count").text(String(rules.length));
   refreshRuntimeStateView();
-}
-function renderRewriteProfileOptions($overlay) {
-  if (!$overlay || !$overlay.length) return;
-  const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
-  const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-  const stProfiles = Array.isArray($overlay.data("rewriteStProfiles")) ? $overlay.data("rewriteStProfiles") : [];
-  const $select = $overlay.find("#t-rewrite-settings-profile-select");
-  const oldValue = String($select.val() || "").trim();
-  $overlay.data("rewriteCustomProfiles", customProfiles);
-  $select.empty();
-  const list = mode === "st" ? stProfiles : customProfiles;
-  if (!Array.isArray(list) || list.length === 0) {
-    $select.append(`<option value="">${mode === "st" ? "\u672A\u53D1\u73B0\u9152\u9986\u9884\u8BBE" : "\u6682\u65E0\u81EA\u5B9A\u4E49\u65B9\u6848"}</option>`);
-    return;
-  }
-  list.forEach((item, idx) => {
-    const name = mode === "st" ? `${item.name}${item.source ? ` \xB7 ${item.source}` : ""}` : item.name || `\u65B9\u6848 ${idx + 1}`;
-    $select.append(`<option value="${escapeHtml4(item.id)}">${escapeHtml4(name)}</option>`);
-  });
-  const hasOld = list.some((item) => item.id === oldValue);
-  $select.val(hasOld ? oldValue : list[0].id);
-}
-function syncRewriteProfileFields($overlay, opts = {}) {
-  if (!$overlay || !$overlay.length) return;
-  const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
-  const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
-  const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-  const stProfiles = Array.isArray($overlay.data("rewriteStProfiles")) ? $overlay.data("rewriteStProfiles") : [];
-  const isSt = mode === "st";
-  const current = isSt ? stProfiles.find((p) => p.id === profileId) : customProfiles.find((p) => p.id === profileId);
-  const keepApiKey = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
-  const shouldReplace = opts.force === true;
-  if (current && shouldReplace) {
-    $overlay.find("#t-rewrite-settings-api-url").val(current.api_url || "");
-    $overlay.find("#t-rewrite-settings-model").val(current.model || "");
-    const keyToSet = isSt ? current.api_key || keepApiKey : current.api_key || "";
-    $overlay.find("#t-rewrite-settings-api-key").val(keyToSet);
-  }
-  const tip = isSt ? "\u9152\u9986\u9884\u8BBE\u5DF2\u8F7D\u5165\uFF1AURL/\u6A21\u578B\u4F1A\u81EA\u52A8\u56DE\u586B\uFF1BAPI Key \u53D7\u5B89\u5168\u673A\u5236\u5F71\u54CD\u53EF\u80FD\u4E0D\u53EF\u8BFB\u53D6\u3002" : "\u81EA\u5B9A\u4E49\u65B9\u6848\u53EF\u7F16\u8F91 URL/API Key/\u6A21\u578B\uFF0C\u4FDD\u5B58\u540E\u6301\u4E45\u5316\u5230\u63D2\u4EF6\u914D\u7F6E\u3002";
-  $overlay.find("#t-rewrite-settings-profile-tip").text(tip);
-  $overlay.find("#t-rewrite-settings-new-profile").prop("disabled", isSt);
 }
 function refreshRuntimeStateView() {
   const $overlay = getOverlay();
@@ -18460,8 +18645,8 @@ function renderMatchResult(result, sourceText = "") {
     const cls = item.hit ? "hit" : "miss";
     const tag = lastMatchResult.splitMode === "paragraph" ? "\u6BB5" : "\u53E5";
     const hits = item.hit ? item.hits.map((h) => {
-      const anchorText = h.matchedAnchor ? `\u4E3B\u8BCD:${escapeHtml4(h.matchedAnchor)}` : `\u4E3B\u8BCD\u7EC4:${escapeHtml4(h.anchor)}`;
-      const extraText = h.matchedExtra ? `\u9644\u52A0\u8BCD:${escapeHtml4(h.matchedExtra)}` : "\u9644\u52A0\u8BCD:\u65E0";
+      const anchorText = h.matchedAnchor ? `\u4E3B\u8BCD:${escapeHtml5(h.matchedAnchor)}` : `\u4E3B\u8BCD\u7EC4:${escapeHtml5(h.anchor)}`;
+      const extraText = h.matchedExtra ? `\u9644\u52A0\u8BCD:${escapeHtml5(h.matchedExtra)}` : "\u9644\u52A0\u8BCD:\u65E0";
       return `<span class="t-rewrite-hit-tag">\u89C4\u5219#${h.ruleIndex}: ${anchorText} + ${extraText}</span>`;
     }).join("") : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
     return `
@@ -18470,7 +18655,7 @@ function renderMatchResult(result, sourceText = "") {
                     <div>${tag} #${item.unitIndex}</div>
                     <div class="t-rewrite-match-tags">${hits}</div>
                 </div>
-                <div class="t-rewrite-match-text">${escapeHtml4(item.text)}</div>
+                <div class="t-rewrite-match-text">${escapeHtml5(item.text)}</div>
             </div>
         `;
   }).join("");
@@ -18481,53 +18666,6 @@ function renderMatchResult(result, sourceText = "") {
 function renderPersistedRewriteViews() {
   renderMatchResult(lastMatchResult, lastMatchSourceText);
   renderDiffRows(lastDiffRows);
-}
-async function fetchModelList(showToast = false, scope = "main") {
-  const $overlay = scope === "settings" ? getSettingsOverlay() : getOverlay();
-  if (!$overlay.length) return;
-  const idApiUrl = scope === "settings" ? "#t-rewrite-settings-api-url" : "#t-rewrite-api-url";
-  const idApiKey = scope === "settings" ? "#t-rewrite-settings-api-key" : "#t-rewrite-api-key";
-  const idModel = scope === "settings" ? "#t-rewrite-settings-model" : "#t-rewrite-model";
-  const rawUrl = $overlay.find(idApiUrl).val();
-  const apiUrl = normalizeApiBaseUrl(rawUrl);
-  const apiKey = String($overlay.find(idApiKey).val() || "").trim();
-  const $model = $overlay.find(idModel);
-  if (!apiUrl) {
-    $model.html('<option value="">\u8BF7\u5148\u586B\u5199 API \u5730\u5740</option>');
-    setStatus("\u8BF7\u8F93\u5165 API \u5730\u5740\u540E\u81EA\u52A8\u83B7\u53D6\u6A21\u578B\u5217\u8868", "warn");
-    return;
-  }
-  try {
-    setStatus("\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...", "muted");
-    $model.html('<option value="">\u52A0\u8F7D\u4E2D...</option>');
-    const headers = {};
-    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-    const res = await fetch(`${apiUrl}/models`, { method: "GET", headers });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
-    const models = list.map((item) => typeof item === "string" ? item : item?.id).filter(Boolean);
-    const unique = [...new Set(models)].sort();
-    const savedModel = String(getExtData()?.rewrite_entry?.model || "");
-    $model.empty();
-    if (unique.length === 0) {
-      $model.append('<option value="">\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B</option>');
-      setStatus("\u6A21\u578B\u5217\u8868\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u670D\u52A1\u7AEF\u8FD4\u56DE", "warn");
-      return;
-    }
-    unique.forEach((m) => {
-      const selected = savedModel === m ? "selected" : "";
-      $model.append(`<option value="${escapeHtml4(m)}" ${selected}>${escapeHtml4(m)}</option>`);
-    });
-    if (!savedModel) $model.val(unique[0]);
-    if (scope !== "settings") persistPanelState();
-    setStatus(`\u5DF2\u83B7\u53D6 ${unique.length} \u4E2A\u6A21\u578B`, "ok");
-    if (showToast && window.toastr) toastr.success(`\u6A21\u578B\u5217\u8868\u5DF2\u66F4\u65B0\uFF08${unique.length} \u4E2A\uFF09`, "\u6587\u672C\u6539\u5199");
-  } catch (e) {
-    $model.html('<option value="">\u83B7\u53D6\u5931\u8D25</option>');
-    setStatus(`\u6A21\u578B\u5217\u8868\u83B7\u53D6\u5931\u8D25: ${e.message}`, "err");
-    if (showToast && window.toastr) toastr.error(e.message || "\u83B7\u53D6\u5931\u8D25", "\u6587\u672C\u6539\u5199");
-  }
 }
 function bindPanelEvents() {
   const $overlay = getOverlay();
@@ -18590,12 +18728,12 @@ function openLivePanel() {
             <div class="t-window-body t-rewrite-live-body">
                 <div class="t-rewrite-live-stream-card">
                     <div class="t-rewrite-live-tools">
-                        <div id="t-rewrite-raw-meta" class="t-rewrite-status muted">${escapeHtml4(lastRawMetaText || "\u7B49\u5F85\u8BF7\u6C42")}</div>
+                        <div id="t-rewrite-raw-meta" class="t-rewrite-status muted">${escapeHtml5(lastRawMetaText || "\u7B49\u5F85\u8BF7\u6C42")}</div>
                         <button id="t-rewrite-abort" class="t-btn" type="button" ${activeRewriteAbortController ? "" : "disabled"}>\u7EC8\u6B62</button>
                     </div>
                     <div class="t-rewrite-live-stream-title">\u6A21\u578B\u5B9E\u65F6\u8FD4\u56DE</div>
                     <div class="t-rewrite-live-meta">\u5C55\u793A\u6700\u8FD1\u4E00\u6B21\u6539\u5199\u8BF7\u6C42\u7684\u5B9E\u65F6\u8FD4\u56DE\u5185\u5BB9\uFF08\u652F\u6301\u6D41\u5F0F\u6EDA\u52A8\uFF09\u3002</div>
-                    <pre id="t-rewrite-raw-response" class="t-rewrite-json-box">${escapeHtml4(lastRawResponseText || "")}</pre>
+                    <pre id="t-rewrite-raw-response" class="t-rewrite-json-box">${escapeHtml5(lastRawResponseText || "")}</pre>
                 </div>
                 <div class="t-rewrite-live-history-card">
                     <div class="t-rewrite-live-history-title">\u5386\u53F2\u8BB0\u5F55</div>
@@ -18609,7 +18747,7 @@ function openLivePanel() {
   bindLivePanelEvents();
   renderLiveHistory();
 }
-function bindSettingsPanelEvents() {
+function bindSettingsPanelEvents(connectionEditor = null) {
   const $overlay = getSettingsOverlay();
   if (!$overlay.length) return;
   $overlay.on("click", ".t-set-tab-btn", function() {
@@ -18625,66 +18763,13 @@ function bindSettingsPanelEvents() {
   });
   $overlay.on("click", "#t-rewrite-settings-save", (e) => {
     e.preventDefault();
+    if (connectionEditor) {
+      const nextState = connectionEditor.getState();
+      $overlay.data("rewriteCustomProfiles", mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo"));
+      $overlay.find("#t-rewrite-settings-profile-select").val(nextState.activeProfileId);
+    }
     persistSettingsPanelState();
     if (window.toastr) toastr.success("\u6587\u672C\u6539\u5199\u8BBE\u7F6E\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
-  });
-  $overlay.on("change", "#t-rewrite-settings-profile-mode", () => {
-    renderRewriteProfileOptions($overlay);
-    syncRewriteProfileFields($overlay, { force: true });
-  });
-  $overlay.on("change", "#t-rewrite-settings-profile-select", () => {
-    syncRewriteProfileFields($overlay, { force: true });
-  });
-  $overlay.on("click", "#t-rewrite-settings-new-profile", (e) => {
-    e.preventDefault();
-    const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
-    if (mode !== "custom") return;
-    const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-    const newName = `\u65B9\u6848 ${customProfiles.length + 1}`;
-    const newProfile = {
-      id: `rewrite_custom_${Date.now()}`,
-      name: newName,
-      api_url: String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim(),
-      api_key: String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim(),
-      model: String($overlay.find("#t-rewrite-settings-model").val() || "").trim()
-    };
-    customProfiles.push(newProfile);
-    $overlay.data("rewriteCustomProfiles", customProfiles);
-    renderRewriteProfileOptions($overlay);
-    $overlay.find("#t-rewrite-settings-profile-select").val(newProfile.id);
-    syncRewriteProfileFields($overlay, { force: true });
-  });
-  $overlay.on("input", "#t-rewrite-settings-api-url, #t-rewrite-settings-api-key", () => {
-    const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
-    if (mode === "custom") {
-      const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
-      const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-      const current = customProfiles.find((p) => p.id === profileId);
-      if (current) {
-        current.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
-        current.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
-      }
-      $overlay.data("rewriteCustomProfiles", customProfiles);
-    }
-    if (autoFetchTimer) clearTimeout(autoFetchTimer);
-    autoFetchTimer = setTimeout(() => {
-      fetchModelList(false, "settings");
-    }, 500);
-  });
-  $overlay.on("click", "#t-rewrite-settings-fetch-models", async (e) => {
-    e.preventDefault();
-    await fetchModelList(true, "settings");
-  });
-  $overlay.on("change", "#t-rewrite-settings-model", () => {
-    const mode = String($overlay.find("#t-rewrite-settings-profile-mode").val() || "custom");
-    if (mode !== "custom") return;
-    const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
-    const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-    const current = customProfiles.find((p) => p.id === profileId);
-    if (current) {
-      current.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
-    }
-    $overlay.data("rewriteCustomProfiles", customProfiles);
   });
   $overlay.on("input", "#t-rewrite-settings-prompt-combined", () => {
     persistPromptStateFromSettings();
@@ -18729,24 +18814,12 @@ function openSettingsPanel() {
   const modeParagraph = rewriteData.split_mode === "paragraph";
   const rules = cleanupRules(rewriteData.rules);
   const customProfiles = normalizeRewriteCustomProfiles(rewriteData.custom_profiles, rewriteData);
-  const stProfiles = getStPresetProfiles();
-  const profileMode = ["custom", "st"].includes(rewriteData.profile_mode) ? rewriteData.profile_mode : "custom";
   let activeProfileId = String(rewriteData.profile_id || "").trim();
-  if (profileMode === "custom") {
-    const fallback = customProfiles[0]?.id || "";
-    const existing = customProfiles.find((p) => p.id === activeProfileId);
-    activeProfileId = existing ? existing.id : fallback;
-  } else {
-    const fallback = stProfiles[0]?.id || "";
-    const existing = stProfiles.find((p) => p.id === activeProfileId);
-    activeProfileId = existing ? existing.id : fallback;
-  }
-  const activeCustom = customProfiles.find((p) => p.id === activeProfileId) || customProfiles[0];
-  const activeSt = stProfiles.find((p) => p.id === activeProfileId) || stProfiles[0];
-  const initProfile = profileMode === "st" ? activeSt : activeCustom;
+  const fallback = customProfiles[0]?.id || "";
+  const existing = customProfiles.find((p) => p.id === activeProfileId);
+  activeProfileId = existing ? existing.id : fallback;
+  const initProfile = customProfiles.find((p) => p.id === activeProfileId) || customProfiles[0];
   const initApiUrl = String(initProfile?.api_url || rewriteData.api_url || "");
-  const initApiKey = profileMode === "st" ? String(rewriteData.api_key || "").trim() || String(initProfile?.api_key || "") : String(initProfile?.api_key || rewriteData.api_key || "");
-  const initModel = String(initProfile?.model || rewriteData.model || "");
   const promptState = getRewritePromptState();
   const html = `
     <div id="${SETTINGS_OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
@@ -18768,39 +18841,44 @@ function openSettingsPanel() {
 
                 <div class="t-set-content">
                     <div id="t-rewrite-page-api" class="t-set-page active">
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848\u6765\u6E90</label>
-                            <div class="t-rewrite-profile-row">
-                                <select id="t-rewrite-settings-profile-mode" class="text_pole">
-                                    <option value="custom" ${profileMode === "custom" ? "selected" : ""}>\u81EA\u5B9A\u4E49\u65B9\u6848</option>
-                                    <option value="st" ${profileMode === "st" ? "selected" : ""}>\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848</option>
-                                </select>
-                                <select id="t-rewrite-settings-profile-select" class="text_pole"></select>
-                                <button id="t-rewrite-settings-new-profile" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
-                            </div>
-                            <div id="t-rewrite-settings-profile-tip" class="t-rewrite-profile-tip"></div>
-                        </div>
-
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u5730\u5740</label>
-                            <input id="t-rewrite-settings-api-url" class="text_pole" type="text" placeholder="https://api.example.com/v1" value="${escapeHtml4(initApiUrl)}">
-
-                            <label class="t-form-label" style="margin-top:10px;">API Key</label>
-                            <input id="t-rewrite-settings-api-key" class="text_pole" type="password" placeholder="\u53EF\u9009\uFF0C\u6309\u4F60\u7684\u670D\u52A1\u7AEF\u8981\u6C42\u586B\u5199" value="${escapeHtml4(initApiKey)}">
-                        </div>
-
-                        <div class="t-form-group">
-                            <label class="t-form-label">\u6A21\u578B</label>
-                            <div class="t-rewrite-model-row">
-                                <select id="t-rewrite-settings-model" class="text_pole">
-                                    <option value="${escapeHtml4(initModel)}">${initModel ? escapeHtml4(initModel) : "\u7B49\u5F85\u81EA\u52A8\u83B7\u53D6"}</option>
-                                </select>
-                                <button id="t-rewrite-settings-fetch-models" class="t-btn" type="button" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
-                                    <i class="fa-solid fa-rotate"></i>
-                                </button>
-                            </div>
-                            <div id="t-rewrite-settings-status" class="t-rewrite-status muted">\u586B\u5199 API \u540E\u4F1A\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5217\u8868</div>
-                        </div>
+                        ${renderApiConnectionEditorHTML({
+    ids: {
+      profileSelectId: "t-rewrite-settings-profile-select",
+      profileAddId: "t-rewrite-settings-new-profile",
+      profileDeleteId: "t-rewrite-settings-delete-profile",
+      profileNameId: "t-rewrite-settings-profile-name",
+      profileMetaId: "t-rewrite-settings-profile-meta",
+      profileTipId: "t-rewrite-settings-profile-tip",
+      fieldsWrapId: "t-rewrite-settings-conn-fields",
+      apiUrlId: "t-rewrite-settings-api-url",
+      apiKeyId: "t-rewrite-settings-api-key",
+      modelId: "t-rewrite-settings-model",
+      fetchModelsId: "t-rewrite-settings-fetch-models",
+      statusId: "t-rewrite-settings-status",
+      urlHintId: "t-rewrite-settings-url-hint",
+      stUrlDisplayId: "t-rewrite-settings-st-url"
+    },
+    classes: {
+      input: "text_pole",
+      select: "text_pole",
+      profileSelect: "text_pole",
+      button: "t-btn"
+    },
+    labels: {
+      profile: "API \u65B9\u6848",
+      apiUrl: "API \u5730\u5740",
+      model: "\u6A21\u578B"
+    },
+    flags: {
+      showProfileName: true,
+      showDeleteProfile: true,
+      showStream: false,
+      showMaxTokens: false
+    },
+    values: {
+      statusText: "\u586B\u5199 API \u540E\u4F1A\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5217\u8868"
+    }
+  })}
                     </div>
 
                     <div id="t-rewrite-page-runtime" class="t-set-page">
@@ -18825,7 +18903,7 @@ function openSettingsPanel() {
 
                         <div class="t-form-group">
                             <label class="t-form-label">\u804A\u5929\u63D0\u53D6\u767D\u540D\u5355</label>
-                            <input id="t-rewrite-settings-tag-whitelist" class="text_pole" type="text" placeholder="\u4F8B\u5982: content, dialogue, narration" value="${escapeHtml4(rewriteData.tag_whitelist || "")}">
+                            <input id="t-rewrite-settings-tag-whitelist" class="text_pole" type="text" placeholder="\u4F8B\u5982: content, dialogue, narration" value="${escapeHtml5(rewriteData.tag_whitelist || "")}">
                             <div class="t-rewrite-rule-guide">\u4EC5\u63D0\u53D6\u767D\u540D\u5355\u6807\u7B7E\u4E2D\u7684\u6587\u672C\u7528\u4E8E\u5207\u5206\u548C\u89C4\u5219\u5339\u914D\uFF1B\u7559\u7A7A\u5219\u63D0\u53D6\u5168\u6587\u7EAF\u6587\u672C\u3002</div>
                         </div>
                     </div>
@@ -18843,7 +18921,7 @@ function openSettingsPanel() {
 ...
 
 [USER]
-...">${escapeHtml4(buildCombinedPromptText(promptState.prompt_system, promptState.prompt_user))}</textarea>
+...">${escapeHtml5(buildCombinedPromptText(promptState.prompt_system, promptState.prompt_user))}</textarea>
                         </div>
                     </div>
 
@@ -18868,15 +18946,36 @@ function openSettingsPanel() {
     </div>`;
   $("body").append(html);
   const $overlay = getSettingsOverlay();
-  $overlay.data("rewriteCustomProfiles", customProfiles);
-  $overlay.data("rewriteStProfiles", stProfiles);
   renderSettingsRules(rules.length > 0 ? rules : [{ anchor: "", extras: [] }]);
-  renderRewriteProfileOptions($overlay);
-  $overlay.find("#t-rewrite-settings-profile-mode").val(profileMode);
-  $overlay.find("#t-rewrite-settings-profile-select").val(activeProfileId);
-  syncRewriteProfileFields($overlay, { force: true });
-  bindSettingsPanelEvents();
-  if (initApiUrl) fetchModelList(false, "settings");
+  const rewriteSettingsConnectionEditor = createApiConnectionEditor({
+    root: $overlay,
+    ids: {
+      profileSelectId: "t-rewrite-settings-profile-select",
+      profileAddId: "t-rewrite-settings-new-profile",
+      profileDeleteId: "t-rewrite-settings-delete-profile",
+      profileNameId: "t-rewrite-settings-profile-name",
+      profileTipId: "t-rewrite-settings-profile-tip",
+      apiUrlId: "t-rewrite-settings-api-url",
+      apiKeyId: "t-rewrite-settings-api-key",
+      modelId: "t-rewrite-settings-model",
+      fetchModelsId: "t-rewrite-settings-fetch-models",
+      statusId: "t-rewrite-settings-status"
+    },
+    profiles: mapCustomProfilesToConnectionProfiles(customProfiles, "gpt-3.5-turbo"),
+    activeProfileId,
+    profileIdPrefix: "rewrite_custom",
+    autoFetchOnInput: true,
+    autoFetchOnProfileSwitch: false,
+    onChange: (nextState) => {
+      const mapped = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+      $overlay.data("rewriteCustomProfiles", mapped);
+      $overlay.find("#t-rewrite-settings-profile-select").val(nextState.activeProfileId);
+    }
+  });
+  rewriteSettingsConnectionEditor.bind();
+  rewriteSettingsConnectionEditor.render();
+  bindSettingsPanelEvents(rewriteSettingsConnectionEditor);
+  if (initApiUrl) rewriteSettingsConnectionEditor.fetchModels(false);
 }
 function openPanel() {
   closePanel();
@@ -18903,12 +19002,12 @@ function openPanel() {
                             <button id="t-rewrite-runtime-toggle" class="t-btn" type="button">\u6298\u53E0</button>
                         </div>
                         <div id="t-rewrite-runtime-body" class="t-rewrite-runtime-meta">
-                            <div>\u5F53\u524D\u6A21\u578B\uFF1A<b id="t-rewrite-runtime-model">${escapeHtml4(rewriteData.model || "\u672A\u8BBE\u7F6E")}</b></div>
+                            <div>\u5F53\u524D\u6A21\u578B\uFF1A<b id="t-rewrite-runtime-model">${escapeHtml5(rewriteData.model || "\u672A\u8BBE\u7F6E")}</b></div>
                             <div>\u5207\u5206\u6A21\u5F0F\uFF1A<b id="t-rewrite-runtime-split">${rewriteData.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50"}</b></div>
                             <div>\u6709\u6548\u89C4\u5219\uFF1A<b id="t-rewrite-rule-count">${rules.length}</b></div>
                             <div>\u6D41\u5F0F\u663E\u793A\uFF1A<b id="t-rewrite-runtime-stream">${rewriteData.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F"}</b></div>
                             <div>\u81EA\u52A8\u89E6\u53D1\uFF1A<b id="t-rewrite-runtime-auto">${rewriteData.auto_trigger ? "\u5F00\u542F" : "\u5173\u95ED"}</b></div>
-                            <div>\u63D0\u53D6\u767D\u540D\u5355\uFF1A<b id="t-rewrite-runtime-whitelist">${rewriteData.tag_whitelist ? escapeHtml4(rewriteData.tag_whitelist) : "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09"}</b></div>
+                            <div>\u63D0\u53D6\u767D\u540D\u5355\uFF1A<b id="t-rewrite-runtime-whitelist">${rewriteData.tag_whitelist ? escapeHtml5(rewriteData.tag_whitelist) : "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09"}</b></div>
                         </div>
                         <div id="t-rewrite-status" class="t-rewrite-status muted">\u6539\u5199\u4F1A\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u5E76\u56DE\u5199\u539F\u6D88\u606F</div>
                     </div>
@@ -18988,12 +19087,13 @@ function openRewritePanelFromMenu() {
   if (!isEnabled()) return;
   openPanel();
 }
-var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, autoFetchTimer, rewriteDecorTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, LIVE_RESPONSE_HISTORY_MAX, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
+var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
 var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
     init_chatTagWhitelist();
     init_apiProfileRegistry();
+    init_apiConnectionEditor();
     BTN_ID = "titania-rewrite-entry-btn";
     OVERLAY_ID = "t-rewrite-overlay";
     SETTINGS_OVERLAY_ID = "t-rewrite-settings-overlay";
@@ -19002,8 +19102,8 @@ var init_rewriteEntryButton = __esm({
     docEventBound = false;
     autoTriggerBound = false;
     rewriteDecorBound = false;
-    autoFetchTimer = null;
     rewriteDecorTimer = null;
+    autoRewriteTimer = null;
     activeRewriteAbortController = null;
     isAutoRewriting = false;
     runtimeCollapsed = false;
@@ -19015,6 +19115,7 @@ var init_rewriteEntryButton = __esm({
     lastMatchSourceText = "";
     lastDiffRows = [];
     LIVE_RESPONSE_HISTORY_MAX = 20;
+    AUTO_REWRITE_DELAY_MS = 3e3;
     REWRITE_TEMPERATURE = 0.8;
     REWRITE_FIX_TEMPERATURE = 0;
     REWRITE_MAX_TOKENS = 4e4;
@@ -21657,11 +21758,6 @@ function saveAnalysisSettings(settings2) {
   };
   saveExtData();
 }
-function getLoreProfileMode() {
-  const cfg = getFeatureConfig();
-  const mode = String(cfg?.profile_mode || "custom").trim();
-  return mode === "st" ? "st" : "custom";
-}
 function getLoreSelectedProfileId() {
   const cfg = getFeatureConfig();
   return String(cfg?.profile_id || cfg?.selected_profile_id || "").trim();
@@ -21676,17 +21772,11 @@ function getLoreCustomProfiles() {
   };
   return normalizeRewriteCustomProfiles(cfg?.custom_profiles, fallback);
 }
-function getLoreStApiKey() {
-  const cfg = getFeatureConfig();
-  return String(cfg?.st_api_key || "").trim();
-}
 async function showProfileConfigDialog(onSave) {
   $("#t-lore-settings-dialog").remove();
   const settingsDraft = {
-    profileMode: getLoreProfileMode(),
     selectedProfileId: getLoreSelectedProfileId(),
     customProfiles: getLoreCustomProfiles(),
-    stApiKey: getLoreStApiKey(),
     embedding: {
       url: String(getExtData()?.embedding_config?.url || "").trim(),
       key: String(getExtData()?.embedding_config?.key || "").trim(),
@@ -21730,35 +21820,44 @@ async function showProfileConfigDialog(onSave) {
                 </div>
                 <div class="t-set-content">
                     <div class="t-set-page active" data-page="api">
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848\u6765\u6E90</label>
-                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <select id="t-lore-settings-profile-mode" class="t-input" style="max-width:220px;">
-                                    <option value="custom">\u81EA\u5B9A\u4E49\u65B9\u6848</option>
-                                    <option value="st">\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848</option>
-                                </select>
-                                <select id="t-lore-settings-profile-select" class="t-input" style="min-width:220px;"></select>
-                                <button id="t-lore-settings-new-profile" class="t-btn t-btn-xs" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
-                            </div>
-                            <div id="t-lore-settings-profile-tip" style="margin-top:8px; font-size:0.8em; color:#8da5b8;"></div>
-                        </div>
-
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u5730\u5740</label>
-                            <input id="t-lore-settings-api-url" class="t-input" type="text" placeholder="https://api.example.com/v1">
-
-                            <label class="t-form-label" style="margin-top:8px;">API Key</label>
-                            <input id="t-lore-settings-api-key" class="t-input" type="password" placeholder="\u53EF\u9009\uFF0C\u6309\u4F60\u7684\u670D\u52A1\u7AEF\u8981\u6C42\u586B\u5199">
-
-                            <label class="t-form-label" style="margin-top:8px;">\u6A21\u578B</label>
-                            <div class="t-lore-settings-model-row">
-                                <select id="t-lore-settings-model" class="t-input" style="flex:1;"></select>
-                                <button id="t-lore-settings-fetch-models" class="t-btn t-btn-xs" type="button" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
-                                    <i class="fa-solid fa-rotate"></i>
-                                </button>
-                            </div>
-                            <div id="t-lore-settings-status" style="margin-top:8px; font-size:0.8em; color:#8da5b8;">\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868</div>
-                        </div>
+                        ${renderApiConnectionEditorHTML({
+    ids: {
+      profileSelectId: "t-lore-settings-profile-select",
+      profileAddId: "t-lore-settings-new-profile",
+      profileDeleteId: "t-lore-settings-delete-profile",
+      profileNameId: "t-lore-settings-profile-name",
+      profileMetaId: "t-lore-settings-profile-meta",
+      profileTipId: "t-lore-settings-profile-tip",
+      fieldsWrapId: "t-lore-settings-conn-fields",
+      apiUrlId: "t-lore-settings-api-url",
+      apiKeyId: "t-lore-settings-api-key",
+      modelId: "t-lore-settings-model",
+      fetchModelsId: "t-lore-settings-fetch-models",
+      statusId: "t-lore-settings-status",
+      urlHintId: "t-lore-settings-url-hint",
+      stUrlDisplayId: "t-lore-settings-st-url"
+    },
+    classes: {
+      input: "t-input",
+      select: "t-input",
+      profileSelect: "t-input",
+      button: "t-btn t-btn-xs"
+    },
+    labels: {
+      profile: "API \u65B9\u6848",
+      apiUrl: "API \u5730\u5740",
+      model: "\u6A21\u578B"
+    },
+    flags: {
+      showProfileName: true,
+      showDeleteProfile: true,
+      showStream: false,
+      showMaxTokens: false
+    },
+    values: {
+      statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868"
+    }
+  })}
                     </div>
 
                     <div class="t-set-page" data-page="embedding">
@@ -21835,130 +21934,34 @@ async function showProfileConfigDialog(onSave) {
     </div>
     `;
   $("body").append(html);
-  const getDraftProfilesByMode = (mode) => {
-    if (mode === "st") {
-      return getStPresetProfiles().map((p) => ({
-        id: String(p.id || "").trim(),
-        name: String(p.name || "").trim() || "\u9152\u9986\u65B9\u6848",
-        api_url: normalizeApiBaseUrl(String(p.api_url || "")),
-        api_key: "",
-        model: String(p.model || "").trim()
-      })).filter((p) => p.id);
+  const loreConnectionEditor = createApiConnectionEditor({
+    root: $("#t-lore-settings-dialog"),
+    ids: {
+      profileSelectId: "t-lore-settings-profile-select",
+      profileAddId: "t-lore-settings-new-profile",
+      profileDeleteId: "t-lore-settings-delete-profile",
+      profileNameId: "t-lore-settings-profile-name",
+      profileTipId: "t-lore-settings-profile-tip",
+      apiUrlId: "t-lore-settings-api-url",
+      apiKeyId: "t-lore-settings-api-key",
+      modelId: "t-lore-settings-model",
+      fetchModelsId: "t-lore-settings-fetch-models",
+      statusId: "t-lore-settings-status"
+    },
+    profiles: mapCustomProfilesToConnectionProfiles(settingsDraft.customProfiles, "gpt-3.5-turbo"),
+    activeProfileId: settingsDraft.selectedProfileId,
+    profileIdPrefix: "lore_custom",
+    autoFetchOnInput: false,
+    autoFetchOnProfileSwitch: false,
+    onChange: (nextState) => {
+      settingsDraft.customProfiles = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+      settingsDraft.selectedProfileId = nextState.activeProfileId;
+      $("#t-btn-save-profile").prop("disabled", !settingsDraft.selectedProfileId);
     }
-    return Array.isArray(settingsDraft.customProfiles) ? settingsDraft.customProfiles : [];
-  };
-  const resolveProfileSelectionDraft = (mode, profileId) => {
-    const profiles = getDraftProfilesByMode(mode);
-    if (!profiles.length) return { profileId: "", profiles };
-    const preferred = String(profileId || "").trim();
-    const selected = profiles.some((p) => p.id === preferred) ? preferred : profiles[0].id;
-    return { profileId: selected, profiles };
-  };
-  const persistCurrentProfileInputsToDraft = () => {
-    const $root = $("#t-lore-settings-dialog");
-    const mode = String($root.find("#t-lore-settings-profile-mode").val() || settingsDraft.profileMode || "custom");
-    const selectedId = String($root.find("#t-lore-settings-profile-select").val() || settingsDraft.selectedProfileId || "").trim();
-    const url = normalizeApiBaseUrl(String($root.find("#t-lore-settings-api-url").val() || "").trim());
-    const key = String($root.find("#t-lore-settings-api-key").val() || "").trim();
-    const model = String($root.find("#t-lore-settings-model").val() || "").trim();
-    settingsDraft.profileMode = mode === "st" ? "st" : "custom";
-    settingsDraft.selectedProfileId = selectedId;
-    if (settingsDraft.profileMode === "custom") {
-      const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-      if (current) {
-        current.api_url = url;
-        current.api_key = key;
-        current.model = model;
-      }
-    } else {
-      settingsDraft.stApiKey = key;
-    }
-  };
-  const syncProfileFieldsDraft = () => {
-    const $root = $("#t-lore-settings-dialog");
-    const mode = settingsDraft.profileMode === "st" ? "st" : "custom";
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
-    settingsDraft.selectedProfileId = resolved.profileId;
-    const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    const isStMode = mode === "st";
-    $root.find("#t-lore-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", isStMode);
-    $root.find("#t-lore-settings-api-key").val(isStMode ? settingsDraft.stApiKey : String(profile?.api_key || "")).prop("readonly", false);
-    $root.find("#t-lore-settings-model").val(String(profile?.model || "")).prop("disabled", isStMode);
-    $root.find("#t-lore-settings-new-profile").prop("disabled", isStMode);
-    const hint = isStMode ? "\u5F53\u524D\u4F7F\u7528\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848\u3002API Key \u4E3A\u624B\u52A8\u586B\u5199\u9879\uFF08\u7528\u4E8E\u76F4\u8FDE\u8BF7\u6C42\uFF09\u3002" : "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002";
-    $root.find("#t-lore-settings-profile-tip").text(hint);
-    $("#t-btn-save-profile").prop("disabled", !settingsDraft.selectedProfileId);
-  };
-  const renderProfileOptionsDraft = () => {
-    const $root = $("#t-lore-settings-dialog");
-    const mode = settingsDraft.profileMode === "st" ? "st" : "custom";
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
-    const $mode = $root.find("#t-lore-settings-profile-mode");
-    const $select = $root.find("#t-lore-settings-profile-select");
-    $mode.val(mode);
-    $select.empty();
-    if (!resolved.profiles.length) {
-      $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
-      settingsDraft.selectedProfileId = "";
-      syncProfileFieldsDraft();
-      return;
-    }
-    resolved.profiles.forEach((profile) => {
-      $select.append(`<option value="${escapeHtml5(profile.id)}">${escapeHtml5(profile.name)}</option>`);
-    });
-    settingsDraft.selectedProfileId = resolved.profileId;
-    $select.val(resolved.profileId);
-    syncProfileFieldsDraft();
-  };
-  const fetchLoreModelListDraft = async (showToast = false) => {
-    const $root = $("#t-lore-settings-dialog");
-    const $status = $root.find("#t-lore-settings-status");
-    persistCurrentProfileInputsToDraft();
-    const mode = settingsDraft.profileMode;
-    const resolved = resolveProfileSelectionDraft(mode, settingsDraft.selectedProfileId);
-    settingsDraft.selectedProfileId = resolved.profileId;
-    const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    const apiUrl = normalizeApiBaseUrl(String($root.find("#t-lore-settings-api-url").val() || profile?.api_url || "").trim());
-    const apiKey = String($root.find("#t-lore-settings-api-key").val() || "").trim();
-    if (!apiUrl) {
-      $status.text("\u8BF7\u5148\u586B\u5199 API \u5730\u5740");
-      return;
-    }
-    try {
-      $status.text("\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...");
-      const headers = {};
-      if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-      const res = await fetch(`${apiUrl}/models`, { method: "GET", headers });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data?.models) ? data.models : [];
-      const ids = [...new Set(rows.map((m) => String(m?.id || m || "").trim()).filter(Boolean))];
-      if (!ids.length) throw new Error("\u672A\u8FD4\u56DE\u6A21\u578B\u5217\u8868");
-      const prevModel = String($root.find("#t-lore-settings-model").val() || profile?.model || "").trim();
-      const selectedModel = ids.includes(prevModel) ? prevModel : ids[0];
-      const $model = $root.find("#t-lore-settings-model");
-      $model.empty();
-      ids.forEach((modelId) => {
-        $model.append(`<option value="${escapeHtml5(modelId)}">${escapeHtml5(modelId)}</option>`);
-      });
-      $model.val(selectedModel);
-      if (mode === "custom") {
-        const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-        if (current) {
-          current.api_url = apiUrl;
-          current.api_key = apiKey;
-          current.model = selectedModel;
-        }
-      } else {
-        settingsDraft.stApiKey = apiKey;
-      }
-      $status.text(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`);
-      if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`, "\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3");
-    } catch (e) {
-      $status.text(`\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${e.message || "\u672A\u77E5\u9519\u8BEF"}`);
-      if (showToast && window.toastr) toastr.error(e.message || "\u6A21\u578B\u83B7\u53D6\u5931\u8D25", "\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3");
-    }
-  };
+  });
+  loreConnectionEditor.bind();
+  loreConnectionEditor.render();
+  $("#t-btn-save-profile").prop("disabled", !settingsDraft.selectedProfileId);
   const initEmbeddingFields = () => {
     const emb = settingsDraft.embedding;
     $("#t-lore-embed-url").val(emb.url || "");
@@ -21968,10 +21971,10 @@ async function showProfileConfigDialog(onSave) {
     const commonModels = ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"];
     const currentModel = emb.model || "text-embedding-3-small";
     commonModels.forEach((m) => {
-      $model.append(`<option value="${escapeHtml5(m)}" ${m === currentModel ? "selected" : ""}>${escapeHtml5(m)}</option>`);
+      $model.append(`<option value="${escapeHtml6(m)}" ${m === currentModel ? "selected" : ""}>${escapeHtml6(m)}</option>`);
     });
     if (!commonModels.includes(currentModel)) {
-      $model.prepend(`<option value="${escapeHtml5(currentModel)}" selected>${escapeHtml5(currentModel)} (\u5F53\u524D)</option>`);
+      $model.prepend(`<option value="${escapeHtml6(currentModel)}" selected>${escapeHtml6(currentModel)} (\u5F53\u524D)</option>`);
     }
     $("#t-lore-embed-dimensions").val(emb.dimensions || "");
     $("#t-lore-clean-html").prop("checked", emb.text_cleaning.remove_html_tags !== false);
@@ -22015,7 +22018,7 @@ async function showProfileConfigDialog(onSave) {
       models.forEach((m) => {
         const id = String(m?.id || m || "").trim();
         if (!id) return;
-        $sel.append(`<option value="${escapeHtml5(id)}" ${id === current ? "selected" : ""}>${escapeHtml5(id)}</option>`);
+        $sel.append(`<option value="${escapeHtml6(id)}" ${id === current ? "selected" : ""}>${escapeHtml6(id)}</option>`);
       });
       if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${models.length} \u4E2A Embedding \u6A21\u578B`);
     } catch (e) {
@@ -22062,7 +22065,6 @@ async function showProfileConfigDialog(onSave) {
       $btn.prop("disabled", false);
     }
   };
-  renderProfileOptionsDraft();
   initEmbeddingFields();
   $("#t-profile-dialog-close, #t-btn-cancel-profile").on("click", () => {
     $("#t-lore-settings-dialog").remove();
@@ -22073,45 +22075,6 @@ async function showProfileConfigDialog(onSave) {
     $(this).addClass("active");
     $("#t-lore-settings-dialog .t-set-page").removeClass("active");
     $(`#t-lore-settings-dialog .t-set-page[data-page='${tab}']`).addClass("active");
-  });
-  $("#t-lore-settings-profile-mode").on("change", function() {
-    persistCurrentProfileInputsToDraft();
-    const mode = String($(this).val() || "custom");
-    settingsDraft.profileMode = mode === "st" ? "st" : "custom";
-    renderProfileOptionsDraft();
-  });
-  $("#t-lore-settings-profile-select").on("change", function() {
-    persistCurrentProfileInputsToDraft();
-    settingsDraft.selectedProfileId = String($(this).val() || "").trim();
-    syncProfileFieldsDraft();
-  });
-  $("#t-lore-settings-new-profile").on("click", function(e) {
-    e.preventDefault();
-    persistCurrentProfileInputsToDraft();
-    if (settingsDraft.profileMode !== "custom") return;
-    const created = {
-      id: `lore_custom_${Date.now()}`,
-      name: `\u65B9\u6848 ${settingsDraft.customProfiles.length + 1}`,
-      api_url: String($("#t-lore-settings-api-url").val() || "").trim(),
-      api_key: String($("#t-lore-settings-api-key").val() || "").trim(),
-      model: String($("#t-lore-settings-model").val() || "").trim()
-    };
-    settingsDraft.customProfiles.push(created);
-    settingsDraft.selectedProfileId = created.id;
-    renderProfileOptionsDraft();
-  });
-  $("#t-lore-settings-api-url, #t-lore-settings-api-key").on("input", () => {
-    persistCurrentProfileInputsToDraft();
-  });
-  $("#t-lore-settings-model").on("change", () => {
-    persistCurrentProfileInputsToDraft();
-  });
-  $("#t-lore-settings-fetch-models").on("click", async function(e) {
-    e.preventDefault();
-    const $icon = $(this).find("i");
-    $icon.addClass("fa-spin");
-    await fetchLoreModelListDraft(true);
-    $icon.removeClass("fa-spin");
   });
   $("#t-lore-embed-fetch-models").on("click", async function(e) {
     e.preventDefault();
@@ -22125,17 +22088,18 @@ async function showProfileConfigDialog(onSave) {
     $("#t-lore-auto-vectorize-panel").toggle($(this).is(":checked"));
   });
   $("#t-btn-save-profile").on("click", function() {
-    persistCurrentProfileInputsToDraft();
+    const nextState = loreConnectionEditor.getState();
+    settingsDraft.customProfiles = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+    settingsDraft.selectedProfileId = nextState.activeProfileId;
     if (!settingsDraft.selectedProfileId) {
       if (window.toastr) toastr.warning("\u8BF7\u9009\u62E9\u4E00\u4E2A API \u65B9\u6848");
       return;
     }
     const data = getExtData();
     data[`${FEATURE_KEY3}_config`] = {
-      profile_mode: settingsDraft.profileMode,
+      profile_mode: "custom",
       profile_id: settingsDraft.selectedProfileId,
       custom_profiles: settingsDraft.customProfiles,
-      st_api_key: settingsDraft.stApiKey,
       selected_profile_id: settingsDraft.selectedProfileId,
       model_override: null
     };
@@ -22259,7 +22223,7 @@ function showRawResponseDialog2(rawContent, isError = false) {
                         font-size: 0.9em;
                         color: #ddd;
                         line-height: 1.5;
-                    ">${escapeHtml5(rawContent || "(\u7A7A)")}</pre>
+                    ">${escapeHtml6(rawContent || "(\u7A7A)")}</pre>
                 </div>
             </div>
             <div class="t-dialog-footer">
@@ -22284,7 +22248,7 @@ function showRawResponseDialog2(rawContent, isError = false) {
     });
   });
 }
-function escapeHtml5(text) {
+function escapeHtml6(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -23512,7 +23476,7 @@ async function updateIncrementalStatus() {
 }
 function formatSummaryAsHtml(text) {
   if (!text) return "";
-  let html = escapeHtml5(text);
+  let html = escapeHtml6(text);
   html = html.replace(/^## (.+)$/gm, '<h3 class="t-summary-h3">$1</h3>');
   html = html.replace(/^### (.+)$/gm, '<h4 class="t-summary-h4">$1</h4>');
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -23727,9 +23691,9 @@ function showPromptPreviewDialog(messages, stats = {}) {
     </div>
     `;
   $("body").append(html);
-  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml5(systemMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml5(userMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml5(JSON.stringify(messages, null, 2))}</pre>`);
+  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml6(systemMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml6(userMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml6(JSON.stringify(messages, null, 2))}</pre>`);
   $("#t-prompt-view-dialog .t-prompt-tab").on("click", function() {
     const role = $(this).data("role");
     $("#t-prompt-view-dialog .t-prompt-tab").removeClass("active");
@@ -23815,11 +23779,11 @@ function showCleaningPreviewDialog(samples) {
             <div class="t-sample-content">
                 <div class="t-sample-pane t-pane-original">
                     <div class="t-pane-header"><i class="fa-solid fa-file-alt"></i> \u539F\u59CB\u6587\u672C</div>
-                    <div class="t-pane-body">${escapeHtml5(sample.original || "(\u7A7A)")}</div>
+                    <div class="t-pane-body">${escapeHtml6(sample.original || "(\u7A7A)")}</div>
                 </div>
                 <div class="t-sample-pane t-pane-cleaned">
                     <div class="t-pane-header"><i class="fa-solid fa-broom"></i> \u6E05\u6D17\u540E</div>
-                    <div class="t-pane-body">${escapeHtml5(sample.cleaned || "(\u7A7A)")}</div>
+                    <div class="t-pane-body">${escapeHtml6(sample.cleaned || "(\u7A7A)")}</div>
                 </div>
             </div>
         </div>
@@ -23856,7 +23820,7 @@ function showCleaningPreviewDialog(samples) {
                 <div class="t-cleaning-config-bar">
                     <span class="t-config-label"><i class="fa-solid fa-cog"></i> \u5F53\u524D\u6E05\u6D17\u89C4\u5219:</span>
                     <div class="t-config-tags">${configHtml}</div>
-                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml5(config.custom_tags_to_remove)}</span>` : ""}
+                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml6(config.custom_tags_to_remove)}</span>` : ""}
                 </div>
 
                 <!-- \u6D88\u606F\u9884\u89C8\u5217\u8868 -->
@@ -24102,6 +24066,7 @@ var init_loreReviewWindow = __esm({
     init_defaults();
     init_connection();
     init_apiProfileRegistry();
+    init_apiConnectionEditor();
     init_storage();
     init_context();
     init_summarizer();
@@ -24448,7 +24413,7 @@ function renderResults() {
     const scorePercent = Math.round(result.score * 100);
     const isSelected = selectedIndices.has(index);
     const scoreColor = scorePercent >= 70 ? "#4caf50" : scorePercent >= 50 ? "#ff9800" : "#888";
-    const displayText = escapeHtml6(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
+    const displayText = escapeHtml7(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
     return '<div class="t-recall-result-item" data-index="' + index + '" style="display: flex; gap: 10px; padding: 12px; margin-bottom: 8px; background: ' + (isSelected ? "#2a3a4a" : "#1e1e1e") + "; border: 1px solid " + (isSelected ? "#4a9eff" : "#333") + '; border-radius: 8px; cursor: pointer; transition: all 0.2s;"><div style="flex-shrink: 0; padding-top: 2px;"><input type="checkbox" ' + (isSelected ? "checked" : "") + ' style="cursor: pointer;"></div><div style="flex: 1; min-width: 0;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="color: #888; font-size: 0.85em;">#' + result.messageIndex + '</span><span style="color: ' + scoreColor + '; font-weight: bold; font-size: 0.9em;">' + scorePercent + '%</span></div><div style="color: #ccc; font-size: 0.9em; line-height: 1.5; word-break: break-word;">' + displayText + "</div></div></div>";
   }).join("");
   $resultsList.html(html);
@@ -24512,7 +24477,7 @@ function handleAppend() {
     }
   }
 }
-function escapeHtml6(text) {
+function escapeHtml7(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -24850,8 +24815,6 @@ function openSettingsWindow() {
   cfg.active_profile_id = normalizedApiConfig.active_profile_id;
   let tempProfiles = JSON.parse(JSON.stringify(cfg.profiles));
   let tempActiveId = cfg.active_profile_id;
-  let tempApiSourceMode = "custom";
-  const tempStProfiles = getStPresetProfiles();
   let tempApp = JSON.parse(JSON.stringify(app));
   if (!tempApp.size) tempApp.size = 56;
   if (!tempApp.border_color) tempApp.border_color = "#90cdf4";
@@ -25241,52 +25204,54 @@ function openSettingsWindow() {
 
                 <!-- Tab 3: \u8FDE\u63A5 -->
                 <div id="page-connection" class="t-set-page">
-                    <div class="t-form-group">
-                        <label class="t-form-label">API \u65B9\u6848\u6765\u6E90</label>
-                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <select id="cfg-api-source-mode" class="t-input" style="max-width:220px;">
-                                <option value="custom" selected>\u81EA\u5B9A\u4E49\u65B9\u6848</option>
-                                <option value="st">\u9152\u9986\u5DF2\u4FDD\u5B58\u65B9\u6848</option>
-                            </select>
-                            <select id="cfg-st-profile-select" class="t-input" style="display:none; min-width:260px;"></select>
-                        </div>
-                        <div id="cfg-api-source-tip" style="font-size:0.8em; color:#888; margin-top:6px;">\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\u6C60\u8FDB\u884C\u5207\u6362\u4E0E\u7F16\u8F91\u3002</div>
-                    </div>
-                    <div class="t-form-group">
-                        <label class="t-form-label">\u5207\u6362\u914D\u7F6E\u65B9\u6848 (Profile)</label>
-                        <div class="t-prof-header">
-                            <select id="cfg-prof-select" class="t-prof-select"></select>
-                            <button id="cfg-prof-add" class="t-tool-btn" title="\u65B0\u5EFA\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
-                            <button id="cfg-prof-del" class="t-tool-btn" title="\u5220\u9664\u5F53\u524D\u65B9\u6848" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                        <div id="cfg-prof-meta"><label class="t-form-label">\u65B9\u6848\u540D\u79F0</label><input id="cfg-prof-name" class="t-input" value=""></div>
-                    </div>
-                    <div style="height:1px; background:#333; margin:20px 0;"></div>
-                    <div id="cfg-conn-fields">
-                        <div class="t-form-group">
-                            <label class="t-form-label">API Endpoint URL</label>
-                            <input id="cfg-url" class="t-input" placeholder="\u4F8B\u5982: http://127.0.0.1:5000/v1">
-                            <div id="cfg-url-hint" style="font-size:0.8em; color:#666; margin-top:5px; display:none;"><i class="fa-solid fa-link"></i> \u6B63\u5728\u8BFB\u53D6 ST \u5168\u5C40\u8BBE\u7F6E\uFF1A<span id="st-url-display"></span></div>
-                        </div>
-                        <div class="t-form-group"><label class="t-form-label">API Key</label><input id="cfg-key" type="password" class="t-input" placeholder="sk-..."></div>
-                        <div class="t-form-group">
-                            <label class="t-form-label">Model Name</label>
-                            <div style="display:flex; gap:10px;"><select id="cfg-model" class="t-input" style="cursor:pointer;"></select><button id="t-btn-fetch" class="t-tool-btn" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
-                        </div>
-                    </div>
-                    <div class="t-form-group"><label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="cfg-stream" ${cfg.stream !== false ? "checked" : ""} style="margin-right:10px;"> \u5F00\u542F\u6D41\u5F0F\u4F20\u8F93 (Streaming)</label></div>
-                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
-                        <label class="t-form-label">\u{1F3AF} \u8F93\u51FA Token \u9650\u5236 (max_tokens)</label>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <input type="number" id="cfg-max-tokens" class="t-input" value="${cfg.max_tokens || 4096}" min="256" max="32768" step="256" style="width:120px;">
-                            <span style="font-size:0.85em; color:#888;">\u8303\u56F4: 256 ~ 32768</span>
-                        </div>
-                        <p style="font-size:0.75em; color:#666; margin-top:5px; line-height:1.5;">
+                    ${renderApiConnectionEditorHTML({
+    ids: {
+      profileSelectId: "cfg-prof-select",
+      profileAddId: "cfg-prof-add",
+      profileDeleteId: "cfg-prof-del",
+      profileNameId: "cfg-prof-name",
+      profileMetaId: "cfg-prof-meta",
+      profileTipId: "cfg-prof-tip",
+      fieldsWrapId: "cfg-conn-fields",
+      apiUrlId: "cfg-url",
+      apiKeyId: "cfg-key",
+      modelId: "cfg-model",
+      fetchModelsId: "t-btn-fetch",
+      statusId: "cfg-status",
+      urlHintId: "cfg-url-hint",
+      stUrlDisplayId: "st-url-display",
+      streamId: "cfg-stream",
+      maxTokensId: "cfg-max-tokens"
+    },
+    classes: {
+      profileSelect: "t-prof-select",
+      button: "t-tool-btn",
+      input: "t-input",
+      select: "t-input"
+    },
+    labels: {
+      profile: "\u5207\u6362\u914D\u7F6E\u65B9\u6848 (Profile)",
+      apiUrl: "API Endpoint URL",
+      model: "Model Name",
+      maxTokens: "\u{1F3AF} \u8F93\u51FA Token \u9650\u5236 (max_tokens)"
+    },
+    flags: {
+      showProfileName: true,
+      showDeleteProfile: true,
+      showStream: true,
+      showMaxTokens: true
+    },
+    values: {
+      stream: cfg.stream !== false,
+      maxTokens: cfg.max_tokens || 4096,
+      statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868",
+      maxTokensHintHtml: `<p style="font-size:0.75em; color:#666; margin-top:5px; line-height:1.5;">
                             \u63A7\u5236 AI \u5355\u6B21\u8F93\u51FA\u7684\u6700\u5927 Token \u6570\u91CF\u3002<br>
                             <span style="color:#55efc4;">\u2713 \u4EC5\u5BF9\u81EA\u5B9A\u4E49 API \u65B9\u6848\u751F\u6548</span>\uFF0CST \u4E3B\u8FDE\u63A5\u4F7F\u7528\u5168\u5C40\u8BBE\u7F6E\u3002<br>
                             <span style="color:#feca57;">\u26A0\uFE0F \u8BBE\u7F6E\u8FC7\u9AD8\u53EF\u80FD\u8D85\u51FA\u6A21\u578B\u9650\u5236\u5BFC\u81F4\u62A5\u9519</span>
-                        </p>
-                    </div>
+                        </p>`
+    }
+  })}
                 </div>
 
                 <!-- Tab 3: \u5BFC\u6F14\u6A21\u5F0F -->
@@ -25497,6 +25462,33 @@ function openSettingsWindow() {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  const mainConnectionEditor = createApiConnectionEditor({
+    root: $("#t-settings-view"),
+    ids: {
+      profileSelectId: "cfg-prof-select",
+      profileAddId: "cfg-prof-add",
+      profileDeleteId: "cfg-prof-del",
+      profileNameId: "cfg-prof-name",
+      profileTipId: "cfg-prof-tip",
+      apiUrlId: "cfg-url",
+      apiKeyId: "cfg-key",
+      modelId: "cfg-model",
+      fetchModelsId: "t-btn-fetch",
+      statusId: "cfg-status",
+      urlHintId: "cfg-url-hint",
+      stUrlDisplayId: "st-url-display"
+    },
+    profiles: tempProfiles,
+    activeProfileId: tempActiveId,
+    autoFetchOnInput: false,
+    autoFetchOnProfileSwitch: true,
+    getInternalUrl: () => typeof settings !== "undefined" ? settings.api_url_openai || "\u672A\u77E5" : "\u672A\u77E5",
+    onChange: (nextState) => {
+      tempProfiles = nextState.profiles;
+      tempActiveId = nextState.activeProfileId;
+    }
+  });
+  mainConnectionEditor.bind();
   $(".t-set-tab-btn").on("click", function() {
     const tabName = $(this).data("tab");
     $(".t-set-tab-btn").removeClass("active");
@@ -25505,139 +25497,16 @@ function openSettingsWindow() {
     $(`#page-${tabName}`).addClass("active");
     if (tabName === "connection") {
       setTimeout(() => {
-        const p = tempProfiles.find((x) => x.id === tempActiveId);
-        if (p && p.type !== "internal") {
-          fetchModelList2(false);
-        }
+        mainConnectionEditor.fetchModels(false);
       }, 100);
     }
   });
   const saveCurrentProfileToMemory = () => {
-    const pIndex = tempProfiles.findIndex((p) => p.id === tempActiveId);
-    if (pIndex !== -1 && tempProfiles[pIndex].type !== "internal") {
-      const p = tempProfiles[pIndex];
-      p.name = $("#cfg-prof-name").val();
-      p.url = $("#cfg-url").val();
-      p.key = $("#cfg-key").val();
-      p.model = $("#cfg-model").val();
-    }
+    mainConnectionEditor.persistCurrentProfileInputs();
+    const nextState = mainConnectionEditor.getState();
+    tempProfiles = nextState.profiles;
+    tempActiveId = nextState.activeProfileId;
   };
-  const renderProfileUI = () => {
-    const pIndex = tempProfiles.findIndex((p2) => p2.id === tempActiveId);
-    if (pIndex === -1) {
-      tempActiveId = tempProfiles[0].id;
-      return renderProfileUI();
-    }
-    const p = tempProfiles[pIndex];
-    const isInternal = p.type === "internal";
-    const $sel = $("#cfg-prof-select");
-    $sel.empty();
-    tempProfiles.forEach((prof) => $sel.append(`<option value="${prof.id}" ${prof.id === tempActiveId ? "selected" : ""}>${prof.name}</option>`));
-    $("#cfg-prof-name").val(p.name).prop("disabled", isInternal);
-    $("#cfg-prof-del").prop("disabled", isInternal).css("opacity", isInternal ? 0.5 : 1);
-    if (isInternal) {
-      $("#cfg-url").val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
-      $("#cfg-key").val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
-      $("#cfg-model").empty().append("<option selected>(ST \u8BBE\u7F6E)</option>").prop("disabled", true);
-      $("#st-url-display").text(typeof settings !== "undefined" ? settings.api_url_openai || "\u672A\u77E5" : "\u672A\u77E5");
-      $("#cfg-url-hint").show();
-    } else {
-      $("#cfg-url").val(p.url || "").prop("disabled", false).prop("placeholder", "http://...");
-      $("#cfg-key").val(p.key || "").prop("disabled", false).prop("placeholder", "sk-...");
-      $("#cfg-model").prop("disabled", false);
-      $("#cfg-url-hint").hide();
-      const $mSel = $("#cfg-model");
-      $mSel.empty();
-      const currentM = p.model || "gpt-3.5-turbo";
-      $mSel.append(`<option value="${currentM}" selected>${currentM}</option>`);
-    }
-  };
-  const ensureEditableCustomProfile = () => {
-    let custom = tempProfiles.find((p) => p.id === tempActiveId && p.type !== "internal");
-    if (custom) return custom;
-    custom = tempProfiles.find((p) => p.type !== "internal");
-    if (custom) {
-      tempActiveId = custom.id;
-      return custom;
-    }
-    const newId = "custom_" + Date.now();
-    const created = { id: newId, name: "\u65B0\u65B9\u6848 1", type: "custom", url: "", key: "", model: "gpt-3.5-turbo" };
-    tempProfiles.push(created);
-    tempActiveId = newId;
-    return created;
-  };
-  const renderStPresetSelector = () => {
-    const $sel = $("#cfg-st-profile-select");
-    if ($sel.length === 0) return;
-    $sel.empty();
-    if (!Array.isArray(tempStProfiles) || tempStProfiles.length === 0) {
-      $sel.append('<option value="">\u672A\u53D1\u73B0\u9152\u9986\u9884\u8BBE</option>');
-      return;
-    }
-    tempStProfiles.forEach((p, idx) => {
-      const label = `${p.name}${p.source ? ` \xB7 ${p.source}` : ""}`;
-      $sel.append(`<option value="${p.id}" ${idx === 0 ? "selected" : ""}>${label}</option>`);
-    });
-  };
-  const applySelectedStPresetToCurrentProfile = () => {
-    const stId = $("#cfg-st-profile-select").val();
-    const preset = tempStProfiles.find((p) => p.id === stId);
-    if (!preset) return;
-    const target = ensureEditableCustomProfile();
-    target.url = preset.api_url || "";
-    target.model = preset.model || target.model || "gpt-3.5-turbo";
-    renderProfileUI();
-    if (preset.model) {
-      const $mSel = $("#cfg-model");
-      if ($mSel.find(`option[value="${preset.model}"]`).length === 0) {
-        $mSel.prepend(`<option value="${preset.model}" selected>${preset.model}</option>`);
-      } else {
-        $mSel.val(preset.model);
-      }
-    }
-  };
-  const syncApiSourceModeUI = () => {
-    const isSt = tempApiSourceMode === "st";
-    $("#cfg-st-profile-select").toggle(isSt);
-    $("#cfg-prof-add, #cfg-prof-del, #cfg-prof-meta").toggle(!isSt);
-    $("#cfg-api-source-tip").text(isSt ? "\u4ECE\u9152\u9986\u9884\u8BBE\u56DE\u586B URL/\u6A21\u578B\u5230\u5F53\u524D\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CAPI Key \u8BF7\u6309\u9700\u8865\u5145\u3002" : "\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\u6C60\u8FDB\u884C\u5207\u6362\u4E0E\u7F16\u8F91\u3002");
-    if (isSt) {
-      applySelectedStPresetToCurrentProfile();
-    }
-  };
-  $("#cfg-prof-select").on("change", function() {
-    saveCurrentProfileToMemory();
-    tempActiveId = $(this).val();
-    renderProfileUI();
-    const newProfile = tempProfiles.find((x) => x.id === tempActiveId);
-    if (newProfile && newProfile.type !== "internal") {
-      setTimeout(() => fetchModelList2(false), 100);
-    }
-  });
-  $("#cfg-prof-add").on("click", function() {
-    saveCurrentProfileToMemory();
-    const newId = "custom_" + Date.now();
-    tempProfiles.push({ id: newId, name: "\u65B0\u65B9\u6848 " + tempProfiles.length, type: "custom", url: "", key: "", model: "gpt-3.5-turbo" });
-    tempActiveId = newId;
-    renderProfileUI();
-  });
-  $("#cfg-prof-del").on("click", function() {
-    if (confirm("\u5220\u9664\u65B9\u6848\uFF1F")) {
-      tempProfiles = tempProfiles.filter((p) => p.id !== tempActiveId);
-      tempActiveId = tempProfiles[0].id;
-      renderProfileUI();
-    }
-  });
-  renderStPresetSelector();
-  syncApiSourceModeUI();
-  $("#cfg-api-source-mode").on("change", function() {
-    tempApiSourceMode = $(this).val() === "st" ? "st" : "custom";
-    syncApiSourceModeUI();
-  });
-  $("#cfg-st-profile-select").on("change", function() {
-    if (tempApiSourceMode !== "st") return;
-    applySelectedStPresetToCurrentProfile();
-  });
   const PREVIEW_ANIM_CLASSES = {
     ripple: "p-anim-ripple",
     arc: "p-anim-arc"
@@ -26297,48 +26166,6 @@ ${JSON.stringify(l.details, null, 2)}`;
   renderLogView();
   $("#btn-refresh-log").on("click", renderLogView);
   $("#btn-export-log").on("click", () => TitaniaLogger.downloadReport());
-  const fetchModelList2 = async (showSuccessToast = true) => {
-    const btn = $("#t-btn-fetch");
-    const p = tempProfiles.find((x) => x.id === tempActiveId);
-    if (!p || p.type === "internal") return;
-    const urlInput = ($("#cfg-url").val() || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
-    const key = ($("#cfg-key").val() || "").trim();
-    if (!urlInput) return;
-    try {
-      btn.prop("disabled", true).text("...");
-      const res = await fetch(`${urlInput}/models`, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${key}` }
-      });
-      if (!res.ok) throw new Error("Status: " + res.status);
-      const data2 = await res.json();
-      const models = data2.data || data2.models || [];
-      const currentModel = p.model || $("#cfg-model").val();
-      const $sel = $("#cfg-model");
-      $sel.empty();
-      models.forEach((m) => {
-        const modelId = m.id || m;
-        const isSelected = modelId === currentModel;
-        $sel.append(`<option value="${modelId}" ${isSelected ? "selected" : ""}>${modelId}</option>`);
-      });
-      if (currentModel && !models.some((m) => (m.id || m) === currentModel)) {
-        $sel.prepend(`<option value="${currentModel}" selected>${currentModel} (\u5F53\u524D)</option>`);
-      }
-      if (showSuccessToast && window.toastr) {
-        toastr.success(`\u83B7\u53D6\u6210\u529F: ${models.length} \u4E2A\u6A21\u578B`);
-      }
-    } catch (e) {
-      if (showSuccessToast) {
-        alert("\u83B7\u53D6\u5931\u8D25: " + e.message);
-        TitaniaLogger.error("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
-      } else {
-        console.warn("Titania: \u81EA\u52A8\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e.message);
-      }
-    } finally {
-      btn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
-    }
-  };
-  $("#t-btn-fetch").on("click", () => fetchModelList2(true));
   $("#btn-restore-presets").on("click", function() {
     if (confirm("\u6062\u590D\u6240\u6709\u9884\u8BBE\uFF1F")) {
       const d = getExtData();
@@ -26477,7 +26304,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   renderPreview();
-  renderProfileUI();
+  mainConnectionEditor.render();
 }
 function applyUIFontScale(scalePercent = 100) {
   const n = Number(scalePercent);
@@ -26497,6 +26324,7 @@ var init_settingsWindow = __esm({
     init_outlineEntryButton();
     init_rewriteEntryButton();
     init_apiProfileRegistry();
+    init_apiConnectionEditor();
   }
 });
 
@@ -31839,37 +31667,42 @@ async function loadExtensionSettings() {
   bindDrawerBackupControls();
 }
 var remoteVersionCache = null;
+var FORCE_SHOW_UPDATE_NOTICE = true;
 async function checkVersionUpdate() {
+  let remoteVersion = CURRENT_VERSION;
+  let hasRealUpdate = false;
   try {
-    const remoteVersion = await fetchRemoteVersion();
-    if (!remoteVersion) {
-      $("#titania-new-badge").hide();
-      $("#titania-update-section").hide();
-      return;
+    const fetchedVersion = await fetchRemoteVersion();
+    if (typeof fetchedVersion === "string" && fetchedVersion.trim()) {
+      remoteVersion = fetchedVersion.trim();
     }
-    if (compareVersions(remoteVersion, CURRENT_VERSION) > 0) {
-      $("#titania-new-badge").show().addClass("update-available").attr("title", `\u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}`).text("NEW");
-      $("#titania-update-section").show();
-      $("#titania-remote-version").text(`v${remoteVersion}`);
-      $("#titania-new-badge").off("click").on("click", (e) => {
-        e.stopPropagation();
-        const drawer = $("#titania-settings-drawer");
-        if (!drawer.hasClass("open")) {
-          drawer.find(".inline-drawer-toggle").click();
-        }
-      });
-      $("#titania-update-btn").off("click").on("click", () => {
-        showUpdateConfirmDialog(remoteVersion);
-      });
-      console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
-    } else {
-      $("#titania-new-badge").hide();
-      $("#titania-update-section").hide();
-    }
+    hasRealUpdate = compareVersions(remoteVersion, CURRENT_VERSION) > 0;
   } catch (e) {
-    console.warn("Titania: \u8FDC\u7A0B\u7248\u672C\u68C0\u6D4B\u5931\u8D25", e);
+    console.warn("Titania: \u8FDC\u7A0B\u7248\u672C\u68C0\u6D4B\u5931\u8D25\uFF0C\u5DF2\u56DE\u9000\u4E3A\u56FA\u5B9A\u663E\u793A\u66F4\u65B0\u63D0\u793A", e);
+  }
+  const shouldShowUpdateNotice = FORCE_SHOW_UPDATE_NOTICE || hasRealUpdate;
+  if (!shouldShowUpdateNotice) {
     $("#titania-new-badge").hide();
     $("#titania-update-section").hide();
+    return;
+  }
+  $("#titania-new-badge").show().addClass("update-available").attr("title", hasRealUpdate ? `\u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}` : "\u5DF2\u542F\u7528\u56FA\u5B9A\u66F4\u65B0\u63D0\u793A").text("NEW");
+  $("#titania-update-section").show();
+  $("#titania-remote-version").text(`v${remoteVersion}`);
+  $("#titania-new-badge").off("click").on("click", (e) => {
+    e.stopPropagation();
+    const drawer = $("#titania-settings-drawer");
+    if (!drawer.hasClass("open")) {
+      drawer.find(".inline-drawer-toggle").click();
+    }
+  });
+  $("#titania-update-btn").off("click").on("click", () => {
+    showUpdateConfirmDialog(remoteVersion);
+  });
+  if (hasRealUpdate) {
+    console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
+  } else if (FORCE_SHOW_UPDATE_NOTICE) {
+    console.log(`Titania: \u5DF2\u542F\u7528\u56FA\u5B9A\u66F4\u65B0\u63D0\u793A\uFF08\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}\uFF09`);
   }
 }
 async function fetchRemoteVersion() {
