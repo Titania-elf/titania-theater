@@ -22,11 +22,12 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.1";
+    CURRENT_VERSION = "5.0.2";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "5.0.2": "\u4F18\u5316\u6536\u85CF\u9986\u6027\u80FD\u4E0E\u6D77\u62A5\u5F0F\u754C\u9762\uFF0C\u4FEE\u590D\u7F16\u8F91\u540E\u6536\u85CF\u5185\u5BB9\u4E0D\u540C\u6B65\u95EE\u9898\uFF0C\u65B0\u589E\u5BFC\u51FA\u56FE\u7247\u6253\u7801\u53EF\u9009\u9879\u5E76\u6539\u8FDB\u79FB\u52A8\u7AEF\u4EA4\u4E92\u3002",
       "5.0.1": "\u4FEE\u590D\u4E86\u4E00\u4E2Abug\uFF0C\u4F18\u5316\u4E86\u90E8\u5206\u754C\u9762\u7EC6\u8282\u3002",
       "5.0.0": "\u8DE8\u5165\u5230\u5168\u65B0\u76845.0\u7248\u672C\uFF0C\u56DE\u58F0\u5C0F\u5267\u573A\u6B63\u5F0F\u66F4\u540D\u4E3A\u56DE\u58F0\u5DE5\u5177\u7BB1\uFF0C\u65B0\u5165\u53E3\u4E3A\u53D1\u9001\u952E\u5DE6\u8FB9\u7684\u56FE\u6807\u3002\u66F4\u591A\u529F\u80FD\u6B63\u5728\u9646\u7EED\u8D76\u6765\u7684\u8DEF\u4E0A~",
       "3.3.4": "\u{1F514} \u65B0\u589E\u6587\u672C\u6539\u5199\u529F\u80FD\uFF0C\u53EF\u4EE5\u5BF9\u9152\u9986\u804A\u5929\u6700\u65B0\u56DE\u590D\u751F\u6210\u7684\u5185\u5BB9\u8FDB\u884C\u6539\u5199\u548C\u4F18\u5316\uFF0C\u5165\u53E3\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u3002\u76EE\u524D\u53EA\u505A\u4E86\u7B80\u5355\u7684\u5173\u952E\u8BCD\u5339\u914D\uFF0C\u540E\u7EED\u4F1A\u6269\u5C55\u66F4\u591A\u89C4\u5219\u3002",
@@ -145,7 +146,7 @@ var init_defaults = __esm({
         enabled: false,
         // 是否启用快捷工具栏（禁用时点击悬浮球直接打开主窗口）
         // 各按钮的启用状态，按固定顺序排列
-        // 可用按钮: main(剧场), lore(设定提取), outline(故事大纲), model(切换模型), settings(设置), favs(收藏夹), scripts(剧本管理), debug(调试), recall(记忆召回)
+        // 可用按钮: main(剧场), lore(设定提取), outline(故事大纲), settings(设置), favs(收藏夹), scripts(剧本管理), debug(调试), recall(记忆召回)
         enabled_items: {
           main: true,
           // 打开剧场
@@ -153,8 +154,6 @@ var init_defaults = __esm({
           // 提取设定
           outline: false,
           // 故事大纲
-          model: false,
-          // 快速切换模型
           settings: true,
           // 设置
           favs: false,
@@ -191,9 +190,6 @@ var init_defaults = __esm({
         prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE\n4) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
         prompt_json_rule: "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09"
       },
-      // 剧场模型覆盖配置（仅影响场景生成，不影响设定提取等其他功能）
-      theater_model_override: null,
-      // null 表示使用当前方案的默认模型，设置后覆盖
       // Embedding API 独立配置（用于向量化）
       embedding_config: {
         url: "",
@@ -4711,63 +4707,90 @@ textarea.t-input {
 
 .t-fav-container {
     height: 90vh;
-    width: 1100px;
+    width: 1240px;
     max-width: 95vw;
     display: flex;
     flex-direction: column;
-    background: #121212;
+    background: radial-gradient(120% 120% at 0% 0%, #2b1f12 0%, #121212 42%, #090909 100%);
     overflow: hidden;
     position: relative;
     isolation: isolate;
+    border: 1px solid rgba(191, 161, 95, 0.25);
+    box-shadow: 0 18px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 245, 222, 0.05);
+}
+
+.t-fav-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(90% 65% at 85% -10%, rgba(191, 161, 95, 0.22), transparent 55%),
+        radial-gradient(70% 45% at 8% 110%, rgba(106, 77, 43, 0.2), transparent 65%);
+    z-index: 0;
 }
 
 .t-fav-toolbar {
-    height: 60px;
-    background: #1e1e1e;
-    border-bottom: 1px solid #333;
+    min-height: 64px;
+    background: linear-gradient(180deg, rgba(27, 27, 27, 0.94), rgba(17, 17, 17, 0.9));
+    border-bottom: 1px solid rgba(191, 161, 95, 0.3);
     display: flex;
     align-items: center;
-    padding: 0 20px;
+    padding: 8px 20px;
     gap: 15px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(8px);
 }
 
 .t-fav-filter-select,
 .t-fav-search {
-    background: #2a2a2a;
-    color: #eee;
-    border: 1px solid #444;
-    padding: 6px 10px;
-    border-radius: 4px;
+    background: rgba(30, 30, 30, 0.88);
+    color: #f2efe8;
+    border: 1px solid rgba(191, 161, 95, 0.3);
+    padding: 8px 10px;
+    border-radius: 8px;
     outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.t-fav-filter-select:focus,
+.t-fav-search:focus {
+    border-color: rgba(228, 196, 120, 0.78);
+    box-shadow: 0 0 0 3px rgba(228, 196, 120, 0.16);
 }
 
 .t-fav-filter-select {
-    min-width: 120px;
+    min-width: 150px;
     cursor: pointer;
 }
 
 .t-fav-search {
-    width: 200px;
+    width: 260px;
 }
 
 /* \u7F51\u683C */
 .t-fav-grid-area {
     flex-grow: 1;
-    padding: 25px;
+    padding: 20px 22px 24px;
     overflow-y: auto;
-    background: #121212;
+    background:
+        linear-gradient(180deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.65)),
+        radial-gradient(90% 140% at 100% 0%, rgba(54, 40, 24, 0.28), transparent 70%);
+    position: relative;
+    z-index: 1;
 }
 
 .t-fav-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
 }
 
 .t-fav-empty {
     text-align: center;
-    color: #555;
+    color: #8d866f;
     margin-top: 50px;
     grid-column: 1/-1;
 }
@@ -4776,15 +4799,17 @@ textarea.t-input {
 .t-fav-card {
     position: relative;
     overflow: hidden;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    height: 180px;
+    background: linear-gradient(180deg, rgba(18, 18, 18, 0.94), rgba(10, 10, 10, 0.94));
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    border-radius: 14px;
+    aspect-ratio: 3 / 4;
+    min-height: 300px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: transform 0.28s ease, border-color 0.26s ease, box-shadow 0.26s ease;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 .t-fav-card-bg {
@@ -4794,16 +4819,46 @@ textarea.t-input {
     width: 100%;
     height: 100%;
     background-size: cover;
-    background-position: top center;
-    opacity: 0.5;
-    transition: all 0.5s ease;
+    background-position: center center;
+    opacity: 0.42;
+    filter: blur(11px) saturate(110%);
+    transform: scale(1.12);
+    transition: transform 0.45s ease, opacity 0.3s ease;
     z-index: 0;
 }
 
 .t-fav-card-bg.no-img {
-    background: linear-gradient(135deg, #1f1f1f, #2a2a2a);
+    background: radial-gradient(120% 120% at 20% 0%, #3a2d1e 0%, #201912 48%, #120f0b 100%);
     opacity: 1;
     filter: none;
+    transform: scale(1);
+}
+
+.t-fav-card-poster {
+    position: absolute;
+    inset: 8px 8px 48px;
+    border-radius: 11px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+    z-index: 1;
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.6));
+}
+
+.t-fav-card.no-img .t-fav-card-poster::before {
+    content: attr(data-initial);
+    position: absolute;
+    inset: 10% 14%;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(42px, 6vw, 86px);
+    font-weight: 700;
+    color: rgba(244, 226, 188, 0.82);
+    letter-spacing: 0.08em;
+    background: linear-gradient(160deg, rgba(96, 73, 41, 0.5), rgba(31, 24, 17, 0.66));
+    border: 1px solid rgba(191, 161, 95, 0.35);
 }
 
 .t-fav-card-overlay {
@@ -4812,65 +4867,79 @@ textarea.t-input {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.9) 100%);
-    z-index: 1;
+    background: linear-gradient(to bottom, rgba(7, 7, 7, 0.04) 24%, rgba(7, 7, 7, 0.4) 62%, rgba(7, 7, 7, 0.95) 100%);
+    z-index: 2;
     pointer-events: none;
 }
 
 .t-fav-card:hover {
-    transform: translateY(-5px);
-    border-color: #666;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+    transform: translateY(-6px);
+    border-color: rgba(239, 209, 141, 0.76);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(239, 209, 141, 0.23);
 }
 
 .t-fav-card:hover .t-fav-card-bg {
-    opacity: 0.6;
-    transform: scale(1.05);
+    opacity: 0.54;
+    transform: scale(1.2);
 }
 
 .t-fav-card-content {
     position: relative;
-    z-index: 2;
-    padding: 15px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    z-index: 3;
+    padding: 14px 12px 12px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.82);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(2, 2, 2, 0.68));
+}
+
+.t-fav-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .t-fav-card-script {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: #fff;
-    margin-bottom: 2px;
+    font-weight: 700;
+    font-size: 1.02em;
+    color: #f6f2ea;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .t-fav-card-char {
-    font-size: 0.85em;
-    color: #bfa15f;
+    font-size: 0.82em;
+    color: #e5c88c;
     font-weight: 500;
     display: flex;
     align-items: center;
     gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .t-fav-card-snippet {
-    font-size: 0.85em;
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1.4;
+    font-size: 0.78em;
+    color: rgba(246, 241, 230, 0.86);
+    line-height: 1.45;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
-    margin-bottom: 8px;
-    font-style: italic;
+    margin: 8px 0 10px;
+    min-height: 3.3em;
+    font-style: normal;
 }
 
 .t-fav-card-footer {
-    font-size: 0.75em;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.72em;
+    color: rgba(234, 221, 197, 0.62);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 8px;
+    border-top: 1px solid rgba(191, 161, 95, 0.2);
+    padding-top: 7px;
 }
 
 /* \u9605\u8BFB\u5668 overlay */
@@ -5116,17 +5185,17 @@ textarea.t-input {
 /* \u5361\u7247\u590D\u9009\u6846\uFF08\u9ED8\u8BA4\u9690\u85CF\uFF09 */
 .t-fav-card-checkbox {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 11px;
+    left: 11px;
     width: 28px;
     height: 28px;
-    background: rgba(0, 0, 0, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(5, 5, 5, 0.68);
+    border: 1px solid rgba(255, 236, 201, 0.44);
     border-radius: 6px;
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 5;
+    z-index: 6;
     color: #fff;
     font-size: 1.1em;
     transition: all 0.2s ease;
@@ -5146,20 +5215,20 @@ textarea.t-input {
 
 /* \u9009\u4E2D\u72B6\u6001\u7684\u5361\u7247 */
 .t-fav-card.selected {
-    border-color: #4ade80;
-    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3), 0 8px 20px rgba(0, 0, 0, 0.4);
+    border-color: #e7ca8f;
+    box-shadow: 0 0 0 2px rgba(231, 202, 143, 0.3), 0 16px 32px rgba(0, 0, 0, 0.45);
 }
 
 .t-fav-card.selected .t-fav-card-checkbox {
-    background: rgba(74, 222, 128, 0.9);
-    border-color: #4ade80;
+    background: rgba(231, 202, 143, 0.95);
+    border-color: #e7ca8f;
     color: #000;
 }
 
 .t-fav-card.selected .t-fav-card-overlay {
     background: linear-gradient(to bottom,
-            rgba(74, 222, 128, 0.1) 0%,
-            rgba(0, 0, 0, 0.5) 50%,
+            rgba(231, 202, 143, 0.09) 0%,
+            rgba(0, 0, 0, 0.48) 48%,
             rgba(0, 0, 0, 0.9) 100%);
 }
 
@@ -5175,11 +5244,84 @@ textarea.t-input {
 
 
 .t-fav-card-chain {
-    border-color: rgba(191, 161, 95, 0.6);
+    border-color: rgba(191, 161, 95, 0.72);
 }
 
 .t-fav-card-chain .t-fav-card-overlay {
-    background: linear-gradient(to bottom, rgba(191, 161, 95, 0.08) 0%, rgba(0, 0, 0, 0.62) 52%, rgba(0, 0, 0, 0.92) 100%);
+    background: linear-gradient(to bottom, rgba(191, 161, 95, 0.07) 0%, rgba(0, 0, 0, 0.58) 50%, rgba(0, 0, 0, 0.92) 100%);
+}
+
+/* \u5BFC\u51FA\u56FE\u7247\u9009\u9879\u5F39\u5C42 */
+.t-fav-export-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 16px;
+}
+
+.t-fav-export-sheet {
+    width: min(520px, 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    background: linear-gradient(180deg, rgba(28, 22, 16, 0.96), rgba(14, 14, 14, 0.98));
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.t-fav-export-sheet-title {
+    color: #f3e6cb;
+    font-size: 1.02em;
+    font-weight: 700;
+}
+
+.t-fav-export-sheet-desc {
+    color: #c4b699;
+    font-size: 0.86em;
+    margin-bottom: 4px;
+}
+
+.t-fav-export-sheet-btn,
+.t-fav-export-sheet-cancel {
+    border: 1px solid rgba(191, 161, 95, 0.26);
+    background: rgba(24, 24, 24, 0.86);
+    color: #e8e0d2;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.t-fav-export-sheet-btn:hover,
+.t-fav-export-sheet-cancel:hover {
+    border-color: rgba(231, 202, 143, 0.5);
+    background: rgba(33, 28, 22, 0.92);
+}
+
+.t-fav-export-sheet-btn.primary {
+    border-color: rgba(231, 202, 143, 0.5);
+    background: linear-gradient(180deg, rgba(84, 64, 38, 0.65), rgba(48, 36, 21, 0.7));
+}
+
+.t-fav-export-sheet-remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #d1c4a9;
+    font-size: 0.86em;
+    padding: 4px 2px;
+}
+
+.t-fav-export-sheet-cancel {
+    text-align: center;
+    color: #b7aaa0;
 }
 
 .t-fav-chain-badge {
@@ -5197,11 +5339,39 @@ textarea.t-input {
 
 
 @media screen and (max-width: 600px) {
+    .t-fav-container {
+        width: 100vw;
+        max-width: 100vw;
+        height: 92vh;
+    }
+
     .t-fav-toolbar {
         flex-direction: column;
         height: auto;
         padding: 10px;
         align-items: stretch;
+    }
+
+    .t-fav-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .t-fav-card {
+        min-height: 230px;
+    }
+
+    .t-fav-card-poster {
+        inset: 6px 6px 44px;
+    }
+
+    .t-fav-export-sheet-backdrop {
+        padding: 10px;
+    }
+
+    .t-fav-export-sheet {
+        border-radius: 12px 12px 10px 10px;
+        padding: 14px;
     }
 
     .t-fav-search {
@@ -5230,6 +5400,7 @@ textarea.t-input {
         font-size: 1.2em;
     }
 }
+
 
 /* === debug.css === */
 /* css/debug.css - \u6781\u7B80\u4EE3\u7801\u7F16\u8F91\u5668\u98CE\u683C (\u542B\u79FB\u52A8\u7AEF\u9002\u914D) */
@@ -12776,7 +12947,15 @@ function openFavsWindow() {
   let isEditMode = false;
   let selectedIds = /* @__PURE__ */ new Set();
   let renderTaskId = 0;
-  const GRID_RENDER_CHUNK_SIZE = 36;
+  let searchDebounceTimer = null;
+  let currentMap = {};
+  let renderedCardCount = 0;
+  let loadedVisibleCount = 0;
+  let filteredIndexMap = /* @__PURE__ */ new Map();
+  const GRID_RENDER_CHUNK_SIZE = 18;
+  const INITIAL_RENDER_LIMIT = 120;
+  const LOAD_MORE_STEP = 80;
+  const SEARCH_DEBOUNCE_MS = 240;
   const charIndex = /* @__PURE__ */ new Set();
   favs.forEach((f) => {
     if (f.charName) {
@@ -12880,31 +13059,52 @@ function openFavsWindow() {
       $(".t-fav-card").removeClass("selected");
     }
   };
-  const buildCardElement = (item, idx, currentMap) => {
+  const getCachedSnippet = (item) => {
+    if (typeof item._snippetText === "string") return item._snippetText;
     const isChain = item?.type === "chain";
     const chainItems = Array.isArray(item?.items) ? item.items : [];
-    const chainCount = chainItems.length;
     const chainSnippetSource = isChain ? chainItems.map((seg) => {
       const instruction = String(seg?.instruction || "").trim();
       const html2 = String(seg?.html || "").trim();
       return `${instruction}
 ${html2}`;
     }).join("\n") : "";
-    const snippet = getSnippet(isChain ? chainSnippetSource || item.html : item.html);
+    item._snippetText = getSnippet(isChain ? chainSnippetSource || item.html : item.html);
+    return item._snippetText;
+  };
+  const getCachedSearchText = (item) => {
+    if (typeof item._searchText === "string") return item._searchText;
+    const snippet = getCachedSnippet(item);
+    item._searchText = [
+      String(item?.title || ""),
+      String(item?._meta?.script || ""),
+      String(item?._meta?.char || ""),
+      String(snippet || "")
+    ].join(" ").toLowerCase();
+    return item._searchText;
+  };
+  const buildCardElement = (item, idx, currentMap2) => {
+    const isChain = item?.type === "chain";
+    const chainItems = Array.isArray(item?.items) ? item.items : [];
+    const chainCount = chainItems.length;
+    const snippet = getCachedSnippet(item);
     const charName = item._meta.char;
-    let bgUrl = currentMap[charName];
+    let bgUrl = currentMap2[charName];
     if (!bgUrl) bgUrl = item.avatar;
     const bgClass = bgUrl ? "" : "no-img";
     const bgStyle = bgUrl ? `background-image: url('${bgUrl}')` : "";
+    const cardBgClass = bgUrl ? "" : "no-img";
+    const charInitial = (String(charName || "?").trim().charAt(0) || "?").toUpperCase();
     const isSelected = selectedIds.has(item.id);
     const displayDate = String(item.date || "").split(" ")[0] || "-";
     const chainBadge = isChain ? `<span class="t-fav-chain-badge">\u5267\u573A\u5206\u7EC4 \xB7 ${chainCount}\u6BB5</span>` : "";
     const card = $(`
-            <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""}" data-fav-id="${item.id}">
+            <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""} ${cardBgClass}" data-fav-id="${item.id}">
                 <div class="t-fav-card-checkbox">
                     <i class="fa-${isSelected ? "solid fa-square-check" : "regular fa-square"}"></i>
                 </div>
                 <div class="t-fav-card-bg ${bgClass}" style="${bgStyle}"></div>
+                <div class="t-fav-card-poster" style="${bgStyle}" data-initial="${escapeHtmlText(charInitial)}"></div>
                 <div class="t-fav-card-overlay"></div>
                 <div class="t-fav-card-content">
                     <div class="t-fav-card-header">
@@ -12916,24 +13116,30 @@ ${html2}`;
                 </div>
             </div>
         `);
-    card.on("click", function() {
-      if (isEditMode) {
-        const favId = item.id;
-        if (selectedIds.has(favId)) {
-          selectedIds.delete(favId);
-          $(this).removeClass("selected");
-          $(this).find(".t-fav-card-checkbox i").removeClass("fa-solid fa-square-check").addClass("fa-regular fa-square");
-        } else {
-          selectedIds.add(favId);
-          $(this).addClass("selected");
-          $(this).find(".t-fav-card-checkbox i").removeClass("fa-regular fa-square").addClass("fa-solid fa-square-check");
-        }
-        updateSelectionCount();
-      } else {
-        loadReaderItem(idx);
-      }
-    });
     return card[0];
+  };
+  const renderCardRange = (start, end, taskId) => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    if (start >= end) return;
+    let cursor = start;
+    const renderChunk = () => {
+      if (taskId !== renderTaskId) return;
+      const chunkEnd = Math.min(cursor + GRID_RENDER_CHUNK_SIZE, end);
+      const frag = document.createDocumentFragment();
+      for (let idx = cursor; idx < chunkEnd; idx++) {
+        const item = currentFilteredList[idx];
+        if (!item) continue;
+        frag.appendChild(buildCardElement(item, idx, currentMap));
+      }
+      gridEl.appendChild(frag);
+      cursor = chunkEnd;
+      renderedCardCount = Math.max(renderedCardCount, cursor);
+      if (cursor < end) {
+        requestAnimationFrame(renderChunk);
+      }
+    };
+    requestAnimationFrame(renderChunk);
   };
   const renderGrid = () => {
     const grid = $("#t-fav-grid");
@@ -12942,13 +13148,19 @@ ${html2}`;
     renderTaskId++;
     const taskId = renderTaskId;
     grid.empty();
-    const currentMap = getExtData().character_map || {};
+    renderedCardCount = 0;
+    loadedVisibleCount = 0;
+    filteredIndexMap.clear();
+    currentMap = getExtData().character_map || {};
     const targetChar = $("#t-fav-filter-char").val();
-    const search = $("#t-fav-search").val().toLowerCase();
+    const search = String($("#t-fav-search").val() || "").trim().toLowerCase();
     currentFilteredList = favs.filter((f) => {
       if (targetChar !== "\u5168\u90E8\u89D2\u8272" && f._meta.char !== targetChar) return false;
-      if (search && !f.title.toLowerCase().includes(search) && !f.html.toLowerCase().includes(search)) return false;
+      if (search && !getCachedSearchText(f).includes(search)) return false;
       return true;
+    });
+    currentFilteredList.forEach((item, idx) => {
+      filteredIndexMap.set(String(item.id), idx);
     });
     if (currentFilteredList.length === 0) {
       grid.append('<div class="t-fav-empty">\u6CA1\u6709\u627E\u5230\u76F8\u5173\u6536\u85CF</div>');
@@ -12957,23 +13169,28 @@ ${html2}`;
     if (isEditMode) {
       grid.addClass("edit-mode");
     }
-    let cursor = 0;
-    const total = currentFilteredList.length;
-    const renderChunk = () => {
-      if (taskId !== renderTaskId) return;
-      const end = Math.min(cursor + GRID_RENDER_CHUNK_SIZE, total);
-      const frag = document.createDocumentFragment();
-      for (let idx = cursor; idx < end; idx++) {
-        const item = currentFilteredList[idx];
-        frag.appendChild(buildCardElement(item, idx, currentMap));
-      }
-      gridEl.appendChild(frag);
-      cursor = end;
-      if (cursor < total) {
-        requestAnimationFrame(renderChunk);
-      }
-    };
-    renderChunk();
+    loadedVisibleCount = Math.min(currentFilteredList.length, INITIAL_RENDER_LIMIT);
+    renderCardRange(0, loadedVisibleCount, taskId);
+  };
+  const maybeLoadMoreCards = () => {
+    const areaEl = $(".t-fav-grid-area")[0];
+    if (!areaEl) return;
+    if (renderedCardCount >= currentFilteredList.length) return;
+    const nearBottom = areaEl.scrollTop + areaEl.clientHeight >= areaEl.scrollHeight - 220;
+    if (!nearBottom) return;
+    const prevLoaded = loadedVisibleCount;
+    loadedVisibleCount = Math.min(currentFilteredList.length, loadedVisibleCount + LOAD_MORE_STEP);
+    if (loadedVisibleCount <= prevLoaded) return;
+    const taskId = renderTaskId;
+    renderCardRange(prevLoaded, loadedVisibleCount, taskId);
+  };
+  const scheduleSearchRender = () => {
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer);
+    }
+    searchDebounceTimer = setTimeout(() => {
+      renderGrid();
+    }, SEARCH_DEBOUNCE_MS);
   };
   let currentViewingHtml = "";
   let currentViewingTitle = "";
@@ -13021,13 +13238,37 @@ ${html2}`;
     }
     $("#t-fav-reader").addClass("show");
   };
-  $("#t-fav-filter-char, #t-fav-search").on("input change", renderGrid);
+  $("#t-fav-filter-char").on("change", renderGrid);
+  $("#t-fav-search").on("input", scheduleSearchRender);
+  $("#t-fav-search").on("change", renderGrid);
+  $(".t-fav-grid-area").on("scroll", maybeLoadMoreCards);
   $("#t-btn-img-mgr").on("click", () => {
     openCharImageManager(() => {
       renderGrid();
     });
   });
   $("#t-read-back").on("click", () => $("#t-fav-reader").removeClass("show"));
+  $("#t-fav-grid").on("click", ".t-fav-card", function() {
+    const favId = String($(this).data("fav-id"));
+    const itemIndex = filteredIndexMap.get(favId);
+    if (typeof itemIndex !== "number") return;
+    const item = currentFilteredList[itemIndex];
+    if (!item) return;
+    if (isEditMode) {
+      if (selectedIds.has(item.id)) {
+        selectedIds.delete(item.id);
+        $(this).removeClass("selected");
+        $(this).find(".t-fav-card-checkbox i").removeClass("fa-solid fa-square-check").addClass("fa-regular fa-square");
+      } else {
+        selectedIds.add(item.id);
+        $(this).addClass("selected");
+        $(this).find(".t-fav-card-checkbox i").removeClass("fa-regular fa-square").addClass("fa-solid fa-square-check");
+      }
+      updateSelectionCount();
+      return;
+    }
+    loadReaderItem(itemIndex);
+  });
   $("#t-btn-edit-mode").on("click", () => toggleEditMode(true));
   $("#t-btn-exit-edit").on("click", () => toggleEditMode(false));
   $("#t-btn-select-all").on("click", () => {
@@ -13110,7 +13351,61 @@ ${html2}`;
       if (window.toastr) toastr.warning("\u5F53\u524D\u65E0\u5185\u5BB9");
     }
   });
-  $("#t-read-img").on("click", async function() {
+  const getExportMaskUserPreference = () => {
+    const d = getExtData();
+    if (typeof d.favs_export_mask_user !== "boolean") {
+      d.favs_export_mask_user = true;
+    }
+    return d.favs_export_mask_user !== false;
+  };
+  const saveExportMaskUserPreference = (maskUser) => {
+    const d = getExtData();
+    d.favs_export_mask_user = maskUser === true;
+    saveExtData();
+  };
+  const isCompactTouchMode = () => {
+    const mobileWidth = window.matchMedia?.("(max-width: 768px)")?.matches === true;
+    const touchCapable = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    return mobileWidth || touchCapable && window.innerWidth <= 920;
+  };
+  const showExportOptionsSheet = (defaultMaskUser) => {
+    return new Promise((resolve) => {
+      $("#t-fav-export-sheet").remove();
+      const sheetHtml = `
+                <div id="t-fav-export-sheet" class="t-fav-export-sheet-backdrop">
+                    <div class="t-fav-export-sheet">
+                        <div class="t-fav-export-sheet-title">\u56FE\u7247\u5BFC\u51FA\u9009\u9879</div>
+                        <div class="t-fav-export-sheet-desc">\u8BF7\u9009\u62E9\u5BFC\u51FA\u65F6\u662F\u5426\u5BF9 User \u540D\u79F0\u6253\u7801</div>
+
+                        <button class="t-fav-export-sheet-btn primary" data-mask="1">\u5BFC\u51FA\u56FE\u7247\uFF08\u6253\u7801\uFF09</button>
+                        <button class="t-fav-export-sheet-btn" data-mask="0">\u5BFC\u51FA\u56FE\u7247\uFF08\u4E0D\u6253\u7801\uFF09</button>
+
+                        <label class="t-fav-export-sheet-remember">
+                            <input type="checkbox" id="t-fav-export-remember" ${defaultMaskUser ? "checked" : ""}>
+                            <span>\u8BB0\u4F4F\u672C\u6B21\u9009\u62E9\u4E3A\u9ED8\u8BA4</span>
+                        </label>
+
+                        <button class="t-fav-export-sheet-cancel" id="t-fav-export-cancel">\u53D6\u6D88</button>
+                    </div>
+                </div>
+            `;
+      $("#t-favs-view").append(sheetHtml);
+      const closeSheet = (payload) => {
+        $("#t-fav-export-sheet").remove();
+        resolve(payload || null);
+      };
+      $("#t-fav-export-sheet").on("click", (e) => {
+        if (e.target === e.currentTarget) closeSheet(null);
+      });
+      $("#t-fav-export-cancel").on("click", () => closeSheet(null));
+      $("#t-fav-export-sheet .t-fav-export-sheet-btn").on("click", function() {
+        const maskUser = $(this).data("mask") === 1;
+        const remember = $("#t-fav-export-remember").is(":checked");
+        closeSheet({ maskUser, remember });
+      });
+    });
+  };
+  const exportCurrentFavImage = async (maskUser) => {
     const btn = $(this);
     const originalBtnHtml = btn.html();
     let offscreen = null;
@@ -13128,11 +13423,13 @@ ${html2}`;
       if (!sourceHtml || sourceHtml.trim().length < 10) {
         throw new Error("\u5F53\u524D\u65E0\u53EF\u5BFC\u51FA\u7684\u5185\u5BB9");
       }
-      const userName = await getExpandedUserNameForMasking();
       let maskedHtml = sourceHtml;
-      if (userName && typeof userName === "string" && userName.trim()) {
-        const replacement = maskStringSameLength(userName, "\u2588");
-        maskedHtml = maskHtmlByToken(sourceHtml, userName, replacement);
+      if (maskUser) {
+        const userName = await getExpandedUserNameForMasking();
+        if (userName && typeof userName === "string" && userName.trim()) {
+          const replacement = maskStringSameLength(userName, "\u2588");
+          maskedHtml = maskHtmlByToken(sourceHtml, userName, replacement);
+        }
       }
       const onScreenZone = document.getElementById("t-read-capture-zone");
       const widthPx = Math.ceil(onScreenZone?.getBoundingClientRect?.().width || 900);
@@ -13151,7 +13448,10 @@ ${html2}`;
       link.download = `Titania_${(/* @__PURE__ */ new Date()).getTime()}.png`;
       link.href = dataUrl;
       link.click();
-      if (window.toastr) toastr.success("\u56FE\u7247\u5BFC\u51FA\u6210\u529F");
+      if (window.toastr) {
+        const modeText = maskUser ? "\u5DF2\u6253\u7801" : "\u672A\u6253\u7801";
+        toastr.success(`\u56FE\u7247\u5BFC\u51FA\u6210\u529F\uFF08${modeText}\uFF09`);
+      }
     } catch (e) {
       console.error(e);
       alert("\u5BFC\u51FA\u5931\u8D25: " + (e?.message || e) + "\n\u53EF\u80FD\u539F\u56E0\uFF1A\u8DE8\u57DF\u56FE\u7247/\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 SVG \u8F6C\u6362/\u5185\u5B58\u4E0D\u8DB3\u3002");
@@ -13162,6 +13462,29 @@ ${html2}`;
       }
       btn.prop("disabled", false).html(originalBtnHtml);
     }
+  };
+  $("#t-read-img").on("click", async function(e) {
+    const defaultMaskUser = getExportMaskUserPreference();
+    if (isCompactTouchMode()) {
+      const selected = await showExportOptionsSheet(defaultMaskUser);
+      if (!selected) return;
+      if (selected.remember) {
+        saveExportMaskUserPreference(selected.maskUser);
+      }
+      await exportCurrentFavImage.call(this, selected.maskUser);
+      return;
+    }
+    await exportCurrentFavImage.call(this, defaultMaskUser);
+  });
+  $("#t-read-img").on("contextmenu", async function(e) {
+    e.preventDefault();
+    const defaultMaskUser = getExportMaskUserPreference();
+    const selected = await showExportOptionsSheet(defaultMaskUser);
+    if (!selected) return;
+    if (selected.remember) {
+      saveExportMaskUserPreference(selected.maskUser);
+    }
+    await exportCurrentFavImage.call(this, selected.maskUser);
   });
   $("#t-read-rename").on("click", () => {
     if (!currentFavId) return;
@@ -13204,6 +13527,10 @@ ${html2}`;
   });
   const closeWindow = () => {
     renderTaskId++;
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = null;
+    }
     setFavsWindowOpen(false);
     $("#t-favs-view").remove();
     const $mainView = $("#t-main-view");
@@ -13429,6 +13756,27 @@ function formatTimeText(ts) {
   if (!ts) return "-";
   return new Date(ts).toLocaleTimeString("zh-CN", { hour12: false });
 }
+function getTraceSourceLabel(source) {
+  const s = String(source || "").toLowerCase();
+  if (s === "user_continuation") return "\u4E3B\u52A8\u7EED\u5199";
+  if (s === "auto_continuation") return "\u81EA\u52A8\u7EED\u5199";
+  if (s === "manual") return "\u624B\u52A8\u751F\u6210";
+  if (s === "queue") return "\u961F\u5217\u751F\u6210";
+  if (s === "preview") return "\u751F\u6210\u524D\u9884\u89C8";
+  return source || "\u672A\u77E5\u6765\u6E90";
+}
+function pickTraceBySource(traces, sourceMode) {
+  const list = Array.isArray(traces) ? traces : [];
+  const withMessages = list.filter((t) => t?.finalMessages?.messages?.length > 0);
+  if (sourceMode === "latest") return withMessages[0] || null;
+  if (sourceMode === "manual") {
+    return withMessages.find((t) => {
+      const src = String(t?.source || "").toLowerCase();
+      return src !== "user_continuation" && src !== "auto_continuation";
+    }) || null;
+  }
+  return withMessages.find((t) => String(t?.source || "").toLowerCase() === sourceMode) || null;
+}
 function getPromptSectionsFromTrace(trace) {
   const messages = trace?.finalMessages?.messages || [];
   const meta = trace?.finalMessages?.meta || {};
@@ -13527,6 +13875,13 @@ async function showDebugInfo() {
         </div>
 
         <div class="t-prompt-toolbar">
+            <select id="t-prompt-source" class="t-input t-prompt-control t-prompt-sort">
+                <option value="live">\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8</option>
+                <option value="latest">\u6700\u8FD1\u4E00\u6B21\u6784\u9020</option>
+                <option value="manual">\u4E3B\u751F\u6210\uFF08\u624B\u52A8/\u961F\u5217\uFF09</option>
+                <option value="user_continuation">\u4E3B\u52A8\u7EED\u5199</option>
+                <option value="auto_continuation">\u81EA\u52A8\u7EED\u5199</option>
+            </select>
             <select id="t-prompt-sort" class="t-input t-prompt-control t-prompt-sort">
                 <option value="order">\u6309\u6784\u9020\u987A\u5E8F</option>
                 <option value="tokens_desc">\u6309 Token\uFF08\u9AD8\u2192\u4F4E\uFF09</option>
@@ -13548,20 +13903,41 @@ async function showDebugInfo() {
   const renderPromptWindow = async () => {
     const seq = ++renderSeq;
     const $sections = $("#t-prompt-sections");
-    const $stats = $("#t-prompt-stats");
+    const sourceMode = $("#t-prompt-source").val() || "live";
     if (!buildPromptCompositionPreview2) {
       const apiModule = await Promise.resolve().then(() => (init_api(), api_exports));
       buildPromptCompositionPreview2 = apiModule.buildPromptCompositionPreview;
     }
-    $sections.html('<div class="t-prompt-empty">\u6B63\u5728\u6784\u5EFA\u751F\u6210\u524D\u63D0\u793A\u8BCD...</div>');
+    $sections.html(`<div class="t-prompt-empty">\u6B63\u5728\u52A0\u8F7D\u63D0\u793A\u8BCD\u6784\u9020\uFF08${escapeHtml2(getTraceSourceLabel(sourceMode === "live" ? "preview" : sourceMode))}\uFF09...</div>`);
+    if (sourceMode !== "live") {
+      const traces = getPromptTraceList();
+      const targetTrace = pickTraceBySource(traces, sourceMode);
+      if (!targetTrace) {
+        $sections.html('<div class="t-prompt-empty">\u672A\u627E\u5230\u5BF9\u5E94\u6765\u6E90\u7684\u63D0\u793A\u8BCD\u8BB0\u5F55\u3002</div>');
+        $("#t-prompt-total-token").text("0");
+        $("#t-prompt-section-count").text("0");
+        $("#t-prompt-trace-name").text("-");
+        $("#t-prompt-updated-at").text("-");
+        $("#t-prompt-live-state").css("color", "#777").html('<i class="fa-solid fa-circle"></i> \u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F');
+        return;
+      }
+      const target = getPromptSectionsFromTrace(targetTrace);
+      renderSectionsAndStats(target.sections, target.totalTokens, {
+        scriptName: targetTrace.scriptName || "\u672A\u77E5\u5267\u672C",
+        updatedAt: targetTrace.endedAt || targetTrace.startedAt,
+        modeText: `\u5386\u53F2\u8FFD\u8E2A \xB7 ${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.status || "unknown"}`
+      });
+      return;
+    }
     const preview = await buildPromptCompositionPreview2();
     if (seq !== renderSeq) return;
     if (!preview?.ok) {
       const traces = getPromptTraceList();
-      const fallbackTrace = traces[0] ? getPromptTraceById(traces[0].id) : null;
+      const fallbackCandidate = pickTraceBySource(traces, "manual") || pickTraceBySource(traces, "latest");
+      const fallbackTrace = fallbackCandidate ? getPromptTraceById(fallbackCandidate.id) : null;
       if (!fallbackTrace) {
         $sections.html(`<div class="t-prompt-empty">\u65E0\u6CD5\u6784\u5EFA\u751F\u6210\u524D\u63D0\u793A\u8BCD\uFF1A${escapeHtml2(preview?.error || "unknown")}</div>`);
-        $stats.html('<div class="t-prompt-empty">\u7EDF\u8BA1\u4FE1\u606F\u4E0D\u53EF\u7528\u3002</div>');
+        $("#t-prompt-stats").html('<div class="t-prompt-empty">\u7EDF\u8BA1\u4FE1\u606F\u4E0D\u53EF\u7528\u3002</div>');
         $("#t-prompt-total-token").text("0");
         $("#t-prompt-section-count").text("0");
         $("#t-prompt-trace-name").text("-");
@@ -13572,7 +13948,7 @@ async function showDebugInfo() {
       renderSectionsAndStats(fallback.sections, fallback.totalTokens, {
         scriptName: fallbackTrace.scriptName || "\u672A\u77E5\u5267\u672C",
         updatedAt: fallbackTrace.endedAt || fallbackTrace.startedAt,
-        modeText: `\u56DE\u9000\u5230\u6700\u8FD1\u8BB0\u5F55\uFF08${fallbackTrace.status || "unknown"}\uFF09`
+        modeText: `\u56DE\u9000\u8BB0\u5F55 \xB7 ${getTraceSourceLabel(fallbackTrace.source)}\uFF08${fallbackTrace.status || "unknown"}\uFF09`
       });
       return;
     }
@@ -13644,9 +14020,10 @@ async function showDebugInfo() {
                 </div>
             </div>`;
     $stats.html(statsHtml);
-    const live = $("#t-prompt-live").is(":checked");
+    const sourceMode = $("#t-prompt-source").val() || "live";
+    const live = sourceMode === "live" && $("#t-prompt-live").is(":checked");
     const liveColor = live ? "#74b9ff" : "#777";
-    const liveText = live ? ctx.modeText || "\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8" : "\u5DF2\u6682\u505C\u66F4\u65B0";
+    const liveText = live ? ctx.modeText || "\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8" : sourceMode === "live" ? "\u5DF2\u6682\u505C\u66F4\u65B0" : ctx.modeText || "\u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F";
     $("#t-prompt-total-token").text(totalTokens);
     $("#t-prompt-section-count").text(allSections.length);
     $("#t-prompt-trace-name").text(ctx.scriptName || "\u672A\u77E5\u5267\u672C");
@@ -13654,7 +14031,9 @@ async function showDebugInfo() {
     $("#t-prompt-live-state").css("color", liveColor).html(`<i class="fa-solid fa-circle"></i> ${liveText}`);
   };
   renderPromptWindow();
-  $("#t-prompt-sort, #t-prompt-high-only").on("input change", () => {
+  $("#t-prompt-sort, #t-prompt-high-only, #t-prompt-source").on("input change", () => {
+    const sourceMode = $("#t-prompt-source").val() || "live";
+    $("#t-prompt-live").prop("disabled", sourceMode !== "live");
     renderPromptWindow();
   });
   $("#t-prompt-live").on("change", () => {
@@ -13678,7 +14057,8 @@ async function showDebugInfo() {
       clearInterval(autoRefreshInterval);
       return;
     }
-    if ($("#t-prompt-live").is(":checked")) {
+    const sourceMode = $("#t-prompt-source").val() || "live";
+    if (sourceMode === "live" && $("#t-prompt-live").is(":checked")) {
       renderPromptWindow();
     }
   }, 1800);
@@ -19589,70 +19969,6 @@ function getActiveConnection() {
     rawProfile: currentProfile
   };
 }
-async function getAvailableModels() {
-  const conn = getActiveConnection();
-  if (conn.useSTConnection) {
-    try {
-      const selectors = [
-        "#model_openai_select",
-        "#model_claude_select",
-        "#model_openrouter_select",
-        "#model_mistral_select",
-        "#api_button_text_generation_webui_model",
-        ".model_select",
-        "select[id*='model']"
-      ];
-      let models = [];
-      for (const sel of selectors) {
-        const $sel = $(sel);
-        if ($sel.length > 0 && $sel.is("select")) {
-          $sel.find("option").each(function() {
-            const val = $(this).val();
-            if (val && val !== "null" && typeof val === "string" && val.trim() !== "") {
-              models.push(val);
-            }
-          });
-        }
-      }
-      if (models.length > 0) {
-        const uniqueModels = [...new Set(models)].sort();
-        const current2 = getChatCompletionModel();
-        if (current2 && !uniqueModels.includes(current2)) {
-          uniqueModels.unshift(current2);
-        }
-        return uniqueModels;
-      }
-    } catch (e) {
-      TitaniaLogger.warn("\u4ECE ST DOM \u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
-    }
-    const current = getChatCompletionModel();
-    return current ? [current] : ["gpt-3.5-turbo"];
-  } else {
-    if (!conn.url) return [conn.model || "gpt-3.5-turbo"];
-    try {
-      let endpoint = conn.url.trim().replace(/\/+$/, "");
-      if (!endpoint.endsWith("/models")) {
-        if (endpoint.endsWith("/v1")) endpoint += "/models";
-        else endpoint += "/v1/models";
-      }
-      const res = await fetch(endpoint, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${conn.key}` }
-      });
-      if (!res.ok) return [conn.model || "gpt-3.5-turbo"];
-      const json = await res.json();
-      if (Array.isArray(json.data)) {
-        return json.data.map((m) => m.id).sort();
-      } else if (Array.isArray(json)) {
-        return json.map((m) => m.id || m).sort();
-      }
-      return [conn.model || "gpt-3.5-turbo"];
-    } catch (e) {
-      TitaniaLogger.warn("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
-      return [conn.model || "gpt-3.5-turbo"];
-    }
-  }
-}
 function validateConnection() {
   const conn = getActiveConnection();
   if (conn.useSTConnection) {
@@ -22142,47 +22458,6 @@ async function showProfileConfigDialog(onSave) {
     if (onSave) onSave();
   });
 }
-function showFirstTimeSetup() {
-  $("#t-lore-review-overlay").remove();
-  const html = `
-    <div id="t-lore-review-overlay" class="t-overlay">
-        <div class="t-window t-lore-review-window" style="max-width: 500px;">
-            <div class="t-window-header">
-                <div class="t-window-title">
-                    <i class="fa-solid fa-brain"></i> \u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3
-                </div>
-                <div class="t-window-controls">
-                    <div class="t-window-close" id="t-lore-review-close"><i class="fa-solid fa-times"></i></div>
-                </div>
-            </div>
-            <div class="t-window-body" style="text-align: center; padding: 40px 30px;">
-                <div style="font-size: 3em; margin-bottom: 20px;">\u{1F50C}</div>
-                <h3 style="color: #eee; margin-bottom: 15px;">\u9996\u6B21\u4F7F\u7528\u914D\u7F6E</h3>
-                <p style="color: #888; line-height: 1.6; margin-bottom: 25px;">
-                    \u5728\u4F7F\u7528\u300C\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3\u300D\u529F\u80FD\u524D\uFF0C<br>
-                    \u8BF7\u5148\u9009\u62E9\u7528\u4E8E\u6B64\u529F\u80FD\u7684 API \u8FDE\u63A5\u65B9\u6848\u3002
-                </p>
-                <button id="t-btn-setup-profile" class="t-btn t-btn-primary" style="padding: 12px 30px; font-size: 1.1em;">
-                    <i class="fa-solid fa-gear"></i> \u6253\u5F00\u8BBE\u7F6E
-                </button>
-                <p style="color: #666; font-size: 0.85em; margin-top: 20px;">
-                    \u63D0\u793A\uFF1A\u5982\u679C\u8FD8\u6CA1\u6709 API \u65B9\u6848\uFF0C\u8BF7\u5148\u524D\u5F80\u300C\u63D2\u4EF6\u8BBE\u7F6E \u2192 API \u8FDE\u63A5\u300D\u521B\u5EFA\u3002
-                </p>
-            </div>
-        </div>
-    </div>
-    `;
-  $("body").append(html);
-  $("#t-lore-review-close").on("click", () => {
-    $("#t-lore-review-overlay").remove();
-  });
-  $("#t-btn-setup-profile").on("click", () => {
-    $("#t-lore-review-overlay").remove();
-    showProfileConfigDialog(() => {
-      showLoreReviewWindow();
-    });
-  });
-}
 function showRawResponseDialog2(rawContent, isError = false) {
   $("#t-raw-response-dialog").remove();
   const title = isError ? "\u89E3\u6790\u5931\u8D25 - \u539F\u59CB\u54CD\u5E94" : "AI \u539F\u59CB\u54CD\u5E94";
@@ -22257,12 +22532,11 @@ async function showLoreReviewWindow() {
   ensureCssLoaded2();
   const validation = validateFeatureConnection(FEATURE_KEY3);
   if (!validation.configured) {
-    showFirstTimeSetup();
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5B8C\u6210 API \u8FDE\u63A5\u914D\u7F6E", "\u914D\u7F6E\u7F3A\u5931");
     return;
   }
   if (!validation.valid) {
     if (window.toastr) toastr.error(validation.error, "\u914D\u7F6E\u9519\u8BEF");
-    showFirstTimeSetup();
     return;
   }
   $("#t-lore-review-overlay").remove();
@@ -24992,11 +25266,6 @@ function openSettingsWindow() {
                                     <span class="t-toolbar-hint">(\u5FC5\u9009)</span>
                                 </label>
                                 <label class="t-toolbar-item">
-                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="model">
-                                    <i class="fa-solid fa-microchip" style="color:#00cec9;"></i>
-                                    <span>\u5207\u6362\u6A21\u578B</span>
-                                </label>
-                                <label class="t-toolbar-item">
                                     <input type="checkbox" class="t-toolbar-chk" data-btn-id="settings">
                                     <i class="fa-solid fa-gear" style="color:#aaa;"></i>
                                     <span>\u8BBE\u7F6E</span>
@@ -26086,7 +26355,6 @@ function openSettingsWindow() {
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
     lore: true,
-    model: false,
     settings: true,
     favs: false,
     scripts: false,
@@ -28617,11 +28885,24 @@ function openContentEditor() {
     if (window.toastr) toastr.info("\u9884\u89C8\u5DF2\u66F4\u65B0\uFF0C\u70B9\u51FB\u4FDD\u5B58\u786E\u8BA4\u4FEE\u6539");
   });
   $("#t-ce-save").on("click", () => {
+    const previousContent = String(GlobalState.lastGeneratedContent || "");
     const newContent = $textarea.val();
+    const scriptId = GlobalState.lastGeneratedScriptId;
     GlobalState.lastGeneratedContent = newContent;
-    const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
+    const display = GlobalState.displayState;
+    const history = GlobalState.sceneHistory;
+    const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
+      history.items[effectiveIndex].content = newContent;
+      history.items[effectiveIndex].timestamp = Date.now();
+    }
+    if (display.isViewingHistory) {
+      display.lockedContent = newContent;
+    }
+    const currentScript = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
     const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
     renderGeneratedContent(newContent, scriptName);
+    syncEditedContentToContinuationSession(scriptId, previousContent, newContent, scriptName);
     $("#t-content-editor").remove();
     if (window.toastr) toastr.success("\u5185\u5BB9\u5DF2\u66F4\u65B0");
   });
@@ -28892,135 +29173,6 @@ var init_mainWindow = __esm({
 });
 
 // src/ui/floatingBtn.js
-function ensureModelDialogCss() {
-  const id = "titania-css-model-dialog";
-  if (!document.getElementById(id)) {
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.type = "text/css";
-    link.href = `${extensionFolderPath}/css/floating.css`;
-    document.head.appendChild(link);
-  }
-}
-async function showModelSwitchDialog() {
-  ensureModelDialogCss();
-  $("#t-model-switch-dialog").remove();
-  const conn = getActiveConnection();
-  const data = getExtData();
-  const currentOverride = data.theater_model_override || "";
-  const currentModel = currentOverride || conn.model;
-  const html = `
-    <div id="t-model-switch-dialog" class="t-model-dialog-overlay">
-        <div class="t-model-dialog-box">
-            <div class="t-model-dialog-header">
-                <span><i class="fa-solid fa-microchip"></i> \u5FEB\u901F\u5207\u6362\u6A21\u578B</span>
-                <div class="t-model-dialog-close" id="t-model-dialog-close"><i class="fa-solid fa-times"></i></div>
-            </div>
-            <div class="t-model-dialog-body">
-                <p class="t-model-dialog-hint">
-                    <i class="fa-solid fa-info-circle"></i>
-                    \u6B64\u8BBE\u7F6E\u4EC5\u5F71\u54CD\u5267\u573A\u573A\u666F\u751F\u6210\uFF0C\u4E0D\u5F71\u54CD\u8BBE\u5B9A\u63D0\u53D6\u7B49\u5176\u4ED6\u529F\u80FD\u3002
-                </p>
-                
-                <div class="t-model-current-info">
-                    <span class="t-model-label">\u5F53\u524D\u65B9\u6848:</span>
-                    <span class="t-model-value">${conn.profileName}</span>
-                </div>
-                
-                <div class="t-form-group">
-                    <label class="t-form-label">\u9009\u62E9\u6A21\u578B</label>
-                    <div style="display: flex; gap: 8px;">
-                        <select id="t-model-select" class="t-input" style="flex: 1;">
-                            <option value="">\u52A0\u8F7D\u4E2D...</option>
-                        </select>
-                        <button id="t-btn-refresh-models" class="t-btn t-btn-xs" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
-                            <i class="fa-solid fa-sync"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="t-model-override-status" id="t-override-status" style="display: none;">
-                    <i class="fa-solid fa-check-circle"></i>
-                    <span>\u5DF2\u8BBE\u7F6E\u6A21\u578B\u8986\u76D6</span>
-                    <button id="t-btn-clear-override" class="t-btn t-btn-xs t-btn-danger">\u6E05\u9664\u8986\u76D6</button>
-                </div>
-            </div>
-            <div class="t-model-dialog-footer">
-                <button id="t-btn-cancel-model" class="t-btn">\u53D6\u6D88</button>
-                <button id="t-btn-save-model" class="t-btn t-btn-primary">
-                    <i class="fa-solid fa-check"></i> \u5E94\u7528
-                </button>
-            </div>
-        </div>
-    </div>
-    `;
-  $("body").append(html);
-  await loadModelList(currentModel);
-  if (currentOverride) {
-    $("#t-override-status").show();
-  }
-  $("#t-model-dialog-close, #t-btn-cancel-model").on("click", () => {
-    $("#t-model-switch-dialog").remove();
-  });
-  $("#t-btn-refresh-models").on("click", async function() {
-    const $icon = $(this).find("i");
-    $icon.addClass("fa-spin");
-    await loadModelList($("#t-model-select").val());
-    $icon.removeClass("fa-spin");
-  });
-  $("#t-btn-clear-override").on("click", function() {
-    const data2 = getExtData();
-    data2.theater_model_override = null;
-    saveExtData();
-    const conn2 = getActiveConnection();
-    loadModelList(conn2.model);
-    $("#t-override-status").hide();
-    if (window.toastr) toastr.info("\u5DF2\u6E05\u9664\u6A21\u578B\u8986\u76D6\uFF0C\u5C06\u4F7F\u7528\u65B9\u6848\u9ED8\u8BA4\u6A21\u578B");
-  });
-  $("#t-btn-save-model").on("click", function() {
-    const selectedModel = $("#t-model-select").val();
-    const conn2 = getActiveConnection();
-    if (!selectedModel) {
-      if (window.toastr) toastr.warning("\u8BF7\u9009\u62E9\u4E00\u4E2A\u6A21\u578B");
-      return;
-    }
-    const data2 = getExtData();
-    if (selectedModel === conn2.model) {
-      data2.theater_model_override = null;
-      if (window.toastr) toastr.success(`\u4F7F\u7528\u65B9\u6848\u9ED8\u8BA4\u6A21\u578B: ${selectedModel}`);
-    } else {
-      data2.theater_model_override = selectedModel;
-      if (window.toastr) toastr.success(`\u5267\u573A\u6A21\u578B\u5DF2\u5207\u6362\u4E3A: ${selectedModel}`);
-    }
-    saveExtData();
-    $("#t-model-switch-dialog").remove();
-  });
-}
-async function loadModelList(currentSelection) {
-  const $select = $("#t-model-select");
-  $select.empty();
-  $select.append('<option value="" disabled>\u52A0\u8F7D\u4E2D...</option>');
-  try {
-    const models = await getAvailableModels();
-    $select.empty();
-    const conn = getActiveConnection();
-    const uniqueModels = [...new Set(models)].sort();
-    uniqueModels.forEach((model) => {
-      const isDefault = model === conn.model;
-      const label = isDefault ? `${model} (\u65B9\u6848\u9ED8\u8BA4)` : model;
-      const selected = model === currentSelection ? "selected" : "";
-      $select.append(`<option value="${model}" ${selected}>${label}</option>`);
-    });
-    if (uniqueModels.length === 0) {
-      $select.append('<option value="" disabled>\u65E0\u53EF\u7528\u6A21\u578B</option>');
-    }
-  } catch (e) {
-    console.warn("Titania: \u52A0\u8F7D\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
-    $select.empty();
-    $select.append('<option value="" disabled>\u52A0\u8F7D\u5931\u8D25</option>');
-  }
-}
 function isToolbarEnabled() {
   const settings2 = getExtData();
   const toolbarConfig = settings2.quick_toolbar || {};
@@ -29298,7 +29450,6 @@ var init_floatingBtn = __esm({
     init_defaults();
     init_mainWindow();
     init_settingsWindow();
-    init_connection();
     slideMenuVisible = false;
     TOOLBAR_BUTTONS = [
       {
@@ -29317,13 +29468,6 @@ var init_floatingBtn = __esm({
           const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
           openStoryOutlineWindow2();
         }
-      },
-      {
-        id: "model",
-        title: "\u5207\u6362\u6A21\u578B",
-        icon: "fa-solid fa-microchip",
-        cssClass: "model",
-        handler: () => showModelSwitchDialog()
       },
       {
         id: "settings",
@@ -29387,7 +29531,8 @@ __export(api_exports, {
   getContinuationSessionStats: () => getContinuationSessionStats,
   handleGenerate: () => handleGenerate,
   handleUserContinuation: () => handleUserContinuation,
-  renderGeneratedContent: () => renderGeneratedContent
+  renderGeneratedContent: () => renderGeneratedContent,
+  syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
 });
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
 import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
@@ -29480,6 +29625,36 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     item.round = index + 1;
   });
   byScript[scriptId].scriptName = scriptName || byScript[scriptId].scriptName || "\u573A\u666F";
+}
+function syncEditedContentToContinuationSession(scriptId, previousContent, editedContent, scriptName = "\u573A\u666F") {
+  if (!scriptId) return false;
+  const newText = String(editedContent || "").trim();
+  if (!newText) return false;
+  const oldText = String(previousContent || "").trim();
+  const byScript = getContinuationRuntimeStore();
+  const entry = byScript[scriptId];
+  const rounds = Array.isArray(entry?.rounds) ? entry.rounds : null;
+  if (!rounds || rounds.length === 0) return false;
+  let targetIndex = -1;
+  if (oldText) {
+    for (let i = rounds.length - 1; i >= 0; i--) {
+      const roundContent = String(rounds[i]?.content || "").trim();
+      if (roundContent === oldText) {
+        targetIndex = i;
+        break;
+      }
+    }
+  }
+  if (targetIndex === -1) {
+    targetIndex = rounds.length - 1;
+  }
+  rounds[targetIndex].content = newText;
+  rounds[targetIndex].timestamp = Date.now();
+  entry.scriptName = scriptName || entry.scriptName || "\u573A\u666F";
+  rounds.forEach((item, index) => {
+    item.round = index + 1;
+  });
+  return true;
 }
 function resetContinuationSessionRounds(scriptId, scriptName = "\u573A\u666F") {
   if (!scriptId) return;
@@ -30049,14 +30224,10 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
     raw_response_snippet: ""
   };
   const conn = getActiveConnection();
-  const theaterModelOverride = data.theater_model_override;
-  const effectiveModel = theaterModelOverride || conn.model;
+  const effectiveModel = conn.model;
   diagnostics.profile = conn.profileName;
   diagnostics.model = effectiveModel;
   diagnostics.endpoint = conn.url;
-  if (theaterModelOverride) {
-    TitaniaLogger.info("\u4F7F\u7528\u5267\u573A\u6A21\u578B\u8986\u76D6", { override: theaterModelOverride, original: conn.model });
-  }
   const validation = validateConnection();
   if (!validation.valid) {
     const errText = `\u914D\u7F6E\u7F3A\u5931\uFF1A${validation.error}`;
@@ -30180,6 +30351,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   showCancelButton();
   startTimer();
   if (!silent && window.toastr) toastr.info(`\u{1F680} [${conn.profileName}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
+  let rawContent = "";
   try {
     diagnostics.phase = "prepare_prompt";
     const dirInstruction = dirDefaults.instruction || "";
@@ -30368,7 +30540,6 @@ ${processedPrompt}`;
     });
     TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: conn.profileName });
     diagnostics.phase = "fetch_start";
-    let rawContent = "";
     if (useSTConnection) {
       diagnostics.endpoint = `[ST Backend: ${oai_settings5.chat_completion_source}]`;
       const requestData = ChatCompletionService4.createRequestData({
@@ -30672,6 +30843,33 @@ ${processedPrompt}`;
       return false;
     }
     console.error("Titania Generate Error:", e);
+    let partialSaved = false;
+    let partialOutput = "";
+    if (typeof rawContent === "string" && rawContent.trim().length > 0) {
+      try {
+        const sanitizedPartial = sanitizeAIOutput(rawContent);
+        partialOutput = sanitizedPartial && sanitizedPartial.trim().length > 0 ? sanitizedPartial : rawContent.trim();
+      } catch (partialSanitizeErr) {
+        TitaniaLogger.warn("\u90E8\u5206\u5185\u5BB9\u6E05\u6D17\u5931\u8D25\uFF0C\u4F7F\u7528\u539F\u59CB\u5185\u5BB9\u515C\u5E95", {
+          error: partialSanitizeErr?.message || "sanitize_failed"
+        });
+        partialOutput = rawContent.trim();
+      }
+      try {
+        endStreamingCache();
+        pushSceneToHistory(partialOutput, script.id, script.name);
+        partialSaved = true;
+        if (shouldRenderStreamToUI() && $("#t-output-content").length > 0) {
+          finalizeStreamRender(partialOutput, script.name);
+        }
+        if (typeof window.updateSceneHistoryNav === "function") {
+          window.updateSceneHistoryNav();
+        }
+      } catch (savePartialErr) {
+        TitaniaLogger.error("\u4FDD\u5B58\u5F02\u5E38\u4E2D\u65AD\u7684\u90E8\u5206\u5185\u5BB9\u5931\u8D25", savePartialErr);
+        partialSaved = false;
+      }
+    }
     stopTimer();
     hideCancelButton();
     resetContinuationState();
@@ -30709,13 +30907,23 @@ ${processedPrompt}`;
                 \u8BCA\u65AD\u63D0\u793A\uFF1A${diagnosisHint}
             </div>
         </div>`;
-    GlobalState.lastGeneratedContent = errHtml;
-    GlobalState.lastGeneratedScriptId = script.id;
+    if (!partialSaved) {
+      GlobalState.lastGeneratedContent = errHtml;
+      GlobalState.lastGeneratedScriptId = script.id;
+    }
     $floatBtn.addClass("t-notify");
-    if (!silent && window.toastr) toastr.error("\u751F\u6210\u5931\u8D25", "Titania Error");
+    if (!silent && window.toastr) {
+      if (partialSaved) {
+        toastr.warning("\u751F\u6210\u4E2D\u65AD\uFF0C\u5DF2\u81EA\u52A8\u4FDD\u5B58\u5DF2\u8FD4\u56DE\u7684\u5185\u5BB9", "Titania Warning");
+      } else {
+        toastr.error("\u751F\u6210\u5931\u8D25", "Titania Error");
+      }
+    }
     finishPromptTrace(promptTraceId, "failed", {
       error: e.message || "unknown_error",
-      phase: diagnostics.phase
+      phase: diagnostics.phase,
+      partialSaved,
+      partialLength: partialSaved ? partialOutput.length : 0
     });
     return false;
   } finally {
@@ -30848,11 +31056,34 @@ async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalMo
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   const signal = GlobalState.abortController?.signal;
+  const continuationSource = continuationType === "user" ? "user_continuation" : "auto_continuation";
+  const promptTraceId = createPromptTrace({
+    source: continuationSource,
+    mode: GlobalState.generationMode,
+    scriptId: script?.id,
+    scriptName: script?.name,
+    profile: getActiveConnection()?.profileName || "",
+    model: finalModel,
+    extraMeta: {
+      continuationType,
+      autoLocate,
+      silent,
+      useSTConnection,
+      useStream
+    }
+  });
   try {
     const context = buildContinuationContext(
       GlobalState.continuation.accumulatedContent,
       GlobalState.continuation.originalPrompt
     );
+    appendPromptTraceStage(promptTraceId, "context_built", {
+      continuationType,
+      totalLength: context.totalLength,
+      unclosedTags: Array.isArray(context.unclosedTags) ? context.unclosedTags.length : 0,
+      hasStyleGuide: !!(context.styleGuide && String(context.styleGuide).trim()),
+      recentClassesCount: Array.isArray(context.recentClasses) ? context.recentClasses.length : 0
+    });
     const continuationSys = `You are seamlessly continuing an interrupted HTML scene.
 
 [Story Context]
@@ -30894,6 +31125,33 @@ ${context.recentHtml}
 ${context.incompleteText ? `Complete this first: "...${context.incompleteText}"` : `Start after: "${context.lastCompleteSentence.slice(-30)}"`}
 
 Generate ONLY the continuation (no repetition):`;
+    const continuationTraceMeta = {
+      source: continuationSource,
+      continuationType,
+      autoLocate,
+      useSTConnection,
+      useStream,
+      estimatedTokens: {
+        system: estimateTokens(continuationSys),
+        user: estimateTokens(continuationUser)
+      },
+      contextStats: {
+        totalLength: context.totalLength,
+        unclosedTags: Array.isArray(context.unclosedTags) ? context.unclosedTags.length : 0,
+        recentClassesCount: Array.isArray(context.recentClasses) ? context.recentClasses.length : 0,
+        styleGuideLength: String(context.styleGuide || "").length,
+        recentHtmlLength: String(context.recentHtml || "").length
+      }
+    };
+    setPromptTraceFinalMessages(promptTraceId, [
+      { role: "system", content: continuationSys },
+      { role: "user", content: continuationUser }
+    ], continuationTraceMeta);
+    appendPromptTraceStage(promptTraceId, "request_ready", {
+      continuationType,
+      useSTConnection,
+      useStream
+    });
     let rawContent = "";
     if (useSTConnection) {
       const requestData = ChatCompletionService4.createRequestData({
@@ -31090,6 +31348,12 @@ Generate ONLY the continuation (no repetition):`;
       if (!silent && window.toastr) {
         toastr.info(`\u{1F504} \u7EED\u5199\u5185\u5BB9\u4ECD\u88AB\u622A\u65AD\uFF0C\u7EE7\u7EED\u5C1D\u8BD5 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
       }
+      finishPromptTrace(promptTraceId, "success", {
+        reason: "continuation_retry",
+        outputLength: continuationOutput.length,
+        retryCount: GlobalState.continuation.retryCount,
+        maxRetries
+      });
       return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, userInstruction, continuationType, autoLocate);
     } else {
       const finalOutput = smartMergeContinuation(
@@ -31149,10 +31413,20 @@ Generate ONLY the continuation (no repetition):`;
         totalRetries,
         elapsed: elapsed.toFixed(1) + "s"
       });
+      finishPromptTrace(promptTraceId, "success", {
+        continuationType,
+        totalRetries,
+        outputLength: rewrittenOutput.length,
+        elapsedMs: GlobalState.lastGenerationTime || 0
+      });
       return true;
     }
   } catch (e) {
     if (e.name === "AbortError") {
+      finishPromptTrace(promptTraceId, "aborted", {
+        continuationType,
+        error: e.message || "aborted"
+      });
       return false;
     }
     console.error("Titania Continuation Error:", e);
@@ -31170,6 +31444,10 @@ Generate ONLY the continuation (no repetition):`;
     resetContinuationState();
     stopTimer();
     $floatBtn.addClass("t-notify");
+    finishPromptTrace(promptTraceId, "failed", {
+      continuationType,
+      error: e?.message || "unknown_error"
+    });
     return false;
   } finally {
     GlobalState.isGenerating = false;
