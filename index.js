@@ -22,11 +22,12 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.2";
+    CURRENT_VERSION = "5.0.3";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "5.0.3": "\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u9875\u9762\uFF0C\u91CD\u6784\u6536\u85CF\u753B\u5ECA\u9875\u9762\uFF0C\u65B0\u589E\u53EF\u5220\u9664\u5267\u573A\u5206\u7EC4\u4E2D\u7684\u4EFB\u610F\u4E00\u6761\u8BB0\u5F55\u3002",
       "5.0.2": "\u4F18\u5316\u6536\u85CF\u9986\u6027\u80FD\u4E0E\u6D77\u62A5\u5F0F\u754C\u9762\uFF0C\u4FEE\u590D\u7F16\u8F91\u540E\u6536\u85CF\u5185\u5BB9\u4E0D\u540C\u6B65\u95EE\u9898\uFF0C\u65B0\u589E\u5BFC\u51FA\u56FE\u7247\u6253\u7801\u53EF\u9009\u9879\u5E76\u6539\u8FDB\u79FB\u52A8\u7AEF\u4EA4\u4E92\u3002",
       "5.0.1": "\u4FEE\u590D\u4E86\u4E00\u4E2Abug\uFF0C\u4F18\u5316\u4E86\u90E8\u5206\u754C\u9762\u7EC6\u8282\u3002",
       "5.0.0": "\u8DE8\u5165\u5230\u5168\u65B0\u76845.0\u7248\u672C\uFF0C\u56DE\u58F0\u5C0F\u5267\u573A\u6B63\u5F0F\u66F4\u540D\u4E3A\u56DE\u58F0\u5DE5\u5177\u7BB1\uFF0C\u65B0\u5165\u53E3\u4E3A\u53D1\u9001\u952E\u5DE6\u8FB9\u7684\u56FE\u6807\u3002\u66F4\u591A\u529F\u80FD\u6B63\u5728\u9646\u7EED\u8D76\u6765\u7684\u8DEF\u4E0A~",
@@ -2248,10 +2249,165 @@ textarea.t-input {
 
 .t-wi-body {
     flex-grow: 1;
+    overflow: hidden;
+    padding: 10px;
+    min-height: 0;
+}
+
+.t-wi-tabs {
+    gap: 8px;
+}
+
+.t-wi-tab-btn {
+    padding: 6px 10px;
+    font-size: 0.82em;
+    color: #aaa;
+    background: #232323;
+    border: 1px solid #3a3a3a;
+}
+
+.t-wi-tab-btn.active {
+    color: #90cdf4;
+    border-color: rgba(144, 205, 244, 0.45);
+    background: rgba(144, 205, 244, 0.12);
+}
+
+.t-wi-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 10px;
+    overflow: hidden;
+    height: 100%;
+    min-height: 0;
+}
+
+.t-wi-books-pane {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #1d1d1d;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.t-wi-books-header {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    color: #999;
+    font-size: 0.8em;
+}
+
+.t-wi-books-list {
+    overflow-y: auto;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.t-wi-book-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 9px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    color: #bbb;
+    transition: all 0.2s;
+}
+
+.t-wi-book-item:hover {
+    background: #252525;
+    border-color: #3b3b3b;
+}
+
+.t-wi-book-item.selected {
+    color: #dff1ff;
+    background: rgba(144, 205, 244, 0.12);
+    border-color: rgba(144, 205, 244, 0.35);
+}
+
+.t-wi-book-item-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4d4d4d;
+    flex-shrink: 0;
+}
+
+.t-wi-book-item-dot.active {
+    background: #55efc4;
+    box-shadow: 0 0 6px rgba(85, 239, 196, 0.6);
+}
+
+.t-wi-book-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.86em;
+}
+
+.t-wi-booklist-empty {
+    color: #666;
+    font-size: 0.84em;
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.t-wi-entry-pane {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #191919;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.t-wi-entry-pane-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.t-wi-entry-pane-title {
+    color: #ddd;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-wi-entry-pane-badge {
+    flex-shrink: 0;
+    font-size: 0.72em;
+    padding: 2px 7px;
+    border-radius: 99px;
+    border: 1px solid #444;
+    color: #888;
+    background: #232323;
+}
+
+.t-wi-entry-pane-badge.active {
+    color: #55efc4;
+    border-color: rgba(85, 239, 196, 0.45);
+    background: rgba(85, 239, 196, 0.08);
+}
+
+.t-wi-entry-pane-badge.inactive {
+    color: #999;
+}
+
+.t-wi-entry-list {
+    flex: 1;
     overflow-y: auto;
     padding: 10px;
-    min-height: 150px;
-    max-height: 400px;
+    min-height: 0;
+    overscroll-behavior: contain;
 }
 
 .t-wi-empty {
@@ -2523,6 +2679,22 @@ textarea.t-input {
     .t-wi-mode-bar {
         flex-direction: column;
         gap: 10px;
+    }
+
+    .t-wi-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 8px;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .t-wi-books-pane {
+        max-height: 160px;
+    }
+
+    .t-wi-entry-pane {
+        min-height: 0;
     }
 }
 
@@ -4749,10 +4921,11 @@ textarea.t-input {
     background: rgba(30, 30, 30, 0.88);
     color: #f2efe8;
     border: 1px solid rgba(191, 161, 95, 0.3);
-    padding: 8px 10px;
+    padding: 6px 8px;
     border-radius: 8px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-size: 0.9em;
 }
 
 .t-fav-filter-select:focus,
@@ -4762,30 +4935,44 @@ textarea.t-input {
 }
 
 .t-fav-filter-select {
-    min-width: 150px;
+    min-width: 132px;
     cursor: pointer;
 }
 
 .t-fav-search {
-    width: 260px;
+    width: 210px;
 }
 
 /* \u7F51\u683C */
 .t-fav-grid-area {
     flex-grow: 1;
-    padding: 20px 22px 24px;
-    overflow-y: auto;
+    padding: 20px 22px 16px;
+    overflow: hidden;
     background:
         linear-gradient(180deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.65)),
         radial-gradient(90% 140% at 100% 0%, rgba(54, 40, 24, 0.28), transparent 70%);
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
 }
 
 .t-fav-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 18px;
+    width: 100%;
+    min-width: 0;
+}
+
+.t-fav-carousel-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    background: radial-gradient(130% 120% at 20% 0%, rgba(49, 37, 22, 0.45), rgba(8, 8, 8, 0.92));
+    box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.06), 0 14px 36px rgba(0, 0, 0, 0.45);
 }
 
 .t-fav-empty {
@@ -4797,19 +4984,27 @@ textarea.t-input {
 
 /* \u5361\u7247 */
 .t-fav-card {
-    position: relative;
+    position: absolute;
+    inset: 0;
     overflow: hidden;
     background: linear-gradient(180deg, rgba(18, 18, 18, 0.94), rgba(10, 10, 10, 0.94));
-    border: 1px solid rgba(191, 161, 95, 0.28);
-    border-radius: 14px;
-    aspect-ratio: 3 / 4;
-    min-height: 300px;
+    border: none;
+    border-radius: 0;
+    aspect-ratio: auto;
+    min-height: 0;
     cursor: pointer;
-    transition: transform 0.28s ease, border-color 0.26s ease, box-shadow 0.26s ease;
+    transition: opacity 0.45s ease;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    box-shadow: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.t-fav-card.is-active {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .t-fav-card-bg {
@@ -4836,13 +5031,13 @@ textarea.t-input {
 
 .t-fav-card-poster {
     position: absolute;
-    inset: 8px 8px 48px;
-    border-radius: 11px;
+    inset: 0;
+    border-radius: 0;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center center;
     z-index: 1;
-    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.6));
+    filter: none;
 }
 
 .t-fav-card.no-img .t-fav-card-poster::before {
@@ -4867,15 +5062,15 @@ textarea.t-input {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(7, 7, 7, 0.04) 24%, rgba(7, 7, 7, 0.4) 62%, rgba(7, 7, 7, 0.95) 100%);
+    background: linear-gradient(to bottom, rgba(7, 7, 7, 0.08) 14%, rgba(7, 7, 7, 0.52) 58%, rgba(7, 7, 7, 0.94) 100%);
     z-index: 2;
     pointer-events: none;
 }
 
 .t-fav-card:hover {
-    transform: translateY(-6px);
-    border-color: rgba(239, 209, 141, 0.76);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(239, 209, 141, 0.23);
+    transform: none;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .t-fav-card:hover .t-fav-card-bg {
@@ -4883,12 +5078,25 @@ textarea.t-input {
     transform: scale(1.2);
 }
 
+/* \u89E6\u5C4F\u8BBE\u5907\u4E0A\u7981\u7528 hover \u4E0A\u6D6E\uFF0C\u907F\u514D\u5361\u7247\u89C6\u89C9\u91CD\u53E0 */
+@media (hover: none), (pointer: coarse) {
+    .t-fav-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .t-fav-card:hover .t-fav-card-bg {
+        opacity: 0.42;
+        transform: scale(1.12);
+    }
+}
+
 .t-fav-card-content {
     position: relative;
     z-index: 3;
-    padding: 14px 12px 12px;
+    padding: 20px 22px 18px;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.82);
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(2, 2, 2, 0.68));
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(2, 2, 2, 0.75));
 }
 
 .t-fav-card-header {
@@ -4899,7 +5107,7 @@ textarea.t-input {
 
 .t-fav-card-script {
     font-weight: 700;
-    font-size: 1.02em;
+    font-size: clamp(1.08em, 2.2vw, 1.34em);
     color: #f6f2ea;
     margin-bottom: 1px;
     white-space: nowrap;
@@ -4908,7 +5116,7 @@ textarea.t-input {
 }
 
 .t-fav-card-char {
-    font-size: 0.82em;
+    font-size: 0.9em;
     color: #e5c88c;
     font-weight: 500;
     display: flex;
@@ -4920,26 +5128,127 @@ textarea.t-input {
 }
 
 .t-fav-card-snippet {
-    font-size: 0.78em;
+    font-size: 0.9em;
     color: rgba(246, 241, 230, 0.86);
     line-height: 1.45;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
-    margin: 8px 0 10px;
-    min-height: 3.3em;
+    margin: 10px 0 12px;
+    min-height: 4.2em;
     font-style: normal;
 }
 
 .t-fav-card-footer {
-    font-size: 0.72em;
+    font-size: 0.78em;
     color: rgba(234, 221, 197, 0.62);
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid rgba(191, 161, 95, 0.2);
     padding-top: 7px;
+}
+
+.t-fav-carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid rgba(231, 202, 143, 0.42);
+    background: rgba(12, 12, 12, 0.66);
+    color: #efe4cb;
+    z-index: 6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+}
+
+.t-fav-carousel-nav.prev {
+    left: 12px;
+}
+
+.t-fav-carousel-nav.next {
+    right: 12px;
+}
+
+.t-fav-carousel-nav:hover {
+    border-color: rgba(231, 202, 143, 0.75);
+    background: rgba(26, 20, 15, 0.85);
+}
+
+.t-fav-carousel-thumbs {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 10px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    cursor: grab;
+}
+
+.t-fav-carousel-thumbs.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+}
+
+.t-fav-carousel-thumbs.is-dragging .t-fav-thumb {
+    pointer-events: none;
+}
+
+.t-fav-thumb {
+    position: relative;
+    border: 1px solid rgba(191, 161, 95, 0.3);
+    border-radius: 10px;
+    background: rgba(18, 18, 18, 0.82);
+    color: #e4dbc9;
+    min-width: 0;
+    flex: 0 0 150px;
+    cursor: pointer;
+    overflow: hidden;
+    height: 62px;
+    text-align: left;
+}
+
+.t-fav-carousel-thumbs::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.t-fav-thumb-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.32;
+    filter: blur(2px);
+}
+
+.t-fav-thumb-label {
+    position: relative;
+    z-index: 1;
+    display: block;
+    padding: 9px 10px;
+    font-size: 0.78em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.t-fav-thumb.is-active {
+    border-color: rgba(231, 202, 143, 0.86);
+    box-shadow: 0 0 0 1px rgba(231, 202, 143, 0.32) inset;
 }
 
 /* \u9605\u8BFB\u5668 overlay */
@@ -5234,12 +5543,49 @@ textarea.t-input {
 
 /* \u7F16\u8F91\u6A21\u5F0F\u4E0B\u5361\u7247\u60AC\u505C\u6548\u679C\u8C03\u6574 */
 .t-fav-grid.edit-mode .t-fav-card:hover {
-    transform: translateY(-3px);
+    transform: none;
     cursor: pointer;
 }
 
 .t-fav-grid.edit-mode .t-fav-card:active {
-    transform: translateY(-1px);
+    transform: none;
+}
+
+.t-fav-grid.edit-mode {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+    overflow-y: auto;
+    border-radius: 10px;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.t-fav-grid.edit-mode .t-fav-card {
+    position: relative;
+    inset: auto;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    border-radius: 12px;
+    opacity: 1;
+    pointer-events: auto;
+    min-height: 240px;
+}
+
+.t-fav-grid.edit-mode .t-fav-card-poster {
+    inset: 8px 8px 48px;
+    border-radius: 11px;
+    background-size: contain;
+    background-position: center;
+}
+
+.t-fav-grid.edit-mode .t-fav-card-content {
+    padding: 14px 12px 12px;
+}
+
+.t-fav-grid.edit-mode ~ .t-fav-carousel-nav,
+.t-fav-grid.edit-mode ~ .t-fav-carousel-thumbs {
+    display: none;
 }
 
 
@@ -5340,9 +5686,10 @@ textarea.t-input {
 
 @media screen and (max-width: 600px) {
     .t-fav-container {
-        width: 100vw;
-        max-width: 100vw;
+        width: 100%;
+        max-width: 100%;
         height: 92vh;
+        box-sizing: border-box;
     }
 
     .t-fav-toolbar {
@@ -5352,17 +5699,55 @@ textarea.t-input {
         align-items: stretch;
     }
 
-    .t-fav-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+    .t-fav-grid-area {
+        padding: 10px;
+        gap: 8px;
+        overflow-x: hidden;
     }
 
     .t-fav-card {
-        min-height: 230px;
+        border-radius: 0;
     }
 
     .t-fav-card-poster {
-        inset: 6px 6px 44px;
+        inset: 0;
+    }
+
+    .t-fav-card-content {
+        padding: 14px 14px 14px;
+    }
+
+    .t-fav-card-snippet {
+        font-size: 0.84em;
+        -webkit-line-clamp: 3;
+        min-height: 3.5em;
+    }
+
+    .t-fav-carousel-nav {
+        width: 34px;
+        height: 34px;
+    }
+
+    .t-fav-carousel-nav.prev {
+        left: 8px;
+    }
+
+    .t-fav-carousel-nav.next {
+        right: 8px;
+    }
+
+    .t-fav-carousel-thumbs {
+        gap: 8px;
+    }
+
+    .t-fav-thumb {
+        height: 50px;
+        flex-basis: 120px;
+    }
+
+    .t-fav-thumb-label {
+        font-size: 0.72em;
+        padding: 7px 8px;
     }
 
     .t-fav-export-sheet-backdrop {
@@ -5398,6 +5783,15 @@ textarea.t-input {
         width: 32px;
         height: 32px;
         font-size: 1.2em;
+    }
+}
+
+/* \u89E6\u5C4F\u8BBE\u5907\u4E0A\u5F7B\u5E95\u7981\u7528\u5361\u7247\u4F4D\u79FB\uFF0C\u5305\u542B\u7F16\u8F91\u6A21\u5F0F */
+@media (hover: none), (pointer: coarse) {
+    .t-fav-card:hover,
+    .t-fav-grid.edit-mode .t-fav-card:hover,
+    .t-fav-grid.edit-mode .t-fav-card:active {
+        transform: none;
     }
 }
 
@@ -11536,7 +11930,7 @@ var init_logger = __esm({
 });
 
 // src/core/context.js
-import { world_info, selected_world_info } from "../../../world-info.js";
+import { world_info, selected_world_info, world_names, updateWorldInfoList } from "../../../world-info.js";
 import { power_user } from "../../../power-user.js";
 function getWorldInfoVars() {
   try {
@@ -11584,35 +11978,9 @@ async function getActiveWorldInfoEntries() {
     console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
     return [];
   }
-  const charId = ctx.characterId;
-  const activeBooks = /* @__PURE__ */ new Set();
   const wiVars = getWorldInfoVars();
-  if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
-    wiVars.selected_world_info.forEach((name) => activeBooks.add(name));
-  }
-  if (charId !== void 0 && ctx.characters && ctx.characters[charId]) {
-    const charObj = ctx.characters[charId];
-    const primary = charObj.data?.extensions?.world;
-    if (primary) activeBooks.add(primary);
-    const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
-    if (wiVars.world_info && wiVars.world_info.charLore) {
-      const loreEntry = wiVars.world_info.charLore.find((e) => e.name === fileName);
-      if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
-        loreEntry.extraBooks.forEach((name) => activeBooks.add(name));
-      }
-    }
-  }
-  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
-    activeBooks.add(ctx.chatMetadata.world_info);
-  }
-  try {
-    const personaWorld = power_user?.persona_description_lorebook;
-    if (personaWorld) {
-      activeBooks.add(personaWorld);
-    }
-  } catch (e) {
-    console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
-  }
+  const charName = getCurrentCharNameFromContext(ctx);
+  const activeBooks = collectSessionActiveBooks(ctx, wiVars, charName, true);
   const result = [];
   for (const bookName of activeBooks) {
     const bookData = await safeLoadWorldInfo(ctx, bookName);
@@ -11655,35 +12023,8 @@ async function getContextData() {
   } catch (e) {
     console.error("Titania: \u5B8F\u89E3\u6790\u5931\u8D25", e);
   }
-  const charId = ctx.characterId;
-  const activeBooks = /* @__PURE__ */ new Set();
   const wiVars = getWorldInfoVars();
-  if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
-    wiVars.selected_world_info.forEach((name) => activeBooks.add(name));
-  }
-  if (charId !== void 0 && ctx.characters && ctx.characters[charId]) {
-    const charObj = ctx.characters[charId];
-    const primary = charObj.data?.extensions?.world;
-    if (primary) activeBooks.add(primary);
-    const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
-    if (wiVars.world_info && wiVars.world_info.charLore) {
-      const loreEntry = wiVars.world_info.charLore.find((e) => e.name === fileName);
-      if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
-        loreEntry.extraBooks.forEach((name) => activeBooks.add(name));
-      }
-    }
-  }
-  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
-    activeBooks.add(ctx.chatMetadata.world_info);
-  }
-  try {
-    const personaWorld = power_user?.persona_description_lorebook;
-    if (personaWorld) {
-      activeBooks.add(personaWorld);
-    }
-  } catch (e) {
-    console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
-  }
+  const activeBooks = collectSessionActiveBooks(ctx, wiVars, data.charName, true);
   const contentParts = [];
   const extData = getExtData();
   const wiConfig = extData.worldinfo || { char_selections: {} };
@@ -11732,6 +12073,117 @@ function getChatHistory() {
     console.warn("Titania: \u83B7\u53D6\u804A\u5929\u5386\u53F2\u5931\u8D25", e);
     return [];
   }
+}
+function getCurrentCharNameFromContext(ctx) {
+  try {
+    return ctx?.substituteParams?.("{{char}}") || "Char";
+  } catch {
+    return "Char";
+  }
+}
+function getLocalAutoActiveBooks(charName) {
+  const extData = getExtData();
+  const wiConfig = extData.worldinfo || {};
+  const explicit = wiConfig.char_auto_active_books?.[charName];
+  if (Array.isArray(explicit)) return explicit;
+  const legacySelections = wiConfig.char_selections?.[charName];
+  if (legacySelections && typeof legacySelections === "object") {
+    return Object.keys(legacySelections).filter((bookName) => {
+      const selected = legacySelections[bookName];
+      return Array.isArray(selected) && selected.length > 0;
+    });
+  }
+  return [];
+}
+function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalAuto = false) {
+  const activeBooks = /* @__PURE__ */ new Set();
+  const charId = ctx.characterId;
+  if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
+    wiVars.selected_world_info.forEach((name) => activeBooks.add(name));
+  }
+  if (charId !== void 0 && ctx.characters && ctx.characters[charId]) {
+    const charObj = ctx.characters[charId];
+    const primary = charObj.data?.extensions?.world;
+    if (primary) activeBooks.add(primary);
+    const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
+    if (wiVars.world_info && wiVars.world_info.charLore) {
+      const loreEntry = wiVars.world_info.charLore.find((e) => e.name === fileName);
+      if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
+        loreEntry.extraBooks.forEach((name) => activeBooks.add(name));
+      }
+    }
+  }
+  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
+    activeBooks.add(ctx.chatMetadata.world_info);
+  }
+  try {
+    const personaWorld = power_user?.persona_description_lorebook;
+    if (personaWorld) activeBooks.add(personaWorld);
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
+  }
+  if (includeLocalAuto) {
+    const localAutoBooks = getLocalAutoActiveBooks(charName);
+    localAutoBooks.forEach((name) => activeBooks.add(name));
+  }
+  return activeBooks;
+}
+function getActiveWorldBookNames() {
+  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
+  let ctx;
+  try {
+    ctx = SillyTavern.getContext();
+    if (!ctx) return [];
+  } catch (e) {
+    console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
+    return [];
+  }
+  const wiVars = getWorldInfoVars();
+  const charName = getCurrentCharNameFromContext(ctx);
+  return Array.from(collectSessionActiveBooks(ctx, wiVars, charName, true));
+}
+async function getAllWorldBookNames() {
+  try {
+    if (typeof updateWorldInfoList === "function") {
+      await updateWorldInfoList();
+    }
+    if (Array.isArray(world_names) && world_names.length > 0) {
+      return [...world_names];
+    }
+    if (Array.isArray(selected_world_info) && selected_world_info.length > 0) {
+      return [...new Set(selected_world_info)];
+    }
+    return [];
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u5168\u90E8\u4E16\u754C\u4E66\u540D\u79F0\u5931\u8D25", e);
+    if (Array.isArray(world_names) && world_names.length > 0) {
+      return [...world_names];
+    }
+    return [];
+  }
+}
+async function getWorldInfoEntriesByBookName(bookName) {
+  if (!bookName || typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
+    return [];
+  }
+  let ctx;
+  try {
+    ctx = SillyTavern.getContext();
+    if (!ctx) return [];
+  } catch (e) {
+    console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
+    return [];
+  }
+  const bookData = await safeLoadWorldInfo(ctx, bookName, 1e4);
+  if (!bookData || !bookData.entries) return [];
+  return Object.values(bookData.entries).sort((a, b) => (a.order || 100) - (b.order || 100)).map((e) => ({
+    uid: e.uid,
+    comment: e.comment || `\u6761\u76EE ${e.uid}`,
+    content: e.content || "",
+    preview: (e.content || "").substring(0, 80).replace(/\n/g, " "),
+    isConstant: e.constant === true,
+    isDisabled: e.disable === true && e.enabled !== true
+  }));
 }
 var init_context = __esm({
   "src/core/context.js"() {
@@ -12946,15 +13398,18 @@ function openFavsWindow() {
   let currentFavId = null;
   let isEditMode = false;
   let selectedIds = /* @__PURE__ */ new Set();
-  let renderTaskId = 0;
   let searchDebounceTimer = null;
   let currentMap = {};
-  let renderedCardCount = 0;
-  let loadedVisibleCount = 0;
   let filteredIndexMap = /* @__PURE__ */ new Map();
-  const GRID_RENDER_CHUNK_SIZE = 18;
-  const INITIAL_RENDER_LIMIT = 120;
-  const LOAD_MORE_STEP = 80;
+  let activeCarouselIndex = 0;
+  let carouselTimer = null;
+  let carouselPauseUntil = 0;
+  let isThumbDragging = false;
+  let thumbDragMoved = false;
+  let thumbDragStartX = 0;
+  let thumbDragStartScrollLeft = 0;
+  const AUTO_SWITCH_MS = 2e3;
+  const MANUAL_PAUSE_MS = 6e3;
   const SEARCH_DEBOUNCE_MS = 240;
   const charIndex = /* @__PURE__ */ new Set();
   favs.forEach((f) => {
@@ -12983,6 +13438,12 @@ function openFavsWindow() {
                 <select id="t-fav-filter-char" class="t-fav-filter-select">
                     ${charList.map((c) => `<option value="${c}">${c}</option>`).join("")}
                 </select>
+                <select id="t-fav-sort" class="t-fav-filter-select" title="\u6392\u5E8F\u65B9\u5F0F">
+                    <option value="newest">\u6700\u65B0\u4F18\u5148</option>
+                    <option value="oldest">\u6700\u65E9\u4F18\u5148</option>
+                    <option value="title_asc">\u6807\u9898 A-Z</option>
+                    <option value="title_desc">\u6807\u9898 Z-A</option>
+                </select>
             </div>
             <div style="display:flex; gap:10px; align-items:center;">
                 <input type="text" id="t-fav-search" class="t-fav-search" placeholder="\u641C\u7D22\u5173\u952E\u8BCD...">
@@ -13005,7 +13466,10 @@ function openFavsWindow() {
         </div>
         
         <div class="t-fav-grid-area">
-            <div class="t-fav-grid" id="t-fav-grid"></div>
+            <div class="t-fav-grid t-fav-carousel-stage" id="t-fav-grid"></div>
+            <button class="t-fav-carousel-nav prev" id="t-fav-prev" title="\u4E0A\u4E00\u5F20"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="t-fav-carousel-nav next" id="t-fav-next" title="\u4E0B\u4E00\u5F20"><i class="fa-solid fa-chevron-right"></i></button>
+            <div class="t-fav-carousel-thumbs" id="t-fav-thumbs"></div>
         </div>
 
         <div class="t-fav-reader" id="t-fav-reader">
@@ -13019,6 +13483,7 @@ function openFavsWindow() {
                 </div>
                 <div style="display:flex; gap:10px; flex-shrink:0;">
                     <button class="t-tool-btn" id="t-read-rename" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
+                    <button class="t-tool-btn" id="t-read-del-segment" title="\u5220\u9664\u5206\u7EC4\u6BB5\u843D" style="display:none; color:#ff9f43; border-color:rgba(255, 159, 67, 0.5);"><i class="fa-solid fa-scissors"></i></button>
                     <button class="t-tool-btn" id="t-read-img" title="\u5BFC\u51FA\u56FE\u7247"><i class="fa-solid fa-camera"></i></button>
                     <button class="t-tool-btn" id="t-read-code" title="\u590D\u5236HTML"><i class="fa-solid fa-code"></i></button>
                     <button class="t-tool-btn" id="t-read-open-window" title="\u65B0\u7A97\u53E3\u6253\u5F00(\u4E92\u52A8\u6A21\u5F0F)"><i class="fa-solid fa-up-right-from-square"></i></button>
@@ -13083,6 +13548,46 @@ ${html2}`;
     ].join(" ").toLowerCase();
     return item._searchText;
   };
+  const clearCarouselTimer = () => {
+    if (carouselTimer) {
+      clearInterval(carouselTimer);
+      carouselTimer = null;
+    }
+  };
+  const pauseCarousel = (ms = MANUAL_PAUSE_MS) => {
+    carouselPauseUntil = Date.now() + ms;
+  };
+  const normalizeCarouselIndex = (index) => {
+    const total = currentFilteredList.length;
+    if (total <= 0) return 0;
+    const mod = index % total;
+    return mod < 0 ? mod + total : mod;
+  };
+  const setActiveCarouselIndex = (index, options = {}) => {
+    const total = currentFilteredList.length;
+    if (total <= 0) return;
+    const normalized = normalizeCarouselIndex(index);
+    const resetPause = options.resetPause !== false;
+    activeCarouselIndex = normalized;
+    $("#t-fav-grid .t-fav-card").removeClass("is-active").attr("aria-hidden", "true");
+    $("#t-fav-grid .t-fav-card").eq(normalized).addClass("is-active").attr("aria-hidden", "false");
+    $("#t-fav-thumbs .t-fav-thumb").removeClass("is-active");
+    const activeThumb = $("#t-fav-thumbs .t-fav-thumb").eq(normalized).addClass("is-active")[0];
+    if (activeThumb?.scrollIntoView) {
+      activeThumb.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+    }
+    if (resetPause) pauseCarousel();
+  };
+  const restartCarouselAutoplay = () => {
+    clearCarouselTimer();
+    if (currentFilteredList.length <= 1) return;
+    carouselTimer = setInterval(() => {
+      if (Date.now() < carouselPauseUntil) return;
+      if (isEditMode) return;
+      if ($("#t-fav-reader").hasClass("show")) return;
+      setActiveCarouselIndex(activeCarouselIndex + 1, { resetPause: false });
+    }, AUTO_SWITCH_MS);
+  };
   const buildCardElement = (item, idx, currentMap2) => {
     const isChain = item?.type === "chain";
     const chainItems = Array.isArray(item?.items) ? item.items : [];
@@ -13099,7 +13604,7 @@ ${html2}`;
     const displayDate = String(item.date || "").split(" ")[0] || "-";
     const chainBadge = isChain ? `<span class="t-fav-chain-badge">\u5267\u573A\u5206\u7EC4 \xB7 ${chainCount}\u6BB5</span>` : "";
     const card = $(`
-            <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""} ${cardBgClass}" data-fav-id="${item.id}">
+            <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""} ${cardBgClass}" data-fav-id="${item.id}" data-fav-index="${idx}" aria-hidden="true">
                 <div class="t-fav-card-checkbox">
                     <i class="fa-${isSelected ? "solid fa-square-check" : "regular fa-square"}"></i>
                 </div>
@@ -13118,71 +13623,74 @@ ${html2}`;
         `);
     return card[0];
   };
-  const renderCardRange = (start, end, taskId) => {
-    const gridEl = document.getElementById("t-fav-grid");
-    if (!gridEl) return;
-    if (start >= end) return;
-    let cursor = start;
-    const renderChunk = () => {
-      if (taskId !== renderTaskId) return;
-      const chunkEnd = Math.min(cursor + GRID_RENDER_CHUNK_SIZE, end);
-      const frag = document.createDocumentFragment();
-      for (let idx = cursor; idx < chunkEnd; idx++) {
-        const item = currentFilteredList[idx];
-        if (!item) continue;
-        frag.appendChild(buildCardElement(item, idx, currentMap));
-      }
-      gridEl.appendChild(frag);
-      cursor = chunkEnd;
-      renderedCardCount = Math.max(renderedCardCount, cursor);
-      if (cursor < end) {
-        requestAnimationFrame(renderChunk);
-      }
-    };
-    requestAnimationFrame(renderChunk);
+  const buildThumbElement = (item, idx, currentMap2) => {
+    const charName = item?._meta?.char || "\u672A\u77E5\u89D2\u8272";
+    const scriptName = item?._meta?.script || item?.title || "\u672A\u547D\u540D\u6536\u85CF";
+    const bgUrl = currentMap2[charName] || item.avatar || "";
+    const thumb = $(`
+            <button class="t-fav-thumb" data-fav-index="${idx}" title="${escapeHtmlText(scriptName)}">
+                <span class="t-fav-thumb-bg" style="${bgUrl ? `background-image: url('${bgUrl}')` : ""}"></span>
+                <span class="t-fav-thumb-label">${escapeHtmlText(scriptName)}</span>
+            </button>
+        `);
+    return thumb[0];
   };
   const renderGrid = () => {
     const grid = $("#t-fav-grid");
     const gridEl = grid[0];
+    const thumbsEl = document.getElementById("t-fav-thumbs");
     if (!gridEl) return;
-    renderTaskId++;
-    const taskId = renderTaskId;
     grid.empty();
-    renderedCardCount = 0;
-    loadedVisibleCount = 0;
+    if (thumbsEl) thumbsEl.innerHTML = "";
     filteredIndexMap.clear();
     currentMap = getExtData().character_map || {};
     const targetChar = $("#t-fav-filter-char").val();
+    const sortMode = String($("#t-fav-sort").val() || "newest");
     const search = String($("#t-fav-search").val() || "").trim().toLowerCase();
     currentFilteredList = favs.filter((f) => {
       if (targetChar !== "\u5168\u90E8\u89D2\u8272" && f._meta.char !== targetChar) return false;
       if (search && !getCachedSearchText(f).includes(search)) return false;
       return true;
     });
+    const getTimeValue = (item) => {
+      const idNum = Number(item?.id);
+      if (Number.isFinite(idNum) && idNum > 0) return idNum;
+      const parsed = Date.parse(String(item?.date || ""));
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    if (sortMode === "oldest") {
+      currentFilteredList.sort((a, b) => getTimeValue(a) - getTimeValue(b));
+    } else if (sortMode === "title_asc") {
+      currentFilteredList.sort((a, b) => String(a?._meta?.script || a?.title || "").localeCompare(String(b?._meta?.script || b?.title || ""), "zh-Hans-CN"));
+    } else if (sortMode === "title_desc") {
+      currentFilteredList.sort((a, b) => String(b?._meta?.script || b?.title || "").localeCompare(String(a?._meta?.script || a?.title || ""), "zh-Hans-CN"));
+    } else {
+      currentFilteredList.sort((a, b) => getTimeValue(b) - getTimeValue(a));
+    }
     currentFilteredList.forEach((item, idx) => {
       filteredIndexMap.set(String(item.id), idx);
     });
     if (currentFilteredList.length === 0) {
       grid.append('<div class="t-fav-empty">\u6CA1\u6709\u627E\u5230\u76F8\u5173\u6536\u85CF</div>');
+      clearCarouselTimer();
       return;
     }
     if (isEditMode) {
       grid.addClass("edit-mode");
+    } else {
+      grid.removeClass("edit-mode");
     }
-    loadedVisibleCount = Math.min(currentFilteredList.length, INITIAL_RENDER_LIMIT);
-    renderCardRange(0, loadedVisibleCount, taskId);
-  };
-  const maybeLoadMoreCards = () => {
-    const areaEl = $(".t-fav-grid-area")[0];
-    if (!areaEl) return;
-    if (renderedCardCount >= currentFilteredList.length) return;
-    const nearBottom = areaEl.scrollTop + areaEl.clientHeight >= areaEl.scrollHeight - 220;
-    if (!nearBottom) return;
-    const prevLoaded = loadedVisibleCount;
-    loadedVisibleCount = Math.min(currentFilteredList.length, loadedVisibleCount + LOAD_MORE_STEP);
-    if (loadedVisibleCount <= prevLoaded) return;
-    const taskId = renderTaskId;
-    renderCardRange(prevLoaded, loadedVisibleCount, taskId);
+    const cardFrag = document.createDocumentFragment();
+    const thumbFrag = document.createDocumentFragment();
+    currentFilteredList.forEach((item, idx) => {
+      cardFrag.appendChild(buildCardElement(item, idx, currentMap));
+      thumbFrag.appendChild(buildThumbElement(item, idx, currentMap));
+    });
+    gridEl.appendChild(cardFrag);
+    if (thumbsEl) thumbsEl.appendChild(thumbFrag);
+    const defaultIndex = currentFavId && filteredIndexMap.has(String(currentFavId)) ? Number(filteredIndexMap.get(String(currentFavId))) || 0 : 0;
+    setActiveCarouselIndex(defaultIndex, { resetPause: false });
+    restartCarouselAutoplay();
   };
   const scheduleSearchRender = () => {
     if (searchDebounceTimer) {
@@ -13206,9 +13714,11 @@ ${html2}`;
       const chainCount = chainItems.length;
       $("#t-read-meta").text(`${item.title}\uFF08\u5267\u573A\u5206\u7EC4\uFF09`);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length} \xB7 ${chainCount} \u6BB5`);
+      $("#t-read-del-segment").show();
     } else {
       $("#t-read-meta").text(item.title);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
+      $("#t-read-del-segment").hide();
     }
     const container = document.getElementById("t-read-content");
     const { isInteractive, reasons } = detectInteractiveContent(item.html);
@@ -13239,15 +13749,85 @@ ${html2}`;
     $("#t-fav-reader").addClass("show");
   };
   $("#t-fav-filter-char").on("change", renderGrid);
+  $("#t-fav-sort").on("change", renderGrid);
   $("#t-fav-search").on("input", scheduleSearchRender);
   $("#t-fav-search").on("change", renderGrid);
-  $(".t-fav-grid-area").on("scroll", maybeLoadMoreCards);
   $("#t-btn-img-mgr").on("click", () => {
     openCharImageManager(() => {
       renderGrid();
     });
   });
-  $("#t-read-back").on("click", () => $("#t-fav-reader").removeClass("show"));
+  $("#t-read-back").on("click", () => {
+    $("#t-fav-reader").removeClass("show");
+    pauseCarousel(1200);
+  });
+  $("#t-fav-prev").on("click", () => {
+    setActiveCarouselIndex(activeCarouselIndex - 1);
+  });
+  $("#t-fav-next").on("click", () => {
+    setActiveCarouselIndex(activeCarouselIndex + 1);
+  });
+  $("#t-fav-thumbs").on("click", ".t-fav-thumb", function() {
+    if (thumbDragMoved) return;
+    const idx = Number($(this).data("fav-index"));
+    if (!Number.isInteger(idx)) return;
+    setActiveCarouselIndex(idx);
+  });
+  $("#t-fav-thumbs").on("wheel", function(e) {
+    const el = this;
+    if (!el) return;
+    const oe = e.originalEvent;
+    const delta = Math.abs(oe?.deltaX || 0) > Math.abs(oe?.deltaY || 0) ? oe?.deltaX || 0 : oe?.deltaY || 0;
+    if (!delta) return;
+    e.preventDefault();
+    el.scrollLeft += delta;
+  });
+  $("#t-fav-thumbs").on("mousedown", function(e) {
+    if (e.button !== 0) return;
+    isThumbDragging = true;
+    thumbDragMoved = false;
+    thumbDragStartX = e.pageX;
+    thumbDragStartScrollLeft = this.scrollLeft;
+    $(this).addClass("is-dragging");
+    e.preventDefault();
+  });
+  $(document).on("mousemove.tFavThumbDrag", (e) => {
+    if (!isThumbDragging) return;
+    const thumbsEl = $("#t-fav-thumbs")[0];
+    if (!thumbsEl) return;
+    const dx = e.pageX - thumbDragStartX;
+    if (Math.abs(dx) > 3) thumbDragMoved = true;
+    thumbsEl.scrollLeft = thumbDragStartScrollLeft - dx;
+  });
+  $(document).on("mouseup.tFavThumbDrag", () => {
+    if (!isThumbDragging) return;
+    isThumbDragging = false;
+    $("#t-fav-thumbs").removeClass("is-dragging");
+    setTimeout(() => {
+      thumbDragMoved = false;
+    }, 0);
+  });
+  let carouselTouchStartX = 0;
+  let carouselTouchStartY = 0;
+  $(".t-fav-grid-area").on("touchstart", (e) => {
+    const touch = e.originalEvent?.touches?.[0];
+    if (!touch) return;
+    carouselTouchStartX = touch.clientX;
+    carouselTouchStartY = touch.clientY;
+  });
+  $(".t-fav-grid-area").on("touchend", (e) => {
+    const touch = e.originalEvent?.changedTouches?.[0];
+    if (!touch) return;
+    const diffX = touch.clientX - carouselTouchStartX;
+    const diffY = touch.clientY - carouselTouchStartY;
+    if (Math.abs(diffX) > 46 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
+      if (diffX > 0) {
+        setActiveCarouselIndex(activeCarouselIndex - 1);
+      } else {
+        setActiveCarouselIndex(activeCarouselIndex + 1);
+      }
+    }
+  });
   $("#t-fav-grid").on("click", ".t-fav-card", function() {
     const favId = String($(this).data("fav-id"));
     const itemIndex = filteredIndexMap.get(favId);
@@ -13525,8 +14105,66 @@ ${html2}`;
       }
     }
   });
+  $("#t-read-del-segment").on("click", () => {
+    if (!currentFavId) return;
+    const currentItem = currentFilteredList[currentIndex];
+    if (!currentItem || currentItem.type !== "chain") return;
+    const chainItems = Array.isArray(currentItem.items) ? currentItem.items : [];
+    if (chainItems.length === 0) {
+      if (window.toastr) toastr.warning("\u8BE5\u5206\u7EC4\u6CA1\u6709\u53EF\u5220\u9664\u7684\u6BB5\u843D");
+      return;
+    }
+    const segmentTip = chainItems.map((seg, idx) => {
+      const round = Number(seg?.round) || idx + 1;
+      const instruction = String(seg?.instruction || "\uFF08\u65E0\u6307\u4EE4\uFF09").replace(/\s+/g, " ").trim();
+      const shortText = instruction.length > 22 ? `${instruction.slice(0, 22)}...` : instruction;
+      return `${idx + 1}. \u7B2C${round}\u6BB5 - ${shortText}`;
+    }).join("\n");
+    const input = prompt(`\u8BF7\u8F93\u5165\u8981\u5220\u9664\u7684\u6BB5\u843D\u5E8F\u53F7\uFF081-${chainItems.length}\uFF09\uFF1A
+
+${segmentTip}`);
+    if (input === null) return;
+    const removeIndex = Number(input) - 1;
+    if (!Number.isInteger(removeIndex) || removeIndex < 0 || removeIndex >= chainItems.length) {
+      if (window.toastr) toastr.warning("\u8F93\u5165\u7684\u6BB5\u843D\u5E8F\u53F7\u65E0\u6548");
+      return;
+    }
+    const target = chainItems[removeIndex];
+    const removeRound = Number(target?.round) || removeIndex + 1;
+    if (!confirm(`\u786E\u5B9A\u5220\u9664\u7B2C ${removeRound} \u6BB5\u5417\uFF1F`)) return;
+    const d = getExtData();
+    const targetFav = d.favs.find((x) => x.id === currentFavId);
+    if (!targetFav || targetFav.type !== "chain") return;
+    if (!Array.isArray(targetFav.items)) targetFav.items = [];
+    targetFav.items.splice(removeIndex, 1);
+    if (targetFav.items.length === 0) {
+      d.favs = d.favs.filter((x) => x.id !== currentFavId);
+      saveExtData();
+      favs.splice(0, favs.length, ...d.favs);
+      renderGrid();
+      if (currentFilteredList.length === 0) {
+        $("#t-fav-reader").removeClass("show");
+      } else {
+        const newIdx = Math.min(currentIndex, currentFilteredList.length - 1);
+        loadReaderItem(newIdx);
+      }
+      if (window.toastr) toastr.success("\u5DF2\u5220\u9664\u8BE5\u6BB5\uFF0C\u5206\u7EC4\u5DF2\u6E05\u7A7A\u5E76\u79FB\u9664");
+      return;
+    }
+    targetFav.html = buildChainMergedHtml(targetFav.items);
+    saveExtData();
+    const localFav = favs.find((x) => x.id === currentFavId);
+    if (localFav) {
+      localFav.items = targetFav.items;
+      localFav.html = targetFav.html;
+    }
+    loadReaderItem(currentIndex);
+    renderGrid();
+    if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u7B2C ${removeRound} \u6BB5`);
+  });
   const closeWindow = () => {
-    renderTaskId++;
+    clearCarouselTimer();
+    $(document).off(".tFavThumbDrag");
     if (searchDebounceTimer) {
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = null;
@@ -28433,7 +29071,7 @@ async function openWorldInfoSelector() {
         <div class="t-wi-header">
             <div style="display:flex; align-items:center; gap:10px;">
                 <i class="fa-solid fa-book-atlas" style="color:#90cdf4;"></i>
-                <span style="font-weight:bold;">\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009</span>
+                <span style="font-weight:bold;">\u4E16\u754C\u4E66\u7BA1\u7406</span>
             </div>
             <div class="t-close" id="t-wi-close">&times;</div>
         </div>
@@ -28446,17 +29084,20 @@ async function openWorldInfoSelector() {
     </div>`;
   $("#t-main-view").append(loadingHtml);
   $("#t-wi-close").on("click", () => $("#t-wi-selector").remove());
-  let ctx, entries;
+  let ctx;
+  let allBookNames;
+  let activeBookNames;
   try {
-    const LOAD_TIMEOUT = 1e4;
+    const LOAD_TIMEOUT = 12e3;
     const loadPromise = Promise.all([
       getContextData(),
-      getActiveWorldInfoEntries()
+      getAllWorldBookNames(),
+      Promise.resolve(getActiveWorldBookNames())
     ]);
     const timeoutPromise = new Promise(
       (_, reject) => setTimeout(() => reject(new Error("\u52A0\u8F7D\u8D85\u65F6")), LOAD_TIMEOUT)
     );
-    [ctx, entries] = await Promise.race([loadPromise, timeoutPromise]);
+    [ctx, allBookNames, activeBookNames] = await Promise.race([loadPromise, timeoutPromise]);
   } catch (e) {
     console.error("Titania: \u52A0\u8F7D\u4E16\u754C\u4E66\u6570\u636E\u5931\u8D25", e);
     $("#t-wi-selector .t-wi-body").html(`
@@ -28470,129 +29111,92 @@ async function openWorldInfoSelector() {
     return;
   }
   const data = getExtData();
-  if (!data.worldinfo) {
-    data.worldinfo = { char_selections: {} };
-  }
+  if (!data.worldinfo) data.worldinfo = { char_selections: {}, char_auto_active_books: {} };
+  if (!data.worldinfo.char_selections) data.worldinfo.char_selections = {};
+  if (!data.worldinfo.char_auto_active_books) data.worldinfo.char_auto_active_books = {};
   const charName = ctx.charName;
-  const charSelections = data.worldinfo.char_selections[charName] || null;
-  const isFirstTime = charSelections === null;
-  let totalCount = 0;
-  entries.forEach((book) => {
-    totalCount += book.entries.length;
-  });
+  const savedSelections = data.worldinfo.char_selections[charName] || null;
+  const workingSelections = savedSelections ? structuredClone(savedSelections) : {};
+  const allBooks = Array.isArray(allBookNames) ? allBookNames.slice() : [];
+  const baseActiveBooks = Array.isArray(activeBookNames) ? activeBookNames.filter((name) => allBooks.includes(name)) : [];
+  let currentViewMode = "all";
+  const getVisibleBooks = () => currentViewMode === "active" ? baseActiveBooks : allBooks;
+  let visibleBooks = getVisibleBooks();
   $("#t-wi-selector").remove();
+  const renderBookListHtml = (books, activeSet2, selectedName) => {
+    if (!books.length) {
+      const emptyText = currentViewMode === "active" ? "\u5F53\u524D\u6CA1\u6709\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66" : "\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66";
+      return `<div class="t-wi-booklist-empty">${emptyText}</div>`;
+    }
+    return books.map((name) => {
+      const isActive = activeSet2.has(name);
+      const selected = name === selectedName;
+      return `
+                <div class="t-wi-book-item ${selected ? "selected" : ""}" data-book-name="${encodeURIComponent(name)}" title="${escapeHtmlText2(name)}">
+                    <span class="t-wi-book-item-dot ${isActive ? "active" : ""}"></span>
+                    <span class="t-wi-book-item-name">${escapeHtmlText2(name)}</span>
+                </div>
+            `;
+    }).join("");
+  };
   const html = `
     <div id="t-wi-selector" class="t-wi-selector">
         <div class="t-wi-header">
             <div style="display:flex; align-items:center; gap:10px;">
                 <i class="fa-solid fa-book-atlas" style="color:#90cdf4;"></i>
-                <span style="font-weight:bold;">\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009</span>
+                <span style="font-weight:bold;">\u4E16\u754C\u4E66\u7BA1\u7406</span>
                 <span style="font-size:0.8em; color:#666;">${ctx.charName}</span>
             </div>
             <div class="t-close" id="t-wi-close">&times;</div>
         </div>
-        
-        <div class="t-wi-action-bar" style="display:flex; gap:10px; padding:10px 15px; border-bottom:1px solid #333;">
-            <button class="t-btn" id="t-wi-select-all" style="flex:1;">
-                <i class="fa-solid fa-check-double"></i> \u5168\u9009
-            </button>
-            <button class="t-btn" id="t-wi-select-none" style="flex:1;">
-                <i class="fa-solid fa-square"></i> \u53D6\u6D88\u5168\u9009
-            </button>
+
+        <div class="t-wi-action-bar t-wi-tabs" style="display:flex; align-items:center; gap:8px; padding:10px 15px; border-bottom:1px solid #333;">
+            <button type="button" class="t-btn t-btn-xs t-wi-tab-btn active" data-mode="all">\u5168\u90E8\u4E16\u754C\u4E66 (${allBooks.length})</button>
+            <button type="button" class="t-btn t-btn-xs t-wi-tab-btn" data-mode="active">\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66 (${baseActiveBooks.length})</button>
         </div>
-        
-        <div class="t-wi-body" id="t-wi-body">
-            ${entries.length === 0 ? '<div class="t-wi-empty">\u5F53\u524D\u89D2\u8272\u6CA1\u6709\u6FC0\u6D3B\u7684\u4E16\u754C\u4E66\u6761\u76EE</div>' : ""}
+
+        <div class="t-wi-body t-wi-layout" id="t-wi-layout">
+            <div class="t-wi-books-pane">
+                <div class="t-wi-books-header">\u4E16\u754C\u4E66\u5217\u8868</div>
+                <div class="t-wi-books-list" id="t-wi-books-list"></div>
+            </div>
+            <div class="t-wi-entry-pane">
+                <div class="t-wi-entry-pane-header" id="t-wi-entry-pane-header">
+                    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                        <div class="t-wi-entry-pane-title" id="t-wi-entry-pane-title">\u672A\u9009\u62E9\u4E16\u754C\u4E66</div>
+                        <span class="t-wi-entry-pane-badge inactive" id="t-wi-entry-pane-badge">\u672A\u6FC0\u6D3B</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                        <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-all">\u5168\u9009</button>
+                        <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-none">\u53D6\u6D88\u5168\u9009</button>
+                    </div>
+                </div>
+                <div class="t-wi-entry-list" id="t-wi-entry-list">
+                    ${visibleBooks.length === 0 ? '<div class="t-wi-empty">\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66</div>' : ""}
+                </div>
+            </div>
         </div>
-        
+
         <div class="t-wi-footer">
-            <span id="t-wi-stat">\u5DF2\u9009: 0/${totalCount}</span>
-            <button class="t-btn primary" id="t-wi-save">\u4FDD\u5B58</button>
+            <span id="t-wi-stat">\u5DF2\u9009: 0/0</span>
+            <button class="t-btn primary" id="t-wi-save" ${allBooks.length === 0 ? "disabled" : ""}>\u4FDD\u5B58</button>
         </div>
     </div>`;
   $("#t-main-view").append(html);
-  const renderEntries = () => {
-    const $body = $("#t-wi-body");
-    $body.empty();
-    if (entries.length === 0) {
-      $body.append('<div class="t-wi-empty">\u5F53\u524D\u89D2\u8272\u6CA1\u6709\u6FC0\u6D3B\u7684\u4E16\u754C\u4E66\u6761\u76EE</div>');
-      return;
-    }
-    entries.forEach((book, bookIdx) => {
-      const bookSel = charSelections ? charSelections[book.bookName] || [] : [];
-      const selectedInBook = isFirstTime ? 0 : book.entries.filter((e) => bookSel.includes(e.uid)).length;
-      const $bookSection = $(`
-                <div class="t-wi-book" data-book-idx="${bookIdx}">
-                    <div class="t-wi-book-header t-wi-collapsible" title="\u70B9\u51FB\u5C55\u5F00/\u6536\u8D77">
-                        <i class="fa-solid fa-caret-right t-wi-collapse-icon"></i>
-                        <i class="fa-solid fa-book" style="color:#bfa15f;"></i>
-                        <span class="t-wi-book-name">${book.bookName}</span>
-                        <span class="t-wi-book-stat">(${selectedInBook}/${book.entries.length})</span>
-                        <span class="t-wi-book-toggle" title="\u5168\u9009/\u53D6\u6D88">\u5168\u9009</span>
-                    </div>
-                    <div class="t-wi-entries t-wi-collapsed" data-book="${book.bookName}"></div>
-                </div>
-            `);
-      const $entriesContainer = $bookSection.find(".t-wi-entries");
-      book.entries.forEach((entry) => {
-        const isSelected = isFirstTime ? false : bookSel.includes(entry.uid);
-        const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
-        const $entry = $(`
-                    <div class="t-wi-entry ${isSelected ? "selected" : ""}" data-uid="${entry.uid}">
-                        <div class="t-wi-entry-check">
-                            <input type="checkbox" ${isSelected ? "checked" : ""}>
-                        </div>
-                        <div class="t-wi-entry-content">
-                            <div class="t-wi-entry-title">
-                                <span class="t-wi-uid">[${entry.uid}]</span>
-                                ${entry.comment}
-                                ${constantBadge}
-                            </div>
-                            <div class="t-wi-entry-preview">${entry.preview}${entry.content.length > 80 ? "..." : ""}</div>
-                        </div>
-                        <div class="t-wi-entry-actions">
-                            <i class="fa-solid fa-eye t-wi-preview-btn" title="\u9884\u89C8\u5B8C\u6574\u5185\u5BB9"></i>
-                        </div>
-                    </div>
-                `);
-        $entry.find("input").on("change", function(e) {
-          e.stopPropagation();
-          const checked = $(this).is(":checked");
-          $entry.toggleClass("selected", checked);
-          updateStat();
-          updateBookStat(book.bookName);
-        });
-        $entry.find(".t-wi-preview-btn").on("click", function(e) {
-          e.stopPropagation();
-          showEntryPreview(entry.comment, entry.content);
-        });
-        $entriesContainer.append($entry);
-      });
-      $bookSection.find(".t-wi-book-header").on("click", function(e) {
-        if ($(e.target).hasClass("t-wi-book-toggle")) return;
-        const $entries = $bookSection.find(".t-wi-entries");
-        const $icon = $bookSection.find(".t-wi-collapse-icon");
-        $entries.toggleClass("t-wi-collapsed");
-        $icon.toggleClass("t-wi-expanded");
-      });
-      $bookSection.find(".t-wi-book-toggle").on("click", function(e) {
-        e.stopPropagation();
-        const $entries = $bookSection.find(".t-wi-entry");
-        const allChecked = $entries.length === $entries.find("input:checked").length;
-        $entries.find("input").prop("checked", !allChecked);
-        $entries.toggleClass("selected", !allChecked);
-        $(this).text(allChecked ? "\u5168\u9009" : "\u53D6\u6D88");
-        updateStat();
-        updateBookStat(book.bookName);
-      });
-      $body.append($bookSection);
+  let currentBookName = visibleBooks[0] || "";
+  let currentEntries2 = [];
+  const activeSet = new Set(baseActiveBooks);
+  const getAutoActiveBooksFromSelections = () => {
+    return Object.keys(workingSelections).filter((bookName) => {
+      const selected = workingSelections[bookName];
+      return Array.isArray(selected) && selected.length > 0;
     });
   };
-  const updateBookStat = (bookName) => {
-    const $book = $(`.t-wi-entries[data-book="${bookName}"]`).closest(".t-wi-book");
-    const total = $book.find(".t-wi-entry").length;
-    const selected = $book.find(".t-wi-entry input:checked").length;
-    $book.find(".t-wi-book-stat").text(`(${selected}/${total})`);
+  const refreshActiveState = () => {
+    const autoActive = getAutoActiveBooksFromSelections();
+    activeSet.clear();
+    baseActiveBooks.forEach((name) => activeSet.add(name));
+    autoActive.forEach((name) => activeSet.add(name));
   };
   const showEntryPreview = (title, content) => {
     $(".t-wi-preview-modal").remove();
@@ -28615,45 +29219,189 @@ async function openWorldInfoSelector() {
     });
     $("#t-wi-selector").append($modal);
   };
-  const updateStat = () => {
-    let total = 0;
-    let selected = 0;
-    $(".t-wi-entry").each(function() {
-      total++;
-      if ($(this).find("input").is(":checked")) selected++;
-    });
-    $("#t-wi-stat").text(`\u5DF2\u9009: ${selected}/${total}`);
+  const getBookSelectedSet = (bookName) => {
+    const selectedUids = Array.isArray(workingSelections[bookName]) ? workingSelections[bookName] : [];
+    return new Set(selectedUids.map((uid) => Number(uid)));
   };
-  $("#t-wi-select-all").on("click", () => {
-    $(".t-wi-entry input[type='checkbox']").prop("checked", true);
-    $(".t-wi-entry").addClass("selected");
-    updateStat();
-  });
-  $("#t-wi-select-none").on("click", () => {
-    $(".t-wi-entry input[type='checkbox']").prop("checked", false);
-    $(".t-wi-entry").removeClass("selected");
-    updateStat();
-  });
-  $("#t-wi-save").on("click", () => {
-    const selections = {};
-    entries.forEach((book) => {
-      const selectedUids = [];
-      $(`.t-wi-entries[data-book="${book.bookName}"] .t-wi-entry`).each(function() {
-        if ($(this).find("input").is(":checked")) {
-          selectedUids.push(parseInt($(this).data("uid")));
+  const setBookSelections = (bookName, selectedSet) => {
+    workingSelections[bookName] = Array.from(selectedSet);
+    refreshActiveState();
+  };
+  const updateStat = () => {
+    const selectedSet = getBookSelectedSet(currentBookName);
+    const selectedCount = currentEntries2.filter((entry) => selectedSet.has(Number(entry.uid))).length;
+    $("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}`);
+  };
+  const renderEntries = () => {
+    const $body = $("#t-wi-entry-list");
+    $body.empty();
+    if (!currentBookName) {
+      $body.append('<div class="t-wi-empty">\u672A\u9009\u62E9\u4E16\u754C\u4E66</div>');
+      updateStat();
+      return;
+    }
+    if (!currentEntries2.length) {
+      $body.append('<div class="t-wi-empty">\u8BE5\u4E16\u754C\u4E66\u6682\u65E0\u6761\u76EE</div>');
+      updateStat();
+      return;
+    }
+    const selectedSet = getBookSelectedSet(currentBookName);
+    currentEntries2.forEach((entry) => {
+      const checked = selectedSet.has(Number(entry.uid));
+      const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
+      const disabledBadge = entry.isDisabled ? '<span style="background:#ff9f4333; color:#ffb968; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u5DF2\u7981\u7528</span>' : "";
+      const $entry = $(`
+                <div class="t-wi-entry ${checked ? "selected" : ""}" data-uid="${entry.uid}">
+                    <div class="t-wi-entry-check">
+                        <input type="checkbox" ${checked ? "checked" : ""} ${entry.isDisabled ? "disabled" : ""}>
+                    </div>
+                    <div class="t-wi-entry-content">
+                        <div class="t-wi-entry-title">
+                            <span class="t-wi-uid">[${entry.uid}]</span>
+                            ${entry.comment}
+                            ${constantBadge}
+                            ${disabledBadge}
+                        </div>
+                        <div class="t-wi-entry-preview">${entry.preview}${entry.content.length > 80 ? "..." : ""}</div>
+                    </div>
+                    <div class="t-wi-entry-actions">
+                        <i class="fa-solid fa-eye t-wi-preview-btn" title="\u9884\u89C8\u5B8C\u6574\u5185\u5BB9"></i>
+                    </div>
+                </div>
+            `);
+      $entry.find("input").on("change", function(e) {
+        e.stopPropagation();
+        const nextSet = getBookSelectedSet(currentBookName);
+        const uid = Number(entry.uid);
+        const isChecked = $(this).is(":checked");
+        if (isChecked) nextSet.add(uid);
+        else nextSet.delete(uid);
+        setBookSelections(currentBookName, nextSet);
+        $entry.toggleClass("selected", isChecked);
+        if (currentViewMode === "active") {
+          syncVisibleBooksByMode();
+          ensureCurrentBookInView();
+          renderBookList();
         }
+        syncEntryPaneHeader();
+        updateStat();
       });
-      selections[book.bookName] = selectedUids;
+      $entry.on("click", function(e) {
+        if ($(e.target).closest("input, .t-wi-preview-btn").length) return;
+        const $checkbox = $entry.find("input");
+        if ($checkbox.is(":disabled")) return;
+        $checkbox.prop("checked", !$checkbox.is(":checked")).trigger("change");
+      });
+      $entry.find(".t-wi-preview-btn").on("click", function(e) {
+        e.stopPropagation();
+        showEntryPreview(entry.comment, entry.content);
+      });
+      $body.append($entry);
     });
-    data.worldinfo.char_selections[charName] = selections;
+    updateStat();
+  };
+  const syncEntryPaneHeader = () => {
+    const isActive = activeSet.has(currentBookName);
+    const title = currentBookName || "\u672A\u9009\u62E9\u4E16\u754C\u4E66";
+    $("#t-wi-entry-pane-title").text(title);
+    $("#t-wi-entry-pane-badge").text(isActive ? "\u5DF2\u6FC0\u6D3B" : "\u672A\u6FC0\u6D3B").removeClass("active inactive").addClass(isActive ? "active" : "inactive");
+  };
+  const bulkSelectCurrentBook = (checked) => {
+    if (!currentBookName) return;
+    const nextSet = getBookSelectedSet(currentBookName);
+    currentEntries2.forEach((entry) => {
+      if (entry.isDisabled) return;
+      const uid = Number(entry.uid);
+      if (checked) nextSet.add(uid);
+      else nextSet.delete(uid);
+    });
+    setBookSelections(currentBookName, nextSet);
+    if (currentViewMode === "active") {
+      syncVisibleBooksByMode();
+      ensureCurrentBookInView();
+      renderBookList();
+    }
+    syncEntryPaneHeader();
+    renderEntries();
+  };
+  const renderBookList = () => {
+    $("#t-wi-books-list").html(renderBookListHtml(visibleBooks, activeSet, currentBookName));
+    $("#t-wi-books-list .t-wi-book-item").on("click", function() {
+      const next = decodeURIComponent(String($(this).data("bookName") || ""));
+      if (!next || next === currentBookName) return;
+      loadBookEntries(next);
+    });
+  };
+  const ensureCurrentBookInView = () => {
+    if (visibleBooks.includes(currentBookName)) return;
+    currentBookName = visibleBooks[0] || "";
+  };
+  const syncVisibleBooksByMode = () => {
+    if (currentViewMode === "active") {
+      visibleBooks = allBooks.filter((name) => activeSet.has(name));
+    } else {
+      visibleBooks = allBooks;
+    }
+  };
+  const loadBookEntries = async (bookName) => {
+    currentBookName = bookName || "";
+    syncEntryPaneHeader();
+    renderBookList();
+    const $body = $("#t-wi-entry-list");
+    $body.html(`
+            <div style="text-align:center; color:#888; padding:30px 10px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:1.6em; margin-bottom:10px;"></i>
+                <div>\u6B63\u5728\u52A0\u8F7D\u300C${escapeHtmlText2(currentBookName)}\u300D...</div>
+            </div>
+        `);
+    try {
+      currentEntries2 = await getWorldInfoEntriesByBookName(currentBookName);
+    } catch (e) {
+      console.error("Titania: \u52A0\u8F7D\u6307\u5B9A\u4E16\u754C\u4E66\u5931\u8D25", e);
+      currentEntries2 = [];
+    }
+    renderEntries();
+    syncEntryPaneHeader();
+    renderBookList();
+  };
+  $(".t-wi-tab-btn").on("click", function() {
+    const nextMode = String($(this).data("mode") || "all");
+    if (nextMode === currentViewMode) return;
+    currentViewMode = nextMode === "active" ? "active" : "all";
+    syncVisibleBooksByMode();
+    ensureCurrentBookInView();
+    $(".t-wi-tab-btn").removeClass("active");
+    $(this).addClass("active");
+    if (!currentBookName) {
+      currentEntries2 = [];
+      renderBookList();
+      renderEntries();
+      syncEntryPaneHeader();
+      return;
+    }
+    loadBookEntries(currentBookName);
+  });
+  $("#t-wi-current-select-all").on("click", () => bulkSelectCurrentBook(true));
+  $("#t-wi-current-select-none").on("click", () => bulkSelectCurrentBook(false));
+  $("#t-wi-save").on("click", () => {
+    if (!currentBookName && !Object.keys(workingSelections).length) return;
+    data.worldinfo.char_selections[charName] = workingSelections;
+    data.worldinfo.char_auto_active_books[charName] = getAutoActiveBooksFromSelections();
     saveExtData();
-    $("#t-wi-selector").remove();
     updateWorldInfoBadge();
     if (window.toastr) toastr.success("\u4E16\u754C\u4E66\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   $("#t-wi-close").on("click", () => $("#t-wi-selector").remove());
-  renderEntries();
-  updateStat();
+  refreshActiveState();
+  syncVisibleBooksByMode();
+  ensureCurrentBookInView();
+  renderBookList();
+  syncEntryPaneHeader();
+  if (currentBookName) {
+    await loadBookEntries(currentBookName);
+  } else {
+    updateStat();
+  }
 }
 function renderFilterMenu(currentFilter, $targetBtn, onSelect) {
   if ($("#t-filter-popover").length) {
