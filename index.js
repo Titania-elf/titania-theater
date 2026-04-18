@@ -22,11 +22,13 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.1";
+    CURRENT_VERSION = "5.0.2";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "5.0.2": "\u4F18\u5316\u6536\u85CF\u9986\u6027\u80FD\u4E0E\u6D77\u62A5\u5F0F\u754C\u9762\uFF0C\u4FEE\u590D\u7F16\u8F91\u540E\u6536\u85CF\u5185\u5BB9\u4E0D\u540C\u6B65\u95EE\u9898\uFF0C\u65B0\u589E\u5BFC\u51FA\u56FE\u7247\u6253\u7801\u53EF\u9009\u9879\u5E76\u6539\u8FDB\u79FB\u52A8\u7AEF\u4EA4\u4E92\u3002",
+      "5.0.1": "\u4FEE\u590D\u4E86\u4E00\u4E2Abug\uFF0C\u4F18\u5316\u4E86\u90E8\u5206\u754C\u9762\u7EC6\u8282\u3002",
       "5.0.0": "\u8DE8\u5165\u5230\u5168\u65B0\u76845.0\u7248\u672C\uFF0C\u56DE\u58F0\u5C0F\u5267\u573A\u6B63\u5F0F\u66F4\u540D\u4E3A\u56DE\u58F0\u5DE5\u5177\u7BB1\uFF0C\u65B0\u5165\u53E3\u4E3A\u53D1\u9001\u952E\u5DE6\u8FB9\u7684\u56FE\u6807\u3002\u66F4\u591A\u529F\u80FD\u6B63\u5728\u9646\u7EED\u8D76\u6765\u7684\u8DEF\u4E0A~",
       "3.3.4": "\u{1F514} \u65B0\u589E\u6587\u672C\u6539\u5199\u529F\u80FD\uFF0C\u53EF\u4EE5\u5BF9\u9152\u9986\u804A\u5929\u6700\u65B0\u56DE\u590D\u751F\u6210\u7684\u5185\u5BB9\u8FDB\u884C\u6539\u5199\u548C\u4F18\u5316\uFF0C\u5165\u53E3\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u3002\u76EE\u524D\u53EA\u505A\u4E86\u7B80\u5355\u7684\u5173\u952E\u8BCD\u5339\u914D\uFF0C\u540E\u7EED\u4F1A\u6269\u5C55\u66F4\u591A\u89C4\u5219\u3002",
       "3.3.3": "\u2728 \u65B0\u589E\u4E00\u952E\u6536\u85CF\u529F\u80FD\uFF0C\u53EF\u4EE5\u5C06\u540C\u4E2A\u5267\u573A\u4E0B\u7684\u6240\u6709\u7EED\u5199\u5185\u5BB9\u6536\u85CF\u5230\u4E00\u8D77\uFF0C\u65B9\u4FBF\u56DE\u987E\u3002<br>\u65B0\u589E\u5927\u7EB2\u4E0E\u7EC6\u7EB2\u751F\u6210\u529F\u80FD\uFF08\u9700\u8981\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u542F\u7528\uFF0C\u5165\u53E3\u5728\u9152\u9986\u53D1\u9001\u952E\u65C1\u8FB9\uFF09\uFF0C\u61D2\u5F97\u81EA\u5DF1\u60F3\u60C5\u8282\u53EA\u60F3\u770B\u5C0F\u8BF4\u7684\u53EF\u4EE5\u5C1D\u8BD5\u8FD9\u4E2A\uFF0C\u4F5C\u8005\u60F3\u73A9\u5C31\u52A0\u4E86\u3002<br>\u{1F527}\u4F18\u5316\u4E86\u5267\u573A\u751F\u6210\u65F6\u6253\u5F00\u6536\u85CF\u9986\u53EF\u80FD\u4EA7\u751F\u7684\u5361\u6B7B\u73B0\u8C61\u3002"
@@ -144,7 +146,7 @@ var init_defaults = __esm({
         enabled: false,
         // 是否启用快捷工具栏（禁用时点击悬浮球直接打开主窗口）
         // 各按钮的启用状态，按固定顺序排列
-        // 可用按钮: main(剧场), lore(设定提取), outline(故事大纲), model(切换模型), settings(设置), favs(收藏夹), scripts(剧本管理), debug(调试), recall(记忆召回)
+        // 可用按钮: main(剧场), lore(设定提取), outline(故事大纲), settings(设置), favs(收藏夹), scripts(剧本管理), debug(调试), recall(记忆召回)
         enabled_items: {
           main: true,
           // 打开剧场
@@ -152,8 +154,6 @@ var init_defaults = __esm({
           // 提取设定
           outline: false,
           // 故事大纲
-          model: false,
-          // 快速切换模型
           settings: true,
           // 设置
           favs: false,
@@ -190,9 +190,6 @@ var init_defaults = __esm({
         prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE\n4) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
         prompt_json_rule: "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09"
       },
-      // 剧场模型覆盖配置（仅影响场景生成，不影响设定提取等其他功能）
-      theater_model_override: null,
-      // null 表示使用当前方案的默认模型，设置后覆盖
       // Embedding API 独立配置（用于向量化）
       embedding_config: {
         url: "",
@@ -2251,10 +2248,165 @@ textarea.t-input {
 
 .t-wi-body {
     flex-grow: 1;
+    overflow: hidden;
+    padding: 10px;
+    min-height: 0;
+}
+
+.t-wi-tabs {
+    gap: 8px;
+}
+
+.t-wi-tab-btn {
+    padding: 6px 10px;
+    font-size: 0.82em;
+    color: #aaa;
+    background: #232323;
+    border: 1px solid #3a3a3a;
+}
+
+.t-wi-tab-btn.active {
+    color: #90cdf4;
+    border-color: rgba(144, 205, 244, 0.45);
+    background: rgba(144, 205, 244, 0.12);
+}
+
+.t-wi-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 10px;
+    overflow: hidden;
+    height: 100%;
+    min-height: 0;
+}
+
+.t-wi-books-pane {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #1d1d1d;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.t-wi-books-header {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    color: #999;
+    font-size: 0.8em;
+}
+
+.t-wi-books-list {
+    overflow-y: auto;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.t-wi-book-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 9px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    color: #bbb;
+    transition: all 0.2s;
+}
+
+.t-wi-book-item:hover {
+    background: #252525;
+    border-color: #3b3b3b;
+}
+
+.t-wi-book-item.selected {
+    color: #dff1ff;
+    background: rgba(144, 205, 244, 0.12);
+    border-color: rgba(144, 205, 244, 0.35);
+}
+
+.t-wi-book-item-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4d4d4d;
+    flex-shrink: 0;
+}
+
+.t-wi-book-item-dot.active {
+    background: #55efc4;
+    box-shadow: 0 0 6px rgba(85, 239, 196, 0.6);
+}
+
+.t-wi-book-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.86em;
+}
+
+.t-wi-booklist-empty {
+    color: #666;
+    font-size: 0.84em;
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.t-wi-entry-pane {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #191919;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.t-wi-entry-pane-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.t-wi-entry-pane-title {
+    color: #ddd;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-wi-entry-pane-badge {
+    flex-shrink: 0;
+    font-size: 0.72em;
+    padding: 2px 7px;
+    border-radius: 99px;
+    border: 1px solid #444;
+    color: #888;
+    background: #232323;
+}
+
+.t-wi-entry-pane-badge.active {
+    color: #55efc4;
+    border-color: rgba(85, 239, 196, 0.45);
+    background: rgba(85, 239, 196, 0.08);
+}
+
+.t-wi-entry-pane-badge.inactive {
+    color: #999;
+}
+
+.t-wi-entry-list {
+    flex: 1;
     overflow-y: auto;
     padding: 10px;
-    min-height: 150px;
-    max-height: 400px;
+    min-height: 0;
+    overscroll-behavior: contain;
 }
 
 .t-wi-empty {
@@ -2526,6 +2678,22 @@ textarea.t-input {
     .t-wi-mode-bar {
         flex-direction: column;
         gap: 10px;
+    }
+
+    .t-wi-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 8px;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .t-wi-books-pane {
+        max-height: 160px;
+    }
+
+    .t-wi-entry-pane {
+        min-height: 0;
     }
 }
 
@@ -4710,63 +4878,90 @@ textarea.t-input {
 
 .t-fav-container {
     height: 90vh;
-    width: 1100px;
+    width: 1240px;
     max-width: 95vw;
     display: flex;
     flex-direction: column;
-    background: #121212;
+    background: radial-gradient(120% 120% at 0% 0%, #2b1f12 0%, #121212 42%, #090909 100%);
     overflow: hidden;
     position: relative;
     isolation: isolate;
+    border: 1px solid rgba(191, 161, 95, 0.25);
+    box-shadow: 0 18px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 245, 222, 0.05);
+}
+
+.t-fav-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(90% 65% at 85% -10%, rgba(191, 161, 95, 0.22), transparent 55%),
+        radial-gradient(70% 45% at 8% 110%, rgba(106, 77, 43, 0.2), transparent 65%);
+    z-index: 0;
 }
 
 .t-fav-toolbar {
-    height: 60px;
-    background: #1e1e1e;
-    border-bottom: 1px solid #333;
+    min-height: 64px;
+    background: linear-gradient(180deg, rgba(27, 27, 27, 0.94), rgba(17, 17, 17, 0.9));
+    border-bottom: 1px solid rgba(191, 161, 95, 0.3);
     display: flex;
     align-items: center;
-    padding: 0 20px;
+    padding: 8px 20px;
     gap: 15px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(8px);
 }
 
 .t-fav-filter-select,
 .t-fav-search {
-    background: #2a2a2a;
-    color: #eee;
-    border: 1px solid #444;
-    padding: 6px 10px;
-    border-radius: 4px;
+    background: rgba(30, 30, 30, 0.88);
+    color: #f2efe8;
+    border: 1px solid rgba(191, 161, 95, 0.3);
+    padding: 8px 10px;
+    border-radius: 8px;
     outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.t-fav-filter-select:focus,
+.t-fav-search:focus {
+    border-color: rgba(228, 196, 120, 0.78);
+    box-shadow: 0 0 0 3px rgba(228, 196, 120, 0.16);
 }
 
 .t-fav-filter-select {
-    min-width: 120px;
+    min-width: 150px;
     cursor: pointer;
 }
 
 .t-fav-search {
-    width: 200px;
+    width: 260px;
 }
 
 /* \u7F51\u683C */
 .t-fav-grid-area {
     flex-grow: 1;
-    padding: 25px;
+    padding: 20px 22px 24px;
     overflow-y: auto;
-    background: #121212;
+    background:
+        linear-gradient(180deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.65)),
+        radial-gradient(90% 140% at 100% 0%, rgba(54, 40, 24, 0.28), transparent 70%);
+    position: relative;
+    z-index: 1;
 }
 
 .t-fav-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
 }
 
 .t-fav-empty {
     text-align: center;
-    color: #555;
+    color: #8d866f;
     margin-top: 50px;
     grid-column: 1/-1;
 }
@@ -4775,15 +4970,17 @@ textarea.t-input {
 .t-fav-card {
     position: relative;
     overflow: hidden;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    height: 180px;
+    background: linear-gradient(180deg, rgba(18, 18, 18, 0.94), rgba(10, 10, 10, 0.94));
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    border-radius: 14px;
+    aspect-ratio: 3 / 4;
+    min-height: 300px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: transform 0.28s ease, border-color 0.26s ease, box-shadow 0.26s ease;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 .t-fav-card-bg {
@@ -4793,16 +4990,46 @@ textarea.t-input {
     width: 100%;
     height: 100%;
     background-size: cover;
-    background-position: top center;
-    opacity: 0.5;
-    transition: all 0.5s ease;
+    background-position: center center;
+    opacity: 0.42;
+    filter: blur(11px) saturate(110%);
+    transform: scale(1.12);
+    transition: transform 0.45s ease, opacity 0.3s ease;
     z-index: 0;
 }
 
 .t-fav-card-bg.no-img {
-    background: linear-gradient(135deg, #1f1f1f, #2a2a2a);
+    background: radial-gradient(120% 120% at 20% 0%, #3a2d1e 0%, #201912 48%, #120f0b 100%);
     opacity: 1;
     filter: none;
+    transform: scale(1);
+}
+
+.t-fav-card-poster {
+    position: absolute;
+    inset: 8px 8px 48px;
+    border-radius: 11px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+    z-index: 1;
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.6));
+}
+
+.t-fav-card.no-img .t-fav-card-poster::before {
+    content: attr(data-initial);
+    position: absolute;
+    inset: 10% 14%;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(42px, 6vw, 86px);
+    font-weight: 700;
+    color: rgba(244, 226, 188, 0.82);
+    letter-spacing: 0.08em;
+    background: linear-gradient(160deg, rgba(96, 73, 41, 0.5), rgba(31, 24, 17, 0.66));
+    border: 1px solid rgba(191, 161, 95, 0.35);
 }
 
 .t-fav-card-overlay {
@@ -4811,65 +5038,92 @@ textarea.t-input {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.9) 100%);
-    z-index: 1;
+    background: linear-gradient(to bottom, rgba(7, 7, 7, 0.04) 24%, rgba(7, 7, 7, 0.4) 62%, rgba(7, 7, 7, 0.95) 100%);
+    z-index: 2;
     pointer-events: none;
 }
 
 .t-fav-card:hover {
-    transform: translateY(-5px);
-    border-color: #666;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+    transform: translateY(-6px);
+    border-color: rgba(239, 209, 141, 0.76);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(239, 209, 141, 0.23);
 }
 
 .t-fav-card:hover .t-fav-card-bg {
-    opacity: 0.6;
-    transform: scale(1.05);
+    opacity: 0.54;
+    transform: scale(1.2);
+}
+
+/* \u89E6\u5C4F\u8BBE\u5907\u4E0A\u7981\u7528 hover \u4E0A\u6D6E\uFF0C\u907F\u514D\u5361\u7247\u89C6\u89C9\u91CD\u53E0 */
+@media (hover: none), (pointer: coarse) {
+    .t-fav-card:hover {
+        transform: none;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    }
+
+    .t-fav-card:hover .t-fav-card-bg {
+        opacity: 0.42;
+        transform: scale(1.12);
+    }
 }
 
 .t-fav-card-content {
     position: relative;
-    z-index: 2;
-    padding: 15px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    z-index: 3;
+    padding: 14px 12px 12px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.82);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(2, 2, 2, 0.68));
+}
+
+.t-fav-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .t-fav-card-script {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: #fff;
-    margin-bottom: 2px;
+    font-weight: 700;
+    font-size: 1.02em;
+    color: #f6f2ea;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .t-fav-card-char {
-    font-size: 0.85em;
-    color: #bfa15f;
+    font-size: 0.82em;
+    color: #e5c88c;
     font-weight: 500;
     display: flex;
     align-items: center;
     gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .t-fav-card-snippet {
-    font-size: 0.85em;
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1.4;
+    font-size: 0.78em;
+    color: rgba(246, 241, 230, 0.86);
+    line-height: 1.45;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
-    margin-bottom: 8px;
-    font-style: italic;
+    margin: 8px 0 10px;
+    min-height: 3.3em;
+    font-style: normal;
 }
 
 .t-fav-card-footer {
-    font-size: 0.75em;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.72em;
+    color: rgba(234, 221, 197, 0.62);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 8px;
+    border-top: 1px solid rgba(191, 161, 95, 0.2);
+    padding-top: 7px;
 }
 
 /* \u9605\u8BFB\u5668 overlay */
@@ -5115,17 +5369,17 @@ textarea.t-input {
 /* \u5361\u7247\u590D\u9009\u6846\uFF08\u9ED8\u8BA4\u9690\u85CF\uFF09 */
 .t-fav-card-checkbox {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 11px;
+    left: 11px;
     width: 28px;
     height: 28px;
-    background: rgba(0, 0, 0, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(5, 5, 5, 0.68);
+    border: 1px solid rgba(255, 236, 201, 0.44);
     border-radius: 6px;
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 5;
+    z-index: 6;
     color: #fff;
     font-size: 1.1em;
     transition: all 0.2s ease;
@@ -5145,20 +5399,20 @@ textarea.t-input {
 
 /* \u9009\u4E2D\u72B6\u6001\u7684\u5361\u7247 */
 .t-fav-card.selected {
-    border-color: #4ade80;
-    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3), 0 8px 20px rgba(0, 0, 0, 0.4);
+    border-color: #e7ca8f;
+    box-shadow: 0 0 0 2px rgba(231, 202, 143, 0.3), 0 16px 32px rgba(0, 0, 0, 0.45);
 }
 
 .t-fav-card.selected .t-fav-card-checkbox {
-    background: rgba(74, 222, 128, 0.9);
-    border-color: #4ade80;
+    background: rgba(231, 202, 143, 0.95);
+    border-color: #e7ca8f;
     color: #000;
 }
 
 .t-fav-card.selected .t-fav-card-overlay {
     background: linear-gradient(to bottom,
-            rgba(74, 222, 128, 0.1) 0%,
-            rgba(0, 0, 0, 0.5) 50%,
+            rgba(231, 202, 143, 0.09) 0%,
+            rgba(0, 0, 0, 0.48) 48%,
             rgba(0, 0, 0, 0.9) 100%);
 }
 
@@ -5174,11 +5428,84 @@ textarea.t-input {
 
 
 .t-fav-card-chain {
-    border-color: rgba(191, 161, 95, 0.6);
+    border-color: rgba(191, 161, 95, 0.72);
 }
 
 .t-fav-card-chain .t-fav-card-overlay {
-    background: linear-gradient(to bottom, rgba(191, 161, 95, 0.08) 0%, rgba(0, 0, 0, 0.62) 52%, rgba(0, 0, 0, 0.92) 100%);
+    background: linear-gradient(to bottom, rgba(191, 161, 95, 0.07) 0%, rgba(0, 0, 0, 0.58) 50%, rgba(0, 0, 0, 0.92) 100%);
+}
+
+/* \u5BFC\u51FA\u56FE\u7247\u9009\u9879\u5F39\u5C42 */
+.t-fav-export-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 16px;
+}
+
+.t-fav-export-sheet {
+    width: min(520px, 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    background: linear-gradient(180deg, rgba(28, 22, 16, 0.96), rgba(14, 14, 14, 0.98));
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.t-fav-export-sheet-title {
+    color: #f3e6cb;
+    font-size: 1.02em;
+    font-weight: 700;
+}
+
+.t-fav-export-sheet-desc {
+    color: #c4b699;
+    font-size: 0.86em;
+    margin-bottom: 4px;
+}
+
+.t-fav-export-sheet-btn,
+.t-fav-export-sheet-cancel {
+    border: 1px solid rgba(191, 161, 95, 0.26);
+    background: rgba(24, 24, 24, 0.86);
+    color: #e8e0d2;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.t-fav-export-sheet-btn:hover,
+.t-fav-export-sheet-cancel:hover {
+    border-color: rgba(231, 202, 143, 0.5);
+    background: rgba(33, 28, 22, 0.92);
+}
+
+.t-fav-export-sheet-btn.primary {
+    border-color: rgba(231, 202, 143, 0.5);
+    background: linear-gradient(180deg, rgba(84, 64, 38, 0.65), rgba(48, 36, 21, 0.7));
+}
+
+.t-fav-export-sheet-remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #d1c4a9;
+    font-size: 0.86em;
+    padding: 4px 2px;
+}
+
+.t-fav-export-sheet-cancel {
+    text-align: center;
+    color: #b7aaa0;
 }
 
 .t-fav-chain-badge {
@@ -5196,11 +5523,39 @@ textarea.t-input {
 
 
 @media screen and (max-width: 600px) {
+    .t-fav-container {
+        width: 100vw;
+        max-width: 100vw;
+        height: 92vh;
+    }
+
     .t-fav-toolbar {
         flex-direction: column;
         height: auto;
         padding: 10px;
         align-items: stretch;
+    }
+
+    .t-fav-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .t-fav-card {
+        min-height: 230px;
+    }
+
+    .t-fav-card-poster {
+        inset: 6px 6px 44px;
+    }
+
+    .t-fav-export-sheet-backdrop {
+        padding: 10px;
+    }
+
+    .t-fav-export-sheet {
+        border-radius: 12px 12px 10px 10px;
+        padding: 14px;
     }
 
     .t-fav-search {
@@ -5229,6 +5584,7 @@ textarea.t-input {
         font-size: 1.2em;
     }
 }
+
 
 /* === debug.css === */
 /* css/debug.css - \u6781\u7B80\u4EE3\u7801\u7F16\u8F91\u5668\u98CE\u683C (\u542B\u79FB\u52A8\u7AEF\u9002\u914D) */
@@ -11364,7 +11720,7 @@ var init_logger = __esm({
 });
 
 // src/core/context.js
-import { world_info, selected_world_info } from "../../../world-info.js";
+import { world_info, selected_world_info, world_names, updateWorldInfoList } from "../../../world-info.js";
 import { power_user } from "../../../power-user.js";
 function getWorldInfoVars() {
   try {
@@ -11412,35 +11768,9 @@ async function getActiveWorldInfoEntries() {
     console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
     return [];
   }
-  const charId = ctx.characterId;
-  const activeBooks = /* @__PURE__ */ new Set();
   const wiVars = getWorldInfoVars();
-  if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
-    wiVars.selected_world_info.forEach((name) => activeBooks.add(name));
-  }
-  if (charId !== void 0 && ctx.characters && ctx.characters[charId]) {
-    const charObj = ctx.characters[charId];
-    const primary = charObj.data?.extensions?.world;
-    if (primary) activeBooks.add(primary);
-    const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
-    if (wiVars.world_info && wiVars.world_info.charLore) {
-      const loreEntry = wiVars.world_info.charLore.find((e) => e.name === fileName);
-      if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
-        loreEntry.extraBooks.forEach((name) => activeBooks.add(name));
-      }
-    }
-  }
-  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
-    activeBooks.add(ctx.chatMetadata.world_info);
-  }
-  try {
-    const personaWorld = power_user?.persona_description_lorebook;
-    if (personaWorld) {
-      activeBooks.add(personaWorld);
-    }
-  } catch (e) {
-    console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
-  }
+  const charName = getCurrentCharNameFromContext(ctx);
+  const activeBooks = collectSessionActiveBooks(ctx, wiVars, charName, true);
   const result = [];
   for (const bookName of activeBooks) {
     const bookData = await safeLoadWorldInfo(ctx, bookName);
@@ -11483,35 +11813,8 @@ async function getContextData() {
   } catch (e) {
     console.error("Titania: \u5B8F\u89E3\u6790\u5931\u8D25", e);
   }
-  const charId = ctx.characterId;
-  const activeBooks = /* @__PURE__ */ new Set();
   const wiVars = getWorldInfoVars();
-  if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
-    wiVars.selected_world_info.forEach((name) => activeBooks.add(name));
-  }
-  if (charId !== void 0 && ctx.characters && ctx.characters[charId]) {
-    const charObj = ctx.characters[charId];
-    const primary = charObj.data?.extensions?.world;
-    if (primary) activeBooks.add(primary);
-    const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
-    if (wiVars.world_info && wiVars.world_info.charLore) {
-      const loreEntry = wiVars.world_info.charLore.find((e) => e.name === fileName);
-      if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
-        loreEntry.extraBooks.forEach((name) => activeBooks.add(name));
-      }
-    }
-  }
-  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
-    activeBooks.add(ctx.chatMetadata.world_info);
-  }
-  try {
-    const personaWorld = power_user?.persona_description_lorebook;
-    if (personaWorld) {
-      activeBooks.add(personaWorld);
-    }
-  } catch (e) {
-    console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
-  }
+  const activeBooks = collectSessionActiveBooks(ctx, wiVars, data.charName, true);
   const contentParts = [];
   const extData = getExtData();
   const wiConfig = extData.worldinfo || { char_selections: {} };
@@ -11560,6 +11863,117 @@ function getChatHistory() {
     console.warn("Titania: \u83B7\u53D6\u804A\u5929\u5386\u53F2\u5931\u8D25", e);
     return [];
   }
+}
+function getCurrentCharNameFromContext(ctx) {
+  try {
+    return ctx?.substituteParams?.("{{char}}") || "Char";
+  } catch {
+    return "Char";
+  }
+}
+function getLocalAutoActiveBooks(charName) {
+  const extData = getExtData();
+  const wiConfig = extData.worldinfo || {};
+  const explicit = wiConfig.char_auto_active_books?.[charName];
+  if (Array.isArray(explicit)) return explicit;
+  const legacySelections = wiConfig.char_selections?.[charName];
+  if (legacySelections && typeof legacySelections === "object") {
+    return Object.keys(legacySelections).filter((bookName) => {
+      const selected = legacySelections[bookName];
+      return Array.isArray(selected) && selected.length > 0;
+    });
+  }
+  return [];
+}
+function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalAuto = false) {
+  const activeBooks = /* @__PURE__ */ new Set();
+  const charId = ctx.characterId;
+  if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
+    wiVars.selected_world_info.forEach((name) => activeBooks.add(name));
+  }
+  if (charId !== void 0 && ctx.characters && ctx.characters[charId]) {
+    const charObj = ctx.characters[charId];
+    const primary = charObj.data?.extensions?.world;
+    if (primary) activeBooks.add(primary);
+    const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
+    if (wiVars.world_info && wiVars.world_info.charLore) {
+      const loreEntry = wiVars.world_info.charLore.find((e) => e.name === fileName);
+      if (loreEntry && Array.isArray(loreEntry.extraBooks)) {
+        loreEntry.extraBooks.forEach((name) => activeBooks.add(name));
+      }
+    }
+  }
+  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
+    activeBooks.add(ctx.chatMetadata.world_info);
+  }
+  try {
+    const personaWorld = power_user?.persona_description_lorebook;
+    if (personaWorld) activeBooks.add(personaWorld);
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
+  }
+  if (includeLocalAuto) {
+    const localAutoBooks = getLocalAutoActiveBooks(charName);
+    localAutoBooks.forEach((name) => activeBooks.add(name));
+  }
+  return activeBooks;
+}
+function getActiveWorldBookNames() {
+  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
+  let ctx;
+  try {
+    ctx = SillyTavern.getContext();
+    if (!ctx) return [];
+  } catch (e) {
+    console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
+    return [];
+  }
+  const wiVars = getWorldInfoVars();
+  const charName = getCurrentCharNameFromContext(ctx);
+  return Array.from(collectSessionActiveBooks(ctx, wiVars, charName, true));
+}
+async function getAllWorldBookNames() {
+  try {
+    if (typeof updateWorldInfoList === "function") {
+      await updateWorldInfoList();
+    }
+    if (Array.isArray(world_names) && world_names.length > 0) {
+      return [...world_names];
+    }
+    if (Array.isArray(selected_world_info) && selected_world_info.length > 0) {
+      return [...new Set(selected_world_info)];
+    }
+    return [];
+  } catch (e) {
+    console.warn("Titania: \u83B7\u53D6\u5168\u90E8\u4E16\u754C\u4E66\u540D\u79F0\u5931\u8D25", e);
+    if (Array.isArray(world_names) && world_names.length > 0) {
+      return [...world_names];
+    }
+    return [];
+  }
+}
+async function getWorldInfoEntriesByBookName(bookName) {
+  if (!bookName || typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
+    return [];
+  }
+  let ctx;
+  try {
+    ctx = SillyTavern.getContext();
+    if (!ctx) return [];
+  } catch (e) {
+    console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
+    return [];
+  }
+  const bookData = await safeLoadWorldInfo(ctx, bookName, 1e4);
+  if (!bookData || !bookData.entries) return [];
+  return Object.values(bookData.entries).sort((a, b) => (a.order || 100) - (b.order || 100)).map((e) => ({
+    uid: e.uid,
+    comment: e.comment || `\u6761\u76EE ${e.uid}`,
+    content: e.content || "",
+    preview: (e.content || "").substring(0, 80).replace(/\n/g, " "),
+    isConstant: e.constant === true,
+    isDisabled: e.disable === true && e.enabled !== true
+  }));
 }
 var init_context = __esm({
   "src/core/context.js"() {
@@ -12775,7 +13189,15 @@ function openFavsWindow() {
   let isEditMode = false;
   let selectedIds = /* @__PURE__ */ new Set();
   let renderTaskId = 0;
-  const GRID_RENDER_CHUNK_SIZE = 36;
+  let searchDebounceTimer = null;
+  let currentMap = {};
+  let renderedCardCount = 0;
+  let loadedVisibleCount = 0;
+  let filteredIndexMap = /* @__PURE__ */ new Map();
+  const GRID_RENDER_CHUNK_SIZE = 18;
+  const INITIAL_RENDER_LIMIT = 120;
+  const LOAD_MORE_STEP = 80;
+  const SEARCH_DEBOUNCE_MS = 240;
   const charIndex = /* @__PURE__ */ new Set();
   favs.forEach((f) => {
     if (f.charName) {
@@ -12839,6 +13261,7 @@ function openFavsWindow() {
                 </div>
                 <div style="display:flex; gap:10px; flex-shrink:0;">
                     <button class="t-tool-btn" id="t-read-rename" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
+                    <button class="t-tool-btn" id="t-read-del-segment" title="\u5220\u9664\u5206\u7EC4\u6BB5\u843D" style="display:none; color:#ff9f43; border-color:rgba(255, 159, 67, 0.5);"><i class="fa-solid fa-scissors"></i></button>
                     <button class="t-tool-btn" id="t-read-img" title="\u5BFC\u51FA\u56FE\u7247"><i class="fa-solid fa-camera"></i></button>
                     <button class="t-tool-btn" id="t-read-code" title="\u590D\u5236HTML"><i class="fa-solid fa-code"></i></button>
                     <button class="t-tool-btn" id="t-read-open-window" title="\u65B0\u7A97\u53E3\u6253\u5F00(\u4E92\u52A8\u6A21\u5F0F)"><i class="fa-solid fa-up-right-from-square"></i></button>
@@ -12879,31 +13302,52 @@ function openFavsWindow() {
       $(".t-fav-card").removeClass("selected");
     }
   };
-  const buildCardElement = (item, idx, currentMap) => {
+  const getCachedSnippet = (item) => {
+    if (typeof item._snippetText === "string") return item._snippetText;
     const isChain = item?.type === "chain";
     const chainItems = Array.isArray(item?.items) ? item.items : [];
-    const chainCount = chainItems.length;
     const chainSnippetSource = isChain ? chainItems.map((seg) => {
       const instruction = String(seg?.instruction || "").trim();
       const html2 = String(seg?.html || "").trim();
       return `${instruction}
 ${html2}`;
     }).join("\n") : "";
-    const snippet = getSnippet(isChain ? chainSnippetSource || item.html : item.html);
+    item._snippetText = getSnippet(isChain ? chainSnippetSource || item.html : item.html);
+    return item._snippetText;
+  };
+  const getCachedSearchText = (item) => {
+    if (typeof item._searchText === "string") return item._searchText;
+    const snippet = getCachedSnippet(item);
+    item._searchText = [
+      String(item?.title || ""),
+      String(item?._meta?.script || ""),
+      String(item?._meta?.char || ""),
+      String(snippet || "")
+    ].join(" ").toLowerCase();
+    return item._searchText;
+  };
+  const buildCardElement = (item, idx, currentMap2) => {
+    const isChain = item?.type === "chain";
+    const chainItems = Array.isArray(item?.items) ? item.items : [];
+    const chainCount = chainItems.length;
+    const snippet = getCachedSnippet(item);
     const charName = item._meta.char;
-    let bgUrl = currentMap[charName];
+    let bgUrl = currentMap2[charName];
     if (!bgUrl) bgUrl = item.avatar;
     const bgClass = bgUrl ? "" : "no-img";
     const bgStyle = bgUrl ? `background-image: url('${bgUrl}')` : "";
+    const cardBgClass = bgUrl ? "" : "no-img";
+    const charInitial = (String(charName || "?").trim().charAt(0) || "?").toUpperCase();
     const isSelected = selectedIds.has(item.id);
     const displayDate = String(item.date || "").split(" ")[0] || "-";
     const chainBadge = isChain ? `<span class="t-fav-chain-badge">\u5267\u573A\u5206\u7EC4 \xB7 ${chainCount}\u6BB5</span>` : "";
     const card = $(`
-            <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""}" data-fav-id="${item.id}">
+            <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""} ${cardBgClass}" data-fav-id="${item.id}">
                 <div class="t-fav-card-checkbox">
                     <i class="fa-${isSelected ? "solid fa-square-check" : "regular fa-square"}"></i>
                 </div>
                 <div class="t-fav-card-bg ${bgClass}" style="${bgStyle}"></div>
+                <div class="t-fav-card-poster" style="${bgStyle}" data-initial="${escapeHtmlText(charInitial)}"></div>
                 <div class="t-fav-card-overlay"></div>
                 <div class="t-fav-card-content">
                     <div class="t-fav-card-header">
@@ -12915,24 +13359,30 @@ ${html2}`;
                 </div>
             </div>
         `);
-    card.on("click", function() {
-      if (isEditMode) {
-        const favId = item.id;
-        if (selectedIds.has(favId)) {
-          selectedIds.delete(favId);
-          $(this).removeClass("selected");
-          $(this).find(".t-fav-card-checkbox i").removeClass("fa-solid fa-square-check").addClass("fa-regular fa-square");
-        } else {
-          selectedIds.add(favId);
-          $(this).addClass("selected");
-          $(this).find(".t-fav-card-checkbox i").removeClass("fa-regular fa-square").addClass("fa-solid fa-square-check");
-        }
-        updateSelectionCount();
-      } else {
-        loadReaderItem(idx);
-      }
-    });
     return card[0];
+  };
+  const renderCardRange = (start, end, taskId) => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    if (start >= end) return;
+    let cursor = start;
+    const renderChunk = () => {
+      if (taskId !== renderTaskId) return;
+      const chunkEnd = Math.min(cursor + GRID_RENDER_CHUNK_SIZE, end);
+      const frag = document.createDocumentFragment();
+      for (let idx = cursor; idx < chunkEnd; idx++) {
+        const item = currentFilteredList[idx];
+        if (!item) continue;
+        frag.appendChild(buildCardElement(item, idx, currentMap));
+      }
+      gridEl.appendChild(frag);
+      cursor = chunkEnd;
+      renderedCardCount = Math.max(renderedCardCount, cursor);
+      if (cursor < end) {
+        requestAnimationFrame(renderChunk);
+      }
+    };
+    requestAnimationFrame(renderChunk);
   };
   const renderGrid = () => {
     const grid = $("#t-fav-grid");
@@ -12941,13 +13391,19 @@ ${html2}`;
     renderTaskId++;
     const taskId = renderTaskId;
     grid.empty();
-    const currentMap = getExtData().character_map || {};
+    renderedCardCount = 0;
+    loadedVisibleCount = 0;
+    filteredIndexMap.clear();
+    currentMap = getExtData().character_map || {};
     const targetChar = $("#t-fav-filter-char").val();
-    const search = $("#t-fav-search").val().toLowerCase();
+    const search = String($("#t-fav-search").val() || "").trim().toLowerCase();
     currentFilteredList = favs.filter((f) => {
       if (targetChar !== "\u5168\u90E8\u89D2\u8272" && f._meta.char !== targetChar) return false;
-      if (search && !f.title.toLowerCase().includes(search) && !f.html.toLowerCase().includes(search)) return false;
+      if (search && !getCachedSearchText(f).includes(search)) return false;
       return true;
+    });
+    currentFilteredList.forEach((item, idx) => {
+      filteredIndexMap.set(String(item.id), idx);
     });
     if (currentFilteredList.length === 0) {
       grid.append('<div class="t-fav-empty">\u6CA1\u6709\u627E\u5230\u76F8\u5173\u6536\u85CF</div>');
@@ -12956,23 +13412,28 @@ ${html2}`;
     if (isEditMode) {
       grid.addClass("edit-mode");
     }
-    let cursor = 0;
-    const total = currentFilteredList.length;
-    const renderChunk = () => {
-      if (taskId !== renderTaskId) return;
-      const end = Math.min(cursor + GRID_RENDER_CHUNK_SIZE, total);
-      const frag = document.createDocumentFragment();
-      for (let idx = cursor; idx < end; idx++) {
-        const item = currentFilteredList[idx];
-        frag.appendChild(buildCardElement(item, idx, currentMap));
-      }
-      gridEl.appendChild(frag);
-      cursor = end;
-      if (cursor < total) {
-        requestAnimationFrame(renderChunk);
-      }
-    };
-    renderChunk();
+    loadedVisibleCount = Math.min(currentFilteredList.length, INITIAL_RENDER_LIMIT);
+    renderCardRange(0, loadedVisibleCount, taskId);
+  };
+  const maybeLoadMoreCards = () => {
+    const areaEl = $(".t-fav-grid-area")[0];
+    if (!areaEl) return;
+    if (renderedCardCount >= currentFilteredList.length) return;
+    const nearBottom = areaEl.scrollTop + areaEl.clientHeight >= areaEl.scrollHeight - 220;
+    if (!nearBottom) return;
+    const prevLoaded = loadedVisibleCount;
+    loadedVisibleCount = Math.min(currentFilteredList.length, loadedVisibleCount + LOAD_MORE_STEP);
+    if (loadedVisibleCount <= prevLoaded) return;
+    const taskId = renderTaskId;
+    renderCardRange(prevLoaded, loadedVisibleCount, taskId);
+  };
+  const scheduleSearchRender = () => {
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer);
+    }
+    searchDebounceTimer = setTimeout(() => {
+      renderGrid();
+    }, SEARCH_DEBOUNCE_MS);
   };
   let currentViewingHtml = "";
   let currentViewingTitle = "";
@@ -12988,9 +13449,11 @@ ${html2}`;
       const chainCount = chainItems.length;
       $("#t-read-meta").text(`${item.title}\uFF08\u5267\u573A\u5206\u7EC4\uFF09`);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length} \xB7 ${chainCount} \u6BB5`);
+      $("#t-read-del-segment").show();
     } else {
       $("#t-read-meta").text(item.title);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
+      $("#t-read-del-segment").hide();
     }
     const container = document.getElementById("t-read-content");
     const { isInteractive, reasons } = detectInteractiveContent(item.html);
@@ -13020,13 +13483,37 @@ ${html2}`;
     }
     $("#t-fav-reader").addClass("show");
   };
-  $("#t-fav-filter-char, #t-fav-search").on("input change", renderGrid);
+  $("#t-fav-filter-char").on("change", renderGrid);
+  $("#t-fav-search").on("input", scheduleSearchRender);
+  $("#t-fav-search").on("change", renderGrid);
+  $(".t-fav-grid-area").on("scroll", maybeLoadMoreCards);
   $("#t-btn-img-mgr").on("click", () => {
     openCharImageManager(() => {
       renderGrid();
     });
   });
   $("#t-read-back").on("click", () => $("#t-fav-reader").removeClass("show"));
+  $("#t-fav-grid").on("click", ".t-fav-card", function() {
+    const favId = String($(this).data("fav-id"));
+    const itemIndex = filteredIndexMap.get(favId);
+    if (typeof itemIndex !== "number") return;
+    const item = currentFilteredList[itemIndex];
+    if (!item) return;
+    if (isEditMode) {
+      if (selectedIds.has(item.id)) {
+        selectedIds.delete(item.id);
+        $(this).removeClass("selected");
+        $(this).find(".t-fav-card-checkbox i").removeClass("fa-solid fa-square-check").addClass("fa-regular fa-square");
+      } else {
+        selectedIds.add(item.id);
+        $(this).addClass("selected");
+        $(this).find(".t-fav-card-checkbox i").removeClass("fa-regular fa-square").addClass("fa-solid fa-square-check");
+      }
+      updateSelectionCount();
+      return;
+    }
+    loadReaderItem(itemIndex);
+  });
   $("#t-btn-edit-mode").on("click", () => toggleEditMode(true));
   $("#t-btn-exit-edit").on("click", () => toggleEditMode(false));
   $("#t-btn-select-all").on("click", () => {
@@ -13109,7 +13596,61 @@ ${html2}`;
       if (window.toastr) toastr.warning("\u5F53\u524D\u65E0\u5185\u5BB9");
     }
   });
-  $("#t-read-img").on("click", async function() {
+  const getExportMaskUserPreference = () => {
+    const d = getExtData();
+    if (typeof d.favs_export_mask_user !== "boolean") {
+      d.favs_export_mask_user = true;
+    }
+    return d.favs_export_mask_user !== false;
+  };
+  const saveExportMaskUserPreference = (maskUser) => {
+    const d = getExtData();
+    d.favs_export_mask_user = maskUser === true;
+    saveExtData();
+  };
+  const isCompactTouchMode = () => {
+    const mobileWidth = window.matchMedia?.("(max-width: 768px)")?.matches === true;
+    const touchCapable = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    return mobileWidth || touchCapable && window.innerWidth <= 920;
+  };
+  const showExportOptionsSheet = (defaultMaskUser) => {
+    return new Promise((resolve) => {
+      $("#t-fav-export-sheet").remove();
+      const sheetHtml = `
+                <div id="t-fav-export-sheet" class="t-fav-export-sheet-backdrop">
+                    <div class="t-fav-export-sheet">
+                        <div class="t-fav-export-sheet-title">\u56FE\u7247\u5BFC\u51FA\u9009\u9879</div>
+                        <div class="t-fav-export-sheet-desc">\u8BF7\u9009\u62E9\u5BFC\u51FA\u65F6\u662F\u5426\u5BF9 User \u540D\u79F0\u6253\u7801</div>
+
+                        <button class="t-fav-export-sheet-btn primary" data-mask="1">\u5BFC\u51FA\u56FE\u7247\uFF08\u6253\u7801\uFF09</button>
+                        <button class="t-fav-export-sheet-btn" data-mask="0">\u5BFC\u51FA\u56FE\u7247\uFF08\u4E0D\u6253\u7801\uFF09</button>
+
+                        <label class="t-fav-export-sheet-remember">
+                            <input type="checkbox" id="t-fav-export-remember" ${defaultMaskUser ? "checked" : ""}>
+                            <span>\u8BB0\u4F4F\u672C\u6B21\u9009\u62E9\u4E3A\u9ED8\u8BA4</span>
+                        </label>
+
+                        <button class="t-fav-export-sheet-cancel" id="t-fav-export-cancel">\u53D6\u6D88</button>
+                    </div>
+                </div>
+            `;
+      $("#t-favs-view").append(sheetHtml);
+      const closeSheet = (payload) => {
+        $("#t-fav-export-sheet").remove();
+        resolve(payload || null);
+      };
+      $("#t-fav-export-sheet").on("click", (e) => {
+        if (e.target === e.currentTarget) closeSheet(null);
+      });
+      $("#t-fav-export-cancel").on("click", () => closeSheet(null));
+      $("#t-fav-export-sheet .t-fav-export-sheet-btn").on("click", function() {
+        const maskUser = $(this).data("mask") === 1;
+        const remember = $("#t-fav-export-remember").is(":checked");
+        closeSheet({ maskUser, remember });
+      });
+    });
+  };
+  const exportCurrentFavImage = async (maskUser) => {
     const btn = $(this);
     const originalBtnHtml = btn.html();
     let offscreen = null;
@@ -13127,11 +13668,13 @@ ${html2}`;
       if (!sourceHtml || sourceHtml.trim().length < 10) {
         throw new Error("\u5F53\u524D\u65E0\u53EF\u5BFC\u51FA\u7684\u5185\u5BB9");
       }
-      const userName = await getExpandedUserNameForMasking();
       let maskedHtml = sourceHtml;
-      if (userName && typeof userName === "string" && userName.trim()) {
-        const replacement = maskStringSameLength(userName, "\u2588");
-        maskedHtml = maskHtmlByToken(sourceHtml, userName, replacement);
+      if (maskUser) {
+        const userName = await getExpandedUserNameForMasking();
+        if (userName && typeof userName === "string" && userName.trim()) {
+          const replacement = maskStringSameLength(userName, "\u2588");
+          maskedHtml = maskHtmlByToken(sourceHtml, userName, replacement);
+        }
       }
       const onScreenZone = document.getElementById("t-read-capture-zone");
       const widthPx = Math.ceil(onScreenZone?.getBoundingClientRect?.().width || 900);
@@ -13150,7 +13693,10 @@ ${html2}`;
       link.download = `Titania_${(/* @__PURE__ */ new Date()).getTime()}.png`;
       link.href = dataUrl;
       link.click();
-      if (window.toastr) toastr.success("\u56FE\u7247\u5BFC\u51FA\u6210\u529F");
+      if (window.toastr) {
+        const modeText = maskUser ? "\u5DF2\u6253\u7801" : "\u672A\u6253\u7801";
+        toastr.success(`\u56FE\u7247\u5BFC\u51FA\u6210\u529F\uFF08${modeText}\uFF09`);
+      }
     } catch (e) {
       console.error(e);
       alert("\u5BFC\u51FA\u5931\u8D25: " + (e?.message || e) + "\n\u53EF\u80FD\u539F\u56E0\uFF1A\u8DE8\u57DF\u56FE\u7247/\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 SVG \u8F6C\u6362/\u5185\u5B58\u4E0D\u8DB3\u3002");
@@ -13161,6 +13707,29 @@ ${html2}`;
       }
       btn.prop("disabled", false).html(originalBtnHtml);
     }
+  };
+  $("#t-read-img").on("click", async function(e) {
+    const defaultMaskUser = getExportMaskUserPreference();
+    if (isCompactTouchMode()) {
+      const selected = await showExportOptionsSheet(defaultMaskUser);
+      if (!selected) return;
+      if (selected.remember) {
+        saveExportMaskUserPreference(selected.maskUser);
+      }
+      await exportCurrentFavImage.call(this, selected.maskUser);
+      return;
+    }
+    await exportCurrentFavImage.call(this, defaultMaskUser);
+  });
+  $("#t-read-img").on("contextmenu", async function(e) {
+    e.preventDefault();
+    const defaultMaskUser = getExportMaskUserPreference();
+    const selected = await showExportOptionsSheet(defaultMaskUser);
+    if (!selected) return;
+    if (selected.remember) {
+      saveExportMaskUserPreference(selected.maskUser);
+    }
+    await exportCurrentFavImage.call(this, selected.maskUser);
   });
   $("#t-read-rename").on("click", () => {
     if (!currentFavId) return;
@@ -13201,8 +13770,69 @@ ${html2}`;
       }
     }
   });
+  $("#t-read-del-segment").on("click", () => {
+    if (!currentFavId) return;
+    const currentItem = currentFilteredList[currentIndex];
+    if (!currentItem || currentItem.type !== "chain") return;
+    const chainItems = Array.isArray(currentItem.items) ? currentItem.items : [];
+    if (chainItems.length === 0) {
+      if (window.toastr) toastr.warning("\u8BE5\u5206\u7EC4\u6CA1\u6709\u53EF\u5220\u9664\u7684\u6BB5\u843D");
+      return;
+    }
+    const segmentTip = chainItems.map((seg, idx) => {
+      const round = Number(seg?.round) || idx + 1;
+      const instruction = String(seg?.instruction || "\uFF08\u65E0\u6307\u4EE4\uFF09").replace(/\s+/g, " ").trim();
+      const shortText = instruction.length > 22 ? `${instruction.slice(0, 22)}...` : instruction;
+      return `${idx + 1}. \u7B2C${round}\u6BB5 - ${shortText}`;
+    }).join("\n");
+    const input = prompt(`\u8BF7\u8F93\u5165\u8981\u5220\u9664\u7684\u6BB5\u843D\u5E8F\u53F7\uFF081-${chainItems.length}\uFF09\uFF1A
+
+${segmentTip}`);
+    if (input === null) return;
+    const removeIndex = Number(input) - 1;
+    if (!Number.isInteger(removeIndex) || removeIndex < 0 || removeIndex >= chainItems.length) {
+      if (window.toastr) toastr.warning("\u8F93\u5165\u7684\u6BB5\u843D\u5E8F\u53F7\u65E0\u6548");
+      return;
+    }
+    const target = chainItems[removeIndex];
+    const removeRound = Number(target?.round) || removeIndex + 1;
+    if (!confirm(`\u786E\u5B9A\u5220\u9664\u7B2C ${removeRound} \u6BB5\u5417\uFF1F`)) return;
+    const d = getExtData();
+    const targetFav = d.favs.find((x) => x.id === currentFavId);
+    if (!targetFav || targetFav.type !== "chain") return;
+    if (!Array.isArray(targetFav.items)) targetFav.items = [];
+    targetFav.items.splice(removeIndex, 1);
+    if (targetFav.items.length === 0) {
+      d.favs = d.favs.filter((x) => x.id !== currentFavId);
+      saveExtData();
+      favs.splice(0, favs.length, ...d.favs);
+      renderGrid();
+      if (currentFilteredList.length === 0) {
+        $("#t-fav-reader").removeClass("show");
+      } else {
+        const newIdx = Math.min(currentIndex, currentFilteredList.length - 1);
+        loadReaderItem(newIdx);
+      }
+      if (window.toastr) toastr.success("\u5DF2\u5220\u9664\u8BE5\u6BB5\uFF0C\u5206\u7EC4\u5DF2\u6E05\u7A7A\u5E76\u79FB\u9664");
+      return;
+    }
+    targetFav.html = buildChainMergedHtml(targetFav.items);
+    saveExtData();
+    const localFav = favs.find((x) => x.id === currentFavId);
+    if (localFav) {
+      localFav.items = targetFav.items;
+      localFav.html = targetFav.html;
+    }
+    loadReaderItem(currentIndex);
+    renderGrid();
+    if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u7B2C ${removeRound} \u6BB5`);
+  });
   const closeWindow = () => {
     renderTaskId++;
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = null;
+    }
     setFavsWindowOpen(false);
     $("#t-favs-view").remove();
     const $mainView = $("#t-main-view");
@@ -13428,6 +14058,27 @@ function formatTimeText(ts) {
   if (!ts) return "-";
   return new Date(ts).toLocaleTimeString("zh-CN", { hour12: false });
 }
+function getTraceSourceLabel(source) {
+  const s = String(source || "").toLowerCase();
+  if (s === "user_continuation") return "\u4E3B\u52A8\u7EED\u5199";
+  if (s === "auto_continuation") return "\u81EA\u52A8\u7EED\u5199";
+  if (s === "manual") return "\u624B\u52A8\u751F\u6210";
+  if (s === "queue") return "\u961F\u5217\u751F\u6210";
+  if (s === "preview") return "\u751F\u6210\u524D\u9884\u89C8";
+  return source || "\u672A\u77E5\u6765\u6E90";
+}
+function pickTraceBySource(traces, sourceMode) {
+  const list = Array.isArray(traces) ? traces : [];
+  const withMessages = list.filter((t) => t?.finalMessages?.messages?.length > 0);
+  if (sourceMode === "latest") return withMessages[0] || null;
+  if (sourceMode === "manual") {
+    return withMessages.find((t) => {
+      const src = String(t?.source || "").toLowerCase();
+      return src !== "user_continuation" && src !== "auto_continuation";
+    }) || null;
+  }
+  return withMessages.find((t) => String(t?.source || "").toLowerCase() === sourceMode) || null;
+}
 function getPromptSectionsFromTrace(trace) {
   const messages = trace?.finalMessages?.messages || [];
   const meta = trace?.finalMessages?.meta || {};
@@ -13526,6 +14177,13 @@ async function showDebugInfo() {
         </div>
 
         <div class="t-prompt-toolbar">
+            <select id="t-prompt-source" class="t-input t-prompt-control t-prompt-sort">
+                <option value="live">\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8</option>
+                <option value="latest">\u6700\u8FD1\u4E00\u6B21\u6784\u9020</option>
+                <option value="manual">\u4E3B\u751F\u6210\uFF08\u624B\u52A8/\u961F\u5217\uFF09</option>
+                <option value="user_continuation">\u4E3B\u52A8\u7EED\u5199</option>
+                <option value="auto_continuation">\u81EA\u52A8\u7EED\u5199</option>
+            </select>
             <select id="t-prompt-sort" class="t-input t-prompt-control t-prompt-sort">
                 <option value="order">\u6309\u6784\u9020\u987A\u5E8F</option>
                 <option value="tokens_desc">\u6309 Token\uFF08\u9AD8\u2192\u4F4E\uFF09</option>
@@ -13547,20 +14205,41 @@ async function showDebugInfo() {
   const renderPromptWindow = async () => {
     const seq = ++renderSeq;
     const $sections = $("#t-prompt-sections");
-    const $stats = $("#t-prompt-stats");
+    const sourceMode = $("#t-prompt-source").val() || "live";
     if (!buildPromptCompositionPreview2) {
       const apiModule = await Promise.resolve().then(() => (init_api(), api_exports));
       buildPromptCompositionPreview2 = apiModule.buildPromptCompositionPreview;
     }
-    $sections.html('<div class="t-prompt-empty">\u6B63\u5728\u6784\u5EFA\u751F\u6210\u524D\u63D0\u793A\u8BCD...</div>');
+    $sections.html(`<div class="t-prompt-empty">\u6B63\u5728\u52A0\u8F7D\u63D0\u793A\u8BCD\u6784\u9020\uFF08${escapeHtml2(getTraceSourceLabel(sourceMode === "live" ? "preview" : sourceMode))}\uFF09...</div>`);
+    if (sourceMode !== "live") {
+      const traces = getPromptTraceList();
+      const targetTrace = pickTraceBySource(traces, sourceMode);
+      if (!targetTrace) {
+        $sections.html('<div class="t-prompt-empty">\u672A\u627E\u5230\u5BF9\u5E94\u6765\u6E90\u7684\u63D0\u793A\u8BCD\u8BB0\u5F55\u3002</div>');
+        $("#t-prompt-total-token").text("0");
+        $("#t-prompt-section-count").text("0");
+        $("#t-prompt-trace-name").text("-");
+        $("#t-prompt-updated-at").text("-");
+        $("#t-prompt-live-state").css("color", "#777").html('<i class="fa-solid fa-circle"></i> \u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F');
+        return;
+      }
+      const target = getPromptSectionsFromTrace(targetTrace);
+      renderSectionsAndStats(target.sections, target.totalTokens, {
+        scriptName: targetTrace.scriptName || "\u672A\u77E5\u5267\u672C",
+        updatedAt: targetTrace.endedAt || targetTrace.startedAt,
+        modeText: `\u5386\u53F2\u8FFD\u8E2A \xB7 ${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.status || "unknown"}`
+      });
+      return;
+    }
     const preview = await buildPromptCompositionPreview2();
     if (seq !== renderSeq) return;
     if (!preview?.ok) {
       const traces = getPromptTraceList();
-      const fallbackTrace = traces[0] ? getPromptTraceById(traces[0].id) : null;
+      const fallbackCandidate = pickTraceBySource(traces, "manual") || pickTraceBySource(traces, "latest");
+      const fallbackTrace = fallbackCandidate ? getPromptTraceById(fallbackCandidate.id) : null;
       if (!fallbackTrace) {
         $sections.html(`<div class="t-prompt-empty">\u65E0\u6CD5\u6784\u5EFA\u751F\u6210\u524D\u63D0\u793A\u8BCD\uFF1A${escapeHtml2(preview?.error || "unknown")}</div>`);
-        $stats.html('<div class="t-prompt-empty">\u7EDF\u8BA1\u4FE1\u606F\u4E0D\u53EF\u7528\u3002</div>');
+        $("#t-prompt-stats").html('<div class="t-prompt-empty">\u7EDF\u8BA1\u4FE1\u606F\u4E0D\u53EF\u7528\u3002</div>');
         $("#t-prompt-total-token").text("0");
         $("#t-prompt-section-count").text("0");
         $("#t-prompt-trace-name").text("-");
@@ -13571,7 +14250,7 @@ async function showDebugInfo() {
       renderSectionsAndStats(fallback.sections, fallback.totalTokens, {
         scriptName: fallbackTrace.scriptName || "\u672A\u77E5\u5267\u672C",
         updatedAt: fallbackTrace.endedAt || fallbackTrace.startedAt,
-        modeText: `\u56DE\u9000\u5230\u6700\u8FD1\u8BB0\u5F55\uFF08${fallbackTrace.status || "unknown"}\uFF09`
+        modeText: `\u56DE\u9000\u8BB0\u5F55 \xB7 ${getTraceSourceLabel(fallbackTrace.source)}\uFF08${fallbackTrace.status || "unknown"}\uFF09`
       });
       return;
     }
@@ -13643,9 +14322,10 @@ async function showDebugInfo() {
                 </div>
             </div>`;
     $stats.html(statsHtml);
-    const live = $("#t-prompt-live").is(":checked");
+    const sourceMode = $("#t-prompt-source").val() || "live";
+    const live = sourceMode === "live" && $("#t-prompt-live").is(":checked");
     const liveColor = live ? "#74b9ff" : "#777";
-    const liveText = live ? ctx.modeText || "\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8" : "\u5DF2\u6682\u505C\u66F4\u65B0";
+    const liveText = live ? ctx.modeText || "\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8" : sourceMode === "live" ? "\u5DF2\u6682\u505C\u66F4\u65B0" : ctx.modeText || "\u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F";
     $("#t-prompt-total-token").text(totalTokens);
     $("#t-prompt-section-count").text(allSections.length);
     $("#t-prompt-trace-name").text(ctx.scriptName || "\u672A\u77E5\u5267\u672C");
@@ -13653,7 +14333,9 @@ async function showDebugInfo() {
     $("#t-prompt-live-state").css("color", liveColor).html(`<i class="fa-solid fa-circle"></i> ${liveText}`);
   };
   renderPromptWindow();
-  $("#t-prompt-sort, #t-prompt-high-only").on("input change", () => {
+  $("#t-prompt-sort, #t-prompt-high-only, #t-prompt-source").on("input change", () => {
+    const sourceMode = $("#t-prompt-source").val() || "live";
+    $("#t-prompt-live").prop("disabled", sourceMode !== "live");
     renderPromptWindow();
   });
   $("#t-prompt-live").on("change", () => {
@@ -13677,7 +14359,8 @@ async function showDebugInfo() {
       clearInterval(autoRefreshInterval);
       return;
     }
-    if ($("#t-prompt-live").is(":checked")) {
+    const sourceMode = $("#t-prompt-source").val() || "live";
+    if (sourceMode === "live" && $("#t-prompt-live").is(":checked")) {
       renderPromptWindow();
     }
   }, 1800);
@@ -13842,6 +14525,414 @@ var init_chatTagWhitelist = __esm({
   }
 });
 
+// src/ui/shared/apiConnectionEditor.js
+function escapeHtml3(value) {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function getById($root, id) {
+  if (!$root || !$root.length || !id) return $();
+  return $root.find(`#${id}`);
+}
+function uniqStrings(values) {
+  return [...new Set((Array.isArray(values) ? values : []).map((v) => String(v || "").trim()).filter(Boolean))];
+}
+function defaultModelFetcher({ apiUrl, apiKey }) {
+  const headers = {};
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  return fetch(`${apiUrl}/models`, { method: "GET", headers }).then((res) => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }).then((json) => {
+    const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
+    return uniqStrings(list.map((item) => typeof item === "string" ? item : item?.id));
+  });
+}
+function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
+  const type = profile?.type === "internal" ? "internal" : "custom";
+  const id = String(profile?.id || `profile_${Date.now()}_${idx}`).trim();
+  const name = String(profile?.name || (type === "internal" ? "\u8DDF\u968F\u4E3B\u8FDE\u63A5" : `\u65B9\u6848 ${idx + 1}`)).trim() || `\u65B9\u6848 ${idx + 1}`;
+  return {
+    id,
+    type,
+    readonly: profile?.readonly === true,
+    name,
+    url: String(profile?.url || "").trim(),
+    key: String(profile?.key || "").trim(),
+    model: String(profile?.model || defaultModel).trim() || defaultModel
+  };
+}
+function mapCustomProfilesToConnectionProfiles(customProfiles, defaultModel = "gpt-3.5-turbo") {
+  const list = Array.isArray(customProfiles) ? customProfiles : [];
+  return list.map((profile, idx) => normalizeProfile({
+    id: profile?.id,
+    name: profile?.name,
+    type: "custom",
+    readonly: false,
+    url: profile?.api_url,
+    key: profile?.api_key,
+    model: profile?.model || defaultModel
+  }, idx, defaultModel));
+}
+function mapConnectionProfilesToCustomProfiles(connectionProfiles, defaultModel = "gpt-3.5-turbo") {
+  return (Array.isArray(connectionProfiles) ? connectionProfiles : []).filter((profile) => String(profile?.type || "custom") !== "internal").map((profile, idx) => {
+    const normalized = normalizeProfile(profile, idx, defaultModel);
+    return {
+      id: normalized.id,
+      name: normalized.name,
+      api_url: normalized.url,
+      api_key: normalized.key,
+      model: normalized.model
+    };
+  });
+}
+function renderApiConnectionEditorHTML(options = {}) {
+  const ids = options.ids || {};
+  const labels = {
+    profile: "API \u65B9\u6848",
+    profileName: "\u65B9\u6848\u540D\u79F0",
+    apiUrl: "API \u5730\u5740",
+    apiKey: "API Key",
+    model: "\u6A21\u578B",
+    stream: "\u5F00\u542F\u6D41\u5F0F\u4F20\u8F93 (Streaming)",
+    maxTokens: "\u8F93\u51FA Token \u9650\u5236 (max_tokens)",
+    ...options.labels || {}
+  };
+  const placeholders = {
+    apiUrl: "https://api.example.com/v1",
+    apiKey: "sk-...",
+    profileName: "\u65B9\u6848\u540D\u79F0",
+    ...options.placeholders || {}
+  };
+  const classes = {
+    input: "t-input",
+    select: "t-input",
+    profileSelect: "t-input",
+    button: "t-btn",
+    ...options.classes || {}
+  };
+  const flags = {
+    showProfileName: true,
+    showDeleteProfile: true,
+    showStream: false,
+    showMaxTokens: false,
+    ...options.flags || {}
+  };
+  const values = {
+    stream: true,
+    maxTokens: 4096,
+    statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868",
+    ...options.values || {}
+  };
+  const profileNameBlock = flags.showProfileName ? `<div id="${escapeHtml3(ids.profileMetaId || "")}"><label class="t-form-label">${escapeHtml3(labels.profileName)}</label><input id="${escapeHtml3(ids.profileNameId || "")}" class="${escapeHtml3(classes.input)}" value="" placeholder="${escapeHtml3(placeholders.profileName)}"></div>` : "";
+  const streamBlock = flags.showStream ? `<div class="t-form-group"><label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="${escapeHtml3(ids.streamId || "")}" ${values.stream ? "checked" : ""} style="margin-right:10px;"> ${escapeHtml3(labels.stream)}</label></div>` : "";
+  const maxTokensBlock = flags.showMaxTokens ? `<div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                <label class="t-form-label">${escapeHtml3(labels.maxTokens)}</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="number" id="${escapeHtml3(ids.maxTokensId || "")}" class="${escapeHtml3(classes.input)}" value="${escapeHtml3(values.maxTokens)}" min="256" max="32768" step="256" style="width:120px;">
+                    <span style="font-size:0.85em; color:#888;">\u8303\u56F4: 256 ~ 32768</span>
+                </div>
+                ${values.maxTokensHintHtml || ""}
+            </div>` : "";
+  return `
+        <div class="t-form-group">
+            <label class="t-form-label">${escapeHtml3(labels.profile)}</label>
+            <div class="t-prof-header">
+                <select id="${escapeHtml3(ids.profileSelectId || "")}" class="${escapeHtml3(classes.profileSelect)}"></select>
+                <button id="${escapeHtml3(ids.profileAddId || "")}" class="${escapeHtml3(classes.button)}" title="\u65B0\u5EFA\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
+                ${flags.showDeleteProfile ? `<button id="${escapeHtml3(ids.profileDeleteId || "")}" class="${escapeHtml3(classes.button)}" title="\u5220\u9664\u5F53\u524D\u65B9\u6848" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>` : ""}
+            </div>
+            ${profileNameBlock}
+            <div id="${escapeHtml3(ids.profileTipId || "")}" style="margin-top:8px; font-size:0.8em; color:#8da5b8;"></div>
+        </div>
+        <div style="height:1px; background:#333; margin:20px 0;"></div>
+        <div id="${escapeHtml3(ids.fieldsWrapId || "")}">
+            <div class="t-form-group">
+                <label class="t-form-label">${escapeHtml3(labels.apiUrl)}</label>
+                <input id="${escapeHtml3(ids.apiUrlId || "")}" class="${escapeHtml3(classes.input)}" placeholder="${escapeHtml3(placeholders.apiUrl)}">
+                <div id="${escapeHtml3(ids.urlHintId || "")}" style="font-size:0.8em; color:#666; margin-top:5px; display:none;"><i class="fa-solid fa-link"></i> \u6B63\u5728\u8BFB\u53D6 ST \u5168\u5C40\u8BBE\u7F6E\uFF1A<span id="${escapeHtml3(ids.stUrlDisplayId || "")}"></span></div>
+            </div>
+            <div class="t-form-group"><label class="t-form-label">${escapeHtml3(labels.apiKey)}</label><input id="${escapeHtml3(ids.apiKeyId || "")}" type="password" class="${escapeHtml3(classes.input)}" placeholder="${escapeHtml3(placeholders.apiKey)}"></div>
+            <div class="t-form-group">
+                <label class="t-form-label">${escapeHtml3(labels.model)}</label>
+                <div style="display:flex; gap:10px;"><select id="${escapeHtml3(ids.modelId || "")}" class="${escapeHtml3(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml3(ids.fetchModelsId || "")}" class="${escapeHtml3(classes.button)}" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
+                <div id="${escapeHtml3(ids.statusId || "")}" style="margin-top:8px; font-size:0.8em; color:#8da5b8;">${escapeHtml3(values.statusText)}</div>
+            </div>
+        </div>
+        ${streamBlock}
+        ${maxTokensBlock}
+    `;
+}
+function createApiConnectionEditor(options = {}) {
+  const $root = options.root;
+  const ids = options.ids || {};
+  const defaultModel = String(options.defaultModel || "gpt-3.5-turbo").trim() || "gpt-3.5-turbo";
+  const normalizeUrl = typeof options.normalizeUrl === "function" ? options.normalizeUrl : normalizeApiBaseUrl;
+  const modelFetcher = typeof options.modelFetcher === "function" ? options.modelFetcher : defaultModelFetcher;
+  const autoFetchDelay = Number.isFinite(Number(options.autoFetchDelayMs)) ? Number(options.autoFetchDelayMs) : 500;
+  const createProfileIdPrefix = String(options.profileIdPrefix || "custom").trim() || "custom";
+  const statusTexts = {
+    default: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868",
+    missingUrl: "\u8BF7\u5148\u586B\u5199 API \u5730\u5740",
+    loading: "\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...",
+    empty: "\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B",
+    success: (count) => `\u5DF2\u83B7\u53D6 ${count} \u4E2A\u6A21\u578B`,
+    failed: (msg) => `\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${msg}`,
+    internalTip: "\u5F53\u524D\u4F7F\u7528 ST \u4E3B\u8FDE\u63A5\uFF0C\u8FDE\u63A5\u53C2\u6570\u7531 ST \u7BA1\u7406\u3002",
+    customTip: "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002",
+    ...options.statusTexts || {}
+  };
+  let state = {
+    profiles: (Array.isArray(options.profiles) ? options.profiles : []).map((p, idx) => normalizeProfile(p, idx, defaultModel)),
+    activeProfileId: String(options.activeProfileId || "").trim()
+  };
+  if (state.profiles.length === 0) {
+    state.profiles = [normalizeProfile({ id: `${createProfileIdPrefix}_${Date.now()}`, name: "\u65B9\u6848 1", type: "custom", url: "", key: "", model: defaultModel }, 0, defaultModel)];
+  }
+  if (!state.profiles.some((p) => p.id === state.activeProfileId)) {
+    state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
+  }
+  let autoFetchTimer = null;
+  const emitChange = () => {
+    if (typeof options.onChange === "function") {
+      options.onChange({ profiles: state.profiles.map((p) => ({ ...p })), activeProfileId: state.activeProfileId });
+    }
+  };
+  const setStatus2 = (text, tone = "muted") => {
+    const $status = getById($root, ids.statusId);
+    if (!$status.length) return;
+    $status.text(String(text || ""));
+    if ($status.hasClass("t-rewrite-status")) {
+      $status.removeClass("ok err muted warn").addClass(tone);
+    }
+  };
+  const findActiveProfileIndex = () => state.profiles.findIndex((p) => p.id === state.activeProfileId);
+  const findActiveProfile = () => state.profiles[findActiveProfileIndex()] || null;
+  const persistCurrentProfileInputs = () => {
+    const idx = findActiveProfileIndex();
+    if (idx === -1) return;
+    const profile = state.profiles[idx];
+    if (profile.type === "internal" || profile.readonly) return;
+    const $name = getById($root, ids.profileNameId);
+    const $url = getById($root, ids.apiUrlId);
+    const $key = getById($root, ids.apiKeyId);
+    const $model = getById($root, ids.modelId);
+    if ($name.length) {
+      profile.name = String($name.val() || "").trim() || profile.name;
+    }
+    if ($url.length) {
+      profile.url = normalizeUrl($url.val());
+    }
+    if ($key.length) {
+      profile.key = String($key.val() || "").trim();
+    }
+    if ($model.length) {
+      profile.model = String($model.val() || "").trim() || defaultModel;
+    }
+    emitChange();
+  };
+  const render = () => {
+    const $select = getById($root, ids.profileSelectId);
+    const $name = getById($root, ids.profileNameId);
+    const $del = getById($root, ids.profileDeleteId);
+    const $url = getById($root, ids.apiUrlId);
+    const $key = getById($root, ids.apiKeyId);
+    const $model = getById($root, ids.modelId);
+    const $urlHint = getById($root, ids.urlHintId);
+    const $stUrlDisplay = getById($root, ids.stUrlDisplayId);
+    const $tip = getById($root, ids.profileTipId);
+    $select.empty();
+    state.profiles.forEach((profile2) => {
+      $select.append(`<option value="${escapeHtml3(profile2.id)}">${escapeHtml3(profile2.name)}</option>`);
+    });
+    $select.val(state.activeProfileId);
+    const profile = findActiveProfile();
+    if (!profile) return;
+    const isInternal = profile.type === "internal";
+    if ($name.length) {
+      $name.val(profile.name || "").prop("disabled", isInternal || profile.readonly === true);
+    }
+    if ($del.length) {
+      $del.prop("disabled", isInternal || profile.readonly === true).css("opacity", isInternal || profile.readonly ? 0.5 : 1);
+    }
+    if (isInternal) {
+      $url.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
+      $key.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
+      $model.empty().append("<option selected>(ST \u8BBE\u7F6E)</option>").prop("disabled", true);
+      if ($urlHint.length) {
+        const stUrl = typeof options.getInternalUrl === "function" ? String(options.getInternalUrl() || "\u672A\u77E5") : "\u672A\u77E5";
+        if ($stUrlDisplay.length) $stUrlDisplay.text(stUrl || "\u672A\u77E5");
+        $urlHint.show();
+      }
+      if ($tip.length) $tip.text(statusTexts.internalTip);
+      setStatus2(statusTexts.default, "muted");
+      return;
+    }
+    $url.val(profile.url || "").prop("disabled", false).prop("placeholder", options.apiUrlPlaceholder || "https://api.example.com/v1");
+    $key.val(profile.key || "").prop("disabled", false).prop("placeholder", options.apiKeyPlaceholder || "sk-...");
+    $model.prop("disabled", false);
+    if ($urlHint.length) $urlHint.hide();
+    if ($tip.length) $tip.text(statusTexts.customTip);
+    const currentModel = profile.model || defaultModel;
+    if ($model.find(`option[value="${currentModel.replace(/\"/g, '\\"')}"]`).length === 0) {
+      $model.empty().append(`<option value="${escapeHtml3(currentModel)}" selected>${escapeHtml3(currentModel)}</option>`);
+    }
+    $model.val(currentModel);
+  };
+  const createProfile = () => {
+    const customCount = state.profiles.filter((p) => p.type !== "internal").length;
+    return normalizeProfile({
+      id: `${createProfileIdPrefix}_${Date.now()}`,
+      name: `\u65B0\u65B9\u6848 ${customCount + 1}`,
+      type: "custom",
+      url: "",
+      key: "",
+      model: defaultModel
+    }, customCount, defaultModel);
+  };
+  const fetchModels = async (showToast = false) => {
+    persistCurrentProfileInputs();
+    const profile = findActiveProfile();
+    const $model = getById($root, ids.modelId);
+    const $fetchBtn = getById($root, ids.fetchModelsId);
+    if (!profile || profile.type === "internal") return [];
+    const apiUrl = normalizeUrl(profile.url);
+    if (!apiUrl) {
+      $model.empty().append("<option value=''>\u8BF7\u5148\u586B\u5199 API \u5730\u5740</option>");
+      setStatus2(statusTexts.missingUrl, "warn");
+      if (showToast && window.toastr) window.toastr.warning(statusTexts.missingUrl);
+      return [];
+    }
+    try {
+      $fetchBtn.prop("disabled", true).text("...");
+      setStatus2(statusTexts.loading, "muted");
+      const models = uniqStrings(await modelFetcher({ apiUrl, apiKey: profile.key, profile, state: { ...state } }));
+      $model.empty();
+      if (!models.length) {
+        $model.append("<option value=''>\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B</option>");
+        setStatus2(statusTexts.empty, "warn");
+        return [];
+      }
+      const selectedModel = models.includes(profile.model) ? profile.model : models[0];
+      models.forEach((m) => {
+        $model.append(`<option value="${escapeHtml3(m)}" ${m === selectedModel ? "selected" : ""}>${escapeHtml3(m)}</option>`);
+      });
+      profile.model = selectedModel;
+      setStatus2(typeof statusTexts.success === "function" ? statusTexts.success(models.length) : statusTexts.success, "ok");
+      emitChange();
+      if (showToast && window.toastr) {
+        window.toastr.success(typeof statusTexts.success === "function" ? statusTexts.success(models.length) : statusTexts.success);
+      }
+      return models;
+    } catch (error) {
+      const msg = error?.message || "\u672A\u77E5\u9519\u8BEF";
+      $model.empty().append("<option value=''>\u83B7\u53D6\u5931\u8D25</option>");
+      setStatus2(typeof statusTexts.failed === "function" ? statusTexts.failed(msg) : statusTexts.failed, "err");
+      if (showToast && window.toastr) {
+        window.toastr.error(msg);
+      }
+      return [];
+    } finally {
+      $fetchBtn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+    }
+  };
+  const bind = () => {
+    const $select = getById($root, ids.profileSelectId);
+    const $add = getById($root, ids.profileAddId);
+    const $del = getById($root, ids.profileDeleteId);
+    const $fetch = getById($root, ids.fetchModelsId);
+    const $name = getById($root, ids.profileNameId);
+    const $url = getById($root, ids.apiUrlId);
+    const $key = getById($root, ids.apiKeyId);
+    const $model = getById($root, ids.modelId);
+    $select.on("change", () => {
+      persistCurrentProfileInputs();
+      state.activeProfileId = String($select.val() || "").trim();
+      render();
+      emitChange();
+      const active = findActiveProfile();
+      if (active && active.type !== "internal" && options.autoFetchOnProfileSwitch !== false) {
+        setTimeout(() => {
+          fetchModels(false);
+        }, 100);
+      }
+    });
+    $add.on("click", (e) => {
+      e.preventDefault();
+      persistCurrentProfileInputs();
+      const profile = typeof options.createProfile === "function" ? normalizeProfile(options.createProfile({ state: { ...state } }) || createProfile(), state.profiles.length, defaultModel) : createProfile();
+      state.profiles.push(profile);
+      state.activeProfileId = profile.id;
+      render();
+      emitChange();
+    });
+    $del.on("click", (e) => {
+      e.preventDefault();
+      const active = findActiveProfile();
+      if (!active || active.type === "internal" || active.readonly) return;
+      if (!window.confirm("\u5220\u9664\u65B9\u6848\uFF1F")) return;
+      state.profiles = state.profiles.filter((p) => p.id !== active.id);
+      if (state.profiles.length === 0) state.profiles.push(createProfile());
+      state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
+      render();
+      emitChange();
+    });
+    $name.on("input", persistCurrentProfileInputs);
+    $model.on("change", persistCurrentProfileInputs);
+    $url.on("input", () => {
+      persistCurrentProfileInputs();
+      if (autoFetchTimer) clearTimeout(autoFetchTimer);
+      if (options.autoFetchOnInput === true) {
+        autoFetchTimer = setTimeout(() => {
+          fetchModels(false);
+        }, autoFetchDelay);
+      }
+    });
+    $key.on("input", () => {
+      persistCurrentProfileInputs();
+      if (autoFetchTimer) clearTimeout(autoFetchTimer);
+      if (options.autoFetchOnInput === true) {
+        autoFetchTimer = setTimeout(() => {
+          fetchModels(false);
+        }, autoFetchDelay);
+      }
+    });
+    $fetch.on("click", (e) => {
+      e.preventDefault();
+      fetchModels(true);
+    });
+    render();
+    emitChange();
+  };
+  const setState = (nextState = {}) => {
+    const nextProfiles = Array.isArray(nextState.profiles) ? nextState.profiles : state.profiles;
+    state.profiles = nextProfiles.map((p, idx) => normalizeProfile(p, idx, defaultModel));
+    state.activeProfileId = String(nextState.activeProfileId || state.activeProfileId || "").trim();
+    if (!state.profiles.some((p) => p.id === state.activeProfileId)) {
+      state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
+    }
+    render();
+    emitChange();
+  };
+  const getState = () => ({
+    profiles: state.profiles.map((p) => ({ ...p })),
+    activeProfileId: state.activeProfileId
+  });
+  return {
+    bind,
+    render,
+    setState,
+    getState,
+    fetchModels,
+    persistCurrentProfileInputs,
+    setStatus: setStatus2
+  };
+}
+var init_apiConnectionEditor = __esm({
+  "src/ui/shared/apiConnectionEditor.js"() {
+    init_apiProfileRegistry();
+  }
+});
+
 // src/ui/storyOutlineWindow.js
 var storyOutlineWindow_exports = {};
 __export(storyOutlineWindow_exports, {
@@ -13997,41 +15088,6 @@ function getOutlineActiveProfile() {
   if (!selected) return null;
   return selected;
 }
-function syncOutlineProfileFields($root, options = {}) {
-  const force = options.force === true;
-  const selectedId = String($root.find("#t-outline-settings-profile-select").val() || getOutlineSelectedProfileId() || "").trim();
-  const resolved = resolveOutlineProfileSelection(selectedId);
-  const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-  if (!force) {
-    if (resolved.profileId !== getOutlineSelectedProfileId()) saveOutlineSelectedProfileId(resolved.profileId);
-  }
-  $root.find("#t-outline-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", false);
-  $root.find("#t-outline-settings-api-key").val(String(profile?.api_key || "")).prop("readonly", false);
-  $root.find("#t-outline-settings-model").val(String(profile?.model || "")).prop("disabled", false);
-  $root.find("#t-outline-settings-new-profile").prop("disabled", false);
-  $root.find("#t-outline-settings-profile-tip").text("\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002");
-}
-function renderOutlineProfileOptions($root = null) {
-  const $scope = $root && $root.length ? $root : $("#t-outline-prompt-manager");
-  if (!$scope.length) return;
-  const resolved = resolveOutlineProfileSelection();
-  const $select = $scope.find("#t-outline-settings-profile-select");
-  if (!$select.length) return;
-  $select.empty();
-  if (resolved.profiles.length === 0) {
-    $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
-    syncOutlineProfileFields($scope, { force: true });
-    return;
-  }
-  resolved.profiles.forEach((profile) => {
-    $select.append(`<option value="${escapeHtml3(profile.id)}">${escapeHtml3(profile.name)}</option>`);
-  });
-  $select.val(resolved.profileId);
-  if (resolved.profileId !== getOutlineSelectedProfileId()) {
-    saveOutlineSelectedProfileId(resolved.profileId);
-  }
-  syncOutlineProfileFields($scope, { force: true });
-}
 async function sendOutlineRequest(messages, options = {}) {
   const profile = getOutlineActiveProfile();
   if (!profile) throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u9009\u62E9 API \u65B9\u6848");
@@ -14135,7 +15191,7 @@ function ensureCssLoaded() {
     document.head.appendChild(link);
   }
 }
-function escapeHtml3(text) {
+function escapeHtml4(text) {
   const div = document.createElement("div");
   div.textContent = text == null ? "" : String(text);
   return div.innerHTML;
@@ -14352,7 +15408,7 @@ function openOpeningSourcePickerDialog(initialChatIndex = -1) {
         return `
                     <div class="t-opening-picker-item ${selected ? "active" : ""}" data-chat-index="${entry.chatIndex}">
                         <div class="t-opening-picker-head">#${entry.chatIndex + 1} \xB7 ${entry.role}</div>
-                        <div class="t-opening-picker-text">${escapeHtml3(entry.text)}</div>
+                        <div class="t-opening-picker-text">${escapeHtml4(entry.text)}</div>
                     </div>
                 `;
       }).join("");
@@ -14418,7 +15474,7 @@ function openCardOpeningPickerDialog(initialOpeningIndex = -1) {
                         <div class="t-dialog-close" id="t-opening-detail-close"><i class="fa-solid fa-times"></i></div>
                     </div>
                     <div class="t-dialog-body" style="padding: 12px;">
-                        <pre class="t-outline-raw-pre">${escapeHtml3(entry.text || "")}</pre>
+                        <pre class="t-outline-raw-pre">${escapeHtml4(entry.text || "")}</pre>
                     </div>
                     <div class="t-dialog-footer">
                         <button id="t-opening-detail-close-btn" class="t-btn">\u5173\u95ED</button>
@@ -14442,7 +15498,7 @@ function openCardOpeningPickerDialog(initialOpeningIndex = -1) {
                             <span class="t-opening-card-title">\u5F00\u573A\u767D ${entry.openingIndex + 1}</span>
                             <button class="t-btn t-btn-xs t-opening-card-detail" data-action="opening-card-detail" data-opening-index="${entry.openingIndex}"><i class="fa-solid fa-eye"></i> \u67E5\u770B\u8BE6\u60C5</button>
                         </div>
-                        <div class="t-opening-card-text">${escapeHtml3(brief)}</div>
+                        <div class="t-opening-card-text">${escapeHtml4(brief)}</div>
                     </div>
                 `;
       }).join("");
@@ -14690,29 +15746,45 @@ async function openPromptTemplateManager() {
 
                 <div class="t-set-content">
                     <div id="t-outline-page-runtime" class="t-set-page active">
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848</label>
-                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <select id="t-outline-settings-profile-select" class="t-outline-select" style="min-width:220px;"></select>
-                                <button id="t-outline-settings-new-profile" class="t-btn t-btn-xs" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
-                            </div>
-                            <div id="t-outline-settings-profile-tip" class="t-plan-tip" style="margin-top:8px;"></div>
-                        </div>
-
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u5730\u5740</label>
-                            <input id="t-outline-settings-api-url" class="t-outline-select" type="text" placeholder="https://api.example.com/v1">
-
-                            <label class="t-form-label" style="margin-top:8px;">API Key</label>
-                            <input id="t-outline-settings-api-key" class="t-outline-select" type="password" placeholder="\u53EF\u9009\uFF0C\u6309\u4F60\u7684\u670D\u52A1\u7AEF\u8981\u6C42\u586B\u5199">
-
-                            <label class="t-form-label" style="margin-top:8px;">\u6A21\u578B</label>
-                            <div style="display:flex; gap:8px; align-items:center;">
-                                <select id="t-outline-settings-model" class="t-outline-select" style="flex:1;"></select>
-                                <button id="t-outline-settings-fetch-models" class="t-btn t-btn-xs" type="button" title="\u5237\u65B0\u6A21\u578B\u5217\u8868"><i class="fa-solid fa-rotate"></i></button>
-                            </div>
-                            <div id="t-outline-settings-status" class="t-plan-tip" style="margin-top:8px;">\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868</div>
-                        </div>
+                        ${renderApiConnectionEditorHTML({
+    ids: {
+      profileSelectId: "t-outline-settings-profile-select",
+      profileAddId: "t-outline-settings-new-profile",
+      profileDeleteId: "t-outline-settings-delete-profile",
+      profileNameId: "t-outline-settings-profile-name",
+      profileMetaId: "t-outline-settings-profile-meta",
+      profileTipId: "t-outline-settings-profile-tip",
+      fieldsWrapId: "t-outline-settings-conn-fields",
+      apiUrlId: "t-outline-settings-api-url",
+      apiKeyId: "t-outline-settings-api-key",
+      modelId: "t-outline-settings-model",
+      fetchModelsId: "t-outline-settings-fetch-models",
+      statusId: "t-outline-settings-status",
+      urlHintId: "t-outline-settings-url-hint",
+      stUrlDisplayId: "t-outline-settings-st-url"
+    },
+    classes: {
+      input: "t-outline-select",
+      select: "t-outline-select",
+      profileSelect: "t-outline-select",
+      button: "t-btn t-btn-xs"
+    },
+    labels: {
+      profile: "API \u65B9\u6848",
+      profileName: "\u65B9\u6848\u540D\u79F0",
+      apiUrl: "API \u5730\u5740",
+      model: "\u6A21\u578B"
+    },
+    flags: {
+      showProfileName: true,
+      showDeleteProfile: true,
+      showStream: false,
+      showMaxTokens: false
+    },
+    values: {
+      statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868"
+    }
+  })}
 
                         <div class="t-form-group">
                             <label class="t-form-label">\u8BF7\u6C42\u884C\u4E3A</label>
@@ -14795,109 +15867,39 @@ async function openPromptTemplateManager() {
     </div>`;
   $("body").append(html);
   const close = () => $("#t-outline-prompt-manager").remove();
-  const getDraftProfiles = () => {
-    return Array.isArray(settingsDraft.customProfiles) ? settingsDraft.customProfiles : [];
-  };
-  const resolveProfileSelectionDraft = (profileId) => {
-    const profiles = getDraftProfiles();
-    if (!profiles.length) return { profileId: "", profiles };
-    const preferred = String(profileId || "").trim();
-    const selected = profiles.some((p) => p.id === preferred) ? preferred : profiles[0].id;
-    return { profileId: selected, profiles };
-  };
-  const syncProfileFieldsDraft = () => {
-    const $root = $("#t-outline-prompt-manager");
-    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
-    settingsDraft.selectedProfileId = resolved.profileId;
-    const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    $root.find("#t-outline-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", false);
-    $root.find("#t-outline-settings-api-key").val(String(profile?.api_key || "")).prop("readonly", false);
-    $root.find("#t-outline-settings-model").val(String(profile?.model || "")).prop("disabled", false);
-    $root.find("#t-outline-settings-new-profile").prop("disabled", false);
-    $root.find("#t-outline-settings-profile-tip").text("\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002");
-  };
-  const renderProfileOptionsDraft = () => {
-    const $root = $("#t-outline-prompt-manager");
-    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
-    const $select = $root.find("#t-outline-settings-profile-select");
-    $select.empty();
-    if (!resolved.profiles.length) {
-      $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
-      settingsDraft.selectedProfileId = "";
-      syncProfileFieldsDraft();
-      return;
+  const $settingsRoot = $("#t-outline-prompt-manager");
+  const outlineSettingsConnectionEditor = createApiConnectionEditor({
+    root: $settingsRoot,
+    ids: {
+      profileSelectId: "t-outline-settings-profile-select",
+      profileAddId: "t-outline-settings-new-profile",
+      profileDeleteId: "t-outline-settings-delete-profile",
+      profileNameId: "t-outline-settings-profile-name",
+      profileTipId: "t-outline-settings-profile-tip",
+      apiUrlId: "t-outline-settings-api-url",
+      apiKeyId: "t-outline-settings-api-key",
+      modelId: "t-outline-settings-model",
+      fetchModelsId: "t-outline-settings-fetch-models",
+      statusId: "t-outline-settings-status"
+    },
+    profiles: mapCustomProfilesToConnectionProfiles(settingsDraft.customProfiles, "gpt-3.5-turbo"),
+    activeProfileId: settingsDraft.selectedProfileId,
+    profileIdPrefix: "outline_custom",
+    autoFetchOnInput: false,
+    autoFetchOnProfileSwitch: false,
+    onChange: (nextState) => {
+      settingsDraft.customProfiles = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+      settingsDraft.selectedProfileId = nextState.activeProfileId;
     }
-    resolved.profiles.forEach((profile) => {
-      $select.append(`<option value="${escapeHtml3(profile.id)}">${escapeHtml3(profile.name)}</option>`);
-    });
-    settingsDraft.selectedProfileId = resolved.profileId;
-    $select.val(resolved.profileId);
-    syncProfileFieldsDraft();
-  };
-  const persistCurrentProfileInputsToDraft = () => {
-    const $root = $("#t-outline-prompt-manager");
-    const selectedId = String($root.find("#t-outline-settings-profile-select").val() || settingsDraft.selectedProfileId || "").trim();
-    const url = normalizeApiBaseUrl(String($root.find("#t-outline-settings-api-url").val() || "").trim());
-    const key = String($root.find("#t-outline-settings-api-key").val() || "").trim();
-    const model = String($root.find("#t-outline-settings-model").val() || "").trim();
-    settingsDraft.selectedProfileId = selectedId;
-    const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-    if (current) {
-      current.api_url = url;
-      current.api_key = key;
-      current.model = model;
-    }
-  };
+  });
+  outlineSettingsConnectionEditor.bind();
+  outlineSettingsConnectionEditor.render();
   const refreshOpeningSourceControlsDraft = () => {
     const mode = settingsDraft.openingSourceMode === "chat_selected" ? "chat_selected" : "auto_first";
     const whitelist = settingsDraft.chatTagWhitelist || "";
     $("#t-outline-settings-opening-source-mode").val(mode);
     $("#t-outline-settings-opening-source-pick").prop("disabled", false);
     $("#t-outline-settings-chat-tag-whitelist").val(whitelist);
-  };
-  const fetchOutlineModelListDraft = async (showToast = false) => {
-    const $root = $("#t-outline-prompt-manager");
-    const $status = $root.find("#t-outline-settings-status");
-    persistCurrentProfileInputsToDraft();
-    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
-    settingsDraft.selectedProfileId = resolved.profileId;
-    const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    const apiUrl = normalizeApiBaseUrl(String($root.find("#t-outline-settings-api-url").val() || profile?.api_url || "").trim());
-    const apiKey = String($root.find("#t-outline-settings-api-key").val() || "").trim();
-    if (!apiUrl) {
-      $status.text("\u8BF7\u5148\u586B\u5199 API \u5730\u5740").removeClass("ok err muted").addClass("warn");
-      return;
-    }
-    try {
-      $status.text("\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...").removeClass("ok err warn").addClass("muted");
-      const headers = {};
-      if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-      const res = await fetch(`${apiUrl}/models`, { method: "GET", headers });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data?.models) ? data.models : [];
-      const ids = [...new Set(rows.map((m) => String(m?.id || m || "").trim()).filter(Boolean))];
-      if (!ids.length) throw new Error("\u672A\u8FD4\u56DE\u6A21\u578B\u5217\u8868");
-      const prevModel = String($root.find("#t-outline-settings-model").val() || profile?.model || "").trim();
-      const selectedModel = ids.includes(prevModel) ? prevModel : ids[0];
-      const $model = $root.find("#t-outline-settings-model");
-      $model.empty();
-      ids.forEach((modelId) => {
-        $model.append(`<option value="${escapeHtml3(modelId)}">${escapeHtml3(modelId)}</option>`);
-      });
-      $model.val(selectedModel);
-      const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-      if (current) {
-        current.api_url = apiUrl;
-        current.api_key = apiKey;
-        current.model = selectedModel;
-      }
-      $status.text(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`).removeClass("muted warn err").addClass("ok");
-      if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`, "\u6545\u4E8B\u5927\u7EB2");
-    } catch (e) {
-      $status.text(`\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${e.message || "\u672A\u77E5\u9519\u8BEF"}`).removeClass("muted ok warn").addClass("err");
-      if (showToast && window.toastr) toastr.error(e.message || "\u6A21\u578B\u83B7\u53D6\u5931\u8D25", "\u6545\u4E8B\u5927\u7EB2");
-    }
   };
   const switchTab = (tab) => {
     const next = tab === "prompt" ? "prompt" : "runtime";
@@ -14938,7 +15940,7 @@ async function openPromptTemplateManager() {
     $("#t-prompt-var-warning").text(unique.length > 0 ? `\u672A\u77E5\u53D8\u91CF\uFF1A${unique.join(", ")}` : "");
   };
   const syncRuntimeSettings = () => {
-    renderProfileOptionsDraft();
+    outlineSettingsConnectionEditor.render();
     refreshOpeningSourceControlsDraft();
     $("#t-outline-settings-stream-enabled").prop("checked", settingsDraft.streamEnabled === true);
   };
@@ -14963,38 +15965,6 @@ async function openPromptTemplateManager() {
     syncToEditor();
     preview();
     if (window.toastr) toastr.success("\u5DF2\u6062\u590D\u5F53\u524D\u6A21\u677F\u9ED8\u8BA4\u503C", "\u6545\u4E8B\u5927\u7EB2\u8BBE\u7F6E");
-  });
-  const $settingsRoot = $("#t-outline-prompt-manager");
-  $settingsRoot.on("change", "#t-outline-settings-profile-select", () => {
-    persistCurrentProfileInputsToDraft();
-    settingsDraft.selectedProfileId = String($settingsRoot.find("#t-outline-settings-profile-select").val() || "").trim();
-    syncProfileFieldsDraft();
-  });
-  $settingsRoot.on("click", "#t-outline-settings-new-profile", (e) => {
-    e.preventDefault();
-    persistCurrentProfileInputsToDraft();
-    const nextName = `\u65B9\u6848 ${settingsDraft.customProfiles.length + 1}`;
-    const created = {
-      id: `outline_custom_${Date.now()}`,
-      name: nextName,
-      api_url: String($settingsRoot.find("#t-outline-settings-api-url").val() || "").trim(),
-      api_key: String($settingsRoot.find("#t-outline-settings-api-key").val() || "").trim(),
-      model: String($settingsRoot.find("#t-outline-settings-model").val() || "").trim()
-    };
-    settingsDraft.customProfiles.push(created);
-    settingsDraft.selectedProfileId = created.id;
-    renderProfileOptionsDraft();
-    if (window.toastr) toastr.success(`\u5DF2\u65B0\u5EFA\u65B9\u6848\uFF1A${created.name}`, "\u6545\u4E8B\u5927\u7EB2");
-  });
-  $settingsRoot.on("input", "#t-outline-settings-api-url, #t-outline-settings-api-key", () => {
-    persistCurrentProfileInputsToDraft();
-  });
-  $settingsRoot.on("change", "#t-outline-settings-model", () => {
-    persistCurrentProfileInputsToDraft();
-  });
-  $settingsRoot.on("click", "#t-outline-settings-fetch-models", async (e) => {
-    e.preventDefault();
-    await fetchOutlineModelListDraft(true);
   });
   $("#t-outline-settings-opening-source-mode").on("change", function() {
     const mode = String($(this).val() || "auto_first") === "chat_selected" ? "chat_selected" : "auto_first";
@@ -15024,7 +15994,10 @@ async function openPromptTemplateManager() {
   $("#t-prompt-manager-close").on("click", close);
   $("#t-prompt-manager-save-btn").on("click", () => {
     syncFromEditor();
-    persistCurrentProfileInputsToDraft();
+    outlineSettingsConnectionEditor.persistCurrentProfileInputs();
+    const nextState = outlineSettingsConnectionEditor.getState();
+    settingsDraft.customProfiles = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+    settingsDraft.selectedProfileId = nextState.activeProfileId;
     saveOutlineSelectedProfileId(settingsDraft.selectedProfileId);
     saveOutlineCustomProfiles(settingsDraft.customProfiles);
     setOpeningSourceMode(settingsDraft.openingSourceMode);
@@ -15367,9 +16340,9 @@ function openPlanCreationDialog() {
             <div class="t-dialog-body" style="padding: 12px;">
                 <div class="t-plan-tip" style="font-size:13px; margin-bottom:10px;">\u521B\u5EFA\u540E\u4F1A\u76F4\u63A5\u8FDB\u5165\u300C\u5927\u7EB2\u751F\u6210\u300D\u7F16\u8F91\u9875\u3002</div>
                 <label class="t-outline-label">\u65B9\u6848\u540D\u79F0</label>
-                <input id="t-create-plan-name" class="t-outline-input" value="${escapeHtml3(defaultPlanName)}" />
+                <input id="t-create-plan-name" class="t-outline-input" value="${escapeHtml4(defaultPlanName)}" />
                 <label class="t-outline-label" style="margin-top:10px;">\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09</label>
-                <textarea id="t-create-plan-story" class="t-outline-story-input" rows="4" placeholder="\u53EF\u5148\u5199\u4E00\u4E2A\u65B9\u5411\uFF0C\u540E\u7EED\u4ECD\u53EF\u968F\u65F6\u4FEE\u6539">${escapeHtml3(draftStoryInput)}</textarea>
+                <textarea id="t-create-plan-story" class="t-outline-story-input" rows="4" placeholder="\u53EF\u5148\u5199\u4E00\u4E2A\u65B9\u5411\uFF0C\u540E\u7EED\u4ECD\u53EF\u968F\u65F6\u4FEE\u6539">${escapeHtml4(draftStoryInput)}</textarea>
                 <div class="t-plan-tip" style="margin-top:8px;">\u63D0\u793A\uFF1A\u5982\u679C\u7559\u7A7A\uFF0C\u4F1A\u521B\u5EFA\u4E00\u4E2A\u7A7A\u767D\u65B9\u6848\u3002</div>
                 <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
                     <button id="t-create-plan-cancel" class="t-btn">\u53D6\u6D88</button>
@@ -15626,11 +16599,11 @@ function renderSceneHubWindow() {
         <div class="t-scene-hub-item ${row.used ? "used" : ""} ${sceneHubSelectedKey === row.key ? "active" : ""}" data-scene-key="${row.key}">
             <div class="t-scene-hub-head">
                 <span class="t-scene-hub-no">#${row.number}</span>
-                <span class="t-scene-hub-plan">${escapeHtml3(row.planName)} / ${escapeHtml3(row.itemTitle)}</span>
+                <span class="t-scene-hub-plan">${escapeHtml4(row.planName)} / ${escapeHtml4(row.itemTitle)}</span>
                 ${row.used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}
             </div>
-            <div class="t-scene-hub-meta">${escapeHtml3(row.scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml3(row.scene.scene_location || "\u672A\u8BBE\u5730\u70B9")}</div>
-            <div class="t-scene-hub-text">${escapeHtml3(row.scene.sendable_prompt || row.scene.key_beats || "(\u7A7A)")}</div>
+            <div class="t-scene-hub-meta">${escapeHtml4(row.scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml4(row.scene.scene_location || "\u672A\u8BBE\u5730\u70B9")}</div>
+            <div class="t-scene-hub-text">${escapeHtml4(row.scene.sendable_prompt || row.scene.key_beats || "(\u7A7A)")}</div>
         </div>
     `).join("");
   $list.html(html);
@@ -15738,10 +16711,10 @@ function renderPlanDetailCarousel(plan) {
   });
   const sceneBlocks = sortedScenes.map(({ scene, sceneIndex, used }) => `
         <div class="t-plan-scene ${used ? "used" : ""}">
-            <div class="t-plan-scene-head ${used ? "used" : ""}">\u573A\u666F ${scene.scene_index} \xB7 ${escapeHtml3(scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml3(scene.scene_location || "\u672A\u8BBE\u5730\u70B9")} ${used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u76EE\u6807</b> ${escapeHtml3(scene.scene_goal || "(\u7A7A)")}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u51B2\u7A81</b> ${escapeHtml3(scene.conflict || "(\u7A7A)")}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u5173\u952E\u8282\u70B9</b><br>${escapeHtml3(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</div>
+            <div class="t-plan-scene-head ${used ? "used" : ""}">\u573A\u666F ${scene.scene_index} \xB7 ${escapeHtml4(scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml4(scene.scene_location || "\u672A\u8BBE\u5730\u70B9")} ${used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}</div>
+            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u76EE\u6807</b> ${escapeHtml4(scene.scene_goal || "(\u7A7A)")}</div>
+            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u51B2\u7A81</b> ${escapeHtml4(scene.conflict || "(\u7A7A)")}</div>
+            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u5173\u952E\u8282\u70B9</b><br>${escapeHtml4(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</div>
         </div>
     `).join("");
   if (!item) return '<div class="t-plan-empty">\u8BE5\u65B9\u6848\u4E3A\u7A7A</div>';
@@ -15751,9 +16724,9 @@ function renderPlanDetailCarousel(plan) {
             <div class="t-plan-item-view" data-plan-id="${plan.id}">
                 <div class="t-plan-item-pager">${itemCursor + 1} / ${items.length}</div>
                 <div class="t-plan-item-block">
-                    <div class="t-plan-item-head">#${item.index} [${escapeHtml3(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml3(item.title || "\u672A\u547D\u540D")}</div>
-                    <div class="t-plan-item-text">${escapeHtml3(item.plot || "(\u7A7A)")}</div>
-                    ${item.foreshadowing ? `<div class="t-plan-item-foreshadow">\u4F0F\u7B14\uFF1A${escapeHtml3(item.foreshadowing)}</div>` : ""}
+                    <div class="t-plan-item-head">#${item.index} [${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml4(item.title || "\u672A\u547D\u540D")}</div>
+                    <div class="t-plan-item-text">${escapeHtml4(item.plot || "(\u7A7A)")}</div>
+                    ${item.foreshadowing ? `<div class="t-plan-item-foreshadow">\u4F0F\u7B14\uFF1A${escapeHtml4(item.foreshadowing)}</div>` : ""}
                     <div class="t-plan-scenes-wrap">${sceneBlocks || '<div class="t-plan-scene-empty">\u6682\u65E0\u573A\u666F\u7EC6\u7EB2</div>'}</div>
                 </div>
             </div>
@@ -15834,7 +16807,7 @@ function renderPlanHub() {
             <div class="t-plan-accordion-item ${active ? "expanded" : ""}" data-plan-id="${plan.id}">
                 <div class="t-plan-accordion-head" data-action="select-plan" data-plan-id="${plan.id}">
                     <div class="t-plan-accordion-main">
-                        <div class="t-plan-name">${escapeHtml3(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
+                        <div class="t-plan-name">${escapeHtml4(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
                         <div class="t-plan-meta">${timeText} \xB7 ${items.length} \u6761</div>
                         <div class="t-plan-tip">${isSource ? "\u5F53\u524D\u7EC6\u7EB2\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
                     </div>
@@ -15862,11 +16835,11 @@ function showPlanInstructionDialog(plan) {
     <div id="t-outline-plan-instruction-dialog" class="t-dialog-overlay">
         <div class="t-dialog-box" style="max-width: 780px; max-height: 82vh;">
             <div class="t-dialog-header">
-                <span><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4 \xB7 ${escapeHtml3(planName)}</span>
+                <span><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4 \xB7 ${escapeHtml4(planName)}</span>
                 <div class="t-dialog-close" id="t-plan-instruction-close"><i class="fa-solid fa-times"></i></div>
             </div>
             <div class="t-dialog-body" style="padding: 12px;">
-                <pre class="t-outline-raw-pre">${escapeHtml3(instructionText || "\uFF08\u65E0\uFF09")}</pre>
+                <pre class="t-outline-raw-pre">${escapeHtml4(instructionText || "\uFF08\u65E0\uFF09")}</pre>
             </div>
             <div class="t-dialog-footer">
                 <button id="t-plan-instruction-close-btn" class="t-btn">\u5173\u95ED</button>
@@ -15953,7 +16926,7 @@ function showRawResponseDialog(rawContent, options = {}) {
   } = options || {};
   const historyOptions = rawResponseHistory.map((entry, idx) => {
     const label = `${idx + 1}. ${entry.typeLabel} \xB7 ${entry.charName || "\u672A\u547D\u540D\u89D2\u8272"} \xB7 ${formatRawHistoryTime(entry.createdAt)}`;
-    return `<option value="${escapeHtml3(entry.id)}">${escapeHtml3(label)}</option>`;
+    return `<option value="${escapeHtml4(entry.id)}">${escapeHtml4(label)}</option>`;
   }).join("");
   const defaultContent = String(rawContent || lastRawResponse || rawResponseHistory[0]?.content || "");
   $("#t-outline-raw-dialog").remove();
@@ -15961,7 +16934,7 @@ function showRawResponseDialog(rawContent, options = {}) {
     <div id="t-outline-raw-dialog" class="t-dialog-overlay">
         <div class="t-dialog-box" style="max-width: 820px; max-height: 82vh;">
             <div class="t-dialog-header">
-                <span><i class="fa-solid fa-code"></i> ${escapeHtml3(title)}</span>
+                <span><i class="fa-solid fa-code"></i> ${escapeHtml4(title)}</span>
                 <div class="t-dialog-close" id="t-outline-raw-close"><i class="fa-solid fa-times"></i></div>
             </div>
             <div class="t-dialog-body" style="padding: 12px;">
@@ -15978,11 +16951,11 @@ function showRawResponseDialog(rawContent, options = {}) {
                         <button id="t-outline-export-raw-history" class="t-btn t-btn-xs"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA\u5386\u53F2</button>
                     </div>
                 </div>
-                ${editable ? `<textarea id="t-outline-raw-editor" class="t-outline-raw-editor">${escapeHtml3(defaultContent)}</textarea>` : `<pre class="t-outline-raw-pre">${escapeHtml3(defaultContent || "(\u7A7A)")}</pre>`}
-                ${parseHint ? `<div class="t-outline-raw-hint">${escapeHtml3(parseHint)}</div>` : ""}
+                ${editable ? `<textarea id="t-outline-raw-editor" class="t-outline-raw-editor">${escapeHtml4(defaultContent)}</textarea>` : `<pre class="t-outline-raw-pre">${escapeHtml4(defaultContent || "(\u7A7A)")}</pre>`}
+                ${parseHint ? `<div class="t-outline-raw-hint">${escapeHtml4(parseHint)}</div>` : ""}
             </div>
             <div class="t-dialog-footer">
-                ${editable ? `<button id="t-outline-raw-reparse" class="t-btn t-btn-primary">${escapeHtml3(parseButtonLabel)}</button>` : ""}
+                ${editable ? `<button id="t-outline-raw-reparse" class="t-btn t-btn-primary">${escapeHtml4(parseButtonLabel)}</button>` : ""}
                 <button id="t-outline-raw-close-btn" class="t-btn">\u5173\u95ED</button>
             </div>
         </div>
@@ -16148,22 +17121,22 @@ function renderRows() {
     const sceneRows = scenes.length > 0 ? scenes.map((scene, sceneIdx) => `
                 <tr data-plot-index="${idx}" data-scene-index="${sceneIdx}">
                     <td class="t-scene-col-index">${scene.scene_index}</td>
-                    <td>${escapeHtml3(scene.scene_time || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.scene_location || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.scene_goal || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.conflict || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</td>
-                    <td>${escapeHtml3(scene.sendable_prompt || "(\u7A7A)")}</td>
-                    <td>${escapeHtml3(scene.notes || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.scene_time || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.scene_location || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.scene_goal || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.conflict || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</td>
+                    <td>${escapeHtml4(scene.sendable_prompt || "(\u7A7A)")}</td>
+                    <td>${escapeHtml4(scene.notes || "(\u7A7A)")}</td>
                 </tr>
             `).join("") : `<tr><td colspan="8" class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\uFF0C\u70B9\u51FB\u201C\u7EC6\u7EB2\u751F\u6210\u201D</td></tr>`;
     return `
             <tr data-index="${idx}">
                 <td class="t-outline-col-index">${item.index}</td>
-                <td data-label="\u65F6\u95F4" data-edit-field="time"><div class="t-cell-text">${escapeHtml3(item.time || "(\u7A7A)")}</div></td>
-                <td data-label="\u6807\u9898" data-edit-field="title"><div class="t-cell-text">${escapeHtml3(item.title || "(\u7A7A)")}</div></td>
-                <td data-label="\u60C5\u8282" data-edit-field="plot"><div class="t-cell-text t-cell-long">${escapeHtml3(getBriefText(item.plot, 70))}</div></td>
-                <td data-label="\u4F0F\u7B14" data-edit-field="foreshadowing"><div class="t-cell-text t-cell-long">${escapeHtml3(getBriefText(item.foreshadowing, 52))}</div></td>
+                <td data-label="\u65F6\u95F4" data-edit-field="time"><div class="t-cell-text">${escapeHtml4(item.time || "(\u7A7A)")}</div></td>
+                <td data-label="\u6807\u9898" data-edit-field="title"><div class="t-cell-text">${escapeHtml4(item.title || "(\u7A7A)")}</div></td>
+                <td data-label="\u60C5\u8282" data-edit-field="plot"><div class="t-cell-text t-cell-long">${escapeHtml4(getBriefText(item.plot, 70))}</div></td>
+                <td data-label="\u4F0F\u7B14" data-edit-field="foreshadowing"><div class="t-cell-text t-cell-long">${escapeHtml4(getBriefText(item.foreshadowing, 52))}</div></td>
                 <td data-label="\u64CD\u4F5C" class="t-outline-op-indicator" title="\u70B9\u51FB\u884C\u5C55\u5F00\u64CD\u4F5C">
                     <i class="fa-solid ${selectedRowIndex === idx ? "fa-chevron-up" : "fa-chevron-down"}"></i>
                 </td>
@@ -16235,25 +17208,25 @@ function renderSceneEditorPage() {
         <div class="t-scene-page-card" data-scene-index="${sceneIdx}">
             <div class="t-scene-page-title">\u573A\u666F ${scene.scene_index}</div>
             <label>\u65F6\u95F4</label>
-            <input class="t-outline-input" data-scene-page-field="scene_time" value="${escapeHtml3(scene.scene_time)}">
+            <input class="t-outline-input" data-scene-page-field="scene_time" value="${escapeHtml4(scene.scene_time)}">
             <label>\u5730\u70B9</label>
-            <input class="t-outline-input" data-scene-page-field="scene_location" value="${escapeHtml3(scene.scene_location)}">
+            <input class="t-outline-input" data-scene-page-field="scene_location" value="${escapeHtml4(scene.scene_location)}">
             <label>\u76EE\u6807</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="scene_goal">${escapeHtml3(scene.scene_goal)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="scene_goal">${escapeHtml4(scene.scene_goal)}</textarea>
             <label>\u51B2\u7A81</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="conflict">${escapeHtml3(scene.conflict)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="conflict">${escapeHtml4(scene.conflict)}</textarea>
             <label>\u5173\u952E\u8282\u70B9</label>
-            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="key_beats">${escapeHtml3(scene.key_beats)}</textarea>
+            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="key_beats">${escapeHtml4(scene.key_beats)}</textarea>
             <label>\u53D1\u9001\u6458\u8981</label>
-            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="sendable_prompt">${escapeHtml3(scene.sendable_prompt)}</textarea>
+            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="sendable_prompt">${escapeHtml4(scene.sendable_prompt)}</textarea>
             <label>\u5907\u6CE8</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="notes">${escapeHtml3(scene.notes)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="notes">${escapeHtml4(scene.notes)}</textarea>
             <button class="t-btn t-btn-xs" data-action="scene-page-delete" data-scene-index="${sceneIdx}" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u573A\u666F</button>
         </div>
     `).join("") || '<div class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\u573A\u666F\uFF0C\u70B9\u51FB\u65B0\u589E\u573A\u666F</div>';
   $container.html(`
         <div class="t-scene-page-head">
-            <div class="t-scene-page-main">#${item.index} [${escapeHtml3(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml3(item.title || "\u672A\u547D\u540D")}</div>
+            <div class="t-scene-page-main">#${item.index} [${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml4(item.title || "\u672A\u547D\u540D")}</div>
             <div class="t-scene-page-nav">
                 <button class="t-btn t-btn-xs" data-action="scene-page-prev"><i class="fa-solid fa-chevron-left"></i> \u4E0A\u4E00\u6761</button>
                 <button class="t-btn t-btn-xs" data-action="scene-page-next">\u4E0B\u4E00\u6761 <i class="fa-solid fa-chevron-right"></i></button>
@@ -16294,11 +17267,11 @@ function renderMobileCards() {
             <div class="t-outline-mobile-card" data-index="${idx}">
                 <div class="t-outline-mobile-head">
                     <span class="idx">#${item.index}</span>
-                    <span class="time">${escapeHtml3(item.time || "\u672A\u8BBE\u65F6\u95F4")}</span>
+                    <span class="time">${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}</span>
                     <span class="scene-count">\u7EC6\u7EB2 ${sceneCount}</span>
                 </div>
-                <div class="t-outline-mobile-title">${escapeHtml3(item.title || "\u672A\u547D\u540D\u6807\u9898")}</div>
-                <div class="t-outline-mobile-plot">${escapeHtml3(getBriefText(item.plot))}</div>
+                <div class="t-outline-mobile-title">${escapeHtml4(item.title || "\u672A\u547D\u540D\u6807\u9898")}</div>
+                <div class="t-outline-mobile-plot">${escapeHtml4(getBriefText(item.plot))}</div>
             </div>
         `;
   }).join("");
@@ -16352,13 +17325,13 @@ function renderDesktopEditor(index, focusField = "") {
         </div>
         <div class="t-desk-editor-body">
             <label>\u65F6\u95F4</label>
-            <input id="t-desk-field-time" class="t-outline-input" value="${escapeHtml3(item.time)}">
+            <input id="t-desk-field-time" class="t-outline-input" value="${escapeHtml4(item.time)}">
             <label>\u6807\u9898</label>
-            <input id="t-desk-field-title" class="t-outline-input" value="${escapeHtml3(item.title)}">
+            <input id="t-desk-field-title" class="t-outline-input" value="${escapeHtml4(item.title)}">
             <label>\u60C5\u8282</label>
-            <textarea id="t-desk-field-plot" class="t-outline-textarea" rows="4">${escapeHtml3(item.plot)}</textarea>
+            <textarea id="t-desk-field-plot" class="t-outline-textarea" rows="4">${escapeHtml4(item.plot)}</textarea>
             <label>\u4F0F\u7B14</label>
-            <textarea id="t-desk-field-foreshadowing" class="t-outline-textarea" rows="3">${escapeHtml3(item.foreshadowing)}</textarea>
+            <textarea id="t-desk-field-foreshadowing" class="t-outline-textarea" rows="3">${escapeHtml4(item.foreshadowing)}</textarea>
             <div class="t-outline-empty" style="margin-top:6px;">\u7EC6\u7EB2\u7F16\u8F91\u8BF7\u5207\u6362\u5230\u4E0A\u65B9\u201C\u7EC6\u7EB2\u7F16\u8F91\u201D\u9875</div>
         </div>
         <div class="t-desk-editor-actions">
@@ -16420,19 +17393,19 @@ function renderMobileDrawerScenes(index) {
         <div class="t-mobile-scene-card" data-scene-index="${sceneIndex}">
             <div class="t-mobile-scene-title">\u573A\u666F ${scene.scene_index}</div>
             <label>\u65F6\u95F4</label>
-            <input class="t-outline-input" data-mobile-scene-field="scene_time" value="${escapeHtml3(scene.scene_time)}">
+            <input class="t-outline-input" data-mobile-scene-field="scene_time" value="${escapeHtml4(scene.scene_time)}">
             <label>\u5730\u70B9</label>
-            <input class="t-outline-input" data-mobile-scene-field="scene_location" value="${escapeHtml3(scene.scene_location)}">
+            <input class="t-outline-input" data-mobile-scene-field="scene_location" value="${escapeHtml4(scene.scene_location)}">
             <label>\u76EE\u6807</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="scene_goal">${escapeHtml3(scene.scene_goal)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="scene_goal">${escapeHtml4(scene.scene_goal)}</textarea>
             <label>\u51B2\u7A81</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="conflict">${escapeHtml3(scene.conflict)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="conflict">${escapeHtml4(scene.conflict)}</textarea>
             <label>\u5173\u952E\u8282\u70B9</label>
-            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="key_beats">${escapeHtml3(scene.key_beats)}</textarea>
+            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="key_beats">${escapeHtml4(scene.key_beats)}</textarea>
             <label>\u53D1\u9001\u6307\u4EE4</label>
-            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="sendable_prompt">${escapeHtml3(scene.sendable_prompt)}</textarea>
+            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="sendable_prompt">${escapeHtml4(scene.sendable_prompt)}</textarea>
             <label>\u5907\u6CE8</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="notes">${escapeHtml3(scene.notes)}</textarea>
+            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="notes">${escapeHtml4(scene.notes)}</textarea>
             <div class="t-mobile-scene-actions">
                 <button class="t-btn t-btn-xs" data-action="mobile-delete-scene" data-scene-index="${sceneIndex}" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u573A\u666F</button>
             </div>
@@ -16956,8 +17929,8 @@ function openStoryOutlineWindow() {
             </div>
             <div class="t-window-body t-outline-body">
                 <div id="t-outline-top" class="t-outline-top">
-                    <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml3(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
-                    <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml3(draft.storyInput)}</textarea>
+                    <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml4(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
+                    <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml4(draft.storyInput)}</textarea>
                     <div class="t-outline-actions">
                         <div class="t-outline-primary-actions">
                             <button id="t-outline-generate" class="t-btn t-btn-primary">
@@ -16977,7 +17950,7 @@ function openStoryOutlineWindow() {
                 <div class="t-outline-nav">
                     <div class="t-outline-nav-right">
                         <div id="t-outline-plan-name-wrap" class="t-plan-name-wrap">
-                            <input id="t-outline-plan-name" class="t-outline-plan-name is-readonly" placeholder="${escapeHtml3(defaultPlanName)}" readonly>
+                            <input id="t-outline-plan-name" class="t-outline-plan-name is-readonly" placeholder="${escapeHtml4(defaultPlanName)}" readonly>
                             <button id="t-outline-plan-rename-trigger" class="t-btn t-btn-xs" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
                             <button id="t-outline-plan-rename-cancel" class="t-btn t-btn-xs" title="\u53D6\u6D88" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
                             <button id="t-outline-plan-rename-confirm" class="t-btn t-btn-xs t-btn-primary" title="\u786E\u8BA4" style="display:none;"><i class="fa-solid fa-check"></i></button>
@@ -17074,7 +18047,6 @@ function openStoryOutlineWindow() {
     renderRows();
   }
   bindEvents();
-  renderOutlineProfileOptions();
   renderPlanHub();
   showOutlineView(plans.length > 0 ? "hub" : "editor");
   refreshOutlineOpeningSourceControls();
@@ -17087,6 +18059,7 @@ var init_storyOutlineWindow = __esm({
     init_defaults();
     init_storage();
     init_chatTagWhitelist();
+    init_apiConnectionEditor();
     outlineItems = [];
     lastRawResponse = "";
     rawResponseHistory = [];
@@ -17149,7 +18122,7 @@ function isEnabled() {
   const data = getExtData();
   return data?.rewrite_entry?.enabled === true;
 }
-function escapeHtml4(text) {
+function escapeHtml5(text) {
   return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function normalizeChatEndpoint(inputUrl) {
@@ -17413,9 +18386,9 @@ function renderDiffRows(rows = []) {
     return;
   }
   const html = lastDiffRows.map((item, idx) => {
-    const before = escapeHtml4(item.before || "");
-    const after = escapeHtml4(item.after || "");
-    const ruleHint = escapeHtml4(item.ruleHint || "");
+    const before = escapeHtml5(item.before || "");
+    const after = escapeHtml5(item.after || "");
+    const ruleHint = escapeHtml5(item.ruleHint || "");
     return `
             <div class="t-rewrite-diff-row">
                 <div class="t-rewrite-diff-cell t-rewrite-diff-before">
@@ -17488,14 +18461,14 @@ function renderLiveHistory() {
   const html = liveResponseHistory.map((item) => {
     const active = String(item.text || "") === String(lastRawResponseText || "");
     const streamText = item.stream ? "\u6D41\u5F0F" : "\u975E\u6D41\u5F0F";
-    const modelText = item.model ? ` \xB7 ${escapeHtml4(item.model)}` : "";
+    const modelText = item.model ? ` \xB7 ${escapeHtml5(item.model)}` : "";
     return `
-            <div class="t-rewrite-live-history-item ${active ? "active" : ""}" data-history-id="${escapeHtml4(item.id)}">
+            <div class="t-rewrite-live-history-item ${active ? "active" : ""}" data-history-id="${escapeHtml5(item.id)}">
                 <div class="t-rewrite-live-history-head">
-                    <span>${escapeHtml4(formatHistoryTime(item.at))} \xB7 ${escapeHtml4(item.source)} \xB7 ${escapeHtml4(item.phase)} \xB7 ${streamText}${modelText}</span>
+                    <span>${escapeHtml5(formatHistoryTime(item.at))} \xB7 ${escapeHtml5(item.source)} \xB7 ${escapeHtml5(item.phase)} \xB7 ${streamText}${modelText}</span>
                     <span>${item.chars} chars</span>
                 </div>
-                <div class="t-rewrite-live-history-preview">${escapeHtml4(makeHistoryPreview(item.text))}</div>
+                <div class="t-rewrite-live-history-preview">${escapeHtml5(makeHistoryPreview(item.text))}</div>
             </div>
         `;
   }).join("");
@@ -18226,8 +19199,8 @@ function renderSettingsRules(rows) {
   const html = rows.map((rule, idx) => `
         <div class="t-rewrite-rule-row" data-rule-idx="${idx}">
             <div class="t-rewrite-rule-no">#${idx + 1}</div>
-            <input class="text_pole t-rewrite-rule-anchor" type="text" value="${escapeHtml4(rule.anchor || "")}" placeholder="\u4E3B\u8BCD\u5217\u8868\uFF08\u9017\u53F7\u5206\u9694\uFF09">
-            <input class="text_pole t-rewrite-rule-extras" type="text" value="${escapeHtml4((rule.extras || []).join(", "))}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u547D\u4E2D\u4EFB\u610F\u4E00\u4E2A\uFF09" maxlength="500">
+            <input class="text_pole t-rewrite-rule-anchor" type="text" value="${escapeHtml5(rule.anchor || "")}" placeholder="\u4E3B\u8BCD\u5217\u8868\uFF08\u9017\u53F7\u5206\u9694\uFF09">
+            <input class="text_pole t-rewrite-rule-extras" type="text" value="${escapeHtml5((rule.extras || []).join(", "))}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u547D\u4E2D\u4EFB\u610F\u4E00\u4E2A\uFF09" maxlength="500">
             <button class="t-btn t-rewrite-rule-del" type="button" title="\u5220\u9664\u89C4\u5219"><i class="fa-solid fa-trash"></i></button>
         </div>
     `).join("");
@@ -18327,41 +19300,6 @@ function persistSettingsPanelState() {
   $("#t-rewrite-settings-rule-count").text(String(rules.length));
   refreshRuntimeStateView();
 }
-function renderRewriteProfileOptions($overlay) {
-  if (!$overlay || !$overlay.length) return;
-  const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-  const $select = $overlay.find("#t-rewrite-settings-profile-select");
-  const oldValue = String($select.val() || "").trim();
-  $overlay.data("rewriteCustomProfiles", customProfiles);
-  $select.empty();
-  const list = customProfiles;
-  if (!Array.isArray(list) || list.length === 0) {
-    $select.append('<option value="">\u6682\u65E0\u81EA\u5B9A\u4E49\u65B9\u6848</option>');
-    return;
-  }
-  list.forEach((item, idx) => {
-    const name = item.name || `\u65B9\u6848 ${idx + 1}`;
-    $select.append(`<option value="${escapeHtml4(item.id)}">${escapeHtml4(name)}</option>`);
-  });
-  const hasOld = list.some((item) => item.id === oldValue);
-  $select.val(hasOld ? oldValue : list[0].id);
-}
-function syncRewriteProfileFields($overlay, opts = {}) {
-  if (!$overlay || !$overlay.length) return;
-  const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
-  const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-  const current = customProfiles.find((p) => p.id === profileId);
-  const keepApiKey = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
-  const shouldReplace = opts.force === true;
-  if (current && shouldReplace) {
-    $overlay.find("#t-rewrite-settings-api-url").val(current.api_url || "");
-    $overlay.find("#t-rewrite-settings-model").val(current.model || "");
-    const keyToSet = current.api_key || keepApiKey;
-    $overlay.find("#t-rewrite-settings-api-key").val(keyToSet);
-  }
-  $overlay.find("#t-rewrite-settings-profile-tip").text("\u81EA\u5B9A\u4E49\u65B9\u6848\u53EF\u7F16\u8F91 URL/API Key/\u6A21\u578B\uFF0C\u4FDD\u5B58\u540E\u6301\u4E45\u5316\u5230\u63D2\u4EF6\u914D\u7F6E\u3002");
-  $overlay.find("#t-rewrite-settings-new-profile").prop("disabled", false);
-}
 function refreshRuntimeStateView() {
   const $overlay = getOverlay();
   if (!$overlay.length) return;
@@ -18389,8 +19327,8 @@ function renderMatchResult(result, sourceText = "") {
     const cls = item.hit ? "hit" : "miss";
     const tag = lastMatchResult.splitMode === "paragraph" ? "\u6BB5" : "\u53E5";
     const hits = item.hit ? item.hits.map((h) => {
-      const anchorText = h.matchedAnchor ? `\u4E3B\u8BCD:${escapeHtml4(h.matchedAnchor)}` : `\u4E3B\u8BCD\u7EC4:${escapeHtml4(h.anchor)}`;
-      const extraText = h.matchedExtra ? `\u9644\u52A0\u8BCD:${escapeHtml4(h.matchedExtra)}` : "\u9644\u52A0\u8BCD:\u65E0";
+      const anchorText = h.matchedAnchor ? `\u4E3B\u8BCD:${escapeHtml5(h.matchedAnchor)}` : `\u4E3B\u8BCD\u7EC4:${escapeHtml5(h.anchor)}`;
+      const extraText = h.matchedExtra ? `\u9644\u52A0\u8BCD:${escapeHtml5(h.matchedExtra)}` : "\u9644\u52A0\u8BCD:\u65E0";
       return `<span class="t-rewrite-hit-tag">\u89C4\u5219#${h.ruleIndex}: ${anchorText} + ${extraText}</span>`;
     }).join("") : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
     return `
@@ -18399,7 +19337,7 @@ function renderMatchResult(result, sourceText = "") {
                     <div>${tag} #${item.unitIndex}</div>
                     <div class="t-rewrite-match-tags">${hits}</div>
                 </div>
-                <div class="t-rewrite-match-text">${escapeHtml4(item.text)}</div>
+                <div class="t-rewrite-match-text">${escapeHtml5(item.text)}</div>
             </div>
         `;
   }).join("");
@@ -18410,53 +19348,6 @@ function renderMatchResult(result, sourceText = "") {
 function renderPersistedRewriteViews() {
   renderMatchResult(lastMatchResult, lastMatchSourceText);
   renderDiffRows(lastDiffRows);
-}
-async function fetchModelList(showToast = false, scope = "main") {
-  const $overlay = scope === "settings" ? getSettingsOverlay() : getOverlay();
-  if (!$overlay.length) return;
-  const idApiUrl = scope === "settings" ? "#t-rewrite-settings-api-url" : "#t-rewrite-api-url";
-  const idApiKey = scope === "settings" ? "#t-rewrite-settings-api-key" : "#t-rewrite-api-key";
-  const idModel = scope === "settings" ? "#t-rewrite-settings-model" : "#t-rewrite-model";
-  const rawUrl = $overlay.find(idApiUrl).val();
-  const apiUrl = normalizeApiBaseUrl(rawUrl);
-  const apiKey = String($overlay.find(idApiKey).val() || "").trim();
-  const $model = $overlay.find(idModel);
-  if (!apiUrl) {
-    $model.html('<option value="">\u8BF7\u5148\u586B\u5199 API \u5730\u5740</option>');
-    setStatus("\u8BF7\u8F93\u5165 API \u5730\u5740\u540E\u81EA\u52A8\u83B7\u53D6\u6A21\u578B\u5217\u8868", "warn");
-    return;
-  }
-  try {
-    setStatus("\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...", "muted");
-    $model.html('<option value="">\u52A0\u8F7D\u4E2D...</option>');
-    const headers = {};
-    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-    const res = await fetch(`${apiUrl}/models`, { method: "GET", headers });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
-    const models = list.map((item) => typeof item === "string" ? item : item?.id).filter(Boolean);
-    const unique = [...new Set(models)].sort();
-    const savedModel = String(getExtData()?.rewrite_entry?.model || "");
-    $model.empty();
-    if (unique.length === 0) {
-      $model.append('<option value="">\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B</option>');
-      setStatus("\u6A21\u578B\u5217\u8868\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u670D\u52A1\u7AEF\u8FD4\u56DE", "warn");
-      return;
-    }
-    unique.forEach((m) => {
-      const selected = savedModel === m ? "selected" : "";
-      $model.append(`<option value="${escapeHtml4(m)}" ${selected}>${escapeHtml4(m)}</option>`);
-    });
-    if (!savedModel) $model.val(unique[0]);
-    if (scope !== "settings") persistPanelState();
-    setStatus(`\u5DF2\u83B7\u53D6 ${unique.length} \u4E2A\u6A21\u578B`, "ok");
-    if (showToast && window.toastr) toastr.success(`\u6A21\u578B\u5217\u8868\u5DF2\u66F4\u65B0\uFF08${unique.length} \u4E2A\uFF09`, "\u6587\u672C\u6539\u5199");
-  } catch (e) {
-    $model.html('<option value="">\u83B7\u53D6\u5931\u8D25</option>');
-    setStatus(`\u6A21\u578B\u5217\u8868\u83B7\u53D6\u5931\u8D25: ${e.message}`, "err");
-    if (showToast && window.toastr) toastr.error(e.message || "\u83B7\u53D6\u5931\u8D25", "\u6587\u672C\u6539\u5199");
-  }
 }
 function bindPanelEvents() {
   const $overlay = getOverlay();
@@ -18519,12 +19410,12 @@ function openLivePanel() {
             <div class="t-window-body t-rewrite-live-body">
                 <div class="t-rewrite-live-stream-card">
                     <div class="t-rewrite-live-tools">
-                        <div id="t-rewrite-raw-meta" class="t-rewrite-status muted">${escapeHtml4(lastRawMetaText || "\u7B49\u5F85\u8BF7\u6C42")}</div>
+                        <div id="t-rewrite-raw-meta" class="t-rewrite-status muted">${escapeHtml5(lastRawMetaText || "\u7B49\u5F85\u8BF7\u6C42")}</div>
                         <button id="t-rewrite-abort" class="t-btn" type="button" ${activeRewriteAbortController ? "" : "disabled"}>\u7EC8\u6B62</button>
                     </div>
                     <div class="t-rewrite-live-stream-title">\u6A21\u578B\u5B9E\u65F6\u8FD4\u56DE</div>
                     <div class="t-rewrite-live-meta">\u5C55\u793A\u6700\u8FD1\u4E00\u6B21\u6539\u5199\u8BF7\u6C42\u7684\u5B9E\u65F6\u8FD4\u56DE\u5185\u5BB9\uFF08\u652F\u6301\u6D41\u5F0F\u6EDA\u52A8\uFF09\u3002</div>
-                    <pre id="t-rewrite-raw-response" class="t-rewrite-json-box">${escapeHtml4(lastRawResponseText || "")}</pre>
+                    <pre id="t-rewrite-raw-response" class="t-rewrite-json-box">${escapeHtml5(lastRawResponseText || "")}</pre>
                 </div>
                 <div class="t-rewrite-live-history-card">
                     <div class="t-rewrite-live-history-title">\u5386\u53F2\u8BB0\u5F55</div>
@@ -18538,7 +19429,7 @@ function openLivePanel() {
   bindLivePanelEvents();
   renderLiveHistory();
 }
-function bindSettingsPanelEvents() {
+function bindSettingsPanelEvents(connectionEditor = null) {
   const $overlay = getSettingsOverlay();
   if (!$overlay.length) return;
   $overlay.on("click", ".t-set-tab-btn", function() {
@@ -18554,55 +19445,13 @@ function bindSettingsPanelEvents() {
   });
   $overlay.on("click", "#t-rewrite-settings-save", (e) => {
     e.preventDefault();
+    if (connectionEditor) {
+      const nextState = connectionEditor.getState();
+      $overlay.data("rewriteCustomProfiles", mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo"));
+      $overlay.find("#t-rewrite-settings-profile-select").val(nextState.activeProfileId);
+    }
     persistSettingsPanelState();
     if (window.toastr) toastr.success("\u6587\u672C\u6539\u5199\u8BBE\u7F6E\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
-  });
-  $overlay.on("change", "#t-rewrite-settings-profile-select", () => {
-    syncRewriteProfileFields($overlay, { force: true });
-  });
-  $overlay.on("click", "#t-rewrite-settings-new-profile", (e) => {
-    e.preventDefault();
-    const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-    const newName = `\u65B9\u6848 ${customProfiles.length + 1}`;
-    const newProfile = {
-      id: `rewrite_custom_${Date.now()}`,
-      name: newName,
-      api_url: String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim(),
-      api_key: String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim(),
-      model: String($overlay.find("#t-rewrite-settings-model").val() || "").trim()
-    };
-    customProfiles.push(newProfile);
-    $overlay.data("rewriteCustomProfiles", customProfiles);
-    renderRewriteProfileOptions($overlay);
-    $overlay.find("#t-rewrite-settings-profile-select").val(newProfile.id);
-    syncRewriteProfileFields($overlay, { force: true });
-  });
-  $overlay.on("input", "#t-rewrite-settings-api-url, #t-rewrite-settings-api-key", () => {
-    const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
-    const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-    const current = customProfiles.find((p) => p.id === profileId);
-    if (current) {
-      current.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
-      current.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
-    }
-    $overlay.data("rewriteCustomProfiles", customProfiles);
-    if (autoFetchTimer) clearTimeout(autoFetchTimer);
-    autoFetchTimer = setTimeout(() => {
-      fetchModelList(false, "settings");
-    }, 500);
-  });
-  $overlay.on("click", "#t-rewrite-settings-fetch-models", async (e) => {
-    e.preventDefault();
-    await fetchModelList(true, "settings");
-  });
-  $overlay.on("change", "#t-rewrite-settings-model", () => {
-    const profileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || "").trim();
-    const customProfiles = normalizeRewriteCustomProfiles($overlay.data("rewriteCustomProfiles"), ensureRewriteDataShape());
-    const current = customProfiles.find((p) => p.id === profileId);
-    if (current) {
-      current.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
-    }
-    $overlay.data("rewriteCustomProfiles", customProfiles);
   });
   $overlay.on("input", "#t-rewrite-settings-prompt-combined", () => {
     persistPromptStateFromSettings();
@@ -18653,8 +19502,6 @@ function openSettingsPanel() {
   activeProfileId = existing ? existing.id : fallback;
   const initProfile = customProfiles.find((p) => p.id === activeProfileId) || customProfiles[0];
   const initApiUrl = String(initProfile?.api_url || rewriteData.api_url || "");
-  const initApiKey = String(initProfile?.api_key || rewriteData.api_key || "");
-  const initModel = String(initProfile?.model || rewriteData.model || "");
   const promptState = getRewritePromptState();
   const html = `
     <div id="${SETTINGS_OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
@@ -18676,35 +19523,44 @@ function openSettingsPanel() {
 
                 <div class="t-set-content">
                     <div id="t-rewrite-page-api" class="t-set-page active">
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848</label>
-                            <div class="t-rewrite-profile-row">
-                                <select id="t-rewrite-settings-profile-select" class="text_pole"></select>
-                                <button id="t-rewrite-settings-new-profile" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
-                            </div>
-                            <div id="t-rewrite-settings-profile-tip" class="t-rewrite-profile-tip"></div>
-                        </div>
-
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u5730\u5740</label>
-                            <input id="t-rewrite-settings-api-url" class="text_pole" type="text" placeholder="https://api.example.com/v1" value="${escapeHtml4(initApiUrl)}">
-
-                            <label class="t-form-label" style="margin-top:10px;">API Key</label>
-                            <input id="t-rewrite-settings-api-key" class="text_pole" type="password" placeholder="\u53EF\u9009\uFF0C\u6309\u4F60\u7684\u670D\u52A1\u7AEF\u8981\u6C42\u586B\u5199" value="${escapeHtml4(initApiKey)}">
-                        </div>
-
-                        <div class="t-form-group">
-                            <label class="t-form-label">\u6A21\u578B</label>
-                            <div class="t-rewrite-model-row">
-                                <select id="t-rewrite-settings-model" class="text_pole">
-                                    <option value="${escapeHtml4(initModel)}">${initModel ? escapeHtml4(initModel) : "\u7B49\u5F85\u81EA\u52A8\u83B7\u53D6"}</option>
-                                </select>
-                                <button id="t-rewrite-settings-fetch-models" class="t-btn" type="button" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
-                                    <i class="fa-solid fa-rotate"></i>
-                                </button>
-                            </div>
-                            <div id="t-rewrite-settings-status" class="t-rewrite-status muted">\u586B\u5199 API \u540E\u4F1A\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5217\u8868</div>
-                        </div>
+                        ${renderApiConnectionEditorHTML({
+    ids: {
+      profileSelectId: "t-rewrite-settings-profile-select",
+      profileAddId: "t-rewrite-settings-new-profile",
+      profileDeleteId: "t-rewrite-settings-delete-profile",
+      profileNameId: "t-rewrite-settings-profile-name",
+      profileMetaId: "t-rewrite-settings-profile-meta",
+      profileTipId: "t-rewrite-settings-profile-tip",
+      fieldsWrapId: "t-rewrite-settings-conn-fields",
+      apiUrlId: "t-rewrite-settings-api-url",
+      apiKeyId: "t-rewrite-settings-api-key",
+      modelId: "t-rewrite-settings-model",
+      fetchModelsId: "t-rewrite-settings-fetch-models",
+      statusId: "t-rewrite-settings-status",
+      urlHintId: "t-rewrite-settings-url-hint",
+      stUrlDisplayId: "t-rewrite-settings-st-url"
+    },
+    classes: {
+      input: "text_pole",
+      select: "text_pole",
+      profileSelect: "text_pole",
+      button: "t-btn"
+    },
+    labels: {
+      profile: "API \u65B9\u6848",
+      apiUrl: "API \u5730\u5740",
+      model: "\u6A21\u578B"
+    },
+    flags: {
+      showProfileName: true,
+      showDeleteProfile: true,
+      showStream: false,
+      showMaxTokens: false
+    },
+    values: {
+      statusText: "\u586B\u5199 API \u540E\u4F1A\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5217\u8868"
+    }
+  })}
                     </div>
 
                     <div id="t-rewrite-page-runtime" class="t-set-page">
@@ -18729,7 +19585,7 @@ function openSettingsPanel() {
 
                         <div class="t-form-group">
                             <label class="t-form-label">\u804A\u5929\u63D0\u53D6\u767D\u540D\u5355</label>
-                            <input id="t-rewrite-settings-tag-whitelist" class="text_pole" type="text" placeholder="\u4F8B\u5982: content, dialogue, narration" value="${escapeHtml4(rewriteData.tag_whitelist || "")}">
+                            <input id="t-rewrite-settings-tag-whitelist" class="text_pole" type="text" placeholder="\u4F8B\u5982: content, dialogue, narration" value="${escapeHtml5(rewriteData.tag_whitelist || "")}">
                             <div class="t-rewrite-rule-guide">\u4EC5\u63D0\u53D6\u767D\u540D\u5355\u6807\u7B7E\u4E2D\u7684\u6587\u672C\u7528\u4E8E\u5207\u5206\u548C\u89C4\u5219\u5339\u914D\uFF1B\u7559\u7A7A\u5219\u63D0\u53D6\u5168\u6587\u7EAF\u6587\u672C\u3002</div>
                         </div>
                     </div>
@@ -18747,7 +19603,7 @@ function openSettingsPanel() {
 ...
 
 [USER]
-...">${escapeHtml4(buildCombinedPromptText(promptState.prompt_system, promptState.prompt_user))}</textarea>
+...">${escapeHtml5(buildCombinedPromptText(promptState.prompt_system, promptState.prompt_user))}</textarea>
                         </div>
                     </div>
 
@@ -18772,13 +19628,36 @@ function openSettingsPanel() {
     </div>`;
   $("body").append(html);
   const $overlay = getSettingsOverlay();
-  $overlay.data("rewriteCustomProfiles", customProfiles);
   renderSettingsRules(rules.length > 0 ? rules : [{ anchor: "", extras: [] }]);
-  renderRewriteProfileOptions($overlay);
-  $overlay.find("#t-rewrite-settings-profile-select").val(activeProfileId);
-  syncRewriteProfileFields($overlay, { force: true });
-  bindSettingsPanelEvents();
-  if (initApiUrl) fetchModelList(false, "settings");
+  const rewriteSettingsConnectionEditor = createApiConnectionEditor({
+    root: $overlay,
+    ids: {
+      profileSelectId: "t-rewrite-settings-profile-select",
+      profileAddId: "t-rewrite-settings-new-profile",
+      profileDeleteId: "t-rewrite-settings-delete-profile",
+      profileNameId: "t-rewrite-settings-profile-name",
+      profileTipId: "t-rewrite-settings-profile-tip",
+      apiUrlId: "t-rewrite-settings-api-url",
+      apiKeyId: "t-rewrite-settings-api-key",
+      modelId: "t-rewrite-settings-model",
+      fetchModelsId: "t-rewrite-settings-fetch-models",
+      statusId: "t-rewrite-settings-status"
+    },
+    profiles: mapCustomProfilesToConnectionProfiles(customProfiles, "gpt-3.5-turbo"),
+    activeProfileId,
+    profileIdPrefix: "rewrite_custom",
+    autoFetchOnInput: true,
+    autoFetchOnProfileSwitch: false,
+    onChange: (nextState) => {
+      const mapped = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+      $overlay.data("rewriteCustomProfiles", mapped);
+      $overlay.find("#t-rewrite-settings-profile-select").val(nextState.activeProfileId);
+    }
+  });
+  rewriteSettingsConnectionEditor.bind();
+  rewriteSettingsConnectionEditor.render();
+  bindSettingsPanelEvents(rewriteSettingsConnectionEditor);
+  if (initApiUrl) rewriteSettingsConnectionEditor.fetchModels(false);
 }
 function openPanel() {
   closePanel();
@@ -18805,12 +19684,12 @@ function openPanel() {
                             <button id="t-rewrite-runtime-toggle" class="t-btn" type="button">\u6298\u53E0</button>
                         </div>
                         <div id="t-rewrite-runtime-body" class="t-rewrite-runtime-meta">
-                            <div>\u5F53\u524D\u6A21\u578B\uFF1A<b id="t-rewrite-runtime-model">${escapeHtml4(rewriteData.model || "\u672A\u8BBE\u7F6E")}</b></div>
+                            <div>\u5F53\u524D\u6A21\u578B\uFF1A<b id="t-rewrite-runtime-model">${escapeHtml5(rewriteData.model || "\u672A\u8BBE\u7F6E")}</b></div>
                             <div>\u5207\u5206\u6A21\u5F0F\uFF1A<b id="t-rewrite-runtime-split">${rewriteData.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50"}</b></div>
                             <div>\u6709\u6548\u89C4\u5219\uFF1A<b id="t-rewrite-rule-count">${rules.length}</b></div>
                             <div>\u6D41\u5F0F\u663E\u793A\uFF1A<b id="t-rewrite-runtime-stream">${rewriteData.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F"}</b></div>
                             <div>\u81EA\u52A8\u89E6\u53D1\uFF1A<b id="t-rewrite-runtime-auto">${rewriteData.auto_trigger ? "\u5F00\u542F" : "\u5173\u95ED"}</b></div>
-                            <div>\u63D0\u53D6\u767D\u540D\u5355\uFF1A<b id="t-rewrite-runtime-whitelist">${rewriteData.tag_whitelist ? escapeHtml4(rewriteData.tag_whitelist) : "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09"}</b></div>
+                            <div>\u63D0\u53D6\u767D\u540D\u5355\uFF1A<b id="t-rewrite-runtime-whitelist">${rewriteData.tag_whitelist ? escapeHtml5(rewriteData.tag_whitelist) : "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09"}</b></div>
                         </div>
                         <div id="t-rewrite-status" class="t-rewrite-status muted">\u6539\u5199\u4F1A\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u5E76\u56DE\u5199\u539F\u6D88\u606F</div>
                     </div>
@@ -18890,12 +19769,13 @@ function openRewritePanelFromMenu() {
   if (!isEnabled()) return;
   openPanel();
 }
-var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, autoFetchTimer, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
+var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
 var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
     init_chatTagWhitelist();
     init_apiProfileRegistry();
+    init_apiConnectionEditor();
     BTN_ID = "titania-rewrite-entry-btn";
     OVERLAY_ID = "t-rewrite-overlay";
     SETTINGS_OVERLAY_ID = "t-rewrite-settings-overlay";
@@ -18904,7 +19784,6 @@ var init_rewriteEntryButton = __esm({
     docEventBound = false;
     autoTriggerBound = false;
     rewriteDecorBound = false;
-    autoFetchTimer = null;
     rewriteDecorTimer = null;
     autoRewriteTimer = null;
     activeRewriteAbortController = null;
@@ -19391,70 +20270,6 @@ function getActiveConnection() {
     stream,
     rawProfile: currentProfile
   };
-}
-async function getAvailableModels() {
-  const conn = getActiveConnection();
-  if (conn.useSTConnection) {
-    try {
-      const selectors = [
-        "#model_openai_select",
-        "#model_claude_select",
-        "#model_openrouter_select",
-        "#model_mistral_select",
-        "#api_button_text_generation_webui_model",
-        ".model_select",
-        "select[id*='model']"
-      ];
-      let models = [];
-      for (const sel of selectors) {
-        const $sel = $(sel);
-        if ($sel.length > 0 && $sel.is("select")) {
-          $sel.find("option").each(function() {
-            const val = $(this).val();
-            if (val && val !== "null" && typeof val === "string" && val.trim() !== "") {
-              models.push(val);
-            }
-          });
-        }
-      }
-      if (models.length > 0) {
-        const uniqueModels = [...new Set(models)].sort();
-        const current2 = getChatCompletionModel();
-        if (current2 && !uniqueModels.includes(current2)) {
-          uniqueModels.unshift(current2);
-        }
-        return uniqueModels;
-      }
-    } catch (e) {
-      TitaniaLogger.warn("\u4ECE ST DOM \u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
-    }
-    const current = getChatCompletionModel();
-    return current ? [current] : ["gpt-3.5-turbo"];
-  } else {
-    if (!conn.url) return [conn.model || "gpt-3.5-turbo"];
-    try {
-      let endpoint = conn.url.trim().replace(/\/+$/, "");
-      if (!endpoint.endsWith("/models")) {
-        if (endpoint.endsWith("/v1")) endpoint += "/models";
-        else endpoint += "/v1/models";
-      }
-      const res = await fetch(endpoint, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${conn.key}` }
-      });
-      if (!res.ok) return [conn.model || "gpt-3.5-turbo"];
-      const json = await res.json();
-      if (Array.isArray(json.data)) {
-        return json.data.map((m) => m.id).sort();
-      } else if (Array.isArray(json)) {
-        return json.map((m) => m.id || m).sort();
-      }
-      return [conn.model || "gpt-3.5-turbo"];
-    } catch (e) {
-      TitaniaLogger.warn("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
-      return [conn.model || "gpt-3.5-turbo"];
-    }
-  }
 }
 function validateConnection() {
   const conn = getActiveConnection();
@@ -21623,31 +22438,44 @@ async function showProfileConfigDialog(onSave) {
                 </div>
                 <div class="t-set-content">
                     <div class="t-set-page active" data-page="api">
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u65B9\u6848</label>
-                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <select id="t-lore-settings-profile-select" class="t-input" style="min-width:220px;"></select>
-                                <button id="t-lore-settings-new-profile" class="t-btn t-btn-xs" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
-                            </div>
-                            <div id="t-lore-settings-profile-tip" style="margin-top:8px; font-size:0.8em; color:#8da5b8;"></div>
-                        </div>
-
-                        <div class="t-form-group">
-                            <label class="t-form-label">API \u5730\u5740</label>
-                            <input id="t-lore-settings-api-url" class="t-input" type="text" placeholder="https://api.example.com/v1">
-
-                            <label class="t-form-label" style="margin-top:8px;">API Key</label>
-                            <input id="t-lore-settings-api-key" class="t-input" type="password" placeholder="\u53EF\u9009\uFF0C\u6309\u4F60\u7684\u670D\u52A1\u7AEF\u8981\u6C42\u586B\u5199">
-
-                            <label class="t-form-label" style="margin-top:8px;">\u6A21\u578B</label>
-                            <div class="t-lore-settings-model-row">
-                                <select id="t-lore-settings-model" class="t-input" style="flex:1;"></select>
-                                <button id="t-lore-settings-fetch-models" class="t-btn t-btn-xs" type="button" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
-                                    <i class="fa-solid fa-rotate"></i>
-                                </button>
-                            </div>
-                            <div id="t-lore-settings-status" style="margin-top:8px; font-size:0.8em; color:#8da5b8;">\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868</div>
-                        </div>
+                        ${renderApiConnectionEditorHTML({
+    ids: {
+      profileSelectId: "t-lore-settings-profile-select",
+      profileAddId: "t-lore-settings-new-profile",
+      profileDeleteId: "t-lore-settings-delete-profile",
+      profileNameId: "t-lore-settings-profile-name",
+      profileMetaId: "t-lore-settings-profile-meta",
+      profileTipId: "t-lore-settings-profile-tip",
+      fieldsWrapId: "t-lore-settings-conn-fields",
+      apiUrlId: "t-lore-settings-api-url",
+      apiKeyId: "t-lore-settings-api-key",
+      modelId: "t-lore-settings-model",
+      fetchModelsId: "t-lore-settings-fetch-models",
+      statusId: "t-lore-settings-status",
+      urlHintId: "t-lore-settings-url-hint",
+      stUrlDisplayId: "t-lore-settings-st-url"
+    },
+    classes: {
+      input: "t-input",
+      select: "t-input",
+      profileSelect: "t-input",
+      button: "t-btn t-btn-xs"
+    },
+    labels: {
+      profile: "API \u65B9\u6848",
+      apiUrl: "API \u5730\u5740",
+      model: "\u6A21\u578B"
+    },
+    flags: {
+      showProfileName: true,
+      showDeleteProfile: true,
+      showStream: false,
+      showMaxTokens: false
+    },
+    values: {
+      statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868"
+    }
+  })}
                     </div>
 
                     <div class="t-set-page" data-page="embedding">
@@ -21724,104 +22552,34 @@ async function showProfileConfigDialog(onSave) {
     </div>
     `;
   $("body").append(html);
-  const getDraftProfiles = () => {
-    return Array.isArray(settingsDraft.customProfiles) ? settingsDraft.customProfiles : [];
-  };
-  const resolveProfileSelectionDraft = (profileId) => {
-    const profiles = getDraftProfiles();
-    if (!profiles.length) return { profileId: "", profiles };
-    const preferred = String(profileId || "").trim();
-    const selected = profiles.some((p) => p.id === preferred) ? preferred : profiles[0].id;
-    return { profileId: selected, profiles };
-  };
-  const persistCurrentProfileInputsToDraft = () => {
-    const $root = $("#t-lore-settings-dialog");
-    const selectedId = String($root.find("#t-lore-settings-profile-select").val() || settingsDraft.selectedProfileId || "").trim();
-    const url = normalizeApiBaseUrl(String($root.find("#t-lore-settings-api-url").val() || "").trim());
-    const key = String($root.find("#t-lore-settings-api-key").val() || "").trim();
-    const model = String($root.find("#t-lore-settings-model").val() || "").trim();
-    settingsDraft.selectedProfileId = selectedId;
-    const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-    if (current) {
-      current.api_url = url;
-      current.api_key = key;
-      current.model = model;
+  const loreConnectionEditor = createApiConnectionEditor({
+    root: $("#t-lore-settings-dialog"),
+    ids: {
+      profileSelectId: "t-lore-settings-profile-select",
+      profileAddId: "t-lore-settings-new-profile",
+      profileDeleteId: "t-lore-settings-delete-profile",
+      profileNameId: "t-lore-settings-profile-name",
+      profileTipId: "t-lore-settings-profile-tip",
+      apiUrlId: "t-lore-settings-api-url",
+      apiKeyId: "t-lore-settings-api-key",
+      modelId: "t-lore-settings-model",
+      fetchModelsId: "t-lore-settings-fetch-models",
+      statusId: "t-lore-settings-status"
+    },
+    profiles: mapCustomProfilesToConnectionProfiles(settingsDraft.customProfiles, "gpt-3.5-turbo"),
+    activeProfileId: settingsDraft.selectedProfileId,
+    profileIdPrefix: "lore_custom",
+    autoFetchOnInput: false,
+    autoFetchOnProfileSwitch: false,
+    onChange: (nextState) => {
+      settingsDraft.customProfiles = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+      settingsDraft.selectedProfileId = nextState.activeProfileId;
+      $("#t-btn-save-profile").prop("disabled", !settingsDraft.selectedProfileId);
     }
-  };
-  const syncProfileFieldsDraft = () => {
-    const $root = $("#t-lore-settings-dialog");
-    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
-    settingsDraft.selectedProfileId = resolved.profileId;
-    const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    $root.find("#t-lore-settings-api-url").val(String(profile?.api_url || "")).prop("readonly", false);
-    $root.find("#t-lore-settings-api-key").val(String(profile?.api_key || "")).prop("readonly", false);
-    $root.find("#t-lore-settings-model").val(String(profile?.model || "")).prop("disabled", false);
-    $root.find("#t-lore-settings-new-profile").prop("disabled", false);
-    $root.find("#t-lore-settings-profile-tip").text("\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002");
-    $("#t-btn-save-profile").prop("disabled", !settingsDraft.selectedProfileId);
-  };
-  const renderProfileOptionsDraft = () => {
-    const $root = $("#t-lore-settings-dialog");
-    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
-    const $select = $root.find("#t-lore-settings-profile-select");
-    $select.empty();
-    if (!resolved.profiles.length) {
-      $select.append('<option value="">\u65E0\u53EF\u7528\u65B9\u6848</option>');
-      settingsDraft.selectedProfileId = "";
-      syncProfileFieldsDraft();
-      return;
-    }
-    resolved.profiles.forEach((profile) => {
-      $select.append(`<option value="${escapeHtml5(profile.id)}">${escapeHtml5(profile.name)}</option>`);
-    });
-    settingsDraft.selectedProfileId = resolved.profileId;
-    $select.val(resolved.profileId);
-    syncProfileFieldsDraft();
-  };
-  const fetchLoreModelListDraft = async (showToast = false) => {
-    const $root = $("#t-lore-settings-dialog");
-    const $status = $root.find("#t-lore-settings-status");
-    persistCurrentProfileInputsToDraft();
-    const resolved = resolveProfileSelectionDraft(settingsDraft.selectedProfileId);
-    settingsDraft.selectedProfileId = resolved.profileId;
-    const profile = resolved.profiles.find((p) => p.id === resolved.profileId) || null;
-    const apiUrl = normalizeApiBaseUrl(String($root.find("#t-lore-settings-api-url").val() || profile?.api_url || "").trim());
-    const apiKey = String($root.find("#t-lore-settings-api-key").val() || "").trim();
-    if (!apiUrl) {
-      $status.text("\u8BF7\u5148\u586B\u5199 API \u5730\u5740");
-      return;
-    }
-    try {
-      $status.text("\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...");
-      const headers = {};
-      if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-      const res = await fetch(`${apiUrl}/models`, { method: "GET", headers });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data?.models) ? data.models : [];
-      const ids = [...new Set(rows.map((m) => String(m?.id || m || "").trim()).filter(Boolean))];
-      if (!ids.length) throw new Error("\u672A\u8FD4\u56DE\u6A21\u578B\u5217\u8868");
-      const prevModel = String($root.find("#t-lore-settings-model").val() || profile?.model || "").trim();
-      const selectedModel = ids.includes(prevModel) ? prevModel : ids[0];
-      const $model = $root.find("#t-lore-settings-model");
-      $model.empty();
-      ids.forEach((modelId) => {
-        $model.append(`<option value="${escapeHtml5(modelId)}">${escapeHtml5(modelId)}</option>`);
-      });
-      $model.val(selectedModel);
-      const current = settingsDraft.customProfiles.find((p) => p.id === settingsDraft.selectedProfileId);
-      if (current) {
-        current.api_url = apiUrl;
-        current.api_key = apiKey;
-        current.model = selectedModel;
-      }
-      $status.text(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`);
-      if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${ids.length} \u4E2A\u6A21\u578B`, "\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3");
-    } catch (e) {
-      $status.text(`\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${e.message || "\u672A\u77E5\u9519\u8BEF"}`);
-      if (showToast && window.toastr) toastr.error(e.message || "\u6A21\u578B\u83B7\u53D6\u5931\u8D25", "\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3");
-    }
-  };
+  });
+  loreConnectionEditor.bind();
+  loreConnectionEditor.render();
+  $("#t-btn-save-profile").prop("disabled", !settingsDraft.selectedProfileId);
   const initEmbeddingFields = () => {
     const emb = settingsDraft.embedding;
     $("#t-lore-embed-url").val(emb.url || "");
@@ -21831,10 +22589,10 @@ async function showProfileConfigDialog(onSave) {
     const commonModels = ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"];
     const currentModel = emb.model || "text-embedding-3-small";
     commonModels.forEach((m) => {
-      $model.append(`<option value="${escapeHtml5(m)}" ${m === currentModel ? "selected" : ""}>${escapeHtml5(m)}</option>`);
+      $model.append(`<option value="${escapeHtml6(m)}" ${m === currentModel ? "selected" : ""}>${escapeHtml6(m)}</option>`);
     });
     if (!commonModels.includes(currentModel)) {
-      $model.prepend(`<option value="${escapeHtml5(currentModel)}" selected>${escapeHtml5(currentModel)} (\u5F53\u524D)</option>`);
+      $model.prepend(`<option value="${escapeHtml6(currentModel)}" selected>${escapeHtml6(currentModel)} (\u5F53\u524D)</option>`);
     }
     $("#t-lore-embed-dimensions").val(emb.dimensions || "");
     $("#t-lore-clean-html").prop("checked", emb.text_cleaning.remove_html_tags !== false);
@@ -21878,7 +22636,7 @@ async function showProfileConfigDialog(onSave) {
       models.forEach((m) => {
         const id = String(m?.id || m || "").trim();
         if (!id) return;
-        $sel.append(`<option value="${escapeHtml5(id)}" ${id === current ? "selected" : ""}>${escapeHtml5(id)}</option>`);
+        $sel.append(`<option value="${escapeHtml6(id)}" ${id === current ? "selected" : ""}>${escapeHtml6(id)}</option>`);
       });
       if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${models.length} \u4E2A Embedding \u6A21\u578B`);
     } catch (e) {
@@ -21925,7 +22683,6 @@ async function showProfileConfigDialog(onSave) {
       $btn.prop("disabled", false);
     }
   };
-  renderProfileOptionsDraft();
   initEmbeddingFields();
   $("#t-profile-dialog-close, #t-btn-cancel-profile").on("click", () => {
     $("#t-lore-settings-dialog").remove();
@@ -21936,38 +22693,6 @@ async function showProfileConfigDialog(onSave) {
     $(this).addClass("active");
     $("#t-lore-settings-dialog .t-set-page").removeClass("active");
     $(`#t-lore-settings-dialog .t-set-page[data-page='${tab}']`).addClass("active");
-  });
-  $("#t-lore-settings-profile-select").on("change", function() {
-    persistCurrentProfileInputsToDraft();
-    settingsDraft.selectedProfileId = String($(this).val() || "").trim();
-    syncProfileFieldsDraft();
-  });
-  $("#t-lore-settings-new-profile").on("click", function(e) {
-    e.preventDefault();
-    persistCurrentProfileInputsToDraft();
-    const created = {
-      id: `lore_custom_${Date.now()}`,
-      name: `\u65B9\u6848 ${settingsDraft.customProfiles.length + 1}`,
-      api_url: String($("#t-lore-settings-api-url").val() || "").trim(),
-      api_key: String($("#t-lore-settings-api-key").val() || "").trim(),
-      model: String($("#t-lore-settings-model").val() || "").trim()
-    };
-    settingsDraft.customProfiles.push(created);
-    settingsDraft.selectedProfileId = created.id;
-    renderProfileOptionsDraft();
-  });
-  $("#t-lore-settings-api-url, #t-lore-settings-api-key").on("input", () => {
-    persistCurrentProfileInputsToDraft();
-  });
-  $("#t-lore-settings-model").on("change", () => {
-    persistCurrentProfileInputsToDraft();
-  });
-  $("#t-lore-settings-fetch-models").on("click", async function(e) {
-    e.preventDefault();
-    const $icon = $(this).find("i");
-    $icon.addClass("fa-spin");
-    await fetchLoreModelListDraft(true);
-    $icon.removeClass("fa-spin");
   });
   $("#t-lore-embed-fetch-models").on("click", async function(e) {
     e.preventDefault();
@@ -21981,7 +22706,9 @@ async function showProfileConfigDialog(onSave) {
     $("#t-lore-auto-vectorize-panel").toggle($(this).is(":checked"));
   });
   $("#t-btn-save-profile").on("click", function() {
-    persistCurrentProfileInputsToDraft();
+    const nextState = loreConnectionEditor.getState();
+    settingsDraft.customProfiles = mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo");
+    settingsDraft.selectedProfileId = nextState.activeProfileId;
     if (!settingsDraft.selectedProfileId) {
       if (window.toastr) toastr.warning("\u8BF7\u9009\u62E9\u4E00\u4E2A API \u65B9\u6848");
       return;
@@ -22033,47 +22760,6 @@ async function showProfileConfigDialog(onSave) {
     if (onSave) onSave();
   });
 }
-function showFirstTimeSetup() {
-  $("#t-lore-review-overlay").remove();
-  const html = `
-    <div id="t-lore-review-overlay" class="t-overlay">
-        <div class="t-window t-lore-review-window" style="max-width: 500px;">
-            <div class="t-window-header">
-                <div class="t-window-title">
-                    <i class="fa-solid fa-brain"></i> \u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3
-                </div>
-                <div class="t-window-controls">
-                    <div class="t-window-close" id="t-lore-review-close"><i class="fa-solid fa-times"></i></div>
-                </div>
-            </div>
-            <div class="t-window-body" style="text-align: center; padding: 40px 30px;">
-                <div style="font-size: 3em; margin-bottom: 20px;">\u{1F50C}</div>
-                <h3 style="color: #eee; margin-bottom: 15px;">\u9996\u6B21\u4F7F\u7528\u914D\u7F6E</h3>
-                <p style="color: #888; line-height: 1.6; margin-bottom: 25px;">
-                    \u5728\u4F7F\u7528\u300C\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u4E0E\u804A\u5929\u603B\u7ED3\u300D\u529F\u80FD\u524D\uFF0C<br>
-                    \u8BF7\u5148\u9009\u62E9\u7528\u4E8E\u6B64\u529F\u80FD\u7684 API \u8FDE\u63A5\u65B9\u6848\u3002
-                </p>
-                <button id="t-btn-setup-profile" class="t-btn t-btn-primary" style="padding: 12px 30px; font-size: 1.1em;">
-                    <i class="fa-solid fa-gear"></i> \u6253\u5F00\u8BBE\u7F6E
-                </button>
-                <p style="color: #666; font-size: 0.85em; margin-top: 20px;">
-                    \u63D0\u793A\uFF1A\u5982\u679C\u8FD8\u6CA1\u6709 API \u65B9\u6848\uFF0C\u8BF7\u5148\u524D\u5F80\u300C\u63D2\u4EF6\u8BBE\u7F6E \u2192 API \u8FDE\u63A5\u300D\u521B\u5EFA\u3002
-                </p>
-            </div>
-        </div>
-    </div>
-    `;
-  $("body").append(html);
-  $("#t-lore-review-close").on("click", () => {
-    $("#t-lore-review-overlay").remove();
-  });
-  $("#t-btn-setup-profile").on("click", () => {
-    $("#t-lore-review-overlay").remove();
-    showProfileConfigDialog(() => {
-      showLoreReviewWindow();
-    });
-  });
-}
 function showRawResponseDialog2(rawContent, isError = false) {
   $("#t-raw-response-dialog").remove();
   const title = isError ? "\u89E3\u6790\u5931\u8D25 - \u539F\u59CB\u54CD\u5E94" : "AI \u539F\u59CB\u54CD\u5E94";
@@ -22114,7 +22800,7 @@ function showRawResponseDialog2(rawContent, isError = false) {
                         font-size: 0.9em;
                         color: #ddd;
                         line-height: 1.5;
-                    ">${escapeHtml5(rawContent || "(\u7A7A)")}</pre>
+                    ">${escapeHtml6(rawContent || "(\u7A7A)")}</pre>
                 </div>
             </div>
             <div class="t-dialog-footer">
@@ -22139,7 +22825,7 @@ function showRawResponseDialog2(rawContent, isError = false) {
     });
   });
 }
-function escapeHtml5(text) {
+function escapeHtml6(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -22148,12 +22834,11 @@ async function showLoreReviewWindow() {
   ensureCssLoaded2();
   const validation = validateFeatureConnection(FEATURE_KEY3);
   if (!validation.configured) {
-    showFirstTimeSetup();
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5B8C\u6210 API \u8FDE\u63A5\u914D\u7F6E", "\u914D\u7F6E\u7F3A\u5931");
     return;
   }
   if (!validation.valid) {
     if (window.toastr) toastr.error(validation.error, "\u914D\u7F6E\u9519\u8BEF");
-    showFirstTimeSetup();
     return;
   }
   $("#t-lore-review-overlay").remove();
@@ -23367,7 +24052,7 @@ async function updateIncrementalStatus() {
 }
 function formatSummaryAsHtml(text) {
   if (!text) return "";
-  let html = escapeHtml5(text);
+  let html = escapeHtml6(text);
   html = html.replace(/^## (.+)$/gm, '<h3 class="t-summary-h3">$1</h3>');
   html = html.replace(/^### (.+)$/gm, '<h4 class="t-summary-h4">$1</h4>');
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -23582,9 +24267,9 @@ function showPromptPreviewDialog(messages, stats = {}) {
     </div>
     `;
   $("body").append(html);
-  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml5(systemMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml5(userMsg?.content || "(\u65E0)")}</pre>`);
-  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml5(JSON.stringify(messages, null, 2))}</pre>`);
+  $("#t-prompt-content-system").html(`<pre class="t-prompt-pre">${escapeHtml6(systemMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-user").html(`<pre class="t-prompt-pre">${escapeHtml6(userMsg?.content || "(\u65E0)")}</pre>`);
+  $("#t-prompt-content-raw").html(`<pre class="t-prompt-pre">${escapeHtml6(JSON.stringify(messages, null, 2))}</pre>`);
   $("#t-prompt-view-dialog .t-prompt-tab").on("click", function() {
     const role = $(this).data("role");
     $("#t-prompt-view-dialog .t-prompt-tab").removeClass("active");
@@ -23670,11 +24355,11 @@ function showCleaningPreviewDialog(samples) {
             <div class="t-sample-content">
                 <div class="t-sample-pane t-pane-original">
                     <div class="t-pane-header"><i class="fa-solid fa-file-alt"></i> \u539F\u59CB\u6587\u672C</div>
-                    <div class="t-pane-body">${escapeHtml5(sample.original || "(\u7A7A)")}</div>
+                    <div class="t-pane-body">${escapeHtml6(sample.original || "(\u7A7A)")}</div>
                 </div>
                 <div class="t-sample-pane t-pane-cleaned">
                     <div class="t-pane-header"><i class="fa-solid fa-broom"></i> \u6E05\u6D17\u540E</div>
-                    <div class="t-pane-body">${escapeHtml5(sample.cleaned || "(\u7A7A)")}</div>
+                    <div class="t-pane-body">${escapeHtml6(sample.cleaned || "(\u7A7A)")}</div>
                 </div>
             </div>
         </div>
@@ -23711,7 +24396,7 @@ function showCleaningPreviewDialog(samples) {
                 <div class="t-cleaning-config-bar">
                     <span class="t-config-label"><i class="fa-solid fa-cog"></i> \u5F53\u524D\u6E05\u6D17\u89C4\u5219:</span>
                     <div class="t-config-tags">${configHtml}</div>
-                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml5(config.custom_tags_to_remove)}</span>` : ""}
+                    ${config.custom_tags_to_remove ? `<span class="t-custom-tags">\u81EA\u5B9A\u4E49: ${escapeHtml6(config.custom_tags_to_remove)}</span>` : ""}
                 </div>
 
                 <!-- \u6D88\u606F\u9884\u89C8\u5217\u8868 -->
@@ -23957,6 +24642,7 @@ var init_loreReviewWindow = __esm({
     init_defaults();
     init_connection();
     init_apiProfileRegistry();
+    init_apiConnectionEditor();
     init_storage();
     init_context();
     init_summarizer();
@@ -24303,7 +24989,7 @@ function renderResults() {
     const scorePercent = Math.round(result.score * 100);
     const isSelected = selectedIndices.has(index);
     const scoreColor = scorePercent >= 70 ? "#4caf50" : scorePercent >= 50 ? "#ff9800" : "#888";
-    const displayText = escapeHtml6(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
+    const displayText = escapeHtml7(result.text).substring(0, 300) + (result.text.length > 300 ? "..." : "");
     return '<div class="t-recall-result-item" data-index="' + index + '" style="display: flex; gap: 10px; padding: 12px; margin-bottom: 8px; background: ' + (isSelected ? "#2a3a4a" : "#1e1e1e") + "; border: 1px solid " + (isSelected ? "#4a9eff" : "#333") + '; border-radius: 8px; cursor: pointer; transition: all 0.2s;"><div style="flex-shrink: 0; padding-top: 2px;"><input type="checkbox" ' + (isSelected ? "checked" : "") + ' style="cursor: pointer;"></div><div style="flex: 1; min-width: 0;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="color: #888; font-size: 0.85em;">#' + result.messageIndex + '</span><span style="color: ' + scoreColor + '; font-weight: bold; font-size: 0.9em;">' + scorePercent + '%</span></div><div style="color: #ccc; font-size: 0.9em; line-height: 1.5; word-break: break-word;">' + displayText + "</div></div></div>";
   }).join("");
   $resultsList.html(html);
@@ -24367,7 +25053,7 @@ function handleAppend() {
     }
   }
 }
-function escapeHtml6(text) {
+function escapeHtml7(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
@@ -24882,11 +25568,6 @@ function openSettingsWindow() {
                                     <span class="t-toolbar-hint">(\u5FC5\u9009)</span>
                                 </label>
                                 <label class="t-toolbar-item">
-                                    <input type="checkbox" class="t-toolbar-chk" data-btn-id="model">
-                                    <i class="fa-solid fa-microchip" style="color:#00cec9;"></i>
-                                    <span>\u5207\u6362\u6A21\u578B</span>
-                                </label>
-                                <label class="t-toolbar-item">
                                     <input type="checkbox" class="t-toolbar-chk" data-btn-id="settings">
                                     <i class="fa-solid fa-gear" style="color:#aaa;"></i>
                                     <span>\u8BBE\u7F6E</span>
@@ -25094,41 +25775,54 @@ function openSettingsWindow() {
 
                 <!-- Tab 3: \u8FDE\u63A5 -->
                 <div id="page-connection" class="t-set-page">
-                    <div class="t-form-group">
-                        <label class="t-form-label">\u5207\u6362\u914D\u7F6E\u65B9\u6848 (Profile)</label>
-                        <div class="t-prof-header">
-                            <select id="cfg-prof-select" class="t-prof-select"></select>
-                            <button id="cfg-prof-add" class="t-tool-btn" title="\u65B0\u5EFA\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
-                            <button id="cfg-prof-del" class="t-tool-btn" title="\u5220\u9664\u5F53\u524D\u65B9\u6848" style="color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                        <div id="cfg-prof-meta"><label class="t-form-label">\u65B9\u6848\u540D\u79F0</label><input id="cfg-prof-name" class="t-input" value=""></div>
-                    </div>
-                    <div style="height:1px; background:#333; margin:20px 0;"></div>
-                    <div id="cfg-conn-fields">
-                        <div class="t-form-group">
-                            <label class="t-form-label">API Endpoint URL</label>
-                            <input id="cfg-url" class="t-input" placeholder="\u4F8B\u5982: http://127.0.0.1:5000/v1">
-                            <div id="cfg-url-hint" style="font-size:0.8em; color:#666; margin-top:5px; display:none;"><i class="fa-solid fa-link"></i> \u6B63\u5728\u8BFB\u53D6 ST \u5168\u5C40\u8BBE\u7F6E\uFF1A<span id="st-url-display"></span></div>
-                        </div>
-                        <div class="t-form-group"><label class="t-form-label">API Key</label><input id="cfg-key" type="password" class="t-input" placeholder="sk-..."></div>
-                        <div class="t-form-group">
-                            <label class="t-form-label">Model Name</label>
-                            <div style="display:flex; gap:10px;"><select id="cfg-model" class="t-input" style="cursor:pointer;"></select><button id="t-btn-fetch" class="t-tool-btn" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
-                        </div>
-                    </div>
-                    <div class="t-form-group"><label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="cfg-stream" ${cfg.stream !== false ? "checked" : ""} style="margin-right:10px;"> \u5F00\u542F\u6D41\u5F0F\u4F20\u8F93 (Streaming)</label></div>
-                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
-                        <label class="t-form-label">\u{1F3AF} \u8F93\u51FA Token \u9650\u5236 (max_tokens)</label>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <input type="number" id="cfg-max-tokens" class="t-input" value="${cfg.max_tokens || 4096}" min="256" max="32768" step="256" style="width:120px;">
-                            <span style="font-size:0.85em; color:#888;">\u8303\u56F4: 256 ~ 32768</span>
-                        </div>
-                        <p style="font-size:0.75em; color:#666; margin-top:5px; line-height:1.5;">
+                    ${renderApiConnectionEditorHTML({
+    ids: {
+      profileSelectId: "cfg-prof-select",
+      profileAddId: "cfg-prof-add",
+      profileDeleteId: "cfg-prof-del",
+      profileNameId: "cfg-prof-name",
+      profileMetaId: "cfg-prof-meta",
+      profileTipId: "cfg-prof-tip",
+      fieldsWrapId: "cfg-conn-fields",
+      apiUrlId: "cfg-url",
+      apiKeyId: "cfg-key",
+      modelId: "cfg-model",
+      fetchModelsId: "t-btn-fetch",
+      statusId: "cfg-status",
+      urlHintId: "cfg-url-hint",
+      stUrlDisplayId: "st-url-display",
+      streamId: "cfg-stream",
+      maxTokensId: "cfg-max-tokens"
+    },
+    classes: {
+      profileSelect: "t-prof-select",
+      button: "t-tool-btn",
+      input: "t-input",
+      select: "t-input"
+    },
+    labels: {
+      profile: "\u5207\u6362\u914D\u7F6E\u65B9\u6848 (Profile)",
+      apiUrl: "API Endpoint URL",
+      model: "Model Name",
+      maxTokens: "\u{1F3AF} \u8F93\u51FA Token \u9650\u5236 (max_tokens)"
+    },
+    flags: {
+      showProfileName: true,
+      showDeleteProfile: true,
+      showStream: true,
+      showMaxTokens: true
+    },
+    values: {
+      stream: cfg.stream !== false,
+      maxTokens: cfg.max_tokens || 4096,
+      statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868",
+      maxTokensHintHtml: `<p style="font-size:0.75em; color:#666; margin-top:5px; line-height:1.5;">
                             \u63A7\u5236 AI \u5355\u6B21\u8F93\u51FA\u7684\u6700\u5927 Token \u6570\u91CF\u3002<br>
                             <span style="color:#55efc4;">\u2713 \u4EC5\u5BF9\u81EA\u5B9A\u4E49 API \u65B9\u6848\u751F\u6548</span>\uFF0CST \u4E3B\u8FDE\u63A5\u4F7F\u7528\u5168\u5C40\u8BBE\u7F6E\u3002<br>
                             <span style="color:#feca57;">\u26A0\uFE0F \u8BBE\u7F6E\u8FC7\u9AD8\u53EF\u80FD\u8D85\u51FA\u6A21\u578B\u9650\u5236\u5BFC\u81F4\u62A5\u9519</span>
-                        </p>
-                    </div>
+                        </p>`
+    }
+  })}
                 </div>
 
                 <!-- Tab 3: \u5BFC\u6F14\u6A21\u5F0F -->
@@ -25339,6 +26033,33 @@ function openSettingsWindow() {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  const mainConnectionEditor = createApiConnectionEditor({
+    root: $("#t-settings-view"),
+    ids: {
+      profileSelectId: "cfg-prof-select",
+      profileAddId: "cfg-prof-add",
+      profileDeleteId: "cfg-prof-del",
+      profileNameId: "cfg-prof-name",
+      profileTipId: "cfg-prof-tip",
+      apiUrlId: "cfg-url",
+      apiKeyId: "cfg-key",
+      modelId: "cfg-model",
+      fetchModelsId: "t-btn-fetch",
+      statusId: "cfg-status",
+      urlHintId: "cfg-url-hint",
+      stUrlDisplayId: "st-url-display"
+    },
+    profiles: tempProfiles,
+    activeProfileId: tempActiveId,
+    autoFetchOnInput: false,
+    autoFetchOnProfileSwitch: true,
+    getInternalUrl: () => typeof settings !== "undefined" ? settings.api_url_openai || "\u672A\u77E5" : "\u672A\u77E5",
+    onChange: (nextState) => {
+      tempProfiles = nextState.profiles;
+      tempActiveId = nextState.activeProfileId;
+    }
+  });
+  mainConnectionEditor.bind();
   $(".t-set-tab-btn").on("click", function() {
     const tabName = $(this).data("tab");
     $(".t-set-tab-btn").removeClass("active");
@@ -25347,76 +26068,16 @@ function openSettingsWindow() {
     $(`#page-${tabName}`).addClass("active");
     if (tabName === "connection") {
       setTimeout(() => {
-        const p = tempProfiles.find((x) => x.id === tempActiveId);
-        if (p && p.type !== "internal") {
-          fetchModelList2(false);
-        }
+        mainConnectionEditor.fetchModels(false);
       }, 100);
     }
   });
   const saveCurrentProfileToMemory = () => {
-    const pIndex = tempProfiles.findIndex((p) => p.id === tempActiveId);
-    if (pIndex !== -1 && tempProfiles[pIndex].type !== "internal") {
-      const p = tempProfiles[pIndex];
-      p.name = $("#cfg-prof-name").val();
-      p.url = $("#cfg-url").val();
-      p.key = $("#cfg-key").val();
-      p.model = $("#cfg-model").val();
-    }
+    mainConnectionEditor.persistCurrentProfileInputs();
+    const nextState = mainConnectionEditor.getState();
+    tempProfiles = nextState.profiles;
+    tempActiveId = nextState.activeProfileId;
   };
-  const renderProfileUI = () => {
-    const pIndex = tempProfiles.findIndex((p2) => p2.id === tempActiveId);
-    if (pIndex === -1) {
-      tempActiveId = tempProfiles[0].id;
-      return renderProfileUI();
-    }
-    const p = tempProfiles[pIndex];
-    const isInternal = p.type === "internal";
-    const $sel = $("#cfg-prof-select");
-    $sel.empty();
-    tempProfiles.forEach((prof) => $sel.append(`<option value="${prof.id}" ${prof.id === tempActiveId ? "selected" : ""}>${prof.name}</option>`));
-    $("#cfg-prof-name").val(p.name).prop("disabled", isInternal);
-    $("#cfg-prof-del").prop("disabled", isInternal).css("opacity", isInternal ? 0.5 : 1);
-    if (isInternal) {
-      $("#cfg-url").val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
-      $("#cfg-key").val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
-      $("#cfg-model").empty().append("<option selected>(ST \u8BBE\u7F6E)</option>").prop("disabled", true);
-      $("#st-url-display").text(typeof settings !== "undefined" ? settings.api_url_openai || "\u672A\u77E5" : "\u672A\u77E5");
-      $("#cfg-url-hint").show();
-    } else {
-      $("#cfg-url").val(p.url || "").prop("disabled", false).prop("placeholder", "http://...");
-      $("#cfg-key").val(p.key || "").prop("disabled", false).prop("placeholder", "sk-...");
-      $("#cfg-model").prop("disabled", false);
-      $("#cfg-url-hint").hide();
-      const $mSel = $("#cfg-model");
-      $mSel.empty();
-      const currentM = p.model || "gpt-3.5-turbo";
-      $mSel.append(`<option value="${currentM}" selected>${currentM}</option>`);
-    }
-  };
-  $("#cfg-prof-select").on("change", function() {
-    saveCurrentProfileToMemory();
-    tempActiveId = $(this).val();
-    renderProfileUI();
-    const newProfile = tempProfiles.find((x) => x.id === tempActiveId);
-    if (newProfile && newProfile.type !== "internal") {
-      setTimeout(() => fetchModelList2(false), 100);
-    }
-  });
-  $("#cfg-prof-add").on("click", function() {
-    saveCurrentProfileToMemory();
-    const newId = "custom_" + Date.now();
-    tempProfiles.push({ id: newId, name: "\u65B0\u65B9\u6848 " + tempProfiles.length, type: "custom", url: "", key: "", model: "gpt-3.5-turbo" });
-    tempActiveId = newId;
-    renderProfileUI();
-  });
-  $("#cfg-prof-del").on("click", function() {
-    if (confirm("\u5220\u9664\u65B9\u6848\uFF1F")) {
-      tempProfiles = tempProfiles.filter((p) => p.id !== tempActiveId);
-      tempActiveId = tempProfiles[0].id;
-      renderProfileUI();
-    }
-  });
   const PREVIEW_ANIM_CLASSES = {
     ripple: "p-anim-ripple",
     arc: "p-anim-arc"
@@ -25996,7 +26657,6 @@ function openSettingsWindow() {
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
     lore: true,
-    model: false,
     settings: true,
     favs: false,
     scripts: false,
@@ -26076,48 +26736,6 @@ ${JSON.stringify(l.details, null, 2)}`;
   renderLogView();
   $("#btn-refresh-log").on("click", renderLogView);
   $("#btn-export-log").on("click", () => TitaniaLogger.downloadReport());
-  const fetchModelList2 = async (showSuccessToast = true) => {
-    const btn = $("#t-btn-fetch");
-    const p = tempProfiles.find((x) => x.id === tempActiveId);
-    if (!p || p.type === "internal") return;
-    const urlInput = ($("#cfg-url").val() || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
-    const key = ($("#cfg-key").val() || "").trim();
-    if (!urlInput) return;
-    try {
-      btn.prop("disabled", true).text("...");
-      const res = await fetch(`${urlInput}/models`, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${key}` }
-      });
-      if (!res.ok) throw new Error("Status: " + res.status);
-      const data2 = await res.json();
-      const models = data2.data || data2.models || [];
-      const currentModel = p.model || $("#cfg-model").val();
-      const $sel = $("#cfg-model");
-      $sel.empty();
-      models.forEach((m) => {
-        const modelId = m.id || m;
-        const isSelected = modelId === currentModel;
-        $sel.append(`<option value="${modelId}" ${isSelected ? "selected" : ""}>${modelId}</option>`);
-      });
-      if (currentModel && !models.some((m) => (m.id || m) === currentModel)) {
-        $sel.prepend(`<option value="${currentModel}" selected>${currentModel} (\u5F53\u524D)</option>`);
-      }
-      if (showSuccessToast && window.toastr) {
-        toastr.success(`\u83B7\u53D6\u6210\u529F: ${models.length} \u4E2A\u6A21\u578B`);
-      }
-    } catch (e) {
-      if (showSuccessToast) {
-        alert("\u83B7\u53D6\u5931\u8D25: " + e.message);
-        TitaniaLogger.error("\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
-      } else {
-        console.warn("Titania: \u81EA\u52A8\u83B7\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25", e.message);
-      }
-    } finally {
-      btn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
-    }
-  };
-  $("#t-btn-fetch").on("click", () => fetchModelList2(true));
   $("#btn-restore-presets").on("click", function() {
     if (confirm("\u6062\u590D\u6240\u6709\u9884\u8BBE\uFF1F")) {
       const d = getExtData();
@@ -26256,7 +26874,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   renderPreview();
-  renderProfileUI();
+  mainConnectionEditor.render();
 }
 function applyUIFontScale(scalePercent = 100) {
   const n = Number(scalePercent);
@@ -26276,6 +26894,7 @@ var init_settingsWindow = __esm({
     init_outlineEntryButton();
     init_rewriteEntryButton();
     init_apiProfileRegistry();
+    init_apiConnectionEditor();
   }
 });
 
@@ -28116,7 +28735,7 @@ async function openWorldInfoSelector() {
         <div class="t-wi-header">
             <div style="display:flex; align-items:center; gap:10px;">
                 <i class="fa-solid fa-book-atlas" style="color:#90cdf4;"></i>
-                <span style="font-weight:bold;">\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009</span>
+                <span style="font-weight:bold;">\u4E16\u754C\u4E66\u7BA1\u7406</span>
             </div>
             <div class="t-close" id="t-wi-close">&times;</div>
         </div>
@@ -28129,17 +28748,20 @@ async function openWorldInfoSelector() {
     </div>`;
   $("#t-main-view").append(loadingHtml);
   $("#t-wi-close").on("click", () => $("#t-wi-selector").remove());
-  let ctx, entries;
+  let ctx;
+  let allBookNames;
+  let activeBookNames;
   try {
-    const LOAD_TIMEOUT = 1e4;
+    const LOAD_TIMEOUT = 12e3;
     const loadPromise = Promise.all([
       getContextData(),
-      getActiveWorldInfoEntries()
+      getAllWorldBookNames(),
+      Promise.resolve(getActiveWorldBookNames())
     ]);
     const timeoutPromise = new Promise(
       (_, reject) => setTimeout(() => reject(new Error("\u52A0\u8F7D\u8D85\u65F6")), LOAD_TIMEOUT)
     );
-    [ctx, entries] = await Promise.race([loadPromise, timeoutPromise]);
+    [ctx, allBookNames, activeBookNames] = await Promise.race([loadPromise, timeoutPromise]);
   } catch (e) {
     console.error("Titania: \u52A0\u8F7D\u4E16\u754C\u4E66\u6570\u636E\u5931\u8D25", e);
     $("#t-wi-selector .t-wi-body").html(`
@@ -28153,129 +28775,92 @@ async function openWorldInfoSelector() {
     return;
   }
   const data = getExtData();
-  if (!data.worldinfo) {
-    data.worldinfo = { char_selections: {} };
-  }
+  if (!data.worldinfo) data.worldinfo = { char_selections: {}, char_auto_active_books: {} };
+  if (!data.worldinfo.char_selections) data.worldinfo.char_selections = {};
+  if (!data.worldinfo.char_auto_active_books) data.worldinfo.char_auto_active_books = {};
   const charName = ctx.charName;
-  const charSelections = data.worldinfo.char_selections[charName] || null;
-  const isFirstTime = charSelections === null;
-  let totalCount = 0;
-  entries.forEach((book) => {
-    totalCount += book.entries.length;
-  });
+  const savedSelections = data.worldinfo.char_selections[charName] || null;
+  const workingSelections = savedSelections ? structuredClone(savedSelections) : {};
+  const allBooks = Array.isArray(allBookNames) ? allBookNames.slice() : [];
+  const baseActiveBooks = Array.isArray(activeBookNames) ? activeBookNames.filter((name) => allBooks.includes(name)) : [];
+  let currentViewMode = "all";
+  const getVisibleBooks = () => currentViewMode === "active" ? baseActiveBooks : allBooks;
+  let visibleBooks = getVisibleBooks();
   $("#t-wi-selector").remove();
+  const renderBookListHtml = (books, activeSet2, selectedName) => {
+    if (!books.length) {
+      const emptyText = currentViewMode === "active" ? "\u5F53\u524D\u6CA1\u6709\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66" : "\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66";
+      return `<div class="t-wi-booklist-empty">${emptyText}</div>`;
+    }
+    return books.map((name) => {
+      const isActive = activeSet2.has(name);
+      const selected = name === selectedName;
+      return `
+                <div class="t-wi-book-item ${selected ? "selected" : ""}" data-book-name="${encodeURIComponent(name)}" title="${escapeHtmlText2(name)}">
+                    <span class="t-wi-book-item-dot ${isActive ? "active" : ""}"></span>
+                    <span class="t-wi-book-item-name">${escapeHtmlText2(name)}</span>
+                </div>
+            `;
+    }).join("");
+  };
   const html = `
     <div id="t-wi-selector" class="t-wi-selector">
         <div class="t-wi-header">
             <div style="display:flex; align-items:center; gap:10px;">
                 <i class="fa-solid fa-book-atlas" style="color:#90cdf4;"></i>
-                <span style="font-weight:bold;">\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009</span>
+                <span style="font-weight:bold;">\u4E16\u754C\u4E66\u7BA1\u7406</span>
                 <span style="font-size:0.8em; color:#666;">${ctx.charName}</span>
             </div>
             <div class="t-close" id="t-wi-close">&times;</div>
         </div>
-        
-        <div class="t-wi-action-bar" style="display:flex; gap:10px; padding:10px 15px; border-bottom:1px solid #333;">
-            <button class="t-btn" id="t-wi-select-all" style="flex:1;">
-                <i class="fa-solid fa-check-double"></i> \u5168\u9009
-            </button>
-            <button class="t-btn" id="t-wi-select-none" style="flex:1;">
-                <i class="fa-solid fa-square"></i> \u53D6\u6D88\u5168\u9009
-            </button>
+
+        <div class="t-wi-action-bar t-wi-tabs" style="display:flex; align-items:center; gap:8px; padding:10px 15px; border-bottom:1px solid #333;">
+            <button type="button" class="t-btn t-btn-xs t-wi-tab-btn active" data-mode="all">\u5168\u90E8\u4E16\u754C\u4E66 (${allBooks.length})</button>
+            <button type="button" class="t-btn t-btn-xs t-wi-tab-btn" data-mode="active">\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66 (${baseActiveBooks.length})</button>
         </div>
-        
-        <div class="t-wi-body" id="t-wi-body">
-            ${entries.length === 0 ? '<div class="t-wi-empty">\u5F53\u524D\u89D2\u8272\u6CA1\u6709\u6FC0\u6D3B\u7684\u4E16\u754C\u4E66\u6761\u76EE</div>' : ""}
+
+        <div class="t-wi-body t-wi-layout" id="t-wi-layout">
+            <div class="t-wi-books-pane">
+                <div class="t-wi-books-header">\u4E16\u754C\u4E66\u5217\u8868</div>
+                <div class="t-wi-books-list" id="t-wi-books-list"></div>
+            </div>
+            <div class="t-wi-entry-pane">
+                <div class="t-wi-entry-pane-header" id="t-wi-entry-pane-header">
+                    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                        <div class="t-wi-entry-pane-title" id="t-wi-entry-pane-title">\u672A\u9009\u62E9\u4E16\u754C\u4E66</div>
+                        <span class="t-wi-entry-pane-badge inactive" id="t-wi-entry-pane-badge">\u672A\u6FC0\u6D3B</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                        <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-all">\u5168\u9009</button>
+                        <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-none">\u53D6\u6D88\u5168\u9009</button>
+                    </div>
+                </div>
+                <div class="t-wi-entry-list" id="t-wi-entry-list">
+                    ${visibleBooks.length === 0 ? '<div class="t-wi-empty">\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66</div>' : ""}
+                </div>
+            </div>
         </div>
-        
+
         <div class="t-wi-footer">
-            <span id="t-wi-stat">\u5DF2\u9009: 0/${totalCount}</span>
-            <button class="t-btn primary" id="t-wi-save">\u4FDD\u5B58</button>
+            <span id="t-wi-stat">\u5DF2\u9009: 0/0</span>
+            <button class="t-btn primary" id="t-wi-save" ${allBooks.length === 0 ? "disabled" : ""}>\u4FDD\u5B58</button>
         </div>
     </div>`;
   $("#t-main-view").append(html);
-  const renderEntries = () => {
-    const $body = $("#t-wi-body");
-    $body.empty();
-    if (entries.length === 0) {
-      $body.append('<div class="t-wi-empty">\u5F53\u524D\u89D2\u8272\u6CA1\u6709\u6FC0\u6D3B\u7684\u4E16\u754C\u4E66\u6761\u76EE</div>');
-      return;
-    }
-    entries.forEach((book, bookIdx) => {
-      const bookSel = charSelections ? charSelections[book.bookName] || [] : [];
-      const selectedInBook = isFirstTime ? 0 : book.entries.filter((e) => bookSel.includes(e.uid)).length;
-      const $bookSection = $(`
-                <div class="t-wi-book" data-book-idx="${bookIdx}">
-                    <div class="t-wi-book-header t-wi-collapsible" title="\u70B9\u51FB\u5C55\u5F00/\u6536\u8D77">
-                        <i class="fa-solid fa-caret-right t-wi-collapse-icon"></i>
-                        <i class="fa-solid fa-book" style="color:#bfa15f;"></i>
-                        <span class="t-wi-book-name">${book.bookName}</span>
-                        <span class="t-wi-book-stat">(${selectedInBook}/${book.entries.length})</span>
-                        <span class="t-wi-book-toggle" title="\u5168\u9009/\u53D6\u6D88">\u5168\u9009</span>
-                    </div>
-                    <div class="t-wi-entries t-wi-collapsed" data-book="${book.bookName}"></div>
-                </div>
-            `);
-      const $entriesContainer = $bookSection.find(".t-wi-entries");
-      book.entries.forEach((entry) => {
-        const isSelected = isFirstTime ? false : bookSel.includes(entry.uid);
-        const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
-        const $entry = $(`
-                    <div class="t-wi-entry ${isSelected ? "selected" : ""}" data-uid="${entry.uid}">
-                        <div class="t-wi-entry-check">
-                            <input type="checkbox" ${isSelected ? "checked" : ""}>
-                        </div>
-                        <div class="t-wi-entry-content">
-                            <div class="t-wi-entry-title">
-                                <span class="t-wi-uid">[${entry.uid}]</span>
-                                ${entry.comment}
-                                ${constantBadge}
-                            </div>
-                            <div class="t-wi-entry-preview">${entry.preview}${entry.content.length > 80 ? "..." : ""}</div>
-                        </div>
-                        <div class="t-wi-entry-actions">
-                            <i class="fa-solid fa-eye t-wi-preview-btn" title="\u9884\u89C8\u5B8C\u6574\u5185\u5BB9"></i>
-                        </div>
-                    </div>
-                `);
-        $entry.find("input").on("change", function(e) {
-          e.stopPropagation();
-          const checked = $(this).is(":checked");
-          $entry.toggleClass("selected", checked);
-          updateStat();
-          updateBookStat(book.bookName);
-        });
-        $entry.find(".t-wi-preview-btn").on("click", function(e) {
-          e.stopPropagation();
-          showEntryPreview(entry.comment, entry.content);
-        });
-        $entriesContainer.append($entry);
-      });
-      $bookSection.find(".t-wi-book-header").on("click", function(e) {
-        if ($(e.target).hasClass("t-wi-book-toggle")) return;
-        const $entries = $bookSection.find(".t-wi-entries");
-        const $icon = $bookSection.find(".t-wi-collapse-icon");
-        $entries.toggleClass("t-wi-collapsed");
-        $icon.toggleClass("t-wi-expanded");
-      });
-      $bookSection.find(".t-wi-book-toggle").on("click", function(e) {
-        e.stopPropagation();
-        const $entries = $bookSection.find(".t-wi-entry");
-        const allChecked = $entries.length === $entries.find("input:checked").length;
-        $entries.find("input").prop("checked", !allChecked);
-        $entries.toggleClass("selected", !allChecked);
-        $(this).text(allChecked ? "\u5168\u9009" : "\u53D6\u6D88");
-        updateStat();
-        updateBookStat(book.bookName);
-      });
-      $body.append($bookSection);
+  let currentBookName = visibleBooks[0] || "";
+  let currentEntries2 = [];
+  const activeSet = new Set(baseActiveBooks);
+  const getAutoActiveBooksFromSelections = () => {
+    return Object.keys(workingSelections).filter((bookName) => {
+      const selected = workingSelections[bookName];
+      return Array.isArray(selected) && selected.length > 0;
     });
   };
-  const updateBookStat = (bookName) => {
-    const $book = $(`.t-wi-entries[data-book="${bookName}"]`).closest(".t-wi-book");
-    const total = $book.find(".t-wi-entry").length;
-    const selected = $book.find(".t-wi-entry input:checked").length;
-    $book.find(".t-wi-book-stat").text(`(${selected}/${total})`);
+  const refreshActiveState = () => {
+    const autoActive = getAutoActiveBooksFromSelections();
+    activeSet.clear();
+    baseActiveBooks.forEach((name) => activeSet.add(name));
+    autoActive.forEach((name) => activeSet.add(name));
   };
   const showEntryPreview = (title, content) => {
     $(".t-wi-preview-modal").remove();
@@ -28298,45 +28883,189 @@ async function openWorldInfoSelector() {
     });
     $("#t-wi-selector").append($modal);
   };
-  const updateStat = () => {
-    let total = 0;
-    let selected = 0;
-    $(".t-wi-entry").each(function() {
-      total++;
-      if ($(this).find("input").is(":checked")) selected++;
-    });
-    $("#t-wi-stat").text(`\u5DF2\u9009: ${selected}/${total}`);
+  const getBookSelectedSet = (bookName) => {
+    const selectedUids = Array.isArray(workingSelections[bookName]) ? workingSelections[bookName] : [];
+    return new Set(selectedUids.map((uid) => Number(uid)));
   };
-  $("#t-wi-select-all").on("click", () => {
-    $(".t-wi-entry input[type='checkbox']").prop("checked", true);
-    $(".t-wi-entry").addClass("selected");
-    updateStat();
-  });
-  $("#t-wi-select-none").on("click", () => {
-    $(".t-wi-entry input[type='checkbox']").prop("checked", false);
-    $(".t-wi-entry").removeClass("selected");
-    updateStat();
-  });
-  $("#t-wi-save").on("click", () => {
-    const selections = {};
-    entries.forEach((book) => {
-      const selectedUids = [];
-      $(`.t-wi-entries[data-book="${book.bookName}"] .t-wi-entry`).each(function() {
-        if ($(this).find("input").is(":checked")) {
-          selectedUids.push(parseInt($(this).data("uid")));
+  const setBookSelections = (bookName, selectedSet) => {
+    workingSelections[bookName] = Array.from(selectedSet);
+    refreshActiveState();
+  };
+  const updateStat = () => {
+    const selectedSet = getBookSelectedSet(currentBookName);
+    const selectedCount = currentEntries2.filter((entry) => selectedSet.has(Number(entry.uid))).length;
+    $("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}`);
+  };
+  const renderEntries = () => {
+    const $body = $("#t-wi-entry-list");
+    $body.empty();
+    if (!currentBookName) {
+      $body.append('<div class="t-wi-empty">\u672A\u9009\u62E9\u4E16\u754C\u4E66</div>');
+      updateStat();
+      return;
+    }
+    if (!currentEntries2.length) {
+      $body.append('<div class="t-wi-empty">\u8BE5\u4E16\u754C\u4E66\u6682\u65E0\u6761\u76EE</div>');
+      updateStat();
+      return;
+    }
+    const selectedSet = getBookSelectedSet(currentBookName);
+    currentEntries2.forEach((entry) => {
+      const checked = selectedSet.has(Number(entry.uid));
+      const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
+      const disabledBadge = entry.isDisabled ? '<span style="background:#ff9f4333; color:#ffb968; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u5DF2\u7981\u7528</span>' : "";
+      const $entry = $(`
+                <div class="t-wi-entry ${checked ? "selected" : ""}" data-uid="${entry.uid}">
+                    <div class="t-wi-entry-check">
+                        <input type="checkbox" ${checked ? "checked" : ""} ${entry.isDisabled ? "disabled" : ""}>
+                    </div>
+                    <div class="t-wi-entry-content">
+                        <div class="t-wi-entry-title">
+                            <span class="t-wi-uid">[${entry.uid}]</span>
+                            ${entry.comment}
+                            ${constantBadge}
+                            ${disabledBadge}
+                        </div>
+                        <div class="t-wi-entry-preview">${entry.preview}${entry.content.length > 80 ? "..." : ""}</div>
+                    </div>
+                    <div class="t-wi-entry-actions">
+                        <i class="fa-solid fa-eye t-wi-preview-btn" title="\u9884\u89C8\u5B8C\u6574\u5185\u5BB9"></i>
+                    </div>
+                </div>
+            `);
+      $entry.find("input").on("change", function(e) {
+        e.stopPropagation();
+        const nextSet = getBookSelectedSet(currentBookName);
+        const uid = Number(entry.uid);
+        const isChecked = $(this).is(":checked");
+        if (isChecked) nextSet.add(uid);
+        else nextSet.delete(uid);
+        setBookSelections(currentBookName, nextSet);
+        $entry.toggleClass("selected", isChecked);
+        if (currentViewMode === "active") {
+          syncVisibleBooksByMode();
+          ensureCurrentBookInView();
+          renderBookList();
         }
+        syncEntryPaneHeader();
+        updateStat();
       });
-      selections[book.bookName] = selectedUids;
+      $entry.on("click", function(e) {
+        if ($(e.target).closest("input, .t-wi-preview-btn").length) return;
+        const $checkbox = $entry.find("input");
+        if ($checkbox.is(":disabled")) return;
+        $checkbox.prop("checked", !$checkbox.is(":checked")).trigger("change");
+      });
+      $entry.find(".t-wi-preview-btn").on("click", function(e) {
+        e.stopPropagation();
+        showEntryPreview(entry.comment, entry.content);
+      });
+      $body.append($entry);
     });
-    data.worldinfo.char_selections[charName] = selections;
+    updateStat();
+  };
+  const syncEntryPaneHeader = () => {
+    const isActive = activeSet.has(currentBookName);
+    const title = currentBookName || "\u672A\u9009\u62E9\u4E16\u754C\u4E66";
+    $("#t-wi-entry-pane-title").text(title);
+    $("#t-wi-entry-pane-badge").text(isActive ? "\u5DF2\u6FC0\u6D3B" : "\u672A\u6FC0\u6D3B").removeClass("active inactive").addClass(isActive ? "active" : "inactive");
+  };
+  const bulkSelectCurrentBook = (checked) => {
+    if (!currentBookName) return;
+    const nextSet = getBookSelectedSet(currentBookName);
+    currentEntries2.forEach((entry) => {
+      if (entry.isDisabled) return;
+      const uid = Number(entry.uid);
+      if (checked) nextSet.add(uid);
+      else nextSet.delete(uid);
+    });
+    setBookSelections(currentBookName, nextSet);
+    if (currentViewMode === "active") {
+      syncVisibleBooksByMode();
+      ensureCurrentBookInView();
+      renderBookList();
+    }
+    syncEntryPaneHeader();
+    renderEntries();
+  };
+  const renderBookList = () => {
+    $("#t-wi-books-list").html(renderBookListHtml(visibleBooks, activeSet, currentBookName));
+    $("#t-wi-books-list .t-wi-book-item").on("click", function() {
+      const next = decodeURIComponent(String($(this).data("bookName") || ""));
+      if (!next || next === currentBookName) return;
+      loadBookEntries(next);
+    });
+  };
+  const ensureCurrentBookInView = () => {
+    if (visibleBooks.includes(currentBookName)) return;
+    currentBookName = visibleBooks[0] || "";
+  };
+  const syncVisibleBooksByMode = () => {
+    if (currentViewMode === "active") {
+      visibleBooks = allBooks.filter((name) => activeSet.has(name));
+    } else {
+      visibleBooks = allBooks;
+    }
+  };
+  const loadBookEntries = async (bookName) => {
+    currentBookName = bookName || "";
+    syncEntryPaneHeader();
+    renderBookList();
+    const $body = $("#t-wi-entry-list");
+    $body.html(`
+            <div style="text-align:center; color:#888; padding:30px 10px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:1.6em; margin-bottom:10px;"></i>
+                <div>\u6B63\u5728\u52A0\u8F7D\u300C${escapeHtmlText2(currentBookName)}\u300D...</div>
+            </div>
+        `);
+    try {
+      currentEntries2 = await getWorldInfoEntriesByBookName(currentBookName);
+    } catch (e) {
+      console.error("Titania: \u52A0\u8F7D\u6307\u5B9A\u4E16\u754C\u4E66\u5931\u8D25", e);
+      currentEntries2 = [];
+    }
+    renderEntries();
+    syncEntryPaneHeader();
+    renderBookList();
+  };
+  $(".t-wi-tab-btn").on("click", function() {
+    const nextMode = String($(this).data("mode") || "all");
+    if (nextMode === currentViewMode) return;
+    currentViewMode = nextMode === "active" ? "active" : "all";
+    syncVisibleBooksByMode();
+    ensureCurrentBookInView();
+    $(".t-wi-tab-btn").removeClass("active");
+    $(this).addClass("active");
+    if (!currentBookName) {
+      currentEntries2 = [];
+      renderBookList();
+      renderEntries();
+      syncEntryPaneHeader();
+      return;
+    }
+    loadBookEntries(currentBookName);
+  });
+  $("#t-wi-current-select-all").on("click", () => bulkSelectCurrentBook(true));
+  $("#t-wi-current-select-none").on("click", () => bulkSelectCurrentBook(false));
+  $("#t-wi-save").on("click", () => {
+    if (!currentBookName && !Object.keys(workingSelections).length) return;
+    data.worldinfo.char_selections[charName] = workingSelections;
+    data.worldinfo.char_auto_active_books[charName] = getAutoActiveBooksFromSelections();
     saveExtData();
-    $("#t-wi-selector").remove();
     updateWorldInfoBadge();
     if (window.toastr) toastr.success("\u4E16\u754C\u4E66\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   $("#t-wi-close").on("click", () => $("#t-wi-selector").remove());
-  renderEntries();
-  updateStat();
+  refreshActiveState();
+  syncVisibleBooksByMode();
+  ensureCurrentBookInView();
+  renderBookList();
+  syncEntryPaneHeader();
+  if (currentBookName) {
+    await loadBookEntries(currentBookName);
+  } else {
+    updateStat();
+  }
 }
 function renderFilterMenu(currentFilter, $targetBtn, onSelect) {
   if ($("#t-filter-popover").length) {
@@ -28568,11 +29297,24 @@ function openContentEditor() {
     if (window.toastr) toastr.info("\u9884\u89C8\u5DF2\u66F4\u65B0\uFF0C\u70B9\u51FB\u4FDD\u5B58\u786E\u8BA4\u4FEE\u6539");
   });
   $("#t-ce-save").on("click", () => {
+    const previousContent = String(GlobalState.lastGeneratedContent || "");
     const newContent = $textarea.val();
+    const scriptId = GlobalState.lastGeneratedScriptId;
     GlobalState.lastGeneratedContent = newContent;
-    const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
+    const display = GlobalState.displayState;
+    const history = GlobalState.sceneHistory;
+    const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
+      history.items[effectiveIndex].content = newContent;
+      history.items[effectiveIndex].timestamp = Date.now();
+    }
+    if (display.isViewingHistory) {
+      display.lockedContent = newContent;
+    }
+    const currentScript = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
     const scriptName = currentScript ? currentScript.name : "\u573A\u666F";
     renderGeneratedContent(newContent, scriptName);
+    syncEditedContentToContinuationSession(scriptId, previousContent, newContent, scriptName);
     $("#t-content-editor").remove();
     if (window.toastr) toastr.success("\u5185\u5BB9\u5DF2\u66F4\u65B0");
   });
@@ -28843,135 +29585,6 @@ var init_mainWindow = __esm({
 });
 
 // src/ui/floatingBtn.js
-function ensureModelDialogCss() {
-  const id = "titania-css-model-dialog";
-  if (!document.getElementById(id)) {
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.type = "text/css";
-    link.href = `${extensionFolderPath}/css/floating.css`;
-    document.head.appendChild(link);
-  }
-}
-async function showModelSwitchDialog() {
-  ensureModelDialogCss();
-  $("#t-model-switch-dialog").remove();
-  const conn = getActiveConnection();
-  const data = getExtData();
-  const currentOverride = data.theater_model_override || "";
-  const currentModel = currentOverride || conn.model;
-  const html = `
-    <div id="t-model-switch-dialog" class="t-model-dialog-overlay">
-        <div class="t-model-dialog-box">
-            <div class="t-model-dialog-header">
-                <span><i class="fa-solid fa-microchip"></i> \u5FEB\u901F\u5207\u6362\u6A21\u578B</span>
-                <div class="t-model-dialog-close" id="t-model-dialog-close"><i class="fa-solid fa-times"></i></div>
-            </div>
-            <div class="t-model-dialog-body">
-                <p class="t-model-dialog-hint">
-                    <i class="fa-solid fa-info-circle"></i>
-                    \u6B64\u8BBE\u7F6E\u4EC5\u5F71\u54CD\u5267\u573A\u573A\u666F\u751F\u6210\uFF0C\u4E0D\u5F71\u54CD\u8BBE\u5B9A\u63D0\u53D6\u7B49\u5176\u4ED6\u529F\u80FD\u3002
-                </p>
-                
-                <div class="t-model-current-info">
-                    <span class="t-model-label">\u5F53\u524D\u65B9\u6848:</span>
-                    <span class="t-model-value">${conn.profileName}</span>
-                </div>
-                
-                <div class="t-form-group">
-                    <label class="t-form-label">\u9009\u62E9\u6A21\u578B</label>
-                    <div style="display: flex; gap: 8px;">
-                        <select id="t-model-select" class="t-input" style="flex: 1;">
-                            <option value="">\u52A0\u8F7D\u4E2D...</option>
-                        </select>
-                        <button id="t-btn-refresh-models" class="t-btn t-btn-xs" title="\u5237\u65B0\u6A21\u578B\u5217\u8868">
-                            <i class="fa-solid fa-sync"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="t-model-override-status" id="t-override-status" style="display: none;">
-                    <i class="fa-solid fa-check-circle"></i>
-                    <span>\u5DF2\u8BBE\u7F6E\u6A21\u578B\u8986\u76D6</span>
-                    <button id="t-btn-clear-override" class="t-btn t-btn-xs t-btn-danger">\u6E05\u9664\u8986\u76D6</button>
-                </div>
-            </div>
-            <div class="t-model-dialog-footer">
-                <button id="t-btn-cancel-model" class="t-btn">\u53D6\u6D88</button>
-                <button id="t-btn-save-model" class="t-btn t-btn-primary">
-                    <i class="fa-solid fa-check"></i> \u5E94\u7528
-                </button>
-            </div>
-        </div>
-    </div>
-    `;
-  $("body").append(html);
-  await loadModelList(currentModel);
-  if (currentOverride) {
-    $("#t-override-status").show();
-  }
-  $("#t-model-dialog-close, #t-btn-cancel-model").on("click", () => {
-    $("#t-model-switch-dialog").remove();
-  });
-  $("#t-btn-refresh-models").on("click", async function() {
-    const $icon = $(this).find("i");
-    $icon.addClass("fa-spin");
-    await loadModelList($("#t-model-select").val());
-    $icon.removeClass("fa-spin");
-  });
-  $("#t-btn-clear-override").on("click", function() {
-    const data2 = getExtData();
-    data2.theater_model_override = null;
-    saveExtData();
-    const conn2 = getActiveConnection();
-    loadModelList(conn2.model);
-    $("#t-override-status").hide();
-    if (window.toastr) toastr.info("\u5DF2\u6E05\u9664\u6A21\u578B\u8986\u76D6\uFF0C\u5C06\u4F7F\u7528\u65B9\u6848\u9ED8\u8BA4\u6A21\u578B");
-  });
-  $("#t-btn-save-model").on("click", function() {
-    const selectedModel = $("#t-model-select").val();
-    const conn2 = getActiveConnection();
-    if (!selectedModel) {
-      if (window.toastr) toastr.warning("\u8BF7\u9009\u62E9\u4E00\u4E2A\u6A21\u578B");
-      return;
-    }
-    const data2 = getExtData();
-    if (selectedModel === conn2.model) {
-      data2.theater_model_override = null;
-      if (window.toastr) toastr.success(`\u4F7F\u7528\u65B9\u6848\u9ED8\u8BA4\u6A21\u578B: ${selectedModel}`);
-    } else {
-      data2.theater_model_override = selectedModel;
-      if (window.toastr) toastr.success(`\u5267\u573A\u6A21\u578B\u5DF2\u5207\u6362\u4E3A: ${selectedModel}`);
-    }
-    saveExtData();
-    $("#t-model-switch-dialog").remove();
-  });
-}
-async function loadModelList(currentSelection) {
-  const $select = $("#t-model-select");
-  $select.empty();
-  $select.append('<option value="" disabled>\u52A0\u8F7D\u4E2D...</option>');
-  try {
-    const models = await getAvailableModels();
-    $select.empty();
-    const conn = getActiveConnection();
-    const uniqueModels = [...new Set(models)].sort();
-    uniqueModels.forEach((model) => {
-      const isDefault = model === conn.model;
-      const label = isDefault ? `${model} (\u65B9\u6848\u9ED8\u8BA4)` : model;
-      const selected = model === currentSelection ? "selected" : "";
-      $select.append(`<option value="${model}" ${selected}>${label}</option>`);
-    });
-    if (uniqueModels.length === 0) {
-      $select.append('<option value="" disabled>\u65E0\u53EF\u7528\u6A21\u578B</option>');
-    }
-  } catch (e) {
-    console.warn("Titania: \u52A0\u8F7D\u6A21\u578B\u5217\u8868\u5931\u8D25", e);
-    $select.empty();
-    $select.append('<option value="" disabled>\u52A0\u8F7D\u5931\u8D25</option>');
-  }
-}
 function isToolbarEnabled() {
   const settings2 = getExtData();
   const toolbarConfig = settings2.quick_toolbar || {};
@@ -29249,7 +29862,6 @@ var init_floatingBtn = __esm({
     init_defaults();
     init_mainWindow();
     init_settingsWindow();
-    init_connection();
     slideMenuVisible = false;
     TOOLBAR_BUTTONS = [
       {
@@ -29268,13 +29880,6 @@ var init_floatingBtn = __esm({
           const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
           openStoryOutlineWindow2();
         }
-      },
-      {
-        id: "model",
-        title: "\u5207\u6362\u6A21\u578B",
-        icon: "fa-solid fa-microchip",
-        cssClass: "model",
-        handler: () => showModelSwitchDialog()
       },
       {
         id: "settings",
@@ -29338,7 +29943,8 @@ __export(api_exports, {
   getContinuationSessionStats: () => getContinuationSessionStats,
   handleGenerate: () => handleGenerate,
   handleUserContinuation: () => handleUserContinuation,
-  renderGeneratedContent: () => renderGeneratedContent
+  renderGeneratedContent: () => renderGeneratedContent,
+  syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
 });
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
 import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
@@ -29431,6 +30037,36 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     item.round = index + 1;
   });
   byScript[scriptId].scriptName = scriptName || byScript[scriptId].scriptName || "\u573A\u666F";
+}
+function syncEditedContentToContinuationSession(scriptId, previousContent, editedContent, scriptName = "\u573A\u666F") {
+  if (!scriptId) return false;
+  const newText = String(editedContent || "").trim();
+  if (!newText) return false;
+  const oldText = String(previousContent || "").trim();
+  const byScript = getContinuationRuntimeStore();
+  const entry = byScript[scriptId];
+  const rounds = Array.isArray(entry?.rounds) ? entry.rounds : null;
+  if (!rounds || rounds.length === 0) return false;
+  let targetIndex = -1;
+  if (oldText) {
+    for (let i = rounds.length - 1; i >= 0; i--) {
+      const roundContent = String(rounds[i]?.content || "").trim();
+      if (roundContent === oldText) {
+        targetIndex = i;
+        break;
+      }
+    }
+  }
+  if (targetIndex === -1) {
+    targetIndex = rounds.length - 1;
+  }
+  rounds[targetIndex].content = newText;
+  rounds[targetIndex].timestamp = Date.now();
+  entry.scriptName = scriptName || entry.scriptName || "\u573A\u666F";
+  rounds.forEach((item, index) => {
+    item.round = index + 1;
+  });
+  return true;
 }
 function resetContinuationSessionRounds(scriptId, scriptName = "\u573A\u666F") {
   if (!scriptId) return;
@@ -30000,14 +30636,10 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
     raw_response_snippet: ""
   };
   const conn = getActiveConnection();
-  const theaterModelOverride = data.theater_model_override;
-  const effectiveModel = theaterModelOverride || conn.model;
+  const effectiveModel = conn.model;
   diagnostics.profile = conn.profileName;
   diagnostics.model = effectiveModel;
   diagnostics.endpoint = conn.url;
-  if (theaterModelOverride) {
-    TitaniaLogger.info("\u4F7F\u7528\u5267\u573A\u6A21\u578B\u8986\u76D6", { override: theaterModelOverride, original: conn.model });
-  }
   const validation = validateConnection();
   if (!validation.valid) {
     const errText = `\u914D\u7F6E\u7F3A\u5931\uFF1A${validation.error}`;
@@ -30131,6 +30763,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   showCancelButton();
   startTimer();
   if (!silent && window.toastr) toastr.info(`\u{1F680} [${conn.profileName}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
+  let rawContent = "";
   try {
     diagnostics.phase = "prepare_prompt";
     const dirInstruction = dirDefaults.instruction || "";
@@ -30319,7 +30952,6 @@ ${processedPrompt}`;
     });
     TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: conn.profileName });
     diagnostics.phase = "fetch_start";
-    let rawContent = "";
     if (useSTConnection) {
       diagnostics.endpoint = `[ST Backend: ${oai_settings5.chat_completion_source}]`;
       const requestData = ChatCompletionService4.createRequestData({
@@ -30623,6 +31255,33 @@ ${processedPrompt}`;
       return false;
     }
     console.error("Titania Generate Error:", e);
+    let partialSaved = false;
+    let partialOutput = "";
+    if (typeof rawContent === "string" && rawContent.trim().length > 0) {
+      try {
+        const sanitizedPartial = sanitizeAIOutput(rawContent);
+        partialOutput = sanitizedPartial && sanitizedPartial.trim().length > 0 ? sanitizedPartial : rawContent.trim();
+      } catch (partialSanitizeErr) {
+        TitaniaLogger.warn("\u90E8\u5206\u5185\u5BB9\u6E05\u6D17\u5931\u8D25\uFF0C\u4F7F\u7528\u539F\u59CB\u5185\u5BB9\u515C\u5E95", {
+          error: partialSanitizeErr?.message || "sanitize_failed"
+        });
+        partialOutput = rawContent.trim();
+      }
+      try {
+        endStreamingCache();
+        pushSceneToHistory(partialOutput, script.id, script.name);
+        partialSaved = true;
+        if (shouldRenderStreamToUI() && $("#t-output-content").length > 0) {
+          finalizeStreamRender(partialOutput, script.name);
+        }
+        if (typeof window.updateSceneHistoryNav === "function") {
+          window.updateSceneHistoryNav();
+        }
+      } catch (savePartialErr) {
+        TitaniaLogger.error("\u4FDD\u5B58\u5F02\u5E38\u4E2D\u65AD\u7684\u90E8\u5206\u5185\u5BB9\u5931\u8D25", savePartialErr);
+        partialSaved = false;
+      }
+    }
     stopTimer();
     hideCancelButton();
     resetContinuationState();
@@ -30660,13 +31319,23 @@ ${processedPrompt}`;
                 \u8BCA\u65AD\u63D0\u793A\uFF1A${diagnosisHint}
             </div>
         </div>`;
-    GlobalState.lastGeneratedContent = errHtml;
-    GlobalState.lastGeneratedScriptId = script.id;
+    if (!partialSaved) {
+      GlobalState.lastGeneratedContent = errHtml;
+      GlobalState.lastGeneratedScriptId = script.id;
+    }
     $floatBtn.addClass("t-notify");
-    if (!silent && window.toastr) toastr.error("\u751F\u6210\u5931\u8D25", "Titania Error");
+    if (!silent && window.toastr) {
+      if (partialSaved) {
+        toastr.warning("\u751F\u6210\u4E2D\u65AD\uFF0C\u5DF2\u81EA\u52A8\u4FDD\u5B58\u5DF2\u8FD4\u56DE\u7684\u5185\u5BB9", "Titania Warning");
+      } else {
+        toastr.error("\u751F\u6210\u5931\u8D25", "Titania Error");
+      }
+    }
     finishPromptTrace(promptTraceId, "failed", {
       error: e.message || "unknown_error",
-      phase: diagnostics.phase
+      phase: diagnostics.phase,
+      partialSaved,
+      partialLength: partialSaved ? partialOutput.length : 0
     });
     return false;
   } finally {
@@ -30799,11 +31468,34 @@ async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalMo
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   const signal = GlobalState.abortController?.signal;
+  const continuationSource = continuationType === "user" ? "user_continuation" : "auto_continuation";
+  const promptTraceId = createPromptTrace({
+    source: continuationSource,
+    mode: GlobalState.generationMode,
+    scriptId: script?.id,
+    scriptName: script?.name,
+    profile: getActiveConnection()?.profileName || "",
+    model: finalModel,
+    extraMeta: {
+      continuationType,
+      autoLocate,
+      silent,
+      useSTConnection,
+      useStream
+    }
+  });
   try {
     const context = buildContinuationContext(
       GlobalState.continuation.accumulatedContent,
       GlobalState.continuation.originalPrompt
     );
+    appendPromptTraceStage(promptTraceId, "context_built", {
+      continuationType,
+      totalLength: context.totalLength,
+      unclosedTags: Array.isArray(context.unclosedTags) ? context.unclosedTags.length : 0,
+      hasStyleGuide: !!(context.styleGuide && String(context.styleGuide).trim()),
+      recentClassesCount: Array.isArray(context.recentClasses) ? context.recentClasses.length : 0
+    });
     const continuationSys = `You are seamlessly continuing an interrupted HTML scene.
 
 [Story Context]
@@ -30845,6 +31537,33 @@ ${context.recentHtml}
 ${context.incompleteText ? `Complete this first: "...${context.incompleteText}"` : `Start after: "${context.lastCompleteSentence.slice(-30)}"`}
 
 Generate ONLY the continuation (no repetition):`;
+    const continuationTraceMeta = {
+      source: continuationSource,
+      continuationType,
+      autoLocate,
+      useSTConnection,
+      useStream,
+      estimatedTokens: {
+        system: estimateTokens(continuationSys),
+        user: estimateTokens(continuationUser)
+      },
+      contextStats: {
+        totalLength: context.totalLength,
+        unclosedTags: Array.isArray(context.unclosedTags) ? context.unclosedTags.length : 0,
+        recentClassesCount: Array.isArray(context.recentClasses) ? context.recentClasses.length : 0,
+        styleGuideLength: String(context.styleGuide || "").length,
+        recentHtmlLength: String(context.recentHtml || "").length
+      }
+    };
+    setPromptTraceFinalMessages(promptTraceId, [
+      { role: "system", content: continuationSys },
+      { role: "user", content: continuationUser }
+    ], continuationTraceMeta);
+    appendPromptTraceStage(promptTraceId, "request_ready", {
+      continuationType,
+      useSTConnection,
+      useStream
+    });
     let rawContent = "";
     if (useSTConnection) {
       const requestData = ChatCompletionService4.createRequestData({
@@ -31041,6 +31760,12 @@ Generate ONLY the continuation (no repetition):`;
       if (!silent && window.toastr) {
         toastr.info(`\u{1F504} \u7EED\u5199\u5185\u5BB9\u4ECD\u88AB\u622A\u65AD\uFF0C\u7EE7\u7EED\u5C1D\u8BD5 (${GlobalState.continuation.retryCount}/${maxRetries})...`, "Titania Echo");
       }
+      finishPromptTrace(promptTraceId, "success", {
+        reason: "continuation_retry",
+        outputLength: continuationOutput.length,
+        retryCount: GlobalState.continuation.retryCount,
+        maxRetries
+      });
       return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, userInstruction, continuationType, autoLocate);
     } else {
       const finalOutput = smartMergeContinuation(
@@ -31100,10 +31825,20 @@ Generate ONLY the continuation (no repetition):`;
         totalRetries,
         elapsed: elapsed.toFixed(1) + "s"
       });
+      finishPromptTrace(promptTraceId, "success", {
+        continuationType,
+        totalRetries,
+        outputLength: rewrittenOutput.length,
+        elapsedMs: GlobalState.lastGenerationTime || 0
+      });
       return true;
     }
   } catch (e) {
     if (e.name === "AbortError") {
+      finishPromptTrace(promptTraceId, "aborted", {
+        continuationType,
+        error: e.message || "aborted"
+      });
       return false;
     }
     console.error("Titania Continuation Error:", e);
@@ -31121,6 +31856,10 @@ Generate ONLY the continuation (no repetition):`;
     resetContinuationState();
     stopTimer();
     $floatBtn.addClass("t-notify");
+    finishPromptTrace(promptTraceId, "failed", {
+      continuationType,
+      error: e?.message || "unknown_error"
+    });
     return false;
   } finally {
     GlobalState.isGenerating = false;
