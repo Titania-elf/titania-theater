@@ -22,11 +22,12 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.3";
+    CURRENT_VERSION = "5.0.4";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "5.0.4": "\u4F18\u5316\u90E8\u5206\u4F53\u9A8C\uFF1A\u5185\u5BB9\u533A\u6D41\u5F0F\u6E32\u67D3\u53EF\u4EE5\u5B9E\u65F6\u67E5\u770B\u751F\u6210\u8FC7\u7A0B\uFF1B\u4FEE\u590D\u67E5\u770B\u5386\u53F2\u751F\u6210\u65F6\u5DE6\u7BAD\u5934\u5931\u6548\u95EE\u9898\uFF1B\u73B0\u5728\u6536\u85CF\u540C\u4E00\u4E2A\u5267\u573A\u65F6\u4F1A\u81EA\u52A8\u201C\u66F4\u65B0\u539F\u6536\u85CF\u201D\u5E76\u628A\u65B0\u7EED\u5199\u5408\u5E76\u8FDB\u53BB\uFF1B\u7EED\u5199\u63D0\u793A\u8BCD\u8FDB\u884C\u91CD\u6784\uFF0C\u8282\u7701token\u3002\u65B0\u589E\u6536\u85CF\u533A\u7D27\u51D1/\u6D77\u62A5\u4E24\u79CD\u89C6\u56FE\u3002",
       "5.0.3": "\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u9875\u9762\uFF0C\u91CD\u6784\u6536\u85CF\u753B\u5ECA\u9875\u9762\uFF0C\u65B0\u589E\u53EF\u5220\u9664\u5267\u573A\u5206\u7EC4\u4E2D\u7684\u4EFB\u610F\u4E00\u6761\u8BB0\u5F55\u3002",
       "5.0.2": "\u4F18\u5316\u6536\u85CF\u9986\u6027\u80FD\u4E0E\u6D77\u62A5\u5F0F\u754C\u9762\uFF0C\u4FEE\u590D\u7F16\u8F91\u540E\u6536\u85CF\u5185\u5BB9\u4E0D\u540C\u6B65\u95EE\u9898\uFF0C\u65B0\u589E\u5BFC\u51FA\u56FE\u7247\u6253\u7801\u53EF\u9009\u9879\u5E76\u6539\u8FDB\u79FB\u52A8\u7AEF\u4EA4\u4E92\u3002",
       "5.0.1": "\u4FEE\u590D\u4E86\u4E00\u4E2Abug\uFF0C\u4F18\u5316\u4E86\u90E8\u5206\u754C\u9762\u7EC6\u8282\u3002",
@@ -12597,6 +12598,15 @@ function getChatHistory2(limit, whitelist = []) {
     return `${name}: ${cleanContent}`;
   }).join("\n");
 }
+function sanitizeAIOutputLite(rawContent) {
+  if (!rawContent || typeof rawContent !== "string") return "";
+  let content = rawContent;
+  content = content.replace(/```html\s*/gi, "");
+  content = content.replace(/```\s*/g, "");
+  content = content.replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/gi, "");
+  content = content.replace(/<think[^>]*>[\s\S]*?<\/think>/gi, "");
+  return content.trim();
+}
 function sanitizeAIOutput(rawContent) {
   if (!rawContent || typeof rawContent !== "string") return "";
   let content = rawContent;
@@ -13402,6 +13412,31 @@ function waitForImagesLoadedDeep(rootEl, timeoutMs = 5e3) {
 async function saveFavorite() {
   await saveContinuationChainFavorite();
 }
+function getChainBaseHtmlFromItems(items) {
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) return "";
+  const initial = list.find((item) => String(item?.type || "").trim() === "initial");
+  const candidate = initial || list[0];
+  return String(candidate?.html || candidate?.content || "").trim();
+}
+function isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems) {
+  if (!favEntry || favEntry.type !== "chain") return false;
+  if (String(favEntry.scriptId || "") !== String(scriptId || "")) return false;
+  const favBase = getChainBaseHtmlFromItems(favEntry.items);
+  const currentBase = getChainBaseHtmlFromItems(currentItems);
+  if (!favBase || !currentBase) return false;
+  return favBase === currentBase;
+}
+function isSameChainSession(favEntry, scriptId, branchKey, currentItems) {
+  if (!favEntry || favEntry.type !== "chain") return false;
+  if (String(favEntry.scriptId || "") !== String(scriptId || "")) return false;
+  const normalizedBranchKey = String(branchKey || "").trim();
+  const favBranchKey = String(favEntry.branchKey || "").trim();
+  if (normalizedBranchKey && favBranchKey) {
+    return normalizedBranchKey === favBranchKey;
+  }
+  return isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems);
+}
 async function saveContinuationChainFavorite() {
   const display = GlobalState.displayState?.isViewingHistory ? GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex] || null : {
     scriptId: GlobalState.lastGeneratedScriptId,
@@ -13434,6 +13469,7 @@ async function saveContinuationChainFavorite() {
   }
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
   const scriptName = String(chainData?.scriptName || script?.name || display?.scriptName || "\u573A\u666F");
+  const branchKey = String(chainData?.branchKey || "").trim();
   const avatarSrc = getCurrentAvatarSrc();
   const chainSignature = buildChainSignature(scriptId, normalizedRounds);
   const data = getExtData();
@@ -13448,6 +13484,32 @@ async function saveContinuationChainFavorite() {
   }
   const mergedHtml = buildChainMergedHtml(items);
   const now = Date.now();
+  const activeFavId = Number(GlobalState.lastFavId) || null;
+  let existingChain = null;
+  if (activeFavId) {
+    existingChain = data.favs.find((f) => f?.type === "chain" && Number(f?.id) === activeFavId) || null;
+  }
+  if (!existingChain) {
+    existingChain = data.favs.find((f) => isSameChainSession(f, scriptId, branchKey, items)) || null;
+  }
+  if (existingChain) {
+    existingChain.title = `${scriptName} - ${ctx.charName}`;
+    existingChain.charName = ctx.charName;
+    existingChain.scriptName = scriptName;
+    existingChain.scriptId = scriptId;
+    existingChain.date = new Date(now).toLocaleString();
+    existingChain.html = mergedHtml;
+    existingChain.avatar = avatarSrc;
+    existingChain.branchKey = branchKey;
+    existingChain.chainSignature = chainSignature;
+    existingChain.items = items;
+    saveExtData();
+    GlobalState.lastFavId = existingChain.id;
+    syncFavIdToCurrentHistory(existingChain.id);
+    updateFavButtonUI();
+    if (window.toastr) toastr.success(`\u5DF2\u66F4\u65B0\u5F53\u524D\u5267\u573A\u5206\u7EC4\u6536\u85CF\uFF08\u5171 ${items.length} \u6BB5\uFF09`);
+    return true;
+  }
   const entry = {
     id: now,
     type: "chain",
@@ -13458,6 +13520,7 @@ async function saveContinuationChainFavorite() {
     date: new Date(now).toLocaleString(),
     html: mergedHtml,
     avatar: avatarSrc,
+    branchKey,
     chainSignature,
     items
   };
@@ -13479,8 +13542,9 @@ function unsaveFavorite() {
     GlobalState.lastFavId = null;
     return false;
   }
+  const targetFavId = String(GlobalState.lastFavId);
   const originalLength = data.favs.length;
-  data.favs = data.favs.filter((f) => f.id !== GlobalState.lastFavId);
+  data.favs = data.favs.filter((f) => String(f?.id) !== targetFavId);
   if (data.favs.length < originalLength) {
     saveExtData();
     GlobalState.lastFavId = null;
@@ -13489,7 +13553,11 @@ function unsaveFavorite() {
     if (window.toastr) toastr.info("\u5DF2\u53D6\u6D88\u6536\u85CF");
     return true;
   }
-  return false;
+  GlobalState.lastFavId = null;
+  syncFavIdToCurrentHistory(null);
+  updateFavButtonUI();
+  if (window.toastr) toastr.info("\u6536\u85CF\u72B6\u6001\u5DF2\u540C\u6B65\u4E3A\u672A\u6536\u85CF");
+  return true;
 }
 function openFavsWindow() {
   setFavsWindowOpen(true);
@@ -28409,6 +28477,14 @@ function openContinuationComposer(initialText = "") {
                     </div>
                     <div id="t-cont-context-estimate" style="color:#9aa; font-size:12px;">\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A0 \u5B57\u7B26 (~0 tokens)</div>
                 </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px; border:1px dashed #3a3a3a; border-radius:8px; padding:10px; background:#1b1b1b;">
+                    <label style="display:flex; align-items:center; gap:8px; color:#ddd; font-size:12px; cursor:pointer;">
+                        <input type="checkbox" id="t-cont-branch-mode" style="margin:0;">
+                        <span>\u4ECE\u5F53\u524D\u5185\u5BB9\u521B\u5EFA\u5206\u652F\u7EED\u5199</span>
+                    </label>
+                    <div style="color:#888; font-size:12px; line-height:1.5;">\u5F00\u542F\u540E\u4F1A\u4EE5\u5F53\u524D\u9875\u9762\u5185\u5BB9\u4F5C\u4E3A\u65B0\u5206\u652F\u8D77\u70B9\uFF0C\u4E0D\u4F1A\u6CBF\u7528\u540E\u7EED\u8F6E\u6B21\u3002</div>
+                </div>
             </div>
 
             <div class="t-ce-footer">
@@ -28433,6 +28509,7 @@ function openContinuationComposer(initialText = "") {
     const $injectButtons = $("#t-cont-inject-buttons");
     const $roundsTotal = $("#t-cont-rounds-total");
     const $contextEstimate = $("#t-cont-context-estimate");
+    const $branchMode = $("#t-cont-branch-mode");
     let resolved = false;
     let expanded = false;
     const finalize = (value) => {
@@ -28460,7 +28537,8 @@ function openContinuationComposer(initialText = "") {
       if (!ensureHasBaseContent()) return;
       finalize({
         instruction: $input.val(),
-        injectRoundsCount: selectedInjectRounds
+        injectRoundsCount: selectedInjectRounds,
+        branchFromCurrentView: $branchMode.is(":checked")
       });
     };
     const updateInjectButtonsVisual = () => {
@@ -28670,10 +28748,6 @@ async function openMainWindow() {
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                         <span>\u4E3B\u52A8\u7EED\u5199</span>
                     </div>
-                    <div class="t-tools-item" id="t-tool-continue-fav-chain">
-                        <i class="fa-solid fa-bookmark"></i>
-                        <span>\u6536\u85CF\u5F53\u524D\u5267\u573A\u5206\u7EC4</span>
-                    </div>
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
@@ -28862,15 +28936,6 @@ async function openMainWindow() {
       $toolsBtn.removeClass("zen-active");
     }
   });
-  $("#t-tool-continue-fav-chain").on("click", async function() {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
-    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
-      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
-      return;
-    }
-    await saveContinuationChainFavorite();
-  });
   $("#t-tool-edit-content").on("click", function() {
     $toolsPanel.hide();
     $toolsBtn.removeClass("active");
@@ -28897,6 +28962,7 @@ async function openMainWindow() {
     await handleUserContinuation({
       instruction: normalizedInstruction,
       injectRoundsCount,
+      branchFromCurrentView: composeResult?.branchFromCurrentView === true,
       fromCurrentView: true
     });
   });
@@ -29037,9 +29103,11 @@ async function openMainWindow() {
     if ($(this).prop("disabled")) return;
     const history = GlobalState.sceneHistory;
     const display = GlobalState.displayState;
+    const streaming = GlobalState.streamingCache;
     let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-    if (effectiveIndex < history.items.length - 1) {
-      const newIndex = effectiveIndex + 1;
+    const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
+    if (canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1) {
+      const newIndex = canJumpFromLiveToHistory ? 0 : effectiveIndex + 1;
       lockDisplayToHistory(newIndex);
       const item = history.items[newIndex];
       if (item) {
@@ -29207,7 +29275,8 @@ function updateSceneHistoryNav() {
   const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
   const virtualTotal = streaming.isActive && display.isViewingHistory ? history.items.length + 1 : history.items.length;
   const displayCurrent = display.isViewingHistory ? effectiveIndex + 1 : streaming.isActive ? 0 : effectiveIndex + 1;
-  const hasPrev = effectiveIndex < history.items.length - 1;
+  const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
+  const hasPrev = canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1;
   const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
   if (history.items.length > 1 || history.items.length >= 1 && streaming.isActive) {
     $prevBtn.show();
@@ -30523,6 +30592,11 @@ function clampContinuationInjectRounds(value) {
 function estimateTokensByChars(charCount) {
   return Math.ceil((Number(charCount) || 0) / 4);
 }
+function createContinuationBranchKey() {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `branch_${ts}_${rand}`;
+}
 function getContinuationRuntimeStore() {
   if (!GlobalState.continuationRuntime || typeof GlobalState.continuationRuntime !== "object") {
     GlobalState.continuationRuntime = { byScript: {} };
@@ -30544,17 +30618,21 @@ function getContinuationSessionRounds(scriptId) {
     timestamp: Number(item?.timestamp) || 0
   })).filter((item) => item.content.length > 0);
 }
-function setContinuationSessionBaseRound(scriptId, scriptName, content) {
+function setContinuationSessionBaseRound(scriptId, scriptName, content, options = {}) {
   if (!scriptId) return;
   const textContent = String(content || "").trim();
   if (!textContent) return;
+  const forceNewBranch = options?.forceNewBranch === true;
+  const providedBranchKey = typeof options?.branchKey === "string" ? options.branchKey.trim() : "";
   const byScript = getContinuationRuntimeStore();
   const current = byScript[scriptId];
   const oldRounds = Array.isArray(current?.rounds) ? current.rounds : [];
   const continuationRounds = oldRounds.filter((item) => String(item?.type || "continuation") !== "initial");
+  const nextBranchKey = providedBranchKey || (forceNewBranch ? createContinuationBranchKey() : String(current?.branchKey || "").trim()) || createContinuationBranchKey();
   byScript[scriptId] = {
     scriptId,
     scriptName: scriptName || current?.scriptName || "\u573A\u666F",
+    branchKey: nextBranchKey,
     rounds: [
       {
         round: 1,
@@ -30581,6 +30659,7 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     byScript[scriptId] = {
       scriptId,
       scriptName: scriptName || "\u573A\u666F",
+      branchKey: createContinuationBranchKey(),
       rounds: []
     };
   }
@@ -30602,6 +30681,9 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     item.round = index + 1;
   });
   byScript[scriptId].scriptName = scriptName || byScript[scriptId].scriptName || "\u573A\u666F";
+  if (!String(byScript[scriptId].branchKey || "").trim()) {
+    byScript[scriptId].branchKey = createContinuationBranchKey();
+  }
 }
 function syncEditedContentToContinuationSession(scriptId, previousContent, editedContent, scriptName = "\u573A\u666F") {
   if (!scriptId) return false;
@@ -30639,6 +30721,7 @@ function resetContinuationSessionRounds(scriptId, scriptName = "\u573A\u666F") {
   byScript[scriptId] = {
     scriptId,
     scriptName: scriptName || "\u573A\u666F",
+    branchKey: null,
     rounds: [],
     resetAt: Date.now()
   };
@@ -30696,6 +30779,7 @@ function getContinuationRoundsForFav(scriptId) {
     return {
       scriptId: null,
       scriptName: "",
+      branchKey: "",
       rounds: []
     };
   }
@@ -30704,6 +30788,7 @@ function getContinuationRoundsForFav(scriptId) {
   return {
     scriptId,
     scriptName: String(entry?.scriptName || "\u573A\u666F"),
+    branchKey: String(entry?.branchKey || "").trim(),
     rounds: getContinuationSessionRounds(scriptId)
   };
 }
@@ -30730,7 +30815,18 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
     $("#t-interactive-fab").remove();
   }
   try {
-    renderToShadowDOMReal(container, content);
+    const shadowContentEl = ensureShadowContentElement(container, content);
+    if (shadowContentEl) {
+      if (isStreaming) {
+        applyStreamingShadowUpdate(shadowContentEl, content);
+      } else {
+        shadowContentEl.innerHTML = String(content || "");
+        lastStreamRenderedContent = String(content || "");
+      }
+    } else {
+      renderToShadowDOMReal(container, content);
+      lastStreamRenderedContent = String(content || "");
+    }
     if (!isStreaming) {
       TitaniaLogger.info("Shadow DOM \u6E32\u67D3\u5B8C\u6210");
     }
@@ -30749,12 +30845,57 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
     });
   }
   if (!isStreaming) {
-    const interactiveResult = detectInteractiveContent(content);
+    scheduleInteractiveDetection(content, scriptName);
+  }
+}
+function ensureShadowContentElement(container, initialContent = "") {
+  const host = container.querySelector(".t-shadow-host");
+  const existingShadow = host && host.shadowRoot ? host.shadowRoot : null;
+  const existingContentEl = existingShadow ? existingShadow.querySelector(".t-shadow-content") : null;
+  if (existingContentEl) return existingContentEl;
+  const shadow = renderToShadowDOMReal(container, initialContent || "");
+  return shadow ? shadow.querySelector(".t-shadow-content") : null;
+}
+function applyStreamingShadowUpdate(contentEl, nextContent) {
+  const normalizedNext = String(nextContent || "");
+  if (!contentEl) return;
+  if (normalizedNext === lastStreamRenderedContent) return;
+  contentEl.innerHTML = normalizedNext;
+  lastStreamRenderedContent = normalizedNext;
+}
+function clearPendingInteractiveDetection() {
+  if (interactiveDetectionIdleHandle !== null && typeof window !== "undefined" && typeof window.cancelIdleCallback === "function") {
+    window.cancelIdleCallback(interactiveDetectionIdleHandle);
+  }
+  interactiveDetectionIdleHandle = null;
+  if (interactiveDetectionTimer !== null) {
+    clearTimeout(interactiveDetectionTimer);
+  }
+  interactiveDetectionTimer = null;
+}
+function scheduleInteractiveDetection(content, scriptName) {
+  clearPendingInteractiveDetection();
+  const token = ++interactiveDetectionToken;
+  const normalizedContent = String(content || "");
+  const run = () => {
+    if (token !== interactiveDetectionToken) return;
+    const interactiveResult = detectInteractiveContent(normalizedContent);
     TitaniaLogger.info("\u4E92\u52A8\u68C0\u6D4B\u7ED3\u679C", interactiveResult);
     if (interactiveResult.isInteractive) {
-      showInteractiveFAB(scriptName, content, interactiveResult.reasons);
+      showInteractiveFAB(scriptName, normalizedContent, interactiveResult.reasons);
     }
+  };
+  if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+    interactiveDetectionIdleHandle = window.requestIdleCallback(() => {
+      interactiveDetectionIdleHandle = null;
+      run();
+    }, { timeout: 320 });
+    return;
   }
+  interactiveDetectionTimer = setTimeout(() => {
+    interactiveDetectionTimer = null;
+    run();
+  }, 60);
 }
 function scheduleStreamRender(content, scriptName) {
   pendingStreamContent = content;
@@ -30871,6 +31012,7 @@ function finalizeStreamRender(content, scriptName) {
   }
   pendingStreamContent = "";
   lastRenderTime = 0;
+  clearPendingInteractiveDetection();
   renderGeneratedContent(content, scriptName, false);
 }
 function showInteractiveFAB(scriptName, html, reasons) {
@@ -31320,6 +31462,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   GlobalState.isGenerating = true;
   $floatBtn.addClass("t-loading");
   startStreamingCache(script.id, script.name);
+  lastStreamRenderedContent = "";
   if (typeof window.updateRunButtonsState === "function") {
     window.updateRunButtonsState();
   }
@@ -31547,7 +31690,7 @@ ${processedPrompt}`;
               diagnostics.stream_stats.chunks = chunkCount;
               rawContent = chunk.text || "";
               if (($("#t-output-content").length > 0 || $("#t-main-view").length > 0) && rawContent.length > 0) {
-                const streamCleanContent = sanitizeAIOutput(rawContent);
+                const streamCleanContent = sanitizeAIOutputLite(rawContent);
                 scheduleStreamRender(streamCleanContent, script.name);
               }
             }
@@ -31647,7 +31790,7 @@ ${processedPrompt}`;
             if (chunk) {
               rawContent += chunk;
               if ($("#t-output-content").length > 0 || $("#t-main-view").length > 0) {
-                const streamCleanContent = sanitizeAIOutput(rawContent);
+                const streamCleanContent = sanitizeAIOutputLite(rawContent);
                 scheduleStreamRender(streamCleanContent, script.name);
               }
             }
@@ -32437,7 +32580,7 @@ Generate ONLY the continuation (no repetition):`;
   }
 }
 async function handleUserContinuation(options = {}) {
-  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3 } = options;
+  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3, branchFromCurrentView = false } = options;
   if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
     if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
     return false;
@@ -32465,6 +32608,15 @@ async function handleUserContinuation(options = {}) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5185\u5BB9\u5BF9\u5E94\u7684\u5267\u672C\uFF0C\u65E0\u6CD5\u7EED\u5199", "Titania");
     return false;
   }
+  if (branchFromCurrentView) {
+    resetContinuationSessionRounds(script.id, script.name);
+    setContinuationSessionBaseRound(script.id, script.name, baseContent, { forceNewBranch: true });
+    TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u521B\u5EFA\u5206\u652F", {
+      scriptId: script.id,
+      scriptName: script.name,
+      baseContentLength: baseContent.length
+    });
+  }
   const userInstruction = (instruction || "").trim() || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
   const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
   const sessionInjection = buildContinuationSessionInjection(script.id, effectiveInjectCount);
@@ -32477,14 +32629,8 @@ async function handleUserContinuation(options = {}) {
 \uFF08\u4EE5\u4E0B\u4E3A\u5386\u53F2\u7EED\u5199\u8F6E\u6B21\uFF0C\u5305\u542B\u201C\u6307\u4EE4+\u7ED3\u679C\u201D\uFF0C\u7528\u4E8E\u4FDD\u6301\u591A\u8F6E\u8FDE\u7EED\u6027\uFF09
 ${sessionInjection.text}
 
-[\u5F53\u524D\u57FA\u51C6\u5185\u5BB9]
-${baseContent}
-
 [\u672C\u8F6E\u7EED\u5199\u6307\u4EE4]
-${userInstruction}
-
-[\u539F\u59CB\u5267\u672C\u6307\u4EE4]
-${script.prompt}`;
+${userInstruction}`;
   TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u5207\u6362\u5230\u65B0\u56DE\u5408\u751F\u6210\u6A21\u5F0F", {
     scriptId: script.id,
     scriptName: script.name,
@@ -32514,7 +32660,7 @@ ${script.prompt}`;
   }
   return success;
 }
-var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
+var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
@@ -32528,6 +32674,10 @@ var init_api = __esm({
     init_scriptData();
     CONTINUATION_SESSION_MAX_ROUNDS = 30;
     CONTINUATION_INJECT_MAX = 5;
+    interactiveDetectionIdleHandle = null;
+    interactiveDetectionTimer = null;
+    interactiveDetectionToken = 0;
+    lastStreamRenderedContent = "";
     streamRenderTimer = null;
     pendingStreamContent = "";
     lastRenderTime = 0;
