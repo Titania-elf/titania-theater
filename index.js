@@ -22,11 +22,12 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.4";
+    CURRENT_VERSION = "5.0.5";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "5.0.5": "\u4F18\u5316\u53D1\u9001\u952E\u83DC\u5355\u5165\u53E3\u903B\u8F91\uFF1A\u65B0\u589E\u53EF\u72EC\u7ACB\u63A7\u5236\u7684\u5927\u7EB2/\u5C0F\u5267\u573A\u5165\u53E3\uFF0C\u5E76\u652F\u6301\u4EC5\u542F\u7528\u5355\u4E00\u529F\u80FD\u65F6\u70B9\u51FB\u83DC\u5355\u6309\u94AE\u76F4\u63A5\u8FDB\u5165\u5BF9\u5E94\u754C\u9762\u3002\u4F18\u5316\u6536\u85CF\u753B\u5ECA\u6D77\u62A5\u6A21\u5F0F\u6027\u80FD\uFF0C\u51CF\u5C11\u5927\u91CF\u6536\u85CF\u65F6\u7684\u5361\u987F\u3002\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u7A97\u53E3\u52A0\u8F7D\u7B56\u7565\uFF0C\u964D\u4F4E\u8D85\u65F6\u5931\u8D25\u6982\u7387\u3002",
       "5.0.4": "\u4F18\u5316\u90E8\u5206\u4F53\u9A8C\uFF1A\u5185\u5BB9\u533A\u6D41\u5F0F\u6E32\u67D3\u53EF\u4EE5\u5B9E\u65F6\u67E5\u770B\u751F\u6210\u8FC7\u7A0B\uFF1B\u4FEE\u590D\u67E5\u770B\u5386\u53F2\u751F\u6210\u65F6\u5DE6\u7BAD\u5934\u5931\u6548\u95EE\u9898\uFF1B\u73B0\u5728\u6536\u85CF\u540C\u4E00\u4E2A\u5267\u573A\u65F6\u4F1A\u81EA\u52A8\u201C\u66F4\u65B0\u539F\u6536\u85CF\u201D\u5E76\u628A\u65B0\u7EED\u5199\u5408\u5E76\u8FDB\u53BB\uFF1B\u7EED\u5199\u63D0\u793A\u8BCD\u8FDB\u884C\u91CD\u6784\uFF0C\u8282\u7701token\u3002\u65B0\u589E\u6536\u85CF\u533A\u7D27\u51D1/\u6D77\u62A5\u4E24\u79CD\u89C6\u56FE\u3002",
       "5.0.3": "\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u9875\u9762\uFF0C\u91CD\u6784\u6536\u85CF\u753B\u5ECA\u9875\u9762\uFF0C\u65B0\u589E\u53EF\u5220\u9664\u5267\u573A\u5206\u7EC4\u4E2D\u7684\u4EFB\u610F\u4E00\u6761\u8BB0\u5F55\u3002",
       "5.0.2": "\u4F18\u5316\u6536\u85CF\u9986\u6027\u80FD\u4E0E\u6D77\u62A5\u5F0F\u754C\u9762\uFF0C\u4FEE\u590D\u7F16\u8F91\u540E\u6536\u85CF\u5185\u5BB9\u4E0D\u540C\u6B65\u95EE\u9898\uFF0C\u65B0\u589E\u5BFC\u51FA\u56FE\u7247\u6253\u7801\u53EF\u9009\u9879\u5E76\u6539\u8FDB\u79FB\u52A8\u7AEF\u4EA4\u4E92\u3002",
@@ -172,7 +173,9 @@ var init_defaults = __esm({
       },
       // 大纲入口按钮（注入到发送按钮旁边）
       outline_entry: {
-        enabled: true
+        enabled: true,
+        show_theater: true,
+        show_outline_actions: true
       },
       // 文本改写入口（显示在故事大纲菜单中）
       rewrite_entry: {
@@ -13579,10 +13582,17 @@ function openFavsWindow() {
   let thumbDragMoved = false;
   let thumbDragStartX = 0;
   let thumbDragStartScrollLeft = 0;
+  let thumbVirtualRange = { start: 0, end: -1 };
+  let thumbVirtualRaf = null;
   let favViewMode = String(data.favs_view_mode || "poster").trim() === "compact" ? "compact" : "poster";
   const AUTO_SWITCH_MS = 2e3;
   const MANUAL_PAUSE_MS = 6e3;
   const SEARCH_DEBOUNCE_MS = 240;
+  const POSTER_CARD_BUFFER = 1;
+  const THUMB_VIRTUAL_THRESHOLD = 120;
+  const THUMB_ITEM_WIDTH = 150;
+  const THUMB_ITEM_GAP = 10;
+  const THUMB_RENDER_BUFFER = 6;
   const charIndex = /* @__PURE__ */ new Set();
   favs.forEach((f) => {
     if (f.charName) {
@@ -13713,6 +13723,7 @@ function openFavsWindow() {
       $(".t-fav-card").removeClass("selected");
     }
     syncFavViewModeClass();
+    renderGrid();
   };
   const getCachedSnippet = (item) => {
     if (typeof item._snippetText === "string") return item._snippetText;
@@ -13758,15 +13769,127 @@ ${html2}`;
     if (total <= 0) return;
     const normalized = normalizeCarouselIndex(index);
     const resetPause = options.resetPause !== false;
+    const smoothScroll = options.smoothScroll !== false;
     activeCarouselIndex = normalized;
-    $("#t-fav-grid .t-fav-card").removeClass("is-active").attr("aria-hidden", "true");
-    $("#t-fav-grid .t-fav-card").eq(normalized).addClass("is-active").attr("aria-hidden", "false");
-    $("#t-fav-thumbs .t-fav-thumb").removeClass("is-active");
-    const activeThumb = $("#t-fav-thumbs .t-fav-thumb").eq(normalized).addClass("is-active")[0];
+    renderPosterCards(normalized);
+    renderVirtualThumbs(normalized);
+    const activeThumb = document.querySelector(`#t-fav-thumbs .t-fav-thumb[data-fav-index='${normalized}']`);
     if (activeThumb?.scrollIntoView) {
-      activeThumb.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+      activeThumb.scrollIntoView({ behavior: smoothScroll ? "smooth" : "auto", inline: "nearest", block: "nearest" });
     }
     if (resetPause) pauseCarousel();
+  };
+  const renderPosterCards = (activeIndex) => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    gridEl.innerHTML = "";
+    const total = currentFilteredList.length;
+    if (total <= 0) return;
+    const active = normalizeCarouselIndex(activeIndex);
+    const appendIndexIfNew = (list, idx) => {
+      if (!list.includes(idx)) list.push(idx);
+    };
+    const visibleIndexes = [];
+    appendIndexIfNew(visibleIndexes, active);
+    for (let i = 1; i <= POSTER_CARD_BUFFER; i += 1) {
+      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active - i));
+      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active + i));
+    }
+    const cardFrag = document.createDocumentFragment();
+    visibleIndexes.forEach((idx) => {
+      const item = currentFilteredList[idx];
+      if (!item) return;
+      const card = buildCardElement(item, idx, currentMap);
+      if (idx === active) {
+        card.classList.add("is-active");
+        card.setAttribute("aria-hidden", "false");
+      } else {
+        card.classList.remove("is-active");
+        card.setAttribute("aria-hidden", "true");
+      }
+      cardFrag.appendChild(card);
+    });
+    gridEl.appendChild(cardFrag);
+  };
+  const renderAllThumbs = () => {
+    const thumbsEl = document.getElementById("t-fav-thumbs");
+    if (!thumbsEl) return;
+    thumbsEl.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    currentFilteredList.forEach((item, idx) => {
+      frag.appendChild(buildThumbElement(item, idx, currentMap));
+    });
+    thumbsEl.appendChild(frag);
+    thumbsEl.scrollLeft = 0;
+    thumbVirtualRange = { start: 0, end: currentFilteredList.length - 1 };
+  };
+  const getThumbVirtualBounds = () => {
+    const thumbsEl = document.getElementById("t-fav-thumbs");
+    const total = currentFilteredList.length;
+    if (!thumbsEl || total <= 0) return { start: 0, end: -1 };
+    const itemSpan = THUMB_ITEM_WIDTH + THUMB_ITEM_GAP;
+    const viewportWidth = thumbsEl.clientWidth || 1;
+    const firstVisible = Math.floor((thumbsEl.scrollLeft || 0) / itemSpan);
+    const visibleCount = Math.ceil(viewportWidth / itemSpan);
+    const start = Math.max(0, firstVisible - THUMB_RENDER_BUFFER);
+    const end = Math.min(total - 1, firstVisible + visibleCount + THUMB_RENDER_BUFFER);
+    return { start, end };
+  };
+  const renderVirtualThumbs = (forceActiveIndex = null) => {
+    const thumbsEl = document.getElementById("t-fav-thumbs");
+    const total = currentFilteredList.length;
+    if (!thumbsEl) return;
+    if (total <= THUMB_VIRTUAL_THRESHOLD) {
+      if (thumbVirtualRange.end < 0 || thumbsEl.childElementCount !== total) {
+        renderAllThumbs();
+      }
+      const activeThumb2 = thumbsEl.querySelector(`[data-fav-index='${activeCarouselIndex}']`);
+      if (activeThumb2) {
+        thumbsEl.querySelectorAll(".t-fav-thumb.is-active").forEach((el) => el.classList.remove("is-active"));
+        activeThumb2.classList.add("is-active");
+      }
+      return;
+    }
+    const itemSpan = THUMB_ITEM_WIDTH + THUMB_ITEM_GAP;
+    let { start, end } = getThumbVirtualBounds();
+    const ensureIndex = Number.isInteger(forceActiveIndex) ? normalizeCarouselIndex(forceActiveIndex) : activeCarouselIndex;
+    if (ensureIndex < start) start = Math.max(0, ensureIndex - THUMB_RENDER_BUFFER);
+    if (ensureIndex > end) end = Math.min(total - 1, ensureIndex + THUMB_RENDER_BUFFER);
+    const hasRenderedNodes = thumbsEl.childElementCount > 0;
+    const rangeUnchanged = hasRenderedNodes && thumbVirtualRange.start === start && thumbVirtualRange.end === end;
+    if (!rangeUnchanged) {
+      thumbsEl.innerHTML = "";
+      const leftSpacer = document.createElement("div");
+      leftSpacer.className = "t-fav-thumb-spacer";
+      leftSpacer.style.width = `${start * itemSpan}px`;
+      leftSpacer.setAttribute("aria-hidden", "true");
+      leftSpacer.style.flex = "0 0 auto";
+      thumbsEl.appendChild(leftSpacer);
+      const frag = document.createDocumentFragment();
+      for (let idx = start; idx <= end; idx += 1) {
+        const item = currentFilteredList[idx];
+        if (!item) continue;
+        frag.appendChild(buildThumbElement(item, idx, currentMap));
+      }
+      thumbsEl.appendChild(frag);
+      const rightSpacer = document.createElement("div");
+      rightSpacer.className = "t-fav-thumb-spacer";
+      rightSpacer.style.width = `${Math.max(0, (total - end - 1) * itemSpan)}px`;
+      rightSpacer.setAttribute("aria-hidden", "true");
+      rightSpacer.style.flex = "0 0 auto";
+      thumbsEl.appendChild(rightSpacer);
+      thumbVirtualRange = { start, end };
+    }
+    thumbsEl.querySelectorAll(".t-fav-thumb.is-active").forEach((el) => el.classList.remove("is-active"));
+    const activeThumb = thumbsEl.querySelector(`[data-fav-index='${activeCarouselIndex}']`);
+    if (activeThumb) activeThumb.classList.add("is-active");
+  };
+  const scheduleVirtualThumbRender = () => {
+    if (thumbVirtualRaf) return;
+    thumbVirtualRaf = requestAnimationFrame(() => {
+      thumbVirtualRaf = null;
+      renderVirtualThumbs();
+    });
   };
   const restartCarouselAutoplay = () => {
     clearCarouselTimer();
@@ -13863,6 +13986,7 @@ ${html2}`;
     if (currentFilteredList.length === 0) {
       grid.append('<div class="t-fav-empty">\u6CA1\u6709\u627E\u5230\u76F8\u5173\u6536\u85CF</div>');
       clearCarouselTimer();
+      thumbVirtualRange = { start: 0, end: -1 };
       return;
     }
     if (isEditMode) {
@@ -13870,21 +13994,41 @@ ${html2}`;
     } else {
       grid.removeClass("edit-mode");
     }
-    const cardFrag = document.createDocumentFragment();
-    const thumbFrag = document.createDocumentFragment();
-    currentFilteredList.forEach((item, idx) => {
-      cardFrag.appendChild(buildCardElement(item, idx, currentMap));
-      thumbFrag.appendChild(buildThumbElement(item, idx, currentMap));
-    });
-    gridEl.appendChild(cardFrag);
-    if (thumbsEl) thumbsEl.appendChild(thumbFrag);
-    if (isCompactView()) {
+    if (isEditMode) {
       clearCarouselTimer();
-      grid.find(".t-fav-card").addClass("is-active").attr("aria-hidden", "false");
+      const cardFrag = document.createDocumentFragment();
+      currentFilteredList.forEach((item, idx) => {
+        const card = buildCardElement(item, idx, currentMap);
+        card.classList.add("is-active");
+        card.setAttribute("aria-hidden", "false");
+        cardFrag.appendChild(card);
+      });
+      gridEl.appendChild(cardFrag);
+      if (thumbsEl) {
+        thumbsEl.innerHTML = "";
+      }
+      thumbVirtualRange = { start: 0, end: -1 };
       return;
     }
+    if (isCompactView()) {
+      clearCarouselTimer();
+      const cardFrag = document.createDocumentFragment();
+      currentFilteredList.forEach((item, idx) => {
+        const card = buildCardElement(item, idx, currentMap);
+        card.classList.add("is-active");
+        card.setAttribute("aria-hidden", "false");
+        cardFrag.appendChild(card);
+      });
+      gridEl.appendChild(cardFrag);
+      if (thumbsEl) {
+        thumbsEl.innerHTML = "";
+      }
+      thumbVirtualRange = { start: 0, end: -1 };
+      return;
+    }
+    renderVirtualThumbs();
     const defaultIndex = currentFavId && filteredIndexMap.has(String(currentFavId)) ? Number(filteredIndexMap.get(String(currentFavId))) || 0 : 0;
-    setActiveCarouselIndex(defaultIndex, { resetPause: false });
+    setActiveCarouselIndex(defaultIndex, { resetPause: false, smoothScroll: false });
     restartCarouselAutoplay();
   };
   const scheduleSearchRender = () => {
@@ -13983,6 +14127,10 @@ ${html2}`;
     if (!delta) return;
     e.preventDefault();
     el.scrollLeft += delta;
+  });
+  $("#t-fav-thumbs").on("scroll", function() {
+    if (isCompactView() || isEditMode) return;
+    scheduleVirtualThumbRender();
   });
   $("#t-fav-thumbs").on("mousedown", function(e) {
     if (e.button !== 0) return;
@@ -14366,6 +14514,10 @@ ${segmentTip}`);
   });
   const closeWindow = () => {
     clearCarouselTimer();
+    if (thumbVirtualRaf) {
+      cancelAnimationFrame(thumbVirtualRaf);
+      thumbVirtualRaf = null;
+    }
     $(document).off(".tFavThumbDrag");
     if (searchDebounceTimer) {
       clearTimeout(searchDebounceTimer);
@@ -21006,22 +21158,6 @@ function getFeatureConnection(featureKey) {
   }
   return conn;
 }
-function validateFeatureConnection(featureKey) {
-  const conn = getFeatureConnection(featureKey);
-  if (!conn) {
-    return { configured: false, valid: false, error: "\u672A\u914D\u7F6E API \u65B9\u6848" };
-  }
-  if (conn.useSTConnection) {
-    return { configured: true, valid: true };
-  }
-  if (!conn.url) {
-    return { configured: true, valid: false, error: "API URL \u672A\u8BBE\u7F6E" };
-  }
-  if (!conn.key) {
-    return { configured: true, valid: false, error: "API Key \u672A\u8BBE\u7F6E" };
-  }
-  return { configured: true, valid: true };
-}
 var init_connection = __esm({
   "src/core/connection.js"() {
     init_storage();
@@ -23465,15 +23601,6 @@ function escapeHtml6(text) {
 }
 async function showLoreReviewWindow() {
   ensureCssLoaded2();
-  const validation = validateFeatureConnection(FEATURE_KEY3);
-  if (!validation.configured) {
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5B8C\u6210 API \u8FDE\u63A5\u914D\u7F6E", "\u914D\u7F6E\u7F3A\u5931");
-    return;
-  }
-  if (!validation.valid) {
-    if (window.toastr) toastr.error(validation.error, "\u914D\u7F6E\u9519\u8BEF");
-    return;
-  }
   $("#t-lore-review-overlay").remove();
   const featureConn = getFeatureConnection(FEATURE_KEY3);
   const currentModel = featureConn?.model || "\u672A\u77E5";
@@ -25773,6 +25900,63 @@ function hasSceneSourcePlan() {
   const data = getExtData();
   return typeof data?.[SCENE_SOURCE_PLAN_KEY2] === "string" && data[SCENE_SOURCE_PLAN_KEY2].trim().length > 0;
 }
+function getEnabledFeatureList(data) {
+  const toolbarItems = data?.quick_toolbar?.enabled_items || {};
+  const showTheater = data?.outline_entry?.show_theater === true;
+  const showOutlineActions = data?.outline_entry?.show_outline_actions === true;
+  const rewriteEnabled = data?.rewrite_entry?.enabled === true;
+  const loreEnabled = toolbarItems.lore === true;
+  const recallEnabled = toolbarItems.recall === true;
+  const features = [];
+  if (showTheater) features.push("theater");
+  if (showOutlineActions) features.push("outline_actions");
+  if (rewriteEnabled) features.push("rewrite");
+  if (loreEnabled) features.push("lore");
+  if (recallEnabled) features.push("recall");
+  return features;
+}
+async function openFeatureDirect(featureKey, canOpenScenes) {
+  switch (featureKey) {
+    case "theater": {
+      const { openMainWindow: openMainWindow2 } = await Promise.resolve().then(() => (init_mainWindow(), mainWindow_exports));
+      openMainWindow2();
+      return;
+    }
+    case "outline_actions": {
+      const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+      openStoryOutlineWindow2();
+      return;
+    }
+    case "rewrite": {
+      const { openRewritePanelFromMenu: openRewritePanelFromMenu2 } = await Promise.resolve().then(() => (init_rewriteEntryButton(), rewriteEntryButton_exports));
+      openRewritePanelFromMenu2();
+      return;
+    }
+    case "lore": {
+      const { showLoreReviewWindow: showLoreReviewWindow2 } = await Promise.resolve().then(() => (init_loreReviewWindow(), loreReviewWindow_exports));
+      showLoreReviewWindow2();
+      return;
+    }
+    case "recall": {
+      const { openRecallPanel: openRecallPanel2 } = await Promise.resolve().then(() => (init_memoryRecallPanel(), memoryRecallPanel_exports));
+      openRecallPanel2();
+      return;
+    }
+    default:
+      return;
+  }
+}
+async function tryOpenSingleFeatureDirect() {
+  const data = getExtData();
+  if (data?.outline_entry?.enabled !== true) return false;
+  const features = getEnabledFeatureList(data);
+  if (features.length !== 1) return false;
+  const hasPlans = getSavedPlanCount() > 0;
+  const hasSource = hasSceneSourcePlan();
+  const canOpenScenes = hasPlans && hasSource;
+  await openFeatureDirect(features[0], canOpenScenes);
+  return true;
+}
 async function openMenu($btn) {
   ensureMenuStyle();
   closeMenu();
@@ -25781,20 +25965,22 @@ async function openMenu($btn) {
   const loreEnabled = toolbarItems.lore === true;
   const recallEnabled = toolbarItems.recall === true;
   const rewriteEnabled = data?.rewrite_entry?.enabled === true;
+  const showTheater = data?.outline_entry?.show_theater === true;
+  const showOutlineActions = data?.outline_entry?.show_outline_actions === true;
   const hasPlans = getSavedPlanCount() > 0;
   const hasSource = hasSceneSourcePlan();
   const canOpenScenes = hasPlans && hasSource;
   const menuHtml = `
     <div id="${MENU_ID}" role="menu" aria-label="\u6545\u4E8B\u5927\u7EB2\u5165\u53E3">
-        <button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${canOpenScenes ? "" : "disabled"}>
+        ${showOutlineActions ? `<button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${canOpenScenes ? "" : "disabled"}>
             <i class="fa-solid fa-clapperboard"></i> \u53D1\u9001\u7EC6\u7EB2
-        </button>
-        <button class="t-outline-entry-item" id="t-outline-entry-open-theater" role="menuitem">
+        </button>` : ""}
+        ${showTheater ? `<button class="t-outline-entry-item" id="t-outline-entry-open-theater" role="menuitem">
             <i class="fa-solid fa-masks-theater"></i> \u56DE\u58F0\u5C0F\u5267\u573A
-        </button>
-        <button class="t-outline-entry-item" id="t-outline-entry-open-outline" role="menuitem">
+        </button>` : ""}
+        ${showOutlineActions ? `<button class="t-outline-entry-item" id="t-outline-entry-open-outline" role="menuitem">
             <i class="fa-solid fa-list-check"></i> \u751F\u6210\u5927\u7EB2
-        </button>
+        </button>` : ""}
         ${rewriteEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-rewrite" role="menuitem"><i class="fa-solid fa-highlighter"></i> \u6587\u672C\u6539\u5199</button>' : ""}
         ${loreEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-lore" role="menuitem"><i class="fa-solid fa-brain"></i> \u8BBE\u5B9A\u7EF4\u62A4\uFF06\u804A\u5929\u603B\u7ED3</button>' : ""}
         ${recallEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-recall" role="menuitem"><i class="fa-solid fa-lightbulb"></i> \u8BB0\u5FC6\u53EC\u56DE</button>' : ""}
@@ -25810,28 +25996,32 @@ async function openMenu($btn) {
   left = Math.max(8, Math.min(left, window.innerWidth - menuWidth - 8));
   top = Math.max(8, top);
   $menu.css({ left: `${left}px`, top: `${top}px` });
-  $("#t-outline-entry-open-outline").on("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
-    openStoryOutlineWindow2();
-  });
-  $("#t-outline-entry-open-scenes").on("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!canOpenScenes) return;
-    closeMenu();
-    const { openSceneHubWindow: openSceneHubWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
-    openSceneHubWindow2();
-  });
-  $("#t-outline-entry-open-theater").on("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    const { openMainWindow: openMainWindow2 } = await Promise.resolve().then(() => (init_mainWindow(), mainWindow_exports));
-    openMainWindow2();
-  });
+  if (showOutlineActions) {
+    $("#t-outline-entry-open-outline").on("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu();
+      const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+      openStoryOutlineWindow2();
+    });
+    $("#t-outline-entry-open-scenes").on("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!canOpenScenes) return;
+      closeMenu();
+      const { openSceneHubWindow: openSceneHubWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+      openSceneHubWindow2();
+    });
+  }
+  if (showTheater) {
+    $("#t-outline-entry-open-theater").on("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu();
+      const { openMainWindow: openMainWindow2 } = await Promise.resolve().then(() => (init_mainWindow(), mainWindow_exports));
+      openMainWindow2();
+    });
+  }
   $("#t-outline-entry-open-rewrite").on("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -25869,6 +26059,8 @@ function bindClick($btn) {
       closeMenu();
       return;
     }
+    const openedDirectly = await tryOpenSingleFeatureDirect();
+    if (openedDirectly) return;
     await openMenu($btn);
   });
   $btn.off("keydown").on("keydown", async (e) => {
@@ -25879,6 +26071,8 @@ function bindClick($btn) {
       closeMenu();
       return;
     }
+    const openedDirectly = await tryOpenSingleFeatureDirect();
+    if (openedDirectly) return;
     await openMenu($btn);
   });
 }
@@ -29364,6 +29558,22 @@ async function updateWorldInfoBadge() {
 }
 async function openWorldInfoSelector() {
   if ($("#t-wi-selector").length) return;
+  const withTimeout3 = (promise, timeoutMs, errorMsg) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(errorMsg)), timeoutMs))
+  ]);
+  const getSelectorContext = () => {
+    try {
+      if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+        const stCtx = SillyTavern.getContext();
+        const charName2 = stCtx?.substituteParams?.("{{char}}") || "Char";
+        return { charName: charName2 };
+      }
+    } catch (e) {
+      console.warn("Titania: \u83B7\u53D6\u4E16\u754C\u4E66\u7A97\u53E3\u4E0A\u4E0B\u6587\u5931\u8D25", e);
+    }
+    return { charName: "Char" };
+  };
   const loadingHtml = `
     <div id="t-wi-selector" class="t-wi-selector">
         <div class="t-wi-header">
@@ -29385,17 +29595,29 @@ async function openWorldInfoSelector() {
   let ctx;
   let allBookNames;
   let activeBookNames;
+  const loadWarnings = [];
   try {
-    const LOAD_TIMEOUT = 12e3;
-    const loadPromise = Promise.all([
-      getContextData(),
-      getAllWorldBookNames(),
-      Promise.resolve(getActiveWorldBookNames())
-    ]);
-    const timeoutPromise = new Promise(
-      (_, reject) => setTimeout(() => reject(new Error("\u52A0\u8F7D\u8D85\u65F6")), LOAD_TIMEOUT)
-    );
-    [ctx, allBookNames, activeBookNames] = await Promise.race([loadPromise, timeoutPromise]);
+    ctx = getSelectorContext();
+    try {
+      allBookNames = await withTimeout3(
+        Promise.resolve(getAllWorldBookNames()),
+        1e4,
+        "\u83B7\u53D6\u4E16\u754C\u4E66\u5217\u8868\u8D85\u65F6"
+      );
+    } catch (e) {
+      allBookNames = [];
+      loadWarnings.push(e?.message || "\u83B7\u53D6\u4E16\u754C\u4E66\u5217\u8868\u5931\u8D25");
+    }
+    try {
+      activeBookNames = await withTimeout3(
+        Promise.resolve(getActiveWorldBookNames()),
+        4e3,
+        "\u83B7\u53D6\u6FC0\u6D3B\u4E16\u754C\u4E66\u8D85\u65F6"
+      );
+    } catch (e) {
+      activeBookNames = [];
+      loadWarnings.push(e?.message || "\u83B7\u53D6\u6FC0\u6D3B\u4E16\u754C\u4E66\u5931\u8D25");
+    }
   } catch (e) {
     console.error("Titania: \u52A0\u8F7D\u4E16\u754C\u4E66\u6570\u636E\u5931\u8D25", e);
     $("#t-wi-selector .t-wi-body").html(`
@@ -29417,6 +29639,9 @@ async function openWorldInfoSelector() {
   const workingSelections = savedSelections ? structuredClone(savedSelections) : {};
   const allBooks = Array.isArray(allBookNames) ? allBookNames.slice() : [];
   const baseActiveBooks = Array.isArray(activeBookNames) ? activeBookNames.filter((name) => allBooks.includes(name)) : [];
+  if (loadWarnings.length > 0 && window.toastr) {
+    toastr.warning(`\u4E16\u754C\u4E66\u6570\u636E\u90E8\u5206\u52A0\u8F7D\u5931\u8D25\uFF1A${loadWarnings.join("\uFF1B")}`, "Titania Echo");
+  }
   let currentViewMode = "all";
   const getVisibleBooks = () => currentViewMode === "active" ? baseActiveBooks : allBooks;
   let visibleBooks = getVisibleBooks();
@@ -33013,7 +33238,15 @@ async function loadExtensionSettings() {
     showFloatingButton();
   }
   const extData = getExtData();
-  if (!extData.outline_entry || typeof extData.outline_entry !== "object") extData.outline_entry = { enabled: false };
+  if (!extData.outline_entry || typeof extData.outline_entry !== "object") {
+    extData.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+  }
+  if (typeof extData.outline_entry.show_theater !== "boolean") {
+    extData.outline_entry.show_theater = true;
+  }
+  if (typeof extData.outline_entry.show_outline_actions !== "boolean") {
+    extData.outline_entry.show_outline_actions = true;
+  }
   if (!extData.rewrite_entry || typeof extData.rewrite_entry !== "object") extData.rewrite_entry = { enabled: false };
   if (!extData.quick_toolbar || typeof extData.quick_toolbar !== "object") extData.quick_toolbar = {};
   if (!extData.quick_toolbar.enabled_items || typeof extData.quick_toolbar.enabled_items !== "object") {
@@ -33025,17 +33258,43 @@ async function loadExtensionSettings() {
     saveExtData();
   }
   $("#cfg-outline-entry-enabled").prop("checked", extData.outline_entry.enabled === true);
+  $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
+  $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
   $("#cfg-toolbar-lore-enabled").prop("checked", extData.quick_toolbar.enabled_items.lore === true);
   $("#cfg-toolbar-recall-enabled").prop("checked", extData.quick_toolbar.enabled_items.recall === true);
   $("#cfg-outline-entry-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
     const data = getExtData();
-    if (!data.outline_entry || typeof data.outline_entry !== "object") data.outline_entry = { enabled: false };
+    if (!data.outline_entry || typeof data.outline_entry !== "object") {
+      data.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+    }
     data.outline_entry.enabled = enabled;
     saveExtData();
     refreshOutlineEntryButton();
     if (window.toastr) toastr.success(enabled ? "\u6545\u4E8B\u5927\u7EB2\u5165\u53E3\u5DF2\u542F\u7528" : "\u6545\u4E8B\u5927\u7EB2\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-outline-theater-enabled").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.outline_entry || typeof data.outline_entry !== "object") {
+      data.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+    }
+    data.outline_entry.show_theater = enabled;
+    saveExtData();
+    refreshOutlineEntryButton();
+    if (window.toastr) toastr.success(enabled ? "\u56DE\u58F0\u5C0F\u5267\u573A\u5165\u53E3\u5DF2\u542F\u7528" : "\u56DE\u58F0\u5C0F\u5267\u573A\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-outline-actions-enabled").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.outline_entry || typeof data.outline_entry !== "object") {
+      data.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+    }
+    data.outline_entry.show_outline_actions = enabled;
+    saveExtData();
+    refreshOutlineEntryButton();
+    if (window.toastr) toastr.success(enabled ? "\u5927\u7EB2\u751F\u6210\u5165\u53E3\u5DF2\u542F\u7528" : "\u5927\u7EB2\u751F\u6210\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
   });
   $("#cfg-rewrite-entry-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
