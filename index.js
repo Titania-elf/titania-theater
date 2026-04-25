@@ -22,11 +22,12 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.5";
+    CURRENT_VERSION = "5.0.6";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "5.0.6": "\u89E3\u8026\u4E16\u754C\u4E66\u7981\u7528\u4E0E\u5C0F\u5267\u573A\u52FE\u9009\u72B6\u6001\u3002<br>\u4FEE\u590D\u7F16\u8F91\u5668\u8F93\u5165\u6CD5\u4E0A\u5C4F\u3002<br>\u4F18\u5316\u5343\u6761\u7EA7\u6536\u85CF\u5220\u9664\u5361\u987F\uFF08\u5206\u5E27/\u5206\u9875/\u8F7B\u91CF\u6E32\u67D3\uFF09\u3002<br>\u4FEE\u590D\u5927\u7EB2\u65B0\u5EFA\u65B9\u6848\u6B8B\u7559\u65E7\u5185\u5BB9\u3002<br>\u91CD\u505A\u5927\u7EB2\u7F16\u8F91\u65B0\u589E\u5165\u53E3\u4E3A\u79FB\u52A8\u7AEF\u5B89\u5168\u7684 FAB\uFF08\u652F\u6301\u201C\u65B0\u589E\u5927\u7EB2\u6761\u76EE\u201D\u548C\u201C\u65B0\u589E\u7EC6\u7EB2\u6761\u76EE\u201D\u4E14\u540E\u8005\u4E3A\u65B0\u5EFA\u6761\u76EE\u5E76\u81EA\u5E26\u9996\u4E2A\u7EC6\u7EB2\uFF09\u3002<br>\u8865\u9F50\u201C\u5220\u9664\u7EC6\u7EB2\u6761\u76EE\u201D\u80FD\u529B\u53CA\u76F8\u5173\u7D22\u5F15/\u72B6\u6001\u540C\u6B65\u3002",
       "5.0.5": "\u4F18\u5316\u53D1\u9001\u952E\u83DC\u5355\u5165\u53E3\u903B\u8F91\uFF1A\u65B0\u589E\u53EF\u72EC\u7ACB\u63A7\u5236\u7684\u5927\u7EB2/\u5C0F\u5267\u573A\u5165\u53E3\uFF0C\u5E76\u652F\u6301\u4EC5\u542F\u7528\u5355\u4E00\u529F\u80FD\u65F6\u70B9\u51FB\u83DC\u5355\u6309\u94AE\u76F4\u63A5\u8FDB\u5165\u5BF9\u5E94\u754C\u9762\u3002\u4F18\u5316\u6536\u85CF\u753B\u5ECA\u6D77\u62A5\u6A21\u5F0F\u6027\u80FD\uFF0C\u51CF\u5C11\u5927\u91CF\u6536\u85CF\u65F6\u7684\u5361\u987F\u3002\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u7A97\u53E3\u52A0\u8F7D\u7B56\u7565\uFF0C\u964D\u4F4E\u8D85\u65F6\u5931\u8D25\u6982\u7387\u3002",
       "5.0.4": "\u4F18\u5316\u90E8\u5206\u4F53\u9A8C\uFF1A\u5185\u5BB9\u533A\u6D41\u5F0F\u6E32\u67D3\u53EF\u4EE5\u5B9E\u65F6\u67E5\u770B\u751F\u6210\u8FC7\u7A0B\uFF1B\u4FEE\u590D\u67E5\u770B\u5386\u53F2\u751F\u6210\u65F6\u5DE6\u7BAD\u5934\u5931\u6548\u95EE\u9898\uFF1B\u73B0\u5728\u6536\u85CF\u540C\u4E00\u4E2A\u5267\u573A\u65F6\u4F1A\u81EA\u52A8\u201C\u66F4\u65B0\u539F\u6536\u85CF\u201D\u5E76\u628A\u65B0\u7EED\u5199\u5408\u5E76\u8FDB\u53BB\uFF1B\u7EED\u5199\u63D0\u793A\u8BCD\u8FDB\u884C\u91CD\u6784\uFF0C\u8282\u7701token\u3002\u65B0\u589E\u6536\u85CF\u533A\u7D27\u51D1/\u6D77\u62A5\u4E24\u79CD\u89C6\u56FE\u3002",
       "5.0.3": "\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u9875\u9762\uFF0C\u91CD\u6784\u6536\u85CF\u753B\u5ECA\u9875\u9762\uFF0C\u65B0\u589E\u53EF\u5220\u9664\u5267\u573A\u5206\u7EC4\u4E2D\u7684\u4EFB\u610F\u4E00\u6761\u8BB0\u5F55\u3002",
@@ -9677,6 +9678,81 @@ body.titania-debug-mode #chat titania-memory::before {
     min-height: 0;
 }
 
+.t-outline-fab-wrap {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 20025;
+    display: none;
+}
+
+.t-outline-add-fab {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(114, 228, 209, 0.72);
+    background: linear-gradient(135deg, rgba(48, 166, 173, 0.97), rgba(74, 206, 172, 0.97));
+    color: #f2fdff;
+    box-shadow: 0 12px 24px rgba(26, 116, 120, 0.45);
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+}
+
+.t-outline-add-fab:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+.t-outline-add-fab[aria-expanded="true"] {
+    transform: rotate(45deg);
+}
+
+.t-outline-add-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 20023;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
+}
+
+.t-outline-add-sheet-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.t-outline-add-sheet {
+    position: absolute;
+    right: 0;
+    bottom: 62px;
+    min-width: 190px;
+    display: grid;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid rgba(120, 150, 170, 0.34);
+    border-radius: 10px;
+    background: rgba(12, 18, 24, 0.96);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.44);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.t-outline-add-sheet.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.t-outline-add-sheet .t-btn {
+    width: 100%;
+    min-height: 36px;
+    justify-content: flex-start;
+}
+
 .t-outline-scene-editor-page {
     border: 1px solid rgba(120, 150, 170, 0.25);
     border-radius: 10px;
@@ -10886,7 +10962,29 @@ body.titania-debug-mode #chat titania-memory::before {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        padding-bottom: 76px;
+        padding-bottom: 110px;
+    }
+
+    .t-outline-fab-wrap {
+        right: 14px;
+        bottom: calc(14px + env(safe-area-inset-bottom));
+    }
+
+    .t-outline-add-fab {
+        width: 56px;
+        height: 56px;
+    }
+
+    .t-outline-add-sheet {
+        right: 0;
+        left: auto;
+        min-width: 218px;
+        bottom: 68px;
+        padding: 10px;
+    }
+
+    .t-outline-add-sheet .t-btn {
+        min-height: 40px;
     }
 
     .t-outline-mobile-empty {
@@ -12478,6 +12576,38 @@ function renderToShadowDOMReal(container, html) {
   host.className = "t-shadow-host";
   host.style.cssText = "width:100%; min-height:100%;";
   const shadow = host.attachShadow({ mode: "open" });
+  const isEditableNode = (node) => {
+    if (!(node instanceof HTMLElement)) return false;
+    const tag = node.tagName.toLowerCase();
+    if (tag === "textarea") {
+      return !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
+    }
+    if (tag === "input") {
+      const type = String(node.getAttribute("type") || "text").toLowerCase();
+      const editableTypes = /* @__PURE__ */ new Set(["text", "search", "url", "tel", "email", "password", "number"]);
+      return editableTypes.has(type) && !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
+    }
+    return node.isContentEditable === true;
+  };
+  const stopEditableKeyboardBubble = (evt) => {
+    const path = typeof evt.composedPath === "function" ? evt.composedPath() : [evt.target];
+    const hasEditableTarget = path.some((node) => isEditableNode(node));
+    if (!hasEditableTarget) return;
+    evt.stopPropagation();
+  };
+  [
+    "keydown",
+    "keypress",
+    "keyup",
+    "beforeinput",
+    "input",
+    "paste",
+    "compositionstart",
+    "compositionupdate",
+    "compositionend"
+  ].forEach((type) => {
+    shadow.addEventListener(type, stopEditableKeyboardBubble, true);
+  });
   const fontInfo = buildFontStylesForShadowDOM();
   const forceOverrideStyles = fontInfo.forceOverride && fontInfo.fontFamily ? `
             /* \u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53\u6837\u5F0F */
@@ -13584,6 +13714,11 @@ function openFavsWindow() {
   let thumbDragStartScrollLeft = 0;
   let thumbVirtualRange = { start: 0, end: -1 };
   let thumbVirtualRaf = null;
+  let gridRenderRaf = null;
+  let pendingGridRenderOptions = null;
+  let editHydrationTimer = null;
+  let editHydrationToken = 0;
+  let editPageIndex = 0;
   let favViewMode = String(data.favs_view_mode || "poster").trim() === "compact" ? "compact" : "poster";
   const AUTO_SWITCH_MS = 2e3;
   const MANUAL_PAUSE_MS = 6e3;
@@ -13593,6 +13728,7 @@ function openFavsWindow() {
   const THUMB_ITEM_WIDTH = 150;
   const THUMB_ITEM_GAP = 10;
   const THUMB_RENDER_BUFFER = 6;
+  const EDIT_PAGE_SIZE = 120;
   const charIndex = /* @__PURE__ */ new Set();
   favs.forEach((f) => {
     if (f.charName) {
@@ -13641,6 +13777,11 @@ function openFavsWindow() {
                 <button id="t-btn-select-all" class="t-tool-btn"><i class="fa-regular fa-square-check"></i> \u5168\u9009</button>
                 <button id="t-btn-deselect-all" class="t-tool-btn"><i class="fa-regular fa-square"></i> \u53D6\u6D88\u5168\u9009</button>
                 <span id="t-edit-count" style="color:#888; font-size:0.9em;">\u5DF2\u9009\u62E9 0 \u9879</span>
+                <div id="t-edit-pager" style="display:none; align-items:center; gap:8px; margin-left:8px;">
+                    <button id="t-edit-page-prev" class="t-tool-btn" title="\u4E0A\u4E00\u9875"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="t-edit-page-stat" style="color:#8f949b; font-size:0.85em; min-width:180px; text-align:center;">\u7B2C 1/1 \u9875</span>
+                    <button id="t-edit-page-next" class="t-tool-btn" title="\u4E0B\u4E00\u9875"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
             </div>
             <div style="display:flex; gap:10px; align-items:center;">
                 <button id="t-btn-delete-selected" class="t-tool-btn t-btn-danger" title="\u5220\u9664\u9009\u4E2D\u9879" disabled><i class="fa-solid fa-trash"></i> \u5220\u9664\u9009\u4E2D</button>
@@ -13707,6 +13848,40 @@ function openFavsWindow() {
       $("#t-btn-delete-selected").html(`<i class="fa-solid fa-trash"></i> \u5220\u9664\u9009\u4E2D`);
     }
   };
+  const clearEditHydration = () => {
+    if (editHydrationTimer) {
+      clearTimeout(editHydrationTimer);
+      editHydrationTimer = null;
+    }
+    editHydrationToken += 1;
+  };
+  const scheduleGridRender = (options = {}) => {
+    pendingGridRenderOptions = {
+      ...pendingGridRenderOptions || {},
+      ...options
+    };
+    if (gridRenderRaf) return;
+    gridRenderRaf = requestAnimationFrame(() => {
+      gridRenderRaf = null;
+      const nextOptions = pendingGridRenderOptions || {};
+      pendingGridRenderOptions = null;
+      renderGrid(nextOptions);
+    });
+  };
+  const syncEditPager = (totalItems, rangeStart, rangeEndExclusive) => {
+    const $pager = $("#t-edit-pager");
+    const totalPages = Math.max(1, Math.ceil(totalItems / EDIT_PAGE_SIZE));
+    if (!isEditMode || totalItems <= EDIT_PAGE_SIZE) {
+      $pager.hide();
+      return;
+    }
+    $pager.css("display", "flex");
+    $("#t-edit-page-prev").prop("disabled", editPageIndex <= 0);
+    $("#t-edit-page-next").prop("disabled", editPageIndex >= totalPages - 1);
+    const start = totalItems === 0 ? 0 : rangeStart + 1;
+    const end = totalItems === 0 ? 0 : Math.max(start, rangeEndExclusive);
+    $("#t-edit-page-stat").text(`\u7B2C ${editPageIndex + 1}/${totalPages} \u9875 \xB7 ${start}-${end}/${totalItems}`);
+  };
   const toggleEditMode = (enable) => {
     isEditMode = enable;
     if (enable) {
@@ -13714,6 +13889,7 @@ function openFavsWindow() {
       $("#t-fav-toolbar-edit").show();
       $("#t-fav-grid").addClass("edit-mode");
       selectedIds.clear();
+      editPageIndex = 0;
       updateSelectionCount();
     } else {
       $("#t-fav-toolbar-normal").show();
@@ -13721,9 +13897,10 @@ function openFavsWindow() {
       $("#t-fav-grid").removeClass("edit-mode");
       selectedIds.clear();
       $(".t-fav-card").removeClass("selected");
+      clearEditHydration();
     }
     syncFavViewModeClass();
-    renderGrid();
+    scheduleGridRender({ preserveEditPage: enable, liteEditPage: true, hydrateEditPage: true });
   };
   const getCachedSnippet = (item) => {
     if (typeof item._snippetText === "string") return item._snippetText;
@@ -13901,14 +14078,18 @@ ${html2}`;
       setActiveCarouselIndex(activeCarouselIndex + 1, { resetPause: false });
     }, AUTO_SWITCH_MS);
   };
-  const buildCardElement = (item, idx, currentMap2) => {
+  const buildCardElement = (item, idx, currentMap2, options = {}) => {
+    const useLite = options.lite === true;
     const isChain = item?.type === "chain";
     const chainItems = Array.isArray(item?.items) ? item.items : [];
     const chainCount = chainItems.length;
-    const snippet = getCachedSnippet(item);
+    const snippet = useLite ? "\u5185\u5BB9\u9884\u89C8\u52A0\u8F7D\u4E2D..." : getCachedSnippet(item);
     const charName = item._meta.char;
-    let bgUrl = currentMap2[charName];
-    if (!bgUrl) bgUrl = item.avatar;
+    let bgUrl = "";
+    if (!useLite) {
+      bgUrl = currentMap2[charName];
+      if (!bgUrl) bgUrl = item.avatar;
+    }
     const bgClass = bgUrl ? "" : "no-img";
     const bgStyle = bgUrl ? `background-image: url('${bgUrl}')` : "";
     const cardBgClass = bgUrl ? "" : "no-img";
@@ -13948,7 +14129,7 @@ ${html2}`;
         `);
     return thumb[0];
   };
-  const renderGrid = () => {
+  const renderGrid = (options = {}) => {
     const grid = $("#t-fav-grid");
     const gridEl = grid[0];
     const thumbsEl = document.getElementById("t-fav-thumbs");
@@ -13996,9 +14177,22 @@ ${html2}`;
     }
     if (isEditMode) {
       clearCarouselTimer();
+      const preserveEditPage = options.preserveEditPage === true;
+      if (!preserveEditPage) {
+        editPageIndex = 0;
+      }
+      const totalItems = currentFilteredList.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / EDIT_PAGE_SIZE));
+      if (editPageIndex < 0) editPageIndex = 0;
+      if (editPageIndex >= totalPages) editPageIndex = totalPages - 1;
+      const pageStart = editPageIndex * EDIT_PAGE_SIZE;
+      const pageEndExclusive = Math.min(totalItems, pageStart + EDIT_PAGE_SIZE);
+      const pageItems = currentFilteredList.slice(pageStart, pageEndExclusive);
+      const renderLite = options.liteEditPage === true;
       const cardFrag = document.createDocumentFragment();
-      currentFilteredList.forEach((item, idx) => {
-        const card = buildCardElement(item, idx, currentMap);
+      pageItems.forEach((item, localIdx) => {
+        const absoluteIdx = pageStart + localIdx;
+        const card = buildCardElement(item, absoluteIdx, currentMap, { lite: renderLite });
         card.classList.add("is-active");
         card.setAttribute("aria-hidden", "false");
         cardFrag.appendChild(card);
@@ -14008,8 +14202,20 @@ ${html2}`;
         thumbsEl.innerHTML = "";
       }
       thumbVirtualRange = { start: 0, end: -1 };
+      syncEditPager(totalItems, pageStart, pageEndExclusive);
+      if (renderLite && options.hydrateEditPage !== false) {
+        clearEditHydration();
+        const token = editHydrationToken;
+        editHydrationTimer = setTimeout(() => {
+          editHydrationTimer = null;
+          if (token !== editHydrationToken) return;
+          if (!isEditMode) return;
+          scheduleGridRender({ preserveEditPage: true, liteEditPage: false, hydrateEditPage: false });
+        }, 120);
+      }
       return;
     }
+    syncEditPager(0, 0, 0);
     if (isCompactView()) {
       clearCarouselTimer();
       const cardFrag = document.createDocumentFragment();
@@ -14036,7 +14242,7 @@ ${html2}`;
       clearTimeout(searchDebounceTimer);
     }
     searchDebounceTimer = setTimeout(() => {
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
     }, SEARCH_DEBOUNCE_MS);
   };
   let currentViewingHtml = "";
@@ -14087,20 +14293,20 @@ ${html2}`;
     }
     $("#t-fav-reader").addClass("show");
   };
-  $("#t-fav-filter-char").on("change", renderGrid);
-  $("#t-fav-sort").on("change", renderGrid);
+  $("#t-fav-filter-char").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
+  $("#t-fav-sort").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
   $("#t-fav-search").on("input", scheduleSearchRender);
-  $("#t-fav-search").on("change", renderGrid);
+  $("#t-fav-search").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
   $("#t-fav-view-toggle").on("click", () => {
     favViewMode = favViewMode === "compact" ? "poster" : "compact";
     saveFavViewMode(favViewMode);
     syncFavViewToggleButton();
     syncFavViewModeClass();
-    renderGrid();
+    scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
   });
   $("#t-btn-img-mgr").on("click", () => {
     openCharImageManager(() => {
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
     });
   });
   $("#t-read-back").on("click", () => {
@@ -14235,7 +14441,7 @@ ${html2}`;
       });
       selectedIds.clear();
       updateSelectionCount();
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
       if (window.toastr) toastr.success(`\u5DF2\u5220\u9664 ${count} \u6761\u6536\u85CF`);
       if (favs.length === 0) {
         toggleEditMode(false);
@@ -14435,7 +14641,7 @@ ${html2}`;
       }
       currentViewingTitle = trimmedTitle;
       $("#t-read-meta").text(trimmedTitle);
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
       if (window.toastr) toastr.success("\u6807\u9898\u5DF2\u66F4\u65B0");
     }
   });
@@ -14445,7 +14651,7 @@ ${html2}`;
       d.favs = d.favs.filter((x) => x.id !== currentFavId);
       saveExtData();
       favs.splice(0, favs.length, ...d.favs);
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
       if (currentFilteredList.length === 0) {
         $("#t-fav-reader").removeClass("show");
       } else {
@@ -14454,6 +14660,18 @@ ${html2}`;
         loadReaderItem(newIdx);
       }
     }
+  });
+  $("#t-edit-page-prev").on("click", () => {
+    if (!isEditMode || editPageIndex <= 0) return;
+    editPageIndex -= 1;
+    scheduleGridRender({ preserveEditPage: true, liteEditPage: false, hydrateEditPage: false });
+  });
+  $("#t-edit-page-next").on("click", () => {
+    if (!isEditMode) return;
+    const totalPages = Math.max(1, Math.ceil(currentFilteredList.length / EDIT_PAGE_SIZE));
+    if (editPageIndex >= totalPages - 1) return;
+    editPageIndex += 1;
+    scheduleGridRender({ preserveEditPage: true, liteEditPage: false, hydrateEditPage: false });
   });
   $("#t-read-del-segment").on("click", () => {
     if (!currentFavId) return;
@@ -14491,7 +14709,7 @@ ${segmentTip}`);
       d.favs = d.favs.filter((x) => x.id !== currentFavId);
       saveExtData();
       favs.splice(0, favs.length, ...d.favs);
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
       if (currentFilteredList.length === 0) {
         $("#t-fav-reader").removeClass("show");
       } else {
@@ -14509,7 +14727,7 @@ ${segmentTip}`);
       localFav.html = targetFav.html;
     }
     loadReaderItem(currentIndex);
-    renderGrid();
+    scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
     if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u7B2C ${removeRound} \u6BB5`);
   });
   const closeWindow = () => {
@@ -14518,6 +14736,12 @@ ${segmentTip}`);
       cancelAnimationFrame(thumbVirtualRaf);
       thumbVirtualRaf = null;
     }
+    if (gridRenderRaf) {
+      cancelAnimationFrame(gridRenderRaf);
+      gridRenderRaf = null;
+    }
+    pendingGridRenderOptions = null;
+    clearEditHydration();
     $(document).off(".tFavThumbDrag");
     if (searchDebounceTimer) {
       clearTimeout(searchDebounceTimer);
@@ -14535,7 +14759,7 @@ ${segmentTip}`);
   $("#t-fav-close").on("click", closeWindow);
   syncFavViewToggleButton();
   syncFavViewModeClass();
-  renderGrid();
+  scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
 }
 function openCharImageManager(onCloseCallback) {
   const data = getExtData();
@@ -17224,10 +17448,16 @@ function showOutlineView(view) {
   if (currentView === "hub") {
     closeMobileEditor();
   }
+  syncAddFabVisibility();
 }
 function loadPlanToEditor(plan) {
   if (!plan) return false;
   outlineItems = normalizeItems(plan.items || []);
+  sceneExpandedMap = {};
+  selectedRowIndex = -1;
+  sceneEditorItemIndex = outlineItems.length > 0 ? 0 : -1;
+  closeDesktopEditor();
+  closeMobileEditor();
   const planInstruction = getPlanInstruction(plan);
   $("#t-outline-story-input").val(planInstruction);
   setEditingPlan(plan);
@@ -17595,9 +17825,128 @@ function normalizeScenes(scenes) {
 function reindexItems() {
   outlineItems = outlineItems.map((item, idx) => ({ ...item, index: idx + 1 }));
 }
+function createEmptyOutlineItem(index = 1) {
+  return {
+    index: Number(index) || 1,
+    time: "",
+    title: "",
+    plot: "",
+    foreshadowing: "",
+    scenes: []
+  };
+}
+function createEmptySceneItem(index = 1) {
+  return {
+    scene_index: Number(index) || 1,
+    scene_time: "",
+    scene_location: "",
+    scene_goal: "",
+    conflict: "",
+    key_beats: "",
+    sendable_prompt: "",
+    notes: ""
+  };
+}
+function closeAddItemSheet() {
+  $("#t-outline-add-sheet").removeClass("show");
+  $("#t-outline-add-sheet-backdrop").removeClass("show");
+  $("#t-outline-add-fab").attr("aria-expanded", "false");
+}
+function openAddItemSheet() {
+  $("#t-outline-add-sheet").addClass("show");
+  $("#t-outline-add-sheet-backdrop").addClass("show");
+  $("#t-outline-add-fab").attr("aria-expanded", "true");
+}
+function syncAddFabVisibility() {
+  const inEditor = currentView === "editor";
+  const hasPlanContext = !!editingPlanId;
+  const drawerOpen = $("#t-outline-mobile-drawer").hasClass("show");
+  $("#t-outline-fab-wrap").toggle(inEditor && hasPlanContext && !drawerOpen);
+  if (!inEditor || drawerOpen) closeAddItemSheet();
+}
+function appendOutlineItem() {
+  if (!ensureEditingPlanContext()) return;
+  const nextIndex = outlineItems.length;
+  outlineItems.push(createEmptyOutlineItem(nextIndex + 1));
+  reindexItems();
+  sceneExpandedMap[nextIndex] = false;
+  selectedRowIndex = nextIndex;
+  sceneEditorItemIndex = nextIndex;
+  renderRows();
+  renderDesktopEditor(nextIndex, "title");
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  if (window.toastr) toastr.success("\u5DF2\u65B0\u589E\u5927\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
+}
+function appendSceneItem() {
+  if (!ensureEditingPlanContext()) return;
+  const targetIndex = outlineItems.length;
+  const nextItem = createEmptyOutlineItem(targetIndex + 1);
+  nextItem.scenes = [createEmptySceneItem(1)];
+  outlineItems.push(nextItem);
+  reindexItems();
+  const targetItem = outlineItems[targetIndex];
+  if (!targetItem) return;
+  reindexScenes(targetItem);
+  sceneExpandedMap[targetIndex] = true;
+  selectedRowIndex = targetIndex;
+  sceneEditorItemIndex = targetIndex;
+  renderRows();
+  setEditorSubView("scene");
+  renderSceneEditorPage();
+  if (window.matchMedia("(max-width: 768px)").matches) {
+    openMobileEditor(targetIndex);
+    setMobileEditorSubView("scene");
+    renderMobileDrawerScenes(targetIndex);
+  } else {
+    setTimeout(() => {
+      const card = document.querySelector('#t-outline-scene-editor-page .t-scene-page-card[data-scene-index="0"]');
+      const input = card?.querySelector('[data-scene-page-field="scene_time"]');
+      if (input) {
+        input.focus();
+        if (typeof input.select === "function") input.select();
+      }
+    }, 0);
+  }
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  if (window.toastr) toastr.success("\u5DF2\u65B0\u589E\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
+}
 function reindexScenes(item) {
   if (!item || !Array.isArray(item.scenes)) return;
   item.scenes = item.scenes.map((scene, idx) => ({ ...scene, scene_index: idx + 1 }));
+}
+function deleteOutlineItemAt(index, options = {}) {
+  const resolvedIndex = Number(index);
+  if (Number.isNaN(resolvedIndex) || !outlineItems[resolvedIndex]) return false;
+  outlineItems.splice(resolvedIndex, 1);
+  const nextMap = {};
+  outlineItems.forEach((_, idx) => {
+    nextMap[idx] = sceneExpandedMap[idx] || sceneExpandedMap[idx + 1] || false;
+  });
+  sceneExpandedMap = nextMap;
+  if (selectedRowIndex === resolvedIndex) {
+    selectedRowIndex = -1;
+  } else if (selectedRowIndex > resolvedIndex) {
+    selectedRowIndex -= 1;
+  }
+  if (desktopEditorIndex === resolvedIndex) {
+    closeDesktopEditor();
+  } else if (desktopEditorIndex > resolvedIndex) {
+    desktopEditorIndex -= 1;
+  }
+  if (outlineItems.length === 0) {
+    sceneEditorItemIndex = -1;
+  } else if (sceneEditorItemIndex > resolvedIndex) {
+    sceneEditorItemIndex -= 1;
+  } else if (sceneEditorItemIndex === resolvedIndex) {
+    sceneEditorItemIndex = Math.min(resolvedIndex, outlineItems.length - 1);
+  }
+  reindexItems();
+  if (options.closeMobile) {
+    closeMobileEditor();
+  }
+  renderRows();
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  return true;
 }
 function clearEditorDraft() {
   const insertMode = $("#t-outline-insert-mode").val() || "overwrite";
@@ -17826,11 +18175,19 @@ function renderRows() {
   if ($tbody.length === 0) return;
   updateGenerateAllScenesButtonState();
   if (outlineItems.length === 0) {
+    selectedRowIndex = -1;
+    sceneEditorItemIndex = -1;
+    closeDesktopEditor();
     $tbody.html(`
             <tr>
-                <td colspan="6" class="t-outline-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u70B9\u51FB\u201C\u8BBE\u8BA1\u5927\u7EB2\u201D\u751F\u6210</td>
+                <td colspan="6" class="t-outline-empty">
+                    <div>\u6682\u65E0\u5927\u7EB2\uFF0C\u53EF\u5148\u751F\u6210\uFF0C\u6216\u624B\u52A8\u521B\u5EFA\u7B2C\u4E00\u6761</div>
+                    <button id="t-outline-empty-create-first" class="t-btn t-btn-xs" style="margin-top:8px;"><i class="fa-solid fa-plus"></i> \u521B\u5EFA\u7B2C\u4E00\u6761\u5927\u7EB2</button>
+                </td>
             </tr>
         `);
+    renderMobileCards();
+    renderSceneEditorPage();
     return;
   }
   const rows = outlineItems.map((item, idx) => {
@@ -17951,6 +18308,7 @@ function renderSceneEditorPage() {
         </div>
         <div class="t-scene-page-actions">
             <button class="t-btn t-btn-xs" data-action="scene-page-add"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u573A\u666F</button>
+            <button class="t-btn t-btn-xs" data-action="scene-page-delete-item" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u7EC6\u7EB2\u6761\u76EE</button>
         </div>
         <div class="t-scene-page-list">${sceneBlocks}</div>
     `);
@@ -17965,6 +18323,7 @@ function setEditorSubView(view) {
   if (isMobile) {
     $("#t-outline-mobile-list").toggle(editorSubView === "outline");
   }
+  syncAddFabVisibility();
 }
 function getBriefText(text, maxLen = 38) {
   const s = (text || "").replace(/\s+/g, " ").trim();
@@ -17975,7 +18334,7 @@ function renderMobileCards() {
   const $list = $("#t-outline-mobile-list");
   if ($list.length === 0) return;
   if (outlineItems.length === 0) {
-    $list.html('<div class="t-outline-mobile-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u70B9\u51FB\u201C\u8BBE\u8BA1\u5927\u7EB2\u201D\u751F\u6210</div>');
+    $list.html('<div class="t-outline-mobile-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u53EF\u5148\u751F\u6210\uFF0C\u6216\u624B\u52A8\u521B\u5EFA\u3002<div style="margin-top:8px;"><button id="t-outline-mobile-create-first" class="t-btn t-btn-xs"><i class="fa-solid fa-plus"></i> \u521B\u5EFA\u7B2C\u4E00\u6761\u5927\u7EB2</button></div></div>');
     return;
   }
   const cards = outlineItems.map((item, idx) => {
@@ -18006,9 +18365,11 @@ function openMobileEditor(index) {
   renderMobileDrawerScenes(index);
   setMobileEditorSubView("outline");
   $drawer.addClass("show");
+  syncAddFabVisibility();
 }
 function closeMobileEditor() {
   $("#t-outline-mobile-drawer").removeClass("show").attr("data-index", "");
+  syncAddFabVisibility();
 }
 function setMobileEditorSubView(view) {
   mobileEditorSubView = view === "scene" ? "scene" : "outline";
@@ -18424,6 +18785,25 @@ function bindEvents() {
   $overlay.on("click", "#t-outline-generate-all-scenes", async () => {
     await generateAllScenes();
   });
+  $overlay.on("click", "#t-outline-add-fab", () => {
+    const isOpen = $("#t-outline-add-sheet").hasClass("show");
+    if (isOpen) closeAddItemSheet();
+    else openAddItemSheet();
+  });
+  $overlay.on("click", "#t-outline-add-sheet-backdrop", () => {
+    closeAddItemSheet();
+  });
+  $overlay.on("click", "#t-outline-add-outline-item", () => {
+    appendOutlineItem();
+    closeAddItemSheet();
+  });
+  $overlay.on("click", "#t-outline-add-scene-item", () => {
+    appendSceneItem();
+    closeAddItemSheet();
+  });
+  $overlay.on("click", "#t-outline-empty-create-first, #t-outline-mobile-create-first", () => {
+    appendOutlineItem();
+  });
   $overlay.on("change", "#t-outline-insert-mode", function() {
     saveDraft($("#t-outline-story-input").val(), $(this).val());
   });
@@ -18434,21 +18814,7 @@ function bindEvents() {
     const rowIndex = Number($(this).closest("tr").data("index"));
     const fallbackIndex = Number($(this).closest("tr").data("op-parent"));
     const resolvedIndex = Number.isNaN(rowIndex) ? fallbackIndex : rowIndex;
-    if (Number.isNaN(resolvedIndex)) return;
-    outlineItems.splice(resolvedIndex, 1);
-    const nextMap = {};
-    outlineItems.forEach((_, idx) => {
-      nextMap[idx] = sceneExpandedMap[idx] || sceneExpandedMap[idx + 1] || false;
-    });
-    sceneExpandedMap = nextMap;
-    if (selectedRowIndex === resolvedIndex) {
-      selectedRowIndex = -1;
-    } else if (selectedRowIndex > resolvedIndex) {
-      selectedRowIndex -= 1;
-    }
-    reindexItems();
-    renderRows();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+    deleteOutlineItemAt(resolvedIndex);
   });
   $overlay.on("click", "#t-outline-tbody tr[data-index]", function(e) {
     if ($(e.target).closest("button,.t-outline-input,.t-outline-textarea").length > 0) return;
@@ -18501,16 +18867,7 @@ function bindEvents() {
     if (idx < 0 || !outlineItems[idx]) return;
     const item = outlineItems[idx];
     if (!Array.isArray(item.scenes)) item.scenes = [];
-    item.scenes.push({
-      scene_index: item.scenes.length + 1,
-      scene_time: "",
-      scene_location: "",
-      scene_goal: "",
-      conflict: "",
-      key_beats: "",
-      sendable_prompt: "",
-      notes: ""
-    });
+    item.scenes.push(createEmptySceneItem(item.scenes.length + 1));
     reindexScenes(item);
     renderSceneEditorPage();
     renderRows();
@@ -18527,6 +18884,14 @@ function bindEvents() {
     renderSceneEditorPage();
     renderRows();
     saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-delete-item']", () => {
+    const idx = getSceneEditorTargetIndex();
+    if (idx < 0 || !outlineItems[idx]) return;
+    const itemTitle = String(outlineItems[idx]?.title || "").trim() || `#${idx + 1}`;
+    if (!window.confirm(`\u786E\u8BA4\u5220\u9664\u7EC6\u7EB2\u6761\u76EE\u300C${itemTitle}\u300D\uFF1F`)) return;
+    const deleted = deleteOutlineItemAt(idx);
+    if (deleted && window.toastr) toastr.success("\u5DF2\u5220\u9664\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-prev']", () => {
     if (sceneEditorItemIndex > 0) {
@@ -18562,28 +18927,15 @@ function bindEvents() {
   });
   $overlay.on("click", "#t-mobile-drawer-delete", function() {
     const index = Number($("#t-outline-mobile-drawer").attr("data-index"));
-    if (Number.isNaN(index)) return;
-    outlineItems.splice(index, 1);
-    reindexItems();
-    closeMobileEditor();
-    renderRows();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+    const deleted = deleteOutlineItemAt(index, { closeMobile: true });
+    if (deleted && window.toastr) toastr.success("\u5DF2\u5220\u9664\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "#t-mobile-add-scene", function() {
     const plotIndex = getMobileDrawerIndex();
     const item = outlineItems[plotIndex];
     if (!item) return;
     if (!Array.isArray(item.scenes)) item.scenes = [];
-    item.scenes.push({
-      scene_index: item.scenes.length + 1,
-      scene_time: "",
-      scene_location: "",
-      scene_goal: "",
-      conflict: "",
-      key_beats: "",
-      sendable_prompt: "",
-      notes: ""
-    });
+    item.scenes.push(createEmptySceneItem(item.scenes.length + 1));
     reindexScenes(item);
     renderRows();
     renderMobileDrawerScenes(plotIndex);
@@ -18751,6 +19103,16 @@ function openStoryOutlineWindow() {
                             <button id="t-mobile-drawer-delete" class="t-btn" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u672C\u6761</button>
                         </div>
                     </div>
+                    <div id="t-outline-add-sheet-backdrop" class="t-outline-add-sheet-backdrop"></div>
+                    <div id="t-outline-fab-wrap" class="t-outline-fab-wrap" aria-live="polite">
+                        <button id="t-outline-add-fab" class="t-outline-add-fab" aria-expanded="false" aria-controls="t-outline-add-sheet" title="\u65B0\u589E\u6761\u76EE">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <div id="t-outline-add-sheet" class="t-outline-add-sheet" role="menu" aria-label="\u65B0\u589E\u6761\u76EE\u7C7B\u578B">
+                            <button id="t-outline-add-outline-item" class="t-btn" role="menuitem"><i class="fa-solid fa-table"></i> \u65B0\u589E\u5927\u7EB2\u6761\u76EE</button>
+                            <button id="t-outline-add-scene-item" class="t-btn" role="menuitem"><i class="fa-solid fa-clapperboard"></i> \u65B0\u589E\u7EC6\u7EB2\u6761\u76EE</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -18766,6 +19128,7 @@ function openStoryOutlineWindow() {
   bindEvents();
   renderPlanHub();
   showOutlineView(plans.length > 0 ? "hub" : "editor");
+  syncAddFabVisibility();
   refreshOutlineOpeningSourceControls();
 }
 var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
@@ -29772,11 +30135,11 @@ async function openWorldInfoSelector() {
     currentEntries2.forEach((entry) => {
       const checked = selectedSet.has(Number(entry.uid));
       const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
-      const disabledBadge = entry.isDisabled ? '<span style="background:#ff9f4333; color:#ffb968; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u5DF2\u7981\u7528</span>' : "";
+      const disabledBadge = entry.isDisabled ? '<span style="background:#ff9f4333; color:#ffb968; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u9152\u9986\u4E2D\u5DF2\u7981\u7528</span>' : "";
       const $entry = $(`
                 <div class="t-wi-entry ${checked ? "selected" : ""}" data-uid="${entry.uid}">
                     <div class="t-wi-entry-check">
-                        <input type="checkbox" ${checked ? "checked" : ""} ${entry.isDisabled ? "disabled" : ""}>
+                        <input type="checkbox" ${checked ? "checked" : ""}>
                     </div>
                     <div class="t-wi-entry-content">
                         <div class="t-wi-entry-title">
@@ -29812,7 +30175,6 @@ async function openWorldInfoSelector() {
       $entry.on("click", function(e) {
         if ($(e.target).closest("input, .t-wi-preview-btn").length) return;
         const $checkbox = $entry.find("input");
-        if ($checkbox.is(":disabled")) return;
         $checkbox.prop("checked", !$checkbox.is(":checked")).trigger("change");
       });
       $entry.find(".t-wi-preview-btn").on("click", function(e) {
@@ -29833,7 +30195,6 @@ async function openWorldInfoSelector() {
     if (!currentBookName) return;
     const nextSet = getBookSelectedSet(currentBookName);
     currentEntries2.forEach((entry) => {
-      if (entry.isDisabled) return;
       const uid = Number(entry.uid);
       if (checked) nextSet.add(uid);
       else nextSet.delete(uid);
