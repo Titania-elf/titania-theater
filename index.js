@@ -22,11 +22,15 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.2";
+    CURRENT_VERSION = "5.0.6";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
+      "5.0.6": "\u89E3\u8026\u4E16\u754C\u4E66\u7981\u7528\u4E0E\u5C0F\u5267\u573A\u52FE\u9009\u72B6\u6001\u3002<br>\u4FEE\u590D\u7F16\u8F91\u5668\u8F93\u5165\u6CD5\u4E0A\u5C4F\u3002<br>\u4F18\u5316\u5343\u6761\u7EA7\u6536\u85CF\u5220\u9664\u5361\u987F\uFF08\u5206\u5E27/\u5206\u9875/\u8F7B\u91CF\u6E32\u67D3\uFF09\u3002<br>\u4FEE\u590D\u5927\u7EB2\u65B0\u5EFA\u65B9\u6848\u6B8B\u7559\u65E7\u5185\u5BB9\u3002<br>\u91CD\u505A\u5927\u7EB2\u7F16\u8F91\u65B0\u589E\u5165\u53E3\u4E3A\u79FB\u52A8\u7AEF\u5B89\u5168\u7684 FAB\uFF08\u652F\u6301\u201C\u65B0\u589E\u5927\u7EB2\u6761\u76EE\u201D\u548C\u201C\u65B0\u589E\u7EC6\u7EB2\u6761\u76EE\u201D\u4E14\u540E\u8005\u4E3A\u65B0\u5EFA\u6761\u76EE\u5E76\u81EA\u5E26\u9996\u4E2A\u7EC6\u7EB2\uFF09\u3002<br>\u8865\u9F50\u201C\u5220\u9664\u7EC6\u7EB2\u6761\u76EE\u201D\u80FD\u529B\u53CA\u76F8\u5173\u7D22\u5F15/\u72B6\u6001\u540C\u6B65\u3002",
+      "5.0.5": "\u4F18\u5316\u53D1\u9001\u952E\u83DC\u5355\u5165\u53E3\u903B\u8F91\uFF1A\u65B0\u589E\u53EF\u72EC\u7ACB\u63A7\u5236\u7684\u5927\u7EB2/\u5C0F\u5267\u573A\u5165\u53E3\uFF0C\u5E76\u652F\u6301\u4EC5\u542F\u7528\u5355\u4E00\u529F\u80FD\u65F6\u70B9\u51FB\u83DC\u5355\u6309\u94AE\u76F4\u63A5\u8FDB\u5165\u5BF9\u5E94\u754C\u9762\u3002\u4F18\u5316\u6536\u85CF\u753B\u5ECA\u6D77\u62A5\u6A21\u5F0F\u6027\u80FD\uFF0C\u51CF\u5C11\u5927\u91CF\u6536\u85CF\u65F6\u7684\u5361\u987F\u3002\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u7A97\u53E3\u52A0\u8F7D\u7B56\u7565\uFF0C\u964D\u4F4E\u8D85\u65F6\u5931\u8D25\u6982\u7387\u3002",
+      "5.0.4": "\u4F18\u5316\u90E8\u5206\u4F53\u9A8C\uFF1A\u5185\u5BB9\u533A\u6D41\u5F0F\u6E32\u67D3\u53EF\u4EE5\u5B9E\u65F6\u67E5\u770B\u751F\u6210\u8FC7\u7A0B\uFF1B\u4FEE\u590D\u67E5\u770B\u5386\u53F2\u751F\u6210\u65F6\u5DE6\u7BAD\u5934\u5931\u6548\u95EE\u9898\uFF1B\u73B0\u5728\u6536\u85CF\u540C\u4E00\u4E2A\u5267\u573A\u65F6\u4F1A\u81EA\u52A8\u201C\u66F4\u65B0\u539F\u6536\u85CF\u201D\u5E76\u628A\u65B0\u7EED\u5199\u5408\u5E76\u8FDB\u53BB\uFF1B\u7EED\u5199\u63D0\u793A\u8BCD\u8FDB\u884C\u91CD\u6784\uFF0C\u8282\u7701token\u3002\u65B0\u589E\u6536\u85CF\u533A\u7D27\u51D1/\u6D77\u62A5\u4E24\u79CD\u89C6\u56FE\u3002",
+      "5.0.3": "\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u9875\u9762\uFF0C\u91CD\u6784\u6536\u85CF\u753B\u5ECA\u9875\u9762\uFF0C\u65B0\u589E\u53EF\u5220\u9664\u5267\u573A\u5206\u7EC4\u4E2D\u7684\u4EFB\u610F\u4E00\u6761\u8BB0\u5F55\u3002",
       "5.0.2": "\u4F18\u5316\u6536\u85CF\u9986\u6027\u80FD\u4E0E\u6D77\u62A5\u5F0F\u754C\u9762\uFF0C\u4FEE\u590D\u7F16\u8F91\u540E\u6536\u85CF\u5185\u5BB9\u4E0D\u540C\u6B65\u95EE\u9898\uFF0C\u65B0\u589E\u5BFC\u51FA\u56FE\u7247\u6253\u7801\u53EF\u9009\u9879\u5E76\u6539\u8FDB\u79FB\u52A8\u7AEF\u4EA4\u4E92\u3002",
       "5.0.1": "\u4FEE\u590D\u4E86\u4E00\u4E2Abug\uFF0C\u4F18\u5316\u4E86\u90E8\u5206\u754C\u9762\u7EC6\u8282\u3002",
       "5.0.0": "\u8DE8\u5165\u5230\u5168\u65B0\u76845.0\u7248\u672C\uFF0C\u56DE\u58F0\u5C0F\u5267\u573A\u6B63\u5F0F\u66F4\u540D\u4E3A\u56DE\u58F0\u5DE5\u5177\u7BB1\uFF0C\u65B0\u5165\u53E3\u4E3A\u53D1\u9001\u952E\u5DE6\u8FB9\u7684\u56FE\u6807\u3002\u66F4\u591A\u529F\u80FD\u6B63\u5728\u9646\u7EED\u8D76\u6765\u7684\u8DEF\u4E0A~",
@@ -170,7 +174,9 @@ var init_defaults = __esm({
       },
       // 大纲入口按钮（注入到发送按钮旁边）
       outline_entry: {
-        enabled: true
+        enabled: true,
+        show_theater: true,
+        show_outline_actions: true
       },
       // 文本改写入口（显示在故事大纲菜单中）
       rewrite_entry: {
@@ -4920,10 +4926,11 @@ textarea.t-input {
     background: rgba(30, 30, 30, 0.88);
     color: #f2efe8;
     border: 1px solid rgba(191, 161, 95, 0.3);
-    padding: 8px 10px;
+    padding: 6px 8px;
     border-radius: 8px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-size: 0.9em;
 }
 
 .t-fav-filter-select:focus,
@@ -4933,30 +4940,67 @@ textarea.t-input {
 }
 
 .t-fav-filter-select {
-    min-width: 150px;
+    min-width: 132px;
     cursor: pointer;
 }
 
 .t-fav-search {
-    width: 260px;
+    width: 210px;
+}
+
+.t-fav-view-toggle.is-active {
+    border-color: rgba(231, 202, 143, 0.7);
+    background: linear-gradient(180deg, rgba(84, 64, 38, 0.58), rgba(48, 36, 21, 0.68));
+    color: #f5e6c2;
+}
+
+.t-fav-view-toggle {
+    min-width: 54px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.05;
+    gap: 2px;
+    text-align: center;
+    white-space: nowrap;
+    padding: 6px 8px;
+}
+
+.t-fav-view-toggle > span {
+    display: block;
 }
 
 /* \u7F51\u683C */
 .t-fav-grid-area {
     flex-grow: 1;
-    padding: 20px 22px 24px;
-    overflow-y: auto;
+    padding: 20px 22px 16px;
+    overflow: hidden;
     background:
         linear-gradient(180deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.65)),
         radial-gradient(90% 140% at 100% 0%, rgba(54, 40, 24, 0.28), transparent 70%);
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
 }
 
 .t-fav-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 18px;
+    width: 100%;
+    min-width: 0;
+}
+
+.t-fav-carousel-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    background: radial-gradient(130% 120% at 20% 0%, rgba(49, 37, 22, 0.45), rgba(8, 8, 8, 0.92));
+    box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.06), 0 14px 36px rgba(0, 0, 0, 0.45);
 }
 
 .t-fav-empty {
@@ -4968,19 +5012,27 @@ textarea.t-input {
 
 /* \u5361\u7247 */
 .t-fav-card {
-    position: relative;
+    position: absolute;
+    inset: 0;
     overflow: hidden;
     background: linear-gradient(180deg, rgba(18, 18, 18, 0.94), rgba(10, 10, 10, 0.94));
-    border: 1px solid rgba(191, 161, 95, 0.28);
-    border-radius: 14px;
-    aspect-ratio: 3 / 4;
-    min-height: 300px;
+    border: none;
+    border-radius: 0;
+    aspect-ratio: auto;
+    min-height: 0;
     cursor: pointer;
-    transition: transform 0.28s ease, border-color 0.26s ease, box-shadow 0.26s ease;
+    transition: opacity 0.45s ease;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    box-shadow: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.t-fav-card.is-active {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .t-fav-card-bg {
@@ -5007,13 +5059,13 @@ textarea.t-input {
 
 .t-fav-card-poster {
     position: absolute;
-    inset: 8px 8px 48px;
-    border-radius: 11px;
+    inset: 0;
+    border-radius: 0;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center center;
     z-index: 1;
-    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.6));
+    filter: none;
 }
 
 .t-fav-card.no-img .t-fav-card-poster::before {
@@ -5038,15 +5090,15 @@ textarea.t-input {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(7, 7, 7, 0.04) 24%, rgba(7, 7, 7, 0.4) 62%, rgba(7, 7, 7, 0.95) 100%);
+    background: linear-gradient(to bottom, rgba(7, 7, 7, 0.08) 14%, rgba(7, 7, 7, 0.52) 58%, rgba(7, 7, 7, 0.94) 100%);
     z-index: 2;
     pointer-events: none;
 }
 
 .t-fav-card:hover {
-    transform: translateY(-6px);
-    border-color: rgba(239, 209, 141, 0.76);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(239, 209, 141, 0.23);
+    transform: none;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .t-fav-card:hover .t-fav-card-bg {
@@ -5058,7 +5110,7 @@ textarea.t-input {
 @media (hover: none), (pointer: coarse) {
     .t-fav-card:hover {
         transform: none;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+        box-shadow: none;
     }
 
     .t-fav-card:hover .t-fav-card-bg {
@@ -5070,9 +5122,9 @@ textarea.t-input {
 .t-fav-card-content {
     position: relative;
     z-index: 3;
-    padding: 14px 12px 12px;
+    padding: 20px 22px 18px;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.82);
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(2, 2, 2, 0.68));
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(2, 2, 2, 0.75));
 }
 
 .t-fav-card-header {
@@ -5083,7 +5135,7 @@ textarea.t-input {
 
 .t-fav-card-script {
     font-weight: 700;
-    font-size: 1.02em;
+    font-size: clamp(1.08em, 2.2vw, 1.34em);
     color: #f6f2ea;
     margin-bottom: 1px;
     white-space: nowrap;
@@ -5092,7 +5144,7 @@ textarea.t-input {
 }
 
 .t-fav-card-char {
-    font-size: 0.82em;
+    font-size: 0.9em;
     color: #e5c88c;
     font-weight: 500;
     display: flex;
@@ -5104,26 +5156,174 @@ textarea.t-input {
 }
 
 .t-fav-card-snippet {
-    font-size: 0.78em;
+    font-size: 0.9em;
     color: rgba(246, 241, 230, 0.86);
     line-height: 1.45;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
-    margin: 8px 0 10px;
-    min-height: 3.3em;
+    margin: 10px 0 12px;
+    min-height: 4.2em;
     font-style: normal;
 }
 
 .t-fav-card-footer {
-    font-size: 0.72em;
+    font-size: 0.78em;
     color: rgba(234, 221, 197, 0.62);
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid rgba(191, 161, 95, 0.2);
     padding-top: 7px;
+}
+
+.t-fav-carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid rgba(231, 202, 143, 0.42);
+    background: rgba(12, 12, 12, 0.66);
+    color: #efe4cb;
+    z-index: 6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+}
+
+.t-fav-carousel-nav.prev {
+    left: 12px;
+}
+
+.t-fav-carousel-nav.next {
+    right: 12px;
+}
+
+.t-fav-carousel-nav:hover {
+    border-color: rgba(231, 202, 143, 0.75);
+    background: rgba(26, 20, 15, 0.85);
+}
+
+.t-fav-carousel-thumbs {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 10px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    cursor: grab;
+}
+
+.t-fav-mode-compact .t-fav-grid-area {
+    overflow-y: auto;
+}
+
+.t-fav-mode-compact .t-fav-grid {
+    display: block;
+    position: relative;
+    overflow: visible;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.t-fav-mode-compact .t-fav-card {
+    position: absolute;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    border-radius: 12px;
+    opacity: 1;
+    pointer-events: auto;
+    height: 280px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.t-fav-mode-compact .t-fav-card-poster {
+    inset: 8px 8px 60px;
+    border-radius: 11px;
+    background-size: contain;
+    background-position: center;
+}
+
+.t-fav-mode-compact .t-fav-card-content {
+    padding: 14px 12px 12px;
+}
+
+.t-fav-mode-compact .t-fav-card-snippet {
+    -webkit-line-clamp: 2;
+    min-height: 2.8em;
+    margin: 8px 0 10px;
+}
+
+.t-fav-mode-compact .t-fav-carousel-nav,
+.t-fav-mode-compact .t-fav-carousel-thumbs {
+    display: none;
+}
+
+.t-fav-carousel-thumbs.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+}
+
+.t-fav-carousel-thumbs.is-dragging .t-fav-thumb {
+    pointer-events: none;
+}
+
+.t-fav-thumb {
+    position: relative;
+    border: 1px solid rgba(191, 161, 95, 0.3);
+    border-radius: 10px;
+    background: rgba(18, 18, 18, 0.82);
+    color: #e4dbc9;
+    min-width: 0;
+    flex: 0 0 150px;
+    cursor: pointer;
+    overflow: hidden;
+    height: 62px;
+    text-align: left;
+}
+
+.t-fav-carousel-thumbs::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.t-fav-thumb-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.32;
+    filter: blur(2px);
+}
+
+.t-fav-thumb-label {
+    position: relative;
+    z-index: 1;
+    display: block;
+    padding: 9px 10px;
+    font-size: 0.78em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.t-fav-thumb.is-active {
+    border-color: rgba(231, 202, 143, 0.86);
+    box-shadow: 0 0 0 1px rgba(231, 202, 143, 0.32) inset;
 }
 
 /* \u9605\u8BFB\u5668 overlay */
@@ -5418,12 +5618,49 @@ textarea.t-input {
 
 /* \u7F16\u8F91\u6A21\u5F0F\u4E0B\u5361\u7247\u60AC\u505C\u6548\u679C\u8C03\u6574 */
 .t-fav-grid.edit-mode .t-fav-card:hover {
-    transform: translateY(-3px);
+    transform: none;
     cursor: pointer;
 }
 
 .t-fav-grid.edit-mode .t-fav-card:active {
-    transform: translateY(-1px);
+    transform: none;
+}
+
+.t-fav-grid.edit-mode {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+    overflow-y: auto;
+    border-radius: 10px;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.t-fav-grid.edit-mode .t-fav-card {
+    position: relative;
+    inset: auto;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    border-radius: 12px;
+    opacity: 1;
+    pointer-events: auto;
+    min-height: 240px;
+}
+
+.t-fav-grid.edit-mode .t-fav-card-poster {
+    inset: 8px 8px 48px;
+    border-radius: 11px;
+    background-size: contain;
+    background-position: center;
+}
+
+.t-fav-grid.edit-mode .t-fav-card-content {
+    padding: 14px 12px 12px;
+}
+
+.t-fav-grid.edit-mode ~ .t-fav-carousel-nav,
+.t-fav-grid.edit-mode ~ .t-fav-carousel-thumbs {
+    display: none;
 }
 
 
@@ -5524,9 +5761,10 @@ textarea.t-input {
 
 @media screen and (max-width: 600px) {
     .t-fav-container {
-        width: 100vw;
-        max-width: 100vw;
+        width: 100%;
+        max-width: 100%;
         height: 92vh;
+        box-sizing: border-box;
     }
 
     .t-fav-toolbar {
@@ -5536,17 +5774,55 @@ textarea.t-input {
         align-items: stretch;
     }
 
-    .t-fav-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+    .t-fav-grid-area {
+        padding: 10px;
+        gap: 8px;
+        overflow-x: hidden;
     }
 
     .t-fav-card {
-        min-height: 230px;
+        border-radius: 0;
     }
 
     .t-fav-card-poster {
-        inset: 6px 6px 44px;
+        inset: 0;
+    }
+
+    .t-fav-card-content {
+        padding: 14px 14px 14px;
+    }
+
+    .t-fav-card-snippet {
+        font-size: 0.84em;
+        -webkit-line-clamp: 3;
+        min-height: 3.5em;
+    }
+
+    .t-fav-carousel-nav {
+        width: 34px;
+        height: 34px;
+    }
+
+    .t-fav-carousel-nav.prev {
+        left: 8px;
+    }
+
+    .t-fav-carousel-nav.next {
+        right: 8px;
+    }
+
+    .t-fav-carousel-thumbs {
+        gap: 8px;
+    }
+
+    .t-fav-thumb {
+        height: 50px;
+        flex-basis: 120px;
+    }
+
+    .t-fav-thumb-label {
+        font-size: 0.72em;
+        padding: 7px 8px;
     }
 
     .t-fav-export-sheet-backdrop {
@@ -5560,6 +5836,34 @@ textarea.t-input {
 
     .t-fav-search {
         width: 100%;
+    }
+
+    .t-fav-mode-compact .t-fav-card {
+        height: 220px;
+    }
+
+    .t-fav-mode-compact .t-fav-card-poster {
+        inset: 6px 6px 58px;
+    }
+
+    .t-fav-mode-compact .t-fav-card-content {
+        padding: 10px 10px 10px;
+    }
+
+    .t-fav-mode-compact .t-fav-card-script {
+        font-size: 0.95em;
+    }
+
+    .t-fav-mode-compact .t-fav-card-char {
+        font-size: 0.78em;
+    }
+
+    .t-fav-mode-compact .t-fav-card-snippet {
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        min-height: 1.4em;
+        margin: 6px 0 8px;
+        font-size: 0.74em;
     }
 
     .t-read-meta-text {
@@ -5582,6 +5886,15 @@ textarea.t-input {
         width: 32px;
         height: 32px;
         font-size: 1.2em;
+    }
+}
+
+/* \u89E6\u5C4F\u8BBE\u5907\u4E0A\u5F7B\u5E95\u7981\u7528\u5361\u7247\u4F4D\u79FB\uFF0C\u5305\u542B\u7F16\u8F91\u6A21\u5F0F */
+@media (hover: none), (pointer: coarse) {
+    .t-fav-card:hover,
+    .t-fav-grid.edit-mode .t-fav-card:hover,
+    .t-fav-grid.edit-mode .t-fav-card:active {
+        transform: none;
     }
 }
 
@@ -9360,6 +9673,81 @@ body.titania-debug-mode #chat titania-memory::before {
     min-height: 0;
 }
 
+.t-outline-fab-wrap {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 20025;
+    display: none;
+}
+
+.t-outline-add-fab {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(114, 228, 209, 0.72);
+    background: linear-gradient(135deg, rgba(48, 166, 173, 0.97), rgba(74, 206, 172, 0.97));
+    color: #f2fdff;
+    box-shadow: 0 12px 24px rgba(26, 116, 120, 0.45);
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+}
+
+.t-outline-add-fab:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+.t-outline-add-fab[aria-expanded="true"] {
+    transform: rotate(45deg);
+}
+
+.t-outline-add-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 20023;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
+}
+
+.t-outline-add-sheet-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.t-outline-add-sheet {
+    position: absolute;
+    right: 0;
+    bottom: 62px;
+    min-width: 190px;
+    display: grid;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid rgba(120, 150, 170, 0.34);
+    border-radius: 10px;
+    background: rgba(12, 18, 24, 0.96);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.44);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.t-outline-add-sheet.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.t-outline-add-sheet .t-btn {
+    width: 100%;
+    min-height: 36px;
+    justify-content: flex-start;
+}
+
 .t-outline-scene-editor-page {
     border: 1px solid rgba(120, 150, 170, 0.25);
     border-radius: 10px;
@@ -10569,7 +10957,29 @@ body.titania-debug-mode #chat titania-memory::before {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        padding-bottom: 76px;
+        padding-bottom: 110px;
+    }
+
+    .t-outline-fab-wrap {
+        right: 14px;
+        bottom: calc(14px + env(safe-area-inset-bottom));
+    }
+
+    .t-outline-add-fab {
+        width: 56px;
+        height: 56px;
+    }
+
+    .t-outline-add-sheet {
+        right: 0;
+        left: auto;
+        min-width: 218px;
+        bottom: 68px;
+        padding: 10px;
+    }
+
+    .t-outline-add-sheet .t-btn {
+        min-height: 40px;
     }
 
     .t-outline-mobile-empty {
@@ -11934,6 +12344,13 @@ function getActiveWorldBookNames() {
 }
 async function getAllWorldBookNames() {
   try {
+    if (Array.isArray(world_names) && world_names.length > 0) {
+      if (typeof updateWorldInfoList === "function") {
+        updateWorldInfoList().catch(() => {
+        });
+      }
+      return [...world_names];
+    }
     if (typeof updateWorldInfoList === "function") {
       await updateWorldInfoList();
     }
@@ -12161,6 +12578,38 @@ function renderToShadowDOMReal(container, html) {
   host.className = "t-shadow-host";
   host.style.cssText = "width:100%; min-height:100%;";
   const shadow = host.attachShadow({ mode: "open" });
+  const isEditableNode = (node) => {
+    if (!(node instanceof HTMLElement)) return false;
+    const tag = node.tagName.toLowerCase();
+    if (tag === "textarea") {
+      return !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
+    }
+    if (tag === "input") {
+      const type = String(node.getAttribute("type") || "text").toLowerCase();
+      const editableTypes = /* @__PURE__ */ new Set(["text", "search", "url", "tel", "email", "password", "number"]);
+      return editableTypes.has(type) && !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
+    }
+    return node.isContentEditable === true;
+  };
+  const stopEditableKeyboardBubble = (evt) => {
+    const path = typeof evt.composedPath === "function" ? evt.composedPath() : [evt.target];
+    const hasEditableTarget = path.some((node) => isEditableNode(node));
+    if (!hasEditableTarget) return;
+    evt.stopPropagation();
+  };
+  [
+    "keydown",
+    "keypress",
+    "keyup",
+    "beforeinput",
+    "input",
+    "paste",
+    "compositionstart",
+    "compositionupdate",
+    "compositionend"
+  ].forEach((type) => {
+    shadow.addEventListener(type, stopEditableKeyboardBubble, true);
+  });
   const fontInfo = buildFontStylesForShadowDOM();
   const forceOverrideStyles = fontInfo.forceOverride && fontInfo.fontFamily ? `
             /* \u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53\u6837\u5F0F */
@@ -12283,6 +12732,15 @@ function getChatHistory2(limit, whitelist = []) {
     }
     return `${name}: ${cleanContent}`;
   }).join("\n");
+}
+function sanitizeAIOutputLite(rawContent) {
+  if (!rawContent || typeof rawContent !== "string") return "";
+  let content = rawContent;
+  content = content.replace(/```html\s*/gi, "");
+  content = content.replace(/```\s*/g, "");
+  content = content.replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/gi, "");
+  content = content.replace(/<think[^>]*>[\s\S]*?<\/think>/gi, "");
+  return content.trim();
 }
 function sanitizeAIOutput(rawContent) {
   if (!rawContent || typeof rawContent !== "string") return "";
@@ -13089,6 +13547,31 @@ function waitForImagesLoadedDeep(rootEl, timeoutMs = 5e3) {
 async function saveFavorite() {
   await saveContinuationChainFavorite();
 }
+function getChainBaseHtmlFromItems(items) {
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) return "";
+  const initial = list.find((item) => String(item?.type || "").trim() === "initial");
+  const candidate = initial || list[0];
+  return String(candidate?.html || candidate?.content || "").trim();
+}
+function isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems) {
+  if (!favEntry || favEntry.type !== "chain") return false;
+  if (String(favEntry.scriptId || "") !== String(scriptId || "")) return false;
+  const favBase = getChainBaseHtmlFromItems(favEntry.items);
+  const currentBase = getChainBaseHtmlFromItems(currentItems);
+  if (!favBase || !currentBase) return false;
+  return favBase === currentBase;
+}
+function isSameChainSession(favEntry, scriptId, branchKey, currentItems) {
+  if (!favEntry || favEntry.type !== "chain") return false;
+  if (String(favEntry.scriptId || "") !== String(scriptId || "")) return false;
+  const normalizedBranchKey = String(branchKey || "").trim();
+  const favBranchKey = String(favEntry.branchKey || "").trim();
+  if (normalizedBranchKey && favBranchKey) {
+    return normalizedBranchKey === favBranchKey;
+  }
+  return isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems);
+}
 async function saveContinuationChainFavorite() {
   const display = GlobalState.displayState?.isViewingHistory ? GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex] || null : {
     scriptId: GlobalState.lastGeneratedScriptId,
@@ -13121,6 +13604,7 @@ async function saveContinuationChainFavorite() {
   }
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
   const scriptName = String(chainData?.scriptName || script?.name || display?.scriptName || "\u573A\u666F");
+  const branchKey = String(chainData?.branchKey || "").trim();
   const avatarSrc = getCurrentAvatarSrc();
   const chainSignature = buildChainSignature(scriptId, normalizedRounds);
   const data = getExtData();
@@ -13135,6 +13619,32 @@ async function saveContinuationChainFavorite() {
   }
   const mergedHtml = buildChainMergedHtml(items);
   const now = Date.now();
+  const activeFavId = Number(GlobalState.lastFavId) || null;
+  let existingChain = null;
+  if (activeFavId) {
+    existingChain = data.favs.find((f) => f?.type === "chain" && Number(f?.id) === activeFavId) || null;
+  }
+  if (!existingChain) {
+    existingChain = data.favs.find((f) => isSameChainSession(f, scriptId, branchKey, items)) || null;
+  }
+  if (existingChain) {
+    existingChain.title = `${scriptName} - ${ctx.charName}`;
+    existingChain.charName = ctx.charName;
+    existingChain.scriptName = scriptName;
+    existingChain.scriptId = scriptId;
+    existingChain.date = new Date(now).toLocaleString();
+    existingChain.html = mergedHtml;
+    existingChain.avatar = avatarSrc;
+    existingChain.branchKey = branchKey;
+    existingChain.chainSignature = chainSignature;
+    existingChain.items = items;
+    saveExtData();
+    GlobalState.lastFavId = existingChain.id;
+    syncFavIdToCurrentHistory(existingChain.id);
+    updateFavButtonUI();
+    if (window.toastr) toastr.success(`\u5DF2\u66F4\u65B0\u5F53\u524D\u5267\u573A\u5206\u7EC4\u6536\u85CF\uFF08\u5171 ${items.length} \u6BB5\uFF09`);
+    return true;
+  }
   const entry = {
     id: now,
     type: "chain",
@@ -13145,6 +13655,7 @@ async function saveContinuationChainFavorite() {
     date: new Date(now).toLocaleString(),
     html: mergedHtml,
     avatar: avatarSrc,
+    branchKey,
     chainSignature,
     items
   };
@@ -13166,8 +13677,9 @@ function unsaveFavorite() {
     GlobalState.lastFavId = null;
     return false;
   }
+  const targetFavId = String(GlobalState.lastFavId);
   const originalLength = data.favs.length;
-  data.favs = data.favs.filter((f) => f.id !== GlobalState.lastFavId);
+  data.favs = data.favs.filter((f) => String(f?.id) !== targetFavId);
   if (data.favs.length < originalLength) {
     saveExtData();
     GlobalState.lastFavId = null;
@@ -13176,7 +13688,11 @@ function unsaveFavorite() {
     if (window.toastr) toastr.info("\u5DF2\u53D6\u6D88\u6536\u85CF");
     return true;
   }
-  return false;
+  GlobalState.lastFavId = null;
+  syncFavIdToCurrentHistory(null);
+  updateFavButtonUI();
+  if (window.toastr) toastr.info("\u6536\u85CF\u72B6\u6001\u5DF2\u540C\u6B65\u4E3A\u672A\u6536\u85CF");
+  return true;
 }
 function openFavsWindow() {
   setFavsWindowOpen(true);
@@ -13188,16 +13704,41 @@ function openFavsWindow() {
   let currentFavId = null;
   let isEditMode = false;
   let selectedIds = /* @__PURE__ */ new Set();
-  let renderTaskId = 0;
   let searchDebounceTimer = null;
   let currentMap = {};
-  let renderedCardCount = 0;
-  let loadedVisibleCount = 0;
   let filteredIndexMap = /* @__PURE__ */ new Map();
-  const GRID_RENDER_CHUNK_SIZE = 18;
-  const INITIAL_RENDER_LIMIT = 120;
-  const LOAD_MORE_STEP = 80;
+  let activeCarouselIndex = 0;
+  let carouselTimer = null;
+  let carouselPauseUntil = 0;
+  let isThumbDragging = false;
+  let thumbDragMoved = false;
+  let thumbDragStartX = 0;
+  let thumbDragStartScrollLeft = 0;
+  let thumbVirtualRange = { start: 0, end: -1 };
+  let thumbVirtualRaf = null;
+  let gridRenderRaf = null;
+  let pendingGridRenderOptions = null;
+  let editHydrationTimer = null;
+  let editHydrationToken = 0;
+  let editPageIndex = 0;
+  let favViewMode = String(data.favs_view_mode || "poster").trim() === "compact" ? "compact" : "poster";
+  const AUTO_SWITCH_MS = 2e3;
+  const MANUAL_PAUSE_MS = 6e3;
   const SEARCH_DEBOUNCE_MS = 240;
+  const POSTER_CARD_BUFFER = 1;
+  const THUMB_VIRTUAL_THRESHOLD = 120;
+  const THUMB_ITEM_WIDTH = 150;
+  const THUMB_ITEM_GAP = 10;
+  const THUMB_RENDER_BUFFER = 6;
+  const EDIT_PAGE_SIZE = 120;
+  let compactScrollRaf = null;
+  let compactResizeObserver = null;
+  let compactCardHeight = 280;
+  let compactCardGap = 14;
+  let compactColumnCount = 1;
+  let compactRowCount = 0;
+  let compactCardWidth = 260;
+  const COMPACT_BUFFER_ROWS = 2;
   const charIndex = /* @__PURE__ */ new Set();
   favs.forEach((f) => {
     if (f.charName) {
@@ -13225,9 +13766,16 @@ function openFavsWindow() {
                 <select id="t-fav-filter-char" class="t-fav-filter-select">
                     ${charList.map((c) => `<option value="${c}">${c}</option>`).join("")}
                 </select>
+                <select id="t-fav-sort" class="t-fav-filter-select" title="\u6392\u5E8F\u65B9\u5F0F">
+                    <option value="newest">\u6700\u65B0\u4F18\u5148</option>
+                    <option value="oldest">\u6700\u65E9\u4F18\u5148</option>
+                    <option value="title_asc">\u6807\u9898 A-Z</option>
+                    <option value="title_desc">\u6807\u9898 Z-A</option>
+                </select>
             </div>
             <div style="display:flex; gap:10px; align-items:center;">
                 <input type="text" id="t-fav-search" class="t-fav-search" placeholder="\u641C\u7D22\u5173\u952E\u8BCD...">
+                <button id="t-fav-view-toggle" class="t-tool-btn t-fav-view-toggle" title="\u5207\u6362\u7D27\u51D1\u6A21\u5F0F"><span>\u7D27\u51D1</span><span>\u6A21\u5F0F</span></button>
                 <button id="t-btn-img-mgr" class="t-tool-btn" title="\u7BA1\u7406\u89D2\u8272\u80CC\u666F\u56FE"><i class="fa-regular fa-image"></i> \u56FE\u9274</button>
                 <button id="t-btn-edit-mode" class="t-tool-btn" title="\u6279\u91CF\u7BA1\u7406"><i class="fa-solid fa-pen-to-square"></i> \u7F16\u8F91</button>
             </div>
@@ -13239,6 +13787,11 @@ function openFavsWindow() {
                 <button id="t-btn-select-all" class="t-tool-btn"><i class="fa-regular fa-square-check"></i> \u5168\u9009</button>
                 <button id="t-btn-deselect-all" class="t-tool-btn"><i class="fa-regular fa-square"></i> \u53D6\u6D88\u5168\u9009</button>
                 <span id="t-edit-count" style="color:#888; font-size:0.9em;">\u5DF2\u9009\u62E9 0 \u9879</span>
+                <div id="t-edit-pager" style="display:none; align-items:center; gap:8px; margin-left:8px;">
+                    <button id="t-edit-page-prev" class="t-tool-btn" title="\u4E0A\u4E00\u9875"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="t-edit-page-stat" style="color:#8f949b; font-size:0.85em; min-width:180px; text-align:center;">\u7B2C 1/1 \u9875</span>
+                    <button id="t-edit-page-next" class="t-tool-btn" title="\u4E0B\u4E00\u9875"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
             </div>
             <div style="display:flex; gap:10px; align-items:center;">
                 <button id="t-btn-delete-selected" class="t-tool-btn t-btn-danger" title="\u5220\u9664\u9009\u4E2D\u9879" disabled><i class="fa-solid fa-trash"></i> \u5220\u9664\u9009\u4E2D</button>
@@ -13247,7 +13800,10 @@ function openFavsWindow() {
         </div>
         
         <div class="t-fav-grid-area">
-            <div class="t-fav-grid" id="t-fav-grid"></div>
+            <div class="t-fav-grid t-fav-carousel-stage" id="t-fav-grid"></div>
+            <button class="t-fav-carousel-nav prev" id="t-fav-prev" title="\u4E0A\u4E00\u5F20"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="t-fav-carousel-nav next" id="t-fav-next" title="\u4E0B\u4E00\u5F20"><i class="fa-solid fa-chevron-right"></i></button>
+            <div class="t-fav-carousel-thumbs" id="t-fav-thumbs"></div>
         </div>
 
         <div class="t-fav-reader" id="t-fav-reader">
@@ -13276,6 +13832,22 @@ function openFavsWindow() {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  const saveFavViewMode = (mode) => {
+    data.favs_view_mode = mode === "compact" ? "compact" : "poster";
+    saveExtData();
+  };
+  const isCompactView = () => favViewMode === "compact" && !isEditMode;
+  const syncFavViewModeClass = () => {
+    const $root = $("#t-favs-view");
+    $root.toggleClass("t-fav-mode-compact", isCompactView());
+  };
+  const syncFavViewToggleButton = () => {
+    const $btn = $("#t-fav-view-toggle");
+    const compact = favViewMode === "compact";
+    $btn.toggleClass("is-active", compact);
+    $btn.attr("title", compact ? "\u5207\u6362\u6D77\u62A5\u8F6E\u64AD\u6A21\u5F0F" : "\u5207\u6362\u7D27\u51D1\u6A21\u5F0F");
+    $btn.html(compact ? "<span>\u6D77\u62A5</span><span>\u6A21\u5F0F</span>" : "<span>\u7D27\u51D1</span><span>\u6A21\u5F0F</span>");
+  };
   const updateSelectionCount = () => {
     const count = selectedIds.size;
     $("#t-edit-count").text(`\u5DF2\u9009\u62E9 ${count} \u9879`);
@@ -13286,6 +13858,40 @@ function openFavsWindow() {
       $("#t-btn-delete-selected").html(`<i class="fa-solid fa-trash"></i> \u5220\u9664\u9009\u4E2D`);
     }
   };
+  const clearEditHydration = () => {
+    if (editHydrationTimer) {
+      clearTimeout(editHydrationTimer);
+      editHydrationTimer = null;
+    }
+    editHydrationToken += 1;
+  };
+  const scheduleGridRender = (options = {}) => {
+    pendingGridRenderOptions = {
+      ...pendingGridRenderOptions || {},
+      ...options
+    };
+    if (gridRenderRaf) return;
+    gridRenderRaf = requestAnimationFrame(() => {
+      gridRenderRaf = null;
+      const nextOptions = pendingGridRenderOptions || {};
+      pendingGridRenderOptions = null;
+      renderGrid(nextOptions);
+    });
+  };
+  const syncEditPager = (totalItems, rangeStart, rangeEndExclusive) => {
+    const $pager = $("#t-edit-pager");
+    const totalPages = Math.max(1, Math.ceil(totalItems / EDIT_PAGE_SIZE));
+    if (!isEditMode || totalItems <= EDIT_PAGE_SIZE) {
+      $pager.hide();
+      return;
+    }
+    $pager.css("display", "flex");
+    $("#t-edit-page-prev").prop("disabled", editPageIndex <= 0);
+    $("#t-edit-page-next").prop("disabled", editPageIndex >= totalPages - 1);
+    const start = totalItems === 0 ? 0 : rangeStart + 1;
+    const end = totalItems === 0 ? 0 : Math.max(start, rangeEndExclusive);
+    $("#t-edit-page-stat").text(`\u7B2C ${editPageIndex + 1}/${totalPages} \u9875 \xB7 ${start}-${end}/${totalItems}`);
+  };
   const toggleEditMode = (enable) => {
     isEditMode = enable;
     if (enable) {
@@ -13293,6 +13899,7 @@ function openFavsWindow() {
       $("#t-fav-toolbar-edit").show();
       $("#t-fav-grid").addClass("edit-mode");
       selectedIds.clear();
+      editPageIndex = 0;
       updateSelectionCount();
     } else {
       $("#t-fav-toolbar-normal").show();
@@ -13300,7 +13907,10 @@ function openFavsWindow() {
       $("#t-fav-grid").removeClass("edit-mode");
       selectedIds.clear();
       $(".t-fav-card").removeClass("selected");
+      clearEditHydration();
     }
+    syncFavViewModeClass();
+    scheduleGridRender({ preserveEditPage: enable, liteEditPage: true, hydrateEditPage: true });
   };
   const getCachedSnippet = (item) => {
     if (typeof item._snippetText === "string") return item._snippetText;
@@ -13326,14 +13936,170 @@ ${html2}`;
     ].join(" ").toLowerCase();
     return item._searchText;
   };
-  const buildCardElement = (item, idx, currentMap2) => {
+  const clearCarouselTimer = () => {
+    if (carouselTimer) {
+      clearInterval(carouselTimer);
+      carouselTimer = null;
+    }
+  };
+  const pauseCarousel = (ms = MANUAL_PAUSE_MS) => {
+    carouselPauseUntil = Date.now() + ms;
+  };
+  const normalizeCarouselIndex = (index) => {
+    const total = currentFilteredList.length;
+    if (total <= 0) return 0;
+    const mod = index % total;
+    return mod < 0 ? mod + total : mod;
+  };
+  const setActiveCarouselIndex = (index, options = {}) => {
+    const total = currentFilteredList.length;
+    if (total <= 0) return;
+    const normalized = normalizeCarouselIndex(index);
+    const resetPause = options.resetPause !== false;
+    const smoothScroll = options.smoothScroll !== false;
+    activeCarouselIndex = normalized;
+    renderPosterCards(normalized);
+    renderVirtualThumbs(normalized);
+    const activeThumb = document.querySelector(`#t-fav-thumbs .t-fav-thumb[data-fav-index='${normalized}']`);
+    if (activeThumb?.scrollIntoView) {
+      activeThumb.scrollIntoView({ behavior: smoothScroll ? "smooth" : "auto", inline: "nearest", block: "nearest" });
+    }
+    if (resetPause) pauseCarousel();
+  };
+  const renderPosterCards = (activeIndex) => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    gridEl.innerHTML = "";
+    const total = currentFilteredList.length;
+    if (total <= 0) return;
+    const active = normalizeCarouselIndex(activeIndex);
+    const appendIndexIfNew = (list, idx) => {
+      if (!list.includes(idx)) list.push(idx);
+    };
+    const visibleIndexes = [];
+    appendIndexIfNew(visibleIndexes, active);
+    for (let i = 1; i <= POSTER_CARD_BUFFER; i += 1) {
+      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active - i));
+      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active + i));
+    }
+    const cardFrag = document.createDocumentFragment();
+    visibleIndexes.forEach((idx) => {
+      const item = currentFilteredList[idx];
+      if (!item) return;
+      const card = buildCardElement(item, idx, currentMap);
+      if (idx === active) {
+        card.classList.add("is-active");
+        card.setAttribute("aria-hidden", "false");
+      } else {
+        card.classList.remove("is-active");
+        card.setAttribute("aria-hidden", "true");
+      }
+      cardFrag.appendChild(card);
+    });
+    gridEl.appendChild(cardFrag);
+  };
+  const renderAllThumbs = () => {
+    const thumbsEl = document.getElementById("t-fav-thumbs");
+    if (!thumbsEl) return;
+    thumbsEl.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    currentFilteredList.forEach((item, idx) => {
+      frag.appendChild(buildThumbElement(item, idx, currentMap));
+    });
+    thumbsEl.appendChild(frag);
+    thumbsEl.scrollLeft = 0;
+    thumbVirtualRange = { start: 0, end: currentFilteredList.length - 1 };
+  };
+  const getThumbVirtualBounds = () => {
+    const thumbsEl = document.getElementById("t-fav-thumbs");
+    const total = currentFilteredList.length;
+    if (!thumbsEl || total <= 0) return { start: 0, end: -1 };
+    const itemSpan = THUMB_ITEM_WIDTH + THUMB_ITEM_GAP;
+    const viewportWidth = thumbsEl.clientWidth || 1;
+    const firstVisible = Math.floor((thumbsEl.scrollLeft || 0) / itemSpan);
+    const visibleCount = Math.ceil(viewportWidth / itemSpan);
+    const start = Math.max(0, firstVisible - THUMB_RENDER_BUFFER);
+    const end = Math.min(total - 1, firstVisible + visibleCount + THUMB_RENDER_BUFFER);
+    return { start, end };
+  };
+  const renderVirtualThumbs = (forceActiveIndex = null) => {
+    const thumbsEl = document.getElementById("t-fav-thumbs");
+    const total = currentFilteredList.length;
+    if (!thumbsEl) return;
+    if (total <= THUMB_VIRTUAL_THRESHOLD) {
+      if (thumbVirtualRange.end < 0 || thumbsEl.childElementCount !== total) {
+        renderAllThumbs();
+      }
+      const activeThumb2 = thumbsEl.querySelector(`[data-fav-index='${activeCarouselIndex}']`);
+      if (activeThumb2) {
+        thumbsEl.querySelectorAll(".t-fav-thumb.is-active").forEach((el) => el.classList.remove("is-active"));
+        activeThumb2.classList.add("is-active");
+      }
+      return;
+    }
+    const itemSpan = THUMB_ITEM_WIDTH + THUMB_ITEM_GAP;
+    let { start, end } = getThumbVirtualBounds();
+    const ensureIndex = Number.isInteger(forceActiveIndex) ? normalizeCarouselIndex(forceActiveIndex) : activeCarouselIndex;
+    if (ensureIndex < start) start = Math.max(0, ensureIndex - THUMB_RENDER_BUFFER);
+    if (ensureIndex > end) end = Math.min(total - 1, ensureIndex + THUMB_RENDER_BUFFER);
+    const hasRenderedNodes = thumbsEl.childElementCount > 0;
+    const rangeUnchanged = hasRenderedNodes && thumbVirtualRange.start === start && thumbVirtualRange.end === end;
+    if (!rangeUnchanged) {
+      thumbsEl.innerHTML = "";
+      const leftSpacer = document.createElement("div");
+      leftSpacer.className = "t-fav-thumb-spacer";
+      leftSpacer.style.width = `${start * itemSpan}px`;
+      leftSpacer.setAttribute("aria-hidden", "true");
+      leftSpacer.style.flex = "0 0 auto";
+      thumbsEl.appendChild(leftSpacer);
+      const frag = document.createDocumentFragment();
+      for (let idx = start; idx <= end; idx += 1) {
+        const item = currentFilteredList[idx];
+        if (!item) continue;
+        frag.appendChild(buildThumbElement(item, idx, currentMap));
+      }
+      thumbsEl.appendChild(frag);
+      const rightSpacer = document.createElement("div");
+      rightSpacer.className = "t-fav-thumb-spacer";
+      rightSpacer.style.width = `${Math.max(0, (total - end - 1) * itemSpan)}px`;
+      rightSpacer.setAttribute("aria-hidden", "true");
+      rightSpacer.style.flex = "0 0 auto";
+      thumbsEl.appendChild(rightSpacer);
+      thumbVirtualRange = { start, end };
+    }
+    thumbsEl.querySelectorAll(".t-fav-thumb.is-active").forEach((el) => el.classList.remove("is-active"));
+    const activeThumb = thumbsEl.querySelector(`[data-fav-index='${activeCarouselIndex}']`);
+    if (activeThumb) activeThumb.classList.add("is-active");
+  };
+  const scheduleVirtualThumbRender = () => {
+    if (thumbVirtualRaf) return;
+    thumbVirtualRaf = requestAnimationFrame(() => {
+      thumbVirtualRaf = null;
+      renderVirtualThumbs();
+    });
+  };
+  const restartCarouselAutoplay = () => {
+    clearCarouselTimer();
+    if (currentFilteredList.length <= 1) return;
+    carouselTimer = setInterval(() => {
+      if (Date.now() < carouselPauseUntil) return;
+      if (isEditMode) return;
+      if ($("#t-fav-reader").hasClass("show")) return;
+      setActiveCarouselIndex(activeCarouselIndex + 1, { resetPause: false });
+    }, AUTO_SWITCH_MS);
+  };
+  const buildCardElement = (item, idx, currentMap2, options = {}) => {
+    const useLite = options.lite === true;
     const isChain = item?.type === "chain";
     const chainItems = Array.isArray(item?.items) ? item.items : [];
     const chainCount = chainItems.length;
-    const snippet = getCachedSnippet(item);
+    const snippet = useLite ? "\u5185\u5BB9\u9884\u89C8\u52A0\u8F7D\u4E2D..." : getCachedSnippet(item);
     const charName = item._meta.char;
-    let bgUrl = currentMap2[charName];
-    if (!bgUrl) bgUrl = item.avatar;
+    let bgUrl = "";
+    if (!useLite) {
+      bgUrl = currentMap2[charName];
+      if (!bgUrl) bgUrl = item.avatar;
+    }
     const bgClass = bgUrl ? "" : "no-img";
     const bgStyle = bgUrl ? `background-image: url('${bgUrl}')` : "";
     const cardBgClass = bgUrl ? "" : "no-img";
@@ -13342,7 +14108,7 @@ ${html2}`;
     const displayDate = String(item.date || "").split(" ")[0] || "-";
     const chainBadge = isChain ? `<span class="t-fav-chain-badge">\u5267\u573A\u5206\u7EC4 \xB7 ${chainCount}\u6BB5</span>` : "";
     const card = $(`
-            <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""} ${cardBgClass}" data-fav-id="${item.id}">
+            <div class="t-fav-card ${isSelected ? "selected" : ""} ${isChain ? "t-fav-card-chain" : ""} ${cardBgClass}" data-fav-id="${item.id}" data-fav-index="${idx}" aria-hidden="true">
                 <div class="t-fav-card-checkbox">
                     <i class="fa-${isSelected ? "solid fa-square-check" : "regular fa-square"}"></i>
                 </div>
@@ -13361,78 +14127,226 @@ ${html2}`;
         `);
     return card[0];
   };
-  const renderCardRange = (start, end, taskId) => {
+  const buildThumbElement = (item, idx, currentMap2) => {
+    const charName = item?._meta?.char || "\u672A\u77E5\u89D2\u8272";
+    const scriptName = item?._meta?.script || item?.title || "\u672A\u547D\u540D\u6536\u85CF";
+    const bgUrl = currentMap2[charName] || item.avatar || "";
+    const thumb = $(`
+            <button class="t-fav-thumb" data-fav-index="${idx}" title="${escapeHtmlText(scriptName)}">
+                <span class="t-fav-thumb-bg" style="${bgUrl ? `background-image: url('${bgUrl}')` : ""}"></span>
+                <span class="t-fav-thumb-label">${escapeHtmlText(scriptName)}</span>
+            </button>
+        `);
+    return thumb[0];
+  };
+  const updateCompactResponsive = () => {
+    const mobile = window.matchMedia("(max-width: 600px)").matches;
+    compactCardHeight = mobile ? 220 : 280;
+    compactCardGap = mobile ? 10 : 14;
+  };
+  const computeCompactLayout = () => {
     const gridEl = document.getElementById("t-fav-grid");
     if (!gridEl) return;
-    if (start >= end) return;
-    let cursor = start;
-    const renderChunk = () => {
-      if (taskId !== renderTaskId) return;
-      const chunkEnd = Math.min(cursor + GRID_RENDER_CHUNK_SIZE, end);
-      const frag = document.createDocumentFragment();
-      for (let idx = cursor; idx < chunkEnd; idx++) {
-        const item = currentFilteredList[idx];
-        if (!item) continue;
-        frag.appendChild(buildCardElement(item, idx, currentMap));
-      }
-      gridEl.appendChild(frag);
-      cursor = chunkEnd;
-      renderedCardCount = Math.max(renderedCardCount, cursor);
-      if (cursor < end) {
-        requestAnimationFrame(renderChunk);
-      }
-    };
-    requestAnimationFrame(renderChunk);
+    updateCompactResponsive();
+    const containerWidth = gridEl.clientWidth;
+    if (containerWidth <= 0) return;
+    const minCardWidth = compactCardGap === 10 ? 160 : 260;
+    compactColumnCount = Math.max(1, Math.floor((containerWidth + compactCardGap) / (minCardWidth + compactCardGap)));
+    compactCardWidth = (containerWidth - (compactColumnCount - 1) * compactCardGap) / compactColumnCount;
+    compactRowCount = Math.max(1, Math.ceil(currentFilteredList.length / compactColumnCount));
   };
-  const renderGrid = () => {
+  const getCompactVisibleRange = () => {
+    const gridArea = document.querySelector("#t-favs-view .t-fav-grid-area");
+    if (!gridArea || compactRowCount <= 0) return { start: 0, end: -1 };
+    const scrollTop = gridArea.scrollTop;
+    const viewportHeight = gridArea.clientHeight;
+    const rowHeight = compactCardHeight + compactCardGap;
+    const firstVisibleRow = Math.floor(scrollTop / rowHeight);
+    const visibleRows = Math.ceil(viewportHeight / rowHeight) + 1;
+    const startRow = Math.max(0, firstVisibleRow - COMPACT_BUFFER_ROWS);
+    const endRow = Math.min(compactRowCount - 1, firstVisibleRow + visibleRows + COMPACT_BUFFER_ROWS);
+    return {
+      start: Math.max(0, startRow * compactColumnCount),
+      end: Math.min(currentFilteredList.length - 1, (endRow + 1) * compactColumnCount - 1)
+    };
+  };
+  const updateCompactSpacer = () => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    let spacer = gridEl.querySelector(".t-fav-compact-spacer");
+    if (!spacer) {
+      spacer = document.createElement("div");
+      spacer.className = "t-fav-compact-spacer";
+      spacer.setAttribute("aria-hidden", "true");
+      spacer.style.cssText = "width:100%; pointer-events:none;";
+      gridEl.appendChild(spacer);
+    }
+    const totalHeight = Math.max(0, compactRowCount * (compactCardHeight + compactCardGap) - compactCardGap);
+    spacer.style.height = `${totalHeight}px`;
+  };
+  const renderCompactCards = (visibleRange) => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    gridEl.querySelectorAll(".t-fav-card").forEach((el) => el.remove());
+    if (visibleRange.end < visibleRange.start) return;
+    const frag = document.createDocumentFragment();
+    for (let idx = visibleRange.start; idx <= visibleRange.end; idx++) {
+      const item = currentFilteredList[idx];
+      if (!item) continue;
+      const col = idx % compactColumnCount;
+      const row = Math.floor(idx / compactColumnCount);
+      const card = buildCardElement(item, idx, currentMap);
+      card.classList.add("is-active");
+      card.setAttribute("aria-hidden", "false");
+      Object.assign(card.style, {
+        position: "absolute",
+        top: `${row * (compactCardHeight + compactCardGap)}px`,
+        left: `${col * (compactCardWidth + compactCardGap)}px`,
+        width: `${compactCardWidth}px`,
+        height: `${compactCardHeight}px`,
+        boxSizing: "border-box"
+      });
+      frag.appendChild(card);
+    }
+    gridEl.appendChild(frag);
+  };
+  const scheduleCompactRender = () => {
+    if (compactScrollRaf) return;
+    compactScrollRaf = requestAnimationFrame(() => {
+      compactScrollRaf = null;
+      if (!isCompactView()) return;
+      const range = getCompactVisibleRange();
+      renderCompactCards(range);
+    });
+  };
+  const setupCompactResizeObserver = () => {
+    if (compactResizeObserver) compactResizeObserver.disconnect();
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    compactResizeObserver = new ResizeObserver(() => {
+      if (!isCompactView()) return;
+      const prevCols = compactColumnCount;
+      computeCompactLayout();
+      updateCompactSpacer();
+      if (compactColumnCount !== prevCols) {
+        const range = getCompactVisibleRange();
+        renderCompactCards(range);
+      }
+    });
+    compactResizeObserver.observe(gridEl);
+  };
+  const renderGrid = (options = {}) => {
     const grid = $("#t-fav-grid");
     const gridEl = grid[0];
+    const thumbsEl = document.getElementById("t-fav-thumbs");
     if (!gridEl) return;
-    renderTaskId++;
-    const taskId = renderTaskId;
     grid.empty();
-    renderedCardCount = 0;
-    loadedVisibleCount = 0;
+    if (thumbsEl) thumbsEl.innerHTML = "";
     filteredIndexMap.clear();
     currentMap = getExtData().character_map || {};
     const targetChar = $("#t-fav-filter-char").val();
+    const sortMode = String($("#t-fav-sort").val() || "newest");
     const search = String($("#t-fav-search").val() || "").trim().toLowerCase();
     currentFilteredList = favs.filter((f) => {
       if (targetChar !== "\u5168\u90E8\u89D2\u8272" && f._meta.char !== targetChar) return false;
       if (search && !getCachedSearchText(f).includes(search)) return false;
       return true;
     });
+    const getTimeValue = (item) => {
+      const idNum = Number(item?.id);
+      if (Number.isFinite(idNum) && idNum > 0) return idNum;
+      const parsed = Date.parse(String(item?.date || ""));
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    if (sortMode === "oldest") {
+      currentFilteredList.sort((a, b) => getTimeValue(a) - getTimeValue(b));
+    } else if (sortMode === "title_asc") {
+      currentFilteredList.sort((a, b) => String(a?._meta?.script || a?.title || "").localeCompare(String(b?._meta?.script || b?.title || ""), "zh-Hans-CN"));
+    } else if (sortMode === "title_desc") {
+      currentFilteredList.sort((a, b) => String(b?._meta?.script || b?.title || "").localeCompare(String(a?._meta?.script || a?.title || ""), "zh-Hans-CN"));
+    } else {
+      currentFilteredList.sort((a, b) => getTimeValue(b) - getTimeValue(a));
+    }
     currentFilteredList.forEach((item, idx) => {
       filteredIndexMap.set(String(item.id), idx);
     });
     if (currentFilteredList.length === 0) {
       grid.append('<div class="t-fav-empty">\u6CA1\u6709\u627E\u5230\u76F8\u5173\u6536\u85CF</div>');
+      clearCarouselTimer();
+      thumbVirtualRange = { start: 0, end: -1 };
       return;
     }
     if (isEditMode) {
       grid.addClass("edit-mode");
+    } else {
+      grid.removeClass("edit-mode");
     }
-    loadedVisibleCount = Math.min(currentFilteredList.length, INITIAL_RENDER_LIMIT);
-    renderCardRange(0, loadedVisibleCount, taskId);
-  };
-  const maybeLoadMoreCards = () => {
-    const areaEl = $(".t-fav-grid-area")[0];
-    if (!areaEl) return;
-    if (renderedCardCount >= currentFilteredList.length) return;
-    const nearBottom = areaEl.scrollTop + areaEl.clientHeight >= areaEl.scrollHeight - 220;
-    if (!nearBottom) return;
-    const prevLoaded = loadedVisibleCount;
-    loadedVisibleCount = Math.min(currentFilteredList.length, loadedVisibleCount + LOAD_MORE_STEP);
-    if (loadedVisibleCount <= prevLoaded) return;
-    const taskId = renderTaskId;
-    renderCardRange(prevLoaded, loadedVisibleCount, taskId);
+    if (isEditMode) {
+      clearCarouselTimer();
+      const preserveEditPage = options.preserveEditPage === true;
+      if (!preserveEditPage) {
+        editPageIndex = 0;
+      }
+      const totalItems = currentFilteredList.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / EDIT_PAGE_SIZE));
+      if (editPageIndex < 0) editPageIndex = 0;
+      if (editPageIndex >= totalPages) editPageIndex = totalPages - 1;
+      const pageStart = editPageIndex * EDIT_PAGE_SIZE;
+      const pageEndExclusive = Math.min(totalItems, pageStart + EDIT_PAGE_SIZE);
+      const pageItems = currentFilteredList.slice(pageStart, pageEndExclusive);
+      const renderLite = options.liteEditPage === true;
+      const cardFrag = document.createDocumentFragment();
+      pageItems.forEach((item, localIdx) => {
+        const absoluteIdx = pageStart + localIdx;
+        const card = buildCardElement(item, absoluteIdx, currentMap, { lite: renderLite });
+        card.classList.add("is-active");
+        card.setAttribute("aria-hidden", "false");
+        cardFrag.appendChild(card);
+      });
+      gridEl.appendChild(cardFrag);
+      if (thumbsEl) {
+        thumbsEl.innerHTML = "";
+      }
+      thumbVirtualRange = { start: 0, end: -1 };
+      syncEditPager(totalItems, pageStart, pageEndExclusive);
+      if (renderLite && options.hydrateEditPage !== false) {
+        clearEditHydration();
+        const token = editHydrationToken;
+        editHydrationTimer = setTimeout(() => {
+          editHydrationTimer = null;
+          if (token !== editHydrationToken) return;
+          if (!isEditMode) return;
+          scheduleGridRender({ preserveEditPage: true, liteEditPage: false, hydrateEditPage: false });
+        }, 120);
+      }
+      return;
+    }
+    syncEditPager(0, 0, 0);
+    if (isCompactView()) {
+      clearCarouselTimer();
+      if (thumbsEl) thumbsEl.innerHTML = "";
+      thumbVirtualRange = { start: 0, end: -1 };
+      gridEl.querySelectorAll(".t-fav-card, .t-fav-compact-spacer").forEach((el) => el.remove());
+      if (currentFilteredList.length === 0) return;
+      computeCompactLayout();
+      updateCompactSpacer();
+      const range = getCompactVisibleRange();
+      renderCompactCards(range);
+      const gridArea = gridEl.closest(".t-fav-grid-area");
+      if (gridArea) gridArea.scrollTop = 0;
+      return;
+    }
+    renderVirtualThumbs();
+    const defaultIndex = currentFavId && filteredIndexMap.has(String(currentFavId)) ? Number(filteredIndexMap.get(String(currentFavId))) || 0 : 0;
+    setActiveCarouselIndex(defaultIndex, { resetPause: false, smoothScroll: false });
+    restartCarouselAutoplay();
   };
   const scheduleSearchRender = () => {
     if (searchDebounceTimer) {
       clearTimeout(searchDebounceTimer);
     }
     searchDebounceTimer = setTimeout(() => {
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
     }, SEARCH_DEBOUNCE_MS);
   };
   let currentViewingHtml = "";
@@ -13483,16 +14397,102 @@ ${html2}`;
     }
     $("#t-fav-reader").addClass("show");
   };
-  $("#t-fav-filter-char").on("change", renderGrid);
+  $("#t-fav-filter-char").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
+  $("#t-fav-sort").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
   $("#t-fav-search").on("input", scheduleSearchRender);
-  $("#t-fav-search").on("change", renderGrid);
-  $(".t-fav-grid-area").on("scroll", maybeLoadMoreCards);
+  $("#t-fav-search").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
+  $("#t-fav-view-toggle").on("click", () => {
+    favViewMode = favViewMode === "compact" ? "poster" : "compact";
+    saveFavViewMode(favViewMode);
+    syncFavViewToggleButton();
+    syncFavViewModeClass();
+    scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
+  });
   $("#t-btn-img-mgr").on("click", () => {
     openCharImageManager(() => {
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
     });
   });
-  $("#t-read-back").on("click", () => $("#t-fav-reader").removeClass("show"));
+  $("#t-read-back").on("click", () => {
+    $("#t-fav-reader").removeClass("show");
+    pauseCarousel(1200);
+  });
+  $("#t-fav-prev").on("click", () => {
+    setActiveCarouselIndex(activeCarouselIndex - 1);
+  });
+  $("#t-fav-next").on("click", () => {
+    setActiveCarouselIndex(activeCarouselIndex + 1);
+  });
+  $("#t-fav-thumbs").on("click", ".t-fav-thumb", function() {
+    if (thumbDragMoved) return;
+    const idx = Number($(this).data("fav-index"));
+    if (!Number.isInteger(idx)) return;
+    setActiveCarouselIndex(idx);
+  });
+  $("#t-fav-thumbs").on("wheel", function(e) {
+    const el = this;
+    if (!el) return;
+    const oe = e.originalEvent;
+    const delta = Math.abs(oe?.deltaX || 0) > Math.abs(oe?.deltaY || 0) ? oe?.deltaX || 0 : oe?.deltaY || 0;
+    if (!delta) return;
+    e.preventDefault();
+    el.scrollLeft += delta;
+  });
+  $("#t-fav-thumbs").on("scroll", function() {
+    if (isCompactView() || isEditMode) return;
+    scheduleVirtualThumbRender();
+  });
+  $("#t-fav-thumbs").on("mousedown", function(e) {
+    if (e.button !== 0) return;
+    isThumbDragging = true;
+    thumbDragMoved = false;
+    thumbDragStartX = e.pageX;
+    thumbDragStartScrollLeft = this.scrollLeft;
+    $(this).addClass("is-dragging");
+    e.preventDefault();
+  });
+  $(document).on("mousemove.tFavThumbDrag", (e) => {
+    if (!isThumbDragging) return;
+    const thumbsEl = $("#t-fav-thumbs")[0];
+    if (!thumbsEl) return;
+    const dx = e.pageX - thumbDragStartX;
+    if (Math.abs(dx) > 3) thumbDragMoved = true;
+    thumbsEl.scrollLeft = thumbDragStartScrollLeft - dx;
+  });
+  $(document).on("mouseup.tFavThumbDrag", () => {
+    if (!isThumbDragging) return;
+    isThumbDragging = false;
+    $("#t-fav-thumbs").removeClass("is-dragging");
+    setTimeout(() => {
+      thumbDragMoved = false;
+    }, 0);
+  });
+  $("#t-favs-view .t-fav-grid-area").on("scroll", function() {
+    if (!isCompactView()) return;
+    scheduleCompactRender();
+  });
+  setupCompactResizeObserver();
+  let carouselTouchStartX = 0;
+  let carouselTouchStartY = 0;
+  $(".t-fav-grid-area").on("touchstart", (e) => {
+    const touch = e.originalEvent?.touches?.[0];
+    if (!touch) return;
+    carouselTouchStartX = touch.clientX;
+    carouselTouchStartY = touch.clientY;
+  });
+  $(".t-fav-grid-area").on("touchend", (e) => {
+    const touch = e.originalEvent?.changedTouches?.[0];
+    if (!touch) return;
+    const diffX = touch.clientX - carouselTouchStartX;
+    const diffY = touch.clientY - carouselTouchStartY;
+    if (Math.abs(diffX) > 46 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
+      if (diffX > 0) {
+        setActiveCarouselIndex(activeCarouselIndex - 1);
+      } else {
+        setActiveCarouselIndex(activeCarouselIndex + 1);
+      }
+    }
+  });
   $("#t-fav-grid").on("click", ".t-fav-card", function() {
     const favId = String($(this).data("fav-id"));
     const itemIndex = filteredIndexMap.get(favId);
@@ -13550,7 +14550,7 @@ ${html2}`;
       });
       selectedIds.clear();
       updateSelectionCount();
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
       if (window.toastr) toastr.success(`\u5DF2\u5220\u9664 ${count} \u6761\u6536\u85CF`);
       if (favs.length === 0) {
         toggleEditMode(false);
@@ -13750,7 +14750,7 @@ ${html2}`;
       }
       currentViewingTitle = trimmedTitle;
       $("#t-read-meta").text(trimmedTitle);
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
       if (window.toastr) toastr.success("\u6807\u9898\u5DF2\u66F4\u65B0");
     }
   });
@@ -13760,7 +14760,7 @@ ${html2}`;
       d.favs = d.favs.filter((x) => x.id !== currentFavId);
       saveExtData();
       favs.splice(0, favs.length, ...d.favs);
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
       if (currentFilteredList.length === 0) {
         $("#t-fav-reader").removeClass("show");
       } else {
@@ -13769,6 +14769,18 @@ ${html2}`;
         loadReaderItem(newIdx);
       }
     }
+  });
+  $("#t-edit-page-prev").on("click", () => {
+    if (!isEditMode || editPageIndex <= 0) return;
+    editPageIndex -= 1;
+    scheduleGridRender({ preserveEditPage: true, liteEditPage: false, hydrateEditPage: false });
+  });
+  $("#t-edit-page-next").on("click", () => {
+    if (!isEditMode) return;
+    const totalPages = Math.max(1, Math.ceil(currentFilteredList.length / EDIT_PAGE_SIZE));
+    if (editPageIndex >= totalPages - 1) return;
+    editPageIndex += 1;
+    scheduleGridRender({ preserveEditPage: true, liteEditPage: false, hydrateEditPage: false });
   });
   $("#t-read-del-segment").on("click", () => {
     if (!currentFavId) return;
@@ -13806,7 +14818,7 @@ ${segmentTip}`);
       d.favs = d.favs.filter((x) => x.id !== currentFavId);
       saveExtData();
       favs.splice(0, favs.length, ...d.favs);
-      renderGrid();
+      scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
       if (currentFilteredList.length === 0) {
         $("#t-fav-reader").removeClass("show");
       } else {
@@ -13824,11 +14836,30 @@ ${segmentTip}`);
       localFav.html = targetFav.html;
     }
     loadReaderItem(currentIndex);
-    renderGrid();
+    scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
     if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u7B2C ${removeRound} \u6BB5`);
   });
   const closeWindow = () => {
-    renderTaskId++;
+    clearCarouselTimer();
+    if (thumbVirtualRaf) {
+      cancelAnimationFrame(thumbVirtualRaf);
+      thumbVirtualRaf = null;
+    }
+    if (gridRenderRaf) {
+      cancelAnimationFrame(gridRenderRaf);
+      gridRenderRaf = null;
+    }
+    if (compactScrollRaf) {
+      cancelAnimationFrame(compactScrollRaf);
+      compactScrollRaf = null;
+    }
+    if (compactResizeObserver) {
+      compactResizeObserver.disconnect();
+      compactResizeObserver = null;
+    }
+    pendingGridRenderOptions = null;
+    clearEditHydration();
+    $(document).off(".tFavThumbDrag");
     if (searchDebounceTimer) {
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = null;
@@ -13843,7 +14874,9 @@ ${segmentTip}`);
     }
   };
   $("#t-fav-close").on("click", closeWindow);
-  renderGrid();
+  syncFavViewToggleButton();
+  syncFavViewModeClass();
+  scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
 }
 function openCharImageManager(onCloseCallback) {
   const data = getExtData();
@@ -14561,6 +15594,29 @@ function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
     model: String(profile?.model || defaultModel).trim() || defaultModel
   };
 }
+function buildUniqueProfileId(rawId, idx, usedIds) {
+  const base = String(rawId || `profile_${Date.now()}_${idx}`).trim() || `profile_${Date.now()}_${idx}`;
+  if (!usedIds.has(base)) {
+    usedIds.add(base);
+    return base;
+  }
+  let seed = 1;
+  let candidate = `${base}_${seed}`;
+  while (usedIds.has(candidate)) {
+    seed += 1;
+    candidate = `${base}_${seed}`;
+  }
+  usedIds.add(candidate);
+  return candidate;
+}
+function normalizeProfilesWithUniqueIds(profiles, defaultModel = "gpt-3.5-turbo") {
+  const usedIds = /* @__PURE__ */ new Set();
+  return (Array.isArray(profiles) ? profiles : []).map((profile, idx) => {
+    const normalized = normalizeProfile(profile, idx, defaultModel);
+    normalized.id = buildUniqueProfileId(normalized.id, idx, usedIds);
+    return normalized;
+  });
+}
 function mapCustomProfilesToConnectionProfiles(customProfiles, defaultModel = "gpt-3.5-turbo") {
   const list = Array.isArray(customProfiles) ? customProfiles : [];
   return list.map((profile, idx) => normalizeProfile({
@@ -14682,7 +15738,7 @@ function createApiConnectionEditor(options = {}) {
     ...options.statusTexts || {}
   };
   let state = {
-    profiles: (Array.isArray(options.profiles) ? options.profiles : []).map((p, idx) => normalizeProfile(p, idx, defaultModel)),
+    profiles: normalizeProfilesWithUniqueIds(options.profiles, defaultModel),
     activeProfileId: String(options.activeProfileId || "").trim()
   };
   if (state.profiles.length === 0) {
@@ -14780,8 +15836,9 @@ function createApiConnectionEditor(options = {}) {
   };
   const createProfile = () => {
     const customCount = state.profiles.filter((p) => p.type !== "internal").length;
+    const uniqueId = buildUniqueProfileId(`${createProfileIdPrefix}_${Date.now()}`, customCount, new Set(state.profiles.map((p) => String(p.id || "").trim()).filter(Boolean)));
     return normalizeProfile({
-      id: `${createProfileIdPrefix}_${Date.now()}`,
+      id: uniqueId,
       name: `\u65B0\u65B9\u6848 ${customCount + 1}`,
       type: "custom",
       url: "",
@@ -14845,8 +15902,9 @@ function createApiConnectionEditor(options = {}) {
     const $key = getById($root, ids.apiKeyId);
     const $model = getById($root, ids.modelId);
     $select.on("change", () => {
+      const nextActiveProfileId = String($select.val() || "").trim();
       persistCurrentProfileInputs();
-      state.activeProfileId = String($select.val() || "").trim();
+      state.activeProfileId = nextActiveProfileId;
       render();
       emitChange();
       const active = findActiveProfile();
@@ -14905,7 +15963,7 @@ function createApiConnectionEditor(options = {}) {
   };
   const setState = (nextState = {}) => {
     const nextProfiles = Array.isArray(nextState.profiles) ? nextState.profiles : state.profiles;
-    state.profiles = nextProfiles.map((p, idx) => normalizeProfile(p, idx, defaultModel));
+    state.profiles = normalizeProfilesWithUniqueIds(nextProfiles, defaultModel);
     state.activeProfileId = String(nextState.activeProfileId || state.activeProfileId || "").trim();
     if (!state.profiles.some((p) => p.id === state.activeProfileId)) {
       state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
@@ -16507,10 +17565,16 @@ function showOutlineView(view) {
   if (currentView === "hub") {
     closeMobileEditor();
   }
+  syncAddFabVisibility();
 }
 function loadPlanToEditor(plan) {
   if (!plan) return false;
   outlineItems = normalizeItems(plan.items || []);
+  sceneExpandedMap = {};
+  selectedRowIndex = -1;
+  sceneEditorItemIndex = outlineItems.length > 0 ? 0 : -1;
+  closeDesktopEditor();
+  closeMobileEditor();
   const planInstruction = getPlanInstruction(plan);
   $("#t-outline-story-input").val(planInstruction);
   setEditingPlan(plan);
@@ -16878,9 +17942,128 @@ function normalizeScenes(scenes) {
 function reindexItems() {
   outlineItems = outlineItems.map((item, idx) => ({ ...item, index: idx + 1 }));
 }
+function createEmptyOutlineItem(index = 1) {
+  return {
+    index: Number(index) || 1,
+    time: "",
+    title: "",
+    plot: "",
+    foreshadowing: "",
+    scenes: []
+  };
+}
+function createEmptySceneItem(index = 1) {
+  return {
+    scene_index: Number(index) || 1,
+    scene_time: "",
+    scene_location: "",
+    scene_goal: "",
+    conflict: "",
+    key_beats: "",
+    sendable_prompt: "",
+    notes: ""
+  };
+}
+function closeAddItemSheet() {
+  $("#t-outline-add-sheet").removeClass("show");
+  $("#t-outline-add-sheet-backdrop").removeClass("show");
+  $("#t-outline-add-fab").attr("aria-expanded", "false");
+}
+function openAddItemSheet() {
+  $("#t-outline-add-sheet").addClass("show");
+  $("#t-outline-add-sheet-backdrop").addClass("show");
+  $("#t-outline-add-fab").attr("aria-expanded", "true");
+}
+function syncAddFabVisibility() {
+  const inEditor = currentView === "editor";
+  const hasPlanContext = !!editingPlanId;
+  const drawerOpen = $("#t-outline-mobile-drawer").hasClass("show");
+  $("#t-outline-fab-wrap").toggle(inEditor && hasPlanContext && !drawerOpen);
+  if (!inEditor || drawerOpen) closeAddItemSheet();
+}
+function appendOutlineItem() {
+  if (!ensureEditingPlanContext()) return;
+  const nextIndex = outlineItems.length;
+  outlineItems.push(createEmptyOutlineItem(nextIndex + 1));
+  reindexItems();
+  sceneExpandedMap[nextIndex] = false;
+  selectedRowIndex = nextIndex;
+  sceneEditorItemIndex = nextIndex;
+  renderRows();
+  renderDesktopEditor(nextIndex, "title");
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  if (window.toastr) toastr.success("\u5DF2\u65B0\u589E\u5927\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
+}
+function appendSceneItem() {
+  if (!ensureEditingPlanContext()) return;
+  const targetIndex = outlineItems.length;
+  const nextItem = createEmptyOutlineItem(targetIndex + 1);
+  nextItem.scenes = [createEmptySceneItem(1)];
+  outlineItems.push(nextItem);
+  reindexItems();
+  const targetItem = outlineItems[targetIndex];
+  if (!targetItem) return;
+  reindexScenes(targetItem);
+  sceneExpandedMap[targetIndex] = true;
+  selectedRowIndex = targetIndex;
+  sceneEditorItemIndex = targetIndex;
+  renderRows();
+  setEditorSubView("scene");
+  renderSceneEditorPage();
+  if (window.matchMedia("(max-width: 768px)").matches) {
+    openMobileEditor(targetIndex);
+    setMobileEditorSubView("scene");
+    renderMobileDrawerScenes(targetIndex);
+  } else {
+    setTimeout(() => {
+      const card = document.querySelector('#t-outline-scene-editor-page .t-scene-page-card[data-scene-index="0"]');
+      const input = card?.querySelector('[data-scene-page-field="scene_time"]');
+      if (input) {
+        input.focus();
+        if (typeof input.select === "function") input.select();
+      }
+    }, 0);
+  }
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  if (window.toastr) toastr.success("\u5DF2\u65B0\u589E\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
+}
 function reindexScenes(item) {
   if (!item || !Array.isArray(item.scenes)) return;
   item.scenes = item.scenes.map((scene, idx) => ({ ...scene, scene_index: idx + 1 }));
+}
+function deleteOutlineItemAt(index, options = {}) {
+  const resolvedIndex = Number(index);
+  if (Number.isNaN(resolvedIndex) || !outlineItems[resolvedIndex]) return false;
+  outlineItems.splice(resolvedIndex, 1);
+  const nextMap = {};
+  outlineItems.forEach((_, idx) => {
+    nextMap[idx] = sceneExpandedMap[idx] || sceneExpandedMap[idx + 1] || false;
+  });
+  sceneExpandedMap = nextMap;
+  if (selectedRowIndex === resolvedIndex) {
+    selectedRowIndex = -1;
+  } else if (selectedRowIndex > resolvedIndex) {
+    selectedRowIndex -= 1;
+  }
+  if (desktopEditorIndex === resolvedIndex) {
+    closeDesktopEditor();
+  } else if (desktopEditorIndex > resolvedIndex) {
+    desktopEditorIndex -= 1;
+  }
+  if (outlineItems.length === 0) {
+    sceneEditorItemIndex = -1;
+  } else if (sceneEditorItemIndex > resolvedIndex) {
+    sceneEditorItemIndex -= 1;
+  } else if (sceneEditorItemIndex === resolvedIndex) {
+    sceneEditorItemIndex = Math.min(resolvedIndex, outlineItems.length - 1);
+  }
+  reindexItems();
+  if (options.closeMobile) {
+    closeMobileEditor();
+  }
+  renderRows();
+  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  return true;
 }
 function clearEditorDraft() {
   const insertMode = $("#t-outline-insert-mode").val() || "overwrite";
@@ -17109,11 +18292,19 @@ function renderRows() {
   if ($tbody.length === 0) return;
   updateGenerateAllScenesButtonState();
   if (outlineItems.length === 0) {
+    selectedRowIndex = -1;
+    sceneEditorItemIndex = -1;
+    closeDesktopEditor();
     $tbody.html(`
             <tr>
-                <td colspan="6" class="t-outline-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u70B9\u51FB\u201C\u8BBE\u8BA1\u5927\u7EB2\u201D\u751F\u6210</td>
+                <td colspan="6" class="t-outline-empty">
+                    <div>\u6682\u65E0\u5927\u7EB2\uFF0C\u53EF\u5148\u751F\u6210\uFF0C\u6216\u624B\u52A8\u521B\u5EFA\u7B2C\u4E00\u6761</div>
+                    <button id="t-outline-empty-create-first" class="t-btn t-btn-xs" style="margin-top:8px;"><i class="fa-solid fa-plus"></i> \u521B\u5EFA\u7B2C\u4E00\u6761\u5927\u7EB2</button>
+                </td>
             </tr>
         `);
+    renderMobileCards();
+    renderSceneEditorPage();
     return;
   }
   const rows = outlineItems.map((item, idx) => {
@@ -17234,6 +18425,7 @@ function renderSceneEditorPage() {
         </div>
         <div class="t-scene-page-actions">
             <button class="t-btn t-btn-xs" data-action="scene-page-add"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u573A\u666F</button>
+            <button class="t-btn t-btn-xs" data-action="scene-page-delete-item" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u7EC6\u7EB2\u6761\u76EE</button>
         </div>
         <div class="t-scene-page-list">${sceneBlocks}</div>
     `);
@@ -17248,6 +18440,7 @@ function setEditorSubView(view) {
   if (isMobile) {
     $("#t-outline-mobile-list").toggle(editorSubView === "outline");
   }
+  syncAddFabVisibility();
 }
 function getBriefText(text, maxLen = 38) {
   const s = (text || "").replace(/\s+/g, " ").trim();
@@ -17258,7 +18451,7 @@ function renderMobileCards() {
   const $list = $("#t-outline-mobile-list");
   if ($list.length === 0) return;
   if (outlineItems.length === 0) {
-    $list.html('<div class="t-outline-mobile-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u70B9\u51FB\u201C\u8BBE\u8BA1\u5927\u7EB2\u201D\u751F\u6210</div>');
+    $list.html('<div class="t-outline-mobile-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u53EF\u5148\u751F\u6210\uFF0C\u6216\u624B\u52A8\u521B\u5EFA\u3002<div style="margin-top:8px;"><button id="t-outline-mobile-create-first" class="t-btn t-btn-xs"><i class="fa-solid fa-plus"></i> \u521B\u5EFA\u7B2C\u4E00\u6761\u5927\u7EB2</button></div></div>');
     return;
   }
   const cards = outlineItems.map((item, idx) => {
@@ -17289,9 +18482,11 @@ function openMobileEditor(index) {
   renderMobileDrawerScenes(index);
   setMobileEditorSubView("outline");
   $drawer.addClass("show");
+  syncAddFabVisibility();
 }
 function closeMobileEditor() {
   $("#t-outline-mobile-drawer").removeClass("show").attr("data-index", "");
+  syncAddFabVisibility();
 }
 function setMobileEditorSubView(view) {
   mobileEditorSubView = view === "scene" ? "scene" : "outline";
@@ -17707,6 +18902,25 @@ function bindEvents() {
   $overlay.on("click", "#t-outline-generate-all-scenes", async () => {
     await generateAllScenes();
   });
+  $overlay.on("click", "#t-outline-add-fab", () => {
+    const isOpen = $("#t-outline-add-sheet").hasClass("show");
+    if (isOpen) closeAddItemSheet();
+    else openAddItemSheet();
+  });
+  $overlay.on("click", "#t-outline-add-sheet-backdrop", () => {
+    closeAddItemSheet();
+  });
+  $overlay.on("click", "#t-outline-add-outline-item", () => {
+    appendOutlineItem();
+    closeAddItemSheet();
+  });
+  $overlay.on("click", "#t-outline-add-scene-item", () => {
+    appendSceneItem();
+    closeAddItemSheet();
+  });
+  $overlay.on("click", "#t-outline-empty-create-first, #t-outline-mobile-create-first", () => {
+    appendOutlineItem();
+  });
   $overlay.on("change", "#t-outline-insert-mode", function() {
     saveDraft($("#t-outline-story-input").val(), $(this).val());
   });
@@ -17717,21 +18931,7 @@ function bindEvents() {
     const rowIndex = Number($(this).closest("tr").data("index"));
     const fallbackIndex = Number($(this).closest("tr").data("op-parent"));
     const resolvedIndex = Number.isNaN(rowIndex) ? fallbackIndex : rowIndex;
-    if (Number.isNaN(resolvedIndex)) return;
-    outlineItems.splice(resolvedIndex, 1);
-    const nextMap = {};
-    outlineItems.forEach((_, idx) => {
-      nextMap[idx] = sceneExpandedMap[idx] || sceneExpandedMap[idx + 1] || false;
-    });
-    sceneExpandedMap = nextMap;
-    if (selectedRowIndex === resolvedIndex) {
-      selectedRowIndex = -1;
-    } else if (selectedRowIndex > resolvedIndex) {
-      selectedRowIndex -= 1;
-    }
-    reindexItems();
-    renderRows();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+    deleteOutlineItemAt(resolvedIndex);
   });
   $overlay.on("click", "#t-outline-tbody tr[data-index]", function(e) {
     if ($(e.target).closest("button,.t-outline-input,.t-outline-textarea").length > 0) return;
@@ -17784,16 +18984,7 @@ function bindEvents() {
     if (idx < 0 || !outlineItems[idx]) return;
     const item = outlineItems[idx];
     if (!Array.isArray(item.scenes)) item.scenes = [];
-    item.scenes.push({
-      scene_index: item.scenes.length + 1,
-      scene_time: "",
-      scene_location: "",
-      scene_goal: "",
-      conflict: "",
-      key_beats: "",
-      sendable_prompt: "",
-      notes: ""
-    });
+    item.scenes.push(createEmptySceneItem(item.scenes.length + 1));
     reindexScenes(item);
     renderSceneEditorPage();
     renderRows();
@@ -17810,6 +19001,14 @@ function bindEvents() {
     renderSceneEditorPage();
     renderRows();
     saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+  });
+  $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-delete-item']", () => {
+    const idx = getSceneEditorTargetIndex();
+    if (idx < 0 || !outlineItems[idx]) return;
+    const itemTitle = String(outlineItems[idx]?.title || "").trim() || `#${idx + 1}`;
+    if (!window.confirm(`\u786E\u8BA4\u5220\u9664\u7EC6\u7EB2\u6761\u76EE\u300C${itemTitle}\u300D\uFF1F`)) return;
+    const deleted = deleteOutlineItemAt(idx);
+    if (deleted && window.toastr) toastr.success("\u5DF2\u5220\u9664\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-prev']", () => {
     if (sceneEditorItemIndex > 0) {
@@ -17845,28 +19044,15 @@ function bindEvents() {
   });
   $overlay.on("click", "#t-mobile-drawer-delete", function() {
     const index = Number($("#t-outline-mobile-drawer").attr("data-index"));
-    if (Number.isNaN(index)) return;
-    outlineItems.splice(index, 1);
-    reindexItems();
-    closeMobileEditor();
-    renderRows();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+    const deleted = deleteOutlineItemAt(index, { closeMobile: true });
+    if (deleted && window.toastr) toastr.success("\u5DF2\u5220\u9664\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "#t-mobile-add-scene", function() {
     const plotIndex = getMobileDrawerIndex();
     const item = outlineItems[plotIndex];
     if (!item) return;
     if (!Array.isArray(item.scenes)) item.scenes = [];
-    item.scenes.push({
-      scene_index: item.scenes.length + 1,
-      scene_time: "",
-      scene_location: "",
-      scene_goal: "",
-      conflict: "",
-      key_beats: "",
-      sendable_prompt: "",
-      notes: ""
-    });
+    item.scenes.push(createEmptySceneItem(item.scenes.length + 1));
     reindexScenes(item);
     renderRows();
     renderMobileDrawerScenes(plotIndex);
@@ -18034,6 +19220,16 @@ function openStoryOutlineWindow() {
                             <button id="t-mobile-drawer-delete" class="t-btn" style="color:#ff9d9d;"><i class="fa-solid fa-trash"></i> \u5220\u9664\u672C\u6761</button>
                         </div>
                     </div>
+                    <div id="t-outline-add-sheet-backdrop" class="t-outline-add-sheet-backdrop"></div>
+                    <div id="t-outline-fab-wrap" class="t-outline-fab-wrap" aria-live="polite">
+                        <button id="t-outline-add-fab" class="t-outline-add-fab" aria-expanded="false" aria-controls="t-outline-add-sheet" title="\u65B0\u589E\u6761\u76EE">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <div id="t-outline-add-sheet" class="t-outline-add-sheet" role="menu" aria-label="\u65B0\u589E\u6761\u76EE\u7C7B\u578B">
+                            <button id="t-outline-add-outline-item" class="t-btn" role="menuitem"><i class="fa-solid fa-table"></i> \u65B0\u589E\u5927\u7EB2\u6761\u76EE</button>
+                            <button id="t-outline-add-scene-item" class="t-btn" role="menuitem"><i class="fa-solid fa-clapperboard"></i> \u65B0\u589E\u7EC6\u7EB2\u6761\u76EE</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -18049,6 +19245,7 @@ function openStoryOutlineWindow() {
   bindEvents();
   renderPlanHub();
   showOutlineView(plans.length > 0 ? "hub" : "editor");
+  syncAddFabVisibility();
   refreshOutlineOpeningSourceControls();
 }
 var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY;
@@ -18144,14 +19341,23 @@ function parseCommaList(input) {
 function uniq(arr) {
   return [...new Set(arr)];
 }
+function normalizeRuleAction(action) {
+  const value = String(action || "").trim().toLowerCase();
+  return value === "delete" ? "delete" : "rewrite";
+}
+function actionLabel(action) {
+  return normalizeRuleAction(action) === "delete" ? "\u5220\u9664" : "\u6539\u5199";
+}
 function cleanupRules(rules) {
   if (!Array.isArray(rules)) return [];
   return rules.map((item) => {
     const anchorTokens = uniq(parseCommaList(item?.anchor || ""));
     const extras = uniq(parseCommaList(item?.extras || ""));
+    const action = normalizeRuleAction(item?.action);
     return {
       anchor: anchorTokens.join(", "),
-      extras
+      extras,
+      action
     };
   }).filter((rule) => rule.anchor && Array.isArray(rule.extras) && rule.extras.length > 0);
 }
@@ -18159,7 +19365,8 @@ function rulesToLegacyText(rules) {
   if (!Array.isArray(rules) || rules.length === 0) return "";
   return rules.map((r) => {
     if (!r.extras || r.extras.length === 0) return r.anchor;
-    return `${r.anchor} => ${r.extras.join(", ")}`;
+    const suffix = normalizeRuleAction(r.action) === "delete" ? " [delete]" : "";
+    return `${r.anchor} => ${r.extras.join(", ")}${suffix}`;
   }).join("\n");
 }
 function ensureRewriteDataShape() {
@@ -18340,11 +19547,13 @@ function evaluateUnit(unitText, rules) {
         ruleIndex: idx + 1,
         anchor: rule.anchor,
         matchedAnchor,
-        matchedExtra
+        matchedExtra,
+        action: normalizeRuleAction(rule.action)
       });
     }
   });
-  return hits;
+  const effectiveAction = hits.some((h) => normalizeRuleAction(h.action) === "delete") ? "delete" : "rewrite";
+  return { hits, effectiveAction };
 }
 function evaluateRules(payload, sourceText = null) {
   const splitMode = payload?.split_mode === "paragraph" ? "paragraph" : "sentence";
@@ -18352,12 +19561,14 @@ function evaluateRules(payload, sourceText = null) {
   const testText = String(sourceText || "");
   const units = splitText(testText, splitMode);
   const unitResults = units.map((unit, idx) => {
-    const hits = evaluateUnit(unit, rules);
+    const unitEval = evaluateUnit(unit, rules);
+    const hits = Array.isArray(unitEval?.hits) ? unitEval.hits : [];
     return {
       unitIndex: idx + 1,
       text: unit,
       hit: hits.length > 0,
-      hits
+      hits,
+      action: hits.length > 0 ? normalizeRuleAction(unitEval?.effectiveAction) : "rewrite"
     };
   });
   const hitUnits = unitResults.filter((item) => item.hit);
@@ -18374,7 +19585,8 @@ function renderDiffRows(rows = []) {
     lastDiffRows = rows.map((item) => ({
       before: String(item?.before || ""),
       after: String(item?.after || ""),
-      ruleHint: String(item?.ruleHint || "")
+      ruleHint: String(item?.ruleHint || ""),
+      action: normalizeRuleAction(item?.action)
     }));
   } else {
     lastDiffRows = [];
@@ -18389,6 +19601,9 @@ function renderDiffRows(rows = []) {
     const before = escapeHtml5(item.before || "");
     const after = escapeHtml5(item.after || "");
     const ruleHint = escapeHtml5(item.ruleHint || "");
+    const action = normalizeRuleAction(item.action);
+    const afterLabel = action === "delete" ? "\u5220\u9664" : "\u6539\u5199";
+    const afterText = action === "delete" ? "\uFF08\u5DF2\u5220\u9664\uFF09" : after;
     return `
             <div class="t-rewrite-diff-row">
                 <div class="t-rewrite-diff-cell t-rewrite-diff-before">
@@ -18396,8 +19611,8 @@ function renderDiffRows(rows = []) {
                     <div class="t-rewrite-diff-text">${before}</div>
                 </div>
                 <div class="t-rewrite-diff-cell t-rewrite-diff-after">
-                    <div class="t-rewrite-diff-label">\u6539\u5199 #${idx + 1}</div>
-                    <div class="t-rewrite-diff-text">${after}</div>
+                    <div class="t-rewrite-diff-label">${afterLabel} #${idx + 1}</div>
+                    <div class="t-rewrite-diff-text">${afterText}</div>
                 </div>
             </div>
         `;
@@ -18580,14 +19795,34 @@ function parseRewriteJson(raw) {
 function buildRewritePayload(data, sourceText) {
   const evaluated = evaluateRules(data, sourceText || "");
   const targets = [];
+  const deleteTargets = [];
   evaluated.unitResults.forEach((unit) => {
     if (!unit.hit) return;
+    const unitAction = normalizeRuleAction(unit.action);
+    if (unitAction === "delete") {
+      deleteTargets.push({
+        segment_id: `s_${unit.unitIndex}`,
+        unit_index: unit.unitIndex,
+        original_text: unit.text,
+        action: "delete",
+        matched_rules: unit.hits.map((h) => ({
+          rule_index: h.ruleIndex,
+          action: normalizeRuleAction(h.action),
+          anchor: h.anchor,
+          matched_anchor: h.matchedAnchor,
+          matched_extra: h.matchedExtra
+        }))
+      });
+      return;
+    }
     targets.push({
       segment_id: `s_${unit.unitIndex}`,
       unit_index: unit.unitIndex,
       original_text: unit.text,
+      action: "rewrite",
       matched_rules: unit.hits.map((h) => ({
         rule_index: h.ruleIndex,
+        action: normalizeRuleAction(h.action),
         anchor: h.anchor,
         matched_anchor: h.matchedAnchor,
         matched_extra: h.matchedExtra
@@ -18601,7 +19836,8 @@ function buildRewritePayload(data, sourceText) {
       split_mode: evaluated.splitMode,
       style_hint: "\u4FDD\u6301\u539F\u6587\u8BED\u6C14\u3001\u4EBA\u79F0\u3001\u53D9\u4E8B\u89C6\u89D2\uFF0C\u4EC5\u505A\u5FC5\u8981\u6539\u5199",
       rules: evaluated.rules,
-      targets
+      targets,
+      delete_targets: deleteTargets
     }
   };
 }
@@ -18750,8 +19986,13 @@ function bindRewriteDecorationEvents() {
   eventSource.on(event_types.MESSAGE_RECEIVED, () => scheduleApplyAllRewriteMarks(120));
   eventSource.on(event_types.GENERATION_ENDED, () => scheduleApplyAllRewriteMarks(120));
 }
-function applyRewriteToFullText(sourceText, evaluated, parsed) {
+function applyRewriteToFullText(sourceText, evaluated, parsed, request = null) {
   const map = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
+  const deleteTargets = Array.isArray(request?.delete_targets) ? request.delete_targets : [];
+  deleteTargets.forEach((target) => {
+    const segmentId = String(target?.segment_id || "").trim();
+    if (segmentId) map.set(segmentId, "");
+  });
   let rewritten = String(sourceText || "");
   let cursor = 0;
   let replaced = 0;
@@ -19011,18 +20252,23 @@ function normalizeRewriteResponseShape(parsed, payload) {
 function buildDiffRowsFromResults(evaluated, payload, parsed) {
   const rewrittenMap = new Map(parsed.results.map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
   const targetMap = new Map(payload.targets.map((t) => [t.segment_id, t]));
+  const deleteTargetMap = new Map((Array.isArray(payload.delete_targets) ? payload.delete_targets : []).map((t) => [String(t.segment_id), t]));
   return evaluated.unitResults.filter((u) => u.hit).map((u) => {
     const segmentId = `s_${u.unitIndex}`;
     const target = targetMap.get(segmentId);
-    const after = rewrittenMap.get(segmentId) || u.text;
-    const ruleHint = (target?.matched_rules || []).map((x) => {
+    const deleteTarget = deleteTargetMap.get(segmentId);
+    const action = deleteTarget ? "delete" : "rewrite";
+    const after = action === "delete" ? "" : rewrittenMap.get(segmentId) || u.text;
+    const hintRules = target?.matched_rules || deleteTarget?.matched_rules || [];
+    const ruleHint = hintRules.map((x) => {
       const anchorText = x.matched_anchor || x.anchor || "";
       return x.matched_extra ? `${anchorText}+${x.matched_extra}` : `${anchorText}`;
     }).join(" | ");
     return {
       before: u.text,
       after,
-      ruleHint
+      ruleHint,
+      action
     };
   });
 }
@@ -19032,14 +20278,6 @@ async function runRewrite(options = {}) {
   const apiUrl = String(data.api_url || "").trim();
   const apiKey = String(data.api_key || "").trim();
   const model = String(data.model || "").trim();
-  if (!apiUrl) {
-    setStatus("\u8BF7\u5148\u586B\u5199 API \u5730\u5740", "warn");
-    return;
-  }
-  if (!model) {
-    setStatus("\u8BF7\u5148\u9009\u62E9\u6A21\u578B", "warn");
-    return;
-  }
   const latest = getLatestAssistantMessageFromChat();
   if (!latest) {
     setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
@@ -19051,13 +20289,26 @@ async function runRewrite(options = {}) {
     setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
     return;
   }
-  if (!Array.isArray(request.targets) || request.targets.length === 0) {
-    setStatus("\u6CA1\u6709\u547D\u4E2D\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF08\u9700\u4E3B\u8BCD+\u9644\u52A0\u8BCD\u540C\u65F6\u547D\u4E2D\uFF09\uFF0C\u672A\u53D1\u8D77\u6539\u5199", "warn");
+  const rewriteTargets = Array.isArray(request.targets) ? request.targets : [];
+  const deleteTargets = Array.isArray(request.delete_targets) ? request.delete_targets : [];
+  const rewriteCount = rewriteTargets.length;
+  const deleteCount = deleteTargets.length;
+  if (rewriteCount > 0) {
+    if (!apiUrl) {
+      setStatus("\u8BF7\u5148\u586B\u5199 API \u5730\u5740", "warn");
+      return;
+    }
+    if (!model) {
+      setStatus("\u8BF7\u5148\u9009\u62E9\u6A21\u578B", "warn");
+      return;
+    }
+  }
+  if (rewriteCount === 0 && deleteCount === 0) {
+    setStatus("\u6CA1\u6709\u547D\u4E2D\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF08\u9700\u4E3B\u8BCD+\u9644\u52A0\u8BCD\u540C\u65F6\u547D\u4E2D\uFF09\uFF0C\u672A\u6267\u884C\u52A8\u4F5C", "warn");
     renderDiffRows([]);
     return;
   }
   const maxTokens = estimateMaxTokens(request);
-  const messages = buildRewriteMessages(request, getRewritePromptState());
   const $btn = $("#t-rewrite-trigger");
   const streamLive = data.stream_live === true;
   const source = options.source || "manual";
@@ -19069,47 +20320,53 @@ async function runRewrite(options = {}) {
   setRawResponse("");
   setRawMeta(streamLive ? `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u6D41\u5F0F\u5F00\u542F\uFF08${source}\uFF09` : `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u975E\u6D41\u5F0F\uFF08${source}\uFF09`);
   try {
-    setStatus(`\u6B63\u5728\u8BF7\u6C42\u6539\u5199\uFF08${request.targets.length} \u4E2A\u76EE\u6807\uFF09...`, "muted");
-    let raw = await requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, {
-      temperature: REWRITE_TEMPERATURE,
-      stream: streamLive,
-      signal: abortController.signal,
-      onProgress: (_chunk, all) => {
-        if (streamLive) {
-          setRawResponse(all);
+    let parsed = { task_id: request.task_id, results: [] };
+    if (rewriteCount > 0) {
+      setStatus(`\u6B63\u5728\u8BF7\u6C42\u6539\u5199\uFF08\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5220\u9664 ${deleteCount} \u6761\uFF09...`, "muted");
+      const messages = buildRewriteMessages(request, getRewritePromptState());
+      let raw = await requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, {
+        temperature: REWRITE_TEMPERATURE,
+        stream: streamLive,
+        signal: abortController.signal,
+        onProgress: (_chunk, all) => {
+          if (streamLive) {
+            setRawResponse(all);
+          }
         }
+      });
+      pushLiveResponseHistory({ source, phase: "\u4E3B\u8BF7\u6C42", model, stream: streamLive, text: raw });
+      if (!streamLive) setRawResponse(raw);
+      try {
+        parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+      } catch (e) {
+        const fixMessages = buildFixJsonMessages(raw, request);
+        raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+          temperature: REWRITE_FIX_TEMPERATURE
+        });
+        pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: raw });
+        parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
       }
-    });
-    pushLiveResponseHistory({ source, phase: "\u4E3B\u8BF7\u6C42", model, stream: streamLive, text: raw });
-    if (!streamLive) setRawResponse(raw);
-    let parsed = null;
-    try {
-      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
-    } catch (e) {
-      const fixMessages = buildFixJsonMessages(raw, request);
-      raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
-        temperature: REWRITE_FIX_TEMPERATURE
-      });
-      pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: raw });
-      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
-    }
-    let valid = validateRewriteResponse(parsed, request);
-    if (!valid.ok) {
-      const fixMessages = buildFixJsonMessages(raw, request);
-      setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
-      const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
-        temperature: REWRITE_FIX_TEMPERATURE
-      });
-      pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: fixedRaw });
-      setRawResponse(fixedRaw);
-      parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
-      valid = validateRewriteResponse(parsed, request);
-      if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
+      let valid = validateRewriteResponse(parsed, request);
+      if (!valid.ok) {
+        const fixMessages = buildFixJsonMessages(raw, request);
+        setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
+        const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+          temperature: REWRITE_FIX_TEMPERATURE
+        });
+        pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: fixedRaw });
+        setRawResponse(fixedRaw);
+        parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
+        valid = validateRewriteResponse(parsed, request);
+        if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
+      }
+    } else {
+      setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u672C\u6B21\u4EC5\u6267\u884C\u5220\u9664\uFF0C\u65E0\u9700\u8BF7\u6C42\u6A21\u578B");
+      setStatus(`\u6B63\u5728\u6267\u884C\u5220\u9664\uFF08${deleteCount} \u6761\uFF09...`, "muted");
     }
     const rows = buildDiffRowsFromResults(evaluated, request, parsed);
     renderDiffRows(rows);
     const rewriteMarks = buildRewriteMarksFromRows(rows);
-    const applied = applyRewriteToFullText(latest.content, evaluated, parsed);
+    const applied = applyRewriteToFullText(latest.content, evaluated, parsed, request);
     writeBackMessageContent(latest.msg, applied.text);
     if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
     latest.msg.extra.titania_rewrite_done = true;
@@ -19117,7 +20374,7 @@ async function runRewrite(options = {}) {
     await saveChatConditional();
     await reloadCurrentChat();
     scheduleApplyAllRewriteMarks(180);
-    setStatus(`\u6539\u5199\u5B8C\u6210\uFF1A${rows.length} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5220\u9664 ${deleteCount} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
     success = true;
   } catch (e) {
     renderDiffRows([]);
@@ -19201,6 +20458,10 @@ function renderSettingsRules(rows) {
             <div class="t-rewrite-rule-no">#${idx + 1}</div>
             <input class="text_pole t-rewrite-rule-anchor" type="text" value="${escapeHtml5(rule.anchor || "")}" placeholder="\u4E3B\u8BCD\u5217\u8868\uFF08\u9017\u53F7\u5206\u9694\uFF09">
             <input class="text_pole t-rewrite-rule-extras" type="text" value="${escapeHtml5((rule.extras || []).join(", "))}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u547D\u4E2D\u4EFB\u610F\u4E00\u4E2A\uFF09" maxlength="500">
+            <select class="text_pole t-rewrite-rule-action" title="\u547D\u4E2D\u540E\u52A8\u4F5C">
+                <option value="rewrite" ${normalizeRuleAction(rule.action) === "rewrite" ? "selected" : ""}>\u6539\u5199</option>
+                <option value="delete" ${normalizeRuleAction(rule.action) === "delete" ? "selected" : ""}>\u5220\u9664</option>
+            </select>
             <button class="t-btn t-rewrite-rule-del" type="button" title="\u5220\u9664\u89C4\u5219"><i class="fa-solid fa-trash"></i></button>
         </div>
     `).join("");
@@ -19214,7 +20475,8 @@ function getRulesFromDom(containerSelector = "#t-rewrite-rules-list") {
     const anchor = uniq(parseCommaList(String($row.find(".t-rewrite-rule-anchor").val() || ""))).join(", ");
     const extrasInput = String($row.find(".t-rewrite-rule-extras").val() || "");
     const extras = uniq(parseCommaList(extrasInput));
-    rows.push({ anchor, extras });
+    const action = normalizeRuleAction($row.find(".t-rewrite-rule-action").val());
+    rows.push({ anchor, extras, action });
   });
   return cleanupRules(rows);
 }
@@ -19329,7 +20591,8 @@ function renderMatchResult(result, sourceText = "") {
     const hits = item.hit ? item.hits.map((h) => {
       const anchorText = h.matchedAnchor ? `\u4E3B\u8BCD:${escapeHtml5(h.matchedAnchor)}` : `\u4E3B\u8BCD\u7EC4:${escapeHtml5(h.anchor)}`;
       const extraText = h.matchedExtra ? `\u9644\u52A0\u8BCD:${escapeHtml5(h.matchedExtra)}` : "\u9644\u52A0\u8BCD:\u65E0";
-      return `<span class="t-rewrite-hit-tag">\u89C4\u5219#${h.ruleIndex}: ${anchorText} + ${extraText}</span>`;
+      const actionText = `\u52A8\u4F5C:${escapeHtml5(actionLabel(h.action))}`;
+      return `<span class="t-rewrite-hit-tag">\u89C4\u5219#${h.ruleIndex}: ${anchorText} + ${extraText} \xB7 ${actionText}</span>`;
     }).join("") : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
     return `
             <div class="t-rewrite-match-row ${cls}">
@@ -19476,7 +20739,7 @@ function bindSettingsPanelEvents(connectionEditor = null) {
   $overlay.on("click", "#t-rewrite-settings-add-rule", (e) => {
     e.preventDefault();
     const current = getRulesFromDom("#t-rewrite-settings-rules-list");
-    current.push({ anchor: "", extras: [] });
+    current.push({ anchor: "", extras: [], action: "rewrite" });
     renderSettingsRules(current);
   });
   $overlay.on("click", ".t-rewrite-rule-del", (e) => {
@@ -19613,7 +20876,7 @@ function openSettingsPanel() {
                                 <label class="t-form-label" style="margin-bottom:0;">\u89C4\u5219\u914D\u7F6E</label>
                                 <button id="t-rewrite-settings-add-rule" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u89C4\u5219</button>
                             </div>
-                            <div class="t-rewrite-rule-guide">\u547D\u4E2D\u903B\u8F91\uFF1A\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09AND \u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09\uFF1B\u4E24\u8005\u540C\u65F6\u547D\u4E2D\u624D\u751F\u6548\u3002</div>
+                            <div class="t-rewrite-rule-guide">\u547D\u4E2D\u903B\u8F91\uFF1A\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09AND \u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09\uFF1B\u4E24\u8005\u540C\u65F6\u547D\u4E2D\u624D\u751F\u6548\u3002\u52A8\u4F5C\u652F\u6301\uFF1A\u6539\u5199 / \u5220\u9664\u3002</div>
                             <div id="t-rewrite-settings-rules-list" class="t-rewrite-rules-list"></div>
                             <div class="t-rewrite-rule-meta">\u6709\u6548\u89C4\u5219\u6570\uFF1A<span id="t-rewrite-settings-rule-count">${rules.length}</span></div>
                         </div>
@@ -19628,7 +20891,7 @@ function openSettingsPanel() {
     </div>`;
   $("body").append(html);
   const $overlay = getSettingsOverlay();
-  renderSettingsRules(rules.length > 0 ? rules : [{ anchor: "", extras: [] }]);
+  renderSettingsRules(rules.length > 0 ? rules : [{ anchor: "", extras: [], action: "rewrite" }]);
   const rewriteSettingsConnectionEditor = createApiConnectionEditor({
     root: $overlay,
     ids: {
@@ -19843,8 +21106,8 @@ var init_rewriteEntryButton = __esm({
 #t-rewrite-overlay .t-rewrite-rule-guide { font-size: 0.78em; color: #8ea5b7; margin-bottom: 8px; }
 #t-rewrite-overlay .t-rewrite-split-options { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; font-size: 0.82em; color: #c5d7e5; }
 #t-rewrite-overlay .t-rewrite-split-options label { display: inline-flex; align-items: center; gap: 6px; }
-#t-rewrite-overlay .t-rewrite-rule-row { display: grid; grid-template-columns: auto minmax(120px, 0.5fr) auto minmax(180px, 1fr) auto; gap: 8px; align-items: center; }
-#t-rewrite-settings-overlay .t-rewrite-rule-row { display: grid; grid-template-columns: auto minmax(140px, 0.56fr) minmax(240px, 1fr) auto; gap: 8px; align-items: center; }
+#t-rewrite-overlay .t-rewrite-rule-row { display: grid; grid-template-columns: auto minmax(120px, 0.45fr) auto minmax(180px, 1fr) minmax(110px, 0.35fr) auto; gap: 8px; align-items: center; }
+#t-rewrite-settings-overlay .t-rewrite-rule-row { display: grid; grid-template-columns: auto minmax(130px, 0.44fr) minmax(220px, 1fr) minmax(110px, 0.32fr) auto; gap: 8px; align-items: center; }
 #t-rewrite-overlay .t-rewrite-rule-and, #t-rewrite-settings-overlay .t-rewrite-rule-and { font-size: 0.8em; color: #9cb2c4; font-weight: 700; letter-spacing: 0.2px; text-align: center; min-width: 18px; }
 #t-rewrite-overlay .t-rewrite-rule-no, #t-rewrite-settings-overlay .t-rewrite-rule-no { min-width: 30px; font-size: 0.78em; color: #89a3b8; }
 #t-rewrite-overlay .t-rewrite-rule-del, #t-rewrite-settings-overlay .t-rewrite-rule-del { width: 34px; min-width: 34px; padding: 0; justify-content: center; }
@@ -20095,18 +21358,20 @@ var init_rewriteEntryButton = __esm({
     #t-rewrite-overlay .t-rewrite-diff-head { gap: 8px; }
     #t-rewrite-overlay .t-rewrite-diff-row { grid-template-columns: 1fr; }
 
-    #t-rewrite-overlay .t-rewrite-rule-row { grid-template-columns: minmax(88px, 0.62fr) auto minmax(132px, 1fr) auto; gap: 6px; }
-    #t-rewrite-settings-overlay .t-rewrite-rule-row { grid-template-columns: minmax(94px, 0.72fr) minmax(132px, 1fr) auto; gap: 6px; }
+    #t-rewrite-overlay .t-rewrite-rule-row { grid-template-columns: minmax(78px, 0.52fr) auto minmax(118px, 1fr) minmax(88px, 0.45fr) auto; gap: 6px; }
+    #t-rewrite-settings-overlay .t-rewrite-rule-row { grid-template-columns: minmax(84px, 0.58fr) minmax(118px, 1fr) minmax(88px, 0.42fr) auto; gap: 6px; }
     #t-rewrite-overlay .t-rewrite-rule-and,
     #t-rewrite-settings-overlay .t-rewrite-rule-and { display: block; min-width: 14px; font-size: 0.74em; }
     #t-rewrite-overlay .t-rewrite-rule-no,
     #t-rewrite-settings-overlay .t-rewrite-rule-no { display: none; }
     #t-rewrite-overlay .t-rewrite-rule-del,
     #t-rewrite-settings-overlay .t-rewrite-rule-del { width: 30px; min-width: 30px; height: 32px; min-height: 32px; }
-    #t-rewrite-overlay .t-rewrite-rule-anchor,
-    #t-rewrite-settings-overlay .t-rewrite-rule-anchor,
-    #t-rewrite-overlay .t-rewrite-rule-extras,
-    #t-rewrite-settings-overlay .t-rewrite-rule-extras { padding: 7px 8px; font-size: 0.84em; }
+#t-rewrite-overlay .t-rewrite-rule-anchor,
+#t-rewrite-settings-overlay .t-rewrite-rule-anchor,
+#t-rewrite-overlay .t-rewrite-rule-extras,
+#t-rewrite-settings-overlay .t-rewrite-rule-extras { padding: 7px 8px; font-size: 0.84em; }
+#t-rewrite-overlay .t-rewrite-rule-action,
+#t-rewrite-settings-overlay .t-rewrite-rule-action { padding: 7px 8px; font-size: 0.84em; }
 }
 
 @media (max-width: 420px) {
@@ -20372,22 +21637,6 @@ function getFeatureConnection(featureKey) {
     return null;
   }
   return conn;
-}
-function validateFeatureConnection(featureKey) {
-  const conn = getFeatureConnection(featureKey);
-  if (!conn) {
-    return { configured: false, valid: false, error: "\u672A\u914D\u7F6E API \u65B9\u6848" };
-  }
-  if (conn.useSTConnection) {
-    return { configured: true, valid: true };
-  }
-  if (!conn.url) {
-    return { configured: true, valid: false, error: "API URL \u672A\u8BBE\u7F6E" };
-  }
-  if (!conn.key) {
-    return { configured: true, valid: false, error: "API Key \u672A\u8BBE\u7F6E" };
-  }
-  return { configured: true, valid: true };
 }
 var init_connection = __esm({
   "src/core/connection.js"() {
@@ -22832,15 +24081,6 @@ function escapeHtml6(text) {
 }
 async function showLoreReviewWindow() {
   ensureCssLoaded2();
-  const validation = validateFeatureConnection(FEATURE_KEY3);
-  if (!validation.configured) {
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5B8C\u6210 API \u8FDE\u63A5\u914D\u7F6E", "\u914D\u7F6E\u7F3A\u5931");
-    return;
-  }
-  if (!validation.valid) {
-    if (window.toastr) toastr.error(validation.error, "\u914D\u7F6E\u9519\u8BEF");
-    return;
-  }
   $("#t-lore-review-overlay").remove();
   const featureConn = getFeatureConnection(FEATURE_KEY3);
   const currentModel = featureConn?.model || "\u672A\u77E5";
@@ -25140,6 +26380,63 @@ function hasSceneSourcePlan() {
   const data = getExtData();
   return typeof data?.[SCENE_SOURCE_PLAN_KEY2] === "string" && data[SCENE_SOURCE_PLAN_KEY2].trim().length > 0;
 }
+function getEnabledFeatureList(data) {
+  const toolbarItems = data?.quick_toolbar?.enabled_items || {};
+  const showTheater = data?.outline_entry?.show_theater === true;
+  const showOutlineActions = data?.outline_entry?.show_outline_actions === true;
+  const rewriteEnabled = data?.rewrite_entry?.enabled === true;
+  const loreEnabled = toolbarItems.lore === true;
+  const recallEnabled = toolbarItems.recall === true;
+  const features = [];
+  if (showTheater) features.push("theater");
+  if (showOutlineActions) features.push("outline_actions");
+  if (rewriteEnabled) features.push("rewrite");
+  if (loreEnabled) features.push("lore");
+  if (recallEnabled) features.push("recall");
+  return features;
+}
+async function openFeatureDirect(featureKey, canOpenScenes) {
+  switch (featureKey) {
+    case "theater": {
+      const { openMainWindow: openMainWindow2 } = await Promise.resolve().then(() => (init_mainWindow(), mainWindow_exports));
+      openMainWindow2();
+      return;
+    }
+    case "outline_actions": {
+      const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+      openStoryOutlineWindow2();
+      return;
+    }
+    case "rewrite": {
+      const { openRewritePanelFromMenu: openRewritePanelFromMenu2 } = await Promise.resolve().then(() => (init_rewriteEntryButton(), rewriteEntryButton_exports));
+      openRewritePanelFromMenu2();
+      return;
+    }
+    case "lore": {
+      const { showLoreReviewWindow: showLoreReviewWindow2 } = await Promise.resolve().then(() => (init_loreReviewWindow(), loreReviewWindow_exports));
+      showLoreReviewWindow2();
+      return;
+    }
+    case "recall": {
+      const { openRecallPanel: openRecallPanel2 } = await Promise.resolve().then(() => (init_memoryRecallPanel(), memoryRecallPanel_exports));
+      openRecallPanel2();
+      return;
+    }
+    default:
+      return;
+  }
+}
+async function tryOpenSingleFeatureDirect() {
+  const data = getExtData();
+  if (data?.outline_entry?.enabled !== true) return false;
+  const features = getEnabledFeatureList(data);
+  if (features.length !== 1) return false;
+  const hasPlans = getSavedPlanCount() > 0;
+  const hasSource = hasSceneSourcePlan();
+  const canOpenScenes = hasPlans && hasSource;
+  await openFeatureDirect(features[0], canOpenScenes);
+  return true;
+}
 async function openMenu($btn) {
   ensureMenuStyle();
   closeMenu();
@@ -25148,20 +26445,22 @@ async function openMenu($btn) {
   const loreEnabled = toolbarItems.lore === true;
   const recallEnabled = toolbarItems.recall === true;
   const rewriteEnabled = data?.rewrite_entry?.enabled === true;
+  const showTheater = data?.outline_entry?.show_theater === true;
+  const showOutlineActions = data?.outline_entry?.show_outline_actions === true;
   const hasPlans = getSavedPlanCount() > 0;
   const hasSource = hasSceneSourcePlan();
   const canOpenScenes = hasPlans && hasSource;
   const menuHtml = `
     <div id="${MENU_ID}" role="menu" aria-label="\u6545\u4E8B\u5927\u7EB2\u5165\u53E3">
-        <button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${canOpenScenes ? "" : "disabled"}>
+        ${showOutlineActions ? `<button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${canOpenScenes ? "" : "disabled"}>
             <i class="fa-solid fa-clapperboard"></i> \u53D1\u9001\u7EC6\u7EB2
-        </button>
-        <button class="t-outline-entry-item" id="t-outline-entry-open-theater" role="menuitem">
+        </button>` : ""}
+        ${showTheater ? `<button class="t-outline-entry-item" id="t-outline-entry-open-theater" role="menuitem">
             <i class="fa-solid fa-masks-theater"></i> \u56DE\u58F0\u5C0F\u5267\u573A
-        </button>
-        <button class="t-outline-entry-item" id="t-outline-entry-open-outline" role="menuitem">
+        </button>` : ""}
+        ${showOutlineActions ? `<button class="t-outline-entry-item" id="t-outline-entry-open-outline" role="menuitem">
             <i class="fa-solid fa-list-check"></i> \u751F\u6210\u5927\u7EB2
-        </button>
+        </button>` : ""}
         ${rewriteEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-rewrite" role="menuitem"><i class="fa-solid fa-highlighter"></i> \u6587\u672C\u6539\u5199</button>' : ""}
         ${loreEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-lore" role="menuitem"><i class="fa-solid fa-brain"></i> \u8BBE\u5B9A\u7EF4\u62A4\uFF06\u804A\u5929\u603B\u7ED3</button>' : ""}
         ${recallEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-recall" role="menuitem"><i class="fa-solid fa-lightbulb"></i> \u8BB0\u5FC6\u53EC\u56DE</button>' : ""}
@@ -25177,28 +26476,32 @@ async function openMenu($btn) {
   left = Math.max(8, Math.min(left, window.innerWidth - menuWidth - 8));
   top = Math.max(8, top);
   $menu.css({ left: `${left}px`, top: `${top}px` });
-  $("#t-outline-entry-open-outline").on("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
-    openStoryOutlineWindow2();
-  });
-  $("#t-outline-entry-open-scenes").on("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!canOpenScenes) return;
-    closeMenu();
-    const { openSceneHubWindow: openSceneHubWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
-    openSceneHubWindow2();
-  });
-  $("#t-outline-entry-open-theater").on("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    const { openMainWindow: openMainWindow2 } = await Promise.resolve().then(() => (init_mainWindow(), mainWindow_exports));
-    openMainWindow2();
-  });
+  if (showOutlineActions) {
+    $("#t-outline-entry-open-outline").on("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu();
+      const { openStoryOutlineWindow: openStoryOutlineWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+      openStoryOutlineWindow2();
+    });
+    $("#t-outline-entry-open-scenes").on("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!canOpenScenes) return;
+      closeMenu();
+      const { openSceneHubWindow: openSceneHubWindow2 } = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+      openSceneHubWindow2();
+    });
+  }
+  if (showTheater) {
+    $("#t-outline-entry-open-theater").on("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu();
+      const { openMainWindow: openMainWindow2 } = await Promise.resolve().then(() => (init_mainWindow(), mainWindow_exports));
+      openMainWindow2();
+    });
+  }
   $("#t-outline-entry-open-rewrite").on("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -25236,6 +26539,8 @@ function bindClick($btn) {
       closeMenu();
       return;
     }
+    const openedDirectly = await tryOpenSingleFeatureDirect();
+    if (openedDirectly) return;
     await openMenu($btn);
   });
   $btn.off("keydown").on("keydown", async (e) => {
@@ -25246,6 +26551,8 @@ function bindClick($btn) {
       closeMenu();
       return;
     }
+    const openedDirectly = await tryOpenSingleFeatureDirect();
+    if (openedDirectly) return;
     await openMenu($btn);
   });
 }
@@ -27844,6 +29151,14 @@ function openContinuationComposer(initialText = "") {
                     </div>
                     <div id="t-cont-context-estimate" style="color:#9aa; font-size:12px;">\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A0 \u5B57\u7B26 (~0 tokens)</div>
                 </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px; border:1px dashed #3a3a3a; border-radius:8px; padding:10px; background:#1b1b1b;">
+                    <label style="display:flex; align-items:center; gap:8px; color:#ddd; font-size:12px; cursor:pointer;">
+                        <input type="checkbox" id="t-cont-branch-mode" style="margin:0;">
+                        <span>\u4ECE\u5F53\u524D\u5185\u5BB9\u521B\u5EFA\u5206\u652F\u7EED\u5199</span>
+                    </label>
+                    <div style="color:#888; font-size:12px; line-height:1.5;">\u5F00\u542F\u540E\u4F1A\u4EE5\u5F53\u524D\u9875\u9762\u5185\u5BB9\u4F5C\u4E3A\u65B0\u5206\u652F\u8D77\u70B9\uFF0C\u4E0D\u4F1A\u6CBF\u7528\u540E\u7EED\u8F6E\u6B21\u3002</div>
+                </div>
             </div>
 
             <div class="t-ce-footer">
@@ -27868,6 +29183,7 @@ function openContinuationComposer(initialText = "") {
     const $injectButtons = $("#t-cont-inject-buttons");
     const $roundsTotal = $("#t-cont-rounds-total");
     const $contextEstimate = $("#t-cont-context-estimate");
+    const $branchMode = $("#t-cont-branch-mode");
     let resolved = false;
     let expanded = false;
     const finalize = (value) => {
@@ -27895,7 +29211,8 @@ function openContinuationComposer(initialText = "") {
       if (!ensureHasBaseContent()) return;
       finalize({
         instruction: $input.val(),
-        injectRoundsCount: selectedInjectRounds
+        injectRoundsCount: selectedInjectRounds,
+        branchFromCurrentView: $branchMode.is(":checked")
       });
     };
     const updateInjectButtonsVisual = () => {
@@ -28105,10 +29422,6 @@ async function openMainWindow() {
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                         <span>\u4E3B\u52A8\u7EED\u5199</span>
                     </div>
-                    <div class="t-tools-item" id="t-tool-continue-fav-chain">
-                        <i class="fa-solid fa-bookmark"></i>
-                        <span>\u6536\u85CF\u5F53\u524D\u5267\u573A\u5206\u7EC4</span>
-                    </div>
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
@@ -28297,15 +29610,6 @@ async function openMainWindow() {
       $toolsBtn.removeClass("zen-active");
     }
   });
-  $("#t-tool-continue-fav-chain").on("click", async function() {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
-    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
-      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
-      return;
-    }
-    await saveContinuationChainFavorite();
-  });
   $("#t-tool-edit-content").on("click", function() {
     $toolsPanel.hide();
     $toolsBtn.removeClass("active");
@@ -28332,6 +29636,7 @@ async function openMainWindow() {
     await handleUserContinuation({
       instruction: normalizedInstruction,
       injectRoundsCount,
+      branchFromCurrentView: composeResult?.branchFromCurrentView === true,
       fromCurrentView: true
     });
   });
@@ -28472,9 +29777,11 @@ async function openMainWindow() {
     if ($(this).prop("disabled")) return;
     const history = GlobalState.sceneHistory;
     const display = GlobalState.displayState;
+    const streaming = GlobalState.streamingCache;
     let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-    if (effectiveIndex < history.items.length - 1) {
-      const newIndex = effectiveIndex + 1;
+    const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
+    if (canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1) {
+      const newIndex = canJumpFromLiveToHistory ? 0 : effectiveIndex + 1;
       lockDisplayToHistory(newIndex);
       const item = history.items[newIndex];
       if (item) {
@@ -28642,7 +29949,8 @@ function updateSceneHistoryNav() {
   const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
   const virtualTotal = streaming.isActive && display.isViewingHistory ? history.items.length + 1 : history.items.length;
   const displayCurrent = display.isViewingHistory ? effectiveIndex + 1 : streaming.isActive ? 0 : effectiveIndex + 1;
-  const hasPrev = effectiveIndex < history.items.length - 1;
+  const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
+  const hasPrev = canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1;
   const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
   if (history.items.length > 1 || history.items.length >= 1 && streaming.isActive) {
     $prevBtn.show();
@@ -28730,6 +30038,22 @@ async function updateWorldInfoBadge() {
 }
 async function openWorldInfoSelector() {
   if ($("#t-wi-selector").length) return;
+  const withTimeout3 = (promise, timeoutMs, errorMsg) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(errorMsg)), timeoutMs))
+  ]);
+  const getSelectorContext = () => {
+    try {
+      if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
+        const stCtx = SillyTavern.getContext();
+        const charName2 = stCtx?.substituteParams?.("{{char}}") || "Char";
+        return { charName: charName2 };
+      }
+    } catch (e) {
+      console.warn("Titania: \u83B7\u53D6\u4E16\u754C\u4E66\u7A97\u53E3\u4E0A\u4E0B\u6587\u5931\u8D25", e);
+    }
+    return { charName: "Char" };
+  };
   const loadingHtml = `
     <div id="t-wi-selector" class="t-wi-selector">
         <div class="t-wi-header">
@@ -28751,17 +30075,29 @@ async function openWorldInfoSelector() {
   let ctx;
   let allBookNames;
   let activeBookNames;
+  const loadWarnings = [];
   try {
-    const LOAD_TIMEOUT = 12e3;
-    const loadPromise = Promise.all([
-      getContextData(),
-      getAllWorldBookNames(),
-      Promise.resolve(getActiveWorldBookNames())
-    ]);
-    const timeoutPromise = new Promise(
-      (_, reject) => setTimeout(() => reject(new Error("\u52A0\u8F7D\u8D85\u65F6")), LOAD_TIMEOUT)
-    );
-    [ctx, allBookNames, activeBookNames] = await Promise.race([loadPromise, timeoutPromise]);
+    ctx = getSelectorContext();
+    try {
+      allBookNames = await withTimeout3(
+        Promise.resolve(getAllWorldBookNames()),
+        1e4,
+        "\u83B7\u53D6\u4E16\u754C\u4E66\u5217\u8868\u8D85\u65F6"
+      );
+    } catch (e) {
+      allBookNames = [];
+      loadWarnings.push(e?.message || "\u83B7\u53D6\u4E16\u754C\u4E66\u5217\u8868\u5931\u8D25");
+    }
+    try {
+      activeBookNames = await withTimeout3(
+        Promise.resolve(getActiveWorldBookNames()),
+        4e3,
+        "\u83B7\u53D6\u6FC0\u6D3B\u4E16\u754C\u4E66\u8D85\u65F6"
+      );
+    } catch (e) {
+      activeBookNames = [];
+      loadWarnings.push(e?.message || "\u83B7\u53D6\u6FC0\u6D3B\u4E16\u754C\u4E66\u5931\u8D25");
+    }
   } catch (e) {
     console.error("Titania: \u52A0\u8F7D\u4E16\u754C\u4E66\u6570\u636E\u5931\u8D25", e);
     $("#t-wi-selector .t-wi-body").html(`
@@ -28783,6 +30119,9 @@ async function openWorldInfoSelector() {
   const workingSelections = savedSelections ? structuredClone(savedSelections) : {};
   const allBooks = Array.isArray(allBookNames) ? allBookNames.slice() : [];
   const baseActiveBooks = Array.isArray(activeBookNames) ? activeBookNames.filter((name) => allBooks.includes(name)) : [];
+  if (loadWarnings.length > 0 && window.toastr) {
+    toastr.warning(`\u4E16\u754C\u4E66\u6570\u636E\u90E8\u5206\u52A0\u8F7D\u5931\u8D25\uFF1A${loadWarnings.join("\uFF1B")}`, "Titania Echo");
+  }
   let currentViewMode = "all";
   const getVisibleBooks = () => currentViewMode === "active" ? baseActiveBooks : allBooks;
   let visibleBooks = getVisibleBooks();
@@ -28913,11 +30252,11 @@ async function openWorldInfoSelector() {
     currentEntries2.forEach((entry) => {
       const checked = selectedSet.has(Number(entry.uid));
       const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
-      const disabledBadge = entry.isDisabled ? '<span style="background:#ff9f4333; color:#ffb968; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u5DF2\u7981\u7528</span>' : "";
+      const disabledBadge = entry.isDisabled ? '<span style="background:#ff9f4333; color:#ffb968; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u9152\u9986\u4E2D\u5DF2\u7981\u7528</span>' : "";
       const $entry = $(`
                 <div class="t-wi-entry ${checked ? "selected" : ""}" data-uid="${entry.uid}">
                     <div class="t-wi-entry-check">
-                        <input type="checkbox" ${checked ? "checked" : ""} ${entry.isDisabled ? "disabled" : ""}>
+                        <input type="checkbox" ${checked ? "checked" : ""}>
                     </div>
                     <div class="t-wi-entry-content">
                         <div class="t-wi-entry-title">
@@ -28953,7 +30292,6 @@ async function openWorldInfoSelector() {
       $entry.on("click", function(e) {
         if ($(e.target).closest("input, .t-wi-preview-btn").length) return;
         const $checkbox = $entry.find("input");
-        if ($checkbox.is(":disabled")) return;
         $checkbox.prop("checked", !$checkbox.is(":checked")).trigger("change");
       });
       $entry.find(".t-wi-preview-btn").on("click", function(e) {
@@ -28974,7 +30312,6 @@ async function openWorldInfoSelector() {
     if (!currentBookName) return;
     const nextSet = getBookSelectedSet(currentBookName);
     currentEntries2.forEach((entry) => {
-      if (entry.isDisabled) return;
       const uid = Number(entry.uid);
       if (checked) nextSet.add(uid);
       else nextSet.delete(uid);
@@ -29958,6 +31295,11 @@ function clampContinuationInjectRounds(value) {
 function estimateTokensByChars(charCount) {
   return Math.ceil((Number(charCount) || 0) / 4);
 }
+function createContinuationBranchKey() {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `branch_${ts}_${rand}`;
+}
 function getContinuationRuntimeStore() {
   if (!GlobalState.continuationRuntime || typeof GlobalState.continuationRuntime !== "object") {
     GlobalState.continuationRuntime = { byScript: {} };
@@ -29979,17 +31321,21 @@ function getContinuationSessionRounds(scriptId) {
     timestamp: Number(item?.timestamp) || 0
   })).filter((item) => item.content.length > 0);
 }
-function setContinuationSessionBaseRound(scriptId, scriptName, content) {
+function setContinuationSessionBaseRound(scriptId, scriptName, content, options = {}) {
   if (!scriptId) return;
   const textContent = String(content || "").trim();
   if (!textContent) return;
+  const forceNewBranch = options?.forceNewBranch === true;
+  const providedBranchKey = typeof options?.branchKey === "string" ? options.branchKey.trim() : "";
   const byScript = getContinuationRuntimeStore();
   const current = byScript[scriptId];
   const oldRounds = Array.isArray(current?.rounds) ? current.rounds : [];
   const continuationRounds = oldRounds.filter((item) => String(item?.type || "continuation") !== "initial");
+  const nextBranchKey = providedBranchKey || (forceNewBranch ? createContinuationBranchKey() : String(current?.branchKey || "").trim()) || createContinuationBranchKey();
   byScript[scriptId] = {
     scriptId,
     scriptName: scriptName || current?.scriptName || "\u573A\u666F",
+    branchKey: nextBranchKey,
     rounds: [
       {
         round: 1,
@@ -30016,6 +31362,7 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     byScript[scriptId] = {
       scriptId,
       scriptName: scriptName || "\u573A\u666F",
+      branchKey: createContinuationBranchKey(),
       rounds: []
     };
   }
@@ -30037,6 +31384,9 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     item.round = index + 1;
   });
   byScript[scriptId].scriptName = scriptName || byScript[scriptId].scriptName || "\u573A\u666F";
+  if (!String(byScript[scriptId].branchKey || "").trim()) {
+    byScript[scriptId].branchKey = createContinuationBranchKey();
+  }
 }
 function syncEditedContentToContinuationSession(scriptId, previousContent, editedContent, scriptName = "\u573A\u666F") {
   if (!scriptId) return false;
@@ -30074,6 +31424,7 @@ function resetContinuationSessionRounds(scriptId, scriptName = "\u573A\u666F") {
   byScript[scriptId] = {
     scriptId,
     scriptName: scriptName || "\u573A\u666F",
+    branchKey: null,
     rounds: [],
     resetAt: Date.now()
   };
@@ -30131,6 +31482,7 @@ function getContinuationRoundsForFav(scriptId) {
     return {
       scriptId: null,
       scriptName: "",
+      branchKey: "",
       rounds: []
     };
   }
@@ -30139,6 +31491,7 @@ function getContinuationRoundsForFav(scriptId) {
   return {
     scriptId,
     scriptName: String(entry?.scriptName || "\u573A\u666F"),
+    branchKey: String(entry?.branchKey || "").trim(),
     rounds: getContinuationSessionRounds(scriptId)
   };
 }
@@ -30165,7 +31518,18 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
     $("#t-interactive-fab").remove();
   }
   try {
-    renderToShadowDOMReal(container, content);
+    const shadowContentEl = ensureShadowContentElement(container, content);
+    if (shadowContentEl) {
+      if (isStreaming) {
+        applyStreamingShadowUpdate(shadowContentEl, content);
+      } else {
+        shadowContentEl.innerHTML = String(content || "");
+        lastStreamRenderedContent = String(content || "");
+      }
+    } else {
+      renderToShadowDOMReal(container, content);
+      lastStreamRenderedContent = String(content || "");
+    }
     if (!isStreaming) {
       TitaniaLogger.info("Shadow DOM \u6E32\u67D3\u5B8C\u6210");
     }
@@ -30184,12 +31548,57 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
     });
   }
   if (!isStreaming) {
-    const interactiveResult = detectInteractiveContent(content);
+    scheduleInteractiveDetection(content, scriptName);
+  }
+}
+function ensureShadowContentElement(container, initialContent = "") {
+  const host = container.querySelector(".t-shadow-host");
+  const existingShadow = host && host.shadowRoot ? host.shadowRoot : null;
+  const existingContentEl = existingShadow ? existingShadow.querySelector(".t-shadow-content") : null;
+  if (existingContentEl) return existingContentEl;
+  const shadow = renderToShadowDOMReal(container, initialContent || "");
+  return shadow ? shadow.querySelector(".t-shadow-content") : null;
+}
+function applyStreamingShadowUpdate(contentEl, nextContent) {
+  const normalizedNext = String(nextContent || "");
+  if (!contentEl) return;
+  if (normalizedNext === lastStreamRenderedContent) return;
+  contentEl.innerHTML = normalizedNext;
+  lastStreamRenderedContent = normalizedNext;
+}
+function clearPendingInteractiveDetection() {
+  if (interactiveDetectionIdleHandle !== null && typeof window !== "undefined" && typeof window.cancelIdleCallback === "function") {
+    window.cancelIdleCallback(interactiveDetectionIdleHandle);
+  }
+  interactiveDetectionIdleHandle = null;
+  if (interactiveDetectionTimer !== null) {
+    clearTimeout(interactiveDetectionTimer);
+  }
+  interactiveDetectionTimer = null;
+}
+function scheduleInteractiveDetection(content, scriptName) {
+  clearPendingInteractiveDetection();
+  const token = ++interactiveDetectionToken;
+  const normalizedContent = String(content || "");
+  const run = () => {
+    if (token !== interactiveDetectionToken) return;
+    const interactiveResult = detectInteractiveContent(normalizedContent);
     TitaniaLogger.info("\u4E92\u52A8\u68C0\u6D4B\u7ED3\u679C", interactiveResult);
     if (interactiveResult.isInteractive) {
-      showInteractiveFAB(scriptName, content, interactiveResult.reasons);
+      showInteractiveFAB(scriptName, normalizedContent, interactiveResult.reasons);
     }
+  };
+  if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+    interactiveDetectionIdleHandle = window.requestIdleCallback(() => {
+      interactiveDetectionIdleHandle = null;
+      run();
+    }, { timeout: 320 });
+    return;
   }
+  interactiveDetectionTimer = setTimeout(() => {
+    interactiveDetectionTimer = null;
+    run();
+  }, 60);
 }
 function scheduleStreamRender(content, scriptName) {
   pendingStreamContent = content;
@@ -30306,6 +31715,7 @@ function finalizeStreamRender(content, scriptName) {
   }
   pendingStreamContent = "";
   lastRenderTime = 0;
+  clearPendingInteractiveDetection();
   renderGeneratedContent(content, scriptName, false);
 }
 function showInteractiveFAB(scriptName, html, reasons) {
@@ -30755,6 +32165,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   GlobalState.isGenerating = true;
   $floatBtn.addClass("t-loading");
   startStreamingCache(script.id, script.name);
+  lastStreamRenderedContent = "";
   if (typeof window.updateRunButtonsState === "function") {
     window.updateRunButtonsState();
   }
@@ -30982,7 +32393,7 @@ ${processedPrompt}`;
               diagnostics.stream_stats.chunks = chunkCount;
               rawContent = chunk.text || "";
               if (($("#t-output-content").length > 0 || $("#t-main-view").length > 0) && rawContent.length > 0) {
-                const streamCleanContent = sanitizeAIOutput(rawContent);
+                const streamCleanContent = sanitizeAIOutputLite(rawContent);
                 scheduleStreamRender(streamCleanContent, script.name);
               }
             }
@@ -31082,7 +32493,7 @@ ${processedPrompt}`;
             if (chunk) {
               rawContent += chunk;
               if ($("#t-output-content").length > 0 || $("#t-main-view").length > 0) {
-                const streamCleanContent = sanitizeAIOutput(rawContent);
+                const streamCleanContent = sanitizeAIOutputLite(rawContent);
                 scheduleStreamRender(streamCleanContent, script.name);
               }
             }
@@ -31872,7 +33283,7 @@ Generate ONLY the continuation (no repetition):`;
   }
 }
 async function handleUserContinuation(options = {}) {
-  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3 } = options;
+  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3, branchFromCurrentView = false } = options;
   if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
     if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
     return false;
@@ -31900,6 +33311,15 @@ async function handleUserContinuation(options = {}) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5185\u5BB9\u5BF9\u5E94\u7684\u5267\u672C\uFF0C\u65E0\u6CD5\u7EED\u5199", "Titania");
     return false;
   }
+  if (branchFromCurrentView) {
+    resetContinuationSessionRounds(script.id, script.name);
+    setContinuationSessionBaseRound(script.id, script.name, baseContent, { forceNewBranch: true });
+    TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u521B\u5EFA\u5206\u652F", {
+      scriptId: script.id,
+      scriptName: script.name,
+      baseContentLength: baseContent.length
+    });
+  }
   const userInstruction = (instruction || "").trim() || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
   const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
   const sessionInjection = buildContinuationSessionInjection(script.id, effectiveInjectCount);
@@ -31912,14 +33332,8 @@ async function handleUserContinuation(options = {}) {
 \uFF08\u4EE5\u4E0B\u4E3A\u5386\u53F2\u7EED\u5199\u8F6E\u6B21\uFF0C\u5305\u542B\u201C\u6307\u4EE4+\u7ED3\u679C\u201D\uFF0C\u7528\u4E8E\u4FDD\u6301\u591A\u8F6E\u8FDE\u7EED\u6027\uFF09
 ${sessionInjection.text}
 
-[\u5F53\u524D\u57FA\u51C6\u5185\u5BB9]
-${baseContent}
-
 [\u672C\u8F6E\u7EED\u5199\u6307\u4EE4]
-${userInstruction}
-
-[\u539F\u59CB\u5267\u672C\u6307\u4EE4]
-${script.prompt}`;
+${userInstruction}`;
   TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u5207\u6362\u5230\u65B0\u56DE\u5408\u751F\u6210\u6A21\u5F0F", {
     scriptId: script.id,
     scriptName: script.name,
@@ -31949,7 +33363,7 @@ ${script.prompt}`;
   }
   return success;
 }
-var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
+var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
@@ -31963,6 +33377,10 @@ var init_api = __esm({
     init_scriptData();
     CONTINUATION_SESSION_MAX_ROUNDS = 30;
     CONTINUATION_INJECT_MAX = 5;
+    interactiveDetectionIdleHandle = null;
+    interactiveDetectionTimer = null;
+    interactiveDetectionToken = 0;
+    lastStreamRenderedContent = "";
     streamRenderTimer = null;
     pendingStreamContent = "";
     lastRenderTime = 0;
@@ -32298,7 +33716,15 @@ async function loadExtensionSettings() {
     showFloatingButton();
   }
   const extData = getExtData();
-  if (!extData.outline_entry || typeof extData.outline_entry !== "object") extData.outline_entry = { enabled: false };
+  if (!extData.outline_entry || typeof extData.outline_entry !== "object") {
+    extData.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+  }
+  if (typeof extData.outline_entry.show_theater !== "boolean") {
+    extData.outline_entry.show_theater = true;
+  }
+  if (typeof extData.outline_entry.show_outline_actions !== "boolean") {
+    extData.outline_entry.show_outline_actions = true;
+  }
   if (!extData.rewrite_entry || typeof extData.rewrite_entry !== "object") extData.rewrite_entry = { enabled: false };
   if (!extData.quick_toolbar || typeof extData.quick_toolbar !== "object") extData.quick_toolbar = {};
   if (!extData.quick_toolbar.enabled_items || typeof extData.quick_toolbar.enabled_items !== "object") {
@@ -32310,17 +33736,43 @@ async function loadExtensionSettings() {
     saveExtData();
   }
   $("#cfg-outline-entry-enabled").prop("checked", extData.outline_entry.enabled === true);
+  $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
+  $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
   $("#cfg-toolbar-lore-enabled").prop("checked", extData.quick_toolbar.enabled_items.lore === true);
   $("#cfg-toolbar-recall-enabled").prop("checked", extData.quick_toolbar.enabled_items.recall === true);
   $("#cfg-outline-entry-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
     const data = getExtData();
-    if (!data.outline_entry || typeof data.outline_entry !== "object") data.outline_entry = { enabled: false };
+    if (!data.outline_entry || typeof data.outline_entry !== "object") {
+      data.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+    }
     data.outline_entry.enabled = enabled;
     saveExtData();
     refreshOutlineEntryButton();
     if (window.toastr) toastr.success(enabled ? "\u6545\u4E8B\u5927\u7EB2\u5165\u53E3\u5DF2\u542F\u7528" : "\u6545\u4E8B\u5927\u7EB2\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-outline-theater-enabled").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.outline_entry || typeof data.outline_entry !== "object") {
+      data.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+    }
+    data.outline_entry.show_theater = enabled;
+    saveExtData();
+    refreshOutlineEntryButton();
+    if (window.toastr) toastr.success(enabled ? "\u56DE\u58F0\u5C0F\u5267\u573A\u5165\u53E3\u5DF2\u542F\u7528" : "\u56DE\u58F0\u5C0F\u5267\u573A\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-outline-actions-enabled").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.outline_entry || typeof data.outline_entry !== "object") {
+      data.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+    }
+    data.outline_entry.show_outline_actions = enabled;
+    saveExtData();
+    refreshOutlineEntryButton();
+    if (window.toastr) toastr.success(enabled ? "\u5927\u7EB2\u751F\u6210\u5165\u53E3\u5DF2\u542F\u7528" : "\u5927\u7EB2\u751F\u6210\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
   });
   $("#cfg-rewrite-entry-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
