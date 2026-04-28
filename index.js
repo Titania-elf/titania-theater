@@ -22,14 +22,15 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.6";
+    CURRENT_VERSION = "5.0.7";
     GITHUB_REPO = "Titania-elf/titania-theater";
     GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
     GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
     CHANGELOG = {
-      "5.0.6": "\u89E3\u8026\u4E16\u754C\u4E66\u7981\u7528\u4E0E\u5C0F\u5267\u573A\u52FE\u9009\u72B6\u6001\u3002<br>\u4FEE\u590D\u7F16\u8F91\u5668\u8F93\u5165\u6CD5\u4E0A\u5C4F\u3002<br>\u4F18\u5316\u5343\u6761\u7EA7\u6536\u85CF\u5220\u9664\u5361\u987F\uFF08\u5206\u5E27/\u5206\u9875/\u8F7B\u91CF\u6E32\u67D3\uFF09\u3002<br>\u4FEE\u590D\u5927\u7EB2\u65B0\u5EFA\u65B9\u6848\u6B8B\u7559\u65E7\u5185\u5BB9\u3002<br>\u91CD\u505A\u5927\u7EB2\u7F16\u8F91\u65B0\u589E\u5165\u53E3\u4E3A\u79FB\u52A8\u7AEF\u5B89\u5168\u7684 FAB\uFF08\u652F\u6301\u201C\u65B0\u589E\u5927\u7EB2\u6761\u76EE\u201D\u548C\u201C\u65B0\u589E\u7EC6\u7EB2\u6761\u76EE\u201D\u4E14\u540E\u8005\u4E3A\u65B0\u5EFA\u6761\u76EE\u5E76\u81EA\u5E26\u9996\u4E2A\u7EC6\u7EB2\uFF09\u3002<br>\u8865\u9F50\u201C\u5220\u9664\u7EC6\u7EB2\u6761\u76EE\u201D\u80FD\u529B\u53CA\u76F8\u5173\u7D22\u5F15/\u72B6\u6001\u540C\u6B65\u3002",
+      "5.0.7": "\u2B50\u65B0\u589E\uFF1A\u9152\u9986\u4E2D\u88AB\u7981\u7528\u7684\u6761\u76EE\u53EF\u4EE5\u6CE8\u5165\u5230\u63D0\u793A\u8BCD\u3002<br>\u{1F527}\u4F18\u5316\uFF1A\u4E16\u754C\u4E66\u52A0\u8F7D\u903B\u8F91\uFF1B\u6536\u85CF\u753B\u5ECA\u7D27\u51D1\u89C6\u56FE\u52A0\u8F7D\u903B\u8F91\uFF1B\u63D0\u793A\u8BCD\u67E5\u770B\u9875\u9762\uFF1B\u751F\u6210\u5230\u4E00\u534A\u5C31\u5931\u8D25\u7684\u5267\u573A\u53EF\u4EE5\u53C2\u4E0E\u4E3B\u52A8\u7EED\u5199\u3002",
+      "5.0.6": '\u89E3\u8026\u4E16\u754C\u4E66\u7981\u7528\u4E0E\u5C0F\u5267\u573A\u52FE\u9009\u72B6\u6001\u3002<br>\u4FEE\u590D\u7F16\u8F91\u5668\u8F93\u5165\u6CD5\u4E0A\u5C4F\u3002<br>\u4F18\u5316\u5343\u6761\u7EA7\u6536\u85CF\u5220\u9664\u5361\u987F\uFF08\u5206\u5E27/\u5206\u9875/\u8F7B\u91CF\u6E32\u67D3\uFF09\u3002<br>\u4FEE\u590D\u5927\u7EB2\u65B0\u5EFA\u65B9\u6848\u6B8B\u7559\u65E7\u5185\u5BB9\u3002<br>\u91CD\u505A\u5927\u7EB2\u7F16\u8F91\u65B0\u589E\u5165\u53E3\u4E3A\u79FB\u52A8\u7AEF\u5B89\u5168\u7684 FAB\uFF08\u652F\u6301"\u65B0\u589E\u5927\u7EB2\u6761\u76EE"\u548C"\u65B0\u589E\u7EC6\u7EB2\u6761\u76EE"\u4E14\u540E\u8005\u4E3A\u65B0\u5EFA\u6761\u76EE\u5E76\u81EA\u5E26\u9996\u4E2A\u7EC6\u7EB2\uFF09\u3002<br>\u8865\u9F50"\u5220\u9664\u7EC6\u7EB2\u6761\u76EE"\u80FD\u529B\u53CA\u76F8\u5173\u7D22\u5F15/\u72B6\u6001\u540C\u6B65\u3002',
       "5.0.5": "\u4F18\u5316\u53D1\u9001\u952E\u83DC\u5355\u5165\u53E3\u903B\u8F91\uFF1A\u65B0\u589E\u53EF\u72EC\u7ACB\u63A7\u5236\u7684\u5927\u7EB2/\u5C0F\u5267\u573A\u5165\u53E3\uFF0C\u5E76\u652F\u6301\u4EC5\u542F\u7528\u5355\u4E00\u529F\u80FD\u65F6\u70B9\u51FB\u83DC\u5355\u6309\u94AE\u76F4\u63A5\u8FDB\u5165\u5BF9\u5E94\u754C\u9762\u3002\u4F18\u5316\u6536\u85CF\u753B\u5ECA\u6D77\u62A5\u6A21\u5F0F\u6027\u80FD\uFF0C\u51CF\u5C11\u5927\u91CF\u6536\u85CF\u65F6\u7684\u5361\u987F\u3002\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u7A97\u53E3\u52A0\u8F7D\u7B56\u7565\uFF0C\u964D\u4F4E\u8D85\u65F6\u5931\u8D25\u6982\u7387\u3002",
-      "5.0.4": "\u4F18\u5316\u90E8\u5206\u4F53\u9A8C\uFF1A\u5185\u5BB9\u533A\u6D41\u5F0F\u6E32\u67D3\u53EF\u4EE5\u5B9E\u65F6\u67E5\u770B\u751F\u6210\u8FC7\u7A0B\uFF1B\u4FEE\u590D\u67E5\u770B\u5386\u53F2\u751F\u6210\u65F6\u5DE6\u7BAD\u5934\u5931\u6548\u95EE\u9898\uFF1B\u73B0\u5728\u6536\u85CF\u540C\u4E00\u4E2A\u5267\u573A\u65F6\u4F1A\u81EA\u52A8\u201C\u66F4\u65B0\u539F\u6536\u85CF\u201D\u5E76\u628A\u65B0\u7EED\u5199\u5408\u5E76\u8FDB\u53BB\uFF1B\u7EED\u5199\u63D0\u793A\u8BCD\u8FDB\u884C\u91CD\u6784\uFF0C\u8282\u7701token\u3002\u65B0\u589E\u6536\u85CF\u533A\u7D27\u51D1/\u6D77\u62A5\u4E24\u79CD\u89C6\u56FE\u3002",
+      "5.0.4": "\u4F18\u5316\u90E8\u5206\u4F53\u9A8C\uFF1A\u5185\u5BB9\u533A\u6D41\u5F0F\u6E32\u67D3\u53EF\u4EE5\u5B9E\u65F6\u67E5\u770B\u751F\u6210\u8FC7\u7A0B\uFF1B\u4FEE\u590D\u67E5\u770B\u5386\u53F2\u751F\u6210\u65F6\u5DE6\u7BAD\u5934\u5931\u6548\u95EE\u9898\uFF1B\u73B0\u5728\u6536\u85CF\u540C\u4E00\u4E2A\u5267\u573A\u65F6\u4F1A\u81EA\u52A8\u300C\u66F4\u65B0\u539F\u6536\u85CF\u300D\u5E76\u628A\u65B0\u7EED\u5199\u5408\u5E76\u8FDB\u53BB\uFF1B\u7EED\u5199\u63D0\u793A\u8BCD\u8FDB\u884C\u91CD\u6784\uFF0C\u8282\u7701token\u3002\u65B0\u589E\u6536\u85CF\u533A\u7D27\u51D1/\u6D77\u62A5\u4E24\u79CD\u89C6\u56FE\u3002",
       "5.0.3": "\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u9875\u9762\uFF0C\u91CD\u6784\u6536\u85CF\u753B\u5ECA\u9875\u9762\uFF0C\u65B0\u589E\u53EF\u5220\u9664\u5267\u573A\u5206\u7EC4\u4E2D\u7684\u4EFB\u610F\u4E00\u6761\u8BB0\u5F55\u3002",
       "5.0.2": "\u4F18\u5316\u6536\u85CF\u9986\u6027\u80FD\u4E0E\u6D77\u62A5\u5F0F\u754C\u9762\uFF0C\u4FEE\u590D\u7F16\u8F91\u540E\u6536\u85CF\u5185\u5BB9\u4E0D\u540C\u6B65\u95EE\u9898\uFF0C\u65B0\u589E\u5BFC\u51FA\u56FE\u7247\u6253\u7801\u53EF\u9009\u9879\u5E76\u6539\u8FDB\u79FB\u52A8\u7AEF\u4EA4\u4E92\u3002",
       "5.0.1": "\u4FEE\u590D\u4E86\u4E00\u4E2Abug\uFF0C\u4F18\u5316\u4E86\u90E8\u5206\u754C\u9762\u7EC6\u8282\u3002",
@@ -5230,9 +5231,8 @@ textarea.t-input {
 }
 
 .t-fav-mode-compact .t-fav-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 14px;
+    display: block;
+    position: relative;
     overflow: visible;
     border-radius: 0;
     border: none;
@@ -5241,13 +5241,14 @@ textarea.t-input {
 }
 
 .t-fav-mode-compact .t-fav-card {
-    position: relative;
-    inset: auto;
+    position: absolute;
     border: 1px solid rgba(191, 161, 95, 0.28);
     border-radius: 12px;
     opacity: 1;
     pointer-events: auto;
-    min-height: 250px;
+    height: 280px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .t-fav-mode-compact .t-fav-card-poster {
@@ -5838,13 +5839,8 @@ textarea.t-input {
         width: 100%;
     }
 
-    .t-fav-mode-compact .t-fav-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
-
     .t-fav-mode-compact .t-fav-card {
-        min-height: 210px;
+        height: 220px;
     }
 
     .t-fav-mode-compact .t-fav-card-poster {
@@ -6264,9 +6260,8 @@ textarea.t-input {
 
 #t-debug-view .t-prompt-top-summary {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    flex-direction: column;
+    gap: 6px;
     padding: 10px 14px;
     border-bottom: 1px solid #2b2b2b;
     background: #171717;
@@ -6276,6 +6271,13 @@ textarea.t-input {
     display: flex;
     align-items: center;
     gap: 14px;
+    flex-wrap: wrap;
+}
+
+#t-debug-view .t-prompt-top-sub {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
@@ -6311,67 +6313,156 @@ textarea.t-input {
     font-weight: 600;
 }
 
+#t-debug-view .t-prompt-top-sub .t-prompt-meta-item {
+    color: #777;
+}
+
+#t-debug-view .t-prompt-top-sub .t-prompt-meta-item b {
+    color: #b0b0b0;
+}
+
+#t-debug-view .t-prompt-budget-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1;
+    border: 1px solid transparent;
+    margin-left: auto;
+}
+
+#t-debug-view .t-prompt-budget-badge.ok {
+    color: #9fd3ff;
+    border-color: #2f5f8a;
+    background: rgba(35, 73, 108, 0.2);
+}
+
+#t-debug-view .t-prompt-budget-badge.warn {
+    color: #f8d78f;
+    border-color: #89692f;
+    background: rgba(134, 102, 37, 0.2);
+}
+
+#t-debug-view .t-prompt-budget-badge.danger {
+    color: #ffb3ac;
+    border-color: #8c3f39;
+    background: rgba(129, 52, 46, 0.2);
+}
+
 #t-debug-view .t-prompt-live-dot {
     color: #74b9ff;
     font-size: 12px;
     white-space: nowrap;
+    margin-left: auto;
 }
 
 #t-debug-view .t-prompt-toolbar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 10px;
     flex-wrap: wrap;
-    padding: 10px 14px;
+    padding: 8px 14px;
     border-bottom: 1px solid #292929;
     background: #151515;
 }
 
-#t-debug-view .t-prompt-control {
-    min-width: 180px;
-    max-width: 360px;
-    height: 34px;
-}
-
-#t-debug-view .t-prompt-sort {
-    min-width: 160px;
-    max-width: 200px;
-}
-
-#t-debug-view .t-prompt-check {
+#t-debug-view .t-prompt-seg-group {
     display: inline-flex;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
+
+#t-debug-view .t-prompt-seg-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #999;
+    background: #1b1b1b;
+    border: none;
+    border-right: 1px solid #333;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+#t-debug-view .t-prompt-seg-btn:last-child {
+    border-right: none;
+}
+
+#t-debug-view .t-prompt-seg-btn:hover {
+    background: #262626;
+    color: #ccc;
+}
+
+#t-debug-view .t-prompt-seg-btn.active {
+    background: #2a3a4a;
+    color: #74b9ff;
+    font-weight: 600;
+}
+
+#t-debug-view .t-prompt-tool-group {
+    display: flex;
     align-items: center;
     gap: 6px;
-    color: #b9b9b9;
+}
+
+#t-debug-view .t-prompt-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #999;
+    background: #1b1b1b;
+    border: 1px solid #333;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+#t-debug-view .t-prompt-tool-btn:hover {
+    background: #262626;
+    color: #ccc;
+    border-color: #444;
+}
+
+#t-debug-view .t-prompt-tool-btn.active {
+    color: #74b9ff;
+    border-color: #2f5f8a;
+    background: rgba(35, 73, 108, 0.25);
+}
+
+#t-debug-view .t-prompt-tool-btn i {
     font-size: 12px;
-    padding: 0 6px;
-}
-
-#t-debug-view .t-prompt-refresh {
-    margin-left: auto;
-    height: 34px;
-}
-
-#t-debug-view .t-prompt-main-layout {
-    flex: 1;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 10px;
-    padding: 10px;
 }
 
 #t-debug-view .t-prompt-sections {
+    flex: 1;
     min-height: 0;
     overflow: auto;
-    padding-right: 4px;
+    padding: 10px;
 }
 
 #t-debug-view .t-prompt-section-card {
     border: 1px solid #2f2f2f;
+    border-left: 3px solid #2f2f2f;
     border-radius: 10px;
     background: #171717;
     margin-bottom: 10px;
+    transition: border-color 0.2s;
+}
+
+#t-debug-view .t-prompt-role-system {
+    border-left-color: #74b9ff;
+}
+
+#t-debug-view .t-prompt-role-user {
+    border-left-color: #55efc4;
 }
 
 #t-debug-view .t-prompt-section-head {
@@ -6381,12 +6472,51 @@ textarea.t-input {
     gap: 10px;
     padding: 10px 12px;
     border-bottom: 1px solid #2b2b2b;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+}
+
+#t-debug-view .t-prompt-section-head:hover {
+    background: #1e1e1e;
 }
 
 #t-debug-view .t-prompt-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: #e5e7eb;
     font-weight: 600;
     font-size: 13px;
+    min-width: 0;
+}
+
+#t-debug-view .t-prompt-chevron {
+    font-size: 10px;
+    width: 12px;
+    color: #555;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+#t-debug-view .t-prompt-section-card.expanded .t-prompt-chevron {
+    transform: rotate(90deg);
+    color: #74b9ff;
+}
+
+#t-debug-view .t-prompt-section-preview {
+    padding: 8px 12px;
+    color: #666;
+    font-size: 11px;
+    font-family: var(--t-font-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid #222;
+}
+
+#t-debug-view .t-prompt-section-card.expanded .t-prompt-section-preview {
+    display: none;
 }
 
 #t-debug-view .t-prompt-token-badge {
@@ -6395,6 +6525,7 @@ textarea.t-input {
     border-radius: 999px;
     padding: 5px 8px;
     border: 1px solid transparent;
+    flex-shrink: 0;
 }
 
 #t-debug-view .t-prompt-token-badge.ok {
@@ -6422,6 +6553,7 @@ textarea.t-input {
 }
 
 #t-debug-view .t-prompt-section-content {
+    display: none;
     margin: 0;
     padding: 10px 12px 12px;
     color: #d4d4d4;
@@ -6430,101 +6562,12 @@ textarea.t-input {
     font-family: var(--t-font-mono);
     white-space: pre-wrap;
     word-break: break-word;
-}
-
-#t-debug-view .t-prompt-stats {
-    min-height: 0;
+    max-height: 400px;
     overflow: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 }
 
-#t-debug-view .t-prompt-stats-card {
-    border: 1px solid #2f2f2f;
-    border-radius: 10px;
-    background: #171717;
-    padding: 10px;
-}
-
-#t-debug-view .t-prompt-stats-title {
-    color: #cfd8e3;
-    font-size: 12px;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-#t-debug-view .t-prompt-stats-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: #b4b4b4;
-    font-size: 12px;
-    margin-bottom: 6px;
-    gap: 8px;
-}
-
-#t-debug-view .t-prompt-stats-row b {
-    color: #e5e7eb;
-    text-align: right;
-}
-
-#t-debug-view .t-prompt-stats-bars {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-#t-debug-view .t-prompt-bar-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-#t-debug-view .t-prompt-bar-label {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 11px;
-    color: #b8b8b8;
-}
-
-#t-debug-view .t-prompt-bar-track {
-    width: 100%;
-    height: 6px;
-    border-radius: 999px;
-    background: #232323;
-    overflow: hidden;
-}
-
-#t-debug-view .t-prompt-bar-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #5fa8f6, #8ecbff);
-}
-
-#t-debug-view .t-prompt-budget {
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 12px;
-}
-
-#t-debug-view .t-prompt-budget.ok {
-    color: #9fd3ff;
-    background: rgba(55, 94, 131, 0.2);
-    border: 1px solid #3d6287;
-}
-
-#t-debug-view .t-prompt-budget.warn {
-    color: #f8d78f;
-    background: rgba(117, 93, 42, 0.22);
-    border: 1px solid #816a35;
-}
-
-#t-debug-view .t-prompt-budget.danger {
-    color: #ffb3ac;
-    background: rgba(127, 52, 46, 0.22);
-    border: 1px solid #8a403b;
+#t-debug-view .t-prompt-section-card.expanded .t-prompt-section-content {
+    display: block;
 }
 
 #t-debug-view .t-prompt-empty {
@@ -6536,12 +6579,6 @@ textarea.t-input {
     font-size: 12px;
 }
 
-@media (max-width: 1050px) {
-    #t-debug-view .t-prompt-main-layout {
-        grid-template-columns: 1fr;
-    }
-}
-
 @media (max-width: 900px) {
     #t-debug-view {
         width: 100vw !important;
@@ -6550,22 +6587,46 @@ textarea.t-input {
         border-radius: 0 !important;
     }
 
-    #t-debug-view .t-prompt-toolbar {
-        align-items: stretch;
+    #t-debug-view .t-prompt-top-main {
+        gap: 8px;
     }
 
-    #t-debug-view .t-prompt-control {
-        min-width: 100%;
-        max-width: none;
-    }
-
-    #t-debug-view .t-prompt-sort {
-        min-width: 100%;
-        max-width: none;
-    }
-
-    #t-debug-view .t-prompt-refresh {
+    #t-debug-view .t-prompt-budget-badge {
         margin-left: 0;
+    }
+
+    #t-debug-view .t-prompt-top-sub {
+        gap: 8px;
+    }
+
+    #t-debug-view .t-prompt-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    #t-debug-view .t-prompt-seg-group {
+        display: flex;
+        flex-wrap: wrap;
+        border-radius: 6px;
+    }
+
+    #t-debug-view .t-prompt-seg-btn {
+        flex: 1;
+        text-align: center;
+        padding: 8px 6px;
+        font-size: 11px;
+    }
+
+    #t-debug-view .t-prompt-tool-group {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    #t-debug-view .t-prompt-tool-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 6px;
     }
 }
 
@@ -12190,19 +12251,17 @@ async function getActiveWorldInfoEntries() {
   for (const bookName of activeBooks) {
     const bookData = await safeLoadWorldInfo(ctx, bookName);
     if (!bookData || !bookData.entries) continue;
-    const enabledEntries = Object.values(bookData.entries).filter(
-      (entry) => entry.disable === false || entry.enabled === true
-    );
-    if (enabledEntries.length > 0) {
+    const allEntries = Object.values(bookData.entries);
+    if (allEntries.length > 0) {
       result.push({
         bookName,
-        entries: enabledEntries.map((e) => ({
+        entries: allEntries.map((e) => ({
           uid: e.uid,
           comment: e.comment || `\u6761\u76EE ${e.uid}`,
           content: e.content || "",
           preview: (e.content || "").substring(0, 80).replace(/\n/g, " "),
-          isConstant: e.constant === true
-          // 标记是否为蓝灯条目，便于UI显示
+          isConstant: e.constant === true,
+          isDisabled: e.disable === true && e.enabled !== true
         }))
       });
     }
@@ -12237,16 +12296,18 @@ async function getContextData() {
   for (const bookName of activeBooks) {
     const bookData = await safeLoadWorldInfo(ctx, bookName);
     if (!bookData || !bookData.entries) continue;
-    let enabledEntries = Object.values(bookData.entries).filter(
-      (entry) => entry.disable === false || entry.enabled === true
-    );
+    let enabledEntries;
     if (charSelections && charSelections[bookName]) {
       const selectedUids = charSelections[bookName];
-      enabledEntries = enabledEntries.filter((e) => selectedUids.includes(e.uid));
+      enabledEntries = Object.values(bookData.entries).filter((e) => selectedUids.includes(e.uid));
     } else if (charSelections === null) {
       enabledEntries = [];
     } else if (!charSelections[bookName]) {
       enabledEntries = [];
+    } else {
+      enabledEntries = Object.values(bookData.entries).filter(
+        (entry) => entry.disable === false || entry.enabled === true
+      );
     }
     enabledEntries.forEach((e) => {
       if (e.content && e.content.trim()) {
@@ -12349,9 +12410,6 @@ function getActiveWorldBookNames() {
 }
 async function getAllWorldBookNames() {
   try {
-    if (typeof updateWorldInfoList === "function") {
-      await updateWorldInfoList();
-    }
     if (Array.isArray(world_names) && world_names.length > 0) {
       return [...world_names];
     }
@@ -12361,9 +12419,6 @@ async function getAllWorldBookNames() {
     return [];
   } catch (e) {
     console.warn("Titania: \u83B7\u53D6\u5168\u90E8\u4E16\u754C\u4E66\u540D\u79F0\u5931\u8D25", e);
-    if (Array.isArray(world_names) && world_names.length > 0) {
-      return [...world_names];
-    }
     return [];
   }
 }
@@ -13729,6 +13784,14 @@ function openFavsWindow() {
   const THUMB_ITEM_GAP = 10;
   const THUMB_RENDER_BUFFER = 6;
   const EDIT_PAGE_SIZE = 120;
+  let compactScrollRaf = null;
+  let compactResizeObserver = null;
+  let compactCardHeight = 280;
+  let compactCardGap = 14;
+  let compactColumnCount = 1;
+  let compactRowCount = 0;
+  let compactCardWidth = 260;
+  const COMPACT_BUFFER_ROWS = 2;
   const charIndex = /* @__PURE__ */ new Set();
   favs.forEach((f) => {
     if (f.charName) {
@@ -14129,6 +14192,102 @@ ${html2}`;
         `);
     return thumb[0];
   };
+  const updateCompactResponsive = () => {
+    const mobile = window.matchMedia("(max-width: 600px)").matches;
+    compactCardHeight = mobile ? 220 : 280;
+    compactCardGap = mobile ? 10 : 14;
+  };
+  const computeCompactLayout = () => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    updateCompactResponsive();
+    const containerWidth = gridEl.clientWidth;
+    if (containerWidth <= 0) return;
+    const minCardWidth = compactCardGap === 10 ? 160 : 260;
+    compactColumnCount = Math.max(1, Math.floor((containerWidth + compactCardGap) / (minCardWidth + compactCardGap)));
+    compactCardWidth = (containerWidth - (compactColumnCount - 1) * compactCardGap) / compactColumnCount;
+    compactRowCount = Math.max(1, Math.ceil(currentFilteredList.length / compactColumnCount));
+  };
+  const getCompactVisibleRange = () => {
+    const gridArea = document.querySelector("#t-favs-view .t-fav-grid-area");
+    if (!gridArea || compactRowCount <= 0) return { start: 0, end: -1 };
+    const scrollTop = gridArea.scrollTop;
+    const viewportHeight = gridArea.clientHeight;
+    const rowHeight = compactCardHeight + compactCardGap;
+    const firstVisibleRow = Math.floor(scrollTop / rowHeight);
+    const visibleRows = Math.ceil(viewportHeight / rowHeight) + 1;
+    const startRow = Math.max(0, firstVisibleRow - COMPACT_BUFFER_ROWS);
+    const endRow = Math.min(compactRowCount - 1, firstVisibleRow + visibleRows + COMPACT_BUFFER_ROWS);
+    return {
+      start: Math.max(0, startRow * compactColumnCount),
+      end: Math.min(currentFilteredList.length - 1, (endRow + 1) * compactColumnCount - 1)
+    };
+  };
+  const updateCompactSpacer = () => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    let spacer = gridEl.querySelector(".t-fav-compact-spacer");
+    if (!spacer) {
+      spacer = document.createElement("div");
+      spacer.className = "t-fav-compact-spacer";
+      spacer.setAttribute("aria-hidden", "true");
+      spacer.style.cssText = "width:100%; pointer-events:none;";
+      gridEl.appendChild(spacer);
+    }
+    const totalHeight = Math.max(0, compactRowCount * (compactCardHeight + compactCardGap) - compactCardGap);
+    spacer.style.height = `${totalHeight}px`;
+  };
+  const renderCompactCards = (visibleRange) => {
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    gridEl.querySelectorAll(".t-fav-card").forEach((el) => el.remove());
+    if (visibleRange.end < visibleRange.start) return;
+    const frag = document.createDocumentFragment();
+    for (let idx = visibleRange.start; idx <= visibleRange.end; idx++) {
+      const item = currentFilteredList[idx];
+      if (!item) continue;
+      const col = idx % compactColumnCount;
+      const row = Math.floor(idx / compactColumnCount);
+      const card = buildCardElement(item, idx, currentMap);
+      card.classList.add("is-active");
+      card.setAttribute("aria-hidden", "false");
+      Object.assign(card.style, {
+        position: "absolute",
+        top: `${row * (compactCardHeight + compactCardGap)}px`,
+        left: `${col * (compactCardWidth + compactCardGap)}px`,
+        width: `${compactCardWidth}px`,
+        height: `${compactCardHeight}px`,
+        boxSizing: "border-box"
+      });
+      frag.appendChild(card);
+    }
+    gridEl.appendChild(frag);
+  };
+  const scheduleCompactRender = () => {
+    if (compactScrollRaf) return;
+    compactScrollRaf = requestAnimationFrame(() => {
+      compactScrollRaf = null;
+      if (!isCompactView()) return;
+      const range = getCompactVisibleRange();
+      renderCompactCards(range);
+    });
+  };
+  const setupCompactResizeObserver = () => {
+    if (compactResizeObserver) compactResizeObserver.disconnect();
+    const gridEl = document.getElementById("t-fav-grid");
+    if (!gridEl) return;
+    compactResizeObserver = new ResizeObserver(() => {
+      if (!isCompactView()) return;
+      const prevCols = compactColumnCount;
+      computeCompactLayout();
+      updateCompactSpacer();
+      if (compactColumnCount !== prevCols) {
+        const range = getCompactVisibleRange();
+        renderCompactCards(range);
+      }
+    });
+    compactResizeObserver.observe(gridEl);
+  };
   const renderGrid = (options = {}) => {
     const grid = $("#t-fav-grid");
     const gridEl = grid[0];
@@ -14218,18 +14377,16 @@ ${html2}`;
     syncEditPager(0, 0, 0);
     if (isCompactView()) {
       clearCarouselTimer();
-      const cardFrag = document.createDocumentFragment();
-      currentFilteredList.forEach((item, idx) => {
-        const card = buildCardElement(item, idx, currentMap);
-        card.classList.add("is-active");
-        card.setAttribute("aria-hidden", "false");
-        cardFrag.appendChild(card);
-      });
-      gridEl.appendChild(cardFrag);
-      if (thumbsEl) {
-        thumbsEl.innerHTML = "";
-      }
+      if (thumbsEl) thumbsEl.innerHTML = "";
       thumbVirtualRange = { start: 0, end: -1 };
+      gridEl.querySelectorAll(".t-fav-card, .t-fav-compact-spacer").forEach((el) => el.remove());
+      if (currentFilteredList.length === 0) return;
+      computeCompactLayout();
+      updateCompactSpacer();
+      const range = getCompactVisibleRange();
+      renderCompactCards(range);
+      const gridArea = gridEl.closest(".t-fav-grid-area");
+      if (gridArea) gridArea.scrollTop = 0;
       return;
     }
     renderVirtualThumbs();
@@ -14363,6 +14520,11 @@ ${html2}`;
       thumbDragMoved = false;
     }, 0);
   });
+  $("#t-favs-view .t-fav-grid-area").on("scroll", function() {
+    if (!isCompactView()) return;
+    scheduleCompactRender();
+  });
+  setupCompactResizeObserver();
   let carouselTouchStartX = 0;
   let carouselTouchStartY = 0;
   $(".t-fav-grid-area").on("touchstart", (e) => {
@@ -14740,6 +14902,14 @@ ${segmentTip}`);
       cancelAnimationFrame(gridRenderRaf);
       gridRenderRaf = null;
     }
+    if (compactScrollRaf) {
+      cancelAnimationFrame(compactScrollRaf);
+      compactScrollRaf = null;
+    }
+    if (compactResizeObserver) {
+      compactResizeObserver.disconnect();
+      compactResizeObserver = null;
+    }
     pendingGridRenderOptions = null;
     clearEditHydration();
     $(document).off(".tFavThumbDrag");
@@ -15086,42 +15256,46 @@ async function showDebugInfo() {
             <div class="t-prompt-top-main">
                 <div class="t-prompt-total-token"><span>\u603B Token</span><strong id="t-prompt-total-token">0</strong></div>
                 <div class="t-prompt-meta-item">\u6BB5\u843D\u6570 <b id="t-prompt-section-count">0</b></div>
-                <div class="t-prompt-meta-item">\u5F53\u524D\u5267\u672C <b id="t-prompt-trace-name">-</b></div>
-                <div class="t-prompt-meta-item">\u66F4\u65B0\u65F6\u95F4 <b id="t-prompt-updated-at">-</b></div>
+                <div class="t-prompt-meta-item">\u5E73\u5747 <b id="t-prompt-avg-tokens">-</b> tk</div>
+                <div class="t-prompt-meta-item">\u6700\u5927\u6BB5\u843D <b id="t-prompt-max-section">-</b></div>
+                <div class="t-prompt-budget-badge ok" id="t-prompt-budget-badge">\u9884\u7B97\u5145\u8DB3</div>
             </div>
-            <div class="t-prompt-live-dot" id="t-prompt-live-state"><i class="fa-solid fa-circle"></i> \u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8</div>
+            <div class="t-prompt-top-sub">
+                <span class="t-prompt-meta-item">\u5267\u672C <b id="t-prompt-trace-name">-</b></span>
+                <span class="t-prompt-meta-item">\u66F4\u65B0 <b id="t-prompt-updated-at">-</b></span>
+                <span class="t-prompt-live-dot" id="t-prompt-live-state"><i class="fa-solid fa-circle"></i> \u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8</span>
+            </div>
         </div>
 
         <div class="t-prompt-toolbar">
-            <select id="t-prompt-source" class="t-input t-prompt-control t-prompt-sort">
-                <option value="live">\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8</option>
-                <option value="latest">\u6700\u8FD1\u4E00\u6B21\u6784\u9020</option>
-                <option value="manual">\u4E3B\u751F\u6210\uFF08\u624B\u52A8/\u961F\u5217\uFF09</option>
-                <option value="user_continuation">\u4E3B\u52A8\u7EED\u5199</option>
-                <option value="auto_continuation">\u81EA\u52A8\u7EED\u5199</option>
-            </select>
-            <select id="t-prompt-sort" class="t-input t-prompt-control t-prompt-sort">
-                <option value="order">\u6309\u6784\u9020\u987A\u5E8F</option>
-                <option value="tokens_desc">\u6309 Token\uFF08\u9AD8\u2192\u4F4E\uFF09</option>
-                <option value="tokens_asc">\u6309 Token\uFF08\u4F4E\u2192\u9AD8\uFF09</option>
-            </select>
-            <label class="t-prompt-check"><input type="checkbox" id="t-prompt-high-only" /> \u4EC5\u770B\u9AD8\u6D88\u8017</label>
-            <label class="t-prompt-check"><input type="checkbox" id="t-prompt-live" checked /> \u5B9E\u65F6\u66F4\u65B0</label>
-            <button id="t-debug-refresh" class="t-btn t-prompt-refresh"><i class="fa-solid fa-rotate-right"></i> \u5237\u65B0</button>
+            <div class="t-prompt-seg-group" id="t-prompt-source-group">
+                <button class="t-prompt-seg-btn active" data-value="live">\u5B9E\u65F6\u9884\u89C8</button>
+                <button class="t-prompt-seg-btn" data-value="latest">\u6700\u8FD1\u6784\u9020</button>
+                <button class="t-prompt-seg-btn" data-value="manual">\u4E3B\u751F\u6210</button>
+                <button class="t-prompt-seg-btn" data-value="user_continuation">\u4E3B\u52A8\u7EED\u5199</button>
+                <button class="t-prompt-seg-btn" data-value="auto_continuation">\u81EA\u52A8\u7EED\u5199</button>
+            </div>
+            <div class="t-prompt-tool-group">
+                <button id="t-prompt-sort-btn" class="t-prompt-tool-btn" data-sort="order" title="\u6392\u5E8F\u65B9\u5F0F"><i class="fa-solid fa-arrow-down-short-wide"></i> \u987A\u5E8F</button>
+                <button id="t-prompt-high-only-btn" class="t-prompt-tool-btn" title="\u4EC5\u663E\u793A\u9AD8\u6D88\u8017\u6BB5\u843D"><i class="fa-solid fa-filter"></i> \u9AD8\u6D88\u8017</button>
+                <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6BB5\u843D"><i class="fa-solid fa-angles-down"></i> \u5C55\u5F00</button>
+                <button id="t-prompt-copy-btn" class="t-prompt-tool-btn" title="\u590D\u5236\u5168\u90E8\u63D0\u793A\u8BCD"><i class="fa-solid fa-copy"></i> \u590D\u5236</button>
+                <button id="t-debug-refresh" class="t-prompt-tool-btn" title="\u624B\u52A8\u5237\u65B0"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
         </div>
 
-        <div class="t-prompt-main-layout">
-            <div class="t-prompt-sections" id="t-prompt-sections"></div>
-            <aside class="t-prompt-stats" id="t-prompt-stats"></aside>
-        </div>
+        <div class="t-prompt-sections" id="t-prompt-sections"></div>
     </div>`;
   $("#t-overlay").append(html);
   let renderSeq = 0;
   let buildPromptCompositionPreview2 = null;
+  const getSourceMode = () => $("#t-prompt-source-group .t-prompt-seg-btn.active").data("value") || "live";
+  const getSortBy = () => $("#t-prompt-sort-btn").data("sort") || "order";
+  const isHighOnly = () => $("#t-prompt-high-only-btn").hasClass("active");
   const renderPromptWindow = async () => {
     const seq = ++renderSeq;
     const $sections = $("#t-prompt-sections");
-    const sourceMode = $("#t-prompt-source").val() || "live";
+    const sourceMode = getSourceMode();
     if (!buildPromptCompositionPreview2) {
       const apiModule = await Promise.resolve().then(() => (init_api(), api_exports));
       buildPromptCompositionPreview2 = apiModule.buildPromptCompositionPreview;
@@ -15134,13 +15308,16 @@ async function showDebugInfo() {
         $sections.html('<div class="t-prompt-empty">\u672A\u627E\u5230\u5BF9\u5E94\u6765\u6E90\u7684\u63D0\u793A\u8BCD\u8BB0\u5F55\u3002</div>');
         $("#t-prompt-total-token").text("0");
         $("#t-prompt-section-count").text("0");
+        $("#t-prompt-avg-tokens").text("-");
+        $("#t-prompt-max-section").text("-");
         $("#t-prompt-trace-name").text("-");
         $("#t-prompt-updated-at").text("-");
+        $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass("ok").text("\u65E0\u6570\u636E");
         $("#t-prompt-live-state").css("color", "#777").html('<i class="fa-solid fa-circle"></i> \u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F');
         return;
       }
       const target = getPromptSectionsFromTrace(targetTrace);
-      renderSectionsAndStats(target.sections, target.totalTokens, {
+      renderSections(target.sections, target.totalTokens, {
         scriptName: targetTrace.scriptName || "\u672A\u77E5\u5267\u672C",
         updatedAt: targetTrace.endedAt || targetTrace.startedAt,
         modeText: `\u5386\u53F2\u8FFD\u8E2A \xB7 ${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.status || "unknown"}`
@@ -15155,15 +15332,17 @@ async function showDebugInfo() {
       const fallbackTrace = fallbackCandidate ? getPromptTraceById(fallbackCandidate.id) : null;
       if (!fallbackTrace) {
         $sections.html(`<div class="t-prompt-empty">\u65E0\u6CD5\u6784\u5EFA\u751F\u6210\u524D\u63D0\u793A\u8BCD\uFF1A${escapeHtml2(preview?.error || "unknown")}</div>`);
-        $("#t-prompt-stats").html('<div class="t-prompt-empty">\u7EDF\u8BA1\u4FE1\u606F\u4E0D\u53EF\u7528\u3002</div>');
         $("#t-prompt-total-token").text("0");
         $("#t-prompt-section-count").text("0");
+        $("#t-prompt-avg-tokens").text("-");
+        $("#t-prompt-max-section").text("-");
         $("#t-prompt-trace-name").text("-");
         $("#t-prompt-updated-at").text("-");
+        $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass("ok").text("\u65E0\u6570\u636E");
         return;
       }
       const fallback = getPromptSectionsFromTrace(fallbackTrace);
-      renderSectionsAndStats(fallback.sections, fallback.totalTokens, {
+      renderSections(fallback.sections, fallback.totalTokens, {
         scriptName: fallbackTrace.scriptName || "\u672A\u77E5\u5267\u672C",
         updatedAt: fallbackTrace.endedAt || fallbackTrace.startedAt,
         modeText: `\u56DE\u9000\u8BB0\u5F55 \xB7 ${getTraceSourceLabel(fallbackTrace.source)}\uFF08${fallbackTrace.status || "unknown"}\uFF09`
@@ -15171,17 +15350,16 @@ async function showDebugInfo() {
       return;
     }
     const composed = getPromptSectionsFromPreview(preview);
-    renderSectionsAndStats(composed.sections, composed.totalTokens, {
+    renderSections(composed.sections, composed.totalTokens, {
       scriptName: preview.script?.name || "\u672A\u77E5\u5267\u672C",
       updatedAt: preview.timestamp,
       modeText: `\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8 \xB7 ${preview.mode === "visual" ? "\u6C1B\u56F4\u7F8E\u5316" : "\u5185\u5BB9\u4F18\u5148"}`
     });
   };
-  const renderSectionsAndStats = (allSections, totalTokens, ctx = {}) => {
+  const renderSections = (allSections, totalTokens, ctx = {}) => {
     const $sections = $("#t-prompt-sections");
-    const $stats = $("#t-prompt-stats");
-    const highOnly = $("#t-prompt-high-only").is(":checked");
-    const sortBy = $("#t-prompt-sort").val() || "order";
+    const highOnly = isHighOnly();
+    const sortBy = getSortBy();
     const highThreshold = Math.max(120, Math.ceil(totalTokens * 0.2));
     let displaySections = allSections.filter((section) => {
       if (highOnly && section.tokens < highThreshold) return false;
@@ -15193,73 +15371,124 @@ async function showDebugInfo() {
     if (displaySections.length === 0) {
       $sections.html('<div class="t-prompt-empty">\u6CA1\u6709\u5339\u914D\u7684\u6BB5\u843D\u3002</div>');
     } else {
+      const expandedIds = /* @__PURE__ */ new Set();
+      $("#t-prompt-sections .t-prompt-section-card.expanded").each(function() {
+        expandedIds.add($(this).data("section-id"));
+      });
       const cardsHtml = displaySections.map((section, idx) => {
         const ratio = totalTokens > 0 ? section.tokens / totalTokens * 100 : 0;
         const badgeClass = ratio >= 30 ? "danger" : ratio >= 20 ? "warn" : "ok";
+        const roleClass = section.role === "system" ? "t-prompt-role-system" : "t-prompt-role-user";
+        const roleLabel = section.role === "system" ? "System" : "User";
+        const previewText = makePreview(section.content, 150);
+        const wasExpanded = expandedIds.has(section.id);
         return `
-                <div class="t-prompt-section-card">
+                <div class="t-prompt-section-card ${roleClass}${wasExpanded ? " expanded" : ""}" data-section-id="${section.id}" data-role="${section.role}">
                     <div class="t-prompt-section-head">
-                        <div class="t-prompt-section-title">${idx + 1}. ${escapeHtml2(section.title)}</div>
+                        <div class="t-prompt-section-title">
+                            <i class="fa-solid fa-chevron-right t-prompt-chevron"></i> ${idx + 1}. ${escapeHtml2(section.title)}
+                        </div>
                         <div class="t-prompt-token-badge ${badgeClass}">${section.tokens} tk</div>
                     </div>
-                    <div class="t-prompt-section-meta">${section.chars} chars \xB7 \u5360\u6BD4 ${ratio.toFixed(1)}% \xB7 ${section.role === "system" ? "System" : "User"}</div>
+                    <div class="t-prompt-section-meta">${section.chars} chars \xB7 \u5360\u6BD4 ${ratio.toFixed(1)}% \xB7 ${roleLabel}</div>
+                    <div class="t-prompt-section-preview">${escapeHtml2(previewText)}</div>
                     <pre class="t-prompt-section-content">${escapeHtml2(section.content || "(\u65E0\u5185\u5BB9)")}</pre>
                 </div>`;
       }).join("");
       $sections.html(cardsHtml);
     }
-    const topSections = [...allSections].sort((a, b) => b.tokens - a.tokens).slice(0, 5);
+    const topSections = [...allSections].sort((a, b) => b.tokens - a.tokens);
     const maxSection = topSections[0] || null;
-    const statsHtml = `
-            <div class="t-prompt-stats-card">
-                <div class="t-prompt-stats-title">\u7EDF\u8BA1</div>
-                <div class="t-prompt-stats-row"><span>\u603B Token</span><b>${totalTokens}</b></div>
-                <div class="t-prompt-stats-row"><span>\u6BB5\u843D\u6570</span><b>${allSections.length}</b></div>
-                <div class="t-prompt-stats-row"><span>\u5E73\u5747\u6BB5\u843D</span><b>${allSections.length > 0 ? Math.round(totalTokens / allSections.length) : 0} tk</b></div>
-                <div class="t-prompt-stats-row"><span>\u6700\u5927\u6BB5\u843D</span><b>${maxSection ? `${escapeHtml2(maxSection.title)} (${maxSection.tokens} tk)` : "-"}</b></div>
-            </div>
-            <div class="t-prompt-stats-card">
-                <div class="t-prompt-stats-title">Token \u5360\u6BD4</div>
-                <div class="t-prompt-stats-bars">
-                    ${topSections.map((section) => {
-      const ratio = totalTokens > 0 ? section.tokens / totalTokens * 100 : 0;
-      return `
-                        <div class="t-prompt-bar-item">
-                            <div class="t-prompt-bar-label"><span>${escapeHtml2(section.title)}</span><span>${section.tokens} tk</span></div>
-                            <div class="t-prompt-bar-track"><div class="t-prompt-bar-fill" style="width:${Math.min(100, ratio)}%;"></div></div>
-                        </div>`;
-    }).join("")}
-                </div>
-            </div>
-            <div class="t-prompt-stats-card">
-                <div class="t-prompt-stats-title">\u9884\u7B97\u63D0\u9192</div>
-                <div class="t-prompt-budget ${totalTokens >= 1900 ? "danger" : totalTokens >= 1600 ? "warn" : "ok"}">
-                    ${totalTokens >= 1900 ? "\u9AD8\u98CE\u9669\uFF1A\u63A5\u8FD1\u6216\u8D85\u8FC7 2k Token" : totalTokens >= 1600 ? "\u6CE8\u610F\uFF1A\u5DF2\u63A5\u8FD1 2k Token" : "\u6B63\u5E38\uFF1AToken \u9884\u7B97\u5145\u8DB3"}
-                </div>
-            </div>`;
-    $stats.html(statsHtml);
-    const sourceMode = $("#t-prompt-source").val() || "live";
-    const live = sourceMode === "live" && $("#t-prompt-live").is(":checked");
+    const avgTokens = allSections.length > 0 ? Math.round(totalTokens / allSections.length) : 0;
+    const budgetLevel = totalTokens >= 1900 ? "danger" : totalTokens >= 1600 ? "warn" : "ok";
+    const budgetText = totalTokens >= 1900 ? "\u63A5\u8FD1\u4E0A\u9650" : totalTokens >= 1600 ? "\u9884\u7B97\u504F\u7D27" : "\u9884\u7B97\u5145\u8DB3";
+    const sourceMode = getSourceMode();
+    const live = sourceMode === "live";
     const liveColor = live ? "#74b9ff" : "#777";
-    const liveText = live ? ctx.modeText || "\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8" : sourceMode === "live" ? "\u5DF2\u6682\u505C\u66F4\u65B0" : ctx.modeText || "\u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F";
+    const liveText = ctx.modeText || (live ? "\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8" : "\u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F");
     $("#t-prompt-total-token").text(totalTokens);
     $("#t-prompt-section-count").text(allSections.length);
+    $("#t-prompt-avg-tokens").text(avgTokens);
+    $("#t-prompt-max-section").text(maxSection ? `${escapeHtml2(maxSection.title)} (${maxSection.tokens} tk)` : "-");
+    $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass(budgetLevel).text(budgetText);
     $("#t-prompt-trace-name").text(ctx.scriptName || "\u672A\u77E5\u5267\u672C");
     $("#t-prompt-updated-at").text(formatTimeText(ctx.updatedAt));
     $("#t-prompt-live-state").css("color", liveColor).html(`<i class="fa-solid fa-circle"></i> ${liveText}`);
   };
   renderPromptWindow();
-  $("#t-prompt-sort, #t-prompt-high-only, #t-prompt-source").on("input change", () => {
-    const sourceMode = $("#t-prompt-source").val() || "live";
-    $("#t-prompt-live").prop("disabled", sourceMode !== "live");
+  $("#t-prompt-source-group").on("click", ".t-prompt-seg-btn", function() {
+    if ($(this).hasClass("active")) return;
+    $("#t-prompt-source-group .t-prompt-seg-btn").removeClass("active");
+    $(this).addClass("active");
     renderPromptWindow();
   });
-  $("#t-prompt-live").on("change", () => {
+  const sortCycle = ["order", "tokens_desc", "tokens_asc"];
+  const sortLabels = { order: "\u987A\u5E8F", tokens_desc: "Token\u2193", tokens_asc: "Token\u2191" };
+  $("#t-prompt-sort-btn").on("click", function() {
+    const current = $(this).data("sort") || "order";
+    const idx = sortCycle.indexOf(current);
+    const next = sortCycle[(idx + 1) % sortCycle.length];
+    $(this).data("sort", next).attr("data-sort", next);
+    $(this).html(`<i class="fa-solid fa-arrow-down-short-wide"></i> ${sortLabels[next]}`);
     renderPromptWindow();
+  });
+  $("#t-prompt-high-only-btn").on("click", function() {
+    $(this).toggleClass("active");
+    renderPromptWindow();
+  });
+  $("#t-prompt-copy-btn").on("click", async () => {
+    const cards = $("#t-prompt-sections .t-prompt-section-card");
+    if (cards.length === 0) {
+      if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u590D\u5236\u7684\u5185\u5BB9", "Titania");
+      return;
+    }
+    const parts = [];
+    cards.each(function() {
+      const title = $(this).find(".t-prompt-section-title").text().trim();
+      const content = $(this).find(".t-prompt-section-content").text().trim();
+      parts.push(`[${title}]
+${content}`);
+    });
+    const fullText = parts.join("\n\n---\n\n");
+    try {
+      await navigator.clipboard.writeText(fullText);
+      if (window.toastr) toastr.success(`\u5DF2\u590D\u5236 ${parts.length} \u4E2A\u6BB5\u843D`, "Titania");
+    } catch {
+      if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u590D\u5236", "Titania");
+    }
   });
   $("#t-debug-refresh").on("click", () => {
     renderPromptWindow();
-    if (window.toastr) toastr.info("\u751F\u6210\u524D\u63D0\u793A\u8BCD\u5DF2\u5237\u65B0", "Titania");
+    if (window.toastr) toastr.info("\u63D0\u793A\u8BCD\u5DF2\u5237\u65B0", "Titania");
+  });
+  $("#t-prompt-sections").on("click", ".t-prompt-section-head", function() {
+    const $card = $(this).closest(".t-prompt-section-card");
+    $card.toggleClass("expanded");
+    syncExpandAllButton();
+  });
+  const syncExpandAllButton = () => {
+    const $cards = $("#t-prompt-sections .t-prompt-section-card");
+    const $btn = $("#t-prompt-expand-all-btn");
+    if ($cards.length === 0) return;
+    const allExpanded = $cards.filter(".expanded").length === $cards.length;
+    if (allExpanded) {
+      $btn.html('<i class="fa-solid fa-angles-up"></i> \u6298\u53E0');
+      $btn.attr("title", "\u6298\u53E0\u5168\u90E8\u6BB5\u843D");
+    } else {
+      $btn.html('<i class="fa-solid fa-angles-down"></i> \u5C55\u5F00');
+      $btn.attr("title", "\u5C55\u5F00\u5168\u90E8\u6BB5\u843D");
+    }
+  };
+  $("#t-prompt-expand-all-btn").on("click", function() {
+    const $cards = $("#t-prompt-sections .t-prompt-section-card");
+    if ($cards.length === 0) return;
+    const allExpanded = $cards.filter(".expanded").length === $cards.length;
+    if (allExpanded) {
+      $cards.removeClass("expanded");
+    } else {
+      $cards.addClass("expanded");
+    }
+    syncExpandAllButton();
   });
   const close = () => {
     $("#t-debug-view").remove();
@@ -15270,16 +15499,6 @@ async function showDebugInfo() {
     }
   };
   $("#t-debug-close").on("click", close);
-  const autoRefreshInterval = setInterval(() => {
-    if ($("#t-debug-view").length === 0) {
-      clearInterval(autoRefreshInterval);
-      return;
-    }
-    const sourceMode = $("#t-prompt-source").val() || "live";
-    if (sourceMode === "live" && $("#t-prompt-live").is(":checked")) {
-      renderPromptWindow();
-    }
-  }, 1800);
 }
 function showDiagnosticsWindow() {
   if ($("#t-diagnostics-view").length) return;
@@ -21934,18 +22153,10 @@ var init_loreExtractor = __esm({
 });
 
 // src/core/worldInfoManager.js
-import { world_info as world_info2, selected_world_info as selected_world_info2, saveWorldInfo } from "../../../world-info.js";
+import { world_info as world_info2, selected_world_info as selected_world_info2, saveWorldInfo, world_names as world_names2 } from "../../../world-info.js";
 import { eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 function getAvailableWorldBooks() {
-  try {
-    if (Array.isArray(world_info2.loreBookNames)) {
-      return world_info2.loreBookNames;
-    }
-    return selected_world_info2 || [];
-  } catch (e) {
-    TitaniaLogger.error("\u83B7\u53D6\u4E16\u754C\u4E66\u5217\u8868\u5931\u8D25", e);
-    return [];
-  }
+  return [...world_names2 || []].sort((a, b) => a.localeCompare(b));
 }
 async function getCharacterWorldBook() {
   const ctx = await getContextData();
@@ -32263,7 +32474,23 @@ ${processedPrompt}`;
       });
       diagnostics.phase = useStream ? "streaming" : "parsing_json";
       if (useStream) {
-        const streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, signal);
+        let streamGenerator;
+        try {
+          streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, signal);
+        } catch (streamErr) {
+          try {
+            await ChatCompletionService4.sendRequest(requestData, true, null);
+          } catch (detailErr) {
+            if (detailErr && typeof detailErr === "object") {
+              diagnostics.raw_response_snippet = JSON.stringify(
+                detailErr.error || detailErr.message || detailErr
+              ).substring(0, 500);
+            } else if (typeof detailErr === "string") {
+              diagnostics.raw_response_snippet = detailErr.substring(0, 500);
+            }
+          }
+          throw streamErr;
+        }
         if (typeof streamGenerator === "function") {
           let chunkCount = 0;
           try {
@@ -32565,6 +32792,9 @@ ${processedPrompt}`;
         endStreamingCache();
         pushSceneToHistory(partialOutput, script.id, script.name);
         partialSaved = true;
+        if (generationSource !== "user_continuation") {
+          setContinuationSessionBaseRound(script.id, script.name, partialOutput);
+        }
         if (shouldRenderStreamToUI() && $("#t-output-content").length > 0) {
           finalizeStreamRender(partialOutput, script.name);
         }
