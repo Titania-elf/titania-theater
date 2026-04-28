@@ -12345,16 +12345,6 @@ function getActiveWorldBookNames() {
 async function getAllWorldBookNames() {
   try {
     if (Array.isArray(world_names) && world_names.length > 0) {
-      if (typeof updateWorldInfoList === "function") {
-        updateWorldInfoList().catch(() => {
-        });
-      }
-      return [...world_names];
-    }
-    if (typeof updateWorldInfoList === "function") {
-      await updateWorldInfoList();
-    }
-    if (Array.isArray(world_names) && world_names.length > 0) {
       return [...world_names];
     }
     if (Array.isArray(selected_world_info) && selected_world_info.length > 0) {
@@ -12363,9 +12353,6 @@ async function getAllWorldBookNames() {
     return [];
   } catch (e) {
     console.warn("Titania: \u83B7\u53D6\u5168\u90E8\u4E16\u754C\u4E66\u540D\u79F0\u5931\u8D25", e);
-    if (Array.isArray(world_names) && world_names.length > 0) {
-      return [...world_names];
-    }
     return [];
   }
 }
@@ -22051,18 +22038,10 @@ var init_loreExtractor = __esm({
 });
 
 // src/core/worldInfoManager.js
-import { world_info as world_info2, selected_world_info as selected_world_info2, saveWorldInfo } from "../../../world-info.js";
+import { world_info as world_info2, selected_world_info as selected_world_info2, saveWorldInfo, world_names as world_names2 } from "../../../world-info.js";
 import { eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 function getAvailableWorldBooks() {
-  try {
-    if (Array.isArray(world_info2.loreBookNames)) {
-      return world_info2.loreBookNames;
-    }
-    return selected_world_info2 || [];
-  } catch (e) {
-    TitaniaLogger.error("\u83B7\u53D6\u4E16\u754C\u4E66\u5217\u8868\u5931\u8D25", e);
-    return [];
-  }
+  return [...world_names2 || []].sort((a, b) => a.localeCompare(b));
 }
 async function getCharacterWorldBook() {
   const ctx = await getContextData();
@@ -32380,7 +32359,23 @@ ${processedPrompt}`;
       });
       diagnostics.phase = useStream ? "streaming" : "parsing_json";
       if (useStream) {
-        const streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, signal);
+        let streamGenerator;
+        try {
+          streamGenerator = await ChatCompletionService4.sendRequest(requestData, false, signal);
+        } catch (streamErr) {
+          try {
+            await ChatCompletionService4.sendRequest(requestData, true, null);
+          } catch (detailErr) {
+            if (detailErr && typeof detailErr === "object") {
+              diagnostics.raw_response_snippet = JSON.stringify(
+                detailErr.error || detailErr.message || detailErr
+              ).substring(0, 500);
+            } else if (typeof detailErr === "string") {
+              diagnostics.raw_response_snippet = detailErr.substring(0, 500);
+            }
+          }
+          throw streamErr;
+        }
         if (typeof streamGenerator === "function") {
           let chunkCount = 0;
           try {
