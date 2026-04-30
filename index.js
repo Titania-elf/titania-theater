@@ -20578,6 +20578,7 @@ function renderSchemeCategoriesList(scheme) {
   }
   const html = categories.map((cat, idx) => {
     const rules = Array.isArray(cat.rules) ? cat.rules : [];
+    const hasContent = String(cat.name || "").trim() || String(cat.bad_example || "").trim() || String(cat.good_example || "").trim() || String(cat.guidance || "").trim() || rules.length > 0;
     const kwRows = rules.length > 0 ? rules.map((r) => `
                 <div class="t-rewrite-kw-row">
                     <input class="text_pole t-rewrite-kw-anchor" type="text" value="${escapeHtml5(r.anchor || "")}" placeholder="\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
@@ -20592,26 +20593,35 @@ function renderSchemeCategoriesList(scheme) {
                 <button class="t-btn t-rewrite-kw-del" type="button" title="\u5220\u9664"><i class="fa-solid fa-xmark"></i></button>
             </div>`;
     const nameMissing = !String(cat.name || "").trim();
+    const collapsedClass = hasContent ? " collapsed" : "";
+    const emptyClass = !hasContent ? " t-rewrite-cat-empty" : "";
+    const statusLine = nameMissing ? '<span class="t-rewrite-cat-status-warn">\u672A\u547D\u540D</span>' : `<span class="t-rewrite-cat-status-ok">${rules.length} \u6761\u89C4\u5219</span>`;
     return `
-            <div class="t-rewrite-category-card" data-cat-idx="${idx}" data-cat-id="${escapeHtml5(cat.id || "")}">
-                <div class="t-rewrite-cat-head">
-                    <span class="t-rewrite-cat-num">\u5206\u7C7B #${idx + 1}</span>
-                    <input class="text_pole t-rewrite-cat-name" type="text" value="${escapeHtml5(cat.name || "")}" placeholder="\u5206\u7C7B\u540D\u79F0\uFF08\u5FC5\u586B\uFF09">
-                    ${nameMissing ? '<span class="t-rewrite-cat-name-warn">\u5206\u7C7B\u540D\u4E0D\u80FD\u4E3A\u7A7A</span>' : ""}
+            <div class="t-rewrite-category-card${emptyClass}${collapsedClass}" data-cat-idx="${idx}" data-cat-id="${escapeHtml5(cat.id || "")}">
+                <div class="t-rewrite-cat-head t-rewrite-cat-toggle">
+                    <span class="t-rewrite-cat-caret"><i class="fa-solid fa-chevron-down"></i></span>
+                    <span class="t-rewrite-cat-num">#${idx + 1}</span>
+                    <span class="t-rewrite-cat-name-display">${escapeHtml5(cat.name || "\u672A\u547D\u540D\u5206\u7C7B")}</span>
+                    <span class="t-rewrite-cat-head-status">${statusLine}</span>
                     <button class="t-btn t-rewrite-cat-del" type="button" title="\u5220\u9664\u6B64\u5206\u7C7B"><i class="fa-solid fa-trash"></i></button>
                 </div>
                 <div class="t-rewrite-cat-body">
+                    <div class="t-rewrite-cat-name-row">
+                        <label>\u5206\u7C7B\u540D\u79F0</label>
+                        <input class="text_pole t-rewrite-cat-name" type="text" value="${escapeHtml5(cat.name || "")}" placeholder="\u5FC5\u586B\uFF0C\u4E0D\u53EF\u4E0E\u540C\u65B9\u6848\u5176\u4ED6\u5206\u7C7B\u91CD\u540D">
+                        ${nameMissing ? '<span class="t-rewrite-cat-name-warn">\uFF08\u5FC5\u586B\uFF09</span>' : ""}
+                    </div>
                     <div class="t-rewrite-cat-field">
-                        <label>\u5DEE\u53E5\u793A\u4F8B\uFF08\u53CD\u9762\u6559\u6750\uFF0C\u544A\u8BC9\u6A21\u578B\u4E0D\u8981\u8FD9\u6837\u5199\uFF09</label>
+                        <label>\u5DEE\u53E5\u793A\u4F8B</label>
                         <textarea class="text_pole t-rewrite-cat-bad" rows="2" placeholder="\u8F93\u5165\u4E00\u6BB5\u4E0D\u7406\u60F3\u7684\u5199\u6CD5\u793A\u4F8B">${escapeHtml5(cat.bad_example || "")}</textarea>
                     </div>
                     <div class="t-rewrite-cat-field">
-                        <label>\u4F18\u79C0\u793A\u4F8B\uFF08\u6B63\u9762\u5199\u6CD5\uFF0C\u6A21\u578B\u4F1A\u6A21\u4EFF\u6B64\u98CE\u683C\uFF09</label>
+                        <label>\u4F18\u79C0\u793A\u4F8B</label>
                         <textarea class="text_pole t-rewrite-cat-good" rows="2" placeholder="\u8F93\u5165\u4E00\u6BB5\u4F18\u79C0\u7684\u5199\u6CD5\u793A\u4F8B">${escapeHtml5(cat.good_example || "")}</textarea>
                     </div>
                     <div class="t-rewrite-cat-field">
-                        <label>\u6539\u5199\u6307\u5BFC\uFF08\u544A\u8BC9\u6A21\u578B\u5177\u4F53\u600E\u4E48\u6539\uFF09</label>
-                        <textarea class="text_pole t-rewrite-cat-guidance" rows="2" placeholder="\u8F93\u5165\u6539\u5199\u6307\u5BFC\u8BF4\u660E">${escapeHtml5(cat.guidance || "")}</textarea>
+                        <label>\u6539\u5199\u6307\u5BFC</label>
+                        <textarea class="text_pole t-rewrite-cat-guidance" rows="2" placeholder="\u544A\u8BC9\u6A21\u578B\u5177\u4F53\u600E\u4E48\u6539">${escapeHtml5(cat.guidance || "")}</textarea>
                     </div>
                     <div class="t-rewrite-cat-field">
                         <label>\u5173\u952E\u8BCD\u89C4\u5219<span class="t-rewrite-cat-field-hint">\uFF08\u4E3B\u8BCD AND \u9644\u52A0\u8BCD\u540C\u65F6\u547D\u4E2D\u624D\u751F\u6548\uFF0C\u547D\u4E2D\u4EFB\u4E00\u884C\u5373\u5F52\u7C7B\uFF09</span></label>
@@ -20856,8 +20866,9 @@ function bindSettingsPanelEvents(connectionEditor = null) {
       $overlay.data("rewriteCustomProfiles", mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo"));
       $overlay.find("#t-rewrite-settings-profile-select").val(nextState.activeProfileId);
     }
+    saveCurrentSchemeFromDom();
     persistSettingsPanelState();
-    if (window.toastr) toastr.success("\u6587\u672C\u6539\u5199\u8BBE\u7F6E\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
+    if (window.toastr) toastr.success("\u8BBE\u7F6E\u4E0E\u65B9\u6848\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
   });
   $overlay.on("input", "#t-rewrite-settings-prompt-combined", () => {
     persistPromptStateFromSettings();
@@ -20878,11 +20889,6 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     saveExtData();
     persistPromptStateFromSettings();
     if (window.toastr) toastr.success("\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
-  });
-  $overlay.on("click", "#t-rewrite-settings-save-scheme", (e) => {
-    e.preventDefault();
-    saveCurrentSchemeFromDom();
-    if (window.toastr) toastr.success("\u6539\u5199\u65B9\u6848\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
   });
   $overlay.on("click", "#t-rewrite-scheme-new", (e) => {
     e.preventDefault();
@@ -20959,8 +20965,14 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     const categories = [...Array.isArray(scheme.categories) ? scheme.categories : [], newCat];
     renderSchemeCategoriesList({ ...scheme, categories });
   });
+  $overlay.on("click", ".t-rewrite-cat-toggle", (e) => {
+    if ($(e.target).is("input, textarea, select, button, .t-rewrite-cat-del, .t-rewrite-kw-del")) return;
+    const $card = $(e.currentTarget).closest(".t-rewrite-category-card");
+    $card.toggleClass("collapsed");
+  });
   $overlay.on("click", ".t-rewrite-cat-del", (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const scheme = getActiveSchemeFromSettings();
     if (!scheme) return;
     const catIdx = Number($(e.currentTarget).closest(".t-rewrite-category-card").attr("data-cat-idx"));
@@ -21144,22 +21156,17 @@ function openSettingsPanel() {
                     <div id="t-rewrite-page-scheme" class="t-set-page">
                         <div class="t-form-group">
                             <div class="t-rewrite-scheme-bar">
-                                <label class="t-form-label" style="margin-bottom:0;">\u5F53\u524D\u65B9\u6848</label>
-                                <div class="t-rewrite-scheme-selector">
-                                    <select id="t-rewrite-scheme-select" class="text_pole">${schemeOptions}</select>
-                                    <button id="t-rewrite-scheme-new" class="t-btn" type="button">\u65B0\u5EFA</button>
-                                    <button id="t-rewrite-scheme-rename" class="t-btn" type="button">\u91CD\u547D\u540D</button>
-                                    <button id="t-rewrite-scheme-delete" class="t-btn" type="button" title="\u5220\u9664\u65B9\u6848">\u5220\u9664</button>
-                                </div>
+                                <span class="t-rewrite-scheme-label">\u5F53\u524D\u65B9\u6848</span>
+                                <select id="t-rewrite-scheme-select" class="text_pole">${schemeOptions}</select>
+                                <button id="t-rewrite-scheme-new" class="t-btn t-rewrite-scheme-btn" type="button" title="\u65B0\u5EFA\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
+                                <button id="t-rewrite-scheme-rename" class="t-btn t-rewrite-scheme-btn" type="button" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button id="t-rewrite-scheme-delete" class="t-btn t-rewrite-scheme-btn" type="button" title="\u5220\u9664\u65B9\u6848"><i class="fa-solid fa-trash"></i></button>
                             </div>
-                            <div class="t-rewrite-rule-guide" id="t-rewrite-scheme-status">${!activeScheme ? "\u65E0\u65B9\u6848\uFF0C\u8BF7\u65B0\u5EFA\u6216\u9009\u62E9\u5DF2\u6709\u65B9\u6848" : `\u6FC0\u6D3B\u65B9\u6848\u300C${escapeHtml5(activeScheme.name)}\u300D`}</div>
+                            <div class="t-rewrite-rule-guide" id="t-rewrite-scheme-status" style="margin-top:4px;">${!activeScheme ? "\u65E0\u65B9\u6848\uFF0C\u8BF7\u65B0\u5EFA\u6216\u9009\u62E9\u5DF2\u6709\u65B9\u6848" : `\u6FC0\u6D3B\u65B9\u6848\u300C${escapeHtml5(activeScheme.name)}\u300D`}</div>
                         </div>
                         <div class="t-form-group">
-                            <div class="t-rewrite-rule-head">
-                                <label class="t-form-label" style="margin-bottom:0;">\u5206\u7C7B\u914D\u7F6E</label>
-                                <button id="t-rewrite-scheme-add-category" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u5206\u7C7B</button>
-                            </div>
-                            <div class="t-rewrite-rule-guide">\u6BCF\u4E2A\u5206\u7C7B\u5305\u542B\u793A\u4F8B\u548C\u6539\u5199\u6307\u5BFC\uFF0C\u547D\u4E2D\u53E5\u5C06\u6309\u5206\u7C7B\u6CE8\u5165 few-shot \u63D0\u793A\u8BCD\u3002</div>
+                            <button id="t-rewrite-scheme-add-category" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u5206\u7C7B</button>
+                            <div class="t-rewrite-rule-guide" style="margin: 6px 0 4px;">\u6BCF\u4E2A\u5206\u7C7B\u5305\u542B\u793A\u4F8B\u548C\u6539\u5199\u6307\u5BFC\uFF0C\u547D\u4E2D\u53E5\u5C06\u6309\u5206\u7C7B\u6CE8\u5165\u63D0\u793A\u8BCD\u3002</div>
                             <div id="t-rewrite-scheme-categories-list"></div>
                         </div>
                     </div>
@@ -21167,8 +21174,7 @@ function openSettingsPanel() {
             </div>
 
             <div class="t-rewrite-settings-footer">
-                <button id="t-rewrite-settings-save-scheme" class="t-btn" type="button" title="\u4FDD\u5B58\u5F53\u524D\u65B9\u6848"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58\u5F53\u524D\u65B9\u6848</button>
-                <button id="t-rewrite-settings-save" class="t-btn" type="button" title="\u4FDD\u5B58\u5168\u90E8\u8BBE\u7F6E"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58\u5168\u90E8</button>
+                <button id="t-rewrite-settings-save" class="t-btn" type="button" title="\u4FDD\u5B58\u5E76\u5E94\u7528"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58</button>
             </div>
         </div>
     </div>`;
@@ -21557,6 +21563,76 @@ var init_rewriteEntryButton = __esm({
 #t-rewrite-overlay .t-rewrite-raw-section { flex: 0.95; }
 #t-rewrite-overlay .t-rewrite-right > .t-rewrite-section:last-child { flex: 1.15; }
 
+    /* === \u65B9\u6848\u9009\u62E9\u5668 === */
+    #t-rewrite-settings-overlay .t-rewrite-scheme-bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    #t-rewrite-settings-overlay .t-rewrite-scheme-label { font-size: 0.85em; color: #bccdd8; font-weight: 600; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-scheme-bar select { flex: 1; min-width: 160px; }
+    #t-rewrite-settings-overlay .t-rewrite-scheme-btn { width: 30px; min-width: 30px; height: 30px; padding: 0; justify-content: center; }
+
+    /* === \u5206\u7C7B\u5361\u7247 === */
+    #t-rewrite-settings-overlay .t-rewrite-category-card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        background: rgba(22, 27, 36, 0.6);
+        margin-bottom: 8px;
+        overflow: hidden;
+        transition: border-color 0.15s;
+    }
+    #t-rewrite-settings-overlay .t-rewrite-category-card.t-rewrite-cat-empty { opacity: 0.7; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(28, 34, 44, 0.7);
+        cursor: pointer;
+        user-select: none;
+    }
+    #t-rewrite-settings-overlay .t-rewrite-cat-head:hover { background: rgba(34, 42, 54, 0.7); }
+    #t-rewrite-settings-overlay .t-rewrite-cat-caret {
+        font-size: 0.7em;
+        color: #8899aa;
+        width: 14px;
+        transition: transform 0.2s;
+    }
+    #t-rewrite-settings-overlay .t-rewrite-category-card.collapsed .t-rewrite-cat-caret { transform: rotate(-90deg); }
+    #t-rewrite-settings-overlay .t-rewrite-category-card.collapsed .t-rewrite-cat-body { display: none; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-num { font-size: 0.75em; color: #6a8090; font-weight: 700; min-width: 22px; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-display {
+        flex: 1;
+        font-size: 0.88em;
+        font-weight: 600;
+        color: #cddce8;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #t-rewrite-settings-overlay .t-rewrite-cat-head-status { font-size: 0.75em; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-status-ok { color: #6a9; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-status-warn { color: #e88; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-warn { color: #e88; font-size: 0.78em; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-body {
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-row { display: flex; align-items: center; gap: 8px; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-row label { font-size: 0.82em; color: #bccdd8; font-weight: 600; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-row input { flex: 1; font-size: 0.88em; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-field { display: flex; flex-direction: column; gap: 4px; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-field label { font-size: 0.8em; color: #99aabb; font-weight: 600; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-field textarea { resize: vertical; min-height: 38px; font-size: 0.84em; background: rgba(15, 18, 25, 0.6); }
+    #t-rewrite-settings-overlay .t-rewrite-cat-field-hint { font-size: 0.76em; color: #6a8090; font-weight: 400; }
+
+    /* === \u5173\u952E\u8BCD\u89C4\u5219 === */
+    #t-rewrite-settings-overlay .t-rewrite-cat-kw-list { display: flex; flex-direction: column; gap: 4px; }
+    #t-rewrite-settings-overlay .t-rewrite-kw-row { display: flex; gap: 4px; align-items: center; }
+    #t-rewrite-settings-overlay .t-rewrite-kw-row input { flex: 1; font-size: 0.82em; min-width: 80px; }
+    #t-rewrite-settings-overlay .t-rewrite-kw-and { font-size: 0.78em; color: #9cb2c4; font-weight: 700; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-kw-del { width: 28px; min-width: 28px; height: 28px; padding: 0; justify-content: center; }
+
 @media (max-width: 1200px) {
     #t-rewrite-overlay .t-rewrite-window { width: min(1080px, 97vw); }
     #t-rewrite-overlay .t-rewrite-body { grid-template-columns: 1fr; overflow: auto; }
@@ -21702,60 +21778,8 @@ var init_rewriteEntryButton = __esm({
         border-radius: 12px;
     }
 
-    /* \u65B9\u6848\u9009\u62E9\u5668 */
-    #t-rewrite-settings-overlay .t-rewrite-scheme-bar { display: flex; flex-direction: column; gap: 6px; }
-    #t-rewrite-settings-overlay .t-rewrite-scheme-selector { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    #t-rewrite-settings-overlay .t-rewrite-scheme-selector select { flex: 1; min-width: 140px; }
-
-    /* \u5206\u7C7B\u5361\u7247 */
-    #t-rewrite-settings-overlay .t-rewrite-category-card {
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        background: rgba(22, 27, 36, 0.7);
-        margin-bottom: 10px;
-        overflow: hidden;
-    }
-    #t-rewrite-settings-overlay .t-rewrite-cat-head {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
-        background: rgba(30, 38, 50, 0.7);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        flex-wrap: wrap;
-    }
-    #t-rewrite-settings-overlay .t-rewrite-cat-num { font-size: 0.82em; color: #8ea5b7; font-weight: 700; min-width: 48px; }
-    #t-rewrite-settings-overlay .t-rewrite-cat-name { flex: 1; min-width: 120px; font-size: 0.9em; }
-    #t-rewrite-settings-overlay .t-rewrite-cat-name-warn {
-        color: #e88;
-        font-size: 0.78em;
-        white-space: nowrap;
-    }
-    #t-rewrite-settings-overlay .t-rewrite-cat-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-    #t-rewrite-settings-overlay .t-rewrite-cat-field { display: flex; flex-direction: column; gap: 4px; }
-    #t-rewrite-settings-overlay .t-rewrite-cat-field label {
-        font-size: 0.82em;
-        color: #bccdd8;
-        font-weight: 600;
-    }
-    #t-rewrite-settings-overlay .t-rewrite-cat-field textarea {
-        resize: vertical;
-        min-height: 40px;
-        font-size: 0.84em;
-    }
-    #t-rewrite-settings-overlay .t-rewrite-cat-field-hint {
-        font-size: 0.78em;
-        color: #789;
-        font-weight: 400;
-    }
-
-    /* \u5173\u952E\u8BCD\u89C4\u5219 */
-    #t-rewrite-settings-overlay .t-rewrite-cat-kw-list { display: flex; flex-direction: column; gap: 4px; }
-    #t-rewrite-settings-overlay .t-rewrite-kw-row { display: flex; gap: 4px; align-items: center; }
-    #t-rewrite-settings-overlay .t-rewrite-kw-row input { flex: 1; font-size: 0.82em; min-width: 80px; }
-    #t-rewrite-settings-overlay .t-rewrite-kw-and { font-size: 0.78em; color: #9cb2c4; font-weight: 700; white-space: nowrap; }
-    #t-rewrite-settings-overlay .t-rewrite-kw-del {
-        width: 28px; min-width: 28px; height: 28px; padding: 0; justify-content: center;
+    @media (max-width: 600px) {
+        #t-rewrite-settings-overlay .t-rewrite-scheme-bar select { min-width: 100px; }
     }
 }
 `;
