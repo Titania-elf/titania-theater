@@ -190,11 +190,14 @@ var init_defaults = __esm({
         split_mode: "sentence",
         stream_live: true,
         auto_trigger: false,
+        selected_sentence_enabled: true,
         tag_whitelist: "",
         active_scheme_id: "",
         schemes: [],
         prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u3002\u4EC5\u6839\u636E\u8F93\u5165 targets \u5BF9\u547D\u4E2D\u7247\u6BB5\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u547D\u4E2D\u4FE1\u606F\u3002\u4FDD\u6301\u8BED\u4E49\u4E00\u81F4\u3001\u8BED\u6C14\u81EA\u7136\u3001\u8FDE\u8D2F\uFF0C\u5E76\u4E0E\u539F\u4E0A\u4E0B\u6587\u98CE\u683C\u4E00\u81F4\u3002",
         prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE\n4) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
+        selected_prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u7684\u624B\u52A8\u9009\u53E5\u6A21\u5F0F\uFF0C\u4E13\u95E8\u5C06\u53E5\u5B50\u6539\u5199\u4E3A\u767D\u63CF\u98CE\u683C\u3002\u767D\u63CF\u6838\u5FC3\u51C6\u5219\uFF1A\u7528\u5177\u4F53\u52A8\u4F5C\u3001\u7269\u8C61\u3001\u7EC6\u8282\u8BF4\u8BDD\uFF0C\u4E0D\u76F4\u8FF0\u89D2\u8272\u5185\u5FC3\u611F\u53D7\uFF1B\u514B\u5236\u5F62\u5BB9\u8BCD\u526F\u8BCD\uFF0C\u4EE5\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\uFF1B\u5220\u9664\u5FC3\u7406\u6982\u62EC\u53E5\uFF0C\u8F6C\u4E3A\u5916\u90E8\u53EF\u89C2\u5BDF\u7684\u884C\u4E3A\u6216\u73AF\u5883\u6620\u886C\uFF1B\u53E5\u5F0F\u7B80\u6D01\u786C\u6717\uFF0C\u4E0D\u865A\u9970\u4E0D\u717D\u60C5\u3002\u7528\u6237\u5DF2\u9009\u5B9A\u9700\u8981\u6539\u5199\u7684\u53E5\u5B50\uFF1B\u53EA\u5BF9\u8F93\u5165 targets \u9010\u6761\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u9009\u5185\u5BB9\u3002\u6539\u540E\u80FD\u81EA\u7136\u66FF\u6362\u56DE\u539F\u4F4D\u7F6E\u3002",
+        selected_prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_selected_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) targets \u662F\u7528\u6237\u624B\u52A8\u9009\u4E2D\u7684\u53E5\u5B50\uFF0C\u53EA\u6539\u5199\u8FD9\u4E9B\u53E5\u5B50\n2) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n3) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n4) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF0C\u4E14\u5E94\u80FD\u539F\u4F4D\u66FF\u6362\u56DE\u4E0A\u4E0B\u6587\n5) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
         prompt_json_rule: "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09"
       },
       // Embedding API 独立配置（用于向量化）
@@ -19507,11 +19510,14 @@ function ensureRewriteDataShape() {
   if (!item.split_mode || !["sentence", "paragraph"].includes(item.split_mode)) item.split_mode = "sentence";
   if (typeof item.stream_live !== "boolean") item.stream_live = true;
   if (typeof item.auto_trigger !== "boolean") item.auto_trigger = false;
+  if (typeof item.selected_sentence_enabled !== "boolean") item.selected_sentence_enabled = true;
   if (typeof item.tag_whitelist !== "string") item.tag_whitelist = "";
   if (typeof item.active_scheme_id !== "string") item.active_scheme_id = "";
   if (!Array.isArray(item.schemes)) item.schemes = [];
   if (typeof item.prompt_system !== "string") item.prompt_system = REWRITE_DEFAULT_PROMPT_SYSTEM;
   if (typeof item.prompt_user !== "string") item.prompt_user = REWRITE_DEFAULT_PROMPT_USER;
+  if (typeof item.selected_prompt_system !== "string") item.selected_prompt_system = REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM;
+  if (typeof item.selected_prompt_user !== "string") item.selected_prompt_user = REWRITE_DEFAULT_SELECTED_PROMPT_USER;
   if (typeof item.prompt_json_rule !== "string") item.prompt_json_rule = REWRITE_DEFAULT_PROMPT_JSON_RULE;
   item.schemes = item.schemes.map(normalizeScheme).filter((s) => s.name);
   return item;
@@ -19521,6 +19527,14 @@ function getRewritePromptState() {
   return {
     prompt_system: String(item.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM),
     prompt_user: String(item.prompt_user || REWRITE_DEFAULT_PROMPT_USER),
+    prompt_json_rule: String(item.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
+  };
+}
+function getSelectedRewritePromptState() {
+  const item = ensureRewriteDataShape();
+  return {
+    prompt_system: String(item.selected_prompt_system || REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM),
+    prompt_user: String(item.selected_prompt_user || REWRITE_DEFAULT_SELECTED_PROMPT_USER),
     prompt_json_rule: String(item.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
 }
@@ -19576,10 +19590,14 @@ function persistPromptStateFromSettings() {
   const prev = ensureRewriteDataShape();
   const combinedText = String($overlay.find("#t-rewrite-settings-prompt-combined").val() || "");
   const parsed = parseCombinedPromptText(combinedText, getRewritePromptState());
+  const selectedCombinedText = String($overlay.find("#t-rewrite-settings-selected-prompt-combined").val() || "");
+  const selectedParsed = parseCombinedPromptText(selectedCombinedText, getSelectedRewritePromptState());
   data.rewrite_entry = {
     ...prev,
     prompt_system: parsed.prompt_system,
     prompt_user: parsed.prompt_user,
+    selected_prompt_system: selectedParsed.prompt_system,
+    selected_prompt_user: selectedParsed.prompt_user,
     prompt_json_rule: String(prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
   saveExtData();
@@ -19640,6 +19658,166 @@ function splitBySentence(text) {
     }
   });
   return chunks;
+}
+function getSelectedSentenceIdSet() {
+  return selectedSentenceIds instanceof Set ? selectedSentenceIds : /* @__PURE__ */ new Set();
+}
+function getSelectedSentenceCount() {
+  return getSelectedSentenceIdSet().size;
+}
+function updateInlineRewriteCount() {
+  $("#chat .t-rewrite-inline-count").text(`\u5DF2\u9009 ${getSelectedSentenceCount()} \u53E5`);
+}
+function setSelectedSentenceIds(ids = []) {
+  selectedSentenceIds = new Set(Array.from(ids).map((id) => String(id || "")).filter(Boolean));
+}
+function buildSentenceUnitsFromLatest(latest) {
+  const sentences = splitBySentence(latest?.content || "");
+  return sentences.map((text, idx) => ({
+    unitIndex: idx + 1,
+    segment_id: `s_${idx + 1}`,
+    text: String(text || ""),
+    hit: false,
+    matchedCategories: []
+  }));
+}
+function buildSelectedSentencePayload(latest, selectedIds) {
+  const selected = selectedIds instanceof Set ? selectedIds : new Set(selectedIds || []);
+  const evaluated = {
+    sourceMode: "selected",
+    splitMode: "sentence",
+    unitCount: latestSentenceUnits.length,
+    hitCount: selected.size,
+    categoryCount: 0,
+    unitResults: latestSentenceUnits.map((unit) => ({
+      ...unit,
+      hit: selected.has(unit.segment_id),
+      matchedCategories: []
+    }))
+  };
+  const targets = evaluated.unitResults.filter((unit) => unit.hit).map((unit) => ({
+    segment_id: unit.segment_id,
+    original_text: unit.text,
+    category: "\u7528\u6237\u9009\u53E5",
+    guidance: "\u7528\u767D\u63CF\u624B\u6CD5\u91CD\u5199\u6B64\u53E5\uFF1A\u5220\u9664\u5FC3\u7406\u76F4\u8FF0\u548C\u62BD\u8C61\u6982\u62EC\uFF0C\u4EE5\u5177\u4F53\u52A8\u4F5C\u3001\u7269\u8C61\u548C\u5916\u90E8\u7EC6\u8282\u5448\u73B0\uFF1B\u514B\u5236\u5F62\u5BB9\u8BCD\u548C\u526F\u8BCD\uFF0C\u8BA9\u8BFB\u8005\u4ECE\u63CF\u5199\u4E2D\u81EA\u884C\u4F53\u4F1A\u3002",
+    bad_example: "",
+    good_example: "",
+    matched_keywords: []
+  }));
+  return {
+    evaluated,
+    request: {
+      task_id: `rewrite_selected_${Date.now()}`,
+      targets
+    },
+    hitCategoryCount: 0
+  };
+}
+function clearInlineSentenceSelection() {
+  $("#chat .t-rewrite-inline-toolbar").remove();
+  $("#chat .t-rewrite-select-sentence").each((_, el) => {
+    const text = document.createTextNode(el.textContent || "");
+    el.replaceWith(text);
+  });
+  const containers = document.querySelectorAll("#chat .mes_text, #chat .message_text");
+  containers.forEach((el) => el.normalize());
+  inlineSelectionMessageIndex = null;
+  setSelectedSentenceIds([]);
+}
+function wrapFirstSentenceSelectionOccurrence(containerEl, unit) {
+  const needle = String(unit?.text || "");
+  const segmentId = String(unit?.segment_id || "");
+  if (!containerEl || !needle || !segmentId) return false;
+  const walker = document.createTreeWalker(containerEl, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node || !node.nodeValue || !node.nodeValue.includes(needle)) return NodeFilter.FILTER_REJECT;
+      const parent = node.parentElement;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+      if (parent.closest(".t-rewrite-mark, .t-rewrite-select-sentence")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const candidateNodes = [];
+  let current = walker.nextNode();
+  while (current) {
+    candidateNodes.push(current);
+    current = walker.nextNode();
+  }
+  for (const textNode of candidateNodes) {
+    const content = textNode.nodeValue || "";
+    const idx = content.indexOf(needle);
+    if (idx < 0) continue;
+    const right = textNode.splitText(idx);
+    const tail = right.splitText(needle.length);
+    const mark = document.createElement("span");
+    mark.className = "t-rewrite-select-sentence";
+    mark.dataset.segmentId = segmentId;
+    mark.title = "\u70B9\u51FB\u9009\u62E9/\u53D6\u6D88\u9009\u62E9\u6B64\u53E5";
+    mark.textContent = needle;
+    right.replaceWith(mark);
+    if (tail && tail.parentNode) tail.parentNode.normalize();
+    else if (mark.parentNode) mark.parentNode.normalize();
+    return true;
+  }
+  return false;
+}
+function ensureInlineRewriteToolbar(latest) {
+  if (!latest) return;
+  const $message = getChatMessageElementByIndex(latest.index);
+  if (!$message.length) return;
+  let $toolbar = $message.find(".t-rewrite-inline-toolbar").first();
+  if ($toolbar.length === 0) {
+    $toolbar = $(`
+            <div class="t-rewrite-inline-toolbar" data-message-index="${latest.index}">
+                <button class="t-rewrite-inline-start" type="button">\u9009\u53E5\u6539\u5199</button>
+                <button class="t-rewrite-inline-confirm" type="button" style="display:none;">\u786E\u8BA4\u6539\u5199</button>
+                <button class="t-rewrite-inline-cancel" type="button" style="display:none;">\u53D6\u6D88</button>
+                <span class="t-rewrite-inline-count" style="display:none;">\u5DF2\u9009 0 \u53E5</span>
+            </div>
+        `);
+    const containerEl = getMessageRenderContainer($message);
+    if (containerEl) $(containerEl).before($toolbar);
+    else $message.prepend($toolbar);
+  }
+}
+function refreshInlineRewriteEntry() {
+  const data = ensureRewriteDataShape();
+  if (!isEnabled() || data.selected_sentence_enabled === false) {
+    clearInlineSentenceSelection();
+    return;
+  }
+  $("#chat .t-rewrite-inline-toolbar").each((_, el) => {
+    const messageIndex = Number($(el).attr("data-message-index"));
+    if (inlineSelectionMessageIndex !== messageIndex) $(el).remove();
+  });
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) return;
+  ensureInlineRewriteToolbar(latest);
+}
+function enterInlineSentenceSelection() {
+  clearInlineSentenceSelection();
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    if (window.toastr) toastr.warning("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "\u6587\u672C\u6539\u5199");
+    return;
+  }
+  latestSentenceUnits = buildSentenceUnitsFromLatest(latest);
+  if (latestSentenceUnits.length === 0) {
+    if (window.toastr) toastr.warning("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u9009\u53E5", "\u6587\u672C\u6539\u5199");
+    return;
+  }
+  inlineSelectionMessageIndex = latest.index;
+  const $message = getChatMessageElementByIndex(latest.index);
+  const containerEl = getMessageRenderContainer($message);
+  if (!containerEl) return;
+  unwrapRenderedRewriteMarks(containerEl);
+  latestSentenceUnits.forEach((unit) => wrapFirstSentenceSelectionOccurrence(containerEl, unit));
+  ensureInlineRewriteToolbar(latest);
+  const $toolbar = $message.find(".t-rewrite-inline-toolbar").first();
+  $toolbar.find(".t-rewrite-inline-start").hide();
+  $toolbar.find(".t-rewrite-inline-confirm, .t-rewrite-inline-cancel, .t-rewrite-inline-count").show();
+  updateInlineRewriteCount();
 }
 function splitByParagraph(text) {
   return String(text || "").split(/\r?\n\s*\r?\n+/).map((s) => s.trim()).filter(Boolean);
@@ -20086,6 +20264,7 @@ function applyAllRewriteMarksFromChat() {
     const marks = normalizeRewriteMarks(msg?.extra?.titania_rewrite_marks);
     applyRewriteMarksToMessage(index, marks);
   });
+  refreshInlineRewriteEntry();
 }
 function scheduleApplyAllRewriteMarks(delay = 80) {
   if (rewriteDecorTimer) clearTimeout(rewriteDecorTimer);
@@ -20096,8 +20275,14 @@ function scheduleApplyAllRewriteMarks(delay = 80) {
 function bindRewriteDecorationEvents() {
   if (rewriteDecorBound) return;
   rewriteDecorBound = true;
-  eventSource.on(event_types.MESSAGE_RECEIVED, () => scheduleApplyAllRewriteMarks(120));
-  eventSource.on(event_types.GENERATION_ENDED, () => scheduleApplyAllRewriteMarks(120));
+  eventSource.on(event_types.MESSAGE_RECEIVED, () => {
+    scheduleApplyAllRewriteMarks(120);
+    setTimeout(refreshInlineRewriteEntry, 160);
+  });
+  eventSource.on(event_types.GENERATION_ENDED, () => {
+    scheduleApplyAllRewriteMarks(120);
+    setTimeout(refreshInlineRewriteEntry, 160);
+  });
 }
 function applyRewriteToFullText(sourceText, evaluated, parsed, request = null) {
   const map = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
@@ -20373,50 +20558,21 @@ function buildDiffRowsFromResults(evaluated, payload, parsed) {
     };
   });
 }
-async function runRewrite(options = {}) {
-  persistPanelState();
-  const data = ensureRewriteDataShape();
-  const scheme = getActiveScheme();
-  if (!scheme) {
-    setStatus("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "warn");
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "Titania \u6539\u5199");
-    return;
-  }
+async function executeRewriteRequest({ data, latest, evaluated, request, rewriteCount, hitCategoryCount = 0, source = "manual", buttonSelector = "#t-rewrite-trigger", promptState = null }) {
   const apiUrl = String(data.api_url || "").trim();
   const apiKey = String(data.api_key || "").trim();
   const model = String(data.model || "").trim();
-  const latest = getLatestAssistantMessageFromChat();
-  if (!latest) {
-    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
-    return;
+  if (!apiUrl) {
+    setStatus("\u8BF7\u5148\u586B\u5199 API \u5730\u5740", "warn");
+    return false;
   }
-  const { evaluated, request, hitCategoryCount } = buildRewritePayload(data, latest.content);
-  renderMatchResult(evaluated, latest.content);
-  if (!String(latest.content || "").trim()) {
-    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
-    return;
-  }
-  const rewriteTargets = Array.isArray(request.targets) ? request.targets : [];
-  const rewriteCount = rewriteTargets.length;
-  if (rewriteCount > 0) {
-    if (!apiUrl) {
-      setStatus("\u8BF7\u5148\u586B\u5199 API \u5730\u5740", "warn");
-      return;
-    }
-    if (!model) {
-      setStatus("\u8BF7\u5148\u9009\u62E9\u6A21\u578B", "warn");
-      return;
-    }
-  }
-  if (rewriteCount === 0) {
-    setStatus("\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u5206\u7C7B\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF0C\u672A\u6267\u884C\u6539\u5199", "warn");
-    renderDiffRows([]);
-    return;
+  if (!model) {
+    setStatus("\u8BF7\u5148\u9009\u62E9\u6A21\u578B", "warn");
+    return false;
   }
   const maxTokens = estimateMaxTokens(request);
-  const $btn = $("#t-rewrite-trigger");
+  const $btn = $(buttonSelector);
   const streamLive = data.stream_live === true;
-  const source = options.source || "manual";
   let success = false;
   $btn.prop("disabled", true);
   updateAbortBtnState(true);
@@ -20426,44 +20582,42 @@ async function runRewrite(options = {}) {
   setRawMeta(streamLive ? `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u6D41\u5F0F\u5F00\u542F\uFF08${source}\uFF09` : `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u975E\u6D41\u5F0F\uFF08${source}\uFF09`);
   try {
     let parsed = { task_id: request.task_id, results: [] };
-    if (rewriteCount > 0) {
-      setStatus(`\u6B63\u5728\u8BF7\u6C42\u6539\u5199\uFF08\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u547D\u4E2D ${hitCategoryCount} \u4E2A\u5206\u7C7B\uFF09...`, "muted");
-      const messages = buildRewriteMessages(request, getRewritePromptState());
-      let raw = await requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, {
-        temperature: REWRITE_TEMPERATURE,
-        stream: streamLive,
-        signal: abortController.signal,
-        onProgress: (_chunk, all) => {
-          if (streamLive) {
-            setRawResponse(all);
-          }
+    setStatus(`\u6B63\u5728\u8BF7\u6C42\u6539\u5199\uFF08\u6539\u5199 ${rewriteCount} \u6761${hitCategoryCount ? `\uFF0C\u547D\u4E2D ${hitCategoryCount} \u4E2A\u5206\u7C7B` : ""}\uFF09...`, "muted");
+    const messages = buildRewriteMessages(request, promptState || getRewritePromptState());
+    let raw = await requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, {
+      temperature: REWRITE_TEMPERATURE,
+      stream: streamLive,
+      signal: abortController.signal,
+      onProgress: (_chunk, all) => {
+        if (streamLive) {
+          setRawResponse(all);
         }
+      }
+    });
+    pushLiveResponseHistory({ source, phase: "\u4E3B\u8BF7\u6C42", model, stream: streamLive, text: raw });
+    if (!streamLive) setRawResponse(raw);
+    try {
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+    } catch (e) {
+      const fixMessages = buildFixJsonMessages(raw, request);
+      raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+        temperature: REWRITE_FIX_TEMPERATURE
       });
-      pushLiveResponseHistory({ source, phase: "\u4E3B\u8BF7\u6C42", model, stream: streamLive, text: raw });
-      if (!streamLive) setRawResponse(raw);
-      try {
-        parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
-      } catch (e) {
-        const fixMessages = buildFixJsonMessages(raw, request);
-        raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
-          temperature: REWRITE_FIX_TEMPERATURE
-        });
-        pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: raw });
-        parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
-      }
-      let valid = validateRewriteResponse(parsed, request);
-      if (!valid.ok) {
-        const fixMessages = buildFixJsonMessages(raw, request);
-        setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
-        const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
-          temperature: REWRITE_FIX_TEMPERATURE
-        });
-        pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: fixedRaw });
-        setRawResponse(fixedRaw);
-        parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
-        valid = validateRewriteResponse(parsed, request);
-        if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
-      }
+      pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: raw });
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+    }
+    let valid = validateRewriteResponse(parsed, request);
+    if (!valid.ok) {
+      const fixMessages = buildFixJsonMessages(raw, request);
+      setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
+      const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+        temperature: REWRITE_FIX_TEMPERATURE
+      });
+      pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: fixedRaw });
+      setRawResponse(fixedRaw);
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
+      valid = validateRewriteResponse(parsed, request);
+      if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
     }
     const rows = buildDiffRowsFromResults(evaluated, request, parsed);
     renderDiffRows(rows);
@@ -20476,7 +20630,7 @@ async function runRewrite(options = {}) {
     await saveChatConditional();
     await reloadCurrentChat();
     scheduleApplyAllRewriteMarks(180);
-    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u547D\u4E2D ${hitCategoryCount} \u4E2A\u5206\u7C7B\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
     success = true;
   } catch (e) {
     renderDiffRows([]);
@@ -20490,6 +20644,89 @@ async function runRewrite(options = {}) {
     activeRewriteAbortController = null;
     $btn.prop("disabled", false);
     updateAbortBtnState(false);
+  }
+  return success;
+}
+async function runRewrite(options = {}) {
+  persistPanelState();
+  const data = ensureRewriteDataShape();
+  const scheme = getActiveScheme();
+  if (!scheme) {
+    setStatus("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "warn");
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "Titania \u6539\u5199");
+    return;
+  }
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    return;
+  }
+  const { evaluated, request, hitCategoryCount } = buildRewritePayload(data, latest.content);
+  renderMatchResult(evaluated, latest.content);
+  if (!String(latest.content || "").trim()) {
+    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
+    return;
+  }
+  const rewriteTargets = Array.isArray(request.targets) ? request.targets : [];
+  const rewriteCount = rewriteTargets.length;
+  if (rewriteCount === 0) {
+    setStatus("\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u5206\u7C7B\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF0C\u672A\u6267\u884C\u6539\u5199", "warn");
+    renderDiffRows([]);
+    return;
+  }
+  return executeRewriteRequest({
+    data,
+    latest,
+    evaluated,
+    request,
+    rewriteCount,
+    hitCategoryCount,
+    source: options.source || "manual",
+    buttonSelector: "#t-rewrite-trigger"
+  });
+}
+async function runSelectedSentenceRewrite() {
+  persistPanelState();
+  const data = ensureRewriteDataShape();
+  const latest = getLatestAssistantMessageFromChat();
+  if (latest) {
+    latestSentenceUnits = buildSentenceUnitsFromLatest(latest);
+  }
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    return;
+  }
+  if (!String(latest.content || "").trim()) {
+    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
+    return;
+  }
+  const selected = getSelectedSentenceIdSet();
+  if (selected.size === 0) {
+    setStatus("\u8BF7\u5148\u9009\u62E9\u8981\u6539\u5199\u7684\u53E5\u5B50", "warn");
+    return;
+  }
+  const { evaluated, request, hitCategoryCount } = buildSelectedSentencePayload(latest, selected);
+  const rewriteCount = request.targets.length;
+  renderMatchResult(evaluated, latest.content);
+  if (rewriteCount === 0) {
+    setStatus("\u9009\u62E9\u7684\u53E5\u5B50\u5DF2\u4E0D\u5728\u6700\u65B0\u697C\u5C42\u4E2D\uFF0C\u8BF7\u5237\u65B0\u540E\u91CD\u9009", "warn");
+    renderDiffRows([]);
+    return;
+  }
+  const success = await executeRewriteRequest({
+    data,
+    latest,
+    evaluated,
+    request,
+    rewriteCount,
+    hitCategoryCount,
+    source: "selected",
+    buttonSelector: ".t-rewrite-inline-confirm",
+    promptState: getSelectedRewritePromptState()
+  });
+  if (success) {
+    clearInlineSentenceSelection();
+    refreshInlineRewriteEntry();
   }
   return success;
 }
@@ -20660,9 +20897,12 @@ function persistPanelState() {
     schemes: prev.schemes || [],
     stream_live: readChecked("#t-rewrite-stream-live", prev.stream_live === true),
     auto_trigger: prev.auto_trigger === true,
+    selected_sentence_enabled: prev.selected_sentence_enabled !== false,
     tag_whitelist: prev.tag_whitelist || "",
     prompt_system: prev.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM,
     prompt_user: prev.prompt_user || REWRITE_DEFAULT_PROMPT_USER,
+    selected_prompt_system: prev.selected_prompt_system || REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM,
+    selected_prompt_user: prev.selected_prompt_user || REWRITE_DEFAULT_SELECTED_PROMPT_USER,
     prompt_json_rule: prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE
   };
   saveExtData();
@@ -20686,6 +20926,14 @@ function persistSettingsPanelState() {
     profileId = current.id;
   }
   const activeSchemeId = String($overlay.find("#t-rewrite-scheme-select").val() || prev.active_scheme_id || "").trim();
+  const rulePromptParsed = parseCombinedPromptText(
+    String($overlay.find("#t-rewrite-settings-prompt-combined").val() || ""),
+    getRewritePromptState()
+  );
+  const selectedPromptParsed = parseCombinedPromptText(
+    String($overlay.find("#t-rewrite-settings-selected-prompt-combined").val() || ""),
+    getSelectedRewritePromptState()
+  );
   data.rewrite_entry = {
     enabled: prev.enabled === true,
     profile_mode: "custom",
@@ -20699,18 +20947,13 @@ function persistSettingsPanelState() {
     schemes: prev.schemes || [],
     stream_live: $overlay.find("#t-rewrite-settings-stream-live").prop("checked") === true,
     auto_trigger: $overlay.find("#t-rewrite-settings-auto-trigger").prop("checked") === true,
+    selected_sentence_enabled: $overlay.find("#t-rewrite-settings-selected-sentence-enabled").prop("checked") === true,
     tag_whitelist: String($overlay.find("#t-rewrite-settings-tag-whitelist").val() || "").trim(),
-    ...(() => {
-      const parsed = parseCombinedPromptText(
-        String($overlay.find("#t-rewrite-settings-prompt-combined").val() || ""),
-        getRewritePromptState()
-      );
-      return {
-        prompt_system: parsed.prompt_system,
-        prompt_user: parsed.prompt_user,
-        prompt_json_rule: String(prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
-      };
-    })()
+    prompt_system: rulePromptParsed.prompt_system,
+    prompt_user: rulePromptParsed.prompt_user,
+    selected_prompt_system: selectedPromptParsed.prompt_system,
+    selected_prompt_user: selectedPromptParsed.prompt_user,
+    prompt_json_rule: String(prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
   saveExtData();
   refreshRuntimeStateView();
@@ -20743,10 +20986,10 @@ function renderMatchResult(result, sourceText = "") {
   const html = lastMatchResult.unitResults.map((item) => {
     const cls = item.hit ? "hit" : "miss";
     const tag = lastMatchResult.splitMode === "paragraph" ? "\u6BB5" : "\u53E5";
-    const tags = item.hit ? item.matchedCategories.map((c) => {
+    const tags = item.hit ? Array.isArray(item.matchedCategories) && item.matchedCategories.length > 0 ? item.matchedCategories.map((c) => {
       const keywords = c.matchedRules.map((r) => `${r.anchor} + ${r.extras}`).join(" | ");
       return `<span class="t-rewrite-hit-tag">\u3010${escapeHtml5(c.categoryName)}\u3011${escapeHtml5(keywords)}</span>`;
-    }).join("") : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
+    }).join("") : '<span class="t-rewrite-hit-tag">\u7528\u6237\u9009\u4E2D</span>' : lastMatchResult.sourceMode === "selected" ? '<span class="t-rewrite-hit-tag miss">\u672A\u9009\u4E2D</span>' : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
     return `
             <div class="t-rewrite-match-row ${cls}">
                 <div class="t-rewrite-match-head">
@@ -20870,7 +21113,7 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     persistSettingsPanelState();
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u4E0E\u65B9\u6848\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
   });
-  $overlay.on("input", "#t-rewrite-settings-prompt-combined", () => {
+  $overlay.on("input", "#t-rewrite-settings-prompt-combined, #t-rewrite-settings-selected-prompt-combined", () => {
     persistPromptStateFromSettings();
   });
   $overlay.on("click", "#t-rewrite-settings-prompt-reset", (e) => {
@@ -20888,7 +21131,24 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     };
     saveExtData();
     persistPromptStateFromSettings();
-    if (window.toastr) toastr.success("\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
+    if (window.toastr) toastr.success("\u89C4\u5219\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
+  });
+  $overlay.on("click", "#t-rewrite-settings-selected-prompt-reset", (e) => {
+    e.preventDefault();
+    $overlay.find("#t-rewrite-settings-selected-prompt-combined").val(
+      buildCombinedPromptText(REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER)
+    );
+    const data = getExtData();
+    const prev = ensureRewriteDataShape();
+    data.rewrite_entry = {
+      ...prev,
+      selected_prompt_system: REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM,
+      selected_prompt_user: REWRITE_DEFAULT_SELECTED_PROMPT_USER,
+      prompt_json_rule: REWRITE_DEFAULT_PROMPT_JSON_RULE
+    };
+    saveExtData();
+    persistPromptStateFromSettings();
+    if (window.toastr) toastr.success("\u9009\u53E5\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
   });
   $overlay.on("click", "#t-rewrite-scheme-new", (e) => {
     e.preventDefault();
@@ -21046,6 +21306,7 @@ function openSettingsPanel() {
   const initProfile = customProfiles.find((p) => p.id === activeProfileId) || customProfiles[0];
   const initApiUrl = String(initProfile?.api_url || rewriteData.api_url || "");
   const promptState = getRewritePromptState();
+  const selectedPromptState = getSelectedRewritePromptState();
   const schemes = Array.isArray(rewriteData.schemes) ? rewriteData.schemes : [];
   const activeScheme = schemes.find((s) => s.id === rewriteData.active_scheme_id) || null;
   const schemeOptions = schemes.map((s) => `<option value="${escapeHtml5(s.id)}" ${s.id === (activeScheme?.id || "") ? "selected" : ""}>${escapeHtml5(s.name)}</option>`).join("");
@@ -21127,6 +21388,10 @@ function openSettingsPanel() {
                             <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
                                 <label><input id="t-rewrite-settings-auto-trigger" type="checkbox" ${rewriteData.auto_trigger ? "checked" : ""}> \u81EA\u52A8\u89E6\u53D1\u6539\u5199\uFF08\u65B0\u56DE\u590D\u751F\u6210\u540E\uFF09</label>
                             </div>
+                            <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
+                                <label><input id="t-rewrite-settings-selected-sentence-enabled" type="checkbox" ${rewriteData.selected_sentence_enabled === false ? "" : "checked"}> \u542F\u7528\u697C\u5C42\u5185\u9009\u53E5\u6539\u5199</label>
+                            </div>
+                            <div class="t-rewrite-rule-guide">\u5173\u95ED\u540E\u4EC5\u9690\u85CF\u6700\u65B0\u697C\u5C42\u5185\u7684\u201C\u9009\u53E5\u6539\u5199\u201D\u5165\u53E3\uFF0C\u4E0D\u5F71\u54CD\u6309\u89C4\u5219\u6539\u5199\u3002</div>
                         </div>
 
                         <div class="t-form-group">
@@ -21139,17 +21404,32 @@ function openSettingsPanel() {
                     <div id="t-rewrite-page-prompt" class="t-set-page">
                         <div class="t-form-group">
                             <div class="t-rewrite-rule-head">
-                                <label class="t-form-label" style="margin-bottom:0;">\u63D0\u793A\u8BCD\u7BA1\u7406</label>
+                                <label class="t-form-label" style="margin-bottom:0;">\u89C4\u5219\u547D\u4E2D\u63D0\u793A\u8BCD</label>
                                 <button id="t-rewrite-settings-prompt-reset" class="t-btn" type="button">\u6062\u590D\u9ED8\u8BA4</button>
                             </div>
 
-                            <label class="t-form-label" for="t-rewrite-settings-prompt-combined">\u7EDF\u4E00\u63D0\u793A\u8BCD\u6587\u672C\u6846\uFF08\u8BF7\u4FDD\u7559 [SYS] \u548C [USER] \u6807\u8BB0\uFF09</label>
-                            <div class="t-rewrite-rule-guide">[SYS] \u6BB5\u4E3A system \u63D0\u793A\u8BCD\uFF1B[USER] \u6BB5\u4E3A user \u6A21\u677F\uFF08\u652F\u6301 {{schema}} / {{payload}}\uFF09\u3002</div>
+                            <label class="t-form-label" for="t-rewrite-settings-prompt-combined">\u89C4\u5219\u6539\u5199\u63D0\u793A\u8BCD\uFF08\u8BF7\u4FDD\u7559 [SYS] \u548C [USER] \u6807\u8BB0\uFF09</label>
+                            <div class="t-rewrite-rule-guide">\u5F71\u54CD\u201C\u6309\u89C4\u5219\u6539\u5199\u201D\u548C\u81EA\u52A8\u6539\u5199\uFF1B[USER] \u6BB5\u652F\u6301 {{schema}} / {{payload}}\u3002</div>
                             <textarea id="t-rewrite-settings-prompt-combined" class="text_pole t-rewrite-settings-textarea" placeholder="[SYS]
 ...
 
 [USER]
 ...">${escapeHtml5(buildCombinedPromptText(promptState.prompt_system, promptState.prompt_user))}</textarea>
+                        </div>
+
+                        <div class="t-form-group">
+                            <div class="t-rewrite-rule-head">
+                                <label class="t-form-label" style="margin-bottom:0;">\u9009\u53E5\u6539\u5199\u63D0\u793A\u8BCD</label>
+                                <button id="t-rewrite-settings-selected-prompt-reset" class="t-btn" type="button">\u6062\u590D\u9ED8\u8BA4</button>
+                            </div>
+
+                            <label class="t-form-label" for="t-rewrite-settings-selected-prompt-combined">\u697C\u5C42\u5185\u624B\u52A8\u9009\u53E5\u63D0\u793A\u8BCD\uFF08\u8BF7\u4FDD\u7559 [SYS] \u548C [USER] \u6807\u8BB0\uFF09</label>
+                            <div class="t-rewrite-rule-guide">\u8FD9\u91CC\u53EA\u5F71\u54CD\u6700\u65B0\u697C\u5C42\u5185\u201C\u9009\u53E5\u6539\u5199\u201D\uFF0C\u4E0D\u5F71\u54CD\u89C4\u5219\u547D\u4E2D\u6539\u5199\uFF1B[USER] \u6BB5\u652F\u6301 {{schema}} / {{payload}}\u3002</div>
+                            <textarea id="t-rewrite-settings-selected-prompt-combined" class="text_pole t-rewrite-settings-textarea" placeholder="[SYS]
+...
+
+[USER]
+...">${escapeHtml5(buildCombinedPromptText(selectedPromptState.prompt_system, selectedPromptState.prompt_user))}</textarea>
                         </div>
                     </div>
 
@@ -21270,9 +21550,9 @@ function openPanel() {
             <div class="t-rewrite-footer-actions">
                 <div class="t-rewrite-actions">
                     <button id="t-rewrite-trigger" class="t-btn" type="button">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> \u624B\u52A8\u89E6\u53D1\u6539\u5199
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> \u6309\u89C4\u5219\u6539\u5199
                     </button>
-                    <span class="t-rewrite-action-hint">\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u6539\u5199\u540E\u56DE\u5199\u5230\u539F\u6D88\u606F</span>
+                    <span class="t-rewrite-action-hint">\u9009\u53E5\u6539\u5199\u5165\u53E3\u4F1A\u663E\u793A\u5728\u6700\u65B0\u56DE\u590D\u697C\u5C42\u5185</span>
                 </div>
             </div>
         </div>
@@ -21281,6 +21561,7 @@ function openPanel() {
   bindPanelEvents();
   syncRuntimeCollapseUi();
   renderPersistedRewriteViews();
+  refreshInlineRewriteEntry();
   setRawResponse("");
   setRawMeta("\u7B49\u5F85\u8BF7\u6C42");
   updateAbortBtnState(false);
@@ -21291,9 +21572,35 @@ function bindGlobalEvents() {
   $(document).on("keydown.titaniaRewritePanel", (evt) => {
     if (evt.key === "Escape") closePanel();
   });
+  $(document).on("click.titaniaRewriteInline", ".t-rewrite-inline-start", (e) => {
+    e.preventDefault();
+    enterInlineSentenceSelection();
+  });
+  $(document).on("click.titaniaRewriteInline", ".t-rewrite-inline-cancel", (e) => {
+    e.preventDefault();
+    clearInlineSentenceSelection();
+    refreshInlineRewriteEntry();
+  });
+  $(document).on("click.titaniaRewriteInline", ".t-rewrite-inline-confirm", (e) => {
+    e.preventDefault();
+    runSelectedSentenceRewrite();
+  });
+  $(document).on("click.titaniaRewriteInline", ".t-rewrite-select-sentence", (e) => {
+    e.preventDefault();
+    const $target = $(e.currentTarget);
+    const id = String($target.attr("data-segment-id") || "").trim();
+    if (!id) return;
+    const selected = getSelectedSentenceIdSet();
+    if (selected.has(id)) selected.delete(id);
+    else selected.add(id);
+    setSelectedSentenceIds(selected);
+    $target.toggleClass("selected", selected.has(id));
+    updateInlineRewriteCount();
+  });
 }
 function syncEntryButton() {
   if (!isEnabled()) {
+    clearInlineSentenceSelection();
     removeButton(true);
     return;
   }
@@ -21315,15 +21622,17 @@ function initRewriteEntryButton() {
   bindRewriteDecorationEvents();
   scheduleApplyAllRewriteMarks(220);
   syncEntryButton();
+  refreshInlineRewriteEntry();
 }
 function refreshRewriteEntryButton() {
   syncEntryButton();
+  refreshInlineRewriteEntry();
 }
 function openRewritePanelFromMenu() {
   if (!isEnabled()) return;
   openPanel();
 }
-var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
+var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, latestSentenceUnits, selectedSentenceIds, inlineSelectionMessageIndex, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
 var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
@@ -21350,6 +21659,9 @@ var init_rewriteEntryButton = __esm({
     lastMatchResult = null;
     lastMatchSourceText = "";
     lastDiffRows = [];
+    latestSentenceUnits = [];
+    selectedSentenceIds = /* @__PURE__ */ new Set();
+    inlineSelectionMessageIndex = null;
     LIVE_RESPONSE_HISTORY_MAX = 20;
     AUTO_REWRITE_DELAY_MS = 3e3;
     REWRITE_TEMPERATURE = 0.8;
@@ -21380,6 +21692,26 @@ var init_rewriteEntryButton = __esm({
 
 \u5982\u679C\u67D0\u53E5\u5728\u4E25\u683C\u7981\u8BCD\u4E0B\u96BE\u4EE5\u6539\u5199\uFF0C\u4E5F\u5FC5\u987B\u7ED9\u51FA\u8BED\u4E49\u7B49\u4EF7\u7684\u91CD\u6784\u53E5\uFF0C\u4E0D\u53EF\u8FD4\u56DE\u539F\u53E5\u3002`;
     REWRITE_DEFAULT_PROMPT_USER = '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\n\u8F93\u5165 payload\uFF1A\n{{payload}}\n\n\u6267\u884C\u89C4\u5219\uFF08\u9010\u6761\uFF09\uFF1A\n1) \u5BF9\u6BCF\u4E2A target \u7684 original_text \u8FDB\u884C\u6574\u53E5\u91CD\u5199\u3002\n2) rewritten_text \u5FC5\u987B\u4E0E original_text \u8BED\u4E49\u7B49\u4EF7\uFF0C\u4F46\u8868\u8FBE\u7ED3\u6784\u660E\u663E\u4E0D\u540C\u3002\n3) \u53C2\u8003 target \u4E2D\u7684 guidance\u3001bad_example\u3001good_example \u8FDB\u884C\u6539\u5199\u3002\n4) results \u6570\u91CF\u5FC5\u987B\u4E0E targets \u4E00\u81F4\uFF0Csegment_id \u4E00\u4E00\u5BF9\u5E94\u4E14\u4E0D\u91CD\u590D\u3002\n5) \u82E5 rewritten_text \u4E0E original_text \u4EC5\u8BCD\u6C47\u66FF\u6362\u3001\u53E5\u6CD5\u57FA\u672C\u4E00\u81F4\uFF0C\u89C6\u4E3A\u4E0D\u5408\u683C\uFF0C\u5FC5\u987B\u91CD\u5199\u540E\u518D\u8F93\u51FA\u3002\n6) \u53EA\u8F93\u51FA JSON\u3002';
+    REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM = `\u4F60\u662F\u300C\u56DE\u58F0\u6587\u5B66\u7F16\u8F91\u300D\u7684\u624B\u52A8\u9009\u53E5\u6539\u5199\u6A21\u5F0F\uFF0C\u4E13\u95E8\u5C06\u53E5\u5B50\u6539\u5199\u4E3A\u767D\u63CF\u98CE\u683C\u3002
+
+\u767D\u63CF\u624B\u6CD5\u6838\u5FC3\u51C6\u5219\uFF1A
+- \u7528\u5177\u4F53\u52A8\u4F5C\u3001\u7269\u8C61\u3001\u7EC6\u8282\u8BF4\u8BDD\uFF0C\u4E0D\u76F4\u8FF0\u89D2\u8272\u7684\u5185\u5FC3\u611F\u53D7\u3002
+- \u514B\u5236\u5F62\u5BB9\u8BCD\u548C\u526F\u8BCD\uFF0C\u907F\u514D\u4FEE\u9970\u6CDB\u6EE5\uFF1B\u7528\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\u3002
+- \u5220\u9664\u300C\u4ED6\u611F\u5230\u5F88\u6124\u6012\u300D\u300C\u5979\u5185\u5FC3\u5145\u6EE1\u4E86\u60B2\u4F24\u300D\u8FD9\u7C7B\u5FC3\u7406\u6982\u62EC\u53E5\uFF0C\u6539\u4E3A\u5916\u90E8\u53EF\u89C2\u5BDF\u7684\u884C\u4E3A\u6216\u73AF\u5883\u6620\u886C\u3002
+- \u53E5\u5F0F\u7B80\u6D01\u3001\u786C\u6717\uFF0C\u4E0D\u865A\u9970\uFF0C\u4E0D\u717D\u60C5\u3002
+- \u8BFB\u8005\u5E94\u80FD\u4ECE\u63CF\u5199\u4E2D\u81EA\u884C\u4F53\u4F1A\u60C5\u7EEA\uFF0C\u800C\u975E\u88AB\u544A\u77E5\u3002
+
+\u6539\u5199\u64CD\u4F5C\uFF1A
+- \u5FE0\u5B9E\u539F\u610F\uFF1A\u4E0D\u6539\u53D8\u4E8B\u5B9E\u3001\u4EBA\u7269\u5173\u7CFB\u3001\u4E8B\u4EF6\u987A\u5E8F\u548C\u60C5\u7EEA\u5F3A\u5EA6\u3002
+- \u767D\u63CF\u8F6C\u5316\uFF1A\u5C06\u5FC3\u7406\u76F4\u8FF0\u3001\u62BD\u8C61\u6982\u62EC\u3001\u534E\u4E3D\u4FEE\u8F9E\u6539\u5199\u4E3A\u514B\u5236\u3001\u5177\u8C61\u3001\u53EF\u89C2\u5BDF\u7684\u8868\u8FF0\u3002
+- \u8D34\u5408\u4E0A\u4E0B\u6587\uFF1A\u6539\u5199\u540E\u7684\u53E5\u5B50\u80FD\u539F\u4F4D\u653E\u56DE\u539F\u697C\u5C42\uFF0C\u4E0D\u663E\u62FC\u63A5\u75D5\u8FF9\u3002
+- \u4FDD\u7559\u53D9\u4E8B\u89C6\u89D2\u548C\u4EBA\u79F0\u3002
+
+\u786C\u7EA6\u675F\uFF1A
+1) \u53EA\u5904\u7406 targets \u4E2D\u51FA\u73B0\u7684\u53E5\u5B50\uFF0C\u4E0D\u65B0\u589E target\u3002
+2) rewritten_text \u4E0D\u5F97\u4E3A\u7A7A\uFF1B\u5373\u4F7F\u539F\u53E5\u5DF2\u662F\u767D\u63CF\uFF0C\u4E5F\u7ED9\u51FA\u4E00\u4E2A\u4E0D\u540C\u7684\u7B49\u4EF7\u5199\u6CD5\u3002
+3) \u53EA\u8F93\u51FA JSON\u3002`;
+    REWRITE_DEFAULT_SELECTED_PROMPT_USER = '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_selected_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\n\u8F93\u5165 payload\uFF1A\n{{payload}}\n\n\u6267\u884C\u89C4\u5219\uFF1A\n1) \u7528\u6237\u5DF2\u624B\u52A8\u9009\u62E9 targets\uFF0C\u8BF7\u9010\u6761\u6539\u5199 original_text\u3002\n2) \u6539\u5199\u65B9\u5411\u59CB\u7EC8\u662F\u767D\u63CF\uFF1A\u5220\u9664\u5FC3\u7406\u76F4\u8FF0\uFF0C\u8F6C\u4E3A\u53EF\u89C2\u5BDF\u7684\u52A8\u4F5C\u548C\u7EC6\u8282\uFF1B\u514B\u5236\u4FEE\u9970\uFF0C\u7528\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\u3002\n3) \u6BCF\u6761 rewritten_text \u5FC5\u987B\u80FD\u66FF\u6362\u56DE\u539F\u4F4D\u7F6E\uFF0C\u5E76\u4E0E\u4E0A\u4E0B\u6587\u81EA\u7136\u8854\u63A5\u3002\n4) \u4E0D\u8981\u8F93\u51FA\u672A\u9009\u62E9\u7684\u53E5\u5B50\uFF0C\u4E0D\u8981\u6539\u53D8 segment_id\u3002\n5) results \u6570\u91CF\u5FC5\u987B\u4E0E targets \u4E00\u81F4\u3002\n6) \u53EA\u8F93\u51FA JSON\u3002';
     REWRITE_DEFAULT_PROMPT_JSON_RULE = "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u5FC5\u987B\u4E3A\u6574\u53E5\u91CD\u5199\uFF0C\u7981\u6B62\u53EA\u505A\u8BCD\u6C47\u66FF\u6362\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u8BE5 target \u7684 matched_keywords \u4E2D\u7684\u8BCD";
     REWRITE_PANEL_CSS = `
 #titania-rewrite-entry-btn { margin-left: 6px; }
@@ -21486,6 +21818,15 @@ var init_rewriteEntryButton = __esm({
 #t-rewrite-live-overlay #t-rewrite-raw-response { max-height: min(34vh, 320px); min-height: 170px; }
 #chat .mes .t-rewrite-auto-badge { position: absolute; right: 10px; top: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #dff0ff; background: rgba(15, 24, 35, 0.88); border: 1px solid rgba(144, 205, 244, 0.45); border-radius: 999px; padding: 3px 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); background-image: linear-gradient(120deg, rgba(144, 205, 244, 0.15) 0%, rgba(191, 161, 95, 0.22) 35%, rgba(122, 203, 159, 0.2) 70%, rgba(144, 205, 244, 0.15) 100%); background-size: 220% 220%; animation: titania-rewrite-badge-flow 1.4s linear infinite; }
 #chat .mes .t-rewrite-auto-badge i { color: #90cdf4; animation: titania-rewrite-badge-icon 0.95s ease-in-out infinite; }
+#chat .mes .t-rewrite-inline-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 8px; font-size: 12px; }
+#chat .mes .t-rewrite-inline-toolbar button { border: 1px solid rgba(144, 205, 244, 0.38); border-radius: 999px; background: rgba(15, 24, 35, 0.82); color: #dff0ff; padding: 3px 9px; line-height: 1.35; cursor: pointer; }
+#chat .mes .t-rewrite-inline-toolbar button:hover { border-color: rgba(144, 205, 244, 0.65); background: rgba(34, 54, 76, 0.86); }
+#chat .mes .t-rewrite-inline-toolbar button.t-rewrite-inline-confirm { border-color: rgba(122, 203, 159, 0.52); color: #d8f5e4; }
+#chat .mes .t-rewrite-inline-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+#chat .mes .t-rewrite-inline-count { color: #a9bfd1; padding: 2px 4px; }
+#chat .mes .t-rewrite-select-sentence { border-radius: 5px; padding: 0 2px; cursor: pointer; transition: background-color 0.16s ease, box-shadow 0.16s ease; }
+#chat .mes .t-rewrite-select-sentence:hover { background: rgba(144, 205, 244, 0.14); box-shadow: inset 0 0 0 1px rgba(144, 205, 244, 0.32); }
+#chat .mes .t-rewrite-select-sentence.selected { background: rgba(122, 203, 159, 0.22); box-shadow: inset 0 0 0 1px rgba(122, 203, 159, 0.52); }
 #chat .mes .t-rewrite-mark {
     position: relative;
     display: inline;
@@ -21864,7 +22205,8 @@ var init_rewriteEntryButton = __esm({
 #t-rewrite-settings-overlay #t-rewrite-settings-prompt-json {
     min-height: 96px;
 }
-#t-rewrite-settings-overlay #t-rewrite-settings-prompt-combined {
+#t-rewrite-settings-overlay #t-rewrite-settings-prompt-combined,
+#t-rewrite-settings-overlay #t-rewrite-settings-selected-prompt-combined {
     min-height: 300px;
 }
 #t-rewrite-settings-overlay .t-window-close {
