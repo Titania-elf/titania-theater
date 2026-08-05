@@ -4264,6 +4264,107 @@ textarea.t-input {
 /* === settings.css === */
 /* css/settings.css - \u8BBE\u7F6E\u7A97\u53E3 */
 
+.titania-update-card {
+    border-color: rgba(98, 217, 188, 0.28);
+    background: linear-gradient(135deg, rgba(98, 217, 188, 0.08), rgba(255, 255, 255, 0.015));
+}
+
+.titania-update-card[data-state="available"] {
+    border-color: rgba(98, 217, 188, 0.65);
+    box-shadow: inset 3px 0 0 #62d9bc;
+}
+
+.titania-update-card[data-state="error"] {
+    border-color: rgba(255, 118, 118, 0.4);
+}
+
+.titania-update-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.titania-update-card-copy {
+    min-width: 0;
+}
+
+.titania-update-card .titania-card-title {
+    margin-bottom: 4px;
+}
+
+.titania-update-status {
+    color: #aebdca;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.titania-update-card[data-state="available"] .titania-update-status {
+    color: #72efd0;
+    font-weight: 700;
+}
+
+.titania-update-check {
+    width: 32px;
+    min-width: 32px;
+    padding: 0;
+    justify-content: center;
+}
+
+.titania-update-summary {
+    display: flex;
+    gap: 8px 16px;
+    flex-wrap: wrap;
+    margin-top: 9px;
+    color: #8296a8;
+    font-size: 11px;
+}
+
+.titania-update-summary strong {
+    color: #d9e6ef;
+    font-weight: 700;
+}
+
+.titania-update-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.titania-update-actions[hidden],
+.titania-update-inline-error[hidden],
+#titania-update-latest-row[hidden] {
+    display: none;
+}
+
+.titania-mini-btn.is-update {
+    color: #08251e;
+    background: #62d9bc;
+    border-color: #62d9bc;
+}
+
+.titania-mini-btn.is-update:hover:not(:disabled) {
+    background: #78e4c9;
+}
+
+.titania-update-inline-error {
+    margin-top: 9px;
+    padding: 8px 10px;
+    color: #ffb8b8;
+    background: rgba(220, 70, 70, 0.12);
+    border: 1px solid rgba(255, 100, 100, 0.28);
+    border-radius: 7px;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.titania-version-badge.has-update {
+    color: #08251e;
+    background: #62d9bc;
+    font-weight: 700;
+}
+
 .titania-update-overlay {
     position: fixed;
     inset: 0;
@@ -16046,12 +16147,61 @@ function getTraceSourceLabel(source) {
   if (s === "queue") return "\u961F\u5217\u751F\u6210";
   return source || "\u672A\u77E5\u6765\u6E90";
 }
+function expandBuiltinContextDetails(details, trace, meta) {
+  const mode = String(trace?.mode || "");
+  const sectionLengths = meta?.sectionLengths;
+  if (!["narrative", "visual"].includes(mode) || meta?.promptScheme?.type !== "builtin" || !sectionLengths) {
+    return details;
+  }
+  const userEntryId = `${mode}_user`;
+  const definitions = [
+    ["director", "\u5BFC\u6F14\u6307\u4EE4"],
+    ["persona", "\u89D2\u8272\u4EBA\u8BBE"],
+    ["userDesc", "\u7528\u6237\u8BBE\u5B9A"],
+    ["worldInfo", "\u4E16\u754C\u89C2\u8BBE\u5B9A"],
+    ["history", "\u804A\u5929\u5386\u53F2"],
+    ["scriptInstruction", "\u5267\u672C\u6307\u4EE4"]
+  ];
+  return details.flatMap((detail) => {
+    if (detail?.entryId !== userEntryId) return [detail];
+    const content = String(detail.content || "");
+    const sections = [];
+    let offset = 0;
+    definitions.forEach(([key, name]) => {
+      const length = Math.max(0, Math.floor(Number(sectionLengths[key]) || 0));
+      if (length === 0) return;
+      const part = content.slice(offset, offset + length);
+      offset += length;
+      if (!part) return;
+      sections.push({
+        ...detail,
+        entryId: `${userEntryId}_${key}`,
+        name,
+        content: part,
+        chars: part.length,
+        tokens: estimateTokens(part)
+      });
+    });
+    if (offset < content.length) {
+      const remainder = content.slice(offset);
+      sections.push({
+        ...detail,
+        entryId: `${userEntryId}_other`,
+        name: "\u5176\u4ED6\u751F\u6210\u4E0A\u4E0B\u6587",
+        content: remainder,
+        chars: remainder.length,
+        tokens: estimateTokens(remainder)
+      });
+    }
+    return sections.length > 0 ? sections : [detail];
+  }).map((detail, index) => ({ ...detail, index }));
+}
 function getPromptMessagesView(source, isTrace = false) {
   const finalMessages = isTrace ? source?.finalMessages : source;
   const messages = finalMessages?.messages || [];
   const meta = finalMessages?.meta || source?.meta || {};
   const suppliedDetails = isTrace ? meta.messageDetails : source?.messageDetails;
-  const details = Array.isArray(suppliedDetails) && suppliedDetails.length > 0 ? suppliedDetails : messages.map((message, index) => ({
+  const rawDetails = Array.isArray(suppliedDetails) && suppliedDetails.length > 0 ? suppliedDetails : messages.map((message, index) => ({
     index,
     entryId: `message_${index}`,
     sourceIdentifier: null,
@@ -16064,6 +16214,7 @@ function getPromptMessagesView(source, isTrace = false) {
     chars: String(message.content || "").length,
     tokens: estimateTokens(message.content || "")
   }));
+  const details = isTrace ? expandBuiltinContextDetails(rawDetails, source, meta) : rawDetails;
   const sections = details.map((detail, index) => ({
     id: detail.entryId || `message_${index}`,
     title: detail.name || `\u6D88\u606F ${index + 1}`,
@@ -32094,8 +32245,7 @@ function updateSceneHistoryNav() {
   const display = GlobalState.displayState;
   const streaming = GlobalState.streamingCache;
   const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-  const virtualTotal = streaming.isActive && display.isViewingHistory ? history.items.length + 1 : history.items.length;
-  const displayCurrent = display.isViewingHistory ? effectiveIndex + 1 : streaming.isActive ? 0 : effectiveIndex + 1;
+  const displayPage = history.items.length - effectiveIndex;
   const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
   const hasPrev = canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1;
   const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
@@ -32109,10 +32259,10 @@ function updateSceneHistoryNav() {
       $indicator.text(`\u23F3/${history.items.length}`);
       $indicator.css("color", "#90cdf4");
     } else if (display.isViewingHistory && streaming.isActive) {
-      $indicator.text(`${effectiveIndex + 1}/${history.items.length} \u26A1`);
+      $indicator.text(`${displayPage}/${history.items.length} \u26A1`);
       $indicator.css("color", "#ffeaa7");
     } else {
-      $indicator.text(`${effectiveIndex + 1}/${history.items.length}`);
+      $indicator.text(`${displayPage}/${history.items.length}`);
       $indicator.css("color", "rgba(255, 255, 255, 0.3)");
     }
     markCurrentAsRead();
@@ -35726,6 +35876,9 @@ var EXTENSION_ID = "third-party/titania-theater";
 var EXTENSION_NAME = "titania-theater";
 var CHANGELOG_URL = "https://raw.githubusercontent.com/Titania-elf/titania-theater/main/changelog.json";
 var DISMISSED_KEY = "titania-update-dismissed";
+var availableUpdate = null;
+var checkSequence = 0;
+var isInstalling = false;
 function compareVersions(left, right) {
   const leftParts = String(left).split(".").map(Number);
   const rightParts = String(right).split(".").map(Number);
@@ -35789,6 +35942,94 @@ async function updateExtension() {
   }
   return response.json();
 }
+function setVersionBadge(hasUpdate) {
+  const $badge = $("#titania-version-badge");
+  if (!$badge.length) return;
+  $badge.toggleClass("has-update", hasUpdate).text(hasUpdate ? `v${CURRENT_VERSION} \xB7 \u53EF\u66F4\u65B0` : `v${CURRENT_VERSION}`);
+}
+function renderUpdateCard(state, update = null, errorMessage = "") {
+  const $card = $("#titania-update-card");
+  if (!$card.length) return;
+  const $check = $("#titania-update-check");
+  const $actions = $("#titania-update-actions");
+  const $error = $("#titania-update-inline-error");
+  const isChecking = state === "checking";
+  $card.attr("data-state", state);
+  $("#titania-update-current-version").text(`v${CURRENT_VERSION}`);
+  $check.prop("disabled", isChecking || isInstalling).html(isChecking ? '<i class="fa-solid fa-spinner fa-spin"></i>' : '<i class="fa-solid fa-rotate-right"></i>');
+  $error.prop("hidden", !errorMessage).text(errorMessage);
+  if (state === "available" && update) {
+    $("#titania-update-status").text(`\u53D1\u73B0\u65B0\u7248\u672C v${update.latestVersion}`);
+    $("#titania-update-latest-version").text(`v${update.latestVersion}`);
+    $("#titania-update-latest-row").prop("hidden", false);
+    $actions.prop("hidden", false);
+    $("#titania-update-details, #titania-update-install").prop("disabled", isInstalling);
+    setVersionBadge(true);
+    return;
+  }
+  $("#titania-update-latest-row").prop("hidden", true);
+  $actions.prop("hidden", true);
+  setVersionBadge(false);
+  if (state === "checking") {
+    $("#titania-update-status").text("\u6B63\u5728\u68C0\u67E5\u66F4\u65B0...");
+  } else if (state === "error") {
+    $("#titania-update-status").text("\u6682\u65F6\u65E0\u6CD5\u68C0\u67E5\u66F4\u65B0");
+  } else {
+    $("#titania-update-status").text("\u5F53\u524D\u5DF2\u662F\u6700\u65B0\u7248\u672C");
+  }
+}
+async function checkForUpdates(showDialog = false) {
+  const sequence = ++checkSequence;
+  renderUpdateCard("checking");
+  try {
+    const update = await fetchAvailableUpdates();
+    if (sequence !== checkSequence) return;
+    availableUpdate = update;
+    if (!update) {
+      renderUpdateCard("current");
+      return;
+    }
+    renderUpdateCard("available", update);
+    if (showDialog && sessionStorage.getItem(DISMISSED_KEY) !== update.latestVersion) {
+      showUpdateDialog(update);
+    }
+  } catch (error) {
+    if (sequence !== checkSequence) return;
+    availableUpdate = null;
+    console.warn("Titania: \u66F4\u65B0\u68C0\u6D4B\u5931\u8D25", error);
+    const message = error?.name === "AbortError" ? "\u68C0\u67E5\u66F4\u65B0\u8D85\u65F6\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002" : `\u68C0\u67E5\u5931\u8D25\uFF1A${error?.message || "\u65E0\u6CD5\u83B7\u53D6\u66F4\u65B0\u65E5\u5FD7"}`;
+    renderUpdateCard("error", null, message);
+  }
+}
+function setInstallState(installing) {
+  isInstalling = installing;
+  $("#titania-update-check, #titania-update-details").prop("disabled", installing);
+  $("#titania-update-install").prop("disabled", installing).html(installing ? '<i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u66F4\u65B0...' : '<i class="fa-solid fa-download"></i> \u7ACB\u5373\u66F4\u65B0');
+  $("#titania-update-close, #titania-update-later").prop("disabled", installing);
+  $("#titania-update-now").prop("disabled", installing).html(installing ? '<i class="fa-solid fa-spinner fa-spin"></i><span>\u6B63\u5728\u66F4\u65B0...</span>' : '<i class="fa-solid fa-download"></i><span>\u7ACB\u5373\u66F4\u65B0</span>');
+}
+async function installAvailableUpdate(update) {
+  if (!update || isInstalling) return;
+  const $dialogError = $("#titania-update-error");
+  const $inlineError = $("#titania-update-inline-error");
+  $dialogError.prop("hidden", true).text("");
+  $inlineError.prop("hidden", true).text("");
+  setInstallState(true);
+  try {
+    await updateExtension();
+    sessionStorage.setItem(DISMISSED_KEY, update.latestVersion);
+    $("#titania-update-status").text("\u66F4\u65B0\u5B8C\u6210\uFF0C\u6B63\u5728\u5237\u65B0...");
+    $("#titania-update-install").html('<i class="fa-solid fa-circle-check"></i> \u66F4\u65B0\u5B8C\u6210');
+    $("#titania-update-now").html('<i class="fa-solid fa-circle-check"></i><span>\u66F4\u65B0\u5B8C\u6210\uFF0C\u6B63\u5728\u5237\u65B0...</span>');
+    setTimeout(() => location.reload(), 500);
+  } catch (error) {
+    console.error("Titania: \u81EA\u52A8\u66F4\u65B0\u5931\u8D25", error);
+    const message = error?.message || "\u66F4\u65B0\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5 SillyTavern \u670D\u52A1\u7AEF\u65E5\u5FD7\u540E\u91CD\u8BD5\u3002";
+    setInstallState(false);
+    $dialogError.prop("hidden", false).text(message);
+    $inlineError.prop("hidden", false).text(message);
+  }
+}
 function showUpdateDialog(update) {
   if (document.getElementById("titania-update-overlay")) return;
   const entriesHtml = update.entries.map((entry) => `
@@ -35819,6 +36060,7 @@ function showUpdateDialog(update) {
         </div>
     `);
   const dismiss = () => {
+    if (isInstalling) return;
     sessionStorage.setItem(DISMISSED_KEY, update.latestVersion);
     $("#titania-update-overlay").remove();
   };
@@ -35826,33 +36068,20 @@ function showUpdateDialog(update) {
   $("#titania-update-overlay").on("click", (event) => {
     if (event.target.id === "titania-update-overlay") dismiss();
   });
-  $("#titania-update-now").on("click", async function() {
-    const $button = $(this);
-    const $error = $("#titania-update-error");
-    $button.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i><span>\u6B63\u5728\u66F4\u65B0...</span>');
-    $("#titania-update-close, #titania-update-later").prop("disabled", true);
-    $error.prop("hidden", true).text("");
-    try {
-      await updateExtension();
-      sessionStorage.setItem(DISMISSED_KEY, update.latestVersion);
-      $button.html('<i class="fa-solid fa-circle-check"></i><span>\u66F4\u65B0\u5B8C\u6210\uFF0C\u6B63\u5728\u5237\u65B0...</span>');
-      setTimeout(() => location.reload(), 500);
-    } catch (error) {
-      console.error("Titania: \u81EA\u52A8\u66F4\u65B0\u5931\u8D25", error);
-      $error.prop("hidden", false).text(error?.message || "\u66F4\u65B0\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5 SillyTavern \u670D\u52A1\u7AEF\u65E5\u5FD7\u540E\u91CD\u8BD5\u3002");
-      $button.prop("disabled", false).html('<i class="fa-solid fa-rotate-right"></i><span>\u91CD\u8BD5\u66F4\u65B0</span>');
-      $("#titania-update-close, #titania-update-later").prop("disabled", false);
-    }
-  });
+  $("#titania-update-now").on("click", () => installAvailableUpdate(update));
 }
 async function initExtensionUpdate() {
-  try {
-    const update = await fetchAvailableUpdates();
-    if (!update || sessionStorage.getItem(DISMISSED_KEY) === update.latestVersion) return;
-    showUpdateDialog(update);
-  } catch (error) {
-    console.warn("Titania: \u66F4\u65B0\u68C0\u6D4B\u5931\u8D25", error);
-  }
+  $("#titania-update-current-version").text(`v${CURRENT_VERSION}`);
+  $("#titania-update-check").off("click.titaniaUpdate").on("click.titaniaUpdate", () => {
+    void checkForUpdates(false);
+  });
+  $("#titania-update-details").off("click.titaniaUpdate").on("click.titaniaUpdate", () => {
+    if (availableUpdate) showUpdateDialog(availableUpdate);
+  });
+  $("#titania-update-install").off("click.titaniaUpdate").on("click.titaniaUpdate", () => {
+    void installAvailableUpdate(availableUpdate);
+  });
+  await checkForUpdates(true);
 }
 
 // src/entry.js
