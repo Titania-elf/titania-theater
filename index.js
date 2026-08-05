@@ -17,27 +17,12 @@ var __export = (target, all) => {
 };
 
 // src/config/defaults.js
-var extensionName, extensionFolderPath, CURRENT_VERSION, GITHUB_REPO, GITHUB_API_URL, GITHUB_CHANGELOG_API_URL, CHANGELOG, LEGACY_KEYS, defaultSettings;
+var extensionName, extensionFolderPath, CURRENT_VERSION, LEGACY_KEYS, defaultSettings;
 var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.0.7";
-    GITHUB_REPO = "Titania-elf/titania-theater";
-    GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/manifest.json`;
-    GITHUB_CHANGELOG_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/changelog.json`;
-    CHANGELOG = {
-      "5.0.7": "\u2B50\u65B0\u589E\uFF1A\u9152\u9986\u4E2D\u88AB\u7981\u7528\u7684\u6761\u76EE\u53EF\u4EE5\u6CE8\u5165\u5230\u63D0\u793A\u8BCD\u3002<br>\u{1F527}\u4F18\u5316\uFF1A\u4E16\u754C\u4E66\u52A0\u8F7D\u903B\u8F91\uFF1B\u6536\u85CF\u753B\u5ECA\u7D27\u51D1\u89C6\u56FE\u52A0\u8F7D\u903B\u8F91\uFF1B\u63D0\u793A\u8BCD\u67E5\u770B\u9875\u9762\uFF1B\u751F\u6210\u5230\u4E00\u534A\u5C31\u5931\u8D25\u7684\u5267\u573A\u53EF\u4EE5\u53C2\u4E0E\u4E3B\u52A8\u7EED\u5199\u3002",
-      "5.0.6": '\u89E3\u8026\u4E16\u754C\u4E66\u7981\u7528\u4E0E\u5C0F\u5267\u573A\u52FE\u9009\u72B6\u6001\u3002<br>\u4FEE\u590D\u7F16\u8F91\u5668\u8F93\u5165\u6CD5\u4E0A\u5C4F\u3002<br>\u4F18\u5316\u5343\u6761\u7EA7\u6536\u85CF\u5220\u9664\u5361\u987F\uFF08\u5206\u5E27/\u5206\u9875/\u8F7B\u91CF\u6E32\u67D3\uFF09\u3002<br>\u4FEE\u590D\u5927\u7EB2\u65B0\u5EFA\u65B9\u6848\u6B8B\u7559\u65E7\u5185\u5BB9\u3002<br>\u91CD\u505A\u5927\u7EB2\u7F16\u8F91\u65B0\u589E\u5165\u53E3\u4E3A\u79FB\u52A8\u7AEF\u5B89\u5168\u7684 FAB\uFF08\u652F\u6301"\u65B0\u589E\u5927\u7EB2\u6761\u76EE"\u548C"\u65B0\u589E\u7EC6\u7EB2\u6761\u76EE"\u4E14\u540E\u8005\u4E3A\u65B0\u5EFA\u6761\u76EE\u5E76\u81EA\u5E26\u9996\u4E2A\u7EC6\u7EB2\uFF09\u3002<br>\u8865\u9F50"\u5220\u9664\u7EC6\u7EB2\u6761\u76EE"\u80FD\u529B\u53CA\u76F8\u5173\u7D22\u5F15/\u72B6\u6001\u540C\u6B65\u3002',
-      "5.0.5": "\u4F18\u5316\u53D1\u9001\u952E\u83DC\u5355\u5165\u53E3\u903B\u8F91\uFF1A\u65B0\u589E\u53EF\u72EC\u7ACB\u63A7\u5236\u7684\u5927\u7EB2/\u5C0F\u5267\u573A\u5165\u53E3\uFF0C\u5E76\u652F\u6301\u4EC5\u542F\u7528\u5355\u4E00\u529F\u80FD\u65F6\u70B9\u51FB\u83DC\u5355\u6309\u94AE\u76F4\u63A5\u8FDB\u5165\u5BF9\u5E94\u754C\u9762\u3002\u4F18\u5316\u6536\u85CF\u753B\u5ECA\u6D77\u62A5\u6A21\u5F0F\u6027\u80FD\uFF0C\u51CF\u5C11\u5927\u91CF\u6536\u85CF\u65F6\u7684\u5361\u987F\u3002\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u7A97\u53E3\u52A0\u8F7D\u7B56\u7565\uFF0C\u964D\u4F4E\u8D85\u65F6\u5931\u8D25\u6982\u7387\u3002",
-      "5.0.4": "\u4F18\u5316\u90E8\u5206\u4F53\u9A8C\uFF1A\u5185\u5BB9\u533A\u6D41\u5F0F\u6E32\u67D3\u53EF\u4EE5\u5B9E\u65F6\u67E5\u770B\u751F\u6210\u8FC7\u7A0B\uFF1B\u4FEE\u590D\u67E5\u770B\u5386\u53F2\u751F\u6210\u65F6\u5DE6\u7BAD\u5934\u5931\u6548\u95EE\u9898\uFF1B\u73B0\u5728\u6536\u85CF\u540C\u4E00\u4E2A\u5267\u573A\u65F6\u4F1A\u81EA\u52A8\u300C\u66F4\u65B0\u539F\u6536\u85CF\u300D\u5E76\u628A\u65B0\u7EED\u5199\u5408\u5E76\u8FDB\u53BB\uFF1B\u7EED\u5199\u63D0\u793A\u8BCD\u8FDB\u884C\u91CD\u6784\uFF0C\u8282\u7701token\u3002\u65B0\u589E\u6536\u85CF\u533A\u7D27\u51D1/\u6D77\u62A5\u4E24\u79CD\u89C6\u56FE\u3002",
-      "5.0.3": "\u4F18\u5316\u4E16\u754C\u4E66\u7BA1\u7406\u9875\u9762\uFF0C\u91CD\u6784\u6536\u85CF\u753B\u5ECA\u9875\u9762\uFF0C\u65B0\u589E\u53EF\u5220\u9664\u5267\u573A\u5206\u7EC4\u4E2D\u7684\u4EFB\u610F\u4E00\u6761\u8BB0\u5F55\u3002",
-      "5.0.2": "\u4F18\u5316\u6536\u85CF\u9986\u6027\u80FD\u4E0E\u6D77\u62A5\u5F0F\u754C\u9762\uFF0C\u4FEE\u590D\u7F16\u8F91\u540E\u6536\u85CF\u5185\u5BB9\u4E0D\u540C\u6B65\u95EE\u9898\uFF0C\u65B0\u589E\u5BFC\u51FA\u56FE\u7247\u6253\u7801\u53EF\u9009\u9879\u5E76\u6539\u8FDB\u79FB\u52A8\u7AEF\u4EA4\u4E92\u3002",
-      "5.0.1": "\u4FEE\u590D\u4E86\u4E00\u4E2Abug\uFF0C\u4F18\u5316\u4E86\u90E8\u5206\u754C\u9762\u7EC6\u8282\u3002",
-      "5.0.0": "\u8DE8\u5165\u5230\u5168\u65B0\u76845.0\u7248\u672C\uFF0C\u56DE\u58F0\u5C0F\u5267\u573A\u6B63\u5F0F\u66F4\u540D\u4E3A\u56DE\u58F0\u5DE5\u5177\u7BB1\uFF0C\u65B0\u5165\u53E3\u4E3A\u53D1\u9001\u952E\u5DE6\u8FB9\u7684\u56FE\u6807\u3002\u66F4\u591A\u529F\u80FD\u6B63\u5728\u9646\u7EED\u8D76\u6765\u7684\u8DEF\u4E0A~",
-      "3.3.4": "\u{1F514} \u65B0\u589E\u6587\u672C\u6539\u5199\u529F\u80FD\uFF0C\u53EF\u4EE5\u5BF9\u9152\u9986\u804A\u5929\u6700\u65B0\u56DE\u590D\u751F\u6210\u7684\u5185\u5BB9\u8FDB\u884C\u6539\u5199\u548C\u4F18\u5316\uFF0C\u5165\u53E3\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u3002\u76EE\u524D\u53EA\u505A\u4E86\u7B80\u5355\u7684\u5173\u952E\u8BCD\u5339\u914D\uFF0C\u540E\u7EED\u4F1A\u6269\u5C55\u66F4\u591A\u89C4\u5219\u3002",
-      "3.3.3": "\u2728 \u65B0\u589E\u4E00\u952E\u6536\u85CF\u529F\u80FD\uFF0C\u53EF\u4EE5\u5C06\u540C\u4E2A\u5267\u573A\u4E0B\u7684\u6240\u6709\u7EED\u5199\u5185\u5BB9\u6536\u85CF\u5230\u4E00\u8D77\uFF0C\u65B9\u4FBF\u56DE\u987E\u3002<br>\u65B0\u589E\u5927\u7EB2\u4E0E\u7EC6\u7EB2\u751F\u6210\u529F\u80FD\uFF08\u9700\u8981\u5728\u8BBE\u7F6E\u9875\u2192\u5FEB\u6377\u5DE5\u5177\u680F\u542F\u7528\uFF0C\u5165\u53E3\u5728\u9152\u9986\u53D1\u9001\u952E\u65C1\u8FB9\uFF09\uFF0C\u61D2\u5F97\u81EA\u5DF1\u60F3\u60C5\u8282\u53EA\u60F3\u770B\u5C0F\u8BF4\u7684\u53EF\u4EE5\u5C1D\u8BD5\u8FD9\u4E2A\uFF0C\u4F5C\u8005\u60F3\u73A9\u5C31\u52A0\u4E86\u3002<br>\u{1F527}\u4F18\u5316\u4E86\u5267\u573A\u751F\u6210\u65F6\u6253\u5F00\u6536\u85CF\u9986\u53EF\u80FD\u4EA7\u751F\u7684\u5361\u6B7B\u73B0\u8C61\u3002"
-    };
+    CURRENT_VERSION = "5.1.2";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -74,6 +59,10 @@ var init_defaults = __esm({
       },
       user_scripts: [],
       favs: [],
+      history_extraction: {
+        whitelist: "",
+        blacklist: ""
+      },
       character_map: {},
       disabled_presets: [],
       script_stats: {},
@@ -139,6 +128,17 @@ var init_defaults = __esm({
         visual_mode: ""
         // 氛围美化模式的自定义系统提示词
       },
+      // 统一提示词方案模型（旧 custom_prompts 字段仍保留用于兼容）
+      prompt_manager: {
+        version: 4,
+        editor_view: "narrative",
+        active_preset_id: "",
+        builtin: {
+          narrative: { id: "narrative", name: "\u5185\u5BB9\u4F18\u5148", type: "builtin", entries: [] },
+          visual: { id: "visual", name: "\u6C1B\u56F4\u7F8E\u5316", type: "builtin", entries: [] }
+        },
+        presets: []
+      },
       // CSS 主题方案配置
       css_themes: {
         profiles: [
@@ -187,14 +187,17 @@ var init_defaults = __esm({
         api_url: "",
         api_key: "",
         model: "",
-        rules_text: "",
         split_mode: "sentence",
-        rules: [],
         stream_live: true,
         auto_trigger: false,
+        selected_sentence_enabled: true,
         tag_whitelist: "",
+        active_scheme_id: "",
+        schemes: [],
         prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u3002\u4EC5\u6839\u636E\u8F93\u5165 targets \u5BF9\u547D\u4E2D\u7247\u6BB5\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u547D\u4E2D\u4FE1\u606F\u3002\u4FDD\u6301\u8BED\u4E49\u4E00\u81F4\u3001\u8BED\u6C14\u81EA\u7136\u3001\u8FDE\u8D2F\uFF0C\u5E76\u4E0E\u539F\u4E0A\u4E0B\u6587\u98CE\u683C\u4E00\u81F4\u3002",
         prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE\n4) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
+        selected_prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u7684\u624B\u52A8\u9009\u53E5\u6A21\u5F0F\uFF0C\u4E13\u95E8\u5C06\u53E5\u5B50\u6539\u5199\u4E3A\u767D\u63CF\u98CE\u683C\u3002\u767D\u63CF\u6838\u5FC3\u51C6\u5219\uFF1A\u7528\u5177\u4F53\u52A8\u4F5C\u3001\u7269\u8C61\u3001\u7EC6\u8282\u8BF4\u8BDD\uFF0C\u4E0D\u76F4\u8FF0\u89D2\u8272\u5185\u5FC3\u611F\u53D7\uFF1B\u514B\u5236\u5F62\u5BB9\u8BCD\u526F\u8BCD\uFF0C\u4EE5\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\uFF1B\u5220\u9664\u5FC3\u7406\u6982\u62EC\u53E5\uFF0C\u8F6C\u4E3A\u5916\u90E8\u53EF\u89C2\u5BDF\u7684\u884C\u4E3A\u6216\u73AF\u5883\u6620\u886C\uFF1B\u53E5\u5F0F\u7B80\u6D01\u786C\u6717\uFF0C\u4E0D\u865A\u9970\u4E0D\u717D\u60C5\u3002\u7528\u6237\u5DF2\u9009\u5B9A\u9700\u8981\u6539\u5199\u7684\u53E5\u5B50\uFF1B\u53EA\u5BF9\u8F93\u5165 targets \u9010\u6761\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u9009\u5185\u5BB9\u3002\u6539\u540E\u80FD\u81EA\u7136\u66FF\u6362\u56DE\u539F\u4F4D\u7F6E\u3002",
+        selected_prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_selected_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) targets \u662F\u7528\u6237\u624B\u52A8\u9009\u4E2D\u7684\u53E5\u5B50\uFF0C\u53EA\u6539\u5199\u8FD9\u4E9B\u53E5\u5B50\n2) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n3) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n4) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF0C\u4E14\u5E94\u80FD\u539F\u4F4D\u66FF\u6362\u56DE\u4E0A\u4E0B\u6587\n5) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
         prompt_json_rule: "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09"
       },
       // Embedding API 独立配置（用于向量化）
@@ -257,6 +260,341 @@ var init_defaults = __esm({
   }
 });
 
+// src/core/promptManager.js
+function estimatePromptTokens(text) {
+  const clean = String(text || "").trim();
+  if (!clean) return 0;
+  const cjkCount = (clean.match(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g) || []).length;
+  const nonCjk = clean.replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g, " ");
+  const wordCount = nonCjk.split(/\s+/).filter(Boolean).length;
+  return Math.floor(cjkCount + wordCount * 1.3);
+}
+function createEntryId(prefix = "entry") {
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+function createBuiltinScheme(mode, systemContent) {
+  return {
+    id: mode,
+    name: mode === "visual" ? "\u6C1B\u56F4\u7F8E\u5316" : "\u5185\u5BB9\u4F18\u5148",
+    type: "builtin",
+    entries: [
+      { id: `${mode}_system`, name: "\u7CFB\u7EDF\u63D0\u793A\u8BCD", role: "system", type: "text", enabled: true, content: systemContent },
+      { id: `${mode}_user`, name: "\u751F\u6210\u4E0A\u4E0B\u6587", role: "user", type: "text", enabled: true, content: "" }
+    ]
+  };
+}
+function createDefaultPromptManager() {
+  return {
+    version: 4,
+    editor_view: "narrative",
+    active_preset_id: "",
+    builtin: {
+      narrative: createBuiltinScheme("narrative", DEFAULT_CONTENT_PROMPT),
+      visual: createBuiltinScheme("visual", DEFAULT_VISUAL_PROMPT)
+    },
+    presets: []
+  };
+}
+function ensurePromptManager(data) {
+  let changed = false;
+  const defaults = createDefaultPromptManager();
+  const manager = data.prompt_manager;
+  if (!manager || typeof manager !== "object") {
+    data.prompt_manager = defaults;
+    const legacy = data.custom_prompts || {};
+    if (legacy.override_enabled === true) {
+      const content = String(legacy.content_mode || "").trim();
+      const visual = String(legacy.visual_mode || "").trim();
+      if (content) data.prompt_manager.builtin.narrative.entries[0].content = content;
+      if (visual) data.prompt_manager.builtin.visual.entries[0].content = visual;
+    }
+    changed = true;
+  } else {
+    const previousVersion = Number(manager.version) || 1;
+    manager.version = 4;
+    if (previousVersion !== 4) changed = true;
+    manager.editor_view = EDITOR_VIEWS.includes(manager.editor_view) ? manager.editor_view : "narrative";
+    manager.active_preset_id = typeof manager.active_preset_id === "string" ? manager.active_preset_id : "";
+    manager.builtin = manager.builtin && typeof manager.builtin === "object" ? manager.builtin : {};
+    for (const mode of BUILTIN_MODES) {
+      if (!manager.builtin[mode] || !Array.isArray(manager.builtin[mode].entries) || !manager.builtin[mode].entries.some((entry) => entry?.role === "system")) {
+        manager.builtin[mode] = defaults.builtin[mode];
+        changed = true;
+      }
+    }
+    if (previousVersion < 2 && data.custom_prompts?.override_enabled === true) {
+      const content = String(data.custom_prompts.content_mode || "").trim();
+      const visual = String(data.custom_prompts.visual_mode || "").trim();
+      const contentEntry = manager.builtin.narrative.entries.find((entry) => entry?.role === "system");
+      const visualEntry = manager.builtin.visual.entries.find((entry) => entry?.role === "system");
+      if (content && contentEntry) contentEntry.content = content;
+      if (visual && visualEntry) visualEntry.content = visual;
+      changed = true;
+    }
+    manager.presets = Array.isArray(manager.presets) ? manager.presets : [];
+    if (previousVersion < 3) {
+      for (const preset of manager.presets) {
+        if (!Array.isArray(preset?.entries)) continue;
+        preset.entries = preset.entries.filter((entry) => {
+          const marker = entry?.marker || entry?.source_identifier;
+          return !REMOVED_MARKERS.has(marker);
+        });
+        for (const entry of preset.entries) {
+          const inferredMarker = entry.marker || entry.source_identifier;
+          if (DYNAMIC_MARKERS.has(inferredMarker)) {
+            entry.type = "dynamic";
+            entry.marker = inferredMarker;
+          }
+        }
+      }
+      changed = true;
+    }
+    for (const preset of manager.presets) {
+      if (ensureTitaniaPresetEntries(preset)) changed = true;
+    }
+    if (manager.active_preset_id && !manager.presets.some((preset) => preset?.id === manager.active_preset_id)) {
+      manager.active_preset_id = manager.presets[0]?.id || "";
+      changed = true;
+    }
+  }
+  return changed;
+}
+function getPresetEntrySummary(preset) {
+  return (preset?.entries || []).map((entry, index) => ({
+    index: index + 1,
+    id: entry.id,
+    name: entry.name || entry.source_identifier || `\u6761\u76EE ${index + 1}`,
+    role: entry.role || "user",
+    type: entry.type || "text",
+    marker: entry.marker || "",
+    enabled: entry.enabled !== false,
+    required: entry.required === true,
+    readonly: entry.readonly === true,
+    content: entry.content || ""
+  }));
+}
+function getPromptScheme(data, mode = "narrative") {
+  ensurePromptManager(data);
+  const manager = data.prompt_manager;
+  if (mode === "preset") {
+    const activePreset = manager.presets.find((preset) => preset?.id === manager.active_preset_id);
+    return activePreset ? JSON.parse(JSON.stringify(activePreset)) : null;
+  }
+  const normalizedMode = BUILTIN_MODES.includes(mode) ? mode : "narrative";
+  const scheme = JSON.parse(JSON.stringify(manager.builtin[normalizedMode]));
+  const defaultContent = normalizedMode === "visual" ? DEFAULT_VISUAL_PROMPT : DEFAULT_CONTENT_PROMPT;
+  const systemEntry = scheme.entries.find((entry) => entry?.role === "system") || scheme.entries[0];
+  if (systemEntry && !String(systemEntry.content || "").trim()) {
+    systemEntry.content = defaultContent;
+  }
+  return scheme;
+}
+function getPromptOrder(preset) {
+  const order = preset?.prompt_order?.[0]?.order;
+  return Array.isArray(order) ? order : [];
+}
+function getMarkerNameFromContent(content) {
+  const exact = String(content || "").trim().match(/^\{\{\s*([\w-]+)\s*\}\}$/);
+  return exact ? exact[1] : "";
+}
+function getDeclaredMarker(definition, identifier) {
+  const markerField = definition?.marker;
+  let declared = "";
+  if (markerField === true) declared = identifier;
+  else if (typeof markerField === "string") declared = markerField.trim();
+  else if (markerField && typeof markerField === "object") {
+    declared = String(markerField.identifier || markerField.name || markerField.key || "").trim();
+  }
+  return declared || getMarkerNameFromContent(definition?.content);
+}
+function isAssistantPrefill(entry) {
+  return entry.role === "assistant" && String(entry.content || "").trim().length > 0;
+}
+function createTitaniaScriptEntry() {
+  return {
+    id: "titania_script_instruction",
+    source_identifier: null,
+    name: "\u5C0F\u5267\u573A\u6307\u4EE4",
+    role: "user",
+    type: "dynamic",
+    marker: "titaniaScript",
+    enabled: true,
+    required: true,
+    readonly: true,
+    content: ""
+  };
+}
+function createTitaniaOutputContractEntry() {
+  return {
+    id: "titania_output_contract",
+    source_identifier: null,
+    name: "\u5C0F\u5267\u573A\u8F93\u51FA\u89C4\u8303",
+    role: "system",
+    type: "text",
+    marker: null,
+    enabled: true,
+    required: true,
+    readonly: true,
+    content: TITANIA_OUTPUT_CONTRACT
+  };
+}
+function ensureTitaniaPresetEntries(preset) {
+  if (!preset || !Array.isArray(preset.entries)) return false;
+  const previous = JSON.stringify(preset.entries);
+  preset.entries = preset.entries.filter((entry) => entry?.id !== "titania_output_contract" && entry?.id !== "titania_script_instruction" && entry?.marker !== "titaniaScript");
+  let insertAt = preset.entries.length;
+  while (insertAt > 0 && isAssistantPrefill(preset.entries[insertAt - 1])) insertAt--;
+  preset.entries.splice(insertAt, 0, createTitaniaOutputContractEntry(), createTitaniaScriptEntry());
+  return JSON.stringify(preset.entries) !== previous;
+}
+function normalizeChatCompletionPreset(preset, options = {}) {
+  if (!preset || typeof preset !== "object") throw new Error("\u9884\u8BBE\u6570\u636E\u65E0\u6548");
+  const promptDefinitions = Array.isArray(preset.prompts) ? preset.prompts : [];
+  const definitions = /* @__PURE__ */ new Map();
+  for (const item of promptDefinitions) {
+    const identifier = String(item?.identifier || "").trim();
+    if (identifier && !definitions.has(identifier)) definitions.set(identifier, item);
+  }
+  const promptOrder = getPromptOrder(preset);
+  const entries = [];
+  const usedIdentifiers = /* @__PURE__ */ new Set();
+  for (const orderItem of promptOrder) {
+    const identifier = String(orderItem?.identifier || "").trim();
+    if (!identifier || usedIdentifiers.has(identifier)) continue;
+    const definition = definitions.get(identifier);
+    if (!definition) continue;
+    let content = String(definition.content || "");
+    const declaredMarker = getDeclaredMarker(definition, identifier);
+    if (REMOVED_MARKERS.has(identifier) || REMOVED_MARKERS.has(declaredMarker)) continue;
+    const marker = DYNAMIC_MARKERS.has(declaredMarker) ? declaredMarker : "";
+    if (declaredMarker && !marker && !content.trim()) content = `{{${declaredMarker}}}`;
+    entries.push({
+      id: createEntryId(`st_${identifier.replace(/[^a-zA-Z0-9_-]/g, "_")}`),
+      source_identifier: identifier,
+      name: String(definition.name || definition.title || identifier),
+      role: MESSAGE_ROLES.includes(definition.role) ? definition.role : "user",
+      type: marker ? "dynamic" : "text",
+      marker: marker || null,
+      enabled: orderItem.enabled !== false,
+      required: false,
+      content
+    });
+    usedIdentifiers.add(identifier);
+  }
+  const normalized = { entries };
+  ensureTitaniaPresetEntries(normalized);
+  return {
+    id: options.id || createEntryId("preset"),
+    name: options.name || preset.name || "\u5BFC\u5165\u9884\u8BBE",
+    type: "preset",
+    source: "sillytavern_chat_completion",
+    imported_at: Date.now(),
+    entries: normalized.entries,
+    model_settings: {
+      model: preset.model || "",
+      temperature: preset.temperature,
+      top_p: preset.top_p,
+      max_tokens: preset.openai_max_tokens ?? preset.max_tokens
+    }
+  };
+}
+function resolveMacro(marker, runtimeContext, originalText) {
+  if (REMOVED_MARKERS.has(marker)) return "";
+  if (DYNAMIC_MARKERS.has(marker)) {
+    const contextKey2 = DYNAMIC_MARKER_CONTEXT_KEYS[marker] || marker;
+    return String(runtimeContext[contextKey2] || "");
+  }
+  const contextKey = BASIC_MACRO_CONTEXT_KEYS[String(marker || "").toLowerCase()];
+  if (contextKey) return String(runtimeContext[contextKey] || "");
+  if (Object.prototype.hasOwnProperty.call(runtimeContext, marker)) {
+    return String(runtimeContext[marker] || "");
+  }
+  return originalText;
+}
+function resolveEntryContent(entry, contentByEntry, runtimeContext) {
+  let content = Object.prototype.hasOwnProperty.call(contentByEntry, entry.id) ? String(contentByEntry[entry.id] || "") : String(entry.content || "");
+  content = content.replace(/\{\{\s*([\w-]+)\s*\}\}/g, (match, marker) => resolveMacro(marker, runtimeContext, match));
+  if (entry.marker) content = resolveMacro(entry.marker, runtimeContext, `{{${entry.marker}}}`);
+  return content;
+}
+function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext = {}) {
+  if (!scheme || !Array.isArray(scheme.entries)) return [];
+  return scheme.entries.filter((entry) => entry?.enabled !== false).map((entry) => {
+    const content = resolveEntryContent(entry, contentByEntry, runtimeContext);
+    return {
+      entryId: entry.id || "",
+      sourceIdentifier: entry.source_identifier || null,
+      name: entry.name || entry.source_identifier || "\u672A\u547D\u540D\u6761\u76EE",
+      role: MESSAGE_ROLES.includes(entry.role) ? entry.role : "user",
+      type: entry.type || "text",
+      marker: entry.marker || null,
+      required: entry.required === true,
+      content,
+      chars: content.length,
+      tokens: estimatePromptTokens(content)
+    };
+  }).filter((message) => message.content.length > 0).map((message, index) => ({ ...message, index }));
+}
+var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
+var init_promptManager = __esm({
+  "src/core/promptManager.js"() {
+    DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
+    DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
+
+[Process]
+1. Analyze the mood/emotion of the scenario
+2. Choose visual effects that represent the mood
+3. Generate HTML with embedded <style>
+
+[Technical Rules]
+1. Output HTML with <style> block
+2. Use CSS animations, gradients, shadows freely
+3. No markdown code blocks
+4. Language: Chinese`;
+    TITANIA_OUTPUT_CONTRACT = `\u4F60\u6B63\u5728\u751F\u6210\u53EF\u76F4\u63A5\u6E32\u67D3\u7684\u5C0F\u5267\u573A\u5185\u5BB9\u3002
+
+[\u8F93\u51FA\u8981\u6C42]
+1. \u6839\u636E\u968F\u540E\u63D0\u4F9B\u7684\u201C\u5C0F\u5267\u573A\u6307\u4EE4\u201D\u5B8C\u6210\u521B\u4F5C\uFF0C\u4E0D\u8981\u590D\u8FF0\u6216\u89E3\u91CA\u6307\u4EE4\u3002
+2. \u8F93\u51FA\u5FC5\u987B\u662F\u5B8C\u6574\u3001\u6709\u6548\u4E14\u53EF\u76F4\u63A5\u5D4C\u5165\u9875\u9762\u7684 HTML \u7247\u6BB5\u3002
+3. \u4F7F\u7528 HTML \u7ED3\u6784\u4E0E CSS \u5BF9\u5185\u5BB9\u8FDB\u884C\u89C6\u89C9\u7F16\u6392\uFF0C\u4F7F\u6837\u5F0F\u670D\u52A1\u4E8E\u573A\u666F\u6C1B\u56F4\u3001\u53D9\u4E8B\u5C42\u6B21\u548C\u9605\u8BFB\u4F53\u9A8C\u3002
+4. \u53EF\u4EE5\u4F7F\u7528\u5185\u8054\u6837\u5F0F\u6216\u7247\u6BB5\u5185\u7684 <style>\uFF0C\u4F46\u4E0D\u8981\u8F93\u51FA <html>\u3001<head>\u3001<body> \u7B49\u5B8C\u6574\u6587\u6863\u5916\u58F3\u3002
+5. \u4E0D\u8981\u8F93\u51FA Markdown \u4EE3\u7801\u5757\u3001\u5B9E\u73B0\u8BF4\u660E\u3001\u524D\u8A00\u3001\u603B\u7ED3\u6216 HTML \u4E4B\u5916\u7684\u6587\u672C\u3002
+6. \u4FDD\u8BC1\u7ED3\u6784\u95ED\u5408\uFF0C\u4E0D\u8981\u4F9D\u8D56\u5916\u90E8\u811A\u672C\u3001\u5916\u90E8\u6837\u5F0F\u8868\u6216\u7F51\u7EDC\u8D44\u6E90\u3002
+7. \u9ED8\u8BA4\u4F7F\u7528\u4E2D\u6587\uFF0C\u9664\u975E\u5C0F\u5267\u573A\u6307\u4EE4\u53E6\u6709\u8981\u6C42\u3002
+8. \u5185\u5BB9\u8868\u8FBE\u4F18\u5148\u4E8E\u88C5\u9970\u3002\u4FDD\u6301\u6B63\u6587\u6E05\u6670\u3001\u5C42\u6B21\u660E\u786E\uFF1B\u89C6\u89C9\u6548\u679C\u5E94\u589E\u5F3A\u5185\u5BB9\uFF0C\u4E0D\u5F97\u906E\u6321\u3001\u538B\u7F29\u6216\u5E72\u6270\u9605\u8BFB\u3002`;
+    BUILTIN_MODES = ["narrative", "visual"];
+    EDITOR_VIEWS = [...BUILTIN_MODES, "preset"];
+    MESSAGE_ROLES = ["system", "user", "assistant"];
+    REMOVED_MARKERS = /* @__PURE__ */ new Set(["charPersonality"]);
+    DYNAMIC_MARKERS = /* @__PURE__ */ new Set([
+      "personaDescription",
+      "charDescription",
+      "worldInfoBefore",
+      "worldInfoAfter",
+      "chatHistory",
+      "scenario",
+      "dialogueExamples",
+      "titaniaScript"
+    ]);
+    BASIC_MACRO_CONTEXT_KEYS = {
+      char: "charName",
+      user: "userName",
+      persona: "userDesc",
+      description: "persona"
+    };
+    DYNAMIC_MARKER_CONTEXT_KEYS = {
+      personaDescription: "userDesc",
+      charDescription: "persona",
+      worldInfoBefore: "worldInfoBefore",
+      worldInfoAfter: "worldInfoAfter",
+      chatHistory: "chatHistory",
+      scenario: "scenario",
+      dialogueExamples: "dialogueExamples",
+      titaniaScript: "titaniaScript"
+    };
+  }
+});
+
 // src/utils/storage.js
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
 import { saveSettingsDebounced, saveSettings } from "../../../../script.js";
@@ -264,6 +602,8 @@ function getExtData() {
   if (!extension_settings2[extensionName]) {
     extension_settings2[extensionName] = JSON.parse(JSON.stringify(defaultSettings));
   }
+  const changed = ensurePromptManager(extension_settings2[extensionName]);
+  if (changed) saveSettingsDebounced();
   return extension_settings2[extensionName];
 }
 function saveExtData() {
@@ -281,6 +621,7 @@ async function saveExtDataImmediate() {
 var init_storage = __esm({
   "src/utils/storage.js"() {
     init_defaults();
+    init_promptManager();
   }
 });
 
@@ -3015,9 +3356,131 @@ textarea.t-input {
     pointer-events: none;
 }
 
+.t-cont-inline-actions {
+    position: absolute;
+    right: 10px;
+    bottom: 24px;
+    z-index: 155;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px 3px 8px;
+    border: 1px solid rgba(191, 161, 95, 0.16);
+    border-radius: 999px;
+    background: rgba(12, 12, 12, 0.72);
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 10px;
+    backdrop-filter: blur(5px);
+    opacity: 0.45;
+    transition: opacity 0.2s, border-color 0.2s;
+}
+
+.t-cont-inline-actions:hover {
+    opacity: 1;
+    border-color: rgba(191, 161, 95, 0.45);
+}
+
+.t-cont-inline-actions button {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #bfa15f;
+    cursor: pointer;
+}
+
+.t-cont-inline-actions button:hover {
+    background: rgba(191, 161, 95, 0.15);
+}
+
+.t-cont-inline-actions.is-menu-open {
+    opacity: 1;
+    border-color: rgba(191, 161, 95, 0.45);
+}
+
+.t-cont-inline-actions.is-menu-open > #t-cont-inline-branch {
+    background: rgba(191, 161, 95, 0.2);
+    transform: rotate(90deg);
+}
+
+#t-cont-inline-branch {
+    transition: background 0.18s, transform 0.18s;
+}
+
+.t-cont-inline-branch-menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: bottom right;
+    transition: visibility 0.18s, opacity 0.18s, transform 0.18s;
+}
+
+.t-cont-inline-actions.is-menu-open .t-cont-inline-branch-menu {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.t-cont-inline-branch-option {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    white-space: nowrap;
+}
+
+.t-cont-inline-branch-option span {
+    padding: 4px 8px;
+    border: 1px solid rgba(191, 161, 95, 0.22);
+    border-radius: 999px;
+    background: rgba(12, 12, 12, 0.88);
+    color: #c9b98f;
+    font-size: 10px;
+    line-height: 1.2;
+    backdrop-filter: blur(5px);
+}
+
+.t-cont-inline-actions .t-cont-inline-branch-option button {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border: 1px solid rgba(191, 161, 95, 0.35);
+    background: rgba(18, 18, 18, 0.92);
+    box-shadow: 0 5px 16px rgba(0, 0, 0, 0.35);
+}
+
+.t-cont-inline-actions .t-cont-inline-branch-option button:hover {
+    border-color: rgba(191, 161, 95, 0.7);
+    background: rgba(191, 161, 95, 0.2);
+}
+
+.t-cont-regeneration-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 9px 11px;
+    border: 1px solid rgba(191, 161, 95, 0.35);
+    border-radius: 8px;
+    background: rgba(191, 161, 95, 0.08);
+    color: #cbbd9e;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
 /* Zen \u6A21\u5F0F\u4E0B\u9690\u85CF\u7FFB\u9875\u6309\u94AE */
 #t-main-view.t-zen-mode .t-page-nav,
-#t-main-view.t-zen-mode .t-page-indicator {
+#t-main-view.t-zen-mode .t-page-indicator,
+#t-main-view.t-zen-mode .t-cont-inline-actions {
     display: none !important;
 }
 
@@ -3031,6 +3494,310 @@ textarea.t-input {
 
     .t-page-indicator {
         font-size: 9px;
+    }
+}
+
+/* ===== \u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2 ===== */
+.t-cont-history-panel {
+    position: absolute;
+    inset: 12px;
+    z-index: 3100;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #464138;
+    border-radius: 12px;
+    background: #151515;
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.72);
+}
+
+.t-cont-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 52px;
+    padding: 0 16px;
+    border-bottom: 1px solid #333;
+    background: #1d1d1d;
+}
+
+.t-cont-history-header>div,
+.t-cont-history-round-head,
+.t-cont-history-round-title,
+.t-cont-history-actions {
+    display: flex;
+    align-items: center;
+}
+
+.t-cont-history-header>div {
+    gap: 9px;
+}
+
+.t-cont-history-header .t-cont-history-header-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.t-cont-history-header-actions .t-btn {
+    padding: 5px 8px;
+    color: #a98888;
+    font-size: 10px;
+}
+
+.t-cont-history-header i,
+.t-cont-history-branch-title i {
+    color: #bfa15f;
+}
+
+.t-cont-history-header span {
+    color: #777;
+    font-size: 11px;
+}
+
+.t-cont-history-body {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+}
+
+.t-cont-history-session {
+    margin-bottom: 12px;
+    border: 1px solid #343434;
+    border-radius: 12px;
+    background: #171717;
+}
+
+.t-cont-history-session:last-child {
+    margin-bottom: 0;
+}
+
+.t-cont-history-session.is-open {
+    border-color: rgba(191, 161, 95, 0.32);
+}
+
+.t-cont-history-session-toggle {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 11px;
+    background: #202020;
+    color: #ddd4c2;
+    cursor: pointer;
+    text-align: left;
+}
+
+.t-cont-history-session.is-open .t-cont-history-session-toggle {
+    border-radius: 11px 11px 0 0;
+    border-bottom: 1px solid #343434;
+}
+
+.t-cont-history-session-toggle > i {
+    color: #bfa15f;
+    font-size: 10px;
+    transition: transform 0.18s;
+}
+
+.t-cont-history-session.is-open .t-cont-history-session-toggle > i {
+    transform: rotate(90deg);
+}
+
+.t-cont-history-session-toggle > span {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-cont-history-session-toggle > small {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: #777;
+    font-size: 10px;
+}
+
+.t-cont-history-session-body {
+    padding: 10px;
+}
+
+.t-cont-history-session-body[hidden] {
+    display: none;
+}
+
+.t-cont-history-branch {
+    margin-bottom: 14px;
+    overflow: hidden;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    background: #191919;
+}
+
+.t-cont-history-branch.is-active {
+    border-color: rgba(191, 161, 95, 0.42);
+}
+
+.t-cont-history-branch-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #303030;
+    color: #d6d0c3;
+    background: #202020;
+}
+
+.t-cont-history-branch-heading {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.t-cont-history-branch-heading strong {
+    overflow: hidden;
+    color: #e4ddcf;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-cont-history-branch-heading span {
+    color: #8c857a;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.t-cont-history-branch-title small {
+    margin-left: auto;
+    color: #777;
+    flex-shrink: 0;
+}
+
+.t-cont-history-round {
+    padding: 12px;
+    border-bottom: 1px solid #292929;
+}
+
+.t-cont-history-round:last-child {
+    border-bottom: 0;
+}
+
+.t-cont-history-round-head {
+    justify-content: space-between;
+}
+
+.t-cont-history-round-title {
+    gap: 8px;
+    color: #ddd;
+}
+
+.t-cont-history-round-title span {
+    color: #666;
+    font-size: 10px;
+}
+
+.t-cont-history-toggle {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+}
+
+.t-cont-history-toggle:hover {
+    color: #bfa15f;
+    background: rgba(191, 161, 95, 0.1);
+}
+
+.t-cont-history-instruction {
+    margin-top: 7px;
+    color: #b7a989;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.t-cont-history-preview {
+    margin-top: 5px;
+    overflow: hidden;
+    color: #777;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-cont-history-full {
+    margin-top: 10px;
+    overflow: hidden;
+    border: 1px solid #303030;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.t-cont-history-full iframe {
+    display: block;
+    width: 100%;
+    height: 300px;
+    border: 0;
+}
+
+.t-cont-history-actions {
+    gap: 7px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.t-cont-history-actions .t-btn {
+    padding: 6px 9px;
+    font-size: 11px;
+}
+
+@media screen and (max-width: 600px) {
+    .t-cont-inline-actions > span {
+        display: none;
+    }
+
+    .t-cont-inline-actions {
+        padding-left: 4px;
+    }
+
+    .t-cont-history-panel {
+        inset: 5px;
+    }
+
+    .t-cont-history-body {
+        padding: 8px;
+    }
+
+    .t-cont-history-session-toggle {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .t-cont-history-session-toggle > span {
+        flex: 1;
+    }
+
+    .t-cont-history-session-toggle > small {
+        width: 100%;
+        margin-left: 18px;
+    }
+
+    .t-cont-history-session-body {
+        padding: 6px;
+    }
+
+    .t-cont-history-actions .t-btn {
+        flex: 1;
     }
 }
 
@@ -3676,6 +4443,239 @@ textarea.t-input {
 /* === settings.css === */
 /* css/settings.css - \u8BBE\u7F6E\u7A97\u53E3 */
 
+.titania-update-card {
+    border-color: rgba(98, 217, 188, 0.28);
+    background: linear-gradient(135deg, rgba(98, 217, 188, 0.08), rgba(255, 255, 255, 0.015));
+}
+
+.titania-update-card[data-state="available"] {
+    border-color: rgba(98, 217, 188, 0.65);
+    box-shadow: inset 3px 0 0 #62d9bc;
+}
+
+.titania-update-card[data-state="error"] {
+    border-color: rgba(255, 118, 118, 0.4);
+}
+
+.titania-update-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.titania-update-card-copy {
+    min-width: 0;
+}
+
+.titania-update-card .titania-card-title {
+    margin-bottom: 4px;
+}
+
+.titania-update-status {
+    color: #aebdca;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.titania-update-card[data-state="available"] .titania-update-status {
+    color: #72efd0;
+    font-weight: 700;
+}
+
+.titania-update-check {
+    width: 32px;
+    min-width: 32px;
+    padding: 0;
+    justify-content: center;
+}
+
+.titania-update-summary {
+    display: flex;
+    gap: 8px 16px;
+    flex-wrap: wrap;
+    margin-top: 9px;
+    color: #8296a8;
+    font-size: 11px;
+}
+
+.titania-update-summary strong {
+    color: #d9e6ef;
+    font-weight: 700;
+}
+
+.titania-update-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.titania-update-actions[hidden],
+.titania-update-inline-error[hidden],
+#titania-update-latest-row[hidden] {
+    display: none;
+}
+
+.titania-mini-btn.is-update {
+    color: #08251e;
+    background: #62d9bc;
+    border-color: #62d9bc;
+}
+
+.titania-mini-btn.is-update:hover:not(:disabled) {
+    background: #78e4c9;
+}
+
+.titania-update-inline-error {
+    margin-top: 9px;
+    padding: 8px 10px;
+    color: #ffb8b8;
+    background: rgba(220, 70, 70, 0.12);
+    border: 1px solid rgba(255, 100, 100, 0.28);
+    border-radius: 7px;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.titania-version-badge.has-update {
+    color: #08251e;
+    background: #62d9bc;
+    font-weight: 700;
+}
+
+.titania-update-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(5, 8, 12, 0.78);
+    backdrop-filter: blur(5px);
+}
+
+.titania-update-dialog {
+    width: min(560px, 100%);
+    max-height: min(720px, 90vh);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #d9e2eb;
+    background: #14191f;
+    border: 1px solid rgba(100, 220, 190, 0.35);
+    border-radius: 14px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+}
+
+.titania-update-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.titania-update-kicker {
+    color: #62d9bc;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.titania-update-header h2 {
+    margin: 4px 0 0;
+    color: #f2f7f5;
+    font-size: 20px;
+}
+
+.titania-update-close {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: #91a0ad;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.titania-update-close:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.titania-update-body {
+    min-height: 0;
+    padding: 8px 22px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.titania-update-entry {
+    padding: 16px 0;
+    color: #bdc8d2;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.titania-update-entry:last-child {
+    border-bottom: 0;
+}
+
+.titania-update-entry h3 {
+    margin: 0 0 8px;
+    color: #62d9bc;
+    font-size: 14px;
+}
+
+.titania-update-entry code {
+    padding: 1px 5px;
+    color: #a9e9da;
+    background: rgba(98, 217, 188, 0.1);
+    border-radius: 4px;
+}
+
+.titania-update-error {
+    margin: 0 22px 12px;
+    padding: 10px 12px;
+    color: #ffb8b8;
+    background: rgba(220, 70, 70, 0.12);
+    border: 1px solid rgba(255, 100, 100, 0.3);
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.titania-update-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 22px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#titania-update-now {
+    color: #08251e;
+    background: #62d9bc;
+    border-color: #62d9bc;
+    font-weight: 700;
+}
+
+#titania-update-now:hover:not(:disabled) {
+    background: #78e4c9;
+}
+
+.titania-update-close:disabled,
+.titania-update-footer button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
 #t-settings-view {
     width: 800px;
     height: 80vh;
@@ -4190,6 +5190,211 @@ textarea.t-input {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* \u63D0\u793A\u8BCD\u65B9\u6848\u6761\u76EE\u5361\u7247 */
+.t-prompt-entry-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.t-prompt-entry-card {
+    background: #1a1a1a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 7px 9px;
+    box-sizing: border-box;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: grab;
+}
+
+.t-prompt-entry-card:active {
+    cursor: grabbing;
+}
+
+.t-prompt-entry-card:hover {
+    background: #1d1d1d;
+    border-color: #555;
+}
+
+.t-prompt-entry-card.is-disabled {
+    opacity: 0.62;
+}
+
+.t-prompt-entry-card.is-locked {
+    cursor: default;
+    border-color: #343d43;
+    background: #181c1f;
+}
+
+.t-prompt-entry-card.is-locked:hover {
+    border-color: #3e4a51;
+    background: #1a1f22;
+}
+
+.t-prompt-entry-card.is-locked .t-prompt-entry-drag-hint {
+    color: #77838a;
+}
+
+.t-prompt-entry-card.is-dragging {
+    opacity: 0.45;
+    border-style: dashed;
+}
+
+.t-prompt-entry-card.is-drag-over {
+    border-color: #90cdf4;
+    box-shadow: 0 -3px 0 rgba(144, 205, 244, 0.75);
+}
+
+.t-prompt-entry-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    height: 28px;
+    overflow: hidden;
+}
+
+.t-prompt-entry-index {
+    color: #666;
+    font-size: 0.78em;
+    width: 26px;
+    flex-shrink: 0;
+    font-family: var(--t-font-mono);
+}
+
+.t-prompt-entry-name {
+    flex: 1;
+    min-width: 0;
+    color: #eee;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-prompt-entry-badge {
+    color: #90cdf4;
+    background: rgba(144, 205, 244, 0.1);
+    border: 1px solid rgba(144, 205, 244, 0.25);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 0.72em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.t-prompt-entry-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.t-prompt-entry-drag-hint {
+    color: #666;
+    width: 12px;
+    font-size: 0.78em;
+    text-align: center;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.t-prompt-entry-actions button,
+.t-prompt-entry-toggle {
+    width: 28px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid #444;
+    border-radius: 3px;
+    background: #242424;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.t-prompt-entry-toggle {
+    width: auto;
+    min-width: 64px;
+    padding: 0 8px;
+    font-size: 0.75em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.t-prompt-entry-toggle.is-enabled {
+    color: #55efc4;
+    border-color: rgba(85, 239, 196, 0.55);
+    background: rgba(85, 239, 196, 0.1);
+}
+
+.t-prompt-entry-toggle.is-required {
+    cursor: default;
+}
+
+.t-prompt-entry-toggle.is-required:disabled {
+    color: #aaa;
+    opacity: 1;
+}
+
+.t-prompt-entry-actions button:hover:not(:disabled),
+.t-prompt-entry-toggle:hover:not(:disabled) {
+    color: #fff;
+    border-color: #90cdf4;
+}
+
+.t-prompt-entry-actions button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+@media (max-width: 600px) {
+    .t-prompt-entry-list {
+        gap: 5px;
+    }
+
+    .t-prompt-entry-card {
+        padding: 6px 7px;
+    }
+
+    .t-prompt-entry-header {
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 6px;
+        height: 28px;
+    }
+
+    .t-prompt-entry-name {
+        min-width: 0;
+        font-size: 0.88em;
+    }
+
+    .t-prompt-entry-index {
+        width: 22px;
+        font-size: 0.7em;
+    }
+
+    .t-prompt-entry-badge {
+        max-width: 54px;
+        padding: 2px 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .t-prompt-entry-toggle {
+        width: 28px;
+        min-width: 28px;
+        padding: 0;
+    }
+
+    .t-prompt-entry-toggle-label {
+        display: none;
+    }
+
+}
+
 
 /* === manager.css === */
 /* css/manager.css - \u5267\u672C\u7BA1\u7406 */
@@ -6258,155 +7463,63 @@ textarea.t-input {
     background: #141414;
 }
 
-#t-debug-view .t-prompt-top-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px 14px;
-    border-bottom: 1px solid #2b2b2b;
-    background: #171717;
-}
-
-#t-debug-view .t-prompt-top-main {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-#t-debug-view .t-prompt-top-sub {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-#t-debug-view .t-prompt-total-token {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 5px 10px;
-    border: 1px solid #3a3a3a;
-    border-radius: 999px;
-    background: #1b1b1b;
-}
-
-#t-debug-view .t-prompt-total-token span {
-    color: #9ca3af;
-    font-size: 12px;
-}
-
-#t-debug-view .t-prompt-total-token strong {
-    color: #74b9ff;
-    font-size: 18px;
-    line-height: 1;
-}
-
-#t-debug-view .t-prompt-meta-item {
-    color: #a8a8a8;
-    font-size: 12px;
-}
-
-#t-debug-view .t-prompt-meta-item b {
-    color: #e5e7eb;
-    margin-left: 4px;
-    font-weight: 600;
-}
-
-#t-debug-view .t-prompt-top-sub .t-prompt-meta-item {
-    color: #777;
-}
-
-#t-debug-view .t-prompt-top-sub .t-prompt-meta-item b {
-    color: #b0b0b0;
-}
-
-#t-debug-view .t-prompt-budget-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    line-height: 1;
-    border: 1px solid transparent;
-    margin-left: auto;
-}
-
-#t-debug-view .t-prompt-budget-badge.ok {
-    color: #9fd3ff;
-    border-color: #2f5f8a;
-    background: rgba(35, 73, 108, 0.2);
-}
-
-#t-debug-view .t-prompt-budget-badge.warn {
-    color: #f8d78f;
-    border-color: #89692f;
-    background: rgba(134, 102, 37, 0.2);
-}
-
-#t-debug-view .t-prompt-budget-badge.danger {
-    color: #ffb3ac;
-    border-color: #8c3f39;
-    background: rgba(129, 52, 46, 0.2);
-}
-
-#t-debug-view .t-prompt-live-dot {
-    color: #74b9ff;
-    font-size: 12px;
-    white-space: nowrap;
-    margin-left: auto;
-}
-
-#t-debug-view .t-prompt-toolbar {
+#t-debug-view .t-prompt-summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 8px 14px;
+    gap: 16px;
+    padding: 11px 16px;
     border-bottom: 1px solid #292929;
-    background: #151515;
+    background: #171717;
 }
 
-#t-debug-view .t-prompt-seg-group {
-    display: inline-flex;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #333;
-}
-
-#t-debug-view .t-prompt-seg-btn {
-    padding: 6px 12px;
+#t-debug-view .t-prompt-request {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: #777;
     font-size: 12px;
-    color: #999;
-    background: #1b1b1b;
-    border: none;
-    border-right: 1px solid #333;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    font-family: inherit;
+}
+
+#t-debug-view .t-prompt-actual {
+    color: #74b9ff;
+    font-weight: 600;
     white-space: nowrap;
 }
 
-#t-debug-view .t-prompt-seg-btn:last-child {
-    border-right: none;
+#t-debug-view .t-prompt-actual i {
+    font-size: 7px;
+    margin-right: 5px;
 }
 
-#t-debug-view .t-prompt-seg-btn:hover {
-    background: #262626;
-    color: #ccc;
+#t-debug-view #t-prompt-request-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-#t-debug-view .t-prompt-seg-btn.active {
-    background: #2a3a4a;
-    color: #74b9ff;
-    font-weight: 600;
-}
-
-#t-debug-view .t-prompt-tool-group {
+#t-debug-view .t-prompt-summary-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+#t-debug-view .t-prompt-count {
+    color: #888;
+    font-size: 12px;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
+#t-debug-view .t-prompt-count strong {
+    color: #d8e9f8;
+    font-size: 14px;
+}
+
+#t-debug-view .t-prompt-count b {
+    color: #bbb;
 }
 
 #t-debug-view .t-prompt-tool-btn {
@@ -6441,20 +7554,23 @@ textarea.t-input {
     font-size: 12px;
 }
 
+#t-debug-view .t-prompt-icon-btn {
+    width: 30px;
+    justify-content: center;
+    padding-inline: 0;
+}
+
 #t-debug-view .t-prompt-sections {
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding: 10px;
+    padding: 12px 14px 16px;
 }
 
 #t-debug-view .t-prompt-section-card {
-    border: 1px solid #2f2f2f;
-    border-left: 3px solid #2f2f2f;
-    border-radius: 10px;
+    border-bottom: 1px solid #292929;
+    border-left: 2px solid #2f2f2f;
     background: #171717;
-    margin-bottom: 10px;
-    transition: border-color 0.2s;
 }
 
 #t-debug-view .t-prompt-role-system {
@@ -6465,13 +7581,16 @@ textarea.t-input {
     border-left-color: #55efc4;
 }
 
+#t-debug-view .t-prompt-role-assistant {
+    border-left-color: #c792ea;
+}
+
 #t-debug-view .t-prompt-section-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 10px 12px;
-    border-bottom: 1px solid #2b2b2b;
+    padding: 11px 12px;
     cursor: pointer;
     user-select: none;
     transition: background 0.15s;
@@ -6484,11 +7603,40 @@ textarea.t-input {
 #t-debug-view .t-prompt-section-title {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     color: #e5e7eb;
     font-weight: 600;
     font-size: 13px;
     min-width: 0;
+}
+
+#t-debug-view .t-prompt-order {
+    width: 22px;
+    color: #666;
+    font-family: var(--t-font-mono);
+    font-size: 11px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+#t-debug-view .t-prompt-role-label {
+    width: 58px;
+    color: #888;
+    font-family: var(--t-font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+#t-debug-view .t-prompt-role-system .t-prompt-role-label { color: #74b9ff; }
+#t-debug-view .t-prompt-role-user .t-prompt-role-label { color: #55efc4; }
+#t-debug-view .t-prompt-role-assistant .t-prompt-role-label { color: #c792ea; }
+
+#t-debug-view .t-prompt-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #t-debug-view .t-prompt-chevron {
@@ -6505,57 +7653,30 @@ textarea.t-input {
 }
 
 #t-debug-view .t-prompt-section-preview {
-    padding: 8px 12px;
+    padding: 0 12px 10px 62px;
     color: #666;
     font-size: 11px;
     font-family: var(--t-font-mono);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    border-bottom: 1px solid #222;
 }
 
 #t-debug-view .t-prompt-section-card.expanded .t-prompt-section-preview {
     display: none;
 }
 
-#t-debug-view .t-prompt-token-badge {
+#t-debug-view .t-prompt-token-count {
     font-size: 11px;
-    line-height: 1;
-    border-radius: 999px;
-    padding: 5px 8px;
-    border: 1px solid transparent;
+    color: #777;
+    font-family: var(--t-font-mono);
     flex-shrink: 0;
-}
-
-#t-debug-view .t-prompt-token-badge.ok {
-    color: #9fd3ff;
-    border-color: #2f5f8a;
-    background: rgba(35, 73, 108, 0.2);
-}
-
-#t-debug-view .t-prompt-token-badge.warn {
-    color: #f8d78f;
-    border-color: #89692f;
-    background: rgba(134, 102, 37, 0.2);
-}
-
-#t-debug-view .t-prompt-token-badge.danger {
-    color: #ffb3ac;
-    border-color: #8c3f39;
-    background: rgba(129, 52, 46, 0.2);
-}
-
-#t-debug-view .t-prompt-section-meta {
-    color: #8e8e8e;
-    font-size: 11px;
-    padding: 8px 12px 0;
 }
 
 #t-debug-view .t-prompt-section-content {
     display: none;
     margin: 0;
-    padding: 10px 12px 12px;
+    padding: 2px 16px 16px 62px;
     color: #d4d4d4;
     font-size: 12px;
     line-height: 1.55;
@@ -6571,12 +7692,26 @@ textarea.t-input {
 }
 
 #t-debug-view .t-prompt-empty {
-    border: 1px dashed #3a3a3a;
-    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 220px;
     color: #8a8a8a;
-    padding: 16px;
-    background: #181818;
-    font-size: 12px;
+    font-size: 13px;
+    text-align: center;
+}
+
+#t-debug-view .t-prompt-empty i {
+    color: #555;
+    font-size: 26px;
+    margin-bottom: 4px;
+}
+
+#t-debug-view .t-prompt-empty small {
+    color: #5f5f5f;
+    font-size: 11px;
 }
 
 @media (max-width: 900px) {
@@ -6587,46 +7722,42 @@ textarea.t-input {
         border-radius: 0 !important;
     }
 
-    #t-debug-view .t-prompt-top-main {
-        gap: 8px;
-    }
-
-    #t-debug-view .t-prompt-budget-badge {
-        margin-left: 0;
-    }
-
-    #t-debug-view .t-prompt-top-sub {
-        gap: 8px;
-    }
-
-    #t-debug-view .t-prompt-toolbar {
+    #t-debug-view .t-prompt-summary {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: 10px;
     }
 
-    #t-debug-view .t-prompt-seg-group {
-        display: flex;
-        flex-wrap: wrap;
-        border-radius: 6px;
+    #t-debug-view .t-prompt-request {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
     }
 
-    #t-debug-view .t-prompt-seg-btn {
-        flex: 1;
-        text-align: center;
-        padding: 8px 6px;
-        font-size: 11px;
+    #t-debug-view #t-prompt-request-meta {
+        max-width: 100%;
     }
 
-    #t-debug-view .t-prompt-tool-group {
-        flex-wrap: wrap;
-        gap: 4px;
+    #t-debug-view .t-prompt-summary-actions {
+        justify-content: space-between;
     }
 
     #t-debug-view .t-prompt-tool-btn {
-        flex: 1;
         justify-content: center;
         padding: 8px 6px;
+    }
+
+    #t-debug-view .t-prompt-icon-btn {
+        width: 34px;
+    }
+
+    #t-debug-view .t-prompt-role-label {
+        width: 50px;
+    }
+
+    #t-debug-view .t-prompt-section-preview,
+    #t-debug-view .t-prompt-section-content {
+        padding-left: 14px;
     }
 }
 
@@ -11448,10 +12579,6 @@ function finishPromptTrace(traceId, status = "success", details = {}) {
 function getPromptTraceList() {
   return clonePromptTraceData(GlobalState.promptTrace.traces);
 }
-function getPromptTraceById(traceId) {
-  const trace = getPromptTraceRecord(traceId);
-  return trace ? clonePromptTraceData(trace) : null;
-}
 function resetContinuationState() {
   GlobalState.continuation = {
     isActive: false,
@@ -11703,6 +12830,11 @@ var init_state = __esm({
         userName: ""
         // 用户名
       },
+      // 主动续写分支历史（当前页面会话内有效）
+      continuationRuntime: {
+        chatId: "",
+        byScript: {}
+      },
       // 剧场历史记录队列
       sceneHistory: {
         items: [],
@@ -11870,6 +13002,11 @@ function compareByMode(a, b, mode, nowTs) {
   if (mode === "name_desc") {
     const n = bName.localeCompare(aName, "zh-CN");
     return n !== 0 ? n : (a.id || "").localeCompare(b.id || "");
+  }
+  if (mode === "recent_added") {
+    const t = (Number(b.created_at) || 0) - (Number(a.created_at) || 0);
+    if (t !== 0) return t;
+    return 0;
   }
   if (mode === "recent_generated") {
     const t = (bStats.last_generated_at || 0) - (aStats.last_generated_at || 0);
@@ -12058,8 +13195,12 @@ function saveUserScript(s) {
   const data = getExtData();
   ensureStatsStore(data);
   let u = data.user_scripts || [];
+  const existing = u.find((x) => x.id === s.id);
+  const createdAt = Number(existing?.created_at) || Number(s.created_at) || (existing ? 0 : Date.now());
+  const script = { ...s };
+  if (createdAt) script.created_at = createdAt;
   u = u.filter((x) => x.id !== s.id);
-  u.push(s);
+  u.push(script);
   data.user_scripts = u;
   saveExtData();
   loadScripts();
@@ -12084,6 +13225,7 @@ var init_scriptData = __esm({
       "default",
       "name_asc",
       "name_desc",
+      "recent_added",
       "recent_generated",
       "most_used",
       "smart"
@@ -12269,7 +13411,17 @@ async function getActiveWorldInfoEntries() {
   return result;
 }
 async function getContextData() {
-  let data = { charName: "Char", persona: "", userName: "User", userDesc: "", worldInfo: "" };
+  let data = {
+    charName: "Char",
+    persona: "",
+    userName: "User",
+    userDesc: "",
+    worldInfo: "",
+    worldInfoBefore: "",
+    worldInfoAfter: "",
+    scenario: "",
+    dialogueExamples: ""
+  };
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return data;
   let ctx;
   try {
@@ -12284,6 +13436,11 @@ async function getContextData() {
     data.charName = ctx.substituteParams("{{char}}") || "Char";
     data.userDesc = ctx.substituteParams("{{persona}}") || "";
     data.persona = ctx.substituteParams("{{description}}") || "";
+    const character = ctx.characterId !== void 0 ? ctx.characters?.[ctx.characterId] : null;
+    const rawScenario = String(character?.data?.scenario || character?.scenario || "");
+    const rawDialogueExamples = String(character?.data?.mes_example || character?.mes_example || "");
+    data.scenario = ctx.substituteParams(rawScenario);
+    data.dialogueExamples = ctx.substituteParams(rawDialogueExamples);
   } catch (e) {
     console.error("Titania: \u5B8F\u89E3\u6790\u5931\u8D25", e);
   }
@@ -12322,6 +13479,7 @@ async function getContextData() {
   if (contentParts.length > 0) {
     data.worldInfo = "[World Info / Lore]\n" + contentParts.join("\n\n") + "\n\n";
   }
+  data.worldInfoBefore = data.worldInfo;
   data.charId = ctx.characterId;
   return data;
 }
@@ -12448,6 +13606,65 @@ async function getWorldInfoEntriesByBookName(bookName) {
 var init_context = __esm({
   "src/core/context.js"() {
     init_storage();
+  }
+});
+
+// src/utils/chatHistoryBlacklist.js
+function parseChatHistoryBlacklistInput(input) {
+  const rules = [];
+  const lines = String(input || "").split(/\r?\n/);
+  lines.forEach((line, index) => {
+    const source = line.trim();
+    if (!source) return;
+    if (!source.endsWith(";")) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u7F3A\u5C11\u82F1\u6587\u5206\u53F7`);
+      return;
+    }
+    const body = source.slice(0, -1).trim();
+    const separator = body.search(/\s/);
+    if (separator <= 0) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u9700\u8981\u586B\u5199\u5F00\u59CB\u6807\u8BB0\u548C\u7ED3\u675F\u6807\u8BB0`);
+      return;
+    }
+    const start = body.slice(0, separator);
+    const end = body.slice(separator).trim();
+    if (!start || !end || /\s/.test(start) || /\s/.test(end) || start.includes(";") || end.includes(";")) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u6807\u8BB0\u4E0D\u80FD\u5305\u542B\u7A7A\u683C\u6216\u5206\u53F7`);
+      return;
+    }
+    rules.push({ start, end });
+  });
+  return rules;
+}
+function removeChatHistoryBlacklist(text, rules = []) {
+  let result = String(text || "");
+  if (!result || !Array.isArray(rules) || rules.length === 0) return result;
+  for (const rule of rules) {
+    if (!rule?.start || !rule?.end) continue;
+    let cursor = 0;
+    let output = "";
+    let changed = false;
+    while (cursor < result.length) {
+      const startIndex = result.indexOf(rule.start, cursor);
+      if (startIndex === -1) {
+        output += result.slice(cursor);
+        break;
+      }
+      const endIndex = result.indexOf(rule.end, startIndex + rule.start.length);
+      if (endIndex === -1) {
+        output += result.slice(cursor);
+        break;
+      }
+      output += result.slice(cursor, startIndex);
+      cursor = endIndex + rule.end.length;
+      changed = true;
+    }
+    if (changed) result = output;
+  }
+  return result;
+}
+var init_chatHistoryBlacklist = __esm({
+  "src/utils/chatHistoryBlacklist.js"() {
   }
 });
 
@@ -12741,11 +13958,12 @@ function extractContent(text, whitelist = []) {
   cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
   return cleaned;
 }
-function getChatHistory2(limit, whitelist = []) {
+function getChatHistory2(limit, whitelist = [], blacklist = void 0) {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
   const ctx = SillyTavern.getContext();
   const history = ctx.chat || [];
   const safeLimit = parseInt(limit) || 10;
+  const effectiveBlacklist = blacklist === void 0 ? parseChatHistoryBlacklistInput(getExtData().history_extraction?.blacklist || "") : blacklist;
   const domMessages = document.querySelectorAll("#chat .mes");
   const useDomCheck = domMessages.length === history.length;
   if (!useDomCheck) {
@@ -12779,6 +13997,7 @@ function getChatHistory2(limit, whitelist = []) {
     if (name === "{{user}}") name = ctx.name1 || "User";
     if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
     let rawContent = msg.message || msg.mes || "";
+    rawContent = removeChatHistoryBlacklist(rawContent, effectiveBlacklist);
     let cleanContent = extractContent(rawContent, whitelist);
     if (!cleanContent.trim()) {
       cleanContent = rawContent.replace(/<[^>]*>?/gm, "").trim();
@@ -13263,6 +14482,7 @@ var fileToBase64, parseMeta, getSnippet;
 var init_helpers = __esm({
   "src/utils/helpers.js"() {
     init_storage();
+    init_chatHistoryBlacklist();
     fileToBase64 = (file) => new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -15095,51 +16315,6 @@ function makePreview(text, maxLen = 260) {
   if (normalized.length <= maxLen) return normalized;
   return `${normalized.slice(0, maxLen)}...`;
 }
-function extractUserSections(userText, includeContent = false) {
-  const text = String(userText || "").trim();
-  if (!text) return [];
-  const sectionRegex = /^\[(.+?)\]/gm;
-  const markers = [];
-  let match;
-  while ((match = sectionRegex.exec(text)) !== null) {
-    markers.push({
-      title: String(match[1] || "\u672A\u547D\u540D\u533A\u5757").trim(),
-      index: match.index,
-      markerLen: match[0].length
-    });
-  }
-  if (markers.length === 0) {
-    const chars = text.length;
-    const base = {
-      title: "\u6B63\u6587",
-      chars,
-      tokens_est: estimateTokens(text),
-      preview: makePreview(text)
-    };
-    if (includeContent) base.content = text;
-    return [base];
-  }
-  const sections = [];
-  for (let i = 0; i < markers.length; i++) {
-    const current = markers[i];
-    const next = markers[i + 1];
-    const contentStart = current.index + current.markerLen;
-    const contentEnd = next ? next.index : text.length;
-    const content = text.slice(contentStart, contentEnd).trim();
-    const chars = content.length;
-    const row = {
-      title: current.title,
-      chars,
-      tokens_est: estimateTokens(content),
-      preview: makePreview(content)
-    };
-    if (includeContent) {
-      row.content = content;
-    }
-    sections.push(row);
-  }
-  return sections;
-}
 function formatTimeText(ts) {
   if (!ts) return "-";
   return new Date(ts).toLocaleTimeString("zh-CN", { hour12: false });
@@ -15150,88 +16325,87 @@ function getTraceSourceLabel(source) {
   if (s === "auto_continuation") return "\u81EA\u52A8\u7EED\u5199";
   if (s === "manual") return "\u624B\u52A8\u751F\u6210";
   if (s === "queue") return "\u961F\u5217\u751F\u6210";
-  if (s === "preview") return "\u751F\u6210\u524D\u9884\u89C8";
   return source || "\u672A\u77E5\u6765\u6E90";
 }
-function pickTraceBySource(traces, sourceMode) {
-  const list = Array.isArray(traces) ? traces : [];
-  const withMessages = list.filter((t) => t?.finalMessages?.messages?.length > 0);
-  if (sourceMode === "latest") return withMessages[0] || null;
-  if (sourceMode === "manual") {
-    return withMessages.find((t) => {
-      const src = String(t?.source || "").toLowerCase();
-      return src !== "user_continuation" && src !== "auto_continuation";
-    }) || null;
+function expandBuiltinContextDetails(details, trace, meta) {
+  const mode = String(trace?.mode || "");
+  const sectionLengths = meta?.sectionLengths;
+  if (!["narrative", "visual"].includes(mode) || meta?.promptScheme?.type !== "builtin" || !sectionLengths) {
+    return details;
   }
-  return withMessages.find((t) => String(t?.source || "").toLowerCase() === sourceMode) || null;
-}
-function getPromptSectionsFromTrace(trace) {
-  const messages = trace?.finalMessages?.messages || [];
-  const meta = trace?.finalMessages?.meta || {};
-  const estimated = meta.estimatedTokens || { system: 0, user: 0 };
-  const systemMsg = messages.find((m) => m.role === "system")?.content || "";
-  const userMsg = messages.find((m) => m.role === "user")?.content || "";
-  const userSections = extractUserSections(userMsg, true);
-  const sections = [];
-  sections.push({
-    id: "system",
-    title: "\u7CFB\u7EDF\u63D0\u793A\u8BCD",
-    role: "system",
-    order: 0,
-    content: systemMsg,
-    chars: systemMsg.length,
-    tokens: estimated.system > 0 ? estimated.system : estimateTokens(systemMsg)
-  });
-  userSections.forEach((item, idx) => {
-    sections.push({
-      id: `user_${idx}`,
-      title: item.title || `\u7528\u6237\u6BB5\u843D ${idx + 1}`,
-      role: "user",
-      order: idx + 1,
-      content: item.content || "",
-      chars: item.chars || 0,
-      tokens: item.tokens_est || 0
-    });
-  });
-  const estimatedTotal = (estimated.system || 0) + (estimated.user || 0);
-  const displayedTotal = sections.reduce((sum, s) => sum + (s.tokens || 0), 0);
-  return {
-    sections,
-    totalTokens: estimatedTotal > 0 ? estimatedTotal : displayedTotal
-  };
-}
-function getPromptSectionsFromPreview(preview) {
-  const messages = preview?.messages || [];
-  const meta = preview?.meta || {};
-  const estimated = meta.estimatedTokens || { system: 0, user: 0 };
-  const systemMsg = messages.find((m) => m.role === "system")?.content || "";
-  const userMsg = messages.find((m) => m.role === "user")?.content || "";
-  const userSections = extractUserSections(userMsg, true);
-  const sections = [
-    {
-      id: "system",
-      title: "\u7CFB\u7EDF\u63D0\u793A\u8BCD",
-      role: "system",
-      order: 0,
-      content: systemMsg,
-      chars: systemMsg.length,
-      tokens: estimated.system > 0 ? estimated.system : estimateTokens(systemMsg)
-    },
-    ...userSections.map((item, idx) => ({
-      id: `user_${idx}`,
-      title: item.title || `\u7528\u6237\u6BB5\u843D ${idx + 1}`,
-      role: "user",
-      order: idx + 1,
-      content: item.content || "",
-      chars: item.chars || 0,
-      tokens: item.tokens_est || 0
-    }))
+  const userEntryId = `${mode}_user`;
+  const definitions = [
+    ["director", "\u5BFC\u6F14\u6307\u4EE4"],
+    ["persona", "\u89D2\u8272\u4EBA\u8BBE"],
+    ["userDesc", "\u7528\u6237\u8BBE\u5B9A"],
+    ["worldInfo", "\u4E16\u754C\u89C2\u8BBE\u5B9A"],
+    ["history", "\u804A\u5929\u5386\u53F2"],
+    ["scriptInstruction", "\u5267\u672C\u6307\u4EE4"]
   ];
-  const estimatedTotal = (estimated.system || 0) + (estimated.user || 0);
-  const displayedTotal = sections.reduce((sum, s) => sum + (s.tokens || 0), 0);
+  return details.flatMap((detail) => {
+    if (detail?.entryId !== userEntryId) return [detail];
+    const content = String(detail.content || "");
+    const sections = [];
+    let offset = 0;
+    definitions.forEach(([key, name]) => {
+      const length = Math.max(0, Math.floor(Number(sectionLengths[key]) || 0));
+      if (length === 0) return;
+      const part = content.slice(offset, offset + length);
+      offset += length;
+      if (!part) return;
+      sections.push({
+        ...detail,
+        entryId: `${userEntryId}_${key}`,
+        name,
+        content: part,
+        chars: part.length,
+        tokens: estimateTokens(part)
+      });
+    });
+    if (offset < content.length) {
+      const remainder = content.slice(offset);
+      sections.push({
+        ...detail,
+        entryId: `${userEntryId}_other`,
+        name: "\u5176\u4ED6\u751F\u6210\u4E0A\u4E0B\u6587",
+        content: remainder,
+        chars: remainder.length,
+        tokens: estimateTokens(remainder)
+      });
+    }
+    return sections.length > 0 ? sections : [detail];
+  }).map((detail, index) => ({ ...detail, index }));
+}
+function getPromptMessagesView(source, isTrace = false) {
+  const finalMessages = isTrace ? source?.finalMessages : source;
+  const messages = finalMessages?.messages || [];
+  const meta = finalMessages?.meta || source?.meta || {};
+  const suppliedDetails = isTrace ? meta.messageDetails : source?.messageDetails;
+  const rawDetails = Array.isArray(suppliedDetails) && suppliedDetails.length > 0 ? suppliedDetails : messages.map((message, index) => ({
+    index,
+    entryId: `message_${index}`,
+    sourceIdentifier: null,
+    name: `\u6D88\u606F ${index + 1}`,
+    role: message.role || "user",
+    type: "text",
+    marker: null,
+    required: false,
+    content: String(message.content || ""),
+    chars: String(message.content || "").length,
+    tokens: estimateTokens(message.content || "")
+  }));
+  const details = isTrace ? expandBuiltinContextDetails(rawDetails, source, meta) : rawDetails;
+  const sections = details.map((detail, index) => ({
+    id: detail.entryId || `message_${index}`,
+    title: detail.name || `\u6D88\u606F ${index + 1}`,
+    role: detail.role || "user",
+    order: Number.isFinite(detail.index) ? detail.index : index,
+    content: String(detail.content || ""),
+    tokens: Number(detail.tokens) || estimateTokens(detail.content || "")
+  }));
   return {
     sections,
-    totalTokens: estimatedTotal > 0 ? estimatedTotal : displayedTotal
+    totalTokens: sections.reduce((sum, section) => sum + section.tokens, 0)
   };
 }
 async function showDebugInfo() {
@@ -15252,211 +16426,60 @@ async function showDebugInfo() {
             <span class="t-close" id="t-debug-close">&times;</span>
         </div>
 
-        <div class="t-prompt-top-summary">
-            <div class="t-prompt-top-main">
-                <div class="t-prompt-total-token"><span>\u603B Token</span><strong id="t-prompt-total-token">0</strong></div>
-                <div class="t-prompt-meta-item">\u6BB5\u843D\u6570 <b id="t-prompt-section-count">0</b></div>
-                <div class="t-prompt-meta-item">\u5E73\u5747 <b id="t-prompt-avg-tokens">-</b> tk</div>
-                <div class="t-prompt-meta-item">\u6700\u5927\u6BB5\u843D <b id="t-prompt-max-section">-</b></div>
-                <div class="t-prompt-budget-badge ok" id="t-prompt-budget-badge">\u9884\u7B97\u5145\u8DB3</div>
+        <div class="t-prompt-summary">
+            <div class="t-prompt-request">
+                <span class="t-prompt-actual"><i class="fa-solid fa-circle"></i> \u6700\u8FD1\u4E00\u6B21\u5B9E\u9645\u8BF7\u6C42</span>
+                <span id="t-prompt-request-meta">\u6682\u65E0\u8BF7\u6C42</span>
             </div>
-            <div class="t-prompt-top-sub">
-                <span class="t-prompt-meta-item">\u5267\u672C <b id="t-prompt-trace-name">-</b></span>
-                <span class="t-prompt-meta-item">\u66F4\u65B0 <b id="t-prompt-updated-at">-</b></span>
-                <span class="t-prompt-live-dot" id="t-prompt-live-state"><i class="fa-solid fa-circle"></i> \u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8</span>
-            </div>
-        </div>
-
-        <div class="t-prompt-toolbar">
-            <div class="t-prompt-seg-group" id="t-prompt-source-group">
-                <button class="t-prompt-seg-btn active" data-value="live">\u5B9E\u65F6\u9884\u89C8</button>
-                <button class="t-prompt-seg-btn" data-value="latest">\u6700\u8FD1\u6784\u9020</button>
-                <button class="t-prompt-seg-btn" data-value="manual">\u4E3B\u751F\u6210</button>
-                <button class="t-prompt-seg-btn" data-value="user_continuation">\u4E3B\u52A8\u7EED\u5199</button>
-                <button class="t-prompt-seg-btn" data-value="auto_continuation">\u81EA\u52A8\u7EED\u5199</button>
-            </div>
-            <div class="t-prompt-tool-group">
-                <button id="t-prompt-sort-btn" class="t-prompt-tool-btn" data-sort="order" title="\u6392\u5E8F\u65B9\u5F0F"><i class="fa-solid fa-arrow-down-short-wide"></i> \u987A\u5E8F</button>
-                <button id="t-prompt-high-only-btn" class="t-prompt-tool-btn" title="\u4EC5\u663E\u793A\u9AD8\u6D88\u8017\u6BB5\u843D"><i class="fa-solid fa-filter"></i> \u9AD8\u6D88\u8017</button>
-                <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6BB5\u843D"><i class="fa-solid fa-angles-down"></i> \u5C55\u5F00</button>
-                <button id="t-prompt-copy-btn" class="t-prompt-tool-btn" title="\u590D\u5236\u5168\u90E8\u63D0\u793A\u8BCD"><i class="fa-solid fa-copy"></i> \u590D\u5236</button>
-                <button id="t-debug-refresh" class="t-prompt-tool-btn" title="\u624B\u52A8\u5237\u65B0"><i class="fa-solid fa-rotate-right"></i></button>
+            <div class="t-prompt-summary-actions">
+                <span class="t-prompt-count"><strong id="t-prompt-total-token">0</strong> tokens \xB7 <b id="t-prompt-section-count">0</b> \u6761\u6D88\u606F</span>
+                <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6D88\u606F"><i class="fa-solid fa-angles-down"></i> \u5C55\u5F00\u5168\u90E8</button>
+                <button id="t-debug-refresh" class="t-prompt-tool-btn t-prompt-icon-btn" title="\u5237\u65B0"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
         </div>
 
         <div class="t-prompt-sections" id="t-prompt-sections"></div>
     </div>`;
   $("#t-overlay").append(html);
-  let renderSeq = 0;
-  let buildPromptCompositionPreview2 = null;
-  const getSourceMode = () => $("#t-prompt-source-group .t-prompt-seg-btn.active").data("value") || "live";
-  const getSortBy = () => $("#t-prompt-sort-btn").data("sort") || "order";
-  const isHighOnly = () => $("#t-prompt-high-only-btn").hasClass("active");
-  const renderPromptWindow = async () => {
-    const seq = ++renderSeq;
+  const renderPromptWindow = () => {
     const $sections = $("#t-prompt-sections");
-    const sourceMode = getSourceMode();
-    if (!buildPromptCompositionPreview2) {
-      const apiModule = await Promise.resolve().then(() => (init_api(), api_exports));
-      buildPromptCompositionPreview2 = apiModule.buildPromptCompositionPreview;
-    }
-    $sections.html(`<div class="t-prompt-empty">\u6B63\u5728\u52A0\u8F7D\u63D0\u793A\u8BCD\u6784\u9020\uFF08${escapeHtml2(getTraceSourceLabel(sourceMode === "live" ? "preview" : sourceMode))}\uFF09...</div>`);
-    if (sourceMode !== "live") {
-      const traces = getPromptTraceList();
-      const targetTrace = pickTraceBySource(traces, sourceMode);
-      if (!targetTrace) {
-        $sections.html('<div class="t-prompt-empty">\u672A\u627E\u5230\u5BF9\u5E94\u6765\u6E90\u7684\u63D0\u793A\u8BCD\u8BB0\u5F55\u3002</div>');
-        $("#t-prompt-total-token").text("0");
-        $("#t-prompt-section-count").text("0");
-        $("#t-prompt-avg-tokens").text("-");
-        $("#t-prompt-max-section").text("-");
-        $("#t-prompt-trace-name").text("-");
-        $("#t-prompt-updated-at").text("-");
-        $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass("ok").text("\u65E0\u6570\u636E");
-        $("#t-prompt-live-state").css("color", "#777").html('<i class="fa-solid fa-circle"></i> \u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F');
-        return;
-      }
-      const target = getPromptSectionsFromTrace(targetTrace);
-      renderSections(target.sections, target.totalTokens, {
-        scriptName: targetTrace.scriptName || "\u672A\u77E5\u5267\u672C",
-        updatedAt: targetTrace.endedAt || targetTrace.startedAt,
-        modeText: `\u5386\u53F2\u8FFD\u8E2A \xB7 ${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.status || "unknown"}`
-      });
+    const targetTrace = getPromptTraceList().find((trace) => trace?.finalMessages?.messages?.length > 0);
+    if (!targetTrace) {
+      $sections.html('<div class="t-prompt-empty"><i class="fa-regular fa-file-lines"></i><span>\u8FD8\u6CA1\u6709\u5B9E\u9645\u53D1\u9001\u8FC7\u63D0\u793A\u8BCD</span><small>\u5B8C\u6210\u4E00\u6B21\u751F\u6210\u540E\uFF0C\u8FD9\u91CC\u4F1A\u663E\u793A\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u5B8C\u6574\u6D88\u606F\u3002</small></div>');
+      $("#t-prompt-total-token, #t-prompt-section-count").text("0");
+      $("#t-prompt-request-meta").text("\u6682\u65E0\u8BF7\u6C42");
       return;
     }
-    const preview = await buildPromptCompositionPreview2();
-    if (seq !== renderSeq) return;
-    if (!preview?.ok) {
-      const traces = getPromptTraceList();
-      const fallbackCandidate = pickTraceBySource(traces, "manual") || pickTraceBySource(traces, "latest");
-      const fallbackTrace = fallbackCandidate ? getPromptTraceById(fallbackCandidate.id) : null;
-      if (!fallbackTrace) {
-        $sections.html(`<div class="t-prompt-empty">\u65E0\u6CD5\u6784\u5EFA\u751F\u6210\u524D\u63D0\u793A\u8BCD\uFF1A${escapeHtml2(preview?.error || "unknown")}</div>`);
-        $("#t-prompt-total-token").text("0");
-        $("#t-prompt-section-count").text("0");
-        $("#t-prompt-avg-tokens").text("-");
-        $("#t-prompt-max-section").text("-");
-        $("#t-prompt-trace-name").text("-");
-        $("#t-prompt-updated-at").text("-");
-        $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass("ok").text("\u65E0\u6570\u636E");
-        return;
-      }
-      const fallback = getPromptSectionsFromTrace(fallbackTrace);
-      renderSections(fallback.sections, fallback.totalTokens, {
-        scriptName: fallbackTrace.scriptName || "\u672A\u77E5\u5267\u672C",
-        updatedAt: fallbackTrace.endedAt || fallbackTrace.startedAt,
-        modeText: `\u56DE\u9000\u8BB0\u5F55 \xB7 ${getTraceSourceLabel(fallbackTrace.source)}\uFF08${fallbackTrace.status || "unknown"}\uFF09`
-      });
-      return;
-    }
-    const composed = getPromptSectionsFromPreview(preview);
-    renderSections(composed.sections, composed.totalTokens, {
-      scriptName: preview.script?.name || "\u672A\u77E5\u5267\u672C",
-      updatedAt: preview.timestamp,
-      modeText: `\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8 \xB7 ${preview.mode === "visual" ? "\u6C1B\u56F4\u7F8E\u5316" : "\u5185\u5BB9\u4F18\u5148"}`
+    const { sections, totalTokens } = getPromptMessagesView(targetTrace, true);
+    const expandedIds = /* @__PURE__ */ new Set();
+    $("#t-prompt-sections .t-prompt-section-card.expanded").each(function() {
+      expandedIds.add($(this).data("section-id"));
     });
-  };
-  const renderSections = (allSections, totalTokens, ctx = {}) => {
-    const $sections = $("#t-prompt-sections");
-    const highOnly = isHighOnly();
-    const sortBy = getSortBy();
-    const highThreshold = Math.max(120, Math.ceil(totalTokens * 0.2));
-    let displaySections = allSections.filter((section) => {
-      if (highOnly && section.tokens < highThreshold) return false;
-      return true;
-    });
-    if (sortBy === "tokens_desc") displaySections.sort((a, b) => b.tokens - a.tokens);
-    else if (sortBy === "tokens_asc") displaySections.sort((a, b) => a.tokens - b.tokens);
-    else displaySections.sort((a, b) => a.order - b.order);
-    if (displaySections.length === 0) {
-      $sections.html('<div class="t-prompt-empty">\u6CA1\u6709\u5339\u914D\u7684\u6BB5\u843D\u3002</div>');
-    } else {
-      const expandedIds = /* @__PURE__ */ new Set();
-      $("#t-prompt-sections .t-prompt-section-card.expanded").each(function() {
-        expandedIds.add($(this).data("section-id"));
-      });
-      const cardsHtml = displaySections.map((section, idx) => {
-        const ratio = totalTokens > 0 ? section.tokens / totalTokens * 100 : 0;
-        const badgeClass = ratio >= 30 ? "danger" : ratio >= 20 ? "warn" : "ok";
-        const roleClass = section.role === "system" ? "t-prompt-role-system" : "t-prompt-role-user";
-        const roleLabel = section.role === "system" ? "System" : "User";
-        const previewText = makePreview(section.content, 150);
-        const wasExpanded = expandedIds.has(section.id);
-        return `
+    const cardsHtml = [...sections].sort((a, b) => a.order - b.order).map((section) => {
+      const roleClass = `t-prompt-role-${section.role}`;
+      const previewText = makePreview(section.content, 150);
+      const wasExpanded = expandedIds.has(section.id);
+      return `
                 <div class="t-prompt-section-card ${roleClass}${wasExpanded ? " expanded" : ""}" data-section-id="${section.id}" data-role="${section.role}">
                     <div class="t-prompt-section-head">
                         <div class="t-prompt-section-title">
-                            <i class="fa-solid fa-chevron-right t-prompt-chevron"></i> ${idx + 1}. ${escapeHtml2(section.title)}
+                            <i class="fa-solid fa-chevron-right t-prompt-chevron"></i>
+                            <span class="t-prompt-order">${section.order + 1}</span>
+                            <span class="t-prompt-role-label">${escapeHtml2(section.role)}</span>
+                            <span class="t-prompt-name">${escapeHtml2(section.title)}</span>
                         </div>
-                        <div class="t-prompt-token-badge ${badgeClass}">${section.tokens} tk</div>
+                        <div class="t-prompt-token-count">${section.tokens} tk</div>
                     </div>
-                    <div class="t-prompt-section-meta">${section.chars} chars \xB7 \u5360\u6BD4 ${ratio.toFixed(1)}% \xB7 ${roleLabel}</div>
                     <div class="t-prompt-section-preview">${escapeHtml2(previewText)}</div>
                     <pre class="t-prompt-section-content">${escapeHtml2(section.content || "(\u65E0\u5185\u5BB9)")}</pre>
                 </div>`;
-      }).join("");
-      $sections.html(cardsHtml);
-    }
-    const topSections = [...allSections].sort((a, b) => b.tokens - a.tokens);
-    const maxSection = topSections[0] || null;
-    const avgTokens = allSections.length > 0 ? Math.round(totalTokens / allSections.length) : 0;
-    const budgetLevel = totalTokens >= 1900 ? "danger" : totalTokens >= 1600 ? "warn" : "ok";
-    const budgetText = totalTokens >= 1900 ? "\u63A5\u8FD1\u4E0A\u9650" : totalTokens >= 1600 ? "\u9884\u7B97\u504F\u7D27" : "\u9884\u7B97\u5145\u8DB3";
-    const sourceMode = getSourceMode();
-    const live = sourceMode === "live";
-    const liveColor = live ? "#74b9ff" : "#777";
-    const liveText = ctx.modeText || (live ? "\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8" : "\u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F");
+    }).join("");
+    $sections.html(cardsHtml);
     $("#t-prompt-total-token").text(totalTokens);
-    $("#t-prompt-section-count").text(allSections.length);
-    $("#t-prompt-avg-tokens").text(avgTokens);
-    $("#t-prompt-max-section").text(maxSection ? `${escapeHtml2(maxSection.title)} (${maxSection.tokens} tk)` : "-");
-    $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass(budgetLevel).text(budgetText);
-    $("#t-prompt-trace-name").text(ctx.scriptName || "\u672A\u77E5\u5267\u672C");
-    $("#t-prompt-updated-at").text(formatTimeText(ctx.updatedAt));
-    $("#t-prompt-live-state").css("color", liveColor).html(`<i class="fa-solid fa-circle"></i> ${liveText}`);
+    $("#t-prompt-section-count").text(sections.length);
+    $("#t-prompt-request-meta").text(`${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.scriptName || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(targetTrace.endedAt || targetTrace.startedAt)}`);
   };
   renderPromptWindow();
-  $("#t-prompt-source-group").on("click", ".t-prompt-seg-btn", function() {
-    if ($(this).hasClass("active")) return;
-    $("#t-prompt-source-group .t-prompt-seg-btn").removeClass("active");
-    $(this).addClass("active");
-    renderPromptWindow();
-  });
-  const sortCycle = ["order", "tokens_desc", "tokens_asc"];
-  const sortLabels = { order: "\u987A\u5E8F", tokens_desc: "Token\u2193", tokens_asc: "Token\u2191" };
-  $("#t-prompt-sort-btn").on("click", function() {
-    const current = $(this).data("sort") || "order";
-    const idx = sortCycle.indexOf(current);
-    const next = sortCycle[(idx + 1) % sortCycle.length];
-    $(this).data("sort", next).attr("data-sort", next);
-    $(this).html(`<i class="fa-solid fa-arrow-down-short-wide"></i> ${sortLabels[next]}`);
-    renderPromptWindow();
-  });
-  $("#t-prompt-high-only-btn").on("click", function() {
-    $(this).toggleClass("active");
-    renderPromptWindow();
-  });
-  $("#t-prompt-copy-btn").on("click", async () => {
-    const cards = $("#t-prompt-sections .t-prompt-section-card");
-    if (cards.length === 0) {
-      if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u590D\u5236\u7684\u5185\u5BB9", "Titania");
-      return;
-    }
-    const parts = [];
-    cards.each(function() {
-      const title = $(this).find(".t-prompt-section-title").text().trim();
-      const content = $(this).find(".t-prompt-section-content").text().trim();
-      parts.push(`[${title}]
-${content}`);
-    });
-    const fullText = parts.join("\n\n---\n\n");
-    try {
-      await navigator.clipboard.writeText(fullText);
-      if (window.toastr) toastr.success(`\u5DF2\u590D\u5236 ${parts.length} \u4E2A\u6BB5\u843D`, "Titania");
-    } catch {
-      if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u590D\u5236", "Titania");
-    }
-  });
   $("#t-debug-refresh").on("click", () => {
     renderPromptWindow();
     if (window.toastr) toastr.info("\u63D0\u793A\u8BCD\u5DF2\u5237\u65B0", "Titania");
@@ -15472,11 +16495,11 @@ ${content}`);
     if ($cards.length === 0) return;
     const allExpanded = $cards.filter(".expanded").length === $cards.length;
     if (allExpanded) {
-      $btn.html('<i class="fa-solid fa-angles-up"></i> \u6298\u53E0');
-      $btn.attr("title", "\u6298\u53E0\u5168\u90E8\u6BB5\u843D");
+      $btn.html('<i class="fa-solid fa-angles-up"></i> \u6298\u53E0\u5168\u90E8');
+      $btn.attr("title", "\u6298\u53E0\u5168\u90E8\u6D88\u606F");
     } else {
-      $btn.html('<i class="fa-solid fa-angles-down"></i> \u5C55\u5F00');
-      $btn.attr("title", "\u5C55\u5F00\u5168\u90E8\u6BB5\u843D");
+      $btn.html('<i class="fa-solid fa-angles-down"></i> \u5C55\u5F00\u5168\u90E8');
+      $btn.attr("title", "\u5C55\u5F00\u5168\u90E8\u6D88\u606F");
     }
   };
   $("#t-prompt-expand-all-btn").on("click", function() {
@@ -19447,29 +20470,42 @@ function normalizeRuleAction(action) {
   const value = String(action || "").trim().toLowerCase();
   return value === "delete" ? "delete" : "rewrite";
 }
-function actionLabel(action) {
-  return normalizeRuleAction(action) === "delete" ? "\u5220\u9664" : "\u6539\u5199";
+function generateId(prefix) {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `${prefix}_${ts}_${rand}`;
 }
-function cleanupRules(rules) {
-  if (!Array.isArray(rules)) return [];
-  return rules.map((item) => {
-    const anchorTokens = uniq(parseCommaList(item?.anchor || ""));
-    const extras = uniq(parseCommaList(item?.extras || ""));
-    const action = normalizeRuleAction(item?.action);
-    return {
-      anchor: anchorTokens.join(", "),
-      extras,
-      action
-    };
-  }).filter((rule) => rule.anchor && Array.isArray(rule.extras) && rule.extras.length > 0);
+function getActiveScheme() {
+  const data = ensureRewriteDataShape();
+  const schemes = Array.isArray(data.schemes) ? data.schemes : [];
+  const activeId = String(data.active_scheme_id || "").trim();
+  if (!activeId) return null;
+  return schemes.find((s) => s.id === activeId) || null;
 }
-function rulesToLegacyText(rules) {
-  if (!Array.isArray(rules) || rules.length === 0) return "";
-  return rules.map((r) => {
-    if (!r.extras || r.extras.length === 0) return r.anchor;
-    const suffix = normalizeRuleAction(r.action) === "delete" ? " [delete]" : "";
-    return `${r.anchor} => ${r.extras.join(", ")}${suffix}`;
-  }).join("\n");
+function getActiveSchemeCategories() {
+  const scheme = getActiveScheme();
+  if (!scheme || !Array.isArray(scheme.categories)) return [];
+  return scheme.categories.filter((cat) => String(cat.name || "").trim() && Array.isArray(cat.rules) && cat.rules.length > 0);
+}
+function normalizeCategory(cat) {
+  return {
+    id: String(cat?.id || ""),
+    name: String(cat?.name || "").trim(),
+    bad_example: String(cat?.bad_example || "").trim(),
+    good_example: String(cat?.good_example || "").trim(),
+    guidance: String(cat?.guidance || "").trim(),
+    rules: (Array.isArray(cat?.rules) ? cat.rules : []).map((r) => ({
+      anchor: uniq(parseCommaList(r?.anchor || "").filter(Boolean)).join(", "),
+      extras: uniq(parseCommaList(r?.extras || "").filter(Boolean)).join(", ")
+    })).filter((r) => r.anchor && r.extras)
+  };
+}
+function normalizeScheme(scheme) {
+  return {
+    id: String(scheme?.id || ""),
+    name: String(scheme?.name || "").trim(),
+    categories: (Array.isArray(scheme?.categories) ? scheme.categories : []).map(normalizeCategory).filter((cat) => cat.name)
+  };
 }
 function ensureRewriteDataShape() {
   const data = getExtData();
@@ -19479,9 +20515,9 @@ function ensureRewriteDataShape() {
       api_url: "",
       api_key: "",
       model: "",
-      rules_text: "",
       split_mode: "sentence",
-      rules: []
+      active_scheme_id: "",
+      schemes: []
     };
   }
   const item = data.rewrite_entry;
@@ -19492,15 +20528,18 @@ function ensureRewriteDataShape() {
     item.profile_id = item.custom_profiles[0]?.id || "";
   }
   if (!item.split_mode || !["sentence", "paragraph"].includes(item.split_mode)) item.split_mode = "sentence";
-  if (!Array.isArray(item.rules)) item.rules = [];
   if (typeof item.stream_live !== "boolean") item.stream_live = true;
   if (typeof item.auto_trigger !== "boolean") item.auto_trigger = false;
+  if (typeof item.selected_sentence_enabled !== "boolean") item.selected_sentence_enabled = true;
   if (typeof item.tag_whitelist !== "string") item.tag_whitelist = "";
-  if (typeof item.rules_text !== "string") item.rules_text = "";
+  if (typeof item.active_scheme_id !== "string") item.active_scheme_id = "";
+  if (!Array.isArray(item.schemes)) item.schemes = [];
   if (typeof item.prompt_system !== "string") item.prompt_system = REWRITE_DEFAULT_PROMPT_SYSTEM;
   if (typeof item.prompt_user !== "string") item.prompt_user = REWRITE_DEFAULT_PROMPT_USER;
+  if (typeof item.selected_prompt_system !== "string") item.selected_prompt_system = REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM;
+  if (typeof item.selected_prompt_user !== "string") item.selected_prompt_user = REWRITE_DEFAULT_SELECTED_PROMPT_USER;
   if (typeof item.prompt_json_rule !== "string") item.prompt_json_rule = REWRITE_DEFAULT_PROMPT_JSON_RULE;
-  item.rules = cleanupRules(item.rules);
+  item.schemes = item.schemes.map(normalizeScheme).filter((s) => s.name);
   return item;
 }
 function getRewritePromptState() {
@@ -19508,6 +20547,14 @@ function getRewritePromptState() {
   return {
     prompt_system: String(item.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM),
     prompt_user: String(item.prompt_user || REWRITE_DEFAULT_PROMPT_USER),
+    prompt_json_rule: String(item.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
+  };
+}
+function getSelectedRewritePromptState() {
+  const item = ensureRewriteDataShape();
+  return {
+    prompt_system: String(item.selected_prompt_system || REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM),
+    prompt_user: String(item.selected_prompt_user || REWRITE_DEFAULT_SELECTED_PROMPT_USER),
     prompt_json_rule: String(item.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
 }
@@ -19563,10 +20610,14 @@ function persistPromptStateFromSettings() {
   const prev = ensureRewriteDataShape();
   const combinedText = String($overlay.find("#t-rewrite-settings-prompt-combined").val() || "");
   const parsed = parseCombinedPromptText(combinedText, getRewritePromptState());
+  const selectedCombinedText = String($overlay.find("#t-rewrite-settings-selected-prompt-combined").val() || "");
+  const selectedParsed = parseCombinedPromptText(selectedCombinedText, getSelectedRewritePromptState());
   data.rewrite_entry = {
     ...prev,
     prompt_system: parsed.prompt_system,
     prompt_user: parsed.prompt_user,
+    selected_prompt_system: selectedParsed.prompt_system,
+    selected_prompt_user: selectedParsed.prompt_user,
     prompt_json_rule: String(prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
   saveExtData();
@@ -19628,57 +20679,223 @@ function splitBySentence(text) {
   });
   return chunks;
 }
+function getSelectedSentenceIdSet() {
+  return selectedSentenceIds instanceof Set ? selectedSentenceIds : /* @__PURE__ */ new Set();
+}
+function getSelectedSentenceCount() {
+  return getSelectedSentenceIdSet().size;
+}
+function updateInlineRewriteCount() {
+  $("#chat .t-rewrite-inline-count").text(`\u5DF2\u9009 ${getSelectedSentenceCount()} \u53E5`);
+}
+function setSelectedSentenceIds(ids = []) {
+  selectedSentenceIds = new Set(Array.from(ids).map((id) => String(id || "")).filter(Boolean));
+}
+function buildSentenceUnitsFromLatest(latest) {
+  const sentences = splitBySentence(latest?.content || "");
+  return sentences.map((text, idx) => ({
+    unitIndex: idx + 1,
+    segment_id: `s_${idx + 1}`,
+    text: String(text || ""),
+    hit: false,
+    matchedCategories: []
+  }));
+}
+function buildSelectedSentencePayload(latest, selectedIds) {
+  const selected = selectedIds instanceof Set ? selectedIds : new Set(selectedIds || []);
+  const evaluated = {
+    sourceMode: "selected",
+    splitMode: "sentence",
+    unitCount: latestSentenceUnits.length,
+    hitCount: selected.size,
+    categoryCount: 0,
+    unitResults: latestSentenceUnits.map((unit) => ({
+      ...unit,
+      hit: selected.has(unit.segment_id),
+      matchedCategories: []
+    }))
+  };
+  const targets = evaluated.unitResults.filter((unit) => unit.hit).map((unit) => ({
+    segment_id: unit.segment_id,
+    original_text: unit.text,
+    matched_keywords: []
+  }));
+  return {
+    evaluated,
+    request: {
+      task_id: `rewrite_selected_${Date.now()}`,
+      targets
+    },
+    hitCategoryCount: 0
+  };
+}
+function clearInlineSentenceSelection() {
+  $("#chat .t-rewrite-inline-toolbar").remove();
+  $("#chat .t-rewrite-select-sentence").each((_, el) => {
+    const text = document.createTextNode(el.textContent || "");
+    el.replaceWith(text);
+  });
+  const containers = document.querySelectorAll("#chat .mes_text, #chat .message_text");
+  containers.forEach((el) => el.normalize());
+  inlineSelectionMessageIndex = null;
+  setSelectedSentenceIds([]);
+}
+function wrapFirstSentenceSelectionOccurrence(containerEl, unit) {
+  const needle = String(unit?.text || "");
+  const segmentId = String(unit?.segment_id || "");
+  if (!containerEl || !needle || !segmentId) return false;
+  const walker = document.createTreeWalker(containerEl, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node || !node.nodeValue || !node.nodeValue.includes(needle)) return NodeFilter.FILTER_REJECT;
+      const parent = node.parentElement;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+      if (parent.closest(".t-rewrite-mark, .t-rewrite-select-sentence")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const candidateNodes = [];
+  let current = walker.nextNode();
+  while (current) {
+    candidateNodes.push(current);
+    current = walker.nextNode();
+  }
+  for (const textNode of candidateNodes) {
+    const content = textNode.nodeValue || "";
+    const idx = content.indexOf(needle);
+    if (idx < 0) continue;
+    const right = textNode.splitText(idx);
+    const tail = right.splitText(needle.length);
+    const mark = document.createElement("span");
+    mark.className = "t-rewrite-select-sentence";
+    mark.dataset.segmentId = segmentId;
+    mark.title = "\u70B9\u51FB\u9009\u62E9/\u53D6\u6D88\u9009\u62E9\u6B64\u53E5";
+    mark.textContent = needle;
+    right.replaceWith(mark);
+    if (tail && tail.parentNode) tail.parentNode.normalize();
+    else if (mark.parentNode) mark.parentNode.normalize();
+    return true;
+  }
+  return false;
+}
+function ensureInlineRewriteToolbar(latest) {
+  if (!latest) return;
+  const $message = getChatMessageElementByIndex(latest.index);
+  if (!$message.length) return;
+  let $toolbar = $message.find(".t-rewrite-inline-toolbar").first();
+  if ($toolbar.length === 0) {
+    $toolbar = $(`
+            <div class="t-rewrite-inline-toolbar" data-message-index="${latest.index}">
+                <button class="t-rewrite-inline-start" type="button">\u9009\u53E5\u6539\u5199</button>
+                <button class="t-rewrite-inline-confirm" type="button" style="display:none;">\u786E\u8BA4\u6539\u5199</button>
+                <button class="t-rewrite-inline-cancel" type="button" style="display:none;">\u53D6\u6D88</button>
+                <span class="t-rewrite-inline-count" style="display:none;">\u5DF2\u9009 0 \u53E5</span>
+            </div>
+        `);
+    const containerEl = getMessageRenderContainer($message);
+    if (containerEl) $(containerEl).before($toolbar);
+    else $message.prepend($toolbar);
+  }
+}
+function refreshInlineRewriteEntry() {
+  const data = ensureRewriteDataShape();
+  if (!isEnabled() || data.selected_sentence_enabled === false) {
+    clearInlineSentenceSelection();
+    return;
+  }
+  $("#chat .t-rewrite-inline-toolbar").each((_, el) => {
+    const messageIndex = Number($(el).attr("data-message-index"));
+    if (inlineSelectionMessageIndex !== messageIndex) $(el).remove();
+  });
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) return;
+  ensureInlineRewriteToolbar(latest);
+}
+function enterInlineSentenceSelection() {
+  clearInlineSentenceSelection();
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    if (window.toastr) toastr.warning("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "\u6587\u672C\u6539\u5199");
+    return;
+  }
+  latestSentenceUnits = buildSentenceUnitsFromLatest(latest);
+  if (latestSentenceUnits.length === 0) {
+    if (window.toastr) toastr.warning("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u9009\u53E5", "\u6587\u672C\u6539\u5199");
+    return;
+  }
+  inlineSelectionMessageIndex = latest.index;
+  const $message = getChatMessageElementByIndex(latest.index);
+  const containerEl = getMessageRenderContainer($message);
+  if (!containerEl) return;
+  unwrapRenderedRewriteMarks(containerEl);
+  latestSentenceUnits.forEach((unit) => wrapFirstSentenceSelectionOccurrence(containerEl, unit));
+  ensureInlineRewriteToolbar(latest);
+  const $toolbar = $message.find(".t-rewrite-inline-toolbar").first();
+  $toolbar.find(".t-rewrite-inline-start").hide();
+  $toolbar.find(".t-rewrite-inline-confirm, .t-rewrite-inline-cancel, .t-rewrite-inline-count").show();
+  updateInlineRewriteCount();
+}
 function splitByParagraph(text) {
   return String(text || "").split(/\r?\n\s*\r?\n+/).map((s) => s.trim()).filter(Boolean);
 }
 function splitText(text, splitMode) {
   return splitMode === "paragraph" ? splitByParagraph(text) : splitBySentence(text);
 }
-function evaluateUnit(unitText, rules) {
+function evaluateUnitAgainstRule(unitText, rule) {
+  const anchorList = parseCommaList(String(rule?.anchor || ""));
+  const extrasList = parseCommaList(String(rule?.extras || ""));
+  if (anchorList.length === 0 || extrasList.length === 0) return false;
   const source = normalizeToken(unitText);
-  const hits = [];
-  rules.forEach((rule, idx) => {
-    const anchorList = uniq(parseCommaList(rule.anchor || ""));
-    const extrasList = Array.isArray(rule.extras) ? rule.extras : [];
-    if (anchorList.length === 0 || extrasList.length === 0) return;
-    const matchedAnchor = anchorList.find((anchor) => source.includes(anchor));
-    if (!matchedAnchor) return;
-    const matchedExtra = extrasList.find((extra) => source.includes(extra));
-    if (matchedExtra) {
-      hits.push({
-        ruleIndex: idx + 1,
-        anchor: rule.anchor,
-        matchedAnchor,
-        matchedExtra,
-        action: normalizeRuleAction(rule.action)
+  const anchorHit = anchorList.some((kw) => source.includes(kw));
+  if (!anchorHit) return false;
+  const extrasHit = extrasList.some((kw) => source.includes(kw));
+  return extrasHit;
+}
+function evaluateUnitAgainstCategory(unitText, category) {
+  const rules = Array.isArray(category.rules) ? category.rules : [];
+  const matchedRules = [];
+  rules.forEach((rule) => {
+    if (evaluateUnitAgainstRule(unitText, rule)) {
+      matchedRules.push({
+        anchor: String(rule.anchor || ""),
+        extras: String(rule.extras || "")
       });
     }
   });
-  const effectiveAction = hits.some((h) => normalizeRuleAction(h.action) === "delete") ? "delete" : "rewrite";
-  return { hits, effectiveAction };
+  return matchedRules;
 }
 function evaluateRules(payload, sourceText = null) {
   const splitMode = payload?.split_mode === "paragraph" ? "paragraph" : "sentence";
-  const rules = cleanupRules(payload?.rules || []);
+  const categories = Array.isArray(payload?.categories) ? payload.categories : [];
   const testText = String(sourceText || "");
   const units = splitText(testText, splitMode);
   const unitResults = units.map((unit, idx) => {
-    const unitEval = evaluateUnit(unit, rules);
-    const hits = Array.isArray(unitEval?.hits) ? unitEval.hits : [];
+    const matchedCategories = [];
+    categories.forEach((cat) => {
+      const matchedRules = evaluateUnitAgainstCategory(unit, cat);
+      if (matchedRules.length > 0) {
+        matchedCategories.push({
+          categoryId: String(cat.id || ""),
+          categoryName: String(cat.name || ""),
+          matchedRules
+        });
+      }
+    });
     return {
       unitIndex: idx + 1,
       text: unit,
-      hit: hits.length > 0,
-      hits,
-      action: hits.length > 0 ? normalizeRuleAction(unitEval?.effectiveAction) : "rewrite"
+      hit: matchedCategories.length > 0,
+      matchedCategories
     };
   });
   const hitUnits = unitResults.filter((item) => item.hit);
+  const hitCategoryIds = /* @__PURE__ */ new Set();
+  hitUnits.forEach((u) => u.matchedCategories.forEach((c) => hitCategoryIds.add(c.categoryId)));
   return {
     splitMode,
     unitCount: unitResults.length,
     hitCount: hitUnits.length,
-    rules,
+    categoryCount: hitCategoryIds.size,
     unitResults
   };
 }
@@ -19811,7 +21028,7 @@ function extractJsonCandidate(text) {
 }
 function sanitizeJsonLike(text) {
   let s = String(text || "");
-  s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  s = s.replace(/[""]/g, '"').replace(/[‘’]/g, "'");
   s = s.replace(/,\s*([}\]])/g, "$1");
   s = s.replace(/([{,]\s*)'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, '$1"$2":');
   s = s.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_m, p1) => {
@@ -19895,52 +21112,33 @@ function parseRewriteJson(raw) {
   throw lastErr || new Error("Invalid JSON response");
 }
 function buildRewritePayload(data, sourceText) {
-  const evaluated = evaluateRules(data, sourceText || "");
+  const categories = getActiveSchemeCategories();
+  const payload = {
+    split_mode: data.split_mode || "sentence",
+    categories
+  };
+  const evaluated = evaluateRules(payload, sourceText || "");
   const targets = [];
-  const deleteTargets = [];
+  const catNames = /* @__PURE__ */ new Set();
   evaluated.unitResults.forEach((unit) => {
     if (!unit.hit) return;
-    const unitAction = normalizeRuleAction(unit.action);
-    if (unitAction === "delete") {
-      deleteTargets.push({
+    unit.matchedCategories.forEach((mc) => {
+      catNames.add(mc.categoryName);
+      const allKeywords = mc.matchedRules.map((r) => [...parseCommaList(r.anchor), ...parseCommaList(r.extras)]).flat();
+      targets.push({
         segment_id: `s_${unit.unitIndex}`,
-        unit_index: unit.unitIndex,
         original_text: unit.text,
-        action: "delete",
-        matched_rules: unit.hits.map((h) => ({
-          rule_index: h.ruleIndex,
-          action: normalizeRuleAction(h.action),
-          anchor: h.anchor,
-          matched_anchor: h.matchedAnchor,
-          matched_extra: h.matchedExtra
-        }))
+        matched_keywords: uniq(allKeywords)
       });
-      return;
-    }
-    targets.push({
-      segment_id: `s_${unit.unitIndex}`,
-      unit_index: unit.unitIndex,
-      original_text: unit.text,
-      action: "rewrite",
-      matched_rules: unit.hits.map((h) => ({
-        rule_index: h.ruleIndex,
-        action: normalizeRuleAction(h.action),
-        anchor: h.anchor,
-        matched_anchor: h.matchedAnchor,
-        matched_extra: h.matchedExtra
-      }))
     });
   });
   return {
     evaluated,
     request: {
       task_id: `rewrite_${Date.now()}`,
-      split_mode: evaluated.splitMode,
-      style_hint: "\u4FDD\u6301\u539F\u6587\u8BED\u6C14\u3001\u4EBA\u79F0\u3001\u53D9\u4E8B\u89C6\u89D2\uFF0C\u4EC5\u505A\u5FC5\u8981\u6539\u5199",
-      rules: evaluated.rules,
-      targets,
-      delete_targets: deleteTargets
-    }
+      targets
+    },
+    hitCategoryCount: catNames.size
   };
 }
 function getLatestAssistantMessageFromChat() {
@@ -20075,6 +21273,7 @@ function applyAllRewriteMarksFromChat() {
     const marks = normalizeRewriteMarks(msg?.extra?.titania_rewrite_marks);
     applyRewriteMarksToMessage(index, marks);
   });
+  refreshInlineRewriteEntry();
 }
 function scheduleApplyAllRewriteMarks(delay = 80) {
   if (rewriteDecorTimer) clearTimeout(rewriteDecorTimer);
@@ -20085,16 +21284,17 @@ function scheduleApplyAllRewriteMarks(delay = 80) {
 function bindRewriteDecorationEvents() {
   if (rewriteDecorBound) return;
   rewriteDecorBound = true;
-  eventSource.on(event_types.MESSAGE_RECEIVED, () => scheduleApplyAllRewriteMarks(120));
-  eventSource.on(event_types.GENERATION_ENDED, () => scheduleApplyAllRewriteMarks(120));
+  eventSource.on(event_types.MESSAGE_RECEIVED, () => {
+    scheduleApplyAllRewriteMarks(120);
+    setTimeout(refreshInlineRewriteEntry, 160);
+  });
+  eventSource.on(event_types.GENERATION_ENDED, () => {
+    scheduleApplyAllRewriteMarks(120);
+    setTimeout(refreshInlineRewriteEntry, 160);
+  });
 }
 function applyRewriteToFullText(sourceText, evaluated, parsed, request = null) {
   const map = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
-  const deleteTargets = Array.isArray(request?.delete_targets) ? request.delete_targets : [];
-  deleteTargets.forEach((target) => {
-    const segmentId = String(target?.segment_id || "").trim();
-    if (segmentId) map.set(segmentId, "");
-  });
   let rewritten = String(sourceText || "");
   let cursor = 0;
   let replaced = 0;
@@ -20354,66 +21554,34 @@ function normalizeRewriteResponseShape(parsed, payload) {
 function buildDiffRowsFromResults(evaluated, payload, parsed) {
   const rewrittenMap = new Map(parsed.results.map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
   const targetMap = new Map(payload.targets.map((t) => [t.segment_id, t]));
-  const deleteTargetMap = new Map((Array.isArray(payload.delete_targets) ? payload.delete_targets : []).map((t) => [String(t.segment_id), t]));
   return evaluated.unitResults.filter((u) => u.hit).map((u) => {
     const segmentId = `s_${u.unitIndex}`;
     const target = targetMap.get(segmentId);
-    const deleteTarget = deleteTargetMap.get(segmentId);
-    const action = deleteTarget ? "delete" : "rewrite";
-    const after = action === "delete" ? "" : rewrittenMap.get(segmentId) || u.text;
-    const hintRules = target?.matched_rules || deleteTarget?.matched_rules || [];
-    const ruleHint = hintRules.map((x) => {
-      const anchorText = x.matched_anchor || x.anchor || "";
-      return x.matched_extra ? `${anchorText}+${x.matched_extra}` : `${anchorText}`;
-    }).join(" | ");
+    const after = rewrittenMap.get(segmentId) || u.text;
+    const categoryNames = Array.isArray(u.matchedCategories) ? u.matchedCategories.map((c) => c.categoryName).join(" | ") : "";
     return {
       before: u.text,
       after,
-      ruleHint,
-      action
+      ruleHint: categoryNames,
+      action: "rewrite"
     };
   });
 }
-async function runRewrite(options = {}) {
-  persistPanelState();
-  const data = ensureRewriteDataShape();
+async function executeRewriteRequest({ data, latest, evaluated, request, rewriteCount, hitCategoryCount = 0, source = "manual", buttonSelector = "#t-rewrite-trigger", promptState = null }) {
   const apiUrl = String(data.api_url || "").trim();
   const apiKey = String(data.api_key || "").trim();
   const model = String(data.model || "").trim();
-  const latest = getLatestAssistantMessageFromChat();
-  if (!latest) {
-    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
-    return;
+  if (!apiUrl) {
+    setStatus("\u8BF7\u5148\u586B\u5199 API \u5730\u5740", "warn");
+    return false;
   }
-  const { evaluated, request } = buildRewritePayload(data, latest.content);
-  renderMatchResult(evaluated, latest.content);
-  if (!String(latest.content || "").trim()) {
-    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
-    return;
-  }
-  const rewriteTargets = Array.isArray(request.targets) ? request.targets : [];
-  const deleteTargets = Array.isArray(request.delete_targets) ? request.delete_targets : [];
-  const rewriteCount = rewriteTargets.length;
-  const deleteCount = deleteTargets.length;
-  if (rewriteCount > 0) {
-    if (!apiUrl) {
-      setStatus("\u8BF7\u5148\u586B\u5199 API \u5730\u5740", "warn");
-      return;
-    }
-    if (!model) {
-      setStatus("\u8BF7\u5148\u9009\u62E9\u6A21\u578B", "warn");
-      return;
-    }
-  }
-  if (rewriteCount === 0 && deleteCount === 0) {
-    setStatus("\u6CA1\u6709\u547D\u4E2D\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF08\u9700\u4E3B\u8BCD+\u9644\u52A0\u8BCD\u540C\u65F6\u547D\u4E2D\uFF09\uFF0C\u672A\u6267\u884C\u52A8\u4F5C", "warn");
-    renderDiffRows([]);
-    return;
+  if (!model) {
+    setStatus("\u8BF7\u5148\u9009\u62E9\u6A21\u578B", "warn");
+    return false;
   }
   const maxTokens = estimateMaxTokens(request);
-  const $btn = $("#t-rewrite-trigger");
+  const $btn = $(buttonSelector);
   const streamLive = data.stream_live === true;
-  const source = options.source || "manual";
   let success = false;
   $btn.prop("disabled", true);
   updateAbortBtnState(true);
@@ -20423,47 +21591,42 @@ async function runRewrite(options = {}) {
   setRawMeta(streamLive ? `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u6D41\u5F0F\u5F00\u542F\uFF08${source}\uFF09` : `\u5B9E\u65F6\u54CD\u5E94\uFF1A\u975E\u6D41\u5F0F\uFF08${source}\uFF09`);
   try {
     let parsed = { task_id: request.task_id, results: [] };
-    if (rewriteCount > 0) {
-      setStatus(`\u6B63\u5728\u8BF7\u6C42\u6539\u5199\uFF08\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5220\u9664 ${deleteCount} \u6761\uFF09...`, "muted");
-      const messages = buildRewriteMessages(request, getRewritePromptState());
-      let raw = await requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, {
-        temperature: REWRITE_TEMPERATURE,
-        stream: streamLive,
-        signal: abortController.signal,
-        onProgress: (_chunk, all) => {
-          if (streamLive) {
-            setRawResponse(all);
-          }
+    setStatus(`\u6B63\u5728\u8BF7\u6C42\u6539\u5199\uFF08\u6539\u5199 ${rewriteCount} \u6761${hitCategoryCount ? `\uFF0C\u547D\u4E2D ${hitCategoryCount} \u4E2A\u5206\u7C7B` : ""}\uFF09...`, "muted");
+    const messages = buildRewriteMessages(request, promptState || getRewritePromptState());
+    let raw = await requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, {
+      temperature: REWRITE_TEMPERATURE,
+      stream: streamLive,
+      signal: abortController.signal,
+      onProgress: (_chunk, all) => {
+        if (streamLive) {
+          setRawResponse(all);
         }
+      }
+    });
+    pushLiveResponseHistory({ source, phase: "\u4E3B\u8BF7\u6C42", model, stream: streamLive, text: raw });
+    if (!streamLive) setRawResponse(raw);
+    try {
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+    } catch (e) {
+      const fixMessages = buildFixJsonMessages(raw, request);
+      raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+        temperature: REWRITE_FIX_TEMPERATURE
       });
-      pushLiveResponseHistory({ source, phase: "\u4E3B\u8BF7\u6C42", model, stream: streamLive, text: raw });
-      if (!streamLive) setRawResponse(raw);
-      try {
-        parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
-      } catch (e) {
-        const fixMessages = buildFixJsonMessages(raw, request);
-        raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
-          temperature: REWRITE_FIX_TEMPERATURE
-        });
-        pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: raw });
-        parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
-      }
-      let valid = validateRewriteResponse(parsed, request);
-      if (!valid.ok) {
-        const fixMessages = buildFixJsonMessages(raw, request);
-        setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
-        const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
-          temperature: REWRITE_FIX_TEMPERATURE
-        });
-        pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: fixedRaw });
-        setRawResponse(fixedRaw);
-        parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
-        valid = validateRewriteResponse(parsed, request);
-        if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
-      }
-    } else {
-      setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u672C\u6B21\u4EC5\u6267\u884C\u5220\u9664\uFF0C\u65E0\u9700\u8BF7\u6C42\u6A21\u578B");
-      setStatus(`\u6B63\u5728\u6267\u884C\u5220\u9664\uFF08${deleteCount} \u6761\uFF09...`, "muted");
+      pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: raw });
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
+    }
+    let valid = validateRewriteResponse(parsed, request);
+    if (!valid.ok) {
+      const fixMessages = buildFixJsonMessages(raw, request);
+      setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
+      const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
+        temperature: REWRITE_FIX_TEMPERATURE
+      });
+      pushLiveResponseHistory({ source, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: fixedRaw });
+      setRawResponse(fixedRaw);
+      parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
+      valid = validateRewriteResponse(parsed, request);
+      if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
     }
     const rows = buildDiffRowsFromResults(evaluated, request, parsed);
     renderDiffRows(rows);
@@ -20476,7 +21639,7 @@ async function runRewrite(options = {}) {
     await saveChatConditional();
     await reloadCurrentChat();
     scheduleApplyAllRewriteMarks(180);
-    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5220\u9664 ${deleteCount} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
     success = true;
   } catch (e) {
     renderDiffRows([]);
@@ -20493,6 +21656,89 @@ async function runRewrite(options = {}) {
   }
   return success;
 }
+async function runRewrite(options = {}) {
+  persistPanelState();
+  const data = ensureRewriteDataShape();
+  const scheme = getActiveScheme();
+  if (!scheme) {
+    setStatus("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "warn");
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "Titania \u6539\u5199");
+    return;
+  }
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    return;
+  }
+  const { evaluated, request, hitCategoryCount } = buildRewritePayload(data, latest.content);
+  renderMatchResult(evaluated, latest.content);
+  if (!String(latest.content || "").trim()) {
+    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
+    return;
+  }
+  const rewriteTargets = Array.isArray(request.targets) ? request.targets : [];
+  const rewriteCount = rewriteTargets.length;
+  if (rewriteCount === 0) {
+    setStatus("\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u5206\u7C7B\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF0C\u672A\u6267\u884C\u6539\u5199", "warn");
+    renderDiffRows([]);
+    return;
+  }
+  return executeRewriteRequest({
+    data,
+    latest,
+    evaluated,
+    request,
+    rewriteCount,
+    hitCategoryCount,
+    source: options.source || "manual",
+    buttonSelector: "#t-rewrite-trigger"
+  });
+}
+async function runSelectedSentenceRewrite() {
+  persistPanelState();
+  const data = ensureRewriteDataShape();
+  const latest = getLatestAssistantMessageFromChat();
+  if (latest) {
+    latestSentenceUnits = buildSentenceUnitsFromLatest(latest);
+  }
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    return;
+  }
+  if (!String(latest.content || "").trim()) {
+    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
+    return;
+  }
+  const selected = getSelectedSentenceIdSet();
+  if (selected.size === 0) {
+    setStatus("\u8BF7\u5148\u9009\u62E9\u8981\u6539\u5199\u7684\u53E5\u5B50", "warn");
+    return;
+  }
+  const { evaluated, request, hitCategoryCount } = buildSelectedSentencePayload(latest, selected);
+  const rewriteCount = request.targets.length;
+  renderMatchResult(evaluated, latest.content);
+  if (rewriteCount === 0) {
+    setStatus("\u9009\u62E9\u7684\u53E5\u5B50\u5DF2\u4E0D\u5728\u6700\u65B0\u697C\u5C42\u4E2D\uFF0C\u8BF7\u5237\u65B0\u540E\u91CD\u9009", "warn");
+    renderDiffRows([]);
+    return;
+  }
+  const success = await executeRewriteRequest({
+    data,
+    latest,
+    evaluated,
+    request,
+    rewriteCount,
+    hitCategoryCount,
+    source: "selected",
+    buttonSelector: ".t-rewrite-inline-confirm",
+    promptState: getSelectedRewritePromptState()
+  });
+  if (success) {
+    clearInlineSentenceSelection();
+    refreshInlineRewriteEntry();
+  }
+  return success;
+}
 async function runManualRewrite() {
   return runRewrite({ source: "manual" });
 }
@@ -20502,6 +21748,7 @@ async function onAutoTriggerRewrite() {
   if (!isEnabled()) return;
   if (isAutoRewriting) return;
   if (activeRewriteAbortController) return;
+  if (!getActiveScheme()) return;
   const latest = getLatestAssistantMessageFromChat();
   if (!latest || !latest.msg) return;
   if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
@@ -20548,46 +21795,96 @@ function bindAutoTriggerEvents() {
   autoTriggerBound = true;
   eventSource.on(event_types.GENERATION_ENDED, onAutoTriggerRewrite);
 }
-function renderSettingsRules(rows) {
-  const $box = $("#t-rewrite-settings-rules-list");
+function readCategoriesFromDom() {
+  const categories = [];
+  $("#t-rewrite-scheme-categories-list .t-rewrite-category-card").each((_, el) => {
+    const $card = $(el);
+    const id = String($card.attr("data-cat-id") || "");
+    const name = String($card.find(".t-rewrite-cat-name").val() || "").trim();
+    const bad_example = String($card.find(".t-rewrite-cat-bad").val() || "").trim();
+    const good_example = String($card.find(".t-rewrite-cat-good").val() || "").trim();
+    const guidance = String($card.find(".t-rewrite-cat-guidance").val() || "").trim();
+    const rules = [];
+    $card.find(".t-rewrite-kw-row").each((_2, kwEl) => {
+      const anchor = String($(kwEl).find(".t-rewrite-kw-anchor").val() || "").trim();
+      const extras = String($(kwEl).find(".t-rewrite-kw-extras").val() || "").trim();
+      if (anchor && extras) rules.push({ anchor, extras });
+    });
+    categories.push({ id: id || generateId("cat"), name, bad_example, good_example, guidance, rules });
+  });
+  return categories.filter((c) => c.name);
+}
+function renderSchemeCategoriesList(scheme) {
+  const $box = $("#t-rewrite-scheme-categories-list");
   if (!$box.length) return;
-  if (!Array.isArray(rows) || rows.length === 0) {
-    $box.html('<div class="t-rewrite-empty-rule">\u6682\u65E0\u89C4\u5219\uFF0C\u70B9\u51FB\u201C\u65B0\u589E\u89C4\u5219\u201D\u5F00\u59CB</div>');
+  const categories = scheme && Array.isArray(scheme.categories) ? scheme.categories : [];
+  if (categories.length === 0) {
+    $box.html('<div class="t-rewrite-empty-rule">\u6682\u65E0\u5206\u7C7B\uFF0C\u70B9\u51FB"\u6DFB\u52A0\u5206\u7C7B"\u5F00\u59CB</div>');
     return;
   }
-  const html = rows.map((rule, idx) => `
-        <div class="t-rewrite-rule-row" data-rule-idx="${idx}">
-            <div class="t-rewrite-rule-no">#${idx + 1}</div>
-            <input class="text_pole t-rewrite-rule-anchor" type="text" value="${escapeHtml5(rule.anchor || "")}" placeholder="\u4E3B\u8BCD\u5217\u8868\uFF08\u9017\u53F7\u5206\u9694\uFF09">
-            <input class="text_pole t-rewrite-rule-extras" type="text" value="${escapeHtml5((rule.extras || []).join(", "))}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u547D\u4E2D\u4EFB\u610F\u4E00\u4E2A\uFF09" maxlength="500">
-            <select class="text_pole t-rewrite-rule-action" title="\u547D\u4E2D\u540E\u52A8\u4F5C">
-                <option value="rewrite" ${normalizeRuleAction(rule.action) === "rewrite" ? "selected" : ""}>\u6539\u5199</option>
-                <option value="delete" ${normalizeRuleAction(rule.action) === "delete" ? "selected" : ""}>\u5220\u9664</option>
-            </select>
-            <button class="t-btn t-rewrite-rule-del" type="button" title="\u5220\u9664\u89C4\u5219"><i class="fa-solid fa-trash"></i></button>
-        </div>
-    `).join("");
+  const html = categories.map((cat, idx) => {
+    const rules = Array.isArray(cat.rules) ? cat.rules : [];
+    const hasContent = String(cat.name || "").trim() || String(cat.bad_example || "").trim() || String(cat.good_example || "").trim() || String(cat.guidance || "").trim() || rules.length > 0;
+    const kwRows = rules.length > 0 ? rules.map((r) => `
+                <div class="t-rewrite-kw-row">
+                    <input class="text_pole t-rewrite-kw-anchor" type="text" value="${escapeHtml5(r.anchor || "")}" placeholder="\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
+                    <span class="t-rewrite-kw-and">\u4E0E</span>
+                    <input class="text_pole t-rewrite-kw-extras" type="text" value="${escapeHtml5(r.extras || "")}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
+                    <button class="t-btn t-rewrite-kw-del" type="button" title="\u5220\u9664\u6B64\u5173\u952E\u8BCD\u89C4\u5219"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            `).join("") : `<div class="t-rewrite-kw-row">
+                <input class="text_pole t-rewrite-kw-anchor" type="text" value="" placeholder="\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
+                <span class="t-rewrite-kw-and">\u4E0E</span>
+                <input class="text_pole t-rewrite-kw-extras" type="text" value="" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
+                <button class="t-btn t-rewrite-kw-del" type="button" title="\u5220\u9664"><i class="fa-solid fa-xmark"></i></button>
+            </div>`;
+    const nameMissing = !String(cat.name || "").trim();
+    const collapsedClass = hasContent ? " collapsed" : "";
+    const emptyClass = !hasContent ? " t-rewrite-cat-empty" : "";
+    const statusLine = nameMissing ? '<span class="t-rewrite-cat-status-warn">\u672A\u547D\u540D</span>' : `<span class="t-rewrite-cat-status-ok">${rules.length} \u6761\u89C4\u5219</span>`;
+    return `
+            <div class="t-rewrite-category-card${emptyClass}${collapsedClass}" data-cat-idx="${idx}" data-cat-id="${escapeHtml5(cat.id || "")}">
+                <div class="t-rewrite-cat-head t-rewrite-cat-toggle">
+                    <span class="t-rewrite-cat-caret"><i class="fa-solid fa-chevron-down"></i></span>
+                    <span class="t-rewrite-cat-num">#${idx + 1}</span>
+                    <span class="t-rewrite-cat-name-display">${escapeHtml5(cat.name || "\u672A\u547D\u540D\u5206\u7C7B")}</span>
+                    <span class="t-rewrite-cat-head-status">${statusLine}</span>
+                    <button class="t-btn t-rewrite-cat-del" type="button" title="\u5220\u9664\u6B64\u5206\u7C7B"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div class="t-rewrite-cat-body">
+                    <div class="t-rewrite-cat-name-row">
+                        <label>\u5206\u7C7B\u540D\u79F0</label>
+                        <input class="text_pole t-rewrite-cat-name" type="text" value="${escapeHtml5(cat.name || "")}" placeholder="\u5FC5\u586B\uFF0C\u4E0D\u53EF\u4E0E\u540C\u65B9\u6848\u5176\u4ED6\u5206\u7C7B\u91CD\u540D">
+                        ${nameMissing ? '<span class="t-rewrite-cat-name-warn">\uFF08\u5FC5\u586B\uFF09</span>' : ""}
+                    </div>
+                    <div class="t-rewrite-cat-field">
+                        <label>\u5DEE\u53E5\u793A\u4F8B</label>
+                        <textarea class="text_pole t-rewrite-cat-bad" rows="2" placeholder="\u8F93\u5165\u4E00\u6BB5\u4E0D\u7406\u60F3\u7684\u5199\u6CD5\u793A\u4F8B">${escapeHtml5(cat.bad_example || "")}</textarea>
+                    </div>
+                    <div class="t-rewrite-cat-field">
+                        <label>\u4F18\u79C0\u793A\u4F8B</label>
+                        <textarea class="text_pole t-rewrite-cat-good" rows="2" placeholder="\u8F93\u5165\u4E00\u6BB5\u4F18\u79C0\u7684\u5199\u6CD5\u793A\u4F8B">${escapeHtml5(cat.good_example || "")}</textarea>
+                    </div>
+                    <div class="t-rewrite-cat-field">
+                        <label>\u6539\u5199\u6307\u5BFC</label>
+                        <textarea class="text_pole t-rewrite-cat-guidance" rows="2" placeholder="\u544A\u8BC9\u6A21\u578B\u5177\u4F53\u600E\u4E48\u6539">${escapeHtml5(cat.guidance || "")}</textarea>
+                    </div>
+                    <div class="t-rewrite-cat-field">
+                        <label>\u5173\u952E\u8BCD\u89C4\u5219<span class="t-rewrite-cat-field-hint">\uFF08\u4E3B\u8BCD AND \u9644\u52A0\u8BCD\u540C\u65F6\u547D\u4E2D\u624D\u751F\u6548\uFF0C\u547D\u4E2D\u4EFB\u4E00\u884C\u5373\u5F52\u7C7B\uFF09</span></label>
+                        <div class="t-rewrite-cat-kw-list">${kwRows}</div>
+                        <button class="t-btn t-rewrite-cat-add-kw" type="button"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u5173\u952E\u8BCD</button>
+                    </div>
+                </div>
+            </div>
+        `;
+  }).join("");
   $box.html(html);
-  $("#t-rewrite-settings-rule-count").text(String(rows.filter((r) => String(r.anchor || "").trim() && Array.isArray(r.extras) && r.extras.length > 0).length));
-}
-function getRulesFromDom(containerSelector = "#t-rewrite-rules-list") {
-  const rows = [];
-  $(`${containerSelector} .t-rewrite-rule-row`).each((_, el) => {
-    const $row = $(el);
-    const anchor = uniq(parseCommaList(String($row.find(".t-rewrite-rule-anchor").val() || ""))).join(", ");
-    const extrasInput = String($row.find(".t-rewrite-rule-extras").val() || "");
-    const extras = uniq(parseCommaList(extrasInput));
-    const action = normalizeRuleAction($row.find(".t-rewrite-rule-action").val());
-    rows.push({ anchor, extras, action });
-  });
-  return cleanupRules(rows);
 }
 function persistPanelState() {
   const $overlay = getOverlay();
   if (!$overlay.length) return;
   const data = getExtData();
   const prev = ensureRewriteDataShape();
-  const rules = $overlay.find("#t-rewrite-rules-list").length > 0 ? getRulesFromDom() : prev.rules;
   const readValue = (selector, fallback = "") => {
     const $el = $overlay.find(selector);
     return $el.length > 0 ? String($el.val() || "").trim() : fallback;
@@ -20604,25 +21901,28 @@ function persistPanelState() {
     api_url: readValue("#t-rewrite-api-url", prev.api_url || ""),
     api_key: readValue("#t-rewrite-api-key", prev.api_key || ""),
     model: readValue("#t-rewrite-model", prev.model || ""),
-    rules_text: rulesToLegacyText(rules),
     split_mode: readValue("input[name='t-rewrite-split-mode']:checked", prev.split_mode || "sentence"),
-    rules,
+    active_scheme_id: prev.active_scheme_id || "",
+    schemes: prev.schemes || [],
     stream_live: readChecked("#t-rewrite-stream-live", prev.stream_live === true),
     auto_trigger: prev.auto_trigger === true,
+    selected_sentence_enabled: prev.selected_sentence_enabled !== false,
     tag_whitelist: prev.tag_whitelist || "",
     prompt_system: prev.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM,
     prompt_user: prev.prompt_user || REWRITE_DEFAULT_PROMPT_USER,
+    selected_prompt_system: prev.selected_prompt_system || REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM,
+    selected_prompt_user: prev.selected_prompt_user || REWRITE_DEFAULT_SELECTED_PROMPT_USER,
     prompt_json_rule: prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE
   };
   saveExtData();
-  $("#t-rewrite-rule-count").text(String(rules.length));
+  const categories = getActiveSchemeCategories();
+  $("#t-rewrite-rule-count").text(String(categories.length));
 }
 function persistSettingsPanelState() {
   const $overlay = getSettingsOverlay();
   if (!$overlay.length) return;
   const data = getExtData();
   const prev = ensureRewriteDataShape();
-  const rules = getRulesFromDom("#t-rewrite-settings-rules-list");
   const rawProfileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || prev.profile_id || "").trim();
   const customProfilesRaw = $overlay.data("rewriteCustomProfiles");
   const customProfiles = normalizeRewriteCustomProfiles(Array.isArray(customProfilesRaw) ? customProfilesRaw : prev.custom_profiles, prev);
@@ -20634,6 +21934,15 @@ function persistSettingsPanelState() {
     current.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
     profileId = current.id;
   }
+  const activeSchemeId = String($overlay.find("#t-rewrite-scheme-select").val() || prev.active_scheme_id || "").trim();
+  const rulePromptParsed = parseCombinedPromptText(
+    String($overlay.find("#t-rewrite-settings-prompt-combined").val() || ""),
+    getRewritePromptState()
+  );
+  const selectedPromptParsed = parseCombinedPromptText(
+    String($overlay.find("#t-rewrite-settings-selected-prompt-combined").val() || ""),
+    getSelectedRewritePromptState()
+  );
   data.rewrite_entry = {
     enabled: prev.enabled === true,
     profile_mode: "custom",
@@ -20642,36 +21951,32 @@ function persistSettingsPanelState() {
     api_url: String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim(),
     api_key: String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim(),
     model: String($overlay.find("#t-rewrite-settings-model").val() || "").trim(),
-    rules_text: rulesToLegacyText(rules),
     split_mode: String($overlay.find("input[name='t-rewrite-settings-split-mode']:checked").val() || "sentence"),
-    rules,
+    active_scheme_id: activeSchemeId,
+    schemes: prev.schemes || [],
     stream_live: $overlay.find("#t-rewrite-settings-stream-live").prop("checked") === true,
     auto_trigger: $overlay.find("#t-rewrite-settings-auto-trigger").prop("checked") === true,
+    selected_sentence_enabled: $overlay.find("#t-rewrite-settings-selected-sentence-enabled").prop("checked") === true,
     tag_whitelist: String($overlay.find("#t-rewrite-settings-tag-whitelist").val() || "").trim(),
-    ...(() => {
-      const parsed = parseCombinedPromptText(
-        String($overlay.find("#t-rewrite-settings-prompt-combined").val() || ""),
-        getRewritePromptState()
-      );
-      return {
-        prompt_system: parsed.prompt_system,
-        prompt_user: parsed.prompt_user,
-        prompt_json_rule: String(prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
-      };
-    })()
+    prompt_system: rulePromptParsed.prompt_system,
+    prompt_user: rulePromptParsed.prompt_user,
+    selected_prompt_system: selectedPromptParsed.prompt_system,
+    selected_prompt_user: selectedPromptParsed.prompt_user,
+    prompt_json_rule: String(prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
   saveExtData();
-  $("#t-rewrite-settings-rule-count").text(String(rules.length));
   refreshRuntimeStateView();
 }
 function refreshRuntimeStateView() {
   const $overlay = getOverlay();
   if (!$overlay.length) return;
   const data = ensureRewriteDataShape();
-  const rules = cleanupRules(data.rules);
+  const scheme = getActiveScheme();
+  const categories = getActiveSchemeCategories();
   $overlay.find("#t-rewrite-runtime-model").text(data.model || "\u672A\u8BBE\u7F6E");
   $overlay.find("#t-rewrite-runtime-split").text(data.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50");
-  $overlay.find("#t-rewrite-rule-count").text(String(rules.length));
+  $overlay.find("#t-rewrite-runtime-scheme").text(scheme ? scheme.name : "\u65E0\u65B9\u6848");
+  $overlay.find("#t-rewrite-rule-count").text(String(categories.length));
   $overlay.find("#t-rewrite-runtime-stream").text(data.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F");
   $overlay.find("#t-rewrite-runtime-auto").text(data.auto_trigger ? "\u5F00\u542F" : "\u5173\u95ED");
   $overlay.find("#t-rewrite-runtime-whitelist").text(data.tag_whitelist || "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09");
@@ -20690,17 +21995,15 @@ function renderMatchResult(result, sourceText = "") {
   const html = lastMatchResult.unitResults.map((item) => {
     const cls = item.hit ? "hit" : "miss";
     const tag = lastMatchResult.splitMode === "paragraph" ? "\u6BB5" : "\u53E5";
-    const hits = item.hit ? item.hits.map((h) => {
-      const anchorText = h.matchedAnchor ? `\u4E3B\u8BCD:${escapeHtml5(h.matchedAnchor)}` : `\u4E3B\u8BCD\u7EC4:${escapeHtml5(h.anchor)}`;
-      const extraText = h.matchedExtra ? `\u9644\u52A0\u8BCD:${escapeHtml5(h.matchedExtra)}` : "\u9644\u52A0\u8BCD:\u65E0";
-      const actionText = `\u52A8\u4F5C:${escapeHtml5(actionLabel(h.action))}`;
-      return `<span class="t-rewrite-hit-tag">\u89C4\u5219#${h.ruleIndex}: ${anchorText} + ${extraText} \xB7 ${actionText}</span>`;
-    }).join("") : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
+    const tags = item.hit ? Array.isArray(item.matchedCategories) && item.matchedCategories.length > 0 ? item.matchedCategories.map((c) => {
+      const keywords = c.matchedRules.map((r) => `${r.anchor} + ${r.extras}`).join(" | ");
+      return `<span class="t-rewrite-hit-tag">\u3010${escapeHtml5(c.categoryName)}\u3011${escapeHtml5(keywords)}</span>`;
+    }).join("") : '<span class="t-rewrite-hit-tag">\u7528\u6237\u9009\u4E2D</span>' : lastMatchResult.sourceMode === "selected" ? '<span class="t-rewrite-hit-tag miss">\u672A\u9009\u4E2D</span>' : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
     return `
             <div class="t-rewrite-match-row ${cls}">
                 <div class="t-rewrite-match-head">
                     <div>${tag} #${item.unitIndex}</div>
-                    <div class="t-rewrite-match-tags">${hits}</div>
+                    <div class="t-rewrite-match-tags">${tags}</div>
                 </div>
                 <div class="t-rewrite-match-text">${escapeHtml5(item.text)}</div>
             </div>
@@ -20815,10 +22118,11 @@ function bindSettingsPanelEvents(connectionEditor = null) {
       $overlay.data("rewriteCustomProfiles", mapConnectionProfilesToCustomProfiles(nextState.profiles, "gpt-3.5-turbo"));
       $overlay.find("#t-rewrite-settings-profile-select").val(nextState.activeProfileId);
     }
+    saveCurrentSchemeFromDom();
     persistSettingsPanelState();
-    if (window.toastr) toastr.success("\u6587\u672C\u6539\u5199\u8BBE\u7F6E\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
+    if (window.toastr) toastr.success("\u8BBE\u7F6E\u4E0E\u65B9\u6848\u5DF2\u4FDD\u5B58", "\u6587\u672C\u6539\u5199");
   });
-  $overlay.on("input", "#t-rewrite-settings-prompt-combined", () => {
+  $overlay.on("input", "#t-rewrite-settings-prompt-combined, #t-rewrite-settings-selected-prompt-combined", () => {
     persistPromptStateFromSettings();
   });
   $overlay.on("click", "#t-rewrite-settings-prompt-reset", (e) => {
@@ -20836,30 +22140,173 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     };
     saveExtData();
     persistPromptStateFromSettings();
-    if (window.toastr) toastr.success("\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
+    if (window.toastr) toastr.success("\u89C4\u5219\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
   });
-  $overlay.on("click", "#t-rewrite-settings-add-rule", (e) => {
+  $overlay.on("click", "#t-rewrite-settings-selected-prompt-reset", (e) => {
     e.preventDefault();
-    const current = getRulesFromDom("#t-rewrite-settings-rules-list");
-    current.push({ anchor: "", extras: [], action: "rewrite" });
-    renderSettingsRules(current);
+    $overlay.find("#t-rewrite-settings-selected-prompt-combined").val(
+      buildCombinedPromptText(REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER)
+    );
+    const data = getExtData();
+    const prev = ensureRewriteDataShape();
+    data.rewrite_entry = {
+      ...prev,
+      selected_prompt_system: REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM,
+      selected_prompt_user: REWRITE_DEFAULT_SELECTED_PROMPT_USER,
+      prompt_json_rule: REWRITE_DEFAULT_PROMPT_JSON_RULE
+    };
+    saveExtData();
+    persistPromptStateFromSettings();
+    if (window.toastr) toastr.success("\u9009\u53E5\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
   });
-  $overlay.on("click", ".t-rewrite-rule-del", (e) => {
+  $overlay.on("click", "#t-rewrite-scheme-new", (e) => {
     e.preventDefault();
-    const idx = Number($(e.currentTarget).closest(".t-rewrite-rule-row").attr("data-rule-idx"));
-    const current = getRulesFromDom("#t-rewrite-settings-rules-list");
-    if (Number.isInteger(idx) && idx >= 0 && idx < current.length) {
-      current.splice(idx, 1);
+    const name = window.prompt && window.prompt("\u8BF7\u8F93\u5165\u65B0\u65B9\u6848\u540D\u79F0\uFF1A", "") || "";
+    if (!name.trim()) return;
+    const data = getExtData();
+    const prev = ensureRewriteDataShape();
+    const schemes = [...prev.schemes || []];
+    if (schemes.some((s) => s.name === name.trim())) {
+      if (window.toastr) toastr.warning("\u65B9\u6848\u540D\u79F0\u5DF2\u5B58\u5728", "\u6587\u672C\u6539\u5199");
+      return;
     }
-    renderSettingsRules(current);
+    const newScheme = { id: generateId("scheme"), name: name.trim(), categories: [] };
+    schemes.push(newScheme);
+    data.rewrite_entry = { ...prev, schemes, active_scheme_id: newScheme.id };
+    saveExtData();
+    refreshSettingsSchemeUI();
+    if (window.toastr) toastr.success(`\u5DF2\u521B\u5EFA\u65B9\u6848\u300C${name}\u300D`, "\u6587\u672C\u6539\u5199");
   });
+  $overlay.on("click", "#t-rewrite-scheme-rename", (e) => {
+    e.preventDefault();
+    const scheme = getActiveSchemeFromSettings();
+    if (!scheme) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u65B9\u6848", "\u6587\u672C\u6539\u5199");
+      return;
+    }
+    const name = window.prompt && window.prompt("\u8BF7\u8F93\u5165\u65B0\u540D\u79F0\uFF1A", scheme.name) || "";
+    if (!name.trim()) return;
+    const data = getExtData();
+    const prev = ensureRewriteDataShape();
+    const schemes = (prev.schemes || []).map((s) => s.id === scheme.id ? { ...s, name: name.trim() } : s);
+    data.rewrite_entry = { ...prev, schemes };
+    saveExtData();
+    refreshSettingsSchemeUI();
+    if (window.toastr) toastr.success("\u65B9\u6848\u5DF2\u91CD\u547D\u540D", "\u6587\u672C\u6539\u5199");
+  });
+  $overlay.on("click", "#t-rewrite-scheme-delete", (e) => {
+    e.preventDefault();
+    const scheme = getActiveSchemeFromSettings();
+    if (!scheme) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u65B9\u6848", "\u6587\u672C\u6539\u5199");
+      return;
+    }
+    if (!window.confirm(`\u786E\u5B9A\u5220\u9664\u65B9\u6848\u300C${scheme.name}\u300D\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002`)) return;
+    const data = getExtData();
+    const prev = ensureRewriteDataShape();
+    const schemes = (prev.schemes || []).filter((s) => s.id !== scheme.id);
+    const newActiveId = schemes.length > 0 ? schemes[0].id : "";
+    data.rewrite_entry = { ...prev, schemes, active_scheme_id: newActiveId };
+    saveExtData();
+    refreshSettingsSchemeUI();
+    if (window.toastr) toastr.success("\u65B9\u6848\u5DF2\u5220\u9664", "\u6587\u672C\u6539\u5199");
+  });
+  $overlay.on("change", "#t-rewrite-scheme-select", () => {
+    const data = getExtData();
+    const prev = ensureRewriteDataShape();
+    const newId = String($overlay.find("#t-rewrite-scheme-select").val() || "").trim();
+    data.rewrite_entry = { ...prev, active_scheme_id: newId };
+    saveExtData();
+    const schemes = prev.schemes || [];
+    const scheme = schemes.find((s) => s.id === newId) || null;
+    renderSchemeCategoriesList(scheme);
+    const $status = $overlay.find("#t-rewrite-scheme-status");
+    if ($status.length) $status.text(scheme ? `\u6FC0\u6D3B\u65B9\u6848\u300C${escapeHtml5(scheme.name)}\u300D` : "\u65E0\u65B9\u6848\uFF0C\u8BF7\u65B0\u5EFA\u6216\u9009\u62E9\u5DF2\u6709\u65B9\u6848");
+  });
+  $overlay.on("click", "#t-rewrite-scheme-add-category", (e) => {
+    e.preventDefault();
+    const scheme = getActiveSchemeFromSettings();
+    if (!scheme) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u521B\u5EFA\u65B9\u6848", "\u6587\u672C\u6539\u5199");
+      return;
+    }
+    const newCat = { id: generateId("cat"), name: "", bad_example: "", good_example: "", guidance: "", rules: [{ keywords: "" }] };
+    const categories = [...Array.isArray(scheme.categories) ? scheme.categories : [], newCat];
+    renderSchemeCategoriesList({ ...scheme, categories });
+  });
+  $overlay.on("click", ".t-rewrite-cat-toggle", (e) => {
+    if ($(e.target).is("input, textarea, select, button, .t-rewrite-cat-del, .t-rewrite-kw-del")) return;
+    const $card = $(e.currentTarget).closest(".t-rewrite-category-card");
+    $card.toggleClass("collapsed");
+  });
+  $overlay.on("click", ".t-rewrite-cat-del", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const scheme = getActiveSchemeFromSettings();
+    if (!scheme) return;
+    const catIdx = Number($(e.currentTarget).closest(".t-rewrite-category-card").attr("data-cat-idx"));
+    const categories = (Array.isArray(scheme.categories) ? scheme.categories : []).filter((_, i) => i !== catIdx);
+    renderSchemeCategoriesList({ ...scheme, categories });
+  });
+  $overlay.on("click", ".t-rewrite-cat-add-kw", (e) => {
+    e.preventDefault();
+    const $card = $(e.currentTarget).closest(".t-rewrite-category-card");
+    const newRow = $(`<div class="t-rewrite-kw-row"><input class="text_pole t-rewrite-kw-anchor" type="text" value="" placeholder="\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09"><span class="t-rewrite-kw-and">\u4E0E</span><input class="text_pole t-rewrite-kw-extras" type="text" value="" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09"><button class="t-btn t-rewrite-kw-del" type="button" title="\u5220\u9664"><i class="fa-solid fa-xmark"></i></button></div>`);
+    $card.find(".t-rewrite-cat-kw-list").append(newRow);
+  });
+  $overlay.on("click", ".t-rewrite-kw-del", (e) => {
+    e.preventDefault();
+    const $row = $(e.currentTarget).closest(".t-rewrite-kw-row");
+    const $list = $row.closest(".t-rewrite-cat-kw-list");
+    if ($list.find(".t-rewrite-kw-row").length <= 1) {
+      $row.find(".t-rewrite-kw-anchor").val("");
+      $row.find(".t-rewrite-kw-extras").val("");
+      return;
+    }
+    $row.remove();
+  });
+}
+function getActiveSchemeFromSettings() {
+  const data = getExtData();
+  ensureRewriteDataShape();
+  const schemes = Array.isArray(data.rewrite_entry?.schemes) ? data.rewrite_entry.schemes : [];
+  const activeId = String($("#t-rewrite-scheme-select").val() || data.rewrite_entry?.active_scheme_id || "").trim();
+  return schemes.find((s) => s.id === activeId) || null;
+}
+function saveCurrentSchemeFromDom() {
+  const scheme = getActiveSchemeFromSettings();
+  if (!scheme) {
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u521B\u5EFA\u65B9\u6848", "\u6587\u672C\u6539\u5199");
+    return;
+  }
+  const categories = readCategoriesFromDom();
+  const data = getExtData();
+  const prev = ensureRewriteDataShape();
+  const schemes = (prev.schemes || []).map(
+    (s) => s.id === scheme.id ? { ...s, categories } : s
+  );
+  data.rewrite_entry = { ...prev, schemes };
+  saveExtData();
+}
+function refreshSettingsSchemeUI() {
+  const data = getExtData();
+  ensureRewriteDataShape();
+  const schemes = Array.isArray(data.rewrite_entry?.schemes) ? data.rewrite_entry.schemes : [];
+  const activeId = data.rewrite_entry?.active_scheme_id || "";
+  const scheme = schemes.find((s) => s.id === activeId) || null;
+  const $select = $("#t-rewrite-scheme-select");
+  if ($select.length) {
+    $select.html(schemes.map((s) => `<option value="${escapeHtml5(s.id)}" ${s.id === activeId ? "selected" : ""}>${escapeHtml5(s.name)}</option>`).join(""));
+  }
+  const $status = $("#t-rewrite-scheme-status");
+  if ($status.length) $status.text(scheme ? `\u6FC0\u6D3B\u65B9\u6848\u300C${escapeHtml5(scheme.name)}\u300D` : "\u65E0\u65B9\u6848\uFF0C\u8BF7\u65B0\u5EFA\u6216\u9009\u62E9\u5DF2\u6709\u65B9\u6848");
+  renderSchemeCategoriesList(scheme);
 }
 function openSettingsPanel() {
   closeSettingsPanel();
   const rewriteData = ensureRewriteDataShape();
   const modeSentence = rewriteData.split_mode !== "paragraph";
   const modeParagraph = rewriteData.split_mode === "paragraph";
-  const rules = cleanupRules(rewriteData.rules);
   const customProfiles = normalizeRewriteCustomProfiles(rewriteData.custom_profiles, rewriteData);
   let activeProfileId = String(rewriteData.profile_id || "").trim();
   const fallback = customProfiles[0]?.id || "";
@@ -20868,6 +22315,10 @@ function openSettingsPanel() {
   const initProfile = customProfiles.find((p) => p.id === activeProfileId) || customProfiles[0];
   const initApiUrl = String(initProfile?.api_url || rewriteData.api_url || "");
   const promptState = getRewritePromptState();
+  const selectedPromptState = getSelectedRewritePromptState();
+  const schemes = Array.isArray(rewriteData.schemes) ? rewriteData.schemes : [];
+  const activeScheme = schemes.find((s) => s.id === rewriteData.active_scheme_id) || null;
+  const schemeOptions = schemes.map((s) => `<option value="${escapeHtml5(s.id)}" ${s.id === (activeScheme?.id || "") ? "selected" : ""}>${escapeHtml5(s.name)}</option>`).join("");
   const html = `
     <div id="${SETTINGS_OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
         <div class="t-window t-rewrite-settings-window">
@@ -20883,7 +22334,7 @@ function openSettingsPanel() {
                     <div class="t-set-tab-btn active" data-tab="api"><i class="fa-solid fa-plug"></i> API \u8FDE\u63A5</div>
                     <div class="t-set-tab-btn" data-tab="runtime"><i class="fa-solid fa-sliders"></i> \u8FD0\u884C\u8BBE\u7F6E</div>
                     <div class="t-set-tab-btn" data-tab="prompt"><i class="fa-solid fa-file-lines"></i> \u63D0\u793A\u8BCD\u7BA1\u7406</div>
-                    <div class="t-set-tab-btn" data-tab="rules"><i class="fa-solid fa-list-check"></i> \u89C4\u5219\u914D\u7F6E</div>
+                    <div class="t-set-tab-btn" data-tab="scheme"><i class="fa-solid fa-list-check"></i> \u89C4\u5219\u65B9\u6848</div>
                 </div>
 
                 <div class="t-set-content">
@@ -20946,6 +22397,10 @@ function openSettingsPanel() {
                             <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
                                 <label><input id="t-rewrite-settings-auto-trigger" type="checkbox" ${rewriteData.auto_trigger ? "checked" : ""}> \u81EA\u52A8\u89E6\u53D1\u6539\u5199\uFF08\u65B0\u56DE\u590D\u751F\u6210\u540E\uFF09</label>
                             </div>
+                            <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
+                                <label><input id="t-rewrite-settings-selected-sentence-enabled" type="checkbox" ${rewriteData.selected_sentence_enabled === false ? "" : "checked"}> \u542F\u7528\u697C\u5C42\u5185\u9009\u53E5\u6539\u5199</label>
+                            </div>
+                            <div class="t-rewrite-rule-guide">\u5173\u95ED\u540E\u4EC5\u9690\u85CF\u6700\u65B0\u697C\u5C42\u5185\u7684\u201C\u9009\u53E5\u6539\u5199\u201D\u5165\u53E3\uFF0C\u4E0D\u5F71\u54CD\u6309\u89C4\u5219\u6539\u5199\u3002</div>
                         </div>
 
                         <div class="t-form-group">
@@ -20958,42 +22413,63 @@ function openSettingsPanel() {
                     <div id="t-rewrite-page-prompt" class="t-set-page">
                         <div class="t-form-group">
                             <div class="t-rewrite-rule-head">
-                                <label class="t-form-label" style="margin-bottom:0;">\u63D0\u793A\u8BCD\u7BA1\u7406</label>
+                                <label class="t-form-label" style="margin-bottom:0;">\u89C4\u5219\u547D\u4E2D\u63D0\u793A\u8BCD</label>
                                 <button id="t-rewrite-settings-prompt-reset" class="t-btn" type="button">\u6062\u590D\u9ED8\u8BA4</button>
                             </div>
 
-                            <label class="t-form-label" for="t-rewrite-settings-prompt-combined">\u7EDF\u4E00\u63D0\u793A\u8BCD\u6587\u672C\u6846\uFF08\u8BF7\u4FDD\u7559 [SYS] \u548C [USER] \u6807\u8BB0\uFF09</label>
-                            <div class="t-rewrite-rule-guide">[SYS] \u6BB5\u4E3A system \u63D0\u793A\u8BCD\uFF1B[USER] \u6BB5\u4E3A user \u6A21\u677F\uFF08\u652F\u6301 {{schema}} / {{payload}}\uFF09\u3002</div>
+                            <label class="t-form-label" for="t-rewrite-settings-prompt-combined">\u89C4\u5219\u6539\u5199\u63D0\u793A\u8BCD\uFF08\u8BF7\u4FDD\u7559 [SYS] \u548C [USER] \u6807\u8BB0\uFF09</label>
+                            <div class="t-rewrite-rule-guide">\u5F71\u54CD\u201C\u6309\u89C4\u5219\u6539\u5199\u201D\u548C\u81EA\u52A8\u6539\u5199\uFF1B[USER] \u6BB5\u652F\u6301 {{schema}} / {{payload}}\u3002</div>
                             <textarea id="t-rewrite-settings-prompt-combined" class="text_pole t-rewrite-settings-textarea" placeholder="[SYS]
 ...
 
 [USER]
 ...">${escapeHtml5(buildCombinedPromptText(promptState.prompt_system, promptState.prompt_user))}</textarea>
                         </div>
-                    </div>
 
-                    <div id="t-rewrite-page-rules" class="t-set-page">
                         <div class="t-form-group">
                             <div class="t-rewrite-rule-head">
-                                <label class="t-form-label" style="margin-bottom:0;">\u89C4\u5219\u914D\u7F6E</label>
-                                <button id="t-rewrite-settings-add-rule" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u89C4\u5219</button>
+                                <label class="t-form-label" style="margin-bottom:0;">\u9009\u53E5\u6539\u5199\u63D0\u793A\u8BCD</label>
+                                <button id="t-rewrite-settings-selected-prompt-reset" class="t-btn" type="button">\u6062\u590D\u9ED8\u8BA4</button>
                             </div>
-                            <div class="t-rewrite-rule-guide">\u547D\u4E2D\u903B\u8F91\uFF1A\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09AND \u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09\uFF1B\u4E24\u8005\u540C\u65F6\u547D\u4E2D\u624D\u751F\u6548\u3002\u52A8\u4F5C\u652F\u6301\uFF1A\u6539\u5199 / \u5220\u9664\u3002</div>
-                            <div id="t-rewrite-settings-rules-list" class="t-rewrite-rules-list"></div>
-                            <div class="t-rewrite-rule-meta">\u6709\u6548\u89C4\u5219\u6570\uFF1A<span id="t-rewrite-settings-rule-count">${rules.length}</span></div>
+
+                            <label class="t-form-label" for="t-rewrite-settings-selected-prompt-combined">\u697C\u5C42\u5185\u624B\u52A8\u9009\u53E5\u63D0\u793A\u8BCD\uFF08\u8BF7\u4FDD\u7559 [SYS] \u548C [USER] \u6807\u8BB0\uFF09</label>
+                            <div class="t-rewrite-rule-guide">\u8FD9\u91CC\u53EA\u5F71\u54CD\u6700\u65B0\u697C\u5C42\u5185\u201C\u9009\u53E5\u6539\u5199\u201D\uFF0C\u4E0D\u5F71\u54CD\u89C4\u5219\u547D\u4E2D\u6539\u5199\uFF1B[USER] \u6BB5\u652F\u6301 {{schema}} / {{payload}}\u3002</div>
+                            <textarea id="t-rewrite-settings-selected-prompt-combined" class="text_pole t-rewrite-settings-textarea" placeholder="[SYS]
+...
+
+[USER]
+...">${escapeHtml5(buildCombinedPromptText(selectedPromptState.prompt_system, selectedPromptState.prompt_user))}</textarea>
+                        </div>
+                    </div>
+
+                    <div id="t-rewrite-page-scheme" class="t-set-page">
+                        <div class="t-form-group">
+                            <div class="t-rewrite-scheme-bar">
+                                <span class="t-rewrite-scheme-label">\u5F53\u524D\u65B9\u6848</span>
+                                <select id="t-rewrite-scheme-select" class="text_pole">${schemeOptions}</select>
+                                <button id="t-rewrite-scheme-new" class="t-btn t-rewrite-scheme-btn" type="button" title="\u65B0\u5EFA\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
+                                <button id="t-rewrite-scheme-rename" class="t-btn t-rewrite-scheme-btn" type="button" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button id="t-rewrite-scheme-delete" class="t-btn t-rewrite-scheme-btn" type="button" title="\u5220\u9664\u65B9\u6848"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <div class="t-rewrite-rule-guide" id="t-rewrite-scheme-status" style="margin-top:4px;">${!activeScheme ? "\u65E0\u65B9\u6848\uFF0C\u8BF7\u65B0\u5EFA\u6216\u9009\u62E9\u5DF2\u6709\u65B9\u6848" : `\u6FC0\u6D3B\u65B9\u6848\u300C${escapeHtml5(activeScheme.name)}\u300D`}</div>
+                        </div>
+                        <div class="t-form-group">
+                            <button id="t-rewrite-scheme-add-category" class="t-btn" type="button"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u5206\u7C7B</button>
+                            <div class="t-rewrite-rule-guide" style="margin: 6px 0 4px;">\u6BCF\u4E2A\u5206\u7C7B\u5305\u542B\u793A\u4F8B\u548C\u6539\u5199\u6307\u5BFC\uFF0C\u547D\u4E2D\u53E5\u5C06\u6309\u5206\u7C7B\u6CE8\u5165\u63D0\u793A\u8BCD\u3002</div>
+                            <div id="t-rewrite-scheme-categories-list"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="t-rewrite-settings-footer">
-                <button id="t-rewrite-settings-save" class="t-btn" type="button" title="\u4FDD\u5B58\u8BBE\u7F6E"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58</button>
+                <button id="t-rewrite-settings-save" class="t-btn" type="button" title="\u4FDD\u5B58\u5E76\u5E94\u7528"><i class="fa-solid fa-floppy-disk"></i> \u4FDD\u5B58</button>
             </div>
         </div>
     </div>`;
   $("body").append(html);
   const $overlay = getSettingsOverlay();
-  renderSettingsRules(rules.length > 0 ? rules : [{ anchor: "", extras: [], action: "rewrite" }]);
+  renderSchemeCategoriesList(activeScheme);
   const rewriteSettingsConnectionEditor = createApiConnectionEditor({
     root: $overlay,
     ids: {
@@ -21028,7 +22504,8 @@ function openPanel() {
   closePanel();
   ensureRewriteCssLoaded();
   const rewriteData = ensureRewriteDataShape();
-  const rules = cleanupRules(rewriteData.rules);
+  const scheme = getActiveScheme();
+  const categories = getActiveSchemeCategories();
   const html = `
     <div id="${OVERLAY_ID}" class="t-overlay" aria-modal="true" role="dialog">
         <div class="t-window t-rewrite-window">
@@ -21051,7 +22528,8 @@ function openPanel() {
                         <div id="t-rewrite-runtime-body" class="t-rewrite-runtime-meta">
                             <div>\u5F53\u524D\u6A21\u578B\uFF1A<b id="t-rewrite-runtime-model">${escapeHtml5(rewriteData.model || "\u672A\u8BBE\u7F6E")}</b></div>
                             <div>\u5207\u5206\u6A21\u5F0F\uFF1A<b id="t-rewrite-runtime-split">${rewriteData.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50"}</b></div>
-                            <div>\u6709\u6548\u89C4\u5219\uFF1A<b id="t-rewrite-rule-count">${rules.length}</b></div>
+                            <div>\u5F53\u524D\u65B9\u6848\uFF1A<b id="t-rewrite-runtime-scheme">${scheme ? escapeHtml5(scheme.name) : "\u65E0\u65B9\u6848"}</b></div>
+                            <div>\u5206\u7C7B\u6570\u91CF\uFF1A<b id="t-rewrite-rule-count">${categories.length}</b></div>
                             <div>\u6D41\u5F0F\u663E\u793A\uFF1A<b id="t-rewrite-runtime-stream">${rewriteData.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F"}</b></div>
                             <div>\u81EA\u52A8\u89E6\u53D1\uFF1A<b id="t-rewrite-runtime-auto">${rewriteData.auto_trigger ? "\u5F00\u542F" : "\u5173\u95ED"}</b></div>
                             <div>\u63D0\u53D6\u767D\u540D\u5355\uFF1A<b id="t-rewrite-runtime-whitelist">${rewriteData.tag_whitelist ? escapeHtml5(rewriteData.tag_whitelist) : "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09"}</b></div>
@@ -21081,9 +22559,9 @@ function openPanel() {
             <div class="t-rewrite-footer-actions">
                 <div class="t-rewrite-actions">
                     <button id="t-rewrite-trigger" class="t-btn" type="button">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> \u624B\u52A8\u89E6\u53D1\u6539\u5199
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> \u6309\u89C4\u5219\u6539\u5199
                     </button>
-                    <span class="t-rewrite-action-hint">\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u6539\u5199\u540E\u56DE\u5199\u5230\u539F\u6D88\u606F</span>
+                    <span class="t-rewrite-action-hint">\u9009\u53E5\u6539\u5199\u5165\u53E3\u4F1A\u663E\u793A\u5728\u6700\u65B0\u56DE\u590D\u697C\u5C42\u5185</span>
                 </div>
             </div>
         </div>
@@ -21092,6 +22570,7 @@ function openPanel() {
   bindPanelEvents();
   syncRuntimeCollapseUi();
   renderPersistedRewriteViews();
+  refreshInlineRewriteEntry();
   setRawResponse("");
   setRawMeta("\u7B49\u5F85\u8BF7\u6C42");
   updateAbortBtnState(false);
@@ -21102,9 +22581,35 @@ function bindGlobalEvents() {
   $(document).on("keydown.titaniaRewritePanel", (evt) => {
     if (evt.key === "Escape") closePanel();
   });
+  $(document).on("click.titaniaRewriteInline", ".t-rewrite-inline-start", (e) => {
+    e.preventDefault();
+    enterInlineSentenceSelection();
+  });
+  $(document).on("click.titaniaRewriteInline", ".t-rewrite-inline-cancel", (e) => {
+    e.preventDefault();
+    clearInlineSentenceSelection();
+    refreshInlineRewriteEntry();
+  });
+  $(document).on("click.titaniaRewriteInline", ".t-rewrite-inline-confirm", (e) => {
+    e.preventDefault();
+    runSelectedSentenceRewrite();
+  });
+  $(document).on("click.titaniaRewriteInline", ".t-rewrite-select-sentence", (e) => {
+    e.preventDefault();
+    const $target = $(e.currentTarget);
+    const id = String($target.attr("data-segment-id") || "").trim();
+    if (!id) return;
+    const selected = getSelectedSentenceIdSet();
+    if (selected.has(id)) selected.delete(id);
+    else selected.add(id);
+    setSelectedSentenceIds(selected);
+    $target.toggleClass("selected", selected.has(id));
+    updateInlineRewriteCount();
+  });
 }
 function syncEntryButton() {
   if (!isEnabled()) {
+    clearInlineSentenceSelection();
     removeButton(true);
     return;
   }
@@ -21126,15 +22631,17 @@ function initRewriteEntryButton() {
   bindRewriteDecorationEvents();
   scheduleApplyAllRewriteMarks(220);
   syncEntryButton();
+  refreshInlineRewriteEntry();
 }
 function refreshRewriteEntryButton() {
   syncEntryButton();
+  refreshInlineRewriteEntry();
 }
 function openRewritePanelFromMenu() {
   if (!isEnabled()) return;
   openPanel();
 }
-var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
+var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, latestSentenceUnits, selectedSentenceIds, inlineSelectionMessageIndex, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, REWRITE_PANEL_CSS, REWRITE_SETTINGS_BUTTON_CSS;
 var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
@@ -21161,14 +22668,59 @@ var init_rewriteEntryButton = __esm({
     lastMatchResult = null;
     lastMatchSourceText = "";
     lastDiffRows = [];
+    latestSentenceUnits = [];
+    selectedSentenceIds = /* @__PURE__ */ new Set();
+    inlineSelectionMessageIndex = null;
     LIVE_RESPONSE_HISTORY_MAX = 20;
     AUTO_REWRITE_DELAY_MS = 3e3;
     REWRITE_TEMPERATURE = 0.8;
     REWRITE_FIX_TEMPERATURE = 0;
     REWRITE_MAX_TOKENS = 4e4;
-    REWRITE_DEFAULT_PROMPT_SYSTEM = "\u4F60\u662F\u4E2D\u6587\u6539\u5199\u7F16\u8F91\u5668\u3002\u4F60\u7684\u4EFB\u52A1\u4E0D\u662F\u66FF\u6362\u5355\u8BCD\uFF0C\u800C\u662F\u5BF9\u6BCF\u4E2A\u76EE\u6807\u53E5\u505A\u6574\u53E5\u91CD\u5199\u3002\u76EE\u6807\u662F\u5728\u4E0D\u6539\u53D8\u539F\u610F\u3001\u8BED\u6C14\u3001\u4EBA\u79F0\u3001\u65F6\u6001\u3001\u53D9\u4E8B\u89C6\u89D2\u7684\u524D\u63D0\u4E0B\uFF0C\u91CD\u5199\u4E3A\u65B0\u7684\u53E5\u6CD5\u8868\u8FBE\u3002\n\n\u5F3A\u5236\u8981\u6C42\uFF08\u5FC5\u987B\u540C\u65F6\u6EE1\u8DB3\uFF09\uFF1A\n1) \u7981\u7528\u8BCD\u7EA6\u675F\uFF1A\u51E1 matched_rules \u4E2D\u51FA\u73B0\u7684 anchor / matched_extra \u53CA\u5176\u539F\u8BCD\u5F62\uFF0C\u4E0D\u5F97\u51FA\u73B0\u5728 rewritten_text\u3002\n2) \u53E5\u7EA7\u91CD\u5199\uFF1A\u4E0D\u5F97\u4EC5\u505A\u540C\u4E49\u8BCD\u66FF\u6362\uFF1B\u5FC5\u987B\u6539\u53D8\u53E5\u5B50\u7ED3\u6784\uFF08\u8BED\u5E8F\u3001\u4E3B\u8C13\u5BBE\u7EC4\u7EC7\u3001\u77ED\u8BED\u7EC4\u5408\u3001\u4ECE\u53E5\u6216\u5E76\u5217\u5173\u7CFB\u81F3\u5C11\u4E00\u9879\u53D8\u5316\uFF09\u3002\n3) \u8BED\u4E49\u7B49\u4EF7\uFF1A\u4E8B\u4EF6\u3001\u5173\u7CFB\u3001\u60C5\u7EEA\u5F3A\u5EA6\u3001\u4E8B\u5B9E\u4FE1\u606F\u4E0D\u4E22\u5931\u3001\u4E0D\u65B0\u589E\u3002\n4) \u53EF\u8BFB\u6027\uFF1A\u8F93\u51FA\u81EA\u7136\u6D41\u7545\uFF0C\u4E0D\u751F\u786C\uFF0C\u4E0D\u53E3\u8BED\u5316\u964D\u7EA7\u3002\n5) \u957F\u5EA6\u63A7\u5236\uFF1Arewritten_text \u5EFA\u8BAE\u5728\u539F\u53E5\u957F\u5EA6\u7684 70%~150%\u3002\n6) \u8F93\u51FA\u4EC5 JSON\uFF0C\u4E0D\u5F97\u8F93\u51FA\u89E3\u91CA\u3002\n\n\u5982\u679C\u67D0\u53E5\u5728\u4E25\u683C\u7981\u8BCD\u4E0B\u96BE\u4EE5\u6539\u5199\uFF0C\u4E5F\u5FC5\u987B\u7ED9\u51FA\u8BED\u4E49\u7B49\u4EF7\u7684\u91CD\u6784\u53E5\uFF0C\u4E0D\u53EF\u8FD4\u56DE\u539F\u53E5\u3002";
-    REWRITE_DEFAULT_PROMPT_USER = '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\n\u8F93\u5165 payload\uFF1A\n{{payload}}\n\n\u6267\u884C\u89C4\u5219\uFF08\u9010\u6761\uFF09\uFF1A\n1) \u5BF9\u6BCF\u4E2A target \u7684 original_text \u8FDB\u884C\u6574\u53E5\u91CD\u5199\u3002\n2) rewritten_text \u5FC5\u987B\u4E0E original_text \u8BED\u4E49\u7B49\u4EF7\uFF0C\u4F46\u8868\u8FBE\u7ED3\u6784\u660E\u663E\u4E0D\u540C\u3002\n3) rewritten_text \u4E2D\u4E0D\u5F97\u51FA\u73B0\u8BE5 target \u7684\u4EFB\u4F55 matched_rules \u91CC\u7684 anchor / matched_extra\u3002\n4) results \u6570\u91CF\u5FC5\u987B\u4E0E targets \u4E00\u81F4\uFF0Csegment_id \u4E00\u4E00\u5BF9\u5E94\u4E14\u4E0D\u91CD\u590D\u3002\n5) \u82E5 rewritten_text \u4E0E original_text \u4EC5\u8BCD\u6C47\u66FF\u6362\u3001\u53E5\u6CD5\u57FA\u672C\u4E00\u81F4\uFF0C\u89C6\u4E3A\u4E0D\u5408\u683C\uFF0C\u5FC5\u987B\u91CD\u5199\u540E\u518D\u8F93\u51FA\u3002\n6) \u53EA\u8F93\u51FA JSON\u3002';
-    REWRITE_DEFAULT_PROMPT_JSON_RULE = "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u5FC5\u987B\u4E3A\u6574\u53E5\u91CD\u5199\uFF0C\u7981\u6B62\u53EA\u505A\u8BCD\u6C47\u66FF\u6362\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09";
+    REWRITE_DEFAULT_PROMPT_SYSTEM = `\u4F60\u662F\u300C\u56DE\u58F0\u6587\u5B66\u7F16\u8F91\u300D\u2014\u2014\u4E00\u4F4D\u8D44\u6DF1\u7684\u4E2D\u6587\u53D9\u4E8B\u6587\u672C\u7F16\u8F91\uFF0C\u4E13\u7CBE\u4E8E\u89D2\u8272\u626E\u6F14\u548C\u5C0F\u8BF4\u573A\u666F\u7684\u6587\u672C\u6DA6\u8272\u4E0E\u6539\u5199\u3002
+
+\u4F60\u7684\u5DE5\u4F5C\u4E0D\u662F\u673A\u68B0\u66FF\u6362\u8BCD\u6C47\uFF0C\u800C\u662F\u7406\u89E3\u4F5C\u8005\u7684\u8868\u8FBE\u610F\u56FE\u540E\uFF0C\u5728\u5FE0\u5B9E\u539F\u610F\u7684\u524D\u63D0\u4E0B\uFF0C\u7528\u66F4\u597D\u7684\u53E5\u5B50\u7ED3\u6784\u91CD\u65B0\u8868\u8FBE\u3002
+
+\u6539\u5199\u54F2\u5B66\uFF1A
+- \u5FE0\u5B9E\u4E8E\u539F\u6587\uFF1A\u4E8B\u4EF6\u3001\u5173\u7CFB\u3001\u60C5\u7EEA\u5F3A\u5EA6\u3001\u4E8B\u5B9E\u4FE1\u606F\u4E0D\u589E\u4E0D\u51CF\u3002
+- \u6539\u53D8\u7ED3\u6784\uFF1A\u8C03\u6574\u8BED\u5E8F\u3001\u4E3B\u8C13\u5BBE\u7EC4\u7EC7\u3001\u4ECE\u53E5\u5173\u7CFB\uFF0C\u800C\u975E\u4EC5\u66FF\u6362\u540C\u4E49\u8BCD\u3002
+- \u4FDD\u6301\u58F0\u97F3\uFF1A\u4FDD\u7559\u539F\u6587\u7684\u8BED\u6C14\u3001\u4EBA\u79F0\u3001\u53D9\u4E8B\u89C6\u89D2\u548C\u60C5\u611F\u5F3A\u5EA6\u3002
+- \u878D\u5165\u8BED\u5883\uFF1A\u6539\u5199\u540E\u7684\u53E5\u5B50\u5E94\u80FD\u81EA\u7136\u5D4C\u5165\u539F\u6587\u4E0A\u4E0B\u6587\uFF0C\u4E0D\u663E\u7A81\u5140\u3002
+- \u8282\u594F\u81EA\u7136\uFF1A\u4E2D\u6587\u6563\u6587\u7684\u8282\u594F\u611F\uFF0C\u957F\u77ED\u53E5\u4EA4\u9519\uFF0C\u907F\u514D\u751F\u786C\u5806\u780C\u3002
+
+\u5DE5\u4F5C\u65B9\u6CD5\uFF1A
+1) \u5148\u8BFB\uFF1A\u7406\u89E3\u8FD9\u4E2A\u53E5\u5B50\u5728\u8BF4\u4EC0\u4E48\u3001\u8868\u8FBE\u4E86\u4EC0\u4E48\u60C5\u7EEA\u3002
+2) \u518D\u8BCA\u65AD\uFF1A\u8FD9\u53E5\u8BDD\u7684"\u95EE\u9898"\u662F\u4EC0\u4E48\uFF08\u91CD\u590D\u8BCD\uFF1F\u53E5\u5F0F\u50F5\u786C\uFF1F\u5197\u957F\uFF1F\uFF09\u3002
+3) \u518D\u91CD\u6784\uFF1A\u7528\u4E0D\u540C\u7684\u53E5\u6CD5\u7ED3\u6784\u91CD\u65B0\u8868\u8FBE\u540C\u4E00\u4EF6\u4E8B\u3002
+4) \u6700\u540E\u68C0\u67E5\uFF1A\u65B0\u53E5\u5B50\u8BFB\u8D77\u6765\u662F\u5426\u81EA\u7136\uFF1F\u662F\u5426\u4FDD\u6301\u4E86\u539F\u610F\uFF1F
+
+\u786C\u7EA6\u675F\uFF08\u5FC5\u987B\u540C\u65F6\u6EE1\u8DB3\uFF09\uFF1A
+1) \u7981\u7528\u8BCD\uFF1A\u6BCF\u4E2A target \u7684 matched_keywords \u4E2D\u7684\u8BCD\uFF0C\u4E0D\u5F97\u51FA\u73B0\u5728 rewritten_text\u3002
+2) \u53E5\u7EA7\u91CD\u5199\uFF1A\u4E0D\u5F97\u4EC5\u505A\u540C\u4E49\u8BCD\u66FF\u6362\uFF1B\u5FC5\u987B\u6539\u53D8\u53E5\u5B50\u7ED3\u6784\uFF08\u8BED\u5E8F\u3001\u4E3B\u8C13\u5BBE\u7EC4\u7EC7\u3001\u77ED\u8BED\u7EC4\u5408\u3001\u4ECE\u53E5\u6216\u5E76\u5217\u5173\u7CFB\u81F3\u5C11\u4E00\u9879\u53D8\u5316\uFF09\u3002
+3) \u957F\u5EA6\u63A7\u5236\uFF1Arewritten_text \u5EFA\u8BAE\u5728\u539F\u53E5\u957F\u5EA6\u7684 70%~150%\u3002
+
+\u5982\u679C\u67D0\u53E5\u5728\u4E25\u683C\u7981\u8BCD\u4E0B\u96BE\u4EE5\u6539\u5199\uFF0C\u4E5F\u5FC5\u987B\u7ED9\u51FA\u8BED\u4E49\u7B49\u4EF7\u7684\u91CD\u6784\u53E5\uFF0C\u4E0D\u53EF\u8FD4\u56DE\u539F\u53E5\u3002`;
+    REWRITE_DEFAULT_PROMPT_USER = '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\n\u8F93\u5165 payload\uFF1A\n{{payload}}\n\n\u6267\u884C\u89C4\u5219\uFF08\u9010\u6761\uFF09\uFF1A\n1) \u5BF9\u6BCF\u4E2A target \u7684 original_text \u8FDB\u884C\u6574\u53E5\u91CD\u5199\u3002\n2) rewritten_text \u5FC5\u987B\u4E0E original_text \u8BED\u4E49\u7B49\u4EF7\uFF0C\u4F46\u8868\u8FBE\u7ED3\u6784\u660E\u663E\u4E0D\u540C\u3002\n3) results \u6570\u91CF\u5FC5\u987B\u4E0E targets \u4E00\u81F4\uFF0Csegment_id \u4E00\u4E00\u5BF9\u5E94\u4E14\u4E0D\u91CD\u590D\u3002\n4) \u82E5 rewritten_text \u4E0E original_text \u4EC5\u8BCD\u6C47\u66FF\u6362\u3001\u53E5\u6CD5\u57FA\u672C\u4E00\u81F4\uFF0C\u89C6\u4E3A\u4E0D\u5408\u683C\uFF0C\u5FC5\u987B\u91CD\u5199\u540E\u518D\u8F93\u51FA\u3002\n5) \u53EA\u8F93\u51FA JSON\u3002';
+    REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM = `\u4F60\u662F\u300C\u56DE\u58F0\u6587\u5B66\u7F16\u8F91\u300D\u7684\u624B\u52A8\u9009\u53E5\u6539\u5199\u6A21\u5F0F\uFF0C\u4E13\u95E8\u5C06\u53E5\u5B50\u6539\u5199\u4E3A\u767D\u63CF\u98CE\u683C\u3002
+
+\u767D\u63CF\u624B\u6CD5\u6838\u5FC3\u51C6\u5219\uFF1A
+- \u7528\u5177\u4F53\u52A8\u4F5C\u3001\u7269\u8C61\u3001\u7EC6\u8282\u8BF4\u8BDD\uFF0C\u4E0D\u76F4\u8FF0\u89D2\u8272\u7684\u5185\u5FC3\u611F\u53D7\u3002
+- \u514B\u5236\u5F62\u5BB9\u8BCD\u548C\u526F\u8BCD\uFF0C\u907F\u514D\u4FEE\u9970\u6CDB\u6EE5\uFF1B\u7528\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\u3002
+- \u5220\u9664\u300C\u4ED6\u611F\u5230\u5F88\u6124\u6012\u300D\u300C\u5979\u5185\u5FC3\u5145\u6EE1\u4E86\u60B2\u4F24\u300D\u8FD9\u7C7B\u5FC3\u7406\u6982\u62EC\u53E5\uFF0C\u6539\u4E3A\u5916\u90E8\u53EF\u89C2\u5BDF\u7684\u884C\u4E3A\u6216\u73AF\u5883\u6620\u886C\u3002
+- \u53E5\u5F0F\u7B80\u6D01\u3001\u786C\u6717\uFF0C\u4E0D\u865A\u9970\uFF0C\u4E0D\u717D\u60C5\u3002
+- \u8BFB\u8005\u5E94\u80FD\u4ECE\u63CF\u5199\u4E2D\u81EA\u884C\u4F53\u4F1A\u60C5\u7EEA\uFF0C\u800C\u975E\u88AB\u544A\u77E5\u3002
+
+\u6539\u5199\u64CD\u4F5C\uFF1A
+- \u5FE0\u5B9E\u539F\u610F\uFF1A\u4E0D\u6539\u53D8\u4E8B\u5B9E\u3001\u4EBA\u7269\u5173\u7CFB\u3001\u4E8B\u4EF6\u987A\u5E8F\u548C\u60C5\u7EEA\u5F3A\u5EA6\u3002
+- \u767D\u63CF\u8F6C\u5316\uFF1A\u5C06\u5FC3\u7406\u76F4\u8FF0\u3001\u62BD\u8C61\u6982\u62EC\u3001\u534E\u4E3D\u4FEE\u8F9E\u6539\u5199\u4E3A\u514B\u5236\u3001\u5177\u8C61\u3001\u53EF\u89C2\u5BDF\u7684\u8868\u8FF0\u3002
+- \u8D34\u5408\u4E0A\u4E0B\u6587\uFF1A\u6539\u5199\u540E\u7684\u53E5\u5B50\u80FD\u539F\u4F4D\u653E\u56DE\u539F\u697C\u5C42\uFF0C\u4E0D\u663E\u62FC\u63A5\u75D5\u8FF9\u3002
+- \u4FDD\u7559\u53D9\u4E8B\u89C6\u89D2\u548C\u4EBA\u79F0\u3002
+
+\u786C\u7EA6\u675F\uFF1A
+1) \u53EA\u5904\u7406 targets \u4E2D\u51FA\u73B0\u7684\u53E5\u5B50\uFF0C\u4E0D\u65B0\u589E target\u3002
+2) rewritten_text \u4E0D\u5F97\u4E3A\u7A7A\uFF1B\u5373\u4F7F\u539F\u53E5\u5DF2\u662F\u767D\u63CF\uFF0C\u4E5F\u7ED9\u51FA\u4E00\u4E2A\u4E0D\u540C\u7684\u7B49\u4EF7\u5199\u6CD5\u3002
+3) \u53EA\u8F93\u51FA JSON\u3002`;
+    REWRITE_DEFAULT_SELECTED_PROMPT_USER = '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_selected_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\n\u8F93\u5165 payload\uFF1A\n{{payload}}\n\n\u6267\u884C\u89C4\u5219\uFF1A\n1) \u7528\u6237\u5DF2\u624B\u52A8\u9009\u62E9 targets\uFF0C\u8BF7\u9010\u6761\u6539\u5199 original_text\u3002\n2) \u6539\u5199\u65B9\u5411\u59CB\u7EC8\u662F\u767D\u63CF\uFF1A\u5220\u9664\u5FC3\u7406\u76F4\u8FF0\uFF0C\u8F6C\u4E3A\u53EF\u89C2\u5BDF\u7684\u52A8\u4F5C\u548C\u7EC6\u8282\uFF1B\u514B\u5236\u4FEE\u9970\uFF0C\u7528\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\u3002\n3) \u6BCF\u6761 rewritten_text \u5FC5\u987B\u80FD\u66FF\u6362\u56DE\u539F\u4F4D\u7F6E\uFF0C\u5E76\u4E0E\u4E0A\u4E0B\u6587\u81EA\u7136\u8854\u63A5\u3002\n4) \u4E0D\u8981\u8F93\u51FA\u672A\u9009\u62E9\u7684\u53E5\u5B50\uFF0C\u4E0D\u8981\u6539\u53D8 segment_id\u3002\n5) results \u6570\u91CF\u5FC5\u987B\u4E0E targets \u4E00\u81F4\u3002\n6) \u53EA\u8F93\u51FA JSON\u3002';
+    REWRITE_DEFAULT_PROMPT_JSON_RULE = "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u5FC5\u987B\u4E3A\u6574\u53E5\u91CD\u5199\uFF0C\u7981\u6B62\u53EA\u505A\u8BCD\u6C47\u66FF\u6362\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u8BE5 target \u7684 matched_keywords \u4E2D\u7684\u8BCD";
     REWRITE_PANEL_CSS = `
 #titania-rewrite-entry-btn { margin-left: 6px; }
 #titania-rewrite-entry-btn i { color: #90cdf4; }
@@ -21274,6 +22826,15 @@ var init_rewriteEntryButton = __esm({
 #t-rewrite-live-overlay #t-rewrite-raw-response { max-height: min(34vh, 320px); min-height: 170px; }
 #chat .mes .t-rewrite-auto-badge { position: absolute; right: 10px; top: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #dff0ff; background: rgba(15, 24, 35, 0.88); border: 1px solid rgba(144, 205, 244, 0.45); border-radius: 999px; padding: 3px 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); background-image: linear-gradient(120deg, rgba(144, 205, 244, 0.15) 0%, rgba(191, 161, 95, 0.22) 35%, rgba(122, 203, 159, 0.2) 70%, rgba(144, 205, 244, 0.15) 100%); background-size: 220% 220%; animation: titania-rewrite-badge-flow 1.4s linear infinite; }
 #chat .mes .t-rewrite-auto-badge i { color: #90cdf4; animation: titania-rewrite-badge-icon 0.95s ease-in-out infinite; }
+#chat .mes .t-rewrite-inline-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 8px; font-size: 12px; }
+#chat .mes .t-rewrite-inline-toolbar button { border: 1px solid rgba(144, 205, 244, 0.38); border-radius: 999px; background: rgba(15, 24, 35, 0.82); color: #dff0ff; padding: 3px 9px; line-height: 1.35; cursor: pointer; }
+#chat .mes .t-rewrite-inline-toolbar button:hover { border-color: rgba(144, 205, 244, 0.65); background: rgba(34, 54, 76, 0.86); }
+#chat .mes .t-rewrite-inline-toolbar button.t-rewrite-inline-confirm { border-color: rgba(122, 203, 159, 0.52); color: #d8f5e4; }
+#chat .mes .t-rewrite-inline-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+#chat .mes .t-rewrite-inline-count { color: #a9bfd1; padding: 2px 4px; }
+#chat .mes .t-rewrite-select-sentence { border-radius: 5px; padding: 0 2px; cursor: pointer; transition: background-color 0.16s ease, box-shadow 0.16s ease; }
+#chat .mes .t-rewrite-select-sentence:hover { background: rgba(144, 205, 244, 0.14); box-shadow: inset 0 0 0 1px rgba(144, 205, 244, 0.32); }
+#chat .mes .t-rewrite-select-sentence.selected { background: rgba(122, 203, 159, 0.22); box-shadow: inset 0 0 0 1px rgba(122, 203, 159, 0.52); }
 #chat .mes .t-rewrite-mark {
     position: relative;
     display: inline;
@@ -21350,6 +22911,76 @@ var init_rewriteEntryButton = __esm({
 #t-rewrite-overlay .t-rewrite-test-section { flex: 1.1; }
 #t-rewrite-overlay .t-rewrite-raw-section { flex: 0.95; }
 #t-rewrite-overlay .t-rewrite-right > .t-rewrite-section:last-child { flex: 1.15; }
+
+    /* === \u65B9\u6848\u9009\u62E9\u5668 === */
+    #t-rewrite-settings-overlay .t-rewrite-scheme-bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    #t-rewrite-settings-overlay .t-rewrite-scheme-label { font-size: 0.85em; color: #bccdd8; font-weight: 600; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-scheme-bar select { flex: 1; min-width: 160px; }
+    #t-rewrite-settings-overlay .t-rewrite-scheme-btn { width: 30px; min-width: 30px; height: 30px; padding: 0; justify-content: center; }
+
+    /* === \u5206\u7C7B\u5361\u7247 === */
+    #t-rewrite-settings-overlay .t-rewrite-category-card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        background: rgba(22, 27, 36, 0.6);
+        margin-bottom: 8px;
+        overflow: hidden;
+        transition: border-color 0.15s;
+    }
+    #t-rewrite-settings-overlay .t-rewrite-category-card.t-rewrite-cat-empty { opacity: 0.7; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(28, 34, 44, 0.7);
+        cursor: pointer;
+        user-select: none;
+    }
+    #t-rewrite-settings-overlay .t-rewrite-cat-head:hover { background: rgba(34, 42, 54, 0.7); }
+    #t-rewrite-settings-overlay .t-rewrite-cat-caret {
+        font-size: 0.7em;
+        color: #8899aa;
+        width: 14px;
+        transition: transform 0.2s;
+    }
+    #t-rewrite-settings-overlay .t-rewrite-category-card.collapsed .t-rewrite-cat-caret { transform: rotate(-90deg); }
+    #t-rewrite-settings-overlay .t-rewrite-category-card.collapsed .t-rewrite-cat-body { display: none; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-num { font-size: 0.75em; color: #6a8090; font-weight: 700; min-width: 22px; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-display {
+        flex: 1;
+        font-size: 0.88em;
+        font-weight: 600;
+        color: #cddce8;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #t-rewrite-settings-overlay .t-rewrite-cat-head-status { font-size: 0.75em; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-status-ok { color: #6a9; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-status-warn { color: #e88; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-warn { color: #e88; font-size: 0.78em; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-body {
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-row { display: flex; align-items: center; gap: 8px; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-row label { font-size: 0.82em; color: #bccdd8; font-weight: 600; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-name-row input { flex: 1; font-size: 0.88em; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-field { display: flex; flex-direction: column; gap: 4px; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-field label { font-size: 0.8em; color: #99aabb; font-weight: 600; }
+    #t-rewrite-settings-overlay .t-rewrite-cat-field textarea { resize: vertical; min-height: 38px; font-size: 0.84em; background: rgba(15, 18, 25, 0.6); }
+    #t-rewrite-settings-overlay .t-rewrite-cat-field-hint { font-size: 0.76em; color: #6a8090; font-weight: 400; }
+
+    /* === \u5173\u952E\u8BCD\u89C4\u5219 === */
+    #t-rewrite-settings-overlay .t-rewrite-cat-kw-list { display: flex; flex-direction: column; gap: 4px; }
+    #t-rewrite-settings-overlay .t-rewrite-kw-row { display: flex; gap: 4px; align-items: center; }
+    #t-rewrite-settings-overlay .t-rewrite-kw-row input { flex: 1; font-size: 0.82em; min-width: 80px; }
+    #t-rewrite-settings-overlay .t-rewrite-kw-and { font-size: 0.78em; color: #9cb2c4; font-weight: 700; white-space: nowrap; }
+    #t-rewrite-settings-overlay .t-rewrite-kw-del { width: 28px; min-width: 28px; height: 28px; padding: 0; justify-content: center; }
 
 @media (max-width: 1200px) {
     #t-rewrite-overlay .t-rewrite-window { width: min(1080px, 97vw); }
@@ -21495,6 +23126,10 @@ var init_rewriteEntryButton = __esm({
         max-height: min(97dvh, 97vh);
         border-radius: 12px;
     }
+
+    @media (max-width: 600px) {
+        #t-rewrite-settings-overlay .t-rewrite-scheme-bar select { min-width: 100px; }
+    }
 }
 `;
     REWRITE_SETTINGS_BUTTON_CSS = `
@@ -21578,7 +23213,8 @@ var init_rewriteEntryButton = __esm({
 #t-rewrite-settings-overlay #t-rewrite-settings-prompt-json {
     min-height: 96px;
 }
-#t-rewrite-settings-overlay #t-rewrite-settings-prompt-combined {
+#t-rewrite-settings-overlay #t-rewrite-settings-prompt-combined,
+#t-rewrite-settings-overlay #t-rewrite-settings-selected-prompt-combined {
     min-height: 300px;
 }
 #t-rewrite-settings-overlay .t-window-close {
@@ -26806,6 +28442,8 @@ function openSettingsWindow() {
   let tempStyleProfiles = JSON.parse(JSON.stringify(styleProfiles));
   let tempActiveStyleId = activeStyleId;
   let styleContentModified = false;
+  ensurePromptManager(data);
+  let tempPromptManager = JSON.parse(JSON.stringify(data.prompt_manager));
   let tempCssThemes = JSON.parse(JSON.stringify(cssThemes.profiles));
   let tempActiveCssThemeId = cssThemes.active_profile_id || "default";
   let cssThemeModified = false;
@@ -26826,7 +28464,7 @@ function openSettingsWindow() {
                 <div class="t-set-tab-btn" data-tab="connection">\u{1F50C} API \u8FDE\u63A5</div>
                 <div class="t-set-tab-btn" data-tab="director">\u{1F3AC} \u5BFC\u6F14\u6A21\u5F0F</div>
                 <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
-                <div class="t-set-tab-btn" data-tab="prompts">\u{1F4DC} \u7CFB\u7EDF\u63D0\u793A\u8BCD</div>
+                <div class="t-set-tab-btn" data-tab="prompts">\u{1F4DC} \u63D0\u793A\u8BCD\u7BA1\u7406</div>
                 <div class="t-set-tab-btn" data-tab="data">\u{1F5C2}\uFE0F \u6570\u636E\u7BA1\u7406</div>
             </div>
 
@@ -27346,63 +28984,38 @@ function openSettingsWindow() {
                             <span style="color:#55efc4;">\u793A\u4F8B\uFF1A\u586B\u5199 <code style="background:#333; padding:1px 4px; border-radius:2px;">content</code> \u5219\u53EA\u63D0\u53D6 <code style="background:#333; padding:1px 4px; border-radius:2px;">&lt;content&gt;...&lt;/content&gt;</code> \u4E2D\u7684\u5185\u5BB9</span>
                         </p>
                     </div>
+
+                    <!-- \u804A\u5929\u5386\u53F2\u63D0\u53D6\u9ED1\u540D\u5355 -->
+                    <div class="t-form-group" style="margin-top:15px;">
+                        <label class="t-form-label">\u{1F6AB} \u804A\u5929\u5386\u53F2\u6392\u9664\u6807\u7B7E (\u9ED1\u540D\u5355)</label>
+                        <textarea id="cfg-history-blacklist" class="t-input" rows="4" placeholder="\u6BCF\u884C\u4E00\u6761\u89C4\u5219\uFF0C\u683C\u5F0F\uFF1A\u5F00\u59CB\u6807\u8BB0 \u7ED3\u675F\u6807\u8BB0;&#10;\u4F8B\u5982\uFF1A&#10;&lt;thinking&gt; &lt;/thinking&gt;;&#10;image### ###image;&#10;\u5FC5\u987B\u586B\u5199\u5B8C\u6574\u7684\u6210\u5BF9\u6807\u8BB0\uFF0C\u4E2D\u95F4\u4FDD\u7559\u7A7A\u683C\uFF0C\u884C\u672B\u4F7F\u7528\u82F1\u6587\u5206\u53F7\u3002">${data.history_extraction?.blacklist || ""}</textarea>
+                        <p style="font-size:0.75em; color:#666; margin-top:5px; line-height:1.5;">
+                            \u8BFB\u53D6\u804A\u5929\u5386\u53F2\u524D\u5220\u9664\u8FD9\u4E9B\u6210\u5BF9\u6807\u8BB0\u53CA\u5176\u4E2D\u7684\u5185\u5BB9\u3002\u6BCF\u884C\u4E00\u6761\u89C4\u5219\uFF0C\u6807\u8BB0\u4E4B\u95F4\u5FC5\u987B\u6709\u7A7A\u683C\uFF0C\u89C4\u5219\u672B\u5C3E\u5FC5\u987B\u4F7F\u7528\u82F1\u6587\u5206\u53F7 <code style="background:#333; padding:1px 4px; border-radius:2px;">;</code>\u3002
+                        </p>
+                    </div>
                 </div>
 
-                <!-- Tab 6: \u7CFB\u7EDF\u63D0\u793A\u8BCD -->
+                <!-- Tab 6: \u63D0\u793A\u8BCD\u7BA1\u7406 -->
                 <div id="page-prompts" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
-                        <div style="font-weight:bold; color:#90cdf4; margin-bottom:10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> \u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD</div>
-                        <div style="font-size:0.85em; color:#888; line-height:1.6;">
-                            \u8986\u76D6\u63D2\u4EF6\u5185\u7F6E\u7684\u7CFB\u7EDF\u63D0\u793A\u8BCD\uFF0C\u81EA\u5B9A\u4E49 AI \u7684\u884C\u4E3A\u65B9\u5F0F\u548C\u8F93\u51FA\u683C\u5F0F\u3002<br>
-                            <span style="color:#feca57;">\u26A0\uFE0F \u9AD8\u7EA7\u529F\u80FD\uFF1A\u4FEE\u6539\u4E0D\u5F53\u53EF\u80FD\u5BFC\u81F4\u751F\u6210\u5931\u8D25\u6216\u683C\u5F0F\u9519\u4E71\u3002</span>
-                        </div>
+                        <div style="font-weight:bold; color:#90cdf4; margin-bottom:8px;"><i class="fa-solid fa-list-check"></i> \u63D0\u793A\u8BCD\u7BA1\u7406</div>
+                        <div style="font-size:0.85em; color:#888; line-height:1.6;">\u7BA1\u7406\u5185\u7F6E\u63D0\u793A\u8BCD\u65B9\u6848\u548C\u5BFC\u5165\u7684 SillyTavern Chat Completion \u9884\u8BBE\u3002\u4E3B\u754C\u9762\u7684\u201C\u9009\u7528\u9884\u8BBE\u201D\u4F7F\u7528\u5F53\u524D\u6D3B\u52A8\u9884\u8BBE\u3002</div>
                     </div>
-                    
-                    <div class="t-form-group">
-                        <label style="cursor:pointer; display:flex; align-items:center; color:#55efc4; font-weight:bold;">
-                            <input type="checkbox" id="cfg-prompt-override" ${data.custom_prompts?.override_enabled ? "checked" : ""} style="margin-right:10px;">
-                            \u542F\u7528\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD
-                        </label>
-                        <p style="font-size:0.8em; color:#666; margin-top:5px; margin-left:22px;">\u542F\u7528\u540E\u5C06\u4F7F\u7528\u4E0B\u65B9\u7684\u81EA\u5B9A\u4E49\u63D0\u793A\u8BCD\u66FF\u4EE3\u5185\u7F6E\u63D0\u793A\u8BCD\u3002</p>
-                    </div>
-                    
-                    <div id="custom-prompts-panel" style="display:${data.custom_prompts?.override_enabled ? "block" : "none"};">
-                        <!-- \u5185\u5BB9\u4F18\u5148\u6A21\u5F0F\u63D0\u793A\u8BCD -->
-                        <div class="t-form-group" style="background:#1a1a2e; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:15px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <label class="t-form-label" style="margin:0; color:#90cdf4;">\u{1F4DD} \u5185\u5BB9\u4F18\u5148\u6A21\u5F0F (Content Mode)</label>
-                                <button id="btn-prompt-content-reset" class="t-tool-btn" title="\u6062\u590D\u9ED8\u8BA4" style="font-size:0.8em; padding:4px 8px;"><i class="fa-solid fa-rotate-left"></i> \u9ED8\u8BA4</button>
-                            </div>
-                            <textarea id="cfg-prompt-content" class="t-input t-code-editor" rows="6" placeholder="You are a creative engine...">${data.custom_prompts?.content_mode || ""}</textarea>
-                            <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                                <span style="font-size:0.75em; color:#666;">\u9ED8\u8BA4\u7528\u4E8E\u5927\u591A\u6570\u5267\u672C\u751F\u6210</span>
-                                <span id="prompt-content-count" style="font-size:0.75em; color:#666;">0 \u5B57\u7B26</span>
-                            </div>
+                    <div class="t-form-group" style="background:#181818; padding:15px; border:1px solid #333; border-radius:6px;">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <label class="t-form-label" style="margin:0;">\u67E5\u770B\u65B9\u6848</label>
+                            <select id="t-prompt-view" class="t-input" style="width:auto; min-width:150px;">
+                                <option value="narrative">\u5185\u5BB9\u4F18\u5148</option>
+                                <option value="visual">\u6C1B\u56F4\u7F8E\u5316</option>
+                                <option value="preset">\u7528\u6237\u9884\u8BBE</option>
+                            </select>
+                            <select id="t-prompt-preset-select" class="t-input" style="width:auto; min-width:210px; display:none;"></select>
+                            <button id="t-prompt-import" class="t-tool-btn" title="\u5BFC\u5165 SillyTavern Chat Completion \u9884\u8BBE"><i class="fa-solid fa-file-import"></i> \u5BFC\u5165\u9884\u8BBE</button>
+                            <button id="t-prompt-delete" class="t-tool-btn" title="\u5220\u9664\u5F53\u524D\u9884\u8BBE" style="display:none;"><i class="fa-solid fa-trash"></i> \u5220\u9664</button>
+                            <button id="t-prompt-reset-builtin" class="t-tool-btn" title="\u6062\u590D\u5F53\u524D\u5185\u7F6E\u65B9\u6848\u9ED8\u8BA4\u503C" style="display:none;"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u9ED8\u8BA4</button>
+                            <input type="file" id="t-prompt-file" accept=".json,application/json" style="display:none;">
                         </div>
-                        
-                        <!-- \u6C1B\u56F4\u7F8E\u5316\u6A21\u5F0F\u63D0\u793A\u8BCD -->
-                        <div class="t-form-group" style="background:#2e1a2e; padding:15px; border-radius:6px; border:1px solid #333;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <label class="t-form-label" style="margin:0; color:#ff79c6;">\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316\u6A21\u5F0F (Visual Mode)</label>
-                                <button id="btn-prompt-visual-reset" class="t-tool-btn" title="\u6062\u590D\u9ED8\u8BA4" style="font-size:0.8em; padding:4px 8px;"><i class="fa-solid fa-rotate-left"></i> \u9ED8\u8BA4</button>
-                            </div>
-                            <textarea id="cfg-prompt-visual" class="t-input t-code-editor" rows="8" placeholder="You are a Visual Director...">${data.custom_prompts?.visual_mode || ""}</textarea>
-                            <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                                <span style="font-size:0.75em; color:#666;">\u7528\u4E8E\u89C6\u89C9\u6548\u679C\u4F18\u5148\u7684\u573A\u666F</span>
-                                <span id="prompt-visual-count" style="font-size:0.75em; color:#666;">0 \u5B57\u7B26</span>
-                            </div>
-                        </div>
-                        
-                        <!-- \u63D0\u793A\u4FE1\u606F -->
-                        <div style="background:rgba(255,159,67,0.1); border:1px solid rgba(255,159,67,0.3); padding:12px; border-radius:6px; margin-top:15px;">
-                            <div style="font-size:0.85em; color:#feca57; margin-bottom:8px;"><i class="fa-solid fa-lightbulb"></i> \u7F16\u5199\u63D0\u793A\u8BCD\u7684\u5EFA\u8BAE</div>
-                            <ul style="font-size:0.8em; color:#888; margin:0; padding-left:18px; line-height:1.7;">
-                                <li>\u660E\u786E\u6307\u5B9A\u8F93\u51FA\u683C\u5F0F\uFF08\u5982\uFF1AHTML\u3001\u4F7F\u7528\u5185\u8054CSS\u7B49\uFF09</li>
-                                <li>\u6307\u5B9A\u8BED\u8A00\uFF08\u5982\uFF1ALanguage: Chinese\uFF09</li>
-                                <li>\u7981\u6B62 Markdown \u4EE3\u7801\u5757\uFF08No markdown code blocks\uFF09</li>
-                                <li>\u7559\u7A7A\u5219\u4F7F\u7528\u5185\u7F6E\u9ED8\u8BA4\u63D0\u793A\u8BCD</li>
-                            </ul>
-                        </div>
+                        <div id="t-prompt-entry-list" class="t-prompt-entry-list" style="margin-top:15px;"></div>
                     </div>
                 </div>
 
@@ -28016,44 +29629,359 @@ function openSettingsWindow() {
   $("#cfg-auto-continue").on("change", function() {
     $("#auto-continue-panel").toggle($(this).is(":checked"));
   });
-  const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
-  const DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
-
-[Process]
-1. Analyze the mood/emotion of the scenario
-2. Choose visual effects that represent the mood
-3. Generate HTML with embedded <style>
-
-[Technical Rules]
-1. Output HTML with <style> block
-2. Use CSS animations, gradients, shadows freely
-3. No markdown code blocks
-4. Language: Chinese`;
-  const updatePromptContentCount = () => {
-    const len = ($("#cfg-prompt-content").val() || "").length;
-    $("#prompt-content-count").text(`${len} \u5B57\u7B26`);
+  const renderPromptManager = () => {
+    const view = $("#t-prompt-view").val() || "narrative";
+    tempPromptManager.editor_view = view;
+    const isPreset = view === "preset";
+    const $select = $("#t-prompt-preset-select");
+    $select.toggle(isPreset).empty();
+    tempPromptManager.presets.forEach((preset) => {
+      $select.append($("<option>", { value: preset.id, text: preset.name }));
+    });
+    $select.val(tempPromptManager.active_preset_id);
+    $("#t-prompt-delete").toggle(isPreset && !!$select.val());
+    $("#t-prompt-reset-builtin").toggle(!isPreset);
+    const scheme = isPreset ? tempPromptManager.presets.find((p) => p.id === $select.val()) : tempPromptManager.builtin[view];
+    const entries = scheme ? getPresetEntrySummary(scheme) : [];
+    const $list = $("#t-prompt-entry-list").empty();
+    if (!scheme) {
+      $list.html('<div style="color:#888; padding:12px 0;">\u6682\u65E0\u5BFC\u5165\u7684\u9884\u8BBE</div>');
+      return;
+    }
+    entries.forEach((entry, entryIndex) => {
+      const isLocked = entry.readonly === true;
+      const stateLabel = isLocked ? "\u63D2\u4EF6\u5185\u7F6E" : entry.required ? "\u5FC5\u9700" : entry.enabled ? "\u5DF2\u542F\u7528" : "\u5DF2\u7981\u7528";
+      const stateIcon = isLocked || entry.required ? "fa-lock" : entry.enabled ? "fa-check" : "fa-xmark";
+      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"} ${isLocked ? "is-locked" : ""}" data-entry-id="${entry.id}" draggable="${isLocked ? "false" : "true"}">
+                <div class="t-prompt-entry-header">
+                    <span class="t-prompt-entry-drag-hint" title="${isLocked ? "\u63D2\u4EF6\u56FA\u5B9A\u6761\u76EE" : "\u62D6\u52A8\u6392\u5E8F"}"><i class="fa-solid ${isLocked ? "fa-lock" : "fa-grip-vertical"}"></i></span>
+                    <span class="t-prompt-entry-index">#${entry.index}</span>
+                    <span class="t-prompt-entry-name"></span>
+                    <span class="t-prompt-entry-badge"></span>
+                    <div class="t-prompt-entry-actions">
+                        <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${isLocked ? "\u63D2\u4EF6\u5185\u7F6E\u6761\u76EE\uFF0C\u4E0D\u80FD\u7F16\u8F91\u3001\u7981\u7528\u6216\u6392\u5E8F" : entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : `${stateLabel}\uFF0C\u70B9\u51FB\u5207\u6362\u72B6\u6001`}" aria-label="${stateLabel}" ${entry.required ? "disabled" : ""}><i class="fa-solid ${stateIcon}"></i><span class="t-prompt-entry-toggle-label">${stateLabel}</span></button>
+                    </div>
+                </div>
+            </div>`);
+      $row.find(".t-prompt-entry-name").text(entry.name).attr("title", entry.name);
+      $row.find(".t-prompt-entry-badge").text(entry.role).attr("title", entry.marker ? `${entry.role} \xB7 {{${entry.marker}}}` : entry.role);
+      const updateEntry = (changes) => {
+        const target = scheme.entries.find((item) => item.id === entry.id);
+        if (!target) return;
+        Object.assign(target, changes);
+        renderPromptManager();
+      };
+      $row.find(".t-prompt-entry-toggle").on("click", function() {
+        if (entry.required) return;
+        updateEntry({ enabled: !entry.enabled });
+      });
+      $row.on("click", function(event) {
+        if ($(event.target).closest("button").length) return;
+        if (isLocked) return;
+        openPromptEntryEditor(scheme, entry.id);
+      });
+      $row.on("dragstart", function(event) {
+        const originalEvent = event.originalEvent;
+        if (isLocked || $(event.target).closest("input, textarea, select, button").length) {
+          originalEvent?.preventDefault();
+          return;
+        }
+        originalEvent.dataTransfer.effectAllowed = "move";
+        originalEvent.dataTransfer.setData("text/plain", entry.id);
+        $(this).addClass("is-dragging");
+      });
+      $row.on("dragover", function(event) {
+        if (isLocked) return;
+        event.preventDefault();
+        const originalEvent = event.originalEvent;
+        const rect = this.getBoundingClientRect();
+        const insertBefore = originalEvent.clientY < rect.top + rect.height / 2;
+        $(this).toggleClass("is-drag-over", insertBefore || !insertBefore);
+        originalEvent.dataTransfer.dropEffect = "move";
+      });
+      $row.on("dragleave", function(event) {
+        if (event.target === this) $(this).removeClass("is-drag-over");
+      });
+      $row.on("drop", function(event) {
+        if (isLocked) return;
+        event.preventDefault();
+        const originalEvent = event.originalEvent;
+        const draggedId = originalEvent.dataTransfer.getData("text/plain");
+        const fromIndex = scheme.entries.findIndex((item) => item.id === draggedId);
+        const targetIndex = scheme.entries.findIndex((item) => item.id === entry.id);
+        if (fromIndex < 0 || targetIndex < 0 || fromIndex === targetIndex) {
+          renderPromptManager();
+          return;
+        }
+        const rect = this.getBoundingClientRect();
+        const insertBefore = originalEvent.clientY < rect.top + rect.height / 2;
+        const [moved] = scheme.entries.splice(fromIndex, 1);
+        let nextIndex = scheme.entries.findIndex((item) => item.id === entry.id);
+        if (!insertBefore) nextIndex++;
+        scheme.entries.splice(Math.max(0, nextIndex), 0, moved);
+        if (scheme.type === "preset") ensureTitaniaPresetEntries(scheme);
+        renderPromptManager();
+      });
+      $row.on("dragend", function() {
+        $(this).removeClass("is-dragging is-drag-over");
+      });
+      $list.append($row);
+    });
   };
-  const updatePromptVisualCount = () => {
-    const len = ($("#cfg-prompt-visual").val() || "").length;
-    $("#prompt-visual-count").text(`${len} \u5B57\u7B26`);
+  const openPromptEntryEditor = (scheme, entryId) => {
+    const entry = scheme?.entries?.find((item) => item.id === entryId);
+    if (!entry || entry.readonly === true) return;
+    document.getElementById("t-prompt-editor-modal")?.remove();
+    const isDynamic = entry.type === "dynamic";
+    const host = document.createElement("div");
+    host.id = "t-prompt-editor-modal";
+    const isolatedHostStyles = {
+      position: "fixed",
+      inset: "0",
+      display: "block",
+      visibility: "visible",
+      opacity: "1",
+      pointerEvents: "auto",
+      width: "100vw",
+      height: "100dvh",
+      maxWidth: "none",
+      maxHeight: "none",
+      margin: "0",
+      padding: "0",
+      border: "0",
+      background: "transparent",
+      overflow: "hidden",
+      transform: "none",
+      transition: "none",
+      animation: "none",
+      colorScheme: "dark"
+    };
+    for (const [property, value] of Object.entries(isolatedHostStyles)) {
+      host.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
+    }
+    const shadow = host.attachShadow({ mode: "closed" });
+    shadow.innerHTML = `
+            <style>
+                :host {
+                    all: initial !important;
+                    position: fixed !important;
+                    inset: 0 !important;
+                    width: 100vw !important;
+                    height: 100dvh !important;
+                    color-scheme: dark;
+                }
+                *, *::before, *::after { box-sizing: border-box; }
+                dialog {
+                    position: fixed;
+                    inset: 0;
+                    width: 100vw;
+                    height: 100dvh;
+                    max-width: none;
+                    max-height: none;
+                    margin: 0;
+                    padding: 0;
+                    border: 0;
+                    overflow: hidden;
+                    background: transparent;
+                    color: inherit;
+                }
+                dialog::backdrop { background: transparent; }
+                .backdrop {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                    background: rgba(0, 0, 0, 0.72);
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+                    font-size: 14px;
+                    color: #eee;
+                }
+                .editor {
+                    width: min(720px, 100%);
+                    max-height: min(760px, calc(100dvh - 40px));
+                    display: grid;
+                    grid-template-rows: auto minmax(0, 1fr);
+                    overflow: hidden;
+                    background: #171717;
+                    border: 1px solid #4a4a4a;
+                    border-radius: 7px;
+                    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+                }
+                .header {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    min-height: 56px;
+                    padding: 12px 14px 12px 16px;
+                    border-bottom: 1px solid #333;
+                    background: #1c1c1c;
+                }
+                .title { flex: 1; min-width: 0; color: #eee; font-weight: 600; }
+                .icon-button {
+                    width: 34px;
+                    height: 32px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    background: #242424;
+                    color: #bbb;
+                    cursor: pointer;
+                }
+                .icon-button svg { width: 15px; height: 15px; fill: currentColor; }
+                .save { color: #55efc4; }
+                .icon-button:hover, .icon-button:focus-visible { color: #fff; border-color: #90cdf4; outline: none; }
+                .body {
+                    min-height: 0;
+                    padding: 16px;
+                    overflow-y: auto;
+                    overscroll-behavior: contain;
+                }
+                .group { margin: 0 0 14px; }
+                .group.content-group { display: flex; min-height: 280px; flex-direction: column; }
+                label { display: block; margin: 0 0 6px; color: #aaa; font-size: 12px; }
+                input, select, textarea {
+                    width: 100%;
+                    margin: 0;
+                    padding: 8px 10px;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    outline: none;
+                    background: #111;
+                    color: #eee;
+                    font: inherit;
+                }
+                input, select { height: 36px; }
+                textarea {
+                    min-height: 280px;
+                    flex: 1;
+                    resize: vertical;
+                    line-height: 1.45;
+                    font-family: Consolas, Monaco, "Courier New", monospace;
+                }
+                input:focus, select:focus, textarea:focus { border-color: #90cdf4; }
+                textarea:disabled { color: #777; background: #121212; border-style: dashed; }
+                .runtime {
+                    margin-top: 8px;
+                    padding: 10px;
+                    border: 1px dashed #444;
+                    border-radius: 4px;
+                    background: #141414;
+                    color: #888;
+                    font-size: 12px;
+                }
+                @media (max-width: 600px) {
+                    .backdrop { padding: 8px; }
+                    .editor { max-height: calc(100dvh - 16px); }
+                    .header { min-height: 52px; padding: 10px 10px 10px 14px; }
+                    .body { padding: 12px; }
+                    .group.content-group { min-height: 220px; }
+                    textarea { min-height: 220px; }
+                }
+            </style>
+            <dialog aria-label="\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE">
+                <div class="backdrop">
+                    <section class="editor" role="document">
+                    <header class="header">
+                        <span class="title">\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE</span>
+                        <button type="button" class="icon-button save" title="\u4FDD\u5B58\u6761\u76EE" aria-label="\u4FDD\u5B58\u6761\u76EE">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4Zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm3-10H5V5h10v4Z"/></svg>
+                        </button>
+                        <button type="button" class="icon-button close" title="\u5173\u95ED" aria-label="\u5173\u95ED">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18.3 5.7-1-1L12 10l-5.3-5.3-1 1L11 11l-5.3 5.3 1 1L12 12l5.3 5.3 1-1L13 11l5.3-5.3Z"/></svg>
+                        </button>
+                    </header>
+                    <div class="body">
+                        <div class="group"><label for="name">\u6761\u76EE\u540D\u79F0</label><input id="name" type="text"></div>
+                        <div class="group"><label for="role">\u6D88\u606F\u89D2\u8272</label><select id="role"><option value="system">system</option><option value="user">user</option><option value="assistant">assistant</option></select></div>
+                        <div class="group content-group"><label for="content">\u63D0\u793A\u8BCD\u5185\u5BB9</label><textarea id="content" placeholder="\u63D0\u793A\u8BCD\u5185\u5BB9"></textarea>${isDynamic ? '<div class="runtime">\u8FD9\u662F\u8FD0\u884C\u65F6\u52A8\u6001\u6761\u76EE\uFF0C\u5B9E\u9645\u5185\u5BB9\u7531\u5F53\u524D\u4E0A\u4E0B\u6587\u751F\u6210\u3002</div>' : ""}</div>
+                    </div>
+                    </section>
+                </div>
+            </dialog>`;
+    const modal = shadow.querySelector("dialog");
+    const nameInput = shadow.querySelector("#name");
+    const roleSelect = shadow.querySelector("#role");
+    const contentInput = shadow.querySelector("#content");
+    nameInput.value = entry.name || "";
+    roleSelect.value = entry.role || "user";
+    contentInput.value = entry.content || "";
+    contentInput.disabled = isDynamic;
+    const close = () => {
+      if (modal.open) modal.close();
+      host.remove();
+    };
+    shadow.querySelector(".close").addEventListener("click", close);
+    shadow.querySelector(".backdrop").addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) close();
+    });
+    modal.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      close();
+    });
+    shadow.querySelector(".save").addEventListener("click", () => {
+      entry.name = nameInput.value.trim() || entry.name || "\u672A\u547D\u540D\u6761\u76EE";
+      entry.role = roleSelect.value || "user";
+      if (!isDynamic) entry.content = contentInput.value;
+      close();
+      renderPromptManager();
+    });
+    document.body.appendChild(host);
+    modal.showModal();
+    nameInput.focus();
   };
-  $("#cfg-prompt-content").on("input", updatePromptContentCount);
-  $("#cfg-prompt-visual").on("input", updatePromptVisualCount);
-  updatePromptContentCount();
-  updatePromptVisualCount();
-  $("#cfg-prompt-override").on("change", function() {
-    $("#custom-prompts-panel").toggle($(this).is(":checked"));
+  $("#t-prompt-view").on("change", renderPromptManager);
+  $("#t-prompt-preset-select").on("change", function() {
+    tempPromptManager.active_preset_id = $(this).val() || "";
+    renderPromptManager();
   });
-  $("#btn-prompt-content-reset").on("click", function() {
-    $("#cfg-prompt-content").val(DEFAULT_CONTENT_PROMPT);
-    updatePromptContentCount();
-    if (window.toastr) toastr.info("\u5DF2\u6062\u590D\u5185\u5BB9\u6A21\u5F0F\u9ED8\u8BA4\u63D0\u793A\u8BCD");
+  $("#t-prompt-import").on("click", () => $("#t-prompt-file").trigger("click"));
+  $("#t-prompt-file").on("change", function() {
+    const file = this.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const raw = JSON.parse(String(reader.result || ""));
+        const preset = normalizeChatCompletionPreset(raw, { name: file.name.replace(/\.json$/i, "") });
+        const existing = tempPromptManager.presets.findIndex((item) => item.name === preset.name);
+        if (existing >= 0) preset.id = tempPromptManager.presets[existing].id;
+        if (existing >= 0) tempPromptManager.presets[existing] = preset;
+        else tempPromptManager.presets.push(preset);
+        tempPromptManager.active_preset_id = preset.id;
+        $("#t-prompt-view").val("preset");
+        renderPromptManager();
+        if (window.toastr) toastr.success(`\u5DF2\u5BFC\u5165\u9884\u8BBE\uFF1A${preset.name}`, "Titania");
+      } catch (e) {
+        if (window.toastr) toastr.error(`\u9884\u8BBE\u5BFC\u5165\u5931\u8D25\uFF1A${e?.message || e}`, "Titania");
+      } finally {
+        $(this).val("");
+      }
+    };
+    reader.readAsText(file);
   });
-  $("#btn-prompt-visual-reset").on("click", function() {
-    $("#cfg-prompt-visual").val(DEFAULT_VISUAL_PROMPT);
-    updatePromptVisualCount();
-    if (window.toastr) toastr.info("\u5DF2\u6062\u590D\u6C1B\u56F4\u6A21\u5F0F\u9ED8\u8BA4\u63D0\u793A\u8BCD");
+  $("#t-prompt-delete").on("click", () => {
+    const id = tempPromptManager.active_preset_id;
+    if (!id) return;
+    tempPromptManager.presets = tempPromptManager.presets.filter((preset) => preset.id !== id);
+    tempPromptManager.active_preset_id = tempPromptManager.presets[0]?.id || "";
+    renderPromptManager();
   });
+  $("#t-prompt-reset-builtin").on("click", () => {
+    const mode = $("#t-prompt-view").val();
+    const defaults = mode === "visual" ? "You are a Visual Director creating an immersive HTML scene.\n\n[Process]\n1. Analyze the mood/emotion of the scenario\n2. Choose visual effects that represent the mood\n3. Generate HTML with embedded <style>\n\n[Technical Rules]\n1. Output HTML with <style> block\n2. Use CSS animations, gradients, shadows freely\n3. No markdown code blocks\n4. Language: Chinese" : "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
+    const scheme = tempPromptManager.builtin[mode];
+    if (scheme) {
+      scheme.entries = [{ id: `${mode}_system`, name: "\u7CFB\u7EDF\u63D0\u793A\u8BCD", role: "system", type: "text", enabled: true, content: defaults }, { id: `${mode}_user`, name: "\u751F\u6210\u4E0A\u4E0B\u6587", role: "user", type: "text", enabled: true, content: "" }];
+      renderPromptManager();
+    }
+  });
+  $("#t-prompt-view").val(tempPromptManager.editor_view || "narrative");
+  renderPromptManager();
   const toolbarConfig = data.quick_toolbar || {};
   const enabledItems = toolbarConfig.enabled_items || {
     main: true,
@@ -28147,10 +30075,12 @@ ${JSON.stringify(l.details, null, 2)}`;
     }
   });
   $("#btn-open-mgr").on("click", () => {
+    document.getElementById("t-prompt-editor-modal")?.remove();
     $("#t-settings-view").remove();
     openScriptManager();
   });
   $("#t-set-close").on("click", () => {
+    document.getElementById("t-prompt-editor-modal")?.remove();
     $("#t-settings-view").remove();
     const $mainView2 = $("#t-main-view");
     if ($mainView2.length > 0) {
@@ -28169,6 +30099,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     const finalCfg = {
       active_profile_id: tempActiveId,
       profiles: tempProfiles,
+      generation_mode: cfg.generation_mode || "narrative",
       history_limit: parseInt($("#cfg-history").val()) || 10,
       stream: $("#cfg-stream").is(":checked"),
       max_tokens: parseInt($("#cfg-max-tokens").val()) || 4096,
@@ -28226,12 +30157,8 @@ ${JSON.stringify(l.details, null, 2)}`;
       show_indicator: $("#cfg-continue-indicator").is(":checked")
     };
     d.history_extraction = {
-      whitelist: $("#cfg-history-whitelist").val().trim()
-    };
-    d.custom_prompts = {
-      override_enabled: $("#cfg-prompt-override").is(":checked"),
-      content_mode: $("#cfg-prompt-content").val().trim(),
-      visual_mode: $("#cfg-prompt-visual").val().trim()
+      whitelist: $("#cfg-history-whitelist").val().trim(),
+      blacklist: $("#cfg-history-blacklist").val().trim()
     };
     const toolbarEnabledItems = {};
     $(".t-toolbar-chk").each(function() {
@@ -28248,6 +30175,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       enabled_items: toolbarEnabledItems,
       max_items: MAX_TOOLBAR_ITEMS
     };
+    d.prompt_manager = tempPromptManager;
     const prevOutlineEntry = d.outline_entry || {};
     d.outline_entry = {
       ...prevOutlineEntry,
@@ -28259,6 +30187,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       enabled: prevRewriteEntry.enabled === true
     };
     saveExtData();
+    document.getElementById("t-prompt-editor-modal")?.remove();
     $("#t-settings-view").remove();
     const $mainViewOnSave = $("#t-main-view");
     if ($mainViewOnSave.length > 0) {
@@ -28296,6 +30225,7 @@ var init_settingsWindow = __esm({
     init_rewriteEntryButton();
     init_apiProfileRegistry();
     init_apiConnectionEditor();
+    init_promptManager();
   }
 });
 
@@ -28353,6 +30283,7 @@ function openScriptManager() {
                     <input type="text" id="t-mgr-search-inp" class="t-mgr-search" placeholder="\u{1F50D} \u641C\u7D22...">
                     <select id="t-mgr-sort" class="t-mgr-sort" title="\u6392\u5E8F\u65B9\u5F0F">
                         <option value="smart">\u667A\u80FD\u6392\u5E8F</option>
+                        <option value="recent_added">\u6700\u8FD1\u6DFB\u52A0</option>
                         <option value="recent_generated">\u6700\u8FD1\u4F7F\u7528</option>
                         <option value="most_used">\u6700\u5E38\u4F7F\u7528</option>
                         <option value="name_asc">\u540D\u79F0 A-Z</option>
@@ -29109,11 +31040,307 @@ var init_scriptManager = __esm({
     SORT_MODE_LABELS = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
+      recent_added: "\u6700\u8FD1\u6DFB\u52A0",
       recent_generated: "\u6700\u8FD1\u4F7F\u7528",
       most_used: "\u6700\u5E38\u4F7F\u7528",
       name_asc: "\u540D\u79F0 A-Z",
       name_desc: "\u540D\u79F0 Z-A"
     };
+  }
+});
+
+// src/core/continuationStore.js
+import {
+  chat_metadata,
+  getCurrentChatId,
+  saveChatConditional as saveChatConditional2
+} from "../../../../script.js";
+function openDatabase() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME2, DB_VERSION2);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
+        const store = db.createObjectStore(STORE_SESSIONS, { keyPath: "id" });
+        store.createIndex("chatId", "chatId", { unique: false });
+      }
+      if (!db.objectStoreNames.contains(STORE_BRANCHES)) {
+        const store = db.createObjectStore(STORE_BRANCHES, { keyPath: "id" });
+        store.createIndex("chatId", "chatId", { unique: false });
+        store.createIndex("sessionId", "sessionId", { unique: false });
+      }
+      if (!db.objectStoreNames.contains(STORE_ROUNDS)) {
+        const store = db.createObjectStore(STORE_ROUNDS, { keyPath: "id" });
+        store.createIndex("chatId", "chatId", { unique: false });
+        store.createIndex("branchId", "branchId", { unique: false });
+      }
+    };
+  });
+  return dbPromise;
+}
+function requestResult(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+function transactionDone(transaction) {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error || new Error("IndexedDB transaction aborted"));
+  });
+}
+function getCurrentChatKey() {
+  return String(getCurrentChatId?.() || "").trim();
+}
+function serializeRuntime(chatId) {
+  const byScript = GlobalState.continuationRuntime?.byScript || {};
+  const sessions = [];
+  const branches = [];
+  const rounds = [];
+  for (const [scriptId, entry] of Object.entries(byScript)) {
+    const activeBranchKey = String(entry?.branchKey || "").trim();
+    if (!activeBranchKey || !Array.isArray(entry?.rounds) || entry.rounds.length === 0) continue;
+    const sessionId = `${chatId}:${scriptId}`;
+    const archivedBranches = Array.isArray(entry.archivedBranches) ? entry.archivedBranches : [];
+    const sessionUpdatedAt = Math.max(
+      ...entry.rounds.map((round) => Number(round?.timestamp) || 0),
+      ...archivedBranches.flatMap((branch) => [
+        Number(branch?.archivedAt) || 0,
+        ...Array.isArray(branch?.rounds) ? branch.rounds.map((round) => Number(round?.timestamp) || 0) : []
+      ])
+    );
+    sessions.push({
+      id: sessionId,
+      chatId,
+      scriptId,
+      scriptName: String(entry.scriptName || "\u573A\u666F"),
+      activeBranchKey,
+      parentBranchKey: String(entry.parentBranchKey || ""),
+      branchedAtRound: Number(entry.branchedAtRound) || null,
+      updatedAt: sessionUpdatedAt || Date.now()
+    });
+    const allBranches = [{
+      branchKey: activeBranchKey,
+      isActive: true,
+      parentBranchKey: String(entry.parentBranchKey || ""),
+      branchedAtRound: Number(entry.branchedAtRound) || null,
+      archivedAt: 0,
+      rounds: entry.rounds
+    }, ...archivedBranches];
+    for (const branch of allBranches) {
+      const branchKey = String(branch?.branchKey || "").trim();
+      if (!branchKey || !Array.isArray(branch?.rounds)) continue;
+      const branchId = `${sessionId}:${branchKey}`;
+      branches.push({
+        id: branchId,
+        chatId,
+        sessionId,
+        branchKey,
+        isActive: branchKey === activeBranchKey,
+        parentBranchKey: String(branch.parentBranchKey || ""),
+        branchedAtRound: Number(branch.branchedAtRound) || null,
+        archivedAt: Number(branch.archivedAt) || 0
+      });
+      branch.rounds.forEach((round, index) => {
+        const roundKey = String(round?.roundKey || `legacy_${index + 1}`);
+        rounds.push({
+          id: `${branchId}:${roundKey}`,
+          chatId,
+          sessionId,
+          branchId,
+          branchKey,
+          roundKey,
+          sequence: index + 1,
+          type: String(round?.type || (index === 0 ? "initial" : "continuation")),
+          instruction: String(round?.instruction || ""),
+          content: String(round?.content || ""),
+          timestamp: Number(round?.timestamp) || 0
+        });
+      });
+    }
+  }
+  return { sessions, branches, rounds };
+}
+function updateCurrentChatMetadata(payload) {
+  if (payload.sessions.length > 0) {
+    chat_metadata[CHAT_METADATA_KEY] = {
+      version: 1,
+      sessionIds: payload.sessions.map((item) => item.id),
+      activeBranches: Object.fromEntries(payload.sessions.map((item) => [item.scriptId, item.activeBranchKey])),
+      branchCount: payload.branches.length,
+      roundCount: payload.rounds.length,
+      updatedAt: Date.now()
+    };
+  } else {
+    delete chat_metadata[CHAT_METADATA_KEY];
+  }
+}
+async function replaceChatRecords(chatId, payload) {
+  const db = await openDatabase();
+  const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
+  const writeCompleted = transactionDone(transaction);
+  const sessionStore = transaction.objectStore(STORE_SESSIONS);
+  const branchStore = transaction.objectStore(STORE_BRANCHES);
+  const roundStore = transaction.objectStore(STORE_ROUNDS);
+  const stores = [sessionStore, branchStore, roundStore];
+  const records = [payload.sessions, payload.branches, payload.rounds];
+  let pendingKeyReads = stores.length;
+  stores.forEach((store, index) => {
+    const request = store.index("chatId").getAllKeys(chatId);
+    request.onerror = () => transaction.abort();
+    request.onsuccess = () => {
+      request.result.forEach((key) => store.delete(key));
+      pendingKeyReads--;
+      if (pendingKeyReads !== 0) return;
+      records.forEach((items, recordIndex) => {
+        items.forEach((item) => stores[recordIndex].put(item));
+      });
+    };
+  });
+  await writeCompleted;
+}
+async function writeCurrentRuntime(chatId, payload) {
+  await replaceChatRecords(chatId, payload);
+  if (chatId !== getCurrentChatKey()) return;
+  updateCurrentChatMetadata(payload);
+  await saveChatConditional2();
+}
+function queueRuntimeWrite(chatId, payload) {
+  const previous = pendingWrites.get(chatId) || Promise.resolve();
+  const next = previous.catch(() => void 0).then(() => writeCurrentRuntime(chatId, payload));
+  pendingWrites.set(chatId, next);
+  void next.then(() => {
+    if (pendingWrites.get(chatId) === next) pendingWrites.delete(chatId);
+  }, () => {
+    if (pendingWrites.get(chatId) === next) pendingWrites.delete(chatId);
+  });
+  return next;
+}
+function scheduleContinuationPersistence() {
+  const chatId = getCurrentChatKey();
+  if (!chatId) return;
+  GlobalState.continuationRuntime.chatId = chatId;
+  runtimeRevision++;
+  const payload = serializeRuntime(chatId);
+  updateCurrentChatMetadata(payload);
+  void queueRuntimeWrite(chatId, payload).catch((error) => {
+    TitaniaLogger.error("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6301\u4E45\u5316\u5931\u8D25", error);
+    if (window.toastr) toastr.warning("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u4FDD\u5B58\u5931\u8D25\uFF0C\u5F53\u524D\u5185\u5BB9\u4ECD\u4FDD\u7559\u5728\u5185\u5B58\u4E2D", "Titania");
+  });
+}
+function getContinuationPersistenceStatus() {
+  const metadata = chat_metadata?.[CHAT_METADATA_KEY];
+  return {
+    chatId: getCurrentChatKey(),
+    persisted: Boolean(metadata?.version === 1),
+    branchCount: Number(metadata?.branchCount) || 0,
+    roundCount: Number(metadata?.roundCount) || 0,
+    updatedAt: Number(metadata?.updatedAt) || 0
+  };
+}
+async function flushContinuationPersistence() {
+  const chatId = getCurrentChatKey();
+  if (!chatId) return false;
+  await queueRuntimeWrite(chatId, serializeRuntime(chatId));
+  return true;
+}
+async function restoreContinuationForCurrentChat() {
+  const sequence = ++restoreSequence;
+  const chatId = getCurrentChatKey();
+  if (!chatId) return false;
+  const runtimeChatId = String(GlobalState.continuationRuntime?.chatId || "");
+  if (runtimeChatId && runtimeChatId !== chatId) {
+    GlobalState.continuationRuntime = { chatId, byScript: {} };
+  }
+  const revision = runtimeRevision;
+  const db = await openDatabase();
+  const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
+  const [sessions, branches, rounds] = await Promise.all([
+    requestResult(transaction.objectStore(STORE_SESSIONS).index("chatId").getAll(chatId)),
+    requestResult(transaction.objectStore(STORE_BRANCHES).index("chatId").getAll(chatId)),
+    requestResult(transaction.objectStore(STORE_ROUNDS).index("chatId").getAll(chatId))
+  ]);
+  if (sequence !== restoreSequence || chatId !== getCurrentChatKey() || revision !== runtimeRevision) return false;
+  const roundsByBranch = /* @__PURE__ */ new Map();
+  rounds.sort((a, b) => a.sequence - b.sequence).forEach((round) => {
+    if (!roundsByBranch.has(round.branchId)) roundsByBranch.set(round.branchId, []);
+    roundsByBranch.get(round.branchId).push({
+      roundKey: round.roundKey,
+      round: round.sequence,
+      type: round.type,
+      instruction: round.instruction,
+      content: round.content,
+      timestamp: round.timestamp
+    });
+  });
+  const nextByScript = {};
+  for (const session of sessions) {
+    const sessionBranches = branches.filter((branch) => branch.sessionId === session.id);
+    const active = sessionBranches.find((branch) => branch.branchKey === session.activeBranchKey);
+    if (!active) continue;
+    nextByScript[session.scriptId] = {
+      scriptId: session.scriptId,
+      scriptName: session.scriptName,
+      updatedAt: Number(session.updatedAt) || 0,
+      branchKey: active.branchKey,
+      parentBranchKey: active.parentBranchKey,
+      branchedAtRound: active.branchedAtRound,
+      rounds: roundsByBranch.get(active.id) || [],
+      archivedBranches: sessionBranches.filter((branch) => branch.id !== active.id).map((branch) => ({
+        branchKey: branch.branchKey,
+        parentBranchKey: branch.parentBranchKey,
+        branchedAtRound: branch.branchedAtRound,
+        archivedAt: branch.archivedAt,
+        rounds: roundsByBranch.get(branch.id) || []
+      }))
+    };
+  }
+  GlobalState.continuationRuntime = { chatId, byScript: nextByScript };
+  const metadata = chat_metadata[CHAT_METADATA_KEY];
+  if (sessions.length > 0 && (metadata?.version !== 1 || Number(metadata?.branchCount) !== branches.length || Number(metadata?.roundCount) !== rounds.length)) {
+    chat_metadata[CHAT_METADATA_KEY] = {
+      version: 1,
+      sessionIds: sessions.map((item) => item.id),
+      activeBranches: Object.fromEntries(sessions.map((item) => [item.scriptId, item.activeBranchKey])),
+      branchCount: branches.length,
+      roundCount: rounds.length,
+      updatedAt: Math.max(...sessions.map((item) => Number(item.updatedAt) || 0), Date.now())
+    };
+    void saveChatConditional2();
+  } else if (sessions.length === 0 && metadata?.version === 1) {
+    delete chat_metadata[CHAT_METADATA_KEY];
+    void saveChatConditional2();
+  }
+  if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
+  return sessions.length > 0;
+}
+async function clearContinuationForCurrentChat() {
+  const chatId = getCurrentChatKey();
+  GlobalState.continuationRuntime = { chatId, byScript: {} };
+  runtimeRevision++;
+  await flushContinuationPersistence();
+  if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
+}
+var DB_NAME2, DB_VERSION2, STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS, CHAT_METADATA_KEY, dbPromise, restoreSequence, runtimeRevision, pendingWrites;
+var init_continuationStore = __esm({
+  "src/core/continuationStore.js"() {
+    init_state();
+    init_logger();
+    DB_NAME2 = "TitaniaContinuationDB";
+    DB_VERSION2 = 1;
+    STORE_SESSIONS = "continuationSessions";
+    STORE_BRANCHES = "continuationBranches";
+    STORE_ROUNDS = "continuationRounds";
+    CHAT_METADATA_KEY = "titania_continuation";
+    dbPromise = null;
+    restoreSequence = 0;
+    runtimeRevision = 0;
+    pendingWrites = /* @__PURE__ */ new Map();
   }
 });
 
@@ -29142,9 +31369,10 @@ function formatRelativeTime2(ts) {
   return new Date(time).toLocaleDateString("zh-CN");
 }
 function clampInjectRoundsCount(value) {
+  if (String(value ?? "").trim() === "") return 3;
   const num = Number(value);
   if (!Number.isFinite(num)) return 3;
-  return Math.max(1, Math.min(CONTINUATION_MAX_INJECT_ROUNDS, Math.floor(num)));
+  return Math.max(CONTINUATION_MIN_INJECT_ROUNDS, Math.min(CONTINUATION_MAX_INJECT_ROUNDS, Math.floor(num)));
 }
 function getContinuationDefaultInjectCount() {
   const data = getExtData();
@@ -29177,7 +31405,7 @@ function saveContinuationRecentInstruction(instruction) {
   data.continuation_ui.recent_instructions = [text, ...deduped].slice(0, CONTINUATION_RECENT_MAX);
   saveExtData();
 }
-function openContinuationComposer(initialText = "") {
+function openContinuationComposer(initialText = "", regenerationTarget = null) {
   return new Promise((resolve) => {
     const recent = getContinuationRecentInstructions();
     const display = getCurrentDisplayContent();
@@ -29220,9 +31448,10 @@ function openContinuationComposer(initialText = "") {
                 <textarea id="t-cont-input" class="t-ce-textarea" placeholder="\u4F8B\u5982\uFF1A\u8BA9\u4E24\u4EBA\u77DB\u76FE\u5347\u7EA7\uFF0C\u4F46\u4FDD\u6301\u514B\u5236\uFF0C\u4E0D\u8981\u7ACB\u523B\u548C\u89E3\u3002" spellcheck="false" style="height:auto; min-height:160px; flex:1;"></textarea>
 
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                    <button id="t-cont-expand" class="t-btn" style="padding:6px 10px; font-size:12px;">
-                        <i class="fa-solid fa-expand"></i> \u5C55\u5F00\u7F16\u8F91\u5668
-                    </button>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button id="t-cont-expand" class="t-btn" style="padding:6px 10px; font-size:12px;"><i class="fa-solid fa-expand"></i> \u5C55\u5F00\u7F16\u8F91\u5668</button>
+                        <button id="t-cont-history" class="t-btn" style="padding:6px 10px; font-size:12px;"><i class="fa-solid fa-clock-rotate-left"></i> \u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2</button>
+                    </div>
                     <div id="t-cont-char-count" style="color:#777; font-size:12px;">0 \u5B57</div>
                 </div>
 
@@ -29233,33 +31462,25 @@ function openContinuationComposer(initialText = "") {
 
                 <div style="display:flex; flex-direction:column; gap:8px; border:1px solid #333; border-radius:8px; padding:10px; background:#1e1e1e;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                        <div style="color:#ddd; font-size:12px;">\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u6761\u6570\uFF08\u6B63\u6587+\u6307\u4EE4\uFF09</div>
+                        <div style="color:#ddd; font-size:12px;">${regenerationTarget ? "\u5206\u652F\u4E0A\u4E0B\u6587" : "\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u6761\u6570\uFF08\u6B63\u6587+\u6307\u4EE4\uFF09"}</div>
                         <div id="t-cont-rounds-total" style="color:#9aa; font-size:12px;">\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A0</div>
                     </div>
-                    <div id="t-cont-inject-buttons" style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button type="button" class="t-btn t-cont-inject-btn" data-count="1" style="padding:4px 10px; font-size:12px;">1 \u6761</button>
-                        <button type="button" class="t-btn t-cont-inject-btn" data-count="2" style="padding:4px 10px; font-size:12px;">2 \u6761</button>
-                        <button type="button" class="t-btn t-cont-inject-btn" data-count="3" style="padding:4px 10px; font-size:12px;">3 \u6761</button>
-                        <button type="button" class="t-btn t-cont-inject-btn" data-count="4" style="padding:4px 10px; font-size:12px;">4 \u6761</button>
-                        <button type="button" class="t-btn t-cont-inject-btn" data-count="5" style="padding:4px 10px; font-size:12px;">5 \u6761</button>
+                    <div style="display:${regenerationTarget ? "none" : "flex"}; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <input type="number" id="t-cont-inject-count" class="t-input" min="3" max="20" step="1" value="${selectedInjectRounds}" placeholder="\u8BF7\u8F93\u5165 3-20" style="width:100px; padding:4px 8px; font-size:12px;">
+                        <span style="color:#888; font-size:12px;">\u6761\uFF083-20 \u6761\uFF09</span>
                     </div>
-                    <div id="t-cont-context-estimate" style="color:#9aa; font-size:12px;">\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A0 \u5B57\u7B26 (~0 tokens)</div>
+                    <div id="t-cont-context-estimate" style="color:#9aa; font-size:12px;">${regenerationTarget ? `\u5C06\u5B8C\u6574\u6CE8\u5165\u76EE\u6807\u8F6E\u4E4B\u524D\u7684 ${Math.max(0, regenerationTarget.round - 1)} \u8F6E\u5185\u5BB9` : "\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A0 \u5B57\u7B26 (~0 tokens)"}</div>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:6px; border:1px dashed #3a3a3a; border-radius:8px; padding:10px; background:#1b1b1b;">
-                    <label style="display:flex; align-items:center; gap:8px; color:#ddd; font-size:12px; cursor:pointer;">
-                        <input type="checkbox" id="t-cont-branch-mode" style="margin:0;">
-                        <span>\u4ECE\u5F53\u524D\u5185\u5BB9\u521B\u5EFA\u5206\u652F\u7EED\u5199</span>
-                    </label>
-                    <div style="color:#888; font-size:12px; line-height:1.5;">\u5F00\u542F\u540E\u4F1A\u4EE5\u5F53\u524D\u9875\u9762\u5185\u5BB9\u4F5C\u4E3A\u65B0\u5206\u652F\u8D77\u70B9\uFF0C\u4E0D\u4F1A\u6CBF\u7528\u540E\u7EED\u8F6E\u6B21\u3002</div>
-                </div>
+                ${regenerationTarget ? `<div class="t-cont-regeneration-note"><i class="fa-solid fa-code-branch"></i> \u5C06\u4ECE${escapeHtmlText2(regenerationTarget.label)}\u521B\u5EFA\u5206\u652F\u5E76\u91CD\u65B0\u751F\u6210\u3002\u76EE\u6807\u8F6E\u4E4B\u524D\u7684\u5168\u90E8\u5185\u5BB9\u4F1A\u88AB\u6CE8\u5165\uFF0C\u539F\u5206\u652F\u4F1A\u4FDD\u7559\u3002</div>` : ""}
+
             </div>
 
             <div class="t-ce-footer">
                 <div class="t-ce-stats"><span id="t-cont-char-count-footer">0 \u5B57</span></div>
                 <div class="t-ce-actions">
                     <button class="t-btn" id="t-cont-cancel">\u53D6\u6D88</button>
-                    <button class="t-btn primary" id="t-cont-submit">\u53D1\u9001\u7EED\u5199</button>
+                    <button class="t-btn primary" id="t-cont-submit">${regenerationTarget ? '<i class="fa-solid fa-code-branch"></i> \u521B\u5EFA\u5206\u652F\u5E76\u91CD\u751F\u6210' : "\u53D1\u9001\u7EED\u5199"}</button>
                 </div>
             </div>
         </div>`;
@@ -29274,10 +31495,9 @@ function openContinuationComposer(initialText = "") {
     const $charCount = $("#t-cont-char-count");
     const $charCountFooter = $("#t-cont-char-count-footer");
     const $expandBtn = $("#t-cont-expand");
-    const $injectButtons = $("#t-cont-inject-buttons");
+    const $injectCountInput = $("#t-cont-inject-count");
     const $roundsTotal = $("#t-cont-rounds-total");
     const $contextEstimate = $("#t-cont-context-estimate");
-    const $branchMode = $("#t-cont-branch-mode");
     let resolved = false;
     let expanded = false;
     const finalize = (value) => {
@@ -29303,25 +31523,25 @@ function openContinuationComposer(initialText = "") {
     };
     const trySubmit = () => {
       if (!ensureHasBaseContent()) return;
+      selectedInjectRounds = clampInjectRoundsCount($injectCountInput.val());
+      saveContinuationDefaultInjectCount(selectedInjectRounds);
+      syncInjectCountInput();
       finalize({
         instruction: $input.val(),
         injectRoundsCount: selectedInjectRounds,
-        branchFromCurrentView: $branchMode.is(":checked")
+        sourceBranchKey: regenerationTarget?.branchKey || "",
+        regenerateRound: regenerationTarget?.round ?? null,
+        regenerateRoundKey: regenerationTarget?.roundKey || ""
       });
     };
-    const updateInjectButtonsVisual = () => {
-      $injectButtons.find(".t-cont-inject-btn").each(function() {
-        const count = Number($(this).attr("data-count") || 0);
-        const isActive = count === selectedInjectRounds;
-        $(this).toggleClass("primary", isActive);
-        if (isActive) {
-          $(this).css({ borderColor: "#bfa15f", color: "#f3e3b2" });
-        } else {
-          $(this).css({ borderColor: "", color: "" });
-        }
-      });
+    const syncInjectCountInput = () => {
+      $injectCountInput.val(selectedInjectRounds);
     };
     const updateContextEstimate = () => {
+      if (regenerationTarget) {
+        $roundsTotal.text(`\u76EE\u6807\uFF1A${regenerationTarget.label}`);
+        return;
+      }
       const stats = getContinuationSessionStats(activeScriptId, selectedInjectRounds);
       $roundsTotal.text(`\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A${stats.totalRounds}`);
       $contextEstimate.text(`\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A${stats.estimatedChars} \u5B57\u7B26 (~${stats.estimatedTokens} tokens)`);
@@ -29355,7 +31575,7 @@ function openContinuationComposer(initialText = "") {
     $input.val(initialText || "");
     updateCharCount();
     applyExpandState();
-    updateInjectButtonsVisual();
+    syncInjectCountInput();
     updateContextEstimate();
     setTimeout(() => $input.trigger("focus"), 0);
     $input.on("input", updateCharCount);
@@ -29373,14 +31593,26 @@ function openContinuationComposer(initialText = "") {
     });
     $("#t-cont-close, #t-cont-cancel").on("click", () => finalize(null));
     $("#t-cont-submit").on("click", () => trySubmit());
+    $("#t-cont-history").on("click", () => finalize({ openHistory: true, scriptId: activeScriptId }));
     $expandBtn.on("click", function() {
       expanded = !expanded;
       applyExpandState();
     });
-    $injectButtons.on("click", ".t-cont-inject-btn", function() {
-      selectedInjectRounds = clampInjectRoundsCount($(this).attr("data-count"));
+    $injectCountInput.on("input", function() {
+      const rawValue = String($(this).val() ?? "").trim();
+      if (rawValue === "") return;
+      const value = Number(rawValue);
+      if (!Number.isInteger(value) || value < CONTINUATION_MIN_INJECT_ROUNDS || value > CONTINUATION_MAX_INJECT_ROUNDS) {
+        return;
+      }
+      selectedInjectRounds = value;
       saveContinuationDefaultInjectCount(selectedInjectRounds);
-      updateInjectButtonsVisual();
+      updateContextEstimate();
+    });
+    $injectCountInput.on("change blur", function() {
+      selectedInjectRounds = clampInjectRoundsCount($(this).val());
+      saveContinuationDefaultInjectCount(selectedInjectRounds);
+      syncInjectCountInput();
       updateContextEstimate();
     });
     $("#t-cont-recent-list").on("click", ".t-cont-recent-item", function() {
@@ -29389,6 +31621,182 @@ function openContinuationComposer(initialText = "") {
       updateCharCount();
       $input.trigger("focus");
     });
+  });
+}
+function getContinuationRoundLabel(round) {
+  return round?.type === "initial" ? "\u521D\u59CB\u5185\u5BB9" : `\u7EED\u5199\u7B2C${round?.continuationIndex || 0}\u6B21`;
+}
+function getContinuationInstructionPreview(instruction, maxLength = 100) {
+  const normalized = String(instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength)}\u2026`;
+}
+function findContinuationRound(scriptId, branchKey, roundKey) {
+  const branch = getContinuationBranches(scriptId).find((item) => item.branchKey === branchKey);
+  const round = branch?.rounds.find((item) => item.roundKey === roundKey);
+  return branch && round ? { branch, round } : null;
+}
+async function regenerateContinuationRound(scriptId, branchKey, roundKey, editInstruction = false) {
+  const target = findContinuationRound(scriptId, branchKey, roundKey);
+  if (!target || target.round.type === "initial") {
+    if (window.toastr) toastr.warning("\u8BE5\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728", "Titania");
+    return false;
+  }
+  const regenerationTarget = {
+    scriptId,
+    branchKey,
+    roundKey,
+    round: target.round.round,
+    label: getContinuationRoundLabel(target.round),
+    content: target.round.content
+  };
+  let instruction = target.round.instruction || "";
+  if (editInstruction) {
+    const composeResult = await openContinuationComposer(instruction, regenerationTarget);
+    if (!composeResult) return false;
+    if (composeResult.openHistory) {
+      openContinuationHistory(scriptId);
+      return false;
+    }
+    instruction = String(composeResult.instruction || "").trim();
+    if (instruction) saveContinuationRecentInstruction(instruction);
+  }
+  continuationHistoryView = null;
+  return handleUserContinuation({
+    instruction,
+    sourceBranchKey: branchKey,
+    regenerateRound: target.round.round,
+    regenerateRoundKey: roundKey,
+    scriptIdOverride: scriptId,
+    baseContentOverride: target.round.content,
+    fromCurrentView: false
+  });
+}
+function showContinuationRoundInMain(scriptId, branchKey, roundKey) {
+  const target = findContinuationRound(scriptId, branchKey, roundKey);
+  if (!target) return false;
+  continuationHistoryView = { scriptId, branchKey, roundKey };
+  renderGeneratedContent(target.round.content, GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F");
+  updateSceneHistoryNav();
+  $(document).off("keydown.tcontinuationhistory");
+  $("#t-continuation-history").remove();
+  return true;
+}
+function openContinuationHistory(preferredScriptId = "") {
+  const sessions = getContinuationSessions();
+  const persistenceStatus = getContinuationPersistenceStatus();
+  $("#t-continuation-history").remove();
+  if (sessions.length === 0) {
+    if (window.toastr) toastr.info("\u5F53\u524D\u804A\u5929\u8FD8\u6CA1\u6709\u4E3B\u52A8\u7EED\u5199\u5386\u53F2", "Titania");
+    return;
+  }
+  const preferredIndex = sessions.findIndex((session) => session.scriptId === preferredScriptId);
+  if (preferredIndex > 0) sessions.unshift(sessions.splice(preferredIndex, 1)[0]);
+  const sessionsHtml = sessions.map((session, sessionIndex) => {
+    const isOpen = sessionIndex === 0;
+    const branchHtml = session.branches.map((branch) => {
+      const sourceContinuationIndex = Math.max(0, Number(branch.branchedAtRound) - 1);
+      const branchSource = sourceContinuationIndex > 0 ? ` \xB7 \u4ECE\u7EED\u5199\u7B2C ${sourceContinuationIndex} \u6B21\u521B\u5EFA` : "";
+      const branchStatus = `${branch.isActive ? "\u5F53\u524D\u5206\u652F" : "\u5386\u53F2\u5206\u652F"}${branchSource}`;
+      const roundHtml = branch.rounds.map((round) => {
+        const label = getContinuationRoundLabel(round);
+        const instruction = round.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
+        const instructionPreview = getContinuationInstructionPreview(instruction);
+        const canRegenerate = round.type !== "initial";
+        return `<article class="t-cont-history-round" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}" data-round-key="${escapeHtmlText2(round.roundKey)}">
+                    <div class="t-cont-history-round-head">
+                        <div class="t-cont-history-round-title"><strong>${escapeHtmlText2(label)}</strong><span>${round.contentLength} \u5B57\u7B26</span></div>
+                        <button class="t-cont-history-toggle" title="\u5C55\u5F00\u5185\u5BB9"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                    <div class="t-cont-history-instruction" title="${escapeHtmlText2(instructionPreview)}">${escapeHtmlText2(instructionPreview)}</div>
+                    <div class="t-cont-history-preview">${escapeHtmlText2(round.contentPreview || "\u65E0\u6587\u672C\u6458\u8981")}</div>
+                    <div class="t-cont-history-full" hidden><iframe sandbox="" title="${escapeHtmlText2(label)}\u5185\u5BB9\u9884\u89C8"></iframe></div>
+                    <div class="t-cont-history-actions">
+                        <button class="t-btn t-cont-history-show"><i class="fa-solid fa-arrow-up-right-from-square"></i> \u8DF3\u8F6C\u5230\u6B64\u5185\u5BB9</button>
+                        ${canRegenerate ? '<button class="t-btn t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn primary t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
+                    </div>
+                </article>`;
+      }).join("");
+      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}">
+                <div class="t-cont-history-branch-title">
+                    <i class="fa-solid fa-code-branch"></i>
+                    <div class="t-cont-history-branch-heading">
+                        <strong>\u300A${escapeHtmlText2(session.scriptName)}\u300B</strong>
+                        <span>${escapeHtmlText2(branchStatus)}</span>
+                    </div>
+                    <small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small>
+                </div>
+                ${roundHtml}
+            </section>`;
+    }).join("");
+    return `<section class="t-cont-history-session ${isOpen ? "is-open" : ""}" data-script-id="${escapeHtmlText2(session.scriptId)}">
+            <button class="t-cont-history-session-toggle" type="button" aria-expanded="${isOpen}">
+                <i class="fa-solid fa-chevron-right"></i>
+                <span>\u300A${escapeHtmlText2(session.scriptName)}\u300B</span>
+                <small>${session.branches.length} \u4E2A\u5206\u652F \xB7 ${session.roundCount} \u8F6E</small>
+            </button>
+            <div class="t-cont-history-session-body" ${isOpen ? "" : "hidden"}>${branchHtml}</div>
+        </section>`;
+  }).join("");
+  $("#t-main-view").append(`<div id="t-continuation-history" class="t-cont-history-panel">
+        <div class="t-cont-history-header"><div><i class="fa-solid fa-clock-rotate-left"></i><strong>\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2</strong><span>${persistenceStatus.persisted ? `\u5DF2\u6301\u4E45\u5316 \xB7 ${sessions.length} \u4E2A\u5267\u672C \xB7 ${persistenceStatus.roundCount} \u8F6E` : `${sessions.length} \u4E2A\u5267\u672C \xB7 \u7B49\u5F85\u6301\u4E45\u5316`}</span></div><div class="t-cont-history-header-actions"><button class="t-btn" id="t-cont-history-clear" title="\u5220\u9664\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2"><i class="fa-solid fa-trash-can"></i> \u6E05\u7A7A</button><button class="t-close" id="t-cont-history-close">&times;</button></div></div>
+        <div class="t-cont-history-body">${sessionsHtml}</div>
+    </div>`);
+  const $panel = $("#t-continuation-history");
+  const closePanel2 = () => {
+    $(document).off("keydown.tcontinuationhistory");
+    $panel.remove();
+  };
+  $("#t-cont-history-close").on("click", closePanel2);
+  $("#t-cont-history-clear").on("click", async function() {
+    const confirmed = window.confirm("\u786E\u5B9A\u6E05\u7A7A\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002");
+    if (!confirmed) return;
+    $(this).prop("disabled", true);
+    try {
+      await clearContinuationForCurrentChat();
+      continuationHistoryView = null;
+      closePanel2();
+      if (window.toastr) toastr.success("\u5F53\u524D\u804A\u5929\u7684\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5DF2\u6E05\u7A7A", "Titania");
+    } catch (error) {
+      console.error("Titania: \u6E05\u7A7A\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", error);
+      $(this).prop("disabled", false);
+      if (window.toastr) toastr.error("\u6E05\u7A7A\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", "Titania");
+    }
+  });
+  $(document).off("keydown.tcontinuationhistory").on("keydown.tcontinuationhistory", function(event) {
+    if (event.key === "Escape") closePanel2();
+  });
+  $panel.on("click", ".t-cont-history-session-toggle", function() {
+    const $session = $(this).closest(".t-cont-history-session");
+    const shouldOpen = !$session.hasClass("is-open");
+    $session.toggleClass("is-open", shouldOpen);
+    $(this).attr("aria-expanded", String(shouldOpen));
+    $session.find(".t-cont-history-session-body").first().prop("hidden", !shouldOpen);
+  });
+  $panel.on("click", ".t-cont-history-toggle", function() {
+    const $round = $(this).closest(".t-cont-history-round");
+    const $full = $round.find(".t-cont-history-full");
+    const shouldOpen = $full.prop("hidden");
+    $full.prop("hidden", !shouldOpen);
+    $(this).find("i").toggleClass("fa-chevron-down", !shouldOpen).toggleClass("fa-chevron-up", shouldOpen);
+    if (shouldOpen) {
+      const roundScriptId = String($round.data("script-id") || "");
+      const branchKey = String($round.data("branch-key") || "");
+      const roundKey = String($round.data("round-key") || "");
+      const content = findContinuationRound(roundScriptId, branchKey, roundKey)?.round.content || "";
+      $full.find("iframe").attr("srcdoc", content);
+    }
+  });
+  $panel.on("click", ".t-cont-history-show", function() {
+    const $round = $(this).closest(".t-cont-history-round");
+    showContinuationRoundInMain(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""));
+  });
+  $panel.on("click", ".t-cont-history-regenerate, .t-cont-history-edit-regenerate", async function() {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
+    const $round = $(this).closest(".t-cont-history-round");
+    const editInstruction = $(this).hasClass("t-cont-history-edit-regenerate");
+    closePanel2();
+    await regenerateContinuationRound(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""), editInstruction);
   });
 }
 function refreshScriptList() {
@@ -29438,7 +31846,7 @@ async function openMainWindow() {
     data = { ui_mode_echo: true };
   }
   GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
-  GlobalState.generationMode = data.config?.generation_mode || "narrative";
+  GlobalState.generationMode = ["narrative", "visual", "preset"].includes(data.config?.generation_mode) ? data.config.generation_mode : "narrative";
   const placeholderContent = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
   const html = `
     <div id="t-overlay" class="t-overlay">
@@ -29473,6 +31881,9 @@ async function openMainWindow() {
                     </div>
                     <div class="t-mode-btn ${GlobalState.generationMode === "visual" ? "active" : ""}" data-mode="visual">
                         <span>\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316</span>
+                    </div>
+                    <div class="t-mode-btn ${GlobalState.generationMode === "preset" ? "active" : ""}" data-mode="preset" title="\u4F7F\u7528\u8BBE\u7F6E\u9875\u4E2D\u9009\u5B9A\u7684\u7528\u6237\u9884\u8BBE">
+                        <span>\u{1F4CB} \u9009\u7528\u9884\u8BBE</span>
                     </div>
                 </div>
                 <div class="t-mobile-row">
@@ -29526,6 +31937,20 @@ async function openMainWindow() {
                     <button class="t-page-nav t-page-prev" id="t-nav-prev" title="\u4E0A\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&lt;</button>
                     <button class="t-page-nav t-page-next" id="t-nav-next" title="\u4E0B\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&gt;</button>
                     <div class="t-page-indicator" id="t-page-indicator" style="display:none;">1/1</div>
+                    <div class="t-cont-inline-actions" id="t-cont-inline-actions" style="display:none;">
+                        <span id="t-cont-inline-label"></span>
+                        <div class="t-cont-inline-branch-menu" id="t-cont-inline-branch-menu">
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u4FEE\u6539\u6307\u4EE4</span>
+                                <button id="t-cont-inline-edit-regenerate" type="button" title="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F" aria-label="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-pen"></i></button>
+                            </div>
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u76F4\u63A5\u91CD\u751F\u6210</span>
+                                <button id="t-cont-inline-regenerate" type="button" title="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F" aria-label="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-rotate"></i></button>
+                            </div>
+                        </div>
+                        <button id="t-cont-inline-branch" type="button" title="\u5206\u652F\u64CD\u4F5C" aria-label="\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" aria-expanded="false"><i class="fa-solid fa-code-branch"></i></button>
+                    </div>
                     <div id="t-output-content"></div>
                 </div>
             </div>
@@ -29654,13 +32079,26 @@ async function openMainWindow() {
     updateModeToggleUI();
     const d = getExtData();
     if (!d.config) d.config = {};
+    if (newMode === "preset") {
+      const manager = d.prompt_manager || {};
+      const activePreset = manager.presets?.find((p) => p.id === manager.active_preset_id);
+      if (!activePreset) {
+        GlobalState.generationMode = "narrative";
+        updateModeToggleUI();
+        if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u8BBE\u7F6E\u7684\u63D0\u793A\u8BCD\u7BA1\u7406\u4E2D\u5BFC\u5165\u5E76\u9009\u62E9\u9884\u8BBE", "Titania");
+        return;
+      }
+    }
     d.config.generation_mode = newMode;
     saveExtData();
     if (window.toastr) {
       if (newMode === "narrative") {
         toastr.info("\u{1F4D6} \u5DF2\u5207\u6362\u81F3\u5185\u5BB9\u4F18\u5148\u6A21\u5F0F", "Titania");
-      } else {
+      } else if (newMode === "visual") {
         toastr.info("\u{1F3A8} \u5DF2\u5207\u6362\u81F3\u6C1B\u56F4\u7F8E\u5316\u6A21\u5F0F", "Titania");
+      } else {
+        const preset = d.prompt_manager?.presets?.find((p) => p.id === d.prompt_manager?.active_preset_id);
+        toastr.info(`\u{1F4CB} \u5DF2\u5207\u6362\u81F3\u9884\u8BBE\uFF1A${preset?.name || "\u7528\u6237\u9884\u8BBE"}`, "Titania");
       }
     }
   });
@@ -29722,6 +32160,15 @@ async function openMainWindow() {
     }
     const composeResult = await openContinuationComposer("");
     if (composeResult === null) return;
+    if (composeResult?.openHistory) {
+      openContinuationHistory(composeResult.scriptId);
+      return;
+    }
+    if (continuationHistoryView) {
+      openContinuationHistory(continuationHistoryView.scriptId);
+      if (window.toastr) toastr.info("\u5F53\u524D\u663E\u793A\u7684\u662F\u7EED\u5199\u5386\u53F2\uFF0C\u8BF7\u4ECE\u5BF9\u5E94\u8F6E\u6B21\u521B\u5EFA\u5206\u652F", "Titania");
+      return;
+    }
     const normalizedInstruction = String(composeResult?.instruction || "").trim();
     const injectRoundsCount = clampInjectRoundsCount(composeResult?.injectRoundsCount ?? getContinuationDefaultInjectCount());
     if (normalizedInstruction) {
@@ -29731,8 +32178,39 @@ async function openMainWindow() {
       instruction: normalizedInstruction,
       injectRoundsCount,
       branchFromCurrentView: composeResult?.branchFromCurrentView === true,
+      sourceBranchKey: composeResult?.sourceBranchKey || "",
+      regenerateRound: composeResult?.regenerateRound ?? null,
       fromCurrentView: true
     });
+  });
+  const closeInlineBranchMenu = () => {
+    $("#t-cont-inline-actions").removeClass("is-menu-open");
+    $("#t-cont-inline-branch").attr({ "aria-expanded": "false", "aria-label": "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" });
+  };
+  const runInlineBranchAction = async (editInstruction) => {
+    const $button = $("#t-cont-inline-branch");
+    const scriptId = String($button.attr("data-script-id") || "");
+    const branchKey = String($button.attr("data-branch-key") || "");
+    const roundKey = String($button.attr("data-round-key") || "");
+    closeInlineBranchMenu();
+    if (!scriptId || !branchKey || !roundKey || GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
+    await regenerateContinuationRound(scriptId, branchKey, roundKey, editInstruction);
+  };
+  $("#t-cont-inline-branch").on("click", function(event) {
+    event.stopPropagation();
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
+    const $actions = $("#t-cont-inline-actions");
+    const isOpen = !$actions.hasClass("is-menu-open");
+    $actions.toggleClass("is-menu-open", isOpen);
+    $(this).attr({
+      "aria-expanded": String(isOpen),
+      "aria-label": isOpen ? "\u6536\u8D77\u5206\u652F\u64CD\u4F5C" : "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C"
+    });
+  });
+  $("#t-cont-inline-regenerate").on("click", () => runInlineBranchAction(false));
+  $("#t-cont-inline-edit-regenerate").on("click", () => runInlineBranchAction(true));
+  $(document).off("click.tinlinebranch").on("click.tinlinebranch", function(event) {
+    if (!$(event.target).closest("#t-cont-inline-actions").length) closeInlineBranchMenu();
   });
   $(document).on("keydown.zenmode", function(e) {
     if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) {
@@ -29740,6 +32218,7 @@ async function openMainWindow() {
     }
   });
   const closeWindow = () => {
+    $(document).off("click.tinlinebranch");
     $("#t-overlay").remove();
     $(document).off("keydown.zenmode");
   };
@@ -29875,6 +32354,7 @@ async function openMainWindow() {
     let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
     const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
     if (canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1) {
+      continuationHistoryView = null;
       const newIndex = canJumpFromLiveToHistory ? 0 : effectiveIndex + 1;
       lockDisplayToHistory(newIndex);
       const item = history.items[newIndex];
@@ -29896,6 +32376,7 @@ async function openMainWindow() {
     const streaming = GlobalState.streamingCache;
     let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
     if (effectiveIndex > 0) {
+      continuationHistoryView = null;
       const newIndex = effectiveIndex - 1;
       if (newIndex === 0 && !streaming.isActive) {
         unlockDisplay();
@@ -29914,6 +32395,7 @@ async function openMainWindow() {
       updateFavButtonUI();
       updateScriptTitleDisplay();
     } else if (effectiveIndex === 0 && streaming.isActive && display.isViewingHistory) {
+      continuationHistoryView = null;
       unlockDisplay();
       if (streaming.content) {
         renderGeneratedContent(streaming.content, streaming.scriptName || "\u573A\u666F", true);
@@ -30041,8 +32523,7 @@ function updateSceneHistoryNav() {
   const display = GlobalState.displayState;
   const streaming = GlobalState.streamingCache;
   const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-  const virtualTotal = streaming.isActive && display.isViewingHistory ? history.items.length + 1 : history.items.length;
-  const displayCurrent = display.isViewingHistory ? effectiveIndex + 1 : streaming.isActive ? 0 : effectiveIndex + 1;
+  const displayPage = history.items.length - effectiveIndex;
   const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
   const hasPrev = canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1;
   const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
@@ -30056,10 +32537,10 @@ function updateSceneHistoryNav() {
       $indicator.text(`\u23F3/${history.items.length}`);
       $indicator.css("color", "#90cdf4");
     } else if (display.isViewingHistory && streaming.isActive) {
-      $indicator.text(`${effectiveIndex + 1}/${history.items.length} \u26A1`);
+      $indicator.text(`${displayPage}/${history.items.length} \u26A1`);
       $indicator.css("color", "#ffeaa7");
     } else {
-      $indicator.text(`${effectiveIndex + 1}/${history.items.length}`);
+      $indicator.text(`${displayPage}/${history.items.length}`);
       $indicator.css("color", "rgba(255, 255, 255, 0.3)");
     }
     markCurrentAsRead();
@@ -30068,6 +32549,42 @@ function updateSceneHistoryNav() {
     $nextBtn.hide();
     $indicator.hide();
   }
+  updateContinuationInlineActions();
+}
+function updateContinuationInlineActions() {
+  const $actions = $("#t-cont-inline-actions");
+  const $button = $("#t-cont-inline-branch");
+  if (!$actions.length) return;
+  $actions.removeClass("is-menu-open");
+  $button.attr({ "aria-expanded": "false", "aria-label": "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" });
+  let target = null;
+  if (continuationHistoryView) {
+    const located = findContinuationRound(
+      continuationHistoryView.scriptId,
+      continuationHistoryView.branchKey,
+      continuationHistoryView.roundKey
+    );
+    if (located) {
+      target = {
+        scriptId: continuationHistoryView.scriptId,
+        branchKey: located.branch.branchKey,
+        isActive: located.branch.isActive,
+        ...located.round
+      };
+    }
+  } else if (!GlobalState.streamingCache.isActive) {
+    const display = getCurrentDisplayContent();
+    target = findContinuationRoundByContent(display?.scriptId, display?.content);
+    if (target) target.scriptId = display.scriptId;
+  }
+  if (!target || target.type === "initial") {
+    $actions.hide();
+    return;
+  }
+  const branchLabel = target.isActive ? "\u5F53\u524D\u5206\u652F" : "\u5386\u53F2\u5206\u652F";
+  $("#t-cont-inline-label").text(`${branchLabel} \xB7 \u7EED\u5199\u7B2C${target.continuationIndex}\u6B21`);
+  $button.attr("data-script-id", target.scriptId).attr("data-branch-key", target.branchKey).attr("data-round-key", target.roundKey);
+  $actions.show();
 }
 function loadContextDataAsync() {
   getContextData().then((ctx) => {
@@ -30558,6 +33075,7 @@ function showScriptSelector(initialFilter = "ALL") {
             <div style="display:flex; align-items:center; gap:10px;">
                 <select id="t-sel-sort" class="t-sel-sort-select" title="\u6392\u5E8F\u65B9\u5F0F">
                     <option value="smart">\u667A\u80FD\u6392\u5E8F</option>
+                    <option value="recent_added">\u6700\u8FD1\u6DFB\u52A0</option>
                     <option value="recent_generated">\u6700\u8FD1\u4F7F\u7528</option>
                     <option value="most_used">\u6700\u5E38\u4F7F\u7528</option>
                     <option value="name_asc">\u540D\u79F0 A-Z</option>
@@ -30986,7 +33504,7 @@ function disableQueueMode() {
   GlobalState.queueState.enabled = false;
   updateQueueButtonUI();
 }
-var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD;
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MIN_INJECT_ROUNDS, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, continuationHistoryView;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -31000,18 +33518,22 @@ var init_mainWindow = __esm({
     init_loreReviewWindow();
     init_settingsWindow();
     init_helpers();
+    init_continuationStore();
     init_scriptData();
     SORT_MODE_LABELS2 = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
+      recent_added: "\u6700\u8FD1\u6DFB\u52A0",
       recent_generated: "\u6700\u8FD1\u4F7F\u7528",
       most_used: "\u6700\u5E38\u4F7F\u7528",
       name_asc: "\u540D\u79F0 A-Z",
       name_desc: "\u540D\u79F0 Z-A"
     };
     CONTINUATION_RECENT_MAX = 10;
-    CONTINUATION_MAX_INJECT_ROUNDS = 5;
+    CONTINUATION_MIN_INJECT_ROUNDS = 3;
+    CONTINUATION_MAX_INJECT_ROUNDS = 20;
     CONTINUATION_TOKEN_WARN_THRESHOLD = 6e4;
+    continuationHistoryView = null;
   }
 });
 
@@ -31364,27 +33886,15 @@ var init_floatingBtn = __esm({
 });
 
 // src/core/api.js
-var api_exports = {};
-__export(api_exports, {
-  buildPromptCompositionPreview: () => buildPromptCompositionPreview,
-  cancelGeneration: () => cancelGeneration,
-  cancelQueueGeneration: () => cancelQueueGeneration,
-  executeQueueGeneration: () => executeQueueGeneration,
-  getContinuationRoundsForFav: () => getContinuationRoundsForFav,
-  getContinuationSessionStats: () => getContinuationSessionStats,
-  handleGenerate: () => handleGenerate,
-  handleUserContinuation: () => handleUserContinuation,
-  renderGeneratedContent: () => renderGeneratedContent,
-  syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
-});
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
 import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
 import EventSourceStream2 from "../../../sse-stream.js";
 import { evaluateMacros } from "../../../macros.js";
 function clampContinuationInjectRounds(value) {
+  if (String(value ?? "").trim() === "") return 3;
   const num = Number(value);
   if (!Number.isFinite(num)) return 3;
-  return Math.max(1, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
+  return Math.max(CONTINUATION_INJECT_MIN, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
 }
 function estimateTokensByChars(charCount) {
   return Math.ceil((Number(charCount) || 0) / 4);
@@ -31396,7 +33906,7 @@ function createContinuationBranchKey() {
 }
 function getContinuationRuntimeStore() {
   if (!GlobalState.continuationRuntime || typeof GlobalState.continuationRuntime !== "object") {
-    GlobalState.continuationRuntime = { byScript: {} };
+    GlobalState.continuationRuntime = { chatId: "", byScript: {} };
   }
   if (!GlobalState.continuationRuntime.byScript || typeof GlobalState.continuationRuntime.byScript !== "object") {
     GlobalState.continuationRuntime.byScript = {};
@@ -31415,12 +33925,89 @@ function getContinuationSessionRounds(scriptId) {
     timestamp: Number(item?.timestamp) || 0
   })).filter((item) => item.content.length > 0);
 }
+function createContinuationRoundKey() {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `round_${ts}_${rand}`;
+}
+function normalizeContinuationRounds(rounds) {
+  if (!Array.isArray(rounds)) return [];
+  return rounds.map((item, index) => {
+    const roundKey = String(item?.roundKey || "").trim() || createContinuationRoundKey();
+    if (item && typeof item === "object" && !item.roundKey) item.roundKey = roundKey;
+    return {
+      roundKey,
+      round: index + 1,
+      type: String(item?.type || (index === 0 ? "initial" : "continuation")),
+      instruction: String(item?.instruction || "").trim(),
+      content: String(item?.content || "").trim(),
+      timestamp: Number(item?.timestamp) || 0
+    };
+  }).filter((item) => item.content.length > 0).slice(0, CONTINUATION_SESSION_MAX_ROUNDS);
+}
+function archiveContinuationBranch(entry) {
+  const branchKey = String(entry?.branchKey || "").trim();
+  const rounds = normalizeContinuationRounds(entry?.rounds);
+  if (!branchKey || rounds.length === 0) return;
+  if (!Array.isArray(entry.archivedBranches)) entry.archivedBranches = [];
+  entry.archivedBranches = [{
+    branchKey,
+    parentBranchKey: String(entry.parentBranchKey || "").trim(),
+    branchedAtRound: Number(entry.branchedAtRound) || null,
+    rounds,
+    archivedAt: Date.now()
+  }, ...entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== branchKey)].slice(0, CONTINUATION_ARCHIVED_BRANCH_MAX);
+}
+function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound, targetRoundKey = "") {
+  const entry = getContinuationRuntimeStore()[scriptId];
+  if (!entry) return null;
+  const activeBranchKey = String(entry.branchKey || "").trim();
+  const requestedBranchKey = String(sourceBranchKey || activeBranchKey).trim();
+  const source = requestedBranchKey === activeBranchKey ? { branchKey: activeBranchKey, rounds: entry.rounds } : Array.isArray(entry.archivedBranches) ? entry.archivedBranches.find((item) => String(item?.branchKey || "") === requestedBranchKey) : null;
+  const sourceRounds = normalizeContinuationRounds(source?.rounds);
+  const requestedRoundKey = String(targetRoundKey || "").trim();
+  const roundNumber = requestedRoundKey ? sourceRounds.findIndex((item) => item.roundKey === requestedRoundKey) + 1 : Math.floor(Number(targetRound));
+  if (!source || !Number.isFinite(roundNumber) || roundNumber < 1 || roundNumber > sourceRounds.length) return null;
+  const previousActiveBranch = {
+    branchKey: activeBranchKey,
+    parentBranchKey: String(entry.parentBranchKey || "").trim(),
+    branchedAtRound: Number(entry.branchedAtRound) || null,
+    rounds: normalizeContinuationRounds(entry.rounds)
+  };
+  archiveContinuationBranch(entry);
+  entry.branchKey = createContinuationBranchKey();
+  entry.parentBranchKey = requestedBranchKey;
+  entry.branchedAtRound = roundNumber;
+  entry.rounds = sourceRounds.slice(0, roundNumber - 1);
+  return {
+    sourceBranchKey: requestedBranchKey,
+    branchKey: entry.branchKey,
+    targetRound: roundNumber,
+    targetInstruction: sourceRounds[roundNumber - 1]?.instruction || "",
+    contextRounds: normalizeContinuationRounds(entry.rounds),
+    previousActiveBranch
+  };
+}
+function restoreContinuationBranchAfterFailedGeneration(scriptId, branchResult) {
+  const entry = getContinuationRuntimeStore()[scriptId];
+  const previous = branchResult?.previousActiveBranch;
+  if (!entry || !previous || String(entry.branchKey || "") !== String(branchResult.branchKey || "")) return;
+  if (normalizeContinuationRounds(entry.rounds).length !== branchResult.contextRounds.length) return;
+  entry.branchKey = previous.branchKey;
+  entry.parentBranchKey = previous.parentBranchKey;
+  entry.branchedAtRound = previous.branchedAtRound;
+  entry.rounds = previous.rounds;
+  if (Array.isArray(entry.archivedBranches)) {
+    entry.archivedBranches = entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== previous.branchKey);
+  }
+}
 function setContinuationSessionBaseRound(scriptId, scriptName, content, options = {}) {
   if (!scriptId) return;
   const textContent = String(content || "").trim();
   if (!textContent) return;
   const forceNewBranch = options?.forceNewBranch === true;
   const providedBranchKey = typeof options?.branchKey === "string" ? options.branchKey.trim() : "";
+  const instruction = typeof options?.instruction === "string" ? options.instruction.trim() : "";
   const byScript = getContinuationRuntimeStore();
   const current = byScript[scriptId];
   const oldRounds = Array.isArray(current?.rounds) ? current.rounds : [];
@@ -31430,11 +34017,13 @@ function setContinuationSessionBaseRound(scriptId, scriptName, content, options 
     scriptId,
     scriptName: scriptName || current?.scriptName || "\u573A\u666F",
     branchKey: nextBranchKey,
+    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
     rounds: [
       {
         round: 1,
+        roundKey: createContinuationRoundKey(),
         type: "initial",
-        instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
+        instruction: instruction || "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
         content: textContent,
         timestamp: Date.now()
       },
@@ -31446,6 +34035,7 @@ function setContinuationSessionBaseRound(scriptId, scriptName, content, options 
     round: index + 1,
     type: String(item?.type || (index === 0 ? "initial" : "continuation"))
   }));
+  scheduleContinuationPersistence();
 }
 function appendContinuationSessionRound(scriptId, scriptName, instruction, content) {
   if (!scriptId) return;
@@ -31466,13 +34056,14 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
   const rounds = byScript[scriptId].rounds;
   rounds.push({
     round: rounds.length + 1,
+    roundKey: createContinuationRoundKey(),
     type: "continuation",
     instruction: String(instruction || "").trim(),
     content: textContent,
     timestamp: Date.now()
   });
   while (rounds.length > CONTINUATION_SESSION_MAX_ROUNDS) {
-    rounds.shift();
+    rounds.splice(rounds[0]?.type === "initial" ? 1 : 0, 1);
   }
   rounds.forEach((item, index) => {
     item.round = index + 1;
@@ -31481,6 +34072,7 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
   if (!String(byScript[scriptId].branchKey || "").trim()) {
     byScript[scriptId].branchKey = createContinuationBranchKey();
   }
+  scheduleContinuationPersistence();
 }
 function syncEditedContentToContinuationSession(scriptId, previousContent, editedContent, scriptName = "\u573A\u666F") {
   if (!scriptId) return false;
@@ -31510,15 +34102,19 @@ function syncEditedContentToContinuationSession(scriptId, previousContent, edite
   rounds.forEach((item, index) => {
     item.round = index + 1;
   });
+  scheduleContinuationPersistence();
   return true;
 }
 function resetContinuationSessionRounds(scriptId, scriptName = "\u573A\u666F") {
   if (!scriptId) return;
   const byScript = getContinuationRuntimeStore();
+  const current = byScript[scriptId];
+  if (current) archiveContinuationBranch(current);
   byScript[scriptId] = {
     scriptId,
     scriptName: scriptName || "\u573A\u666F",
     branchKey: null,
+    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
     rounds: [],
     resetAt: Date.now()
   };
@@ -31554,6 +34150,33 @@ ${item.content}`;
     estimatedTokens: estimateTokensByChars(estimatedChars)
   };
 }
+function buildContinuationBranchInjection(rounds) {
+  const selectedRounds = normalizeContinuationRounds(rounds);
+  if (selectedRounds.length === 0) {
+    return {
+      totalRounds: 0,
+      selectedRounds: [],
+      text: "\uFF08\u65E0\u5386\u53F2\u8F6E\u6B21\uFF0C\u5C06\u91CD\u65B0\u751F\u6210\u7B2C1\u8F6E\uFF09",
+      estimatedChars: 0,
+      estimatedTokens: 0
+    };
+  }
+  const text = selectedRounds.map((item) => {
+    const instructionText = item.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
+    return `[\u7B2C${item.round}\u8F6E \u6307\u4EE4]
+${instructionText}
+
+[\u7B2C${item.round}\u8F6E \u7ED3\u679C]
+${item.content}`;
+  }).join("\n\n");
+  return {
+    totalRounds: selectedRounds.length,
+    selectedRounds,
+    text,
+    estimatedChars: text.length,
+    estimatedTokens: estimateTokensByChars(text.length)
+  };
+}
 function getContinuationSessionStats(scriptId, injectRoundsCount = 3) {
   if (!scriptId) {
     return {
@@ -31570,6 +34193,70 @@ function getContinuationSessionStats(scriptId, injectRoundsCount = 3) {
     estimatedChars: injection.estimatedChars,
     estimatedTokens: injection.estimatedTokens
   };
+}
+function getContinuationBranches(scriptId) {
+  if (!scriptId) return [];
+  const entry = getContinuationRuntimeStore()[scriptId];
+  if (!entry) return [];
+  const toPublicBranch = (branch, isActive) => ({
+    branchKey: String(branch?.branchKey || "").trim(),
+    scriptName: String(entry.scriptName || "").trim(),
+    isActive,
+    branchedAtRound: Number(branch?.branchedAtRound) || null,
+    archivedAt: Number(branch?.archivedAt) || 0,
+    rounds: normalizeContinuationRounds(branch?.rounds).map((item, index) => ({
+      roundKey: item.roundKey,
+      round: item.round,
+      type: item.type,
+      continuationIndex: item.type === "initial" ? 0 : index,
+      instruction: item.instruction,
+      content: item.content,
+      contentPreview: item.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
+      contentLength: item.content.length,
+      timestamp: item.timestamp
+    }))
+  });
+  const branches = [];
+  if (String(entry.branchKey || "").trim() && normalizeContinuationRounds(entry.rounds).length > 0) {
+    branches.push(toPublicBranch(entry, true));
+  }
+  if (Array.isArray(entry.archivedBranches)) {
+    branches.push(...entry.archivedBranches.map((branch) => toPublicBranch(branch, false)));
+  }
+  return branches.filter((branch) => branch.branchKey && branch.rounds.length > 0);
+}
+function getContinuationSessions() {
+  return Object.entries(getContinuationRuntimeStore()).map(([scriptId, entry]) => {
+    const branches = getContinuationBranches(scriptId);
+    const roundTimestamps = branches.flatMap((branch) => branch.rounds.map((round) => Number(round.timestamp) || 0));
+    return {
+      scriptId,
+      scriptName: String(entry?.scriptName || "").trim() || "\u672A\u77E5\u5267\u672C",
+      updatedAt: Math.max(...roundTimestamps, Number(entry?.updatedAt) || 0),
+      branches,
+      roundCount: branches.reduce((sum, branch) => sum + branch.rounds.length, 0)
+    };
+  }).filter((session) => session.branches.length > 0).sort((left, right) => right.updatedAt - left.updatedAt);
+}
+function findContinuationRoundByContent(scriptId, content) {
+  const targetContent = String(content || "").trim();
+  if (!scriptId || !targetContent) return null;
+  for (const branch of getContinuationBranches(scriptId)) {
+    const round = branch.rounds.find((item) => String(item.content || "").trim() === targetContent);
+    if (round) {
+      return {
+        branchKey: branch.branchKey,
+        isActive: branch.isActive,
+        roundKey: round.roundKey,
+        round: round.round,
+        type: round.type,
+        continuationIndex: round.continuationIndex,
+        instruction: round.instruction,
+        content: round.content
+      };
+    }
+  }
+  return null;
 }
 function getContinuationRoundsForFav(scriptId) {
   if (!scriptId) {
@@ -31958,172 +34645,6 @@ function cancelGeneration() {
   TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u4E86\u751F\u6210");
   if (window.toastr) toastr.info("\u23F9\uFE0F \u6F14\u7ECE\u5DF2\u4E2D\u65AD", "Titania");
 }
-async function buildPromptCompositionPreview(options = {}) {
-  try {
-    const data = getExtData();
-    const cfg = data.config || {};
-    const dirDefaults = data.director || { instruction: "" };
-    const conn = getActiveConnection();
-    const generationOverrides = options.generationOverrides || null;
-    const scriptId = options.forceScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
-    const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
-    if (!script) {
-      return { ok: false, error: "\u672A\u9009\u62E9\u5267\u672C" };
-    }
-    const promptOverride = generationOverrides?.promptOverride;
-    const scriptPromptSource = typeof promptOverride === "string" && promptOverride.trim().length > 0 ? promptOverride : script.prompt;
-    const generationSource = generationOverrides?.source || "preview";
-    const ctx = await getContextData();
-    let sys;
-    const customPrompts = data.custom_prompts || {};
-    const useCustomPrompts = customPrompts.override_enabled === true;
-    const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
-    const DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
-
-[Process]
-1. Analyze the mood/emotion of the scenario
-2. Choose visual effects that represent the mood
-3. Generate HTML with embedded <style>
-
-[Technical Rules]
-1. Output HTML with <style> block
-2. Use CSS animations, gradients, shadows freely
-3. No markdown code blocks
-4. Language: Chinese`;
-    if (GlobalState.generationMode === "visual") {
-      sys = useCustomPrompts && customPrompts.visual_mode?.trim() ? customPrompts.visual_mode.trim() : DEFAULT_VISUAL_PROMPT;
-    } else {
-      sys = useCustomPrompts && customPrompts.content_mode?.trim() ? customPrompts.content_mode.trim() : DEFAULT_CONTENT_PROMPT;
-    }
-    let user = "";
-    const sectionLengths = {
-      director: 0,
-      persona: 0,
-      userDesc: 0,
-      worldInfo: 0,
-      history: 0,
-      scriptInstruction: 0
-    };
-    const dirInstruction = dirDefaults.instruction || "";
-    const styleProfiles = data.style_profiles || [{ id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }];
-    const activeStyleId = data.active_style_id || "default";
-    const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId) || styleProfiles[0];
-    const dStyle = activeStyleProfile ? activeStyleProfile.content : "";
-    let directorSection = "";
-    if (dirInstruction.trim()) {
-      directorSection += dirInstruction.trim() + "\n";
-    }
-    if (dStyle) {
-      directorSection += `\u6587\u7B14\u53C2\u8003\uFF1A\u6A21\u4EFF\u4EE5\u4E0B\u6587\u98CE\uFF08\u4E0D\u8981\u590D\u5236\u539F\u6587\uFF09:
-<style_ref>
-${dStyle.substring(0, 1e3)}
-</style_ref>
-`;
-    }
-    if (directorSection) {
-      const block = `[\u5BFC\u6F14\u6307\u4EE4]
-\uFF08\u4EE5\u4E0B\u662F\u5199\u4F5C\u98CE\u683C\u548C\u683C\u5F0F\u8981\u6C42\uFF0C\u8BF7\u6309\u6B64\u98CE\u683C\u751F\u6210\u5185\u5BB9\uFF09
-${directorSection}
-`;
-      sectionLengths.director = block.length;
-      user += block;
-    }
-    if (ctx.persona) {
-      const block = `[\u89D2\u8272\u4EBA\u8BBE]
-\uFF08\u4EE5\u4E0B\u662F\u89D2\u8272\u7684\u6027\u683C\u8BBE\u5B9A\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u91CD\u590D\u8FD9\u4E9B\u5185\u5BB9\uFF09
-${ctx.persona}
-
-`;
-      sectionLengths.persona = block.length;
-      user += block;
-    }
-    if (ctx.userDesc) {
-      const block = `[\u7528\u6237\u8BBE\u5B9A]
-\uFF08\u4EE5\u4E0B\u662F\u7528\u6237\u7684\u63CF\u8FF0\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u80CC\u666F\u53C2\u8003\uFF09
-${ctx.userDesc}
-
-`;
-      sectionLengths.userDesc = block.length;
-      user += block;
-    }
-    if (ctx.worldInfo) {
-      const block = `[\u4E16\u754C\u89C2\u8BBE\u5B9A]
-\uFF08\u4EE5\u4E0B\u662F\u80CC\u666F\u8BBE\u5B9A\u548C\u4E16\u754C\u89C2\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u76F4\u63A5\u590D\u5236\uFF09
-${ctx.worldInfo}
-
-`;
-      sectionLengths.worldInfo = block.length;
-      user += block;
-    }
-    if (GlobalState.useHistoryAnalysis) {
-      const limit = cfg.history_limit || 10;
-      const historyWhitelistStr = data.history_extraction?.whitelist || "";
-      const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
-      const history = getChatHistory2(limit, historyWhitelist);
-      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
-\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
-${history}
-
-` : `[\u804A\u5929\u5386\u53F2]
-\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
-
-`;
-      sectionLengths.history = historyBlock.length;
-      user += historyBlock;
-    }
-    const skipMacroEvaluation = generationOverrides?.skipMacroEvaluation === true;
-    let processedPrompt = scriptPromptSource;
-    if (!skipMacroEvaluation) {
-      try {
-        const macroEnv = {
-          char: ctx.charName,
-          user: ctx.userName
-        };
-        processedPrompt = evaluateMacros(scriptPromptSource, macroEnv);
-      } catch (e) {
-        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
-      }
-    }
-    const scriptBlock = `[\u5267\u672C\u6307\u4EE4]
-\uFF08\u8FD9\u662F\u4F60\u7684\u4E3B\u8981\u4EFB\u52A1\uFF01\u8BF7\u6839\u636E\u4EE5\u4E0B\u6307\u4EE4\u751F\u6210\u521B\u610F\u5185\u5BB9\uFF0C\u5FFD\u7565\u4E0A\u65B9\u7684\u804A\u5929\u5386\u53F2\uFF0C\u4E13\u6CE8\u4E8E\u5B8C\u6210\u6B64\u521B\u4F5C\u8BF7\u6C42\uFF09
-${processedPrompt}`;
-    sectionLengths.scriptInstruction = scriptBlock.length;
-    user += scriptBlock;
-    const meta = {
-      source: generationSource,
-      hasPromptOverride: typeof promptOverride === "string" && promptOverride.trim().length > 0,
-      promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
-      skipMacroEvaluation,
-      sectionLengths,
-      estimatedTokens: {
-        system: estimateTokens(sys),
-        user: estimateTokens(user)
-      }
-    };
-    return {
-      ok: true,
-      script: {
-        id: script.id,
-        name: script.name
-      },
-      mode: GlobalState.generationMode,
-      source: generationSource,
-      connection: {
-        profile: conn.profileName || "",
-        model: conn.model || "",
-        useSTConnection: !!conn.useSTConnection
-      },
-      messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-      meta,
-      timestamp: Date.now()
-    };
-  } catch (e) {
-    return {
-      ok: false,
-      error: e?.message || "preview_build_failed"
-    };
-  }
-}
 async function handleGenerate(forceScriptId = null, silent = false, generationOverrides = null) {
   const data = getExtData();
   const cfg = data.config || {};
@@ -32269,6 +34790,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   startTimer();
   if (!silent && window.toastr) toastr.info(`\u{1F680} [${conn.profileName}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
   let rawContent = "";
+  let effectiveScriptInstruction = scriptPromptSource;
   try {
     diagnostics.phase = "prepare_prompt";
     const dirInstruction = dirDefaults.instruction || "";
@@ -32277,35 +34799,23 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
     const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId) || styleProfiles[0];
     const dStyle = activeStyleProfile ? activeStyleProfile.content : "";
     let sys;
-    const customPrompts = data.custom_prompts || {};
-    const useCustomPrompts = customPrompts.override_enabled === true;
-    const DEFAULT_CONTENT_PROMPT = `You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.`;
-    const DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
-
-[Process]
-1. Analyze the mood/emotion of the scenario
-2. Choose visual effects that represent the mood
-3. Generate HTML with embedded <style>
-
-[Technical Rules]
-1. Output HTML with <style> block
-2. Use CSS animations, gradients, shadows freely
-3. No markdown code blocks
-4. Language: Chinese`;
-    if (GlobalState.generationMode === "visual") {
-      sys = useCustomPrompts && customPrompts.visual_mode?.trim() ? customPrompts.visual_mode.trim() : DEFAULT_VISUAL_PROMPT;
-    } else {
-      sys = useCustomPrompts && customPrompts.content_mode?.trim() ? customPrompts.content_mode.trim() : DEFAULT_CONTENT_PROMPT;
+    let promptScheme = getPromptScheme(data, GlobalState.generationMode);
+    if (!promptScheme) {
+      promptScheme = getPromptScheme(data, "narrative");
+      if (window.toastr) toastr.warning("\u672A\u627E\u5230\u6D3B\u52A8\u9884\u8BBE\uFF0C\u5DF2\u56DE\u9000\u5230\u5185\u5BB9\u4F18\u5148\u6A21\u5F0F", "Titania");
     }
+    const systemEntry = promptScheme.entries.find((entry) => entry.role === "system");
+    sys = systemEntry?.content || (GlobalState.generationMode === "visual" ? DEFAULT_VISUAL_PROMPT : DEFAULT_CONTENT_PROMPT);
     appendPromptTraceStage(promptTraceId, "system_selected", {
       mode: GlobalState.generationMode,
-      customPromptEnabled: useCustomPrompts,
-      usedCustomPrompt: GlobalState.generationMode === "visual" ? !!(useCustomPrompts && customPrompts.visual_mode?.trim()) : !!(useCustomPrompts && customPrompts.content_mode?.trim()),
+      schemeId: promptScheme.id || GlobalState.generationMode,
+      schemeType: promptScheme.type || "builtin",
       length: sys.length,
       estimatedTokens: estimateTokens(sys),
       preview: sys.substring(0, 240)
     });
     let user = "";
+    let runtimeChatHistory = "";
     const sectionLengths = {
       director: 0,
       persona: 0,
@@ -32364,7 +34874,8 @@ ${ctx.worldInfo}
       const limit = cfg.history_limit || 10;
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
-      const history = getChatHistory2(limit, historyWhitelist);
+      const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
+      const history = getChatHistory2(limit, historyWhitelist, historyBlacklist);
       const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
 \uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
 ${history}
@@ -32374,6 +34885,7 @@ ${history}
 
 `;
       sectionLengths.history = historyBlock.length;
+      runtimeChatHistory = historyBlock;
       user += historyBlock;
     }
     const skipMacroEvaluation = generationOverrides?.skipMacroEvaluation === true;
@@ -32422,6 +34934,7 @@ ${history}
         afterPreview: scriptPromptSource.substring(0, 240)
       });
     }
+    effectiveScriptInstruction = processedPrompt;
     const scriptBlock = `[\u5267\u672C\u6307\u4EE4]
 \uFF08\u8FD9\u662F\u4F60\u7684\u4E3B\u8981\u4EFB\u52A1\uFF01\u8BF7\u6839\u636E\u4EE5\u4E0B\u6307\u4EE4\u751F\u6210\u521B\u610F\u5185\u5BB9\uFF0C\u5FFD\u7565\u4E0A\u65B9\u7684\u804A\u5929\u5386\u53F2\uFF0C\u4E13\u6CE8\u4E8E\u5B8C\u6210\u6B64\u521B\u4F5C\u8BF7\u6C42\uFF09
 ${processedPrompt}`;
@@ -32449,7 +34962,25 @@ ${processedPrompt}`;
       };
     }
     appendPromptTraceStage(promptTraceId, "user_composed", traceMeta);
-    setPromptTraceFinalMessages(promptTraceId, [{ role: "system", content: sys }, { role: "user", content: user }], traceMeta);
+    const runtimePromptContext = {
+      ...ctx,
+      worldInfoBefore: ctx.worldInfo,
+      worldInfoAfter: "",
+      chatHistory: runtimeChatHistory,
+      titaniaScript: processedPrompt
+    };
+    const messageDetails = buildPromptMessageDetails(promptScheme, {
+      [`${GlobalState.generationMode}_system`]: sys,
+      [`${GlobalState.generationMode}_user`]: user
+    }, runtimePromptContext);
+    const messages = messageDetails.map(({ role, content }) => ({ role, content }));
+    traceMeta.promptScheme = {
+      id: promptScheme.id || GlobalState.generationMode,
+      name: promptScheme.name || "\u672A\u547D\u540D\u65B9\u6848",
+      type: promptScheme.type || "builtin"
+    };
+    traceMeta.messageDetails = messageDetails;
+    setPromptTraceFinalMessages(promptTraceId, messages, traceMeta);
     appendPromptTraceStage(promptTraceId, "request_ready", {
       useStream,
       useSTConnection,
@@ -32461,7 +34992,7 @@ ${processedPrompt}`;
       diagnostics.endpoint = `[ST Backend: ${oai_settings5.chat_completion_source}]`;
       const requestData = ChatCompletionService4.createRequestData({
         stream: useStream,
-        messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+        messages,
         chat_completion_source: oai_settings5.chat_completion_source,
         model: finalModel,
         max_tokens: oai_settings5.openai_max_tokens || 2048,
@@ -32547,7 +35078,7 @@ ${processedPrompt}`;
       diagnostics.endpoint = endpoint;
       const requestBody = {
         model: finalModel,
-        messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+        messages,
         stream: useStream,
         max_tokens: cfg.max_tokens || 4096
       };
@@ -32685,7 +35216,7 @@ ${processedPrompt}`;
             GlobalState.continuation.isActive = true;
             GlobalState.continuation.originalContent = finalOutput;
             GlobalState.continuation.accumulatedContent = finalOutput;
-            GlobalState.continuation.originalPrompt = scriptPromptSource.replace(/{{char}}/g, ctx.charName).replace(/{{user}}/g, ctx.userName);
+            GlobalState.continuation.originalPrompt = effectiveScriptInstruction;
             GlobalState.continuation.characterName = ctx.charName;
             GlobalState.continuation.userName = ctx.userName;
           } else {
@@ -32699,7 +35230,21 @@ ${processedPrompt}`;
           if (!silent && window.toastr) {
             toastr.info(`\u{1F504} \u68C0\u6D4B\u5230\u622A\u65AD\uFF0C\u6B63\u5728\u81EA\u52A8\u7EED\u5199 (${currentRetry + 1}/${maxRetries})...`, "Titania Echo");
           }
-          const continuationSuccess = await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, "", "auto", false);
+          const continuationSuccess = await performContinuation(
+            script,
+            ctx,
+            cfg,
+            finalUrl,
+            finalKey,
+            finalModel,
+            autoContinueCfg,
+            silent,
+            useSTConnection,
+            "",
+            "auto",
+            false,
+            effectiveScriptInstruction
+          );
           finishPromptTrace(promptTraceId, continuationSuccess ? "success" : "failed", {
             reason: "auto_continuation",
             continuationRetryCount: GlobalState.continuation.retryCount
@@ -32727,7 +35272,9 @@ ${processedPrompt}`;
     endStreamingCache();
     pushSceneToHistory(finalOutput, script.id, script.name);
     if (generationSource !== "user_continuation") {
-      setContinuationSessionBaseRound(script.id, script.name, finalOutput);
+      setContinuationSessionBaseRound(script.id, script.name, finalOutput, {
+        instruction: effectiveScriptInstruction
+      });
     }
     recordScriptGenerated(script.id, {
       isQueue: silent === true && GlobalState.queueState.isRunning,
@@ -32769,13 +35316,10 @@ ${processedPrompt}`;
     });
     return true;
   } catch (e) {
-    if (e.name === "AbortError") {
-      finishPromptTrace(promptTraceId, "aborted", {
-        error: e.message || "aborted"
-      });
-      return false;
+    const isAbortError = e.name === "AbortError";
+    if (!isAbortError) {
+      console.error("Titania Generate Error:", e);
     }
-    console.error("Titania Generate Error:", e);
     let partialSaved = false;
     let partialOutput = "";
     if (typeof rawContent === "string" && rawContent.trim().length > 0) {
@@ -32792,8 +35336,17 @@ ${processedPrompt}`;
         endStreamingCache();
         pushSceneToHistory(partialOutput, script.id, script.name);
         partialSaved = true;
-        if (generationSource !== "user_continuation") {
-          setContinuationSessionBaseRound(script.id, script.name, partialOutput);
+        if (generationSource === "user_continuation") {
+          appendContinuationSessionRound(
+            script.id,
+            script.name,
+            generationOverrides?.continuationInstruction || "\uFF08\u4E2D\u65AD\u540E\u4FDD\u7559\u7684\u7EED\u5199\uFF09",
+            partialOutput
+          );
+        } else {
+          setContinuationSessionBaseRound(script.id, script.name, partialOutput, {
+            instruction: effectiveScriptInstruction
+          });
         }
         if (shouldRenderStreamToUI() && $("#t-output-content").length > 0) {
           finalizeStreamRender(partialOutput, script.name);
@@ -32813,6 +35366,21 @@ ${processedPrompt}`;
     removeNewContentIndicator();
     diagnostics.network.latency = Date.now() - startTime;
     diagnostics.phase += "_failed";
+    if (isAbortError) {
+      TitaniaLogger.info("\u751F\u6210\u5DF2\u4E2D\u65AD", {
+        partialSaved,
+        partialLength: partialSaved ? partialOutput.length : 0
+      });
+      if (!silent && partialSaved && window.toastr) {
+        toastr.warning("\u751F\u6210\u5DF2\u4E2D\u65AD\uFF0C\u5DF2\u4FDD\u5B58\u5F53\u524D\u8FD4\u56DE\u5185\u5BB9\uFF0C\u53EF\u7EE7\u7EED\u7EED\u5199", "Titania Warning");
+      }
+      finishPromptTrace(promptTraceId, "aborted", {
+        error: e.message || "aborted",
+        partialSaved,
+        partialLength: partialSaved ? partialOutput.length : 0
+      });
+      return false;
+    }
     TitaniaLogger.error("\u751F\u6210\u8FC7\u7A0B\u53D1\u751F\u5F02\u5E38", e, diagnostics);
     let diagnosisHint = "API\u8C03\u7528\u5931\u8D25\u6216\u5185\u5BB9\u89E3\u6790\u9519\u8BEF\u3002\u8BF7\u68C0\u67E5 Key \u4F59\u989D\u6216\u7F51\u7EDC\u8FDE\u63A5\u3002";
     const errMsg = e.message || "\u672A\u77E5\u9519\u8BEF";
@@ -32988,7 +35556,7 @@ function cancelQueueGeneration() {
     TitaniaLogger.info("\u961F\u5217\u751F\u6210\u5DF2\u53D6\u6D88");
   }
 }
-async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false) {
+async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false, initialInstruction = "") {
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   const signal = GlobalState.abortController?.signal;
@@ -33290,7 +35858,7 @@ Generate ONLY the continuation (no repetition):`;
         retryCount: GlobalState.continuation.retryCount,
         maxRetries
       });
-      return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, userInstruction, continuationType, autoLocate);
+      return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, userInstruction, continuationType, autoLocate, initialInstruction);
     } else {
       const finalOutput = smartMergeContinuation(
         GlobalState.continuation.accumulatedContent,
@@ -33302,6 +35870,11 @@ Generate ONLY the continuation (no repetition):`;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
       pushSceneToHistory(rewrittenOutput, script.id, script.name);
+      if (continuationType === "auto") {
+        setContinuationSessionBaseRound(script.id, script.name, rewrittenOutput, {
+          instruction: initialInstruction
+        });
+      }
       recordScriptGenerated(script.id, {
         isQueue: silent === true && GlobalState.queueState.isRunning,
         mode: GlobalState.generationMode,
@@ -33396,12 +35969,17 @@ Generate ONLY the continuation (no repetition):`;
   }
 }
 async function handleUserContinuation(options = {}) {
-  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3, branchFromCurrentView = false } = options;
+  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3, branchFromCurrentView = false, regenerateRound = null, regenerateRoundKey = "", sourceBranchKey = "", scriptIdOverride = "", baseContentOverride = "" } = options;
   if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
     if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
     return false;
   }
-  const display = fromCurrentView ? getCurrentDisplayContent() : {
+  const isRegeneration = regenerateRound !== null && regenerateRound !== void 0 || Boolean(regenerateRoundKey);
+  const display = scriptIdOverride && baseContentOverride ? {
+    content: baseContentOverride,
+    scriptId: scriptIdOverride,
+    scriptName: GlobalState.runtimeScripts.find((s) => s.id === scriptIdOverride)?.name || "\u573A\u666F"
+  } : fromCurrentView ? getCurrentDisplayContent() : {
     content: GlobalState.lastGeneratedContent,
     scriptId: GlobalState.lastGeneratedScriptId,
     scriptName: "\u573A\u666F"
@@ -33424,18 +36002,79 @@ async function handleUserContinuation(options = {}) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5185\u5BB9\u5BF9\u5E94\u7684\u5267\u672C\uFF0C\u65E0\u6CD5\u7EED\u5199", "Titania");
     return false;
   }
+  let continuationEntry = getContinuationRuntimeStore()[script.id];
+  const existingRounds = Array.isArray(continuationEntry?.rounds) ? continuationEntry.rounds : [];
+  const hasCurrentContent = existingRounds.some((item) => String(item?.content || "").trim() === baseContent);
+  if (!hasCurrentContent && !isRegeneration) {
+    if (existingRounds.length === 0) {
+      const continuationContext = await getContextData();
+      let initialInstruction = String(script.prompt || "");
+      try {
+        initialInstruction = evaluateMacros(initialInstruction, {
+          char: continuationContext.charName,
+          user: continuationContext.userName
+        });
+      } catch (e) {
+        initialInstruction = initialInstruction.replace(/{{char}}/gi, continuationContext.charName).replace(/{{user}}/gi, continuationContext.userName);
+      }
+      setContinuationSessionBaseRound(script.id, script.name, baseContent, {
+        instruction: initialInstruction
+      });
+    } else {
+      appendContinuationSessionRound(
+        script.id,
+        script.name,
+        "\uFF08\u4E2D\u65AD\u540E\u6062\u590D\u7684\u90E8\u5206\u5185\u5BB9\uFF09",
+        baseContent
+      );
+    }
+    continuationEntry = getContinuationRuntimeStore()[script.id];
+  }
+  const initialRound = Array.isArray(continuationEntry?.rounds) ? continuationEntry.rounds.find((item) => item.type === "initial") : null;
+  if (initialRound && (!initialRound.instruction || initialRound.instruction === "\uFF08\u9996\u6B21\u751F\u6210\uFF09")) {
+    const continuationContext = await getContextData();
+    try {
+      initialRound.instruction = evaluateMacros(String(script.prompt || ""), {
+        char: continuationContext.charName,
+        user: continuationContext.userName
+      });
+    } catch (e) {
+      initialRound.instruction = String(script.prompt || "").replace(/{{char}}/gi, continuationContext.charName).replace(/{{user}}/gi, continuationContext.userName);
+    }
+  }
   if (branchFromCurrentView) {
     resetContinuationSessionRounds(script.id, script.name);
-    setContinuationSessionBaseRound(script.id, script.name, baseContent, { forceNewBranch: true });
+    const branchContext = await getContextData();
+    let branchInstruction = String(script.prompt || "");
+    try {
+      branchInstruction = evaluateMacros(branchInstruction, {
+        char: branchContext.charName,
+        user: branchContext.userName
+      });
+    } catch (e) {
+      branchInstruction = branchInstruction.replace(/{{char}}/gi, branchContext.charName).replace(/{{user}}/gi, branchContext.userName);
+    }
+    setContinuationSessionBaseRound(script.id, script.name, baseContent, {
+      forceNewBranch: true,
+      instruction: branchInstruction
+    });
     TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u521B\u5EFA\u5206\u652F", {
       scriptId: script.id,
       scriptName: script.name,
       baseContentLength: baseContent.length
     });
   }
-  const userInstruction = (instruction || "").trim() || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
+  let branchResult = null;
+  if (regenerateRound !== null && regenerateRound !== void 0 || regenerateRoundKey) {
+    branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, regenerateRound, regenerateRoundKey);
+    if (!branchResult) {
+      if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
+      return false;
+    }
+  }
+  const userInstruction = (instruction || "").trim() || branchResult?.targetInstruction || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
   const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
-  const sessionInjection = buildContinuationSessionInjection(script.id, effectiveInjectCount);
+  const sessionInjection = branchResult ? buildContinuationBranchInjection(branchResult.contextRounds) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
   const promptOverride = `[\u7EED\u5199\u6A21\u5F0F]
 \u4F60\u5C06\u57FA\u4E8E\u5DF2\u6709\u5267\u60C5\u8FDB\u884C\u591A\u8F6E\u7EED\u5199\u751F\u6210\u3002
 \u8BF7\u4FDD\u6301\u4EBA\u7269\u3001\u8BED\u6C14\u3001\u8BBE\u5B9A\u4E0E\u89C6\u89C9\u98CE\u683C\u4E00\u81F4\uFF0C\u5728\u4E0D\u91CD\u590D\u5DF2\u6709\u6587\u672C\u7684\u524D\u63D0\u4E0B\u63A8\u8FDB\u5267\u60C5\u3002
@@ -33455,7 +36094,9 @@ ${userInstruction}`;
     injectRoundsCount: effectiveInjectCount,
     injectedRoundItems: sessionInjection.selectedRounds.length,
     injectedChars: sessionInjection.estimatedChars,
-    injectedTokensEstimated: sessionInjection.estimatedTokens
+    injectedTokensEstimated: sessionInjection.estimatedTokens,
+    regenerateRound: branchResult?.targetRound || null,
+    branchKey: branchResult?.branchKey || continuationEntry?.branchKey || ""
   });
   if (autoLocate === true) {
     unlockDisplay();
@@ -33466,17 +36107,24 @@ ${userInstruction}`;
     skipMacroEvaluation: true,
     keepOverlayOpen: true,
     source: "user_continuation",
+    continuationInstruction: userInstruction,
     injectRoundsCount: effectiveInjectCount,
     injectedRoundItems: sessionInjection.selectedRounds.length,
     injectedChars: sessionInjection.estimatedChars,
-    injectedTokensEstimated: sessionInjection.estimatedTokens
+    injectedTokensEstimated: sessionInjection.estimatedTokens,
+    regenerateRound: branchResult?.targetRound || null,
+    branchKey: branchResult?.branchKey || ""
   });
   if (success) {
     appendContinuationSessionRound(script.id, script.name, userInstruction, GlobalState.lastGeneratedContent);
+    if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
+  } else if (branchResult) {
+    restoreContinuationBranchAfterFailedGeneration(script.id, branchResult);
+    scheduleContinuationPersistence();
   }
   return success;
 }
-var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
+var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, CONTINUATION_INJECT_MIN, CONTINUATION_ARCHIVED_BRANCH_MAX, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
@@ -33484,12 +36132,17 @@ var init_api = __esm({
     init_logger();
     init_context();
     init_helpers();
+    init_chatHistoryBlacklist();
     init_floatingBtn();
     init_mainWindow();
     init_connection();
     init_scriptData();
+    init_promptManager();
+    init_continuationStore();
     CONTINUATION_SESSION_MAX_ROUNDS = 30;
-    CONTINUATION_INJECT_MAX = 5;
+    CONTINUATION_INJECT_MAX = 20;
+    CONTINUATION_INJECT_MIN = 3;
+    CONTINUATION_ARCHIVED_BRANCH_MAX = 20;
     interactiveDetectionIdleHandle = null;
     interactiveDetectionTimer = null;
     interactiveDetectionToken = 0;
@@ -33508,6 +36161,227 @@ init_dom();
 init_state();
 init_scriptData();
 init_api();
+init_continuationStore();
+import { extension_settings as extension_settings3 } from "../../../extensions.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
+
+// src/core/extensionUpdate.js
+init_defaults();
+import { getRequestHeaders } from "../../../../script.js";
+import { extensionTypes } from "../../../extensions.js";
+var EXTENSION_ID = "third-party/titania-theater";
+var EXTENSION_NAME = "titania-theater";
+var CHANGELOG_URL = "https://raw.githubusercontent.com/Titania-elf/titania-theater/main/changelog.json";
+var DISMISSED_KEY = "titania-update-dismissed";
+var availableUpdate = null;
+var checkSequence = 0;
+var isInstalling = false;
+function compareVersions(left, right) {
+  const leftParts = String(left).split(".").map(Number);
+  const rightParts = String(right).split(".").map(Number);
+  const length = Math.max(leftParts.length, rightParts.length);
+  for (let index = 0; index < length; index++) {
+    const difference = (leftParts[index] || 0) - (rightParts[index] || 0);
+    if (difference !== 0) return difference > 0 ? 1 : -1;
+  }
+  return 0;
+}
+function isVersion(value) {
+  return /^\d+\.\d+\.\d+$/.test(String(value));
+}
+function escapeHtml8(value) {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+function renderChangelogContent(content) {
+  return escapeHtml8(content).replace(/&lt;br\s*\/?&gt;/gi, "<br>").replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+async function fetchAvailableUpdates() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8e3);
+  try {
+    const response = await fetch(`${CHANGELOG_URL}?t=${Date.now()}`, {
+      cache: "no-store",
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const changelog = await response.json();
+    if (!changelog || typeof changelog !== "object" || Array.isArray(changelog)) {
+      throw new Error("\u66F4\u65B0\u65E5\u5FD7\u683C\u5F0F\u65E0\u6548");
+    }
+    const versions = Object.keys(changelog).filter(isVersion).sort((left, right) => compareVersions(right, left));
+    const latestVersion = versions[0];
+    if (!latestVersion || compareVersions(latestVersion, CURRENT_VERSION) <= 0) return null;
+    return {
+      latestVersion,
+      entries: versions.filter((version) => compareVersions(version, CURRENT_VERSION) > 0).map((version) => ({ version, content: String(changelog[version] || "") }))
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+function getExtensionType() {
+  const id = Object.keys(extensionTypes).find((key) => key === EXTENSION_ID || key.endsWith(`/${EXTENSION_NAME}`));
+  return id ? extensionTypes[id] : "";
+}
+async function updateExtension() {
+  const response = await fetch("/api/extensions/update", {
+    method: "POST",
+    headers: getRequestHeaders(),
+    body: JSON.stringify({
+      extensionName: EXTENSION_NAME,
+      global: getExtensionType() === "global"
+    })
+  });
+  if (!response.ok) {
+    const message = (await response.text()).trim();
+    if (response.status === 403) throw new Error("\u5F53\u524D\u8D26\u6237\u6CA1\u6709\u66F4\u65B0\u5168\u5C40\u6269\u5C55\u7684\u6743\u9650\u3002");
+    throw new Error(message || `\u66F4\u65B0\u5931\u8D25\uFF08HTTP ${response.status}\uFF09`);
+  }
+  return response.json();
+}
+function setVersionBadge(hasUpdate) {
+  const $badge = $("#titania-version-badge");
+  if (!$badge.length) return;
+  $badge.toggleClass("has-update", hasUpdate).text(hasUpdate ? `v${CURRENT_VERSION} \xB7 \u53EF\u66F4\u65B0` : `v${CURRENT_VERSION}`);
+}
+function renderUpdateCard(state, update = null, errorMessage = "") {
+  const $card = $("#titania-update-card");
+  if (!$card.length) return;
+  const $check = $("#titania-update-check");
+  const $actions = $("#titania-update-actions");
+  const $error = $("#titania-update-inline-error");
+  const isChecking = state === "checking";
+  $card.attr("data-state", state);
+  $("#titania-update-current-version").text(`v${CURRENT_VERSION}`);
+  $check.prop("disabled", isChecking || isInstalling).html(isChecking ? '<i class="fa-solid fa-spinner fa-spin"></i>' : '<i class="fa-solid fa-rotate-right"></i>');
+  $error.prop("hidden", !errorMessage).text(errorMessage);
+  if (state === "available" && update) {
+    $("#titania-update-status").text(`\u53D1\u73B0\u65B0\u7248\u672C v${update.latestVersion}`);
+    $("#titania-update-latest-version").text(`v${update.latestVersion}`);
+    $("#titania-update-latest-row").prop("hidden", false);
+    $actions.prop("hidden", false);
+    $("#titania-update-details, #titania-update-install").prop("disabled", isInstalling);
+    setVersionBadge(true);
+    return;
+  }
+  $("#titania-update-latest-row").prop("hidden", true);
+  $actions.prop("hidden", true);
+  setVersionBadge(false);
+  if (state === "checking") {
+    $("#titania-update-status").text("\u6B63\u5728\u68C0\u67E5\u66F4\u65B0...");
+  } else if (state === "error") {
+    $("#titania-update-status").text("\u6682\u65F6\u65E0\u6CD5\u68C0\u67E5\u66F4\u65B0");
+  } else {
+    $("#titania-update-status").text("\u5F53\u524D\u5DF2\u662F\u6700\u65B0\u7248\u672C");
+  }
+}
+async function checkForUpdates(showDialog = false) {
+  const sequence = ++checkSequence;
+  renderUpdateCard("checking");
+  try {
+    const update = await fetchAvailableUpdates();
+    if (sequence !== checkSequence) return;
+    availableUpdate = update;
+    if (!update) {
+      renderUpdateCard("current");
+      return;
+    }
+    renderUpdateCard("available", update);
+    if (showDialog && sessionStorage.getItem(DISMISSED_KEY) !== update.latestVersion) {
+      showUpdateDialog(update);
+    }
+  } catch (error) {
+    if (sequence !== checkSequence) return;
+    availableUpdate = null;
+    console.warn("Titania: \u66F4\u65B0\u68C0\u6D4B\u5931\u8D25", error);
+    const message = error?.name === "AbortError" ? "\u68C0\u67E5\u66F4\u65B0\u8D85\u65F6\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002" : `\u68C0\u67E5\u5931\u8D25\uFF1A${error?.message || "\u65E0\u6CD5\u83B7\u53D6\u66F4\u65B0\u65E5\u5FD7"}`;
+    renderUpdateCard("error", null, message);
+  }
+}
+function setInstallState(installing) {
+  isInstalling = installing;
+  $("#titania-update-check, #titania-update-details").prop("disabled", installing);
+  $("#titania-update-install").prop("disabled", installing).html(installing ? '<i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u66F4\u65B0...' : '<i class="fa-solid fa-download"></i> \u7ACB\u5373\u66F4\u65B0');
+  $("#titania-update-close, #titania-update-later").prop("disabled", installing);
+  $("#titania-update-now").prop("disabled", installing).html(installing ? '<i class="fa-solid fa-spinner fa-spin"></i><span>\u6B63\u5728\u66F4\u65B0...</span>' : '<i class="fa-solid fa-download"></i><span>\u7ACB\u5373\u66F4\u65B0</span>');
+}
+async function installAvailableUpdate(update) {
+  if (!update || isInstalling) return;
+  const $dialogError = $("#titania-update-error");
+  const $inlineError = $("#titania-update-inline-error");
+  $dialogError.prop("hidden", true).text("");
+  $inlineError.prop("hidden", true).text("");
+  setInstallState(true);
+  try {
+    await updateExtension();
+    sessionStorage.setItem(DISMISSED_KEY, update.latestVersion);
+    $("#titania-update-status").text("\u66F4\u65B0\u5B8C\u6210\uFF0C\u6B63\u5728\u5237\u65B0...");
+    $("#titania-update-install").html('<i class="fa-solid fa-circle-check"></i> \u66F4\u65B0\u5B8C\u6210');
+    $("#titania-update-now").html('<i class="fa-solid fa-circle-check"></i><span>\u66F4\u65B0\u5B8C\u6210\uFF0C\u6B63\u5728\u5237\u65B0...</span>');
+    setTimeout(() => location.reload(), 500);
+  } catch (error) {
+    console.error("Titania: \u81EA\u52A8\u66F4\u65B0\u5931\u8D25", error);
+    const message = error?.message || "\u66F4\u65B0\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5 SillyTavern \u670D\u52A1\u7AEF\u65E5\u5FD7\u540E\u91CD\u8BD5\u3002";
+    setInstallState(false);
+    $dialogError.prop("hidden", false).text(message);
+    $inlineError.prop("hidden", false).text(message);
+  }
+}
+function showUpdateDialog(update) {
+  if (document.getElementById("titania-update-overlay")) return;
+  const entriesHtml = update.entries.map((entry) => `
+        <section class="titania-update-entry">
+            <h3>v${escapeHtml8(entry.version)}</h3>
+            <div>${renderChangelogContent(entry.content)}</div>
+        </section>
+    `).join("");
+  $("body").append(`
+        <div id="titania-update-overlay" class="titania-update-overlay">
+            <div class="titania-update-dialog" role="dialog" aria-modal="true" aria-labelledby="titania-update-title">
+                <header class="titania-update-header">
+                    <div>
+                        <span class="titania-update-kicker">\u56DE\u58F0\u5DE5\u5177\u7BB1\u66F4\u65B0</span>
+                        <h2 id="titania-update-title">v${escapeHtml8(update.latestVersion)} \u5DF2\u53D1\u5E03</h2>
+                    </div>
+                    <button id="titania-update-close" class="titania-update-close" type="button" aria-label="\u7A0D\u540E\u66F4\u65B0">&times;</button>
+                </header>
+                <main class="titania-update-body">${entriesHtml}</main>
+                <div id="titania-update-error" class="titania-update-error" role="alert" hidden></div>
+                <footer class="titania-update-footer">
+                    <button id="titania-update-later" class="menu_button" type="button">\u7A0D\u540E</button>
+                    <button id="titania-update-now" class="menu_button menu_button_icon" type="button">
+                        <i class="fa-solid fa-download"></i><span>\u7ACB\u5373\u66F4\u65B0</span>
+                    </button>
+                </footer>
+            </div>
+        </div>
+    `);
+  const dismiss = () => {
+    if (isInstalling) return;
+    sessionStorage.setItem(DISMISSED_KEY, update.latestVersion);
+    $("#titania-update-overlay").remove();
+  };
+  $("#titania-update-close, #titania-update-later").on("click", dismiss);
+  $("#titania-update-overlay").on("click", (event) => {
+    if (event.target.id === "titania-update-overlay") dismiss();
+  });
+  $("#titania-update-now").on("click", () => installAvailableUpdate(update));
+}
+async function initExtensionUpdate() {
+  $("#titania-update-current-version").text(`v${CURRENT_VERSION}`);
+  $("#titania-update-check").off("click.titaniaUpdate").on("click.titaniaUpdate", () => {
+    void checkForUpdates(false);
+  });
+  $("#titania-update-details").off("click.titaniaUpdate").on("click.titaniaUpdate", () => {
+    if (availableUpdate) showUpdateDialog(availableUpdate);
+  });
+  $("#titania-update-install").off("click.titaniaUpdate").on("click.titaniaUpdate", () => {
+    void installAvailableUpdate(availableUpdate);
+  });
+  await checkForUpdates(true);
+}
+
+// src/entry.js
 init_worldInfoManager();
 init_floatingBtn();
 init_settingsWindow();
@@ -33516,8 +36390,6 @@ init_rewriteEntryButton();
 init_outlineEntryButton();
 init_vectorStore();
 init_summarizer();
-import { extension_settings as extension_settings3 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
 async function onGenerationEnded() {
   const extData = getExtData();
   const cfg = extData.config || {};
@@ -33593,6 +36465,10 @@ function initCoreFeatures() {
   }
   applyUIFontScale(extData.appearance?.ui_font_scale);
   eventSource3.on(event_types3.GENERATION_ENDED, onGenerationEnded);
+  eventSource3.on(event_types3.CHAT_CHANGED, () => {
+    void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
+  });
+  void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u521D\u59CB\u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
   initSyncListener();
   initVectorUnsavedWarning();
   initAutoVectorizeListener();
@@ -33918,286 +36794,8 @@ async function loadExtensionSettings() {
     saveExtData();
     if (window.toastr) toastr.success(enabled ? "\u8BB0\u5FC6\u53EC\u56DE\u5FEB\u6377\u5165\u53E3\u5DF2\u542F\u7528" : "\u8BB0\u5FC6\u53EC\u56DE\u5FEB\u6377\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
   });
-  checkVersionUpdate();
+  void initExtensionUpdate();
   bindDrawerBackupControls();
-}
-var remoteVersionCache = null;
-async function checkVersionUpdate() {
-  try {
-    const remoteVersion = await fetchRemoteVersion();
-    if (!remoteVersion) {
-      $("#titania-new-badge").hide();
-      $("#titania-update-section").hide();
-      return;
-    }
-    if (compareVersions(remoteVersion, CURRENT_VERSION) > 0) {
-      $("#titania-new-badge").show().addClass("update-available").attr("title", `\u53D1\u73B0\u65B0\u7248\u672C v${remoteVersion}`).text("NEW");
-      $("#titania-update-section").show();
-      $("#titania-remote-version").text(`v${remoteVersion}`);
-      $("#titania-new-badge").off("click").on("click", (e) => {
-        e.stopPropagation();
-        const drawer = $("#titania-settings-drawer");
-        if (!drawer.hasClass("open")) {
-          drawer.find(".inline-drawer-toggle").click();
-        }
-      });
-      $("#titania-update-btn").off("click").on("click", () => {
-        showUpdateConfirmDialog(remoteVersion);
-      });
-      console.log(`Titania: \u53D1\u73B0\u66F4\u65B0 v${remoteVersion}\uFF0C\u5F53\u524D\u7248\u672C v${CURRENT_VERSION}`);
-    } else {
-      $("#titania-new-badge").hide();
-      $("#titania-update-section").hide();
-    }
-  } catch (e) {
-    console.warn("Titania: \u8FDC\u7A0B\u7248\u672C\u68C0\u6D4B\u5931\u8D25", e);
-    $("#titania-new-badge").hide();
-    $("#titania-update-section").hide();
-  }
-}
-async function fetchRemoteVersion() {
-  if (remoteVersionCache) return remoteVersionCache;
-  try {
-    const url = `${GITHUB_API_URL}?t=${Date.now()}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Accept": "application/vnd.github.v3+json"
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const data = await response.json();
-    if (data.content) {
-      const base64 = data.content.replace(/\n/g, "");
-      const binaryString = atob(base64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const decodedContent = new TextDecoder("utf-8").decode(bytes);
-      const manifest = JSON.parse(decodedContent);
-      remoteVersionCache = manifest.version;
-      return manifest.version;
-    }
-    return null;
-  } catch (e) {
-    console.warn("Titania: \u83B7\u53D6\u8FDC\u7A0B\u7248\u672C\u5931\u8D25", e);
-    return null;
-  }
-}
-function compareVersions(v1, v2) {
-  const parts1 = v1.split(".").map(Number);
-  const parts2 = v2.split(".").map(Number);
-  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-    const p1 = parts1[i] || 0;
-    const p2 = parts2[i] || 0;
-    if (p1 > p2) return 1;
-    if (p1 < p2) return -1;
-  }
-  return 0;
-}
-var remoteChangelogCache = null;
-async function fetchRemoteChangelog() {
-  if (remoteChangelogCache) return remoteChangelogCache;
-  try {
-    const url = `${GITHUB_CHANGELOG_API_URL}?t=${Date.now()}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Accept": "application/vnd.github.v3+json"
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const data = await response.json();
-    if (data.content) {
-      const base64 = data.content.replace(/\n/g, "");
-      const binaryString = atob(base64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const decodedContent = new TextDecoder("utf-8").decode(bytes);
-      const changelog = JSON.parse(decodedContent);
-      remoteChangelogCache = changelog;
-      return changelog;
-    }
-    return null;
-  } catch (e) {
-    console.warn("Titania: \u83B7\u53D6\u8FDC\u7A0B changelog \u5931\u8D25", e);
-    return null;
-  }
-}
-function getChangelogSinceVersion(currentVersion, remoteVersion, changelog) {
-  const updates = [];
-  const versions = Object.keys(changelog).sort((a, b) => compareVersions(b, a));
-  for (const ver of versions) {
-    if (compareVersions(ver, currentVersion) > 0 && compareVersions(ver, remoteVersion) <= 0) {
-      updates.push({
-        version: ver,
-        content: changelog[ver]
-      });
-    }
-  }
-  return updates;
-}
-function showRefreshPrompt() {
-  if ($("#titania-refresh-prompt").length) return;
-  const promptHtml = `
-    <div id="titania-refresh-prompt" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100000;
-        background: linear-gradient(90deg, #1a472a, #2d5a3d);
-        color: #fff;
-        padding: 12px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        font-size: 14px;
-    ">
-        <i class="fa-solid fa-circle-check" style="color: #55efc4; font-size: 18px;"></i>
-        <span>\u6269\u5C55\u7BA1\u7406\u5668\u5DF2\u6253\u5F00\uFF0C\u66F4\u65B0\u5B8C\u6210\u540E\u8BF7\u70B9\u51FB\u5237\u65B0\u6309\u94AE</span>
-        <button id="titania-refresh-btn" style="
-            background: #55efc4;
-            color: #1a472a;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        ">
-            <i class="fa-solid fa-rotate-right"></i>
-            <span>\u5237\u65B0\u9875\u9762</span>
-        </button>
-        <button id="titania-refresh-close" style="
-            background: transparent;
-            color: #aaa;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 18px;
-            margin-left: 10px;
-        " title="\u5173\u95ED\u63D0\u793A">&times;</button>
-    </div>`;
-  $("body").prepend(promptHtml);
-  $("#titania-refresh-btn").on("click", function() {
-    $(this).html('<i class="fa-solid fa-spinner fa-spin"></i> \u5237\u65B0\u4E2D...');
-    $(this).prop("disabled", true);
-    setTimeout(() => {
-      location.reload();
-    }, 300);
-  });
-  $("#titania-refresh-btn").hover(
-    function() {
-      $(this).css({ "transform": "scale(1.05)", "box-shadow": "0 2px 8px rgba(85, 239, 196, 0.4)" });
-    },
-    function() {
-      $(this).css({ "transform": "scale(1)", "box-shadow": "none" });
-    }
-  );
-  $("#titania-refresh-close").on("click", function() {
-    $("#titania-refresh-prompt").slideUp(200, function() {
-      $(this).remove();
-    });
-  });
-}
-async function showUpdateConfirmDialog(remoteVersion) {
-  if ($(".titania-update-overlay").length) return;
-  const loadingHtml = `
-    <div class="titania-update-overlay">
-        <div class="titania-update-dialog">
-            <div class="titania-update-header">
-                <span><i class="fa-solid fa-arrow-up-right-from-square"></i> \u53D1\u73B0\u65B0\u7248\u672C</span>
-                <span class="titania-update-close">&times;</span>
-            </div>
-            <div class="titania-update-body" style="text-align: center; padding: 40px;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #90cdf4;"></i>
-                <p style="margin-top: 15px; color: #a0aec0;">\u6B63\u5728\u83B7\u53D6\u66F4\u65B0\u65E5\u5FD7...</p>
-            </div>
-        </div>
-    </div>`;
-  $("body").append(loadingHtml);
-  $(".titania-update-close").on("click", () => {
-    $(".titania-update-overlay").remove();
-  });
-  let changelog = await fetchRemoteChangelog();
-  if (!changelog) {
-    changelog = CHANGELOG;
-  }
-  const updates = getChangelogSinceVersion(CURRENT_VERSION, remoteVersion, changelog);
-  let changelogContent = "";
-  if (updates.length > 0) {
-    updates.forEach((item) => {
-      changelogContent += `<div class="titania-changelog-version">v${item.version}</div>`;
-      changelogContent += `<div class="titania-changelog-content">${item.content}</div>`;
-    });
-  } else {
-    changelogContent = `<p>v${remoteVersion} \u5DF2\u53D1\u5E03</p>`;
-  }
-  $(".titania-update-overlay").remove();
-  const html = `
-    <div class="titania-update-overlay">
-        <div class="titania-update-dialog">
-            <div class="titania-update-header">
-                <span><i class="fa-solid fa-arrow-up-right-from-square"></i> \u53D1\u73B0\u65B0\u7248\u672C</span>
-                <span class="titania-update-close">&times;</span>
-            </div>
-            <div class="titania-update-body">
-                <div class="titania-version-compare">
-                    <div class="titania-version-box">
-                        <div class="titania-version-label">\u5F53\u524D\u7248\u672C</div>
-                        <div class="titania-version-num old">v${CURRENT_VERSION}</div>
-                    </div>
-                    <div class="titania-version-arrow">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </div>
-                    <div class="titania-version-box">
-                        <div class="titania-version-label">\u6700\u65B0\u7248\u672C</div>
-                        <div class="titania-version-num new">v${remoteVersion}</div>
-                    </div>
-                </div>
-                <div class="titania-changelog-title">\u{1F4CB} \u66F4\u65B0\u5185\u5BB9\uFF1A</div>
-                <div class="titania-changelog-list">
-                    ${changelogContent}
-                </div>
-            </div>
-            <div class="titania-update-footer">
-                <button class="titania-btn-cancel" id="titania-update-cancel">\u7A0D\u540E\u518D\u8BF4</button>
-                <button class="titania-btn-confirm" id="titania-update-confirm">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> \u524D\u5F80\u66F4\u65B0
-                </button>
-            </div>
-        </div>
-    </div>`;
-  $("body").append(html);
-  $("#titania-update-cancel, .titania-update-close").on("click", () => {
-    $(".titania-update-overlay").remove();
-  });
-  $("#titania-update-confirm").on("click", function() {
-    $(".titania-update-overlay").remove();
-    $("#extensions_details").click();
-    if (window.toastr) {
-      toastr.info("\u8BF7\u5728\u6269\u5C55\u7BA1\u7406\u5668\u4E2D\u627E\u5230\u300C\u56DE\u58F0\u5C0F\u5267\u573A\u300D\u5E76\u70B9\u51FB\u66F4\u65B0\u6309\u94AE", "Titania Echo");
-    }
-    showRefreshPrompt();
-  });
-  $(".titania-update-overlay").on("click", function(e) {
-    if (e.target === this) {
-      $(".titania-update-overlay").remove();
-    }
-  });
 }
 jQuery(async () => {
   loadCssFiles();
