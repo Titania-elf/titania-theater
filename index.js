@@ -3395,6 +3395,75 @@ textarea.t-input {
     background: rgba(191, 161, 95, 0.15);
 }
 
+.t-cont-inline-actions.is-menu-open {
+    opacity: 1;
+    border-color: rgba(191, 161, 95, 0.45);
+}
+
+.t-cont-inline-actions.is-menu-open > #t-cont-inline-branch {
+    background: rgba(191, 161, 95, 0.2);
+    transform: rotate(90deg);
+}
+
+#t-cont-inline-branch {
+    transition: background 0.18s, transform 0.18s;
+}
+
+.t-cont-inline-branch-menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: bottom right;
+    transition: visibility 0.18s, opacity 0.18s, transform 0.18s;
+}
+
+.t-cont-inline-actions.is-menu-open .t-cont-inline-branch-menu {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.t-cont-inline-branch-option {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    white-space: nowrap;
+}
+
+.t-cont-inline-branch-option span {
+    padding: 4px 8px;
+    border: 1px solid rgba(191, 161, 95, 0.22);
+    border-radius: 999px;
+    background: rgba(12, 12, 12, 0.88);
+    color: #c9b98f;
+    font-size: 10px;
+    line-height: 1.2;
+    backdrop-filter: blur(5px);
+}
+
+.t-cont-inline-actions .t-cont-inline-branch-option button {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border: 1px solid rgba(191, 161, 95, 0.35);
+    background: rgba(18, 18, 18, 0.92);
+    box-shadow: 0 5px 16px rgba(0, 0, 0, 0.35);
+}
+
+.t-cont-inline-actions .t-cont-inline-branch-option button:hover {
+    border-color: rgba(191, 161, 95, 0.7);
+    background: rgba(191, 161, 95, 0.2);
+}
+
 .t-cont-regeneration-note {
     display: flex;
     align-items: flex-start;
@@ -3492,6 +3561,75 @@ textarea.t-input {
     padding: 14px;
 }
 
+.t-cont-history-session {
+    margin-bottom: 12px;
+    border: 1px solid #343434;
+    border-radius: 12px;
+    background: #171717;
+}
+
+.t-cont-history-session:last-child {
+    margin-bottom: 0;
+}
+
+.t-cont-history-session.is-open {
+    border-color: rgba(191, 161, 95, 0.32);
+}
+
+.t-cont-history-session-toggle {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 11px;
+    background: #202020;
+    color: #ddd4c2;
+    cursor: pointer;
+    text-align: left;
+}
+
+.t-cont-history-session.is-open .t-cont-history-session-toggle {
+    border-radius: 11px 11px 0 0;
+    border-bottom: 1px solid #343434;
+}
+
+.t-cont-history-session-toggle > i {
+    color: #bfa15f;
+    font-size: 10px;
+    transition: transform 0.18s;
+}
+
+.t-cont-history-session.is-open .t-cont-history-session-toggle > i {
+    transform: rotate(90deg);
+}
+
+.t-cont-history-session-toggle > span {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-cont-history-session-toggle > small {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: #777;
+    font-size: 10px;
+}
+
+.t-cont-history-session-body {
+    padding: 10px;
+}
+
+.t-cont-history-session-body[hidden] {
+    display: none;
+}
+
 .t-cont-history-branch {
     margin-bottom: 14px;
     overflow: hidden;
@@ -3514,9 +3652,32 @@ textarea.t-input {
     background: #202020;
 }
 
+.t-cont-history-branch-heading {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.t-cont-history-branch-heading strong {
+    overflow: hidden;
+    color: #e4ddcf;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-cont-history-branch-heading span {
+    color: #8c857a;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
 .t-cont-history-branch-title small {
     margin-left: auto;
     color: #777;
+    flex-shrink: 0;
 }
 
 .t-cont-history-round {
@@ -3601,7 +3762,7 @@ textarea.t-input {
 }
 
 @media screen and (max-width: 600px) {
-    .t-cont-inline-actions span {
+    .t-cont-inline-actions > span {
         display: none;
     }
 
@@ -3615,6 +3776,24 @@ textarea.t-input {
 
     .t-cont-history-body {
         padding: 8px;
+    }
+
+    .t-cont-history-session-toggle {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .t-cont-history-session-toggle > span {
+        flex: 1;
+    }
+
+    .t-cont-history-session-toggle > small {
+        width: 100%;
+        margin-left: 18px;
+    }
+
+    .t-cont-history-session-body {
+        padding: 6px;
     }
 
     .t-cont-history-actions .t-btn {
@@ -12653,6 +12832,7 @@ var init_state = __esm({
       },
       // 主动续写分支历史（当前页面会话内有效）
       continuationRuntime: {
+        chatId: "",
         byScript: {}
       },
       // 剧场历史记录队列
@@ -30914,21 +31094,6 @@ function transactionDone(transaction) {
     transaction.onabort = () => reject(transaction.error || new Error("IndexedDB transaction aborted"));
   });
 }
-function deleteByChat(store, chatId) {
-  return new Promise((resolve, reject) => {
-    const request = store.index("chatId").openKeyCursor(IDBKeyRange.only(chatId));
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => {
-      const cursor = request.result;
-      if (!cursor) {
-        resolve();
-        return;
-      }
-      store.delete(cursor.primaryKey);
-      cursor.continue();
-    };
-  });
-}
 function getCurrentChatKey() {
   return String(getCurrentChatId?.() || "").trim();
 }
@@ -30941,6 +31106,14 @@ function serializeRuntime(chatId) {
     const activeBranchKey = String(entry?.branchKey || "").trim();
     if (!activeBranchKey || !Array.isArray(entry?.rounds) || entry.rounds.length === 0) continue;
     const sessionId = `${chatId}:${scriptId}`;
+    const archivedBranches = Array.isArray(entry.archivedBranches) ? entry.archivedBranches : [];
+    const sessionUpdatedAt = Math.max(
+      ...entry.rounds.map((round) => Number(round?.timestamp) || 0),
+      ...archivedBranches.flatMap((branch) => [
+        Number(branch?.archivedAt) || 0,
+        ...Array.isArray(branch?.rounds) ? branch.rounds.map((round) => Number(round?.timestamp) || 0) : []
+      ])
+    );
     sessions.push({
       id: sessionId,
       chatId,
@@ -30949,7 +31122,7 @@ function serializeRuntime(chatId) {
       activeBranchKey,
       parentBranchKey: String(entry.parentBranchKey || ""),
       branchedAtRound: Number(entry.branchedAtRound) || null,
-      updatedAt: Date.now()
+      updatedAt: sessionUpdatedAt || Date.now()
     });
     const allBranches = [{
       branchKey: activeBranchKey,
@@ -30958,7 +31131,7 @@ function serializeRuntime(chatId) {
       branchedAtRound: Number(entry.branchedAtRound) || null,
       archivedAt: 0,
       rounds: entry.rounds
-    }, ...Array.isArray(entry.archivedBranches) ? entry.archivedBranches : []];
+    }, ...archivedBranches];
     for (const branch of allBranches) {
       const branchKey = String(branch?.branchKey || "").trim();
       if (!branchKey || !Array.isArray(branch?.rounds)) continue;
@@ -31007,43 +31180,58 @@ function updateCurrentChatMetadata(payload) {
     delete chat_metadata[CHAT_METADATA_KEY];
   }
 }
-async function writeCurrentRuntime(chatId, preparedPayload = null) {
+async function replaceChatRecords(chatId, payload) {
   const db = await openDatabase();
-  const payload = preparedPayload || serializeRuntime(chatId);
-  const deleteTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
-  const deleteCompleted = transactionDone(deleteTransaction);
-  await Promise.all([
-    deleteByChat(deleteTransaction.objectStore(STORE_SESSIONS), chatId),
-    deleteByChat(deleteTransaction.objectStore(STORE_BRANCHES), chatId),
-    deleteByChat(deleteTransaction.objectStore(STORE_ROUNDS), chatId)
-  ]);
-  await deleteCompleted;
   const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
   const writeCompleted = transactionDone(transaction);
   const sessionStore = transaction.objectStore(STORE_SESSIONS);
   const branchStore = transaction.objectStore(STORE_BRANCHES);
   const roundStore = transaction.objectStore(STORE_ROUNDS);
-  payload.sessions.forEach((item) => sessionStore.put(item));
-  payload.branches.forEach((item) => branchStore.put(item));
-  payload.rounds.forEach((item) => roundStore.put(item));
+  const stores = [sessionStore, branchStore, roundStore];
+  const records = [payload.sessions, payload.branches, payload.rounds];
+  let pendingKeyReads = stores.length;
+  stores.forEach((store, index) => {
+    const request = store.index("chatId").getAllKeys(chatId);
+    request.onerror = () => transaction.abort();
+    request.onsuccess = () => {
+      request.result.forEach((key) => store.delete(key));
+      pendingKeyReads--;
+      if (pendingKeyReads !== 0) return;
+      records.forEach((items, recordIndex) => {
+        items.forEach((item) => stores[recordIndex].put(item));
+      });
+    };
+  });
   await writeCompleted;
+}
+async function writeCurrentRuntime(chatId, payload) {
+  await replaceChatRecords(chatId, payload);
   if (chatId !== getCurrentChatKey()) return;
   updateCurrentChatMetadata(payload);
   await saveChatConditional2();
 }
+function queueRuntimeWrite(chatId, payload) {
+  const previous = pendingWrites.get(chatId) || Promise.resolve();
+  const next = previous.catch(() => void 0).then(() => writeCurrentRuntime(chatId, payload));
+  pendingWrites.set(chatId, next);
+  void next.then(() => {
+    if (pendingWrites.get(chatId) === next) pendingWrites.delete(chatId);
+  }, () => {
+    if (pendingWrites.get(chatId) === next) pendingWrites.delete(chatId);
+  });
+  return next;
+}
 function scheduleContinuationPersistence() {
   const chatId = getCurrentChatKey();
   if (!chatId) return;
+  GlobalState.continuationRuntime.chatId = chatId;
+  runtimeRevision++;
   const payload = serializeRuntime(chatId);
   updateCurrentChatMetadata(payload);
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    saveTimer = null;
-    void writeCurrentRuntime(chatId, payload).catch((error) => {
-      TitaniaLogger.error("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6301\u4E45\u5316\u5931\u8D25", error);
-      if (window.toastr) toastr.warning("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u4FDD\u5B58\u5931\u8D25\uFF0C\u5F53\u524D\u5185\u5BB9\u4ECD\u4FDD\u7559\u5728\u5185\u5B58\u4E2D", "Titania");
-    });
-  }, SAVE_DELAY);
+  void queueRuntimeWrite(chatId, payload).catch((error) => {
+    TitaniaLogger.error("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6301\u4E45\u5316\u5931\u8D25", error);
+    if (window.toastr) toastr.warning("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u4FDD\u5B58\u5931\u8D25\uFF0C\u5F53\u524D\u5185\u5BB9\u4ECD\u4FDD\u7559\u5728\u5185\u5B58\u4E2D", "Titania");
+  });
 }
 function getContinuationPersistenceStatus() {
   const metadata = chat_metadata?.[CHAT_METADATA_KEY];
@@ -31056,18 +31244,20 @@ function getContinuationPersistenceStatus() {
   };
 }
 async function flushContinuationPersistence() {
-  clearTimeout(saveTimer);
-  saveTimer = null;
   const chatId = getCurrentChatKey();
   if (!chatId) return false;
-  await writeCurrentRuntime(chatId);
+  await queueRuntimeWrite(chatId, serializeRuntime(chatId));
   return true;
 }
 async function restoreContinuationForCurrentChat() {
   const sequence = ++restoreSequence;
   const chatId = getCurrentChatKey();
-  GlobalState.continuationRuntime = { byScript: {} };
   if (!chatId) return false;
+  const runtimeChatId = String(GlobalState.continuationRuntime?.chatId || "");
+  if (runtimeChatId && runtimeChatId !== chatId) {
+    GlobalState.continuationRuntime = { chatId, byScript: {} };
+  }
+  const revision = runtimeRevision;
   const db = await openDatabase();
   const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
   const [sessions, branches, rounds] = await Promise.all([
@@ -31075,7 +31265,7 @@ async function restoreContinuationForCurrentChat() {
     requestResult(transaction.objectStore(STORE_BRANCHES).index("chatId").getAll(chatId)),
     requestResult(transaction.objectStore(STORE_ROUNDS).index("chatId").getAll(chatId))
   ]);
-  if (sequence !== restoreSequence || chatId !== getCurrentChatKey()) return false;
+  if (sequence !== restoreSequence || chatId !== getCurrentChatKey() || revision !== runtimeRevision) return false;
   const roundsByBranch = /* @__PURE__ */ new Map();
   rounds.sort((a, b) => a.sequence - b.sequence).forEach((round) => {
     if (!roundsByBranch.has(round.branchId)) roundsByBranch.set(round.branchId, []);
@@ -31088,13 +31278,15 @@ async function restoreContinuationForCurrentChat() {
       timestamp: round.timestamp
     });
   });
+  const nextByScript = {};
   for (const session of sessions) {
     const sessionBranches = branches.filter((branch) => branch.sessionId === session.id);
     const active = sessionBranches.find((branch) => branch.branchKey === session.activeBranchKey);
     if (!active) continue;
-    GlobalState.continuationRuntime.byScript[session.scriptId] = {
+    nextByScript[session.scriptId] = {
       scriptId: session.scriptId,
       scriptName: session.scriptName,
+      updatedAt: Number(session.updatedAt) || 0,
       branchKey: active.branchKey,
       parentBranchKey: active.parentBranchKey,
       branchedAtRound: active.branchedAtRound,
@@ -31108,6 +31300,7 @@ async function restoreContinuationForCurrentChat() {
       }))
     };
   }
+  GlobalState.continuationRuntime = { chatId, byScript: nextByScript };
   const metadata = chat_metadata[CHAT_METADATA_KEY];
   if (sessions.length > 0 && (metadata?.version !== 1 || Number(metadata?.branchCount) !== branches.length || Number(metadata?.roundCount) !== rounds.length)) {
     chat_metadata[CHAT_METADATA_KEY] = {
@@ -31127,11 +31320,13 @@ async function restoreContinuationForCurrentChat() {
   return sessions.length > 0;
 }
 async function clearContinuationForCurrentChat() {
-  GlobalState.continuationRuntime = { byScript: {} };
+  const chatId = getCurrentChatKey();
+  GlobalState.continuationRuntime = { chatId, byScript: {} };
+  runtimeRevision++;
   await flushContinuationPersistence();
   if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
 }
-var DB_NAME2, DB_VERSION2, STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS, CHAT_METADATA_KEY, SAVE_DELAY, dbPromise, saveTimer, restoreSequence;
+var DB_NAME2, DB_VERSION2, STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS, CHAT_METADATA_KEY, dbPromise, restoreSequence, runtimeRevision, pendingWrites;
 var init_continuationStore = __esm({
   "src/core/continuationStore.js"() {
     init_state();
@@ -31142,10 +31337,10 @@ var init_continuationStore = __esm({
     STORE_BRANCHES = "continuationBranches";
     STORE_ROUNDS = "continuationRounds";
     CHAT_METADATA_KEY = "titania_continuation";
-    SAVE_DELAY = 350;
     dbPromise = null;
-    saveTimer = null;
     restoreSequence = 0;
+    runtimeRevision = 0;
+    pendingWrites = /* @__PURE__ */ new Map();
   }
 });
 
@@ -31177,7 +31372,7 @@ function clampInjectRoundsCount(value) {
   if (String(value ?? "").trim() === "") return 3;
   const num = Number(value);
   if (!Number.isFinite(num)) return 3;
-  return Math.max(1, Math.min(CONTINUATION_MAX_INJECT_ROUNDS, Math.floor(num)));
+  return Math.max(CONTINUATION_MIN_INJECT_ROUNDS, Math.min(CONTINUATION_MAX_INJECT_ROUNDS, Math.floor(num)));
 }
 function getContinuationDefaultInjectCount() {
   const data = getExtData();
@@ -31271,8 +31466,8 @@ function openContinuationComposer(initialText = "", regenerationTarget = null) {
                         <div id="t-cont-rounds-total" style="color:#9aa; font-size:12px;">\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A0</div>
                     </div>
                     <div style="display:${regenerationTarget ? "none" : "flex"}; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <input type="number" id="t-cont-inject-count" class="t-input" min="1" max="20" step="1" value="${selectedInjectRounds}" placeholder="\u8BF7\u8F93\u5165 1-20" style="width:100px; padding:4px 8px; font-size:12px;">
-                        <span style="color:#888; font-size:12px;">\u6761\uFF08\u6700\u591A 20 \u6761\uFF09</span>
+                        <input type="number" id="t-cont-inject-count" class="t-input" min="3" max="20" step="1" value="${selectedInjectRounds}" placeholder="\u8BF7\u8F93\u5165 3-20" style="width:100px; padding:4px 8px; font-size:12px;">
+                        <span style="color:#888; font-size:12px;">\u6761\uFF083-20 \u6761\uFF09</span>
                     </div>
                     <div id="t-cont-context-estimate" style="color:#9aa; font-size:12px;">${regenerationTarget ? `\u5C06\u5B8C\u6574\u6CE8\u5165\u76EE\u6807\u8F6E\u4E4B\u524D\u7684 ${Math.max(0, regenerationTarget.round - 1)} \u8F6E\u5185\u5BB9` : "\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A0 \u5B57\u7B26 (~0 tokens)"}</div>
                 </div>
@@ -31328,6 +31523,9 @@ function openContinuationComposer(initialText = "", regenerationTarget = null) {
     };
     const trySubmit = () => {
       if (!ensureHasBaseContent()) return;
+      selectedInjectRounds = clampInjectRoundsCount($injectCountInput.val());
+      saveContinuationDefaultInjectCount(selectedInjectRounds);
+      syncInjectCountInput();
       finalize({
         instruction: $input.val(),
         injectRoundsCount: selectedInjectRounds,
@@ -31400,7 +31598,18 @@ function openContinuationComposer(initialText = "", regenerationTarget = null) {
       expanded = !expanded;
       applyExpandState();
     });
-    $injectCountInput.on("input change", function() {
+    $injectCountInput.on("input", function() {
+      const rawValue = String($(this).val() ?? "").trim();
+      if (rawValue === "") return;
+      const value = Number(rawValue);
+      if (!Number.isInteger(value) || value < CONTINUATION_MIN_INJECT_ROUNDS || value > CONTINUATION_MAX_INJECT_ROUNDS) {
+        return;
+      }
+      selectedInjectRounds = value;
+      saveContinuationDefaultInjectCount(selectedInjectRounds);
+      updateContextEstimate();
+    });
+    $injectCountInput.on("change blur", function() {
       selectedInjectRounds = clampInjectRoundsCount($(this).val());
       saveContinuationDefaultInjectCount(selectedInjectRounds);
       syncInjectCountInput();
@@ -31416,6 +31625,11 @@ function openContinuationComposer(initialText = "", regenerationTarget = null) {
 }
 function getContinuationRoundLabel(round) {
   return round?.type === "initial" ? "\u521D\u59CB\u5185\u5BB9" : `\u7EED\u5199\u7B2C${round?.continuationIndex || 0}\u6B21`;
+}
+function getContinuationInstructionPreview(instruction, maxLength = 100) {
+  const normalized = String(instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength)}\u2026`;
 }
 function findContinuationRound(scriptId, branchKey, roundKey) {
   const branch = getContinuationBranches(scriptId).find((item) => item.branchKey === branchKey);
@@ -31468,42 +31682,65 @@ function showContinuationRoundInMain(scriptId, branchKey, roundKey) {
   $("#t-continuation-history").remove();
   return true;
 }
-function openContinuationHistory(scriptId) {
-  const branches = getContinuationBranches(scriptId);
+function openContinuationHistory(preferredScriptId = "") {
+  const sessions = getContinuationSessions();
   const persistenceStatus = getContinuationPersistenceStatus();
   $("#t-continuation-history").remove();
-  if (branches.length === 0) {
-    if (window.toastr) toastr.info("\u5F53\u524D\u8FD8\u6CA1\u6709\u4E3B\u52A8\u7EED\u5199\u5386\u53F2", "Titania");
+  if (sessions.length === 0) {
+    if (window.toastr) toastr.info("\u5F53\u524D\u804A\u5929\u8FD8\u6CA1\u6709\u4E3B\u52A8\u7EED\u5199\u5386\u53F2", "Titania");
     return;
   }
-  const branchHtml = branches.map((branch, branchIndex) => {
-    const branchName = branch.isActive ? "\u5F53\u524D\u5206\u652F" : `\u65E7\u5206\u652F ${branchIndex}`;
-    const roundHtml = branch.rounds.map((round) => {
-      const label = getContinuationRoundLabel(round);
-      const instruction = round.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
-      const canRegenerate = round.type !== "initial";
-      return `<article class="t-cont-history-round" data-branch-key="${escapeHtmlText2(branch.branchKey)}" data-round-key="${escapeHtmlText2(round.roundKey)}">
-                <div class="t-cont-history-round-head">
-                    <div class="t-cont-history-round-title"><strong>${escapeHtmlText2(label)}</strong><span>${round.contentLength} \u5B57\u7B26</span></div>
-                    <button class="t-cont-history-toggle" title="\u5C55\u5F00\u5185\u5BB9"><i class="fa-solid fa-chevron-down"></i></button>
+  const preferredIndex = sessions.findIndex((session) => session.scriptId === preferredScriptId);
+  if (preferredIndex > 0) sessions.unshift(sessions.splice(preferredIndex, 1)[0]);
+  const sessionsHtml = sessions.map((session, sessionIndex) => {
+    const isOpen = sessionIndex === 0;
+    const branchHtml = session.branches.map((branch) => {
+      const sourceContinuationIndex = Math.max(0, Number(branch.branchedAtRound) - 1);
+      const branchSource = sourceContinuationIndex > 0 ? ` \xB7 \u4ECE\u7EED\u5199\u7B2C ${sourceContinuationIndex} \u6B21\u521B\u5EFA` : "";
+      const branchStatus = `${branch.isActive ? "\u5F53\u524D\u5206\u652F" : "\u5386\u53F2\u5206\u652F"}${branchSource}`;
+      const roundHtml = branch.rounds.map((round) => {
+        const label = getContinuationRoundLabel(round);
+        const instruction = round.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
+        const instructionPreview = getContinuationInstructionPreview(instruction);
+        const canRegenerate = round.type !== "initial";
+        return `<article class="t-cont-history-round" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}" data-round-key="${escapeHtmlText2(round.roundKey)}">
+                    <div class="t-cont-history-round-head">
+                        <div class="t-cont-history-round-title"><strong>${escapeHtmlText2(label)}</strong><span>${round.contentLength} \u5B57\u7B26</span></div>
+                        <button class="t-cont-history-toggle" title="\u5C55\u5F00\u5185\u5BB9"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                    <div class="t-cont-history-instruction" title="${escapeHtmlText2(instructionPreview)}">${escapeHtmlText2(instructionPreview)}</div>
+                    <div class="t-cont-history-preview">${escapeHtmlText2(round.contentPreview || "\u65E0\u6587\u672C\u6458\u8981")}</div>
+                    <div class="t-cont-history-full" hidden><iframe sandbox="" title="${escapeHtmlText2(label)}\u5185\u5BB9\u9884\u89C8"></iframe></div>
+                    <div class="t-cont-history-actions">
+                        <button class="t-btn t-cont-history-show"><i class="fa-solid fa-arrow-up-right-from-square"></i> \u8DF3\u8F6C\u5230\u6B64\u5185\u5BB9</button>
+                        ${canRegenerate ? '<button class="t-btn t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn primary t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
+                    </div>
+                </article>`;
+      }).join("");
+      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}">
+                <div class="t-cont-history-branch-title">
+                    <i class="fa-solid fa-code-branch"></i>
+                    <div class="t-cont-history-branch-heading">
+                        <strong>\u300A${escapeHtmlText2(session.scriptName)}\u300B</strong>
+                        <span>${escapeHtmlText2(branchStatus)}</span>
+                    </div>
+                    <small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small>
                 </div>
-                <div class="t-cont-history-instruction">${escapeHtmlText2(instruction)}</div>
-                <div class="t-cont-history-preview">${escapeHtmlText2(round.contentPreview || "\u65E0\u6587\u672C\u6458\u8981")}</div>
-                <div class="t-cont-history-full" hidden><iframe sandbox="" title="${escapeHtmlText2(label)}\u5185\u5BB9\u9884\u89C8"></iframe></div>
-                <div class="t-cont-history-actions">
-                    <button class="t-btn t-cont-history-show"><i class="fa-solid fa-arrow-up-right-from-square"></i> \u8DF3\u8F6C\u5230\u6B64\u5185\u5BB9</button>
-                    ${canRegenerate ? '<button class="t-btn t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn primary t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
-                </div>
-            </article>`;
+                ${roundHtml}
+            </section>`;
     }).join("");
-    return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}">
-            <div class="t-cont-history-branch-title"><i class="fa-solid fa-code-branch"></i><span>${branchName}</span><small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small></div>
-            ${roundHtml}
+    return `<section class="t-cont-history-session ${isOpen ? "is-open" : ""}" data-script-id="${escapeHtmlText2(session.scriptId)}">
+            <button class="t-cont-history-session-toggle" type="button" aria-expanded="${isOpen}">
+                <i class="fa-solid fa-chevron-right"></i>
+                <span>\u300A${escapeHtmlText2(session.scriptName)}\u300B</span>
+                <small>${session.branches.length} \u4E2A\u5206\u652F \xB7 ${session.roundCount} \u8F6E</small>
+            </button>
+            <div class="t-cont-history-session-body" ${isOpen ? "" : "hidden"}>${branchHtml}</div>
         </section>`;
   }).join("");
   $("#t-main-view").append(`<div id="t-continuation-history" class="t-cont-history-panel">
-        <div class="t-cont-history-header"><div><i class="fa-solid fa-clock-rotate-left"></i><strong>\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2</strong><span>${persistenceStatus.persisted ? `\u5DF2\u6301\u4E45\u5316 \xB7 ${persistenceStatus.roundCount} \u8F6E` : "\u7B49\u5F85\u9996\u6B21\u6301\u4E45\u5316"}</span></div><div class="t-cont-history-header-actions"><button class="t-btn" id="t-cont-history-clear" title="\u5220\u9664\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2"><i class="fa-solid fa-trash-can"></i> \u6E05\u7A7A</button><button class="t-close" id="t-cont-history-close">&times;</button></div></div>
-        <div class="t-cont-history-body">${branchHtml}</div>
+        <div class="t-cont-history-header"><div><i class="fa-solid fa-clock-rotate-left"></i><strong>\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2</strong><span>${persistenceStatus.persisted ? `\u5DF2\u6301\u4E45\u5316 \xB7 ${sessions.length} \u4E2A\u5267\u672C \xB7 ${persistenceStatus.roundCount} \u8F6E` : `${sessions.length} \u4E2A\u5267\u672C \xB7 \u7B49\u5F85\u6301\u4E45\u5316`}</span></div><div class="t-cont-history-header-actions"><button class="t-btn" id="t-cont-history-clear" title="\u5220\u9664\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2"><i class="fa-solid fa-trash-can"></i> \u6E05\u7A7A</button><button class="t-close" id="t-cont-history-close">&times;</button></div></div>
+        <div class="t-cont-history-body">${sessionsHtml}</div>
     </div>`);
   const $panel = $("#t-continuation-history");
   const closePanel2 = () => {
@@ -31529,6 +31766,13 @@ function openContinuationHistory(scriptId) {
   $(document).off("keydown.tcontinuationhistory").on("keydown.tcontinuationhistory", function(event) {
     if (event.key === "Escape") closePanel2();
   });
+  $panel.on("click", ".t-cont-history-session-toggle", function() {
+    const $session = $(this).closest(".t-cont-history-session");
+    const shouldOpen = !$session.hasClass("is-open");
+    $session.toggleClass("is-open", shouldOpen);
+    $(this).attr("aria-expanded", String(shouldOpen));
+    $session.find(".t-cont-history-session-body").first().prop("hidden", !shouldOpen);
+  });
   $panel.on("click", ".t-cont-history-toggle", function() {
     const $round = $(this).closest(".t-cont-history-round");
     const $full = $round.find(".t-cont-history-full");
@@ -31536,22 +31780,23 @@ function openContinuationHistory(scriptId) {
     $full.prop("hidden", !shouldOpen);
     $(this).find("i").toggleClass("fa-chevron-down", !shouldOpen).toggleClass("fa-chevron-up", shouldOpen);
     if (shouldOpen) {
+      const roundScriptId = String($round.data("script-id") || "");
       const branchKey = String($round.data("branch-key") || "");
       const roundKey = String($round.data("round-key") || "");
-      const content = findContinuationRound(scriptId, branchKey, roundKey)?.round.content || "";
+      const content = findContinuationRound(roundScriptId, branchKey, roundKey)?.round.content || "";
       $full.find("iframe").attr("srcdoc", content);
     }
   });
   $panel.on("click", ".t-cont-history-show", function() {
     const $round = $(this).closest(".t-cont-history-round");
-    showContinuationRoundInMain(scriptId, String($round.data("branch-key") || ""), String($round.data("round-key") || ""));
+    showContinuationRoundInMain(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""));
   });
   $panel.on("click", ".t-cont-history-regenerate, .t-cont-history-edit-regenerate", async function() {
     if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
     const $round = $(this).closest(".t-cont-history-round");
     const editInstruction = $(this).hasClass("t-cont-history-edit-regenerate");
     closePanel2();
-    await regenerateContinuationRound(scriptId, String($round.data("branch-key") || ""), String($round.data("round-key") || ""), editInstruction);
+    await regenerateContinuationRound(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""), editInstruction);
   });
 }
 function refreshScriptList() {
@@ -31694,7 +31939,17 @@ async function openMainWindow() {
                     <div class="t-page-indicator" id="t-page-indicator" style="display:none;">1/1</div>
                     <div class="t-cont-inline-actions" id="t-cont-inline-actions" style="display:none;">
                         <span id="t-cont-inline-label"></span>
-                        <button id="t-cont-inline-branch" title="\u4ECE\u8FD9\u4E00\u8F6E\u521B\u5EFA\u5206\u652F\u5E76\u91CD\u65B0\u751F\u6210"><i class="fa-solid fa-code-branch"></i></button>
+                        <div class="t-cont-inline-branch-menu" id="t-cont-inline-branch-menu">
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u4FEE\u6539\u6307\u4EE4</span>
+                                <button id="t-cont-inline-edit-regenerate" type="button" title="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F" aria-label="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-pen"></i></button>
+                            </div>
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u76F4\u63A5\u91CD\u751F\u6210</span>
+                                <button id="t-cont-inline-regenerate" type="button" title="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F" aria-label="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-rotate"></i></button>
+                            </div>
+                        </div>
+                        <button id="t-cont-inline-branch" type="button" title="\u5206\u652F\u64CD\u4F5C" aria-label="\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" aria-expanded="false"><i class="fa-solid fa-code-branch"></i></button>
                     </div>
                     <div id="t-output-content"></div>
                 </div>
@@ -31928,12 +32183,34 @@ async function openMainWindow() {
       fromCurrentView: true
     });
   });
-  $("#t-cont-inline-branch").on("click", async function() {
-    const scriptId = String($(this).attr("data-script-id") || "");
-    const branchKey = String($(this).attr("data-branch-key") || "");
-    const roundKey = String($(this).attr("data-round-key") || "");
+  const closeInlineBranchMenu = () => {
+    $("#t-cont-inline-actions").removeClass("is-menu-open");
+    $("#t-cont-inline-branch").attr({ "aria-expanded": "false", "aria-label": "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" });
+  };
+  const runInlineBranchAction = async (editInstruction) => {
+    const $button = $("#t-cont-inline-branch");
+    const scriptId = String($button.attr("data-script-id") || "");
+    const branchKey = String($button.attr("data-branch-key") || "");
+    const roundKey = String($button.attr("data-round-key") || "");
+    closeInlineBranchMenu();
     if (!scriptId || !branchKey || !roundKey || GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
-    await regenerateContinuationRound(scriptId, branchKey, roundKey, false);
+    await regenerateContinuationRound(scriptId, branchKey, roundKey, editInstruction);
+  };
+  $("#t-cont-inline-branch").on("click", function(event) {
+    event.stopPropagation();
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
+    const $actions = $("#t-cont-inline-actions");
+    const isOpen = !$actions.hasClass("is-menu-open");
+    $actions.toggleClass("is-menu-open", isOpen);
+    $(this).attr({
+      "aria-expanded": String(isOpen),
+      "aria-label": isOpen ? "\u6536\u8D77\u5206\u652F\u64CD\u4F5C" : "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C"
+    });
+  });
+  $("#t-cont-inline-regenerate").on("click", () => runInlineBranchAction(false));
+  $("#t-cont-inline-edit-regenerate").on("click", () => runInlineBranchAction(true));
+  $(document).off("click.tinlinebranch").on("click.tinlinebranch", function(event) {
+    if (!$(event.target).closest("#t-cont-inline-actions").length) closeInlineBranchMenu();
   });
   $(document).on("keydown.zenmode", function(e) {
     if (e.key === "Escape" && $("#t-main-view").hasClass("t-zen-mode")) {
@@ -31941,6 +32218,7 @@ async function openMainWindow() {
     }
   });
   const closeWindow = () => {
+    $(document).off("click.tinlinebranch");
     $("#t-overlay").remove();
     $(document).off("keydown.zenmode");
   };
@@ -32277,6 +32555,8 @@ function updateContinuationInlineActions() {
   const $actions = $("#t-cont-inline-actions");
   const $button = $("#t-cont-inline-branch");
   if (!$actions.length) return;
+  $actions.removeClass("is-menu-open");
+  $button.attr({ "aria-expanded": "false", "aria-label": "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" });
   let target = null;
   if (continuationHistoryView) {
     const located = findContinuationRound(
@@ -33224,7 +33504,7 @@ function disableQueueMode() {
   GlobalState.queueState.enabled = false;
   updateQueueButtonUI();
 }
-var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, continuationHistoryView;
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MIN_INJECT_ROUNDS, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, continuationHistoryView;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -33250,6 +33530,7 @@ var init_mainWindow = __esm({
       name_desc: "\u540D\u79F0 Z-A"
     };
     CONTINUATION_RECENT_MAX = 10;
+    CONTINUATION_MIN_INJECT_ROUNDS = 3;
     CONTINUATION_MAX_INJECT_ROUNDS = 20;
     CONTINUATION_TOKEN_WARN_THRESHOLD = 6e4;
     continuationHistoryView = null;
@@ -33613,7 +33894,7 @@ function clampContinuationInjectRounds(value) {
   if (String(value ?? "").trim() === "") return 3;
   const num = Number(value);
   if (!Number.isFinite(num)) return 3;
-  return Math.max(1, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
+  return Math.max(CONTINUATION_INJECT_MIN, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
 }
 function estimateTokensByChars(charCount) {
   return Math.ceil((Number(charCount) || 0) / 4);
@@ -33625,7 +33906,7 @@ function createContinuationBranchKey() {
 }
 function getContinuationRuntimeStore() {
   if (!GlobalState.continuationRuntime || typeof GlobalState.continuationRuntime !== "object") {
-    GlobalState.continuationRuntime = { byScript: {} };
+    GlobalState.continuationRuntime = { chatId: "", byScript: {} };
   }
   if (!GlobalState.continuationRuntime.byScript || typeof GlobalState.continuationRuntime.byScript !== "object") {
     GlobalState.continuationRuntime.byScript = {};
@@ -33919,7 +34200,9 @@ function getContinuationBranches(scriptId) {
   if (!entry) return [];
   const toPublicBranch = (branch, isActive) => ({
     branchKey: String(branch?.branchKey || "").trim(),
+    scriptName: String(entry.scriptName || "").trim(),
     isActive,
+    branchedAtRound: Number(branch?.branchedAtRound) || null,
     archivedAt: Number(branch?.archivedAt) || 0,
     rounds: normalizeContinuationRounds(branch?.rounds).map((item, index) => ({
       roundKey: item.roundKey,
@@ -33941,6 +34224,19 @@ function getContinuationBranches(scriptId) {
     branches.push(...entry.archivedBranches.map((branch) => toPublicBranch(branch, false)));
   }
   return branches.filter((branch) => branch.branchKey && branch.rounds.length > 0);
+}
+function getContinuationSessions() {
+  return Object.entries(getContinuationRuntimeStore()).map(([scriptId, entry]) => {
+    const branches = getContinuationBranches(scriptId);
+    const roundTimestamps = branches.flatMap((branch) => branch.rounds.map((round) => Number(round.timestamp) || 0));
+    return {
+      scriptId,
+      scriptName: String(entry?.scriptName || "").trim() || "\u672A\u77E5\u5267\u672C",
+      updatedAt: Math.max(...roundTimestamps, Number(entry?.updatedAt) || 0),
+      branches,
+      roundCount: branches.reduce((sum, branch) => sum + branch.rounds.length, 0)
+    };
+  }).filter((session) => session.branches.length > 0).sort((left, right) => right.updatedAt - left.updatedAt);
 }
 function findContinuationRoundByContent(scriptId, content) {
   const targetContent = String(content || "").trim();
@@ -35828,7 +36124,7 @@ ${userInstruction}`;
   }
   return success;
 }
-var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, CONTINUATION_ARCHIVED_BRANCH_MAX, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
+var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, CONTINUATION_INJECT_MIN, CONTINUATION_ARCHIVED_BRANCH_MAX, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
@@ -35845,6 +36141,7 @@ var init_api = __esm({
     init_continuationStore();
     CONTINUATION_SESSION_MAX_ROUNDS = 30;
     CONTINUATION_INJECT_MAX = 20;
+    CONTINUATION_INJECT_MIN = 3;
     CONTINUATION_ARCHIVED_BRANCH_MAX = 20;
     interactiveDetectionIdleHandle = null;
     interactiveDetectionTimer = null;
