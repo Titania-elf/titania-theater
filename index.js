@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.1.0";
+    CURRENT_VERSION = "5.1.1";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -130,7 +130,7 @@ var init_defaults = __esm({
       },
       // 统一提示词方案模型（旧 custom_prompts 字段仍保留用于兼容）
       prompt_manager: {
-        version: 3,
+        version: 4,
         editor_view: "narrative",
         active_preset_id: "",
         builtin: {
@@ -285,7 +285,7 @@ function createBuiltinScheme(mode, systemContent) {
 }
 function createDefaultPromptManager() {
   return {
-    version: 3,
+    version: 4,
     editor_view: "narrative",
     active_preset_id: "",
     builtin: {
@@ -311,7 +311,8 @@ function ensurePromptManager(data) {
     changed = true;
   } else {
     const previousVersion = Number(manager.version) || 1;
-    manager.version = 3;
+    manager.version = 4;
+    if (previousVersion !== 4) changed = true;
     manager.editor_view = EDITOR_VIEWS.includes(manager.editor_view) ? manager.editor_view : "narrative";
     manager.active_preset_id = typeof manager.active_preset_id === "string" ? manager.active_preset_id : "";
     manager.builtin = manager.builtin && typeof manager.builtin === "object" ? manager.builtin : {};
@@ -345,15 +346,11 @@ function ensurePromptManager(data) {
             entry.marker = inferredMarker;
           }
         }
-        const scriptEntries = preset.entries.filter((entry) => entry?.marker === "titaniaScript" || entry?.id === "titania_script_instruction");
-        const scriptEntry = scriptEntries[0] || createTitaniaScriptEntry();
-        Object.assign(scriptEntry, createTitaniaScriptEntry());
-        preset.entries = preset.entries.filter((entry) => entry?.marker !== "titaniaScript" && entry?.id !== "titania_script_instruction");
-        let insertAt = preset.entries.length;
-        while (insertAt > 0 && isAssistantPrefill(preset.entries[insertAt - 1])) insertAt--;
-        preset.entries.splice(insertAt, 0, scriptEntry);
       }
       changed = true;
+    }
+    for (const preset of manager.presets) {
+      if (ensureTitaniaPresetEntries(preset)) changed = true;
     }
     if (manager.active_preset_id && !manager.presets.some((preset) => preset?.id === manager.active_preset_id)) {
       manager.active_preset_id = manager.presets[0]?.id || "";
@@ -372,6 +369,7 @@ function getPresetEntrySummary(preset) {
     marker: entry.marker || "",
     enabled: entry.enabled !== false,
     required: entry.required === true,
+    readonly: entry.readonly === true,
     content: entry.content || ""
   }));
 }
@@ -422,8 +420,32 @@ function createTitaniaScriptEntry() {
     marker: "titaniaScript",
     enabled: true,
     required: true,
+    readonly: true,
     content: ""
   };
+}
+function createTitaniaOutputContractEntry() {
+  return {
+    id: "titania_output_contract",
+    source_identifier: null,
+    name: "\u5C0F\u5267\u573A\u8F93\u51FA\u89C4\u8303",
+    role: "system",
+    type: "text",
+    marker: null,
+    enabled: true,
+    required: true,
+    readonly: true,
+    content: TITANIA_OUTPUT_CONTRACT
+  };
+}
+function ensureTitaniaPresetEntries(preset) {
+  if (!preset || !Array.isArray(preset.entries)) return false;
+  const previous = JSON.stringify(preset.entries);
+  preset.entries = preset.entries.filter((entry) => entry?.id !== "titania_output_contract" && entry?.id !== "titania_script_instruction" && entry?.marker !== "titaniaScript");
+  let insertAt = preset.entries.length;
+  while (insertAt > 0 && isAssistantPrefill(preset.entries[insertAt - 1])) insertAt--;
+  preset.entries.splice(insertAt, 0, createTitaniaOutputContractEntry(), createTitaniaScriptEntry());
+  return JSON.stringify(preset.entries) !== previous;
 }
 function normalizeChatCompletionPreset(preset, options = {}) {
   if (!preset || typeof preset !== "object") throw new Error("\u9884\u8BBE\u6570\u636E\u65E0\u6548");
@@ -459,17 +481,15 @@ function normalizeChatCompletionPreset(preset, options = {}) {
     });
     usedIdentifiers.add(identifier);
   }
-  const scriptEntry = createTitaniaScriptEntry();
-  let insertAt = entries.length;
-  while (insertAt > 0 && isAssistantPrefill(entries[insertAt - 1])) insertAt--;
-  entries.splice(insertAt, 0, scriptEntry);
+  const normalized = { entries };
+  ensureTitaniaPresetEntries(normalized);
   return {
     id: options.id || createEntryId("preset"),
     name: options.name || preset.name || "\u5BFC\u5165\u9884\u8BBE",
     type: "preset",
     source: "sillytavern_chat_completion",
     imported_at: Date.now(),
-    entries,
+    entries: normalized.entries,
     model_settings: {
       model: preset.model || "",
       temperature: preset.temperature,
@@ -515,7 +535,7 @@ function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext =
     };
   }).filter((message) => message.content.length > 0).map((message, index) => ({ ...message, index }));
 }
-var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
+var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
 var init_promptManager = __esm({
   "src/core/promptManager.js"() {
     DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
@@ -531,6 +551,17 @@ var init_promptManager = __esm({
 2. Use CSS animations, gradients, shadows freely
 3. No markdown code blocks
 4. Language: Chinese`;
+    TITANIA_OUTPUT_CONTRACT = `\u4F60\u6B63\u5728\u751F\u6210\u53EF\u76F4\u63A5\u6E32\u67D3\u7684\u5C0F\u5267\u573A\u5185\u5BB9\u3002
+
+[\u8F93\u51FA\u8981\u6C42]
+1. \u6839\u636E\u968F\u540E\u63D0\u4F9B\u7684\u201C\u5C0F\u5267\u573A\u6307\u4EE4\u201D\u5B8C\u6210\u521B\u4F5C\uFF0C\u4E0D\u8981\u590D\u8FF0\u6216\u89E3\u91CA\u6307\u4EE4\u3002
+2. \u8F93\u51FA\u5FC5\u987B\u662F\u5B8C\u6574\u3001\u6709\u6548\u4E14\u53EF\u76F4\u63A5\u5D4C\u5165\u9875\u9762\u7684 HTML \u7247\u6BB5\u3002
+3. \u4F7F\u7528 HTML \u7ED3\u6784\u4E0E CSS \u5BF9\u5185\u5BB9\u8FDB\u884C\u89C6\u89C9\u7F16\u6392\uFF0C\u4F7F\u6837\u5F0F\u670D\u52A1\u4E8E\u573A\u666F\u6C1B\u56F4\u3001\u53D9\u4E8B\u5C42\u6B21\u548C\u9605\u8BFB\u4F53\u9A8C\u3002
+4. \u53EF\u4EE5\u4F7F\u7528\u5185\u8054\u6837\u5F0F\u6216\u7247\u6BB5\u5185\u7684 <style>\uFF0C\u4F46\u4E0D\u8981\u8F93\u51FA <html>\u3001<head>\u3001<body> \u7B49\u5B8C\u6574\u6587\u6863\u5916\u58F3\u3002
+5. \u4E0D\u8981\u8F93\u51FA Markdown \u4EE3\u7801\u5757\u3001\u5B9E\u73B0\u8BF4\u660E\u3001\u524D\u8A00\u3001\u603B\u7ED3\u6216 HTML \u4E4B\u5916\u7684\u6587\u672C\u3002
+6. \u4FDD\u8BC1\u7ED3\u6784\u95ED\u5408\uFF0C\u4E0D\u8981\u4F9D\u8D56\u5916\u90E8\u811A\u672C\u3001\u5916\u90E8\u6837\u5F0F\u8868\u6216\u7F51\u7EDC\u8D44\u6E90\u3002
+7. \u9ED8\u8BA4\u4F7F\u7528\u4E2D\u6587\uFF0C\u9664\u975E\u5C0F\u5267\u573A\u6307\u4EE4\u53E6\u6709\u8981\u6C42\u3002
+8. \u5185\u5BB9\u8868\u8FBE\u4F18\u5148\u4E8E\u88C5\u9970\u3002\u4FDD\u6301\u6B63\u6587\u6E05\u6670\u3001\u5C42\u6B21\u660E\u786E\uFF1B\u89C6\u89C9\u6548\u679C\u5E94\u589E\u5F3A\u5185\u5BB9\uFF0C\u4E0D\u5F97\u906E\u6321\u3001\u538B\u7F29\u6216\u5E72\u6270\u9605\u8BFB\u3002`;
     BUILTIN_MODES = ["narrative", "visual"];
     EDITOR_VIEWS = [...BUILTIN_MODES, "preset"];
     MESSAGE_ROLES = ["system", "user", "assistant"];
@@ -4884,14 +4915,14 @@ textarea.t-input {
 .t-prompt-entry-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 7px;
 }
 
 .t-prompt-entry-card {
     background: #1a1a1a;
     border: 1px solid #3a3a3a;
     border-radius: 6px;
-    padding: 14px;
+    padding: 7px 9px;
     box-sizing: border-box;
     transition: border-color 0.2s, background 0.2s;
     cursor: grab;
@@ -4910,6 +4941,21 @@ textarea.t-input {
     opacity: 0.62;
 }
 
+.t-prompt-entry-card.is-locked {
+    cursor: default;
+    border-color: #343d43;
+    background: #181c1f;
+}
+
+.t-prompt-entry-card.is-locked:hover {
+    border-color: #3e4a51;
+    background: #1a1f22;
+}
+
+.t-prompt-entry-card.is-locked .t-prompt-entry-drag-hint {
+    color: #77838a;
+}
+
 .t-prompt-entry-card.is-dragging {
     opacity: 0.45;
     border-style: dashed;
@@ -4923,14 +4969,18 @@ textarea.t-input {
 .t-prompt-entry-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
+    height: 28px;
+    overflow: hidden;
 }
 
 .t-prompt-entry-index {
     color: #666;
     font-size: 0.78em;
-    min-width: 24px;
+    width: 26px;
+    flex-shrink: 0;
+    font-family: var(--t-font-mono);
 }
 
 .t-prompt-entry-name {
@@ -4951,6 +5001,8 @@ textarea.t-input {
     padding: 2px 6px;
     font-size: 0.72em;
     white-space: nowrap;
+    flex-shrink: 0;
+    text-transform: uppercase;
 }
 
 .t-prompt-entry-actions {
@@ -4962,8 +5014,10 @@ textarea.t-input {
 
 .t-prompt-entry-drag-hint {
     color: #666;
-    font-size: 0.72em;
-    white-space: nowrap;
+    width: 12px;
+    font-size: 0.78em;
+    text-align: center;
+    flex-shrink: 0;
     user-select: none;
 }
 
@@ -4981,9 +5035,13 @@ textarea.t-input {
 
 .t-prompt-entry-toggle {
     width: auto;
-    min-width: 58px;
+    min-width: 64px;
     padding: 0 8px;
     font-size: 0.75em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
 }
 
 .t-prompt-entry-toggle.is-enabled {
@@ -4994,6 +5052,11 @@ textarea.t-input {
 
 .t-prompt-entry-toggle.is-required {
     cursor: default;
+}
+
+.t-prompt-entry-toggle.is-required:disabled {
+    color: #aaa;
+    opacity: 1;
 }
 
 .t-prompt-entry-actions button:hover:not(:disabled),
@@ -5007,139 +5070,49 @@ textarea.t-input {
     cursor: default;
 }
 
-.t-prompt-editor-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 30000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.72);
-}
-
-.t-prompt-editor-dialog {
-    width: min(720px, 100%);
-    max-height: min(760px, 90vh);
-    display: flex;
-    flex-direction: column;
-    background: #171717;
-    border: 1px solid #4a4a4a;
-    border-radius: 7px;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
-}
-
-.t-prompt-editor-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border-bottom: 1px solid #333;
-}
-
-.t-prompt-editor-title {
-    flex: 1;
-    color: #eee;
-    font-weight: 600;
-}
-
-.t-prompt-editor-close,
-.t-prompt-editor-save {
-    width: 32px;
-    height: 30px;
-    padding: 0;
-    border: 1px solid #444;
-    border-radius: 4px;
-    background: #242424;
-    color: #bbb;
-    cursor: pointer;
-}
-
-.t-prompt-editor-save {
-    color: #55efc4;
-}
-
-.t-prompt-editor-close:hover,
-.t-prompt-editor-save:hover {
-    color: #fff;
-    border-color: #90cdf4;
-}
-
-.t-prompt-editor-body {
-    padding: 16px;
-    overflow-y: auto;
-}
-
-.t-prompt-editor-label {
-    display: block;
-    margin: 0 0 6px;
-    color: #aaa;
-    font-size: 0.82em;
-}
-
-.t-prompt-editor-group {
-    margin-bottom: 14px;
-}
-
-.t-prompt-editor-content {
-    width: 100%;
-    min-height: 280px;
-    resize: vertical;
-    box-sizing: border-box;
-    background: #111;
-    color: #ccc;
-    border: 1px solid #333;
-    border-radius: 4px;
-    padding: 8px;
-    font: inherit;
-    line-height: 1.45;
-}
-
-.t-prompt-editor-content:disabled {
-    color: #777;
-    background: #121212;
-    border-style: dashed;
-}
-
-.t-prompt-editor-content:focus,
-.t-prompt-editor-body input:focus,
-.t-prompt-editor-body select:focus {
-    outline: none;
-    border-color: #90cdf4;
-}
-
-.t-prompt-entry-runtime {
-    color: #888;
-    background: #141414;
-    border: 1px dashed #444;
-    border-radius: 4px;
-    padding: 10px;
-    margin-top: 8px;
-    font-size: 0.82em;
-}
-
 @media (max-width: 600px) {
+    .t-prompt-entry-list {
+        gap: 5px;
+    }
+
+    .t-prompt-entry-card {
+        padding: 6px 7px;
+    }
+
     .t-prompt-entry-header {
-        align-items: flex-start;
-        flex-wrap: wrap;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 6px;
+        height: 28px;
     }
 
     .t-prompt-entry-name {
-        min-width: calc(100% - 42px);
+        min-width: 0;
+        font-size: 0.88em;
     }
 
-    .t-prompt-entry-badge,
-    .t-prompt-entry-actions {
-        margin-left: 34px;
+    .t-prompt-entry-index {
+        width: 22px;
+        font-size: 0.7em;
     }
 
-    .t-prompt-editor-modal {
-        padding: 10px;
+    .t-prompt-entry-badge {
+        max-width: 54px;
+        padding: 2px 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .t-prompt-editor-content {
-        min-height: 220px;
+    .t-prompt-entry-toggle {
+        width: 28px;
+        min-width: 28px;
+        padding: 0;
     }
+
+    .t-prompt-entry-toggle-label {
+        display: none;
+    }
+
 }
 
 
@@ -7210,155 +7183,63 @@ textarea.t-input {
     background: #141414;
 }
 
-#t-debug-view .t-prompt-top-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px 14px;
-    border-bottom: 1px solid #2b2b2b;
-    background: #171717;
-}
-
-#t-debug-view .t-prompt-top-main {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-#t-debug-view .t-prompt-top-sub {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-#t-debug-view .t-prompt-total-token {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 5px 10px;
-    border: 1px solid #3a3a3a;
-    border-radius: 999px;
-    background: #1b1b1b;
-}
-
-#t-debug-view .t-prompt-total-token span {
-    color: #9ca3af;
-    font-size: 12px;
-}
-
-#t-debug-view .t-prompt-total-token strong {
-    color: #74b9ff;
-    font-size: 18px;
-    line-height: 1;
-}
-
-#t-debug-view .t-prompt-meta-item {
-    color: #a8a8a8;
-    font-size: 12px;
-}
-
-#t-debug-view .t-prompt-meta-item b {
-    color: #e5e7eb;
-    margin-left: 4px;
-    font-weight: 600;
-}
-
-#t-debug-view .t-prompt-top-sub .t-prompt-meta-item {
-    color: #777;
-}
-
-#t-debug-view .t-prompt-top-sub .t-prompt-meta-item b {
-    color: #b0b0b0;
-}
-
-#t-debug-view .t-prompt-budget-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    line-height: 1;
-    border: 1px solid transparent;
-    margin-left: auto;
-}
-
-#t-debug-view .t-prompt-budget-badge.ok {
-    color: #9fd3ff;
-    border-color: #2f5f8a;
-    background: rgba(35, 73, 108, 0.2);
-}
-
-#t-debug-view .t-prompt-budget-badge.warn {
-    color: #f8d78f;
-    border-color: #89692f;
-    background: rgba(134, 102, 37, 0.2);
-}
-
-#t-debug-view .t-prompt-budget-badge.danger {
-    color: #ffb3ac;
-    border-color: #8c3f39;
-    background: rgba(129, 52, 46, 0.2);
-}
-
-#t-debug-view .t-prompt-live-dot {
-    color: #74b9ff;
-    font-size: 12px;
-    white-space: nowrap;
-    margin-left: auto;
-}
-
-#t-debug-view .t-prompt-toolbar {
+#t-debug-view .t-prompt-summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 8px 14px;
+    gap: 16px;
+    padding: 11px 16px;
     border-bottom: 1px solid #292929;
-    background: #151515;
+    background: #171717;
 }
 
-#t-debug-view .t-prompt-seg-group {
-    display: inline-flex;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #333;
-}
-
-#t-debug-view .t-prompt-seg-btn {
-    padding: 6px 12px;
+#t-debug-view .t-prompt-request {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: #777;
     font-size: 12px;
-    color: #999;
-    background: #1b1b1b;
-    border: none;
-    border-right: 1px solid #333;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    font-family: inherit;
+}
+
+#t-debug-view .t-prompt-actual {
+    color: #74b9ff;
+    font-weight: 600;
     white-space: nowrap;
 }
 
-#t-debug-view .t-prompt-seg-btn:last-child {
-    border-right: none;
+#t-debug-view .t-prompt-actual i {
+    font-size: 7px;
+    margin-right: 5px;
 }
 
-#t-debug-view .t-prompt-seg-btn:hover {
-    background: #262626;
-    color: #ccc;
+#t-debug-view #t-prompt-request-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-#t-debug-view .t-prompt-seg-btn.active {
-    background: #2a3a4a;
-    color: #74b9ff;
-    font-weight: 600;
-}
-
-#t-debug-view .t-prompt-tool-group {
+#t-debug-view .t-prompt-summary-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+#t-debug-view .t-prompt-count {
+    color: #888;
+    font-size: 12px;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
+#t-debug-view .t-prompt-count strong {
+    color: #d8e9f8;
+    font-size: 14px;
+}
+
+#t-debug-view .t-prompt-count b {
+    color: #bbb;
 }
 
 #t-debug-view .t-prompt-tool-btn {
@@ -7393,20 +7274,23 @@ textarea.t-input {
     font-size: 12px;
 }
 
+#t-debug-view .t-prompt-icon-btn {
+    width: 30px;
+    justify-content: center;
+    padding-inline: 0;
+}
+
 #t-debug-view .t-prompt-sections {
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding: 10px;
+    padding: 12px 14px 16px;
 }
 
 #t-debug-view .t-prompt-section-card {
-    border: 1px solid #2f2f2f;
-    border-left: 3px solid #2f2f2f;
-    border-radius: 10px;
+    border-bottom: 1px solid #292929;
+    border-left: 2px solid #2f2f2f;
     background: #171717;
-    margin-bottom: 10px;
-    transition: border-color 0.2s;
 }
 
 #t-debug-view .t-prompt-role-system {
@@ -7421,17 +7305,12 @@ textarea.t-input {
     border-left-color: #c792ea;
 }
 
-#t-debug-view .t-prompt-role-assistant .t-prompt-section-title {
-    color: #d9b8f1;
-}
-
 #t-debug-view .t-prompt-section-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 10px 12px;
-    border-bottom: 1px solid #2b2b2b;
+    padding: 11px 12px;
     cursor: pointer;
     user-select: none;
     transition: background 0.15s;
@@ -7444,11 +7323,40 @@ textarea.t-input {
 #t-debug-view .t-prompt-section-title {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     color: #e5e7eb;
     font-weight: 600;
     font-size: 13px;
     min-width: 0;
+}
+
+#t-debug-view .t-prompt-order {
+    width: 22px;
+    color: #666;
+    font-family: var(--t-font-mono);
+    font-size: 11px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+#t-debug-view .t-prompt-role-label {
+    width: 58px;
+    color: #888;
+    font-family: var(--t-font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+#t-debug-view .t-prompt-role-system .t-prompt-role-label { color: #74b9ff; }
+#t-debug-view .t-prompt-role-user .t-prompt-role-label { color: #55efc4; }
+#t-debug-view .t-prompt-role-assistant .t-prompt-role-label { color: #c792ea; }
+
+#t-debug-view .t-prompt-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #t-debug-view .t-prompt-chevron {
@@ -7465,57 +7373,30 @@ textarea.t-input {
 }
 
 #t-debug-view .t-prompt-section-preview {
-    padding: 8px 12px;
+    padding: 0 12px 10px 62px;
     color: #666;
     font-size: 11px;
     font-family: var(--t-font-mono);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    border-bottom: 1px solid #222;
 }
 
 #t-debug-view .t-prompt-section-card.expanded .t-prompt-section-preview {
     display: none;
 }
 
-#t-debug-view .t-prompt-token-badge {
+#t-debug-view .t-prompt-token-count {
     font-size: 11px;
-    line-height: 1;
-    border-radius: 999px;
-    padding: 5px 8px;
-    border: 1px solid transparent;
+    color: #777;
+    font-family: var(--t-font-mono);
     flex-shrink: 0;
-}
-
-#t-debug-view .t-prompt-token-badge.ok {
-    color: #9fd3ff;
-    border-color: #2f5f8a;
-    background: rgba(35, 73, 108, 0.2);
-}
-
-#t-debug-view .t-prompt-token-badge.warn {
-    color: #f8d78f;
-    border-color: #89692f;
-    background: rgba(134, 102, 37, 0.2);
-}
-
-#t-debug-view .t-prompt-token-badge.danger {
-    color: #ffb3ac;
-    border-color: #8c3f39;
-    background: rgba(129, 52, 46, 0.2);
-}
-
-#t-debug-view .t-prompt-section-meta {
-    color: #8e8e8e;
-    font-size: 11px;
-    padding: 8px 12px 0;
 }
 
 #t-debug-view .t-prompt-section-content {
     display: none;
     margin: 0;
-    padding: 10px 12px 12px;
+    padding: 2px 16px 16px 62px;
     color: #d4d4d4;
     font-size: 12px;
     line-height: 1.55;
@@ -7531,12 +7412,26 @@ textarea.t-input {
 }
 
 #t-debug-view .t-prompt-empty {
-    border: 1px dashed #3a3a3a;
-    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 220px;
     color: #8a8a8a;
-    padding: 16px;
-    background: #181818;
-    font-size: 12px;
+    font-size: 13px;
+    text-align: center;
+}
+
+#t-debug-view .t-prompt-empty i {
+    color: #555;
+    font-size: 26px;
+    margin-bottom: 4px;
+}
+
+#t-debug-view .t-prompt-empty small {
+    color: #5f5f5f;
+    font-size: 11px;
 }
 
 @media (max-width: 900px) {
@@ -7547,46 +7442,42 @@ textarea.t-input {
         border-radius: 0 !important;
     }
 
-    #t-debug-view .t-prompt-top-main {
-        gap: 8px;
-    }
-
-    #t-debug-view .t-prompt-budget-badge {
-        margin-left: 0;
-    }
-
-    #t-debug-view .t-prompt-top-sub {
-        gap: 8px;
-    }
-
-    #t-debug-view .t-prompt-toolbar {
+    #t-debug-view .t-prompt-summary {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: 10px;
     }
 
-    #t-debug-view .t-prompt-seg-group {
-        display: flex;
-        flex-wrap: wrap;
-        border-radius: 6px;
+    #t-debug-view .t-prompt-request {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
     }
 
-    #t-debug-view .t-prompt-seg-btn {
-        flex: 1;
-        text-align: center;
-        padding: 8px 6px;
-        font-size: 11px;
+    #t-debug-view #t-prompt-request-meta {
+        max-width: 100%;
     }
 
-    #t-debug-view .t-prompt-tool-group {
-        flex-wrap: wrap;
-        gap: 4px;
+    #t-debug-view .t-prompt-summary-actions {
+        justify-content: space-between;
     }
 
     #t-debug-view .t-prompt-tool-btn {
-        flex: 1;
         justify-content: center;
         padding: 8px 6px;
+    }
+
+    #t-debug-view .t-prompt-icon-btn {
+        width: 34px;
+    }
+
+    #t-debug-view .t-prompt-role-label {
+        width: 50px;
+    }
+
+    #t-debug-view .t-prompt-section-preview,
+    #t-debug-view .t-prompt-section-content {
+        padding-left: 14px;
     }
 }
 
@@ -12408,10 +12299,6 @@ function finishPromptTrace(traceId, status = "success", details = {}) {
 function getPromptTraceList() {
   return clonePromptTraceData(GlobalState.promptTrace.traces);
 }
-function getPromptTraceById(traceId) {
-  const trace = getPromptTraceRecord(traceId);
-  return trace ? clonePromptTraceData(trace) : null;
-}
 function resetContinuationState() {
   GlobalState.continuation = {
     isActive: false,
@@ -16157,20 +16044,7 @@ function getTraceSourceLabel(source) {
   if (s === "auto_continuation") return "\u81EA\u52A8\u7EED\u5199";
   if (s === "manual") return "\u624B\u52A8\u751F\u6210";
   if (s === "queue") return "\u961F\u5217\u751F\u6210";
-  if (s === "preview") return "\u751F\u6210\u524D\u9884\u89C8";
   return source || "\u672A\u77E5\u6765\u6E90";
-}
-function pickTraceBySource(traces, sourceMode) {
-  const list = Array.isArray(traces) ? traces : [];
-  const withMessages = list.filter((t) => t?.finalMessages?.messages?.length > 0);
-  if (sourceMode === "latest") return withMessages[0] || null;
-  if (sourceMode === "manual") {
-    return withMessages.find((t) => {
-      const src = String(t?.source || "").toLowerCase();
-      return src !== "user_continuation" && src !== "auto_continuation";
-    }) || null;
-  }
-  return withMessages.find((t) => String(t?.source || "").toLowerCase() === sourceMode) || null;
 }
 function getPromptMessagesView(source, isTrace = false) {
   const finalMessages = isTrace ? source?.finalMessages : source;
@@ -16196,18 +16070,11 @@ function getPromptMessagesView(source, isTrace = false) {
     role: detail.role || "user",
     order: Number.isFinite(detail.index) ? detail.index : index,
     content: String(detail.content || ""),
-    chars: Number(detail.chars) || String(detail.content || "").length,
-    tokens: Number(detail.tokens) || estimateTokens(detail.content || ""),
-    marker: detail.marker || "",
-    type: detail.type || "text",
-    sourceIdentifier: detail.sourceIdentifier || null,
-    required: detail.required === true
+    tokens: Number(detail.tokens) || estimateTokens(detail.content || "")
   }));
   return {
     sections,
-    messages,
-    totalTokens: sections.reduce((sum, section) => sum + section.tokens, 0),
-    promptScheme: isTrace ? meta.promptScheme : source?.promptScheme
+    totalTokens: sections.reduce((sum, section) => sum + section.tokens, 0)
   };
 }
 async function showDebugInfo() {
@@ -16228,224 +16095,60 @@ async function showDebugInfo() {
             <span class="t-close" id="t-debug-close">&times;</span>
         </div>
 
-        <div class="t-prompt-top-summary">
-            <div class="t-prompt-top-main">
-                <div class="t-prompt-total-token"><span>\u603B Token</span><strong id="t-prompt-total-token">0</strong></div>
-                <div class="t-prompt-meta-item">\u6D88\u606F\u6570 <b id="t-prompt-section-count">0</b></div>
-                <div class="t-prompt-meta-item">\u5E73\u5747 <b id="t-prompt-avg-tokens">-</b> tk</div>
-                <div class="t-prompt-meta-item">\u6700\u5927\u6BB5\u843D <b id="t-prompt-max-section">-</b></div>
-                <div class="t-prompt-budget-badge ok" id="t-prompt-budget-badge">\u9884\u7B97\u5145\u8DB3</div>
+        <div class="t-prompt-summary">
+            <div class="t-prompt-request">
+                <span class="t-prompt-actual"><i class="fa-solid fa-circle"></i> \u6700\u8FD1\u4E00\u6B21\u5B9E\u9645\u8BF7\u6C42</span>
+                <span id="t-prompt-request-meta">\u6682\u65E0\u8BF7\u6C42</span>
             </div>
-            <div class="t-prompt-top-sub">
-                <span class="t-prompt-meta-item">\u5267\u672C <b id="t-prompt-trace-name">-</b></span>
-                <span class="t-prompt-meta-item">\u6A21\u5F0F <b id="t-prompt-mode-name">-</b></span>
-                <span class="t-prompt-meta-item">\u65B9\u6848 <b id="t-prompt-scheme-name">-</b></span>
-                <span class="t-prompt-meta-item">\u66F4\u65B0 <b id="t-prompt-updated-at">-</b></span>
-                <span class="t-prompt-live-dot" id="t-prompt-live-state"><i class="fa-solid fa-circle"></i> \u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8</span>
-            </div>
-        </div>
-
-        <div class="t-prompt-toolbar">
-            <div class="t-prompt-seg-group" id="t-prompt-source-group">
-                <button class="t-prompt-seg-btn active" data-value="live">\u5B9E\u65F6\u9884\u89C8</button>
-                <button class="t-prompt-seg-btn" data-value="latest">\u6700\u8FD1\u6784\u9020</button>
-                <button class="t-prompt-seg-btn" data-value="manual">\u4E3B\u751F\u6210</button>
-                <button class="t-prompt-seg-btn" data-value="user_continuation">\u4E3B\u52A8\u7EED\u5199</button>
-                <button class="t-prompt-seg-btn" data-value="auto_continuation">\u81EA\u52A8\u7EED\u5199</button>
-            </div>
-            <div class="t-prompt-tool-group">
-                <button id="t-prompt-sort-btn" class="t-prompt-tool-btn" data-sort="order" title="\u6392\u5E8F\u65B9\u5F0F"><i class="fa-solid fa-arrow-down-short-wide"></i> \u987A\u5E8F</button>
-                <button id="t-prompt-high-only-btn" class="t-prompt-tool-btn" title="\u4EC5\u663E\u793A\u9AD8\u6D88\u8017\u6BB5\u843D"><i class="fa-solid fa-filter"></i> \u9AD8\u6D88\u8017</button>
-                <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6BB5\u843D"><i class="fa-solid fa-angles-down"></i> \u5C55\u5F00</button>
-                <button id="t-prompt-copy-btn" class="t-prompt-tool-btn" title="\u590D\u5236\u5168\u90E8\u63D0\u793A\u8BCD"><i class="fa-solid fa-copy"></i> \u590D\u5236</button>
-                <button id="t-debug-refresh" class="t-prompt-tool-btn" title="\u624B\u52A8\u5237\u65B0"><i class="fa-solid fa-rotate-right"></i></button>
+            <div class="t-prompt-summary-actions">
+                <span class="t-prompt-count"><strong id="t-prompt-total-token">0</strong> tokens \xB7 <b id="t-prompt-section-count">0</b> \u6761\u6D88\u606F</span>
+                <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6D88\u606F"><i class="fa-solid fa-angles-down"></i> \u5C55\u5F00\u5168\u90E8</button>
+                <button id="t-debug-refresh" class="t-prompt-tool-btn t-prompt-icon-btn" title="\u5237\u65B0"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
         </div>
 
         <div class="t-prompt-sections" id="t-prompt-sections"></div>
     </div>`;
   $("#t-overlay").append(html);
-  let renderSeq = 0;
-  let buildPromptCompositionPreview2 = null;
-  let currentMessages = [];
-  const getSourceMode = () => $("#t-prompt-source-group .t-prompt-seg-btn.active").data("value") || "live";
-  const getSortBy = () => $("#t-prompt-sort-btn").data("sort") || "order";
-  const isHighOnly = () => $("#t-prompt-high-only-btn").hasClass("active");
-  const renderPromptWindow = async () => {
-    const seq = ++renderSeq;
+  const renderPromptWindow = () => {
     const $sections = $("#t-prompt-sections");
-    const sourceMode = getSourceMode();
-    currentMessages = [];
-    if (!buildPromptCompositionPreview2) {
-      const apiModule = await Promise.resolve().then(() => (init_api(), api_exports));
-      buildPromptCompositionPreview2 = apiModule.buildPromptCompositionPreview;
-    }
-    $sections.html(`<div class="t-prompt-empty">\u6B63\u5728\u52A0\u8F7D\u63D0\u793A\u8BCD\u6784\u9020\uFF08${escapeHtml2(getTraceSourceLabel(sourceMode === "live" ? "preview" : sourceMode))}\uFF09...</div>`);
-    if (sourceMode !== "live") {
-      const traces = getPromptTraceList();
-      const targetTrace = pickTraceBySource(traces, sourceMode);
-      if (!targetTrace) {
-        $sections.html('<div class="t-prompt-empty">\u672A\u627E\u5230\u5BF9\u5E94\u6765\u6E90\u7684\u63D0\u793A\u8BCD\u8BB0\u5F55\u3002</div>');
-        $("#t-prompt-total-token").text("0");
-        $("#t-prompt-section-count").text("0");
-        $("#t-prompt-avg-tokens").text("-");
-        $("#t-prompt-max-section").text("-");
-        $("#t-prompt-trace-name").text("-");
-        $("#t-prompt-updated-at").text("-");
-        $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass("ok").text("\u65E0\u6570\u636E");
-        $("#t-prompt-live-state").css("color", "#777").html('<i class="fa-solid fa-circle"></i> \u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F');
-        return;
-      }
-      const target = getPromptMessagesView(targetTrace, true);
-      renderSections(target.sections, target.totalTokens, {
-        scriptName: targetTrace.scriptName || "\u672A\u77E5\u5267\u672C",
-        updatedAt: targetTrace.endedAt || targetTrace.startedAt,
-        mode: targetTrace.mode,
-        promptScheme: target.promptScheme,
-        messages: target.messages,
-        modeText: `\u5386\u53F2\u8FFD\u8E2A \xB7 ${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.status || "unknown"}`
-      });
+    const targetTrace = getPromptTraceList().find((trace) => trace?.finalMessages?.messages?.length > 0);
+    if (!targetTrace) {
+      $sections.html('<div class="t-prompt-empty"><i class="fa-regular fa-file-lines"></i><span>\u8FD8\u6CA1\u6709\u5B9E\u9645\u53D1\u9001\u8FC7\u63D0\u793A\u8BCD</span><small>\u5B8C\u6210\u4E00\u6B21\u751F\u6210\u540E\uFF0C\u8FD9\u91CC\u4F1A\u663E\u793A\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u5B8C\u6574\u6D88\u606F\u3002</small></div>');
+      $("#t-prompt-total-token, #t-prompt-section-count").text("0");
+      $("#t-prompt-request-meta").text("\u6682\u65E0\u8BF7\u6C42");
       return;
     }
-    const preview = await buildPromptCompositionPreview2();
-    if (seq !== renderSeq) return;
-    if (!preview?.ok) {
-      const traces = getPromptTraceList();
-      const fallbackCandidate = pickTraceBySource(traces, "manual") || pickTraceBySource(traces, "latest");
-      const fallbackTrace = fallbackCandidate ? getPromptTraceById(fallbackCandidate.id) : null;
-      if (!fallbackTrace) {
-        $sections.html(`<div class="t-prompt-empty">\u65E0\u6CD5\u6784\u5EFA\u751F\u6210\u524D\u63D0\u793A\u8BCD\uFF1A${escapeHtml2(preview?.error || "unknown")}</div>`);
-        $("#t-prompt-total-token").text("0");
-        $("#t-prompt-section-count").text("0");
-        $("#t-prompt-avg-tokens").text("-");
-        $("#t-prompt-max-section").text("-");
-        $("#t-prompt-trace-name").text("-");
-        $("#t-prompt-updated-at").text("-");
-        $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass("ok").text("\u65E0\u6570\u636E");
-        return;
-      }
-      const fallback = getPromptMessagesView(fallbackTrace, true);
-      renderSections(fallback.sections, fallback.totalTokens, {
-        scriptName: fallbackTrace.scriptName || "\u672A\u77E5\u5267\u672C",
-        updatedAt: fallbackTrace.endedAt || fallbackTrace.startedAt,
-        mode: fallbackTrace.mode,
-        promptScheme: fallback.promptScheme,
-        messages: fallback.messages,
-        modeText: `\u56DE\u9000\u8BB0\u5F55 \xB7 ${getTraceSourceLabel(fallbackTrace.source)}\uFF08${fallbackTrace.status || "unknown"}\uFF09`
-      });
-      return;
-    }
-    const composed = getPromptMessagesView(preview);
-    renderSections(composed.sections, composed.totalTokens, {
-      scriptName: preview.script?.name || "\u672A\u77E5\u5267\u672C",
-      updatedAt: preview.timestamp,
-      mode: preview.mode,
-      promptScheme: composed.promptScheme,
-      messages: composed.messages,
-      modeText: `\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8 \xB7 ${getGenerationModeLabel(preview.mode)}`
+    const { sections, totalTokens } = getPromptMessagesView(targetTrace, true);
+    const expandedIds = /* @__PURE__ */ new Set();
+    $("#t-prompt-sections .t-prompt-section-card.expanded").each(function() {
+      expandedIds.add($(this).data("section-id"));
     });
-  };
-  function getGenerationModeLabel(mode) {
-    if (mode === "visual") return "\u6C1B\u56F4\u7F8E\u5316";
-    if (mode === "preset") return "\u9009\u7528\u9884\u8BBE";
-    return "\u5185\u5BB9\u4F18\u5148";
-  }
-  const renderSections = (allSections, totalTokens, ctx = {}) => {
-    const $sections = $("#t-prompt-sections");
-    const highOnly = isHighOnly();
-    const sortBy = getSortBy();
-    const highThreshold = Math.max(120, Math.ceil(totalTokens * 0.2));
-    currentMessages = Array.isArray(ctx.messages) ? ctx.messages.map((message) => ({ role: message.role, content: message.content })) : [...allSections].sort((a, b) => a.order - b.order).map((section) => ({ role: section.role, content: section.content }));
-    let displaySections = allSections.filter((section) => {
-      if (highOnly && section.tokens < highThreshold) return false;
-      return true;
-    });
-    if (sortBy === "tokens_desc") displaySections.sort((a, b) => b.tokens - a.tokens);
-    else if (sortBy === "tokens_asc") displaySections.sort((a, b) => a.tokens - b.tokens);
-    else displaySections.sort((a, b) => a.order - b.order);
-    if (displaySections.length === 0) {
-      $sections.html('<div class="t-prompt-empty">\u6CA1\u6709\u5339\u914D\u7684\u6BB5\u843D\u3002</div>');
-    } else {
-      const expandedIds = /* @__PURE__ */ new Set();
-      $("#t-prompt-sections .t-prompt-section-card.expanded").each(function() {
-        expandedIds.add($(this).data("section-id"));
-      });
-      const cardsHtml = displaySections.map((section, idx) => {
-        const ratio = totalTokens > 0 ? section.tokens / totalTokens * 100 : 0;
-        const badgeClass = ratio >= 30 ? "danger" : ratio >= 20 ? "warn" : "ok";
-        const roleClass = `t-prompt-role-${section.role}`;
-        const roleLabel = String(section.role || "user").replace(/^./, (char) => char.toUpperCase());
-        const previewText = makePreview(section.content, 150);
-        const wasExpanded = expandedIds.has(section.id);
-        const markerText = section.marker ? ` \xB7 {{${section.marker}}}` : "";
-        return `
+    const cardsHtml = [...sections].sort((a, b) => a.order - b.order).map((section) => {
+      const roleClass = `t-prompt-role-${section.role}`;
+      const previewText = makePreview(section.content, 150);
+      const wasExpanded = expandedIds.has(section.id);
+      return `
                 <div class="t-prompt-section-card ${roleClass}${wasExpanded ? " expanded" : ""}" data-section-id="${section.id}" data-role="${section.role}">
                     <div class="t-prompt-section-head">
                         <div class="t-prompt-section-title">
-                            <i class="fa-solid fa-chevron-right t-prompt-chevron"></i> #${section.order + 1} ${escapeHtml2(section.title)}
+                            <i class="fa-solid fa-chevron-right t-prompt-chevron"></i>
+                            <span class="t-prompt-order">${section.order + 1}</span>
+                            <span class="t-prompt-role-label">${escapeHtml2(section.role)}</span>
+                            <span class="t-prompt-name">${escapeHtml2(section.title)}</span>
                         </div>
-                        <div class="t-prompt-token-badge ${badgeClass}">${section.tokens} tk</div>
+                        <div class="t-prompt-token-count">${section.tokens} tk</div>
                     </div>
-                    <div class="t-prompt-section-meta">${section.chars} chars \xB7 \u5360\u6BD4 ${ratio.toFixed(1)}% \xB7 ${roleLabel}${escapeHtml2(markerText)}</div>
                     <div class="t-prompt-section-preview">${escapeHtml2(previewText)}</div>
                     <pre class="t-prompt-section-content">${escapeHtml2(section.content || "(\u65E0\u5185\u5BB9)")}</pre>
                 </div>`;
-      }).join("");
-      $sections.html(cardsHtml);
-    }
-    const topSections = [...allSections].sort((a, b) => b.tokens - a.tokens);
-    const maxSection = topSections[0] || null;
-    const avgTokens = allSections.length > 0 ? Math.round(totalTokens / allSections.length) : 0;
-    const budgetLevel = totalTokens >= 1900 ? "danger" : totalTokens >= 1600 ? "warn" : "ok";
-    const budgetText = totalTokens >= 1900 ? "\u63A5\u8FD1\u4E0A\u9650" : totalTokens >= 1600 ? "\u9884\u7B97\u504F\u7D27" : "\u9884\u7B97\u5145\u8DB3";
-    const sourceMode = getSourceMode();
-    const live = sourceMode === "live";
-    const liveColor = live ? "#74b9ff" : "#777";
-    const liveText = ctx.modeText || (live ? "\u751F\u6210\u524D\u5B9E\u65F6\u9884\u89C8" : "\u5386\u53F2\u8FFD\u8E2A\u6A21\u5F0F");
+    }).join("");
+    $sections.html(cardsHtml);
     $("#t-prompt-total-token").text(totalTokens);
-    $("#t-prompt-section-count").text(allSections.length);
-    $("#t-prompt-avg-tokens").text(avgTokens);
-    $("#t-prompt-max-section").text(maxSection ? `${escapeHtml2(maxSection.title)} (${maxSection.tokens} tk)` : "-");
-    $("#t-prompt-budget-badge").removeClass("ok warn danger").addClass(budgetLevel).text(budgetText);
-    $("#t-prompt-trace-name").text(ctx.scriptName || "\u672A\u77E5\u5267\u672C");
-    $("#t-prompt-mode-name").text(getGenerationModeLabel(ctx.mode));
-    $("#t-prompt-scheme-name").text(ctx.promptScheme?.name || "\u72EC\u7ACB\u63D0\u793A\u8BCD");
-    $("#t-prompt-updated-at").text(formatTimeText(ctx.updatedAt));
-    $("#t-prompt-live-state").css("color", liveColor).html(`<i class="fa-solid fa-circle"></i> ${liveText}`);
+    $("#t-prompt-section-count").text(sections.length);
+    $("#t-prompt-request-meta").text(`${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.scriptName || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(targetTrace.endedAt || targetTrace.startedAt)}`);
   };
   renderPromptWindow();
-  $("#t-prompt-source-group").on("click", ".t-prompt-seg-btn", function() {
-    if ($(this).hasClass("active")) return;
-    $("#t-prompt-source-group .t-prompt-seg-btn").removeClass("active");
-    $(this).addClass("active");
-    renderPromptWindow();
-  });
-  const sortCycle = ["order", "tokens_desc", "tokens_asc"];
-  const sortLabels = { order: "\u987A\u5E8F", tokens_desc: "Token\u2193", tokens_asc: "Token\u2191" };
-  $("#t-prompt-sort-btn").on("click", function() {
-    const current = $(this).data("sort") || "order";
-    const idx = sortCycle.indexOf(current);
-    const next = sortCycle[(idx + 1) % sortCycle.length];
-    $(this).data("sort", next).attr("data-sort", next);
-    $(this).html(`<i class="fa-solid fa-arrow-down-short-wide"></i> ${sortLabels[next]}`);
-    renderPromptWindow();
-  });
-  $("#t-prompt-high-only-btn").on("click", function() {
-    $(this).toggleClass("active");
-    renderPromptWindow();
-  });
-  $("#t-prompt-copy-btn").on("click", async () => {
-    if (currentMessages.length === 0) {
-      if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u590D\u5236\u7684\u5185\u5BB9", "Titania");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(currentMessages, null, 2));
-      if (window.toastr) toastr.success(`\u5DF2\u590D\u5236 ${currentMessages.length} \u6761\u6D88\u606F JSON`, "Titania");
-    } catch {
-      if (window.toastr) toastr.error("\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u590D\u5236", "Titania");
-    }
-  });
   $("#t-debug-refresh").on("click", () => {
     renderPromptWindow();
     if (window.toastr) toastr.info("\u63D0\u793A\u8BCD\u5DF2\u5237\u65B0", "Titania");
@@ -16461,11 +16164,11 @@ async function showDebugInfo() {
     if ($cards.length === 0) return;
     const allExpanded = $cards.filter(".expanded").length === $cards.length;
     if (allExpanded) {
-      $btn.html('<i class="fa-solid fa-angles-up"></i> \u6298\u53E0');
-      $btn.attr("title", "\u6298\u53E0\u5168\u90E8\u6BB5\u843D");
+      $btn.html('<i class="fa-solid fa-angles-up"></i> \u6298\u53E0\u5168\u90E8');
+      $btn.attr("title", "\u6298\u53E0\u5168\u90E8\u6D88\u606F");
     } else {
-      $btn.html('<i class="fa-solid fa-angles-down"></i> \u5C55\u5F00');
-      $btn.attr("title", "\u5C55\u5F00\u5168\u90E8\u6BB5\u843D");
+      $btn.html('<i class="fa-solid fa-angles-down"></i> \u5C55\u5F00\u5168\u90E8');
+      $btn.attr("title", "\u5C55\u5F00\u5168\u90E8\u6D88\u606F");
     }
   };
   $("#t-prompt-expand-all-btn").on("click", function() {
@@ -29615,19 +29318,22 @@ function openSettingsWindow() {
       return;
     }
     entries.forEach((entry, entryIndex) => {
-      const marker = entry.marker ? ` \xB7 {{${entry.marker}}}` : "";
-      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"}" data-entry-id="${entry.id}" draggable="true">
+      const isLocked = entry.readonly === true;
+      const stateLabel = isLocked ? "\u63D2\u4EF6\u5185\u7F6E" : entry.required ? "\u5FC5\u9700" : entry.enabled ? "\u5DF2\u542F\u7528" : "\u5DF2\u7981\u7528";
+      const stateIcon = isLocked || entry.required ? "fa-lock" : entry.enabled ? "fa-check" : "fa-xmark";
+      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"} ${isLocked ? "is-locked" : ""}" data-entry-id="${entry.id}" draggable="${isLocked ? "false" : "true"}">
                 <div class="t-prompt-entry-header">
+                    <span class="t-prompt-entry-drag-hint" title="${isLocked ? "\u63D2\u4EF6\u56FA\u5B9A\u6761\u76EE" : "\u62D6\u52A8\u6392\u5E8F"}"><i class="fa-solid ${isLocked ? "fa-lock" : "fa-grip-vertical"}"></i></span>
                     <span class="t-prompt-entry-index">#${entry.index}</span>
                     <span class="t-prompt-entry-name"></span>
-                    <span class="t-prompt-entry-badge">${entry.role}${marker}</span>
+                    <span class="t-prompt-entry-badge"></span>
                     <div class="t-prompt-entry-actions">
-                        <span class="t-prompt-entry-drag-hint"><i class="fa-solid fa-grip-vertical"></i> \u62D6\u52A8\u6392\u5E8F</span>
-                        <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : "\u70B9\u51FB\u5207\u6362\u542F\u7528\u72B6\u6001"}" ${entry.required ? "disabled" : ""}>${entry.enabled ? "\u5DF2\u542F\u7528" : "\u5DF2\u7981\u7528"}</button>
+                        <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${isLocked ? "\u63D2\u4EF6\u5185\u7F6E\u6761\u76EE\uFF0C\u4E0D\u80FD\u7F16\u8F91\u3001\u7981\u7528\u6216\u6392\u5E8F" : entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : `${stateLabel}\uFF0C\u70B9\u51FB\u5207\u6362\u72B6\u6001`}" aria-label="${stateLabel}" ${entry.required ? "disabled" : ""}><i class="fa-solid ${stateIcon}"></i><span class="t-prompt-entry-toggle-label">${stateLabel}</span></button>
                     </div>
                 </div>
             </div>`);
-      $row.find(".t-prompt-entry-name").text(entry.name);
+      $row.find(".t-prompt-entry-name").text(entry.name).attr("title", entry.name);
+      $row.find(".t-prompt-entry-badge").text(entry.role).attr("title", entry.marker ? `${entry.role} \xB7 {{${entry.marker}}}` : entry.role);
       const updateEntry = (changes) => {
         const target = scheme.entries.find((item) => item.id === entry.id);
         if (!target) return;
@@ -29640,11 +29346,12 @@ function openSettingsWindow() {
       });
       $row.on("click", function(event) {
         if ($(event.target).closest("button").length) return;
+        if (isLocked) return;
         openPromptEntryEditor(scheme, entry.id);
       });
       $row.on("dragstart", function(event) {
         const originalEvent = event.originalEvent;
-        if ($(event.target).closest("input, textarea, select, button").length) {
+        if (isLocked || $(event.target).closest("input, textarea, select, button").length) {
           originalEvent?.preventDefault();
           return;
         }
@@ -29653,6 +29360,7 @@ function openSettingsWindow() {
         $(this).addClass("is-dragging");
       });
       $row.on("dragover", function(event) {
+        if (isLocked) return;
         event.preventDefault();
         const originalEvent = event.originalEvent;
         const rect = this.getBoundingClientRect();
@@ -29664,6 +29372,7 @@ function openSettingsWindow() {
         if (event.target === this) $(this).removeClass("is-drag-over");
       });
       $row.on("drop", function(event) {
+        if (isLocked) return;
         event.preventDefault();
         const originalEvent = event.originalEvent;
         const draggedId = originalEvent.dataTransfer.getData("text/plain");
@@ -29679,6 +29388,7 @@ function openSettingsWindow() {
         let nextIndex = scheme.entries.findIndex((item) => item.id === entry.id);
         if (!insertBefore) nextIndex++;
         scheme.entries.splice(Math.max(0, nextIndex), 0, moved);
+        if (scheme.type === "preset") ensureTitaniaPresetEntries(scheme);
         renderPromptManager();
       });
       $row.on("dragend", function() {
@@ -29689,39 +29399,209 @@ function openSettingsWindow() {
   };
   const openPromptEntryEditor = (scheme, entryId) => {
     const entry = scheme?.entries?.find((item) => item.id === entryId);
-    if (!entry) return;
-    $("#t-prompt-editor-modal").remove();
+    if (!entry || entry.readonly === true) return;
+    document.getElementById("t-prompt-editor-modal")?.remove();
     const isDynamic = entry.type === "dynamic";
-    const editorHtml = `<div id="t-prompt-editor-modal" class="t-prompt-editor-modal">
-            <div class="t-prompt-editor-dialog" role="dialog" aria-modal="true">
-                <div class="t-prompt-editor-header">
-                    <span class="t-prompt-editor-title">\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE</span>
-                    <button type="button" class="t-prompt-editor-save" title="\u4FDD\u5B58\u6761\u76EE"><i class="fa-solid fa-floppy-disk"></i></button>
-                    <button type="button" class="t-prompt-editor-close" title="\u5173\u95ED"><i class="fa-solid fa-xmark"></i></button>
+    const host = document.createElement("div");
+    host.id = "t-prompt-editor-modal";
+    const isolatedHostStyles = {
+      position: "fixed",
+      inset: "0",
+      display: "block",
+      visibility: "visible",
+      opacity: "1",
+      pointerEvents: "auto",
+      width: "100vw",
+      height: "100dvh",
+      maxWidth: "none",
+      maxHeight: "none",
+      margin: "0",
+      padding: "0",
+      border: "0",
+      background: "transparent",
+      overflow: "hidden",
+      transform: "none",
+      transition: "none",
+      animation: "none",
+      colorScheme: "dark"
+    };
+    for (const [property, value] of Object.entries(isolatedHostStyles)) {
+      host.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
+    }
+    const shadow = host.attachShadow({ mode: "closed" });
+    shadow.innerHTML = `
+            <style>
+                :host {
+                    all: initial !important;
+                    position: fixed !important;
+                    inset: 0 !important;
+                    width: 100vw !important;
+                    height: 100dvh !important;
+                    color-scheme: dark;
+                }
+                *, *::before, *::after { box-sizing: border-box; }
+                dialog {
+                    position: fixed;
+                    inset: 0;
+                    width: 100vw;
+                    height: 100dvh;
+                    max-width: none;
+                    max-height: none;
+                    margin: 0;
+                    padding: 0;
+                    border: 0;
+                    overflow: hidden;
+                    background: transparent;
+                    color: inherit;
+                }
+                dialog::backdrop { background: transparent; }
+                .backdrop {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                    background: rgba(0, 0, 0, 0.72);
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+                    font-size: 14px;
+                    color: #eee;
+                }
+                .editor {
+                    width: min(720px, 100%);
+                    max-height: min(760px, calc(100dvh - 40px));
+                    display: grid;
+                    grid-template-rows: auto minmax(0, 1fr);
+                    overflow: hidden;
+                    background: #171717;
+                    border: 1px solid #4a4a4a;
+                    border-radius: 7px;
+                    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+                }
+                .header {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    min-height: 56px;
+                    padding: 12px 14px 12px 16px;
+                    border-bottom: 1px solid #333;
+                    background: #1c1c1c;
+                }
+                .title { flex: 1; min-width: 0; color: #eee; font-weight: 600; }
+                .icon-button {
+                    width: 34px;
+                    height: 32px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    background: #242424;
+                    color: #bbb;
+                    cursor: pointer;
+                }
+                .icon-button svg { width: 15px; height: 15px; fill: currentColor; }
+                .save { color: #55efc4; }
+                .icon-button:hover, .icon-button:focus-visible { color: #fff; border-color: #90cdf4; outline: none; }
+                .body {
+                    min-height: 0;
+                    padding: 16px;
+                    overflow-y: auto;
+                    overscroll-behavior: contain;
+                }
+                .group { margin: 0 0 14px; }
+                .group.content-group { display: flex; min-height: 280px; flex-direction: column; }
+                label { display: block; margin: 0 0 6px; color: #aaa; font-size: 12px; }
+                input, select, textarea {
+                    width: 100%;
+                    margin: 0;
+                    padding: 8px 10px;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    outline: none;
+                    background: #111;
+                    color: #eee;
+                    font: inherit;
+                }
+                input, select { height: 36px; }
+                textarea {
+                    min-height: 280px;
+                    flex: 1;
+                    resize: vertical;
+                    line-height: 1.45;
+                    font-family: Consolas, Monaco, "Courier New", monospace;
+                }
+                input:focus, select:focus, textarea:focus { border-color: #90cdf4; }
+                textarea:disabled { color: #777; background: #121212; border-style: dashed; }
+                .runtime {
+                    margin-top: 8px;
+                    padding: 10px;
+                    border: 1px dashed #444;
+                    border-radius: 4px;
+                    background: #141414;
+                    color: #888;
+                    font-size: 12px;
+                }
+                @media (max-width: 600px) {
+                    .backdrop { padding: 8px; }
+                    .editor { max-height: calc(100dvh - 16px); }
+                    .header { min-height: 52px; padding: 10px 10px 10px 14px; }
+                    .body { padding: 12px; }
+                    .group.content-group { min-height: 220px; }
+                    textarea { min-height: 220px; }
+                }
+            </style>
+            <dialog aria-label="\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE">
+                <div class="backdrop">
+                    <section class="editor" role="document">
+                    <header class="header">
+                        <span class="title">\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE</span>
+                        <button type="button" class="icon-button save" title="\u4FDD\u5B58\u6761\u76EE" aria-label="\u4FDD\u5B58\u6761\u76EE">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4Zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm3-10H5V5h10v4Z"/></svg>
+                        </button>
+                        <button type="button" class="icon-button close" title="\u5173\u95ED" aria-label="\u5173\u95ED">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18.3 5.7-1-1L12 10l-5.3-5.3-1 1L11 11l-5.3 5.3 1 1L12 12l5.3 5.3 1-1L13 11l5.3-5.3Z"/></svg>
+                        </button>
+                    </header>
+                    <div class="body">
+                        <div class="group"><label for="name">\u6761\u76EE\u540D\u79F0</label><input id="name" type="text"></div>
+                        <div class="group"><label for="role">\u6D88\u606F\u89D2\u8272</label><select id="role"><option value="system">system</option><option value="user">user</option><option value="assistant">assistant</option></select></div>
+                        <div class="group content-group"><label for="content">\u63D0\u793A\u8BCD\u5185\u5BB9</label><textarea id="content" placeholder="\u63D0\u793A\u8BCD\u5185\u5BB9"></textarea>${isDynamic ? '<div class="runtime">\u8FD9\u662F\u8FD0\u884C\u65F6\u52A8\u6001\u6761\u76EE\uFF0C\u5B9E\u9645\u5185\u5BB9\u7531\u5F53\u524D\u4E0A\u4E0B\u6587\u751F\u6210\u3002</div>' : ""}</div>
+                    </div>
+                    </section>
                 </div>
-                <div class="t-prompt-editor-body">
-                    <div class="t-prompt-editor-group"><label class="t-prompt-editor-label">\u6761\u76EE\u540D\u79F0</label><input id="t-prompt-edit-name" class="t-input" type="text"></div>
-                    <div class="t-prompt-editor-group"><label class="t-prompt-editor-label">\u6D88\u606F\u89D2\u8272</label><select id="t-prompt-edit-role" class="t-input"><option value="system">system</option><option value="user">user</option><option value="assistant">assistant</option></select></div>
-                    <div class="t-prompt-editor-group"><label class="t-prompt-editor-label">\u63D0\u793A\u8BCD\u5185\u5BB9</label><textarea id="t-prompt-edit-content" class="t-prompt-editor-content" placeholder="\u63D0\u793A\u8BCD\u5185\u5BB9"></textarea>${isDynamic ? '<div class="t-prompt-entry-runtime">\u8FD9\u662F\u8FD0\u884C\u65F6\u52A8\u6001\u6761\u76EE\uFF0C\u5B9E\u9645\u5185\u5BB9\u7531\u5F53\u524D\u4E0A\u4E0B\u6587\u751F\u6210\u3002</div>' : ""}</div>
-                </div>
-            </div>
-        </div>`;
-    $("#t-overlay").append(editorHtml);
-    $("#t-prompt-edit-name").val(entry.name || "");
-    $("#t-prompt-edit-role").val(entry.role || "user");
-    $("#t-prompt-edit-content").val(entry.content || "").prop("disabled", isDynamic);
-    const close = () => $("#t-prompt-editor-modal").remove();
-    $(".t-prompt-editor-close").on("click", close);
-    $("#t-prompt-editor-modal").on("click", function(event) {
-      if (event.target === this) close();
+            </dialog>`;
+    const modal = shadow.querySelector("dialog");
+    const nameInput = shadow.querySelector("#name");
+    const roleSelect = shadow.querySelector("#role");
+    const contentInput = shadow.querySelector("#content");
+    nameInput.value = entry.name || "";
+    roleSelect.value = entry.role || "user";
+    contentInput.value = entry.content || "";
+    contentInput.disabled = isDynamic;
+    const close = () => {
+      if (modal.open) modal.close();
+      host.remove();
+    };
+    shadow.querySelector(".close").addEventListener("click", close);
+    shadow.querySelector(".backdrop").addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) close();
     });
-    $(".t-prompt-editor-save").on("click", function() {
-      entry.name = $("#t-prompt-edit-name").val().trim() || entry.name || "\u672A\u547D\u540D\u6761\u76EE";
-      entry.role = $("#t-prompt-edit-role").val() || "user";
-      if (!isDynamic) entry.content = $("#t-prompt-edit-content").val();
+    modal.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      close();
+    });
+    shadow.querySelector(".save").addEventListener("click", () => {
+      entry.name = nameInput.value.trim() || entry.name || "\u672A\u547D\u540D\u6761\u76EE";
+      entry.role = roleSelect.value || "user";
+      if (!isDynamic) entry.content = contentInput.value;
       close();
       renderPromptManager();
     });
+    document.body.appendChild(host);
+    modal.showModal();
+    nameInput.focus();
   };
   $("#t-prompt-view").on("change", renderPromptManager);
   $("#t-prompt-preset-select").on("change", function() {
@@ -29864,10 +29744,12 @@ ${JSON.stringify(l.details, null, 2)}`;
     }
   });
   $("#btn-open-mgr").on("click", () => {
+    document.getElementById("t-prompt-editor-modal")?.remove();
     $("#t-settings-view").remove();
     openScriptManager();
   });
   $("#t-set-close").on("click", () => {
+    document.getElementById("t-prompt-editor-modal")?.remove();
     $("#t-settings-view").remove();
     const $mainView2 = $("#t-main-view");
     if ($mainView2.length > 0) {
@@ -29974,6 +29856,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       enabled: prevRewriteEntry.enabled === true
     };
     saveExtData();
+    document.getElementById("t-prompt-editor-modal")?.remove();
     $("#t-settings-view").remove();
     const $mainViewOnSave = $("#t-main-view");
     if ($mainViewOnSave.length > 0) {
@@ -33572,21 +33455,6 @@ var init_floatingBtn = __esm({
 });
 
 // src/core/api.js
-var api_exports = {};
-__export(api_exports, {
-  buildPromptCompositionPreview: () => buildPromptCompositionPreview,
-  cancelGeneration: () => cancelGeneration,
-  cancelQueueGeneration: () => cancelQueueGeneration,
-  executeQueueGeneration: () => executeQueueGeneration,
-  findContinuationRoundByContent: () => findContinuationRoundByContent,
-  getContinuationBranches: () => getContinuationBranches,
-  getContinuationRoundsForFav: () => getContinuationRoundsForFav,
-  getContinuationSessionStats: () => getContinuationSessionStats,
-  handleGenerate: () => handleGenerate,
-  handleUserContinuation: () => handleUserContinuation,
-  renderGeneratedContent: () => renderGeneratedContent,
-  syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
-});
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
 import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
 import EventSourceStream2 from "../../../sse-stream.js";
@@ -34330,180 +34198,6 @@ function cancelGeneration() {
   $floatBtn.removeClass("t-loading t-anim-ripple t-anim-arc");
   TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u4E86\u751F\u6210");
   if (window.toastr) toastr.info("\u23F9\uFE0F \u6F14\u7ECE\u5DF2\u4E2D\u65AD", "Titania");
-}
-async function buildPromptCompositionPreview(options = {}) {
-  try {
-    const data = getExtData();
-    const cfg = data.config || {};
-    const dirDefaults = data.director || { instruction: "" };
-    const conn = getActiveConnection();
-    const generationOverrides = options.generationOverrides || null;
-    const scriptId = options.forceScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
-    const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
-    if (!script) {
-      return { ok: false, error: "\u672A\u9009\u62E9\u5267\u672C" };
-    }
-    const promptOverride = generationOverrides?.promptOverride;
-    const scriptPromptSource = typeof promptOverride === "string" && promptOverride.trim().length > 0 ? promptOverride : script.prompt;
-    const generationSource = generationOverrides?.source || "preview";
-    const ctx = await getContextData();
-    let sys;
-    let promptScheme = getPromptScheme(data, GlobalState.generationMode);
-    if (!promptScheme) {
-      promptScheme = getPromptScheme(data, "narrative");
-      if (window.toastr) toastr.warning("\u672A\u627E\u5230\u6D3B\u52A8\u9884\u8BBE\uFF0C\u5DF2\u56DE\u9000\u5230\u5185\u5BB9\u4F18\u5148\u6A21\u5F0F", "Titania");
-    }
-    const systemEntry = promptScheme.entries.find((entry) => entry.role === "system");
-    sys = systemEntry?.content || (GlobalState.generationMode === "visual" ? DEFAULT_VISUAL_PROMPT : DEFAULT_CONTENT_PROMPT);
-    let user = "";
-    let runtimeChatHistory = "";
-    const sectionLengths = {
-      director: 0,
-      persona: 0,
-      userDesc: 0,
-      worldInfo: 0,
-      history: 0,
-      scriptInstruction: 0
-    };
-    const dirInstruction = dirDefaults.instruction || "";
-    const styleProfiles = data.style_profiles || [{ id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }];
-    const activeStyleId = data.active_style_id || "default";
-    const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId) || styleProfiles[0];
-    const dStyle = activeStyleProfile ? activeStyleProfile.content : "";
-    let directorSection = "";
-    if (dirInstruction.trim()) {
-      directorSection += dirInstruction.trim() + "\n";
-    }
-    if (dStyle) {
-      directorSection += `\u6587\u7B14\u53C2\u8003\uFF1A\u6A21\u4EFF\u4EE5\u4E0B\u6587\u98CE\uFF08\u4E0D\u8981\u590D\u5236\u539F\u6587\uFF09:
-<style_ref>
-${dStyle.substring(0, 1e3)}
-</style_ref>
-`;
-    }
-    if (directorSection) {
-      const block = `[\u5BFC\u6F14\u6307\u4EE4]
-\uFF08\u4EE5\u4E0B\u662F\u5199\u4F5C\u98CE\u683C\u548C\u683C\u5F0F\u8981\u6C42\uFF0C\u8BF7\u6309\u6B64\u98CE\u683C\u751F\u6210\u5185\u5BB9\uFF09
-${directorSection}
-`;
-      sectionLengths.director = block.length;
-      user += block;
-    }
-    if (ctx.persona) {
-      const block = `[\u89D2\u8272\u4EBA\u8BBE]
-\uFF08\u4EE5\u4E0B\u662F\u89D2\u8272\u7684\u6027\u683C\u8BBE\u5B9A\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u91CD\u590D\u8FD9\u4E9B\u5185\u5BB9\uFF09
-${ctx.persona}
-
-`;
-      sectionLengths.persona = block.length;
-      user += block;
-    }
-    if (ctx.userDesc) {
-      const block = `[\u7528\u6237\u8BBE\u5B9A]
-\uFF08\u4EE5\u4E0B\u662F\u7528\u6237\u7684\u63CF\u8FF0\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u80CC\u666F\u53C2\u8003\uFF09
-${ctx.userDesc}
-
-`;
-      sectionLengths.userDesc = block.length;
-      user += block;
-    }
-    if (ctx.worldInfo) {
-      const block = `[\u4E16\u754C\u89C2\u8BBE\u5B9A]
-\uFF08\u4EE5\u4E0B\u662F\u80CC\u666F\u8BBE\u5B9A\u548C\u4E16\u754C\u89C2\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u76F4\u63A5\u590D\u5236\uFF09
-${ctx.worldInfo}
-
-`;
-      sectionLengths.worldInfo = block.length;
-      user += block;
-    }
-    if (GlobalState.useHistoryAnalysis) {
-      const limit = cfg.history_limit || 10;
-      const historyWhitelistStr = data.history_extraction?.whitelist || "";
-      const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
-      const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
-      const history = getChatHistory2(limit, historyWhitelist, historyBlacklist);
-      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
-\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
-${history}
-
-` : `[\u804A\u5929\u5386\u53F2]
-\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
-
-`;
-      sectionLengths.history = historyBlock.length;
-      runtimeChatHistory = historyBlock;
-      user += historyBlock;
-    }
-    const skipMacroEvaluation = generationOverrides?.skipMacroEvaluation === true;
-    let processedPrompt = scriptPromptSource;
-    if (!skipMacroEvaluation) {
-      try {
-        const macroEnv = {
-          char: ctx.charName,
-          user: ctx.userName
-        };
-        processedPrompt = evaluateMacros(scriptPromptSource, macroEnv);
-      } catch (e) {
-        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
-      }
-    }
-    const scriptBlock = `[\u5267\u672C\u6307\u4EE4]
-\uFF08\u8FD9\u662F\u4F60\u7684\u4E3B\u8981\u4EFB\u52A1\uFF01\u8BF7\u6839\u636E\u4EE5\u4E0B\u6307\u4EE4\u751F\u6210\u521B\u610F\u5185\u5BB9\uFF0C\u5FFD\u7565\u4E0A\u65B9\u7684\u804A\u5929\u5386\u53F2\uFF0C\u4E13\u6CE8\u4E8E\u5B8C\u6210\u6B64\u521B\u4F5C\u8BF7\u6C42\uFF09
-${processedPrompt}`;
-    sectionLengths.scriptInstruction = scriptBlock.length;
-    user += scriptBlock;
-    const meta = {
-      source: generationSource,
-      hasPromptOverride: typeof promptOverride === "string" && promptOverride.trim().length > 0,
-      promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
-      skipMacroEvaluation,
-      sectionLengths,
-      estimatedTokens: {
-        system: estimateTokens(sys),
-        user: estimateTokens(user)
-      }
-    };
-    const runtimePromptContext = {
-      ...ctx,
-      worldInfoBefore: ctx.worldInfo,
-      worldInfoAfter: "",
-      chatHistory: runtimeChatHistory,
-      titaniaScript: processedPrompt
-    };
-    const messageDetails = buildPromptMessageDetails(promptScheme, {
-      [`${GlobalState.generationMode}_system`]: sys,
-      [`${GlobalState.generationMode}_user`]: user
-    }, runtimePromptContext);
-    const messages = messageDetails.map(({ role, content }) => ({ role, content }));
-    return {
-      ok: true,
-      script: {
-        id: script.id,
-        name: script.name
-      },
-      mode: GlobalState.generationMode,
-      source: generationSource,
-      connection: {
-        profile: conn.profileName || "",
-        model: conn.model || "",
-        useSTConnection: !!conn.useSTConnection
-      },
-      promptScheme: {
-        id: promptScheme.id || GlobalState.generationMode,
-        name: promptScheme.name || "\u672A\u547D\u540D\u65B9\u6848",
-        type: promptScheme.type || "builtin"
-      },
-      messages,
-      messageDetails,
-      meta,
-      timestamp: Date.now()
-    };
-  } catch (e) {
-    return {
-      ok: false,
-      error: e?.message || "preview_build_failed"
-    };
-  }
 }
 async function handleGenerate(forceScriptId = null, silent = false, generationOverrides = null) {
   const data = getExtData();
