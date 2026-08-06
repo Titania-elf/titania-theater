@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.1.2";
+    CURRENT_VERSION = "5.1.5";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -390,8 +390,61 @@ function getPromptScheme(data, mode = "narrative") {
   return scheme;
 }
 function getPromptOrder(preset) {
-  const order = preset?.prompt_order?.[0]?.order;
-  return Array.isArray(order) ? order : [];
+  const groups = Array.isArray(preset?.prompt_order) ? preset.prompt_order.map((group) => Array.isArray(group?.order) ? group.order : []).filter((order) => order.length > 0) : [];
+  const getIdentifier = (item) => String(item?.identifier || "").trim();
+  const getUniqueCount = (order) => new Set(order.map(getIdentifier).filter(Boolean)).size;
+  const referenceCount = groups.reduce((total, order) => total + order.length, 0);
+  if (groups.length === 0) {
+    return {
+      order: [],
+      stats: { group_count: 0, reference_count: 0, unique_count: 0, duplicate_count: 0, conflict_count: 0 }
+    };
+  }
+  let primaryIndex = 0;
+  for (let index = 1; index < groups.length; index++) {
+    if (getUniqueCount(groups[index]) > getUniqueCount(groups[primaryIndex])) primaryIndex = index;
+  }
+  const merged = [];
+  const mergedIdentifiers = /* @__PURE__ */ new Set();
+  const enabledStates = /* @__PURE__ */ new Map();
+  for (const order of groups) {
+    for (const item of order) {
+      const identifier = getIdentifier(item);
+      if (!identifier) continue;
+      if (!enabledStates.has(identifier)) enabledStates.set(identifier, /* @__PURE__ */ new Set());
+      enabledStates.get(identifier).add(item?.enabled !== false);
+    }
+  }
+  const appendUnique = (item) => {
+    const identifier = getIdentifier(item);
+    if (!identifier || mergedIdentifiers.has(identifier)) return;
+    merged.push(item);
+    mergedIdentifiers.add(identifier);
+  };
+  groups[primaryIndex].forEach(appendUnique);
+  for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+    if (groupIndex === primaryIndex) continue;
+    const order = groups[groupIndex];
+    for (let itemIndex = 0; itemIndex < order.length; itemIndex++) {
+      const item = order[itemIndex];
+      const identifier = getIdentifier(item);
+      if (!identifier || mergedIdentifiers.has(identifier)) continue;
+      const nextKnownIdentifier = order.slice(itemIndex + 1).map(getIdentifier).find((candidate) => mergedIdentifiers.has(candidate));
+      const insertAt = nextKnownIdentifier ? merged.findIndex((candidate) => getIdentifier(candidate) === nextKnownIdentifier) : merged.length;
+      merged.splice(insertAt, 0, item);
+      mergedIdentifiers.add(identifier);
+    }
+  }
+  return {
+    order: merged,
+    stats: {
+      group_count: groups.length,
+      reference_count: referenceCount,
+      unique_count: merged.length,
+      duplicate_count: referenceCount - merged.length,
+      conflict_count: [...enabledStates.values()].filter((states) => states.size > 1).length
+    }
+  };
 }
 function getMarkerNameFromContent(content) {
   const exact = String(content || "").trim().match(/^\{\{\s*([\w-]+)\s*\}\}$/);
@@ -455,17 +508,26 @@ function normalizeChatCompletionPreset(preset, options = {}) {
     const identifier = String(item?.identifier || "").trim();
     if (identifier && !definitions.has(identifier)) definitions.set(identifier, item);
   }
-  const promptOrder = getPromptOrder(preset);
+  const promptOrderResult = getPromptOrder(preset);
+  const promptOrder = promptOrderResult.order;
   const entries = [];
   const usedIdentifiers = /* @__PURE__ */ new Set();
+  let missingDefinitionCount = 0;
+  let removedMarkerCount = 0;
   for (const orderItem of promptOrder) {
     const identifier = String(orderItem?.identifier || "").trim();
     if (!identifier || usedIdentifiers.has(identifier)) continue;
     const definition = definitions.get(identifier);
-    if (!definition) continue;
+    if (!definition) {
+      missingDefinitionCount++;
+      continue;
+    }
     let content = String(definition.content || "");
     const declaredMarker = getDeclaredMarker(definition, identifier);
-    if (REMOVED_MARKERS.has(identifier) || REMOVED_MARKERS.has(declaredMarker)) continue;
+    if (REMOVED_MARKERS.has(identifier) || REMOVED_MARKERS.has(declaredMarker)) {
+      removedMarkerCount++;
+      continue;
+    }
     const marker = DYNAMIC_MARKERS.has(declaredMarker) ? declaredMarker : "";
     if (declaredMarker && !marker && !content.trim()) content = `{{${declaredMarker}}}`;
     entries.push({
@@ -495,6 +557,12 @@ function normalizeChatCompletionPreset(preset, options = {}) {
       temperature: preset.temperature,
       top_p: preset.top_p,
       max_tokens: preset.openai_max_tokens ?? preset.max_tokens
+    },
+    import_stats: {
+      ...promptOrderResult.stats,
+      imported_count: entries.length,
+      missing_definition_count: missingDefinitionCount,
+      removed_marker_count: removedMarkerCount
     }
   };
 }
@@ -1691,7 +1759,10 @@ textarea.t-input {
 /* Zen Mode (\u6C89\u6D78\u6A21\u5F0F) */
 #t-main-view.t-zen-mode .t-header,
 #t-main-view.t-zen-mode .t-top-bar,
-#t-main-view.t-zen-mode .t-bottom-bar {
+#t-main-view.t-zen-mode .t-bottom-bar,
+#t-main-view.t-zen-mode .t-toolbox-rail,
+#t-main-view.t-zen-mode .t-toolbox-panel,
+#t-main-view.t-zen-mode .t-toolbox-backdrop {
     display: none !important;
 }
 
@@ -1765,6 +1836,144 @@ textarea.t-input {
     background: transparent;
     display: block;
     /* \u9AD8\u5EA6\u7531 JS \u52A8\u6001\u8BBE\u7F6E */
+}
+
+/* \u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u7BA1\u7406\u6A21\u5F0F */
+.t-cont-history-heading {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-cont-history-heading strong,
+.t-cont-history-heading span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-cont-history-heading span {
+    color: #888;
+    font-size: 12px;
+}
+
+.t-cont-history-scope {
+    max-width: 92px;
+    height: 30px;
+    padding: 0 6px;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #242424;
+    color: #ccc;
+    font-size: 11px;
+}
+
+.t-cont-select-wrap {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.t-cont-select {
+    width: 16px;
+    height: 16px;
+    margin: 0 8px 0 0;
+    accent-color: #90cdf4;
+    cursor: pointer;
+}
+
+.t-cont-select:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+.t-cont-history-panel.is-managing .t-cont-history-session-toggle,
+.t-cont-history-panel.is-managing .t-cont-history-branch-title,
+.t-cont-history-panel.is-managing .t-cont-history-round-head {
+    gap: 6px;
+}
+
+.t-cont-history-panel.is-managing .t-cont-history-session-toggle {
+    cursor: default;
+}
+
+.t-cont-history-bulk-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border-top: 1px solid #333;
+    background: #181818;
+    flex-shrink: 0;
+}
+
+.t-cont-history-bulk-bar span {
+    color: #aaa;
+    font-size: 12px;
+}
+
+.t-cont-history-bulk-bar .danger {
+    color: #ffd6d6;
+    border-color: rgba(248, 113, 113, .45);
+    background: rgba(185, 28, 28, .18);
+}
+
+.t-cont-history-more-wrap {
+    position: relative;
+}
+
+.t-cont-history-header-actions .t-icon-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+}
+
+.t-cont-history-more-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 3;
+    min-width: 150px;
+    padding: 4px;
+    border: 1px solid #3b3b3b;
+    border-radius: 6px;
+    background: #202020;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .45);
+}
+
+.t-cont-history-more-menu[hidden] {
+    display: none;
+}
+
+.t-cont-history-more-menu button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #e5b5b5;
+    cursor: pointer;
+    text-align: left;
+}
+
+.t-cont-history-more-menu button:hover {
+    background: rgba(185, 28, 28, .18);
+}
+
+@media (max-width: 620px) {
+    .t-cont-history-heading span {
+        display: none;
+    }
+
+    .t-cont-history-header-actions .t-btn {
+        padding: 5px 7px;
+        font-size: 12px;
+    }
 }
 
 /* \u9876\u90E8\u64CD\u4F5C\u533A */
@@ -2009,322 +2218,561 @@ textarea.t-input {
     color: #fff;
 }
 
-/* Tools Button (\u66FF\u4EE3\u539F Zen Button) */
-.t-tools-btn {
+/* \u5185\u5BB9\u533A\u53F3\u4E0A\u89D2\u5782\u76F4\u56FE\u6807\u680F */
+.t-tools-rail {
     position: absolute;
-    top: 20px;
-    right: 25px;
-    width: 40px;
-    height: 40px;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 100;
+}
+
+.t-tools-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
     border-radius: 50%;
-    background: rgba(30, 30, 30, 0.6);
+    background: rgba(30, 30, 30, 0.4);
     backdrop-filter: blur(4px);
-    color: #777;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #666;
+    border: 1px solid rgba(255, 255, 255, 0.03);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0.85em;
     cursor: pointer;
-    z-index: 100;
     transition: all 0.2s;
-    opacity: 0.6;
+    opacity: 0.4;
 }
 
-.t-tools-btn:hover {
+.t-tools-icon:hover {
     opacity: 1;
-    background: #333;
+    background: rgba(51, 51, 51, 0.8);
     color: #fff;
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
-.t-tools-btn.active {
+.t-tools-icon.active {
     opacity: 1;
     background: #bfa15f;
     color: #000;
 }
 
-.t-tools-btn.zen-active {
-    opacity: 1;
+.t-tools-icon.is-faved {
+    opacity: 0.95;
+    border-color: rgba(255, 107, 107, 0.4);
+}
+
+#t-main-view.t-zen-mode .t-tools-icon {
     background: transparent;
-    color: #bfa15f;
 }
 
-/* Tools Panel (\u5F39\u51FA\u83DC\u5355) */
-.t-tools-panel {
-    position: absolute;
-    top: 65px;
-    right: 25px;
-    background: #1e1e1e;
-    border: 1px solid #444;
-    border-radius: 8px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-    z-index: 101;
-    min-width: 140px;
-    padding: 5px;
-    animation: fadeIn 0.15s ease;
-}
-
-.t-tools-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #ccc;
-    font-size: 0.9em;
-    transition: all 0.2s;
-}
-
-.t-tools-item:hover {
-    background: #2a2a2a;
-    color: #fff;
-}
-
-.t-tools-item i {
-    width: 18px;
-    text-align: center;
-    color: #888;
-}
-
-.t-tools-item:hover i {
-    color: #bfa15f;
-}
-
-/* Bottom Bar - \u65B0\u5E03\u5C40 */
-/* \u5E95\u90E8\u680F\u5BB9\u5668\uFF1A\u4E09\u5217\u5E03\u5C40 (\u5DE5\u5177\u533A | \u4E3B\u6309\u94AE | \u8F85\u52A9\u533A) */
+/* \u6838\u5FC3\u64CD\u4F5C\u680F */
 .t-bottom-bar {
-    padding: 12px 15px;
-    background: #1e1e1e;
+    height: 70px;
+    padding: 10px 14px;
+    background: #181818;
     border-top: 1px solid #333;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    height: 85px;
+    gap: 10px;
     flex-shrink: 0;
     position: relative;
     z-index: 50;
     box-sizing: border-box;
 }
 
-/* \u5DE6\u4FA7\uFF1A\u5DE5\u5177\u533A (2x2 \u7F51\u683C) */
-.t-bot-left {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    width: 92px;
-    height: 60px;
-    flex-shrink: 0;
-}
-
-/* \u5DE6\u4FA7\u5C0F\u5DE5\u5177\u6309\u94AE\u6837\u5F0F */
-.t-btn-grid {
+.t-mobile-toolbox-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 0;
+    gap: 8px;
+    height: 48px;
+    padding: 0 18px;
     box-sizing: border-box;
-    line-height: 1;
-    background: #2b2b2b;
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #aaa;
-    font-size: 1em;
+    border: 1px solid #3a3a3a;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 650;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background .18s, border-color .18s, color .18s, transform .18s;
 }
 
-.t-btn-grid:hover {
-    background: #383838;
-    color: #fff;
-    border-color: #666;
-}
-
-.t-btn-grid:active {
-    transform: scale(0.95);
-}
-
-/* \u4E2D\u95F4\uFF1A\u4E3B\u64CD\u4F5C\u533A (\u53CC\u6309\u94AE\u7EC4) */
-.t-bot-center {
+.t-continuation-quick {
+    min-width: 0;
     flex: 1;
     display: flex;
     align-items: center;
+    position: relative;
+    border: 1px solid #3a3a3a;
+    border-radius: 7px;
+    background: #222;
+}
+
+.t-continuation-history-btn,
+.t-continuation-context-btn,
+.t-continuation-send {
+    height: 36px;
+    margin: 0 4px;
+    padding: 0 9px;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #888;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
 }
 
-/* \u53CC\u6309\u94AE\u7EC4\u5BB9\u5668 */
-.t-run-group {
+.t-continuation-history-btn:hover,
+.t-continuation-context-btn:hover,
+.t-continuation-context-btn.active {
+    background: #303030;
+    color: #ddd;
+}
+
+.t-continuation-input-wrap {
+    min-width: 0;
+    flex: 1;
+    position: relative;
+    align-self: stretch;
     display: flex;
-    gap: 0;
-    border-radius: 30px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    align-items: center;
 }
 
-/* \u901A\u7528\u6F14\u7ECE\u6309\u94AE\u6837\u5F0F */
-.t-run-btn {
+.t-continuation-input-wrap textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    max-height: 88px;
+    padding: 11px 8px 9px;
+    resize: none;
+    overflow-y: auto;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #eee;
+    font: inherit;
+    font-size: 13px;
+    line-height: 18px;
+    box-sizing: border-box;
+}
+
+.t-continuation-input-wrap textarea::placeholder {
+    color: #777;
+}
+
+.t-continuation-input-wrap textarea:focus {
+    box-shadow: none;
+}
+
+.t-continuation-quick:focus-within {
+    border-color: rgba(191, 161, 95, .58);
+}
+
+.t-continuation-send {
+    width: 38px;
+    margin-left: 0;
+    background: #bfa15f;
+    color: #171717;
+}
+
+.t-continuation-send:hover:not(:disabled) {
+    background: #d0b575;
+}
+
+.t-continuation-send.is-stop {
+    border-color: rgba(255, 107, 107, .55);
+    background: #d95757;
+    color: #fff;
+}
+
+.t-continuation-send.is-stop:hover {
+    background: #e86868;
+}
+
+.t-continuation-send:disabled,
+.t-continuation-history-btn:disabled,
+.t-continuation-context-btn:disabled,
+.t-continuation-input-wrap textarea:disabled {
+    cursor: not-allowed;
+    opacity: .42;
+}
+
+.t-mobile-toolbox-btn:active {
+    transform: translateY(1px);
+}
+
+.t-mobile-toolbox-btn:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+.t-mobile-toolbox-btn {
+    display: none;
+}
+
+.t-continuation-suggestions,
+.t-continuation-context-popover {
+    position: absolute;
+    z-index: 120;
+    bottom: calc(100% + 9px);
+    border: 1px solid #444;
+    border-radius: 7px;
+    background: #1d1d1d;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, .48);
+}
+
+.t-continuation-suggestions[hidden],
+.t-continuation-context-popover[hidden] {
+    display: none;
+}
+
+.t-continuation-suggestions {
+    left: -44px;
+    width: min(440px, calc(100vw - 40px));
+    padding: 7px;
+}
+
+.t-continuation-suggestions-head {
+    height: 30px;
+    padding: 0 4px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #888;
+    font-size: 11px;
+}
+
+.t-continuation-suggestions-head button {
+    padding: 5px 7px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #aaa;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.t-continuation-suggestions-head button:hover {
+    background: #303030;
+    color: #eee;
+}
+
+.t-continuation-suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.t-continuation-suggestion {
+    width: 100%;
+    padding: 8px 9px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #ccc;
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.t-continuation-suggestion:hover {
+    background: #2b2b2b;
+    color: #fff;
+}
+
+.t-continuation-suggestions-empty {
+    padding: 10px 9px;
+    color: #666;
+    font-size: 12px;
+}
+
+.t-continuation-context-popover {
+    right: 46px;
+    width: 248px;
+    padding: 12px;
+}
+
+.t-continuation-context-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.t-continuation-context-head strong {
+    color: #eee;
+    font-size: 13px;
+}
+
+.t-continuation-context-head span,
+.t-continuation-context-stats {
+    color: #888;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.t-continuation-stepper {
+    margin: 12px 0 10px;
+    display: grid;
+    grid-template-columns: 34px 1fr 34px;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-continuation-stepper button {
+    width: 34px;
+    height: 32px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background: #292929;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.t-continuation-stepper button:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+.t-continuation-stepper span {
+    color: #bbb;
+    font-size: 12px;
+    text-align: center;
+}
+
+.t-continuation-stepper strong {
+    color: #bfa15f;
+    font-size: 17px;
+}
+
+.t-continuation-context-stats.is-warning {
+    color: #ff7675;
+}
+
+/* \u6536\u7F29\u5DE5\u5177\u680F\u4E0E\u5DE5\u5177\u7BB1 */
+.t-toolbox-rail {
+    position: absolute;
+    z-index: 105;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    min-height: 104px;
+    padding: 12px 7px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 10px 18px;
-    min-width: 90px;
-    height: 55px;
-    border: none;
+    gap: 9px;
+    border: 1px solid #444;
+    border-right: 0;
+    border-radius: 8px 0 0 8px;
+    background: rgba(27, 27, 27, .96);
+    color: #aaa;
     cursor: pointer;
-    font-weight: bold;
-    font-size: 0.75em;
-    transition: all 0.2s;
-    line-height: 1.2;
+    box-shadow: -4px 8px 20px rgba(0, 0, 0, .32);
+    transition: color .18s, border-color .18s, background .18s, opacity .22s, transform .22s;
 }
 
-.t-run-btn i {
-    font-size: 1.3em;
+.t-toolbox-rail span {
+    writing-mode: vertical-rl;
+    font-size: 11px;
+    letter-spacing: 0;
 }
 
-.t-run-btn span {
-    font-size: 0.85em;
-    white-space: nowrap;
+.t-toolbox-rail:hover {
+    color: #eee;
+    border-color: #666;
+    background: #242424;
 }
 
-.t-run-btn:active {
-    transform: scale(0.98);
-}
-
-.t-run-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* \u5355\u6B21\u6F14\u7ECE\u6309\u94AE - \u9EC4\u8272\u4E3B\u9898 */
-.t-run-single {
-    background: linear-gradient(135deg, #bfa15f, #d4c08b);
-    color: #1a1a1a;
-    border-radius: 30px 0 0 30px;
-}
-
-.t-run-single:hover:not(:disabled) {
-    background: linear-gradient(135deg, #d4b06b, #e5d1a0);
-    box-shadow: 0 0 15px rgba(191, 161, 95, 0.4);
-}
-
-/* \u961F\u5217\u751F\u6210\u6309\u94AE - \u84DD\u8272\u4E3B\u9898 */
-.t-run-queue {
-    background: linear-gradient(135deg, #4a9eff, #6ab0ff);
-    color: #fff;
-    border-radius: 0 30px 30px 0;
-}
-
-.t-run-queue:hover:not(:disabled) {
-    background: linear-gradient(135deg, #5aafff, #7ac0ff);
-    box-shadow: 0 0 15px rgba(74, 158, 255, 0.4);
-}
-
-/* \u961F\u5217\u6309\u94AE\u6FC0\u6D3B\u72B6\u6001\uFF08\u961F\u5217\u5DF2\u914D\u7F6E\uFF09 */
-.t-run-queue.active {
-    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
-}
-
-/* \u961F\u5217\u6309\u94AE\u672A\u6FC0\u6D3B\u63D0\u793A\u6837\u5F0F */
-.t-run-queue.inactive {
-    background: linear-gradient(135deg, #3a3a3a, #4a4a4a);
-    color: #888;
-}
-
-.t-run-queue.inactive:hover:not(:disabled) {
-    background: linear-gradient(135deg, #4a4a4a, #5a5a5a);
+/* \u7FFB\u9875\u53EF\u7528\u65F6\u5DE5\u5177\u7BB1\u5165\u53E3\u8BA9\u4F4D\u7ED9\u53F3\u7FFB\u9875\u952E\uFF0C\u9F20\u6807\u9760\u8FD1\u53F3\u4FA7\u624D\u91CD\u65B0\u6D6E\u51FA */
+#t-main-view.t-has-pagenav .t-toolbox-rail {
+    opacity: 0.12;
+    pointer-events: none;
     box-shadow: none;
+    transform: translateY(calc(-50% - 92px));
 }
 
-/* \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A (2x2 \u7F51\u683C\u5E03\u5C40) */
-.t-bot-right {
+#t-main-view.t-has-pagenav.t-rail-peek .t-toolbox-rail,
+#t-main-view.t-has-pagenav.t-toolbox-open .t-toolbox-rail {
+    opacity: 1;
+    pointer-events: auto;
+    box-shadow: -4px 8px 20px rgba(0, 0, 0, .32);
+}
+
+.t-toolbox-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 106;
+    visibility: hidden;
+    background: rgba(0, 0, 0, .28);
+    opacity: 0;
+    transition: opacity .2s, visibility .2s;
+}
+
+.t-toolbox-panel {
+    position: absolute;
+    z-index: 107;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: #191919;
+    border-left: 1px solid #444;
+    box-shadow: -14px 0 34px rgba(0, 0, 0, .5);
+    transform: translateX(102%);
+    transition: transform .24s ease;
+}
+
+.t-toolbox-open .t-toolbox-backdrop {
+    visibility: visible;
+    opacity: 1;
+}
+
+.t-toolbox-open .t-toolbox-panel {
+    transform: translateX(0);
+}
+
+.t-toolbox-header {
+    min-height: 62px;
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+    box-sizing: border-box;
+}
+
+.t-toolbox-header div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.t-toolbox-header strong {
+    color: #eee;
+    font-size: 15px;
+}
+
+.t-toolbox-header span,
+.t-toolbox-section-title {
+    color: #777;
+    font-size: 11px;
+}
+
+.t-toolbox-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 6px;
+    background: #292929;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.t-toolbox-body {
+    flex: 1;
+    min-height: 0;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.t-toolbox-section + .t-toolbox-section {
+    margin-top: 16px;
+}
+
+.t-toolbox-section-title {
+    margin: 0 0 7px 2px;
+}
+
+.t-toolbox-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    width: 92px;
-    height: 60px;
-    flex-shrink: 0;
+    gap: 7px;
 }
 
-/* \u53F3\u4FA7\u8F85\u52A9\u6309\u94AE\u901A\u7528\u6837\u5F0F */
-.t-btn-aux {
+.t-toolbox-action {
+    min-width: 0;
+    min-height: 54px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #393939;
+    border-radius: 6px;
+    background: #232323;
+    color: #bbb;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: background .18s, border-color .18s, color .18s;
+}
+
+.t-toolbox-action i {
+    width: 19px;
+    flex: 0 0 19px;
+    color: #888;
+    text-align: center;
+}
+
+.t-toolbox-action:hover {
+    background: #2d2d2d;
+    border-color: #555;
+    color: #fff;
+}
+
+.t-toolbox-action.active,
+#t-btn-queue-settings.active {
+    border-color: rgba(144, 205, 244, .45);
+    background: rgba(144, 205, 244, .12);
+    color: #b8e0fa;
+}
+
+.t-toolbox-action.inactive {
+    color: #777;
+}
+
+.t-toolbox-action-wide {
+    grid-column: 1 / -1;
+}
+
+.t-toolbox-stop {
+    display: none;
+    min-height: 44px;
+    margin: 0 12px 12px;
+    border: 1px solid rgba(255, 107, 107, .45);
+    border-radius: 6px;
+    background: rgba(255, 107, 107, .1);
+    color: #ff8a8a;
+    font: inherit;
+    cursor: pointer;
+}
+
+.t-toolbox-stop.is-active {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    box-sizing: border-box;
-    line-height: 1;
-    background: #2b2b2b;
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #aaa;
-    font-size: 1em;
-    cursor: pointer;
-    transition: all 0.2s;
+    gap: 8px;
 }
-
-.t-btn-aux:hover {
-    background: #383838;
-    color: #fff;
-    border-color: #666;
-}
-
-.t-btn-aux:active {
-    transform: scale(0.95);
-}
-
-/* \u961F\u5217\u8BBE\u7F6E\u6309\u94AE\u7279\u6B8A\u6837\u5F0F */
-#t-btn-queue-settings.active {
-    background: rgba(144, 205, 244, 0.15);
-    border-color: rgba(144, 205, 244, 0.4);
-    color: #90cdf4;
-}
-
-/* \u8BCA\u65AD\u6309\u94AE - \u6A59\u8272\u4E3B\u9898 */
-.t-btn-diag {
-    color: #f59e0b;
-}
-
-.t-btn-diag:hover {
-    background: rgba(245, 158, 11, 0.15);
-    border-color: rgba(245, 158, 11, 0.4);
-    color: #fbbf24;
-}
-
-/* \u7F16\u8F91\u6309\u94AE */
-#t-btn-edit {
-    color: #bfa15f;
-}
-
-#t-btn-edit:hover {
-    background: rgba(191, 161, 95, 0.15);
-    border-color: rgba(191, 161, 95, 0.4);
-}
-
-/* \u4E2D\u6B62\u6309\u94AE - \u7EA2\u8272\u4E3B\u9898 */
-.t-btn-stop {
-    color: #ff6b6b;
-}
-
-.t-btn-stop:hover {
-    background: rgba(255, 107, 107, 0.15);
-    border-color: rgba(255, 107, 107, 0.4);
-    color: #ff8a8a;
-}
-
-.t-btn-stop:active {
-    background: rgba(255, 107, 107, 0.25);
-}
-
-/* ... (\u4FDD\u7559 Media Query \u9002\u914D) ... */
 
 /* \u7B5B\u9009\u5F39\u51FA\u83DC\u5355 */
 .t-filter-popover {
@@ -2470,58 +2918,117 @@ textarea.t-input {
         padding: 15px;
     }
 
-    /* --- [\u91CD\u70B9\u4FEE\u6539] \u5E95\u90E8\u64CD\u4F5C\u680F\u9002\u914D --- */
+    /* \u79FB\u52A8\u7AEF\u6838\u5FC3\u64CD\u4F5C\u680F */
     .t-bottom-bar {
-        flex-direction: row;
-        height: 80px;
-        padding: 8px 10px;
-        gap: 10px;
+        height: auto;
+        min-height: 62px;
+        padding: 8px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 52px;
+        grid-template-rows: 46px;
+        gap: 6px;
     }
 
-    /* \u5DE6\u4FA7\u7F51\u683C\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
-    .t-bot-left {
-        width: 76px;
-        height: 55px;
-        gap: 4px;
+    .t-continuation-quick {
+        grid-column: 1;
+        grid-row: 1;
+        height: 46px;
     }
 
-    .t-btn-grid {
-        font-size: 0.95em;
+    .t-continuation-history-btn {
+        width: 38px;
+        margin: 0 2px;
+        padding: 0 5px;
     }
 
-    /* \u4E2D\u95F4\u53CC\u6309\u94AE\u7EC4\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
-    .t-run-group {
-        border-radius: 25px;
+    .t-continuation-input-wrap textarea {
+        min-height: 42px;
+        padding: 12px 5px 10px;
+        font-size: 12px;
     }
 
-    .t-run-btn {
-        min-width: 75px;
-        height: 50px;
-        padding: 8px 12px;
-        font-size: 0.7em;
+    .t-continuation-context-btn {
+        margin: 0;
+        padding: 0 5px;
     }
 
-    .t-run-btn i {
-        font-size: 1.2em;
+    .t-continuation-context-btn i {
+        display: none;
     }
 
-    .t-run-single {
-        border-radius: 25px 0 0 25px;
+    .t-continuation-send {
+        width: 36px;
+        margin-right: 4px;
+        padding: 0;
     }
 
-    .t-run-queue {
-        border-radius: 0 25px 25px 0;
+    .t-mobile-toolbox-btn {
+        grid-column: 2;
+        grid-row: 1;
+        display: flex;
+        width: 52px;
+        height: 46px;
+        padding: 0;
+        flex-direction: column;
+        gap: 3px;
+        border-color: #444;
+        background: #252525;
+        color: #aaa;
+        font-size: 11px;
     }
 
-    /* \u53F3\u4FA7\u8F85\u52A9\u533A\uFF1A\u79FB\u52A8\u7AEF\u9002\u914D */
-    .t-bot-right {
-        width: 76px;
-        height: 55px;
-        gap: 4px;
+    .t-continuation-suggestions {
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: 62px;
+        width: auto;
+        max-height: min(42dvh, 320px);
+        overflow-y: auto;
     }
 
-    .t-btn-aux {
-        font-size: 0.85em;
+    .t-continuation-context-popover {
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: 62px;
+        width: auto;
+        box-sizing: border-box;
+    }
+
+    .t-toolbox-rail {
+        display: none;
+    }
+
+    .t-toolbox-backdrop {
+        position: fixed;
+        inset: 0;
+    }
+
+    .t-toolbox-panel {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: min(76dvh, 620px);
+        border-top: 1px solid #555;
+        border-left: 0;
+        border-radius: 12px 12px 0 0;
+        transform: translateY(102%);
+    }
+
+    .t-toolbox-open .t-toolbox-panel {
+        transform: translateY(0);
+    }
+
+    .t-toolbox-close i {
+        transform: rotate(90deg);
+    }
+
+    .t-toolbox-body {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
 }
 
@@ -3561,6 +4068,14 @@ textarea.t-input {
     padding: 14px;
 }
 
+.t-cont-history-empty {
+    display: grid;
+    min-height: 180px;
+    place-items: center;
+    color: #777;
+    font-size: 13px;
+}
+
 .t-cont-history-session {
     margin-bottom: 12px;
     border: 1px solid #343434;
@@ -3779,17 +4294,24 @@ textarea.t-input {
     }
 
     .t-cont-history-session-toggle {
-        align-items: flex-start;
-        flex-wrap: wrap;
+        align-items: center;
+        flex-wrap: nowrap;
     }
 
-    .t-cont-history-session-toggle > span {
-        flex: 1;
+    .t-cont-history-session-toggle > .t-cont-select-wrap {
+        flex: 0 0 auto;
+    }
+
+    .t-cont-history-session-toggle > span:not(.t-cont-select-wrap) {
+        flex: 1 1 auto;
+        min-width: 0;
     }
 
     .t-cont-history-session-toggle > small {
-        width: 100%;
-        margin-left: 18px;
+        width: auto;
+        margin-left: auto;
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 
     .t-cont-history-session-body {
@@ -6127,6 +6649,25 @@ textarea.t-input {
     backdrop-filter: blur(8px);
 }
 
+/* \u5DE5\u5177\u680F\u62BD\u5C49\uFF1A\u684C\u9762\u7AEF\u5FFD\u7565 hidden \u5C5E\u6027\u5E76\u5E73\u94FA\uFF0C\u79FB\u52A8\u7AEF\u624D\u6298\u53E0\u4E3A\u4E0B\u62C9\u9762\u677F */
+.t-fav-tools-drawer {
+    display: contents;
+}
+
+.t-fav-drawer-toggle {
+    display: none;
+}
+
+.t-fav-drawer-toggle.is-active {
+    border-color: rgba(231, 202, 143, 0.7);
+    background: rgba(191, 161, 95, 0.16);
+    color: #f5e6c2;
+}
+
+.t-fav-toolbar-tail {
+    margin-left: auto;
+}
+
 .t-fav-filter-select,
 .t-fav-search {
     background: rgba(30, 30, 30, 0.88);
@@ -6561,6 +7102,109 @@ textarea.t-input {
     background: #181818;
 }
 
+/* \u9876\u680F\u64CD\u4F5C\u533A */
+.t-read-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* \u9876\u680F\u6EA2\u51FA\u83DC\u5355 */
+.t-read-more-wrap {
+    position: relative;
+}
+
+.t-read-more-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 20;
+    min-width: 172px;
+    padding: 5px;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    border-radius: 8px;
+    background: #1f1b15;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+    animation: fadeIn 0.14s ease;
+}
+
+.t-read-more-menu[hidden] {
+    display: none;
+}
+
+.t-read-more-menu button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 11px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #e2dccc;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.9em;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.t-read-more-menu button i {
+    width: 16px;
+    text-align: center;
+    color: #9c8f6f;
+}
+
+.t-read-more-menu button:hover {
+    background: rgba(191, 161, 95, 0.14);
+    color: #fff;
+}
+
+.t-read-more-menu button.danger {
+    color: #ef8f8f;
+}
+
+.t-read-more-menu button.danger i {
+    color: #d66;
+}
+
+.t-read-more-menu button.danger:hover {
+    background: rgba(220, 60, 60, 0.16);
+    color: #ffb4b4;
+}
+
+.t-read-more-sep {
+    height: 1px;
+    margin: 5px 6px;
+    background: rgba(191, 161, 95, 0.2);
+}
+
+.t-read-more-btn.is-active,
+.t-read-toggle-meta.is-active {
+    border-color: rgba(231, 202, 143, 0.7);
+    background: rgba(191, 161, 95, 0.16);
+    color: #f5e6c2;
+}
+
+/* \u4EE3\u7406\u6309\u94AE\uFF1A\u4EC5\u627F\u8F7D\u4E8B\u4EF6\u5904\u7406\u5668\uFF0C\u4E0D\u53C2\u4E0E\u5E03\u5C40 */
+.t-read-proxy-actions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* \u684C\u9762\u7AEF\uFF1A\u6EA2\u51FA\u83DC\u5355\u91CC\u4EC5\u4FDD\u7559\u5220\u9664\u7C7B\u5371\u9669\u64CD\u4F5C\uFF0C\u5176\u4F59\u91CD\u590D\u9879\u4E0E\u5206\u9694\u7EBF\u9690\u85CF */
+.t-read-more-menu .t-read-menu-opt {
+    display: none;
+}
+
+.t-read-more-menu .t-read-more-sep {
+    display: none;
+}
+
 .t-read-body {
     flex-grow: 1;
     padding: 0;
@@ -6974,10 +7618,83 @@ textarea.t-input {
     }
 
     .t-fav-toolbar {
-        flex-direction: column;
+        min-height: 0;
         height: auto;
         padding: 10px;
-        align-items: stretch;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    /* \u79FB\u52A8\u7AEF\uFF1A\u7B5B\u9009\u4E0B\u62C9\u5360\u636E\u4E3B\u884C\u5269\u4F59\u7A7A\u95F4 */
+    #t-fav-filter-char {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .t-fav-toolbar .t-fav-toolbar-tail {
+        margin-left: 0;
+        flex-shrink: 0;
+    }
+
+    /* \u79FB\u52A8\u7AEF\u663E\u793A\u62BD\u5C49\u5F00\u5173 */
+    .t-fav-drawer-toggle {
+        display: inline-flex;
+        flex-shrink: 0;
+    }
+
+    /* \u62BD\u5C49\u6298\u53E0\u4E3A\u4E0B\u62C9\u9762\u677F */
+    .t-fav-tools-drawer {
+        display: flex;
+        position: absolute;
+        top: calc(100% - 2px);
+        right: 10px;
+        left: 10px;
+        z-index: 12;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid rgba(191, 161, 95, 0.32);
+        border-radius: 10px;
+        background: #1c1811;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+        animation: fadeIn 0.14s ease;
+    }
+
+    .t-fav-tools-drawer[hidden] {
+        display: none;
+    }
+
+    .t-fav-tools-drawer > * {
+        width: 100%;
+    }
+
+    .t-fav-tools-drawer .t-fav-view-toggle {
+        flex-direction: row;
+        justify-content: center;
+        gap: 4px;
+        padding: 9px 8px;
+    }
+
+    /* \u9876\u680F\uFF1A\u5185\u8054\u7684\u91CD\u590D\u6309\u94AE\u6536\u8FDB\u83DC\u5355\uFF0C\u53EA\u7559\u4FE1\u606F / \u65B0\u7A97\u53E3 / \u66F4\u591A */
+    .t-read-actions {
+        gap: 6px;
+    }
+
+    .t-read-inline-opt {
+        display: none;
+    }
+
+    .t-read-more-menu {
+        min-width: 190px;
+    }
+
+    .t-read-more-menu .t-read-menu-opt {
+        display: flex;
+    }
+
+    .t-read-more-menu .t-read-more-sep {
+        display: block;
     }
 
     .t-fav-grid-area {
@@ -7463,6 +8180,119 @@ textarea.t-input {
     background: #141414;
 }
 
+#t-debug-view .t-prompt-source-bar {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 6px 16px 0;
+    border-bottom: 1px solid #242424;
+    background: #161616;
+}
+
+#t-debug-view .t-prompt-source-tabs {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+#t-debug-view .t-prompt-source-tab,
+#t-debug-view .t-prompt-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 11px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #777;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#t-debug-view .t-prompt-source-tab:hover,
+#t-debug-view .t-prompt-info-btn:hover {
+    color: #bbb;
+    background: #1d1d1d;
+}
+
+#t-debug-view .t-prompt-source-tab.active {
+    border-bottom-color: #74b9ff;
+    color: #d8e9f8;
+}
+
+#t-debug-view .t-prompt-source-tab i {
+    color: #74b9ff;
+    font-size: 7px;
+}
+
+#t-debug-view .t-prompt-info-btn {
+    width: 32px;
+    padding: 0;
+    border-bottom: 0;
+    border-radius: 5px;
+}
+
+#t-debug-view .t-prompt-info-btn i {
+    font-size: 12px;
+}
+
+#t-debug-view .t-prompt-info-popover {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 0;
+    z-index: 8;
+    width: min(360px, calc(100vw - 32px));
+    padding: 13px 14px;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    background: #202020;
+    color: #aaa;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .55);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+#t-debug-view .t-prompt-info-popover[hidden] {
+    display: none;
+}
+
+#t-debug-view .t-prompt-info-popover strong {
+    color: #e5e7eb;
+    font-size: 12px;
+}
+
+#t-debug-view .t-prompt-info-popover p {
+    margin: 7px 0 10px;
+}
+
+#t-debug-view .t-prompt-info-popover dl,
+#t-debug-view .t-prompt-info-popover dd {
+    margin: 0;
+}
+
+#t-debug-view .t-prompt-info-popover dl > div {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 8px;
+}
+
+#t-debug-view .t-prompt-info-popover dt {
+    color: #666;
+}
+
+#t-debug-view .t-prompt-info-popover dd {
+    overflow: hidden;
+    color: #ccc;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 #t-debug-view .t-prompt-summary {
     display: flex;
     align-items: center;
@@ -7728,6 +8558,24 @@ textarea.t-input {
         gap: 10px;
     }
 
+    #t-debug-view .t-prompt-source-bar {
+        padding-inline: 10px;
+    }
+
+    #t-debug-view .t-prompt-source-tabs {
+        width: 100%;
+    }
+
+    #t-debug-view .t-prompt-source-tab {
+        flex: 1;
+        min-width: 0;
+        padding-inline: 5px;
+    }
+
+    #t-debug-view .t-prompt-info-popover {
+        left: 0;
+    }
+
     #t-debug-view .t-prompt-request {
         align-items: flex-start;
         flex-direction: column;
@@ -7745,6 +8593,17 @@ textarea.t-input {
     #t-debug-view .t-prompt-tool-btn {
         justify-content: center;
         padding: 8px 6px;
+    }
+
+    #t-debug-view #t-prompt-expand-all-btn {
+        width: 34px;
+        overflow: hidden;
+        color: transparent;
+        gap: 0;
+    }
+
+    #t-debug-view #t-prompt-expand-all-btn i {
+        color: #999;
     }
 
     #t-debug-view .t-prompt-icon-btn {
@@ -12692,6 +13551,13 @@ function lockDisplayToHistory(historyIndex) {
   item.isRead = true;
   console.log(`[Titania] \u663E\u793A\u5C42\u9501\u5B9A\u5230\u5386\u53F2 #${historyIndex + 1}`);
 }
+function lockDisplayToContent(content, scriptId, scriptName = "\u573A\u666F") {
+  GlobalState.displayState.isViewingHistory = true;
+  GlobalState.displayState.currentViewIndex = -1;
+  GlobalState.displayState.lockedContent = String(content || "");
+  GlobalState.displayState.lockedScriptId = String(scriptId || "");
+  GlobalState.displayState.lockedScriptName = String(scriptName || "\u573A\u666F");
+}
 function unlockDisplay() {
   GlobalState.displayState.isViewingHistory = false;
   GlobalState.displayState.currentViewIndex = -1;
@@ -14645,7 +15511,7 @@ function getCurrentAvatarSrc() {
 function escapeHtmlText(str) {
   return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function buildChainMergedHtml(chainItems) {
+function buildChainSegmentsHtml(chainItems) {
   const items = Array.isArray(chainItems) ? chainItems : [];
   if (items.length === 0) return "";
   return items.map((item, idx) => {
@@ -14653,18 +15519,39 @@ function buildChainMergedHtml(chainItems) {
     const type = String(item?.type || (idx === 0 ? "initial" : "continuation"));
     const instruction = String(item?.instruction || "").trim() || (type === "initial" ? "\uFF08\u9996\u6B21\u751F\u6210\uFF09" : "\uFF08\u81EA\u7136\u7EED\u5199\uFF09");
     const html = String(item?.html || "").trim();
-    const title = type === "initial" ? "\u9996\u6B21\u751F\u6210" : `\u7B2C ${roundNo} \u6BB5\u7EED\u5199`;
+    const chipLabel = type === "initial" ? "\u9996\u6B21\u751F\u6210" : `\u7B2C ${roundNo} \u6BB5\u7EED\u5199`;
     const instructionLabel = type === "initial" ? "\u751F\u6210\u8BF4\u660E" : "\u7EED\u5199\u6307\u4EE4";
     return `
-            <section class="t-chain-segment" data-round="${roundNo}">
-                <div class="t-chain-segment-head">
-                    <div class="t-chain-segment-title">${escapeHtmlText(title)}</div>
-                    <div class="t-chain-segment-instruction">${instructionLabel}\uFF1A${escapeHtmlText(instruction)}</div>
-                </div>
+            <section class="t-chain-segment" data-round="${roundNo}" data-type="${escapeHtmlText(type)}">
+                <details class="t-chain-meta">
+                    <summary>
+                        <span class="t-chain-meta-line"></span>
+                        <span class="t-chain-meta-chip">
+                            <span class="t-chain-meta-name">${escapeHtmlText(chipLabel)}</span>
+                            <span class="t-chain-meta-caret">\u25BC</span>
+                        </span>
+                        <span class="t-chain-meta-line"></span>
+                    </summary>
+                    <div class="t-chain-meta-panel">
+                        <span class="t-chain-meta-label">${escapeHtmlText(instructionLabel)}</span>
+                        <span class="t-chain-meta-text">${escapeHtmlText(instruction)}</span>
+                    </div>
+                </details>
                 <div class="t-chain-segment-body">${html}</div>
             </section>
         `;
   }).join("\n");
+}
+function buildChainMergedHtml(chainItems, options = {}) {
+  const segments = buildChainSegmentsHtml(chainItems);
+  if (!segments) return "";
+  return options.withStyles === true ? `${CHAIN_SEGMENT_STYLES}
+${segments}` : segments;
+}
+function getChainDisplayHtml(item) {
+  const rebuilt = buildChainMergedHtml(item?.items, { withStyles: true });
+  if (rebuilt) return rebuilt;
+  return String(item?.html || "");
 }
 function buildChainSignature(scriptId, rounds) {
   const payload = `${String(scriptId || "")}|${(Array.isArray(rounds) ? rounds : []).map((r) => `${r.round}#${String(r.type || "continuation").trim()}#${String(r.instruction || "").trim()}#${String(r.content || "").trim()}`).join("|")}`;
@@ -14890,7 +15777,7 @@ async function saveContinuationChainFavorite() {
     if (window.toastr) toastr.info("\u5F53\u524D\u5267\u573A\u5206\u7EC4\u5DF2\u6536\u85CF\uFF0C\u65E0\u9700\u91CD\u590D\u6536\u85CF");
     return true;
   }
-  const mergedHtml = buildChainMergedHtml(items);
+  const mergedHtml = buildChainMergedHtml(items, { withStyles: true });
   const now = Date.now();
   const activeFavId = Number(GlobalState.lastFavId) || null;
   let existingChain = null;
@@ -15032,26 +15919,25 @@ function openFavsWindow() {
             <span class="t-close" id="t-fav-close">&times;</span>
         </div>
         
-        <!-- \u666E\u901A\u5DE5\u5177\u680F -->
+        <!-- \u666E\u901A\u5DE5\u5177\u680F\uFF1A\u62BD\u5C49\u5185\u4E3A\u540C\u4E00\u5957\u771F\u5B9E\u63A7\u4EF6\uFF0C\u684C\u9762\u7AEF display:contents \u5E73\u94FA\uFF0C\u79FB\u52A8\u7AEF\u6298\u53E0\u4E3A\u4E0B\u62C9\u9762\u677F -->
         <div class="t-fav-toolbar" id="t-fav-toolbar-normal">
-            <div style="display:flex; align-items:center; gap:10px; flex-grow:1;">
-                <i class="fa-solid fa-filter" style="color:#666;"></i>
-                <select id="t-fav-filter-char" class="t-fav-filter-select">
-                    ${charList.map((c) => `<option value="${c}">${c}</option>`).join("")}
-                </select>
+            <i class="fa-solid fa-filter t-fav-filter-icon" style="color:#666;"></i>
+            <select id="t-fav-filter-char" class="t-fav-filter-select">
+                ${charList.map((c) => `<option value="${c}">${c}</option>`).join("")}
+            </select>
+            <div class="t-fav-tools-drawer" id="t-fav-tools-drawer" hidden>
                 <select id="t-fav-sort" class="t-fav-filter-select" title="\u6392\u5E8F\u65B9\u5F0F">
                     <option value="newest">\u6700\u65B0\u4F18\u5148</option>
                     <option value="oldest">\u6700\u65E9\u4F18\u5148</option>
                     <option value="title_asc">\u6807\u9898 A-Z</option>
                     <option value="title_desc">\u6807\u9898 Z-A</option>
                 </select>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center;">
                 <input type="text" id="t-fav-search" class="t-fav-search" placeholder="\u641C\u7D22\u5173\u952E\u8BCD...">
                 <button id="t-fav-view-toggle" class="t-tool-btn t-fav-view-toggle" title="\u5207\u6362\u7D27\u51D1\u6A21\u5F0F"><span>\u7D27\u51D1</span><span>\u6A21\u5F0F</span></button>
                 <button id="t-btn-img-mgr" class="t-tool-btn" title="\u7BA1\u7406\u89D2\u8272\u80CC\u666F\u56FE"><i class="fa-regular fa-image"></i> \u56FE\u9274</button>
-                <button id="t-btn-edit-mode" class="t-tool-btn" title="\u6279\u91CF\u7BA1\u7406"><i class="fa-solid fa-pen-to-square"></i> \u7F16\u8F91</button>
             </div>
+            <button id="t-btn-edit-mode" class="t-tool-btn t-fav-toolbar-tail" title="\u6279\u91CF\u7BA1\u7406"><i class="fa-solid fa-pen-to-square"></i> \u7F16\u8F91</button>
+            <button class="t-tool-btn t-fav-drawer-toggle" id="t-fav-drawer-toggle" title="\u66F4\u591A\u5DE5\u5177" aria-label="\u66F4\u591A\u5DE5\u5177" aria-controls="t-fav-tools-drawer" aria-expanded="false"><i class="fa-solid fa-sliders"></i></button>
         </div>
         
         <!-- \u7F16\u8F91\u6A21\u5F0F\u5DE5\u5177\u680F -->
@@ -15088,19 +15974,34 @@ function openFavsWindow() {
                         <div id="t-read-index" style="font-size:0.75em; color:#666;">0 / 0</div>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px; flex-shrink:0;">
-                    <button class="t-tool-btn" id="t-read-rename" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
-                    <button class="t-tool-btn" id="t-read-del-segment" title="\u5220\u9664\u5206\u7EC4\u6BB5\u843D" style="display:none; color:#ff9f43; border-color:rgba(255, 159, 67, 0.5);"><i class="fa-solid fa-scissors"></i></button>
-                    <button class="t-tool-btn" id="t-read-img" title="\u5BFC\u51FA\u56FE\u7247"><i class="fa-solid fa-camera"></i></button>
-                    <button class="t-tool-btn" id="t-read-code" title="\u590D\u5236HTML"><i class="fa-solid fa-code"></i></button>
+                <div class="t-read-actions">
+                    <button class="t-tool-btn" id="t-read-toggle-meta" title="\u5C55\u5F00\u5168\u90E8\u6BB5\u843D\u4FE1\u606F" style="display:none;"><i class="fa-solid fa-circle-info"></i></button>
+                    <button class="t-tool-btn t-read-inline-opt" id="t-read-rename" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
+                    <button class="t-tool-btn t-read-inline-opt" id="t-read-img" title="\u5BFC\u51FA\u56FE\u7247"><i class="fa-solid fa-camera"></i></button>
+                    <button class="t-tool-btn t-read-inline-opt" id="t-read-code" title="\u590D\u5236HTML"><i class="fa-solid fa-code"></i></button>
                     <button class="t-tool-btn" id="t-read-open-window" title="\u65B0\u7A97\u53E3\u6253\u5F00(\u4E92\u52A8\u6A21\u5F0F)"><i class="fa-solid fa-up-right-from-square"></i></button>
-                    <button class="t-tool-btn" id="t-read-del-one" title="\u5220\u9664" style="color:#ff6b6b; border-color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
+                    <div class="t-read-more-wrap">
+                        <button class="t-tool-btn t-read-more-btn" id="t-read-more" title="\u66F4\u591A\u64CD\u4F5C" aria-label="\u66F4\u591A\u64CD\u4F5C" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        <div class="t-read-more-menu" id="t-read-more-menu" hidden>
+                            <button type="button" class="t-read-menu-opt" data-read-action="rename"><i class="fa-solid fa-pen"></i><span>\u91CD\u547D\u540D</span></button>
+                            <button type="button" class="t-read-menu-opt" data-read-action="img"><i class="fa-solid fa-camera"></i><span>\u5BFC\u51FA\u56FE\u7247</span></button>
+                            <button type="button" class="t-read-menu-opt" data-read-action="code"><i class="fa-solid fa-code"></i><span>\u590D\u5236 HTML</span></button>
+                            <div class="t-read-more-sep"></div>
+                            <button type="button" class="danger" id="t-read-menu-del-segment" data-read-action="del-segment"><i class="fa-solid fa-scissors"></i><span>\u5220\u9664\u5206\u7EC4\u6BB5\u843D</span></button>
+                            <button type="button" class="danger" data-read-action="del-one"><i class="fa-solid fa-trash"></i><span>\u5220\u9664\u6B64\u6536\u85CF</span></button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="t-read-body">
                 <div id="t-read-capture-zone">
                     <div id="t-read-content"></div>
                 </div>
+            </div>
+            <!-- \u4EE3\u7406\u6309\u94AE\uFF1A\u4EC5\u627F\u8F7D\u65E2\u6709\u4E8B\u4EF6\u5904\u7406\u5668\uFF0C\u7531\u9876\u680F\u83DC\u5355\u8F6C\u53D1\u70B9\u51FB\uFF0C\u4E0D\u76F4\u63A5\u5C55\u793A -->
+            <div class="t-read-proxy-actions" aria-hidden="true">
+                <button type="button" id="t-read-del-segment"></button>
+                <button type="button" id="t-read-del-one"></button>
             </div>
         </div>
     </div>`;
@@ -15167,6 +16068,7 @@ function openFavsWindow() {
   };
   const toggleEditMode = (enable) => {
     isEditMode = enable;
+    setFavDrawerOpen(false);
     if (enable) {
       $("#t-fav-toolbar-normal").hide();
       $("#t-fav-toolbar-edit").show();
@@ -15189,14 +16091,15 @@ function openFavsWindow() {
     if (typeof item._snippetText === "string") return item._snippetText;
     const isChain = item?.type === "chain";
     const chainItems = Array.isArray(item?.items) ? item.items : [];
-    const chainSnippetSource = isChain ? chainItems.map((seg) => {
-      const instruction = String(seg?.instruction || "").trim();
-      const html2 = String(seg?.html || "").trim();
-      return `${instruction}
-${html2}`;
-    }).join("\n") : "";
+    const chainSnippetSource = isChain ? chainItems.map((seg) => String(seg?.html || "").trim()).filter(Boolean).join("\n") : "";
     item._snippetText = getSnippet(isChain ? chainSnippetSource || item.html : item.html);
     return item._snippetText;
+  };
+  const getChainInstructionText = (item) => {
+    if (typeof item._instructionText === "string") return item._instructionText;
+    const chainItems = item?.type === "chain" && Array.isArray(item?.items) ? item.items : [];
+    item._instructionText = chainItems.map((seg) => String(seg?.instruction || "").trim()).filter(Boolean).join(" ");
+    return item._instructionText;
   };
   const getCachedSearchText = (item) => {
     if (typeof item._searchText === "string") return item._searchText;
@@ -15205,7 +16108,8 @@ ${html2}`;
       String(item?.title || ""),
       String(item?._meta?.script || ""),
       String(item?._meta?.char || ""),
-      String(snippet || "")
+      String(snippet || ""),
+      getChainInstructionText(item)
     ].join(" ").toLowerCase();
     return item._searchText;
   };
@@ -15629,21 +16533,25 @@ ${html2}`;
     currentIndex = index;
     const item = currentFilteredList[index];
     currentFavId = item.id;
-    currentViewingHtml = item.html;
-    currentViewingTitle = item.title;
     if (item?.type === "chain") {
+      currentViewingHtml = getChainDisplayHtml(item);
       const chainItems = Array.isArray(item.items) ? item.items : [];
       const chainCount = chainItems.length;
       $("#t-read-meta").text(`${item.title}\uFF08\u5267\u573A\u5206\u7EC4\uFF09`);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length} \xB7 ${chainCount} \u6BB5`);
-      $("#t-read-del-segment").show();
+      $("#t-read-menu-del-segment").show();
+      $("#t-read-toggle-meta").show();
+      syncToggleMetaButton(false);
     } else {
+      currentViewingHtml = item.html;
       $("#t-read-meta").text(item.title);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
-      $("#t-read-del-segment").hide();
+      $("#t-read-menu-del-segment").hide();
+      $("#t-read-toggle-meta").hide();
     }
+    currentViewingTitle = item.title;
     const container = document.getElementById("t-read-content");
-    const { isInteractive, reasons } = detectInteractiveContent(item.html);
+    const { isInteractive, reasons } = detectInteractiveContent(currentViewingHtml);
     const openWindowBtn = $("#t-read-open-window");
     if (isInteractive) {
       openWindowBtn.addClass("has-interactive").attr("title", `\u65B0\u7A97\u53E3\u6253\u5F00(${reasons.join(", ")})`);
@@ -15651,7 +16559,7 @@ ${html2}`;
       openWindowBtn.removeClass("has-interactive").attr("title", "\u65B0\u7A97\u53E3\u6253\u5F00");
     }
     try {
-      const shadow = renderToShadowDOMReal(container, item.html);
+      const shadow = renderToShadowDOMReal(container, currentViewingHtml);
       setTimeout(() => {
         shadow.querySelectorAll("*").forEach((el) => {
           const style = window.getComputedStyle(el);
@@ -15665,11 +16573,47 @@ ${html2}`;
       console.warn("Titania: Shadow DOM \u6E32\u67D3\u5931\u8D25\uFF0C\u964D\u7EA7\u5230 innerHTML", e);
       container.innerHTML = "";
       setTimeout(() => {
-        container.innerHTML = item.html;
+        container.innerHTML = currentViewingHtml;
       }, 10);
     }
     $("#t-fav-reader").addClass("show");
   };
+  const setFavDrawerOpen = (open) => {
+    $("#t-fav-tools-drawer").prop("hidden", !open);
+    $("#t-fav-drawer-toggle").attr("aria-expanded", String(open === true)).toggleClass("is-active", open === true);
+  };
+  const setReadMenuOpen = (open) => {
+    $("#t-read-more-menu").prop("hidden", !open);
+    $("#t-read-more").attr("aria-expanded", String(open === true));
+  };
+  $("#t-fav-drawer-toggle").on("click", (e) => {
+    e.stopPropagation();
+    setReadMenuOpen(false);
+    setFavDrawerOpen($("#t-fav-tools-drawer").prop("hidden") === true);
+  });
+  $("#t-fav-tools-drawer").on("click", (e) => e.stopPropagation());
+  $("#t-read-more-menu").on("click", (e) => e.stopPropagation());
+  $("#t-read-more").on("click", (e) => {
+    e.stopPropagation();
+    setFavDrawerOpen(false);
+    setReadMenuOpen($("#t-read-more-menu").prop("hidden") === true);
+  });
+  $("#t-read-more-menu").on("click", "[data-read-action]", function() {
+    const action = String($(this).data("read-action") || "");
+    setReadMenuOpen(false);
+    const targetId = {
+      rename: "#t-read-rename",
+      img: "#t-read-img",
+      code: "#t-read-code",
+      "del-segment": "#t-read-del-segment",
+      "del-one": "#t-read-del-one"
+    }[action];
+    if (targetId) $(targetId).trigger("click");
+  });
+  $("#t-favs-view").on("click", () => {
+    setFavDrawerOpen(false);
+    setReadMenuOpen(false);
+  });
   $("#t-fav-filter-char").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
   $("#t-fav-sort").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
   $("#t-fav-search").on("input", scheduleSearchRender);
@@ -15682,6 +16626,7 @@ ${html2}`;
     scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
   });
   $("#t-btn-img-mgr").on("click", () => {
+    setFavDrawerOpen(false);
     openCharImageManager(() => {
       scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
     });
@@ -16055,6 +17000,28 @@ ${html2}`;
     editPageIndex += 1;
     scheduleGridRender({ preserveEditPage: true, liteEditPage: false, hydrateEditPage: false });
   });
+  const getChainMetaNodes = () => {
+    const container = document.getElementById("t-read-content");
+    if (!container) return [];
+    const host = container.querySelector(".t-shadow-host");
+    const root = host?.shadowRoot || container;
+    return Array.from(root.querySelectorAll("details.t-chain-meta"));
+  };
+  const syncToggleMetaButton = (expanded) => {
+    $("#t-read-toggle-meta").toggleClass("is-active", expanded === true).attr("title", expanded === true ? "\u6298\u53E0\u5168\u90E8\u6BB5\u843D\u4FE1\u606F" : "\u5C55\u5F00\u5168\u90E8\u6BB5\u843D\u4FE1\u606F");
+  };
+  $("#t-read-toggle-meta").on("click", () => {
+    const nodes = getChainMetaNodes();
+    if (nodes.length === 0) {
+      if (window.toastr) toastr.info("\u5F53\u524D\u5185\u5BB9\u6CA1\u6709\u53EF\u5C55\u5F00\u7684\u6BB5\u843D\u4FE1\u606F");
+      return;
+    }
+    const shouldOpen = nodes.some((node) => !node.open);
+    nodes.forEach((node) => {
+      node.open = shouldOpen;
+    });
+    syncToggleMetaButton(shouldOpen);
+  });
   $("#t-read-del-segment").on("click", () => {
     if (!currentFavId) return;
     const currentItem = currentFilteredList[currentIndex];
@@ -16101,7 +17068,7 @@ ${segmentTip}`);
       if (window.toastr) toastr.success("\u5DF2\u5220\u9664\u8BE5\u6BB5\uFF0C\u5206\u7EC4\u5DF2\u6E05\u7A7A\u5E76\u79FB\u9664");
       return;
     }
-    targetFav.html = buildChainMergedHtml(targetFav.items);
+    targetFav.html = buildChainMergedHtml(targetFav.items, { withStyles: true });
     saveExtData();
     const localFav = favs.find((x) => x.id === currentFavId);
     if (localFav) {
@@ -16290,6 +17257,7 @@ function openCharImageManager(onCloseCallback) {
   $("#t-img-close").on("click", () => $("#t-img-mgr").remove());
   renderList();
 }
+var CHAIN_SEGMENT_STYLE_ID, CHAIN_SEGMENT_STYLES;
 var init_favsWindow = __esm({
   "src/ui/favsWindow.js"() {
     init_storage();
@@ -16298,6 +17266,83 @@ var init_favsWindow = __esm({
     init_helpers();
     init_mainWindow();
     init_api();
+    CHAIN_SEGMENT_STYLE_ID = "t-chain-segment-style";
+    CHAIN_SEGMENT_STYLES = `
+<style data-t-style="${CHAIN_SEGMENT_STYLE_ID}">
+.t-chain-segment { display: block; margin: 0; padding: 0; }
+.t-chain-segment .t-chain-meta { display: block; margin: 0; padding: 0; }
+.t-chain-segment .t-chain-meta > summary {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    outline: none;
+}
+.t-chain-segment .t-chain-meta > summary::-webkit-details-marker { display: none; }
+.t-chain-segment .t-chain-meta > summary::marker { content: ""; }
+.t-chain-segment .t-chain-meta-line {
+    flex: 1 1 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(191, 161, 95, 0.32), transparent);
+}
+.t-chain-segment .t-chain-meta-chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(191, 161, 95, 0.34);
+    background: rgba(191, 161, 95, 0.1);
+    color: rgba(238, 220, 178, 0.78) !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.t-chain-segment .t-chain-meta > summary:hover .t-chain-meta-chip {
+    color: #f6e7bf !important;
+    border-color: rgba(231, 202, 143, 0.62);
+    background: rgba(191, 161, 95, 0.18);
+}
+.t-chain-segment .t-chain-meta-caret {
+    font-size: 9px !important;
+    line-height: 1 !important;
+    opacity: 0.7;
+    transition: transform 0.2s ease;
+}
+.t-chain-segment .t-chain-meta[open] .t-chain-meta-caret { transform: rotate(180deg); }
+.t-chain-segment .t-chain-meta-panel {
+    margin: 0 18px 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(191, 161, 95, 0.22);
+    background: rgba(24, 20, 14, 0.55);
+}
+.t-chain-segment .t-chain-meta-label {
+    display: block;
+    margin-bottom: 4px;
+    color: rgba(229, 200, 140, 0.9) !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.04em;
+}
+.t-chain-segment .t-chain-meta-text {
+    display: block;
+    color: rgba(226, 219, 205, 0.86) !important;
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-align: left;
+}
+.t-chain-segment .t-chain-segment-body { display: block; }
+</style>
+`.trim();
   }
 });
 
@@ -16394,7 +17439,7 @@ function getPromptMessagesView(source, isTrace = false) {
     chars: String(message.content || "").length,
     tokens: estimateTokens(message.content || "")
   }));
-  const details = isTrace ? expandBuiltinContextDetails(rawDetails, source, meta) : rawDetails;
+  const details = isTrace ? expandBuiltinContextDetails(rawDetails, source, meta) : expandBuiltinContextDetails(rawDetails, { mode: source?.mode }, { ...meta, promptScheme: source?.promptScheme });
   const sections = details.map((detail, index) => ({
     id: detail.entryId || `message_${index}`,
     title: detail.name || `\u6D88\u606F ${index + 1}`,
@@ -16426,10 +17471,19 @@ async function showDebugInfo() {
             <span class="t-close" id="t-debug-close">&times;</span>
         </div>
 
+        <div class="t-prompt-source-bar">
+            <div class="t-prompt-source-tabs" role="tablist" aria-label="\u63D0\u793A\u8BCD\u6570\u636E\u6765\u6E90">
+                <button class="t-prompt-source-tab active" data-source="preview" role="tab" aria-selected="true"><i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8</button>
+                <button class="t-prompt-source-tab" data-source="actual" role="tab" aria-selected="false"><i class="fa-solid fa-circle"></i> \u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42</button>
+                <button id="t-prompt-info-btn" class="t-prompt-info-btn" title="\u67E5\u770B\u5F53\u524D\u6570\u636E\u6765\u6E90\u8BF4\u660E" aria-label="\u67E5\u770B\u5F53\u524D\u6570\u636E\u6765\u6E90\u8BF4\u660E" aria-expanded="false"><i class="fa-solid fa-circle-info"></i></button>
+                <div id="t-prompt-info-popover" class="t-prompt-info-popover" hidden></div>
+            </div>
+        </div>
+
         <div class="t-prompt-summary">
             <div class="t-prompt-request">
-                <span class="t-prompt-actual"><i class="fa-solid fa-circle"></i> \u6700\u8FD1\u4E00\u6B21\u5B9E\u9645\u8BF7\u6C42</span>
-                <span id="t-prompt-request-meta">\u6682\u65E0\u8BF7\u6C42</span>
+                <span id="t-prompt-source-state" class="t-prompt-actual"><i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8 \xB7 \u5C1A\u672A\u53D1\u9001</span>
+                <span id="t-prompt-request-meta">\u6B63\u5728\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD...</span>
             </div>
             <div class="t-prompt-summary-actions">
                 <span class="t-prompt-count"><strong id="t-prompt-total-token">0</strong> tokens \xB7 <b id="t-prompt-section-count">0</b> \u6761\u6D88\u606F</span>
@@ -16441,16 +17495,46 @@ async function showDebugInfo() {
         <div class="t-prompt-sections" id="t-prompt-sections"></div>
     </div>`;
   $("#t-overlay").append(html);
+  let activeSource = "preview";
+  let currentPreview = null;
+  let previewLoading = false;
+  const getLatestActualTrace = () => getPromptTraceList().find((trace) => trace?.finalMessages?.messages?.length > 0) || null;
+  const updateInfoPopover = () => {
+    const isPreview = activeSource === "preview";
+    const source = isPreview ? currentPreview : getLatestActualTrace();
+    const modeName = isPreview ? source?.promptScheme?.name || source?.mode || "\u5F53\u524D\u6A21\u5F0F" : source?.finalMessages?.meta?.promptScheme?.name || source?.mode || "\u672A\u77E5\u6A21\u5F0F";
+    const scriptName = isPreview ? source?.script?.name : source?.scriptName;
+    const time = isPreview ? source?.timestamp : source?.endedAt || source?.startedAt;
+    $("#t-prompt-info-popover").html(`
+            <strong>${isPreview ? "\u5F53\u524D\u6784\u9020\u9884\u89C8" : "\u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42"}</strong>
+            <p>${isPreview ? "\u57FA\u4E8E\u5F53\u524D\u89D2\u8272\u3001\u4E16\u754C\u4E66\u3001\u804A\u5929\u5386\u53F2\u548C\u8BBE\u7F6E\u5373\u65F6\u6784\u9020\uFF0C\u6CA1\u6709\u53D1\u9001\u8BF7\u6C42\u3002\u52A8\u6001\u5B8F\u4E0E\u4E0A\u4E0B\u6587\u53EF\u80FD\u5728\u5B9E\u9645\u751F\u6210\u65F6\u53D8\u5316\u3002" : "\u8FD9\u662F\u6700\u8FD1\u4E00\u6B21\u5B9E\u9645\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u56FA\u5B9A\u6D88\u606F\u5FEB\u7167\u3002"}</p>
+            <dl>
+                <div><dt>\u6A21\u5F0F</dt><dd>${escapeHtml2(modeName || "-")}</dd></div>
+                <div><dt>\u5267\u672C</dt><dd>${escapeHtml2(scriptName || "-")}</dd></div>
+                <div><dt>${isPreview ? "\u6784\u5EFA\u65F6\u95F4" : "\u53D1\u9001\u65F6\u95F4"}</dt><dd>${escapeHtml2(formatTimeText(time))}</dd></div>
+            </dl>`);
+  };
   const renderPromptWindow = () => {
     const $sections = $("#t-prompt-sections");
-    const targetTrace = getPromptTraceList().find((trace) => trace?.finalMessages?.messages?.length > 0);
-    if (!targetTrace) {
-      $sections.html('<div class="t-prompt-empty"><i class="fa-regular fa-file-lines"></i><span>\u8FD8\u6CA1\u6709\u5B9E\u9645\u53D1\u9001\u8FC7\u63D0\u793A\u8BCD</span><small>\u5B8C\u6210\u4E00\u6B21\u751F\u6210\u540E\uFF0C\u8FD9\u91CC\u4F1A\u663E\u793A\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u5B8C\u6574\u6D88\u606F\u3002</small></div>');
+    const isPreview = activeSource === "preview";
+    const source = isPreview ? currentPreview : getLatestActualTrace();
+    if (isPreview && previewLoading) {
+      $sections.html('<div class="t-prompt-empty"><i class="fa-solid fa-spinner fa-spin"></i><span>\u6B63\u5728\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD</span><small>\u6B63\u5728\u8BFB\u53D6\u5F53\u524D\u89D2\u8272\u3001\u4E16\u754C\u4E66\u548C\u804A\u5929\u5386\u53F2...</small></div>');
       $("#t-prompt-total-token, #t-prompt-section-count").text("0");
-      $("#t-prompt-request-meta").text("\u6682\u65E0\u8BF7\u6C42");
+      $("#t-prompt-request-meta").text("\u6B63\u5728\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD...");
       return;
     }
-    const { sections, totalTokens } = getPromptMessagesView(targetTrace, true);
+    if (!source || isPreview && source.ok === false) {
+      const error = isPreview ? source?.error || "\u65E0\u6CD5\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD" : "\u8FD8\u6CA1\u6709\u5B9E\u9645\u53D1\u9001\u8FC7\u63D0\u793A\u8BCD";
+      const detail = isPreview ? "\u8BF7\u5148\u5728\u5C0F\u5267\u573A\u4E3B\u754C\u9762\u9009\u62E9\u4E00\u4E2A\u53EF\u7528\u5267\u672C\u3002" : "\u5207\u6362\u5230\u201C\u5F53\u524D\u9884\u89C8\u201D\u53EF\u76F4\u63A5\u67E5\u770B\u5F53\u524D\u63D0\u793A\u8BCD\u6784\u9020\u3002";
+      $sections.html(`<div class="t-prompt-empty"><i class="fa-regular fa-file-lines"></i><span>${escapeHtml2(error)}</span><small>${escapeHtml2(detail)}</small></div>`);
+      $("#t-prompt-total-token, #t-prompt-section-count").text("0");
+      $("#t-prompt-request-meta").text(isPreview ? "\u9884\u89C8\u4E0D\u53EF\u7528" : "\u6682\u65E0\u5B9E\u9645\u8BF7\u6C42");
+      $("#t-prompt-source-state").html(isPreview ? '<i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8 \xB7 \u5C1A\u672A\u53D1\u9001' : '<i class="fa-solid fa-circle"></i> \u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42');
+      updateInfoPopover();
+      return;
+    }
+    const { sections, totalTokens } = getPromptMessagesView(source, !isPreview);
     const expandedIds = /* @__PURE__ */ new Set();
     $("#t-prompt-sections .t-prompt-section-card.expanded").each(function() {
       expandedIds.add($(this).data("section-id"));
@@ -16477,12 +17561,61 @@ async function showDebugInfo() {
     $sections.html(cardsHtml);
     $("#t-prompt-total-token").text(totalTokens);
     $("#t-prompt-section-count").text(sections.length);
-    $("#t-prompt-request-meta").text(`${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.scriptName || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(targetTrace.endedAt || targetTrace.startedAt)}`);
+    if (isPreview) {
+      $("#t-prompt-source-state").html('<i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8 \xB7 \u5C1A\u672A\u53D1\u9001');
+      $("#t-prompt-request-meta").text(`${source.promptScheme?.name || source.mode || "\u5F53\u524D\u6A21\u5F0F"} \xB7 ${source.script?.name || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(source.timestamp)}`);
+    } else {
+      $("#t-prompt-source-state").html('<i class="fa-solid fa-circle"></i> \u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42');
+      $("#t-prompt-request-meta").text(`${getTraceSourceLabel(source.source)} \xB7 ${source.scriptName || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(source.endedAt || source.startedAt)}`);
+    }
+    updateInfoPopover();
   };
-  renderPromptWindow();
-  $("#t-debug-refresh").on("click", () => {
+  const loadCurrentPreview = async () => {
+    if (previewLoading) return;
+    previewLoading = true;
     renderPromptWindow();
-    if (window.toastr) toastr.info("\u63D0\u793A\u8BCD\u5DF2\u5237\u65B0", "Titania");
+    try {
+      const { buildPromptCompositionPreview: buildPromptCompositionPreview2 } = await Promise.resolve().then(() => (init_api(), api_exports));
+      currentPreview = await buildPromptCompositionPreview2();
+    } catch (error) {
+      currentPreview = { ok: false, error: error?.message || "\u9884\u89C8\u6784\u9020\u5931\u8D25" };
+    } finally {
+      previewLoading = false;
+      renderPromptWindow();
+    }
+  };
+  await loadCurrentPreview();
+  $(".t-prompt-source-tab").on("click", async function() {
+    activeSource = String($(this).data("source") || "preview");
+    $(".t-prompt-source-tab").removeClass("active").attr("aria-selected", "false");
+    $(this).addClass("active").attr("aria-selected", "true");
+    $("#t-prompt-info-popover").prop("hidden", true);
+    $("#t-prompt-info-btn").attr("aria-expanded", "false");
+    if (activeSource === "preview" && !currentPreview) await loadCurrentPreview();
+    else renderPromptWindow();
+  });
+  $("#t-prompt-info-btn").on("click", function(event) {
+    event.stopPropagation();
+    updateInfoPopover();
+    const $popover = $("#t-prompt-info-popover");
+    const shouldOpen = $popover.prop("hidden");
+    $popover.prop("hidden", !shouldOpen);
+    $(this).attr("aria-expanded", String(shouldOpen));
+  });
+  $("#t-prompt-info-popover").on("click", (event) => event.stopPropagation());
+  $(document).off("click.tpromptinfo").on("click.tpromptinfo", () => {
+    $("#t-prompt-info-popover").prop("hidden", true);
+    $("#t-prompt-info-btn").attr("aria-expanded", "false");
+  });
+  $("#t-debug-refresh").on("click", async () => {
+    if (activeSource === "preview") {
+      currentPreview = null;
+      await loadCurrentPreview();
+      if (window.toastr) toastr.info("\u5F53\u524D\u63D0\u793A\u8BCD\u9884\u89C8\u5DF2\u91CD\u65B0\u6784\u9020", "Titania");
+    } else {
+      renderPromptWindow();
+      if (window.toastr) toastr.info("\u5B9E\u9645\u8BF7\u6C42\u5FEB\u7167\u5DF2\u5237\u65B0", "Titania");
+    }
   });
   $("#t-prompt-sections").on("click", ".t-prompt-section-head", function() {
     const $card = $(this).closest(".t-prompt-section-card");
@@ -16514,6 +17647,7 @@ async function showDebugInfo() {
     syncExpandAllButton();
   });
   const close = () => {
+    $(document).off("click.tpromptinfo");
     $("#t-debug-view").remove();
     if (hasMainView) {
       $mainView.show();
@@ -29955,7 +31089,11 @@ function openSettingsWindow() {
         tempPromptManager.active_preset_id = preset.id;
         $("#t-prompt-view").val("preset");
         renderPromptManager();
-        if (window.toastr) toastr.success(`\u5DF2\u5BFC\u5165\u9884\u8BBE\uFF1A${preset.name}`, "Titania");
+        if (window.toastr) {
+          const stats = preset.import_stats;
+          const summary = stats ? `\u5DF2\u5408\u5E76 ${stats.group_count} \u4E2A\u987A\u5E8F\u5206\u7EC4\uFF1A${stats.reference_count} \u6761\u5F15\u7528\uFF0C${stats.unique_count} \u4E2A\u552F\u4E00\u6761\u76EE\uFF0C\u5BFC\u5165 ${stats.imported_count} \u4E2A` + (stats.duplicate_count ? `\uFF1B\u53BB\u9664 ${stats.duplicate_count} \u6761\u91CD\u590D\u5F15\u7528` : "") + (stats.conflict_count ? `\uFF1B${stats.conflict_count} \u4E2A\u72B6\u6001\u51B2\u7A81\u4EE5\u4E3B\u5206\u7EC4\u4E3A\u51C6` : "") + (stats.removed_marker_count ? `\uFF1B\u8FC7\u6EE4 ${stats.removed_marker_count} \u4E2A\u4E0D\u652F\u6301\u6807\u8BB0` : "") + (stats.missing_definition_count ? `\uFF1B\u8DF3\u8FC7 ${stats.missing_definition_count} \u4E2A\u7F3A\u5931\u5B9A\u4E49` : "") : "";
+          toastr.success(summary, `\u5DF2\u5BFC\u5165\u9884\u8BBE\uFF1A${preset.name}`);
+        }
       } catch (e) {
         if (window.toastr) toastr.error(`\u9884\u8BBE\u5BFC\u5165\u5931\u8D25\uFF1A${e?.message || e}`, "Titania");
       } finally {
@@ -31097,11 +32235,23 @@ function transactionDone(transaction) {
 function getCurrentChatKey() {
   return String(getCurrentChatId?.() || "").trim();
 }
+function getCurrentSourceMetadata() {
+  const context = window.SillyTavern?.getContext?.() || {};
+  const characterId = context.characterId;
+  const character = characterId !== void 0 ? context.characters?.[characterId] : null;
+  return {
+    characterId: characterId === void 0 || characterId === null ? "" : String(characterId),
+    characterName: String(character?.name || context.name2 || "\u672A\u77E5\u89D2\u8272"),
+    characterAvatar: String(character?.avatar || ""),
+    chatName: String(context.chatId || getCurrentChatKey() || "\u672A\u77E5\u804A\u5929")
+  };
+}
 function serializeRuntime(chatId) {
   const byScript = GlobalState.continuationRuntime?.byScript || {};
   const sessions = [];
   const branches = [];
   const rounds = [];
+  const currentSource = getCurrentSourceMetadata();
   for (const [scriptId, entry] of Object.entries(byScript)) {
     const activeBranchKey = String(entry?.branchKey || "").trim();
     if (!activeBranchKey || !Array.isArray(entry?.rounds) || entry.rounds.length === 0) continue;
@@ -31119,6 +32269,11 @@ function serializeRuntime(chatId) {
       chatId,
       scriptId,
       scriptName: String(entry.scriptName || "\u573A\u666F"),
+      characterId: String(entry.characterId ?? currentSource.characterId),
+      characterName: String(entry.characterName || currentSource.characterName),
+      characterAvatar: String(entry.characterAvatar || currentSource.characterAvatar),
+      chatName: String(entry.chatName || currentSource.chatName),
+      origin: entry.origin && typeof entry.origin === "object" ? entry.origin : null,
       activeBranchKey,
       parentBranchKey: String(entry.parentBranchKey || ""),
       branchedAtRound: Number(entry.branchedAtRound) || null,
@@ -31165,6 +32320,134 @@ function serializeRuntime(chatId) {
     }
   }
   return { sessions, branches, rounds };
+}
+function buildGlobalSessions(sessions, branches, rounds) {
+  const roundsByBranch = /* @__PURE__ */ new Map();
+  rounds.sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((round) => {
+    if (!roundsByBranch.has(round.branchId)) roundsByBranch.set(round.branchId, []);
+    roundsByBranch.get(round.branchId).push({
+      roundKey: round.roundKey,
+      round: round.sequence,
+      type: round.type,
+      continuationIndex: round.type === "initial" ? 0 : Math.max(1, Number(round.sequence) - 1),
+      instruction: round.instruction,
+      content: round.content,
+      contentPreview: String(round.content || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
+      contentLength: String(round.content || "").length,
+      timestamp: round.timestamp
+    });
+  });
+  return sessions.map((session) => {
+    const sessionBranches = branches.filter((branch) => branch.sessionId === session.id).map((branch) => ({
+      branchKey: branch.branchKey,
+      isActive: branch.branchKey === session.activeBranchKey,
+      parentBranchKey: branch.parentBranchKey,
+      branchedAtRound: branch.branchedAtRound,
+      archivedAt: branch.archivedAt,
+      rounds: roundsByBranch.get(branch.id) || []
+    })).filter((branch) => branch.rounds.length > 0);
+    return {
+      chatId: session.chatId,
+      scriptId: session.scriptId,
+      scriptName: session.scriptName || "\u672A\u77E5\u5267\u672C",
+      characterId: String(session.characterId || ""),
+      characterName: String(session.characterName || "\u65E7\u7248\u8BB0\u5F55"),
+      characterAvatar: String(session.characterAvatar || ""),
+      chatName: String(session.chatName || session.chatId || "\u672A\u77E5\u804A\u5929"),
+      origin: session.origin || null,
+      updatedAt: Number(session.updatedAt) || 0,
+      branches: sessionBranches,
+      roundCount: sessionBranches.reduce((sum, branch) => sum + branch.rounds.length, 0)
+    };
+  }).filter((session) => session.branches.length > 0).sort((a, b) => b.updatedAt - a.updatedAt);
+}
+async function listAllContinuationSessions() {
+  await Promise.allSettled([...pendingWrites.values()]);
+  const db = await openDatabase();
+  const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
+  const [sessions, branches, rounds] = await Promise.all([
+    requestResult(transaction.objectStore(STORE_SESSIONS).getAll()),
+    requestResult(transaction.objectStore(STORE_BRANCHES).getAll()),
+    requestResult(transaction.objectStore(STORE_ROUNDS).getAll())
+  ]);
+  return buildGlobalSessions(sessions, branches, rounds);
+}
+async function deleteGlobalContinuationSelections(selections = []) {
+  const items = Array.isArray(selections) ? selections : [];
+  if (items.length === 0) return { deletedSessions: 0, deletedBranches: 0, deletedRounds: 0 };
+  const db = await openDatabase();
+  const readTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
+  const [sessions, branches, rounds] = await Promise.all([
+    requestResult(readTransaction.objectStore(STORE_SESSIONS).getAll()),
+    requestResult(readTransaction.objectStore(STORE_BRANCHES).getAll()),
+    requestResult(readTransaction.objectStore(STORE_ROUNDS).getAll())
+  ]);
+  const sessionKeys = new Set(items.filter((item) => !item.branchKey).map((item) => `${item.chatId}\0${item.scriptId}`));
+  const branchKeys = new Set(items.filter((item) => item.branchKey && !item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}`));
+  const roundKeys = new Set(items.filter((item) => item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}\0${item.roundKey}`));
+  const deletedSessionIds = /* @__PURE__ */ new Set();
+  const deletedBranchIds = /* @__PURE__ */ new Set();
+  const deletedRoundIds = /* @__PURE__ */ new Set();
+  const sessionById = new Map(sessions.map((session) => [session.id, session]));
+  for (const session of sessions) {
+    if (sessionKeys.has(`${session.chatId}\0${session.scriptId}`)) deletedSessionIds.add(session.id);
+  }
+  for (const branch of branches) {
+    const session = sessionById.get(branch.sessionId);
+    if (!session) continue;
+    if (deletedSessionIds.has(session.id) || branchKeys.has(`${session.chatId}\0${session.scriptId}\0${branch.branchKey}`)) {
+      deletedBranchIds.add(branch.id);
+    }
+  }
+  for (const round of rounds) {
+    const session = sessionById.get(round.sessionId);
+    if (!session) continue;
+    if (deletedSessionIds.has(session.id) || deletedBranchIds.has(round.branchId) || roundKeys.has(`${session.chatId}\0${session.scriptId}\0${round.branchKey}\0${round.roundKey}`)) {
+      deletedRoundIds.add(round.id);
+    }
+  }
+  for (const branch of branches) {
+    if (deletedBranchIds.has(branch.id)) continue;
+    const hasRemainingRounds = rounds.some((round) => round.branchId === branch.id && !deletedRoundIds.has(round.id));
+    if (!hasRemainingRounds) deletedBranchIds.add(branch.id);
+  }
+  for (const session of sessions) {
+    if (deletedSessionIds.has(session.id)) continue;
+    const remainingBranches = branches.filter((branch) => branch.sessionId === session.id && !deletedBranchIds.has(branch.id));
+    if (remainingBranches.length === 0) {
+      deletedSessionIds.add(session.id);
+      continue;
+    }
+    const activeRemoved = deletedBranchIds.has(`${session.id}:${session.activeBranchKey}`);
+    if (activeRemoved) {
+      const nextActive = remainingBranches.sort((a, b) => Number(b.archivedAt) - Number(a.archivedAt))[0];
+      session.activeBranchKey = nextActive.branchKey;
+    }
+  }
+  const writeTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
+  const completed = transactionDone(writeTransaction);
+  const sessionStore = writeTransaction.objectStore(STORE_SESSIONS);
+  const branchStore = writeTransaction.objectStore(STORE_BRANCHES);
+  const roundStore = writeTransaction.objectStore(STORE_ROUNDS);
+  sessions.forEach((session) => deletedSessionIds.has(session.id) ? sessionStore.delete(session.id) : sessionStore.put(session));
+  branches.forEach((branch) => (deletedSessionIds.has(branch.sessionId) || deletedBranchIds.has(branch.id)) && branchStore.delete(branch.id));
+  const nextSequenceByBranch = /* @__PURE__ */ new Map();
+  rounds.sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((round) => {
+    if (deletedSessionIds.has(round.sessionId) || deletedBranchIds.has(round.branchId) || deletedRoundIds.has(round.id)) {
+      roundStore.delete(round.id);
+      return;
+    }
+    const sequence = (nextSequenceByBranch.get(round.branchId) || 0) + 1;
+    nextSequenceByBranch.set(round.branchId, sequence);
+    round.sequence = sequence;
+    roundStore.put(round);
+  });
+  await completed;
+  if (items.some((item) => item.chatId === getCurrentChatKey())) await restoreContinuationForCurrentChat();
+  return { deletedSessions: deletedSessionIds.size, deletedBranches: deletedBranchIds.size, deletedRounds: deletedRoundIds.size };
+}
+function getCurrentContinuationSource() {
+  return { chatId: getCurrentChatKey(), ...getCurrentSourceMetadata() };
 }
 function updateCurrentChatMetadata(payload) {
   if (payload.sessions.length > 0) {
@@ -31233,16 +32516,6 @@ function scheduleContinuationPersistence() {
     if (window.toastr) toastr.warning("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u4FDD\u5B58\u5931\u8D25\uFF0C\u5F53\u524D\u5185\u5BB9\u4ECD\u4FDD\u7559\u5728\u5185\u5B58\u4E2D", "Titania");
   });
 }
-function getContinuationPersistenceStatus() {
-  const metadata = chat_metadata?.[CHAT_METADATA_KEY];
-  return {
-    chatId: getCurrentChatKey(),
-    persisted: Boolean(metadata?.version === 1),
-    branchCount: Number(metadata?.branchCount) || 0,
-    roundCount: Number(metadata?.roundCount) || 0,
-    updatedAt: Number(metadata?.updatedAt) || 0
-  };
-}
 async function flushContinuationPersistence() {
   const chatId = getCurrentChatKey();
   if (!chatId) return false;
@@ -31286,6 +32559,11 @@ async function restoreContinuationForCurrentChat() {
     nextByScript[session.scriptId] = {
       scriptId: session.scriptId,
       scriptName: session.scriptName,
+      characterId: session.characterId,
+      characterName: session.characterName,
+      characterAvatar: session.characterAvatar,
+      chatName: session.chatName,
+      origin: session.origin || null,
       updatedAt: Number(session.updatedAt) || 0,
       branchKey: active.branchKey,
       parentBranchKey: active.parentBranchKey,
@@ -31405,10 +32683,10 @@ function saveContinuationRecentInstruction(instruction) {
   data.continuation_ui.recent_instructions = [text, ...deduped].slice(0, CONTINUATION_RECENT_MAX);
   saveExtData();
 }
-function openContinuationComposer(initialText = "", regenerationTarget = null) {
+function openContinuationComposer(initialText = "", regenerationTarget = null, baseContentOverride = null) {
   return new Promise((resolve) => {
     const recent = getContinuationRecentInstructions();
-    const display = getCurrentDisplayContent();
+    const display = baseContentOverride || getCurrentDisplayContent();
     const activeScriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
     let selectedInjectRounds = getContinuationDefaultInjectCount();
     $("#t-continuation-dialog").remove();
@@ -31513,7 +32791,7 @@ function openContinuationComposer(initialText = "", regenerationTarget = null) {
       $charCountFooter.text(count);
     };
     const ensureHasBaseContent = () => {
-      const displayContent = getCurrentDisplayContent();
+      const displayContent = baseContentOverride || getCurrentDisplayContent();
       const hasContent = Boolean(displayContent?.content && displayContent.content.trim().length > 0);
       if (!hasContent) {
         if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7EED\u5199\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F", "Titania");
@@ -31636,6 +32914,12 @@ function findContinuationRound(scriptId, branchKey, roundKey) {
   const round = branch?.rounds.find((item) => item.roundKey === roundKey);
   return branch && round ? { branch, round } : null;
 }
+function findGlobalContinuationRound(chatId, scriptId, branchKey, roundKey) {
+  const session = continuationGlobalSessions.find((item) => item.chatId === chatId && item.scriptId === scriptId);
+  const branch = session?.branches.find((item) => item.branchKey === branchKey);
+  const round = branch?.rounds.find((item) => item.roundKey === roundKey);
+  return session && branch && round ? { session, branch, round } : null;
+}
 async function regenerateContinuationRound(scriptId, branchKey, roundKey, editInstruction = false) {
   const target = findContinuationRound(scriptId, branchKey, roundKey);
   if (!target || target.round.type === "initial") {
@@ -31672,26 +32956,40 @@ async function regenerateContinuationRound(scriptId, branchKey, roundKey, editIn
     fromCurrentView: false
   });
 }
-function showContinuationRoundInMain(scriptId, branchKey, roundKey) {
-  const target = findContinuationRound(scriptId, branchKey, roundKey);
+function showContinuationRoundInMain(chatId, scriptId, branchKey, roundKey) {
+  const target = findGlobalContinuationRound(chatId, scriptId, branchKey, roundKey);
   if (!target) return false;
-  continuationHistoryView = { scriptId, branchKey, roundKey };
-  renderGeneratedContent(target.round.content, GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F");
+  continuationHistoryView = { chatId, scriptId, branchKey, roundKey };
+  pendingGenerationScriptId = "";
+  const scriptName = target.session.scriptName || GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
+  lockDisplayToContent(target.round.content, scriptId, scriptName);
+  renderGeneratedContent(target.round.content, scriptName);
   updateSceneHistoryNav();
+  if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
   $(document).off("keydown.tcontinuationhistory");
   $("#t-continuation-history").remove();
   return true;
 }
-function openContinuationHistory(preferredScriptId = "") {
-  const sessions = getContinuationSessions();
-  const persistenceStatus = getContinuationPersistenceStatus();
+async function openContinuationHistory(preferredScriptId = "") {
+  const allSessions = await listAllContinuationSessions();
+  continuationGlobalSessions = allSessions;
+  const currentSource = getCurrentContinuationSource();
+  const sessions = allSessions.filter((session) => {
+    if (continuationHistoryScope === "chat") return session.chatId === currentSource.chatId;
+    if (continuationHistoryScope === "character") {
+      if (session.characterAvatar && currentSource.characterAvatar) return session.characterAvatar === currentSource.characterAvatar;
+      return session.characterName === currentSource.characterName;
+    }
+    return true;
+  });
   $("#t-continuation-history").remove();
-  if (sessions.length === 0) {
-    if (window.toastr) toastr.info("\u5F53\u524D\u804A\u5929\u8FD8\u6CA1\u6709\u4E3B\u52A8\u7EED\u5199\u5386\u53F2", "Titania");
+  if (allSessions.length === 0) {
+    if (window.toastr) toastr.info("\u8FD8\u6CA1\u6709\u4E3B\u52A8\u7EED\u5199\u5386\u53F2", "Titania");
     return;
   }
   const preferredIndex = sessions.findIndex((session) => session.scriptId === preferredScriptId);
   if (preferredIndex > 0) sessions.unshift(sessions.splice(preferredIndex, 1)[0]);
+  const selectionCheckbox = (level, chatId, scriptId, branchKey = "", roundKey = "", disabled = false) => continuationHistoryManaging ? `<input class="t-cont-select" type="checkbox" data-selection-level="${level}" data-chat-id="${escapeHtmlText2(chatId)}" data-script-id="${escapeHtmlText2(scriptId)}" data-branch-key="${escapeHtmlText2(branchKey)}" data-round-key="${escapeHtmlText2(roundKey)}" ${disabled ? "disabled" : ""} aria-label="\u9009\u62E9${level === "session" ? "\u5267\u672C" : level === "branch" ? "\u5206\u652F" : "\u8F6E\u6B21"}">` : "";
   const sessionsHtml = sessions.map((session, sessionIndex) => {
     const isOpen = sessionIndex === 0;
     const branchHtml = session.branches.map((branch) => {
@@ -31703,8 +33001,10 @@ function openContinuationHistory(preferredScriptId = "") {
         const instruction = round.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
         const instructionPreview = getContinuationInstructionPreview(instruction);
         const canRegenerate = round.type !== "initial";
-        return `<article class="t-cont-history-round" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}" data-round-key="${escapeHtmlText2(round.roundKey)}">
+        const isCurrentChat = session.chatId === currentSource.chatId;
+        return `<article class="t-cont-history-round" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}" data-round-key="${escapeHtmlText2(round.roundKey)}">
                     <div class="t-cont-history-round-head">
+                         <span class="t-cont-select-wrap">${selectionCheckbox("round", session.chatId, session.scriptId, branch.branchKey, round.roundKey, round.type === "initial")}</span>
                         <div class="t-cont-history-round-title"><strong>${escapeHtmlText2(label)}</strong><span>${round.contentLength} \u5B57\u7B26</span></div>
                         <button class="t-cont-history-toggle" title="\u5C55\u5F00\u5185\u5BB9"><i class="fa-solid fa-chevron-down"></i></button>
                     </div>
@@ -31713,41 +33013,148 @@ function openContinuationHistory(preferredScriptId = "") {
                     <div class="t-cont-history-full" hidden><iframe sandbox="" title="${escapeHtmlText2(label)}\u5185\u5BB9\u9884\u89C8"></iframe></div>
                     <div class="t-cont-history-actions">
                         <button class="t-btn t-cont-history-show"><i class="fa-solid fa-arrow-up-right-from-square"></i> \u8DF3\u8F6C\u5230\u6B64\u5185\u5BB9</button>
-                        ${canRegenerate ? '<button class="t-btn t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn primary t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
+                        ${isCurrentChat && canRegenerate ? '<button class="t-btn t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn primary t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
+                        ${!isCurrentChat ? '<button class="t-btn primary t-cont-history-visit"><i class="fa-solid fa-person-walking-arrow-right"></i> \u5E26\u5165\u5F53\u524D\u89D2\u8272\u7EED\u5199</button><button class="t-btn t-cont-history-visit-edit"><i class="fa-solid fa-pen"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u5E26\u5165</button>' : ""}
                     </div>
                 </article>`;
       }).join("");
-      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}">
+      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}">
                 <div class="t-cont-history-branch-title">
+                    <span class="t-cont-select-wrap">${selectionCheckbox("branch", session.chatId, session.scriptId, branch.branchKey)}</span>
                     <i class="fa-solid fa-code-branch"></i>
                     <div class="t-cont-history-branch-heading">
                         <strong>\u300A${escapeHtmlText2(session.scriptName)}\u300B</strong>
-                        <span>${escapeHtmlText2(branchStatus)}</span>
+                        <span>${escapeHtmlText2(session.characterName)} \xB7 ${escapeHtmlText2(branchStatus)}</span>
                     </div>
                     <small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small>
                 </div>
                 ${roundHtml}
             </section>`;
     }).join("");
-    return `<section class="t-cont-history-session ${isOpen ? "is-open" : ""}" data-script-id="${escapeHtmlText2(session.scriptId)}">
+    return `<section class="t-cont-history-session ${isOpen ? "is-open" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}">
             <button class="t-cont-history-session-toggle" type="button" aria-expanded="${isOpen}">
+                <span class="t-cont-select-wrap">${selectionCheckbox("session", session.chatId, session.scriptId)}</span>
                 <i class="fa-solid fa-chevron-right"></i>
-                <span>\u300A${escapeHtmlText2(session.scriptName)}\u300B</span>
+                <span>${escapeHtmlText2(session.characterName)} \xB7 \u300A${escapeHtmlText2(session.scriptName)}\u300B</span>
                 <small>${session.branches.length} \u4E2A\u5206\u652F \xB7 ${session.roundCount} \u8F6E</small>
             </button>
             <div class="t-cont-history-session-body" ${isOpen ? "" : "hidden"}>${branchHtml}</div>
         </section>`;
   }).join("");
-  $("#t-main-view").append(`<div id="t-continuation-history" class="t-cont-history-panel">
-        <div class="t-cont-history-header"><div><i class="fa-solid fa-clock-rotate-left"></i><strong>\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2</strong><span>${persistenceStatus.persisted ? `\u5DF2\u6301\u4E45\u5316 \xB7 ${sessions.length} \u4E2A\u5267\u672C \xB7 ${persistenceStatus.roundCount} \u8F6E` : `${sessions.length} \u4E2A\u5267\u672C \xB7 \u7B49\u5F85\u6301\u4E45\u5316`}</span></div><div class="t-cont-history-header-actions"><button class="t-btn" id="t-cont-history-clear" title="\u5220\u9664\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2"><i class="fa-solid fa-trash-can"></i> \u6E05\u7A7A</button><button class="t-close" id="t-cont-history-close">&times;</button></div></div>
-        <div class="t-cont-history-body">${sessionsHtml}</div>
+  $("#t-main-view").append(`<div id="t-continuation-history" class="t-cont-history-panel ${continuationHistoryManaging ? "is-managing" : ""}">
+        <div class="t-cont-history-header"><div class="t-cont-history-heading"><i class="fa-solid fa-clock-rotate-left"></i><strong>${continuationHistoryManaging ? "\u6279\u91CF\u7BA1\u7406" : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2"}</strong><span>${continuationHistoryManaging ? "\u52FE\u9009\u8981\u5220\u9664\u7684\u5267\u672C\u3001\u5206\u652F\u6216\u8F6E\u6B21" : `${sessions.length} \u4E2A\u5267\u672C \xB7 ${sessions.reduce((sum, item) => sum + item.roundCount, 0)} \u8F6E`}</span></div><div class="t-cont-history-header-actions">${continuationHistoryManaging ? '<button class="t-btn" id="t-cont-history-select-all"><i class="fa-solid fa-check-double"></i> \u5168\u9009</button><button class="t-btn" id="t-cont-history-manage-cancel">\u53D6\u6D88</button>' : `<select id="t-cont-history-scope" class="t-cont-history-scope" title="\u5386\u53F2\u8303\u56F4"><option value="all" ${continuationHistoryScope === "all" ? "selected" : ""}>\u5168\u90E8\u89D2\u8272</option><option value="character" ${continuationHistoryScope === "character" ? "selected" : ""}>\u5F53\u524D\u89D2\u8272</option><option value="chat" ${continuationHistoryScope === "chat" ? "selected" : ""}>\u5F53\u524D\u804A\u5929</option></select><button class="t-btn" id="t-cont-history-manage" title="\u6279\u91CF\u7BA1\u7406\u5386\u53F2"><i class="fa-solid fa-list-check"></i> \u7BA1\u7406</button><div class="t-cont-history-more-wrap"><button class="t-btn t-icon-btn" id="t-cont-history-more" title="\u66F4\u591A\u64CD\u4F5C" aria-label="\u66F4\u591A\u64CD\u4F5C" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="t-cont-history-more-menu" hidden><button id="t-cont-history-clear"><i class="fa-solid fa-trash-can"></i><span>\u6E05\u7A7A\u5F53\u524D\u804A\u5929\u5386\u53F2</span></button></div></div>`}<button class="t-close" id="t-cont-history-close">&times;</button></div></div>
+        <div class="t-cont-history-body">${sessionsHtml || '<div class="t-cont-history-empty">\u5F53\u524D\u7B5B\u9009\u8303\u56F4\u5185\u6CA1\u6709\u8BB0\u5F55</div>'}</div>
+        ${continuationHistoryManaging ? '<div class="t-cont-history-bulk-bar"><span id="t-cont-history-selection-count">\u5DF2\u9009\u62E9 0 \u9879</span><button class="t-btn danger" id="t-cont-history-delete-selected" disabled><i class="fa-solid fa-trash-can"></i> \u5220\u9664\u6240\u9009</button></div>' : ""}
     </div>`);
   const $panel = $("#t-continuation-history");
   const closePanel2 = () => {
     $(document).off("keydown.tcontinuationhistory");
+    continuationHistoryManaging = false;
+    continuationHistorySelection.clear();
     $panel.remove();
   };
   $("#t-cont-history-close").on("click", closePanel2);
+  $("#t-cont-history-scope").on("change", function() {
+    continuationHistoryScope = String($(this).val() || "all");
+    openContinuationHistory(preferredScriptId);
+  });
+  $("#t-cont-history-more").on("click", function(event) {
+    event.stopPropagation();
+    const $menu = $panel.find(".t-cont-history-more-menu");
+    const shouldOpen = $menu.prop("hidden");
+    $menu.prop("hidden", !shouldOpen);
+    $(this).attr("aria-expanded", String(shouldOpen));
+  });
+  $panel.on("click", ".t-cont-history-more-menu", (event) => event.stopPropagation());
+  $panel.on("click", function() {
+    $("#t-cont-history-more").attr("aria-expanded", "false");
+    $panel.find(".t-cont-history-more-menu").prop("hidden", true);
+  });
+  $("#t-cont-history-manage").on("click", () => {
+    continuationHistoryManaging = true;
+    continuationHistorySelection.clear();
+    openContinuationHistory(preferredScriptId);
+  });
+  $("#t-cont-history-manage-cancel").on("click", () => {
+    continuationHistoryManaging = false;
+    continuationHistorySelection.clear();
+    openContinuationHistory(preferredScriptId);
+  });
+  const updateBulkSelection = () => {
+    const $checks = $panel.find(".t-cont-select:not(:disabled)");
+    $panel.find('.t-cont-select[data-selection-level="branch"]').each(function() {
+      const $branch = $(this).closest(".t-cont-history-branch");
+      const children = $branch.find('.t-cont-select[data-selection-level="round"]:not(:disabled)').get();
+      const checkedCount = children.filter((item) => item.checked).length;
+      this.indeterminate = checkedCount > 0 && checkedCount < children.length;
+      if (children.length > 0 && checkedCount === children.length) this.checked = true;
+      if (checkedCount === 0) this.checked = false;
+    });
+    $panel.find('.t-cont-select[data-selection-level="session"]').each(function() {
+      const $session = $(this).closest(".t-cont-history-session");
+      const children = $session.find('.t-cont-select[data-selection-level="branch"]:not(:disabled)').get();
+      const checkedCount = children.filter((item) => item.checked).length;
+      const indeterminateCount = children.filter((item) => item.indeterminate).length;
+      this.indeterminate = indeterminateCount > 0 || checkedCount > 0 && checkedCount < children.length;
+      if (children.length > 0 && checkedCount === children.length && indeterminateCount === 0) this.checked = true;
+      if (checkedCount === 0 && indeterminateCount === 0) this.checked = false;
+    });
+    continuationHistorySelection.clear();
+    $checks.filter(":checked").each(function() {
+      continuationHistorySelection.add(`${$(this).data("chat-id")}\0${$(this).data("script-id")}\0${$(this).data("branch-key") || ""}\0${$(this).data("round-key") || ""}`);
+    });
+    const count = continuationHistorySelection.size;
+    $("#t-cont-history-selection-count").text(`\u5DF2\u9009\u62E9 ${count} \u9879`);
+    $("#t-cont-history-delete-selected").prop("disabled", count === 0);
+  };
+  $panel.on("click", ".t-cont-select", (event) => event.stopPropagation());
+  $panel.on("change", ".t-cont-select", function() {
+    const $check = $(this);
+    const chatId = String($check.data("chat-id") || "");
+    const scriptId = String($check.data("script-id") || "");
+    const branchKey = String($check.data("branch-key") || "");
+    const level = String($check.data("selection-level") || "");
+    const selector = level === "session" ? `.t-cont-select[data-chat-id="${CSS.escape(chatId)}"][data-script-id="${CSS.escape(scriptId)}"]` : level === "branch" ? `.t-cont-select[data-chat-id="${CSS.escape(chatId)}"][data-script-id="${CSS.escape(scriptId)}"][data-branch-key="${CSS.escape(branchKey)}"]` : "";
+    if (selector) $panel.find(selector).prop("checked", $check.prop("checked"));
+    updateBulkSelection();
+  });
+  $("#t-cont-history-select-all").on("click", () => {
+    $panel.find(".t-cont-select:not(:disabled)").prop("checked", true);
+    updateBulkSelection();
+  });
+  $("#t-cont-history-delete-selected").on("click", async function() {
+    const selections = [...continuationHistorySelection].map((key) => {
+      const [chatId, scriptId, branchKey, roundKey] = key.split("\0");
+      return { chatId, scriptId, branchKey, roundKey };
+    });
+    if (selections.length === 0) return;
+    const roundCount = selections.filter((item) => item.roundKey).length;
+    if (!window.confirm(`\u786E\u5B9A\u5220\u9664\u5DF2\u9009\u62E9\u7684 ${selections.length} \u9879\u5417\uFF1F
+
+\u5176\u4E2D\u5305\u542B ${roundCount} \u4E2A\u7EED\u5199\u8F6E\u6B21\u3002\u5220\u9664\u540E\u65E0\u6CD5\u6062\u590D\u3002`)) return;
+    $(this).prop("disabled", true);
+    try {
+      const currentViewDeleted = continuationHistoryView && selections.some((item) => item.chatId === continuationHistoryView.chatId && item.scriptId === continuationHistoryView.scriptId && (!item.branchKey || item.branchKey === continuationHistoryView.branchKey) && (!item.roundKey || item.roundKey === continuationHistoryView.roundKey));
+      const result = await deleteGlobalContinuationSelections(selections);
+      continuationHistorySelection.clear();
+      continuationHistoryManaging = false;
+      if (currentViewDeleted) {
+        continuationHistoryView = null;
+        unlockDisplay();
+        if (GlobalState.lastGeneratedContent) {
+          const scriptName = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId)?.name || "\u573A\u666F";
+          renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
+        }
+      }
+      updateSceneHistoryNav();
+      openContinuationHistory(preferredScriptId);
+      if (window.toastr) toastr.success(`\u5DF2\u5220\u9664 ${result.deletedRounds} \u4E2A\u8F6E\u6B21\u3001${result.deletedBranches} \u4E2A\u5206\u652F`, "Titania");
+    } catch (error) {
+      console.error("Titania: \u6279\u91CF\u5220\u9664\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", error);
+      $(this).prop("disabled", false);
+      if (window.toastr) toastr.error("\u6279\u91CF\u5220\u9664\u5931\u8D25", "Titania");
+    }
+  });
   $("#t-cont-history-clear").on("click", async function() {
     const confirmed = window.confirm("\u786E\u5B9A\u6E05\u7A7A\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002");
     if (!confirmed) return;
@@ -31780,16 +33187,17 @@ function openContinuationHistory(preferredScriptId = "") {
     $full.prop("hidden", !shouldOpen);
     $(this).find("i").toggleClass("fa-chevron-down", !shouldOpen).toggleClass("fa-chevron-up", shouldOpen);
     if (shouldOpen) {
+      const chatId = String($round.data("chat-id") || "");
       const roundScriptId = String($round.data("script-id") || "");
       const branchKey = String($round.data("branch-key") || "");
       const roundKey = String($round.data("round-key") || "");
-      const content = findContinuationRound(roundScriptId, branchKey, roundKey)?.round.content || "";
+      const content = findGlobalContinuationRound(chatId, roundScriptId, branchKey, roundKey)?.round.content || "";
       $full.find("iframe").attr("srcdoc", content);
     }
   });
   $panel.on("click", ".t-cont-history-show", function() {
     const $round = $(this).closest(".t-cont-history-round");
-    showContinuationRoundInMain(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""));
+    showContinuationRoundInMain(String($round.data("chat-id") || ""), String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""));
   });
   $panel.on("click", ".t-cont-history-regenerate, .t-cont-history-edit-regenerate", async function() {
     if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
@@ -31797,6 +33205,57 @@ function openContinuationHistory(preferredScriptId = "") {
     const editInstruction = $(this).hasClass("t-cont-history-edit-regenerate");
     closePanel2();
     await regenerateContinuationRound(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""), editInstruction);
+  });
+  $panel.on("click", ".t-cont-history-visit, .t-cont-history-visit-edit", async function() {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
+    const $round = $(this).closest(".t-cont-history-round");
+    const target = findGlobalContinuationRound(
+      String($round.data("chat-id") || ""),
+      String($round.data("script-id") || ""),
+      String($round.data("branch-key") || ""),
+      String($round.data("round-key") || "")
+    );
+    if (!target) return;
+    let instruction = "";
+    const editInstruction = $(this).hasClass("t-cont-history-visit-edit");
+    let historyPanelClosed = false;
+    if (editInstruction) {
+      closePanel2();
+      historyPanelClosed = true;
+      const composeResult = await openContinuationComposer("", null, {
+        content: target.round.content,
+        scriptId: target.session.scriptId,
+        scriptName: target.session.scriptName
+      });
+      if (!composeResult || composeResult.openHistory) {
+        await openContinuationHistory(target.session.scriptId);
+        return;
+      }
+      instruction = String(composeResult.instruction || "").trim();
+    }
+    const confirmed = window.confirm(`\u5C06\u5F53\u524D\u89D2\u8272\u5E26\u5165\u201C${target.session.characterName}\u201D\u7684\u5386\u53F2\u5267\u60C5\u5E76\u521B\u5EFA\u5F53\u524D\u804A\u5929\u7684\u65B0\u5206\u652F\u3002
+
+\u539F\u59CB\u5206\u652F\u4E0D\u4F1A\u88AB\u4FEE\u6539\u3002`);
+    if (!confirmed) {
+      if (historyPanelClosed) await openContinuationHistory(target.session.scriptId);
+      return;
+    }
+    const copied = copyContinuationBranchToCurrentChat({
+      ...target.session,
+      branchKey: target.branch.branchKey,
+      rounds: target.branch.rounds,
+      roundKey: target.round.roundKey
+    });
+    if (!copied) return;
+    if (!historyPanelClosed) closePanel2();
+    continuationHistoryView = null;
+    return handleUserContinuation({
+      instruction,
+      scriptIdOverride: copied.scriptId,
+      baseContentOverride: copied.content,
+      fromCurrentView: false,
+      crossRoleSource: target.session.characterName
+    });
   });
 }
 function refreshScriptList() {
@@ -31823,6 +33282,12 @@ function applyScriptSelection(id, options = {}) {
     recordScriptSelected(s.id);
   }
   GlobalState.lastUsedScriptId = s.id;
+  if (options.pendingGeneration === true) {
+    pendingGenerationScriptId = s.id;
+    continuationQuickDraft = "";
+    $("#t-continuation-quick-input").val("");
+    if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
+  }
   $("#t-lbl-name").text(s.name);
   const $catTag = $("#t-lbl-cat");
   const category = s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
@@ -31837,6 +33302,7 @@ function applyScriptSelection(id, options = {}) {
 }
 async function openMainWindow() {
   if ($("#t-overlay").length) return;
+  pendingGenerationScriptId = "";
   const defaultCtx = { charName: "\u52A0\u8F7D\u4E2D...", userName: "\u7528\u6237" };
   let data;
   try {
@@ -31917,20 +33383,16 @@ async function openMainWindow() {
                     <span class="t-stats-sep">|</span>
                     <span class="t-stats-item"><span class="t-stats-label">\u8017\u65F6</span><span class="t-stats-value" id="t-stat-time">-</span></span>
                 </div>
-                <div class="t-tools-btn" id="t-btn-tools" title="\u5185\u5BB9\u5DE5\u5177"><i class="fa-solid fa-ellipsis-vertical"></i></div>
-                <div class="t-tools-panel" id="t-tools-panel" style="display:none;">
-                    <div class="t-tools-item" id="t-tool-zen">
+                <div class="t-tools-rail" id="t-tools-rail">
+                    <button class="t-tools-icon" id="t-tool-zen" type="button" title="\u6C89\u6D78\u9605\u8BFB" aria-label="\u6C89\u6D78\u9605\u8BFB">
                         <i class="fa-solid fa-expand"></i>
-                        <span>\u6C89\u6D78\u9605\u8BFB</span>
-                    </div>
-                    <div class="t-tools-item" id="t-tool-continue">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>\u4E3B\u52A8\u7EED\u5199</span>
-                    </div>
-                    <div class="t-tools-item" id="t-tool-edit-content">
+                    </button>
+                    <button class="t-tools-icon" id="t-tool-edit-content" type="button" title="\u7F16\u8F91\u5185\u5BB9" aria-label="\u7F16\u8F91\u5185\u5BB9">
                         <i class="fa-solid fa-pen-nib"></i>
-                        <span>\u7F16\u8F91\u5185\u5BB9</span>
-                    </div>
+                    </button>
+                    <button class="t-tools-icon" id="t-btn-like" type="button" title="\u6536\u85CF\u7ED3\u679C" aria-label="\u6536\u85CF\u7ED3\u679C">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
                 </div>
                 <div class="t-content-area">
                     <!-- \u7FFB\u9875\u6309\u94AE\u79FB\u5230\u5185\u5BB9\u533A\u4E24\u4FA7 -->
@@ -31953,44 +33415,81 @@ async function openMainWindow() {
                     </div>
                     <div id="t-output-content"></div>
                 </div>
+
+                <button class="t-toolbox-rail t-toolbox-toggle" type="button" title="\u5C55\u5F00\u5DE5\u5177\u7BB1" aria-label="\u5C55\u5F00\u5DE5\u5177\u7BB1" aria-expanded="false">
+                    <i class="fa-solid fa-toolbox"></i>
+                    <span>\u5DE5\u5177</span>
+                </button>
+                <div class="t-toolbox-backdrop" id="t-toolbox-backdrop"></div>
+                <aside class="t-toolbox-panel" id="t-toolbox-panel" aria-hidden="true">
+                    <div class="t-toolbox-header">
+                        <div><strong>\u5DE5\u5177\u7BB1</strong><span>\u521B\u4F5C\u8F85\u52A9\u4E0E\u6279\u91CF\u4EFB\u52A1</span></div>
+                        <button class="t-toolbox-close" id="t-toolbox-close" type="button" title="\u6536\u8D77\u5DE5\u5177\u7BB1" aria-label="\u6536\u8D77\u5DE5\u5177\u7BB1"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="t-toolbox-body">
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u5185\u5BB9\u64CD\u4F5C</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-copy" type="button"><i class="fa-regular fa-copy"></i><span>\u590D\u5236\u6E90\u7801</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u5267\u672C\u7BA1\u7406</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action" id="t-btn-new" type="button"><i class="fa-solid fa-plus"></i><span>\u65B0\u5EFA\u5267\u672C</span></button>
+                                <button class="t-toolbox-action" id="t-btn-edit" type="button"><i class="fa-solid fa-pen-to-square"></i><span>\u7F16\u8F91\u5267\u672C</span></button>
+                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-regenerate" type="button"><i class="fa-solid fa-rotate"></i><span>\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u961F\u5217\u751F\u6210</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action t-toolbox-queue" id="t-btn-run-queue" type="button"><i class="fa-solid fa-layer-group"></i><span>\u5F00\u59CB\u961F\u5217</span></button>
+                                <button class="t-toolbox-action" id="t-btn-queue-settings" type="button"><i class="fa-solid fa-sliders"></i><span>\u961F\u5217\u8BBE\u7F6E</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u68C0\u67E5\u4E0E\u8BCA\u65AD</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action" id="t-btn-debug" type="button"><i class="fa-solid fa-eye"></i><span>\u5BA1\u67E5 Prompt</span></button>
+                                <button class="t-toolbox-action t-btn-diag" id="t-btn-diagnostics" type="button"><i class="fa-solid fa-stethoscope"></i><span>\u8BCA\u65AD\u65E5\u5FD7</span></button>
+                            </div>
+                        </section>
+                    </div>
+                    <button class="t-toolbox-stop" id="t-btn-stop" type="button"><i class="fa-solid fa-stop"></i><span>\u4E2D\u6B62\u5F53\u524D\u751F\u6210</span></button>
+                </aside>
             </div>
 
             <div class="t-bottom-bar">
-            <!-- \u5DE6\u4FA7\uFF1A2x2 \u5DE5\u5177\u7F51\u683C -->
-            <div class="t-bot-left">
-                <button class="t-btn-grid" id="t-btn-debug" title="\u5BA1\u67E5 Prompt"><i class="fa-solid fa-eye"></i></button>
-                <button class="t-btn-grid" id="t-btn-copy" title="\u590D\u5236\u6E90\u7801"><i class="fa-regular fa-copy"></i></button>
-                <button class="t-btn-grid" id="t-btn-like" title="\u6536\u85CF\u7ED3\u679C"><i class="fa-regular fa-heart"></i></button>
-                <button class="t-btn-grid" id="t-btn-new" title="\u65B0\u5EFA\u5267\u672C"><i class="fa-solid fa-plus"></i></button>
-            </div>
-
-            <!-- \u4E2D\u95F4\uFF1A\u53CC\u6309\u94AE\u6F14\u7ECE\u533A -->
-            <div class="t-bot-center">
-                <div class="t-run-group">
-                    <button class="t-run-btn t-run-single" id="t-btn-run-single" title="\u5355\u6B21\u6F14\u7ECE\u5F53\u524D\u5267\u672C">
-                        <i class="fa-solid fa-clapperboard"></i>
-                        <span>\u5355\u6B21\u6F14\u7ECE</span>
+                <div class="t-continuation-quick">
+                    <button class="t-continuation-history-btn" id="t-btn-continuation-history" type="button" title="\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2" aria-label="\u6253\u5F00\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2">
+                        <i class="fa-solid fa-clock-rotate-left"></i><span id="t-continuation-history-count">0</span>
                     </button>
-                    <button class="t-run-btn t-run-queue" id="t-btn-run-queue" title="\u6279\u91CF\u961F\u5217\u751F\u6210">
-                        <i class="fa-solid fa-layer-group"></i>
-                        <span>\u961F\u5217\u751F\u6210</span>
+                    <div class="t-continuation-input-wrap">
+                        <textarea id="t-continuation-quick-input" rows="1" placeholder="\u8F93\u5165\u7EED\u5199\u6307\u4EE4..." aria-label="\u7EED\u5199\u6307\u4EE4"></textarea>
+                        <div class="t-continuation-suggestions" id="t-continuation-suggestions" hidden>
+                            <div class="t-continuation-suggestions-head"><span>\u6700\u8FD1\u4F7F\u7528</span><button id="t-btn-continuation-compose" type="button"><i class="fa-solid fa-expand"></i> \u5B8C\u6574\u7F16\u8F91\u5668</button></div>
+                            <div class="t-continuation-suggestions-list" id="t-continuation-suggestions-list"></div>
+                        </div>
+                    </div>
+                    <button class="t-continuation-context-btn" id="t-btn-continuation-context" type="button" title="\u7EED\u5199\u4E0A\u4E0B\u6587" aria-label="\u8BBE\u7F6E\u7EED\u5199\u4E0A\u4E0B\u6587" aria-expanded="false">
+                        <i class="fa-solid fa-layer-group"></i><span id="t-continuation-context-count">${getContinuationDefaultInjectCount()}</span>
                     </button>
+                    <button class="t-continuation-send" id="t-btn-continuation-send" type="button" title="\u53D1\u9001" aria-label="\u53D1\u9001">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    <div class="t-continuation-context-popover" id="t-continuation-context-popover" hidden>
+                        <div class="t-continuation-context-head"><strong>\u7EED\u5199\u4E0A\u4E0B\u6587</strong><span>\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u8BB0\u5F55</span></div>
+                        <div class="t-continuation-stepper">
+                            <button id="t-continuation-context-minus" type="button" aria-label="\u51CF\u5C11\u7EED\u5199\u4E0A\u4E0B\u6587"><i class="fa-solid fa-minus"></i></button>
+                            <span><strong id="t-continuation-context-value">${getContinuationDefaultInjectCount()}</strong> \u8F6E</span>
+                            <button id="t-continuation-context-plus" type="button" aria-label="\u589E\u52A0\u7EED\u5199\u4E0A\u4E0B\u6587"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <div class="t-continuation-context-stats" id="t-continuation-context-stats"></div>
+                    </div>
                 </div>
-            </div>
-
-            <!-- \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A -->
-            <div class="t-bot-right">
-                <button class="t-btn-aux" id="t-btn-queue-settings" title="\u961F\u5217\u8BBE\u7F6E">
-                    <i class="fa-solid fa-sliders"></i>
-                </button>
-                <button class="t-btn-aux" id="t-btn-edit" title="\u7F16\u8F91\u5F53\u524D\u5267\u672C">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                </button>
-                <button class="t-btn-aux t-btn-stop" id="t-btn-stop" title="\u4E2D\u6B62\u751F\u6210">
-                    <i class="fa-solid fa-stop"></i>
-                </button>
-                <button class="t-btn-aux t-btn-diag" id="t-btn-diagnostics" title="\u8BCA\u65AD\u65E5\u5FD7">
-                    <i class="fa-solid fa-stethoscope"></i>
+                <button class="t-mobile-toolbox-btn t-toolbox-toggle" type="button" title="\u6253\u5F00\u5DE5\u5177\u7BB1" aria-label="\u6253\u5F00\u5DE5\u5177\u7BB1" aria-expanded="false">
+                    <i class="fa-solid fa-toolbox"></i><span>\u5DE5\u5177</span>
                 </button>
             </div>
         </div>
@@ -32053,7 +33552,7 @@ async function openMainWindow() {
     }
     const rnd = Math.floor(Math.random() * pool.length);
     const s = pool[rnd];
-    applyScriptSelection(s.id, { trackSelection: false });
+    applyScriptSelection(s.id, { trackSelection: false, pendingGeneration: true });
     const dice = $("#t-btn-dice");
     dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
     setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
@@ -32116,57 +33615,27 @@ async function openMainWindow() {
     e.stopPropagation();
   });
   $("#t-btn-dice").on("click", handleRandom);
-  const $toolsPanel = $("#t-tools-panel");
-  const $toolsBtn = $("#t-btn-tools");
-  $toolsBtn.on("click", function(e) {
-    e.stopPropagation();
-    const isVisible = $toolsPanel.is(":visible");
-    $toolsPanel.toggle(!isVisible);
-    $(this).toggleClass("active", !isVisible);
-  });
-  $(document).on("click.toolspanel", function(e) {
-    if (!$(e.target).closest("#t-tools-panel, #t-btn-tools").length) {
-      $toolsPanel.hide();
-      $toolsBtn.removeClass("active");
-    }
-  });
   $("#t-tool-zen").on("click", function() {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
     const view = $("#t-main-view");
     view.toggleClass("t-zen-mode");
     const isZen = view.hasClass("t-zen-mode");
-    if (isZen) {
-      $toolsBtn.addClass("zen-active");
-    } else {
-      $toolsBtn.removeClass("zen-active");
-    }
+    $(this).toggleClass("active", isZen);
   });
   $("#t-tool-edit-content").on("click", function() {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
     if (!GlobalState.lastGeneratedContent) {
       if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7F16\u8F91\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F");
       return;
     }
     openContentEditor();
   });
-  $("#t-tool-continue").on("click", async function() {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
+  const runContinuation = async (composeResult) => {
     if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
       if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
       return;
     }
-    const composeResult = await openContinuationComposer("");
     if (composeResult === null) return;
     if (composeResult?.openHistory) {
       openContinuationHistory(composeResult.scriptId);
-      return;
-    }
-    if (continuationHistoryView) {
-      openContinuationHistory(continuationHistoryView.scriptId);
-      if (window.toastr) toastr.info("\u5F53\u524D\u663E\u793A\u7684\u662F\u7EED\u5199\u5386\u53F2\uFF0C\u8BF7\u4ECE\u5BF9\u5E94\u8F6E\u6B21\u521B\u5EFA\u5206\u652F", "Titania");
       return;
     }
     const normalizedInstruction = String(composeResult?.instruction || "").trim();
@@ -32174,14 +33643,210 @@ async function openMainWindow() {
     if (normalizedInstruction) {
       saveContinuationRecentInstruction(normalizedInstruction);
     }
+    const historyTarget = continuationHistoryView ? findGlobalContinuationRound(
+      continuationHistoryView.chatId,
+      continuationHistoryView.scriptId,
+      continuationHistoryView.branchKey,
+      continuationHistoryView.roundKey
+    ) : null;
+    const historyView = historyTarget ? { ...continuationHistoryView } : null;
+    if (historyView) continuationHistoryView = null;
+    const currentSource = getCurrentContinuationSource();
+    const isCrossChatHistory = Boolean(historyView && historyView.chatId !== currentSource.chatId);
+    const copied = isCrossChatHistory ? copyContinuationBranchToCurrentChat({
+      ...historyTarget.session,
+      branchKey: historyTarget.branch.branchKey,
+      rounds: historyTarget.branch.rounds,
+      roundKey: historyTarget.round.roundKey
+    }) : null;
     await handleUserContinuation({
       instruction: normalizedInstruction,
       injectRoundsCount,
       branchFromCurrentView: composeResult?.branchFromCurrentView === true,
-      sourceBranchKey: composeResult?.sourceBranchKey || "",
+      sourceBranchKey: isCrossChatHistory ? "" : historyView?.branchKey || composeResult?.sourceBranchKey || "",
       regenerateRound: composeResult?.regenerateRound ?? null,
+      continueAfterRound: isCrossChatHistory ? null : historyTarget?.round.round ?? null,
+      continueAfterRoundKey: isCrossChatHistory ? "" : historyView?.roundKey || "",
+      scriptIdOverride: copied?.scriptId || historyView?.scriptId || "",
+      baseContentOverride: copied?.content || historyTarget?.round.content || "",
+      crossRoleSource: isCrossChatHistory ? historyTarget.session.characterName : "",
       fromCurrentView: true
     });
+  };
+  const $quickInput = $("#t-continuation-quick-input");
+  const $suggestions = $("#t-continuation-suggestions");
+  const $contextPopover = $("#t-continuation-context-popover");
+  let quickInjectRounds = getContinuationDefaultInjectCount();
+  const getQuickScriptId = () => {
+    const display = getCurrentDisplayContent();
+    return display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || "";
+  };
+  const resizeQuickInput = () => {
+    const input = $quickInput.get(0);
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${Math.min(input.scrollHeight, 88)}px`;
+  };
+  const getQuickAction = () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return "stop";
+    const display = getCurrentDisplayContent();
+    if (pendingGenerationScriptId || !display?.content?.trim()) return "generate";
+    return String($quickInput.val() || "").trim() ? "instruct" : "continue";
+  };
+  const updateQuickSendState = () => {
+    continuationQuickDraft = String($quickInput.val() || "");
+    const action = getQuickAction();
+    const scriptName = GlobalState.runtimeScripts.find((item) => item.id === (pendingGenerationScriptId || GlobalState.lastUsedScriptId))?.name || "\u5F53\u524D\u5267\u672C";
+    const config = {
+      generate: { icon: "fa-solid fa-clapperboard", title: "\u6F14\u7ECE\u5F53\u524D\u5267\u672C", placeholder: `\u51C6\u5907\u6F14\u7ECE\u300A${scriptName}\u300B` },
+      continue: { icon: "fa-solid fa-forward-step", title: "\u81EA\u7136\u7EED\u5199", placeholder: "\u8F93\u5165\u7EED\u5199\u6307\u4EE4\uFF0C\u7559\u7A7A\u81EA\u7136\u7EED\u5199..." },
+      instruct: { icon: "fa-solid fa-paper-plane", title: "\u6309\u6307\u4EE4\u7EED\u5199", placeholder: "\u8F93\u5165\u7EED\u5199\u6307\u4EE4\uFF0C\u7559\u7A7A\u81EA\u7136\u7EED\u5199..." },
+      stop: { icon: "fa-solid fa-stop", title: "\u4E2D\u6B62\u5F53\u524D\u751F\u6210", placeholder: "\u6B63\u5728\u751F\u6210..." }
+    }[action];
+    $("#t-btn-continuation-send").attr({ title: config.title, "aria-label": config.title, "data-action": action }).toggleClass("is-stop", action === "stop").prop("disabled", false).find("i").attr("class", config.icon);
+    $quickInput.attr("placeholder", config.placeholder).prop("disabled", action === "generate" || action === "stop");
+    $("#t-btn-continuation-context").prop("disabled", action === "generate" || action === "stop");
+    resizeQuickInput();
+  };
+  const renderRecentSuggestions = () => {
+    const query = String($quickInput.val() || "").trim().toLowerCase();
+    const recent = getContinuationRecentInstructions().filter((item) => !query || item.toLowerCase().includes(query)).slice(0, 5);
+    const html2 = recent.length ? recent.map((item) => `<button type="button" class="t-continuation-suggestion" data-text="${encodeURIComponent(item)}" title="${escapeHtmlText2(item)}">${escapeHtmlText2(item)}</button>`).join("") : '<div class="t-continuation-suggestions-empty">\u6682\u65E0\u5339\u914D\u7684\u6700\u8FD1\u6307\u4EE4</div>';
+    $("#t-continuation-suggestions-list").html(html2);
+  };
+  const updateContextPopover = () => {
+    const stats = getContinuationSessionStats(getQuickScriptId(), quickInjectRounds);
+    $("#t-continuation-context-count, #t-continuation-context-value").text(quickInjectRounds);
+    $("#t-continuation-context-stats").html(`\u5F53\u524D\u7EED\u5199\u94FE ${stats.totalRounds} \u8F6E<br>\u9884\u8BA1\u6CE8\u5165 ${stats.estimatedChars.toLocaleString()} \u5B57 \xB7 \u7EA6 ${stats.estimatedTokens.toLocaleString()} tokens`).toggleClass("is-warning", stats.estimatedTokens > CONTINUATION_TOKEN_WARN_THRESHOLD);
+    $("#t-continuation-context-minus").prop("disabled", quickInjectRounds <= CONTINUATION_MIN_INJECT_ROUNDS);
+    $("#t-continuation-context-plus").prop("disabled", quickInjectRounds >= CONTINUATION_MAX_INJECT_ROUNDS);
+  };
+  const setContextPopoverOpen = (open) => {
+    $contextPopover.prop("hidden", !open);
+    $("#t-btn-continuation-context").attr("aria-expanded", String(open)).toggleClass("active", open);
+    if (open) {
+      $suggestions.prop("hidden", true);
+      updateContextPopover();
+    }
+  };
+  const refreshContinuationHistoryCount = async () => {
+    try {
+      const source = getCurrentContinuationSource();
+      const sessions = await listAllContinuationSessions();
+      const count = sessions.filter((session) => session.chatId === source.chatId).reduce((total, session) => total + session.branches.reduce((sum, branch) => sum + Math.max(0, branch.rounds.length - 1), 0), 0);
+      $("#t-continuation-history-count").text(count > 99 ? "99+" : count);
+      $("#t-btn-continuation-history").attr("title", count ? `\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2\uFF08${count} \u8F6E\uFF09` : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2");
+    } catch (error) {
+      console.warn("Titania: \u8BFB\u53D6\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6570\u91CF\u5931\u8D25", error);
+    }
+  };
+  const submitQuickAction = async () => {
+    const action = getQuickAction();
+    if (action === "stop") {
+      if (GlobalState.isGenerating) cancelGeneration();
+      else if (GlobalState.queueState.isRunning) cancelQueueGeneration();
+      return;
+    }
+    if (action === "generate") {
+      const scriptId = pendingGenerationScriptId || GlobalState.lastUsedScriptId;
+      if (!scriptId) {
+        if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
+        return;
+      }
+      pendingGenerationScriptId = "";
+      closeWindow();
+      handleGenerate(scriptId, false);
+      return;
+    }
+    const instruction = String($quickInput.val() || "").trim();
+    $suggestions.prop("hidden", true);
+    setContextPopoverOpen(false);
+    const success = await runContinuation({ instruction, injectRoundsCount: quickInjectRounds });
+    if (success) {
+      continuationQuickDraft = "";
+      $quickInput.val("");
+      updateQuickSendState();
+    }
+    refreshContinuationHistoryCount();
+  };
+  $quickInput.val(continuationQuickDraft).on("input", () => {
+    updateQuickSendState();
+    renderRecentSuggestions();
+  }).on("focus", () => {
+    renderRecentSuggestions();
+    $suggestions.prop("hidden", false);
+    setContextPopoverOpen(false);
+  }).on("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      submitQuickAction();
+    }
+  });
+  $("#t-btn-continuation-send").on("click", submitQuickAction);
+  $("#t-btn-continuation-history").on("click", () => {
+    $suggestions.prop("hidden", true);
+    setContextPopoverOpen(false);
+    openContinuationHistory(getQuickScriptId());
+  });
+  $("#t-btn-continuation-context").on("click", (event) => {
+    event.stopPropagation();
+    setContextPopoverOpen($contextPopover.prop("hidden"));
+  });
+  $("#t-continuation-context-minus, #t-continuation-context-plus").on("click", function() {
+    quickInjectRounds = clampInjectRoundsCount(quickInjectRounds + ($(this).is("#t-continuation-context-plus") ? 1 : -1));
+    saveContinuationDefaultInjectCount(quickInjectRounds);
+    updateContextPopover();
+  });
+  $("#t-continuation-suggestions-list").on("click", ".t-continuation-suggestion", function() {
+    $quickInput.val(decodeURIComponent($(this).attr("data-text") || "")).trigger("input").trigger("focus");
+    $suggestions.prop("hidden", true);
+  });
+  $("#t-btn-continuation-compose").on("click", async () => {
+    $suggestions.prop("hidden", true);
+    const result = await openContinuationComposer(String($quickInput.val() || ""));
+    if (!result) return;
+    if (result.openHistory) {
+      openContinuationHistory(result.scriptId);
+      return;
+    }
+    $quickInput.val(String(result.instruction || "")).trigger("input");
+    quickInjectRounds = clampInjectRoundsCount(result.injectRoundsCount ?? quickInjectRounds);
+    updateContextPopover();
+    await submitQuickAction();
+  });
+  $(document).on("click.tcontinuationquick", (event) => {
+    if (!$(event.target).closest(".t-continuation-input-wrap").length) $suggestions.prop("hidden", true);
+    if (!$(event.target).closest("#t-continuation-context-popover, #t-btn-continuation-context").length) setContextPopoverOpen(false);
+  });
+  updateQuickSendState();
+  updateContextPopover();
+  refreshContinuationHistoryCount();
+  const setToolboxOpen = (open) => {
+    $("#t-main-view").toggleClass("t-toolbox-open", open);
+    $("#t-toolbox-panel").attr("aria-hidden", String(!open));
+    $(".t-toolbox-toggle").attr("aria-expanded", String(open));
+  };
+  $(".t-toolbox-toggle").on("click", (event) => {
+    event.stopPropagation();
+    setToolboxOpen(!$("#t-main-view").hasClass("t-toolbox-open"));
+  });
+  $("#t-toolbox-close, #t-toolbox-backdrop").on("click", () => setToolboxOpen(false));
+  $("#t-toolbox-panel").on("click", ".t-toolbox-action", () => setToolboxOpen(false));
+  $(document).on("keydown.ttoolbox", (event) => {
+    if (event.key === "Escape" && $("#t-main-view").hasClass("t-toolbox-open")) {
+      setToolboxOpen(false);
+    }
+  });
+  const RAIL_PEEK_WIDTH = 150;
+  let railPeeking = false;
+  $(".t-content-wrapper").on("mousemove", function(event) {
+    const nearRight = this.getBoundingClientRect().right - event.clientX <= RAIL_PEEK_WIDTH;
+    if (nearRight === railPeeking) return;
+    railPeeking = nearRight;
+    $("#t-main-view").toggleClass("t-rail-peek", nearRight);
+  }).on("mouseleave", () => {
+    railPeeking = false;
+    $("#t-main-view").removeClass("t-rail-peek");
   });
   const closeInlineBranchMenu = () => {
     $("#t-cont-inline-actions").removeClass("is-menu-open");
@@ -32221,6 +33886,8 @@ async function openMainWindow() {
     $(document).off("click.tinlinebranch");
     $("#t-overlay").remove();
     $(document).off("keydown.zenmode");
+    $(document).off("keydown.ttoolbox");
+    $(document).off("click.tcontinuationquick");
   };
   $("#t-btn-close").on("click", closeWindow);
   $("#t-overlay").on("click", (e) => {
@@ -32239,6 +33906,19 @@ async function openMainWindow() {
       return;
     }
     openEditor(GlobalState.lastUsedScriptId, "main");
+  });
+  $("#t-btn-regenerate").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    const scriptId = GlobalState.lastUsedScriptId || GlobalState.lastGeneratedScriptId;
+    if (!scriptId) {
+      if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
+      return;
+    }
+    closeWindow();
+    handleGenerate(scriptId, false);
   });
   $("#t-btn-copy").on("click", async () => {
     const container = document.getElementById("t-output-content");
@@ -32290,14 +33970,6 @@ async function openMainWindow() {
         toastr.error("\u590D\u5236\u5931\u8D25\uFF1A" + (err.message || "\u8BF7\u68C0\u67E5\u6D4F\u89C8\u5668\u6743\u9650"), "Titania");
       }
     }
-  });
-  $("#t-btn-run-single").on("click", () => {
-    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
-      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
-      return;
-    }
-    closeWindow();
-    handleGenerate(null, false);
   });
   $("#t-btn-run-queue").on("click", () => {
     if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
@@ -32355,6 +34027,7 @@ async function openMainWindow() {
     const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
     if (canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1) {
       continuationHistoryView = null;
+      pendingGenerationScriptId = "";
       const newIndex = canJumpFromLiveToHistory ? 0 : effectiveIndex + 1;
       lockDisplayToHistory(newIndex);
       const item = history.items[newIndex];
@@ -32365,6 +34038,7 @@ async function openMainWindow() {
         GlobalState.lastFavId = item.favId || null;
       }
       updateSceneHistoryNav();
+      updateRunButtonsState();
       updateFavButtonUI();
       updateScriptTitleDisplay();
     }
@@ -32377,6 +34051,7 @@ async function openMainWindow() {
     let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
     if (effectiveIndex > 0) {
       continuationHistoryView = null;
+      pendingGenerationScriptId = "";
       const newIndex = effectiveIndex - 1;
       if (newIndex === 0 && !streaming.isActive) {
         unlockDisplay();
@@ -32392,16 +34067,19 @@ async function openMainWindow() {
         GlobalState.lastFavId = item.favId || null;
       }
       updateSceneHistoryNav();
+      updateRunButtonsState();
       updateFavButtonUI();
       updateScriptTitleDisplay();
     } else if (effectiveIndex === 0 && streaming.isActive && display.isViewingHistory) {
       continuationHistoryView = null;
+      pendingGenerationScriptId = "";
       unlockDisplay();
       if (streaming.content) {
         renderGeneratedContent(streaming.content, streaming.scriptName || "\u573A\u666F", true);
       }
       $("#t-new-content-indicator").remove();
       updateSceneHistoryNav();
+      updateRunButtonsState();
     }
   });
   window.updateSceneHistoryNav = updateSceneHistoryNav;
@@ -32436,18 +34114,22 @@ async function openMainWindow() {
   updateQueueButtonUI();
 }
 function updateRunButtonsState() {
-  const $singleBtn = $("#t-btn-run-single");
   const $queueBtn = $("#t-btn-run-queue");
-  if (!$singleBtn.length || !$queueBtn.length) return;
+  const $secondaryContinuationBtns = $("#t-btn-continuation-compose, #t-btn-continuation-history");
+  const $stopBtn = $("#t-btn-stop");
+  if (!$queueBtn.length) return;
   const isGenerating = GlobalState.isGenerating;
   const isQueueRunning = GlobalState.queueState.isRunning;
   if (isGenerating || isQueueRunning) {
-    $singleBtn.prop("disabled", true);
     $queueBtn.prop("disabled", true);
+    $secondaryContinuationBtns.prop("disabled", true);
+    $stopBtn.addClass("is-active");
   } else {
-    $singleBtn.prop("disabled", false);
     $queueBtn.prop("disabled", false);
+    $secondaryContinuationBtns.prop("disabled", false);
+    $stopBtn.removeClass("is-active");
   }
+  $("#t-continuation-quick-input").trigger("input");
 }
 function updateQueueButtonUI() {
   const $queueBtn = $("#t-btn-run-queue");
@@ -32486,10 +34168,13 @@ function updateContentStatsDisplay(stats) {
 function updateFavButtonUI() {
   const btn = $("#t-btn-like");
   if (!btn.length) return;
+  const icon = btn.find("i");
   if (GlobalState.lastFavId) {
-    btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i>');
+    icon.attr("class", "fa-solid fa-heart").css("color", "#ff6b6b");
+    btn.attr({ title: "\u53D6\u6D88\u6536\u85CF", "aria-label": "\u53D6\u6D88\u6536\u85CF" }).addClass("is-faved");
   } else {
-    btn.html('<i class="fa-regular fa-heart"></i>');
+    icon.attr("class", "fa-regular fa-heart").css("color", "");
+    btn.attr({ title: "\u6536\u85CF\u7ED3\u679C", "aria-label": "\u6536\u85CF\u7ED3\u679C" }).removeClass("is-faved");
   }
 }
 function updateScriptTitleDisplay() {
@@ -32527,7 +34212,9 @@ function updateSceneHistoryNav() {
   const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
   const hasPrev = canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1;
   const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
-  if (history.items.length > 1 || history.items.length >= 1 && streaming.isActive) {
+  const showPageNav = history.items.length > 1 || history.items.length >= 1 && streaming.isActive;
+  $("#t-main-view").toggleClass("t-has-pagenav", showPageNav);
+  if (showPageNav) {
     $prevBtn.show();
     $nextBtn.show();
     $indicator.show();
@@ -32559,11 +34246,12 @@ function updateContinuationInlineActions() {
   $button.attr({ "aria-expanded": "false", "aria-label": "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" });
   let target = null;
   if (continuationHistoryView) {
-    const located = findContinuationRound(
+    const currentSource = getCurrentContinuationSource();
+    const located = continuationHistoryView.chatId === currentSource.chatId ? findContinuationRound(
       continuationHistoryView.scriptId,
       continuationHistoryView.branchKey,
       continuationHistoryView.roundKey
-    );
+    ) : null;
     if (located) {
       target = {
         scriptId: continuationHistoryView.scriptId,
@@ -33123,7 +34811,7 @@ function showScriptSelector(initialFilter = "ALL") {
                 </div>
             `);
       card.on("click", () => {
-        applyScriptSelection(s.id, { trackSelection: true });
+        applyScriptSelection(s.id, { trackSelection: true, pendingGeneration: true });
         $("#t-selector-panel").remove();
       });
       $grid.append(card);
@@ -33504,7 +35192,7 @@ function disableQueueMode() {
   GlobalState.queueState.enabled = false;
   updateQueueButtonUI();
 }
-var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MIN_INJECT_ROUNDS, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, continuationHistoryView;
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MIN_INJECT_ROUNDS, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, continuationHistoryView, continuationHistoryManaging, continuationHistorySelection, continuationGlobalSessions, continuationHistoryScope, continuationQuickDraft, pendingGenerationScriptId;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -33534,10 +35222,94 @@ var init_mainWindow = __esm({
     CONTINUATION_MAX_INJECT_ROUNDS = 20;
     CONTINUATION_TOKEN_WARN_THRESHOLD = 6e4;
     continuationHistoryView = null;
+    continuationHistoryManaging = false;
+    continuationHistorySelection = /* @__PURE__ */ new Set();
+    continuationGlobalSessions = [];
+    continuationHistoryScope = "all";
+    continuationQuickDraft = "";
+    pendingGenerationScriptId = "";
   }
 });
 
 // src/ui/floatingBtn.js
+function getFloatingPositionMode() {
+  return window.innerWidth <= FLOAT_POSITION_MOBILE_BREAKPOINT ? "mobile" : "desktop";
+}
+function getFloatingPositionData() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FLOAT_POSITION_STORAGE_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+function getFloatingPositionBounds(size) {
+  const safeSize = Math.max(1, Number(size) || 56);
+  const minLeft = FLOAT_POSITION_MARGIN;
+  const minTop = FLOAT_POSITION_MARGIN;
+  const maxLeft = Math.max(minLeft, window.innerWidth - safeSize - FLOAT_POSITION_MARGIN);
+  const maxTop = Math.max(minTop, window.innerHeight - safeSize - FLOAT_POSITION_MARGIN);
+  return {
+    minLeft,
+    minTop,
+    maxLeft,
+    maxTop,
+    travelX: Math.max(0, maxLeft - minLeft),
+    travelY: Math.max(0, maxTop - minTop)
+  };
+}
+function clampFloatingPosition(left, top, size) {
+  const bounds = getFloatingPositionBounds(size);
+  return {
+    left: Math.max(bounds.minLeft, Math.min(bounds.maxLeft, Number(left) || 0)),
+    top: Math.max(bounds.minTop, Math.min(bounds.maxTop, Number(top) || 0))
+  };
+}
+function saveFloatingPosition(btn, size) {
+  if (!btn?.length) return;
+  try {
+    const rect = btn[0].getBoundingClientRect();
+    const bounds = getFloatingPositionBounds(size);
+    const position = clampFloatingPosition(rect.left, rect.top, size);
+    const data = getFloatingPositionData();
+    data[getFloatingPositionMode()] = {
+      x: bounds.travelX > 0 ? (position.left - bounds.minLeft) / bounds.travelX : 0,
+      y: bounds.travelY > 0 ? (position.top - bounds.minTop) / bounds.travelY : 0
+    };
+    localStorage.setItem(FLOAT_POSITION_STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn("Titania: \u4FDD\u5B58\u60AC\u6D6E\u7403\u4F4D\u7F6E\u5931\u8D25", e);
+  }
+}
+function applyFloatingPosition(btn, size) {
+  if (!btn?.length) return;
+  const saved = getFloatingPositionData()[getFloatingPositionMode()];
+  const hasSavedPosition = Number.isFinite(saved?.x) && Number.isFinite(saved?.y);
+  const bounds = getFloatingPositionBounds(size);
+  if (hasSavedPosition) {
+    const x = Math.max(0, Math.min(1, saved.x));
+    const y = Math.max(0, Math.min(1, saved.y));
+    btn.css({
+      left: `${bounds.minLeft + x * bounds.travelX}px`,
+      top: `${bounds.minTop + y * bounds.travelY}px`,
+      right: "auto"
+    });
+    return;
+  }
+  const position = clampFloatingPosition(FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, size);
+  btn.css({ left: `${position.left}px`, top: `${position.top}px`, right: "auto" });
+}
+function destroyFloatingButton() {
+  $(document).off(".titaniaFloatDrag");
+  $(window).off(".titaniaFloatPosition");
+  if (floatResizeTimer) {
+    clearTimeout(floatResizeTimer);
+    floatResizeTimer = null;
+  }
+  hideSlideMenu();
+  $("#titania-float-btn").remove();
+  $("#titania-timer").remove();
+}
 function isToolbarEnabled() {
   const settings2 = getExtData();
   const toolbarConfig = settings2.quick_toolbar || {};
@@ -33713,8 +35485,7 @@ function getCurrentAnimationClass() {
   return ANIMATION_CLASSES[animationType] || ANIMATION_CLASSES.ripple;
 }
 function createFloatingButton() {
-  $("#titania-float-btn").remove();
-  $("#titania-timer").remove();
+  destroyFloatingButton();
   $("#titania-float-style").remove();
   const settings2 = getExtData();
   if (typeof extension_settings !== "undefined" && extension_settings[extensionName] && !extension_settings[extensionName].enabled) {
@@ -33760,6 +35531,7 @@ function createFloatingButton() {
   });
   $("body").append(btn);
   $("body").append(timer);
+  applyFloatingPosition(btn, size);
   let isDragging = false, startX, startY, initialLeft, initialTop;
   btn.on("touchstart mousedown", function(e) {
     isDragging = false;
@@ -33771,14 +35543,13 @@ function createFloatingButton() {
     initialTop = rect.top;
     $(this).css({ "transition": "none", "transform": "none" });
   });
-  $(document).on("touchmove mousemove", function(e) {
+  $(document).on("touchmove.titaniaFloatDrag mousemove.titaniaFloatDrag", function(e) {
     if (startX === void 0) return;
     const evt = e.type === "touchmove" ? e.originalEvent.touches[0] : e;
     if (Math.abs(evt.clientX - startX) > 5 || Math.abs(evt.clientY - startY) > 5) isDragging = true;
     let l = initialLeft + (evt.clientX - startX), t = initialTop + (evt.clientY - startY);
-    l = Math.max(0, Math.min(window.innerWidth - size, l));
-    t = Math.max(0, Math.min(window.innerHeight - size, t));
-    btn.css({ left: l + "px", top: t + "px", right: "auto" });
+    const position = clampFloatingPosition(l, t, size);
+    btn.css({ left: position.left + "px", top: position.top + "px", right: "auto" });
     updateTimerPosition();
   });
   btn.on("touchend mouseup", function(e) {
@@ -33787,6 +35558,7 @@ function createFloatingButton() {
       isDragging = false;
       startX = void 0;
       btn.css({ "transition": "none" });
+      saveFloatingPosition(btn, size);
       updateTimerPosition();
       hideSlideMenu();
       return;
@@ -33797,17 +35569,28 @@ function createFloatingButton() {
     btn.removeClass("t-notify");
     handleFloatingButtonClick();
   });
-  $(document).on("touchend mouseup", function(e) {
-    if (startX !== void 0 && isDragging) {
-      startX = void 0;
-      isDragging = false;
+  $(document).on("touchend.titaniaFloatDrag mouseup.titaniaFloatDrag touchcancel.titaniaFloatDrag", function() {
+    if (startX === void 0) return;
+    if (isDragging) {
       btn.css({ "transition": "none" });
+      saveFloatingPosition(btn, size);
       updateTimerPosition();
       hideSlideMenu();
     }
+    startX = void 0;
+    isDragging = false;
+  });
+  $(window).on("resize.titaniaFloatPosition orientationchange.titaniaFloatPosition", function() {
+    if (floatResizeTimer) clearTimeout(floatResizeTimer);
+    floatResizeTimer = setTimeout(() => {
+      floatResizeTimer = null;
+      applyFloatingPosition(btn, size);
+      updateTimerPosition();
+      hideSlideMenu();
+    }, 120);
   });
 }
-var slideMenuVisible, TOOLBAR_BUTTONS, ANIMATION_CLASSES;
+var slideMenuVisible, FLOAT_POSITION_STORAGE_KEY, FLOAT_POSITION_MARGIN, FLOAT_POSITION_MOBILE_BREAKPOINT, FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, floatResizeTimer, TOOLBAR_BUTTONS, ANIMATION_CLASSES;
 var init_floatingBtn = __esm({
   "src/ui/floatingBtn.js"() {
     init_storage();
@@ -33816,6 +35599,12 @@ var init_floatingBtn = __esm({
     init_mainWindow();
     init_settingsWindow();
     slideMenuVisible = false;
+    FLOAT_POSITION_STORAGE_KEY = "titania-theater:float-position:v1";
+    FLOAT_POSITION_MARGIN = 8;
+    FLOAT_POSITION_MOBILE_BREAKPOINT = 768;
+    FLOAT_POSITION_DEFAULT_LEFT = 20;
+    FLOAT_POSITION_DEFAULT_TOP = 100;
+    floatResizeTimer = null;
     TOOLBAR_BUTTONS = [
       {
         id: "main",
@@ -33886,6 +35675,24 @@ var init_floatingBtn = __esm({
 });
 
 // src/core/api.js
+var api_exports = {};
+__export(api_exports, {
+  buildPromptCompositionPreview: () => buildPromptCompositionPreview,
+  cancelGeneration: () => cancelGeneration,
+  cancelQueueGeneration: () => cancelQueueGeneration,
+  copyContinuationBranchToCurrentChat: () => copyContinuationBranchToCurrentChat,
+  deleteContinuationHistorySelections: () => deleteContinuationHistorySelections,
+  executeQueueGeneration: () => executeQueueGeneration,
+  findContinuationRoundByContent: () => findContinuationRoundByContent,
+  getContinuationBranches: () => getContinuationBranches,
+  getContinuationRoundsForFav: () => getContinuationRoundsForFav,
+  getContinuationSessionStats: () => getContinuationSessionStats,
+  getContinuationSessions: () => getContinuationSessions,
+  handleGenerate: () => handleGenerate,
+  handleUserContinuation: () => handleUserContinuation,
+  renderGeneratedContent: () => renderGeneratedContent,
+  syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
+});
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
 import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
 import EventSourceStream2 from "../../../sse-stream.js";
@@ -33958,7 +35765,7 @@ function archiveContinuationBranch(entry) {
     archivedAt: Date.now()
   }, ...entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== branchKey)].slice(0, CONTINUATION_ARCHIVED_BRANCH_MAX);
 }
-function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound, targetRoundKey = "") {
+function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound, targetRoundKey = "", includeTarget = false) {
   const entry = getContinuationRuntimeStore()[scriptId];
   if (!entry) return null;
   const activeBranchKey = String(entry.branchKey || "").trim();
@@ -33978,7 +35785,7 @@ function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound
   entry.branchKey = createContinuationBranchKey();
   entry.parentBranchKey = requestedBranchKey;
   entry.branchedAtRound = roundNumber;
-  entry.rounds = sourceRounds.slice(0, roundNumber - 1);
+  entry.rounds = sourceRounds.slice(0, includeTarget ? roundNumber : roundNumber - 1);
   return {
     sourceBranchKey: requestedBranchKey,
     branchKey: entry.branchKey,
@@ -34237,6 +36044,116 @@ function getContinuationSessions() {
       roundCount: branches.reduce((sum, branch) => sum + branch.rounds.length, 0)
     };
   }).filter((session) => session.branches.length > 0).sort((left, right) => right.updatedAt - left.updatedAt);
+}
+function copyContinuationBranchToCurrentChat(source = {}) {
+  const scriptId = String(source.scriptId || "").trim();
+  const sourceRounds = normalizeContinuationRounds(source.rounds);
+  const targetRoundKey = String(source.roundKey || "").trim();
+  const targetIndex = targetRoundKey ? sourceRounds.findIndex((round) => round.roundKey === targetRoundKey) : sourceRounds.length - 1;
+  if (!scriptId || targetIndex < 0) return null;
+  const byScript = getContinuationRuntimeStore();
+  const current = byScript[scriptId];
+  if (current) archiveContinuationBranch(current);
+  const copiedRounds = sourceRounds.slice(0, targetIndex + 1).map((round, index) => ({
+    ...round,
+    round: index + 1,
+    roundKey: createContinuationRoundKey(),
+    timestamp: Date.now() + index
+  }));
+  byScript[scriptId] = {
+    scriptId,
+    scriptName: String(source.scriptName || current?.scriptName || "\u573A\u666F"),
+    branchKey: createContinuationBranchKey(),
+    parentBranchKey: "",
+    branchedAtRound: copiedRounds.length,
+    rounds: copiedRounds,
+    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
+    origin: {
+      chatId: String(source.chatId || ""),
+      characterId: String(source.characterId || ""),
+      characterName: String(source.characterName || "\u672A\u77E5\u89D2\u8272"),
+      scriptId,
+      branchKey: String(source.branchKey || ""),
+      roundKey: targetRoundKey
+    }
+  };
+  scheduleContinuationPersistence();
+  return {
+    scriptId,
+    branchKey: byScript[scriptId].branchKey,
+    roundKey: copiedRounds[copiedRounds.length - 1].roundKey,
+    content: copiedRounds[copiedRounds.length - 1].content
+  };
+}
+function deleteContinuationHistorySelections(selections = []) {
+  const selected = new Set((Array.isArray(selections) ? selections : []).map(
+    (item) => `${String(item?.scriptId || "")}\0${String(item?.branchKey || "")}\0${String(item?.roundKey || "")}`
+  ));
+  const byScript = getContinuationRuntimeStore();
+  let deletedSessions = 0;
+  let deletedBranches = 0;
+  let deletedRounds = 0;
+  for (const [scriptId, entry] of Object.entries(byScript)) {
+    const sessionKey = `${scriptId}\0\0`;
+    const allBranches = [
+      { ...entry, isActive: true },
+      ...Array.isArray(entry.archivedBranches) ? entry.archivedBranches.map((branch) => ({ ...branch, isActive: false })) : []
+    ];
+    if (selected.has(sessionKey)) {
+      delete byScript[scriptId];
+      deletedSessions++;
+      deletedBranches += allBranches.length;
+      deletedRounds += allBranches.reduce((sum, branch) => sum + (Array.isArray(branch.rounds) ? branch.rounds.length : 0), 0);
+      continue;
+    }
+    const keptBranches = [];
+    for (const branch of allBranches) {
+      const branchKey = String(branch.branchKey || "");
+      const branchSelectionKey = `${scriptId}\0${branchKey}\0`;
+      if (selected.has(branchSelectionKey)) {
+        deletedBranches++;
+        deletedRounds += Array.isArray(branch.rounds) ? branch.rounds.length : 0;
+        continue;
+      }
+      const rounds = Array.isArray(branch.rounds) ? branch.rounds : [];
+      const roundSelections = new Set([...selected].filter((key) => key.startsWith(`${scriptId}\0${branchKey}\0`)).map((key) => key.split("\0")[2]));
+      if (roundSelections.size > 0) {
+        const initialSelected = rounds.some((round) => round.type === "initial" && roundSelections.has(String(round.roundKey || "")));
+        if (initialSelected) {
+          deletedBranches++;
+          deletedRounds += rounds.length;
+          continue;
+        }
+        branch.rounds = rounds.filter((round) => {
+          const shouldDelete = roundSelections.has(String(round.roundKey || ""));
+          if (shouldDelete) deletedRounds++;
+          return !shouldDelete;
+        });
+      }
+      if (branch.rounds.length > 0) keptBranches.push(branch);
+      else deletedBranches++;
+    }
+    if (keptBranches.length === 0) {
+      delete byScript[scriptId];
+      deletedSessions++;
+      continue;
+    }
+    const active = keptBranches.find((branch) => branch.isActive) || keptBranches.slice().sort((a, b) => Math.max(...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
+    const activeBranch = keptBranches.find((branch) => branch.branchKey === active.branchKey);
+    entry.branchKey = activeBranch.branchKey;
+    entry.parentBranchKey = activeBranch.parentBranchKey || "";
+    entry.branchedAtRound = activeBranch.branchedAtRound || null;
+    entry.rounds = activeBranch.rounds;
+    entry.archivedBranches = keptBranches.filter((branch) => branch.branchKey !== activeBranch.branchKey).map((branch) => ({
+      branchKey: branch.branchKey,
+      parentBranchKey: branch.parentBranchKey || "",
+      branchedAtRound: branch.branchedAtRound || null,
+      archivedAt: branch.archivedAt || 0,
+      rounds: branch.rounds
+    }));
+  }
+  if (deletedSessions || deletedBranches || deletedRounds) scheduleContinuationPersistence();
+  return { deletedSessions, deletedBranches, deletedRounds };
 }
 function findContinuationRoundByContent(scriptId, content) {
   const targetContent = String(content || "").trim();
@@ -34645,6 +36562,180 @@ function cancelGeneration() {
   TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u4E86\u751F\u6210");
   if (window.toastr) toastr.info("\u23F9\uFE0F \u6F14\u7ECE\u5DF2\u4E2D\u65AD", "Titania");
 }
+async function buildPromptCompositionPreview(options = {}) {
+  try {
+    const data = getExtData();
+    const cfg = data.config || {};
+    const dirDefaults = data.director || { instruction: "" };
+    const conn = getActiveConnection();
+    const generationOverrides = options.generationOverrides || null;
+    const scriptId = options.forceScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
+    const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
+    if (!script) {
+      return { ok: false, error: "\u672A\u9009\u62E9\u5267\u672C" };
+    }
+    const promptOverride = generationOverrides?.promptOverride;
+    const scriptPromptSource = typeof promptOverride === "string" && promptOverride.trim().length > 0 ? promptOverride : script.prompt;
+    const generationSource = generationOverrides?.source || "preview";
+    const ctx = await getContextData();
+    let sys;
+    let promptScheme = getPromptScheme(data, GlobalState.generationMode);
+    if (!promptScheme) {
+      promptScheme = getPromptScheme(data, "narrative");
+      if (window.toastr) toastr.warning("\u672A\u627E\u5230\u6D3B\u52A8\u9884\u8BBE\uFF0C\u5DF2\u56DE\u9000\u5230\u5185\u5BB9\u4F18\u5148\u6A21\u5F0F", "Titania");
+    }
+    const systemEntry = promptScheme.entries.find((entry) => entry.role === "system");
+    sys = systemEntry?.content || (GlobalState.generationMode === "visual" ? DEFAULT_VISUAL_PROMPT : DEFAULT_CONTENT_PROMPT);
+    let user = "";
+    let runtimeChatHistory = "";
+    const sectionLengths = {
+      director: 0,
+      persona: 0,
+      userDesc: 0,
+      worldInfo: 0,
+      history: 0,
+      scriptInstruction: 0
+    };
+    const dirInstruction = dirDefaults.instruction || "";
+    const styleProfiles = data.style_profiles || [{ id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }];
+    const activeStyleId = data.active_style_id || "default";
+    const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId) || styleProfiles[0];
+    const dStyle = activeStyleProfile ? activeStyleProfile.content : "";
+    let directorSection = "";
+    if (dirInstruction.trim()) {
+      directorSection += dirInstruction.trim() + "\n";
+    }
+    if (dStyle) {
+      directorSection += `\u6587\u7B14\u53C2\u8003\uFF1A\u6A21\u4EFF\u4EE5\u4E0B\u6587\u98CE\uFF08\u4E0D\u8981\u590D\u5236\u539F\u6587\uFF09:
+<style_ref>
+${dStyle.substring(0, 1e3)}
+</style_ref>
+`;
+    }
+    if (directorSection) {
+      const block = `[\u5BFC\u6F14\u6307\u4EE4]
+\uFF08\u4EE5\u4E0B\u662F\u5199\u4F5C\u98CE\u683C\u548C\u683C\u5F0F\u8981\u6C42\uFF0C\u8BF7\u6309\u6B64\u98CE\u683C\u751F\u6210\u5185\u5BB9\uFF09
+${directorSection}
+`;
+      sectionLengths.director = block.length;
+      user += block;
+    }
+    if (ctx.persona) {
+      const block = `[\u89D2\u8272\u4EBA\u8BBE]
+\uFF08\u4EE5\u4E0B\u662F\u89D2\u8272\u7684\u6027\u683C\u8BBE\u5B9A\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u91CD\u590D\u8FD9\u4E9B\u5185\u5BB9\uFF09
+${ctx.persona}
+
+`;
+      sectionLengths.persona = block.length;
+      user += block;
+    }
+    if (ctx.userDesc) {
+      const block = `[\u7528\u6237\u8BBE\u5B9A]
+\uFF08\u4EE5\u4E0B\u662F\u7528\u6237\u7684\u63CF\u8FF0\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u80CC\u666F\u53C2\u8003\uFF09
+${ctx.userDesc}
+
+`;
+      sectionLengths.userDesc = block.length;
+      user += block;
+    }
+    if (ctx.worldInfo) {
+      const block = `[\u4E16\u754C\u89C2\u8BBE\u5B9A]
+\uFF08\u4EE5\u4E0B\u662F\u80CC\u666F\u8BBE\u5B9A\u548C\u4E16\u754C\u89C2\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u76F4\u63A5\u590D\u5236\uFF09
+${ctx.worldInfo}
+
+`;
+      sectionLengths.worldInfo = block.length;
+      user += block;
+    }
+    if (GlobalState.useHistoryAnalysis) {
+      const limit = cfg.history_limit || 10;
+      const historyWhitelistStr = data.history_extraction?.whitelist || "";
+      const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
+      const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
+      const history = getChatHistory2(limit, historyWhitelist, historyBlacklist);
+      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
+\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
+${history}
+
+` : `[\u804A\u5929\u5386\u53F2]
+\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
+
+`;
+      sectionLengths.history = historyBlock.length;
+      runtimeChatHistory = historyBlock;
+      user += historyBlock;
+    }
+    const skipMacroEvaluation = generationOverrides?.skipMacroEvaluation === true;
+    let processedPrompt = scriptPromptSource;
+    if (!skipMacroEvaluation) {
+      try {
+        const macroEnv = {
+          char: ctx.charName,
+          user: ctx.userName
+        };
+        processedPrompt = evaluateMacros(scriptPromptSource, macroEnv);
+      } catch (e) {
+        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
+      }
+    }
+    const scriptBlock = `[\u5267\u672C\u6307\u4EE4]
+\uFF08\u8FD9\u662F\u4F60\u7684\u4E3B\u8981\u4EFB\u52A1\uFF01\u8BF7\u6839\u636E\u4EE5\u4E0B\u6307\u4EE4\u751F\u6210\u521B\u610F\u5185\u5BB9\uFF0C\u5FFD\u7565\u4E0A\u65B9\u7684\u804A\u5929\u5386\u53F2\uFF0C\u4E13\u6CE8\u4E8E\u5B8C\u6210\u6B64\u521B\u4F5C\u8BF7\u6C42\uFF09
+${processedPrompt}`;
+    sectionLengths.scriptInstruction = scriptBlock.length;
+    user += scriptBlock;
+    const meta = {
+      source: generationSource,
+      hasPromptOverride: typeof promptOverride === "string" && promptOverride.trim().length > 0,
+      promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
+      skipMacroEvaluation,
+      sectionLengths,
+      estimatedTokens: {
+        system: estimateTokens(sys),
+        user: estimateTokens(user)
+      }
+    };
+    const runtimePromptContext = {
+      ...ctx,
+      worldInfoBefore: ctx.worldInfo,
+      worldInfoAfter: "",
+      chatHistory: runtimeChatHistory,
+      titaniaScript: processedPrompt
+    };
+    const messageDetails = buildPromptMessageDetails(promptScheme, {
+      [`${GlobalState.generationMode}_system`]: sys,
+      [`${GlobalState.generationMode}_user`]: user
+    }, runtimePromptContext);
+    const messages = messageDetails.map(({ role, content }) => ({ role, content }));
+    return {
+      ok: true,
+      script: {
+        id: script.id,
+        name: script.name
+      },
+      mode: GlobalState.generationMode,
+      source: generationSource,
+      connection: {
+        profile: conn.profileName || "",
+        model: conn.model || "",
+        useSTConnection: !!conn.useSTConnection
+      },
+      promptScheme: {
+        id: promptScheme.id || GlobalState.generationMode,
+        name: promptScheme.name || "\u672A\u547D\u540D\u65B9\u6848",
+        type: promptScheme.type || "builtin"
+      },
+      messages,
+      messageDetails,
+      meta,
+      timestamp: Date.now()
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e?.message || "preview_build_failed"
+    };
+  }
+}
 async function handleGenerate(forceScriptId = null, silent = false, generationOverrides = null) {
   const data = getExtData();
   const cfg = data.config || {};
@@ -34785,7 +36876,8 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
     window.updateRunButtonsState();
   }
   GlobalState.lastFavId = null;
-  $("#t-btn-like").html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
+  $("#t-btn-like").prop("disabled", false);
+  updateFavButtonUI();
   showCancelButton();
   startTimer();
   if (!silent && window.toastr) toastr.info(`\u{1F680} [${conn.profileName}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
@@ -35969,12 +38061,13 @@ Generate ONLY the continuation (no repetition):`;
   }
 }
 async function handleUserContinuation(options = {}) {
-  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3, branchFromCurrentView = false, regenerateRound = null, regenerateRoundKey = "", sourceBranchKey = "", scriptIdOverride = "", baseContentOverride = "" } = options;
+  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3, branchFromCurrentView = false, regenerateRound = null, regenerateRoundKey = "", continueAfterRound = null, continueAfterRoundKey = "", sourceBranchKey = "", scriptIdOverride = "", baseContentOverride = "", crossRoleSource = "" } = options;
   if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
     if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
     return false;
   }
   const isRegeneration = regenerateRound !== null && regenerateRound !== void 0 || Boolean(regenerateRoundKey);
+  const isHistoryContinuation = continueAfterRound !== null && continueAfterRound !== void 0 || Boolean(continueAfterRoundKey);
   const display = scriptIdOverride && baseContentOverride ? {
     content: baseContentOverride,
     scriptId: scriptIdOverride,
@@ -36005,7 +38098,7 @@ async function handleUserContinuation(options = {}) {
   let continuationEntry = getContinuationRuntimeStore()[script.id];
   const existingRounds = Array.isArray(continuationEntry?.rounds) ? continuationEntry.rounds : [];
   const hasCurrentContent = existingRounds.some((item) => String(item?.content || "").trim() === baseContent);
-  if (!hasCurrentContent && !isRegeneration) {
+  if (!hasCurrentContent && !isRegeneration && !isHistoryContinuation) {
     if (existingRounds.length === 0) {
       const continuationContext = await getContextData();
       let initialInstruction = String(script.prompt || "");
@@ -36065,18 +38158,28 @@ async function handleUserContinuation(options = {}) {
     });
   }
   let branchResult = null;
-  if (regenerateRound !== null && regenerateRound !== void 0 || regenerateRoundKey) {
+  if (isRegeneration) {
     branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, regenerateRound, regenerateRoundKey);
     if (!branchResult) {
       if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
       return false;
     }
+  } else if (isHistoryContinuation) {
+    branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, continueAfterRound, continueAfterRoundKey, true);
+    if (!branchResult) {
+      if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
+      return false;
+    }
   }
-  const userInstruction = (instruction || "").trim() || branchResult?.targetInstruction || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
+  const userInstruction = (instruction || "").trim() || (isRegeneration ? branchResult?.targetInstruction : "") || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
   const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
   const sessionInjection = branchResult ? buildContinuationBranchInjection(branchResult.contextRounds) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
+  const crossRoleBlock = crossRoleSource ? `
+[\u8DE8\u89D2\u8272\u7EED\u5199]
+\u4EE5\u4E0B\u5386\u53F2\u5185\u5BB9\u6765\u81EA\u89D2\u8272\u201C${crossRoleSource}\u201D\u53C2\u4E0E\u7684\u65E2\u6709\u5267\u60C5\u3002\u4FDD\u7559\u5386\u53F2\u4E2D\u5DF2\u7ECF\u51FA\u73B0\u7684\u4EBA\u7269\u3001\u8EAB\u4EFD\u548C\u4E8B\u4EF6\uFF0C\u4E0D\u8981\u628A\u539F\u89D2\u8272\u66FF\u6362\u6216\u6539\u540D\u3002\u5F53\u524D\u89D2\u8272\u662F\u65B0\u8FDB\u5165\u5267\u60C5\u7684\u53C2\u4E0E\u8005\uFF0C\u5E94\u4F9D\u636E\u5F53\u524D\u89D2\u8272\u8BBE\u5B9A\u81EA\u7136\u52A0\u5165\u3002
+` : "";
   const promptOverride = `[\u7EED\u5199\u6A21\u5F0F]
-\u4F60\u5C06\u57FA\u4E8E\u5DF2\u6709\u5267\u60C5\u8FDB\u884C\u591A\u8F6E\u7EED\u5199\u751F\u6210\u3002
+\u4F60\u5C06\u57FA\u4E8E\u5DF2\u6709\u5267\u60C5\u8FDB\u884C\u591A\u8F6E\u7EED\u5199\u751F\u6210\u3002${crossRoleBlock}
 \u8BF7\u4FDD\u6301\u4EBA\u7269\u3001\u8BED\u6C14\u3001\u8BBE\u5B9A\u4E0E\u89C6\u89C9\u98CE\u683C\u4E00\u81F4\uFF0C\u5728\u4E0D\u91CD\u590D\u5DF2\u6709\u6587\u672C\u7684\u524D\u63D0\u4E0B\u63A8\u8FDB\u5267\u60C5\u3002
 \u8F93\u51FA\u8981\u6C42\u4E0E\u666E\u901A\u751F\u6210\u4E00\u81F4\uFF1A\u8F93\u51FA\u53EF\u76F4\u63A5\u6E32\u67D3\u7684\u539F\u59CB HTML\uFF0C\u4E0D\u8981 Markdown \u4EE3\u7801\u5757\u3002
 
@@ -36549,8 +38652,7 @@ function showFloatingButton() {
   console.log("Titania: \u60AC\u6D6E\u7403\u5DF2\u663E\u793A");
 }
 function hideFloatingButton() {
-  $("#titania-float-btn").remove();
-  $("#titania-timer").remove();
+  destroyFloatingButton();
   console.log("Titania: \u60AC\u6D6E\u7403\u5DF2\u9690\u85CF");
 }
 async function buildVectorBackupData() {
