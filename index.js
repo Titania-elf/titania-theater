@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.1.5";
+    CURRENT_VERSION = "5.1.8";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -71,7 +71,9 @@ var init_defaults = __esm({
         last_cleanup_at: 0
       },
       ui_prefs: {
-        script_sort_mode: "smart"
+        script_sort_mode: "smart",
+        // 主界面布局: modern(新版工具箱布局) | legacy(5.1.2 经典布局)
+        main_window_mode: "modern"
       },
       appearance: {
         type: "emoji",
@@ -260,15 +262,933 @@ var init_defaults = __esm({
   }
 });
 
-// src/core/promptManager.js
-function estimatePromptTokens(text) {
+// src/utils/chatHistoryBlacklist.js
+function parseChatHistoryBlacklistInput(input) {
+  const rules = [];
+  const lines = String(input || "").split(/\r?\n/);
+  lines.forEach((line, index) => {
+    const source = line.trim();
+    if (!source) return;
+    if (!source.endsWith(";")) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u7F3A\u5C11\u82F1\u6587\u5206\u53F7`);
+      return;
+    }
+    const body = source.slice(0, -1).trim();
+    const separator = body.search(/\s/);
+    if (separator <= 0) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u9700\u8981\u586B\u5199\u5F00\u59CB\u6807\u8BB0\u548C\u7ED3\u675F\u6807\u8BB0`);
+      return;
+    }
+    const start = body.slice(0, separator);
+    const end = body.slice(separator).trim();
+    if (!start || !end || /\s/.test(start) || /\s/.test(end) || start.includes(";") || end.includes(";")) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u6807\u8BB0\u4E0D\u80FD\u5305\u542B\u7A7A\u683C\u6216\u5206\u53F7`);
+      return;
+    }
+    rules.push({ start, end });
+  });
+  return rules;
+}
+function removeChatHistoryBlacklist(text, rules = []) {
+  let result = String(text || "");
+  if (!result || !Array.isArray(rules) || rules.length === 0) return result;
+  for (const rule of rules) {
+    if (!rule?.start || !rule?.end) continue;
+    let cursor = 0;
+    let output = "";
+    let changed = false;
+    while (cursor < result.length) {
+      const startIndex = result.indexOf(rule.start, cursor);
+      if (startIndex === -1) {
+        output += result.slice(cursor);
+        break;
+      }
+      const endIndex = result.indexOf(rule.end, startIndex + rule.start.length);
+      if (endIndex === -1) {
+        output += result.slice(cursor);
+        break;
+      }
+      output += result.slice(cursor, startIndex);
+      cursor = endIndex + rule.end.length;
+      changed = true;
+    }
+    if (changed) result = output;
+  }
+  return result;
+}
+var init_chatHistoryBlacklist = __esm({
+  "src/utils/chatHistoryBlacklist.js"() {
+  }
+});
+
+// src/utils/helpers.js
+function detectInteractiveContent(html) {
+  if (!html) return { isInteractive: false, reasons: [] };
+  const reasons = [];
+  if (/<script[\s>]/i.test(html)) {
+    reasons.push("\u5305\u542B <script> \u6807\u7B7E");
+  }
+  const eventHandlers = [
+    "onclick",
+    "ondblclick",
+    "onmousedown",
+    "onmouseup",
+    "onmouseover",
+    "onmouseout",
+    "onmousemove",
+    "onmouseenter",
+    "onmouseleave",
+    "onkeydown",
+    "onkeyup",
+    "onkeypress",
+    "onchange",
+    "oninput",
+    "onsubmit",
+    "onreset",
+    "onfocus",
+    "onblur",
+    "onload",
+    "onerror",
+    "onscroll",
+    "onresize",
+    "ontouchstart",
+    "ontouchmove",
+    "ontouchend",
+    "ontouchcancel"
+  ];
+  const eventPattern = new RegExp(`\\s(${eventHandlers.join("|")})\\s*=`, "i");
+  if (eventPattern.test(html)) {
+    reasons.push("\u5305\u542B\u4E8B\u4EF6\u5904\u7406\u5668\u5C5E\u6027");
+  }
+  if (/<button[^>]*onclick/i.test(html) || /<input[^>]*type\s*=\s*["']?(button|submit)/i.test(html)) {
+    reasons.push("\u5305\u542B\u4EA4\u4E92\u5F0F\u6309\u94AE");
+  }
+  if (/javascript:/i.test(html)) {
+    reasons.push("\u5305\u542B javascript: \u534F\u8BAE");
+  }
+  if (/<form[\s>]/i.test(html) && /<input[\s>]/i.test(html)) {
+    reasons.push("\u5305\u542B\u8868\u5355\u5143\u7D20");
+  }
+  return {
+    isInteractive: reasons.length > 0,
+    reasons
+  };
+}
+function buildFullHtmlDocument(content, title = "Titania Echo - \u4E92\u52A8\u573A\u666F") {
+  const styleMatch = content.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+  const styles = styleMatch ? styleMatch.join("\n") : "";
+  const bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(title)}</title>
+    <style>
+        /* \u57FA\u7840\u6837\u5F0F */
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        body {
+            padding: 20px;
+        }
+        a { color: #90cdf4; }
+        img, video { max-width: 100%; height: auto; }
+        
+        /* \u7528\u6237\u81EA\u5B9A\u4E49\u6837\u5F0F */
+    </style>
+    ${styles}
+</head>
+<body>
+${bodyContent}
+</body>
+</html>`;
+}
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
+  console.log("[Titania] openInNewWindow \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
+  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
+  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
+  console.log("[Titania] \u5B8C\u6574HTML\u524D500\u5B57\u7B26:", fullHtml?.substring(0, 500));
+  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const newWindow = window.open(
+    url,
+    "_blank",
+    "width=900,height=700,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes"
+  );
+  if (newWindow) {
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1e3);
+  } else {
+    console.warn("Titania: \u5F39\u7A97\u88AB\u62E6\u622A\uFF0C\u5C1D\u8BD5\u65B0\u6807\u7B7E\u9875");
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1e3);
+  }
+  return newWindow;
+}
+function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
+  console.log("[Titania] exportAsHtmlFile \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
+  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
+  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
+  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const safeFileName = scriptName.replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_").substring(0, 50);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${safeFileName}_\u4E92\u52A8\u573A\u666F.html`;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+function buildFontStylesForShadowDOM() {
+  try {
+    const extData = getExtData();
+    const fontSettings = extData.font_settings;
+    if (!fontSettings || fontSettings.source === "default" || !fontSettings.source) {
+      return { fontImport: "", forceOverride: false, fontFamily: "" };
+    }
+    const forceOverride = fontSettings.force_override === true;
+    if (fontSettings.source === "online" && fontSettings.import_url && fontSettings.font_name) {
+      return {
+        fontImport: `@import url('${fontSettings.import_url}');`,
+        forceOverride,
+        fontFamily: `'${fontSettings.font_name}'`
+      };
+    }
+    if (fontSettings.source === "upload" && fontSettings.font_data) {
+      const fontName = fontSettings.font_name || "TitaniaCustomFont";
+      return {
+        fontImport: `
+                    @font-face {
+                        font-family: '${fontName}';
+                        src: url('${fontSettings.font_data}') format('woff2');
+                        font-weight: normal;
+                        font-style: normal;
+                        font-display: swap;
+                    }
+                `,
+        forceOverride,
+        fontFamily: `'${fontName}'`
+      };
+    }
+    return { fontImport: "", forceOverride: false, fontFamily: "" };
+  } catch (e) {
+    console.warn("Titania: \u6784\u5EFA Shadow DOM \u5B57\u4F53\u6837\u5F0F\u5931\u8D25", e);
+    return { fontImport: "", forceOverride: false, fontFamily: "" };
+  }
+}
+function renderToShadowDOMReal(container, html) {
+  container.innerHTML = "";
+  const host = document.createElement("div");
+  host.className = "t-shadow-host";
+  host.style.cssText = "width:100%; min-height:100%;";
+  const shadow = host.attachShadow({ mode: "open" });
+  const isEditableNode = (node) => {
+    if (!(node instanceof HTMLElement)) return false;
+    const tag = node.tagName.toLowerCase();
+    if (tag === "textarea") {
+      return !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
+    }
+    if (tag === "input") {
+      const type = String(node.getAttribute("type") || "text").toLowerCase();
+      const editableTypes = /* @__PURE__ */ new Set(["text", "search", "url", "tel", "email", "password", "number"]);
+      return editableTypes.has(type) && !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
+    }
+    return node.isContentEditable === true;
+  };
+  const stopEditableKeyboardBubble = (evt) => {
+    const path = typeof evt.composedPath === "function" ? evt.composedPath() : [evt.target];
+    const hasEditableTarget = path.some((node) => isEditableNode(node));
+    if (!hasEditableTarget) return;
+    evt.stopPropagation();
+  };
+  [
+    "keydown",
+    "keypress",
+    "keyup",
+    "beforeinput",
+    "input",
+    "paste",
+    "compositionstart",
+    "compositionupdate",
+    "compositionend"
+  ].forEach((type) => {
+    shadow.addEventListener(type, stopEditableKeyboardBubble, true);
+  });
+  const fontInfo = buildFontStylesForShadowDOM();
+  const forceOverrideStyles = fontInfo.forceOverride && fontInfo.fontFamily ? `
+            /* \u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53\u6837\u5F0F */
+            .t-shadow-content * {
+                font-family: ${fontInfo.fontFamily}, var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
+            }
+            /* \u4FDD\u7559\u7B49\u5BBD\u5B57\u4F53\u5143\u7D20 */
+            .t-shadow-content code,
+            .t-shadow-content pre,
+            .t-shadow-content kbd,
+            .t-shadow-content samp {
+                font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            }
+        ` : "";
+  const baseStyles = `
+        <style>
+            ${fontInfo.fontImport}
+            :host {
+                display: block;
+                width: 100%;
+                min-height: 100%;
+            }
+            * { box-sizing: border-box; }
+            :host, .t-shadow-content {
+                background: transparent;
+                color: #e0e0e0;
+                font-family: var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+                font-size: 14px;
+                line-height: 1.6;
+            }
+            /* \u5185\u5BB9\u533A\u4FDD\u6301\u56FA\u5B9A\u5B57\u53F7\uFF0C\u4E0D\u53D7 UI \u7F29\u653E\u53D8\u91CF\u5F71\u54CD */
+            .t-shadow-content,
+            .t-shadow-content * {
+                font-size: 14px;
+            }
+            .t-shadow-content {
+                padding: 0;
+                min-height: 100%;
+            }
+            img, video { max-width: 100%; height: auto; }
+            a { color: #90cdf4; }
+            ${forceOverrideStyles}
+        </style>
+    `;
+  shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
+  container.appendChild(host);
+  return shadow;
+}
+function parseWhitelistInput(input) {
+  if (!input || !input.trim()) return [];
+  return input.split(/[,，\n]/).map((tag) => tag.trim()).map((tag) => tag.replace(/^<|>$/g, "")).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
+}
+function extractContent(text, whitelist = []) {
+  if (!text) return "";
+  if (whitelist && whitelist.length > 0) {
+    const extracted = [];
+    for (const tag of whitelist) {
+      const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        const innerContent = match[1].trim();
+        if (innerContent) {
+          extracted.push(innerContent);
+        }
+      }
+    }
+    if (extracted.length > 0) {
+      let result = extracted.join("\n");
+      result = result.replace(/<[^>]*>?/gm, "");
+      result = result.replace(/\n{3,}/g, "\n\n").trim();
+      return result;
+    }
+  }
+  let cleaned = text;
+  cleaned = cleaned.replace(/<[^>]*>?/gm, "");
+  cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
+  return cleaned;
+}
+function getChatHistory(limit, whitelist = [], blacklist = void 0) {
+  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
+  const ctx = SillyTavern.getContext();
+  const history = ctx.chat || [];
+  const safeLimit = parseInt(limit) || 10;
+  const effectiveBlacklist = blacklist === void 0 ? parseChatHistoryBlacklistInput(getExtData().history_extraction?.blacklist || "") : blacklist;
+  const domMessages = document.querySelectorAll("#chat .mes");
+  const useDomCheck = domMessages.length === history.length;
+  if (!useDomCheck) {
+    console.warn(`Titania: DOM messages count (${domMessages.length}) != History count (${history.length}). Fallback to property check.`);
+  }
+  const visibleHistory = history.filter((msg, index) => {
+    let isHidden = !!(msg.is_hidden || msg.isHidden || msg.is_system || // ST 使用 is_system 来标记隐藏的消息
+    msg.extra && msg.extra.is_hidden);
+    if (!isHidden && useDomCheck) {
+      const el = domMessages[index];
+      if (el) {
+        if (el.hasAttribute("hidden") || el.style.display === "none" || el.classList.contains("hidden") || el.getAttribute("is_system") === "true") {
+          isHidden = true;
+        }
+      }
+    }
+    const isDisabled = !!msg.disabled;
+    if (isHidden) {
+      return false;
+    }
+    if (isDisabled) {
+      return false;
+    }
+    return true;
+  });
+  console.log(`Titania: History Analysis - Total: ${history.length}, Visible: ${visibleHistory.length}, Filtered: ${history.length - visibleHistory.length}`);
+  const recent = visibleHistory.slice(-safeLimit);
+  return recent.map((msg) => {
+    let name = msg.name;
+    if (msg.is_user) name = ctx.name1 || "User";
+    if (name === "{{user}}") name = ctx.name1 || "User";
+    if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
+    let rawContent = msg.message || msg.mes || "";
+    rawContent = removeChatHistoryBlacklist(rawContent, effectiveBlacklist);
+    let cleanContent = extractContent(rawContent, whitelist);
+    if (!cleanContent.trim()) {
+      cleanContent = rawContent.replace(/<[^>]*>?/gm, "").trim();
+    }
+    return `${name}: ${cleanContent}`;
+  }).join("\n");
+}
+function sanitizeAIOutputLite(rawContent) {
+  if (!rawContent || typeof rawContent !== "string") return "";
+  let content = rawContent;
+  content = content.replace(/```html\s*/gi, "");
+  content = content.replace(/```\s*/g, "");
+  content = content.replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/gi, "");
+  content = content.replace(/<think[^>]*>[\s\S]*?<\/think>/gi, "");
+  return content.trim();
+}
+function sanitizeAIOutput(rawContent) {
+  if (!rawContent || typeof rawContent !== "string") return "";
+  let content = rawContent;
+  const originalContent = rawContent;
+  const tagsToRemove = [
+    "thinking",
+    "think",
+    // 思考过程
+    "system",
+    "note",
+    "notes",
+    // 系统/笔记
+    "ooc",
+    "OOC",
+    // Out of Character
+    "debug",
+    "meta",
+    // 调试/元信息
+    "comment",
+    "aside",
+    // 注释/旁白
+    "reflection",
+    "planning",
+    // 反思/规划
+    "internal",
+    "analysis"
+    // 内部思考/分析
+  ];
+  tagsToRemove.forEach((tag) => {
+    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, "gi");
+    content = content.replace(regex, "");
+  });
+  content = content.replace(/```html\s*/gi, "");
+  content = content.replace(/```\s*/g, "");
+  const htmlStartPatterns = [
+    /<!DOCTYPE\s+html/i,
+    // DOCTYPE 声明
+    /<html[\s>]/i,
+    // <html> 标签
+    /<head[\s>]/i,
+    // <head> 标签
+    /<body[\s>]/i,
+    // <body> 标签
+    /<style[\s>]/i,
+    // <style> 标签（很多 AI 会以此开头）
+    /<div[\s>]/i,
+    // <div> 标签
+    /<section[\s>]/i,
+    // <section> 标签
+    /<article[\s>]/i,
+    // <article> 标签
+    /<main[\s>]/i,
+    // <main> 标签
+    /<header[\s>]/i,
+    // <header> 标签
+    /<p[\s>]/i,
+    // <p> 标签
+    /<span[\s>]/i,
+    // <span> 标签
+    /<h[1-6][\s>]/i
+    // 标题标签
+  ];
+  let firstHtmlIndex = -1;
+  for (const pattern of htmlStartPatterns) {
+    const match = content.search(pattern);
+    if (match !== -1) {
+      if (firstHtmlIndex === -1 || match < firstHtmlIndex) {
+        firstHtmlIndex = match;
+      }
+    }
+  }
+  if (firstHtmlIndex > 0) {
+    content = content.substring(firstHtmlIndex);
+  }
+  const htmlEndPatterns = [
+    /<\/html>\s*$/i,
+    /<\/body>\s*$/i,
+    /<\/div>\s*$/i,
+    /<\/section>\s*$/i,
+    /<\/article>\s*$/i,
+    /<\/main>\s*$/i,
+    /<\/style>\s*$/i,
+    /<\/p>\s*$/i,
+    /<\/span>\s*$/i,
+    /<\/h[1-6]>\s*$/i
+  ];
+  let lastHtmlEndIndex = -1;
+  for (const pattern of htmlEndPatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      const endIndex = content.lastIndexOf(match[0]) + match[0].length;
+      if (endIndex > lastHtmlEndIndex) {
+        lastHtmlEndIndex = endIndex;
+      }
+    }
+  }
+  if (lastHtmlEndIndex === -1) {
+    const allClosingTags = content.match(/<\/[a-zA-Z][a-zA-Z0-9]*>\s*$/);
+    if (allClosingTags) {
+      lastHtmlEndIndex = content.lastIndexOf(allClosingTags[0]) + allClosingTags[0].length;
+    }
+  }
+  if (lastHtmlEndIndex > 0 && lastHtmlEndIndex < content.length) {
+    content = content.substring(0, lastHtmlEndIndex);
+  }
+  content = content.replace(/(\s|>)\*\*([^*<>]+)\*\*(\s|<)/g, "$1$2$3");
+  content = content.replace(/(\s|>)__([^_<>]+)__(\s|<)/g, "$1$2$3");
+  content = content.replace(/(\s|>)\*([^*<>\n]+)\*(\s|<)/g, "$1$2$3");
+  content = content.replace(/^\s*#{1,6}\s+/gm, "");
+  content = content.replace(/^\s*[-*+]\s+(?=[^\s<])/gm, "");
+  content = content.replace(/^\s*\d+\.\s+(?=[^\s<])/gm, "");
+  content = content.replace(/\n{3,}/g, "\n\n");
+  content = content.trim();
+  if (!content || content.length < 10) {
+    console.warn("Titania: \u6E05\u6D17\u540E\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u56DE\u9000\u5230\u539F\u59CB\u5185\u5BB9");
+    return originalContent.replace(/```html\s*/gi, "").replace(/```\s*/g, "").trim();
+  }
+  return content;
+}
+function extractFromShadowDOM(container) {
+  const shadowHost = container.querySelector(".t-shadow-host");
+  if (shadowHost && shadowHost.shadowRoot) {
+    try {
+      const shadow = shadowHost.shadowRoot;
+      const contentDiv = shadow.querySelector(".t-shadow-content");
+      if (contentDiv) {
+        let userStyles = "";
+        shadow.querySelectorAll("style").forEach((style) => {
+          const text = style.textContent || "";
+          if (!text.includes(":host")) {
+            userStyles += `<style>${text}</style>
+`;
+          }
+        });
+        return userStyles + contentDiv.innerHTML;
+      }
+    } catch (e) {
+      console.warn("Titania: \u65E0\u6CD5\u4ECE Shadow DOM \u63D0\u53D6\u5185\u5BB9", e);
+    }
+  }
+  const iframe = container.querySelector(".t-content-iframe");
+  if (iframe) {
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (doc && doc.body) {
+        const bodyClone = doc.body.cloneNode(true);
+        bodyClone.querySelectorAll("script").forEach((s) => s.remove());
+        let userStyles = "";
+        doc.querySelectorAll("head style").forEach((style) => {
+          const text = style.textContent || "";
+          if (!text.includes("box-sizing: border-box") || text.length > 500) {
+            userStyles += `<style>${text}</style>
+`;
+          }
+        });
+        return userStyles + bodyClone.innerHTML;
+      }
+    } catch (e) {
+      console.warn("Titania: \u65E0\u6CD5\u4ECE iframe \u63D0\u53D6\u5185\u5BB9", e);
+    }
+  }
+  return container.innerHTML;
+}
+async function countTokens(text) {
+  const str = String(text || "");
+  if (!str) return { count: 0, exact: true };
+  try {
+    const { getTokenCountAsync } = await import("../../../tokenizers.js");
+    const count = await getTokenCountAsync(str);
+    if (Number.isFinite(count)) return { count, exact: true };
+  } catch (error) {
+    console.warn("Titania: ST \u5206\u8BCD\u5668\u4E0D\u53EF\u7528\uFF0C\u56DE\u9000\u5230\u4F30\u7B97", error);
+  }
+  return { count: estimateTokens(str), exact: false };
+}
+async function countTokensBatch(texts) {
+  const list = Array.isArray(texts) ? texts : [];
+  const counts = [];
+  let exact = true;
+  for (const item of list) {
+    const result = await countTokens(item);
+    counts.push(result.count);
+    if (!result.exact) exact = false;
+  }
+  return { counts, total: counts.reduce((sum, n) => sum + n, 0), exact };
+}
+function estimateTokens(text) {
   const clean = String(text || "").trim();
   if (!clean) return 0;
-  const cjkCount = (clean.match(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g) || []).length;
-  const nonCjk = clean.replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g, " ");
-  const wordCount = nonCjk.split(/\s+/).filter(Boolean).length;
-  return Math.floor(cjkCount + wordCount * 1.3);
+  let cjk = 0;
+  let alnum = 0;
+  let other = 0;
+  for (const ch of clean) {
+    if (/[一-龥　-〿＀-￯]/.test(ch)) cjk++;
+    else if (/[A-Za-z0-9]/.test(ch)) alnum++;
+    else if (!/\s/.test(ch)) other++;
+  }
+  return Math.max(1, Math.round(cjk * 1.35 + alnum * 0.28 + other * 0.55));
 }
+function detectTruncation(content, mode = "html") {
+  if (!content || content.trim().length === 0) {
+    return { isTruncated: false, reason: "empty", details: {} };
+  }
+  const result = {
+    isTruncated: false,
+    reason: "",
+    details: {
+      htmlCheck: null,
+      sentenceCheck: null
+    }
+  };
+  if (mode === "html" || mode === "both") {
+    const htmlResult = checkHtmlTags(content);
+    result.details.htmlCheck = htmlResult;
+    if (htmlResult.isTruncated) {
+      result.isTruncated = true;
+      result.reason = htmlResult.reason;
+    }
+  }
+  if (mode === "sentence" || mode === "both") {
+    const sentenceResult = checkSentenceCompletion(content);
+    result.details.sentenceCheck = sentenceResult;
+    if (sentenceResult.isTruncated && !result.isTruncated) {
+      result.isTruncated = true;
+      result.reason = sentenceResult.reason;
+    }
+  }
+  return result;
+}
+function checkHtmlTags(html) {
+  const result = {
+    isTruncated: false,
+    reason: "",
+    unclosedTags: []
+  };
+  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
+  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
+  const stack = [];
+  let match;
+  while ((match = tagPattern.exec(html)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
+      continue;
+    }
+    if (fullTag.startsWith("</")) {
+      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
+        stack.pop();
+      }
+    } else {
+      stack.push(tagName);
+    }
+  }
+  const importantTags = ["div", "style", "span", "p", "section", "article", "main", "header", "footer"];
+  const unclosedImportant = stack.filter((tag) => importantTags.includes(tag));
+  if (unclosedImportant.length > 0) {
+    result.isTruncated = true;
+    result.reason = `HTML \u6807\u7B7E\u672A\u95ED\u5408: <${unclosedImportant.join(">, <")}>`;
+    result.unclosedTags = unclosedImportant;
+  }
+  const styleOpenCount = (html.match(/<style[^>]*>/gi) || []).length;
+  const styleCloseCount = (html.match(/<\/style>/gi) || []).length;
+  if (styleOpenCount > styleCloseCount) {
+    result.isTruncated = true;
+    result.reason = "<style> \u6807\u7B7E\u672A\u95ED\u5408";
+    result.unclosedTags.push("style");
+  }
+  const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+  if (styleMatch) {
+    for (const styleBlock of styleMatch) {
+      const cssContent = styleBlock.replace(/<\/?style[^>]*>/gi, "");
+      const openBraces = (cssContent.match(/{/g) || []).length;
+      const closeBraces = (cssContent.match(/}/g) || []).length;
+      if (openBraces > closeBraces) {
+        result.isTruncated = true;
+        result.reason = "CSS \u82B1\u62EC\u53F7\u4E0D\u5339\u914D";
+        break;
+      }
+    }
+  }
+  return result;
+}
+function checkSentenceCompletion(content) {
+  const result = {
+    isTruncated: false,
+    reason: "",
+    lastChars: ""
+  };
+  const textContent = content.replace(/<[^>]*>/g, "").trim();
+  if (textContent.length === 0) {
+    return result;
+  }
+  const lastChars = textContent.slice(-50);
+  result.lastChars = lastChars;
+  const chineseEndPunctuation = ["\u3002", "\uFF01", "\uFF1F", "\u2026", '"', '"', "\u300F", "\u300D"];
+  const englishEndPunctuation = [".", "!", "?", '"', "'"];
+  const allEndPunctuation = [...chineseEndPunctuation, ...englishEndPunctuation];
+  const lastChar = textContent.trim().slice(-1);
+  const endsWithPunctuation = allEndPunctuation.includes(lastChar);
+  const endsWithLetter = /[a-zA-Z]$/.test(textContent.trim());
+  const previousChars = textContent.trim().slice(-10);
+  const hasIncompleteWord = endsWithLetter && !/[.!?,;:\s]/.test(previousChars.slice(-2, -1));
+  const lastCJK = /[\u4e00-\u9fa5]$/.test(textContent.trim());
+  const hasCJKContent = /[\u4e00-\u9fa5]/.test(textContent);
+  if (hasCJKContent && lastCJK && !chineseEndPunctuation.includes(lastChar)) {
+    if (!endsWithPunctuation) {
+      result.isTruncated = true;
+      result.reason = "\u4E2D\u6587\u53E5\u5B50\u4F3C\u4E4E\u672A\u5B8C\u6210";
+    }
+  } else if (hasIncompleteWord) {
+    result.isTruncated = true;
+    result.reason = "\u82F1\u6587\u5355\u8BCD\u4F3C\u4E4E\u88AB\u622A\u65AD";
+  }
+  return result;
+}
+function buildContinuationContext(accumulatedContent, originalPrompt = "") {
+  const styleBlocks = accumulatedContent.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+  const styleGuide = styleBlocks.map((block) => block.replace(/<\/?style[^>]*>/gi, "").trim()).join("\n").slice(0, 1600);
+  const bodyContent = accumulatedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  const plainText = bodyContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const paragraphs = plainText.split(/\n\n+|。(?=[^。]*$)/);
+  const plotPoints = paragraphs.map((p) => {
+    const firstSentence = p.trim().split(/[。！？]/)[0];
+    return firstSentence && firstSentence.length > 5 ? firstSentence.trim() : null;
+  }).filter(Boolean).slice(-5).join(" \u2192 ");
+  const htmlBlocks = bodyContent.split(/(<\/p>|<\/div>)/i);
+  let recentHtml = "";
+  let blockCount = 0;
+  for (let i = htmlBlocks.length - 1; i >= 0 && blockCount < 4; i--) {
+    recentHtml = htmlBlocks[i] + recentHtml;
+    if (htmlBlocks[i].match(/<\/p>|<\/div>/i)) {
+      blockCount++;
+    }
+  }
+  recentHtml = recentHtml.trim().slice(-1e3);
+  const sentences = plainText.match(/[^。！？]*[。！？]/g) || [];
+  const lastCompleteSentence = sentences.length > 0 ? sentences[sentences.length - 1].trim() : "";
+  const lastPart = plainText.slice(-100);
+  const endsWithPunctuation = /[。！？"」』]$/.test(lastPart.trim());
+  const incompleteText = endsWithPunctuation ? "" : lastPart.split(/[。！？]/).pop()?.trim() || "";
+  const unclosedTags = detectUnclosedTags(bodyContent);
+  const classMatches = bodyContent.match(/class=["']([^"']+)["']/gi) || [];
+  const classSet = /* @__PURE__ */ new Set();
+  classMatches.forEach((item) => {
+    const m = item.match(/class=["']([^"']+)["']/i);
+    if (m && m[1]) {
+      m[1].split(/\s+/).forEach((cls) => {
+        const c = cls.trim();
+        if (c) classSet.add(c);
+      });
+    }
+  });
+  const recentClasses = Array.from(classSet).slice(0, 20);
+  return {
+    plotSummary: plotPoints || "(\u65E0\u60C5\u8282\u6458\u8981)",
+    // 情节进展摘要
+    recentHtml,
+    // 最后2段完整HTML
+    styleGuide,
+    // 原有样式片段
+    recentClasses,
+    // 近期使用类名
+    lastCompleteSentence,
+    // 最后完整句子
+    incompleteText,
+    // 未完成的句子片段
+    unclosedTags,
+    // 未闭合标签列表
+    totalLength: plainText.length,
+    // 已生成总字数
+    endsWithPunctuation,
+    // 是否以标点结束
+    originalPrompt: (originalPrompt || "").slice(0, 300)
+    // 原始请求摘要
+  };
+}
+function detectUnclosedTags(html) {
+  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
+  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
+  const stack = [];
+  let match;
+  while ((match = tagPattern.exec(html)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
+      continue;
+    }
+    if (fullTag.startsWith("</")) {
+      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
+        stack.pop();
+      }
+    } else {
+      stack.push(tagName);
+    }
+  }
+  const importantTags = ["div", "p", "span", "section", "article", "blockquote"];
+  return stack.filter((tag) => importantTags.includes(tag));
+}
+function smartMergeContinuation(originalContent, continuationContent, showIndicator = false) {
+  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
+  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
+  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  contBody = removeOverlap(originalBody, contBody);
+  let indicator = "";
+  if (showIndicator) {
+    indicator = `<!-- continuation-point -->`;
+  }
+  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
+  const mergedBody = originalBody + indicator + contBody;
+  if (mergedStyle.trim()) {
+    return `<style>
+${mergedStyle}
+</style>
+${mergedBody}`;
+  }
+  return mergedBody;
+}
+function removeOverlap(original, continuation) {
+  if (!original || !continuation) return continuation;
+  const originalText = original.replace(/<[^>]*>/g, "").trim();
+  const contText = continuation.replace(/<[^>]*>/g, "").trim();
+  const originalEnd = originalText.slice(-100);
+  let maxOverlap = 0;
+  const minOverlapLength = 10;
+  const maxCheckLength = Math.min(80, contText.length, originalEnd.length);
+  for (let len = maxCheckLength; len >= minOverlapLength; len--) {
+    const originalSuffix = originalEnd.slice(-len);
+    const contPrefix = contText.slice(0, len);
+    const normalizedSuffix = originalSuffix.replace(/[，。！？、\s]/g, "");
+    const normalizedPrefix = contPrefix.replace(/[，。！？、\s]/g, "");
+    if (normalizedSuffix === normalizedPrefix) {
+      maxOverlap = len;
+      break;
+    }
+  }
+  if (maxOverlap >= minOverlapLength) {
+    const overlapText = contText.slice(0, maxOverlap);
+    const overlapIndex = continuation.indexOf(overlapText.slice(-20));
+    if (overlapIndex !== -1) {
+      const afterOverlap = continuation.slice(overlapIndex + 20);
+      const nextStart = afterOverlap.search(/[。！？]|<[a-z]/i);
+      if (nextStart !== -1) {
+        return afterOverlap.slice(nextStart).replace(/^[。！？]/, "");
+      }
+    }
+  }
+  return continuation;
+}
+function countContentStats(htmlContent) {
+  if (!htmlContent) {
+    return { totalChars: 0, chineseChars: 0, estimatedTokens: 0 };
+  }
+  let plainText = htmlContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<[^>]*>/g, "").trim();
+  const totalChars = plainText.replace(/\s+/g, " ").length;
+  const chineseMatches = plainText.match(/[\u4e00-\u9fa5]/g);
+  const chineseChars = chineseMatches ? chineseMatches.length : 0;
+  const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, "");
+  const wordCount = nonChineseText.split(/\s+/).filter((w) => w.length > 0).length;
+  const estimatedTokens = Math.ceil(chineseChars / 1.5 + wordCount * 1.3);
+  return {
+    totalChars,
+    chineseChars,
+    estimatedTokens
+  };
+}
+function mergeContinuationContent(originalContent, continuationContent, showIndicator = true) {
+  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
+  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
+  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  let indicator = "";
+  if (showIndicator) {
+    indicator = `<div style="text-align:center; color:#bfa15f; font-size:0.8em; margin:15px 0; opacity:0.7;">
+            <i class="fa-solid fa-link"></i> \u2500\u2500\u2500 \u7EED\u5199\u8FDE\u63A5 \u2500\u2500\u2500
+        </div>`;
+  }
+  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
+  const mergedBody = originalBody + indicator + contBody;
+  if (mergedStyle.trim()) {
+    return `<style>
+${mergedStyle}
+</style>
+${mergedBody}`;
+  }
+  return mergedBody;
+}
+var fileToBase64, parseMeta, getSnippet;
+var init_helpers = __esm({
+  "src/utils/helpers.js"() {
+    init_storage();
+    init_chatHistoryBlacklist();
+    fileToBase64 = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+    parseMeta = (title) => {
+      const parts = title.split(" - ");
+      if (parts.length >= 2) {
+        const char = parts.pop();
+        const script = parts.join(" - ");
+        return { script, char: char.trim() };
+      }
+      return { script: title, char: "\u672A\u77E5" };
+    };
+    getSnippet = (html) => {
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      let text = tmp.textContent || tmp.innerText || "";
+      text = text.replace(/\s+/g, " ").trim();
+      return text.length > 60 ? text.substring(0, 60) + "..." : text;
+    };
+  }
+});
+
+// src/core/promptManager.js
 function createEntryId(prefix = "entry") {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -491,8 +1411,36 @@ function createTitaniaOutputContractEntry() {
     content: TITANIA_OUTPUT_CONTRACT
   };
 }
+function isTitaniaManagedEntry(entry) {
+  return entry?.id === "titania_output_contract" || entry?.id === "titania_script_instruction" || entry?.marker === "titaniaScript";
+}
+function isCanonicalEntry(entry, canonical) {
+  if (!entry || typeof entry !== "object") return false;
+  const keys = Object.keys(canonical);
+  if (Object.keys(entry).length !== keys.length) return false;
+  return keys.every((key) => entry[key] === canonical[key]);
+}
+function hasCanonicalTitaniaEntries(entries) {
+  let firstIndex = -1;
+  let managedCount = 0;
+  for (let i = 0; i < entries.length; i++) {
+    if (!isTitaniaManagedEntry(entries[i])) continue;
+    if (firstIndex === -1) firstIndex = i;
+    managedCount++;
+  }
+  if (managedCount !== 2) return false;
+  if (!isCanonicalEntry(entries[firstIndex], createTitaniaOutputContractEntry())) return false;
+  if (!isCanonicalEntry(entries[firstIndex + 1], createTitaniaScriptEntry())) return false;
+  const isPrefill = (entry) => !!entry && typeof entry === "object" && isAssistantPrefill(entry);
+  if (firstIndex > 0 && isPrefill(entries[firstIndex - 1])) return false;
+  for (let i = firstIndex + 2; i < entries.length; i++) {
+    if (!isPrefill(entries[i])) return false;
+  }
+  return true;
+}
 function ensureTitaniaPresetEntries(preset) {
   if (!preset || !Array.isArray(preset.entries)) return false;
+  if (hasCanonicalTitaniaEntries(preset.entries)) return false;
   const previous = JSON.stringify(preset.entries);
   preset.entries = preset.entries.filter((entry) => entry?.id !== "titania_output_contract" && entry?.id !== "titania_script_instruction" && entry?.marker !== "titaniaScript");
   let insertAt = preset.entries.length;
@@ -599,13 +1547,14 @@ function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext =
       required: entry.required === true,
       content,
       chars: content.length,
-      tokens: estimatePromptTokens(content)
+      tokens: estimateTokens(content)
     };
   }).filter((message) => message.content.length > 0).map((message, index) => ({ ...message, index }));
 }
 var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
 var init_promptManager = __esm({
   "src/core/promptManager.js"() {
+    init_helpers();
     DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
     DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
 
@@ -664,15 +1613,15 @@ var init_promptManager = __esm({
 });
 
 // src/utils/storage.js
-import { extension_settings as extension_settings2 } from "../../../extensions.js";
+import { extension_settings } from "../../../extensions.js";
 import { saveSettingsDebounced, saveSettings } from "../../../../script.js";
 function getExtData() {
-  if (!extension_settings2[extensionName]) {
-    extension_settings2[extensionName] = JSON.parse(JSON.stringify(defaultSettings));
+  if (!extension_settings[extensionName]) {
+    extension_settings[extensionName] = JSON.parse(JSON.stringify(defaultSettings));
   }
-  const changed = ensurePromptManager(extension_settings2[extensionName]);
+  const changed = ensurePromptManager(extension_settings[extensionName]);
   if (changed) saveSettingsDebounced();
-  return extension_settings2[extensionName];
+  return extension_settings[extensionName];
 }
 function saveExtData() {
   saveSettingsDebounced();
@@ -847,6 +1796,17 @@ function loadCssFiles() {
     background: linear-gradient(90deg, #ff9a9e, #fecfef);
     color: #444;
     border: none;
+}
+
+.t-btn.t-btn-soft {
+    border: 1px solid rgba(191, 161, 95, 0.55);
+    background: rgba(191, 161, 95, 0.14);
+    color: #e0c98a;
+}
+
+.t-btn.t-btn-soft:hover {
+    background: rgba(191, 161, 95, 0.22);
+    border-color: rgba(191, 161, 95, 0.7);
 }
 
 .t-btn:disabled {
@@ -1920,51 +2880,6 @@ textarea.t-input {
     background: rgba(185, 28, 28, .18);
 }
 
-.t-cont-history-more-wrap {
-    position: relative;
-}
-
-.t-cont-history-header-actions .t-icon-btn {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-}
-
-.t-cont-history-more-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    z-index: 3;
-    min-width: 150px;
-    padding: 4px;
-    border: 1px solid #3b3b3b;
-    border-radius: 6px;
-    background: #202020;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, .45);
-}
-
-.t-cont-history-more-menu[hidden] {
-    display: none;
-}
-
-.t-cont-history-more-menu button {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 8px;
-    padding: 8px 10px;
-    border: 0;
-    border-radius: 4px;
-    background: transparent;
-    color: #e5b5b5;
-    cursor: pointer;
-    text-align: left;
-}
-
-.t-cont-history-more-menu button:hover {
-    background: rgba(185, 28, 28, .18);
-}
-
 @media (max-width: 620px) {
     .t-cont-history-heading span {
         display: none;
@@ -2271,7 +3186,7 @@ textarea.t-input {
 
 /* \u6838\u5FC3\u64CD\u4F5C\u680F */
 .t-bottom-bar {
-    height: 70px;
+    min-height: 70px;
     padding: 10px 14px;
     background: #181818;
     border-top: 1px solid #333;
@@ -2282,6 +3197,55 @@ textarea.t-input {
     position: relative;
     z-index: 50;
     box-sizing: border-box;
+}
+
+.t-continuation-stack {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.t-continuation-shortcuts {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.t-continuation-shortcuts::-webkit-scrollbar {
+    display: none;
+}
+
+.t-shortcut-btn {
+    padding: 4px 11px;
+    flex: 0 0 auto;
+    border: 1px solid #3a3a3a;
+    border-radius: 999px;
+    background: #232323;
+    color: #999;
+    font: inherit;
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s, border-color .18s, color .18s;
+}
+
+.t-shortcut-btn:hover {
+    border-color: rgba(191, 161, 95, .5);
+    background: #2b2b2b;
+    color: #ddd;
+}
+
+.t-shortcut-btn.t-shortcut-compose {
+    margin-left: auto;
+    color: #bfa15f;
+}
+
+.t-shortcut-btn.t-shortcut-compose i {
+    margin-right: 3px;
+    font-size: 10px;
 }
 
 .t-mobile-toolbox-btn {
@@ -2303,7 +3267,6 @@ textarea.t-input {
 
 .t-continuation-quick {
     min-width: 0;
-    flex: 1;
     display: flex;
     align-items: center;
     position: relative;
@@ -2345,14 +3308,14 @@ textarea.t-input {
     position: relative;
     align-self: stretch;
     display: flex;
-    align-items: center;
+    align-items: stretch;
+    overflow: hidden;
 }
 
 .t-continuation-input-wrap textarea {
     width: 100%;
     min-width: 0;
-    min-height: 38px;
-    max-height: 88px;
+    height: 38px;
     padding: 11px 8px 9px;
     resize: none;
     overflow-y: auto;
@@ -2420,7 +3383,6 @@ textarea.t-input {
     display: none;
 }
 
-.t-continuation-suggestions,
 .t-continuation-context-popover {
     position: absolute;
     z-index: 120;
@@ -2431,75 +3393,15 @@ textarea.t-input {
     box-shadow: 0 -10px 30px rgba(0, 0, 0, .48);
 }
 
-.t-continuation-suggestions[hidden],
 .t-continuation-context-popover[hidden] {
     display: none;
 }
 
-.t-continuation-suggestions {
-    left: -44px;
-    width: min(440px, calc(100vw - 40px));
-    padding: 7px;
-}
 
-.t-continuation-suggestions-head {
-    height: 30px;
-    padding: 0 4px 5px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: #888;
-    font-size: 11px;
-}
 
-.t-continuation-suggestions-head button {
-    padding: 5px 7px;
-    border: 0;
-    border-radius: 4px;
-    background: transparent;
-    color: #aaa;
-    font: inherit;
-    font-size: 11px;
-    cursor: pointer;
-}
 
-.t-continuation-suggestions-head button:hover {
-    background: #303030;
-    color: #eee;
-}
 
-.t-continuation-suggestions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
 
-.t-continuation-suggestion {
-    width: 100%;
-    padding: 8px 9px;
-    overflow: hidden;
-    border: 0;
-    border-radius: 4px;
-    background: transparent;
-    color: #ccc;
-    font: inherit;
-    font-size: 12px;
-    text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.t-continuation-suggestion:hover {
-    background: #2b2b2b;
-    color: #fff;
-}
-
-.t-continuation-suggestions-empty {
-    padding: 10px 9px;
-    color: #666;
-    font-size: 12px;
-}
 
 .t-continuation-context-popover {
     right: 46px;
@@ -2925,31 +3827,48 @@ textarea.t-input {
         padding: 8px;
         display: grid;
         grid-template-columns: minmax(0, 1fr) 52px;
-        grid-template-rows: 46px;
+        align-items: end;
+        gap: 6px;
+    }
+
+    .t-continuation-stack {
+        grid-column: 1;
+        grid-row: 1;
         gap: 6px;
     }
 
     .t-continuation-quick {
-        grid-column: 1;
-        grid-row: 1;
         height: 46px;
+    }
+
+    .t-shortcut-btn {
+        padding: 3px 10px;
+    }
+
+    .t-shortcut-btn.t-shortcut-compose span,
+    .t-shortcut-btn.t-shortcut-compose {
+        margin-left: 0;
     }
 
     .t-continuation-history-btn {
         width: 38px;
+        height: 42px;
         margin: 0 2px;
         padding: 0 5px;
     }
 
     .t-continuation-input-wrap textarea {
-        min-height: 42px;
+        height: 42px;
         padding: 12px 5px 10px;
         font-size: 12px;
     }
 
     .t-continuation-context-btn {
+        width: 38px;
+        height: 42px;
         margin: 0;
-        padding: 0 5px;
+        padding: 0;
+        font-size: 13px;
     }
 
     .t-continuation-context-btn i {
@@ -2957,7 +3876,8 @@ textarea.t-input {
     }
 
     .t-continuation-send {
-        width: 36px;
+        width: 38px;
+        height: 42px;
         margin-right: 4px;
         padding: 0;
     }
@@ -2975,16 +3895,6 @@ textarea.t-input {
         background: #252525;
         color: #aaa;
         font-size: 11px;
-    }
-
-    .t-continuation-suggestions {
-        position: fixed;
-        left: 8px;
-        right: 8px;
-        bottom: 62px;
-        width: auto;
-        max-height: min(42dvh, 320px);
-        overflow-y: auto;
     }
 
     .t-continuation-context-popover {
@@ -3027,8 +3937,39 @@ textarea.t-input {
         transform: rotate(90deg);
     }
 
+    /* \u9762\u677F\u9AD8\u5EA6\u7531 max-height \u6536\u53E3\uFF0Cbody \u5FC5\u987B\u53EF\u6536\u7F29\u624D\u4F1A\u51FA\u73B0\u6EDA\u52A8\u6761 */
     .t-toolbox-body {
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 10px 10px max(10px, env(safe-area-inset-bottom));
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .t-toolbox-header {
+        min-height: 52px;
+        padding: 9px 12px;
+        flex-shrink: 0;
+    }
+
+    .t-toolbox-section + .t-toolbox-section {
+        margin-top: 12px;
+    }
+
+    .t-toolbox-action {
+        min-height: 44px;
+        padding: 7px;
+    }
+
+    .t-toolbox-action i {
+        width: 16px;
+        flex: 0 0 16px;
+    }
+
+    .t-toolbox-stop {
+        min-height: 42px;
+        margin: 0 10px 10px;
+        flex-shrink: 0;
     }
 }
 
@@ -3041,8 +3982,8 @@ textarea.t-input {
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 600px;
-    max-height: 70vh;
+    max-width: 860px;
+    max-height: 80vh;
     background: #1a1a1a;
     border: 1px solid #444;
     border-radius: 10px;
@@ -3128,7 +4069,7 @@ textarea.t-input {
 
 .t-wi-layout {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 240px 1fr;
     gap: 10px;
     overflow: hidden;
     height: 100%;
@@ -3254,6 +4195,70 @@ textarea.t-input {
 
 .t-wi-entry-pane-badge.inactive {
     color: #999;
+}
+
+/* \u6761\u76EE\u641C\u7D22\uFF08\u6309\u6807\u9898\u8FC7\u6EE4\uFF09 */
+.t-wi-entry-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+}
+
+.t-wi-entry-search .t-wi-search-icon {
+    position: absolute;
+    left: 22px;
+    color: #666;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.t-wi-entry-search input {
+    width: 100%;
+    height: 30px;
+    padding: 0 28px 0 30px;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #222;
+    color: #ddd;
+    font-size: 12px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.t-wi-entry-search input:focus {
+    outline: none;
+    border-color: rgba(144, 205, 244, 0.5);
+}
+
+.t-wi-entry-search input::placeholder {
+    color: #666;
+}
+
+.t-wi-search-clear {
+    position: absolute;
+    right: 20px;
+    display: none;
+    color: #888;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.t-wi-search-clear:hover {
+    color: #ddd;
+}
+
+.t-wi-entry-search.has-query .t-wi-search-clear {
+    display: block;
+}
+
+.t-wi-title-hit {
+    background: rgba(144, 205, 244, 0.25);
+    color: #cfe8ff;
+    border-radius: 2px;
 }
 
 .t-wi-entry-list {
@@ -4265,6 +5270,17 @@ textarea.t-input {
     border: 0;
 }
 
+.t-cont-history-cross-hint {
+    margin-top: 9px;
+    padding: 5px 8px;
+    border-left: 2px solid rgba(191, 161, 95, 0.55);
+    border-radius: 0 4px 4px 0;
+    background: rgba(191, 161, 95, 0.08);
+    color: #9a8a63;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
 .t-cont-history-actions {
     gap: 7px;
     margin-top: 10px;
@@ -4962,6 +5978,372 @@ textarea.t-input {
 }
 
 
+/* === main-window-legacy.css === */
+/* css/main-window-legacy.css - \u7ECF\u5178\u7248\uFF085.1.2\uFF09\u4E3B\u754C\u9762\u5E03\u5C40
+ *
+ * \u4EC5\u5305\u542B\u7ECF\u5178\u5E03\u5C40\u72EC\u6709\u7684\u9009\u62E9\u5668\uFF0C\u4EE5\u53CA\u4E0E 5.1.5 \u51B2\u7A81\u9700\u8981\u8986\u76D6\u7684\u89C4\u5219\u3002
+ * \u5168\u90E8\u9650\u5B9A\u5728 #t-main-view.t-layout-legacy \u4F5C\u7528\u57DF\u5185\uFF0C
+ * \u56E0\u6B64\u53EF\u4E0E main-window.css \u540C\u65F6\u5E38\u9A7B\u800C\u4E92\u4E0D\u5F71\u54CD\u3002
+ *
+ * \u6CE8\u610F\uFF1A\u4E16\u754C\u4E66\u9009\u62E9\u5668\uFF08.t-wi-*\uFF09\u4E0E\u7EED\u5199\u5386\u53F2\uFF08.t-cont-history-*\uFF09\u5C5E\u4E8E\u4E24\u5957\u5E03\u5C40
+ * \u5171\u7528\u7684\u5B50\u7A97\u53E3\uFF0C\u4E0D\u968F\u4E3B\u754C\u9762\u5206\u53C9\uFF0C\u4E00\u5F8B\u6CBF\u7528 main-window.css \u7684\u65B0\u7248\u6837\u5F0F\u3002
+ */
+
+#t-main-view.t-layout-legacy .t-tools-btn {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(4px);
+    color: #777;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+#t-main-view.t-layout-legacy .t-tools-btn:hover {
+    opacity: 1;
+    background: #333;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+#t-main-view.t-layout-legacy .t-tools-btn.active {
+    opacity: 1;
+    background: #bfa15f;
+    color: #000;
+}
+
+#t-main-view.t-layout-legacy .t-tools-btn.zen-active {
+    opacity: 1;
+    background: transparent;
+    color: #bfa15f;
+}
+
+#t-main-view.t-layout-legacy .t-tools-panel {
+    position: absolute;
+    top: 65px;
+    right: 25px;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 101;
+    min-width: 140px;
+    padding: 5px;
+    animation: fadeIn 0.15s ease;
+}
+
+#t-main-view.t-layout-legacy .t-tools-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+#t-main-view.t-layout-legacy .t-tools-item:hover {
+    background: #2a2a2a;
+    color: #fff;
+}
+
+#t-main-view.t-layout-legacy .t-tools-item i {
+    width: 18px;
+    text-align: center;
+    color: #888;
+}
+
+#t-main-view.t-layout-legacy .t-tools-item:hover i {
+    color: #bfa15f;
+}
+
+#t-main-view.t-layout-legacy .t-bot-left {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 92px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+#t-main-view.t-layout-legacy .t-btn-grid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #aaa;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#t-main-view.t-layout-legacy .t-btn-grid:hover {
+    background: #383838;
+    color: #fff;
+    border-color: #666;
+}
+
+#t-main-view.t-layout-legacy .t-btn-grid:active {
+    transform: scale(0.95);
+}
+
+#t-main-view.t-layout-legacy .t-bot-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#t-main-view.t-layout-legacy .t-run-group {
+    display: flex;
+    gap: 0;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+#t-main-view.t-layout-legacy .t-run-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 18px;
+    min-width: 90px;
+    height: 55px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.75em;
+    transition: all 0.2s;
+    line-height: 1.2;
+}
+
+#t-main-view.t-layout-legacy .t-run-btn i {
+    font-size: 1.3em;
+}
+
+#t-main-view.t-layout-legacy .t-run-btn span {
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+#t-main-view.t-layout-legacy .t-run-btn:active {
+    transform: scale(0.98);
+}
+
+#t-main-view.t-layout-legacy .t-run-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#t-main-view.t-layout-legacy .t-run-single {
+    background: linear-gradient(135deg, #bfa15f, #d4c08b);
+    color: #1a1a1a;
+    border-radius: 30px 0 0 30px;
+}
+
+#t-main-view.t-layout-legacy .t-run-single:hover:not(:disabled) {
+    background: linear-gradient(135deg, #d4b06b, #e5d1a0);
+    box-shadow: 0 0 15px rgba(191, 161, 95, 0.4);
+}
+
+#t-main-view.t-layout-legacy .t-run-queue {
+    background: linear-gradient(135deg, #4a9eff, #6ab0ff);
+    color: #fff;
+    border-radius: 0 30px 30px 0;
+}
+
+#t-main-view.t-layout-legacy .t-run-queue:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5aafff, #7ac0ff);
+    box-shadow: 0 0 15px rgba(74, 158, 255, 0.4);
+}
+
+#t-main-view.t-layout-legacy .t-run-queue.active {
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+}
+
+#t-main-view.t-layout-legacy .t-run-queue.inactive {
+    background: linear-gradient(135deg, #3a3a3a, #4a4a4a);
+    color: #888;
+}
+
+#t-main-view.t-layout-legacy .t-run-queue.inactive:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4a4a4a, #5a5a5a);
+    box-shadow: none;
+}
+
+#t-main-view.t-layout-legacy .t-bot-right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 92px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+#t-main-view.t-layout-legacy .t-btn-aux {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #aaa;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#t-main-view.t-layout-legacy .t-btn-aux:hover {
+    background: #383838;
+    color: #fff;
+    border-color: #666;
+}
+
+#t-main-view.t-layout-legacy .t-btn-aux:active {
+    transform: scale(0.95);
+}
+
+#t-main-view.t-layout-legacy .t-btn-diag {
+    color: #f59e0b;
+}
+
+#t-main-view.t-layout-legacy .t-btn-diag:hover {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+}
+
+#t-main-view.t-layout-legacy #t-btn-edit {
+    color: #bfa15f;
+}
+
+#t-main-view.t-layout-legacy #t-btn-edit:hover {
+    background: rgba(191, 161, 95, 0.15);
+    border-color: rgba(191, 161, 95, 0.4);
+}
+
+#t-main-view.t-layout-legacy .t-btn-stop {
+    color: #ff6b6b;
+}
+
+#t-main-view.t-layout-legacy .t-btn-stop:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.4);
+    color: #ff8a8a;
+}
+
+#t-main-view.t-layout-legacy .t-btn-stop:active {
+    background: rgba(255, 107, 107, 0.25);
+}
+
+#t-main-view.t-layout-legacy .t-bottom-bar {
+    padding: 12px 15px;
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    height: 85px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 50;
+    box-sizing: border-box;
+    /* \u65B0\u7248\u7528 min-height \u6491\u9AD8\uFF0C\u7ECF\u5178\u7248\u9760\u56FA\u5B9A height\uFF0C\u9700\u663E\u5F0F\u91CD\u7F6E */
+    min-height: 0;
+}
+
+#t-main-view.t-layout-legacy #t-btn-queue-settings.active {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+}
+
+@media screen and (max-width: 600px) {
+    #t-main-view.t-layout-legacy .t-bot-left {
+        width: 76px;
+        height: 55px;
+        gap: 4px;
+    }
+
+    #t-main-view.t-layout-legacy .t-btn-grid {
+        font-size: 0.95em;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-group {
+        border-radius: 25px;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-btn {
+        min-width: 75px;
+        height: 50px;
+        padding: 8px 12px;
+        font-size: 0.7em;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-btn i {
+        font-size: 1.2em;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-single {
+        border-radius: 25px 0 0 25px;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-queue {
+        border-radius: 0 25px 25px 0;
+    }
+
+    #t-main-view.t-layout-legacy .t-bot-right {
+        width: 76px;
+        height: 55px;
+        gap: 4px;
+    }
+
+    #t-main-view.t-layout-legacy .t-btn-aux {
+        font-size: 0.85em;
+    }
+
+    #t-main-view.t-layout-legacy .t-bottom-bar {
+        flex-direction: row;
+        height: 80px;
+        padding: 8px 10px;
+        gap: 10px;
+        /* \u65B0\u7248\u79FB\u52A8\u7AEF\u6539\u7528 grid \u4E24\u5217\u5E03\u5C40\uFF0C\u7ECF\u5178\u7248\u9700\u8FD8\u539F\u4E3A flex */
+        display: flex;
+        align-items: center;
+        min-height: 0;
+    }
+}
+
+
 /* === settings.css === */
 /* css/settings.css - \u8BBE\u7F6E\u7A97\u53E3 */
 
@@ -5069,17 +6451,25 @@ textarea.t-input {
 .titania-update-overlay {
     position: fixed;
     inset: 0;
+    /* \u79FB\u52A8\u7AEF\u6D4F\u89C8\u5668\u5730\u5740\u680F\u4F1A\u8BA9 100vh \u5927\u4E8E\u53EF\u89C6\u9AD8\u5EA6\uFF0C\u7528 dvh \u8D34\u5408\u5B9E\u9645\u89C6\u53E3 */
+    height: 100vh;
+    height: 100dvh;
     z-index: 100000;
-    display: grid;
-    place-items: center;
+    display: flex;
     padding: 18px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     background: rgba(5, 8, 12, 0.78);
     backdrop-filter: blur(5px);
 }
 
 .titania-update-dialog {
     width: min(560px, 100%);
+    /* margin:auto \u5C45\u4E2D\uFF1A\u5185\u5BB9\u8D85\u9AD8\u65F6\u5411\u4E0B\u6EA2\u51FA\u5E76\u53EF\u6EDA\u52A8\uFF0C\u4E0D\u4F1A\u628A\u9876\u90E8\u9876\u51FA\u5C4F\u5E55 */
+    margin: auto;
     max-height: min(720px, 90vh);
+    max-height: min(720px, 90dvh);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -5196,6 +6586,37 @@ textarea.t-input {
 .titania-update-footer button:disabled {
     cursor: wait;
     opacity: 0.65;
+}
+
+@media (max-width: 600px) {
+    .titania-update-overlay {
+        padding: 12px;
+    }
+
+    .titania-update-dialog {
+        max-height: calc(100vh - 24px);
+        max-height: calc(100dvh - 24px);
+    }
+
+    .titania-update-header {
+        padding: 16px 16px 12px;
+    }
+
+    .titania-update-header h2 {
+        font-size: 17px;
+    }
+
+    .titania-update-body {
+        padding: 4px 16px;
+    }
+
+    .titania-update-error {
+        margin: 0 16px 10px;
+    }
+
+    .titania-update-footer {
+        padding: 12px 16px 14px;
+    }
 }
 
 #t-settings-view {
@@ -13449,12 +14870,16 @@ function resetContinuationState() {
     userName: ""
   };
 }
-function pushSceneToHistory(content, scriptId, scriptName) {
+function pushSceneToHistory(content, scriptId, scriptName, metadata = {}) {
   const history = GlobalState.sceneHistory;
+  const generationId = String(metadata.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+  const status = metadata.status || "success";
   const newItem = {
     content,
     scriptId,
     scriptName: scriptName || "\u672A\u77E5\u5267\u672C",
+    status,
+    generationId,
     timestamp: Date.now(),
     isRead: false,
     // 新生成的默认未读
@@ -13468,8 +14893,87 @@ function pushSceneToHistory(content, scriptId, scriptName) {
   history.currentIndex = 0;
   GlobalState.lastGeneratedContent = content;
   GlobalState.lastGeneratedScriptId = scriptId;
+  GlobalState.currentGenerationResult = {
+    generationId,
+    content: String(content || ""),
+    scriptId: String(scriptId || ""),
+    scriptName: String(scriptName || "\u573A\u666F"),
+    status,
+    canFavorite: status === "success" || status === "legacy",
+    canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+    error: metadata.error || null,
+    timestamp: Date.now()
+  };
   GlobalState.lastFavId = null;
   console.log(`[Titania] \u5267\u573A\u5386\u53F2\u5DF2\u66F4\u65B0: ${history.items.length} \u6761\u8BB0\u5F55`);
+}
+function setCurrentGenerationResult(result = {}) {
+  const status = result.status || "failed";
+  GlobalState.currentGenerationResult = {
+    generationId: String(result.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
+    content: String(result.content || ""),
+    scriptId: String(result.scriptId || ""),
+    scriptName: String(result.scriptName || "\u573A\u666F"),
+    status,
+    canFavorite: status === "success" || status === "legacy",
+    canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+    error: result.error || null,
+    timestamp: Number(result.timestamp) || Date.now()
+  };
+  GlobalState.lastGeneratedContent = GlobalState.currentGenerationResult.content;
+  GlobalState.lastGeneratedScriptId = GlobalState.currentGenerationResult.scriptId;
+  return GlobalState.currentGenerationResult;
+}
+function getCurrentGenerationResult() {
+  const display = GlobalState.displayState;
+  if (display.isViewingHistory && display.currentViewIndex >= 0) {
+    const item = GlobalState.sceneHistory.items[display.currentViewIndex];
+    if (item) {
+      const status = item.status || "legacy";
+      return {
+        generationId: String(item.generationId || ""),
+        content: String(item.content || ""),
+        scriptId: String(item.scriptId || ""),
+        scriptName: String(item.scriptName || "\u573A\u666F"),
+        status,
+        canFavorite: status === "success" || status === "legacy",
+        canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+        error: item.error || null,
+        timestamp: Number(item.timestamp) || 0
+      };
+    }
+  }
+  if (GlobalState.streamingCache.isActive) {
+    return {
+      generationId: "",
+      content: String(GlobalState.streamingCache.content || ""),
+      scriptId: String(GlobalState.streamingCache.scriptId || ""),
+      scriptName: String(GlobalState.streamingCache.scriptName || "\u573A\u666F"),
+      status: "running",
+      canFavorite: false,
+      canContinue: false,
+      error: null,
+      timestamp: Date.now()
+    };
+  }
+  if (GlobalState.currentGenerationResult) return GlobalState.currentGenerationResult;
+  if (GlobalState.lastGeneratedContent) {
+    return {
+      generationId: "",
+      content: String(GlobalState.lastGeneratedContent),
+      scriptId: String(GlobalState.lastGeneratedScriptId || ""),
+      scriptName: "\u573A\u666F",
+      status: "legacy",
+      canFavorite: true,
+      canContinue: true,
+      error: null,
+      timestamp: 0
+    };
+  }
+  return null;
+}
+function isFavoriteEligible(result = getCurrentGenerationResult()) {
+  return Boolean(result?.canFavorite && String(result.content || "").trim());
 }
 function getCurrentHistoryItem() {
   const history = GlobalState.sceneHistory;
@@ -13629,6 +15133,8 @@ var init_state = __esm({
       // 加载好的剧本列表 (预设 + 自定义)
       lastGeneratedContent: "",
       // 上一次生成的结果 HTML
+      currentGenerationResult: null,
+      // 当前生成结果的状态化快照
       lastUsedScriptId: "",
       // 上一次用户手动选择的剧本 ID (用于 UI 显示)
       lastGeneratedScriptId: "",
@@ -13899,10 +15405,10 @@ function compareByMode(a, b, mode, nowTs) {
   }
   return 0;
 }
-function getScriptStats(scriptId) {
+function createScriptStatsReader() {
   const data = getExtData();
   ensureStatsStore(data);
-  return normalizeStats(data.script_stats[scriptId]);
+  return (scriptId) => normalizeStats(data.script_stats[scriptId]);
 }
 function getScriptSortMode() {
   const data = getExtData();
@@ -14071,13 +15577,13 @@ function saveUserScript(s) {
   saveExtData();
   loadScripts();
 }
-function deleteUserScript(id) {
+function deleteUserScript(id3) {
   const data = getExtData();
   ensureStatsStore(data);
   let u = data.user_scripts || [];
-  u = u.filter((x) => x.id !== id);
+  u = u.filter((x) => x.id !== id3);
   data.user_scripts = u;
-  delete data.script_stats[id];
+  delete data.script_stats[id3];
   saveExtData();
   loadScripts();
 }
@@ -14171,7 +15677,7 @@ var init_logger = __esm({
         let stVersion = "Unknown";
         try {
           if (typeof SillyTavern !== "undefined" && SillyTavern.version) stVersion = SillyTavern.version;
-          else if (typeof extension_settings !== "undefined" && window.SillyTavernVersion) stVersion = window.SillyTavernVersion;
+          else if (window.SillyTavernVersion) stVersion = window.SillyTavernVersion;
         } catch (e) {
         }
         const reportObj = {
@@ -14349,7 +15855,7 @@ async function getContextData() {
   data.charId = ctx.characterId;
   return data;
 }
-function getChatHistory() {
+function getChatHistory2() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
     return [];
   }
@@ -14475,905 +15981,6 @@ var init_context = __esm({
   }
 });
 
-// src/utils/chatHistoryBlacklist.js
-function parseChatHistoryBlacklistInput(input) {
-  const rules = [];
-  const lines = String(input || "").split(/\r?\n/);
-  lines.forEach((line, index) => {
-    const source = line.trim();
-    if (!source) return;
-    if (!source.endsWith(";")) {
-      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u7F3A\u5C11\u82F1\u6587\u5206\u53F7`);
-      return;
-    }
-    const body = source.slice(0, -1).trim();
-    const separator = body.search(/\s/);
-    if (separator <= 0) {
-      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u9700\u8981\u586B\u5199\u5F00\u59CB\u6807\u8BB0\u548C\u7ED3\u675F\u6807\u8BB0`);
-      return;
-    }
-    const start = body.slice(0, separator);
-    const end = body.slice(separator).trim();
-    if (!start || !end || /\s/.test(start) || /\s/.test(end) || start.includes(";") || end.includes(";")) {
-      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u6807\u8BB0\u4E0D\u80FD\u5305\u542B\u7A7A\u683C\u6216\u5206\u53F7`);
-      return;
-    }
-    rules.push({ start, end });
-  });
-  return rules;
-}
-function removeChatHistoryBlacklist(text, rules = []) {
-  let result = String(text || "");
-  if (!result || !Array.isArray(rules) || rules.length === 0) return result;
-  for (const rule of rules) {
-    if (!rule?.start || !rule?.end) continue;
-    let cursor = 0;
-    let output = "";
-    let changed = false;
-    while (cursor < result.length) {
-      const startIndex = result.indexOf(rule.start, cursor);
-      if (startIndex === -1) {
-        output += result.slice(cursor);
-        break;
-      }
-      const endIndex = result.indexOf(rule.end, startIndex + rule.start.length);
-      if (endIndex === -1) {
-        output += result.slice(cursor);
-        break;
-      }
-      output += result.slice(cursor, startIndex);
-      cursor = endIndex + rule.end.length;
-      changed = true;
-    }
-    if (changed) result = output;
-  }
-  return result;
-}
-var init_chatHistoryBlacklist = __esm({
-  "src/utils/chatHistoryBlacklist.js"() {
-  }
-});
-
-// src/utils/helpers.js
-function detectInteractiveContent(html) {
-  if (!html) return { isInteractive: false, reasons: [] };
-  const reasons = [];
-  if (/<script[\s>]/i.test(html)) {
-    reasons.push("\u5305\u542B <script> \u6807\u7B7E");
-  }
-  const eventHandlers = [
-    "onclick",
-    "ondblclick",
-    "onmousedown",
-    "onmouseup",
-    "onmouseover",
-    "onmouseout",
-    "onmousemove",
-    "onmouseenter",
-    "onmouseleave",
-    "onkeydown",
-    "onkeyup",
-    "onkeypress",
-    "onchange",
-    "oninput",
-    "onsubmit",
-    "onreset",
-    "onfocus",
-    "onblur",
-    "onload",
-    "onerror",
-    "onscroll",
-    "onresize",
-    "ontouchstart",
-    "ontouchmove",
-    "ontouchend",
-    "ontouchcancel"
-  ];
-  const eventPattern = new RegExp(`\\s(${eventHandlers.join("|")})\\s*=`, "i");
-  if (eventPattern.test(html)) {
-    reasons.push("\u5305\u542B\u4E8B\u4EF6\u5904\u7406\u5668\u5C5E\u6027");
-  }
-  if (/<button[^>]*onclick/i.test(html) || /<input[^>]*type\s*=\s*["']?(button|submit)/i.test(html)) {
-    reasons.push("\u5305\u542B\u4EA4\u4E92\u5F0F\u6309\u94AE");
-  }
-  if (/javascript:/i.test(html)) {
-    reasons.push("\u5305\u542B javascript: \u534F\u8BAE");
-  }
-  if (/<form[\s>]/i.test(html) && /<input[\s>]/i.test(html)) {
-    reasons.push("\u5305\u542B\u8868\u5355\u5143\u7D20");
-  }
-  return {
-    isInteractive: reasons.length > 0,
-    reasons
-  };
-}
-function buildFullHtmlDocument(content, title = "Titania Echo - \u4E92\u52A8\u573A\u666F") {
-  const styleMatch = content.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-  const styles = styleMatch ? styleMatch.join("\n") : "";
-  const bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${escapeHtml(title)}</title>
-    <style>
-        /* \u57FA\u7840\u6837\u5F0F */
-        * { box-sizing: border-box; }
-        html, body {
-            margin: 0;
-            padding: 0;
-            background: #0a0a0a;
-            color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-        body {
-            padding: 20px;
-        }
-        a { color: #90cdf4; }
-        img, video { max-width: 100%; height: auto; }
-        
-        /* \u7528\u6237\u81EA\u5B9A\u4E49\u6837\u5F0F */
-    </style>
-    ${styles}
-</head>
-<body>
-${bodyContent}
-</body>
-</html>`;
-}
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
-function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
-  console.log("[Titania] openInNewWindow \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
-  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
-  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
-  console.log("[Titania] \u5B8C\u6574HTML\u524D500\u5B57\u7B26:", fullHtml?.substring(0, 500));
-  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const newWindow = window.open(
-    url,
-    "_blank",
-    "width=900,height=700,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes"
-  );
-  if (newWindow) {
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 1e3);
-  } else {
-    console.warn("Titania: \u5F39\u7A97\u88AB\u62E6\u622A\uFF0C\u5C1D\u8BD5\u65B0\u6807\u7B7E\u9875");
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1e3);
-  }
-  return newWindow;
-}
-function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
-  console.log("[Titania] exportAsHtmlFile \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
-  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
-  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
-  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const safeFileName = scriptName.replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_").substring(0, 50);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${safeFileName}_\u4E92\u52A8\u573A\u666F.html`;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
-}
-function buildFontStylesForShadowDOM() {
-  try {
-    const extData = getExtData();
-    const fontSettings = extData.font_settings;
-    if (!fontSettings || fontSettings.source === "default" || !fontSettings.source) {
-      return { fontImport: "", forceOverride: false, fontFamily: "" };
-    }
-    const forceOverride = fontSettings.force_override === true;
-    if (fontSettings.source === "online" && fontSettings.import_url && fontSettings.font_name) {
-      return {
-        fontImport: `@import url('${fontSettings.import_url}');`,
-        forceOverride,
-        fontFamily: `'${fontSettings.font_name}'`
-      };
-    }
-    if (fontSettings.source === "upload" && fontSettings.font_data) {
-      const fontName = fontSettings.font_name || "TitaniaCustomFont";
-      return {
-        fontImport: `
-                    @font-face {
-                        font-family: '${fontName}';
-                        src: url('${fontSettings.font_data}') format('woff2');
-                        font-weight: normal;
-                        font-style: normal;
-                        font-display: swap;
-                    }
-                `,
-        forceOverride,
-        fontFamily: `'${fontName}'`
-      };
-    }
-    return { fontImport: "", forceOverride: false, fontFamily: "" };
-  } catch (e) {
-    console.warn("Titania: \u6784\u5EFA Shadow DOM \u5B57\u4F53\u6837\u5F0F\u5931\u8D25", e);
-    return { fontImport: "", forceOverride: false, fontFamily: "" };
-  }
-}
-function renderToShadowDOMReal(container, html) {
-  container.innerHTML = "";
-  const host = document.createElement("div");
-  host.className = "t-shadow-host";
-  host.style.cssText = "width:100%; min-height:100%;";
-  const shadow = host.attachShadow({ mode: "open" });
-  const isEditableNode = (node) => {
-    if (!(node instanceof HTMLElement)) return false;
-    const tag = node.tagName.toLowerCase();
-    if (tag === "textarea") {
-      return !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
-    }
-    if (tag === "input") {
-      const type = String(node.getAttribute("type") || "text").toLowerCase();
-      const editableTypes = /* @__PURE__ */ new Set(["text", "search", "url", "tel", "email", "password", "number"]);
-      return editableTypes.has(type) && !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
-    }
-    return node.isContentEditable === true;
-  };
-  const stopEditableKeyboardBubble = (evt) => {
-    const path = typeof evt.composedPath === "function" ? evt.composedPath() : [evt.target];
-    const hasEditableTarget = path.some((node) => isEditableNode(node));
-    if (!hasEditableTarget) return;
-    evt.stopPropagation();
-  };
-  [
-    "keydown",
-    "keypress",
-    "keyup",
-    "beforeinput",
-    "input",
-    "paste",
-    "compositionstart",
-    "compositionupdate",
-    "compositionend"
-  ].forEach((type) => {
-    shadow.addEventListener(type, stopEditableKeyboardBubble, true);
-  });
-  const fontInfo = buildFontStylesForShadowDOM();
-  const forceOverrideStyles = fontInfo.forceOverride && fontInfo.fontFamily ? `
-            /* \u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53\u6837\u5F0F */
-            .t-shadow-content * {
-                font-family: ${fontInfo.fontFamily}, var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
-            }
-            /* \u4FDD\u7559\u7B49\u5BBD\u5B57\u4F53\u5143\u7D20 */
-            .t-shadow-content code,
-            .t-shadow-content pre,
-            .t-shadow-content kbd,
-            .t-shadow-content samp {
-                font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-            }
-        ` : "";
-  const baseStyles = `
-        <style>
-            ${fontInfo.fontImport}
-            :host {
-                display: block;
-                width: 100%;
-                min-height: 100%;
-            }
-            * { box-sizing: border-box; }
-            :host, .t-shadow-content {
-                background: transparent;
-                color: #e0e0e0;
-                font-family: var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-                font-size: 14px;
-                line-height: 1.6;
-            }
-            /* \u5185\u5BB9\u533A\u4FDD\u6301\u56FA\u5B9A\u5B57\u53F7\uFF0C\u4E0D\u53D7 UI \u7F29\u653E\u53D8\u91CF\u5F71\u54CD */
-            .t-shadow-content,
-            .t-shadow-content * {
-                font-size: 14px;
-            }
-            .t-shadow-content {
-                padding: 0;
-                min-height: 100%;
-            }
-            img, video { max-width: 100%; height: auto; }
-            a { color: #90cdf4; }
-            ${forceOverrideStyles}
-        </style>
-    `;
-  shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
-  container.appendChild(host);
-  return shadow;
-}
-function parseWhitelistInput(input) {
-  if (!input || !input.trim()) return [];
-  return input.split(/[,，\n]/).map((tag) => tag.trim()).map((tag) => tag.replace(/^<|>$/g, "")).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
-}
-function extractContent(text, whitelist = []) {
-  if (!text) return "";
-  if (whitelist && whitelist.length > 0) {
-    const extracted = [];
-    for (const tag of whitelist) {
-      const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        const innerContent = match[1].trim();
-        if (innerContent) {
-          extracted.push(innerContent);
-        }
-      }
-    }
-    if (extracted.length > 0) {
-      let result = extracted.join("\n");
-      result = result.replace(/<[^>]*>?/gm, "");
-      result = result.replace(/\n{3,}/g, "\n\n").trim();
-      return result;
-    }
-  }
-  let cleaned = text;
-  cleaned = cleaned.replace(/<[^>]*>?/gm, "");
-  cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
-  return cleaned;
-}
-function getChatHistory2(limit, whitelist = [], blacklist = void 0) {
-  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
-  const ctx = SillyTavern.getContext();
-  const history = ctx.chat || [];
-  const safeLimit = parseInt(limit) || 10;
-  const effectiveBlacklist = blacklist === void 0 ? parseChatHistoryBlacklistInput(getExtData().history_extraction?.blacklist || "") : blacklist;
-  const domMessages = document.querySelectorAll("#chat .mes");
-  const useDomCheck = domMessages.length === history.length;
-  if (!useDomCheck) {
-    console.warn(`Titania: DOM messages count (${domMessages.length}) != History count (${history.length}). Fallback to property check.`);
-  }
-  const visibleHistory = history.filter((msg, index) => {
-    let isHidden = !!(msg.is_hidden || msg.isHidden || msg.is_system || // ST 使用 is_system 来标记隐藏的消息
-    msg.extra && msg.extra.is_hidden);
-    if (!isHidden && useDomCheck) {
-      const el = domMessages[index];
-      if (el) {
-        if (el.hasAttribute("hidden") || el.style.display === "none" || el.classList.contains("hidden") || el.getAttribute("is_system") === "true") {
-          isHidden = true;
-        }
-      }
-    }
-    const isDisabled = !!msg.disabled;
-    if (isHidden) {
-      return false;
-    }
-    if (isDisabled) {
-      return false;
-    }
-    return true;
-  });
-  console.log(`Titania: History Analysis - Total: ${history.length}, Visible: ${visibleHistory.length}, Filtered: ${history.length - visibleHistory.length}`);
-  const recent = visibleHistory.slice(-safeLimit);
-  return recent.map((msg) => {
-    let name = msg.name;
-    if (msg.is_user) name = ctx.name1 || "User";
-    if (name === "{{user}}") name = ctx.name1 || "User";
-    if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
-    let rawContent = msg.message || msg.mes || "";
-    rawContent = removeChatHistoryBlacklist(rawContent, effectiveBlacklist);
-    let cleanContent = extractContent(rawContent, whitelist);
-    if (!cleanContent.trim()) {
-      cleanContent = rawContent.replace(/<[^>]*>?/gm, "").trim();
-    }
-    return `${name}: ${cleanContent}`;
-  }).join("\n");
-}
-function sanitizeAIOutputLite(rawContent) {
-  if (!rawContent || typeof rawContent !== "string") return "";
-  let content = rawContent;
-  content = content.replace(/```html\s*/gi, "");
-  content = content.replace(/```\s*/g, "");
-  content = content.replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/gi, "");
-  content = content.replace(/<think[^>]*>[\s\S]*?<\/think>/gi, "");
-  return content.trim();
-}
-function sanitizeAIOutput(rawContent) {
-  if (!rawContent || typeof rawContent !== "string") return "";
-  let content = rawContent;
-  const originalContent = rawContent;
-  const tagsToRemove = [
-    "thinking",
-    "think",
-    // 思考过程
-    "system",
-    "note",
-    "notes",
-    // 系统/笔记
-    "ooc",
-    "OOC",
-    // Out of Character
-    "debug",
-    "meta",
-    // 调试/元信息
-    "comment",
-    "aside",
-    // 注释/旁白
-    "reflection",
-    "planning",
-    // 反思/规划
-    "internal",
-    "analysis"
-    // 内部思考/分析
-  ];
-  tagsToRemove.forEach((tag) => {
-    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, "gi");
-    content = content.replace(regex, "");
-  });
-  content = content.replace(/```html\s*/gi, "");
-  content = content.replace(/```\s*/g, "");
-  const htmlStartPatterns = [
-    /<!DOCTYPE\s+html/i,
-    // DOCTYPE 声明
-    /<html[\s>]/i,
-    // <html> 标签
-    /<head[\s>]/i,
-    // <head> 标签
-    /<body[\s>]/i,
-    // <body> 标签
-    /<style[\s>]/i,
-    // <style> 标签（很多 AI 会以此开头）
-    /<div[\s>]/i,
-    // <div> 标签
-    /<section[\s>]/i,
-    // <section> 标签
-    /<article[\s>]/i,
-    // <article> 标签
-    /<main[\s>]/i,
-    // <main> 标签
-    /<header[\s>]/i,
-    // <header> 标签
-    /<p[\s>]/i,
-    // <p> 标签
-    /<span[\s>]/i,
-    // <span> 标签
-    /<h[1-6][\s>]/i
-    // 标题标签
-  ];
-  let firstHtmlIndex = -1;
-  for (const pattern of htmlStartPatterns) {
-    const match = content.search(pattern);
-    if (match !== -1) {
-      if (firstHtmlIndex === -1 || match < firstHtmlIndex) {
-        firstHtmlIndex = match;
-      }
-    }
-  }
-  if (firstHtmlIndex > 0) {
-    content = content.substring(firstHtmlIndex);
-  }
-  const htmlEndPatterns = [
-    /<\/html>\s*$/i,
-    /<\/body>\s*$/i,
-    /<\/div>\s*$/i,
-    /<\/section>\s*$/i,
-    /<\/article>\s*$/i,
-    /<\/main>\s*$/i,
-    /<\/style>\s*$/i,
-    /<\/p>\s*$/i,
-    /<\/span>\s*$/i,
-    /<\/h[1-6]>\s*$/i
-  ];
-  let lastHtmlEndIndex = -1;
-  for (const pattern of htmlEndPatterns) {
-    const match = content.match(pattern);
-    if (match) {
-      const endIndex = content.lastIndexOf(match[0]) + match[0].length;
-      if (endIndex > lastHtmlEndIndex) {
-        lastHtmlEndIndex = endIndex;
-      }
-    }
-  }
-  if (lastHtmlEndIndex === -1) {
-    const allClosingTags = content.match(/<\/[a-zA-Z][a-zA-Z0-9]*>\s*$/);
-    if (allClosingTags) {
-      lastHtmlEndIndex = content.lastIndexOf(allClosingTags[0]) + allClosingTags[0].length;
-    }
-  }
-  if (lastHtmlEndIndex > 0 && lastHtmlEndIndex < content.length) {
-    content = content.substring(0, lastHtmlEndIndex);
-  }
-  content = content.replace(/(\s|>)\*\*([^*<>]+)\*\*(\s|<)/g, "$1$2$3");
-  content = content.replace(/(\s|>)__([^_<>]+)__(\s|<)/g, "$1$2$3");
-  content = content.replace(/(\s|>)\*([^*<>\n]+)\*(\s|<)/g, "$1$2$3");
-  content = content.replace(/^\s*#{1,6}\s+/gm, "");
-  content = content.replace(/^\s*[-*+]\s+(?=[^\s<])/gm, "");
-  content = content.replace(/^\s*\d+\.\s+(?=[^\s<])/gm, "");
-  content = content.replace(/\n{3,}/g, "\n\n");
-  content = content.trim();
-  if (!content || content.length < 10) {
-    console.warn("Titania: \u6E05\u6D17\u540E\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u56DE\u9000\u5230\u539F\u59CB\u5185\u5BB9");
-    return originalContent.replace(/```html\s*/gi, "").replace(/```\s*/g, "").trim();
-  }
-  return content;
-}
-function extractFromShadowDOM(container) {
-  const shadowHost = container.querySelector(".t-shadow-host");
-  if (shadowHost && shadowHost.shadowRoot) {
-    try {
-      const shadow = shadowHost.shadowRoot;
-      const contentDiv = shadow.querySelector(".t-shadow-content");
-      if (contentDiv) {
-        let userStyles = "";
-        shadow.querySelectorAll("style").forEach((style) => {
-          const text = style.textContent || "";
-          if (!text.includes(":host")) {
-            userStyles += `<style>${text}</style>
-`;
-          }
-        });
-        return userStyles + contentDiv.innerHTML;
-      }
-    } catch (e) {
-      console.warn("Titania: \u65E0\u6CD5\u4ECE Shadow DOM \u63D0\u53D6\u5185\u5BB9", e);
-    }
-  }
-  const iframe = container.querySelector(".t-content-iframe");
-  if (iframe) {
-    try {
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (doc && doc.body) {
-        const bodyClone = doc.body.cloneNode(true);
-        bodyClone.querySelectorAll("script").forEach((s) => s.remove());
-        let userStyles = "";
-        doc.querySelectorAll("head style").forEach((style) => {
-          const text = style.textContent || "";
-          if (!text.includes("box-sizing: border-box") || text.length > 500) {
-            userStyles += `<style>${text}</style>
-`;
-          }
-        });
-        return userStyles + bodyClone.innerHTML;
-      }
-    } catch (e) {
-      console.warn("Titania: \u65E0\u6CD5\u4ECE iframe \u63D0\u53D6\u5185\u5BB9", e);
-    }
-  }
-  return container.innerHTML;
-}
-function estimateTokens(text) {
-  if (!text) return 0;
-  const clean = text.trim();
-  if (clean.length === 0) return 0;
-  const cjkCount = (clean.match(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g) || []).length;
-  const nonCjkStr = clean.replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g, " ");
-  const wordCount = nonCjkStr.split(/\s+/).filter((w) => w.length > 0).length;
-  return Math.floor(cjkCount + wordCount * 1.3);
-}
-function detectTruncation(content, mode = "html") {
-  if (!content || content.trim().length === 0) {
-    return { isTruncated: false, reason: "empty", details: {} };
-  }
-  const result = {
-    isTruncated: false,
-    reason: "",
-    details: {
-      htmlCheck: null,
-      sentenceCheck: null
-    }
-  };
-  if (mode === "html" || mode === "both") {
-    const htmlResult = checkHtmlTags(content);
-    result.details.htmlCheck = htmlResult;
-    if (htmlResult.isTruncated) {
-      result.isTruncated = true;
-      result.reason = htmlResult.reason;
-    }
-  }
-  if (mode === "sentence" || mode === "both") {
-    const sentenceResult = checkSentenceCompletion(content);
-    result.details.sentenceCheck = sentenceResult;
-    if (sentenceResult.isTruncated && !result.isTruncated) {
-      result.isTruncated = true;
-      result.reason = sentenceResult.reason;
-    }
-  }
-  return result;
-}
-function checkHtmlTags(html) {
-  const result = {
-    isTruncated: false,
-    reason: "",
-    unclosedTags: []
-  };
-  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
-  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
-  const stack = [];
-  let match;
-  while ((match = tagPattern.exec(html)) !== null) {
-    const fullTag = match[0];
-    const tagName = match[1].toLowerCase();
-    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
-      continue;
-    }
-    if (fullTag.startsWith("</")) {
-      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
-        stack.pop();
-      }
-    } else {
-      stack.push(tagName);
-    }
-  }
-  const importantTags = ["div", "style", "span", "p", "section", "article", "main", "header", "footer"];
-  const unclosedImportant = stack.filter((tag) => importantTags.includes(tag));
-  if (unclosedImportant.length > 0) {
-    result.isTruncated = true;
-    result.reason = `HTML \u6807\u7B7E\u672A\u95ED\u5408: <${unclosedImportant.join(">, <")}>`;
-    result.unclosedTags = unclosedImportant;
-  }
-  const styleOpenCount = (html.match(/<style[^>]*>/gi) || []).length;
-  const styleCloseCount = (html.match(/<\/style>/gi) || []).length;
-  if (styleOpenCount > styleCloseCount) {
-    result.isTruncated = true;
-    result.reason = "<style> \u6807\u7B7E\u672A\u95ED\u5408";
-    result.unclosedTags.push("style");
-  }
-  const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-  if (styleMatch) {
-    for (const styleBlock of styleMatch) {
-      const cssContent = styleBlock.replace(/<\/?style[^>]*>/gi, "");
-      const openBraces = (cssContent.match(/{/g) || []).length;
-      const closeBraces = (cssContent.match(/}/g) || []).length;
-      if (openBraces > closeBraces) {
-        result.isTruncated = true;
-        result.reason = "CSS \u82B1\u62EC\u53F7\u4E0D\u5339\u914D";
-        break;
-      }
-    }
-  }
-  return result;
-}
-function checkSentenceCompletion(content) {
-  const result = {
-    isTruncated: false,
-    reason: "",
-    lastChars: ""
-  };
-  const textContent = content.replace(/<[^>]*>/g, "").trim();
-  if (textContent.length === 0) {
-    return result;
-  }
-  const lastChars = textContent.slice(-50);
-  result.lastChars = lastChars;
-  const chineseEndPunctuation = ["\u3002", "\uFF01", "\uFF1F", "\u2026", '"', '"', "\u300F", "\u300D"];
-  const englishEndPunctuation = [".", "!", "?", '"', "'"];
-  const allEndPunctuation = [...chineseEndPunctuation, ...englishEndPunctuation];
-  const lastChar = textContent.trim().slice(-1);
-  const endsWithPunctuation = allEndPunctuation.includes(lastChar);
-  const endsWithLetter = /[a-zA-Z]$/.test(textContent.trim());
-  const previousChars = textContent.trim().slice(-10);
-  const hasIncompleteWord = endsWithLetter && !/[.!?,;:\s]/.test(previousChars.slice(-2, -1));
-  const lastCJK = /[\u4e00-\u9fa5]$/.test(textContent.trim());
-  const hasCJKContent = /[\u4e00-\u9fa5]/.test(textContent);
-  if (hasCJKContent && lastCJK && !chineseEndPunctuation.includes(lastChar)) {
-    if (!endsWithPunctuation) {
-      result.isTruncated = true;
-      result.reason = "\u4E2D\u6587\u53E5\u5B50\u4F3C\u4E4E\u672A\u5B8C\u6210";
-    }
-  } else if (hasIncompleteWord) {
-    result.isTruncated = true;
-    result.reason = "\u82F1\u6587\u5355\u8BCD\u4F3C\u4E4E\u88AB\u622A\u65AD";
-  }
-  return result;
-}
-function buildContinuationContext(accumulatedContent, originalPrompt = "") {
-  const styleBlocks = accumulatedContent.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
-  const styleGuide = styleBlocks.map((block) => block.replace(/<\/?style[^>]*>/gi, "").trim()).join("\n").slice(0, 1600);
-  const bodyContent = accumulatedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  const plainText = bodyContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  const paragraphs = plainText.split(/\n\n+|。(?=[^。]*$)/);
-  const plotPoints = paragraphs.map((p) => {
-    const firstSentence = p.trim().split(/[。！？]/)[0];
-    return firstSentence && firstSentence.length > 5 ? firstSentence.trim() : null;
-  }).filter(Boolean).slice(-5).join(" \u2192 ");
-  const htmlBlocks = bodyContent.split(/(<\/p>|<\/div>)/i);
-  let recentHtml = "";
-  let blockCount = 0;
-  for (let i = htmlBlocks.length - 1; i >= 0 && blockCount < 4; i--) {
-    recentHtml = htmlBlocks[i] + recentHtml;
-    if (htmlBlocks[i].match(/<\/p>|<\/div>/i)) {
-      blockCount++;
-    }
-  }
-  recentHtml = recentHtml.trim().slice(-1e3);
-  const sentences = plainText.match(/[^。！？]*[。！？]/g) || [];
-  const lastCompleteSentence = sentences.length > 0 ? sentences[sentences.length - 1].trim() : "";
-  const lastPart = plainText.slice(-100);
-  const endsWithPunctuation = /[。！？"」』]$/.test(lastPart.trim());
-  const incompleteText = endsWithPunctuation ? "" : lastPart.split(/[。！？]/).pop()?.trim() || "";
-  const unclosedTags = detectUnclosedTags(bodyContent);
-  const classMatches = bodyContent.match(/class=["']([^"']+)["']/gi) || [];
-  const classSet = /* @__PURE__ */ new Set();
-  classMatches.forEach((item) => {
-    const m = item.match(/class=["']([^"']+)["']/i);
-    if (m && m[1]) {
-      m[1].split(/\s+/).forEach((cls) => {
-        const c = cls.trim();
-        if (c) classSet.add(c);
-      });
-    }
-  });
-  const recentClasses = Array.from(classSet).slice(0, 20);
-  return {
-    plotSummary: plotPoints || "(\u65E0\u60C5\u8282\u6458\u8981)",
-    // 情节进展摘要
-    recentHtml,
-    // 最后2段完整HTML
-    styleGuide,
-    // 原有样式片段
-    recentClasses,
-    // 近期使用类名
-    lastCompleteSentence,
-    // 最后完整句子
-    incompleteText,
-    // 未完成的句子片段
-    unclosedTags,
-    // 未闭合标签列表
-    totalLength: plainText.length,
-    // 已生成总字数
-    endsWithPunctuation,
-    // 是否以标点结束
-    originalPrompt: (originalPrompt || "").slice(0, 300)
-    // 原始请求摘要
-  };
-}
-function detectUnclosedTags(html) {
-  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
-  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
-  const stack = [];
-  let match;
-  while ((match = tagPattern.exec(html)) !== null) {
-    const fullTag = match[0];
-    const tagName = match[1].toLowerCase();
-    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
-      continue;
-    }
-    if (fullTag.startsWith("</")) {
-      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
-        stack.pop();
-      }
-    } else {
-      stack.push(tagName);
-    }
-  }
-  const importantTags = ["div", "p", "span", "section", "article", "blockquote"];
-  return stack.filter((tag) => importantTags.includes(tag));
-}
-function smartMergeContinuation(originalContent, continuationContent, showIndicator = false) {
-  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
-  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
-  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  contBody = removeOverlap(originalBody, contBody);
-  let indicator = "";
-  if (showIndicator) {
-    indicator = `<!-- continuation-point -->`;
-  }
-  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
-  const mergedBody = originalBody + indicator + contBody;
-  if (mergedStyle.trim()) {
-    return `<style>
-${mergedStyle}
-</style>
-${mergedBody}`;
-  }
-  return mergedBody;
-}
-function removeOverlap(original, continuation) {
-  if (!original || !continuation) return continuation;
-  const originalText = original.replace(/<[^>]*>/g, "").trim();
-  const contText = continuation.replace(/<[^>]*>/g, "").trim();
-  const originalEnd = originalText.slice(-100);
-  let maxOverlap = 0;
-  const minOverlapLength = 10;
-  const maxCheckLength = Math.min(80, contText.length, originalEnd.length);
-  for (let len = maxCheckLength; len >= minOverlapLength; len--) {
-    const originalSuffix = originalEnd.slice(-len);
-    const contPrefix = contText.slice(0, len);
-    const normalizedSuffix = originalSuffix.replace(/[，。！？、\s]/g, "");
-    const normalizedPrefix = contPrefix.replace(/[，。！？、\s]/g, "");
-    if (normalizedSuffix === normalizedPrefix) {
-      maxOverlap = len;
-      break;
-    }
-  }
-  if (maxOverlap >= minOverlapLength) {
-    const overlapText = contText.slice(0, maxOverlap);
-    const overlapIndex = continuation.indexOf(overlapText.slice(-20));
-    if (overlapIndex !== -1) {
-      const afterOverlap = continuation.slice(overlapIndex + 20);
-      const nextStart = afterOverlap.search(/[。！？]|<[a-z]/i);
-      if (nextStart !== -1) {
-        return afterOverlap.slice(nextStart).replace(/^[。！？]/, "");
-      }
-    }
-  }
-  return continuation;
-}
-function countContentStats(htmlContent) {
-  if (!htmlContent) {
-    return { totalChars: 0, chineseChars: 0, estimatedTokens: 0 };
-  }
-  let plainText = htmlContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<[^>]*>/g, "").trim();
-  const totalChars = plainText.replace(/\s+/g, " ").length;
-  const chineseMatches = plainText.match(/[\u4e00-\u9fa5]/g);
-  const chineseChars = chineseMatches ? chineseMatches.length : 0;
-  const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, "");
-  const wordCount = nonChineseText.split(/\s+/).filter((w) => w.length > 0).length;
-  const estimatedTokens = Math.ceil(chineseChars / 1.5 + wordCount * 1.3);
-  return {
-    totalChars,
-    chineseChars,
-    estimatedTokens
-  };
-}
-function mergeContinuationContent(originalContent, continuationContent, showIndicator = true) {
-  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
-  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
-  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  let indicator = "";
-  if (showIndicator) {
-    indicator = `<div style="text-align:center; color:#bfa15f; font-size:0.8em; margin:15px 0; opacity:0.7;">
-            <i class="fa-solid fa-link"></i> \u2500\u2500\u2500 \u7EED\u5199\u8FDE\u63A5 \u2500\u2500\u2500
-        </div>`;
-  }
-  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
-  const mergedBody = originalBody + indicator + contBody;
-  if (mergedStyle.trim()) {
-    return `<style>
-${mergedStyle}
-</style>
-${mergedBody}`;
-  }
-  return mergedBody;
-}
-var fileToBase64, parseMeta, getSnippet;
-var init_helpers = __esm({
-  "src/utils/helpers.js"() {
-    init_storage();
-    init_chatHistoryBlacklist();
-    fileToBase64 = (file) => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-    parseMeta = (title) => {
-      const parts = title.split(" - ");
-      if (parts.length >= 2) {
-        const char = parts.pop();
-        const script = parts.join(" - ");
-        return { script, char: char.trim() };
-      }
-      return { script: title, char: "\u672A\u77E5" };
-    };
-    getSnippet = (html) => {
-      const tmp = document.createElement("DIV");
-      tmp.innerHTML = html;
-      let text = tmp.textContent || tmp.innerText || "";
-      text = text.replace(/\s+/g, " ").trim();
-      return text.length > 60 ? text.substring(0, 60) + "..." : text;
-    };
-  }
-});
-
 // src/core/apiProfileRegistry.js
 import { openai_setting_names, openai_settings, oai_settings } from "../../../openai.js";
 function normalizeApiBaseUrl(inputUrl) {
@@ -15389,11 +15996,11 @@ function ensureMainApiProfiles(config = {}) {
     ];
   }
   profiles = profiles.map((profile, idx) => {
-    const id = String(profile?.id || `custom_${Date.now()}_${idx}`).trim();
+    const id3 = String(profile?.id || `custom_${Date.now()}_${idx}`).trim();
     const type = profile?.type === "internal" ? "internal" : "custom";
     const fallbackName = type === "internal" ? "\u{1F517} \u8DDF\u968F SillyTavern (\u4E3B\u8FDE\u63A5)" : `\u81EA\u5B9A\u4E49\u65B9\u6848 ${idx + 1}`;
     return {
-      id,
+      id: id3,
       name: String(profile?.name || fallbackName).trim() || fallbackName,
       type,
       readonly: profile?.readonly === true,
@@ -15412,10 +16019,10 @@ function ensureMainApiProfiles(config = {}) {
 function normalizeRewriteCustomProfiles(inputProfiles = [], fallback = null) {
   const list = Array.isArray(inputProfiles) ? inputProfiles : [];
   const rows = list.map((item, idx) => {
-    const id = String(item?.id || `rewrite_custom_${Date.now()}_${idx}`).trim();
+    const id3 = String(item?.id || `rewrite_custom_${Date.now()}_${idx}`).trim();
     const name = String(item?.name || `\u65B9\u6848 ${idx + 1}`).trim() || `\u65B9\u6848 ${idx + 1}`;
     return {
-      id,
+      id: id3,
       name,
       api_url: String(item?.api_url || "").trim(),
       api_key: String(item?.api_key || "").trim(),
@@ -15733,11 +16340,16 @@ function isSameChainSession(favEntry, scriptId, branchKey, currentItems) {
   return isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems);
 }
 async function saveContinuationChainFavorite() {
+  const currentResult = getCurrentGenerationResult();
+  if (!isFavoriteEligible(currentResult)) {
+    if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u751F\u6210\u672A\u5B8C\u6210\uFF0C\u65E0\u6CD5\u6536\u85CF");
+    return false;
+  }
   const display = GlobalState.displayState?.isViewingHistory ? GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex] || null : {
     scriptId: GlobalState.lastGeneratedScriptId,
     scriptName: ""
   };
-  const scriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
+  const scriptId = currentResult?.scriptId || display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
   if (!scriptId) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5267\u672C\uFF0C\u65E0\u6CD5\u6536\u85CF\u7EED\u5199\u94FE");
     return false;
@@ -15745,8 +16357,8 @@ async function saveContinuationChainFavorite() {
   const ctx = await getContextData();
   const chainData = getContinuationRoundsForFav(scriptId);
   const rounds = Array.isArray(chainData?.rounds) ? chainData.rounds : [];
-  const currentDisplayContent = GlobalState.displayState?.isViewingHistory ? String(GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex]?.content || "").trim() : String(GlobalState.lastGeneratedContent || "").trim();
-  const normalizedRounds = rounds.length > 0 ? rounds : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, timestamp: Date.now() }] : [];
+  const currentDisplayContent = String(currentResult?.content || "").trim();
+  const normalizedRounds = rounds.length > 0 ? rounds.filter((round) => round.status === "success" || round.status === "legacy") : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, timestamp: Date.now() }] : [];
   if (normalizedRounds.length === 0) {
     if (window.toastr) toastr.warning("\u5F53\u524D\u5267\u573A\u6CA1\u6709\u53EF\u6536\u85CF\u5185\u5BB9");
     return false;
@@ -15756,6 +16368,8 @@ async function saveContinuationChainFavorite() {
     type: String(item?.type || (idx === 0 ? "initial" : "continuation")),
     instruction: String(item?.instruction || "").trim(),
     html: String(item?.content || "").trim(),
+    status: String(item?.status || "legacy"),
+    generationId: String(item?.generationId || ""),
     timestamp: Number(item?.timestamp) || Date.now()
   })).filter((item) => item.html.length > 0);
   if (items.length === 0) {
@@ -17079,7 +17693,7 @@ ${segmentTip}`);
     scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
     if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u7B2C ${removeRound} \u6BB5`);
   });
-  const closeWindow = () => {
+  const closeWindow2 = () => {
     clearCarouselTimer();
     if (thumbVirtualRaf) {
       cancelAnimationFrame(thumbVirtualRaf);
@@ -17113,7 +17727,7 @@ ${segmentTip}`);
       $("#t-overlay").remove();
     }
   };
-  $("#t-fav-close").on("click", closeWindow);
+  $("#t-fav-close").on("click", closeWindow2);
   syncFavViewToggleButton();
   syncFavViewModeClass();
   scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
@@ -17453,6 +18067,17 @@ function getPromptMessagesView(source, isTrace = false) {
     totalTokens: sections.reduce((sum, section) => sum + section.tokens, 0)
   };
 }
+async function applyExactTokenCounts(sections) {
+  const run = ++tokenCountRun;
+  const { counts, total, exact } = await countTokensBatch(sections.map((item) => item.content || ""));
+  if (run !== tokenCountRun) return;
+  sections.forEach((section, index) => {
+    $(`.t-prompt-token-count[data-token-for="${section.id}"]`).text(`${counts[index]} tk`);
+  });
+  $("#t-prompt-total-token").text(total);
+  $("#t-prompt-token-approx").toggle(!exact);
+  $("#t-prompt-total-token").closest(".t-prompt-count").attr("title", exact ? "\u7531 SillyTavern \u5206\u8BCD\u5668\u7CBE\u786E\u8BA1\u7B97" : "\u5206\u8BCD\u5668\u4E0D\u53EF\u7528\uFF0C\u5F53\u524D\u4E3A\u4F30\u7B97\u503C");
+}
 async function showDebugInfo() {
   if ($("#t-debug-view").length) return;
   ensureOverlay();
@@ -17486,7 +18111,7 @@ async function showDebugInfo() {
                 <span id="t-prompt-request-meta">\u6B63\u5728\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD...</span>
             </div>
             <div class="t-prompt-summary-actions">
-                <span class="t-prompt-count"><strong id="t-prompt-total-token">0</strong> tokens \xB7 <b id="t-prompt-section-count">0</b> \u6761\u6D88\u606F</span>
+                <span class="t-prompt-count"><strong id="t-prompt-total-token">0</strong> tokens<span id="t-prompt-token-approx" style="display:none"> (\u4F30\u7B97)</span> \xB7 <b id="t-prompt-section-count">0</b> \u6761\u6D88\u606F</span>
                 <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6D88\u606F"><i class="fa-solid fa-angles-down"></i> \u5C55\u5F00\u5168\u90E8</button>
                 <button id="t-debug-refresh" class="t-prompt-tool-btn t-prompt-icon-btn" title="\u5237\u65B0"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
@@ -17552,7 +18177,7 @@ async function showDebugInfo() {
                             <span class="t-prompt-role-label">${escapeHtml2(section.role)}</span>
                             <span class="t-prompt-name">${escapeHtml2(section.title)}</span>
                         </div>
-                        <div class="t-prompt-token-count">${section.tokens} tk</div>
+                        <div class="t-prompt-token-count" data-token-for="${section.id}">${section.tokens} tk</div>
                     </div>
                     <div class="t-prompt-section-preview">${escapeHtml2(previewText)}</div>
                     <pre class="t-prompt-section-content">${escapeHtml2(section.content || "(\u65E0\u5185\u5BB9)")}</pre>
@@ -17561,6 +18186,7 @@ async function showDebugInfo() {
     $sections.html(cardsHtml);
     $("#t-prompt-total-token").text(totalTokens);
     $("#t-prompt-section-count").text(sections.length);
+    applyExactTokenCounts(sections);
     if (isPreview) {
       $("#t-prompt-source-state").html('<i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8 \xB7 \u5C1A\u672A\u53D1\u9001');
       $("#t-prompt-request-meta").text(`${source.promptScheme?.name || source.mode || "\u5F53\u524D\u6A21\u5F0F"} \xB7 ${source.script?.name || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(source.timestamp)}`);
@@ -17750,7 +18376,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     $viewer.scrollTop($viewer[0].scrollHeight);
   };
   renderLogView();
-  const closeWindow = () => {
+  const closeWindow2 = () => {
     $("#t-diagnostics-view").remove();
     if (hasMainView) {
       $mainView.show();
@@ -17758,7 +18384,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       $("#t-overlay").remove();
     }
   };
-  $("#t-diag-close").on("click", closeWindow);
+  $("#t-diag-close").on("click", closeWindow2);
   $("#t-diag-refresh").on("click", () => {
     renderLogView();
     if (window.toastr) toastr.info("\u65E5\u5FD7\u5DF2\u5237\u65B0", "Titania");
@@ -17780,12 +18406,14 @@ ${JSON.stringify(l.details, null, 2)}`;
     renderLogView();
   }, 3e3);
 }
+var tokenCountRun;
 var init_debugWindow = __esm({
   "src/ui/debugWindow.js"() {
     init_state();
     init_logger();
     init_dom();
     init_helpers();
+    tokenCountRun = 0;
   }
 });
 
@@ -17821,9 +18449,9 @@ var init_chatTagWhitelist = __esm({
 function escapeHtml3(value) {
   return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function getById($root, id) {
-  if (!$root || !$root.length || !id) return $();
-  return $root.find(`#${id}`);
+function getById($root, id3) {
+  if (!$root || !$root.length || !id3) return $();
+  return $root.find(`#${id3}`);
 }
 function uniqStrings(values) {
   return [...new Set((Array.isArray(values) ? values : []).map((v) => String(v || "").trim()).filter(Boolean))];
@@ -17841,10 +18469,10 @@ function defaultModelFetcher({ apiUrl, apiKey }) {
 }
 function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
   const type = profile?.type === "internal" ? "internal" : "custom";
-  const id = String(profile?.id || `profile_${Date.now()}_${idx}`).trim();
+  const id3 = String(profile?.id || `profile_${Date.now()}_${idx}`).trim();
   const name = String(profile?.name || (type === "internal" ? "\u8DDF\u968F\u4E3B\u8FDE\u63A5" : `\u65B9\u6848 ${idx + 1}`)).trim() || `\u65B9\u6848 ${idx + 1}`;
   return {
-    id,
+    id: id3,
     type,
     readonly: profile?.readonly === true,
     name,
@@ -17930,6 +18558,7 @@ function renderApiConnectionEditorHTML(options = {}) {
     showDeleteProfile: true,
     showStream: false,
     showMaxTokens: false,
+    showManualModelInput: false,
     ...options.flags || {}
   };
   const values = {
@@ -17969,7 +18598,9 @@ function renderApiConnectionEditorHTML(options = {}) {
             <div class="t-form-group"><label class="t-form-label">${escapeHtml3(labels.apiKey)}</label><input id="${escapeHtml3(ids.apiKeyId || "")}" type="password" class="${escapeHtml3(classes.input)}" placeholder="${escapeHtml3(placeholders.apiKey)}"></div>
             <div class="t-form-group">
                 <label class="t-form-label">${escapeHtml3(labels.model)}</label>
-                <div style="display:flex; gap:10px;"><select id="${escapeHtml3(ids.modelId || "")}" class="${escapeHtml3(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml3(ids.fetchModelsId || "")}" class="${escapeHtml3(classes.button)}" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
+                ${flags.showManualModelInput ? `<div style="display:flex; gap:10px; margin-bottom:8px;"><select id="${escapeHtml3(ids.modelModeId || "")}" class="${escapeHtml3(classes.select)}" style="width:auto; cursor:pointer;"><option value="list">\u83B7\u53D6\u5217\u8868</option><option value="manual">\u624B\u52A8\u586B\u5199</option></select></div>` : ""}
+                <div id="${escapeHtml3(ids.modelListWrapId || "")}" style="display:flex; gap:10px;"><select id="${escapeHtml3(ids.modelId || "")}" class="${escapeHtml3(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml3(ids.fetchModelsId || "")}" class="${escapeHtml3(classes.button)}" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
+                ${flags.showManualModelInput ? `<div id="${escapeHtml3(ids.modelManualWrapId || "")}" style="display:none;"><input id="${escapeHtml3(ids.modelInputId || "")}" class="${escapeHtml3(classes.input)}" placeholder="\u6A21\u578B ID\uFF0C\u4F8B\u5982\uFF1Agpt-4o"></div>` : ""}
                 <div id="${escapeHtml3(ids.statusId || "")}" style="margin-top:8px; font-size:0.8em; color:#8da5b8;">${escapeHtml3(values.statusText)}</div>
             </div>
         </div>
@@ -17983,6 +18614,7 @@ function createApiConnectionEditor(options = {}) {
   const defaultModel = String(options.defaultModel || "gpt-3.5-turbo").trim() || "gpt-3.5-turbo";
   const normalizeUrl = typeof options.normalizeUrl === "function" ? options.normalizeUrl : normalizeApiBaseUrl;
   const modelFetcher = typeof options.modelFetcher === "function" ? options.modelFetcher : defaultModelFetcher;
+  const showManualModelInput = options.showManualModelInput === true;
   const autoFetchDelay = Number.isFinite(Number(options.autoFetchDelayMs)) ? Number(options.autoFetchDelayMs) : 500;
   const createProfileIdPrefix = String(options.profileIdPrefix || "custom").trim() || "custom";
   const statusTexts = {
@@ -17992,6 +18624,7 @@ function createApiConnectionEditor(options = {}) {
     empty: "\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B",
     success: (count) => `\u5DF2\u83B7\u53D6 ${count} \u4E2A\u6A21\u578B`,
     failed: (msg) => `\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${msg}`,
+    manual: "\u624B\u52A8\u586B\u5199\u6A21\u578B ID\uFF0C\u4E0D\u4F1A\u8BF7\u6C42\u6A21\u578B\u5217\u8868\u3002",
     internalTip: "\u5F53\u524D\u4F7F\u7528 ST \u4E3B\u8FDE\u63A5\uFF0C\u8FDE\u63A5\u53C2\u6570\u7531 ST \u7BA1\u7406\u3002",
     customTip: "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002",
     ...options.statusTexts || {}
@@ -18007,6 +18640,8 @@ function createApiConnectionEditor(options = {}) {
     state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
   }
   let autoFetchTimer = null;
+  let modelInputMode = "list";
+  let modelRequestVersion = 0;
   const emitChange = () => {
     if (typeof options.onChange === "function") {
       options.onChange({ profiles: state.profiles.map((p) => ({ ...p })), activeProfileId: state.activeProfileId });
@@ -18031,6 +18666,7 @@ function createApiConnectionEditor(options = {}) {
     const $url = getById($root, ids.apiUrlId);
     const $key = getById($root, ids.apiKeyId);
     const $model = getById($root, ids.modelId);
+    const $modelInput = getById($root, ids.modelInputId);
     if ($name.length) {
       profile.name = String($name.val() || "").trim() || profile.name;
     }
@@ -18040,7 +18676,9 @@ function createApiConnectionEditor(options = {}) {
     if ($key.length) {
       profile.key = String($key.val() || "").trim();
     }
-    if ($model.length) {
+    if (modelInputMode === "manual" && $modelInput.length) {
+      profile.model = String($modelInput.val() || "").trim() || defaultModel;
+    } else if ($model.length) {
       profile.model = String($model.val() || "").trim() || defaultModel;
     }
     emitChange();
@@ -18052,6 +18690,11 @@ function createApiConnectionEditor(options = {}) {
     const $url = getById($root, ids.apiUrlId);
     const $key = getById($root, ids.apiKeyId);
     const $model = getById($root, ids.modelId);
+    const $fetchBtn = getById($root, ids.fetchModelsId);
+    const $modelMode = getById($root, ids.modelModeId);
+    const $modelInput = getById($root, ids.modelInputId);
+    const $modelListWrap = getById($root, ids.modelListWrapId);
+    const $modelManualWrap = getById($root, ids.modelManualWrapId);
     const $urlHint = getById($root, ids.urlHintId);
     const $stUrlDisplay = getById($root, ids.stUrlDisplayId);
     const $tip = getById($root, ids.profileTipId);
@@ -18073,6 +18716,11 @@ function createApiConnectionEditor(options = {}) {
       $url.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
       $key.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
       $model.empty().append("<option selected>(ST \u8BBE\u7F6E)</option>").prop("disabled", true);
+      $modelMode.prop("disabled", true);
+      $modelInput.prop("disabled", true).val("");
+      $fetchBtn.prop("disabled", true).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+      $modelListWrap.show();
+      $modelManualWrap.hide();
       if ($urlHint.length) {
         const stUrl = typeof options.getInternalUrl === "function" ? String(options.getInternalUrl() || "\u672A\u77E5") : "\u672A\u77E5";
         if ($stUrlDisplay.length) $stUrlDisplay.text(stUrl || "\u672A\u77E5");
@@ -18085,10 +18733,16 @@ function createApiConnectionEditor(options = {}) {
     $url.val(profile.url || "").prop("disabled", false).prop("placeholder", options.apiUrlPlaceholder || "https://api.example.com/v1");
     $key.val(profile.key || "").prop("disabled", false).prop("placeholder", options.apiKeyPlaceholder || "sk-...");
     $model.prop("disabled", false);
+    $modelMode.prop("disabled", !showManualModelInput).val(modelInputMode);
+    $modelInput.prop("disabled", modelInputMode !== "manual").val(profile.model || defaultModel);
+    $fetchBtn.prop("disabled", modelInputMode === "manual").text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+    $modelListWrap.toggle(modelInputMode !== "manual");
+    $modelManualWrap.toggle(modelInputMode === "manual");
     if ($urlHint.length) $urlHint.hide();
     if ($tip.length) $tip.text(statusTexts.customTip);
     const currentModel = profile.model || defaultModel;
-    if ($model.find(`option[value="${currentModel.replace(/\"/g, '\\"')}"]`).length === 0) {
+    const hasCurrentModel = $model.find("option").toArray().some((option) => String(option.value) === currentModel);
+    if (!hasCurrentModel) {
       $model.empty().append(`<option value="${escapeHtml3(currentModel)}" selected>${escapeHtml3(currentModel)}</option>`);
     }
     $model.val(currentModel);
@@ -18107,32 +18761,34 @@ function createApiConnectionEditor(options = {}) {
   };
   const fetchModels = async (showToast = false) => {
     persistCurrentProfileInputs();
+    if (modelInputMode === "manual") return [];
     const profile = findActiveProfile();
     const $model = getById($root, ids.modelId);
     const $fetchBtn = getById($root, ids.fetchModelsId);
     if (!profile || profile.type === "internal") return [];
     const apiUrl = normalizeUrl(profile.url);
     if (!apiUrl) {
-      $model.empty().append("<option value=''>\u8BF7\u5148\u586B\u5199 API \u5730\u5740</option>");
       setStatus2(statusTexts.missingUrl, "warn");
       if (showToast && window.toastr) window.toastr.warning(statusTexts.missingUrl);
       return [];
     }
+    const requestVersion = ++modelRequestVersion;
     try {
       $fetchBtn.prop("disabled", true).text("...");
       setStatus2(statusTexts.loading, "muted");
       const models = uniqStrings(await modelFetcher({ apiUrl, apiKey: profile.key, profile, state: { ...state } }));
-      $model.empty();
+      if (requestVersion !== modelRequestVersion || profile.id !== state.activeProfileId) return [];
       if (!models.length) {
-        $model.append("<option value=''>\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B</option>");
         setStatus2(statusTexts.empty, "warn");
         return [];
       }
-      const selectedModel = models.includes(profile.model) ? profile.model : models[0];
-      models.forEach((m) => {
-        $model.append(`<option value="${escapeHtml3(m)}" ${m === selectedModel ? "selected" : ""}>${escapeHtml3(m)}</option>`);
+      const selectedModel = profile.model || defaultModel;
+      const displayModels = uniqStrings([selectedModel, ...models]);
+      $model.empty();
+      displayModels.forEach((m) => {
+        const label = m === selectedModel && !models.includes(m) ? `${m}\uFF08\u5F53\u524D\uFF09` : m;
+        $model.append(`<option value="${escapeHtml3(m)}" ${m === selectedModel ? "selected" : ""}>${escapeHtml3(label)}</option>`);
       });
-      profile.model = selectedModel;
       setStatus2(typeof statusTexts.success === "function" ? statusTexts.success(models.length) : statusTexts.success, "ok");
       emitChange();
       if (showToast && window.toastr) {
@@ -18140,15 +18796,17 @@ function createApiConnectionEditor(options = {}) {
       }
       return models;
     } catch (error) {
+      if (requestVersion !== modelRequestVersion || profile.id !== state.activeProfileId) return [];
       const msg = error?.message || "\u672A\u77E5\u9519\u8BEF";
-      $model.empty().append("<option value=''>\u83B7\u53D6\u5931\u8D25</option>");
       setStatus2(typeof statusTexts.failed === "function" ? statusTexts.failed(msg) : statusTexts.failed, "err");
       if (showToast && window.toastr) {
         window.toastr.error(msg);
       }
       return [];
     } finally {
-      $fetchBtn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+      if (requestVersion === modelRequestVersion) {
+        $fetchBtn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+      }
     }
   };
   const bind = () => {
@@ -18160,14 +18818,17 @@ function createApiConnectionEditor(options = {}) {
     const $url = getById($root, ids.apiUrlId);
     const $key = getById($root, ids.apiKeyId);
     const $model = getById($root, ids.modelId);
+    const $modelMode = getById($root, ids.modelModeId);
+    const $modelInput = getById($root, ids.modelInputId);
     $select.on("change", () => {
       const nextActiveProfileId = String($select.val() || "").trim();
       persistCurrentProfileInputs();
+      modelRequestVersion += 1;
       state.activeProfileId = nextActiveProfileId;
       render();
       emitChange();
       const active = findActiveProfile();
-      if (active && active.type !== "internal" && options.autoFetchOnProfileSwitch !== false) {
+      if (active && active.type !== "internal" && modelInputMode !== "manual" && options.autoFetchOnProfileSwitch !== false) {
         setTimeout(() => {
           fetchModels(false);
         }, 100);
@@ -18195,6 +18856,14 @@ function createApiConnectionEditor(options = {}) {
     });
     $name.on("input", persistCurrentProfileInputs);
     $model.on("change", persistCurrentProfileInputs);
+    $modelInput.on("input", persistCurrentProfileInputs);
+    $modelMode.on("change", () => {
+      persistCurrentProfileInputs();
+      modelRequestVersion += 1;
+      modelInputMode = String($modelMode.val() || "list") === "manual" ? "manual" : "list";
+      render();
+      setStatus2(modelInputMode === "manual" ? statusTexts.manual : statusTexts.default, "muted");
+    });
     $url.on("input", () => {
       persistCurrentProfileInputs();
       if (autoFetchTimer) clearTimeout(autoFetchTimer);
@@ -18221,6 +18890,7 @@ function createApiConnectionEditor(options = {}) {
     emitChange();
   };
   const setState = (nextState = {}) => {
+    modelRequestVersion += 1;
     const nextProfiles = Array.isArray(nextState.profiles) ? nextState.profiles : state.profiles;
     state.profiles = normalizeProfilesWithUniqueIds(nextProfiles, defaultModel);
     state.activeProfileId = String(nextState.activeProfileId || state.activeProfileId || "").trim();
@@ -18498,10 +19168,10 @@ function stopResponseTimer() {
   setRawWaitingAnimation(false);
 }
 function ensureCssLoaded() {
-  const id = "titania-css-story-outline";
-  if (!document.getElementById(id)) {
+  const id3 = "titania-css-story-outline";
+  if (!document.getElementById(id3)) {
     const link = document.createElement("link");
-    link.id = id;
+    link.id = id3;
     link.rel = "stylesheet";
     link.type = "text/css";
     link.href = `${extensionFolderPath}/css/story-outline.css`;
@@ -20429,8 +21099,8 @@ function showRawResponseDialog(rawContent, options = {}) {
     isRawDialogOpen = false;
   });
   $("#t-outline-raw-history").on("change", function() {
-    const id = String($(this).val() || "");
-    const picked = rawResponseHistory.find((entry) => entry.id === id);
+    const id3 = String($(this).val() || "");
+    const picked = rawResponseHistory.find((entry) => entry.id === id3);
     if (!picked) return;
     setDialogRawContent(picked.content || "");
   });
@@ -21823,7 +22493,7 @@ function updateInlineRewriteCount() {
   $("#chat .t-rewrite-inline-count").text(`\u5DF2\u9009 ${getSelectedSentenceCount()} \u53E5`);
 }
 function setSelectedSentenceIds(ids = []) {
-  selectedSentenceIds = new Set(Array.from(ids).map((id) => String(id || "")).filter(Boolean));
+  selectedSentenceIds = new Set(Array.from(ids).map((id3) => String(id3 || "")).filter(Boolean));
 }
 function buildSentenceUnitsFromLatest(latest) {
   const sentences = splitBySentence(latest?.content || "");
@@ -22933,7 +23603,7 @@ function readCategoriesFromDom() {
   const categories = [];
   $("#t-rewrite-scheme-categories-list .t-rewrite-category-card").each((_, el) => {
     const $card = $(el);
-    const id = String($card.attr("data-cat-id") || "");
+    const id3 = String($card.attr("data-cat-id") || "");
     const name = String($card.find(".t-rewrite-cat-name").val() || "").trim();
     const bad_example = String($card.find(".t-rewrite-cat-bad").val() || "").trim();
     const good_example = String($card.find(".t-rewrite-cat-good").val() || "").trim();
@@ -22944,7 +23614,7 @@ function readCategoriesFromDom() {
       const extras = String($(kwEl).find(".t-rewrite-kw-extras").val() || "").trim();
       if (anchor && extras) rules.push({ anchor, extras });
     });
-    categories.push({ id: id || generateId("cat"), name, bad_example, good_example, guidance, rules });
+    categories.push({ id: id3 || generateId("cat"), name, bad_example, good_example, guidance, rules });
   });
   return categories.filter((c) => c.name);
 }
@@ -23190,9 +23860,9 @@ function bindLivePanelEvents() {
   });
   $overlay.on("click", ".t-rewrite-live-history-item", (e) => {
     e.preventDefault();
-    const id = String($(e.currentTarget).attr("data-history-id") || "").trim();
-    if (!id) return;
-    const item = liveResponseHistory.find((x) => x.id === id);
+    const id3 = String($(e.currentTarget).attr("data-history-id") || "").trim();
+    if (!id3) return;
+    const item = liveResponseHistory.find((x) => x.id === id3);
     if (!item) return;
     setRawResponse(item.text);
     setRawMeta(`\u5386\u53F2\u8BB0\u5F55\uFF1A${formatHistoryTime(item.at)} \xB7 ${item.source} \xB7 ${item.phase}`);
@@ -23731,13 +24401,13 @@ function bindGlobalEvents() {
   $(document).on("click.titaniaRewriteInline", ".t-rewrite-select-sentence", (e) => {
     e.preventDefault();
     const $target = $(e.currentTarget);
-    const id = String($target.attr("data-segment-id") || "").trim();
-    if (!id) return;
+    const id3 = String($target.attr("data-segment-id") || "").trim();
+    if (!id3) return;
     const selected = getSelectedSentenceIdSet();
-    if (selected.has(id)) selected.delete(id);
-    else selected.add(id);
+    if (selected.has(id3)) selected.delete(id3);
+    else selected.add(id3);
     setSelectedSentenceIds(selected);
-    $target.toggleClass("selected", selected.has(id));
+    $target.toggleClass("selected", selected.has(id3));
     updateInlineRewriteCount();
   });
 }
@@ -24784,7 +25454,7 @@ Extract new lore entries from the above history. Return JSON only.`;
 async function previewExtractPrompt(historyLimit = 20) {
   TitaniaLogger.info("\u9884\u89C8\u8BBE\u5B9A\u63D0\u53D6\u63D0\u793A\u8BCD...", { historyLimit });
   const ctx = await getContextData();
-  const history = getChatHistory2(historyLimit);
+  const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A");
   }
@@ -24833,7 +25503,7 @@ async function extractLoreFromHistory(historyLimit = 20) {
     model: conn.model
   });
   const ctx = await getContextData();
-  const history = getChatHistory2(historyLimit);
+  const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u63D0\u53D6\u8BBE\u5B9A");
   }
@@ -26018,7 +26688,7 @@ async function previewSummaryPrompt(characterId, options = {}) {
     hasCustomPrompt: !!customPrompt
   });
   const ctx = await getContextData();
-  const history = getChatHistory2(historyLimit);
+  const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A");
   }
@@ -26074,7 +26744,7 @@ async function generateSummary(characterId, options = {}) {
     hasCustomPrompt: !!customPrompt
   });
   const ctx = await getContextData();
-  const history = getChatHistory2(historyLimit);
+  const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u751F\u6210\u603B\u7ED3");
   }
@@ -26463,10 +27133,10 @@ async function getHideChatMessageRange() {
   return _hideChatMessageRange;
 }
 function ensureCssLoaded2() {
-  const id = "titania-css-lore-review";
-  if (!document.getElementById(id)) {
+  const id3 = "titania-css-lore-review";
+  if (!document.getElementById(id3)) {
     const link = document.createElement("link");
-    link.id = id;
+    link.id = id3;
     link.rel = "stylesheet";
     link.type = "text/css";
     link.href = `${extensionFolderPath}/css/lore-review.css`;
@@ -26747,9 +27417,9 @@ async function showProfileConfigDialog(onSave) {
       const current = String($sel.val() || "").trim();
       $sel.empty();
       models.forEach((m) => {
-        const id = String(m?.id || m || "").trim();
-        if (!id) return;
-        $sel.append(`<option value="${escapeHtml6(id)}" ${id === current ? "selected" : ""}>${escapeHtml6(id)}</option>`);
+        const id3 = String(m?.id || m || "").trim();
+        if (!id3) return;
+        $sel.append(`<option value="${escapeHtml6(id3)}" ${id3 === current ? "selected" : ""}>${escapeHtml6(id3)}</option>`);
       });
       if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${models.length} \u4E2A Embedding \u6A21\u578B`);
     } catch (e) {
@@ -26950,7 +27620,7 @@ async function showLoreReviewWindow() {
   const currentModel = featureConn?.model || "\u672A\u77E5";
   const currentProfileName = featureConn?.profileName || "\u672A\u77E5";
   try {
-    const chatHistory = getChatHistory();
+    const chatHistory = getChatHistory2();
     currentTotalFloors = chatHistory?.length || 0;
   } catch (e) {
     TitaniaLogger.warn("\u83B7\u53D6\u804A\u5929\u5386\u53F2\u5931\u8D25", e);
@@ -27944,7 +28614,7 @@ function bindEvents2() {
     const $btn = $(this);
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u52A0\u8F7D\u4E2D...');
     try {
-      const chatHistory = getChatHistory();
+      const chatHistory = getChatHistory2();
       if (!chatHistory || chatHistory.length === 0) {
         if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u9884\u89C8\u7684\u804A\u5929\u5386\u53F2", "\u65E0\u6570\u636E");
         return;
@@ -28844,7 +29514,7 @@ function appendMemoriesToInput(memories) {
 }
 function getDefaultQuery() {
   try {
-    const chat = getChatHistory();
+    const chat = getChatHistory2();
     if (!chat || chat.length === 0) return "";
     for (let i = chat.length - 1; i >= 0; i--) {
       const msg = chat[i];
@@ -29526,6 +30196,7 @@ function openSettingsWindow() {
   const data = getExtData();
   const cfg = data.config || {};
   const app = data.appearance || {};
+  const mainWindowMode = data.ui_prefs?.main_window_mode === "legacy" ? "legacy" : "modern";
   const customCSS = data.custom_css || "";
   const cssThemes = data.css_themes || {
     profiles: [{ id: "default", name: "\u9ED8\u8BA4\u4E3B\u9898", css: customCSS }],
@@ -29592,19 +30263,19 @@ function openSettingsWindow() {
         <div class="t-header"><span class="t-title-main">\u2699\uFE0F \u8BBE\u7F6E</span><span class="t-close" id="t-set-close">&times;</span></div>
         <div class="t-set-body">
             <div class="t-set-nav">
-                <div class="t-set-tab-btn active" data-tab="appearance">\u{1F3A8} \u5916\u89C2\u8BBE\u7F6E</div>
+                <div class="t-set-tab-btn active" data-tab="prompts">\u{1F4DC} \u63D0\u793A\u8BCD\u7BA1\u7406</div>
+                <div class="t-set-tab-btn" data-tab="data">\u{1F5C2}\uFE0F \u6570\u636E\u7BA1\u7406</div>
+                <div class="t-set-tab-btn" data-tab="connection">\u{1F50C} API \u8FDE\u63A5</div>
+                <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
+                <div class="t-set-tab-btn" data-tab="appearance">\u{1F3A8} \u5916\u89C2\u8BBE\u7F6E</div>
                 <div class="t-set-tab-btn" data-tab="toolbar">\u{1F6E0}\uFE0F \u5FEB\u6377\u5DE5\u5177\u680F</div>
                 <div class="t-set-tab-btn" data-tab="theme">\u{1F58C}\uFE0F \u4E3B\u9898\u6837\u5F0F</div>
-                <div class="t-set-tab-btn" data-tab="connection">\u{1F50C} API \u8FDE\u63A5</div>
                 <div class="t-set-tab-btn" data-tab="director">\u{1F3AC} \u5BFC\u6F14\u6A21\u5F0F</div>
-                <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
-                <div class="t-set-tab-btn" data-tab="prompts">\u{1F4DC} \u63D0\u793A\u8BCD\u7BA1\u7406</div>
-                <div class="t-set-tab-btn" data-tab="data">\u{1F5C2}\uFE0F \u6570\u636E\u7BA1\u7406</div>
             </div>
 
             <div class="t-set-content">
-                <!-- Tab 1: \u5916\u89C2 -->
-                <div id="page-appearance" class="t-set-page active">
+                <!-- Tab 5: \u5916\u89C2 -->
+                <div id="page-appearance" class="t-set-page">
                     <div class="t-preview-container">
                         <div style="font-size:0.8em; color:#666; margin-bottom:15px;">\u52A8\u753B\u6548\u679C\u9884\u89C8</div>
                         <div id="p-ball" class="t-preview-ball"></div>
@@ -29705,9 +30376,18 @@ function openSettingsWindow() {
                         </label>
                         <p style="font-size:0.75em; color:#666; margin-top:5px; margin-left:22px;">\u751F\u6210\u65F6\u5728\u60AC\u6D6E\u7403\u4E0A\u65B9\u663E\u793A\u8017\u65F6</p>
                     </div>
+
+                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                        <label style="color:#ccc; display:block; margin-bottom:8px;">\u{1F3AD} \u5C0F\u5267\u573A\u4E3B\u754C\u9762</label>
+                        <select id="p-main-window-mode" class="t-input">
+                            <option value="modern" ${mainWindowMode !== "legacy" ? "selected" : ""}>\u65B0\u7248\uFF08\u5DE5\u5177\u7BB1 + \u5E38\u9A7B\u7EED\u5199\u680F\uFF09</option>
+                            <option value="legacy" ${mainWindowMode === "legacy" ? "selected" : ""}>\u7ECF\u5178\u7248\uFF08\u53CC\u6F14\u7ECE\u6309\u94AE + \u5DE5\u5177\u7F51\u683C\uFF09</option>
+                        </select>
+                        <p style="font-size:0.75em; color:#666; margin-top:6px;">\u4E24\u7248\u529F\u80FD\u5B8C\u5168\u76F8\u540C\uFF0C\u4EC5\u5E03\u5C40\u4E0D\u540C\u3002\u5207\u6362\u540E\u9700\u91CD\u65B0\u6253\u5F00\u5C0F\u5267\u573A\u751F\u6548\u3002</p>
+                    </div>
                 </div>
 
-                <!-- Tab 2: \u5FEB\u6377\u5DE5\u5177\u680F -->
+                <!-- Tab 6: \u5FEB\u6377\u5DE5\u5177\u680F -->
                 <div id="page-toolbar" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
                         <div style="font-weight:bold; color:#bfa15f; margin-bottom:10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> \u5FEB\u6377\u5DE5\u5177\u680F</div>
@@ -29764,7 +30444,7 @@ function openSettingsWindow() {
 
                 </div>
 
-                <!-- Tab 2: \u4E3B\u9898\u6837\u5F0F -->
+                <!-- Tab 7: \u4E3B\u9898\u6837\u5F0F -->
                 <div id="page-theme" class="t-set-page">
                     <!-- \u5B57\u4F53\u8BBE\u7F6E\u533A\u57DF -->
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
@@ -29960,6 +30640,10 @@ function openSettingsWindow() {
       apiUrlId: "cfg-url",
       apiKeyId: "cfg-key",
       modelId: "cfg-model",
+      modelModeId: "cfg-model-mode",
+      modelInputId: "cfg-model-input",
+      modelListWrapId: "cfg-model-list-wrap",
+      modelManualWrapId: "cfg-model-manual-wrap",
       fetchModelsId: "t-btn-fetch",
       statusId: "cfg-status",
       urlHintId: "cfg-url-hint",
@@ -29983,7 +30667,8 @@ function openSettingsWindow() {
       showProfileName: true,
       showDeleteProfile: true,
       showStream: true,
-      showMaxTokens: true
+      showMaxTokens: true,
+      showManualModelInput: true
     },
     values: {
       stream: cfg.stream !== false,
@@ -29998,7 +30683,7 @@ function openSettingsWindow() {
   })}
                 </div>
 
-                <!-- Tab 3: \u5BFC\u6F14\u6A21\u5F0F -->
+                <!-- Tab 8: \u5BFC\u6F14\u6A21\u5F0F -->
                 <div id="page-director" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px; color:#888; font-size:0.9em;">
                         <i class="fa-solid fa-circle-info"></i> \u81EA\u5B9A\u4E49\u5BFC\u6F14\u6307\u4EE4\uFF0C\u7528\u4E8E\u63A7\u5236\u751F\u6210\u5185\u5BB9\u7684\u98CE\u683C\u3001\u7BC7\u5E45\u3001\u89C6\u89D2\u7B49\u3002\u652F\u6301\u53D8\u91CF\uFF1A<code style="background:#333; padding:2px 5px; border-radius:3px;">{{char}}</code> \u89D2\u8272\u540D\u3001<code style="background:#333; padding:2px 5px; border-radius:3px;">{{user}}</code> \u7528\u6237\u540D
@@ -30129,8 +30814,8 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 6: \u63D0\u793A\u8BCD\u7BA1\u7406 -->
-                <div id="page-prompts" class="t-set-page">
+                <!-- Tab 1: \u63D0\u793A\u8BCD\u7BA1\u7406 -->
+                <div id="page-prompts" class="t-set-page active">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
                         <div style="font-weight:bold; color:#90cdf4; margin-bottom:8px;"><i class="fa-solid fa-list-check"></i> \u63D0\u793A\u8BCD\u7BA1\u7406</div>
                         <div style="font-size:0.85em; color:#888; line-height:1.6;">\u7BA1\u7406\u5185\u7F6E\u63D0\u793A\u8BCD\u65B9\u6848\u548C\u5BFC\u5165\u7684 SillyTavern Chat Completion \u9884\u8BBE\u3002\u4E3B\u754C\u9762\u7684\u201C\u9009\u7528\u9884\u8BBE\u201D\u4F7F\u7528\u5F53\u524D\u6D3B\u52A8\u9884\u8BBE\u3002</div>
@@ -30153,7 +30838,7 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 6: \u6570\u636E\u7BA1\u7406 -->
+                <!-- Tab 2: \u6570\u636E\u7BA1\u7406 -->
                 <div id="page-data" class="t-set-page">
                     <div class="t-form-group">
                         <div class="t-form-label">\u81EA\u5B9A\u4E49\u5267\u672C\u5E93</div>
@@ -30192,6 +30877,10 @@ function openSettingsWindow() {
       apiUrlId: "cfg-url",
       apiKeyId: "cfg-key",
       modelId: "cfg-model",
+      modelModeId: "cfg-model-mode",
+      modelInputId: "cfg-model-input",
+      modelListWrapId: "cfg-model-list-wrap",
+      modelManualWrapId: "cfg-model-manual-wrap",
       fetchModelsId: "t-btn-fetch",
       statusId: "cfg-status",
       urlHintId: "cfg-url-hint",
@@ -30199,8 +30888,9 @@ function openSettingsWindow() {
     },
     profiles: tempProfiles,
     activeProfileId: tempActiveId,
+    showManualModelInput: true,
     autoFetchOnInput: false,
-    autoFetchOnProfileSwitch: true,
+    autoFetchOnProfileSwitch: false,
     getInternalUrl: () => typeof settings !== "undefined" ? settings.api_url_openai || "\u672A\u77E5" : "\u672A\u77E5",
     onChange: (nextState) => {
       tempProfiles = nextState.profiles;
@@ -30214,11 +30904,6 @@ function openSettingsWindow() {
     $(this).addClass("active");
     $(".t-set-page").removeClass("active");
     $(`#page-${tabName}`).addClass("active");
-    if (tabName === "connection") {
-      setTimeout(() => {
-        mainConnectionEditor.fetchModels(false);
-      }, 100);
-    }
   });
   const saveCurrentProfileToMemory = () => {
     mainConnectionEditor.persistCurrentProfileInputs();
@@ -31103,9 +31788,9 @@ function openSettingsWindow() {
     reader.readAsText(file);
   });
   $("#t-prompt-delete").on("click", () => {
-    const id = tempPromptManager.active_preset_id;
-    if (!id) return;
-    tempPromptManager.presets = tempPromptManager.presets.filter((preset) => preset.id !== id);
+    const id3 = tempPromptManager.active_preset_id;
+    if (!id3) return;
+    tempPromptManager.presets = tempPromptManager.presets.filter((preset) => preset.id !== id3);
     tempPromptManager.active_preset_id = tempPromptManager.presets[0]?.id || "";
     renderPromptManager();
   });
@@ -31260,6 +31945,8 @@ ${JSON.stringify(l.details, null, 2)}`;
       bg_opacity: tempApp.bg_opacity !== void 0 ? tempApp.bg_opacity : 100,
       show_timer: $("#p-show-timer").is(":checked")
     };
+    if (!d.ui_prefs) d.ui_prefs = {};
+    d.ui_prefs.main_window_mode = $("#p-main-window-mode").val() === "legacy" ? "legacy" : "modern";
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
     const clampInt = (value, min, max, fallback) => {
       const n = parseInt(value, 10);
@@ -31685,11 +32372,12 @@ function openScriptManager() {
       $list.append(`<div style="text-align:center; color:#555; margin-top:50px;">\u65E0\u6570\u636E</div>`);
       return;
     }
+    const readStats = createScriptStatsReader();
     filtered.forEach((s) => {
       const isUser = s._type === "user";
       const catLabel = s.category ? `<span class="t-mgr-tag">${s.category}</span>` : "";
       const presetLabel = !isUser ? `<span class="t-mgr-tag" style="background:#444;">\u9884\u8BBE</span>` : "";
-      const stats = getScriptStats(s.id);
+      const stats = readStats(s.id);
       const statsLine = `\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 \u9009\u62E9 ${stats.selected_count || 0} \u6B21 \xB7 \u6700\u8FD1 ${formatRelativeTime(stats.last_generated_at || stats.last_selected_at)}`;
       const $row = $(`
                 <div class="t-mgr-item">
@@ -31944,16 +32632,16 @@ ${s.prompt}`;
     const toDeleteUser = [];
     const toHidePreset = [];
     $(".t-mgr-check:checked").each(function() {
-      const id = $(this).data("id");
+      const id3 = $(this).data("id");
       const type = $(this).data("type");
-      if (type === "user") toDeleteUser.push(id);
-      else if (type === "preset") toHidePreset.push(id);
+      if (type === "user") toDeleteUser.push(id3);
+      else if (type === "preset") toHidePreset.push(id3);
     });
     const total = toDeleteUser.length + toHidePreset.length;
     if (total === 0) return;
     if (confirm(`\u26A0\uFE0F \u786E\u5B9A\u5220\u9664\u9009\u4E2D\u7684 ${total} \u4E2A\u5267\u672C\uFF1F
 (\u6CE8\uFF1A\u5B98\u65B9\u9884\u8BBE\u5C06\u53D8\u4E3A\u9690\u85CF\u72B6\u6001\uFF0C\u53EF\u53BB\u8BBE\u7F6E\u91CC\u6062\u590D)`)) {
-      if (toDeleteUser.length > 0) toDeleteUser.forEach((id) => deleteUserScript(id));
+      if (toDeleteUser.length > 0) toDeleteUser.forEach((id3) => deleteUserScript(id3));
       if (toHidePreset.length > 0) {
         const data = getExtData();
         if (!data.disabled_presets) data.disabled_presets = [];
@@ -32038,10 +32726,10 @@ ${s.prompt}`;
   });
   refreshAll();
 }
-function openEditor(id, source = "main") {
-  const isEdit = !!id;
+function openEditor(id3, source = "main") {
+  const isEdit = !!id3;
   let data = { id: Date.now().toString(), name: "\u65B0\u5267\u672C", desc: "", prompt: "", category: "" };
-  if (isEdit) data = GlobalState.runtimeScripts.find((s) => s.id === id);
+  if (isEdit) data = GlobalState.runtimeScripts.find((s) => s.id === id3);
   const isPreset = data._type === "preset";
   if (source === "manager") {
     $("#t-mgr-view").hide();
@@ -32314,6 +33002,8 @@ function serializeRuntime(chatId) {
           type: String(round?.type || (index === 0 ? "initial" : "continuation")),
           instruction: String(round?.instruction || ""),
           content: String(round?.content || ""),
+          status: String(round?.status || "legacy"),
+          generationId: String(round?.generationId || ""),
           timestamp: Number(round?.timestamp) || 0
         });
       });
@@ -32332,6 +33022,8 @@ function buildGlobalSessions(sessions, branches, rounds) {
       continuationIndex: round.type === "initial" ? 0 : Math.max(1, Number(round.sequence) - 1),
       instruction: round.instruction,
       content: round.content,
+      status: round.status || "legacy",
+      generationId: round.generationId || "",
       contentPreview: String(round.content || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
       contentLength: String(round.content || "").length,
       timestamp: round.timestamp
@@ -32516,12 +33208,6 @@ function scheduleContinuationPersistence() {
     if (window.toastr) toastr.warning("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u4FDD\u5B58\u5931\u8D25\uFF0C\u5F53\u524D\u5185\u5BB9\u4ECD\u4FDD\u7559\u5728\u5185\u5B58\u4E2D", "Titania");
   });
 }
-async function flushContinuationPersistence() {
-  const chatId = getCurrentChatKey();
-  if (!chatId) return false;
-  await queueRuntimeWrite(chatId, serializeRuntime(chatId));
-  return true;
-}
 async function restoreContinuationForCurrentChat() {
   const sequence = ++restoreSequence;
   const chatId = getCurrentChatKey();
@@ -32548,6 +33234,8 @@ async function restoreContinuationForCurrentChat() {
       type: round.type,
       instruction: round.instruction,
       content: round.content,
+      status: round.status || "legacy",
+      generationId: round.generationId || "",
       timestamp: round.timestamp
     });
   });
@@ -32597,13 +33285,6 @@ async function restoreContinuationForCurrentChat() {
   if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
   return sessions.length > 0;
 }
-async function clearContinuationForCurrentChat() {
-  const chatId = getCurrentChatKey();
-  GlobalState.continuationRuntime = { chatId, byScript: {} };
-  runtimeRevision++;
-  await flushContinuationPersistence();
-  if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
-}
 var DB_NAME2, DB_VERSION2, STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS, CHAT_METADATA_KEY, dbPromise, restoreSequence, runtimeRevision, pendingWrites;
 var init_continuationStore = __esm({
   "src/core/continuationStore.js"() {
@@ -32622,29 +33303,18 @@ var init_continuationStore = __esm({
   }
 });
 
-// src/ui/mainWindow.js
-var mainWindow_exports = {};
-__export(mainWindow_exports, {
-  applyScriptSelection: () => applyScriptSelection,
-  disableQueueMode: () => disableQueueMode,
-  getQueueScripts: () => getQueueScripts,
-  openMainWindow: () => openMainWindow,
-  refreshScriptList: () => refreshScriptList,
-  updateContentStatsDisplay: () => updateContentStatsDisplay,
-  updateFavButtonUI: () => updateFavButtonUI,
-  updateQueueButtonUI: () => updateQueueButtonUI,
-  updateRunButtonsState: () => updateRunButtonsState,
-  updateScriptTitleDisplay: () => updateScriptTitleDisplay
-});
-function formatRelativeTime2(ts) {
-  const time = Number(ts) || 0;
-  if (!time) return "\u672A\u4F7F\u7528";
-  const diff = Date.now() - time;
-  if (diff < 6e4) return "\u521A\u521A";
-  if (diff < 36e5) return `${Math.floor(diff / 6e4)} \u5206\u949F\u524D`;
-  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
-  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
-  return new Date(time).toLocaleDateString("zh-CN");
+// src/ui/mainWindow/viewState.js
+function getPendingGenerationScriptId() {
+  return pendingGenerationScriptId;
+}
+function setPendingGenerationScriptId(scriptId) {
+  pendingGenerationScriptId = String(scriptId || "");
+}
+function getContinuationQuickDraft() {
+  return continuationQuickDraft;
+}
+function setContinuationQuickDraft(text) {
+  continuationQuickDraft = String(text || "");
 }
 function clampInjectRoundsCount(value) {
   if (String(value ?? "").trim() === "") return 3;
@@ -32662,6 +33332,758 @@ function saveContinuationDefaultInjectCount(count) {
   if (!data.continuation_ui) data.continuation_ui = {};
   data.continuation_ui.inject_rounds_count = clampInjectRoundsCount(count);
   saveExtData();
+}
+var CONTINUATION_MIN_INJECT_ROUNDS, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, pendingGenerationScriptId, continuationQuickDraft;
+var init_viewState = __esm({
+  "src/ui/mainWindow/viewState.js"() {
+    init_storage();
+    CONTINUATION_MIN_INJECT_ROUNDS = 3;
+    CONTINUATION_MAX_INJECT_ROUNDS = 20;
+    CONTINUATION_TOKEN_WARN_THRESHOLD = 6e4;
+    pendingGenerationScriptId = "";
+    continuationQuickDraft = "";
+  }
+});
+
+// src/ui/mainWindow/layouts/modern.js
+var modern_exports = {};
+__export(modern_exports, {
+  bindEvents: () => bindEvents3,
+  id: () => id,
+  renderHtml: () => renderHtml,
+  syncRunButtons: () => syncRunButtons
+});
+function renderHtml(viewData) {
+  const { defaultCtx } = viewData;
+  return `
+    <div id="t-overlay" class="t-overlay">
+        <div class="t-box" id="t-main-view">
+
+            <div class="t-header" style="flex-shrink:0;">
+                <div class="t-title-container" style="display:flex; flex-direction:column; overflow:hidden;">
+                    <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
+                    <div class="t-title-sub" id="t-title-sub">
+                        \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; flex-shrink:0;">
+                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
+                    <i class="fa-solid fa-book-atlas t-icon-btn" id="t-btn-worldinfo" title="\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009"></i>
+                    <i class="fa-solid fa-network-wired t-icon-btn" id="t-btn-profiles" title="\u5FEB\u901F\u5207\u6362API\u65B9\u6848"></i>
+                    <i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="\u8BBE\u7F6E"></i>
+                    <span class="t-close" id="t-btn-close">&times;</span>
+                </div>
+            </div>
+
+            <div class="t-top-bar">
+                <div class="t-history-toggle" id="t-history-toggle">
+                    <label class="t-toggle-label">
+                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
+                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
+                    </label>
+                </div>
+                <div class="t-mode-toggle" id="t-mode-toggle">
+                    <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
+                        <span>\u{1F4D6} \u5185\u5BB9\u4F18\u5148</span>
+                    </div>
+                    <div class="t-mode-btn ${GlobalState.generationMode === "visual" ? "active" : ""}" data-mode="visual">
+                        <span>\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316</span>
+                    </div>
+                    <div class="t-mode-btn ${GlobalState.generationMode === "preset" ? "active" : ""}" data-mode="preset" title="\u4F7F\u7528\u8BBE\u7F6E\u9875\u4E2D\u9009\u5B9A\u7684\u7528\u6237\u9884\u8BBE">
+                        <span>\u{1F4CB} \u9009\u7528\u9884\u8BBE</span>
+                    </div>
+                </div>
+                <div class="t-mobile-row">
+                    <div class="t-trigger-card" id="t-trigger-btn" title="\u70B9\u51FB\u5207\u6362\u5267\u672C">
+                        <div class="t-trigger-main">
+                            <span id="t-lbl-name" style="overflow:hidden; text-overflow:ellipsis;">\u52A0\u8F7D\u4E2D...</span>
+                        </div>
+                        <div class="t-trigger-sub">
+                            <span class="t-cat-tag" id="t-lbl-cat">\u5206\u7C7B</span>
+                            <span id="t-lbl-desc-mini">...</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down t-chevron"></i>
+                    </div>
+
+                    <div class="t-action-group">
+                        <div class="t-filter-btn" id="t-btn-filter" title="\u7B5B\u9009\u968F\u673A\u8303\u56F4">
+                            <i class="fa-solid fa-filter"></i>
+                        </div>
+                        <div class="t-dice-btn" id="t-btn-dice" title="\u968F\u673A\u5267\u672C">\u{1F3B2}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="t-content-wrapper">
+                <div class="t-stats-hud" id="t-stats-hud" style="display:none;">
+                    <span class="t-stats-item"><span class="t-stats-label">\u6A21\u578B</span><span class="t-stats-value" id="t-stat-model">-</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u5B57\u7B26</span><span class="t-stats-value" id="t-stat-total">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u4E2D\u6587</span><span class="t-stats-value" id="t-stat-chinese">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u8017\u65F6</span><span class="t-stats-value" id="t-stat-time">-</span></span>
+                </div>
+                <div class="t-tools-rail" id="t-tools-rail">
+                    <button class="t-tools-icon" id="t-tool-zen" type="button" title="\u6C89\u6D78\u9605\u8BFB" aria-label="\u6C89\u6D78\u9605\u8BFB">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                    <button class="t-tools-icon" id="t-tool-edit-content" type="button" title="\u7F16\u8F91\u5185\u5BB9" aria-label="\u7F16\u8F91\u5185\u5BB9">
+                        <i class="fa-solid fa-pen-nib"></i>
+                    </button>
+                    <button class="t-tools-icon" id="t-btn-like" type="button" title="\u6536\u85CF\u7ED3\u679C" aria-label="\u6536\u85CF\u7ED3\u679C">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
+                </div>
+                <div class="t-content-area">
+                    <!-- \u7FFB\u9875\u6309\u94AE\u79FB\u5230\u5185\u5BB9\u533A\u4E24\u4FA7 -->
+                    <button class="t-page-nav t-page-prev" id="t-nav-prev" title="\u4E0A\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&lt;</button>
+                    <button class="t-page-nav t-page-next" id="t-nav-next" title="\u4E0B\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&gt;</button>
+                    <div class="t-page-indicator" id="t-page-indicator" style="display:none;">1/1</div>
+                    <div class="t-cont-inline-actions" id="t-cont-inline-actions" style="display:none;">
+                        <span id="t-cont-inline-label"></span>
+                        <div class="t-cont-inline-branch-menu" id="t-cont-inline-branch-menu">
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u4FEE\u6539\u6307\u4EE4</span>
+                                <button id="t-cont-inline-edit-regenerate" type="button" title="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F" aria-label="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-pen"></i></button>
+                            </div>
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u76F4\u63A5\u91CD\u751F\u6210</span>
+                                <button id="t-cont-inline-regenerate" type="button" title="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F" aria-label="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-rotate"></i></button>
+                            </div>
+                        </div>
+                        <button id="t-cont-inline-branch" type="button" title="\u5206\u652F\u64CD\u4F5C" aria-label="\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" aria-expanded="false"><i class="fa-solid fa-code-branch"></i></button>
+                    </div>
+                    <div id="t-output-content"></div>
+                </div>
+
+                <button class="t-toolbox-rail t-toolbox-toggle" type="button" title="\u5C55\u5F00\u5DE5\u5177\u7BB1" aria-label="\u5C55\u5F00\u5DE5\u5177\u7BB1" aria-expanded="false">
+                    <i class="fa-solid fa-toolbox"></i>
+                    <span>\u5DE5\u5177</span>
+                </button>
+                <div class="t-toolbox-backdrop" id="t-toolbox-backdrop"></div>
+                <aside class="t-toolbox-panel" id="t-toolbox-panel" aria-hidden="true">
+                    <div class="t-toolbox-header">
+                        <div><strong>\u5DE5\u5177\u7BB1</strong><span>\u521B\u4F5C\u8F85\u52A9\u4E0E\u6279\u91CF\u4EFB\u52A1</span></div>
+                        <button class="t-toolbox-close" id="t-toolbox-close" type="button" title="\u6536\u8D77\u5DE5\u5177\u7BB1" aria-label="\u6536\u8D77\u5DE5\u5177\u7BB1"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="t-toolbox-body">
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u5185\u5BB9\u64CD\u4F5C</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-copy" type="button"><i class="fa-regular fa-copy"></i><span>\u590D\u5236\u6E90\u7801</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u5267\u672C\u7BA1\u7406</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action" id="t-btn-new" type="button"><i class="fa-solid fa-plus"></i><span>\u65B0\u5EFA\u5267\u672C</span></button>
+                                <button class="t-toolbox-action" id="t-btn-edit" type="button"><i class="fa-solid fa-pen-to-square"></i><span>\u7F16\u8F91\u5267\u672C</span></button>
+                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-regenerate" type="button"><i class="fa-solid fa-rotate"></i><span>\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u961F\u5217\u751F\u6210</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action t-toolbox-queue" id="t-btn-run-queue" type="button"><i class="fa-solid fa-layer-group"></i><span>\u5F00\u59CB\u961F\u5217</span></button>
+                                <button class="t-toolbox-action" id="t-btn-queue-settings" type="button"><i class="fa-solid fa-sliders"></i><span>\u961F\u5217\u8BBE\u7F6E</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u68C0\u67E5\u4E0E\u8BCA\u65AD</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action" id="t-btn-debug" type="button"><i class="fa-solid fa-eye"></i><span>\u5BA1\u67E5 Prompt</span></button>
+                                <button class="t-toolbox-action t-btn-diag" id="t-btn-diagnostics" type="button"><i class="fa-solid fa-stethoscope"></i><span>\u8BCA\u65AD\u65E5\u5FD7</span></button>
+                            </div>
+                        </section>
+                    </div>
+                    <button class="t-toolbox-stop" id="t-btn-stop" type="button"><i class="fa-solid fa-stop"></i><span>\u4E2D\u6B62\u5F53\u524D\u751F\u6210</span></button>
+                </aside>
+            </div>
+
+            <div class="t-bottom-bar">
+                <div class="t-continuation-stack">
+                    <div class="t-continuation-shortcuts" id="t-continuation-shortcuts">
+                        <button type="button" class="t-shortcut-btn" data-instruction="">\u81EA\u7136\u7EED\u5199</button>
+                        <button type="button" class="t-shortcut-btn" data-instruction="\u63A8\u8FDB\u5267\u60C5\u53D1\u5C55\uFF0C\u5F15\u5165\u65B0\u7684\u8FDB\u5C55\u6216\u51B2\u7A81\uFF0C\u4E0D\u8981\u505C\u6EDE\u5728\u5F53\u524D\u573A\u666F\u3002">\u63A8\u8FDB\u5267\u60C5</button>
+                        <button type="button" class="t-shortcut-btn" data-instruction="\u5236\u9020\u4E00\u4E2A\u610F\u5916\u8F6C\u6298\uFF0C\u6253\u7834\u5F53\u524D\u7684\u5E73\u8861\u72B6\u6001\u3002">\u5236\u9020\u8F6C\u6298</button>
+                        <button type="button" class="t-shortcut-btn" data-instruction="\u6DF1\u5316\u89D2\u8272\u60C5\u611F\uFF0C\u5C55\u73B0\u5185\u5FC3\u51B2\u7A81\u4E0E\u7EC6\u817B\u7684\u5FC3\u7406\u53D8\u5316\u3002">\u6DF1\u5316\u60C5\u611F</button>
+                        <button type="button" class="t-shortcut-btn t-shortcut-compose" id="t-btn-continuation-compose" title="\u6253\u5F00\u5B8C\u6574\u7F16\u8F91\u5668"><i class="fa-solid fa-expand"></i> \u5B8C\u6574\u7F16\u8F91\u5668</button>
+                    </div>
+                    <div class="t-continuation-quick">
+                        <button class="t-continuation-history-btn" id="t-btn-continuation-history" type="button" title="\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2" aria-label="\u6253\u5F00\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2">
+                            <i class="fa-solid fa-clock-rotate-left"></i><span id="t-continuation-history-count">0</span>
+                        </button>
+                        <div class="t-continuation-input-wrap">
+                            <textarea id="t-continuation-quick-input" rows="1" placeholder="\u8F93\u5165\u7EED\u5199\u6307\u4EE4..." aria-label="\u7EED\u5199\u6307\u4EE4"></textarea>
+                        </div>
+                        <button class="t-continuation-context-btn" id="t-btn-continuation-context" type="button" title="\u7EED\u5199\u4E0A\u4E0B\u6587" aria-label="\u8BBE\u7F6E\u7EED\u5199\u4E0A\u4E0B\u6587" aria-expanded="false">
+                            <i class="fa-solid fa-layer-group"></i><span id="t-continuation-context-count">${getContinuationDefaultInjectCount()}</span>
+                        </button>
+                        <button class="t-continuation-send" id="t-btn-continuation-send" type="button" title="\u53D1\u9001" aria-label="\u53D1\u9001">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                        <div class="t-continuation-context-popover" id="t-continuation-context-popover" hidden>
+                            <div class="t-continuation-context-head"><strong>\u7EED\u5199\u4E0A\u4E0B\u6587</strong><span>\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u8BB0\u5F55</span></div>
+                            <div class="t-continuation-stepper">
+                                <button id="t-continuation-context-minus" type="button" aria-label="\u51CF\u5C11\u7EED\u5199\u4E0A\u4E0B\u6587"><i class="fa-solid fa-minus"></i></button>
+                                <span><strong id="t-continuation-context-value">${getContinuationDefaultInjectCount()}</strong> \u8F6E</span>
+                                <button id="t-continuation-context-plus" type="button" aria-label="\u589E\u52A0\u7EED\u5199\u4E0A\u4E0B\u6587"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                            <div class="t-continuation-context-stats" id="t-continuation-context-stats"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="t-mobile-toolbox-btn t-toolbox-toggle" type="button" title="\u6253\u5F00\u5DE5\u5177\u7BB1" aria-label="\u6253\u5F00\u5DE5\u5177\u7BB1" aria-expanded="false">
+                    <i class="fa-solid fa-toolbox"></i><span>\u5DE5\u5177</span>
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+function bindEvents3(ctx) {
+  const {
+    closeWindow: closeWindow2,
+    registerTeardown: registerTeardown2,
+    runContinuation,
+    openContinuationHistory: openContinuationHistory2,
+    openContinuationComposer: openContinuationComposer2
+  } = ctx;
+  const $quickInput = $("#t-continuation-quick-input");
+  const $contextPopover = $("#t-continuation-context-popover");
+  let quickInjectRounds = getContinuationDefaultInjectCount();
+  const getQuickScriptId = () => {
+    const display = getCurrentDisplayContent();
+    return display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || "";
+  };
+  const getQuickAction = () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return "stop";
+    const display = getCurrentDisplayContent();
+    if (getPendingGenerationScriptId() || !display?.content?.trim()) return "generate";
+    return String($quickInput.val() || "").trim() ? "instruct" : "continue";
+  };
+  const updateQuickSendState = () => {
+    setContinuationQuickDraft(String($quickInput.val() || ""));
+    const action = getQuickAction();
+    const scriptName = GlobalState.runtimeScripts.find((item) => item.id === (getPendingGenerationScriptId() || GlobalState.lastUsedScriptId))?.name || "\u5F53\u524D\u5267\u672C";
+    const config = {
+      generate: { icon: "fa-solid fa-clapperboard", title: "\u6F14\u7ECE\u5F53\u524D\u5267\u672C", placeholder: `\u51C6\u5907\u6F14\u7ECE\u300A${scriptName}\u300B` },
+      continue: { icon: "fa-solid fa-forward-step", title: "\u81EA\u7136\u7EED\u5199", placeholder: "\u8F93\u5165\u7EED\u5199\u6307\u4EE4\uFF0C\u7559\u7A7A\u81EA\u7136\u7EED\u5199..." },
+      instruct: { icon: "fa-solid fa-paper-plane", title: "\u6309\u6307\u4EE4\u7EED\u5199", placeholder: "\u8F93\u5165\u7EED\u5199\u6307\u4EE4\uFF0C\u7559\u7A7A\u81EA\u7136\u7EED\u5199..." },
+      stop: { icon: "fa-solid fa-stop", title: "\u4E2D\u6B62\u5F53\u524D\u751F\u6210", placeholder: "\u6B63\u5728\u751F\u6210..." }
+    }[action];
+    $("#t-btn-continuation-send").attr({ title: config.title, "aria-label": config.title, "data-action": action }).toggleClass("is-stop", action === "stop").prop("disabled", false).find("i").attr("class", config.icon);
+    $quickInput.attr("placeholder", config.placeholder).prop("disabled", action === "generate" || action === "stop");
+    $("#t-btn-continuation-context").prop("disabled", action === "generate" || action === "stop");
+  };
+  const updateContextPopover = () => {
+    const stats = getContinuationSessionStats(getQuickScriptId(), quickInjectRounds);
+    $("#t-continuation-context-count, #t-continuation-context-value").text(quickInjectRounds);
+    $("#t-continuation-context-stats").html(`\u5F53\u524D\u7EED\u5199\u94FE ${stats.totalRounds} \u8F6E<br>\u9884\u8BA1\u6CE8\u5165 ${stats.estimatedChars.toLocaleString()} \u5B57 \xB7 \u7EA6 ${stats.estimatedTokens.toLocaleString()} tokens`).toggleClass("is-warning", stats.estimatedTokens > CONTINUATION_TOKEN_WARN_THRESHOLD);
+    $("#t-continuation-context-minus").prop("disabled", quickInjectRounds <= CONTINUATION_MIN_INJECT_ROUNDS);
+    $("#t-continuation-context-plus").prop("disabled", quickInjectRounds >= CONTINUATION_MAX_INJECT_ROUNDS);
+  };
+  const setContextPopoverOpen = (open) => {
+    $contextPopover.prop("hidden", !open);
+    $("#t-btn-continuation-context").attr("aria-expanded", String(open)).toggleClass("active", open);
+    if (open) {
+      updateContextPopover();
+    }
+  };
+  const refreshContinuationHistoryCount = async () => {
+    try {
+      const source = ctx.getCurrentContinuationSource();
+      const sessions = await listAllContinuationSessions();
+      const count = sessions.filter((session) => session.chatId === source.chatId).reduce((total, session) => total + session.branches.reduce((sum, branch) => sum + Math.max(0, branch.rounds.length - 1), 0), 0);
+      $("#t-continuation-history-count").text(count > 99 ? "99+" : count);
+      $("#t-btn-continuation-history").attr("title", count ? `\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2\uFF08${count} \u8F6E\uFF09` : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2");
+    } catch (error) {
+      console.warn("Titania: \u8BFB\u53D6\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6570\u91CF\u5931\u8D25", error);
+    }
+  };
+  const submitQuickAction = async () => {
+    const action = getQuickAction();
+    if (action === "stop") {
+      if (GlobalState.isGenerating) cancelGeneration();
+      else if (GlobalState.queueState.isRunning) cancelQueueGeneration();
+      return;
+    }
+    if (action === "generate") {
+      const scriptId = getPendingGenerationScriptId() || GlobalState.lastUsedScriptId;
+      if (!scriptId) {
+        if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
+        return;
+      }
+      setPendingGenerationScriptId("");
+      closeWindow2();
+      handleGenerate(scriptId, false);
+      return;
+    }
+    const instruction = String($quickInput.val() || "").trim();
+    setContextPopoverOpen(false);
+    setContinuationQuickDraft("");
+    $quickInput.val("");
+    updateQuickSendState();
+    const success = await runContinuation({ instruction, injectRoundsCount: quickInjectRounds });
+    if (!success) {
+      $quickInput.val(instruction);
+      setContinuationQuickDraft(instruction);
+      updateQuickSendState();
+    }
+    refreshContinuationHistoryCount();
+  };
+  $quickInput.val(getContinuationQuickDraft()).on("input", () => {
+    updateQuickSendState();
+  }).on("focus", () => {
+    setContextPopoverOpen(false);
+  }).on("keydown", (event) => {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      submitQuickAction();
+    }
+  });
+  $("#t-btn-continuation-send").on("click", submitQuickAction);
+  $("#t-btn-continuation-history").on("click", () => {
+    setContextPopoverOpen(false);
+    openContinuationHistory2(getQuickScriptId());
+  });
+  $("#t-btn-continuation-context").on("click", (event) => {
+    event.stopPropagation();
+    setContextPopoverOpen($contextPopover.prop("hidden"));
+  });
+  $("#t-continuation-context-minus, #t-continuation-context-plus").on("click", function() {
+    quickInjectRounds = clampInjectRoundsCount(quickInjectRounds + ($(this).is("#t-continuation-context-plus") ? 1 : -1));
+    saveContinuationDefaultInjectCount(quickInjectRounds);
+    updateContextPopover();
+  });
+  $("#t-continuation-shortcuts").on("click", ".t-shortcut-btn:not(.t-shortcut-compose)", function() {
+    if ($quickInput.prop("disabled")) return;
+    $quickInput.val(String($(this).attr("data-instruction") || "")).trigger("input").trigger("focus");
+  });
+  $("#t-btn-continuation-compose").on("click", async () => {
+    const result = await openContinuationComposer2(String($quickInput.val() || ""));
+    if (!result) return;
+    if (result.openHistory) {
+      openContinuationHistory2(result.scriptId);
+      return;
+    }
+    $quickInput.val(String(result.instruction || "")).trigger("input");
+    quickInjectRounds = clampInjectRoundsCount(result.injectRoundsCount ?? quickInjectRounds);
+    updateContextPopover();
+    await submitQuickAction();
+  });
+  $(document).on("click.tcontinuationquick", (event) => {
+    if (!$(event.target).closest("#t-continuation-context-popover, #t-btn-continuation-context").length) setContextPopoverOpen(false);
+  });
+  updateQuickSendState();
+  updateContextPopover();
+  refreshContinuationHistoryCount();
+  const setToolboxOpen = (open) => {
+    $("#t-main-view").toggleClass("t-toolbox-open", open);
+    $("#t-toolbox-panel").attr("aria-hidden", String(!open));
+    $(".t-toolbox-toggle").attr("aria-expanded", String(open));
+  };
+  $(".t-toolbox-toggle").on("click", (event) => {
+    event.stopPropagation();
+    setToolboxOpen(!$("#t-main-view").hasClass("t-toolbox-open"));
+  });
+  $("#t-toolbox-close, #t-toolbox-backdrop").on("click", () => setToolboxOpen(false));
+  $("#t-toolbox-panel").on("click", ".t-toolbox-action", () => setToolboxOpen(false));
+  $(document).on("keydown.ttoolbox", (event) => {
+    if (event.key === "Escape" && $("#t-main-view").hasClass("t-toolbox-open")) {
+      setToolboxOpen(false);
+    }
+  });
+  const RAIL_PEEK_WIDTH = 150;
+  let railPeeking = false;
+  $(".t-content-wrapper").on("mousemove", function(event) {
+    const nearRight = this.getBoundingClientRect().right - event.clientX <= RAIL_PEEK_WIDTH;
+    if (nearRight === railPeeking) return;
+    railPeeking = nearRight;
+    $("#t-main-view").toggleClass("t-rail-peek", nearRight);
+  }).on("mouseleave", () => {
+    railPeeking = false;
+    $("#t-main-view").removeClass("t-rail-peek");
+  });
+  $("#t-btn-regenerate").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    const scriptId = GlobalState.lastUsedScriptId || GlobalState.lastGeneratedScriptId;
+    if (!scriptId) {
+      if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
+      return;
+    }
+    closeWindow2();
+    handleGenerate(scriptId, false);
+  });
+  registerTeardown2(() => {
+    $(document).off("keydown.ttoolbox");
+    $(document).off("click.tcontinuationquick");
+  });
+}
+function syncRunButtons({ isGenerating, isQueueRunning }) {
+  const $queueBtn = $("#t-btn-run-queue");
+  const $secondaryContinuationBtns = $("#t-btn-continuation-compose, #t-btn-continuation-history");
+  const $stopBtn = $("#t-btn-stop");
+  if (!$queueBtn.length) return;
+  if (isGenerating || isQueueRunning) {
+    $queueBtn.prop("disabled", true);
+    $secondaryContinuationBtns.prop("disabled", true);
+    $stopBtn.addClass("is-active");
+  } else {
+    $queueBtn.prop("disabled", false);
+    $secondaryContinuationBtns.prop("disabled", false);
+    $stopBtn.removeClass("is-active");
+  }
+  $("#t-continuation-quick-input").trigger("input");
+}
+var id;
+var init_modern = __esm({
+  "src/ui/mainWindow/layouts/modern.js"() {
+    init_state();
+    init_api();
+    init_continuationStore();
+    init_viewState();
+    id = "modern";
+  }
+});
+
+// src/ui/mainWindow/layouts/legacy.js
+var legacy_exports = {};
+__export(legacy_exports, {
+  bindEvents: () => bindEvents4,
+  id: () => id2,
+  renderHtml: () => renderHtml2,
+  syncRunButtons: () => syncRunButtons2
+});
+function renderHtml2(viewData) {
+  const { defaultCtx } = viewData;
+  return `
+    <div id="t-overlay" class="t-overlay">
+        <div class="t-box" id="t-main-view">
+
+            <div class="t-header" style="flex-shrink:0;">
+                <div class="t-title-container" style="display:flex; flex-direction:column; overflow:hidden;">
+                    <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
+                    <div class="t-title-sub" id="t-title-sub">
+                        \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; flex-shrink:0;">
+                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
+                    <i class="fa-solid fa-book-atlas t-icon-btn" id="t-btn-worldinfo" title="\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009"></i>
+                    <i class="fa-solid fa-network-wired t-icon-btn" id="t-btn-profiles" title="\u5FEB\u901F\u5207\u6362API\u65B9\u6848"></i>
+                    <i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="\u8BBE\u7F6E"></i>
+                    <span class="t-close" id="t-btn-close">&times;</span>
+                </div>
+            </div>
+
+            <div class="t-top-bar">
+                <div class="t-history-toggle" id="t-history-toggle">
+                    <label class="t-toggle-label">
+                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
+                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
+                    </label>
+                </div>
+                <div class="t-mode-toggle" id="t-mode-toggle">
+                    <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
+                        <span>\u{1F4D6} \u5185\u5BB9\u4F18\u5148</span>
+                    </div>
+                    <div class="t-mode-btn ${GlobalState.generationMode === "visual" ? "active" : ""}" data-mode="visual">
+                        <span>\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316</span>
+                    </div>
+                    <div class="t-mode-btn ${GlobalState.generationMode === "preset" ? "active" : ""}" data-mode="preset" title="\u4F7F\u7528\u8BBE\u7F6E\u9875\u4E2D\u9009\u5B9A\u7684\u7528\u6237\u9884\u8BBE">
+                        <span>\u{1F4CB} \u9009\u7528\u9884\u8BBE</span>
+                    </div>
+                </div>
+                <div class="t-mobile-row">
+                    <div class="t-trigger-card" id="t-trigger-btn" title="\u70B9\u51FB\u5207\u6362\u5267\u672C">
+                        <div class="t-trigger-main">
+                            <span id="t-lbl-name" style="overflow:hidden; text-overflow:ellipsis;">\u52A0\u8F7D\u4E2D...</span>
+                        </div>
+                        <div class="t-trigger-sub">
+                            <span class="t-cat-tag" id="t-lbl-cat">\u5206\u7C7B</span>
+                            <span id="t-lbl-desc-mini">...</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down t-chevron"></i>
+                    </div>
+
+                    <div class="t-action-group">
+                        <div class="t-filter-btn" id="t-btn-filter" title="\u7B5B\u9009\u968F\u673A\u8303\u56F4">
+                            <i class="fa-solid fa-filter"></i>
+                        </div>
+                        <div class="t-dice-btn" id="t-btn-dice" title="\u968F\u673A\u5267\u672C">\u{1F3B2}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="t-content-wrapper">
+                <div class="t-stats-hud" id="t-stats-hud" style="display:none;">
+                    <span class="t-stats-item"><span class="t-stats-label">\u6A21\u578B</span><span class="t-stats-value" id="t-stat-model">-</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u5B57\u7B26</span><span class="t-stats-value" id="t-stat-total">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u4E2D\u6587</span><span class="t-stats-value" id="t-stat-chinese">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u8017\u65F6</span><span class="t-stats-value" id="t-stat-time">-</span></span>
+                </div>
+                <div class="t-tools-btn" id="t-btn-tools" title="\u5185\u5BB9\u5DE5\u5177"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+                <div class="t-tools-panel" id="t-tools-panel" style="display:none;">
+                    <div class="t-tools-item" id="t-tool-zen">
+                        <i class="fa-solid fa-expand"></i>
+                        <span>\u6C89\u6D78\u9605\u8BFB</span>
+                    </div>
+                    <div class="t-tools-item" id="t-tool-continue">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>\u4E3B\u52A8\u7EED\u5199</span>
+                    </div>
+                    <div class="t-tools-item" id="t-tool-continuation-history">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>\u7EED\u5199\u5386\u53F2</span>
+                    </div>
+                    <div class="t-tools-item" id="t-tool-edit-content">
+                        <i class="fa-solid fa-pen-nib"></i>
+                        <span>\u7F16\u8F91\u5185\u5BB9</span>
+                    </div>
+                </div>
+                <div class="t-content-area">
+                    <!-- \u7FFB\u9875\u6309\u94AE\u79FB\u5230\u5185\u5BB9\u533A\u4E24\u4FA7 -->
+                    <button class="t-page-nav t-page-prev" id="t-nav-prev" title="\u4E0A\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&lt;</button>
+                    <button class="t-page-nav t-page-next" id="t-nav-next" title="\u4E0B\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&gt;</button>
+                    <div class="t-page-indicator" id="t-page-indicator" style="display:none;">1/1</div>
+                    <div class="t-cont-inline-actions" id="t-cont-inline-actions" style="display:none;">
+                        <span id="t-cont-inline-label"></span>
+                        <div class="t-cont-inline-branch-menu" id="t-cont-inline-branch-menu">
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u4FEE\u6539\u6307\u4EE4</span>
+                                <button id="t-cont-inline-edit-regenerate" type="button" title="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F" aria-label="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-pen"></i></button>
+                            </div>
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u76F4\u63A5\u91CD\u751F\u6210</span>
+                                <button id="t-cont-inline-regenerate" type="button" title="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F" aria-label="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-rotate"></i></button>
+                            </div>
+                        </div>
+                        <button id="t-cont-inline-branch" type="button" title="\u5206\u652F\u64CD\u4F5C" aria-label="\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" aria-expanded="false"><i class="fa-solid fa-code-branch"></i></button>
+                    </div>
+                    <div id="t-output-content"></div>
+                </div>
+            </div>
+
+            <div class="t-bottom-bar">
+            <!-- \u5DE6\u4FA7\uFF1A2x2 \u5DE5\u5177\u7F51\u683C -->
+            <div class="t-bot-left">
+                <button class="t-btn-grid" id="t-btn-debug" title="\u5BA1\u67E5 Prompt"><i class="fa-solid fa-eye"></i></button>
+                <button class="t-btn-grid" id="t-btn-copy" title="\u590D\u5236\u6E90\u7801"><i class="fa-regular fa-copy"></i></button>
+                <button class="t-btn-grid" id="t-btn-like" title="\u6536\u85CF\u7ED3\u679C"><i class="fa-regular fa-heart"></i></button>
+                <button class="t-btn-grid" id="t-btn-new" title="\u65B0\u5EFA\u5267\u672C"><i class="fa-solid fa-plus"></i></button>
+            </div>
+
+            <!-- \u4E2D\u95F4\uFF1A\u53CC\u6309\u94AE\u6F14\u7ECE\u533A -->
+            <div class="t-bot-center">
+                <div class="t-run-group">
+                    <button class="t-run-btn t-run-single" id="t-btn-run-single" title="\u5355\u6B21\u6F14\u7ECE\u5F53\u524D\u5267\u672C">
+                        <i class="fa-solid fa-clapperboard"></i>
+                        <span>\u5355\u6B21\u6F14\u7ECE</span>
+                    </button>
+                    <button class="t-run-btn t-run-queue" id="t-btn-run-queue" title="\u6279\u91CF\u961F\u5217\u751F\u6210">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>\u961F\u5217\u751F\u6210</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A -->
+            <div class="t-bot-right">
+                <button class="t-btn-aux" id="t-btn-queue-settings" title="\u961F\u5217\u8BBE\u7F6E">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+                <button class="t-btn-aux" id="t-btn-edit" title="\u7F16\u8F91\u5F53\u524D\u5267\u672C">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="t-btn-aux t-btn-stop" id="t-btn-stop" title="\u4E2D\u6B62\u751F\u6210">
+                    <i class="fa-solid fa-stop"></i>
+                </button>
+                <button class="t-btn-aux t-btn-diag" id="t-btn-diagnostics" title="\u8BCA\u65AD\u65E5\u5FD7">
+                    <i class="fa-solid fa-stethoscope"></i>
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+function bindEvents4(ctx) {
+  const {
+    closeWindow: closeWindow2,
+    registerTeardown: registerTeardown2,
+    runContinuation,
+    openContinuationHistory: openContinuationHistory2,
+    openContinuationComposer: openContinuationComposer2
+  } = ctx;
+  const $toolsPanel = $("#t-tools-panel");
+  const $toolsBtn = $("#t-btn-tools");
+  const hideToolsPanel = () => {
+    $toolsPanel.hide();
+    $toolsBtn.removeClass("active");
+  };
+  $toolsBtn.on("click", function(e) {
+    e.stopPropagation();
+    const isVisible = $toolsPanel.is(":visible");
+    $toolsPanel.toggle(!isVisible);
+    $(this).toggleClass("active", !isVisible);
+  });
+  $(document).on("click.toolspanel", function(e) {
+    if (!$(e.target).closest("#t-tools-panel, #t-btn-tools").length) {
+      hideToolsPanel();
+    }
+  });
+  $toolsPanel.on("click", ".t-tools-item", function() {
+    hideToolsPanel();
+    $toolsBtn.toggleClass("zen-active", $("#t-main-view").hasClass("t-zen-mode"));
+  });
+  $("#t-tool-continue").on("click", async function() {
+    const composeResult = await openContinuationComposer2("");
+    await runContinuation(composeResult);
+  });
+  $("#t-tool-continuation-history").on("click", function() {
+    openContinuationHistory2("");
+  });
+  $("#t-btn-run-single").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    closeWindow2();
+    handleGenerate(null, false);
+  });
+  registerTeardown2(() => {
+    $(document).off("click.toolspanel");
+  });
+}
+function syncRunButtons2({ isGenerating, isQueueRunning }) {
+  const $singleBtn = $("#t-btn-run-single");
+  const $queueBtn = $("#t-btn-run-queue");
+  if (!$singleBtn.length || !$queueBtn.length) return;
+  const busy = isGenerating || isQueueRunning;
+  $singleBtn.prop("disabled", busy);
+  $queueBtn.prop("disabled", busy);
+}
+var id2;
+var init_legacy = __esm({
+  "src/ui/mainWindow/layouts/legacy.js"() {
+    init_state();
+    init_api();
+    id2 = "legacy";
+  }
+});
+
+// src/ui/mainWindow.js
+var mainWindow_exports = {};
+__export(mainWindow_exports, {
+  applyScriptSelection: () => applyScriptSelection,
+  closeWindow: () => closeWindow,
+  disableQueueMode: () => disableQueueMode,
+  getContinuationHistoryView: () => getContinuationHistoryView,
+  getQueueScripts: () => getQueueScripts,
+  handleRandom: () => handleRandom,
+  openMainWindow: () => openMainWindow,
+  refreshScriptList: () => refreshScriptList,
+  registerTeardown: () => registerTeardown,
+  setContinuationHistoryView: () => setContinuationHistoryView,
+  updateContentStatsDisplay: () => updateContentStatsDisplay,
+  updateFavButtonUI: () => updateFavButtonUI,
+  updateFilterUI: () => updateFilterUI,
+  updateHistoryToggleUI: () => updateHistoryToggleUI,
+  updateModeToggleUI: () => updateModeToggleUI,
+  updateQueueButtonUI: () => updateQueueButtonUI,
+  updateRunButtonsState: () => updateRunButtonsState,
+  updateScriptTitleDisplay: () => updateScriptTitleDisplay
+});
+function formatRelativeTime2(ts) {
+  const time = Number(ts) || 0;
+  if (!time) return "\u672A\u4F7F\u7528";
+  const diff = Date.now() - time;
+  if (diff < 6e4) return "\u521A\u521A";
+  if (diff < 36e5) return `${Math.floor(diff / 6e4)} \u5206\u949F\u524D`;
+  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
+  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
+  return new Date(time).toLocaleDateString("zh-CN");
+}
+function getContinuationHistoryView() {
+  return continuationHistoryView;
+}
+function setContinuationHistoryView(view) {
+  continuationHistoryView = view;
+}
+function registerTeardown(fn) {
+  if (typeof fn === "function") layoutTeardownHooks.push(fn);
+}
+function updateFilterUI() {
+  const btn = $("#t-btn-filter");
+  const dice = $("#t-btn-dice");
+  if (GlobalState.currentCategoryFilter === "ALL") {
+    btn.removeClass("active-filter");
+    dice.removeClass("active-filter");
+    btn.attr("title", "\u5F53\u524D\uFF1A\u5168\u90E8\u5206\u7C7B");
+  } else {
+    btn.addClass("active-filter");
+    dice.addClass("active-filter");
+    btn.attr("title", `\u5F53\u524D\u9501\u5B9A\uFF1A${GlobalState.currentCategoryFilter}`);
+  }
+}
+function updateHistoryToggleUI() {
+  const $toggle = $("#t-history-toggle");
+  const $checkbox = $("#t-use-history");
+  if (GlobalState.useHistoryAnalysis) {
+    $toggle.addClass("active");
+  } else {
+    $toggle.removeClass("active");
+  }
+  $checkbox.prop("checked", GlobalState.useHistoryAnalysis);
+}
+function updateModeToggleUI() {
+  $(".t-mode-btn").removeClass("active");
+  $(`.t-mode-btn[data-mode="${GlobalState.generationMode}"]`).addClass("active");
+}
+function handleRandom() {
+  const allScripts = GlobalState.runtimeScripts;
+  if (allScripts.length === 0) {
+    if (window.toastr) toastr.warning("\u6682\u65E0\u53EF\u7528\u5267\u672C\u3002", "Titania");
+    $("#t-lbl-name").text("\u6682\u65E0\u5267\u672C");
+    $("#t-lbl-cat").text("\u65E0\u5206\u7C7B");
+    $("#t-lbl-desc-mini").text("\u8BF7\u521B\u5EFA\u6216\u5BFC\u5165\u5267\u672C");
+    return;
+  }
+  let pool = allScripts;
+  if (GlobalState.currentCategoryFilter !== "ALL") {
+    pool = pool.filter((s2) => (s2.category || (s2._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === GlobalState.currentCategoryFilter);
+  }
+  if (pool.length === 0) {
+    if (window.toastr) toastr.warning(`\u6CA1\u627E\u5230 [${GlobalState.currentCategoryFilter}] \u5206\u7C7B\u7684\u5267\u672C\uFF0C\u5DF2\u5207\u6362\u5230\u5168\u90E8\u3002`, "Titania");
+    GlobalState.currentCategoryFilter = "ALL";
+    updateFilterUI();
+    pool = allScripts;
+  }
+  const rnd = Math.floor(Math.random() * pool.length);
+  const s = pool[rnd];
+  applyScriptSelection(s.id, { trackSelection: false, pendingGeneration: true });
+  const dice = $("#t-btn-dice");
+  dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
+  setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
+}
+function closeWindow() {
+  layoutTeardownHooks.forEach((fn) => {
+    try {
+      fn();
+    } catch (e) {
+      console.warn("Titania: \u5E03\u5C40\u6E05\u7406\u5931\u8D25", e);
+    }
+  });
+  layoutTeardownHooks = [];
+  activeLayout = null;
+  $("#t-overlay").remove();
+  $(document).off("keydown.zenmode");
+  $(document).off("click.tinlinebranch");
 }
 function escapeHtmlText2(str) {
   return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
@@ -32960,7 +34382,7 @@ function showContinuationRoundInMain(chatId, scriptId, branchKey, roundKey) {
   const target = findGlobalContinuationRound(chatId, scriptId, branchKey, roundKey);
   if (!target) return false;
   continuationHistoryView = { chatId, scriptId, branchKey, roundKey };
-  pendingGenerationScriptId = "";
+  setPendingGenerationScriptId("");
   const scriptName = target.session.scriptName || GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
   lockDisplayToContent(target.round.content, scriptId, scriptName);
   renderGeneratedContent(target.round.content, scriptName);
@@ -33002,19 +34424,21 @@ async function openContinuationHistory(preferredScriptId = "") {
         const instructionPreview = getContinuationInstructionPreview(instruction);
         const canRegenerate = round.type !== "initial";
         const isCurrentChat = session.chatId === currentSource.chatId;
+        const crossRoleHint = !isCurrentChat ? `<div class="t-cont-history-cross-hint">\u6765\u81EA\u300C${escapeHtmlText2(session.characterName)}\u300D\u7684\u5267\u60C5 \xB7 \u63A5\u6F14\u4F1A\u590D\u5236\u5230\u5F53\u524D\u804A\u5929\u7684\u65B0\u5206\u652F\uFF0C\u539F\u5206\u652F\u4E0D\u53D8</div>` : "";
         return `<article class="t-cont-history-round" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}" data-round-key="${escapeHtmlText2(round.roundKey)}">
                     <div class="t-cont-history-round-head">
-                         <span class="t-cont-select-wrap">${selectionCheckbox("round", session.chatId, session.scriptId, branch.branchKey, round.roundKey, round.type === "initial")}</span>
+                         <span class="t-cont-select-wrap">${selectionCheckbox("round", session.chatId, session.scriptId, branch.branchKey, round.roundKey, false)}</span>
                         <div class="t-cont-history-round-title"><strong>${escapeHtmlText2(label)}</strong><span>${round.contentLength} \u5B57\u7B26</span></div>
                         <button class="t-cont-history-toggle" title="\u5C55\u5F00\u5185\u5BB9"><i class="fa-solid fa-chevron-down"></i></button>
                     </div>
                     <div class="t-cont-history-instruction" title="${escapeHtmlText2(instructionPreview)}">${escapeHtmlText2(instructionPreview)}</div>
                     <div class="t-cont-history-preview">${escapeHtmlText2(round.contentPreview || "\u65E0\u6587\u672C\u6458\u8981")}</div>
                     <div class="t-cont-history-full" hidden><iframe sandbox="" title="${escapeHtmlText2(label)}\u5185\u5BB9\u9884\u89C8"></iframe></div>
+                    ${crossRoleHint}
                     <div class="t-cont-history-actions">
                         <button class="t-btn t-cont-history-show"><i class="fa-solid fa-arrow-up-right-from-square"></i> \u8DF3\u8F6C\u5230\u6B64\u5185\u5BB9</button>
-                        ${isCurrentChat && canRegenerate ? '<button class="t-btn t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn primary t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
-                        ${!isCurrentChat ? '<button class="t-btn primary t-cont-history-visit"><i class="fa-solid fa-person-walking-arrow-right"></i> \u5E26\u5165\u5F53\u524D\u89D2\u8272\u7EED\u5199</button><button class="t-btn t-cont-history-visit-edit"><i class="fa-solid fa-pen"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u5E26\u5165</button>' : ""}
+                        ${isCurrentChat && canRegenerate ? '<button class="t-btn t-btn-soft t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
+                        ${!isCurrentChat ? '<button class="t-btn t-btn-soft t-cont-history-visit"><i class="fa-solid fa-theater-masks"></i> \u8BA9\u5F53\u524D\u89D2\u8272\u63A5\u6F14</button><button class="t-btn t-cont-history-visit-edit"><i class="fa-solid fa-pen"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u63A5\u6F14</button>' : ""}
                     </div>
                 </article>`;
       }).join("");
@@ -33042,7 +34466,7 @@ async function openContinuationHistory(preferredScriptId = "") {
         </section>`;
   }).join("");
   $("#t-main-view").append(`<div id="t-continuation-history" class="t-cont-history-panel ${continuationHistoryManaging ? "is-managing" : ""}">
-        <div class="t-cont-history-header"><div class="t-cont-history-heading"><i class="fa-solid fa-clock-rotate-left"></i><strong>${continuationHistoryManaging ? "\u6279\u91CF\u7BA1\u7406" : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2"}</strong><span>${continuationHistoryManaging ? "\u52FE\u9009\u8981\u5220\u9664\u7684\u5267\u672C\u3001\u5206\u652F\u6216\u8F6E\u6B21" : `${sessions.length} \u4E2A\u5267\u672C \xB7 ${sessions.reduce((sum, item) => sum + item.roundCount, 0)} \u8F6E`}</span></div><div class="t-cont-history-header-actions">${continuationHistoryManaging ? '<button class="t-btn" id="t-cont-history-select-all"><i class="fa-solid fa-check-double"></i> \u5168\u9009</button><button class="t-btn" id="t-cont-history-manage-cancel">\u53D6\u6D88</button>' : `<select id="t-cont-history-scope" class="t-cont-history-scope" title="\u5386\u53F2\u8303\u56F4"><option value="all" ${continuationHistoryScope === "all" ? "selected" : ""}>\u5168\u90E8\u89D2\u8272</option><option value="character" ${continuationHistoryScope === "character" ? "selected" : ""}>\u5F53\u524D\u89D2\u8272</option><option value="chat" ${continuationHistoryScope === "chat" ? "selected" : ""}>\u5F53\u524D\u804A\u5929</option></select><button class="t-btn" id="t-cont-history-manage" title="\u6279\u91CF\u7BA1\u7406\u5386\u53F2"><i class="fa-solid fa-list-check"></i> \u7BA1\u7406</button><div class="t-cont-history-more-wrap"><button class="t-btn t-icon-btn" id="t-cont-history-more" title="\u66F4\u591A\u64CD\u4F5C" aria-label="\u66F4\u591A\u64CD\u4F5C" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="t-cont-history-more-menu" hidden><button id="t-cont-history-clear"><i class="fa-solid fa-trash-can"></i><span>\u6E05\u7A7A\u5F53\u524D\u804A\u5929\u5386\u53F2</span></button></div></div>`}<button class="t-close" id="t-cont-history-close">&times;</button></div></div>
+        <div class="t-cont-history-header"><div class="t-cont-history-heading"><i class="fa-solid fa-clock-rotate-left"></i><strong>${continuationHistoryManaging ? "\u6279\u91CF\u7BA1\u7406" : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2"}</strong><span>${continuationHistoryManaging ? "\u52FE\u9009\u8981\u5220\u9664\u7684\u5267\u672C\u3001\u5206\u652F\u6216\u8F6E\u6B21" : `${sessions.length} \u4E2A\u5267\u672C \xB7 ${sessions.reduce((sum, item) => sum + item.roundCount, 0)} \u8F6E`}</span></div><div class="t-cont-history-header-actions">${continuationHistoryManaging ? '<button class="t-btn" id="t-cont-history-select-all"><i class="fa-solid fa-check-double"></i> \u5168\u9009</button><button class="t-btn" id="t-cont-history-manage-cancel">\u9000\u51FA</button>' : `<select id="t-cont-history-scope" class="t-cont-history-scope" title="\u5386\u53F2\u8303\u56F4"><option value="all" ${continuationHistoryScope === "all" ? "selected" : ""}>\u5168\u90E8\u89D2\u8272</option><option value="character" ${continuationHistoryScope === "character" ? "selected" : ""}>\u5F53\u524D\u89D2\u8272</option><option value="chat" ${continuationHistoryScope === "chat" ? "selected" : ""}>\u5F53\u524D\u804A\u5929</option></select><button class="t-btn" id="t-cont-history-manage" title="\u6279\u91CF\u7BA1\u7406\u5386\u53F2"><i class="fa-solid fa-list-check"></i> \u7BA1\u7406</button>`}<button class="t-close" id="t-cont-history-close">&times;</button></div></div>
         <div class="t-cont-history-body">${sessionsHtml || '<div class="t-cont-history-empty">\u5F53\u524D\u7B5B\u9009\u8303\u56F4\u5185\u6CA1\u6709\u8BB0\u5F55</div>'}</div>
         ${continuationHistoryManaging ? '<div class="t-cont-history-bulk-bar"><span id="t-cont-history-selection-count">\u5DF2\u9009\u62E9 0 \u9879</span><button class="t-btn danger" id="t-cont-history-delete-selected" disabled><i class="fa-solid fa-trash-can"></i> \u5220\u9664\u6240\u9009</button></div>' : ""}
     </div>`);
@@ -33057,18 +34481,6 @@ async function openContinuationHistory(preferredScriptId = "") {
   $("#t-cont-history-scope").on("change", function() {
     continuationHistoryScope = String($(this).val() || "all");
     openContinuationHistory(preferredScriptId);
-  });
-  $("#t-cont-history-more").on("click", function(event) {
-    event.stopPropagation();
-    const $menu = $panel.find(".t-cont-history-more-menu");
-    const shouldOpen = $menu.prop("hidden");
-    $menu.prop("hidden", !shouldOpen);
-    $(this).attr("aria-expanded", String(shouldOpen));
-  });
-  $panel.on("click", ".t-cont-history-more-menu", (event) => event.stopPropagation());
-  $panel.on("click", function() {
-    $("#t-cont-history-more").attr("aria-expanded", "false");
-    $panel.find(".t-cont-history-more-menu").prop("hidden", true);
   });
   $("#t-cont-history-manage").on("click", () => {
     continuationHistoryManaging = true;
@@ -33118,8 +34530,11 @@ async function openContinuationHistory(preferredScriptId = "") {
     if (selector) $panel.find(selector).prop("checked", $check.prop("checked"));
     updateBulkSelection();
   });
-  $("#t-cont-history-select-all").on("click", () => {
-    $panel.find(".t-cont-select:not(:disabled)").prop("checked", true);
+  $("#t-cont-history-select-all").on("click", function() {
+    const $checks = $panel.find(".t-cont-select:not(:disabled)");
+    const allChecked = $checks.length > 0 && $checks.filter(":checked").length === $checks.length;
+    $checks.prop("checked", !allChecked);
+    $(this).html(allChecked ? '<i class="fa-solid fa-check-double"></i> \u5168\u9009' : '<i class="fa-solid fa-circle-xmark"></i> \u53D6\u6D88\u5168\u9009');
     updateBulkSelection();
   });
   $("#t-cont-history-delete-selected").on("click", async function() {
@@ -33153,21 +34568,6 @@ async function openContinuationHistory(preferredScriptId = "") {
       console.error("Titania: \u6279\u91CF\u5220\u9664\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", error);
       $(this).prop("disabled", false);
       if (window.toastr) toastr.error("\u6279\u91CF\u5220\u9664\u5931\u8D25", "Titania");
-    }
-  });
-  $("#t-cont-history-clear").on("click", async function() {
-    const confirmed = window.confirm("\u786E\u5B9A\u6E05\u7A7A\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002");
-    if (!confirmed) return;
-    $(this).prop("disabled", true);
-    try {
-      await clearContinuationForCurrentChat();
-      continuationHistoryView = null;
-      closePanel2();
-      if (window.toastr) toastr.success("\u5F53\u524D\u804A\u5929\u7684\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5DF2\u6E05\u7A7A", "Titania");
-    } catch (error) {
-      console.error("Titania: \u6E05\u7A7A\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", error);
-      $(this).prop("disabled", false);
-      if (window.toastr) toastr.error("\u6E05\u7A7A\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", "Titania");
     }
   });
   $(document).off("keydown.tcontinuationhistory").on("keydown.tcontinuationhistory", function(event) {
@@ -33233,9 +34633,9 @@ async function openContinuationHistory(preferredScriptId = "") {
       }
       instruction = String(composeResult.instruction || "").trim();
     }
-    const confirmed = window.confirm(`\u5C06\u5F53\u524D\u89D2\u8272\u5E26\u5165\u201C${target.session.characterName}\u201D\u7684\u5386\u53F2\u5267\u60C5\u5E76\u521B\u5EFA\u5F53\u524D\u804A\u5929\u7684\u65B0\u5206\u652F\u3002
+    const confirmed = window.confirm(`\u8BA9\u5F53\u524D\u89D2\u8272\u63A5\u6F14\u300C${target.session.characterName}\u300D\u7684\u8FD9\u6BB5\u5267\u60C5\uFF1F
 
-\u539F\u59CB\u5206\u652F\u4E0D\u4F1A\u88AB\u4FEE\u6539\u3002`);
+\u5C06\u5728\u5F53\u524D\u804A\u5929\u521B\u5EFA\u65B0\u5206\u652F\uFF0C\u539F\u5206\u652F\u4E0D\u4F1A\u88AB\u4FEE\u6539\u3002`);
     if (!confirmed) {
       if (historyPanelClosed) await openContinuationHistory(target.session.scriptId);
       return;
@@ -33274,8 +34674,8 @@ function updateDesc() {
   const s = GlobalState.runtimeScripts.find((x) => x.id === $("#t-sel-script").val());
   if (s) $("#t-txt-desc").val(s.desc);
 }
-function applyScriptSelection(id, options = {}) {
-  const s = GlobalState.runtimeScripts.find((x) => x.id === id);
+function applyScriptSelection(id3, options = {}) {
+  const s = GlobalState.runtimeScripts.find((x) => x.id === id3);
   if (!s) return;
   const shouldTrackSelection = options.trackSelection === true;
   if (shouldTrackSelection) {
@@ -33283,8 +34683,8 @@ function applyScriptSelection(id, options = {}) {
   }
   GlobalState.lastUsedScriptId = s.id;
   if (options.pendingGeneration === true) {
-    pendingGenerationScriptId = s.id;
-    continuationQuickDraft = "";
+    setPendingGenerationScriptId(s.id);
+    setContinuationQuickDraft("");
     $("#t-continuation-quick-input").val("");
     if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
   }
@@ -33302,7 +34702,7 @@ function applyScriptSelection(id, options = {}) {
 }
 async function openMainWindow() {
   if ($("#t-overlay").length) return;
-  pendingGenerationScriptId = "";
+  setPendingGenerationScriptId("");
   const defaultCtx = { charName: "\u52A0\u8F7D\u4E2D...", userName: "\u7528\u6237" };
   let data;
   try {
@@ -33314,187 +34714,10 @@ async function openMainWindow() {
   GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
   GlobalState.generationMode = ["narrative", "visual", "preset"].includes(data.config?.generation_mode) ? data.config.generation_mode : "narrative";
   const placeholderContent = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
-  const html = `
-    <div id="t-overlay" class="t-overlay">
-        <div class="t-box" id="t-main-view">
-            
-            <div class="t-header" style="flex-shrink:0;">
-                <div class="t-title-container" style="display:flex; flex-direction:column; overflow:hidden;">
-                    <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
-                    <div class="t-title-sub" id="t-title-sub">
-                        \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; flex-shrink:0;">
-                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
-                    <i class="fa-solid fa-book-atlas t-icon-btn" id="t-btn-worldinfo" title="\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009"></i>
-                    <i class="fa-solid fa-network-wired t-icon-btn" id="t-btn-profiles" title="\u5FEB\u901F\u5207\u6362API\u65B9\u6848"></i>
-                    <i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="\u8BBE\u7F6E"></i>
-                    <span class="t-close" id="t-btn-close">&times;</span>
-                </div>
-            </div>
-
-            <div class="t-top-bar">
-                <div class="t-history-toggle" id="t-history-toggle">
-                    <label class="t-toggle-label">
-                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
-                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
-                    </label>
-                </div>
-                <div class="t-mode-toggle" id="t-mode-toggle">
-                    <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
-                        <span>\u{1F4D6} \u5185\u5BB9\u4F18\u5148</span>
-                    </div>
-                    <div class="t-mode-btn ${GlobalState.generationMode === "visual" ? "active" : ""}" data-mode="visual">
-                        <span>\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316</span>
-                    </div>
-                    <div class="t-mode-btn ${GlobalState.generationMode === "preset" ? "active" : ""}" data-mode="preset" title="\u4F7F\u7528\u8BBE\u7F6E\u9875\u4E2D\u9009\u5B9A\u7684\u7528\u6237\u9884\u8BBE">
-                        <span>\u{1F4CB} \u9009\u7528\u9884\u8BBE</span>
-                    </div>
-                </div>
-                <div class="t-mobile-row">
-                    <div class="t-trigger-card" id="t-trigger-btn" title="\u70B9\u51FB\u5207\u6362\u5267\u672C">
-                        <div class="t-trigger-main">
-                            <span id="t-lbl-name" style="overflow:hidden; text-overflow:ellipsis;">\u52A0\u8F7D\u4E2D...</span>
-                        </div>
-                        <div class="t-trigger-sub">
-                            <span class="t-cat-tag" id="t-lbl-cat">\u5206\u7C7B</span>
-                            <span id="t-lbl-desc-mini">...</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-down t-chevron"></i>
-                    </div>
-                    
-                    <div class="t-action-group">
-                        <div class="t-filter-btn" id="t-btn-filter" title="\u7B5B\u9009\u968F\u673A\u8303\u56F4">
-                            <i class="fa-solid fa-filter"></i>
-                        </div>
-                        <div class="t-dice-btn" id="t-btn-dice" title="\u968F\u673A\u5267\u672C">\u{1F3B2}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="t-content-wrapper">
-                <div class="t-stats-hud" id="t-stats-hud" style="display:none;">
-                    <span class="t-stats-item"><span class="t-stats-label">\u6A21\u578B</span><span class="t-stats-value" id="t-stat-model">-</span></span>
-                    <span class="t-stats-sep">|</span>
-                    <span class="t-stats-item"><span class="t-stats-label">\u5B57\u7B26</span><span class="t-stats-value" id="t-stat-total">0</span></span>
-                    <span class="t-stats-sep">|</span>
-                    <span class="t-stats-item"><span class="t-stats-label">\u4E2D\u6587</span><span class="t-stats-value" id="t-stat-chinese">0</span></span>
-                    <span class="t-stats-sep">|</span>
-                    <span class="t-stats-item"><span class="t-stats-label">\u8017\u65F6</span><span class="t-stats-value" id="t-stat-time">-</span></span>
-                </div>
-                <div class="t-tools-rail" id="t-tools-rail">
-                    <button class="t-tools-icon" id="t-tool-zen" type="button" title="\u6C89\u6D78\u9605\u8BFB" aria-label="\u6C89\u6D78\u9605\u8BFB">
-                        <i class="fa-solid fa-expand"></i>
-                    </button>
-                    <button class="t-tools-icon" id="t-tool-edit-content" type="button" title="\u7F16\u8F91\u5185\u5BB9" aria-label="\u7F16\u8F91\u5185\u5BB9">
-                        <i class="fa-solid fa-pen-nib"></i>
-                    </button>
-                    <button class="t-tools-icon" id="t-btn-like" type="button" title="\u6536\u85CF\u7ED3\u679C" aria-label="\u6536\u85CF\u7ED3\u679C">
-                        <i class="fa-regular fa-heart"></i>
-                    </button>
-                </div>
-                <div class="t-content-area">
-                    <!-- \u7FFB\u9875\u6309\u94AE\u79FB\u5230\u5185\u5BB9\u533A\u4E24\u4FA7 -->
-                    <button class="t-page-nav t-page-prev" id="t-nav-prev" title="\u4E0A\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&lt;</button>
-                    <button class="t-page-nav t-page-next" id="t-nav-next" title="\u4E0B\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&gt;</button>
-                    <div class="t-page-indicator" id="t-page-indicator" style="display:none;">1/1</div>
-                    <div class="t-cont-inline-actions" id="t-cont-inline-actions" style="display:none;">
-                        <span id="t-cont-inline-label"></span>
-                        <div class="t-cont-inline-branch-menu" id="t-cont-inline-branch-menu">
-                            <div class="t-cont-inline-branch-option">
-                                <span>\u4FEE\u6539\u6307\u4EE4</span>
-                                <button id="t-cont-inline-edit-regenerate" type="button" title="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F" aria-label="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-pen"></i></button>
-                            </div>
-                            <div class="t-cont-inline-branch-option">
-                                <span>\u76F4\u63A5\u91CD\u751F\u6210</span>
-                                <button id="t-cont-inline-regenerate" type="button" title="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F" aria-label="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-rotate"></i></button>
-                            </div>
-                        </div>
-                        <button id="t-cont-inline-branch" type="button" title="\u5206\u652F\u64CD\u4F5C" aria-label="\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" aria-expanded="false"><i class="fa-solid fa-code-branch"></i></button>
-                    </div>
-                    <div id="t-output-content"></div>
-                </div>
-
-                <button class="t-toolbox-rail t-toolbox-toggle" type="button" title="\u5C55\u5F00\u5DE5\u5177\u7BB1" aria-label="\u5C55\u5F00\u5DE5\u5177\u7BB1" aria-expanded="false">
-                    <i class="fa-solid fa-toolbox"></i>
-                    <span>\u5DE5\u5177</span>
-                </button>
-                <div class="t-toolbox-backdrop" id="t-toolbox-backdrop"></div>
-                <aside class="t-toolbox-panel" id="t-toolbox-panel" aria-hidden="true">
-                    <div class="t-toolbox-header">
-                        <div><strong>\u5DE5\u5177\u7BB1</strong><span>\u521B\u4F5C\u8F85\u52A9\u4E0E\u6279\u91CF\u4EFB\u52A1</span></div>
-                        <button class="t-toolbox-close" id="t-toolbox-close" type="button" title="\u6536\u8D77\u5DE5\u5177\u7BB1" aria-label="\u6536\u8D77\u5DE5\u5177\u7BB1"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                    <div class="t-toolbox-body">
-                        <section class="t-toolbox-section">
-                            <div class="t-toolbox-section-title">\u5185\u5BB9\u64CD\u4F5C</div>
-                            <div class="t-toolbox-grid">
-                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-copy" type="button"><i class="fa-regular fa-copy"></i><span>\u590D\u5236\u6E90\u7801</span></button>
-                            </div>
-                        </section>
-                        <section class="t-toolbox-section">
-                            <div class="t-toolbox-section-title">\u5267\u672C\u7BA1\u7406</div>
-                            <div class="t-toolbox-grid">
-                                <button class="t-toolbox-action" id="t-btn-new" type="button"><i class="fa-solid fa-plus"></i><span>\u65B0\u5EFA\u5267\u672C</span></button>
-                                <button class="t-toolbox-action" id="t-btn-edit" type="button"><i class="fa-solid fa-pen-to-square"></i><span>\u7F16\u8F91\u5267\u672C</span></button>
-                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-regenerate" type="button"><i class="fa-solid fa-rotate"></i><span>\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C</span></button>
-                            </div>
-                        </section>
-                        <section class="t-toolbox-section">
-                            <div class="t-toolbox-section-title">\u961F\u5217\u751F\u6210</div>
-                            <div class="t-toolbox-grid">
-                                <button class="t-toolbox-action t-toolbox-queue" id="t-btn-run-queue" type="button"><i class="fa-solid fa-layer-group"></i><span>\u5F00\u59CB\u961F\u5217</span></button>
-                                <button class="t-toolbox-action" id="t-btn-queue-settings" type="button"><i class="fa-solid fa-sliders"></i><span>\u961F\u5217\u8BBE\u7F6E</span></button>
-                            </div>
-                        </section>
-                        <section class="t-toolbox-section">
-                            <div class="t-toolbox-section-title">\u68C0\u67E5\u4E0E\u8BCA\u65AD</div>
-                            <div class="t-toolbox-grid">
-                                <button class="t-toolbox-action" id="t-btn-debug" type="button"><i class="fa-solid fa-eye"></i><span>\u5BA1\u67E5 Prompt</span></button>
-                                <button class="t-toolbox-action t-btn-diag" id="t-btn-diagnostics" type="button"><i class="fa-solid fa-stethoscope"></i><span>\u8BCA\u65AD\u65E5\u5FD7</span></button>
-                            </div>
-                        </section>
-                    </div>
-                    <button class="t-toolbox-stop" id="t-btn-stop" type="button"><i class="fa-solid fa-stop"></i><span>\u4E2D\u6B62\u5F53\u524D\u751F\u6210</span></button>
-                </aside>
-            </div>
-
-            <div class="t-bottom-bar">
-                <div class="t-continuation-quick">
-                    <button class="t-continuation-history-btn" id="t-btn-continuation-history" type="button" title="\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2" aria-label="\u6253\u5F00\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2">
-                        <i class="fa-solid fa-clock-rotate-left"></i><span id="t-continuation-history-count">0</span>
-                    </button>
-                    <div class="t-continuation-input-wrap">
-                        <textarea id="t-continuation-quick-input" rows="1" placeholder="\u8F93\u5165\u7EED\u5199\u6307\u4EE4..." aria-label="\u7EED\u5199\u6307\u4EE4"></textarea>
-                        <div class="t-continuation-suggestions" id="t-continuation-suggestions" hidden>
-                            <div class="t-continuation-suggestions-head"><span>\u6700\u8FD1\u4F7F\u7528</span><button id="t-btn-continuation-compose" type="button"><i class="fa-solid fa-expand"></i> \u5B8C\u6574\u7F16\u8F91\u5668</button></div>
-                            <div class="t-continuation-suggestions-list" id="t-continuation-suggestions-list"></div>
-                        </div>
-                    </div>
-                    <button class="t-continuation-context-btn" id="t-btn-continuation-context" type="button" title="\u7EED\u5199\u4E0A\u4E0B\u6587" aria-label="\u8BBE\u7F6E\u7EED\u5199\u4E0A\u4E0B\u6587" aria-expanded="false">
-                        <i class="fa-solid fa-layer-group"></i><span id="t-continuation-context-count">${getContinuationDefaultInjectCount()}</span>
-                    </button>
-                    <button class="t-continuation-send" id="t-btn-continuation-send" type="button" title="\u53D1\u9001" aria-label="\u53D1\u9001">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                    <div class="t-continuation-context-popover" id="t-continuation-context-popover" hidden>
-                        <div class="t-continuation-context-head"><strong>\u7EED\u5199\u4E0A\u4E0B\u6587</strong><span>\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u8BB0\u5F55</span></div>
-                        <div class="t-continuation-stepper">
-                            <button id="t-continuation-context-minus" type="button" aria-label="\u51CF\u5C11\u7EED\u5199\u4E0A\u4E0B\u6587"><i class="fa-solid fa-minus"></i></button>
-                            <span><strong id="t-continuation-context-value">${getContinuationDefaultInjectCount()}</strong> \u8F6E</span>
-                            <button id="t-continuation-context-plus" type="button" aria-label="\u589E\u52A0\u7EED\u5199\u4E0A\u4E0B\u6587"><i class="fa-solid fa-plus"></i></button>
-                        </div>
-                        <div class="t-continuation-context-stats" id="t-continuation-context-stats"></div>
-                    </div>
-                </div>
-                <button class="t-mobile-toolbox-btn t-toolbox-toggle" type="button" title="\u6253\u5F00\u5DE5\u5177\u7BB1" aria-label="\u6253\u5F00\u5DE5\u5177\u7BB1" aria-expanded="false">
-                    <i class="fa-solid fa-toolbox"></i><span>\u5DE5\u5177</span>
-                </button>
-            </div>
-        </div>
-    </div>`;
-  $("body").append(html);
+  const layout = data.ui_prefs?.main_window_mode === "legacy" ? legacy_exports : modern_exports;
+  activeLayout = layout;
+  $("body").append(layout.renderHtml({ defaultCtx }));
+  $("#t-main-view").addClass(`t-layout-${layout.id}`);
   const outputContainer = document.getElementById("t-output-content");
   if (GlobalState.lastGeneratedContent) {
     const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
@@ -33504,59 +34727,6 @@ async function openMainWindow() {
   } else {
     outputContainer.innerHTML = placeholderContent;
   }
-  const updateFilterUI = () => {
-    const btn = $("#t-btn-filter");
-    const dice = $("#t-btn-dice");
-    if (GlobalState.currentCategoryFilter === "ALL") {
-      btn.removeClass("active-filter");
-      dice.removeClass("active-filter");
-      btn.attr("title", "\u5F53\u524D\uFF1A\u5168\u90E8\u5206\u7C7B");
-    } else {
-      btn.addClass("active-filter");
-      dice.addClass("active-filter");
-      btn.attr("title", `\u5F53\u524D\u9501\u5B9A\uFF1A${GlobalState.currentCategoryFilter}`);
-    }
-  };
-  const updateHistoryToggleUI = () => {
-    const $toggle = $("#t-history-toggle");
-    const $checkbox = $("#t-use-history");
-    if (GlobalState.useHistoryAnalysis) {
-      $toggle.addClass("active");
-    } else {
-      $toggle.removeClass("active");
-    }
-    $checkbox.prop("checked", GlobalState.useHistoryAnalysis);
-  };
-  const updateModeToggleUI = () => {
-    $(".t-mode-btn").removeClass("active");
-    $(`.t-mode-btn[data-mode="${GlobalState.generationMode}"]`).addClass("active");
-  };
-  const handleRandom = () => {
-    const allScripts = GlobalState.runtimeScripts;
-    if (allScripts.length === 0) {
-      if (window.toastr) toastr.warning("\u6682\u65E0\u53EF\u7528\u5267\u672C\u3002", "Titania");
-      $("#t-lbl-name").text("\u6682\u65E0\u5267\u672C");
-      $("#t-lbl-cat").text("\u65E0\u5206\u7C7B");
-      $("#t-lbl-desc-mini").text("\u8BF7\u521B\u5EFA\u6216\u5BFC\u5165\u5267\u672C");
-      return;
-    }
-    let pool = allScripts;
-    if (GlobalState.currentCategoryFilter !== "ALL") {
-      pool = pool.filter((s2) => (s2.category || (s2._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === GlobalState.currentCategoryFilter);
-    }
-    if (pool.length === 0) {
-      if (window.toastr) toastr.warning(`\u6CA1\u627E\u5230 [${GlobalState.currentCategoryFilter}] \u5206\u7C7B\u7684\u5267\u672C\uFF0C\u5DF2\u5207\u6362\u5230\u5168\u90E8\u3002`, "Titania");
-      GlobalState.currentCategoryFilter = "ALL";
-      updateFilterUI();
-      pool = allScripts;
-    }
-    const rnd = Math.floor(Math.random() * pool.length);
-    const s = pool[rnd];
-    applyScriptSelection(s.id, { trackSelection: false, pendingGeneration: true });
-    const dice = $("#t-btn-dice");
-    dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
-    setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
-  };
   $("#t-use-history").on("change", function() {
     GlobalState.useHistoryAnalysis = $(this).is(":checked");
     updateHistoryToggleUI();
@@ -33631,12 +34801,12 @@ async function openMainWindow() {
   const runContinuation = async (composeResult) => {
     if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
       if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
-      return;
+      return false;
     }
-    if (composeResult === null) return;
+    if (composeResult === null) return false;
     if (composeResult?.openHistory) {
       openContinuationHistory(composeResult.scriptId);
-      return;
+      return false;
     }
     const normalizedInstruction = String(composeResult?.instruction || "").trim();
     const injectRoundsCount = clampInjectRoundsCount(composeResult?.injectRoundsCount ?? getContinuationDefaultInjectCount());
@@ -33672,182 +34842,8 @@ async function openMainWindow() {
       crossRoleSource: isCrossChatHistory ? historyTarget.session.characterName : "",
       fromCurrentView: true
     });
+    return true;
   };
-  const $quickInput = $("#t-continuation-quick-input");
-  const $suggestions = $("#t-continuation-suggestions");
-  const $contextPopover = $("#t-continuation-context-popover");
-  let quickInjectRounds = getContinuationDefaultInjectCount();
-  const getQuickScriptId = () => {
-    const display = getCurrentDisplayContent();
-    return display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || "";
-  };
-  const resizeQuickInput = () => {
-    const input = $quickInput.get(0);
-    if (!input) return;
-    input.style.height = "auto";
-    input.style.height = `${Math.min(input.scrollHeight, 88)}px`;
-  };
-  const getQuickAction = () => {
-    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return "stop";
-    const display = getCurrentDisplayContent();
-    if (pendingGenerationScriptId || !display?.content?.trim()) return "generate";
-    return String($quickInput.val() || "").trim() ? "instruct" : "continue";
-  };
-  const updateQuickSendState = () => {
-    continuationQuickDraft = String($quickInput.val() || "");
-    const action = getQuickAction();
-    const scriptName = GlobalState.runtimeScripts.find((item) => item.id === (pendingGenerationScriptId || GlobalState.lastUsedScriptId))?.name || "\u5F53\u524D\u5267\u672C";
-    const config = {
-      generate: { icon: "fa-solid fa-clapperboard", title: "\u6F14\u7ECE\u5F53\u524D\u5267\u672C", placeholder: `\u51C6\u5907\u6F14\u7ECE\u300A${scriptName}\u300B` },
-      continue: { icon: "fa-solid fa-forward-step", title: "\u81EA\u7136\u7EED\u5199", placeholder: "\u8F93\u5165\u7EED\u5199\u6307\u4EE4\uFF0C\u7559\u7A7A\u81EA\u7136\u7EED\u5199..." },
-      instruct: { icon: "fa-solid fa-paper-plane", title: "\u6309\u6307\u4EE4\u7EED\u5199", placeholder: "\u8F93\u5165\u7EED\u5199\u6307\u4EE4\uFF0C\u7559\u7A7A\u81EA\u7136\u7EED\u5199..." },
-      stop: { icon: "fa-solid fa-stop", title: "\u4E2D\u6B62\u5F53\u524D\u751F\u6210", placeholder: "\u6B63\u5728\u751F\u6210..." }
-    }[action];
-    $("#t-btn-continuation-send").attr({ title: config.title, "aria-label": config.title, "data-action": action }).toggleClass("is-stop", action === "stop").prop("disabled", false).find("i").attr("class", config.icon);
-    $quickInput.attr("placeholder", config.placeholder).prop("disabled", action === "generate" || action === "stop");
-    $("#t-btn-continuation-context").prop("disabled", action === "generate" || action === "stop");
-    resizeQuickInput();
-  };
-  const renderRecentSuggestions = () => {
-    const query = String($quickInput.val() || "").trim().toLowerCase();
-    const recent = getContinuationRecentInstructions().filter((item) => !query || item.toLowerCase().includes(query)).slice(0, 5);
-    const html2 = recent.length ? recent.map((item) => `<button type="button" class="t-continuation-suggestion" data-text="${encodeURIComponent(item)}" title="${escapeHtmlText2(item)}">${escapeHtmlText2(item)}</button>`).join("") : '<div class="t-continuation-suggestions-empty">\u6682\u65E0\u5339\u914D\u7684\u6700\u8FD1\u6307\u4EE4</div>';
-    $("#t-continuation-suggestions-list").html(html2);
-  };
-  const updateContextPopover = () => {
-    const stats = getContinuationSessionStats(getQuickScriptId(), quickInjectRounds);
-    $("#t-continuation-context-count, #t-continuation-context-value").text(quickInjectRounds);
-    $("#t-continuation-context-stats").html(`\u5F53\u524D\u7EED\u5199\u94FE ${stats.totalRounds} \u8F6E<br>\u9884\u8BA1\u6CE8\u5165 ${stats.estimatedChars.toLocaleString()} \u5B57 \xB7 \u7EA6 ${stats.estimatedTokens.toLocaleString()} tokens`).toggleClass("is-warning", stats.estimatedTokens > CONTINUATION_TOKEN_WARN_THRESHOLD);
-    $("#t-continuation-context-minus").prop("disabled", quickInjectRounds <= CONTINUATION_MIN_INJECT_ROUNDS);
-    $("#t-continuation-context-plus").prop("disabled", quickInjectRounds >= CONTINUATION_MAX_INJECT_ROUNDS);
-  };
-  const setContextPopoverOpen = (open) => {
-    $contextPopover.prop("hidden", !open);
-    $("#t-btn-continuation-context").attr("aria-expanded", String(open)).toggleClass("active", open);
-    if (open) {
-      $suggestions.prop("hidden", true);
-      updateContextPopover();
-    }
-  };
-  const refreshContinuationHistoryCount = async () => {
-    try {
-      const source = getCurrentContinuationSource();
-      const sessions = await listAllContinuationSessions();
-      const count = sessions.filter((session) => session.chatId === source.chatId).reduce((total, session) => total + session.branches.reduce((sum, branch) => sum + Math.max(0, branch.rounds.length - 1), 0), 0);
-      $("#t-continuation-history-count").text(count > 99 ? "99+" : count);
-      $("#t-btn-continuation-history").attr("title", count ? `\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2\uFF08${count} \u8F6E\uFF09` : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2");
-    } catch (error) {
-      console.warn("Titania: \u8BFB\u53D6\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6570\u91CF\u5931\u8D25", error);
-    }
-  };
-  const submitQuickAction = async () => {
-    const action = getQuickAction();
-    if (action === "stop") {
-      if (GlobalState.isGenerating) cancelGeneration();
-      else if (GlobalState.queueState.isRunning) cancelQueueGeneration();
-      return;
-    }
-    if (action === "generate") {
-      const scriptId = pendingGenerationScriptId || GlobalState.lastUsedScriptId;
-      if (!scriptId) {
-        if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
-        return;
-      }
-      pendingGenerationScriptId = "";
-      closeWindow();
-      handleGenerate(scriptId, false);
-      return;
-    }
-    const instruction = String($quickInput.val() || "").trim();
-    $suggestions.prop("hidden", true);
-    setContextPopoverOpen(false);
-    const success = await runContinuation({ instruction, injectRoundsCount: quickInjectRounds });
-    if (success) {
-      continuationQuickDraft = "";
-      $quickInput.val("");
-      updateQuickSendState();
-    }
-    refreshContinuationHistoryCount();
-  };
-  $quickInput.val(continuationQuickDraft).on("input", () => {
-    updateQuickSendState();
-    renderRecentSuggestions();
-  }).on("focus", () => {
-    renderRecentSuggestions();
-    $suggestions.prop("hidden", false);
-    setContextPopoverOpen(false);
-  }).on("keydown", (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      submitQuickAction();
-    }
-  });
-  $("#t-btn-continuation-send").on("click", submitQuickAction);
-  $("#t-btn-continuation-history").on("click", () => {
-    $suggestions.prop("hidden", true);
-    setContextPopoverOpen(false);
-    openContinuationHistory(getQuickScriptId());
-  });
-  $("#t-btn-continuation-context").on("click", (event) => {
-    event.stopPropagation();
-    setContextPopoverOpen($contextPopover.prop("hidden"));
-  });
-  $("#t-continuation-context-minus, #t-continuation-context-plus").on("click", function() {
-    quickInjectRounds = clampInjectRoundsCount(quickInjectRounds + ($(this).is("#t-continuation-context-plus") ? 1 : -1));
-    saveContinuationDefaultInjectCount(quickInjectRounds);
-    updateContextPopover();
-  });
-  $("#t-continuation-suggestions-list").on("click", ".t-continuation-suggestion", function() {
-    $quickInput.val(decodeURIComponent($(this).attr("data-text") || "")).trigger("input").trigger("focus");
-    $suggestions.prop("hidden", true);
-  });
-  $("#t-btn-continuation-compose").on("click", async () => {
-    $suggestions.prop("hidden", true);
-    const result = await openContinuationComposer(String($quickInput.val() || ""));
-    if (!result) return;
-    if (result.openHistory) {
-      openContinuationHistory(result.scriptId);
-      return;
-    }
-    $quickInput.val(String(result.instruction || "")).trigger("input");
-    quickInjectRounds = clampInjectRoundsCount(result.injectRoundsCount ?? quickInjectRounds);
-    updateContextPopover();
-    await submitQuickAction();
-  });
-  $(document).on("click.tcontinuationquick", (event) => {
-    if (!$(event.target).closest(".t-continuation-input-wrap").length) $suggestions.prop("hidden", true);
-    if (!$(event.target).closest("#t-continuation-context-popover, #t-btn-continuation-context").length) setContextPopoverOpen(false);
-  });
-  updateQuickSendState();
-  updateContextPopover();
-  refreshContinuationHistoryCount();
-  const setToolboxOpen = (open) => {
-    $("#t-main-view").toggleClass("t-toolbox-open", open);
-    $("#t-toolbox-panel").attr("aria-hidden", String(!open));
-    $(".t-toolbox-toggle").attr("aria-expanded", String(open));
-  };
-  $(".t-toolbox-toggle").on("click", (event) => {
-    event.stopPropagation();
-    setToolboxOpen(!$("#t-main-view").hasClass("t-toolbox-open"));
-  });
-  $("#t-toolbox-close, #t-toolbox-backdrop").on("click", () => setToolboxOpen(false));
-  $("#t-toolbox-panel").on("click", ".t-toolbox-action", () => setToolboxOpen(false));
-  $(document).on("keydown.ttoolbox", (event) => {
-    if (event.key === "Escape" && $("#t-main-view").hasClass("t-toolbox-open")) {
-      setToolboxOpen(false);
-    }
-  });
-  const RAIL_PEEK_WIDTH = 150;
-  let railPeeking = false;
-  $(".t-content-wrapper").on("mousemove", function(event) {
-    const nearRight = this.getBoundingClientRect().right - event.clientX <= RAIL_PEEK_WIDTH;
-    if (nearRight === railPeeking) return;
-    railPeeking = nearRight;
-    $("#t-main-view").toggleClass("t-rail-peek", nearRight);
-  }).on("mouseleave", () => {
-    railPeeking = false;
-    $("#t-main-view").removeClass("t-rail-peek");
-  });
   const closeInlineBranchMenu = () => {
     $("#t-cont-inline-actions").removeClass("is-menu-open");
     $("#t-cont-inline-branch").attr({ "aria-expanded": "false", "aria-label": "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" });
@@ -33882,13 +34878,14 @@ async function openMainWindow() {
       $("#t-tool-zen").click();
     }
   });
-  const closeWindow = () => {
-    $(document).off("click.tinlinebranch");
-    $("#t-overlay").remove();
-    $(document).off("keydown.zenmode");
-    $(document).off("keydown.ttoolbox");
-    $(document).off("click.tcontinuationquick");
-  };
+  layout.bindEvents({
+    closeWindow,
+    registerTeardown,
+    runContinuation,
+    openContinuationHistory,
+    openContinuationComposer,
+    getCurrentContinuationSource
+  });
   $("#t-btn-close").on("click", closeWindow);
   $("#t-overlay").on("click", (e) => {
     if (e.target === e.currentTarget) closeWindow();
@@ -33906,19 +34903,6 @@ async function openMainWindow() {
       return;
     }
     openEditor(GlobalState.lastUsedScriptId, "main");
-  });
-  $("#t-btn-regenerate").on("click", () => {
-    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
-      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
-      return;
-    }
-    const scriptId = GlobalState.lastUsedScriptId || GlobalState.lastGeneratedScriptId;
-    if (!scriptId) {
-      if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
-      return;
-    }
-    closeWindow();
-    handleGenerate(scriptId, false);
   });
   $("#t-btn-copy").on("click", async () => {
     const container = document.getElementById("t-output-content");
@@ -33991,6 +34975,11 @@ async function openMainWindow() {
     }
   });
   $("#t-btn-like").on("click", () => {
+    if (!isFavoriteEligible(getCurrentGenerationResult())) {
+      if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u751F\u6210\u672A\u5B8C\u6210\uFF0C\u65E0\u6CD5\u6536\u85CF");
+      updateFavButtonUI();
+      return;
+    }
     if (GlobalState.lastFavId) {
       unsaveFavorite();
     } else {
@@ -34027,14 +35016,13 @@ async function openMainWindow() {
     const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
     if (canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1) {
       continuationHistoryView = null;
-      pendingGenerationScriptId = "";
+      setPendingGenerationScriptId("");
       const newIndex = canJumpFromLiveToHistory ? 0 : effectiveIndex + 1;
       lockDisplayToHistory(newIndex);
       const item = history.items[newIndex];
       if (item) {
         renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
-        GlobalState.lastGeneratedContent = item.content;
-        GlobalState.lastGeneratedScriptId = item.scriptId;
+        setCurrentGenerationResult({ ...item, status: item.status || "legacy" });
         GlobalState.lastFavId = item.favId || null;
       }
       updateSceneHistoryNav();
@@ -34051,7 +35039,7 @@ async function openMainWindow() {
     let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
     if (effectiveIndex > 0) {
       continuationHistoryView = null;
-      pendingGenerationScriptId = "";
+      setPendingGenerationScriptId("");
       const newIndex = effectiveIndex - 1;
       if (newIndex === 0 && !streaming.isActive) {
         unlockDisplay();
@@ -34062,8 +35050,7 @@ async function openMainWindow() {
       const item = history.items[newIndex];
       if (item) {
         renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
-        GlobalState.lastGeneratedContent = item.content;
-        GlobalState.lastGeneratedScriptId = item.scriptId;
+        setCurrentGenerationResult({ ...item, status: item.status || "legacy" });
         GlobalState.lastFavId = item.favId || null;
       }
       updateSceneHistoryNav();
@@ -34072,7 +35059,7 @@ async function openMainWindow() {
       updateScriptTitleDisplay();
     } else if (effectiveIndex === 0 && streaming.isActive && display.isViewingHistory) {
       continuationHistoryView = null;
-      pendingGenerationScriptId = "";
+      setPendingGenerationScriptId("");
       unlockDisplay();
       if (streaming.content) {
         renderGeneratedContent(streaming.content, streaming.scriptName || "\u573A\u666F", true);
@@ -34114,22 +35101,11 @@ async function openMainWindow() {
   updateQueueButtonUI();
 }
 function updateRunButtonsState() {
-  const $queueBtn = $("#t-btn-run-queue");
-  const $secondaryContinuationBtns = $("#t-btn-continuation-compose, #t-btn-continuation-history");
-  const $stopBtn = $("#t-btn-stop");
-  if (!$queueBtn.length) return;
-  const isGenerating = GlobalState.isGenerating;
-  const isQueueRunning = GlobalState.queueState.isRunning;
-  if (isGenerating || isQueueRunning) {
-    $queueBtn.prop("disabled", true);
-    $secondaryContinuationBtns.prop("disabled", true);
-    $stopBtn.addClass("is-active");
-  } else {
-    $queueBtn.prop("disabled", false);
-    $secondaryContinuationBtns.prop("disabled", false);
-    $stopBtn.removeClass("is-active");
-  }
-  $("#t-continuation-quick-input").trigger("input");
+  if (!activeLayout) return;
+  activeLayout.syncRunButtons({
+    isGenerating: GlobalState.isGenerating,
+    isQueueRunning: GlobalState.queueState.isRunning
+  });
 }
 function updateQueueButtonUI() {
   const $queueBtn = $("#t-btn-run-queue");
@@ -34169,6 +35145,13 @@ function updateFavButtonUI() {
   const btn = $("#t-btn-like");
   if (!btn.length) return;
   const icon = btn.find("i");
+  const eligible = isFavoriteEligible(getCurrentGenerationResult());
+  btn.prop("disabled", !eligible);
+  if (!eligible) {
+    icon.attr("class", "fa-regular fa-heart").css("color", "#777");
+    btn.attr({ title: "\u5F53\u524D\u5185\u5BB9\u4E0D\u53EF\u6536\u85CF", "aria-label": "\u5F53\u524D\u5185\u5BB9\u4E0D\u53EF\u6536\u85CF" }).removeClass("is-faved");
+    return;
+  }
   if (GlobalState.lastFavId) {
     icon.attr("class", "fa-solid fa-heart").css("color", "#ff6b6b");
     btn.attr({ title: "\u53D6\u6D88\u6536\u85CF", "aria-label": "\u53D6\u6D88\u6536\u85CF" }).addClass("is-faved");
@@ -34473,6 +35456,11 @@ async function openWorldInfoSelector() {
                         <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-none">\u53D6\u6D88\u5168\u9009</button>
                     </div>
                 </div>
+                <div class="t-wi-entry-search" id="t-wi-entry-search">
+                    <i class="fa-solid fa-magnifying-glass t-wi-search-icon"></i>
+                    <input type="text" id="t-wi-entry-search-input" placeholder="\u641C\u7D22\u6761\u76EE\u6807\u9898..." autocomplete="off">
+                    <i class="fa-solid fa-xmark t-wi-search-clear" id="t-wi-entry-search-clear" title="\u6E05\u7A7A\u641C\u7D22"></i>
+                </div>
                 <div class="t-wi-entry-list" id="t-wi-entry-list">
                     ${visibleBooks.length === 0 ? '<div class="t-wi-empty">\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66</div>' : ""}
                 </div>
@@ -34487,6 +35475,7 @@ async function openWorldInfoSelector() {
   $("#t-main-view").append(html);
   let currentBookName = visibleBooks[0] || "";
   let currentEntries2 = [];
+  let entrySearchQuery = "";
   const activeSet = new Set(baseActiveBooks);
   const getAutoActiveBooksFromSelections = () => {
     return Object.keys(workingSelections).filter((bookName) => {
@@ -34529,10 +35518,33 @@ async function openWorldInfoSelector() {
     workingSelections[bookName] = Array.from(selectedSet);
     refreshActiveState();
   };
+  const getVisibleEntries = () => {
+    if (!entrySearchQuery) return currentEntries2;
+    const needle = entrySearchQuery.toLowerCase();
+    return currentEntries2.filter((entry) => String(entry.comment || "").toLowerCase().includes(needle));
+  };
+  const renderEntryTitle = (title) => {
+    const text = String(title || "");
+    if (!entrySearchQuery) return escapeHtmlText2(text);
+    const idx = text.toLowerCase().indexOf(entrySearchQuery.toLowerCase());
+    if (idx === -1) return escapeHtmlText2(text);
+    const before = text.slice(0, idx);
+    const hit = text.slice(idx, idx + entrySearchQuery.length);
+    const after = text.slice(idx + entrySearchQuery.length);
+    return `${escapeHtmlText2(before)}<span class="t-wi-title-hit">${escapeHtmlText2(hit)}</span>${escapeHtmlText2(after)}`;
+  };
+  const syncSelectAllLabels = () => {
+    const visibleCount = getVisibleEntries().length;
+    const suffix = entrySearchQuery ? ` (${visibleCount})` : "";
+    $("#t-wi-current-select-all").text(`\u5168\u9009${suffix}`);
+    $("#t-wi-current-select-none").text(`\u53D6\u6D88\u5168\u9009${suffix}`);
+  };
   const updateStat = () => {
     const selectedSet = getBookSelectedSet(currentBookName);
     const selectedCount = currentEntries2.filter((entry) => selectedSet.has(Number(entry.uid))).length;
-    $("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}`);
+    const filterNote = entrySearchQuery ? `\u3000\u7B5B\u9009\u51FA ${getVisibleEntries().length} \u6761` : "";
+    $("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}${filterNote}`);
+    syncSelectAllLabels();
   };
   const renderEntries = () => {
     const $body = $("#t-wi-entry-list");
@@ -34547,8 +35559,22 @@ async function openWorldInfoSelector() {
       updateStat();
       return;
     }
+    const visibleEntries = getVisibleEntries();
+    if (!visibleEntries.length) {
+      $body.append(`
+                <div class="t-wi-empty">
+                    <div>\u65E0\u5339\u914D\u6761\u76EE</div>
+                    <button type="button" class="t-btn t-btn-xs" id="t-wi-search-reset" style="margin-top:12px;">\u6E05\u7A7A\u641C\u7D22</button>
+                </div>
+            `);
+      $body.find("#t-wi-search-reset").on("click", () => {
+        $("#t-wi-entry-search-input").val("").trigger("input");
+      });
+      updateStat();
+      return;
+    }
     const selectedSet = getBookSelectedSet(currentBookName);
-    currentEntries2.forEach((entry) => {
+    visibleEntries.forEach((entry) => {
       const checked = selectedSet.has(Number(entry.uid));
       const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
       const disabledBadge = entry.isDisabled ? '<span style="background:#ff9f4333; color:#ffb968; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u9152\u9986\u4E2D\u5DF2\u7981\u7528</span>' : "";
@@ -34560,7 +35586,7 @@ async function openWorldInfoSelector() {
                     <div class="t-wi-entry-content">
                         <div class="t-wi-entry-title">
                             <span class="t-wi-uid">[${entry.uid}]</span>
-                            ${entry.comment}
+                            ${renderEntryTitle(entry.comment)}
                             ${constantBadge}
                             ${disabledBadge}
                         </div>
@@ -34610,7 +35636,7 @@ async function openWorldInfoSelector() {
   const bulkSelectCurrentBook = (checked) => {
     if (!currentBookName) return;
     const nextSet = getBookSelectedSet(currentBookName);
-    currentEntries2.forEach((entry) => {
+    getVisibleEntries().forEach((entry) => {
       const uid = Number(entry.uid);
       if (checked) nextSet.add(uid);
       else nextSet.delete(uid);
@@ -34645,6 +35671,9 @@ async function openWorldInfoSelector() {
   };
   const loadBookEntries = async (bookName) => {
     currentBookName = bookName || "";
+    entrySearchQuery = "";
+    $("#t-wi-entry-search-input").val("");
+    $("#t-wi-entry-search").removeClass("has-query");
     syncEntryPaneHeader();
     renderBookList();
     const $body = $("#t-wi-entry-list");
@@ -34683,6 +35712,19 @@ async function openWorldInfoSelector() {
   });
   $("#t-wi-current-select-all").on("click", () => bulkSelectCurrentBook(true));
   $("#t-wi-current-select-none").on("click", () => bulkSelectCurrentBook(false));
+  let entrySearchTimer = null;
+  $("#t-wi-entry-search-input").on("input", function() {
+    const raw = String($(this).val() || "");
+    $("#t-wi-entry-search").toggleClass("has-query", raw.length > 0);
+    clearTimeout(entrySearchTimer);
+    entrySearchTimer = setTimeout(() => {
+      entrySearchQuery = raw.trim();
+      renderEntries();
+    }, 120);
+  });
+  $("#t-wi-entry-search-clear").on("click", () => {
+    $("#t-wi-entry-search-input").val("").trigger("input").trigger("focus");
+  });
   $("#t-wi-save").on("click", () => {
     if (!currentBookName && !Object.keys(workingSelections).length) return;
     data.worldinfo.char_selections[charName] = workingSelections;
@@ -34801,8 +35843,9 @@ function showScriptSelector(initialFilter = "ALL") {
       $grid.append(`<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px;">${msg}</div>`);
       return;
     }
+    const readStats = createScriptStatsReader();
     filtered.forEach((s) => {
-      const stats = getScriptStats(s.id);
+      const stats = readStats(s.id);
       const card = $(`
                 <div class="t-script-card">
                     <div class="t-card-title">${s.name}</div>
@@ -34937,7 +35980,13 @@ function openContentEditor() {
     const previousContent = String(GlobalState.lastGeneratedContent || "");
     const newContent = $textarea.val();
     const scriptId = GlobalState.lastGeneratedScriptId;
-    GlobalState.lastGeneratedContent = newContent;
+    const currentResult = getCurrentGenerationResult();
+    setCurrentGenerationResult({
+      ...currentResult,
+      content: newContent,
+      scriptId,
+      status: currentResult?.status || "legacy"
+    });
     const display = GlobalState.displayState;
     const history = GlobalState.sceneHistory;
     const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
@@ -35175,7 +36224,7 @@ function getQueueScripts() {
     return [];
   }
   if (qState.mode === "manual") {
-    return qState.manualItems.map((id) => GlobalState.runtimeScripts.find((s) => s.id === id)).filter((s) => s).map((s) => ({ id: s.id, name: s.name }));
+    return qState.manualItems.map((id3) => GlobalState.runtimeScripts.find((s) => s.id === id3)).filter((s) => s).map((s) => ({ id: s.id, name: s.name }));
   } else {
     let pool = GlobalState.runtimeScripts;
     if (qState.categoryFilter !== "ALL") {
@@ -35192,7 +36241,7 @@ function disableQueueMode() {
   GlobalState.queueState.enabled = false;
   updateQueueButtonUI();
 }
-var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MIN_INJECT_ROUNDS, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, continuationHistoryView, continuationHistoryManaging, continuationHistorySelection, continuationGlobalSessions, continuationHistoryScope, continuationQuickDraft, pendingGenerationScriptId;
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, continuationHistoryView, continuationHistoryManaging, continuationHistorySelection, continuationGlobalSessions, continuationHistoryScope, layoutTeardownHooks, activeLayout;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -35208,6 +36257,9 @@ var init_mainWindow = __esm({
     init_helpers();
     init_continuationStore();
     init_scriptData();
+    init_viewState();
+    init_modern();
+    init_legacy();
     SORT_MODE_LABELS2 = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
@@ -35218,20 +36270,25 @@ var init_mainWindow = __esm({
       name_desc: "\u540D\u79F0 Z-A"
     };
     CONTINUATION_RECENT_MAX = 10;
-    CONTINUATION_MIN_INJECT_ROUNDS = 3;
-    CONTINUATION_MAX_INJECT_ROUNDS = 20;
-    CONTINUATION_TOKEN_WARN_THRESHOLD = 6e4;
     continuationHistoryView = null;
     continuationHistoryManaging = false;
     continuationHistorySelection = /* @__PURE__ */ new Set();
     continuationGlobalSessions = [];
     continuationHistoryScope = "all";
-    continuationQuickDraft = "";
-    pendingGenerationScriptId = "";
+    layoutTeardownHooks = [];
+    activeLayout = null;
   }
 });
 
 // src/ui/floatingBtn.js
+function refreshFloatTuckCache() {
+  try {
+    floatTuckEnabled = getExtData()?.appearance?.edge_tuck !== false;
+  } catch (e) {
+    floatTuckEnabled = true;
+  }
+  return floatTuckEnabled;
+}
 function getFloatingPositionMode() {
   return window.innerWidth <= FLOAT_POSITION_MOBILE_BREAKPOINT ? "mobile" : "desktop";
 }
@@ -35258,11 +36315,26 @@ function getFloatingPositionBounds(size) {
     travelY: Math.max(0, maxTop - minTop)
   };
 }
-function clampFloatingPosition(left, top, size) {
+function getFloatingPositionLimits(size) {
+  const safeSize = Math.max(1, Number(size) || 56);
   const bounds = getFloatingPositionBounds(size);
+  if (!floatTuckEnabled) {
+    return { minLeft: bounds.minLeft, maxLeft: bounds.maxLeft, minTop: bounds.minTop, maxTop: bounds.maxTop };
+  }
+  const hidden = safeSize * FLOAT_TUCK_RATIO;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
   return {
-    left: Math.max(bounds.minLeft, Math.min(bounds.maxLeft, Number(left) || 0)),
-    top: Math.max(bounds.minTop, Math.min(bounds.maxTop, Number(top) || 0))
+    minLeft: -hidden,
+    maxLeft: Math.max(-hidden, viewportWidth - safeSize + hidden),
+    minTop: bounds.minTop,
+    maxTop: bounds.maxTop
+  };
+}
+function clampFloatingPosition(left, top, size) {
+  const limits = getFloatingPositionLimits(size);
+  return {
+    left: Math.max(limits.minLeft, Math.min(limits.maxLeft, Number(left) || 0)),
+    top: Math.max(limits.minTop, Math.min(limits.maxTop, Number(top) || 0))
   };
 }
 function saveFloatingPosition(btn, size) {
@@ -35287,17 +36359,27 @@ function applyFloatingPosition(btn, size) {
   const hasSavedPosition = Number.isFinite(saved?.x) && Number.isFinite(saved?.y);
   const bounds = getFloatingPositionBounds(size);
   if (hasSavedPosition) {
-    const x = Math.max(0, Math.min(1, saved.x));
-    const y = Math.max(0, Math.min(1, saved.y));
-    btn.css({
-      left: `${bounds.minLeft + x * bounds.travelX}px`,
-      top: `${bounds.minTop + y * bounds.travelY}px`,
-      right: "auto"
-    });
+    const position2 = clampFloatingPosition(
+      bounds.minLeft + saved.x * bounds.travelX,
+      bounds.minTop + saved.y * bounds.travelY,
+      size
+    );
+    btn.css({ left: `${position2.left}px`, top: `${position2.top}px`, right: "auto" });
     return;
   }
   const position = clampFloatingPosition(FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, size);
   btn.css({ left: `${position.left}px`, top: `${position.top}px`, right: "auto" });
+}
+function refreshFloatingTuck() {
+  refreshFloatTuckCache();
+  const btn = $("#titania-float-btn");
+  if (!btn.length) return;
+  const size = btn.outerWidth() || parseInt(getExtData()?.appearance?.size) || 56;
+  const rect = btn[0].getBoundingClientRect();
+  const position = clampFloatingPosition(rect.left, rect.top, size);
+  btn.css({ transition: "none", left: `${position.left}px`, top: `${position.top}px`, right: "auto" });
+  saveFloatingPosition(btn, size);
+  updateTimerPosition();
 }
 function destroyFloatingButton() {
   $(document).off(".titaniaFloatDrag");
@@ -35488,7 +36570,7 @@ function createFloatingButton() {
   destroyFloatingButton();
   $("#titania-float-style").remove();
   const settings2 = getExtData();
-  if (typeof extension_settings !== "undefined" && extension_settings[extensionName] && !extension_settings[extensionName].enabled) {
+  if (settings2.enabled !== true) {
     return;
   }
   const app = settings2.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: "#90cdf4", bg_color: "#2b2b2b", border_opacity: 100, bg_opacity: 100 };
@@ -35531,6 +36613,7 @@ function createFloatingButton() {
   });
   $("body").append(btn);
   $("body").append(timer);
+  refreshFloatTuckCache();
   applyFloatingPosition(btn, size);
   let isDragging = false, startX, startY, initialLeft, initialTop;
   btn.on("touchstart mousedown", function(e) {
@@ -35557,9 +36640,7 @@ function createFloatingButton() {
     if (isDragging) {
       isDragging = false;
       startX = void 0;
-      btn.css({ "transition": "none" });
       saveFloatingPosition(btn, size);
-      updateTimerPosition();
       hideSlideMenu();
       return;
     }
@@ -35572,9 +36653,7 @@ function createFloatingButton() {
   $(document).on("touchend.titaniaFloatDrag mouseup.titaniaFloatDrag touchcancel.titaniaFloatDrag", function() {
     if (startX === void 0) return;
     if (isDragging) {
-      btn.css({ "transition": "none" });
       saveFloatingPosition(btn, size);
-      updateTimerPosition();
       hideSlideMenu();
     }
     startX = void 0;
@@ -35585,17 +36664,15 @@ function createFloatingButton() {
     floatResizeTimer = setTimeout(() => {
       floatResizeTimer = null;
       applyFloatingPosition(btn, size);
-      updateTimerPosition();
       hideSlideMenu();
     }, 120);
   });
 }
-var slideMenuVisible, FLOAT_POSITION_STORAGE_KEY, FLOAT_POSITION_MARGIN, FLOAT_POSITION_MOBILE_BREAKPOINT, FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, floatResizeTimer, TOOLBAR_BUTTONS, ANIMATION_CLASSES;
+var slideMenuVisible, FLOAT_POSITION_STORAGE_KEY, FLOAT_POSITION_MARGIN, FLOAT_POSITION_MOBILE_BREAKPOINT, FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, FLOAT_TUCK_RATIO, floatResizeTimer, floatTuckEnabled, TOOLBAR_BUTTONS, ANIMATION_CLASSES;
 var init_floatingBtn = __esm({
   "src/ui/floatingBtn.js"() {
     init_storage();
     init_state();
-    init_defaults();
     init_mainWindow();
     init_settingsWindow();
     slideMenuVisible = false;
@@ -35604,7 +36681,9 @@ var init_floatingBtn = __esm({
     FLOAT_POSITION_MOBILE_BREAKPOINT = 768;
     FLOAT_POSITION_DEFAULT_LEFT = 20;
     FLOAT_POSITION_DEFAULT_TOP = 100;
+    FLOAT_TUCK_RATIO = 0.5;
     floatResizeTimer = null;
+    floatTuckEnabled = true;
     TOOLBAR_BUTTONS = [
       {
         id: "main",
@@ -35703,9 +36782,6 @@ function clampContinuationInjectRounds(value) {
   if (!Number.isFinite(num)) return 3;
   return Math.max(CONTINUATION_INJECT_MIN, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
 }
-function estimateTokensByChars(charCount) {
-  return Math.ceil((Number(charCount) || 0) / 4);
-}
 function createContinuationBranchKey() {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 8);
@@ -35729,6 +36805,8 @@ function getContinuationSessionRounds(scriptId) {
     type: String(item?.type || "continuation"),
     instruction: String(item?.instruction || "").trim(),
     content: String(item?.content || "").trim(),
+    status: String(item?.status || "legacy"),
+    generationId: String(item?.generationId || ""),
     timestamp: Number(item?.timestamp) || 0
   })).filter((item) => item.content.length > 0);
 }
@@ -35748,6 +36826,8 @@ function normalizeContinuationRounds(rounds) {
       type: String(item?.type || (index === 0 ? "initial" : "continuation")),
       instruction: String(item?.instruction || "").trim(),
       content: String(item?.content || "").trim(),
+      status: String(item?.status || "legacy"),
+      generationId: String(item?.generationId || ""),
       timestamp: Number(item?.timestamp) || 0
     };
   }).filter((item) => item.content.length > 0).slice(0, CONTINUATION_SESSION_MAX_ROUNDS);
@@ -35832,6 +36912,8 @@ function setContinuationSessionBaseRound(scriptId, scriptName, content, options 
         type: "initial",
         instruction: instruction || "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
         content: textContent,
+        status: String(options?.status || "success"),
+        generationId: String(options?.generationId || ""),
         timestamp: Date.now()
       },
       ...continuationRounds
@@ -35844,7 +36926,7 @@ function setContinuationSessionBaseRound(scriptId, scriptName, content, options 
   }));
   scheduleContinuationPersistence();
 }
-function appendContinuationSessionRound(scriptId, scriptName, instruction, content) {
+function appendContinuationSessionRound(scriptId, scriptName, instruction, content, options = {}) {
   if (!scriptId) return;
   const textContent = String(content || "").trim();
   if (!textContent) return;
@@ -35867,6 +36949,8 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     type: "continuation",
     instruction: String(instruction || "").trim(),
     content: textContent,
+    status: String(options?.status || "success"),
+    generationId: String(options?.generationId || ""),
     timestamp: Date.now()
   });
   while (rounds.length > CONTINUATION_SESSION_MAX_ROUNDS) {
@@ -35954,7 +37038,7 @@ ${item.content}`;
     selectedRounds,
     text: block,
     estimatedChars,
-    estimatedTokens: estimateTokensByChars(estimatedChars)
+    estimatedTokens: estimateTokens(block)
   };
 }
 function buildContinuationBranchInjection(rounds) {
@@ -35981,7 +37065,7 @@ ${item.content}`;
     selectedRounds,
     text,
     estimatedChars: text.length,
-    estimatedTokens: estimateTokensByChars(text.length)
+    estimatedTokens: estimateTokens(text)
   };
 }
 function getContinuationSessionStats(scriptId, injectRoundsCount = 3) {
@@ -36190,7 +37274,7 @@ function getContinuationRoundsForFav(scriptId) {
     scriptId,
     scriptName: String(entry?.scriptName || "\u573A\u666F"),
     branchKey: String(entry?.branchKey || "").trim(),
-    rounds: getContinuationSessionRounds(scriptId)
+    rounds: getContinuationSessionRounds(scriptId).filter((item) => item.status === "success" || item.status === "legacy")
   };
 }
 function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
@@ -36380,8 +37464,7 @@ function showGenerationCompleteNotification(scriptName) {
     const latestItem = GlobalState.sceneHistory.items[0];
     if (latestItem) {
       renderGeneratedContent(latestItem.content, latestItem.scriptName || "\u573A\u666F", false);
-      GlobalState.lastGeneratedContent = latestItem.content;
-      GlobalState.lastGeneratedScriptId = latestItem.scriptId;
+      setCurrentGenerationResult({ ...latestItem, status: latestItem.status || "legacy" });
       GlobalState.lastFavId = latestItem.favId || null;
     }
     if (typeof window.updateSceneHistoryNav === "function") {
@@ -36652,7 +37735,7 @@ ${ctx.worldInfo}
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
       const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
-      const history = getChatHistory2(limit, historyWhitelist, historyBlacklist);
+      const history = getChatHistory(limit, historyWhitelist, historyBlacklist);
       const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
 \uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
 ${history}
@@ -36741,6 +37824,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   const cfg = data.config || {};
   const dirDefaults = data.director || { instruction: "" };
   const startTime = Date.now();
+  const generationId = `generation_${startTime}_${Math.random().toString(36).slice(2, 8)}`;
   let diagnostics = {
     phase: "init",
     profile: "",
@@ -36967,7 +38051,7 @@ ${ctx.worldInfo}
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
       const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
-      const history = getChatHistory2(limit, historyWhitelist, historyBlacklist);
+      const history = getChatHistory(limit, historyWhitelist, historyBlacklist);
       const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
 \uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
 ${history}
@@ -37269,8 +38353,15 @@ ${processedPrompt}`;
         const jsonText = await res.text();
         try {
           const json = JSON.parse(jsonText);
+          if (json?.error) {
+            throw new Error(json.error?.message || json.error || "ERR_API_RESPONSE");
+          }
+          if (!Array.isArray(json?.choices)) {
+            throw new Error("ERR_INVALID_API_RESPONSE");
+          }
           rawContent = json.choices?.[0]?.message?.content || "";
         } catch (jsonErr) {
+          if (["ERR_API_RESPONSE", "ERR_INVALID_API_RESPONSE"].some((code) => String(jsonErr?.message || "").includes(code))) throw jsonErr;
           throw new Error("Invalid JSON");
         }
       }
@@ -37362,10 +38453,12 @@ ${processedPrompt}`;
     }
     resetContinuationState();
     endStreamingCache();
-    pushSceneToHistory(finalOutput, script.id, script.name);
+    pushSceneToHistory(finalOutput, script.id, script.name, { status: "success", generationId });
     if (generationSource !== "user_continuation") {
       setContinuationSessionBaseRound(script.id, script.name, finalOutput, {
-        instruction: effectiveScriptInstruction
+        instruction: effectiveScriptInstruction,
+        status: "success",
+        generationId
       });
     }
     recordScriptGenerated(script.id, {
@@ -37426,18 +38519,22 @@ ${processedPrompt}`;
       }
       try {
         endStreamingCache();
-        pushSceneToHistory(partialOutput, script.id, script.name);
+        const partialStatus = isAbortError ? "aborted" : "partial";
+        pushSceneToHistory(partialOutput, script.id, script.name, { status: partialStatus, generationId, error: e?.message });
         partialSaved = true;
         if (generationSource === "user_continuation") {
           appendContinuationSessionRound(
             script.id,
             script.name,
             generationOverrides?.continuationInstruction || "\uFF08\u4E2D\u65AD\u540E\u4FDD\u7559\u7684\u7EED\u5199\uFF09",
-            partialOutput
+            partialOutput,
+            { status: partialStatus, generationId }
           );
         } else {
           setContinuationSessionBaseRound(script.id, script.name, partialOutput, {
-            instruction: effectiveScriptInstruction
+            instruction: effectiveScriptInstruction,
+            status: partialStatus,
+            generationId
           });
         }
         if (shouldRenderStreamToUI() && $("#t-output-content").length > 0) {
@@ -37495,7 +38592,7 @@ ${processedPrompt}`;
     } else if (errMsg.includes("quota") || errMsg.includes("limit") || errMsg.includes("429")) {
       diagnosisHint = "API \u914D\u989D\u4E0D\u8DB3\u6216\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\u3002\u8BF7\u7A0D\u540E\u91CD\u8BD5\u6216\u68C0\u67E5\u8D26\u6237\u4F59\u989D\u3002";
     }
-    const errHtml = `<div style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; background: rgba(255,107,107,0.1); border-radius:8px;">
+    const errHtml = `<div data-titania-result-status="failed" style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; background: rgba(255,107,107,0.1); border-radius:8px;">
             <div style="font-size:3em; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div style="font-weight:bold; margin-bottom:5px;">\u6F14\u7ECE\u51FA\u9519\u4E86</div>
             <div style="font-size:0.9em; margin-bottom:15px; color:#faa;">${errMsg}</div>
@@ -37504,8 +38601,14 @@ ${processedPrompt}`;
             </div>
         </div>`;
     if (!partialSaved) {
-      GlobalState.lastGeneratedContent = errHtml;
-      GlobalState.lastGeneratedScriptId = script.id;
+      setCurrentGenerationResult({
+        generationId,
+        content: errHtml,
+        scriptId: script.id,
+        scriptName: script.name,
+        status: "failed",
+        error: e?.message || "unknown_error"
+      });
     }
     $floatBtn.addClass("t-notify");
     if (!silent && window.toastr) {
@@ -37530,6 +38633,7 @@ ${processedPrompt}`;
     if (typeof window.updateRunButtonsState === "function") {
       window.updateRunButtonsState();
     }
+    updateFavButtonUI();
   }
 }
 async function executeQueueGeneration(scripts) {
@@ -37650,6 +38754,7 @@ function cancelQueueGeneration() {
 }
 async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false, initialInstruction = "") {
   const $floatBtn = $("#titania-float-btn");
+  const generationId = `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const useStream = cfg.stream !== false;
   const signal = GlobalState.abortController?.signal;
   const continuationSource = continuationType === "user" ? "user_continuation" : "auto_continuation";
@@ -37961,10 +39066,12 @@ Generate ONLY the continuation (no repetition):`;
       const rewrittenOutput = finalOutput;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
-      pushSceneToHistory(rewrittenOutput, script.id, script.name);
+      pushSceneToHistory(rewrittenOutput, script.id, script.name, { status: "success", generationId });
       if (continuationType === "auto") {
         setContinuationSessionBaseRound(script.id, script.name, rewrittenOutput, {
-          instruction: initialInstruction
+          instruction: initialInstruction,
+          status: "success",
+          generationId
         });
       }
       recordScriptGenerated(script.id, {
@@ -38024,6 +39131,17 @@ Generate ONLY the continuation (no repetition):`;
     }
   } catch (e) {
     if (e.name === "AbortError") {
+      if (GlobalState.continuation.accumulatedContent) {
+        setCurrentGenerationResult({
+          generationId,
+          content: GlobalState.continuation.accumulatedContent,
+          scriptId: script.id,
+          scriptName: script.name,
+          status: "aborted",
+          error: e.message || "aborted"
+        });
+      }
+      clearStreamingCache();
       finishPromptTrace(promptTraceId, "aborted", {
         continuationType,
         error: e.message || "aborted"
@@ -38033,8 +39151,14 @@ Generate ONLY the continuation (no repetition):`;
     console.error("Titania Continuation Error:", e);
     TitaniaLogger.error("\u7EED\u5199\u8FC7\u7A0B\u53D1\u751F\u5F02\u5E38", e);
     if (GlobalState.continuation.accumulatedContent) {
-      GlobalState.lastGeneratedContent = GlobalState.continuation.accumulatedContent;
-      GlobalState.lastGeneratedScriptId = script.id;
+      setCurrentGenerationResult({
+        generationId,
+        content: GlobalState.continuation.accumulatedContent,
+        scriptId: script.id,
+        scriptName: script.name,
+        status: "partial",
+        error: e?.message || "unknown_error"
+      });
       if (!silent && window.toastr) {
         const errorHint = String(e?.message || "");
         const isServerBusy = errorHint.includes("503") || errorHint.includes("429");
@@ -38043,6 +39167,7 @@ Generate ONLY the continuation (no repetition):`;
       }
     }
     resetContinuationState();
+    clearStreamingCache();
     stopTimer();
     $floatBtn.addClass("t-notify");
     finishPromptTrace(promptTraceId, "failed", {
@@ -38058,6 +39183,7 @@ Generate ONLY the continuation (no repetition):`;
     if (typeof window.updateRunButtonsState === "function") {
       window.updateRunButtonsState();
     }
+    updateFavButtonUI();
   }
 }
 async function handleUserContinuation(options = {}) {
@@ -38219,7 +39345,10 @@ ${userInstruction}`;
     branchKey: branchResult?.branchKey || ""
   });
   if (success) {
-    appendContinuationSessionRound(script.id, script.name, userInstruction, GlobalState.lastGeneratedContent);
+    appendContinuationSessionRound(script.id, script.name, userInstruction, GlobalState.lastGeneratedContent, {
+      status: "success",
+      generationId: GlobalState.currentGenerationResult?.generationId
+    });
     if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
   } else if (branchResult) {
     restoreContinuationBranchAfterFailedGeneration(script.id, branchResult);
@@ -38265,7 +39394,7 @@ init_state();
 init_scriptData();
 init_api();
 init_continuationStore();
-import { extension_settings as extension_settings3 } from "../../../extensions.js";
+import { extension_settings as extension_settings2 } from "../../../extensions.js";
 import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
 
 // src/core/extensionUpdate.js
@@ -38323,8 +39452,8 @@ async function fetchAvailableUpdates() {
   }
 }
 function getExtensionType() {
-  const id = Object.keys(extensionTypes).find((key) => key === EXTENSION_ID || key.endsWith(`/${EXTENSION_NAME}`));
-  return id ? extensionTypes[id] : "";
+  const id3 = Object.keys(extensionTypes).find((key) => key === EXTENSION_ID || key.endsWith(`/${EXTENSION_NAME}`));
+  return id3 ? extensionTypes[id3] : "";
 }
 async function updateExtension() {
   const response = await fetch("/api/extensions/update", {
@@ -38786,16 +39915,16 @@ function bindDrawerBackupControls() {
   });
 }
 async function loadExtensionSettings() {
-  extension_settings3[extensionName] = extension_settings3[extensionName] || {};
-  if (Object.keys(extension_settings3[extensionName]).length === 0) {
-    Object.assign(extension_settings3[extensionName], defaultSettings);
+  extension_settings2[extensionName] = extension_settings2[extensionName] || {};
+  if (Object.keys(extension_settings2[extensionName]).length === 0) {
+    Object.assign(extension_settings2[extensionName], defaultSettings);
   }
   $("#titania-version-badge").text(`v${CURRENT_VERSION}`);
   initCoreFeatures();
-  $("#enable_echo_theater").prop("checked", extension_settings3[extensionName].enabled);
+  $("#enable_echo_theater").prop("checked", extension_settings2[extensionName].enabled);
   $("#enable_echo_theater").on("input", function() {
     const showFloatBtn = $(this).prop("checked");
-    extension_settings3[extensionName].enabled = showFloatBtn;
+    extension_settings2[extensionName].enabled = showFloatBtn;
     saveSettingsDebounced2();
     if (showFloatBtn) {
       showFloatingButton();
@@ -38803,7 +39932,7 @@ async function loadExtensionSettings() {
       hideFloatingButton();
     }
   });
-  if (extension_settings3[extensionName].enabled) {
+  if (extension_settings2[extensionName].enabled) {
     showFloatingButton();
   }
   const extData = getExtData();
@@ -38827,11 +39956,21 @@ async function loadExtensionSettings() {
     saveExtData();
   }
   $("#cfg-outline-entry-enabled").prop("checked", extData.outline_entry.enabled === true);
+  $("#cfg-float-edge-tuck").prop("checked", extData.appearance?.edge_tuck !== false);
   $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
   $("#cfg-toolbar-lore-enabled").prop("checked", extData.quick_toolbar.enabled_items.lore === true);
   $("#cfg-toolbar-recall-enabled").prop("checked", extData.quick_toolbar.enabled_items.recall === true);
+  $("#cfg-float-edge-tuck").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.appearance || typeof data.appearance !== "object") data.appearance = {};
+    data.appearance.edge_tuck = enabled;
+    saveExtData();
+    refreshFloatingTuck();
+    if (window.toastr) toastr.success(enabled ? "\u60AC\u6D6E\u7403\u534A\u9690\u85CF\u5DF2\u542F\u7528\uFF0C\u53EF\u62D6\u5230\u5C4F\u5E55\u8FB9\u7F18\u85CF\u8D77\u4E00\u534A" : "\u60AC\u6D6E\u7403\u534A\u9690\u85CF\u5DF2\u5173\u95ED\uFF0C\u5C06\u59CB\u7EC8\u5B8C\u6574\u663E\u793A", "Titania Echo");
+  });
   $("#cfg-outline-entry-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
     const data = getExtData();
