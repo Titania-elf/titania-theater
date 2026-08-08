@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.1.2";
+    CURRENT_VERSION = "5.1.8";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -71,7 +71,9 @@ var init_defaults = __esm({
         last_cleanup_at: 0
       },
       ui_prefs: {
-        script_sort_mode: "smart"
+        script_sort_mode: "smart",
+        // 主界面布局: modern(新版工具箱布局) | legacy(5.1.2 经典布局)
+        main_window_mode: "modern"
       },
       appearance: {
         type: "emoji",
@@ -260,15 +262,933 @@ var init_defaults = __esm({
   }
 });
 
-// src/core/promptManager.js
-function estimatePromptTokens(text) {
+// src/utils/chatHistoryBlacklist.js
+function parseChatHistoryBlacklistInput(input) {
+  const rules = [];
+  const lines = String(input || "").split(/\r?\n/);
+  lines.forEach((line, index) => {
+    const source = line.trim();
+    if (!source) return;
+    if (!source.endsWith(";")) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u7F3A\u5C11\u82F1\u6587\u5206\u53F7`);
+      return;
+    }
+    const body = source.slice(0, -1).trim();
+    const separator = body.search(/\s/);
+    if (separator <= 0) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u9700\u8981\u586B\u5199\u5F00\u59CB\u6807\u8BB0\u548C\u7ED3\u675F\u6807\u8BB0`);
+      return;
+    }
+    const start = body.slice(0, separator);
+    const end = body.slice(separator).trim();
+    if (!start || !end || /\s/.test(start) || /\s/.test(end) || start.includes(";") || end.includes(";")) {
+      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u6807\u8BB0\u4E0D\u80FD\u5305\u542B\u7A7A\u683C\u6216\u5206\u53F7`);
+      return;
+    }
+    rules.push({ start, end });
+  });
+  return rules;
+}
+function removeChatHistoryBlacklist(text, rules = []) {
+  let result = String(text || "");
+  if (!result || !Array.isArray(rules) || rules.length === 0) return result;
+  for (const rule of rules) {
+    if (!rule?.start || !rule?.end) continue;
+    let cursor = 0;
+    let output = "";
+    let changed = false;
+    while (cursor < result.length) {
+      const startIndex = result.indexOf(rule.start, cursor);
+      if (startIndex === -1) {
+        output += result.slice(cursor);
+        break;
+      }
+      const endIndex = result.indexOf(rule.end, startIndex + rule.start.length);
+      if (endIndex === -1) {
+        output += result.slice(cursor);
+        break;
+      }
+      output += result.slice(cursor, startIndex);
+      cursor = endIndex + rule.end.length;
+      changed = true;
+    }
+    if (changed) result = output;
+  }
+  return result;
+}
+var init_chatHistoryBlacklist = __esm({
+  "src/utils/chatHistoryBlacklist.js"() {
+  }
+});
+
+// src/utils/helpers.js
+function detectInteractiveContent(html) {
+  if (!html) return { isInteractive: false, reasons: [] };
+  const reasons = [];
+  if (/<script[\s>]/i.test(html)) {
+    reasons.push("\u5305\u542B <script> \u6807\u7B7E");
+  }
+  const eventHandlers = [
+    "onclick",
+    "ondblclick",
+    "onmousedown",
+    "onmouseup",
+    "onmouseover",
+    "onmouseout",
+    "onmousemove",
+    "onmouseenter",
+    "onmouseleave",
+    "onkeydown",
+    "onkeyup",
+    "onkeypress",
+    "onchange",
+    "oninput",
+    "onsubmit",
+    "onreset",
+    "onfocus",
+    "onblur",
+    "onload",
+    "onerror",
+    "onscroll",
+    "onresize",
+    "ontouchstart",
+    "ontouchmove",
+    "ontouchend",
+    "ontouchcancel"
+  ];
+  const eventPattern = new RegExp(`\\s(${eventHandlers.join("|")})\\s*=`, "i");
+  if (eventPattern.test(html)) {
+    reasons.push("\u5305\u542B\u4E8B\u4EF6\u5904\u7406\u5668\u5C5E\u6027");
+  }
+  if (/<button[^>]*onclick/i.test(html) || /<input[^>]*type\s*=\s*["']?(button|submit)/i.test(html)) {
+    reasons.push("\u5305\u542B\u4EA4\u4E92\u5F0F\u6309\u94AE");
+  }
+  if (/javascript:/i.test(html)) {
+    reasons.push("\u5305\u542B javascript: \u534F\u8BAE");
+  }
+  if (/<form[\s>]/i.test(html) && /<input[\s>]/i.test(html)) {
+    reasons.push("\u5305\u542B\u8868\u5355\u5143\u7D20");
+  }
+  return {
+    isInteractive: reasons.length > 0,
+    reasons
+  };
+}
+function buildFullHtmlDocument(content, title = "Titania Echo - \u4E92\u52A8\u573A\u666F") {
+  const styleMatch = content.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+  const styles = styleMatch ? styleMatch.join("\n") : "";
+  const bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(title)}</title>
+    <style>
+        /* \u57FA\u7840\u6837\u5F0F */
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        body {
+            padding: 20px;
+        }
+        a { color: #90cdf4; }
+        img, video { max-width: 100%; height: auto; }
+        
+        /* \u7528\u6237\u81EA\u5B9A\u4E49\u6837\u5F0F */
+    </style>
+    ${styles}
+</head>
+<body>
+${bodyContent}
+</body>
+</html>`;
+}
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
+  console.log("[Titania] openInNewWindow \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
+  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
+  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
+  console.log("[Titania] \u5B8C\u6574HTML\u524D500\u5B57\u7B26:", fullHtml?.substring(0, 500));
+  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const newWindow = window.open(
+    url,
+    "_blank",
+    "width=900,height=700,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes"
+  );
+  if (newWindow) {
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1e3);
+  } else {
+    console.warn("Titania: \u5F39\u7A97\u88AB\u62E6\u622A\uFF0C\u5C1D\u8BD5\u65B0\u6807\u7B7E\u9875");
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1e3);
+  }
+  return newWindow;
+}
+function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
+  console.log("[Titania] exportAsHtmlFile \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
+  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
+  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
+  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const safeFileName = scriptName.replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_").substring(0, 50);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${safeFileName}_\u4E92\u52A8\u573A\u666F.html`;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+function buildFontStylesForShadowDOM() {
+  try {
+    const extData = getExtData();
+    const fontSettings = extData.font_settings;
+    if (!fontSettings || fontSettings.source === "default" || !fontSettings.source) {
+      return { fontImport: "", forceOverride: false, fontFamily: "" };
+    }
+    const forceOverride = fontSettings.force_override === true;
+    if (fontSettings.source === "online" && fontSettings.import_url && fontSettings.font_name) {
+      return {
+        fontImport: `@import url('${fontSettings.import_url}');`,
+        forceOverride,
+        fontFamily: `'${fontSettings.font_name}'`
+      };
+    }
+    if (fontSettings.source === "upload" && fontSettings.font_data) {
+      const fontName = fontSettings.font_name || "TitaniaCustomFont";
+      return {
+        fontImport: `
+                    @font-face {
+                        font-family: '${fontName}';
+                        src: url('${fontSettings.font_data}') format('woff2');
+                        font-weight: normal;
+                        font-style: normal;
+                        font-display: swap;
+                    }
+                `,
+        forceOverride,
+        fontFamily: `'${fontName}'`
+      };
+    }
+    return { fontImport: "", forceOverride: false, fontFamily: "" };
+  } catch (e) {
+    console.warn("Titania: \u6784\u5EFA Shadow DOM \u5B57\u4F53\u6837\u5F0F\u5931\u8D25", e);
+    return { fontImport: "", forceOverride: false, fontFamily: "" };
+  }
+}
+function renderToShadowDOMReal(container, html) {
+  container.innerHTML = "";
+  const host = document.createElement("div");
+  host.className = "t-shadow-host";
+  host.style.cssText = "width:100%; min-height:100%;";
+  const shadow = host.attachShadow({ mode: "open" });
+  const isEditableNode = (node) => {
+    if (!(node instanceof HTMLElement)) return false;
+    const tag = node.tagName.toLowerCase();
+    if (tag === "textarea") {
+      return !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
+    }
+    if (tag === "input") {
+      const type = String(node.getAttribute("type") || "text").toLowerCase();
+      const editableTypes = /* @__PURE__ */ new Set(["text", "search", "url", "tel", "email", "password", "number"]);
+      return editableTypes.has(type) && !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
+    }
+    return node.isContentEditable === true;
+  };
+  const stopEditableKeyboardBubble = (evt) => {
+    const path = typeof evt.composedPath === "function" ? evt.composedPath() : [evt.target];
+    const hasEditableTarget = path.some((node) => isEditableNode(node));
+    if (!hasEditableTarget) return;
+    evt.stopPropagation();
+  };
+  [
+    "keydown",
+    "keypress",
+    "keyup",
+    "beforeinput",
+    "input",
+    "paste",
+    "compositionstart",
+    "compositionupdate",
+    "compositionend"
+  ].forEach((type) => {
+    shadow.addEventListener(type, stopEditableKeyboardBubble, true);
+  });
+  const fontInfo = buildFontStylesForShadowDOM();
+  const forceOverrideStyles = fontInfo.forceOverride && fontInfo.fontFamily ? `
+            /* \u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53\u6837\u5F0F */
+            .t-shadow-content * {
+                font-family: ${fontInfo.fontFamily}, var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
+            }
+            /* \u4FDD\u7559\u7B49\u5BBD\u5B57\u4F53\u5143\u7D20 */
+            .t-shadow-content code,
+            .t-shadow-content pre,
+            .t-shadow-content kbd,
+            .t-shadow-content samp {
+                font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            }
+        ` : "";
+  const baseStyles = `
+        <style>
+            ${fontInfo.fontImport}
+            :host {
+                display: block;
+                width: 100%;
+                min-height: 100%;
+            }
+            * { box-sizing: border-box; }
+            :host, .t-shadow-content {
+                background: transparent;
+                color: #e0e0e0;
+                font-family: var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+                font-size: 14px;
+                line-height: 1.6;
+            }
+            /* \u5185\u5BB9\u533A\u4FDD\u6301\u56FA\u5B9A\u5B57\u53F7\uFF0C\u4E0D\u53D7 UI \u7F29\u653E\u53D8\u91CF\u5F71\u54CD */
+            .t-shadow-content,
+            .t-shadow-content * {
+                font-size: 14px;
+            }
+            .t-shadow-content {
+                padding: 0;
+                min-height: 100%;
+            }
+            img, video { max-width: 100%; height: auto; }
+            a { color: #90cdf4; }
+            ${forceOverrideStyles}
+        </style>
+    `;
+  shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
+  container.appendChild(host);
+  return shadow;
+}
+function parseWhitelistInput(input) {
+  if (!input || !input.trim()) return [];
+  return input.split(/[,，\n]/).map((tag) => tag.trim()).map((tag) => tag.replace(/^<|>$/g, "")).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
+}
+function extractContent(text, whitelist = []) {
+  if (!text) return "";
+  if (whitelist && whitelist.length > 0) {
+    const extracted = [];
+    for (const tag of whitelist) {
+      const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        const innerContent = match[1].trim();
+        if (innerContent) {
+          extracted.push(innerContent);
+        }
+      }
+    }
+    if (extracted.length > 0) {
+      let result = extracted.join("\n");
+      result = result.replace(/<[^>]*>?/gm, "");
+      result = result.replace(/\n{3,}/g, "\n\n").trim();
+      return result;
+    }
+  }
+  let cleaned = text;
+  cleaned = cleaned.replace(/<[^>]*>?/gm, "");
+  cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
+  return cleaned;
+}
+function getChatHistory(limit, whitelist = [], blacklist = void 0) {
+  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
+  const ctx = SillyTavern.getContext();
+  const history = ctx.chat || [];
+  const safeLimit = parseInt(limit) || 10;
+  const effectiveBlacklist = blacklist === void 0 ? parseChatHistoryBlacklistInput(getExtData().history_extraction?.blacklist || "") : blacklist;
+  const domMessages = document.querySelectorAll("#chat .mes");
+  const useDomCheck = domMessages.length === history.length;
+  if (!useDomCheck) {
+    console.warn(`Titania: DOM messages count (${domMessages.length}) != History count (${history.length}). Fallback to property check.`);
+  }
+  const visibleHistory = history.filter((msg, index) => {
+    let isHidden = !!(msg.is_hidden || msg.isHidden || msg.is_system || // ST 使用 is_system 来标记隐藏的消息
+    msg.extra && msg.extra.is_hidden);
+    if (!isHidden && useDomCheck) {
+      const el = domMessages[index];
+      if (el) {
+        if (el.hasAttribute("hidden") || el.style.display === "none" || el.classList.contains("hidden") || el.getAttribute("is_system") === "true") {
+          isHidden = true;
+        }
+      }
+    }
+    const isDisabled = !!msg.disabled;
+    if (isHidden) {
+      return false;
+    }
+    if (isDisabled) {
+      return false;
+    }
+    return true;
+  });
+  console.log(`Titania: History Analysis - Total: ${history.length}, Visible: ${visibleHistory.length}, Filtered: ${history.length - visibleHistory.length}`);
+  const recent = visibleHistory.slice(-safeLimit);
+  return recent.map((msg) => {
+    let name = msg.name;
+    if (msg.is_user) name = ctx.name1 || "User";
+    if (name === "{{user}}") name = ctx.name1 || "User";
+    if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
+    let rawContent = msg.message || msg.mes || "";
+    rawContent = removeChatHistoryBlacklist(rawContent, effectiveBlacklist);
+    let cleanContent = extractContent(rawContent, whitelist);
+    if (!cleanContent.trim()) {
+      cleanContent = rawContent.replace(/<[^>]*>?/gm, "").trim();
+    }
+    return `${name}: ${cleanContent}`;
+  }).join("\n");
+}
+function sanitizeAIOutputLite(rawContent) {
+  if (!rawContent || typeof rawContent !== "string") return "";
+  let content = rawContent;
+  content = content.replace(/```html\s*/gi, "");
+  content = content.replace(/```\s*/g, "");
+  content = content.replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/gi, "");
+  content = content.replace(/<think[^>]*>[\s\S]*?<\/think>/gi, "");
+  return content.trim();
+}
+function sanitizeAIOutput(rawContent) {
+  if (!rawContent || typeof rawContent !== "string") return "";
+  let content = rawContent;
+  const originalContent = rawContent;
+  const tagsToRemove = [
+    "thinking",
+    "think",
+    // 思考过程
+    "system",
+    "note",
+    "notes",
+    // 系统/笔记
+    "ooc",
+    "OOC",
+    // Out of Character
+    "debug",
+    "meta",
+    // 调试/元信息
+    "comment",
+    "aside",
+    // 注释/旁白
+    "reflection",
+    "planning",
+    // 反思/规划
+    "internal",
+    "analysis"
+    // 内部思考/分析
+  ];
+  tagsToRemove.forEach((tag) => {
+    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, "gi");
+    content = content.replace(regex, "");
+  });
+  content = content.replace(/```html\s*/gi, "");
+  content = content.replace(/```\s*/g, "");
+  const htmlStartPatterns = [
+    /<!DOCTYPE\s+html/i,
+    // DOCTYPE 声明
+    /<html[\s>]/i,
+    // <html> 标签
+    /<head[\s>]/i,
+    // <head> 标签
+    /<body[\s>]/i,
+    // <body> 标签
+    /<style[\s>]/i,
+    // <style> 标签（很多 AI 会以此开头）
+    /<div[\s>]/i,
+    // <div> 标签
+    /<section[\s>]/i,
+    // <section> 标签
+    /<article[\s>]/i,
+    // <article> 标签
+    /<main[\s>]/i,
+    // <main> 标签
+    /<header[\s>]/i,
+    // <header> 标签
+    /<p[\s>]/i,
+    // <p> 标签
+    /<span[\s>]/i,
+    // <span> 标签
+    /<h[1-6][\s>]/i
+    // 标题标签
+  ];
+  let firstHtmlIndex = -1;
+  for (const pattern of htmlStartPatterns) {
+    const match = content.search(pattern);
+    if (match !== -1) {
+      if (firstHtmlIndex === -1 || match < firstHtmlIndex) {
+        firstHtmlIndex = match;
+      }
+    }
+  }
+  if (firstHtmlIndex > 0) {
+    content = content.substring(firstHtmlIndex);
+  }
+  const htmlEndPatterns = [
+    /<\/html>\s*$/i,
+    /<\/body>\s*$/i,
+    /<\/div>\s*$/i,
+    /<\/section>\s*$/i,
+    /<\/article>\s*$/i,
+    /<\/main>\s*$/i,
+    /<\/style>\s*$/i,
+    /<\/p>\s*$/i,
+    /<\/span>\s*$/i,
+    /<\/h[1-6]>\s*$/i
+  ];
+  let lastHtmlEndIndex = -1;
+  for (const pattern of htmlEndPatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      const endIndex = content.lastIndexOf(match[0]) + match[0].length;
+      if (endIndex > lastHtmlEndIndex) {
+        lastHtmlEndIndex = endIndex;
+      }
+    }
+  }
+  if (lastHtmlEndIndex === -1) {
+    const allClosingTags = content.match(/<\/[a-zA-Z][a-zA-Z0-9]*>\s*$/);
+    if (allClosingTags) {
+      lastHtmlEndIndex = content.lastIndexOf(allClosingTags[0]) + allClosingTags[0].length;
+    }
+  }
+  if (lastHtmlEndIndex > 0 && lastHtmlEndIndex < content.length) {
+    content = content.substring(0, lastHtmlEndIndex);
+  }
+  content = content.replace(/(\s|>)\*\*([^*<>]+)\*\*(\s|<)/g, "$1$2$3");
+  content = content.replace(/(\s|>)__([^_<>]+)__(\s|<)/g, "$1$2$3");
+  content = content.replace(/(\s|>)\*([^*<>\n]+)\*(\s|<)/g, "$1$2$3");
+  content = content.replace(/^\s*#{1,6}\s+/gm, "");
+  content = content.replace(/^\s*[-*+]\s+(?=[^\s<])/gm, "");
+  content = content.replace(/^\s*\d+\.\s+(?=[^\s<])/gm, "");
+  content = content.replace(/\n{3,}/g, "\n\n");
+  content = content.trim();
+  if (!content || content.length < 10) {
+    console.warn("Titania: \u6E05\u6D17\u540E\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u56DE\u9000\u5230\u539F\u59CB\u5185\u5BB9");
+    return originalContent.replace(/```html\s*/gi, "").replace(/```\s*/g, "").trim();
+  }
+  return content;
+}
+function extractFromShadowDOM(container) {
+  const shadowHost = container.querySelector(".t-shadow-host");
+  if (shadowHost && shadowHost.shadowRoot) {
+    try {
+      const shadow = shadowHost.shadowRoot;
+      const contentDiv = shadow.querySelector(".t-shadow-content");
+      if (contentDiv) {
+        let userStyles = "";
+        shadow.querySelectorAll("style").forEach((style) => {
+          const text = style.textContent || "";
+          if (!text.includes(":host")) {
+            userStyles += `<style>${text}</style>
+`;
+          }
+        });
+        return userStyles + contentDiv.innerHTML;
+      }
+    } catch (e) {
+      console.warn("Titania: \u65E0\u6CD5\u4ECE Shadow DOM \u63D0\u53D6\u5185\u5BB9", e);
+    }
+  }
+  const iframe = container.querySelector(".t-content-iframe");
+  if (iframe) {
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (doc && doc.body) {
+        const bodyClone = doc.body.cloneNode(true);
+        bodyClone.querySelectorAll("script").forEach((s) => s.remove());
+        let userStyles = "";
+        doc.querySelectorAll("head style").forEach((style) => {
+          const text = style.textContent || "";
+          if (!text.includes("box-sizing: border-box") || text.length > 500) {
+            userStyles += `<style>${text}</style>
+`;
+          }
+        });
+        return userStyles + bodyClone.innerHTML;
+      }
+    } catch (e) {
+      console.warn("Titania: \u65E0\u6CD5\u4ECE iframe \u63D0\u53D6\u5185\u5BB9", e);
+    }
+  }
+  return container.innerHTML;
+}
+async function countTokens(text) {
+  const str = String(text || "");
+  if (!str) return { count: 0, exact: true };
+  try {
+    const { getTokenCountAsync } = await import("../../../tokenizers.js");
+    const count = await getTokenCountAsync(str);
+    if (Number.isFinite(count)) return { count, exact: true };
+  } catch (error) {
+    console.warn("Titania: ST \u5206\u8BCD\u5668\u4E0D\u53EF\u7528\uFF0C\u56DE\u9000\u5230\u4F30\u7B97", error);
+  }
+  return { count: estimateTokens(str), exact: false };
+}
+async function countTokensBatch(texts) {
+  const list = Array.isArray(texts) ? texts : [];
+  const counts = [];
+  let exact = true;
+  for (const item of list) {
+    const result = await countTokens(item);
+    counts.push(result.count);
+    if (!result.exact) exact = false;
+  }
+  return { counts, total: counts.reduce((sum, n) => sum + n, 0), exact };
+}
+function estimateTokens(text) {
   const clean = String(text || "").trim();
   if (!clean) return 0;
-  const cjkCount = (clean.match(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g) || []).length;
-  const nonCjk = clean.replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g, " ");
-  const wordCount = nonCjk.split(/\s+/).filter(Boolean).length;
-  return Math.floor(cjkCount + wordCount * 1.3);
+  let cjk = 0;
+  let alnum = 0;
+  let other = 0;
+  for (const ch of clean) {
+    if (/[一-龥　-〿＀-￯]/.test(ch)) cjk++;
+    else if (/[A-Za-z0-9]/.test(ch)) alnum++;
+    else if (!/\s/.test(ch)) other++;
+  }
+  return Math.max(1, Math.round(cjk * 1.35 + alnum * 0.28 + other * 0.55));
 }
+function detectTruncation(content, mode = "html") {
+  if (!content || content.trim().length === 0) {
+    return { isTruncated: false, reason: "empty", details: {} };
+  }
+  const result = {
+    isTruncated: false,
+    reason: "",
+    details: {
+      htmlCheck: null,
+      sentenceCheck: null
+    }
+  };
+  if (mode === "html" || mode === "both") {
+    const htmlResult = checkHtmlTags(content);
+    result.details.htmlCheck = htmlResult;
+    if (htmlResult.isTruncated) {
+      result.isTruncated = true;
+      result.reason = htmlResult.reason;
+    }
+  }
+  if (mode === "sentence" || mode === "both") {
+    const sentenceResult = checkSentenceCompletion(content);
+    result.details.sentenceCheck = sentenceResult;
+    if (sentenceResult.isTruncated && !result.isTruncated) {
+      result.isTruncated = true;
+      result.reason = sentenceResult.reason;
+    }
+  }
+  return result;
+}
+function checkHtmlTags(html) {
+  const result = {
+    isTruncated: false,
+    reason: "",
+    unclosedTags: []
+  };
+  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
+  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
+  const stack = [];
+  let match;
+  while ((match = tagPattern.exec(html)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
+      continue;
+    }
+    if (fullTag.startsWith("</")) {
+      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
+        stack.pop();
+      }
+    } else {
+      stack.push(tagName);
+    }
+  }
+  const importantTags = ["div", "style", "span", "p", "section", "article", "main", "header", "footer"];
+  const unclosedImportant = stack.filter((tag) => importantTags.includes(tag));
+  if (unclosedImportant.length > 0) {
+    result.isTruncated = true;
+    result.reason = `HTML \u6807\u7B7E\u672A\u95ED\u5408: <${unclosedImportant.join(">, <")}>`;
+    result.unclosedTags = unclosedImportant;
+  }
+  const styleOpenCount = (html.match(/<style[^>]*>/gi) || []).length;
+  const styleCloseCount = (html.match(/<\/style>/gi) || []).length;
+  if (styleOpenCount > styleCloseCount) {
+    result.isTruncated = true;
+    result.reason = "<style> \u6807\u7B7E\u672A\u95ED\u5408";
+    result.unclosedTags.push("style");
+  }
+  const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+  if (styleMatch) {
+    for (const styleBlock of styleMatch) {
+      const cssContent = styleBlock.replace(/<\/?style[^>]*>/gi, "");
+      const openBraces = (cssContent.match(/{/g) || []).length;
+      const closeBraces = (cssContent.match(/}/g) || []).length;
+      if (openBraces > closeBraces) {
+        result.isTruncated = true;
+        result.reason = "CSS \u82B1\u62EC\u53F7\u4E0D\u5339\u914D";
+        break;
+      }
+    }
+  }
+  return result;
+}
+function checkSentenceCompletion(content) {
+  const result = {
+    isTruncated: false,
+    reason: "",
+    lastChars: ""
+  };
+  const textContent = content.replace(/<[^>]*>/g, "").trim();
+  if (textContent.length === 0) {
+    return result;
+  }
+  const lastChars = textContent.slice(-50);
+  result.lastChars = lastChars;
+  const chineseEndPunctuation = ["\u3002", "\uFF01", "\uFF1F", "\u2026", '"', '"', "\u300F", "\u300D"];
+  const englishEndPunctuation = [".", "!", "?", '"', "'"];
+  const allEndPunctuation = [...chineseEndPunctuation, ...englishEndPunctuation];
+  const lastChar = textContent.trim().slice(-1);
+  const endsWithPunctuation = allEndPunctuation.includes(lastChar);
+  const endsWithLetter = /[a-zA-Z]$/.test(textContent.trim());
+  const previousChars = textContent.trim().slice(-10);
+  const hasIncompleteWord = endsWithLetter && !/[.!?,;:\s]/.test(previousChars.slice(-2, -1));
+  const lastCJK = /[\u4e00-\u9fa5]$/.test(textContent.trim());
+  const hasCJKContent = /[\u4e00-\u9fa5]/.test(textContent);
+  if (hasCJKContent && lastCJK && !chineseEndPunctuation.includes(lastChar)) {
+    if (!endsWithPunctuation) {
+      result.isTruncated = true;
+      result.reason = "\u4E2D\u6587\u53E5\u5B50\u4F3C\u4E4E\u672A\u5B8C\u6210";
+    }
+  } else if (hasIncompleteWord) {
+    result.isTruncated = true;
+    result.reason = "\u82F1\u6587\u5355\u8BCD\u4F3C\u4E4E\u88AB\u622A\u65AD";
+  }
+  return result;
+}
+function buildContinuationContext(accumulatedContent, originalPrompt = "") {
+  const styleBlocks = accumulatedContent.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+  const styleGuide = styleBlocks.map((block) => block.replace(/<\/?style[^>]*>/gi, "").trim()).join("\n").slice(0, 1600);
+  const bodyContent = accumulatedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  const plainText = bodyContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const paragraphs = plainText.split(/\n\n+|。(?=[^。]*$)/);
+  const plotPoints = paragraphs.map((p) => {
+    const firstSentence = p.trim().split(/[。！？]/)[0];
+    return firstSentence && firstSentence.length > 5 ? firstSentence.trim() : null;
+  }).filter(Boolean).slice(-5).join(" \u2192 ");
+  const htmlBlocks = bodyContent.split(/(<\/p>|<\/div>)/i);
+  let recentHtml = "";
+  let blockCount = 0;
+  for (let i = htmlBlocks.length - 1; i >= 0 && blockCount < 4; i--) {
+    recentHtml = htmlBlocks[i] + recentHtml;
+    if (htmlBlocks[i].match(/<\/p>|<\/div>/i)) {
+      blockCount++;
+    }
+  }
+  recentHtml = recentHtml.trim().slice(-1e3);
+  const sentences = plainText.match(/[^。！？]*[。！？]/g) || [];
+  const lastCompleteSentence = sentences.length > 0 ? sentences[sentences.length - 1].trim() : "";
+  const lastPart = plainText.slice(-100);
+  const endsWithPunctuation = /[。！？"」』]$/.test(lastPart.trim());
+  const incompleteText = endsWithPunctuation ? "" : lastPart.split(/[。！？]/).pop()?.trim() || "";
+  const unclosedTags = detectUnclosedTags(bodyContent);
+  const classMatches = bodyContent.match(/class=["']([^"']+)["']/gi) || [];
+  const classSet = /* @__PURE__ */ new Set();
+  classMatches.forEach((item) => {
+    const m = item.match(/class=["']([^"']+)["']/i);
+    if (m && m[1]) {
+      m[1].split(/\s+/).forEach((cls) => {
+        const c = cls.trim();
+        if (c) classSet.add(c);
+      });
+    }
+  });
+  const recentClasses = Array.from(classSet).slice(0, 20);
+  return {
+    plotSummary: plotPoints || "(\u65E0\u60C5\u8282\u6458\u8981)",
+    // 情节进展摘要
+    recentHtml,
+    // 最后2段完整HTML
+    styleGuide,
+    // 原有样式片段
+    recentClasses,
+    // 近期使用类名
+    lastCompleteSentence,
+    // 最后完整句子
+    incompleteText,
+    // 未完成的句子片段
+    unclosedTags,
+    // 未闭合标签列表
+    totalLength: plainText.length,
+    // 已生成总字数
+    endsWithPunctuation,
+    // 是否以标点结束
+    originalPrompt: (originalPrompt || "").slice(0, 300)
+    // 原始请求摘要
+  };
+}
+function detectUnclosedTags(html) {
+  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
+  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
+  const stack = [];
+  let match;
+  while ((match = tagPattern.exec(html)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
+      continue;
+    }
+    if (fullTag.startsWith("</")) {
+      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
+        stack.pop();
+      }
+    } else {
+      stack.push(tagName);
+    }
+  }
+  const importantTags = ["div", "p", "span", "section", "article", "blockquote"];
+  return stack.filter((tag) => importantTags.includes(tag));
+}
+function smartMergeContinuation(originalContent, continuationContent, showIndicator = false) {
+  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
+  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
+  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  contBody = removeOverlap(originalBody, contBody);
+  let indicator = "";
+  if (showIndicator) {
+    indicator = `<!-- continuation-point -->`;
+  }
+  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
+  const mergedBody = originalBody + indicator + contBody;
+  if (mergedStyle.trim()) {
+    return `<style>
+${mergedStyle}
+</style>
+${mergedBody}`;
+  }
+  return mergedBody;
+}
+function removeOverlap(original, continuation) {
+  if (!original || !continuation) return continuation;
+  const originalText = original.replace(/<[^>]*>/g, "").trim();
+  const contText = continuation.replace(/<[^>]*>/g, "").trim();
+  const originalEnd = originalText.slice(-100);
+  let maxOverlap = 0;
+  const minOverlapLength = 10;
+  const maxCheckLength = Math.min(80, contText.length, originalEnd.length);
+  for (let len = maxCheckLength; len >= minOverlapLength; len--) {
+    const originalSuffix = originalEnd.slice(-len);
+    const contPrefix = contText.slice(0, len);
+    const normalizedSuffix = originalSuffix.replace(/[，。！？、\s]/g, "");
+    const normalizedPrefix = contPrefix.replace(/[，。！？、\s]/g, "");
+    if (normalizedSuffix === normalizedPrefix) {
+      maxOverlap = len;
+      break;
+    }
+  }
+  if (maxOverlap >= minOverlapLength) {
+    const overlapText = contText.slice(0, maxOverlap);
+    const overlapIndex = continuation.indexOf(overlapText.slice(-20));
+    if (overlapIndex !== -1) {
+      const afterOverlap = continuation.slice(overlapIndex + 20);
+      const nextStart = afterOverlap.search(/[。！？]|<[a-z]/i);
+      if (nextStart !== -1) {
+        return afterOverlap.slice(nextStart).replace(/^[。！？]/, "");
+      }
+    }
+  }
+  return continuation;
+}
+function countContentStats(htmlContent) {
+  if (!htmlContent) {
+    return { totalChars: 0, chineseChars: 0, estimatedTokens: 0 };
+  }
+  let plainText = htmlContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<[^>]*>/g, "").trim();
+  const totalChars = plainText.replace(/\s+/g, " ").length;
+  const chineseMatches = plainText.match(/[\u4e00-\u9fa5]/g);
+  const chineseChars = chineseMatches ? chineseMatches.length : 0;
+  const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, "");
+  const wordCount = nonChineseText.split(/\s+/).filter((w) => w.length > 0).length;
+  const estimatedTokens = Math.ceil(chineseChars / 1.5 + wordCount * 1.3);
+  return {
+    totalChars,
+    chineseChars,
+    estimatedTokens
+  };
+}
+function mergeContinuationContent(originalContent, continuationContent, showIndicator = true) {
+  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
+  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
+  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+  let indicator = "";
+  if (showIndicator) {
+    indicator = `<div style="text-align:center; color:#bfa15f; font-size:0.8em; margin:15px 0; opacity:0.7;">
+            <i class="fa-solid fa-link"></i> \u2500\u2500\u2500 \u7EED\u5199\u8FDE\u63A5 \u2500\u2500\u2500
+        </div>`;
+  }
+  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
+  const mergedBody = originalBody + indicator + contBody;
+  if (mergedStyle.trim()) {
+    return `<style>
+${mergedStyle}
+</style>
+${mergedBody}`;
+  }
+  return mergedBody;
+}
+var fileToBase64, parseMeta, getSnippet;
+var init_helpers = __esm({
+  "src/utils/helpers.js"() {
+    init_storage();
+    init_chatHistoryBlacklist();
+    fileToBase64 = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+    parseMeta = (title) => {
+      const parts = title.split(" - ");
+      if (parts.length >= 2) {
+        const char = parts.pop();
+        const script = parts.join(" - ");
+        return { script, char: char.trim() };
+      }
+      return { script: title, char: "\u672A\u77E5" };
+    };
+    getSnippet = (html) => {
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      let text = tmp.textContent || tmp.innerText || "";
+      text = text.replace(/\s+/g, " ").trim();
+      return text.length > 60 ? text.substring(0, 60) + "..." : text;
+    };
+  }
+});
+
+// src/core/promptManager.js
 function createEntryId(prefix = "entry") {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -390,8 +1310,61 @@ function getPromptScheme(data, mode = "narrative") {
   return scheme;
 }
 function getPromptOrder(preset) {
-  const order = preset?.prompt_order?.[0]?.order;
-  return Array.isArray(order) ? order : [];
+  const groups = Array.isArray(preset?.prompt_order) ? preset.prompt_order.map((group) => Array.isArray(group?.order) ? group.order : []).filter((order) => order.length > 0) : [];
+  const getIdentifier = (item) => String(item?.identifier || "").trim();
+  const getUniqueCount = (order) => new Set(order.map(getIdentifier).filter(Boolean)).size;
+  const referenceCount = groups.reduce((total, order) => total + order.length, 0);
+  if (groups.length === 0) {
+    return {
+      order: [],
+      stats: { group_count: 0, reference_count: 0, unique_count: 0, duplicate_count: 0, conflict_count: 0 }
+    };
+  }
+  let primaryIndex = 0;
+  for (let index = 1; index < groups.length; index++) {
+    if (getUniqueCount(groups[index]) > getUniqueCount(groups[primaryIndex])) primaryIndex = index;
+  }
+  const merged = [];
+  const mergedIdentifiers = /* @__PURE__ */ new Set();
+  const enabledStates = /* @__PURE__ */ new Map();
+  for (const order of groups) {
+    for (const item of order) {
+      const identifier = getIdentifier(item);
+      if (!identifier) continue;
+      if (!enabledStates.has(identifier)) enabledStates.set(identifier, /* @__PURE__ */ new Set());
+      enabledStates.get(identifier).add(item?.enabled !== false);
+    }
+  }
+  const appendUnique = (item) => {
+    const identifier = getIdentifier(item);
+    if (!identifier || mergedIdentifiers.has(identifier)) return;
+    merged.push(item);
+    mergedIdentifiers.add(identifier);
+  };
+  groups[primaryIndex].forEach(appendUnique);
+  for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+    if (groupIndex === primaryIndex) continue;
+    const order = groups[groupIndex];
+    for (let itemIndex = 0; itemIndex < order.length; itemIndex++) {
+      const item = order[itemIndex];
+      const identifier = getIdentifier(item);
+      if (!identifier || mergedIdentifiers.has(identifier)) continue;
+      const nextKnownIdentifier = order.slice(itemIndex + 1).map(getIdentifier).find((candidate) => mergedIdentifiers.has(candidate));
+      const insertAt = nextKnownIdentifier ? merged.findIndex((candidate) => getIdentifier(candidate) === nextKnownIdentifier) : merged.length;
+      merged.splice(insertAt, 0, item);
+      mergedIdentifiers.add(identifier);
+    }
+  }
+  return {
+    order: merged,
+    stats: {
+      group_count: groups.length,
+      reference_count: referenceCount,
+      unique_count: merged.length,
+      duplicate_count: referenceCount - merged.length,
+      conflict_count: [...enabledStates.values()].filter((states) => states.size > 1).length
+    }
+  };
 }
 function getMarkerNameFromContent(content) {
   const exact = String(content || "").trim().match(/^\{\{\s*([\w-]+)\s*\}\}$/);
@@ -438,8 +1411,36 @@ function createTitaniaOutputContractEntry() {
     content: TITANIA_OUTPUT_CONTRACT
   };
 }
+function isTitaniaManagedEntry(entry) {
+  return entry?.id === "titania_output_contract" || entry?.id === "titania_script_instruction" || entry?.marker === "titaniaScript";
+}
+function isCanonicalEntry(entry, canonical) {
+  if (!entry || typeof entry !== "object") return false;
+  const keys = Object.keys(canonical);
+  if (Object.keys(entry).length !== keys.length) return false;
+  return keys.every((key) => entry[key] === canonical[key]);
+}
+function hasCanonicalTitaniaEntries(entries) {
+  let firstIndex = -1;
+  let managedCount = 0;
+  for (let i = 0; i < entries.length; i++) {
+    if (!isTitaniaManagedEntry(entries[i])) continue;
+    if (firstIndex === -1) firstIndex = i;
+    managedCount++;
+  }
+  if (managedCount !== 2) return false;
+  if (!isCanonicalEntry(entries[firstIndex], createTitaniaOutputContractEntry())) return false;
+  if (!isCanonicalEntry(entries[firstIndex + 1], createTitaniaScriptEntry())) return false;
+  const isPrefill = (entry) => !!entry && typeof entry === "object" && isAssistantPrefill(entry);
+  if (firstIndex > 0 && isPrefill(entries[firstIndex - 1])) return false;
+  for (let i = firstIndex + 2; i < entries.length; i++) {
+    if (!isPrefill(entries[i])) return false;
+  }
+  return true;
+}
 function ensureTitaniaPresetEntries(preset) {
   if (!preset || !Array.isArray(preset.entries)) return false;
+  if (hasCanonicalTitaniaEntries(preset.entries)) return false;
   const previous = JSON.stringify(preset.entries);
   preset.entries = preset.entries.filter((entry) => entry?.id !== "titania_output_contract" && entry?.id !== "titania_script_instruction" && entry?.marker !== "titaniaScript");
   let insertAt = preset.entries.length;
@@ -455,17 +1456,26 @@ function normalizeChatCompletionPreset(preset, options = {}) {
     const identifier = String(item?.identifier || "").trim();
     if (identifier && !definitions.has(identifier)) definitions.set(identifier, item);
   }
-  const promptOrder = getPromptOrder(preset);
+  const promptOrderResult = getPromptOrder(preset);
+  const promptOrder = promptOrderResult.order;
   const entries = [];
   const usedIdentifiers = /* @__PURE__ */ new Set();
+  let missingDefinitionCount = 0;
+  let removedMarkerCount = 0;
   for (const orderItem of promptOrder) {
     const identifier = String(orderItem?.identifier || "").trim();
     if (!identifier || usedIdentifiers.has(identifier)) continue;
     const definition = definitions.get(identifier);
-    if (!definition) continue;
+    if (!definition) {
+      missingDefinitionCount++;
+      continue;
+    }
     let content = String(definition.content || "");
     const declaredMarker = getDeclaredMarker(definition, identifier);
-    if (REMOVED_MARKERS.has(identifier) || REMOVED_MARKERS.has(declaredMarker)) continue;
+    if (REMOVED_MARKERS.has(identifier) || REMOVED_MARKERS.has(declaredMarker)) {
+      removedMarkerCount++;
+      continue;
+    }
     const marker = DYNAMIC_MARKERS.has(declaredMarker) ? declaredMarker : "";
     if (declaredMarker && !marker && !content.trim()) content = `{{${declaredMarker}}}`;
     entries.push({
@@ -495,6 +1505,12 @@ function normalizeChatCompletionPreset(preset, options = {}) {
       temperature: preset.temperature,
       top_p: preset.top_p,
       max_tokens: preset.openai_max_tokens ?? preset.max_tokens
+    },
+    import_stats: {
+      ...promptOrderResult.stats,
+      imported_count: entries.length,
+      missing_definition_count: missingDefinitionCount,
+      removed_marker_count: removedMarkerCount
     }
   };
 }
@@ -531,13 +1547,14 @@ function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext =
       required: entry.required === true,
       content,
       chars: content.length,
-      tokens: estimatePromptTokens(content)
+      tokens: estimateTokens(content)
     };
   }).filter((message) => message.content.length > 0).map((message, index) => ({ ...message, index }));
 }
 var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
 var init_promptManager = __esm({
   "src/core/promptManager.js"() {
+    init_helpers();
     DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
     DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
 
@@ -596,15 +1613,15 @@ var init_promptManager = __esm({
 });
 
 // src/utils/storage.js
-import { extension_settings as extension_settings2 } from "../../../extensions.js";
+import { extension_settings } from "../../../extensions.js";
 import { saveSettingsDebounced, saveSettings } from "../../../../script.js";
 function getExtData() {
-  if (!extension_settings2[extensionName]) {
-    extension_settings2[extensionName] = JSON.parse(JSON.stringify(defaultSettings));
+  if (!extension_settings[extensionName]) {
+    extension_settings[extensionName] = JSON.parse(JSON.stringify(defaultSettings));
   }
-  const changed = ensurePromptManager(extension_settings2[extensionName]);
+  const changed = ensurePromptManager(extension_settings[extensionName]);
   if (changed) saveSettingsDebounced();
-  return extension_settings2[extensionName];
+  return extension_settings[extensionName];
 }
 function saveExtData() {
   saveSettingsDebounced();
@@ -779,6 +1796,17 @@ function loadCssFiles() {
     background: linear-gradient(90deg, #ff9a9e, #fecfef);
     color: #444;
     border: none;
+}
+
+.t-btn.t-btn-soft {
+    border: 1px solid rgba(191, 161, 95, 0.55);
+    background: rgba(191, 161, 95, 0.14);
+    color: #e0c98a;
+}
+
+.t-btn.t-btn-soft:hover {
+    background: rgba(191, 161, 95, 0.22);
+    border-color: rgba(191, 161, 95, 0.7);
 }
 
 .t-btn:disabled {
@@ -1691,7 +2719,9 @@ textarea.t-input {
 /* Zen Mode (\u6C89\u6D78\u6A21\u5F0F) */
 #t-main-view.t-zen-mode .t-header,
 #t-main-view.t-zen-mode .t-top-bar,
-#t-main-view.t-zen-mode .t-bottom-bar {
+#t-main-view.t-zen-mode .t-bottom-bar,
+#t-main-view.t-zen-mode .t-toolbox-panel,
+#t-main-view.t-zen-mode .t-toolbox-backdrop {
     display: none !important;
 }
 
@@ -1765,6 +2795,99 @@ textarea.t-input {
     background: transparent;
     display: block;
     /* \u9AD8\u5EA6\u7531 JS \u52A8\u6001\u8BBE\u7F6E */
+}
+
+/* \u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u7BA1\u7406\u6A21\u5F0F */
+.t-cont-history-heading {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-cont-history-heading strong,
+.t-cont-history-heading span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-cont-history-heading span {
+    color: #888;
+    font-size: 12px;
+}
+
+.t-cont-history-scope {
+    max-width: 92px;
+    height: 30px;
+    padding: 0 6px;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #242424;
+    color: #ccc;
+    font-size: 11px;
+}
+
+.t-cont-select-wrap {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.t-cont-select {
+    width: 16px;
+    height: 16px;
+    margin: 0 8px 0 0;
+    accent-color: #90cdf4;
+    cursor: pointer;
+}
+
+.t-cont-select:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+.t-cont-history-panel.is-managing .t-cont-history-session-toggle,
+.t-cont-history-panel.is-managing .t-cont-history-branch-title,
+.t-cont-history-panel.is-managing .t-cont-history-round-head {
+    gap: 6px;
+}
+
+.t-cont-history-panel.is-managing .t-cont-history-session-toggle {
+    cursor: default;
+}
+
+.t-cont-history-bulk-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border-top: 1px solid #333;
+    background: #181818;
+    flex-shrink: 0;
+}
+
+.t-cont-history-bulk-bar span {
+    color: #aaa;
+    font-size: 12px;
+}
+
+.t-cont-history-bulk-bar .danger {
+    color: #ffd6d6;
+    border-color: rgba(248, 113, 113, .45);
+    background: rgba(185, 28, 28, .18);
+}
+
+@media (max-width: 620px) {
+    .t-cont-history-heading span {
+        display: none;
+    }
+
+    .t-cont-history-header-actions .t-btn {
+        padding: 5px 7px;
+        font-size: 12px;
+    }
 }
 
 /* \u9876\u90E8\u64CD\u4F5C\u533A */
@@ -2009,322 +3132,522 @@ textarea.t-input {
     color: #fff;
 }
 
-/* Tools Button (\u66FF\u4EE3\u539F Zen Button) */
-.t-tools-btn {
+/* \u5185\u5BB9\u533A\u53F3\u4E0A\u89D2\u5782\u76F4\u56FE\u6807\u680F */
+.t-tools-rail {
     position: absolute;
-    top: 20px;
-    right: 25px;
-    width: 40px;
-    height: 40px;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 100;
+}
+
+.t-tools-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
     border-radius: 50%;
-    background: rgba(30, 30, 30, 0.6);
+    background: rgba(30, 30, 30, 0.4);
     backdrop-filter: blur(4px);
-    color: #777;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #666;
+    border: 1px solid rgba(255, 255, 255, 0.03);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0.85em;
     cursor: pointer;
-    z-index: 100;
     transition: all 0.2s;
-    opacity: 0.6;
+    opacity: 0.4;
 }
 
-.t-tools-btn:hover {
+.t-tools-icon:hover {
     opacity: 1;
-    background: #333;
+    background: rgba(51, 51, 51, 0.8);
     color: #fff;
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
-.t-tools-btn.active {
+.t-tools-icon.active {
     opacity: 1;
     background: #bfa15f;
     color: #000;
 }
 
-.t-tools-btn.zen-active {
-    opacity: 1;
+.t-tools-icon.is-faved {
+    opacity: 0.95;
+    border-color: rgba(255, 107, 107, 0.4);
+}
+
+#t-main-view.t-zen-mode .t-tools-icon {
     background: transparent;
-    color: #bfa15f;
 }
 
-/* Tools Panel (\u5F39\u51FA\u83DC\u5355) */
-.t-tools-panel {
-    position: absolute;
-    top: 65px;
-    right: 25px;
-    background: #1e1e1e;
-    border: 1px solid #444;
-    border-radius: 8px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-    z-index: 101;
-    min-width: 140px;
-    padding: 5px;
-    animation: fadeIn 0.15s ease;
-}
-
-.t-tools-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #ccc;
-    font-size: 0.9em;
-    transition: all 0.2s;
-}
-
-.t-tools-item:hover {
-    background: #2a2a2a;
-    color: #fff;
-}
-
-.t-tools-item i {
-    width: 18px;
-    text-align: center;
-    color: #888;
-}
-
-.t-tools-item:hover i {
-    color: #bfa15f;
-}
-
-/* Bottom Bar - \u65B0\u5E03\u5C40 */
-/* \u5E95\u90E8\u680F\u5BB9\u5668\uFF1A\u4E09\u5217\u5E03\u5C40 (\u5DE5\u5177\u533A | \u4E3B\u6309\u94AE | \u8F85\u52A9\u533A) */
+/* \u6838\u5FC3\u64CD\u4F5C\u680F */
 .t-bottom-bar {
-    padding: 12px 15px;
-    background: #1e1e1e;
+    min-height: 70px;
+    padding: 10px 14px;
+    background: #181818;
     border-top: 1px solid #333;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    height: 85px;
+    gap: 10px;
     flex-shrink: 0;
     position: relative;
     z-index: 50;
     box-sizing: border-box;
 }
 
-/* \u5DE6\u4FA7\uFF1A\u5DE5\u5177\u533A (2x2 \u7F51\u683C) */
-.t-bot-left {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    width: 92px;
-    height: 60px;
-    flex-shrink: 0;
-}
-
-/* \u5DE6\u4FA7\u5C0F\u5DE5\u5177\u6309\u94AE\u6837\u5F0F */
-.t-btn-grid {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    box-sizing: border-box;
-    line-height: 1;
-    background: #2b2b2b;
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #aaa;
-    font-size: 1em;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.t-btn-grid:hover {
-    background: #383838;
-    color: #fff;
-    border-color: #666;
-}
-
-.t-btn-grid:active {
-    transform: scale(0.95);
-}
-
-/* \u4E2D\u95F4\uFF1A\u4E3B\u64CD\u4F5C\u533A (\u53CC\u6309\u94AE\u7EC4) */
-.t-bot-center {
+.t-continuation-stack {
+    min-width: 0;
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* \u53CC\u6309\u94AE\u7EC4\u5BB9\u5668 */
-.t-run-group {
-    display: flex;
-    gap: 0;
-    border-radius: 30px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* \u901A\u7528\u6F14\u7ECE\u6309\u94AE\u6837\u5F0F */
-.t-run-btn {
-    display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    padding: 10px 18px;
-    min-width: 90px;
-    height: 55px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.75em;
-    transition: all 0.2s;
-    line-height: 1.2;
+    gap: 7px;
 }
 
-.t-run-btn i {
-    font-size: 1.3em;
-}
-
-.t-run-btn span {
-    font-size: 0.85em;
-    white-space: nowrap;
-}
-
-.t-run-btn:active {
-    transform: scale(0.98);
-}
-
-.t-run-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* \u5355\u6B21\u6F14\u7ECE\u6309\u94AE - \u9EC4\u8272\u4E3B\u9898 */
-.t-run-single {
-    background: linear-gradient(135deg, #bfa15f, #d4c08b);
-    color: #1a1a1a;
-    border-radius: 30px 0 0 30px;
-}
-
-.t-run-single:hover:not(:disabled) {
-    background: linear-gradient(135deg, #d4b06b, #e5d1a0);
-    box-shadow: 0 0 15px rgba(191, 161, 95, 0.4);
-}
-
-/* \u961F\u5217\u751F\u6210\u6309\u94AE - \u84DD\u8272\u4E3B\u9898 */
-.t-run-queue {
-    background: linear-gradient(135deg, #4a9eff, #6ab0ff);
-    color: #fff;
-    border-radius: 0 30px 30px 0;
-}
-
-.t-run-queue:hover:not(:disabled) {
-    background: linear-gradient(135deg, #5aafff, #7ac0ff);
-    box-shadow: 0 0 15px rgba(74, 158, 255, 0.4);
-}
-
-/* \u961F\u5217\u6309\u94AE\u6FC0\u6D3B\u72B6\u6001\uFF08\u961F\u5217\u5DF2\u914D\u7F6E\uFF09 */
-.t-run-queue.active {
-    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
-}
-
-/* \u961F\u5217\u6309\u94AE\u672A\u6FC0\u6D3B\u63D0\u793A\u6837\u5F0F */
-.t-run-queue.inactive {
-    background: linear-gradient(135deg, #3a3a3a, #4a4a4a);
-    color: #888;
-}
-
-.t-run-queue.inactive:hover:not(:disabled) {
-    background: linear-gradient(135deg, #4a4a4a, #5a5a5a);
-    box-shadow: none;
-}
-
-/* \u53F3\u4FA7\uFF1A\u8F85\u52A9\u64CD\u4F5C\u533A (2x2 \u7F51\u683C\u5E03\u5C40) */
-.t-bot-right {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    width: 92px;
-    height: 60px;
-    flex-shrink: 0;
-}
-
-/* \u53F3\u4FA7\u8F85\u52A9\u6309\u94AE\u901A\u7528\u6837\u5F0F */
-.t-btn-aux {
+/* \u5FEB\u6377\u6307\u4EE4\u884C\uFF1A\u5DE6\u8FB9\u53EF\u6A2A\u6ED1\uFF0C\u53F3\u8FB9\u56FA\u5B9A\u4F4F\u7F16\u8F91\u5668\u548C\u5DE5\u5177\u4E24\u4E2A\u5165\u53E3\u3002
+   \u56FA\u5B9A\u5728\u53F3\u4FA7\u800C\u4E0D\u662F\u5DE6\u4FA7 \u2014\u2014 \u5DE6\u4FA7\u56FA\u5B9A\u4F1A\u6321\u4F4F\u300C\u8FD8\u80FD\u5F80\u53F3\u6ED1\u300D\u7684\u6697\u793A\uFF0C
+   \u800C\u4E14\u5FEB\u6377\u6307\u4EE4\u624D\u662F\u8FD9\u4E00\u884C\u7684\u4E3B\u4F53\uFF0C\u8BE5\u5148\u88AB\u770B\u5230\u3002 */
+.t-continuation-shortcuts-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    box-sizing: border-box;
-    line-height: 1;
-    background: #2b2b2b;
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #aaa;
-    font-size: 1em;
+    gap: 6px;
+    min-width: 0;
+}
+
+.t-continuation-shortcuts {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.t-continuation-shortcuts-fixed {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.t-continuation-shortcuts::-webkit-scrollbar {
+    display: none;
+}
+
+.t-shortcut-btn {
+    padding: 4px 11px;
+    flex: 0 0 auto;
+    border: 1px solid #3a3a3a;
+    border-radius: 999px;
+    background: #232323;
+    color: #999;
+    font: inherit;
+    font-size: 11px;
+    white-space: nowrap;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background .18s, border-color .18s, color .18s;
 }
 
-.t-btn-aux:hover {
-    background: #383838;
-    color: #fff;
-    border-color: #666;
+.t-shortcut-btn:hover {
+    border-color: rgba(191, 161, 95, .5);
+    background: #2b2b2b;
+    color: #ddd;
 }
 
-.t-btn-aux:active {
-    transform: scale(0.95);
-}
-
-/* \u961F\u5217\u8BBE\u7F6E\u6309\u94AE\u7279\u6B8A\u6837\u5F0F */
-#t-btn-queue-settings.active {
-    background: rgba(144, 205, 244, 0.15);
-    border-color: rgba(144, 205, 244, 0.4);
-    color: #90cdf4;
-}
-
-/* \u8BCA\u65AD\u6309\u94AE - \u6A59\u8272\u4E3B\u9898 */
-.t-btn-diag {
-    color: #f59e0b;
-}
-
-.t-btn-diag:hover {
-    background: rgba(245, 158, 11, 0.15);
-    border-color: rgba(245, 158, 11, 0.4);
-    color: #fbbf24;
-}
-
-/* \u7F16\u8F91\u6309\u94AE */
-#t-btn-edit {
+.t-shortcut-btn.t-shortcut-compose {
+    margin-left: auto;
     color: #bfa15f;
 }
 
-#t-btn-edit:hover {
-    background: rgba(191, 161, 95, 0.15);
-    border-color: rgba(191, 161, 95, 0.4);
+.t-shortcut-btn.t-shortcut-compose i {
+    margin-right: 3px;
+    font-size: 10px;
 }
 
-/* \u4E2D\u6B62\u6309\u94AE - \u7EA2\u8272\u4E3B\u9898 */
-.t-btn-stop {
-    color: #ff6b6b;
+
+.t-continuation-quick {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    position: relative;
+    border: 1px solid #3a3a3a;
+    border-radius: 7px;
+    background: #222;
 }
 
-.t-btn-stop:hover {
-    background: rgba(255, 107, 107, 0.15);
-    border-color: rgba(255, 107, 107, 0.4);
+.t-continuation-history-btn,
+.t-continuation-context-btn,
+.t-continuation-send {
+    height: 36px;
+    margin: 0 4px;
+    padding: 0 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #888;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.t-continuation-history-btn:hover,
+.t-continuation-context-btn:hover,
+.t-continuation-context-btn.active {
+    background: #303030;
+    color: #ddd;
+}
+
+.t-continuation-input-wrap {
+    min-width: 0;
+    flex: 1;
+    position: relative;
+    align-self: stretch;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+}
+
+.t-continuation-input-wrap textarea {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    padding: 11px 8px 9px;
+    resize: none;
+    overflow-y: auto;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #eee;
+    font: inherit;
+    font-size: 13px;
+    line-height: 18px;
+    box-sizing: border-box;
+}
+
+.t-continuation-input-wrap textarea::placeholder {
+    color: #777;
+}
+
+.t-continuation-input-wrap textarea:focus {
+    box-shadow: none;
+}
+
+.t-continuation-quick:focus-within {
+    border-color: rgba(191, 161, 95, .58);
+}
+
+.t-continuation-send {
+    width: 38px;
+    margin-left: 0;
+    background: #bfa15f;
+    color: #171717;
+}
+
+.t-continuation-send:hover:not(:disabled) {
+    background: #d0b575;
+}
+
+.t-continuation-send.is-stop {
+    border-color: rgba(255, 107, 107, .55);
+    background: #d95757;
+    color: #fff;
+}
+
+.t-continuation-send.is-stop:hover {
+    background: #e86868;
+}
+
+/* \u91CD\u6F14\uFF1A\u8DDF\u53D1\u9001\u952E\u540C\u89C4\u683C\u3002\u53D1\u9001\u662F\u4E3B\u64CD\u4F5C\u7528\u5B9E\u5FC3\uFF0C\u91CD\u6F14\u7528\u63CF\u8FB9\uFF0C
+   \u4E24\u4E2A\u6328\u7740\u624D\u4E0D\u4F1A\u8BEF\u70B9 */
+.t-continuation-replay {
+    height: 36px;
+    width: 34px;
+    margin: 0 2px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border: 1px solid #3f3f3f;
+    border-radius: 5px;
+    background: transparent;
+    color: #999;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color .18s, color .18s, background .18s;
+}
+
+.t-continuation-replay:hover:not(:disabled) {
+    border-color: rgba(191, 161, 95, .55);
+    background: #2b2b2b;
+    color: #d0b575;
+}
+
+.t-continuation-replay:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.t-continuation-replay:disabled,
+.t-continuation-send:disabled,
+.t-continuation-history-btn:disabled,
+.t-continuation-context-btn:disabled,
+.t-continuation-input-wrap textarea:disabled {
+    cursor: not-allowed;
+    opacity: .42;
+}
+
+
+
+
+.t-continuation-context-popover {
+    position: absolute;
+    z-index: 120;
+    bottom: calc(100% + 9px);
+    border: 1px solid #444;
+    border-radius: 7px;
+    background: #1d1d1d;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, .48);
+}
+
+.t-continuation-context-popover[hidden] {
+    display: none;
+}
+
+
+
+
+
+
+
+.t-continuation-context-popover {
+    right: 46px;
+    width: 248px;
+    padding: 12px;
+}
+
+.t-continuation-context-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.t-continuation-context-head strong {
+    color: #eee;
+    font-size: 13px;
+}
+
+.t-continuation-context-head span,
+.t-continuation-context-stats {
+    color: #888;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.t-continuation-stepper {
+    margin: 12px 0 10px;
+    display: grid;
+    grid-template-columns: 34px 1fr 34px;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-continuation-stepper button {
+    width: 34px;
+    height: 32px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background: #292929;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.t-continuation-stepper button:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+.t-continuation-stepper span {
+    color: #bbb;
+    font-size: 12px;
+    text-align: center;
+}
+
+.t-continuation-stepper strong {
+    color: #bfa15f;
+    font-size: 17px;
+}
+
+.t-continuation-context-stats.is-warning {
+    color: #ff7675;
+}
+
+/* \u5DE5\u5177\u7BB1\u62BD\u5C49 */
+.t-toolbox-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 106;
+    visibility: hidden;
+    background: rgba(0, 0, 0, .28);
+    opacity: 0;
+    transition: opacity .2s, visibility .2s;
+}
+
+.t-toolbox-panel {
+    position: absolute;
+    z-index: 107;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: #191919;
+    border-left: 1px solid #444;
+    box-shadow: -14px 0 34px rgba(0, 0, 0, .5);
+    transform: translateX(102%);
+    transition: transform .24s ease;
+}
+
+.t-toolbox-open .t-toolbox-backdrop {
+    visibility: visible;
+    opacity: 1;
+}
+
+.t-toolbox-open .t-toolbox-panel {
+    transform: translateX(0);
+}
+
+.t-toolbox-header {
+    min-height: 62px;
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+    box-sizing: border-box;
+}
+
+.t-toolbox-header div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.t-toolbox-header strong {
+    color: #eee;
+    font-size: 15px;
+}
+
+.t-toolbox-header span,
+.t-toolbox-section-title {
+    color: #777;
+    font-size: 11px;
+}
+
+.t-toolbox-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 6px;
+    background: #292929;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.t-toolbox-body {
+    flex: 1;
+    min-height: 0;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.t-toolbox-section + .t-toolbox-section {
+    margin-top: 16px;
+}
+
+.t-toolbox-section-title {
+    margin: 0 0 7px 2px;
+}
+
+.t-toolbox-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.t-toolbox-action {
+    min-width: 0;
+    min-height: 54px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #393939;
+    border-radius: 6px;
+    background: #232323;
+    color: #bbb;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: background .18s, border-color .18s, color .18s;
+}
+
+.t-toolbox-action i {
+    width: 19px;
+    flex: 0 0 19px;
+    color: #888;
+    text-align: center;
+}
+
+.t-toolbox-action:hover {
+    background: #2d2d2d;
+    border-color: #555;
+    color: #fff;
+}
+
+.t-toolbox-action.active,
+#t-btn-queue-settings.active {
+    border-color: rgba(144, 205, 244, .45);
+    background: rgba(144, 205, 244, .12);
+    color: #b8e0fa;
+}
+
+.t-toolbox-action.inactive {
+    color: #777;
+}
+
+.t-toolbox-action-wide {
+    grid-column: 1 / -1;
+}
+
+.t-toolbox-stop {
+    display: none;
+    min-height: 44px;
+    margin: 0 12px 12px;
+    border: 1px solid rgba(255, 107, 107, .45);
+    border-radius: 6px;
+    background: rgba(255, 107, 107, .1);
     color: #ff8a8a;
+    font: inherit;
+    cursor: pointer;
 }
 
-.t-btn-stop:active {
-    background: rgba(255, 107, 107, 0.25);
+.t-toolbox-stop.is-active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
-
-/* ... (\u4FDD\u7559 Media Query \u9002\u914D) ... */
 
 /* \u7B5B\u9009\u5F39\u51FA\u83DC\u5355 */
 .t-filter-popover {
@@ -2416,6 +3739,17 @@ textarea.t-input {
         padding: 10px;
     }
 
+    /* \u56FE\u6807\u95F4\u8DDD\u6536\u7A84\uFF1Abase.css \u7684 15px \u662F\u7ED9\u684C\u9762\u7559\u767D\u7528\u7684\uFF0C
+       \u7A84\u5C4F\u4E0B\u4F1A\u628A\u6807\u9898\u6324\u5230\u622A\u65AD\uFF08.t-title-container \u662F overflow:hidden\uFF09 */
+    #t-main-view .t-header .t-icon-btn {
+        margin-left: 8px;
+        font-size: 1.05em;
+    }
+
+    #t-main-view .t-header .t-close {
+        margin-left: 8px;
+    }
+
     .t-top-bar {
         height: auto;
         flex-direction: column;
@@ -2470,58 +3804,137 @@ textarea.t-input {
         padding: 15px;
     }
 
-    /* --- [\u91CD\u70B9\u4FEE\u6539] \u5E95\u90E8\u64CD\u4F5C\u680F\u9002\u914D --- */
+    /* \u79FB\u52A8\u7AEF\u6838\u5FC3\u64CD\u4F5C\u680F */
     .t-bottom-bar {
-        flex-direction: row;
-        height: 80px;
-        padding: 8px 10px;
-        gap: 10px;
+        height: auto;
+        min-height: 62px;
+        padding: 8px;
+        display: block;
     }
 
-    /* \u5DE6\u4FA7\u7F51\u683C\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
-    .t-bot-left {
-        width: 76px;
-        height: 55px;
-        gap: 4px;
+    .t-continuation-stack {
+        gap: 6px;
     }
 
-    .t-btn-grid {
-        font-size: 0.95em;
+    .t-continuation-quick {
+        height: 46px;
     }
 
-    /* \u4E2D\u95F4\u53CC\u6309\u94AE\u7EC4\uFF1A\u7A0D\u5FAE\u7F29\u5C0F */
-    .t-run-group {
-        border-radius: 25px;
+    .t-shortcut-btn {
+        padding: 3px 10px;
     }
 
-    .t-run-btn {
-        min-width: 75px;
-        height: 50px;
-        padding: 8px 12px;
-        font-size: 0.7em;
+    .t-shortcut-btn.t-shortcut-compose span,
+    .t-shortcut-btn.t-shortcut-compose {
+        margin-left: 0;
     }
 
-    .t-run-btn i {
-        font-size: 1.2em;
+    .t-continuation-history-btn {
+        width: 38px;
+        height: 42px;
+        margin: 0 2px;
+        padding: 0 5px;
     }
 
-    .t-run-single {
-        border-radius: 25px 0 0 25px;
+    .t-continuation-input-wrap textarea {
+        height: 42px;
+        padding: 12px 5px 10px;
+        font-size: 12px;
     }
 
-    .t-run-queue {
-        border-radius: 0 25px 25px 0;
+    .t-continuation-context-btn {
+        width: 38px;
+        height: 42px;
+        margin: 0;
+        padding: 0;
+        font-size: 13px;
     }
 
-    /* \u53F3\u4FA7\u8F85\u52A9\u533A\uFF1A\u79FB\u52A8\u7AEF\u9002\u914D */
-    .t-bot-right {
-        width: 76px;
-        height: 55px;
-        gap: 4px;
+    .t-continuation-context-btn i {
+        display: none;
     }
 
-    .t-btn-aux {
-        font-size: 0.85em;
+    .t-continuation-send {
+        width: 38px;
+        height: 42px;
+        margin-right: 4px;
+        padding: 0;
+    }
+
+    /* \u5DE5\u5177\u5165\u53E3\u5DF2\u7ECF\u5E76\u8FDB\u5FEB\u6377\u6307\u4EE4\u884C\uFF0C\u8FD9\u91CC\u53EA\u9700\u8981\u8BA9\u5B83\u8DDF\u5176\u4ED6\u80F6\u56CA\u4E00\u6837\u9AD8 */
+    .t-shortcut-toolbox {
+        padding: 3px 10px;
+    }
+
+    .t-continuation-context-popover {
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: 62px;
+        width: auto;
+        box-sizing: border-box;
+    }
+
+    .t-toolbox-backdrop {
+        position: fixed;
+        inset: 0;
+    }
+
+    .t-toolbox-panel {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: min(76dvh, 620px);
+        border-top: 1px solid #555;
+        border-left: 0;
+        border-radius: 12px 12px 0 0;
+        transform: translateY(102%);
+    }
+
+    .t-toolbox-open .t-toolbox-panel {
+        transform: translateY(0);
+    }
+
+    .t-toolbox-close i {
+        transform: rotate(90deg);
+    }
+
+    /* \u9762\u677F\u9AD8\u5EA6\u7531 max-height \u6536\u53E3\uFF0Cbody \u5FC5\u987B\u53EF\u6536\u7F29\u624D\u4F1A\u51FA\u73B0\u6EDA\u52A8\u6761 */
+    .t-toolbox-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 10px 10px max(10px, env(safe-area-inset-bottom));
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .t-toolbox-header {
+        min-height: 52px;
+        padding: 9px 12px;
+        flex-shrink: 0;
+    }
+
+    .t-toolbox-section + .t-toolbox-section {
+        margin-top: 12px;
+    }
+
+    .t-toolbox-action {
+        min-height: 44px;
+        padding: 7px;
+    }
+
+    .t-toolbox-action i {
+        width: 16px;
+        flex: 0 0 16px;
+    }
+
+    .t-toolbox-stop {
+        min-height: 42px;
+        margin: 0 10px 10px;
+        flex-shrink: 0;
     }
 }
 
@@ -2534,8 +3947,8 @@ textarea.t-input {
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 600px;
-    max-height: 70vh;
+    max-width: 860px;
+    max-height: 80vh;
     background: #1a1a1a;
     border: 1px solid #444;
     border-radius: 10px;
@@ -2621,7 +4034,7 @@ textarea.t-input {
 
 .t-wi-layout {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 240px 1fr;
     gap: 10px;
     overflow: hidden;
     height: 100%;
@@ -2747,6 +4160,70 @@ textarea.t-input {
 
 .t-wi-entry-pane-badge.inactive {
     color: #999;
+}
+
+/* \u6761\u76EE\u641C\u7D22\uFF08\u6309\u6807\u9898\u8FC7\u6EE4\uFF09 */
+.t-wi-entry-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+}
+
+.t-wi-entry-search .t-wi-search-icon {
+    position: absolute;
+    left: 22px;
+    color: #666;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.t-wi-entry-search input {
+    width: 100%;
+    height: 30px;
+    padding: 0 28px 0 30px;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #222;
+    color: #ddd;
+    font-size: 12px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.t-wi-entry-search input:focus {
+    outline: none;
+    border-color: rgba(144, 205, 244, 0.5);
+}
+
+.t-wi-entry-search input::placeholder {
+    color: #666;
+}
+
+.t-wi-search-clear {
+    position: absolute;
+    right: 20px;
+    display: none;
+    color: #888;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.t-wi-search-clear:hover {
+    color: #ddd;
+}
+
+.t-wi-entry-search.has-query .t-wi-search-clear {
+    display: block;
+}
+
+.t-wi-title-hit {
+    background: rgba(144, 205, 244, 0.25);
+    color: #cfe8ff;
+    border-radius: 2px;
 }
 
 .t-wi-entry-list {
@@ -3561,6 +5038,14 @@ textarea.t-input {
     padding: 14px;
 }
 
+.t-cont-history-empty {
+    display: grid;
+    min-height: 180px;
+    place-items: center;
+    color: #777;
+    font-size: 13px;
+}
+
 .t-cont-history-session {
     margin-bottom: 12px;
     border: 1px solid #343434;
@@ -3750,6 +5235,17 @@ textarea.t-input {
     border: 0;
 }
 
+.t-cont-history-cross-hint {
+    margin-top: 9px;
+    padding: 5px 8px;
+    border-left: 2px solid rgba(191, 161, 95, 0.55);
+    border-radius: 0 4px 4px 0;
+    background: rgba(191, 161, 95, 0.08);
+    color: #9a8a63;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
 .t-cont-history-actions {
     gap: 7px;
     margin-top: 10px;
@@ -3779,17 +5275,24 @@ textarea.t-input {
     }
 
     .t-cont-history-session-toggle {
-        align-items: flex-start;
-        flex-wrap: wrap;
+        align-items: center;
+        flex-wrap: nowrap;
     }
 
-    .t-cont-history-session-toggle > span {
-        flex: 1;
+    .t-cont-history-session-toggle > .t-cont-select-wrap {
+        flex: 0 0 auto;
+    }
+
+    .t-cont-history-session-toggle > span:not(.t-cont-select-wrap) {
+        flex: 1 1 auto;
+        min-width: 0;
     }
 
     .t-cont-history-session-toggle > small {
-        width: 100%;
-        margin-left: 18px;
+        width: auto;
+        margin-left: auto;
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 
     .t-cont-history-session-body {
@@ -4440,6 +5943,372 @@ textarea.t-input {
 }
 
 
+/* === main-window-legacy.css === */
+/* css/main-window-legacy.css - \u7ECF\u5178\u7248\uFF085.1.2\uFF09\u4E3B\u754C\u9762\u5E03\u5C40
+ *
+ * \u4EC5\u5305\u542B\u7ECF\u5178\u5E03\u5C40\u72EC\u6709\u7684\u9009\u62E9\u5668\uFF0C\u4EE5\u53CA\u4E0E 5.1.5 \u51B2\u7A81\u9700\u8981\u8986\u76D6\u7684\u89C4\u5219\u3002
+ * \u5168\u90E8\u9650\u5B9A\u5728 #t-main-view.t-layout-legacy \u4F5C\u7528\u57DF\u5185\uFF0C
+ * \u56E0\u6B64\u53EF\u4E0E main-window.css \u540C\u65F6\u5E38\u9A7B\u800C\u4E92\u4E0D\u5F71\u54CD\u3002
+ *
+ * \u6CE8\u610F\uFF1A\u4E16\u754C\u4E66\u9009\u62E9\u5668\uFF08.t-wi-*\uFF09\u4E0E\u7EED\u5199\u5386\u53F2\uFF08.t-cont-history-*\uFF09\u5C5E\u4E8E\u4E24\u5957\u5E03\u5C40
+ * \u5171\u7528\u7684\u5B50\u7A97\u53E3\uFF0C\u4E0D\u968F\u4E3B\u754C\u9762\u5206\u53C9\uFF0C\u4E00\u5F8B\u6CBF\u7528 main-window.css \u7684\u65B0\u7248\u6837\u5F0F\u3002
+ */
+
+#t-main-view.t-layout-legacy .t-tools-btn {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(4px);
+    color: #777;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+#t-main-view.t-layout-legacy .t-tools-btn:hover {
+    opacity: 1;
+    background: #333;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+#t-main-view.t-layout-legacy .t-tools-btn.active {
+    opacity: 1;
+    background: #bfa15f;
+    color: #000;
+}
+
+#t-main-view.t-layout-legacy .t-tools-btn.zen-active {
+    opacity: 1;
+    background: transparent;
+    color: #bfa15f;
+}
+
+#t-main-view.t-layout-legacy .t-tools-panel {
+    position: absolute;
+    top: 65px;
+    right: 25px;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 101;
+    min-width: 140px;
+    padding: 5px;
+    animation: fadeIn 0.15s ease;
+}
+
+#t-main-view.t-layout-legacy .t-tools-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+#t-main-view.t-layout-legacy .t-tools-item:hover {
+    background: #2a2a2a;
+    color: #fff;
+}
+
+#t-main-view.t-layout-legacy .t-tools-item i {
+    width: 18px;
+    text-align: center;
+    color: #888;
+}
+
+#t-main-view.t-layout-legacy .t-tools-item:hover i {
+    color: #bfa15f;
+}
+
+#t-main-view.t-layout-legacy .t-bot-left {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 92px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+#t-main-view.t-layout-legacy .t-btn-grid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #aaa;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#t-main-view.t-layout-legacy .t-btn-grid:hover {
+    background: #383838;
+    color: #fff;
+    border-color: #666;
+}
+
+#t-main-view.t-layout-legacy .t-btn-grid:active {
+    transform: scale(0.95);
+}
+
+#t-main-view.t-layout-legacy .t-bot-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#t-main-view.t-layout-legacy .t-run-group {
+    display: flex;
+    gap: 0;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+#t-main-view.t-layout-legacy .t-run-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 18px;
+    min-width: 90px;
+    height: 55px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.75em;
+    transition: all 0.2s;
+    line-height: 1.2;
+}
+
+#t-main-view.t-layout-legacy .t-run-btn i {
+    font-size: 1.3em;
+}
+
+#t-main-view.t-layout-legacy .t-run-btn span {
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+#t-main-view.t-layout-legacy .t-run-btn:active {
+    transform: scale(0.98);
+}
+
+#t-main-view.t-layout-legacy .t-run-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#t-main-view.t-layout-legacy .t-run-single {
+    background: linear-gradient(135deg, #bfa15f, #d4c08b);
+    color: #1a1a1a;
+    border-radius: 30px 0 0 30px;
+}
+
+#t-main-view.t-layout-legacy .t-run-single:hover:not(:disabled) {
+    background: linear-gradient(135deg, #d4b06b, #e5d1a0);
+    box-shadow: 0 0 15px rgba(191, 161, 95, 0.4);
+}
+
+#t-main-view.t-layout-legacy .t-run-queue {
+    background: linear-gradient(135deg, #4a9eff, #6ab0ff);
+    color: #fff;
+    border-radius: 0 30px 30px 0;
+}
+
+#t-main-view.t-layout-legacy .t-run-queue:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5aafff, #7ac0ff);
+    box-shadow: 0 0 15px rgba(74, 158, 255, 0.4);
+}
+
+#t-main-view.t-layout-legacy .t-run-queue.active {
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+}
+
+#t-main-view.t-layout-legacy .t-run-queue.inactive {
+    background: linear-gradient(135deg, #3a3a3a, #4a4a4a);
+    color: #888;
+}
+
+#t-main-view.t-layout-legacy .t-run-queue.inactive:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4a4a4a, #5a5a5a);
+    box-shadow: none;
+}
+
+#t-main-view.t-layout-legacy .t-bot-right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 92px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+#t-main-view.t-layout-legacy .t-btn-aux {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #aaa;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#t-main-view.t-layout-legacy .t-btn-aux:hover {
+    background: #383838;
+    color: #fff;
+    border-color: #666;
+}
+
+#t-main-view.t-layout-legacy .t-btn-aux:active {
+    transform: scale(0.95);
+}
+
+#t-main-view.t-layout-legacy .t-btn-diag {
+    color: #f59e0b;
+}
+
+#t-main-view.t-layout-legacy .t-btn-diag:hover {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+}
+
+#t-main-view.t-layout-legacy #t-btn-edit {
+    color: #bfa15f;
+}
+
+#t-main-view.t-layout-legacy #t-btn-edit:hover {
+    background: rgba(191, 161, 95, 0.15);
+    border-color: rgba(191, 161, 95, 0.4);
+}
+
+#t-main-view.t-layout-legacy .t-btn-stop {
+    color: #ff6b6b;
+}
+
+#t-main-view.t-layout-legacy .t-btn-stop:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.4);
+    color: #ff8a8a;
+}
+
+#t-main-view.t-layout-legacy .t-btn-stop:active {
+    background: rgba(255, 107, 107, 0.25);
+}
+
+#t-main-view.t-layout-legacy .t-bottom-bar {
+    padding: 12px 15px;
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    height: 85px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 50;
+    box-sizing: border-box;
+    /* \u65B0\u7248\u7528 min-height \u6491\u9AD8\uFF0C\u7ECF\u5178\u7248\u9760\u56FA\u5B9A height\uFF0C\u9700\u663E\u5F0F\u91CD\u7F6E */
+    min-height: 0;
+}
+
+#t-main-view.t-layout-legacy #t-btn-queue-settings.active {
+    background: rgba(144, 205, 244, 0.15);
+    border-color: rgba(144, 205, 244, 0.4);
+    color: #90cdf4;
+}
+
+@media screen and (max-width: 600px) {
+    #t-main-view.t-layout-legacy .t-bot-left {
+        width: 76px;
+        height: 55px;
+        gap: 4px;
+    }
+
+    #t-main-view.t-layout-legacy .t-btn-grid {
+        font-size: 0.95em;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-group {
+        border-radius: 25px;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-btn {
+        min-width: 75px;
+        height: 50px;
+        padding: 8px 12px;
+        font-size: 0.7em;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-btn i {
+        font-size: 1.2em;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-single {
+        border-radius: 25px 0 0 25px;
+    }
+
+    #t-main-view.t-layout-legacy .t-run-queue {
+        border-radius: 0 25px 25px 0;
+    }
+
+    #t-main-view.t-layout-legacy .t-bot-right {
+        width: 76px;
+        height: 55px;
+        gap: 4px;
+    }
+
+    #t-main-view.t-layout-legacy .t-btn-aux {
+        font-size: 0.85em;
+    }
+
+    #t-main-view.t-layout-legacy .t-bottom-bar {
+        flex-direction: row;
+        height: 80px;
+        padding: 8px 10px;
+        gap: 10px;
+        /* \u65B0\u7248\u79FB\u52A8\u7AEF\u6539\u7528 grid \u4E24\u5217\u5E03\u5C40\uFF0C\u7ECF\u5178\u7248\u9700\u8FD8\u539F\u4E3A flex */
+        display: flex;
+        align-items: center;
+        min-height: 0;
+    }
+}
+
+
 /* === settings.css === */
 /* css/settings.css - \u8BBE\u7F6E\u7A97\u53E3 */
 
@@ -4547,17 +6416,25 @@ textarea.t-input {
 .titania-update-overlay {
     position: fixed;
     inset: 0;
+    /* \u79FB\u52A8\u7AEF\u6D4F\u89C8\u5668\u5730\u5740\u680F\u4F1A\u8BA9 100vh \u5927\u4E8E\u53EF\u89C6\u9AD8\u5EA6\uFF0C\u7528 dvh \u8D34\u5408\u5B9E\u9645\u89C6\u53E3 */
+    height: 100vh;
+    height: 100dvh;
     z-index: 100000;
-    display: grid;
-    place-items: center;
+    display: flex;
     padding: 18px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     background: rgba(5, 8, 12, 0.78);
     backdrop-filter: blur(5px);
 }
 
 .titania-update-dialog {
     width: min(560px, 100%);
+    /* margin:auto \u5C45\u4E2D\uFF1A\u5185\u5BB9\u8D85\u9AD8\u65F6\u5411\u4E0B\u6EA2\u51FA\u5E76\u53EF\u6EDA\u52A8\uFF0C\u4E0D\u4F1A\u628A\u9876\u90E8\u9876\u51FA\u5C4F\u5E55 */
+    margin: auto;
     max-height: min(720px, 90vh);
+    max-height: min(720px, 90dvh);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -4674,6 +6551,37 @@ textarea.t-input {
 .titania-update-footer button:disabled {
     cursor: wait;
     opacity: 0.65;
+}
+
+@media (max-width: 600px) {
+    .titania-update-overlay {
+        padding: 12px;
+    }
+
+    .titania-update-dialog {
+        max-height: calc(100vh - 24px);
+        max-height: calc(100dvh - 24px);
+    }
+
+    .titania-update-header {
+        padding: 16px 16px 12px;
+    }
+
+    .titania-update-header h2 {
+        font-size: 17px;
+    }
+
+    .titania-update-body {
+        padding: 4px 16px;
+    }
+
+    .titania-update-error {
+        margin: 0 16px 10px;
+    }
+
+    .titania-update-footer {
+        padding: 12px 16px 14px;
+    }
 }
 
 #t-settings-view {
@@ -6011,6 +7919,29 @@ textarea.t-input {
         padding: 8px 10px;
     }
 
+    /* \u5DE5\u5177\u680F\u539F\u672C\u662F\u5355\u884C\u4E0D\u6362\u884C\uFF0C\u7A84\u5C4F\u4E0B 6 \u4E2A\u63A7\u4EF6\u6324\u4E0D\u4E0B\uFF0C
+       \u800C .t-mgr-main \u662F overflow:hidden\uFF0C\u6700\u540E\u7684\u300C\u7BA1\u7406\u300D\u6309\u94AE\u4F1A\u88AB\u76F4\u63A5\u5207\u6389\u3002
+       \u6539\u6210\u641C\u7D22\u6846\u72EC\u5360\u4E00\u884C\uFF0C\u6392\u5E8F\u548C\u6309\u94AE\u6392\u7B2C\u4E8C\u884C */
+    .t-mgr-toolbar {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .t-mgr-search {
+        flex: 1 1 100%;
+    }
+
+    .t-mgr-sort {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* \u6309\u94AE\u4E0D\u53C2\u4E0E\u538B\u7F29\uFF0C\u5B81\u53EF\u6362\u884C\u4E5F\u4E0D\u8981\u88AB\u538B\u6241\u5230\u770B\u4E0D\u6E05 */
+    .t-mgr-toolbar .t-tool-btn {
+        flex-shrink: 0;
+    }
+
     .t-mgr-ov-meta,
     .t-mgr-ov-top {
         font-size: 0.75em;
@@ -6085,6 +8016,565 @@ textarea.t-input {
 }
 
 
+/* === workshop.css === */
+/* css/workshop.css - \u56DE\u58F0\u5DE5\u574A\u6D4F\u89C8\u7A97 */
+
+#t-ws-view {
+    height: 85vh;
+    width: 880px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    background: #121212;
+}
+
+.t-ws-body {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+    /* flex \u5B50\u9879\u9ED8\u8BA4 min-height:auto\uFF0C\u4E0D\u52A0\u8FD9\u884C\u5C31\u6491\u4E0D\u4F4F\uFF0C
+       \u5185\u90E8\u7684 .t-ws-grid \u7B97\u4E0D\u51FA\u53EF\u7528\u9AD8\u5EA6\uFF0C\u6EDA\u52A8\u6761\u6C38\u8FDC\u4E0D\u51FA\u73B0\u3001\u5361\u7247\u88AB\u6324\u538B */
+    min-height: 0;
+}
+
+/* \u2500\u2500 \u5DE5\u5177\u680F \u2500\u2500 */
+.t-ws-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 10px 15px;
+    border-bottom: 1px solid #2a2a2a;
+    background: #181818;
+    flex-shrink: 0;
+}
+
+.t-ws-search {
+    flex-grow: 1;
+    min-width: 0;
+    background-color: #1a1a1a !important;
+    color: #eee !important;
+    border: 1px solid #3a3a3a !important;
+    border-radius: 6px;
+    padding: 7px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.t-ws-search:focus {
+    border-color: var(--t-theme) !important;
+}
+
+.t-ws-select {
+    background: #1a1a1a;
+    color: #ccc;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 7px 8px;
+    cursor: pointer;
+    max-width: 130px;
+    transition: border-color 0.2s;
+}
+
+.t-ws-select:hover {
+    border-color: #555;
+}
+
+/* \u2500\u2500 \u7EDF\u8BA1\u6761 \u2500\u2500 */
+.t-ws-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 8px 15px;
+    background: #151515;
+    border-bottom: 1px solid #2a2a2a;
+    color: #777;
+    font-size: 0.8em;
+    flex-shrink: 0;
+}
+
+.t-ws-stats:empty {
+    display: none;
+}
+
+.t-ws-stats b {
+    color: var(--t-theme);
+    font-weight: bold;
+}
+
+.t-ws-stats-filter b {
+    color: #90cdf4;
+}
+
+/* \u2500\u2500 \u5361\u7247\u7F51\u683C \u2500\u2500 */
+/* \u591A\u5217\u7D27\u51D1\u89C6\u56FE\uFF0C\u53C2\u8003\u6536\u85CF\u753B\u5ECA\u7684 compact \u6A21\u5F0F\u3002
+   .t-ws-body \u8865\u4E86 min-height:0 \u4E4B\u540E\u8FD9\u91CC\u624D\u80FD\u5B89\u5168\u7528 grid \u2014\u2014
+   \u7F3A\u90A3\u4E00\u5C42\u65F6\u884C\u9AD8\u7B97\u4E0D\u51FA\u6765\uFF0C\u5361\u7247\u4F1A\u88AB\u538B\u6241\u3002 */
+.t-ws-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
+    align-content: start;
+    /* \u53CC\u5C42\u6E10\u53D8\u6253\u5E95\uFF0C\u907F\u514D\u5927\u7247\u7EAF\u8272\u663E\u5F97\u677F\u3002\u624B\u6CD5\u540C\u6536\u85CF\u753B\u5ECA\u7684 .t-fav-grid-area\uFF1A
+       \u7AD6\u5411\u6E10\u53D8\u538B\u51FA\u7EB5\u6DF1\uFF0C\u53F3\u4E0A\u89D2\u4E00\u56E2\u6696\u5149\u547C\u5E94\u91D1\u8272\u4E3B\u9898 */
+    background:
+        linear-gradient(180deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.65)),
+        radial-gradient(90% 140% at 100% 0%, rgba(54, 40, 24, 0.28), transparent 70%);
+}
+
+.t-ws-grid-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.t-ws-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    /* \u7528 min-height \u800C\u4E0D\u662F\u56FA\u5B9A height\uFF1A\u540C\u4E00\u884C\u7684\u5361\u7247\u4F1A\u81EA\u52A8\u7B49\u9AD8\uFF08grid \u9ED8\u8BA4 stretch\uFF09\uFF0C
+       \u5B57\u53F7\u88AB\u7528\u6237\u653E\u5927\u65F6\u4E5F\u4E0D\u4F1A\u88C1\u6389\u5185\u5BB9 */
+    min-height: 200px;
+    padding: 12px 12px 12px 16px;
+    background: linear-gradient(160deg, #1d1d1d 0%, #151515 100%);
+    border: 1px solid #2e2e2e;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    animation: fadeIn 0.25s;
+}
+
+/* \u5DE6\u4FA7\u5F3A\u8C03\u6761\uFF1A\u989C\u8272\u6309\u4F5C\u8005\u53D6\uFF0C\u540C\u4E00\u4F5C\u8005\u7684\u6295\u7A3F\u770B\u8D77\u6765\u662F\u4E00\u7EC4 */
+.t-ws-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: var(--card-accent, var(--t-theme));
+    opacity: 0.85;
+}
+
+.t-ws-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(191, 161, 95, 0.55);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* \u5DF2\u4E0B\u8F7D\u8FC7\u7684\u6574\u5361\u538B\u6697\uFF0C\u65B9\u4FBF\u4E00\u773C\u8DF3\u8FC7 */
+.t-ws-card.is-dup {
+    opacity: 0.55;
+}
+
+.t-ws-card.is-dup:hover {
+    opacity: 1;
+}
+
+.t-ws-dup-flag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(225deg, var(--t-theme) 50%, transparent 50%);
+    color: #1a1a1a;
+    font-size: 0.66em;
+    text-align: right;
+    padding: 2px 4px 0 0;
+    box-sizing: border-box;
+}
+
+/* \u9876\u90E8\uFF1A\u5934\u50CF + \u4F5C\u8005 + \u70ED\u5EA6 */
+.t-ws-card-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.t-ws-card-head .t-ws-author-name {
+    flex: 1 1 auto;
+}
+
+.t-ws-card-title {
+    color: #f0f0f0;
+    font-weight: bold;
+    font-size: 1em;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* \u70ED\u5EA6\u5FBD\u7AE0 */
+.t-ws-heat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: #262626;
+    color: #777;
+    font-size: 0.72em;
+    white-space: nowrap;
+}
+
+.t-ws-heat.is-hot {
+    background: rgba(191, 161, 95, 0.16);
+    color: var(--t-theme);
+}
+
+.t-ws-card-desc {
+    flex: 1 1 auto;
+    color: #9a9a9a;
+    font-size: 0.84em;
+    line-height: 1.45;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.t-ws-card-tags {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    max-height: 18px;
+    overflow: hidden;
+}
+
+.t-ws-tag {
+    display: inline-block;
+    background: #282828;
+    color: #888;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 0.72em;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+.t-ws-tag-cat {
+    background: rgba(191, 161, 95, 0.16);
+    color: var(--t-theme);
+}
+
+/* \u5E95\u90E8\u64CD\u4F5C */
+.t-ws-card-actions {
+    display: flex;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #262626;
+    margin-top: auto;
+}
+
+.t-ws-card-actions .t-btn {
+    flex: 1;
+    padding: 5px 4px;
+    font-size: 0.78em;
+    white-space: nowrap;
+}
+
+/* \u5934\u50CF\uFF1A\u8272\u5757\u6253\u5E95\uFF0C\u56FE\u7247\u76D6\u5728\u4E0A\u5C42\u3002
+   Discord CDN \u8FDE\u4E0D\u4E0A\u65F6 JS \u4F1A\u6458\u6389 img\uFF0C\u81EA\u7136\u9732\u51FA\u5E95\u4E0B\u7684\u9996\u5B57 */
+.t-ws-avatar {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: block;
+    overflow: hidden;
+    border: 1px solid #383838;
+}
+
+.t-ws-avatar-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #14100a;
+    font-weight: bold;
+    font-size: 0.8em;
+}
+
+.t-ws-avatar-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.t-ws-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.t-ws-author-meta {
+    min-width: 0;
+}
+
+.t-ws-author-name {
+    color: #aaa;
+    font-size: 0.78em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.t-ws-author-time {
+    color: #666;
+    font-size: 0.72em;
+}
+
+/* \u2500\u2500 \u5360\u4F4D\u6001\uFF1A\u7A7A / \u65E0\u5339\u914D / \u51FA\u9519 \u2500\u2500 */
+.t-ws-placeholder {
+    text-align: center;
+    color: #555;
+    padding: 40px 20px;
+    /* \u7F51\u683C\u662F\u591A\u5217\u7684\uFF0C\u5360\u4F4D\u5185\u5BB9\u8981\u6A2A\u8DE8\u6574\u884C\u624D\u4E0D\u4F1A\u88AB\u6324\u6210\u4E00\u6761 */
+    grid-column: 1 / -1;
+}
+
+.t-ws-placeholder>i {
+    font-size: 2.6em;
+    color: #333;
+    margin-bottom: 14px;
+    display: block;
+}
+
+.t-ws-ph-title {
+    color: #aaa;
+    font-size: 1.05em;
+    margin-bottom: 6px;
+}
+
+.t-ws-ph-desc {
+    color: #666;
+    font-size: 0.85em;
+    margin-bottom: 14px;
+}
+
+.t-ws-placeholder .t-btn {
+    display: inline-flex;
+    margin: 0 auto;
+}
+
+/* \u2500\u2500 \u9AA8\u67B6\u5C4F \u2500\u2500 */
+.t-ws-skeleton {
+    pointer-events: none;
+}
+
+.t-ws-skeleton::before {
+    background: #2a2a2a;
+}
+
+.t-ws-sk-line {
+    height: 10px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #232323 25%, #2d2d2d 50%, #232323 75%);
+    background-size: 200% 100%;
+    animation: t-ws-shimmer 1.4s infinite;
+}
+
+.t-ws-sk-circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, #232323 25%, #2d2d2d 50%, #232323 75%);
+    background-size: 200% 100%;
+    animation: t-ws-shimmer 1.4s infinite;
+}
+
+@keyframes t-ws-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* \u2500\u2500 \u9884\u89C8\u5F39\u5C42 \u2500\u2500 */
+.t-ws-preview-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(2px);
+    z-index: 20002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.t-ws-preview-box {
+    width: 100%;
+    max-width: 700px;
+    height: 80vh;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.t-ws-preview-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 14px;
+    gap: 10px;
+}
+
+.t-ws-pv-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.t-ws-pv-desc {
+    color: #bbb;
+    font-size: 0.88em;
+    line-height: 1.55;
+    padding: 8px 12px;
+    background: #1a1a1a;
+    border-radius: 4px;
+    border-left: 2px solid var(--t-theme);
+}
+
+.t-ws-pv-label {
+    color: #888;
+    font-size: 0.8em;
+}
+
+.t-ws-pv-prompt {
+    flex: 1;
+    resize: none;
+    min-height: 0;
+    font-family: var(--t-font-mono);
+    font-size: 0.88em;
+    line-height: 1.6;
+}
+
+/* \u2500\u2500 \u79FB\u52A8\u7AEF \u2500\u2500 */
+@media screen and (max-width: 600px) {
+    #t-ws-view {
+        width: 100%;
+        height: 95vh;
+        max-width: 100vw;
+        border-radius: 10px 10px 0 0;
+    }
+
+    #t-ws-view .t-header {
+        padding: 10px;
+    }
+
+    #t-ws-view .t-icon-btn,
+    #t-ws-view .t-close {
+        margin-left: 8px;
+        font-size: 1.05em;
+    }
+
+    .t-ws-toolbar {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+    }
+
+    .t-ws-search {
+        flex: 1 1 100%;
+    }
+
+    .t-ws-select {
+        flex: 1;
+        max-width: none;
+    }
+
+    .t-ws-stats {
+        gap: 10px;
+        padding: 7px 10px;
+    }
+
+    /* \u7A84\u5C4F\u4E24\u5217\u3002minmax \u4F1A\u81EA\u7136\u964D\u7EA7\u2014\u2014320px \u4EE5\u4E0B\u653E\u4E0D\u4E0B\u4E24\u5217\u5C31\u9000\u56DE\u5355\u5217 */
+    .t-ws-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .t-ws-card {
+        min-height: 170px;
+        padding: 10px 10px 10px 14px;
+        gap: 5px;
+        border-radius: 8px;
+    }
+
+    .t-ws-card::before {
+        width: 2px;
+    }
+
+    .t-ws-avatar {
+        width: 22px;
+        height: 22px;
+    }
+
+    .t-ws-card-title {
+        font-size: 0.92em;
+    }
+
+    .t-ws-card-desc {
+        font-size: 0.78em;
+        -webkit-line-clamp: 2;
+    }
+
+    .t-ws-author-name {
+        font-size: 0.72em;
+    }
+
+    .t-ws-heat {
+        padding: 1px 5px;
+        font-size: 0.66em;
+    }
+
+    .t-ws-card-tags {
+        max-height: 16px;
+    }
+
+    .t-ws-card-actions {
+        gap: 5px;
+        padding-top: 7px;
+    }
+
+    .t-ws-card-actions .t-btn {
+        font-size: 0.72em;
+        padding: 5px 2px;
+    }
+}
+
+
 /* === favs.css === */
 /* css/favs.css - \u6536\u85CF\u4E0E\u56FE\u9274 */
 
@@ -6125,6 +8615,25 @@ textarea.t-input {
     position: relative;
     z-index: 2;
     backdrop-filter: blur(8px);
+}
+
+/* \u5DE5\u5177\u680F\u62BD\u5C49\uFF1A\u684C\u9762\u7AEF\u5FFD\u7565 hidden \u5C5E\u6027\u5E76\u5E73\u94FA\uFF0C\u79FB\u52A8\u7AEF\u624D\u6298\u53E0\u4E3A\u4E0B\u62C9\u9762\u677F */
+.t-fav-tools-drawer {
+    display: contents;
+}
+
+.t-fav-drawer-toggle {
+    display: none;
+}
+
+.t-fav-drawer-toggle.is-active {
+    border-color: rgba(231, 202, 143, 0.7);
+    background: rgba(191, 161, 95, 0.16);
+    color: #f5e6c2;
+}
+
+.t-fav-toolbar-tail {
+    margin-left: auto;
 }
 
 .t-fav-filter-select,
@@ -6561,6 +9070,109 @@ textarea.t-input {
     background: #181818;
 }
 
+/* \u9876\u680F\u64CD\u4F5C\u533A */
+.t-read-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* \u9876\u680F\u6EA2\u51FA\u83DC\u5355 */
+.t-read-more-wrap {
+    position: relative;
+}
+
+.t-read-more-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 20;
+    min-width: 172px;
+    padding: 5px;
+    border: 1px solid rgba(191, 161, 95, 0.28);
+    border-radius: 8px;
+    background: #1f1b15;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+    animation: fadeIn 0.14s ease;
+}
+
+.t-read-more-menu[hidden] {
+    display: none;
+}
+
+.t-read-more-menu button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 11px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #e2dccc;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.9em;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.t-read-more-menu button i {
+    width: 16px;
+    text-align: center;
+    color: #9c8f6f;
+}
+
+.t-read-more-menu button:hover {
+    background: rgba(191, 161, 95, 0.14);
+    color: #fff;
+}
+
+.t-read-more-menu button.danger {
+    color: #ef8f8f;
+}
+
+.t-read-more-menu button.danger i {
+    color: #d66;
+}
+
+.t-read-more-menu button.danger:hover {
+    background: rgba(220, 60, 60, 0.16);
+    color: #ffb4b4;
+}
+
+.t-read-more-sep {
+    height: 1px;
+    margin: 5px 6px;
+    background: rgba(191, 161, 95, 0.2);
+}
+
+.t-read-more-btn.is-active,
+.t-read-toggle-meta.is-active {
+    border-color: rgba(231, 202, 143, 0.7);
+    background: rgba(191, 161, 95, 0.16);
+    color: #f5e6c2;
+}
+
+/* \u4EE3\u7406\u6309\u94AE\uFF1A\u4EC5\u627F\u8F7D\u4E8B\u4EF6\u5904\u7406\u5668\uFF0C\u4E0D\u53C2\u4E0E\u5E03\u5C40 */
+.t-read-proxy-actions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* \u684C\u9762\u7AEF\uFF1A\u6EA2\u51FA\u83DC\u5355\u91CC\u4EC5\u4FDD\u7559\u5220\u9664\u7C7B\u5371\u9669\u64CD\u4F5C\uFF0C\u5176\u4F59\u91CD\u590D\u9879\u4E0E\u5206\u9694\u7EBF\u9690\u85CF */
+.t-read-more-menu .t-read-menu-opt {
+    display: none;
+}
+
+.t-read-more-menu .t-read-more-sep {
+    display: none;
+}
+
 .t-read-body {
     flex-grow: 1;
     padding: 0;
@@ -6974,10 +9586,83 @@ textarea.t-input {
     }
 
     .t-fav-toolbar {
-        flex-direction: column;
+        min-height: 0;
         height: auto;
         padding: 10px;
-        align-items: stretch;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    /* \u79FB\u52A8\u7AEF\uFF1A\u7B5B\u9009\u4E0B\u62C9\u5360\u636E\u4E3B\u884C\u5269\u4F59\u7A7A\u95F4 */
+    #t-fav-filter-char {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .t-fav-toolbar .t-fav-toolbar-tail {
+        margin-left: 0;
+        flex-shrink: 0;
+    }
+
+    /* \u79FB\u52A8\u7AEF\u663E\u793A\u62BD\u5C49\u5F00\u5173 */
+    .t-fav-drawer-toggle {
+        display: inline-flex;
+        flex-shrink: 0;
+    }
+
+    /* \u62BD\u5C49\u6298\u53E0\u4E3A\u4E0B\u62C9\u9762\u677F */
+    .t-fav-tools-drawer {
+        display: flex;
+        position: absolute;
+        top: calc(100% - 2px);
+        right: 10px;
+        left: 10px;
+        z-index: 12;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid rgba(191, 161, 95, 0.32);
+        border-radius: 10px;
+        background: #1c1811;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+        animation: fadeIn 0.14s ease;
+    }
+
+    .t-fav-tools-drawer[hidden] {
+        display: none;
+    }
+
+    .t-fav-tools-drawer > * {
+        width: 100%;
+    }
+
+    .t-fav-tools-drawer .t-fav-view-toggle {
+        flex-direction: row;
+        justify-content: center;
+        gap: 4px;
+        padding: 9px 8px;
+    }
+
+    /* \u9876\u680F\uFF1A\u5185\u8054\u7684\u91CD\u590D\u6309\u94AE\u6536\u8FDB\u83DC\u5355\uFF0C\u53EA\u7559\u4FE1\u606F / \u65B0\u7A97\u53E3 / \u66F4\u591A */
+    .t-read-actions {
+        gap: 6px;
+    }
+
+    .t-read-inline-opt {
+        display: none;
+    }
+
+    .t-read-more-menu {
+        min-width: 190px;
+    }
+
+    .t-read-more-menu .t-read-menu-opt {
+        display: flex;
+    }
+
+    .t-read-more-menu .t-read-more-sep {
+        display: block;
     }
 
     .t-fav-grid-area {
@@ -7463,6 +10148,119 @@ textarea.t-input {
     background: #141414;
 }
 
+#t-debug-view .t-prompt-source-bar {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 6px 16px 0;
+    border-bottom: 1px solid #242424;
+    background: #161616;
+}
+
+#t-debug-view .t-prompt-source-tabs {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+#t-debug-view .t-prompt-source-tab,
+#t-debug-view .t-prompt-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 11px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #777;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#t-debug-view .t-prompt-source-tab:hover,
+#t-debug-view .t-prompt-info-btn:hover {
+    color: #bbb;
+    background: #1d1d1d;
+}
+
+#t-debug-view .t-prompt-source-tab.active {
+    border-bottom-color: #74b9ff;
+    color: #d8e9f8;
+}
+
+#t-debug-view .t-prompt-source-tab i {
+    color: #74b9ff;
+    font-size: 7px;
+}
+
+#t-debug-view .t-prompt-info-btn {
+    width: 32px;
+    padding: 0;
+    border-bottom: 0;
+    border-radius: 5px;
+}
+
+#t-debug-view .t-prompt-info-btn i {
+    font-size: 12px;
+}
+
+#t-debug-view .t-prompt-info-popover {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 0;
+    z-index: 8;
+    width: min(360px, calc(100vw - 32px));
+    padding: 13px 14px;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    background: #202020;
+    color: #aaa;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .55);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+#t-debug-view .t-prompt-info-popover[hidden] {
+    display: none;
+}
+
+#t-debug-view .t-prompt-info-popover strong {
+    color: #e5e7eb;
+    font-size: 12px;
+}
+
+#t-debug-view .t-prompt-info-popover p {
+    margin: 7px 0 10px;
+}
+
+#t-debug-view .t-prompt-info-popover dl,
+#t-debug-view .t-prompt-info-popover dd {
+    margin: 0;
+}
+
+#t-debug-view .t-prompt-info-popover dl > div {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 8px;
+}
+
+#t-debug-view .t-prompt-info-popover dt {
+    color: #666;
+}
+
+#t-debug-view .t-prompt-info-popover dd {
+    overflow: hidden;
+    color: #ccc;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 #t-debug-view .t-prompt-summary {
     display: flex;
     align-items: center;
@@ -7728,6 +10526,24 @@ textarea.t-input {
         gap: 10px;
     }
 
+    #t-debug-view .t-prompt-source-bar {
+        padding-inline: 10px;
+    }
+
+    #t-debug-view .t-prompt-source-tabs {
+        width: 100%;
+    }
+
+    #t-debug-view .t-prompt-source-tab {
+        flex: 1;
+        min-width: 0;
+        padding-inline: 5px;
+    }
+
+    #t-debug-view .t-prompt-info-popover {
+        left: 0;
+    }
+
     #t-debug-view .t-prompt-request {
         align-items: flex-start;
         flex-direction: column;
@@ -7745,6 +10561,17 @@ textarea.t-input {
     #t-debug-view .t-prompt-tool-btn {
         justify-content: center;
         padding: 8px 6px;
+    }
+
+    #t-debug-view #t-prompt-expand-all-btn {
+        width: 34px;
+        overflow: hidden;
+        color: transparent;
+        gap: 0;
+    }
+
+    #t-debug-view #t-prompt-expand-all-btn i {
+        color: #999;
     }
 
     #t-debug-view .t-prompt-icon-btn {
@@ -12590,12 +15417,16 @@ function resetContinuationState() {
     userName: ""
   };
 }
-function pushSceneToHistory(content, scriptId, scriptName) {
+function pushSceneToHistory(content, scriptId, scriptName, metadata = {}) {
   const history = GlobalState.sceneHistory;
+  const generationId = String(metadata.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+  const status = metadata.status || "success";
   const newItem = {
     content,
     scriptId,
     scriptName: scriptName || "\u672A\u77E5\u5267\u672C",
+    status,
+    generationId,
     timestamp: Date.now(),
     isRead: false,
     // 新生成的默认未读
@@ -12609,8 +15440,87 @@ function pushSceneToHistory(content, scriptId, scriptName) {
   history.currentIndex = 0;
   GlobalState.lastGeneratedContent = content;
   GlobalState.lastGeneratedScriptId = scriptId;
+  GlobalState.currentGenerationResult = {
+    generationId,
+    content: String(content || ""),
+    scriptId: String(scriptId || ""),
+    scriptName: String(scriptName || "\u573A\u666F"),
+    status,
+    canFavorite: status === "success" || status === "legacy",
+    canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+    error: metadata.error || null,
+    timestamp: Date.now()
+  };
   GlobalState.lastFavId = null;
   console.log(`[Titania] \u5267\u573A\u5386\u53F2\u5DF2\u66F4\u65B0: ${history.items.length} \u6761\u8BB0\u5F55`);
+}
+function setCurrentGenerationResult(result = {}) {
+  const status = result.status || "failed";
+  GlobalState.currentGenerationResult = {
+    generationId: String(result.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
+    content: String(result.content || ""),
+    scriptId: String(result.scriptId || ""),
+    scriptName: String(result.scriptName || "\u573A\u666F"),
+    status,
+    canFavorite: status === "success" || status === "legacy",
+    canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+    error: result.error || null,
+    timestamp: Number(result.timestamp) || Date.now()
+  };
+  GlobalState.lastGeneratedContent = GlobalState.currentGenerationResult.content;
+  GlobalState.lastGeneratedScriptId = GlobalState.currentGenerationResult.scriptId;
+  return GlobalState.currentGenerationResult;
+}
+function getCurrentGenerationResult() {
+  const display = GlobalState.displayState;
+  if (display.isViewingHistory && display.currentViewIndex >= 0) {
+    const item = GlobalState.sceneHistory.items[display.currentViewIndex];
+    if (item) {
+      const status = item.status || "legacy";
+      return {
+        generationId: String(item.generationId || ""),
+        content: String(item.content || ""),
+        scriptId: String(item.scriptId || ""),
+        scriptName: String(item.scriptName || "\u573A\u666F"),
+        status,
+        canFavorite: status === "success" || status === "legacy",
+        canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+        error: item.error || null,
+        timestamp: Number(item.timestamp) || 0
+      };
+    }
+  }
+  if (GlobalState.streamingCache.isActive) {
+    return {
+      generationId: "",
+      content: String(GlobalState.streamingCache.content || ""),
+      scriptId: String(GlobalState.streamingCache.scriptId || ""),
+      scriptName: String(GlobalState.streamingCache.scriptName || "\u573A\u666F"),
+      status: "running",
+      canFavorite: false,
+      canContinue: false,
+      error: null,
+      timestamp: Date.now()
+    };
+  }
+  if (GlobalState.currentGenerationResult) return GlobalState.currentGenerationResult;
+  if (GlobalState.lastGeneratedContent) {
+    return {
+      generationId: "",
+      content: String(GlobalState.lastGeneratedContent),
+      scriptId: String(GlobalState.lastGeneratedScriptId || ""),
+      scriptName: "\u573A\u666F",
+      status: "legacy",
+      canFavorite: true,
+      canContinue: true,
+      error: null,
+      timestamp: 0
+    };
+  }
+  return null;
+}
+function isFavoriteEligible(result = getCurrentGenerationResult()) {
+  return Boolean(result?.canFavorite && String(result.content || "").trim());
 }
 function getCurrentHistoryItem() {
   const history = GlobalState.sceneHistory;
@@ -12689,8 +15599,17 @@ function lockDisplayToHistory(historyIndex) {
   GlobalState.displayState.lockedContent = item.content;
   GlobalState.displayState.lockedScriptId = item.scriptId;
   GlobalState.displayState.lockedScriptName = item.scriptName;
+  GlobalState.displayState.lockedGenerationId = item.generationId || null;
   item.isRead = true;
   console.log(`[Titania] \u663E\u793A\u5C42\u9501\u5B9A\u5230\u5386\u53F2 #${historyIndex + 1}`);
+}
+function lockDisplayToContent(content, scriptId, scriptName = "\u573A\u666F", generationId = "") {
+  GlobalState.displayState.isViewingHistory = true;
+  GlobalState.displayState.currentViewIndex = -1;
+  GlobalState.displayState.lockedContent = String(content || "");
+  GlobalState.displayState.lockedScriptId = String(scriptId || "");
+  GlobalState.displayState.lockedScriptName = String(scriptName || "\u573A\u666F");
+  GlobalState.displayState.lockedGenerationId = String(generationId || "") || null;
 }
 function unlockDisplay() {
   GlobalState.displayState.isViewingHistory = false;
@@ -12698,6 +15617,7 @@ function unlockDisplay() {
   GlobalState.displayState.lockedContent = null;
   GlobalState.displayState.lockedScriptId = null;
   GlobalState.displayState.lockedScriptName = null;
+  GlobalState.displayState.lockedGenerationId = null;
   console.log(`[Titania] \u663E\u793A\u5C42\u5DF2\u89E3\u9501\uFF0C\u8FD4\u56DE\u5B9E\u65F6\u72B6\u6001`);
 }
 function shouldRenderStreamToUI() {
@@ -12710,7 +15630,8 @@ function getCurrentDisplayContent() {
       content: display.lockedContent,
       scriptId: display.lockedScriptId,
       scriptName: display.lockedScriptName,
-      isLive: false
+      isLive: false,
+      generationId: String(display.lockedGenerationId || "")
     };
   }
   if (GlobalState.streamingCache.isActive && GlobalState.streamingCache.content) {
@@ -12718,14 +15639,16 @@ function getCurrentDisplayContent() {
       content: GlobalState.streamingCache.content,
       scriptId: GlobalState.streamingCache.scriptId,
       scriptName: GlobalState.streamingCache.scriptName,
-      isLive: true
+      isLive: true,
+      generationId: ""
     };
   }
   return {
     content: GlobalState.lastGeneratedContent,
     scriptId: GlobalState.lastGeneratedScriptId,
     scriptName: GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId)?.name || "\u573A\u666F",
-    isLive: false
+    isLive: false,
+    generationId: String(GlobalState.currentGenerationResult?.generationId || "")
   };
 }
 function startStreamingCache(scriptId, scriptName) {
@@ -12763,6 +15686,8 @@ var init_state = __esm({
       // 加载好的剧本列表 (预设 + 自定义)
       lastGeneratedContent: "",
       // 上一次生成的结果 HTML
+      currentGenerationResult: null,
+      // 当前生成结果的状态化快照
       lastUsedScriptId: "",
       // 上一次用户手动选择的剧本 ID (用于 UI 显示)
       lastGeneratedScriptId: "",
@@ -12798,8 +15723,10 @@ var init_state = __esm({
         // 锁定显示的内容（用户切换历史时）
         lockedScriptId: null,
         // 锁定显示的剧本ID
-        lockedScriptName: null
+        lockedScriptName: null,
         // 锁定显示的剧本名称
+        lockedGenerationId: null
+        // 锁定内容的生成ID（续写时用于定位所属世系）
       },
       // 流式生成缓存 (后台生成时暂存)
       streamingCache: {
@@ -13033,10 +15960,10 @@ function compareByMode(a, b, mode, nowTs) {
   }
   return 0;
 }
-function getScriptStats(scriptId) {
+function createScriptStatsReader() {
   const data = getExtData();
   ensureStatsStore(data);
-  return normalizeStats(data.script_stats[scriptId]);
+  return (scriptId) => normalizeStats(data.script_stats[scriptId]);
 }
 function getScriptSortMode() {
   const data = getExtData();
@@ -13205,13 +16132,13 @@ function saveUserScript(s) {
   saveExtData();
   loadScripts();
 }
-function deleteUserScript(id) {
+function deleteUserScript(id3) {
   const data = getExtData();
   ensureStatsStore(data);
   let u = data.user_scripts || [];
-  u = u.filter((x) => x.id !== id);
+  u = u.filter((x) => x.id !== id3);
   data.user_scripts = u;
-  delete data.script_stats[id];
+  delete data.script_stats[id3];
   saveExtData();
   loadScripts();
 }
@@ -13305,7 +16232,7 @@ var init_logger = __esm({
         let stVersion = "Unknown";
         try {
           if (typeof SillyTavern !== "undefined" && SillyTavern.version) stVersion = SillyTavern.version;
-          else if (typeof extension_settings !== "undefined" && window.SillyTavernVersion) stVersion = window.SillyTavernVersion;
+          else if (window.SillyTavernVersion) stVersion = window.SillyTavernVersion;
         } catch (e) {
         }
         const reportObj = {
@@ -13483,7 +16410,7 @@ async function getContextData() {
   data.charId = ctx.characterId;
   return data;
 }
-function getChatHistory() {
+function getChatHistory2() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
     return [];
   }
@@ -13609,905 +16536,6 @@ var init_context = __esm({
   }
 });
 
-// src/utils/chatHistoryBlacklist.js
-function parseChatHistoryBlacklistInput(input) {
-  const rules = [];
-  const lines = String(input || "").split(/\r?\n/);
-  lines.forEach((line, index) => {
-    const source = line.trim();
-    if (!source) return;
-    if (!source.endsWith(";")) {
-      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u7F3A\u5C11\u82F1\u6587\u5206\u53F7`);
-      return;
-    }
-    const body = source.slice(0, -1).trim();
-    const separator = body.search(/\s/);
-    if (separator <= 0) {
-      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u9700\u8981\u586B\u5199\u5F00\u59CB\u6807\u8BB0\u548C\u7ED3\u675F\u6807\u8BB0`);
-      return;
-    }
-    const start = body.slice(0, separator);
-    const end = body.slice(separator).trim();
-    if (!start || !end || /\s/.test(start) || /\s/.test(end) || start.includes(";") || end.includes(";")) {
-      console.warn(`Titania: \u5FFD\u7565\u7B2C ${index + 1} \u6761\u65E0\u6548\u804A\u5929\u5386\u53F2\u9ED1\u540D\u5355\u89C4\u5219\uFF1A\u6807\u8BB0\u4E0D\u80FD\u5305\u542B\u7A7A\u683C\u6216\u5206\u53F7`);
-      return;
-    }
-    rules.push({ start, end });
-  });
-  return rules;
-}
-function removeChatHistoryBlacklist(text, rules = []) {
-  let result = String(text || "");
-  if (!result || !Array.isArray(rules) || rules.length === 0) return result;
-  for (const rule of rules) {
-    if (!rule?.start || !rule?.end) continue;
-    let cursor = 0;
-    let output = "";
-    let changed = false;
-    while (cursor < result.length) {
-      const startIndex = result.indexOf(rule.start, cursor);
-      if (startIndex === -1) {
-        output += result.slice(cursor);
-        break;
-      }
-      const endIndex = result.indexOf(rule.end, startIndex + rule.start.length);
-      if (endIndex === -1) {
-        output += result.slice(cursor);
-        break;
-      }
-      output += result.slice(cursor, startIndex);
-      cursor = endIndex + rule.end.length;
-      changed = true;
-    }
-    if (changed) result = output;
-  }
-  return result;
-}
-var init_chatHistoryBlacklist = __esm({
-  "src/utils/chatHistoryBlacklist.js"() {
-  }
-});
-
-// src/utils/helpers.js
-function detectInteractiveContent(html) {
-  if (!html) return { isInteractive: false, reasons: [] };
-  const reasons = [];
-  if (/<script[\s>]/i.test(html)) {
-    reasons.push("\u5305\u542B <script> \u6807\u7B7E");
-  }
-  const eventHandlers = [
-    "onclick",
-    "ondblclick",
-    "onmousedown",
-    "onmouseup",
-    "onmouseover",
-    "onmouseout",
-    "onmousemove",
-    "onmouseenter",
-    "onmouseleave",
-    "onkeydown",
-    "onkeyup",
-    "onkeypress",
-    "onchange",
-    "oninput",
-    "onsubmit",
-    "onreset",
-    "onfocus",
-    "onblur",
-    "onload",
-    "onerror",
-    "onscroll",
-    "onresize",
-    "ontouchstart",
-    "ontouchmove",
-    "ontouchend",
-    "ontouchcancel"
-  ];
-  const eventPattern = new RegExp(`\\s(${eventHandlers.join("|")})\\s*=`, "i");
-  if (eventPattern.test(html)) {
-    reasons.push("\u5305\u542B\u4E8B\u4EF6\u5904\u7406\u5668\u5C5E\u6027");
-  }
-  if (/<button[^>]*onclick/i.test(html) || /<input[^>]*type\s*=\s*["']?(button|submit)/i.test(html)) {
-    reasons.push("\u5305\u542B\u4EA4\u4E92\u5F0F\u6309\u94AE");
-  }
-  if (/javascript:/i.test(html)) {
-    reasons.push("\u5305\u542B javascript: \u534F\u8BAE");
-  }
-  if (/<form[\s>]/i.test(html) && /<input[\s>]/i.test(html)) {
-    reasons.push("\u5305\u542B\u8868\u5355\u5143\u7D20");
-  }
-  return {
-    isInteractive: reasons.length > 0,
-    reasons
-  };
-}
-function buildFullHtmlDocument(content, title = "Titania Echo - \u4E92\u52A8\u573A\u666F") {
-  const styleMatch = content.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-  const styles = styleMatch ? styleMatch.join("\n") : "";
-  const bodyContent = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${escapeHtml(title)}</title>
-    <style>
-        /* \u57FA\u7840\u6837\u5F0F */
-        * { box-sizing: border-box; }
-        html, body {
-            margin: 0;
-            padding: 0;
-            background: #0a0a0a;
-            color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-        body {
-            padding: 20px;
-        }
-        a { color: #90cdf4; }
-        img, video { max-width: 100%; height: auto; }
-        
-        /* \u7528\u6237\u81EA\u5B9A\u4E49\u6837\u5F0F */
-    </style>
-    ${styles}
-</head>
-<body>
-${bodyContent}
-</body>
-</html>`;
-}
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
-function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
-  console.log("[Titania] openInNewWindow \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
-  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
-  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
-  console.log("[Titania] \u5B8C\u6574HTML\u524D500\u5B57\u7B26:", fullHtml?.substring(0, 500));
-  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const newWindow = window.open(
-    url,
-    "_blank",
-    "width=900,height=700,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes"
-  );
-  if (newWindow) {
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 1e3);
-  } else {
-    console.warn("Titania: \u5F39\u7A97\u88AB\u62E6\u622A\uFF0C\u5C1D\u8BD5\u65B0\u6807\u7B7E\u9875");
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1e3);
-  }
-  return newWindow;
-}
-function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
-  console.log("[Titania] exportAsHtmlFile \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
-  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
-  console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
-  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const safeFileName = scriptName.replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_").substring(0, 50);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${safeFileName}_\u4E92\u52A8\u573A\u666F.html`;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
-}
-function buildFontStylesForShadowDOM() {
-  try {
-    const extData = getExtData();
-    const fontSettings = extData.font_settings;
-    if (!fontSettings || fontSettings.source === "default" || !fontSettings.source) {
-      return { fontImport: "", forceOverride: false, fontFamily: "" };
-    }
-    const forceOverride = fontSettings.force_override === true;
-    if (fontSettings.source === "online" && fontSettings.import_url && fontSettings.font_name) {
-      return {
-        fontImport: `@import url('${fontSettings.import_url}');`,
-        forceOverride,
-        fontFamily: `'${fontSettings.font_name}'`
-      };
-    }
-    if (fontSettings.source === "upload" && fontSettings.font_data) {
-      const fontName = fontSettings.font_name || "TitaniaCustomFont";
-      return {
-        fontImport: `
-                    @font-face {
-                        font-family: '${fontName}';
-                        src: url('${fontSettings.font_data}') format('woff2');
-                        font-weight: normal;
-                        font-style: normal;
-                        font-display: swap;
-                    }
-                `,
-        forceOverride,
-        fontFamily: `'${fontName}'`
-      };
-    }
-    return { fontImport: "", forceOverride: false, fontFamily: "" };
-  } catch (e) {
-    console.warn("Titania: \u6784\u5EFA Shadow DOM \u5B57\u4F53\u6837\u5F0F\u5931\u8D25", e);
-    return { fontImport: "", forceOverride: false, fontFamily: "" };
-  }
-}
-function renderToShadowDOMReal(container, html) {
-  container.innerHTML = "";
-  const host = document.createElement("div");
-  host.className = "t-shadow-host";
-  host.style.cssText = "width:100%; min-height:100%;";
-  const shadow = host.attachShadow({ mode: "open" });
-  const isEditableNode = (node) => {
-    if (!(node instanceof HTMLElement)) return false;
-    const tag = node.tagName.toLowerCase();
-    if (tag === "textarea") {
-      return !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
-    }
-    if (tag === "input") {
-      const type = String(node.getAttribute("type") || "text").toLowerCase();
-      const editableTypes = /* @__PURE__ */ new Set(["text", "search", "url", "tel", "email", "password", "number"]);
-      return editableTypes.has(type) && !node.hasAttribute("readonly") && !node.hasAttribute("disabled");
-    }
-    return node.isContentEditable === true;
-  };
-  const stopEditableKeyboardBubble = (evt) => {
-    const path = typeof evt.composedPath === "function" ? evt.composedPath() : [evt.target];
-    const hasEditableTarget = path.some((node) => isEditableNode(node));
-    if (!hasEditableTarget) return;
-    evt.stopPropagation();
-  };
-  [
-    "keydown",
-    "keypress",
-    "keyup",
-    "beforeinput",
-    "input",
-    "paste",
-    "compositionstart",
-    "compositionupdate",
-    "compositionend"
-  ].forEach((type) => {
-    shadow.addEventListener(type, stopEditableKeyboardBubble, true);
-  });
-  const fontInfo = buildFontStylesForShadowDOM();
-  const forceOverrideStyles = fontInfo.forceOverride && fontInfo.fontFamily ? `
-            /* \u5F3A\u5236\u8986\u76D6\u5185\u8054\u5B57\u4F53\u6837\u5F0F */
-            .t-shadow-content * {
-                font-family: ${fontInfo.fontFamily}, var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
-            }
-            /* \u4FDD\u7559\u7B49\u5BBD\u5B57\u4F53\u5143\u7D20 */
-            .t-shadow-content code,
-            .t-shadow-content pre,
-            .t-shadow-content kbd,
-            .t-shadow-content samp {
-                font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-            }
-        ` : "";
-  const baseStyles = `
-        <style>
-            ${fontInfo.fontImport}
-            :host {
-                display: block;
-                width: 100%;
-                min-height: 100%;
-            }
-            * { box-sizing: border-box; }
-            :host, .t-shadow-content {
-                background: transparent;
-                color: #e0e0e0;
-                font-family: var(--t-font-global, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-                font-size: 14px;
-                line-height: 1.6;
-            }
-            /* \u5185\u5BB9\u533A\u4FDD\u6301\u56FA\u5B9A\u5B57\u53F7\uFF0C\u4E0D\u53D7 UI \u7F29\u653E\u53D8\u91CF\u5F71\u54CD */
-            .t-shadow-content,
-            .t-shadow-content * {
-                font-size: 14px;
-            }
-            .t-shadow-content {
-                padding: 0;
-                min-height: 100%;
-            }
-            img, video { max-width: 100%; height: auto; }
-            a { color: #90cdf4; }
-            ${forceOverrideStyles}
-        </style>
-    `;
-  shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
-  container.appendChild(host);
-  return shadow;
-}
-function parseWhitelistInput(input) {
-  if (!input || !input.trim()) return [];
-  return input.split(/[,，\n]/).map((tag) => tag.trim()).map((tag) => tag.replace(/^<|>$/g, "")).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
-}
-function extractContent(text, whitelist = []) {
-  if (!text) return "";
-  if (whitelist && whitelist.length > 0) {
-    const extracted = [];
-    for (const tag of whitelist) {
-      const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        const innerContent = match[1].trim();
-        if (innerContent) {
-          extracted.push(innerContent);
-        }
-      }
-    }
-    if (extracted.length > 0) {
-      let result = extracted.join("\n");
-      result = result.replace(/<[^>]*>?/gm, "");
-      result = result.replace(/\n{3,}/g, "\n\n").trim();
-      return result;
-    }
-  }
-  let cleaned = text;
-  cleaned = cleaned.replace(/<[^>]*>?/gm, "");
-  cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
-  return cleaned;
-}
-function getChatHistory2(limit, whitelist = [], blacklist = void 0) {
-  if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
-  const ctx = SillyTavern.getContext();
-  const history = ctx.chat || [];
-  const safeLimit = parseInt(limit) || 10;
-  const effectiveBlacklist = blacklist === void 0 ? parseChatHistoryBlacklistInput(getExtData().history_extraction?.blacklist || "") : blacklist;
-  const domMessages = document.querySelectorAll("#chat .mes");
-  const useDomCheck = domMessages.length === history.length;
-  if (!useDomCheck) {
-    console.warn(`Titania: DOM messages count (${domMessages.length}) != History count (${history.length}). Fallback to property check.`);
-  }
-  const visibleHistory = history.filter((msg, index) => {
-    let isHidden = !!(msg.is_hidden || msg.isHidden || msg.is_system || // ST 使用 is_system 来标记隐藏的消息
-    msg.extra && msg.extra.is_hidden);
-    if (!isHidden && useDomCheck) {
-      const el = domMessages[index];
-      if (el) {
-        if (el.hasAttribute("hidden") || el.style.display === "none" || el.classList.contains("hidden") || el.getAttribute("is_system") === "true") {
-          isHidden = true;
-        }
-      }
-    }
-    const isDisabled = !!msg.disabled;
-    if (isHidden) {
-      return false;
-    }
-    if (isDisabled) {
-      return false;
-    }
-    return true;
-  });
-  console.log(`Titania: History Analysis - Total: ${history.length}, Visible: ${visibleHistory.length}, Filtered: ${history.length - visibleHistory.length}`);
-  const recent = visibleHistory.slice(-safeLimit);
-  return recent.map((msg) => {
-    let name = msg.name;
-    if (msg.is_user) name = ctx.name1 || "User";
-    if (name === "{{user}}") name = ctx.name1 || "User";
-    if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
-    let rawContent = msg.message || msg.mes || "";
-    rawContent = removeChatHistoryBlacklist(rawContent, effectiveBlacklist);
-    let cleanContent = extractContent(rawContent, whitelist);
-    if (!cleanContent.trim()) {
-      cleanContent = rawContent.replace(/<[^>]*>?/gm, "").trim();
-    }
-    return `${name}: ${cleanContent}`;
-  }).join("\n");
-}
-function sanitizeAIOutputLite(rawContent) {
-  if (!rawContent || typeof rawContent !== "string") return "";
-  let content = rawContent;
-  content = content.replace(/```html\s*/gi, "");
-  content = content.replace(/```\s*/g, "");
-  content = content.replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/gi, "");
-  content = content.replace(/<think[^>]*>[\s\S]*?<\/think>/gi, "");
-  return content.trim();
-}
-function sanitizeAIOutput(rawContent) {
-  if (!rawContent || typeof rawContent !== "string") return "";
-  let content = rawContent;
-  const originalContent = rawContent;
-  const tagsToRemove = [
-    "thinking",
-    "think",
-    // 思考过程
-    "system",
-    "note",
-    "notes",
-    // 系统/笔记
-    "ooc",
-    "OOC",
-    // Out of Character
-    "debug",
-    "meta",
-    // 调试/元信息
-    "comment",
-    "aside",
-    // 注释/旁白
-    "reflection",
-    "planning",
-    // 反思/规划
-    "internal",
-    "analysis"
-    // 内部思考/分析
-  ];
-  tagsToRemove.forEach((tag) => {
-    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, "gi");
-    content = content.replace(regex, "");
-  });
-  content = content.replace(/```html\s*/gi, "");
-  content = content.replace(/```\s*/g, "");
-  const htmlStartPatterns = [
-    /<!DOCTYPE\s+html/i,
-    // DOCTYPE 声明
-    /<html[\s>]/i,
-    // <html> 标签
-    /<head[\s>]/i,
-    // <head> 标签
-    /<body[\s>]/i,
-    // <body> 标签
-    /<style[\s>]/i,
-    // <style> 标签（很多 AI 会以此开头）
-    /<div[\s>]/i,
-    // <div> 标签
-    /<section[\s>]/i,
-    // <section> 标签
-    /<article[\s>]/i,
-    // <article> 标签
-    /<main[\s>]/i,
-    // <main> 标签
-    /<header[\s>]/i,
-    // <header> 标签
-    /<p[\s>]/i,
-    // <p> 标签
-    /<span[\s>]/i,
-    // <span> 标签
-    /<h[1-6][\s>]/i
-    // 标题标签
-  ];
-  let firstHtmlIndex = -1;
-  for (const pattern of htmlStartPatterns) {
-    const match = content.search(pattern);
-    if (match !== -1) {
-      if (firstHtmlIndex === -1 || match < firstHtmlIndex) {
-        firstHtmlIndex = match;
-      }
-    }
-  }
-  if (firstHtmlIndex > 0) {
-    content = content.substring(firstHtmlIndex);
-  }
-  const htmlEndPatterns = [
-    /<\/html>\s*$/i,
-    /<\/body>\s*$/i,
-    /<\/div>\s*$/i,
-    /<\/section>\s*$/i,
-    /<\/article>\s*$/i,
-    /<\/main>\s*$/i,
-    /<\/style>\s*$/i,
-    /<\/p>\s*$/i,
-    /<\/span>\s*$/i,
-    /<\/h[1-6]>\s*$/i
-  ];
-  let lastHtmlEndIndex = -1;
-  for (const pattern of htmlEndPatterns) {
-    const match = content.match(pattern);
-    if (match) {
-      const endIndex = content.lastIndexOf(match[0]) + match[0].length;
-      if (endIndex > lastHtmlEndIndex) {
-        lastHtmlEndIndex = endIndex;
-      }
-    }
-  }
-  if (lastHtmlEndIndex === -1) {
-    const allClosingTags = content.match(/<\/[a-zA-Z][a-zA-Z0-9]*>\s*$/);
-    if (allClosingTags) {
-      lastHtmlEndIndex = content.lastIndexOf(allClosingTags[0]) + allClosingTags[0].length;
-    }
-  }
-  if (lastHtmlEndIndex > 0 && lastHtmlEndIndex < content.length) {
-    content = content.substring(0, lastHtmlEndIndex);
-  }
-  content = content.replace(/(\s|>)\*\*([^*<>]+)\*\*(\s|<)/g, "$1$2$3");
-  content = content.replace(/(\s|>)__([^_<>]+)__(\s|<)/g, "$1$2$3");
-  content = content.replace(/(\s|>)\*([^*<>\n]+)\*(\s|<)/g, "$1$2$3");
-  content = content.replace(/^\s*#{1,6}\s+/gm, "");
-  content = content.replace(/^\s*[-*+]\s+(?=[^\s<])/gm, "");
-  content = content.replace(/^\s*\d+\.\s+(?=[^\s<])/gm, "");
-  content = content.replace(/\n{3,}/g, "\n\n");
-  content = content.trim();
-  if (!content || content.length < 10) {
-    console.warn("Titania: \u6E05\u6D17\u540E\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u56DE\u9000\u5230\u539F\u59CB\u5185\u5BB9");
-    return originalContent.replace(/```html\s*/gi, "").replace(/```\s*/g, "").trim();
-  }
-  return content;
-}
-function extractFromShadowDOM(container) {
-  const shadowHost = container.querySelector(".t-shadow-host");
-  if (shadowHost && shadowHost.shadowRoot) {
-    try {
-      const shadow = shadowHost.shadowRoot;
-      const contentDiv = shadow.querySelector(".t-shadow-content");
-      if (contentDiv) {
-        let userStyles = "";
-        shadow.querySelectorAll("style").forEach((style) => {
-          const text = style.textContent || "";
-          if (!text.includes(":host")) {
-            userStyles += `<style>${text}</style>
-`;
-          }
-        });
-        return userStyles + contentDiv.innerHTML;
-      }
-    } catch (e) {
-      console.warn("Titania: \u65E0\u6CD5\u4ECE Shadow DOM \u63D0\u53D6\u5185\u5BB9", e);
-    }
-  }
-  const iframe = container.querySelector(".t-content-iframe");
-  if (iframe) {
-    try {
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (doc && doc.body) {
-        const bodyClone = doc.body.cloneNode(true);
-        bodyClone.querySelectorAll("script").forEach((s) => s.remove());
-        let userStyles = "";
-        doc.querySelectorAll("head style").forEach((style) => {
-          const text = style.textContent || "";
-          if (!text.includes("box-sizing: border-box") || text.length > 500) {
-            userStyles += `<style>${text}</style>
-`;
-          }
-        });
-        return userStyles + bodyClone.innerHTML;
-      }
-    } catch (e) {
-      console.warn("Titania: \u65E0\u6CD5\u4ECE iframe \u63D0\u53D6\u5185\u5BB9", e);
-    }
-  }
-  return container.innerHTML;
-}
-function estimateTokens(text) {
-  if (!text) return 0;
-  const clean = text.trim();
-  if (clean.length === 0) return 0;
-  const cjkCount = (clean.match(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g) || []).length;
-  const nonCjkStr = clean.replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g, " ");
-  const wordCount = nonCjkStr.split(/\s+/).filter((w) => w.length > 0).length;
-  return Math.floor(cjkCount + wordCount * 1.3);
-}
-function detectTruncation(content, mode = "html") {
-  if (!content || content.trim().length === 0) {
-    return { isTruncated: false, reason: "empty", details: {} };
-  }
-  const result = {
-    isTruncated: false,
-    reason: "",
-    details: {
-      htmlCheck: null,
-      sentenceCheck: null
-    }
-  };
-  if (mode === "html" || mode === "both") {
-    const htmlResult = checkHtmlTags(content);
-    result.details.htmlCheck = htmlResult;
-    if (htmlResult.isTruncated) {
-      result.isTruncated = true;
-      result.reason = htmlResult.reason;
-    }
-  }
-  if (mode === "sentence" || mode === "both") {
-    const sentenceResult = checkSentenceCompletion(content);
-    result.details.sentenceCheck = sentenceResult;
-    if (sentenceResult.isTruncated && !result.isTruncated) {
-      result.isTruncated = true;
-      result.reason = sentenceResult.reason;
-    }
-  }
-  return result;
-}
-function checkHtmlTags(html) {
-  const result = {
-    isTruncated: false,
-    reason: "",
-    unclosedTags: []
-  };
-  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
-  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
-  const stack = [];
-  let match;
-  while ((match = tagPattern.exec(html)) !== null) {
-    const fullTag = match[0];
-    const tagName = match[1].toLowerCase();
-    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
-      continue;
-    }
-    if (fullTag.startsWith("</")) {
-      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
-        stack.pop();
-      }
-    } else {
-      stack.push(tagName);
-    }
-  }
-  const importantTags = ["div", "style", "span", "p", "section", "article", "main", "header", "footer"];
-  const unclosedImportant = stack.filter((tag) => importantTags.includes(tag));
-  if (unclosedImportant.length > 0) {
-    result.isTruncated = true;
-    result.reason = `HTML \u6807\u7B7E\u672A\u95ED\u5408: <${unclosedImportant.join(">, <")}>`;
-    result.unclosedTags = unclosedImportant;
-  }
-  const styleOpenCount = (html.match(/<style[^>]*>/gi) || []).length;
-  const styleCloseCount = (html.match(/<\/style>/gi) || []).length;
-  if (styleOpenCount > styleCloseCount) {
-    result.isTruncated = true;
-    result.reason = "<style> \u6807\u7B7E\u672A\u95ED\u5408";
-    result.unclosedTags.push("style");
-  }
-  const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-  if (styleMatch) {
-    for (const styleBlock of styleMatch) {
-      const cssContent = styleBlock.replace(/<\/?style[^>]*>/gi, "");
-      const openBraces = (cssContent.match(/{/g) || []).length;
-      const closeBraces = (cssContent.match(/}/g) || []).length;
-      if (openBraces > closeBraces) {
-        result.isTruncated = true;
-        result.reason = "CSS \u82B1\u62EC\u53F7\u4E0D\u5339\u914D";
-        break;
-      }
-    }
-  }
-  return result;
-}
-function checkSentenceCompletion(content) {
-  const result = {
-    isTruncated: false,
-    reason: "",
-    lastChars: ""
-  };
-  const textContent = content.replace(/<[^>]*>/g, "").trim();
-  if (textContent.length === 0) {
-    return result;
-  }
-  const lastChars = textContent.slice(-50);
-  result.lastChars = lastChars;
-  const chineseEndPunctuation = ["\u3002", "\uFF01", "\uFF1F", "\u2026", '"', '"', "\u300F", "\u300D"];
-  const englishEndPunctuation = [".", "!", "?", '"', "'"];
-  const allEndPunctuation = [...chineseEndPunctuation, ...englishEndPunctuation];
-  const lastChar = textContent.trim().slice(-1);
-  const endsWithPunctuation = allEndPunctuation.includes(lastChar);
-  const endsWithLetter = /[a-zA-Z]$/.test(textContent.trim());
-  const previousChars = textContent.trim().slice(-10);
-  const hasIncompleteWord = endsWithLetter && !/[.!?,;:\s]/.test(previousChars.slice(-2, -1));
-  const lastCJK = /[\u4e00-\u9fa5]$/.test(textContent.trim());
-  const hasCJKContent = /[\u4e00-\u9fa5]/.test(textContent);
-  if (hasCJKContent && lastCJK && !chineseEndPunctuation.includes(lastChar)) {
-    if (!endsWithPunctuation) {
-      result.isTruncated = true;
-      result.reason = "\u4E2D\u6587\u53E5\u5B50\u4F3C\u4E4E\u672A\u5B8C\u6210";
-    }
-  } else if (hasIncompleteWord) {
-    result.isTruncated = true;
-    result.reason = "\u82F1\u6587\u5355\u8BCD\u4F3C\u4E4E\u88AB\u622A\u65AD";
-  }
-  return result;
-}
-function buildContinuationContext(accumulatedContent, originalPrompt = "") {
-  const styleBlocks = accumulatedContent.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
-  const styleGuide = styleBlocks.map((block) => block.replace(/<\/?style[^>]*>/gi, "").trim()).join("\n").slice(0, 1600);
-  const bodyContent = accumulatedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  const plainText = bodyContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  const paragraphs = plainText.split(/\n\n+|。(?=[^。]*$)/);
-  const plotPoints = paragraphs.map((p) => {
-    const firstSentence = p.trim().split(/[。！？]/)[0];
-    return firstSentence && firstSentence.length > 5 ? firstSentence.trim() : null;
-  }).filter(Boolean).slice(-5).join(" \u2192 ");
-  const htmlBlocks = bodyContent.split(/(<\/p>|<\/div>)/i);
-  let recentHtml = "";
-  let blockCount = 0;
-  for (let i = htmlBlocks.length - 1; i >= 0 && blockCount < 4; i--) {
-    recentHtml = htmlBlocks[i] + recentHtml;
-    if (htmlBlocks[i].match(/<\/p>|<\/div>/i)) {
-      blockCount++;
-    }
-  }
-  recentHtml = recentHtml.trim().slice(-1e3);
-  const sentences = plainText.match(/[^。！？]*[。！？]/g) || [];
-  const lastCompleteSentence = sentences.length > 0 ? sentences[sentences.length - 1].trim() : "";
-  const lastPart = plainText.slice(-100);
-  const endsWithPunctuation = /[。！？"」』]$/.test(lastPart.trim());
-  const incompleteText = endsWithPunctuation ? "" : lastPart.split(/[。！？]/).pop()?.trim() || "";
-  const unclosedTags = detectUnclosedTags(bodyContent);
-  const classMatches = bodyContent.match(/class=["']([^"']+)["']/gi) || [];
-  const classSet = /* @__PURE__ */ new Set();
-  classMatches.forEach((item) => {
-    const m = item.match(/class=["']([^"']+)["']/i);
-    if (m && m[1]) {
-      m[1].split(/\s+/).forEach((cls) => {
-        const c = cls.trim();
-        if (c) classSet.add(c);
-      });
-    }
-  });
-  const recentClasses = Array.from(classSet).slice(0, 20);
-  return {
-    plotSummary: plotPoints || "(\u65E0\u60C5\u8282\u6458\u8981)",
-    // 情节进展摘要
-    recentHtml,
-    // 最后2段完整HTML
-    styleGuide,
-    // 原有样式片段
-    recentClasses,
-    // 近期使用类名
-    lastCompleteSentence,
-    // 最后完整句子
-    incompleteText,
-    // 未完成的句子片段
-    unclosedTags,
-    // 未闭合标签列表
-    totalLength: plainText.length,
-    // 已生成总字数
-    endsWithPunctuation,
-    // 是否以标点结束
-    originalPrompt: (originalPrompt || "").slice(0, 300)
-    // 原始请求摘要
-  };
-}
-function detectUnclosedTags(html) {
-  const selfClosingTags = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
-  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*\/?>/g;
-  const stack = [];
-  let match;
-  while ((match = tagPattern.exec(html)) !== null) {
-    const fullTag = match[0];
-    const tagName = match[1].toLowerCase();
-    if (selfClosingTags.includes(tagName) || fullTag.endsWith("/>")) {
-      continue;
-    }
-    if (fullTag.startsWith("</")) {
-      if (stack.length > 0 && stack[stack.length - 1] === tagName) {
-        stack.pop();
-      }
-    } else {
-      stack.push(tagName);
-    }
-  }
-  const importantTags = ["div", "p", "span", "section", "article", "blockquote"];
-  return stack.filter((tag) => importantTags.includes(tag));
-}
-function smartMergeContinuation(originalContent, continuationContent, showIndicator = false) {
-  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
-  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
-  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  contBody = removeOverlap(originalBody, contBody);
-  let indicator = "";
-  if (showIndicator) {
-    indicator = `<!-- continuation-point -->`;
-  }
-  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
-  const mergedBody = originalBody + indicator + contBody;
-  if (mergedStyle.trim()) {
-    return `<style>
-${mergedStyle}
-</style>
-${mergedBody}`;
-  }
-  return mergedBody;
-}
-function removeOverlap(original, continuation) {
-  if (!original || !continuation) return continuation;
-  const originalText = original.replace(/<[^>]*>/g, "").trim();
-  const contText = continuation.replace(/<[^>]*>/g, "").trim();
-  const originalEnd = originalText.slice(-100);
-  let maxOverlap = 0;
-  const minOverlapLength = 10;
-  const maxCheckLength = Math.min(80, contText.length, originalEnd.length);
-  for (let len = maxCheckLength; len >= minOverlapLength; len--) {
-    const originalSuffix = originalEnd.slice(-len);
-    const contPrefix = contText.slice(0, len);
-    const normalizedSuffix = originalSuffix.replace(/[，。！？、\s]/g, "");
-    const normalizedPrefix = contPrefix.replace(/[，。！？、\s]/g, "");
-    if (normalizedSuffix === normalizedPrefix) {
-      maxOverlap = len;
-      break;
-    }
-  }
-  if (maxOverlap >= minOverlapLength) {
-    const overlapText = contText.slice(0, maxOverlap);
-    const overlapIndex = continuation.indexOf(overlapText.slice(-20));
-    if (overlapIndex !== -1) {
-      const afterOverlap = continuation.slice(overlapIndex + 20);
-      const nextStart = afterOverlap.search(/[。！？]|<[a-z]/i);
-      if (nextStart !== -1) {
-        return afterOverlap.slice(nextStart).replace(/^[。！？]/, "");
-      }
-    }
-  }
-  return continuation;
-}
-function countContentStats(htmlContent) {
-  if (!htmlContent) {
-    return { totalChars: 0, chineseChars: 0, estimatedTokens: 0 };
-  }
-  let plainText = htmlContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<[^>]*>/g, "").trim();
-  const totalChars = plainText.replace(/\s+/g, " ").length;
-  const chineseMatches = plainText.match(/[\u4e00-\u9fa5]/g);
-  const chineseChars = chineseMatches ? chineseMatches.length : 0;
-  const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, "");
-  const wordCount = nonChineseText.split(/\s+/).filter((w) => w.length > 0).length;
-  const estimatedTokens = Math.ceil(chineseChars / 1.5 + wordCount * 1.3);
-  return {
-    totalChars,
-    chineseChars,
-    estimatedTokens
-  };
-}
-function mergeContinuationContent(originalContent, continuationContent, showIndicator = true) {
-  const originalStyleMatch = originalContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  const originalStyle = originalStyleMatch ? originalStyleMatch[1] : "";
-  const contStyleMatch = continuationContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-  const contStyle = contStyleMatch ? contStyleMatch[1] : "";
-  let contBody = continuationContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  let originalBody = originalContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").trim();
-  let indicator = "";
-  if (showIndicator) {
-    indicator = `<div style="text-align:center; color:#bfa15f; font-size:0.8em; margin:15px 0; opacity:0.7;">
-            <i class="fa-solid fa-link"></i> \u2500\u2500\u2500 \u7EED\u5199\u8FDE\u63A5 \u2500\u2500\u2500
-        </div>`;
-  }
-  const mergedStyle = originalStyle + (contStyle ? "\n/* Continuation CSS */\n" + contStyle : "");
-  const mergedBody = originalBody + indicator + contBody;
-  if (mergedStyle.trim()) {
-    return `<style>
-${mergedStyle}
-</style>
-${mergedBody}`;
-  }
-  return mergedBody;
-}
-var fileToBase64, parseMeta, getSnippet;
-var init_helpers = __esm({
-  "src/utils/helpers.js"() {
-    init_storage();
-    init_chatHistoryBlacklist();
-    fileToBase64 = (file) => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-    parseMeta = (title) => {
-      const parts = title.split(" - ");
-      if (parts.length >= 2) {
-        const char = parts.pop();
-        const script = parts.join(" - ");
-        return { script, char: char.trim() };
-      }
-      return { script: title, char: "\u672A\u77E5" };
-    };
-    getSnippet = (html) => {
-      const tmp = document.createElement("DIV");
-      tmp.innerHTML = html;
-      let text = tmp.textContent || tmp.innerText || "";
-      text = text.replace(/\s+/g, " ").trim();
-      return text.length > 60 ? text.substring(0, 60) + "..." : text;
-    };
-  }
-});
-
 // src/core/apiProfileRegistry.js
 import { openai_setting_names, openai_settings, oai_settings } from "../../../openai.js";
 function normalizeApiBaseUrl(inputUrl) {
@@ -14523,11 +16551,11 @@ function ensureMainApiProfiles(config = {}) {
     ];
   }
   profiles = profiles.map((profile, idx) => {
-    const id = String(profile?.id || `custom_${Date.now()}_${idx}`).trim();
+    const id3 = String(profile?.id || `custom_${Date.now()}_${idx}`).trim();
     const type = profile?.type === "internal" ? "internal" : "custom";
     const fallbackName = type === "internal" ? "\u{1F517} \u8DDF\u968F SillyTavern (\u4E3B\u8FDE\u63A5)" : `\u81EA\u5B9A\u4E49\u65B9\u6848 ${idx + 1}`;
     return {
-      id,
+      id: id3,
       name: String(profile?.name || fallbackName).trim() || fallbackName,
       type,
       readonly: profile?.readonly === true,
@@ -14546,10 +16574,10 @@ function ensureMainApiProfiles(config = {}) {
 function normalizeRewriteCustomProfiles(inputProfiles = [], fallback = null) {
   const list = Array.isArray(inputProfiles) ? inputProfiles : [];
   const rows = list.map((item, idx) => {
-    const id = String(item?.id || `rewrite_custom_${Date.now()}_${idx}`).trim();
+    const id3 = String(item?.id || `rewrite_custom_${Date.now()}_${idx}`).trim();
     const name = String(item?.name || `\u65B9\u6848 ${idx + 1}`).trim() || `\u65B9\u6848 ${idx + 1}`;
     return {
-      id,
+      id: id3,
       name,
       api_url: String(item?.api_url || "").trim(),
       api_key: String(item?.api_key || "").trim(),
@@ -14645,7 +16673,7 @@ function getCurrentAvatarSrc() {
 function escapeHtmlText(str) {
   return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function buildChainMergedHtml(chainItems) {
+function buildChainSegmentsHtml(chainItems) {
   const items = Array.isArray(chainItems) ? chainItems : [];
   if (items.length === 0) return "";
   return items.map((item, idx) => {
@@ -14653,18 +16681,39 @@ function buildChainMergedHtml(chainItems) {
     const type = String(item?.type || (idx === 0 ? "initial" : "continuation"));
     const instruction = String(item?.instruction || "").trim() || (type === "initial" ? "\uFF08\u9996\u6B21\u751F\u6210\uFF09" : "\uFF08\u81EA\u7136\u7EED\u5199\uFF09");
     const html = String(item?.html || "").trim();
-    const title = type === "initial" ? "\u9996\u6B21\u751F\u6210" : `\u7B2C ${roundNo} \u6BB5\u7EED\u5199`;
+    const chipLabel = type === "initial" ? "\u9996\u6B21\u751F\u6210" : `\u7B2C ${roundNo} \u6BB5\u7EED\u5199`;
     const instructionLabel = type === "initial" ? "\u751F\u6210\u8BF4\u660E" : "\u7EED\u5199\u6307\u4EE4";
     return `
-            <section class="t-chain-segment" data-round="${roundNo}">
-                <div class="t-chain-segment-head">
-                    <div class="t-chain-segment-title">${escapeHtmlText(title)}</div>
-                    <div class="t-chain-segment-instruction">${instructionLabel}\uFF1A${escapeHtmlText(instruction)}</div>
-                </div>
+            <section class="t-chain-segment" data-round="${roundNo}" data-type="${escapeHtmlText(type)}">
+                <details class="t-chain-meta">
+                    <summary>
+                        <span class="t-chain-meta-line"></span>
+                        <span class="t-chain-meta-chip">
+                            <span class="t-chain-meta-name">${escapeHtmlText(chipLabel)}</span>
+                            <span class="t-chain-meta-caret">\u25BC</span>
+                        </span>
+                        <span class="t-chain-meta-line"></span>
+                    </summary>
+                    <div class="t-chain-meta-panel">
+                        <span class="t-chain-meta-label">${escapeHtmlText(instructionLabel)}</span>
+                        <span class="t-chain-meta-text">${escapeHtmlText(instruction)}</span>
+                    </div>
+                </details>
                 <div class="t-chain-segment-body">${html}</div>
             </section>
         `;
   }).join("\n");
+}
+function buildChainMergedHtml(chainItems, options = {}) {
+  const segments = buildChainSegmentsHtml(chainItems);
+  if (!segments) return "";
+  return options.withStyles === true ? `${CHAIN_SEGMENT_STYLES}
+${segments}` : segments;
+}
+function getChainDisplayHtml(item) {
+  const rebuilt = buildChainMergedHtml(item?.items, { withStyles: true });
+  if (rebuilt) return rebuilt;
+  return String(item?.html || "");
 }
 function buildChainSignature(scriptId, rounds) {
   const payload = `${String(scriptId || "")}|${(Array.isArray(rounds) ? rounds : []).map((r) => `${r.round}#${String(r.type || "continuation").trim()}#${String(r.instruction || "").trim()}#${String(r.content || "").trim()}`).join("|")}`;
@@ -14846,11 +16895,16 @@ function isSameChainSession(favEntry, scriptId, branchKey, currentItems) {
   return isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems);
 }
 async function saveContinuationChainFavorite() {
+  const currentResult = getCurrentGenerationResult();
+  if (!isFavoriteEligible(currentResult)) {
+    if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u751F\u6210\u672A\u5B8C\u6210\uFF0C\u65E0\u6CD5\u6536\u85CF");
+    return false;
+  }
   const display = GlobalState.displayState?.isViewingHistory ? GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex] || null : {
     scriptId: GlobalState.lastGeneratedScriptId,
     scriptName: ""
   };
-  const scriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
+  const scriptId = currentResult?.scriptId || display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
   if (!scriptId) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5267\u672C\uFF0C\u65E0\u6CD5\u6536\u85CF\u7EED\u5199\u94FE");
     return false;
@@ -14858,8 +16912,8 @@ async function saveContinuationChainFavorite() {
   const ctx = await getContextData();
   const chainData = getContinuationRoundsForFav(scriptId);
   const rounds = Array.isArray(chainData?.rounds) ? chainData.rounds : [];
-  const currentDisplayContent = GlobalState.displayState?.isViewingHistory ? String(GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex]?.content || "").trim() : String(GlobalState.lastGeneratedContent || "").trim();
-  const normalizedRounds = rounds.length > 0 ? rounds : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, timestamp: Date.now() }] : [];
+  const currentDisplayContent = String(currentResult?.content || "").trim();
+  const normalizedRounds = rounds.length > 0 ? rounds.filter((round) => round.status === "success" || round.status === "legacy") : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, timestamp: Date.now() }] : [];
   if (normalizedRounds.length === 0) {
     if (window.toastr) toastr.warning("\u5F53\u524D\u5267\u573A\u6CA1\u6709\u53EF\u6536\u85CF\u5185\u5BB9");
     return false;
@@ -14869,6 +16923,8 @@ async function saveContinuationChainFavorite() {
     type: String(item?.type || (idx === 0 ? "initial" : "continuation")),
     instruction: String(item?.instruction || "").trim(),
     html: String(item?.content || "").trim(),
+    status: String(item?.status || "legacy"),
+    generationId: String(item?.generationId || ""),
     timestamp: Number(item?.timestamp) || Date.now()
   })).filter((item) => item.html.length > 0);
   if (items.length === 0) {
@@ -14890,7 +16946,7 @@ async function saveContinuationChainFavorite() {
     if (window.toastr) toastr.info("\u5F53\u524D\u5267\u573A\u5206\u7EC4\u5DF2\u6536\u85CF\uFF0C\u65E0\u9700\u91CD\u590D\u6536\u85CF");
     return true;
   }
-  const mergedHtml = buildChainMergedHtml(items);
+  const mergedHtml = buildChainMergedHtml(items, { withStyles: true });
   const now = Date.now();
   const activeFavId = Number(GlobalState.lastFavId) || null;
   let existingChain = null;
@@ -15032,26 +17088,25 @@ function openFavsWindow() {
             <span class="t-close" id="t-fav-close">&times;</span>
         </div>
         
-        <!-- \u666E\u901A\u5DE5\u5177\u680F -->
+        <!-- \u666E\u901A\u5DE5\u5177\u680F\uFF1A\u62BD\u5C49\u5185\u4E3A\u540C\u4E00\u5957\u771F\u5B9E\u63A7\u4EF6\uFF0C\u684C\u9762\u7AEF display:contents \u5E73\u94FA\uFF0C\u79FB\u52A8\u7AEF\u6298\u53E0\u4E3A\u4E0B\u62C9\u9762\u677F -->
         <div class="t-fav-toolbar" id="t-fav-toolbar-normal">
-            <div style="display:flex; align-items:center; gap:10px; flex-grow:1;">
-                <i class="fa-solid fa-filter" style="color:#666;"></i>
-                <select id="t-fav-filter-char" class="t-fav-filter-select">
-                    ${charList.map((c) => `<option value="${c}">${c}</option>`).join("")}
-                </select>
+            <i class="fa-solid fa-filter t-fav-filter-icon" style="color:#666;"></i>
+            <select id="t-fav-filter-char" class="t-fav-filter-select">
+                ${charList.map((c) => `<option value="${c}">${c}</option>`).join("")}
+            </select>
+            <div class="t-fav-tools-drawer" id="t-fav-tools-drawer" hidden>
                 <select id="t-fav-sort" class="t-fav-filter-select" title="\u6392\u5E8F\u65B9\u5F0F">
                     <option value="newest">\u6700\u65B0\u4F18\u5148</option>
                     <option value="oldest">\u6700\u65E9\u4F18\u5148</option>
                     <option value="title_asc">\u6807\u9898 A-Z</option>
                     <option value="title_desc">\u6807\u9898 Z-A</option>
                 </select>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center;">
                 <input type="text" id="t-fav-search" class="t-fav-search" placeholder="\u641C\u7D22\u5173\u952E\u8BCD...">
                 <button id="t-fav-view-toggle" class="t-tool-btn t-fav-view-toggle" title="\u5207\u6362\u7D27\u51D1\u6A21\u5F0F"><span>\u7D27\u51D1</span><span>\u6A21\u5F0F</span></button>
                 <button id="t-btn-img-mgr" class="t-tool-btn" title="\u7BA1\u7406\u89D2\u8272\u80CC\u666F\u56FE"><i class="fa-regular fa-image"></i> \u56FE\u9274</button>
-                <button id="t-btn-edit-mode" class="t-tool-btn" title="\u6279\u91CF\u7BA1\u7406"><i class="fa-solid fa-pen-to-square"></i> \u7F16\u8F91</button>
             </div>
+            <button id="t-btn-edit-mode" class="t-tool-btn t-fav-toolbar-tail" title="\u6279\u91CF\u7BA1\u7406"><i class="fa-solid fa-pen-to-square"></i> \u7F16\u8F91</button>
+            <button class="t-tool-btn t-fav-drawer-toggle" id="t-fav-drawer-toggle" title="\u66F4\u591A\u5DE5\u5177" aria-label="\u66F4\u591A\u5DE5\u5177" aria-controls="t-fav-tools-drawer" aria-expanded="false"><i class="fa-solid fa-sliders"></i></button>
         </div>
         
         <!-- \u7F16\u8F91\u6A21\u5F0F\u5DE5\u5177\u680F -->
@@ -15088,19 +17143,34 @@ function openFavsWindow() {
                         <div id="t-read-index" style="font-size:0.75em; color:#666;">0 / 0</div>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px; flex-shrink:0;">
-                    <button class="t-tool-btn" id="t-read-rename" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
-                    <button class="t-tool-btn" id="t-read-del-segment" title="\u5220\u9664\u5206\u7EC4\u6BB5\u843D" style="display:none; color:#ff9f43; border-color:rgba(255, 159, 67, 0.5);"><i class="fa-solid fa-scissors"></i></button>
-                    <button class="t-tool-btn" id="t-read-img" title="\u5BFC\u51FA\u56FE\u7247"><i class="fa-solid fa-camera"></i></button>
-                    <button class="t-tool-btn" id="t-read-code" title="\u590D\u5236HTML"><i class="fa-solid fa-code"></i></button>
+                <div class="t-read-actions">
+                    <button class="t-tool-btn" id="t-read-toggle-meta" title="\u5C55\u5F00\u5168\u90E8\u6BB5\u843D\u4FE1\u606F" style="display:none;"><i class="fa-solid fa-circle-info"></i></button>
+                    <button class="t-tool-btn t-read-inline-opt" id="t-read-rename" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
+                    <button class="t-tool-btn t-read-inline-opt" id="t-read-img" title="\u5BFC\u51FA\u56FE\u7247"><i class="fa-solid fa-camera"></i></button>
+                    <button class="t-tool-btn t-read-inline-opt" id="t-read-code" title="\u590D\u5236HTML"><i class="fa-solid fa-code"></i></button>
                     <button class="t-tool-btn" id="t-read-open-window" title="\u65B0\u7A97\u53E3\u6253\u5F00(\u4E92\u52A8\u6A21\u5F0F)"><i class="fa-solid fa-up-right-from-square"></i></button>
-                    <button class="t-tool-btn" id="t-read-del-one" title="\u5220\u9664" style="color:#ff6b6b; border-color:#ff6b6b;"><i class="fa-solid fa-trash"></i></button>
+                    <div class="t-read-more-wrap">
+                        <button class="t-tool-btn t-read-more-btn" id="t-read-more" title="\u66F4\u591A\u64CD\u4F5C" aria-label="\u66F4\u591A\u64CD\u4F5C" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        <div class="t-read-more-menu" id="t-read-more-menu" hidden>
+                            <button type="button" class="t-read-menu-opt" data-read-action="rename"><i class="fa-solid fa-pen"></i><span>\u91CD\u547D\u540D</span></button>
+                            <button type="button" class="t-read-menu-opt" data-read-action="img"><i class="fa-solid fa-camera"></i><span>\u5BFC\u51FA\u56FE\u7247</span></button>
+                            <button type="button" class="t-read-menu-opt" data-read-action="code"><i class="fa-solid fa-code"></i><span>\u590D\u5236 HTML</span></button>
+                            <div class="t-read-more-sep"></div>
+                            <button type="button" class="danger" id="t-read-menu-del-segment" data-read-action="del-segment"><i class="fa-solid fa-scissors"></i><span>\u5220\u9664\u5206\u7EC4\u6BB5\u843D</span></button>
+                            <button type="button" class="danger" data-read-action="del-one"><i class="fa-solid fa-trash"></i><span>\u5220\u9664\u6B64\u6536\u85CF</span></button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="t-read-body">
                 <div id="t-read-capture-zone">
                     <div id="t-read-content"></div>
                 </div>
+            </div>
+            <!-- \u4EE3\u7406\u6309\u94AE\uFF1A\u4EC5\u627F\u8F7D\u65E2\u6709\u4E8B\u4EF6\u5904\u7406\u5668\uFF0C\u7531\u9876\u680F\u83DC\u5355\u8F6C\u53D1\u70B9\u51FB\uFF0C\u4E0D\u76F4\u63A5\u5C55\u793A -->
+            <div class="t-read-proxy-actions" aria-hidden="true">
+                <button type="button" id="t-read-del-segment"></button>
+                <button type="button" id="t-read-del-one"></button>
             </div>
         </div>
     </div>`;
@@ -15167,6 +17237,7 @@ function openFavsWindow() {
   };
   const toggleEditMode = (enable) => {
     isEditMode = enable;
+    setFavDrawerOpen(false);
     if (enable) {
       $("#t-fav-toolbar-normal").hide();
       $("#t-fav-toolbar-edit").show();
@@ -15189,14 +17260,15 @@ function openFavsWindow() {
     if (typeof item._snippetText === "string") return item._snippetText;
     const isChain = item?.type === "chain";
     const chainItems = Array.isArray(item?.items) ? item.items : [];
-    const chainSnippetSource = isChain ? chainItems.map((seg) => {
-      const instruction = String(seg?.instruction || "").trim();
-      const html2 = String(seg?.html || "").trim();
-      return `${instruction}
-${html2}`;
-    }).join("\n") : "";
+    const chainSnippetSource = isChain ? chainItems.map((seg) => String(seg?.html || "").trim()).filter(Boolean).join("\n") : "";
     item._snippetText = getSnippet(isChain ? chainSnippetSource || item.html : item.html);
     return item._snippetText;
+  };
+  const getChainInstructionText = (item) => {
+    if (typeof item._instructionText === "string") return item._instructionText;
+    const chainItems = item?.type === "chain" && Array.isArray(item?.items) ? item.items : [];
+    item._instructionText = chainItems.map((seg) => String(seg?.instruction || "").trim()).filter(Boolean).join(" ");
+    return item._instructionText;
   };
   const getCachedSearchText = (item) => {
     if (typeof item._searchText === "string") return item._searchText;
@@ -15205,7 +17277,8 @@ ${html2}`;
       String(item?.title || ""),
       String(item?._meta?.script || ""),
       String(item?._meta?.char || ""),
-      String(snippet || "")
+      String(snippet || ""),
+      getChainInstructionText(item)
     ].join(" ").toLowerCase();
     return item._searchText;
   };
@@ -15629,21 +17702,25 @@ ${html2}`;
     currentIndex = index;
     const item = currentFilteredList[index];
     currentFavId = item.id;
-    currentViewingHtml = item.html;
-    currentViewingTitle = item.title;
     if (item?.type === "chain") {
+      currentViewingHtml = getChainDisplayHtml(item);
       const chainItems = Array.isArray(item.items) ? item.items : [];
       const chainCount = chainItems.length;
       $("#t-read-meta").text(`${item.title}\uFF08\u5267\u573A\u5206\u7EC4\uFF09`);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length} \xB7 ${chainCount} \u6BB5`);
-      $("#t-read-del-segment").show();
+      $("#t-read-menu-del-segment").show();
+      $("#t-read-toggle-meta").show();
+      syncToggleMetaButton(false);
     } else {
+      currentViewingHtml = item.html;
       $("#t-read-meta").text(item.title);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
-      $("#t-read-del-segment").hide();
+      $("#t-read-menu-del-segment").hide();
+      $("#t-read-toggle-meta").hide();
     }
+    currentViewingTitle = item.title;
     const container = document.getElementById("t-read-content");
-    const { isInteractive, reasons } = detectInteractiveContent(item.html);
+    const { isInteractive, reasons } = detectInteractiveContent(currentViewingHtml);
     const openWindowBtn = $("#t-read-open-window");
     if (isInteractive) {
       openWindowBtn.addClass("has-interactive").attr("title", `\u65B0\u7A97\u53E3\u6253\u5F00(${reasons.join(", ")})`);
@@ -15651,7 +17728,7 @@ ${html2}`;
       openWindowBtn.removeClass("has-interactive").attr("title", "\u65B0\u7A97\u53E3\u6253\u5F00");
     }
     try {
-      const shadow = renderToShadowDOMReal(container, item.html);
+      const shadow = renderToShadowDOMReal(container, currentViewingHtml);
       setTimeout(() => {
         shadow.querySelectorAll("*").forEach((el) => {
           const style = window.getComputedStyle(el);
@@ -15665,11 +17742,47 @@ ${html2}`;
       console.warn("Titania: Shadow DOM \u6E32\u67D3\u5931\u8D25\uFF0C\u964D\u7EA7\u5230 innerHTML", e);
       container.innerHTML = "";
       setTimeout(() => {
-        container.innerHTML = item.html;
+        container.innerHTML = currentViewingHtml;
       }, 10);
     }
     $("#t-fav-reader").addClass("show");
   };
+  const setFavDrawerOpen = (open) => {
+    $("#t-fav-tools-drawer").prop("hidden", !open);
+    $("#t-fav-drawer-toggle").attr("aria-expanded", String(open === true)).toggleClass("is-active", open === true);
+  };
+  const setReadMenuOpen = (open) => {
+    $("#t-read-more-menu").prop("hidden", !open);
+    $("#t-read-more").attr("aria-expanded", String(open === true));
+  };
+  $("#t-fav-drawer-toggle").on("click", (e) => {
+    e.stopPropagation();
+    setReadMenuOpen(false);
+    setFavDrawerOpen($("#t-fav-tools-drawer").prop("hidden") === true);
+  });
+  $("#t-fav-tools-drawer").on("click", (e) => e.stopPropagation());
+  $("#t-read-more-menu").on("click", (e) => e.stopPropagation());
+  $("#t-read-more").on("click", (e) => {
+    e.stopPropagation();
+    setFavDrawerOpen(false);
+    setReadMenuOpen($("#t-read-more-menu").prop("hidden") === true);
+  });
+  $("#t-read-more-menu").on("click", "[data-read-action]", function() {
+    const action = String($(this).data("read-action") || "");
+    setReadMenuOpen(false);
+    const targetId = {
+      rename: "#t-read-rename",
+      img: "#t-read-img",
+      code: "#t-read-code",
+      "del-segment": "#t-read-del-segment",
+      "del-one": "#t-read-del-one"
+    }[action];
+    if (targetId) $(targetId).trigger("click");
+  });
+  $("#t-favs-view").on("click", () => {
+    setFavDrawerOpen(false);
+    setReadMenuOpen(false);
+  });
   $("#t-fav-filter-char").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
   $("#t-fav-sort").on("change", () => scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true }));
   $("#t-fav-search").on("input", scheduleSearchRender);
@@ -15682,6 +17795,7 @@ ${html2}`;
     scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
   });
   $("#t-btn-img-mgr").on("click", () => {
+    setFavDrawerOpen(false);
     openCharImageManager(() => {
       scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
     });
@@ -16055,6 +18169,28 @@ ${html2}`;
     editPageIndex += 1;
     scheduleGridRender({ preserveEditPage: true, liteEditPage: false, hydrateEditPage: false });
   });
+  const getChainMetaNodes = () => {
+    const container = document.getElementById("t-read-content");
+    if (!container) return [];
+    const host = container.querySelector(".t-shadow-host");
+    const root = host?.shadowRoot || container;
+    return Array.from(root.querySelectorAll("details.t-chain-meta"));
+  };
+  const syncToggleMetaButton = (expanded) => {
+    $("#t-read-toggle-meta").toggleClass("is-active", expanded === true).attr("title", expanded === true ? "\u6298\u53E0\u5168\u90E8\u6BB5\u843D\u4FE1\u606F" : "\u5C55\u5F00\u5168\u90E8\u6BB5\u843D\u4FE1\u606F");
+  };
+  $("#t-read-toggle-meta").on("click", () => {
+    const nodes = getChainMetaNodes();
+    if (nodes.length === 0) {
+      if (window.toastr) toastr.info("\u5F53\u524D\u5185\u5BB9\u6CA1\u6709\u53EF\u5C55\u5F00\u7684\u6BB5\u843D\u4FE1\u606F");
+      return;
+    }
+    const shouldOpen = nodes.some((node) => !node.open);
+    nodes.forEach((node) => {
+      node.open = shouldOpen;
+    });
+    syncToggleMetaButton(shouldOpen);
+  });
   $("#t-read-del-segment").on("click", () => {
     if (!currentFavId) return;
     const currentItem = currentFilteredList[currentIndex];
@@ -16101,7 +18237,7 @@ ${segmentTip}`);
       if (window.toastr) toastr.success("\u5DF2\u5220\u9664\u8BE5\u6BB5\uFF0C\u5206\u7EC4\u5DF2\u6E05\u7A7A\u5E76\u79FB\u9664");
       return;
     }
-    targetFav.html = buildChainMergedHtml(targetFav.items);
+    targetFav.html = buildChainMergedHtml(targetFav.items, { withStyles: true });
     saveExtData();
     const localFav = favs.find((x) => x.id === currentFavId);
     if (localFav) {
@@ -16112,7 +18248,7 @@ ${segmentTip}`);
     scheduleGridRender({ preserveEditPage: true, liteEditPage: true, hydrateEditPage: true });
     if (window.toastr) toastr.success(`\u5DF2\u5220\u9664\u7B2C ${removeRound} \u6BB5`);
   });
-  const closeWindow = () => {
+  const closeWindow2 = () => {
     clearCarouselTimer();
     if (thumbVirtualRaf) {
       cancelAnimationFrame(thumbVirtualRaf);
@@ -16146,7 +18282,7 @@ ${segmentTip}`);
       $("#t-overlay").remove();
     }
   };
-  $("#t-fav-close").on("click", closeWindow);
+  $("#t-fav-close").on("click", closeWindow2);
   syncFavViewToggleButton();
   syncFavViewModeClass();
   scheduleGridRender({ preserveEditPage: false, liteEditPage: true, hydrateEditPage: true });
@@ -16290,6 +18426,7 @@ function openCharImageManager(onCloseCallback) {
   $("#t-img-close").on("click", () => $("#t-img-mgr").remove());
   renderList();
 }
+var CHAIN_SEGMENT_STYLE_ID, CHAIN_SEGMENT_STYLES;
 var init_favsWindow = __esm({
   "src/ui/favsWindow.js"() {
     init_storage();
@@ -16298,6 +18435,83 @@ var init_favsWindow = __esm({
     init_helpers();
     init_mainWindow();
     init_api();
+    CHAIN_SEGMENT_STYLE_ID = "t-chain-segment-style";
+    CHAIN_SEGMENT_STYLES = `
+<style data-t-style="${CHAIN_SEGMENT_STYLE_ID}">
+.t-chain-segment { display: block; margin: 0; padding: 0; }
+.t-chain-segment .t-chain-meta { display: block; margin: 0; padding: 0; }
+.t-chain-segment .t-chain-meta > summary {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    outline: none;
+}
+.t-chain-segment .t-chain-meta > summary::-webkit-details-marker { display: none; }
+.t-chain-segment .t-chain-meta > summary::marker { content: ""; }
+.t-chain-segment .t-chain-meta-line {
+    flex: 1 1 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(191, 161, 95, 0.32), transparent);
+}
+.t-chain-segment .t-chain-meta-chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(191, 161, 95, 0.34);
+    background: rgba(191, 161, 95, 0.1);
+    color: rgba(238, 220, 178, 0.78) !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.t-chain-segment .t-chain-meta > summary:hover .t-chain-meta-chip {
+    color: #f6e7bf !important;
+    border-color: rgba(231, 202, 143, 0.62);
+    background: rgba(191, 161, 95, 0.18);
+}
+.t-chain-segment .t-chain-meta-caret {
+    font-size: 9px !important;
+    line-height: 1 !important;
+    opacity: 0.7;
+    transition: transform 0.2s ease;
+}
+.t-chain-segment .t-chain-meta[open] .t-chain-meta-caret { transform: rotate(180deg); }
+.t-chain-segment .t-chain-meta-panel {
+    margin: 0 18px 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(191, 161, 95, 0.22);
+    background: rgba(24, 20, 14, 0.55);
+}
+.t-chain-segment .t-chain-meta-label {
+    display: block;
+    margin-bottom: 4px;
+    color: rgba(229, 200, 140, 0.9) !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.04em;
+}
+.t-chain-segment .t-chain-meta-text {
+    display: block;
+    color: rgba(226, 219, 205, 0.86) !important;
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-align: left;
+}
+.t-chain-segment .t-chain-segment-body { display: block; }
+</style>
+`.trim();
   }
 });
 
@@ -16340,7 +18554,10 @@ function expandBuiltinContextDetails(details, trace, meta) {
     ["userDesc", "\u7528\u6237\u8BBE\u5B9A"],
     ["worldInfo", "\u4E16\u754C\u89C2\u8BBE\u5B9A"],
     ["history", "\u804A\u5929\u5386\u53F2"],
-    ["scriptInstruction", "\u5267\u672C\u6307\u4EE4"]
+    ["scriptInstruction", "\u5267\u672C\u6307\u4EE4"],
+    ["continuationPreamble", "\u7EED\u5199\u6A21\u5F0F\u8BF4\u660E"],
+    ["continuationContext", "\u7EED\u5199\u4F1A\u8BDD\u4E0A\u4E0B\u6587"],
+    ["continuationInstruction", "\u672C\u8F6E\u7EED\u5199\u6307\u4EE4"]
   ];
   return details.flatMap((detail) => {
     if (detail?.entryId !== userEntryId) return [detail];
@@ -16394,7 +18611,7 @@ function getPromptMessagesView(source, isTrace = false) {
     chars: String(message.content || "").length,
     tokens: estimateTokens(message.content || "")
   }));
-  const details = isTrace ? expandBuiltinContextDetails(rawDetails, source, meta) : rawDetails;
+  const details = isTrace ? expandBuiltinContextDetails(rawDetails, source, meta) : expandBuiltinContextDetails(rawDetails, { mode: source?.mode }, { ...meta, promptScheme: source?.promptScheme });
   const sections = details.map((detail, index) => ({
     id: detail.entryId || `message_${index}`,
     title: detail.name || `\u6D88\u606F ${index + 1}`,
@@ -16407,6 +18624,17 @@ function getPromptMessagesView(source, isTrace = false) {
     sections,
     totalTokens: sections.reduce((sum, section) => sum + section.tokens, 0)
   };
+}
+async function applyExactTokenCounts(sections) {
+  const run = ++tokenCountRun;
+  const { counts, total, exact } = await countTokensBatch(sections.map((item) => item.content || ""));
+  if (run !== tokenCountRun) return;
+  sections.forEach((section, index) => {
+    $(`.t-prompt-token-count[data-token-for="${section.id}"]`).text(`${counts[index]} tk`);
+  });
+  $("#t-prompt-total-token").text(total);
+  $("#t-prompt-token-approx").toggle(!exact);
+  $("#t-prompt-total-token").closest(".t-prompt-count").attr("title", exact ? "\u7531 SillyTavern \u5206\u8BCD\u5668\u7CBE\u786E\u8BA1\u7B97" : "\u5206\u8BCD\u5668\u4E0D\u53EF\u7528\uFF0C\u5F53\u524D\u4E3A\u4F30\u7B97\u503C");
 }
 async function showDebugInfo() {
   if ($("#t-debug-view").length) return;
@@ -16426,13 +18654,22 @@ async function showDebugInfo() {
             <span class="t-close" id="t-debug-close">&times;</span>
         </div>
 
+        <div class="t-prompt-source-bar">
+            <div class="t-prompt-source-tabs" role="tablist" aria-label="\u63D0\u793A\u8BCD\u6570\u636E\u6765\u6E90">
+                <button class="t-prompt-source-tab active" data-source="preview" role="tab" aria-selected="true"><i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8</button>
+                <button class="t-prompt-source-tab" data-source="actual" role="tab" aria-selected="false"><i class="fa-solid fa-circle"></i> \u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42</button>
+                <button id="t-prompt-info-btn" class="t-prompt-info-btn" title="\u67E5\u770B\u5F53\u524D\u6570\u636E\u6765\u6E90\u8BF4\u660E" aria-label="\u67E5\u770B\u5F53\u524D\u6570\u636E\u6765\u6E90\u8BF4\u660E" aria-expanded="false"><i class="fa-solid fa-circle-info"></i></button>
+                <div id="t-prompt-info-popover" class="t-prompt-info-popover" hidden></div>
+            </div>
+        </div>
+
         <div class="t-prompt-summary">
             <div class="t-prompt-request">
-                <span class="t-prompt-actual"><i class="fa-solid fa-circle"></i> \u6700\u8FD1\u4E00\u6B21\u5B9E\u9645\u8BF7\u6C42</span>
-                <span id="t-prompt-request-meta">\u6682\u65E0\u8BF7\u6C42</span>
+                <span id="t-prompt-source-state" class="t-prompt-actual"><i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8 \xB7 \u5C1A\u672A\u53D1\u9001</span>
+                <span id="t-prompt-request-meta">\u6B63\u5728\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD...</span>
             </div>
             <div class="t-prompt-summary-actions">
-                <span class="t-prompt-count"><strong id="t-prompt-total-token">0</strong> tokens \xB7 <b id="t-prompt-section-count">0</b> \u6761\u6D88\u606F</span>
+                <span class="t-prompt-count"><strong id="t-prompt-total-token">0</strong> tokens<span id="t-prompt-token-approx" style="display:none"> (\u4F30\u7B97)</span> \xB7 <b id="t-prompt-section-count">0</b> \u6761\u6D88\u606F</span>
                 <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6D88\u606F"><i class="fa-solid fa-angles-down"></i> \u5C55\u5F00\u5168\u90E8</button>
                 <button id="t-debug-refresh" class="t-prompt-tool-btn t-prompt-icon-btn" title="\u5237\u65B0"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
@@ -16441,16 +18678,52 @@ async function showDebugInfo() {
         <div class="t-prompt-sections" id="t-prompt-sections"></div>
     </div>`;
   $("#t-overlay").append(html);
+  let activeSource = "preview";
+  let currentPreview = null;
+  let previewLoading = false;
+  const getLatestActualTrace = () => getPromptTraceList().find((trace) => trace?.finalMessages?.messages?.length > 0) || null;
+  const getPreviewContinuation = (source) => {
+    const info = source?.meta?.continuation;
+    return info?.isContinuation ? info : null;
+  };
+  const updateInfoPopover = () => {
+    const isPreview = activeSource === "preview";
+    const source = isPreview ? currentPreview : getLatestActualTrace();
+    const modeName = isPreview ? source?.promptScheme?.name || source?.mode || "\u5F53\u524D\u6A21\u5F0F" : source?.finalMessages?.meta?.promptScheme?.name || source?.mode || "\u672A\u77E5\u6A21\u5F0F";
+    const scriptName = isPreview ? source?.script?.name : source?.scriptName;
+    const time = isPreview ? source?.timestamp : source?.endedAt || source?.startedAt;
+    const continuation = isPreview ? getPreviewContinuation(source) : null;
+    const description = !isPreview ? "\u8FD9\u662F\u6700\u8FD1\u4E00\u6B21\u5B9E\u9645\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u56FA\u5B9A\u6D88\u606F\u5FEB\u7167\u3002" : continuation ? `\u4E0B\u4E00\u6B65\u52A8\u4F5C\u662F\u7EED\u5199\uFF0C\u56E0\u6B64\u6309\u7EED\u5199\u53E3\u5F84\u6784\u9020\uFF1A\u5DF2\u6CE8\u5165 ${continuation.injectedRounds}/${continuation.totalRounds} \u8F6E\u5386\u53F2\uFF08\u542B\u6700\u8FD1\u4E00\u6B21\u7EED\u5199\u7ED3\u679C\uFF09\uFF0Ctoken \u5DF2\u8BA1\u5165\u3002\u52A8\u6001\u5B8F\u4E0E\u4E0A\u4E0B\u6587\u53EF\u80FD\u5728\u5B9E\u9645\u751F\u6210\u65F6\u53D8\u5316\u3002` : "\u57FA\u4E8E\u5F53\u524D\u89D2\u8272\u3001\u4E16\u754C\u4E66\u3001\u804A\u5929\u5386\u53F2\u548C\u8BBE\u7F6E\u5373\u65F6\u6784\u9020\uFF0C\u6CA1\u6709\u53D1\u9001\u8BF7\u6C42\u3002\u52A8\u6001\u5B8F\u4E0E\u4E0A\u4E0B\u6587\u53EF\u80FD\u5728\u5B9E\u9645\u751F\u6210\u65F6\u53D8\u5316\u3002";
+    $("#t-prompt-info-popover").html(`
+            <strong>${isPreview ? continuation ? "\u5F53\u524D\u6784\u9020\u9884\u89C8 \xB7 \u7EED\u5199\u53E3\u5F84" : "\u5F53\u524D\u6784\u9020\u9884\u89C8" : "\u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42"}</strong>
+            <p>${description}</p>
+            <dl>
+                <div><dt>\u6A21\u5F0F</dt><dd>${escapeHtml2(modeName || "-")}</dd></div>
+                <div><dt>\u5267\u672C</dt><dd>${escapeHtml2(scriptName || "-")}</dd></div>
+                <div><dt>${isPreview ? "\u6784\u5EFA\u65F6\u95F4" : "\u53D1\u9001\u65F6\u95F4"}</dt><dd>${escapeHtml2(formatTimeText(time))}</dd></div>
+            </dl>`);
+  };
   const renderPromptWindow = () => {
     const $sections = $("#t-prompt-sections");
-    const targetTrace = getPromptTraceList().find((trace) => trace?.finalMessages?.messages?.length > 0);
-    if (!targetTrace) {
-      $sections.html('<div class="t-prompt-empty"><i class="fa-regular fa-file-lines"></i><span>\u8FD8\u6CA1\u6709\u5B9E\u9645\u53D1\u9001\u8FC7\u63D0\u793A\u8BCD</span><small>\u5B8C\u6210\u4E00\u6B21\u751F\u6210\u540E\uFF0C\u8FD9\u91CC\u4F1A\u663E\u793A\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u5B8C\u6574\u6D88\u606F\u3002</small></div>');
+    const isPreview = activeSource === "preview";
+    const source = isPreview ? currentPreview : getLatestActualTrace();
+    if (isPreview && previewLoading) {
+      $sections.html('<div class="t-prompt-empty"><i class="fa-solid fa-spinner fa-spin"></i><span>\u6B63\u5728\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD</span><small>\u6B63\u5728\u8BFB\u53D6\u5F53\u524D\u89D2\u8272\u3001\u4E16\u754C\u4E66\u548C\u804A\u5929\u5386\u53F2...</small></div>');
       $("#t-prompt-total-token, #t-prompt-section-count").text("0");
-      $("#t-prompt-request-meta").text("\u6682\u65E0\u8BF7\u6C42");
+      $("#t-prompt-request-meta").text("\u6B63\u5728\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD...");
       return;
     }
-    const { sections, totalTokens } = getPromptMessagesView(targetTrace, true);
+    if (!source || isPreview && source.ok === false) {
+      const error = isPreview ? source?.error || "\u65E0\u6CD5\u6784\u9020\u5F53\u524D\u63D0\u793A\u8BCD" : "\u8FD8\u6CA1\u6709\u5B9E\u9645\u53D1\u9001\u8FC7\u63D0\u793A\u8BCD";
+      const detail = isPreview ? "\u8BF7\u5148\u5728\u5C0F\u5267\u573A\u4E3B\u754C\u9762\u9009\u62E9\u4E00\u4E2A\u53EF\u7528\u5267\u672C\u3002" : "\u5207\u6362\u5230\u201C\u5F53\u524D\u9884\u89C8\u201D\u53EF\u76F4\u63A5\u67E5\u770B\u5F53\u524D\u63D0\u793A\u8BCD\u6784\u9020\u3002";
+      $sections.html(`<div class="t-prompt-empty"><i class="fa-regular fa-file-lines"></i><span>${escapeHtml2(error)}</span><small>${escapeHtml2(detail)}</small></div>`);
+      $("#t-prompt-total-token, #t-prompt-section-count").text("0");
+      $("#t-prompt-request-meta").text(isPreview ? "\u9884\u89C8\u4E0D\u53EF\u7528" : "\u6682\u65E0\u5B9E\u9645\u8BF7\u6C42");
+      $("#t-prompt-source-state").html(isPreview ? '<i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8 \xB7 \u5C1A\u672A\u53D1\u9001' : '<i class="fa-solid fa-circle"></i> \u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42');
+      updateInfoPopover();
+      return;
+    }
+    const { sections, totalTokens } = getPromptMessagesView(source, !isPreview);
     const expandedIds = /* @__PURE__ */ new Set();
     $("#t-prompt-sections .t-prompt-section-card.expanded").each(function() {
       expandedIds.add($(this).data("section-id"));
@@ -16468,7 +18741,7 @@ async function showDebugInfo() {
                             <span class="t-prompt-role-label">${escapeHtml2(section.role)}</span>
                             <span class="t-prompt-name">${escapeHtml2(section.title)}</span>
                         </div>
-                        <div class="t-prompt-token-count">${section.tokens} tk</div>
+                        <div class="t-prompt-token-count" data-token-for="${section.id}">${section.tokens} tk</div>
                     </div>
                     <div class="t-prompt-section-preview">${escapeHtml2(previewText)}</div>
                     <pre class="t-prompt-section-content">${escapeHtml2(section.content || "(\u65E0\u5185\u5BB9)")}</pre>
@@ -16477,12 +18750,64 @@ async function showDebugInfo() {
     $sections.html(cardsHtml);
     $("#t-prompt-total-token").text(totalTokens);
     $("#t-prompt-section-count").text(sections.length);
-    $("#t-prompt-request-meta").text(`${getTraceSourceLabel(targetTrace.source)} \xB7 ${targetTrace.scriptName || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(targetTrace.endedAt || targetTrace.startedAt)}`);
+    applyExactTokenCounts(sections);
+    if (isPreview) {
+      const continuation = getPreviewContinuation(source);
+      $("#t-prompt-source-state").html(continuation ? '<i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8 \xB7 \u7EED\u5199\u53E3\u5F84 \xB7 \u5C1A\u672A\u53D1\u9001' : '<i class="fa-regular fa-circle"></i> \u5F53\u524D\u9884\u89C8 \xB7 \u5C1A\u672A\u53D1\u9001');
+      const modeLabel = continuation ? `\u7EED\u5199\u6A21\u5F0F \xB7 \u6CE8\u5165 ${continuation.injectedRounds}/${continuation.totalRounds} \u8F6E` : source.promptScheme?.name || source.mode || "\u5F53\u524D\u6A21\u5F0F";
+      $("#t-prompt-request-meta").text(`${modeLabel} \xB7 ${source.script?.name || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(source.timestamp)}`);
+    } else {
+      $("#t-prompt-source-state").html('<i class="fa-solid fa-circle"></i> \u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42');
+      $("#t-prompt-request-meta").text(`${getTraceSourceLabel(source.source)} \xB7 ${source.scriptName || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(source.endedAt || source.startedAt)}`);
+    }
+    updateInfoPopover();
   };
-  renderPromptWindow();
-  $("#t-debug-refresh").on("click", () => {
+  const loadCurrentPreview = async () => {
+    if (previewLoading) return;
+    previewLoading = true;
     renderPromptWindow();
-    if (window.toastr) toastr.info("\u63D0\u793A\u8BCD\u5DF2\u5237\u65B0", "Titania");
+    try {
+      const { buildPromptCompositionPreview: buildPromptCompositionPreview2 } = await Promise.resolve().then(() => (init_api(), api_exports));
+      currentPreview = await buildPromptCompositionPreview2();
+    } catch (error) {
+      currentPreview = { ok: false, error: error?.message || "\u9884\u89C8\u6784\u9020\u5931\u8D25" };
+    } finally {
+      previewLoading = false;
+      renderPromptWindow();
+    }
+  };
+  await loadCurrentPreview();
+  $(".t-prompt-source-tab").on("click", async function() {
+    activeSource = String($(this).data("source") || "preview");
+    $(".t-prompt-source-tab").removeClass("active").attr("aria-selected", "false");
+    $(this).addClass("active").attr("aria-selected", "true");
+    $("#t-prompt-info-popover").prop("hidden", true);
+    $("#t-prompt-info-btn").attr("aria-expanded", "false");
+    if (activeSource === "preview" && !currentPreview) await loadCurrentPreview();
+    else renderPromptWindow();
+  });
+  $("#t-prompt-info-btn").on("click", function(event) {
+    event.stopPropagation();
+    updateInfoPopover();
+    const $popover = $("#t-prompt-info-popover");
+    const shouldOpen = $popover.prop("hidden");
+    $popover.prop("hidden", !shouldOpen);
+    $(this).attr("aria-expanded", String(shouldOpen));
+  });
+  $("#t-prompt-info-popover").on("click", (event) => event.stopPropagation());
+  $(document).off("click.tpromptinfo").on("click.tpromptinfo", () => {
+    $("#t-prompt-info-popover").prop("hidden", true);
+    $("#t-prompt-info-btn").attr("aria-expanded", "false");
+  });
+  $("#t-debug-refresh").on("click", async () => {
+    if (activeSource === "preview") {
+      currentPreview = null;
+      await loadCurrentPreview();
+      if (window.toastr) toastr.info("\u5F53\u524D\u63D0\u793A\u8BCD\u9884\u89C8\u5DF2\u91CD\u65B0\u6784\u9020", "Titania");
+    } else {
+      renderPromptWindow();
+      if (window.toastr) toastr.info("\u5B9E\u9645\u8BF7\u6C42\u5FEB\u7167\u5DF2\u5237\u65B0", "Titania");
+    }
   });
   $("#t-prompt-sections").on("click", ".t-prompt-section-head", function() {
     const $card = $(this).closest(".t-prompt-section-card");
@@ -16514,6 +18839,7 @@ async function showDebugInfo() {
     syncExpandAllButton();
   });
   const close = () => {
+    $(document).off("click.tpromptinfo");
     $("#t-debug-view").remove();
     if (hasMainView) {
       $mainView.show();
@@ -16616,7 +18942,7 @@ ${JSON.stringify(l.details, null, 2)}`;
     $viewer.scrollTop($viewer[0].scrollHeight);
   };
   renderLogView();
-  const closeWindow = () => {
+  const closeWindow2 = () => {
     $("#t-diagnostics-view").remove();
     if (hasMainView) {
       $mainView.show();
@@ -16624,7 +18950,7 @@ ${JSON.stringify(l.details, null, 2)}`;
       $("#t-overlay").remove();
     }
   };
-  $("#t-diag-close").on("click", closeWindow);
+  $("#t-diag-close").on("click", closeWindow2);
   $("#t-diag-refresh").on("click", () => {
     renderLogView();
     if (window.toastr) toastr.info("\u65E5\u5FD7\u5DF2\u5237\u65B0", "Titania");
@@ -16646,12 +18972,14 @@ ${JSON.stringify(l.details, null, 2)}`;
     renderLogView();
   }, 3e3);
 }
+var tokenCountRun;
 var init_debugWindow = __esm({
   "src/ui/debugWindow.js"() {
     init_state();
     init_logger();
     init_dom();
     init_helpers();
+    tokenCountRun = 0;
   }
 });
 
@@ -16687,9 +19015,9 @@ var init_chatTagWhitelist = __esm({
 function escapeHtml3(value) {
   return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function getById($root, id) {
-  if (!$root || !$root.length || !id) return $();
-  return $root.find(`#${id}`);
+function getById($root, id3) {
+  if (!$root || !$root.length || !id3) return $();
+  return $root.find(`#${id3}`);
 }
 function uniqStrings(values) {
   return [...new Set((Array.isArray(values) ? values : []).map((v) => String(v || "").trim()).filter(Boolean))];
@@ -16707,10 +19035,10 @@ function defaultModelFetcher({ apiUrl, apiKey }) {
 }
 function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
   const type = profile?.type === "internal" ? "internal" : "custom";
-  const id = String(profile?.id || `profile_${Date.now()}_${idx}`).trim();
+  const id3 = String(profile?.id || `profile_${Date.now()}_${idx}`).trim();
   const name = String(profile?.name || (type === "internal" ? "\u8DDF\u968F\u4E3B\u8FDE\u63A5" : `\u65B9\u6848 ${idx + 1}`)).trim() || `\u65B9\u6848 ${idx + 1}`;
   return {
-    id,
+    id: id3,
     type,
     readonly: profile?.readonly === true,
     name,
@@ -16796,6 +19124,7 @@ function renderApiConnectionEditorHTML(options = {}) {
     showDeleteProfile: true,
     showStream: false,
     showMaxTokens: false,
+    showManualModelInput: false,
     ...options.flags || {}
   };
   const values = {
@@ -16835,7 +19164,9 @@ function renderApiConnectionEditorHTML(options = {}) {
             <div class="t-form-group"><label class="t-form-label">${escapeHtml3(labels.apiKey)}</label><input id="${escapeHtml3(ids.apiKeyId || "")}" type="password" class="${escapeHtml3(classes.input)}" placeholder="${escapeHtml3(placeholders.apiKey)}"></div>
             <div class="t-form-group">
                 <label class="t-form-label">${escapeHtml3(labels.model)}</label>
-                <div style="display:flex; gap:10px;"><select id="${escapeHtml3(ids.modelId || "")}" class="${escapeHtml3(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml3(ids.fetchModelsId || "")}" class="${escapeHtml3(classes.button)}" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
+                ${flags.showManualModelInput ? `<div style="display:flex; gap:10px; margin-bottom:8px;"><select id="${escapeHtml3(ids.modelModeId || "")}" class="${escapeHtml3(classes.select)}" style="width:auto; cursor:pointer;"><option value="list">\u83B7\u53D6\u5217\u8868</option><option value="manual">\u624B\u52A8\u586B\u5199</option></select></div>` : ""}
+                <div id="${escapeHtml3(ids.modelListWrapId || "")}" style="display:flex; gap:10px;"><select id="${escapeHtml3(ids.modelId || "")}" class="${escapeHtml3(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml3(ids.fetchModelsId || "")}" class="${escapeHtml3(classes.button)}" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
+                ${flags.showManualModelInput ? `<div id="${escapeHtml3(ids.modelManualWrapId || "")}" style="display:none;"><input id="${escapeHtml3(ids.modelInputId || "")}" class="${escapeHtml3(classes.input)}" placeholder="\u6A21\u578B ID\uFF0C\u4F8B\u5982\uFF1Agpt-4o"></div>` : ""}
                 <div id="${escapeHtml3(ids.statusId || "")}" style="margin-top:8px; font-size:0.8em; color:#8da5b8;">${escapeHtml3(values.statusText)}</div>
             </div>
         </div>
@@ -16849,6 +19180,7 @@ function createApiConnectionEditor(options = {}) {
   const defaultModel = String(options.defaultModel || "gpt-3.5-turbo").trim() || "gpt-3.5-turbo";
   const normalizeUrl = typeof options.normalizeUrl === "function" ? options.normalizeUrl : normalizeApiBaseUrl;
   const modelFetcher = typeof options.modelFetcher === "function" ? options.modelFetcher : defaultModelFetcher;
+  const showManualModelInput = options.showManualModelInput === true;
   const autoFetchDelay = Number.isFinite(Number(options.autoFetchDelayMs)) ? Number(options.autoFetchDelayMs) : 500;
   const createProfileIdPrefix = String(options.profileIdPrefix || "custom").trim() || "custom";
   const statusTexts = {
@@ -16858,6 +19190,7 @@ function createApiConnectionEditor(options = {}) {
     empty: "\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B",
     success: (count) => `\u5DF2\u83B7\u53D6 ${count} \u4E2A\u6A21\u578B`,
     failed: (msg) => `\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${msg}`,
+    manual: "\u624B\u52A8\u586B\u5199\u6A21\u578B ID\uFF0C\u4E0D\u4F1A\u8BF7\u6C42\u6A21\u578B\u5217\u8868\u3002",
     internalTip: "\u5F53\u524D\u4F7F\u7528 ST \u4E3B\u8FDE\u63A5\uFF0C\u8FDE\u63A5\u53C2\u6570\u7531 ST \u7BA1\u7406\u3002",
     customTip: "\u5F53\u524D\u4F7F\u7528\u81EA\u5B9A\u4E49\u65B9\u6848\uFF0CURL/Key/\u6A21\u578B\u4F1A\u4FDD\u5B58\u5230\u8BE5\u65B9\u6848\u3002",
     ...options.statusTexts || {}
@@ -16873,6 +19206,8 @@ function createApiConnectionEditor(options = {}) {
     state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
   }
   let autoFetchTimer = null;
+  let modelInputMode = "list";
+  let modelRequestVersion = 0;
   const emitChange = () => {
     if (typeof options.onChange === "function") {
       options.onChange({ profiles: state.profiles.map((p) => ({ ...p })), activeProfileId: state.activeProfileId });
@@ -16897,6 +19232,7 @@ function createApiConnectionEditor(options = {}) {
     const $url = getById($root, ids.apiUrlId);
     const $key = getById($root, ids.apiKeyId);
     const $model = getById($root, ids.modelId);
+    const $modelInput = getById($root, ids.modelInputId);
     if ($name.length) {
       profile.name = String($name.val() || "").trim() || profile.name;
     }
@@ -16906,7 +19242,9 @@ function createApiConnectionEditor(options = {}) {
     if ($key.length) {
       profile.key = String($key.val() || "").trim();
     }
-    if ($model.length) {
+    if (modelInputMode === "manual" && $modelInput.length) {
+      profile.model = String($modelInput.val() || "").trim() || defaultModel;
+    } else if ($model.length) {
       profile.model = String($model.val() || "").trim() || defaultModel;
     }
     emitChange();
@@ -16918,6 +19256,11 @@ function createApiConnectionEditor(options = {}) {
     const $url = getById($root, ids.apiUrlId);
     const $key = getById($root, ids.apiKeyId);
     const $model = getById($root, ids.modelId);
+    const $fetchBtn = getById($root, ids.fetchModelsId);
+    const $modelMode = getById($root, ids.modelModeId);
+    const $modelInput = getById($root, ids.modelInputId);
+    const $modelListWrap = getById($root, ids.modelListWrapId);
+    const $modelManualWrap = getById($root, ids.modelManualWrapId);
     const $urlHint = getById($root, ids.urlHintId);
     const $stUrlDisplay = getById($root, ids.stUrlDisplayId);
     const $tip = getById($root, ids.profileTipId);
@@ -16939,6 +19282,11 @@ function createApiConnectionEditor(options = {}) {
       $url.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
       $key.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
       $model.empty().append("<option selected>(ST \u8BBE\u7F6E)</option>").prop("disabled", true);
+      $modelMode.prop("disabled", true);
+      $modelInput.prop("disabled", true).val("");
+      $fetchBtn.prop("disabled", true).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+      $modelListWrap.show();
+      $modelManualWrap.hide();
       if ($urlHint.length) {
         const stUrl = typeof options.getInternalUrl === "function" ? String(options.getInternalUrl() || "\u672A\u77E5") : "\u672A\u77E5";
         if ($stUrlDisplay.length) $stUrlDisplay.text(stUrl || "\u672A\u77E5");
@@ -16951,10 +19299,16 @@ function createApiConnectionEditor(options = {}) {
     $url.val(profile.url || "").prop("disabled", false).prop("placeholder", options.apiUrlPlaceholder || "https://api.example.com/v1");
     $key.val(profile.key || "").prop("disabled", false).prop("placeholder", options.apiKeyPlaceholder || "sk-...");
     $model.prop("disabled", false);
+    $modelMode.prop("disabled", !showManualModelInput).val(modelInputMode);
+    $modelInput.prop("disabled", modelInputMode !== "manual").val(profile.model || defaultModel);
+    $fetchBtn.prop("disabled", modelInputMode === "manual").text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+    $modelListWrap.toggle(modelInputMode !== "manual");
+    $modelManualWrap.toggle(modelInputMode === "manual");
     if ($urlHint.length) $urlHint.hide();
     if ($tip.length) $tip.text(statusTexts.customTip);
     const currentModel = profile.model || defaultModel;
-    if ($model.find(`option[value="${currentModel.replace(/\"/g, '\\"')}"]`).length === 0) {
+    const hasCurrentModel = $model.find("option").toArray().some((option) => String(option.value) === currentModel);
+    if (!hasCurrentModel) {
       $model.empty().append(`<option value="${escapeHtml3(currentModel)}" selected>${escapeHtml3(currentModel)}</option>`);
     }
     $model.val(currentModel);
@@ -16973,32 +19327,34 @@ function createApiConnectionEditor(options = {}) {
   };
   const fetchModels = async (showToast = false) => {
     persistCurrentProfileInputs();
+    if (modelInputMode === "manual") return [];
     const profile = findActiveProfile();
     const $model = getById($root, ids.modelId);
     const $fetchBtn = getById($root, ids.fetchModelsId);
     if (!profile || profile.type === "internal") return [];
     const apiUrl = normalizeUrl(profile.url);
     if (!apiUrl) {
-      $model.empty().append("<option value=''>\u8BF7\u5148\u586B\u5199 API \u5730\u5740</option>");
       setStatus2(statusTexts.missingUrl, "warn");
       if (showToast && window.toastr) window.toastr.warning(statusTexts.missingUrl);
       return [];
     }
+    const requestVersion = ++modelRequestVersion;
     try {
       $fetchBtn.prop("disabled", true).text("...");
       setStatus2(statusTexts.loading, "muted");
       const models = uniqStrings(await modelFetcher({ apiUrl, apiKey: profile.key, profile, state: { ...state } }));
-      $model.empty();
+      if (requestVersion !== modelRequestVersion || profile.id !== state.activeProfileId) return [];
       if (!models.length) {
-        $model.append("<option value=''>\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B</option>");
         setStatus2(statusTexts.empty, "warn");
         return [];
       }
-      const selectedModel = models.includes(profile.model) ? profile.model : models[0];
-      models.forEach((m) => {
-        $model.append(`<option value="${escapeHtml3(m)}" ${m === selectedModel ? "selected" : ""}>${escapeHtml3(m)}</option>`);
+      const selectedModel = profile.model || defaultModel;
+      const displayModels = uniqStrings([selectedModel, ...models]);
+      $model.empty();
+      displayModels.forEach((m) => {
+        const label = m === selectedModel && !models.includes(m) ? `${m}\uFF08\u5F53\u524D\uFF09` : m;
+        $model.append(`<option value="${escapeHtml3(m)}" ${m === selectedModel ? "selected" : ""}>${escapeHtml3(label)}</option>`);
       });
-      profile.model = selectedModel;
       setStatus2(typeof statusTexts.success === "function" ? statusTexts.success(models.length) : statusTexts.success, "ok");
       emitChange();
       if (showToast && window.toastr) {
@@ -17006,15 +19362,17 @@ function createApiConnectionEditor(options = {}) {
       }
       return models;
     } catch (error) {
+      if (requestVersion !== modelRequestVersion || profile.id !== state.activeProfileId) return [];
       const msg = error?.message || "\u672A\u77E5\u9519\u8BEF";
-      $model.empty().append("<option value=''>\u83B7\u53D6\u5931\u8D25</option>");
       setStatus2(typeof statusTexts.failed === "function" ? statusTexts.failed(msg) : statusTexts.failed, "err");
       if (showToast && window.toastr) {
         window.toastr.error(msg);
       }
       return [];
     } finally {
-      $fetchBtn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+      if (requestVersion === modelRequestVersion) {
+        $fetchBtn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+      }
     }
   };
   const bind = () => {
@@ -17026,14 +19384,17 @@ function createApiConnectionEditor(options = {}) {
     const $url = getById($root, ids.apiUrlId);
     const $key = getById($root, ids.apiKeyId);
     const $model = getById($root, ids.modelId);
+    const $modelMode = getById($root, ids.modelModeId);
+    const $modelInput = getById($root, ids.modelInputId);
     $select.on("change", () => {
       const nextActiveProfileId = String($select.val() || "").trim();
       persistCurrentProfileInputs();
+      modelRequestVersion += 1;
       state.activeProfileId = nextActiveProfileId;
       render();
       emitChange();
       const active = findActiveProfile();
-      if (active && active.type !== "internal" && options.autoFetchOnProfileSwitch !== false) {
+      if (active && active.type !== "internal" && modelInputMode !== "manual" && options.autoFetchOnProfileSwitch !== false) {
         setTimeout(() => {
           fetchModels(false);
         }, 100);
@@ -17061,6 +19422,14 @@ function createApiConnectionEditor(options = {}) {
     });
     $name.on("input", persistCurrentProfileInputs);
     $model.on("change", persistCurrentProfileInputs);
+    $modelInput.on("input", persistCurrentProfileInputs);
+    $modelMode.on("change", () => {
+      persistCurrentProfileInputs();
+      modelRequestVersion += 1;
+      modelInputMode = String($modelMode.val() || "list") === "manual" ? "manual" : "list";
+      render();
+      setStatus2(modelInputMode === "manual" ? statusTexts.manual : statusTexts.default, "muted");
+    });
     $url.on("input", () => {
       persistCurrentProfileInputs();
       if (autoFetchTimer) clearTimeout(autoFetchTimer);
@@ -17087,6 +19456,7 @@ function createApiConnectionEditor(options = {}) {
     emitChange();
   };
   const setState = (nextState = {}) => {
+    modelRequestVersion += 1;
     const nextProfiles = Array.isArray(nextState.profiles) ? nextState.profiles : state.profiles;
     state.profiles = normalizeProfilesWithUniqueIds(nextProfiles, defaultModel);
     state.activeProfileId = String(nextState.activeProfileId || state.activeProfileId || "").trim();
@@ -17364,10 +19734,10 @@ function stopResponseTimer() {
   setRawWaitingAnimation(false);
 }
 function ensureCssLoaded() {
-  const id = "titania-css-story-outline";
-  if (!document.getElementById(id)) {
+  const id3 = "titania-css-story-outline";
+  if (!document.getElementById(id3)) {
     const link = document.createElement("link");
-    link.id = id;
+    link.id = id3;
     link.rel = "stylesheet";
     link.type = "text/css";
     link.href = `${extensionFolderPath}/css/story-outline.css`;
@@ -19295,8 +21665,8 @@ function showRawResponseDialog(rawContent, options = {}) {
     isRawDialogOpen = false;
   });
   $("#t-outline-raw-history").on("change", function() {
-    const id = String($(this).val() || "");
-    const picked = rawResponseHistory.find((entry) => entry.id === id);
+    const id3 = String($(this).val() || "");
+    const picked = rawResponseHistory.find((entry) => entry.id === id3);
     if (!picked) return;
     setDialogRawContent(picked.content || "");
   });
@@ -20689,7 +23059,7 @@ function updateInlineRewriteCount() {
   $("#chat .t-rewrite-inline-count").text(`\u5DF2\u9009 ${getSelectedSentenceCount()} \u53E5`);
 }
 function setSelectedSentenceIds(ids = []) {
-  selectedSentenceIds = new Set(Array.from(ids).map((id) => String(id || "")).filter(Boolean));
+  selectedSentenceIds = new Set(Array.from(ids).map((id3) => String(id3 || "")).filter(Boolean));
 }
 function buildSentenceUnitsFromLatest(latest) {
   const sentences = splitBySentence(latest?.content || "");
@@ -21799,7 +24169,7 @@ function readCategoriesFromDom() {
   const categories = [];
   $("#t-rewrite-scheme-categories-list .t-rewrite-category-card").each((_, el) => {
     const $card = $(el);
-    const id = String($card.attr("data-cat-id") || "");
+    const id3 = String($card.attr("data-cat-id") || "");
     const name = String($card.find(".t-rewrite-cat-name").val() || "").trim();
     const bad_example = String($card.find(".t-rewrite-cat-bad").val() || "").trim();
     const good_example = String($card.find(".t-rewrite-cat-good").val() || "").trim();
@@ -21810,7 +24180,7 @@ function readCategoriesFromDom() {
       const extras = String($(kwEl).find(".t-rewrite-kw-extras").val() || "").trim();
       if (anchor && extras) rules.push({ anchor, extras });
     });
-    categories.push({ id: id || generateId("cat"), name, bad_example, good_example, guidance, rules });
+    categories.push({ id: id3 || generateId("cat"), name, bad_example, good_example, guidance, rules });
   });
   return categories.filter((c) => c.name);
 }
@@ -22056,9 +24426,9 @@ function bindLivePanelEvents() {
   });
   $overlay.on("click", ".t-rewrite-live-history-item", (e) => {
     e.preventDefault();
-    const id = String($(e.currentTarget).attr("data-history-id") || "").trim();
-    if (!id) return;
-    const item = liveResponseHistory.find((x) => x.id === id);
+    const id3 = String($(e.currentTarget).attr("data-history-id") || "").trim();
+    if (!id3) return;
+    const item = liveResponseHistory.find((x) => x.id === id3);
     if (!item) return;
     setRawResponse(item.text);
     setRawMeta(`\u5386\u53F2\u8BB0\u5F55\uFF1A${formatHistoryTime(item.at)} \xB7 ${item.source} \xB7 ${item.phase}`);
@@ -22597,13 +24967,13 @@ function bindGlobalEvents() {
   $(document).on("click.titaniaRewriteInline", ".t-rewrite-select-sentence", (e) => {
     e.preventDefault();
     const $target = $(e.currentTarget);
-    const id = String($target.attr("data-segment-id") || "").trim();
-    if (!id) return;
+    const id3 = String($target.attr("data-segment-id") || "").trim();
+    if (!id3) return;
     const selected = getSelectedSentenceIdSet();
-    if (selected.has(id)) selected.delete(id);
-    else selected.add(id);
+    if (selected.has(id3)) selected.delete(id3);
+    else selected.add(id3);
     setSelectedSentenceIds(selected);
-    $target.toggleClass("selected", selected.has(id));
+    $target.toggleClass("selected", selected.has(id3));
     updateInlineRewriteCount();
   });
 }
@@ -23650,7 +26020,7 @@ Extract new lore entries from the above history. Return JSON only.`;
 async function previewExtractPrompt(historyLimit = 20) {
   TitaniaLogger.info("\u9884\u89C8\u8BBE\u5B9A\u63D0\u53D6\u63D0\u793A\u8BCD...", { historyLimit });
   const ctx = await getContextData();
-  const history = getChatHistory2(historyLimit);
+  const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A");
   }
@@ -23699,7 +26069,7 @@ async function extractLoreFromHistory(historyLimit = 20) {
     model: conn.model
   });
   const ctx = await getContextData();
-  const history = getChatHistory2(historyLimit);
+  const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u63D0\u53D6\u8BBE\u5B9A");
   }
@@ -24884,7 +27254,7 @@ async function previewSummaryPrompt(characterId, options = {}) {
     hasCustomPrompt: !!customPrompt
   });
   const ctx = await getContextData();
-  const history = getChatHistory2(historyLimit);
+  const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A");
   }
@@ -24940,7 +27310,7 @@ async function generateSummary(characterId, options = {}) {
     hasCustomPrompt: !!customPrompt
   });
   const ctx = await getContextData();
-  const history = getChatHistory2(historyLimit);
+  const history = getChatHistory(historyLimit);
   if (!history || history.trim().length === 0) {
     throw new Error("\u804A\u5929\u8BB0\u5F55\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u751F\u6210\u603B\u7ED3");
   }
@@ -25329,10 +27699,10 @@ async function getHideChatMessageRange() {
   return _hideChatMessageRange;
 }
 function ensureCssLoaded2() {
-  const id = "titania-css-lore-review";
-  if (!document.getElementById(id)) {
+  const id3 = "titania-css-lore-review";
+  if (!document.getElementById(id3)) {
     const link = document.createElement("link");
-    link.id = id;
+    link.id = id3;
     link.rel = "stylesheet";
     link.type = "text/css";
     link.href = `${extensionFolderPath}/css/lore-review.css`;
@@ -25613,9 +27983,9 @@ async function showProfileConfigDialog(onSave) {
       const current = String($sel.val() || "").trim();
       $sel.empty();
       models.forEach((m) => {
-        const id = String(m?.id || m || "").trim();
-        if (!id) return;
-        $sel.append(`<option value="${escapeHtml6(id)}" ${id === current ? "selected" : ""}>${escapeHtml6(id)}</option>`);
+        const id3 = String(m?.id || m || "").trim();
+        if (!id3) return;
+        $sel.append(`<option value="${escapeHtml6(id3)}" ${id3 === current ? "selected" : ""}>${escapeHtml6(id3)}</option>`);
       });
       if (showToast && window.toastr) toastr.success(`\u5DF2\u83B7\u53D6 ${models.length} \u4E2A Embedding \u6A21\u578B`);
     } catch (e) {
@@ -25816,7 +28186,7 @@ async function showLoreReviewWindow() {
   const currentModel = featureConn?.model || "\u672A\u77E5";
   const currentProfileName = featureConn?.profileName || "\u672A\u77E5";
   try {
-    const chatHistory = getChatHistory();
+    const chatHistory = getChatHistory2();
     currentTotalFloors = chatHistory?.length || 0;
   } catch (e) {
     TitaniaLogger.warn("\u83B7\u53D6\u804A\u5929\u5386\u53F2\u5931\u8D25", e);
@@ -26810,7 +29180,7 @@ function bindEvents2() {
     const $btn = $(this);
     $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u52A0\u8F7D\u4E2D...');
     try {
-      const chatHistory = getChatHistory();
+      const chatHistory = getChatHistory2();
       if (!chatHistory || chatHistory.length === 0) {
         if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u9884\u89C8\u7684\u804A\u5929\u5386\u53F2", "\u65E0\u6570\u636E");
         return;
@@ -27710,7 +30080,7 @@ function appendMemoriesToInput(memories) {
 }
 function getDefaultQuery() {
   try {
-    const chat = getChatHistory();
+    const chat = getChatHistory2();
     if (!chat || chat.length === 0) return "";
     for (let i = chat.length - 1; i >= 0; i--) {
       const msg = chat[i];
@@ -28392,6 +30762,7 @@ function openSettingsWindow() {
   const data = getExtData();
   const cfg = data.config || {};
   const app = data.appearance || {};
+  const mainWindowMode = data.ui_prefs?.main_window_mode === "legacy" ? "legacy" : "modern";
   const customCSS = data.custom_css || "";
   const cssThemes = data.css_themes || {
     profiles: [{ id: "default", name: "\u9ED8\u8BA4\u4E3B\u9898", css: customCSS }],
@@ -28458,19 +30829,19 @@ function openSettingsWindow() {
         <div class="t-header"><span class="t-title-main">\u2699\uFE0F \u8BBE\u7F6E</span><span class="t-close" id="t-set-close">&times;</span></div>
         <div class="t-set-body">
             <div class="t-set-nav">
-                <div class="t-set-tab-btn active" data-tab="appearance">\u{1F3A8} \u5916\u89C2\u8BBE\u7F6E</div>
+                <div class="t-set-tab-btn active" data-tab="prompts">\u{1F4DC} \u63D0\u793A\u8BCD\u7BA1\u7406</div>
+                <div class="t-set-tab-btn" data-tab="data">\u{1F5C2}\uFE0F \u5267\u672C\u7BA1\u7406</div>
+                <div class="t-set-tab-btn" data-tab="connection">\u{1F50C} API \u8FDE\u63A5</div>
+                <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
+                <div class="t-set-tab-btn" data-tab="appearance">\u{1F3A8} \u5916\u89C2\u8BBE\u7F6E</div>
                 <div class="t-set-tab-btn" data-tab="toolbar">\u{1F6E0}\uFE0F \u5FEB\u6377\u5DE5\u5177\u680F</div>
                 <div class="t-set-tab-btn" data-tab="theme">\u{1F58C}\uFE0F \u4E3B\u9898\u6837\u5F0F</div>
-                <div class="t-set-tab-btn" data-tab="connection">\u{1F50C} API \u8FDE\u63A5</div>
                 <div class="t-set-tab-btn" data-tab="director">\u{1F3AC} \u5BFC\u6F14\u6A21\u5F0F</div>
-                <div class="t-set-tab-btn" data-tab="automation">\u{1F916} \u81EA\u52A8\u5316</div>
-                <div class="t-set-tab-btn" data-tab="prompts">\u{1F4DC} \u63D0\u793A\u8BCD\u7BA1\u7406</div>
-                <div class="t-set-tab-btn" data-tab="data">\u{1F5C2}\uFE0F \u6570\u636E\u7BA1\u7406</div>
             </div>
 
             <div class="t-set-content">
-                <!-- Tab 1: \u5916\u89C2 -->
-                <div id="page-appearance" class="t-set-page active">
+                <!-- Tab 5: \u5916\u89C2 -->
+                <div id="page-appearance" class="t-set-page">
                     <div class="t-preview-container">
                         <div style="font-size:0.8em; color:#666; margin-bottom:15px;">\u52A8\u753B\u6548\u679C\u9884\u89C8</div>
                         <div id="p-ball" class="t-preview-ball"></div>
@@ -28571,9 +30942,18 @@ function openSettingsWindow() {
                         </label>
                         <p style="font-size:0.75em; color:#666; margin-top:5px; margin-left:22px;">\u751F\u6210\u65F6\u5728\u60AC\u6D6E\u7403\u4E0A\u65B9\u663E\u793A\u8017\u65F6</p>
                     </div>
+
+                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                        <label style="color:#ccc; display:block; margin-bottom:8px;">\u{1F3AD} \u5C0F\u5267\u573A\u4E3B\u754C\u9762</label>
+                        <select id="p-main-window-mode" class="t-input">
+                            <option value="modern" ${mainWindowMode !== "legacy" ? "selected" : ""}>\u65B0\u7248\uFF08\u5DE5\u5177\u7BB1 + \u5E38\u9A7B\u7EED\u5199\u680F\uFF09</option>
+                            <option value="legacy" ${mainWindowMode === "legacy" ? "selected" : ""}>\u7ECF\u5178\u7248\uFF08\u53CC\u6F14\u7ECE\u6309\u94AE + \u5DE5\u5177\u7F51\u683C\uFF09</option>
+                        </select>
+                        <p style="font-size:0.75em; color:#666; margin-top:6px;">\u4E24\u7248\u529F\u80FD\u5B8C\u5168\u76F8\u540C\uFF0C\u4EC5\u5E03\u5C40\u4E0D\u540C\u3002\u5207\u6362\u540E\u9700\u91CD\u65B0\u6253\u5F00\u5C0F\u5267\u573A\u751F\u6548\u3002</p>
+                    </div>
                 </div>
 
-                <!-- Tab 2: \u5FEB\u6377\u5DE5\u5177\u680F -->
+                <!-- Tab 6: \u5FEB\u6377\u5DE5\u5177\u680F -->
                 <div id="page-toolbar" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
                         <div style="font-weight:bold; color:#bfa15f; margin-bottom:10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> \u5FEB\u6377\u5DE5\u5177\u680F</div>
@@ -28630,7 +31010,7 @@ function openSettingsWindow() {
 
                 </div>
 
-                <!-- Tab 2: \u4E3B\u9898\u6837\u5F0F -->
+                <!-- Tab 7: \u4E3B\u9898\u6837\u5F0F -->
                 <div id="page-theme" class="t-set-page">
                     <!-- \u5B57\u4F53\u8BBE\u7F6E\u533A\u57DF -->
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
@@ -28826,6 +31206,10 @@ function openSettingsWindow() {
       apiUrlId: "cfg-url",
       apiKeyId: "cfg-key",
       modelId: "cfg-model",
+      modelModeId: "cfg-model-mode",
+      modelInputId: "cfg-model-input",
+      modelListWrapId: "cfg-model-list-wrap",
+      modelManualWrapId: "cfg-model-manual-wrap",
       fetchModelsId: "t-btn-fetch",
       statusId: "cfg-status",
       urlHintId: "cfg-url-hint",
@@ -28849,7 +31233,8 @@ function openSettingsWindow() {
       showProfileName: true,
       showDeleteProfile: true,
       showStream: true,
-      showMaxTokens: true
+      showMaxTokens: true,
+      showManualModelInput: true
     },
     values: {
       stream: cfg.stream !== false,
@@ -28864,7 +31249,7 @@ function openSettingsWindow() {
   })}
                 </div>
 
-                <!-- Tab 3: \u5BFC\u6F14\u6A21\u5F0F -->
+                <!-- Tab 8: \u5BFC\u6F14\u6A21\u5F0F -->
                 <div id="page-director" class="t-set-page">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px; color:#888; font-size:0.9em;">
                         <i class="fa-solid fa-circle-info"></i> \u81EA\u5B9A\u4E49\u5BFC\u6F14\u6307\u4EE4\uFF0C\u7528\u4E8E\u63A7\u5236\u751F\u6210\u5185\u5BB9\u7684\u98CE\u683C\u3001\u7BC7\u5E45\u3001\u89C6\u89D2\u7B49\u3002\u652F\u6301\u53D8\u91CF\uFF1A<code style="background:#333; padding:2px 5px; border-radius:3px;">{{char}}</code> \u89D2\u8272\u540D\u3001<code style="background:#333; padding:2px 5px; border-radius:3px;">{{user}}</code> \u7528\u6237\u540D
@@ -28995,8 +31380,8 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 6: \u63D0\u793A\u8BCD\u7BA1\u7406 -->
-                <div id="page-prompts" class="t-set-page">
+                <!-- Tab 1: \u63D0\u793A\u8BCD\u7BA1\u7406 -->
+                <div id="page-prompts" class="t-set-page active">
                     <div style="background:#181818; padding:15px; border-radius:6px; border:1px solid #333; margin-bottom:20px;">
                         <div style="font-weight:bold; color:#90cdf4; margin-bottom:8px;"><i class="fa-solid fa-list-check"></i> \u63D0\u793A\u8BCD\u7BA1\u7406</div>
                         <div style="font-size:0.85em; color:#888; line-height:1.6;">\u7BA1\u7406\u5185\u7F6E\u63D0\u793A\u8BCD\u65B9\u6848\u548C\u5BFC\u5165\u7684 SillyTavern Chat Completion \u9884\u8BBE\u3002\u4E3B\u754C\u9762\u7684\u201C\u9009\u7528\u9884\u8BBE\u201D\u4F7F\u7528\u5F53\u524D\u6D3B\u52A8\u9884\u8BBE\u3002</div>
@@ -29019,7 +31404,7 @@ function openSettingsWindow() {
                     </div>
                 </div>
 
-                <!-- Tab 6: \u6570\u636E\u7BA1\u7406 -->
+                <!-- Tab 2: \u6570\u636E\u7BA1\u7406 -->
                 <div id="page-data" class="t-set-page">
                     <div class="t-form-group">
                         <div class="t-form-label">\u81EA\u5B9A\u4E49\u5267\u672C\u5E93</div>
@@ -29058,6 +31443,10 @@ function openSettingsWindow() {
       apiUrlId: "cfg-url",
       apiKeyId: "cfg-key",
       modelId: "cfg-model",
+      modelModeId: "cfg-model-mode",
+      modelInputId: "cfg-model-input",
+      modelListWrapId: "cfg-model-list-wrap",
+      modelManualWrapId: "cfg-model-manual-wrap",
       fetchModelsId: "t-btn-fetch",
       statusId: "cfg-status",
       urlHintId: "cfg-url-hint",
@@ -29065,8 +31454,9 @@ function openSettingsWindow() {
     },
     profiles: tempProfiles,
     activeProfileId: tempActiveId,
+    showManualModelInput: true,
     autoFetchOnInput: false,
-    autoFetchOnProfileSwitch: true,
+    autoFetchOnProfileSwitch: false,
     getInternalUrl: () => typeof settings !== "undefined" ? settings.api_url_openai || "\u672A\u77E5" : "\u672A\u77E5",
     onChange: (nextState) => {
       tempProfiles = nextState.profiles;
@@ -29080,11 +31470,6 @@ function openSettingsWindow() {
     $(this).addClass("active");
     $(".t-set-page").removeClass("active");
     $(`#page-${tabName}`).addClass("active");
-    if (tabName === "connection") {
-      setTimeout(() => {
-        mainConnectionEditor.fetchModels(false);
-      }, 100);
-    }
   });
   const saveCurrentProfileToMemory = () => {
     mainConnectionEditor.persistCurrentProfileInputs();
@@ -29955,7 +32340,11 @@ function openSettingsWindow() {
         tempPromptManager.active_preset_id = preset.id;
         $("#t-prompt-view").val("preset");
         renderPromptManager();
-        if (window.toastr) toastr.success(`\u5DF2\u5BFC\u5165\u9884\u8BBE\uFF1A${preset.name}`, "Titania");
+        if (window.toastr) {
+          const stats = preset.import_stats;
+          const summary = stats ? `\u5DF2\u5408\u5E76 ${stats.group_count} \u4E2A\u987A\u5E8F\u5206\u7EC4\uFF1A${stats.reference_count} \u6761\u5F15\u7528\uFF0C${stats.unique_count} \u4E2A\u552F\u4E00\u6761\u76EE\uFF0C\u5BFC\u5165 ${stats.imported_count} \u4E2A` + (stats.duplicate_count ? `\uFF1B\u53BB\u9664 ${stats.duplicate_count} \u6761\u91CD\u590D\u5F15\u7528` : "") + (stats.conflict_count ? `\uFF1B${stats.conflict_count} \u4E2A\u72B6\u6001\u51B2\u7A81\u4EE5\u4E3B\u5206\u7EC4\u4E3A\u51C6` : "") + (stats.removed_marker_count ? `\uFF1B\u8FC7\u6EE4 ${stats.removed_marker_count} \u4E2A\u4E0D\u652F\u6301\u6807\u8BB0` : "") + (stats.missing_definition_count ? `\uFF1B\u8DF3\u8FC7 ${stats.missing_definition_count} \u4E2A\u7F3A\u5931\u5B9A\u4E49` : "") : "";
+          toastr.success(summary, `\u5DF2\u5BFC\u5165\u9884\u8BBE\uFF1A${preset.name}`);
+        }
       } catch (e) {
         if (window.toastr) toastr.error(`\u9884\u8BBE\u5BFC\u5165\u5931\u8D25\uFF1A${e?.message || e}`, "Titania");
       } finally {
@@ -29965,9 +32354,9 @@ function openSettingsWindow() {
     reader.readAsText(file);
   });
   $("#t-prompt-delete").on("click", () => {
-    const id = tempPromptManager.active_preset_id;
-    if (!id) return;
-    tempPromptManager.presets = tempPromptManager.presets.filter((preset) => preset.id !== id);
+    const id3 = tempPromptManager.active_preset_id;
+    if (!id3) return;
+    tempPromptManager.presets = tempPromptManager.presets.filter((preset) => preset.id !== id3);
     tempPromptManager.active_preset_id = tempPromptManager.presets[0]?.id || "";
     renderPromptManager();
   });
@@ -30122,6 +32511,8 @@ ${JSON.stringify(l.details, null, 2)}`;
       bg_opacity: tempApp.bg_opacity !== void 0 ? tempApp.bg_opacity : 100,
       show_timer: $("#p-show-timer").is(":checked")
     };
+    if (!d.ui_prefs) d.ui_prefs = {};
+    d.ui_prefs.main_window_mode = $("#p-main-window-mode").val() === "legacy" ? "legacy" : "modern";
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
     const clampInt = (value, min, max, fallback) => {
       const n = parseInt(value, 10);
@@ -30229,13 +32620,421 @@ var init_settingsWindow = __esm({
   }
 });
 
+// src/core/workshopApi.js
+async function req(path, options = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT);
+  let res;
+  try {
+    res = await fetch(WORKSHOP_ORIGIN + path, {
+      // 公开读接口不需要身份，显式不带 cookie
+      credentials: "omit",
+      signal: ctrl.signal,
+      headers: options.body ? { "Content-Type": "application/json" } : {},
+      ...options
+    });
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("\u8FDE\u63A5\u5DE5\u574A\u8D85\u65F6\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC");
+    throw new Error("\u65E0\u6CD5\u8FDE\u63A5\u5DE5\u574A\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC");
+  } finally {
+    clearTimeout(timer);
+  }
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+  }
+  if (!res.ok) throw new Error(data?.error || `\u8BF7\u6C42\u5931\u8D25\uFF08${res.status}\uFF09`);
+  return data;
+}
+async function fetchList({ force = false } = {}) {
+  if (!force && cache.list && Date.now() - cache.at < LIST_TTL) return cache.list;
+  const data = await req("/api/list");
+  cache.list = data;
+  cache.at = Date.now();
+  return data;
+}
+function fetchScript(id3) {
+  return req(`/api/script/${encodeURIComponent(id3)}`);
+}
+function countDownload(id3) {
+  return req("/api/downloads", {
+    method: "POST",
+    body: JSON.stringify({ ids: [id3] })
+  }).catch(() => {
+  });
+}
+var WORKSHOP_ORIGIN, LIST_TTL, TIMEOUT, cache;
+var init_workshopApi = __esm({
+  "src/core/workshopApi.js"() {
+    WORKSHOP_ORIGIN = "https://echo-workshop.pages.dev";
+    LIST_TTL = 6e4;
+    TIMEOUT = 15e3;
+    cache = { list: null, at: 0 };
+  }
+});
+
+// src/ui/workshopWindow.js
+var workshopWindow_exports = {};
+__export(workshopWindow_exports, {
+  openWorkshopWindow: () => openWorkshopWindow
+});
+function esc(text) {
+  return String(text ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[c]);
+}
+function pickAvatarColor(id3) {
+  const key = String(id3 || "");
+  if (!key) return ANON_COLOR;
+  let sum = 0;
+  for (let i = 0; i < key.length; i++) sum += key.charCodeAt(i);
+  return AVATAR_COLORS[sum % AVATAR_COLORS.length];
+}
+function renderAvatar(author, anonymous = false) {
+  const name = author?.name || "\u672A\u77E5\u4F5C\u8005";
+  const initial = anonymous ? '<i class="fa-solid fa-user-secret"></i>' : esc([...name][0] || "?");
+  const color = pickAvatarColor(anonymous ? null : author?.id);
+  let img = "";
+  if (!anonymous && author?.avatar && author?.id && /^[a-zA-Z0-9_]+$/.test(author.avatar)) {
+    const ext = author.avatar.startsWith("a_") ? "gif" : "png";
+    const url = `https://cdn.discordapp.com/avatars/${encodeURIComponent(author.id)}/${author.avatar}.${ext}?size=64`;
+    img = `<img class="t-ws-avatar-img" src="${url}" alt="">`;
+  }
+  return `<span class="t-ws-avatar" style="background:${color};">
+                <span class="t-ws-avatar-initial">${initial}</span>${img}
+            </span>`;
+}
+function bindAvatarFallback($scope) {
+  $scope.find(".t-ws-avatar-img").on("error", function() {
+    $(this).remove();
+  });
+}
+function formatRelativeTime(ts) {
+  const time = (Number(ts) || 0) * 1e3;
+  if (!time) return "";
+  const diff = Date.now() - time;
+  if (diff < 36e5) return "\u521A\u521A";
+  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
+  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
+  return new Date(time).toLocaleDateString("zh-CN");
+}
+function openWorkshopWindow(source = "manager") {
+  let allItems = [];
+  let currentFilter = { category: "\u5168\u90E8", search: "", sort: "latest" };
+  if (source === "manager" && !$("#t-mgr-view").length) source = "main";
+  if (source === "main" && !$("#t-main-view").length && $("#t-mgr-view").length) source = "manager";
+  if (source === "manager") {
+    $("#t-mgr-view").hide();
+  } else {
+    $("#t-main-view").hide();
+  }
+  const sortOptions = Object.entries(SORT_MODES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("");
+  const html = `
+    <div class="t-box" id="t-ws-view">
+        <div class="t-header">
+            <div class="t-title-container">
+                <div class="t-title-main">\u56DE\u58F0\u5DE5\u574A</div>
+                <div class="t-title-sub">ECHO WORKSHOP</div>
+            </div>
+            <div style="display:flex; align-items:center; flex-shrink:0;">
+                <i class="fa-solid fa-arrow-up-right-from-square t-icon-btn" id="t-ws-open-site" title="\u5728\u6D4F\u89C8\u5668\u4E2D\u6253\u5F00\u5DE5\u574A\uFF08\u6295\u7A3F/\u7F16\u8F91\uFF09"></i>
+                <i class="fa-solid fa-rotate t-icon-btn" id="t-ws-refresh" title="\u5237\u65B0"></i>
+                <span class="t-close" id="t-ws-close">&times;</span>
+            </div>
+        </div>
+        <div class="t-ws-body">
+            <div class="t-ws-toolbar">
+                <input type="text" id="t-ws-search" class="t-ws-search" placeholder="\u{1F50D} \u641C\u7D22\u6807\u9898\u3001\u7B80\u4ECB\u3001\u4F5C\u8005\u3001\u6807\u7B7E...">
+                <select id="t-ws-cat" class="t-ws-select"></select>
+                <select id="t-ws-sort" class="t-ws-select">${sortOptions}</select>
+            </div>
+            <div class="t-ws-stats" id="t-ws-stats"></div>
+            <div class="t-ws-grid" id="t-ws-list"></div>
+        </div>
+    </div>`;
+  $("#t-overlay").append(html);
+  const closeWindow2 = () => {
+    $("#t-ws-view").remove();
+    if (source === "manager") {
+      $("#t-mgr-view").remove();
+      Promise.resolve().then(() => (init_scriptManager(), scriptManager_exports)).then((m) => m.openScriptManager());
+    } else {
+      $("#t-main-view").show();
+      refreshScriptList();
+    }
+  };
+  const renderCategories = () => {
+    const cats = [...new Set(allItems.map((i) => i.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));
+    const $sel = $("#t-ws-cat");
+    $sel.empty().append(`<option value="\u5168\u90E8">\u5168\u90E8\u5206\u7C7B</option>`);
+    cats.forEach((c) => $sel.append(`<option value="${esc(c)}">${esc(c)}</option>`));
+    $sel.val(currentFilter.category);
+  };
+  const renderStats = (shownCount) => {
+    if (!allItems.length) {
+      $("#t-ws-stats").empty();
+      return;
+    }
+    const weekAgo = Math.floor(Date.now() / 1e3) - 7 * 86400;
+    const fresh = allItems.filter((i) => (i.created_at || 0) >= weekAgo).length;
+    const totalDownloads = allItems.reduce((sum, i) => sum + (Number(i.downloads) || 0), 0);
+    const filtered = shownCount !== allItems.length;
+    $("#t-ws-stats").html(`
+            <span><b>${allItems.length}</b> \u6761\u6295\u7A3F</span>
+            ${fresh ? `<span>\u672C\u5468\u65B0\u589E <b>${fresh}</b></span>` : ""}
+            <span>\u7D2F\u8BA1\u4E0B\u8F7D <b>${totalDownloads}</b></span>
+            ${filtered ? `<span class="t-ws-stats-filter">\u5F53\u524D\u663E\u793A <b>${shownCount}</b></span>` : ""}
+        `);
+  };
+  const getFiltered = () => {
+    const list = allItems.filter((item) => {
+      if (currentFilter.category !== "\u5168\u90E8" && item.category !== currentFilter.category) return false;
+      if (currentFilter.search) {
+        const term = currentFilter.search.toLowerCase();
+        const hay = [item.name, item.desc, item.author?.name, ...item.tags || []].join(" ").toLowerCase();
+        if (!hay.includes(term)) return false;
+      }
+      return true;
+    });
+    const sorter = SORT_MODES[currentFilter.sort] || SORT_MODES.latest;
+    return list.sort(sorter.fn);
+  };
+  const renderList = () => {
+    const $list = $("#t-ws-list");
+    const filtered = getFiltered();
+    renderStats(filtered.length);
+    $list.empty().removeClass("t-ws-grid-empty");
+    if (filtered.length === 0) {
+      $list.addClass("t-ws-grid-empty");
+      if (allItems.length) {
+        $list.html(`
+                    <div class="t-ws-placeholder">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <div class="t-ws-ph-title">\u6CA1\u6709\u5339\u914D\u7684\u6295\u7A3F</div>
+                        <div class="t-ws-ph-desc">\u6362\u4E2A\u5173\u952E\u8BCD\uFF0C\u6216\u628A\u5206\u7C7B\u5207\u56DE\u300C\u5168\u90E8\u5206\u7C7B\u300D</div>
+                    </div>`);
+      } else {
+        $list.html(`
+                    <div class="t-ws-placeholder">
+                        <i class="fa-solid fa-store"></i>
+                        <div class="t-ws-ph-title">\u5DE5\u574A\u91CC\u8FD8\u6CA1\u6709\u6295\u7A3F</div>
+                        <div class="t-ws-ph-desc">\u53BB\u7F51\u9875\u7AEF\u53D1\u5E03\u7B2C\u4E00\u6761\uFF0C\u8BA9\u5927\u5BB6\u7528\u4E0A\u4F60\u7684\u6307\u4EE4</div>
+                        <button class="t-btn t-btn-soft" id="t-ws-ph-site">\u524D\u5F80\u5DE5\u574A\u7F51\u7AD9</button>
+                    </div>`);
+        $("#t-ws-ph-site").on("click", () => window.open(WORKSHOP_ORIGIN, "_blank"));
+      }
+      return;
+    }
+    filtered.forEach((item) => {
+      const dup = GlobalState.runtimeScripts.some((s) => s.name === item.name);
+      const downloads = Number(item.downloads) || 0;
+      const hot = downloads >= HOT_THRESHOLD;
+      const tags = (item.tags || []).slice(0, 3).map((t) => `<span class="t-ws-tag">#${esc(t)}</span>`).join("");
+      const $card = $(`
+                <div class="t-ws-card${dup ? " is-dup" : ""}" style="--card-accent:${pickAvatarColor(item.anonymous ? null : item.author?.id)};">
+                    ${dup ? `<div class="t-ws-dup-flag" title="\u672C\u5730\u5DF2\u6709\u540C\u540D\u5267\u672C"><i class="fa-solid fa-check"></i></div>` : ""}
+                    <div class="t-ws-card-head">
+                        ${renderAvatar(item.author, item.anonymous)}
+                        <span class="t-ws-author-name">${esc(item.author?.name || "\u672A\u77E5\u4F5C\u8005")}</span>
+                        <div class="t-ws-heat${hot ? " is-hot" : ""}" title="\u4E0B\u8F7D\u91CF">
+                            <i class="fa-solid fa-fire"></i> ${downloads}
+                        </div>
+                    </div>
+                    <div class="t-ws-card-title">${esc(item.name)}</div>
+                    <div class="t-ws-card-desc">${esc(item.desc) || "\u4F5C\u8005\u6CA1\u6709\u5199\u7B80\u4ECB"}</div>
+                    <div class="t-ws-card-tags">
+                        ${item.category ? `<span class="t-ws-tag t-ws-tag-cat">${esc(item.category)}</span>` : ""}
+                        ${tags}
+                        <span class="t-ws-tag">v${Number(item.version) || 1}</span>
+                    </div>
+                    <div class="t-ws-card-actions">
+                        <button class="t-btn t-btn-soft t-ws-preview">\u9884\u89C8</button>
+                        <button class="t-btn primary t-ws-get">\u4E0B\u8F7D</button>
+                    </div>
+                </div>
+            `);
+      bindAvatarFallback($card);
+      $card.find(".t-ws-preview").on("click", () => openPreview(item));
+      $card.find(".t-ws-get").on("click", function() {
+        downloadScript(item, $(this));
+      });
+      $list.append($card);
+    });
+  };
+  const downloadScript = async (item, $btn) => {
+    const originalText = $btn.text();
+    $btn.prop("disabled", true).text("\u4E0B\u8F7D\u4E2D...");
+    try {
+      const detail = await fetchScript(item.id);
+      saveUserScript({
+        id: "ws_" + item.id + "_" + Date.now(),
+        name: detail.name,
+        desc: detail.desc || "",
+        prompt: detail.prompt,
+        category: detail.category || "\u5DE5\u574A\u4E0B\u8F7D"
+      });
+      countDownload(item.id);
+      $btn.text("\u2713 \u5DF2\u4E0B\u8F7D");
+      if (window.toastr) toastr.success(`\u5DF2\u4FDD\u5B58\u300C${detail.name}\u300D`);
+      setTimeout(renderList, 1200);
+    } catch (e) {
+      $btn.prop("disabled", false).text(originalText);
+      if (window.toastr) toastr.error(e.message);
+      else alert(e.message);
+    }
+  };
+  const openPreview = async (item) => {
+    const downloads = Number(item.downloads) || 0;
+    const previewHtml = `
+        <div id="t-ws-preview-overlay" class="t-ws-preview-overlay">
+            <div class="t-box t-ws-preview-box">
+                <div class="t-header">
+                    <span class="t-title-main" style="font-size:1.15em;">${esc(item.name)}</span>
+                    <span class="t-close" id="t-ws-pv-close">&times;</span>
+                </div>
+                <div class="t-ws-preview-body">
+                    <div class="t-ws-pv-bar">
+                        <div class="t-ws-author">
+                            ${renderAvatar(item.author, item.anonymous)}
+                            <div class="t-ws-author-meta">
+                                <div class="t-ws-author-name">${esc(item.author?.name || "\u672A\u77E5\u4F5C\u8005")}</div>
+                                <div class="t-ws-author-time">v${Number(item.version) || 1} \xB7 ${formatRelativeTime(item.updated_at)}</div>
+                            </div>
+                        </div>
+                        <div class="t-ws-heat${downloads >= HOT_THRESHOLD ? " is-hot" : ""}">
+                            <i class="fa-solid fa-fire"></i> ${downloads}
+                        </div>
+                    </div>
+                    ${item.desc ? `<div class="t-ws-pv-desc">${esc(item.desc)}</div>` : ""}
+                    <div class="t-ws-pv-label">
+                        <span>\u6307\u4EE4\u5185\u5BB9</span>
+                    </div>
+                    <textarea class="t-input t-ws-pv-prompt" readonly>\u52A0\u8F7D\u4E2D...</textarea>
+                    <div class="t-btn-row">
+                        <button class="t-btn primary" id="t-ws-pv-get" style="flex:1;">\u4E0B\u8F7D\u5230\u672C\u5730</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    $("body").append(previewHtml);
+    bindAvatarFallback($("#t-ws-preview-overlay"));
+    const closePreview = () => {
+      $("#t-ws-preview-overlay").remove();
+      $(document).off("keydown.wspreview");
+    };
+    $("#t-ws-pv-close").on("click", closePreview);
+    $("#t-ws-preview-overlay").on("click", function(e) {
+      if (e.target === this) closePreview();
+    });
+    $(document).on("keydown.wspreview", (e) => {
+      if (e.key === "Escape") {
+        closePreview();
+        e.preventDefault();
+      }
+    });
+    try {
+      const detail = await fetchScript(item.id);
+      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(detail.prompt);
+      $("#t-ws-pv-get").on("click", function() {
+        downloadScript(item, $(this));
+        setTimeout(closePreview, 800);
+      });
+    } catch (e) {
+      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(`\u52A0\u8F7D\u5931\u8D25\uFF1A${e.message}`);
+      $("#t-ws-pv-get").prop("disabled", true);
+    }
+  };
+  const renderSkeleton = () => {
+    $("#t-ws-stats").empty();
+    $("#t-ws-list").removeClass("t-ws-grid-empty").html(
+      Array.from({ length: 6 }, () => `
+                <div class="t-ws-card t-ws-skeleton">
+                    <div class="t-ws-card-head">
+                        <div class="t-ws-sk-circle"></div>
+                        <div class="t-ws-sk-line" style="width:50%;"></div>
+                    </div>
+                    <div class="t-ws-sk-line" style="width:75%; height:13px;"></div>
+                    <div class="t-ws-sk-line" style="width:100%;"></div>
+                    <div class="t-ws-sk-line" style="width:60%;"></div>
+                </div>`).join("")
+    );
+  };
+  const load = async ({ force = false } = {}) => {
+    renderSkeleton();
+    try {
+      const data = await fetchList({ force });
+      allItems = data?.items || [];
+      renderCategories();
+      renderList();
+    } catch (e) {
+      allItems = [];
+      $("#t-ws-stats").empty();
+      $("#t-ws-list").addClass("t-ws-grid-empty").html(`
+                <div class="t-ws-placeholder">
+                    <i class="fa-solid fa-plug-circle-xmark" style="color:#ff6b6b;"></i>
+                    <div class="t-ws-ph-title">${esc(e.message)}</div>
+                    <div class="t-ws-ph-desc">\u5DE5\u574A\u90E8\u7F72\u5728 Cloudflare\uFF0C\u90E8\u5206\u7F51\u7EDC\u73AF\u5883\u53EF\u80FD\u65E0\u6CD5\u8BBF\u95EE</div>
+                    <button class="t-btn t-btn-soft" id="t-ws-retry">\u91CD\u8BD5</button>
+                </div>
+            `);
+      $("#t-ws-retry").on("click", () => load({ force: true }));
+    }
+  };
+  $("#t-ws-close").on("click", closeWindow2);
+  $("#t-ws-refresh").on("click", () => load({ force: true }));
+  $("#t-ws-open-site").on("click", () => window.open(WORKSHOP_ORIGIN, "_blank"));
+  $("#t-ws-search").on("input", function() {
+    currentFilter.search = $(this).val().trim();
+    renderList();
+  });
+  $("#t-ws-cat").on("change", function() {
+    currentFilter.category = $(this).val();
+    renderList();
+  });
+  $("#t-ws-sort").val(currentFilter.sort).on("change", function() {
+    currentFilter.sort = $(this).val();
+    renderList();
+  });
+  load();
+}
+var HOT_THRESHOLD, AVATAR_COLORS, ANON_COLOR, SORT_MODES;
+var init_workshopWindow = __esm({
+  "src/ui/workshopWindow.js"() {
+    init_workshopApi();
+    init_scriptData();
+    init_state();
+    init_mainWindow();
+    HOT_THRESHOLD = 50;
+    AVATAR_COLORS = [
+      "linear-gradient(135deg, #bfa15f, #8a7038)",
+      "linear-gradient(135deg, #90cdf4, #4a7fb5)",
+      "linear-gradient(135deg, #ff9a9e, #c96b73)",
+      "linear-gradient(135deg, #55efc4, #2d9e80)",
+      "linear-gradient(135deg, #e0c3fc, #9a7fc4)",
+      "linear-gradient(135deg, #f6c177, #b8823c)"
+    ];
+    ANON_COLOR = "linear-gradient(135deg, #5a5a5a, #3a3a3a)";
+    SORT_MODES = {
+      latest: { label: "\u6700\u65B0\u66F4\u65B0", fn: (a, b) => (b.updated_at || 0) - (a.updated_at || 0) },
+      downloads: { label: "\u4E0B\u8F7D\u6700\u591A", fn: (a, b) => (b.downloads || 0) - (a.downloads || 0) },
+      newest: { label: "\u6700\u65B0\u53D1\u5E03", fn: (a, b) => (b.created_at || 0) - (a.created_at || 0) },
+      name: { label: "\u540D\u79F0 A-Z", fn: (a, b) => String(a.name).localeCompare(String(b.name), "zh-CN") }
+    };
+  }
+});
+
 // src/ui/scriptManager.js
 var scriptManager_exports = {};
 __export(scriptManager_exports, {
   openEditor: () => openEditor,
   openScriptManager: () => openScriptManager
 });
-function formatRelativeTime(ts) {
+function formatRelativeTime2(ts) {
   const time = Number(ts) || 0;
   if (!time) return "\u672A\u4F7F\u7528";
   const diff = Date.now() - time;
@@ -30290,6 +33089,7 @@ function openScriptManager() {
                         <option value="name_desc">\u540D\u79F0 Z-A</option>
                         <option value="default">\u9ED8\u8BA4\u987A\u5E8F</option>
                     </select>
+                    <button id="t-mgr-workshop-btn" class="t-tool-btn" title="\u56DE\u58F0\u5DE5\u574A"><i class="fa-solid fa-store"></i> \u5DE5\u574A</button>
                     <button id="t-mgr-import-btn" class="t-tool-btn" title="\u5BFC\u5165"><i class="fa-solid fa-file-import"></i></button>
                     <button id="t-mgr-export-btn" class="t-tool-btn" title="\u5BFC\u51FA"><i class="fa-solid fa-file-export"></i></button>
                     <button id="t-mgr-batch-toggle" class="t-tool-btn" style="border:1px solid #444;" title="\u6279\u91CF\u7BA1\u7406">
@@ -30547,12 +33347,13 @@ function openScriptManager() {
       $list.append(`<div style="text-align:center; color:#555; margin-top:50px;">\u65E0\u6570\u636E</div>`);
       return;
     }
+    const readStats = createScriptStatsReader();
     filtered.forEach((s) => {
       const isUser = s._type === "user";
       const catLabel = s.category ? `<span class="t-mgr-tag">${s.category}</span>` : "";
       const presetLabel = !isUser ? `<span class="t-mgr-tag" style="background:#444;">\u9884\u8BBE</span>` : "";
-      const stats = getScriptStats(s.id);
-      const statsLine = `\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 \u9009\u62E9 ${stats.selected_count || 0} \u6B21 \xB7 \u6700\u8FD1 ${formatRelativeTime(stats.last_generated_at || stats.last_selected_at)}`;
+      const stats = readStats(s.id);
+      const statsLine = `\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 \u9009\u62E9 ${stats.selected_count || 0} \u6B21 \xB7 \u6700\u8FD1 ${formatRelativeTime2(stats.last_generated_at || stats.last_selected_at)}`;
       const $row = $(`
                 <div class="t-mgr-item">
                     <div class="t-mgr-item-check-col">
@@ -30730,6 +33531,7 @@ ${s.prompt}`;
     downloadFile(content, `Titania_Selected_${timestamp}.txt`, "text/plain;charset=utf-8");
     if (window.toastr) toastr.success(`\u5DF2\u5BFC\u51FA ${scripts.length} \u4E2A\u5267\u672C`);
   });
+  $("#t-mgr-workshop-btn").on("click", () => openWorkshopWindow("manager"));
   $("#t-mgr-import-btn").on("click", () => {
     $("#t-imp-modal").css("display", "flex");
     $("#t-file-input-m").val("");
@@ -30806,16 +33608,16 @@ ${s.prompt}`;
     const toDeleteUser = [];
     const toHidePreset = [];
     $(".t-mgr-check:checked").each(function() {
-      const id = $(this).data("id");
+      const id3 = $(this).data("id");
       const type = $(this).data("type");
-      if (type === "user") toDeleteUser.push(id);
-      else if (type === "preset") toHidePreset.push(id);
+      if (type === "user") toDeleteUser.push(id3);
+      else if (type === "preset") toHidePreset.push(id3);
     });
     const total = toDeleteUser.length + toHidePreset.length;
     if (total === 0) return;
     if (confirm(`\u26A0\uFE0F \u786E\u5B9A\u5220\u9664\u9009\u4E2D\u7684 ${total} \u4E2A\u5267\u672C\uFF1F
 (\u6CE8\uFF1A\u5B98\u65B9\u9884\u8BBE\u5C06\u53D8\u4E3A\u9690\u85CF\u72B6\u6001\uFF0C\u53EF\u53BB\u8BBE\u7F6E\u91CC\u6062\u590D)`)) {
-      if (toDeleteUser.length > 0) toDeleteUser.forEach((id) => deleteUserScript(id));
+      if (toDeleteUser.length > 0) toDeleteUser.forEach((id3) => deleteUserScript(id3));
       if (toHidePreset.length > 0) {
         const data = getExtData();
         if (!data.disabled_presets) data.disabled_presets = [];
@@ -30900,10 +33702,10 @@ ${s.prompt}`;
   });
   refreshAll();
 }
-function openEditor(id, source = "main") {
-  const isEdit = !!id;
+function openEditor(id3, source = "main") {
+  const isEdit = !!id3;
   let data = { id: Date.now().toString(), name: "\u65B0\u5267\u672C", desc: "", prompt: "", category: "" };
-  if (isEdit) data = GlobalState.runtimeScripts.find((s) => s.id === id);
+  if (isEdit) data = GlobalState.runtimeScripts.find((s) => s.id === id3);
   const isPreset = data._type === "preset";
   if (source === "manager") {
     $("#t-mgr-view").hide();
@@ -31037,6 +33839,7 @@ var init_scriptManager = __esm({
     init_scriptData();
     init_mainWindow();
     init_settingsWindow();
+    init_workshopWindow();
     SORT_MODE_LABELS = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
@@ -31097,11 +33900,23 @@ function transactionDone(transaction) {
 function getCurrentChatKey() {
   return String(getCurrentChatId?.() || "").trim();
 }
+function getCurrentSourceMetadata() {
+  const context = window.SillyTavern?.getContext?.() || {};
+  const characterId = context.characterId;
+  const character = characterId !== void 0 ? context.characters?.[characterId] : null;
+  return {
+    characterId: characterId === void 0 || characterId === null ? "" : String(characterId),
+    characterName: String(character?.name || context.name2 || "\u672A\u77E5\u89D2\u8272"),
+    characterAvatar: String(character?.avatar || ""),
+    chatName: String(context.chatId || getCurrentChatKey() || "\u672A\u77E5\u804A\u5929")
+  };
+}
 function serializeRuntime(chatId) {
   const byScript = GlobalState.continuationRuntime?.byScript || {};
   const sessions = [];
   const branches = [];
   const rounds = [];
+  const currentSource = getCurrentSourceMetadata();
   for (const [scriptId, entry] of Object.entries(byScript)) {
     const activeBranchKey = String(entry?.branchKey || "").trim();
     if (!activeBranchKey || !Array.isArray(entry?.rounds) || entry.rounds.length === 0) continue;
@@ -31119,6 +33934,11 @@ function serializeRuntime(chatId) {
       chatId,
       scriptId,
       scriptName: String(entry.scriptName || "\u573A\u666F"),
+      characterId: String(entry.characterId ?? currentSource.characterId),
+      characterName: String(entry.characterName || currentSource.characterName),
+      characterAvatar: String(entry.characterAvatar || currentSource.characterAvatar),
+      chatName: String(entry.chatName || currentSource.chatName),
+      origin: entry.origin && typeof entry.origin === "object" ? entry.origin : null,
       activeBranchKey,
       parentBranchKey: String(entry.parentBranchKey || ""),
       branchedAtRound: Number(entry.branchedAtRound) || null,
@@ -31159,12 +33979,144 @@ function serializeRuntime(chatId) {
           type: String(round?.type || (index === 0 ? "initial" : "continuation")),
           instruction: String(round?.instruction || ""),
           content: String(round?.content || ""),
+          status: String(round?.status || "legacy"),
+          generationId: String(round?.generationId || ""),
           timestamp: Number(round?.timestamp) || 0
         });
       });
     }
   }
   return { sessions, branches, rounds };
+}
+function buildGlobalSessions(sessions, branches, rounds) {
+  const roundsByBranch = /* @__PURE__ */ new Map();
+  rounds.sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((round) => {
+    if (!roundsByBranch.has(round.branchId)) roundsByBranch.set(round.branchId, []);
+    roundsByBranch.get(round.branchId).push({
+      roundKey: round.roundKey,
+      round: round.sequence,
+      type: round.type,
+      continuationIndex: round.type === "initial" ? 0 : Math.max(1, Number(round.sequence) - 1),
+      instruction: round.instruction,
+      content: round.content,
+      status: round.status || "legacy",
+      generationId: round.generationId || "",
+      contentPreview: String(round.content || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
+      contentLength: String(round.content || "").length,
+      timestamp: round.timestamp
+    });
+  });
+  return sessions.map((session) => {
+    const sessionBranches = branches.filter((branch) => branch.sessionId === session.id).map((branch) => ({
+      branchKey: branch.branchKey,
+      isActive: branch.branchKey === session.activeBranchKey,
+      parentBranchKey: branch.parentBranchKey,
+      branchedAtRound: branch.branchedAtRound,
+      archivedAt: branch.archivedAt,
+      rounds: roundsByBranch.get(branch.id) || []
+    })).filter((branch) => branch.rounds.length > 0);
+    return {
+      chatId: session.chatId,
+      scriptId: session.scriptId,
+      scriptName: session.scriptName || "\u672A\u77E5\u5267\u672C",
+      characterId: String(session.characterId || ""),
+      characterName: String(session.characterName || "\u65E7\u7248\u8BB0\u5F55"),
+      characterAvatar: String(session.characterAvatar || ""),
+      chatName: String(session.chatName || session.chatId || "\u672A\u77E5\u804A\u5929"),
+      origin: session.origin || null,
+      updatedAt: Number(session.updatedAt) || 0,
+      branches: sessionBranches,
+      roundCount: sessionBranches.reduce((sum, branch) => sum + branch.rounds.length, 0)
+    };
+  }).filter((session) => session.branches.length > 0).sort((a, b) => b.updatedAt - a.updatedAt);
+}
+async function listAllContinuationSessions() {
+  await Promise.allSettled([...pendingWrites.values()]);
+  const db = await openDatabase();
+  const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
+  const [sessions, branches, rounds] = await Promise.all([
+    requestResult(transaction.objectStore(STORE_SESSIONS).getAll()),
+    requestResult(transaction.objectStore(STORE_BRANCHES).getAll()),
+    requestResult(transaction.objectStore(STORE_ROUNDS).getAll())
+  ]);
+  return buildGlobalSessions(sessions, branches, rounds);
+}
+async function deleteGlobalContinuationSelections(selections = []) {
+  const items = Array.isArray(selections) ? selections : [];
+  if (items.length === 0) return { deletedSessions: 0, deletedBranches: 0, deletedRounds: 0 };
+  const db = await openDatabase();
+  const readTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
+  const [sessions, branches, rounds] = await Promise.all([
+    requestResult(readTransaction.objectStore(STORE_SESSIONS).getAll()),
+    requestResult(readTransaction.objectStore(STORE_BRANCHES).getAll()),
+    requestResult(readTransaction.objectStore(STORE_ROUNDS).getAll())
+  ]);
+  const sessionKeys = new Set(items.filter((item) => !item.branchKey).map((item) => `${item.chatId}\0${item.scriptId}`));
+  const branchKeys = new Set(items.filter((item) => item.branchKey && !item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}`));
+  const roundKeys = new Set(items.filter((item) => item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}\0${item.roundKey}`));
+  const deletedSessionIds = /* @__PURE__ */ new Set();
+  const deletedBranchIds = /* @__PURE__ */ new Set();
+  const deletedRoundIds = /* @__PURE__ */ new Set();
+  const sessionById = new Map(sessions.map((session) => [session.id, session]));
+  for (const session of sessions) {
+    if (sessionKeys.has(`${session.chatId}\0${session.scriptId}`)) deletedSessionIds.add(session.id);
+  }
+  for (const branch of branches) {
+    const session = sessionById.get(branch.sessionId);
+    if (!session) continue;
+    if (deletedSessionIds.has(session.id) || branchKeys.has(`${session.chatId}\0${session.scriptId}\0${branch.branchKey}`)) {
+      deletedBranchIds.add(branch.id);
+    }
+  }
+  for (const round of rounds) {
+    const session = sessionById.get(round.sessionId);
+    if (!session) continue;
+    if (deletedSessionIds.has(session.id) || deletedBranchIds.has(round.branchId) || roundKeys.has(`${session.chatId}\0${session.scriptId}\0${round.branchKey}\0${round.roundKey}`)) {
+      deletedRoundIds.add(round.id);
+    }
+  }
+  for (const branch of branches) {
+    if (deletedBranchIds.has(branch.id)) continue;
+    const hasRemainingRounds = rounds.some((round) => round.branchId === branch.id && !deletedRoundIds.has(round.id));
+    if (!hasRemainingRounds) deletedBranchIds.add(branch.id);
+  }
+  for (const session of sessions) {
+    if (deletedSessionIds.has(session.id)) continue;
+    const remainingBranches = branches.filter((branch) => branch.sessionId === session.id && !deletedBranchIds.has(branch.id));
+    if (remainingBranches.length === 0) {
+      deletedSessionIds.add(session.id);
+      continue;
+    }
+    const activeRemoved = deletedBranchIds.has(`${session.id}:${session.activeBranchKey}`);
+    if (activeRemoved) {
+      const nextActive = remainingBranches.sort((a, b) => Number(b.archivedAt) - Number(a.archivedAt))[0];
+      session.activeBranchKey = nextActive.branchKey;
+    }
+  }
+  const writeTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
+  const completed = transactionDone(writeTransaction);
+  const sessionStore = writeTransaction.objectStore(STORE_SESSIONS);
+  const branchStore = writeTransaction.objectStore(STORE_BRANCHES);
+  const roundStore = writeTransaction.objectStore(STORE_ROUNDS);
+  sessions.forEach((session) => deletedSessionIds.has(session.id) ? sessionStore.delete(session.id) : sessionStore.put(session));
+  branches.forEach((branch) => (deletedSessionIds.has(branch.sessionId) || deletedBranchIds.has(branch.id)) && branchStore.delete(branch.id));
+  const nextSequenceByBranch = /* @__PURE__ */ new Map();
+  rounds.sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((round) => {
+    if (deletedSessionIds.has(round.sessionId) || deletedBranchIds.has(round.branchId) || deletedRoundIds.has(round.id)) {
+      roundStore.delete(round.id);
+      return;
+    }
+    const sequence = (nextSequenceByBranch.get(round.branchId) || 0) + 1;
+    nextSequenceByBranch.set(round.branchId, sequence);
+    round.sequence = sequence;
+    roundStore.put(round);
+  });
+  await completed;
+  if (items.some((item) => item.chatId === getCurrentChatKey())) await restoreContinuationForCurrentChat();
+  return { deletedSessions: deletedSessionIds.size, deletedBranches: deletedBranchIds.size, deletedRounds: deletedRoundIds.size };
+}
+function getCurrentContinuationSource() {
+  return { chatId: getCurrentChatKey(), ...getCurrentSourceMetadata() };
 }
 function updateCurrentChatMetadata(payload) {
   if (payload.sessions.length > 0) {
@@ -31233,22 +34185,6 @@ function scheduleContinuationPersistence() {
     if (window.toastr) toastr.warning("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u4FDD\u5B58\u5931\u8D25\uFF0C\u5F53\u524D\u5185\u5BB9\u4ECD\u4FDD\u7559\u5728\u5185\u5B58\u4E2D", "Titania");
   });
 }
-function getContinuationPersistenceStatus() {
-  const metadata = chat_metadata?.[CHAT_METADATA_KEY];
-  return {
-    chatId: getCurrentChatKey(),
-    persisted: Boolean(metadata?.version === 1),
-    branchCount: Number(metadata?.branchCount) || 0,
-    roundCount: Number(metadata?.roundCount) || 0,
-    updatedAt: Number(metadata?.updatedAt) || 0
-  };
-}
-async function flushContinuationPersistence() {
-  const chatId = getCurrentChatKey();
-  if (!chatId) return false;
-  await queueRuntimeWrite(chatId, serializeRuntime(chatId));
-  return true;
-}
 async function restoreContinuationForCurrentChat() {
   const sequence = ++restoreSequence;
   const chatId = getCurrentChatKey();
@@ -31275,6 +34211,8 @@ async function restoreContinuationForCurrentChat() {
       type: round.type,
       instruction: round.instruction,
       content: round.content,
+      status: round.status || "legacy",
+      generationId: round.generationId || "",
       timestamp: round.timestamp
     });
   });
@@ -31286,6 +34224,11 @@ async function restoreContinuationForCurrentChat() {
     nextByScript[session.scriptId] = {
       scriptId: session.scriptId,
       scriptName: session.scriptName,
+      characterId: session.characterId,
+      characterName: session.characterName,
+      characterAvatar: session.characterAvatar,
+      chatName: session.chatName,
+      origin: session.origin || null,
       updatedAt: Number(session.updatedAt) || 0,
       branchKey: active.branchKey,
       parentBranchKey: active.parentBranchKey,
@@ -31319,13 +34262,6 @@ async function restoreContinuationForCurrentChat() {
   if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
   return sessions.length > 0;
 }
-async function clearContinuationForCurrentChat() {
-  const chatId = getCurrentChatKey();
-  GlobalState.continuationRuntime = { chatId, byScript: {} };
-  runtimeRevision++;
-  await flushContinuationPersistence();
-  if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
-}
 var DB_NAME2, DB_VERSION2, STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS, CHAT_METADATA_KEY, dbPromise, restoreSequence, runtimeRevision, pendingWrites;
 var init_continuationStore = __esm({
   "src/core/continuationStore.js"() {
@@ -31344,29 +34280,18 @@ var init_continuationStore = __esm({
   }
 });
 
-// src/ui/mainWindow.js
-var mainWindow_exports = {};
-__export(mainWindow_exports, {
-  applyScriptSelection: () => applyScriptSelection,
-  disableQueueMode: () => disableQueueMode,
-  getQueueScripts: () => getQueueScripts,
-  openMainWindow: () => openMainWindow,
-  refreshScriptList: () => refreshScriptList,
-  updateContentStatsDisplay: () => updateContentStatsDisplay,
-  updateFavButtonUI: () => updateFavButtonUI,
-  updateQueueButtonUI: () => updateQueueButtonUI,
-  updateRunButtonsState: () => updateRunButtonsState,
-  updateScriptTitleDisplay: () => updateScriptTitleDisplay
-});
-function formatRelativeTime2(ts) {
-  const time = Number(ts) || 0;
-  if (!time) return "\u672A\u4F7F\u7528";
-  const diff = Date.now() - time;
-  if (diff < 6e4) return "\u521A\u521A";
-  if (diff < 36e5) return `${Math.floor(diff / 6e4)} \u5206\u949F\u524D`;
-  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
-  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
-  return new Date(time).toLocaleDateString("zh-CN");
+// src/ui/mainWindow/viewState.js
+function getPendingGenerationScriptId() {
+  return pendingGenerationScriptId;
+}
+function setPendingGenerationScriptId(scriptId) {
+  pendingGenerationScriptId = String(scriptId || "");
+}
+function getContinuationQuickDraft() {
+  return continuationQuickDraft;
+}
+function setContinuationQuickDraft(text) {
+  continuationQuickDraft = String(text || "");
 }
 function clampInjectRoundsCount(value) {
   if (String(value ?? "").trim() === "") return 3;
@@ -31385,473 +34310,32 @@ function saveContinuationDefaultInjectCount(count) {
   data.continuation_ui.inject_rounds_count = clampInjectRoundsCount(count);
   saveExtData();
 }
-function escapeHtmlText2(str) {
-  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
-}
-function getContinuationRecentInstructions() {
-  const data = getExtData();
-  const list = data.continuation_ui?.recent_instructions;
-  if (!Array.isArray(list)) return [];
-  return list.map((item) => String(item || "").trim()).filter((item) => item.length > 0).slice(0, CONTINUATION_RECENT_MAX);
-}
-function saveContinuationRecentInstruction(instruction) {
-  const text = String(instruction || "").trim();
-  if (!text) return;
-  const data = getExtData();
-  if (!data.continuation_ui) data.continuation_ui = {};
-  const prev = Array.isArray(data.continuation_ui.recent_instructions) ? data.continuation_ui.recent_instructions : [];
-  const normalizedPrev = prev.map((item) => String(item || "").trim()).filter((item) => item.length > 0);
-  const deduped = normalizedPrev.filter((item) => item !== text);
-  data.continuation_ui.recent_instructions = [text, ...deduped].slice(0, CONTINUATION_RECENT_MAX);
-  saveExtData();
-}
-function openContinuationComposer(initialText = "", regenerationTarget = null) {
-  return new Promise((resolve) => {
-    const recent = getContinuationRecentInstructions();
-    const display = getCurrentDisplayContent();
-    const activeScriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
-    let selectedInjectRounds = getContinuationDefaultInjectCount();
-    $("#t-continuation-dialog").remove();
-    $("#t-continuation-editor").remove();
-    $(document).off("keydown.tcontinuecomposer");
-    const recentHtml = recent.length > 0 ? recent.map((item) => {
-      const encoded = encodeURIComponent(item);
-      const display2 = item.length > 24 ? `${item.slice(0, 24)}\u2026` : item;
-      return `<button class="t-cont-recent-item" data-text="${encoded}" style="
-                            border:1px solid #3d3d3d;
-                            background:#262626;
-                            color:#ddd;
-                            border-radius:999px;
-                            padding:6px 12px;
-                            font-size:12px;
-                            cursor:pointer;
-                            max-width:100%;
-                            overflow:hidden;
-                            text-overflow:ellipsis;
-                            white-space:nowrap;
-                        " title="${escapeHtmlText2(item)}">${escapeHtmlText2(display2)}</button>`;
-    }).join("") : `<div style="color:#777; font-size:12px;">\u6682\u65E0\u6700\u8FD1\u7EED\u5199\u6307\u4EE4</div>`;
-    const html = `
-        <div id="t-continuation-editor" class="t-content-editor">
-            <div class="t-ce-header">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="color:#bfa15f;"></i>
-                    <span style="font-weight:bold;">\u4E3B\u52A8\u7EED\u5199\u6307\u4EE4</span>
-                    <span style="font-size:0.8em; color:#666;">\u652F\u6301 Ctrl+Enter \u5FEB\u901F\u53D1\u9001</span>
-                </div>
-                <div class="t-close" id="t-cont-close">&times;</div>
-            </div>
-
-            <div class="t-ce-body" style="display:flex; flex-direction:column; gap:10px; overflow:auto;">
-                <div style="color:#888; font-size:12px;">\u53EF\u7559\u7A7A\u8868\u793A\u201C\u81EA\u7136\u7EED\u5199\u201D\uFF1B\u4F1A\u57FA\u4E8E\u5F53\u524D\u5267\u573A\u4E0A\u4E0B\u6587\u7EE7\u7EED\u751F\u6210\u3002</div>
-
-                <textarea id="t-cont-input" class="t-ce-textarea" placeholder="\u4F8B\u5982\uFF1A\u8BA9\u4E24\u4EBA\u77DB\u76FE\u5347\u7EA7\uFF0C\u4F46\u4FDD\u6301\u514B\u5236\uFF0C\u4E0D\u8981\u7ACB\u523B\u548C\u89E3\u3002" spellcheck="false" style="height:auto; min-height:160px; flex:1;"></textarea>
-
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button id="t-cont-expand" class="t-btn" style="padding:6px 10px; font-size:12px;"><i class="fa-solid fa-expand"></i> \u5C55\u5F00\u7F16\u8F91\u5668</button>
-                        <button id="t-cont-history" class="t-btn" style="padding:6px 10px; font-size:12px;"><i class="fa-solid fa-clock-rotate-left"></i> \u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2</button>
-                    </div>
-                    <div id="t-cont-char-count" style="color:#777; font-size:12px;">0 \u5B57</div>
-                </div>
-
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div style="color:#aaa; font-size:12px;">\u6700\u8FD1\u4F7F\u7528\uFF08\u6700\u591A ${CONTINUATION_RECENT_MAX} \u6761\uFF0C\u70B9\u51FB\u590D\u7528\uFF09</div>
-                    <div id="t-cont-recent-list" style="display:flex; gap:8px; flex-wrap:wrap; max-height:88px; overflow:auto;">${recentHtml}</div>
-                </div>
-
-                <div style="display:flex; flex-direction:column; gap:8px; border:1px solid #333; border-radius:8px; padding:10px; background:#1e1e1e;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                        <div style="color:#ddd; font-size:12px;">${regenerationTarget ? "\u5206\u652F\u4E0A\u4E0B\u6587" : "\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u6761\u6570\uFF08\u6B63\u6587+\u6307\u4EE4\uFF09"}</div>
-                        <div id="t-cont-rounds-total" style="color:#9aa; font-size:12px;">\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A0</div>
-                    </div>
-                    <div style="display:${regenerationTarget ? "none" : "flex"}; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <input type="number" id="t-cont-inject-count" class="t-input" min="3" max="20" step="1" value="${selectedInjectRounds}" placeholder="\u8BF7\u8F93\u5165 3-20" style="width:100px; padding:4px 8px; font-size:12px;">
-                        <span style="color:#888; font-size:12px;">\u6761\uFF083-20 \u6761\uFF09</span>
-                    </div>
-                    <div id="t-cont-context-estimate" style="color:#9aa; font-size:12px;">${regenerationTarget ? `\u5C06\u5B8C\u6574\u6CE8\u5165\u76EE\u6807\u8F6E\u4E4B\u524D\u7684 ${Math.max(0, regenerationTarget.round - 1)} \u8F6E\u5185\u5BB9` : "\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A0 \u5B57\u7B26 (~0 tokens)"}</div>
-                </div>
-
-                ${regenerationTarget ? `<div class="t-cont-regeneration-note"><i class="fa-solid fa-code-branch"></i> \u5C06\u4ECE${escapeHtmlText2(regenerationTarget.label)}\u521B\u5EFA\u5206\u652F\u5E76\u91CD\u65B0\u751F\u6210\u3002\u76EE\u6807\u8F6E\u4E4B\u524D\u7684\u5168\u90E8\u5185\u5BB9\u4F1A\u88AB\u6CE8\u5165\uFF0C\u539F\u5206\u652F\u4F1A\u4FDD\u7559\u3002</div>` : ""}
-
-            </div>
-
-            <div class="t-ce-footer">
-                <div class="t-ce-stats"><span id="t-cont-char-count-footer">0 \u5B57</span></div>
-                <div class="t-ce-actions">
-                    <button class="t-btn" id="t-cont-cancel">\u53D6\u6D88</button>
-                    <button class="t-btn primary" id="t-cont-submit">${regenerationTarget ? '<i class="fa-solid fa-code-branch"></i> \u521B\u5EFA\u5206\u652F\u5E76\u91CD\u751F\u6210' : "\u53D1\u9001\u7EED\u5199"}</button>
-                </div>
-            </div>
-        </div>`;
-    const $host = $("#t-main-view");
-    if ($host.length) {
-      $host.append(html);
-    } else {
-      $("body").append(html);
-    }
-    const $dialog = $("#t-continuation-editor");
-    const $input = $("#t-cont-input");
-    const $charCount = $("#t-cont-char-count");
-    const $charCountFooter = $("#t-cont-char-count-footer");
-    const $expandBtn = $("#t-cont-expand");
-    const $injectCountInput = $("#t-cont-inject-count");
-    const $roundsTotal = $("#t-cont-rounds-total");
-    const $contextEstimate = $("#t-cont-context-estimate");
-    let resolved = false;
-    let expanded = false;
-    const finalize = (value) => {
-      if (resolved) return;
-      resolved = true;
-      $(document).off("keydown.tcontinuecomposer");
-      $dialog.remove();
-      resolve(value);
-    };
-    const updateCharCount = () => {
-      const count = `${$input.val().length} \u5B57`;
-      $charCount.text(count);
-      $charCountFooter.text(count);
-    };
-    const ensureHasBaseContent = () => {
-      const displayContent = getCurrentDisplayContent();
-      const hasContent = Boolean(displayContent?.content && displayContent.content.trim().length > 0);
-      if (!hasContent) {
-        if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7EED\u5199\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F", "Titania");
-        return false;
-      }
-      return true;
-    };
-    const trySubmit = () => {
-      if (!ensureHasBaseContent()) return;
-      selectedInjectRounds = clampInjectRoundsCount($injectCountInput.val());
-      saveContinuationDefaultInjectCount(selectedInjectRounds);
-      syncInjectCountInput();
-      finalize({
-        instruction: $input.val(),
-        injectRoundsCount: selectedInjectRounds,
-        sourceBranchKey: regenerationTarget?.branchKey || "",
-        regenerateRound: regenerationTarget?.round ?? null,
-        regenerateRoundKey: regenerationTarget?.roundKey || ""
-      });
-    };
-    const syncInjectCountInput = () => {
-      $injectCountInput.val(selectedInjectRounds);
-    };
-    const updateContextEstimate = () => {
-      if (regenerationTarget) {
-        $roundsTotal.text(`\u76EE\u6807\uFF1A${regenerationTarget.label}`);
-        return;
-      }
-      const stats = getContinuationSessionStats(activeScriptId, selectedInjectRounds);
-      $roundsTotal.text(`\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A${stats.totalRounds}`);
-      $contextEstimate.text(`\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A${stats.estimatedChars} \u5B57\u7B26 (~${stats.estimatedTokens} tokens)`);
-      if (stats.estimatedTokens > CONTINUATION_TOKEN_WARN_THRESHOLD) {
-        $contextEstimate.css({ color: "#ff7675", fontWeight: "bold" });
-      } else {
-        $contextEstimate.css({ color: "#9aa", fontWeight: "" });
-      }
-    };
-    const applyExpandState = () => {
-      if (expanded) {
-        $dialog.css({
-          width: "98%",
-          maxWidth: "1100px",
-          height: "calc(100% - 20px)",
-          maxHeight: "none"
-        });
-        $input.css({ minHeight: "52vh" });
-        $expandBtn.html('<i class="fa-solid fa-compress"></i> \u6536\u8D77\u7F16\u8F91\u5668');
-      } else {
-        $dialog.css({
-          width: "",
-          maxWidth: "",
-          height: "",
-          maxHeight: ""
-        });
-        $input.css({ minHeight: "160px" });
-        $expandBtn.html('<i class="fa-solid fa-expand"></i> \u5C55\u5F00\u7F16\u8F91\u5668');
-      }
-    };
-    $input.val(initialText || "");
-    updateCharCount();
-    applyExpandState();
-    syncInjectCountInput();
-    updateContextEstimate();
-    setTimeout(() => $input.trigger("focus"), 0);
-    $input.on("input", updateCharCount);
-    $input.on("keydown", function(e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        e.preventDefault();
-        trySubmit();
-      }
-    });
-    $(document).on("keydown.tcontinuecomposer", function(e) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        finalize(null);
-      }
-    });
-    $("#t-cont-close, #t-cont-cancel").on("click", () => finalize(null));
-    $("#t-cont-submit").on("click", () => trySubmit());
-    $("#t-cont-history").on("click", () => finalize({ openHistory: true, scriptId: activeScriptId }));
-    $expandBtn.on("click", function() {
-      expanded = !expanded;
-      applyExpandState();
-    });
-    $injectCountInput.on("input", function() {
-      const rawValue = String($(this).val() ?? "").trim();
-      if (rawValue === "") return;
-      const value = Number(rawValue);
-      if (!Number.isInteger(value) || value < CONTINUATION_MIN_INJECT_ROUNDS || value > CONTINUATION_MAX_INJECT_ROUNDS) {
-        return;
-      }
-      selectedInjectRounds = value;
-      saveContinuationDefaultInjectCount(selectedInjectRounds);
-      updateContextEstimate();
-    });
-    $injectCountInput.on("change blur", function() {
-      selectedInjectRounds = clampInjectRoundsCount($(this).val());
-      saveContinuationDefaultInjectCount(selectedInjectRounds);
-      syncInjectCountInput();
-      updateContextEstimate();
-    });
-    $("#t-cont-recent-list").on("click", ".t-cont-recent-item", function() {
-      const text = decodeURIComponent($(this).attr("data-text") || "");
-      $input.val(text);
-      updateCharCount();
-      $input.trigger("focus");
-    });
-  });
-}
-function getContinuationRoundLabel(round) {
-  return round?.type === "initial" ? "\u521D\u59CB\u5185\u5BB9" : `\u7EED\u5199\u7B2C${round?.continuationIndex || 0}\u6B21`;
-}
-function getContinuationInstructionPreview(instruction, maxLength = 100) {
-  const normalized = String(instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09").replace(/\s+/g, " ").trim();
-  if (normalized.length <= maxLength) return normalized;
-  return `${normalized.slice(0, maxLength)}\u2026`;
-}
-function findContinuationRound(scriptId, branchKey, roundKey) {
-  const branch = getContinuationBranches(scriptId).find((item) => item.branchKey === branchKey);
-  const round = branch?.rounds.find((item) => item.roundKey === roundKey);
-  return branch && round ? { branch, round } : null;
-}
-async function regenerateContinuationRound(scriptId, branchKey, roundKey, editInstruction = false) {
-  const target = findContinuationRound(scriptId, branchKey, roundKey);
-  if (!target || target.round.type === "initial") {
-    if (window.toastr) toastr.warning("\u8BE5\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728", "Titania");
-    return false;
+var CONTINUATION_MIN_INJECT_ROUNDS, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, pendingGenerationScriptId, continuationQuickDraft;
+var init_viewState = __esm({
+  "src/ui/mainWindow/viewState.js"() {
+    init_storage();
+    CONTINUATION_MIN_INJECT_ROUNDS = 3;
+    CONTINUATION_MAX_INJECT_ROUNDS = 20;
+    CONTINUATION_TOKEN_WARN_THRESHOLD = 6e4;
+    pendingGenerationScriptId = "";
+    continuationQuickDraft = "";
   }
-  const regenerationTarget = {
-    scriptId,
-    branchKey,
-    roundKey,
-    round: target.round.round,
-    label: getContinuationRoundLabel(target.round),
-    content: target.round.content
-  };
-  let instruction = target.round.instruction || "";
-  if (editInstruction) {
-    const composeResult = await openContinuationComposer(instruction, regenerationTarget);
-    if (!composeResult) return false;
-    if (composeResult.openHistory) {
-      openContinuationHistory(scriptId);
-      return false;
-    }
-    instruction = String(composeResult.instruction || "").trim();
-    if (instruction) saveContinuationRecentInstruction(instruction);
-  }
-  continuationHistoryView = null;
-  return handleUserContinuation({
-    instruction,
-    sourceBranchKey: branchKey,
-    regenerateRound: target.round.round,
-    regenerateRoundKey: roundKey,
-    scriptIdOverride: scriptId,
-    baseContentOverride: target.round.content,
-    fromCurrentView: false
-  });
-}
-function showContinuationRoundInMain(scriptId, branchKey, roundKey) {
-  const target = findContinuationRound(scriptId, branchKey, roundKey);
-  if (!target) return false;
-  continuationHistoryView = { scriptId, branchKey, roundKey };
-  renderGeneratedContent(target.round.content, GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F");
-  updateSceneHistoryNav();
-  $(document).off("keydown.tcontinuationhistory");
-  $("#t-continuation-history").remove();
-  return true;
-}
-function openContinuationHistory(preferredScriptId = "") {
-  const sessions = getContinuationSessions();
-  const persistenceStatus = getContinuationPersistenceStatus();
-  $("#t-continuation-history").remove();
-  if (sessions.length === 0) {
-    if (window.toastr) toastr.info("\u5F53\u524D\u804A\u5929\u8FD8\u6CA1\u6709\u4E3B\u52A8\u7EED\u5199\u5386\u53F2", "Titania");
-    return;
-  }
-  const preferredIndex = sessions.findIndex((session) => session.scriptId === preferredScriptId);
-  if (preferredIndex > 0) sessions.unshift(sessions.splice(preferredIndex, 1)[0]);
-  const sessionsHtml = sessions.map((session, sessionIndex) => {
-    const isOpen = sessionIndex === 0;
-    const branchHtml = session.branches.map((branch) => {
-      const sourceContinuationIndex = Math.max(0, Number(branch.branchedAtRound) - 1);
-      const branchSource = sourceContinuationIndex > 0 ? ` \xB7 \u4ECE\u7EED\u5199\u7B2C ${sourceContinuationIndex} \u6B21\u521B\u5EFA` : "";
-      const branchStatus = `${branch.isActive ? "\u5F53\u524D\u5206\u652F" : "\u5386\u53F2\u5206\u652F"}${branchSource}`;
-      const roundHtml = branch.rounds.map((round) => {
-        const label = getContinuationRoundLabel(round);
-        const instruction = round.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
-        const instructionPreview = getContinuationInstructionPreview(instruction);
-        const canRegenerate = round.type !== "initial";
-        return `<article class="t-cont-history-round" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}" data-round-key="${escapeHtmlText2(round.roundKey)}">
-                    <div class="t-cont-history-round-head">
-                        <div class="t-cont-history-round-title"><strong>${escapeHtmlText2(label)}</strong><span>${round.contentLength} \u5B57\u7B26</span></div>
-                        <button class="t-cont-history-toggle" title="\u5C55\u5F00\u5185\u5BB9"><i class="fa-solid fa-chevron-down"></i></button>
-                    </div>
-                    <div class="t-cont-history-instruction" title="${escapeHtmlText2(instructionPreview)}">${escapeHtmlText2(instructionPreview)}</div>
-                    <div class="t-cont-history-preview">${escapeHtmlText2(round.contentPreview || "\u65E0\u6587\u672C\u6458\u8981")}</div>
-                    <div class="t-cont-history-full" hidden><iframe sandbox="" title="${escapeHtmlText2(label)}\u5185\u5BB9\u9884\u89C8"></iframe></div>
-                    <div class="t-cont-history-actions">
-                        <button class="t-btn t-cont-history-show"><i class="fa-solid fa-arrow-up-right-from-square"></i> \u8DF3\u8F6C\u5230\u6B64\u5185\u5BB9</button>
-                        ${canRegenerate ? '<button class="t-btn t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn primary t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
-                    </div>
-                </article>`;
-      }).join("");
-      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}">
-                <div class="t-cont-history-branch-title">
-                    <i class="fa-solid fa-code-branch"></i>
-                    <div class="t-cont-history-branch-heading">
-                        <strong>\u300A${escapeHtmlText2(session.scriptName)}\u300B</strong>
-                        <span>${escapeHtmlText2(branchStatus)}</span>
-                    </div>
-                    <small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small>
-                </div>
-                ${roundHtml}
-            </section>`;
-    }).join("");
-    return `<section class="t-cont-history-session ${isOpen ? "is-open" : ""}" data-script-id="${escapeHtmlText2(session.scriptId)}">
-            <button class="t-cont-history-session-toggle" type="button" aria-expanded="${isOpen}">
-                <i class="fa-solid fa-chevron-right"></i>
-                <span>\u300A${escapeHtmlText2(session.scriptName)}\u300B</span>
-                <small>${session.branches.length} \u4E2A\u5206\u652F \xB7 ${session.roundCount} \u8F6E</small>
-            </button>
-            <div class="t-cont-history-session-body" ${isOpen ? "" : "hidden"}>${branchHtml}</div>
-        </section>`;
-  }).join("");
-  $("#t-main-view").append(`<div id="t-continuation-history" class="t-cont-history-panel">
-        <div class="t-cont-history-header"><div><i class="fa-solid fa-clock-rotate-left"></i><strong>\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2</strong><span>${persistenceStatus.persisted ? `\u5DF2\u6301\u4E45\u5316 \xB7 ${sessions.length} \u4E2A\u5267\u672C \xB7 ${persistenceStatus.roundCount} \u8F6E` : `${sessions.length} \u4E2A\u5267\u672C \xB7 \u7B49\u5F85\u6301\u4E45\u5316`}</span></div><div class="t-cont-history-header-actions"><button class="t-btn" id="t-cont-history-clear" title="\u5220\u9664\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2"><i class="fa-solid fa-trash-can"></i> \u6E05\u7A7A</button><button class="t-close" id="t-cont-history-close">&times;</button></div></div>
-        <div class="t-cont-history-body">${sessionsHtml}</div>
-    </div>`);
-  const $panel = $("#t-continuation-history");
-  const closePanel2 = () => {
-    $(document).off("keydown.tcontinuationhistory");
-    $panel.remove();
-  };
-  $("#t-cont-history-close").on("click", closePanel2);
-  $("#t-cont-history-clear").on("click", async function() {
-    const confirmed = window.confirm("\u786E\u5B9A\u6E05\u7A7A\u5F53\u524D\u804A\u5929\u7684\u5168\u90E8\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002");
-    if (!confirmed) return;
-    $(this).prop("disabled", true);
-    try {
-      await clearContinuationForCurrentChat();
-      continuationHistoryView = null;
-      closePanel2();
-      if (window.toastr) toastr.success("\u5F53\u524D\u804A\u5929\u7684\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5DF2\u6E05\u7A7A", "Titania");
-    } catch (error) {
-      console.error("Titania: \u6E05\u7A7A\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", error);
-      $(this).prop("disabled", false);
-      if (window.toastr) toastr.error("\u6E05\u7A7A\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", "Titania");
-    }
-  });
-  $(document).off("keydown.tcontinuationhistory").on("keydown.tcontinuationhistory", function(event) {
-    if (event.key === "Escape") closePanel2();
-  });
-  $panel.on("click", ".t-cont-history-session-toggle", function() {
-    const $session = $(this).closest(".t-cont-history-session");
-    const shouldOpen = !$session.hasClass("is-open");
-    $session.toggleClass("is-open", shouldOpen);
-    $(this).attr("aria-expanded", String(shouldOpen));
-    $session.find(".t-cont-history-session-body").first().prop("hidden", !shouldOpen);
-  });
-  $panel.on("click", ".t-cont-history-toggle", function() {
-    const $round = $(this).closest(".t-cont-history-round");
-    const $full = $round.find(".t-cont-history-full");
-    const shouldOpen = $full.prop("hidden");
-    $full.prop("hidden", !shouldOpen);
-    $(this).find("i").toggleClass("fa-chevron-down", !shouldOpen).toggleClass("fa-chevron-up", shouldOpen);
-    if (shouldOpen) {
-      const roundScriptId = String($round.data("script-id") || "");
-      const branchKey = String($round.data("branch-key") || "");
-      const roundKey = String($round.data("round-key") || "");
-      const content = findContinuationRound(roundScriptId, branchKey, roundKey)?.round.content || "";
-      $full.find("iframe").attr("srcdoc", content);
-    }
-  });
-  $panel.on("click", ".t-cont-history-show", function() {
-    const $round = $(this).closest(".t-cont-history-round");
-    showContinuationRoundInMain(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""));
-  });
-  $panel.on("click", ".t-cont-history-regenerate, .t-cont-history-edit-regenerate", async function() {
-    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
-    const $round = $(this).closest(".t-cont-history-round");
-    const editInstruction = $(this).hasClass("t-cont-history-edit-regenerate");
-    closePanel2();
-    await regenerateContinuationRound(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""), editInstruction);
-  });
-}
-function refreshScriptList() {
-  const $sel = $("#t-sel-script");
-  $sel.empty();
-  const validScripts = sortScripts(GlobalState.runtimeScripts, getScriptSortMode());
-  validScripts.forEach((s) => {
-    $sel.append(`<option value="${s.id}">${s.name}</option>`);
-  });
-  if (GlobalState.lastUsedScriptId && validScripts.find((s) => s.id === GlobalState.lastUsedScriptId)) {
-    $sel.val(GlobalState.lastUsedScriptId);
-  }
-  updateDesc();
-}
-function updateDesc() {
-  const s = GlobalState.runtimeScripts.find((x) => x.id === $("#t-sel-script").val());
-  if (s) $("#t-txt-desc").val(s.desc);
-}
-function applyScriptSelection(id, options = {}) {
-  const s = GlobalState.runtimeScripts.find((x) => x.id === id);
-  if (!s) return;
-  const shouldTrackSelection = options.trackSelection === true;
-  if (shouldTrackSelection) {
-    recordScriptSelected(s.id);
-  }
-  GlobalState.lastUsedScriptId = s.id;
-  $("#t-lbl-name").text(s.name);
-  const $catTag = $("#t-lbl-cat");
-  const category = s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
-  $catTag.text(category);
-  $catTag.css({
-    "color": "#bfa15f",
-    "background": "rgba(191, 161, 95, 0.15)",
-    "border": "1px solid rgba(191, 161, 95, 0.33)"
-  });
-  $("#t-lbl-desc-mini").text(s.desc || "\u65E0\u7B80\u4ECB");
-  $("#t-txt-desc").val(s.desc);
-}
-async function openMainWindow() {
-  if ($("#t-overlay").length) return;
-  const defaultCtx = { charName: "\u52A0\u8F7D\u4E2D...", userName: "\u7528\u6237" };
-  let data;
-  try {
-    data = getExtData();
-  } catch (e) {
-    console.error("Titania: \u83B7\u53D6\u6269\u5C55\u6570\u636E\u5931\u8D25", e);
-    data = { ui_mode_echo: true };
-  }
-  GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
-  GlobalState.generationMode = ["narrative", "visual", "preset"].includes(data.config?.generation_mode) ? data.config.generation_mode : "narrative";
-  const placeholderContent = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
-  const html = `
+});
+
+// src/ui/mainWindow/layouts/modern.js
+var modern_exports = {};
+__export(modern_exports, {
+  bindEvents: () => bindEvents3,
+  id: () => id,
+  renderHtml: () => renderHtml,
+  syncRunButtons: () => syncRunButtons
+});
+function renderHtml(viewData) {
+  const { defaultCtx } = viewData;
+  return `
     <div id="t-overlay" class="t-overlay">
         <div class="t-box" id="t-main-view">
-            
+
             <div class="t-header" style="flex-shrink:0;">
                 <div class="t-title-container" style="display:flex; flex-direction:column; overflow:hidden;">
                     <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
@@ -31860,10 +34344,9 @@ async function openMainWindow() {
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; flex-shrink:0;">
+                    <i class="fa-solid fa-store t-icon-btn" id="t-btn-workshop" title="\u56DE\u58F0\u5DE5\u574A"></i>
                     <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
-                    <i class="fa-solid fa-book-atlas t-icon-btn" id="t-btn-worldinfo" title="\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009"></i>
-                    <i class="fa-solid fa-network-wired t-icon-btn" id="t-btn-profiles" title="\u5FEB\u901F\u5207\u6362API\u65B9\u6848"></i>
-                    <i class="fa-solid fa-gear t-icon-btn" id="t-btn-settings" title="\u8BBE\u7F6E"></i>
+                    <i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" title="\u66F4\u591A"></i>
                     <span class="t-close" id="t-btn-close">&times;</span>
                 </div>
             </div>
@@ -31897,7 +34380,418 @@ async function openMainWindow() {
                         </div>
                         <i class="fa-solid fa-chevron-down t-chevron"></i>
                     </div>
-                    
+
+                    <div class="t-action-group">
+                        <div class="t-filter-btn" id="t-btn-filter" title="\u7B5B\u9009\u968F\u673A\u8303\u56F4">
+                            <i class="fa-solid fa-filter"></i>
+                        </div>
+                        <div class="t-dice-btn" id="t-btn-dice" title="\u968F\u673A\u5267\u672C">\u{1F3B2}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="t-content-wrapper">
+                <div class="t-stats-hud" id="t-stats-hud" style="display:none;">
+                    <span class="t-stats-item"><span class="t-stats-label">\u6A21\u578B</span><span class="t-stats-value" id="t-stat-model">-</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u5B57\u7B26</span><span class="t-stats-value" id="t-stat-total">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u4E2D\u6587</span><span class="t-stats-value" id="t-stat-chinese">0</span></span>
+                    <span class="t-stats-sep">|</span>
+                    <span class="t-stats-item"><span class="t-stats-label">\u8017\u65F6</span><span class="t-stats-value" id="t-stat-time">-</span></span>
+                </div>
+                <div class="t-tools-rail" id="t-tools-rail">
+                    <button class="t-tools-icon" id="t-tool-zen" type="button" title="\u6C89\u6D78\u9605\u8BFB" aria-label="\u6C89\u6D78\u9605\u8BFB">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                    <button class="t-tools-icon" id="t-tool-edit-content" type="button" title="\u7F16\u8F91\u5185\u5BB9" aria-label="\u7F16\u8F91\u5185\u5BB9">
+                        <i class="fa-solid fa-pen-nib"></i>
+                    </button>
+                    <button class="t-tools-icon" id="t-btn-like" type="button" title="\u6536\u85CF\u7ED3\u679C" aria-label="\u6536\u85CF\u7ED3\u679C">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
+                </div>
+                <div class="t-content-area">
+                    <!-- \u7FFB\u9875\u6309\u94AE\u79FB\u5230\u5185\u5BB9\u533A\u4E24\u4FA7 -->
+                    <button class="t-page-nav t-page-prev" id="t-nav-prev" title="\u4E0A\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&lt;</button>
+                    <button class="t-page-nav t-page-next" id="t-nav-next" title="\u4E0B\u4E00\u4E2A\u5267\u573A" style="display:none;" disabled>&gt;</button>
+                    <div class="t-page-indicator" id="t-page-indicator" style="display:none;">1/1</div>
+                    <div class="t-cont-inline-actions" id="t-cont-inline-actions" style="display:none;">
+                        <span id="t-cont-inline-label"></span>
+                        <div class="t-cont-inline-branch-menu" id="t-cont-inline-branch-menu">
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u4FEE\u6539\u6307\u4EE4</span>
+                                <button id="t-cont-inline-edit-regenerate" type="button" title="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F" aria-label="\u4FEE\u6539\u6307\u4EE4\u5E76\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-pen"></i></button>
+                            </div>
+                            <div class="t-cont-inline-branch-option">
+                                <span>\u76F4\u63A5\u91CD\u751F\u6210</span>
+                                <button id="t-cont-inline-regenerate" type="button" title="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F" aria-label="\u4F7F\u7528\u539F\u6307\u4EE4\u521B\u5EFA\u5206\u652F"><i class="fa-solid fa-rotate"></i></button>
+                            </div>
+                        </div>
+                        <button id="t-cont-inline-branch" type="button" title="\u5206\u652F\u64CD\u4F5C" aria-label="\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" aria-expanded="false"><i class="fa-solid fa-code-branch"></i></button>
+                    </div>
+                    <div id="t-output-content"></div>
+                </div>
+                <div class="t-toolbox-backdrop" id="t-toolbox-backdrop"></div>
+                <aside class="t-toolbox-panel" id="t-toolbox-panel" aria-hidden="true">
+                    <div class="t-toolbox-header">
+                        <div><strong>\u5DE5\u5177\u7BB1</strong><span>\u521B\u4F5C\u8F85\u52A9\u4E0E\u6279\u91CF\u4EFB\u52A1</span></div>
+                        <button class="t-toolbox-close" id="t-toolbox-close" type="button" title="\u6536\u8D77\u5DE5\u5177\u7BB1" aria-label="\u6536\u8D77\u5DE5\u5177\u7BB1"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="t-toolbox-body">
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u5185\u5BB9\u64CD\u4F5C</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-copy" type="button"><i class="fa-regular fa-copy"></i><span>\u590D\u5236\u6E90\u7801</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u5267\u672C\u7BA1\u7406</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action" id="t-btn-new" type="button"><i class="fa-solid fa-plus"></i><span>\u65B0\u5EFA\u5267\u672C</span></button>
+                                <button class="t-toolbox-action" id="t-btn-edit" type="button"><i class="fa-solid fa-pen-to-square"></i><span>\u7F16\u8F91\u5267\u672C</span></button>
+                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-regenerate" type="button"><i class="fa-solid fa-rotate"></i><span>\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u961F\u5217\u751F\u6210</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action t-toolbox-queue" id="t-btn-run-queue" type="button"><i class="fa-solid fa-layer-group"></i><span>\u5F00\u59CB\u961F\u5217</span></button>
+                                <button class="t-toolbox-action" id="t-btn-queue-settings" type="button"><i class="fa-solid fa-sliders"></i><span>\u961F\u5217\u8BBE\u7F6E</span></button>
+                            </div>
+                        </section>
+                        <section class="t-toolbox-section">
+                            <div class="t-toolbox-section-title">\u68C0\u67E5\u4E0E\u8BCA\u65AD</div>
+                            <div class="t-toolbox-grid">
+                                <button class="t-toolbox-action" id="t-btn-debug" type="button"><i class="fa-solid fa-eye"></i><span>\u5BA1\u67E5 Prompt</span></button>
+                                <button class="t-toolbox-action t-btn-diag" id="t-btn-diagnostics" type="button"><i class="fa-solid fa-stethoscope"></i><span>\u8BCA\u65AD\u65E5\u5FD7</span></button>
+                            </div>
+                        </section>
+                    </div>
+                    <button class="t-toolbox-stop" id="t-btn-stop" type="button"><i class="fa-solid fa-stop"></i><span>\u4E2D\u6B62\u5F53\u524D\u751F\u6210</span></button>
+                </aside>
+            </div>
+
+            <div class="t-bottom-bar">
+                <div class="t-continuation-stack">
+                    <div class="t-continuation-shortcuts-row">
+                        <div class="t-continuation-shortcuts" id="t-continuation-shortcuts">
+                            <button type="button" class="t-shortcut-btn" data-instruction="">\u81EA\u7136\u7EED\u5199</button>
+                            <button type="button" class="t-shortcut-btn" data-instruction="\u63A8\u8FDB\u5267\u60C5\u53D1\u5C55\uFF0C\u5F15\u5165\u65B0\u7684\u8FDB\u5C55\u6216\u51B2\u7A81\uFF0C\u4E0D\u8981\u505C\u6EDE\u5728\u5F53\u524D\u573A\u666F\u3002">\u63A8\u8FDB\u5267\u60C5</button>
+                            <button type="button" class="t-shortcut-btn" data-instruction="\u5236\u9020\u4E00\u4E2A\u610F\u5916\u8F6C\u6298\uFF0C\u6253\u7834\u5F53\u524D\u7684\u5E73\u8861\u72B6\u6001\u3002">\u5236\u9020\u8F6C\u6298</button>
+                            <button type="button" class="t-shortcut-btn" data-instruction="\u6DF1\u5316\u89D2\u8272\u60C5\u611F\uFF0C\u5C55\u73B0\u5185\u5FC3\u51B2\u7A81\u4E0E\u7EC6\u817B\u7684\u5FC3\u7406\u53D8\u5316\u3002">\u6DF1\u5316\u60C5\u611F</button>
+                        </div>
+                        <div class="t-continuation-shortcuts-fixed">
+                            <button type="button" class="t-shortcut-btn t-shortcut-compose" id="t-btn-continuation-compose" title="\u6253\u5F00\u5B8C\u6574\u7F16\u8F91\u5668"><i class="fa-solid fa-expand"></i> \u5B8C\u6574\u7F16\u8F91\u5668</button>
+                            <button type="button" class="t-shortcut-btn t-shortcut-toolbox t-toolbox-toggle" title="\u6253\u5F00\u5DE5\u5177\u7BB1" aria-label="\u6253\u5F00\u5DE5\u5177\u7BB1" aria-expanded="false"><i class="fa-solid fa-toolbox"></i> \u5DE5\u5177</button>
+                        </div>
+                    </div>
+                    <div class="t-continuation-quick">
+                        <button class="t-continuation-history-btn" id="t-btn-continuation-history" type="button" title="\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2" aria-label="\u6253\u5F00\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2">
+                            <i class="fa-solid fa-clock-rotate-left"></i><span id="t-continuation-history-count">0</span>
+                        </button>
+                        <div class="t-continuation-input-wrap">
+                            <textarea id="t-continuation-quick-input" rows="1" placeholder="\u8F93\u5165\u7EED\u5199\u6307\u4EE4..." aria-label="\u7EED\u5199\u6307\u4EE4"></textarea>
+                        </div>
+                        <button class="t-continuation-context-btn" id="t-btn-continuation-context" type="button" title="\u7EED\u5199\u4E0A\u4E0B\u6587" aria-label="\u8BBE\u7F6E\u7EED\u5199\u4E0A\u4E0B\u6587" aria-expanded="false">
+                            <i class="fa-solid fa-layer-group"></i><span id="t-continuation-context-count">${getContinuationDefaultInjectCount()}</span>
+                        </button>
+                        <button class="t-continuation-replay" id="t-btn-continuation-replay" type="button" title="\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C" aria-label="\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                        <button class="t-continuation-send" id="t-btn-continuation-send" type="button" title="\u53D1\u9001" aria-label="\u53D1\u9001">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                        <div class="t-continuation-context-popover" id="t-continuation-context-popover" hidden>
+                            <div class="t-continuation-context-head"><strong>\u7EED\u5199\u4E0A\u4E0B\u6587</strong><span>\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u8BB0\u5F55</span></div>
+                            <div class="t-continuation-stepper">
+                                <button id="t-continuation-context-minus" type="button" aria-label="\u51CF\u5C11\u7EED\u5199\u4E0A\u4E0B\u6587"><i class="fa-solid fa-minus"></i></button>
+                                <span><strong id="t-continuation-context-value">${getContinuationDefaultInjectCount()}</strong> \u8F6E</span>
+                                <button id="t-continuation-context-plus" type="button" aria-label="\u589E\u52A0\u7EED\u5199\u4E0A\u4E0B\u6587"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                            <div class="t-continuation-context-stats" id="t-continuation-context-stats"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+function bindEvents3(ctx) {
+  const {
+    closeWindow: closeWindow2,
+    registerTeardown: registerTeardown2,
+    runContinuation,
+    openContinuationHistory: openContinuationHistory2,
+    openContinuationComposer: openContinuationComposer2
+  } = ctx;
+  const $quickInput = $("#t-continuation-quick-input");
+  const $contextPopover = $("#t-continuation-context-popover");
+  let quickInjectRounds = getContinuationDefaultInjectCount();
+  const getQuickScriptId = () => {
+    const display = getCurrentDisplayContent();
+    return display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || "";
+  };
+  const getQuickAction = () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return "stop";
+    const display = getCurrentDisplayContent();
+    if (getPendingGenerationScriptId() || !display?.content?.trim()) return "generate";
+    return String($quickInput.val() || "").trim() ? "instruct" : "continue";
+  };
+  const updateQuickSendState = () => {
+    setContinuationQuickDraft(String($quickInput.val() || ""));
+    const action = getQuickAction();
+    const scriptName = GlobalState.runtimeScripts.find((item) => item.id === (getPendingGenerationScriptId() || GlobalState.lastUsedScriptId))?.name || "\u5F53\u524D\u5267\u672C";
+    const config = {
+      generate: { icon: "fa-solid fa-clapperboard", title: "\u6F14\u7ECE\u5F53\u524D\u5267\u672C", placeholder: `\u51C6\u5907\u6F14\u7ECE\u300A${scriptName}\u300B` },
+      continue: { icon: "fa-solid fa-forward-step", title: "\u81EA\u7136\u7EED\u5199", placeholder: "\u8F93\u5165\u7EED\u5199\u6307\u4EE4\uFF0C\u7559\u7A7A\u81EA\u7136\u7EED\u5199..." },
+      instruct: { icon: "fa-solid fa-paper-plane", title: "\u6309\u6307\u4EE4\u7EED\u5199", placeholder: "\u8F93\u5165\u7EED\u5199\u6307\u4EE4\uFF0C\u7559\u7A7A\u81EA\u7136\u7EED\u5199..." },
+      stop: { icon: "fa-solid fa-stop", title: "\u4E2D\u6B62\u5F53\u524D\u751F\u6210", placeholder: "\u6B63\u5728\u751F\u6210..." }
+    }[action];
+    $("#t-btn-continuation-send").attr({ title: config.title, "aria-label": config.title, "data-action": action }).toggleClass("is-stop", action === "stop").prop("disabled", false).find("i").attr("class", config.icon);
+    $quickInput.attr("placeholder", config.placeholder).prop("disabled", action === "generate" || action === "stop");
+    $("#t-btn-continuation-context").prop("disabled", action === "generate" || action === "stop");
+    updateReplayState(action);
+  };
+  const updateReplayState = (action) => {
+    const hasContent = !!getCurrentDisplayContent()?.content?.trim();
+    const busy = action === "stop";
+    const drafting = !!String($quickInput.val() || "").trim();
+    const disabled = busy || !hasContent || drafting;
+    $("#t-btn-continuation-replay").prop("disabled", disabled).attr("title", drafting ? "\u6E05\u7A7A\u8F93\u5165\u6846\u540E\u53EF\u91CD\u65B0\u6F14\u7ECE" : hasContent ? "\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C" : "\u8FD8\u6CA1\u6709\u53EF\u91CD\u6F14\u7684\u5185\u5BB9");
+  };
+  const updateContextPopover = () => {
+    const stats = getContinuationSessionStats(getQuickScriptId(), quickInjectRounds);
+    $("#t-continuation-context-count, #t-continuation-context-value").text(quickInjectRounds);
+    $("#t-continuation-context-stats").html(`\u5F53\u524D\u7EED\u5199\u94FE ${stats.totalRounds} \u8F6E<br>\u9884\u8BA1\u6CE8\u5165 ${stats.estimatedChars.toLocaleString()} \u5B57 \xB7 \u7EA6 ${stats.estimatedTokens.toLocaleString()} tokens`).toggleClass("is-warning", stats.estimatedTokens > CONTINUATION_TOKEN_WARN_THRESHOLD);
+    $("#t-continuation-context-minus").prop("disabled", quickInjectRounds <= CONTINUATION_MIN_INJECT_ROUNDS);
+    $("#t-continuation-context-plus").prop("disabled", quickInjectRounds >= CONTINUATION_MAX_INJECT_ROUNDS);
+  };
+  const setContextPopoverOpen = (open) => {
+    $contextPopover.prop("hidden", !open);
+    $("#t-btn-continuation-context").attr("aria-expanded", String(open)).toggleClass("active", open);
+    if (open) {
+      updateContextPopover();
+    }
+  };
+  const refreshContinuationHistoryCount = async () => {
+    try {
+      const source = ctx.getCurrentContinuationSource();
+      const sessions = await listAllContinuationSessions();
+      const count = sessions.filter((session) => session.chatId === source.chatId).reduce((total, session) => total + session.branches.reduce((sum, branch) => sum + Math.max(0, branch.rounds.length - 1), 0), 0);
+      $("#t-continuation-history-count").text(count > 99 ? "99+" : count);
+      $("#t-btn-continuation-history").attr("title", count ? `\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2\uFF08${count} \u8F6E\uFF09` : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2");
+    } catch (error) {
+      console.warn("Titania: \u8BFB\u53D6\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6570\u91CF\u5931\u8D25", error);
+    }
+  };
+  const submitQuickAction = async () => {
+    const action = getQuickAction();
+    if (action === "stop") {
+      if (GlobalState.isGenerating) cancelGeneration();
+      else if (GlobalState.queueState.isRunning) cancelQueueGeneration();
+      return;
+    }
+    if (action === "generate") {
+      const scriptId = getPendingGenerationScriptId() || GlobalState.lastUsedScriptId;
+      if (!scriptId) {
+        if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
+        return;
+      }
+      setPendingGenerationScriptId("");
+      closeWindow2();
+      handleGenerate(scriptId, false);
+      return;
+    }
+    const instruction = String($quickInput.val() || "").trim();
+    setContextPopoverOpen(false);
+    setContinuationQuickDraft("");
+    $quickInput.val("");
+    updateQuickSendState();
+    const success = await runContinuation({ instruction, injectRoundsCount: quickInjectRounds });
+    if (!success) {
+      $quickInput.val(instruction);
+      setContinuationQuickDraft(instruction);
+      updateQuickSendState();
+    }
+    refreshContinuationHistoryCount();
+  };
+  $("#t-btn-continuation-replay").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
+    const scriptId = getQuickScriptId();
+    if (!scriptId) {
+      if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u53EF\u91CD\u6F14\u7684\u5267\u672C", "Titania");
+      return;
+    }
+    closeWindow2();
+    handleGenerate(scriptId, false);
+  });
+  $quickInput.val(getContinuationQuickDraft()).on("input", () => {
+    updateQuickSendState();
+  }).on("focus", () => {
+    setContextPopoverOpen(false);
+  }).on("keydown", (event) => {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      submitQuickAction();
+    }
+  });
+  $("#t-btn-continuation-send").on("click", submitQuickAction);
+  $("#t-btn-continuation-history").on("click", () => {
+    setContextPopoverOpen(false);
+    openContinuationHistory2(getQuickScriptId());
+  });
+  $("#t-btn-continuation-context").on("click", (event) => {
+    event.stopPropagation();
+    setContextPopoverOpen($contextPopover.prop("hidden"));
+  });
+  $("#t-continuation-context-minus, #t-continuation-context-plus").on("click", function() {
+    quickInjectRounds = clampInjectRoundsCount(quickInjectRounds + ($(this).is("#t-continuation-context-plus") ? 1 : -1));
+    saveContinuationDefaultInjectCount(quickInjectRounds);
+    updateContextPopover();
+  });
+  $("#t-continuation-shortcuts").on("click", ".t-shortcut-btn:not(.t-shortcut-compose)", function() {
+    if ($quickInput.prop("disabled")) return;
+    $quickInput.val(String($(this).attr("data-instruction") || "")).trigger("input").trigger("focus");
+  });
+  $("#t-btn-continuation-compose").on("click", async () => {
+    const result = await openContinuationComposer2(String($quickInput.val() || ""));
+    if (!result) return;
+    if (result.openHistory) {
+      openContinuationHistory2(result.scriptId);
+      return;
+    }
+    $quickInput.val(String(result.instruction || "")).trigger("input");
+    quickInjectRounds = clampInjectRoundsCount(result.injectRoundsCount ?? quickInjectRounds);
+    updateContextPopover();
+    await submitQuickAction();
+  });
+  $(document).on("click.tcontinuationquick", (event) => {
+    if (!$(event.target).closest("#t-continuation-context-popover, #t-btn-continuation-context").length) setContextPopoverOpen(false);
+  });
+  updateQuickSendState();
+  updateContextPopover();
+  refreshContinuationHistoryCount();
+  const setToolboxOpen = (open) => {
+    $("#t-main-view").toggleClass("t-toolbox-open", open);
+    $("#t-toolbox-panel").attr("aria-hidden", String(!open));
+    $(".t-toolbox-toggle").attr("aria-expanded", String(open));
+  };
+  $(".t-toolbox-toggle").on("click", (event) => {
+    event.stopPropagation();
+    setToolboxOpen(!$("#t-main-view").hasClass("t-toolbox-open"));
+  });
+  $("#t-toolbox-close, #t-toolbox-backdrop").on("click", () => setToolboxOpen(false));
+  $("#t-toolbox-panel").on("click", ".t-toolbox-action", () => setToolboxOpen(false));
+  $(document).on("keydown.ttoolbox", (event) => {
+    if (event.key === "Escape" && $("#t-main-view").hasClass("t-toolbox-open")) {
+      setToolboxOpen(false);
+    }
+  });
+  $("#t-btn-regenerate").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    const scriptId = GlobalState.lastUsedScriptId || GlobalState.lastGeneratedScriptId;
+    if (!scriptId) {
+      if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
+      return;
+    }
+    closeWindow2();
+    handleGenerate(scriptId, false);
+  });
+  registerTeardown2(() => {
+    $(document).off("keydown.ttoolbox");
+    $(document).off("click.tcontinuationquick");
+  });
+}
+function syncRunButtons({ isGenerating, isQueueRunning }) {
+  const $queueBtn = $("#t-btn-run-queue");
+  const $secondaryContinuationBtns = $("#t-btn-continuation-compose, #t-btn-continuation-history");
+  const $stopBtn = $("#t-btn-stop");
+  if (!$queueBtn.length) return;
+  if (isGenerating || isQueueRunning) {
+    $queueBtn.prop("disabled", true);
+    $secondaryContinuationBtns.prop("disabled", true);
+    $stopBtn.addClass("is-active");
+  } else {
+    $queueBtn.prop("disabled", false);
+    $secondaryContinuationBtns.prop("disabled", false);
+    $stopBtn.removeClass("is-active");
+  }
+  $("#t-continuation-quick-input").trigger("input");
+}
+var id;
+var init_modern = __esm({
+  "src/ui/mainWindow/layouts/modern.js"() {
+    init_state();
+    init_api();
+    init_continuationStore();
+    init_viewState();
+    id = "modern";
+  }
+});
+
+// src/ui/mainWindow/layouts/legacy.js
+var legacy_exports = {};
+__export(legacy_exports, {
+  bindEvents: () => bindEvents4,
+  id: () => id2,
+  renderHtml: () => renderHtml2,
+  syncRunButtons: () => syncRunButtons2
+});
+function renderHtml2(viewData) {
+  const { defaultCtx } = viewData;
+  return `
+    <div id="t-overlay" class="t-overlay">
+        <div class="t-box" id="t-main-view">
+
+            <div class="t-header" style="flex-shrink:0;">
+                <div class="t-title-container" style="display:flex; flex-direction:column; overflow:hidden;">
+                    <div class="t-title-main" style="white-space:nowrap;">\u56DE\u58F0\u5C0F\u5267\u573A</div>
+                    <div class="t-title-sub" id="t-title-sub">
+                        \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; flex-shrink:0;">
+                    <i class="fa-solid fa-store t-icon-btn" id="t-btn-workshop" title="\u56DE\u58F0\u5DE5\u574A"></i>
+                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
+                    <i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" title="\u66F4\u591A"></i>
+                    <span class="t-close" id="t-btn-close">&times;</span>
+                </div>
+            </div>
+
+            <div class="t-top-bar">
+                <div class="t-history-toggle" id="t-history-toggle">
+                    <label class="t-toggle-label">
+                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
+                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
+                    </label>
+                </div>
+                <div class="t-mode-toggle" id="t-mode-toggle">
+                    <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
+                        <span>\u{1F4D6} \u5185\u5BB9\u4F18\u5148</span>
+                    </div>
+                    <div class="t-mode-btn ${GlobalState.generationMode === "visual" ? "active" : ""}" data-mode="visual">
+                        <span>\u{1F3A8} \u6C1B\u56F4\u7F8E\u5316</span>
+                    </div>
+                    <div class="t-mode-btn ${GlobalState.generationMode === "preset" ? "active" : ""}" data-mode="preset" title="\u4F7F\u7528\u8BBE\u7F6E\u9875\u4E2D\u9009\u5B9A\u7684\u7528\u6237\u9884\u8BBE">
+                        <span>\u{1F4CB} \u9009\u7528\u9884\u8BBE</span>
+                    </div>
+                </div>
+                <div class="t-mobile-row">
+                    <div class="t-trigger-card" id="t-trigger-btn" title="\u70B9\u51FB\u5207\u6362\u5267\u672C">
+                        <div class="t-trigger-main">
+                            <span id="t-lbl-name" style="overflow:hidden; text-overflow:ellipsis;">\u52A0\u8F7D\u4E2D...</span>
+                        </div>
+                        <div class="t-trigger-sub">
+                            <span class="t-cat-tag" id="t-lbl-cat">\u5206\u7C7B</span>
+                            <span id="t-lbl-desc-mini">...</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down t-chevron"></i>
+                    </div>
+
                     <div class="t-action-group">
                         <div class="t-filter-btn" id="t-btn-filter" title="\u7B5B\u9009\u968F\u673A\u8303\u56F4">
                             <i class="fa-solid fa-filter"></i>
@@ -31926,6 +34820,10 @@ async function openMainWindow() {
                     <div class="t-tools-item" id="t-tool-continue">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                         <span>\u4E3B\u52A8\u7EED\u5199</span>
+                    </div>
+                    <div class="t-tools-item" id="t-tool-continuation-history">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>\u7EED\u5199\u5386\u53F2</span>
                     </div>
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
@@ -31995,7 +34893,780 @@ async function openMainWindow() {
             </div>
         </div>
     </div>`;
-  $("body").append(html);
+}
+function bindEvents4(ctx) {
+  const {
+    closeWindow: closeWindow2,
+    registerTeardown: registerTeardown2,
+    runContinuation,
+    openContinuationHistory: openContinuationHistory2,
+    openContinuationComposer: openContinuationComposer2
+  } = ctx;
+  const $toolsPanel = $("#t-tools-panel");
+  const $toolsBtn = $("#t-btn-tools");
+  const hideToolsPanel = () => {
+    $toolsPanel.hide();
+    $toolsBtn.removeClass("active");
+  };
+  $toolsBtn.on("click", function(e) {
+    e.stopPropagation();
+    const isVisible = $toolsPanel.is(":visible");
+    $toolsPanel.toggle(!isVisible);
+    $(this).toggleClass("active", !isVisible);
+  });
+  $(document).on("click.toolspanel", function(e) {
+    if (!$(e.target).closest("#t-tools-panel, #t-btn-tools").length) {
+      hideToolsPanel();
+    }
+  });
+  $toolsPanel.on("click", ".t-tools-item", function() {
+    hideToolsPanel();
+    $toolsBtn.toggleClass("zen-active", $("#t-main-view").hasClass("t-zen-mode"));
+  });
+  $("#t-tool-continue").on("click", async function() {
+    const composeResult = await openContinuationComposer2("");
+    await runContinuation(composeResult);
+  });
+  $("#t-tool-continuation-history").on("click", function() {
+    openContinuationHistory2("");
+  });
+  $("#t-btn-run-single").on("click", () => {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
+      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
+      return;
+    }
+    closeWindow2();
+    handleGenerate(null, false);
+  });
+  registerTeardown2(() => {
+    $(document).off("click.toolspanel");
+  });
+}
+function syncRunButtons2({ isGenerating, isQueueRunning }) {
+  const $singleBtn = $("#t-btn-run-single");
+  const $queueBtn = $("#t-btn-run-queue");
+  if (!$singleBtn.length || !$queueBtn.length) return;
+  const busy = isGenerating || isQueueRunning;
+  $singleBtn.prop("disabled", busy);
+  $queueBtn.prop("disabled", busy);
+}
+var id2;
+var init_legacy = __esm({
+  "src/ui/mainWindow/layouts/legacy.js"() {
+    init_state();
+    init_api();
+    id2 = "legacy";
+  }
+});
+
+// src/ui/mainWindow.js
+var mainWindow_exports = {};
+__export(mainWindow_exports, {
+  applyScriptSelection: () => applyScriptSelection,
+  closeWindow: () => closeWindow,
+  disableQueueMode: () => disableQueueMode,
+  getContinuationHistoryView: () => getContinuationHistoryView,
+  getQueueScripts: () => getQueueScripts,
+  handleRandom: () => handleRandom,
+  openMainWindow: () => openMainWindow,
+  refreshScriptList: () => refreshScriptList,
+  registerTeardown: () => registerTeardown,
+  setContinuationHistoryView: () => setContinuationHistoryView,
+  updateContentStatsDisplay: () => updateContentStatsDisplay,
+  updateFavButtonUI: () => updateFavButtonUI,
+  updateFilterUI: () => updateFilterUI,
+  updateHistoryToggleUI: () => updateHistoryToggleUI,
+  updateModeToggleUI: () => updateModeToggleUI,
+  updateQueueButtonUI: () => updateQueueButtonUI,
+  updateRunButtonsState: () => updateRunButtonsState,
+  updateScriptTitleDisplay: () => updateScriptTitleDisplay
+});
+function formatRelativeTime3(ts) {
+  const time = Number(ts) || 0;
+  if (!time) return "\u672A\u4F7F\u7528";
+  const diff = Date.now() - time;
+  if (diff < 6e4) return "\u521A\u521A";
+  if (diff < 36e5) return `${Math.floor(diff / 6e4)} \u5206\u949F\u524D`;
+  if (diff < 864e5) return `${Math.floor(diff / 36e5)} \u5C0F\u65F6\u524D`;
+  if (diff < 864e5 * 30) return `${Math.floor(diff / 864e5)} \u5929\u524D`;
+  return new Date(time).toLocaleDateString("zh-CN");
+}
+function getContinuationHistoryView() {
+  return continuationHistoryView;
+}
+function setContinuationHistoryView(view) {
+  continuationHistoryView = view;
+}
+function registerTeardown(fn) {
+  if (typeof fn === "function") layoutTeardownHooks.push(fn);
+}
+function updateFilterUI() {
+  const btn = $("#t-btn-filter");
+  const dice = $("#t-btn-dice");
+  if (GlobalState.currentCategoryFilter === "ALL") {
+    btn.removeClass("active-filter");
+    dice.removeClass("active-filter");
+    btn.attr("title", "\u5F53\u524D\uFF1A\u5168\u90E8\u5206\u7C7B");
+  } else {
+    btn.addClass("active-filter");
+    dice.addClass("active-filter");
+    btn.attr("title", `\u5F53\u524D\u9501\u5B9A\uFF1A${GlobalState.currentCategoryFilter}`);
+  }
+}
+function updateHistoryToggleUI() {
+  const $toggle = $("#t-history-toggle");
+  const $checkbox = $("#t-use-history");
+  if (GlobalState.useHistoryAnalysis) {
+    $toggle.addClass("active");
+  } else {
+    $toggle.removeClass("active");
+  }
+  $checkbox.prop("checked", GlobalState.useHistoryAnalysis);
+}
+function updateModeToggleUI() {
+  $(".t-mode-btn").removeClass("active");
+  $(`.t-mode-btn[data-mode="${GlobalState.generationMode}"]`).addClass("active");
+}
+function handleRandom() {
+  const allScripts = GlobalState.runtimeScripts;
+  if (allScripts.length === 0) {
+    if (window.toastr) toastr.warning("\u6682\u65E0\u53EF\u7528\u5267\u672C\u3002", "Titania");
+    $("#t-lbl-name").text("\u6682\u65E0\u5267\u672C");
+    $("#t-lbl-cat").text("\u65E0\u5206\u7C7B");
+    $("#t-lbl-desc-mini").text("\u8BF7\u521B\u5EFA\u6216\u5BFC\u5165\u5267\u672C");
+    return;
+  }
+  let pool = allScripts;
+  if (GlobalState.currentCategoryFilter !== "ALL") {
+    pool = pool.filter((s2) => (s2.category || (s2._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === GlobalState.currentCategoryFilter);
+  }
+  if (pool.length === 0) {
+    if (window.toastr) toastr.warning(`\u6CA1\u627E\u5230 [${GlobalState.currentCategoryFilter}] \u5206\u7C7B\u7684\u5267\u672C\uFF0C\u5DF2\u5207\u6362\u5230\u5168\u90E8\u3002`, "Titania");
+    GlobalState.currentCategoryFilter = "ALL";
+    updateFilterUI();
+    pool = allScripts;
+  }
+  const rnd = Math.floor(Math.random() * pool.length);
+  const s = pool[rnd];
+  applyScriptSelection(s.id, { trackSelection: false, pendingGeneration: true });
+  const dice = $("#t-btn-dice");
+  dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
+  setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
+}
+function closeWindow() {
+  layoutTeardownHooks.forEach((fn) => {
+    try {
+      fn();
+    } catch (e) {
+      console.warn("Titania: \u5E03\u5C40\u6E05\u7406\u5931\u8D25", e);
+    }
+  });
+  layoutTeardownHooks = [];
+  activeLayout = null;
+  $("#t-overlay").remove();
+  $(document).off("keydown.zenmode");
+  $(document).off("click.tinlinebranch");
+}
+function escapeHtmlText2(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function getContinuationRecentInstructions() {
+  const data = getExtData();
+  const list = data.continuation_ui?.recent_instructions;
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => String(item || "").trim()).filter((item) => item.length > 0).slice(0, CONTINUATION_RECENT_MAX);
+}
+function saveContinuationRecentInstruction(instruction) {
+  const text = String(instruction || "").trim();
+  if (!text) return;
+  const data = getExtData();
+  if (!data.continuation_ui) data.continuation_ui = {};
+  const prev = Array.isArray(data.continuation_ui.recent_instructions) ? data.continuation_ui.recent_instructions : [];
+  const normalizedPrev = prev.map((item) => String(item || "").trim()).filter((item) => item.length > 0);
+  const deduped = normalizedPrev.filter((item) => item !== text);
+  data.continuation_ui.recent_instructions = [text, ...deduped].slice(0, CONTINUATION_RECENT_MAX);
+  saveExtData();
+}
+function openContinuationComposer(initialText = "", regenerationTarget = null, baseContentOverride = null) {
+  return new Promise((resolve) => {
+    const recent = getContinuationRecentInstructions();
+    const display = baseContentOverride || getCurrentDisplayContent();
+    const activeScriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
+    let selectedInjectRounds = getContinuationDefaultInjectCount();
+    $("#t-continuation-dialog").remove();
+    $("#t-continuation-editor").remove();
+    $(document).off("keydown.tcontinuecomposer");
+    const recentHtml = recent.length > 0 ? recent.map((item) => {
+      const encoded = encodeURIComponent(item);
+      const display2 = item.length > 24 ? `${item.slice(0, 24)}\u2026` : item;
+      return `<button class="t-cont-recent-item" data-text="${encoded}" style="
+                            border:1px solid #3d3d3d;
+                            background:#262626;
+                            color:#ddd;
+                            border-radius:999px;
+                            padding:6px 12px;
+                            font-size:12px;
+                            cursor:pointer;
+                            max-width:100%;
+                            overflow:hidden;
+                            text-overflow:ellipsis;
+                            white-space:nowrap;
+                        " title="${escapeHtmlText2(item)}">${escapeHtmlText2(display2)}</button>`;
+    }).join("") : `<div style="color:#777; font-size:12px;">\u6682\u65E0\u6700\u8FD1\u7EED\u5199\u6307\u4EE4</div>`;
+    const html = `
+        <div id="t-continuation-editor" class="t-content-editor">
+            <div class="t-ce-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color:#bfa15f;"></i>
+                    <span style="font-weight:bold;">\u7EED\u5199\u64CD\u4F5C\u53F0</span>
+                    <span style="font-size:0.8em; color:#666;">\u652F\u6301 Ctrl+Enter \u5FEB\u901F\u53D1\u9001</span>
+                </div>
+                <div class="t-close" id="t-cont-close">&times;</div>
+            </div>
+
+            <div class="t-ce-body" style="display:flex; flex-direction:column; gap:10px; overflow:auto;">
+                <div style="color:#888; font-size:12px;">\u53EF\u7559\u7A7A\u8868\u793A\u201C\u81EA\u7136\u7EED\u5199\u201D\uFF1B\u4F1A\u57FA\u4E8E\u5F53\u524D\u5267\u573A\u4E0A\u4E0B\u6587\u7EE7\u7EED\u751F\u6210\u3002</div>
+
+                <textarea id="t-cont-input" class="t-ce-textarea" placeholder="\u4F8B\u5982\uFF1A\u8BA9\u4E24\u4EBA\u77DB\u76FE\u5347\u7EA7\uFF0C\u4F46\u4FDD\u6301\u514B\u5236\uFF0C\u4E0D\u8981\u7ACB\u523B\u548C\u89E3\u3002" spellcheck="false" style="height:auto; min-height:160px; flex:1;"></textarea>
+
+                <div style="display:flex; align-items:center; justify-content:flex-end;">
+                    <div id="t-cont-char-count" style="color:#777; font-size:12px;">0 \u5B57</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="color:#aaa; font-size:12px;">\u6700\u8FD1\u4F7F\u7528\uFF08\u6700\u591A ${CONTINUATION_RECENT_MAX} \u6761\uFF0C\u70B9\u51FB\u590D\u7528\uFF09</div>
+                    <div id="t-cont-recent-list" style="display:flex; gap:8px; flex-wrap:wrap; max-height:88px; overflow:auto;">${recentHtml}</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px; border:1px solid #333; border-radius:8px; padding:10px; background:#1e1e1e;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                        <div style="color:#ddd; font-size:12px;">${regenerationTarget ? "\u5206\u652F\u4E0A\u4E0B\u6587" : "\u6CE8\u5165\u6700\u8FD1\u7EED\u5199\u6761\u6570\uFF08\u6B63\u6587+\u6307\u4EE4\uFF09"}</div>
+                        <div id="t-cont-rounds-total" style="color:#9aa; font-size:12px;">\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A0</div>
+                    </div>
+                    <div style="display:${regenerationTarget ? "none" : "flex"}; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <input type="number" id="t-cont-inject-count" class="t-input" min="3" max="20" step="1" value="${selectedInjectRounds}" placeholder="\u8BF7\u8F93\u5165 3-20" style="width:100px; padding:4px 8px; font-size:12px;">
+                        <span style="color:#888; font-size:12px;">\u6761\uFF083-20 \u6761\uFF09</span>
+                    </div>
+                    <div id="t-cont-context-estimate" style="color:#9aa; font-size:12px;">${regenerationTarget ? `\u5C06\u5B8C\u6574\u6CE8\u5165\u76EE\u6807\u8F6E\u4E4B\u524D\u7684 ${Math.max(0, regenerationTarget.round - 1)} \u8F6E\u5185\u5BB9` : "\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A0 \u5B57\u7B26 (~0 tokens)"}</div>
+                </div>
+
+                ${regenerationTarget ? `<div class="t-cont-regeneration-note"><i class="fa-solid fa-code-branch"></i> \u5C06\u4ECE${escapeHtmlText2(regenerationTarget.label)}\u521B\u5EFA\u5206\u652F\u5E76\u91CD\u65B0\u751F\u6210\u3002\u76EE\u6807\u8F6E\u4E4B\u524D\u7684\u5168\u90E8\u5185\u5BB9\u4F1A\u88AB\u6CE8\u5165\uFF0C\u539F\u5206\u652F\u4F1A\u4FDD\u7559\u3002</div>` : ""}
+
+            </div>
+
+            <div class="t-ce-footer">
+                <div class="t-ce-stats"><span id="t-cont-char-count-footer">0 \u5B57</span></div>
+                <div class="t-ce-actions">
+                    <button class="t-btn" id="t-cont-cancel">\u53D6\u6D88</button>
+                    <button class="t-btn primary" id="t-cont-submit">${regenerationTarget ? '<i class="fa-solid fa-code-branch"></i> \u521B\u5EFA\u5206\u652F\u5E76\u91CD\u751F\u6210' : "\u53D1\u9001\u7EED\u5199"}</button>
+                </div>
+            </div>
+        </div>`;
+    const $host = $("#t-main-view");
+    if ($host.length) {
+      $host.append(html);
+    } else {
+      $("body").append(html);
+    }
+    const $dialog = $("#t-continuation-editor");
+    const $input = $("#t-cont-input");
+    const $charCount = $("#t-cont-char-count");
+    const $charCountFooter = $("#t-cont-char-count-footer");
+    const $injectCountInput = $("#t-cont-inject-count");
+    const $roundsTotal = $("#t-cont-rounds-total");
+    const $contextEstimate = $("#t-cont-context-estimate");
+    let resolved = false;
+    const finalize = (value) => {
+      if (resolved) return;
+      resolved = true;
+      $(document).off("keydown.tcontinuecomposer");
+      $dialog.remove();
+      resolve(value);
+    };
+    const updateCharCount = () => {
+      const count = `${$input.val().length} \u5B57`;
+      $charCount.text(count);
+      $charCountFooter.text(count);
+    };
+    const ensureHasBaseContent = () => {
+      const displayContent = baseContentOverride || getCurrentDisplayContent();
+      const hasContent = Boolean(displayContent?.content && displayContent.content.trim().length > 0);
+      if (!hasContent) {
+        if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7EED\u5199\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F", "Titania");
+        return false;
+      }
+      return true;
+    };
+    const trySubmit = () => {
+      if (!ensureHasBaseContent()) return;
+      selectedInjectRounds = clampInjectRoundsCount($injectCountInput.val());
+      saveContinuationDefaultInjectCount(selectedInjectRounds);
+      syncInjectCountInput();
+      finalize({
+        instruction: $input.val(),
+        injectRoundsCount: selectedInjectRounds,
+        sourceBranchKey: regenerationTarget?.branchKey || "",
+        regenerateRound: regenerationTarget?.round ?? null,
+        regenerateRoundKey: regenerationTarget?.roundKey || ""
+      });
+    };
+    const syncInjectCountInput = () => {
+      $injectCountInput.val(selectedInjectRounds);
+    };
+    const updateContextEstimate = () => {
+      if (regenerationTarget) {
+        $roundsTotal.text(`\u76EE\u6807\uFF1A${regenerationTarget.label}`);
+        return;
+      }
+      const stats = getContinuationSessionStats(activeScriptId, selectedInjectRounds);
+      $roundsTotal.text(`\u5DF2\u751F\u6210\u8F6E\u6B21\uFF1A${stats.totalRounds}`);
+      $contextEstimate.text(`\u9884\u4F30\u4E0A\u4E0B\u6587\u957F\u5EA6\uFF1A${stats.estimatedChars} \u5B57\u7B26 (~${stats.estimatedTokens} tokens)`);
+      if (stats.estimatedTokens > CONTINUATION_TOKEN_WARN_THRESHOLD) {
+        $contextEstimate.css({ color: "#ff7675", fontWeight: "bold" });
+      } else {
+        $contextEstimate.css({ color: "#9aa", fontWeight: "" });
+      }
+    };
+    $input.val(initialText || "");
+    updateCharCount();
+    syncInjectCountInput();
+    updateContextEstimate();
+    setTimeout(() => $input.trigger("focus"), 0);
+    $input.on("input", updateCharCount);
+    $input.on("keydown", function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        trySubmit();
+      }
+    });
+    $(document).on("keydown.tcontinuecomposer", function(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        finalize(null);
+      }
+    });
+    $("#t-cont-close, #t-cont-cancel").on("click", () => finalize(null));
+    $("#t-cont-submit").on("click", () => trySubmit());
+    $injectCountInput.on("input", function() {
+      const rawValue = String($(this).val() ?? "").trim();
+      if (rawValue === "") return;
+      const value = Number(rawValue);
+      if (!Number.isInteger(value) || value < CONTINUATION_MIN_INJECT_ROUNDS || value > CONTINUATION_MAX_INJECT_ROUNDS) {
+        return;
+      }
+      selectedInjectRounds = value;
+      saveContinuationDefaultInjectCount(selectedInjectRounds);
+      updateContextEstimate();
+    });
+    $injectCountInput.on("change blur", function() {
+      selectedInjectRounds = clampInjectRoundsCount($(this).val());
+      saveContinuationDefaultInjectCount(selectedInjectRounds);
+      syncInjectCountInput();
+      updateContextEstimate();
+    });
+    $("#t-cont-recent-list").on("click", ".t-cont-recent-item", function() {
+      const text = decodeURIComponent($(this).attr("data-text") || "");
+      $input.val(text);
+      updateCharCount();
+      $input.trigger("focus");
+    });
+  });
+}
+function getContinuationRoundLabel(round) {
+  return round?.type === "initial" ? "\u521D\u59CB\u5185\u5BB9" : `\u7EED\u5199\u7B2C${round?.continuationIndex || 0}\u6B21`;
+}
+function getContinuationInstructionPreview(instruction, maxLength = 100) {
+  const normalized = String(instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength)}\u2026`;
+}
+function findContinuationRound(scriptId, branchKey, roundKey) {
+  const branch = getContinuationBranches(scriptId).find((item) => item.branchKey === branchKey);
+  const round = branch?.rounds.find((item) => item.roundKey === roundKey);
+  return branch && round ? { branch, round } : null;
+}
+function findGlobalContinuationRound(chatId, scriptId, branchKey, roundKey) {
+  const session = continuationGlobalSessions.find((item) => item.chatId === chatId && item.scriptId === scriptId);
+  const branch = session?.branches.find((item) => item.branchKey === branchKey);
+  const round = branch?.rounds.find((item) => item.roundKey === roundKey);
+  return session && branch && round ? { session, branch, round } : null;
+}
+async function regenerateContinuationRound(scriptId, branchKey, roundKey, editInstruction = false) {
+  const target = findContinuationRound(scriptId, branchKey, roundKey);
+  if (!target || target.round.type === "initial") {
+    if (window.toastr) toastr.warning("\u8BE5\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728", "Titania");
+    return false;
+  }
+  const regenerationTarget = {
+    scriptId,
+    branchKey,
+    roundKey,
+    round: target.round.round,
+    label: getContinuationRoundLabel(target.round),
+    content: target.round.content
+  };
+  let instruction = target.round.instruction || "";
+  if (editInstruction) {
+    const composeResult = await openContinuationComposer(instruction, regenerationTarget);
+    if (!composeResult) return false;
+    if (composeResult.openHistory) {
+      openContinuationHistory(scriptId);
+      return false;
+    }
+    instruction = String(composeResult.instruction || "").trim();
+    if (instruction) saveContinuationRecentInstruction(instruction);
+  }
+  continuationHistoryView = null;
+  return handleUserContinuation({
+    instruction,
+    sourceBranchKey: branchKey,
+    regenerateRound: target.round.round,
+    regenerateRoundKey: roundKey,
+    scriptIdOverride: scriptId,
+    baseContentOverride: target.round.content,
+    fromCurrentView: false
+  });
+}
+function showContinuationRoundInMain(chatId, scriptId, branchKey, roundKey) {
+  const target = findGlobalContinuationRound(chatId, scriptId, branchKey, roundKey);
+  if (!target) return false;
+  continuationHistoryView = { chatId, scriptId, branchKey, roundKey };
+  setPendingGenerationScriptId("");
+  const scriptName = target.session.scriptName || GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
+  lockDisplayToContent(target.round.content, scriptId, scriptName, target.round.generationId);
+  renderGeneratedContent(target.round.content, scriptName);
+  updateSceneHistoryNav();
+  if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
+  $(document).off("keydown.tcontinuationhistory");
+  $("#t-continuation-history").remove();
+  return true;
+}
+async function openContinuationHistory(preferredScriptId = "") {
+  const allSessions = await listAllContinuationSessions();
+  continuationGlobalSessions = allSessions;
+  const currentSource = getCurrentContinuationSource();
+  const sessions = allSessions.filter((session) => {
+    if (continuationHistoryScope === "chat") return session.chatId === currentSource.chatId;
+    if (continuationHistoryScope === "character") {
+      if (session.characterAvatar && currentSource.characterAvatar) return session.characterAvatar === currentSource.characterAvatar;
+      return session.characterName === currentSource.characterName;
+    }
+    return true;
+  });
+  $("#t-continuation-history").remove();
+  if (allSessions.length === 0) {
+    if (window.toastr) toastr.info("\u8FD8\u6CA1\u6709\u4E3B\u52A8\u7EED\u5199\u5386\u53F2", "Titania");
+    return;
+  }
+  const preferredIndex = sessions.findIndex((session) => session.scriptId === preferredScriptId);
+  if (preferredIndex > 0) sessions.unshift(sessions.splice(preferredIndex, 1)[0]);
+  const selectionCheckbox = (level, chatId, scriptId, branchKey = "", roundKey = "", disabled = false) => continuationHistoryManaging ? `<input class="t-cont-select" type="checkbox" data-selection-level="${level}" data-chat-id="${escapeHtmlText2(chatId)}" data-script-id="${escapeHtmlText2(scriptId)}" data-branch-key="${escapeHtmlText2(branchKey)}" data-round-key="${escapeHtmlText2(roundKey)}" ${disabled ? "disabled" : ""} aria-label="\u9009\u62E9${level === "session" ? "\u5267\u672C" : level === "branch" ? "\u5206\u652F" : "\u8F6E\u6B21"}">` : "";
+  const sessionsHtml = sessions.map((session, sessionIndex) => {
+    const isOpen = sessionIndex === 0;
+    const branchHtml = session.branches.map((branch) => {
+      const sourceContinuationIndex = Math.max(0, Number(branch.branchedAtRound) - 1);
+      const branchSource = sourceContinuationIndex > 0 ? ` \xB7 \u4ECE\u7EED\u5199\u7B2C ${sourceContinuationIndex} \u6B21\u521B\u5EFA` : "";
+      const branchStatus = `${branch.isActive ? "\u5F53\u524D\u5206\u652F" : "\u5386\u53F2\u5206\u652F"}${branchSource}`;
+      const roundHtml = branch.rounds.map((round) => {
+        const label = getContinuationRoundLabel(round);
+        const instruction = round.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
+        const instructionPreview = getContinuationInstructionPreview(instruction);
+        const canRegenerate = round.type !== "initial";
+        const isCurrentChat = session.chatId === currentSource.chatId;
+        const crossRoleHint = !isCurrentChat ? `<div class="t-cont-history-cross-hint">\u6765\u81EA\u300C${escapeHtmlText2(session.characterName)}\u300D\u7684\u5267\u60C5 \xB7 \u63A5\u6F14\u4F1A\u590D\u5236\u5230\u5F53\u524D\u804A\u5929\u7684\u65B0\u5206\u652F\uFF0C\u539F\u5206\u652F\u4E0D\u53D8</div>` : "";
+        return `<article class="t-cont-history-round" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}" data-round-key="${escapeHtmlText2(round.roundKey)}">
+                    <div class="t-cont-history-round-head">
+                         <span class="t-cont-select-wrap">${selectionCheckbox("round", session.chatId, session.scriptId, branch.branchKey, round.roundKey, false)}</span>
+                        <div class="t-cont-history-round-title"><strong>${escapeHtmlText2(label)}</strong><span>${round.contentLength} \u5B57\u7B26</span></div>
+                        <button class="t-cont-history-toggle" title="\u5C55\u5F00\u5185\u5BB9"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                    <div class="t-cont-history-instruction" title="${escapeHtmlText2(instructionPreview)}">${escapeHtmlText2(instructionPreview)}</div>
+                    <div class="t-cont-history-preview">${escapeHtmlText2(round.contentPreview || "\u65E0\u6587\u672C\u6458\u8981")}</div>
+                    <div class="t-cont-history-full" hidden><iframe sandbox="" title="${escapeHtmlText2(label)}\u5185\u5BB9\u9884\u89C8"></iframe></div>
+                    ${crossRoleHint}
+                    <div class="t-cont-history-actions">
+                        <button class="t-btn t-cont-history-show"><i class="fa-solid fa-arrow-up-right-from-square"></i> \u8DF3\u8F6C\u5230\u6B64\u5185\u5BB9</button>
+                        ${isCurrentChat && canRegenerate ? '<button class="t-btn t-btn-soft t-cont-history-regenerate"><i class="fa-solid fa-rotate"></i> \u76F4\u63A5\u91CD\u751F\u6210</button><button class="t-btn t-cont-history-edit-regenerate"><i class="fa-solid fa-code-branch"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u91CD\u751F\u6210</button>' : ""}
+                        ${!isCurrentChat ? '<button class="t-btn t-btn-soft t-cont-history-visit"><i class="fa-solid fa-theater-masks"></i> \u8BA9\u5F53\u524D\u89D2\u8272\u63A5\u6F14</button><button class="t-btn t-cont-history-visit-edit"><i class="fa-solid fa-pen"></i> \u4FEE\u6539\u6307\u4EE4\u5E76\u63A5\u6F14</button>' : ""}
+                    </div>
+                </article>`;
+      }).join("");
+      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}">
+                <div class="t-cont-history-branch-title">
+                    <span class="t-cont-select-wrap">${selectionCheckbox("branch", session.chatId, session.scriptId, branch.branchKey)}</span>
+                    <i class="fa-solid fa-code-branch"></i>
+                    <div class="t-cont-history-branch-heading">
+                        <strong>\u300A${escapeHtmlText2(session.scriptName)}\u300B</strong>
+                        <span>${escapeHtmlText2(session.characterName)} \xB7 ${escapeHtmlText2(branchStatus)}</span>
+                    </div>
+                    <small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small>
+                </div>
+                ${roundHtml}
+            </section>`;
+    }).join("");
+    return `<section class="t-cont-history-session ${isOpen ? "is-open" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}">
+            <button class="t-cont-history-session-toggle" type="button" aria-expanded="${isOpen}">
+                <span class="t-cont-select-wrap">${selectionCheckbox("session", session.chatId, session.scriptId)}</span>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span>${escapeHtmlText2(session.characterName)} \xB7 \u300A${escapeHtmlText2(session.scriptName)}\u300B</span>
+                <small>${session.branches.length} \u4E2A\u5206\u652F \xB7 ${session.roundCount} \u8F6E</small>
+            </button>
+            <div class="t-cont-history-session-body" ${isOpen ? "" : "hidden"}>${branchHtml}</div>
+        </section>`;
+  }).join("");
+  $("#t-main-view").append(`<div id="t-continuation-history" class="t-cont-history-panel ${continuationHistoryManaging ? "is-managing" : ""}">
+        <div class="t-cont-history-header"><div class="t-cont-history-heading"><i class="fa-solid fa-clock-rotate-left"></i><strong>${continuationHistoryManaging ? "\u6279\u91CF\u7BA1\u7406" : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2"}</strong><span>${continuationHistoryManaging ? "\u52FE\u9009\u8981\u5220\u9664\u7684\u5267\u672C\u3001\u5206\u652F\u6216\u8F6E\u6B21" : `${sessions.length} \u4E2A\u5267\u672C \xB7 ${sessions.reduce((sum, item) => sum + item.roundCount, 0)} \u8F6E`}</span></div><div class="t-cont-history-header-actions">${continuationHistoryManaging ? '<button class="t-btn" id="t-cont-history-select-all"><i class="fa-solid fa-check-double"></i> \u5168\u9009</button><button class="t-btn" id="t-cont-history-manage-cancel">\u9000\u51FA</button>' : `<select id="t-cont-history-scope" class="t-cont-history-scope" title="\u5386\u53F2\u8303\u56F4"><option value="all" ${continuationHistoryScope === "all" ? "selected" : ""}>\u5168\u90E8\u89D2\u8272</option><option value="character" ${continuationHistoryScope === "character" ? "selected" : ""}>\u5F53\u524D\u89D2\u8272</option><option value="chat" ${continuationHistoryScope === "chat" ? "selected" : ""}>\u5F53\u524D\u804A\u5929</option></select><button class="t-btn" id="t-cont-history-manage" title="\u6279\u91CF\u7BA1\u7406\u5386\u53F2"><i class="fa-solid fa-list-check"></i> \u7BA1\u7406</button>`}<button class="t-close" id="t-cont-history-close">&times;</button></div></div>
+        <div class="t-cont-history-body">${sessionsHtml || '<div class="t-cont-history-empty">\u5F53\u524D\u7B5B\u9009\u8303\u56F4\u5185\u6CA1\u6709\u8BB0\u5F55</div>'}</div>
+        ${continuationHistoryManaging ? '<div class="t-cont-history-bulk-bar"><span id="t-cont-history-selection-count">\u5DF2\u9009\u62E9 0 \u9879</span><button class="t-btn danger" id="t-cont-history-delete-selected" disabled><i class="fa-solid fa-trash-can"></i> \u5220\u9664\u6240\u9009</button></div>' : ""}
+    </div>`);
+  const $panel = $("#t-continuation-history");
+  const closePanel2 = () => {
+    $(document).off("keydown.tcontinuationhistory");
+    continuationHistoryManaging = false;
+    continuationHistorySelection.clear();
+    $panel.remove();
+  };
+  $("#t-cont-history-close").on("click", closePanel2);
+  $("#t-cont-history-scope").on("change", function() {
+    continuationHistoryScope = String($(this).val() || "all");
+    openContinuationHistory(preferredScriptId);
+  });
+  $("#t-cont-history-manage").on("click", () => {
+    continuationHistoryManaging = true;
+    continuationHistorySelection.clear();
+    openContinuationHistory(preferredScriptId);
+  });
+  $("#t-cont-history-manage-cancel").on("click", () => {
+    continuationHistoryManaging = false;
+    continuationHistorySelection.clear();
+    openContinuationHistory(preferredScriptId);
+  });
+  const updateBulkSelection = () => {
+    const $checks = $panel.find(".t-cont-select:not(:disabled)");
+    $panel.find('.t-cont-select[data-selection-level="branch"]').each(function() {
+      const $branch = $(this).closest(".t-cont-history-branch");
+      const children = $branch.find('.t-cont-select[data-selection-level="round"]:not(:disabled)').get();
+      const checkedCount = children.filter((item) => item.checked).length;
+      this.indeterminate = checkedCount > 0 && checkedCount < children.length;
+      if (children.length > 0 && checkedCount === children.length) this.checked = true;
+      if (checkedCount === 0) this.checked = false;
+    });
+    $panel.find('.t-cont-select[data-selection-level="session"]').each(function() {
+      const $session = $(this).closest(".t-cont-history-session");
+      const children = $session.find('.t-cont-select[data-selection-level="branch"]:not(:disabled)').get();
+      const checkedCount = children.filter((item) => item.checked).length;
+      const indeterminateCount = children.filter((item) => item.indeterminate).length;
+      this.indeterminate = indeterminateCount > 0 || checkedCount > 0 && checkedCount < children.length;
+      if (children.length > 0 && checkedCount === children.length && indeterminateCount === 0) this.checked = true;
+      if (checkedCount === 0 && indeterminateCount === 0) this.checked = false;
+    });
+    continuationHistorySelection.clear();
+    $checks.filter(":checked").each(function() {
+      continuationHistorySelection.add(`${$(this).data("chat-id")}\0${$(this).data("script-id")}\0${$(this).data("branch-key") || ""}\0${$(this).data("round-key") || ""}`);
+    });
+    const count = continuationHistorySelection.size;
+    $("#t-cont-history-selection-count").text(`\u5DF2\u9009\u62E9 ${count} \u9879`);
+    $("#t-cont-history-delete-selected").prop("disabled", count === 0);
+  };
+  $panel.on("click", ".t-cont-select", (event) => event.stopPropagation());
+  $panel.on("change", ".t-cont-select", function() {
+    const $check = $(this);
+    const chatId = String($check.data("chat-id") || "");
+    const scriptId = String($check.data("script-id") || "");
+    const branchKey = String($check.data("branch-key") || "");
+    const level = String($check.data("selection-level") || "");
+    const selector = level === "session" ? `.t-cont-select[data-chat-id="${CSS.escape(chatId)}"][data-script-id="${CSS.escape(scriptId)}"]` : level === "branch" ? `.t-cont-select[data-chat-id="${CSS.escape(chatId)}"][data-script-id="${CSS.escape(scriptId)}"][data-branch-key="${CSS.escape(branchKey)}"]` : "";
+    if (selector) $panel.find(selector).prop("checked", $check.prop("checked"));
+    updateBulkSelection();
+  });
+  $("#t-cont-history-select-all").on("click", function() {
+    const $checks = $panel.find(".t-cont-select:not(:disabled)");
+    const allChecked = $checks.length > 0 && $checks.filter(":checked").length === $checks.length;
+    $checks.prop("checked", !allChecked);
+    $(this).html(allChecked ? '<i class="fa-solid fa-check-double"></i> \u5168\u9009' : '<i class="fa-solid fa-circle-xmark"></i> \u53D6\u6D88\u5168\u9009');
+    updateBulkSelection();
+  });
+  $("#t-cont-history-delete-selected").on("click", async function() {
+    const selections = [...continuationHistorySelection].map((key) => {
+      const [chatId, scriptId, branchKey, roundKey] = key.split("\0");
+      return { chatId, scriptId, branchKey, roundKey };
+    });
+    if (selections.length === 0) return;
+    const roundCount = selections.filter((item) => item.roundKey).length;
+    if (!window.confirm(`\u786E\u5B9A\u5220\u9664\u5DF2\u9009\u62E9\u7684 ${selections.length} \u9879\u5417\uFF1F
+
+\u5176\u4E2D\u5305\u542B ${roundCount} \u4E2A\u7EED\u5199\u8F6E\u6B21\u3002\u5220\u9664\u540E\u65E0\u6CD5\u6062\u590D\u3002`)) return;
+    $(this).prop("disabled", true);
+    try {
+      const currentViewDeleted = continuationHistoryView && selections.some((item) => item.chatId === continuationHistoryView.chatId && item.scriptId === continuationHistoryView.scriptId && (!item.branchKey || item.branchKey === continuationHistoryView.branchKey) && (!item.roundKey || item.roundKey === continuationHistoryView.roundKey));
+      const result = await deleteGlobalContinuationSelections(selections);
+      continuationHistorySelection.clear();
+      continuationHistoryManaging = false;
+      if (currentViewDeleted) {
+        continuationHistoryView = null;
+        unlockDisplay();
+        if (GlobalState.lastGeneratedContent) {
+          const scriptName = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId)?.name || "\u573A\u666F";
+          renderGeneratedContent(GlobalState.lastGeneratedContent, scriptName);
+        }
+      }
+      updateSceneHistoryNav();
+      openContinuationHistory(preferredScriptId);
+      if (window.toastr) toastr.success(`\u5DF2\u5220\u9664 ${result.deletedRounds} \u4E2A\u8F6E\u6B21\u3001${result.deletedBranches} \u4E2A\u5206\u652F`, "Titania");
+    } catch (error) {
+      console.error("Titania: \u6279\u91CF\u5220\u9664\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u5931\u8D25", error);
+      $(this).prop("disabled", false);
+      if (window.toastr) toastr.error("\u6279\u91CF\u5220\u9664\u5931\u8D25", "Titania");
+    }
+  });
+  $(document).off("keydown.tcontinuationhistory").on("keydown.tcontinuationhistory", function(event) {
+    if (event.key === "Escape") closePanel2();
+  });
+  $panel.on("click", ".t-cont-history-session-toggle", function() {
+    const $session = $(this).closest(".t-cont-history-session");
+    const shouldOpen = !$session.hasClass("is-open");
+    $session.toggleClass("is-open", shouldOpen);
+    $(this).attr("aria-expanded", String(shouldOpen));
+    $session.find(".t-cont-history-session-body").first().prop("hidden", !shouldOpen);
+  });
+  $panel.on("click", ".t-cont-history-toggle", function() {
+    const $round = $(this).closest(".t-cont-history-round");
+    const $full = $round.find(".t-cont-history-full");
+    const shouldOpen = $full.prop("hidden");
+    $full.prop("hidden", !shouldOpen);
+    $(this).find("i").toggleClass("fa-chevron-down", !shouldOpen).toggleClass("fa-chevron-up", shouldOpen);
+    if (shouldOpen) {
+      const chatId = String($round.data("chat-id") || "");
+      const roundScriptId = String($round.data("script-id") || "");
+      const branchKey = String($round.data("branch-key") || "");
+      const roundKey = String($round.data("round-key") || "");
+      const content = findGlobalContinuationRound(chatId, roundScriptId, branchKey, roundKey)?.round.content || "";
+      $full.find("iframe").attr("srcdoc", content);
+    }
+  });
+  $panel.on("click", ".t-cont-history-show", function() {
+    const $round = $(this).closest(".t-cont-history-round");
+    showContinuationRoundInMain(String($round.data("chat-id") || ""), String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""));
+  });
+  $panel.on("click", ".t-cont-history-regenerate, .t-cont-history-edit-regenerate", async function() {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
+    const $round = $(this).closest(".t-cont-history-round");
+    const editInstruction = $(this).hasClass("t-cont-history-edit-regenerate");
+    closePanel2();
+    await regenerateContinuationRound(String($round.data("script-id") || ""), String($round.data("branch-key") || ""), String($round.data("round-key") || ""), editInstruction);
+  });
+  $panel.on("click", ".t-cont-history-visit, .t-cont-history-visit-edit", async function() {
+    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) return;
+    const $round = $(this).closest(".t-cont-history-round");
+    const target = findGlobalContinuationRound(
+      String($round.data("chat-id") || ""),
+      String($round.data("script-id") || ""),
+      String($round.data("branch-key") || ""),
+      String($round.data("round-key") || "")
+    );
+    if (!target) return;
+    let instruction = "";
+    const editInstruction = $(this).hasClass("t-cont-history-visit-edit");
+    let historyPanelClosed = false;
+    if (editInstruction) {
+      closePanel2();
+      historyPanelClosed = true;
+      const composeResult = await openContinuationComposer("", null, {
+        content: target.round.content,
+        scriptId: target.session.scriptId,
+        scriptName: target.session.scriptName
+      });
+      if (!composeResult || composeResult.openHistory) {
+        await openContinuationHistory(target.session.scriptId);
+        return;
+      }
+      instruction = String(composeResult.instruction || "").trim();
+    }
+    const confirmed = window.confirm(`\u8BA9\u5F53\u524D\u89D2\u8272\u63A5\u6F14\u300C${target.session.characterName}\u300D\u7684\u8FD9\u6BB5\u5267\u60C5\uFF1F
+
+\u5C06\u5728\u5F53\u524D\u804A\u5929\u521B\u5EFA\u65B0\u5206\u652F\uFF0C\u539F\u5206\u652F\u4E0D\u4F1A\u88AB\u4FEE\u6539\u3002`);
+    if (!confirmed) {
+      if (historyPanelClosed) await openContinuationHistory(target.session.scriptId);
+      return;
+    }
+    const copied = copyContinuationBranchToCurrentChat({
+      ...target.session,
+      branchKey: target.branch.branchKey,
+      rounds: target.branch.rounds,
+      roundKey: target.round.roundKey
+    });
+    if (!copied) return;
+    if (!historyPanelClosed) closePanel2();
+    continuationHistoryView = null;
+    return handleUserContinuation({
+      instruction,
+      scriptIdOverride: copied.scriptId,
+      baseContentOverride: copied.content,
+      fromCurrentView: false,
+      crossRoleSource: target.session.characterName
+    });
+  });
+}
+function refreshScriptList() {
+  const $sel = $("#t-sel-script");
+  $sel.empty();
+  const validScripts = sortScripts(GlobalState.runtimeScripts, getScriptSortMode());
+  validScripts.forEach((s) => {
+    $sel.append(`<option value="${s.id}">${s.name}</option>`);
+  });
+  if (GlobalState.lastUsedScriptId && validScripts.find((s) => s.id === GlobalState.lastUsedScriptId)) {
+    $sel.val(GlobalState.lastUsedScriptId);
+  }
+  updateDesc();
+}
+function updateDesc() {
+  const s = GlobalState.runtimeScripts.find((x) => x.id === $("#t-sel-script").val());
+  if (s) $("#t-txt-desc").val(s.desc);
+}
+function applyScriptSelection(id3, options = {}) {
+  const s = GlobalState.runtimeScripts.find((x) => x.id === id3);
+  if (!s) return;
+  const shouldTrackSelection = options.trackSelection === true;
+  if (shouldTrackSelection) {
+    recordScriptSelected(s.id);
+  }
+  GlobalState.lastUsedScriptId = s.id;
+  if (options.pendingGeneration === true) {
+    setPendingGenerationScriptId(s.id);
+    setContinuationQuickDraft("");
+    $("#t-continuation-quick-input").val("");
+    if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
+  }
+  $("#t-lbl-name").text(s.name);
+  const $catTag = $("#t-lbl-cat");
+  const category = s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
+  $catTag.text(category);
+  $catTag.css({
+    "color": "#bfa15f",
+    "background": "rgba(191, 161, 95, 0.15)",
+    "border": "1px solid rgba(191, 161, 95, 0.33)"
+  });
+  $("#t-lbl-desc-mini").text(s.desc || "\u65E0\u7B80\u4ECB");
+  $("#t-txt-desc").val(s.desc);
+}
+async function openMainWindow() {
+  if ($("#t-overlay").length) return;
+  setPendingGenerationScriptId("");
+  const defaultCtx = { charName: "\u52A0\u8F7D\u4E2D...", userName: "\u7528\u6237" };
+  let data;
+  try {
+    data = getExtData();
+  } catch (e) {
+    console.error("Titania: \u83B7\u53D6\u6269\u5C55\u6570\u636E\u5931\u8D25", e);
+    data = { ui_mode_echo: true };
+  }
+  GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
+  GlobalState.generationMode = ["narrative", "visual", "preset"].includes(data.config?.generation_mode) ? data.config.generation_mode : "narrative";
+  const placeholderContent = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
+  const layout = data.ui_prefs?.main_window_mode === "legacy" ? legacy_exports : modern_exports;
+  activeLayout = layout;
+  $("body").append(layout.renderHtml({ defaultCtx }));
+  $("#t-main-view").addClass(`t-layout-${layout.id}`);
   const outputContainer = document.getElementById("t-output-content");
   if (GlobalState.lastGeneratedContent) {
     const currentScript = GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId);
@@ -32005,59 +35676,6 @@ async function openMainWindow() {
   } else {
     outputContainer.innerHTML = placeholderContent;
   }
-  const updateFilterUI = () => {
-    const btn = $("#t-btn-filter");
-    const dice = $("#t-btn-dice");
-    if (GlobalState.currentCategoryFilter === "ALL") {
-      btn.removeClass("active-filter");
-      dice.removeClass("active-filter");
-      btn.attr("title", "\u5F53\u524D\uFF1A\u5168\u90E8\u5206\u7C7B");
-    } else {
-      btn.addClass("active-filter");
-      dice.addClass("active-filter");
-      btn.attr("title", `\u5F53\u524D\u9501\u5B9A\uFF1A${GlobalState.currentCategoryFilter}`);
-    }
-  };
-  const updateHistoryToggleUI = () => {
-    const $toggle = $("#t-history-toggle");
-    const $checkbox = $("#t-use-history");
-    if (GlobalState.useHistoryAnalysis) {
-      $toggle.addClass("active");
-    } else {
-      $toggle.removeClass("active");
-    }
-    $checkbox.prop("checked", GlobalState.useHistoryAnalysis);
-  };
-  const updateModeToggleUI = () => {
-    $(".t-mode-btn").removeClass("active");
-    $(`.t-mode-btn[data-mode="${GlobalState.generationMode}"]`).addClass("active");
-  };
-  const handleRandom = () => {
-    const allScripts = GlobalState.runtimeScripts;
-    if (allScripts.length === 0) {
-      if (window.toastr) toastr.warning("\u6682\u65E0\u53EF\u7528\u5267\u672C\u3002", "Titania");
-      $("#t-lbl-name").text("\u6682\u65E0\u5267\u672C");
-      $("#t-lbl-cat").text("\u65E0\u5206\u7C7B");
-      $("#t-lbl-desc-mini").text("\u8BF7\u521B\u5EFA\u6216\u5BFC\u5165\u5267\u672C");
-      return;
-    }
-    let pool = allScripts;
-    if (GlobalState.currentCategoryFilter !== "ALL") {
-      pool = pool.filter((s2) => (s2.category || (s2._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")) === GlobalState.currentCategoryFilter);
-    }
-    if (pool.length === 0) {
-      if (window.toastr) toastr.warning(`\u6CA1\u627E\u5230 [${GlobalState.currentCategoryFilter}] \u5206\u7C7B\u7684\u5267\u672C\uFF0C\u5DF2\u5207\u6362\u5230\u5168\u90E8\u3002`, "Titania");
-      GlobalState.currentCategoryFilter = "ALL";
-      updateFilterUI();
-      pool = allScripts;
-    }
-    const rnd = Math.floor(Math.random() * pool.length);
-    const s = pool[rnd];
-    applyScriptSelection(s.id, { trackSelection: false });
-    const dice = $("#t-btn-dice");
-    dice.css("transform", `rotate(${Math.random() * 360}deg) scale(1.1)`);
-    setTimeout(() => dice.css("transform", "rotate(0deg) scale(1)"), 300);
-  };
   $("#t-use-history").on("change", function() {
     GlobalState.useHistoryAnalysis = $(this).is(":checked");
     updateHistoryToggleUI();
@@ -32116,73 +35734,65 @@ async function openMainWindow() {
     e.stopPropagation();
   });
   $("#t-btn-dice").on("click", handleRandom);
-  const $toolsPanel = $("#t-tools-panel");
-  const $toolsBtn = $("#t-btn-tools");
-  $toolsBtn.on("click", function(e) {
-    e.stopPropagation();
-    const isVisible = $toolsPanel.is(":visible");
-    $toolsPanel.toggle(!isVisible);
-    $(this).toggleClass("active", !isVisible);
-  });
-  $(document).on("click.toolspanel", function(e) {
-    if (!$(e.target).closest("#t-tools-panel, #t-btn-tools").length) {
-      $toolsPanel.hide();
-      $toolsBtn.removeClass("active");
-    }
-  });
   $("#t-tool-zen").on("click", function() {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
     const view = $("#t-main-view");
     view.toggleClass("t-zen-mode");
     const isZen = view.hasClass("t-zen-mode");
-    if (isZen) {
-      $toolsBtn.addClass("zen-active");
-    } else {
-      $toolsBtn.removeClass("zen-active");
-    }
+    $(this).toggleClass("active", isZen);
   });
   $("#t-tool-edit-content").on("click", function() {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
     if (!GlobalState.lastGeneratedContent) {
       if (window.toastr) toastr.warning("\u6CA1\u6709\u53EF\u7F16\u8F91\u7684\u5185\u5BB9\uFF0C\u8BF7\u5148\u751F\u6210\u573A\u666F");
       return;
     }
     openContentEditor();
   });
-  $("#t-tool-continue").on("click", async function() {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
+  const runContinuation = async (composeResult) => {
     if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
       if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
-      return;
+      return false;
     }
-    const composeResult = await openContinuationComposer("");
-    if (composeResult === null) return;
+    if (composeResult === null) return false;
     if (composeResult?.openHistory) {
       openContinuationHistory(composeResult.scriptId);
-      return;
-    }
-    if (continuationHistoryView) {
-      openContinuationHistory(continuationHistoryView.scriptId);
-      if (window.toastr) toastr.info("\u5F53\u524D\u663E\u793A\u7684\u662F\u7EED\u5199\u5386\u53F2\uFF0C\u8BF7\u4ECE\u5BF9\u5E94\u8F6E\u6B21\u521B\u5EFA\u5206\u652F", "Titania");
-      return;
+      return false;
     }
     const normalizedInstruction = String(composeResult?.instruction || "").trim();
     const injectRoundsCount = clampInjectRoundsCount(composeResult?.injectRoundsCount ?? getContinuationDefaultInjectCount());
     if (normalizedInstruction) {
       saveContinuationRecentInstruction(normalizedInstruction);
     }
+    const historyTarget = continuationHistoryView ? findGlobalContinuationRound(
+      continuationHistoryView.chatId,
+      continuationHistoryView.scriptId,
+      continuationHistoryView.branchKey,
+      continuationHistoryView.roundKey
+    ) : null;
+    const historyView = historyTarget ? { ...continuationHistoryView } : null;
+    if (historyView) continuationHistoryView = null;
+    const currentSource = getCurrentContinuationSource();
+    const isCrossChatHistory = Boolean(historyView && historyView.chatId !== currentSource.chatId);
+    const copied = isCrossChatHistory ? copyContinuationBranchToCurrentChat({
+      ...historyTarget.session,
+      branchKey: historyTarget.branch.branchKey,
+      rounds: historyTarget.branch.rounds,
+      roundKey: historyTarget.round.roundKey
+    }) : null;
     await handleUserContinuation({
       instruction: normalizedInstruction,
       injectRoundsCount,
       branchFromCurrentView: composeResult?.branchFromCurrentView === true,
-      sourceBranchKey: composeResult?.sourceBranchKey || "",
+      sourceBranchKey: isCrossChatHistory ? "" : historyView?.branchKey || composeResult?.sourceBranchKey || "",
       regenerateRound: composeResult?.regenerateRound ?? null,
+      continueAfterRound: isCrossChatHistory ? null : historyTarget?.round.round ?? null,
+      continueAfterRoundKey: isCrossChatHistory ? "" : historyView?.roundKey || "",
+      scriptIdOverride: copied?.scriptId || historyView?.scriptId || "",
+      baseContentOverride: copied?.content || historyTarget?.round.content || "",
+      crossRoleSource: isCrossChatHistory ? historyTarget.session.characterName : "",
       fromCurrentView: true
     });
-  });
+    return true;
+  };
   const closeInlineBranchMenu = () => {
     $("#t-cont-inline-actions").removeClass("is-menu-open");
     $("#t-cont-inline-branch").attr({ "aria-expanded": "false", "aria-label": "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" });
@@ -32217,11 +35827,14 @@ async function openMainWindow() {
       $("#t-tool-zen").click();
     }
   });
-  const closeWindow = () => {
-    $(document).off("click.tinlinebranch");
-    $("#t-overlay").remove();
-    $(document).off("keydown.zenmode");
-  };
+  layout.bindEvents({
+    closeWindow,
+    registerTeardown,
+    runContinuation,
+    openContinuationHistory,
+    openContinuationComposer,
+    getCurrentContinuationSource
+  });
   $("#t-btn-close").on("click", closeWindow);
   $("#t-overlay").on("click", (e) => {
     if (e.target === e.currentTarget) closeWindow();
@@ -32291,14 +35904,6 @@ async function openMainWindow() {
       }
     }
   });
-  $("#t-btn-run-single").on("click", () => {
-    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
-      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
-      return;
-    }
-    closeWindow();
-    handleGenerate(null, false);
-  });
   $("#t-btn-run-queue").on("click", () => {
     if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
       if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
@@ -32319,19 +35924,26 @@ async function openMainWindow() {
     }
   });
   $("#t-btn-like").on("click", () => {
+    if (!isFavoriteEligible(getCurrentGenerationResult())) {
+      if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u751F\u6210\u672A\u5B8C\u6210\uFF0C\u65E0\u6CD5\u6536\u85CF");
+      updateFavButtonUI();
+      return;
+    }
     if (GlobalState.lastFavId) {
       unsaveFavorite();
     } else {
       saveFavorite();
     }
   });
-  $("#t-btn-profiles").on("click", function(e) {
-    renderProfileMenu($(this));
+  $("#t-btn-favs").on("click", openFavsWindow);
+  $("#t-btn-workshop").on("click", async () => {
+    const { openWorkshopWindow: openWorkshopWindow2 } = await Promise.resolve().then(() => (init_workshopWindow(), workshopWindow_exports));
+    openWorkshopWindow2("main");
+  });
+  $("#t-btn-more").on("click", function(e) {
+    renderMoreMenu($(this));
     e.stopPropagation();
   });
-  $("#t-btn-favs").on("click", openFavsWindow);
-  $("#t-btn-worldinfo").on("click", openWorldInfoSelector);
-  $("#t-btn-settings").on("click", openSettingsWindow);
   $("#t-btn-debug").on("click", async () => await showDebugInfo());
   $("#t-btn-queue-settings").on("click", openQueueSettingsWindow);
   $("#t-btn-stop").on("click", () => {
@@ -32355,16 +35967,17 @@ async function openMainWindow() {
     const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
     if (canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1) {
       continuationHistoryView = null;
+      setPendingGenerationScriptId("");
       const newIndex = canJumpFromLiveToHistory ? 0 : effectiveIndex + 1;
       lockDisplayToHistory(newIndex);
       const item = history.items[newIndex];
       if (item) {
         renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
-        GlobalState.lastGeneratedContent = item.content;
-        GlobalState.lastGeneratedScriptId = item.scriptId;
+        setCurrentGenerationResult({ ...item, status: item.status || "legacy" });
         GlobalState.lastFavId = item.favId || null;
       }
       updateSceneHistoryNav();
+      updateRunButtonsState();
       updateFavButtonUI();
       updateScriptTitleDisplay();
     }
@@ -32377,6 +35990,7 @@ async function openMainWindow() {
     let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
     if (effectiveIndex > 0) {
       continuationHistoryView = null;
+      setPendingGenerationScriptId("");
       const newIndex = effectiveIndex - 1;
       if (newIndex === 0 && !streaming.isActive) {
         unlockDisplay();
@@ -32387,21 +36001,23 @@ async function openMainWindow() {
       const item = history.items[newIndex];
       if (item) {
         renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
-        GlobalState.lastGeneratedContent = item.content;
-        GlobalState.lastGeneratedScriptId = item.scriptId;
+        setCurrentGenerationResult({ ...item, status: item.status || "legacy" });
         GlobalState.lastFavId = item.favId || null;
       }
       updateSceneHistoryNav();
+      updateRunButtonsState();
       updateFavButtonUI();
       updateScriptTitleDisplay();
     } else if (effectiveIndex === 0 && streaming.isActive && display.isViewingHistory) {
       continuationHistoryView = null;
+      setPendingGenerationScriptId("");
       unlockDisplay();
       if (streaming.content) {
         renderGeneratedContent(streaming.content, streaming.scriptName || "\u573A\u666F", true);
       }
       $("#t-new-content-indicator").remove();
       updateSceneHistoryNav();
+      updateRunButtonsState();
     }
   });
   window.updateSceneHistoryNav = updateSceneHistoryNav;
@@ -32436,18 +36052,11 @@ async function openMainWindow() {
   updateQueueButtonUI();
 }
 function updateRunButtonsState() {
-  const $singleBtn = $("#t-btn-run-single");
-  const $queueBtn = $("#t-btn-run-queue");
-  if (!$singleBtn.length || !$queueBtn.length) return;
-  const isGenerating = GlobalState.isGenerating;
-  const isQueueRunning = GlobalState.queueState.isRunning;
-  if (isGenerating || isQueueRunning) {
-    $singleBtn.prop("disabled", true);
-    $queueBtn.prop("disabled", true);
-  } else {
-    $singleBtn.prop("disabled", false);
-    $queueBtn.prop("disabled", false);
-  }
+  if (!activeLayout) return;
+  activeLayout.syncRunButtons({
+    isGenerating: GlobalState.isGenerating,
+    isQueueRunning: GlobalState.queueState.isRunning
+  });
 }
 function updateQueueButtonUI() {
   const $queueBtn = $("#t-btn-run-queue");
@@ -32486,10 +36095,20 @@ function updateContentStatsDisplay(stats) {
 function updateFavButtonUI() {
   const btn = $("#t-btn-like");
   if (!btn.length) return;
+  const icon = btn.find("i");
+  const eligible = isFavoriteEligible(getCurrentGenerationResult());
+  btn.prop("disabled", !eligible);
+  if (!eligible) {
+    icon.attr("class", "fa-regular fa-heart").css("color", "#777");
+    btn.attr({ title: "\u5F53\u524D\u5185\u5BB9\u4E0D\u53EF\u6536\u85CF", "aria-label": "\u5F53\u524D\u5185\u5BB9\u4E0D\u53EF\u6536\u85CF" }).removeClass("is-faved");
+    return;
+  }
   if (GlobalState.lastFavId) {
-    btn.html('<i class="fa-solid fa-heart" style="color:#ff6b6b;"></i>');
+    icon.attr("class", "fa-solid fa-heart").css("color", "#ff6b6b");
+    btn.attr({ title: "\u53D6\u6D88\u6536\u85CF", "aria-label": "\u53D6\u6D88\u6536\u85CF" }).addClass("is-faved");
   } else {
-    btn.html('<i class="fa-regular fa-heart"></i>');
+    icon.attr("class", "fa-regular fa-heart").css("color", "");
+    btn.attr({ title: "\u6536\u85CF\u7ED3\u679C", "aria-label": "\u6536\u85CF\u7ED3\u679C" }).removeClass("is-faved");
   }
 }
 function updateScriptTitleDisplay() {
@@ -32527,7 +36146,8 @@ function updateSceneHistoryNav() {
   const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
   const hasPrev = canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1;
   const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
-  if (history.items.length > 1 || history.items.length >= 1 && streaming.isActive) {
+  const showPageNav = history.items.length > 1 || history.items.length >= 1 && streaming.isActive;
+  if (showPageNav) {
     $prevBtn.show();
     $nextBtn.show();
     $indicator.show();
@@ -32559,11 +36179,12 @@ function updateContinuationInlineActions() {
   $button.attr({ "aria-expanded": "false", "aria-label": "\u5C55\u5F00\u5206\u652F\u64CD\u4F5C" });
   let target = null;
   if (continuationHistoryView) {
-    const located = findContinuationRound(
+    const currentSource = getCurrentContinuationSource();
+    const located = continuationHistoryView.chatId === currentSource.chatId ? findContinuationRound(
       continuationHistoryView.scriptId,
       continuationHistoryView.branchKey,
       continuationHistoryView.roundKey
-    );
+    ) : null;
     if (located) {
       target = {
         scriptId: continuationHistoryView.scriptId,
@@ -32631,20 +36252,20 @@ async function updateWorldInfoBadge() {
         }
       });
     });
-    const $icon = $("#t-btn-worldinfo");
+    const $icon = $("#t-btn-more");
     if (selectedCount > 0) {
       $icon.css("color", "#90cdf4");
-      $icon.attr("title", `\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009 (\u5DF2\u9009 ${selectedCount}/${totalCount})`);
+      $icon.attr("title", `\u66F4\u591A \xB7 \u4E16\u754C\u4E66\u5DF2\u9009 ${selectedCount}/${totalCount}`);
     } else if (totalCount > 0) {
       $icon.css("color", "#bfa15f");
-      $icon.attr("title", `\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009 (\u672A\u9009\u62E9\u4EFB\u4F55\u6761\u76EE)`);
+      $icon.attr("title", `\u66F4\u591A \xB7 \u4E16\u754C\u4E66\u672A\u9009\u62E9\u4EFB\u4F55\u6761\u76EE`);
     } else {
       $icon.css("color", "");
-      $icon.attr("title", "\u4E16\u754C\u4E66\u6761\u76EE\u7B5B\u9009");
+      $icon.attr("title", "\u66F4\u591A");
     }
   } catch (e) {
     console.warn("Titania: \u66F4\u65B0\u4E16\u754C\u4E66\u56FE\u6807\u72B6\u6001\u5931\u8D25", e);
-    $("#t-btn-worldinfo").css("color", "");
+    $("#t-btn-more").css("color", "");
   }
 }
 async function openWorldInfoSelector() {
@@ -32785,6 +36406,11 @@ async function openWorldInfoSelector() {
                         <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-none">\u53D6\u6D88\u5168\u9009</button>
                     </div>
                 </div>
+                <div class="t-wi-entry-search" id="t-wi-entry-search">
+                    <i class="fa-solid fa-magnifying-glass t-wi-search-icon"></i>
+                    <input type="text" id="t-wi-entry-search-input" placeholder="\u641C\u7D22\u6761\u76EE\u6807\u9898..." autocomplete="off">
+                    <i class="fa-solid fa-xmark t-wi-search-clear" id="t-wi-entry-search-clear" title="\u6E05\u7A7A\u641C\u7D22"></i>
+                </div>
                 <div class="t-wi-entry-list" id="t-wi-entry-list">
                     ${visibleBooks.length === 0 ? '<div class="t-wi-empty">\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66</div>' : ""}
                 </div>
@@ -32799,6 +36425,7 @@ async function openWorldInfoSelector() {
   $("#t-main-view").append(html);
   let currentBookName = visibleBooks[0] || "";
   let currentEntries2 = [];
+  let entrySearchQuery = "";
   const activeSet = new Set(baseActiveBooks);
   const getAutoActiveBooksFromSelections = () => {
     return Object.keys(workingSelections).filter((bookName) => {
@@ -32841,10 +36468,33 @@ async function openWorldInfoSelector() {
     workingSelections[bookName] = Array.from(selectedSet);
     refreshActiveState();
   };
+  const getVisibleEntries = () => {
+    if (!entrySearchQuery) return currentEntries2;
+    const needle = entrySearchQuery.toLowerCase();
+    return currentEntries2.filter((entry) => String(entry.comment || "").toLowerCase().includes(needle));
+  };
+  const renderEntryTitle = (title) => {
+    const text = String(title || "");
+    if (!entrySearchQuery) return escapeHtmlText2(text);
+    const idx = text.toLowerCase().indexOf(entrySearchQuery.toLowerCase());
+    if (idx === -1) return escapeHtmlText2(text);
+    const before = text.slice(0, idx);
+    const hit = text.slice(idx, idx + entrySearchQuery.length);
+    const after = text.slice(idx + entrySearchQuery.length);
+    return `${escapeHtmlText2(before)}<span class="t-wi-title-hit">${escapeHtmlText2(hit)}</span>${escapeHtmlText2(after)}`;
+  };
+  const syncSelectAllLabels = () => {
+    const visibleCount = getVisibleEntries().length;
+    const suffix = entrySearchQuery ? ` (${visibleCount})` : "";
+    $("#t-wi-current-select-all").text(`\u5168\u9009${suffix}`);
+    $("#t-wi-current-select-none").text(`\u53D6\u6D88\u5168\u9009${suffix}`);
+  };
   const updateStat = () => {
     const selectedSet = getBookSelectedSet(currentBookName);
     const selectedCount = currentEntries2.filter((entry) => selectedSet.has(Number(entry.uid))).length;
-    $("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}`);
+    const filterNote = entrySearchQuery ? `\u3000\u7B5B\u9009\u51FA ${getVisibleEntries().length} \u6761` : "";
+    $("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}${filterNote}`);
+    syncSelectAllLabels();
   };
   const renderEntries = () => {
     const $body = $("#t-wi-entry-list");
@@ -32859,8 +36509,22 @@ async function openWorldInfoSelector() {
       updateStat();
       return;
     }
+    const visibleEntries = getVisibleEntries();
+    if (!visibleEntries.length) {
+      $body.append(`
+                <div class="t-wi-empty">
+                    <div>\u65E0\u5339\u914D\u6761\u76EE</div>
+                    <button type="button" class="t-btn t-btn-xs" id="t-wi-search-reset" style="margin-top:12px;">\u6E05\u7A7A\u641C\u7D22</button>
+                </div>
+            `);
+      $body.find("#t-wi-search-reset").on("click", () => {
+        $("#t-wi-entry-search-input").val("").trigger("input");
+      });
+      updateStat();
+      return;
+    }
     const selectedSet = getBookSelectedSet(currentBookName);
-    currentEntries2.forEach((entry) => {
+    visibleEntries.forEach((entry) => {
       const checked = selectedSet.has(Number(entry.uid));
       const constantBadge = entry.isConstant ? '<span style="background:#4a9eff33; color:#4a9eff; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u84DD\u706F</span>' : "";
       const disabledBadge = entry.isDisabled ? '<span style="background:#ff9f4333; color:#ffb968; padding:1px 4px; border-radius:3px; font-size:0.7em; margin-left:5px;">\u9152\u9986\u4E2D\u5DF2\u7981\u7528</span>' : "";
@@ -32872,7 +36536,7 @@ async function openWorldInfoSelector() {
                     <div class="t-wi-entry-content">
                         <div class="t-wi-entry-title">
                             <span class="t-wi-uid">[${entry.uid}]</span>
-                            ${entry.comment}
+                            ${renderEntryTitle(entry.comment)}
                             ${constantBadge}
                             ${disabledBadge}
                         </div>
@@ -32922,7 +36586,7 @@ async function openWorldInfoSelector() {
   const bulkSelectCurrentBook = (checked) => {
     if (!currentBookName) return;
     const nextSet = getBookSelectedSet(currentBookName);
-    currentEntries2.forEach((entry) => {
+    getVisibleEntries().forEach((entry) => {
       const uid = Number(entry.uid);
       if (checked) nextSet.add(uid);
       else nextSet.delete(uid);
@@ -32957,6 +36621,9 @@ async function openWorldInfoSelector() {
   };
   const loadBookEntries = async (bookName) => {
     currentBookName = bookName || "";
+    entrySearchQuery = "";
+    $("#t-wi-entry-search-input").val("");
+    $("#t-wi-entry-search").removeClass("has-query");
     syncEntryPaneHeader();
     renderBookList();
     const $body = $("#t-wi-entry-list");
@@ -32995,6 +36662,19 @@ async function openWorldInfoSelector() {
   });
   $("#t-wi-current-select-all").on("click", () => bulkSelectCurrentBook(true));
   $("#t-wi-current-select-none").on("click", () => bulkSelectCurrentBook(false));
+  let entrySearchTimer = null;
+  $("#t-wi-entry-search-input").on("input", function() {
+    const raw = String($(this).val() || "");
+    $("#t-wi-entry-search").toggleClass("has-query", raw.length > 0);
+    clearTimeout(entrySearchTimer);
+    entrySearchTimer = setTimeout(() => {
+      entrySearchQuery = raw.trim();
+      renderEntries();
+    }, 120);
+  });
+  $("#t-wi-entry-search-clear").on("click", () => {
+    $("#t-wi-entry-search-input").val("").trigger("input").trigger("focus");
+  });
   $("#t-wi-save").on("click", () => {
     if (!currentBookName && !Object.keys(workingSelections).length) return;
     data.worldinfo.char_selections[charName] = workingSelections;
@@ -33113,17 +36793,18 @@ function showScriptSelector(initialFilter = "ALL") {
       $grid.append(`<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px;">${msg}</div>`);
       return;
     }
+    const readStats = createScriptStatsReader();
     filtered.forEach((s) => {
-      const stats = getScriptStats(s.id);
+      const stats = readStats(s.id);
       const card = $(`
                 <div class="t-script-card">
                     <div class="t-card-title">${s.name}</div>
                     <div class="t-card-desc">${s.desc || "..."}</div>
-                    <div class="t-card-stats">\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 ${formatRelativeTime2(stats.last_generated_at)}</div>
+                    <div class="t-card-stats">\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 ${formatRelativeTime3(stats.last_generated_at)}</div>
                 </div>
             `);
       card.on("click", () => {
-        applyScriptSelection(s.id, { trackSelection: true });
+        applyScriptSelection(s.id, { trackSelection: true, pendingGeneration: true });
         $("#t-selector-panel").remove();
       });
       $grid.append(card);
@@ -33153,6 +36834,50 @@ function showScriptSelector(initialFilter = "ALL") {
   });
   renderGrid();
   $("#t-sel-close").on("click", () => $("#t-selector-panel").remove());
+}
+function renderMoreMenu($targetBtn) {
+  if ($("#t-more-popover").length) {
+    $("#t-more-popover").remove();
+    return;
+  }
+  const items = [
+    { id: "worldinfo", icon: "fa-book-atlas", label: "\u4E16\u754C\u4E66\u7B5B\u9009" },
+    { id: "profiles", icon: "fa-network-wired", label: "API \u65B9\u6848" },
+    { id: "settings", icon: "fa-gear", label: "\u8BBE\u7F6E" }
+  ];
+  const html = `
+    <div id="t-more-popover" class="t-filter-popover" style="width: 170px; z-index: 21000;">
+        ${items.map((it) => `
+            <div class="t-filter-item" data-action="${it.id}">
+                <span><i class="fa-solid ${it.icon}" style="width:1.1em; margin-right:8px;"></i>${it.label}</span>
+            </div>
+        `).join("")}
+    </div>`;
+  $("body").append(html);
+  const pop = $("#t-more-popover");
+  const rect = $targetBtn[0].getBoundingClientRect();
+  const left = rect.left + 170 > window.innerWidth ? rect.right - 170 : rect.left;
+  pop.css({ top: rect.bottom + 10, left });
+  const closeMenu2 = () => {
+    pop.remove();
+    $(document).off("click.closemore");
+  };
+  $(".t-filter-item", pop).on("click", function() {
+    const action = $(this).data("action");
+    closeMenu2();
+    if (action === "worldinfo") {
+      openWorldInfoSelector();
+    } else if (action === "profiles") {
+      renderProfileMenu($targetBtn);
+    } else if (action === "settings") {
+      openSettingsWindow();
+    }
+  });
+  setTimeout(() => {
+    $(document).on("click.closemore", (e) => {
+      if (!$(e.target).closest("#t-more-popover, #t-btn-more").length) closeMenu2();
+    });
+  }, 10);
 }
 function renderProfileMenu($targetBtn) {
   if ($("#t-profile-popover").length) {
@@ -33189,7 +36914,10 @@ function renderProfileMenu($targetBtn) {
     pop.remove();
     $(document).off("click.closeprofile");
     $targetBtn.css({ "color": "#55efc4", "transform": "scale(1.2)" });
-    setTimeout(() => $targetBtn.css({ "color": "", "transform": "" }), 500);
+    setTimeout(() => {
+      $targetBtn.css({ "color": "", "transform": "" });
+      updateWorldInfoBadge();
+    }, 500);
     if (window.toastr) toastr.success(`\u5DF2\u5207\u6362\u81F3\u65B9\u6848\uFF1A${newName}`, "API Profile");
   });
   setTimeout(() => {
@@ -33249,7 +36977,13 @@ function openContentEditor() {
     const previousContent = String(GlobalState.lastGeneratedContent || "");
     const newContent = $textarea.val();
     const scriptId = GlobalState.lastGeneratedScriptId;
-    GlobalState.lastGeneratedContent = newContent;
+    const currentResult = getCurrentGenerationResult();
+    setCurrentGenerationResult({
+      ...currentResult,
+      content: newContent,
+      scriptId,
+      status: currentResult?.status || "legacy"
+    });
     const display = GlobalState.displayState;
     const history = GlobalState.sceneHistory;
     const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
@@ -33487,7 +37221,7 @@ function getQueueScripts() {
     return [];
   }
   if (qState.mode === "manual") {
-    return qState.manualItems.map((id) => GlobalState.runtimeScripts.find((s) => s.id === id)).filter((s) => s).map((s) => ({ id: s.id, name: s.name }));
+    return qState.manualItems.map((id3) => GlobalState.runtimeScripts.find((s) => s.id === id3)).filter((s) => s).map((s) => ({ id: s.id, name: s.name }));
   } else {
     let pool = GlobalState.runtimeScripts;
     if (qState.categoryFilter !== "ALL") {
@@ -33504,7 +37238,7 @@ function disableQueueMode() {
   GlobalState.queueState.enabled = false;
   updateQueueButtonUI();
 }
-var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, CONTINUATION_MIN_INJECT_ROUNDS, CONTINUATION_MAX_INJECT_ROUNDS, CONTINUATION_TOKEN_WARN_THRESHOLD, continuationHistoryView;
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, continuationHistoryView, continuationHistoryManaging, continuationHistorySelection, continuationGlobalSessions, continuationHistoryScope, layoutTeardownHooks, activeLayout;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -33520,6 +37254,9 @@ var init_mainWindow = __esm({
     init_helpers();
     init_continuationStore();
     init_scriptData();
+    init_viewState();
+    init_modern();
+    init_legacy();
     SORT_MODE_LABELS2 = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
@@ -33530,14 +37267,128 @@ var init_mainWindow = __esm({
       name_desc: "\u540D\u79F0 Z-A"
     };
     CONTINUATION_RECENT_MAX = 10;
-    CONTINUATION_MIN_INJECT_ROUNDS = 3;
-    CONTINUATION_MAX_INJECT_ROUNDS = 20;
-    CONTINUATION_TOKEN_WARN_THRESHOLD = 6e4;
     continuationHistoryView = null;
+    continuationHistoryManaging = false;
+    continuationHistorySelection = /* @__PURE__ */ new Set();
+    continuationGlobalSessions = [];
+    continuationHistoryScope = "all";
+    layoutTeardownHooks = [];
+    activeLayout = null;
   }
 });
 
 // src/ui/floatingBtn.js
+function refreshFloatTuckCache() {
+  try {
+    floatTuckEnabled = getExtData()?.appearance?.edge_tuck !== false;
+  } catch (e) {
+    floatTuckEnabled = true;
+  }
+  return floatTuckEnabled;
+}
+function getFloatingPositionMode() {
+  return window.innerWidth <= FLOAT_POSITION_MOBILE_BREAKPOINT ? "mobile" : "desktop";
+}
+function getFloatingPositionData() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FLOAT_POSITION_STORAGE_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+function getFloatingPositionBounds(size) {
+  const safeSize = Math.max(1, Number(size) || 56);
+  const minLeft = FLOAT_POSITION_MARGIN;
+  const minTop = FLOAT_POSITION_MARGIN;
+  const maxLeft = Math.max(minLeft, window.innerWidth - safeSize - FLOAT_POSITION_MARGIN);
+  const maxTop = Math.max(minTop, window.innerHeight - safeSize - FLOAT_POSITION_MARGIN);
+  return {
+    minLeft,
+    minTop,
+    maxLeft,
+    maxTop,
+    travelX: Math.max(0, maxLeft - minLeft),
+    travelY: Math.max(0, maxTop - minTop)
+  };
+}
+function getFloatingPositionLimits(size) {
+  const safeSize = Math.max(1, Number(size) || 56);
+  const bounds = getFloatingPositionBounds(size);
+  if (!floatTuckEnabled) {
+    return { minLeft: bounds.minLeft, maxLeft: bounds.maxLeft, minTop: bounds.minTop, maxTop: bounds.maxTop };
+  }
+  const hidden = safeSize * FLOAT_TUCK_RATIO;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+  return {
+    minLeft: -hidden,
+    maxLeft: Math.max(-hidden, viewportWidth - safeSize + hidden),
+    minTop: bounds.minTop,
+    maxTop: bounds.maxTop
+  };
+}
+function clampFloatingPosition(left, top, size) {
+  const limits = getFloatingPositionLimits(size);
+  return {
+    left: Math.max(limits.minLeft, Math.min(limits.maxLeft, Number(left) || 0)),
+    top: Math.max(limits.minTop, Math.min(limits.maxTop, Number(top) || 0))
+  };
+}
+function saveFloatingPosition(btn, size) {
+  if (!btn?.length) return;
+  try {
+    const rect = btn[0].getBoundingClientRect();
+    const bounds = getFloatingPositionBounds(size);
+    const position = clampFloatingPosition(rect.left, rect.top, size);
+    const data = getFloatingPositionData();
+    data[getFloatingPositionMode()] = {
+      x: bounds.travelX > 0 ? (position.left - bounds.minLeft) / bounds.travelX : 0,
+      y: bounds.travelY > 0 ? (position.top - bounds.minTop) / bounds.travelY : 0
+    };
+    localStorage.setItem(FLOAT_POSITION_STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn("Titania: \u4FDD\u5B58\u60AC\u6D6E\u7403\u4F4D\u7F6E\u5931\u8D25", e);
+  }
+}
+function applyFloatingPosition(btn, size) {
+  if (!btn?.length) return;
+  const saved = getFloatingPositionData()[getFloatingPositionMode()];
+  const hasSavedPosition = Number.isFinite(saved?.x) && Number.isFinite(saved?.y);
+  const bounds = getFloatingPositionBounds(size);
+  if (hasSavedPosition) {
+    const position2 = clampFloatingPosition(
+      bounds.minLeft + saved.x * bounds.travelX,
+      bounds.minTop + saved.y * bounds.travelY,
+      size
+    );
+    btn.css({ left: `${position2.left}px`, top: `${position2.top}px`, right: "auto" });
+    return;
+  }
+  const position = clampFloatingPosition(FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, size);
+  btn.css({ left: `${position.left}px`, top: `${position.top}px`, right: "auto" });
+}
+function refreshFloatingTuck() {
+  refreshFloatTuckCache();
+  const btn = $("#titania-float-btn");
+  if (!btn.length) return;
+  const size = btn.outerWidth() || parseInt(getExtData()?.appearance?.size) || 56;
+  const rect = btn[0].getBoundingClientRect();
+  const position = clampFloatingPosition(rect.left, rect.top, size);
+  btn.css({ transition: "none", left: `${position.left}px`, top: `${position.top}px`, right: "auto" });
+  saveFloatingPosition(btn, size);
+  updateTimerPosition();
+}
+function destroyFloatingButton() {
+  $(document).off(".titaniaFloatDrag");
+  $(window).off(".titaniaFloatPosition");
+  if (floatResizeTimer) {
+    clearTimeout(floatResizeTimer);
+    floatResizeTimer = null;
+  }
+  hideSlideMenu();
+  $("#titania-float-btn").remove();
+  $("#titania-timer").remove();
+}
 function isToolbarEnabled() {
   const settings2 = getExtData();
   const toolbarConfig = settings2.quick_toolbar || {};
@@ -33713,11 +37564,10 @@ function getCurrentAnimationClass() {
   return ANIMATION_CLASSES[animationType] || ANIMATION_CLASSES.ripple;
 }
 function createFloatingButton() {
-  $("#titania-float-btn").remove();
-  $("#titania-timer").remove();
+  destroyFloatingButton();
   $("#titania-float-style").remove();
   const settings2 = getExtData();
-  if (typeof extension_settings !== "undefined" && extension_settings[extensionName] && !extension_settings[extensionName].enabled) {
+  if (settings2.enabled !== true) {
     return;
   }
   const app = settings2.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: "#90cdf4", bg_color: "#2b2b2b", border_opacity: 100, bg_opacity: 100 };
@@ -33760,6 +37610,8 @@ function createFloatingButton() {
   });
   $("body").append(btn);
   $("body").append(timer);
+  refreshFloatTuckCache();
+  applyFloatingPosition(btn, size);
   let isDragging = false, startX, startY, initialLeft, initialTop;
   btn.on("touchstart mousedown", function(e) {
     isDragging = false;
@@ -33771,14 +37623,13 @@ function createFloatingButton() {
     initialTop = rect.top;
     $(this).css({ "transition": "none", "transform": "none" });
   });
-  $(document).on("touchmove mousemove", function(e) {
+  $(document).on("touchmove.titaniaFloatDrag mousemove.titaniaFloatDrag", function(e) {
     if (startX === void 0) return;
     const evt = e.type === "touchmove" ? e.originalEvent.touches[0] : e;
     if (Math.abs(evt.clientX - startX) > 5 || Math.abs(evt.clientY - startY) > 5) isDragging = true;
     let l = initialLeft + (evt.clientX - startX), t = initialTop + (evt.clientY - startY);
-    l = Math.max(0, Math.min(window.innerWidth - size, l));
-    t = Math.max(0, Math.min(window.innerHeight - size, t));
-    btn.css({ left: l + "px", top: t + "px", right: "auto" });
+    const position = clampFloatingPosition(l, t, size);
+    btn.css({ left: position.left + "px", top: position.top + "px", right: "auto" });
     updateTimerPosition();
   });
   btn.on("touchend mouseup", function(e) {
@@ -33786,8 +37637,7 @@ function createFloatingButton() {
     if (isDragging) {
       isDragging = false;
       startX = void 0;
-      btn.css({ "transition": "none" });
-      updateTimerPosition();
+      saveFloatingPosition(btn, size);
       hideSlideMenu();
       return;
     }
@@ -33797,25 +37647,40 @@ function createFloatingButton() {
     btn.removeClass("t-notify");
     handleFloatingButtonClick();
   });
-  $(document).on("touchend mouseup", function(e) {
-    if (startX !== void 0 && isDragging) {
-      startX = void 0;
-      isDragging = false;
-      btn.css({ "transition": "none" });
-      updateTimerPosition();
+  $(document).on("touchend.titaniaFloatDrag mouseup.titaniaFloatDrag touchcancel.titaniaFloatDrag", function() {
+    if (startX === void 0) return;
+    if (isDragging) {
+      saveFloatingPosition(btn, size);
       hideSlideMenu();
     }
+    startX = void 0;
+    isDragging = false;
+  });
+  $(window).on("resize.titaniaFloatPosition orientationchange.titaniaFloatPosition", function() {
+    if (floatResizeTimer) clearTimeout(floatResizeTimer);
+    floatResizeTimer = setTimeout(() => {
+      floatResizeTimer = null;
+      applyFloatingPosition(btn, size);
+      hideSlideMenu();
+    }, 120);
   });
 }
-var slideMenuVisible, TOOLBAR_BUTTONS, ANIMATION_CLASSES;
+var slideMenuVisible, FLOAT_POSITION_STORAGE_KEY, FLOAT_POSITION_MARGIN, FLOAT_POSITION_MOBILE_BREAKPOINT, FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, FLOAT_TUCK_RATIO, floatResizeTimer, floatTuckEnabled, TOOLBAR_BUTTONS, ANIMATION_CLASSES;
 var init_floatingBtn = __esm({
   "src/ui/floatingBtn.js"() {
     init_storage();
     init_state();
-    init_defaults();
     init_mainWindow();
     init_settingsWindow();
     slideMenuVisible = false;
+    FLOAT_POSITION_STORAGE_KEY = "titania-theater:float-position:v1";
+    FLOAT_POSITION_MARGIN = 8;
+    FLOAT_POSITION_MOBILE_BREAKPOINT = 768;
+    FLOAT_POSITION_DEFAULT_LEFT = 20;
+    FLOAT_POSITION_DEFAULT_TOP = 100;
+    FLOAT_TUCK_RATIO = 0.5;
+    floatResizeTimer = null;
+    floatTuckEnabled = true;
     TOOLBAR_BUTTONS = [
       {
         id: "main",
@@ -33886,6 +37751,24 @@ var init_floatingBtn = __esm({
 });
 
 // src/core/api.js
+var api_exports = {};
+__export(api_exports, {
+  buildPromptCompositionPreview: () => buildPromptCompositionPreview,
+  cancelGeneration: () => cancelGeneration,
+  cancelQueueGeneration: () => cancelQueueGeneration,
+  copyContinuationBranchToCurrentChat: () => copyContinuationBranchToCurrentChat,
+  deleteContinuationHistorySelections: () => deleteContinuationHistorySelections,
+  executeQueueGeneration: () => executeQueueGeneration,
+  findContinuationRoundByContent: () => findContinuationRoundByContent,
+  getContinuationBranches: () => getContinuationBranches,
+  getContinuationRoundsForFav: () => getContinuationRoundsForFav,
+  getContinuationSessionStats: () => getContinuationSessionStats,
+  getContinuationSessions: () => getContinuationSessions,
+  handleGenerate: () => handleGenerate,
+  handleUserContinuation: () => handleUserContinuation,
+  renderGeneratedContent: () => renderGeneratedContent,
+  syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
+});
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
 import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
 import EventSourceStream2 from "../../../sse-stream.js";
@@ -33895,9 +37778,6 @@ function clampContinuationInjectRounds(value) {
   const num = Number(value);
   if (!Number.isFinite(num)) return 3;
   return Math.max(CONTINUATION_INJECT_MIN, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
-}
-function estimateTokensByChars(charCount) {
-  return Math.ceil((Number(charCount) || 0) / 4);
 }
 function createContinuationBranchKey() {
   const ts = Date.now().toString(36);
@@ -33922,6 +37802,8 @@ function getContinuationSessionRounds(scriptId) {
     type: String(item?.type || "continuation"),
     instruction: String(item?.instruction || "").trim(),
     content: String(item?.content || "").trim(),
+    status: String(item?.status || "legacy"),
+    generationId: String(item?.generationId || ""),
     timestamp: Number(item?.timestamp) || 0
   })).filter((item) => item.content.length > 0);
 }
@@ -33941,6 +37823,8 @@ function normalizeContinuationRounds(rounds) {
       type: String(item?.type || (index === 0 ? "initial" : "continuation")),
       instruction: String(item?.instruction || "").trim(),
       content: String(item?.content || "").trim(),
+      status: String(item?.status || "legacy"),
+      generationId: String(item?.generationId || ""),
       timestamp: Number(item?.timestamp) || 0
     };
   }).filter((item) => item.content.length > 0).slice(0, CONTINUATION_SESSION_MAX_ROUNDS);
@@ -33958,7 +37842,54 @@ function archiveContinuationBranch(entry) {
     archivedAt: Date.now()
   }, ...entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== branchKey)].slice(0, CONTINUATION_ARCHIVED_BRANCH_MAX);
 }
-function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound, targetRoundKey = "") {
+function findContinuationRoundAnchor(scriptId, probe = {}) {
+  const entry = getContinuationRuntimeStore()[scriptId];
+  if (!entry) return null;
+  const wantedId = String(probe.generationId || "").trim();
+  const wantedContent = String(probe.content || "").trim();
+  if (!wantedId && !wantedContent) return null;
+  const activeBranchKey = String(entry.branchKey || "").trim();
+  const candidates = [
+    { branchKey: activeBranchKey, rounds: entry.rounds, isActive: true },
+    ...(Array.isArray(entry.archivedBranches) ? entry.archivedBranches : []).map((branch) => ({ branchKey: String(branch?.branchKey || "").trim(), rounds: branch?.rounds, isActive: false }))
+  ];
+  for (const matchById of [true, false]) {
+    if (matchById && !wantedId) continue;
+    if (!matchById && !wantedContent) continue;
+    for (const candidate of candidates) {
+      if (!candidate.branchKey) continue;
+      const rounds = normalizeContinuationRounds(candidate.rounds);
+      const index = rounds.findIndex((item) => matchById ? String(item.generationId || "").trim() === wantedId : item.content === wantedContent);
+      if (index < 0) continue;
+      return {
+        branchKey: candidate.branchKey,
+        roundKey: rounds[index].roundKey,
+        round: index + 1,
+        isActive: candidate.isActive,
+        isActiveTail: candidate.isActive && index === rounds.length - 1
+      };
+    }
+  }
+  return null;
+}
+async function startFreshContinuationBranch(script, baseContent) {
+  resetContinuationSessionRounds(script.id, script.name);
+  const branchContext = await getContextData();
+  let branchInstruction = String(script.prompt || "");
+  try {
+    branchInstruction = evaluateMacros(branchInstruction, {
+      char: branchContext.charName,
+      user: branchContext.userName
+    });
+  } catch (e) {
+    branchInstruction = branchInstruction.replace(/{{char}}/gi, branchContext.charName).replace(/{{user}}/gi, branchContext.userName);
+  }
+  setContinuationSessionBaseRound(script.id, script.name, baseContent, {
+    forceNewBranch: true,
+    instruction: branchInstruction
+  });
+}
+function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound, targetRoundKey = "", includeTarget = false) {
   const entry = getContinuationRuntimeStore()[scriptId];
   if (!entry) return null;
   const activeBranchKey = String(entry.branchKey || "").trim();
@@ -33978,7 +37909,7 @@ function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound
   entry.branchKey = createContinuationBranchKey();
   entry.parentBranchKey = requestedBranchKey;
   entry.branchedAtRound = roundNumber;
-  entry.rounds = sourceRounds.slice(0, roundNumber - 1);
+  entry.rounds = sourceRounds.slice(0, includeTarget ? roundNumber : roundNumber - 1);
   return {
     sourceBranchKey: requestedBranchKey,
     branchKey: entry.branchKey,
@@ -34025,6 +37956,8 @@ function setContinuationSessionBaseRound(scriptId, scriptName, content, options 
         type: "initial",
         instruction: instruction || "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
         content: textContent,
+        status: String(options?.status || "success"),
+        generationId: String(options?.generationId || ""),
         timestamp: Date.now()
       },
       ...continuationRounds
@@ -34037,7 +37970,7 @@ function setContinuationSessionBaseRound(scriptId, scriptName, content, options 
   }));
   scheduleContinuationPersistence();
 }
-function appendContinuationSessionRound(scriptId, scriptName, instruction, content) {
+function appendContinuationSessionRound(scriptId, scriptName, instruction, content, options = {}) {
   if (!scriptId) return;
   const textContent = String(content || "").trim();
   if (!textContent) return;
@@ -34060,6 +37993,8 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     type: "continuation",
     instruction: String(instruction || "").trim(),
     content: textContent,
+    status: String(options?.status || "success"),
+    generationId: String(options?.generationId || ""),
     timestamp: Date.now()
   });
   while (rounds.length > CONTINUATION_SESSION_MAX_ROUNDS) {
@@ -34147,7 +38082,7 @@ ${item.content}`;
     selectedRounds,
     text: block,
     estimatedChars,
-    estimatedTokens: estimateTokensByChars(estimatedChars)
+    estimatedTokens: estimateTokens(block)
   };
 }
 function buildContinuationBranchInjection(rounds) {
@@ -34174,7 +38109,66 @@ ${item.content}`;
     selectedRounds,
     text,
     estimatedChars: text.length,
-    estimatedTokens: estimateTokensByChars(text.length)
+    estimatedTokens: estimateTokens(text)
+  };
+}
+function composeContinuationPromptOverride({ injectionText, userInstruction, crossRoleSource = "" }) {
+  const crossRoleBlock = crossRoleSource ? `
+[\u8DE8\u89D2\u8272\u7EED\u5199]
+\u4EE5\u4E0B\u5386\u53F2\u5185\u5BB9\u6765\u81EA\u89D2\u8272\u201C${crossRoleSource}\u201D\u53C2\u4E0E\u7684\u65E2\u6709\u5267\u60C5\u3002\u4FDD\u7559\u5386\u53F2\u4E2D\u5DF2\u7ECF\u51FA\u73B0\u7684\u4EBA\u7269\u3001\u8EAB\u4EFD\u548C\u4E8B\u4EF6\uFF0C\u4E0D\u8981\u628A\u539F\u89D2\u8272\u66FF\u6362\u6216\u6539\u540D\u3002\u5F53\u524D\u89D2\u8272\u662F\u65B0\u8FDB\u5165\u5267\u60C5\u7684\u53C2\u4E0E\u8005\uFF0C\u5E94\u4F9D\u636E\u5F53\u524D\u89D2\u8272\u8BBE\u5B9A\u81EA\u7136\u52A0\u5165\u3002
+` : "";
+  const preamble = `[\u7EED\u5199\u6A21\u5F0F]
+\u4F60\u5C06\u57FA\u4E8E\u5DF2\u6709\u5267\u60C5\u8FDB\u884C\u591A\u8F6E\u7EED\u5199\u751F\u6210\u3002${crossRoleBlock}
+\u8BF7\u4FDD\u6301\u4EBA\u7269\u3001\u8BED\u6C14\u3001\u8BBE\u5B9A\u4E0E\u89C6\u89C9\u98CE\u683C\u4E00\u81F4\uFF0C\u5728\u4E0D\u91CD\u590D\u5DF2\u6709\u6587\u672C\u7684\u524D\u63D0\u4E0B\u63A8\u8FDB\u5267\u60C5\u3002
+\u8F93\u51FA\u8981\u6C42\u4E0E\u666E\u901A\u751F\u6210\u4E00\u81F4\uFF1A\u8F93\u51FA\u53EF\u76F4\u63A5\u6E32\u67D3\u7684\u539F\u59CB HTML\uFF0C\u4E0D\u8981 Markdown \u4EE3\u7801\u5757\u3002`;
+  const contextBlock = `
+
+[\u7EED\u5199\u4F1A\u8BDD\u4E0A\u4E0B\u6587]
+\uFF08\u4EE5\u4E0B\u4E3A\u5386\u53F2\u7EED\u5199\u8F6E\u6B21\uFF0C\u5305\u542B\u201C\u6307\u4EE4+\u7ED3\u679C\u201D\uFF0C\u7528\u4E8E\u4FDD\u6301\u591A\u8F6E\u8FDE\u7EED\u6027\uFF09
+${injectionText}`;
+  const instructionBlock = `
+
+[\u672C\u8F6E\u7EED\u5199\u6307\u4EE4]
+${userInstruction}`;
+  return {
+    text: `${preamble}${contextBlock}${instructionBlock}`,
+    lengths: {
+      continuationPreamble: preamble.length,
+      continuationContext: contextBlock.length,
+      continuationInstruction: instructionBlock.length
+    }
+  };
+}
+function applyScriptInstructionSectionLengths(sectionLengths, scriptBlock, promptBody, continuationLengths) {
+  const parts = continuationLengths ? [continuationLengths.continuationPreamble, continuationLengths.continuationContext, continuationLengths.continuationInstruction] : null;
+  if (!parts || parts.some((length) => !Number.isFinite(length)) || parts.reduce((sum, length) => sum + length, 0) !== promptBody.length) {
+    sectionLengths.scriptInstruction = scriptBlock.length;
+    return;
+  }
+  sectionLengths.scriptInstruction = scriptBlock.length - promptBody.length;
+  sectionLengths.continuationPreamble = parts[0];
+  sectionLengths.continuationContext = parts[1];
+  sectionLengths.continuationInstruction = parts[2];
+}
+function resolveContinuationPreviewPlan() {
+  if (getPendingGenerationScriptId()) return null;
+  const display = getCurrentDisplayContent();
+  if (!String(display?.content || "").trim()) return null;
+  const scriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || "";
+  if (!scriptId) return null;
+  const injectRoundsCount = getContinuationDefaultInjectCount();
+  const injection = buildContinuationSessionInjection(scriptId, injectRoundsCount);
+  if (injection.totalRounds === 0) return null;
+  const userInstruction = getContinuationQuickDraft().trim() || DEFAULT_CONTINUATION_INSTRUCTION;
+  return {
+    scriptId,
+    injection,
+    injectRoundsCount,
+    userInstruction,
+    override: composeContinuationPromptOverride({
+      injectionText: injection.text,
+      userInstruction
+    })
   };
 }
 function getContinuationSessionStats(scriptId, injectRoundsCount = 3) {
@@ -34238,6 +38232,116 @@ function getContinuationSessions() {
     };
   }).filter((session) => session.branches.length > 0).sort((left, right) => right.updatedAt - left.updatedAt);
 }
+function copyContinuationBranchToCurrentChat(source = {}) {
+  const scriptId = String(source.scriptId || "").trim();
+  const sourceRounds = normalizeContinuationRounds(source.rounds);
+  const targetRoundKey = String(source.roundKey || "").trim();
+  const targetIndex = targetRoundKey ? sourceRounds.findIndex((round) => round.roundKey === targetRoundKey) : sourceRounds.length - 1;
+  if (!scriptId || targetIndex < 0) return null;
+  const byScript = getContinuationRuntimeStore();
+  const current = byScript[scriptId];
+  if (current) archiveContinuationBranch(current);
+  const copiedRounds = sourceRounds.slice(0, targetIndex + 1).map((round, index) => ({
+    ...round,
+    round: index + 1,
+    roundKey: createContinuationRoundKey(),
+    timestamp: Date.now() + index
+  }));
+  byScript[scriptId] = {
+    scriptId,
+    scriptName: String(source.scriptName || current?.scriptName || "\u573A\u666F"),
+    branchKey: createContinuationBranchKey(),
+    parentBranchKey: "",
+    branchedAtRound: copiedRounds.length,
+    rounds: copiedRounds,
+    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
+    origin: {
+      chatId: String(source.chatId || ""),
+      characterId: String(source.characterId || ""),
+      characterName: String(source.characterName || "\u672A\u77E5\u89D2\u8272"),
+      scriptId,
+      branchKey: String(source.branchKey || ""),
+      roundKey: targetRoundKey
+    }
+  };
+  scheduleContinuationPersistence();
+  return {
+    scriptId,
+    branchKey: byScript[scriptId].branchKey,
+    roundKey: copiedRounds[copiedRounds.length - 1].roundKey,
+    content: copiedRounds[copiedRounds.length - 1].content
+  };
+}
+function deleteContinuationHistorySelections(selections = []) {
+  const selected = new Set((Array.isArray(selections) ? selections : []).map(
+    (item) => `${String(item?.scriptId || "")}\0${String(item?.branchKey || "")}\0${String(item?.roundKey || "")}`
+  ));
+  const byScript = getContinuationRuntimeStore();
+  let deletedSessions = 0;
+  let deletedBranches = 0;
+  let deletedRounds = 0;
+  for (const [scriptId, entry] of Object.entries(byScript)) {
+    const sessionKey = `${scriptId}\0\0`;
+    const allBranches = [
+      { ...entry, isActive: true },
+      ...Array.isArray(entry.archivedBranches) ? entry.archivedBranches.map((branch) => ({ ...branch, isActive: false })) : []
+    ];
+    if (selected.has(sessionKey)) {
+      delete byScript[scriptId];
+      deletedSessions++;
+      deletedBranches += allBranches.length;
+      deletedRounds += allBranches.reduce((sum, branch) => sum + (Array.isArray(branch.rounds) ? branch.rounds.length : 0), 0);
+      continue;
+    }
+    const keptBranches = [];
+    for (const branch of allBranches) {
+      const branchKey = String(branch.branchKey || "");
+      const branchSelectionKey = `${scriptId}\0${branchKey}\0`;
+      if (selected.has(branchSelectionKey)) {
+        deletedBranches++;
+        deletedRounds += Array.isArray(branch.rounds) ? branch.rounds.length : 0;
+        continue;
+      }
+      const rounds = Array.isArray(branch.rounds) ? branch.rounds : [];
+      const roundSelections = new Set([...selected].filter((key) => key.startsWith(`${scriptId}\0${branchKey}\0`)).map((key) => key.split("\0")[2]));
+      if (roundSelections.size > 0) {
+        const initialSelected = rounds.some((round) => round.type === "initial" && roundSelections.has(String(round.roundKey || "")));
+        if (initialSelected) {
+          deletedBranches++;
+          deletedRounds += rounds.length;
+          continue;
+        }
+        branch.rounds = rounds.filter((round) => {
+          const shouldDelete = roundSelections.has(String(round.roundKey || ""));
+          if (shouldDelete) deletedRounds++;
+          return !shouldDelete;
+        });
+      }
+      if (branch.rounds.length > 0) keptBranches.push(branch);
+      else deletedBranches++;
+    }
+    if (keptBranches.length === 0) {
+      delete byScript[scriptId];
+      deletedSessions++;
+      continue;
+    }
+    const active = keptBranches.find((branch) => branch.isActive) || keptBranches.slice().sort((a, b) => Math.max(...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
+    const activeBranch = keptBranches.find((branch) => branch.branchKey === active.branchKey);
+    entry.branchKey = activeBranch.branchKey;
+    entry.parentBranchKey = activeBranch.parentBranchKey || "";
+    entry.branchedAtRound = activeBranch.branchedAtRound || null;
+    entry.rounds = activeBranch.rounds;
+    entry.archivedBranches = keptBranches.filter((branch) => branch.branchKey !== activeBranch.branchKey).map((branch) => ({
+      branchKey: branch.branchKey,
+      parentBranchKey: branch.parentBranchKey || "",
+      branchedAtRound: branch.branchedAtRound || null,
+      archivedAt: branch.archivedAt || 0,
+      rounds: branch.rounds
+    }));
+  }
+  if (deletedSessions || deletedBranches || deletedRounds) scheduleContinuationPersistence();
+  return { deletedSessions, deletedBranches, deletedRounds };
+}
 function findContinuationRoundByContent(scriptId, content) {
   const targetContent = String(content || "").trim();
   if (!scriptId || !targetContent) return null;
@@ -34273,7 +38377,7 @@ function getContinuationRoundsForFav(scriptId) {
     scriptId,
     scriptName: String(entry?.scriptName || "\u573A\u666F"),
     branchKey: String(entry?.branchKey || "").trim(),
-    rounds: getContinuationSessionRounds(scriptId)
+    rounds: getContinuationSessionRounds(scriptId).filter((item) => item.status === "success" || item.status === "legacy")
   };
 }
 function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
@@ -34463,8 +38567,7 @@ function showGenerationCompleteNotification(scriptName) {
     const latestItem = GlobalState.sceneHistory.items[0];
     if (latestItem) {
       renderGeneratedContent(latestItem.content, latestItem.scriptName || "\u573A\u666F", false);
-      GlobalState.lastGeneratedContent = latestItem.content;
-      GlobalState.lastGeneratedScriptId = latestItem.scriptId;
+      setCurrentGenerationResult({ ...latestItem, status: latestItem.status || "legacy" });
       GlobalState.lastFavId = latestItem.favId || null;
     }
     if (typeof window.updateSceneHistoryNav === "function") {
@@ -34645,11 +38748,203 @@ function cancelGeneration() {
   TitaniaLogger.info("\u7528\u6237\u53D6\u6D88\u4E86\u751F\u6210");
   if (window.toastr) toastr.info("\u23F9\uFE0F \u6F14\u7ECE\u5DF2\u4E2D\u65AD", "Titania");
 }
+async function buildPromptCompositionPreview(options = {}) {
+  try {
+    const data = getExtData();
+    const cfg = data.config || {};
+    const dirDefaults = data.director || { instruction: "" };
+    const conn = getActiveConnection();
+    const generationOverrides = options.generationOverrides || null;
+    const promptOverride = generationOverrides?.promptOverride;
+    const hasExplicitOverride = typeof promptOverride === "string" && promptOverride.trim().length > 0;
+    let continuationPlan = hasExplicitOverride ? null : resolveContinuationPreviewPlan();
+    if (continuationPlan && options.forceScriptId && options.forceScriptId !== continuationPlan.scriptId) {
+      continuationPlan = null;
+    }
+    const scriptId = options.forceScriptId || continuationPlan?.scriptId || GlobalState.lastUsedScriptId || $("#t-sel-script").val();
+    const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
+    if (!script) {
+      return { ok: false, error: "\u672A\u9009\u62E9\u5267\u672C" };
+    }
+    const scriptPromptSource = hasExplicitOverride ? promptOverride : continuationPlan?.override.text ?? script.prompt;
+    const generationSource = generationOverrides?.source || "preview";
+    const ctx = await getContextData();
+    let sys;
+    let promptScheme = getPromptScheme(data, GlobalState.generationMode);
+    if (!promptScheme) {
+      promptScheme = getPromptScheme(data, "narrative");
+      if (window.toastr) toastr.warning("\u672A\u627E\u5230\u6D3B\u52A8\u9884\u8BBE\uFF0C\u5DF2\u56DE\u9000\u5230\u5185\u5BB9\u4F18\u5148\u6A21\u5F0F", "Titania");
+    }
+    const systemEntry = promptScheme.entries.find((entry) => entry.role === "system");
+    sys = systemEntry?.content || (GlobalState.generationMode === "visual" ? DEFAULT_VISUAL_PROMPT : DEFAULT_CONTENT_PROMPT);
+    let user = "";
+    let runtimeChatHistory = "";
+    const sectionLengths = {
+      director: 0,
+      persona: 0,
+      userDesc: 0,
+      worldInfo: 0,
+      history: 0,
+      scriptInstruction: 0,
+      // 仅续写口径下非零：把 [剧本指令] 块再拆三段（顺序即查看器的切片顺序）
+      continuationPreamble: 0,
+      continuationContext: 0,
+      continuationInstruction: 0
+    };
+    const dirInstruction = dirDefaults.instruction || "";
+    const styleProfiles = data.style_profiles || [{ id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }];
+    const activeStyleId = data.active_style_id || "default";
+    const activeStyleProfile = styleProfiles.find((p) => p.id === activeStyleId) || styleProfiles[0];
+    const dStyle = activeStyleProfile ? activeStyleProfile.content : "";
+    let directorSection = "";
+    if (dirInstruction.trim()) {
+      directorSection += dirInstruction.trim() + "\n";
+    }
+    if (dStyle) {
+      directorSection += `\u6587\u7B14\u53C2\u8003\uFF1A\u6A21\u4EFF\u4EE5\u4E0B\u6587\u98CE\uFF08\u4E0D\u8981\u590D\u5236\u539F\u6587\uFF09:
+<style_ref>
+${dStyle.substring(0, 1e3)}
+</style_ref>
+`;
+    }
+    if (directorSection) {
+      const block = `[\u5BFC\u6F14\u6307\u4EE4]
+\uFF08\u4EE5\u4E0B\u662F\u5199\u4F5C\u98CE\u683C\u548C\u683C\u5F0F\u8981\u6C42\uFF0C\u8BF7\u6309\u6B64\u98CE\u683C\u751F\u6210\u5185\u5BB9\uFF09
+${directorSection}
+`;
+      sectionLengths.director = block.length;
+      user += block;
+    }
+    if (ctx.persona) {
+      const block = `[\u89D2\u8272\u4EBA\u8BBE]
+\uFF08\u4EE5\u4E0B\u662F\u89D2\u8272\u7684\u6027\u683C\u8BBE\u5B9A\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u91CD\u590D\u8FD9\u4E9B\u5185\u5BB9\uFF09
+${ctx.persona}
+
+`;
+      sectionLengths.persona = block.length;
+      user += block;
+    }
+    if (ctx.userDesc) {
+      const block = `[\u7528\u6237\u8BBE\u5B9A]
+\uFF08\u4EE5\u4E0B\u662F\u7528\u6237\u7684\u63CF\u8FF0\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u80CC\u666F\u53C2\u8003\uFF09
+${ctx.userDesc}
+
+`;
+      sectionLengths.userDesc = block.length;
+      user += block;
+    }
+    if (ctx.worldInfo) {
+      const block = `[\u4E16\u754C\u89C2\u8BBE\u5B9A]
+\uFF08\u4EE5\u4E0B\u662F\u80CC\u666F\u8BBE\u5B9A\u548C\u4E16\u754C\u89C2\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u76F4\u63A5\u590D\u5236\uFF09
+${ctx.worldInfo}
+
+`;
+      sectionLengths.worldInfo = block.length;
+      user += block;
+    }
+    if (GlobalState.useHistoryAnalysis) {
+      const limit = cfg.history_limit || 10;
+      const historyWhitelistStr = data.history_extraction?.whitelist || "";
+      const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
+      const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
+      const history = getChatHistory(limit, historyWhitelist, historyBlacklist);
+      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
+\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
+${history}
+
+` : `[\u804A\u5929\u5386\u53F2]
+\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
+
+`;
+      sectionLengths.history = historyBlock.length;
+      runtimeChatHistory = historyBlock;
+      user += historyBlock;
+    }
+    const skipMacroEvaluation = generationOverrides?.skipMacroEvaluation === true || Boolean(continuationPlan);
+    let processedPrompt = scriptPromptSource;
+    if (!skipMacroEvaluation) {
+      try {
+        const macroEnv = {
+          char: ctx.charName,
+          user: ctx.userName
+        };
+        processedPrompt = evaluateMacros(scriptPromptSource, macroEnv);
+      } catch (e) {
+        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
+      }
+    }
+    const scriptBlock = `[\u5267\u672C\u6307\u4EE4]
+\uFF08\u8FD9\u662F\u4F60\u7684\u4E3B\u8981\u4EFB\u52A1\uFF01\u8BF7\u6839\u636E\u4EE5\u4E0B\u6307\u4EE4\u751F\u6210\u521B\u610F\u5185\u5BB9\uFF0C\u5FFD\u7565\u4E0A\u65B9\u7684\u804A\u5929\u5386\u53F2\uFF0C\u4E13\u6CE8\u4E8E\u5B8C\u6210\u6B64\u521B\u4F5C\u8BF7\u6C42\uFF09
+${processedPrompt}`;
+    applyScriptInstructionSectionLengths(sectionLengths, scriptBlock, processedPrompt, continuationPlan?.override.lengths || null);
+    user += scriptBlock;
+    const meta = {
+      source: generationSource,
+      hasPromptOverride: hasExplicitOverride,
+      promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
+      skipMacroEvaluation,
+      sectionLengths,
+      estimatedTokens: {
+        system: estimateTokens(sys),
+        user: estimateTokens(user)
+      }
+    };
+    if (continuationPlan) {
+      meta.continuation = {
+        isContinuation: true,
+        totalRounds: continuationPlan.injection.totalRounds,
+        injectedRounds: continuationPlan.injection.selectedRounds.length,
+        injectRoundsCount: continuationPlan.injectRoundsCount
+      };
+    }
+    const runtimePromptContext = {
+      ...ctx,
+      worldInfoBefore: ctx.worldInfo,
+      worldInfoAfter: "",
+      chatHistory: runtimeChatHistory,
+      titaniaScript: processedPrompt
+    };
+    const messageDetails = buildPromptMessageDetails(promptScheme, {
+      [`${GlobalState.generationMode}_system`]: sys,
+      [`${GlobalState.generationMode}_user`]: user
+    }, runtimePromptContext);
+    const messages = messageDetails.map(({ role, content }) => ({ role, content }));
+    return {
+      ok: true,
+      script: {
+        id: script.id,
+        name: script.name
+      },
+      mode: GlobalState.generationMode,
+      source: generationSource,
+      connection: {
+        profile: conn.profileName || "",
+        model: conn.model || "",
+        useSTConnection: !!conn.useSTConnection
+      },
+      promptScheme: {
+        id: promptScheme.id || GlobalState.generationMode,
+        name: promptScheme.name || "\u672A\u547D\u540D\u65B9\u6848",
+        type: promptScheme.type || "builtin"
+      },
+      messages,
+      messageDetails,
+      meta,
+      timestamp: Date.now()
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e?.message || "preview_build_failed"
+    };
+  }
+}
 async function handleGenerate(forceScriptId = null, silent = false, generationOverrides = null) {
   const data = getExtData();
   const cfg = data.config || {};
   const dirDefaults = data.director || { instruction: "" };
   const startTime = Date.now();
+  const generationId = `generation_${startTime}_${Math.random().toString(36).slice(2, 8)}`;
   let diagnostics = {
     phase: "init",
     profile: "",
@@ -34785,7 +39080,8 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
     window.updateRunButtonsState();
   }
   GlobalState.lastFavId = null;
-  $("#t-btn-like").html('<i class="fa-regular fa-heart"></i>').prop("disabled", false);
+  $("#t-btn-like").prop("disabled", false);
+  updateFavButtonUI();
   showCancelButton();
   startTimer();
   if (!silent && window.toastr) toastr.info(`\u{1F680} [${conn.profileName}] \u6B63\u5728\u8FDE\u63A5\u6A21\u578B\u6F14\u7ECE...`, "Titania Echo");
@@ -34822,7 +39118,11 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
       userDesc: 0,
       worldInfo: 0,
       history: 0,
-      scriptInstruction: 0
+      scriptInstruction: 0,
+      // 仅续写口径下非零：把 [剧本指令] 块再拆三段（顺序即查看器的切片顺序）
+      continuationPreamble: 0,
+      continuationContext: 0,
+      continuationInstruction: 0
     };
     let directorSection = "";
     if (dirInstruction.trim()) {
@@ -34875,7 +39175,7 @@ ${ctx.worldInfo}
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
       const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
-      const history = getChatHistory2(limit, historyWhitelist, historyBlacklist);
+      const history = getChatHistory(limit, historyWhitelist, historyBlacklist);
       const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
 \uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
 ${history}
@@ -34938,7 +39238,12 @@ ${history}
     const scriptBlock = `[\u5267\u672C\u6307\u4EE4]
 \uFF08\u8FD9\u662F\u4F60\u7684\u4E3B\u8981\u4EFB\u52A1\uFF01\u8BF7\u6839\u636E\u4EE5\u4E0B\u6307\u4EE4\u751F\u6210\u521B\u610F\u5185\u5BB9\uFF0C\u5FFD\u7565\u4E0A\u65B9\u7684\u804A\u5929\u5386\u53F2\uFF0C\u4E13\u6CE8\u4E8E\u5B8C\u6210\u6B64\u521B\u4F5C\u8BF7\u6C42\uFF09
 ${processedPrompt}`;
-    sectionLengths.scriptInstruction = scriptBlock.length;
+    applyScriptInstructionSectionLengths(
+      sectionLengths,
+      scriptBlock,
+      processedPrompt,
+      generationOverrides?.continuationSectionLengths || null
+    );
     user += scriptBlock;
     diagnostics.input_stats.sys_len = sys.length;
     diagnostics.input_stats.user_len = user.length;
@@ -35177,8 +39482,15 @@ ${processedPrompt}`;
         const jsonText = await res.text();
         try {
           const json = JSON.parse(jsonText);
+          if (json?.error) {
+            throw new Error(json.error?.message || json.error || "ERR_API_RESPONSE");
+          }
+          if (!Array.isArray(json?.choices)) {
+            throw new Error("ERR_INVALID_API_RESPONSE");
+          }
           rawContent = json.choices?.[0]?.message?.content || "";
         } catch (jsonErr) {
+          if (["ERR_API_RESPONSE", "ERR_INVALID_API_RESPONSE"].some((code) => String(jsonErr?.message || "").includes(code))) throw jsonErr;
           throw new Error("Invalid JSON");
         }
       }
@@ -35270,10 +39582,12 @@ ${processedPrompt}`;
     }
     resetContinuationState();
     endStreamingCache();
-    pushSceneToHistory(finalOutput, script.id, script.name);
+    pushSceneToHistory(finalOutput, script.id, script.name, { status: "success", generationId });
     if (generationSource !== "user_continuation") {
       setContinuationSessionBaseRound(script.id, script.name, finalOutput, {
-        instruction: effectiveScriptInstruction
+        instruction: effectiveScriptInstruction,
+        status: "success",
+        generationId
       });
     }
     recordScriptGenerated(script.id, {
@@ -35334,18 +39648,22 @@ ${processedPrompt}`;
       }
       try {
         endStreamingCache();
-        pushSceneToHistory(partialOutput, script.id, script.name);
+        const partialStatus = isAbortError ? "aborted" : "partial";
+        pushSceneToHistory(partialOutput, script.id, script.name, { status: partialStatus, generationId, error: e?.message });
         partialSaved = true;
         if (generationSource === "user_continuation") {
           appendContinuationSessionRound(
             script.id,
             script.name,
             generationOverrides?.continuationInstruction || "\uFF08\u4E2D\u65AD\u540E\u4FDD\u7559\u7684\u7EED\u5199\uFF09",
-            partialOutput
+            partialOutput,
+            { status: partialStatus, generationId }
           );
         } else {
           setContinuationSessionBaseRound(script.id, script.name, partialOutput, {
-            instruction: effectiveScriptInstruction
+            instruction: effectiveScriptInstruction,
+            status: partialStatus,
+            generationId
           });
         }
         if (shouldRenderStreamToUI() && $("#t-output-content").length > 0) {
@@ -35403,7 +39721,7 @@ ${processedPrompt}`;
     } else if (errMsg.includes("quota") || errMsg.includes("limit") || errMsg.includes("429")) {
       diagnosisHint = "API \u914D\u989D\u4E0D\u8DB3\u6216\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\u3002\u8BF7\u7A0D\u540E\u91CD\u8BD5\u6216\u68C0\u67E5\u8D26\u6237\u4F59\u989D\u3002";
     }
-    const errHtml = `<div style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; background: rgba(255,107,107,0.1); border-radius:8px;">
+    const errHtml = `<div data-titania-result-status="failed" style="color:#ff6b6b; text-align:center; padding:20px; border:1px dashed #ff6b6b; background: rgba(255,107,107,0.1); border-radius:8px;">
             <div style="font-size:3em; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div style="font-weight:bold; margin-bottom:5px;">\u6F14\u7ECE\u51FA\u9519\u4E86</div>
             <div style="font-size:0.9em; margin-bottom:15px; color:#faa;">${errMsg}</div>
@@ -35412,8 +39730,14 @@ ${processedPrompt}`;
             </div>
         </div>`;
     if (!partialSaved) {
-      GlobalState.lastGeneratedContent = errHtml;
-      GlobalState.lastGeneratedScriptId = script.id;
+      setCurrentGenerationResult({
+        generationId,
+        content: errHtml,
+        scriptId: script.id,
+        scriptName: script.name,
+        status: "failed",
+        error: e?.message || "unknown_error"
+      });
     }
     $floatBtn.addClass("t-notify");
     if (!silent && window.toastr) {
@@ -35438,6 +39762,7 @@ ${processedPrompt}`;
     if (typeof window.updateRunButtonsState === "function") {
       window.updateRunButtonsState();
     }
+    updateFavButtonUI();
   }
 }
 async function executeQueueGeneration(scripts) {
@@ -35558,6 +39883,7 @@ function cancelQueueGeneration() {
 }
 async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false, initialInstruction = "") {
   const $floatBtn = $("#titania-float-btn");
+  const generationId = `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const useStream = cfg.stream !== false;
   const signal = GlobalState.abortController?.signal;
   const continuationSource = continuationType === "user" ? "user_continuation" : "auto_continuation";
@@ -35869,10 +40195,12 @@ Generate ONLY the continuation (no repetition):`;
       const rewrittenOutput = finalOutput;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
-      pushSceneToHistory(rewrittenOutput, script.id, script.name);
+      pushSceneToHistory(rewrittenOutput, script.id, script.name, { status: "success", generationId });
       if (continuationType === "auto") {
         setContinuationSessionBaseRound(script.id, script.name, rewrittenOutput, {
-          instruction: initialInstruction
+          instruction: initialInstruction,
+          status: "success",
+          generationId
         });
       }
       recordScriptGenerated(script.id, {
@@ -35932,6 +40260,17 @@ Generate ONLY the continuation (no repetition):`;
     }
   } catch (e) {
     if (e.name === "AbortError") {
+      if (GlobalState.continuation.accumulatedContent) {
+        setCurrentGenerationResult({
+          generationId,
+          content: GlobalState.continuation.accumulatedContent,
+          scriptId: script.id,
+          scriptName: script.name,
+          status: "aborted",
+          error: e.message || "aborted"
+        });
+      }
+      clearStreamingCache();
       finishPromptTrace(promptTraceId, "aborted", {
         continuationType,
         error: e.message || "aborted"
@@ -35941,8 +40280,14 @@ Generate ONLY the continuation (no repetition):`;
     console.error("Titania Continuation Error:", e);
     TitaniaLogger.error("\u7EED\u5199\u8FC7\u7A0B\u53D1\u751F\u5F02\u5E38", e);
     if (GlobalState.continuation.accumulatedContent) {
-      GlobalState.lastGeneratedContent = GlobalState.continuation.accumulatedContent;
-      GlobalState.lastGeneratedScriptId = script.id;
+      setCurrentGenerationResult({
+        generationId,
+        content: GlobalState.continuation.accumulatedContent,
+        scriptId: script.id,
+        scriptName: script.name,
+        status: "partial",
+        error: e?.message || "unknown_error"
+      });
       if (!silent && window.toastr) {
         const errorHint = String(e?.message || "");
         const isServerBusy = errorHint.includes("503") || errorHint.includes("429");
@@ -35951,6 +40296,7 @@ Generate ONLY the continuation (no repetition):`;
       }
     }
     resetContinuationState();
+    clearStreamingCache();
     stopTimer();
     $floatBtn.addClass("t-notify");
     finishPromptTrace(promptTraceId, "failed", {
@@ -35966,15 +40312,17 @@ Generate ONLY the continuation (no repetition):`;
     if (typeof window.updateRunButtonsState === "function") {
       window.updateRunButtonsState();
     }
+    updateFavButtonUI();
   }
 }
 async function handleUserContinuation(options = {}) {
-  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3, branchFromCurrentView = false, regenerateRound = null, regenerateRoundKey = "", sourceBranchKey = "", scriptIdOverride = "", baseContentOverride = "" } = options;
+  const { instruction = "", fromCurrentView = true, autoLocate = true, injectRoundsCount = 3, branchFromCurrentView = false, regenerateRound = null, regenerateRoundKey = "", continueAfterRound = null, continueAfterRoundKey = "", sourceBranchKey = "", scriptIdOverride = "", baseContentOverride = "", crossRoleSource = "" } = options;
   if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
     if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
     return false;
   }
   const isRegeneration = regenerateRound !== null && regenerateRound !== void 0 || Boolean(regenerateRoundKey);
+  const isHistoryContinuation = continueAfterRound !== null && continueAfterRound !== void 0 || Boolean(continueAfterRoundKey);
   const display = scriptIdOverride && baseContentOverride ? {
     content: baseContentOverride,
     scriptId: scriptIdOverride,
@@ -35982,7 +40330,8 @@ async function handleUserContinuation(options = {}) {
   } : fromCurrentView ? getCurrentDisplayContent() : {
     content: GlobalState.lastGeneratedContent,
     scriptId: GlobalState.lastGeneratedScriptId,
-    scriptName: "\u573A\u666F"
+    scriptName: "\u573A\u666F",
+    generationId: String(GlobalState.currentGenerationResult?.generationId || "")
   };
   const baseContent = (display?.content || "").trim();
   if (!baseContent) {
@@ -36003,30 +40352,32 @@ async function handleUserContinuation(options = {}) {
     return false;
   }
   let continuationEntry = getContinuationRuntimeStore()[script.id];
-  const existingRounds = Array.isArray(continuationEntry?.rounds) ? continuationEntry.rounds : [];
-  const hasCurrentContent = existingRounds.some((item) => String(item?.content || "").trim() === baseContent);
-  if (!hasCurrentContent && !isRegeneration) {
-    if (existingRounds.length === 0) {
-      const continuationContext = await getContextData();
-      let initialInstruction = String(script.prompt || "");
-      try {
-        initialInstruction = evaluateMacros(initialInstruction, {
-          char: continuationContext.charName,
-          user: continuationContext.userName
-        });
-      } catch (e) {
-        initialInstruction = initialInstruction.replace(/{{char}}/gi, continuationContext.charName).replace(/{{user}}/gi, continuationContext.userName);
-      }
-      setContinuationSessionBaseRound(script.id, script.name, baseContent, {
-        instruction: initialInstruction
-      });
-    } else {
-      appendContinuationSessionRound(
+  let lineageBranchResult = null;
+  if (!isRegeneration && !isHistoryContinuation && !branchFromCurrentView) {
+    const anchor = findContinuationRoundAnchor(script.id, {
+      generationId: display?.generationId,
+      content: baseContent
+    });
+    if (!anchor) {
+      await startFreshContinuationBranch(script, baseContent);
+    } else if (!anchor.isActiveTail) {
+      lineageBranchResult = branchContinuationSessionAtRound(
         script.id,
-        script.name,
-        "\uFF08\u4E2D\u65AD\u540E\u6062\u590D\u7684\u90E8\u5206\u5185\u5BB9\uFF09",
-        baseContent
+        anchor.branchKey,
+        anchor.round,
+        anchor.roundKey,
+        true
       );
+      if (lineageBranchResult) {
+        TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u5BF9\u9F50\u5230\u5F53\u524D\u663E\u793A\u5185\u5BB9\u6240\u5C5E\u4E16\u7CFB", {
+          scriptId: script.id,
+          sourceBranchKey: anchor.branchKey,
+          fromArchivedBranch: !anchor.isActive,
+          anchorRound: anchor.round,
+          branchKey: lineageBranchResult.branchKey,
+          contextRounds: lineageBranchResult.contextRounds.length
+        });
+      }
     }
     continuationEntry = getContinuationRuntimeStore()[script.id];
   }
@@ -36043,49 +40394,36 @@ async function handleUserContinuation(options = {}) {
     }
   }
   if (branchFromCurrentView) {
-    resetContinuationSessionRounds(script.id, script.name);
-    const branchContext = await getContextData();
-    let branchInstruction = String(script.prompt || "");
-    try {
-      branchInstruction = evaluateMacros(branchInstruction, {
-        char: branchContext.charName,
-        user: branchContext.userName
-      });
-    } catch (e) {
-      branchInstruction = branchInstruction.replace(/{{char}}/gi, branchContext.charName).replace(/{{user}}/gi, branchContext.userName);
-    }
-    setContinuationSessionBaseRound(script.id, script.name, baseContent, {
-      forceNewBranch: true,
-      instruction: branchInstruction
-    });
+    await startFreshContinuationBranch(script, baseContent);
     TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u521B\u5EFA\u5206\u652F", {
       scriptId: script.id,
       scriptName: script.name,
       baseContentLength: baseContent.length
     });
   }
-  let branchResult = null;
-  if (regenerateRound !== null && regenerateRound !== void 0 || regenerateRoundKey) {
+  let branchResult = lineageBranchResult;
+  if (isRegeneration) {
     branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, regenerateRound, regenerateRoundKey);
     if (!branchResult) {
       if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
       return false;
     }
+  } else if (isHistoryContinuation) {
+    branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, continueAfterRound, continueAfterRoundKey, true);
+    if (!branchResult) {
+      if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
+      return false;
+    }
   }
-  const userInstruction = (instruction || "").trim() || branchResult?.targetInstruction || "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
+  const userInstruction = (instruction || "").trim() || (isRegeneration ? branchResult?.targetInstruction : "") || DEFAULT_CONTINUATION_INSTRUCTION;
   const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
   const sessionInjection = branchResult ? buildContinuationBranchInjection(branchResult.contextRounds) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
-  const promptOverride = `[\u7EED\u5199\u6A21\u5F0F]
-\u4F60\u5C06\u57FA\u4E8E\u5DF2\u6709\u5267\u60C5\u8FDB\u884C\u591A\u8F6E\u7EED\u5199\u751F\u6210\u3002
-\u8BF7\u4FDD\u6301\u4EBA\u7269\u3001\u8BED\u6C14\u3001\u8BBE\u5B9A\u4E0E\u89C6\u89C9\u98CE\u683C\u4E00\u81F4\uFF0C\u5728\u4E0D\u91CD\u590D\u5DF2\u6709\u6587\u672C\u7684\u524D\u63D0\u4E0B\u63A8\u8FDB\u5267\u60C5\u3002
-\u8F93\u51FA\u8981\u6C42\u4E0E\u666E\u901A\u751F\u6210\u4E00\u81F4\uFF1A\u8F93\u51FA\u53EF\u76F4\u63A5\u6E32\u67D3\u7684\u539F\u59CB HTML\uFF0C\u4E0D\u8981 Markdown \u4EE3\u7801\u5757\u3002
-
-[\u7EED\u5199\u4F1A\u8BDD\u4E0A\u4E0B\u6587]
-\uFF08\u4EE5\u4E0B\u4E3A\u5386\u53F2\u7EED\u5199\u8F6E\u6B21\uFF0C\u5305\u542B\u201C\u6307\u4EE4+\u7ED3\u679C\u201D\uFF0C\u7528\u4E8E\u4FDD\u6301\u591A\u8F6E\u8FDE\u7EED\u6027\uFF09
-${sessionInjection.text}
-
-[\u672C\u8F6E\u7EED\u5199\u6307\u4EE4]
-${userInstruction}`;
+  const composedOverride = composeContinuationPromptOverride({
+    injectionText: sessionInjection.text,
+    userInstruction,
+    crossRoleSource
+  });
+  const promptOverride = composedOverride.text;
   TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u5207\u6362\u5230\u65B0\u56DE\u5408\u751F\u6210\u6A21\u5F0F", {
     scriptId: script.id,
     scriptName: script.name,
@@ -36108,6 +40446,7 @@ ${userInstruction}`;
     keepOverlayOpen: true,
     source: "user_continuation",
     continuationInstruction: userInstruction,
+    continuationSectionLengths: composedOverride.lengths,
     injectRoundsCount: effectiveInjectCount,
     injectedRoundItems: sessionInjection.selectedRounds.length,
     injectedChars: sessionInjection.estimatedChars,
@@ -36116,7 +40455,10 @@ ${userInstruction}`;
     branchKey: branchResult?.branchKey || ""
   });
   if (success) {
-    appendContinuationSessionRound(script.id, script.name, userInstruction, GlobalState.lastGeneratedContent);
+    appendContinuationSessionRound(script.id, script.name, userInstruction, GlobalState.lastGeneratedContent, {
+      status: "success",
+      generationId: GlobalState.currentGenerationResult?.generationId
+    });
     if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
   } else if (branchResult) {
     restoreContinuationBranchAfterFailedGeneration(script.id, branchResult);
@@ -36124,7 +40466,7 @@ ${userInstruction}`;
   }
   return success;
 }
-var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, CONTINUATION_INJECT_MIN, CONTINUATION_ARCHIVED_BRANCH_MAX, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
+var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, CONTINUATION_INJECT_MIN, CONTINUATION_ARCHIVED_BRANCH_MAX, DEFAULT_CONTINUATION_INSTRUCTION, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
@@ -36135,6 +40477,7 @@ var init_api = __esm({
     init_chatHistoryBlacklist();
     init_floatingBtn();
     init_mainWindow();
+    init_viewState();
     init_connection();
     init_scriptData();
     init_promptManager();
@@ -36143,6 +40486,7 @@ var init_api = __esm({
     CONTINUATION_INJECT_MAX = 20;
     CONTINUATION_INJECT_MIN = 3;
     CONTINUATION_ARCHIVED_BRANCH_MAX = 20;
+    DEFAULT_CONTINUATION_INSTRUCTION = "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
     interactiveDetectionIdleHandle = null;
     interactiveDetectionTimer = null;
     interactiveDetectionToken = 0;
@@ -36162,7 +40506,7 @@ init_state();
 init_scriptData();
 init_api();
 init_continuationStore();
-import { extension_settings as extension_settings3 } from "../../../extensions.js";
+import { extension_settings as extension_settings2 } from "../../../extensions.js";
 import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
 
 // src/core/extensionUpdate.js
@@ -36220,8 +40564,8 @@ async function fetchAvailableUpdates() {
   }
 }
 function getExtensionType() {
-  const id = Object.keys(extensionTypes).find((key) => key === EXTENSION_ID || key.endsWith(`/${EXTENSION_NAME}`));
-  return id ? extensionTypes[id] : "";
+  const id3 = Object.keys(extensionTypes).find((key) => key === EXTENSION_ID || key.endsWith(`/${EXTENSION_NAME}`));
+  return id3 ? extensionTypes[id3] : "";
 }
 async function updateExtension() {
   const response = await fetch("/api/extensions/update", {
@@ -36549,8 +40893,7 @@ function showFloatingButton() {
   console.log("Titania: \u60AC\u6D6E\u7403\u5DF2\u663E\u793A");
 }
 function hideFloatingButton() {
-  $("#titania-float-btn").remove();
-  $("#titania-timer").remove();
+  destroyFloatingButton();
   console.log("Titania: \u60AC\u6D6E\u7403\u5DF2\u9690\u85CF");
 }
 async function buildVectorBackupData() {
@@ -36684,16 +41027,16 @@ function bindDrawerBackupControls() {
   });
 }
 async function loadExtensionSettings() {
-  extension_settings3[extensionName] = extension_settings3[extensionName] || {};
-  if (Object.keys(extension_settings3[extensionName]).length === 0) {
-    Object.assign(extension_settings3[extensionName], defaultSettings);
+  extension_settings2[extensionName] = extension_settings2[extensionName] || {};
+  if (Object.keys(extension_settings2[extensionName]).length === 0) {
+    Object.assign(extension_settings2[extensionName], defaultSettings);
   }
   $("#titania-version-badge").text(`v${CURRENT_VERSION}`);
   initCoreFeatures();
-  $("#enable_echo_theater").prop("checked", extension_settings3[extensionName].enabled);
+  $("#enable_echo_theater").prop("checked", extension_settings2[extensionName].enabled);
   $("#enable_echo_theater").on("input", function() {
     const showFloatBtn = $(this).prop("checked");
-    extension_settings3[extensionName].enabled = showFloatBtn;
+    extension_settings2[extensionName].enabled = showFloatBtn;
     saveSettingsDebounced2();
     if (showFloatBtn) {
       showFloatingButton();
@@ -36701,7 +41044,7 @@ async function loadExtensionSettings() {
       hideFloatingButton();
     }
   });
-  if (extension_settings3[extensionName].enabled) {
+  if (extension_settings2[extensionName].enabled) {
     showFloatingButton();
   }
   const extData = getExtData();
@@ -36725,11 +41068,21 @@ async function loadExtensionSettings() {
     saveExtData();
   }
   $("#cfg-outline-entry-enabled").prop("checked", extData.outline_entry.enabled === true);
+  $("#cfg-float-edge-tuck").prop("checked", extData.appearance?.edge_tuck !== false);
   $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
   $("#cfg-toolbar-lore-enabled").prop("checked", extData.quick_toolbar.enabled_items.lore === true);
   $("#cfg-toolbar-recall-enabled").prop("checked", extData.quick_toolbar.enabled_items.recall === true);
+  $("#cfg-float-edge-tuck").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.appearance || typeof data.appearance !== "object") data.appearance = {};
+    data.appearance.edge_tuck = enabled;
+    saveExtData();
+    refreshFloatingTuck();
+    if (window.toastr) toastr.success(enabled ? "\u60AC\u6D6E\u7403\u534A\u9690\u85CF\u5DF2\u542F\u7528\uFF0C\u53EF\u62D6\u5230\u5C4F\u5E55\u8FB9\u7F18\u85CF\u8D77\u4E00\u534A" : "\u60AC\u6D6E\u7403\u534A\u9690\u85CF\u5DF2\u5173\u95ED\uFF0C\u5C06\u59CB\u7EC8\u5B8C\u6574\u663E\u793A", "Titania Echo");
+  });
   $("#cfg-outline-entry-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
     const data = getExtData();
