@@ -1290,8 +1290,30 @@ function getPresetEntrySummary(preset) {
     enabled: entry.enabled !== false,
     required: entry.required === true,
     readonly: entry.readonly === true,
+    custom: entry.custom === true,
     content: entry.content || ""
   }));
+}
+function createCustomPresetEntry(overrides = {}) {
+  return {
+    id: createEntryId("custom"),
+    source_identifier: null,
+    name: "\u81EA\u5B9A\u4E49\u6761\u76EE",
+    role: "system",
+    type: "text",
+    marker: null,
+    enabled: true,
+    required: false,
+    custom: true,
+    content: "",
+    ...overrides
+  };
+}
+function getPresetInsertLimit(preset) {
+  const entries = preset?.entries;
+  if (!Array.isArray(entries)) return 0;
+  const managedIndex = entries.findIndex(isTitaniaManagedEntry);
+  return managedIndex < 0 ? entries.length : managedIndex;
 }
 function getPromptScheme(data, mode = "narrative") {
   ensurePromptManager(data);
@@ -2716,6 +2738,37 @@ textarea.t-input {
     z-index: 20001;
 }
 
+/* \u6807\u9898\u680F\u53F3\u4FA7\u56FE\u6807\u7EC4\uFF08\u5DE5\u574A / \u6536\u85CF\u5939 / \u66F4\u591A / \u5173\u95ED\uFF09
+   base.css \u7684 .t-icon-btn \u662F 1.2em \u88F8\u56FE\u6807 + margin-left\uFF0C\u70B9\u51FB\u70ED\u533A\u53EA\u6709\u5B57\u5F62\u672C\u8EAB\uFF0C
+   \u5728\u6807\u9898\u680F\u91CC\u65E2\u663E\u5C0F\u53C8\u96BE\u70B9\u3002\u8FD9\u91CC\u7EDF\u4E00\u6539\u6210\u5E26\u5185\u8FB9\u8DDD\u7684\u65B9\u5F62\u70ED\u533A\uFF0C\u95F4\u8DDD\u4EA4\u7ED9 gap\u3002 */
+#t-main-view .t-header .t-header-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+#t-main-view .t-header .t-header-actions .t-icon-btn {
+    /* \u95F4\u8DDD\u7EDF\u4E00\u7531\u7236\u7EA7 gap \u8D1F\u8D23\uFF0C\u6E05\u6389 base.css \u7684 margin-left \u907F\u514D\u53E0\u52A0 */
+    margin-left: 0;
+    font-size: 1.5em;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+#t-main-view .t-header .t-header-actions .t-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#t-main-view .t-header .t-header-actions .t-close {
+    margin-left: 0;
+}
+
 /* Zen Mode (\u6C89\u6D78\u6A21\u5F0F) */
 #t-main-view.t-zen-mode .t-header,
 #t-main-view.t-zen-mode .t-top-bar,
@@ -3739,15 +3792,16 @@ textarea.t-input {
         padding: 10px;
     }
 
-    /* \u56FE\u6807\u95F4\u8DDD\u6536\u7A84\uFF1Abase.css \u7684 15px \u662F\u7ED9\u684C\u9762\u7559\u767D\u7528\u7684\uFF0C
-       \u7A84\u5C4F\u4E0B\u4F1A\u628A\u6807\u9898\u6324\u5230\u622A\u65AD\uFF08.t-title-container \u662F overflow:hidden\uFF09 */
-    #t-main-view .t-header .t-icon-btn {
-        margin-left: 8px;
-        font-size: 1.05em;
+    /* \u56FE\u6807\u95F4\u8DDD\u6536\u7A84\uFF1A\u684C\u9762\u4E0B\u7684 8px gap \u5728\u7A84\u5C4F\u4F1A\u628A\u6807\u9898\u6324\u5230\u622A\u65AD
+       \uFF08.t-title-container \u662F overflow:hidden\uFF09 */
+    #t-main-view .t-header .t-header-actions {
+        gap: 4px;
     }
 
-    #t-main-view .t-header .t-close {
-        margin-left: 8px;
+    #t-main-view .t-header .t-header-actions .t-icon-btn {
+        font-size: 1.3em;
+        width: 30px;
+        height: 30px;
     }
 
     .t-top-bar {
@@ -4014,6 +4068,17 @@ textarea.t-input {
     min-height: 0;
 }
 
+/* \u6807\u7B7E\u680F\u3002\u6837\u5F0F\u539F\u672C\u5185\u8054\u5728 mainWindow.js \u91CC\uFF0C\u5185\u8054\u4F18\u5148\u7EA7\u538B\u8FC7\u5A92\u4F53\u67E5\u8BE2\uFF0C
+   \u79FB\u52A8\u7AEF\u6CA1\u6CD5\u628A\u5B83\u5E76\u8FDB\u6807\u9898\u680F\uFF0C\u6240\u4EE5\u642C\u5230\u8FD9\u91CC */
+.t-wi-action-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+}
+
 .t-wi-tabs {
     gap: 8px;
 }
@@ -4063,6 +4128,11 @@ textarea.t-input {
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+/* \u684C\u9762\u7AEF\u4E0D\u9700\u8981\u4E0B\u62C9\uFF0C\u5361\u7247\u5217\u8868\u5DF2\u7ECF\u5168\u90E8\u5C55\u5F00 */
+.t-wi-book-select {
+    display: none;
 }
 
 .t-wi-book-item {
@@ -4125,13 +4195,29 @@ textarea.t-input {
     overflow: hidden;
 }
 
+/* \u6761\u76EE\u533A\u5934\u90E8\uFF1A\u4E0A\u6392\u4E66\u540D+\u5FBD\u7AE0\uFF0C\u4E0B\u6392\u641C\u7D22\u6846+\u5168\u9009\u6309\u94AE\u3002
+   \u79FB\u52A8\u7AEF\u4F1A\u628A\u4E0A\u6392\u6574\u4E2A\u9690\u85CF\uFF0C\u53EA\u7559\u4E0B\u6392\u4E00\u6761\u5DE5\u5177\u884C */
 .t-wi-entry-pane-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     padding: 10px 12px;
     border-bottom: 1px solid #333;
+    flex-shrink: 0;
+}
+
+.t-wi-entry-pane-heading {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 10px;
+    min-width: 0;
+}
+
+.t-wi-entry-pane-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
 
 .t-wi-entry-pane-title {
@@ -4162,19 +4248,19 @@ textarea.t-input {
     color: #999;
 }
 
-/* \u6761\u76EE\u641C\u7D22\uFF08\u6309\u6807\u9898\u8FC7\u6EE4\uFF09 */
+/* \u6761\u76EE\u641C\u7D22\uFF08\u6309\u6807\u9898\u8FC7\u6EE4\uFF09\u3002\u73B0\u5728\u662F\u5DE5\u5177\u884C\u91CC\u7684\u4E00\u4E2A flex \u5B50\u9879\uFF0C
+   \u81EA\u8EAB\u4E0D\u518D\u6709 padding / \u4E0B\u8FB9\u6846 \u2014\u2014 \u90A3\u4E9B\u5DF2\u7ECF\u4E0A\u79FB\u5230 .t-wi-entry-pane-header */
 .t-wi-entry-search {
     position: relative;
     display: flex;
     align-items: center;
-    padding: 8px 12px;
-    border-bottom: 1px solid #333;
-    flex-shrink: 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .t-wi-entry-search .t-wi-search-icon {
     position: absolute;
-    left: 22px;
+    left: 10px;
     color: #666;
     font-size: 12px;
     pointer-events: none;
@@ -4204,12 +4290,16 @@ textarea.t-input {
 
 .t-wi-search-clear {
     position: absolute;
-    right: 20px;
+    right: 8px;
     display: none;
     color: #888;
     font-size: 13px;
     cursor: pointer;
     padding: 2px 4px;
+}
+
+.t-wi-entry-pane-tools .t-btn {
+    flex-shrink: 0;
 }
 
 .t-wi-search-clear:hover {
@@ -4494,15 +4584,32 @@ textarea.t-input {
 
 /* \u79FB\u52A8\u7AEF\u9002\u914D */
 @media screen and (max-width: 600px) {
+    /* \u9762\u677F\u62C9\u5230\u8FD1\u6EE1\u5C4F\u3002\u7528\u7236\u5BB9\u5668\u767E\u5206\u6BD4\u800C\u4E0D\u662F vh/dvh\uFF1A
+       .t-wi-selector \u7EDD\u5BF9\u5B9A\u4F4D\u5728 #t-main-view \u5185\uFF0C\u800C .t-box \u662F overflow:hidden\uFF0C
+       \u6240\u4EE5 100% \u5C31\u662F\u4E3B\u7A97\u53E3\u53EF\u89C6\u9AD8\u5EA6\uFF0C\u4E14\u4E0D\u53D7\u79FB\u52A8\u6D4F\u89C8\u5668\u5730\u5740\u680F\u4F38\u7F29\u5F71\u54CD */
     .t-wi-selector {
         width: 95%;
-        top: 50px;
-        max-height: 75vh;
+        top: 8px;
+        max-height: calc(100% - 16px);
     }
 
     .t-wi-mode-bar {
         flex-direction: column;
         gap: 10px;
+    }
+
+    /* \u6807\u9898\u680F\u548C\u6807\u7B7E\u680F\u5404\u81EA\u538B\u8584\u3002\u4E24\u8005\u662F\u5144\u5F1F\u8282\u70B9\u800C\u975E\u7236\u5B50\uFF0C
+       \u6CA1\u6CD5\u9760 CSS \u5408\u5E76\u6210\u4E00\u884C\uFF0C\u771F\u8981\u5408\u5E76\u5F97\u6539 DOM \u5E76\u727A\u7272\u684C\u9762\u7AEF\u7684\u5206\u9694\u7EBF\uFF0C\u4E0D\u5212\u7B97 */
+    .t-wi-header {
+        padding: 10px 12px;
+    }
+
+    .t-wi-action-bar {
+        padding: 6px 12px;
+    }
+
+    .t-wi-body {
+        padding: 8px;
     }
 
     .t-wi-layout {
@@ -4513,12 +4620,56 @@ textarea.t-input {
         min-height: 0;
     }
 
+    /* 160px \u7684\u5361\u7247\u7AD6\u5217\u6362\u6210\u4E00\u4E2A\u539F\u751F\u4E0B\u62C9\u3002
+       \u4E4B\u524D\u8BD5\u8FC7\u6A2A\u6ED1\u82AF\u7247\u6761\uFF0C\u771F\u673A\u4E0A\u6ED1\u4E0D\u52A8\uFF0C\u5DF2\u5F03\u7528 */
     .t-wi-books-pane {
-        max-height: 160px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        max-height: none;
+    }
+
+    .t-wi-books-header,
+    .t-wi-books-list {
+        display: none;
+    }
+
+    .t-wi-book-select {
+        display: block;
+        width: 100%;
+        height: 36px;
+        padding: 0 10px;
+        border: 1px solid #3a3a3a;
+        border-radius: 8px;
+        background: #222;
+        color: #ddd;
+        font-size: 13px;
+        box-sizing: border-box;
+    }
+
+    .t-wi-book-select:disabled {
+        color: #777;
     }
 
     .t-wi-entry-pane {
         min-height: 0;
+    }
+
+    /* \u4E66\u540D\u90A3\u884C\u9690\u85CF \u2014\u2014 \u4E0A\u9762\u7684\u4E0B\u62C9\u6846\u5DF2\u7ECF\u663E\u793A\u4E86\u5F53\u524D\u9009\u4E2D\u7684\u4E66 */
+    .t-wi-entry-pane-heading {
+        display: none;
+    }
+
+    .t-wi-entry-pane-header {
+        padding: 8px 10px;
+    }
+
+    .t-wi-entry-list {
+        padding: 8px;
+    }
+
+    .t-wi-footer {
+        padding: 10px 12px;
     }
 }
 
@@ -7106,6 +7257,88 @@ textarea.t-input {
     gap: 7px;
 }
 
+/* \u6761\u76EE\u4E4B\u95F4\u7684\u63D2\u5165\u70B9\u3002
+   \u5E73\u65F6\u96F6\u9AD8\u5EA6\u3001\u4E0D\u5360\u5E03\u5C40\uFF0C\u9F20\u6807\u79FB\u8FDB\u5361\u7247\u7F1D\u9699\u624D\u6D6E\u51FA\u300C\uFF0B \u5728\u6B64\u63D2\u5165\u300D\u3002
+   \u8D1F margin \u62B5\u6D88\u6389 .t-prompt-entry-list \u4E24\u6BB5 gap\uFF0C\u4FDD\u8BC1\u63D2\u5165\u70B9\u7684\u5B58\u5728\u4E0D\u6539\u53D8\u539F\u6709\u95F4\u8DDD\uFF1B
+   \u547D\u4E2D\u533A\u4EA4\u7ED9 ::before\uFF0C\u63A7\u5236\u5728 7px \u7F1D\u9699\u4EE5\u5185\uFF0C\u907F\u514D\u62A2\u8D70\u5361\u7247\u8FB9\u7F18\u7684\u70B9\u51FB\u3002 */
+.t-prompt-insert-slot {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 0;
+    margin: -3.5px 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.t-prompt-insert-slot::before {
+    content: "";
+    position: absolute;
+    inset: -3px 0;
+}
+
+/* \u9690\u85CF\u65F6\u5FC5\u987B pointer-events:none \u2014\u2014 opacity:0 \u7684\u5143\u7D20\u7167\u6837\u5403\u70B9\u51FB\uFF0C
+   \u5426\u5219\u6EA2\u51FA\u5230\u5361\u7247\u4E0A\u7684\u6807\u7B7E\u4F1A\u6321\u4F4F\u300C\u70B9\u5361\u7247\u7F16\u8F91\u6761\u76EE\u300D */
+.t-prompt-insert-slot > * {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+
+.t-prompt-insert-slot:hover > *,
+.t-prompt-insert-slot:focus-visible > * {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.t-prompt-insert-slot:focus-visible {
+    outline: none;
+}
+
+.t-prompt-insert-line {
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(to right, #55697a 0 4px, transparent 4px 8px);
+}
+
+.t-prompt-insert-label {
+    flex-shrink: 0;
+    padding: 3px 10px;
+    border: 1px solid #55697a;
+    border-radius: 999px;
+    background: #1a2027;
+    color: #90cdf4;
+    font-size: 0.72em;
+    line-height: 1.4;
+    white-space: nowrap;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.t-prompt-insert-slot:hover .t-prompt-insert-label,
+.t-prompt-insert-slot:focus-visible .t-prompt-insert-label {
+    border-color: #90cdf4;
+    background: #223040;
+}
+
+/* \u89E6\u5C4F\u6CA1\u6709 hover\uFF0C\u63D2\u5165\u70B9\u6539\u4E3A\u5E38\u9A7B\u53EF\u89C1\u5E76\u6491\u51FA\u771F\u5B9E\u9AD8\u5EA6 */
+@media (hover: none) {
+    .t-prompt-insert-slot {
+        height: 18px;
+        margin: -4px 0;
+    }
+
+    .t-prompt-insert-slot > * {
+        opacity: 0.55;
+        pointer-events: auto;
+    }
+}
+
 .t-prompt-entry-card {
     background: #1a1a1a;
     border: 1px solid #3a3a3a;
@@ -7147,6 +7380,16 @@ textarea.t-input {
 .t-prompt-entry-card.is-dragging {
     opacity: 0.45;
     border-style: dashed;
+}
+
+/* \u7528\u6237\u81EA\u5EFA\u6761\u76EE\uFF1A\u5DE6\u4FA7\u91D1\u8272\u63CF\u8FB9\uFF0C\u8DDF\u9884\u8BBE\u81EA\u5E26\u7684\u6761\u76EE\u533A\u5206\u5F00 */
+.t-prompt-entry-card.is-custom {
+    border-left: 2px solid rgba(191, 161, 95, 0.75);
+}
+
+.t-prompt-entry-delete:hover {
+    color: #ff7675;
+    border-color: rgba(255, 118, 117, 0.55);
 }
 
 .t-prompt-entry-card.is-drag-over {
@@ -32033,11 +32276,23 @@ function openSettingsWindow() {
       $list.html('<div style="color:#888; padding:12px 0;">\u6682\u65E0\u5BFC\u5165\u7684\u9884\u8BBE</div>');
       return;
     }
+    const insertLimit = isPreset ? getPresetInsertLimit(scheme) : -1;
+    const appendInsertSlot = (position) => {
+      if (position > insertLimit) return;
+      const $slot = $(`<button type="button" class="t-prompt-insert-slot" title="\u5728\u8FD9\u91CC\u63D2\u5165\u4E00\u4E2A\u65B0\u6761\u76EE">
+                <span class="t-prompt-insert-line"></span>
+                <span class="t-prompt-insert-label"><i class="fa-solid fa-plus"></i> \u5728\u6B64\u63D2\u5165</span>
+                <span class="t-prompt-insert-line"></span>
+            </button>`);
+      $slot.on("click", () => openPromptEntryEditor(scheme, null, { mode: "create", position }));
+      $list.append($slot);
+    };
     entries.forEach((entry, entryIndex) => {
+      appendInsertSlot(entryIndex);
       const isLocked = entry.readonly === true;
       const stateLabel = isLocked ? "\u63D2\u4EF6\u5185\u7F6E" : entry.required ? "\u5FC5\u9700" : entry.enabled ? "\u5DF2\u542F\u7528" : "\u5DF2\u7981\u7528";
       const stateIcon = isLocked || entry.required ? "fa-lock" : entry.enabled ? "fa-check" : "fa-xmark";
-      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"} ${isLocked ? "is-locked" : ""}" data-entry-id="${entry.id}" draggable="${isLocked ? "false" : "true"}">
+      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"} ${isLocked ? "is-locked" : ""} ${entry.custom ? "is-custom" : ""}" data-entry-id="${entry.id}" draggable="${isLocked ? "false" : "true"}">
                 <div class="t-prompt-entry-header">
                     <span class="t-prompt-entry-drag-hint" title="${isLocked ? "\u63D2\u4EF6\u56FA\u5B9A\u6761\u76EE" : "\u62D6\u52A8\u6392\u5E8F"}"><i class="fa-solid ${isLocked ? "fa-lock" : "fa-grip-vertical"}"></i></span>
                     <span class="t-prompt-entry-index">#${entry.index}</span>
@@ -32045,6 +32300,7 @@ function openSettingsWindow() {
                     <span class="t-prompt-entry-badge"></span>
                     <div class="t-prompt-entry-actions">
                         <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${isLocked ? "\u63D2\u4EF6\u5185\u7F6E\u6761\u76EE\uFF0C\u4E0D\u80FD\u7F16\u8F91\u3001\u7981\u7528\u6216\u6392\u5E8F" : entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : `${stateLabel}\uFF0C\u70B9\u51FB\u5207\u6362\u72B6\u6001`}" aria-label="${stateLabel}" ${entry.required ? "disabled" : ""}><i class="fa-solid ${stateIcon}"></i><span class="t-prompt-entry-toggle-label">${stateLabel}</span></button>
+                        ${entry.custom ? '<button type="button" class="t-prompt-entry-delete" title="\u5220\u9664\u8FD9\u4E2A\u81EA\u5B9A\u4E49\u6761\u76EE" aria-label="\u5220\u9664\u6761\u76EE"><i class="fa-solid fa-trash"></i></button>' : ""}
                     </div>
                 </div>
             </div>`);
@@ -32059,6 +32315,12 @@ function openSettingsWindow() {
       $row.find(".t-prompt-entry-toggle").on("click", function() {
         if (entry.required) return;
         updateEntry({ enabled: !entry.enabled });
+      });
+      $row.find(".t-prompt-entry-delete").on("click", function() {
+        const index = scheme.entries.findIndex((item) => item.id === entry.id);
+        if (index < 0) return;
+        scheme.entries.splice(index, 1);
+        renderPromptManager();
       });
       $row.on("click", function(event) {
         if ($(event.target).closest("button").length) return;
@@ -32112,10 +32374,13 @@ function openSettingsWindow() {
       });
       $list.append($row);
     });
+    appendInsertSlot(entries.length);
   };
-  const openPromptEntryEditor = (scheme, entryId) => {
-    const entry = scheme?.entries?.find((item) => item.id === entryId);
-    if (!entry || entry.readonly === true) return;
+  const openPromptEntryEditor = (scheme, entryId, options = {}) => {
+    const isCreate = options.mode === "create";
+    const entry = isCreate ? createCustomPresetEntry() : scheme?.entries?.find((item) => item.id === entryId);
+    if (!entry) return;
+    if (!isCreate && entry.readonly === true) return;
     document.getElementById("t-prompt-editor-modal")?.remove();
     const isDynamic = entry.type === "dynamic";
     const host = document.createElement("div");
@@ -32268,12 +32533,12 @@ function openSettingsWindow() {
                     textarea { min-height: 220px; }
                 }
             </style>
-            <dialog aria-label="\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE">
+            <dialog aria-label="${isCreate ? "\u65B0\u589E\u63D0\u793A\u8BCD\u6761\u76EE" : "\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE"}">
                 <div class="backdrop">
                     <section class="editor" role="document">
                     <header class="header">
-                        <span class="title">\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE</span>
-                        <button type="button" class="icon-button save" title="\u4FDD\u5B58\u6761\u76EE" aria-label="\u4FDD\u5B58\u6761\u76EE">
+                        <span class="title">${isCreate ? "\u65B0\u589E\u63D0\u793A\u8BCD\u6761\u76EE" : "\u7F16\u8F91\u63D0\u793A\u8BCD\u6761\u76EE"}</span>
+                        <button type="button" class="icon-button save" title="${isCreate ? "\u63D2\u5165\u6761\u76EE" : "\u4FDD\u5B58\u6761\u76EE"}" aria-label="${isCreate ? "\u63D2\u5165\u6761\u76EE" : "\u4FDD\u5B58\u6761\u76EE"}">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4Zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm3-10H5V5h10v4Z"/></svg>
                         </button>
                         <button type="button" class="icon-button close" title="\u5173\u95ED" aria-label="\u5173\u95ED">
@@ -32312,12 +32577,18 @@ function openSettingsWindow() {
       entry.name = nameInput.value.trim() || entry.name || "\u672A\u547D\u540D\u6761\u76EE";
       entry.role = roleSelect.value || "user";
       if (!isDynamic) entry.content = contentInput.value;
+      if (isCreate) {
+        const position = Math.min(Math.max(0, options.position ?? scheme.entries.length), scheme.entries.length);
+        scheme.entries.splice(position, 0, entry);
+        ensureTitaniaPresetEntries(scheme);
+      }
       close();
       renderPromptManager();
     });
     document.body.appendChild(host);
     modal.showModal();
     nameInput.focus();
+    if (isCreate) nameInput.select();
   };
   $("#t-prompt-view").on("change", renderPromptManager);
   $("#t-prompt-preset-select").on("change", function() {
@@ -34343,7 +34614,7 @@ function renderHtml(viewData) {
                         \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
                     </div>
                 </div>
-                <div style="display:flex; align-items:center; flex-shrink:0;">
+                <div class="t-header-actions">
                     <i class="fa-solid fa-store t-icon-btn" id="t-btn-workshop" title="\u56DE\u58F0\u5DE5\u574A"></i>
                     <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
                     <i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" title="\u66F4\u591A"></i>
@@ -34754,7 +35025,7 @@ function renderHtml2(viewData) {
                         \u2728 \u4E3B\u6F14: <span id="t-char-name">${defaultCtx.charName}</span>
                     </div>
                 </div>
-                <div style="display:flex; align-items:center; flex-shrink:0;">
+                <div class="t-header-actions">
                     <i class="fa-solid fa-store t-icon-btn" id="t-btn-workshop" title="\u56DE\u58F0\u5DE5\u574A"></i>
                     <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
                     <i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" title="\u66F4\u591A"></i>
@@ -36374,6 +36645,18 @@ async function openWorldInfoSelector() {
             `;
     }).join("");
   };
+  const renderBookSelectHtml = (books, activeSet2, selectedName) => {
+    if (!books.length) {
+      const emptyText = currentViewMode === "active" ? "\u5F53\u524D\u6CA1\u6709\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66" : "\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66";
+      return `<option value="">${escapeHtmlText2(emptyText)}</option>`;
+    }
+    return books.map((name) => {
+      const isActive = activeSet2.has(name);
+      const selected = name === selectedName;
+      const label = `${isActive ? "\u25CF" : "\u25CB"} ${name}`;
+      return `<option value="${encodeURIComponent(name)}" ${selected ? "selected" : ""}>${escapeHtmlText2(label)}</option>`;
+    }).join("");
+  };
   const html = `
     <div id="t-wi-selector" class="t-wi-selector">
         <div class="t-wi-header">
@@ -36385,7 +36668,7 @@ async function openWorldInfoSelector() {
             <div class="t-close" id="t-wi-close">&times;</div>
         </div>
 
-        <div class="t-wi-action-bar t-wi-tabs" style="display:flex; align-items:center; gap:8px; padding:10px 15px; border-bottom:1px solid #333;">
+        <div class="t-wi-action-bar t-wi-tabs">
             <button type="button" class="t-btn t-btn-xs t-wi-tab-btn active" data-mode="all">\u5168\u90E8\u4E16\u754C\u4E66 (${allBooks.length})</button>
             <button type="button" class="t-btn t-btn-xs t-wi-tab-btn" data-mode="active">\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66 (${baseActiveBooks.length})</button>
         </div>
@@ -36393,23 +36676,24 @@ async function openWorldInfoSelector() {
         <div class="t-wi-body t-wi-layout" id="t-wi-layout">
             <div class="t-wi-books-pane">
                 <div class="t-wi-books-header">\u4E16\u754C\u4E66\u5217\u8868</div>
+                <select class="t-wi-book-select" id="t-wi-book-select" aria-label="\u9009\u62E9\u4E16\u754C\u4E66"></select>
                 <div class="t-wi-books-list" id="t-wi-books-list"></div>
             </div>
             <div class="t-wi-entry-pane">
                 <div class="t-wi-entry-pane-header" id="t-wi-entry-pane-header">
-                    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                    <div class="t-wi-entry-pane-heading">
                         <div class="t-wi-entry-pane-title" id="t-wi-entry-pane-title">\u672A\u9009\u62E9\u4E16\u754C\u4E66</div>
                         <span class="t-wi-entry-pane-badge inactive" id="t-wi-entry-pane-badge">\u672A\u6FC0\u6D3B</span>
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                    <div class="t-wi-entry-pane-tools">
+                        <div class="t-wi-entry-search" id="t-wi-entry-search">
+                            <i class="fa-solid fa-magnifying-glass t-wi-search-icon"></i>
+                            <input type="text" id="t-wi-entry-search-input" placeholder="\u641C\u7D22\u6761\u76EE\u6807\u9898..." autocomplete="off">
+                            <i class="fa-solid fa-xmark t-wi-search-clear" id="t-wi-entry-search-clear" title="\u6E05\u7A7A\u641C\u7D22"></i>
+                        </div>
                         <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-all">\u5168\u9009</button>
                         <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-none">\u53D6\u6D88\u5168\u9009</button>
                     </div>
-                </div>
-                <div class="t-wi-entry-search" id="t-wi-entry-search">
-                    <i class="fa-solid fa-magnifying-glass t-wi-search-icon"></i>
-                    <input type="text" id="t-wi-entry-search-input" placeholder="\u641C\u7D22\u6761\u76EE\u6807\u9898..." autocomplete="off">
-                    <i class="fa-solid fa-xmark t-wi-search-clear" id="t-wi-entry-search-clear" title="\u6E05\u7A7A\u641C\u7D22"></i>
                 </div>
                 <div class="t-wi-entry-list" id="t-wi-entry-list">
                     ${visibleBooks.length === 0 ? '<div class="t-wi-empty">\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66</div>' : ""}
@@ -36604,6 +36888,14 @@ async function openWorldInfoSelector() {
     $("#t-wi-books-list").html(renderBookListHtml(visibleBooks, activeSet, currentBookName));
     $("#t-wi-books-list .t-wi-book-item").on("click", function() {
       const next = decodeURIComponent(String($(this).data("bookName") || ""));
+      if (!next || next === currentBookName) return;
+      loadBookEntries(next);
+    });
+    const $select = $("#t-wi-book-select");
+    $select.html(renderBookSelectHtml(visibleBooks, activeSet, currentBookName));
+    $select.prop("disabled", visibleBooks.length === 0);
+    $select.off("change").on("change", function() {
+      const next = decodeURIComponent(String($(this).val() || ""));
       if (!next || next === currentBookName) return;
       loadBookEntries(next);
     });
