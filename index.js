@@ -8271,6 +8271,52 @@ textarea.t-input {
     background: #121212;
 }
 
+/* \u6807\u9898\u680F\u53F3\u4FA7\u56FE\u6807\u7EC4\uFF08\u6253\u5F00\u7AD9\u70B9 / \u5237\u65B0 / \u5173\u95ED\uFF09
+   base.css \u7684 .t-icon-btn \u662F\u88F8\u56FE\u6807 + margin-left\uFF0C\u70B9\u51FB\u70ED\u533A\u53EA\u6709\u5B57\u5F62\u672C\u8EAB\uFF0C
+   \u79FB\u52A8\u7AEF\u5F88\u96BE\u70B9\u4E2D\u3002\u8FD9\u91CC\u8DDF\u4E3B\u7A97\u53E3\u4FDD\u6301\u4E00\u81F4\uFF1A\u65B9\u5F62\u70ED\u533A + gap \u63A7\u5236\u95F4\u8DDD\u3002 */
+#t-ws-view .t-header .t-header-actions,
+.t-ws-preview-box .t-header .t-header-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+#t-ws-view .t-header .t-header-actions .t-icon-btn,
+#t-ws-view .t-header .t-header-actions .t-close,
+.t-ws-preview-box .t-header .t-header-actions .t-close {
+    /* \u95F4\u8DDD\u7EDF\u4E00\u7531\u7236\u7EA7 gap \u8D1F\u8D23\uFF0C\u6E05\u6389 base.css \u7684 margin-left \u907F\u514D\u53E0\u52A0 */
+    margin-left: 0;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: color 0.2s, background-color 0.2s;
+    /* \u907F\u514D\u79FB\u52A8\u7AEF\u957F\u6309\u9009\u4E2D \xD7 \u6587\u672C / \u70B9\u51FB\u9AD8\u4EAE\u5757 */
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#t-ws-view .t-header .t-header-actions .t-icon-btn {
+    font-size: 1.35em;
+}
+
+#t-ws-view .t-header .t-header-actions .t-close,
+.t-ws-preview-box .t-header .t-header-actions .t-close {
+    font-size: 1.7em;
+}
+
+#t-ws-view .t-header .t-header-actions .t-icon-btn:hover,
+#t-ws-view .t-header .t-header-actions .t-close:hover,
+.t-ws-preview-box .t-header .t-header-actions .t-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* \u5173\u95ED\u952E\u65CB\u8F6C\u4F1A\u5E26\u7740\u70ED\u533A\u4E00\u8D77\u8F6C\uFF0C\u5706\u89D2\u65B9\u5757\u770B\u7740\u6CA1\u95EE\u9898\uFF0C\u4FDD\u7559\u539F\u52A8\u6548 */
+
 .t-ws-body {
     display: flex;
     flex-direction: column;
@@ -8736,10 +8782,26 @@ textarea.t-input {
         padding: 10px;
     }
 
-    #t-ws-view .t-icon-btn,
-    #t-ws-view .t-close {
-        margin-left: 8px;
-        font-size: 1.05em;
+    /* \u79FB\u52A8\u7AEF\u70ED\u533A\u653E\u5927\u5230 40px\uFF0C\u6BD4\u684C\u9762\u66F4\u597D\u6309\uFF1B\u56FE\u6807\u5B57\u53F7\u4E0D\u518D\u7F29\u5C0F */
+    #t-ws-view .t-header .t-header-actions,
+    .t-ws-preview-box .t-header .t-header-actions {
+        gap: 4px;
+    }
+
+    #t-ws-view .t-header .t-header-actions .t-icon-btn,
+    #t-ws-view .t-header .t-header-actions .t-close,
+    .t-ws-preview-box .t-header .t-header-actions .t-close {
+        width: 40px;
+        height: 40px;
+    }
+
+    #t-ws-view .t-header .t-header-actions .t-icon-btn {
+        font-size: 1.3em;
+    }
+
+    #t-ws-view .t-header .t-header-actions .t-close,
+    .t-ws-preview-box .t-header .t-header-actions .t-close {
+        font-size: 1.6em;
     }
 
     .t-ws-toolbar {
@@ -33012,7 +33074,7 @@ function openWorkshopWindow(source = "manager") {
                 <div class="t-title-main">\u56DE\u58F0\u5DE5\u574A</div>
                 <div class="t-title-sub">ECHO WORKSHOP</div>
             </div>
-            <div style="display:flex; align-items:center; flex-shrink:0;">
+            <div class="t-header-actions">
                 <i class="fa-solid fa-arrow-up-right-from-square t-icon-btn" id="t-ws-open-site" title="\u5728\u6D4F\u89C8\u5668\u4E2D\u6253\u5F00\u5DE5\u574A\uFF08\u6295\u7A3F/\u7F16\u8F91\uFF09"></i>
                 <i class="fa-solid fa-rotate t-icon-btn" id="t-ws-refresh" title="\u5237\u65B0"></i>
                 <span class="t-close" id="t-ws-close">&times;</span>
@@ -33166,7 +33228,9 @@ function openWorkshopWindow(source = "manager") {
             <div class="t-box t-ws-preview-box">
                 <div class="t-header">
                     <span class="t-title-main" style="font-size:1.15em;">${esc(item.name)}</span>
-                    <span class="t-close" id="t-ws-pv-close">&times;</span>
+                    <div class="t-header-actions">
+                        <span class="t-close" id="t-ws-pv-close">&times;</span>
+                    </div>
                 </div>
                 <div class="t-ws-preview-body">
                     <div class="t-ws-pv-bar">
