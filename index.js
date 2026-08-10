@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.2.0";
+    CURRENT_VERSION = "5.2.1";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -73,7 +73,10 @@ var init_defaults = __esm({
       ui_prefs: {
         script_sort_mode: "smart",
         // 主界面布局: modern(新版工具箱布局) | legacy(5.1.2 经典布局)
-        main_window_mode: "modern"
+        main_window_mode: "modern",
+        // 标题栏常驻图标（最多 5 个），未列入的自动收进「更多」弹层。
+        // 可选 id 见 src/ui/mainWindow/headerActions.js 的注册表
+        header_actions: ["workshop", "favs"]
       },
       appearance: {
         type: "emoji",
@@ -2910,6 +2913,11 @@ textarea.t-input {
     cursor: default;
 }
 
+/* \u5206\u652F\u6807\u9898\u5728\u6279\u91CF\u7BA1\u7406\u4E0B\u4ECD\u53EF\u6298\u53E0\uFF0C\u4FDD\u7559\u6307\u9488\u4EE5\u793A\u53EF\u70B9 */
+.t-cont-history-panel.is-managing .t-cont-history-branch-title {
+    cursor: pointer;
+}
+
 .t-cont-history-bulk-bar {
     display: flex;
     align-items: center;
@@ -3771,6 +3779,34 @@ textarea.t-input {
     opacity: 1;
 }
 
+/* === \u300C\u66F4\u591A\u300D\u83DC\u5355\u91CC\u7684\u56FE\u9489\uFF1A\u628A\u8BE5\u9879\u63D0\u5347\u5230\u6807\u9898\u680F === */
+
+/* \u624B\u673A\u4E0A\u6CA1\u6709\u53F3\u952E\u3001\u957F\u6309\u53C8\u4F1A\u8DDF\u6EDA\u52A8\u624B\u52BF\u6253\u67B6\uFF0C\u6240\u4EE5\u7528\u5E38\u9A7B\u53EF\u89C1\u7684\u6309\u94AE */
+.t-more-pin {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    margin-left: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #6d6d6d;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.t-more-pin:hover:not(:disabled) {
+    background: rgba(191, 161, 95, 0.16);
+    color: #bfa15f;
+}
+
+.t-more-pin:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
 /* 
    === \u79FB\u52A8\u7AEF\u9002\u914D ===
    \u6CE8\u610F\uFF1A\u53EA\u6709\u5C4F\u5E55\u5BBD\u5EA6\u5C0F\u4E8E 600px \u65F6\uFF0C\u8FD9\u4E9B\u6837\u5F0F\u624D\u4F1A\u751F\u6548\u3002
@@ -3799,9 +3835,17 @@ textarea.t-input {
     }
 
     #t-main-view .t-header .t-header-actions .t-icon-btn {
-        font-size: 1.3em;
+        /* \u53EA\u6536\u5B57\u5F62\u4E0D\u6536\u70ED\u533A\uFF1A30px \u5DF2\u662F\u89E6\u5C4F\u70B9\u51FB\u7684\u4E0B\u9650\uFF0C\u518D\u5C0F\u4F1A\u96BE\u70B9\u3002
+           \u56FE\u6807\u6700\u591A 5 \u4E2A\u65F6 1.3em \u51E0\u4E4E\u9876\u6EE1\u65B9\u5757\uFF0C\u663E\u5F97\u62E5\u6324\uFF0C\u7F29\u5230 1.15em \u7559\u51FA\u547C\u5438\u611F\u3002 */
+        font-size: 1.15em;
         width: 30px;
         height: 30px;
+    }
+
+    /* \u5173\u95ED\u952E\u7684 1.8em \u5728\u7A84\u5C4F\u6BD4\u529F\u80FD\u56FE\u6807\u5927\u51FA\u4E00\u5708\uFF0C\u4E00\u8D77\u6536\u4E00\u70B9\u4FDD\u6301\u89C6\u89C9\u9F50\u5E73 */
+    #t-main-view .t-header .t-header-actions .t-close {
+        font-size: 1.5em;
+        padding: 0 3px;
     }
 
     .t-top-bar {
@@ -5281,11 +5325,34 @@ textarea.t-input {
 .t-cont-history-branch-title {
     display: flex;
     align-items: center;
+    width: 100%;
     gap: 8px;
     padding: 10px 12px;
+    border: 0;
     border-bottom: 1px solid #303030;
     color: #d6d0c3;
     background: #202020;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+}
+
+.t-cont-history-branch:not(.is-open) .t-cont-history-branch-title {
+    border-bottom-color: transparent;
+}
+
+.t-cont-history-branch-chevron {
+    flex-shrink: 0;
+    font-size: 10px;
+    transition: transform 0.18s;
+}
+
+.t-cont-history-branch.is-open .t-cont-history-branch-chevron {
+    transform: rotate(90deg);
+}
+
+.t-cont-history-branch-body[hidden] {
+    display: none;
 }
 
 .t-cont-history-branch-heading {
@@ -5302,6 +5369,19 @@ textarea.t-input {
     font-size: 13px;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* \u5206\u652F\u7F16\u53F7\u662F\u626B\u5217\u8868\u65F6\u7684\u4E3B\u8981\u533A\u5206\u70B9\uFF0C\u7ED9\u5B83\u4E00\u679A\u6807\u8BB0\u907F\u514D\u6DF7\u5728\u65F6\u95F4\u91CC */
+.t-cont-history-branch-no {
+    margin-left: 7px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(191, 161, 95, 0.14);
+    color: #bfa15f;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 600;
+    vertical-align: 1px;
 }
 
 .t-cont-history-branch-heading span {
@@ -7499,6 +7579,101 @@ textarea.t-input {
 .t-prompt-entry-actions button:disabled {
     opacity: 0.35;
     cursor: default;
+}
+
+/* === \u6807\u9898\u680F\u56FE\u6807\u914D\u7F6E === */
+
+.t-header-action-count {
+    margin-left: 6px;
+    color: #666;
+    font-size: 0.8em;
+    font-weight: normal;
+}
+
+.t-header-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.t-header-action-card {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #1a1a1a;
+    cursor: grab;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.t-header-action-card:active {
+    cursor: grabbing;
+}
+
+.t-header-action-card:hover {
+    background: #1d1d1d;
+    border-color: #555;
+}
+
+.t-header-action-card.is-dragging {
+    opacity: 0.45;
+    border-style: dashed;
+}
+
+.t-header-action-card.is-drag-over {
+    border-color: #90cdf4;
+    box-shadow: 0 -3px 0 rgba(144, 205, 244, 0.75);
+}
+
+/* \u5DF2\u8FBE\u4E0A\u9650\u65F6\u672A\u9009\u4E2D\u7684\u9879\uFF1A\u53D8\u6697\u63D0\u793A\u9009\u4E0D\u4E86\uFF0C\u4F46\u4ECD\u53EF\u62D6\u52A8\u8C03\u5E8F */
+.t-header-action-card.is-blocked {
+    opacity: 0.5;
+}
+
+.t-header-action-grip {
+    flex-shrink: 0;
+    color: #555;
+    cursor: grab;
+}
+
+.t-header-action-icon {
+    width: 1.2em;
+    flex-shrink: 0;
+    color: #bfa15f;
+    text-align: center;
+}
+
+.t-header-action-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: #ccc;
+    font-size: 0.9em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-header-action-switch {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
+}
+
+.t-header-action-switch input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #bfa15f;
+    cursor: pointer;
+}
+
+.t-header-action-switch input:disabled {
+    cursor: not-allowed;
 }
 
 @media (max-width: 600px) {
@@ -31014,6 +31189,65 @@ var init_outlineEntryButton = __esm({
   }
 });
 
+// src/ui/mainWindow/headerActions.js
+function getHeaderActionMeta(id3) {
+  return HEADER_ACTION_REGISTRY.find((item) => item.id === String(id3 || "")) || null;
+}
+function normalizeHeaderActions(list) {
+  if (!Array.isArray(list)) return [];
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const raw of list) {
+    const id3 = String(raw || "");
+    if (seen.has(id3) || !getHeaderActionMeta(id3)) continue;
+    seen.add(id3);
+    result.push(id3);
+    if (result.length >= HEADER_ACTION_MAX) break;
+  }
+  return result;
+}
+function getHeaderActions() {
+  const data = getExtData();
+  const saved = data.ui_prefs?.header_actions;
+  if (!Array.isArray(saved)) return [...HEADER_ACTION_DEFAULT];
+  return normalizeHeaderActions(saved);
+}
+function saveHeaderActions(list) {
+  const data = getExtData();
+  if (!data.ui_prefs) data.ui_prefs = {};
+  data.ui_prefs.header_actions = normalizeHeaderActions(list);
+  saveExtData();
+  return data.ui_prefs.header_actions;
+}
+function getOverflowActions() {
+  const active = new Set(getHeaderActions());
+  return HEADER_ACTION_REGISTRY.filter((item) => !active.has(item.id));
+}
+function renderHeaderActionsHtml() {
+  const iconsHtml = getHeaderActions().map((id3) => {
+    const meta = getHeaderActionMeta(id3);
+    if (!meta) return "";
+    return `<i class="fa-solid ${meta.icon} t-icon-btn" id="t-btn-${meta.id}" data-header-action="${meta.id}" title="${meta.label}" role="button" tabindex="0" aria-label="${meta.label}"></i>`;
+  }).join("");
+  const moreHtml = getOverflowActions().length ? `<i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" data-header-action="__more__" title="\u66F4\u591A" role="button" tabindex="0" aria-label="\u66F4\u591A"></i>` : "";
+  return `${iconsHtml}${moreHtml}<span class="t-close" id="t-btn-close">&times;</span>`;
+}
+var HEADER_ACTION_REGISTRY, HEADER_ACTION_MAX, HEADER_ACTION_DEFAULT;
+var init_headerActions = __esm({
+  "src/ui/mainWindow/headerActions.js"() {
+    init_storage();
+    HEADER_ACTION_REGISTRY = [
+      { id: "workshop", icon: "fa-store", label: "\u56DE\u58F0\u5DE5\u574A" },
+      { id: "favs", icon: "fa-book-bookmark", label: "\u56DE\u58F0\u6536\u85CF\u5939" },
+      { id: "worldinfo", icon: "fa-book-atlas", label: "\u4E16\u754C\u4E66\u7B5B\u9009" },
+      { id: "profiles", icon: "fa-network-wired", label: "API \u65B9\u6848" },
+      { id: "settings", icon: "fa-gear", label: "\u8BBE\u7F6E" }
+    ];
+    HEADER_ACTION_MAX = 5;
+    HEADER_ACTION_DEFAULT = ["workshop", "favs"];
+  }
+});
+
 // src/ui/settingsWindow.js
 function applyCustomCSS(cssText) {
   let styleEl = document.getElementById("t-custom-style");
@@ -31255,6 +31489,12 @@ function openSettingsWindow() {
                             <option value="legacy" ${mainWindowMode === "legacy" ? "selected" : ""}>\u7ECF\u5178\u7248\uFF08\u53CC\u6F14\u7ECE\u6309\u94AE + \u5DE5\u5177\u7F51\u683C\uFF09</option>
                         </select>
                         <p style="font-size:0.75em; color:#666; margin-top:6px;">\u4E24\u7248\u529F\u80FD\u5B8C\u5168\u76F8\u540C\uFF0C\u4EC5\u5E03\u5C40\u4E0D\u540C\u3002\u5207\u6362\u540E\u9700\u91CD\u65B0\u6253\u5F00\u5C0F\u5267\u573A\u751F\u6548\u3002</p>
+                    </div>
+
+                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                        <label style="color:#ccc; display:block; margin-bottom:8px;">\u{1F3A8} \u6807\u9898\u680F\u56FE\u6807 <span id="p-header-actions-count" class="t-header-action-count"></span></label>
+                        <div id="p-header-actions" class="t-header-action-list"></div>
+                        <p style="font-size:0.75em; color:#666; margin-top:6px;">\u52FE\u9009\u8981\u5E38\u9A7B\u6807\u9898\u680F\u7684\u529F\u80FD\uFF08\u6700\u591A ${HEADER_ACTION_MAX} \u4E2A\uFF09\uFF0C\u62D6\u52A8\u53EF\u8C03\u6574\u987A\u5E8F\u3002\u6CA1\u9009\u4E2D\u7684\u4F1A\u6536\u8FDB\u6807\u9898\u680F\u7684\u300C\u66F4\u591A\u300D\u83DC\u5355\u3002\u6539\u52A8\u7ACB\u5373\u751F\u6548\u3002</p>
                     </div>
                 </div>
 
@@ -32744,6 +32984,91 @@ function openSettingsWindow() {
     $("#toolbar-settings-panel").toggle($(this).is(":checked"));
   });
   initToolbarCheckboxes();
+  let headerActionOrder = (() => {
+    const active = getHeaderActions();
+    const rest = HEADER_ACTION_REGISTRY.map((item) => item.id).filter((id3) => !active.includes(id3));
+    return [...active, ...rest];
+  })();
+  const applyHeaderActions = () => {
+    const selected = headerActionOrder.filter((id3) => $(`.t-header-action-chk[data-action-id="${id3}"]`).is(":checked"));
+    saveHeaderActions(selected);
+    if (typeof window.refreshHeaderActions === "function") window.refreshHeaderActions();
+    return selected;
+  };
+  const updateHeaderActionCount = () => {
+    const count = $(".t-header-action-chk:checked").length;
+    const $countEl = $("#p-header-actions-count");
+    $countEl.text(`\u5DF2\u9009 ${count} / ${HEADER_ACTION_MAX}`);
+    const full = count >= HEADER_ACTION_MAX;
+    $countEl.css("color", full ? "#ff9f43" : "#666");
+    $(".t-header-action-chk:not(:checked)").prop("disabled", full).closest(".t-header-action-card").toggleClass("is-blocked", full).attr("title", full ? `\u6700\u591A ${HEADER_ACTION_MAX} \u4E2A\uFF0C\u53D6\u6D88\u4E00\u4E2A\u518D\u9009` : "");
+  };
+  const renderHeaderActionCards = () => {
+    const $list = $("#p-header-actions");
+    if (!$list.length) return;
+    const active = getHeaderActions();
+    $list.empty();
+    headerActionOrder.forEach((id3) => {
+      const meta = HEADER_ACTION_REGISTRY.find((item) => item.id === id3);
+      if (!meta) return;
+      const checked = active.includes(id3);
+      const $card = $(`<div class="t-header-action-card" data-action-id="${id3}" draggable="true">
+                <span class="t-header-action-grip" title="\u62D6\u52A8\u6392\u5E8F"><i class="fa-solid fa-grip-vertical"></i></span>
+                <i class="fa-solid ${meta.icon} t-header-action-icon"></i>
+                <span class="t-header-action-label"></span>
+                <label class="t-header-action-switch">
+                    <input type="checkbox" class="t-header-action-chk" data-action-id="${id3}" ${checked ? "checked" : ""}>
+                </label>
+            </div>`);
+      $card.find(".t-header-action-label").text(meta.label);
+      $card.on("dragstart", function(event) {
+        const originalEvent = event.originalEvent;
+        if ($(event.target).closest("input, label").length) {
+          originalEvent?.preventDefault();
+          return;
+        }
+        originalEvent.dataTransfer.effectAllowed = "move";
+        originalEvent.dataTransfer.setData("text/plain", id3);
+        $(this).addClass("is-dragging");
+      });
+      $card.on("dragend", function() {
+        $(this).removeClass("is-dragging");
+        $(".t-header-action-card").removeClass("is-drag-over");
+      });
+      $card.on("dragover", function(event) {
+        event.preventDefault();
+        event.originalEvent.dataTransfer.dropEffect = "move";
+        $(this).addClass("is-drag-over");
+      });
+      $card.on("dragleave", function(event) {
+        if (event.target === this) $(this).removeClass("is-drag-over");
+      });
+      $card.on("drop", function(event) {
+        event.preventDefault();
+        const draggedId = String(event.originalEvent.dataTransfer.getData("text/plain") || "");
+        const fromIndex = headerActionOrder.indexOf(draggedId);
+        const targetIndex = headerActionOrder.indexOf(id3);
+        if (fromIndex < 0 || targetIndex < 0 || fromIndex === targetIndex) {
+          renderHeaderActionCards();
+          return;
+        }
+        const rect = this.getBoundingClientRect();
+        const insertBefore = event.originalEvent.clientY < rect.top + rect.height / 2;
+        headerActionOrder.splice(fromIndex, 1);
+        const base = headerActionOrder.indexOf(id3);
+        headerActionOrder.splice(insertBefore ? base : base + 1, 0, draggedId);
+        applyHeaderActions();
+        renderHeaderActionCards();
+      });
+      $list.append($card);
+    });
+    $(".t-header-action-chk").on("change", function() {
+      applyHeaderActions();
+      updateHeaderActionCount();
+    });
+    updateHeaderActionCount();
+  };
+  renderHeaderActionCards();
   const renderLogView = () => {
     const logs = TitaniaLogger.logs;
     if (!logs || logs.length === 0) {
@@ -32846,6 +33171,9 @@ ${JSON.stringify(l.details, null, 2)}`;
     };
     if (!d.ui_prefs) d.ui_prefs = {};
     d.ui_prefs.main_window_mode = $("#p-main-window-mode").val() === "legacy" ? "legacy" : "modern";
+    if ($(".t-header-action-chk").length) {
+      d.ui_prefs.header_actions = headerActionOrder.filter((id3) => $(`.t-header-action-chk[data-action-id="${id3}"]`).is(":checked")).slice(0, HEADER_ACTION_MAX);
+    }
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
     const clampInt = (value, min, max, fallback) => {
       const n = parseInt(value, 10);
@@ -32950,6 +33278,7 @@ var init_settingsWindow = __esm({
     init_apiProfileRegistry();
     init_apiConnectionEditor();
     init_promptManager();
+    init_headerActions();
   }
 });
 
@@ -34199,25 +34528,140 @@ function openDatabase() {
     const request = indexedDB.open(DB_NAME2, DB_VERSION2);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = () => {
+    request.onblocked = () => TitaniaLogger.warn("\u7EED\u5199\u5386\u53F2\u6570\u636E\u5E93\u5347\u7EA7\u88AB\u5176\u4ED6\u6807\u7B7E\u9875\u963B\u585E\uFF0C\u8BF7\u5173\u95ED\u591A\u4F59\u7684 SillyTavern \u9875\u9762");
+    request.onupgradeneeded = (event) => {
       const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
-        const store = db.createObjectStore(STORE_SESSIONS, { keyPath: "id" });
-        store.createIndex("chatId", "chatId", { unique: false });
-      }
-      if (!db.objectStoreNames.contains(STORE_BRANCHES)) {
-        const store = db.createObjectStore(STORE_BRANCHES, { keyPath: "id" });
-        store.createIndex("chatId", "chatId", { unique: false });
-        store.createIndex("sessionId", "sessionId", { unique: false });
-      }
-      if (!db.objectStoreNames.contains(STORE_ROUNDS)) {
-        const store = db.createObjectStore(STORE_ROUNDS, { keyPath: "id" });
-        store.createIndex("chatId", "chatId", { unique: false });
-        store.createIndex("branchId", "branchId", { unique: false });
+      const transaction = request.transaction;
+      createStores(db);
+      if (Number(event.oldVersion) >= 1 && Number(event.oldVersion) < 2) {
+        migrateV1ToV2(transaction);
       }
     };
   });
   return dbPromise;
+}
+function createStores(db) {
+  if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
+    const store = db.createObjectStore(STORE_SESSIONS, { keyPath: "id" });
+    store.createIndex("chatId", "chatId", { unique: false });
+  }
+  if (!db.objectStoreNames.contains(STORE_BRANCHES)) {
+    const store = db.createObjectStore(STORE_BRANCHES, { keyPath: "id" });
+    store.createIndex("chatId", "chatId", { unique: false });
+    store.createIndex("sessionId", "sessionId", { unique: false });
+  }
+  if (!db.objectStoreNames.contains(STORE_ROUNDS)) {
+    const store = db.createObjectStore(STORE_ROUNDS, { keyPath: "id" });
+    store.createIndex("chatId", "chatId", { unique: false });
+    store.createIndex("branchId", "branchId", { unique: false });
+  }
+}
+function migrateV1ToV2(transaction) {
+  const sessionStore = transaction.objectStore(STORE_SESSIONS);
+  const branchStore = transaction.objectStore(STORE_BRANCHES);
+  const roundStore = transaction.objectStore(STORE_ROUNDS);
+  sessionStore.getAll().onsuccess = (sessionEvent) => {
+    branchStore.getAll().onsuccess = (branchEvent) => {
+      roundStore.getAll().onsuccess = (roundEvent) => {
+        const sessions = sessionEvent.target.result || [];
+        const branches = branchEvent.target.result || [];
+        const rounds = roundEvent.target.result || [];
+        const branchIdMap = /* @__PURE__ */ new Map();
+        const branchIdBySessionKey = /* @__PURE__ */ new Map();
+        const usedIds = /* @__PURE__ */ new Set();
+        for (const branch of branches) {
+          const legacyKey = String(branch?.branchKey || "").trim();
+          let nextId = legacyKey || String(branch?.id || "");
+          if (!nextId) continue;
+          let guard = 2;
+          while (usedIds.has(nextId)) {
+            nextId = `${branch.sessionId}:${legacyKey}:${guard++}`;
+          }
+          usedIds.add(nextId);
+          branchIdMap.set(String(branch.id), nextId);
+          if (legacyKey) branchIdBySessionKey.set(`${branch.sessionId}\0${legacyKey}`, nextId);
+        }
+        const roundTimestampsByBranch = /* @__PURE__ */ new Map();
+        for (const round of rounds) {
+          const nextBranchId = branchIdMap.get(String(round?.branchId || ""));
+          if (!nextBranchId) continue;
+          const timestamp = Number(round?.timestamp) || 0;
+          const known = roundTimestampsByBranch.get(nextBranchId);
+          if (timestamp > 0 && (!known || timestamp < known)) {
+            roundTimestampsByBranch.set(nextBranchId, timestamp);
+          }
+        }
+        const now = Date.now();
+        const branchCountBySession = /* @__PURE__ */ new Map();
+        branchStore.clear().onsuccess = () => {
+          for (const branch of branches) {
+            const nextId = branchIdMap.get(String(branch.id));
+            if (!nextId) continue;
+            const legacyKey = String(branch?.branchKey || "").trim();
+            const parentKey = String(branch?.parentBranchKey || "").trim();
+            const roundCount = rounds.filter((item) => branchIdMap.get(String(item?.branchId || "")) === nextId).length;
+            branchCountBySession.set(branch.sessionId, (branchCountBySession.get(branch.sessionId) || 0) + 1);
+            branchStore.put({
+              id: nextId,
+              sessionId: String(branch.sessionId || ""),
+              chatId: String(branch.chatId || ""),
+              branchKey: legacyKey || nextId,
+              legacyBranchKey: legacyKey,
+              parentBranchId: parentKey ? branchIdBySessionKey.get(`${branch.sessionId}\0${parentKey}`) || "" : "",
+              branchedAtSequence: Number(branch?.branchedAtRound) || null,
+              createdAt: Number(branch?.archivedAt) || roundTimestampsByBranch.get(nextId) || now,
+              archivedAt: Number(branch?.archivedAt) || 0,
+              label: "",
+              roundCount
+            });
+          }
+        };
+        roundStore.clear().onsuccess = () => {
+          for (const round of rounds) {
+            const nextBranchId = branchIdMap.get(String(round?.branchId || ""));
+            if (!nextBranchId) continue;
+            const roundKey = String(round?.roundKey || "").trim() || createRoundKey();
+            roundStore.put({
+              id: `${nextBranchId}:${roundKey}`,
+              branchId: nextBranchId,
+              sessionId: String(round.sessionId || ""),
+              chatId: String(round.chatId || ""),
+              branchKey: String(round?.branchKey || ""),
+              roundKey,
+              sequence: Number(round?.sequence) || 1,
+              originRoundId: "",
+              type: String(round?.type || "continuation"),
+              instruction: String(round?.instruction || ""),
+              content: String(round?.content || ""),
+              status: String(round?.status || "legacy"),
+              generationId: String(round?.generationId || ""),
+              timestamp: Number(round?.timestamp) || 0
+            });
+          }
+        };
+        for (const session of sessions) {
+          const activeKey = String(session?.activeBranchKey || "").trim();
+          const activeBranchId = branchIdBySessionKey.get(`${session.id}\0${activeKey}`) || "";
+          const sessionBranches = branches.filter((item) => String(item?.sessionId || "") === String(session.id)).map((item) => branchIdMap.get(String(item.id))).filter(Boolean);
+          const rootBranchId = sessionBranches.find((id3) => {
+            const source = branches.find((item) => branchIdMap.get(String(item.id)) === id3);
+            return !String(source?.parentBranchKey || "").trim();
+          }) || sessionBranches[0] || "";
+          sessionStore.put({
+            ...session,
+            activeBranchId: activeBranchId || rootBranchId,
+            rootBranchId,
+            branchCount: sessionBranches.length
+          });
+        }
+        TitaniaLogger.info("\u7EED\u5199\u5386\u53F2\u5DF2\u8FC1\u79FB\u5230 v2 \u5206\u652F\u6A21\u578B", {
+          sessions: sessions.length,
+          branches: branchIdMap.size,
+          rounds: rounds.length
+        });
+      };
+    };
+  };
 }
 function requestResult(request) {
   return new Promise((resolve, reject) => {
@@ -34231,6 +34675,11 @@ function transactionDone(transaction) {
     transaction.onerror = () => reject(transaction.error);
     transaction.onabort = () => reject(transaction.error || new Error("IndexedDB transaction aborted"));
   });
+}
+function createRoundKey() {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `round_${ts}_${rand}`;
 }
 function getCurrentChatKey() {
   return String(getCurrentChatId?.() || "").trim();
@@ -34246,112 +34695,58 @@ function getCurrentSourceMetadata() {
     chatName: String(context.chatId || getCurrentChatKey() || "\u672A\u77E5\u804A\u5929")
   };
 }
-function serializeRuntime(chatId) {
-  const byScript = GlobalState.continuationRuntime?.byScript || {};
-  const sessions = [];
-  const branches = [];
-  const rounds = [];
-  const currentSource = getCurrentSourceMetadata();
-  for (const [scriptId, entry] of Object.entries(byScript)) {
-    const activeBranchKey = String(entry?.branchKey || "").trim();
-    if (!activeBranchKey || !Array.isArray(entry?.rounds) || entry.rounds.length === 0) continue;
-    const sessionId = `${chatId}:${scriptId}`;
-    const archivedBranches = Array.isArray(entry.archivedBranches) ? entry.archivedBranches : [];
-    const sessionUpdatedAt = Math.max(
-      ...entry.rounds.map((round) => Number(round?.timestamp) || 0),
-      ...archivedBranches.flatMap((branch) => [
-        Number(branch?.archivedAt) || 0,
-        ...Array.isArray(branch?.rounds) ? branch.rounds.map((round) => Number(round?.timestamp) || 0) : []
-      ])
-    );
-    sessions.push({
-      id: sessionId,
-      chatId,
-      scriptId,
-      scriptName: String(entry.scriptName || "\u573A\u666F"),
-      characterId: String(entry.characterId ?? currentSource.characterId),
-      characterName: String(entry.characterName || currentSource.characterName),
-      characterAvatar: String(entry.characterAvatar || currentSource.characterAvatar),
-      chatName: String(entry.chatName || currentSource.chatName),
-      origin: entry.origin && typeof entry.origin === "object" ? entry.origin : null,
-      activeBranchKey,
-      parentBranchKey: String(entry.parentBranchKey || ""),
-      branchedAtRound: Number(entry.branchedAtRound) || null,
-      updatedAt: sessionUpdatedAt || Date.now()
-    });
-    const allBranches = [{
-      branchKey: activeBranchKey,
-      isActive: true,
-      parentBranchKey: String(entry.parentBranchKey || ""),
-      branchedAtRound: Number(entry.branchedAtRound) || null,
-      archivedAt: 0,
-      rounds: entry.rounds
-    }, ...archivedBranches];
-    for (const branch of allBranches) {
-      const branchKey = String(branch?.branchKey || "").trim();
-      if (!branchKey || !Array.isArray(branch?.rounds)) continue;
-      const branchId = `${sessionId}:${branchKey}`;
-      branches.push({
-        id: branchId,
-        chatId,
-        sessionId,
-        branchKey,
-        isActive: branchKey === activeBranchKey,
-        parentBranchKey: String(branch.parentBranchKey || ""),
-        branchedAtRound: Number(branch.branchedAtRound) || null,
-        archivedAt: Number(branch.archivedAt) || 0
-      });
-      branch.rounds.forEach((round, index) => {
-        const roundKey = String(round?.roundKey || `legacy_${index + 1}`);
-        rounds.push({
-          id: `${branchId}:${roundKey}`,
-          chatId,
-          sessionId,
-          branchId,
-          branchKey,
-          roundKey,
-          sequence: index + 1,
-          type: String(round?.type || (index === 0 ? "initial" : "continuation")),
-          instruction: String(round?.instruction || ""),
-          content: String(round?.content || ""),
-          status: String(round?.status || "legacy"),
-          generationId: String(round?.generationId || ""),
-          timestamp: Number(round?.timestamp) || 0
-        });
-      });
-    }
-  }
-  return { sessions, branches, rounds };
+function getCurrentContinuationSource() {
+  return { chatId: getCurrentChatKey(), ...getCurrentSourceMetadata() };
+}
+function sortBySequence(rounds) {
+  return [...rounds].sort((a, b) => (Number(a?.sequence) || 0) - (Number(b?.sequence) || 0));
+}
+function toPublicRound(round) {
+  const content = String(round?.content || "");
+  const sequence = Number(round?.sequence) || 1;
+  const type = String(round?.type || (sequence === 1 ? "initial" : "continuation"));
+  return {
+    roundKey: String(round?.roundKey || ""),
+    round: sequence,
+    type,
+    continuationIndex: type === "initial" ? 0 : Math.max(1, sequence - 1),
+    instruction: String(round?.instruction || ""),
+    content,
+    status: String(round?.status || "legacy"),
+    generationId: String(round?.generationId || ""),
+    contentPreview: content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
+    contentLength: content.length,
+    timestamp: Number(round?.timestamp) || 0
+  };
 }
 function buildGlobalSessions(sessions, branches, rounds) {
   const roundsByBranch = /* @__PURE__ */ new Map();
-  rounds.sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((round) => {
-    if (!roundsByBranch.has(round.branchId)) roundsByBranch.set(round.branchId, []);
-    roundsByBranch.get(round.branchId).push({
-      roundKey: round.roundKey,
-      round: round.sequence,
-      type: round.type,
-      continuationIndex: round.type === "initial" ? 0 : Math.max(1, Number(round.sequence) - 1),
-      instruction: round.instruction,
-      content: round.content,
-      status: round.status || "legacy",
-      generationId: round.generationId || "",
-      contentPreview: String(round.content || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
-      contentLength: String(round.content || "").length,
-      timestamp: round.timestamp
-    });
+  sortBySequence(rounds).forEach((round) => {
+    const branchId = String(round?.branchId || "");
+    if (!roundsByBranch.has(branchId)) roundsByBranch.set(branchId, []);
+    roundsByBranch.get(branchId).push(toPublicRound(round));
   });
+  const branchesBySession = /* @__PURE__ */ new Map();
+  for (const branch of branches) {
+    const sessionId = String(branch?.sessionId || "");
+    if (!branchesBySession.has(sessionId)) branchesBySession.set(sessionId, []);
+    branchesBySession.get(sessionId).push(branch);
+  }
   return sessions.map((session) => {
-    const sessionBranches = branches.filter((branch) => branch.sessionId === session.id).map((branch) => ({
-      branchKey: branch.branchKey,
-      isActive: branch.branchKey === session.activeBranchKey,
-      parentBranchKey: branch.parentBranchKey,
-      branchedAtRound: branch.branchedAtRound,
-      archivedAt: branch.archivedAt,
+    const sessionBranches = (branchesBySession.get(String(session.id)) || []).map((branch) => ({
+      branchId: branch.id,
+      branchKey: String(branch.branchKey || branch.id),
+      isActive: branch.id === session.activeBranchId,
+      parentBranchKey: String(branch.parentBranchId || ""),
+      parentBranchId: String(branch.parentBranchId || ""),
+      branchedAtRound: Number(branch.branchedAtSequence) || null,
+      createdAt: Number(branch.createdAt) || 0,
+      archivedAt: Number(branch.archivedAt) || 0,
       rounds: roundsByBranch.get(branch.id) || []
-    })).filter((branch) => branch.rounds.length > 0);
+    })).filter((branch) => branch.rounds.length > 0).sort((a, b) => Number(b.isActive) - Number(a.isActive) || b.createdAt - a.createdAt);
     return {
       chatId: session.chatId,
+      sessionId: session.id,
       scriptId: session.scriptId,
       scriptName: session.scriptName || "\u672A\u77E5\u5267\u672C",
       characterId: String(session.characterId || ""),
@@ -34359,6 +34754,7 @@ function buildGlobalSessions(sessions, branches, rounds) {
       characterAvatar: String(session.characterAvatar || ""),
       chatName: String(session.chatName || session.chatId || "\u672A\u77E5\u804A\u5929"),
       origin: session.origin || null,
+      activeBranchId: String(session.activeBranchId || ""),
       updatedAt: Number(session.updatedAt) || 0,
       branches: sessionBranches,
       roundCount: sessionBranches.reduce((sum, branch) => sum + branch.rounds.length, 0)
@@ -34376,126 +34772,157 @@ async function listAllContinuationSessions() {
   ]);
   return buildGlobalSessions(sessions, branches, rounds);
 }
-async function deleteGlobalContinuationSelections(selections = []) {
-  const items = Array.isArray(selections) ? selections : [];
-  if (items.length === 0) return { deletedSessions: 0, deletedBranches: 0, deletedRounds: 0 };
-  const db = await openDatabase();
-  const readTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
-  const [sessions, branches, rounds] = await Promise.all([
-    requestResult(readTransaction.objectStore(STORE_SESSIONS).getAll()),
-    requestResult(readTransaction.objectStore(STORE_BRANCHES).getAll()),
-    requestResult(readTransaction.objectStore(STORE_ROUNDS).getAll())
-  ]);
-  const sessionKeys = new Set(items.filter((item) => !item.branchKey).map((item) => `${item.chatId}\0${item.scriptId}`));
-  const branchKeys = new Set(items.filter((item) => item.branchKey && !item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}`));
-  const roundKeys = new Set(items.filter((item) => item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}\0${item.roundKey}`));
-  const deletedSessionIds = /* @__PURE__ */ new Set();
-  const deletedBranchIds = /* @__PURE__ */ new Set();
-  const deletedRoundIds = /* @__PURE__ */ new Set();
-  const sessionById = new Map(sessions.map((session) => [session.id, session]));
+function buildPointerMetadata(sessions) {
+  const active = {};
   for (const session of sessions) {
-    if (sessionKeys.has(`${session.chatId}\0${session.scriptId}`)) deletedSessionIds.add(session.id);
+    const branchId = String(session?.activeBranchId || "").trim();
+    if (branchId) active[String(session.scriptId)] = branchId;
   }
-  for (const branch of branches) {
-    const session = sessionById.get(branch.sessionId);
-    if (!session) continue;
-    if (deletedSessionIds.has(session.id) || branchKeys.has(`${session.chatId}\0${session.scriptId}\0${branch.branchKey}`)) {
-      deletedBranchIds.add(branch.id);
-    }
-  }
-  for (const round of rounds) {
-    const session = sessionById.get(round.sessionId);
-    if (!session) continue;
-    if (deletedSessionIds.has(session.id) || deletedBranchIds.has(round.branchId) || roundKeys.has(`${session.chatId}\0${session.scriptId}\0${round.branchKey}\0${round.roundKey}`)) {
-      deletedRoundIds.add(round.id);
-    }
-  }
-  for (const branch of branches) {
-    if (deletedBranchIds.has(branch.id)) continue;
-    const hasRemainingRounds = rounds.some((round) => round.branchId === branch.id && !deletedRoundIds.has(round.id));
-    if (!hasRemainingRounds) deletedBranchIds.add(branch.id);
-  }
-  for (const session of sessions) {
-    if (deletedSessionIds.has(session.id)) continue;
-    const remainingBranches = branches.filter((branch) => branch.sessionId === session.id && !deletedBranchIds.has(branch.id));
-    if (remainingBranches.length === 0) {
-      deletedSessionIds.add(session.id);
-      continue;
-    }
-    const activeRemoved = deletedBranchIds.has(`${session.id}:${session.activeBranchKey}`);
-    if (activeRemoved) {
-      const nextActive = remainingBranches.sort((a, b) => Number(b.archivedAt) - Number(a.archivedAt))[0];
-      session.activeBranchKey = nextActive.branchKey;
-    }
-  }
-  const writeTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
-  const completed = transactionDone(writeTransaction);
-  const sessionStore = writeTransaction.objectStore(STORE_SESSIONS);
-  const branchStore = writeTransaction.objectStore(STORE_BRANCHES);
-  const roundStore = writeTransaction.objectStore(STORE_ROUNDS);
-  sessions.forEach((session) => deletedSessionIds.has(session.id) ? sessionStore.delete(session.id) : sessionStore.put(session));
-  branches.forEach((branch) => (deletedSessionIds.has(branch.sessionId) || deletedBranchIds.has(branch.id)) && branchStore.delete(branch.id));
-  const nextSequenceByBranch = /* @__PURE__ */ new Map();
-  rounds.sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((round) => {
-    if (deletedSessionIds.has(round.sessionId) || deletedBranchIds.has(round.branchId) || deletedRoundIds.has(round.id)) {
-      roundStore.delete(round.id);
-      return;
-    }
-    const sequence = (nextSequenceByBranch.get(round.branchId) || 0) + 1;
-    nextSequenceByBranch.set(round.branchId, sequence);
-    round.sequence = sequence;
-    roundStore.put(round);
-  });
-  await completed;
-  if (items.some((item) => item.chatId === getCurrentChatKey())) await restoreContinuationForCurrentChat();
-  return { deletedSessions: deletedSessionIds.size, deletedBranches: deletedBranchIds.size, deletedRounds: deletedRoundIds.size };
+  return Object.keys(active).length > 0 ? { version: 2, active } : null;
 }
-function getCurrentContinuationSource() {
-  return { chatId: getCurrentChatKey(), ...getCurrentSourceMetadata() };
-}
-function updateCurrentChatMetadata(payload) {
-  if (payload.sessions.length > 0) {
-    chat_metadata[CHAT_METADATA_KEY] = {
-      version: 1,
-      sessionIds: payload.sessions.map((item) => item.id),
-      activeBranches: Object.fromEntries(payload.sessions.map((item) => [item.scriptId, item.activeBranchKey])),
-      branchCount: payload.branches.length,
-      roundCount: payload.rounds.length,
-      updatedAt: Date.now()
-    };
+function updateCurrentChatMetadata(sessions) {
+  const next = buildPointerMetadata(sessions);
+  const current = chat_metadata?.[CHAT_METADATA_KEY];
+  const sameShape = JSON.stringify(current?.active || null) === JSON.stringify(next?.active || null) && Number(current?.version || 0) === Number(next?.version || 0);
+  if (sameShape) return false;
+  if (next) {
+    chat_metadata[CHAT_METADATA_KEY] = { ...next, updatedAt: Date.now() };
   } else {
     delete chat_metadata[CHAT_METADATA_KEY];
   }
+  return true;
 }
-async function replaceChatRecords(chatId, payload) {
+function collectRuntimeRecords(chatId) {
+  const byScript = GlobalState.continuationRuntime?.byScript || {};
+  const sessions = [];
+  const branches = [];
+  const rounds = [];
+  const currentSource = getCurrentSourceMetadata();
+  for (const [scriptId, entry] of Object.entries(byScript)) {
+    const activeBranchKey = String(entry?.branchKey || "").trim();
+    if (!activeBranchKey || !Array.isArray(entry?.rounds) || entry.rounds.length === 0) continue;
+    const sessionId = `${chatId}:${scriptId}`;
+    const archivedBranches = Array.isArray(entry.archivedBranches) ? entry.archivedBranches : [];
+    const updatedAt = Math.max(
+      0,
+      ...entry.rounds.map((round) => Number(round?.timestamp) || 0),
+      ...archivedBranches.flatMap((branch) => [
+        Number(branch?.archivedAt) || 0,
+        ...Array.isArray(branch?.rounds) ? branch.rounds.map((round) => Number(round?.timestamp) || 0) : []
+      ])
+    );
+    sessions.push({
+      id: sessionId,
+      chatId,
+      scriptId,
+      scriptName: String(entry.scriptName || "\u573A\u666F"),
+      characterId: String(entry.characterId ?? currentSource.characterId),
+      characterName: String(entry.characterName || currentSource.characterName),
+      characterAvatar: String(entry.characterAvatar || currentSource.characterAvatar),
+      chatName: String(entry.chatName || currentSource.chatName),
+      origin: entry.origin && typeof entry.origin === "object" ? entry.origin : null,
+      activeBranchId: activeBranchKey,
+      rootBranchId: "",
+      updatedAt: updatedAt || Date.now()
+    });
+    const allBranches = [{
+      branchKey: activeBranchKey,
+      parentBranchKey: String(entry.parentBranchKey || ""),
+      branchedAtRound: Number(entry.branchedAtRound) || null,
+      archivedAt: 0,
+      rounds: entry.rounds
+    }, ...archivedBranches];
+    for (const branch of allBranches) {
+      const branchId = String(branch?.branchKey || "").trim();
+      if (!branchId || !Array.isArray(branch?.rounds)) continue;
+      branches.push({
+        id: branchId,
+        sessionId,
+        chatId,
+        branchKey: branchId,
+        legacyBranchKey: "",
+        parentBranchId: String(branch.parentBranchKey || ""),
+        branchedAtSequence: Number(branch.branchedAtRound) || null,
+        createdAt: Number(branch.archivedAt) || 0,
+        archivedAt: Number(branch.archivedAt) || 0,
+        label: "",
+        roundCount: branch.rounds.length
+      });
+      branch.rounds.forEach((round, index) => {
+        const roundKey = String(round?.roundKey || `legacy_${index + 1}`);
+        rounds.push({
+          id: `${branchId}:${roundKey}`,
+          branchId,
+          sessionId,
+          chatId,
+          branchKey: branchId,
+          roundKey,
+          sequence: index + 1,
+          originRoundId: "",
+          type: String(round?.type || (index === 0 ? "initial" : "continuation")),
+          instruction: String(round?.instruction || ""),
+          content: String(round?.content || ""),
+          status: String(round?.status || "legacy"),
+          generationId: String(round?.generationId || ""),
+          timestamp: Number(round?.timestamp) || 0
+        });
+      });
+    }
+  }
+  return { sessions, branches, rounds };
+}
+async function reconcileRuntimeRecords(chatId, payload) {
   const db = await openDatabase();
   const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
-  const writeCompleted = transactionDone(transaction);
+  const completed = transactionDone(transaction);
   const sessionStore = transaction.objectStore(STORE_SESSIONS);
   const branchStore = transaction.objectStore(STORE_BRANCHES);
   const roundStore = transaction.objectStore(STORE_ROUNDS);
-  const stores = [sessionStore, branchStore, roundStore];
-  const records = [payload.sessions, payload.branches, payload.rounds];
-  let pendingKeyReads = stores.length;
-  stores.forEach((store, index) => {
-    const request = store.index("chatId").getAllKeys(chatId);
-    request.onerror = () => transaction.abort();
-    request.onsuccess = () => {
-      request.result.forEach((key) => store.delete(key));
-      pendingKeyReads--;
-      if (pendingKeyReads !== 0) return;
-      records.forEach((items, recordIndex) => {
-        items.forEach((item) => stores[recordIndex].put(item));
-      });
-    };
-  });
-  await writeCompleted;
+  const existingRounds = await requestResult(roundStore.index("chatId").getAll(chatId));
+  const existingByBranch = /* @__PURE__ */ new Map();
+  for (const round of existingRounds) {
+    const branchId = String(round?.branchId || "");
+    if (!existingByBranch.has(branchId)) existingByBranch.set(branchId, []);
+    existingByBranch.get(branchId).push(round);
+  }
+  const incomingByBranch = /* @__PURE__ */ new Map();
+  for (const round of payload.rounds) {
+    if (!incomingByBranch.has(round.branchId)) incomingByBranch.set(round.branchId, []);
+    incomingByBranch.get(round.branchId).push(round);
+  }
+  for (const [branchId, incoming] of incomingByBranch) {
+    const existing = sortBySequence(existingByBranch.get(branchId) || []);
+    const incomingByKey = new Map(incoming.map((round) => [round.roundKey, round]));
+    const merged = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (const round of existing) {
+      const update = incomingByKey.get(round.roundKey);
+      merged.push(update ? { ...round, ...update, id: round.id } : round);
+      seen.add(round.roundKey);
+    }
+    for (const round of incoming) {
+      if (seen.has(round.roundKey)) continue;
+      merged.push(round);
+      seen.add(round.roundKey);
+    }
+    merged.forEach((round, index) => roundStore.put({ ...round, sequence: index + 1 }));
+    const branch = payload.branches.find((item) => item.id === branchId);
+    if (branch) branch.roundCount = merged.length;
+  }
+  for (const branch of payload.branches) {
+    const existing = await requestResult(branchStore.get(branch.id));
+    branchStore.put(existing ? { ...existing, ...branch, createdAt: Number(existing.createdAt) || branch.createdAt || Date.now(), label: existing.label || branch.label } : { ...branch, createdAt: branch.createdAt || Date.now() });
+  }
+  for (const session of payload.sessions) {
+    const existing = await requestResult(sessionStore.get(session.id));
+    sessionStore.put(existing ? { ...existing, ...session, rootBranchId: existing.rootBranchId || session.rootBranchId } : session);
+  }
+  await completed;
 }
 async function writeCurrentRuntime(chatId, payload) {
-  await replaceChatRecords(chatId, payload);
+  await reconcileRuntimeRecords(chatId, payload);
   if (chatId !== getCurrentChatKey()) return;
-  updateCurrentChatMetadata(payload);
-  await saveChatConditional2();
+  if (updateCurrentChatMetadata(payload.sessions)) await saveChatConditional2();
 }
 function queueRuntimeWrite(chatId, payload) {
   const previous = pendingWrites.get(chatId) || Promise.resolve();
@@ -34513,8 +34940,8 @@ function scheduleContinuationPersistence() {
   if (!chatId) return;
   GlobalState.continuationRuntime.chatId = chatId;
   runtimeRevision++;
-  const payload = serializeRuntime(chatId);
-  updateCurrentChatMetadata(payload);
+  const payload = collectRuntimeRecords(chatId);
+  updateCurrentChatMetadata(payload.sessions);
   void queueRuntimeWrite(chatId, payload).catch((error) => {
     TitaniaLogger.error("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6301\u4E45\u5316\u5931\u8D25", error);
     if (window.toastr) toastr.warning("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u4FDD\u5B58\u5931\u8D25\uFF0C\u5F53\u524D\u5185\u5BB9\u4ECD\u4FDD\u7559\u5728\u5185\u5B58\u4E2D", "Titania");
@@ -34538,23 +34965,24 @@ async function restoreContinuationForCurrentChat() {
   ]);
   if (sequence !== restoreSequence || chatId !== getCurrentChatKey() || revision !== runtimeRevision) return false;
   const roundsByBranch = /* @__PURE__ */ new Map();
-  rounds.sort((a, b) => a.sequence - b.sequence).forEach((round) => {
-    if (!roundsByBranch.has(round.branchId)) roundsByBranch.set(round.branchId, []);
-    roundsByBranch.get(round.branchId).push({
-      roundKey: round.roundKey,
-      round: round.sequence,
-      type: round.type,
-      instruction: round.instruction,
-      content: round.content,
-      status: round.status || "legacy",
-      generationId: round.generationId || "",
-      timestamp: round.timestamp
+  sortBySequence(rounds).forEach((round) => {
+    const branchId = String(round?.branchId || "");
+    if (!roundsByBranch.has(branchId)) roundsByBranch.set(branchId, []);
+    roundsByBranch.get(branchId).push({
+      roundKey: String(round.roundKey || ""),
+      round: Number(round.sequence) || 1,
+      type: String(round.type || "continuation"),
+      instruction: String(round.instruction || ""),
+      content: String(round.content || ""),
+      status: String(round.status || "legacy"),
+      generationId: String(round.generationId || ""),
+      timestamp: Number(round.timestamp) || 0
     });
   });
   const nextByScript = {};
   for (const session of sessions) {
-    const sessionBranches = branches.filter((branch) => branch.sessionId === session.id);
-    const active = sessionBranches.find((branch) => branch.branchKey === session.activeBranchKey);
+    const sessionBranches = branches.filter((branch) => String(branch.sessionId) === String(session.id));
+    const active = sessionBranches.find((branch) => branch.id === session.activeBranchId);
     if (!active) continue;
     nextByScript[session.scriptId] = {
       scriptId: session.scriptId,
@@ -34565,37 +34993,99 @@ async function restoreContinuationForCurrentChat() {
       chatName: session.chatName,
       origin: session.origin || null,
       updatedAt: Number(session.updatedAt) || 0,
-      branchKey: active.branchKey,
-      parentBranchKey: active.parentBranchKey,
-      branchedAtRound: active.branchedAtRound,
+      branchKey: String(active.branchKey || active.id),
+      parentBranchKey: String(active.parentBranchId || ""),
+      branchedAtRound: Number(active.branchedAtSequence) || null,
       rounds: roundsByBranch.get(active.id) || [],
       archivedBranches: sessionBranches.filter((branch) => branch.id !== active.id).map((branch) => ({
-        branchKey: branch.branchKey,
-        parentBranchKey: branch.parentBranchKey,
-        branchedAtRound: branch.branchedAtRound,
-        archivedAt: branch.archivedAt,
+        branchKey: String(branch.branchKey || branch.id),
+        parentBranchKey: String(branch.parentBranchId || ""),
+        branchedAtRound: Number(branch.branchedAtSequence) || null,
+        archivedAt: Number(branch.archivedAt) || 0,
         rounds: roundsByBranch.get(branch.id) || []
       }))
     };
   }
   GlobalState.continuationRuntime = { chatId, byScript: nextByScript };
-  const metadata = chat_metadata[CHAT_METADATA_KEY];
-  if (sessions.length > 0 && (metadata?.version !== 1 || Number(metadata?.branchCount) !== branches.length || Number(metadata?.roundCount) !== rounds.length)) {
-    chat_metadata[CHAT_METADATA_KEY] = {
-      version: 1,
-      sessionIds: sessions.map((item) => item.id),
-      activeBranches: Object.fromEntries(sessions.map((item) => [item.scriptId, item.activeBranchKey])),
-      branchCount: branches.length,
-      roundCount: rounds.length,
-      updatedAt: Math.max(...sessions.map((item) => Number(item.updatedAt) || 0), Date.now())
-    };
-    void saveChatConditional2();
-  } else if (sessions.length === 0 && metadata?.version === 1) {
-    delete chat_metadata[CHAT_METADATA_KEY];
-    void saveChatConditional2();
-  }
+  if (updateCurrentChatMetadata(sessions)) void saveChatConditional2();
   if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
   return sessions.length > 0;
+}
+async function deleteGlobalContinuationSelections(selections = []) {
+  const items = Array.isArray(selections) ? selections : [];
+  if (items.length === 0) return { deletedSessions: 0, deletedBranches: 0, deletedRounds: 0 };
+  const db = await openDatabase();
+  const readTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
+  const [sessions, branches, rounds] = await Promise.all([
+    requestResult(readTransaction.objectStore(STORE_SESSIONS).getAll()),
+    requestResult(readTransaction.objectStore(STORE_BRANCHES).getAll()),
+    requestResult(readTransaction.objectStore(STORE_ROUNDS).getAll())
+  ]);
+  const sessionKeys = new Set(items.filter((item) => !item.branchKey).map((item) => `${item.chatId}\0${item.scriptId}`));
+  const branchKeys = new Set(items.filter((item) => item.branchKey && !item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}`));
+  const roundKeys = new Set(items.filter((item) => item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}\0${item.roundKey}`));
+  const sessionById = new Map(sessions.map((session) => [session.id, session]));
+  const deletedSessionIds = /* @__PURE__ */ new Set();
+  const deletedBranchIds = /* @__PURE__ */ new Set();
+  const deletedRoundIds = /* @__PURE__ */ new Set();
+  for (const session of sessions) {
+    if (sessionKeys.has(`${session.chatId}\0${session.scriptId}`)) deletedSessionIds.add(session.id);
+  }
+  for (const branch of branches) {
+    const session = sessionById.get(branch.sessionId);
+    if (!session) continue;
+    const branchKey = String(branch.branchKey || branch.id);
+    if (deletedSessionIds.has(session.id) || branchKeys.has(`${session.chatId}\0${session.scriptId}\0${branchKey}`)) {
+      deletedBranchIds.add(branch.id);
+    }
+  }
+  for (const round of rounds) {
+    const session = sessionById.get(round.sessionId);
+    if (!session) continue;
+    const branchKey = String(round.branchKey || round.branchId);
+    if (deletedSessionIds.has(session.id) || deletedBranchIds.has(round.branchId) || roundKeys.has(`${session.chatId}\0${session.scriptId}\0${branchKey}\0${round.roundKey}`)) {
+      deletedRoundIds.add(round.id);
+    }
+  }
+  for (const branch of branches) {
+    if (deletedBranchIds.has(branch.id)) continue;
+    const hasRemaining = rounds.some((round) => round.branchId === branch.id && !deletedRoundIds.has(round.id));
+    if (!hasRemaining) deletedBranchIds.add(branch.id);
+  }
+  const writeTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
+  const completed = transactionDone(writeTransaction);
+  const sessionStore = writeTransaction.objectStore(STORE_SESSIONS);
+  const branchStore = writeTransaction.objectStore(STORE_BRANCHES);
+  const roundStore = writeTransaction.objectStore(STORE_ROUNDS);
+  for (const session of sessions) {
+    if (deletedSessionIds.has(session.id)) continue;
+    const remaining = branches.filter((branch) => branch.sessionId === session.id && !deletedBranchIds.has(branch.id));
+    if (remaining.length === 0) {
+      deletedSessionIds.add(session.id);
+      continue;
+    }
+    if (deletedBranchIds.has(String(session.activeBranchId || ""))) {
+      const fallback = remaining.find((branch) => branch.id === branches.find((item) => item.id === session.activeBranchId)?.parentBranchId) || [...remaining].sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0))[0];
+      session.activeBranchId = fallback.id;
+    }
+  }
+  sessions.forEach((session) => deletedSessionIds.has(session.id) ? sessionStore.delete(session.id) : sessionStore.put(session));
+  branches.forEach((branch) => {
+    if (deletedSessionIds.has(branch.sessionId) || deletedBranchIds.has(branch.id)) branchStore.delete(branch.id);
+  });
+  const nextSequenceByBranch = /* @__PURE__ */ new Map();
+  sortBySequence(rounds).forEach((round) => {
+    if (deletedSessionIds.has(round.sessionId) || deletedBranchIds.has(round.branchId) || deletedRoundIds.has(round.id)) {
+      roundStore.delete(round.id);
+      return;
+    }
+    const sequence = (nextSequenceByBranch.get(round.branchId) || 0) + 1;
+    nextSequenceByBranch.set(round.branchId, sequence);
+    roundStore.put({ ...round, sequence });
+  });
+  await completed;
+  if (items.some((item) => item.chatId === getCurrentChatKey())) await restoreContinuationForCurrentChat();
+  return { deletedSessions: deletedSessionIds.size, deletedBranches: deletedBranchIds.size, deletedRounds: deletedRoundIds.size };
 }
 var DB_NAME2, DB_VERSION2, STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS, CHAT_METADATA_KEY, dbPromise, restoreSequence, runtimeRevision, pendingWrites;
 var init_continuationStore = __esm({
@@ -34603,7 +35093,7 @@ var init_continuationStore = __esm({
     init_state();
     init_logger();
     DB_NAME2 = "TitaniaContinuationDB";
-    DB_VERSION2 = 1;
+    DB_VERSION2 = 2;
     STORE_SESSIONS = "continuationSessions";
     STORE_BRANCHES = "continuationBranches";
     STORE_ROUNDS = "continuationRounds";
@@ -34679,10 +35169,7 @@ function renderHtml(viewData) {
                     </div>
                 </div>
                 <div class="t-header-actions">
-                    <i class="fa-solid fa-store t-icon-btn" id="t-btn-workshop" title="\u56DE\u58F0\u5DE5\u574A"></i>
-                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
-                    <i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" title="\u66F4\u591A"></i>
-                    <span class="t-close" id="t-btn-close">&times;</span>
+                    ${renderHeaderActionsHtml()}
                 </div>
             </div>
 
@@ -35064,6 +35551,7 @@ var init_modern = __esm({
     init_api();
     init_continuationStore();
     init_viewState();
+    init_headerActions();
     id = "modern";
   }
 });
@@ -35090,10 +35578,7 @@ function renderHtml2(viewData) {
                     </div>
                 </div>
                 <div class="t-header-actions">
-                    <i class="fa-solid fa-store t-icon-btn" id="t-btn-workshop" title="\u56DE\u58F0\u5DE5\u574A"></i>
-                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
-                    <i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" title="\u66F4\u591A"></i>
-                    <span class="t-close" id="t-btn-close">&times;</span>
+                    ${renderHeaderActionsHtml()}
                 </div>
             </div>
 
@@ -35156,10 +35641,6 @@ function renderHtml2(viewData) {
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                         <span>\u4E3B\u52A8\u7EED\u5199</span>
                     </div>
-                    <div class="t-tools-item" id="t-tool-continuation-history">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                        <span>\u7EED\u5199\u5386\u53F2</span>
-                    </div>
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
@@ -35192,7 +35673,7 @@ function renderHtml2(viewData) {
             <!-- \u5DE6\u4FA7\uFF1A2x2 \u5DE5\u5177\u7F51\u683C -->
             <div class="t-bot-left">
                 <button class="t-btn-grid" id="t-btn-debug" title="\u5BA1\u67E5 Prompt"><i class="fa-solid fa-eye"></i></button>
-                <button class="t-btn-grid" id="t-btn-copy" title="\u590D\u5236\u6E90\u7801"><i class="fa-regular fa-copy"></i></button>
+                <button class="t-btn-grid" id="t-btn-continuation-history" title="\u7EED\u5199\u5386\u53F2"><i class="fa-solid fa-clock-rotate-left"></i></button>
                 <button class="t-btn-grid" id="t-btn-like" title="\u6536\u85CF\u7ED3\u679C"><i class="fa-regular fa-heart"></i></button>
                 <button class="t-btn-grid" id="t-btn-new" title="\u65B0\u5EFA\u5267\u672C"><i class="fa-solid fa-plus"></i></button>
             </div>
@@ -35262,7 +35743,7 @@ function bindEvents4(ctx) {
     const composeResult = await openContinuationComposer2("");
     await runContinuation(composeResult);
   });
-  $("#t-tool-continuation-history").on("click", function() {
+  $("#t-btn-continuation-history").on("click", function() {
     openContinuationHistory2("");
   });
   $("#t-btn-run-single").on("click", () => {
@@ -35290,6 +35771,7 @@ var init_legacy = __esm({
   "src/ui/mainWindow/layouts/legacy.js"() {
     init_state();
     init_api();
+    init_headerActions();
     id2 = "legacy";
   }
 });
@@ -35304,6 +35786,7 @@ __export(mainWindow_exports, {
   getQueueScripts: () => getQueueScripts,
   handleRandom: () => handleRandom,
   openMainWindow: () => openMainWindow,
+  refreshHeaderActions: () => refreshHeaderActions,
   refreshScriptList: () => refreshScriptList,
   registerTeardown: () => registerTeardown,
   setContinuationHistoryView: () => setContinuationHistoryView,
@@ -35615,6 +36098,18 @@ function getContinuationInstructionPreview(instruction, maxLength = 100) {
   if (normalized.length <= maxLength) return normalized;
   return `${normalized.slice(0, maxLength)}\u2026`;
 }
+function formatContinuationTimestamp(timestamp) {
+  const value = Number(timestamp) || 0;
+  if (!value) return "";
+  if (typeof window.moment === "function") {
+    const parsed = window.moment(value);
+    if (parsed.isValid()) return parsed.format("LL LT");
+  }
+  return new Date(value).toLocaleString();
+}
+function getContinuationBranchTime(branch) {
+  return Number(branch?.createdAt) || Number(branch?.rounds?.[0]?.timestamp) || 0;
+}
 function findContinuationRound(scriptId, branchKey, roundKey) {
   const branch = getContinuationBranches(scriptId).find((item) => item.branchKey === branchKey);
   const round = branch?.rounds.find((item) => item.roundKey === roundKey);
@@ -35698,7 +36193,15 @@ async function openContinuationHistory(preferredScriptId = "") {
   const selectionCheckbox = (level, chatId, scriptId, branchKey = "", roundKey = "", disabled = false) => continuationHistoryManaging ? `<input class="t-cont-select" type="checkbox" data-selection-level="${level}" data-chat-id="${escapeHtmlText2(chatId)}" data-script-id="${escapeHtmlText2(scriptId)}" data-branch-key="${escapeHtmlText2(branchKey)}" data-round-key="${escapeHtmlText2(roundKey)}" ${disabled ? "disabled" : ""} aria-label="\u9009\u62E9${level === "session" ? "\u5267\u672C" : level === "branch" ? "\u5206\u652F" : "\u8F6E\u6B21"}">` : "";
   const sessionsHtml = sessions.map((session, sessionIndex) => {
     const isOpen = sessionIndex === 0;
-    const branchHtml = session.branches.map((branch) => {
+    const hasActiveBranch = session.branches.some((item) => item.isActive);
+    const branchNumbers = new Map(
+      [...session.branches].sort((a, b) => getContinuationBranchTime(a) - getContinuationBranchTime(b)).map((item, index) => [item.branchKey, index + 1])
+    );
+    const branchHtml = session.branches.map((branch, branchIndex) => {
+      const isBranchOpen = hasActiveBranch ? branch.isActive : branchIndex === 0;
+      const branchNumber = branchNumbers.get(branch.branchKey) || 1;
+      const branchTime = formatContinuationTimestamp(getContinuationBranchTime(branch));
+      const branchTitle = branchTime || "\u65F6\u95F4\u672A\u77E5";
       const sourceContinuationIndex = Math.max(0, Number(branch.branchedAtRound) - 1);
       const branchSource = sourceContinuationIndex > 0 ? ` \xB7 \u4ECE\u7EED\u5199\u7B2C ${sourceContinuationIndex} \u6B21\u521B\u5EFA` : "";
       const branchStatus = `${branch.isActive ? "\u5F53\u524D\u5206\u652F" : "\u5386\u53F2\u5206\u652F"}${branchSource}`;
@@ -35726,17 +36229,18 @@ async function openContinuationHistory(preferredScriptId = "") {
                     </div>
                 </article>`;
       }).join("");
-      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}">
-                <div class="t-cont-history-branch-title">
+      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""} ${isBranchOpen ? "is-open" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}">
+                <button class="t-cont-history-branch-title" type="button" aria-expanded="${isBranchOpen}">
                     <span class="t-cont-select-wrap">${selectionCheckbox("branch", session.chatId, session.scriptId, branch.branchKey)}</span>
+                    <i class="fa-solid fa-chevron-right t-cont-history-branch-chevron"></i>
                     <i class="fa-solid fa-code-branch"></i>
                     <div class="t-cont-history-branch-heading">
-                        <strong>\u300A${escapeHtmlText2(session.scriptName)}\u300B</strong>
-                        <span>${escapeHtmlText2(session.characterName)} \xB7 ${escapeHtmlText2(branchStatus)}</span>
+                        <strong>${escapeHtmlText2(branchTitle)}${branchNumber > 1 ? `<em class="t-cont-history-branch-no">\u5206\u652F ${branchNumber}</em>` : ""}</strong>
+                        <span>${escapeHtmlText2(branchStatus)}</span>
                     </div>
                     <small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small>
-                </div>
-                ${roundHtml}
+                </button>
+                <div class="t-cont-history-branch-body" ${isBranchOpen ? "" : "hidden"}>${roundHtml}</div>
             </section>`;
     }).join("");
     return `<section class="t-cont-history-session ${isOpen ? "is-open" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}">
@@ -35863,6 +36367,13 @@ async function openContinuationHistory(preferredScriptId = "") {
     $session.toggleClass("is-open", shouldOpen);
     $(this).attr("aria-expanded", String(shouldOpen));
     $session.find(".t-cont-history-session-body").first().prop("hidden", !shouldOpen);
+  });
+  $panel.on("click", ".t-cont-history-branch-title", function() {
+    const $branch = $(this).closest(".t-cont-history-branch");
+    const shouldOpen = !$branch.hasClass("is-open");
+    $branch.toggleClass("is-open", shouldOpen);
+    $(this).attr("aria-expanded", String(shouldOpen));
+    $branch.find(".t-cont-history-branch-body").first().prop("hidden", !shouldOpen);
   });
   $panel.on("click", ".t-cont-history-toggle", function() {
     const $round = $(this).closest(".t-cont-history-round");
@@ -36174,10 +36685,6 @@ async function openMainWindow() {
   $("#t-overlay").on("click", (e) => {
     if (e.target === e.currentTarget) closeWindow();
   });
-  $("#t-btn-profile").on("click", function(e) {
-    renderProfileMenu($(this));
-    e.stopPropagation();
-  });
   $("#t-btn-new").on("click", () => {
     openEditor(null, "main");
   });
@@ -36270,14 +36777,9 @@ async function openMainWindow() {
       saveFavorite();
     }
   });
-  $("#t-btn-favs").on("click", openFavsWindow);
-  $("#t-btn-workshop").on("click", async () => {
-    const { openWorkshopWindow: openWorkshopWindow2 } = await Promise.resolve().then(() => (init_workshopWindow(), workshopWindow_exports));
-    openWorkshopWindow2("main");
-  });
-  $("#t-btn-more").on("click", function(e) {
-    renderMoreMenu($(this));
+  $("#t-main-view").on("click", "[data-header-action]", function(e) {
     e.stopPropagation();
+    runHeaderAction(String($(this).data("header-action") || ""), $(this));
   });
   $("#t-btn-debug").on("click", async () => await showDebugInfo());
   $("#t-btn-queue-settings").on("click", openQueueSettingsWindow);
@@ -36359,6 +36861,7 @@ async function openMainWindow() {
   window.updateRunButtonsState = updateRunButtonsState;
   window.updateFavButtonUI = updateFavButtonUI;
   window.updateScriptTitleDisplay = updateScriptTitleDisplay;
+  window.refreshHeaderActions = refreshHeaderActions;
   let initialScriptId = GlobalState.lastUsedScriptId;
   if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
     initialScriptId = GlobalState.lastGeneratedScriptId;
@@ -36587,20 +37090,23 @@ async function updateWorldInfoBadge() {
         }
       });
     });
-    const $icon = $("#t-btn-more");
+    const onBar = $("#t-btn-worldinfo").length > 0;
+    const $icon = onBar ? $("#t-btn-worldinfo") : $("#t-btn-more");
+    if (!$icon.length) return;
+    const prefix = onBar ? "\u4E16\u754C\u4E66\u7B5B\u9009" : "\u66F4\u591A \xB7 \u4E16\u754C\u4E66";
     if (selectedCount > 0) {
       $icon.css("color", "#90cdf4");
-      $icon.attr("title", `\u66F4\u591A \xB7 \u4E16\u754C\u4E66\u5DF2\u9009 ${selectedCount}/${totalCount}`);
+      $icon.attr("title", `${prefix}\u5DF2\u9009 ${selectedCount}/${totalCount}`);
     } else if (totalCount > 0) {
       $icon.css("color", "#bfa15f");
-      $icon.attr("title", `\u66F4\u591A \xB7 \u4E16\u754C\u4E66\u672A\u9009\u62E9\u4EFB\u4F55\u6761\u76EE`);
+      $icon.attr("title", `${prefix}\u672A\u9009\u62E9\u4EFB\u4F55\u6761\u76EE`);
     } else {
       $icon.css("color", "");
-      $icon.attr("title", "\u66F4\u591A");
+      $icon.attr("title", onBar ? "\u4E16\u754C\u4E66\u7B5B\u9009" : "\u66F4\u591A");
     }
   } catch (e) {
     console.warn("Titania: \u66F4\u65B0\u4E16\u754C\u4E66\u56FE\u6807\u72B6\u6001\u5931\u8D25", e);
-    $("#t-btn-more").css("color", "");
+    $("#t-btn-worldinfo, #t-btn-more").css("color", "");
   }
 }
 async function openWorldInfoSelector() {
@@ -37191,43 +37697,73 @@ function showScriptSelector(initialFilter = "ALL") {
   renderGrid();
   $("#t-sel-close").on("click", () => $("#t-selector-panel").remove());
 }
+async function runHeaderAction(id3, $anchor) {
+  if (id3 === "__more__") {
+    renderMoreMenu($anchor);
+    return;
+  }
+  if (id3 === "favs") {
+    openFavsWindow();
+  } else if (id3 === "workshop") {
+    const { openWorkshopWindow: openWorkshopWindow2 } = await Promise.resolve().then(() => (init_workshopWindow(), workshopWindow_exports));
+    openWorkshopWindow2("main");
+  } else if (id3 === "worldinfo") {
+    openWorldInfoSelector();
+  } else if (id3 === "profiles") {
+    renderProfileMenu($anchor);
+  } else if (id3 === "settings") {
+    openSettingsWindow();
+  }
+}
+function refreshHeaderActions() {
+  const $host = $("#t-main-view .t-header-actions");
+  if (!$host.length) return;
+  $host.html(renderHeaderActionsHtml());
+  updateWorldInfoBadge().catch((e) => console.warn("Titania: \u5237\u65B0\u4E16\u754C\u4E66\u72B6\u6001\u5931\u8D25", e));
+}
 function renderMoreMenu($targetBtn) {
   if ($("#t-more-popover").length) {
     $("#t-more-popover").remove();
     return;
   }
-  const items = [
-    { id: "worldinfo", icon: "fa-book-atlas", label: "\u4E16\u754C\u4E66\u7B5B\u9009" },
-    { id: "profiles", icon: "fa-network-wired", label: "API \u65B9\u6848" },
-    { id: "settings", icon: "fa-gear", label: "\u8BBE\u7F6E" }
-  ];
+  const items = getOverflowActions();
+  if (!items.length) return;
+  const isFull = getHeaderActions().length >= HEADER_ACTION_MAX;
+  const pinTitle = isFull ? `\u6700\u591A ${HEADER_ACTION_MAX} \u4E2A\uFF0C\u53D6\u6D88\u4E00\u4E2A\u518D\u9009` : "\u56FA\u5B9A\u5230\u680F\u4E0A";
   const html = `
-    <div id="t-more-popover" class="t-filter-popover" style="width: 170px; z-index: 21000;">
+    <div id="t-more-popover" class="t-filter-popover" style="width: 190px; z-index: 21000;">
         ${items.map((it) => `
-            <div class="t-filter-item" data-action="${it.id}">
+            <div class="t-filter-item t-more-item" data-action="${it.id}">
                 <span><i class="fa-solid ${it.icon}" style="width:1.1em; margin-right:8px;"></i>${it.label}</span>
+                <button type="button" class="t-more-pin" data-pin="${it.id}" title="${pinTitle}" aria-label="${pinTitle}" ${isFull ? "disabled" : ""}><i class="fa-solid fa-thumbtack"></i></button>
             </div>
         `).join("")}
     </div>`;
   $("body").append(html);
   const pop = $("#t-more-popover");
   const rect = $targetBtn[0].getBoundingClientRect();
-  const left = rect.left + 170 > window.innerWidth ? rect.right - 170 : rect.left;
+  const left = rect.left + 190 > window.innerWidth ? rect.right - 190 : rect.left;
   pop.css({ top: rect.bottom + 10, left });
   const closeMenu2 = () => {
     pop.remove();
     $(document).off("click.closemore");
   };
-  $(".t-filter-item", pop).on("click", function() {
-    const action = $(this).data("action");
+  $(".t-more-pin", pop).on("click", function(e) {
+    e.stopPropagation();
+    if ($(this).prop("disabled")) return;
+    const id3 = String($(this).data("pin") || "");
+    const meta = getOverflowActions().find((item) => item.id === id3);
+    const next = [...getHeaderActions(), id3];
+    if (next.length > HEADER_ACTION_MAX) return;
+    saveHeaderActions(next);
     closeMenu2();
-    if (action === "worldinfo") {
-      openWorldInfoSelector();
-    } else if (action === "profiles") {
-      renderProfileMenu($targetBtn);
-    } else if (action === "settings") {
-      openSettingsWindow();
-    }
+    refreshHeaderActions();
+    if (window.toastr && meta) toastr.success(`\u5DF2\u628A\u300C${meta.label}\u300D\u56FA\u5B9A\u5230\u6807\u9898\u680F`, "Titania");
+  });
+  $(".t-filter-item", pop).on("click", function() {
+    const action = String($(this).data("action") || "");
+    closeMenu2();
+    runHeaderAction(action, $targetBtn);
   });
   setTimeout(() => {
     $(document).on("click.closemore", (e) => {
@@ -37613,6 +38149,7 @@ var init_mainWindow = __esm({
     init_viewState();
     init_modern();
     init_legacy();
+    init_headerActions();
     SORT_MODE_LABELS2 = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
