@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.1.8";
+    CURRENT_VERSION = "5.2.0";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -5272,6 +5272,13 @@ textarea.t-input {
     border: 1px solid #303030;
     border-radius: 10px;
     background: #191919;
+    /* \u6D3E\u751F\u5206\u652F\u6309\u5C42\u7EA7\u7F29\u8FDB\uFF0C\u6DF1\u5EA6\u7531\u884C\u5185 --t-branch-depth \u63D0\u4F9B\uFF1B\u9650\u6DF1\u907F\u514D\u6DF1\u94FE\u628A\u5185\u5BB9\u6324\u6CA1 */
+    margin-left: calc(min(var(--t-branch-depth, 0), 4) * 16px);
+}
+
+/* \u7F29\u8FDB\u5C42\u7528\u5DE6\u4FA7\u63CF\u8FB9\u793A\u610F\u6D3E\u751F\u5173\u7CFB\uFF0C\u9876\u5C42\u5206\u652F\u4E0D\u663E\u793A */
+.t-cont-history-branch.is-derived {
+    border-left: 2px solid rgba(191, 161, 95, 0.3);
 }
 
 .t-cont-history-branch.is-active {
@@ -5314,6 +5321,63 @@ textarea.t-input {
     margin-left: auto;
     color: #777;
     flex-shrink: 0;
+}
+
+.t-cont-history-branch-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.t-cont-history-branch-actions .t-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* .danger \u539F\u672C\u53EA\u5728\u6279\u91CF\u5220\u9664\u6761\u91CC\u6709\u6837\u5F0F\uFF0C\u5206\u652F\u5934\u91CC\u7684\u5220\u9664\u6309\u94AE\u9700\u8981\u540C\u6837\u7684\u89C6\u89C9 */
+.t-cont-history-branch-actions .danger {
+    color: #ffd6d6;
+    border-color: rgba(248, 113, 113, .45);
+    background: rgba(185, 28, 28, .18);
+}
+
+.t-cont-branch-current {
+    padding: 3px 8px;
+    border: 1px solid rgba(191, 161, 95, 0.34);
+    border-radius: 999px;
+    background: rgba(191, 161, 95, 0.1);
+    color: rgba(238, 220, 178, 0.78);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.t-cont-branch-name {
+    cursor: text;
+}
+
+.t-cont-branch-name:hover {
+    text-decoration: underline dotted rgba(191, 161, 95, 0.5);
+    text-underline-offset: 3px;
+}
+
+/* \u5C31\u5730\u91CD\u547D\u540D\u8F93\u5165\u6846\uFF1A\u6491\u6EE1\u6807\u9898\u884C\uFF0C\u907F\u514D\u7F16\u8F91\u65F6\u5E03\u5C40\u8DF3\u52A8 */
+.t-cont-branch-rename {
+    width: 100%;
+    padding: 2px 6px;
+    border: 1px solid rgba(191, 161, 95, 0.5);
+    border-radius: 4px;
+    background: #141414;
+    color: #e4ddcf;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.t-cont-branch-rename:focus {
+    outline: none;
+    border-color: rgba(231, 202, 143, 0.75);
 }
 
 .t-cont-history-round {
@@ -15722,27 +15786,9 @@ function resetContinuationState() {
     userName: ""
   };
 }
-function pushSceneToHistory(content, scriptId, scriptName, metadata = {}) {
-  const history = GlobalState.sceneHistory;
+function recordGenerationResult(content, scriptId, scriptName, metadata = {}) {
   const generationId = String(metadata.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
   const status = metadata.status || "success";
-  const newItem = {
-    content,
-    scriptId,
-    scriptName: scriptName || "\u672A\u77E5\u5267\u672C",
-    status,
-    generationId,
-    timestamp: Date.now(),
-    isRead: false,
-    // 新生成的默认未读
-    favId: null
-    // 该记录对应的收藏 ID（null 表示未收藏）
-  };
-  history.items.unshift(newItem);
-  while (history.items.length > history.maxItems) {
-    history.items.pop();
-  }
-  history.currentIndex = 0;
   GlobalState.lastGeneratedContent = content;
   GlobalState.lastGeneratedScriptId = scriptId;
   GlobalState.currentGenerationResult = {
@@ -15757,7 +15803,7 @@ function pushSceneToHistory(content, scriptId, scriptName, metadata = {}) {
     timestamp: Date.now()
   };
   GlobalState.lastFavId = null;
-  console.log(`[Titania] \u5267\u573A\u5386\u53F2\u5DF2\u66F4\u65B0: ${history.items.length} \u6761\u8BB0\u5F55`);
+  return { generationId, status };
 }
 function setCurrentGenerationResult(result = {}) {
   const status = result.status || "failed";
@@ -15778,22 +15824,18 @@ function setCurrentGenerationResult(result = {}) {
 }
 function getCurrentGenerationResult() {
   const display = GlobalState.displayState;
-  if (display.isViewingHistory && display.currentViewIndex >= 0) {
-    const item = GlobalState.sceneHistory.items[display.currentViewIndex];
-    if (item) {
-      const status = item.status || "legacy";
-      return {
-        generationId: String(item.generationId || ""),
-        content: String(item.content || ""),
-        scriptId: String(item.scriptId || ""),
-        scriptName: String(item.scriptName || "\u573A\u666F"),
-        status,
-        canFavorite: status === "success" || status === "legacy",
-        canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
-        error: item.error || null,
-        timestamp: Number(item.timestamp) || 0
-      };
-    }
+  if (display.isViewingHistory && display.lockedContent) {
+    return {
+      generationId: String(display.lockedGenerationId || ""),
+      content: String(display.lockedContent),
+      scriptId: String(display.lockedScriptId || ""),
+      scriptName: String(display.lockedScriptName || "\u573A\u666F"),
+      status: "legacy",
+      canFavorite: true,
+      canContinue: true,
+      error: null,
+      timestamp: 0
+    };
   }
   if (GlobalState.streamingCache.isActive) {
     return {
@@ -15826,27 +15868,6 @@ function getCurrentGenerationResult() {
 }
 function isFavoriteEligible(result = getCurrentGenerationResult()) {
   return Boolean(result?.canFavorite && String(result.content || "").trim());
-}
-function getCurrentHistoryItem() {
-  const history = GlobalState.sceneHistory;
-  if (history.currentIndex < 0 || history.currentIndex >= history.items.length) {
-    return null;
-  }
-  return history.items[history.currentIndex];
-}
-function syncFavIdToCurrentHistory(favId) {
-  const display = GlobalState.displayState;
-  const history = GlobalState.sceneHistory;
-  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-  if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
-    history.items[effectiveIndex].favId = favId;
-  }
-}
-function markCurrentAsRead() {
-  const item = getCurrentHistoryItem();
-  if (item) {
-    item.isRead = true;
-  }
 }
 function resetQueueState() {
   GlobalState.queueState.isRunning = false;
@@ -15889,28 +15910,8 @@ function getQueueProgress() {
     isRunning: q.isRunning
   };
 }
-function setHistoryMaxItems(maxItems) {
-  GlobalState.sceneHistory.maxItems = maxItems;
-  while (GlobalState.sceneHistory.items.length > maxItems) {
-    GlobalState.sceneHistory.items.pop();
-  }
-}
-function lockDisplayToHistory(historyIndex) {
-  const history = GlobalState.sceneHistory;
-  if (historyIndex < 0 || historyIndex >= history.items.length) return;
-  const item = history.items[historyIndex];
-  GlobalState.displayState.isViewingHistory = true;
-  GlobalState.displayState.currentViewIndex = historyIndex;
-  GlobalState.displayState.lockedContent = item.content;
-  GlobalState.displayState.lockedScriptId = item.scriptId;
-  GlobalState.displayState.lockedScriptName = item.scriptName;
-  GlobalState.displayState.lockedGenerationId = item.generationId || null;
-  item.isRead = true;
-  console.log(`[Titania] \u663E\u793A\u5C42\u9501\u5B9A\u5230\u5386\u53F2 #${historyIndex + 1}`);
-}
 function lockDisplayToContent(content, scriptId, scriptName = "\u573A\u666F", generationId = "") {
   GlobalState.displayState.isViewingHistory = true;
-  GlobalState.displayState.currentViewIndex = -1;
   GlobalState.displayState.lockedContent = String(content || "");
   GlobalState.displayState.lockedScriptId = String(scriptId || "");
   GlobalState.displayState.lockedScriptName = String(scriptName || "\u573A\u666F");
@@ -15918,7 +15919,6 @@ function lockDisplayToContent(content, scriptId, scriptName = "\u573A\u666F", ge
 }
 function unlockDisplay() {
   GlobalState.displayState.isViewingHistory = false;
-  GlobalState.displayState.currentViewIndex = -1;
   GlobalState.displayState.lockedContent = null;
   GlobalState.displayState.lockedScriptId = null;
   GlobalState.displayState.lockedScriptName = null;
@@ -16021,11 +16021,9 @@ var init_state = __esm({
       // 显示层状态 (用于分离显示与生成)
       displayState: {
         isViewingHistory: false,
-        // 是否正在查看历史（非最新）
-        currentViewIndex: -1,
-        // 当前查看的历史索引 (-1 表示查看最新/实时)
+        // 是否锁定在某条历史内容上（非实时）
         lockedContent: null,
-        // 锁定显示的内容（用户切换历史时）
+        // 锁定显示的内容
         lockedScriptId: null,
         // 锁定显示的剧本ID
         lockedScriptName: null,
@@ -16066,15 +16064,6 @@ var init_state = __esm({
       continuationRuntime: {
         chatId: "",
         byScript: {}
-      },
-      // 剧场历史记录队列
-      sceneHistory: {
-        items: [],
-        // 历史记录数组，每项 { content, scriptId, scriptName, timestamp, isRead }
-        currentIndex: -1,
-        // 当前查看的索引 (-1 表示没有历史)
-        maxItems: 5
-        // 最多保留的历史记录数量
       },
       // 生成内容统计信息
       contentStats: {
@@ -16950,8 +16939,10 @@ var favsWindow_exports = {};
 __export(favsWindow_exports, {
   openCharImageManager: () => openCharImageManager,
   openFavsWindow: () => openFavsWindow,
+  resolveFavIdForBranch: () => resolveFavIdForBranch,
   saveContinuationChainFavorite: () => saveContinuationChainFavorite,
   saveFavorite: () => saveFavorite,
+  syncFavStateToCurrentView: () => syncFavStateToCurrentView,
   unsaveFavorite: () => unsaveFavorite
 });
 function getCurrentAvatarSrc() {
@@ -17174,30 +17165,57 @@ function waitForImagesLoadedDeep(rootEl, timeoutMs = 5e3) {
 async function saveFavorite() {
   await saveContinuationChainFavorite();
 }
-function getChainBaseHtmlFromItems(items) {
-  const list = Array.isArray(items) ? items : [];
-  if (list.length === 0) return "";
-  const initial = list.find((item) => String(item?.type || "").trim() === "initial");
-  const candidate = initial || list[0];
-  return String(candidate?.html || candidate?.content || "").trim();
+function migrateLegacyChainFavorites(data) {
+  const favs = Array.isArray(data?.favs) ? data.favs : [];
+  let changed = 0;
+  for (const fav of favs) {
+    if (!fav || fav.type !== "chain") continue;
+    if (fav.anchor || fav.legacy === true) continue;
+    const branchKey = String(fav.branchKey || "").trim();
+    if (branchKey) {
+      const rounds = Array.isArray(fav.items) ? fav.items : [];
+      fav.anchor = {
+        scriptId: String(fav.scriptId || ""),
+        branchKey,
+        chatId: "",
+        upToRound: rounds.length,
+        lastRoundKey: ""
+      };
+    } else {
+      fav.legacy = true;
+      fav.anchor = null;
+    }
+    changed++;
+  }
+  if (changed > 0) {
+    saveExtData();
+    console.log(`[Titania] \u5DF2\u8FC1\u79FB ${changed} \u6761\u65E7\u5206\u7EC4\u6536\u85CF\u7684\u5206\u652F\u8EAB\u4EFD`);
+  }
+  return changed;
 }
-function isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems) {
+function isSameChainSession(favEntry, scriptId, branchKey) {
   if (!favEntry || favEntry.type !== "chain") return false;
-  if (String(favEntry.scriptId || "") !== String(scriptId || "")) return false;
-  const favBase = getChainBaseHtmlFromItems(favEntry.items);
-  const currentBase = getChainBaseHtmlFromItems(currentItems);
-  if (!favBase || !currentBase) return false;
-  return favBase === currentBase;
-}
-function isSameChainSession(favEntry, scriptId, branchKey, currentItems) {
-  if (!favEntry || favEntry.type !== "chain") return false;
+  if (favEntry.legacy === true) return false;
   if (String(favEntry.scriptId || "") !== String(scriptId || "")) return false;
   const normalizedBranchKey = String(branchKey || "").trim();
-  const favBranchKey = String(favEntry.branchKey || "").trim();
-  if (normalizedBranchKey && favBranchKey) {
-    return normalizedBranchKey === favBranchKey;
-  }
-  return isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems);
+  const favBranchKey = String(favEntry.branchKey || favEntry.anchor?.branchKey || "").trim();
+  if (!normalizedBranchKey || !favBranchKey) return false;
+  return normalizedBranchKey === favBranchKey;
+}
+function resolveFavIdForBranch(scriptId, branchKey = "") {
+  const normalizedScriptId = String(scriptId || "").trim();
+  if (!normalizedScriptId) return null;
+  const resolvedBranchKey = String(branchKey || "").trim() || String(getContinuationRoundsForFav(normalizedScriptId)?.branchKey || "").trim();
+  if (!resolvedBranchKey) return null;
+  const data = getExtData();
+  if (!Array.isArray(data.favs)) return null;
+  migrateLegacyChainFavorites(data);
+  const hit = data.favs.find((fav) => isSameChainSession(fav, normalizedScriptId, resolvedBranchKey));
+  return hit ? Number(hit.id) || null : null;
+}
+function syncFavStateToCurrentView(scriptId, branchKey = "") {
+  GlobalState.lastFavId = resolveFavIdForBranch(scriptId, branchKey);
+  return GlobalState.lastFavId;
 }
 async function saveContinuationChainFavorite() {
   const currentResult = getCurrentGenerationResult();
@@ -17205,11 +17223,8 @@ async function saveContinuationChainFavorite() {
     if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u751F\u6210\u672A\u5B8C\u6210\uFF0C\u65E0\u6CD5\u6536\u85CF");
     return false;
   }
-  const display = GlobalState.displayState?.isViewingHistory ? GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex] || null : {
-    scriptId: GlobalState.lastGeneratedScriptId,
-    scriptName: ""
-  };
-  const scriptId = currentResult?.scriptId || display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
+  const lockedScriptId = GlobalState.displayState?.isViewingHistory ? GlobalState.displayState.lockedScriptId : GlobalState.lastGeneratedScriptId;
+  const scriptId = currentResult?.scriptId || lockedScriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
   if (!scriptId) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5267\u672C\uFF0C\u65E0\u6CD5\u6536\u85CF\u7EED\u5199\u94FE");
     return false;
@@ -17237,16 +17252,17 @@ async function saveContinuationChainFavorite() {
     return false;
   }
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
-  const scriptName = String(chainData?.scriptName || script?.name || display?.scriptName || "\u573A\u666F");
+  const scriptName = String(chainData?.scriptName || script?.name || GlobalState.displayState?.lockedScriptName || "\u573A\u666F");
   const branchKey = String(chainData?.branchKey || "").trim();
   const avatarSrc = getCurrentAvatarSrc();
   const chainSignature = buildChainSignature(scriptId, normalizedRounds);
+  const anchor = chainData?.anchor ? { ...chainData.anchor, chatId: String(window.SillyTavern?.getContext?.()?.chatId || "") } : null;
   const data = getExtData();
   if (!Array.isArray(data.favs)) data.favs = [];
+  migrateLegacyChainFavorites(data);
   const duplicated = data.favs.find((f) => f?.type === "chain" && f?.chainSignature === chainSignature);
   if (duplicated) {
     GlobalState.lastFavId = duplicated.id;
-    syncFavIdToCurrentHistory(duplicated.id);
     updateFavButtonUI();
     if (window.toastr) toastr.info("\u5F53\u524D\u5267\u573A\u5206\u7EC4\u5DF2\u6536\u85CF\uFF0C\u65E0\u9700\u91CD\u590D\u6536\u85CF");
     return true;
@@ -17256,10 +17272,10 @@ async function saveContinuationChainFavorite() {
   const activeFavId = Number(GlobalState.lastFavId) || null;
   let existingChain = null;
   if (activeFavId) {
-    existingChain = data.favs.find((f) => f?.type === "chain" && Number(f?.id) === activeFavId) || null;
+    existingChain = data.favs.find((f) => f?.type === "chain" && Number(f?.id) === activeFavId && isSameChainSession(f, scriptId, branchKey)) || null;
   }
   if (!existingChain) {
-    existingChain = data.favs.find((f) => isSameChainSession(f, scriptId, branchKey, items)) || null;
+    existingChain = data.favs.find((f) => isSameChainSession(f, scriptId, branchKey)) || null;
   }
   if (existingChain) {
     existingChain.title = `${scriptName} - ${ctx.charName}`;
@@ -17270,11 +17286,11 @@ async function saveContinuationChainFavorite() {
     existingChain.html = mergedHtml;
     existingChain.avatar = avatarSrc;
     existingChain.branchKey = branchKey;
+    existingChain.anchor = anchor;
     existingChain.chainSignature = chainSignature;
     existingChain.items = items;
     saveExtData();
     GlobalState.lastFavId = existingChain.id;
-    syncFavIdToCurrentHistory(existingChain.id);
     updateFavButtonUI();
     if (window.toastr) toastr.success(`\u5DF2\u66F4\u65B0\u5F53\u524D\u5267\u573A\u5206\u7EC4\u6536\u85CF\uFF08\u5171 ${items.length} \u6BB5\uFF09`);
     return true;
@@ -17290,13 +17306,13 @@ async function saveContinuationChainFavorite() {
     html: mergedHtml,
     avatar: avatarSrc,
     branchKey,
+    anchor,
     chainSignature,
     items
   };
   data.favs.unshift(entry);
   saveExtData();
   GlobalState.lastFavId = entry.id;
-  syncFavIdToCurrentHistory(entry.id);
   updateFavButtonUI();
   if (window.toastr) toastr.success(`\u5DF2\u6536\u85CF\u5F53\u524D\u5267\u573A\u5206\u7EC4\uFF08\u5171 ${items.length} \u6BB5\uFF09`);
   return true;
@@ -17317,13 +17333,11 @@ function unsaveFavorite() {
   if (data.favs.length < originalLength) {
     saveExtData();
     GlobalState.lastFavId = null;
-    syncFavIdToCurrentHistory(null);
     updateFavButtonUI();
     if (window.toastr) toastr.info("\u5DF2\u53D6\u6D88\u6536\u85CF");
     return true;
   }
   GlobalState.lastFavId = null;
-  syncFavIdToCurrentHistory(null);
   updateFavButtonUI();
   if (window.toastr) toastr.info("\u6536\u85CF\u72B6\u6001\u5DF2\u540C\u6B65\u4E3A\u672A\u6536\u85CF");
   return true;
@@ -34199,25 +34213,140 @@ function openDatabase() {
     const request = indexedDB.open(DB_NAME2, DB_VERSION2);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = () => {
+    request.onblocked = () => TitaniaLogger.warn("\u7EED\u5199\u5386\u53F2\u6570\u636E\u5E93\u5347\u7EA7\u88AB\u5176\u4ED6\u6807\u7B7E\u9875\u963B\u585E\uFF0C\u8BF7\u5173\u95ED\u591A\u4F59\u7684 SillyTavern \u9875\u9762");
+    request.onupgradeneeded = (event) => {
       const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
-        const store = db.createObjectStore(STORE_SESSIONS, { keyPath: "id" });
-        store.createIndex("chatId", "chatId", { unique: false });
-      }
-      if (!db.objectStoreNames.contains(STORE_BRANCHES)) {
-        const store = db.createObjectStore(STORE_BRANCHES, { keyPath: "id" });
-        store.createIndex("chatId", "chatId", { unique: false });
-        store.createIndex("sessionId", "sessionId", { unique: false });
-      }
-      if (!db.objectStoreNames.contains(STORE_ROUNDS)) {
-        const store = db.createObjectStore(STORE_ROUNDS, { keyPath: "id" });
-        store.createIndex("chatId", "chatId", { unique: false });
-        store.createIndex("branchId", "branchId", { unique: false });
+      const transaction = request.transaction;
+      createStores(db);
+      if (Number(event.oldVersion) >= 1 && Number(event.oldVersion) < 2) {
+        migrateV1ToV2(transaction);
       }
     };
   });
   return dbPromise;
+}
+function createStores(db) {
+  if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
+    const store = db.createObjectStore(STORE_SESSIONS, { keyPath: "id" });
+    store.createIndex("chatId", "chatId", { unique: false });
+  }
+  if (!db.objectStoreNames.contains(STORE_BRANCHES)) {
+    const store = db.createObjectStore(STORE_BRANCHES, { keyPath: "id" });
+    store.createIndex("chatId", "chatId", { unique: false });
+    store.createIndex("sessionId", "sessionId", { unique: false });
+  }
+  if (!db.objectStoreNames.contains(STORE_ROUNDS)) {
+    const store = db.createObjectStore(STORE_ROUNDS, { keyPath: "id" });
+    store.createIndex("chatId", "chatId", { unique: false });
+    store.createIndex("branchId", "branchId", { unique: false });
+  }
+}
+function migrateV1ToV2(transaction) {
+  const sessionStore = transaction.objectStore(STORE_SESSIONS);
+  const branchStore = transaction.objectStore(STORE_BRANCHES);
+  const roundStore = transaction.objectStore(STORE_ROUNDS);
+  sessionStore.getAll().onsuccess = (sessionEvent) => {
+    branchStore.getAll().onsuccess = (branchEvent) => {
+      roundStore.getAll().onsuccess = (roundEvent) => {
+        const sessions = sessionEvent.target.result || [];
+        const branches = branchEvent.target.result || [];
+        const rounds = roundEvent.target.result || [];
+        const branchIdMap = /* @__PURE__ */ new Map();
+        const branchIdBySessionKey = /* @__PURE__ */ new Map();
+        const usedIds = /* @__PURE__ */ new Set();
+        for (const branch of branches) {
+          const legacyKey = String(branch?.branchKey || "").trim();
+          let nextId = legacyKey || String(branch?.id || "");
+          if (!nextId) continue;
+          let guard = 2;
+          while (usedIds.has(nextId)) {
+            nextId = `${branch.sessionId}:${legacyKey}:${guard++}`;
+          }
+          usedIds.add(nextId);
+          branchIdMap.set(String(branch.id), nextId);
+          if (legacyKey) branchIdBySessionKey.set(`${branch.sessionId}\0${legacyKey}`, nextId);
+        }
+        const roundTimestampsByBranch = /* @__PURE__ */ new Map();
+        for (const round of rounds) {
+          const nextBranchId = branchIdMap.get(String(round?.branchId || ""));
+          if (!nextBranchId) continue;
+          const timestamp = Number(round?.timestamp) || 0;
+          const known = roundTimestampsByBranch.get(nextBranchId);
+          if (timestamp > 0 && (!known || timestamp < known)) {
+            roundTimestampsByBranch.set(nextBranchId, timestamp);
+          }
+        }
+        const now = Date.now();
+        const branchCountBySession = /* @__PURE__ */ new Map();
+        branchStore.clear().onsuccess = () => {
+          for (const branch of branches) {
+            const nextId = branchIdMap.get(String(branch.id));
+            if (!nextId) continue;
+            const legacyKey = String(branch?.branchKey || "").trim();
+            const parentKey = String(branch?.parentBranchKey || "").trim();
+            const roundCount = rounds.filter((item) => branchIdMap.get(String(item?.branchId || "")) === nextId).length;
+            branchCountBySession.set(branch.sessionId, (branchCountBySession.get(branch.sessionId) || 0) + 1);
+            branchStore.put({
+              id: nextId,
+              sessionId: String(branch.sessionId || ""),
+              chatId: String(branch.chatId || ""),
+              branchKey: legacyKey || nextId,
+              legacyBranchKey: legacyKey,
+              parentBranchId: parentKey ? branchIdBySessionKey.get(`${branch.sessionId}\0${parentKey}`) || "" : "",
+              branchedAtSequence: Number(branch?.branchedAtRound) || null,
+              createdAt: Number(branch?.archivedAt) || roundTimestampsByBranch.get(nextId) || now,
+              archivedAt: Number(branch?.archivedAt) || 0,
+              label: "",
+              roundCount
+            });
+          }
+        };
+        roundStore.clear().onsuccess = () => {
+          for (const round of rounds) {
+            const nextBranchId = branchIdMap.get(String(round?.branchId || ""));
+            if (!nextBranchId) continue;
+            const roundKey = String(round?.roundKey || "").trim() || createRoundKey();
+            roundStore.put({
+              id: `${nextBranchId}:${roundKey}`,
+              branchId: nextBranchId,
+              sessionId: String(round.sessionId || ""),
+              chatId: String(round.chatId || ""),
+              branchKey: String(round?.branchKey || ""),
+              roundKey,
+              sequence: Number(round?.sequence) || 1,
+              originRoundId: "",
+              type: String(round?.type || "continuation"),
+              instruction: String(round?.instruction || ""),
+              content: String(round?.content || ""),
+              status: String(round?.status || "legacy"),
+              generationId: String(round?.generationId || ""),
+              timestamp: Number(round?.timestamp) || 0
+            });
+          }
+        };
+        for (const session of sessions) {
+          const activeKey = String(session?.activeBranchKey || "").trim();
+          const activeBranchId = branchIdBySessionKey.get(`${session.id}\0${activeKey}`) || "";
+          const sessionBranches = branches.filter((item) => String(item?.sessionId || "") === String(session.id)).map((item) => branchIdMap.get(String(item.id))).filter(Boolean);
+          const rootBranchId = sessionBranches.find((id3) => {
+            const source = branches.find((item) => branchIdMap.get(String(item.id)) === id3);
+            return !String(source?.parentBranchKey || "").trim();
+          }) || sessionBranches[0] || "";
+          sessionStore.put({
+            ...session,
+            activeBranchId: activeBranchId || rootBranchId,
+            rootBranchId,
+            branchCount: sessionBranches.length
+          });
+        }
+        TitaniaLogger.info("\u7EED\u5199\u5386\u53F2\u5DF2\u8FC1\u79FB\u5230 v2 \u5206\u652F\u6A21\u578B", {
+          sessions: sessions.length,
+          branches: branchIdMap.size,
+          rounds: rounds.length
+        });
+      };
+    };
+  };
 }
 function requestResult(request) {
   return new Promise((resolve, reject) => {
@@ -34231,6 +34360,18 @@ function transactionDone(transaction) {
     transaction.onerror = () => reject(transaction.error);
     transaction.onabort = () => reject(transaction.error || new Error("IndexedDB transaction aborted"));
   });
+}
+function abortQuietly(transaction, completed) {
+  void completed.catch(() => void 0);
+  try {
+    transaction.abort();
+  } catch {
+  }
+}
+function createRoundKey() {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `round_${ts}_${rand}`;
 }
 function getCurrentChatKey() {
   return String(getCurrentChatId?.() || "").trim();
@@ -34246,112 +34387,58 @@ function getCurrentSourceMetadata() {
     chatName: String(context.chatId || getCurrentChatKey() || "\u672A\u77E5\u804A\u5929")
   };
 }
-function serializeRuntime(chatId) {
-  const byScript = GlobalState.continuationRuntime?.byScript || {};
-  const sessions = [];
-  const branches = [];
-  const rounds = [];
-  const currentSource = getCurrentSourceMetadata();
-  for (const [scriptId, entry] of Object.entries(byScript)) {
-    const activeBranchKey = String(entry?.branchKey || "").trim();
-    if (!activeBranchKey || !Array.isArray(entry?.rounds) || entry.rounds.length === 0) continue;
-    const sessionId = `${chatId}:${scriptId}`;
-    const archivedBranches = Array.isArray(entry.archivedBranches) ? entry.archivedBranches : [];
-    const sessionUpdatedAt = Math.max(
-      ...entry.rounds.map((round) => Number(round?.timestamp) || 0),
-      ...archivedBranches.flatMap((branch) => [
-        Number(branch?.archivedAt) || 0,
-        ...Array.isArray(branch?.rounds) ? branch.rounds.map((round) => Number(round?.timestamp) || 0) : []
-      ])
-    );
-    sessions.push({
-      id: sessionId,
-      chatId,
-      scriptId,
-      scriptName: String(entry.scriptName || "\u573A\u666F"),
-      characterId: String(entry.characterId ?? currentSource.characterId),
-      characterName: String(entry.characterName || currentSource.characterName),
-      characterAvatar: String(entry.characterAvatar || currentSource.characterAvatar),
-      chatName: String(entry.chatName || currentSource.chatName),
-      origin: entry.origin && typeof entry.origin === "object" ? entry.origin : null,
-      activeBranchKey,
-      parentBranchKey: String(entry.parentBranchKey || ""),
-      branchedAtRound: Number(entry.branchedAtRound) || null,
-      updatedAt: sessionUpdatedAt || Date.now()
-    });
-    const allBranches = [{
-      branchKey: activeBranchKey,
-      isActive: true,
-      parentBranchKey: String(entry.parentBranchKey || ""),
-      branchedAtRound: Number(entry.branchedAtRound) || null,
-      archivedAt: 0,
-      rounds: entry.rounds
-    }, ...archivedBranches];
-    for (const branch of allBranches) {
-      const branchKey = String(branch?.branchKey || "").trim();
-      if (!branchKey || !Array.isArray(branch?.rounds)) continue;
-      const branchId = `${sessionId}:${branchKey}`;
-      branches.push({
-        id: branchId,
-        chatId,
-        sessionId,
-        branchKey,
-        isActive: branchKey === activeBranchKey,
-        parentBranchKey: String(branch.parentBranchKey || ""),
-        branchedAtRound: Number(branch.branchedAtRound) || null,
-        archivedAt: Number(branch.archivedAt) || 0
-      });
-      branch.rounds.forEach((round, index) => {
-        const roundKey = String(round?.roundKey || `legacy_${index + 1}`);
-        rounds.push({
-          id: `${branchId}:${roundKey}`,
-          chatId,
-          sessionId,
-          branchId,
-          branchKey,
-          roundKey,
-          sequence: index + 1,
-          type: String(round?.type || (index === 0 ? "initial" : "continuation")),
-          instruction: String(round?.instruction || ""),
-          content: String(round?.content || ""),
-          status: String(round?.status || "legacy"),
-          generationId: String(round?.generationId || ""),
-          timestamp: Number(round?.timestamp) || 0
-        });
-      });
-    }
-  }
-  return { sessions, branches, rounds };
+function getCurrentContinuationSource() {
+  return { chatId: getCurrentChatKey(), ...getCurrentSourceMetadata() };
+}
+function sortBySequence(rounds) {
+  return [...rounds].sort((a, b) => (Number(a?.sequence) || 0) - (Number(b?.sequence) || 0));
+}
+function toPublicRound(round) {
+  const content = String(round?.content || "");
+  const sequence = Number(round?.sequence) || 1;
+  const type = String(round?.type || (sequence === 1 ? "initial" : "continuation"));
+  return {
+    roundKey: String(round?.roundKey || ""),
+    round: sequence,
+    type,
+    continuationIndex: type === "initial" ? 0 : Math.max(1, sequence - 1),
+    instruction: String(round?.instruction || ""),
+    content,
+    status: String(round?.status || "legacy"),
+    generationId: String(round?.generationId || ""),
+    contentPreview: content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
+    contentLength: content.length,
+    timestamp: Number(round?.timestamp) || 0
+  };
 }
 function buildGlobalSessions(sessions, branches, rounds) {
   const roundsByBranch = /* @__PURE__ */ new Map();
-  rounds.sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((round) => {
-    if (!roundsByBranch.has(round.branchId)) roundsByBranch.set(round.branchId, []);
-    roundsByBranch.get(round.branchId).push({
-      roundKey: round.roundKey,
-      round: round.sequence,
-      type: round.type,
-      continuationIndex: round.type === "initial" ? 0 : Math.max(1, Number(round.sequence) - 1),
-      instruction: round.instruction,
-      content: round.content,
-      status: round.status || "legacy",
-      generationId: round.generationId || "",
-      contentPreview: String(round.content || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
-      contentLength: String(round.content || "").length,
-      timestamp: round.timestamp
-    });
+  sortBySequence(rounds).forEach((round) => {
+    const branchId = String(round?.branchId || "");
+    if (!roundsByBranch.has(branchId)) roundsByBranch.set(branchId, []);
+    roundsByBranch.get(branchId).push(toPublicRound(round));
   });
+  const branchesBySession = /* @__PURE__ */ new Map();
+  for (const branch of branches) {
+    const sessionId = String(branch?.sessionId || "");
+    if (!branchesBySession.has(sessionId)) branchesBySession.set(sessionId, []);
+    branchesBySession.get(sessionId).push(branch);
+  }
   return sessions.map((session) => {
-    const sessionBranches = branches.filter((branch) => branch.sessionId === session.id).map((branch) => ({
-      branchKey: branch.branchKey,
-      isActive: branch.branchKey === session.activeBranchKey,
-      parentBranchKey: branch.parentBranchKey,
-      branchedAtRound: branch.branchedAtRound,
-      archivedAt: branch.archivedAt,
+    const sessionBranches = (branchesBySession.get(String(session.id)) || []).map((branch) => ({
+      branchId: branch.id,
+      branchKey: String(branch.branchKey || branch.id),
+      isActive: branch.id === session.activeBranchId,
+      parentBranchKey: String(branch.parentBranchId || ""),
+      parentBranchId: String(branch.parentBranchId || ""),
+      branchedAtRound: Number(branch.branchedAtSequence) || null,
+      createdAt: Number(branch.createdAt) || 0,
+      archivedAt: Number(branch.archivedAt) || 0,
       rounds: roundsByBranch.get(branch.id) || []
-    })).filter((branch) => branch.rounds.length > 0);
+    })).filter((branch) => branch.rounds.length > 0).sort((a, b) => Number(b.isActive) - Number(a.isActive) || b.createdAt - a.createdAt);
     return {
       chatId: session.chatId,
+      sessionId: session.id,
       scriptId: session.scriptId,
       scriptName: session.scriptName || "\u672A\u77E5\u5267\u672C",
       characterId: String(session.characterId || ""),
@@ -34359,6 +34446,7 @@ function buildGlobalSessions(sessions, branches, rounds) {
       characterAvatar: String(session.characterAvatar || ""),
       chatName: String(session.chatName || session.chatId || "\u672A\u77E5\u804A\u5929"),
       origin: session.origin || null,
+      activeBranchId: String(session.activeBranchId || ""),
       updatedAt: Number(session.updatedAt) || 0,
       branches: sessionBranches,
       roundCount: sessionBranches.reduce((sum, branch) => sum + branch.rounds.length, 0)
@@ -34376,126 +34464,215 @@ async function listAllContinuationSessions() {
   ]);
   return buildGlobalSessions(sessions, branches, rounds);
 }
-async function deleteGlobalContinuationSelections(selections = []) {
-  const items = Array.isArray(selections) ? selections : [];
-  if (items.length === 0) return { deletedSessions: 0, deletedBranches: 0, deletedRounds: 0 };
+async function switchActiveBranch(sessionId, branchId) {
+  if (!sessionId || !branchId) return false;
   const db = await openDatabase();
-  const readTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
-  const [sessions, branches, rounds] = await Promise.all([
-    requestResult(readTransaction.objectStore(STORE_SESSIONS).getAll()),
-    requestResult(readTransaction.objectStore(STORE_BRANCHES).getAll()),
-    requestResult(readTransaction.objectStore(STORE_ROUNDS).getAll())
+  const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES], "readwrite");
+  const completed = transactionDone(transaction);
+  const sessionStore = transaction.objectStore(STORE_SESSIONS);
+  const [session, branch] = await Promise.all([
+    requestResult(sessionStore.get(sessionId)),
+    requestResult(transaction.objectStore(STORE_BRANCHES).get(branchId))
   ]);
-  const sessionKeys = new Set(items.filter((item) => !item.branchKey).map((item) => `${item.chatId}\0${item.scriptId}`));
-  const branchKeys = new Set(items.filter((item) => item.branchKey && !item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}`));
-  const roundKeys = new Set(items.filter((item) => item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}\0${item.roundKey}`));
-  const deletedSessionIds = /* @__PURE__ */ new Set();
-  const deletedBranchIds = /* @__PURE__ */ new Set();
-  const deletedRoundIds = /* @__PURE__ */ new Set();
-  const sessionById = new Map(sessions.map((session) => [session.id, session]));
-  for (const session of sessions) {
-    if (sessionKeys.has(`${session.chatId}\0${session.scriptId}`)) deletedSessionIds.add(session.id);
+  if (!session || !branch || branch.sessionId !== sessionId) {
+    abortQuietly(transaction, completed);
+    return false;
   }
-  for (const branch of branches) {
-    const session = sessionById.get(branch.sessionId);
-    if (!session) continue;
-    if (deletedSessionIds.has(session.id) || branchKeys.has(`${session.chatId}\0${session.scriptId}\0${branch.branchKey}`)) {
-      deletedBranchIds.add(branch.id);
-    }
-  }
-  for (const round of rounds) {
-    const session = sessionById.get(round.sessionId);
-    if (!session) continue;
-    if (deletedSessionIds.has(session.id) || deletedBranchIds.has(round.branchId) || roundKeys.has(`${session.chatId}\0${session.scriptId}\0${round.branchKey}\0${round.roundKey}`)) {
-      deletedRoundIds.add(round.id);
-    }
-  }
-  for (const branch of branches) {
-    if (deletedBranchIds.has(branch.id)) continue;
-    const hasRemainingRounds = rounds.some((round) => round.branchId === branch.id && !deletedRoundIds.has(round.id));
-    if (!hasRemainingRounds) deletedBranchIds.add(branch.id);
-  }
-  for (const session of sessions) {
-    if (deletedSessionIds.has(session.id)) continue;
-    const remainingBranches = branches.filter((branch) => branch.sessionId === session.id && !deletedBranchIds.has(branch.id));
-    if (remainingBranches.length === 0) {
-      deletedSessionIds.add(session.id);
-      continue;
-    }
-    const activeRemoved = deletedBranchIds.has(`${session.id}:${session.activeBranchKey}`);
-    if (activeRemoved) {
-      const nextActive = remainingBranches.sort((a, b) => Number(b.archivedAt) - Number(a.archivedAt))[0];
-      session.activeBranchKey = nextActive.branchKey;
-    }
-  }
-  const writeTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
-  const completed = transactionDone(writeTransaction);
-  const sessionStore = writeTransaction.objectStore(STORE_SESSIONS);
-  const branchStore = writeTransaction.objectStore(STORE_BRANCHES);
-  const roundStore = writeTransaction.objectStore(STORE_ROUNDS);
-  sessions.forEach((session) => deletedSessionIds.has(session.id) ? sessionStore.delete(session.id) : sessionStore.put(session));
-  branches.forEach((branch) => (deletedSessionIds.has(branch.sessionId) || deletedBranchIds.has(branch.id)) && branchStore.delete(branch.id));
-  const nextSequenceByBranch = /* @__PURE__ */ new Map();
-  rounds.sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((round) => {
-    if (deletedSessionIds.has(round.sessionId) || deletedBranchIds.has(round.branchId) || deletedRoundIds.has(round.id)) {
-      roundStore.delete(round.id);
-      return;
-    }
-    const sequence = (nextSequenceByBranch.get(round.branchId) || 0) + 1;
-    nextSequenceByBranch.set(round.branchId, sequence);
-    round.sequence = sequence;
-    roundStore.put(round);
-  });
+  sessionStore.put({ ...session, activeBranchId: branchId, updatedAt: Date.now() });
   await completed;
-  if (items.some((item) => item.chatId === getCurrentChatKey())) await restoreContinuationForCurrentChat();
-  return { deletedSessions: deletedSessionIds.size, deletedBranches: deletedBranchIds.size, deletedRounds: deletedRoundIds.size };
+  return true;
 }
-function getCurrentContinuationSource() {
-  return { chatId: getCurrentChatKey(), ...getCurrentSourceMetadata() };
-}
-function updateCurrentChatMetadata(payload) {
-  if (payload.sessions.length > 0) {
-    chat_metadata[CHAT_METADATA_KEY] = {
-      version: 1,
-      sessionIds: payload.sessions.map((item) => item.id),
-      activeBranches: Object.fromEntries(payload.sessions.map((item) => [item.scriptId, item.activeBranchKey])),
-      branchCount: payload.branches.length,
-      roundCount: payload.rounds.length,
-      updatedAt: Date.now()
-    };
-  } else {
-    delete chat_metadata[CHAT_METADATA_KEY];
+async function updateBranchLabel(branchId, label) {
+  if (!branchId) return false;
+  const db = await openDatabase();
+  const transaction = db.transaction([STORE_BRANCHES], "readwrite");
+  const completed = transactionDone(transaction);
+  const branchStore = transaction.objectStore(STORE_BRANCHES);
+  const branch = await requestResult(branchStore.get(branchId));
+  if (!branch) {
+    abortQuietly(transaction, completed);
+    return false;
   }
+  branchStore.put({ ...branch, label: String(label || "").trim().slice(0, 60) });
+  await completed;
+  return true;
 }
-async function replaceChatRecords(chatId, payload) {
+async function deleteBranch(branchId) {
+  if (!branchId) return false;
   const db = await openDatabase();
   const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
-  const writeCompleted = transactionDone(transaction);
+  const completed = transactionDone(transaction);
   const sessionStore = transaction.objectStore(STORE_SESSIONS);
   const branchStore = transaction.objectStore(STORE_BRANCHES);
   const roundStore = transaction.objectStore(STORE_ROUNDS);
-  const stores = [sessionStore, branchStore, roundStore];
-  const records = [payload.sessions, payload.branches, payload.rounds];
-  let pendingKeyReads = stores.length;
-  stores.forEach((store, index) => {
-    const request = store.index("chatId").getAllKeys(chatId);
-    request.onerror = () => transaction.abort();
-    request.onsuccess = () => {
-      request.result.forEach((key) => store.delete(key));
-      pendingKeyReads--;
-      if (pendingKeyReads !== 0) return;
-      records.forEach((items, recordIndex) => {
-        items.forEach((item) => stores[recordIndex].put(item));
+  const branch = await requestResult(branchStore.get(branchId));
+  if (!branch) {
+    abortQuietly(transaction, completed);
+    return false;
+  }
+  const [session, siblings, rounds] = await Promise.all([
+    requestResult(sessionStore.get(branch.sessionId)),
+    requestResult(branchStore.index("sessionId").getAll(branch.sessionId)),
+    requestResult(roundStore.index("branchId").getAll(branchId))
+  ]);
+  rounds.forEach((round) => roundStore.delete(round.id));
+  branchStore.delete(branchId);
+  if (session && session.activeBranchId === branchId) {
+    const remaining = siblings.filter((item) => item.id !== branchId);
+    const fallback = remaining.find((item) => item.id === branch.parentBranchId) || [...remaining].sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0))[0];
+    if (fallback) {
+      sessionStore.put({ ...session, activeBranchId: fallback.id, updatedAt: Date.now() });
+    } else {
+      sessionStore.delete(session.id);
+    }
+  }
+  await completed;
+  return true;
+}
+function buildPointerMetadata(sessions) {
+  const active = {};
+  for (const session of sessions) {
+    const branchId = String(session?.activeBranchId || "").trim();
+    if (branchId) active[String(session.scriptId)] = branchId;
+  }
+  return Object.keys(active).length > 0 ? { version: 2, active } : null;
+}
+function updateCurrentChatMetadata(sessions) {
+  const next = buildPointerMetadata(sessions);
+  const current = chat_metadata?.[CHAT_METADATA_KEY];
+  const sameShape = JSON.stringify(current?.active || null) === JSON.stringify(next?.active || null) && Number(current?.version || 0) === Number(next?.version || 0);
+  if (sameShape) return false;
+  if (next) {
+    chat_metadata[CHAT_METADATA_KEY] = { ...next, updatedAt: Date.now() };
+  } else {
+    delete chat_metadata[CHAT_METADATA_KEY];
+  }
+  return true;
+}
+function collectRuntimeRecords(chatId) {
+  const byScript = GlobalState.continuationRuntime?.byScript || {};
+  const sessions = [];
+  const branches = [];
+  const rounds = [];
+  const currentSource = getCurrentSourceMetadata();
+  for (const [scriptId, entry] of Object.entries(byScript)) {
+    const branchMap = entry?.branches && typeof entry.branches === "object" ? entry.branches : null;
+    const allBranches = branchMap ? Object.values(branchMap).filter((branch) => String(branch?.branchKey || "").trim() && Array.isArray(branch?.rounds) && branch.rounds.length > 0) : [];
+    if (allBranches.length === 0) continue;
+    const activeBranchKey = String(entry.activeBranchKey || "").trim() || String(allBranches[allBranches.length - 1].branchKey);
+    const sessionId = `${chatId}:${scriptId}`;
+    const updatedAt = Math.max(
+      0,
+      ...allBranches.flatMap((branch) => [
+        Number(branch?.createdAt) || 0,
+        ...branch.rounds.map((round) => Number(round?.timestamp) || 0)
+      ])
+    );
+    sessions.push({
+      id: sessionId,
+      chatId,
+      scriptId,
+      scriptName: String(entry.scriptName || "\u573A\u666F"),
+      characterId: String(entry.characterId ?? currentSource.characterId),
+      characterName: String(entry.characterName || currentSource.characterName),
+      characterAvatar: String(entry.characterAvatar || currentSource.characterAvatar),
+      chatName: String(entry.chatName || currentSource.chatName),
+      origin: entry.origin && typeof entry.origin === "object" ? entry.origin : null,
+      activeBranchId: activeBranchKey,
+      rootBranchId: "",
+      updatedAt: updatedAt || Date.now()
+    });
+    for (const branch of allBranches) {
+      const branchId = String(branch?.branchKey || "").trim();
+      if (!branchId || !Array.isArray(branch?.rounds)) continue;
+      branches.push({
+        id: branchId,
+        sessionId,
+        chatId,
+        branchKey: branchId,
+        legacyBranchKey: "",
+        parentBranchId: String(branch.parentBranchKey || ""),
+        branchedAtSequence: Number(branch.branchedAtRound) || null,
+        createdAt: Number(branch.createdAt) || 0,
+        archivedAt: 0,
+        label: "",
+        roundCount: branch.rounds.length
       });
-    };
-  });
-  await writeCompleted;
+      branch.rounds.forEach((round, index) => {
+        const roundKey = String(round?.roundKey || `legacy_${index + 1}`);
+        rounds.push({
+          id: `${branchId}:${roundKey}`,
+          branchId,
+          sessionId,
+          chatId,
+          branchKey: branchId,
+          roundKey,
+          sequence: index + 1,
+          originRoundId: String(round?.originRoundKey || ""),
+          type: String(round?.type || (index === 0 ? "initial" : "continuation")),
+          instruction: String(round?.instruction || ""),
+          content: String(round?.content || ""),
+          status: String(round?.status || "legacy"),
+          generationId: String(round?.generationId || ""),
+          timestamp: Number(round?.timestamp) || 0
+        });
+      });
+    }
+  }
+  return { sessions, branches, rounds };
+}
+async function reconcileRuntimeRecords(chatId, payload) {
+  const db = await openDatabase();
+  const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
+  const completed = transactionDone(transaction);
+  const sessionStore = transaction.objectStore(STORE_SESSIONS);
+  const branchStore = transaction.objectStore(STORE_BRANCHES);
+  const roundStore = transaction.objectStore(STORE_ROUNDS);
+  const existingRounds = await requestResult(roundStore.index("chatId").getAll(chatId));
+  const existingByBranch = /* @__PURE__ */ new Map();
+  for (const round of existingRounds) {
+    const branchId = String(round?.branchId || "");
+    if (!existingByBranch.has(branchId)) existingByBranch.set(branchId, []);
+    existingByBranch.get(branchId).push(round);
+  }
+  const incomingByBranch = /* @__PURE__ */ new Map();
+  for (const round of payload.rounds) {
+    if (!incomingByBranch.has(round.branchId)) incomingByBranch.set(round.branchId, []);
+    incomingByBranch.get(round.branchId).push(round);
+  }
+  for (const [branchId, incoming] of incomingByBranch) {
+    const existing = sortBySequence(existingByBranch.get(branchId) || []);
+    const incomingByKey = new Map(incoming.map((round) => [round.roundKey, round]));
+    const merged = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (const round of existing) {
+      const update = incomingByKey.get(round.roundKey);
+      merged.push(update ? { ...round, ...update, id: round.id } : round);
+      seen.add(round.roundKey);
+    }
+    for (const round of incoming) {
+      if (seen.has(round.roundKey)) continue;
+      merged.push(round);
+      seen.add(round.roundKey);
+    }
+    merged.forEach((round, index) => roundStore.put({ ...round, sequence: index + 1 }));
+    const branch = payload.branches.find((item) => item.id === branchId);
+    if (branch) branch.roundCount = merged.length;
+  }
+  for (const branch of payload.branches) {
+    const existing = await requestResult(branchStore.get(branch.id));
+    branchStore.put(existing ? { ...existing, ...branch, createdAt: Number(existing.createdAt) || branch.createdAt || Date.now(), label: existing.label || branch.label } : { ...branch, createdAt: branch.createdAt || Date.now() });
+  }
+  for (const session of payload.sessions) {
+    const existing = await requestResult(sessionStore.get(session.id));
+    sessionStore.put(existing ? { ...existing, ...session, rootBranchId: existing.rootBranchId || session.rootBranchId } : session);
+  }
+  await completed;
 }
 async function writeCurrentRuntime(chatId, payload) {
-  await replaceChatRecords(chatId, payload);
+  await reconcileRuntimeRecords(chatId, payload);
   if (chatId !== getCurrentChatKey()) return;
-  updateCurrentChatMetadata(payload);
-  await saveChatConditional2();
+  if (updateCurrentChatMetadata(payload.sessions)) await saveChatConditional2();
 }
 function queueRuntimeWrite(chatId, payload) {
   const previous = pendingWrites.get(chatId) || Promise.resolve();
@@ -34513,8 +34690,8 @@ function scheduleContinuationPersistence() {
   if (!chatId) return;
   GlobalState.continuationRuntime.chatId = chatId;
   runtimeRevision++;
-  const payload = serializeRuntime(chatId);
-  updateCurrentChatMetadata(payload);
+  const payload = collectRuntimeRecords(chatId);
+  updateCurrentChatMetadata(payload.sessions);
   void queueRuntimeWrite(chatId, payload).catch((error) => {
     TitaniaLogger.error("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u6301\u4E45\u5316\u5931\u8D25", error);
     if (window.toastr) toastr.warning("\u4E3B\u52A8\u7EED\u5199\u5386\u53F2\u4FDD\u5B58\u5931\u8D25\uFF0C\u5F53\u524D\u5185\u5BB9\u4ECD\u4FDD\u7559\u5728\u5185\u5B58\u4E2D", "Titania");
@@ -34538,23 +34715,24 @@ async function restoreContinuationForCurrentChat() {
   ]);
   if (sequence !== restoreSequence || chatId !== getCurrentChatKey() || revision !== runtimeRevision) return false;
   const roundsByBranch = /* @__PURE__ */ new Map();
-  rounds.sort((a, b) => a.sequence - b.sequence).forEach((round) => {
-    if (!roundsByBranch.has(round.branchId)) roundsByBranch.set(round.branchId, []);
-    roundsByBranch.get(round.branchId).push({
-      roundKey: round.roundKey,
-      round: round.sequence,
-      type: round.type,
-      instruction: round.instruction,
-      content: round.content,
-      status: round.status || "legacy",
-      generationId: round.generationId || "",
-      timestamp: round.timestamp
+  sortBySequence(rounds).forEach((round) => {
+    const branchId = String(round?.branchId || "");
+    if (!roundsByBranch.has(branchId)) roundsByBranch.set(branchId, []);
+    roundsByBranch.get(branchId).push({
+      roundKey: String(round.roundKey || ""),
+      round: Number(round.sequence) || 1,
+      type: String(round.type || "continuation"),
+      instruction: String(round.instruction || ""),
+      content: String(round.content || ""),
+      status: String(round.status || "legacy"),
+      generationId: String(round.generationId || ""),
+      timestamp: Number(round.timestamp) || 0
     });
   });
   const nextByScript = {};
   for (const session of sessions) {
-    const sessionBranches = branches.filter((branch) => branch.sessionId === session.id);
-    const active = sessionBranches.find((branch) => branch.branchKey === session.activeBranchKey);
+    const sessionBranches = branches.filter((branch) => String(branch.sessionId) === String(session.id));
+    const active = sessionBranches.find((branch) => branch.id === session.activeBranchId);
     if (!active) continue;
     nextByScript[session.scriptId] = {
       scriptId: session.scriptId,
@@ -34565,37 +34743,102 @@ async function restoreContinuationForCurrentChat() {
       chatName: session.chatName,
       origin: session.origin || null,
       updatedAt: Number(session.updatedAt) || 0,
-      branchKey: active.branchKey,
-      parentBranchKey: active.parentBranchKey,
-      branchedAtRound: active.branchedAtRound,
-      rounds: roundsByBranch.get(active.id) || [],
-      archivedBranches: sessionBranches.filter((branch) => branch.id !== active.id).map((branch) => ({
-        branchKey: branch.branchKey,
-        parentBranchKey: branch.parentBranchKey,
-        branchedAtRound: branch.branchedAtRound,
-        archivedAt: branch.archivedAt,
-        rounds: roundsByBranch.get(branch.id) || []
+      activeBranchKey: String(active.branchKey || active.id),
+      branches: Object.fromEntries(sessionBranches.map((branch) => {
+        const branchKey = String(branch.branchKey || branch.id);
+        return [branchKey, {
+          branchKey,
+          parentBranchKey: String(branch.parentBranchId || ""),
+          branchedAtRound: Number(branch.branchedAtSequence) || null,
+          createdAt: Number(branch.createdAt) || 0,
+          archivedAt: Number(branch.archivedAt) || 0,
+          rounds: roundsByBranch.get(branch.id) || []
+        }];
       }))
     };
   }
   GlobalState.continuationRuntime = { chatId, byScript: nextByScript };
-  const metadata = chat_metadata[CHAT_METADATA_KEY];
-  if (sessions.length > 0 && (metadata?.version !== 1 || Number(metadata?.branchCount) !== branches.length || Number(metadata?.roundCount) !== rounds.length)) {
-    chat_metadata[CHAT_METADATA_KEY] = {
-      version: 1,
-      sessionIds: sessions.map((item) => item.id),
-      activeBranches: Object.fromEntries(sessions.map((item) => [item.scriptId, item.activeBranchKey])),
-      branchCount: branches.length,
-      roundCount: rounds.length,
-      updatedAt: Math.max(...sessions.map((item) => Number(item.updatedAt) || 0), Date.now())
-    };
-    void saveChatConditional2();
-  } else if (sessions.length === 0 && metadata?.version === 1) {
-    delete chat_metadata[CHAT_METADATA_KEY];
-    void saveChatConditional2();
-  }
+  if (updateCurrentChatMetadata(sessions)) void saveChatConditional2();
   if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
   return sessions.length > 0;
+}
+async function deleteGlobalContinuationSelections(selections = []) {
+  const items = Array.isArray(selections) ? selections : [];
+  if (items.length === 0) return { deletedSessions: 0, deletedBranches: 0, deletedRounds: 0 };
+  const db = await openDatabase();
+  const readTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
+  const [sessions, branches, rounds] = await Promise.all([
+    requestResult(readTransaction.objectStore(STORE_SESSIONS).getAll()),
+    requestResult(readTransaction.objectStore(STORE_BRANCHES).getAll()),
+    requestResult(readTransaction.objectStore(STORE_ROUNDS).getAll())
+  ]);
+  const sessionKeys = new Set(items.filter((item) => !item.branchKey).map((item) => `${item.chatId}\0${item.scriptId}`));
+  const branchKeys = new Set(items.filter((item) => item.branchKey && !item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}`));
+  const roundKeys = new Set(items.filter((item) => item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}\0${item.roundKey}`));
+  const sessionById = new Map(sessions.map((session) => [session.id, session]));
+  const deletedSessionIds = /* @__PURE__ */ new Set();
+  const deletedBranchIds = /* @__PURE__ */ new Set();
+  const deletedRoundIds = /* @__PURE__ */ new Set();
+  for (const session of sessions) {
+    if (sessionKeys.has(`${session.chatId}\0${session.scriptId}`)) deletedSessionIds.add(session.id);
+  }
+  for (const branch of branches) {
+    const session = sessionById.get(branch.sessionId);
+    if (!session) continue;
+    const branchKey = String(branch.branchKey || branch.id);
+    if (deletedSessionIds.has(session.id) || branchKeys.has(`${session.chatId}\0${session.scriptId}\0${branchKey}`)) {
+      deletedBranchIds.add(branch.id);
+    }
+  }
+  for (const round of rounds) {
+    const session = sessionById.get(round.sessionId);
+    if (!session) continue;
+    const branchKey = String(round.branchKey || round.branchId);
+    if (deletedSessionIds.has(session.id) || deletedBranchIds.has(round.branchId) || roundKeys.has(`${session.chatId}\0${session.scriptId}\0${branchKey}\0${round.roundKey}`)) {
+      deletedRoundIds.add(round.id);
+    }
+  }
+  for (const branch of branches) {
+    if (deletedBranchIds.has(branch.id)) continue;
+    const hasRemaining = rounds.some((round) => round.branchId === branch.id && !deletedRoundIds.has(round.id));
+    if (!hasRemaining) deletedBranchIds.add(branch.id);
+  }
+  const writeTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
+  const completed = transactionDone(writeTransaction);
+  const sessionStore = writeTransaction.objectStore(STORE_SESSIONS);
+  const branchStore = writeTransaction.objectStore(STORE_BRANCHES);
+  const roundStore = writeTransaction.objectStore(STORE_ROUNDS);
+  for (const session of sessions) {
+    if (deletedSessionIds.has(session.id)) continue;
+    const remaining = branches.filter((branch) => branch.sessionId === session.id && !deletedBranchIds.has(branch.id));
+    if (remaining.length === 0) {
+      deletedSessionIds.add(session.id);
+      continue;
+    }
+    if (deletedBranchIds.has(String(session.activeBranchId || ""))) {
+      const removedActive = branches.find((branch) => branch.id === session.activeBranchId);
+      const parentId = String(removedActive?.parentBranchId || "");
+      const fallback = remaining.find((branch) => branch.id === parentId) || [...remaining].sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0))[0];
+      session.activeBranchId = fallback.id;
+    }
+  }
+  sessions.forEach((session) => deletedSessionIds.has(session.id) ? sessionStore.delete(session.id) : sessionStore.put(session));
+  branches.forEach((branch) => {
+    if (deletedSessionIds.has(branch.sessionId) || deletedBranchIds.has(branch.id)) branchStore.delete(branch.id);
+  });
+  const nextSequenceByBranch = /* @__PURE__ */ new Map();
+  sortBySequence(rounds).forEach((round) => {
+    if (deletedSessionIds.has(round.sessionId) || deletedBranchIds.has(round.branchId) || deletedRoundIds.has(round.id)) {
+      roundStore.delete(round.id);
+      return;
+    }
+    const sequence = (nextSequenceByBranch.get(round.branchId) || 0) + 1;
+    nextSequenceByBranch.set(round.branchId, sequence);
+    roundStore.put({ ...round, sequence });
+  });
+  await completed;
+  if (items.some((item) => item.chatId === getCurrentChatKey())) await restoreContinuationForCurrentChat();
+  return { deletedSessions: deletedSessionIds.size, deletedBranches: deletedBranchIds.size, deletedRounds: deletedRoundIds.size };
 }
 var DB_NAME2, DB_VERSION2, STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS, CHAT_METADATA_KEY, dbPromise, restoreSequence, runtimeRevision, pendingWrites;
 var init_continuationStore = __esm({
@@ -34603,7 +34846,7 @@ var init_continuationStore = __esm({
     init_state();
     init_logger();
     DB_NAME2 = "TitaniaContinuationDB";
-    DB_VERSION2 = 1;
+    DB_VERSION2 = 2;
     STORE_SESSIONS = "continuationSessions";
     STORE_BRANCHES = "continuationBranches";
     STORE_ROUNDS = "continuationRounds";
@@ -35669,12 +35912,124 @@ function showContinuationRoundInMain(chatId, scriptId, branchKey, roundKey) {
   setPendingGenerationScriptId("");
   const scriptName = target.session.scriptName || GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
   lockDisplayToContent(target.round.content, scriptId, scriptName, target.round.generationId);
+  setCurrentGenerationResult({
+    generationId: target.round.generationId || "",
+    content: target.round.content,
+    scriptId,
+    scriptName,
+    status: target.round.status || "legacy"
+  });
   renderGeneratedContent(target.round.content, scriptName);
+  syncFavStateToCurrentView(scriptId, branchKey);
   updateSceneHistoryNav();
+  updateFavButtonUI();
   if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
   $(document).off("keydown.tcontinuationhistory");
   $("#t-continuation-history").remove();
   return true;
+}
+function getActiveBranchView() {
+  const scriptId = String(GlobalState.lastGeneratedScriptId || "");
+  if (!scriptId) return { scriptId: "", branch: null, rounds: [] };
+  const branch = getContinuationBranches(scriptId).find((item) => item.isActive) || null;
+  return { scriptId, branch, rounds: Array.isArray(branch?.rounds) ? branch.rounds : [] };
+}
+function getCurrentBranchRoundIndex(rounds) {
+  if (!Array.isArray(rounds) || rounds.length === 0) return -1;
+  const display = GlobalState.displayState;
+  if (!display.isViewingHistory) return rounds.length - 1;
+  const wantedId = String(display.lockedGenerationId || "").trim();
+  if (wantedId) {
+    const byId = rounds.findIndex((item) => String(item.generationId || "").trim() === wantedId);
+    if (byId >= 0) return byId;
+  }
+  const wantedContent = String(display.lockedContent || "").trim();
+  if (wantedContent) {
+    const byContent = rounds.findIndex((item) => String(item.content || "").trim() === wantedContent);
+    if (byContent >= 0) return byContent;
+  }
+  return -1;
+}
+function showBranchRound(index) {
+  const { scriptId, rounds } = getActiveBranchView();
+  if (index < 0 || index >= rounds.length) return false;
+  const round = rounds[index];
+  const scriptName = GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
+  continuationHistoryView = null;
+  setPendingGenerationScriptId("");
+  if (index === rounds.length - 1 && !GlobalState.streamingCache.isActive) {
+    unlockDisplay();
+  } else {
+    lockDisplayToContent(round.content, scriptId, scriptName, round.generationId);
+  }
+  renderGeneratedContent(round.content, scriptName);
+  setCurrentGenerationResult({
+    generationId: round.generationId || "",
+    content: round.content,
+    scriptId,
+    scriptName,
+    status: round.status || "legacy"
+  });
+  syncFavStateToCurrentView(scriptId);
+  updateSceneHistoryNav();
+  updateRunButtonsState();
+  updateFavButtonUI();
+  updateScriptTitleDisplay();
+  return true;
+}
+function buildContinuationBranchTree(branches) {
+  const list = Array.isArray(branches) ? branches : [];
+  if (list.length === 0) return [];
+  const byId = new Map(list.map((branch) => [String(branch.branchId || branch.branchKey || ""), branch]));
+  const childrenOf = /* @__PURE__ */ new Map();
+  const roots = [];
+  for (const branch of list) {
+    const id3 = String(branch.branchId || branch.branchKey || "");
+    const parentId = String(branch.parentBranchId || "");
+    if (parentId && parentId !== id3 && byId.has(parentId)) {
+      if (!childrenOf.has(parentId)) childrenOf.set(parentId, []);
+      childrenOf.get(parentId).push(branch);
+    } else {
+      roots.push(branch);
+    }
+  }
+  const ordered = [];
+  const visited = /* @__PURE__ */ new Set();
+  const walk = (branch, depth) => {
+    const id3 = String(branch.branchId || branch.branchKey || "");
+    if (visited.has(id3)) return;
+    visited.add(id3);
+    ordered.push({ ...branch, depth });
+    for (const child of childrenOf.get(id3) || []) walk(child, depth + 1);
+  };
+  roots.forEach((branch) => walk(branch, 0));
+  list.forEach((branch) => walk(branch, 0));
+  return ordered;
+}
+function getContinuationBranchLabel(branch) {
+  const custom = String(branch?.label || "").trim();
+  if (custom) return custom;
+  const sourceIndex = Math.max(0, Number(branch?.branchedAtRound) - 1);
+  if (sourceIndex > 0) return `\u5206\u652F \xB7 \u81EA\u7EED\u5199\u7B2C ${sourceIndex} \u6B21`;
+  return branch?.isActive ? "\u4E3B\u7EBF" : "\u5206\u652F";
+}
+async function refreshAfterBranchMutation(preferredScriptId = "") {
+  await restoreContinuationForCurrentChat();
+  continuationHistoryView = null;
+  unlockDisplay();
+  const scriptId = GlobalState.lastGeneratedScriptId;
+  const rounds = scriptId ? getContinuationBranches(scriptId).find((item) => item.isActive)?.rounds : null;
+  const tail = Array.isArray(rounds) && rounds.length > 0 ? rounds[rounds.length - 1] : null;
+  if (tail) {
+    const scriptName = GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
+    lockDisplayToContent(tail.content, scriptId, scriptName, tail.generationId);
+    renderGeneratedContent(tail.content, scriptName);
+  }
+  updateSceneHistoryNav();
+  syncFavStateToCurrentView(scriptId);
+  updateFavButtonUI();
+  if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
+  await openContinuationHistory(preferredScriptId);
 }
 async function openContinuationHistory(preferredScriptId = "") {
   const allSessions = await listAllContinuationSessions();
@@ -35698,10 +36053,13 @@ async function openContinuationHistory(preferredScriptId = "") {
   const selectionCheckbox = (level, chatId, scriptId, branchKey = "", roundKey = "", disabled = false) => continuationHistoryManaging ? `<input class="t-cont-select" type="checkbox" data-selection-level="${level}" data-chat-id="${escapeHtmlText2(chatId)}" data-script-id="${escapeHtmlText2(scriptId)}" data-branch-key="${escapeHtmlText2(branchKey)}" data-round-key="${escapeHtmlText2(roundKey)}" ${disabled ? "disabled" : ""} aria-label="\u9009\u62E9${level === "session" ? "\u5267\u672C" : level === "branch" ? "\u5206\u652F" : "\u8F6E\u6B21"}">` : "";
   const sessionsHtml = sessions.map((session, sessionIndex) => {
     const isOpen = sessionIndex === 0;
-    const branchHtml = session.branches.map((branch) => {
+    const isCurrentChatSession = session.chatId === currentSource.chatId;
+    const branchHtml = buildContinuationBranchTree(session.branches).map((branch) => {
       const sourceContinuationIndex = Math.max(0, Number(branch.branchedAtRound) - 1);
       const branchSource = sourceContinuationIndex > 0 ? ` \xB7 \u4ECE\u7EED\u5199\u7B2C ${sourceContinuationIndex} \u6B21\u521B\u5EFA` : "";
       const branchStatus = `${branch.isActive ? "\u5F53\u524D\u5206\u652F" : "\u5386\u53F2\u5206\u652F"}${branchSource}`;
+      const branchTitle = getContinuationBranchLabel(branch);
+      const branchId = String(branch.branchId || branch.branchKey || "");
       const roundHtml = branch.rounds.map((round) => {
         const label = getContinuationRoundLabel(round);
         const instruction = round.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
@@ -35726,15 +36084,20 @@ async function openContinuationHistory(preferredScriptId = "") {
                     </div>
                 </article>`;
       }).join("");
-      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}">
+      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""} ${branch.depth > 0 ? "is-derived" : ""}" style="--t-branch-depth:${branch.depth || 0}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-session-id="${escapeHtmlText2(session.sessionId || "")}" data-branch-id="${escapeHtmlText2(branchId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}">
                 <div class="t-cont-history-branch-title">
                     <span class="t-cont-select-wrap">${selectionCheckbox("branch", session.chatId, session.scriptId, branch.branchKey)}</span>
                     <i class="fa-solid fa-code-branch"></i>
                     <div class="t-cont-history-branch-heading">
-                        <strong>\u300A${escapeHtmlText2(session.scriptName)}\u300B</strong>
-                        <span>${escapeHtmlText2(session.characterName)} \xB7 ${escapeHtmlText2(branchStatus)}</span>
+                        <strong class="t-cont-branch-name" title="\u53CC\u51FB\u91CD\u547D\u540D\u6B64\u5206\u652F">${escapeHtmlText2(branchTitle)}</strong>
+                        <span>${escapeHtmlText2(session.characterName)} \xB7 \u300A${escapeHtmlText2(session.scriptName)}\u300B \xB7 ${escapeHtmlText2(branchStatus)}</span>
                     </div>
                     <small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small>
+                    ${continuationHistoryManaging ? "" : `<div class="t-cont-history-branch-actions">
+                        ${isCurrentChatSession && !branch.isActive ? '<button class="t-btn t-btn-soft t-cont-branch-switch" title="\u628A\u8FD9\u6761\u5206\u652F\u8BBE\u4E3A\u5F53\u524D\u5206\u652F"><i class="fa-solid fa-right-left"></i> \u5207\u6362\u5230\u6B64</button>' : ""}
+                        ${isCurrentChatSession && branch.isActive ? '<span class="t-cont-branch-current">\u5F53\u524D\u5206\u652F</span>' : ""}
+                        <button class="t-btn danger t-cont-branch-delete" title="\u5220\u9664\u8FD9\u6761\u5206\u652F"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>`}
                 </div>
                 ${roundHtml}
             </section>`;
@@ -35878,6 +36241,110 @@ async function openContinuationHistory(preferredScriptId = "") {
       const content = findGlobalContinuationRound(chatId, roundScriptId, branchKey, roundKey)?.round.content || "";
       $full.find("iframe").attr("srcdoc", content);
     }
+  });
+  $panel.on("click", ".t-cont-branch-switch", async function() {
+    const $branch = $(this).closest(".t-cont-history-branch");
+    const sessionId = String($branch.data("session-id") || "");
+    const branchId = String($branch.data("branch-id") || "");
+    if (!sessionId || !branchId) {
+      if (window.toastr) toastr.error("\u8BE5\u5206\u652F\u7F3A\u5C11\u6807\u8BC6\uFF0C\u65E0\u6CD5\u5207\u6362", "Titania");
+      return;
+    }
+    $(this).prop("disabled", true);
+    try {
+      const ok = await switchActiveBranch(sessionId, branchId);
+      if (!ok) {
+        $(this).prop("disabled", false);
+        if (window.toastr) toastr.warning("\u8BE5\u5206\u652F\u5DF2\u4E0D\u5B58\u5728", "Titania");
+        return;
+      }
+      await refreshAfterBranchMutation(String($branch.data("script-id") || ""));
+      if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u5206\u652F", "Titania");
+    } catch (error) {
+      console.error("Titania: \u5207\u6362\u4E3B\u52A8\u7EED\u5199\u5206\u652F\u5931\u8D25", error);
+      $(this).prop("disabled", false);
+      if (window.toastr) toastr.error("\u5207\u6362\u5206\u652F\u5931\u8D25", "Titania");
+    }
+  });
+  $panel.on("click", ".t-cont-branch-delete", async function() {
+    const $branch = $(this).closest(".t-cont-history-branch");
+    const branchId = String($branch.data("branch-id") || "");
+    if (!branchId) {
+      if (window.toastr) toastr.error("\u8BE5\u5206\u652F\u7F3A\u5C11\u6807\u8BC6\uFF0C\u65E0\u6CD5\u5220\u9664", "Titania");
+      return;
+    }
+    const roundCount = $branch.find(".t-cont-history-round").length;
+    const name = $branch.find(".t-cont-branch-name").first().text().trim() || "\u8BE5\u5206\u652F";
+    const isActive = $branch.hasClass("is-active");
+    const activeHint = isActive ? "\n\n\u8FD9\u662F\u5F53\u524D\u5206\u652F\uFF0C\u5220\u9664\u540E\u4F1A\u81EA\u52A8\u56DE\u9000\u5230\u5B83\u7684\u7236\u5206\u652F\u3002" : "";
+    if (!window.confirm(`\u786E\u5B9A\u5220\u9664\u300C${name}\u300D\u5417\uFF1F
+
+\u5C06\u5220\u9664 ${roundCount} \u4E2A\u8F6E\u6B21\u3002\u4ECE\u5B83\u6D3E\u751F\u51FA\u7684\u5B50\u5206\u652F\u662F\u72EC\u7ACB\u526F\u672C\uFF0C\u4E0D\u4F1A\u88AB\u5220\u9664\u3002${activeHint}
+
+\u5220\u9664\u540E\u65E0\u6CD5\u6062\u590D\u3002`)) return;
+    $(this).prop("disabled", true);
+    try {
+      const ok = await deleteBranch(branchId);
+      if (!ok) {
+        $(this).prop("disabled", false);
+        if (window.toastr) toastr.warning("\u8BE5\u5206\u652F\u5DF2\u4E0D\u5B58\u5728", "Titania");
+        return;
+      }
+      await refreshAfterBranchMutation(String($branch.data("script-id") || ""));
+      if (window.toastr) toastr.success("\u5DF2\u5220\u9664\u5206\u652F", "Titania");
+    } catch (error) {
+      console.error("Titania: \u5220\u9664\u4E3B\u52A8\u7EED\u5199\u5206\u652F\u5931\u8D25", error);
+      $(this).prop("disabled", false);
+      if (window.toastr) toastr.error("\u5220\u9664\u5206\u652F\u5931\u8D25", "Titania");
+    }
+  });
+  $panel.on("dblclick", ".t-cont-branch-name", function() {
+    if (continuationHistoryManaging) return;
+    const $name = $(this);
+    if ($name.find("input").length > 0) return;
+    const $branch = $name.closest(".t-cont-history-branch");
+    const branchId = String($branch.data("branch-id") || "");
+    if (!branchId) return;
+    const original = $name.text().trim();
+    const $input = $(`<input type="text" class="t-cont-branch-rename" maxlength="60" aria-label="\u5206\u652F\u540D\u79F0">`).val(original);
+    $name.empty().append($input);
+    $input.trigger("focus").trigger("select");
+    let settled = false;
+    const restore = (text) => {
+      $name.text(text);
+    };
+    const commit = async () => {
+      if (settled) return;
+      settled = true;
+      const next = String($input.val() || "").trim();
+      if (next === original) {
+        restore(original);
+        return;
+      }
+      try {
+        await updateBranchLabel(branchId, next);
+        await openContinuationHistory(String($branch.data("script-id") || ""));
+      } catch (error) {
+        console.error("Titania: \u91CD\u547D\u540D\u4E3B\u52A8\u7EED\u5199\u5206\u652F\u5931\u8D25", error);
+        restore(original);
+        if (window.toastr) toastr.error("\u91CD\u547D\u540D\u5931\u8D25", "Titania");
+      }
+    };
+    $input.on("keydown", function(event) {
+      event.stopPropagation();
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commit();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        settled = true;
+        restore(original);
+      }
+    });
+    $input.on("blur", commit);
+    $input.on("dblclick click", function(event) {
+      event.stopPropagation();
+    });
   });
   $panel.on("click", ".t-cont-history-show", function() {
     const $round = $(this).closest(".t-cont-history-round");
@@ -36295,55 +36762,16 @@ async function openMainWindow() {
   });
   $("#t-nav-prev").on("click", function() {
     if ($(this).prop("disabled")) return;
-    const history = GlobalState.sceneHistory;
-    const display = GlobalState.displayState;
-    const streaming = GlobalState.streamingCache;
-    let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-    const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
-    if (canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1) {
-      continuationHistoryView = null;
-      setPendingGenerationScriptId("");
-      const newIndex = canJumpFromLiveToHistory ? 0 : effectiveIndex + 1;
-      lockDisplayToHistory(newIndex);
-      const item = history.items[newIndex];
-      if (item) {
-        renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
-        setCurrentGenerationResult({ ...item, status: item.status || "legacy" });
-        GlobalState.lastFavId = item.favId || null;
-      }
-      updateSceneHistoryNav();
-      updateRunButtonsState();
-      updateFavButtonUI();
-      updateScriptTitleDisplay();
-    }
+    const { rounds } = getActiveBranchView();
+    if (rounds.length === 0) return;
+    const current = getCurrentBranchRoundIndex(rounds);
+    if (current > 0) showBranchRound(current - 1);
   });
   $("#t-nav-next").on("click", function() {
     if ($(this).prop("disabled")) return;
-    const history = GlobalState.sceneHistory;
-    const display = GlobalState.displayState;
     const streaming = GlobalState.streamingCache;
-    let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-    if (effectiveIndex > 0) {
-      continuationHistoryView = null;
-      setPendingGenerationScriptId("");
-      const newIndex = effectiveIndex - 1;
-      if (newIndex === 0 && !streaming.isActive) {
-        unlockDisplay();
-        history.currentIndex = 0;
-      } else {
-        lockDisplayToHistory(newIndex);
-      }
-      const item = history.items[newIndex];
-      if (item) {
-        renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
-        setCurrentGenerationResult({ ...item, status: item.status || "legacy" });
-        GlobalState.lastFavId = item.favId || null;
-      }
-      updateSceneHistoryNav();
-      updateRunButtonsState();
-      updateFavButtonUI();
-      updateScriptTitleDisplay();
-    } else if (effectiveIndex === 0 && streaming.isActive && display.isViewingHistory) {
+    const display = GlobalState.displayState;
+    if (streaming.isActive && display.isViewingHistory) {
       continuationHistoryView = null;
       setPendingGenerationScriptId("");
       unlockDisplay();
@@ -36353,7 +36781,12 @@ async function openMainWindow() {
       $("#t-new-content-indicator").remove();
       updateSceneHistoryNav();
       updateRunButtonsState();
+      return;
     }
+    const { rounds } = getActiveBranchView();
+    if (rounds.length === 0) return;
+    const current = getCurrentBranchRoundIndex(rounds);
+    if (current >= 0 && current + 1 < rounds.length) showBranchRound(current + 1);
   });
   window.updateSceneHistoryNav = updateSceneHistoryNav;
   window.updateRunButtonsState = updateRunButtonsState;
@@ -36473,32 +36906,32 @@ function updateSceneHistoryNav() {
   const $prevBtn = $("#t-nav-prev");
   const $nextBtn = $("#t-nav-next");
   const $indicator = $("#t-page-indicator");
-  const history = GlobalState.sceneHistory;
   const display = GlobalState.displayState;
   const streaming = GlobalState.streamingCache;
-  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-  const displayPage = history.items.length - effectiveIndex;
-  const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
-  const hasPrev = canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1;
-  const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
-  const showPageNav = history.items.length > 1 || history.items.length >= 1 && streaming.isActive;
+  const { rounds } = getActiveBranchView();
+  const total = rounds.length;
+  const current = getCurrentBranchRoundIndex(rounds);
+  const canNavigate = current >= 0;
+  const hasPrev = canNavigate && current > 0;
+  const hasNext = canNavigate && current < total - 1 || display.isViewingHistory && streaming.isActive;
+  const showPageNav = canNavigate && total > 1 || streaming.isActive && total >= 1;
   if (showPageNav) {
     $prevBtn.show();
     $nextBtn.show();
     $indicator.show();
     $prevBtn.prop("disabled", !hasPrev);
     $nextBtn.prop("disabled", !hasNext);
+    const page = current >= 0 ? current + 1 : 0;
     if (streaming.isActive && !display.isViewingHistory) {
-      $indicator.text(`\u23F3/${history.items.length}`);
+      $indicator.text(`\u23F3/${total}`);
       $indicator.css("color", "#90cdf4");
     } else if (display.isViewingHistory && streaming.isActive) {
-      $indicator.text(`${displayPage}/${history.items.length} \u26A1`);
+      $indicator.text(`${page}/${total} \u26A1`);
       $indicator.css("color", "#ffeaa7");
     } else {
-      $indicator.text(`${displayPage}/${history.items.length}`);
+      $indicator.text(`${page}/${total}`);
       $indicator.css("color", "rgba(255, 255, 255, 0.3)");
     }
-    markCurrentAsRead();
   } else {
     $prevBtn.hide();
     $nextBtn.hide();
@@ -37341,12 +37774,6 @@ function openContentEditor() {
       status: currentResult?.status || "legacy"
     });
     const display = GlobalState.displayState;
-    const history = GlobalState.sceneHistory;
-    const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-    if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
-      history.items[effectiveIndex].content = newContent;
-      history.items[effectiveIndex].timestamp = Date.now();
-    }
     if (display.isViewingHistory) {
       display.lockedContent = newContent;
     }
@@ -37441,17 +37868,9 @@ function openQueueSettingsWindow() {
                         <button class="t-queue-num-btn" id="t-queue-interval-inc">+</button>
                     </div>
                 </div>
-                <div class="t-queue-row">
-                    <div class="t-queue-label">\u5386\u53F2\u5BB9\u91CF</div>
-                    <div class="t-queue-control">
-                        <button class="t-queue-num-btn" id="t-queue-history-dec">-</button>
-                        <span class="t-queue-num-value" id="t-queue-history-value">${GlobalState.sceneHistory.maxItems}</span>
-                        <button class="t-queue-num-btn" id="t-queue-history-inc">+</button>
-                    </div>
-                </div>
             </div>
         </div>
-        
+
         <div class="t-queue-footer">
             <div class="t-queue-status" id="t-queue-status">
                 ${qState.enabled ? '<i class="fa-solid fa-check-circle" style="color:#55efc4;"></i> \u961F\u5217\u5DF2\u6FC0\u6D3B' : '<i class="fa-solid fa-circle" style="color:#666;"></i> \u961F\u5217\u672A\u6FC0\u6D3B'}
@@ -37495,16 +37914,6 @@ function openQueueSettingsWindow() {
     let v = parseInt($val.text()) || 2;
     if (v < 30) $val.text(v + 1);
   });
-  $("#t-queue-history-dec").on("click", function() {
-    const $val = $("#t-queue-history-value");
-    let v = parseInt($val.text()) || 5;
-    if (v > 5) $val.text(v - 5);
-  });
-  $("#t-queue-history-inc").on("click", function() {
-    const $val = $("#t-queue-history-value");
-    let v = parseInt($val.text()) || 5;
-    if (v < 50) $val.text(v + 5);
-  });
   $(".t-queue-script-item").on("click", function(e) {
     if ($(e.target).is("input")) return;
     const $checkbox = $(this).find("input");
@@ -37533,7 +37942,6 @@ function openQueueSettingsWindow() {
     const count = parseInt($("#t-queue-count-value").text()) || 3;
     const category = $("#t-queue-category").val();
     const interval = parseInt($("#t-queue-interval-value").text()) || 2;
-    const historyMax = parseInt($("#t-queue-history-value").text()) || 5;
     const manualItems = [];
     $(".t-queue-script-item.selected").each(function() {
       manualItems.push($(this).data("id"));
@@ -37548,7 +37956,6 @@ function openQueueSettingsWindow() {
     GlobalState.queueState.categoryFilter = category;
     GlobalState.queueState.manualItems = manualItems;
     GlobalState.queueState.interval = interval;
-    setHistoryMaxItems(historyMax);
     const d = getExtData();
     d.queue_config = {
       enabled: true,
@@ -37556,8 +37963,7 @@ function openQueueSettingsWindow() {
       count,
       categoryFilter: category,
       manualItems,
-      interval,
-      historyMax
+      interval
     };
     saveExtData();
     updateQueueButtonUI();
@@ -38150,11 +38556,12 @@ function getContinuationRuntimeStore() {
   return GlobalState.continuationRuntime.byScript;
 }
 function getContinuationSessionRounds(scriptId) {
-  const byScript = getContinuationRuntimeStore();
-  const rounds = byScript[scriptId]?.rounds;
+  const branch = getActiveRuntimeBranch(getContinuationEntry(scriptId));
+  const rounds = branch?.rounds;
   if (!Array.isArray(rounds)) return [];
   return rounds.map((item, idx) => ({
     round: Number(item?.round) || idx + 1,
+    roundKey: String(item?.roundKey || ""),
     type: String(item?.type || "continuation"),
     instruction: String(item?.instruction || "").trim(),
     content: String(item?.content || "").trim(),
@@ -38167,6 +38574,86 @@ function createContinuationRoundKey() {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 8);
   return `round_${ts}_${rand}`;
+}
+function normalizeRuntimeEntry(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  if (entry.branches && typeof entry.branches === "object") return entry;
+  const branches = {};
+  const activeKey = String(entry.branchKey || "").trim();
+  if (activeKey) {
+    branches[activeKey] = {
+      branchKey: activeKey,
+      parentBranchKey: String(entry.parentBranchKey || "").trim(),
+      branchedAtRound: Number(entry.branchedAtRound) || null,
+      createdAt: Number(entry.createdAt) || 0,
+      archivedAt: 0,
+      rounds: Array.isArray(entry.rounds) ? entry.rounds : []
+    };
+  }
+  for (const branch of Array.isArray(entry.archivedBranches) ? entry.archivedBranches : []) {
+    const key = String(branch?.branchKey || "").trim();
+    if (!key || branches[key]) continue;
+    branches[key] = {
+      branchKey: key,
+      parentBranchKey: String(branch.parentBranchKey || "").trim(),
+      branchedAtRound: Number(branch.branchedAtRound) || null,
+      createdAt: Number(branch.createdAt) || Number(branch.archivedAt) || 0,
+      archivedAt: Number(branch.archivedAt) || 0,
+      rounds: Array.isArray(branch.rounds) ? branch.rounds : []
+    };
+  }
+  entry.branches = branches;
+  entry.activeBranchKey = activeKey;
+  delete entry.rounds;
+  delete entry.archivedBranches;
+  delete entry.parentBranchKey;
+  delete entry.branchedAtRound;
+  return entry;
+}
+function getContinuationEntry(scriptId) {
+  const entry = getContinuationRuntimeStore()[scriptId];
+  return entry ? normalizeRuntimeEntry(entry) : null;
+}
+function ensureContinuationEntry(scriptId, scriptName) {
+  const byScript = getContinuationRuntimeStore();
+  if (!byScript[scriptId] || typeof byScript[scriptId] !== "object") {
+    byScript[scriptId] = {
+      scriptId,
+      scriptName: scriptName || "\u573A\u666F",
+      activeBranchKey: "",
+      branches: {}
+    };
+  }
+  const entry = normalizeRuntimeEntry(byScript[scriptId]);
+  if (scriptName) entry.scriptName = scriptName;
+  return entry;
+}
+function getRuntimeBranch(entry, branchKey) {
+  const key = String(branchKey || "").trim();
+  return key && entry?.branches ? entry.branches[key] || null : null;
+}
+function getActiveRuntimeBranch(entry) {
+  return getRuntimeBranch(entry, entry?.activeBranchKey);
+}
+function listRuntimeBranches(entry) {
+  const branches = Object.values(entry?.branches || {});
+  const activeKey = String(entry?.activeBranchKey || "").trim();
+  return branches.sort((a, b) => Number(b.branchKey === activeKey) - Number(a.branchKey === activeKey) || (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+}
+function putRuntimeBranch(entry, branch, { activate = true } = {}) {
+  const key = String(branch?.branchKey || "").trim();
+  if (!entry || !key) return null;
+  if (!entry.branches || typeof entry.branches !== "object") entry.branches = {};
+  entry.branches[key] = {
+    branchKey: key,
+    parentBranchKey: String(branch.parentBranchKey || "").trim(),
+    branchedAtRound: Number(branch.branchedAtRound) || null,
+    createdAt: Number(branch.createdAt) || Date.now(),
+    archivedAt: Number(branch.archivedAt) || 0,
+    rounds: Array.isArray(branch.rounds) ? branch.rounds : []
+  };
+  if (activate) entry.activeBranchKey = key;
+  return entry.branches[key];
 }
 function normalizeContinuationRounds(rounds) {
   if (!Array.isArray(rounds)) return [];
@@ -38183,46 +38670,33 @@ function normalizeContinuationRounds(rounds) {
       generationId: String(item?.generationId || ""),
       timestamp: Number(item?.timestamp) || 0
     };
-  }).filter((item) => item.content.length > 0).slice(0, CONTINUATION_SESSION_MAX_ROUNDS);
-}
-function archiveContinuationBranch(entry) {
-  const branchKey = String(entry?.branchKey || "").trim();
-  const rounds = normalizeContinuationRounds(entry?.rounds);
-  if (!branchKey || rounds.length === 0) return;
-  if (!Array.isArray(entry.archivedBranches)) entry.archivedBranches = [];
-  entry.archivedBranches = [{
-    branchKey,
-    parentBranchKey: String(entry.parentBranchKey || "").trim(),
-    branchedAtRound: Number(entry.branchedAtRound) || null,
-    rounds,
-    archivedAt: Date.now()
-  }, ...entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== branchKey)].slice(0, CONTINUATION_ARCHIVED_BRANCH_MAX);
+  }).filter((item) => item.content.length > 0);
 }
 function findContinuationRoundAnchor(scriptId, probe = {}) {
-  const entry = getContinuationRuntimeStore()[scriptId];
+  const entry = getContinuationEntry(scriptId);
   if (!entry) return null;
   const wantedId = String(probe.generationId || "").trim();
   const wantedContent = String(probe.content || "").trim();
   if (!wantedId && !wantedContent) return null;
-  const activeBranchKey = String(entry.branchKey || "").trim();
-  const candidates = [
-    { branchKey: activeBranchKey, rounds: entry.rounds, isActive: true },
-    ...(Array.isArray(entry.archivedBranches) ? entry.archivedBranches : []).map((branch) => ({ branchKey: String(branch?.branchKey || "").trim(), rounds: branch?.rounds, isActive: false }))
-  ];
+  const activeBranchKey = String(entry.activeBranchKey || "").trim();
+  const candidates = listRuntimeBranches(entry);
   for (const matchById of [true, false]) {
     if (matchById && !wantedId) continue;
     if (!matchById && !wantedContent) continue;
     for (const candidate of candidates) {
-      if (!candidate.branchKey) continue;
+      const branchKey = String(candidate?.branchKey || "").trim();
+      if (!branchKey) continue;
       const rounds = normalizeContinuationRounds(candidate.rounds);
       const index = rounds.findIndex((item) => matchById ? String(item.generationId || "").trim() === wantedId : item.content === wantedContent);
       if (index < 0) continue;
+      const isActive = branchKey === activeBranchKey;
       return {
-        branchKey: candidate.branchKey,
+        branchKey,
         roundKey: rounds[index].roundKey,
         round: index + 1,
-        isActive: candidate.isActive,
-        isActiveTail: candidate.isActive && index === rounds.length - 1
+        isActive,
+        isTail: index === rounds.length - 1,
+        isActiveTail: isActive && index === rounds.length - 1
       };
     }
   }
@@ -38245,48 +38719,47 @@ async function startFreshContinuationBranch(script, baseContent) {
     instruction: branchInstruction
   });
 }
-function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound, targetRoundKey = "", includeTarget = false) {
-  const entry = getContinuationRuntimeStore()[scriptId];
+function resolveContinuationBranchPlan(scriptId, options = {}) {
+  const { sourceBranchKey = "", targetRound = null, targetRoundKey = "", includeTarget = false } = options;
+  const entry = getContinuationEntry(scriptId);
   if (!entry) return null;
-  const activeBranchKey = String(entry.branchKey || "").trim();
-  const requestedBranchKey = String(sourceBranchKey || activeBranchKey).trim();
-  const source = requestedBranchKey === activeBranchKey ? { branchKey: activeBranchKey, rounds: entry.rounds } : Array.isArray(entry.archivedBranches) ? entry.archivedBranches.find((item) => String(item?.branchKey || "") === requestedBranchKey) : null;
-  const sourceRounds = normalizeContinuationRounds(source?.rounds);
+  const requestedBranchKey = String(sourceBranchKey || entry.activeBranchKey || "").trim();
+  const source = getRuntimeBranch(entry, requestedBranchKey);
+  if (!source) return null;
+  const sourceRounds = normalizeContinuationRounds(source.rounds);
   const requestedRoundKey = String(targetRoundKey || "").trim();
   const roundNumber = requestedRoundKey ? sourceRounds.findIndex((item) => item.roundKey === requestedRoundKey) + 1 : Math.floor(Number(targetRound));
-  if (!source || !Number.isFinite(roundNumber) || roundNumber < 1 || roundNumber > sourceRounds.length) return null;
-  const previousActiveBranch = {
-    branchKey: activeBranchKey,
-    parentBranchKey: String(entry.parentBranchKey || "").trim(),
-    branchedAtRound: Number(entry.branchedAtRound) || null,
-    rounds: normalizeContinuationRounds(entry.rounds)
-  };
-  archiveContinuationBranch(entry);
-  entry.branchKey = createContinuationBranchKey();
-  entry.parentBranchKey = requestedBranchKey;
-  entry.branchedAtRound = roundNumber;
-  entry.rounds = sourceRounds.slice(0, includeTarget ? roundNumber : roundNumber - 1);
+  if (!Number.isFinite(roundNumber) || roundNumber < 1 || roundNumber > sourceRounds.length) return null;
+  const limit = includeTarget ? roundNumber : roundNumber - 1;
   return {
     sourceBranchKey: requestedBranchKey,
-    branchKey: entry.branchKey,
     targetRound: roundNumber,
     targetInstruction: sourceRounds[roundNumber - 1]?.instruction || "",
-    contextRounds: normalizeContinuationRounds(entry.rounds),
-    previousActiveBranch
+    contextRounds: sourceRounds.slice(0, limit),
+    branchedAtRound: limit,
+    // 落地点之后还有轮次 → 追加会造成分叉，必须新开分支；
+    // 正好落在尾部 → 直接续在这条分支后面，跟 ST 里“在当前聊天继续说”一样。
+    forkNeeded: limit < sourceRounds.length || requestedBranchKey !== String(entry.activeBranchKey || "").trim()
   };
 }
-function restoreContinuationBranchAfterFailedGeneration(scriptId, branchResult) {
-  const entry = getContinuationRuntimeStore()[scriptId];
-  const previous = branchResult?.previousActiveBranch;
-  if (!entry || !previous || String(entry.branchKey || "") !== String(branchResult.branchKey || "")) return;
-  if (normalizeContinuationRounds(entry.rounds).length !== branchResult.contextRounds.length) return;
-  entry.branchKey = previous.branchKey;
-  entry.parentBranchKey = previous.parentBranchKey;
-  entry.branchedAtRound = previous.branchedAtRound;
-  entry.rounds = previous.rounds;
-  if (Array.isArray(entry.archivedBranches)) {
-    entry.archivedBranches = entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== previous.branchKey);
-  }
+function materializeContinuationBranch(scriptId, plan) {
+  const entry = getContinuationEntry(scriptId);
+  if (!entry || !plan) return "";
+  const branchKey = createContinuationBranchKey();
+  const created = putRuntimeBranch(entry, {
+    branchKey,
+    parentBranchKey: plan.sourceBranchKey,
+    branchedAtRound: plan.branchedAtRound || null,
+    createdAt: Date.now(),
+    // 复制而非共享：新分支的轮次拿到自己的 roundKey，与源分支彻底解耦
+    rounds: (plan.contextRounds || []).map((round, index) => ({
+      ...round,
+      round: index + 1,
+      roundKey: createContinuationRoundKey(),
+      originRoundKey: String(round.roundKey || "")
+    }))
+  }, { activate: true });
+  return created ? branchKey : "";
 }
 function setContinuationSessionBaseRound(scriptId, scriptName, content, options = {}) {
   if (!scriptId) return;
@@ -38295,54 +38768,55 @@ function setContinuationSessionBaseRound(scriptId, scriptName, content, options 
   const forceNewBranch = options?.forceNewBranch === true;
   const providedBranchKey = typeof options?.branchKey === "string" ? options.branchKey.trim() : "";
   const instruction = typeof options?.instruction === "string" ? options.instruction.trim() : "";
-  const byScript = getContinuationRuntimeStore();
-  const current = byScript[scriptId];
-  const oldRounds = Array.isArray(current?.rounds) ? current.rounds : [];
+  const entry = ensureContinuationEntry(scriptId, scriptName);
+  const activeBranch = getActiveRuntimeBranch(entry);
+  const oldRounds = Array.isArray(activeBranch?.rounds) ? activeBranch.rounds : [];
   const continuationRounds = oldRounds.filter((item) => String(item?.type || "continuation") !== "initial");
-  const nextBranchKey = providedBranchKey || (forceNewBranch ? createContinuationBranchKey() : String(current?.branchKey || "").trim()) || createContinuationBranchKey();
-  byScript[scriptId] = {
-    scriptId,
-    scriptName: scriptName || current?.scriptName || "\u573A\u666F",
-    branchKey: nextBranchKey,
-    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
-    rounds: [
-      {
-        round: 1,
-        roundKey: createContinuationRoundKey(),
-        type: "initial",
-        instruction: instruction || "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
-        content: textContent,
-        status: String(options?.status || "success"),
-        generationId: String(options?.generationId || ""),
-        timestamp: Date.now()
-      },
-      ...continuationRounds
-    ]
-  };
-  byScript[scriptId].rounds = byScript[scriptId].rounds.slice(0, CONTINUATION_SESSION_MAX_ROUNDS).map((item, index) => ({
+  const requestedBranchKey = providedBranchKey || (forceNewBranch ? createContinuationBranchKey() : String(entry.activeBranchKey || "").trim());
+  const nextBranchKey = requestedBranchKey && !getRuntimeBranch(entry, requestedBranchKey) ? requestedBranchKey : createContinuationBranchKey();
+  const rounds = [
+    {
+      round: 1,
+      roundKey: createContinuationRoundKey(),
+      type: "initial",
+      instruction: instruction || "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
+      content: textContent,
+      status: String(options?.status || "success"),
+      generationId: String(options?.generationId || ""),
+      timestamp: Date.now()
+    },
+    ...continuationRounds
+  ].map((item, index) => ({
     ...item,
     round: index + 1,
     type: String(item?.type || (index === 0 ? "initial" : "continuation"))
   }));
+  putRuntimeBranch(entry, {
+    branchKey: nextBranchKey,
+    parentBranchKey: "",
+    branchedAtRound: null,
+    createdAt: Date.now(),
+    rounds
+  }, { activate: true });
   scheduleContinuationPersistence();
 }
 function appendContinuationSessionRound(scriptId, scriptName, instruction, content, options = {}) {
   if (!scriptId) return;
   const textContent = String(content || "").trim();
   if (!textContent) return;
-  const byScript = getContinuationRuntimeStore();
-  if (!byScript[scriptId] || typeof byScript[scriptId] !== "object") {
-    byScript[scriptId] = {
-      scriptId,
-      scriptName: scriptName || "\u573A\u666F",
+  const entry = ensureContinuationEntry(scriptId, scriptName);
+  let branch = getActiveRuntimeBranch(entry);
+  if (!branch) {
+    branch = putRuntimeBranch(entry, {
       branchKey: createContinuationBranchKey(),
+      parentBranchKey: "",
+      branchedAtRound: null,
+      createdAt: Date.now(),
       rounds: []
-    };
+    }, { activate: true });
   }
-  if (!Array.isArray(byScript[scriptId].rounds)) {
-    byScript[scriptId].rounds = [];
-  }
-  const rounds = byScript[scriptId].rounds;
+  if (!Array.isArray(branch.rounds)) branch.rounds = [];
+  const rounds = branch.rounds;
   rounds.push({
     round: rounds.length + 1,
     roundKey: createContinuationRoundKey(),
@@ -38353,16 +38827,10 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     generationId: String(options?.generationId || ""),
     timestamp: Date.now()
   });
-  while (rounds.length > CONTINUATION_SESSION_MAX_ROUNDS) {
-    rounds.splice(rounds[0]?.type === "initial" ? 1 : 0, 1);
-  }
   rounds.forEach((item, index) => {
     item.round = index + 1;
   });
-  byScript[scriptId].scriptName = scriptName || byScript[scriptId].scriptName || "\u573A\u666F";
-  if (!String(byScript[scriptId].branchKey || "").trim()) {
-    byScript[scriptId].branchKey = createContinuationBranchKey();
-  }
+  entry.scriptName = scriptName || entry.scriptName || "\u573A\u666F";
   scheduleContinuationPersistence();
 }
 function syncEditedContentToContinuationSession(scriptId, previousContent, editedContent, scriptName = "\u573A\u666F") {
@@ -38370,9 +38838,9 @@ function syncEditedContentToContinuationSession(scriptId, previousContent, edite
   const newText = String(editedContent || "").trim();
   if (!newText) return false;
   const oldText = String(previousContent || "").trim();
-  const byScript = getContinuationRuntimeStore();
-  const entry = byScript[scriptId];
-  const rounds = Array.isArray(entry?.rounds) ? entry.rounds : null;
+  const entry = getContinuationEntry(scriptId);
+  const branch = getActiveRuntimeBranch(entry);
+  const rounds = Array.isArray(branch?.rounds) ? branch.rounds : null;
   if (!rounds || rounds.length === 0) return false;
   let targetIndex = -1;
   if (oldText) {
@@ -38398,17 +38866,9 @@ function syncEditedContentToContinuationSession(scriptId, previousContent, edite
 }
 function resetContinuationSessionRounds(scriptId, scriptName = "\u573A\u666F") {
   if (!scriptId) return;
-  const byScript = getContinuationRuntimeStore();
-  const current = byScript[scriptId];
-  if (current) archiveContinuationBranch(current);
-  byScript[scriptId] = {
-    scriptId,
-    scriptName: scriptName || "\u573A\u666F",
-    branchKey: null,
-    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
-    rounds: [],
-    resetAt: Date.now()
-  };
+  const entry = ensureContinuationEntry(scriptId, scriptName);
+  entry.activeBranchKey = "";
+  entry.resetAt = Date.now();
 }
 function buildContinuationSessionInjection(scriptId, injectRoundsCount) {
   const rounds = getContinuationSessionRounds(scriptId);
@@ -38442,15 +38902,25 @@ ${item.content}`;
   };
 }
 function buildContinuationBranchInjection(rounds) {
-  const selectedRounds = normalizeContinuationRounds(rounds);
-  if (selectedRounds.length === 0) {
+  const allRounds = normalizeContinuationRounds(rounds);
+  if (allRounds.length === 0) {
     return {
       totalRounds: 0,
       selectedRounds: [],
+      droppedRounds: 0,
       text: "\uFF08\u65E0\u5386\u53F2\u8F6E\u6B21\uFF0C\u5C06\u91CD\u65B0\u751F\u6210\u7B2C1\u8F6E\uFF09",
       estimatedChars: 0,
       estimatedTokens: 0
     };
+  }
+  const droppedRounds = Math.max(0, allRounds.length - CONTINUATION_BRANCH_INJECT_MAX_ROUNDS);
+  const selectedRounds = droppedRounds > 0 ? allRounds.slice(-CONTINUATION_BRANCH_INJECT_MAX_ROUNDS) : allRounds;
+  if (droppedRounds > 0) {
+    TitaniaLogger.warn("\u5206\u652F\u4E0A\u4E0B\u6587\u8D85\u51FA\u6CE8\u5165\u4E0A\u9650\uFF0C\u5DF2\u4FDD\u7559\u6700\u8FD1\u82E5\u5E72\u8F6E", {
+      totalRounds: allRounds.length,
+      injectedRounds: selectedRounds.length,
+      droppedRounds
+    });
   }
   const text = selectedRounds.map((item) => {
     const instructionText = item.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
@@ -38461,8 +38931,9 @@ ${instructionText}
 ${item.content}`;
   }).join("\n\n");
   return {
-    totalRounds: selectedRounds.length,
+    totalRounds: allRounds.length,
     selectedRounds,
+    droppedRounds,
     text,
     estimatedChars: text.length,
     estimatedTokens: estimateTokens(text)
@@ -38546,7 +39017,7 @@ function getContinuationSessionStats(scriptId, injectRoundsCount = 3) {
 }
 function getContinuationBranches(scriptId) {
   if (!scriptId) return [];
-  const entry = getContinuationRuntimeStore()[scriptId];
+  const entry = getContinuationEntry(scriptId);
   if (!entry) return [];
   const toPublicBranch = (branch, isActive) => ({
     branchKey: String(branch?.branchKey || "").trim(),
@@ -38566,17 +39037,12 @@ function getContinuationBranches(scriptId) {
       timestamp: item.timestamp
     }))
   });
-  const branches = [];
-  if (String(entry.branchKey || "").trim() && normalizeContinuationRounds(entry.rounds).length > 0) {
-    branches.push(toPublicBranch(entry, true));
-  }
-  if (Array.isArray(entry.archivedBranches)) {
-    branches.push(...entry.archivedBranches.map((branch) => toPublicBranch(branch, false)));
-  }
-  return branches.filter((branch) => branch.branchKey && branch.rounds.length > 0);
+  const activeBranchKey = String(entry.activeBranchKey || "").trim();
+  return listRuntimeBranches(entry).map((branch) => toPublicBranch(branch, String(branch.branchKey || "") === activeBranchKey)).filter((branch) => branch.branchKey && branch.rounds.length > 0);
 }
 function getContinuationSessions() {
-  return Object.entries(getContinuationRuntimeStore()).map(([scriptId, entry]) => {
+  return Object.entries(getContinuationRuntimeStore()).map(([scriptId, rawEntry]) => {
+    const entry = normalizeRuntimeEntry(rawEntry);
     const branches = getContinuationBranches(scriptId);
     const roundTimestamps = branches.flatMap((branch) => branch.rounds.map((round) => Number(round.timestamp) || 0));
     return {
@@ -38594,36 +39060,34 @@ function copyContinuationBranchToCurrentChat(source = {}) {
   const targetRoundKey = String(source.roundKey || "").trim();
   const targetIndex = targetRoundKey ? sourceRounds.findIndex((round) => round.roundKey === targetRoundKey) : sourceRounds.length - 1;
   if (!scriptId || targetIndex < 0) return null;
-  const byScript = getContinuationRuntimeStore();
-  const current = byScript[scriptId];
-  if (current) archiveContinuationBranch(current);
+  const entry = ensureContinuationEntry(scriptId, String(source.scriptName || "").trim());
   const copiedRounds = sourceRounds.slice(0, targetIndex + 1).map((round, index) => ({
     ...round,
     round: index + 1,
     roundKey: createContinuationRoundKey(),
+    originRoundKey: String(round.roundKey || ""),
     timestamp: Date.now() + index
   }));
-  byScript[scriptId] = {
-    scriptId,
-    scriptName: String(source.scriptName || current?.scriptName || "\u573A\u666F"),
-    branchKey: createContinuationBranchKey(),
+  const branchKey = createContinuationBranchKey();
+  putRuntimeBranch(entry, {
+    branchKey,
     parentBranchKey: "",
     branchedAtRound: copiedRounds.length,
-    rounds: copiedRounds,
-    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
-    origin: {
-      chatId: String(source.chatId || ""),
-      characterId: String(source.characterId || ""),
-      characterName: String(source.characterName || "\u672A\u77E5\u89D2\u8272"),
-      scriptId,
-      branchKey: String(source.branchKey || ""),
-      roundKey: targetRoundKey
-    }
+    createdAt: Date.now(),
+    rounds: copiedRounds
+  }, { activate: true });
+  entry.origin = {
+    chatId: String(source.chatId || ""),
+    characterId: String(source.characterId || ""),
+    characterName: String(source.characterName || "\u672A\u77E5\u89D2\u8272"),
+    scriptId,
+    branchKey: String(source.branchKey || ""),
+    roundKey: targetRoundKey
   };
   scheduleContinuationPersistence();
   return {
     scriptId,
-    branchKey: byScript[scriptId].branchKey,
+    branchKey,
     roundKey: copiedRounds[copiedRounds.length - 1].roundKey,
     content: copiedRounds[copiedRounds.length - 1].content
   };
@@ -38636,12 +39100,10 @@ function deleteContinuationHistorySelections(selections = []) {
   let deletedSessions = 0;
   let deletedBranches = 0;
   let deletedRounds = 0;
-  for (const [scriptId, entry] of Object.entries(byScript)) {
+  for (const [scriptId, rawEntry] of Object.entries(byScript)) {
+    const entry = normalizeRuntimeEntry(rawEntry);
     const sessionKey = `${scriptId}\0\0`;
-    const allBranches = [
-      { ...entry, isActive: true },
-      ...Array.isArray(entry.archivedBranches) ? entry.archivedBranches.map((branch) => ({ ...branch, isActive: false })) : []
-    ];
+    const allBranches = listRuntimeBranches(entry);
     if (selected.has(sessionKey)) {
       delete byScript[scriptId];
       deletedSessions++;
@@ -38649,6 +39111,7 @@ function deleteContinuationHistorySelections(selections = []) {
       deletedRounds += allBranches.reduce((sum, branch) => sum + (Array.isArray(branch.rounds) ? branch.rounds.length : 0), 0);
       continue;
     }
+    const activeBranchKey = String(entry.activeBranchKey || "").trim();
     const keptBranches = [];
     for (const branch of allBranches) {
       const branchKey = String(branch.branchKey || "");
@@ -38681,19 +39144,11 @@ function deleteContinuationHistorySelections(selections = []) {
       deletedSessions++;
       continue;
     }
-    const active = keptBranches.find((branch) => branch.isActive) || keptBranches.slice().sort((a, b) => Math.max(...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
-    const activeBranch = keptBranches.find((branch) => branch.branchKey === active.branchKey);
-    entry.branchKey = activeBranch.branchKey;
-    entry.parentBranchKey = activeBranch.parentBranchKey || "";
-    entry.branchedAtRound = activeBranch.branchedAtRound || null;
-    entry.rounds = activeBranch.rounds;
-    entry.archivedBranches = keptBranches.filter((branch) => branch.branchKey !== activeBranch.branchKey).map((branch) => ({
-      branchKey: branch.branchKey,
-      parentBranchKey: branch.parentBranchKey || "",
-      branchedAtRound: branch.branchedAtRound || null,
-      archivedAt: branch.archivedAt || 0,
-      rounds: branch.rounds
-    }));
+    entry.branches = Object.fromEntries(keptBranches.map((branch) => [branch.branchKey, branch]));
+    if (!entry.branches[activeBranchKey]) {
+      const fallback = keptBranches.slice().sort((a, b) => Math.max(0, ...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(0, ...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
+      entry.activeBranchKey = fallback.branchKey;
+    }
   }
   if (deletedSessions || deletedBranches || deletedRounds) scheduleContinuationPersistence();
   return { deletedSessions, deletedBranches, deletedRounds };
@@ -38724,16 +39179,26 @@ function getContinuationRoundsForFav(scriptId) {
       scriptId: null,
       scriptName: "",
       branchKey: "",
+      anchor: null,
       rounds: []
     };
   }
-  const byScript = getContinuationRuntimeStore();
-  const entry = byScript[scriptId];
+  const entry = getContinuationEntry(scriptId);
+  const branchKey = String(entry?.activeBranchKey || "").trim();
+  const rounds = getContinuationSessionRounds(scriptId).filter((item) => item.status === "success" || item.status === "legacy");
   return {
     scriptId,
     scriptName: String(entry?.scriptName || "\u573A\u666F"),
-    branchKey: String(entry?.branchKey || "").trim(),
-    rounds: getContinuationSessionRounds(scriptId).filter((item) => item.status === "success" || item.status === "legacy")
+    branchKey,
+    // 收藏的身份锚点：branchKey 是不可变的分支身份，配合轮数定位这条链的截止点。
+    // chatId 由收藏侧补齐（api.js 不直接依赖 ST 的聊天上下文）。
+    anchor: branchKey ? {
+      scriptId,
+      branchKey,
+      upToRound: rounds.length,
+      lastRoundKey: String(rounds[rounds.length - 1]?.roundKey || "")
+    } : null,
+    rounds
   };
 }
 function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
@@ -38881,7 +39346,6 @@ function updateNewContentIndicator() {
     $(".t-content-wrapper").append(indicatorHtml);
     $("#t-goto-live").on("click", function() {
       unlockDisplay();
-      GlobalState.sceneHistory.currentIndex = 0;
       if (GlobalState.streamingCache.content) {
         renderGeneratedContent(
           GlobalState.streamingCache.content,
@@ -38919,12 +39383,20 @@ function showGenerationCompleteNotification(scriptName) {
   $(".t-content-wrapper").append($notification);
   $("#t-gcn-view").on("click", function() {
     unlockDisplay();
-    GlobalState.sceneHistory.currentIndex = 0;
-    const latestItem = GlobalState.sceneHistory.items[0];
-    if (latestItem) {
-      renderGeneratedContent(latestItem.content, latestItem.scriptName || "\u573A\u666F", false);
-      setCurrentGenerationResult({ ...latestItem, status: latestItem.status || "legacy" });
-      GlobalState.lastFavId = latestItem.favId || null;
+    const scriptId = GlobalState.lastGeneratedScriptId;
+    const rounds = scriptId ? getContinuationBranches(scriptId).find((item) => item.isActive)?.rounds : null;
+    const latest = Array.isArray(rounds) && rounds.length > 0 ? rounds[rounds.length - 1] : null;
+    if (latest) {
+      const scriptName2 = GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
+      renderGeneratedContent(latest.content, scriptName2, false);
+      setCurrentGenerationResult({
+        generationId: latest.generationId || "",
+        content: latest.content,
+        scriptId,
+        scriptName: scriptName2,
+        status: latest.status || "legacy"
+      });
+      GlobalState.lastFavId = resolveFavIdForBranch(scriptId);
     }
     if (typeof window.updateSceneHistoryNav === "function") {
       window.updateSceneHistoryNav();
@@ -39938,7 +40410,7 @@ ${processedPrompt}`;
     }
     resetContinuationState();
     endStreamingCache();
-    pushSceneToHistory(finalOutput, script.id, script.name, { status: "success", generationId });
+    recordGenerationResult(finalOutput, script.id, script.name, { status: "success", generationId });
     if (generationSource !== "user_continuation") {
       setContinuationSessionBaseRound(script.id, script.name, finalOutput, {
         instruction: effectiveScriptInstruction,
@@ -40005,7 +40477,7 @@ ${processedPrompt}`;
       try {
         endStreamingCache();
         const partialStatus = isAbortError ? "aborted" : "partial";
-        pushSceneToHistory(partialOutput, script.id, script.name, { status: partialStatus, generationId, error: e?.message });
+        recordGenerationResult(partialOutput, script.id, script.name, { status: partialStatus, generationId, error: e?.message });
         partialSaved = true;
         if (generationSource === "user_continuation") {
           appendContinuationSessionRound(
@@ -40551,7 +41023,7 @@ Generate ONLY the continuation (no repetition):`;
       const rewrittenOutput = finalOutput;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
-      pushSceneToHistory(rewrittenOutput, script.id, script.name, { status: "success", generationId });
+      recordGenerationResult(rewrittenOutput, script.id, script.name, { status: "success", generationId });
       if (continuationType === "auto") {
         setContinuationSessionBaseRound(script.id, script.name, rewrittenOutput, {
           instruction: initialInstruction,
@@ -40707,8 +41179,8 @@ async function handleUserContinuation(options = {}) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5185\u5BB9\u5BF9\u5E94\u7684\u5267\u672C\uFF0C\u65E0\u6CD5\u7EED\u5199", "Titania");
     return false;
   }
-  let continuationEntry = getContinuationRuntimeStore()[script.id];
-  let lineageBranchResult = null;
+  let continuationEntry = getContinuationEntry(script.id);
+  let lineagePlan = null;
   if (!isRegeneration && !isHistoryContinuation && !branchFromCurrentView) {
     const anchor = findContinuationRoundAnchor(script.id, {
       generationId: display?.generationId,
@@ -40717,27 +41189,27 @@ async function handleUserContinuation(options = {}) {
     if (!anchor) {
       await startFreshContinuationBranch(script, baseContent);
     } else if (!anchor.isActiveTail) {
-      lineageBranchResult = branchContinuationSessionAtRound(
-        script.id,
-        anchor.branchKey,
-        anchor.round,
-        anchor.roundKey,
-        true
-      );
-      if (lineageBranchResult) {
+      lineagePlan = resolveContinuationBranchPlan(script.id, {
+        sourceBranchKey: anchor.branchKey,
+        targetRound: anchor.round,
+        targetRoundKey: anchor.roundKey,
+        includeTarget: true
+      });
+      if (lineagePlan) {
         TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u5BF9\u9F50\u5230\u5F53\u524D\u663E\u793A\u5185\u5BB9\u6240\u5C5E\u4E16\u7CFB", {
           scriptId: script.id,
           sourceBranchKey: anchor.branchKey,
-          fromArchivedBranch: !anchor.isActive,
+          fromInactiveBranch: !anchor.isActive,
           anchorRound: anchor.round,
-          branchKey: lineageBranchResult.branchKey,
-          contextRounds: lineageBranchResult.contextRounds.length
+          forkNeeded: lineagePlan.forkNeeded,
+          contextRounds: lineagePlan.contextRounds.length
         });
       }
     }
-    continuationEntry = getContinuationRuntimeStore()[script.id];
+    continuationEntry = getContinuationEntry(script.id);
   }
-  const initialRound = Array.isArray(continuationEntry?.rounds) ? continuationEntry.rounds.find((item) => item.type === "initial") : null;
+  const activeRuntimeBranch = getActiveRuntimeBranch(continuationEntry);
+  const initialRound = Array.isArray(activeRuntimeBranch?.rounds) ? activeRuntimeBranch.rounds.find((item) => item.type === "initial") : null;
   if (initialRound && (!initialRound.instruction || initialRound.instruction === "\uFF08\u9996\u6B21\u751F\u6210\uFF09")) {
     const continuationContext = await getContextData();
     try {
@@ -40757,23 +41229,33 @@ async function handleUserContinuation(options = {}) {
       baseContentLength: baseContent.length
     });
   }
-  let branchResult = lineageBranchResult;
+  let branchPlan = lineagePlan;
   if (isRegeneration) {
-    branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, regenerateRound, regenerateRoundKey);
-    if (!branchResult) {
+    branchPlan = resolveContinuationBranchPlan(script.id, {
+      sourceBranchKey,
+      targetRound: regenerateRound,
+      targetRoundKey: regenerateRoundKey,
+      includeTarget: false
+    });
+    if (!branchPlan) {
       if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
       return false;
     }
   } else if (isHistoryContinuation) {
-    branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, continueAfterRound, continueAfterRoundKey, true);
-    if (!branchResult) {
+    branchPlan = resolveContinuationBranchPlan(script.id, {
+      sourceBranchKey,
+      targetRound: continueAfterRound,
+      targetRoundKey: continueAfterRoundKey,
+      includeTarget: true
+    });
+    if (!branchPlan) {
       if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
       return false;
     }
   }
-  const userInstruction = (instruction || "").trim() || (isRegeneration ? branchResult?.targetInstruction : "") || DEFAULT_CONTINUATION_INSTRUCTION;
+  const userInstruction = (instruction || "").trim() || (isRegeneration ? branchPlan?.targetInstruction : "") || DEFAULT_CONTINUATION_INSTRUCTION;
   const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
-  const sessionInjection = branchResult ? buildContinuationBranchInjection(branchResult.contextRounds) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
+  const sessionInjection = branchPlan ? buildContinuationBranchInjection(branchPlan.contextRounds) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
   const composedOverride = composeContinuationPromptOverride({
     injectionText: sessionInjection.text,
     userInstruction,
@@ -40789,8 +41271,8 @@ async function handleUserContinuation(options = {}) {
     injectedRoundItems: sessionInjection.selectedRounds.length,
     injectedChars: sessionInjection.estimatedChars,
     injectedTokensEstimated: sessionInjection.estimatedTokens,
-    regenerateRound: branchResult?.targetRound || null,
-    branchKey: branchResult?.branchKey || continuationEntry?.branchKey || ""
+    regenerateRound: branchPlan?.targetRound || null,
+    branchKey: continuationEntry?.activeBranchKey || ""
   });
   if (autoLocate === true) {
     unlockDisplay();
@@ -40807,22 +41289,30 @@ async function handleUserContinuation(options = {}) {
     injectedRoundItems: sessionInjection.selectedRounds.length,
     injectedChars: sessionInjection.estimatedChars,
     injectedTokensEstimated: sessionInjection.estimatedTokens,
-    regenerateRound: branchResult?.targetRound || null,
-    branchKey: branchResult?.branchKey || ""
+    regenerateRound: branchPlan?.targetRound || null,
+    branchKey: ""
   });
   if (success) {
+    if (branchPlan?.forkNeeded) {
+      const forkedKey = materializeContinuationBranch(script.id, branchPlan);
+      if (forkedKey) {
+        TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u521B\u5EFA\u65B0\u5206\u652F", {
+          scriptId: script.id,
+          sourceBranchKey: branchPlan.sourceBranchKey,
+          branchedAtRound: branchPlan.branchedAtRound,
+          branchKey: forkedKey
+        });
+      }
+    }
     appendContinuationSessionRound(script.id, script.name, userInstruction, GlobalState.lastGeneratedContent, {
       status: "success",
       generationId: GlobalState.currentGenerationResult?.generationId
     });
     if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
-  } else if (branchResult) {
-    restoreContinuationBranchAfterFailedGeneration(script.id, branchResult);
-    scheduleContinuationPersistence();
   }
   return success;
 }
-var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, CONTINUATION_INJECT_MIN, CONTINUATION_ARCHIVED_BRANCH_MAX, DEFAULT_CONTINUATION_INSTRUCTION, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
+var CONTINUATION_INJECT_MAX, CONTINUATION_INJECT_MIN, CONTINUATION_BRANCH_INJECT_MAX_ROUNDS, DEFAULT_CONTINUATION_INSTRUCTION, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
@@ -40833,15 +41323,15 @@ var init_api = __esm({
     init_chatHistoryBlacklist();
     init_floatingBtn();
     init_mainWindow();
+    init_favsWindow();
     init_viewState();
     init_connection();
     init_scriptData();
     init_promptManager();
     init_continuationStore();
-    CONTINUATION_SESSION_MAX_ROUNDS = 30;
     CONTINUATION_INJECT_MAX = 20;
     CONTINUATION_INJECT_MIN = 3;
-    CONTINUATION_ARCHIVED_BRANCH_MAX = 20;
+    CONTINUATION_BRANCH_INJECT_MAX_ROUNDS = 30;
     DEFAULT_CONTINUATION_INSTRUCTION = "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
     interactiveDetectionIdleHandle = null;
     interactiveDetectionTimer = null;
@@ -41186,9 +41676,6 @@ function loadQueueConfig() {
       GlobalState.queueState.manualItems = queueCfg.manualItems || [];
       GlobalState.queueState.interval = queueCfg.interval || 2;
       GlobalState.queueState.enabled = queueCfg.enabled === true;
-      if (queueCfg.historyMax) {
-        GlobalState.sceneHistory.maxItems = queueCfg.historyMax;
-      }
       console.log("Titania: \u961F\u5217\u914D\u7F6E\u5DF2\u52A0\u8F7D", GlobalState.queueState);
     }
   } catch (e) {
