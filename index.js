@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.2.0";
+    CURRENT_VERSION = "5.2.1";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -73,7 +73,10 @@ var init_defaults = __esm({
       ui_prefs: {
         script_sort_mode: "smart",
         // 主界面布局: modern(新版工具箱布局) | legacy(5.1.2 经典布局)
-        main_window_mode: "modern"
+        main_window_mode: "modern",
+        // 标题栏常驻图标（最多 5 个），未列入的自动收进「更多」弹层。
+        // 可选 id 见 src/ui/mainWindow/headerActions.js 的注册表
+        header_actions: ["workshop", "favs"]
       },
       appearance: {
         type: "emoji",
@@ -180,6 +183,14 @@ var init_defaults = __esm({
         enabled: true,
         show_theater: true,
         show_outline_actions: true
+      },
+      // 小剧场注入聊天（挂在每条消息气泡的「…」菜单里）
+      chat_inject: {
+        enabled: true,
+        visible_to_ai: true,
+        // 注入时默认让 AI 看到；注入后可用气泡上的眼睛图标切换
+        speaker_name: "\u56DE\u58F0\u5C0F\u5267\u573A"
+        // 仅界面显示用，narrator 类型不会把名字带进提示词
       },
       // 文本改写入口（显示在故事大纲菜单中）
       rewrite_entry: {
@@ -2910,6 +2921,11 @@ textarea.t-input {
     cursor: default;
 }
 
+/* \u5206\u652F\u6807\u9898\u5728\u6279\u91CF\u7BA1\u7406\u4E0B\u4ECD\u53EF\u6298\u53E0\uFF0C\u4FDD\u7559\u6307\u9488\u4EE5\u793A\u53EF\u70B9 */
+.t-cont-history-panel.is-managing .t-cont-history-branch-title {
+    cursor: pointer;
+}
+
 .t-cont-history-bulk-bar {
     display: flex;
     align-items: center;
@@ -3771,6 +3787,34 @@ textarea.t-input {
     opacity: 1;
 }
 
+/* === \u300C\u66F4\u591A\u300D\u83DC\u5355\u91CC\u7684\u56FE\u9489\uFF1A\u628A\u8BE5\u9879\u63D0\u5347\u5230\u6807\u9898\u680F === */
+
+/* \u624B\u673A\u4E0A\u6CA1\u6709\u53F3\u952E\u3001\u957F\u6309\u53C8\u4F1A\u8DDF\u6EDA\u52A8\u624B\u52BF\u6253\u67B6\uFF0C\u6240\u4EE5\u7528\u5E38\u9A7B\u53EF\u89C1\u7684\u6309\u94AE */
+.t-more-pin {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    margin-left: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #6d6d6d;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.t-more-pin:hover:not(:disabled) {
+    background: rgba(191, 161, 95, 0.16);
+    color: #bfa15f;
+}
+
+.t-more-pin:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
 /* 
    === \u79FB\u52A8\u7AEF\u9002\u914D ===
    \u6CE8\u610F\uFF1A\u53EA\u6709\u5C4F\u5E55\u5BBD\u5EA6\u5C0F\u4E8E 600px \u65F6\uFF0C\u8FD9\u4E9B\u6837\u5F0F\u624D\u4F1A\u751F\u6548\u3002
@@ -3799,9 +3843,17 @@ textarea.t-input {
     }
 
     #t-main-view .t-header .t-header-actions .t-icon-btn {
-        font-size: 1.3em;
+        /* \u53EA\u6536\u5B57\u5F62\u4E0D\u6536\u70ED\u533A\uFF1A30px \u5DF2\u662F\u89E6\u5C4F\u70B9\u51FB\u7684\u4E0B\u9650\uFF0C\u518D\u5C0F\u4F1A\u96BE\u70B9\u3002
+           \u56FE\u6807\u6700\u591A 5 \u4E2A\u65F6 1.3em \u51E0\u4E4E\u9876\u6EE1\u65B9\u5757\uFF0C\u663E\u5F97\u62E5\u6324\uFF0C\u7F29\u5230 1.15em \u7559\u51FA\u547C\u5438\u611F\u3002 */
+        font-size: 1.15em;
         width: 30px;
         height: 30px;
+    }
+
+    /* \u5173\u95ED\u952E\u7684 1.8em \u5728\u7A84\u5C4F\u6BD4\u529F\u80FD\u56FE\u6807\u5927\u51FA\u4E00\u5708\uFF0C\u4E00\u8D77\u6536\u4E00\u70B9\u4FDD\u6301\u89C6\u89C9\u9F50\u5E73 */
+    #t-main-view .t-header .t-header-actions .t-close {
+        font-size: 1.5em;
+        padding: 0 3px;
     }
 
     .t-top-bar {
@@ -5272,13 +5324,6 @@ textarea.t-input {
     border: 1px solid #303030;
     border-radius: 10px;
     background: #191919;
-    /* \u6D3E\u751F\u5206\u652F\u6309\u5C42\u7EA7\u7F29\u8FDB\uFF0C\u6DF1\u5EA6\u7531\u884C\u5185 --t-branch-depth \u63D0\u4F9B\uFF1B\u9650\u6DF1\u907F\u514D\u6DF1\u94FE\u628A\u5185\u5BB9\u6324\u6CA1 */
-    margin-left: calc(min(var(--t-branch-depth, 0), 4) * 16px);
-}
-
-/* \u7F29\u8FDB\u5C42\u7528\u5DE6\u4FA7\u63CF\u8FB9\u793A\u610F\u6D3E\u751F\u5173\u7CFB\uFF0C\u9876\u5C42\u5206\u652F\u4E0D\u663E\u793A */
-.t-cont-history-branch.is-derived {
-    border-left: 2px solid rgba(191, 161, 95, 0.3);
 }
 
 .t-cont-history-branch.is-active {
@@ -5288,11 +5333,34 @@ textarea.t-input {
 .t-cont-history-branch-title {
     display: flex;
     align-items: center;
+    width: 100%;
     gap: 8px;
     padding: 10px 12px;
+    border: 0;
     border-bottom: 1px solid #303030;
     color: #d6d0c3;
     background: #202020;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+}
+
+.t-cont-history-branch:not(.is-open) .t-cont-history-branch-title {
+    border-bottom-color: transparent;
+}
+
+.t-cont-history-branch-chevron {
+    flex-shrink: 0;
+    font-size: 10px;
+    transition: transform 0.18s;
+}
+
+.t-cont-history-branch.is-open .t-cont-history-branch-chevron {
+    transform: rotate(90deg);
+}
+
+.t-cont-history-branch-body[hidden] {
+    display: none;
 }
 
 .t-cont-history-branch-heading {
@@ -5311,6 +5379,19 @@ textarea.t-input {
     white-space: nowrap;
 }
 
+/* \u5206\u652F\u7F16\u53F7\u662F\u626B\u5217\u8868\u65F6\u7684\u4E3B\u8981\u533A\u5206\u70B9\uFF0C\u7ED9\u5B83\u4E00\u679A\u6807\u8BB0\u907F\u514D\u6DF7\u5728\u65F6\u95F4\u91CC */
+.t-cont-history-branch-no {
+    margin-left: 7px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(191, 161, 95, 0.14);
+    color: #bfa15f;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 600;
+    vertical-align: 1px;
+}
+
 .t-cont-history-branch-heading span {
     color: #8c857a;
     font-size: 10px;
@@ -5321,63 +5402,6 @@ textarea.t-input {
     margin-left: auto;
     color: #777;
     flex-shrink: 0;
-}
-
-.t-cont-history-branch-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.t-cont-history-branch-actions .t-btn {
-    padding: 3px 8px;
-    font-size: 11px;
-    line-height: 1.5;
-}
-
-/* .danger \u539F\u672C\u53EA\u5728\u6279\u91CF\u5220\u9664\u6761\u91CC\u6709\u6837\u5F0F\uFF0C\u5206\u652F\u5934\u91CC\u7684\u5220\u9664\u6309\u94AE\u9700\u8981\u540C\u6837\u7684\u89C6\u89C9 */
-.t-cont-history-branch-actions .danger {
-    color: #ffd6d6;
-    border-color: rgba(248, 113, 113, .45);
-    background: rgba(185, 28, 28, .18);
-}
-
-.t-cont-branch-current {
-    padding: 3px 8px;
-    border: 1px solid rgba(191, 161, 95, 0.34);
-    border-radius: 999px;
-    background: rgba(191, 161, 95, 0.1);
-    color: rgba(238, 220, 178, 0.78);
-    font-size: 11px;
-    line-height: 1.5;
-    white-space: nowrap;
-}
-
-.t-cont-branch-name {
-    cursor: text;
-}
-
-.t-cont-branch-name:hover {
-    text-decoration: underline dotted rgba(191, 161, 95, 0.5);
-    text-underline-offset: 3px;
-}
-
-/* \u5C31\u5730\u91CD\u547D\u540D\u8F93\u5165\u6846\uFF1A\u6491\u6EE1\u6807\u9898\u884C\uFF0C\u907F\u514D\u7F16\u8F91\u65F6\u5E03\u5C40\u8DF3\u52A8 */
-.t-cont-branch-rename {
-    width: 100%;
-    padding: 2px 6px;
-    border: 1px solid rgba(191, 161, 95, 0.5);
-    border-radius: 4px;
-    background: #141414;
-    color: #e4ddcf;
-    font-size: 13px;
-    font-family: inherit;
-}
-
-.t-cont-branch-rename:focus {
-    outline: none;
-    border-color: rgba(231, 202, 143, 0.75);
 }
 
 .t-cont-history-round {
@@ -6155,6 +6179,165 @@ textarea.t-input {
         padding: 5px 10px;
         font-size: 0.8em;
     }
+}
+
+/* ============================================================
+   \u5C0F\u5267\u573A\u6CE8\u5165\u804A\u5929\uFF1A\u6C14\u6CE1\u6309\u94AE + \u5185\u5BB9\u9009\u62E9\u5F39\u7A97
+   ============================================================ */
+
+/* \u6302\u5728 ST \u7684 .extraMesButtons \u91CC\uFF0C\u7EE7\u627F .mes_button \u7684\u5C3A\u5BF8\u4E0E\u4EA4\u4E92\uFF0C\u53EA\u6539\u914D\u8272 */
+#chat .titania-inject-btn {
+    color: var(--t-theme, #bfa15f);
+}
+
+#chat .titania-inject-btn:hover {
+    color: #90cdf4;
+}
+
+.t-chat-inject-window {
+    width: 520px;
+    max-width: 94vw;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(30, 30, 35, 0.96);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    color: #e2e8f0;
+}
+
+.t-chat-inject-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 18px 18px;
+    overflow: hidden;
+}
+
+.t-chat-inject-target {
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(144, 205, 244, 0.08);
+    border-left: 3px solid #90cdf4;
+    color: #cbd5e0;
+    flex-shrink: 0;
+}
+
+.t-chat-inject-target b {
+    color: #90cdf4;
+}
+
+.t-chat-inject-visible {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.t-chat-inject-visible input {
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.t-chat-inject-visible-main {
+    display: block;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.t-chat-inject-visible small {
+    display: block;
+    margin-top: 3px;
+    color: #8f9bb0;
+    line-height: 1.5;
+}
+
+.t-chat-inject-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 60px;
+}
+
+.t-chat-inject-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.t-chat-inject-item:hover {
+    background: rgba(191, 161, 95, 0.12);
+    border-color: var(--t-theme, #bfa15f);
+    transform: translateX(2px);
+}
+
+.t-chat-inject-item-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.t-chat-inject-item-name {
+    color: var(--t-theme, #bfa15f);
+    font-weight: 600;
+}
+
+.t-chat-inject-item-time {
+    color: #6f7b8f;
+    font-size: 0.9em;
+    flex-shrink: 0;
+}
+
+.t-chat-inject-item-preview {
+    color: #a8b3c4;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.t-chat-inject-empty {
+    text-align: center;
+    padding: 32px 20px;
+    color: #8f9bb0;
+}
+
+.t-chat-inject-empty > i {
+    font-size: 2.2em;
+    color: #4a5568;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.t-chat-inject-empty-title {
+    color: #cbd5e0;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.t-chat-inject-empty-hint {
+    line-height: 1.6;
+    max-width: 340px;
+    margin: 0 auto;
 }
 
 
@@ -7563,6 +7746,101 @@ textarea.t-input {
 .t-prompt-entry-actions button:disabled {
     opacity: 0.35;
     cursor: default;
+}
+
+/* === \u6807\u9898\u680F\u56FE\u6807\u914D\u7F6E === */
+
+.t-header-action-count {
+    margin-left: 6px;
+    color: #666;
+    font-size: 0.8em;
+    font-weight: normal;
+}
+
+.t-header-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.t-header-action-card {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #1a1a1a;
+    cursor: grab;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.t-header-action-card:active {
+    cursor: grabbing;
+}
+
+.t-header-action-card:hover {
+    background: #1d1d1d;
+    border-color: #555;
+}
+
+.t-header-action-card.is-dragging {
+    opacity: 0.45;
+    border-style: dashed;
+}
+
+.t-header-action-card.is-drag-over {
+    border-color: #90cdf4;
+    box-shadow: 0 -3px 0 rgba(144, 205, 244, 0.75);
+}
+
+/* \u5DF2\u8FBE\u4E0A\u9650\u65F6\u672A\u9009\u4E2D\u7684\u9879\uFF1A\u53D8\u6697\u63D0\u793A\u9009\u4E0D\u4E86\uFF0C\u4F46\u4ECD\u53EF\u62D6\u52A8\u8C03\u5E8F */
+.t-header-action-card.is-blocked {
+    opacity: 0.5;
+}
+
+.t-header-action-grip {
+    flex-shrink: 0;
+    color: #555;
+    cursor: grab;
+}
+
+.t-header-action-icon {
+    width: 1.2em;
+    flex-shrink: 0;
+    color: #bfa15f;
+    text-align: center;
+}
+
+.t-header-action-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: #ccc;
+    font-size: 0.9em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.t-header-action-switch {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
+}
+
+.t-header-action-switch input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #bfa15f;
+    cursor: pointer;
+}
+
+.t-header-action-switch input:disabled {
+    cursor: not-allowed;
 }
 
 @media (max-width: 600px) {
@@ -15786,9 +16064,27 @@ function resetContinuationState() {
     userName: ""
   };
 }
-function recordGenerationResult(content, scriptId, scriptName, metadata = {}) {
+function pushSceneToHistory(content, scriptId, scriptName, metadata = {}) {
+  const history = GlobalState.sceneHistory;
   const generationId = String(metadata.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
   const status = metadata.status || "success";
+  const newItem = {
+    content,
+    scriptId,
+    scriptName: scriptName || "\u672A\u77E5\u5267\u672C",
+    status,
+    generationId,
+    timestamp: Date.now(),
+    isRead: false,
+    // 新生成的默认未读
+    favId: null
+    // 该记录对应的收藏 ID（null 表示未收藏）
+  };
+  history.items.unshift(newItem);
+  while (history.items.length > history.maxItems) {
+    history.items.pop();
+  }
+  history.currentIndex = 0;
   GlobalState.lastGeneratedContent = content;
   GlobalState.lastGeneratedScriptId = scriptId;
   GlobalState.currentGenerationResult = {
@@ -15803,7 +16099,7 @@ function recordGenerationResult(content, scriptId, scriptName, metadata = {}) {
     timestamp: Date.now()
   };
   GlobalState.lastFavId = null;
-  return { generationId, status };
+  console.log(`[Titania] \u5267\u573A\u5386\u53F2\u5DF2\u66F4\u65B0: ${history.items.length} \u6761\u8BB0\u5F55`);
 }
 function setCurrentGenerationResult(result = {}) {
   const status = result.status || "failed";
@@ -15824,18 +16120,22 @@ function setCurrentGenerationResult(result = {}) {
 }
 function getCurrentGenerationResult() {
   const display = GlobalState.displayState;
-  if (display.isViewingHistory && display.lockedContent) {
-    return {
-      generationId: String(display.lockedGenerationId || ""),
-      content: String(display.lockedContent),
-      scriptId: String(display.lockedScriptId || ""),
-      scriptName: String(display.lockedScriptName || "\u573A\u666F"),
-      status: "legacy",
-      canFavorite: true,
-      canContinue: true,
-      error: null,
-      timestamp: 0
-    };
+  if (display.isViewingHistory && display.currentViewIndex >= 0) {
+    const item = GlobalState.sceneHistory.items[display.currentViewIndex];
+    if (item) {
+      const status = item.status || "legacy";
+      return {
+        generationId: String(item.generationId || ""),
+        content: String(item.content || ""),
+        scriptId: String(item.scriptId || ""),
+        scriptName: String(item.scriptName || "\u573A\u666F"),
+        status,
+        canFavorite: status === "success" || status === "legacy",
+        canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+        error: item.error || null,
+        timestamp: Number(item.timestamp) || 0
+      };
+    }
   }
   if (GlobalState.streamingCache.isActive) {
     return {
@@ -15868,6 +16168,27 @@ function getCurrentGenerationResult() {
 }
 function isFavoriteEligible(result = getCurrentGenerationResult()) {
   return Boolean(result?.canFavorite && String(result.content || "").trim());
+}
+function getCurrentHistoryItem() {
+  const history = GlobalState.sceneHistory;
+  if (history.currentIndex < 0 || history.currentIndex >= history.items.length) {
+    return null;
+  }
+  return history.items[history.currentIndex];
+}
+function syncFavIdToCurrentHistory(favId) {
+  const display = GlobalState.displayState;
+  const history = GlobalState.sceneHistory;
+  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+  if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
+    history.items[effectiveIndex].favId = favId;
+  }
+}
+function markCurrentAsRead() {
+  const item = getCurrentHistoryItem();
+  if (item) {
+    item.isRead = true;
+  }
 }
 function resetQueueState() {
   GlobalState.queueState.isRunning = false;
@@ -15910,8 +16231,28 @@ function getQueueProgress() {
     isRunning: q.isRunning
   };
 }
+function setHistoryMaxItems(maxItems) {
+  GlobalState.sceneHistory.maxItems = maxItems;
+  while (GlobalState.sceneHistory.items.length > maxItems) {
+    GlobalState.sceneHistory.items.pop();
+  }
+}
+function lockDisplayToHistory(historyIndex) {
+  const history = GlobalState.sceneHistory;
+  if (historyIndex < 0 || historyIndex >= history.items.length) return;
+  const item = history.items[historyIndex];
+  GlobalState.displayState.isViewingHistory = true;
+  GlobalState.displayState.currentViewIndex = historyIndex;
+  GlobalState.displayState.lockedContent = item.content;
+  GlobalState.displayState.lockedScriptId = item.scriptId;
+  GlobalState.displayState.lockedScriptName = item.scriptName;
+  GlobalState.displayState.lockedGenerationId = item.generationId || null;
+  item.isRead = true;
+  console.log(`[Titania] \u663E\u793A\u5C42\u9501\u5B9A\u5230\u5386\u53F2 #${historyIndex + 1}`);
+}
 function lockDisplayToContent(content, scriptId, scriptName = "\u573A\u666F", generationId = "") {
   GlobalState.displayState.isViewingHistory = true;
+  GlobalState.displayState.currentViewIndex = -1;
   GlobalState.displayState.lockedContent = String(content || "");
   GlobalState.displayState.lockedScriptId = String(scriptId || "");
   GlobalState.displayState.lockedScriptName = String(scriptName || "\u573A\u666F");
@@ -15919,6 +16260,7 @@ function lockDisplayToContent(content, scriptId, scriptName = "\u573A\u666F", ge
 }
 function unlockDisplay() {
   GlobalState.displayState.isViewingHistory = false;
+  GlobalState.displayState.currentViewIndex = -1;
   GlobalState.displayState.lockedContent = null;
   GlobalState.displayState.lockedScriptId = null;
   GlobalState.displayState.lockedScriptName = null;
@@ -16021,9 +16363,11 @@ var init_state = __esm({
       // 显示层状态 (用于分离显示与生成)
       displayState: {
         isViewingHistory: false,
-        // 是否锁定在某条历史内容上（非实时）
+        // 是否正在查看历史（非最新）
+        currentViewIndex: -1,
+        // 当前查看的历史索引 (-1 表示查看最新/实时)
         lockedContent: null,
-        // 锁定显示的内容
+        // 锁定显示的内容（用户切换历史时）
         lockedScriptId: null,
         // 锁定显示的剧本ID
         lockedScriptName: null,
@@ -16064,6 +16408,15 @@ var init_state = __esm({
       continuationRuntime: {
         chatId: "",
         byScript: {}
+      },
+      // 剧场历史记录队列
+      sceneHistory: {
+        items: [],
+        // 历史记录数组，每项 { content, scriptId, scriptName, timestamp, isRead }
+        currentIndex: -1,
+        // 当前查看的索引 (-1 表示没有历史)
+        maxItems: 5
+        // 最多保留的历史记录数量
       },
       // 生成内容统计信息
       contentStats: {
@@ -16939,10 +17292,8 @@ var favsWindow_exports = {};
 __export(favsWindow_exports, {
   openCharImageManager: () => openCharImageManager,
   openFavsWindow: () => openFavsWindow,
-  resolveFavIdForBranch: () => resolveFavIdForBranch,
   saveContinuationChainFavorite: () => saveContinuationChainFavorite,
   saveFavorite: () => saveFavorite,
-  syncFavStateToCurrentView: () => syncFavStateToCurrentView,
   unsaveFavorite: () => unsaveFavorite
 });
 function getCurrentAvatarSrc() {
@@ -17165,57 +17516,30 @@ function waitForImagesLoadedDeep(rootEl, timeoutMs = 5e3) {
 async function saveFavorite() {
   await saveContinuationChainFavorite();
 }
-function migrateLegacyChainFavorites(data) {
-  const favs = Array.isArray(data?.favs) ? data.favs : [];
-  let changed = 0;
-  for (const fav of favs) {
-    if (!fav || fav.type !== "chain") continue;
-    if (fav.anchor || fav.legacy === true) continue;
-    const branchKey = String(fav.branchKey || "").trim();
-    if (branchKey) {
-      const rounds = Array.isArray(fav.items) ? fav.items : [];
-      fav.anchor = {
-        scriptId: String(fav.scriptId || ""),
-        branchKey,
-        chatId: "",
-        upToRound: rounds.length,
-        lastRoundKey: ""
-      };
-    } else {
-      fav.legacy = true;
-      fav.anchor = null;
-    }
-    changed++;
-  }
-  if (changed > 0) {
-    saveExtData();
-    console.log(`[Titania] \u5DF2\u8FC1\u79FB ${changed} \u6761\u65E7\u5206\u7EC4\u6536\u85CF\u7684\u5206\u652F\u8EAB\u4EFD`);
-  }
-  return changed;
+function getChainBaseHtmlFromItems(items) {
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) return "";
+  const initial = list.find((item) => String(item?.type || "").trim() === "initial");
+  const candidate = initial || list[0];
+  return String(candidate?.html || candidate?.content || "").trim();
 }
-function isSameChainSession(favEntry, scriptId, branchKey) {
+function isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems) {
   if (!favEntry || favEntry.type !== "chain") return false;
-  if (favEntry.legacy === true) return false;
+  if (String(favEntry.scriptId || "") !== String(scriptId || "")) return false;
+  const favBase = getChainBaseHtmlFromItems(favEntry.items);
+  const currentBase = getChainBaseHtmlFromItems(currentItems);
+  if (!favBase || !currentBase) return false;
+  return favBase === currentBase;
+}
+function isSameChainSession(favEntry, scriptId, branchKey, currentItems) {
+  if (!favEntry || favEntry.type !== "chain") return false;
   if (String(favEntry.scriptId || "") !== String(scriptId || "")) return false;
   const normalizedBranchKey = String(branchKey || "").trim();
-  const favBranchKey = String(favEntry.branchKey || favEntry.anchor?.branchKey || "").trim();
-  if (!normalizedBranchKey || !favBranchKey) return false;
-  return normalizedBranchKey === favBranchKey;
-}
-function resolveFavIdForBranch(scriptId, branchKey = "") {
-  const normalizedScriptId = String(scriptId || "").trim();
-  if (!normalizedScriptId) return null;
-  const resolvedBranchKey = String(branchKey || "").trim() || String(getContinuationRoundsForFav(normalizedScriptId)?.branchKey || "").trim();
-  if (!resolvedBranchKey) return null;
-  const data = getExtData();
-  if (!Array.isArray(data.favs)) return null;
-  migrateLegacyChainFavorites(data);
-  const hit = data.favs.find((fav) => isSameChainSession(fav, normalizedScriptId, resolvedBranchKey));
-  return hit ? Number(hit.id) || null : null;
-}
-function syncFavStateToCurrentView(scriptId, branchKey = "") {
-  GlobalState.lastFavId = resolveFavIdForBranch(scriptId, branchKey);
-  return GlobalState.lastFavId;
+  const favBranchKey = String(favEntry.branchKey || "").trim();
+  if (normalizedBranchKey && favBranchKey) {
+    return normalizedBranchKey === favBranchKey;
+  }
+  return isSameChainSessionByBaseHtml(favEntry, scriptId, currentItems);
 }
 async function saveContinuationChainFavorite() {
   const currentResult = getCurrentGenerationResult();
@@ -17223,8 +17547,11 @@ async function saveContinuationChainFavorite() {
     if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u751F\u6210\u672A\u5B8C\u6210\uFF0C\u65E0\u6CD5\u6536\u85CF");
     return false;
   }
-  const lockedScriptId = GlobalState.displayState?.isViewingHistory ? GlobalState.displayState.lockedScriptId : GlobalState.lastGeneratedScriptId;
-  const scriptId = currentResult?.scriptId || lockedScriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
+  const display = GlobalState.displayState?.isViewingHistory ? GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex] || null : {
+    scriptId: GlobalState.lastGeneratedScriptId,
+    scriptName: ""
+  };
+  const scriptId = currentResult?.scriptId || display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId;
   if (!scriptId) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5267\u672C\uFF0C\u65E0\u6CD5\u6536\u85CF\u7EED\u5199\u94FE");
     return false;
@@ -17252,17 +17579,16 @@ async function saveContinuationChainFavorite() {
     return false;
   }
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
-  const scriptName = String(chainData?.scriptName || script?.name || GlobalState.displayState?.lockedScriptName || "\u573A\u666F");
+  const scriptName = String(chainData?.scriptName || script?.name || display?.scriptName || "\u573A\u666F");
   const branchKey = String(chainData?.branchKey || "").trim();
   const avatarSrc = getCurrentAvatarSrc();
   const chainSignature = buildChainSignature(scriptId, normalizedRounds);
-  const anchor = chainData?.anchor ? { ...chainData.anchor, chatId: String(window.SillyTavern?.getContext?.()?.chatId || "") } : null;
   const data = getExtData();
   if (!Array.isArray(data.favs)) data.favs = [];
-  migrateLegacyChainFavorites(data);
   const duplicated = data.favs.find((f) => f?.type === "chain" && f?.chainSignature === chainSignature);
   if (duplicated) {
     GlobalState.lastFavId = duplicated.id;
+    syncFavIdToCurrentHistory(duplicated.id);
     updateFavButtonUI();
     if (window.toastr) toastr.info("\u5F53\u524D\u5267\u573A\u5206\u7EC4\u5DF2\u6536\u85CF\uFF0C\u65E0\u9700\u91CD\u590D\u6536\u85CF");
     return true;
@@ -17272,10 +17598,10 @@ async function saveContinuationChainFavorite() {
   const activeFavId = Number(GlobalState.lastFavId) || null;
   let existingChain = null;
   if (activeFavId) {
-    existingChain = data.favs.find((f) => f?.type === "chain" && Number(f?.id) === activeFavId && isSameChainSession(f, scriptId, branchKey)) || null;
+    existingChain = data.favs.find((f) => f?.type === "chain" && Number(f?.id) === activeFavId) || null;
   }
   if (!existingChain) {
-    existingChain = data.favs.find((f) => isSameChainSession(f, scriptId, branchKey)) || null;
+    existingChain = data.favs.find((f) => isSameChainSession(f, scriptId, branchKey, items)) || null;
   }
   if (existingChain) {
     existingChain.title = `${scriptName} - ${ctx.charName}`;
@@ -17286,11 +17612,11 @@ async function saveContinuationChainFavorite() {
     existingChain.html = mergedHtml;
     existingChain.avatar = avatarSrc;
     existingChain.branchKey = branchKey;
-    existingChain.anchor = anchor;
     existingChain.chainSignature = chainSignature;
     existingChain.items = items;
     saveExtData();
     GlobalState.lastFavId = existingChain.id;
+    syncFavIdToCurrentHistory(existingChain.id);
     updateFavButtonUI();
     if (window.toastr) toastr.success(`\u5DF2\u66F4\u65B0\u5F53\u524D\u5267\u573A\u5206\u7EC4\u6536\u85CF\uFF08\u5171 ${items.length} \u6BB5\uFF09`);
     return true;
@@ -17306,13 +17632,13 @@ async function saveContinuationChainFavorite() {
     html: mergedHtml,
     avatar: avatarSrc,
     branchKey,
-    anchor,
     chainSignature,
     items
   };
   data.favs.unshift(entry);
   saveExtData();
   GlobalState.lastFavId = entry.id;
+  syncFavIdToCurrentHistory(entry.id);
   updateFavButtonUI();
   if (window.toastr) toastr.success(`\u5DF2\u6536\u85CF\u5F53\u524D\u5267\u573A\u5206\u7EC4\uFF08\u5171 ${items.length} \u6BB5\uFF09`);
   return true;
@@ -17333,11 +17659,13 @@ function unsaveFavorite() {
   if (data.favs.length < originalLength) {
     saveExtData();
     GlobalState.lastFavId = null;
+    syncFavIdToCurrentHistory(null);
     updateFavButtonUI();
     if (window.toastr) toastr.info("\u5DF2\u53D6\u6D88\u6536\u85CF");
     return true;
   }
   GlobalState.lastFavId = null;
+  syncFavIdToCurrentHistory(null);
   updateFavButtonUI();
   if (window.toastr) toastr.info("\u6536\u85CF\u72B6\u6001\u5DF2\u540C\u6B65\u4E3A\u672A\u6536\u85CF");
   return true;
@@ -20207,9 +20535,9 @@ function getChatHistoryEntries() {
   try {
     if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
     const stCtx = SillyTavern.getContext();
-    const chat = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
+    const chat2 = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
     const whitelist = parseTagWhitelistInput(getOutlineChatTagWhitelistRaw());
-    return chat.map((msg, idx) => {
+    return chat2.map((msg, idx) => {
       const raw = typeof msg?.mes === "string" ? msg.mes : "";
       const text = extractTextByWhitelist(raw, whitelist);
       if (!text) return null;
@@ -23833,11 +24161,11 @@ function buildRewritePayload(data, sourceText) {
 function getLatestAssistantMessageFromChat() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return null;
   const ctx = SillyTavern.getContext();
-  const chat = Array.isArray(ctx?.chat) ? ctx.chat : [];
+  const chat2 = Array.isArray(ctx?.chat) ? ctx.chat : [];
   const whitelist = parseTagWhitelistInput(ensureRewriteDataShape().tag_whitelist || "");
-  if (chat.length === 0) return null;
-  for (let i = chat.length - 1; i >= 0; i -= 1) {
-    const msg = chat[i];
+  if (chat2.length === 0) return null;
+  for (let i = chat2.length - 1; i >= 0; i -= 1) {
+    const msg = chat2[i];
     if (!msg || msg.is_user || msg.is_system || msg.is_hidden || msg.disabled) continue;
     const raw = String(msg.mes || msg.message || "");
     const content = extractTextByWhitelist(raw, whitelist);
@@ -23957,8 +24285,8 @@ function applyRewriteMarksToMessage(index, marksInput) {
 function applyAllRewriteMarksFromChat() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return;
   const ctx = SillyTavern.getContext();
-  const chat = Array.isArray(ctx?.chat) ? ctx.chat : [];
-  chat.forEach((msg, index) => {
+  const chat2 = Array.isArray(ctx?.chat) ? ctx.chat : [];
+  chat2.forEach((msg, index) => {
     const marks = normalizeRewriteMarks(msg?.extra?.titania_rewrite_marks);
     applyRewriteMarksToMessage(index, marks);
   });
@@ -29619,13 +29947,13 @@ function updateHideFloorCount() {
 }
 function updateHiddenStatus() {
   try {
-    const chat = window.SillyTavern?.getContext?.()?.chat;
-    if (!chat || !Array.isArray(chat)) {
+    const chat2 = window.SillyTavern?.getContext?.()?.chat;
+    if (!chat2 || !Array.isArray(chat2)) {
       $("#t-hidden-status").text("");
       return;
     }
     let hiddenCount = 0;
-    chat.forEach((msg) => {
+    chat2.forEach((msg) => {
       if (msg.is_system === true) {
         hiddenCount++;
       }
@@ -30399,15 +30727,15 @@ function appendMemoriesToInput(memories) {
 }
 function getDefaultQuery() {
   try {
-    const chat = getChatHistory2();
-    if (!chat || chat.length === 0) return "";
-    for (let i = chat.length - 1; i >= 0; i--) {
-      const msg = chat[i];
+    const chat2 = getChatHistory2();
+    if (!chat2 || chat2.length === 0) return "";
+    for (let i = chat2.length - 1; i >= 0; i--) {
+      const msg = chat2[i];
       if (msg.is_user && msg.mes) {
         return msg.mes.substring(0, 500);
       }
     }
-    const lastMsg = chat[chat.length - 1];
+    const lastMsg = chat2[chat2.length - 1];
     if (lastMsg && lastMsg.mes) {
       return lastMsg.mes.substring(0, 500);
     }
@@ -31028,6 +31356,65 @@ var init_outlineEntryButton = __esm({
   }
 });
 
+// src/ui/mainWindow/headerActions.js
+function getHeaderActionMeta(id3) {
+  return HEADER_ACTION_REGISTRY.find((item) => item.id === String(id3 || "")) || null;
+}
+function normalizeHeaderActions(list) {
+  if (!Array.isArray(list)) return [];
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const raw of list) {
+    const id3 = String(raw || "");
+    if (seen.has(id3) || !getHeaderActionMeta(id3)) continue;
+    seen.add(id3);
+    result.push(id3);
+    if (result.length >= HEADER_ACTION_MAX) break;
+  }
+  return result;
+}
+function getHeaderActions() {
+  const data = getExtData();
+  const saved = data.ui_prefs?.header_actions;
+  if (!Array.isArray(saved)) return [...HEADER_ACTION_DEFAULT];
+  return normalizeHeaderActions(saved);
+}
+function saveHeaderActions(list) {
+  const data = getExtData();
+  if (!data.ui_prefs) data.ui_prefs = {};
+  data.ui_prefs.header_actions = normalizeHeaderActions(list);
+  saveExtData();
+  return data.ui_prefs.header_actions;
+}
+function getOverflowActions() {
+  const active = new Set(getHeaderActions());
+  return HEADER_ACTION_REGISTRY.filter((item) => !active.has(item.id));
+}
+function renderHeaderActionsHtml() {
+  const iconsHtml = getHeaderActions().map((id3) => {
+    const meta = getHeaderActionMeta(id3);
+    if (!meta) return "";
+    return `<i class="fa-solid ${meta.icon} t-icon-btn" id="t-btn-${meta.id}" data-header-action="${meta.id}" title="${meta.label}" role="button" tabindex="0" aria-label="${meta.label}"></i>`;
+  }).join("");
+  const moreHtml = getOverflowActions().length ? `<i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" data-header-action="__more__" title="\u66F4\u591A" role="button" tabindex="0" aria-label="\u66F4\u591A"></i>` : "";
+  return `${iconsHtml}${moreHtml}<span class="t-close" id="t-btn-close">&times;</span>`;
+}
+var HEADER_ACTION_REGISTRY, HEADER_ACTION_MAX, HEADER_ACTION_DEFAULT;
+var init_headerActions = __esm({
+  "src/ui/mainWindow/headerActions.js"() {
+    init_storage();
+    HEADER_ACTION_REGISTRY = [
+      { id: "workshop", icon: "fa-store", label: "\u56DE\u58F0\u5DE5\u574A" },
+      { id: "favs", icon: "fa-book-bookmark", label: "\u56DE\u58F0\u6536\u85CF\u5939" },
+      { id: "worldinfo", icon: "fa-book-atlas", label: "\u4E16\u754C\u4E66\u7B5B\u9009" },
+      { id: "profiles", icon: "fa-network-wired", label: "API \u65B9\u6848" },
+      { id: "settings", icon: "fa-gear", label: "\u8BBE\u7F6E" }
+    ];
+    HEADER_ACTION_MAX = 5;
+    HEADER_ACTION_DEFAULT = ["workshop", "favs"];
+  }
+});
+
 // src/ui/settingsWindow.js
 function applyCustomCSS(cssText) {
   let styleEl = document.getElementById("t-custom-style");
@@ -31269,6 +31656,12 @@ function openSettingsWindow() {
                             <option value="legacy" ${mainWindowMode === "legacy" ? "selected" : ""}>\u7ECF\u5178\u7248\uFF08\u53CC\u6F14\u7ECE\u6309\u94AE + \u5DE5\u5177\u7F51\u683C\uFF09</option>
                         </select>
                         <p style="font-size:0.75em; color:#666; margin-top:6px;">\u4E24\u7248\u529F\u80FD\u5B8C\u5168\u76F8\u540C\uFF0C\u4EC5\u5E03\u5C40\u4E0D\u540C\u3002\u5207\u6362\u540E\u9700\u91CD\u65B0\u6253\u5F00\u5C0F\u5267\u573A\u751F\u6548\u3002</p>
+                    </div>
+
+                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid #333;">
+                        <label style="color:#ccc; display:block; margin-bottom:8px;">\u{1F3A8} \u6807\u9898\u680F\u56FE\u6807 <span id="p-header-actions-count" class="t-header-action-count"></span></label>
+                        <div id="p-header-actions" class="t-header-action-list"></div>
+                        <p style="font-size:0.75em; color:#666; margin-top:6px;">\u52FE\u9009\u8981\u5E38\u9A7B\u6807\u9898\u680F\u7684\u529F\u80FD\uFF08\u6700\u591A ${HEADER_ACTION_MAX} \u4E2A\uFF09\uFF0C\u62D6\u52A8\u53EF\u8C03\u6574\u987A\u5E8F\u3002\u6CA1\u9009\u4E2D\u7684\u4F1A\u6536\u8FDB\u6807\u9898\u680F\u7684\u300C\u66F4\u591A\u300D\u83DC\u5355\u3002\u6539\u52A8\u7ACB\u5373\u751F\u6548\u3002</p>
                     </div>
                 </div>
 
@@ -32758,6 +33151,91 @@ function openSettingsWindow() {
     $("#toolbar-settings-panel").toggle($(this).is(":checked"));
   });
   initToolbarCheckboxes();
+  let headerActionOrder = (() => {
+    const active = getHeaderActions();
+    const rest = HEADER_ACTION_REGISTRY.map((item) => item.id).filter((id3) => !active.includes(id3));
+    return [...active, ...rest];
+  })();
+  const applyHeaderActions = () => {
+    const selected = headerActionOrder.filter((id3) => $(`.t-header-action-chk[data-action-id="${id3}"]`).is(":checked"));
+    saveHeaderActions(selected);
+    if (typeof window.refreshHeaderActions === "function") window.refreshHeaderActions();
+    return selected;
+  };
+  const updateHeaderActionCount = () => {
+    const count = $(".t-header-action-chk:checked").length;
+    const $countEl = $("#p-header-actions-count");
+    $countEl.text(`\u5DF2\u9009 ${count} / ${HEADER_ACTION_MAX}`);
+    const full = count >= HEADER_ACTION_MAX;
+    $countEl.css("color", full ? "#ff9f43" : "#666");
+    $(".t-header-action-chk:not(:checked)").prop("disabled", full).closest(".t-header-action-card").toggleClass("is-blocked", full).attr("title", full ? `\u6700\u591A ${HEADER_ACTION_MAX} \u4E2A\uFF0C\u53D6\u6D88\u4E00\u4E2A\u518D\u9009` : "");
+  };
+  const renderHeaderActionCards = () => {
+    const $list = $("#p-header-actions");
+    if (!$list.length) return;
+    const active = getHeaderActions();
+    $list.empty();
+    headerActionOrder.forEach((id3) => {
+      const meta = HEADER_ACTION_REGISTRY.find((item) => item.id === id3);
+      if (!meta) return;
+      const checked = active.includes(id3);
+      const $card = $(`<div class="t-header-action-card" data-action-id="${id3}" draggable="true">
+                <span class="t-header-action-grip" title="\u62D6\u52A8\u6392\u5E8F"><i class="fa-solid fa-grip-vertical"></i></span>
+                <i class="fa-solid ${meta.icon} t-header-action-icon"></i>
+                <span class="t-header-action-label"></span>
+                <label class="t-header-action-switch">
+                    <input type="checkbox" class="t-header-action-chk" data-action-id="${id3}" ${checked ? "checked" : ""}>
+                </label>
+            </div>`);
+      $card.find(".t-header-action-label").text(meta.label);
+      $card.on("dragstart", function(event) {
+        const originalEvent = event.originalEvent;
+        if ($(event.target).closest("input, label").length) {
+          originalEvent?.preventDefault();
+          return;
+        }
+        originalEvent.dataTransfer.effectAllowed = "move";
+        originalEvent.dataTransfer.setData("text/plain", id3);
+        $(this).addClass("is-dragging");
+      });
+      $card.on("dragend", function() {
+        $(this).removeClass("is-dragging");
+        $(".t-header-action-card").removeClass("is-drag-over");
+      });
+      $card.on("dragover", function(event) {
+        event.preventDefault();
+        event.originalEvent.dataTransfer.dropEffect = "move";
+        $(this).addClass("is-drag-over");
+      });
+      $card.on("dragleave", function(event) {
+        if (event.target === this) $(this).removeClass("is-drag-over");
+      });
+      $card.on("drop", function(event) {
+        event.preventDefault();
+        const draggedId = String(event.originalEvent.dataTransfer.getData("text/plain") || "");
+        const fromIndex = headerActionOrder.indexOf(draggedId);
+        const targetIndex = headerActionOrder.indexOf(id3);
+        if (fromIndex < 0 || targetIndex < 0 || fromIndex === targetIndex) {
+          renderHeaderActionCards();
+          return;
+        }
+        const rect = this.getBoundingClientRect();
+        const insertBefore = event.originalEvent.clientY < rect.top + rect.height / 2;
+        headerActionOrder.splice(fromIndex, 1);
+        const base = headerActionOrder.indexOf(id3);
+        headerActionOrder.splice(insertBefore ? base : base + 1, 0, draggedId);
+        applyHeaderActions();
+        renderHeaderActionCards();
+      });
+      $list.append($card);
+    });
+    $(".t-header-action-chk").on("change", function() {
+      applyHeaderActions();
+      updateHeaderActionCount();
+    });
+    updateHeaderActionCount();
+  };
+  renderHeaderActionCards();
   const renderLogView = () => {
     const logs = TitaniaLogger.logs;
     if (!logs || logs.length === 0) {
@@ -32860,6 +33338,9 @@ ${JSON.stringify(l.details, null, 2)}`;
     };
     if (!d.ui_prefs) d.ui_prefs = {};
     d.ui_prefs.main_window_mode = $("#p-main-window-mode").val() === "legacy" ? "legacy" : "modern";
+    if ($(".t-header-action-chk").length) {
+      d.ui_prefs.header_actions = headerActionOrder.filter((id3) => $(`.t-header-action-chk[data-action-id="${id3}"]`).is(":checked")).slice(0, HEADER_ACTION_MAX);
+    }
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
     const clampInt = (value, min, max, fallback) => {
       const n = parseInt(value, 10);
@@ -32964,6 +33445,7 @@ var init_settingsWindow = __esm({
     init_apiProfileRegistry();
     init_apiConnectionEditor();
     init_promptManager();
+    init_headerActions();
   }
 });
 
@@ -34361,13 +34843,6 @@ function transactionDone(transaction) {
     transaction.onabort = () => reject(transaction.error || new Error("IndexedDB transaction aborted"));
   });
 }
-function abortQuietly(transaction, completed) {
-  void completed.catch(() => void 0);
-  try {
-    transaction.abort();
-  } catch {
-  }
-}
 function createRoundKey() {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 8);
@@ -34464,71 +34939,6 @@ async function listAllContinuationSessions() {
   ]);
   return buildGlobalSessions(sessions, branches, rounds);
 }
-async function switchActiveBranch(sessionId, branchId) {
-  if (!sessionId || !branchId) return false;
-  const db = await openDatabase();
-  const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES], "readwrite");
-  const completed = transactionDone(transaction);
-  const sessionStore = transaction.objectStore(STORE_SESSIONS);
-  const [session, branch] = await Promise.all([
-    requestResult(sessionStore.get(sessionId)),
-    requestResult(transaction.objectStore(STORE_BRANCHES).get(branchId))
-  ]);
-  if (!session || !branch || branch.sessionId !== sessionId) {
-    abortQuietly(transaction, completed);
-    return false;
-  }
-  sessionStore.put({ ...session, activeBranchId: branchId, updatedAt: Date.now() });
-  await completed;
-  return true;
-}
-async function updateBranchLabel(branchId, label) {
-  if (!branchId) return false;
-  const db = await openDatabase();
-  const transaction = db.transaction([STORE_BRANCHES], "readwrite");
-  const completed = transactionDone(transaction);
-  const branchStore = transaction.objectStore(STORE_BRANCHES);
-  const branch = await requestResult(branchStore.get(branchId));
-  if (!branch) {
-    abortQuietly(transaction, completed);
-    return false;
-  }
-  branchStore.put({ ...branch, label: String(label || "").trim().slice(0, 60) });
-  await completed;
-  return true;
-}
-async function deleteBranch(branchId) {
-  if (!branchId) return false;
-  const db = await openDatabase();
-  const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readwrite");
-  const completed = transactionDone(transaction);
-  const sessionStore = transaction.objectStore(STORE_SESSIONS);
-  const branchStore = transaction.objectStore(STORE_BRANCHES);
-  const roundStore = transaction.objectStore(STORE_ROUNDS);
-  const branch = await requestResult(branchStore.get(branchId));
-  if (!branch) {
-    abortQuietly(transaction, completed);
-    return false;
-  }
-  const [session, siblings, rounds] = await Promise.all([
-    requestResult(sessionStore.get(branch.sessionId)),
-    requestResult(branchStore.index("sessionId").getAll(branch.sessionId)),
-    requestResult(roundStore.index("branchId").getAll(branchId))
-  ]);
-  rounds.forEach((round) => roundStore.delete(round.id));
-  branchStore.delete(branchId);
-  if (session && session.activeBranchId === branchId) {
-    const remaining = siblings.filter((item) => item.id !== branchId);
-    const fallback = remaining.find((item) => item.id === branch.parentBranchId) || [...remaining].sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0))[0];
-    if (fallback) {
-      sessionStore.put({ ...session, activeBranchId: fallback.id, updatedAt: Date.now() });
-    } else {
-      sessionStore.delete(session.id);
-    }
-  }
-  await completed;
-  return true;
-}
 function buildPointerMetadata(sessions) {
   const active = {};
   for (const session of sessions) {
@@ -34556,16 +34966,16 @@ function collectRuntimeRecords(chatId) {
   const rounds = [];
   const currentSource = getCurrentSourceMetadata();
   for (const [scriptId, entry] of Object.entries(byScript)) {
-    const branchMap = entry?.branches && typeof entry.branches === "object" ? entry.branches : null;
-    const allBranches = branchMap ? Object.values(branchMap).filter((branch) => String(branch?.branchKey || "").trim() && Array.isArray(branch?.rounds) && branch.rounds.length > 0) : [];
-    if (allBranches.length === 0) continue;
-    const activeBranchKey = String(entry.activeBranchKey || "").trim() || String(allBranches[allBranches.length - 1].branchKey);
+    const activeBranchKey = String(entry?.branchKey || "").trim();
+    if (!activeBranchKey || !Array.isArray(entry?.rounds) || entry.rounds.length === 0) continue;
     const sessionId = `${chatId}:${scriptId}`;
+    const archivedBranches = Array.isArray(entry.archivedBranches) ? entry.archivedBranches : [];
     const updatedAt = Math.max(
       0,
-      ...allBranches.flatMap((branch) => [
-        Number(branch?.createdAt) || 0,
-        ...branch.rounds.map((round) => Number(round?.timestamp) || 0)
+      ...entry.rounds.map((round) => Number(round?.timestamp) || 0),
+      ...archivedBranches.flatMap((branch) => [
+        Number(branch?.archivedAt) || 0,
+        ...Array.isArray(branch?.rounds) ? branch.rounds.map((round) => Number(round?.timestamp) || 0) : []
       ])
     );
     sessions.push({
@@ -34582,6 +34992,13 @@ function collectRuntimeRecords(chatId) {
       rootBranchId: "",
       updatedAt: updatedAt || Date.now()
     });
+    const allBranches = [{
+      branchKey: activeBranchKey,
+      parentBranchKey: String(entry.parentBranchKey || ""),
+      branchedAtRound: Number(entry.branchedAtRound) || null,
+      archivedAt: 0,
+      rounds: entry.rounds
+    }, ...archivedBranches];
     for (const branch of allBranches) {
       const branchId = String(branch?.branchKey || "").trim();
       if (!branchId || !Array.isArray(branch?.rounds)) continue;
@@ -34593,8 +35010,8 @@ function collectRuntimeRecords(chatId) {
         legacyBranchKey: "",
         parentBranchId: String(branch.parentBranchKey || ""),
         branchedAtSequence: Number(branch.branchedAtRound) || null,
-        createdAt: Number(branch.createdAt) || 0,
-        archivedAt: 0,
+        createdAt: Number(branch.archivedAt) || 0,
+        archivedAt: Number(branch.archivedAt) || 0,
         label: "",
         roundCount: branch.rounds.length
       });
@@ -34608,7 +35025,7 @@ function collectRuntimeRecords(chatId) {
           branchKey: branchId,
           roundKey,
           sequence: index + 1,
-          originRoundId: String(round?.originRoundKey || ""),
+          originRoundId: "",
           type: String(round?.type || (index === 0 ? "initial" : "continuation")),
           instruction: String(round?.instruction || ""),
           content: String(round?.content || ""),
@@ -34743,17 +35160,16 @@ async function restoreContinuationForCurrentChat() {
       chatName: session.chatName,
       origin: session.origin || null,
       updatedAt: Number(session.updatedAt) || 0,
-      activeBranchKey: String(active.branchKey || active.id),
-      branches: Object.fromEntries(sessionBranches.map((branch) => {
-        const branchKey = String(branch.branchKey || branch.id);
-        return [branchKey, {
-          branchKey,
-          parentBranchKey: String(branch.parentBranchId || ""),
-          branchedAtRound: Number(branch.branchedAtSequence) || null,
-          createdAt: Number(branch.createdAt) || 0,
-          archivedAt: Number(branch.archivedAt) || 0,
-          rounds: roundsByBranch.get(branch.id) || []
-        }];
+      branchKey: String(active.branchKey || active.id),
+      parentBranchKey: String(active.parentBranchId || ""),
+      branchedAtRound: Number(active.branchedAtSequence) || null,
+      rounds: roundsByBranch.get(active.id) || [],
+      archivedBranches: sessionBranches.filter((branch) => branch.id !== active.id).map((branch) => ({
+        branchKey: String(branch.branchKey || branch.id),
+        parentBranchKey: String(branch.parentBranchId || ""),
+        branchedAtRound: Number(branch.branchedAtSequence) || null,
+        archivedAt: Number(branch.archivedAt) || 0,
+        rounds: roundsByBranch.get(branch.id) || []
       }))
     };
   }
@@ -34816,9 +35232,7 @@ async function deleteGlobalContinuationSelections(selections = []) {
       continue;
     }
     if (deletedBranchIds.has(String(session.activeBranchId || ""))) {
-      const removedActive = branches.find((branch) => branch.id === session.activeBranchId);
-      const parentId = String(removedActive?.parentBranchId || "");
-      const fallback = remaining.find((branch) => branch.id === parentId) || [...remaining].sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0))[0];
+      const fallback = remaining.find((branch) => branch.id === branches.find((item) => item.id === session.activeBranchId)?.parentBranchId) || [...remaining].sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0))[0];
       session.activeBranchId = fallback.id;
     }
   }
@@ -34922,10 +35336,7 @@ function renderHtml(viewData) {
                     </div>
                 </div>
                 <div class="t-header-actions">
-                    <i class="fa-solid fa-store t-icon-btn" id="t-btn-workshop" title="\u56DE\u58F0\u5DE5\u574A"></i>
-                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
-                    <i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" title="\u66F4\u591A"></i>
-                    <span class="t-close" id="t-btn-close">&times;</span>
+                    ${renderHeaderActionsHtml()}
                 </div>
             </div>
 
@@ -35307,6 +35718,7 @@ var init_modern = __esm({
     init_api();
     init_continuationStore();
     init_viewState();
+    init_headerActions();
     id = "modern";
   }
 });
@@ -35333,10 +35745,7 @@ function renderHtml2(viewData) {
                     </div>
                 </div>
                 <div class="t-header-actions">
-                    <i class="fa-solid fa-store t-icon-btn" id="t-btn-workshop" title="\u56DE\u58F0\u5DE5\u574A"></i>
-                    <i class="fa-solid fa-book-bookmark t-icon-btn" id="t-btn-favs" title="\u56DE\u58F0\u6536\u85CF\u5939"></i>
-                    <i class="fa-solid fa-ellipsis t-icon-btn" id="t-btn-more" title="\u66F4\u591A"></i>
-                    <span class="t-close" id="t-btn-close">&times;</span>
+                    ${renderHeaderActionsHtml()}
                 </div>
             </div>
 
@@ -35399,10 +35808,6 @@ function renderHtml2(viewData) {
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                         <span>\u4E3B\u52A8\u7EED\u5199</span>
                     </div>
-                    <div class="t-tools-item" id="t-tool-continuation-history">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                        <span>\u7EED\u5199\u5386\u53F2</span>
-                    </div>
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
@@ -35435,7 +35840,7 @@ function renderHtml2(viewData) {
             <!-- \u5DE6\u4FA7\uFF1A2x2 \u5DE5\u5177\u7F51\u683C -->
             <div class="t-bot-left">
                 <button class="t-btn-grid" id="t-btn-debug" title="\u5BA1\u67E5 Prompt"><i class="fa-solid fa-eye"></i></button>
-                <button class="t-btn-grid" id="t-btn-copy" title="\u590D\u5236\u6E90\u7801"><i class="fa-regular fa-copy"></i></button>
+                <button class="t-btn-grid" id="t-btn-continuation-history" title="\u7EED\u5199\u5386\u53F2"><i class="fa-solid fa-clock-rotate-left"></i></button>
                 <button class="t-btn-grid" id="t-btn-like" title="\u6536\u85CF\u7ED3\u679C"><i class="fa-regular fa-heart"></i></button>
                 <button class="t-btn-grid" id="t-btn-new" title="\u65B0\u5EFA\u5267\u672C"><i class="fa-solid fa-plus"></i></button>
             </div>
@@ -35505,7 +35910,7 @@ function bindEvents4(ctx) {
     const composeResult = await openContinuationComposer2("");
     await runContinuation(composeResult);
   });
-  $("#t-tool-continuation-history").on("click", function() {
+  $("#t-btn-continuation-history").on("click", function() {
     openContinuationHistory2("");
   });
   $("#t-btn-run-single").on("click", () => {
@@ -35533,6 +35938,7 @@ var init_legacy = __esm({
   "src/ui/mainWindow/layouts/legacy.js"() {
     init_state();
     init_api();
+    init_headerActions();
     id2 = "legacy";
   }
 });
@@ -35547,6 +35953,7 @@ __export(mainWindow_exports, {
   getQueueScripts: () => getQueueScripts,
   handleRandom: () => handleRandom,
   openMainWindow: () => openMainWindow,
+  refreshHeaderActions: () => refreshHeaderActions,
   refreshScriptList: () => refreshScriptList,
   registerTeardown: () => registerTeardown,
   setContinuationHistoryView: () => setContinuationHistoryView,
@@ -35858,6 +36265,18 @@ function getContinuationInstructionPreview(instruction, maxLength = 100) {
   if (normalized.length <= maxLength) return normalized;
   return `${normalized.slice(0, maxLength)}\u2026`;
 }
+function formatContinuationTimestamp(timestamp) {
+  const value = Number(timestamp) || 0;
+  if (!value) return "";
+  if (typeof window.moment === "function") {
+    const parsed = window.moment(value);
+    if (parsed.isValid()) return parsed.format("LL LT");
+  }
+  return new Date(value).toLocaleString();
+}
+function getContinuationBranchTime(branch) {
+  return Number(branch?.createdAt) || Number(branch?.rounds?.[0]?.timestamp) || 0;
+}
 function findContinuationRound(scriptId, branchKey, roundKey) {
   const branch = getContinuationBranches(scriptId).find((item) => item.branchKey === branchKey);
   const round = branch?.rounds.find((item) => item.roundKey === roundKey);
@@ -35912,124 +36331,12 @@ function showContinuationRoundInMain(chatId, scriptId, branchKey, roundKey) {
   setPendingGenerationScriptId("");
   const scriptName = target.session.scriptName || GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
   lockDisplayToContent(target.round.content, scriptId, scriptName, target.round.generationId);
-  setCurrentGenerationResult({
-    generationId: target.round.generationId || "",
-    content: target.round.content,
-    scriptId,
-    scriptName,
-    status: target.round.status || "legacy"
-  });
   renderGeneratedContent(target.round.content, scriptName);
-  syncFavStateToCurrentView(scriptId, branchKey);
   updateSceneHistoryNav();
-  updateFavButtonUI();
   if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
   $(document).off("keydown.tcontinuationhistory");
   $("#t-continuation-history").remove();
   return true;
-}
-function getActiveBranchView() {
-  const scriptId = String(GlobalState.lastGeneratedScriptId || "");
-  if (!scriptId) return { scriptId: "", branch: null, rounds: [] };
-  const branch = getContinuationBranches(scriptId).find((item) => item.isActive) || null;
-  return { scriptId, branch, rounds: Array.isArray(branch?.rounds) ? branch.rounds : [] };
-}
-function getCurrentBranchRoundIndex(rounds) {
-  if (!Array.isArray(rounds) || rounds.length === 0) return -1;
-  const display = GlobalState.displayState;
-  if (!display.isViewingHistory) return rounds.length - 1;
-  const wantedId = String(display.lockedGenerationId || "").trim();
-  if (wantedId) {
-    const byId = rounds.findIndex((item) => String(item.generationId || "").trim() === wantedId);
-    if (byId >= 0) return byId;
-  }
-  const wantedContent = String(display.lockedContent || "").trim();
-  if (wantedContent) {
-    const byContent = rounds.findIndex((item) => String(item.content || "").trim() === wantedContent);
-    if (byContent >= 0) return byContent;
-  }
-  return -1;
-}
-function showBranchRound(index) {
-  const { scriptId, rounds } = getActiveBranchView();
-  if (index < 0 || index >= rounds.length) return false;
-  const round = rounds[index];
-  const scriptName = GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
-  continuationHistoryView = null;
-  setPendingGenerationScriptId("");
-  if (index === rounds.length - 1 && !GlobalState.streamingCache.isActive) {
-    unlockDisplay();
-  } else {
-    lockDisplayToContent(round.content, scriptId, scriptName, round.generationId);
-  }
-  renderGeneratedContent(round.content, scriptName);
-  setCurrentGenerationResult({
-    generationId: round.generationId || "",
-    content: round.content,
-    scriptId,
-    scriptName,
-    status: round.status || "legacy"
-  });
-  syncFavStateToCurrentView(scriptId);
-  updateSceneHistoryNav();
-  updateRunButtonsState();
-  updateFavButtonUI();
-  updateScriptTitleDisplay();
-  return true;
-}
-function buildContinuationBranchTree(branches) {
-  const list = Array.isArray(branches) ? branches : [];
-  if (list.length === 0) return [];
-  const byId = new Map(list.map((branch) => [String(branch.branchId || branch.branchKey || ""), branch]));
-  const childrenOf = /* @__PURE__ */ new Map();
-  const roots = [];
-  for (const branch of list) {
-    const id3 = String(branch.branchId || branch.branchKey || "");
-    const parentId = String(branch.parentBranchId || "");
-    if (parentId && parentId !== id3 && byId.has(parentId)) {
-      if (!childrenOf.has(parentId)) childrenOf.set(parentId, []);
-      childrenOf.get(parentId).push(branch);
-    } else {
-      roots.push(branch);
-    }
-  }
-  const ordered = [];
-  const visited = /* @__PURE__ */ new Set();
-  const walk = (branch, depth) => {
-    const id3 = String(branch.branchId || branch.branchKey || "");
-    if (visited.has(id3)) return;
-    visited.add(id3);
-    ordered.push({ ...branch, depth });
-    for (const child of childrenOf.get(id3) || []) walk(child, depth + 1);
-  };
-  roots.forEach((branch) => walk(branch, 0));
-  list.forEach((branch) => walk(branch, 0));
-  return ordered;
-}
-function getContinuationBranchLabel(branch) {
-  const custom = String(branch?.label || "").trim();
-  if (custom) return custom;
-  const sourceIndex = Math.max(0, Number(branch?.branchedAtRound) - 1);
-  if (sourceIndex > 0) return `\u5206\u652F \xB7 \u81EA\u7EED\u5199\u7B2C ${sourceIndex} \u6B21`;
-  return branch?.isActive ? "\u4E3B\u7EBF" : "\u5206\u652F";
-}
-async function refreshAfterBranchMutation(preferredScriptId = "") {
-  await restoreContinuationForCurrentChat();
-  continuationHistoryView = null;
-  unlockDisplay();
-  const scriptId = GlobalState.lastGeneratedScriptId;
-  const rounds = scriptId ? getContinuationBranches(scriptId).find((item) => item.isActive)?.rounds : null;
-  const tail = Array.isArray(rounds) && rounds.length > 0 ? rounds[rounds.length - 1] : null;
-  if (tail) {
-    const scriptName = GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
-    lockDisplayToContent(tail.content, scriptId, scriptName, tail.generationId);
-    renderGeneratedContent(tail.content, scriptName);
-  }
-  updateSceneHistoryNav();
-  syncFavStateToCurrentView(scriptId);
-  updateFavButtonUI();
-  if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
-  await openContinuationHistory(preferredScriptId);
 }
 async function openContinuationHistory(preferredScriptId = "") {
   const allSessions = await listAllContinuationSessions();
@@ -36053,13 +36360,18 @@ async function openContinuationHistory(preferredScriptId = "") {
   const selectionCheckbox = (level, chatId, scriptId, branchKey = "", roundKey = "", disabled = false) => continuationHistoryManaging ? `<input class="t-cont-select" type="checkbox" data-selection-level="${level}" data-chat-id="${escapeHtmlText2(chatId)}" data-script-id="${escapeHtmlText2(scriptId)}" data-branch-key="${escapeHtmlText2(branchKey)}" data-round-key="${escapeHtmlText2(roundKey)}" ${disabled ? "disabled" : ""} aria-label="\u9009\u62E9${level === "session" ? "\u5267\u672C" : level === "branch" ? "\u5206\u652F" : "\u8F6E\u6B21"}">` : "";
   const sessionsHtml = sessions.map((session, sessionIndex) => {
     const isOpen = sessionIndex === 0;
-    const isCurrentChatSession = session.chatId === currentSource.chatId;
-    const branchHtml = buildContinuationBranchTree(session.branches).map((branch) => {
+    const hasActiveBranch = session.branches.some((item) => item.isActive);
+    const branchNumbers = new Map(
+      [...session.branches].sort((a, b) => getContinuationBranchTime(a) - getContinuationBranchTime(b)).map((item, index) => [item.branchKey, index + 1])
+    );
+    const branchHtml = session.branches.map((branch, branchIndex) => {
+      const isBranchOpen = hasActiveBranch ? branch.isActive : branchIndex === 0;
+      const branchNumber = branchNumbers.get(branch.branchKey) || 1;
+      const branchTime = formatContinuationTimestamp(getContinuationBranchTime(branch));
+      const branchTitle = branchTime || "\u65F6\u95F4\u672A\u77E5";
       const sourceContinuationIndex = Math.max(0, Number(branch.branchedAtRound) - 1);
       const branchSource = sourceContinuationIndex > 0 ? ` \xB7 \u4ECE\u7EED\u5199\u7B2C ${sourceContinuationIndex} \u6B21\u521B\u5EFA` : "";
       const branchStatus = `${branch.isActive ? "\u5F53\u524D\u5206\u652F" : "\u5386\u53F2\u5206\u652F"}${branchSource}`;
-      const branchTitle = getContinuationBranchLabel(branch);
-      const branchId = String(branch.branchId || branch.branchKey || "");
       const roundHtml = branch.rounds.map((round) => {
         const label = getContinuationRoundLabel(round);
         const instruction = round.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
@@ -36084,22 +36396,18 @@ async function openContinuationHistory(preferredScriptId = "") {
                     </div>
                 </article>`;
       }).join("");
-      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""} ${branch.depth > 0 ? "is-derived" : ""}" style="--t-branch-depth:${branch.depth || 0}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-session-id="${escapeHtmlText2(session.sessionId || "")}" data-branch-id="${escapeHtmlText2(branchId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}">
-                <div class="t-cont-history-branch-title">
+      return `<section class="t-cont-history-branch ${branch.isActive ? "is-active" : ""} ${isBranchOpen ? "is-open" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}" data-branch-key="${escapeHtmlText2(branch.branchKey)}">
+                <button class="t-cont-history-branch-title" type="button" aria-expanded="${isBranchOpen}">
                     <span class="t-cont-select-wrap">${selectionCheckbox("branch", session.chatId, session.scriptId, branch.branchKey)}</span>
+                    <i class="fa-solid fa-chevron-right t-cont-history-branch-chevron"></i>
                     <i class="fa-solid fa-code-branch"></i>
                     <div class="t-cont-history-branch-heading">
-                        <strong class="t-cont-branch-name" title="\u53CC\u51FB\u91CD\u547D\u540D\u6B64\u5206\u652F">${escapeHtmlText2(branchTitle)}</strong>
-                        <span>${escapeHtmlText2(session.characterName)} \xB7 \u300A${escapeHtmlText2(session.scriptName)}\u300B \xB7 ${escapeHtmlText2(branchStatus)}</span>
+                        <strong>${escapeHtmlText2(branchTitle)}${branchNumber > 1 ? `<em class="t-cont-history-branch-no">\u5206\u652F ${branchNumber}</em>` : ""}</strong>
+                        <span>${escapeHtmlText2(branchStatus)}</span>
                     </div>
                     <small>${branch.rounds.length - 1} \u6B21\u7EED\u5199</small>
-                    ${continuationHistoryManaging ? "" : `<div class="t-cont-history-branch-actions">
-                        ${isCurrentChatSession && !branch.isActive ? '<button class="t-btn t-btn-soft t-cont-branch-switch" title="\u628A\u8FD9\u6761\u5206\u652F\u8BBE\u4E3A\u5F53\u524D\u5206\u652F"><i class="fa-solid fa-right-left"></i> \u5207\u6362\u5230\u6B64</button>' : ""}
-                        ${isCurrentChatSession && branch.isActive ? '<span class="t-cont-branch-current">\u5F53\u524D\u5206\u652F</span>' : ""}
-                        <button class="t-btn danger t-cont-branch-delete" title="\u5220\u9664\u8FD9\u6761\u5206\u652F"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>`}
-                </div>
-                ${roundHtml}
+                </button>
+                <div class="t-cont-history-branch-body" ${isBranchOpen ? "" : "hidden"}>${roundHtml}</div>
             </section>`;
     }).join("");
     return `<section class="t-cont-history-session ${isOpen ? "is-open" : ""}" data-chat-id="${escapeHtmlText2(session.chatId)}" data-script-id="${escapeHtmlText2(session.scriptId)}">
@@ -36227,6 +36535,13 @@ async function openContinuationHistory(preferredScriptId = "") {
     $(this).attr("aria-expanded", String(shouldOpen));
     $session.find(".t-cont-history-session-body").first().prop("hidden", !shouldOpen);
   });
+  $panel.on("click", ".t-cont-history-branch-title", function() {
+    const $branch = $(this).closest(".t-cont-history-branch");
+    const shouldOpen = !$branch.hasClass("is-open");
+    $branch.toggleClass("is-open", shouldOpen);
+    $(this).attr("aria-expanded", String(shouldOpen));
+    $branch.find(".t-cont-history-branch-body").first().prop("hidden", !shouldOpen);
+  });
   $panel.on("click", ".t-cont-history-toggle", function() {
     const $round = $(this).closest(".t-cont-history-round");
     const $full = $round.find(".t-cont-history-full");
@@ -36241,110 +36556,6 @@ async function openContinuationHistory(preferredScriptId = "") {
       const content = findGlobalContinuationRound(chatId, roundScriptId, branchKey, roundKey)?.round.content || "";
       $full.find("iframe").attr("srcdoc", content);
     }
-  });
-  $panel.on("click", ".t-cont-branch-switch", async function() {
-    const $branch = $(this).closest(".t-cont-history-branch");
-    const sessionId = String($branch.data("session-id") || "");
-    const branchId = String($branch.data("branch-id") || "");
-    if (!sessionId || !branchId) {
-      if (window.toastr) toastr.error("\u8BE5\u5206\u652F\u7F3A\u5C11\u6807\u8BC6\uFF0C\u65E0\u6CD5\u5207\u6362", "Titania");
-      return;
-    }
-    $(this).prop("disabled", true);
-    try {
-      const ok = await switchActiveBranch(sessionId, branchId);
-      if (!ok) {
-        $(this).prop("disabled", false);
-        if (window.toastr) toastr.warning("\u8BE5\u5206\u652F\u5DF2\u4E0D\u5B58\u5728", "Titania");
-        return;
-      }
-      await refreshAfterBranchMutation(String($branch.data("script-id") || ""));
-      if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u5206\u652F", "Titania");
-    } catch (error) {
-      console.error("Titania: \u5207\u6362\u4E3B\u52A8\u7EED\u5199\u5206\u652F\u5931\u8D25", error);
-      $(this).prop("disabled", false);
-      if (window.toastr) toastr.error("\u5207\u6362\u5206\u652F\u5931\u8D25", "Titania");
-    }
-  });
-  $panel.on("click", ".t-cont-branch-delete", async function() {
-    const $branch = $(this).closest(".t-cont-history-branch");
-    const branchId = String($branch.data("branch-id") || "");
-    if (!branchId) {
-      if (window.toastr) toastr.error("\u8BE5\u5206\u652F\u7F3A\u5C11\u6807\u8BC6\uFF0C\u65E0\u6CD5\u5220\u9664", "Titania");
-      return;
-    }
-    const roundCount = $branch.find(".t-cont-history-round").length;
-    const name = $branch.find(".t-cont-branch-name").first().text().trim() || "\u8BE5\u5206\u652F";
-    const isActive = $branch.hasClass("is-active");
-    const activeHint = isActive ? "\n\n\u8FD9\u662F\u5F53\u524D\u5206\u652F\uFF0C\u5220\u9664\u540E\u4F1A\u81EA\u52A8\u56DE\u9000\u5230\u5B83\u7684\u7236\u5206\u652F\u3002" : "";
-    if (!window.confirm(`\u786E\u5B9A\u5220\u9664\u300C${name}\u300D\u5417\uFF1F
-
-\u5C06\u5220\u9664 ${roundCount} \u4E2A\u8F6E\u6B21\u3002\u4ECE\u5B83\u6D3E\u751F\u51FA\u7684\u5B50\u5206\u652F\u662F\u72EC\u7ACB\u526F\u672C\uFF0C\u4E0D\u4F1A\u88AB\u5220\u9664\u3002${activeHint}
-
-\u5220\u9664\u540E\u65E0\u6CD5\u6062\u590D\u3002`)) return;
-    $(this).prop("disabled", true);
-    try {
-      const ok = await deleteBranch(branchId);
-      if (!ok) {
-        $(this).prop("disabled", false);
-        if (window.toastr) toastr.warning("\u8BE5\u5206\u652F\u5DF2\u4E0D\u5B58\u5728", "Titania");
-        return;
-      }
-      await refreshAfterBranchMutation(String($branch.data("script-id") || ""));
-      if (window.toastr) toastr.success("\u5DF2\u5220\u9664\u5206\u652F", "Titania");
-    } catch (error) {
-      console.error("Titania: \u5220\u9664\u4E3B\u52A8\u7EED\u5199\u5206\u652F\u5931\u8D25", error);
-      $(this).prop("disabled", false);
-      if (window.toastr) toastr.error("\u5220\u9664\u5206\u652F\u5931\u8D25", "Titania");
-    }
-  });
-  $panel.on("dblclick", ".t-cont-branch-name", function() {
-    if (continuationHistoryManaging) return;
-    const $name = $(this);
-    if ($name.find("input").length > 0) return;
-    const $branch = $name.closest(".t-cont-history-branch");
-    const branchId = String($branch.data("branch-id") || "");
-    if (!branchId) return;
-    const original = $name.text().trim();
-    const $input = $(`<input type="text" class="t-cont-branch-rename" maxlength="60" aria-label="\u5206\u652F\u540D\u79F0">`).val(original);
-    $name.empty().append($input);
-    $input.trigger("focus").trigger("select");
-    let settled = false;
-    const restore = (text) => {
-      $name.text(text);
-    };
-    const commit = async () => {
-      if (settled) return;
-      settled = true;
-      const next = String($input.val() || "").trim();
-      if (next === original) {
-        restore(original);
-        return;
-      }
-      try {
-        await updateBranchLabel(branchId, next);
-        await openContinuationHistory(String($branch.data("script-id") || ""));
-      } catch (error) {
-        console.error("Titania: \u91CD\u547D\u540D\u4E3B\u52A8\u7EED\u5199\u5206\u652F\u5931\u8D25", error);
-        restore(original);
-        if (window.toastr) toastr.error("\u91CD\u547D\u540D\u5931\u8D25", "Titania");
-      }
-    };
-    $input.on("keydown", function(event) {
-      event.stopPropagation();
-      if (event.key === "Enter") {
-        event.preventDefault();
-        commit();
-      } else if (event.key === "Escape") {
-        event.preventDefault();
-        settled = true;
-        restore(original);
-      }
-    });
-    $input.on("blur", commit);
-    $input.on("dblclick click", function(event) {
-      event.stopPropagation();
-    });
   });
   $panel.on("click", ".t-cont-history-show", function() {
     const $round = $(this).closest(".t-cont-history-round");
@@ -36641,10 +36852,6 @@ async function openMainWindow() {
   $("#t-overlay").on("click", (e) => {
     if (e.target === e.currentTarget) closeWindow();
   });
-  $("#t-btn-profile").on("click", function(e) {
-    renderProfileMenu($(this));
-    e.stopPropagation();
-  });
   $("#t-btn-new").on("click", () => {
     openEditor(null, "main");
   });
@@ -36737,14 +36944,9 @@ async function openMainWindow() {
       saveFavorite();
     }
   });
-  $("#t-btn-favs").on("click", openFavsWindow);
-  $("#t-btn-workshop").on("click", async () => {
-    const { openWorkshopWindow: openWorkshopWindow2 } = await Promise.resolve().then(() => (init_workshopWindow(), workshopWindow_exports));
-    openWorkshopWindow2("main");
-  });
-  $("#t-btn-more").on("click", function(e) {
-    renderMoreMenu($(this));
+  $("#t-main-view").on("click", "[data-header-action]", function(e) {
     e.stopPropagation();
+    runHeaderAction(String($(this).data("header-action") || ""), $(this));
   });
   $("#t-btn-debug").on("click", async () => await showDebugInfo());
   $("#t-btn-queue-settings").on("click", openQueueSettingsWindow);
@@ -36762,16 +36964,55 @@ async function openMainWindow() {
   });
   $("#t-nav-prev").on("click", function() {
     if ($(this).prop("disabled")) return;
-    const { rounds } = getActiveBranchView();
-    if (rounds.length === 0) return;
-    const current = getCurrentBranchRoundIndex(rounds);
-    if (current > 0) showBranchRound(current - 1);
+    const history = GlobalState.sceneHistory;
+    const display = GlobalState.displayState;
+    const streaming = GlobalState.streamingCache;
+    let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
+    if (canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1) {
+      continuationHistoryView = null;
+      setPendingGenerationScriptId("");
+      const newIndex = canJumpFromLiveToHistory ? 0 : effectiveIndex + 1;
+      lockDisplayToHistory(newIndex);
+      const item = history.items[newIndex];
+      if (item) {
+        renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
+        setCurrentGenerationResult({ ...item, status: item.status || "legacy" });
+        GlobalState.lastFavId = item.favId || null;
+      }
+      updateSceneHistoryNav();
+      updateRunButtonsState();
+      updateFavButtonUI();
+      updateScriptTitleDisplay();
+    }
   });
   $("#t-nav-next").on("click", function() {
     if ($(this).prop("disabled")) return;
-    const streaming = GlobalState.streamingCache;
+    const history = GlobalState.sceneHistory;
     const display = GlobalState.displayState;
-    if (streaming.isActive && display.isViewingHistory) {
+    const streaming = GlobalState.streamingCache;
+    let effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    if (effectiveIndex > 0) {
+      continuationHistoryView = null;
+      setPendingGenerationScriptId("");
+      const newIndex = effectiveIndex - 1;
+      if (newIndex === 0 && !streaming.isActive) {
+        unlockDisplay();
+        history.currentIndex = 0;
+      } else {
+        lockDisplayToHistory(newIndex);
+      }
+      const item = history.items[newIndex];
+      if (item) {
+        renderGeneratedContent(item.content, item.scriptName || "\u573A\u666F");
+        setCurrentGenerationResult({ ...item, status: item.status || "legacy" });
+        GlobalState.lastFavId = item.favId || null;
+      }
+      updateSceneHistoryNav();
+      updateRunButtonsState();
+      updateFavButtonUI();
+      updateScriptTitleDisplay();
+    } else if (effectiveIndex === 0 && streaming.isActive && display.isViewingHistory) {
       continuationHistoryView = null;
       setPendingGenerationScriptId("");
       unlockDisplay();
@@ -36781,17 +37022,13 @@ async function openMainWindow() {
       $("#t-new-content-indicator").remove();
       updateSceneHistoryNav();
       updateRunButtonsState();
-      return;
     }
-    const { rounds } = getActiveBranchView();
-    if (rounds.length === 0) return;
-    const current = getCurrentBranchRoundIndex(rounds);
-    if (current >= 0 && current + 1 < rounds.length) showBranchRound(current + 1);
   });
   window.updateSceneHistoryNav = updateSceneHistoryNav;
   window.updateRunButtonsState = updateRunButtonsState;
   window.updateFavButtonUI = updateFavButtonUI;
   window.updateScriptTitleDisplay = updateScriptTitleDisplay;
+  window.refreshHeaderActions = refreshHeaderActions;
   let initialScriptId = GlobalState.lastUsedScriptId;
   if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
     initialScriptId = GlobalState.lastGeneratedScriptId;
@@ -36906,32 +37143,32 @@ function updateSceneHistoryNav() {
   const $prevBtn = $("#t-nav-prev");
   const $nextBtn = $("#t-nav-next");
   const $indicator = $("#t-page-indicator");
+  const history = GlobalState.sceneHistory;
   const display = GlobalState.displayState;
   const streaming = GlobalState.streamingCache;
-  const { rounds } = getActiveBranchView();
-  const total = rounds.length;
-  const current = getCurrentBranchRoundIndex(rounds);
-  const canNavigate = current >= 0;
-  const hasPrev = canNavigate && current > 0;
-  const hasNext = canNavigate && current < total - 1 || display.isViewingHistory && streaming.isActive;
-  const showPageNav = canNavigate && total > 1 || streaming.isActive && total >= 1;
+  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+  const displayPage = history.items.length - effectiveIndex;
+  const canJumpFromLiveToHistory = streaming.isActive && !display.isViewingHistory && history.items.length > 0;
+  const hasPrev = canJumpFromLiveToHistory || effectiveIndex < history.items.length - 1;
+  const hasNext = effectiveIndex > 0 || display.isViewingHistory && streaming.isActive;
+  const showPageNav = history.items.length > 1 || history.items.length >= 1 && streaming.isActive;
   if (showPageNav) {
     $prevBtn.show();
     $nextBtn.show();
     $indicator.show();
     $prevBtn.prop("disabled", !hasPrev);
     $nextBtn.prop("disabled", !hasNext);
-    const page = current >= 0 ? current + 1 : 0;
     if (streaming.isActive && !display.isViewingHistory) {
-      $indicator.text(`\u23F3/${total}`);
+      $indicator.text(`\u23F3/${history.items.length}`);
       $indicator.css("color", "#90cdf4");
     } else if (display.isViewingHistory && streaming.isActive) {
-      $indicator.text(`${page}/${total} \u26A1`);
+      $indicator.text(`${displayPage}/${history.items.length} \u26A1`);
       $indicator.css("color", "#ffeaa7");
     } else {
-      $indicator.text(`${page}/${total}`);
+      $indicator.text(`${displayPage}/${history.items.length}`);
       $indicator.css("color", "rgba(255, 255, 255, 0.3)");
     }
+    markCurrentAsRead();
   } else {
     $prevBtn.hide();
     $nextBtn.hide();
@@ -37020,20 +37257,23 @@ async function updateWorldInfoBadge() {
         }
       });
     });
-    const $icon = $("#t-btn-more");
+    const onBar = $("#t-btn-worldinfo").length > 0;
+    const $icon = onBar ? $("#t-btn-worldinfo") : $("#t-btn-more");
+    if (!$icon.length) return;
+    const prefix = onBar ? "\u4E16\u754C\u4E66\u7B5B\u9009" : "\u66F4\u591A \xB7 \u4E16\u754C\u4E66";
     if (selectedCount > 0) {
       $icon.css("color", "#90cdf4");
-      $icon.attr("title", `\u66F4\u591A \xB7 \u4E16\u754C\u4E66\u5DF2\u9009 ${selectedCount}/${totalCount}`);
+      $icon.attr("title", `${prefix}\u5DF2\u9009 ${selectedCount}/${totalCount}`);
     } else if (totalCount > 0) {
       $icon.css("color", "#bfa15f");
-      $icon.attr("title", `\u66F4\u591A \xB7 \u4E16\u754C\u4E66\u672A\u9009\u62E9\u4EFB\u4F55\u6761\u76EE`);
+      $icon.attr("title", `${prefix}\u672A\u9009\u62E9\u4EFB\u4F55\u6761\u76EE`);
     } else {
       $icon.css("color", "");
-      $icon.attr("title", "\u66F4\u591A");
+      $icon.attr("title", onBar ? "\u4E16\u754C\u4E66\u7B5B\u9009" : "\u66F4\u591A");
     }
   } catch (e) {
     console.warn("Titania: \u66F4\u65B0\u4E16\u754C\u4E66\u56FE\u6807\u72B6\u6001\u5931\u8D25", e);
-    $("#t-btn-more").css("color", "");
+    $("#t-btn-worldinfo, #t-btn-more").css("color", "");
   }
 }
 async function openWorldInfoSelector() {
@@ -37624,43 +37864,73 @@ function showScriptSelector(initialFilter = "ALL") {
   renderGrid();
   $("#t-sel-close").on("click", () => $("#t-selector-panel").remove());
 }
+async function runHeaderAction(id3, $anchor) {
+  if (id3 === "__more__") {
+    renderMoreMenu($anchor);
+    return;
+  }
+  if (id3 === "favs") {
+    openFavsWindow();
+  } else if (id3 === "workshop") {
+    const { openWorkshopWindow: openWorkshopWindow2 } = await Promise.resolve().then(() => (init_workshopWindow(), workshopWindow_exports));
+    openWorkshopWindow2("main");
+  } else if (id3 === "worldinfo") {
+    openWorldInfoSelector();
+  } else if (id3 === "profiles") {
+    renderProfileMenu($anchor);
+  } else if (id3 === "settings") {
+    openSettingsWindow();
+  }
+}
+function refreshHeaderActions() {
+  const $host = $("#t-main-view .t-header-actions");
+  if (!$host.length) return;
+  $host.html(renderHeaderActionsHtml());
+  updateWorldInfoBadge().catch((e) => console.warn("Titania: \u5237\u65B0\u4E16\u754C\u4E66\u72B6\u6001\u5931\u8D25", e));
+}
 function renderMoreMenu($targetBtn) {
   if ($("#t-more-popover").length) {
     $("#t-more-popover").remove();
     return;
   }
-  const items = [
-    { id: "worldinfo", icon: "fa-book-atlas", label: "\u4E16\u754C\u4E66\u7B5B\u9009" },
-    { id: "profiles", icon: "fa-network-wired", label: "API \u65B9\u6848" },
-    { id: "settings", icon: "fa-gear", label: "\u8BBE\u7F6E" }
-  ];
+  const items = getOverflowActions();
+  if (!items.length) return;
+  const isFull = getHeaderActions().length >= HEADER_ACTION_MAX;
+  const pinTitle = isFull ? `\u6700\u591A ${HEADER_ACTION_MAX} \u4E2A\uFF0C\u53D6\u6D88\u4E00\u4E2A\u518D\u9009` : "\u56FA\u5B9A\u5230\u680F\u4E0A";
   const html = `
-    <div id="t-more-popover" class="t-filter-popover" style="width: 170px; z-index: 21000;">
+    <div id="t-more-popover" class="t-filter-popover" style="width: 190px; z-index: 21000;">
         ${items.map((it) => `
-            <div class="t-filter-item" data-action="${it.id}">
+            <div class="t-filter-item t-more-item" data-action="${it.id}">
                 <span><i class="fa-solid ${it.icon}" style="width:1.1em; margin-right:8px;"></i>${it.label}</span>
+                <button type="button" class="t-more-pin" data-pin="${it.id}" title="${pinTitle}" aria-label="${pinTitle}" ${isFull ? "disabled" : ""}><i class="fa-solid fa-thumbtack"></i></button>
             </div>
         `).join("")}
     </div>`;
   $("body").append(html);
   const pop = $("#t-more-popover");
   const rect = $targetBtn[0].getBoundingClientRect();
-  const left = rect.left + 170 > window.innerWidth ? rect.right - 170 : rect.left;
+  const left = rect.left + 190 > window.innerWidth ? rect.right - 190 : rect.left;
   pop.css({ top: rect.bottom + 10, left });
   const closeMenu2 = () => {
     pop.remove();
     $(document).off("click.closemore");
   };
-  $(".t-filter-item", pop).on("click", function() {
-    const action = $(this).data("action");
+  $(".t-more-pin", pop).on("click", function(e) {
+    e.stopPropagation();
+    if ($(this).prop("disabled")) return;
+    const id3 = String($(this).data("pin") || "");
+    const meta = getOverflowActions().find((item) => item.id === id3);
+    const next = [...getHeaderActions(), id3];
+    if (next.length > HEADER_ACTION_MAX) return;
+    saveHeaderActions(next);
     closeMenu2();
-    if (action === "worldinfo") {
-      openWorldInfoSelector();
-    } else if (action === "profiles") {
-      renderProfileMenu($targetBtn);
-    } else if (action === "settings") {
-      openSettingsWindow();
-    }
+    refreshHeaderActions();
+    if (window.toastr && meta) toastr.success(`\u5DF2\u628A\u300C${meta.label}\u300D\u56FA\u5B9A\u5230\u6807\u9898\u680F`, "Titania");
+  });
+  $(".t-filter-item", pop).on("click", function() {
+    const action = String($(this).data("action") || "");
+    closeMenu2();
+    runHeaderAction(action, $targetBtn);
   });
   setTimeout(() => {
     $(document).on("click.closemore", (e) => {
@@ -37774,6 +38044,12 @@ function openContentEditor() {
       status: currentResult?.status || "legacy"
     });
     const display = GlobalState.displayState;
+    const history = GlobalState.sceneHistory;
+    const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+    if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
+      history.items[effectiveIndex].content = newContent;
+      history.items[effectiveIndex].timestamp = Date.now();
+    }
     if (display.isViewingHistory) {
       display.lockedContent = newContent;
     }
@@ -37868,9 +38144,17 @@ function openQueueSettingsWindow() {
                         <button class="t-queue-num-btn" id="t-queue-interval-inc">+</button>
                     </div>
                 </div>
+                <div class="t-queue-row">
+                    <div class="t-queue-label">\u5386\u53F2\u5BB9\u91CF</div>
+                    <div class="t-queue-control">
+                        <button class="t-queue-num-btn" id="t-queue-history-dec">-</button>
+                        <span class="t-queue-num-value" id="t-queue-history-value">${GlobalState.sceneHistory.maxItems}</span>
+                        <button class="t-queue-num-btn" id="t-queue-history-inc">+</button>
+                    </div>
+                </div>
             </div>
         </div>
-
+        
         <div class="t-queue-footer">
             <div class="t-queue-status" id="t-queue-status">
                 ${qState.enabled ? '<i class="fa-solid fa-check-circle" style="color:#55efc4;"></i> \u961F\u5217\u5DF2\u6FC0\u6D3B' : '<i class="fa-solid fa-circle" style="color:#666;"></i> \u961F\u5217\u672A\u6FC0\u6D3B'}
@@ -37914,6 +38198,16 @@ function openQueueSettingsWindow() {
     let v = parseInt($val.text()) || 2;
     if (v < 30) $val.text(v + 1);
   });
+  $("#t-queue-history-dec").on("click", function() {
+    const $val = $("#t-queue-history-value");
+    let v = parseInt($val.text()) || 5;
+    if (v > 5) $val.text(v - 5);
+  });
+  $("#t-queue-history-inc").on("click", function() {
+    const $val = $("#t-queue-history-value");
+    let v = parseInt($val.text()) || 5;
+    if (v < 50) $val.text(v + 5);
+  });
   $(".t-queue-script-item").on("click", function(e) {
     if ($(e.target).is("input")) return;
     const $checkbox = $(this).find("input");
@@ -37942,6 +38236,7 @@ function openQueueSettingsWindow() {
     const count = parseInt($("#t-queue-count-value").text()) || 3;
     const category = $("#t-queue-category").val();
     const interval = parseInt($("#t-queue-interval-value").text()) || 2;
+    const historyMax = parseInt($("#t-queue-history-value").text()) || 5;
     const manualItems = [];
     $(".t-queue-script-item.selected").each(function() {
       manualItems.push($(this).data("id"));
@@ -37956,6 +38251,7 @@ function openQueueSettingsWindow() {
     GlobalState.queueState.categoryFilter = category;
     GlobalState.queueState.manualItems = manualItems;
     GlobalState.queueState.interval = interval;
+    setHistoryMaxItems(historyMax);
     const d = getExtData();
     d.queue_config = {
       enabled: true,
@@ -37963,7 +38259,8 @@ function openQueueSettingsWindow() {
       count,
       categoryFilter: category,
       manualItems,
-      interval
+      interval,
+      historyMax
     };
     saveExtData();
     updateQueueButtonUI();
@@ -38019,6 +38316,7 @@ var init_mainWindow = __esm({
     init_viewState();
     init_modern();
     init_legacy();
+    init_headerActions();
     SORT_MODE_LABELS2 = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
@@ -38556,12 +38854,11 @@ function getContinuationRuntimeStore() {
   return GlobalState.continuationRuntime.byScript;
 }
 function getContinuationSessionRounds(scriptId) {
-  const branch = getActiveRuntimeBranch(getContinuationEntry(scriptId));
-  const rounds = branch?.rounds;
+  const byScript = getContinuationRuntimeStore();
+  const rounds = byScript[scriptId]?.rounds;
   if (!Array.isArray(rounds)) return [];
   return rounds.map((item, idx) => ({
     round: Number(item?.round) || idx + 1,
-    roundKey: String(item?.roundKey || ""),
     type: String(item?.type || "continuation"),
     instruction: String(item?.instruction || "").trim(),
     content: String(item?.content || "").trim(),
@@ -38574,86 +38871,6 @@ function createContinuationRoundKey() {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 8);
   return `round_${ts}_${rand}`;
-}
-function normalizeRuntimeEntry(entry) {
-  if (!entry || typeof entry !== "object") return null;
-  if (entry.branches && typeof entry.branches === "object") return entry;
-  const branches = {};
-  const activeKey = String(entry.branchKey || "").trim();
-  if (activeKey) {
-    branches[activeKey] = {
-      branchKey: activeKey,
-      parentBranchKey: String(entry.parentBranchKey || "").trim(),
-      branchedAtRound: Number(entry.branchedAtRound) || null,
-      createdAt: Number(entry.createdAt) || 0,
-      archivedAt: 0,
-      rounds: Array.isArray(entry.rounds) ? entry.rounds : []
-    };
-  }
-  for (const branch of Array.isArray(entry.archivedBranches) ? entry.archivedBranches : []) {
-    const key = String(branch?.branchKey || "").trim();
-    if (!key || branches[key]) continue;
-    branches[key] = {
-      branchKey: key,
-      parentBranchKey: String(branch.parentBranchKey || "").trim(),
-      branchedAtRound: Number(branch.branchedAtRound) || null,
-      createdAt: Number(branch.createdAt) || Number(branch.archivedAt) || 0,
-      archivedAt: Number(branch.archivedAt) || 0,
-      rounds: Array.isArray(branch.rounds) ? branch.rounds : []
-    };
-  }
-  entry.branches = branches;
-  entry.activeBranchKey = activeKey;
-  delete entry.rounds;
-  delete entry.archivedBranches;
-  delete entry.parentBranchKey;
-  delete entry.branchedAtRound;
-  return entry;
-}
-function getContinuationEntry(scriptId) {
-  const entry = getContinuationRuntimeStore()[scriptId];
-  return entry ? normalizeRuntimeEntry(entry) : null;
-}
-function ensureContinuationEntry(scriptId, scriptName) {
-  const byScript = getContinuationRuntimeStore();
-  if (!byScript[scriptId] || typeof byScript[scriptId] !== "object") {
-    byScript[scriptId] = {
-      scriptId,
-      scriptName: scriptName || "\u573A\u666F",
-      activeBranchKey: "",
-      branches: {}
-    };
-  }
-  const entry = normalizeRuntimeEntry(byScript[scriptId]);
-  if (scriptName) entry.scriptName = scriptName;
-  return entry;
-}
-function getRuntimeBranch(entry, branchKey) {
-  const key = String(branchKey || "").trim();
-  return key && entry?.branches ? entry.branches[key] || null : null;
-}
-function getActiveRuntimeBranch(entry) {
-  return getRuntimeBranch(entry, entry?.activeBranchKey);
-}
-function listRuntimeBranches(entry) {
-  const branches = Object.values(entry?.branches || {});
-  const activeKey = String(entry?.activeBranchKey || "").trim();
-  return branches.sort((a, b) => Number(b.branchKey === activeKey) - Number(a.branchKey === activeKey) || (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
-}
-function putRuntimeBranch(entry, branch, { activate = true } = {}) {
-  const key = String(branch?.branchKey || "").trim();
-  if (!entry || !key) return null;
-  if (!entry.branches || typeof entry.branches !== "object") entry.branches = {};
-  entry.branches[key] = {
-    branchKey: key,
-    parentBranchKey: String(branch.parentBranchKey || "").trim(),
-    branchedAtRound: Number(branch.branchedAtRound) || null,
-    createdAt: Number(branch.createdAt) || Date.now(),
-    archivedAt: Number(branch.archivedAt) || 0,
-    rounds: Array.isArray(branch.rounds) ? branch.rounds : []
-  };
-  if (activate) entry.activeBranchKey = key;
-  return entry.branches[key];
 }
 function normalizeContinuationRounds(rounds) {
   if (!Array.isArray(rounds)) return [];
@@ -38670,33 +38887,46 @@ function normalizeContinuationRounds(rounds) {
       generationId: String(item?.generationId || ""),
       timestamp: Number(item?.timestamp) || 0
     };
-  }).filter((item) => item.content.length > 0);
+  }).filter((item) => item.content.length > 0).slice(0, CONTINUATION_SESSION_MAX_ROUNDS);
+}
+function archiveContinuationBranch(entry) {
+  const branchKey = String(entry?.branchKey || "").trim();
+  const rounds = normalizeContinuationRounds(entry?.rounds);
+  if (!branchKey || rounds.length === 0) return;
+  if (!Array.isArray(entry.archivedBranches)) entry.archivedBranches = [];
+  entry.archivedBranches = [{
+    branchKey,
+    parentBranchKey: String(entry.parentBranchKey || "").trim(),
+    branchedAtRound: Number(entry.branchedAtRound) || null,
+    rounds,
+    archivedAt: Date.now()
+  }, ...entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== branchKey)].slice(0, CONTINUATION_ARCHIVED_BRANCH_MAX);
 }
 function findContinuationRoundAnchor(scriptId, probe = {}) {
-  const entry = getContinuationEntry(scriptId);
+  const entry = getContinuationRuntimeStore()[scriptId];
   if (!entry) return null;
   const wantedId = String(probe.generationId || "").trim();
   const wantedContent = String(probe.content || "").trim();
   if (!wantedId && !wantedContent) return null;
-  const activeBranchKey = String(entry.activeBranchKey || "").trim();
-  const candidates = listRuntimeBranches(entry);
+  const activeBranchKey = String(entry.branchKey || "").trim();
+  const candidates = [
+    { branchKey: activeBranchKey, rounds: entry.rounds, isActive: true },
+    ...(Array.isArray(entry.archivedBranches) ? entry.archivedBranches : []).map((branch) => ({ branchKey: String(branch?.branchKey || "").trim(), rounds: branch?.rounds, isActive: false }))
+  ];
   for (const matchById of [true, false]) {
     if (matchById && !wantedId) continue;
     if (!matchById && !wantedContent) continue;
     for (const candidate of candidates) {
-      const branchKey = String(candidate?.branchKey || "").trim();
-      if (!branchKey) continue;
+      if (!candidate.branchKey) continue;
       const rounds = normalizeContinuationRounds(candidate.rounds);
       const index = rounds.findIndex((item) => matchById ? String(item.generationId || "").trim() === wantedId : item.content === wantedContent);
       if (index < 0) continue;
-      const isActive = branchKey === activeBranchKey;
       return {
-        branchKey,
+        branchKey: candidate.branchKey,
         roundKey: rounds[index].roundKey,
         round: index + 1,
-        isActive,
-        isTail: index === rounds.length - 1,
-        isActiveTail: isActive && index === rounds.length - 1
+        isActive: candidate.isActive,
+        isActiveTail: candidate.isActive && index === rounds.length - 1
       };
     }
   }
@@ -38719,47 +38949,48 @@ async function startFreshContinuationBranch(script, baseContent) {
     instruction: branchInstruction
   });
 }
-function resolveContinuationBranchPlan(scriptId, options = {}) {
-  const { sourceBranchKey = "", targetRound = null, targetRoundKey = "", includeTarget = false } = options;
-  const entry = getContinuationEntry(scriptId);
+function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound, targetRoundKey = "", includeTarget = false) {
+  const entry = getContinuationRuntimeStore()[scriptId];
   if (!entry) return null;
-  const requestedBranchKey = String(sourceBranchKey || entry.activeBranchKey || "").trim();
-  const source = getRuntimeBranch(entry, requestedBranchKey);
-  if (!source) return null;
-  const sourceRounds = normalizeContinuationRounds(source.rounds);
+  const activeBranchKey = String(entry.branchKey || "").trim();
+  const requestedBranchKey = String(sourceBranchKey || activeBranchKey).trim();
+  const source = requestedBranchKey === activeBranchKey ? { branchKey: activeBranchKey, rounds: entry.rounds } : Array.isArray(entry.archivedBranches) ? entry.archivedBranches.find((item) => String(item?.branchKey || "") === requestedBranchKey) : null;
+  const sourceRounds = normalizeContinuationRounds(source?.rounds);
   const requestedRoundKey = String(targetRoundKey || "").trim();
   const roundNumber = requestedRoundKey ? sourceRounds.findIndex((item) => item.roundKey === requestedRoundKey) + 1 : Math.floor(Number(targetRound));
-  if (!Number.isFinite(roundNumber) || roundNumber < 1 || roundNumber > sourceRounds.length) return null;
-  const limit = includeTarget ? roundNumber : roundNumber - 1;
+  if (!source || !Number.isFinite(roundNumber) || roundNumber < 1 || roundNumber > sourceRounds.length) return null;
+  const previousActiveBranch = {
+    branchKey: activeBranchKey,
+    parentBranchKey: String(entry.parentBranchKey || "").trim(),
+    branchedAtRound: Number(entry.branchedAtRound) || null,
+    rounds: normalizeContinuationRounds(entry.rounds)
+  };
+  archiveContinuationBranch(entry);
+  entry.branchKey = createContinuationBranchKey();
+  entry.parentBranchKey = requestedBranchKey;
+  entry.branchedAtRound = roundNumber;
+  entry.rounds = sourceRounds.slice(0, includeTarget ? roundNumber : roundNumber - 1);
   return {
     sourceBranchKey: requestedBranchKey,
+    branchKey: entry.branchKey,
     targetRound: roundNumber,
     targetInstruction: sourceRounds[roundNumber - 1]?.instruction || "",
-    contextRounds: sourceRounds.slice(0, limit),
-    branchedAtRound: limit,
-    // 落地点之后还有轮次 → 追加会造成分叉，必须新开分支；
-    // 正好落在尾部 → 直接续在这条分支后面，跟 ST 里“在当前聊天继续说”一样。
-    forkNeeded: limit < sourceRounds.length || requestedBranchKey !== String(entry.activeBranchKey || "").trim()
+    contextRounds: normalizeContinuationRounds(entry.rounds),
+    previousActiveBranch
   };
 }
-function materializeContinuationBranch(scriptId, plan) {
-  const entry = getContinuationEntry(scriptId);
-  if (!entry || !plan) return "";
-  const branchKey = createContinuationBranchKey();
-  const created = putRuntimeBranch(entry, {
-    branchKey,
-    parentBranchKey: plan.sourceBranchKey,
-    branchedAtRound: plan.branchedAtRound || null,
-    createdAt: Date.now(),
-    // 复制而非共享：新分支的轮次拿到自己的 roundKey，与源分支彻底解耦
-    rounds: (plan.contextRounds || []).map((round, index) => ({
-      ...round,
-      round: index + 1,
-      roundKey: createContinuationRoundKey(),
-      originRoundKey: String(round.roundKey || "")
-    }))
-  }, { activate: true });
-  return created ? branchKey : "";
+function restoreContinuationBranchAfterFailedGeneration(scriptId, branchResult) {
+  const entry = getContinuationRuntimeStore()[scriptId];
+  const previous = branchResult?.previousActiveBranch;
+  if (!entry || !previous || String(entry.branchKey || "") !== String(branchResult.branchKey || "")) return;
+  if (normalizeContinuationRounds(entry.rounds).length !== branchResult.contextRounds.length) return;
+  entry.branchKey = previous.branchKey;
+  entry.parentBranchKey = previous.parentBranchKey;
+  entry.branchedAtRound = previous.branchedAtRound;
+  entry.rounds = previous.rounds;
+  if (Array.isArray(entry.archivedBranches)) {
+    entry.archivedBranches = entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== previous.branchKey);
+  }
 }
 function setContinuationSessionBaseRound(scriptId, scriptName, content, options = {}) {
   if (!scriptId) return;
@@ -38768,55 +38999,54 @@ function setContinuationSessionBaseRound(scriptId, scriptName, content, options 
   const forceNewBranch = options?.forceNewBranch === true;
   const providedBranchKey = typeof options?.branchKey === "string" ? options.branchKey.trim() : "";
   const instruction = typeof options?.instruction === "string" ? options.instruction.trim() : "";
-  const entry = ensureContinuationEntry(scriptId, scriptName);
-  const activeBranch = getActiveRuntimeBranch(entry);
-  const oldRounds = Array.isArray(activeBranch?.rounds) ? activeBranch.rounds : [];
+  const byScript = getContinuationRuntimeStore();
+  const current = byScript[scriptId];
+  const oldRounds = Array.isArray(current?.rounds) ? current.rounds : [];
   const continuationRounds = oldRounds.filter((item) => String(item?.type || "continuation") !== "initial");
-  const requestedBranchKey = providedBranchKey || (forceNewBranch ? createContinuationBranchKey() : String(entry.activeBranchKey || "").trim());
-  const nextBranchKey = requestedBranchKey && !getRuntimeBranch(entry, requestedBranchKey) ? requestedBranchKey : createContinuationBranchKey();
-  const rounds = [
-    {
-      round: 1,
-      roundKey: createContinuationRoundKey(),
-      type: "initial",
-      instruction: instruction || "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
-      content: textContent,
-      status: String(options?.status || "success"),
-      generationId: String(options?.generationId || ""),
-      timestamp: Date.now()
-    },
-    ...continuationRounds
-  ].map((item, index) => ({
+  const nextBranchKey = providedBranchKey || (forceNewBranch ? createContinuationBranchKey() : String(current?.branchKey || "").trim()) || createContinuationBranchKey();
+  byScript[scriptId] = {
+    scriptId,
+    scriptName: scriptName || current?.scriptName || "\u573A\u666F",
+    branchKey: nextBranchKey,
+    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
+    rounds: [
+      {
+        round: 1,
+        roundKey: createContinuationRoundKey(),
+        type: "initial",
+        instruction: instruction || "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
+        content: textContent,
+        status: String(options?.status || "success"),
+        generationId: String(options?.generationId || ""),
+        timestamp: Date.now()
+      },
+      ...continuationRounds
+    ]
+  };
+  byScript[scriptId].rounds = byScript[scriptId].rounds.slice(0, CONTINUATION_SESSION_MAX_ROUNDS).map((item, index) => ({
     ...item,
     round: index + 1,
     type: String(item?.type || (index === 0 ? "initial" : "continuation"))
   }));
-  putRuntimeBranch(entry, {
-    branchKey: nextBranchKey,
-    parentBranchKey: "",
-    branchedAtRound: null,
-    createdAt: Date.now(),
-    rounds
-  }, { activate: true });
   scheduleContinuationPersistence();
 }
 function appendContinuationSessionRound(scriptId, scriptName, instruction, content, options = {}) {
   if (!scriptId) return;
   const textContent = String(content || "").trim();
   if (!textContent) return;
-  const entry = ensureContinuationEntry(scriptId, scriptName);
-  let branch = getActiveRuntimeBranch(entry);
-  if (!branch) {
-    branch = putRuntimeBranch(entry, {
+  const byScript = getContinuationRuntimeStore();
+  if (!byScript[scriptId] || typeof byScript[scriptId] !== "object") {
+    byScript[scriptId] = {
+      scriptId,
+      scriptName: scriptName || "\u573A\u666F",
       branchKey: createContinuationBranchKey(),
-      parentBranchKey: "",
-      branchedAtRound: null,
-      createdAt: Date.now(),
       rounds: []
-    }, { activate: true });
+    };
   }
-  if (!Array.isArray(branch.rounds)) branch.rounds = [];
-  const rounds = branch.rounds;
+  if (!Array.isArray(byScript[scriptId].rounds)) {
+    byScript[scriptId].rounds = [];
+  }
+  const rounds = byScript[scriptId].rounds;
   rounds.push({
     round: rounds.length + 1,
     roundKey: createContinuationRoundKey(),
@@ -38827,10 +39057,16 @@ function appendContinuationSessionRound(scriptId, scriptName, instruction, conte
     generationId: String(options?.generationId || ""),
     timestamp: Date.now()
   });
+  while (rounds.length > CONTINUATION_SESSION_MAX_ROUNDS) {
+    rounds.splice(rounds[0]?.type === "initial" ? 1 : 0, 1);
+  }
   rounds.forEach((item, index) => {
     item.round = index + 1;
   });
-  entry.scriptName = scriptName || entry.scriptName || "\u573A\u666F";
+  byScript[scriptId].scriptName = scriptName || byScript[scriptId].scriptName || "\u573A\u666F";
+  if (!String(byScript[scriptId].branchKey || "").trim()) {
+    byScript[scriptId].branchKey = createContinuationBranchKey();
+  }
   scheduleContinuationPersistence();
 }
 function syncEditedContentToContinuationSession(scriptId, previousContent, editedContent, scriptName = "\u573A\u666F") {
@@ -38838,9 +39074,9 @@ function syncEditedContentToContinuationSession(scriptId, previousContent, edite
   const newText = String(editedContent || "").trim();
   if (!newText) return false;
   const oldText = String(previousContent || "").trim();
-  const entry = getContinuationEntry(scriptId);
-  const branch = getActiveRuntimeBranch(entry);
-  const rounds = Array.isArray(branch?.rounds) ? branch.rounds : null;
+  const byScript = getContinuationRuntimeStore();
+  const entry = byScript[scriptId];
+  const rounds = Array.isArray(entry?.rounds) ? entry.rounds : null;
   if (!rounds || rounds.length === 0) return false;
   let targetIndex = -1;
   if (oldText) {
@@ -38866,9 +39102,17 @@ function syncEditedContentToContinuationSession(scriptId, previousContent, edite
 }
 function resetContinuationSessionRounds(scriptId, scriptName = "\u573A\u666F") {
   if (!scriptId) return;
-  const entry = ensureContinuationEntry(scriptId, scriptName);
-  entry.activeBranchKey = "";
-  entry.resetAt = Date.now();
+  const byScript = getContinuationRuntimeStore();
+  const current = byScript[scriptId];
+  if (current) archiveContinuationBranch(current);
+  byScript[scriptId] = {
+    scriptId,
+    scriptName: scriptName || "\u573A\u666F",
+    branchKey: null,
+    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
+    rounds: [],
+    resetAt: Date.now()
+  };
 }
 function buildContinuationSessionInjection(scriptId, injectRoundsCount) {
   const rounds = getContinuationSessionRounds(scriptId);
@@ -38902,25 +39146,15 @@ ${item.content}`;
   };
 }
 function buildContinuationBranchInjection(rounds) {
-  const allRounds = normalizeContinuationRounds(rounds);
-  if (allRounds.length === 0) {
+  const selectedRounds = normalizeContinuationRounds(rounds);
+  if (selectedRounds.length === 0) {
     return {
       totalRounds: 0,
       selectedRounds: [],
-      droppedRounds: 0,
       text: "\uFF08\u65E0\u5386\u53F2\u8F6E\u6B21\uFF0C\u5C06\u91CD\u65B0\u751F\u6210\u7B2C1\u8F6E\uFF09",
       estimatedChars: 0,
       estimatedTokens: 0
     };
-  }
-  const droppedRounds = Math.max(0, allRounds.length - CONTINUATION_BRANCH_INJECT_MAX_ROUNDS);
-  const selectedRounds = droppedRounds > 0 ? allRounds.slice(-CONTINUATION_BRANCH_INJECT_MAX_ROUNDS) : allRounds;
-  if (droppedRounds > 0) {
-    TitaniaLogger.warn("\u5206\u652F\u4E0A\u4E0B\u6587\u8D85\u51FA\u6CE8\u5165\u4E0A\u9650\uFF0C\u5DF2\u4FDD\u7559\u6700\u8FD1\u82E5\u5E72\u8F6E", {
-      totalRounds: allRounds.length,
-      injectedRounds: selectedRounds.length,
-      droppedRounds
-    });
   }
   const text = selectedRounds.map((item) => {
     const instructionText = item.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
@@ -38931,9 +39165,8 @@ ${instructionText}
 ${item.content}`;
   }).join("\n\n");
   return {
-    totalRounds: allRounds.length,
+    totalRounds: selectedRounds.length,
     selectedRounds,
-    droppedRounds,
     text,
     estimatedChars: text.length,
     estimatedTokens: estimateTokens(text)
@@ -39017,7 +39250,7 @@ function getContinuationSessionStats(scriptId, injectRoundsCount = 3) {
 }
 function getContinuationBranches(scriptId) {
   if (!scriptId) return [];
-  const entry = getContinuationEntry(scriptId);
+  const entry = getContinuationRuntimeStore()[scriptId];
   if (!entry) return [];
   const toPublicBranch = (branch, isActive) => ({
     branchKey: String(branch?.branchKey || "").trim(),
@@ -39037,12 +39270,17 @@ function getContinuationBranches(scriptId) {
       timestamp: item.timestamp
     }))
   });
-  const activeBranchKey = String(entry.activeBranchKey || "").trim();
-  return listRuntimeBranches(entry).map((branch) => toPublicBranch(branch, String(branch.branchKey || "") === activeBranchKey)).filter((branch) => branch.branchKey && branch.rounds.length > 0);
+  const branches = [];
+  if (String(entry.branchKey || "").trim() && normalizeContinuationRounds(entry.rounds).length > 0) {
+    branches.push(toPublicBranch(entry, true));
+  }
+  if (Array.isArray(entry.archivedBranches)) {
+    branches.push(...entry.archivedBranches.map((branch) => toPublicBranch(branch, false)));
+  }
+  return branches.filter((branch) => branch.branchKey && branch.rounds.length > 0);
 }
 function getContinuationSessions() {
-  return Object.entries(getContinuationRuntimeStore()).map(([scriptId, rawEntry]) => {
-    const entry = normalizeRuntimeEntry(rawEntry);
+  return Object.entries(getContinuationRuntimeStore()).map(([scriptId, entry]) => {
     const branches = getContinuationBranches(scriptId);
     const roundTimestamps = branches.flatMap((branch) => branch.rounds.map((round) => Number(round.timestamp) || 0));
     return {
@@ -39060,34 +39298,36 @@ function copyContinuationBranchToCurrentChat(source = {}) {
   const targetRoundKey = String(source.roundKey || "").trim();
   const targetIndex = targetRoundKey ? sourceRounds.findIndex((round) => round.roundKey === targetRoundKey) : sourceRounds.length - 1;
   if (!scriptId || targetIndex < 0) return null;
-  const entry = ensureContinuationEntry(scriptId, String(source.scriptName || "").trim());
+  const byScript = getContinuationRuntimeStore();
+  const current = byScript[scriptId];
+  if (current) archiveContinuationBranch(current);
   const copiedRounds = sourceRounds.slice(0, targetIndex + 1).map((round, index) => ({
     ...round,
     round: index + 1,
     roundKey: createContinuationRoundKey(),
-    originRoundKey: String(round.roundKey || ""),
     timestamp: Date.now() + index
   }));
-  const branchKey = createContinuationBranchKey();
-  putRuntimeBranch(entry, {
-    branchKey,
+  byScript[scriptId] = {
+    scriptId,
+    scriptName: String(source.scriptName || current?.scriptName || "\u573A\u666F"),
+    branchKey: createContinuationBranchKey(),
     parentBranchKey: "",
     branchedAtRound: copiedRounds.length,
-    createdAt: Date.now(),
-    rounds: copiedRounds
-  }, { activate: true });
-  entry.origin = {
-    chatId: String(source.chatId || ""),
-    characterId: String(source.characterId || ""),
-    characterName: String(source.characterName || "\u672A\u77E5\u89D2\u8272"),
-    scriptId,
-    branchKey: String(source.branchKey || ""),
-    roundKey: targetRoundKey
+    rounds: copiedRounds,
+    archivedBranches: Array.isArray(current?.archivedBranches) ? current.archivedBranches : [],
+    origin: {
+      chatId: String(source.chatId || ""),
+      characterId: String(source.characterId || ""),
+      characterName: String(source.characterName || "\u672A\u77E5\u89D2\u8272"),
+      scriptId,
+      branchKey: String(source.branchKey || ""),
+      roundKey: targetRoundKey
+    }
   };
   scheduleContinuationPersistence();
   return {
     scriptId,
-    branchKey,
+    branchKey: byScript[scriptId].branchKey,
     roundKey: copiedRounds[copiedRounds.length - 1].roundKey,
     content: copiedRounds[copiedRounds.length - 1].content
   };
@@ -39100,10 +39340,12 @@ function deleteContinuationHistorySelections(selections = []) {
   let deletedSessions = 0;
   let deletedBranches = 0;
   let deletedRounds = 0;
-  for (const [scriptId, rawEntry] of Object.entries(byScript)) {
-    const entry = normalizeRuntimeEntry(rawEntry);
+  for (const [scriptId, entry] of Object.entries(byScript)) {
     const sessionKey = `${scriptId}\0\0`;
-    const allBranches = listRuntimeBranches(entry);
+    const allBranches = [
+      { ...entry, isActive: true },
+      ...Array.isArray(entry.archivedBranches) ? entry.archivedBranches.map((branch) => ({ ...branch, isActive: false })) : []
+    ];
     if (selected.has(sessionKey)) {
       delete byScript[scriptId];
       deletedSessions++;
@@ -39111,7 +39353,6 @@ function deleteContinuationHistorySelections(selections = []) {
       deletedRounds += allBranches.reduce((sum, branch) => sum + (Array.isArray(branch.rounds) ? branch.rounds.length : 0), 0);
       continue;
     }
-    const activeBranchKey = String(entry.activeBranchKey || "").trim();
     const keptBranches = [];
     for (const branch of allBranches) {
       const branchKey = String(branch.branchKey || "");
@@ -39144,11 +39385,19 @@ function deleteContinuationHistorySelections(selections = []) {
       deletedSessions++;
       continue;
     }
-    entry.branches = Object.fromEntries(keptBranches.map((branch) => [branch.branchKey, branch]));
-    if (!entry.branches[activeBranchKey]) {
-      const fallback = keptBranches.slice().sort((a, b) => Math.max(0, ...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(0, ...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
-      entry.activeBranchKey = fallback.branchKey;
-    }
+    const active = keptBranches.find((branch) => branch.isActive) || keptBranches.slice().sort((a, b) => Math.max(...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
+    const activeBranch = keptBranches.find((branch) => branch.branchKey === active.branchKey);
+    entry.branchKey = activeBranch.branchKey;
+    entry.parentBranchKey = activeBranch.parentBranchKey || "";
+    entry.branchedAtRound = activeBranch.branchedAtRound || null;
+    entry.rounds = activeBranch.rounds;
+    entry.archivedBranches = keptBranches.filter((branch) => branch.branchKey !== activeBranch.branchKey).map((branch) => ({
+      branchKey: branch.branchKey,
+      parentBranchKey: branch.parentBranchKey || "",
+      branchedAtRound: branch.branchedAtRound || null,
+      archivedAt: branch.archivedAt || 0,
+      rounds: branch.rounds
+    }));
   }
   if (deletedSessions || deletedBranches || deletedRounds) scheduleContinuationPersistence();
   return { deletedSessions, deletedBranches, deletedRounds };
@@ -39179,26 +39428,16 @@ function getContinuationRoundsForFav(scriptId) {
       scriptId: null,
       scriptName: "",
       branchKey: "",
-      anchor: null,
       rounds: []
     };
   }
-  const entry = getContinuationEntry(scriptId);
-  const branchKey = String(entry?.activeBranchKey || "").trim();
-  const rounds = getContinuationSessionRounds(scriptId).filter((item) => item.status === "success" || item.status === "legacy");
+  const byScript = getContinuationRuntimeStore();
+  const entry = byScript[scriptId];
   return {
     scriptId,
     scriptName: String(entry?.scriptName || "\u573A\u666F"),
-    branchKey,
-    // 收藏的身份锚点：branchKey 是不可变的分支身份，配合轮数定位这条链的截止点。
-    // chatId 由收藏侧补齐（api.js 不直接依赖 ST 的聊天上下文）。
-    anchor: branchKey ? {
-      scriptId,
-      branchKey,
-      upToRound: rounds.length,
-      lastRoundKey: String(rounds[rounds.length - 1]?.roundKey || "")
-    } : null,
-    rounds
+    branchKey: String(entry?.branchKey || "").trim(),
+    rounds: getContinuationSessionRounds(scriptId).filter((item) => item.status === "success" || item.status === "legacy")
   };
 }
 function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
@@ -39346,6 +39585,7 @@ function updateNewContentIndicator() {
     $(".t-content-wrapper").append(indicatorHtml);
     $("#t-goto-live").on("click", function() {
       unlockDisplay();
+      GlobalState.sceneHistory.currentIndex = 0;
       if (GlobalState.streamingCache.content) {
         renderGeneratedContent(
           GlobalState.streamingCache.content,
@@ -39383,20 +39623,12 @@ function showGenerationCompleteNotification(scriptName) {
   $(".t-content-wrapper").append($notification);
   $("#t-gcn-view").on("click", function() {
     unlockDisplay();
-    const scriptId = GlobalState.lastGeneratedScriptId;
-    const rounds = scriptId ? getContinuationBranches(scriptId).find((item) => item.isActive)?.rounds : null;
-    const latest = Array.isArray(rounds) && rounds.length > 0 ? rounds[rounds.length - 1] : null;
-    if (latest) {
-      const scriptName2 = GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
-      renderGeneratedContent(latest.content, scriptName2, false);
-      setCurrentGenerationResult({
-        generationId: latest.generationId || "",
-        content: latest.content,
-        scriptId,
-        scriptName: scriptName2,
-        status: latest.status || "legacy"
-      });
-      GlobalState.lastFavId = resolveFavIdForBranch(scriptId);
+    GlobalState.sceneHistory.currentIndex = 0;
+    const latestItem = GlobalState.sceneHistory.items[0];
+    if (latestItem) {
+      renderGeneratedContent(latestItem.content, latestItem.scriptName || "\u573A\u666F", false);
+      setCurrentGenerationResult({ ...latestItem, status: latestItem.status || "legacy" });
+      GlobalState.lastFavId = latestItem.favId || null;
     }
     if (typeof window.updateSceneHistoryNav === "function") {
       window.updateSceneHistoryNav();
@@ -40410,7 +40642,7 @@ ${processedPrompt}`;
     }
     resetContinuationState();
     endStreamingCache();
-    recordGenerationResult(finalOutput, script.id, script.name, { status: "success", generationId });
+    pushSceneToHistory(finalOutput, script.id, script.name, { status: "success", generationId });
     if (generationSource !== "user_continuation") {
       setContinuationSessionBaseRound(script.id, script.name, finalOutput, {
         instruction: effectiveScriptInstruction,
@@ -40477,7 +40709,7 @@ ${processedPrompt}`;
       try {
         endStreamingCache();
         const partialStatus = isAbortError ? "aborted" : "partial";
-        recordGenerationResult(partialOutput, script.id, script.name, { status: partialStatus, generationId, error: e?.message });
+        pushSceneToHistory(partialOutput, script.id, script.name, { status: partialStatus, generationId, error: e?.message });
         partialSaved = true;
         if (generationSource === "user_continuation") {
           appendContinuationSessionRound(
@@ -41023,7 +41255,7 @@ Generate ONLY the continuation (no repetition):`;
       const rewrittenOutput = finalOutput;
       const totalRetries = GlobalState.continuation.retryCount;
       resetContinuationState();
-      recordGenerationResult(rewrittenOutput, script.id, script.name, { status: "success", generationId });
+      pushSceneToHistory(rewrittenOutput, script.id, script.name, { status: "success", generationId });
       if (continuationType === "auto") {
         setContinuationSessionBaseRound(script.id, script.name, rewrittenOutput, {
           instruction: initialInstruction,
@@ -41179,8 +41411,8 @@ async function handleUserContinuation(options = {}) {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5185\u5BB9\u5BF9\u5E94\u7684\u5267\u672C\uFF0C\u65E0\u6CD5\u7EED\u5199", "Titania");
     return false;
   }
-  let continuationEntry = getContinuationEntry(script.id);
-  let lineagePlan = null;
+  let continuationEntry = getContinuationRuntimeStore()[script.id];
+  let lineageBranchResult = null;
   if (!isRegeneration && !isHistoryContinuation && !branchFromCurrentView) {
     const anchor = findContinuationRoundAnchor(script.id, {
       generationId: display?.generationId,
@@ -41189,27 +41421,27 @@ async function handleUserContinuation(options = {}) {
     if (!anchor) {
       await startFreshContinuationBranch(script, baseContent);
     } else if (!anchor.isActiveTail) {
-      lineagePlan = resolveContinuationBranchPlan(script.id, {
-        sourceBranchKey: anchor.branchKey,
-        targetRound: anchor.round,
-        targetRoundKey: anchor.roundKey,
-        includeTarget: true
-      });
-      if (lineagePlan) {
+      lineageBranchResult = branchContinuationSessionAtRound(
+        script.id,
+        anchor.branchKey,
+        anchor.round,
+        anchor.roundKey,
+        true
+      );
+      if (lineageBranchResult) {
         TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u5BF9\u9F50\u5230\u5F53\u524D\u663E\u793A\u5185\u5BB9\u6240\u5C5E\u4E16\u7CFB", {
           scriptId: script.id,
           sourceBranchKey: anchor.branchKey,
-          fromInactiveBranch: !anchor.isActive,
+          fromArchivedBranch: !anchor.isActive,
           anchorRound: anchor.round,
-          forkNeeded: lineagePlan.forkNeeded,
-          contextRounds: lineagePlan.contextRounds.length
+          branchKey: lineageBranchResult.branchKey,
+          contextRounds: lineageBranchResult.contextRounds.length
         });
       }
     }
-    continuationEntry = getContinuationEntry(script.id);
+    continuationEntry = getContinuationRuntimeStore()[script.id];
   }
-  const activeRuntimeBranch = getActiveRuntimeBranch(continuationEntry);
-  const initialRound = Array.isArray(activeRuntimeBranch?.rounds) ? activeRuntimeBranch.rounds.find((item) => item.type === "initial") : null;
+  const initialRound = Array.isArray(continuationEntry?.rounds) ? continuationEntry.rounds.find((item) => item.type === "initial") : null;
   if (initialRound && (!initialRound.instruction || initialRound.instruction === "\uFF08\u9996\u6B21\u751F\u6210\uFF09")) {
     const continuationContext = await getContextData();
     try {
@@ -41229,33 +41461,23 @@ async function handleUserContinuation(options = {}) {
       baseContentLength: baseContent.length
     });
   }
-  let branchPlan = lineagePlan;
+  let branchResult = lineageBranchResult;
   if (isRegeneration) {
-    branchPlan = resolveContinuationBranchPlan(script.id, {
-      sourceBranchKey,
-      targetRound: regenerateRound,
-      targetRoundKey: regenerateRoundKey,
-      includeTarget: false
-    });
-    if (!branchPlan) {
+    branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, regenerateRound, regenerateRoundKey);
+    if (!branchResult) {
       if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
       return false;
     }
   } else if (isHistoryContinuation) {
-    branchPlan = resolveContinuationBranchPlan(script.id, {
-      sourceBranchKey,
-      targetRound: continueAfterRound,
-      targetRoundKey: continueAfterRoundKey,
-      includeTarget: true
-    });
-    if (!branchPlan) {
+    branchResult = branchContinuationSessionAtRound(script.id, sourceBranchKey, continueAfterRound, continueAfterRoundKey, true);
+    if (!branchResult) {
       if (window.toastr) toastr.warning("\u6240\u9009\u7EED\u5199\u8F6E\u6B21\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9", "Titania");
       return false;
     }
   }
-  const userInstruction = (instruction || "").trim() || (isRegeneration ? branchPlan?.targetInstruction : "") || DEFAULT_CONTINUATION_INSTRUCTION;
+  const userInstruction = (instruction || "").trim() || (isRegeneration ? branchResult?.targetInstruction : "") || DEFAULT_CONTINUATION_INSTRUCTION;
   const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
-  const sessionInjection = branchPlan ? buildContinuationBranchInjection(branchPlan.contextRounds) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
+  const sessionInjection = branchResult ? buildContinuationBranchInjection(branchResult.contextRounds) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
   const composedOverride = composeContinuationPromptOverride({
     injectionText: sessionInjection.text,
     userInstruction,
@@ -41271,8 +41493,8 @@ async function handleUserContinuation(options = {}) {
     injectedRoundItems: sessionInjection.selectedRounds.length,
     injectedChars: sessionInjection.estimatedChars,
     injectedTokensEstimated: sessionInjection.estimatedTokens,
-    regenerateRound: branchPlan?.targetRound || null,
-    branchKey: continuationEntry?.activeBranchKey || ""
+    regenerateRound: branchResult?.targetRound || null,
+    branchKey: branchResult?.branchKey || continuationEntry?.branchKey || ""
   });
   if (autoLocate === true) {
     unlockDisplay();
@@ -41289,30 +41511,22 @@ async function handleUserContinuation(options = {}) {
     injectedRoundItems: sessionInjection.selectedRounds.length,
     injectedChars: sessionInjection.estimatedChars,
     injectedTokensEstimated: sessionInjection.estimatedTokens,
-    regenerateRound: branchPlan?.targetRound || null,
-    branchKey: ""
+    regenerateRound: branchResult?.targetRound || null,
+    branchKey: branchResult?.branchKey || ""
   });
   if (success) {
-    if (branchPlan?.forkNeeded) {
-      const forkedKey = materializeContinuationBranch(script.id, branchPlan);
-      if (forkedKey) {
-        TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u521B\u5EFA\u65B0\u5206\u652F", {
-          scriptId: script.id,
-          sourceBranchKey: branchPlan.sourceBranchKey,
-          branchedAtRound: branchPlan.branchedAtRound,
-          branchKey: forkedKey
-        });
-      }
-    }
     appendContinuationSessionRound(script.id, script.name, userInstruction, GlobalState.lastGeneratedContent, {
       status: "success",
       generationId: GlobalState.currentGenerationResult?.generationId
     });
     if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
+  } else if (branchResult) {
+    restoreContinuationBranchAfterFailedGeneration(script.id, branchResult);
+    scheduleContinuationPersistence();
   }
   return success;
 }
-var CONTINUATION_INJECT_MAX, CONTINUATION_INJECT_MIN, CONTINUATION_BRANCH_INJECT_MAX_ROUNDS, DEFAULT_CONTINUATION_INSTRUCTION, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
+var CONTINUATION_SESSION_MAX_ROUNDS, CONTINUATION_INJECT_MAX, CONTINUATION_INJECT_MIN, CONTINUATION_ARCHIVED_BRANCH_MAX, DEFAULT_CONTINUATION_INSTRUCTION, interactiveDetectionIdleHandle, interactiveDetectionTimer, interactiveDetectionToken, lastStreamRenderedContent, streamRenderTimer, pendingStreamContent, lastRenderTime, STREAM_RENDER_INTERVAL;
 var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
@@ -41323,15 +41537,15 @@ var init_api = __esm({
     init_chatHistoryBlacklist();
     init_floatingBtn();
     init_mainWindow();
-    init_favsWindow();
     init_viewState();
     init_connection();
     init_scriptData();
     init_promptManager();
     init_continuationStore();
+    CONTINUATION_SESSION_MAX_ROUNDS = 30;
     CONTINUATION_INJECT_MAX = 20;
     CONTINUATION_INJECT_MIN = 3;
-    CONTINUATION_BRANCH_INJECT_MAX_ROUNDS = 30;
+    CONTINUATION_ARCHIVED_BRANCH_MAX = 20;
     DEFAULT_CONTINUATION_INSTRUCTION = "\u8BF7\u57FA\u4E8E\u4E0A\u8F6E\u5185\u5BB9\u81EA\u7136\u7EED\u5199\u4E0B\u4E00\u6BB5\u5267\u60C5\uFF0C\u4FDD\u6301\u98CE\u683C\u4E00\u81F4\u5E76\u63A8\u8FDB\u60C5\u8282\u3002";
     interactiveDetectionIdleHandle = null;
     interactiveDetectionTimer = null;
@@ -41353,7 +41567,7 @@ init_scriptData();
 init_api();
 init_continuationStore();
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource5, event_types as event_types5 } from "../../../../script.js";
 
 // src/core/extensionUpdate.js
 init_defaults();
@@ -41577,6 +41791,378 @@ init_floatingBtn();
 init_settingsWindow();
 init_outlineEntryButton();
 init_rewriteEntryButton();
+
+// src/ui/chatInjectButton.js
+init_state();
+import { eventSource as eventSource4, event_types as event_types4 } from "../../../../script.js";
+
+// src/core/chatInjector.js
+init_chatTagWhitelist();
+init_storage();
+init_logger();
+import {
+  chat,
+  chat_metadata as chat_metadata2,
+  addOneMessage,
+  saveChatConditional as saveChatConditional3,
+  reloadCurrentChat as reloadCurrentChat2,
+  eventSource as eventSource3,
+  event_types as event_types3,
+  system_avatar
+} from "../../../../script.js";
+import { system_message_types } from "../../../system-messages.js";
+import { getMessageTimeStamp } from "../../../RossAscends-mods.js";
+var INJECT_MARKER_KEY = "titania_theater";
+function getChatInjectConfig() {
+  const data = getExtData();
+  const cfg = data?.chat_inject && typeof data.chat_inject === "object" ? data.chat_inject : {};
+  return {
+    enabled: cfg.enabled !== false,
+    visibleToAI: cfg.visible_to_ai !== false,
+    speakerName: String(cfg.speaker_name || "").trim() || "\u56DE\u58F0\u5C0F\u5267\u573A"
+  };
+}
+function isInjectedTheaterMessage(message) {
+  return Boolean(message?.extra?.[INJECT_MARKER_KEY]);
+}
+function normalizeTheaterHtmlForChat(html) {
+  let out = String(html || "");
+  if (!out.trim()) return "";
+  out = out.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  out = out.replace(/<script\b[^>]*\/?>/gi, "");
+  out = out.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "");
+  out = out.replace(/<\/?(?:html|head|body)\b[^>]*>/gi, "");
+  out = out.replace(/<(?:link|meta|base|title)\b[^>]*>/gi, "");
+  out = out.replace(/<\/title\s*>/gi, "");
+  out = out.replace(/<style\b[^>]*>/gi, "<style>");
+  const openCount = (out.match(/<style>/gi) || []).length;
+  const closeCount = (out.match(/<\/style>/gi) || []).length;
+  if (openCount > closeCount) {
+    out += "</style>".repeat(openCount - closeCount);
+  }
+  return out.trim();
+}
+var HTML_ENTITIES = {
+  "&nbsp;": " ",
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+  "&hellip;": "\u2026",
+  "&mdash;": "\u2014",
+  "&ndash;": "\u2013",
+  "&ldquo;": "\u201C",
+  "&rdquo;": "\u201D",
+  "&lsquo;": "\u2018",
+  "&rsquo;": "\u2019"
+};
+function decodeHtmlEntities(text) {
+  let out = String(text || "");
+  for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
+    out = out.replace(new RegExp(entity, "gi"), char);
+  }
+  out = out.replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)));
+  out = out.replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)));
+  return out;
+}
+function buildPromptTextFromTheater(html) {
+  let text = String(html || "");
+  if (!text.trim()) return "";
+  text = text.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "\n");
+  text = text.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "\n");
+  text = text.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "\n");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/(?:p|div|section|article|header|footer|blockquote|li|tr|h[1-6]|figcaption|pre)\s*>/gi, "\n");
+  text = text.replace(/<hr\s*\/?>/gi, "\n");
+  text = text.replace(/<\/(?:td|th)\s*>/gi, " ");
+  text = extractTextByWhitelist(text, []);
+  text = decodeHtmlEntities(text);
+  return text.split("\n").map((line) => line.replace(/[ \t ]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+async function injectTheaterToChat(options = {}) {
+  const cfg = getChatInjectConfig();
+  const rawContent = String(options.content || "");
+  const displayHtml = normalizeTheaterHtmlForChat(rawContent);
+  const promptText = buildPromptTextFromTheater(rawContent);
+  if (!displayHtml && !promptText) {
+    if (window.toastr) toastr.warning("\u5C0F\u5267\u573A\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6CE8\u5165", "Titania Echo");
+    return null;
+  }
+  if (!Array.isArray(chat)) {
+    TitaniaLogger.error("\u6CE8\u5165\u5931\u8D25\uFF1AST \u804A\u5929\u6570\u7EC4\u4E0D\u53EF\u7528");
+    if (window.toastr) toastr.error("\u5F53\u524D\u6CA1\u6709\u6253\u5F00\u7684\u804A\u5929\uFF0C\u65E0\u6CD5\u6CE8\u5165", "Titania Echo");
+    return null;
+  }
+  const visibleToAI = options.visibleToAI === void 0 ? cfg.visibleToAI : options.visibleToAI === true;
+  const scriptName = String(options.scriptName || "").trim() || "\u573A\u666F";
+  const message = {
+    name: cfg.speakerName,
+    is_user: false,
+    // is_system 为 true 时不进提示词。ST 气泡上的眼睛图标（chats.js:2115）之后可随时翻转。
+    is_system: !visibleToAI,
+    send_date: getMessageTimeStamp(),
+    // mes 是发给模型的内容，display_text 才是界面显示的内容（script.js:2377）
+    mes: promptText,
+    force_avatar: system_avatar,
+    extra: {
+      // narrator 类型：对 Chat Completion 映射成 role:'system'（openai.js:528），
+      // 文本补全时不加名字前缀（script.js:5444）
+      type: system_message_types.NARRATOR,
+      display_text: displayHtml,
+      api: "manual",
+      model: "titania-theater",
+      [INJECT_MARKER_KEY]: {
+        generationId: String(options.generationId || ""),
+        scriptId: String(options.scriptId || ""),
+        scriptName,
+        injectedAt: Date.now()
+      }
+    }
+  };
+  const baseIndex = Number(options.insertAfterIndex);
+  const insertAt = Number.isFinite(baseIndex) ? baseIndex + 1 : chat.length;
+  const clamped = Math.max(0, Math.min(insertAt, chat.length));
+  const appended = clamped >= chat.length;
+  chat_metadata2["tainted"] = true;
+  try {
+    if (appended) {
+      chat.push(message);
+      const messageId = chat.length - 1;
+      await eventSource3.emit(event_types3.MESSAGE_SENT, messageId);
+      addOneMessage(message);
+      await eventSource3.emit(event_types3.USER_MESSAGE_RENDERED, messageId);
+      await saveChatConditional3();
+      TitaniaLogger.info("\u5C0F\u5267\u573A\u5DF2\u8FFD\u52A0\u5230\u804A\u5929\u672B\u5C3E", { messageId, scriptName, visibleToAI });
+      return { messageId, appended: true };
+    }
+    chat.splice(clamped, 0, message);
+    await saveChatConditional3();
+    await eventSource3.emit(event_types3.MESSAGE_SENT, clamped);
+    await reloadCurrentChat2();
+    await eventSource3.emit(event_types3.USER_MESSAGE_RENDERED, clamped);
+    scrollToMessage(clamped);
+    TitaniaLogger.info("\u5C0F\u5267\u573A\u5DF2\u63D2\u5165\u804A\u5929", { messageId: clamped, scriptName, visibleToAI });
+    return { messageId: clamped, appended: false };
+  } catch (e) {
+    TitaniaLogger.error("\u5C0F\u5267\u573A\u6CE8\u5165\u804A\u5929\u5931\u8D25", e, { insertAt: clamped, scriptName });
+    if (window.toastr) toastr.error("\u6CE8\u5165\u5931\u8D25\uFF1A" + (e?.message || String(e)), "Titania Echo");
+    return null;
+  }
+}
+function scrollToMessage(messageId) {
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`#chat .mes[mesid="${messageId}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
+
+// src/ui/chatInjectButton.js
+init_logger();
+var BTN_CLASS = "titania-inject-btn";
+var OVERLAY_ID2 = "t-chat-inject-overlay";
+var listenersBound = false;
+var refreshQueued = false;
+var lastVisibleChoice = null;
+function escapeHtmlText3(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function isEnabled3() {
+  return getChatInjectConfig().enabled;
+}
+function removeAllButtons() {
+  document.querySelectorAll(`#chat .${BTN_CLASS}`).forEach((node) => node.remove());
+}
+function refreshButtons() {
+  if (!isEnabled3()) {
+    removeAllButtons();
+    return;
+  }
+  const messages = document.querySelectorAll("#chat .mes");
+  for (const message of messages) {
+    const buttonArea = message.querySelector(".extraMesButtons");
+    if (!buttonArea) continue;
+    if (buttonArea.querySelector(`.${BTN_CLASS}`)) continue;
+    const btn = document.createElement("div");
+    btn.className = `mes_button ${BTN_CLASS} fa-solid fa-masks-theater`;
+    btn.title = "\u6CE8\u5165\u5C0F\u5267\u573A\u5230\u6B64\u697C\u4E0B\u65B9";
+    btn.setAttribute("tabindex", "0");
+    buttonArea.appendChild(btn);
+  }
+}
+function scheduleRefreshButtons(delay = 0) {
+  if (refreshQueued) return;
+  refreshQueued = true;
+  setTimeout(() => {
+    refreshQueued = false;
+    try {
+      refreshButtons();
+    } catch (e) {
+      TitaniaLogger.warn("\u6CE8\u5165\u6309\u94AE\u6302\u8F7D\u5931\u8D25", e?.message || String(e));
+    }
+  }, delay);
+}
+function refreshChatInjectButton() {
+  scheduleRefreshButtons(0);
+}
+function collectInjectableItems() {
+  const items = Array.isArray(GlobalState.sceneHistory?.items) ? GlobalState.sceneHistory.items : [];
+  return items.map((item, index) => ({ item, index })).filter(({ item }) => {
+    const status = String(item?.status || "legacy");
+    if (status !== "success" && status !== "legacy") return false;
+    return String(item?.content || "").trim().length > 0;
+  }).map(({ item, index }) => ({
+    index,
+    content: String(item.content || ""),
+    scriptId: String(item.scriptId || ""),
+    scriptName: String(item.scriptName || "\u573A\u666F"),
+    generationId: String(item.generationId || ""),
+    timestamp: Number(item.timestamp) || 0,
+    preview: buildPreview(item.content)
+  }));
+}
+function buildPreview(content) {
+  return String(content || "").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 90);
+}
+function formatTimestamp(ts) {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleString();
+  } catch {
+    return "";
+  }
+}
+function getOverlay2() {
+  return $(`#${OVERLAY_ID2}`);
+}
+function closePicker() {
+  getOverlay2().remove();
+  $(document).off("keydown.tchatinject");
+}
+function renderItemsHtml(items) {
+  if (items.length === 0) {
+    return `
+            <div class="t-chat-inject-empty">
+                <i class="fa-solid fa-masks-theater"></i>
+                <div class="t-chat-inject-empty-title">\u672C\u6B21\u4F1A\u8BDD\u8FD8\u6CA1\u6709\u751F\u6210\u5C0F\u5267\u573A</div>
+                <div class="t-chat-inject-empty-hint">
+                    \u5267\u573A\u5386\u53F2\u53EA\u4FDD\u7559\u5728\u5185\u5B58\u4E2D\uFF0C\u5237\u65B0\u9875\u9762\u5C31\u4F1A\u6E05\u7A7A\u3002\u5148\u7528\u60AC\u6D6E\u7403\u751F\u6210\u4E00\u6BB5\u5C0F\u5267\u573A\uFF0C\u518D\u56DE\u6765\u6CE8\u5165\u3002
+                </div>
+            </div>`;
+  }
+  return items.map((item) => `
+        <div class="t-chat-inject-item" data-index="${item.index}">
+            <div class="t-chat-inject-item-head">
+                <span class="t-chat-inject-item-name">${escapeHtmlText3(item.scriptName)}</span>
+                <span class="t-chat-inject-item-time">${escapeHtmlText3(formatTimestamp(item.timestamp))}</span>
+            </div>
+            <div class="t-chat-inject-item-preview">${escapeHtmlText3(item.preview) || "\uFF08\u65E0\u6587\u672C\u5185\u5BB9\uFF09"}</div>
+        </div>
+    `).join("");
+}
+function openInjectPickerWindow(mesid) {
+  closePicker();
+  const cfg = getChatInjectConfig();
+  const items = collectInjectableItems();
+  const visibleDefault = lastVisibleChoice === null ? cfg.visibleToAI : lastVisibleChoice;
+  const floorLabel = Number.isFinite(mesid) ? `\u7B2C ${mesid} \u697C` : "\u5F53\u524D\u697C\u5C42";
+  const html = `
+    <div id="${OVERLAY_ID2}" class="t-overlay" aria-modal="true" role="dialog">
+        <div class="t-window t-chat-inject-window">
+            <div class="t-window-header">
+                <div class="t-window-title">
+                    <i class="fa-solid fa-masks-theater"></i> \u6CE8\u5165\u5C0F\u5267\u573A
+                </div>
+                <div class="t-window-controls">
+                    <div class="t-window-close" id="t-chat-inject-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+
+            <div class="t-chat-inject-body">
+                <div class="t-chat-inject-target">
+                    \u5C06\u63D2\u5165\u5230 <b>${escapeHtmlText3(floorLabel)}</b> \u7684\u4E0B\u65B9
+                </div>
+
+                <label class="t-chat-inject-visible">
+                    <input type="checkbox" id="t-chat-inject-visible" ${visibleDefault ? "checked" : ""} />
+                    <span>
+                        <span class="t-chat-inject-visible-main">\u8BA9 AI \u770B\u5230\u8FD9\u6BB5\u5185\u5BB9</span>
+                        <small>\u52FE\u9009\u540E\u5C0F\u5267\u573A\u6210\u4E3A\u5267\u60C5\u6B63\u53F2\uFF0C\u4F1A\u8FDB\u5165\u540E\u7EED\u63D0\u793A\u8BCD\u3002\u6CE8\u5165\u540E\u4ECD\u53EF\u7528\u6C14\u6CE1\u4E0A\u7684\u773C\u775B\u56FE\u6807\u968F\u65F6\u5207\u6362\u3002</small>
+                    </span>
+                </label>
+
+                <div class="t-chat-inject-list">
+                    ${renderItemsHtml(items)}
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  const $overlay = getOverlay2();
+  $overlay.on("click", "#t-chat-inject-close", closePicker);
+  $overlay.on("click", (event) => {
+    if (event.target === $overlay[0]) closePicker();
+  });
+  $(document).on("keydown.tchatinject", (event) => {
+    if (event.key === "Escape") closePicker();
+  });
+  $overlay.on("click", "#t-chat-inject-visible", (event) => {
+    lastVisibleChoice = $(event.currentTarget).prop("checked") === true;
+  });
+  $overlay.on("click", ".t-chat-inject-item", async function() {
+    const index = Number($(this).data("index"));
+    const target = items.find((item) => item.index === index);
+    if (!target) return;
+    const visibleToAI = $overlay.find("#t-chat-inject-visible").prop("checked") === true;
+    lastVisibleChoice = visibleToAI;
+    closePicker();
+    const result = await injectTheaterToChat({
+      content: target.content,
+      scriptId: target.scriptId,
+      scriptName: target.scriptName,
+      generationId: target.generationId,
+      insertAfterIndex: mesid,
+      visibleToAI
+    });
+    if (result && window.toastr) {
+      const visibilityNote = visibleToAI ? "AI \u53EF\u89C1" : "AI \u4E0D\u53EF\u89C1";
+      toastr.success(`\u5DF2\u6CE8\u5165\u300C${target.scriptName}\u300D\uFF08${visibilityNote}\uFF09`, "Titania Echo");
+    }
+  });
+}
+function initChatInjectButton() {
+  if (listenersBound) {
+    scheduleRefreshButtons(0);
+    return;
+  }
+  listenersBound = true;
+  $(document).on("click", `.${BTN_CLASS}`, function(event) {
+    event.stopPropagation();
+    const mesid = Number($(this).closest(".mes").attr("mesid"));
+    if (!Number.isFinite(mesid)) {
+      if (window.toastr) toastr.warning("\u65E0\u6CD5\u8BC6\u522B\u5F53\u524D\u697C\u5C42", "Titania Echo");
+      return;
+    }
+    openInjectPickerWindow(mesid);
+  });
+  const rerenderEvents = [
+    event_types4.CHAT_CHANGED,
+    event_types4.CHARACTER_MESSAGE_RENDERED,
+    event_types4.USER_MESSAGE_RENDERED,
+    event_types4.MESSAGE_SWIPED,
+    event_types4.MESSAGE_DELETED,
+    event_types4.MORE_MESSAGES_LOADED
+  ];
+  for (const eventName of rerenderEvents) {
+    if (!eventName) continue;
+    eventSource4.on(eventName, () => scheduleRefreshButtons(0));
+  }
+  scheduleRefreshButtons(300);
+  TitaniaLogger.info("\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u521D\u59CB\u5316");
+}
+
+// src/entry.js
 init_outlineEntryButton();
 init_vectorStore();
 init_summarizer();
@@ -41587,12 +42173,13 @@ async function onGenerationEnded() {
   if (GlobalState.isGenerating || $("#t-overlay").length > 0) return;
   if (!SillyTavern || !SillyTavern.getContext) return;
   const context = SillyTavern.getContext();
-  const chat = context.chat;
-  if (!chat || chat.length === 0) return;
-  const lastMsg = chat[chat.length - 1];
+  const chat2 = context.chat;
+  if (!chat2 || chat2.length === 0) return;
+  const lastMsg = chat2[chat2.length - 1];
   if (lastMsg.is_user) return;
   if (lastMsg.is_system) return;
   if (lastMsg.is_hidden) return;
+  if (isInjectedTheaterMessage(lastMsg)) return;
   const chance = cfg.auto_chance || 50;
   if (Math.random() * 100 > chance) return;
   const getCat = (s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
@@ -41654,8 +42241,8 @@ function initCoreFeatures() {
     applyFontSettings(extData.font_settings);
   }
   applyUIFontScale(extData.appearance?.ui_font_scale);
-  eventSource3.on(event_types3.GENERATION_ENDED, onGenerationEnded);
-  eventSource3.on(event_types3.CHAT_CHANGED, () => {
+  eventSource5.on(event_types5.GENERATION_ENDED, onGenerationEnded);
+  eventSource5.on(event_types5.CHAT_CHANGED, () => {
     void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
   });
   void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u521D\u59CB\u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
@@ -41664,6 +42251,7 @@ function initCoreFeatures() {
   initAutoVectorizeListener();
   initOutlineEntryButton();
   initRewriteEntryButton();
+  initChatInjectButton();
 }
 function loadQueueConfig() {
   try {
@@ -41676,6 +42264,9 @@ function loadQueueConfig() {
       GlobalState.queueState.manualItems = queueCfg.manualItems || [];
       GlobalState.queueState.interval = queueCfg.interval || 2;
       GlobalState.queueState.enabled = queueCfg.enabled === true;
+      if (queueCfg.historyMax) {
+        GlobalState.sceneHistory.maxItems = queueCfg.historyMax;
+      }
       console.log("Titania: \u961F\u5217\u914D\u7F6E\u5DF2\u52A0\u8F7D", GlobalState.queueState);
     }
   } catch (e) {
@@ -41683,8 +42274,8 @@ function loadQueueConfig() {
   }
 }
 function initAutoVectorizeListener() {
-  eventSource3.on(event_types3.MESSAGE_RECEIVED, onMessageForAutoVectorize);
-  eventSource3.on(event_types3.MESSAGE_SENT, onMessageForAutoVectorize);
+  eventSource5.on(event_types5.MESSAGE_RECEIVED, onMessageForAutoVectorize);
+  eventSource5.on(event_types5.MESSAGE_SENT, onMessageForAutoVectorize);
   console.log("Titania: \u81EA\u52A8\u5411\u91CF\u5316\u76D1\u542C\u5668\u5DF2\u521D\u59CB\u5316");
 }
 async function onMessageForAutoVectorize() {
@@ -41901,6 +42492,12 @@ async function loadExtensionSettings() {
     extData.outline_entry.show_outline_actions = true;
   }
   if (!extData.rewrite_entry || typeof extData.rewrite_entry !== "object") extData.rewrite_entry = { enabled: false };
+  if (!extData.chat_inject || typeof extData.chat_inject !== "object") {
+    extData.chat_inject = { enabled: true, visible_to_ai: true, speaker_name: "\u56DE\u58F0\u5C0F\u5267\u573A" };
+  }
+  if (typeof extData.chat_inject.enabled !== "boolean") extData.chat_inject.enabled = true;
+  if (typeof extData.chat_inject.visible_to_ai !== "boolean") extData.chat_inject.visible_to_ai = true;
+  if (!String(extData.chat_inject.speaker_name || "").trim()) extData.chat_inject.speaker_name = "\u56DE\u58F0\u5C0F\u5267\u573A";
   if (!extData.quick_toolbar || typeof extData.quick_toolbar !== "object") extData.quick_toolbar = {};
   if (!extData.quick_toolbar.enabled_items || typeof extData.quick_toolbar.enabled_items !== "object") {
     extData.quick_toolbar.enabled_items = {};
@@ -41915,6 +42512,7 @@ async function loadExtensionSettings() {
   $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
+  $("#cfg-chat-inject-enabled").prop("checked", extData.chat_inject.enabled === true);
   $("#cfg-toolbar-lore-enabled").prop("checked", extData.quick_toolbar.enabled_items.lore === true);
   $("#cfg-toolbar-recall-enabled").prop("checked", extData.quick_toolbar.enabled_items.recall === true);
   $("#cfg-float-edge-tuck").on("input", function() {
@@ -41967,6 +42565,17 @@ async function loadExtensionSettings() {
     saveExtData();
     refreshRewriteEntryButton();
     if (window.toastr) toastr.success(enabled ? "\u6587\u672C\u6539\u5199\u5165\u53E3\u5DF2\u542F\u7528" : "\u6587\u672C\u6539\u5199\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-chat-inject-enabled").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.chat_inject || typeof data.chat_inject !== "object") {
+      data.chat_inject = { enabled: true, visible_to_ai: true, speaker_name: "\u56DE\u58F0\u5C0F\u5267\u573A" };
+    }
+    data.chat_inject.enabled = enabled;
+    saveExtData();
+    refreshChatInjectButton();
+    if (window.toastr) toastr.success(enabled ? "\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u542F\u7528" : "\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
   });
   $("#cfg-toolbar-lore-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
