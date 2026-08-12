@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.2.2";
+    CURRENT_VERSION = "5.2.3";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -102,11 +102,15 @@ var init_defaults = __esm({
         instruction: ""
         // 自由编辑的导演指令
       },
-      // 世界书条目筛选配置
+      // 世界书条目筛选配置（按角色卡隔离）
       worldinfo: {
+        // { "card:<avatar 去扩展名>": { "世界书名": [uid1, uid2, ...] } }
+        // 键用 avatar 而非角色名：同名角色卡必须各自独立，否则会互相激活对方的世界书
+        card_selections: {},
+        // { "card:<avatar>": ["世界书名", ...] } 需要额外激活的书（由选中条目推导）
+        card_auto_active_books: {},
+        // 旧的名字键配置，保留供读取回退（仅当该名字只有一张卡时才继承）
         char_selections: {}
-        // { "角色名": { "世界书名": [uid1, uid2, ...] } }
-        // 用户选择的条目会被保存在这里，首次使用时默认全选
       },
       // 自动续写配置 (应对 API 超时截断)
       auto_continue: {
@@ -191,6 +195,12 @@ var init_defaults = __esm({
         // 注入时默认让 AI 看到；注入后可用气泡上的眼睛图标切换
         speaker_name: "\u56DE\u58F0\u5C0F\u5267\u573A"
         // 仅界面显示用，narrator 类型不会把名字带进提示词
+      },
+      // 导入预设的宏求值行为
+      preset_macros: {
+        // 预设里的 {{setvar::}} 等写入宏默认只在本次提示词构建内有效，构建完成后还原，
+        // 不写进用户的聊天存档。开启后写入照常落盘（少数依赖变量跨次留存的预设才需要）。
+        persist_variables: false
       },
       // 文本改写入口（显示在故事大纲菜单中）
       rewrite_entry: {
@@ -1560,34 +1570,90 @@ function resolveMacro(marker, runtimeContext, originalText) {
   }
   return originalText;
 }
+function getPresetMacroConfig() {
+  try {
+    const ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+    const data = ctx?.extensionSettings?.[extensionName];
+    const cfg = data?.preset_macros;
+    return { persistVariables: cfg?.persist_variables === true };
+  } catch {
+    return { persistVariables: false };
+  }
+}
+function safeSubstituteParams(content) {
+  const source = String(content || "");
+  if (!source.includes("{{")) return source;
+  try {
+    const ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+    const substitute = ctx?.substituteParamsExtended || ctx?.substituteParams;
+    if (typeof substitute !== "function") return source;
+    return String(substitute.call(ctx, source) ?? source);
+  } catch (e) {
+    console.warn("Titania: ST \u5B8F\u6C42\u503C\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u6587", e);
+    return source;
+  }
+}
+function beginVariableSandbox() {
+  if (getPresetMacroConfig().persistVariables) return () => {
+  };
+  let ctx = null;
+  try {
+    ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+  } catch {
+    return () => {
+    };
+  }
+  if (!ctx) return () => {
+  };
+  const chatMetadata = ctx.chatMetadata;
+  const extensionSettings = ctx.extensionSettings;
+  const localSnapshot = chatMetadata && typeof chatMetadata.variables === "object" && chatMetadata.variables ? { ...chatMetadata.variables } : null;
+  const globalStore = extensionSettings?.variables;
+  const globalSnapshot = globalStore && typeof globalStore.global === "object" && globalStore.global ? { ...globalStore.global } : null;
+  return () => {
+    try {
+      if (chatMetadata && localSnapshot) chatMetadata.variables = localSnapshot;
+      if (globalStore && globalSnapshot) globalStore.global = globalSnapshot;
+    } catch (e) {
+      console.warn("Titania: \u53D8\u91CF\u6C99\u7BB1\u8FD8\u539F\u5931\u8D25", e);
+    }
+  };
+}
 function resolveEntryContent(entry, contentByEntry, runtimeContext) {
   let content = Object.prototype.hasOwnProperty.call(contentByEntry, entry.id) ? String(contentByEntry[entry.id] || "") : String(entry.content || "");
+  content = safeSubstituteParams(content);
   content = content.replace(/\{\{\s*([\w-]+)\s*\}\}/g, (match, marker) => resolveMacro(marker, runtimeContext, match));
   if (entry.marker) content = resolveMacro(entry.marker, runtimeContext, `{{${entry.marker}}}`);
   return content;
 }
 function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext = {}) {
   if (!scheme || !Array.isArray(scheme.entries)) return [];
-  return scheme.entries.filter((entry) => entry?.enabled !== false).map((entry) => {
-    const content = resolveEntryContent(entry, contentByEntry, runtimeContext);
-    return {
-      entryId: entry.id || "",
-      sourceIdentifier: entry.source_identifier || null,
-      name: entry.name || entry.source_identifier || "\u672A\u547D\u540D\u6761\u76EE",
-      role: MESSAGE_ROLES.includes(entry.role) ? entry.role : "user",
-      type: entry.type || "text",
-      marker: entry.marker || null,
-      required: entry.required === true,
-      content,
-      chars: content.length,
-      tokens: estimateTokens(content)
-    };
-  }).filter((message) => message.content.length > 0).map((message, index) => ({ ...message, index }));
+  const restoreVariables = beginVariableSandbox();
+  try {
+    return scheme.entries.filter((entry) => entry?.enabled !== false).map((entry) => {
+      const content = resolveEntryContent(entry, contentByEntry, runtimeContext);
+      return {
+        entryId: entry.id || "",
+        sourceIdentifier: entry.source_identifier || null,
+        name: entry.name || entry.source_identifier || "\u672A\u547D\u540D\u6761\u76EE",
+        role: MESSAGE_ROLES.includes(entry.role) ? entry.role : "user",
+        type: entry.type || "text",
+        marker: entry.marker || null,
+        required: entry.required === true,
+        content,
+        chars: content.length,
+        tokens: estimateTokens(content)
+      };
+    }).filter((message) => message.content.trim().length > 0).map((message, index) => ({ ...message, index }));
+  } finally {
+    restoreVariables();
+  }
 }
 var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
 var init_promptManager = __esm({
   "src/core/promptManager.js"() {
     init_helpers();
+    init_defaults();
     DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
     DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
 
@@ -17022,8 +17088,7 @@ async function getContextData() {
   const activeBooks = collectSessionActiveBooks(ctx, wiVars, data.charName, true);
   const contentParts = [];
   const extData = getExtData();
-  const wiConfig = extData.worldinfo || { char_selections: {} };
-  const charSelections = wiConfig.char_selections[data.charName] || null;
+  const charSelections = readWorldInfoSelections(extData, ctx, data.charName);
   for (const bookName of activeBooks) {
     const bookData = await safeLoadWorldInfo(ctx, bookName);
     if (!bookData || !bookData.entries) continue;
@@ -17079,19 +17144,98 @@ function getCurrentCharNameFromContext(ctx) {
     return "Char";
   }
 }
-function getLocalAutoActiveBooks(charName) {
-  const extData = getExtData();
-  const wiConfig = extData.worldinfo || {};
-  const explicit = wiConfig.char_auto_active_books?.[charName];
-  if (Array.isArray(explicit)) return explicit;
-  const legacySelections = wiConfig.char_selections?.[charName];
-  if (legacySelections && typeof legacySelections === "object") {
-    return Object.keys(legacySelections).filter((bookName) => {
-      const selected = legacySelections[bookName];
-      return Array.isArray(selected) && selected.length > 0;
-    });
+function getCharacterCardKey(stCtx = null) {
+  let ctx = stCtx;
+  try {
+    if (!ctx && typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+  } catch {
+    ctx = null;
   }
+  if (!ctx) return `${NAME_KEY_PREFIX}Char`;
+  const charId = ctx.characterId;
+  if (charId !== void 0 && charId !== null) {
+    const avatar = String(ctx.characters?.[charId]?.avatar || "").trim();
+    if (avatar) return CARD_KEY_PREFIX + avatar.replace(/\.[^/.]+$/, "");
+  }
+  return NAME_KEY_PREFIX + getCurrentCharNameFromContext(ctx);
+}
+function isNameSharedByMultipleCards(ctx, charName) {
+  const characters = Array.isArray(ctx?.characters) ? ctx.characters : [];
+  const target = String(charName || "").trim();
+  if (!target) return false;
+  let seen = 0;
+  for (const item of characters) {
+    if (String(item?.name || "").trim() === target && ++seen > 1) return true;
+  }
+  return false;
+}
+function getWorldInfoConfig(extData) {
+  const wiConfig = extData.worldinfo && typeof extData.worldinfo === "object" ? extData.worldinfo : {};
+  return {
+    cardSelections: wiConfig.card_selections && typeof wiConfig.card_selections === "object" ? wiConfig.card_selections : null,
+    cardAutoActiveBooks: wiConfig.card_auto_active_books && typeof wiConfig.card_auto_active_books === "object" ? wiConfig.card_auto_active_books : null,
+    legacySelections: wiConfig.char_selections && typeof wiConfig.char_selections === "object" ? wiConfig.char_selections : null,
+    legacyAutoActiveBooks: wiConfig.char_auto_active_books && typeof wiConfig.char_auto_active_books === "object" ? wiConfig.char_auto_active_books : null
+  };
+}
+function notifyLegacyAmbiguityOnce(charName) {
+  if (legacyAmbiguityNotified) return;
+  legacyAmbiguityNotified = true;
+  console.warn(`Titania: \u68C0\u6D4B\u5230\u591A\u5F20\u89D2\u8272\u5361\u5171\u7528\u540D\u79F0\u300C${charName}\u300D\uFF0C\u65E7\u7684\u4E16\u754C\u4E66\u7B5B\u9009\u914D\u7F6E\u5DF2\u6309\u5361\u7247\u9694\u79BB\uFF0C\u9700\u8981\u91CD\u65B0\u9009\u62E9\u4E00\u6B21\u6761\u76EE\u3002`);
+  if (typeof window !== "undefined" && window.toastr) {
+    window.toastr.info(
+      `\u68C0\u6D4B\u5230\u591A\u5F20\u89D2\u8272\u5361\u5171\u7528\u540D\u79F0\u300C${charName}\u300D\u3002\u4E16\u754C\u4E66\u7B5B\u9009\u5DF2\u6539\u4E3A\u6309\u5361\u7247\u72EC\u7ACB\u4FDD\u5B58\uFF0C\u8FD9\u5F20\u5361\u9700\u8981\u91CD\u65B0\u9009\u62E9\u4E00\u6B21\u6761\u76EE\u3002`,
+      "Titania Echo",
+      { timeOut: 9e3 }
+    );
+  }
+}
+function canInheritLegacy(ctx, charName, hasLegacyData) {
+  if (!isNameSharedByMultipleCards(ctx, charName)) return true;
+  if (hasLegacyData) notifyLegacyAmbiguityOnce(charName);
+  return false;
+}
+function readWorldInfoSelections(extData, ctx, charName) {
+  const cfg = getWorldInfoConfig(extData);
+  const cardKey = getCharacterCardKey(ctx);
+  const byCard = cfg.cardSelections?.[cardKey];
+  if (byCard && typeof byCard === "object") return byCard;
+  const legacy = cfg.legacySelections?.[charName];
+  const hasLegacy = Boolean(legacy && typeof legacy === "object");
+  if (hasLegacy && canInheritLegacy(ctx, charName, true)) return legacy;
+  return null;
+}
+function readAutoActiveBooks(extData, ctx, charName) {
+  const cfg = getWorldInfoConfig(extData);
+  const cardKey = getCharacterCardKey(ctx);
+  const deriveFromSelections = (selections) => Object.keys(selections).filter((bookName) => {
+    const selected = selections[bookName];
+    return Array.isArray(selected) && selected.length > 0;
+  });
+  const byCard = cfg.cardAutoActiveBooks?.[cardKey];
+  if (Array.isArray(byCard)) return byCard;
+  const cardSelections = cfg.cardSelections?.[cardKey];
+  if (cardSelections && typeof cardSelections === "object") return deriveFromSelections(cardSelections);
+  const legacyExplicit = cfg.legacyAutoActiveBooks?.[charName];
+  const legacySelections = cfg.legacySelections?.[charName];
+  const hasLegacy = Array.isArray(legacyExplicit) || Boolean(legacySelections && typeof legacySelections === "object");
+  if (!canInheritLegacy(ctx, charName, hasLegacy)) return [];
+  if (Array.isArray(legacyExplicit)) return legacyExplicit;
+  if (legacySelections && typeof legacySelections === "object") return deriveFromSelections(legacySelections);
   return [];
+}
+function writeWorldInfoSelections(extData, ctx, selections, autoActiveBooks) {
+  if (!extData.worldinfo || typeof extData.worldinfo !== "object") extData.worldinfo = {};
+  const wiConfig = extData.worldinfo;
+  if (!wiConfig.card_selections || typeof wiConfig.card_selections !== "object") wiConfig.card_selections = {};
+  if (!wiConfig.card_auto_active_books || typeof wiConfig.card_auto_active_books !== "object") wiConfig.card_auto_active_books = {};
+  const cardKey = getCharacterCardKey(ctx);
+  wiConfig.card_selections[cardKey] = selections;
+  wiConfig.card_auto_active_books[cardKey] = Array.isArray(autoActiveBooks) ? autoActiveBooks : [];
+  return cardKey;
+}
+function getLocalAutoActiveBooks(charName, ctx = null) {
+  return readAutoActiveBooks(getExtData(), ctx, charName);
 }
 function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalAuto = false) {
   const activeBooks = /* @__PURE__ */ new Set();
@@ -17121,7 +17265,7 @@ function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalA
     console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
   }
   if (includeLocalAuto) {
-    const localAutoBooks = getLocalAutoActiveBooks(charName);
+    const localAutoBooks = getLocalAutoActiveBooks(charName, ctx);
     localAutoBooks.forEach((name) => activeBooks.add(name));
   }
   return activeBooks;
@@ -17177,9 +17321,13 @@ async function getWorldInfoEntriesByBookName(bookName) {
     isDisabled: e.disable === true && e.enabled !== true
   }));
 }
+var CARD_KEY_PREFIX, NAME_KEY_PREFIX, legacyAmbiguityNotified;
 var init_context = __esm({
   "src/core/context.js"() {
     init_storage();
+    CARD_KEY_PREFIX = "card:";
+    NAME_KEY_PREFIX = "name:";
+    legacyAmbiguityNotified = false;
   }
 });
 
@@ -37243,7 +37391,13 @@ async function updateWorldInfoBadge() {
     const data = getExtData();
     let totalCount = 0;
     let selectedCount = 0;
-    const charSelections = data.worldinfo?.char_selections?.[ctx.charName] || null;
+    let stCtx = null;
+    try {
+      if (typeof SillyTavern !== "undefined") stCtx = SillyTavern.getContext?.() || null;
+    } catch {
+      stCtx = null;
+    }
+    const charSelections = readWorldInfoSelections(data, stCtx, ctx.charName);
     entries.forEach((book) => {
       book.entries.forEach((entry) => {
         totalCount++;
@@ -37287,12 +37441,12 @@ async function openWorldInfoSelector() {
       if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
         const stCtx = SillyTavern.getContext();
         const charName2 = stCtx?.substituteParams?.("{{char}}") || "Char";
-        return { charName: charName2 };
+        return { charName: charName2, stCtx };
       }
     } catch (e) {
       console.warn("Titania: \u83B7\u53D6\u4E16\u754C\u4E66\u7A97\u53E3\u4E0A\u4E0B\u6587\u5931\u8D25", e);
     }
-    return { charName: "Char" };
+    return { charName: "Char", stCtx: null };
   };
   const loadingHtml = `
     <div id="t-wi-selector" class="t-wi-selector">
@@ -37351,11 +37505,9 @@ async function openWorldInfoSelector() {
     return;
   }
   const data = getExtData();
-  if (!data.worldinfo) data.worldinfo = { char_selections: {}, char_auto_active_books: {} };
-  if (!data.worldinfo.char_selections) data.worldinfo.char_selections = {};
-  if (!data.worldinfo.char_auto_active_books) data.worldinfo.char_auto_active_books = {};
+  if (!data.worldinfo) data.worldinfo = {};
   const charName = ctx.charName;
-  const savedSelections = data.worldinfo.char_selections[charName] || null;
+  const savedSelections = readWorldInfoSelections(data, ctx.stCtx, charName);
   const workingSelections = savedSelections ? structuredClone(savedSelections) : {};
   const allBooks = Array.isArray(allBookNames) ? allBookNames.slice() : [];
   const baseActiveBooks = Array.isArray(activeBookNames) ? activeBookNames.filter((name) => allBooks.includes(name)) : [];
@@ -37444,6 +37596,8 @@ async function openWorldInfoSelector() {
         </div>
     </div>`;
   $("#t-main-view").append(html);
+  const $panel = $("#t-wi-selector").last();
+  const $q = (selector) => $panel.find(selector);
   let currentBookName = visibleBooks[0] || "";
   let currentEntries2 = [];
   let entrySearchQuery = "";
@@ -37706,8 +37860,7 @@ async function openWorldInfoSelector() {
   });
   $("#t-wi-save").on("click", () => {
     if (!currentBookName && !Object.keys(workingSelections).length) return;
-    data.worldinfo.char_selections[charName] = workingSelections;
-    data.worldinfo.char_auto_active_books[charName] = getAutoActiveBooksFromSelections();
+    writeWorldInfoSelections(data, ctx.stCtx, workingSelections, getAutoActiveBooksFromSelections());
     saveExtData();
     updateWorldInfoBadge();
     if (window.toastr) toastr.success("\u4E16\u754C\u4E66\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
@@ -42498,6 +42651,12 @@ async function loadExtensionSettings() {
   if (typeof extData.chat_inject.enabled !== "boolean") extData.chat_inject.enabled = true;
   if (typeof extData.chat_inject.visible_to_ai !== "boolean") extData.chat_inject.visible_to_ai = true;
   if (!String(extData.chat_inject.speaker_name || "").trim()) extData.chat_inject.speaker_name = "\u56DE\u58F0\u5C0F\u5267\u573A";
+  if (!extData.preset_macros || typeof extData.preset_macros !== "object") {
+    extData.preset_macros = { persist_variables: false };
+  }
+  if (typeof extData.preset_macros.persist_variables !== "boolean") {
+    extData.preset_macros.persist_variables = false;
+  }
   if (!extData.quick_toolbar || typeof extData.quick_toolbar !== "object") extData.quick_toolbar = {};
   if (!extData.quick_toolbar.enabled_items || typeof extData.quick_toolbar.enabled_items !== "object") {
     extData.quick_toolbar.enabled_items = {};
@@ -42513,6 +42672,7 @@ async function loadExtensionSettings() {
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
   $("#cfg-chat-inject-enabled").prop("checked", extData.chat_inject.enabled === true);
+  $("#cfg-preset-persist-vars").prop("checked", extData.preset_macros.persist_variables === true);
   $("#cfg-toolbar-lore-enabled").prop("checked", extData.quick_toolbar.enabled_items.lore === true);
   $("#cfg-toolbar-recall-enabled").prop("checked", extData.quick_toolbar.enabled_items.recall === true);
   $("#cfg-float-edge-tuck").on("input", function() {
@@ -42576,6 +42736,21 @@ async function loadExtensionSettings() {
     saveExtData();
     refreshChatInjectButton();
     if (window.toastr) toastr.success(enabled ? "\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u542F\u7528" : "\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-preset-persist-vars").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.preset_macros || typeof data.preset_macros !== "object") {
+      data.preset_macros = { persist_variables: false };
+    }
+    data.preset_macros.persist_variables = enabled;
+    saveExtData();
+    if (window.toastr) {
+      toastr.success(
+        enabled ? "\u9884\u8BBE\u53D8\u91CF\u5C06\u5199\u5165\u804A\u5929\u5B58\u6863" : "\u9884\u8BBE\u53D8\u91CF\u53EA\u5728\u672C\u6B21\u63D0\u793A\u8BCD\u6784\u5EFA\u5185\u751F\u6548",
+        "Titania Echo"
+      );
+    }
   });
   $("#cfg-toolbar-lore-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
