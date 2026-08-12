@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.2.1";
+    CURRENT_VERSION = "5.2.2";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -183,6 +183,14 @@ var init_defaults = __esm({
         enabled: true,
         show_theater: true,
         show_outline_actions: true
+      },
+      // 小剧场注入聊天（挂在每条消息气泡的「…」菜单里）
+      chat_inject: {
+        enabled: true,
+        visible_to_ai: true,
+        // 注入时默认让 AI 看到；注入后可用气泡上的眼睛图标切换
+        speaker_name: "\u56DE\u58F0\u5C0F\u5267\u573A"
+        // 仅界面显示用，narrator 类型不会把名字带进提示词
       },
       // 文本改写入口（显示在故事大纲菜单中）
       rewrite_entry: {
@@ -6171,6 +6179,165 @@ textarea.t-input {
         padding: 5px 10px;
         font-size: 0.8em;
     }
+}
+
+/* ============================================================
+   \u5C0F\u5267\u573A\u6CE8\u5165\u804A\u5929\uFF1A\u6C14\u6CE1\u6309\u94AE + \u5185\u5BB9\u9009\u62E9\u5F39\u7A97
+   ============================================================ */
+
+/* \u6302\u5728 ST \u7684 .extraMesButtons \u91CC\uFF0C\u7EE7\u627F .mes_button \u7684\u5C3A\u5BF8\u4E0E\u4EA4\u4E92\uFF0C\u53EA\u6539\u914D\u8272 */
+#chat .titania-inject-btn {
+    color: var(--t-theme, #bfa15f);
+}
+
+#chat .titania-inject-btn:hover {
+    color: #90cdf4;
+}
+
+.t-chat-inject-window {
+    width: 520px;
+    max-width: 94vw;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(30, 30, 35, 0.96);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    color: #e2e8f0;
+}
+
+.t-chat-inject-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 18px 18px;
+    overflow: hidden;
+}
+
+.t-chat-inject-target {
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(144, 205, 244, 0.08);
+    border-left: 3px solid #90cdf4;
+    color: #cbd5e0;
+    flex-shrink: 0;
+}
+
+.t-chat-inject-target b {
+    color: #90cdf4;
+}
+
+.t-chat-inject-visible {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.t-chat-inject-visible input {
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.t-chat-inject-visible-main {
+    display: block;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.t-chat-inject-visible small {
+    display: block;
+    margin-top: 3px;
+    color: #8f9bb0;
+    line-height: 1.5;
+}
+
+.t-chat-inject-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 60px;
+}
+
+.t-chat-inject-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.t-chat-inject-item:hover {
+    background: rgba(191, 161, 95, 0.12);
+    border-color: var(--t-theme, #bfa15f);
+    transform: translateX(2px);
+}
+
+.t-chat-inject-item-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.t-chat-inject-item-name {
+    color: var(--t-theme, #bfa15f);
+    font-weight: 600;
+}
+
+.t-chat-inject-item-time {
+    color: #6f7b8f;
+    font-size: 0.9em;
+    flex-shrink: 0;
+}
+
+.t-chat-inject-item-preview {
+    color: #a8b3c4;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.t-chat-inject-empty {
+    text-align: center;
+    padding: 32px 20px;
+    color: #8f9bb0;
+}
+
+.t-chat-inject-empty > i {
+    font-size: 2.2em;
+    color: #4a5568;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.t-chat-inject-empty-title {
+    color: #cbd5e0;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.t-chat-inject-empty-hint {
+    line-height: 1.6;
+    max-width: 340px;
+    margin: 0 auto;
 }
 
 
@@ -20368,9 +20535,9 @@ function getChatHistoryEntries() {
   try {
     if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
     const stCtx = SillyTavern.getContext();
-    const chat = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
+    const chat2 = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
     const whitelist = parseTagWhitelistInput(getOutlineChatTagWhitelistRaw());
-    return chat.map((msg, idx) => {
+    return chat2.map((msg, idx) => {
       const raw = typeof msg?.mes === "string" ? msg.mes : "";
       const text = extractTextByWhitelist(raw, whitelist);
       if (!text) return null;
@@ -23994,11 +24161,11 @@ function buildRewritePayload(data, sourceText) {
 function getLatestAssistantMessageFromChat() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return null;
   const ctx = SillyTavern.getContext();
-  const chat = Array.isArray(ctx?.chat) ? ctx.chat : [];
+  const chat2 = Array.isArray(ctx?.chat) ? ctx.chat : [];
   const whitelist = parseTagWhitelistInput(ensureRewriteDataShape().tag_whitelist || "");
-  if (chat.length === 0) return null;
-  for (let i = chat.length - 1; i >= 0; i -= 1) {
-    const msg = chat[i];
+  if (chat2.length === 0) return null;
+  for (let i = chat2.length - 1; i >= 0; i -= 1) {
+    const msg = chat2[i];
     if (!msg || msg.is_user || msg.is_system || msg.is_hidden || msg.disabled) continue;
     const raw = String(msg.mes || msg.message || "");
     const content = extractTextByWhitelist(raw, whitelist);
@@ -24118,8 +24285,8 @@ function applyRewriteMarksToMessage(index, marksInput) {
 function applyAllRewriteMarksFromChat() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return;
   const ctx = SillyTavern.getContext();
-  const chat = Array.isArray(ctx?.chat) ? ctx.chat : [];
-  chat.forEach((msg, index) => {
+  const chat2 = Array.isArray(ctx?.chat) ? ctx.chat : [];
+  chat2.forEach((msg, index) => {
     const marks = normalizeRewriteMarks(msg?.extra?.titania_rewrite_marks);
     applyRewriteMarksToMessage(index, marks);
   });
@@ -29780,13 +29947,13 @@ function updateHideFloorCount() {
 }
 function updateHiddenStatus() {
   try {
-    const chat = window.SillyTavern?.getContext?.()?.chat;
-    if (!chat || !Array.isArray(chat)) {
+    const chat2 = window.SillyTavern?.getContext?.()?.chat;
+    if (!chat2 || !Array.isArray(chat2)) {
       $("#t-hidden-status").text("");
       return;
     }
     let hiddenCount = 0;
-    chat.forEach((msg) => {
+    chat2.forEach((msg) => {
       if (msg.is_system === true) {
         hiddenCount++;
       }
@@ -30560,15 +30727,15 @@ function appendMemoriesToInput(memories) {
 }
 function getDefaultQuery() {
   try {
-    const chat = getChatHistory2();
-    if (!chat || chat.length === 0) return "";
-    for (let i = chat.length - 1; i >= 0; i--) {
-      const msg = chat[i];
+    const chat2 = getChatHistory2();
+    if (!chat2 || chat2.length === 0) return "";
+    for (let i = chat2.length - 1; i >= 0; i--) {
+      const msg = chat2[i];
       if (msg.is_user && msg.mes) {
         return msg.mes.substring(0, 500);
       }
     }
-    const lastMsg = chat[chat.length - 1];
+    const lastMsg = chat2[chat2.length - 1];
     if (lastMsg && lastMsg.mes) {
       return lastMsg.mes.substring(0, 500);
     }
@@ -41400,7 +41567,7 @@ init_scriptData();
 init_api();
 init_continuationStore();
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource5, event_types as event_types5 } from "../../../../script.js";
 
 // src/core/extensionUpdate.js
 init_defaults();
@@ -41624,6 +41791,378 @@ init_floatingBtn();
 init_settingsWindow();
 init_outlineEntryButton();
 init_rewriteEntryButton();
+
+// src/ui/chatInjectButton.js
+init_state();
+import { eventSource as eventSource4, event_types as event_types4 } from "../../../../script.js";
+
+// src/core/chatInjector.js
+init_chatTagWhitelist();
+init_storage();
+init_logger();
+import {
+  chat,
+  chat_metadata as chat_metadata2,
+  addOneMessage,
+  saveChatConditional as saveChatConditional3,
+  reloadCurrentChat as reloadCurrentChat2,
+  eventSource as eventSource3,
+  event_types as event_types3,
+  system_avatar
+} from "../../../../script.js";
+import { system_message_types } from "../../../system-messages.js";
+import { getMessageTimeStamp } from "../../../RossAscends-mods.js";
+var INJECT_MARKER_KEY = "titania_theater";
+function getChatInjectConfig() {
+  const data = getExtData();
+  const cfg = data?.chat_inject && typeof data.chat_inject === "object" ? data.chat_inject : {};
+  return {
+    enabled: cfg.enabled !== false,
+    visibleToAI: cfg.visible_to_ai !== false,
+    speakerName: String(cfg.speaker_name || "").trim() || "\u56DE\u58F0\u5C0F\u5267\u573A"
+  };
+}
+function isInjectedTheaterMessage(message) {
+  return Boolean(message?.extra?.[INJECT_MARKER_KEY]);
+}
+function normalizeTheaterHtmlForChat(html) {
+  let out = String(html || "");
+  if (!out.trim()) return "";
+  out = out.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  out = out.replace(/<script\b[^>]*\/?>/gi, "");
+  out = out.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "");
+  out = out.replace(/<\/?(?:html|head|body)\b[^>]*>/gi, "");
+  out = out.replace(/<(?:link|meta|base|title)\b[^>]*>/gi, "");
+  out = out.replace(/<\/title\s*>/gi, "");
+  out = out.replace(/<style\b[^>]*>/gi, "<style>");
+  const openCount = (out.match(/<style>/gi) || []).length;
+  const closeCount = (out.match(/<\/style>/gi) || []).length;
+  if (openCount > closeCount) {
+    out += "</style>".repeat(openCount - closeCount);
+  }
+  return out.trim();
+}
+var HTML_ENTITIES = {
+  "&nbsp;": " ",
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+  "&hellip;": "\u2026",
+  "&mdash;": "\u2014",
+  "&ndash;": "\u2013",
+  "&ldquo;": "\u201C",
+  "&rdquo;": "\u201D",
+  "&lsquo;": "\u2018",
+  "&rsquo;": "\u2019"
+};
+function decodeHtmlEntities(text) {
+  let out = String(text || "");
+  for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
+    out = out.replace(new RegExp(entity, "gi"), char);
+  }
+  out = out.replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)));
+  out = out.replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)));
+  return out;
+}
+function buildPromptTextFromTheater(html) {
+  let text = String(html || "");
+  if (!text.trim()) return "";
+  text = text.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "\n");
+  text = text.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "\n");
+  text = text.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "\n");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/(?:p|div|section|article|header|footer|blockquote|li|tr|h[1-6]|figcaption|pre)\s*>/gi, "\n");
+  text = text.replace(/<hr\s*\/?>/gi, "\n");
+  text = text.replace(/<\/(?:td|th)\s*>/gi, " ");
+  text = extractTextByWhitelist(text, []);
+  text = decodeHtmlEntities(text);
+  return text.split("\n").map((line) => line.replace(/[ \t ]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+async function injectTheaterToChat(options = {}) {
+  const cfg = getChatInjectConfig();
+  const rawContent = String(options.content || "");
+  const displayHtml = normalizeTheaterHtmlForChat(rawContent);
+  const promptText = buildPromptTextFromTheater(rawContent);
+  if (!displayHtml && !promptText) {
+    if (window.toastr) toastr.warning("\u5C0F\u5267\u573A\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6CE8\u5165", "Titania Echo");
+    return null;
+  }
+  if (!Array.isArray(chat)) {
+    TitaniaLogger.error("\u6CE8\u5165\u5931\u8D25\uFF1AST \u804A\u5929\u6570\u7EC4\u4E0D\u53EF\u7528");
+    if (window.toastr) toastr.error("\u5F53\u524D\u6CA1\u6709\u6253\u5F00\u7684\u804A\u5929\uFF0C\u65E0\u6CD5\u6CE8\u5165", "Titania Echo");
+    return null;
+  }
+  const visibleToAI = options.visibleToAI === void 0 ? cfg.visibleToAI : options.visibleToAI === true;
+  const scriptName = String(options.scriptName || "").trim() || "\u573A\u666F";
+  const message = {
+    name: cfg.speakerName,
+    is_user: false,
+    // is_system 为 true 时不进提示词。ST 气泡上的眼睛图标（chats.js:2115）之后可随时翻转。
+    is_system: !visibleToAI,
+    send_date: getMessageTimeStamp(),
+    // mes 是发给模型的内容，display_text 才是界面显示的内容（script.js:2377）
+    mes: promptText,
+    force_avatar: system_avatar,
+    extra: {
+      // narrator 类型：对 Chat Completion 映射成 role:'system'（openai.js:528），
+      // 文本补全时不加名字前缀（script.js:5444）
+      type: system_message_types.NARRATOR,
+      display_text: displayHtml,
+      api: "manual",
+      model: "titania-theater",
+      [INJECT_MARKER_KEY]: {
+        generationId: String(options.generationId || ""),
+        scriptId: String(options.scriptId || ""),
+        scriptName,
+        injectedAt: Date.now()
+      }
+    }
+  };
+  const baseIndex = Number(options.insertAfterIndex);
+  const insertAt = Number.isFinite(baseIndex) ? baseIndex + 1 : chat.length;
+  const clamped = Math.max(0, Math.min(insertAt, chat.length));
+  const appended = clamped >= chat.length;
+  chat_metadata2["tainted"] = true;
+  try {
+    if (appended) {
+      chat.push(message);
+      const messageId = chat.length - 1;
+      await eventSource3.emit(event_types3.MESSAGE_SENT, messageId);
+      addOneMessage(message);
+      await eventSource3.emit(event_types3.USER_MESSAGE_RENDERED, messageId);
+      await saveChatConditional3();
+      TitaniaLogger.info("\u5C0F\u5267\u573A\u5DF2\u8FFD\u52A0\u5230\u804A\u5929\u672B\u5C3E", { messageId, scriptName, visibleToAI });
+      return { messageId, appended: true };
+    }
+    chat.splice(clamped, 0, message);
+    await saveChatConditional3();
+    await eventSource3.emit(event_types3.MESSAGE_SENT, clamped);
+    await reloadCurrentChat2();
+    await eventSource3.emit(event_types3.USER_MESSAGE_RENDERED, clamped);
+    scrollToMessage(clamped);
+    TitaniaLogger.info("\u5C0F\u5267\u573A\u5DF2\u63D2\u5165\u804A\u5929", { messageId: clamped, scriptName, visibleToAI });
+    return { messageId: clamped, appended: false };
+  } catch (e) {
+    TitaniaLogger.error("\u5C0F\u5267\u573A\u6CE8\u5165\u804A\u5929\u5931\u8D25", e, { insertAt: clamped, scriptName });
+    if (window.toastr) toastr.error("\u6CE8\u5165\u5931\u8D25\uFF1A" + (e?.message || String(e)), "Titania Echo");
+    return null;
+  }
+}
+function scrollToMessage(messageId) {
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`#chat .mes[mesid="${messageId}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
+
+// src/ui/chatInjectButton.js
+init_logger();
+var BTN_CLASS = "titania-inject-btn";
+var OVERLAY_ID2 = "t-chat-inject-overlay";
+var listenersBound = false;
+var refreshQueued = false;
+var lastVisibleChoice = null;
+function escapeHtmlText3(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function isEnabled3() {
+  return getChatInjectConfig().enabled;
+}
+function removeAllButtons() {
+  document.querySelectorAll(`#chat .${BTN_CLASS}`).forEach((node) => node.remove());
+}
+function refreshButtons() {
+  if (!isEnabled3()) {
+    removeAllButtons();
+    return;
+  }
+  const messages = document.querySelectorAll("#chat .mes");
+  for (const message of messages) {
+    const buttonArea = message.querySelector(".extraMesButtons");
+    if (!buttonArea) continue;
+    if (buttonArea.querySelector(`.${BTN_CLASS}`)) continue;
+    const btn = document.createElement("div");
+    btn.className = `mes_button ${BTN_CLASS} fa-solid fa-masks-theater`;
+    btn.title = "\u6CE8\u5165\u5C0F\u5267\u573A\u5230\u6B64\u697C\u4E0B\u65B9";
+    btn.setAttribute("tabindex", "0");
+    buttonArea.appendChild(btn);
+  }
+}
+function scheduleRefreshButtons(delay = 0) {
+  if (refreshQueued) return;
+  refreshQueued = true;
+  setTimeout(() => {
+    refreshQueued = false;
+    try {
+      refreshButtons();
+    } catch (e) {
+      TitaniaLogger.warn("\u6CE8\u5165\u6309\u94AE\u6302\u8F7D\u5931\u8D25", e?.message || String(e));
+    }
+  }, delay);
+}
+function refreshChatInjectButton() {
+  scheduleRefreshButtons(0);
+}
+function collectInjectableItems() {
+  const items = Array.isArray(GlobalState.sceneHistory?.items) ? GlobalState.sceneHistory.items : [];
+  return items.map((item, index) => ({ item, index })).filter(({ item }) => {
+    const status = String(item?.status || "legacy");
+    if (status !== "success" && status !== "legacy") return false;
+    return String(item?.content || "").trim().length > 0;
+  }).map(({ item, index }) => ({
+    index,
+    content: String(item.content || ""),
+    scriptId: String(item.scriptId || ""),
+    scriptName: String(item.scriptName || "\u573A\u666F"),
+    generationId: String(item.generationId || ""),
+    timestamp: Number(item.timestamp) || 0,
+    preview: buildPreview(item.content)
+  }));
+}
+function buildPreview(content) {
+  return String(content || "").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 90);
+}
+function formatTimestamp(ts) {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleString();
+  } catch {
+    return "";
+  }
+}
+function getOverlay2() {
+  return $(`#${OVERLAY_ID2}`);
+}
+function closePicker() {
+  getOverlay2().remove();
+  $(document).off("keydown.tchatinject");
+}
+function renderItemsHtml(items) {
+  if (items.length === 0) {
+    return `
+            <div class="t-chat-inject-empty">
+                <i class="fa-solid fa-masks-theater"></i>
+                <div class="t-chat-inject-empty-title">\u672C\u6B21\u4F1A\u8BDD\u8FD8\u6CA1\u6709\u751F\u6210\u5C0F\u5267\u573A</div>
+                <div class="t-chat-inject-empty-hint">
+                    \u5267\u573A\u5386\u53F2\u53EA\u4FDD\u7559\u5728\u5185\u5B58\u4E2D\uFF0C\u5237\u65B0\u9875\u9762\u5C31\u4F1A\u6E05\u7A7A\u3002\u5148\u7528\u60AC\u6D6E\u7403\u751F\u6210\u4E00\u6BB5\u5C0F\u5267\u573A\uFF0C\u518D\u56DE\u6765\u6CE8\u5165\u3002
+                </div>
+            </div>`;
+  }
+  return items.map((item) => `
+        <div class="t-chat-inject-item" data-index="${item.index}">
+            <div class="t-chat-inject-item-head">
+                <span class="t-chat-inject-item-name">${escapeHtmlText3(item.scriptName)}</span>
+                <span class="t-chat-inject-item-time">${escapeHtmlText3(formatTimestamp(item.timestamp))}</span>
+            </div>
+            <div class="t-chat-inject-item-preview">${escapeHtmlText3(item.preview) || "\uFF08\u65E0\u6587\u672C\u5185\u5BB9\uFF09"}</div>
+        </div>
+    `).join("");
+}
+function openInjectPickerWindow(mesid) {
+  closePicker();
+  const cfg = getChatInjectConfig();
+  const items = collectInjectableItems();
+  const visibleDefault = lastVisibleChoice === null ? cfg.visibleToAI : lastVisibleChoice;
+  const floorLabel = Number.isFinite(mesid) ? `\u7B2C ${mesid} \u697C` : "\u5F53\u524D\u697C\u5C42";
+  const html = `
+    <div id="${OVERLAY_ID2}" class="t-overlay" aria-modal="true" role="dialog">
+        <div class="t-window t-chat-inject-window">
+            <div class="t-window-header">
+                <div class="t-window-title">
+                    <i class="fa-solid fa-masks-theater"></i> \u6CE8\u5165\u5C0F\u5267\u573A
+                </div>
+                <div class="t-window-controls">
+                    <div class="t-window-close" id="t-chat-inject-close"><i class="fa-solid fa-times"></i></div>
+                </div>
+            </div>
+
+            <div class="t-chat-inject-body">
+                <div class="t-chat-inject-target">
+                    \u5C06\u63D2\u5165\u5230 <b>${escapeHtmlText3(floorLabel)}</b> \u7684\u4E0B\u65B9
+                </div>
+
+                <label class="t-chat-inject-visible">
+                    <input type="checkbox" id="t-chat-inject-visible" ${visibleDefault ? "checked" : ""} />
+                    <span>
+                        <span class="t-chat-inject-visible-main">\u8BA9 AI \u770B\u5230\u8FD9\u6BB5\u5185\u5BB9</span>
+                        <small>\u52FE\u9009\u540E\u5C0F\u5267\u573A\u6210\u4E3A\u5267\u60C5\u6B63\u53F2\uFF0C\u4F1A\u8FDB\u5165\u540E\u7EED\u63D0\u793A\u8BCD\u3002\u6CE8\u5165\u540E\u4ECD\u53EF\u7528\u6C14\u6CE1\u4E0A\u7684\u773C\u775B\u56FE\u6807\u968F\u65F6\u5207\u6362\u3002</small>
+                    </span>
+                </label>
+
+                <div class="t-chat-inject-list">
+                    ${renderItemsHtml(items)}
+                </div>
+            </div>
+        </div>
+    </div>`;
+  $("body").append(html);
+  const $overlay = getOverlay2();
+  $overlay.on("click", "#t-chat-inject-close", closePicker);
+  $overlay.on("click", (event) => {
+    if (event.target === $overlay[0]) closePicker();
+  });
+  $(document).on("keydown.tchatinject", (event) => {
+    if (event.key === "Escape") closePicker();
+  });
+  $overlay.on("click", "#t-chat-inject-visible", (event) => {
+    lastVisibleChoice = $(event.currentTarget).prop("checked") === true;
+  });
+  $overlay.on("click", ".t-chat-inject-item", async function() {
+    const index = Number($(this).data("index"));
+    const target = items.find((item) => item.index === index);
+    if (!target) return;
+    const visibleToAI = $overlay.find("#t-chat-inject-visible").prop("checked") === true;
+    lastVisibleChoice = visibleToAI;
+    closePicker();
+    const result = await injectTheaterToChat({
+      content: target.content,
+      scriptId: target.scriptId,
+      scriptName: target.scriptName,
+      generationId: target.generationId,
+      insertAfterIndex: mesid,
+      visibleToAI
+    });
+    if (result && window.toastr) {
+      const visibilityNote = visibleToAI ? "AI \u53EF\u89C1" : "AI \u4E0D\u53EF\u89C1";
+      toastr.success(`\u5DF2\u6CE8\u5165\u300C${target.scriptName}\u300D\uFF08${visibilityNote}\uFF09`, "Titania Echo");
+    }
+  });
+}
+function initChatInjectButton() {
+  if (listenersBound) {
+    scheduleRefreshButtons(0);
+    return;
+  }
+  listenersBound = true;
+  $(document).on("click", `.${BTN_CLASS}`, function(event) {
+    event.stopPropagation();
+    const mesid = Number($(this).closest(".mes").attr("mesid"));
+    if (!Number.isFinite(mesid)) {
+      if (window.toastr) toastr.warning("\u65E0\u6CD5\u8BC6\u522B\u5F53\u524D\u697C\u5C42", "Titania Echo");
+      return;
+    }
+    openInjectPickerWindow(mesid);
+  });
+  const rerenderEvents = [
+    event_types4.CHAT_CHANGED,
+    event_types4.CHARACTER_MESSAGE_RENDERED,
+    event_types4.USER_MESSAGE_RENDERED,
+    event_types4.MESSAGE_SWIPED,
+    event_types4.MESSAGE_DELETED,
+    event_types4.MORE_MESSAGES_LOADED
+  ];
+  for (const eventName of rerenderEvents) {
+    if (!eventName) continue;
+    eventSource4.on(eventName, () => scheduleRefreshButtons(0));
+  }
+  scheduleRefreshButtons(300);
+  TitaniaLogger.info("\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u521D\u59CB\u5316");
+}
+
+// src/entry.js
 init_outlineEntryButton();
 init_vectorStore();
 init_summarizer();
@@ -41634,12 +42173,13 @@ async function onGenerationEnded() {
   if (GlobalState.isGenerating || $("#t-overlay").length > 0) return;
   if (!SillyTavern || !SillyTavern.getContext) return;
   const context = SillyTavern.getContext();
-  const chat = context.chat;
-  if (!chat || chat.length === 0) return;
-  const lastMsg = chat[chat.length - 1];
+  const chat2 = context.chat;
+  if (!chat2 || chat2.length === 0) return;
+  const lastMsg = chat2[chat2.length - 1];
   if (lastMsg.is_user) return;
   if (lastMsg.is_system) return;
   if (lastMsg.is_hidden) return;
+  if (isInjectedTheaterMessage(lastMsg)) return;
   const chance = cfg.auto_chance || 50;
   if (Math.random() * 100 > chance) return;
   const getCat = (s) => s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B");
@@ -41701,8 +42241,8 @@ function initCoreFeatures() {
     applyFontSettings(extData.font_settings);
   }
   applyUIFontScale(extData.appearance?.ui_font_scale);
-  eventSource3.on(event_types3.GENERATION_ENDED, onGenerationEnded);
-  eventSource3.on(event_types3.CHAT_CHANGED, () => {
+  eventSource5.on(event_types5.GENERATION_ENDED, onGenerationEnded);
+  eventSource5.on(event_types5.CHAT_CHANGED, () => {
     void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
   });
   void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u521D\u59CB\u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
@@ -41711,6 +42251,7 @@ function initCoreFeatures() {
   initAutoVectorizeListener();
   initOutlineEntryButton();
   initRewriteEntryButton();
+  initChatInjectButton();
 }
 function loadQueueConfig() {
   try {
@@ -41733,8 +42274,8 @@ function loadQueueConfig() {
   }
 }
 function initAutoVectorizeListener() {
-  eventSource3.on(event_types3.MESSAGE_RECEIVED, onMessageForAutoVectorize);
-  eventSource3.on(event_types3.MESSAGE_SENT, onMessageForAutoVectorize);
+  eventSource5.on(event_types5.MESSAGE_RECEIVED, onMessageForAutoVectorize);
+  eventSource5.on(event_types5.MESSAGE_SENT, onMessageForAutoVectorize);
   console.log("Titania: \u81EA\u52A8\u5411\u91CF\u5316\u76D1\u542C\u5668\u5DF2\u521D\u59CB\u5316");
 }
 async function onMessageForAutoVectorize() {
@@ -41951,6 +42492,12 @@ async function loadExtensionSettings() {
     extData.outline_entry.show_outline_actions = true;
   }
   if (!extData.rewrite_entry || typeof extData.rewrite_entry !== "object") extData.rewrite_entry = { enabled: false };
+  if (!extData.chat_inject || typeof extData.chat_inject !== "object") {
+    extData.chat_inject = { enabled: true, visible_to_ai: true, speaker_name: "\u56DE\u58F0\u5C0F\u5267\u573A" };
+  }
+  if (typeof extData.chat_inject.enabled !== "boolean") extData.chat_inject.enabled = true;
+  if (typeof extData.chat_inject.visible_to_ai !== "boolean") extData.chat_inject.visible_to_ai = true;
+  if (!String(extData.chat_inject.speaker_name || "").trim()) extData.chat_inject.speaker_name = "\u56DE\u58F0\u5C0F\u5267\u573A";
   if (!extData.quick_toolbar || typeof extData.quick_toolbar !== "object") extData.quick_toolbar = {};
   if (!extData.quick_toolbar.enabled_items || typeof extData.quick_toolbar.enabled_items !== "object") {
     extData.quick_toolbar.enabled_items = {};
@@ -41965,6 +42512,7 @@ async function loadExtensionSettings() {
   $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
+  $("#cfg-chat-inject-enabled").prop("checked", extData.chat_inject.enabled === true);
   $("#cfg-toolbar-lore-enabled").prop("checked", extData.quick_toolbar.enabled_items.lore === true);
   $("#cfg-toolbar-recall-enabled").prop("checked", extData.quick_toolbar.enabled_items.recall === true);
   $("#cfg-float-edge-tuck").on("input", function() {
@@ -42017,6 +42565,17 @@ async function loadExtensionSettings() {
     saveExtData();
     refreshRewriteEntryButton();
     if (window.toastr) toastr.success(enabled ? "\u6587\u672C\u6539\u5199\u5165\u53E3\u5DF2\u542F\u7528" : "\u6587\u672C\u6539\u5199\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-chat-inject-enabled").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.chat_inject || typeof data.chat_inject !== "object") {
+      data.chat_inject = { enabled: true, visible_to_ai: true, speaker_name: "\u56DE\u58F0\u5C0F\u5267\u573A" };
+    }
+    data.chat_inject.enabled = enabled;
+    saveExtData();
+    refreshChatInjectButton();
+    if (window.toastr) toastr.success(enabled ? "\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u542F\u7528" : "\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
   });
   $("#cfg-toolbar-lore-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
