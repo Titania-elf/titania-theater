@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.2.1";
+    CURRENT_VERSION = "5.2.4";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -61,7 +61,10 @@ var init_defaults = __esm({
       favs: [],
       history_extraction: {
         whitelist: "",
-        blacklist: ""
+        blacklist: "",
+        // 只把角色发言注入剧本生成，跳过用户楼层。
+        // 只作用于剧本生成，总结和世界书提取照旧读全量历史
+        ai_only: false
       },
       character_map: {},
       disabled_presets: [],
@@ -102,11 +105,15 @@ var init_defaults = __esm({
         instruction: ""
         // 自由编辑的导演指令
       },
-      // 世界书条目筛选配置
+      // 世界书条目筛选配置（按角色卡隔离）
       worldinfo: {
+        // { "card:<avatar 去扩展名>": { "世界书名": [uid1, uid2, ...] } }
+        // 键用 avatar 而非角色名：同名角色卡必须各自独立，否则会互相激活对方的世界书
+        card_selections: {},
+        // { "card:<avatar>": ["世界书名", ...] } 需要额外激活的书（由选中条目推导）
+        card_auto_active_books: {},
+        // 旧的名字键配置，保留供读取回退（仅当该名字只有一张卡时才继承）
         char_selections: {}
-        // { "角色名": { "世界书名": [uid1, uid2, ...] } }
-        // 用户选择的条目会被保存在这里，首次使用时默认全选
       },
       // 自动续写配置 (应对 API 超时截断)
       auto_continue: {
@@ -191,6 +198,12 @@ var init_defaults = __esm({
         // 注入时默认让 AI 看到；注入后可用气泡上的眼睛图标切换
         speaker_name: "\u56DE\u58F0\u5C0F\u5267\u573A"
         // 仅界面显示用，narrator 类型不会把名字带进提示词
+      },
+      // 导入预设的宏求值行为
+      preset_macros: {
+        // 预设里的 {{setvar::}} 等写入宏默认只在本次提示词构建内有效，构建完成后还原，
+        // 不写进用户的聊天存档。开启后写入照常落盘（少数依赖变量跨次留存的预设才需要）。
+        persist_variables: false
       },
       // 文本改写入口（显示在故事大纲菜单中）
       rewrite_entry: {
@@ -622,7 +635,7 @@ function extractContent(text, whitelist = []) {
   cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
   return cleaned;
 }
-function getChatHistory(limit, whitelist = [], blacklist = void 0) {
+function getChatHistory(limit, whitelist = [], blacklist = void 0, aiOnly = false) {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
   const ctx = SillyTavern.getContext();
   const history = ctx.chat || [];
@@ -654,7 +667,11 @@ function getChatHistory(limit, whitelist = [], blacklist = void 0) {
     return true;
   });
   console.log(`Titania: History Analysis - Total: ${history.length}, Visible: ${visibleHistory.length}, Filtered: ${history.length - visibleHistory.length}`);
-  const recent = visibleHistory.slice(-safeLimit);
+  const scoped = aiOnly ? visibleHistory.filter((msg) => !msg.is_user) : visibleHistory;
+  if (aiOnly) {
+    console.log(`Titania: History Analysis - AI only: ${scoped.length} / ${visibleHistory.length}`);
+  }
+  const recent = scoped.slice(-safeLimit);
   return recent.map((msg) => {
     let name = msg.name;
     if (msg.is_user) name = ctx.name1 || "User";
@@ -1560,34 +1577,90 @@ function resolveMacro(marker, runtimeContext, originalText) {
   }
   return originalText;
 }
+function getPresetMacroConfig() {
+  try {
+    const ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+    const data = ctx?.extensionSettings?.[extensionName];
+    const cfg = data?.preset_macros;
+    return { persistVariables: cfg?.persist_variables === true };
+  } catch {
+    return { persistVariables: false };
+  }
+}
+function safeSubstituteParams(content) {
+  const source = String(content || "");
+  if (!source.includes("{{")) return source;
+  try {
+    const ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+    const substitute = ctx?.substituteParamsExtended || ctx?.substituteParams;
+    if (typeof substitute !== "function") return source;
+    return String(substitute.call(ctx, source) ?? source);
+  } catch (e) {
+    console.warn("Titania: ST \u5B8F\u6C42\u503C\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u6587", e);
+    return source;
+  }
+}
+function beginVariableSandbox() {
+  if (getPresetMacroConfig().persistVariables) return () => {
+  };
+  let ctx = null;
+  try {
+    ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+  } catch {
+    return () => {
+    };
+  }
+  if (!ctx) return () => {
+  };
+  const chatMetadata = ctx.chatMetadata;
+  const extensionSettings = ctx.extensionSettings;
+  const localSnapshot = chatMetadata && typeof chatMetadata.variables === "object" && chatMetadata.variables ? { ...chatMetadata.variables } : null;
+  const globalStore = extensionSettings?.variables;
+  const globalSnapshot = globalStore && typeof globalStore.global === "object" && globalStore.global ? { ...globalStore.global } : null;
+  return () => {
+    try {
+      if (chatMetadata && localSnapshot) chatMetadata.variables = localSnapshot;
+      if (globalStore && globalSnapshot) globalStore.global = globalSnapshot;
+    } catch (e) {
+      console.warn("Titania: \u53D8\u91CF\u6C99\u7BB1\u8FD8\u539F\u5931\u8D25", e);
+    }
+  };
+}
 function resolveEntryContent(entry, contentByEntry, runtimeContext) {
   let content = Object.prototype.hasOwnProperty.call(contentByEntry, entry.id) ? String(contentByEntry[entry.id] || "") : String(entry.content || "");
+  content = safeSubstituteParams(content);
   content = content.replace(/\{\{\s*([\w-]+)\s*\}\}/g, (match, marker) => resolveMacro(marker, runtimeContext, match));
   if (entry.marker) content = resolveMacro(entry.marker, runtimeContext, `{{${entry.marker}}}`);
   return content;
 }
 function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext = {}) {
   if (!scheme || !Array.isArray(scheme.entries)) return [];
-  return scheme.entries.filter((entry) => entry?.enabled !== false).map((entry) => {
-    const content = resolveEntryContent(entry, contentByEntry, runtimeContext);
-    return {
-      entryId: entry.id || "",
-      sourceIdentifier: entry.source_identifier || null,
-      name: entry.name || entry.source_identifier || "\u672A\u547D\u540D\u6761\u76EE",
-      role: MESSAGE_ROLES.includes(entry.role) ? entry.role : "user",
-      type: entry.type || "text",
-      marker: entry.marker || null,
-      required: entry.required === true,
-      content,
-      chars: content.length,
-      tokens: estimateTokens(content)
-    };
-  }).filter((message) => message.content.length > 0).map((message, index) => ({ ...message, index }));
+  const restoreVariables = beginVariableSandbox();
+  try {
+    return scheme.entries.filter((entry) => entry?.enabled !== false).map((entry) => {
+      const content = resolveEntryContent(entry, contentByEntry, runtimeContext);
+      return {
+        entryId: entry.id || "",
+        sourceIdentifier: entry.source_identifier || null,
+        name: entry.name || entry.source_identifier || "\u672A\u547D\u540D\u6761\u76EE",
+        role: MESSAGE_ROLES.includes(entry.role) ? entry.role : "user",
+        type: entry.type || "text",
+        marker: entry.marker || null,
+        required: entry.required === true,
+        content,
+        chars: content.length,
+        tokens: estimateTokens(content)
+      };
+    }).filter((message) => message.content.trim().length > 0).map((message, index) => ({ ...message, index }));
+  } finally {
+    restoreVariables();
+  }
 }
 var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
 var init_promptManager = __esm({
   "src/core/promptManager.js"() {
     init_helpers();
+    init_defaults();
     DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
     DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
 
@@ -2985,6 +3058,15 @@ textarea.t-input {
     /* \u9632\u6B62 flex \u5B50\u9879\u6EA2\u51FA */
 }
 
+/* \u5386\u53F2\u5F00\u5173 + \u5B50\u5F00\u5173\u7684\u5206\u7EC4\u5BB9\u5668\u3002
+   \u684C\u9762\u7AEF\u6CBF\u7528\u9876\u680F\u7684 15px gap\uFF0C\u89C6\u89C9\u4E0E\u4E24\u8005\u5404\u81EA\u4F5C\u4E3A\u9876\u680F\u76F4\u63A5\u5B50\u9879\u65F6\u5B8C\u5168\u4E00\u81F4\uFF1B
+   \u5B58\u5728\u7684\u610F\u4E49\u5728\u7A84\u5C4F\uFF1A\u8BA9\u8FD9\u4E24\u4E2A\u5F00\u5173\u5171\u5360\u4E00\u884C\uFF0C\u800C\u4E0D\u662F\u5404\u5360\u4E00\u884C */
+.t-history-group {
+    display: flex;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
 /* \u5386\u53F2\u5F00\u5173 */
 .t-history-toggle {
     display: flex;
@@ -3043,6 +3125,31 @@ textarea.t-input {
 
 .t-history-toggle.active:hover .t-toggle-text {
     color: #a8d8f8;
+}
+
+/* \u300C\u53EA\u8981\u89D2\u8272\u53D1\u8A00\u300D\uFF1A\u5386\u53F2\u5F00\u5173\u7684\u5B50\u9879\uFF0C\u7A84\u4E00\u70B9\u4EE5\u514D\u9876\u680F\u88AB\u4E24\u4E2A\u540C\u5BBD\u5F00\u5173\u6324\u6EE1 */
+.t-subtoggle {
+    min-width: 150px;
+}
+
+/* \u4E0D\u8BFB\u5386\u53F2\u65F6\u7F6E\u7070\u3002\u4ECD\u4FDD\u7559 pointer-events\uFF0C\u597D\u8BA9 title \u63D0\u793A\u80FD\u8BF4\u660E\u4E3A\u4EC0\u4E48\u4E0D\u53EF\u7528 */
+.t-subtoggle.disabled {
+    opacity: 0.45;
+}
+
+.t-subtoggle.disabled,
+.t-subtoggle.disabled .t-toggle-label,
+.t-subtoggle.disabled input[type="checkbox"] {
+    cursor: not-allowed;
+}
+
+.t-subtoggle.disabled:hover {
+    background: #1a1a1a;
+    border-color: #333;
+}
+
+.t-subtoggle.disabled:hover .t-toggle-text {
+    color: #888;
 }
 
 /* \u751F\u6210\u6A21\u5F0F\u5207\u6362 */
@@ -3870,6 +3977,44 @@ textarea.t-input {
         justify-content: center;
     }
 
+    /* \u4E24\u4E2A\u5F00\u5173\u5E73\u5206\u4E00\u884C\uFF1A\u5404\u5360\u4E00\u884C\u4F1A\u8BA9\u9876\u680F\u5728\u7A84\u5C4F\u591A\u5403 48px */
+    .t-history-group {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .t-history-group .t-history-toggle {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+        /* \u6781\u7AEF\u7EC4\u5408\uFF08320px \u5C4F + 130% \u5B57\u53F7\u7F29\u653E\uFF09\u4E0B\u6587\u5B57\u8981\u6298\u6210\u4E24\u884C\uFF0C
+           \u56FA\u5B9A 40px \u4F1A\u88C1\u6389\u7B2C\u4E8C\u884C\uFF0C\u6240\u4EE5\u6539\u6210\u4E0B\u9650 */
+        height: auto;
+        min-height: 40px;
+        padding: 0 6px;
+    }
+
+    /* \u534A\u683C\u5BBD\u5EA6\u5BB9\u4E0D\u4E0B 0.9em \u7684 7 \u4E2A\u6C49\u5B57\u3002\u6536\u5230 0.8em\uFF0C\u4E0E\u540C\u6392\u7684 .t-mode-btn \u4E00\u81F4 */
+    .t-history-group .t-toggle-text {
+        font-size: 0.8em;
+        /* \u57FA\u51C6\u5B57\u53F7\u53EF\u88AB\u7528\u6237\u653E\u5927\u5230 130%\uFF0C\u90A3\u65F6\u534A\u683C\u4ECD\u4F1A\u4E0D\u591F\u3002
+           \u89E3\u9664\u5168\u5C40\u7684 nowrap \u8BA9\u5B83\u6298\u884C \u2014\u2014 \u6BD4\u622A\u65AD\u6210\u7701\u7565\u53F7\u4E0D\u4E22\u4FE1\u606F */
+        white-space: normal;
+        line-height: 1.25;
+        text-align: center;
+    }
+
+    .t-history-group .t-toggle-label {
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .t-history-group .t-toggle-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
     .t-mode-toggle {
         width: 100%;
         height: 40px;
@@ -4118,35 +4263,80 @@ textarea.t-input {
     overflow: hidden;
     padding: 10px;
     min-height: 0;
+    position: relative;
+    z-index: 0;
 }
 
-/* \u6807\u7B7E\u680F\u3002\u6837\u5F0F\u539F\u672C\u5185\u8054\u5728 mainWindow.js \u91CC\uFF0C\u5185\u8054\u4F18\u5148\u7EA7\u538B\u8FC7\u5A92\u4F53\u67E5\u8BE2\uFF0C
-   \u79FB\u52A8\u7AEF\u6CA1\u6CD5\u628A\u5B83\u5E76\u8FDB\u6807\u9898\u680F\uFF0C\u6240\u4EE5\u642C\u5230\u8FD9\u91CC */
-.t-wi-action-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 15px;
-    border-bottom: 1px solid #333;
-    flex-shrink: 0;
-}
-
+/* \u6807\u51C6\u6807\u7B7E\u9875\uFF1A\u6574\u884C\u5206\u533A\uFF0C\u9009\u4E2D\u9879\u901A\u8FC7\u5E95\u90E8\u6307\u793A\u7EBF\u8868\u8FBE\u5F53\u524D\u9875\u9762\u3002 */
 .t-wi-tabs {
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-shrink: 0;
+    border-bottom: 1px solid #333;
+    background: #1e1e1e;
+    position: relative;
+    z-index: 2;
 }
 
 .t-wi-tab-btn {
-    padding: 6px 10px;
-    font-size: 0.82em;
-    color: #aaa;
-    background: #232323;
-    border: 1px solid #3a3a3a;
+    appearance: none;
+    position: relative;
+    min-width: 0;
+    min-height: 42px;
+    padding: 10px 12px 9px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #999;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.86em;
+    letter-spacing: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.t-wi-tab-btn:hover {
+    color: #d0d0d0;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.t-wi-tab-btn::after {
+    content: "";
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: -1px;
+    height: 2px;
+    background: transparent;
 }
 
 .t-wi-tab-btn.active {
     color: #90cdf4;
-    border-color: rgba(144, 205, 244, 0.45);
-    background: rgba(144, 205, 244, 0.12);
+    font-weight: 600;
+    background: rgba(144, 205, 244, 0.055);
+}
+
+.t-wi-tab-btn.active::after {
+    background: #90cdf4;
+}
+
+.t-wi-tab-btn:focus-visible {
+    outline: 2px solid rgba(144, 205, 244, 0.75);
+    outline-offset: -3px;
+}
+
+.t-wi-tab-count {
+    color: #777;
+    font-size: 0.82em;
+    font-variant-numeric: tabular-nums;
+}
+
+.t-wi-tab-btn.active .t-wi-tab-count {
+    color: #90cdf4;
 }
 
 .t-wi-layout {
@@ -4654,6 +4844,14 @@ textarea.t-input {
        \u6CA1\u6CD5\u9760 CSS \u5408\u5E76\u6210\u4E00\u884C\uFF0C\u771F\u8981\u5408\u5E76\u5F97\u6539 DOM \u5E76\u727A\u7272\u684C\u9762\u7AEF\u7684\u5206\u9694\u7EBF\uFF0C\u4E0D\u5212\u7B97 */
     .t-wi-header {
         padding: 10px 12px;
+    }
+
+    .t-wi-tabs {
+        isolation: isolate;
+    }
+
+    .t-wi-tab-btn {
+        touch-action: manipulation;
     }
 
     .t-wi-action-bar {
@@ -8624,6 +8822,23 @@ textarea.t-input {
     gap: 6px;
 }
 
+#t-ws-rating-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 36px;
+    padding: 0 10px;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #ccc;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 0.8em;
+}
+#t-ws-rating-toggle:hover { border-color: var(--t-theme); color: #fff; }
+#t-ws-rating-toggle.is-mature { border-color: #7e3847; background: #4a2530; color: #ffa8b0; }
+
 #t-ws-view .t-header .t-header-actions .t-icon-btn,
 #t-ws-view .t-header .t-header-actions .t-close,
 .t-ws-preview-box .t-header .t-header-actions .t-close {
@@ -8902,6 +9117,7 @@ textarea.t-input {
     background: rgba(191, 161, 95, 0.16);
     color: var(--t-theme);
 }
+.t-ws-tag-mature { background: #4a2530; color: #ffa8b0; }
 
 /* \u5E95\u90E8\u64CD\u4F5C */
 .t-ws-card-actions {
@@ -9073,7 +9289,7 @@ textarea.t-input {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
     padding: 14px;
     gap: 10px;
 }
@@ -9103,13 +9319,68 @@ textarea.t-input {
 }
 
 .t-ws-pv-prompt {
-    flex: 1;
+    flex: 0 0 auto;
     resize: none;
-    min-height: 0;
+    height: clamp(160px, 28vh, 300px);
     font-family: var(--t-font-mono);
     font-size: 0.88em;
     line-height: 1.6;
 }
+
+.t-ws-pv-comments {
+    border-top: 1px solid #2a2a2a;
+    padding-top: 12px;
+}
+
+.t-ws-pv-comments-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.t-ws-pv-comments-head > div {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.t-ws-pv-comments-head strong {
+    color: #ddd;
+    font-size: 0.85em;
+}
+
+.t-ws-pv-comments-list {
+    display: grid;
+    gap: 8px;
+}
+
+.t-ws-pv-comment {
+    padding: 10px 12px;
+    border: 1px solid #2a2a2a;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.t-ws-pv-comment-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-ws-pv-comment-author {
+    display: grid;
+    gap: 2px;
+}
+
+.t-ws-pv-comment-author strong { font-size: 0.86em; color: #e5e5e5; }
+.t-ws-pv-comment-author small { color: #888; font-size: 0.72em; }
+.t-ws-pv-comment-body { margin-top: 8px; white-space: pre-wrap; line-height: 1.5; color: #d0d0d0; font-size: 0.86em; }
+.t-ws-pv-comment-reply { margin-top: 8px; padding: 7px 9px; border-left: 2px solid var(--t-theme); background: rgba(255, 255, 255, 0.04); display: grid; gap: 3px; font-size: 0.82em; }
+.t-ws-pv-comment-reply strong { color: #d9c18a; }
+.t-ws-pv-comment-reply span { white-space: pre-wrap; color: #bbb; }
+.t-ws-pv-comments-empty { color: #888; font-size: 0.84em; padding: 12px 0; }
 
 /* \u2500\u2500 \u79FB\u52A8\u7AEF \u2500\u2500 */
 @media screen and (max-width: 600px) {
@@ -11202,23 +11473,41 @@ textarea.t-input {
     }
 
     #t-debug-view .t-prompt-summary-actions {
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        justify-content: stretch;
+    }
+
+    #t-debug-view .t-prompt-count {
+        grid-column: 1 / -1;
+        margin-right: 0;
+        white-space: normal;
     }
 
     #t-debug-view .t-prompt-tool-btn {
         justify-content: center;
-        padding: 8px 6px;
+        min-height: 36px;
+        padding: 8px 10px;
     }
 
     #t-debug-view #t-prompt-expand-all-btn {
-        width: 34px;
-        overflow: hidden;
-        color: transparent;
-        gap: 0;
+        width: auto;
+        min-width: 0;
+        overflow: visible;
+        color: #999;
+        gap: 6px;
     }
 
     #t-debug-view #t-prompt-expand-all-btn i {
-        color: #999;
+        color: inherit;
+        flex-shrink: 0;
+    }
+
+    #t-debug-view .t-prompt-expand-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     #t-debug-view .t-prompt-icon-btn {
@@ -15991,6 +16280,9 @@ var init_dom = __esm({
 });
 
 // src/core/state.js
+function isFavoritableStatus(status) {
+  return FAVORITABLE_RESULT_STATUSES.has(String(status || ""));
+}
 function clonePromptTraceData(data) {
   return JSON.parse(JSON.stringify(data));
 }
@@ -16093,8 +16385,8 @@ function pushSceneToHistory(content, scriptId, scriptName, metadata = {}) {
     scriptId: String(scriptId || ""),
     scriptName: String(scriptName || "\u573A\u666F"),
     status,
-    canFavorite: status === "success" || status === "legacy",
-    canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+    canFavorite: isFavoritableStatus(status),
+    canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
     error: metadata.error || null,
     timestamp: Date.now()
   };
@@ -16109,8 +16401,8 @@ function setCurrentGenerationResult(result = {}) {
     scriptId: String(result.scriptId || ""),
     scriptName: String(result.scriptName || "\u573A\u666F"),
     status,
-    canFavorite: status === "success" || status === "legacy",
-    canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+    canFavorite: isFavoritableStatus(status),
+    canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
     error: result.error || null,
     timestamp: Number(result.timestamp) || Date.now()
   };
@@ -16130,8 +16422,8 @@ function getCurrentGenerationResult() {
         scriptId: String(item.scriptId || ""),
         scriptName: String(item.scriptName || "\u573A\u666F"),
         status,
-        canFavorite: status === "success" || status === "legacy",
-        canContinue: ["success", "partial", "aborted", "legacy"].includes(status),
+        canFavorite: isFavoritableStatus(status),
+        canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
         error: item.error || null,
         timestamp: Number(item.timestamp) || 0
       };
@@ -16322,9 +16614,11 @@ function setFavsWindowOpen(isOpen) {
 function shouldSuspendStreamUiRendering() {
   return GlobalState.uiFlags.isFavsOpen === true;
 }
-var GlobalState;
+var FAVORITABLE_RESULT_STATUSES, CONTINUABLE_RESULT_STATUSES, GlobalState;
 var init_state = __esm({
   "src/core/state.js"() {
+    FAVORITABLE_RESULT_STATUSES = /* @__PURE__ */ new Set(["success", "partial", "aborted", "legacy"]);
+    CONTINUABLE_RESULT_STATUSES = /* @__PURE__ */ new Set(["success", "partial", "aborted", "legacy"]);
     GlobalState = {
       isGenerating: false,
       abortController: null,
@@ -16349,6 +16643,8 @@ var init_state = __esm({
       // 生成模式: "narrative"(内容优先) | "visual"(氛围美化)
       useHistoryAnalysis: false,
       // 是否读取聊天历史（默认关闭）
+      historyAiOnly: false,
+      // 读历史时只要角色发言，跳过用户楼层（仅作用于剧本生成）
       skipWorldBookCheck: false,
       // 跳过世界书空检查（本次会话内有效）
       skipInteractiveHint: false,
@@ -17022,8 +17318,7 @@ async function getContextData() {
   const activeBooks = collectSessionActiveBooks(ctx, wiVars, data.charName, true);
   const contentParts = [];
   const extData = getExtData();
-  const wiConfig = extData.worldinfo || { char_selections: {} };
-  const charSelections = wiConfig.char_selections[data.charName] || null;
+  const charSelections = readWorldInfoSelections(extData, ctx, data.charName);
   for (const bookName of activeBooks) {
     const bookData = await safeLoadWorldInfo(ctx, bookName);
     if (!bookData || !bookData.entries) continue;
@@ -17079,19 +17374,98 @@ function getCurrentCharNameFromContext(ctx) {
     return "Char";
   }
 }
-function getLocalAutoActiveBooks(charName) {
-  const extData = getExtData();
-  const wiConfig = extData.worldinfo || {};
-  const explicit = wiConfig.char_auto_active_books?.[charName];
-  if (Array.isArray(explicit)) return explicit;
-  const legacySelections = wiConfig.char_selections?.[charName];
-  if (legacySelections && typeof legacySelections === "object") {
-    return Object.keys(legacySelections).filter((bookName) => {
-      const selected = legacySelections[bookName];
-      return Array.isArray(selected) && selected.length > 0;
-    });
+function getCharacterCardKey(stCtx = null) {
+  let ctx = stCtx;
+  try {
+    if (!ctx && typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+  } catch {
+    ctx = null;
   }
+  if (!ctx) return `${NAME_KEY_PREFIX}Char`;
+  const charId = ctx.characterId;
+  if (charId !== void 0 && charId !== null) {
+    const avatar = String(ctx.characters?.[charId]?.avatar || "").trim();
+    if (avatar) return CARD_KEY_PREFIX + avatar.replace(/\.[^/.]+$/, "");
+  }
+  return NAME_KEY_PREFIX + getCurrentCharNameFromContext(ctx);
+}
+function isNameSharedByMultipleCards(ctx, charName) {
+  const characters = Array.isArray(ctx?.characters) ? ctx.characters : [];
+  const target = String(charName || "").trim();
+  if (!target) return false;
+  let seen = 0;
+  for (const item of characters) {
+    if (String(item?.name || "").trim() === target && ++seen > 1) return true;
+  }
+  return false;
+}
+function getWorldInfoConfig(extData) {
+  const wiConfig = extData.worldinfo && typeof extData.worldinfo === "object" ? extData.worldinfo : {};
+  return {
+    cardSelections: wiConfig.card_selections && typeof wiConfig.card_selections === "object" ? wiConfig.card_selections : null,
+    cardAutoActiveBooks: wiConfig.card_auto_active_books && typeof wiConfig.card_auto_active_books === "object" ? wiConfig.card_auto_active_books : null,
+    legacySelections: wiConfig.char_selections && typeof wiConfig.char_selections === "object" ? wiConfig.char_selections : null,
+    legacyAutoActiveBooks: wiConfig.char_auto_active_books && typeof wiConfig.char_auto_active_books === "object" ? wiConfig.char_auto_active_books : null
+  };
+}
+function notifyLegacyAmbiguityOnce(charName) {
+  if (legacyAmbiguityNotified) return;
+  legacyAmbiguityNotified = true;
+  console.warn(`Titania: \u68C0\u6D4B\u5230\u591A\u5F20\u89D2\u8272\u5361\u5171\u7528\u540D\u79F0\u300C${charName}\u300D\uFF0C\u65E7\u7684\u4E16\u754C\u4E66\u7B5B\u9009\u914D\u7F6E\u5DF2\u6309\u5361\u7247\u9694\u79BB\uFF0C\u9700\u8981\u91CD\u65B0\u9009\u62E9\u4E00\u6B21\u6761\u76EE\u3002`);
+  if (typeof window !== "undefined" && window.toastr) {
+    window.toastr.info(
+      `\u68C0\u6D4B\u5230\u591A\u5F20\u89D2\u8272\u5361\u5171\u7528\u540D\u79F0\u300C${charName}\u300D\u3002\u4E16\u754C\u4E66\u7B5B\u9009\u5DF2\u6539\u4E3A\u6309\u5361\u7247\u72EC\u7ACB\u4FDD\u5B58\uFF0C\u8FD9\u5F20\u5361\u9700\u8981\u91CD\u65B0\u9009\u62E9\u4E00\u6B21\u6761\u76EE\u3002`,
+      "Titania Echo",
+      { timeOut: 9e3 }
+    );
+  }
+}
+function canInheritLegacy(ctx, charName, hasLegacyData) {
+  if (!isNameSharedByMultipleCards(ctx, charName)) return true;
+  if (hasLegacyData) notifyLegacyAmbiguityOnce(charName);
+  return false;
+}
+function readWorldInfoSelections(extData, ctx, charName) {
+  const cfg = getWorldInfoConfig(extData);
+  const cardKey = getCharacterCardKey(ctx);
+  const byCard = cfg.cardSelections?.[cardKey];
+  if (byCard && typeof byCard === "object") return byCard;
+  const legacy = cfg.legacySelections?.[charName];
+  const hasLegacy = Boolean(legacy && typeof legacy === "object");
+  if (hasLegacy && canInheritLegacy(ctx, charName, true)) return legacy;
+  return null;
+}
+function readAutoActiveBooks(extData, ctx, charName) {
+  const cfg = getWorldInfoConfig(extData);
+  const cardKey = getCharacterCardKey(ctx);
+  const deriveFromSelections = (selections) => Object.keys(selections).filter((bookName) => {
+    const selected = selections[bookName];
+    return Array.isArray(selected) && selected.length > 0;
+  });
+  const byCard = cfg.cardAutoActiveBooks?.[cardKey];
+  if (Array.isArray(byCard)) return byCard;
+  const cardSelections = cfg.cardSelections?.[cardKey];
+  if (cardSelections && typeof cardSelections === "object") return deriveFromSelections(cardSelections);
+  const legacyExplicit = cfg.legacyAutoActiveBooks?.[charName];
+  const legacySelections = cfg.legacySelections?.[charName];
+  const hasLegacy = Array.isArray(legacyExplicit) || Boolean(legacySelections && typeof legacySelections === "object");
+  if (!canInheritLegacy(ctx, charName, hasLegacy)) return [];
+  if (Array.isArray(legacyExplicit)) return legacyExplicit;
+  if (legacySelections && typeof legacySelections === "object") return deriveFromSelections(legacySelections);
   return [];
+}
+function writeWorldInfoSelections(extData, ctx, selections, autoActiveBooks) {
+  if (!extData.worldinfo || typeof extData.worldinfo !== "object") extData.worldinfo = {};
+  const wiConfig = extData.worldinfo;
+  if (!wiConfig.card_selections || typeof wiConfig.card_selections !== "object") wiConfig.card_selections = {};
+  if (!wiConfig.card_auto_active_books || typeof wiConfig.card_auto_active_books !== "object") wiConfig.card_auto_active_books = {};
+  const cardKey = getCharacterCardKey(ctx);
+  wiConfig.card_selections[cardKey] = selections;
+  wiConfig.card_auto_active_books[cardKey] = Array.isArray(autoActiveBooks) ? autoActiveBooks : [];
+  return cardKey;
+}
+function getLocalAutoActiveBooks(charName, ctx = null) {
+  return readAutoActiveBooks(getExtData(), ctx, charName);
 }
 function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalAuto = false) {
   const activeBooks = /* @__PURE__ */ new Set();
@@ -17121,7 +17495,7 @@ function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalA
     console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
   }
   if (includeLocalAuto) {
-    const localAutoBooks = getLocalAutoActiveBooks(charName);
+    const localAutoBooks = getLocalAutoActiveBooks(charName, ctx);
     localAutoBooks.forEach((name) => activeBooks.add(name));
   }
   return activeBooks;
@@ -17177,9 +17551,13 @@ async function getWorldInfoEntriesByBookName(bookName) {
     isDisabled: e.disable === true && e.enabled !== true
   }));
 }
+var CARD_KEY_PREFIX, NAME_KEY_PREFIX, legacyAmbiguityNotified;
 var init_context = __esm({
   "src/core/context.js"() {
     init_storage();
+    CARD_KEY_PREFIX = "card:";
+    NAME_KEY_PREFIX = "name:";
+    legacyAmbiguityNotified = false;
   }
 });
 
@@ -17544,7 +17922,7 @@ function isSameChainSession(favEntry, scriptId, branchKey, currentItems) {
 async function saveContinuationChainFavorite() {
   const currentResult = getCurrentGenerationResult();
   if (!isFavoriteEligible(currentResult)) {
-    if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u751F\u6210\u672A\u5B8C\u6210\uFF0C\u65E0\u6CD5\u6536\u85CF");
+    if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u53EF\u6536\u85CF\u7684\u5267\u573A\u5185\u5BB9");
     return false;
   }
   const display = GlobalState.displayState?.isViewingHistory ? GlobalState.sceneHistory?.items?.[GlobalState.displayState.currentViewIndex] || null : {
@@ -17560,7 +17938,9 @@ async function saveContinuationChainFavorite() {
   const chainData = getContinuationRoundsForFav(scriptId);
   const rounds = Array.isArray(chainData?.rounds) ? chainData.rounds : [];
   const currentDisplayContent = String(currentResult?.content || "").trim();
-  const normalizedRounds = rounds.length > 0 ? rounds.filter((round) => round.status === "success" || round.status === "legacy") : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, timestamp: Date.now() }] : [];
+  const normalizedRounds = rounds.length > 0 ? rounds.filter(
+    (round) => ["success", "partial", "aborted", "legacy"].includes(String(round?.status || "legacy")) && String(round?.content || "").trim().length > 0
+  ) : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, timestamp: Date.now() }] : [];
   if (normalizedRounds.length === 0) {
     if (window.toastr) toastr.warning("\u5F53\u524D\u5267\u573A\u6CA1\u6709\u53EF\u6536\u85CF\u5185\u5BB9");
     return false;
@@ -19317,7 +19697,7 @@ async function showDebugInfo() {
             </div>
             <div class="t-prompt-summary-actions">
                 <span class="t-prompt-count"><strong id="t-prompt-total-token">0</strong> tokens<span id="t-prompt-token-approx" style="display:none"> (\u4F30\u7B97)</span> \xB7 <b id="t-prompt-section-count">0</b> \u6761\u6D88\u606F</span>
-                <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6D88\u606F"><i class="fa-solid fa-angles-down"></i> \u5C55\u5F00\u5168\u90E8</button>
+                <button id="t-prompt-expand-all-btn" class="t-prompt-tool-btn" title="\u5C55\u5F00\u5168\u90E8\u6D88\u606F" aria-label="\u5C55\u5F00\u5168\u90E8\u6D88\u606F"><i class="fa-solid fa-angles-down"></i><span class="t-prompt-expand-label">\u5C55\u5F00\u5168\u90E8</span></button>
                 <button id="t-debug-refresh" class="t-prompt-tool-btn t-prompt-icon-btn" title="\u5237\u65B0"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
         </div>
@@ -19430,8 +19810,12 @@ async function showDebugInfo() {
     $(this).addClass("active").attr("aria-selected", "true");
     $("#t-prompt-info-popover").prop("hidden", true);
     $("#t-prompt-info-btn").attr("aria-expanded", "false");
-    if (activeSource === "preview" && !currentPreview) await loadCurrentPreview();
-    else renderPromptWindow();
+    if (activeSource === "preview") {
+      currentPreview = null;
+      await loadCurrentPreview();
+    } else {
+      renderPromptWindow();
+    }
   });
   $("#t-prompt-info-btn").on("click", function(event) {
     event.stopPropagation();
@@ -19467,11 +19851,11 @@ async function showDebugInfo() {
     if ($cards.length === 0) return;
     const allExpanded = $cards.filter(".expanded").length === $cards.length;
     if (allExpanded) {
-      $btn.html('<i class="fa-solid fa-angles-up"></i> \u6298\u53E0\u5168\u90E8');
-      $btn.attr("title", "\u6298\u53E0\u5168\u90E8\u6D88\u606F");
+      $btn.html('<i class="fa-solid fa-angles-up"></i><span class="t-prompt-expand-label">\u6298\u53E0\u5168\u90E8</span>');
+      $btn.attr({ title: "\u6298\u53E0\u5168\u90E8\u6D88\u606F", "aria-label": "\u6298\u53E0\u5168\u90E8\u6D88\u606F" });
     } else {
-      $btn.html('<i class="fa-solid fa-angles-down"></i> \u5C55\u5F00\u5168\u90E8');
-      $btn.attr("title", "\u5C55\u5F00\u5168\u90E8\u6D88\u606F");
+      $btn.html('<i class="fa-solid fa-angles-down"></i><span class="t-prompt-expand-label">\u5C55\u5F00\u5168\u90E8</span>');
+      $btn.attr({ title: "\u5C55\u5F00\u5168\u90E8\u6D88\u606F", "aria-label": "\u5C55\u5F00\u5168\u90E8\u6D88\u606F" });
     }
   };
   $("#t-prompt-expand-all-btn").on("click", function() {
@@ -33486,6 +33870,9 @@ async function fetchList({ force = false } = {}) {
 function fetchScript(id3) {
   return req(`/api/script/${encodeURIComponent(id3)}`);
 }
+function fetchComments(id3) {
+  return req(`/api/script/${encodeURIComponent(id3)}/comments`);
+}
 function countDownload(id3) {
   return req("/api/downloads", {
     method: "POST",
@@ -33500,6 +33887,39 @@ var init_workshopApi = __esm({
     LIST_TTL = 6e4;
     TIMEOUT = 15e3;
     cache = { list: null, at: 0 };
+  }
+});
+
+// src/core/workshopRating.js
+function showMature() {
+  try {
+    return localStorage.getItem(KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function setShowMature(on) {
+  try {
+    localStorage.setItem(KEY, on ? "1" : "0");
+  } catch {
+  }
+}
+function toggleMature() {
+  if (showMature()) {
+    setShowMature(false);
+    return false;
+  }
+  const ok = window.confirm("\u5373\u5C06\u663E\u793A\u6807\u8BB0\u4E3A\u201C\u6210\u4EBA\u5411\u201D\u7684\u6295\u7A3F\uFF0C\u5176\u4E2D\u53EF\u80FD\u5305\u542B\u9732\u9AA8\u6027\u5185\u5BB9\u3001\u6027\u6697\u793A\u6216\u5F3A\u70C8\u66B4\u529B\u5185\u5BB9\u3002\n\n\u8BF7\u786E\u8BA4\u4F60\u5DF2\u6EE1\u8DB3\u6240\u5728\u5730\u7684\u6CD5\u5B9A\u5E74\u9F84\u8981\u6C42\u3002\n\n\u70B9\u51FB\u201C\u786E\u5B9A\u201D\u7EE7\u7EED\u663E\u793A\u6210\u4EBA\u5411\u5185\u5BB9\u3002");
+  if (ok) setShowMature(true);
+  return ok;
+}
+function filterByRating(items) {
+  return showMature() ? items : items.filter((item) => item.rating !== "mature");
+}
+var KEY;
+var init_workshopRating = __esm({
+  "src/core/workshopRating.js"() {
+    KEY = "titania_workshop_show_mature";
   }
 });
 
@@ -33543,6 +33963,24 @@ function bindAvatarFallback($scope) {
     $(this).remove();
   });
 }
+function renderPreviewComments(items) {
+  if (!items?.length) {
+    return `<div class="t-ws-pv-comments-empty">\u8FD8\u6CA1\u6709\u8BC4\u8BBA\uFF0C\u53BB\u7F51\u9875\u7ED9\u4F5C\u8005\u7559\u53E5\u8BDD\u5427\u3002</div>`;
+  }
+  return items.map((item) => `
+        <article class="t-ws-pv-comment">
+            <div class="t-ws-pv-comment-head">
+                ${renderAvatar(item.author)}
+                <div class="t-ws-pv-comment-author">
+                    <strong>${esc(item.author?.name || "\u672A\u77E5\u7528\u6237")}</strong>
+                    <small>${formatRelativeTime(item.updated_at || item.created_at)}</small>
+                </div>
+            </div>
+            <div class="t-ws-pv-comment-body">${esc(item.body)}</div>
+            ${item.reply ? `<div class="t-ws-pv-comment-reply"><strong>\u4F5C\u8005\u56DE\u590D</strong><span>${esc(item.reply.body)}</span></div>` : ""}
+        </article>
+    `).join("");
+}
 function formatRelativeTime(ts) {
   const time = (Number(ts) || 0) * 1e3;
   if (!time) return "";
@@ -33554,7 +33992,7 @@ function formatRelativeTime(ts) {
 }
 function openWorkshopWindow(source = "manager") {
   let allItems = [];
-  let currentFilter = { category: "\u5168\u90E8", search: "", sort: "latest" };
+  let currentFilter = { category: "\u5168\u90E8", search: "", sort: "newest" };
   if (source === "manager" && !$("#t-mgr-view").length) source = "main";
   if (source === "main" && !$("#t-main-view").length && $("#t-mgr-view").length) source = "manager";
   if (source === "manager") {
@@ -33571,6 +34009,7 @@ function openWorkshopWindow(source = "manager") {
                 <div class="t-title-sub">ECHO WORKSHOP</div>
             </div>
             <div class="t-header-actions">
+                <button class="t-ws-rating-toggle" id="t-ws-rating-toggle" type="button"></button>
                 <i class="fa-solid fa-arrow-up-right-from-square t-icon-btn" id="t-ws-open-site" title="\u5728\u6D4F\u89C8\u5668\u4E2D\u6253\u5F00\u5DE5\u574A\uFF08\u6295\u7A3F/\u7F16\u8F91\uFF09"></i>
                 <i class="fa-solid fa-rotate t-icon-btn" id="t-ws-refresh" title="\u5237\u65B0"></i>
                 <span class="t-close" id="t-ws-close">&times;</span>
@@ -33598,30 +34037,31 @@ function openWorkshopWindow(source = "manager") {
     }
   };
   const renderCategories = () => {
-    const cats = [...new Set(allItems.map((i) => i.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));
+    const cats = [...new Set(filterByRating(allItems).map((i) => i.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));
     const $sel = $("#t-ws-cat");
     $sel.empty().append(`<option value="\u5168\u90E8">\u5168\u90E8\u5206\u7C7B</option>`);
     cats.forEach((c) => $sel.append(`<option value="${esc(c)}">${esc(c)}</option>`));
     $sel.val(currentFilter.category);
   };
   const renderStats = (shownCount) => {
-    if (!allItems.length) {
+    const visibleItems = filterByRating(allItems);
+    if (!visibleItems.length) {
       $("#t-ws-stats").empty();
       return;
     }
     const weekAgo = Math.floor(Date.now() / 1e3) - 7 * 86400;
-    const fresh = allItems.filter((i) => (i.created_at || 0) >= weekAgo).length;
-    const totalDownloads = allItems.reduce((sum, i) => sum + (Number(i.downloads) || 0), 0);
-    const filtered = shownCount !== allItems.length;
+    const fresh = visibleItems.filter((i) => (i.created_at || 0) >= weekAgo).length;
+    const totalDownloads = visibleItems.reduce((sum, i) => sum + (Number(i.downloads) || 0), 0);
+    const filtered = shownCount !== visibleItems.length;
     $("#t-ws-stats").html(`
-            <span><b>${allItems.length}</b> \u6761\u6295\u7A3F</span>
+            <span><b>${visibleItems.length}</b> \u6761\u5F53\u524D\u53EF\u89C1\u6295\u7A3F</span>
             ${fresh ? `<span>\u672C\u5468\u65B0\u589E <b>${fresh}</b></span>` : ""}
             <span>\u7D2F\u8BA1\u4E0B\u8F7D <b>${totalDownloads}</b></span>
             ${filtered ? `<span class="t-ws-stats-filter">\u5F53\u524D\u663E\u793A <b>${shownCount}</b></span>` : ""}
         `);
   };
   const getFiltered = () => {
-    const list = allItems.filter((item) => {
+    const list = filterByRating(allItems).filter((item) => {
       if (currentFilter.category !== "\u5168\u90E8" && item.category !== currentFilter.category) return false;
       if (currentFilter.search) {
         const term = currentFilter.search.toLowerCase();
@@ -33630,7 +34070,7 @@ function openWorkshopWindow(source = "manager") {
       }
       return true;
     });
-    const sorter = SORT_MODES[currentFilter.sort] || SORT_MODES.latest;
+    const sorter = SORT_MODES[currentFilter.sort] || SORT_MODES.newest;
     return list.sort(sorter.fn);
   };
   const renderList = () => {
@@ -33644,8 +34084,8 @@ function openWorkshopWindow(source = "manager") {
         $list.html(`
                     <div class="t-ws-placeholder">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <div class="t-ws-ph-title">\u6CA1\u6709\u5339\u914D\u7684\u6295\u7A3F</div>
-                        <div class="t-ws-ph-desc">\u6362\u4E2A\u5173\u952E\u8BCD\uFF0C\u6216\u628A\u5206\u7C7B\u5207\u56DE\u300C\u5168\u90E8\u5206\u7C7B\u300D</div>
+                        <div class="t-ws-ph-title">\u6CA1\u6709\u53EF\u663E\u793A\u7684\u6295\u7A3F</div>
+                        <div class="t-ws-ph-desc">\u6362\u4E2A\u5173\u952E\u8BCD\u3001\u5206\u7C7B\uFF0C\u6216\u5207\u6362\u5185\u5BB9\u8303\u56F4</div>
                     </div>`);
       } else {
         $list.html(`
@@ -33678,6 +34118,7 @@ function openWorkshopWindow(source = "manager") {
                     <div class="t-ws-card-desc">${esc(item.desc) || "\u4F5C\u8005\u6CA1\u6709\u5199\u7B80\u4ECB"}</div>
                     <div class="t-ws-card-tags">
                         ${item.category ? `<span class="t-ws-tag t-ws-tag-cat">${esc(item.category)}</span>` : ""}
+                        ${item.rating === "mature" ? `<span class="t-ws-tag t-ws-tag-mature">\u6210\u4EBA\u5411</span>` : ""}
                         ${tags}
                         <span class="t-ws-tag">v${Number(item.version) || 1}</span>
                     </div>
@@ -33705,7 +34146,9 @@ function openWorkshopWindow(source = "manager") {
         name: detail.name,
         desc: detail.desc || "",
         prompt: detail.prompt,
-        category: detail.category || "\u5DE5\u574A\u4E0B\u8F7D"
+        category: detail.category || "\u5DE5\u574A\u4E0B\u8F7D",
+        workshop_source_id: item.id,
+        workshop_author_id: item.author?.id || null
       });
       countDownload(item.id);
       $btn.text("\u2713 \u5DF2\u4E0B\u8F7D");
@@ -33740,12 +34183,25 @@ function openWorkshopWindow(source = "manager") {
                         <div class="t-ws-heat${downloads >= HOT_THRESHOLD ? " is-hot" : ""}">
                             <i class="fa-solid fa-fire"></i> ${downloads}
                         </div>
+                        ${item.rating === "mature" ? `<span class="t-ws-tag t-ws-tag-mature">\u6210\u4EBA\u5411</span>` : ""}
                     </div>
                     ${item.desc ? `<div class="t-ws-pv-desc">${esc(item.desc)}</div>` : ""}
                     <div class="t-ws-pv-label">
                         <span>\u6307\u4EE4\u5185\u5BB9</span>
                     </div>
                     <textarea class="t-input t-ws-pv-prompt" readonly>\u52A0\u8F7D\u4E2D...</textarea>
+                    <section class="t-ws-pv-comments">
+                        <div class="t-ws-pv-comments-head">
+                            <div>
+                                <span class="t-ws-pv-label">\u8BC4\u8BBA</span>
+                                <strong id="t-ws-pv-comments-count">\u52A0\u8F7D\u4E2D...</strong>
+                            </div>
+                            <button class="t-btn t-btn-soft" id="t-ws-pv-comment-open">\u53BB\u7F51\u9875\u8BC4\u8BBA</button>
+                        </div>
+                        <div id="t-ws-pv-comments-list" class="t-ws-pv-comments-list">
+                            <div class="t-ws-pv-comments-empty">\u6B63\u5728\u52A0\u8F7D\u8BC4\u8BBA...</div>
+                        </div>
+                    </section>
                     <div class="t-btn-row">
                         <button class="t-btn primary" id="t-ws-pv-get" style="flex:1;">\u4E0B\u8F7D\u5230\u672C\u5730</button>
                     </div>
@@ -33759,6 +34215,7 @@ function openWorkshopWindow(source = "manager") {
       $(document).off("keydown.wspreview");
     };
     $("#t-ws-pv-close").on("click", closePreview);
+    $("#t-ws-pv-comment-open").on("click", () => window.open(`${WORKSHOP_ORIGIN}/#/comment/${encodeURIComponent(item.id)}`, "_blank"));
     $("#t-ws-preview-overlay").on("click", function(e) {
       if (e.target === this) closePreview();
     });
@@ -33768,16 +34225,25 @@ function openWorkshopWindow(source = "manager") {
         e.preventDefault();
       }
     });
-    try {
-      const detail = await fetchScript(item.id);
-      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(detail.prompt);
+    const [detailResult, commentsResult] = await Promise.allSettled([fetchScript(item.id), fetchComments(item.id)]);
+    if (detailResult.status === "fulfilled") {
+      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(detailResult.value.prompt);
       $("#t-ws-pv-get").on("click", function() {
         downloadScript(item, $(this));
         setTimeout(closePreview, 800);
       });
-    } catch (e) {
-      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(`\u52A0\u8F7D\u5931\u8D25\uFF1A${e.message}`);
+    } else {
+      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(`\u52A0\u8F7D\u5931\u8D25\uFF1A${detailResult.reason?.message || "\u672A\u77E5\u9519\u8BEF"}`);
       $("#t-ws-pv-get").prop("disabled", true);
+    }
+    if (commentsResult.status === "fulfilled") {
+      const items = commentsResult.value.items || [];
+      $("#t-ws-pv-comments-count").text(`${items.length} \u6761`);
+      $("#t-ws-pv-comments-list").html(renderPreviewComments(items));
+      bindAvatarFallback($("#t-ws-pv-comments-list"));
+    } else {
+      $("#t-ws-pv-comments-count").text("\u6682\u4E0D\u53EF\u7528");
+      $("#t-ws-pv-comments-list").html(`<div class="t-ws-pv-comments-empty">\u8BC4\u8BBA\u52A0\u8F7D\u5931\u8D25\uFF1A${esc(commentsResult.reason?.message || "\u672A\u77E5\u9519\u8BEF")}</div>`);
     }
   };
   const renderSkeleton = () => {
@@ -33819,6 +34285,16 @@ function openWorkshopWindow(source = "manager") {
   $("#t-ws-close").on("click", closeWindow2);
   $("#t-ws-refresh").on("click", () => load({ force: true }));
   $("#t-ws-open-site").on("click", () => window.open(WORKSHOP_ORIGIN, "_blank"));
+  const paintRatingToggle = () => {
+    const mature = showMature();
+    $("#t-ws-rating-toggle").toggleClass("is-mature", mature).attr("aria-pressed", String(mature)).attr("title", mature ? "\u70B9\u51FB\u9690\u85CF\u6210\u4EBA\u5411\u5185\u5BB9" : "\u70B9\u51FB\u663E\u793A\u6210\u4EBA\u5411\u5185\u5BB9").html(`<i class="fa-solid fa-shield-halved"></i> ${mature ? "\u5305\u542B\u6210\u4EBA\u5411" : "\u5168\u5E74\u9F84"}`);
+  };
+  $("#t-ws-rating-toggle").on("click", () => {
+    toggleMature();
+    paintRatingToggle();
+    renderCategories();
+    renderList();
+  });
   $("#t-ws-search").on("input", function() {
     currentFilter.search = $(this).val().trim();
     renderList();
@@ -33831,6 +34307,7 @@ function openWorkshopWindow(source = "manager") {
     currentFilter.sort = $(this).val();
     renderList();
   });
+  paintRatingToggle();
   load();
 }
 var HOT_THRESHOLD, AVATAR_COLORS, ANON_COLOR, SORT_MODES;
@@ -33840,6 +34317,7 @@ var init_workshopWindow = __esm({
     init_scriptData();
     init_state();
     init_mainWindow();
+    init_workshopRating();
     HOT_THRESHOLD = 50;
     AVATAR_COLORS = [
       "linear-gradient(135deg, #bfa15f, #8a7038)",
@@ -33851,9 +34329,9 @@ var init_workshopWindow = __esm({
     ];
     ANON_COLOR = "linear-gradient(135deg, #5a5a5a, #3a3a3a)";
     SORT_MODES = {
+      newest: { label: "\u6700\u65B0\u53D1\u5E03", fn: (a, b) => (b.created_at || b.updated_at || 0) - (a.created_at || a.updated_at || 0) || (b.updated_at || 0) - (a.updated_at || 0) || String(b.id).localeCompare(String(a.id)) },
       latest: { label: "\u6700\u65B0\u66F4\u65B0", fn: (a, b) => (b.updated_at || 0) - (a.updated_at || 0) },
       downloads: { label: "\u4E0B\u8F7D\u6700\u591A", fn: (a, b) => (b.downloads || 0) - (a.downloads || 0) },
-      newest: { label: "\u6700\u65B0\u53D1\u5E03", fn: (a, b) => (b.created_at || 0) - (a.created_at || 0) },
       name: { label: "\u540D\u79F0 A-Z", fn: (a, b) => String(a.name).localeCompare(String(b.name), "zh-CN") }
     };
   }
@@ -35341,11 +35819,19 @@ function renderHtml(viewData) {
             </div>
 
             <div class="t-top-bar">
-                <div class="t-history-toggle" id="t-history-toggle">
-                    <label class="t-toggle-label">
-                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
-                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
-                    </label>
+                <div class="t-history-group">
+                    <div class="t-history-toggle" id="t-history-toggle">
+                        <label class="t-toggle-label">
+                            <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
+                            <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
+                        </label>
+                    </div>
+                    <div class="t-history-toggle t-subtoggle" id="t-ai-only-toggle" title="\u53EA\u628A\u89D2\u8272\u7684\u53D1\u8A00\u6CE8\u5165\u5267\u672C\u751F\u6210\uFF0C\u8DF3\u8FC7\u4F60\u81EA\u5DF1\u7684\u697C\u5C42\u3002\u603B\u7ED3\u548C\u8BBE\u5B9A\u63D0\u53D6\u4E0D\u53D7\u5F71\u54CD">
+                        <label class="t-toggle-label">
+                            <input type="checkbox" id="t-history-ai-only" ${GlobalState.historyAiOnly ? "checked" : ""}>
+                            <span class="t-toggle-text">\u{1F3AD} \u53EA\u8981\u89D2\u8272\u53D1\u8A00</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="t-mode-toggle" id="t-mode-toggle">
                     <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
@@ -35398,6 +35884,9 @@ function renderHtml(viewData) {
                     </button>
                     <button class="t-tools-icon" id="t-btn-like" type="button" title="\u6536\u85CF\u7ED3\u679C" aria-label="\u6536\u85CF\u7ED3\u679C">
                         <i class="fa-regular fa-heart"></i>
+                    </button>
+                    <button class="t-tools-icon" id="t-tool-workshop-feedback" type="button" title="\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F" aria-label="\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F" style="display:none;">
+                        <i class="fa-regular fa-comment-dots"></i>
                     </button>
                 </div>
                 <div class="t-content-area">
@@ -35750,11 +36239,19 @@ function renderHtml2(viewData) {
             </div>
 
             <div class="t-top-bar">
-                <div class="t-history-toggle" id="t-history-toggle">
-                    <label class="t-toggle-label">
-                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
-                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
-                    </label>
+                <div class="t-history-group">
+                    <div class="t-history-toggle" id="t-history-toggle">
+                        <label class="t-toggle-label">
+                            <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
+                            <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
+                        </label>
+                    </div>
+                    <div class="t-history-toggle t-subtoggle" id="t-ai-only-toggle" title="\u53EA\u628A\u89D2\u8272\u7684\u53D1\u8A00\u6CE8\u5165\u5267\u672C\u751F\u6210\uFF0C\u8DF3\u8FC7\u4F60\u81EA\u5DF1\u7684\u697C\u5C42\u3002\u603B\u7ED3\u548C\u8BBE\u5B9A\u63D0\u53D6\u4E0D\u53D7\u5F71\u54CD">
+                        <label class="t-toggle-label">
+                            <input type="checkbox" id="t-history-ai-only" ${GlobalState.historyAiOnly ? "checked" : ""}>
+                            <span class="t-toggle-text">\u{1F3AD} \u53EA\u8981\u89D2\u8272\u53D1\u8A00</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="t-mode-toggle" id="t-mode-toggle">
                     <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
@@ -35811,6 +36308,10 @@ function renderHtml2(viewData) {
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
+                    </div>
+                    <div class="t-tools-item" id="t-tool-workshop-feedback" style="display:none;">
+                        <i class="fa-regular fa-comment-dots"></i>
+                        <span>\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F</span>
                     </div>
                 </div>
                 <div class="t-content-area">
@@ -35964,7 +36465,8 @@ __export(mainWindow_exports, {
   updateModeToggleUI: () => updateModeToggleUI,
   updateQueueButtonUI: () => updateQueueButtonUI,
   updateRunButtonsState: () => updateRunButtonsState,
-  updateScriptTitleDisplay: () => updateScriptTitleDisplay
+  updateScriptTitleDisplay: () => updateScriptTitleDisplay,
+  updateWorkshopFeedbackButton: () => updateWorkshopFeedbackButton
 });
 function formatRelativeTime3(ts) {
   const time = Number(ts) || 0;
@@ -36007,6 +36509,12 @@ function updateHistoryToggleUI() {
     $toggle.removeClass("active");
   }
   $checkbox.prop("checked", GlobalState.useHistoryAnalysis);
+  const $aiOnly = $("#t-ai-only-toggle");
+  const $aiOnlyBox = $("#t-history-ai-only");
+  $aiOnly.toggleClass("disabled", !GlobalState.useHistoryAnalysis);
+  $aiOnly.toggleClass("active", GlobalState.useHistoryAnalysis && GlobalState.historyAiOnly);
+  $aiOnlyBox.prop("disabled", !GlobalState.useHistoryAnalysis);
+  $aiOnlyBox.prop("checked", GlobalState.historyAiOnly);
 }
 function updateModeToggleUI() {
   $(".t-mode-btn").removeClass("active");
@@ -36674,6 +37182,7 @@ async function openMainWindow() {
     data = { ui_mode_echo: true };
   }
   GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
+  GlobalState.historyAiOnly = data.history_extraction?.ai_only === true;
   GlobalState.generationMode = ["narrative", "visual", "preset"].includes(data.config?.generation_mode) ? data.config.generation_mode : "narrative";
   const placeholderContent = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
   const layout = data.ui_prefs?.main_window_mode === "legacy" ? legacy_exports : modern_exports;
@@ -36700,6 +37209,21 @@ async function openMainWindow() {
         toastr.info("\u{1F4DC} \u5DF2\u5F00\u542F\uFF1A\u5C06\u5206\u6790\u804A\u5929\u5386\u53F2", "Titania");
       } else {
         toastr.info("\u{1F4DC} \u5DF2\u5173\u95ED\uFF1A\u4E0D\u8BFB\u53D6\u804A\u5929\u5386\u53F2", "Titania");
+      }
+    }
+  });
+  $("#t-history-ai-only").on("change", function() {
+    GlobalState.historyAiOnly = $(this).is(":checked");
+    updateHistoryToggleUI();
+    const d = getExtData();
+    if (!d.history_extraction || typeof d.history_extraction !== "object") d.history_extraction = {};
+    d.history_extraction.ai_only = GlobalState.historyAiOnly;
+    saveExtData();
+    if (window.toastr) {
+      if (GlobalState.historyAiOnly) {
+        toastr.info("\u{1F3AD} \u5DF2\u5F00\u542F\uFF1A\u5386\u53F2\u53EA\u6CE8\u5165\u89D2\u8272\u53D1\u8A00", "Titania");
+      } else {
+        toastr.info("\u{1F3AD} \u5DF2\u5173\u95ED\uFF1A\u5386\u53F2\u5305\u542B\u53CC\u65B9\u53D1\u8A00", "Titania");
       }
     }
   });
@@ -36934,7 +37458,7 @@ async function openMainWindow() {
   });
   $("#t-btn-like").on("click", () => {
     if (!isFavoriteEligible(getCurrentGenerationResult())) {
-      if (window.toastr) toastr.warning("\u5F53\u524D\u5185\u5BB9\u751F\u6210\u672A\u5B8C\u6210\uFF0C\u65E0\u6CD5\u6536\u85CF");
+      if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u53EF\u6536\u85CF\u7684\u5267\u573A\u5185\u5BB9");
       updateFavButtonUI();
       return;
     }
@@ -36943,6 +37467,16 @@ async function openMainWindow() {
     } else {
       saveFavorite();
     }
+  });
+  $("#t-tool-workshop-feedback").on("click", () => {
+    const result = getCurrentGenerationResult();
+    const script = GlobalState.runtimeScripts.find((s) => s.id === result?.scriptId);
+    const sourceId = script?.workshop_source_id;
+    if (!sourceId) {
+      if (window.toastr) toastr.info("\u5F53\u524D\u5267\u672C\u4E0D\u662F\u4ECE\u56DE\u58F0\u5DE5\u574A\u4E0B\u8F7D\u7684");
+      return;
+    }
+    window.open(`${WORKSHOP_ORIGIN}/#/comment/${encodeURIComponent(sourceId)}`, "_blank");
   });
   $("#t-main-view").on("click", "[data-header-action]", function(e) {
     e.stopPropagation();
@@ -37098,6 +37632,7 @@ function updateContentStatsDisplay(stats) {
   $hud.show();
 }
 function updateFavButtonUI() {
+  updateWorkshopFeedbackButton();
   const btn = $("#t-btn-like");
   if (!btn.length) return;
   const icon = btn.find("i");
@@ -37115,6 +37650,13 @@ function updateFavButtonUI() {
     icon.attr("class", "fa-regular fa-heart").css("color", "");
     btn.attr({ title: "\u6536\u85CF\u7ED3\u679C", "aria-label": "\u6536\u85CF\u7ED3\u679C" }).removeClass("is-faved");
   }
+}
+function updateWorkshopFeedbackButton() {
+  const btn = $("#t-tool-workshop-feedback");
+  if (!btn.length) return;
+  const result = getCurrentGenerationResult();
+  const script = GlobalState.runtimeScripts.find((s) => s.id === result?.scriptId);
+  btn.toggle(Boolean(result?.content && script?.workshop_source_id));
 }
 function updateScriptTitleDisplay() {
   const scriptId = GlobalState.lastGeneratedScriptId;
@@ -37243,7 +37785,13 @@ async function updateWorldInfoBadge() {
     const data = getExtData();
     let totalCount = 0;
     let selectedCount = 0;
-    const charSelections = data.worldinfo?.char_selections?.[ctx.charName] || null;
+    let stCtx = null;
+    try {
+      if (typeof SillyTavern !== "undefined") stCtx = SillyTavern.getContext?.() || null;
+    } catch {
+      stCtx = null;
+    }
+    const charSelections = readWorldInfoSelections(data, stCtx, ctx.charName);
     entries.forEach((book) => {
       book.entries.forEach((entry) => {
         totalCount++;
@@ -37287,12 +37835,12 @@ async function openWorldInfoSelector() {
       if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
         const stCtx = SillyTavern.getContext();
         const charName2 = stCtx?.substituteParams?.("{{char}}") || "Char";
-        return { charName: charName2 };
+        return { charName: charName2, stCtx };
       }
     } catch (e) {
       console.warn("Titania: \u83B7\u53D6\u4E16\u754C\u4E66\u7A97\u53E3\u4E0A\u4E0B\u6587\u5931\u8D25", e);
     }
-    return { charName: "Char" };
+    return { charName: "Char", stCtx: null };
   };
   const loadingHtml = `
     <div id="t-wi-selector" class="t-wi-selector">
@@ -37310,8 +37858,13 @@ async function openWorldInfoSelector() {
             </div>
         </div>
     </div>`;
-  $("#t-main-view").append(loadingHtml);
-  $("#t-wi-close").on("click", () => $("#t-wi-selector").remove());
+  const $loadingPanel = $(loadingHtml);
+  let loadingCancelled = false;
+  $("#t-main-view").append($loadingPanel);
+  $loadingPanel.find("#t-wi-close").on("click", () => {
+    loadingCancelled = true;
+    $loadingPanel.remove();
+  });
   let ctx;
   let allBookNames;
   let activeBookNames;
@@ -37340,22 +37893,23 @@ async function openWorldInfoSelector() {
     }
   } catch (e) {
     console.error("Titania: \u52A0\u8F7D\u4E16\u754C\u4E66\u6570\u636E\u5931\u8D25", e);
-    $("#t-wi-selector .t-wi-body").html(`
+    if (loadingCancelled || !$loadingPanel[0]?.isConnected) return;
+    $loadingPanel.find(".t-wi-body").html(`
             <div style="text-align:center; color:#e74c3c; padding:20px;">
                 <i class="fa-solid fa-exclamation-triangle" style="font-size:2em; margin-bottom:10px;"></i>
                 <div style="margin-bottom:10px;">\u52A0\u8F7D\u4E16\u754C\u4E66\u6570\u636E\u5931\u8D25</div>
                 <div style="font-size:0.9em; color:#888;">${e.message}</div>
-                <button class="t-btn" style="margin-top:15px;" onclick="$('#t-wi-selector').remove();">\u5173\u95ED</button>
+                <button class="t-btn t-wi-load-error-close" style="margin-top:15px;">\u5173\u95ED</button>
             </div>
         `);
+    $loadingPanel.find(".t-wi-load-error-close").on("click", () => $loadingPanel.remove());
     return;
   }
+  if (loadingCancelled || !$loadingPanel[0]?.isConnected) return;
   const data = getExtData();
-  if (!data.worldinfo) data.worldinfo = { char_selections: {}, char_auto_active_books: {} };
-  if (!data.worldinfo.char_selections) data.worldinfo.char_selections = {};
-  if (!data.worldinfo.char_auto_active_books) data.worldinfo.char_auto_active_books = {};
+  if (!data.worldinfo) data.worldinfo = {};
   const charName = ctx.charName;
-  const savedSelections = data.worldinfo.char_selections[charName] || null;
+  const savedSelections = readWorldInfoSelections(data, ctx.stCtx, charName);
   const workingSelections = savedSelections ? structuredClone(savedSelections) : {};
   const allBooks = Array.isArray(allBookNames) ? allBookNames.slice() : [];
   const baseActiveBooks = Array.isArray(activeBookNames) ? activeBookNames.filter((name) => allBooks.includes(name)) : [];
@@ -37365,7 +37919,7 @@ async function openWorldInfoSelector() {
   let currentViewMode = "all";
   const getVisibleBooks = () => currentViewMode === "active" ? baseActiveBooks : allBooks;
   let visibleBooks = getVisibleBooks();
-  $("#t-wi-selector").remove();
+  $loadingPanel.remove();
   const renderBookListHtml = (books, activeSet2, selectedName) => {
     if (!books.length) {
       const emptyText = currentViewMode === "active" ? "\u5F53\u524D\u6CA1\u6709\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66" : "\u672A\u627E\u5230\u4EFB\u4F55\u4E16\u754C\u4E66";
@@ -37405,9 +37959,13 @@ async function openWorldInfoSelector() {
             <div class="t-close" id="t-wi-close">&times;</div>
         </div>
 
-        <div class="t-wi-action-bar t-wi-tabs">
-            <button type="button" class="t-btn t-btn-xs t-wi-tab-btn active" data-mode="all">\u5168\u90E8\u4E16\u754C\u4E66 (${allBooks.length})</button>
-            <button type="button" class="t-btn t-btn-xs t-wi-tab-btn" data-mode="active">\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66 (${baseActiveBooks.length})</button>
+        <div class="t-wi-tabs" role="tablist" aria-label="\u4E16\u754C\u4E66\u8303\u56F4">
+            <button type="button" class="t-wi-tab-btn active" role="tab" aria-selected="true" data-mode="all">
+                <span>\u5168\u90E8\u4E16\u754C\u4E66</span><span class="t-wi-tab-count" id="t-wi-all-count">${allBooks.length}</span>
+            </button>
+            <button type="button" class="t-wi-tab-btn" role="tab" aria-selected="false" data-mode="active">
+                <span>\u5DF2\u6FC0\u6D3B\u4E16\u754C\u4E66</span><span class="t-wi-tab-count" id="t-wi-active-count">${baseActiveBooks.length}</span>
+            </button>
         </div>
 
         <div class="t-wi-body t-wi-layout" id="t-wi-layout">
@@ -37443,11 +38001,20 @@ async function openWorldInfoSelector() {
             <button class="t-btn primary" id="t-wi-save" ${allBooks.length === 0 ? "disabled" : ""}>\u4FDD\u5B58</button>
         </div>
     </div>`;
-  $("#t-main-view").append(html);
+  const $panel = $(html);
+  const $q = (selector) => $panel.find(selector);
+  $("#t-main-view").append($panel);
   let currentBookName = visibleBooks[0] || "";
   let currentEntries2 = [];
   let entrySearchQuery = "";
+  let entrySearchTimer = null;
+  let bookLoadRequestId = 0;
   const activeSet = new Set(baseActiveBooks);
+  const closePanel2 = () => {
+    bookLoadRequestId++;
+    clearTimeout(entrySearchTimer);
+    $panel.remove();
+  };
   const getAutoActiveBooksFromSelections = () => {
     return Object.keys(workingSelections).filter((bookName) => {
       const selected = workingSelections[bookName];
@@ -37459,9 +38026,11 @@ async function openWorldInfoSelector() {
     activeSet.clear();
     baseActiveBooks.forEach((name) => activeSet.add(name));
     autoActive.forEach((name) => activeSet.add(name));
+    const activeCount = allBooks.filter((name) => activeSet.has(name)).length;
+    $q("#t-wi-active-count").text(activeCount);
   };
   const showEntryPreview = (title, content) => {
-    $(".t-wi-preview-modal").remove();
+    $q(".t-wi-preview-modal").remove();
     const $modal = $(`
             <div class="t-wi-preview-modal">
                 <div class="t-wi-preview-box">
@@ -37479,7 +38048,7 @@ async function openWorldInfoSelector() {
     $modal.find(".t-wi-preview-close").on("click", function() {
       $modal.remove();
     });
-    $("#t-wi-selector").append($modal);
+    $panel.append($modal);
   };
   const getBookSelectedSet = (bookName) => {
     const selectedUids = Array.isArray(workingSelections[bookName]) ? workingSelections[bookName] : [];
@@ -37507,18 +38076,18 @@ async function openWorldInfoSelector() {
   const syncSelectAllLabels = () => {
     const visibleCount = getVisibleEntries().length;
     const suffix = entrySearchQuery ? ` (${visibleCount})` : "";
-    $("#t-wi-current-select-all").text(`\u5168\u9009${suffix}`);
-    $("#t-wi-current-select-none").text(`\u53D6\u6D88\u5168\u9009${suffix}`);
+    $q("#t-wi-current-select-all").text(`\u5168\u9009${suffix}`);
+    $q("#t-wi-current-select-none").text(`\u53D6\u6D88\u5168\u9009${suffix}`);
   };
   const updateStat = () => {
     const selectedSet = getBookSelectedSet(currentBookName);
     const selectedCount = currentEntries2.filter((entry) => selectedSet.has(Number(entry.uid))).length;
     const filterNote = entrySearchQuery ? `\u3000\u7B5B\u9009\u51FA ${getVisibleEntries().length} \u6761` : "";
-    $("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}${filterNote}`);
+    $q("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}${filterNote}`);
     syncSelectAllLabels();
   };
   const renderEntries = () => {
-    const $body = $("#t-wi-entry-list");
+    const $body = $q("#t-wi-entry-list");
     $body.empty();
     if (!currentBookName) {
       $body.append('<div class="t-wi-empty">\u672A\u9009\u62E9\u4E16\u754C\u4E66</div>');
@@ -37539,7 +38108,7 @@ async function openWorldInfoSelector() {
                 </div>
             `);
       $body.find("#t-wi-search-reset").on("click", () => {
-        $("#t-wi-entry-search-input").val("").trigger("input");
+        $q("#t-wi-entry-search-input").val("").trigger("input");
       });
       updateStat();
       return;
@@ -37578,9 +38147,19 @@ async function openWorldInfoSelector() {
         setBookSelections(currentBookName, nextSet);
         $entry.toggleClass("selected", isChecked);
         if (currentViewMode === "active") {
+          const previousBookName = currentBookName;
           syncVisibleBooksByMode();
           ensureCurrentBookInView();
           renderBookList();
+          if (currentBookName !== previousBookName) {
+            if (currentBookName) loadBookEntries(currentBookName);
+            else {
+              currentEntries2 = [];
+              renderEntries();
+              syncEntryPaneHeader();
+            }
+            return;
+          }
         }
         syncEntryPaneHeader();
         updateStat();
@@ -37601,8 +38180,8 @@ async function openWorldInfoSelector() {
   const syncEntryPaneHeader = () => {
     const isActive = activeSet.has(currentBookName);
     const title = currentBookName || "\u672A\u9009\u62E9\u4E16\u754C\u4E66";
-    $("#t-wi-entry-pane-title").text(title);
-    $("#t-wi-entry-pane-badge").text(isActive ? "\u5DF2\u6FC0\u6D3B" : "\u672A\u6FC0\u6D3B").removeClass("active inactive").addClass(isActive ? "active" : "inactive");
+    $q("#t-wi-entry-pane-title").text(title);
+    $q("#t-wi-entry-pane-badge").text(isActive ? "\u5DF2\u6FC0\u6D3B" : "\u672A\u6FC0\u6D3B").removeClass("active inactive").addClass(isActive ? "active" : "inactive");
   };
   const bulkSelectCurrentBook = (checked) => {
     if (!currentBookName) return;
@@ -37614,21 +38193,31 @@ async function openWorldInfoSelector() {
     });
     setBookSelections(currentBookName, nextSet);
     if (currentViewMode === "active") {
+      const previousBookName = currentBookName;
       syncVisibleBooksByMode();
       ensureCurrentBookInView();
       renderBookList();
+      if (currentBookName !== previousBookName) {
+        if (currentBookName) loadBookEntries(currentBookName);
+        else {
+          currentEntries2 = [];
+          renderEntries();
+          syncEntryPaneHeader();
+        }
+        return;
+      }
     }
     syncEntryPaneHeader();
     renderEntries();
   };
   const renderBookList = () => {
-    $("#t-wi-books-list").html(renderBookListHtml(visibleBooks, activeSet, currentBookName));
-    $("#t-wi-books-list .t-wi-book-item").on("click", function() {
+    $q("#t-wi-books-list").html(renderBookListHtml(visibleBooks, activeSet, currentBookName));
+    $q("#t-wi-books-list .t-wi-book-item").on("click", function() {
       const next = decodeURIComponent(String($(this).data("bookName") || ""));
       if (!next || next === currentBookName) return;
       loadBookEntries(next);
     });
-    const $select = $("#t-wi-book-select");
+    const $select = $q("#t-wi-book-select");
     $select.html(renderBookSelectHtml(visibleBooks, activeSet, currentBookName));
     $select.prop("disabled", visibleBooks.length === 0);
     $select.off("change").on("change", function() {
@@ -37650,36 +38239,41 @@ async function openWorldInfoSelector() {
   };
   const loadBookEntries = async (bookName) => {
     currentBookName = bookName || "";
+    const requestedBookName = currentBookName;
+    const requestId = ++bookLoadRequestId;
+    clearTimeout(entrySearchTimer);
     entrySearchQuery = "";
-    $("#t-wi-entry-search-input").val("");
-    $("#t-wi-entry-search").removeClass("has-query");
+    $q("#t-wi-entry-search-input").val("");
+    $q("#t-wi-entry-search").removeClass("has-query");
     syncEntryPaneHeader();
     renderBookList();
-    const $body = $("#t-wi-entry-list");
+    const $body = $q("#t-wi-entry-list");
     $body.html(`
             <div style="text-align:center; color:#888; padding:30px 10px;">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size:1.6em; margin-bottom:10px;"></i>
-                <div>\u6B63\u5728\u52A0\u8F7D\u300C${escapeHtmlText2(currentBookName)}\u300D...</div>
+                <div>\u6B63\u5728\u52A0\u8F7D\u300C${escapeHtmlText2(requestedBookName)}\u300D...</div>
             </div>
         `);
+    let nextEntries = [];
     try {
-      currentEntries2 = await getWorldInfoEntriesByBookName(currentBookName);
+      nextEntries = await getWorldInfoEntriesByBookName(requestedBookName);
     } catch (e) {
       console.error("Titania: \u52A0\u8F7D\u6307\u5B9A\u4E16\u754C\u4E66\u5931\u8D25", e);
-      currentEntries2 = [];
     }
+    if (!$panel[0]?.isConnected || requestId !== bookLoadRequestId || currentBookName !== requestedBookName) return;
+    currentEntries2 = nextEntries;
     renderEntries();
     syncEntryPaneHeader();
     renderBookList();
   };
-  $(".t-wi-tab-btn").on("click", function() {
+  $panel.on("click", ".t-wi-tab-btn", function() {
     const nextMode = String($(this).data("mode") || "all");
     if (nextMode === currentViewMode) return;
     currentViewMode = nextMode === "active" ? "active" : "all";
     syncVisibleBooksByMode();
     ensureCurrentBookInView();
-    $(".t-wi-tab-btn").removeClass("active");
-    $(this).addClass("active");
+    $q(".t-wi-tab-btn").removeClass("active").attr("aria-selected", "false");
+    $(this).addClass("active").attr("aria-selected", "true");
     if (!currentBookName) {
       currentEntries2 = [];
       renderBookList();
@@ -37689,30 +38283,28 @@ async function openWorldInfoSelector() {
     }
     loadBookEntries(currentBookName);
   });
-  $("#t-wi-current-select-all").on("click", () => bulkSelectCurrentBook(true));
-  $("#t-wi-current-select-none").on("click", () => bulkSelectCurrentBook(false));
-  let entrySearchTimer = null;
-  $("#t-wi-entry-search-input").on("input", function() {
+  $q("#t-wi-current-select-all").on("click", () => bulkSelectCurrentBook(true));
+  $q("#t-wi-current-select-none").on("click", () => bulkSelectCurrentBook(false));
+  $q("#t-wi-entry-search-input").on("input", function() {
     const raw = String($(this).val() || "");
-    $("#t-wi-entry-search").toggleClass("has-query", raw.length > 0);
+    $q("#t-wi-entry-search").toggleClass("has-query", raw.length > 0);
     clearTimeout(entrySearchTimer);
     entrySearchTimer = setTimeout(() => {
       entrySearchQuery = raw.trim();
       renderEntries();
     }, 120);
   });
-  $("#t-wi-entry-search-clear").on("click", () => {
-    $("#t-wi-entry-search-input").val("").trigger("input").trigger("focus");
+  $q("#t-wi-entry-search-clear").on("click", () => {
+    $q("#t-wi-entry-search-input").val("").trigger("input").trigger("focus");
   });
-  $("#t-wi-save").on("click", () => {
+  $q("#t-wi-save").on("click", () => {
     if (!currentBookName && !Object.keys(workingSelections).length) return;
-    data.worldinfo.char_selections[charName] = workingSelections;
-    data.worldinfo.char_auto_active_books[charName] = getAutoActiveBooksFromSelections();
+    writeWorldInfoSelections(data, ctx.stCtx, workingSelections, getAutoActiveBooksFromSelections());
     saveExtData();
     updateWorldInfoBadge();
     if (window.toastr) toastr.success("\u4E16\u754C\u4E66\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
-  $("#t-wi-close").on("click", () => $("#t-wi-selector").remove());
+  $q("#t-wi-close").on("click", closePanel2);
   refreshActiveState();
   syncVisibleBooksByMode();
   ensureCurrentBookInView();
@@ -38311,6 +38903,7 @@ var init_mainWindow = __esm({
     init_loreReviewWindow();
     init_settingsWindow();
     init_helpers();
+    init_workshopApi();
     init_continuationStore();
     init_scriptData();
     init_viewState();
@@ -38839,6 +39432,18 @@ function clampContinuationInjectRounds(value) {
   if (!Number.isFinite(num)) return 3;
   return Math.max(CONTINUATION_INJECT_MIN, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
 }
+function buildChatHistoryBlock(history, aiOnly) {
+  if (!history || history.trim().length === 0) return `[\u804A\u5929\u5386\u53F2]
+\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
+
+`;
+  const note = aiOnly ? "\u4EE5\u4E0B\u4EC5\u4E3A\u89D2\u8272\u7684\u8FD1\u671F\u53D1\u8A00\uFF0C\u5DF2\u8DF3\u8FC7\u7528\u6237\u8F93\u5165\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587" : "\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587";
+  return `[\u804A\u5929\u5386\u53F2]
+\uFF08${note}\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
+${history}
+
+`;
+}
 function createContinuationBranchKey() {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 8);
@@ -38872,11 +39477,12 @@ function createContinuationRoundKey() {
   const rand = Math.random().toString(36).slice(2, 8);
   return `round_${ts}_${rand}`;
 }
-function normalizeContinuationRounds(rounds) {
+function normalizeContinuationRounds(rounds, options = {}) {
   if (!Array.isArray(rounds)) return [];
+  const persistRoundKeys = options.persistRoundKeys !== false;
   return rounds.map((item, index) => {
     const roundKey = String(item?.roundKey || "").trim() || createContinuationRoundKey();
-    if (item && typeof item === "object" && !item.roundKey) item.roundKey = roundKey;
+    if (persistRoundKeys && item && typeof item === "object" && !item.roundKey) item.roundKey = roundKey;
     return {
       roundKey,
       round: index + 1,
@@ -38918,7 +39524,7 @@ function findContinuationRoundAnchor(scriptId, probe = {}) {
     if (!matchById && !wantedContent) continue;
     for (const candidate of candidates) {
       if (!candidate.branchKey) continue;
-      const rounds = normalizeContinuationRounds(candidate.rounds);
+      const rounds = normalizeContinuationRounds(candidate.rounds, { persistRoundKeys: false });
       const index = rounds.findIndex((item) => matchById ? String(item.generationId || "").trim() === wantedId : item.content === wantedContent);
       if (index < 0) continue;
       return {
@@ -38932,7 +39538,7 @@ function findContinuationRoundAnchor(scriptId, probe = {}) {
   }
   return null;
 }
-async function startFreshContinuationBranch(script, baseContent) {
+async function startFreshContinuationBranch(script, baseContent, generationId = "") {
   resetContinuationSessionRounds(script.id, script.name);
   const branchContext = await getContextData();
   let branchInstruction = String(script.prompt || "");
@@ -38946,7 +39552,8 @@ async function startFreshContinuationBranch(script, baseContent) {
   }
   setContinuationSessionBaseRound(script.id, script.name, baseContent, {
     forceNewBranch: true,
-    instruction: branchInstruction
+    instruction: branchInstruction,
+    generationId: String(generationId || "")
   });
 }
 function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound, targetRoundKey = "", includeTarget = false) {
@@ -38957,7 +39564,8 @@ function branchContinuationSessionAtRound(scriptId, sourceBranchKey, targetRound
   const source = requestedBranchKey === activeBranchKey ? { branchKey: activeBranchKey, rounds: entry.rounds } : Array.isArray(entry.archivedBranches) ? entry.archivedBranches.find((item) => String(item?.branchKey || "") === requestedBranchKey) : null;
   const sourceRounds = normalizeContinuationRounds(source?.rounds);
   const requestedRoundKey = String(targetRoundKey || "").trim();
-  const roundNumber = requestedRoundKey ? sourceRounds.findIndex((item) => item.roundKey === requestedRoundKey) + 1 : Math.floor(Number(targetRound));
+  let roundNumber = requestedRoundKey ? sourceRounds.findIndex((item) => item.roundKey === requestedRoundKey) + 1 : Math.floor(Number(targetRound));
+  if (requestedRoundKey && roundNumber === 0) roundNumber = Math.floor(Number(targetRound));
   if (!source || !Number.isFinite(roundNumber) || roundNumber < 1 || roundNumber > sourceRounds.length) return null;
   const previousActiveBranch = {
     branchKey: activeBranchKey,
@@ -39145,6 +39753,19 @@ ${item.content}`;
     estimatedTokens: estimateTokens(block)
   };
 }
+function getContinuationRoundsThroughAnchor(scriptId, anchor) {
+  const entry = getContinuationRuntimeStore()[scriptId];
+  if (!entry || !anchor) return [];
+  const activeBranchKey = String(entry.branchKey || "").trim();
+  const requestedBranchKey = String(anchor.branchKey || "").trim();
+  const source = requestedBranchKey === activeBranchKey ? entry : Array.isArray(entry.archivedBranches) ? entry.archivedBranches.find((branch) => String(branch?.branchKey || "").trim() === requestedBranchKey) : null;
+  const rounds = normalizeContinuationRounds(source?.rounds, { persistRoundKeys: false });
+  const requestedRoundKey = String(anchor.roundKey || "").trim();
+  let anchorIndex = requestedRoundKey ? rounds.findIndex((round) => round.roundKey === requestedRoundKey) : -1;
+  if (anchorIndex < 0) anchorIndex = Math.floor(Number(anchor.round)) - 1;
+  if (anchorIndex < 0 || anchorIndex >= rounds.length) return [];
+  return rounds.slice(0, anchorIndex + 1);
+}
 function buildContinuationBranchInjection(rounds) {
   const selectedRounds = normalizeContinuationRounds(rounds);
   if (selectedRounds.length === 0) {
@@ -39213,11 +39834,32 @@ function applyScriptInstructionSectionLengths(sectionLengths, scriptBlock, promp
 function resolveContinuationPreviewPlan() {
   if (getPendingGenerationScriptId()) return null;
   const display = getCurrentDisplayContent();
-  if (!String(display?.content || "").trim()) return null;
+  const displayContent = String(display?.content || "").trim();
+  if (!displayContent) return null;
   const scriptId = display?.scriptId || GlobalState.lastGeneratedScriptId || GlobalState.lastUsedScriptId || "";
   if (!scriptId) return null;
   const injectRoundsCount = getContinuationDefaultInjectCount();
-  const injection = buildContinuationSessionInjection(scriptId, injectRoundsCount);
+  const anchor = findContinuationRoundAnchor(scriptId, {
+    generationId: display?.generationId,
+    content: displayContent
+  });
+  let injection;
+  if (anchor?.isActiveTail) {
+    injection = buildContinuationSessionInjection(scriptId, injectRoundsCount);
+  } else if (anchor) {
+    const ancestorRounds = getContinuationRoundsThroughAnchor(scriptId, anchor);
+    injection = buildContinuationBranchInjection(ancestorRounds.slice(-clampContinuationInjectRounds(injectRoundsCount)));
+    injection.totalRounds = ancestorRounds.length;
+  } else {
+    injection = buildContinuationBranchInjection([{
+      round: 1,
+      type: "initial",
+      instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09",
+      content: displayContent,
+      status: "legacy",
+      generationId: String(display?.generationId || "")
+    }]);
+  }
   if (injection.totalRounds === 0) return null;
   const userInstruction = getContinuationQuickDraft().trim() || DEFAULT_CONTINUATION_INSTRUCTION;
   return {
@@ -39437,7 +40079,11 @@ function getContinuationRoundsForFav(scriptId) {
     scriptId,
     scriptName: String(entry?.scriptName || "\u573A\u666F"),
     branchKey: String(entry?.branchKey || "").trim(),
-    rounds: getContinuationSessionRounds(scriptId).filter((item) => item.status === "success" || item.status === "legacy")
+    // 收藏入口会先校验当前结果已成功；这里必须保留该分支中已有内容的中断轮次，
+    // 否则“首段中断后主动续写成功”的收藏会只剩续写段。
+    rounds: getContinuationSessionRounds(scriptId).filter(
+      (item) => ["success", "partial", "aborted", "legacy"].includes(String(item?.status || "legacy")) && String(item?.content || "").trim().length > 0
+    )
   };
 }
 function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreaming = false) {
@@ -39907,15 +40553,8 @@ ${ctx.worldInfo}
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
       const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
-      const history = getChatHistory(limit, historyWhitelist, historyBlacklist);
-      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
-\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
-${history}
-
-` : `[\u804A\u5929\u5386\u53F2]
-\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
-
-`;
+      const history = getChatHistory(limit, historyWhitelist, historyBlacklist, GlobalState.historyAiOnly);
+      const historyBlock = buildChatHistoryBlock(history, GlobalState.historyAiOnly);
       sectionLengths.history = historyBlock.length;
       runtimeChatHistory = historyBlock;
       user += historyBlock;
@@ -40235,15 +40874,8 @@ ${ctx.worldInfo}
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
       const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
-      const history = getChatHistory(limit, historyWhitelist, historyBlacklist);
-      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
-\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
-${history}
-
-` : `[\u804A\u5929\u5386\u53F2]
-\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
-
-`;
+      const history = getChatHistory(limit, historyWhitelist, historyBlacklist, GlobalState.historyAiOnly);
+      const historyBlock = buildChatHistoryBlock(history, GlobalState.historyAiOnly);
       sectionLengths.history = historyBlock.length;
       runtimeChatHistory = historyBlock;
       user += historyBlock;
@@ -41419,7 +42051,7 @@ async function handleUserContinuation(options = {}) {
       content: baseContent
     });
     if (!anchor) {
-      await startFreshContinuationBranch(script, baseContent);
+      await startFreshContinuationBranch(script, baseContent, display?.generationId);
     } else if (!anchor.isActiveTail) {
       lineageBranchResult = branchContinuationSessionAtRound(
         script.id,
@@ -41454,7 +42086,7 @@ async function handleUserContinuation(options = {}) {
     }
   }
   if (branchFromCurrentView) {
-    await startFreshContinuationBranch(script, baseContent);
+    await startFreshContinuationBranch(script, baseContent, display?.generationId);
     TitaniaLogger.info("\u4E3B\u52A8\u7EED\u5199\u5DF2\u521B\u5EFA\u5206\u652F", {
       scriptId: script.id,
       scriptName: script.name,
@@ -41477,7 +42109,7 @@ async function handleUserContinuation(options = {}) {
   }
   const userInstruction = (instruction || "").trim() || (isRegeneration ? branchResult?.targetInstruction : "") || DEFAULT_CONTINUATION_INSTRUCTION;
   const effectiveInjectCount = clampContinuationInjectRounds(injectRoundsCount);
-  const sessionInjection = branchResult ? buildContinuationBranchInjection(branchResult.contextRounds) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
+  const sessionInjection = branchResult ? buildContinuationBranchInjection(branchResult.contextRounds.slice(-effectiveInjectCount)) : buildContinuationSessionInjection(script.id, effectiveInjectCount);
   const composedOverride = composeContinuationPromptOverride({
     injectionText: sessionInjection.text,
     userInstruction,
@@ -42498,6 +43130,12 @@ async function loadExtensionSettings() {
   if (typeof extData.chat_inject.enabled !== "boolean") extData.chat_inject.enabled = true;
   if (typeof extData.chat_inject.visible_to_ai !== "boolean") extData.chat_inject.visible_to_ai = true;
   if (!String(extData.chat_inject.speaker_name || "").trim()) extData.chat_inject.speaker_name = "\u56DE\u58F0\u5C0F\u5267\u573A";
+  if (!extData.preset_macros || typeof extData.preset_macros !== "object") {
+    extData.preset_macros = { persist_variables: false };
+  }
+  if (typeof extData.preset_macros.persist_variables !== "boolean") {
+    extData.preset_macros.persist_variables = false;
+  }
   if (!extData.quick_toolbar || typeof extData.quick_toolbar !== "object") extData.quick_toolbar = {};
   if (!extData.quick_toolbar.enabled_items || typeof extData.quick_toolbar.enabled_items !== "object") {
     extData.quick_toolbar.enabled_items = {};
@@ -42513,6 +43151,7 @@ async function loadExtensionSettings() {
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
   $("#cfg-chat-inject-enabled").prop("checked", extData.chat_inject.enabled === true);
+  $("#cfg-preset-persist-vars").prop("checked", extData.preset_macros.persist_variables === true);
   $("#cfg-toolbar-lore-enabled").prop("checked", extData.quick_toolbar.enabled_items.lore === true);
   $("#cfg-toolbar-recall-enabled").prop("checked", extData.quick_toolbar.enabled_items.recall === true);
   $("#cfg-float-edge-tuck").on("input", function() {
@@ -42576,6 +43215,21 @@ async function loadExtensionSettings() {
     saveExtData();
     refreshChatInjectButton();
     if (window.toastr) toastr.success(enabled ? "\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u542F\u7528" : "\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-preset-persist-vars").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.preset_macros || typeof data.preset_macros !== "object") {
+      data.preset_macros = { persist_variables: false };
+    }
+    data.preset_macros.persist_variables = enabled;
+    saveExtData();
+    if (window.toastr) {
+      toastr.success(
+        enabled ? "\u9884\u8BBE\u53D8\u91CF\u5C06\u5199\u5165\u804A\u5929\u5B58\u6863" : "\u9884\u8BBE\u53D8\u91CF\u53EA\u5728\u672C\u6B21\u63D0\u793A\u8BCD\u6784\u5EFA\u5185\u751F\u6548",
+        "Titania Echo"
+      );
+    }
   });
   $("#cfg-toolbar-lore-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
