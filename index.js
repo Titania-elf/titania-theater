@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.2.4";
+    CURRENT_VERSION = "5.2.5";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -61,7 +61,10 @@ var init_defaults = __esm({
       favs: [],
       history_extraction: {
         whitelist: "",
-        blacklist: ""
+        blacklist: "",
+        // 只把角色发言注入剧本生成，跳过用户楼层。
+        // 只作用于剧本生成，总结和世界书提取照旧读全量历史
+        ai_only: false
       },
       character_map: {},
       disabled_presets: [],
@@ -76,7 +79,10 @@ var init_defaults = __esm({
         main_window_mode: "modern",
         // 标题栏常驻图标（最多 5 个），未列入的自动收进「更多」弹层。
         // 可选 id 见 src/ui/mainWindow/headerActions.js 的注册表
-        header_actions: ["workshop", "favs"]
+        header_actions: ["workshop", "favs"],
+        // 世界书管理页：列表里不显示带「酒馆中已禁用」标记的条目。
+        // 纯视图过滤，不动已保存的勾选
+        wi_hide_disabled: false
       },
       appearance: {
         type: "emoji",
@@ -632,7 +638,7 @@ function extractContent(text, whitelist = []) {
   cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
   return cleaned;
 }
-function getChatHistory(limit, whitelist = [], blacklist = void 0) {
+function getChatHistory(limit, whitelist = [], blacklist = void 0, aiOnly = false) {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
   const ctx = SillyTavern.getContext();
   const history = ctx.chat || [];
@@ -664,7 +670,11 @@ function getChatHistory(limit, whitelist = [], blacklist = void 0) {
     return true;
   });
   console.log(`Titania: History Analysis - Total: ${history.length}, Visible: ${visibleHistory.length}, Filtered: ${history.length - visibleHistory.length}`);
-  const recent = visibleHistory.slice(-safeLimit);
+  const scoped = aiOnly ? visibleHistory.filter((msg) => !msg.is_user) : visibleHistory;
+  if (aiOnly) {
+    console.log(`Titania: History Analysis - AI only: ${scoped.length} / ${visibleHistory.length}`);
+  }
+  const recent = scoped.slice(-safeLimit);
   return recent.map((msg) => {
     let name = msg.name;
     if (msg.is_user) name = ctx.name1 || "User";
@@ -3051,6 +3061,15 @@ textarea.t-input {
     /* \u9632\u6B62 flex \u5B50\u9879\u6EA2\u51FA */
 }
 
+/* \u5386\u53F2\u5F00\u5173 + \u5B50\u5F00\u5173\u7684\u5206\u7EC4\u5BB9\u5668\u3002
+   \u684C\u9762\u7AEF\u6CBF\u7528\u9876\u680F\u7684 15px gap\uFF0C\u89C6\u89C9\u4E0E\u4E24\u8005\u5404\u81EA\u4F5C\u4E3A\u9876\u680F\u76F4\u63A5\u5B50\u9879\u65F6\u5B8C\u5168\u4E00\u81F4\uFF1B
+   \u5B58\u5728\u7684\u610F\u4E49\u5728\u7A84\u5C4F\uFF1A\u8BA9\u8FD9\u4E24\u4E2A\u5F00\u5173\u5171\u5360\u4E00\u884C\uFF0C\u800C\u4E0D\u662F\u5404\u5360\u4E00\u884C */
+.t-history-group {
+    display: flex;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
 /* \u5386\u53F2\u5F00\u5173 */
 .t-history-toggle {
     display: flex;
@@ -3109,6 +3128,31 @@ textarea.t-input {
 
 .t-history-toggle.active:hover .t-toggle-text {
     color: #a8d8f8;
+}
+
+/* \u300C\u53EA\u8981\u89D2\u8272\u53D1\u8A00\u300D\uFF1A\u5386\u53F2\u5F00\u5173\u7684\u5B50\u9879\uFF0C\u7A84\u4E00\u70B9\u4EE5\u514D\u9876\u680F\u88AB\u4E24\u4E2A\u540C\u5BBD\u5F00\u5173\u6324\u6EE1 */
+.t-subtoggle {
+    min-width: 150px;
+}
+
+/* \u4E0D\u8BFB\u5386\u53F2\u65F6\u7F6E\u7070\u3002\u4ECD\u4FDD\u7559 pointer-events\uFF0C\u597D\u8BA9 title \u63D0\u793A\u80FD\u8BF4\u660E\u4E3A\u4EC0\u4E48\u4E0D\u53EF\u7528 */
+.t-subtoggle.disabled {
+    opacity: 0.45;
+}
+
+.t-subtoggle.disabled,
+.t-subtoggle.disabled .t-toggle-label,
+.t-subtoggle.disabled input[type="checkbox"] {
+    cursor: not-allowed;
+}
+
+.t-subtoggle.disabled:hover {
+    background: #1a1a1a;
+    border-color: #333;
+}
+
+.t-subtoggle.disabled:hover .t-toggle-text {
+    color: #888;
 }
 
 /* \u751F\u6210\u6A21\u5F0F\u5207\u6362 */
@@ -3936,6 +3980,44 @@ textarea.t-input {
         justify-content: center;
     }
 
+    /* \u4E24\u4E2A\u5F00\u5173\u5E73\u5206\u4E00\u884C\uFF1A\u5404\u5360\u4E00\u884C\u4F1A\u8BA9\u9876\u680F\u5728\u7A84\u5C4F\u591A\u5403 48px */
+    .t-history-group {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .t-history-group .t-history-toggle {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+        /* \u6781\u7AEF\u7EC4\u5408\uFF08320px \u5C4F + 130% \u5B57\u53F7\u7F29\u653E\uFF09\u4E0B\u6587\u5B57\u8981\u6298\u6210\u4E24\u884C\uFF0C
+           \u56FA\u5B9A 40px \u4F1A\u88C1\u6389\u7B2C\u4E8C\u884C\uFF0C\u6240\u4EE5\u6539\u6210\u4E0B\u9650 */
+        height: auto;
+        min-height: 40px;
+        padding: 0 6px;
+    }
+
+    /* \u534A\u683C\u5BBD\u5EA6\u5BB9\u4E0D\u4E0B 0.9em \u7684 7 \u4E2A\u6C49\u5B57\u3002\u6536\u5230 0.8em\uFF0C\u4E0E\u540C\u6392\u7684 .t-mode-btn \u4E00\u81F4 */
+    .t-history-group .t-toggle-text {
+        font-size: 0.8em;
+        /* \u57FA\u51C6\u5B57\u53F7\u53EF\u88AB\u7528\u6237\u653E\u5927\u5230 130%\uFF0C\u90A3\u65F6\u534A\u683C\u4ECD\u4F1A\u4E0D\u591F\u3002
+           \u89E3\u9664\u5168\u5C40\u7684 nowrap \u8BA9\u5B83\u6298\u884C \u2014\u2014 \u6BD4\u622A\u65AD\u6210\u7701\u7565\u53F7\u4E0D\u4E22\u4FE1\u606F */
+        white-space: normal;
+        line-height: 1.25;
+        text-align: center;
+    }
+
+    .t-history-group .t-toggle-label {
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .t-history-group .t-toggle-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
     .t-mode-toggle {
         width: 100%;
         height: 40px;
@@ -4465,6 +4547,38 @@ textarea.t-input {
     flex-shrink: 0;
 }
 
+/* \u300C\u9690\u85CF\u5DF2\u7981\u7528\u300D\uFF1A\u7EAF\u89C6\u56FE\u8FC7\u6EE4\uFF0C\u89C6\u89C9\u4E0A\u6BD4\u4E24\u4E2A\u52A8\u4F5C\u6309\u94AE\u8F7B\u4E00\u6863 */
+.t-wi-hide-disabled {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    padding: 0 6px;
+    color: #888;
+    font-size: 0.8em;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.t-wi-hide-disabled:hover {
+    color: #bbb;
+}
+
+.t-wi-hide-disabled input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: #ffb968;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* \u52FE\u9009\u540E\u7528\u7981\u7528\u6807\u8BB0\u7684\u540C\u8272\uFF0C\u548C\u6761\u76EE\u4E0A\u90A3\u4E2A\u300C\u9152\u9986\u4E2D\u5DF2\u7981\u7528\u300D\u5FBD\u7AE0\u547C\u5E94 */
+.t-wi-hide-disabled:has(input:checked) {
+    color: #ffb968;
+}
+
 .t-wi-search-clear:hover {
     color: #ddd;
 }
@@ -4767,12 +4881,12 @@ textarea.t-input {
         padding: 10px 12px;
     }
 
+    /* \u6807\u7B7E\u680F\u5728\u7A84\u5C4F\u9690\u85CF\uFF1A\u8FD9\u91CC\u7A7A\u95F4\u7D27\uFF0C\u800C\u5B83\u627F\u8F7D\u7684\u4FE1\u606F\u6CA1\u6709\u4E22 \u2014\u2014
+       \u4E0B\u65B9\u539F\u751F\u4E0B\u62C9\u6846\u7684\u6BCF\u4E00\u9879\u524D\u9762\u6709 \u25CF/\u25CB \u6807\u793A\u6FC0\u6D3B\u72B6\u6001\uFF08\u89C1 renderBookSelectHtml\uFF09\u3002
+       \u4EE3\u4EF7\u662F\u79FB\u52A8\u7AEF\u9501\u5B9A\u5728\u300C\u5168\u90E8\u4E16\u754C\u4E66\u300D\u89C6\u56FE\uFF08currentViewMode \u7684\u521D\u503C\uFF09\u3002
+       \u539F\u5148\u9488\u5BF9\u5B83\u7684 isolation / touch-action \u4E24\u6761\u89C4\u5219\u968F\u4E4B\u5931\u53BB\u610F\u4E49\uFF0C\u5DF2\u4E00\u5E76\u79FB\u9664 */
     .t-wi-tabs {
-        isolation: isolate;
-    }
-
-    .t-wi-tab-btn {
-        touch-action: manipulation;
+        display: none;
     }
 
     .t-wi-action-bar {
@@ -4833,6 +4947,16 @@ textarea.t-input {
 
     .t-wi-entry-pane-header {
         padding: 8px 10px;
+    }
+
+    /* \u641C\u7D22\u6846\u72EC\u5360\u4E00\u884C\uFF0C\u4E24\u4E2A\u6309\u94AE\u52A0\u300C\u9690\u85CF\u5DF2\u7981\u7528\u300D\u5171\u7528\u4E0B\u4E00\u884C\u3002
+       \u6324\u5728\u540C\u4E00\u884C\u65F6\u641C\u7D22\u6846\uFF08flex:1, min-width:0\uFF09\u4F1A\u88AB\u538B\u5230\u53EA\u5269\u767E\u6765\u50CF\u7D20 */
+    .t-wi-entry-pane-tools {
+        flex-wrap: wrap;
+    }
+
+    .t-wi-entry-pane-tools .t-wi-entry-search {
+        flex: 1 0 100%;
     }
 
     .t-wi-entry-list {
@@ -8743,6 +8867,23 @@ textarea.t-input {
     gap: 6px;
 }
 
+#t-ws-rating-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 36px;
+    padding: 0 10px;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #ccc;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 0.8em;
+}
+#t-ws-rating-toggle:hover { border-color: var(--t-theme); color: #fff; }
+#t-ws-rating-toggle.is-mature { border-color: #7e3847; background: #4a2530; color: #ffa8b0; }
+
 #t-ws-view .t-header .t-header-actions .t-icon-btn,
 #t-ws-view .t-header .t-header-actions .t-close,
 .t-ws-preview-box .t-header .t-header-actions .t-close {
@@ -9021,6 +9162,7 @@ textarea.t-input {
     background: rgba(191, 161, 95, 0.16);
     color: var(--t-theme);
 }
+.t-ws-tag-mature { background: #4a2530; color: #ffa8b0; }
 
 /* \u5E95\u90E8\u64CD\u4F5C */
 .t-ws-card-actions {
@@ -9192,7 +9334,7 @@ textarea.t-input {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
     padding: 14px;
     gap: 10px;
 }
@@ -9222,13 +9364,68 @@ textarea.t-input {
 }
 
 .t-ws-pv-prompt {
-    flex: 1;
+    flex: 0 0 auto;
     resize: none;
-    min-height: 0;
+    height: clamp(160px, 28vh, 300px);
     font-family: var(--t-font-mono);
     font-size: 0.88em;
     line-height: 1.6;
 }
+
+.t-ws-pv-comments {
+    border-top: 1px solid #2a2a2a;
+    padding-top: 12px;
+}
+
+.t-ws-pv-comments-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.t-ws-pv-comments-head > div {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.t-ws-pv-comments-head strong {
+    color: #ddd;
+    font-size: 0.85em;
+}
+
+.t-ws-pv-comments-list {
+    display: grid;
+    gap: 8px;
+}
+
+.t-ws-pv-comment {
+    padding: 10px 12px;
+    border: 1px solid #2a2a2a;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.t-ws-pv-comment-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.t-ws-pv-comment-author {
+    display: grid;
+    gap: 2px;
+}
+
+.t-ws-pv-comment-author strong { font-size: 0.86em; color: #e5e5e5; }
+.t-ws-pv-comment-author small { color: #888; font-size: 0.72em; }
+.t-ws-pv-comment-body { margin-top: 8px; white-space: pre-wrap; line-height: 1.5; color: #d0d0d0; font-size: 0.86em; }
+.t-ws-pv-comment-reply { margin-top: 8px; padding: 7px 9px; border-left: 2px solid var(--t-theme); background: rgba(255, 255, 255, 0.04); display: grid; gap: 3px; font-size: 0.82em; }
+.t-ws-pv-comment-reply strong { color: #d9c18a; }
+.t-ws-pv-comment-reply span { white-space: pre-wrap; color: #bbb; }
+.t-ws-pv-comments-empty { color: #888; font-size: 0.84em; padding: 12px 0; }
 
 /* \u2500\u2500 \u79FB\u52A8\u7AEF \u2500\u2500 */
 @media screen and (max-width: 600px) {
@@ -16491,6 +16688,8 @@ var init_state = __esm({
       // 生成模式: "narrative"(内容优先) | "visual"(氛围美化)
       useHistoryAnalysis: false,
       // 是否读取聊天历史（默认关闭）
+      historyAiOnly: false,
+      // 读历史时只要角色发言，跳过用户楼层（仅作用于剧本生成）
       skipWorldBookCheck: false,
       // 跳过世界书空检查（本次会话内有效）
       skipInteractiveHint: false,
@@ -33716,6 +33915,9 @@ async function fetchList({ force = false } = {}) {
 function fetchScript(id3) {
   return req(`/api/script/${encodeURIComponent(id3)}`);
 }
+function fetchComments(id3) {
+  return req(`/api/script/${encodeURIComponent(id3)}/comments`);
+}
 function countDownload(id3) {
   return req("/api/downloads", {
     method: "POST",
@@ -33730,6 +33932,39 @@ var init_workshopApi = __esm({
     LIST_TTL = 6e4;
     TIMEOUT = 15e3;
     cache = { list: null, at: 0 };
+  }
+});
+
+// src/core/workshopRating.js
+function showMature() {
+  try {
+    return localStorage.getItem(KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function setShowMature(on) {
+  try {
+    localStorage.setItem(KEY, on ? "1" : "0");
+  } catch {
+  }
+}
+function toggleMature() {
+  if (showMature()) {
+    setShowMature(false);
+    return false;
+  }
+  const ok = window.confirm("\u5373\u5C06\u663E\u793A\u6807\u8BB0\u4E3A\u201C\u6210\u4EBA\u5411\u201D\u7684\u6295\u7A3F\uFF0C\u5176\u4E2D\u53EF\u80FD\u5305\u542B\u9732\u9AA8\u6027\u5185\u5BB9\u3001\u6027\u6697\u793A\u6216\u5F3A\u70C8\u66B4\u529B\u5185\u5BB9\u3002\n\n\u8BF7\u786E\u8BA4\u4F60\u5DF2\u6EE1\u8DB3\u6240\u5728\u5730\u7684\u6CD5\u5B9A\u5E74\u9F84\u8981\u6C42\u3002\n\n\u70B9\u51FB\u201C\u786E\u5B9A\u201D\u7EE7\u7EED\u663E\u793A\u6210\u4EBA\u5411\u5185\u5BB9\u3002");
+  if (ok) setShowMature(true);
+  return ok;
+}
+function filterByRating(items) {
+  return showMature() ? items : items.filter((item) => item.rating !== "mature");
+}
+var KEY;
+var init_workshopRating = __esm({
+  "src/core/workshopRating.js"() {
+    KEY = "titania_workshop_show_mature";
   }
 });
 
@@ -33773,6 +34008,24 @@ function bindAvatarFallback($scope) {
     $(this).remove();
   });
 }
+function renderPreviewComments(items) {
+  if (!items?.length) {
+    return `<div class="t-ws-pv-comments-empty">\u8FD8\u6CA1\u6709\u8BC4\u8BBA\uFF0C\u53BB\u7F51\u9875\u7ED9\u4F5C\u8005\u7559\u53E5\u8BDD\u5427\u3002</div>`;
+  }
+  return items.map((item) => `
+        <article class="t-ws-pv-comment">
+            <div class="t-ws-pv-comment-head">
+                ${renderAvatar(item.author)}
+                <div class="t-ws-pv-comment-author">
+                    <strong>${esc(item.author?.name || "\u672A\u77E5\u7528\u6237")}</strong>
+                    <small>${formatRelativeTime(item.updated_at || item.created_at)}</small>
+                </div>
+            </div>
+            <div class="t-ws-pv-comment-body">${esc(item.body)}</div>
+            ${item.reply ? `<div class="t-ws-pv-comment-reply"><strong>\u4F5C\u8005\u56DE\u590D</strong><span>${esc(item.reply.body)}</span></div>` : ""}
+        </article>
+    `).join("");
+}
 function formatRelativeTime(ts) {
   const time = (Number(ts) || 0) * 1e3;
   if (!time) return "";
@@ -33784,7 +34037,7 @@ function formatRelativeTime(ts) {
 }
 function openWorkshopWindow(source = "manager") {
   let allItems = [];
-  let currentFilter = { category: "\u5168\u90E8", search: "", sort: "latest" };
+  let currentFilter = { category: "\u5168\u90E8", search: "", sort: "newest" };
   if (source === "manager" && !$("#t-mgr-view").length) source = "main";
   if (source === "main" && !$("#t-main-view").length && $("#t-mgr-view").length) source = "manager";
   if (source === "manager") {
@@ -33801,6 +34054,7 @@ function openWorkshopWindow(source = "manager") {
                 <div class="t-title-sub">ECHO WORKSHOP</div>
             </div>
             <div class="t-header-actions">
+                <button class="t-ws-rating-toggle" id="t-ws-rating-toggle" type="button"></button>
                 <i class="fa-solid fa-arrow-up-right-from-square t-icon-btn" id="t-ws-open-site" title="\u5728\u6D4F\u89C8\u5668\u4E2D\u6253\u5F00\u5DE5\u574A\uFF08\u6295\u7A3F/\u7F16\u8F91\uFF09"></i>
                 <i class="fa-solid fa-rotate t-icon-btn" id="t-ws-refresh" title="\u5237\u65B0"></i>
                 <span class="t-close" id="t-ws-close">&times;</span>
@@ -33828,30 +34082,31 @@ function openWorkshopWindow(source = "manager") {
     }
   };
   const renderCategories = () => {
-    const cats = [...new Set(allItems.map((i) => i.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));
+    const cats = [...new Set(filterByRating(allItems).map((i) => i.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));
     const $sel = $("#t-ws-cat");
     $sel.empty().append(`<option value="\u5168\u90E8">\u5168\u90E8\u5206\u7C7B</option>`);
     cats.forEach((c) => $sel.append(`<option value="${esc(c)}">${esc(c)}</option>`));
     $sel.val(currentFilter.category);
   };
   const renderStats = (shownCount) => {
-    if (!allItems.length) {
+    const visibleItems = filterByRating(allItems);
+    if (!visibleItems.length) {
       $("#t-ws-stats").empty();
       return;
     }
     const weekAgo = Math.floor(Date.now() / 1e3) - 7 * 86400;
-    const fresh = allItems.filter((i) => (i.created_at || 0) >= weekAgo).length;
-    const totalDownloads = allItems.reduce((sum, i) => sum + (Number(i.downloads) || 0), 0);
-    const filtered = shownCount !== allItems.length;
+    const fresh = visibleItems.filter((i) => (i.created_at || 0) >= weekAgo).length;
+    const totalDownloads = visibleItems.reduce((sum, i) => sum + (Number(i.downloads) || 0), 0);
+    const filtered = shownCount !== visibleItems.length;
     $("#t-ws-stats").html(`
-            <span><b>${allItems.length}</b> \u6761\u6295\u7A3F</span>
+            <span><b>${visibleItems.length}</b> \u6761\u5F53\u524D\u53EF\u89C1\u6295\u7A3F</span>
             ${fresh ? `<span>\u672C\u5468\u65B0\u589E <b>${fresh}</b></span>` : ""}
             <span>\u7D2F\u8BA1\u4E0B\u8F7D <b>${totalDownloads}</b></span>
             ${filtered ? `<span class="t-ws-stats-filter">\u5F53\u524D\u663E\u793A <b>${shownCount}</b></span>` : ""}
         `);
   };
   const getFiltered = () => {
-    const list = allItems.filter((item) => {
+    const list = filterByRating(allItems).filter((item) => {
       if (currentFilter.category !== "\u5168\u90E8" && item.category !== currentFilter.category) return false;
       if (currentFilter.search) {
         const term = currentFilter.search.toLowerCase();
@@ -33860,7 +34115,7 @@ function openWorkshopWindow(source = "manager") {
       }
       return true;
     });
-    const sorter = SORT_MODES[currentFilter.sort] || SORT_MODES.latest;
+    const sorter = SORT_MODES[currentFilter.sort] || SORT_MODES.newest;
     return list.sort(sorter.fn);
   };
   const renderList = () => {
@@ -33874,8 +34129,8 @@ function openWorkshopWindow(source = "manager") {
         $list.html(`
                     <div class="t-ws-placeholder">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <div class="t-ws-ph-title">\u6CA1\u6709\u5339\u914D\u7684\u6295\u7A3F</div>
-                        <div class="t-ws-ph-desc">\u6362\u4E2A\u5173\u952E\u8BCD\uFF0C\u6216\u628A\u5206\u7C7B\u5207\u56DE\u300C\u5168\u90E8\u5206\u7C7B\u300D</div>
+                        <div class="t-ws-ph-title">\u6CA1\u6709\u53EF\u663E\u793A\u7684\u6295\u7A3F</div>
+                        <div class="t-ws-ph-desc">\u6362\u4E2A\u5173\u952E\u8BCD\u3001\u5206\u7C7B\uFF0C\u6216\u5207\u6362\u5185\u5BB9\u8303\u56F4</div>
                     </div>`);
       } else {
         $list.html(`
@@ -33908,6 +34163,7 @@ function openWorkshopWindow(source = "manager") {
                     <div class="t-ws-card-desc">${esc(item.desc) || "\u4F5C\u8005\u6CA1\u6709\u5199\u7B80\u4ECB"}</div>
                     <div class="t-ws-card-tags">
                         ${item.category ? `<span class="t-ws-tag t-ws-tag-cat">${esc(item.category)}</span>` : ""}
+                        ${item.rating === "mature" ? `<span class="t-ws-tag t-ws-tag-mature">\u6210\u4EBA\u5411</span>` : ""}
                         ${tags}
                         <span class="t-ws-tag">v${Number(item.version) || 1}</span>
                     </div>
@@ -33935,7 +34191,9 @@ function openWorkshopWindow(source = "manager") {
         name: detail.name,
         desc: detail.desc || "",
         prompt: detail.prompt,
-        category: detail.category || "\u5DE5\u574A\u4E0B\u8F7D"
+        category: detail.category || "\u5DE5\u574A\u4E0B\u8F7D",
+        workshop_source_id: item.id,
+        workshop_author_id: item.author?.id || null
       });
       countDownload(item.id);
       $btn.text("\u2713 \u5DF2\u4E0B\u8F7D");
@@ -33970,12 +34228,25 @@ function openWorkshopWindow(source = "manager") {
                         <div class="t-ws-heat${downloads >= HOT_THRESHOLD ? " is-hot" : ""}">
                             <i class="fa-solid fa-fire"></i> ${downloads}
                         </div>
+                        ${item.rating === "mature" ? `<span class="t-ws-tag t-ws-tag-mature">\u6210\u4EBA\u5411</span>` : ""}
                     </div>
                     ${item.desc ? `<div class="t-ws-pv-desc">${esc(item.desc)}</div>` : ""}
                     <div class="t-ws-pv-label">
                         <span>\u6307\u4EE4\u5185\u5BB9</span>
                     </div>
                     <textarea class="t-input t-ws-pv-prompt" readonly>\u52A0\u8F7D\u4E2D...</textarea>
+                    <section class="t-ws-pv-comments">
+                        <div class="t-ws-pv-comments-head">
+                            <div>
+                                <span class="t-ws-pv-label">\u8BC4\u8BBA</span>
+                                <strong id="t-ws-pv-comments-count">\u52A0\u8F7D\u4E2D...</strong>
+                            </div>
+                            <button class="t-btn t-btn-soft" id="t-ws-pv-comment-open">\u53BB\u7F51\u9875\u8BC4\u8BBA</button>
+                        </div>
+                        <div id="t-ws-pv-comments-list" class="t-ws-pv-comments-list">
+                            <div class="t-ws-pv-comments-empty">\u6B63\u5728\u52A0\u8F7D\u8BC4\u8BBA...</div>
+                        </div>
+                    </section>
                     <div class="t-btn-row">
                         <button class="t-btn primary" id="t-ws-pv-get" style="flex:1;">\u4E0B\u8F7D\u5230\u672C\u5730</button>
                     </div>
@@ -33989,6 +34260,7 @@ function openWorkshopWindow(source = "manager") {
       $(document).off("keydown.wspreview");
     };
     $("#t-ws-pv-close").on("click", closePreview);
+    $("#t-ws-pv-comment-open").on("click", () => window.open(`${WORKSHOP_ORIGIN}/#/comment/${encodeURIComponent(item.id)}`, "_blank"));
     $("#t-ws-preview-overlay").on("click", function(e) {
       if (e.target === this) closePreview();
     });
@@ -33998,16 +34270,25 @@ function openWorkshopWindow(source = "manager") {
         e.preventDefault();
       }
     });
-    try {
-      const detail = await fetchScript(item.id);
-      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(detail.prompt);
+    const [detailResult, commentsResult] = await Promise.allSettled([fetchScript(item.id), fetchComments(item.id)]);
+    if (detailResult.status === "fulfilled") {
+      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(detailResult.value.prompt);
       $("#t-ws-pv-get").on("click", function() {
         downloadScript(item, $(this));
         setTimeout(closePreview, 800);
       });
-    } catch (e) {
-      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(`\u52A0\u8F7D\u5931\u8D25\uFF1A${e.message}`);
+    } else {
+      $("#t-ws-preview-overlay .t-ws-pv-prompt").val(`\u52A0\u8F7D\u5931\u8D25\uFF1A${detailResult.reason?.message || "\u672A\u77E5\u9519\u8BEF"}`);
       $("#t-ws-pv-get").prop("disabled", true);
+    }
+    if (commentsResult.status === "fulfilled") {
+      const items = commentsResult.value.items || [];
+      $("#t-ws-pv-comments-count").text(`${items.length} \u6761`);
+      $("#t-ws-pv-comments-list").html(renderPreviewComments(items));
+      bindAvatarFallback($("#t-ws-pv-comments-list"));
+    } else {
+      $("#t-ws-pv-comments-count").text("\u6682\u4E0D\u53EF\u7528");
+      $("#t-ws-pv-comments-list").html(`<div class="t-ws-pv-comments-empty">\u8BC4\u8BBA\u52A0\u8F7D\u5931\u8D25\uFF1A${esc(commentsResult.reason?.message || "\u672A\u77E5\u9519\u8BEF")}</div>`);
     }
   };
   const renderSkeleton = () => {
@@ -34049,6 +34330,16 @@ function openWorkshopWindow(source = "manager") {
   $("#t-ws-close").on("click", closeWindow2);
   $("#t-ws-refresh").on("click", () => load({ force: true }));
   $("#t-ws-open-site").on("click", () => window.open(WORKSHOP_ORIGIN, "_blank"));
+  const paintRatingToggle = () => {
+    const mature = showMature();
+    $("#t-ws-rating-toggle").toggleClass("is-mature", mature).attr("aria-pressed", String(mature)).attr("title", mature ? "\u70B9\u51FB\u9690\u85CF\u6210\u4EBA\u5411\u5185\u5BB9" : "\u70B9\u51FB\u663E\u793A\u6210\u4EBA\u5411\u5185\u5BB9").html(`<i class="fa-solid fa-shield-halved"></i> ${mature ? "\u5305\u542B\u6210\u4EBA\u5411" : "\u5168\u5E74\u9F84"}`);
+  };
+  $("#t-ws-rating-toggle").on("click", () => {
+    toggleMature();
+    paintRatingToggle();
+    renderCategories();
+    renderList();
+  });
   $("#t-ws-search").on("input", function() {
     currentFilter.search = $(this).val().trim();
     renderList();
@@ -34061,6 +34352,7 @@ function openWorkshopWindow(source = "manager") {
     currentFilter.sort = $(this).val();
     renderList();
   });
+  paintRatingToggle();
   load();
 }
 var HOT_THRESHOLD, AVATAR_COLORS, ANON_COLOR, SORT_MODES;
@@ -34070,6 +34362,7 @@ var init_workshopWindow = __esm({
     init_scriptData();
     init_state();
     init_mainWindow();
+    init_workshopRating();
     HOT_THRESHOLD = 50;
     AVATAR_COLORS = [
       "linear-gradient(135deg, #bfa15f, #8a7038)",
@@ -34081,9 +34374,9 @@ var init_workshopWindow = __esm({
     ];
     ANON_COLOR = "linear-gradient(135deg, #5a5a5a, #3a3a3a)";
     SORT_MODES = {
+      newest: { label: "\u6700\u65B0\u53D1\u5E03", fn: (a, b) => (b.created_at || b.updated_at || 0) - (a.created_at || a.updated_at || 0) || (b.updated_at || 0) - (a.updated_at || 0) || String(b.id).localeCompare(String(a.id)) },
       latest: { label: "\u6700\u65B0\u66F4\u65B0", fn: (a, b) => (b.updated_at || 0) - (a.updated_at || 0) },
       downloads: { label: "\u4E0B\u8F7D\u6700\u591A", fn: (a, b) => (b.downloads || 0) - (a.downloads || 0) },
-      newest: { label: "\u6700\u65B0\u53D1\u5E03", fn: (a, b) => (b.created_at || 0) - (a.created_at || 0) },
       name: { label: "\u540D\u79F0 A-Z", fn: (a, b) => String(a.name).localeCompare(String(b.name), "zh-CN") }
     };
   }
@@ -35571,11 +35864,19 @@ function renderHtml(viewData) {
             </div>
 
             <div class="t-top-bar">
-                <div class="t-history-toggle" id="t-history-toggle">
-                    <label class="t-toggle-label">
-                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
-                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
-                    </label>
+                <div class="t-history-group">
+                    <div class="t-history-toggle" id="t-history-toggle">
+                        <label class="t-toggle-label">
+                            <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
+                            <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
+                        </label>
+                    </div>
+                    <div class="t-history-toggle t-subtoggle" id="t-ai-only-toggle" title="\u53EA\u628A\u89D2\u8272\u7684\u53D1\u8A00\u6CE8\u5165\u5267\u672C\u751F\u6210\uFF0C\u8DF3\u8FC7\u4F60\u81EA\u5DF1\u7684\u697C\u5C42\u3002\u603B\u7ED3\u548C\u8BBE\u5B9A\u63D0\u53D6\u4E0D\u53D7\u5F71\u54CD">
+                        <label class="t-toggle-label">
+                            <input type="checkbox" id="t-history-ai-only" ${GlobalState.historyAiOnly ? "checked" : ""}>
+                            <span class="t-toggle-text">\u{1F3AD} \u53EA\u8981\u89D2\u8272\u53D1\u8A00</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="t-mode-toggle" id="t-mode-toggle">
                     <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
@@ -35629,6 +35930,9 @@ function renderHtml(viewData) {
                     <button class="t-tools-icon" id="t-btn-like" type="button" title="\u6536\u85CF\u7ED3\u679C" aria-label="\u6536\u85CF\u7ED3\u679C">
                         <i class="fa-regular fa-heart"></i>
                     </button>
+                    <button class="t-tools-icon" id="t-tool-workshop-feedback" type="button" title="\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F" aria-label="\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F" style="display:none;">
+                        <i class="fa-regular fa-comment-dots"></i>
+                    </button>
                 </div>
                 <div class="t-content-area">
                     <!-- \u7FFB\u9875\u6309\u94AE\u79FB\u5230\u5185\u5BB9\u533A\u4E24\u4FA7 -->
@@ -35669,7 +35973,6 @@ function renderHtml(viewData) {
                             <div class="t-toolbox-grid">
                                 <button class="t-toolbox-action" id="t-btn-new" type="button"><i class="fa-solid fa-plus"></i><span>\u65B0\u5EFA\u5267\u672C</span></button>
                                 <button class="t-toolbox-action" id="t-btn-edit" type="button"><i class="fa-solid fa-pen-to-square"></i><span>\u7F16\u8F91\u5267\u672C</span></button>
-                                <button class="t-toolbox-action t-toolbox-action-wide" id="t-btn-regenerate" type="button"><i class="fa-solid fa-rotate"></i><span>\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C</span></button>
                             </div>
                         </section>
                         <section class="t-toolbox-section">
@@ -35776,8 +36079,9 @@ function bindEvents3(ctx) {
     const hasContent = !!getCurrentDisplayContent()?.content?.trim();
     const busy = action === "stop";
     const drafting = !!String($quickInput.val() || "").trim();
-    const disabled = busy || !hasContent || drafting;
-    $("#t-btn-continuation-replay").prop("disabled", disabled).attr("title", drafting ? "\u6E05\u7A7A\u8F93\u5165\u6846\u540E\u53EF\u91CD\u65B0\u6F14\u7ECE" : hasContent ? "\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C" : "\u8FD8\u6CA1\u6709\u53EF\u91CD\u6F14\u7684\u5185\u5BB9");
+    const redundant = action === "generate";
+    const disabled = busy || !hasContent || drafting || redundant;
+    $("#t-btn-continuation-replay").prop("disabled", disabled).attr("title", busy ? "\u6B63\u5728\u751F\u6210\u4E2D" : drafting ? "\u6E05\u7A7A\u8F93\u5165\u6846\u540E\u53EF\u91CD\u65B0\u6F14\u7ECE" : !hasContent ? "\u8FD8\u6CA1\u6709\u53EF\u91CD\u6F14\u7684\u5185\u5BB9" : redundant ? "\u5DF2\u5207\u6362\u5267\u672C\uFF0C\u8BF7\u7528\u53F3\u4FA7\u53D1\u9001\u952E\u6F14\u7ECE\u65B0\u5267\u672C" : "\u91CD\u65B0\u6F14\u7ECE\u5F53\u524D\u5267\u672C");
   };
   const updateContextPopover = () => {
     const stats = getContinuationSessionStats(getQuickScriptId(), quickInjectRounds);
@@ -35907,19 +36211,6 @@ function bindEvents3(ctx) {
       setToolboxOpen(false);
     }
   });
-  $("#t-btn-regenerate").on("click", () => {
-    if (GlobalState.isGenerating || GlobalState.queueState.isRunning) {
-      if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u4E2D\uFF0C\u8BF7\u7A0D\u5019...", "Titania");
-      return;
-    }
-    const scriptId = GlobalState.lastUsedScriptId || GlobalState.lastGeneratedScriptId;
-    if (!scriptId) {
-      if (window.toastr) toastr.warning("\u5F53\u524D\u6CA1\u6709\u9009\u4E2D\u7684\u5267\u672C", "Titania");
-      return;
-    }
-    closeWindow2();
-    handleGenerate(scriptId, false);
-  });
   registerTeardown2(() => {
     $(document).off("keydown.ttoolbox");
     $(document).off("click.tcontinuationquick");
@@ -35980,11 +36271,19 @@ function renderHtml2(viewData) {
             </div>
 
             <div class="t-top-bar">
-                <div class="t-history-toggle" id="t-history-toggle">
-                    <label class="t-toggle-label">
-                        <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
-                        <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
-                    </label>
+                <div class="t-history-group">
+                    <div class="t-history-toggle" id="t-history-toggle">
+                        <label class="t-toggle-label">
+                            <input type="checkbox" id="t-use-history" ${GlobalState.useHistoryAnalysis ? "checked" : ""}>
+                            <span class="t-toggle-text">\u{1F4DC} \u8BFB\u53D6\u804A\u5929\u5386\u53F2</span>
+                        </label>
+                    </div>
+                    <div class="t-history-toggle t-subtoggle" id="t-ai-only-toggle" title="\u53EA\u628A\u89D2\u8272\u7684\u53D1\u8A00\u6CE8\u5165\u5267\u672C\u751F\u6210\uFF0C\u8DF3\u8FC7\u4F60\u81EA\u5DF1\u7684\u697C\u5C42\u3002\u603B\u7ED3\u548C\u8BBE\u5B9A\u63D0\u53D6\u4E0D\u53D7\u5F71\u54CD">
+                        <label class="t-toggle-label">
+                            <input type="checkbox" id="t-history-ai-only" ${GlobalState.historyAiOnly ? "checked" : ""}>
+                            <span class="t-toggle-text">\u{1F3AD} \u53EA\u8981\u89D2\u8272\u53D1\u8A00</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="t-mode-toggle" id="t-mode-toggle">
                     <div class="t-mode-btn ${GlobalState.generationMode === "narrative" ? "active" : ""}" data-mode="narrative">
@@ -36041,6 +36340,10 @@ function renderHtml2(viewData) {
                     <div class="t-tools-item" id="t-tool-edit-content">
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
+                    </div>
+                    <div class="t-tools-item" id="t-tool-workshop-feedback" style="display:none;">
+                        <i class="fa-regular fa-comment-dots"></i>
+                        <span>\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F</span>
                     </div>
                 </div>
                 <div class="t-content-area">
@@ -36194,7 +36497,8 @@ __export(mainWindow_exports, {
   updateModeToggleUI: () => updateModeToggleUI,
   updateQueueButtonUI: () => updateQueueButtonUI,
   updateRunButtonsState: () => updateRunButtonsState,
-  updateScriptTitleDisplay: () => updateScriptTitleDisplay
+  updateScriptTitleDisplay: () => updateScriptTitleDisplay,
+  updateWorkshopFeedbackButton: () => updateWorkshopFeedbackButton
 });
 function formatRelativeTime3(ts) {
   const time = Number(ts) || 0;
@@ -36237,6 +36541,12 @@ function updateHistoryToggleUI() {
     $toggle.removeClass("active");
   }
   $checkbox.prop("checked", GlobalState.useHistoryAnalysis);
+  const $aiOnly = $("#t-ai-only-toggle");
+  const $aiOnlyBox = $("#t-history-ai-only");
+  $aiOnly.toggleClass("disabled", !GlobalState.useHistoryAnalysis);
+  $aiOnly.toggleClass("active", GlobalState.useHistoryAnalysis && GlobalState.historyAiOnly);
+  $aiOnlyBox.prop("disabled", !GlobalState.useHistoryAnalysis);
+  $aiOnlyBox.prop("checked", GlobalState.historyAiOnly);
 }
 function updateModeToggleUI() {
   $(".t-mode-btn").removeClass("active");
@@ -36904,6 +37214,7 @@ async function openMainWindow() {
     data = { ui_mode_echo: true };
   }
   GlobalState.useHistoryAnalysis = data.use_history_analysis === true;
+  GlobalState.historyAiOnly = data.history_extraction?.ai_only === true;
   GlobalState.generationMode = ["narrative", "visual", "preset"].includes(data.config?.generation_mode) ? data.config.generation_mode : "narrative";
   const placeholderContent = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555;"><i class="fa-solid fa-clapperboard" style="font-size:3em; margin-bottom:15px; opacity:0.5;"></i><div style="font-size:1.1em;">\u8BF7\u9009\u62E9\u5267\u672C\uFF0C\u5F00\u59CB\u6F14\u7ECE...</div></div>';
   const layout = data.ui_prefs?.main_window_mode === "legacy" ? legacy_exports : modern_exports;
@@ -36930,6 +37241,21 @@ async function openMainWindow() {
         toastr.info("\u{1F4DC} \u5DF2\u5F00\u542F\uFF1A\u5C06\u5206\u6790\u804A\u5929\u5386\u53F2", "Titania");
       } else {
         toastr.info("\u{1F4DC} \u5DF2\u5173\u95ED\uFF1A\u4E0D\u8BFB\u53D6\u804A\u5929\u5386\u53F2", "Titania");
+      }
+    }
+  });
+  $("#t-history-ai-only").on("change", function() {
+    GlobalState.historyAiOnly = $(this).is(":checked");
+    updateHistoryToggleUI();
+    const d = getExtData();
+    if (!d.history_extraction || typeof d.history_extraction !== "object") d.history_extraction = {};
+    d.history_extraction.ai_only = GlobalState.historyAiOnly;
+    saveExtData();
+    if (window.toastr) {
+      if (GlobalState.historyAiOnly) {
+        toastr.info("\u{1F3AD} \u5DF2\u5F00\u542F\uFF1A\u5386\u53F2\u53EA\u6CE8\u5165\u89D2\u8272\u53D1\u8A00", "Titania");
+      } else {
+        toastr.info("\u{1F3AD} \u5DF2\u5173\u95ED\uFF1A\u5386\u53F2\u5305\u542B\u53CC\u65B9\u53D1\u8A00", "Titania");
       }
     }
   });
@@ -37174,6 +37500,16 @@ async function openMainWindow() {
       saveFavorite();
     }
   });
+  $("#t-tool-workshop-feedback").on("click", () => {
+    const result = getCurrentGenerationResult();
+    const script = GlobalState.runtimeScripts.find((s) => s.id === result?.scriptId);
+    const sourceId = script?.workshop_source_id;
+    if (!sourceId) {
+      if (window.toastr) toastr.info("\u5F53\u524D\u5267\u672C\u4E0D\u662F\u4ECE\u56DE\u58F0\u5DE5\u574A\u4E0B\u8F7D\u7684");
+      return;
+    }
+    window.open(`${WORKSHOP_ORIGIN}/#/comment/${encodeURIComponent(sourceId)}`, "_blank");
+  });
   $("#t-main-view").on("click", "[data-header-action]", function(e) {
     e.stopPropagation();
     runHeaderAction(String($(this).data("header-action") || ""), $(this));
@@ -37328,6 +37664,7 @@ function updateContentStatsDisplay(stats) {
   $hud.show();
 }
 function updateFavButtonUI() {
+  updateWorkshopFeedbackButton();
   const btn = $("#t-btn-like");
   if (!btn.length) return;
   const icon = btn.find("i");
@@ -37345,6 +37682,13 @@ function updateFavButtonUI() {
     icon.attr("class", "fa-regular fa-heart").css("color", "");
     btn.attr({ title: "\u6536\u85CF\u7ED3\u679C", "aria-label": "\u6536\u85CF\u7ED3\u679C" }).removeClass("is-faved");
   }
+}
+function updateWorkshopFeedbackButton() {
+  const btn = $("#t-tool-workshop-feedback");
+  if (!btn.length) return;
+  const result = getCurrentGenerationResult();
+  const script = GlobalState.runtimeScripts.find((s) => s.id === result?.scriptId);
+  btn.toggle(Boolean(result?.content && script?.workshop_source_id));
 }
 function updateScriptTitleDisplay() {
   const scriptId = GlobalState.lastGeneratedScriptId;
@@ -37605,6 +37949,7 @@ async function openWorldInfoSelector() {
     toastr.warning(`\u4E16\u754C\u4E66\u6570\u636E\u90E8\u5206\u52A0\u8F7D\u5931\u8D25\uFF1A${loadWarnings.join("\uFF1B")}`, "Titania Echo");
   }
   let currentViewMode = "all";
+  let hideDisabled = data.ui_prefs?.wi_hide_disabled === true;
   const getVisibleBooks = () => currentViewMode === "active" ? baseActiveBooks : allBooks;
   let visibleBooks = getVisibleBooks();
   $loadingPanel.remove();
@@ -37676,6 +38021,10 @@ async function openWorldInfoSelector() {
                         </div>
                         <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-all">\u5168\u9009</button>
                         <button type="button" class="t-btn t-btn-xs" id="t-wi-current-select-none">\u53D6\u6D88\u5168\u9009</button>
+                        <label class="t-wi-hide-disabled" id="t-wi-hide-disabled-label" title="\u4EC5\u4ECE\u5217\u8868\u91CC\u9690\u85CF\uFF0C\u4E0D\u6539\u52A8\u5DF2\u4FDD\u5B58\u7684\u52FE\u9009\u3002\u5DF2\u52FE\u9009\u7684\u7981\u7528\u6761\u76EE\u4ECD\u4F1A\u6CE8\u5165">
+                            <input type="checkbox" id="t-wi-hide-disabled" ${hideDisabled ? "checked" : ""}>
+                            <span>\u9690\u85CF\u5DF2\u7981\u7528</span>
+                        </label>
                     </div>
                 </div>
                 <div class="t-wi-entry-list" id="t-wi-entry-list">
@@ -37747,9 +38096,16 @@ async function openWorldInfoSelector() {
     refreshActiveState();
   };
   const getVisibleEntries = () => {
-    if (!entrySearchQuery) return currentEntries2;
+    let list = currentEntries2;
+    if (hideDisabled) list = list.filter((entry) => !entry.isDisabled);
+    if (!entrySearchQuery) return list;
     const needle = entrySearchQuery.toLowerCase();
-    return currentEntries2.filter((entry) => String(entry.comment || "").toLowerCase().includes(needle));
+    return list.filter((entry) => String(entry.comment || "").toLowerCase().includes(needle));
+  };
+  const countHiddenSelected = () => {
+    if (!hideDisabled || !currentBookName) return 0;
+    const selectedSet = getBookSelectedSet(currentBookName);
+    return currentEntries2.filter((entry) => entry.isDisabled && selectedSet.has(Number(entry.uid))).length;
   };
   const renderEntryTitle = (title) => {
     const text = String(title || "");
@@ -37763,15 +38119,17 @@ async function openWorldInfoSelector() {
   };
   const syncSelectAllLabels = () => {
     const visibleCount = getVisibleEntries().length;
-    const suffix = entrySearchQuery ? ` (${visibleCount})` : "";
+    const suffix = entrySearchQuery || hideDisabled ? ` (${visibleCount})` : "";
     $q("#t-wi-current-select-all").text(`\u5168\u9009${suffix}`);
     $q("#t-wi-current-select-none").text(`\u53D6\u6D88\u5168\u9009${suffix}`);
   };
   const updateStat = () => {
     const selectedSet = getBookSelectedSet(currentBookName);
     const selectedCount = currentEntries2.filter((entry) => selectedSet.has(Number(entry.uid))).length;
-    const filterNote = entrySearchQuery ? `\u3000\u7B5B\u9009\u51FA ${getVisibleEntries().length} \u6761` : "";
-    $q("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}${filterNote}`);
+    const filterNote = entrySearchQuery || hideDisabled ? `\u3000\u7B5B\u9009\u51FA ${getVisibleEntries().length} \u6761` : "";
+    const hiddenSelected = countHiddenSelected();
+    const hiddenNote = hiddenSelected ? `\u3000\u542B ${hiddenSelected} \u6761\u5DF2\u9690\u85CF\u4F46\u4ECD\u4F1A\u6CE8\u5165` : "";
+    $q("#t-wi-stat").text(`\u5DF2\u9009: ${selectedCount}/${currentEntries2.length}${filterNote}${hiddenNote}`);
     syncSelectAllLabels();
   };
   const renderEntries = () => {
@@ -37789,14 +38147,16 @@ async function openWorldInfoSelector() {
     }
     const visibleEntries = getVisibleEntries();
     if (!visibleEntries.length) {
+      const blockedByHide = hideDisabled && !entrySearchQuery;
       $body.append(`
                 <div class="t-wi-empty">
-                    <div>\u65E0\u5339\u914D\u6761\u76EE</div>
-                    <button type="button" class="t-btn t-btn-xs" id="t-wi-search-reset" style="margin-top:12px;">\u6E05\u7A7A\u641C\u7D22</button>
+                    <div>${blockedByHide ? "\u8BE5\u4E16\u754C\u4E66\u7684\u6761\u76EE\u5728\u9152\u9986\u4E2D\u90FD\u88AB\u7981\u7528\u4E86" : "\u65E0\u5339\u914D\u6761\u76EE"}</div>
+                    <button type="button" class="t-btn t-btn-xs" id="t-wi-empty-reset" style="margin-top:12px;">${blockedByHide ? "\u663E\u793A\u5DF2\u7981\u7528\u6761\u76EE" : "\u6E05\u7A7A\u641C\u7D22"}</button>
                 </div>
             `);
-      $body.find("#t-wi-search-reset").on("click", () => {
-        $q("#t-wi-entry-search-input").val("").trigger("input");
+      $body.find("#t-wi-empty-reset").on("click", () => {
+        if (blockedByHide) $q("#t-wi-hide-disabled").prop("checked", false).trigger("change");
+        else $q("#t-wi-entry-search-input").val("").trigger("input");
       });
       updateStat();
       return;
@@ -37984,6 +38344,13 @@ async function openWorldInfoSelector() {
   });
   $q("#t-wi-entry-search-clear").on("click", () => {
     $q("#t-wi-entry-search-input").val("").trigger("input").trigger("focus");
+  });
+  $q("#t-wi-hide-disabled").on("change", function() {
+    hideDisabled = $(this).is(":checked");
+    if (!data.ui_prefs || typeof data.ui_prefs !== "object") data.ui_prefs = {};
+    data.ui_prefs.wi_hide_disabled = hideDisabled;
+    saveExtData();
+    renderEntries();
   });
   $q("#t-wi-save").on("click", () => {
     if (!currentBookName && !Object.keys(workingSelections).length) return;
@@ -38591,6 +38958,7 @@ var init_mainWindow = __esm({
     init_loreReviewWindow();
     init_settingsWindow();
     init_helpers();
+    init_workshopApi();
     init_continuationStore();
     init_scriptData();
     init_viewState();
@@ -39118,6 +39486,18 @@ function clampContinuationInjectRounds(value) {
   const num = Number(value);
   if (!Number.isFinite(num)) return 3;
   return Math.max(CONTINUATION_INJECT_MIN, Math.min(CONTINUATION_INJECT_MAX, Math.floor(num)));
+}
+function buildChatHistoryBlock(history, aiOnly) {
+  if (!history || history.trim().length === 0) return `[\u804A\u5929\u5386\u53F2]
+\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
+
+`;
+  const note = aiOnly ? "\u4EE5\u4E0B\u4EC5\u4E3A\u89D2\u8272\u7684\u8FD1\u671F\u53D1\u8A00\uFF0C\u5DF2\u8DF3\u8FC7\u7528\u6237\u8F93\u5165\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587" : "\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587";
+  return `[\u804A\u5929\u5386\u53F2]
+\uFF08${note}\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
+${history}
+
+`;
 }
 function createContinuationBranchKey() {
   const ts = Date.now().toString(36);
@@ -40228,15 +40608,8 @@ ${ctx.worldInfo}
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
       const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
-      const history = getChatHistory(limit, historyWhitelist, historyBlacklist);
-      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
-\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
-${history}
-
-` : `[\u804A\u5929\u5386\u53F2]
-\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
-
-`;
+      const history = getChatHistory(limit, historyWhitelist, historyBlacklist, GlobalState.historyAiOnly);
+      const historyBlock = buildChatHistoryBlock(history, GlobalState.historyAiOnly);
       sectionLengths.history = historyBlock.length;
       runtimeChatHistory = historyBlock;
       user += historyBlock;
@@ -40556,15 +40929,8 @@ ${ctx.worldInfo}
       const historyWhitelistStr = data.history_extraction?.whitelist || "";
       const historyWhitelist = parseWhitelistInput(historyWhitelistStr);
       const historyBlacklist = parseChatHistoryBlacklistInput(data.history_extraction?.blacklist || "");
-      const history = getChatHistory(limit, historyWhitelist, historyBlacklist);
-      const historyBlock = history && history.trim().length > 0 ? `[\u804A\u5929\u5386\u53F2]
-\uFF08\u4EE5\u4E0B\u662F\u8FD1\u671F\u5BF9\u8BDD\u8BB0\u5F55\uFF0C\u4EC5\u4F9B\u53C2\u8003\u4E0A\u4E0B\u6587\u3002\u8BF7\u52FF\u7EED\u5199\u6216\u91CD\u590D\u6B64\u5185\u5BB9\uFF0C\u4E13\u6CE8\u4E8E\u4E0B\u65B9\u7684\u5267\u672C\u6307\u4EE4\uFF09
-${history}
-
-` : `[\u804A\u5929\u5386\u53F2]
-\uFF08\u65E0\u5386\u53F2\u8BB0\u5F55\uFF09
-
-`;
+      const history = getChatHistory(limit, historyWhitelist, historyBlacklist, GlobalState.historyAiOnly);
+      const historyBlock = buildChatHistoryBlock(history, GlobalState.historyAiOnly);
       sectionLengths.history = historyBlock.length;
       runtimeChatHistory = historyBlock;
       user += historyBlock;
