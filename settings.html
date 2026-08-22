@@ -90,6 +90,22 @@
                 </label>
 
                 <label class="checkbox_label titania-switch-row">
+                    <input id="cfg-chat-inject-enabled" type="checkbox" />
+                    <span class="titania-switch-text">
+                        <span class="titania-switch-main">启用小剧场注入入口</span>
+                        <small>在每条消息气泡的「…」菜单中显示注入按钮，可把已生成的小剧场插入到该楼层下方。</small>
+                    </span>
+                </label>
+
+                <label class="checkbox_label titania-switch-row">
+                    <input id="cfg-preset-persist-vars" type="checkbox" />
+                    <span class="titania-switch-text">
+                        <span class="titania-switch-main">允许预设变量写入聊天存档</span>
+                        <small>关闭时（推荐）预设里的 {{setvar}} 只在本次提示词构建内生效，不污染聊天存档；提示词展开结果不受影响。仅当预设依赖变量跨次留存时才需要开启。</small>
+                    </span>
+                </label>
+
+                <label class="checkbox_label titania-switch-row">
                     <input id="cfg-toolbar-lore-enabled" type="checkbox" />
                     <span class="titania-switch-text">
                         <span class="titania-switch-main">启用提取设定快捷入口</span>
@@ -118,128 +134,15 @@
                     <input type="file" id="titania-backup-file-input" accept=".json" style="display:none;">
                 </div>
             </section>
+
+            <!-- 收藏存储。文案与按钮全部由 src/entry.js 的 renderFavsStorageCard() 按状态渲染：
+                 「要不要搬家 / 搬到哪一步 / 还有没有遗留」只有运行时才知道，
+                 在这里写死初始文案会与 JS 覆盖出来的文案漂移（历史上就是这么出过 bug 的）。 -->
+            <section class="titania-panel-card" id="titania-favs-storage-card" hidden>
+                <div class="titania-card-title"><i class="fa-solid fa-hard-drive"></i> 收藏存储</div>
+                <div class="titania-backup-desc" id="titania-favs-storage-desc"></div>
+                <div class="titania-backup-actions" id="titania-favs-storage-actions"></div>
+            </section>
         </div>
     </div>
 </div>
-
-<style>
-    #titania-settings-drawer .inline-drawer-content {
-        padding-top: 10px;
-    }
-
-    .titania-header-main {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-    }
-
-    .titania-panel-grid {
-        display: grid;
-        gap: 10px;
-    }
-
-    .titania-panel-card {
-        padding: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 10px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
-    }
-
-    .titania-card-title {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 8px;
-        font-size: 12px;
-        font-weight: 700;
-        color: #d8e4f0;
-    }
-
-    .titania-switch-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        margin-bottom: 8px;
-    }
-
-    .titania-switch-row:last-child {
-        margin-bottom: 0;
-    }
-
-    .titania-switch-text {
-        display: inline-flex;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 0;
-    }
-
-    .titania-switch-main {
-        color: #dce7f3;
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 1.35;
-    }
-
-    .titania-switch-text small {
-        color: #93a8bb;
-        line-height: 1.4;
-        font-size: 11px;
-    }
-
-    .titania-version-badge {
-        background: rgba(100, 100, 100, 0.3);
-        color: #888;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 4px;
-    }
-
-    .titania-backup-desc {
-        color: #93a8bb;
-        line-height: 1.45;
-        font-size: 11px;
-        margin-bottom: 8px;
-    }
-
-    .titania-backup-actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .titania-mini-btn {
-        border: 1px solid rgba(255, 255, 255, 0.24);
-        background: rgba(255, 255, 255, 0.03);
-        color: #d5e2ef;
-        border-radius: 8px;
-        min-height: 30px;
-        padding: 0 10px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .titania-mini-btn.is-export {
-        border-color: rgba(85, 239, 196, 0.65);
-        color: #72efd0;
-    }
-
-    .titania-mini-btn.is-import {
-        border-color: rgba(144, 205, 244, 0.65);
-        color: #9acff5;
-    }
-
-    .titania-mini-btn:hover:not(:disabled) {
-        filter: brightness(1.06);
-    }
-
-    .titania-mini-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-</style>
