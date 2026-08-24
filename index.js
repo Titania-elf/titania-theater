@@ -48050,10 +48050,10 @@ function renderScriptsStorageCard() {
       html += `<br><span style="color:#ff7675;">\u26A0\uFE0F \u6700\u8FD1\u4E00\u6B21\u4FDD\u5B58\u5931\u8D25\uFF1A${writeError}<br>\u6539\u52A8\u53EF\u80FD\u6CA1\u6709\u5199\u8FDB\u6587\u4EF6\u3002\u8BF7\u68C0\u67E5 ST \u670D\u52A1\u7AEF\u662F\u5426\u6B63\u5E38\uFF0C\u7136\u540E\u91CD\u65B0\u7F16\u8F91\u4E00\u6B21\u89E6\u53D1\u4FDD\u5B58\u3002</span>`;
     }
     if (legacyCount > 0) {
-      html += `<br><span style="color:#feca57;">\u65E7\u6570\u636E\u4ECD\u4F5C\u4E3A\u5B89\u5168\u7F51\u4FDD\u7559\u5728\u8BBE\u7F6E\u91CC\uFF08${legacyCount} \u6761\uFF0C${formatBytes(footprint.bytes)}\uFF09\uFF0C\u6240\u4EE5\u8BBE\u7F6E\u6587\u4EF6<b>\u8FD8\u6CA1\u53D8\u5C0F</b>\u3002<br>\u70B9\u4E0B\u9762\u7684\u6309\u94AE\uFF0C\u6838\u5BF9\u65E0\u8BEF\u540E\u4F1A\u628A\u65E7\u6570\u636E\u5220\u6389\u3002<br>\u26A0\uFE0F \u8FD9\u4E00\u6B65\u5220\u4E86\u5C31\u627E\u4E0D\u56DE\u6765\uFF0C\u6267\u884C\u524D\u4F1A\u81EA\u52A8\u4E0B\u8F7D\u4E00\u4EFD\u5907\u4EFD\u3002</span>`;
+      html += `<br><span style="color:#feca57;">\u65E7\u6570\u636E\u8FD8\u7559\u5728\u8BBE\u7F6E\u91CC\uFF08${legacyCount} \u6761\uFF0C${formatBytes(footprint.bytes)}\uFF09\uFF0C\u6240\u4EE5\u8BBE\u7F6E\u6587\u4EF6<b>\u8FD8\u6CA1\u53D8\u5C0F</b>\u3002<br>\u8FD9\u901A\u5E38\u662F\u4E0A\u6B21\u642C\u5BB6\u4E2D\u9014\u88AB\u6253\u65AD\u4E86\u3002\u70B9\u4E0B\u9762\u7684\u6309\u94AE\u8865\u5B8C\u6700\u540E\u4E00\u6B65\u3002<br>\u26A0\uFE0F \u4F1A\u5148\u6838\u5BF9\u518D\u5220\u9664\uFF0C\u6267\u884C\u524D\u81EA\u52A8\u4E0B\u8F7D\u5907\u4EFD\u3002</span>`;
       $desc.html(html);
       $actions.html(
-        `<button class="titania-mini-btn is-export" data-act="finish"><i class="fa-solid fa-broom"></i> \u5B8C\u6210\u6536\u5C3E\uFF08\u5220\u9664\u65E7\u6570\u636E\uFF09</button>`
+        `<button class="titania-mini-btn is-export" data-act="finish"><i class="fa-solid fa-broom"></i> \u8865\u5B8C\u6536\u5C3E</button>`
       );
       return;
     }
@@ -48062,10 +48062,10 @@ function renderScriptsStorageCard() {
     return;
   }
   $desc.html(
-    `\u5267\u672C\u6307\u4EE4\u73B0\u5728\u548C\u8BBE\u7F6E\u5B58\u5728\u4E00\u8D77\u3002ST \u6BCF\u6B21\u4FDD\u5B58\u8BBE\u7F6E\u90FD\u4F1A\u628A\u6574\u4E2A\u8BBE\u7F6E\u6587\u4EF6\u91CD\u5199\u4E00\u904D\uFF0C\u6240\u4EE5\u5267\u672C\u8D8A\u591A\uFF0C\u6539\u4EFB\u4F55\u4E00\u4E2A\u5F00\u5173\u5C31\u8D8A\u6162\u3002<br>\u5F53\u524D <b>${footprint.count}</b> \u6761\uFF0C\u5360 <b>${formatBytes(footprint.bytes)}</b>\uFF08\u5176\u4E2D\u6307\u4EE4\u6B63\u6587 <b>${formatBytes(footprint.promptBytes)}</b>\uFF09\u3002<br>\u5148\u8DD1\u4E00\u6B21\u8BD5\u8FD0\u884C\uFF1A\u5B83\u4F1A\u628A\u5267\u672C\u5199\u6210\u6587\u4EF6\u518D\u8BFB\u56DE\u6765\u9010\u6761\u6BD4\u5BF9\uFF0C<b>\u4E0D\u6539\u52A8\u4EFB\u4F55\u73B0\u6709\u6570\u636E</b>\uFF0C\u53EA\u544A\u8BC9\u4F60\u642C\u5BB6\u662F\u5426\u5B89\u5168\u3002<br><span style="color:#feca57;">\u26A0\uFE0F \u642C\u5BB6\u524D\u4F1A\u81EA\u52A8\u4E0B\u8F7D\u4E00\u4EFD\u5907\u4EFD\uFF0C\u8BF7\u4FDD\u5B58\u597D\u8FD9\u4E2A\u6587\u4EF6\u3002\u642C\u5BB6\u540E\u65E7\u6570\u636E\u4ECD\u4F1A\u4FDD\u7559\u4E00\u6BB5\u65F6\u95F4\u4F5C\u4E3A\u5B89\u5168\u7F51\uFF0C\u6240\u4EE5\u8BBE\u7F6E\u6587\u4EF6\u8981\u7B49\u300C\u5B8C\u6210\u6536\u5C3E\u300D\u624D\u4F1A\u53D8\u5C0F\u3002</span>`
+    `\u5267\u672C\u6307\u4EE4\u73B0\u5728\u548C\u8BBE\u7F6E\u5B58\u5728\u4E00\u8D77\u3002ST \u6BCF\u6B21\u4FDD\u5B58\u8BBE\u7F6E\u90FD\u4F1A\u628A\u6574\u4E2A\u8BBE\u7F6E\u6587\u4EF6\u91CD\u5199\u4E00\u904D\uFF0C\u6240\u4EE5\u5267\u672C\u8D8A\u591A\uFF0C\u6539\u4EFB\u4F55\u4E00\u4E2A\u5F00\u5173\u5C31\u8D8A\u6162\u3002<br>\u5F53\u524D <b>${footprint.count}</b> \u6761\uFF0C\u5360 <b>${formatBytes(footprint.bytes)}</b>\uFF08\u5176\u4E2D\u6307\u4EE4\u6B63\u6587 <b>${formatBytes(footprint.promptBytes)}</b>\uFF09\u3002<br>\u642C\u5BB6\u4F1A\u628A\u5267\u672C\u632A\u5230\u72EC\u7ACB\u6587\u4EF6\u5355\u72EC\u5B58\u653E\uFF0C\u4E00\u6761\u90FD\u4E0D\u4F1A\u5C11\uFF0C\u4E4B\u540E\u6539\u8BBE\u7F6E\u5C31\u5FEB\u4E86\u3002<br><span style="color:#feca57;">\u26A0\uFE0F \u5F00\u59CB\u524D\u4F1A\u81EA\u52A8\u4E0B\u8F7D\u4E00\u4EFD\u5907\u4EFD\uFF0C\u8BF7\u4FDD\u5B58\u597D\u8FD9\u4E2A\u6587\u4EF6\u3002</span>`
   );
   $actions.html(
-    `<button class="titania-mini-btn" data-act="dryrun"><i class="fa-solid fa-vial"></i> \u8BD5\u8FD0\u884C\u642C\u5BB6\uFF08\u4E0D\u6539\u6570\u636E\uFF09</button><button class="titania-mini-btn is-import" data-act="migrate"><i class="fa-solid fa-box-archive"></i> \u4E00\u952E\u642C\u5BB6\uFF08\u81EA\u52A8\u5907\u4EFD\uFF09</button>`
+    `<button class="titania-mini-btn is-import" data-act="migrate"><i class="fa-solid fa-box-archive"></i> \u4E00\u952E\u642C\u5BB6\uFF08\u81EA\u52A8\u5907\u4EFD\uFF09</button>`
   );
 }
 function bindScriptsStorageCard() {
@@ -48073,61 +48073,66 @@ function bindScriptsStorageCard() {
   if ($card.length === 0) return;
   $card.off("click", "[data-act]").on("click", "[data-act]", async function() {
     const act = $(this).attr("data-act");
-    if (act === "dryrun") return void handleScriptsDryRun($(this));
-    if (act === "migrate") return void handleScriptsMigrate($(this));
-    if (act === "finish") return void handleScriptsFinish($(this));
+    if (act === "migrate") return void runScriptsOneClick($(this));
+    if (act === "finish") return void runScriptsFinish($(this), { backupAlreadyDone: false });
   });
   renderScriptsStorageCard();
 }
-async function handleScriptsDryRun($btn) {
-  $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u8BD5\u8FD0\u884C\u4E2D...');
-  try {
-    const report = await dryRunScriptsMigration();
-    if (report.empty) {
-      showScriptsStorageReport(`\u5F53\u524D\u6CA1\u6709\u81EA\u5B9A\u4E49\u5267\u672C\uFF0C\u65E0\u9700\u642C\u5BB6\u3002`, "#feca57");
-    } else if (report.ok) {
-      showScriptsStorageReport(
-        `\u2705 <b>\u8BD5\u8FD0\u884C\u901A\u8FC7</b>\uFF1A${report.settings.count} \u6761\u5267\u672C\u5199\u5165\u6587\u4EF6\u540E\u8BFB\u56DE\uFF0C\u9010\u6761\u6DF1\u6BD4\u5BF9<b>\u5B8C\u5168\u4E00\u81F4</b>\u3002<br>\u6587\u4EF6 ${formatBytes(report.written.bytes)}\uFF0C\u642C\u5BB6\u540E\u53EF\u4ECE\u8BBE\u7F6E\u91CC\u817E\u51FA ${formatBytes(report.settings.bytes)}\u3002<br>\u8017\u65F6 ${report.durationMs} ms\u3002\u8BD5\u8FD0\u884C\u6587\u4EF6\u5DF2\u5220\u9664\uFF0C\u73B0\u6709\u6570\u636E\u672A\u6539\u52A8\u3002` + (report.cleanupError ? `<br>\u26A0\uFE0F \u8BD5\u8FD0\u884C\u6587\u4EF6\u6E05\u7406\u5931\u8D25\uFF1A${report.cleanupError}` : ""),
-        "#55efc4"
-      );
-      if (window.toastr) toastr.success("\u8BD5\u8FD0\u884C\u901A\u8FC7\uFF0C\u6570\u636E\u53EF\u5B89\u5168\u642C\u5BB6", "Titania Echo");
-    } else if (report.mismatches?.length) {
-      showScriptsStorageReport(
-        `\u274C <b>\u5F80\u8FD4\u6BD4\u5BF9\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u52FF\u642C\u5BB6</b><br>\xB7 ${report.mismatches.join("<br>\xB7 ")}<br>\u5B8C\u6574\u4FE1\u606F\u89C1\u63A7\u5236\u53F0\u3002`,
-        "#ff7675"
-      );
-      console.error("[Titania] \u5267\u672C\u8BD5\u8FD0\u884C\u6BD4\u5BF9\u4E0D\u4E00\u81F4", report);
-      if (window.toastr) toastr.error("\u8BD5\u8FD0\u884C\u6BD4\u5BF9\u4E0D\u4E00\u81F4", "Titania Echo");
-    } else {
-      showScriptsStorageReport(`\u274C \u8BD5\u8FD0\u884C\u5931\u8D25\uFF1A${report.reason}`, "#ff7675");
-      if (window.toastr) toastr.error(report.reason || "\u8BD5\u8FD0\u884C\u5931\u8D25", "Titania Echo");
-    }
-  } catch (e) {
-    console.error("Titania: \u5267\u672C\u8BD5\u8FD0\u884C\u5931\u8D25", e);
-    showScriptsStorageReport(`\u274C \u8BD5\u8FD0\u884C\u5931\u8D25\uFF1A${e?.message || String(e)}`, "#ff7675");
-    if (window.toastr) toastr.error(e?.message || "\u8BD5\u8FD0\u884C\u5931\u8D25", "Titania Echo");
-  } finally {
+async function runScriptsOneClick($btn) {
+  if (isScriptsMigrated()) {
+    showScriptsStorageReport("\u5267\u672C\u5DF2\u7ECF\u642C\u8FC7\u5BB6\u4E86\uFF0C\u65E0\u9700\u91CD\u590D\u64CD\u4F5C\u3002", "#feca57");
     renderScriptsStorageCard();
+    return;
   }
-}
-async function handleScriptsMigrate($btn) {
-  $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u642C\u5BB6\u4E2D...');
+  const footprint = describeCurrentScriptsFootprint();
+  if (footprint.count === 0) {
+    showScriptsStorageReport("\u5F53\u524D\u6CA1\u6709\u81EA\u5B9A\u4E49\u5267\u672C\uFF0C\u65E0\u9700\u642C\u5BB6\u3002", "#feca57");
+    renderScriptsStorageCard();
+    return;
+  }
+  const confirmed = confirm(
+    `\u5373\u5C06\u628A ${footprint.count} \u6761\u5267\u672C\u6307\u4EE4\u632A\u5230\u72EC\u7ACB\u6587\u4EF6\uFF08\u7EA6 ${formatBytes(footprint.bytes)}\uFF09\u3002
+
+\u6D41\u7A0B\uFF1A
+  1. \u4E0B\u8F7D\u4E00\u4EFD\u5B8C\u6574\u5907\u4EFD\uFF08\u8BF7\u52A1\u5FC5\u4FDD\u5B58\u597D\uFF09
+  2. \u8BD5\u5199\u4E00\u4E2A\u4E34\u65F6\u6587\u4EF6\u5E76\u8BFB\u56DE\u9010\u6761\u6BD4\u5BF9\uFF0C\u786E\u8BA4\u5E8F\u5217\u5316\u65E0\u635F
+  3. \u5199\u5165\u6B63\u5F0F\u6587\u4EF6\u5E76\u6821\u9A8C\uFF0C\u7136\u540E\u5728\u8BBE\u7F6E\u91CC\u53EA\u7559\u4E00\u4E2A\u6307\u9488
+  4. \u5168\u91CF\u9010\u6761\u6838\u5BF9\u6587\u4EF6\u4E0E\u8BBE\u7F6E\u91CC\u7684\u65E7\u6570\u636E
+  5. \u6838\u5BF9\u901A\u8FC7\u540E\u5220\u6389\u8BBE\u7F6E\u91CC\u7684\u65E7\u6570\u636E\uFF08\u5220\u4E4B\u524D\u4F1A\u518D\u95EE\u4F60\u4E00\u6B21\uFF09
+
+\u786E\u5B9A\u7EE7\u7EED\u5417\uFF1F`
+  );
+  if (!confirmed) return;
+  $btn.prop("disabled", true);
   try {
+    $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u5907\u4EFD...');
     try {
       const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
       downloadBackupPayload(snapshot, backupFileName("before_scripts_migration"));
       if (window.toastr) toastr.info("\u5DF2\u4E0B\u8F7D\u642C\u5BB6\u524D\u5907\u4EFD\uFF0C\u8BF7\u4FDD\u5B58\u8FD9\u4E2A\u6587\u4EF6", "Titania Echo");
     } catch (backupErr) {
-      console.warn("Titania: \u642C\u5BB6\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
-      if (!confirm("\u26A0\uFE0F \u642C\u5BB6\u524D\u81EA\u52A8\u5907\u4EFD\u5931\u8D25\uFF01\u662F\u5426\u4ECD\u8981\u7EE7\u7EED\uFF1F\n\n\u5EFA\u8BAE\u5148\u89E3\u51B3\u5907\u4EFD\u95EE\u9898\u518D\u642C\u5BB6\u3002")) {
-        return;
-      }
-    }
-    const report = await migrateScriptsToFiles();
-    if (report.alreadyMigrated) {
-      showScriptsStorageReport(`\u5267\u672C\u5DF2\u7ECF\u642C\u8FC7\u5BB6\u4E86\u3002`, "#feca57");
+      console.error("Titania: \u642C\u5BB6\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
+      showScriptsStorageReport(
+        `\u274C \u5907\u4EFD\u5931\u8D25\uFF0C\u5DF2\u4E2D\u6B62\uFF0C\u672A\u6539\u52A8\u4EFB\u4F55\u6570\u636E\uFF1A${backupErr?.message || String(backupErr)}`,
+        "#ff7675"
+      );
+      if (window.toastr) toastr.error("\u5907\u4EFD\u5931\u8D25\uFF0C\u642C\u5BB6\u5DF2\u4E2D\u6B62", "Titania Echo");
       return;
     }
+    $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> \u6821\u9A8C\u6570\u636E...');
+    const dry = await dryRunScriptsMigration();
+    if (!dry.ok) {
+      const detail = dry.mismatches?.length ? dry.mismatches.join("\uFF1B") : dry.reason;
+      showScriptsStorageReport(
+        `\u274C <b>\u6570\u636E\u6821\u9A8C\u672A\u901A\u8FC7\uFF0C\u5DF2\u4E2D\u6B62\uFF0C\u672A\u6539\u52A8\u4EFB\u4F55\u6570\u636E</b><br>${detail}<br>\u8BF7\u628A\u8FD9\u6761\u4FE1\u606F\u53D1\u7ED9\u5F00\u53D1\u8005\u3002`,
+        "#ff7675"
+      );
+      console.error("[Titania] \u5267\u672C\u642C\u5BB6\u524D\u6821\u9A8C\u672A\u901A\u8FC7", dry);
+      if (window.toastr) toastr.error("\u6570\u636E\u6821\u9A8C\u672A\u901A\u8FC7\uFF0C\u642C\u5BB6\u5DF2\u4E2D\u6B62", "Titania Echo");
+      return;
+    }
+    $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> \u642C\u5BB6\u4E2D...');
+    const report = await migrateScriptsToFiles();
     if (!report.ok) {
       showScriptsStorageReport(
         `\u274C <b>\u642C\u5BB6\u5DF2\u4E2D\u6B62\uFF0C\u672A\u6539\u52A8\u4EFB\u4F55\u6570\u636E</b><br>${report.reason}<br>\u6307\u9488\u6CA1\u6709\u5199\u5165\uFF0C\u5267\u672C\u4ECD\u4ECE\u8BBE\u7F6E\u91CC\u8BFB\u53D6\uFF0C\u53EF\u4EE5\u76F4\u63A5\u91CD\u8BD5\u3002`,
@@ -48136,12 +48141,9 @@ async function handleScriptsMigrate($btn) {
       if (window.toastr) toastr.error("\u642C\u5BB6\u5DF2\u4E2D\u6B62\uFF0C\u6570\u636E\u672A\u6539\u52A8", "Titania Echo");
       return;
     }
-    showScriptsStorageReport(
-      `\u2705 <b>\u642C\u5BB6\u5B8C\u6210</b>\uFF1A${report.written.count} \u6761\u5267\u672C\u5DF2\u5199\u5165 <code>user/files/${SCRIPTS_FILE_NAME}</code>\uFF08${formatBytes(report.written.bytes)}\uFF09\u3002<br>\u8BBE\u7F6E\u91CC\u7684\u6307\u9488\u53EA\u5360 ${formatBytes(report.pointerBytes)}\u3002\u8017\u65F6 ${report.durationMs} ms\u3002<br>\u65E7\u6570\u636E\u4ECD\u4FDD\u7559\u4F5C\u5B89\u5168\u7F51\uFF0C\u7B49\u4F60\u786E\u8BA4\u65E0\u8BEF\u540E\u518D\u6267\u884C\u6536\u5C3E\u5220\u9664\uFF0C\u5C4A\u65F6\u53EF\u4ECE\u8BBE\u7F6E\u91CC\u817E\u51FA ${formatBytes(report.pendingRemovalBytes)}\u3002`,
-      "#55efc4"
-    );
-    if (window.toastr) toastr.success(`${report.written.count} \u6761\u5267\u672C\u5DF2\u642C\u5230\u6587\u4EF6\u5B58\u50A8`, "Titania Echo");
     loadScripts();
+    const migrationSummary = `${report.written.count} \u6761\u5267\u672C\u5DF2\u5199\u5165 <code>user/files/${SCRIPTS_FILE_NAME}</code>\uFF08${formatBytes(report.written.bytes)}\uFF09`;
+    await runScriptsFinish($btn, { backupAlreadyDone: true, migrationSummary });
   } catch (e) {
     console.error("Titania: \u5267\u672C\u642C\u5BB6\u5931\u8D25", e);
     showScriptsStorageReport(`\u274C \u642C\u5BB6\u5931\u8D25\uFF1A${e?.message || String(e)}`, "#ff7675");
@@ -48150,37 +48152,51 @@ async function handleScriptsMigrate($btn) {
     renderScriptsStorageCard();
   }
 }
-async function handleScriptsFinish($btn) {
+async function runScriptsFinish($btn, { backupAlreadyDone = false, migrationSummary = "" } = {}) {
+  if (!isScriptsMigrated()) {
+    showScriptsStorageReport("\u8BF7\u5148\u5B8C\u6210\u642C\u5BB6\uFF0C\u518D\u6267\u884C\u6536\u5C3E\u3002", "#feca57");
+    return;
+  }
+  const legacy = getExtData().user_scripts;
+  if (!Array.isArray(legacy) || legacy.length === 0) {
+    showScriptsStorageReport("\u8BBE\u7F6E\u91CC\u5DF2\u7ECF\u6CA1\u6709\u65E7\u5267\u672C\u6570\u636E\u4E86\u3002", "#feca57");
+    return;
+  }
   $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u6838\u5BF9\u4E2D...');
   try {
     const result = await dropLegacyScripts({
-      // 核对通过之后才走到这里 —— 先备份，再让用户拍板
+      // 核对通过之后才走到这里：先补备份（若还没做），再让用户拍板
       confirmBeforeDelete: async (verification) => {
-        try {
-          const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
-          downloadBackupPayload(snapshot, backupFileName("before_scripts_cleanup"));
-          if (window.toastr) toastr.info("\u5DF2\u4E0B\u8F7D\u6536\u5C3E\u524D\u5907\u4EFD\uFF0C\u8BF7\u4FDD\u5B58\u8FD9\u4E2A\u6587\u4EF6", "Titania Echo");
-        } catch (backupErr) {
-          console.warn("Titania: \u6536\u5C3E\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
-          if (!confirm("\u26A0\uFE0F \u6536\u5C3E\u524D\u81EA\u52A8\u5907\u4EFD\u5931\u8D25\uFF01\u662F\u5426\u4ECD\u8981\u7EE7\u7EED\u5220\u9664\u65E7\u6570\u636E\uFF1F\n\n\u5220\u9664\u540E\u65E0\u6CD5\u64A4\u9500\u3002\u5EFA\u8BAE\u5148\u89E3\u51B3\u5907\u4EFD\u95EE\u9898\u3002")) {
-            return false;
+        if (!backupAlreadyDone) {
+          try {
+            const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
+            downloadBackupPayload(snapshot, backupFileName("before_scripts_cleanup"));
+            if (window.toastr) toastr.info("\u5DF2\u4E0B\u8F7D\u6536\u5C3E\u524D\u5907\u4EFD\uFF0C\u8BF7\u4FDD\u5B58\u8FD9\u4E2A\u6587\u4EF6", "Titania Echo");
+          } catch (backupErr) {
+            console.warn("Titania: \u6536\u5C3E\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
+            if (!confirm("\u26A0\uFE0F \u5907\u4EFD\u5931\u8D25\uFF01\u662F\u5426\u4ECD\u8981\u7EE7\u7EED\u5220\u9664\u65E7\u6570\u636E\uFF1F\n\n\u5220\u9664\u540E\u65E0\u6CD5\u64A4\u9500\u3002\u5EFA\u8BAE\u5148\u89E3\u51B3\u5907\u4EFD\u95EE\u9898\u3002")) {
+              return false;
+            }
           }
         }
         return confirm(
           `\u6838\u5BF9\u901A\u8FC7\uFF1A${verification.checked} \u6761\u5267\u672C\u5728\u6587\u4EF6\u91CC\u4E0E\u8BBE\u7F6E\u91CC\u9010\u6761\u4E00\u81F4\u3002
 
-\u73B0\u5728\u8981\u5220\u9664 settings.json \u91CC\u7684\u65E7\u5267\u672C\u6570\u636E\u5417\uFF1F
+\u73B0\u5728\u8981\u5220\u9664\u8BBE\u7F6E\u91CC\u7684\u65E7\u5267\u672C\u6570\u636E\u5417\uFF1F
 \u26A0\uFE0F \u8FD9\u4E00\u6B65\u4E0D\u53EF\u64A4\u9500\u3002\u5220\u9664\u540E\u5267\u672C\u53EA\u5B58\u5728\u4E8E user/files/${SCRIPTS_FILE_NAME}\u3002`
         );
       }
     });
     if (result.cancelled) {
-      showScriptsStorageReport(`\u5DF2\u53D6\u6D88\uFF0C\u65E7\u6570\u636E\u4FDD\u7559\u3002\u6838\u5BF9\u662F\u901A\u8FC7\u7684\uFF0C\u968F\u65F6\u53EF\u4EE5\u518D\u70B9\u3002`, "#feca57");
+      showScriptsStorageReport(
+        (migrationSummary ? `${migrationSummary}\u3002<br>` : "") + `\u5DF2\u53D6\u6D88\u5220\u9664\uFF0C\u65E7\u6570\u636E\u4FDD\u7559\u3002\u6838\u5BF9\u662F\u901A\u8FC7\u7684\uFF0C\u968F\u65F6\u53EF\u4EE5\u70B9\u300C\u8865\u5B8C\u6536\u5C3E\u300D\u3002`,
+        "#feca57"
+      );
       return;
     }
     if (!result.ok) {
       showScriptsStorageReport(
-        `\u274C <b>\u6838\u5BF9\u672A\u901A\u8FC7\uFF0C\u672A\u5220\u9664\u4EFB\u4F55\u6570\u636E</b><br>\xB7 ${result.problems.join("<br>\xB7 ")}<br>\u65E7\u6570\u636E\u4ECD\u5728\u8BBE\u7F6E\u91CC\uFF0C\u5267\u672C\u4E0D\u4F1A\u4E22\u3002\u8BF7\u628A\u4E0A\u9762\u7684\u4FE1\u606F\u53D1\u7ED9\u5F00\u53D1\u8005\u3002`,
+        (migrationSummary ? `${migrationSummary}\u3002<br>` : "") + `\u274C <b>\u6838\u5BF9\u672A\u901A\u8FC7\uFF0C\u672A\u5220\u9664\u4EFB\u4F55\u6570\u636E</b><br>\xB7 ${result.problems.join("<br>\xB7 ")}<br>\u65E7\u6570\u636E\u4ECD\u5728\u8BBE\u7F6E\u91CC\uFF0C\u5267\u672C\u4E0D\u4F1A\u4E22\u3002\u8BF7\u628A\u4E0A\u9762\u7684\u4FE1\u606F\u53D1\u7ED9\u5F00\u53D1\u8005\u3002`,
         "#ff7675"
       );
       console.error("[Titania] \u5267\u672C\u6536\u5C3E\u6838\u5BF9\u672A\u901A\u8FC7", result.problems);
@@ -48188,10 +48204,10 @@ async function handleScriptsFinish($btn) {
       return;
     }
     showScriptsStorageReport(
-      `\u2705 <b>\u6536\u5C3E\u5B8C\u6210</b>\uFF1A\u6838\u5BF9 ${result.checked} \u6761\u65E0\u8BEF\u540E\u5DF2\u5220\u9664\u65E7\u6570\u636E\uFF0Csettings.json \u51CF\u5C11\u7EA6 <b>${formatBytes(result.removedBytes)}</b>\u3002<br>\u4ECE\u73B0\u5728\u8D77\u6539\u8BBE\u7F6E\u4E0D\u518D\u7275\u8FDE\u5267\u672C\u3002`,
+      (migrationSummary ? `\u2705 ${migrationSummary}\u3002<br>` : "\u2705 ") + `\u6838\u5BF9 ${result.checked} \u6761\u65E0\u8BEF\u540E\u5DF2\u5220\u9664\u65E7\u6570\u636E\uFF0C\u8BBE\u7F6E\u6587\u4EF6\u51CF\u5C11\u7EA6 <b>${formatBytes(result.removedBytes)}</b>\u3002<br>\u4ECE\u73B0\u5728\u8D77\u6539\u8BBE\u7F6E\u4E0D\u518D\u7275\u8FDE\u5267\u672C\u3002`,
       "#55efc4"
     );
-    if (window.toastr) toastr.success(`\u65E7\u6570\u636E\u5DF2\u5220\u9664\uFF0C\u8BBE\u7F6E\u6587\u4EF6\u51CF\u5C11 ${formatBytes(result.removedBytes)}`, "Titania Echo");
+    if (window.toastr) toastr.success(`\u642C\u5BB6\u5B8C\u6210\uFF0C\u8BBE\u7F6E\u6587\u4EF6\u51CF\u5C11 ${formatBytes(result.removedBytes)}`, "Titania Echo");
     await saveExtDataImmediate();
   } catch (e) {
     console.error("Titania: \u5267\u672C\u6536\u5C3E\u5931\u8D25", e);
