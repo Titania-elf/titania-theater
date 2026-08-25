@@ -1352,12 +1352,6 @@ function createCustomPresetEntry(overrides = {}) {
     ...overrides
   };
 }
-function getPresetInsertLimit(preset) {
-  const entries = preset?.entries;
-  if (!Array.isArray(entries)) return 0;
-  const managedIndex = entries.findIndex(isTitaniaManagedEntry);
-  return managedIndex < 0 ? entries.length : managedIndex;
-}
 function getPromptScheme(data, mode = "narrative") {
   ensurePromptManager(data);
   const manager = data.prompt_manager;
@@ -1446,7 +1440,7 @@ function getDeclaredMarker(definition, identifier) {
   return declared || getMarkerNameFromContent(definition?.content);
 }
 function isAssistantPrefill(entry) {
-  return entry.role === "assistant" && String(entry.content || "").trim().length > 0;
+  return entry?.role === "assistant" && String(entry?.content || "").trim().length > 0;
 }
 function createTitaniaScriptEntry() {
   return {
@@ -1476,8 +1470,10 @@ function createTitaniaOutputContractEntry() {
     content: TITANIA_OUTPUT_CONTRACT
   };
 }
-function isTitaniaManagedEntry(entry) {
-  return entry?.id === "titania_output_contract" || entry?.id === "titania_script_instruction" || entry?.marker === "titaniaScript";
+function getTitaniaEntryKind(entry) {
+  if (entry?.id === "titania_output_contract") return "contract";
+  if (entry?.id === "titania_script_instruction" || entry?.marker === "titaniaScript") return "instruction";
+  return "";
 }
 function isCanonicalEntry(entry, canonical) {
   if (!entry || typeof entry !== "object") return false;
@@ -1486,31 +1482,37 @@ function isCanonicalEntry(entry, canonical) {
   return keys.every((key) => entry[key] === canonical[key]);
 }
 function hasCanonicalTitaniaEntries(entries) {
-  let firstIndex = -1;
-  let managedCount = 0;
-  for (let i = 0; i < entries.length; i++) {
-    if (!isTitaniaManagedEntry(entries[i])) continue;
-    if (firstIndex === -1) firstIndex = i;
-    managedCount++;
+  const seen = /* @__PURE__ */ new Set();
+  for (const entry of entries) {
+    const kind = getTitaniaEntryKind(entry);
+    if (!kind) continue;
+    if (seen.has(kind)) return false;
+    if (!isCanonicalEntry(entry, TITANIA_ENTRY_FACTORIES[kind]())) return false;
+    seen.add(kind);
   }
-  if (managedCount !== 2) return false;
-  if (!isCanonicalEntry(entries[firstIndex], createTitaniaOutputContractEntry())) return false;
-  if (!isCanonicalEntry(entries[firstIndex + 1], createTitaniaScriptEntry())) return false;
-  const isPrefill = (entry) => !!entry && typeof entry === "object" && isAssistantPrefill(entry);
-  if (firstIndex > 0 && isPrefill(entries[firstIndex - 1])) return false;
-  for (let i = firstIndex + 2; i < entries.length; i++) {
-    if (!isPrefill(entries[i])) return false;
-  }
-  return true;
+  return seen.size === TITANIA_ENTRY_KINDS.length;
 }
 function ensureTitaniaPresetEntries(preset) {
   if (!preset || !Array.isArray(preset.entries)) return false;
   if (hasCanonicalTitaniaEntries(preset.entries)) return false;
   const previous = JSON.stringify(preset.entries);
-  preset.entries = preset.entries.filter((entry) => entry?.id !== "titania_output_contract" && entry?.id !== "titania_script_instruction" && entry?.marker !== "titaniaScript");
-  let insertAt = preset.entries.length;
-  while (insertAt > 0 && isAssistantPrefill(preset.entries[insertAt - 1])) insertAt--;
-  preset.entries.splice(insertAt, 0, createTitaniaOutputContractEntry(), createTitaniaScriptEntry());
+  const kept = /* @__PURE__ */ new Set();
+  const entries = [];
+  for (const entry of preset.entries) {
+    const kind = getTitaniaEntryKind(entry);
+    if (!kind) {
+      entries.push(entry);
+      continue;
+    }
+    if (kept.has(kind)) continue;
+    kept.add(kind);
+    entries.push(TITANIA_ENTRY_FACTORIES[kind]());
+  }
+  let insertAt = entries.length;
+  while (insertAt > 0 && isAssistantPrefill(entries[insertAt - 1])) insertAt--;
+  const missing = TITANIA_ENTRY_KINDS.filter((kind) => !kept.has(kind));
+  entries.splice(insertAt, 0, ...missing.map((kind) => TITANIA_ENTRY_FACTORIES[kind]()));
+  preset.entries = entries;
   return JSON.stringify(preset.entries) !== previous;
 }
 function normalizeChatCompletionPreset(preset, options = {}) {
@@ -1671,7 +1673,7 @@ function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext =
     restoreVariables();
   }
 }
-var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
+var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS, TITANIA_ENTRY_FACTORIES, TITANIA_ENTRY_KINDS;
 var init_promptManager = __esm({
   "src/core/promptManager.js"() {
     init_helpers();
@@ -1730,6 +1732,11 @@ var init_promptManager = __esm({
       dialogueExamples: "dialogueExamples",
       titaniaScript: "titaniaScript"
     };
+    TITANIA_ENTRY_FACTORIES = {
+      contract: createTitaniaOutputContractEntry,
+      instruction: createTitaniaScriptEntry
+    };
+    TITANIA_ENTRY_KINDS = Object.keys(TITANIA_ENTRY_FACTORIES);
   }
 });
 
@@ -11993,7 +12000,6 @@ textarea.t-input {
 }
 
 .t-prompt-entry-card.is-locked {
-    cursor: default;
     border-color: rgb(var(--t-glass-locked-border-rgb));
     background: var(--t-color-dialog-surface);
 }
@@ -37524,9 +37530,8 @@ function openSettingsWindow() {
       $list.html('<div style="color:var(--t-color-text-muted); padding:12px 0;">\u6682\u65E0\u5BFC\u5165\u7684\u9884\u8BBE</div>');
       return;
     }
-    const insertLimit = isPreset ? getPresetInsertLimit(scheme) : -1;
     const appendInsertSlot = (position) => {
-      if (position > insertLimit) return;
+      if (!isPreset) return;
       const $slot = $(`<button type="button" class="t-prompt-insert-slot" title="\u5728\u8FD9\u91CC\u63D2\u5165\u4E00\u4E2A\u65B0\u6761\u76EE">
                 <span class="t-prompt-insert-line"></span>
                 <span class="t-prompt-insert-label"><i class="fa-solid fa-plus"></i> \u5728\u6B64\u63D2\u5165</span>
@@ -37540,14 +37545,14 @@ function openSettingsWindow() {
       const isLocked = entry.readonly === true;
       const stateLabel = isLocked ? "\u63D2\u4EF6\u5185\u7F6E" : entry.required ? "\u5FC5\u9700" : entry.enabled ? "\u5DF2\u542F\u7528" : "\u5DF2\u7981\u7528";
       const stateIcon = isLocked || entry.required ? "fa-lock" : entry.enabled ? "fa-check" : "fa-xmark";
-      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"} ${isLocked ? "is-locked" : ""} ${entry.custom ? "is-custom" : ""}" data-entry-id="${entry.id}" draggable="${isLocked ? "false" : "true"}">
+      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"} ${isLocked ? "is-locked" : ""} ${entry.custom ? "is-custom" : ""}" data-entry-id="${entry.id}" draggable="true">
                 <div class="t-prompt-entry-header">
-                    <span class="t-prompt-entry-drag-hint" title="${isLocked ? "\u63D2\u4EF6\u56FA\u5B9A\u6761\u76EE" : "\u62D6\u52A8\u6392\u5E8F"}"><i class="fa-solid ${isLocked ? "fa-lock" : "fa-grip-vertical"}"></i></span>
+                    <span class="t-prompt-entry-drag-hint" title="\u62D6\u52A8\u6392\u5E8F"><i class="fa-solid fa-grip-vertical"></i></span>
                     <span class="t-prompt-entry-index">#${entry.index}</span>
                     <span class="t-prompt-entry-name"></span>
                     <span class="t-prompt-entry-badge"></span>
                     <div class="t-prompt-entry-actions">
-                        <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${isLocked ? "\u63D2\u4EF6\u5185\u7F6E\u6761\u76EE\uFF0C\u4E0D\u80FD\u7F16\u8F91\u3001\u7981\u7528\u6216\u6392\u5E8F" : entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : `${stateLabel}\uFF0C\u70B9\u51FB\u5207\u6362\u72B6\u6001`}" aria-label="${stateLabel}" ${entry.required ? "disabled" : ""}><i class="fa-solid ${stateIcon}"></i><span class="t-prompt-entry-toggle-label">${stateLabel}</span></button>
+                        <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${isLocked ? "\u63D2\u4EF6\u5185\u7F6E\u6761\u76EE\uFF0C\u53EF\u4EE5\u62D6\u52A8\u6392\u5E8F\uFF0C\u4F46\u4E0D\u80FD\u7F16\u8F91\u6216\u7981\u7528" : entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : `${stateLabel}\uFF0C\u70B9\u51FB\u5207\u6362\u72B6\u6001`}" aria-label="${stateLabel}" ${entry.required ? "disabled" : ""}><i class="fa-solid ${stateIcon}"></i><span class="t-prompt-entry-toggle-label">${stateLabel}</span></button>
                         ${entry.custom ? '<button type="button" class="t-prompt-entry-delete" title="\u5220\u9664\u8FD9\u4E2A\u81EA\u5B9A\u4E49\u6761\u76EE" aria-label="\u5220\u9664\u6761\u76EE"><i class="fa-solid fa-trash"></i></button>' : ""}
                     </div>
                 </div>
@@ -37577,7 +37582,7 @@ function openSettingsWindow() {
       });
       $row.on("dragstart", function(event) {
         const originalEvent = event.originalEvent;
-        if (isLocked || $(event.target).closest("input, textarea, select, button").length) {
+        if ($(event.target).closest("input, textarea, select, button").length) {
           originalEvent?.preventDefault();
           return;
         }
@@ -37586,7 +37591,6 @@ function openSettingsWindow() {
         $(this).addClass("is-dragging");
       });
       $row.on("dragover", function(event) {
-        if (isLocked) return;
         event.preventDefault();
         const originalEvent = event.originalEvent;
         const rect = this.getBoundingClientRect();
@@ -37598,7 +37602,6 @@ function openSettingsWindow() {
         if (event.target === this) $(this).removeClass("is-drag-over");
       });
       $row.on("drop", function(event) {
-        if (isLocked) return;
         event.preventDefault();
         const originalEvent = event.originalEvent;
         const draggedId = originalEvent.dataTransfer.getData("text/plain");
@@ -37614,7 +37617,6 @@ function openSettingsWindow() {
         let nextIndex = scheme.entries.findIndex((item) => item.id === entry.id);
         if (!insertBefore) nextIndex++;
         scheme.entries.splice(Math.max(0, nextIndex), 0, moved);
-        if (scheme.type === "preset") ensureTitaniaPresetEntries(scheme);
         renderPromptManager();
       });
       $row.on("dragend", function() {
