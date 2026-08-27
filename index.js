@@ -47818,7 +47818,7 @@ function renderFavsStorageCard() {
     );
   } else if (info.state === "needs-cleanup") {
     $desc.html(
-      `\u6536\u85CF\u5DF2\u7ECF\u642C\u597D\u4E86\uFF0C\u4F46\u8BBE\u7F6E\u91CC\u7684\u65E7\u6570\u636E\u8FD8\u6CA1\u5220\uFF0C\u6240\u4EE5\u901F\u5EA6<b>\u8FD8\u6CA1\u53D8\u5FEB</b>\u3002<br>\u70B9\u4E0B\u9762\u7684\u6309\u94AE\uFF0C\u6838\u5BF9\u65E0\u8BEF\u540E\u4F1A\u628A\u65E7\u6570\u636E\u5220\u6389\u3002<br><span style="color:#feca57;">\u26A0\uFE0F \u8FD9\u4E00\u6B65\u5220\u4E86\u5C31\u627E\u4E0D\u56DE\u6765\uFF0C\u6267\u884C\u524D\u4F1A\u81EA\u52A8\u4E0B\u8F7D\u4E00\u4EFD\u5907\u4EFD\u3002</span>`
+      `\u6536\u85CF\u5DF2\u7ECF\u642C\u597D\u4E86\uFF0C\u4F46\u8BBE\u7F6E\u91CC\u7684\u65E7\u6570\u636E\u8FD8\u6CA1\u5220\uFF0C\u6240\u4EE5\u901F\u5EA6<b>\u8FD8\u6CA1\u53D8\u5FEB</b>\u3002<br>\u70B9\u4E0B\u9762\u7684\u6309\u94AE\uFF0C\u6838\u5BF9\u65E0\u8BEF\u5E76\u786E\u8BA4\u540E\u4F1A\u628A\u65E7\u6570\u636E\u5220\u6389\u3002<br><span style="color:#feca57;">\u26A0\uFE0F \u8FD9\u4E00\u6B65\u5220\u4E86\u5C31\u627E\u4E0D\u56DE\u6765\u3002</span>`
     );
     $actions.html(
       `<button class="titania-mini-btn is-export" data-act="finish"><i class="fa-solid fa-broom"></i> \u5B8C\u6210\u6536\u5C3E\uFF08\u5220\u9664\u65E7\u6570\u636E\uFF09</button>`
@@ -47844,7 +47844,7 @@ function renderFavsStorageCard() {
       case "migrate":
         return runOneClickMigration($self);
       case "finish":
-        return runFinishCleanup($self, { backupAlreadyDone: false });
+        return runFinishCleanup($self);
       case "artifacts":
         return runArtifactCleanup($self);
       case "check":
@@ -47915,7 +47915,6 @@ async function runOneClickMigration($btn) {
     }
     console.log("[Titania] \u6536\u85CF\u642C\u5BB6\u62A5\u544A", report);
     await runFinishCleanup($btn, {
-      backupAlreadyDone: true,
       migrationSummary: `${report.written.count} \u6761\u6B63\u6587\u5DF2\u843D\u6587\u4EF6\uFF0C\u5171 ${formatBytes(report.written.bytesTotal)}\uFF0C\u7D22\u5F15 ${formatBytes(report.indexBytes)}`
     });
   } catch (e) {
@@ -47926,7 +47925,7 @@ async function runOneClickMigration($btn) {
     renderFavsStorageCard();
   }
 }
-async function runFinishCleanup($btn, { backupAlreadyDone = false, migrationSummary = "" } = {}) {
+async function runFinishCleanup($btn, { migrationSummary = "" } = {}) {
   if (!isFavsMigrated()) {
     showFavsMigrationReport("\u8BF7\u5148\u5B8C\u6210\u642C\u5BB6\uFF0C\u518D\u6267\u884C\u6536\u5C3E\u3002", "#feca57");
     renderFavsStorageCard();
@@ -47938,39 +47937,8 @@ async function runFinishCleanup($btn, { backupAlreadyDone = false, migrationSumm
     renderFavsStorageCard();
     return;
   }
-  if (!backupAlreadyDone) {
-    const confirmed = confirm(
-      `\u5373\u5C06\u4ECE settings.json \u5220\u9664 ${footprint.count} \u6761\u6536\u85CF\u7684\u65E7\u6570\u636E\uFF08\u7EA6 ${formatBytes(footprint.bytes)}\uFF09\u3002
-
-\xB7 \u5220\u9664\u524D\u4F1A\u5168\u91CF\u6838\u5BF9\u6BCF\u4E00\u6761\u6B63\u6587\uFF0C\u4EFB\u4F55\u4E00\u6761\u4E0D\u4E00\u81F4\u5C31\u4E2D\u6B62
-\xB7 \u4F1A\u5148\u4E0B\u8F7D\u4E00\u4EFD\u5B8C\u6574\u5907\u4EFD\uFF0C\u8BF7\u52A1\u5FC5\u4FDD\u5B58\u597D
-\xB7 \u6838\u5BF9\u901A\u8FC7\u540E\u4F1A\u518D\u95EE\u4F60\u4E00\u6B21
-
-\u786E\u5B9A\u7EE7\u7EED\u5417\uFF1F`
-    );
-    if (!confirmed) return;
-  }
   $btn.prop("disabled", true);
   try {
-    if (!backupAlreadyDone) {
-      $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u5907\u4EFD...');
-      try {
-        const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
-        const go = await downloadBackupAndConfirm(snapshot, backupFileName("before_favs_cleanup"), "\u6536\u5C3E");
-        if (!go) {
-          showFavsMigrationReport("\u5DF2\u53D6\u6D88\uFF0C\u65E7\u6570\u636E\u4FDD\u7559\uFF0C\u4EC0\u4E48\u90FD\u6CA1\u5220\u3002\u5907\u4EFD\u6587\u4EF6\u5DF2\u4E0B\u8F7D\u3002", "#feca57");
-          return;
-        }
-      } catch (backupErr) {
-        console.error("Titania: \u6536\u5C3E\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
-        showFavsMigrationReport(
-          `\u274C \u6536\u5C3E\u524D\u7684\u5907\u4EFD\u5931\u8D25\uFF0C\u5DF2\u4E2D\u6B62\uFF0C\u672A\u5220\u9664\u4EFB\u4F55\u6570\u636E\uFF1A${backupErr?.message || String(backupErr)}`,
-          "#ff7675"
-        );
-        if (window.toastr) toastr.error("\u5907\u4EFD\u5931\u8D25\uFF0C\u6536\u5C3E\u5DF2\u4E2D\u6B62", "Titania Echo");
-        return;
-      }
-    }
     const result = await dropLegacyFavs({
       onProgress: (done, total) => {
         $btn.html(`<i class="fa-solid fa-spinner fa-spin"></i> \u6838\u5BF9\u4E2D ${done}/${total}`);
@@ -47993,7 +47961,7 @@ async function runFinishCleanup($btn, { backupAlreadyDone = false, migrationSumm
     }
     if (!result.ok) {
       showFavsMigrationReport(
-        `\u274C \u6838\u5BF9\u672A\u901A\u8FC7\uFF0C<b>\u65E7\u6570\u636E\u4E00\u4E2A\u5B57\u90FD\u6CA1\u5220</b>\uFF1A<br>\xB7 ${(result.problems || []).join("<br>\xB7 ")}<br>\u5907\u4EFD\u6587\u4EF6\u5DF2\u4E0B\u8F7D\uFF0C\u53EF\u653E\u5FC3\u6392\u67E5\u540E\u91CD\u8BD5\u3002`,
+        `\u274C \u6838\u5BF9\u672A\u901A\u8FC7\uFF0C<b>\u65E7\u6570\u636E\u4E00\u4E2A\u5B57\u90FD\u6CA1\u5220</b>\uFF1A<br>\xB7 ${(result.problems || []).join("<br>\xB7 ")}`,
         "#ff7675"
       );
       console.error("[Titania] \u6536\u5C3E\u6838\u5BF9\u672A\u901A\u8FC7", result);
@@ -48167,7 +48135,7 @@ function renderScriptsStorageCard() {
       html += `<br><span style="color:#ff7675;">\u26A0\uFE0F \u6700\u8FD1\u4E00\u6B21\u4FDD\u5B58\u5931\u8D25\uFF1A${writeError}<br>\u6539\u52A8\u53EF\u80FD\u6CA1\u6709\u5199\u8FDB\u6587\u4EF6\u3002\u8BF7\u68C0\u67E5 ST \u670D\u52A1\u7AEF\u662F\u5426\u6B63\u5E38\uFF0C\u7136\u540E\u91CD\u65B0\u7F16\u8F91\u4E00\u6B21\u89E6\u53D1\u4FDD\u5B58\u3002</span>`;
     }
     if (legacyCount > 0) {
-      html += `<br><span style="color:#feca57;">\u65E7\u6570\u636E\u8FD8\u7559\u5728\u8BBE\u7F6E\u91CC\uFF08${legacyCount} \u6761\uFF0C${formatBytes(footprint.bytes)}\uFF09\uFF0C\u6240\u4EE5\u8BBE\u7F6E\u6587\u4EF6<b>\u8FD8\u6CA1\u53D8\u5C0F</b>\u3002<br>\u8FD9\u901A\u5E38\u662F\u4E0A\u6B21\u642C\u5BB6\u4E2D\u9014\u88AB\u6253\u65AD\u4E86\u3002\u70B9\u4E0B\u9762\u7684\u6309\u94AE\u8865\u5B8C\u6700\u540E\u4E00\u6B65\u3002<br>\u26A0\uFE0F \u4F1A\u5148\u6838\u5BF9\u518D\u5220\u9664\uFF0C\u6267\u884C\u524D\u81EA\u52A8\u4E0B\u8F7D\u5907\u4EFD\u3002</span>`;
+      html += `<br><span style="color:#feca57;">\u65E7\u6570\u636E\u8FD8\u7559\u5728\u8BBE\u7F6E\u91CC\uFF08${legacyCount} \u6761\uFF0C${formatBytes(footprint.bytes)}\uFF09\uFF0C\u6240\u4EE5\u8BBE\u7F6E\u6587\u4EF6<b>\u8FD8\u6CA1\u53D8\u5C0F</b>\u3002<br>\u8FD9\u901A\u5E38\u662F\u4E0A\u6B21\u642C\u5BB6\u4E2D\u9014\u88AB\u6253\u65AD\u4E86\u3002\u70B9\u4E0B\u9762\u7684\u6309\u94AE\u8865\u5B8C\u6700\u540E\u4E00\u6B65\u3002<br>\u26A0\uFE0F \u4F1A\u5148\u6838\u5BF9\uFF0C\u786E\u8BA4\u540E\u518D\u5220\u9664\u3002</span>`;
       $desc.html(html);
       $actions.html(
         `<button class="titania-mini-btn is-export" data-act="finish"><i class="fa-solid fa-broom"></i> \u8865\u5B8C\u6536\u5C3E</button>`
@@ -48191,7 +48159,7 @@ function bindScriptsStorageCard() {
   $card.off("click", "[data-act]").on("click", "[data-act]", async function() {
     const act = $(this).attr("data-act");
     if (act === "migrate") return void runScriptsOneClick($(this));
-    if (act === "finish") return void runScriptsFinish($(this), { backupAlreadyDone: false });
+    if (act === "finish") return void runScriptsFinish($(this));
   });
   renderScriptsStorageCard();
 }
@@ -48263,7 +48231,7 @@ async function runScriptsOneClick($btn) {
     }
     loadScripts();
     const migrationSummary = `${report.written.count} \u6761\u5267\u672C\u5DF2\u5199\u5165 <code>user/files/${SCRIPTS_FILE_NAME}</code>\uFF08${formatBytes(report.written.bytes)}\uFF09`;
-    await runScriptsFinish($btn, { backupAlreadyDone: true, migrationSummary });
+    await runScriptsFinish($btn, { migrationSummary });
   } catch (e) {
     console.error("Titania: \u5267\u672C\u642C\u5BB6\u5931\u8D25", e);
     showScriptsStorageReport(`\u274C \u642C\u5BB6\u5931\u8D25\uFF1A${e?.message || String(e)}`, "#ff7675");
@@ -48272,7 +48240,7 @@ async function runScriptsOneClick($btn) {
     renderScriptsStorageCard();
   }
 }
-async function runScriptsFinish($btn, { backupAlreadyDone = false, migrationSummary = "" } = {}) {
+async function runScriptsFinish($btn, { migrationSummary = "" } = {}) {
   if (!isScriptsMigrated()) {
     showScriptsStorageReport("\u8BF7\u5148\u5B8C\u6210\u642C\u5BB6\uFF0C\u518D\u6267\u884C\u6536\u5C3E\u3002", "#feca57");
     return;
@@ -48285,20 +48253,7 @@ async function runScriptsFinish($btn, { backupAlreadyDone = false, migrationSumm
   $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u6838\u5BF9\u4E2D...');
   try {
     const result = await dropLegacyScripts({
-      // 核对通过之后才走到这里：先补备份（若还没做），再让用户拍板
       confirmBeforeDelete: async (verification) => {
-        if (!backupAlreadyDone) {
-          try {
-            const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
-            downloadBackupPayload(snapshot, backupFileName("before_scripts_cleanup"));
-            await settleAfterDownload();
-          } catch (backupErr) {
-            console.warn("Titania: \u6536\u5C3E\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
-            if (!confirm("\u26A0\uFE0F \u5907\u4EFD\u5931\u8D25\uFF01\u662F\u5426\u4ECD\u8981\u7EE7\u7EED\u5220\u9664\u65E7\u6570\u636E\uFF1F\n\n\u5220\u9664\u540E\u65E0\u6CD5\u64A4\u9500\u3002\u5EFA\u8BAE\u5148\u89E3\u51B3\u5907\u4EFD\u95EE\u9898\u3002")) {
-              return false;
-            }
-          }
-        }
         return confirm(
           `\u6838\u5BF9\u901A\u8FC7\uFF1A${verification.checked} \u6761\u5267\u672C\u5728\u6587\u4EF6\u91CC\u4E0E\u8BBE\u7F6E\u91CC\u9010\u6761\u4E00\u81F4\u3002
 
