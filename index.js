@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.2.6";
+    CURRENT_VERSION = "5.2.7";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -452,8 +452,8 @@ ${bodyContent}
 </html>`;
 }
 function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  if (str === null || str === void 0 || str === "") return "";
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
   console.log("[Titania] openInNewWindow \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
@@ -1352,12 +1352,6 @@ function createCustomPresetEntry(overrides = {}) {
     ...overrides
   };
 }
-function getPresetInsertLimit(preset) {
-  const entries = preset?.entries;
-  if (!Array.isArray(entries)) return 0;
-  const managedIndex = entries.findIndex(isTitaniaManagedEntry);
-  return managedIndex < 0 ? entries.length : managedIndex;
-}
 function getPromptScheme(data, mode = "narrative") {
   ensurePromptManager(data);
   const manager = data.prompt_manager;
@@ -1446,7 +1440,7 @@ function getDeclaredMarker(definition, identifier) {
   return declared || getMarkerNameFromContent(definition?.content);
 }
 function isAssistantPrefill(entry) {
-  return entry.role === "assistant" && String(entry.content || "").trim().length > 0;
+  return entry?.role === "assistant" && String(entry?.content || "").trim().length > 0;
 }
 function createTitaniaScriptEntry() {
   return {
@@ -1476,8 +1470,10 @@ function createTitaniaOutputContractEntry() {
     content: TITANIA_OUTPUT_CONTRACT
   };
 }
-function isTitaniaManagedEntry(entry) {
-  return entry?.id === "titania_output_contract" || entry?.id === "titania_script_instruction" || entry?.marker === "titaniaScript";
+function getTitaniaEntryKind(entry) {
+  if (entry?.id === "titania_output_contract") return "contract";
+  if (entry?.id === "titania_script_instruction" || entry?.marker === "titaniaScript") return "instruction";
+  return "";
 }
 function isCanonicalEntry(entry, canonical) {
   if (!entry || typeof entry !== "object") return false;
@@ -1486,31 +1482,37 @@ function isCanonicalEntry(entry, canonical) {
   return keys.every((key) => entry[key] === canonical[key]);
 }
 function hasCanonicalTitaniaEntries(entries) {
-  let firstIndex = -1;
-  let managedCount = 0;
-  for (let i = 0; i < entries.length; i++) {
-    if (!isTitaniaManagedEntry(entries[i])) continue;
-    if (firstIndex === -1) firstIndex = i;
-    managedCount++;
+  const seen = /* @__PURE__ */ new Set();
+  for (const entry of entries) {
+    const kind = getTitaniaEntryKind(entry);
+    if (!kind) continue;
+    if (seen.has(kind)) return false;
+    if (!isCanonicalEntry(entry, TITANIA_ENTRY_FACTORIES[kind]())) return false;
+    seen.add(kind);
   }
-  if (managedCount !== 2) return false;
-  if (!isCanonicalEntry(entries[firstIndex], createTitaniaOutputContractEntry())) return false;
-  if (!isCanonicalEntry(entries[firstIndex + 1], createTitaniaScriptEntry())) return false;
-  const isPrefill = (entry) => !!entry && typeof entry === "object" && isAssistantPrefill(entry);
-  if (firstIndex > 0 && isPrefill(entries[firstIndex - 1])) return false;
-  for (let i = firstIndex + 2; i < entries.length; i++) {
-    if (!isPrefill(entries[i])) return false;
-  }
-  return true;
+  return seen.size === TITANIA_ENTRY_KINDS.length;
 }
 function ensureTitaniaPresetEntries(preset) {
   if (!preset || !Array.isArray(preset.entries)) return false;
   if (hasCanonicalTitaniaEntries(preset.entries)) return false;
   const previous = JSON.stringify(preset.entries);
-  preset.entries = preset.entries.filter((entry) => entry?.id !== "titania_output_contract" && entry?.id !== "titania_script_instruction" && entry?.marker !== "titaniaScript");
-  let insertAt = preset.entries.length;
-  while (insertAt > 0 && isAssistantPrefill(preset.entries[insertAt - 1])) insertAt--;
-  preset.entries.splice(insertAt, 0, createTitaniaOutputContractEntry(), createTitaniaScriptEntry());
+  const kept = /* @__PURE__ */ new Set();
+  const entries = [];
+  for (const entry of preset.entries) {
+    const kind = getTitaniaEntryKind(entry);
+    if (!kind) {
+      entries.push(entry);
+      continue;
+    }
+    if (kept.has(kind)) continue;
+    kept.add(kind);
+    entries.push(TITANIA_ENTRY_FACTORIES[kind]());
+  }
+  let insertAt = entries.length;
+  while (insertAt > 0 && isAssistantPrefill(entries[insertAt - 1])) insertAt--;
+  const missing = TITANIA_ENTRY_KINDS.filter((kind) => !kept.has(kind));
+  entries.splice(insertAt, 0, ...missing.map((kind) => TITANIA_ENTRY_FACTORIES[kind]()));
+  preset.entries = entries;
   return JSON.stringify(preset.entries) !== previous;
 }
 function normalizeChatCompletionPreset(preset, options = {}) {
@@ -1671,7 +1673,7 @@ function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext =
     restoreVariables();
   }
 }
-var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS;
+var DEFAULT_CONTENT_PROMPT, DEFAULT_VISUAL_PROMPT, TITANIA_OUTPUT_CONTRACT, BUILTIN_MODES, EDITOR_VIEWS, MESSAGE_ROLES, REMOVED_MARKERS, DYNAMIC_MARKERS, BASIC_MACRO_CONTEXT_KEYS, DYNAMIC_MARKER_CONTEXT_KEYS, TITANIA_ENTRY_FACTORIES, TITANIA_ENTRY_KINDS;
 var init_promptManager = __esm({
   "src/core/promptManager.js"() {
     init_helpers();
@@ -1730,6 +1732,11 @@ var init_promptManager = __esm({
       dialogueExamples: "dialogueExamples",
       titaniaScript: "titaniaScript"
     };
+    TITANIA_ENTRY_FACTORIES = {
+      contract: createTitaniaOutputContractEntry,
+      instruction: createTitaniaScriptEntry
+    };
+    TITANIA_ENTRY_KINDS = Object.keys(TITANIA_ENTRY_FACTORIES);
   }
 });
 
@@ -4280,11 +4287,13 @@ function loadCssFiles() {
    \u505A\u6CD5\u7167 t-indicator-slide-up(\u89C1\u4E0B) \u2014\u2014 \u90A3\u662F\u5168\u5E93\u6700\u65E9\u9047\u5230\u540C\u4E00\u95EE\u9898\u5E76\u5DF2\u6B63\u786E\u5904\u7406\u7684
    \u4E00\u5904,\u672C\u5173\u952E\u5E27\u53EA\u662F\u628A\u540C\u6837\u7684\u89E3\u6CD5\u8865\u7ED9\u6DE1\u5165\u8FD9\u4E00\u65CF\u3002
 
-   \u7528\u5B83\u7684\u4E09\u5904\u9762\u677F\u90FD\u662F \`left: 50%; transform: translateX(-50%)\` \u5C45\u4E2D,
+   \u7528\u5B83\u7684\u4E24\u5904\u9762\u677F\u90FD\u662F \`left: 50%; transform: translateX(-50%)\` \u53EA\u505A**\u6C34\u5E73**\u5C45\u4E2D,
    \u4E14\u5404\u81EA\u7684 @media \u8986\u76D6\u53EA\u6539\u5BBD\u9AD8\u4E0E top\u3001\u4E0D\u78B0 transform(\u5DF2\u9010\u5904\u6838\u5BF9):
-     .t-content-editor(\u7EED\u5199\u64CD\u4F5C\u53F0) / .t-wi-selector(\u4E16\u754C\u4E66) / .t-queue-settings(\u961F\u5217\u8BBE\u7F6E)
+     .t-content-editor(\u7EED\u5199\u64CD\u4F5C\u53F0) / .t-queue-settings(\u961F\u5217\u8BBE\u7F6E)
    \u26A0 \u56E0\u6B64\u5B83**\u53EA\u80FD**\u7528\u5728\u786E\u5B9E\u9760 translateX(-50%) \u5C45\u4E2D\u7684\u5143\u7D20\u4E0A \u2014\u2014
-     \u7528\u5728\u6CA1\u6709\u8FD9\u4E2A\u504F\u79FB\u7684\u5143\u7D20\u4E0A\u4F1A\u628A\u5B83\u5F80\u5DE6\u63A8\u8D70\u81EA\u8EAB\u4E00\u534A\u5BBD\u5EA6\u3002 */
+     \u7528\u5728\u6CA1\u6709\u8FD9\u4E2A\u504F\u79FB\u7684\u5143\u7D20\u4E0A\u4F1A\u628A\u5B83\u5F80\u5DE6\u63A8\u8D70\u81EA\u8EAB\u4E00\u534A\u5BBD\u5EA6\u3002
+   \u26A0 \u53CC\u8F74\u5C45\u4E2D(translate(-50%, -50%))\u7684\u5143\u7D20\u8981\u7528\u4E0B\u9762\u7684 t-fade-in-centered-xy,
+     \u7528\u672C\u52A8\u753B\u4F1A\u4E22\u6389 Y \u8F74\u90A3\u4E00\u534A\u504F\u79FB\u3001\u5F00\u7A97\u77AC\u95F4\u4E0B\u5760\u81EA\u8EAB\u4E00\u534A\u9AD8\u5EA6\u3002 */
 @keyframes t-fade-in-centered {
     from {
         opacity: 0;
@@ -4294,6 +4303,26 @@ function loadCssFiles() {
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* \u53CC\u8F74\u5C45\u4E2D\u7248:\`top: 50%; left: 50%; transform: translate(-50%, -50%)\` \u7684\u5143\u7D20\u7528\u5B83\u3002
+   \u4E0E\u4E0A\u9762\u90A3\u6761\u540C\u7406 \u2014\u2014 \u52A8\u753B\u5904\u5728 animation origin \u5C42\u7EA7,\u4E0D\u628A\u5B9A\u4F4D\u7528\u7684\u504F\u79FB\u5199\u8FDB\u5173\u952E\u5E27
+   \u5C31\u4F1A\u88AB\u6574\u6761\u8986\u76D6\u6389\u3002
+
+   \u5F53\u524D\u4F7F\u7528\u8005:
+     .t-wi-selector(\u4E16\u754C\u4E66\u7BA1\u7406)
+   \u26A0 \u4E24\u4E2A translate \u90FD\u662F\u7EAF\u4F4D\u79FB\u3001\u53EF\u4EA4\u6362,\u6240\u4EE5 translateY(5px) \u8FFD\u52A0\u5728\u540E\u9762\u4E0D\u5F71\u54CD
+     -50% \u7684\u8BED\u4E49(\u767E\u5206\u6BD4\u59CB\u7EC8\u6309\u5143\u7D20\u81EA\u8EAB\u5C3A\u5BF8\u89E3\u6790,\u4E0E\u4E66\u5199\u987A\u5E8F\u65E0\u5173)\u3002 */
+@keyframes t-fade-in-centered-xy {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateY(0);
     }
 }
 
@@ -8115,10 +8144,26 @@ textarea.t-input {
     height: 75px;
 }
 
-/* \u65B0\u7248 gap 4px\u3002\u684C\u9762\u7AEF\u6CBF\u7528\u9876\u680F\u7684 15px\uFF0C\u89C6\u89C9\u4E0E\u4E24\u4E2A\u5F00\u5173\u5404\u81EA\u4F5C\u4E3A\u9876\u680F\u76F4\u63A5\u5B50\u9879
-   \u65F6\u5B8C\u5168\u4E00\u81F4\uFF1B\u8FD9\u4E2A\u5BB9\u5668\u5B58\u5728\u7684\u610F\u4E49\u5728\u7A84\u5C4F \u2014\u2014 \u8BA9\u5B83\u4EEC\u5171\u5360\u4E00\u884C\u800C\u4E0D\u662F\u5404\u5360\u4E00\u884C */
+/* \u65B0\u7248 gap 4px\u3002
+   \u2500\u2500 \u684C\u9762\u7AEF\u4E3A\u4EC0\u4E48\u662F\u7AD6\u6392 \u2500\u2500
+   5.1.2 \u8FD9\u91CC\u53EA\u6709\u300C\u8BFB\u53D6\u804A\u5929\u5386\u53F2\u300D\u4E00\u4E2A\u5F00\u5173\uFF08160px\uFF09\u3002\u540E\u6765\u52A0\u5165\u7684\u300C\u53EA\u8981\u89D2\u8272\u53D1\u8A00\u300D
+   \u53C8\u8981 150px + gap 15px = 165px\uFF0C\u800C\u8FD9 325px \u662F flex-shrink: 0 \u7684\u786C\u5730\u677F \u2014\u2014
+   \u90A3 165px \u6574\u6574\u662F\u4ECE\u5267\u672C\u5361\u8EAB\u4E0A\u6263\u7684\u3002\u6309 950px \u7A97\u53E3\u7B97\uFF08\u57FA\u51C6\u5B57\u53F7 12px\uFF09\uFF1A
+     \u9876\u680F\u5185\u5BB9\u5BBD 910 \u2212 \u5F00\u5173\u7EC4 325 \u2212 \u6A21\u5F0F\u4E09\u8FDE\u7EA6 260 \u2212 \u4E24\u4E2A gap 30
+       = 295px \u5F52 .t-mobile-row
+     \u5176\u4E2D\u7B5B\u9009 40 + gap 5 + \u9AB0\u5B50 50 + gap 15 = 110px
+       \u2192 \u5267\u672C\u5361\u7EA6 185px\uFF0C\u518D\u51CF padding(15 + 15+1.8em \u2248 51.6px)
+       \u2192 \u6807\u9898\u53EA\u5269\u7EA6 133px\uFF0C1.1em \u7C97\u4F53\u4E0B\u7EA6 10 \u4E2A\u6C49\u5B57
+   \u800C\u7A97\u53E3\u8FD8\u53D7 max-width: 95vw \u7EA6\u675F\uFF1A\u89C6\u53E3 960px \u65F6\u7A97\u53E3\u53EA\u6709 912px\uFF0C\u6807\u9898\u5269 8 \u4E2A\u5B57\u3002
+   \u7AD6\u6392\u628A\u5F00\u5173\u7EC4\u4ECE 325px \u6536\u56DE 160px\uFF0C\u5267\u672C\u5361\u62FF\u5230\u7EA6 350px\uFF08\u6807\u9898\u7EA6 22 \u4E2A\u6C49\u5B57\uFF09\uFF0C
+   \u800C\u4E24\u4E2A\u5F00\u5173\u7684\u300C\u52FE\u9009\u6846 + \u56FE\u6807 + \u6587\u5B57\u300D\u6A2A\u6761\u5F62\u6001\u4E00\u6761\u4E0D\u4E22 \u2014\u2014 \u5F52\u8FD8\u7684\u6B63\u662F\u65B0\u63A7\u4EF6
+   \u5360\u8D70\u7684\u90A3 165px\uFF0C\u4E0D\u52A8\u6A21\u5F0F\u4E09\u8FDE\u3001\u4E0D\u6539\u6587\u6848\u3001\u4E0D\u6539\u7A97\u53E3\u5C3A\u5BF8\u3002
+   \u26A0 gap \u4ECE 15px \u6536\u5230 3px\uFF1A\u7AD6\u6392\u540E gap \u4F5C\u7528\u5728**\u7EB5\u5411**\uFF0C\u53EF\u7528\u9AD8\u5EA6\u53EA\u6709 51px
+     \uFF08\u9876\u680F 75 \u2212 padding 24\uFF09\u3002\u7559 15px \u4F1A\u8BA9\u4E24\u6761\u5404\u5269 18px\uFF0C\u6BD4\u5185\u5BB9\u8FD8\u77EE\u3002
+   \u26A0 \u53EA\u5728\u684C\u9762\u6863\u7AD6\u6392\u3002\u5E73\u677F(920px)\u4E0E\u7A84\u5C4F(600px)\u4E24\u6863\u4ECD\u662F\u6A2A\u6392\uFF0C\u89C1\u4E0B\u65B9\u4E24\u6BB5\u7684\u590D\u4F4D\u3002 */
 #t-main-view.t-layout-legacy .t-history-group {
-    gap: 15px;
+    flex-direction: column;
+    gap: 3px;
 }
 
 /* PC \u7AEF\u5E03\u5C40\u6838\u5FC3\uFF1A\u5403\u6389\u9876\u680F\u5269\u4F59\u5BBD\u5EA6\uFF0C\u5185\u542B\u5267\u672C\u5361 + \u7B5B\u9009/\u9AB0\u5B50\u3002
@@ -8132,7 +8177,11 @@ textarea.t-input {
 }
 
 /* \u5386\u53F2\u5F00\u5173\u672C\u4F53\u3002\u65B0\u7248\u662F 36px \u89C1\u65B9\u7684\u7EAF\u56FE\u6807\u94AE\uFF08.t-topbar-toggle\uFF09\uFF0C
-   \u7ECF\u5178\u7248\u662F 160px \u7684\u300C\u52FE\u9009\u6846 + \u56FE\u6807 + \u6587\u5B57\u300D\u6A2A\u6761 */
+   \u7ECF\u5178\u7248\u662F 160px \u7684\u300C\u52FE\u9009\u6846 + \u56FE\u6807 + \u6587\u5B57\u300D\u6A2A\u6761\u3002
+   \u5BBD\u5EA6\uFF1A\u7AD6\u6392\u540E\u7531 .t-history-group \u7684 align-items: stretch\uFF08main-window.css:143\uFF09
+   \u628A\u4E24\u6761\u90FD\u62C9\u5230\u7EC4\u7684\u5185\u5BB9\u5BBD = \u4E24\u8005 min-width \u7684\u8F83\u5927\u503C = 160px\uFF0C\u4E8E\u662F\u7B49\u5BBD\u3002
+   \u4E0B\u9762 .t-subtoggle \u7684 min-width: 150px \u5728\u7AD6\u6392\u4E0B\u56E0\u6B64\u4E0D\u518D\u51B3\u5B9A\u5BBD\u5EA6\uFF0C
+   \u53EA\u5728\u5E73\u677F/\u7A84\u5C4F\u7684\u6A2A\u6392\u6863\u8D77\u4F5C\u7528\u3002 */
 #t-main-view.t-layout-legacy .t-history-toggle {
     display: flex;
     align-items: center;
@@ -8142,7 +8191,13 @@ textarea.t-input {
     border-radius: var(--t-radius-control);
     padding: 0 12px;
     border: 1px solid var(--t-color-border);
-    flex-shrink: 0;
+    /* \u4E24\u6761\u7B49\u5206 51px \u2192 \u5404 24px\uFF0C\u5185\u5BB9\u6846 22px\u3002\u884C\u5185\u6700\u9AD8\u7684\u662F\u52FE\u9009\u6846\uFF0818px \u56FA\u5B9A\uFF0C
+       \u89C1 choice-input.css \u7684 --responsive-lg\uFF09\uFF0C\u6587\u5B57\u5728 130% / 150% \u5B57\u53F7\u7F29\u653E\u4E0B
+       \u884C\u9AD8\u7EA6 17 / 19.5px\uFF0C\u90FD\u88C5\u5F97\u4E0B\u3002
+       \u26A0 \u8FD9\u4E00\u6761\u53D6\u4EE3\u4E86\u539F\u6765\u7684 flex-shrink: 0\u3002\u7AD6\u6392\u540E\u5B83\u7EA6\u675F\u7684\u662F**\u7EB5\u5411**\uFF0C\u800C\u6B64\u5904
+         \u672C\u6765\u5C31\u6CA1\u6709\u53EF\u6536\u7F29\u7684\u4F59\u91CF\uFF0C\u65E0\u526F\u4F5C\u7528\uFF1B\u4F46\u5E73\u677F/\u7A84\u5C4F\u662F\u6A2A\u6392\uFF0C\u90A3 325px \u7684\u786C\u5730\u677F
+         \u6B63\u662F\u9760 shrink:0 \u6491\u4F4F\u7684\uFF0C\u6545\u4E24\u6863\u90FD\u8981\u663E\u5F0F\u590D\u4F4D\uFF08\u89C1\u4E0B\u65B9 920px \u6BB5\uFF09\u3002 */
+    flex: 1;
     box-sizing: border-box;
     cursor: pointer;
     transition: var(--t-transition-hover);
@@ -8363,8 +8418,10 @@ textarea.t-input {
 /* \u2500\u2500 \u7B2C\u4E8C\u680F\u5E73\u677F\u6863\uFF1A2 \u884C \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
    \u684C\u9762\u7684\u4E09\u7C07\u5355\u884C\u5728\u5E73\u677F\u4E0A\u88C5\u4E0D\u4E0B\uFF0C\u5267\u672C\u5361\u4F1A\u88AB\u538B\u5230 0 \u5BBD\u751A\u81F3\u628A\u6574\u680F\u9876\u6EA2\u51FA\u3002
    \u6309\u663E\u5F0F\u503C\u7B97\uFF08\u4E0D\u4F9D\u8D56\u5B57\u5F62\u5BBD\u5EA6\u4F30\u7B97\uFF09\uFF1A
-     \u5F00\u5173\u7EC4   min-width 160 + 150 + gap 15 = 325px\uFF0C\u4E14 .t-history-toggle \u662F
-              flex-shrink: 0 \u2014\u2014 \u8FD9 325px \u662F\u786C\u5730\u677F\uFF0C\u4E0D\u53C2\u4E0E\u6536\u7F29
+     \u5F00\u5173\u7EC4   min-width 160 + 150 + gap 15 = 325px\uFF0C\u4E14\u672C\u6BB5\u628A .t-history-toggle
+              \u590D\u4F4D\u6210 flex: 0 0 auto \u2014\u2014 \u8FD9 325px \u662F\u786C\u5730\u677F\uFF0C\u4E0D\u53C2\u4E0E\u6536\u7F29
+              \uFF08\u684C\u9762\u6863\u6539\u6210\u7AD6\u6392\u540E\u5F00\u5173\u7EC4\u53EA\u5360 160px\uFF0C\u90A3\u6761\u8DEF\u89C1\u4E0A\u65B9 .t-history-group
+                \u7684\u6CE8\u91CA\uFF1B\u672C\u6BB5\u8D77\u6A2A\u6392\uFF0C325px \u91CD\u65B0\u6210\u7ACB\uFF09
      \u6A21\u5F0F\u4E09\u8FDE \u540C\u6837 flex-shrink: 0\uFF0C\u4E09\u4E2A\u6309\u94AE\u5B9E\u6D4B\u7EA6 230~266px
      \u4E24\u4E2A gap 30px
    \u56FA\u5B9A\u90E8\u5206\u5408\u8BA1 585~621px\u3002\u800C #t-main-view \u662F \`width: 950px; max-width: 95vw\`\uFF0C
@@ -8396,9 +8453,23 @@ textarea.t-input {
     /* \u7B2C\u4E00\u884C\u3002\u26A0 \u5FC5\u987B\u7ED9\u8FD9\u4E24\u7C07\u663E\u5F0F\u9AD8\u5EA6\uFF1A\u684C\u9762\u4E0B\u5B83\u4EEC\u9760 align-items:stretch \u6491\u5230
        \u6574\u680F\u5185\u5BB9\u9AD8(51px)\uFF0C\`.t-mode-btn { height: 100% }\` \u4E5F\u662F\u62FF\u8FD9\u4E2A\u5F53\u57FA\u51C6\u3002
        \u4E00\u65E6 .t-top-bar \u6539\u6210 height:auto\uFF0C\u7236\u9AD8\u53D8\u6210 auto\uFF0C\u90A3\u6761 100% \u5C31\u9000\u5316\u6210
-       \u5185\u5BB9\u9AD8 \u2014\u2014 \u6A21\u5F0F\u6309\u94AE\u4F1A\u584C\u6210\u4E00\u884C\u6587\u5B57\u7684\u9AD8\u5EA6\u3002 */
+       \u5185\u5BB9\u9AD8 \u2014\u2014 \u6A21\u5F0F\u6309\u94AE\u4F1A\u584C\u6210\u4E00\u884C\u6587\u5B57\u7684\u9AD8\u5EA6\u3002
+       \u26A0 flex-direction \u662F\u590D\u4F4D\u684C\u9762\u6863\u7684\u7AD6\u6392\u3002\u5E73\u677F\u8D77\u4E24\u4E2A\u5F00\u5173\u91CD\u65B0\u5E76\u6392\uFF1A\u8FD9\u4E00\u6863\u7684
+         \u5267\u672C\u5361\u5DF2\u7ECF\u72EC\u5360\u7B2C\u4E8C\u884C\u3001\u62FF\u5230\u901A\u680F\u5BBD\u5EA6\uFF0C\u4E0D\u9700\u8981\u518D\u4ECE\u5F00\u5173\u7EC4\u62A0\u90A3 165px\uFF0C
+         \u800C\u6A2A\u6392\u5728 48px \u7684\u884C\u9AD8\u91CC\u6BD4\u4E24\u6761 22px \u66F4\u63A5\u8FD1 5.1.2 \u7684\u89C2\u611F\u3002 */
     #t-main-view.t-layout-legacy .t-history-group {
         height: 48px;
+        flex-direction: row;
+        gap: 15px;
+    }
+
+    /* \u26A0 \u590D\u4F4D\u684C\u9762\u6863\u7684 flex: 1\u3002\u6A2A\u6392\u4E0B\u5B83\u4F1A\u8BA9\u4E24\u4E2A\u5F00\u5173\u53BB\u62A2\u7B2C\u4E00\u884C\u7684\u4F59\u91CF\uFF0C\u628A
+       min-width 160/150 \u7684\u300C\u786C\u5730\u677F\u300D\u53D8\u6210\u300C\u8D77\u59CB\u5BBD\u5EA6\u300D\u2014\u2014 \u4E0A\u9762\u90A3\u6BB5\u7A7A\u95F4\u8D26
+       \uFF08\u5F00\u5173\u7EC4\u6052\u5360 325px\uFF09\u5C31\u4E0D\u518D\u6210\u7ACB\uFF0C\u6A21\u5F0F\u4E09\u8FDE\u4F1A\u88AB\u6324\u7A84\u3002
+       \u5199 0 0 auto \u800C\u4E0D\u662F\u53EA\u5199 flex-shrink: 0\uFF1Aflex-basis \u4E5F\u5F97\u4ECE 0% \u56DE\u5230 auto\uFF0C
+       \u5426\u5219\u5BBD\u5EA6\u53EA\u5269 min-width \u515C\u7740\uFF0C\u8BED\u4E49\u4E0A\u4E0D\u518D\u662F\u300C\u6309\u5185\u5BB9\u6491\u5F00\u300D\u3002 */
+    #t-main-view.t-layout-legacy .t-history-toggle {
+        flex: 0 0 auto;
     }
 
     /* \u6A21\u5F0F\u4E09\u8FDE\u5403\u6389\u7B2C\u4E00\u884C\u4F59\u91CF\uFF0C\u4E09\u4E2A\u6309\u94AE\u7B49\u5206 \u2014\u2014 \u4E0E 600px \u6863\u540C\u4E00\u5957\u505A\u6CD5\u3002
@@ -8876,11 +8947,24 @@ textarea.t-input {
 
 /* ===== \u4E16\u754C\u4E66\u6761\u76EE\u9009\u62E9\u5668 ===== */
 /* \u9009\u62E9\u5668\u9762\u677F */
+/* \u53CC\u8F74\u5C45\u4E2D\u3002
+   \u2500\u2500 \u4E3A\u4EC0\u4E48\u4E0D\u662F top: 60px \u2500\u2500
+   \u539F\u5148\u662F \`top: 60px; max-height: 80vh\`\uFF0C\u800C\u5B9A\u4F4D\u7236\u7EA7 #t-main-view \u662F
+   \`height: 85vh\`\uFF08main-window.css:6\uFF09\u4E14\u5E26 .t-box \u7684 \`overflow: hidden\`
+   \uFF08base.css:44\uFF09\u3002\u4E8E\u662F\u9762\u677F\u5E95\u8FB9 = 60px + 80vh\uFF0C\u5BB9\u5668\u53EA\u6709 85vh\uFF1A
+     \u6EA2\u51FA\u91CF = 60px + 80vh \u2212 85vh = 60px \u2212 5vh
+   \u53EA\u8981\u89C6\u53E3\u9AD8 < 1200px \u5C31\u88C5\u4E0D\u4E0B\uFF0C\u591A\u51FA\u6765\u7684\u90E8\u5206\u88AB\u5BB9\u5668\u76F4\u63A5\u88C1\u6389 \u2014\u2014
+   1080p \u6D4F\u89C8\u5668\u89C6\u53E3\u7EA6 950px \u65F6\u88C1\u6389\u7EA6 12.5px\uFF0C\u89C6\u53E3 800px \u65F6\u88C1\u6389 20px\u3002
+   \u6539\u6210\u53CC\u8F74\u5C45\u4E2D\u540E\u4E0A\u4E0B\u4F59\u91CF\u81EA\u52A8\u5747\u5206\uFF0880vh \u9762\u677F\u5728 85vh \u5BB9\u5668\u91CC\u5404\u7559 2.5vh\uFF09\uFF0C
+   \u4E0E\u89C6\u53E3\u9AD8\u5EA6\u65E0\u5173\uFF0C\u4E14\u9762\u677F\u6BD4 max-height \u77EE\u65F6\u4ECD\u7136\u5C45\u4E2D\u3002
+   \u26A0 \u540C\u680F\u53E6\u4E24\u5904\u5C45\u4E2D\u9762\u677F\u6CA1\u6709\u8FD9\u4E2A\u95EE\u9898\uFF0C\u4E0D\u8981\u987A\u624B\u4E00\u8D77\u6539\uFF1A
+     .t-content-editor \u662F \`height: calc(100% - 80px)\`\uFF08\u81EA\u5DF1\u7B97\u597D\u4E86 60+20 \u7684\u4F59\u91CF\uFF09\uFF0C
+     .t-queue-settings \u662F \`max-height: 75vh\`\uFF08\u8981\u89C6\u53E3\u9AD8 <600px \u624D\u6EA2\u51FA\uFF09\u3002 */
 .t-wi-selector {
     position: absolute;
-    top: 60px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     width: 90%;
     max-width: 860px;
     max-height: 80vh;
@@ -8891,9 +8975,10 @@ textarea.t-input {
     z-index: 3000;
     display: flex;
     flex-direction: column;
-    /* \u5FC5\u987B\u7528\u5C45\u4E2D\u7248:\u672C\u5143\u7D20\u9760 translateX(-50%) \u5C45\u4E2D\uFF0C\u88F8 t-fade-in \u4F1A\u8986\u76D6\u6389\u5B83\uFF0C
-       \u5F00\u7A97\u77AC\u95F4\u9762\u677F\u53F3\u79FB\u81EA\u8EAB\u4E00\u534A\u5BBD\u5EA6\uFF08\u6B64\u5904\u7EA6 427px\uFF09\u518D\u731B\u8DF3\u56DE\u6765 */
-    animation: t-fade-in-centered 0.2s;
+    /* \u5FC5\u987B\u7528**\u53CC\u8F74**\u5C45\u4E2D\u7248:\u672C\u5143\u7D20\u9760 translate(-50%, -50%) \u5B9A\u4F4D\uFF0C\u88F8 t-fade-in \u4F1A
+       \u6574\u6761\u8986\u76D6\u6389\u5B83\uFF08\u5F00\u7A97\u77AC\u95F4\u6A2A\u5411\u731B\u8DF3\u7EA6 427px\uFF09\uFF0C\u53EA\u5E26 X \u7684 t-fade-in-centered
+       \u5219\u4F1A\u4E22\u6389 Y \u90A3\u4E00\u534A\u3001\u4E0B\u5760\u81EA\u8EAB\u4E00\u534A\u9AD8\u5EA6 */
+    animation: t-fade-in-centered-xy 0.2s;
 }
 
 .t-wi-body {
@@ -9387,10 +9472,13 @@ textarea.t-input {
 @media screen and (max-width: 600px) {
 /* \u9762\u677F\u62C9\u5230\u8FD1\u6EE1\u5C4F\u3002\u7528\u7236\u5BB9\u5668\u767E\u5206\u6BD4\u800C\u4E0D\u662F vh/dvh\uFF1A
        .t-wi-selector \u7EDD\u5BF9\u5B9A\u4F4D\u5728 #t-main-view \u5185\uFF0C\u800C .t-box \u662F overflow:hidden\uFF0C
-       \u6240\u4EE5 100% \u5C31\u662F\u4E3B\u7A97\u53E3\u53EF\u89C6\u9AD8\u5EA6\uFF0C\u4E14\u4E0D\u53D7\u79FB\u52A8\u6D4F\u89C8\u5668\u5730\u5740\u680F\u4F38\u7F29\u5F71\u54CD */
+       \u6240\u4EE5 100% \u5C31\u662F\u4E3B\u7A97\u53E3\u53EF\u89C6\u9AD8\u5EA6\uFF0C\u4E14\u4E0D\u53D7\u79FB\u52A8\u6D4F\u89C8\u5668\u5730\u5740\u680F\u4F38\u7F29\u5F71\u54CD\u3002
+       \u26A0 \u523B\u610F**\u4E0D\u518D**\u5199 top \u2014\u2014 \u57FA\u7840\u89C4\u5219\u7684 \`top: 50%\` + translate(-50%, -50%)
+         \u914D\u4E0A\u8FD9\u91CC\u7684 max-height \u6B63\u597D\u4E0A\u4E0B\u5404\u7559 8px\uFF0C\u4E0E\u6539\u7248\u524D \`top: 8px\` \u7684\u4EA7\u51FA
+         \u5B8C\u5168\u76F8\u540C\u3002\u82E5\u5728\u8FD9\u91CC\u5199\u56DE top: 8px\uFF0CtranslateY(-50%) \u4F1A\u628A\u9762\u677F\u5F80\u4E0A\u62AC\u8D70
+         \u81EA\u8EAB\u4E00\u534A\u9AD8\u5EA6\uFF0C\u76F4\u63A5\u8DD1\u51FA\u5BB9\u5668\u3002 */
 .t-wi-selector {
         width: 95%;
-        top: 8px;
         max-height: calc(100% - 16px);
     }
 
@@ -11912,7 +12000,6 @@ textarea.t-input {
 }
 
 .t-prompt-entry-card.is-locked {
-    cursor: default;
     border-color: rgb(var(--t-glass-locked-border-rgb));
     background: var(--t-color-dialog-surface);
 }
@@ -20810,11 +20897,11 @@ var init_logger = __esm({
         if (contextData && contextData.network && contextData.network.status) {
           msg += ` [HTTP ${contextData.network.status}]`;
         }
-        this.add("ERROR", msg, {
-          error_message: errMsg,
-          stack_trace: stack,
-          diagnostics: contextData
-        });
+        const details = { error_message: errMsg, stack_trace: stack };
+        if (contextData && typeof contextData === "object" && Object.keys(contextData).length > 0) {
+          details.diagnostics = contextData;
+        }
+        this.add("ERROR", msg, details);
       },
       // 导出并下载日志
       downloadReport: function() {
@@ -24616,6 +24703,74 @@ var init_favsWindow = __esm({
   }
 });
 
+// src/ui/shared/logView.js
+function clip(text) {
+  const str = String(text ?? "");
+  if (str.length <= MAX_DETAIL_CHARS) return str;
+  return `${str.slice(0, MAX_DETAIL_CHARS)}\u2026\uFF08\u5DF2\u622A\u65AD\uFF0C\u5B8C\u6574\u5185\u5BB9\u89C1\u300C\u5BFC\u51FA\u65E5\u5FD7\u300D\uFF09`;
+}
+function safeStringify(value) {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch (e) {
+    return "[\u65E0\u6CD5\u5E8F\u5217\u5316\u7684\u6570\u636E]";
+  }
+}
+function isNetworkDiagnostics(diag) {
+  return !!(diag.network || diag.phase || diag.input_stats || diag.raw_response_snippet);
+}
+function formatNetworkDiagnostics(diag) {
+  const net = diag.network || {};
+  const parts = [];
+  if (diag.phase) parts.push(`\u9636\u6BB5=${diag.phase}`);
+  if (net.status) parts.push(`HTTP=${net.status}${net.statusText ? ` ${net.statusText}` : ""}`);
+  const latency = Number(net.latency);
+  if (Number.isFinite(latency) && latency > 0) parts.push(`\u8017\u65F6=${latency}ms`);
+  if (diag.input_stats) parts.push(`\u8F93\u5165=${safeStringify(diag.input_stats)}`);
+  const lines = [];
+  if (parts.length) lines.push(`\u8BCA\u65AD: ${parts.join("  ")}`);
+  if (diag.raw_response_snippet) lines.push(`\u54CD\u5E94\u7247\u6BB5: ${clip(diag.raw_response_snippet)}`);
+  return lines.join("\n");
+}
+function formatDetails(details) {
+  if (!details) return "";
+  if (typeof details !== "object") return String(details);
+  const lines = [];
+  if (details.error_message) lines.push(`\u539F\u56E0: ${details.error_message}`);
+  const diag = details.diagnostics;
+  if (diag && typeof diag === "object" && Object.keys(diag).length > 0) {
+    lines.push(isNetworkDiagnostics(diag) ? formatNetworkDiagnostics(diag) : `\u4E0A\u4E0B\u6587: ${clip(safeStringify(diag))}`);
+  }
+  const stack = details.stack_trace;
+  if (stack && stack !== "{}" && stack !== "Unknown") {
+    lines.push(`${/^[[{]/.test(String(stack).trim()) ? "\u8BE6\u60C5" : "\u5806\u6808"}: ${clip(stack)}`);
+  }
+  if (lines.length === 0) return clip(safeStringify(details));
+  return lines.filter(Boolean).join("\n");
+}
+function entryClass(type) {
+  if (type === "ERROR") return "t-log-entry-error";
+  if (type === "WARN") return "t-log-entry-warn";
+  return "t-log-entry-info";
+}
+function renderLogEntriesHtml(logs) {
+  if (!Array.isArray(logs)) return "";
+  return logs.map((entry) => {
+    const head = `[${entry.timestamp}] [${entry.type}] ${entry.message}`;
+    const detail = formatDetails(entry.details);
+    const text = detail ? `${head}
+${detail}` : head;
+    return `<div class="${entryClass(entry.type)}">${escapeHtml(text)}</div>`;
+  }).join("");
+}
+var MAX_DETAIL_CHARS;
+var init_logView = __esm({
+  "src/ui/shared/logView.js"() {
+    init_helpers();
+    MAX_DETAIL_CHARS = 1200;
+  }
+});
+
 // src/ui/debugWindow.js
 var debugWindow_exports = {};
 __export(debugWindow_exports, {
@@ -25011,39 +25166,7 @@ function showDiagnosticsWindow() {
       $viewer.html('<div class="t-diag-log-empty"><i class="fa-solid fa-inbox"></i><br>\u6682\u65E0\u65E5\u5FD7</div>');
       return;
     }
-    let html2 = "";
-    logs.forEach((l) => {
-      let colorClass = "t-log-entry-info";
-      if (l.type === "ERROR") colorClass = "t-log-entry-error";
-      if (l.type === "WARN") colorClass = "t-log-entry-warn";
-      let detailStr = "";
-      if (l.details) {
-        if (l.details.diagnostics) {
-          const d = l.details.diagnostics;
-          const net = d.network || {};
-          const summary = {
-            phase: d.phase,
-            status: net.status,
-            latency: net.latency + "ms",
-            input: d.input_stats
-          };
-          if (d.raw_response_snippet) {
-            summary.raw_snippet = d.raw_response_snippet.substring(0, 100) + (d.raw_response_snippet.length > 100 ? "..." : "");
-          }
-          detailStr = `
-[Diagnostics]: ${JSON.stringify(summary, null, 2)}`;
-        } else {
-          try {
-            detailStr = `
-${JSON.stringify(l.details, null, 2)}`;
-          } catch (e) {
-            detailStr = "\n[Complex Data]";
-          }
-        }
-      }
-      html2 += `<div class="${colorClass}">[${l.timestamp}] [${l.type}] ${l.message}${detailStr}</div>`;
-    });
-    $viewer.html(html2);
+    $viewer.html(renderLogEntriesHtml(logs));
     $viewer.scrollTop($viewer[0].scrollHeight);
   };
   renderLogView();
@@ -25084,6 +25207,7 @@ var init_debugWindow = __esm({
     init_logger();
     init_dom();
     init_helpers();
+    init_logView();
     tokenCountRun = 0;
   }
 });
@@ -37443,9 +37567,8 @@ function openSettingsWindow() {
       $list.html('<div style="color:var(--t-color-text-muted); padding:12px 0;">\u6682\u65E0\u5BFC\u5165\u7684\u9884\u8BBE</div>');
       return;
     }
-    const insertLimit = isPreset ? getPresetInsertLimit(scheme) : -1;
     const appendInsertSlot = (position) => {
-      if (position > insertLimit) return;
+      if (!isPreset) return;
       const $slot = $(`<button type="button" class="t-prompt-insert-slot" title="\u5728\u8FD9\u91CC\u63D2\u5165\u4E00\u4E2A\u65B0\u6761\u76EE">
                 <span class="t-prompt-insert-line"></span>
                 <span class="t-prompt-insert-label"><i class="fa-solid fa-plus"></i> \u5728\u6B64\u63D2\u5165</span>
@@ -37459,14 +37582,14 @@ function openSettingsWindow() {
       const isLocked = entry.readonly === true;
       const stateLabel = isLocked ? "\u63D2\u4EF6\u5185\u7F6E" : entry.required ? "\u5FC5\u9700" : entry.enabled ? "\u5DF2\u542F\u7528" : "\u5DF2\u7981\u7528";
       const stateIcon = isLocked || entry.required ? "fa-lock" : entry.enabled ? "fa-check" : "fa-xmark";
-      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"} ${isLocked ? "is-locked" : ""} ${entry.custom ? "is-custom" : ""}" data-entry-id="${entry.id}" draggable="${isLocked ? "false" : "true"}">
+      const $row = $(`<div class="t-prompt-entry-card ${entry.enabled ? "" : "is-disabled"} ${isLocked ? "is-locked" : ""} ${entry.custom ? "is-custom" : ""}" data-entry-id="${entry.id}" draggable="true">
                 <div class="t-prompt-entry-header">
-                    <span class="t-prompt-entry-drag-hint" title="${isLocked ? "\u63D2\u4EF6\u56FA\u5B9A\u6761\u76EE" : "\u62D6\u52A8\u6392\u5E8F"}"><i class="fa-solid ${isLocked ? "fa-lock" : "fa-grip-vertical"}"></i></span>
+                    <span class="t-prompt-entry-drag-hint" title="\u62D6\u52A8\u6392\u5E8F"><i class="fa-solid fa-grip-vertical"></i></span>
                     <span class="t-prompt-entry-index">#${entry.index}</span>
                     <span class="t-prompt-entry-name"></span>
                     <span class="t-prompt-entry-badge"></span>
                     <div class="t-prompt-entry-actions">
-                        <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${isLocked ? "\u63D2\u4EF6\u5185\u7F6E\u6761\u76EE\uFF0C\u4E0D\u80FD\u7F16\u8F91\u3001\u7981\u7528\u6216\u6392\u5E8F" : entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : `${stateLabel}\uFF0C\u70B9\u51FB\u5207\u6362\u72B6\u6001`}" aria-label="${stateLabel}" ${entry.required ? "disabled" : ""}><i class="fa-solid ${stateIcon}"></i><span class="t-prompt-entry-toggle-label">${stateLabel}</span></button>
+                        <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${isLocked ? "\u63D2\u4EF6\u5185\u7F6E\u6761\u76EE\uFF0C\u53EF\u4EE5\u62D6\u52A8\u6392\u5E8F\uFF0C\u4F46\u4E0D\u80FD\u7F16\u8F91\u6216\u7981\u7528" : entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : `${stateLabel}\uFF0C\u70B9\u51FB\u5207\u6362\u72B6\u6001`}" aria-label="${stateLabel}" ${entry.required ? "disabled" : ""}><i class="fa-solid ${stateIcon}"></i><span class="t-prompt-entry-toggle-label">${stateLabel}</span></button>
                         ${entry.custom ? '<button type="button" class="t-prompt-entry-delete" title="\u5220\u9664\u8FD9\u4E2A\u81EA\u5B9A\u4E49\u6761\u76EE" aria-label="\u5220\u9664\u6761\u76EE"><i class="fa-solid fa-trash"></i></button>' : ""}
                     </div>
                 </div>
@@ -37496,7 +37619,7 @@ function openSettingsWindow() {
       });
       $row.on("dragstart", function(event) {
         const originalEvent = event.originalEvent;
-        if (isLocked || $(event.target).closest("input, textarea, select, button").length) {
+        if ($(event.target).closest("input, textarea, select, button").length) {
           originalEvent?.preventDefault();
           return;
         }
@@ -37505,7 +37628,6 @@ function openSettingsWindow() {
         $(this).addClass("is-dragging");
       });
       $row.on("dragover", function(event) {
-        if (isLocked) return;
         event.preventDefault();
         const originalEvent = event.originalEvent;
         const rect = this.getBoundingClientRect();
@@ -37517,7 +37639,6 @@ function openSettingsWindow() {
         if (event.target === this) $(this).removeClass("is-drag-over");
       });
       $row.on("drop", function(event) {
-        if (isLocked) return;
         event.preventDefault();
         const originalEvent = event.originalEvent;
         const draggedId = originalEvent.dataTransfer.getData("text/plain");
@@ -37533,7 +37654,6 @@ function openSettingsWindow() {
         let nextIndex = scheme.entries.findIndex((item) => item.id === entry.id);
         if (!insertBefore) nextIndex++;
         scheme.entries.splice(Math.max(0, nextIndex), 0, moved);
-        if (scheme.type === "preset") ensureTitaniaPresetEntries(scheme);
         renderPromptManager();
       });
       $row.on("dragend", function() {
@@ -37940,39 +38060,7 @@ function openSettingsWindow() {
       $("#t-log-viewer").html('<div class="t-set-log-empty">\u6682\u65E0\u65E5\u5FD7</div>');
       return;
     }
-    let html2 = "";
-    logs.forEach((l) => {
-      let colorClass = "t-log-entry-info";
-      if (l.type === "ERROR") colorClass = "t-log-entry-error";
-      if (l.type === "WARN") colorClass = "t-log-entry-warn";
-      let detailStr = "";
-      if (l.details) {
-        if (l.details.diagnostics) {
-          const d = l.details.diagnostics;
-          const net = d.network || {};
-          const summary = {
-            phase: d.phase,
-            status: net.status,
-            latency: net.latency + "ms",
-            input: d.input_stats
-          };
-          if (d.raw_response_snippet) {
-            summary.raw_snippet = d.raw_response_snippet.substring(0, 100) + (d.raw_response_snippet.length > 100 ? "..." : "");
-          }
-          detailStr = `
-[Diagnostics]: ${JSON.stringify(summary, null, 2)}`;
-        } else {
-          try {
-            detailStr = `
-${JSON.stringify(l.details, null, 2)}`;
-          } catch (e) {
-            detailStr = "\n[Complex Data]";
-          }
-        }
-      }
-      html2 += `<div class="${colorClass}">[${l.timestamp}] [${l.type}] ${l.message}${detailStr}</div>`;
-    });
-    $("#t-log-viewer").html(html2);
+    $("#t-log-viewer").html(renderLogEntriesHtml(logs));
   };
   renderLogView();
   $("#btn-refresh-log").on("click", renderLogView);
@@ -38164,6 +38252,7 @@ var init_settingsWindow = __esm({
     init_rewriteEntryButton();
     init_apiProfileRegistry();
     init_apiConnectionEditor();
+    init_logView();
     init_promptManager();
     init_headerActions();
     init_theme();
@@ -46729,6 +46818,7 @@ var init_api = __esm({
 init_defaults();
 init_storage();
 init_dom();
+init_helpers();
 init_state();
 init_scriptData();
 init_api();
@@ -47557,7 +47647,23 @@ function downloadBackupPayload(payload, filename) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 6e4);
+}
+function settleAfterDownload() {
+  return new Promise((resolve) => setTimeout(resolve, 1200));
+}
+async function downloadBackupAndConfirm(payload, filename, what) {
+  downloadBackupPayload(payload, filename);
+  await settleAfterDownload();
+  return confirm(
+    `\u5907\u4EFD\u5DF2\u5F00\u59CB\u4E0B\u8F7D\uFF1A
+${filename}
+
+\u8BF7\u5148\u786E\u8BA4\u8FD9\u4E2A\u6587\u4EF6\u5B58\u597D\u4E86\uFF08\u624B\u673A\u4E0A\u4E00\u822C\u5728\u300C\u6587\u4EF6\u300DApp \u7684\u300C\u4E0B\u8F7D\u9879\u300D\u91CC\uFF09\uFF0C\u5B83\u662F${what}\u51FA\u95EE\u9898\u65F6\u552F\u4E00\u7684\u9000\u8DEF\u3002
+
+\u786E\u5B9A = \u7EE7\u7EED${what}
+\u53D6\u6D88 = \u5C31\u6B64\u505C\u4E0B\uFF0C\u4EC0\u4E48\u90FD\u4E0D\u6539`
+  );
 }
 function bindDrawerBackupControls() {
   $("#titania-backup-export").off("click").on("click", async function() {
@@ -47607,6 +47713,7 @@ function bindDrawerBackupControls() {
         const filename = `titania_auto_backup_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 19).replace(/[-:]/g, "").replace("T", "_")}.json`;
         downloadBackupPayload(currentSnapshot, filename);
         if (window.toastr) toastr.info("\u5DF2\u81EA\u52A8\u5907\u4EFD\u5F53\u524D\u6570\u636E\uFF0C\u8BF7\u4FDD\u5B58\u4E0B\u8F7D\u7684\u6587\u4EF6", "Titania Echo");
+        await settleAfterDownload();
       } catch (backupErr) {
         console.warn("Titania: \u81EA\u52A8\u5907\u4EFD\u5931\u8D25", backupErr);
         if (!confirm("\u26A0\uFE0F \u81EA\u52A8\u5907\u4EFD\u5931\u8D25\uFF01\u662F\u5426\u4ECD\u8981\u7EE7\u7EED\u5BFC\u5165\uFF1F\n\n\u5982\u679C\u7EE7\u7EED\uFF0C\u5F53\u524D\u6570\u636E\u53EF\u80FD\u65E0\u6CD5\u6062\u590D\u3002")) {
@@ -47776,7 +47883,11 @@ async function runOneClickMigration($btn) {
     $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u5907\u4EFD...');
     try {
       const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
-      downloadBackupPayload(snapshot, backupFileName("before_favs_migration"));
+      const go = await downloadBackupAndConfirm(snapshot, backupFileName("before_favs_migration"), "\u642C\u5BB6");
+      if (!go) {
+        showFavsMigrationReport("\u5DF2\u53D6\u6D88\uFF0C\u672A\u6539\u52A8\u4EFB\u4F55\u6570\u636E\u3002\u5907\u4EFD\u6587\u4EF6\u5DF2\u4E0B\u8F7D\uFF0C\u53EF\u968F\u65F6\u56DE\u6765\u91CD\u8BD5\u3002", "#feca57");
+        return;
+      }
     } catch (backupErr) {
       console.error("Titania: \u642C\u5BB6\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
       showFavsMigrationReport(
@@ -47792,8 +47903,10 @@ async function runOneClickMigration($btn) {
       }
     });
     if (!report.ok) {
+      const sample = report.failures?.[0]?.error;
+      const allFailed = report.failures?.length === footprint.count && footprint.count > 0;
       showFavsMigrationReport(
-        `\u274C \u642C\u5BB6\u5DF2\u4E2D\u6B62\uFF0C\u7D22\u5F15\u672A\u5199\u5165\uFF0Csettings.json \u672A\u6539\u52A8\uFF1A${report.reason || "\u672A\u77E5\u539F\u56E0"}<br>\xB7 \u5907\u4EFD\u6587\u4EF6\u5DF2\u4E0B\u8F7D\uFF0C\u53EF\u653E\u5FC3\u91CD\u8BD5<br>\xB7 \u8BE6\u60C5\u89C1\u63A7\u5236\u53F0`,
+        `\u274C \u642C\u5BB6\u5DF2\u4E2D\u6B62\uFF0C\u7D22\u5F15\u672A\u5199\u5165\uFF0Csettings.json \u672A\u6539\u52A8\uFF1A${report.reason || "\u672A\u77E5\u539F\u56E0"}` + (sample ? `<br>\xB7 \u62A5\u9519\u539F\u56E0\uFF1A<b>${escapeHtml(sample)}</b>` : "") + (allFailed ? `<br>\xB7 \u4E00\u6761\u90FD\u6CA1\u6210\u529F\uFF0C\u901A\u5E38\u662F\u6D4F\u89C8\u5668\u6CA1\u80FD\u628A\u8BF7\u6C42\u53D1\u51FA\u53BB\uFF1A\u8BF7\u786E\u8BA4\u5907\u4EFD\u5DF2\u4E0B\u8F7D\u5B8C\u3001SillyTavern \u4ECD\u8FDE\u5F97\u4E0A\uFF0C\u7136\u540E\u91CD\u8BD5` : "") + `<br>\xB7 \u5907\u4EFD\u6587\u4EF6\u5DF2\u4E0B\u8F7D\uFF0C\u53EF\u653E\u5FC3\u91CD\u8BD5<br>\xB7 \u8BE6\u60C5\u89C1\u63A7\u5236\u53F0\u4E0E\u8BBE\u7F6E\u9875\u7684\u65E5\u5FD7`,
         "#ff7675"
       );
       console.error("[Titania] \u6536\u85CF\u642C\u5BB6\u4E2D\u6B62", report);
@@ -47843,7 +47956,11 @@ async function runFinishCleanup($btn, { backupAlreadyDone = false, migrationSumm
       $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u5907\u4EFD...');
       try {
         const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
-        downloadBackupPayload(snapshot, backupFileName("before_favs_cleanup"));
+        const go = await downloadBackupAndConfirm(snapshot, backupFileName("before_favs_cleanup"), "\u6536\u5C3E");
+        if (!go) {
+          showFavsMigrationReport("\u5DF2\u53D6\u6D88\uFF0C\u65E7\u6570\u636E\u4FDD\u7559\uFF0C\u4EC0\u4E48\u90FD\u6CA1\u5220\u3002\u5907\u4EFD\u6587\u4EF6\u5DF2\u4E0B\u8F7D\u3002", "#feca57");
+          return;
+        }
       } catch (backupErr) {
         console.error("Titania: \u6536\u5C3E\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
         showFavsMigrationReport(
@@ -48108,8 +48225,11 @@ async function runScriptsOneClick($btn) {
     $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> \u6B63\u5728\u5907\u4EFD...');
     try {
       const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
-      downloadBackupPayload(snapshot, backupFileName("before_scripts_migration"));
-      if (window.toastr) toastr.info("\u5DF2\u4E0B\u8F7D\u642C\u5BB6\u524D\u5907\u4EFD\uFF0C\u8BF7\u4FDD\u5B58\u8FD9\u4E2A\u6587\u4EF6", "Titania Echo");
+      const go = await downloadBackupAndConfirm(snapshot, backupFileName("before_scripts_migration"), "\u642C\u5BB6");
+      if (!go) {
+        showScriptsStorageReport("\u5DF2\u53D6\u6D88\uFF0C\u672A\u6539\u52A8\u4EFB\u4F55\u6570\u636E\u3002\u5907\u4EFD\u6587\u4EF6\u5DF2\u4E0B\u8F7D\uFF0C\u53EF\u968F\u65F6\u56DE\u6765\u91CD\u8BD5\u3002", "#feca57");
+        return;
+      }
     } catch (backupErr) {
       console.error("Titania: \u642C\u5BB6\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
       showScriptsStorageReport(
@@ -48171,7 +48291,7 @@ async function runScriptsFinish($btn, { backupAlreadyDone = false, migrationSumm
           try {
             const snapshot = await createFullBackupPayload({ includeVectors: true, autoBackup: true });
             downloadBackupPayload(snapshot, backupFileName("before_scripts_cleanup"));
-            if (window.toastr) toastr.info("\u5DF2\u4E0B\u8F7D\u6536\u5C3E\u524D\u5907\u4EFD\uFF0C\u8BF7\u4FDD\u5B58\u8FD9\u4E2A\u6587\u4EF6", "Titania Echo");
+            await settleAfterDownload();
           } catch (backupErr) {
             console.warn("Titania: \u6536\u5C3E\u524D\u5907\u4EFD\u5931\u8D25", backupErr);
             if (!confirm("\u26A0\uFE0F \u5907\u4EFD\u5931\u8D25\uFF01\u662F\u5426\u4ECD\u8981\u7EE7\u7EED\u5220\u9664\u65E7\u6570\u636E\uFF1F\n\n\u5220\u9664\u540E\u65E0\u6CD5\u64A4\u9500\u3002\u5EFA\u8BAE\u5148\u89E3\u51B3\u5907\u4EFD\u95EE\u9898\u3002")) {
