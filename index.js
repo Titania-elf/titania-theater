@@ -32195,20 +32195,35 @@ function setUnsavedCache(value) {
 function resetUnsavedCacheFromMetadataChange() {
   void refreshUnsavedVectorsCache();
 }
+function isConnectionUsable(db) {
+  try {
+    db.transaction([STORE_EMBEDDINGS], "readonly");
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
 async function initVectorDB() {
-  if (dbInstance) {
+  if (dbInstance && isConnectionUsable(dbInstance)) {
     return dbInstance;
   }
+  dbInstance = null;
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onerror = () => {
+      dbInstance = null;
       TitaniaLogger.error("\u6253\u5F00\u5411\u91CF\u6570\u636E\u5E93\u5931\u8D25", request.error);
       reject(request.error);
     };
     request.onsuccess = () => {
-      dbInstance = request.result;
+      const db = request.result;
+      db.onclose = () => {
+        dbInstance = null;
+      };
+      db.onversionchange = () => db.close();
+      dbInstance = db;
       TitaniaLogger.info("\u5411\u91CF\u6570\u636E\u5E93\u5DF2\u8FDE\u63A5");
-      resolve(dbInstance);
+      resolve(db);
     };
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
@@ -39739,12 +39754,34 @@ import {
   getCurrentChatId,
   saveChatConditional as saveChatConditional2
 } from "../../../../script.js";
-function openDatabase() {
-  if (dbPromise) return dbPromise;
+function isConnectionUsable2(db) {
+  try {
+    db.transaction([STORE_SESSIONS], "readonly");
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+async function openDatabase() {
+  if (dbPromise) {
+    const cached = await dbPromise.catch(() => null);
+    if (cached && isConnectionUsable2(cached)) return cached;
+    dbPromise = null;
+  }
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME2, DB_VERSION2);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => {
+      dbPromise = null;
+      reject(request.error);
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onclose = () => {
+        dbPromise = null;
+      };
+      db.onversionchange = () => db.close();
+      resolve(db);
+    };
     request.onblocked = () => TitaniaLogger.warn("\u7EED\u5199\u5386\u53F2\u6570\u636E\u5E93\u5347\u7EA7\u88AB\u5176\u4ED6\u6807\u7B7E\u9875\u963B\u585E\uFF0C\u8BF7\u5173\u95ED\u591A\u4F59\u7684 SillyTavern \u9875\u9762");
     request.onupgradeneeded = (event) => {
       const db = request.result;
