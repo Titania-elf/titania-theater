@@ -18330,7 +18330,7 @@ textarea.t-input {
     gap: 6px;
 }
 
-/* \u6E10\u8FDB\u7EED\u5199\u9762\u677F\uFF1A\u8FDB\u5EA6\u6761 + \u751F\u6210\u4E0B\u4E00\u6BB5 + \u624B\u52A8\u6307\u9488 */
+/* \u6E10\u8FDB\u7EED\u5199\u9762\u677F\uFF1A\u8FDB\u5EA6\u6761 + \u751F\u6210\u4E0B\u4E00\u6BB5 + \u624B\u52A8\u6307\u9488\uFF08\u73B0\u4F4D\u4E8E\u300C\u7EC6\u7EB2\u60C5\u8282\u300D\u7A97\u53E3\uFF09 */
 .t-outline-rolling {
     margin-top: 12px;
     padding: 12px;
@@ -18342,11 +18342,163 @@ textarea.t-input {
     gap: 10px;
 }
 
+/* \u5728\u7EC6\u7EB2\u7A97\u53E3\u91CC\u5939\u5728\u5217\u8868\u4E0E\u53D1\u9001\u680F\u4E4B\u95F4\uFF1A\u53BB\u6389\u9876\u90E8\u5916\u8FB9\u8DDD\uFF0C\u6536\u7D27\u4E0E\u5217\u8868\u7684\u95F4\u9694 */
+.t-outline-rolling--scene-hub {
+    margin-top: 8px;
+}
+
 .t-outline-rolling-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+}
+
+.t-outline-rolling-head-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+#t-outline-rolling-outline-toggle {
+    min-height: 26px;
+    padding: 0 8px;
+    border-radius: 8px;
+}
+
+#t-outline-rolling-outline-toggle.active {
+    border-color: var(--t-color-teal-strong);
+    box-shadow: 0 0 0 1px rgb(var(--t-accent-teal-rgb) / .25) inset;
+}
+
+/* \u5927\u7EB2\u60C5\u8282\u9884\u89C8\uFF1A\u7EB5\u5217\u6761\u76EE\uFF0C\u6309\u63A8\u8FDB\u72B6\u6001\u7740\u8272 */
+.t-outline-rolling-outline-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: min(38vh, 360px);
+    overflow: auto;
+    padding: 6px;
+    border: 1px solid var(--t-color-border-glass);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.t-rolling-outline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.t-rolling-outline-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.t-rolling-outline-item.expanded {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.t-rolling-outline-marker {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.t-rolling-outline-main {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.t-rolling-outline-title {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.t-rolling-outline-plot {
+    font-size: 11px;
+    color: var(--t-glass-text-soft);
+    line-height: 1.45;
+}
+
+/* \u5C55\u5F00\u540E\u7684\u5B8C\u6574\u60C5\u8282\uFF1A\u4E0D\u622A\u65AD\uFF0C\u6B63\u5E38\u6362\u884C */
+.t-rolling-outline-plot--full {
+    color: var(--t-glass-text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* \u5C55\u5F00\u540E\u7684\u4F0F\u7B14\u884C */
+.t-rolling-outline-foreshadow {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--t-color-border-glass);
+    font-size: 11px;
+    color: rgb(var(--t-accent-teal-rgb));
+    line-height: 1.45;
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.t-rolling-outline-foreshadow i {
+    margin-top: 2px;
+    flex: 0 0 auto;
+}
+
+/* \u53F3\u4FA7\u8DF3\u6307\u9488\u6309\u94AE\uFF1A\u9ED8\u8BA4\u4F4E\u8C03\uFF0Chover \u624D\u663E\u5F62 */
+.t-rolling-outline-jump {
+    flex: 0 0 auto;
+    min-height: 24px;
+    min-width: 26px;
+    padding: 0 5px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--t-glass-text-faint);
+    font-size: 11px;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    align-self: center;
+}
+
+.t-rolling-outline-item:hover .t-rolling-outline-jump,
+.t-rolling-outline-jump:focus-visible {
+    opacity: 1;
+}
+
+.t-rolling-outline-jump:hover {
+    color: var(--t-color-teal-strong);
+    border-color: var(--t-color-border-glass);
+}
+
+/* \u5DF2\u63A8\u8FDB\u8FC7\uFF1A\u6DE1\u5316\uFF1B\u5F53\u524D\u6761\u76EE\uFF1A\u9AD8\u4EAE\u5DE6\u8FB9\u6761+\u6587\u5B57\u63D0\u4EAE */
+.t-rolling-outline-item.done {
+    opacity: 0.55;
+}
+
+.t-rolling-outline-item.done .t-rolling-outline-marker {
+    color: rgb(var(--t-accent-teal-rgb));
+}
+
+.t-rolling-outline-item.current {
+    background: rgb(var(--t-accent-teal-rgb) / .10);
+    box-shadow: -2px 0 0 0 var(--t-color-teal-strong);
+}
+
+.t-rolling-outline-item.current .t-rolling-outline-marker {
+    color: var(--t-color-teal-strong);
+}
+
+.t-rolling-outline-item.todo .t-rolling-outline-marker {
+    color: var(--t-glass-text-faint);
 }
 
 .t-outline-rolling-title {
@@ -25341,10 +25493,225 @@ var init_debugWindow = __esm({
   }
 });
 
+// src/core/relayClient.js
+import { getRequestHeaders as getRequestHeaders2 } from "../../../../script.js";
+import EventSourceStream from "../../../sse-stream.js";
+import { tryParseStreamingError } from "../../../openai.js";
+function toOpenAiBase(url) {
+  const base = normalizeApiBaseUrl(url);
+  if (!base) return "";
+  if (/^https?:\/\/[^/?#]+$/i.test(base)) return `${base}/v1`;
+  return base;
+}
+async function fetchModelList({ url, key = "" }) {
+  const base = toOpenAiBase(url);
+  if (!base) throw new Error("API \u5730\u5740\u65E0\u6548");
+  const res = await fetch(ST_STATUS_URL, {
+    method: "POST",
+    headers: getRequestHeaders2(),
+    body: JSON.stringify({
+      chat_completion_source: "openai",
+      reverse_proxy: base,
+      // 后端允许 reverse_proxy 存在时空 key，但必须是字符串，否则拼出 "Bearer undefined"
+      proxy_password: String(key || "")
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}${errText ? " - " + errText.substring(0, 120) : ""}`);
+  }
+  const json = await res.json().catch(() => null);
+  if (!json || json.error === true) {
+    throw new Error("\u4E2D\u8F6C\u670D\u52A1\u5668\u8FDE\u63A5\u5931\u8D25\uFF08\u7ECF ST \u540E\u7AEF\u4EE3\u7406\uFF09\uFF0C\u8BF7\u68C0\u67E5\u5730\u5740\u4E0E Key");
+  }
+  const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
+  return [...new Set(
+    list.map((m) => typeof m === "string" ? m : String(m?.id || "").trim()).filter(Boolean)
+  )].sort();
+}
+function toStJsonSchema(responseFormat) {
+  const js = responseFormat?.json_schema;
+  if (!js || typeof js !== "object") return null;
+  return {
+    name: String(js.name || "response"),
+    strict: js.strict ?? true,
+    value: js.schema
+  };
+}
+async function consumeSse(res, { onProgress, signal }) {
+  const eventStream = new EventSourceStream();
+  res.body.pipeThrough(eventStream);
+  const reader = eventStream.readable.getReader();
+  let content = "";
+  let chunkCount = 0;
+  let parseFailCount = 0;
+  try {
+    while (true) {
+      if (signal?.aborted) {
+        await reader.cancel();
+        throw new DOMException("Generation aborted", "AbortError");
+      }
+      const { done, value } = await reader.read();
+      if (done) break;
+      const data = value.data;
+      if (data === "[DONE]") break;
+      try {
+        tryParseStreamingError(res, data, { quiet: true });
+      } catch (streamParseErr) {
+        throw streamParseErr;
+      }
+      chunkCount++;
+      try {
+        const json = JSON.parse(data);
+        const chunk = json.choices?.[0]?.delta?.content ?? json.choices?.[0]?.message?.content ?? "";
+        if (chunk) {
+          content += chunk;
+          if (onProgress) onProgress(content);
+        }
+      } catch (parseErr) {
+        parseFailCount++;
+        if (parseFailCount <= 3) {
+          TitaniaLogger.warn("\u6D41\u5F0F chunk \u89E3\u6790\u5931\u8D25 (#" + parseFailCount + ")", {
+            data: String(data).substring(0, 100),
+            error: parseErr.message
+          });
+        }
+      }
+    }
+  } finally {
+    try {
+      reader.cancel();
+    } catch {
+    }
+  }
+  return { content, chunkCount, parseFailCount };
+}
+function throwHttpError(res, bodyText, prefix = "") {
+  const e = new Error(`${prefix}HTTP ${res.status}${res.statusText ? ": " + res.statusText : ""}${bodyText ? " - " + bodyText.substring(0, 180) : ""}`);
+  e.status = res.status;
+  e.body = bodyText || "";
+  throw e;
+}
+async function sendChatCompletion(options = {}) {
+  const {
+    url,
+    key = "",
+    model,
+    messages,
+    stream = false,
+    maxTokens,
+    temperature,
+    signal = null,
+    onProgress = null,
+    responseFormat = null,
+    wireStreamOverride = null,
+    diagnostics = null
+  } = options;
+  const base = toOpenAiBase(url);
+  if (!base) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
+  if (!Array.isArray(messages)) {
+    throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4\uFF08\u5B57\u7B26\u4E32\u4F1A\u88AB ST \u540E\u7AEF\u6539\u8D70 /completions\uFF09");
+  }
+  const wireStream = wireStreamOverride !== null ? wireStreamOverride : stream;
+  const suppressProgress = wireStream === true && stream !== true;
+  if (diagnostics) {
+    diagnostics.transport = "st_proxy";
+    diagnostics.endpoint = `[ST \u4EE3\u7406] ${base}/chat/completions`;
+  }
+  const body = {
+    chat_completion_source: "openai",
+    reverse_proxy: base,
+    proxy_password: String(key || ""),
+    model,
+    messages,
+    stream: wireStream
+  };
+  if (Number.isFinite(maxTokens)) body.max_tokens = maxTokens;
+  if (temperature !== void 0) body.temperature = temperature;
+  const stJsonSchema = toStJsonSchema(responseFormat);
+  if (stJsonSchema) body.json_schema = stJsonSchema;
+  const startedAt = Date.now();
+  const res = await fetch(ST_GENERATE_URL, {
+    method: "POST",
+    headers: getRequestHeaders2(),
+    body: JSON.stringify(body),
+    signal
+  });
+  if (diagnostics) {
+    diagnostics.network = diagnostics.network || {};
+    diagnostics.network.status = res.status;
+    diagnostics.network.latency = Date.now() - startedAt;
+  }
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    if (diagnostics) diagnostics.raw_response_snippet = errText.substring(0, 500);
+    try {
+      tryParseStreamingError(res, errText, { quiet: true });
+    } catch (parsedErr) {
+      throw parsedErr;
+    }
+    throwHttpError(res, errText, "ST \u540E\u7AEF\u4EE3\u7406\u8BF7\u6C42\u5931\u8D25: ");
+  }
+  if (wireStream) {
+    if (diagnostics) diagnostics.phase = "streaming";
+    const attemptStartTime = Date.now();
+    const { content: content2, chunkCount, parseFailCount } = await consumeSse(res, {
+      onProgress: suppressProgress ? null : onProgress,
+      signal
+    });
+    if (chunkCount === 0 && suppressProgress) {
+      return sendChatCompletion({ ...options, wireStreamOverride: false, signal, diagnostics });
+    }
+    if (chunkCount === 0) {
+      throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
+    }
+    if (diagnostics) {
+      diagnostics.stream_stats = diagnostics.stream_stats || {};
+      diagnostics.stream_stats.ttft = Date.now() - attemptStartTime;
+      diagnostics.stream_stats.chunks = chunkCount;
+    }
+    if (parseFailCount > 0 && !content2) {
+      throw new Error("ERR_STREAM_PARSE_FAILED: \u6D41\u5F0F\u54CD\u5E94\u89E3\u6790\u5931\u8D25");
+    }
+    if (!content2) {
+      throw new Error("ERR_STREAM_EMPTY: \u672A\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E\u5757");
+    }
+    if (suppressProgress && onProgress) onProgress(content2);
+    return content2;
+  }
+  if (diagnostics) diagnostics.phase = "parsing_json";
+  const text = await res.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("Invalid JSON response");
+  }
+  if (json?.error) {
+    const e = new Error(`\u4E0A\u6E38\u8FD4\u56DE\u9519\u8BEF\uFF08\u7ECF ST \u540E\u7AEF\u4EE3\u7406\uFF09: ${json.error?.message || json.error}`);
+    e.proxy = true;
+    throw e;
+  }
+  if (!Array.isArray(json.choices)) {
+    throw new Error("ERR_INVALID_API_RESPONSE: \u54CD\u5E94\u7F3A\u5C11 choices \u6570\u7EC4");
+  }
+  const content = json.choices[0]?.message?.content || "";
+  if (onProgress) onProgress(content);
+  return content;
+}
+var ST_STATUS_URL, ST_GENERATE_URL;
+var init_relayClient = __esm({
+  "src/core/relayClient.js"() {
+    init_apiProfileRegistry();
+    init_logger();
+    ST_STATUS_URL = "/api/backends/chat-completions/status";
+    ST_GENERATE_URL = "/api/backends/chat-completions/generate";
+  }
+});
+
 // src/core/connection.js
 import { ChatCompletionService } from "../../../custom-request.js";
-import { oai_settings as oai_settings2, getChatCompletionModel, tryParseStreamingError } from "../../../openai.js";
-import EventSourceStream from "../../../sse-stream.js";
+import { oai_settings as oai_settings2, getChatCompletionModel } from "../../../openai.js";
 function getActiveConnection() {
   const data = getExtData();
   const normalized = ensureMainApiProfiles(data.config || {});
@@ -25379,18 +25746,6 @@ function getActiveConnection() {
     stream,
     rawProfile: currentProfile
   };
-}
-function normalizeEndpoint(url, suffix = "/chat/completions") {
-  if (!url) return "";
-  let endpoint = url.trim().replace(/\/+$/, "");
-  if (!endpoint.endsWith(suffix)) {
-    if (endpoint.endsWith("/v1")) {
-      endpoint += suffix;
-    } else {
-      endpoint += "/v1" + suffix;
-    }
-  }
-  return endpoint;
 }
 async function sendChatRequestWithConnection(conn, messages, options = {}) {
   const model = options.model || conn.model;
@@ -25433,105 +25788,20 @@ async function sendChatRequestWithConnection(conn, messages, options = {}) {
     if (!conn.key && options.allowEmptyKey !== true) {
       throw new Error("\u914D\u7F6E\u7F3A\u5931\uFF1A\u8BF7\u5148\u53BB\u8BBE\u7F6E\u586B API Key\uFF01");
     }
-    const endpoint = normalizeEndpoint(conn.url, "/chat/completions");
-    if (!endpoint) {
+    if (!conn.url || !conn.url.trim()) {
       throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
     }
-    const buildHeaders = () => {
-      const headers = { "Content-Type": "application/json" };
-      if (conn.key) headers.Authorization = `Bearer ${conn.key}`;
-      return headers;
-    };
-    const requestBody = {
+    rawContent = await sendChatCompletion({
+      url: conn.url,
+      key: conn.key,
       model,
       messages,
       stream: useStream,
-      max_tokens: maxTokens,
-      temperature
-    };
-    if (useStream) {
-      const fetchOptions = {
-        method: "POST",
-        headers: buildHeaders(),
-        body: JSON.stringify(requestBody)
-      };
-      if (signal) {
-        fetchOptions.signal = signal;
-      }
-      const res = await fetch(endpoint, fetchOptions);
-      if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
-      }
-      if (!res.body) {
-        throw new Error("Stream Empty Body: \u54CD\u5E94\u4F53\u4E3A\u7A7A");
-      }
-      const eventStream = new EventSourceStream();
-      res.body.pipeThrough(eventStream);
-      const reader = eventStream.readable.getReader();
-      let chunkCount = 0;
-      let parseFailCount = 0;
-      while (true) {
-        if (signal?.aborted) {
-          await reader.cancel();
-          throw new DOMException("Request aborted", "AbortError");
-        }
-        const { done, value } = await reader.read();
-        if (done) break;
-        const data = value.data;
-        if (data === "[DONE]") break;
-        try {
-          tryParseStreamingError(res, data, { quiet: true });
-        } catch (streamParseErr) {
-          throw streamParseErr;
-        }
-        chunkCount++;
-        try {
-          const json = JSON.parse(data);
-          const chunk = json.choices?.[0]?.delta?.content || "";
-          if (chunk) {
-            rawContent += chunk;
-            if (onProgress) onProgress(rawContent);
-          }
-        } catch (e) {
-          parseFailCount++;
-          if (parseFailCount <= 3) {
-            TitaniaLogger.warn(`\u6D41\u5F0F chunk \u89E3\u6790\u5931\u8D25 (#${parseFailCount})`, {
-              data: data.substring(0, 100),
-              error: e.message
-            });
-          }
-        }
-      }
-      if (chunkCount === 0) {
-        throw new Error("Stream Empty: \u672A\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E");
-      }
-      if (parseFailCount > 0 && rawContent.length === 0) {
-        throw new Error(`Stream Parse Failed: \u63A5\u6536\u5230 ${chunkCount} \u4E2A\u6570\u636E\u5757\uFF0C\u4F46\u5168\u90E8\u89E3\u6790\u5931\u8D25`);
-      }
-    } else {
-      const fetchOptions = {
-        method: "POST",
-        headers: buildHeaders(),
-        body: JSON.stringify(requestBody)
-      };
-      if (signal) {
-        fetchOptions.signal = signal;
-      }
-      const res = await fetch(endpoint, fetchOptions);
-      if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
-      }
-      const jsonText = await res.text();
-      try {
-        const json = JSON.parse(jsonText);
-        rawContent = json.choices?.[0]?.message?.content || "";
-        if (onProgress) onProgress(rawContent);
-      } catch (jsonErr) {
-        throw new Error("Invalid JSON response");
-      }
-    }
+      maxTokens,
+      temperature,
+      signal,
+      onProgress
+    });
   }
   return rawContent;
 }
@@ -25642,6 +25912,7 @@ var init_connection = __esm({
     init_storage();
     init_logger();
     init_apiProfileRegistry();
+    init_relayClient();
   }
 });
 
@@ -25685,15 +25956,7 @@ function uniqStrings(values) {
   return [...new Set((Array.isArray(values) ? values : []).map((v) => String(v || "").trim()).filter(Boolean))];
 }
 function defaultModelFetcher({ apiUrl, apiKey }) {
-  const headers = {};
-  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-  return fetch(`${apiUrl}/models`, { method: "GET", headers }).then((res) => {
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  }).then((json) => {
-    const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
-    return uniqStrings(list.map((item) => typeof item === "string" ? item : item?.id));
-  });
+  return fetchModelList({ url: apiUrl, key: apiKey });
 }
 function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
   const type = profile?.type === "internal" ? "internal" : "custom";
@@ -26145,6 +26408,7 @@ function createApiConnectionEditor(options = {}) {
 var init_apiConnectionEditor = __esm({
   "src/ui/shared/apiConnectionEditor.js"() {
     init_apiProfileRegistry();
+    init_relayClient();
   }
 });
 
@@ -27938,7 +28202,8 @@ function isSceneUsed(plan, itemIndex, sceneIndex) {
   return plan.used_scene_keys.includes(getSceneUsageKey(itemIndex, sceneIndex));
 }
 function advanceProgressOnSend(planId, itemIndex) {
-  if (!planId || planId !== editingPlanId) return;
+  if (!planId) return;
+  if (planId !== editingPlanId && planId !== getSceneSourcePlanId()) return;
   const plan = getPlans().find((p) => p.id === planId);
   if (!plan) return;
   const total = Array.isArray(plan.items) ? plan.items.length : 0;
@@ -27947,7 +28212,7 @@ function advanceProgressOnSend(planId, itemIndex) {
   const nextIdx = Math.max(prev.itemIndex, Math.min(Number(itemIndex) || 0, total - 1));
   const reachedEnding = prev.reachedEnding || nextIdx >= total - 1;
   setPlanProgress(planId, { itemIndex: nextIdx, reachedEnding });
-  setEditingPlan(getPlans().find((p) => p.id === planId));
+  if (editingPlanId === planId) setEditingPlan(getPlans().find((p) => p.id === planId));
   refreshRollingProgressUI();
 }
 function markSceneUsed(planId, itemIndex, sceneIndex) {
@@ -28095,6 +28360,25 @@ function openSceneHubWindow() {
             </div>
             <div class="t-window-body t-outline-body">
                 <div id="t-scene-hub-list" class="t-scene-hub-list"></div>
+                <div id="t-outline-rolling" class="t-outline-rolling t-outline-rolling--scene-hub" style="display:none;">
+                    <div class="t-outline-rolling-head">
+                        <span class="t-outline-rolling-title"><i class="fa-solid fa-forward-step"></i> \u6E10\u8FDB\u7EED\u5199</span>
+                        <div class="t-outline-rolling-head-right">
+                            <span id="t-outline-rolling-status" class="t-outline-rolling-status"></span>
+                            <button id="t-outline-rolling-outline-toggle" class="t-btn t-btn-xs" title="\u5C55\u5F00/\u6536\u8D77\u5927\u7EB2\u60C5\u8282\u9884\u89C8"><i class="fa-solid fa-map"></i></button>
+                        </div>
+                    </div>
+                    <div class="t-outline-rolling-bar"><div id="t-outline-rolling-bar-fill" class="t-outline-rolling-bar-fill"></div></div>
+                    <div id="t-outline-rolling-outline-preview" class="t-outline-rolling-outline-preview" style="display:none;"></div>
+                    <div class="t-outline-rolling-controls">
+                        <button id="t-outline-generate-next" class="t-btn t-btn-primary t-btn-xs"><i class="fa-solid fa-forward-step"></i> \u751F\u6210\u4E0B\u4E00\u6BB5</button>
+                        <label class="t-outline-rolling-cursor">\u63A8\u8FDB\u5230
+                            <select id="t-outline-rolling-cursor-select" class="t-outline-select"></select>
+                        </label>
+                        <button id="t-outline-rolling-reset" class="t-btn t-btn-xs" title="\u56DE\u5230\u5F00\u5934\u91CD\u65B0\u63A8\u8FDB"><i class="fa-solid fa-rotate-left"></i></button>
+                    </div>
+                    <div class="t-outline-rolling-hint">\u5927\u7EB2\u5F53\u8DEF\u6807\uFF0C\u7ED3\u5408\u6700\u8FD1\u6B63\u6587\u4E00\u6B65\u6B65\u5199\u5230\u7ED3\u5C40\u3002\u53D1\u9001\u573A\u666F\u4F1A\u81EA\u52A8\u63A8\u8FDB\uFF0C\u4E5F\u53EF\u624B\u52A8\u6307\u5B9A\u5F53\u524D\u8FDB\u5EA6\u3002</div>
+                </div>
                 <div class="t-scene-hub-footer">
                     <label class="t-outline-mode" style="margin-right:auto;">
                         \u5199\u5165\u65B9\u5F0F
@@ -28110,6 +28394,7 @@ function openSceneHubWindow() {
     </div>`;
   $("body").append(html);
   renderSceneHubWindow();
+  refreshRollingProgressUI();
   const $overlay = $("#t-scene-hub-overlay");
   $overlay.on("click", "#t-scene-hub-close", () => {
     $overlay.remove();
@@ -28135,6 +28420,70 @@ function openSceneHubWindow() {
     sceneHubSelectedKey = "";
     $overlay.remove();
     if (window.toastr) toastr.success("\u5DF2\u53D1\u9001\u573A\u666F\u5230\u8F93\u5165\u6846", "\u6545\u4E8B\u5927\u7EB2");
+  });
+  $overlay.on("click", "#t-outline-generate-next", async () => {
+    if (!editingPlanId) {
+      const sourceId = getSceneSourcePlanId();
+      const plan = sourceId ? getPlans().find((p) => p.id === sourceId) : null;
+      if (!plan || !loadPlanToEditor(plan)) {
+        if (window.toastr) toastr.warning("\u8BF7\u5148\u751F\u6210\u6216\u586B\u5199\u603B\u7EB2\uFF0C\u518D\u6E10\u8FDB\u7EED\u5199", "\u6E10\u8FDB\u7EED\u5199");
+        return;
+      }
+      refreshSceneHubListIfOpen();
+    }
+    await generateNextRolling();
+    refreshSceneHubListIfOpen();
+  });
+  $overlay.on("change", "#t-outline-rolling-cursor-select", function() {
+    if (!editingPlanId) return;
+    const idx = Number($(this).val());
+    if (!Number.isFinite(idx)) return;
+    const plan = getPlans().find((p) => p.id === editingPlanId);
+    const prev = getPlanProgress(plan);
+    const reachedEnding = prev.reachedEnding && idx >= outlineItems.length - 1;
+    setPlanProgress(editingPlanId, { itemIndex: idx, reachedEnding });
+    if (editingPlanId) setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
+    refreshRollingProgressUI();
+  });
+  $overlay.on("click", "#t-outline-rolling-reset", () => {
+    if (!editingPlanId) return;
+    setPlanProgress(editingPlanId, { itemIndex: 0, reachedEnding: false });
+    setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
+    refreshRollingProgressUI();
+    refreshSceneHubListIfOpen();
+    if (window.toastr) toastr.info("\u5DF2\u56DE\u5230\u5F00\u5934\uFF0C\u53EF\u91CD\u65B0\u6E10\u8FDB\u7EED\u5199", "\u6E10\u8FDB\u7EED\u5199");
+  });
+  $overlay.on("click", "#t-outline-rolling-outline-toggle", () => {
+    toggleRollingOutlinePreview();
+  });
+  $overlay.on("click", "#t-outline-rolling-outline-preview .t-rolling-outline-item", function(e) {
+    if ($(e.target).closest(".t-rolling-outline-jump").length > 0) return;
+    const idx = Number($(this).data("rolling-outline-idx"));
+    if (!Number.isFinite(idx)) return;
+    rollingPreviewExpandedIdx = rollingPreviewExpandedIdx === idx ? -1 : idx;
+    refreshRollingProgressUI();
+    if (rollingPreviewExpandedIdx === idx) {
+      const $item = $("#t-outline-rolling-outline-preview .t-rolling-outline-item").filter((_, el) => Number($(el).data("rolling-outline-idx")) === idx);
+      $item[0]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  });
+  $overlay.on("click", "#t-outline-rolling-outline-preview .t-rolling-outline-jump", function(e) {
+    e.stopPropagation();
+    const idx = Number($(this).data("rolling-outline-jump"));
+    if (!Number.isFinite(idx)) return;
+    let plan = editingPlanId ? getPlans().find((p) => p.id === editingPlanId) : null;
+    if (!plan) {
+      const sourceId = getSceneSourcePlanId();
+      plan = sourceId ? getPlans().find((p) => p.id === sourceId) : null;
+    }
+    if (!plan) return;
+    const total = Array.isArray(plan.items) ? plan.items.length : 0;
+    if (total <= 0 || idx < 0 || idx >= total) return;
+    const prev = getPlanProgress(plan);
+    const reachedEnding = prev.reachedEnding && idx >= total - 1;
+    setPlanProgress(plan.id, { itemIndex: idx, reachedEnding });
+    if (editingPlanId === plan.id) setEditingPlan(getPlans().find((p) => p.id === plan.id));
+    refreshRollingProgressUI();
   });
 }
 function openOutlineEntryDialog() {
@@ -29057,29 +29406,78 @@ function updateGenerateAllScenesButtonState() {
 function refreshRollingProgressUI() {
   const $panel = $("#t-outline-rolling");
   if ($panel.length === 0) return;
-  const hasOutline = Array.isArray(outlineItems) && outlineItems.length > 0;
-  const plan = editingPlanId ? getPlans().find((p) => p.id === editingPlanId) : null;
-  if (!hasOutline || !plan) {
+  let plan = editingPlanId ? getPlans().find((p) => p.id === editingPlanId) : null;
+  if (!plan) {
+    const sourceId = getSceneSourcePlanId();
+    plan = sourceId ? getPlans().find((p) => p.id === sourceId) : null;
+  }
+  const outlineForPanel = Array.isArray(outlineItems) && outlineItems.length > 0 && plan && plan.id === editingPlanId ? outlineItems : plan ? normalizeItems(plan.items || []) : [];
+  if (outlineForPanel.length === 0 || !plan) {
     $panel.hide();
     return;
   }
   $panel.show();
-  const total = outlineItems.length;
+  const total = outlineForPanel.length;
   const progress = getPlanProgress(plan);
   const stepNo = progress.itemIndex + 1;
   const pct = total > 0 ? Math.round(stepNo / total * 100) : 0;
   $("#t-outline-rolling-bar-fill").css("width", `${progress.reachedEnding ? 100 : pct}%`);
-  const currentTitle = outlineItems[progress.itemIndex]?.title || "\u672A\u547D\u540D";
+  const currentTitle = outlineForPanel[progress.itemIndex]?.title || "\u672A\u547D\u540D";
   $("#t-outline-rolling-status").text(
     progress.reachedEnding ? `\u5DF2\u62B5\u8FBE\u7ED3\u5C40\uFF08${total}/${total}\uFF09` : `\u7B2C ${stepNo}/${total} \u6761 \xB7 ${currentTitle}`
   );
   $("#t-outline-generate-next").prop("disabled", progress.reachedEnding);
   const $select = $("#t-outline-rolling-cursor-select");
   if ($select.length) {
-    const options = outlineItems.map(
+    const options = outlineForPanel.map(
       (it, idx) => `<option value="${idx}" ${idx === progress.itemIndex ? "selected" : ""}>${idx + 1}. ${escapeHtml4((it.title || "\u672A\u547D\u540D").slice(0, 16))}</option>`
     ).join("");
     $select.html(options).val(String(progress.itemIndex));
+  }
+  renderRollingOutlinePreview(outlineForPanel, progress.itemIndex, progress.reachedEnding);
+}
+function renderRollingOutlinePreview(outlineForPanel, currentItemIndex, reachedEnding) {
+  const $preview = $("#t-outline-rolling-outline-preview");
+  if ($preview.length === 0) return;
+  if ($preview.css("display") === "none") return;
+  if (rollingPreviewExpandedIdx >= outlineForPanel.length) rollingPreviewExpandedIdx = -1;
+  const rows = outlineForPanel.map((item, idx) => {
+    const state = idx < currentItemIndex ? "done" : idx === currentItemIndex ? reachedEnding ? "done" : "current" : "todo";
+    const marker = state === "done" ? '<i class="fa-solid fa-check"></i>' : state === "current" ? '<i class="fa-solid fa-location-dot"></i>' : '<i class="fa-regular fa-circle"></i>';
+    const expanded = rollingPreviewExpandedIdx === idx;
+    const plotHtml = expanded ? `<div class="t-rolling-outline-plot t-rolling-outline-plot--full">${escapeHtml4(item.plot || "(\u7A7A)")}</div>` : `<div class="t-rolling-outline-plot">${escapeHtml4(getBriefText(item.plot, 60))}</div>`;
+    const foreshadowing = String(item.foreshadowing || "").trim();
+    const foreshadowHtml = expanded && foreshadowing ? `<div class="t-rolling-outline-foreshadow"><i class="fa-solid fa-seedling"></i> \u4F0F\u7B14\uFF1A${escapeHtml4(foreshadowing)}</div>` : "";
+    return `
+            <div class="t-rolling-outline-item ${state} ${expanded ? "expanded" : ""}" data-rolling-outline-idx="${idx}" title="${escapeHtml4(item.plot || "(\u7A7A)")}">
+                <span class="t-rolling-outline-marker">${marker}</span>
+                <div class="t-rolling-outline-main">
+                    <div class="t-rolling-outline-title">${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml4(item.title || "\u672A\u547D\u540D")}</div>
+                    ${plotHtml}
+                    ${foreshadowHtml}
+                </div>
+                <button class="t-rolling-outline-jump" data-rolling-outline-jump="${idx}" title="\u63A8\u8FDB\u5230\u7B2C ${idx + 1} \u6761"><i class="fa-solid fa-forward-step"></i></button>
+            </div>`;
+  }).join("");
+  $preview.html(rows);
+}
+function toggleRollingOutlinePreview(forceOpen) {
+  const $preview = $("#t-outline-rolling-outline-preview");
+  const $toggle = $("#t-outline-rolling-outline-toggle");
+  if ($preview.length === 0) return;
+  const willOpen = forceOpen === true ? true : $preview.css("display") === "none";
+  $preview.toggle(willOpen);
+  $toggle.toggleClass("active", willOpen);
+  if (willOpen) {
+    refreshRollingProgressUI();
+  } else {
+    rollingPreviewExpandedIdx = -1;
+  }
+}
+function refreshSceneHubListIfOpen() {
+  if ($("#t-scene-hub-overlay").length > 0) {
+    renderSceneHubWindow();
+    refreshRollingProgressUI();
   }
 }
 function getMobileDrawerIndex() {
@@ -29220,7 +29618,8 @@ async function generateNextRolling() {
   const progressHint = `\u5F53\u524D\u63A8\u8FDB\u5230\u7B2C ${progress.itemIndex + 1}/${total} \u6761\u5927\u7EB2\uFF08${currentItem?.title || "\u672A\u547D\u540D"}\uFF09\u3002\u8DDD\u7ED3\u5C40\u8FD8\u6709 ${total - 1 - progress.itemIndex} \u6761\u3002\u8BF7\u53EA\u63A8\u8FDB\u4E00\u5C0F\u6B65\u3002`;
   let outcome = { appended: 0, reachedEnding: false, note: "" };
   try {
-    const storyInput = ($("#t-outline-story-input").val() || "").trim();
+    const $storyInput = $("#t-outline-story-input");
+    const storyInput = ($storyInput.length > 0 ? $storyInput.val() || "" : getPlanInstruction(getPlans().find((p) => p.id === editingPlanId))).trim();
     const params = getOutlineGenParams().scenes;
     await runGenerationFlow({
       label: "\u6E10\u8FDB\u7EED\u5199",
@@ -29247,6 +29646,7 @@ async function generateNextRolling() {
         if (editingPlanId) setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
         outcome = { appended: res.appended, reachedEnding, note: parsed?.progress?.note || "" };
         refreshRollingProgressUI();
+        refreshSceneHubListIfOpen();
       },
       reparseLabel: "\u91CD\u65B0\u89E3\u6790\u5E76\u8FFD\u52A0",
       successMessage: () => {
@@ -29261,6 +29661,7 @@ async function generateNextRolling() {
     stopResponseTimer();
     $btn.prop("disabled", false).html(originHtml || '<i class="fa-solid fa-forward-step"></i> \u751F\u6210\u4E0B\u4E00\u6BB5');
     refreshRollingProgressUI();
+    refreshSceneHubListIfOpen();
   }
 }
 async function generateOutline() {
@@ -29467,27 +29868,6 @@ function bindEvents() {
   });
   $overlay.on("click", "#t-outline-generate-all-scenes", async () => {
     await generateAllScenes();
-  });
-  $overlay.on("click", "#t-outline-generate-next", async () => {
-    await generateNextRolling();
-  });
-  $overlay.on("change", "#t-outline-rolling-cursor-select", function() {
-    if (!editingPlanId) return;
-    const idx = Number($(this).val());
-    if (!Number.isFinite(idx)) return;
-    const plan = getPlans().find((p) => p.id === editingPlanId);
-    const prev = getPlanProgress(plan);
-    const reachedEnding = prev.reachedEnding && idx >= outlineItems.length - 1;
-    setPlanProgress(editingPlanId, { itemIndex: idx, reachedEnding });
-    if (editingPlanId) setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
-    refreshRollingProgressUI();
-  });
-  $overlay.on("click", "#t-outline-rolling-reset", () => {
-    if (!editingPlanId) return;
-    setPlanProgress(editingPlanId, { itemIndex: 0, reachedEnding: false });
-    setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
-    refreshRollingProgressUI();
-    if (window.toastr) toastr.info("\u5DF2\u56DE\u5230\u5F00\u5934\uFF0C\u53EF\u91CD\u65B0\u6E10\u8FDB\u7EED\u5199", "\u6E10\u8FDB\u7EED\u5199");
   });
   $overlay.on("click", "#t-outline-add-fab", () => {
     const isOpen = $("#t-outline-add-sheet").hasClass("show");
@@ -29714,21 +30094,6 @@ function openStoryOutlineWindow() {
                             </button>
                         </div>
                     </div>
-                    <div id="t-outline-rolling" class="t-outline-rolling" style="display:none;">
-                        <div class="t-outline-rolling-head">
-                            <span class="t-outline-rolling-title"><i class="fa-solid fa-forward-step"></i> \u6E10\u8FDB\u7EED\u5199</span>
-                            <span id="t-outline-rolling-status" class="t-outline-rolling-status"></span>
-                        </div>
-                        <div class="t-outline-rolling-bar"><div id="t-outline-rolling-bar-fill" class="t-outline-rolling-bar-fill"></div></div>
-                        <div class="t-outline-rolling-controls">
-                            <button id="t-outline-generate-next" class="t-btn t-btn-primary t-btn-xs"><i class="fa-solid fa-forward-step"></i> \u751F\u6210\u4E0B\u4E00\u6BB5</button>
-                            <label class="t-outline-rolling-cursor">\u63A8\u8FDB\u5230
-                                <select id="t-outline-rolling-cursor-select" class="t-outline-select"></select>
-                            </label>
-                            <button id="t-outline-rolling-reset" class="t-btn t-btn-xs" title="\u56DE\u5230\u5F00\u5934\u91CD\u65B0\u63A8\u8FDB"><i class="fa-solid fa-rotate-left"></i></button>
-                        </div>
-                        <div class="t-outline-rolling-hint">\u5927\u7EB2\u5F53\u8DEF\u6807\uFF0C\u7ED3\u5408\u6700\u8FD1\u6B63\u6587\u4E00\u6B65\u6B65\u5199\u5230\u7ED3\u5C40\u3002\u53D1\u9001\u573A\u666F\u4F1A\u81EA\u52A8\u63A8\u8FDB\uFF0C\u4E5F\u53EF\u624B\u52A8\u6307\u5B9A\u5F53\u524D\u8FDB\u5EA6\u3002</div>
-                    </div>
                     <select id="t-outline-insert-mode" class="t-outline-select" style="display:none;">
                         <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
                         <option value="append" ${draft.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
@@ -29850,7 +30215,7 @@ function openStoryOutlineWindow() {
   syncAddFabVisibility();
   refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID;
+var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, rollingPreviewExpandedIdx;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -29900,6 +30265,7 @@ var init_storyOutlineWindow = __esm({
     planRenameSnapshot = "";
     MAX_RAW_HISTORY = 24;
     OUTLINE_ST_FOLLOW_ID = "st_sync";
+    rollingPreviewExpandedIdx = -1;
   }
 });
 
@@ -29917,13 +30283,6 @@ function isEnabled() {
 }
 function escapeHtml5(text) {
   return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
-}
-function normalizeChatEndpoint(inputUrl) {
-  const base = normalizeApiBaseUrl(inputUrl);
-  if (!base) return "";
-  if (base.endsWith("/chat/completions")) return base;
-  if (base.endsWith("/v1")) return `${base}/chat/completions`;
-  return `${base}/v1/chat/completions`;
 }
 function normalizeToken(s) {
   return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -30893,104 +31252,30 @@ function shouldFallbackWithoutSchema(status, bodyText) {
   return msg.includes("response_format") || msg.includes("json_schema") || msg.includes("unsupported") || msg.includes("invalid_request_error");
 }
 async function requestRewriteWithOptions(apiUrl, apiKey, model, messages, maxTokens, options = {}) {
-  const endpoint = normalizeChatEndpoint(apiUrl);
-  if (!endpoint) throw new Error("API \u5730\u5740\u65E0\u6548");
-  const headers = { "Content-Type": "application/json" };
-  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
   const temperature = Number.isFinite(options.temperature) ? options.temperature : REWRITE_TEMPERATURE;
   const stream = options.stream === true;
   const signal = options.signal;
   const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
-  const body = {
+  const baseCall = (responseFormat) => sendChatCompletion({
+    url: apiUrl,
+    key: apiKey,
     model,
     messages,
     stream,
+    maxTokens,
     temperature,
-    max_tokens: maxTokens,
-    response_format: buildRewriteJsonSchema()
-  };
-  let res = await fetch(endpoint, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-    signal
+    signal,
+    responseFormat,
+    onProgress: stream ? (all) => onProgress && onProgress(all, all) : null
   });
-  if (!res.ok) {
-    const firstErrText = await res.text().catch(() => "");
-    if (shouldFallbackWithoutSchema(res.status, firstErrText)) {
-      const fallbackBody = {
-        model,
-        messages,
-        stream,
-        temperature,
-        max_tokens: maxTokens
-      };
-      res = await fetch(endpoint, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(fallbackBody),
-        signal
-      });
-      if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status}: ${errText.slice(0, 200)}`);
-      }
-      if (stream) {
-        return await consumeStreamResponse(res, onProgress);
-      }
-      const json2 = await res.json();
-      const content2 = json2?.choices?.[0]?.message?.content || "";
-      return String(content2 || "");
+  try {
+    return await baseCall(buildRewriteJsonSchema());
+  } catch (err) {
+    if (shouldFallbackWithoutSchema(Number(err?.status), String(err?.body || err?.message || ""))) {
+      return await baseCall(null);
     }
-    throw new Error(`HTTP ${res.status}: ${firstErrText.slice(0, 200)}`);
+    throw err;
   }
-  if (stream) {
-    return await consumeStreamResponse(res, onProgress);
-  }
-  const json = await res.json();
-  const content = json?.choices?.[0]?.message?.content || "";
-  return String(content || "");
-}
-async function consumeStreamResponse(res, onProgress) {
-  if (!res.body) throw new Error("Stream Empty Body: \u54CD\u5E94\u4F53\u4E3A\u7A7A");
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let aggregated = "";
-  const processSseLine = (rawLine) => {
-    const line = String(rawLine || "").trim();
-    if (!line || !line.startsWith("data:")) return;
-    const data = line.slice(5).trim();
-    if (!data || data === "[DONE]") return;
-    try {
-      const json = JSON.parse(data);
-      const chunk = json?.choices?.[0]?.delta?.content || json?.choices?.[0]?.message?.content || "";
-      if (!chunk) return;
-      aggregated += chunk;
-      if (onProgress) onProgress(chunk, aggregated);
-    } catch {
-    }
-  };
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    while (true) {
-      const idx = buffer.indexOf("\n");
-      if (idx < 0) break;
-      const line = buffer.slice(0, idx);
-      buffer = buffer.slice(idx + 1);
-      processSseLine(line);
-    }
-  }
-  if (buffer) {
-    const tailLines = buffer.split(/\r?\n/);
-    tailLines.forEach((line) => processSseLine(line));
-  }
-  if (!aggregated.trim()) {
-    throw new Error("\u6D41\u5F0F\u8FD4\u56DE\u4E3A\u7A7A");
-  }
-  return aggregated;
 }
 function normalizeRewriteResponseShape(parsed, payload) {
   const input = parsed && typeof parsed === "object" ? parsed : {};
@@ -31068,7 +31353,7 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
       temperature: REWRITE_TEMPERATURE,
       stream: streamLive,
       signal: abortController.signal,
-      onProgress: (_chunk, all) => {
+      onProgress: (all) => {
         if (streamLive) {
           setRawResponse(all);
         }
@@ -32116,6 +32401,7 @@ var init_rewriteEntryButton = __esm({
     init_storage();
     init_chatTagWhitelist();
     init_apiProfileRegistry();
+    init_relayClient();
     init_apiConnectionEditor();
     BTN_ID = "titania-rewrite-entry-btn";
     OVERLAY_ID = "t-rewrite-overlay";
@@ -32366,31 +32652,15 @@ async function sendFeatureRequest(messages, options = {}) {
     if (!conn.key) {
       throw new Error("API Key \u672A\u8BBE\u7F6E");
     }
-    let endpoint = conn.url.trim().replace(/\/+$/, "");
-    if (!endpoint.endsWith("/chat/completions")) {
-      if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
-      else endpoint += "/v1/chat/completions";
-    }
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${conn.key}`
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: false,
-        max_tokens: maxTokens,
-        temperature
-      })
+    return sendChatCompletion({
+      url: conn.url,
+      key: conn.key,
+      model,
+      messages,
+      stream: false,
+      maxTokens,
+      temperature
     });
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
-    }
-    const json = await res.json();
-    return json.choices?.[0]?.message?.content || "";
   }
 }
 function buildExtractPrompt(ctx, history, existingLoreSummary) {
@@ -32590,6 +32860,7 @@ var init_loreExtractor = __esm({
     init_logger();
     init_connection();
     init_storage();
+    init_relayClient();
     FEATURE_KEY = "lore_extractor";
     _cachedWorldInfoEntries = null;
     _cacheTimestamp = 0;
@@ -33574,31 +33845,15 @@ async function sendSummaryRequest(messages, options = {}) {
     if (!conn.key) {
       throw new Error("API Key \u672A\u8BBE\u7F6E");
     }
-    let endpoint = conn.url.trim().replace(/\/+$/, "");
-    if (!endpoint.endsWith("/chat/completions")) {
-      if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
-      else endpoint += "/v1/chat/completions";
-    }
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${conn.key}`
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: false,
-        max_tokens: maxTokens,
-        temperature
-      })
+    return sendChatCompletion({
+      url: conn.url,
+      key: conn.key,
+      model,
+      messages,
+      stream: false,
+      maxTokens,
+      temperature
     });
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`HTTP Error ${res.status}: ${res.statusText} - ${errText.substring(0, 100)}`);
-    }
-    const json = await res.json();
-    return json.choices?.[0]?.message?.content || "";
   }
 }
 function buildStructuredPrompt(context, history, relevantHistory = "") {
@@ -34101,6 +34356,7 @@ var init_summarizer = __esm({
     init_logger();
     init_connection();
     init_storage();
+    init_relayClient();
     init_semanticSearch();
     init_vectorStore();
     init_embeddings();
@@ -44826,8 +45082,7 @@ __export(api_exports, {
   syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
 });
 import { ChatCompletionService as ChatCompletionService4 } from "../../../custom-request.js";
-import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel2, tryParseStreamingError as tryParseStreamingError2 } from "../../../openai.js";
-import EventSourceStream2 from "../../../sse-stream.js";
+import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
 import { evaluateMacros } from "../../../macros.js";
 function clampContinuationInjectRounds(value) {
   if (String(value ?? "").trim() === "") return 3;
@@ -46052,6 +46307,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
     profile: "",
     model: "",
     endpoint: "",
+    transport: "st_proxy",
     input_stats: { sys_len: 0, user_len: 0 },
     network: { status: 0, statusText: "", contentType: "", latency: 0 },
     stream_stats: { chunks: 0, ttft: 0 },
@@ -46469,126 +46725,29 @@ ${processedPrompt}`;
       diagnostics.network.latency = Date.now() - startTime;
       diagnostics.network.status = 200;
     } else {
-      let endpoint = finalUrl.trim().replace(/\/+$/, "");
-      if (!endpoint) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
-      if (!endpoint.endsWith("/chat/completions")) {
-        if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
-        else endpoint += "/v1/chat/completions";
-      }
-      diagnostics.endpoint = endpoint;
-      const requestBody = {
+      if (!finalUrl || !finalUrl.trim()) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
+      rawContent = await sendChatCompletion({
+        url: finalUrl,
+        key: finalKey,
         model: finalModel,
         messages,
         stream: useStream,
-        max_tokens: cfg.max_tokens || 4096
-      };
-      if (useStream) {
-        const attemptStartTime = Date.now();
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-          body: JSON.stringify(requestBody),
-          signal
-        });
-        diagnostics.network.status = res.status;
-        diagnostics.network.latency = Date.now() - startTime;
-        if (!res.ok) {
-          const errText = await res.text().catch(() => "");
-          diagnostics.raw_response_snippet = errText.substring(0, 500);
-          try {
-            tryParseStreamingError2(res, errText, { quiet: true });
-          } catch (parsedErr) {
-            throw parsedErr;
+        maxTokens: cfg.max_tokens || 4096,
+        // 保持原有请求形状：自定义分支此前不发送 temperature
+        signal,
+        diagnostics,
+        onProgress: useStream ? (accumulated) => {
+          rawContent = accumulated;
+          if ($("#t-output-content").length > 0 || $("#t-main-view").length > 0) {
+            const streamCleanContent = sanitizeAIOutputLite(rawContent);
+            scheduleStreamRender(streamCleanContent, script.name);
           }
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        diagnostics.phase = "streaming";
-        const eventStream = new EventSourceStream2();
-        res.body.pipeThrough(eventStream);
-        const reader = eventStream.readable.getReader();
-        let chunkCount = 0;
-        let parseFailCount = 0;
-        while (true) {
-          if (signal.aborted) {
-            await reader.cancel();
-            throw new DOMException("Generation aborted", "AbortError");
-          }
-          const { done, value } = await reader.read();
-          if (done) break;
-          const data2 = value.data;
-          if (data2 === "[DONE]") break;
-          try {
-            tryParseStreamingError2(res, data2, { quiet: true });
-          } catch (streamParseErr) {
-            throw streamParseErr;
-          }
-          if (chunkCount === 0) {
-            diagnostics.stream_stats.ttft = Date.now() - attemptStartTime;
-            TitaniaLogger.info(`\u6D41\u5F0F\u54CD\u5E94\u5F00\u59CB (TTFT: ${diagnostics.stream_stats.ttft}ms)`);
-          }
-          chunkCount++;
-          diagnostics.stream_stats.chunks = chunkCount;
-          try {
-            const json = JSON.parse(data2);
-            const chunk = json.choices?.[0]?.delta?.content || "";
-            if (chunk) {
-              rawContent += chunk;
-              if ($("#t-output-content").length > 0 || $("#t-main-view").length > 0) {
-                const streamCleanContent = sanitizeAIOutputLite(rawContent);
-                scheduleStreamRender(streamCleanContent, script.name);
-              }
-            }
-          } catch (parseErr) {
-            parseFailCount++;
-            if (parseFailCount <= 3) {
-              TitaniaLogger.warn(`\u6D41\u5F0F chunk \u89E3\u6790\u5931\u8D25 (#${parseFailCount})`, {
-                data: data2.substring(0, 100),
-                error: parseErr.message
-              });
-            }
-          }
-        }
-        if (chunkCount === 0) {
-          throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
-        }
-        if (parseFailCount > 0 && rawContent.length === 0) {
-          throw new Error(`ERR_STREAM_PARSE_FAILED: \u63A5\u6536\u5230 ${chunkCount} \u4E2A\u6570\u636E\u5757\uFF0C\u4F46\u5168\u90E8\u89E3\u6790\u5931\u8D25`);
-        }
-        TitaniaLogger.info(`\u6D41\u5F0F\u4F20\u8F93\u5B8C\u6210`, {
-          chunks: chunkCount,
-          contentLength: rawContent.length,
-          parseFailures: parseFailCount
-        });
-      } else {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-          body: JSON.stringify(requestBody),
-          signal
-        });
-        diagnostics.network.status = res.status;
-        diagnostics.network.latency = Date.now() - startTime;
-        diagnostics.phase = "parsing_json";
-        if (!res.ok) {
-          const errText = await res.text().catch(() => "");
-          diagnostics.raw_response_snippet = errText.substring(0, 500);
-          throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
-        }
-        const jsonText = await res.text();
-        try {
-          const json = JSON.parse(jsonText);
-          if (json?.error) {
-            throw new Error(json.error?.message || json.error || "ERR_API_RESPONSE");
-          }
-          if (!Array.isArray(json?.choices)) {
-            throw new Error("ERR_INVALID_API_RESPONSE");
-          }
-          rawContent = json.choices?.[0]?.message?.content || "";
-        } catch (jsonErr) {
-          if (["ERR_API_RESPONSE", "ERR_INVALID_API_RESPONSE"].some((code) => String(jsonErr?.message || "").includes(code))) throw jsonErr;
-          throw new Error("Invalid JSON");
-        }
-      }
+        } : null
+      });
+      TitaniaLogger.info(`\u6D41\u5F0F\u4F20\u8F93\u5B8C\u6210`, {
+        chunks: diagnostics.stream_stats?.chunks || 0,
+        contentLength: rawContent.length
+      });
     }
     diagnostics.phase = "validation";
     if (!rawContent) {
@@ -47108,19 +47267,17 @@ Generate ONLY the continuation (no repetition):`;
         rawContent = result?.content || "";
       }
     } else {
-      let endpoint = finalUrl.trim().replace(/\/+$/, "");
-      if (!endpoint.endsWith("/chat/completions")) {
-        if (endpoint.endsWith("/v1")) endpoint += "/chat/completions";
-        else endpoint += "/v1/chat/completions";
-      }
-      const requestBody = {
-        model: finalModel,
-        messages: [
-          { role: "system", content: continuationSys },
-          { role: "user", content: continuationUser }
-        ],
-        stream: useStream,
-        max_tokens: cfg.max_tokens || 4096
+      const continuationMessages = [
+        { role: "system", content: continuationSys },
+        { role: "user", content: continuationUser }
+      ];
+      const continuationMaxTokens = cfg.max_tokens || 4096;
+      const wrapContinuationError = (err) => {
+        if (err?.name === "AbortError") return err;
+        const wrapped = new Error(`Continuation ${err?.message || err}`);
+        if (err?.status !== void 0) wrapped.status = err.status;
+        if (err?.body !== void 0) wrapped.body = err.body;
+        return wrapped;
       };
       if (useStream) {
         const maxRetries2 = 2;
@@ -47136,51 +47293,15 @@ Generate ONLY the continuation (no repetition):`;
                 toastr.info(`\u{1F504} \u7EED\u5199\u91CD\u8BD5\u4E2D (${attempt}/${maxRetries2})...`, "Titania");
               }
             }
-            const res = await fetch(endpoint, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-              body: JSON.stringify(requestBody),
+            rawContent = await sendChatCompletion({
+              url: finalUrl,
+              key: finalKey,
+              model: finalModel,
+              messages: continuationMessages,
+              stream: true,
+              maxTokens: continuationMaxTokens,
               signal
             });
-            if (!res.ok) {
-              let errorDetail = "";
-              try {
-                const errorText = (await res.text() || "").trim();
-                if (errorText) {
-                  errorDetail = ` | ${errorText.slice(0, 180)}`;
-                }
-              } catch (e) {
-              }
-              if (res.status >= 500) {
-                shouldFallbackToNonStream = true;
-              }
-              const statusPart = res.statusText ? `${res.status}: ${res.statusText}` : `${res.status}`;
-              throw new Error(`Continuation HTTP Error ${statusPart}${errorDetail}`);
-            }
-            const eventStream = new EventSourceStream2();
-            res.body.pipeThrough(eventStream);
-            const reader = eventStream.readable.getReader();
-            let chunkCount = 0;
-            while (true) {
-              if (signal?.aborted) {
-                await reader.cancel();
-                throw new DOMException("Continuation aborted", "AbortError");
-              }
-              const { done, value } = await reader.read();
-              if (done) break;
-              const data = value.data;
-              if (data === "[DONE]") break;
-              chunkCount++;
-              try {
-                const json = JSON.parse(data);
-                const chunk = json.choices?.[0]?.delta?.content || "";
-                if (chunk) rawContent += chunk;
-              } catch (e) {
-              }
-            }
-            if (chunkCount === 0) {
-              throw new Error("Continuation Stream Empty");
-            }
             streamSuccess = true;
           } catch (streamErr) {
             lastError = streamErr;
@@ -47191,6 +47312,9 @@ Generate ONLY the continuation (no repetition):`;
               error: streamErr.message,
               attempt: attempt + 1
             });
+            if (Number(streamErr?.status) >= 500) {
+              shouldFallbackToNonStream = true;
+            }
             if (attempt < maxRetries2) {
               rawContent = "";
               const retryDelay = retryDelayBase * (attempt + 1);
@@ -47205,53 +47329,37 @@ Generate ONLY the continuation (no repetition):`;
           if (!silent && window.toastr) {
             toastr.info("\u{1F501} \u7EED\u5199\u670D\u52A1\u7E41\u5FD9\uFF0C\u5C1D\u8BD5\u975E\u6D41\u5F0F\u6A21\u5F0F...", "Titania Echo");
           }
-          const fallbackBody = { ...requestBody, stream: false };
-          const fallbackRes = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-            body: JSON.stringify(fallbackBody),
-            signal
-          });
-          if (!fallbackRes.ok) {
-            let fallbackDetail = "";
-            try {
-              const fallbackText = (await fallbackRes.text() || "").trim();
-              if (fallbackText) {
-                fallbackDetail = ` | ${fallbackText.slice(0, 180)}`;
-              }
-            } catch (e) {
-            }
-            const fallbackStatus = fallbackRes.statusText ? `${fallbackRes.status}: ${fallbackRes.statusText}` : `${fallbackRes.status}`;
-            throw new Error(`Continuation Fallback HTTP Error ${fallbackStatus}${fallbackDetail}`);
-          }
-          const fallbackJsonText = await fallbackRes.text();
           try {
-            const fallbackJson = JSON.parse(fallbackJsonText);
-            rawContent = fallbackJson.choices?.[0]?.message?.content || "";
+            rawContent = await sendChatCompletion({
+              url: finalUrl,
+              key: finalKey,
+              model: finalModel,
+              messages: continuationMessages,
+              stream: false,
+              maxTokens: continuationMaxTokens,
+              signal
+            });
             streamSuccess = rawContent.trim().length > 0;
-          } catch (jsonErr) {
-            throw new Error("Continuation Fallback Invalid JSON");
+          } catch (fallbackErr) {
+            throw wrapContinuationError(fallbackErr);
           }
         }
         if (!streamSuccess) {
           throw new Error(`Continuation Stream Interrupted (\u5DF2\u91CD\u8BD5 ${maxRetries2} \u6B21): ${lastError?.message || "\u672A\u77E5\u9519\u8BEF"}`);
         }
       } else {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalKey}` },
-          body: JSON.stringify(requestBody),
-          signal
-        });
-        if (!res.ok) {
-          throw new Error(`Continuation HTTP Error ${res.status}: ${res.statusText}`);
-        }
-        const jsonText = await res.text();
         try {
-          const json = JSON.parse(jsonText);
-          rawContent = json.choices?.[0]?.message?.content || "";
-        } catch (jsonErr) {
-          throw new Error("Continuation Invalid JSON");
+          rawContent = await sendChatCompletion({
+            url: finalUrl,
+            key: finalKey,
+            model: finalModel,
+            messages: continuationMessages,
+            stream: false,
+            maxTokens: continuationMaxTokens,
+            signal
+          });
+        } catch (e) {
+          throw wrapContinuationError(e);
         }
       }
     }
@@ -47575,6 +47683,7 @@ var init_api = __esm({
     init_mainWindow();
     init_viewState();
     init_connection();
+    init_relayClient();
     init_scriptData();
     init_promptManager();
     init_continuationStore();
@@ -47610,7 +47719,7 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSo
 
 // src/core/extensionUpdate.js
 init_defaults();
-import { getRequestHeaders as getRequestHeaders2 } from "../../../../script.js";
+import { getRequestHeaders as getRequestHeaders3 } from "../../../../script.js";
 import { extensionTypes } from "../../../extensions.js";
 var EXTENSION_ID = "third-party/titania-theater";
 var EXTENSION_NAME = "titania-theater";
@@ -47669,7 +47778,7 @@ function getExtensionType() {
 async function updateExtension() {
   const response = await fetch("/api/extensions/update", {
     method: "POST",
-    headers: getRequestHeaders2(),
+    headers: getRequestHeaders3(),
     body: JSON.stringify({
       extensionName: EXTENSION_NAME,
       global: getExtensionType() === "global"
