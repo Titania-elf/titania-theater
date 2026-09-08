@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.2.7";
+    CURRENT_VERSION = "5.3.0";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -3004,8 +3004,6 @@ function loadCssFiles() {
     /* #121a22 2 \u5904 \u2014\u2014 \u5927\u7EB2\u6761\u76EE\u5BFC\u822A\u94AE\u7684 base(.2) \u4E0E disabled(.45)\u3002 */
     --t-glass-pre-rgb: 26 26 46;
     /* #1a1a2e 2 \u5904 \u2014\u2014 \u8BBE\u5B9A\u5BA1\u9605\u7A97\u7684 <pre> \u4EE3\u7801\u5757\uFF08\u5E26\u7D2B\u8C03\uFF0C\u523B\u610F\u7684\uFF09\u3002 */
-    --t-glass-scene-used-rgb: 58 62 68;
-    /* #3a3e44 1 \u5904 \u2014\u2014 \u5DF2\u4F7F\u7528\u7684\u573A\u666F\u6761\u76EE\u3002 */
     --t-glass-insert-rgb: 85 105 122;
     /* #55697a 2 \u5904 \u2014\u2014 \u63D0\u793A\u8BCD\u63D2\u5165\u69FD\u7684\u5206\u9694\u7EBF\uFF08\u5E95\uFF09\u4E0E\u6807\u7B7E\u63CF\u8FB9\uFF0C\u540C\u503C\u540C\u65CF\u3002 */
     --t-glass-miss-rgb: 182 193 205;
@@ -3530,7 +3528,6 @@ function loadCssFiles() {
     /* ---- \u89C4\u5219 R-A ---- */
     --t-glass-nav-rgb: 221 231 242;   /* \u6DF1\u8272: 18 26 34 */
     --t-glass-pre-rgb: 226 223 251;   /* \u6DF1\u8272: 26 26 46 */
-    --t-glass-scene-used-rgb: 178 182 189;   /* \u6DF1\u8272: 58 62 68 */
     --t-glass-insert-rgb: 118 138 156;   /* \u6DF1\u8272: 85 105 122 */
     --t-glass-miss-rgb: 45 55 64;   /* \u6DF1\u8272: 182 193 205 */
     --t-glass-border-blue-rgb: 25 60 75;   /* \u6DF1\u8272: 160 194 213 */
@@ -17766,58 +17763,6 @@ textarea.t-input {
     justify-content: flex-start;
 }
 
-.t-outline-scene-editor-page {
-    border: 1px solid var(--t-color-border-cool);
-    border-radius: 10px;
-    background: var(--t-glass-panel);
-    padding: 10px;
-    max-height: min(68vh, 700px);
-    overflow: auto;
-}
-
-.t-scene-page-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-}
-
-.t-scene-page-main {
-    color: var(--t-glass-text-bright);
-    font-weight: 700;
-}
-
-.t-scene-page-nav,
-.t-scene-page-actions {
-    display: flex;
-    gap: 6px;
-}
-
-.t-scene-page-actions {
-    margin-bottom: 8px;
-}
-
-.t-scene-page-list {
-    display: grid;
-    gap: 8px;
-}
-
-.t-scene-page-card {
-    border: 1px solid var(--t-color-teal-soft-strong);
-    border-radius: 8px;
-    background: var(--t-glass-card);
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.t-scene-page-title {
-    color: var(--t-glass-text-bright);
-    font-weight: 700;
-}
-
 .t-outline-plan-list {
     border: 1px solid var(--t-color-border-cool);
     border-radius: 10px;
@@ -18061,6 +18006,8 @@ textarea.t-input {
     margin-top: 6px;
     color: var(--t-glass-text-secondary);
     line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .t-scene-hub-footer {
@@ -18070,29 +18017,6 @@ textarea.t-input {
     gap: 8px;
     flex-wrap: wrap;
     margin-top: 8px;
-}
-
-.t-scene-hub-footer #t-scene-hub-send {
-    min-height: 36px;
-    padding: 0 12px;
-    border-radius: 10px;
-    border: 1px solid rgb(var(--t-accent-outline-btn-border-rgb) / .75);
-    background: linear-gradient(135deg, rgb(var(--t-accent-outline-btn-rgb) / .96), rgb(var(--t-accent-outline-btn-pale-rgb) / .96));
-    color: var(--t-color-text-strong);
-    box-shadow: 0 8px 18px rgb(var(--t-accent-outline-btn-glow-rgb) / .32);
-    font-weight: 700;
-    transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
-}
-
-.t-scene-hub-footer #t-scene-hub-send:hover:not(:disabled) {
-    transform: translateY(-1px);
-    filter: brightness(1.04);
-}
-
-.t-scene-hub-footer #t-scene-hub-send:disabled {
-    opacity: 0.58;
-    box-shadow: none;
-    cursor: not-allowed;
 }
 
 .t-opening-picker-list {
@@ -18202,39 +18126,12 @@ textarea.t-input {
 
 .t-plan-item-text,
 .t-plan-item-foreshadow,
-.t-plan-scene-text,
-.t-plan-scene-head,
-.t-plan-scene-empty,
 .t-plan-empty {
     color: var(--t-glass-text-secondary);
     margin-top: 6px;
 }
 
-.t-plan-scenes-wrap {
-    margin-top: 10px;
-    display: grid;
-    gap: 8px;
-}
-
-.t-plan-scene {
-    border: 1px dashed var(--t-color-teal-border-subtle);
-    border-radius: 8px;
-    padding: 8px;
-    background: var(--t-glass-row-head);
-}
-
-.t-plan-scene.used {
-    border-color: var(--t-color-border-glass);
-    border-style: solid;
-    background: rgb(var(--t-glass-scene-used-rgb) / .35);
-    opacity: 0.72;
-}
-
-.t-plan-scene-head.used,
-.t-plan-scene-text.used {
-    color: var(--t-glass-text-faint);
-}
-
+/* \u5DF2\u5199\u5165/\u5DF2\u4F7F\u7528\u5C0F\u6807\u7B7E\uFF1A\u5019\u9009\u5361\u7247\u7B49\u5904\u590D\u7528\u3002 */
 .t-plan-used-tag {
     margin-left: 8px;
     padding: 1px 6px;
@@ -18278,8 +18175,7 @@ textarea.t-input {
 }
 
 .t-outline-primary-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(140px, 176px));
+    display: flex;
     gap: 8px;
     align-items: center;
     justify-content: start;
@@ -18294,22 +18190,12 @@ textarea.t-input {
     font-weight: 700;
 }
 
-.t-outline-primary-actions #t-outline-generate-all-scenes {
-    min-height: 40px;
-    border-radius: 12px;
-    border: 1px solid rgb(var(--t-glass-border-blue-rgb) / .42);
-    background: linear-gradient(180deg, rgb(var(--t-accent-outline-btn-alt-rgb) / .92), var(--t-glass-nav));
-    color: var(--t-glass-text-bright);
-}
-
-.t-outline-primary-actions #t-outline-generate:hover:not(:disabled),
-.t-outline-primary-actions #t-outline-generate-all-scenes:hover:not(:disabled) {
+.t-outline-primary-actions #t-outline-generate:hover:not(:disabled) {
     transform: translateY(-1px);
     filter: brightness(1.04);
 }
 
-.t-outline-primary-actions #t-outline-generate:disabled,
-.t-outline-primary-actions #t-outline-generate-all-scenes:disabled {
+.t-outline-primary-actions #t-outline-generate:disabled {
     opacity: 0.58;
     box-shadow: none;
 }
@@ -18719,60 +18605,6 @@ textarea.t-input {
     resize: vertical;
 }
 
-.t-outline-scene-row {
-    display: none;
-}
-
-.t-outline-scene-row.show {
-    display: table-row;
-}
-
-.t-outline-scene-wrap {
-    border: 1px dashed var(--t-color-teal-border-subtle);
-    border-radius: 8px;
-    padding: 10px;
-    background: var(--t-glass-panel);
-}
-
-.t-outline-scene-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    color: rgb(var(--t-sky-text-2-rgb));
-}
-
-.t-outline-scene-table-wrap {
-    overflow: auto;
-}
-
-.t-outline-scene-table {
-    width: 100%;
-    min-width: 1040px;
-    border-collapse: collapse;
-}
-
-.t-outline-scene-table th,
-.t-outline-scene-table td {
-    border-bottom: 1px solid var(--t-color-border-faint);
-    padding: 6px;
-    vertical-align: top;
-}
-
-.t-outline-scene-table th {
-    text-align: left;
-    font-weight: 600;
-    color: var(--t-glass-text-bright);
-    background: var(--t-glass-row-head);
-}
-
-.t-scene-col-index {
-    width: 56px;
-    text-align: center;
-    color: rgb(var(--t-sky-text-3-rgb));
-    font-weight: 700;
-}
-
 .t-outline-empty {
     text-align: center;
     color: var(--t-glass-text-faint);
@@ -19017,22 +18849,6 @@ textarea.t-input {
         font-size: 16px;
     }
 
-    .t-scene-page-head {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .t-scene-page-nav,
-    .t-scene-page-actions {
-        width: 100%;
-    }
-
-    .t-scene-page-nav .t-btn,
-    .t-scene-page-actions .t-btn {
-        flex: 1;
-        min-height: 36px;
-    }
-
     .t-outline-plan-list {
         max-height: none;
     }
@@ -19044,12 +18860,6 @@ textarea.t-input {
     .t-scene-hub-footer .t-outline-mode {
         width: 100%;
         margin-right: 0 !important; /* override scene hub template inline margin-right:auto on mobile */
-    }
-
-    .t-scene-hub-footer #t-scene-hub-send {
-        width: 100%;
-        min-width: 0;
-        min-height: 34px;
     }
 
     .t-plan-accordion-head {
@@ -19114,17 +18924,12 @@ textarea.t-input {
     }
 
     .t-outline-primary-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(120px, 152px));
-        gap: 6px;
-        justify-content: center;
         width: 100%;
+        justify-content: center;
     }
 
-    .t-outline-primary-actions #t-outline-generate,
-    .t-outline-primary-actions #t-outline-generate-all-scenes {
+    .t-outline-primary-actions #t-outline-generate {
         min-height: 40px;
-        width: 100%;
         min-width: 0;
     }
 
@@ -19207,11 +19012,6 @@ textarea.t-input {
         color: var(--t-color-teal);
     }
 
-    .t-outline-mobile-head .scene-count {
-        margin-left: auto;
-        color: var(--t-glass-text-secondary);
-    }
-
     .t-outline-mobile-title {
         color: var(--t-color-text);
         font-weight: 600;
@@ -19261,19 +19061,6 @@ textarea.t-input {
         font-weight: 600;
     }
 
-    .t-mobile-editor-tabs {
-        display: flex;
-        gap: 6px;
-        padding: 8px 12px;
-        border-bottom: 1px solid var(--t-color-border-faint);
-        background: var(--t-glass-card);
-    }
-
-    .t-mobile-editor-tabs .t-btn {
-        flex: 1;
-        min-height: 34px;
-    }
-
     .t-outline-mobile-drawer-body {
         padding: 10px 12px 4px;
         max-height: 52vh;
@@ -19299,59 +19086,6 @@ textarea.t-input {
 
     .t-outline-mobile-drawer-actions .t-btn {
         min-height: 40px;
-    }
-
-    .t-mobile-scene-head {
-        margin-top: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: rgb(var(--t-sky-text-1-rgb));
-        font-size: 12px;
-    }
-
-    .t-mobile-scenes-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-top: 6px;
-        padding-bottom: 8px;
-    }
-
-    .t-mobile-scene-empty {
-        border: 1px dashed var(--t-color-teal-border-subtle);
-        border-radius: 8px;
-        color: var(--t-glass-text-faint);
-        font-size: 12px;
-        padding: 10px;
-        text-align: center;
-    }
-
-    .t-mobile-scene-card {
-        border: 1px solid var(--t-color-teal-soft-strong);
-        border-radius: 8px;
-        background: var(--t-glass-card);
-        padding: 8px;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .t-mobile-scene-title {
-        color: var(--t-glass-text-bright);
-        font-weight: 700;
-        margin-bottom: 2px;
-    }
-
-    .t-mobile-scene-actions {
-        display: flex;
-        gap: 6px;
-        margin-top: 4px;
-    }
-
-    .t-mobile-scene-actions .t-btn {
-        flex: 1;
-        min-height: 36px;
     }
 
     .t-outline-table {
@@ -19418,61 +19152,6 @@ textarea.t-input {
 
     .t-outline-textarea {
         min-height: 82px;
-    }
-
-    .t-outline-scene-row.show {
-        display: block;
-    }
-
-    .t-outline-scene-wrap {
-        padding: 8px;
-    }
-
-    .t-outline-scene-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-
-    .t-outline-scene-header .t-btn {
-        width: 100%;
-        min-height: 36px;
-    }
-
-    .t-outline-scene-table-wrap {
-        max-height: none;
-        overflow: visible;
-    }
-
-    .t-outline-scene-table {
-        min-width: 100%;
-        display: block;
-    }
-
-    .t-outline-scene-table thead {
-        display: none;
-    }
-
-    .t-outline-scene-table tbody,
-    .t-outline-scene-table tr,
-    .t-outline-scene-table td {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .t-outline-scene-table tr {
-        border: 1px solid var(--t-color-teal-soft-strong);
-        border-radius: 8px;
-        padding: 8px;
-        margin-bottom: 8px;
-        background: var(--t-glass-card);
-    }
-
-    .t-scene-col-index {
-        width: auto;
-        text-align: left;
-        margin-bottom: 4px;
     }
 }
 
@@ -26415,7 +26094,6 @@ var init_apiConnectionEditor = __esm({
 // src/ui/storyOutlineWindow.js
 var storyOutlineWindow_exports = {};
 __export(storyOutlineWindow_exports, {
-  openOutlineEntryDialog: () => openOutlineEntryDialog,
   openPromptTemplateManager: () => openPromptTemplateManager,
   openSceneHubWindow: () => openSceneHubWindow,
   openStoryOutlineWindow: () => openStoryOutlineWindow
@@ -26423,7 +26101,8 @@ __export(storyOutlineWindow_exports, {
 function getGenParamDefaults() {
   return {
     outline: { temperature: 0.4, maxTokens: 2e4, timeoutSec: 0 },
-    scenes: { temperature: 0.8, maxTokens: 6e4, timeoutSec: 0 }
+    // scenes 存储键沿用旧名（细纲时代遗留），现服务剧情推进推荐；2~3 条候选用不到 60k。
+    scenes: { temperature: 0.8, maxTokens: 8e3, timeoutSec: 0 }
   };
 }
 function normalizeGenParamGroup(raw, fallback) {
@@ -26718,7 +26397,7 @@ function reportGenerationError(e, label, failMessage) {
   }
   if (isAbortError(e)) {
     if (isStreamingEnabled()) updateRawPreview("\u5DF2\u7EC8\u6B62\u751F\u6210");
-    if (window.toastr) toastr.info(`\u5DF2\u7EC8\u6B62${label === "\u6545\u4E8B\u7EC6\u7EB2" ? "\u7EC6\u7EB2" : "\u5927\u7EB2"}\u751F\u6210`, label);
+    if (window.toastr) toastr.info(`\u5DF2\u7EC8\u6B62${label}\u751F\u6210`, label);
     return;
   }
   console.error(`Titania: ${label}\u751F\u6210\u5931\u8D25`, e);
@@ -27176,107 +26855,31 @@ function getDefaultPromptTemplates() {
 [\u4EFB\u52A1]
 \u8BF7\u8BBE\u8BA1\u6545\u4E8B\u5927\u7EB2\uFF0C\u5E76\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     },
-    scenes: {
-      system: `\u4F60\u662F\u5267\u60C5\u5206\u955C\u7B56\u5212\u3002\u57FA\u4E8E\u8F93\u5165\u201C\u603B\u7EB2 items\u201D\uFF0C\u4E3A\u6BCF\u4E2A\u6761\u76EE\u8865\u5168 scenes\u3002
+    rolling: {
+      system: `\u4F60\u662F\u5267\u60C5\u63A8\u8FDB\u7B56\u5212\u3002\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\u5DF2\u7ED9\u5B9A\uFF08\u6700\u540E\u4E00\u6761\u5373\u7ED3\u5C40\uFF09\u3002\u4F60\u7684\u804C\u8D23\u662F\uFF1A\u7ED3\u5408"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\uFF0C\u7ED9\u51FA 2~3 \u4E2A\u4E92\u4E0D\u76F8\u540C\u7684\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF0C\u4F9B\u73A9\u5BB6\u6311\u9009\u540E\u4F5C\u4E3A\u4E0B\u4E00\u56DE\u5408\u7684\u73A9\u5BB6\u8F93\u5165\u6765\u63A8\u8FDB\u6545\u4E8B\u3002
+
+[\u6838\u5FC3\u539F\u5219]
+1) \u5927\u7EB2\u662F\u8DEF\u6807\u4E0E\u7EC8\u70B9\u7EA6\u675F\uFF1A\u5019\u9009\u5FC5\u987B\u671D\u5927\u7EB2\u7ED3\u5C40\u7684\u65B9\u5411\u6536\u675F\uFF0C\u53EF\u63D0\u524D\u57CB\u4F0F\u7B14\u3001\u63A7\u5236\u8282\u594F\uFF0C\u4F46\u7EDD\u4E0D\u8DF3\u6B65\u3001\u4E0D\u4E00\u6B21\u5199\u5230\u7ED3\u5C40\uFF08\u9664\u975E\u5F53\u524D\u5DF2\u662F\u6700\u540E\u4E00\u6761\u5927\u7EB2\u4E14\u5267\u60C5\u786E\u5B9E\u8BE5\u6536\u5C3E\uFF09\u3002
+2) \u627F\u63A5\u5DF2\u53D1\u751F\u7684\u5267\u60C5\uFF1A\u5019\u9009\u5FC5\u987B\u81EA\u7136\u8854\u63A5"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\u7684\u6700\u540E\u72B6\u6001\uFF0C\u4E0D\u91CD\u590D\u5DF2\u7ECF\u5199\u8FC7\u7684\u60C5\u8282\u3002
+3) \u5019\u9009\u4E4B\u95F4\u8D70\u5411\u8981\u6709\u660E\u663E\u5DEE\u5F02\uFF08\u4E0D\u540C\u7684\u5207\u5165\u70B9/\u51B2\u7A81/\u8282\u594F\uFF09\uFF0C\u4E0D\u662F\u540C\u4E00\u60C5\u8282\u7684\u63AA\u8F9E\u53D8\u4F53\u3002
 
 [\u786C\u6027\u8981\u6C42]
 1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
 2) \u53EA\u5141\u8BB8\u8FD4\u56DE\u4EE5\u4E0B\u7ED3\u6784\uFF1A
 {
-  "version": "1.2",
-  "items": [
+  "version": "1.4",
+  "candidates": [
     {
-      "index": 1,
-      "scenes": [
-        {
-          "scene_index": 1,
-          "scene_time": "\u65F6\u95F4\u70B9",
-          "scene_location": "\u5730\u70B9",
-          "scene_goal": "\u672C\u573A\u76EE\u6807",
-          "conflict": "\u51B2\u7A81",
-          "key_beats": ["\u5173\u952E\u8282\u70B91", "\u5173\u952E\u8282\u70B92"],
-          "sendable_prompt": "\u53EF\u4F9B\u6269\u5199\u7684\u573A\u666F\u6458\u8981\u6BB5\u843D",
-          "notes": ""
-        }
-      ]
+      "title": "\u5019\u9009\u6807\u9898\uFF088\u5B57\u4EE5\u5185\uFF09",
+      "text": "\u53EF\u76F4\u63A5\u4F5C\u4E3A\u73A9\u5BB6\u8F93\u5165\u53D1\u9001\u7684\u5267\u60C5\u6BB5\u843D",
+      "item_index": 1
     }
   ]
 }
-3) items \u6570\u91CF\u5FC5\u987B\u4E0E\u8F93\u5165\u603B\u7EB2\u4E00\u81F4\uFF1Bindex \u5FC5\u987B\u4E00\u4E00\u5BF9\u5E94\uFF1B\u4E0D\u5F97\u7F3A\u5931\u3001\u4E0D\u5F97\u65B0\u589E\u3001\u4E0D\u5F97\u91CD\u6392\u3002
-4) \u4EC5\u8865\u5168 scenes\uFF0C\u7981\u6B62\u6539\u5199\u603B\u7EB2\u4E3B\u7EBF\u542B\u4E49\u3002
-5) \u6BCF\u4E2A item \u751F\u6210 3-5 \u4E2A scenes\uFF08\u9ED8\u8BA4 4 \u4E2A\uFF0C\u9664\u975E\u5185\u5BB9\u4E0D\u8DB3\uFF09\u3002
-6) \u6BCF\u4E2A scene \u5FC5\u987B\u5305\u542B scene_goal\u3001conflict\u3001key_beats\u3001sendable_prompt\u3002
-7) key_beats \u81F3\u5C11 2 \u6761\uFF0C\u5355\u6761\u4E0D\u8D85\u8FC7 24 \u5B57\u3002
-8) sendable_prompt \u5FC5\u987B\u878D\u5408 conflict \u4E0E key_beats\uFF0C120-220 \u5B57\uFF0C\u4E2D\u6587\uFF0C\u5177\u4F53\u53EF\u5EF6\u5C55\uFF0C\u4E0D\u5199\u201C\u8BF7\u4F60/\u4F60\u9700\u8981\u201D\u3002
-9) \u82E5\u4FE1\u606F\u4E0D\u8DB3\uFF0Cnotes \u586B\u7A7A\u5B57\u7B26\u4E32\uFF0C\u4E0D\u8981\u7F16\u9020\u989D\u5916\u5B57\u6BB5\u3002
-10) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
-      user: `[\u89D2\u8272\u8BBE\u5B9A]
-{{persona}}
-
-[\u7528\u6237\u8BBE\u5B9A]
-{{userDesc}}
-
-[\u4E16\u754C\u4E66/\u8BBE\u5B9A]
-{{worldInfo}}
-
-[\u5F00\u573A\u767D]
-{{openingText}}
-
-[\u6545\u4E8B\u9700\u6C42]
-{{storyInput}}
-
-[\u5F53\u524D\u603B\u7EB2 items]
-{{outlineItemsJson}}
-
-[\u4EFB\u52A1]
-\u8BF7\u5BF9\u6BCF\u4E2A item \u4E00\u6B21\u6027\u751F\u6210 scenes\u3002
-\u4FDD\u6301\u603B\u7EB2\u4E3B\u7EBF\u4E0E\u987A\u5E8F\u4E0D\u53D8\uFF0C\u53EA\u8865\u5168\u7EC6\u7EB2\u5185\u5BB9\u3002
-\u4E25\u683C\u4F7F\u7528 version 1.2 \u7684\u7CBE\u7B80\u7ED3\u6784\uFF0C\u4EC5\u8FD4\u56DE index \u548C scenes\uFF0C\u4E0D\u8981\u8FD4\u56DE time/title/plot/foreshadowing/story_summary\u3002
-sendable_prompt \u5FC5\u987B\u5199\u6210\u53EF\u4F9B\u6A21\u578B\u6269\u5199/\u8F6C\u8FF0/\u6DA6\u8272\u7684\u5177\u4F53\u6458\u8981\u6BB5\u843D\uFF0C\u5E76\u878D\u5408 conflict \u4E0E key_beats\u3002
-\u53EA\u8FD4\u56DE JSON\u3002`
-    },
-    rolling: {
-      system: `\u4F60\u662F\u6E10\u8FDB\u5F0F\u5267\u60C5\u63A8\u8FDB\u7B56\u5212\u3002\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\u5DF2\u7ED9\u5B9A\uFF08\u6700\u540E\u4E00\u6761\u5373\u7ED3\u5C40\uFF09\uFF0C\u4F60\u7684\u804C\u8D23\u662F\uFF1A\u7ED3\u5408"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\uFF0C\u53EA\u751F\u6210"\u63A5\u4E0B\u6765 1~2 \u4E2A\u573A\u666F"\u7684\u7EC6\u7EB2\uFF0C\u8BA9\u6545\u4E8B\u5728\u5927\u7EB2\u7684\u6697\u4E2D\u5F15\u5BFC\u4E0B\u81EA\u7136\u3001\u7A33\u6B65\u5730\u671D\u7ED3\u5C40\u63A8\u8FDB\u3002
-
-[\u6838\u5FC3\u539F\u5219]
-1) \u5927\u7EB2\u662F\u8DEF\u6807\u4E0E\u7EC8\u70B9\u7EA6\u675F\uFF1A\u59CB\u7EC8\u671D\u5927\u7EB2\u7ED3\u5C40\u6536\u675F\uFF0C\u53EF\u63D0\u524D\u57CB\u4F0F\u7B14\u3001\u63A7\u5236\u8282\u594F\uFF0C\u4F46\u7EDD\u4E0D\u8DF3\u6B65\u3001\u4E0D\u4E00\u6B21\u5199\u5230\u7ED3\u5C40\u3002
-2) \u627F\u63A5\u5DF2\u53D1\u751F\u7684\u5267\u60C5\uFF1A\u65B0\u573A\u666F\u5FC5\u987B\u81EA\u7136\u8854\u63A5"\u5DF2\u53D1\u751F\u7684\u5267\u60C5"\u7684\u6700\u540E\u72B6\u6001\uFF0C\u4E0D\u91CD\u590D\u5DF2\u7ECF\u5199\u8FC7\u7684\u60C5\u8282\u3002
-3) \u4E00\u6B21\u53EA\u63A8\u8FDB\u4E00\u5C0F\u6B65\uFF1A\u53EA\u4EA7\u51FA 1~2 \u4E2A\u573A\u666F\u3002\u4EC5\u5F53\u8FDB\u5EA6\u5DF2\u5230\u5927\u7EB2\u6700\u540E\u4E00\u6761\u3001\u4E14\u5267\u60C5\u786E\u5B9E\u8BE5\u6536\u5C3E\u65F6\uFF0C\u624D\u5141\u8BB8\u5199\u7ED3\u5C40\u573A\u666F\u3002
-
-[\u786C\u6027\u8981\u6C42]
-1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
-2) \u53EA\u5141\u8BB8\u8FD4\u56DE\u4EE5\u4E0B\u7ED3\u6784\uFF1A
-{
-  "version": "1.3",
-  "items": [
-    {
-      "index": 1,
-      "scenes": [
-        {
-          "scene_index": 1,
-          "scene_time": "\u65F6\u95F4\u70B9",
-          "scene_location": "\u5730\u70B9",
-          "scene_goal": "\u672C\u573A\u76EE\u6807",
-          "conflict": "\u51B2\u7A81",
-          "key_beats": ["\u5173\u952E\u8282\u70B91", "\u5173\u952E\u8282\u70B92"],
-          "sendable_prompt": "\u53EF\u4F9B\u6269\u5199\u7684\u573A\u666F\u6458\u8981\u6BB5\u843D",
-          "notes": ""
-        }
-      ]
-    }
-  ],
-  "progress": {
-    "current_item_index": 1,
-    "reached_ending": false,
-    "note": "\u4E00\u53E5\u8BDD\u8BF4\u660E\u63A8\u8FDB\u5230\u54EA\u3001\u4E3A\u4EC0\u4E48"
-  }
-}
-3) index \u5FC5\u987B\u662F\u8FD9\u4E9B\u573A\u666F\u6240\u5F52\u5C5E\u7684\u5927\u7EB2\u6761\u76EE\u5E8F\u53F7\uFF08\u5BF9\u5E94\u8F93\u5165\u5927\u7EB2\u91CC\u7684 index\uFF09\uFF0C\u4E0E\u5927\u7EB2\u4E00\u4E00\u5BF9\u5E94\uFF0C\u4E0D\u5F97\u65B0\u589E\u5927\u7EB2\u6CA1\u6709\u7684 index\u3002
-4) \u672C\u6B21\u603B\u5171\u53EA\u4EA7\u51FA 1~2 \u4E2A\u573A\u666F\uFF08\u53EF\u4EE5\u90FD\u6302\u5728\u540C\u4E00\u4E2A index \u4E0B\uFF0C\u6216\u8DE8\u76F8\u90BB\u4E24\u4E2A index\uFF09\u3002
-5) \u6BCF\u4E2A scene \u5FC5\u987B\u5305\u542B scene_goal\u3001conflict\u3001key_beats\u3001sendable_prompt\uFF1Bkey_beats \u81F3\u5C11 2 \u6761\uFF0C\u5355\u6761\u4E0D\u8D85\u8FC7 24 \u5B57\u3002
-6) sendable_prompt \u878D\u5408 conflict \u4E0E key_beats\uFF0C120-220 \u5B57\uFF0C\u4E2D\u6587\uFF0C\u5177\u4F53\u53EF\u5EF6\u5C55\uFF0C\u5199\u6210\u53EF\u76F4\u63A5\u53D1\u7ED9\u6A21\u578B\u7EED\u5199\u7684\u573A\u666F\u6458\u8981\uFF0C\u4E0D\u5199"\u8BF7\u4F60/\u4F60\u9700\u8981"\u3002
-7) progress.current_item_index \u586B\u8FD9\u6279\u573A\u666F\u63A8\u8FDB\u5230\u7684\u5927\u7EB2\u6761\u76EE\u5E8F\u53F7\uFF1Breached_ending \u4EC5\u5728\u786E\u5B9E\u62B5\u8FBE\u7ED3\u5C40\u65F6\u4E3A true\u3002
-8) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+3) candidates \u6570\u91CF\u5FC5\u987B\u4E3A 2~3 \u4E2A\u3002
+4) text \u662F\u4EE5\u73A9\u5BB6\u89C6\u89D2\u9A71\u52A8\u5267\u60C5\u7684\u6307\u4EE4\u5F0F\u60C5\u8282\u6BB5\u843D\uFF0C120-220 \u5B57\uFF0C\u4E2D\u6587\uFF0C\u5177\u4F53\u53EF\u5EF6\u5C55\uFF0C\u53EF\u76F4\u63A5\u53D1\u9001\u7ED9\u6A21\u578B\u7EED\u5199\uFF0C\u4E0D\u5199"\u8BF7\u4F60/\u4F60\u9700\u8981"\u3002
+5) item_index \u586B\u8BE5\u5019\u9009\u4E3B\u8981\u63A8\u8FDB\u5230\u7684\u5927\u7EB2\u6761\u76EE\u5E8F\u53F7\uFF08\u5BF9\u5E94\u8F93\u5165\u5927\u7EB2\u91CC\u7684 index\uFF09\uFF0C\u5FC5\u987B\u6765\u81EA\u8F93\u5165\u5927\u7EB2\uFF0C\u4E0D\u5F97\u65B0\u589E\u3002
+6) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
       user: `[\u89D2\u8272\u8BBE\u5B9A]
 {{persona}}
 
@@ -27295,16 +26898,12 @@ sendable_prompt \u5FC5\u987B\u5199\u6210\u53EF\u4F9B\u6A21\u578B\u6269\u5199/\u8
 [\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF08\u6700\u8FD1\u6B63\u6587\uFF0C\u8D8A\u9760\u540E\u8D8A\u65B0\uFF09]
 {{recentChat}}
 
-[\u5DF2\u751F\u6210\u7684\u7EC6\u7EB2\u6458\u8981]
-{{scenesSoFar}}
-
 [\u5F53\u524D\u8FDB\u5EA6]
 {{progressHint}}
 
 [\u4EFB\u52A1]
-\u53EA\u751F\u6210"\u63A5\u4E0B\u6765 1~2 \u4E2A\u573A\u666F"\u7684\u7EC6\u7EB2\uFF0C\u627F\u63A5\u4E0A\u9762\u5DF2\u53D1\u751F\u7684\u5267\u60C5\uFF0C\u671D\u5927\u7EB2\u7ED3\u5C40\u7A33\u6B65\u63A8\u8FDB\uFF0C\u4E0D\u8981\u4E00\u6B21\u5199\u5230\u7ED3\u5C40\u3002
-\u4E25\u683C\u6309 version 1.3 \u7ED3\u6784\u8FD4\u56DE\uFF0C\u5E76\u5728 progress \u91CC\u56DE\u62A5\u63A8\u8FDB\u5230\u7684\u5927\u7EB2\u6761\u76EE\u4E0E\u662F\u5426\u62B5\u8FBE\u7ED3\u5C40\u3002
-\u53EA\u8FD4\u56DE JSON\u3002`
+\u8BF7\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF1A\u627F\u63A5\u5DF2\u53D1\u751F\u7684\u5267\u60C5\uFF0C\u5BF9\u9F50\u5F53\u524D\u5927\u7EB2\u6761\u76EE\uFF0C\u5F7C\u6B64\u65B9\u5411\u4E0D\u540C\uFF0C\u671D\u7ED3\u5C40\u7A33\u6B65\u63A8\u8FDB\u4F46\u4E0D\u8981\u8DF3\u5230\u7ED3\u5C40\u3002
+\u4E25\u683C\u6309 version 1.4 \u7ED3\u6784\u8FD4\u56DE\u3002\u53EA\u8FD4\u56DE JSON\u3002`
     }
   };
 }
@@ -27317,14 +26916,16 @@ function getPromptTemplates() {
       system: String(raw?.outline?.system || defaults.outline.system),
       user: String(raw?.outline?.user || defaults.outline.user)
     },
-    scenes: {
-      system: String(raw?.scenes?.system || defaults.scenes.system),
-      user: String(raw?.scenes?.user || defaults.scenes.user)
-    },
-    rolling: {
-      system: String(raw?.rolling?.system || defaults.rolling.system),
-      user: String(raw?.rolling?.user || defaults.rolling.user)
-    }
+    // rolling：旧版(1.3, items/scenes 结构)模板与新解析器不兼容，检测到即重置为默认。
+    rolling: (() => {
+      const sys = String(raw?.rolling?.system || defaults.rolling.system);
+      const usr = String(raw?.rolling?.user || defaults.rolling.user);
+      if (sys.includes('"1.3"') || usr.includes("scenesSoFar")) {
+        console.info("[Titania] \u68C0\u6D4B\u5230\u65E7\u7248\u6E10\u8FDB\u7EED\u5199\u6A21\u677F\uFF0C\u5DF2\u91CD\u7F6E\u4E3A\u5267\u60C5\u63A8\u8FDB\u9ED8\u8BA4\u6A21\u677F");
+        return JSON.parse(JSON.stringify(defaults.rolling));
+      }
+      return { system: sys, user: usr };
+    })()
   };
 }
 function savePromptTemplates(templates) {
@@ -27337,7 +26938,6 @@ function renderPromptTemplate(template, vars) {
   return source.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key) => String(vars?.[key] ?? ""));
 }
 function getPromptTemplateSection(templates, type) {
-  if (type === "scenes") return templates.scenes;
   if (type === "rolling") return templates.rolling;
   return templates.outline;
 }
@@ -27351,9 +26951,8 @@ function getUnknownPromptVars(text) {
     "worldInfo",
     "scenario",
     "dialogueExamples",
-    // 渐进续写专用变量
+    // 剧情推进专用变量
     "recentChat",
-    "scenesSoFar",
     "progressHint"
   ]);
   const unknown = /* @__PURE__ */ new Set();
@@ -27374,9 +26973,8 @@ function buildPromptTemplateVars(ctx, userStoryInput, openingText, outlinePayloa
     worldInfo: rawWorldInfo || "(\u65E0)",
     scenario: String(ctx?.scenario || "").trim() || "(\u65E0)",
     dialogueExamples: String(ctx?.dialogueExamples || "").trim() || "(\u65E0)",
-    // 渐进续写专用；非续写场景为 "(无)"，模板里没引用就不影响。
+    // 剧情推进专用；非推荐场景为 "(无)"，模板里没引用就不影响。
     recentChat: String(extras?.recentChat || "").trim() || "(\u65E0)",
-    scenesSoFar: String(extras?.scenesSoFar || "").trim() || "(\u65E0)",
     progressHint: String(extras?.progressHint || "").trim() || "(\u65E0)"
   };
 }
@@ -27491,18 +27089,18 @@ async function openPromptTemplateManager() {
 
                         <div class="t-form-group">
                             <label class="t-form-label">\u751F\u6210\u53C2\u6570</label>
-                            <div class="t-outline-genparam-hint">\u5206\u522B\u63A7\u5236\u5927\u7EB2/\u7EC6\u7EB2\u751F\u6210\u7684\u91C7\u6837\u4E0E\u4E0A\u9650\uFF08\u6E10\u8FDB\u7EED\u5199\u6CBF\u7528\u7EC6\u7EB2\u53C2\u6570\uFF09\u3002\u7EC6\u7EB2\u8FC7\u957F\u88AB\u4E2D\u9014\u6390\u65AD\u65F6\u591A\u4E3A\u7F51\u5173\u8D85\u65F6\uFF0C\u5EFA\u8BAE\u8C03\u4F4E max_tokens \u6216\u7528\u6E10\u8FDB\u7EED\u5199\u5206\u6BB5\u751F\u6210\u3002\u8D85\u65F6\u4E3A\u5BA2\u6237\u7AEF\u5B89\u5168\u4E0A\u9650\uFF080=\u4E0D\u9650\u5236\uFF09\u3002</div>
+                            <div class="t-outline-genparam-hint">\u5206\u522B\u63A7\u5236\u5927\u7EB2/\u5267\u60C5\u63A8\u8350\u7684\u91C7\u6837\u4E0E\u4E0A\u9650\u3002\u63A8\u8350\u7ED3\u679C\u88AB\u4E2D\u9014\u6390\u65AD\u65F6\u591A\u4E3A\u7F51\u5173\u8D85\u65F6\uFF0C\u5EFA\u8BAE\u8C03\u4F4E max_tokens\u3002\u8D85\u65F6\u4E3A\u5BA2\u6237\u7AEF\u5B89\u5168\u4E0A\u9650\uFF080=\u4E0D\u9650\u5236\uFF09\u3002</div>
                             ${renderGenParamRow("outline", "\u5927\u7EB2", settingsDraft.genParams.outline)}
-                            ${renderGenParamRow("scenes", "\u7EC6\u7EB2/\u7EED\u5199", settingsDraft.genParams.scenes)}
+                            ${renderGenParamRow("scenes", "\u5267\u60C5\u63A8\u8350", settingsDraft.genParams.scenes)}
                         </div>
 
                         <div class="t-form-group">
-                            <label class="t-form-label">\u6E10\u8FDB\u7EED\u5199</label>
+                            <label class="t-form-label">\u5267\u60C5\u63A8\u8FDB</label>
                             <label class="t-outline-mode t-outline-mode-source" style="margin-left:0;">
                                 \u8BFB\u53D6\u6700\u8FD1\u6B63\u6587\u697C\u5C42\u6570
                                 <input id="t-outline-settings-rolling-floors" type="number" class="t-outline-select" value="${escapeHtml4(settingsDraft.rollingChatFloors)}" min="0" max="50" step="1" style="width:80px;">
                             </label>
-                            <div class="t-outline-genparam-hint">\u6E10\u8FDB\u7EED\u5199\u65F6\u8BFB\u53D6\u9152\u9986\u6700\u8FD1 N \u697C\u6B63\u6587\u4F5C\u4E3A"\u5DF2\u53D1\u751F\u7684\u5267\u60C5"\uFF08\u8D70\u4E0B\u65B9\u804A\u5929\u63D0\u53D6\u767D\u540D\u5355\u8FC7\u6EE4\uFF09\u30020=\u4E0D\u8BFB\u6B63\u6587\uFF0C\u4EC5\u9760\u5927\u7EB2\u4E0E\u5DF2\u751F\u6210\u7EC6\u7EB2\u63A8\u8FDB\u3002</div>
+                            <div class="t-outline-genparam-hint">\u5267\u60C5\u63A8\u8350\u65F6\u8BFB\u53D6\u9152\u9986\u6700\u8FD1 N \u697C\u6B63\u6587\u4F5C\u4E3A"\u5DF2\u53D1\u751F\u7684\u5267\u60C5"\uFF08\u8D70\u4E0B\u65B9\u804A\u5929\u63D0\u53D6\u767D\u540D\u5355\u8FC7\u6EE4\uFF09\u30020=\u4E0D\u8BFB\u6B63\u6587\uFF0C\u4EC5\u9760\u5927\u7EB2\u63A8\u8FDB\u3002</div>
                         </div>
 
                         <div class="t-form-group">
@@ -27534,12 +27132,11 @@ async function openPromptTemplateManager() {
                             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                                 <select id="t-prompt-target" class="t-outline-select">
                                     <option value="outline">\u6545\u4E8B\u5927\u7EB2</option>
-                                    <option value="scenes">\u7EC6\u7EB2\u751F\u6210</option>
-                                    <option value="rolling">\u6E10\u8FDB\u7EED\u5199</option>
+                                    <option value="rolling">\u5267\u60C5\u63A8\u8FDB</option>
                                 </select>
                                 <button id="t-prompt-reset-current" class="t-btn t-btn-xs"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u5F53\u524D\u9ED8\u8BA4</button>
                             </div>
-                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u6E10\u8FDB\u7EED\u5199\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{scenesSoFar}} {{progressHint}}</div>
+                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{progressHint}}</div>
                         </div>
 
                         <div class="t-form-group">
@@ -27755,10 +27352,8 @@ function buildPrompt(ctx, userStoryInput, openingText) {
     { role: "user", content: user }
   ];
 }
-function parseJsonItemsResponse(raw, failMessage = "\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON") {
-  if (!raw || typeof raw !== "string") {
-    throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
-  }
+function tryParseLooseJsonObject(raw) {
+  if (!raw || typeof raw !== "string") return null;
   const attempts = [raw.trim()];
   const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (codeBlockMatch?.[1]) attempts.push(codeBlockMatch[1].trim());
@@ -27768,10 +27363,18 @@ function parseJsonItemsResponse(raw, failMessage = "\u8FD4\u56DE\u683C\u5F0F\u65
     try {
       const fixed = content.replace(/,\s*([}\]])/g, "$1");
       const data = JSON.parse(fixed);
-      if (data && Array.isArray(data.items)) return data;
+      if (data && typeof data === "object") return data;
     } catch {
     }
   }
+  return null;
+}
+function parseJsonItemsResponse(raw, failMessage = "\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON") {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
+  }
+  const data = tryParseLooseJsonObject(raw);
+  if (data && Array.isArray(data.items)) return data;
   throw new Error(failMessage);
 }
 function parseOutlineResponse(raw) {
@@ -27927,7 +27530,6 @@ function insertPlan({ name, storyInput, instruction, items }) {
     storyInput: storyInput || "",
     instruction: instruction || "",
     items: Array.isArray(items) ? items : [],
-    used_scene_keys: [],
     createdAt: now,
     updatedAt: now
   };
@@ -28070,7 +27672,6 @@ function openPlanCreationDialog() {
     loadPlanToEditor(created);
     renderPlanHub();
     showOutlineView("editor");
-    setEditorSubView("outline");
     updatePlanWorkflowUI();
   });
 }
@@ -28185,9 +27786,6 @@ function cancelPlanRename() {
 function getCurrentInsertMode() {
   return $("#t-scene-hub-insert-mode").val() || $("#t-outline-insert-mode").val() || loadDraft().insertMode || "overwrite";
 }
-function getSceneUsageKey(itemIndex, sceneIndex) {
-  return `${itemIndex}:${sceneIndex}`;
-}
 function getPlanProgress(plan) {
   const raw = plan && typeof plan.progress === "object" ? plan.progress : null;
   const totalItems = Array.isArray(plan?.items) ? plan.items.length : 0;
@@ -28208,10 +27806,6 @@ function setPlanProgress(planId, progress) {
   plan.updatedAt = Date.now();
   saveExtData();
 }
-function isSceneUsed(plan, itemIndex, sceneIndex) {
-  if (!plan || !Array.isArray(plan.used_scene_keys)) return false;
-  return plan.used_scene_keys.includes(getSceneUsageKey(itemIndex, sceneIndex));
-}
 function advanceProgressOnSend(planId, itemIndex) {
   if (!planId) return;
   if (planId !== editingPlanId && planId !== getSceneSourcePlanId()) return;
@@ -28225,18 +27819,6 @@ function advanceProgressOnSend(planId, itemIndex) {
   setPlanProgress(planId, { itemIndex: nextIdx, reachedEnding });
   if (editingPlanId === planId) setEditingPlan(getPlans().find((p) => p.id === planId));
   refreshRollingProgressUI();
-}
-function markSceneUsed(planId, itemIndex, sceneIndex) {
-  const plans = getPlans();
-  const plan = plans.find((p) => p.id === planId);
-  if (!plan) return;
-  if (!Array.isArray(plan.used_scene_keys)) plan.used_scene_keys = [];
-  const key = getSceneUsageKey(itemIndex, sceneIndex);
-  if (!plan.used_scene_keys.includes(key)) {
-    plan.used_scene_keys.push(key);
-    plan.updatedAt = Date.now();
-    saveExtData();
-  }
 }
 function showOutlineView(view) {
   currentView = view === "editor" ? "editor" : "hub";
@@ -28252,9 +27834,7 @@ function showOutlineView(view) {
 function loadPlanToEditor(plan) {
   if (!plan) return false;
   outlineItems = normalizeItems(plan.items || []);
-  sceneExpandedMap = {};
   selectedRowIndex = -1;
-  sceneEditorItemIndex = outlineItems.length > 0 ? 0 : -1;
   closeDesktopEditor();
   closeMobileEditor();
   const planInstruction = getPlanInstruction(plan);
@@ -28290,90 +27870,44 @@ function movePlanItemCursor(planId, delta, totalItems) {
   const current = getPlanItemCursor(planId, total);
   setPlanItemCursor(planId, current + (Number(delta) || 0), total);
 }
-function collectAllPlanScenes() {
-  const plans = getPlans();
-  const sourcePlanId = getSceneSourcePlanId();
-  const sourcePlan = plans.find((p) => p.id === sourcePlanId) || null;
-  const rows = [];
-  if (!sourcePlan) return rows;
-  [sourcePlan].forEach((plan) => {
-    const items = normalizeItems(plan?.items || []);
-    items.forEach((item, itemIndex) => {
-      const scenes = Array.isArray(item.scenes) ? item.scenes : [];
-      scenes.forEach((scene, sceneIndex) => {
-        rows.push({
-          key: `${plan.id}:${itemIndex}:${sceneIndex}`,
-          planId: plan.id,
-          planName: plan.name || "\u672A\u547D\u540D\u65B9\u6848",
-          itemIndex,
-          sceneIndex,
-          itemTitle: item.title || `\u6761\u76EE${item.index}`,
-          itemTime: item.time || "",
-          scene,
-          used: isSceneUsed(plan, itemIndex, sceneIndex)
-        });
-      });
-    });
-  });
-  rows.sort((a, b) => {
-    if (a.used !== b.used) return a.used ? 1 : -1;
-    if (a.planName !== b.planName) return String(a.planName).localeCompare(String(b.planName), "zh-CN");
-    if (a.itemIndex !== b.itemIndex) return a.itemIndex - b.itemIndex;
-    return a.sceneIndex - b.sceneIndex;
-  });
-  return rows.map((row, idx) => ({ ...row, number: idx + 1 }));
-}
-function renderSceneHubWindow() {
-  const rows = collectAllPlanScenes();
-  const $list = $("#t-scene-hub-list");
-  const $sendBtn = $("#t-scene-hub-send");
-  if ($list.length === 0 || $sendBtn.length === 0) return;
-  if (rows.length === 0) {
-    sceneHubSelectedKey = "";
+function renderCandidates() {
+  const $list = $("#t-outline-candidates");
+  if ($list.length === 0) return;
+  if (latestCandidates.length === 0) {
     const sourcePlanId = getSceneSourcePlanId();
-    if (!sourcePlanId) {
-      $list.html('<div class="t-plan-empty">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u4E00\u4E2A\u7528\u4E8E\u7EC6\u7EB2\u60C5\u8282\u7684\u65B9\u6848</div>');
-    } else {
-      $list.html('<div class="t-plan-empty">\u5F53\u524D\u9009\u4E2D\u65B9\u6848\u6682\u65E0\u53EF\u7528\u7EC6\u7EB2\u573A\u666F\uFF0C\u8BF7\u5148\u751F\u6210\u7EC6\u7EB2</div>');
-    }
-    $sendBtn.prop("disabled", true);
+    $list.html(sourcePlanId ? '<div class="t-plan-empty">\u70B9\u51FB\u300C\u63A8\u8350\u5267\u60C5\u300D\uFF0C\u751F\u6210 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411</div>' : '<div class="t-plan-empty">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u4E00\u4E2A\u7528\u4E8E\u5267\u60C5\u63A8\u8FDB\u7684\u65B9\u6848</div>');
     return;
   }
-  if (!rows.some((r) => r.key === sceneHubSelectedKey)) {
-    sceneHubSelectedKey = "";
-  }
-  const html = rows.map((row) => `
-        <div class="t-scene-hub-item ${row.used ? "used" : ""} ${sceneHubSelectedKey === row.key ? "active" : ""}" data-scene-key="${row.key}">
+  const html = latestCandidates.map((c, idx) => `
+        <div class="t-scene-hub-item ${c.used ? "used" : ""}" data-candidate-index="${idx}" title="\u70B9\u51FB\u5199\u5165\u8F93\u5165\u6846\uFF08\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\uFF09">
             <div class="t-scene-hub-head">
-                <span class="t-scene-hub-no">#${row.number}</span>
-                <span class="t-scene-hub-plan">${escapeHtml4(row.planName)} / ${escapeHtml4(row.itemTitle)}</span>
-                ${row.used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}
+                <span class="t-scene-hub-no">#${idx + 1}</span>
+                <span class="t-scene-hub-plan">${escapeHtml4(c.title || `\u5019\u9009 ${idx + 1}`)}</span>
+                ${c.used ? '<span class="t-plan-used-tag">\u5DF2\u5199\u5165</span>' : ""}
             </div>
-            <div class="t-scene-hub-meta">${escapeHtml4(row.scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml4(row.scene.scene_location || "\u672A\u8BBE\u5730\u70B9")}</div>
-            <div class="t-scene-hub-text">${escapeHtml4(row.scene.sendable_prompt || row.scene.key_beats || "(\u7A7A)")}</div>
+            <div class="t-scene-hub-meta">\u63A8\u8FDB\u81F3\u5927\u7EB2\u7B2C ${c.itemIndex} \u6761</div>
+            <div class="t-scene-hub-text">${escapeHtml4(c.text)}</div>
         </div>
     `).join("");
   $list.html(html);
-  $sendBtn.prop("disabled", !sceneHubSelectedKey);
 }
 function openSceneHubWindow() {
   ensureCssLoaded();
   $("#t-scene-hub-overlay").remove();
-  sceneHubSelectedKey = "";
+  latestCandidates = [];
   const html = `
     <div id="t-scene-hub-overlay" class="t-overlay t-root">
         <div class="t-window t-story-outline-window">
             <div class="t-window-header">
-                <div class="t-window-title"><i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2\u60C5\u8282</div>
+                <div class="t-window-title"><i class="fa-solid fa-clapperboard"></i> \u5267\u60C5\u63A8\u8FDB</div>
                 <div class="t-window-controls">
                     <div class="t-window-close" id="t-scene-hub-close"><i class="fa-solid fa-times"></i></div>
                 </div>
             </div>
             <div class="t-window-body t-outline-body">
-                <div id="t-scene-hub-list" class="t-scene-hub-list"></div>
                 <div id="t-outline-rolling" class="t-outline-rolling t-outline-rolling--scene-hub" style="display:none;">
                     <div class="t-outline-rolling-head">
-                        <span class="t-outline-rolling-title"><i class="fa-solid fa-forward-step"></i> \u6E10\u8FDB\u7EED\u5199</span>
+                        <span class="t-outline-rolling-title"><i class="fa-solid fa-forward-step"></i> \u5267\u60C5\u63A8\u8FDB</span>
                         <div class="t-outline-rolling-head-right">
                             <span id="t-outline-rolling-status" class="t-outline-rolling-status"></span>
                             <button id="t-outline-rolling-outline-toggle" class="t-btn t-btn-xs" title="\u5C55\u5F00/\u6536\u8D77\u5927\u7EB2\u60C5\u8282\u9884\u89C8"><i class="fa-solid fa-map"></i></button>
@@ -28382,14 +27916,15 @@ function openSceneHubWindow() {
                     <div class="t-outline-rolling-bar"><div id="t-outline-rolling-bar-fill" class="t-outline-rolling-bar-fill"></div></div>
                     <div id="t-outline-rolling-outline-preview" class="t-outline-rolling-outline-preview" style="display:none;"></div>
                     <div class="t-outline-rolling-controls">
-                        <button id="t-outline-generate-next" class="t-btn t-btn-primary t-btn-xs"><i class="fa-solid fa-forward-step"></i> \u751F\u6210\u4E0B\u4E00\u6BB5</button>
+                        <button id="t-outline-generate-next" class="t-btn t-btn-primary t-btn-xs"><i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5</button>
                         <label class="t-outline-rolling-cursor">\u63A8\u8FDB\u5230
                             <select id="t-outline-rolling-cursor-select" class="t-outline-select"></select>
                         </label>
                         <button id="t-outline-rolling-reset" class="t-btn t-btn-xs" title="\u56DE\u5230\u5F00\u5934\u91CD\u65B0\u63A8\u8FDB"><i class="fa-solid fa-rotate-left"></i></button>
                     </div>
-                    <div class="t-outline-rolling-hint">\u5927\u7EB2\u5F53\u8DEF\u6807\uFF0C\u7ED3\u5408\u6700\u8FD1\u6B63\u6587\u4E00\u6B65\u6B65\u5199\u5230\u7ED3\u5C40\u3002\u53D1\u9001\u573A\u666F\u4F1A\u81EA\u52A8\u63A8\u8FDB\uFF0C\u4E5F\u53EF\u624B\u52A8\u6307\u5B9A\u5F53\u524D\u8FDB\u5EA6\u3002</div>
+                    <div class="t-outline-rolling-hint">\u5927\u7EB2\u5F53\u8DEF\u6807\uFF0C\u7ED3\u5408\u6700\u8FD1\u6B63\u6587\u4E00\u6B65\u6B65\u5199\u5230\u7ED3\u5C40\u3002\u70B9\u51FB\u5019\u9009\u5361\u7247\u5373\u5199\u5165\u8F93\u5165\u6846\u5E76\u81EA\u52A8\u63A8\u8FDB\u8FDB\u5EA6\uFF0C\u4E5F\u53EF\u624B\u52A8\u6307\u5B9A\u5F53\u524D\u8FDB\u5EA6\u3002</div>
                 </div>
+                <div id="t-outline-candidates" class="t-scene-hub-list"></div>
                 <div class="t-scene-hub-footer">
                     <label class="t-outline-mode" style="margin-right:auto;">
                         \u5199\u5165\u65B9\u5F0F
@@ -28398,52 +27933,46 @@ function openSceneHubWindow() {
                             <option value="append" ${getCurrentInsertMode() === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
                         </select>
                     </label>
-                    <button id="t-scene-hub-send" class="t-btn t-btn-primary" disabled><i class="fa-solid fa-paper-plane"></i> \u53D1\u9001\u573A\u666F</button>
+                    <span class="t-plan-source-note">\u70B9\u51FB\u5019\u9009\u5361\u7247\u5373\u6309\u6240\u9009\u65B9\u5F0F\u5199\u5165\u8F93\u5165\u6846\uFF08\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\uFF09</span>
                 </div>
             </div>
         </div>
     </div>`;
   $("body").append(html);
-  renderSceneHubWindow();
+  renderCandidates();
   refreshRollingProgressUI();
   const $overlay = $("#t-scene-hub-overlay");
   $overlay.on("click", "#t-scene-hub-close", () => {
     $overlay.remove();
-  });
-  $overlay.on("click", ".t-scene-hub-item", function() {
-    const key = String($(this).data("scene-key") || "").trim();
-    if (!key) return;
-    sceneHubSelectedKey = key;
-    renderSceneHubWindow();
   });
   $overlay.on("change", "#t-scene-hub-insert-mode", function() {
     const mode = String($(this).val() || "overwrite") === "append" ? "append" : "overwrite";
     $("#t-outline-insert-mode").val(mode);
     saveDraft($("#t-outline-story-input").val() || "", mode);
   });
-  $overlay.on("click", "#t-scene-hub-send", () => {
-    const rows = collectAllPlanScenes();
-    const selected = rows.find((r) => r.key === sceneHubSelectedKey);
-    if (!selected) return;
-    writePlotToInput(selected.scene?.sendable_prompt || "", getCurrentInsertMode());
-    markSceneUsed(selected.planId, selected.itemIndex, selected.sceneIndex);
-    advanceProgressOnSend(selected.planId, selected.itemIndex);
-    sceneHubSelectedKey = "";
-    $overlay.remove();
-    if (window.toastr) toastr.success("\u5DF2\u53D1\u9001\u573A\u666F\u5230\u8F93\u5165\u6846", "\u6545\u4E8B\u5927\u7EB2");
+  $overlay.on("click", "#t-outline-candidates .t-scene-hub-item", function() {
+    const idx = Number($(this).data("candidate-index"));
+    const c = latestCandidates[idx];
+    if (!c || !String(c.text || "").trim()) return;
+    const planId = editingPlanId || getSceneSourcePlanId();
+    writePlotToInput(c.text, getCurrentInsertMode());
+    if (planId) advanceProgressOnSend(planId, c.itemIndex - 1);
+    c.used = true;
+    renderCandidates();
+    refreshRollingProgressUI();
+    if (window.toastr) toastr.success("\u5DF2\u5199\u5165\u8F93\u5165\u6846\uFF08\u672A\u81EA\u52A8\u53D1\u9001\uFF09\uFF0C\u8FDB\u5EA6\u5DF2\u63A8\u8FDB", "\u5267\u60C5\u63A8\u8FDB");
   });
   $overlay.on("click", "#t-outline-generate-next", async () => {
     if (!editingPlanId) {
       const sourceId = getSceneSourcePlanId();
       const plan = sourceId ? getPlans().find((p) => p.id === sourceId) : null;
       if (!plan || !loadPlanToEditor(plan)) {
-        if (window.toastr) toastr.warning("\u8BF7\u5148\u751F\u6210\u6216\u586B\u5199\u603B\u7EB2\uFF0C\u518D\u6E10\u8FDB\u7EED\u5199", "\u6E10\u8FDB\u7EED\u5199");
+        if (window.toastr) toastr.warning("\u8BF7\u5148\u751F\u6210\u6216\u586B\u5199\u603B\u7EB2\uFF0C\u518D\u63A8\u8350\u5267\u60C5", "\u5267\u60C5\u63A8\u8FDB");
         return;
       }
-      refreshSceneHubListIfOpen();
+      refreshRollingProgressUI();
     }
-    await generateNextRolling();
-    refreshSceneHubListIfOpen();
+    await generateRecommendations();
   });
   $overlay.on("change", "#t-outline-rolling-cursor-select", function() {
     if (!editingPlanId) return;
@@ -28461,8 +27990,7 @@ function openSceneHubWindow() {
     setPlanProgress(editingPlanId, { itemIndex: 0, reachedEnding: false });
     setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
     refreshRollingProgressUI();
-    refreshSceneHubListIfOpen();
-    if (window.toastr) toastr.info("\u5DF2\u56DE\u5230\u5F00\u5934\uFF0C\u53EF\u91CD\u65B0\u6E10\u8FDB\u7EED\u5199", "\u6E10\u8FDB\u7EED\u5199");
+    if (window.toastr) toastr.info("\u5DF2\u56DE\u5230\u5F00\u5934\uFF0C\u53EF\u91CD\u65B0\u63A8\u8350\u5267\u60C5", "\u5267\u60C5\u63A8\u8FDB");
   });
   $overlay.on("click", "#t-outline-rolling-outline-toggle", () => {
     toggleRollingOutlinePreview();
@@ -28497,58 +28025,10 @@ function openSceneHubWindow() {
     refreshRollingProgressUI();
   });
 }
-function openOutlineEntryDialog() {
-  ensureCssLoaded();
-  $("#t-outline-entry-dialog").remove();
-  const hasPlans = getPlans().length > 0;
-  const html = `
-    <div id="t-outline-entry-dialog" class="t-dialog-overlay t-dialog-overlay--outline t-root">
-        <div class="t-dialog-box">
-            <div class="t-dialog-header">
-                <span><i class="fa-solid fa-list-check"></i> \u9009\u62E9\u5165\u53E3</span>
-                <div class="t-dialog-close" id="t-outline-entry-close"><i class="fa-solid fa-times"></i></div>
-            </div>
-            <div class="t-dialog-body t-dialog-body--tight t-outline-entry-form">
-                <button id="t-outline-entry-open-outline" class="t-btn t-btn-primary"><i class="fa-solid fa-list-check"></i> \u6545\u4E8B\u5927\u7EB2</button>
-                <button id="t-outline-entry-open-scenes" class="t-btn" ${hasPlans ? "" : "disabled"}><i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2\u60C5\u8282</button>
-                ${hasPlans ? "" : '<div class="t-plan-tip">\u8BF7\u5148\u81F3\u5C11\u4FDD\u5B58\u4E00\u4E2A\u65B9\u6848\u540E\u518D\u4F7F\u7528\u7EC6\u7EB2\u60C5\u8282</div>'}
-            </div>
-        </div>
-    </div>`;
-  $("body").append(html);
-  const close = () => $("#t-outline-entry-dialog").remove();
-  $("#t-outline-entry-close").on("click", close);
-  $("#t-outline-entry-open-outline").on("click", () => {
-    close();
-    openStoryOutlineWindow();
-  });
-  $("#t-outline-entry-open-scenes").on("click", () => {
-    if (!hasPlans) return;
-    close();
-    openSceneHubWindow();
-  });
-}
 function renderPlanDetailCarousel(plan) {
   const items = normalizeItems(plan?.items || []);
   const itemCursor = getPlanItemCursor(plan?.id, items.length);
   const item = items[itemCursor] || null;
-  const scenes = Array.isArray(item?.scenes) ? item.scenes : [];
-  const sortedScenes = scenes.map((scene, sceneIndex) => ({
-    scene,
-    sceneIndex,
-    used: isSceneUsed(plan, itemCursor, sceneIndex)
-  })).sort((a, b) => {
-    if (a.used === b.used) return a.scene.scene_index - b.scene.scene_index;
-    return a.used ? 1 : -1;
-  });
-  const sceneBlocks = sortedScenes.map(({ scene, sceneIndex, used }) => `
-        <div class="t-plan-scene ${used ? "used" : ""}">
-            <div class="t-plan-scene-head ${used ? "used" : ""}">\u573A\u666F ${scene.scene_index} \xB7 ${escapeHtml4(scene.scene_time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtml4(scene.scene_location || "\u672A\u8BBE\u5730\u70B9")} ${used ? '<span class="t-plan-used-tag">\u5DF2\u4F7F\u7528</span>' : ""}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u76EE\u6807</b> ${escapeHtml4(scene.scene_goal || "(\u7A7A)")}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u51B2\u7A81</b> ${escapeHtml4(scene.conflict || "(\u7A7A)")}</div>
-            <div class="t-plan-scene-text ${used ? "used" : ""}"><b>\u5173\u952E\u8282\u70B9</b><br>${escapeHtml4(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</div>
-        </div>
-    `).join("");
   if (!item) return '<div class="t-plan-empty">\u8BE5\u65B9\u6848\u4E3A\u7A7A</div>';
   return `
         <div class="t-plan-item-carousel" data-plan-id="${plan.id}" data-item-total="${items.length}">
@@ -28559,7 +28039,6 @@ function renderPlanDetailCarousel(plan) {
                     <div class="t-plan-item-head">#${item.index} [${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml4(item.title || "\u672A\u547D\u540D")}</div>
                     <div class="t-plan-item-text">${escapeHtml4(item.plot || "(\u7A7A)")}</div>
                     ${item.foreshadowing ? `<div class="t-plan-item-foreshadow">\u4F0F\u7B14\uFF1A${escapeHtml4(item.foreshadowing)}</div>` : ""}
-                    <div class="t-plan-scenes-wrap">${sceneBlocks || '<div class="t-plan-scene-empty">\u6682\u65E0\u573A\u666F\u7EC6\u7EB2</div>'}</div>
                 </div>
             </div>
             <button class="t-plan-item-nav-btn" data-action="plan-item-next" data-plan-id="${plan.id}" ${itemCursor >= items.length - 1 ? "disabled" : ""}>&gt;</button>
@@ -28641,15 +28120,15 @@ function renderPlanHub() {
                     <div class="t-plan-accordion-main">
                         <div class="t-plan-name">${escapeHtml4(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
                         <div class="t-plan-meta">${timeText} \xB7 ${items.length} \u6761</div>
-                        <div class="t-plan-tip">${isSource ? "\u5F53\u524D\u7EC6\u7EB2\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
+                        <div class="t-plan-tip">${isSource ? "\u5F53\u524D\u5267\u60C5\u63A8\u8FDB\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
                     </div>
                 </div>
                 <div class="t-plan-card-actions">
-                    <label class="t-plan-source-radio" title="\u9009\u62E9\u540E\uFF0C\u7EC6\u7EB2\u60C5\u8282\u9875\u5C06\u4ECE\u8BE5\u65B9\u6848\u8BFB\u53D6\u5E76\u4F7F\u7528\u573A\u666F\u5185\u5BB9">
+                    <label class="t-plan-source-radio" title="\u9009\u62E9\u540E\uFF0C\u5267\u60C5\u63A8\u8FDB\u9875\u5C06\u4ECE\u8BE5\u65B9\u6848\u8BFB\u53D6\u5927\u7EB2\u5E76\u751F\u6210\u63A8\u8350">
                         <input type="radio" class="t-choice-input t-choice-input--cyan-muted" name="t-plan-scene-source" data-action="set-scene-source" data-plan-id="${plan.id}" ${isSource ? "checked" : ""}>
-                        <span>\u4F5C\u4E3A\u7EC6\u7EB2\u6765\u6E90</span>
+                        <span>\u4F5C\u4E3A\u5267\u60C5\u63A8\u8FDB\u6765\u6E90</span>
                     </label>
-                    <div class="t-plan-source-note">\u8BF4\u660E\uFF1A\u52FE\u9009\u540E\uFF0C\u7EC6\u7EB2\u60C5\u8282\u9875\u4F1A\u4F18\u5148\u4F7F\u7528\u8BE5\u65B9\u6848\u4E2D\u7684\u573A\u666F\u3002</div>
+                    <div class="t-plan-source-note">\u8BF4\u660E\uFF1A\u52FE\u9009\u540E\uFF0C\u5267\u60C5\u63A8\u8FDB\u9875\u4F1A\u57FA\u4E8E\u8BE5\u65B9\u6848\u7684\u5927\u7EB2\u751F\u6210\u63A8\u8350\u3002</div>
                     <button class="t-btn t-btn-xs t-plan-delete-btn" data-action="delete-plan" data-plan-id="${plan.id}"><i class="fa-solid fa-trash"></i> \u5220\u9664\u65B9\u6848</button>
                 </div>
             </div>
@@ -28690,21 +28169,7 @@ function normalizeItems(items) {
     time: typeof item?.time === "string" ? item.time : "",
     title: typeof item?.title === "string" ? item.title : "",
     plot: typeof item?.plot === "string" ? item.plot : "",
-    foreshadowing: typeof item?.foreshadowing === "string" ? item.foreshadowing : "",
-    scenes: normalizeScenes(item?.scenes)
-  }));
-}
-function normalizeScenes(scenes) {
-  if (!Array.isArray(scenes)) return [];
-  return scenes.map((scene, idx) => ({
-    scene_index: idx + 1,
-    scene_time: typeof scene?.scene_time === "string" ? scene.scene_time : "",
-    scene_location: typeof scene?.scene_location === "string" ? scene.scene_location : "",
-    scene_goal: typeof scene?.scene_goal === "string" ? scene.scene_goal : "",
-    conflict: typeof scene?.conflict === "string" ? scene.conflict : "",
-    key_beats: Array.isArray(scene?.key_beats) ? scene.key_beats.filter(Boolean).join("\n") : typeof scene?.key_beats === "string" ? scene.key_beats : "",
-    sendable_prompt: typeof scene?.sendable_prompt === "string" ? scene.sendable_prompt : "",
-    notes: typeof scene?.notes === "string" ? scene.notes : ""
+    foreshadowing: typeof item?.foreshadowing === "string" ? item.foreshadowing : ""
   }));
 }
 function reindexItems() {
@@ -28716,20 +28181,7 @@ function createEmptyOutlineItem(index = 1) {
     time: "",
     title: "",
     plot: "",
-    foreshadowing: "",
-    scenes: []
-  };
-}
-function createEmptySceneItem(index = 1) {
-  return {
-    scene_index: Number(index) || 1,
-    scene_time: "",
-    scene_location: "",
-    scene_goal: "",
-    conflict: "",
-    key_beats: "",
-    sendable_prompt: "",
-    notes: ""
+    foreshadowing: ""
   };
 }
 function closeAddItemSheet() {
@@ -28754,60 +28206,16 @@ function appendOutlineItem() {
   const nextIndex = outlineItems.length;
   outlineItems.push(createEmptyOutlineItem(nextIndex + 1));
   reindexItems();
-  sceneExpandedMap[nextIndex] = false;
   selectedRowIndex = nextIndex;
-  sceneEditorItemIndex = nextIndex;
   renderRows();
   renderDesktopEditor(nextIndex, "title");
   saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
   if (window.toastr) toastr.success("\u5DF2\u65B0\u589E\u5927\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
 }
-function appendSceneItem() {
-  if (!ensureEditingPlanContext()) return;
-  const targetIndex = outlineItems.length;
-  const nextItem = createEmptyOutlineItem(targetIndex + 1);
-  nextItem.scenes = [createEmptySceneItem(1)];
-  outlineItems.push(nextItem);
-  reindexItems();
-  const targetItem = outlineItems[targetIndex];
-  if (!targetItem) return;
-  reindexScenes(targetItem);
-  sceneExpandedMap[targetIndex] = true;
-  selectedRowIndex = targetIndex;
-  sceneEditorItemIndex = targetIndex;
-  renderRows();
-  setEditorSubView("scene");
-  renderSceneEditorPage();
-  if (window.matchMedia("(max-width: 768px)").matches) {
-    openMobileEditor(targetIndex);
-    setMobileEditorSubView("scene");
-    renderMobileDrawerScenes(targetIndex);
-  } else {
-    setTimeout(() => {
-      const card = document.querySelector('#t-outline-scene-editor-page .t-scene-page-card[data-scene-index="0"]');
-      const input = card?.querySelector('[data-scene-page-field="scene_time"]');
-      if (input) {
-        input.focus();
-        if (typeof input.select === "function") input.select();
-      }
-    }, 0);
-  }
-  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  if (window.toastr) toastr.success("\u5DF2\u65B0\u589E\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
-}
-function reindexScenes(item) {
-  if (!item || !Array.isArray(item.scenes)) return;
-  item.scenes = item.scenes.map((scene, idx) => ({ ...scene, scene_index: idx + 1 }));
-}
 function deleteOutlineItemAt(index, options = {}) {
   const resolvedIndex = Number(index);
   if (Number.isNaN(resolvedIndex) || !outlineItems[resolvedIndex]) return false;
   outlineItems.splice(resolvedIndex, 1);
-  const nextMap = {};
-  outlineItems.forEach((_, idx) => {
-    nextMap[idx] = sceneExpandedMap[idx] || sceneExpandedMap[idx + 1] || false;
-  });
-  sceneExpandedMap = nextMap;
   if (selectedRowIndex === resolvedIndex) {
     selectedRowIndex = -1;
   } else if (selectedRowIndex > resolvedIndex) {
@@ -28817,13 +28225,6 @@ function deleteOutlineItemAt(index, options = {}) {
     closeDesktopEditor();
   } else if (desktopEditorIndex > resolvedIndex) {
     desktopEditorIndex -= 1;
-  }
-  if (outlineItems.length === 0) {
-    sceneEditorItemIndex = -1;
-  } else if (sceneEditorItemIndex > resolvedIndex) {
-    sceneEditorItemIndex -= 1;
-  } else if (sceneEditorItemIndex === resolvedIndex) {
-    sceneEditorItemIndex = Math.min(resolvedIndex, outlineItems.length - 1);
   }
   reindexItems();
   if (options.closeMobile) {
@@ -28836,9 +28237,7 @@ function deleteOutlineItemAt(index, options = {}) {
 function clearEditorDraft() {
   const insertMode = $("#t-outline-insert-mode").val() || "overwrite";
   outlineItems = [];
-  sceneExpandedMap = {};
   selectedRowIndex = -1;
-  sceneEditorItemIndex = -1;
   closeDesktopEditor();
   closeMobileEditor();
   $("#t-outline-story-input").val("");
@@ -28999,25 +28398,8 @@ function ensureRawDialogForStreaming(title = "\u6D41\u5F0F\u751F\u6210\u4E2D..."
   syncAbortButtonUI();
   updateRawPreview(title);
 }
-function applyParsedScenes(parsed) {
-  const incomingItems = Array.isArray(parsed?.items) ? parsed.items : [];
-  for (let i = 0; i < outlineItems.length; i++) {
-    const source = incomingItems.find((x) => Number(x?.index) === outlineItems[i].index) || incomingItems[i];
-    outlineItems[i].scenes = normalizeScenes(source?.scenes || []);
-    reindexScenes(outlineItems[i]);
-    sceneExpandedMap[i] = true;
-  }
-  renderRows();
-  const mobileIdx = getMobileDrawerIndex();
-  if (!Number.isNaN(mobileIdx) && mobileIdx >= 0 && outlineItems[mobileIdx]) {
-    renderMobileDrawerScenes(mobileIdx);
-  }
-  persistCurrentEditingPlan();
-  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-}
 function applyParsedOutline(parsed, storyInput, insertMode) {
   outlineItems = normalizeItems(parsed.items);
-  sceneExpandedMap = {};
   renderRows();
   persistCurrentEditingPlan();
   if (editingPlanId) {
@@ -29026,9 +28408,6 @@ function applyParsedOutline(parsed, storyInput, insertMode) {
   }
   refreshRollingProgressUI();
   saveDraft(storyInput, insertMode);
-}
-function parseAllScenesResponse(raw) {
-  return parseJsonItemsResponse(raw, "\u7EC6\u7EB2\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON\uFF08\u7F3A\u5C11 items\uFF09");
 }
 function buildOutlinePayloadForPrompt() {
   return outlineItems.map((item) => ({
@@ -29039,17 +28418,6 @@ function buildOutlinePayloadForPrompt() {
     foreshadowing: item.foreshadowing || ""
   }));
 }
-function buildAllScenesPrompt(ctx, userStoryInput, openingText) {
-  const outlinePayload = buildOutlinePayloadForPrompt();
-  const templates = getPromptTemplates();
-  const vars = buildPromptTemplateVars(ctx, userStoryInput || "(\u7A7A)", openingText, outlinePayload);
-  const sys = renderPromptTemplate(templates.scenes.system, vars);
-  const user = renderPromptTemplate(templates.scenes.user, vars);
-  return [
-    { role: "system", content: sys },
-    { role: "user", content: user }
-  ];
-}
 function collectRecentChatText(floors) {
   const n = Number(floors) || 0;
   if (n <= 0) return "";
@@ -29057,25 +28425,11 @@ function collectRecentChatText(floors) {
   if (!entries.length) return "";
   return entries.slice(-n).map((e) => `\u3010${e.role}\u3011${e.text}`).join("\n\n");
 }
-function summarizeScenesSoFar() {
-  const lines = [];
-  outlineItems.forEach((item) => {
-    const scenes = Array.isArray(item.scenes) ? item.scenes : [];
-    scenes.forEach((scene) => {
-      const summary = String(scene.sendable_prompt || scene.scene_goal || scene.key_beats || "").trim();
-      if (summary) {
-        lines.push(`#${item.index}-${scene.scene_index} ${summary.slice(0, 120)}`);
-      }
-    });
-  });
-  return lines.join("\n");
-}
-function buildRollingPrompt(ctx, userStoryInput, openingText, progressHint) {
+function buildRecommendationPrompt(ctx, userStoryInput, openingText, progressHint) {
   const outlinePayload = buildOutlinePayloadForPrompt();
   const templates = getPromptTemplates();
   const vars = buildPromptTemplateVars(ctx, userStoryInput || "(\u7A7A)", openingText, outlinePayload, {
     recentChat: collectRecentChatText(getRollingChatFloors()),
-    scenesSoFar: summarizeScenesSoFar(),
     progressHint
   });
   const sys = renderPromptTemplate(templates.rolling.system, vars);
@@ -29085,57 +28439,32 @@ function buildRollingPrompt(ctx, userStoryInput, openingText, progressHint) {
     { role: "user", content: user }
   ];
 }
-function parseRollingResponse(raw) {
-  const data = parseJsonItemsResponse(raw, "\u6E10\u8FDB\u7EED\u5199\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON\uFF08\u7F3A\u5C11 items\uFF09");
-  let progress = null;
-  const rawProgress = data?.progress;
-  if (rawProgress && typeof rawProgress === "object") {
-    const idx = Number(rawProgress.current_item_index);
-    progress = {
-      currentItemIndex: Number.isFinite(idx) ? idx : null,
-      reachedEnding: rawProgress.reached_ending === true,
-      note: String(rawProgress.note || "").trim()
-    };
+function parseRecommendationResponse(raw, fallbackItemIndex, totalItems) {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
   }
-  return { items: Array.isArray(data.items) ? data.items : [], progress };
-}
-function appendRollingScenes(parsed, fallbackItemIndex) {
-  const incomingItems = Array.isArray(parsed?.items) ? parsed.items : [];
-  let appended = 0;
-  let lastTouchedIdx = -1;
-  incomingItems.forEach((incoming) => {
-    const declaredIndex = Number(incoming?.index);
-    let targetIdx = outlineItems.findIndex((it) => it.index === declaredIndex);
-    if (targetIdx === -1) {
-      targetIdx = Math.min(Math.max(Number(fallbackItemIndex) || 0, 0), outlineItems.length - 1);
-    }
-    const target = outlineItems[targetIdx];
-    if (!target) return;
-    if (!Array.isArray(target.scenes)) target.scenes = [];
-    const newScenes = normalizeScenes(incoming?.scenes || []);
-    if (newScenes.length === 0) return;
-    target.scenes = target.scenes.concat(newScenes);
-    reindexScenes(target);
-    sceneExpandedMap[targetIdx] = true;
-    appended += newScenes.length;
-    lastTouchedIdx = targetIdx;
-  });
-  renderRows();
-  const mobileIdx = getMobileDrawerIndex();
-  if (!Number.isNaN(mobileIdx) && mobileIdx >= 0 && outlineItems[mobileIdx]) {
-    renderMobileDrawerScenes(mobileIdx);
+  const data = tryParseLooseJsonObject(raw);
+  const list = Array.isArray(data?.candidates) ? data.candidates : [];
+  const maxIdx = Math.max(Number(totalItems) || 1, 1);
+  const candidates = list.map((c) => {
+    const text = String(c?.text || "").trim();
+    if (!text) return null;
+    let idx = Number(c?.item_index);
+    if (!Number.isFinite(idx)) idx = (Number(fallbackItemIndex) || 0) + 1;
+    idx = Math.min(Math.max(Math.floor(idx), 1), maxIdx);
+    return { title: String(c?.title || "").trim(), text, itemIndex: idx };
+  }).filter(Boolean);
+  if (candidates.length === 0) {
+    throw new Error("\u5267\u60C5\u63A8\u8350\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON\uFF08\u7F3A\u5C11\u6709\u6548 candidates\uFF09");
   }
-  persistCurrentEditingPlan();
-  saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  return { appended, lastTouchedIdx };
+  return { candidates };
 }
 function renderRows() {
   const $tbody = $("#t-outline-tbody");
   if ($tbody.length === 0) return;
-  updateGenerateAllScenesButtonState();
+  refreshRollingProgressUI();
   if (outlineItems.length === 0) {
     selectedRowIndex = -1;
-    sceneEditorItemIndex = -1;
     closeDesktopEditor();
     $tbody.html(`
             <tr>
@@ -29146,24 +28475,9 @@ function renderRows() {
             </tr>
         `);
     renderMobileCards();
-    renderSceneEditorPage();
     return;
   }
-  const rows = outlineItems.map((item, idx) => {
-    const scenes = Array.isArray(item.scenes) ? item.scenes : [];
-    const sceneRows = scenes.length > 0 ? scenes.map((scene, sceneIdx) => `
-                <tr data-plot-index="${idx}" data-scene-index="${sceneIdx}">
-                    <td class="t-scene-col-index">${scene.scene_index}</td>
-                    <td>${escapeHtml4(scene.scene_time || "(\u7A7A)")}</td>
-                    <td>${escapeHtml4(scene.scene_location || "(\u7A7A)")}</td>
-                    <td>${escapeHtml4(scene.scene_goal || "(\u7A7A)")}</td>
-                    <td>${escapeHtml4(scene.conflict || "(\u7A7A)")}</td>
-                    <td>${escapeHtml4(scene.key_beats || "(\u7A7A)").replace(/\n/g, "<br>")}</td>
-                    <td>${escapeHtml4(scene.sendable_prompt || "(\u7A7A)")}</td>
-                    <td>${escapeHtml4(scene.notes || "(\u7A7A)")}</td>
-                </tr>
-            `).join("") : `<tr><td colspan="8" class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\uFF0C\u70B9\u51FB\u201C\u7EC6\u7EB2\u751F\u6210\u201D</td></tr>`;
-    return `
+  const rows = outlineItems.map((item, idx) => `
             <tr data-index="${idx}">
                 <td class="t-outline-col-index">${item.index}</td>
                 <td data-label="\u65F6\u95F4" data-edit-field="time"><div class="t-cell-text">${escapeHtml4(item.time || "(\u7A7A)")}</div></td>
@@ -29177,112 +28491,18 @@ function renderRows() {
             <tr class="t-outline-op-row ${selectedRowIndex === idx ? "show" : ""}" data-op-parent="${idx}">
                 <td colspan="6">
                     <div class="t-outline-op-panel">
-                        <button class="t-btn t-btn-xs" data-action="toggle-scenes" title="\u5C55\u5F00/\u6536\u8D77\u8BE5\u884C\u60C5\u8282\u7EC6\u7EB2">
-                            <i class="fa-solid fa-layer-group"></i> \u5C55\u5F00\u7EC6\u7EB2
-                        </button>
                         <button class="t-btn t-btn-xs t-plan-delete-btn" data-action="delete" title="\u5220\u9664\u672C\u884C">
                             <i class="fa-solid fa-trash"></i> \u5220\u9664
                         </button>
                     </div>
                 </td>
             </tr>
-            <tr class="t-outline-scene-row ${sceneExpandedMap[idx] ? "show" : ""}" data-scene-parent="${idx}">
-                <td colspan="6">
-                    <div class="t-outline-scene-wrap">
-                        <div class="t-outline-scene-header">
-                            <span><i class="fa-solid fa-clapperboard"></i> \u60C5\u8282 ${item.index} \u7EC6\u7EB2\uFF08\u573A\u666F\uFF09</span>
-                        </div>
-                        <div class="t-outline-scene-table-wrap">
-                            <table class="t-outline-scene-table">
-                                <thead>
-                                    <tr>
-                                        <th>\u5E8F\u53F7</th>
-                                        <th>\u65F6\u95F4</th>
-                                        <th>\u5730\u70B9</th>
-                                        <th>\u76EE\u6807</th>
-                                        <th>\u51B2\u7A81</th>
-                                        <th>\u5173\u952E\u8282\u70B9</th>
-                                        <th>\u53D1\u9001\u6307\u4EE4</th>
-                                        <th>\u5907\u6CE8</th>
-                                    </tr>
-                                </thead>
-                                <tbody>${sceneRows}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        `;
-  }).join("");
+        `).join("");
   $tbody.html(rows);
   renderMobileCards();
   if (desktopEditorIndex >= 0 && outlineItems[desktopEditorIndex]) {
     renderDesktopEditor(desktopEditorIndex);
   }
-  renderSceneEditorPage();
-}
-function getSceneEditorTargetIndex() {
-  if (sceneEditorItemIndex >= 0 && outlineItems[sceneEditorItemIndex]) return sceneEditorItemIndex;
-  if (outlineItems.length > 0) return 0;
-  return -1;
-}
-function renderSceneEditorPage() {
-  const $container = $("#t-outline-scene-editor-page");
-  if ($container.length === 0) return;
-  const idx = getSceneEditorTargetIndex();
-  if (idx < 0 || !outlineItems[idx]) {
-    $container.html('<div class="t-outline-empty">\u6682\u65E0\u53EF\u7F16\u8F91\u7684\u5927\u7EB2\u6761\u76EE</div>');
-    return;
-  }
-  sceneEditorItemIndex = idx;
-  const item = outlineItems[idx];
-  const scenes = Array.isArray(item.scenes) ? item.scenes : [];
-  const sceneBlocks = scenes.map((scene, sceneIdx) => `
-        <div class="t-scene-page-card" data-scene-index="${sceneIdx}">
-            <div class="t-scene-page-title">\u573A\u666F ${scene.scene_index}</div>
-            <label>\u65F6\u95F4</label>
-            <input class="t-outline-input" data-scene-page-field="scene_time" value="${escapeHtml4(scene.scene_time)}">
-            <label>\u5730\u70B9</label>
-            <input class="t-outline-input" data-scene-page-field="scene_location" value="${escapeHtml4(scene.scene_location)}">
-            <label>\u76EE\u6807</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="scene_goal">${escapeHtml4(scene.scene_goal)}</textarea>
-            <label>\u51B2\u7A81</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="conflict">${escapeHtml4(scene.conflict)}</textarea>
-            <label>\u5173\u952E\u8282\u70B9</label>
-            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="key_beats">${escapeHtml4(scene.key_beats)}</textarea>
-            <label>\u53D1\u9001\u6458\u8981</label>
-            <textarea class="t-outline-textarea" rows="3" data-scene-page-field="sendable_prompt">${escapeHtml4(scene.sendable_prompt)}</textarea>
-            <label>\u5907\u6CE8</label>
-            <textarea class="t-outline-textarea" rows="2" data-scene-page-field="notes">${escapeHtml4(scene.notes)}</textarea>
-            <button class="t-btn t-btn-xs t-plan-delete-btn" data-action="scene-page-delete" data-scene-index="${sceneIdx}"><i class="fa-solid fa-trash"></i> \u5220\u9664\u573A\u666F</button>
-        </div>
-    `).join("") || '<div class="t-outline-empty">\u6682\u65E0\u7EC6\u7EB2\u573A\u666F\uFF0C\u70B9\u51FB\u65B0\u589E\u573A\u666F</div>';
-  $container.html(`
-        <div class="t-scene-page-head">
-            <div class="t-scene-page-main">#${item.index} [${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}] ${escapeHtml4(item.title || "\u672A\u547D\u540D")}</div>
-            <div class="t-scene-page-nav">
-                <button class="t-btn t-btn-xs" data-action="scene-page-prev"><i class="fa-solid fa-chevron-left"></i> \u4E0A\u4E00\u6761</button>
-                <button class="t-btn t-btn-xs" data-action="scene-page-next">\u4E0B\u4E00\u6761 <i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-        </div>
-        <div class="t-scene-page-actions">
-            <button class="t-btn t-btn-xs" data-action="scene-page-add"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u573A\u666F</button>
-            <button class="t-btn t-btn-xs t-plan-delete-btn" data-action="scene-page-delete-item"><i class="fa-solid fa-trash"></i> \u5220\u9664\u7EC6\u7EB2\u6761\u76EE</button>
-        </div>
-        <div class="t-scene-page-list">${sceneBlocks}</div>
-    `);
-}
-function setEditorSubView(view) {
-  editorSubView = view === "scene" ? "scene" : "outline";
-  $("#t-outline-subview-outline").toggle(editorSubView === "outline");
-  $("#t-outline-subview-scene").toggle(editorSubView === "scene");
-  $("#t-editor-tab-outline").toggleClass("active", editorSubView === "outline");
-  $("#t-editor-tab-scene").toggleClass("active", editorSubView === "scene");
-  const isMobile = window.matchMedia("(max-width: 768px)").matches;
-  if (isMobile) {
-    $("#t-outline-mobile-list").toggle(editorSubView === "outline");
-  }
-  syncAddFabVisibility();
 }
 function getBriefText(text, maxLen = 38) {
   const s = (text || "").replace(/\s+/g, " ").trim();
@@ -29296,20 +28516,16 @@ function renderMobileCards() {
     $list.html('<div class="t-outline-mobile-empty">\u6682\u65E0\u5927\u7EB2\uFF0C\u53EF\u5148\u751F\u6210\uFF0C\u6216\u624B\u52A8\u521B\u5EFA\u3002<div style="margin-top:8px;"><button id="t-outline-mobile-create-first" class="t-btn t-btn-xs"><i class="fa-solid fa-plus"></i> \u521B\u5EFA\u7B2C\u4E00\u6761\u5927\u7EB2</button></div></div>');
     return;
   }
-  const cards = outlineItems.map((item, idx) => {
-    const sceneCount = Array.isArray(item.scenes) ? item.scenes.length : 0;
-    return `
+  const cards = outlineItems.map((item, idx) => `
             <div class="t-outline-mobile-card" data-index="${idx}">
                 <div class="t-outline-mobile-head">
                     <span class="idx">#${item.index}</span>
                     <span class="time">${escapeHtml4(item.time || "\u672A\u8BBE\u65F6\u95F4")}</span>
-                    <span class="scene-count">\u7EC6\u7EB2 ${sceneCount}</span>
                 </div>
                 <div class="t-outline-mobile-title">${escapeHtml4(item.title || "\u672A\u547D\u540D\u6807\u9898")}</div>
                 <div class="t-outline-mobile-plot">${escapeHtml4(getBriefText(item.plot))}</div>
             </div>
-        `;
-  }).join("");
+        `).join("");
   $list.html(cards);
 }
 function openMobileEditor(index) {
@@ -29321,21 +28537,12 @@ function openMobileEditor(index) {
   $drawer.find("#t-mobile-field-title").val(item.title || "");
   $drawer.find("#t-mobile-field-plot").val(item.plot || "");
   $drawer.find("#t-mobile-field-foreshadowing").val(item.foreshadowing || "");
-  renderMobileDrawerScenes(index);
-  setMobileEditorSubView("outline");
   $drawer.addClass("show");
   syncAddFabVisibility();
 }
 function closeMobileEditor() {
   $("#t-outline-mobile-drawer").removeClass("show").attr("data-index", "");
   syncAddFabVisibility();
-}
-function setMobileEditorSubView(view) {
-  mobileEditorSubView = view === "scene" ? "scene" : "outline";
-  $("#t-mobile-outline-view").toggle(mobileEditorSubView === "outline");
-  $("#t-mobile-scene-view").toggle(mobileEditorSubView === "scene");
-  $("#t-mobile-tab-outline").toggleClass("active", mobileEditorSubView === "outline");
-  $("#t-mobile-tab-scene").toggleClass("active", mobileEditorSubView === "scene");
 }
 function saveMobileEditor() {
   const $drawer = $("#t-outline-mobile-drawer");
@@ -29369,7 +28576,6 @@ function renderDesktopEditor(index, focusField = "") {
             <textarea id="t-desk-field-plot" class="t-outline-textarea" rows="4">${escapeHtml4(item.plot)}</textarea>
             <label>\u4F0F\u7B14</label>
             <textarea id="t-desk-field-foreshadowing" class="t-outline-textarea" rows="3">${escapeHtml4(item.foreshadowing)}</textarea>
-            <div class="t-outline-empty" style="margin-top:6px;">\u7EC6\u7EB2\u7F16\u8F91\u8BF7\u5207\u6362\u5230\u4E0A\u65B9\u201C\u7EC6\u7EB2\u7F16\u8F91\u201D\u9875</div>
         </div>
         <div class="t-desk-editor-actions">
             <button class="t-btn t-btn-primary" id="t-desk-editor-save"><i class="fa-solid fa-check"></i> \u4FDD\u5B58</button>
@@ -29408,11 +28614,6 @@ function saveDesktopEditor() {
   item.foreshadowing = $("#t-desk-field-foreshadowing").val() || "";
   renderRows();
   saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-}
-function updateGenerateAllScenesButtonState() {
-  const hasOutline = Array.isArray(outlineItems) && outlineItems.length > 0;
-  $("#t-outline-generate-all-scenes").prop("disabled", !hasOutline);
-  refreshRollingProgressUI();
 }
 function refreshRollingProgressUI() {
   const $panel = $("#t-outline-rolling");
@@ -29485,49 +28686,6 @@ function toggleRollingOutlinePreview(forceOpen) {
     rollingPreviewExpandedIdx = -1;
   }
 }
-function refreshSceneHubListIfOpen() {
-  if ($("#t-scene-hub-overlay").length > 0) {
-    renderSceneHubWindow();
-    refreshRollingProgressUI();
-  }
-}
-function getMobileDrawerIndex() {
-  return Number($("#t-outline-mobile-drawer").attr("data-index"));
-}
-function renderMobileDrawerScenes(index) {
-  const item = outlineItems[index];
-  const $list = $("#t-mobile-scenes-list");
-  if (!item || $list.length === 0) return;
-  const scenes = Array.isArray(item.scenes) ? item.scenes : [];
-  $("#t-mobile-scene-count").text(String(scenes.length));
-  if (scenes.length === 0) {
-    $list.html('<div class="t-mobile-scene-empty">\u6682\u65E0\u7EC6\u7EB2\u573A\u666F\uFF0C\u53EF\u70B9\u51FB\u201C\u751F\u6210\u7EC6\u7EB2\u201D\u6216\u201C\u65B0\u589E\u573A\u666F\u201D</div>');
-    return;
-  }
-  const html = scenes.map((scene, sceneIndex) => `
-        <div class="t-mobile-scene-card" data-scene-index="${sceneIndex}">
-            <div class="t-mobile-scene-title">\u573A\u666F ${scene.scene_index}</div>
-            <label>\u65F6\u95F4</label>
-            <input class="t-outline-input" data-mobile-scene-field="scene_time" value="${escapeHtml4(scene.scene_time)}">
-            <label>\u5730\u70B9</label>
-            <input class="t-outline-input" data-mobile-scene-field="scene_location" value="${escapeHtml4(scene.scene_location)}">
-            <label>\u76EE\u6807</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="scene_goal">${escapeHtml4(scene.scene_goal)}</textarea>
-            <label>\u51B2\u7A81</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="conflict">${escapeHtml4(scene.conflict)}</textarea>
-            <label>\u5173\u952E\u8282\u70B9</label>
-            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="key_beats">${escapeHtml4(scene.key_beats)}</textarea>
-            <label>\u53D1\u9001\u6307\u4EE4</label>
-            <textarea class="t-outline-textarea" rows="3" data-mobile-scene-field="sendable_prompt">${escapeHtml4(scene.sendable_prompt)}</textarea>
-            <label>\u5907\u6CE8</label>
-            <textarea class="t-outline-textarea" rows="2" data-mobile-scene-field="notes">${escapeHtml4(scene.notes)}</textarea>
-            <div class="t-mobile-scene-actions">
-                <button class="t-btn t-btn-xs t-plan-delete-btn" data-action="mobile-delete-scene" data-scene-index="${sceneIndex}"><i class="fa-solid fa-trash"></i> \u5220\u9664\u573A\u666F</button>
-            </div>
-        </div>
-    `).join("");
-  $list.html(html);
-}
 async function runGenerationFlow(cfg) {
   const useStream = isStreamingEnabled();
   return runOutlineGeneration(async (signal) => {
@@ -29562,117 +28720,60 @@ async function runGenerationFlow(cfg) {
         parseHint: "\u4F60\u53EF\u4EE5\u76F4\u63A5\u4FEE\u6B63 JSON \u540E\u70B9\u51FB\u6309\u94AE\u91CD\u65B0\u89E3\u6790\uFF0C\u65E0\u9700\u91CD\u65B0\u8BF7\u6C42\u6A21\u578B\u3002",
         parseAction: async (editedText) => {
           cfg.apply(cfg.parse(editedText));
-          if (window.toastr) toastr.success(cfg.successMessage(outlineItems.length, true), cfg.label);
+          if (window.toastr) toastr.success(cfg.successMessage(true), cfg.label);
         }
       });
       throw parseError;
     }
-    if (window.toastr) toastr.success(cfg.successMessage(outlineItems.length, false), cfg.label);
+    if (window.toastr) toastr.success(cfg.successMessage(false), cfg.label);
   }, { timeoutSec: cfg.timeoutSec });
 }
-async function generateAllScenes() {
+async function generateRecommendations() {
   if (!ensureEditingPlanContext()) return;
   if (!Array.isArray(outlineItems) || outlineItems.length === 0) {
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u751F\u6210\u6216\u586B\u5199\u603B\u7EB2", "\u6545\u4E8B\u7EC6\u7EB2");
-    return;
-  }
-  const $buttons = $("#t-outline-generate-all-scenes");
-  const originTexts = [];
-  $buttons.each(function() {
-    originTexts.push($(this).html());
-    $(this).prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i>');
-  });
-  try {
-    const storyInput = ($("#t-outline-story-input").val() || "").trim();
-    const params = getOutlineGenParams().scenes;
-    await runGenerationFlow({
-      label: "\u6545\u4E8B\u7EC6\u7EB2",
-      historyLabel: "\u7EC6\u7EB2\u751F\u6210",
-      streamingTitle: "\u6D41\u5F0F\u751F\u6210\u7EC6\u7EB2\u4E2D...",
-      doneTitle: "\u7EC6\u7EB2\u751F\u6210\u5B8C\u6210",
-      failTitle: "\u7EC6\u7EB2\u89E3\u6790\u5931\u8D25 - \u53EF\u624B\u52A8\u4FEE\u590D",
-      temperature: params.temperature,
-      maxTokens: params.maxTokens,
-      timeoutSec: params.timeoutSec,
-      buildMessages: (ctx, opening) => buildAllScenesPrompt(ctx, storyInput, opening),
-      parse: parseAllScenesResponse,
-      apply: applyParsedScenes,
-      reparseLabel: "\u91CD\u65B0\u89E3\u6790\u7EC6\u7EB2\u5E76\u5E94\u7528",
-      successMessage: (count, fixed) => fixed ? `\u4FEE\u590D\u6210\u529F\uFF0C\u5DF2\u5E94\u7528 ${count} \u6761\u60C5\u8282\u7EC6\u7EB2` : `\u5DF2\u4E00\u6B21\u6027\u751F\u6210 ${count} \u6761\u60C5\u8282\u7684\u7EC6\u7EB2`
-    });
-  } catch (e) {
-    reportGenerationError(e, "\u6545\u4E8B\u7EC6\u7EB2", "\u6279\u91CF\u7EC6\u7EB2\u751F\u6210\u5931\u8D25");
-  } finally {
-    stopResponseTimer();
-    $buttons.each(function(idx) {
-      $(this).prop("disabled", false).html(originTexts[idx] || '<i class="fa-solid fa-wand-magic-sparkles"></i>');
-    });
-  }
-}
-async function generateNextRolling() {
-  if (!ensureEditingPlanContext()) return;
-  if (!Array.isArray(outlineItems) || outlineItems.length === 0) {
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u751F\u6210\u6216\u586B\u5199\u603B\u7EB2\uFF0C\u518D\u6E10\u8FDB\u7EED\u5199", "\u6E10\u8FDB\u7EED\u5199");
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u751F\u6210\u6216\u586B\u5199\u603B\u7EB2\uFF0C\u518D\u63A8\u8350\u5267\u60C5", "\u5267\u60C5\u63A8\u8FDB");
     return;
   }
   const plan = getPlans().find((p) => p.id === editingPlanId);
   const progress = getPlanProgress(plan);
   if (progress.reachedEnding) {
-    if (window.toastr) toastr.info("\u5DF2\u62B5\u8FBE\u7ED3\u5C40\u3002\u5982\u9700\u91CD\u5199\uFF0C\u53EF\u5728\u8FDB\u5EA6\u6761\u624B\u52A8\u56DE\u9000\u3002", "\u6E10\u8FDB\u7EED\u5199");
+    if (window.toastr) toastr.info("\u5DF2\u62B5\u8FBE\u7ED3\u5C40\u3002\u5982\u9700\u91CD\u5199\uFF0C\u53EF\u5728\u8FDB\u5EA6\u6761\u624B\u52A8\u56DE\u9000\u3002", "\u5267\u60C5\u63A8\u8FDB");
     return;
   }
   const $btn = $("#t-outline-generate-next");
   const originHtml = $btn.html();
-  $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u7EED\u5199\u4E2D...');
+  $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u63A8\u8350\u4E2D...');
   const total = outlineItems.length;
   const currentItem = outlineItems[progress.itemIndex];
   const progressHint = `\u5F53\u524D\u63A8\u8FDB\u5230\u7B2C ${progress.itemIndex + 1}/${total} \u6761\u5927\u7EB2\uFF08${currentItem?.title || "\u672A\u547D\u540D"}\uFF09\u3002\u8DDD\u7ED3\u5C40\u8FD8\u6709 ${total - 1 - progress.itemIndex} \u6761\u3002\u8BF7\u53EA\u63A8\u8FDB\u4E00\u5C0F\u6B65\u3002`;
-  let outcome = { appended: 0, reachedEnding: false, note: "" };
   try {
     const $storyInput = $("#t-outline-story-input");
     const storyInput = ($storyInput.length > 0 ? $storyInput.val() || "" : getPlanInstruction(getPlans().find((p) => p.id === editingPlanId))).trim();
     const params = getOutlineGenParams().scenes;
     await runGenerationFlow({
-      label: "\u6E10\u8FDB\u7EED\u5199",
-      historyLabel: "\u6E10\u8FDB\u7EED\u5199",
-      streamingTitle: "\u6D41\u5F0F\u6E10\u8FDB\u7EED\u5199\u4E2D...",
-      doneTitle: "\u6E10\u8FDB\u7EED\u5199\u5B8C\u6210",
-      failTitle: "\u6E10\u8FDB\u7EED\u5199\u89E3\u6790\u5931\u8D25 - \u53EF\u624B\u52A8\u4FEE\u590D",
+      label: "\u5267\u60C5\u63A8\u8FDB",
+      historyLabel: "\u5267\u60C5\u63A8\u8350",
+      streamingTitle: "\u6D41\u5F0F\u751F\u6210\u5267\u60C5\u63A8\u8350\u4E2D...",
+      doneTitle: "\u5267\u60C5\u63A8\u8350\u5B8C\u6210",
+      failTitle: "\u5267\u60C5\u63A8\u8350\u89E3\u6790\u5931\u8D25 - \u53EF\u624B\u52A8\u4FEE\u590D",
       temperature: params.temperature,
       maxTokens: params.maxTokens,
       timeoutSec: params.timeoutSec,
-      buildMessages: (ctx, opening) => buildRollingPrompt(ctx, storyInput, opening, progressHint),
-      parse: parseRollingResponse,
+      buildMessages: (ctx, opening) => buildRecommendationPrompt(ctx, storyInput, opening, progressHint),
+      parse: (raw) => parseRecommendationResponse(raw, progress.itemIndex, total),
       apply: (parsed) => {
-        const res = appendRollingScenes(parsed, progress.itemIndex);
-        let nextIdx = progress.itemIndex;
-        const reported = parsed?.progress?.currentItemIndex;
-        if (Number.isFinite(reported)) {
-          nextIdx = Math.min(Math.max(reported - 1, 0), total - 1);
-        } else if (res.lastTouchedIdx >= 0) {
-          nextIdx = res.lastTouchedIdx;
-        }
-        const reachedEnding = parsed?.progress?.reachedEnding === true || nextIdx >= total - 1 && parsed?.progress?.reachedEnding === true;
-        setPlanProgress(editingPlanId, { itemIndex: nextIdx, reachedEnding });
-        if (editingPlanId) setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
-        outcome = { appended: res.appended, reachedEnding, note: parsed?.progress?.note || "" };
-        refreshRollingProgressUI();
-        refreshSceneHubListIfOpen();
+        latestCandidates = parsed.candidates.map((c) => ({ ...c, used: false }));
+        renderCandidates();
       },
-      reparseLabel: "\u91CD\u65B0\u89E3\u6790\u5E76\u8FFD\u52A0",
-      successMessage: () => {
-        const tail = outcome.reachedEnding ? "\uFF0C\u5DF2\u62B5\u8FBE\u7ED3\u5C40" : "";
-        const note = outcome.note ? `\uFF08${outcome.note}\uFF09` : "";
-        return `\u5DF2\u7EED\u5199 ${outcome.appended} \u4E2A\u573A\u666F${tail}${note}`;
-      }
+      reparseLabel: "\u91CD\u65B0\u89E3\u6790\u5E76\u5E94\u7528",
+      successMessage: () => `\u5DF2\u751F\u6210 ${latestCandidates.length} \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411`
     });
   } catch (e) {
-    reportGenerationError(e, "\u6E10\u8FDB\u7EED\u5199", "\u6E10\u8FDB\u7EED\u5199\u5931\u8D25");
+    reportGenerationError(e, "\u5267\u60C5\u63A8\u8FDB", "\u5267\u60C5\u63A8\u8350\u5931\u8D25");
   } finally {
     stopResponseTimer();
-    $btn.prop("disabled", false).html(originHtml || '<i class="fa-solid fa-forward-step"></i> \u751F\u6210\u4E0B\u4E00\u6BB5');
+    $btn.prop("disabled", false).html(originHtml || '<i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5');
     refreshRollingProgressUI();
-    refreshSceneHubListIfOpen();
   }
 }
 async function generateOutline() {
@@ -29696,7 +28797,10 @@ async function generateOutline() {
       parse: parseOutlineResponse,
       apply: (parsed) => applyParsedOutline(parsed, storyInput, insertMode),
       reparseLabel: "\u91CD\u65B0\u89E3\u6790\u5927\u7EB2\u5E76\u5E94\u7528",
-      successMessage: (count, fixed) => fixed ? `\u4FEE\u590D\u6210\u529F\uFF0C\u5DF2\u751F\u6210 ${count} \u6761\u5927\u7EB2` : `\u5DF2\u751F\u6210 ${count} \u6761\u5927\u7EB2`
+      successMessage: (fixed) => {
+        const count = outlineItems.length;
+        return fixed ? `\u4FEE\u590D\u6210\u529F\uFF0C\u5DF2\u751F\u6210 ${count} \u6761\u5927\u7EB2` : `\u5DF2\u751F\u6210 ${count} \u6761\u5927\u7EB2`;
+      }
     });
   } catch (e) {
     reportGenerationError(e, "\u6545\u4E8B\u5927\u7EB2", "\u751F\u6210\u5931\u8D25");
@@ -29763,7 +28867,6 @@ function bindEvents() {
     }
     loadPlanToEditor(plan);
     showOutlineView("editor");
-    setEditorSubView("outline");
     updatePlanWorkflowUI();
   });
   $overlay.on("click", "#t-hub-create-plan", function() {
@@ -29780,7 +28883,6 @@ function bindEvents() {
     loadPlanToEditor(created);
     renderPlanHub();
     showOutlineView("editor");
-    setEditorSubView("outline");
     updatePlanWorkflowUI();
     if (window.toastr) toastr.success(`\u5DF2\u521B\u5EFA\u5206\u652F\u65B9\u6848\uFF1A${created.name}`, "\u6545\u4E8B\u5927\u7EB2");
   });
@@ -29823,7 +28925,7 @@ function bindEvents() {
     activePlanId = planId;
     setActivePlanId(activePlanId);
     renderPlanHub();
-    if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
+    if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u5267\u60C5\u63A8\u8FDB\u6765\u6E90\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "[data-action='plan-item-prev']", function() {
     const dialogPlanId = String($("#t-outline-plan-detail-dialog").attr("data-plan-id") || "").trim();
@@ -29877,9 +28979,6 @@ function bindEvents() {
   $overlay.on("click", "#t-outline-generate", async () => {
     await generateOutline();
   });
-  $overlay.on("click", "#t-outline-generate-all-scenes", async () => {
-    await generateAllScenes();
-  });
   $overlay.on("click", "#t-outline-add-fab", () => {
     const isOpen = $("#t-outline-add-sheet").hasClass("show");
     if (isOpen) closeAddItemSheet();
@@ -29890,10 +28989,6 @@ function bindEvents() {
   });
   $overlay.on("click", "#t-outline-add-outline-item", () => {
     appendOutlineItem();
-    closeAddItemSheet();
-  });
-  $overlay.on("click", "#t-outline-add-scene-item", () => {
-    appendSceneItem();
     closeAddItemSheet();
   });
   $overlay.on("click", "#t-outline-empty-create-first, #t-outline-mobile-create-first", () => {
@@ -29925,88 +29020,12 @@ function bindEvents() {
     selectedRowIndex = selectedRowIndex === idx ? -1 : idx;
     renderRows();
   });
-  $overlay.on("click", "#t-outline-tbody [data-action='toggle-scenes']", function() {
-    const rowIndex = Number($(this).closest("tr").data("index"));
-    const fallbackIndex = Number($(this).closest("tr").data("op-parent"));
-    const resolvedIndex = Number.isNaN(rowIndex) ? fallbackIndex : rowIndex;
-    if (Number.isNaN(resolvedIndex)) return;
-    sceneExpandedMap[resolvedIndex] = !sceneExpandedMap[resolvedIndex];
-    renderRows();
-  });
-  $overlay.on("click", "#t-editor-tab-outline", () => {
-    setEditorSubView("outline");
-  });
-  $overlay.on("click", "#t-editor-tab-scene", () => {
-    setEditorSubView("scene");
-    renderSceneEditorPage();
-  });
   $overlay.on("click", "#t-desk-editor-close", () => {
     closeDesktopEditor();
   });
   $overlay.on("click", "#t-desk-editor-save", () => {
     saveDesktopEditor();
     if (window.toastr) toastr.success("\u5DF2\u4FDD\u5B58\u7F16\u8F91", "\u6545\u4E8B\u5927\u7EB2");
-  });
-  $overlay.on("input", "#t-outline-scene-editor-page [data-scene-page-field]", function() {
-    const idx = getSceneEditorTargetIndex();
-    if (idx < 0 || !outlineItems[idx]) return;
-    const item = outlineItems[idx];
-    const sceneIndex = Number($(this).closest(".t-scene-page-card").data("scene-index"));
-    const field = $(this).data("scene-page-field");
-    if (Number.isNaN(sceneIndex) || !item.scenes?.[sceneIndex]) return;
-    item.scenes[sceneIndex][field] = $(this).val();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  });
-  $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-add']", () => {
-    const idx = getSceneEditorTargetIndex();
-    if (idx < 0 || !outlineItems[idx]) return;
-    const item = outlineItems[idx];
-    if (!Array.isArray(item.scenes)) item.scenes = [];
-    item.scenes.push(createEmptySceneItem(item.scenes.length + 1));
-    reindexScenes(item);
-    renderSceneEditorPage();
-    renderRows();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  });
-  $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-delete']", function() {
-    const idx = getSceneEditorTargetIndex();
-    if (idx < 0 || !outlineItems[idx]) return;
-    const item = outlineItems[idx];
-    const sceneIndex = Number($(this).data("scene-index"));
-    if (Number.isNaN(sceneIndex) || !item.scenes?.[sceneIndex]) return;
-    item.scenes.splice(sceneIndex, 1);
-    reindexScenes(item);
-    renderSceneEditorPage();
-    renderRows();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  });
-  $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-delete-item']", () => {
-    const idx = getSceneEditorTargetIndex();
-    if (idx < 0 || !outlineItems[idx]) return;
-    const itemTitle = String(outlineItems[idx]?.title || "").trim() || `#${idx + 1}`;
-    if (!window.confirm(`\u786E\u8BA4\u5220\u9664\u7EC6\u7EB2\u6761\u76EE\u300C${itemTitle}\u300D\uFF1F`)) return;
-    const deleted = deleteOutlineItemAt(idx);
-    if (deleted && window.toastr) toastr.success("\u5DF2\u5220\u9664\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
-  });
-  $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-prev']", () => {
-    if (sceneEditorItemIndex > 0) {
-      sceneEditorItemIndex -= 1;
-      renderSceneEditorPage();
-    }
-  });
-  $overlay.on("click", "#t-outline-scene-editor-page [data-action='scene-page-next']", () => {
-    if (sceneEditorItemIndex < outlineItems.length - 1) {
-      sceneEditorItemIndex += 1;
-      renderSceneEditorPage();
-    }
-  });
-  $overlay.on("click", "#t-mobile-tab-outline", () => {
-    setMobileEditorSubView("outline");
-  });
-  $overlay.on("click", "#t-mobile-tab-scene", () => {
-    const index = getMobileDrawerIndex();
-    setMobileEditorSubView("scene");
-    if (!Number.isNaN(index)) renderMobileDrawerScenes(index);
   });
   $overlay.on("click", "#t-outline-mobile-list .t-outline-mobile-card", function() {
     const index = Number($(this).data("index"));
@@ -30023,41 +29042,7 @@ function bindEvents() {
   $overlay.on("click", "#t-mobile-drawer-delete", function() {
     const index = Number($("#t-outline-mobile-drawer").attr("data-index"));
     const deleted = deleteOutlineItemAt(index, { closeMobile: true });
-    if (deleted && window.toastr) toastr.success("\u5DF2\u5220\u9664\u7EC6\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
-  });
-  $overlay.on("click", "#t-mobile-add-scene", function() {
-    const plotIndex = getMobileDrawerIndex();
-    const item = outlineItems[plotIndex];
-    if (!item) return;
-    if (!Array.isArray(item.scenes)) item.scenes = [];
-    item.scenes.push(createEmptySceneItem(item.scenes.length + 1));
-    reindexScenes(item);
-    renderRows();
-    renderMobileDrawerScenes(plotIndex);
-    setMobileEditorSubView("scene");
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  });
-  $overlay.on("input", "#t-mobile-scenes-list [data-mobile-scene-field]", function() {
-    const plotIndex = getMobileDrawerIndex();
-    const item = outlineItems[plotIndex];
-    if (!item || !Array.isArray(item.scenes)) return;
-    const sceneIndex = Number($(this).closest(".t-mobile-scene-card").data("scene-index"));
-    const field = $(this).data("mobile-scene-field");
-    if (Number.isNaN(sceneIndex) || !item.scenes[sceneIndex]) return;
-    item.scenes[sceneIndex][field] = $(this).val();
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
-  });
-  $overlay.on("click", "#t-mobile-scenes-list [data-action='mobile-delete-scene']", function() {
-    const plotIndex = getMobileDrawerIndex();
-    const item = outlineItems[plotIndex];
-    if (!item || !Array.isArray(item.scenes)) return;
-    const sceneIndex = Number($(this).data("scene-index"));
-    if (Number.isNaN(sceneIndex)) return;
-    item.scenes.splice(sceneIndex, 1);
-    reindexScenes(item);
-    renderRows();
-    renderMobileDrawerScenes(plotIndex);
-    saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
+    if (deleted && window.toastr) toastr.success("\u5DF2\u5220\u9664\u5927\u7EB2\u6761\u76EE", "\u6545\u4E8B\u5927\u7EB2");
   });
 }
 function openStoryOutlineWindow() {
@@ -30073,13 +29058,10 @@ function openStoryOutlineWindow() {
   }
   responseElapsedMs = 0;
   stopResponseTimer();
-  sceneExpandedMap = {};
   selectedRowIndex = -1;
   activePlanId = "";
   planItemCursorMap = {};
   setEditingPlan(null);
-  editorSubView = "outline";
-  sceneEditorItemIndex = -1;
   const defaultPlanName = createPlanName(getCurrentCharCardName());
   const html = `
     <div id="t-story-outline-overlay" class="t-overlay t-root">
@@ -30099,9 +29081,6 @@ function openStoryOutlineWindow() {
                         <div class="t-outline-primary-actions">
                             <button id="t-outline-generate" class="t-btn t-btn-primary">
                                 <i class="fa-solid fa-wand-magic-sparkles"></i> \u5927\u7EB2\u751F\u6210
-                            </button>
-                            <button id="t-outline-generate-all-scenes" class="t-btn" disabled>
-                                <i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2\u751F\u6210
                             </button>
                         </div>
                     </div>
@@ -30128,7 +29107,7 @@ function openStoryOutlineWindow() {
                         <button id="t-hub-create-plan" class="t-btn t-btn-xs"><i class="fa-solid fa-plus"></i> \u65B0\u5EFA\u65B9\u6848</button>
                         <button id="t-hub-create-branch" class="t-btn t-btn-xs"><i class="fa-solid fa-code-branch"></i> \u65B0\u5EFA\u5206\u652F</button>
                         <button id="t-hub-edit-plan" class="t-btn t-btn-xs t-hub-primary-action"><i class="fa-solid fa-wand-magic-sparkles"></i> \u7F16\u8F91&\u751F\u6210\u5927\u7EB2</button>
-                        <button id="t-hub-view-detail" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u67E5\u770B\u60C5\u8282&\u7EC6\u7EB2</button>
+                        <button id="t-hub-view-detail" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u67E5\u770B\u60C5\u8282</button>
                         <button id="t-hub-view-instruction" class="t-btn t-btn-xs"><i class="fa-solid fa-file-lines"></i> \u6545\u4E8B\u6307\u4EE4</button>
                     </div>
                     <div id="t-outline-plan-list" class="t-outline-plan-list"></div>
@@ -30138,7 +29117,6 @@ function openStoryOutlineWindow() {
                     <div class="t-editor-tabs">
                         <button id="t-outline-back-hub" class="t-btn t-btn-xs"><i class="fa-solid fa-arrow-left"></i> \u8FD4\u56DE\u65B9\u6848\u9875</button>
                         <button id="t-editor-tab-outline" class="t-btn t-btn-xs active"><i class="fa-solid fa-table"></i> \u5927\u7EB2\u7F16\u8F91</button>
-                        <button id="t-editor-tab-scene" class="t-btn t-btn-xs"><i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2\u7F16\u8F91</button>
                     </div>
 
                     <div id="t-outline-subview-outline" class="t-outline-subview">
@@ -30160,19 +29138,11 @@ function openStoryOutlineWindow() {
                         <div id="t-outline-desktop-editor" class="t-outline-desktop-editor"></div>
                     </div>
 
-                    <div id="t-outline-subview-scene" class="t-outline-subview" style="display:none;">
-                        <div id="t-outline-scene-editor-page" class="t-outline-scene-editor-page"></div>
-                    </div>
-
                     <div id="t-outline-mobile-list" class="t-outline-mobile-list"></div>
                     <div id="t-outline-mobile-drawer" class="t-outline-mobile-drawer" data-index="">
                         <div class="t-outline-mobile-drawer-head">
                             <span><i class="fa-solid fa-pen-to-square"></i> \u7F16\u8F91\u60C5\u8282</span>
                             <button id="t-mobile-drawer-close" class="t-btn t-btn-xs"><i class="fa-solid fa-times"></i></button>
-                        </div>
-                        <div class="t-mobile-editor-tabs">
-                            <button id="t-mobile-tab-outline" class="t-btn t-btn-xs active"><i class="fa-solid fa-table"></i> \u5927\u7EB2</button>
-                            <button id="t-mobile-tab-scene" class="t-btn t-btn-xs"><i class="fa-solid fa-clapperboard"></i> \u7EC6\u7EB2</button>
                         </div>
                         <div class="t-outline-mobile-drawer-body">
                             <div id="t-mobile-outline-view">
@@ -30184,13 +29154,6 @@ function openStoryOutlineWindow() {
                                 <textarea id="t-mobile-field-plot" class="t-outline-textarea" rows="5"></textarea>
                                 <label>\u4F0F\u7B14</label>
                                 <textarea id="t-mobile-field-foreshadowing" class="t-outline-textarea" rows="3"></textarea>
-                            </div>
-                            <div id="t-mobile-scene-view" style="display:none;">
-                                <div class="t-mobile-scene-head">
-                                    <span><i class="fa-solid fa-clapperboard"></i> \u573A\u666F\u7EC6\u7EB2\uFF08<span id="t-mobile-scene-count">0</span>\uFF09</span>
-                                    <button id="t-mobile-add-scene" class="t-btn t-btn-xs"><i class="fa-solid fa-plus"></i> \u65B0\u589E\u573A\u666F</button>
-                                </div>
-                                <div id="t-mobile-scenes-list" class="t-mobile-scenes-list"></div>
                             </div>
                         </div>
                         <div class="t-outline-mobile-drawer-actions">
@@ -30205,7 +29168,6 @@ function openStoryOutlineWindow() {
                         </button>
                         <div id="t-outline-add-sheet" class="t-outline-add-sheet t-root" role="menu" aria-label="\u65B0\u589E\u6761\u76EE\u7C7B\u578B">
                             <button id="t-outline-add-outline-item" class="t-btn" role="menuitem"><i class="fa-solid fa-table"></i> \u65B0\u589E\u5927\u7EB2\u6761\u76EE</button>
-                            <button id="t-outline-add-scene-item" class="t-btn" role="menuitem"><i class="fa-solid fa-clapperboard"></i> \u65B0\u589E\u7EC6\u7EB2\u6761\u76EE</button>
                         </div>
                     </div>
                 </div>
@@ -30226,7 +29188,7 @@ function openStoryOutlineWindow() {
   syncAddFabVisibility();
   refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, rawResponseHistory, sceneExpandedMap, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, editorSubView, sceneEditorItemIndex, mobileEditorSubView, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, sceneHubSelectedKey, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, rollingPreviewExpandedIdx;
+var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, latestCandidates, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, rollingPreviewExpandedIdx;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -30239,13 +29201,9 @@ var init_storyOutlineWindow = __esm({
     outlineItems = [];
     lastRawResponse = "";
     rawResponseHistory = [];
-    sceneExpandedMap = {};
     selectedRowIndex = -1;
     desktopEditorIndex = -1;
     isRawDialogOpen = false;
-    editorSubView = "outline";
-    sceneEditorItemIndex = -1;
-    mobileEditorSubView = "outline";
     responseTimerStartAt = 0;
     responseElapsedMs = 0;
     responseTimerId = null;
@@ -30270,7 +29228,7 @@ var init_storyOutlineWindow = __esm({
     editingPlanId = "";
     editingPlanBaseline = "";
     planItemCursorMap = {};
-    sceneHubSelectedKey = "";
+    latestCandidates = [];
     autoSavePlanTimer = null;
     planRenameMode = false;
     planRenameSnapshot = "";
@@ -37006,7 +35964,7 @@ async function openMenu($btn) {
   const menuHtml = `
     <div id="${MENU_ID}" role="menu" aria-label="\u6545\u4E8B\u5927\u7EB2\u5165\u53E3">
         ${showOutlineActions ? `<button class="t-outline-entry-item" id="t-outline-entry-open-scenes" role="menuitem" ${canOpenScenes ? "" : "disabled"}>
-            <i class="fa-solid fa-clapperboard"></i> \u53D1\u9001\u7EC6\u7EB2
+            <i class="fa-solid fa-clapperboard"></i> \u5267\u60C5\u63A8\u8FDB
         </button>` : ""}
         ${showTheater ? `<button class="t-outline-entry-item" id="t-outline-entry-open-theater" role="menuitem">
             <i class="fa-solid fa-masks-theater"></i> \u56DE\u58F0\u5C0F\u5267\u573A
@@ -37017,7 +35975,7 @@ async function openMenu($btn) {
         ${rewriteEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-rewrite" role="menuitem"><i class="fa-solid fa-highlighter"></i> \u6587\u672C\u6539\u5199</button>' : ""}
         ${loreEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-lore" role="menuitem"><i class="fa-solid fa-brain"></i> \u8BBE\u5B9A\u7EF4\u62A4\uFF06\u804A\u5929\u603B\u7ED3</button>' : ""}
         ${recallEnabled ? '<button class="t-outline-entry-item" id="t-outline-entry-open-recall" role="menuitem"><i class="fa-solid fa-lightbulb"></i> \u8BB0\u5FC6\u53EC\u56DE</button>' : ""}
-        ${hasPlans ? hasSource ? "" : '<div class="t-outline-entry-tip">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u7EC6\u7EB2\u60C5\u8282\u6765\u6E90\u65B9\u6848</div>' : '<div class="t-outline-entry-tip">\u8BF7\u5148\u4FDD\u5B58\u81F3\u5C11\u4E00\u4E2A\u65B9\u6848</div>'}
+        ${hasPlans ? hasSource ? "" : '<div class="t-outline-entry-tip">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u5267\u60C5\u63A8\u8FDB\u6765\u6E90\u65B9\u6848</div>' : '<div class="t-outline-entry-tip">\u8BF7\u5148\u4FDD\u5B58\u81F3\u5C11\u4E00\u4E2A\u65B9\u6848</div>'}
     </div>`;
   $("body").append(menuHtml);
   const $menu = $(`#${MENU_ID}`);
