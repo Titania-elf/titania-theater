@@ -27122,7 +27122,9 @@ async function ensureOpeningTextForGeneration() {
 function getDefaultPromptTemplates() {
   return {
     outline: {
-      system: `\u4F60\u662F\u8D44\u6DF1\u53D9\u4E8B\u7B56\u5212\u3002\u8BF7\u57FA\u4E8E\u7ED9\u5B9A\u4FE1\u606F\u8BBE\u8BA1\u5267\u60C5\u5927\u7EB2\u3002
+      system: `\u4F60\u662F\u6545\u4E8B\u7ED3\u6784\u8BBE\u8BA1\u5E08\uFF08\u5267\u96C6 showrunner\uFF09\uFF0C\u8D1F\u8D23\u5728\u52A8\u7B14\u524D\u89C4\u5212\u6574\u6761\u6545\u4E8B\u5F27\u7EBF\u3002
+\u4F60\u4EE5"\u4E8B\u4EF6\u4E0E\u540E\u679C"\u4E3A\u601D\u8003\u5355\u4F4D\uFF1A\u4FEF\u77B0\u5168\u5C40\uFF0C\u51B3\u5B9A\u6BCF\u4E2A\u4E8B\u4EF6\u7684\u4F4D\u7F6E\u3001\u5206\u91CF\u4E0E\u65F6\u95F4\u8DE8\u5EA6\uFF1B\u6761\u76EE\u4E4B\u95F4\u7528"\u56E0\u6B64/\u4F46\u662F"\u8854\u63A5\uFF0C\u800C\u975E"\u7136\u540E"\u3002
+\u4F60\u4E0D\u662F\u6267\u7B14\u8005\u2014\u2014\u4E0D\u5199\u573A\u666F\u7EC6\u8282\uFF0C\u4E0D\u4EA4\u4EE3\u6BCF\u5929\u7684\u7ECF\u8FC7\uFF0C\u53EA\u7559\u9AA8\u67B6\u4E0E\u5173\u952E\u8F6C\u6298\u3002
 
 [\u786C\u6027\u8981\u6C42]
 1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
@@ -27133,7 +27135,14 @@ function getDefaultPromptTemplates() {
   "items": [
     {
       "index": 1,
-      "time": "\u65F6\u95F4\u70B9",
+      "time": "\u5F00\u573A\u5F53\u665A",
+      "title": "\u6807\u9898",
+      "plot": "\u5177\u4F53\u60C5\u8282",
+      "foreshadowing": "\u4F0F\u7B14\uFF0C\u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32"
+    },
+    {
+      "index": 2,
+      "time": "\u4E00\u5468\u540E",
       "title": "\u6807\u9898",
       "plot": "\u5177\u4F53\u60C5\u8282",
       "foreshadowing": "\u4F0F\u7B14\uFF0C\u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32"
@@ -27142,8 +27151,10 @@ function getDefaultPromptTemplates() {
 }
 3) items \u6570\u91CF\u5EFA\u8BAE 6-12 \u6761\u3002
 4) foreshadowing \u5B57\u6BB5\u5FC5\u987B\u5B58\u5728\uFF0C\u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32\u3002
-5) \u60C5\u8282\u9700\u8981\u8FDE\u8D2F\uFF0C\u5141\u8BB8\u9636\u6BB5\u6027\u8F6C\u6298\u3002
-6) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+5) \u60C5\u8282\u5FC5\u987B\u56E0\u679C\u8854\u63A5\uFF08\u4E0A\u4E00\u6761\u7684\u540E\u679C\u9A71\u52A8\u4E0B\u4E00\u6761\uFF09\uFF0C\u4F46\u76F8\u90BB\u6761\u76EE\u7684\u65F6\u95F4\u8DE8\u5EA6\u7531\u5267\u60C5\u5206\u91CF\u51B3\u5B9A\uFF1A\u8BE5\u5FEB\u5219\u5FEB\u3001\u8BE5\u6162\u5219\u6162\uFF0C\u9700\u8981\u65F6\u5927\u5E45\u8DF3\u8DC3\uFF08\u6570\u65E5/\u6570\u5468/\u6570\u6708/\u6570\u5E74\uFF09\uFF0C\u8DF3\u8FC7\u7684\u65F6\u95F4\u91CC\u7684\u5173\u952E\u53D8\u5316\u76F4\u63A5\u5199\u8FDB plot\u3002
+6) \u5148\u5224\u65AD\u6574\u4E2A\u6545\u4E8B\u6A2A\u8DE8\u7684\u603B\u65F6\u957F\uFF08\u4E00\u591C/\u6570\u65E5/\u6570\u6708/\u6570\u5E74/\u4E00\u751F\uFF09\uFF0C\u518D\u636E\u6B64\u5206\u914D\u5404\u6761\u76EE\u7684\u65F6\u95F4\uFF1B\u7981\u6B62\u9ED8\u8BA4\u9010\u65E5\u63A8\u8FDB\uFF0C\u7981\u6B62\u628A\u6574\u4E2A\u6545\u4E8B\u538B\u7F29\u5728\u8FDE\u7EED\u6570\u65E5\u4E4B\u5185\uFF08\u9664\u975E\u6545\u4E8B\u9700\u6C42\u660E\u786E\u8BBE\u5B9A\u4E3A\u77ED\u65F6\u95F4\u7EBF\uFF0C\u5982\u5BC6\u95ED\u7A7A\u95F4\u5355\u65E5\u60AC\u7591\uFF09\u3002
+7) time \u5199\u6210\u65F6\u95F4\u8DE8\u5EA6\u6807\u8BB0\u800C\u975E\u77AC\u65F6\u65F6\u523B\uFF0C\u683C\u5F0F\u53C2\u8003\uFF1A\u5F00\u573A\u5F53\u665A / \u4E09\u5929\u540E / \u4E00\u5468\u540E / \u534A\u5E74\u540E / \u6B21\u5E74\u6625\u5929 / \u4E09\u5E74\u540E\u3002
+8) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
       user: `[\u89D2\u8272\u8BBE\u5B9A]
 {{persona}}
 
@@ -35303,8 +35314,15 @@ async function showLoreReviewWindow() {
         </div>
     </div>
     `;
-  $("body").append(html);
-  bindEvents2();
+  try {
+    $("body").append(html);
+    bindEvents2();
+  } catch (e) {
+    $("#t-lore-review-overlay").remove();
+    TitaniaLogger.error("\u6253\u5F00\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u7A97\u53E3\u5931\u8D25", e);
+    if (window.toastr) toastr.error(`\u7A97\u53E3\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`, "Titania");
+    return;
+  }
   const LOAD_TIMEOUT = 8e3;
   setTimeout(async () => {
     try {
@@ -36947,7 +36965,10 @@ async function openFeatureDirect(featureKey, canOpenScenes) {
     }
     case "lore": {
       const { showLoreReviewWindow: showLoreReviewWindow2 } = await Promise.resolve().then(() => (init_loreReviewWindow(), loreReviewWindow_exports));
-      showLoreReviewWindow2();
+      showLoreReviewWindow2().catch((e) => {
+        console.error("[Titania] \u8BBE\u5B9A\u96C6\u7EF4\u62A4\u7A97\u53E3\u6253\u5F00\u5931\u8D25:", e);
+        if (window.toastr) toastr.error(`\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u6253\u5F00\u5931\u8D25\uFF1A${e.message}`, "Titania");
+      });
       return;
     }
     case "recall": {
@@ -37046,7 +37067,10 @@ async function openMenu($btn) {
     e.stopPropagation();
     closeMenu();
     const { showLoreReviewWindow: showLoreReviewWindow2 } = await Promise.resolve().then(() => (init_loreReviewWindow(), loreReviewWindow_exports));
-    showLoreReviewWindow2();
+    showLoreReviewWindow2().catch((e2) => {
+      console.error("[Titania] \u8BBE\u5B9A\u96C6\u7EF4\u62A4\u7A97\u53E3\u6253\u5F00\u5931\u8D25:", e2);
+      if (window.toastr) toastr.error(`\u8BBE\u5B9A\u96C6\u7EF4\u62A4\u6253\u5F00\u5931\u8D25\uFF1A${e2.message}`, "Titania");
+    });
   });
   $("#t-outline-entry-open-recall").on("click", async (e) => {
     e.preventDefault();
