@@ -18019,6 +18019,31 @@ textarea.t-input {
     margin-top: 8px;
 }
 
+/* \u5199\u5165\u65B9\u5F0F\u82AF\u7247\uFF1A\u4F4E\u9891\u5207\u6362\u63A7\u4EF6\uFF0C\u89C6\u89C9\u5F31\u5316\uFF0C\u70B9\u51FB\u5728\u8986\u76D6/\u8FFD\u52A0\u95F4\u5FAA\u73AF */
+.t-insert-mode-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: auto;
+    padding: 4px 12px;
+    min-height: 24px;
+    border: 1px solid var(--t-color-border-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--t-color-text);
+    font-family: inherit;
+    font-size: var(--t-text-caption);
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--t-transition-hover);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.t-insert-mode-chip:hover {
+    background: var(--t-color-surface-hover);
+    border-color: var(--t-color-accent-border-hover);
+}
+
 .t-opening-picker-list {
     border: 1px solid var(--t-color-border-cool);
     border-radius: 10px;
@@ -18851,15 +18876,6 @@ textarea.t-input {
 
     .t-outline-plan-list {
         max-height: none;
-    }
-
-    .t-scene-hub-footer {
-        justify-content: stretch;
-    }
-
-    .t-scene-hub-footer .t-outline-mode {
-        width: 100%;
-        margin-right: 0 !important; /* override scene hub template inline margin-right:auto on mobile */
     }
 
     .t-plan-accordion-head {
@@ -26804,6 +26820,7 @@ function getDefaultPromptTemplates() {
       system: `\u4F60\u662F\u6545\u4E8B\u7ED3\u6784\u8BBE\u8BA1\u5E08\uFF08\u5267\u96C6 showrunner\uFF09\uFF0C\u8D1F\u8D23\u5728\u52A8\u7B14\u524D\u89C4\u5212\u6574\u6761\u6545\u4E8B\u5F27\u7EBF\u3002
 \u4F60\u4EE5"\u4E8B\u4EF6\u4E0E\u540E\u679C"\u4E3A\u601D\u8003\u5355\u4F4D\uFF1A\u4FEF\u77B0\u5168\u5C40\uFF0C\u51B3\u5B9A\u6BCF\u4E2A\u4E8B\u4EF6\u7684\u4F4D\u7F6E\u3001\u5206\u91CF\u4E0E\u65F6\u95F4\u8DE8\u5EA6\uFF1B\u6761\u76EE\u4E4B\u95F4\u7528"\u56E0\u6B64/\u4F46\u662F"\u8854\u63A5\uFF0C\u800C\u975E"\u7136\u540E"\u3002
 \u4F60\u4E0D\u662F\u6267\u7B14\u8005\u2014\u2014\u4E0D\u5199\u573A\u666F\u7EC6\u8282\uFF0C\u4E0D\u4EA4\u4EE3\u6BCF\u5929\u7684\u7ECF\u8FC7\uFF0C\u53EA\u7559\u9AA8\u67B6\u4E0E\u5173\u952E\u8F6C\u6298\u3002
+plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7ED9\u7F16\u5267\u770B\u7684\u89C4\u5212\u6587\u6863\u2014\u2014\u65C1\u89C2\u8005\u89C6\u89D2\u3001\u5BA2\u89C2\u6982\u8FF0"\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u5BFC\u81F4\u4E86\u4EC0\u4E48"\uFF0C\u800C\u4E0D\u662F\u6B63\u6587\u6216\u5267\u672C\u3002
 
 [\u786C\u6027\u8981\u6C42]
 1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
@@ -26833,7 +26850,13 @@ function getDefaultPromptTemplates() {
 5) \u60C5\u8282\u5FC5\u987B\u56E0\u679C\u8854\u63A5\uFF08\u4E0A\u4E00\u6761\u7684\u540E\u679C\u9A71\u52A8\u4E0B\u4E00\u6761\uFF09\uFF0C\u4F46\u76F8\u90BB\u6761\u76EE\u7684\u65F6\u95F4\u8DE8\u5EA6\u7531\u5267\u60C5\u5206\u91CF\u51B3\u5B9A\uFF1A\u8BE5\u5FEB\u5219\u5FEB\u3001\u8BE5\u6162\u5219\u6162\uFF0C\u9700\u8981\u65F6\u5927\u5E45\u8DF3\u8DC3\uFF08\u6570\u65E5/\u6570\u5468/\u6570\u6708/\u6570\u5E74\uFF09\uFF0C\u8DF3\u8FC7\u7684\u65F6\u95F4\u91CC\u7684\u5173\u952E\u53D8\u5316\u76F4\u63A5\u5199\u8FDB plot\u3002
 6) \u5148\u5224\u65AD\u6574\u4E2A\u6545\u4E8B\u6A2A\u8DE8\u7684\u603B\u65F6\u957F\uFF08\u4E00\u591C/\u6570\u65E5/\u6570\u6708/\u6570\u5E74/\u4E00\u751F\uFF09\uFF0C\u518D\u636E\u6B64\u5206\u914D\u5404\u6761\u76EE\u7684\u65F6\u95F4\uFF1B\u7981\u6B62\u9ED8\u8BA4\u9010\u65E5\u63A8\u8FDB\uFF0C\u7981\u6B62\u628A\u6574\u4E2A\u6545\u4E8B\u538B\u7F29\u5728\u8FDE\u7EED\u6570\u65E5\u4E4B\u5185\uFF08\u9664\u975E\u6545\u4E8B\u9700\u6C42\u660E\u786E\u8BBE\u5B9A\u4E3A\u77ED\u65F6\u95F4\u7EBF\uFF0C\u5982\u5BC6\u95ED\u7A7A\u95F4\u5355\u65E5\u60AC\u7591\uFF09\u3002
 7) time \u5199\u6210\u65F6\u95F4\u8DE8\u5EA6\u6807\u8BB0\u800C\u975E\u77AC\u65F6\u65F6\u523B\uFF0C\u683C\u5F0F\u53C2\u8003\uFF1A\u5F00\u573A\u5F53\u665A / \u4E09\u5929\u540E / \u4E00\u5468\u540E / \u534A\u5E74\u540E / \u6B21\u5E74\u6625\u5929 / \u4E09\u5E74\u540E\u3002
-8) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+8) plot \u4E00\u5F8B\u7528\u6897\u6982\u4F53\uFF08\u5BA2\u89C2\u6982\u8FF0\uFF09\u4E66\u5199\uFF0C\u8FD9\u662F\u6587\u98CE\u786C\u7EA6\u675F\uFF1A
+   - \u53EA\u5199"\u53D1\u751F\u4E86\u4EC0\u4E48\u4E8B\u4EF6\u3001\u4EA7\u751F\u4EC0\u4E48\u540E\u679C\u3001\u4EBA\u7269\u5904\u5883\u6216\u5173\u7CFB\u53D1\u751F\u4EC0\u4E48\u53D8\u5316"\uFF0C\u7528\u9648\u8FF0\u53E5\uFF1B
+   - \u7981\u6B62\u5BF9\u767D\u4E0E\u53F0\u8BCD\uFF08\u5305\u62EC\u5F15\u53F7\u5F15\u7528\u7684\u539F\u8BDD\uFF09\uFF0C\u4EBA\u7269\u8A00\u8BED\u4E00\u5F8B\u6982\u62EC\u8F6C\u8FF0\uFF08\u5982"\u5F53\u9762\u62D2\u7EDD\u5E76\u644A\u724C"\uFF0C\u800C\u975E\u5199\u51FA\u539F\u8BDD\uFF09\uFF1B
+   - \u7981\u6B62\u795E\u6001\u3001\u52A8\u4F5C\u3001\u8BED\u6C14\u7B49\u8868\u6F14\u6027\u63CF\u5199\u4E0E\u5FC3\u7406\u6D3B\u52A8\u6E32\u67D3\uFF08\u5982"\u98A4\u6296\u7740""\u82E6\u7B11\u7740\u8BF4""\u5FC3\u4E2D\u4E00\u6C89"\uFF09\uFF1B
+   - \u6B63\u4F8B\uFF1A\u6797\u7136\u6574\u7406\u9057\u7269\u65F6\u53D1\u73B0\u4E00\u5F20\u964C\u751F\u5408\u5F71\uFF0C\u8FFD\u95EE\u4E0B\u6BCD\u4EB2\u627F\u8BA4\u4ED6\u6709\u4E00\u4E2A\u4ECE\u672A\u8C0B\u9762\u7684\u59D0\u59D0\uFF1B\u4E24\u4EBA\u7206\u53D1\u4E89\u5435\uFF0C\u6797\u7136\u5F53\u665A\u79BB\u5BB6\u3002
+   - \u53CD\u4F8B\uFF1A\u6797\u7136\u98A4\u6296\u7740\u62FF\u8D77\u7167\u7247\uFF1A"\u8FD9\u4E2A\u4EBA\u2026\u2026\u662F\u8C01\uFF1F"\u6BCD\u4EB2\u82E6\u7B11\u7740\u522B\u8FC7\u8138\u53BB\uFF1A"\u4F60\u6709\u4E2A\u59D0\u59D0\u3002"\u4ED6\u5FC3\u4E2D\u4E00\u6C89\uFF0C\u593A\u95E8\u800C\u51FA\u3002
+9) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
       user: `[\u89D2\u8272\u8BBE\u5B9A]
 {{persona}}
 
@@ -26853,7 +26876,7 @@ function getDefaultPromptTemplates() {
 {{storyInput}}
 
 [\u4EFB\u52A1]
-\u8BF7\u8BBE\u8BA1\u6545\u4E8B\u5927\u7EB2\uFF0C\u5E76\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
+\u8BF7\u8BBE\u8BA1\u6545\u4E8B\u5927\u7EB2\uFF08plot \u7528\u5BA2\u89C2\u6897\u6982\u4F53\u6982\u8FF0\uFF0C\u4E0D\u5199\u5BF9\u767D\u4E0E\u8868\u6F14\u6027\u7EC6\u8282\uFF09\uFF0C\u5E76\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     },
     rolling: {
       system: `\u4F60\u662F\u5267\u60C5\u63A8\u8FDB\u7B56\u5212\u3002\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\u5DF2\u7ED9\u5B9A\uFF08\u6700\u540E\u4E00\u6761\u5373\u7ED3\u5C40\uFF09\u3002\u4F60\u7684\u804C\u8D23\u662F\uFF1A\u7ED3\u5408"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\uFF0C\u7ED9\u51FA 2~3 \u4E2A\u4E92\u4E0D\u76F8\u540C\u7684\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF0C\u4F9B\u73A9\u5BB6\u6311\u9009\u540E\u4F5C\u4E3A\u4E0B\u4E00\u56DE\u5408\u7684\u73A9\u5BB6\u8F93\u5165\u6765\u63A8\u8FDB\u6545\u4E8B\u3002
@@ -27408,6 +27431,18 @@ function saveDraftStreamEnabledOnly(streamEnabled) {
   };
   saveExtData();
 }
+function saveDraftInsertModeOnly(insertMode) {
+  const data = getExtData();
+  const prev = data[DRAFT_KEY] && typeof data[DRAFT_KEY] === "object" ? data[DRAFT_KEY] : {};
+  data[DRAFT_KEY] = {
+    storyInput: typeof prev.storyInput === "string" ? prev.storyInput : "",
+    insertMode: insertMode === "append" ? "append" : "overwrite",
+    streamEnabled: prev.streamEnabled === true,
+    items: normalizeItems(prev.items),
+    updatedAt: Date.now()
+  };
+  saveExtData();
+}
 function loadDraft() {
   const draft = getDraft();
   if (!draft) {
@@ -27783,8 +27818,15 @@ function cancelPlanRename() {
   $("#t-outline-plan-name").val(planRenameSnapshot || "");
   setPlanRenameMode(false);
 }
+function resolveInsertMode() {
+  const mainMode = $("#t-outline-insert-mode").val();
+  if (mainMode === "append" || mainMode === "overwrite") return mainMode;
+  return loadDraft().insertMode === "append" ? "append" : "overwrite";
+}
 function getCurrentInsertMode() {
-  return $("#t-scene-hub-insert-mode").val() || $("#t-outline-insert-mode").val() || loadDraft().insertMode || "overwrite";
+  const chipMode = $("#t-scene-hub-insert-chip").attr("data-mode");
+  if (chipMode === "append" || chipMode === "overwrite") return chipMode;
+  return resolveInsertMode();
 }
 function getPlanProgress(plan) {
   const raw = plan && typeof plan.progress === "object" ? plan.progress : null;
@@ -27803,6 +27845,34 @@ function setPlanProgress(planId, progress) {
   if (!Number.isFinite(itemIndex) || itemIndex < 0) itemIndex = 0;
   if (totalItems > 0) itemIndex = Math.min(itemIndex, totalItems - 1);
   plan.progress = { itemIndex, reachedEnding: progress?.reachedEnding === true };
+  plan.updatedAt = Date.now();
+  saveExtData();
+}
+function getPlanCandidates(plan) {
+  const items = plan && Array.isArray(plan.candidates?.items) ? plan.candidates.items : [];
+  return items.map((c) => ({
+    title: String(c?.title || ""),
+    text: String(c?.text || ""),
+    itemIndex: Number(c?.itemIndex) || 1,
+    used: c?.used === true
+  })).filter((c) => c.text.trim());
+}
+function setPlanCandidates(planId, candidates, opts = {}) {
+  const plans = getPlans();
+  const plan = plans.find((p) => p.id === planId);
+  if (!plan) return;
+  const items = (Array.isArray(candidates) ? candidates : []).map((c) => ({
+    title: String(c?.title || ""),
+    text: String(c?.text || ""),
+    itemIndex: Number(c?.itemIndex) || 1,
+    used: c?.used === true
+  })).filter((c) => c.text.trim());
+  if (items.length === 0) {
+    delete plan.candidates;
+  } else {
+    const generatedAt = opts.keepTimestamp && Number(plan.candidates?.generatedAt) || Date.now();
+    plan.candidates = { items, generatedAt };
+  }
   plan.updatedAt = Date.now();
   saveExtData();
 }
@@ -27875,7 +27945,8 @@ function renderCandidates() {
   if ($list.length === 0) return;
   if (latestCandidates.length === 0) {
     const sourcePlanId = getSceneSourcePlanId();
-    $list.html(sourcePlanId ? '<div class="t-plan-empty">\u70B9\u51FB\u300C\u63A8\u8350\u5267\u60C5\u300D\uFF0C\u751F\u6210 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411</div>' : '<div class="t-plan-empty">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u4E00\u4E2A\u7528\u4E8E\u5267\u60C5\u63A8\u8FDB\u7684\u65B9\u6848</div>');
+    $list.html(sourcePlanId ? '<div class="t-plan-empty">\u70B9\u51FB\u53F3\u4E0B\u89D2\u300C\u63A8\u8350\u5267\u60C5\u300D\uFF0C\u751F\u6210 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411</div>' : '<div class="t-plan-empty">\u8BF7\u5148\u5728\u65B9\u6848\u9875\u9009\u62E9\u4E00\u4E2A\u7528\u4E8E\u5267\u60C5\u63A8\u8FDB\u7684\u65B9\u6848</div>');
+    syncGenerateNextBtn();
     return;
   }
   const html = latestCandidates.map((c, idx) => `
@@ -27890,11 +27961,19 @@ function renderCandidates() {
         </div>
     `).join("");
   $list.html(html);
+  syncGenerateNextBtn();
+}
+function syncGenerateNextBtn() {
+  const $btn = $("#t-outline-generate-next");
+  if ($btn.length === 0) return;
+  $btn.html(latestCandidates.length > 0 ? '<i class="fa-solid fa-rotate"></i> \u6362\u4E00\u6279' : '<i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5');
 }
 function openSceneHubWindow() {
   ensureCssLoaded();
   $("#t-scene-hub-overlay").remove();
-  latestCandidates = [];
+  const restorePlan = getRollingPlan();
+  latestCandidates = restorePlan ? getPlanCandidates(restorePlan) : [];
+  latestCandidatesPlanId = restorePlan?.id || "";
   const html = `
     <div id="t-scene-hub-overlay" class="t-overlay t-root">
         <div class="t-window t-story-outline-window">
@@ -27916,24 +27995,20 @@ function openSceneHubWindow() {
                     <div class="t-outline-rolling-bar"><div id="t-outline-rolling-bar-fill" class="t-outline-rolling-bar-fill"></div></div>
                     <div id="t-outline-rolling-outline-preview" class="t-outline-rolling-outline-preview" style="display:none;"></div>
                     <div class="t-outline-rolling-controls">
-                        <button id="t-outline-generate-next" class="t-btn t-btn-primary t-btn-xs"><i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5</button>
                         <label class="t-outline-rolling-cursor">\u63A8\u8FDB\u5230
                             <select id="t-outline-rolling-cursor-select" class="t-outline-select"></select>
                         </label>
                         <button id="t-outline-rolling-reset" class="t-btn t-btn-xs" title="\u56DE\u5230\u5F00\u5934\u91CD\u65B0\u63A8\u8FDB"><i class="fa-solid fa-rotate-left"></i></button>
                     </div>
-                    <div class="t-outline-rolling-hint">\u5927\u7EB2\u5F53\u8DEF\u6807\uFF0C\u7ED3\u5408\u6700\u8FD1\u6B63\u6587\u4E00\u6B65\u6B65\u5199\u5230\u7ED3\u5C40\u3002\u70B9\u51FB\u5019\u9009\u5361\u7247\u5373\u5199\u5165\u8F93\u5165\u6846\u5E76\u81EA\u52A8\u63A8\u8FDB\u8FDB\u5EA6\uFF0C\u4E5F\u53EF\u624B\u52A8\u6307\u5B9A\u5F53\u524D\u8FDB\u5EA6\u3002</div>
+                    <div class="t-outline-rolling-hint">\u5927\u7EB2\u5F53\u8DEF\u6807\uFF0C\u7ED3\u5408\u6700\u8FD1\u6B63\u6587\u4E00\u6B65\u6B65\u5199\u5230\u7ED3\u5C40\u3002\u70B9\u51FB\u5019\u9009\u5361\u7247\u5373\u6309\u6240\u9009\u5199\u5165\u65B9\u5F0F\u5199\u5165\u8F93\u5165\u6846\uFF08\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\uFF09\u5E76\u81EA\u52A8\u63A8\u8FDB\u8FDB\u5EA6\uFF0C\u4E5F\u53EF\u624B\u52A8\u6307\u5B9A\u5F53\u524D\u8FDB\u5EA6\u3002</div>
                 </div>
                 <div id="t-outline-candidates" class="t-scene-hub-list"></div>
                 <div class="t-scene-hub-footer">
-                    <label class="t-outline-mode" style="margin-right:auto;">
-                        \u5199\u5165\u65B9\u5F0F
-                        <select id="t-scene-hub-insert-mode" class="t-outline-select">
-                            <option value="overwrite" ${getCurrentInsertMode() === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
-                            <option value="append" ${getCurrentInsertMode() === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
-                        </select>
-                    </label>
-                    <span class="t-plan-source-note">\u70B9\u51FB\u5019\u9009\u5361\u7247\u5373\u6309\u6240\u9009\u65B9\u5F0F\u5199\u5165\u8F93\u5165\u6846\uFF08\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\uFF09</span>
+                    <button id="t-scene-hub-insert-chip" class="t-insert-mode-chip" data-mode="${resolveInsertMode()}" title="\u70B9\u51FB\u5207\u6362\u5199\u5165\u65B9\u5F0F\uFF1A\u8986\u76D6/\u8FFD\u52A0\uFF08\u70B9\u51FB\u5019\u9009\u5361\u7247\u65F6\u751F\u6548\uFF09">
+                        <i class="fa-solid fa-arrows-left-right"></i>
+                        <span class="t-insert-mode-chip-label">${resolveInsertMode() === "append" ? "\u8FFD\u52A0" : "\u8986\u76D6"}</span>
+                    </button>
+                    <button id="t-outline-generate-next" class="t-btn t-btn-primary t-btn-xs" title="\u57FA\u4E8E\u5927\u7EB2\u548C\u6700\u8FD1\u6B63\u6587\u63A8\u8350 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411"><i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5</button>
                 </div>
             </div>
         </div>
@@ -27945,10 +28020,12 @@ function openSceneHubWindow() {
   $overlay.on("click", "#t-scene-hub-close", () => {
     $overlay.remove();
   });
-  $overlay.on("change", "#t-scene-hub-insert-mode", function() {
-    const mode = String($(this).val() || "overwrite") === "append" ? "append" : "overwrite";
-    $("#t-outline-insert-mode").val(mode);
-    saveDraft($("#t-outline-story-input").val() || "", mode);
+  $overlay.on("click", "#t-scene-hub-insert-chip", function() {
+    const next = getCurrentInsertMode() === "append" ? "overwrite" : "append";
+    $("#t-outline-insert-mode").val(next);
+    saveDraftInsertModeOnly(next);
+    $(this).attr("data-mode", next).find(".t-insert-mode-chip-label").text(next === "append" ? "\u8FFD\u52A0" : "\u8986\u76D6");
+    if (window.toastr) toastr.info(next === "append" ? "\u5019\u9009\u5C06\u8FFD\u52A0\u5230\u8F93\u5165\u6846\u672B\u5C3E" : "\u5019\u9009\u5C06\u8986\u76D6\u8F93\u5165\u6846\u5185\u5BB9", "\u5199\u5165\u65B9\u5F0F");
   });
   $overlay.on("click", "#t-outline-candidates .t-scene-hub-item", function() {
     const idx = Number($(this).data("candidate-index"));
@@ -27958,6 +28035,7 @@ function openSceneHubWindow() {
     writePlotToInput(c.text, getCurrentInsertMode());
     if (planId) advanceProgressOnSend(planId, c.itemIndex - 1);
     c.used = true;
+    if (planId) setPlanCandidates(planId, latestCandidates, { keepTimestamp: true });
     renderCandidates();
     refreshRollingProgressUI();
     if (window.toastr) toastr.success("\u5DF2\u5199\u5165\u8F93\u5165\u6846\uFF08\u672A\u81EA\u52A8\u53D1\u9001\uFF09\uFF0C\u8FDB\u5EA6\u5DF2\u63A8\u8FDB", "\u5267\u60C5\u63A8\u8FDB");
@@ -28404,6 +28482,12 @@ function applyParsedOutline(parsed, storyInput, insertMode) {
   persistCurrentEditingPlan();
   if (editingPlanId) {
     setPlanProgress(editingPlanId, { itemIndex: 0, reachedEnding: false });
+    setPlanCandidates(editingPlanId, []);
+    if (latestCandidatesPlanId === editingPlanId) {
+      latestCandidates = [];
+      latestCandidatesPlanId = "";
+      renderCandidates();
+    }
     setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
   }
   refreshRollingProgressUI();
@@ -28615,14 +28699,18 @@ function saveDesktopEditor() {
   renderRows();
   saveDraft($("#t-outline-story-input").val(), $("#t-outline-insert-mode").val());
 }
-function refreshRollingProgressUI() {
-  const $panel = $("#t-outline-rolling");
-  if ($panel.length === 0) return;
+function getRollingPlan() {
   let plan = editingPlanId ? getPlans().find((p) => p.id === editingPlanId) : null;
   if (!plan) {
     const sourceId = getSceneSourcePlanId();
     plan = sourceId ? getPlans().find((p) => p.id === sourceId) : null;
   }
+  return plan || null;
+}
+function refreshRollingProgressUI() {
+  const $panel = $("#t-outline-rolling");
+  if ($panel.length === 0) return;
+  const plan = getRollingPlan();
   const outlineForPanel = Array.isArray(outlineItems) && outlineItems.length > 0 && plan && plan.id === editingPlanId ? outlineItems : plan ? normalizeItems(plan.items || []) : [];
   if (outlineForPanel.length === 0 || !plan) {
     $panel.hide();
@@ -28741,7 +28829,6 @@ async function generateRecommendations() {
     return;
   }
   const $btn = $("#t-outline-generate-next");
-  const originHtml = $btn.html();
   $btn.prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin"></i> \u63A8\u8350\u4E2D...');
   const total = outlineItems.length;
   const currentItem = outlineItems[progress.itemIndex];
@@ -28763,6 +28850,8 @@ async function generateRecommendations() {
       parse: (raw) => parseRecommendationResponse(raw, progress.itemIndex, total),
       apply: (parsed) => {
         latestCandidates = parsed.candidates.map((c) => ({ ...c, used: false }));
+        latestCandidatesPlanId = editingPlanId;
+        setPlanCandidates(editingPlanId, latestCandidates);
         renderCandidates();
       },
       reparseLabel: "\u91CD\u65B0\u89E3\u6790\u5E76\u5E94\u7528",
@@ -28772,8 +28861,9 @@ async function generateRecommendations() {
     reportGenerationError(e, "\u5267\u60C5\u63A8\u8FDB", "\u5267\u60C5\u63A8\u8350\u5931\u8D25");
   } finally {
     stopResponseTimer();
-    $btn.prop("disabled", false).html(originHtml || '<i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5');
+    $btn.prop("disabled", false);
     refreshRollingProgressUI();
+    syncGenerateNextBtn();
   }
 }
 async function generateOutline() {
@@ -28925,6 +29015,13 @@ function bindEvents() {
     activePlanId = planId;
     setActivePlanId(activePlanId);
     renderPlanHub();
+    if ($("#t-scene-hub-overlay").length > 0) {
+      const rollingPlan = getRollingPlan();
+      latestCandidates = rollingPlan ? getPlanCandidates(rollingPlan) : [];
+      latestCandidatesPlanId = rollingPlan?.id || "";
+      renderCandidates();
+      refreshRollingProgressUI();
+    }
     if (window.toastr) toastr.success("\u5DF2\u5207\u6362\u5267\u60C5\u63A8\u8FDB\u6765\u6E90\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
   });
   $overlay.on("click", "[data-action='plan-item-prev']", function() {
@@ -29188,7 +29285,7 @@ function openStoryOutlineWindow() {
   syncAddFabVisibility();
   refreshOutlineOpeningSourceControls();
 }
-var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, latestCandidates, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, rollingPreviewExpandedIdx;
+var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, desktopEditorIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, latestCandidates, latestCandidatesPlanId, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, rollingPreviewExpandedIdx;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -29229,6 +29326,7 @@ var init_storyOutlineWindow = __esm({
     editingPlanBaseline = "";
     planItemCursorMap = {};
     latestCandidates = [];
+    latestCandidatesPlanId = "";
     autoSavePlanTimer = null;
     planRenameMode = false;
     planRenameSnapshot = "";
