@@ -61,7 +61,7 @@
                     <input id="cfg-outline-entry-enabled" type="checkbox" />
                     <span class="titania-switch-text">
                         <span class="titania-switch-main">启用发送键菜单入口</span>
-                        <small>在发送按钮旁显示菜单入口，故事大纲/细纲情节/回声小剧场等功能从该菜单进入。</small>
+                        <small>在发送按钮旁显示菜单入口，故事大纲/剧情推进/回声小剧场等功能从该菜单进入。</small>
                     </span>
                 </label>
 
@@ -69,7 +69,7 @@
                     <input id="cfg-outline-actions-enabled" type="checkbox" />
                     <span class="titania-switch-text">
                         <span class="titania-switch-main">启用大纲生成入口</span>
-                        <small>在发送键菜单中显示「发送细纲」与「生成大纲」两个入口。</small>
+                        <small>在发送键菜单中显示「剧情推进」与「生成大纲」两个入口。</small>
                     </span>
                 </label>
 
@@ -98,6 +98,14 @@
                 </label>
 
                 <label class="checkbox_label titania-switch-row">
+                    <input id="cfg-floor-nav-enabled" type="checkbox" />
+                    <span class="titania-switch-text">
+                        <span class="titania-switch-main">启用楼层快捷操作</span>
+                        <small>在入口菜单中显示「回到顶楼 / 跳到最新AI回复」，并在每条消息气泡上显示「隐藏到此为止」按钮（一键隐藏该楼之前的全部旧楼，不进提示词）。</small>
+                    </span>
+                </label>
+
+                <label class="checkbox_label titania-switch-row">
                     <input id="cfg-preset-persist-vars" type="checkbox" />
                     <span class="titania-switch-text">
                         <span class="titania-switch-main">允许预设变量写入聊天存档</span>
@@ -105,27 +113,12 @@
                     </span>
                 </label>
 
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-toolbar-lore-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用提取设定快捷入口</span>
-                        <small>在发送键菜单中显示「提取设定」项。</small>
-                    </span>
-                </label>
-
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-toolbar-recall-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用记忆召回快捷入口</span>
-                        <small>在发送键菜单中显示「记忆召回」项。</small>
-                    </span>
-                </label>
             </section>
 
             <section class="titania-panel-card">
                 <div class="titania-card-title"><i class="fa-solid fa-database"></i> 数据备份与恢复</div>
                 <div class="titania-backup-desc">
-                    导出包含：API 配置、用户脚本、收藏内容、外观设置、导演指令、世界书筛选、向量索引等所有插件数据。
+                    导出包含：API 配置、用户脚本、收藏内容、外观设置、导演指令、世界书筛选等所有插件数据。
                     <br><span style="color:#feca57;">⚠️ 导出文件包含 API 密钥，请妥善保管！</span>
                 </div>
                 <div class="titania-backup-actions">
