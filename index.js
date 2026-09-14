@@ -2967,6 +2967,7 @@ function loadCssFiles() {
     --t-reader-user-bg: rgb(107 95 77 / .10);
     --t-reader-user-text: #a89c8a;
     --t-reader-code-bg: #1d1916;
+    --t-reader-quote: #ddd0bc;
     /* 3 \u5904 \u2014\u2014 \u6539\u5199\u7A97\u300C\u672A\u547D\u4E2D\u300D\u7684\u6807\u7B7E\u5E95(.12) + \u6807\u7B7E\u63CF\u8FB9(.35) + \u884C\u63CF\u8FB9(.28)\u3002
        \u539F\u672C\u662F #b1bdc9 / #bdc7d2 / #b0bcc9 \u4E09\u4E2A\u5199\u6CD5\uFF0C\u5408\u5230\u4E00\u6863\u6700\u5927\u5408\u6210 \u0394E 1.0\u3002
        \u8DE8 surface / border \u4E24\u79CD\u89D2\u8272\u5171\u7528\u4E00\u4E2A token \u5728\u8FD9\u91CC\u662F\u5BF9\u7684\uFF1A
@@ -3496,6 +3497,7 @@ function loadCssFiles() {
     --t-reader-user-bg: rgb(176 154 114 / .12);   /* \u6DF1\u8272: rgb(107 95 77 / .10) */
     --t-reader-user-text: #6f6250;   /* \u6DF1\u8272: #a89c8a */
     --t-reader-code-bg: #efe8da;   /* \u6DF1\u8272: #1d1916 */
+    --t-reader-quote: #2c4a52;   /* \u6DF1\u8272: #ddd0bc */
     --t-glass-border-blue-rgb: 25 60 75;   /* \u6DF1\u8272: 160 194 213 */
     --t-glass-border-blue-dim-rgb: 48 82 102;   /* \u6DF1\u8272: 133 167 190 */
     --t-glass-locked-border-rgb: 175 186 193;   /* \u6DF1\u8272: 52 61 67 */
@@ -5237,6 +5239,21 @@ function loadCssFiles() {
 .t-btn__icon {
     flex: 0 0 auto;
     line-height: 1;
+}
+
+/* \u83B7\u53D6\u6A21\u578B\u5217\u8868\u6309\u94AE\uFF08\u7EAF\u56FE\u6807\uFF0C\u65E0\u6587\u5B57\uFF09\u3002
+   \u4E09\u4E2A\u8C03\u7528\u65B9\u5404\u81EA\u4F20\u4E0D\u540C\u7684\u6309\u94AE\u7C7B\uFF08t-tool-btn / t-btn--glass / t-btn-xs\uFF09\uFF0C
+   \u8FD9\u91CC\u53EA\u8D1F\u8D23\u201C\u6536\u6210\u65B9\u5F62\u3001\u56FE\u6807\u5C45\u4E2D\u3001\u4E0D\u88AB\u5F39\u6027\u5E03\u5C40\u62C9\u957F\u201D\uFF0C
+   \u914D\u8272\u4E0E\u8FB9\u6846\u7EE7\u7EED\u7531\u5404\u81EA\u7684\u6309\u94AE\u7C7B\u51B3\u5B9A\uFF08\u4E0D\u8986\u5199\u89C6\u89C9\u5C5E\u6027\uFF0CR4\uFF09\u3002 */
+.t-fetch-models-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    min-width: 34px;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 
@@ -17859,6 +17876,22 @@ body.t-reader-zen .t-reader-topbar {
     user-select: none;
 }
 
+/* \u5F15\u53F7\u53BB\u91CD\uFF1AmessageFormatting \u628A\u5F15\u53F7\u53E5\u5305\u6210 <q>\u201C\u6587\u672C\u201D</q>\uFF0C\u5F15\u53F7\u5B57\u7B26
+   \u672C\u8EAB\u5DF2\u5728\u6807\u7B7E\u5185\uFF08script.js:1850\uFF09\u3002\u6D4F\u89C8\u5668\u5BF9 <q> \u8FD8\u4F1A\u518D\u81EA\u52A8\u751F\u6210\u4E00\u5BF9\uFF0C
+   \u9152\u9986\u7528 .mes q:before/:after { content:'' } \u6E05\u6389\uFF08style.css:1208\uFF09\uFF0C\u4F46\u90A3\u6761
+   \u9650\u5B9A\u5728 .mes \u4F5C\u7528\u57DF\u5185\u3002\u9605\u8BFB\u5BB9\u5668\u4E0D\u5728 .mes \u4E0B\uFF0C\u5FC5\u987B\u81EA\u5DF1\u91CD\u7F6E\uFF0C
+   \u5426\u5219\u663E\u793A\u6210\u201C\u201C\u6587\u672C\u201D\u201D\u3002 */
+.t-reader-flow q::before,
+.t-reader-flow q::after {
+    content: '';
+}
+
+/* \u5BF9\u8BDD\u4E0E\u53D9\u8FF0\u5206\u8272\uFF08\u9152\u9986\u7528 .mes_text q + --SmartThemeQuoteColor \u505A\u540C\u4E00\u4EF6\u4E8B\uFF0C
+   \u9605\u8BFB\u6001\u6539\u7528\u81EA\u5DF1\u7684\u7EB8\u611F\u8272\uFF0C\u907F\u514D\u8DDF\u5BBF\u4E3B\u4E3B\u9898\u649E\u8272\uFF09 */
+.t-reader-flow q {
+    color: var(--t-reader-quote);
+}
+
 /* \u9605\u8BFB\u6001\u4E0B\u7684\u4EE3\u7801\u5757/\u5F15\u6587\uFF1A\u6781\u7B80\u914D\u8272\uFF0C\u4E0D\u62A2\u6B63\u6587 */
 .t-reader-flow pre {
     text-indent: 0;
@@ -23474,7 +23507,7 @@ function renderApiConnectionEditorHTML(options = {}) {
             <div class="t-form-group">
                 <label class="t-form-label">${escapeHtml3(labels.model)}</label>
                 ${flags.showManualModelInput ? `<div style="display:flex; gap:10px; margin-bottom:8px;"><select id="${escapeHtml3(ids.modelModeId || "")}" class="${escapeHtml3(classes.select)}" style="width:auto; cursor:pointer;"><option value="list">\u83B7\u53D6\u5217\u8868</option><option value="manual">\u624B\u52A8\u586B\u5199</option></select></div>` : ""}
-                <div id="${escapeHtml3(ids.modelListWrapId || "")}" style="display:flex; gap:10px;"><select id="${escapeHtml3(ids.modelId || "")}" class="${escapeHtml3(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml3(ids.fetchModelsId || "")}" class="${escapeHtml3(classes.button)}" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868">\u{1F504} \u83B7\u53D6\u5217\u8868</button></div>
+                <div id="${escapeHtml3(ids.modelListWrapId || "")}" style="display:flex; gap:10px;"><select id="${escapeHtml3(ids.modelId || "")}" class="${escapeHtml3(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml3(ids.fetchModelsId || "")}" class="${escapeHtml3(classes.button)} t-fetch-models-btn" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868" aria-label="\u83B7\u53D6\u6A21\u578B\u5217\u8868"><i class="fa-solid fa-rotate"></i></button></div>
                 ${flags.showManualModelInput ? `<div id="${escapeHtml3(ids.modelManualWrapId || "")}" style="display:none;"><input id="${escapeHtml3(ids.modelInputId || "")}" class="${escapeHtml3(classes.input)}" placeholder="\u6A21\u578B ID\uFF0C\u4F8B\u5982\uFF1Agpt-4o"></div>` : ""}
                 <div id="${escapeHtml3(ids.statusId || "")}" class="t-conn-hint">${escapeHtml3(values.statusText)}</div>
             </div>
@@ -23593,7 +23626,7 @@ function createApiConnectionEditor(options = {}) {
       $model.empty().append("<option selected>(ST \u8BBE\u7F6E)</option>").prop("disabled", true);
       $modelMode.prop("disabled", true);
       $modelInput.prop("disabled", true).val("");
-      $fetchBtn.prop("disabled", true).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+      $fetchBtn.prop("disabled", true).html('<i class="fa-solid fa-rotate"></i>');
       $modelListWrap.show();
       $modelManualWrap.hide();
       if ($urlHint.length) {
@@ -23610,7 +23643,7 @@ function createApiConnectionEditor(options = {}) {
     $model.prop("disabled", false);
     $modelMode.prop("disabled", !showManualModelInput).val(modelInputMode);
     $modelInput.prop("disabled", modelInputMode !== "manual").val(profile.model || defaultModel);
-    $fetchBtn.prop("disabled", modelInputMode === "manual").text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+    $fetchBtn.prop("disabled", modelInputMode === "manual").html('<i class="fa-solid fa-rotate"></i>');
     $modelListWrap.toggle(modelInputMode !== "manual");
     $modelManualWrap.toggle(modelInputMode === "manual");
     if ($urlHint.length) $urlHint.hide();
@@ -23649,7 +23682,7 @@ function createApiConnectionEditor(options = {}) {
     }
     const requestVersion = ++modelRequestVersion;
     try {
-      $fetchBtn.prop("disabled", true).text("...");
+      $fetchBtn.prop("disabled", true).html('<i class="fa-solid fa-rotate fa-spin"></i>');
       setStatus2(statusTexts.loading, "muted");
       const models = uniqStrings(await modelFetcher({ apiUrl, apiKey: profile.key, profile, state: { ...state } }));
       if (requestVersion !== modelRequestVersion || profile.id !== state.activeProfileId) return [];
@@ -23680,7 +23713,7 @@ function createApiConnectionEditor(options = {}) {
       return [];
     } finally {
       if (requestVersion === modelRequestVersion) {
-        $fetchBtn.prop("disabled", false).text("\u{1F504} \u83B7\u53D6\u5217\u8868");
+        $fetchBtn.prop("disabled", false).html('<i class="fa-solid fa-rotate"></i>');
       }
     }
   };
