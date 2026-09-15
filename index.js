@@ -1418,7 +1418,8 @@ function createTitaniaOutputContractEntry() {
     marker: null,
     enabled: true,
     required: true,
-    readonly: true,
+    // 内容开放编辑；条目本身仍受管（不能禁用/删除），UI 提供「恢复默认」
+    readonly: false,
     content: TITANIA_OUTPUT_CONTRACT
   };
 }
@@ -1426,6 +1427,9 @@ function getTitaniaEntryKind(entry) {
   if (entry?.id === "titania_output_contract") return "contract";
   if (entry?.id === "titania_script_instruction" || entry?.marker === "titaniaScript") return "instruction";
   return "";
+}
+function isTitaniaOutputContractEntry(entry) {
+  return getTitaniaEntryKind(entry) === "contract";
 }
 function isCanonicalEntry(entry, canonical) {
   if (!entry || typeof entry !== "object") return false;
@@ -1439,7 +1443,11 @@ function hasCanonicalTitaniaEntries(entries) {
     const kind = getTitaniaEntryKind(entry);
     if (!kind) continue;
     if (seen.has(kind)) return false;
-    if (!isCanonicalEntry(entry, TITANIA_ENTRY_FACTORIES[kind]())) return false;
+    if (kind === "contract") {
+      if (entry?.readonly === true) return false;
+    } else if (!isCanonicalEntry(entry, TITANIA_ENTRY_FACTORIES[kind]())) {
+      return false;
+    }
     seen.add(kind);
   }
   return seen.size === TITANIA_ENTRY_KINDS.length;
@@ -1458,7 +1466,12 @@ function ensureTitaniaPresetEntries(preset) {
     }
     if (kept.has(kind)) continue;
     kept.add(kind);
-    entries.push(TITANIA_ENTRY_FACTORIES[kind]());
+    if (kind === "contract") {
+      entry.readonly = false;
+      entries.push(entry);
+    } else {
+      entries.push(TITANIA_ENTRY_FACTORIES[kind]());
+    }
   }
   let insertAt = entries.length;
   while (insertAt > 0 && isAssistantPrefill(entries[insertAt - 1])) insertAt--;
@@ -12055,6 +12068,12 @@ textarea.t-input {
 .t-prompt-entry-delete:hover {
     color: rgb(var(--t-accent-red-soft-rgb));
     border-color: rgb(var(--t-accent-red-soft-rgb) / .55);
+}
+
+/* \u8F93\u51FA\u89C4\u8303\u6761\u76EE\u7684\u300C\u6062\u590D\u9ED8\u8BA4\u300D\uFF1A\u7528\u8584\u8377\u7EFF\u533A\u5206\u4E8E\u5220\u9664\u7684\u7EA2\u8272 */
+.t-prompt-entry-restore:hover:not(:disabled) {
+    color: var(--t-color-notify);
+    border-color: rgb(var(--t-accent-mint-rgb) / .55);
 }
 
 .t-prompt-entry-card.is-drag-over {
@@ -31376,6 +31395,8 @@ function openSettingsWindow() {
     };
     entries.forEach((entry, entryIndex) => {
       appendInsertSlot(entryIndex);
+      const sourceEntry = scheme.entries.find((item) => item.id === entry.id);
+      const isContract = isTitaniaOutputContractEntry(sourceEntry);
       const isLocked = entry.readonly === true;
       const stateLabel = isLocked ? "\u63D2\u4EF6\u5185\u7F6E" : entry.required ? "\u5FC5\u9700" : entry.enabled ? "\u5DF2\u542F\u7528" : "\u5DF2\u7981\u7528";
       const stateIcon = isLocked || entry.required ? "fa-lock" : entry.enabled ? "fa-check" : "fa-xmark";
@@ -31387,6 +31408,7 @@ function openSettingsWindow() {
                     <span class="t-prompt-entry-badge"></span>
                     <div class="t-prompt-entry-actions">
                         <button type="button" class="t-prompt-entry-toggle ${entry.enabled ? "is-enabled" : ""} ${entry.required ? "is-required" : ""}" title="${isLocked ? "\u63D2\u4EF6\u5185\u7F6E\u6761\u76EE\uFF0C\u53EF\u4EE5\u62D6\u52A8\u6392\u5E8F\uFF0C\u4F46\u4E0D\u80FD\u7F16\u8F91\u6216\u7981\u7528" : entry.required ? "\u5FC5\u9700\u6761\u76EE\uFF0C\u4E0D\u80FD\u7981\u7528" : `${stateLabel}\uFF0C\u70B9\u51FB\u5207\u6362\u72B6\u6001`}" aria-label="${stateLabel}" ${entry.required ? "disabled" : ""}><i class="fa-solid ${stateIcon}"></i><span class="t-prompt-entry-toggle-label">${stateLabel}</span></button>
+                        ${isContract ? '<button type="button" class="t-prompt-entry-restore" title="\u6062\u590D\u9ED8\u8BA4\u7684\u5185\u7F6E\u89C4\u8303\u5185\u5BB9" aria-label="\u6062\u590D\u9ED8\u8BA4\u5185\u5BB9"><i class="fa-solid fa-rotate-left"></i></button>' : ""}
                         ${entry.custom ? '<button type="button" class="t-prompt-entry-delete" title="\u5220\u9664\u8FD9\u4E2A\u81EA\u5B9A\u4E49\u6761\u76EE" aria-label="\u5220\u9664\u6761\u76EE"><i class="fa-solid fa-trash"></i></button>' : ""}
                     </div>
                 </div>
@@ -31402,6 +31424,13 @@ function openSettingsWindow() {
       $row.find(".t-prompt-entry-toggle").on("click", function() {
         if (entry.required) return;
         updateEntry({ enabled: !entry.enabled });
+      });
+      $row.find(".t-prompt-entry-restore").on("click", function() {
+        const target = scheme.entries.find((item) => item.id === entry.id);
+        if (!target) return;
+        target.content = TITANIA_OUTPUT_CONTRACT;
+        renderPromptManager();
+        if (window.toastr) toastr.success("\u5DF2\u6062\u590D\u300C\u5C0F\u5267\u573A\u8F93\u51FA\u89C4\u8303\u300D\u7684\u9ED8\u8BA4\u5185\u5BB9");
       });
       $row.find(".t-prompt-entry-delete").on("click", function() {
         const index = scheme.entries.findIndex((item) => item.id === entry.id);
