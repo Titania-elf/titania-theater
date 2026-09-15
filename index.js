@@ -1424,7 +1424,7 @@ function createTitaniaOutputContractEntry() {
   };
 }
 function getTitaniaEntryKind(entry) {
-  if (entry?.id === "titania_output_contract") return "contract";
+  if (entry?.id === "titania_output_contract" || entry?.source_identifier === "titania_output_contract") return "contract";
   if (entry?.id === "titania_script_instruction" || entry?.marker === "titaniaScript") return "instruction";
   return "";
 }
@@ -1468,6 +1468,9 @@ function ensureTitaniaPresetEntries(preset) {
     kept.add(kind);
     if (kind === "contract") {
       entry.readonly = false;
+      entry.required = true;
+      entry.type = "text";
+      entry.role = "system";
       entries.push(entry);
     } else {
       entries.push(TITANIA_ENTRY_FACTORIES[kind]());
@@ -1544,6 +1547,43 @@ function normalizeChatCompletionPreset(preset, options = {}) {
       missing_definition_count: missingDefinitionCount,
       removed_marker_count: removedMarkerCount
     }
+  };
+}
+function serializeToChatCompletionPreset(preset) {
+  if (!preset || !Array.isArray(preset.entries)) throw new Error("\u9884\u8BBE\u6570\u636E\u65E0\u6548");
+  const usedIdentifiers = /* @__PURE__ */ new Set();
+  const prompts = [];
+  const order = [];
+  for (const entry of preset.entries) {
+    if (!entry) continue;
+    let identifier = String(entry.source_identifier || "").trim();
+    if (!identifier) identifier = String(entry.id || "").trim();
+    if (!identifier || usedIdentifiers.has(identifier)) identifier = createEntryId("titania");
+    usedIdentifiers.add(identifier);
+    const marker = String(entry.marker || "").trim();
+    const definition = {
+      identifier,
+      name: entry.name || "\u672A\u547D\u540D\u6761\u76EE",
+      role: MESSAGE_ROLES.includes(entry.role) ? entry.role : "user",
+      content: String(entry.content || "")
+    };
+    if (marker) {
+      if (marker === identifier) definition.marker = true;
+      else definition.marker = marker;
+      if (!definition.content.trim()) definition.content = `{{${marker}}}`;
+    }
+    prompts.push(definition);
+    order.push({ identifier, enabled: entry.enabled !== false });
+  }
+  const modelSettings = preset.model_settings || {};
+  return {
+    name: preset.name || "\u5BFC\u51FA\u9884\u8BBE",
+    prompts,
+    prompt_order: [{ character_id: 100001, order }],
+    model: modelSettings.model || "",
+    temperature: modelSettings.temperature,
+    top_p: modelSettings.top_p,
+    openai_max_tokens: modelSettings.max_tokens
   };
 }
 function resolveMacro(marker, runtimeContext, originalText) {
@@ -30746,6 +30786,7 @@ function openSettingsWindow() {
                             </select>
                             <select id="t-prompt-preset-select" class="t-input" style="width:auto; min-width:210px; display:none;"></select>
                             <button id="t-prompt-import" class="t-tool-btn" title="\u5BFC\u5165 SillyTavern Chat Completion \u9884\u8BBE"><i class="fa-solid fa-file-import"></i> \u5BFC\u5165\u9884\u8BBE</button>
+                            <button id="t-prompt-export" class="t-tool-btn" title="\u5BFC\u51FA\u5F53\u524D\u9884\u8BBE\u4E3A JSON \u6587\u4EF6\uFF08\u53EF\u91CD\u65B0\u5BFC\u5165\uFF0C\u6216\u7ED9 SillyTavern \u4F7F\u7528\uFF09" style="display:none;"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA</button>
                             <button id="t-prompt-delete" class="t-tool-btn" title="\u5220\u9664\u5F53\u524D\u9884\u8BBE" style="display:none;"><i class="fa-solid fa-trash"></i> \u5220\u9664</button>
                             <button id="t-prompt-reset-builtin" class="t-tool-btn" title="\u6062\u590D\u5F53\u524D\u5185\u7F6E\u65B9\u6848\u9ED8\u8BA4\u503C" style="display:none;"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u9ED8\u8BA4</button>
                             <input type="file" id="t-prompt-file" accept=".json,application/json" style="display:none;">
@@ -31375,6 +31416,7 @@ function openSettingsWindow() {
     });
     $select.val(tempPromptManager.active_preset_id);
     $("#t-prompt-delete").toggle(isPreset && !!$select.val());
+    $("#t-prompt-export").toggle(isPreset && !!$select.val());
     $("#t-prompt-reset-builtin").toggle(!isPreset);
     const scheme = isPreset ? tempPromptManager.presets.find((p) => p.id === $select.val()) : tempPromptManager.builtin[view];
     const entries = scheme ? getPresetEntrySummary(scheme) : [];
@@ -31736,6 +31778,26 @@ function openSettingsWindow() {
       }
     };
     reader.readAsText(file);
+  });
+  $("#t-prompt-export").on("click", () => {
+    const preset = tempPromptManager.presets.find((p) => p.id === tempPromptManager.active_preset_id);
+    if (!preset) return;
+    try {
+      const exported = serializeToChatCompletionPreset(preset);
+      const blob = new Blob([JSON.stringify(exported, null, 4)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const safeName = (preset.name || "\u5BFC\u51FA\u9884\u8BBE").replace(/[\\/:*?"<>|]/g, "_").trim() || "\u5BFC\u51FA\u9884\u8BBE";
+      a.href = url;
+      a.download = `${safeName}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      if (window.toastr) toastr.success(`\u5DF2\u5BFC\u51FA\u9884\u8BBE\uFF1A${preset.name}`);
+    } catch (e) {
+      if (window.toastr) toastr.error(`\u9884\u8BBE\u5BFC\u51FA\u5931\u8D25\uFF1A${e?.message || e}`, "Titania");
+    }
   });
   $("#t-prompt-delete").on("click", () => {
     const id3 = tempPromptManager.active_preset_id;
