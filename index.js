@@ -135,6 +135,10 @@ var init_defaults = __esm({
         card_selections: {},
         // { "card:<avatar>": ["世界书名", ...] } 需要额外激活的书（由选中条目推导）
         card_auto_active_books: {},
+        // { "card:<avatar>": { active_id, items: [{ id, name, selections, auto_active_books }] } }
+        // 条目方案。只是 card_selections 的具名快照：切换方案=把快照写回上面两个键，
+        // 注入侧照旧只读 card_selections，不感知方案的存在
+        card_schemes: {},
         // 旧的名字键配置，保留供读取回退（仅当该名字只有一张卡时才继承）
         char_selections: {}
       },
@@ -9541,6 +9545,56 @@ textarea.t-input {
     line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+/* ===== \u6761\u76EE\u65B9\u6848\u6761 =====
+   \u628A\u5F53\u524D\u52FE\u9009\u7684\u6761\u76EE\u7EC4\u5408\u5B58\u6210\u547D\u540D\u65B9\u6848\u3002\u5939\u5728\u6761\u76EE\u533A\u4E0E\u9875\u811A\u4E4B\u95F4\uFF1A\u4E0A\u9762\u662F\u300C\u5728\u7F16\u8F91\u4EC0\u4E48\u300D\uFF0C
+   \u4E0B\u9762\u662F\u300C\u5DF2\u9009\u591A\u5C11 / \u4FDD\u5B58\u300D\uFF0C\u65B9\u6848\u6761\u6B63\u597D\u662F\u4E24\u8005\u4E4B\u95F4\u7684\u90A3\u5C42\u6865\u3002
+   flex-wrap \u515C\u4F4F\u7A84\u5C4F\uFF1A\u624B\u673A\u4E0A\u9009\u62E9\u6846\u72EC\u5360\u4E00\u884C\uFF0C\u6309\u94AE\u8DDF\u7740\u6362\u884C\u3002 */
+.t-wi-scheme-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    padding: 8px 12px;
+    border-top: 1px solid var(--t-color-border);
+    background: var(--t-color-surface);
+}
+
+.t-wi-scheme-label {
+    font-size: 0.85em;
+    color: var(--t-color-text-muted);
+    white-space: nowrap;
+}
+
+.t-wi-scheme-select {
+    flex: 1;
+    min-width: 120px;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid var(--t-color-border-control);
+    border-radius: 6px;
+    background: var(--t-color-surface-elevated);
+    color: var(--t-color-text-soft);
+    font-size: 12px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.t-wi-scheme-select:focus {
+    outline: none;
+    border-color: var(--t-color-accent-border-strong);
+}
+
+.t-wi-scheme-bar .t-btn.t-btn-xs {
+    flex: 0 0 auto;
+}
+
+.t-wi-scheme-count {
+    margin-left: auto;
+    font-size: 0.75em;
+    color: var(--t-color-text-faint);
 }
 
 /* \`.t-wi-footer\` \u7684\u57FA\u7840\u89C6\u89C9\u5DF2\u8FC1\u81F3 02-components/panel.css \u7684 \`.t-panel-footer\`
@@ -19842,6 +19896,7 @@ function getWorldInfoConfig(extData) {
   return {
     cardSelections: wiConfig.card_selections && typeof wiConfig.card_selections === "object" ? wiConfig.card_selections : null,
     cardAutoActiveBooks: wiConfig.card_auto_active_books && typeof wiConfig.card_auto_active_books === "object" ? wiConfig.card_auto_active_books : null,
+    cardSchemes: wiConfig.card_schemes && typeof wiConfig.card_schemes === "object" ? wiConfig.card_schemes : null,
     legacySelections: wiConfig.char_selections && typeof wiConfig.char_selections === "object" ? wiConfig.char_selections : null,
     legacyAutoActiveBooks: wiConfig.char_auto_active_books && typeof wiConfig.char_auto_active_books === "object" ? wiConfig.char_auto_active_books : null
   };
@@ -19898,8 +19953,49 @@ function writeWorldInfoSelections(extData, ctx, selections, autoActiveBooks) {
   if (!wiConfig.card_selections || typeof wiConfig.card_selections !== "object") wiConfig.card_selections = {};
   if (!wiConfig.card_auto_active_books || typeof wiConfig.card_auto_active_books !== "object") wiConfig.card_auto_active_books = {};
   const cardKey = getCharacterCardKey(ctx);
-  wiConfig.card_selections[cardKey] = selections;
-  wiConfig.card_auto_active_books[cardKey] = Array.isArray(autoActiveBooks) ? autoActiveBooks : [];
+  wiConfig.card_selections[cardKey] = selections ? structuredClone(selections) : {};
+  wiConfig.card_auto_active_books[cardKey] = Array.isArray(autoActiveBooks) ? [...autoActiveBooks] : [];
+  return cardKey;
+}
+function normalizeSchemeSelections(selections) {
+  const out = {};
+  if (!selections || typeof selections !== "object") return out;
+  for (const bookName of Object.keys(selections)) {
+    const raw = selections[bookName];
+    const uids = Array.isArray(raw) ? raw.map(Number).filter(Number.isFinite) : [];
+    if (uids.length > 0) out[bookName] = uids;
+  }
+  return out;
+}
+function isValidSchemeItem(item) {
+  return Boolean(item && typeof item === "object" && typeof item.id === "string" && item.id);
+}
+function readWorldInfoSchemes(extData, ctx) {
+  const cfg = getWorldInfoConfig(extData);
+  const cardKey = getCharacterCardKey(ctx);
+  const stored = cfg.cardSchemes?.[cardKey];
+  if (!stored || typeof stored !== "object") return { activeId: "", items: [] };
+  const items = (Array.isArray(stored.items) ? stored.items : []).filter(isValidSchemeItem).map((item) => ({
+    id: item.id,
+    name: String(item.name || "").trim() || "\u672A\u547D\u540D\u65B9\u6848",
+    selections: normalizeSchemeSelections(item.selections),
+    autoActiveBooks: Array.isArray(item.auto_active_books) ? item.auto_active_books.map(String) : []
+  }));
+  const activeId = items.some((item) => item.id === stored.active_id) ? String(stored.active_id) : "";
+  return { activeId, items };
+}
+function writeWorldInfoSchemes(extData, ctx, schemes) {
+  if (!extData.worldinfo || typeof extData.worldinfo !== "object") extData.worldinfo = {};
+  const wiConfig = extData.worldinfo;
+  if (!wiConfig.card_schemes || typeof wiConfig.card_schemes !== "object") wiConfig.card_schemes = {};
+  const cardKey = getCharacterCardKey(ctx);
+  const items = (Array.isArray(schemes?.items) ? schemes.items : []).filter(isValidSchemeItem).map((item) => ({
+    id: item.id,
+    name: String(item.name || ""),
+    selections: normalizeSchemeSelections(item.selections),
+    auto_active_books: Array.isArray(item.autoActiveBooks) ? item.autoActiveBooks.map(String) : []
+  }));
+  wiConfig.card_schemes[cardKey] = { active_id: String(schemes?.activeId || ""), items };
   return cardKey;
 }
 function getLocalAutoActiveBooks(charName, ctx = null) {
@@ -30656,10 +30752,10 @@ function openSettingsWindow() {
                         <div id="style-unsaved-hint" class="t-set-unsaved-hint">
                             <i class="fa-solid fa-circle-exclamation"></i> \u5F53\u524D\u5185\u5BB9\u6709\u4FEE\u6539\uFF0C\u5207\u6362\u65B9\u6848\u524D\u8BF7\u5148\u4FDD\u5B58
                         </div>
-                        <textarea id="set-dir-style" class="t-input" rows="6" placeholder="\u7C98\u8D34\u4F60\u559C\u6B22\u7684\u6587\u7B14\u6BB5\u843D...\uFF08\u6700\u591A1000\u5B57\uFF09" maxlength="1000"></textarea>
+                        <textarea id="set-dir-style" class="t-input" rows="6" placeholder="\u7C98\u8D34\u4F60\u559C\u6B22\u7684\u6587\u7B14\u6BB5\u843D...\uFF08\u5B57\u6570\u4E0D\u9650\uFF09"></textarea>
                         <div style="display:flex; justify-content:space-between; margin-top:5px;">
                             <span style="font-size:0.75em; color:var(--t-color-text-faint);">\u65B9\u6848\u6570\u91CF: <span id="style-count">0</span>/10</span>
-                            <span id="style-char-count" style="font-size:0.75em; color:var(--t-color-text-faint);">0/1000</span>
+                            <span id="style-char-count" style="font-size:0.75em; color:var(--t-color-text-faint);">0 \u5B57</span>
                         </div>
                     </div>
                 </div>
@@ -31048,12 +31144,7 @@ function openSettingsWindow() {
   };
   const updateStyleCharCount = () => {
     const len = ($("#set-dir-style").val() || "").length;
-    $("#style-char-count").text(`${len}/1000`);
-    if (len > 900) {
-      $("#style-char-count").css("color", "#ff6b6b");
-    } else {
-      $("#style-char-count").css("color", "#666");
-    }
+    $("#style-char-count").text(`${len} \u5B57`);
   };
   const saveCurrentStyleToMemory = () => {
     const pIndex = tempStyleProfiles.findIndex((p) => p.id === tempActiveStyleId);
@@ -36490,6 +36581,15 @@ async function openWorldInfoSelector() {
             </div>
         </div>
 
+        <div class="t-wi-scheme-bar">
+            <span class="t-wi-scheme-label">\u6761\u76EE\u65B9\u6848</span>
+            <select class="t-wi-scheme-select" id="t-wi-scheme-select" aria-label="\u9009\u62E9\u6761\u76EE\u65B9\u6848"></select>
+            <button type="button" class="t-btn t-btn-xs" id="t-wi-scheme-add" title="\u628A\u5F53\u524D\u52FE\u9009\u7684\u6761\u76EE\u7EC4\u5408\u5B58\u4E3A\u65B0\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="t-btn t-btn-xs" id="t-wi-scheme-rename" title="\u91CD\u547D\u540D\u5F53\u524D\u65B9\u6848"><i class="fa-solid fa-pen"></i></button>
+            <button type="button" class="t-btn t-btn-xs" id="t-wi-scheme-del" title="\u5220\u9664\u5F53\u524D\u65B9\u6848" style="color:var(--t-color-danger);"><i class="fa-solid fa-trash"></i></button>
+            <span class="t-wi-scheme-count" id="t-wi-scheme-count">0/20</span>
+        </div>
+
         <div class="t-panel-footer t-wi-footer">
             <span id="t-wi-stat">\u5DF2\u9009: 0/0</span>
             <button class="t-btn primary" id="t-wi-save" ${allBooks.length === 0 ? "disabled" : ""}>\u4FDD\u5B58</button>
@@ -36523,6 +36623,146 @@ async function openWorldInfoSelector() {
     const activeCount = allBooks.filter((name) => activeSet.has(name)).length;
     $q("#t-wi-active-count").text(activeCount);
   };
+  const MAX_WI_SCHEMES = 20;
+  let schemeState = readWorldInfoSchemes(data, ctx.stCtx);
+  const selectionsSignature = (selections) => {
+    const source = selections && typeof selections === "object" ? selections : {};
+    const normalized = {};
+    Object.keys(source).sort().forEach((bookName) => {
+      const uids = Array.isArray(source[bookName]) ? source[bookName].map(Number).filter(Number.isFinite).sort((a, b) => a - b) : [];
+      if (uids.length > 0) normalized[bookName] = uids;
+    });
+    return JSON.stringify(normalized);
+  };
+  let lastPersistedSignature = selectionsSignature(workingSelections);
+  const hasUnsavedSelectionChanges = () => selectionsSignature(workingSelections) !== lastPersistedSignature;
+  const getActiveScheme2 = () => schemeState.items.find((s) => s.id === schemeState.activeId) || null;
+  const replaceWorkingSelections = (next) => {
+    Object.keys(workingSelections).forEach((bookName) => delete workingSelections[bookName]);
+    Object.assign(workingSelections, structuredClone(next || {}));
+  };
+  const persistWorldInfo = (autoActiveBooks) => {
+    const autoActive = Array.isArray(autoActiveBooks) ? autoActiveBooks : getAutoActiveBooksFromSelections();
+    writeWorldInfoSelections(data, ctx.stCtx, workingSelections, autoActive);
+    writeWorldInfoSchemes(data, ctx.stCtx, schemeState);
+    lastPersistedSignature = selectionsSignature(workingSelections);
+    saveExtData();
+  };
+  const persistSchemesOnly = () => {
+    writeWorldInfoSchemes(data, ctx.stCtx, schemeState);
+    saveExtData();
+  };
+  const renderSchemeBar = () => {
+    const options = ['<option value="">\uFF08\u672A\u547D\u540D \xB7 \u8DDF\u968F\u5F53\u524D\u52FE\u9009\uFF09</option>'];
+    schemeState.items.forEach((scheme) => {
+      const selected = scheme.id === schemeState.activeId ? "selected" : "";
+      options.push(`<option value="${escapeHtmlText2(scheme.id)}" ${selected}>${escapeHtmlText2(scheme.name)}</option>`);
+    });
+    $q("#t-wi-scheme-select").html(options.join(""));
+    const hasActive = Boolean(getActiveScheme2());
+    $q("#t-wi-scheme-rename").prop("disabled", !hasActive).css("opacity", hasActive ? 1 : 0.5);
+    $q("#t-wi-scheme-del").prop("disabled", !hasActive).css("opacity", hasActive ? 1 : 0.5);
+    $q("#t-wi-scheme-count").text(`${schemeState.items.length}/${MAX_WI_SCHEMES}`);
+  };
+  const refreshAfterSelectionChange = () => {
+    refreshActiveState();
+    syncVisibleBooksByMode();
+    ensureCurrentBookInView();
+    renderBookList();
+    renderEntries();
+    syncEntryPaneHeader();
+    updateStat();
+    renderSchemeBar();
+    updateWorldInfoBadge();
+  };
+  const findSchemeByName = (name) => schemeState.items.find((s) => s.name === name) || null;
+  $q("#t-wi-scheme-select").on("change", function() {
+    const nextId = String($(this).val() || "");
+    if (nextId === schemeState.activeId) return;
+    const nextScheme = schemeState.items.find((s) => s.id === nextId) || null;
+    if (nextScheme && hasUnsavedSelectionChanges()) {
+      const ok = window.confirm(`\u5F53\u524D\u52FE\u9009\u6709\u672A\u4FDD\u5B58\u7684\u6539\u52A8\uFF0C\u5207\u6362\u5230\u65B9\u6848\u300C${nextScheme.name}\u300D\u4F1A\u653E\u5F03\u8FD9\u4E9B\u6539\u52A8\u3002
+
+\u662F\u5426\u7EE7\u7EED\uFF1F`);
+      if (!ok) {
+        $(this).val(schemeState.activeId);
+        return;
+      }
+    }
+    schemeState.activeId = nextScheme ? nextScheme.id : "";
+    if (nextScheme) {
+      replaceWorkingSelections(nextScheme.selections);
+      persistWorldInfo(nextScheme.autoActiveBooks);
+    } else {
+      persistSchemesOnly();
+    }
+    refreshAfterSelectionChange();
+    if (window.toastr) {
+      toastr.success(nextScheme ? `\u5DF2\u5207\u6362\u65B9\u6848\uFF1A${nextScheme.name}` : "\u5DF2\u5207\u6362\u4E3A\u672A\u547D\u540D\u65B9\u6848");
+    }
+  });
+  $q("#t-wi-scheme-add").on("click", () => {
+    if (schemeState.items.length >= MAX_WI_SCHEMES) {
+      if (window.toastr) toastr.warning(`\u6700\u591A\u53EA\u80FD\u4FDD\u5B58 ${MAX_WI_SCHEMES} \u4E2A\u65B9\u6848`);
+      return;
+    }
+    const autoActive = getAutoActiveBooksFromSelections();
+    if (autoActive.length === 0) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u52FE\u9009\u81F3\u5C11\u4E00\u6761\u6761\u76EE\uFF0C\u518D\u5B58\u4E3A\u65B9\u6848");
+      return;
+    }
+    const input = window.prompt("\u8BF7\u8F93\u5165\u65B0\u65B9\u6848\u7684\u540D\u79F0\uFF1A", `\u65B9\u6848 ${schemeState.items.length + 1}`);
+    if (!input || !input.trim()) return;
+    const name = input.trim();
+    if (findSchemeByName(name)) {
+      if (window.toastr) toastr.warning(`\u5DF2\u5B58\u5728\u540C\u540D\u65B9\u6848\u300C${name}\u300D`);
+      return;
+    }
+    const newId = "wi_" + Date.now();
+    schemeState.items.push({
+      id: newId,
+      name,
+      selections: structuredClone(workingSelections),
+      autoActiveBooks: autoActive
+    });
+    schemeState.activeId = newId;
+    persistWorldInfo(autoActive);
+    renderSchemeBar();
+    updateWorldInfoBadge();
+    if (window.toastr) toastr.success(`\u5DF2\u4FDD\u5B58\u4E3A\u65B0\u65B9\u6848\uFF1A${name}`);
+  });
+  $q("#t-wi-scheme-rename").on("click", () => {
+    const scheme = getActiveScheme2();
+    if (!scheme) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u65B9\u6848");
+      return;
+    }
+    const input = window.prompt("\u8BF7\u8F93\u5165\u65B0\u7684\u65B9\u6848\u540D\u79F0\uFF1A", scheme.name);
+    if (!input || !input.trim()) return;
+    const name = input.trim();
+    if (name !== scheme.name && findSchemeByName(name)) {
+      if (window.toastr) toastr.warning(`\u5DF2\u5B58\u5728\u540C\u540D\u65B9\u6848\u300C${name}\u300D`);
+      return;
+    }
+    const previousName = scheme.name;
+    scheme.name = name;
+    persistSchemesOnly();
+    renderSchemeBar();
+    if (window.toastr) toastr.success(`\u65B9\u6848\u5DF2\u91CD\u547D\u540D\uFF1A${previousName} \u2192 ${name}`);
+  });
+  $q("#t-wi-scheme-del").on("click", () => {
+    const scheme = getActiveScheme2();
+    if (!scheme) return;
+    const ok = window.confirm(`\u786E\u5B9A\u8981\u5220\u9664\u65B9\u6848\u300C${scheme.name}\u300D\u5417\uFF1F
+
+\u6761\u76EE\u52FE\u9009\u4F1A\u4FDD\u6301\u4E0D\u53D8\uFF0C\u53EA\u5220\u9664\u8FD9\u4EFD\u65B9\u6848\u8BB0\u5F55\u3002`);
+    if (!ok) return;
+    schemeState.items = schemeState.items.filter((s) => s.id !== scheme.id);
+    schemeState.activeId = "";
+    persistSchemesOnly();
+    renderSchemeBar();
+    if (window.toastr) toastr.success(`\u65B9\u6848\u300C${scheme.name}\u300D\u5DF2\u5220\u9664`);
+  });
   const showEntryPreview = (title, content) => {
     $q(".t-wi-preview-modal").remove();
     const $modal = $(`
@@ -36811,10 +37051,18 @@ async function openWorldInfoSelector() {
   });
   $q("#t-wi-save").on("click", () => {
     if (!currentBookName && !Object.keys(workingSelections).length) return;
-    writeWorldInfoSelections(data, ctx.stCtx, workingSelections, getAutoActiveBooksFromSelections());
-    saveExtData();
+    const autoActive = getAutoActiveBooksFromSelections();
+    const activeScheme = getActiveScheme2();
+    if (activeScheme) {
+      activeScheme.selections = structuredClone(workingSelections);
+      activeScheme.autoActiveBooks = autoActive;
+    }
+    persistWorldInfo(autoActive);
+    renderSchemeBar();
     updateWorldInfoBadge();
-    if (window.toastr) toastr.success("\u4E16\u754C\u4E66\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
+    if (window.toastr) {
+      toastr.success(activeScheme ? `\u4E16\u754C\u4E66\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u65B9\u6848\u300C${activeScheme.name}\u300D\u5DF2\u540C\u6B65\u66F4\u65B0` : "\u4E16\u754C\u4E66\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
+    }
   });
   $q("#t-wi-close").on("click", closePanel2);
   refreshActiveState();
@@ -36822,6 +37070,7 @@ async function openWorldInfoSelector() {
   ensureCurrentBookInView();
   renderBookList();
   syncEntryPaneHeader();
+  renderSchemeBar();
   if (currentBookName) {
     await loadBookEntries(currentBookName);
   } else {
@@ -39038,7 +39287,7 @@ async function buildPromptCompositionPreview(options = {}) {
     if (dStyle) {
       directorSection += `\u6587\u7B14\u53C2\u8003\uFF1A\u6A21\u4EFF\u4EE5\u4E0B\u6587\u98CE\uFF08\u4E0D\u8981\u590D\u5236\u539F\u6587\uFF09:
 <style_ref>
-${dStyle.substring(0, 1e3)}
+${dStyle}
 </style_ref>
 `;
     }
@@ -39360,7 +39609,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
     if (dStyle) {
       directorSection += `\u6587\u7B14\u53C2\u8003\uFF1A\u6A21\u4EFF\u4EE5\u4E0B\u6587\u98CE\uFF08\u4E0D\u8981\u590D\u5236\u539F\u6587\uFF09:
 <style_ref>
-${dStyle.substring(0, 1e3)}
+${dStyle}
 </style_ref>
 `;
     }
