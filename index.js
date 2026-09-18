@@ -257,6 +257,1026 @@ var init_defaults = __esm({
   }
 });
 
+// src/core/state.js
+function isFavoritableStatus(status) {
+  return FAVORITABLE_RESULT_STATUSES.has(String(status || ""));
+}
+function clonePromptTraceData(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+function getPromptTraceRecord(traceId) {
+  return GlobalState.promptTrace.traces.find((t) => t.id === traceId) || null;
+}
+function createPromptTrace(meta = {}) {
+  const traceId = `trace_${Date.now()}_${Math.floor(Math.random() * 1e5)}`;
+  const trace = {
+    id: traceId,
+    startedAt: Date.now(),
+    endedAt: null,
+    status: "running",
+    // running | success | failed | aborted
+    source: meta.source || "manual",
+    mode: meta.mode || "narrative",
+    scriptId: meta.scriptId || "",
+    scriptName: meta.scriptName || "\u672A\u77E5\u5267\u672C",
+    profile: meta.profile || "",
+    model: meta.model || "",
+    extraMeta: clonePromptTraceData(meta.extraMeta || {}),
+    stages: [],
+    finalMessages: null,
+    error: null
+  };
+  GlobalState.promptTrace.traces.unshift(trace);
+  while (GlobalState.promptTrace.traces.length > GlobalState.promptTrace.maxItems) {
+    GlobalState.promptTrace.traces.pop();
+  }
+  GlobalState.promptTrace.activeTraceId = traceId;
+  return traceId;
+}
+function appendPromptTraceStage(traceId, stage, payload = {}) {
+  const trace = getPromptTraceRecord(traceId);
+  if (!trace) return;
+  trace.stages.push({
+    at: Date.now(),
+    stage: stage || "unknown",
+    payload: clonePromptTraceData(payload)
+  });
+}
+function setPromptTraceFinalMessages(traceId, messages, meta = {}) {
+  const trace = getPromptTraceRecord(traceId);
+  if (!trace) return;
+  trace.finalMessages = {
+    messages: clonePromptTraceData(messages || []),
+    meta: clonePromptTraceData(meta)
+  };
+}
+function finishPromptTrace(traceId, status = "success", details = {}) {
+  const trace = getPromptTraceRecord(traceId);
+  if (!trace) return;
+  trace.status = status;
+  trace.endedAt = Date.now();
+  trace.error = details?.error || null;
+  if (GlobalState.promptTrace.activeTraceId === traceId) {
+    GlobalState.promptTrace.activeTraceId = null;
+  }
+}
+function getPromptTraceList() {
+  return clonePromptTraceData(GlobalState.promptTrace.traces);
+}
+function resetContinuationState() {
+  GlobalState.continuation = {
+    isActive: false,
+    retryCount: 0,
+    originalContent: "",
+    accumulatedContent: "",
+    originalPrompt: "",
+    characterName: "",
+    userName: ""
+  };
+}
+function pushSceneToHistory(content, scriptId, scriptName, metadata = {}) {
+  const history = GlobalState.sceneHistory;
+  const generationId = String(metadata.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+  const status = metadata.status || "success";
+  const newItem = {
+    content,
+    scriptId,
+    scriptName: scriptName || "\u672A\u77E5\u5267\u672C",
+    status,
+    generationId,
+    timestamp: Date.now(),
+    isRead: false,
+    // 新生成的默认未读
+    favId: null
+    // 该记录对应的收藏 ID（null 表示未收藏）
+  };
+  history.items.unshift(newItem);
+  while (history.items.length > history.maxItems) {
+    history.items.pop();
+  }
+  history.currentIndex = 0;
+  GlobalState.lastGeneratedContent = content;
+  GlobalState.lastGeneratedScriptId = scriptId;
+  GlobalState.currentGenerationResult = {
+    generationId,
+    content: String(content || ""),
+    scriptId: String(scriptId || ""),
+    scriptName: String(scriptName || "\u573A\u666F"),
+    status,
+    canFavorite: isFavoritableStatus(status),
+    canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
+    error: metadata.error || null,
+    timestamp: Date.now()
+  };
+  GlobalState.lastFavId = null;
+  console.log(`[Titania] \u5267\u573A\u5386\u53F2\u5DF2\u66F4\u65B0: ${history.items.length} \u6761\u8BB0\u5F55`);
+}
+function setCurrentGenerationResult(result = {}) {
+  const status = result.status || "failed";
+  GlobalState.currentGenerationResult = {
+    generationId: String(result.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
+    content: String(result.content || ""),
+    scriptId: String(result.scriptId || ""),
+    scriptName: String(result.scriptName || "\u573A\u666F"),
+    status,
+    canFavorite: isFavoritableStatus(status),
+    canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
+    error: result.error || null,
+    timestamp: Number(result.timestamp) || Date.now()
+  };
+  GlobalState.lastGeneratedContent = GlobalState.currentGenerationResult.content;
+  GlobalState.lastGeneratedScriptId = GlobalState.currentGenerationResult.scriptId;
+  return GlobalState.currentGenerationResult;
+}
+function getCurrentGenerationResult() {
+  const display = GlobalState.displayState;
+  if (display.isViewingHistory && display.currentViewIndex >= 0) {
+    const item = GlobalState.sceneHistory.items[display.currentViewIndex];
+    if (item) {
+      const status = item.status || "legacy";
+      return {
+        generationId: String(item.generationId || ""),
+        content: String(item.content || ""),
+        scriptId: String(item.scriptId || ""),
+        scriptName: String(item.scriptName || "\u573A\u666F"),
+        status,
+        canFavorite: isFavoritableStatus(status),
+        canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
+        error: item.error || null,
+        timestamp: Number(item.timestamp) || 0
+      };
+    }
+  }
+  if (display.isViewingHistory && display.currentViewIndex < 0 && display.lockedContent) {
+    return {
+      generationId: String(display.lockedGenerationId || ""),
+      content: String(display.lockedContent),
+      scriptId: String(display.lockedScriptId || ""),
+      scriptName: String(display.lockedScriptName || "\u573A\u666F"),
+      status: "legacy",
+      canFavorite: true,
+      canContinue: true,
+      error: null,
+      timestamp: 0
+    };
+  }
+  if (GlobalState.streamingCache.isActive) {
+    return {
+      generationId: "",
+      content: String(GlobalState.streamingCache.content || ""),
+      scriptId: String(GlobalState.streamingCache.scriptId || ""),
+      scriptName: String(GlobalState.streamingCache.scriptName || "\u573A\u666F"),
+      status: "running",
+      canFavorite: false,
+      canContinue: false,
+      error: null,
+      timestamp: Date.now()
+    };
+  }
+  if (GlobalState.currentGenerationResult) return GlobalState.currentGenerationResult;
+  if (GlobalState.lastGeneratedContent) {
+    return {
+      generationId: "",
+      content: String(GlobalState.lastGeneratedContent),
+      scriptId: String(GlobalState.lastGeneratedScriptId || ""),
+      scriptName: "\u573A\u666F",
+      status: "legacy",
+      canFavorite: true,
+      canContinue: true,
+      error: null,
+      timestamp: 0
+    };
+  }
+  return null;
+}
+function isFavoriteEligible(result = getCurrentGenerationResult()) {
+  return Boolean(result?.canFavorite && String(result.content || "").trim());
+}
+function getCurrentHistoryItem() {
+  const history = GlobalState.sceneHistory;
+  if (history.currentIndex < 0 || history.currentIndex >= history.items.length) {
+    return null;
+  }
+  return history.items[history.currentIndex];
+}
+function syncFavIdToCurrentHistory(favId) {
+  const display = GlobalState.displayState;
+  const history = GlobalState.sceneHistory;
+  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
+  if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
+    history.items[effectiveIndex].favId = favId;
+  }
+}
+function markCurrentAsRead() {
+  const item = getCurrentHistoryItem();
+  if (item) {
+    item.isRead = true;
+  }
+}
+function resetQueueState() {
+  GlobalState.queueState.isRunning = false;
+  GlobalState.queueState.currentIndex = 0;
+  GlobalState.queueState.totalCount = 0;
+  GlobalState.queueState.completedCount = 0;
+  GlobalState.queueState.failedCount = 0;
+  GlobalState.queueState.results = [];
+}
+function initQueueTasks(scriptIds) {
+  GlobalState.queueState.isRunning = true;
+  GlobalState.queueState.currentIndex = 0;
+  GlobalState.queueState.totalCount = scriptIds.length;
+  GlobalState.queueState.completedCount = 0;
+  GlobalState.queueState.failedCount = 0;
+  GlobalState.queueState.results = [];
+}
+function recordQueueResult(scriptId, scriptName, success, error = null) {
+  GlobalState.queueState.results.push({
+    scriptId,
+    scriptName,
+    success,
+    error,
+    timestamp: Date.now()
+  });
+  if (success) {
+    GlobalState.queueState.completedCount++;
+  } else {
+    GlobalState.queueState.failedCount++;
+  }
+  GlobalState.queueState.currentIndex++;
+}
+function getQueueProgress() {
+  const q = GlobalState.queueState;
+  return {
+    current: q.currentIndex,
+    total: q.totalCount,
+    completed: q.completedCount,
+    failed: q.failedCount,
+    isRunning: q.isRunning
+  };
+}
+function setHistoryMaxItems(maxItems) {
+  GlobalState.sceneHistory.maxItems = maxItems;
+  while (GlobalState.sceneHistory.items.length > maxItems) {
+    GlobalState.sceneHistory.items.pop();
+  }
+}
+function lockDisplayToHistory(historyIndex) {
+  const history = GlobalState.sceneHistory;
+  if (historyIndex < 0 || historyIndex >= history.items.length) return;
+  const item = history.items[historyIndex];
+  GlobalState.displayState.isViewingHistory = true;
+  GlobalState.displayState.currentViewIndex = historyIndex;
+  GlobalState.displayState.lockedContent = item.content;
+  GlobalState.displayState.lockedScriptId = item.scriptId;
+  GlobalState.displayState.lockedScriptName = item.scriptName;
+  GlobalState.displayState.lockedGenerationId = item.generationId || null;
+  item.isRead = true;
+  console.log(`[Titania] \u663E\u793A\u5C42\u9501\u5B9A\u5230\u5386\u53F2 #${historyIndex + 1}`);
+}
+function lockDisplayToContent(content, scriptId, scriptName = "\u573A\u666F", generationId = "") {
+  GlobalState.displayState.isViewingHistory = true;
+  GlobalState.displayState.currentViewIndex = -1;
+  GlobalState.displayState.lockedContent = String(content || "");
+  GlobalState.displayState.lockedScriptId = String(scriptId || "");
+  GlobalState.displayState.lockedScriptName = String(scriptName || "\u573A\u666F");
+  GlobalState.displayState.lockedGenerationId = String(generationId || "") || null;
+}
+function unlockDisplay() {
+  GlobalState.displayState.isViewingHistory = false;
+  GlobalState.displayState.currentViewIndex = -1;
+  GlobalState.displayState.lockedContent = null;
+  GlobalState.displayState.lockedScriptId = null;
+  GlobalState.displayState.lockedScriptName = null;
+  GlobalState.displayState.lockedGenerationId = null;
+  console.log(`[Titania] \u663E\u793A\u5C42\u5DF2\u89E3\u9501\uFF0C\u8FD4\u56DE\u5B9E\u65F6\u72B6\u6001`);
+}
+function shouldRenderStreamToUI() {
+  return !GlobalState.displayState.isViewingHistory;
+}
+function getCurrentDisplayContent() {
+  const display = GlobalState.displayState;
+  if (display.isViewingHistory && display.lockedContent) {
+    return {
+      content: display.lockedContent,
+      scriptId: display.lockedScriptId,
+      scriptName: display.lockedScriptName,
+      isLive: false,
+      generationId: String(display.lockedGenerationId || "")
+    };
+  }
+  if (GlobalState.streamingCache.isActive && GlobalState.streamingCache.content) {
+    return {
+      content: GlobalState.streamingCache.content,
+      scriptId: GlobalState.streamingCache.scriptId,
+      scriptName: GlobalState.streamingCache.scriptName,
+      isLive: true,
+      generationId: ""
+    };
+  }
+  return {
+    content: GlobalState.lastGeneratedContent,
+    scriptId: GlobalState.lastGeneratedScriptId,
+    scriptName: GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId)?.name || "\u573A\u666F",
+    isLive: false,
+    generationId: String(GlobalState.currentGenerationResult?.generationId || "")
+  };
+}
+function startStreamingCache(scriptId, scriptName) {
+  GlobalState.streamingCache.content = "";
+  GlobalState.streamingCache.scriptId = scriptId;
+  GlobalState.streamingCache.scriptName = scriptName;
+  GlobalState.streamingCache.isActive = true;
+}
+function updateStreamingCache(content) {
+  GlobalState.streamingCache.content = content;
+}
+function endStreamingCache() {
+  GlobalState.streamingCache.isActive = false;
+}
+function clearStreamingCache() {
+  GlobalState.streamingCache.content = "";
+  GlobalState.streamingCache.scriptId = null;
+  GlobalState.streamingCache.scriptName = null;
+  GlobalState.streamingCache.isActive = false;
+}
+function setFavsWindowOpen(isOpen) {
+  GlobalState.uiFlags.isFavsOpen = isOpen === true;
+}
+function shouldSuspendStreamUiRendering() {
+  return GlobalState.uiFlags.isFavsOpen === true;
+}
+var FAVORITABLE_RESULT_STATUSES, CONTINUABLE_RESULT_STATUSES, GlobalState;
+var init_state = __esm({
+  "src/core/state.js"() {
+    FAVORITABLE_RESULT_STATUSES = /* @__PURE__ */ new Set(["success", "partial", "aborted", "legacy"]);
+    CONTINUABLE_RESULT_STATUSES = /* @__PURE__ */ new Set(["success", "partial", "aborted", "legacy"]);
+    GlobalState = {
+      isGenerating: false,
+      abortController: null,
+      // 中断控制器 (AbortController 实例)
+      runtimeScripts: [],
+      // 加载好的剧本列表 (预设 + 自定义)
+      lastGeneratedContent: "",
+      // 上一次生成的结果 HTML
+      currentGenerationResult: null,
+      // 当前生成结果的状态化快照
+      lastUsedScriptId: "",
+      // 上一次用户手动选择的剧本 ID (用于 UI 显示)
+      lastGeneratedScriptId: "",
+      // 上一次生成内容对应的剧本 ID (可能是后台自动生成的)
+      lastUsedModelName: "",
+      // 上一次生成使用的模型名称
+      lastFavId: null,
+      // 当前内容对应的收藏 ID（null 表示未收藏）
+      currentCategoryFilter: "ALL",
+      // 当前的分类筛选器状态
+      generationMode: "narrative",
+      // 生成模式: "narrative"(内容优先) | "visual"(氛围美化)
+      useHistoryAnalysis: false,
+      // 是否读取聊天历史（默认关闭）
+      historyAiOnly: false,
+      // 读历史时只要角色发言，跳过用户楼层（仅作用于剧本生成）
+      skipWorldBookCheck: false,
+      // 跳过世界书空检查（本次会话内有效）
+      skipInteractiveHint: false,
+      // 跳过互动内容提示弹窗（本次会话内有效）
+      // 计时器相关
+      timerStartTime: 0,
+      // 计时开始时间戳
+      timerInterval: null,
+      // 计时器 interval ID
+      lastGenerationTime: 0,
+      // 上次生成耗时 (毫秒)
+      // 显示层状态 (用于分离显示与生成)
+      displayState: {
+        isViewingHistory: false,
+        // 是否正在查看历史（非最新）
+        currentViewIndex: -1,
+        // 当前查看的历史索引 (-1 表示查看最新/实时)
+        lockedContent: null,
+        // 锁定显示的内容（用户切换历史时）
+        lockedScriptId: null,
+        // 锁定显示的剧本ID
+        lockedScriptName: null,
+        // 锁定显示的剧本名称
+        lockedGenerationId: null
+        // 锁定内容的生成ID（续写时用于定位所属世系）
+      },
+      // 流式生成缓存 (后台生成时暂存)
+      streamingCache: {
+        content: "",
+        // 正在生成的内容
+        scriptId: null,
+        // 正在生成的剧本ID
+        scriptName: null,
+        // 正在生成的剧本名称
+        isActive: false
+        // 是否有活跃的流式生成
+      },
+      // 自动续写相关
+      continuation: {
+        isActive: false,
+        // 是否正在进行续写
+        retryCount: 0,
+        // 当前续写次数
+        originalContent: "",
+        // 原始内容（未被截断前）
+        accumulatedContent: "",
+        // 累积的完整内容
+        // 优化：保存原始请求上下文，确保续写连贯性
+        originalPrompt: "",
+        // 原始剧本的 prompt
+        characterName: "",
+        // 角色名
+        userName: ""
+        // 用户名
+      },
+      // 主动续写分支历史（当前页面会话内有效）
+      continuationRuntime: {
+        chatId: "",
+        byScript: {}
+      },
+      // 剧场历史记录队列
+      sceneHistory: {
+        items: [],
+        // 历史记录数组，每项 { content, scriptId, scriptName, timestamp, isRead }
+        currentIndex: -1,
+        // 当前查看的索引 (-1 表示没有历史)
+        maxItems: 5
+        // 最多保留的历史记录数量
+      },
+      // 生成内容统计信息
+      contentStats: {
+        totalChars: 0,
+        // 总字符数
+        chineseChars: 0,
+        // 中文字符数
+        tokens: 0,
+        // Token 数量
+        isEstimated: true
+        // Token 是否为估算值
+      },
+      // 队列生成状态
+      queueState: {
+        enabled: false,
+        // 队列模式是否激活
+        mode: "random",
+        // 队列模式: "random"(随机抽取) | "manual"(手动选择)
+        count: 3,
+        // 随机模式下的生成数量
+        categoryFilter: "ALL",
+        // 分类筛选
+        manualItems: [],
+        // 手动模式下选择的剧本ID列表
+        interval: 2,
+        // 生成间隔（秒）
+        isRunning: false,
+        // 队列是否正在运行
+        currentIndex: 0,
+        // 当前生成到第几个
+        totalCount: 0,
+        // 总任务数
+        completedCount: 0,
+        // 已完成数
+        failedCount: 0,
+        // 失败数
+        results: []
+        // 生成结果记录 { scriptId, scriptName, success, error? }
+      },
+      // UI 视图状态
+      uiFlags: {
+        isFavsOpen: false
+        // 收藏管理器是否打开
+      },
+      // 提示词构包追踪（用于提示词实时组成窗口）
+      promptTrace: {
+        traces: [],
+        // 最近生成记录（最新在前）
+        activeTraceId: null,
+        // 当前正在构建的 trace ID
+        maxItems: 30
+        // 最多保留条数
+      }
+    };
+  }
+});
+
+// src/core/logger.js
+var TitaniaLogger;
+var init_logger = __esm({
+  "src/core/logger.js"() {
+    init_storage();
+    init_defaults();
+    init_state();
+    TitaniaLogger = {
+      logs: [],
+      maxLogs: 50,
+      // 内存中最多保留50条，刷新即清空
+      add: function(type, message, details = null) {
+        const entry = {
+          timestamp: (/* @__PURE__ */ new Date()).toLocaleString(),
+          type,
+          // 'INFO', 'WARN', 'ERROR'
+          message,
+          details,
+          // 记录基础环境上下文，从 GlobalState 获取
+          context: {
+            scriptId: GlobalState.lastUsedScriptId || "none",
+            isGenerating: GlobalState.isGenerating
+          }
+        };
+        this.logs.unshift(entry);
+        if (this.logs.length > this.maxLogs) this.logs.pop();
+        if (type === "ERROR") console.error("[Titania Debug]", message, details);
+      },
+      info: function(msg, details) {
+        this.add("INFO", msg, details);
+      },
+      warn: function(msg, details) {
+        this.add("WARN", msg, details);
+      },
+      // 专门用于记录报错，支持传入上下文对象
+      error: function(msg, errObj, contextData = {}) {
+        let stack = "Unknown";
+        let errMsg = "Unknown Error";
+        if (errObj) {
+          if (typeof errObj === "string") {
+            errMsg = errObj;
+          } else {
+            errMsg = errObj.message || "Error Object";
+            stack = errObj.stack || JSON.stringify(errObj);
+          }
+        }
+        if (contextData && contextData.network && contextData.network.status) {
+          msg += ` [HTTP ${contextData.network.status}]`;
+        }
+        const details = { error_message: errMsg, stack_trace: stack };
+        if (contextData && typeof contextData === "object" && Object.keys(contextData).length > 0) {
+          details.diagnostics = contextData;
+        }
+        this.add("ERROR", msg, details);
+      },
+      // 导出并下载日志
+      downloadReport: function() {
+        const data = getExtData();
+        const configSnapshot = JSON.parse(JSON.stringify(data.config || {}));
+        if (configSnapshot.profiles && Array.isArray(configSnapshot.profiles)) {
+          configSnapshot.profiles.forEach((p) => {
+            if (p.key && p.key.length > 5) {
+              p.key = p.key.substring(0, 3) + "***(HIDDEN)";
+            } else if (p.key) {
+              p.key = "***(HIDDEN)";
+            }
+          });
+        }
+        if (configSnapshot.key) configSnapshot.key = "***(HIDDEN)";
+        let stVersion = "Unknown";
+        try {
+          if (typeof SillyTavern !== "undefined" && SillyTavern.version) stVersion = SillyTavern.version;
+          else if (window.SillyTavernVersion) stVersion = window.SillyTavernVersion;
+        } catch (e) {
+        }
+        const reportObj = {
+          meta: {
+            extension: extensionName,
+            extension_version: `v${CURRENT_VERSION}`,
+            st_version: stVersion,
+            userAgent: navigator.userAgent,
+            screen_res: `${window.screen.width}x${window.screen.height}`,
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            time: (/* @__PURE__ */ new Date()).toLocaleString(),
+            timestamp: Date.now()
+          },
+          config: configSnapshot,
+          logs: this.logs
+        };
+        const content = JSON.stringify(reportObj, null, 2);
+        const blob = new Blob([content], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Titania_Debug_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10).replace(/-/g, "")}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    };
+  }
+});
+
+// src/utils/userFiles.js
+import { getRequestHeaders } from "../../../../script.js";
+function utf8ToBase64(text) {
+  const bytes = new TextEncoder().encode(String(text ?? ""));
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + BASE64_CHUNK));
+  }
+  return btoa(binary);
+}
+function utf8ByteLength(text) {
+  return new TextEncoder().encode(String(text ?? "")).length;
+}
+async function uploadTextFile(fileName, text) {
+  const response = await fetch("/api/files/upload", {
+    method: "POST",
+    headers: getRequestHeaders(),
+    body: JSON.stringify({ name: fileName, data: utf8ToBase64(text) })
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`\u4E0A\u4F20 ${fileName} \u5931\u8D25\uFF08${response.status}\uFF09${detail ? `\uFF1A${detail}` : ""}`);
+  }
+  const payload = await response.json();
+  const filePath = String(payload?.path || "").trim();
+  if (!filePath) throw new Error(`\u4E0A\u4F20 ${fileName} \u540E\u670D\u52A1\u7AEF\u672A\u8FD4\u56DE\u8DEF\u5F84`);
+  return filePath;
+}
+async function fetchTextFile(filePath, rev = 0) {
+  const url = rev > 0 ? `${filePath}?rev=${encodeURIComponent(rev)}` : filePath;
+  const response = await fetch(url, {
+    method: "GET",
+    cache: "no-cache",
+    headers: getRequestHeaders()
+  });
+  if (!response.ok) {
+    throw new Error(`\u8BFB\u53D6 ${filePath} \u5931\u8D25\uFF08${response.status}\uFF09`);
+  }
+  return response.text();
+}
+async function deleteUserFile(filePath, options = {}) {
+  const label = options.label || "\u6587\u4EF6";
+  const target = String(filePath || "").trim();
+  if (!target) return false;
+  const response = await fetch("/api/files/delete", {
+    method: "POST",
+    headers: getRequestHeaders(),
+    body: JSON.stringify({ path: target })
+  });
+  if (response.status === 404) return true;
+  if (!response.ok) {
+    TitaniaLogger.warn(`\u5220\u9664${label}\u5931\u8D25\uFF08${response.status}\uFF09\uFF1A${target}`);
+    return false;
+  }
+  return true;
+}
+async function verifyUserFiles(filePaths, options = {}) {
+  const label = options.label || "\u6587\u4EF6";
+  const urls = (Array.isArray(filePaths) ? filePaths : []).map((p) => String(p || "")).filter(Boolean);
+  if (urls.length === 0) return {};
+  const response = await fetch("/api/files/verify", {
+    method: "POST",
+    headers: getRequestHeaders(),
+    body: JSON.stringify({ urls })
+  });
+  if (!response.ok) {
+    throw new Error(`\u6821\u9A8C${label}\u5931\u8D25\uFF08${response.status}\uFF09`);
+  }
+  return await response.json();
+}
+var BASE64_CHUNK;
+var init_userFiles = __esm({
+  "src/utils/userFiles.js"() {
+    init_logger();
+    BASE64_CHUNK = 32768;
+  }
+});
+
+// src/core/illustrationData.js
+function illustrationError(message, code = "INVALID_RESPONSE") {
+  return Object.assign(new Error(message), { code });
+}
+function newIllustrationId() {
+  return globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+function illustrationHash(value) {
+  const text = String(value);
+  let a = 2166136261, b = 5381;
+  for (let i = 0; i < text.length; i++) {
+    a = Math.imul(a ^ text.charCodeAt(i), 16777619);
+    b = Math.imul(b, 33) ^ text.charCodeAt(i);
+  }
+  return `${(a >>> 0).toString(16)}-${(b >>> 0).toString(16)}-${text.length.toString(16)}`;
+}
+function createIllustrationTarget(result, fallbackId = "") {
+  const content = String(result?.content ?? result?.html ?? "").trim();
+  if (!content || result?.status === "running" || result?.status === "failed") {
+    throw illustrationError("\u8BF7\u5148\u9009\u62E9\u4E00\u6BB5\u5DF2\u5B8C\u6210\u7684\u5C0F\u5267\u573A\u5185\u5BB9\u3002", "NO_CONTENT");
+  }
+  const identity = String(result.generationId || fallbackId);
+  if (!identity) throw illustrationError("\u8FD9\u6BB5\u5185\u5BB9\u7F3A\u5C11\u4FDD\u5B58\u6807\u8BC6\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u540E\u518D\u8BD5\u3002", "NO_CONTENT");
+  return Object.freeze({
+    sceneId: `scene-${illustrationHash(JSON.stringify([identity, result.scriptId || "", content]))}`,
+    content,
+    scriptId: String(result.scriptId || ""),
+    scriptName: String(result.scriptName || "\u573A\u666F"),
+    generationId: String(result.generationId || "")
+  });
+}
+function resolveDisplayedFavoriteBranch(result, active, archived = []) {
+  const matches = (round) => result?.generationId ? round?.generationId === result.generationId : String(round?.content || "").trim() === String(result?.content || "").trim();
+  const source = [active, ...archived].find((branch) => branch?.rounds?.some(matches));
+  return source ? { ...active, ...source } : { ...active, branchKey: "", rounds: [] };
+}
+function requireText(value, label, allowEmpty = false) {
+  if (typeof value !== "string" || !allowEmpty && !value.trim()) {
+    throw illustrationError(`${label}\u7F3A\u5931\u6216\u683C\u5F0F\u9519\u8BEF\u3002`);
+  }
+  return value.trim();
+}
+function normalizeIllustrationDraft(value, theaterText) {
+  if (value?.version !== 1 || !SOURCES.has(value.imageSource)) throw illustrationError("\u914D\u56FE\u8349\u7A3F\u7248\u672C\u6216\u56FE\u50CF\u6765\u6E90\u4E0D\u53D7\u652F\u6301\u3002");
+  const sourceExcerpt = requireText(value.scene?.sourceExcerpt, "\u753B\u9762\u539F\u6587");
+  if (typeof theaterText === "string" && !theaterText.includes(sourceExcerpt)) {
+    throw illustrationError("\u9009\u666F\u539F\u6587\u4E0E\u5F53\u524D\u5267\u573A\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u91CD\u65B0\u5206\u6790\u753B\u9762\u3002");
+  }
+  if (!Array.isArray(value.prompts?.characterPrompts)) throw illustrationError("\u4EBA\u7269\u63D0\u793A\u8BCD\u5E94\u4E3A\u6570\u7EC4\u3002");
+  const characterPrompts = value.prompts.characterPrompts.map((character) => {
+    const { x, y } = character?.position || {};
+    if (![x, y].every((n) => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 1)) {
+      throw illustrationError("\u4EBA\u7269\u4F4D\u7F6E\u5E94\u5728 0\u20131 \u4E4B\u95F4\u3002");
+    }
+    return {
+      positivePrompt: requireText(character.positivePrompt, "\u4EBA\u7269\u6B63\u5411\u63D0\u793A\u8BCD", true),
+      negativePrompt: requireText(character.negativePrompt, "\u4EBA\u7269\u8D1F\u5411\u63D0\u793A\u8BCD", true),
+      position: { x, y }
+    };
+  });
+  return {
+    version: 1,
+    imageSource: value.imageSource,
+    model: requireText(value.model, "\u6A21\u578B\u6807\u8BC6"),
+    scene: { summary: requireText(value.scene.summary, "\u753B\u9762\u63CF\u8FF0"), sourceExcerpt },
+    prompts: {
+      positivePrompt: requireText(value.prompts.positivePrompt, "\u6B63\u5411\u63D0\u793A\u8BCD"),
+      negativePrompt: requireText(value.prompts.negativePrompt, "\u8D1F\u5411\u63D0\u793A\u8BCD", true),
+      characterPrompts
+    }
+  };
+}
+function illustrationExtension(mime) {
+  const extension = MIME_EXTENSIONS[mime];
+  if (!extension) throw illustrationError("\u4EC5\u652F\u6301 PNG\u3001JPEG \u548C WebP \u56FE\u7247\u3002");
+  return extension;
+}
+async function validateIllustrationBlob(blob) {
+  if (!(blob instanceof Blob) || !blob.size || blob.size > MAX_IMAGE_BYTES) {
+    throw illustrationError("\u56FE\u7247\u4E3A\u7A7A\u6216\u8D85\u8FC7 32 MB\uFF0C\u65E0\u6CD5\u4FDD\u5B58\u3002");
+  }
+  illustrationExtension(blob.type);
+  const bytes = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+  const matches = (sequence, offset = 0) => sequence.every((byte, index) => bytes[index + offset] === byte);
+  const valid = blob.type === "image/png" ? matches([137, 80, 78, 71, 13, 10, 26, 10]) : blob.type === "image/jpeg" ? matches([255, 216, 255]) : matches([82, 73, 70, 70]) && matches([87, 69, 66, 80], 8);
+  if (!valid) throw illustrationError("\u8FD4\u56DE\u7684\u6587\u4EF6\u4E0E\u56FE\u7247\u683C\u5F0F\u4E0D\u7B26\uFF0C\u8BF7\u68C0\u67E5\u751F\u56FE\u63A5\u53E3\u3002");
+  return blob;
+}
+function isIllustrationPath(path) {
+  return typeof path === "string" && /^\/user\/files\/titania-illustration-[a-zA-Z0-9-]+\.(png|jpg|webp)$/.test(path);
+}
+function normalizeSavedIllustration(value) {
+  if (!value || !isIllustrationPath(value.filePath)) throw illustrationError("\u914D\u56FE\u6587\u4EF6\u8DEF\u5F84\u65E0\u6548\u3002");
+  const width = Number(value.width), height = Number(value.height);
+  if (![width, height].every((n) => Number.isInteger(n) && n > 0)) throw illustrationError("\u56FE\u7247\u5C3A\u5BF8\u65E0\u6548\u3002");
+  return {
+    id: requireText(value.id, "\u56FE\u7247\u6807\u8BC6"),
+    filePath: value.filePath,
+    draft: normalizeIllustrationDraft(value.draft),
+    width,
+    height,
+    ...typeof value.seed === "number" || typeof value.seed === "string" ? { seed: value.seed } : {},
+    createdAt: Number(value.createdAt) || 0
+  };
+}
+function escapeIllustrationHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+function illustrationFigure(value) {
+  if (!value) return "";
+  let image;
+  try {
+    image = normalizeSavedIllustration(value);
+  } catch {
+    return "";
+  }
+  const caption = escapeIllustrationHtml(image.draft.scene.summary);
+  return `<figure data-titania-illustration="${escapeIllustrationHtml(image.id)}" style="margin:24px auto;text-align:center;max-width:100%"><a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" alt="${caption}" width="${image.width}" height="${image.height}" loading="lazy" style="display:block;max-width:100%;height:auto;max-height:80vh;object-fit:contain;margin:auto;border-radius:12px"></a><figcaption style="margin-top:10px;font-size:0.9em;line-height:1.6">${caption}</figcaption></figure>`;
+}
+var ILLUSTRATION_INDEX_KEY, MAX_IMAGE_BYTES, SOURCES, MIME_EXTENSIONS;
+var init_illustrationData = __esm({
+  "src/core/illustrationData.js"() {
+    ILLUSTRATION_INDEX_KEY = "illustration_index";
+    MAX_IMAGE_BYTES = 32 * 1024 * 1024;
+    SOURCES = /* @__PURE__ */ new Set(["novelai", "comfyui"]);
+    MIME_EXTENSIONS = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+  }
+});
+
+// src/core/illustrationStore.js
+import { getRequestHeaders as getRequestHeaders2 } from "../../../../script.js";
+function pointer(sceneId) {
+  return getExtData()[ILLUSTRATION_INDEX_KEY]?.[sceneId];
+}
+async function readSceneIllustrations(sceneId) {
+  const ref = pointer(sceneId);
+  if (!ref) return { v: 1, sceneId, selectedId: null, images: [] };
+  const key = `${ref.file}:${ref.rev}`;
+  if (cache.has(key)) return structuredClone(cache.get(key));
+  if (!/^\/user\/files\/titania-scene-[a-zA-Z0-9-]+\.json$/.test(ref.file)) throw illustrationError("\u914D\u56FE\u8BB0\u5F55\u8DEF\u5F84\u65E0\u6548\u3002");
+  const record = JSON.parse(await fetchTextFile(ref.file, ref.rev));
+  if (record?.v !== 1 || record.sceneId !== sceneId || !Array.isArray(record.images)) throw illustrationError("\u914D\u56FE\u8BB0\u5F55\u635F\u574F\uFF0C\u5DF2\u505C\u6B62\u5199\u5165\u4EE5\u4FDD\u62A4\u539F\u6570\u636E\u3002");
+  record.images = record.images.map(normalizeSavedIllustration);
+  if (record.selectedId !== null && !record.images.some((image) => image.id === record.selectedId)) throw illustrationError("\u5F53\u524D\u914D\u56FE\u8BB0\u5F55\u4E0D\u5B8C\u6574\u3002");
+  cache.set(key, structuredClone(record));
+  return record;
+}
+function selectedIllustration(record) {
+  return record?.images?.find((image) => image.id === record.selectedId) || null;
+}
+function mutateScene(sceneId, mutate) {
+  const previous = writeTail;
+  const operation = previous.catch(() => {
+  }).then(async () => {
+    var _a;
+    const record = await readSceneIllustrations(sceneId);
+    mutate(record);
+    const oldPointer = pointer(sceneId);
+    const rev = (Number(oldPointer?.rev) || 0) + 1;
+    const fileName = `titania-scene-${illustrationHash(sceneId)}-${newIllustrationId()}.json`;
+    const file = await uploadTextFile(fileName, JSON.stringify(record));
+    const data = getExtData();
+    data[_a = ILLUSTRATION_INDEX_KEY] || (data[_a] = {});
+    data[ILLUSTRATION_INDEX_KEY][sceneId] = { file, rev };
+    if (!await saveExtDataImmediate()) {
+      if (oldPointer) data[ILLUSTRATION_INDEX_KEY][sceneId] = oldPointer;
+      else delete data[ILLUSTRATION_INDEX_KEY][sceneId];
+      throw illustrationError("\u56FE\u7247\u5DF2\u751F\u6210\uFF0C\u4F46\u914D\u56FE\u8BB0\u5F55\u4FDD\u5B58\u5931\u8D25\u3002\u8BF7\u70B9\u51FB\u91CD\u8BD5\u4FDD\u5B58\u3002", "SAVE_FAILED");
+    }
+    cache.set(`${file}:${rev}`, structuredClone(record));
+    window.dispatchEvent(new CustomEvent("titania:illustrations-changed", { detail: { sceneId } }));
+    return record;
+  });
+  writes.set(sceneId, operation);
+  writeTail = operation.catch(() => {
+  });
+  void operation.finally(() => {
+    if (writes.get(sceneId) === operation) writes.delete(sceneId);
+  }).catch(() => {
+  });
+  return operation;
+}
+function blobToIllustrationDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("\u56FE\u7247\u8BFB\u53D6\u5931\u8D25\u3002"));
+    reader.readAsDataURL(blob);
+  });
+}
+async function uploadIllustrationBlob(blob, id3 = newIllustrationId()) {
+  await validateIllustrationBlob(blob);
+  const name = `titania-illustration-${id3}.${illustrationExtension(blob.type)}`;
+  const dataUrl = await blobToIllustrationDataUrl(blob);
+  const response = await fetch("/api/files/upload", {
+    method: "POST",
+    headers: getRequestHeaders2(),
+    body: JSON.stringify({ name, data: dataUrl.slice(dataUrl.indexOf(",") + 1) })
+  });
+  if (!response.ok) throw illustrationError(`\u56FE\u7247\u4FDD\u5B58\u5931\u8D25\uFF08${response.status}\uFF09\uFF0C\u53EF\u4EE5\u91CD\u8BD5\u4FDD\u5B58\u3002`, "SAVE_FAILED");
+  const payload = await response.json();
+  if (payload.path !== `/user/files/${name}`) throw illustrationError("\u56FE\u7247\u4FDD\u5B58\u540E\u8FD4\u56DE\u4E86\u610F\u5916\u7684\u6587\u4EF6\u8DEF\u5F84\u3002", "SAVE_FAILED");
+  return payload.path;
+}
+async function saveGeneratedIllustration(sceneId, pending) {
+  pending.id || (pending.id = newIllustrationId());
+  pending.filePath || (pending.filePath = await uploadIllustrationBlob(pending.image.blob, pending.id));
+  const image = normalizeSavedIllustration({
+    ...pending.image,
+    id: pending.id,
+    filePath: pending.filePath,
+    draft: pending.draft,
+    createdAt: pending.createdAt || Date.now()
+  });
+  return mutateScene(sceneId, (record) => {
+    if (!record.images.some((item) => item.id === image.id)) record.images.push(image);
+    record.selectedId = image.id;
+  });
+}
+function selectSceneIllustration(sceneId, imageId, savedImage = null) {
+  return mutateScene(sceneId, (record) => {
+    if (savedImage && savedImage.id === imageId && !record.images.some((image) => image.id === imageId)) {
+      record.images.push(normalizeSavedIllustration(savedImage));
+    }
+    if (imageId !== null && !record.images.some((image) => image.id === imageId)) throw illustrationError("\u627E\u4E0D\u5230\u8FD9\u5F20\u914D\u56FE\u3002");
+    record.selectedId = imageId;
+  });
+}
+async function flushIllustrationWrites() {
+  await Promise.all([...writes.values()]);
+}
+var writes, cache, writeTail;
+var init_illustrationStore = __esm({
+  "src/core/illustrationStore.js"() {
+    init_storage();
+    init_userFiles();
+    init_illustrationData();
+    writes = /* @__PURE__ */ new Map();
+    cache = /* @__PURE__ */ new Map();
+    writeTail = Promise.resolve();
+  }
+});
+
+// src/core/illustrationPortability.js
+function collectPaths(value, result = /* @__PURE__ */ new Set()) {
+  if (typeof value === "string") {
+    for (const match of value.matchAll(/\/user\/files\/titania-illustration-[a-zA-Z0-9-]+\.(?:png|jpg|webp)/g)) result.add(match[0]);
+  } else if (Array.isArray(value)) value.forEach((item) => collectPaths(item, result));
+  else if (value && typeof value === "object") Object.values(value).forEach((item) => collectPaths(item, result));
+  return result;
+}
+function replaceIllustrationPaths(value, replacements) {
+  if (typeof value === "string") {
+    return value.replace(/\/user\/files\/titania-illustration-[a-zA-Z0-9-]+\.(?:png|jpg|webp)/g, (path) => replacements[path] || path);
+  }
+  if (Array.isArray(value)) return value.map((item) => replaceIllustrationPaths(item, replacements));
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replaceIllustrationPaths(item, replacements)]));
+  return value;
+}
+async function loadAsset(path) {
+  if (!isIllustrationPath(path)) throw illustrationError("\u914D\u56FE\u8DEF\u5F84\u65E0\u6548\u3002");
+  const response = await fetch(path, { cache: "no-cache" });
+  if (!response.ok) throw illustrationError(`\u914D\u56FE\u6587\u4EF6\u8BFB\u53D6\u5931\u8D25\uFF08${response.status}\uFF09\uFF0C\u5DF2\u505C\u6B62\u5BFC\u51FA\u4EE5\u514D\u9057\u6F0F\u56FE\u7247\u3002`);
+  const blob = await response.blob();
+  await validateIllustrationBlob(blob);
+  return blob;
+}
+async function exportIllustrationBackup(favorites = []) {
+  await flushIllustrationWrites();
+  const scenes = [];
+  for (const sceneId of Object.keys(getExtData()[ILLUSTRATION_INDEX_KEY] || {})) {
+    scenes.push(await readSceneIllustrations(sceneId));
+  }
+  const paths = collectPaths([scenes, favorites]);
+  if (!scenes.length && !paths.size) return void 0;
+  const assets = {};
+  for (const path of paths) assets[path] = await blobToIllustrationDataUrl(await loadAsset(path));
+  return { v: 1, scenes, assets };
+}
+function decodeIllustrationDataUrl(value) {
+  if (typeof value !== "string" || value.length > Math.ceil(MAX_IMAGE_BYTES * 4 / 3) + 100) throw illustrationError("\u5907\u4EFD\u56FE\u7247\u8FC7\u5927\u6216\u683C\u5F0F\u9519\u8BEF\u3002");
+  const match = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/]*={0,2})$/.exec(value);
+  if (!match) throw illustrationError("\u5907\u4EFD\u56FE\u7247\u683C\u5F0F\u65E0\u6548\u3002");
+  const binary = atob(match[2]);
+  return new Blob([Uint8Array.from(binary, (char) => char.charCodeAt(0))], { type: match[1] });
+}
+async function restoreIllustrationBackup(bundle, data) {
+  const next = structuredClone(data);
+  const referenced = collectPaths(next.favs || []);
+  if (!bundle) {
+    if (referenced.size || Object.keys(next[ILLUSTRATION_INDEX_KEY] || {}).length) throw illustrationError("\u5907\u4EFD\u542B\u914D\u56FE\u5F15\u7528\u4F46\u7F3A\u5C11\u56FE\u7247\u6587\u4EF6\uFF0C\u65E0\u6CD5\u5B8C\u6574\u6062\u590D\u3002");
+    delete next[ILLUSTRATION_INDEX_KEY];
+    return next;
+  }
+  if (bundle.v !== 1 || !Array.isArray(bundle.scenes) || !bundle.assets || typeof bundle.assets !== "object" || Array.isArray(bundle.assets)) throw illustrationError("\u914D\u56FE\u5907\u4EFD\u7248\u672C\u6216\u7ED3\u6784\u65E0\u6548\u3002");
+  const ids = /* @__PURE__ */ new Set();
+  for (const record of bundle.scenes) {
+    if (record?.v !== 1 || !/^scene-[a-zA-Z0-9-]+$/.test(record.sceneId) || ids.has(record.sceneId) || !Array.isArray(record.images)) throw illustrationError("\u5907\u4EFD\u573A\u666F\u8BB0\u5F55\u65E0\u6548\u3002");
+    ids.add(record.sceneId);
+    record.images.forEach(normalizeSavedIllustration);
+    if (record.selectedId !== null && !record.images.some((image) => image.id === record.selectedId)) throw illustrationError("\u5907\u4EFD\u7F3A\u5C11\u5F53\u524D\u91C7\u7528\u7684\u56FE\u7247\u3002");
+  }
+  collectPaths(bundle.scenes, referenced);
+  for (const path of referenced) if (!Object.hasOwn(bundle.assets, path)) throw illustrationError("\u5907\u4EFD\u4E2D\u7F3A\u5C11\u88AB\u5F15\u7528\u7684\u914D\u56FE\uFF0C\u5DF2\u505C\u6B62\u6062\u590D\u3002");
+  for (const [path, encoded] of Object.entries(bundle.assets)) {
+    if (!isIllustrationPath(path)) throw illustrationError("\u5907\u4EFD\u5305\u542B\u4E0D\u652F\u6301\u7684\u56FE\u7247\u8DEF\u5F84\u3002");
+    await validateIllustrationBlob(decodeIllustrationDataUrl(encoded));
+  }
+  const replacements = {};
+  for (const [path, encoded] of Object.entries(bundle.assets)) replacements[path] = await uploadIllustrationBlob(decodeIllustrationDataUrl(encoded));
+  const index = {};
+  for (const source of bundle.scenes) {
+    const record = replaceIllustrationPaths(source, replacements);
+    const file = await uploadTextFile(`titania-scene-${illustrationHash(record.sceneId)}-${newIllustrationId()}.json`, JSON.stringify(record));
+    index[record.sceneId] = { file, rev: 1 };
+  }
+  const restored = replaceIllustrationPaths(next, replacements);
+  restored[ILLUSTRATION_INDEX_KEY] = index;
+  return restored;
+}
+async function embedIllustrationsInHtml(html) {
+  const replacements = {};
+  for (const path of collectPaths(String(html || ""))) replacements[path] = await blobToIllustrationDataUrl(await loadAsset(path));
+  return replaceIllustrationPaths(String(html || ""), replacements);
+}
+var init_illustrationPortability = __esm({
+  "src/core/illustrationPortability.js"() {
+    init_storage();
+    init_userFiles();
+    init_illustrationData();
+    init_illustrationStore();
+  }
+});
+
 // src/utils/chatHistoryBlacklist.js
 function parseChatHistoryBlacklistInput(input) {
   const rules = [];
@@ -397,7 +1417,7 @@ function buildFullHtmlDocument(content, title = "Titania Echo - \u4E92\u52A8\u57
         }
         a { color: #90cdf4; }
         img, video { max-width: 100%; height: auto; }
-        
+
         /* \u7528\u6237\u81EA\u5B9A\u4E49\u6837\u5F0F */
     </style>
     ${styles}
@@ -437,9 +1457,9 @@ function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
   }
   return newWindow;
 }
-function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
+async function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
   console.log("[Titania] exportAsHtmlFile \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
-  const fullHtml = buildFullHtmlDocument(html, `${scriptName} - Titania Echo`);
+  const fullHtml = buildFullHtmlDocument(await embedIllustrationsInHtml(html), `${scriptName} - Titania Echo`);
   console.log("[Titania] \u6784\u5EFA\u540E\u5B8C\u6574HTML\u957F\u5EA6:", fullHtml?.length || 0);
   const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -451,7 +1471,7 @@ function exportAsHtmlFile(html, scriptName = "\u573A\u666F") {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  setTimeout(() => URL.revokeObjectURL(url), 6e4);
 }
 function buildFontStylesForShadowDOM() {
   try {
@@ -1161,6 +2181,7 @@ var fileToBase64, parseMeta, getSnippet;
 var init_helpers = __esm({
   "src/utils/helpers.js"() {
     init_storage();
+    init_illustrationPortability();
     init_chatHistoryBlacklist();
     fileToBase64 = (file) => new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -11202,6 +12223,116 @@ textarea.t-input {
 
 
 
+/* === 04-features/illustration.css === */
+.t-root.t-illustration-window {
+    position: fixed;
+    /* ST \u79FB\u52A8\u7AEF\u7684 fixed body + html transform \u4F1A\u4F7F inset: 0 \u7684\u5BB9\u5668\u9AD8\u5EA6\u584C\u7F29\u3002 */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 20060;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    box-sizing: border-box;
+}
+
+.t-illustration-panel {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    width: min(560px, 100%);
+    min-width: 0;
+    max-height: min(92vh, 100%);
+    max-height: min(92dvh, 100%);
+    background: var(--t-color-surface);
+    color: var(--t-color-text-strong);
+    border: 1px solid var(--t-color-border-strong);
+    border-radius: 14px;
+    box-shadow: var(--t-shadow-lg);
+    overflow: hidden;
+}
+
+.t-illustration-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.t-illustration-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.t-illustration-field textarea {
+    width: 100%;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.t-illustration-hint,
+.t-illustration-connection {
+    color: var(--t-color-text-secondary);
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.t-illustration-connection,
+.t-illustration-actions,
+.t-illustration-coordinates {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.t-illustration-details {
+    padding: 10px;
+    border: 1px solid var(--t-color-border-faint);
+    border-radius: 8px;
+}
+
+.t-illustration-details summary { cursor: pointer; }
+.t-illustration-details[open] > summary { margin-bottom: 10px; }
+.t-illustration-details .t-illustration-field + .t-illustration-field { margin-top: 10px; }
+.t-illustration-details blockquote { white-space: pre-wrap; margin: 10px 0; }
+.t-illustration-summary { line-height: 1.7; white-space: pre-wrap; }
+.t-illustration-character { margin-top: 12px; border: 1px solid var(--t-color-border-faint); border-radius: 8px; }
+.t-illustration-coordinates { margin-top: 8px; }
+.t-illustration-coordinates input { width: 80px; }
+.t-illustration-status { white-space: pre-wrap; line-height: 1.6; color: var(--t-color-text-secondary); }
+.t-illustration-candidates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 10px 0; }
+.t-illustration-candidate { min-width: 0; border: 1px solid var(--t-color-border-faint); padding: 8px; border-radius: 10px; }
+.t-illustration-candidate img { width: 100%; height: 160px; object-fit: contain; }
+.t-illustration-candidate p { font-size: 0.9em; line-height: 1.5; }
+.t-illustration-pending img { width: 100%; max-height: 360px; object-fit: contain; }
+.t-illustration-panel [hidden] { display: none; }
+.t-illustration-panel button:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 600px) {
+    .t-root.t-illustration-window {
+        padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+            max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    }
+    .t-illustration-panel { max-height: 100%; }
+    .t-illustration-body { padding: 12px; }
+}
+
+
 /* === 04-features/settings-drawer.css === */
 /* css/04-features/settings-drawer.css - ST \u6269\u5C55\u8BBE\u7F6E\u62BD\u5C49
  *
@@ -18260,693 +19391,7 @@ var CSS_FILES;
 var init_dom = __esm({
   "src/utils/dom.js"() {
     init_defaults();
-    CSS_FILES = ["00-tokens/primitives.css", "00-tokens/semantic.css", "00-tokens/theme-dark.css", "00-tokens/theme-light.css", "00-tokens/legacy-aliases.css", "01-base/scope.css", "01-base/base.css", "01-base/scrollbar.css", "01-base/form-controls.css", "01-base/keyframes.css", "02-components/window.css", "02-components/panel.css", "02-components/settings-shell.css", "02-components/dialog.css", "02-components/button.css", "02-components/icon-button.css", "02-components/field.css", "02-components/choice-input.css", "02-components/radio-card.css", "02-components/_legacy.css", "03-layout/button-groups.css", "03-layout/utilities.css", "04-features/floating.css", "04-features/main-window.css", "04-features/main-window-legacy.css", "04-features/script-picker.css", "04-features/wi-selector.css", "04-features/continuation.css", "04-features/queue.css", "04-features/content-editor.css", "04-features/settings-drawer.css", "04-features/settings.css", "04-features/manager.css", "04-features/workshop.css", "04-features/favs.css", "04-features/debug.css", "04-features/story-outline.css", "04-features/outline-entry-menu.css", "04-features/rewrite.css", "04-features/reader.css", "04-features/confirm-dialog.css", "04-features/st-embedded.css"];
-  }
-});
-
-// src/core/state.js
-function isFavoritableStatus(status) {
-  return FAVORITABLE_RESULT_STATUSES.has(String(status || ""));
-}
-function clonePromptTraceData(data) {
-  return JSON.parse(JSON.stringify(data));
-}
-function getPromptTraceRecord(traceId) {
-  return GlobalState.promptTrace.traces.find((t) => t.id === traceId) || null;
-}
-function createPromptTrace(meta = {}) {
-  const traceId = `trace_${Date.now()}_${Math.floor(Math.random() * 1e5)}`;
-  const trace = {
-    id: traceId,
-    startedAt: Date.now(),
-    endedAt: null,
-    status: "running",
-    // running | success | failed | aborted
-    source: meta.source || "manual",
-    mode: meta.mode || "narrative",
-    scriptId: meta.scriptId || "",
-    scriptName: meta.scriptName || "\u672A\u77E5\u5267\u672C",
-    profile: meta.profile || "",
-    model: meta.model || "",
-    extraMeta: clonePromptTraceData(meta.extraMeta || {}),
-    stages: [],
-    finalMessages: null,
-    error: null
-  };
-  GlobalState.promptTrace.traces.unshift(trace);
-  while (GlobalState.promptTrace.traces.length > GlobalState.promptTrace.maxItems) {
-    GlobalState.promptTrace.traces.pop();
-  }
-  GlobalState.promptTrace.activeTraceId = traceId;
-  return traceId;
-}
-function appendPromptTraceStage(traceId, stage, payload = {}) {
-  const trace = getPromptTraceRecord(traceId);
-  if (!trace) return;
-  trace.stages.push({
-    at: Date.now(),
-    stage: stage || "unknown",
-    payload: clonePromptTraceData(payload)
-  });
-}
-function setPromptTraceFinalMessages(traceId, messages, meta = {}) {
-  const trace = getPromptTraceRecord(traceId);
-  if (!trace) return;
-  trace.finalMessages = {
-    messages: clonePromptTraceData(messages || []),
-    meta: clonePromptTraceData(meta)
-  };
-}
-function finishPromptTrace(traceId, status = "success", details = {}) {
-  const trace = getPromptTraceRecord(traceId);
-  if (!trace) return;
-  trace.status = status;
-  trace.endedAt = Date.now();
-  trace.error = details?.error || null;
-  if (GlobalState.promptTrace.activeTraceId === traceId) {
-    GlobalState.promptTrace.activeTraceId = null;
-  }
-}
-function getPromptTraceList() {
-  return clonePromptTraceData(GlobalState.promptTrace.traces);
-}
-function resetContinuationState() {
-  GlobalState.continuation = {
-    isActive: false,
-    retryCount: 0,
-    originalContent: "",
-    accumulatedContent: "",
-    originalPrompt: "",
-    characterName: "",
-    userName: ""
-  };
-}
-function pushSceneToHistory(content, scriptId, scriptName, metadata = {}) {
-  const history = GlobalState.sceneHistory;
-  const generationId = String(metadata.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
-  const status = metadata.status || "success";
-  const newItem = {
-    content,
-    scriptId,
-    scriptName: scriptName || "\u672A\u77E5\u5267\u672C",
-    status,
-    generationId,
-    timestamp: Date.now(),
-    isRead: false,
-    // 新生成的默认未读
-    favId: null
-    // 该记录对应的收藏 ID（null 表示未收藏）
-  };
-  history.items.unshift(newItem);
-  while (history.items.length > history.maxItems) {
-    history.items.pop();
-  }
-  history.currentIndex = 0;
-  GlobalState.lastGeneratedContent = content;
-  GlobalState.lastGeneratedScriptId = scriptId;
-  GlobalState.currentGenerationResult = {
-    generationId,
-    content: String(content || ""),
-    scriptId: String(scriptId || ""),
-    scriptName: String(scriptName || "\u573A\u666F"),
-    status,
-    canFavorite: isFavoritableStatus(status),
-    canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
-    error: metadata.error || null,
-    timestamp: Date.now()
-  };
-  GlobalState.lastFavId = null;
-  console.log(`[Titania] \u5267\u573A\u5386\u53F2\u5DF2\u66F4\u65B0: ${history.items.length} \u6761\u8BB0\u5F55`);
-}
-function setCurrentGenerationResult(result = {}) {
-  const status = result.status || "failed";
-  GlobalState.currentGenerationResult = {
-    generationId: String(result.generationId || `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
-    content: String(result.content || ""),
-    scriptId: String(result.scriptId || ""),
-    scriptName: String(result.scriptName || "\u573A\u666F"),
-    status,
-    canFavorite: isFavoritableStatus(status),
-    canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
-    error: result.error || null,
-    timestamp: Number(result.timestamp) || Date.now()
-  };
-  GlobalState.lastGeneratedContent = GlobalState.currentGenerationResult.content;
-  GlobalState.lastGeneratedScriptId = GlobalState.currentGenerationResult.scriptId;
-  return GlobalState.currentGenerationResult;
-}
-function getCurrentGenerationResult() {
-  const display = GlobalState.displayState;
-  if (display.isViewingHistory && display.currentViewIndex >= 0) {
-    const item = GlobalState.sceneHistory.items[display.currentViewIndex];
-    if (item) {
-      const status = item.status || "legacy";
-      return {
-        generationId: String(item.generationId || ""),
-        content: String(item.content || ""),
-        scriptId: String(item.scriptId || ""),
-        scriptName: String(item.scriptName || "\u573A\u666F"),
-        status,
-        canFavorite: isFavoritableStatus(status),
-        canContinue: CONTINUABLE_RESULT_STATUSES.has(status),
-        error: item.error || null,
-        timestamp: Number(item.timestamp) || 0
-      };
-    }
-  }
-  if (display.isViewingHistory && display.currentViewIndex < 0 && display.lockedContent) {
-    return {
-      generationId: String(display.lockedGenerationId || ""),
-      content: String(display.lockedContent),
-      scriptId: String(display.lockedScriptId || ""),
-      scriptName: String(display.lockedScriptName || "\u573A\u666F"),
-      status: "legacy",
-      canFavorite: true,
-      canContinue: true,
-      error: null,
-      timestamp: 0
-    };
-  }
-  if (GlobalState.streamingCache.isActive) {
-    return {
-      generationId: "",
-      content: String(GlobalState.streamingCache.content || ""),
-      scriptId: String(GlobalState.streamingCache.scriptId || ""),
-      scriptName: String(GlobalState.streamingCache.scriptName || "\u573A\u666F"),
-      status: "running",
-      canFavorite: false,
-      canContinue: false,
-      error: null,
-      timestamp: Date.now()
-    };
-  }
-  if (GlobalState.currentGenerationResult) return GlobalState.currentGenerationResult;
-  if (GlobalState.lastGeneratedContent) {
-    return {
-      generationId: "",
-      content: String(GlobalState.lastGeneratedContent),
-      scriptId: String(GlobalState.lastGeneratedScriptId || ""),
-      scriptName: "\u573A\u666F",
-      status: "legacy",
-      canFavorite: true,
-      canContinue: true,
-      error: null,
-      timestamp: 0
-    };
-  }
-  return null;
-}
-function isFavoriteEligible(result = getCurrentGenerationResult()) {
-  return Boolean(result?.canFavorite && String(result.content || "").trim());
-}
-function getCurrentHistoryItem() {
-  const history = GlobalState.sceneHistory;
-  if (history.currentIndex < 0 || history.currentIndex >= history.items.length) {
-    return null;
-  }
-  return history.items[history.currentIndex];
-}
-function syncFavIdToCurrentHistory(favId) {
-  const display = GlobalState.displayState;
-  const history = GlobalState.sceneHistory;
-  const effectiveIndex = display.isViewingHistory ? display.currentViewIndex : history.currentIndex;
-  if (effectiveIndex >= 0 && effectiveIndex < history.items.length) {
-    history.items[effectiveIndex].favId = favId;
-  }
-}
-function markCurrentAsRead() {
-  const item = getCurrentHistoryItem();
-  if (item) {
-    item.isRead = true;
-  }
-}
-function resetQueueState() {
-  GlobalState.queueState.isRunning = false;
-  GlobalState.queueState.currentIndex = 0;
-  GlobalState.queueState.totalCount = 0;
-  GlobalState.queueState.completedCount = 0;
-  GlobalState.queueState.failedCount = 0;
-  GlobalState.queueState.results = [];
-}
-function initQueueTasks(scriptIds) {
-  GlobalState.queueState.isRunning = true;
-  GlobalState.queueState.currentIndex = 0;
-  GlobalState.queueState.totalCount = scriptIds.length;
-  GlobalState.queueState.completedCount = 0;
-  GlobalState.queueState.failedCount = 0;
-  GlobalState.queueState.results = [];
-}
-function recordQueueResult(scriptId, scriptName, success, error = null) {
-  GlobalState.queueState.results.push({
-    scriptId,
-    scriptName,
-    success,
-    error,
-    timestamp: Date.now()
-  });
-  if (success) {
-    GlobalState.queueState.completedCount++;
-  } else {
-    GlobalState.queueState.failedCount++;
-  }
-  GlobalState.queueState.currentIndex++;
-}
-function getQueueProgress() {
-  const q = GlobalState.queueState;
-  return {
-    current: q.currentIndex,
-    total: q.totalCount,
-    completed: q.completedCount,
-    failed: q.failedCount,
-    isRunning: q.isRunning
-  };
-}
-function setHistoryMaxItems(maxItems) {
-  GlobalState.sceneHistory.maxItems = maxItems;
-  while (GlobalState.sceneHistory.items.length > maxItems) {
-    GlobalState.sceneHistory.items.pop();
-  }
-}
-function lockDisplayToHistory(historyIndex) {
-  const history = GlobalState.sceneHistory;
-  if (historyIndex < 0 || historyIndex >= history.items.length) return;
-  const item = history.items[historyIndex];
-  GlobalState.displayState.isViewingHistory = true;
-  GlobalState.displayState.currentViewIndex = historyIndex;
-  GlobalState.displayState.lockedContent = item.content;
-  GlobalState.displayState.lockedScriptId = item.scriptId;
-  GlobalState.displayState.lockedScriptName = item.scriptName;
-  GlobalState.displayState.lockedGenerationId = item.generationId || null;
-  item.isRead = true;
-  console.log(`[Titania] \u663E\u793A\u5C42\u9501\u5B9A\u5230\u5386\u53F2 #${historyIndex + 1}`);
-}
-function lockDisplayToContent(content, scriptId, scriptName = "\u573A\u666F", generationId = "") {
-  GlobalState.displayState.isViewingHistory = true;
-  GlobalState.displayState.currentViewIndex = -1;
-  GlobalState.displayState.lockedContent = String(content || "");
-  GlobalState.displayState.lockedScriptId = String(scriptId || "");
-  GlobalState.displayState.lockedScriptName = String(scriptName || "\u573A\u666F");
-  GlobalState.displayState.lockedGenerationId = String(generationId || "") || null;
-}
-function unlockDisplay() {
-  GlobalState.displayState.isViewingHistory = false;
-  GlobalState.displayState.currentViewIndex = -1;
-  GlobalState.displayState.lockedContent = null;
-  GlobalState.displayState.lockedScriptId = null;
-  GlobalState.displayState.lockedScriptName = null;
-  GlobalState.displayState.lockedGenerationId = null;
-  console.log(`[Titania] \u663E\u793A\u5C42\u5DF2\u89E3\u9501\uFF0C\u8FD4\u56DE\u5B9E\u65F6\u72B6\u6001`);
-}
-function shouldRenderStreamToUI() {
-  return !GlobalState.displayState.isViewingHistory;
-}
-function getCurrentDisplayContent() {
-  const display = GlobalState.displayState;
-  if (display.isViewingHistory && display.lockedContent) {
-    return {
-      content: display.lockedContent,
-      scriptId: display.lockedScriptId,
-      scriptName: display.lockedScriptName,
-      isLive: false,
-      generationId: String(display.lockedGenerationId || "")
-    };
-  }
-  if (GlobalState.streamingCache.isActive && GlobalState.streamingCache.content) {
-    return {
-      content: GlobalState.streamingCache.content,
-      scriptId: GlobalState.streamingCache.scriptId,
-      scriptName: GlobalState.streamingCache.scriptName,
-      isLive: true,
-      generationId: ""
-    };
-  }
-  return {
-    content: GlobalState.lastGeneratedContent,
-    scriptId: GlobalState.lastGeneratedScriptId,
-    scriptName: GlobalState.runtimeScripts.find((s) => s.id === GlobalState.lastGeneratedScriptId)?.name || "\u573A\u666F",
-    isLive: false,
-    generationId: String(GlobalState.currentGenerationResult?.generationId || "")
-  };
-}
-function startStreamingCache(scriptId, scriptName) {
-  GlobalState.streamingCache.content = "";
-  GlobalState.streamingCache.scriptId = scriptId;
-  GlobalState.streamingCache.scriptName = scriptName;
-  GlobalState.streamingCache.isActive = true;
-}
-function updateStreamingCache(content) {
-  GlobalState.streamingCache.content = content;
-}
-function endStreamingCache() {
-  GlobalState.streamingCache.isActive = false;
-}
-function clearStreamingCache() {
-  GlobalState.streamingCache.content = "";
-  GlobalState.streamingCache.scriptId = null;
-  GlobalState.streamingCache.scriptName = null;
-  GlobalState.streamingCache.isActive = false;
-}
-function setFavsWindowOpen(isOpen) {
-  GlobalState.uiFlags.isFavsOpen = isOpen === true;
-}
-function shouldSuspendStreamUiRendering() {
-  return GlobalState.uiFlags.isFavsOpen === true;
-}
-var FAVORITABLE_RESULT_STATUSES, CONTINUABLE_RESULT_STATUSES, GlobalState;
-var init_state = __esm({
-  "src/core/state.js"() {
-    FAVORITABLE_RESULT_STATUSES = /* @__PURE__ */ new Set(["success", "partial", "aborted", "legacy"]);
-    CONTINUABLE_RESULT_STATUSES = /* @__PURE__ */ new Set(["success", "partial", "aborted", "legacy"]);
-    GlobalState = {
-      isGenerating: false,
-      abortController: null,
-      // 中断控制器 (AbortController 实例)
-      runtimeScripts: [],
-      // 加载好的剧本列表 (预设 + 自定义)
-      lastGeneratedContent: "",
-      // 上一次生成的结果 HTML
-      currentGenerationResult: null,
-      // 当前生成结果的状态化快照
-      lastUsedScriptId: "",
-      // 上一次用户手动选择的剧本 ID (用于 UI 显示)
-      lastGeneratedScriptId: "",
-      // 上一次生成内容对应的剧本 ID (可能是后台自动生成的)
-      lastUsedModelName: "",
-      // 上一次生成使用的模型名称
-      lastFavId: null,
-      // 当前内容对应的收藏 ID（null 表示未收藏）
-      currentCategoryFilter: "ALL",
-      // 当前的分类筛选器状态
-      generationMode: "narrative",
-      // 生成模式: "narrative"(内容优先) | "visual"(氛围美化)
-      useHistoryAnalysis: false,
-      // 是否读取聊天历史（默认关闭）
-      historyAiOnly: false,
-      // 读历史时只要角色发言，跳过用户楼层（仅作用于剧本生成）
-      skipWorldBookCheck: false,
-      // 跳过世界书空检查（本次会话内有效）
-      skipInteractiveHint: false,
-      // 跳过互动内容提示弹窗（本次会话内有效）
-      // 计时器相关
-      timerStartTime: 0,
-      // 计时开始时间戳
-      timerInterval: null,
-      // 计时器 interval ID
-      lastGenerationTime: 0,
-      // 上次生成耗时 (毫秒)
-      // 显示层状态 (用于分离显示与生成)
-      displayState: {
-        isViewingHistory: false,
-        // 是否正在查看历史（非最新）
-        currentViewIndex: -1,
-        // 当前查看的历史索引 (-1 表示查看最新/实时)
-        lockedContent: null,
-        // 锁定显示的内容（用户切换历史时）
-        lockedScriptId: null,
-        // 锁定显示的剧本ID
-        lockedScriptName: null,
-        // 锁定显示的剧本名称
-        lockedGenerationId: null
-        // 锁定内容的生成ID（续写时用于定位所属世系）
-      },
-      // 流式生成缓存 (后台生成时暂存)
-      streamingCache: {
-        content: "",
-        // 正在生成的内容
-        scriptId: null,
-        // 正在生成的剧本ID
-        scriptName: null,
-        // 正在生成的剧本名称
-        isActive: false
-        // 是否有活跃的流式生成
-      },
-      // 自动续写相关
-      continuation: {
-        isActive: false,
-        // 是否正在进行续写
-        retryCount: 0,
-        // 当前续写次数
-        originalContent: "",
-        // 原始内容（未被截断前）
-        accumulatedContent: "",
-        // 累积的完整内容
-        // 优化：保存原始请求上下文，确保续写连贯性
-        originalPrompt: "",
-        // 原始剧本的 prompt
-        characterName: "",
-        // 角色名
-        userName: ""
-        // 用户名
-      },
-      // 主动续写分支历史（当前页面会话内有效）
-      continuationRuntime: {
-        chatId: "",
-        byScript: {}
-      },
-      // 剧场历史记录队列
-      sceneHistory: {
-        items: [],
-        // 历史记录数组，每项 { content, scriptId, scriptName, timestamp, isRead }
-        currentIndex: -1,
-        // 当前查看的索引 (-1 表示没有历史)
-        maxItems: 5
-        // 最多保留的历史记录数量
-      },
-      // 生成内容统计信息
-      contentStats: {
-        totalChars: 0,
-        // 总字符数
-        chineseChars: 0,
-        // 中文字符数
-        tokens: 0,
-        // Token 数量
-        isEstimated: true
-        // Token 是否为估算值
-      },
-      // 队列生成状态
-      queueState: {
-        enabled: false,
-        // 队列模式是否激活
-        mode: "random",
-        // 队列模式: "random"(随机抽取) | "manual"(手动选择)
-        count: 3,
-        // 随机模式下的生成数量
-        categoryFilter: "ALL",
-        // 分类筛选
-        manualItems: [],
-        // 手动模式下选择的剧本ID列表
-        interval: 2,
-        // 生成间隔（秒）
-        isRunning: false,
-        // 队列是否正在运行
-        currentIndex: 0,
-        // 当前生成到第几个
-        totalCount: 0,
-        // 总任务数
-        completedCount: 0,
-        // 已完成数
-        failedCount: 0,
-        // 失败数
-        results: []
-        // 生成结果记录 { scriptId, scriptName, success, error? }
-      },
-      // UI 视图状态
-      uiFlags: {
-        isFavsOpen: false
-        // 收藏管理器是否打开
-      },
-      // 提示词构包追踪（用于提示词实时组成窗口）
-      promptTrace: {
-        traces: [],
-        // 最近生成记录（最新在前）
-        activeTraceId: null,
-        // 当前正在构建的 trace ID
-        maxItems: 30
-        // 最多保留条数
-      }
-    };
-  }
-});
-
-// src/core/logger.js
-var TitaniaLogger;
-var init_logger = __esm({
-  "src/core/logger.js"() {
-    init_storage();
-    init_defaults();
-    init_state();
-    TitaniaLogger = {
-      logs: [],
-      maxLogs: 50,
-      // 内存中最多保留50条，刷新即清空
-      add: function(type, message, details = null) {
-        const entry = {
-          timestamp: (/* @__PURE__ */ new Date()).toLocaleString(),
-          type,
-          // 'INFO', 'WARN', 'ERROR'
-          message,
-          details,
-          // 记录基础环境上下文，从 GlobalState 获取
-          context: {
-            scriptId: GlobalState.lastUsedScriptId || "none",
-            isGenerating: GlobalState.isGenerating
-          }
-        };
-        this.logs.unshift(entry);
-        if (this.logs.length > this.maxLogs) this.logs.pop();
-        if (type === "ERROR") console.error("[Titania Debug]", message, details);
-      },
-      info: function(msg, details) {
-        this.add("INFO", msg, details);
-      },
-      warn: function(msg, details) {
-        this.add("WARN", msg, details);
-      },
-      // 专门用于记录报错，支持传入上下文对象
-      error: function(msg, errObj, contextData = {}) {
-        let stack = "Unknown";
-        let errMsg = "Unknown Error";
-        if (errObj) {
-          if (typeof errObj === "string") {
-            errMsg = errObj;
-          } else {
-            errMsg = errObj.message || "Error Object";
-            stack = errObj.stack || JSON.stringify(errObj);
-          }
-        }
-        if (contextData && contextData.network && contextData.network.status) {
-          msg += ` [HTTP ${contextData.network.status}]`;
-        }
-        const details = { error_message: errMsg, stack_trace: stack };
-        if (contextData && typeof contextData === "object" && Object.keys(contextData).length > 0) {
-          details.diagnostics = contextData;
-        }
-        this.add("ERROR", msg, details);
-      },
-      // 导出并下载日志
-      downloadReport: function() {
-        const data = getExtData();
-        const configSnapshot = JSON.parse(JSON.stringify(data.config || {}));
-        if (configSnapshot.profiles && Array.isArray(configSnapshot.profiles)) {
-          configSnapshot.profiles.forEach((p) => {
-            if (p.key && p.key.length > 5) {
-              p.key = p.key.substring(0, 3) + "***(HIDDEN)";
-            } else if (p.key) {
-              p.key = "***(HIDDEN)";
-            }
-          });
-        }
-        if (configSnapshot.key) configSnapshot.key = "***(HIDDEN)";
-        let stVersion = "Unknown";
-        try {
-          if (typeof SillyTavern !== "undefined" && SillyTavern.version) stVersion = SillyTavern.version;
-          else if (window.SillyTavernVersion) stVersion = window.SillyTavernVersion;
-        } catch (e) {
-        }
-        const reportObj = {
-          meta: {
-            extension: extensionName,
-            extension_version: `v${CURRENT_VERSION}`,
-            st_version: stVersion,
-            userAgent: navigator.userAgent,
-            screen_res: `${window.screen.width}x${window.screen.height}`,
-            viewport: `${window.innerWidth}x${window.innerHeight}`,
-            time: (/* @__PURE__ */ new Date()).toLocaleString(),
-            timestamp: Date.now()
-          },
-          config: configSnapshot,
-          logs: this.logs
-        };
-        const content = JSON.stringify(reportObj, null, 2);
-        const blob = new Blob([content], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Titania_Debug_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10).replace(/-/g, "")}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-    };
-  }
-});
-
-// src/utils/userFiles.js
-import { getRequestHeaders } from "../../../../script.js";
-function utf8ToBase64(text) {
-  const bytes = new TextEncoder().encode(String(text ?? ""));
-  let binary = "";
-  for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK) {
-    binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + BASE64_CHUNK));
-  }
-  return btoa(binary);
-}
-function utf8ByteLength(text) {
-  return new TextEncoder().encode(String(text ?? "")).length;
-}
-async function uploadTextFile(fileName, text) {
-  const response = await fetch("/api/files/upload", {
-    method: "POST",
-    headers: getRequestHeaders(),
-    body: JSON.stringify({ name: fileName, data: utf8ToBase64(text) })
-  });
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(`\u4E0A\u4F20 ${fileName} \u5931\u8D25\uFF08${response.status}\uFF09${detail ? `\uFF1A${detail}` : ""}`);
-  }
-  const payload = await response.json();
-  const filePath = String(payload?.path || "").trim();
-  if (!filePath) throw new Error(`\u4E0A\u4F20 ${fileName} \u540E\u670D\u52A1\u7AEF\u672A\u8FD4\u56DE\u8DEF\u5F84`);
-  return filePath;
-}
-async function fetchTextFile(filePath, rev = 0) {
-  const url = rev > 0 ? `${filePath}?rev=${encodeURIComponent(rev)}` : filePath;
-  const response = await fetch(url, {
-    method: "GET",
-    cache: "no-cache",
-    headers: getRequestHeaders()
-  });
-  if (!response.ok) {
-    throw new Error(`\u8BFB\u53D6 ${filePath} \u5931\u8D25\uFF08${response.status}\uFF09`);
-  }
-  return response.text();
-}
-async function deleteUserFile(filePath, options = {}) {
-  const label = options.label || "\u6587\u4EF6";
-  const target = String(filePath || "").trim();
-  if (!target) return false;
-  const response = await fetch("/api/files/delete", {
-    method: "POST",
-    headers: getRequestHeaders(),
-    body: JSON.stringify({ path: target })
-  });
-  if (response.status === 404) return true;
-  if (!response.ok) {
-    TitaniaLogger.warn(`\u5220\u9664${label}\u5931\u8D25\uFF08${response.status}\uFF09\uFF1A${target}`);
-    return false;
-  }
-  return true;
-}
-async function verifyUserFiles(filePaths, options = {}) {
-  const label = options.label || "\u6587\u4EF6";
-  const urls = (Array.isArray(filePaths) ? filePaths : []).map((p) => String(p || "")).filter(Boolean);
-  if (urls.length === 0) return {};
-  const response = await fetch("/api/files/verify", {
-    method: "POST",
-    headers: getRequestHeaders(),
-    body: JSON.stringify({ urls })
-  });
-  if (!response.ok) {
-    throw new Error(`\u6821\u9A8C${label}\u5931\u8D25\uFF08${response.status}\uFF09`);
-  }
-  return await response.json();
-}
-var BASE64_CHUNK;
-var init_userFiles = __esm({
-  "src/utils/userFiles.js"() {
-    init_logger();
-    BASE64_CHUNK = 32768;
+    CSS_FILES = ["00-tokens/primitives.css", "00-tokens/semantic.css", "00-tokens/theme-dark.css", "00-tokens/theme-light.css", "00-tokens/legacy-aliases.css", "01-base/scope.css", "01-base/base.css", "01-base/scrollbar.css", "01-base/form-controls.css", "01-base/keyframes.css", "02-components/window.css", "02-components/panel.css", "02-components/settings-shell.css", "02-components/dialog.css", "02-components/button.css", "02-components/icon-button.css", "02-components/field.css", "02-components/choice-input.css", "02-components/radio-card.css", "02-components/_legacy.css", "03-layout/button-groups.css", "03-layout/utilities.css", "04-features/floating.css", "04-features/main-window.css", "04-features/main-window-legacy.css", "04-features/script-picker.css", "04-features/wi-selector.css", "04-features/continuation.css", "04-features/queue.css", "04-features/content-editor.css", "04-features/illustration.css", "04-features/settings-drawer.css", "04-features/settings.css", "04-features/manager.css", "04-features/workshop.css", "04-features/favs.css", "04-features/debug.css", "04-features/story-outline.css", "04-features/outline-entry-menu.css", "04-features/rewrite.css", "04-features/reader.css", "04-features/confirm-dialog.css", "04-features/st-embedded.css"];
   }
 });
 
@@ -19022,9 +19467,9 @@ function pump() {
     try {
       do {
         dirty = false;
-        const pointer = getScriptsPointer();
-        const nextRev = (Number(pointer?.rev) || 0) + 1;
-        const written = await writeScriptsFile(cache, nextRev);
+        const pointer2 = getScriptsPointer();
+        const nextRev = (Number(pointer2?.rev) || 0) + 1;
+        const written = await writeScriptsFile(cache2, nextRev);
         writePointer({ rev: written.rev, count: written.count, bytes: written.bytes });
         lastWriteError = null;
       } while (dirty);
@@ -19050,20 +19495,20 @@ function getLastWriteError() {
   return lastWriteError;
 }
 async function hydrateScripts() {
-  const pointer = getScriptsPointer();
-  if (!pointer) {
+  const pointer2 = getScriptsPointer();
+  if (!pointer2) {
     hydrationError = null;
-    cache = null;
+    cache2 = null;
     return { ok: true, migrated: false, count: 0, error: null };
   }
   try {
-    const parsed = await readScriptsFile(pointer.file, Number(pointer.rev) || 0);
-    cache = parsed.scripts.filter(Boolean);
+    const parsed = await readScriptsFile(pointer2.file, Number(pointer2.rev) || 0);
+    cache2 = parsed.scripts.filter(Boolean);
     hydrationError = null;
-    TitaniaLogger.info(`\u5267\u672C\u5DF2\u4ECE\u6587\u4EF6\u8F7D\u5165\uFF1A${cache.length} \u6761`);
-    return { ok: true, migrated: true, count: cache.length, error: null };
+    TitaniaLogger.info(`\u5267\u672C\u5DF2\u4ECE\u6587\u4EF6\u8F7D\u5165\uFF1A${cache2.length} \u6761`);
+    return { ok: true, migrated: true, count: cache2.length, error: null };
   } catch (e) {
-    cache = null;
+    cache2 = null;
     hydrationError = e?.message || String(e);
     TitaniaLogger.error("\u5267\u672C\u8F7D\u5165\u5931\u8D25\uFF0C\u5DF2\u8FDB\u5165\u53EA\u8BFB\u4FDD\u62A4\u72B6\u6001", e);
     return { ok: false, migrated: true, count: 0, error: hydrationError };
@@ -19085,7 +19530,7 @@ function getScripts() {
     const data = getExtData();
     return Array.isArray(data.user_scripts) ? data.user_scripts : [];
   }
-  return Array.isArray(cache) ? cache : [];
+  return Array.isArray(cache2) ? cache2 : [];
 }
 function setScripts(list) {
   assertUsable();
@@ -19096,7 +19541,7 @@ function setScripts(list) {
     saveExtData();
     return;
   }
-  cache = next;
+  cache2 = next;
   void pump();
   if (shouldDualWrite()) {
     const data = getExtData();
@@ -19115,15 +19560,15 @@ function describeCurrentScriptsFootprint() {
   };
 }
 function describeScriptsStorageFootprint() {
-  const pointer = getScriptsPointer();
-  if (!pointer) return null;
+  const pointer2 = getScriptsPointer();
+  if (!pointer2) return null;
   return {
-    count: Number(pointer.count) || 0,
-    fileBytes: Number(pointer.bytes) || 0,
-    pointerBytes: utf8ByteLength(JSON.stringify(pointer)),
-    file: String(pointer.file || ""),
-    rev: Number(pointer.rev) || 0,
-    migratedAt: Number(pointer.migratedAt) || 0
+    count: Number(pointer2.count) || 0,
+    fileBytes: Number(pointer2.bytes) || 0,
+    pointerBytes: utf8ByteLength(JSON.stringify(pointer2)),
+    file: String(pointer2.file || ""),
+    rev: Number(pointer2.rev) || 0,
+    migratedAt: Number(pointer2.migratedAt) || 0
   };
 }
 async function dryRunScriptsMigration() {
@@ -19191,7 +19636,7 @@ async function bootstrapEmptyScriptsStore() {
   try {
     const written = await writeScriptsFile([], 1);
     writePointer({ rev: written.rev, count: 0, bytes: written.bytes, migratedAt: Date.now() });
-    cache = [];
+    cache2 = [];
     hydrationError = null;
     TitaniaLogger.info("\u5267\u672C\u4E3A\u96F6\uFF0C\u5DF2\u76F4\u63A5\u5EFA\u7ACB\u6587\u4EF6\u5B58\u50A8\uFF08\u65B0\u589E\u5267\u672C\u5C06\u76F4\u63A5\u843D\u6587\u4EF6\uFF09");
     return true;
@@ -19254,7 +19699,7 @@ async function migrateScriptsToFiles() {
         durationMs: Date.now() - startedAt
       };
     }
-    cache = parsed.scripts.filter(Boolean);
+    cache2 = parsed.scripts.filter(Boolean);
   } catch (e) {
     return {
       ok: false,
@@ -19283,14 +19728,14 @@ function exportScriptsAsLegacyArray() {
     const scripts = getExtData().user_scripts;
     return Array.isArray(scripts) ? scripts : [];
   }
-  if (!Array.isArray(cache)) {
+  if (!Array.isArray(cache2)) {
     throw new Error("\u5267\u672C\u5C1A\u672A\u8F7D\u5165\uFF0C\u65E0\u6CD5\u5BFC\u51FA\u5907\u4EFD\u3002\u8BF7\u5237\u65B0\u9875\u9762\u540E\u91CD\u8BD5\u3002");
   }
-  return cache;
+  return cache2;
 }
 async function verifyScriptsAgainstLegacy() {
-  const pointer = getScriptsPointer();
-  if (!pointer) return { ok: false, checked: 0, problems: ["\u5C1A\u672A\u642C\u5BB6\uFF0C\u6CA1\u6709\u53EF\u6838\u5BF9\u7684\u6587\u4EF6\u5B58\u50A8"] };
+  const pointer2 = getScriptsPointer();
+  if (!pointer2) return { ok: false, checked: 0, problems: ["\u5C1A\u672A\u642C\u5BB6\uFF0C\u6CA1\u6709\u53EF\u6838\u5BF9\u7684\u6587\u4EF6\u5B58\u50A8"] };
   if (hydrationError) return { ok: false, checked: 0, problems: [`\u5267\u672C\u672A\u80FD\u8F7D\u5165\uFF1A${hydrationError}`] };
   const legacy = getExtData().user_scripts;
   const legacyList = Array.isArray(legacy) ? legacy.filter(Boolean) : [];
@@ -19299,16 +19744,16 @@ async function verifyScriptsAgainstLegacy() {
     return { ok: false, checked: 0, problems: ["settings.json \u91CC\u5DF2\u7ECF\u6CA1\u6709\u65E7\u5267\u672C\u6570\u636E\u4E86"] };
   }
   try {
-    const verifyResult = await verifyUserFiles([pointer.file], { label: "\u5267\u672C\u6587\u4EF6" });
-    if (verifyResult[pointer.file] === false) {
-      return { ok: false, checked: 0, problems: [`\u5267\u672C\u6587\u4EF6\u4E0D\u5B58\u5728\uFF1A${pointer.file}`] };
+    const verifyResult = await verifyUserFiles([pointer2.file], { label: "\u5267\u672C\u6587\u4EF6" });
+    if (verifyResult[pointer2.file] === false) {
+      return { ok: false, checked: 0, problems: [`\u5267\u672C\u6587\u4EF6\u4E0D\u5B58\u5728\uFF1A${pointer2.file}`] };
     }
   } catch (e) {
     return { ok: false, checked: 0, problems: [`\u6587\u4EF6\u6821\u9A8C\u8BF7\u6C42\u5931\u8D25\uFF1A${e?.message || String(e)}`] };
   }
   let parsed;
   try {
-    parsed = await readScriptsFile(pointer.file, Number(pointer.rev) || 0);
+    parsed = await readScriptsFile(pointer2.file, Number(pointer2.rev) || 0);
   } catch (e) {
     return { ok: false, checked: 0, problems: [`\u5267\u672C\u6587\u4EF6\u8BFB\u53D6\u5931\u8D25\uFF1A${e?.message || String(e)}`] };
   }
@@ -19350,7 +19795,7 @@ async function dropLegacyScripts(options = {}) {
   TitaniaLogger.info(`\u65E7\u5267\u672C\u6570\u636E\u5DF2\u5220\u9664\uFF0Csettings.json \u51CF\u5C11\u7EA6 ${removedBytes} \u5B57\u8282`);
   return { ok: true, removedBytes, checked: verification.checked };
 }
-var SCRIPTS_FILE_NAME, SCRIPTS_DRYRUN_FILE_NAME, SCRIPTS_FILE_VERSION, SCRIPTS_STORE_KEY, SCRIPTS_STORE_VERSION, cache, hydrationError, writing, dirty, currentPump, lastWriteError;
+var SCRIPTS_FILE_NAME, SCRIPTS_DRYRUN_FILE_NAME, SCRIPTS_FILE_VERSION, SCRIPTS_STORE_KEY, SCRIPTS_STORE_VERSION, cache2, hydrationError, writing, dirty, currentPump, lastWriteError;
 var init_scriptStore = __esm({
   "src/core/scriptStore.js"() {
     init_storage();
@@ -19361,7 +19806,7 @@ var init_scriptStore = __esm({
     SCRIPTS_FILE_VERSION = 1;
     SCRIPTS_STORE_KEY = "scripts_store";
     SCRIPTS_STORE_VERSION = 1;
-    cache = null;
+    cache2 = null;
     hydrationError = null;
     writing = false;
     dirty = false;
@@ -20173,6 +20618,7 @@ function verifyFavFiles(filePaths) {
 function buildFavBody(fav) {
   const type = fav?.type === "chain" ? "chain" : "plain";
   const body = { v: FAV_BODY_VERSION, id: fav?.id, type };
+  if (fav?.illustration) body.illustration = fav.illustration;
   if (type === "chain") {
     const items = Array.isArray(fav?.items) ? fav.items : [];
     const rebuildable = items.length > 0 && items.every((seg) => String(seg?.html || "").trim());
@@ -20207,7 +20653,7 @@ function computeInstructionText(fav) {
   if (fav?.type !== "chain" || !Array.isArray(fav?.items)) return "";
   return fav.items.map((seg) => String(seg?.instruction || "").trim()).filter(Boolean).join(" ");
 }
-function buildFavIndexEntry(fav, pointer = {}) {
+function buildFavIndexEntry(fav, pointer2 = {}) {
   const meta = resolveFavMeta(fav);
   return {
     id: fav?.id,
@@ -20223,9 +20669,9 @@ function buildFavIndexEntry(fav, pointer = {}) {
     itemCount: Array.isArray(fav?.items) ? fav.items.length : 0,
     snippetText: computeSnippetText(fav),
     instructionText: computeInstructionText(fav),
-    file: String(pointer.file || ""),
-    rev: Number(pointer.rev) || 1,
-    bytes: Number(pointer.bytes) || 0
+    file: String(pointer2.file || ""),
+    rev: Number(pointer2.rev) || 1,
+    bytes: Number(pointer2.bytes) || 0
   };
 }
 async function writeFavBody(fav, rev = 1) {
@@ -20336,6 +20782,8 @@ async function ensureFavBody(uiEntry) {
   if (uiEntry._bodyLoaded) return uiEntry;
   if (!uiEntry._file) return uiEntry;
   const body = await readFavBody({ id: uiEntry.id, file: uiEntry._file, rev: uiEntry._rev });
+  if (body.illustration) uiEntry.illustration = body.illustration;
+  else delete uiEntry.illustration;
   if (body.type === "chain") {
     uiEntry.items = Array.isArray(body.items) ? body.items : [];
     if (typeof body.html === "string") uiEntry.html = body.html;
@@ -20472,6 +20920,7 @@ function assembleFav(entry, body) {
   } else {
     fav.html = String(body?.html || "");
   }
+  if (body?.illustration) fav.illustration = body.illustration;
   return fav;
 }
 async function getFullFavById(id3) {
@@ -20646,6 +21095,779 @@ var init_favsStore = __esm({
   }
 });
 
+// src/utils/chatTagWhitelist.js
+function parseTagWhitelistInput(input) {
+  return String(input || "").split(/[,，\n]/).map((tag) => tag.trim()).map((tag) => tag.replace(/^<|>$/g, "").toLowerCase()).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
+}
+function extractTextByWhitelist(rawHtml, whitelist = []) {
+  const src = String(rawHtml || "");
+  if (!src.trim()) return "";
+  if (Array.isArray(whitelist) && whitelist.length > 0) {
+    const extracted = [];
+    for (const tag of whitelist) {
+      const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
+      let match;
+      while ((match = regex.exec(src)) !== null) {
+        const inner = String(match[1] || "").trim();
+        if (inner) extracted.push(inner);
+      }
+    }
+    if (extracted.length > 0) {
+      return extracted.join("\n").replace(/<[^>]*>?/gm, "").replace(/\n{3,}/g, "\n\n").trim();
+    }
+  }
+  return src.replace(/<[^>]*>?/gm, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+var init_chatTagWhitelist = __esm({
+  "src/utils/chatTagWhitelist.js"() {
+  }
+});
+
+// src/core/chatInjector.js
+import {
+  chat,
+  chat_metadata,
+  addOneMessage,
+  saveChatConditional,
+  reloadCurrentChat,
+  eventSource,
+  event_types,
+  system_avatar
+} from "../../../../script.js";
+import { system_message_types } from "../../../system-messages.js";
+import { getMessageTimeStamp } from "../../../RossAscends-mods.js";
+function getChatInjectConfig() {
+  const data = getExtData();
+  const cfg = data?.chat_inject && typeof data.chat_inject === "object" ? data.chat_inject : {};
+  return {
+    enabled: cfg.enabled !== false,
+    visibleToAI: cfg.visible_to_ai !== false,
+    speakerName: String(cfg.speaker_name || "").trim() || "\u56DE\u58F0\u5C0F\u5267\u573A"
+  };
+}
+function isInjectedTheaterMessage(message) {
+  return Boolean(message?.extra?.[INJECT_MARKER_KEY]);
+}
+function normalizeTheaterHtmlForChat(html) {
+  let out = String(html || "");
+  if (!out.trim()) return "";
+  out = out.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  out = out.replace(/<script\b[^>]*\/?>/gi, "");
+  out = out.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "");
+  out = out.replace(/<\/?(?:html|head|body)\b[^>]*>/gi, "");
+  out = out.replace(/<(?:link|meta|base|title)\b[^>]*>/gi, "");
+  out = out.replace(/<\/title\s*>/gi, "");
+  out = out.replace(/<style\b[^>]*>/gi, "<style>");
+  const openCount = (out.match(/<style>/gi) || []).length;
+  const closeCount = (out.match(/<\/style>/gi) || []).length;
+  if (openCount > closeCount) {
+    out += "</style>".repeat(openCount - closeCount);
+  }
+  return out.trim();
+}
+function decodeHtmlEntities(text) {
+  let out = String(text || "");
+  for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
+    out = out.replace(new RegExp(entity, "gi"), char);
+  }
+  out = out.replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)));
+  out = out.replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)));
+  return out;
+}
+function buildPromptTextFromTheater(html) {
+  let text = String(html || "");
+  if (!text.trim()) return "";
+  text = text.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "\n");
+  text = text.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "\n");
+  text = text.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "\n");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/(?:p|div|section|article|header|footer|blockquote|li|tr|h[1-6]|figcaption|pre)\s*>/gi, "\n");
+  text = text.replace(/<hr\s*\/?>/gi, "\n");
+  text = text.replace(/<\/(?:td|th)\s*>/gi, " ");
+  text = extractTextByWhitelist(text, []);
+  text = decodeHtmlEntities(text);
+  return text.split("\n").map((line) => line.replace(/[ \t ]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+async function injectTheaterToChat(options = {}) {
+  const cfg = getChatInjectConfig();
+  const rawContent = String(options.content || "");
+  const displayHtml = normalizeTheaterHtmlForChat(rawContent);
+  const promptText = buildPromptTextFromTheater(rawContent);
+  if (!displayHtml && !promptText) {
+    if (window.toastr) toastr.warning("\u5C0F\u5267\u573A\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6CE8\u5165", "Titania Echo");
+    return null;
+  }
+  if (!Array.isArray(chat)) {
+    TitaniaLogger.error("\u6CE8\u5165\u5931\u8D25\uFF1AST \u804A\u5929\u6570\u7EC4\u4E0D\u53EF\u7528");
+    if (window.toastr) toastr.error("\u5F53\u524D\u6CA1\u6709\u6253\u5F00\u7684\u804A\u5929\uFF0C\u65E0\u6CD5\u6CE8\u5165", "Titania Echo");
+    return null;
+  }
+  const visibleToAI = options.visibleToAI === void 0 ? cfg.visibleToAI : options.visibleToAI === true;
+  const scriptName = String(options.scriptName || "").trim() || "\u573A\u666F";
+  const message = {
+    name: cfg.speakerName,
+    is_user: false,
+    // is_system 为 true 时不进提示词。ST 气泡上的眼睛图标（chats.js:2115）之后可随时翻转。
+    is_system: !visibleToAI,
+    send_date: getMessageTimeStamp(),
+    // mes 是发给模型的内容，display_text 才是界面显示的内容（script.js:2377）
+    mes: promptText,
+    force_avatar: system_avatar,
+    extra: {
+      // narrator 类型：对 Chat Completion 映射成 role:'system'（openai.js:528），
+      // 文本补全时不加名字前缀（script.js:5444）
+      type: system_message_types.NARRATOR,
+      display_text: displayHtml,
+      api: "manual",
+      model: "titania-theater",
+      [INJECT_MARKER_KEY]: {
+        generationId: String(options.generationId || ""),
+        scriptId: String(options.scriptId || ""),
+        scriptName,
+        injectedAt: Date.now()
+      }
+    }
+  };
+  const baseIndex = Number(options.insertAfterIndex);
+  const insertAt = Number.isFinite(baseIndex) ? baseIndex + 1 : chat.length;
+  const clamped = Math.max(0, Math.min(insertAt, chat.length));
+  const appended = clamped >= chat.length;
+  chat_metadata["tainted"] = true;
+  try {
+    if (appended) {
+      chat.push(message);
+      const messageId = chat.length - 1;
+      await eventSource.emit(event_types.MESSAGE_SENT, messageId);
+      addOneMessage(message);
+      await eventSource.emit(event_types.USER_MESSAGE_RENDERED, messageId);
+      await saveChatConditional();
+      TitaniaLogger.info("\u5C0F\u5267\u573A\u5DF2\u8FFD\u52A0\u5230\u804A\u5929\u672B\u5C3E", { messageId, scriptName, visibleToAI });
+      return { messageId, appended: true };
+    }
+    chat.splice(clamped, 0, message);
+    await saveChatConditional();
+    await eventSource.emit(event_types.MESSAGE_SENT, clamped);
+    await reloadCurrentChat();
+    await eventSource.emit(event_types.USER_MESSAGE_RENDERED, clamped);
+    scrollToMessage(clamped);
+    TitaniaLogger.info("\u5C0F\u5267\u573A\u5DF2\u63D2\u5165\u804A\u5929", { messageId: clamped, scriptName, visibleToAI });
+    return { messageId: clamped, appended: false };
+  } catch (e) {
+    TitaniaLogger.error("\u5C0F\u5267\u573A\u6CE8\u5165\u804A\u5929\u5931\u8D25", e, { insertAt: clamped, scriptName });
+    if (window.toastr) toastr.error("\u6CE8\u5165\u5931\u8D25\uFF1A" + (e?.message || String(e)), "Titania Echo");
+    return null;
+  }
+}
+function scrollToMessage(messageId) {
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`#chat .mes[mesid="${messageId}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
+var INJECT_MARKER_KEY, HTML_ENTITIES;
+var init_chatInjector = __esm({
+  "src/core/chatInjector.js"() {
+    init_chatTagWhitelist();
+    init_storage();
+    init_logger();
+    INJECT_MARKER_KEY = "titania_theater";
+    HTML_ENTITIES = {
+      "&nbsp;": " ",
+      "&amp;": "&",
+      "&lt;": "<",
+      "&gt;": ">",
+      "&quot;": '"',
+      "&#39;": "'",
+      "&apos;": "'",
+      "&hellip;": "\u2026",
+      "&mdash;": "\u2014",
+      "&ndash;": "\u2013",
+      "&ldquo;": "\u201C",
+      "&rdquo;": "\u201D",
+      "&lsquo;": "\u2018",
+      "&rsquo;": "\u2019"
+    };
+  }
+});
+
+// src/core/cosmosVisionBridge.js
+function getApi() {
+  const api = globalThis.window?.CosmosVision;
+  if (!api) throw illustrationError("\u8BF7\u542F\u7528\u652F\u6301\u516C\u5F00\u63A5\u53E3\u7684 Cosmos Vision\uFF0C\u7136\u540E\u70B9\u51FB\u91CD\u65B0\u68C0\u6D4B\u3002", "NOT_READY");
+  if (!/^1\./.test(String(api.apiVersion || "")) || !["getCapabilities", "preparePrompt", "generate"].every((key) => typeof api[key] === "function")) {
+    throw illustrationError("Cosmos Vision \u63A5\u53E3\u7248\u672C\u4E0D\u517C\u5BB9\uFF0C\u9700\u8981\u516C\u5F00\u63A5\u53E3 v1\u3002", "UNSUPPORTED_API");
+  }
+  return api;
+}
+async function getCosmosCapabilities() {
+  const api = getApi();
+  const capabilities = await api.getCapabilities();
+  if (!capabilities?.ready) throw illustrationError(capabilities?.reason || "Cosmos Vision \u6B63\u5728\u521D\u59CB\u5316\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002", "NOT_READY");
+  if (!capabilities.enabled) throw illustrationError("\u8BF7\u5148\u5728\u6269\u5C55\u8BBE\u7F6E\u4E2D\u542F\u7528 Cosmos Vision\u3002", "DISABLED");
+  if (!capabilities.features?.theaterPrompt || !capabilities.features?.providedContext) {
+    throw illustrationError("Cosmos Vision \u5C1A\u4E0D\u652F\u6301\u5C0F\u5267\u573A\u9009\u666F\u4E0E\u663E\u5F0F\u4E0A\u4E0B\u6587\u3002", "UNSUPPORTED_MODE");
+  }
+  if (!Array.isArray(capabilities.imageSources) || !Number.isInteger(capabilities.limits?.maxTextChars) || capabilities.limits.maxTextChars < 1) {
+    throw illustrationError("Cosmos Vision \u80FD\u529B\u4FE1\u606F\u4E0D\u5B8C\u6574\u3002");
+  }
+  return capabilities;
+}
+function abortError() {
+  return Object.assign(new Error("\u914D\u56FE\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002"), { name: "AbortError", code: "ABORTED" });
+}
+function runAbortableIllustrationTask(task, signal) {
+  if (signal?.aborted) return Promise.reject(abortError());
+  return new Promise((resolve, reject) => {
+    const abort = () => {
+      signal?.removeEventListener("abort", abort);
+      reject(abortError());
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+    Promise.resolve().then(() => {
+      if (signal?.aborted) throw abortError();
+      return task();
+    }).then((value) => signal?.aborted ? reject(abortError()) : resolve(value), reject).finally(() => signal?.removeEventListener("abort", abort));
+  });
+}
+function requestControl(options) {
+  const requestId = newIllustrationId();
+  return {
+    requestId,
+    signal: options.signal,
+    onProgress(event) {
+      if (options.signal?.aborted || event?.requestId !== requestId) return;
+      try {
+        options.onProgress?.(event);
+      } catch {
+      }
+    }
+  };
+}
+async function prepareTheaterIllustration(request, options = {}) {
+  return runAbortableIllustrationTask(async () => {
+    const capabilities = await getCosmosCapabilities();
+    if (!request.theaterText?.trim()) throw illustrationError("\u6B63\u6587\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u9009\u62E9\u753B\u9762\u3002", "NO_CONTENT");
+    if (request.theaterText.length > capabilities.limits.maxTextChars) {
+      throw illustrationError(`\u6B63\u6587\u8D85\u8FC7 Cosmos \u652F\u6301\u7684 ${capabilities.limits.maxTextChars} \u5B57\u7B26\uFF0C\u8BF7\u7F29\u77ED\u672C\u6B21\u914D\u56FE\u7D20\u6750\u3002`, "TEXT_TOO_LONG");
+    }
+    const source = capabilities.imageSources.find((item) => item.id === request.imageSource);
+    if (!source?.ready) throw illustrationError(source?.reason || "\u6240\u9009\u751F\u56FE\u6765\u6E90\u5C1A\u672A\u914D\u7F6E\u3002", "PROVIDER_NOT_CONFIGURED");
+    if (options.signal?.aborted) throw abortError();
+    const draft = normalizeIllustrationDraft(await getApi().preparePrompt(request, requestControl(options)), request.theaterText);
+    if (draft.imageSource !== request.imageSource) throw illustrationError("\u8FD4\u56DE\u8349\u7A3F\u7684\u56FE\u50CF\u6765\u6E90\u4E0E\u8BF7\u6C42\u4E0D\u4E00\u81F4\u3002");
+    return draft;
+  }, options.signal);
+}
+async function generateTheaterIllustration(draft, options = {}) {
+  return runAbortableIllustrationTask(async () => {
+    const normalized = normalizeIllustrationDraft(draft);
+    const capabilities = await getCosmosCapabilities();
+    const source = capabilities.imageSources.find((item) => item.id === normalized.imageSource);
+    if (!source?.ready) throw illustrationError(source?.reason || "\u6240\u9009\u751F\u56FE\u6765\u6E90\u5C1A\u672A\u914D\u7F6E\u3002", "PROVIDER_NOT_CONFIGURED");
+    if (options.signal?.aborted) throw abortError();
+    const control = requestControl(options);
+    const result = await getApi().generate({ draft: normalized, count: 1 }, control);
+    if (result?.requestId !== control.requestId || !Array.isArray(result.images) || result.images.length !== 1) {
+      throw illustrationError("\u751F\u56FE\u7ED3\u679C\u7684\u4EFB\u52A1\u6807\u8BC6\u6216\u56FE\u7247\u6570\u91CF\u4E0D\u7B26\u5408\u63A5\u53E3\u7EA6\u5B9A\u3002");
+    }
+    const actualDraft = normalizeIllustrationDraft(result.draft);
+    if (actualDraft.imageSource !== normalized.imageSource || actualDraft.model !== normalized.model || actualDraft.scene.sourceExcerpt !== normalized.scene.sourceExcerpt) throw illustrationError("\u751F\u56FE\u7ED3\u679C\u6765\u6E90\u3001\u6A21\u578B\u6216\u9009\u666F\u539F\u6587\u4E0D\u4E00\u81F4\u3002");
+    const image = result.images[0];
+    await validateIllustrationBlob(image.blob);
+    if (image.mimeType !== image.blob.type || ![image.width, image.height].every((n) => Number.isInteger(n) && n > 0)) {
+      throw illustrationError("\u751F\u56FE\u7ED3\u679C\u7684\u683C\u5F0F\u6216\u5C3A\u5BF8\u65E0\u6548\u3002");
+    }
+    return { draft: actualDraft, image };
+  }, options.signal);
+}
+var init_cosmosVisionBridge = __esm({
+  "src/core/cosmosVisionBridge.js"() {
+    init_illustrationData();
+  }
+});
+
+// src/ui/illustrationWindow.js
+function showError(error) {
+  return error?.name === "AbortError" || error?.code === "ABORTED" ? "\u5DF2\u53D6\u6D88\u7B49\u5F85\u3002\u540E\u7AEF\u53EF\u80FD\u4ECD\u5728\u8BA1\u7B97\uFF1B\u9700\u8981\u65F6\u53EF\u91CD\u65B0\u53D1\u8D77\u3002" : String(error?.message || "\u914D\u56FE\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+}
+function sessionFor(sceneId, initialText) {
+  if (!sessions.has(sceneId)) {
+    sessions.set(sceneId, { text: initialText || "", request: "", participants: "", draft: null, pending: null, previousScenes: [], adopted: void 0, notice: "", job: null });
+  }
+  return sessions.get(sceneId);
+}
+function notifyView(sceneId) {
+  if (activeView?.sceneId === sceneId) activeView.sync();
+}
+function jobProgress(job) {
+  return (event) => {
+    job.status = PROGRESS_LABELS[event.stage] || "\u6B63\u5728\u5904\u7406\u2026";
+    notifyView(job.sceneId);
+  };
+}
+function startJob(current, currentTarget, kind, operation) {
+  if (current.job) return current.job;
+  const job = { sceneId: currentTarget.sceneId, kind, status: "", phase: "running", controller: new AbortController(), error: null };
+  current.job = job;
+  current.notice = "";
+  job.promise = Promise.resolve().then(() => operation(job)).catch((error) => {
+    job.error = error;
+    current.notice = showError(error);
+  }).finally(() => {
+    if (current.job === job) current.job = null;
+    if (activeView?.sceneId === job.sceneId) activeView.sync();
+    else notifyBackgroundResult(job);
+  });
+  notifyView(job.sceneId);
+  return job;
+}
+function notifyBackgroundResult(job) {
+  if (!window.toastr) return;
+  const titles = { prepare: "\u573A\u666F\u914D\u56FE\uFF1A\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u91CD\u65B0\u6253\u5F00\u914D\u56FE\u9762\u677F\u5373\u53EF\u7EE7\u7EED\u3002", generate: "\u573A\u666F\u914D\u56FE\uFF1A\u56FE\u7247\u5DF2\u751F\u6210\u5E76\u4FDD\u5B58\u3002" };
+  if (job.error) window.toastr.warning(showError(job.error), "Titania Echo");
+  else if (titles[job.kind]) window.toastr.info(titles[job.kind], "Titania Echo");
+}
+async function persistPending(current, currentTarget) {
+  current.record = await saveGeneratedIllustration(currentTarget.sceneId, current.pending);
+  const image = selectedIllustration(current.record);
+  await currentTarget.onSelected?.(image);
+  current.adopted = image;
+  current.pending = null;
+  current.notice = "\u914D\u56FE\u5DF2\u4FDD\u5B58\u3002\u53EF\u5728\u4E0B\u65B9\u6311\u9009\u56FE\u7247\uFF0C\u6216\u6CBF\u7528\u63D0\u793A\u8BCD\u91CD\u65B0\u751F\u6210\u3002";
+  return current.record;
+}
+function openIllustrationWindow(targetOrTargets) {
+  closeActiveWindow?.();
+  const targets = Array.isArray(targetOrTargets) ? targetOrTargets : [targetOrTargets];
+  if (!targets.length) return;
+  const previousFocus = document.activeElement;
+  const root = document.createElement("div");
+  root.className = "t-root t-illustration-window";
+  root.innerHTML = `
+        <section class="t-illustration-panel" role="dialog" aria-labelledby="t-illustration-title">
+            <div class="t-panel-header">
+                <strong id="t-illustration-title">\u573A\u666F\u914D\u56FE</strong>
+                <button type="button" class="t-btn" data-action="close" aria-label="\u5173\u95ED\u914D\u56FE\u9762\u677F">\u5173\u95ED</button>
+            </div>
+            <div class="t-illustration-body">
+                <label class="t-illustration-field">\u914D\u56FE\u5185\u5BB9<select class="t-input" data-field="target"></select></label>
+                <p class="t-illustration-hint">\u4E3A\u9009\u4E2D\u7684\u8FD9\u4E00\u8F6E\u5267\u573A\u6311\u9009\u4E00\u4E2A\u753B\u9762\u3002\u5207\u6362\u6B63\u6587\u540E\uFF0C\u672C\u6B21\u4EFB\u52A1\u4ECD\u5C5E\u4E8E\u8FD9\u91CC\u663E\u793A\u7684\u5185\u5BB9\u3002</p>
+                <div class="t-illustration-connection"><span data-role="connection">\u6B63\u5728\u68C0\u6D4B Cosmos Vision\u2026</span><button class="t-btn" type="button" data-action="detect">\u91CD\u65B0\u68C0\u6D4B</button></div>
+                <label class="t-illustration-field">\u751F\u56FE\u6765\u6E90<select class="t-input" data-field="source"></select></label>
+                <p class="t-illustration-hint">\u753B\u5E45\u3001\u753B\u98CE\u548C\u91C7\u6837\u8BBE\u7F6E\u6CBF\u7528 Cosmos Vision \u7684\u914D\u7F6E\u3002</p>
+                <label class="t-illustration-field">\u60F3\u753B\u4EC0\u4E48\uFF08\u53EF\u9009\uFF09<textarea class="t-input" data-field="request" rows="2" placeholder="\u4F8B\u5982\uFF1A\u753B\u96E8\u4E2D\u91CD\u9022\u7684\u77AC\u95F4\uFF0C\u8FDC\u666F\uFF0C\u504F\u51B7\u8272"></textarea></label>
+                <details class="t-illustration-details"><summary>\u6B63\u6587\u4E0E\u4EBA\u7269\u8D44\u6599</summary>
+                    <label class="t-illustration-field">\u672C\u6B21\u914D\u56FE\u7D20\u6750<textarea class="t-input" data-field="text" rows="6"></textarea></label>
+                    <label class="t-illustration-field">\u4EBA\u7269\u5916\u89C2\u7B49\u8865\u5145\u8D44\u6599\uFF08\u53EF\u9009\uFF09<textarea class="t-input" data-field="participants" rows="3" placeholder="\u53EF\u4EE5\u8865\u5145\u53D1\u8272\u3001\u670D\u88C5\u7B49\u4FE1\u606F\uFF1B\u7559\u7A7A\u5219\u6839\u636E\u6B63\u6587\u9009\u666F\u3002"></textarea></label>
+                </details>
+                <div class="t-illustration-actions"><button class="t-btn primary" type="button" data-action="prepare">\u5206\u6790\u753B\u9762</button><button class="t-btn" type="button" data-action="alternate">\u6362\u4E2A\u753B\u9762</button></div>
+                <div data-role="draft" hidden>
+                    <p class="t-illustration-summary" data-role="summary"></p>
+                    <details class="t-illustration-details"><summary>\u5BF9\u5E94\u539F\u6587</summary><blockquote data-role="excerpt"></blockquote></details>
+                    <details class="t-illustration-details"><summary>\u7F16\u8F91\u7ED8\u753B\u63D0\u793A\u8BCD</summary>
+                        <label class="t-illustration-field">\u6B63\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-field="positive" rows="5"></textarea></label>
+                        <label class="t-illustration-field">\u8D1F\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-field="negative" rows="3"></textarea></label>
+                        <div data-role="characters"></div>
+                    </details>
+                    <button class="t-btn primary" type="button" data-action="generate">\u751F\u6210\u56FE\u7247</button>
+                </div>
+                <div class="t-illustration-status" role="status" aria-live="polite" data-role="status"></div>
+                <div class="t-illustration-actions"><button class="t-btn" type="button" data-action="cancel" hidden>\u53D6\u6D88\u7B49\u5F85</button><button class="t-btn" type="button" data-action="save" hidden>\u91CD\u8BD5\u4FDD\u5B58</button></div>
+                <div class="t-illustration-pending" data-role="pending" hidden><p>\u56FE\u7247\u5DF2\u751F\u6210\uFF0C\u7B49\u5F85\u4FDD\u5B58\u3002</p><img alt="\u5F85\u4FDD\u5B58\u7684\u914D\u56FE" data-role="pending-image"></div>
+                <div class="t-illustration-gallery" data-role="gallery"></div>
+            </div>
+        </section>`;
+  document.body.append(root);
+  const field = (name) => root.querySelector(`[data-field="${name}"]`);
+  const role = (name) => root.querySelector(`[data-role="${name}"]`);
+  const action = (name) => root.querySelector(`[data-action="${name}"]`);
+  targets.forEach((target2, index) => field("target").add(new Option(target2.label || target2.scriptName, String(index))));
+  let target = targets[0], session, localBusy = false, ready = false, disposed = false;
+  let selectionSequence = 0, detectionSequence = 0, pendingUrl = null, renderedDraft, renderedPending;
+  const isBusy = () => localBusy || Boolean(session?.job);
+  const view = { sceneId: "", sync: () => refreshFromState() };
+  activeView = view;
+  function updateControls() {
+    const busy = isBusy();
+    const job = session?.job;
+    root.querySelectorAll("input, textarea, select").forEach((el) => {
+      el.disabled = busy;
+    });
+    for (const name of ["prepare", "alternate", "generate"]) action(name).disabled = busy || !ready || !session?.record || name !== "prepare" && !session?.draft;
+    action("detect").disabled = busy;
+    action("cancel").hidden = !job || job.phase === "saving";
+    action("save").hidden = !session?.pending;
+    action("save").disabled = busy;
+    root.querySelectorAll("[data-image-id]").forEach((el) => {
+      el.disabled = busy;
+    });
+    field("target").disabled = busy || targets.length === 1;
+  }
+  function refreshFromState() {
+    if (disposed || !session) return;
+    role("status").textContent = session.job?.status || session.notice || (session.pending ? "\u4E0A\u6B21\u751F\u6210\u7684\u56FE\u7247\u5C1A\u672A\u4FDD\u5B58\uFF0C\u53EF\u4EE5\u7EE7\u7EED\u4FDD\u5B58\u3002" : "");
+    if (session.draft !== renderedDraft) {
+      renderedDraft = session.draft;
+      renderDraft();
+    }
+    renderGallery();
+  }
+  function renderDraft() {
+    const draft = session?.draft;
+    role("draft").hidden = !draft;
+    if (draft) {
+      role("summary").textContent = draft.scene.summary;
+      role("excerpt").textContent = draft.scene.sourceExcerpt;
+      field("positive").value = draft.prompts.positivePrompt;
+      field("negative").value = draft.prompts.negativePrompt;
+      role("characters").innerHTML = draft.prompts.characterPrompts.map((character, index) => `
+                <fieldset class="t-illustration-character"><legend>\u4EBA\u7269 ${index + 1}</legend>
+                    <label class="t-illustration-field">\u6B63\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-character="${index}" data-key="positivePrompt" rows="2">${escapeIllustrationHtml(character.positivePrompt)}</textarea></label>
+                    <label class="t-illustration-field">\u8D1F\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-character="${index}" data-key="negativePrompt" rows="2">${escapeIllustrationHtml(character.negativePrompt)}</textarea></label>
+                    <div class="t-illustration-coordinates">${["x", "y"].map((axis) => `<label>${axis.toUpperCase()} <input class="t-input" type="number" min="0" max="1" step="0.05" data-character="${index}" data-key="${axis}" value="${character.position[axis]}"></label>`).join("")}</div>
+                </fieldset>`).join("");
+    }
+    updateControls();
+  }
+  function readDraft() {
+    const draft = structuredClone(session.draft);
+    draft.prompts.positivePrompt = field("positive").value;
+    draft.prompts.negativePrompt = field("negative").value;
+    root.querySelectorAll("[data-character]").forEach((input) => {
+      const character = draft.prompts.characterPrompts[Number(input.dataset.character)];
+      if (input.dataset.key === "x" || input.dataset.key === "y") character.position[input.dataset.key] = Number(input.value);
+      else character[input.dataset.key] = input.value;
+    });
+    return normalizeIllustrationDraft(draft, session.text);
+  }
+  function renderGallery() {
+    const images = session?.record?.images || [];
+    role("gallery").innerHTML = images.length ? `<strong>\u5DF2\u4FDD\u5B58\u7684\u914D\u56FE</strong><div class="t-illustration-candidates">${images.map((image) => `
+            <article class="t-illustration-candidate">
+                <a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" loading="lazy" alt="${escapeIllustrationHtml(image.draft.scene.summary)}"></a>
+                <p>${escapeIllustrationHtml(image.draft.scene.summary)}</p>
+                <div class="t-illustration-actions"><button class="t-btn" type="button" data-image-id="${escapeIllustrationHtml(image.id)}">${session.record.selectedId === image.id ? "\u5F53\u524D\u914D\u56FE" : "\u91C7\u7528\u8FD9\u5F20"}</button><a class="t-btn" href="${image.filePath}" download>\u4E0B\u8F7D</a></div>
+            </article>`).join("")}</div><div class="t-illustration-actions"><button class="t-btn" type="button" data-image-id="">\u6682\u4E0D\u5C55\u793A\u914D\u56FE</button><button class="t-btn" type="button" data-action="export">\u5BFC\u51FA\u56FE\u6587 HTML</button></div>` : "";
+    if (pendingUrl && session?.pending !== renderedPending) {
+      URL.revokeObjectURL(pendingUrl);
+      pendingUrl = null;
+    }
+    if (session?.pending && session.pending !== renderedPending) {
+      pendingUrl = URL.createObjectURL(session.pending.image.blob);
+    }
+    renderedPending = session?.pending || null;
+    role("pending").hidden = !pendingUrl;
+    if (pendingUrl) role("pending-image").src = pendingUrl;
+    else role("pending-image").removeAttribute("src");
+    updateControls();
+  }
+  async function detect() {
+    const sequence = ++detectionSequence;
+    ready = false;
+    updateControls();
+    try {
+      const capabilities = await getCosmosCapabilities();
+      if (disposed || sequence !== detectionSequence) return;
+      const previous = session?.draft?.imageSource || field("source").value || capabilities.defaultImageSource;
+      field("source").replaceChildren();
+      for (const source of capabilities.imageSources) {
+        const option = new Option(`${source.label}${source.ready ? "" : "\uFF08\u672A\u914D\u7F6E\uFF09"}`, source.id);
+        option.disabled = !source.ready;
+        option.title = source.reason || "";
+        field("source").add(option);
+      }
+      field("source").value = capabilities.imageSources.some((item) => item.id === previous && item.ready) ? previous : capabilities.imageSources.find((item) => item.ready)?.id || "";
+      ready = Boolean(field("source").value);
+      role("connection").textContent = ready ? "Cosmos Vision \u5DF2\u8FDE\u63A5" : "\u8BF7\u5148\u5728 Cosmos Vision \u914D\u7F6E\u4E00\u4E2A\u751F\u56FE\u6765\u6E90\u3002";
+    } catch (error) {
+      if (disposed || sequence !== detectionSequence) return;
+      role("connection").textContent = showError(error);
+    }
+    updateControls();
+  }
+  async function loadTarget(index) {
+    target = targets[index];
+    const sequence = ++selectionSequence;
+    const current = target;
+    session = sessionFor(current.sceneId, buildPromptTextFromTheater(current.content));
+    view.sceneId = "";
+    localBusy = true;
+    ready = false;
+    field("text").value = session.text;
+    field("request").value = session.request;
+    field("participants").value = session.participants;
+    role("status").textContent = "\u6B63\u5728\u8BFB\u53D6\u914D\u56FE\u8BB0\u5F55\u2026";
+    renderDraft();
+    try {
+      const record = await readSceneIllustrations(current.sceneId);
+      if (disposed || sequence !== selectionSequence) return;
+      if (Object.hasOwn(current, "illustration")) {
+        const adopted = session.adopted === void 0 ? current.illustration : session.adopted;
+        const saved = adopted ? normalizeSavedIllustration(adopted) : null;
+        if (saved && !record.images.some((image) => image.id === saved.id)) record.images.push(saved);
+        record.selectedId = saved?.id || null;
+      }
+      session.record = record;
+      session.draft || (session.draft = selectedIllustration(record)?.draft || null);
+      renderDraft();
+      renderGallery();
+    } catch (error) {
+      session.notice = showError(error);
+      session.record = null;
+    } finally {
+      if (!disposed && sequence === selectionSequence) {
+        localBusy = false;
+        view.sceneId = current.sceneId;
+        refreshFromState();
+        void detect();
+      }
+    }
+  }
+  async function run(operation) {
+    if (isBusy()) return;
+    localBusy = true;
+    updateControls();
+    try {
+      await operation();
+    } catch (error) {
+      session.notice = showError(error);
+    } finally {
+      localBusy = false;
+      refreshFromState();
+    }
+  }
+  root.addEventListener("input", (event) => {
+    if (!session) return;
+    const key = event.target.dataset.field;
+    if (["text", "request", "participants"].includes(key)) {
+      session[key] = event.target.value;
+      session.draft = null;
+      renderDraft();
+    }
+  });
+  root.addEventListener("change", (event) => {
+    if (event.target === field("target")) void loadTarget(Number(event.target.value));
+    if (event.target === field("source")) {
+      session.draft = null;
+      renderDraft();
+    }
+  });
+  root.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button || button.disabled) return;
+    const operation = button.dataset.action;
+    if (operation === "close") {
+      close();
+      return;
+    }
+    if (operation === "cancel") {
+      session?.job?.controller.abort();
+      return;
+    }
+    if (operation === "detect") {
+      if (!session?.record) void loadTarget(Number(field("target").value));
+      else void detect();
+      return;
+    }
+    const current = session, currentTarget = target;
+    if (operation === "save") {
+      void run(async () => {
+        await persistPending(current, currentTarget);
+      });
+      return;
+    }
+    if (operation === "export") {
+      void run(async () => {
+        await exportAsHtmlFile(currentTarget.content + illustrationFigure(selectedIllustration(current.record)), currentTarget.scriptName);
+        current.notice = "\u56FE\u6587 HTML \u5DF2\u5BFC\u51FA\u3002";
+      });
+      return;
+    }
+    if (operation === "prepare" || operation === "alternate") {
+      if (current.pending) {
+        role("status").textContent = "\u8BF7\u5148\u4FDD\u5B58\u4E0A\u6B21\u751F\u6210\u7684\u56FE\u7247\u3002";
+        return;
+      }
+      const imageSource = field("source").value;
+      const alternate = operation === "alternate";
+      startJob(current, currentTarget, "prepare", async (job) => {
+        job.status = PROGRESS_LABELS.analyzing;
+        notifyView(job.sceneId);
+        const draft = await prepareTheaterIllustration({
+          mode: "theater",
+          imageSource,
+          theaterText: current.text,
+          context: { mode: "provided", source: { client: "titania-theater", sceneId: currentTarget.sceneId }, participants: current.participants, history: [] },
+          specialRequest: current.request,
+          ...alternate ? { previousScenes: current.previousScenes.slice(-6) } : {}
+        }, { signal: job.controller.signal, onProgress: jobProgress(job) });
+        current.draft = draft;
+        current.previousScenes.push(draft.scene);
+        current.notice = "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
+      });
+      return;
+    }
+    if (operation === "generate") {
+      if (!current?.draft || current.pending) {
+        role("status").textContent = current?.pending ? "\u8BF7\u5148\u4FDD\u5B58\u4E0A\u6B21\u751F\u6210\u7684\u56FE\u7247\u3002" : "";
+        return;
+      }
+      let draft;
+      try {
+        draft = readDraft();
+      } catch (error) {
+        role("status").textContent = showError(error);
+        return;
+      }
+      current.draft = draft;
+      startJob(current, currentTarget, "generate", async (job) => {
+        job.status = PROGRESS_LABELS.generating;
+        notifyView(job.sceneId);
+        current.pending = await generateTheaterIllustration(draft, { signal: job.controller.signal, onProgress: jobProgress(job) });
+        job.phase = "saving";
+        job.status = "\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026";
+        notifyView(job.sceneId);
+        await persistPending(current, currentTarget);
+      });
+      return;
+    }
+    if (button.hasAttribute("data-image-id")) {
+      void run(async () => {
+        const id3 = button.dataset.imageId || null;
+        const image = current.record.images.find((item) => item.id === id3);
+        current.record = await selectSceneIllustration(currentTarget.sceneId, id3, image);
+        current.adopted = selectedIllustration(current.record);
+        await currentTarget.onSelected?.(current.adopted);
+        if (image) current.draft = image.draft;
+        current.notice = id3 ? "\u5DF2\u66F4\u6362\u5F53\u524D\u914D\u56FE\u3002" : "\u5DF2\u9690\u85CF\u5F53\u524D\u914D\u56FE\uFF0C\u5DF2\u4FDD\u5B58\u7684\u56FE\u7247\u4ECD\u53EF\u91CD\u65B0\u91C7\u7528\u3002";
+      });
+    }
+  });
+  function close() {
+    if (session?.draft && !isBusy()) {
+      try {
+        session.draft = readDraft();
+      } catch {
+      }
+    }
+    disposed = true;
+    if (activeView === view) activeView = null;
+    if (pendingUrl) URL.revokeObjectURL(pendingUrl);
+    root.remove();
+    window.removeEventListener("cosmos-vision:ready", detect);
+    window.removeEventListener("cosmos-vision:capabilities-changed", detect);
+    if (closeActiveWindow === close) closeActiveWindow = null;
+    if (previousFocus?.isConnected) previousFocus.focus();
+    for (const [key, value] of sessions) {
+      if (sessions.size <= 20) break;
+      if (!value.pending && !value.job && key !== target.sceneId) sessions.delete(key);
+    }
+  }
+  closeActiveWindow = close;
+  window.addEventListener("cosmos-vision:ready", detect);
+  window.addEventListener("cosmos-vision:capabilities-changed", detect);
+  void loadTarget(0);
+  action("close").focus();
+}
+function findSceneContentRoot(container) {
+  return container.querySelector(".t-shadow-host")?.shadowRoot?.querySelector(".t-shadow-content") || container;
+}
+function clearSceneIllustration(root) {
+  root?.querySelectorAll(SCENE_ILLUSTRATION_SELECTOR).forEach((node) => node.remove());
+}
+function hasSceneIllustration(root) {
+  return Boolean(root?.querySelector(SCENE_ILLUSTRATION_SELECTOR));
+}
+function buildSceneIllustrationNotice(message) {
+  const notice = document.createElement("p");
+  notice.setAttribute("data-titania-illustration-notice", "");
+  notice.style.cssText = "margin:16px 0;text-align:center;font-size:13px;opacity:0.75";
+  notice.textContent = message;
+  return notice;
+}
+function bindMainIllustrations(getTarget) {
+  const content = document.getElementById("t-output-content");
+  if (!content) return () => {
+  };
+  let disposed = false, sequence = 0, timer;
+  let currentKey = "", currentImage = null, currentError = "";
+  function draw() {
+    const root = findSceneContentRoot(content);
+    if (!root) return;
+    clearSceneIllustration(root);
+    if (currentImage) {
+      const holder = document.createElement("div");
+      holder.innerHTML = illustrationFigure(currentImage);
+      const figure = holder.firstElementChild;
+      if (figure) {
+        root.prepend(figure);
+        return;
+      }
+    }
+    if (currentError) root.prepend(buildSceneIllustrationNotice(currentError));
+  }
+  const refresh = async (force = false) => {
+    let target;
+    try {
+      target = getTarget();
+    } catch {
+      target = null;
+    }
+    const key = target?.sceneId || "";
+    if (!force && key === currentKey && (!key || hasSceneIllustration(findSceneContentRoot(content)))) return;
+    if (force || key !== currentKey) {
+      currentKey = key;
+      currentImage = null;
+      currentError = "";
+      const request = ++sequence;
+      if (key) {
+        try {
+          const record = await readSceneIllustrations(key);
+          if (disposed || request !== sequence) return;
+          currentImage = selectedIllustration(record);
+        } catch {
+          if (disposed || request !== sequence) return;
+          currentError = "\u914D\u56FE\u8BFB\u53D6\u5931\u8D25\uFF0C\u53EF\u6253\u5F00\u573A\u666F\u914D\u56FE\u9762\u677F\u91CD\u8BD5\u3002";
+        }
+      } else if (disposed || request !== sequence) return;
+    }
+    if (!disposed) draw();
+  };
+  const schedule = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => void refresh(), 80);
+  };
+  const observer = new MutationObserver(schedule);
+  observer.observe(content, { childList: true, subtree: true });
+  window.addEventListener("titania:scene-rendered", schedule);
+  const changed = () => void refresh(true);
+  window.addEventListener("titania:illustrations-changed", changed);
+  void refresh(true);
+  return () => {
+    disposed = true;
+    clearTimeout(timer);
+    observer.disconnect();
+    window.removeEventListener("titania:scene-rendered", schedule);
+    window.removeEventListener("titania:illustrations-changed", changed);
+    clearSceneIllustration(findSceneContentRoot(content));
+  };
+}
+var PROGRESS_LABELS, sessions, activeView, closeActiveWindow, SCENE_ILLUSTRATION_SELECTOR;
+var init_illustrationWindow = __esm({
+  "src/ui/illustrationWindow.js"() {
+    init_chatInjector();
+    init_cosmosVisionBridge();
+    init_illustrationStore();
+    init_illustrationData();
+    init_helpers();
+    PROGRESS_LABELS = { queued: "\u6B63\u5728\u6392\u961F\u2026", analyzing: "\u6B63\u5728\u5206\u6790\u5267\u573A\u3001\u9009\u62E9\u753B\u9762\u2026", generating: "\u6B63\u5728\u751F\u6210\u56FE\u7247\u2026", downloading: "\u6B63\u5728\u63A5\u6536\u56FE\u7247\u2026" };
+    sessions = /* @__PURE__ */ new Map();
+    activeView = null;
+    closeActiveWindow = null;
+    SCENE_ILLUSTRATION_SELECTOR = "[data-titania-illustration],[data-titania-illustration-notice]";
+  }
+});
+
 // src/ui/favsWindow.js
 var favsWindow_exports = {};
 __export(favsWindow_exports, {
@@ -20754,7 +21976,7 @@ function buildChainSegmentsHtml(chainItems) {
     const roundNo = Number(item?.round) || idx + 1;
     const type = String(item?.type || (idx === 0 ? "initial" : "continuation"));
     const instruction = String(item?.instruction || "").trim() || (type === "initial" ? "\uFF08\u9996\u6B21\u751F\u6210\uFF09" : "\uFF08\u81EA\u7136\u7EED\u5199\uFF09");
-    const html = String(item?.html || "").trim();
+    const html = String(item?.html || "").trim() + illustrationFigure(item?.illustration);
     const chipLabel = type === "initial" ? "\u9996\u6B21\u751F\u6210" : `\u7B2C ${roundNo} \u6BB5\u7EED\u5199`;
     const instructionLabel = type === "initial" ? "\u751F\u6210\u8BF4\u660E" : "\u7EED\u5199\u6307\u4EE4";
     return `
@@ -20790,7 +22012,7 @@ function getChainDisplayHtml(item) {
   return String(item?.html || "");
 }
 function buildChainSignature(scriptId, rounds) {
-  const payload = `${String(scriptId || "")}|${(Array.isArray(rounds) ? rounds : []).map((r) => `${r.round}#${String(r.type || "continuation").trim()}#${String(r.instruction || "").trim()}#${String(r.content || "").trim()}`).join("|")}`;
+  const payload = `${String(scriptId || "")}|${(Array.isArray(rounds) ? rounds : []).map((r) => `${r.round}#${String(r.type || "continuation").trim()}#${String(r.instruction || "").trim()}#${String(r.content || r.html || "").trim()}${r.illustration ? `#image:${r.illustration.id}` : ""}`).join("|")}`;
   let hash = 0;
   for (let i = 0; i < payload.length; i++) {
     hash = (hash << 5) - hash + payload.charCodeAt(i);
@@ -20993,12 +22215,16 @@ async function saveContinuationChainFavorite() {
     return false;
   }
   const ctx = await getContextData();
-  const chainData = getContinuationRoundsForFav(scriptId);
+  const chainData = resolveDisplayedFavoriteBranch(
+    currentResult,
+    getContinuationRoundsForFav(scriptId),
+    GlobalState.continuationRuntime?.byScript?.[scriptId]?.archivedBranches || []
+  );
   const rounds = Array.isArray(chainData?.rounds) ? chainData.rounds : [];
   const currentDisplayContent = String(currentResult?.content || "").trim();
   const normalizedRounds = rounds.length > 0 ? rounds.filter(
     (round) => ["success", "partial", "aborted", "legacy"].includes(String(round?.status || "legacy")) && String(round?.content || "").trim().length > 0
-  ) : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, timestamp: Date.now() }] : [];
+  ) : currentDisplayContent ? [{ round: 1, type: "initial", instruction: "\uFF08\u9996\u6B21\u751F\u6210\uFF09", content: currentDisplayContent, generationId: currentResult.generationId, status: currentResult.status, timestamp: Date.now() }] : [];
   if (normalizedRounds.length === 0) {
     if (window.toastr) toastr.warning("\u5F53\u524D\u5267\u573A\u6CA1\u6709\u53EF\u6536\u85CF\u5185\u5BB9");
     return false;
@@ -21012,6 +22238,12 @@ async function saveContinuationChainFavorite() {
     generationId: String(item?.generationId || ""),
     timestamp: Number(item?.timestamp) || Date.now()
   })).filter((item) => item.html.length > 0);
+  await Promise.all(items.map(async (item) => {
+    if (!item.generationId) return;
+    const target = createIllustrationTarget({ ...item, scriptId });
+    const illustration = selectedIllustration(await readSceneIllustrations(target.sceneId));
+    if (illustration) item.illustration = illustration;
+  }));
   if (items.length === 0) {
     if (window.toastr) toastr.warning("\u7EED\u5199\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6536\u85CF");
     return false;
@@ -21020,7 +22252,7 @@ async function saveContinuationChainFavorite() {
   const scriptName = String(chainData?.scriptName || script?.name || display?.scriptName || "\u573A\u666F");
   const branchKey = String(chainData?.branchKey || "").trim();
   const avatarSrc = getCurrentAvatarSrc();
-  const chainSignature = buildChainSignature(scriptId, normalizedRounds);
+  const chainSignature = buildChainSignature(scriptId, items);
   const data = getExtData();
   if (!Array.isArray(data.favs) && !isFavsMigrated()) data.favs = [];
   const favMeta = listFavMetaForDedup();
@@ -21237,6 +22469,7 @@ function openFavsWindow() {
                     </div>
                 </div>
                 <div class="t-read-actions">
+                    <button class="t-tool-btn" id="t-read-illustrate" title="\u573A\u666F\u914D\u56FE" aria-label="\u573A\u666F\u914D\u56FE"><i class="fa-solid fa-image"></i></button>
                     <button class="t-tool-btn" id="t-read-toggle-meta" title="\u5C55\u5F00\u5168\u90E8\u6BB5\u843D\u4FE1\u606F" style="display:none;"><i class="fa-solid fa-circle-info"></i></button>
                     <button class="t-tool-btn t-read-inline-opt" id="t-read-rename" title="\u91CD\u547D\u540D"><i class="fa-solid fa-pen"></i></button>
                     <button class="t-tool-btn t-read-inline-opt" id="t-read-img" title="\u5BFC\u51FA\u56FE\u7247"><i class="fa-solid fa-camera"></i></button>
@@ -21248,6 +22481,7 @@ function openFavsWindow() {
                             <button type="button" class="t-read-menu-opt" data-read-action="rename"><i class="fa-solid fa-pen"></i><span>\u91CD\u547D\u540D</span></button>
                             <button type="button" class="t-read-menu-opt" data-read-action="img"><i class="fa-solid fa-camera"></i><span>\u5BFC\u51FA\u56FE\u7247</span></button>
                             <button type="button" class="t-read-menu-opt" data-read-action="code"><i class="fa-solid fa-code"></i><span>\u590D\u5236 HTML</span></button>
+                            <button type="button" class="t-read-menu-opt" data-read-action="html"><i class="fa-solid fa-file-code"></i><span>\u5BFC\u51FA HTML\uFF08\u542B\u914D\u56FE\uFF09</span></button>
                             <div class="t-read-more-sep"></div>
                             <button type="button" class="danger" id="t-read-menu-del-segment" data-read-action="del-segment"><i class="fa-solid fa-scissors"></i><span>\u5220\u9664\u5206\u7EC4\u6BB5\u843D</span></button>
                             <button type="button" class="danger" data-read-action="del-one"><i class="fa-solid fa-trash"></i><span>\u5220\u9664\u6B64\u6536\u85CF</span></button>
@@ -21813,7 +23047,7 @@ function openFavsWindow() {
       $("#t-read-toggle-meta").show();
       syncToggleMetaButton(false);
     } else {
-      currentViewingHtml = item.html;
+      currentViewingHtml = String(item.html || "") + illustrationFigure(item.illustration);
       $("#t-read-meta").text(item.title);
       $("#t-read-index").text(`${index + 1} / ${currentFilteredList.length}`);
       $("#t-read-menu-del-segment").hide();
@@ -21848,6 +23082,45 @@ function openFavsWindow() {
     }
     $("#t-fav-reader").addClass("show");
   };
+  $("#t-read-illustrate").on("click", async () => {
+    const favorite = currentFilteredList[currentIndex];
+    if (!favorite) return;
+    try {
+      await ensureFavBody(favorite);
+      const segments = favorite.type === "chain" && favorite.items?.length ? favorite.items : [favorite];
+      const targets = segments.map((segment, index) => {
+        const content = String(segment.html || "");
+        const fallback = `favorite:${favorite.id}:${index}`;
+        const target = createIllustrationTarget({ ...segment, content, scriptId: favorite.scriptId, scriptName: favorite.scriptName || favorite.title }, fallback);
+        return {
+          ...target,
+          label: segments.length > 1 ? `\u7B2C ${index + 1} \u6BB5 \xB7 ${target.scriptName}` : target.scriptName,
+          illustration: segment.illustration || null,
+          async onSelected(image) {
+            const fresh = await loadFavForWrite(favorite.id);
+            if (!fresh) throw new Error("\u539F\u6536\u85CF\u5DF2\u88AB\u5220\u9664\uFF1B\u56FE\u7247\u5DF2\u4FDD\u5B58\u5728\u914D\u56FE\u8BB0\u5F55\u4E2D\u3002");
+            const destination = favorite.type === "chain" && fresh.items?.length ? fresh.items[index] : fresh;
+            if (!destination || String(destination.html || "") !== content || String(destination.generationId || "") !== String(segment.generationId || "")) {
+              throw new Error("\u539F\u6536\u85CF\u5185\u5BB9\u5DF2\u53D8\u5316\uFF0C\u56FE\u7247\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u6536\u85CF\u540E\u9009\u62E9\u914D\u56FE\u3002");
+            }
+            if (image) destination.illustration = image;
+            else delete destination.illustration;
+            if (fresh.type === "chain") {
+              fresh.chainSignature = buildChainSignature(fresh.scriptId, fresh.items);
+              fresh.html = buildChainMergedHtml(fresh.items, { withStyles: true });
+            }
+            await putFav(fresh);
+            if (!fresh.illustration) delete favorite.illustration;
+            Object.assign(favorite, fresh);
+            if (currentFavId === favorite.id && $("#t-fav-reader").length) await loadReaderItem(currentIndex);
+          }
+        };
+      });
+      openIllustrationWindow(targets);
+    } catch (error) {
+      if (window.toastr) toastr.error(error.message || "\u65E0\u6CD5\u6253\u5F00\u914D\u56FE\u9762\u677F");
+    }
+  });
   const setFavDrawerOpen = (open) => {
     $("#t-fav-tools-drawer").prop("hidden", !open);
     $("#t-fav-drawer-toggle").attr("aria-expanded", String(open === true)).toggleClass("is-active", open === true);
@@ -21878,6 +23151,11 @@ function openFavsWindow() {
       "del-segment": "#t-read-del-segment",
       "del-one": "#t-read-del-one"
     }[action];
+    if (action === "html" && currentViewingHtml) {
+      void exportAsHtmlFile(currentViewingHtml, currentViewingTitle).catch((error) => {
+        if (window.toastr) toastr.error(error.message || "\u5BFC\u51FA\u5931\u8D25");
+      });
+    }
     if (targetId) $(targetId).trigger("click");
   });
   $("#t-favs-view").on("click", () => {
@@ -22052,15 +23330,13 @@ function openFavsWindow() {
       }
     }
   });
-  $("#t-read-code").on("click", () => {
-    if (currentViewingHtml) {
-      navigator.clipboard.writeText(currentViewingHtml);
-      if (window.toastr) toastr.success("\u6E90\u7801\u5DF2\u590D\u5236");
-    } else {
-      const container = document.getElementById("t-read-content");
-      const htmlCode = extractFromShadowDOM(container);
-      navigator.clipboard.writeText(htmlCode);
-      if (window.toastr) toastr.success("\u6E90\u7801\u5DF2\u590D\u5236");
+  $("#t-read-code").on("click", async () => {
+    const html2 = currentViewingHtml || extractFromShadowDOM(document.getElementById("t-read-content"));
+    try {
+      await navigator.clipboard.writeText(await embedIllustrationsInHtml(html2));
+      if (window.toastr) toastr.success("\u6E90\u7801\u5DF2\u590D\u5236\uFF08\u5305\u542B\u914D\u56FE\uFF09");
+    } catch (error) {
+      if (window.toastr) toastr.error(error.message || "\u590D\u5236\u5931\u8D25\uFF0C\u53EF\u4EE5\u4F7F\u7528\u5BFC\u51FA HTML");
     }
   });
   $("#t-read-open-window").on("click", () => {
@@ -22529,6 +23805,10 @@ var init_favsWindow = __esm({
     init_api();
     init_favsStore();
     init_logger();
+    init_illustrationData();
+    init_illustrationStore();
+    init_illustrationWindow();
+    init_illustrationPortability();
     CHAIN_SEGMENT_STYLE_ID = "t-chain-segment-style";
     CHAIN_SEGMENT_STYLES = `
 <style data-t-style="${CHAIN_SEGMENT_STYLE_ID}">
@@ -23119,7 +24399,7 @@ var init_debugWindow = __esm({
 });
 
 // src/core/relayClient.js
-import { getRequestHeaders as getRequestHeaders2 } from "../../../../script.js";
+import { getRequestHeaders as getRequestHeaders3 } from "../../../../script.js";
 import EventSourceStream from "../../../sse-stream.js";
 import { tryParseStreamingError } from "../../../openai.js";
 function toOpenAiBase(url) {
@@ -23133,7 +24413,7 @@ async function fetchModelList({ url, key = "" }) {
   if (!base) throw new Error("API \u5730\u5740\u65E0\u6548");
   const res = await fetch(ST_STATUS_URL, {
     method: "POST",
-    headers: getRequestHeaders2(),
+    headers: getRequestHeaders3(),
     body: JSON.stringify({
       chat_completion_source: "openai",
       reverse_proxy: base,
@@ -23258,7 +24538,7 @@ async function sendChatCompletion(options = {}) {
   const startedAt = Date.now();
   const res = await fetch(ST_GENERATE_URL, {
     method: "POST",
-    headers: getRequestHeaders2(),
+    headers: getRequestHeaders3(),
     body: JSON.stringify(body),
     signal
   });
@@ -23485,34 +24765,6 @@ var init_connection = __esm({
     init_logger();
     init_apiProfileRegistry();
     init_relayClient();
-  }
-});
-
-// src/utils/chatTagWhitelist.js
-function parseTagWhitelistInput(input) {
-  return String(input || "").split(/[,，\n]/).map((tag) => tag.trim()).map((tag) => tag.replace(/^<|>$/g, "").toLowerCase()).filter((tag) => tag.length > 0 && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(tag));
-}
-function extractTextByWhitelist(rawHtml, whitelist = []) {
-  const src = String(rawHtml || "");
-  if (!src.trim()) return "";
-  if (Array.isArray(whitelist) && whitelist.length > 0) {
-    const extracted = [];
-    for (const tag of whitelist) {
-      const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
-      let match;
-      while ((match = regex.exec(src)) !== null) {
-        const inner = String(match[1] || "").trim();
-        if (inner) extracted.push(inner);
-      }
-    }
-    if (extracted.length > 0) {
-      return extracted.join("\n").replace(/<[^>]*>?/gm, "").replace(/\n{3,}/g, "\n\n").trim();
-    }
-  }
-  return src.replace(/<[^>]*>?/gm, "").replace(/\n{3,}/g, "\n\n").trim();
-}
-var init_chatTagWhitelist = __esm({
-  "src/utils/chatTagWhitelist.js"() {
   }
 });
 
@@ -27147,7 +28399,7 @@ __export(rewriteEntryButton_exports, {
   openRewritePanelFromMenu: () => openRewritePanelFromMenu,
   refreshRewriteEntryButton: () => refreshRewriteEntryButton
 });
-import { saveChatConditional, reloadCurrentChat, eventSource, event_types } from "../../../../script.js";
+import { saveChatConditional as saveChatConditional2, reloadCurrentChat as reloadCurrentChat2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
 function isEnabled() {
   const data = getExtData();
   return data?.rewrite_entry?.enabled === true;
@@ -28033,11 +29285,11 @@ function scheduleApplyAllRewriteMarks(delay = 80) {
 function bindRewriteDecorationEvents() {
   if (rewriteDecorBound) return;
   rewriteDecorBound = true;
-  eventSource.on(event_types.MESSAGE_RECEIVED, () => {
+  eventSource2.on(event_types2.MESSAGE_RECEIVED, () => {
     scheduleApplyAllRewriteMarks(120);
     setTimeout(refreshInlineRewriteEntry, 160);
   });
-  eventSource.on(event_types.GENERATION_ENDED, () => {
+  eventSource2.on(event_types2.GENERATION_ENDED, () => {
     scheduleApplyAllRewriteMarks(120);
     setTimeout(refreshInlineRewriteEntry, 160);
   });
@@ -28345,8 +29597,8 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
     if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
     latest.msg.extra.titania_rewrite_done = true;
     latest.msg.extra.titania_rewrite_marks = rewriteMarks;
-    await saveChatConditional();
-    await reloadCurrentChat();
+    await saveChatConditional2();
+    await reloadCurrentChat2();
     scheduleApplyAllRewriteMarks(180);
     const deleteCount = Array.isArray(deleteUnits) ? deleteUnits.length : 0;
     setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761${deleteCount > 0 ? `\uFF0C\u5220\u9664 ${deleteCount} \u6761` : ""}\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
@@ -28403,8 +29655,8 @@ async function runRewrite(options = {}) {
     if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
     latest.msg.extra.titania_rewrite_done = true;
     latest.msg.extra.titania_rewrite_marks = rewriteMarks;
-    await saveChatConditional();
-    await reloadCurrentChat();
+    await saveChatConditional2();
+    await reloadCurrentChat2();
     scheduleApplyAllRewriteMarks(180);
     setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u5220\u9664 ${deleteCount} \u6761\uFF08\u79BB\u7EBF\u5904\u7406\uFF0C\u672A\u8BF7\u6C42\u6A21\u578B\uFF09\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
     if (window.toastr) toastr.success(`\u5DF2\u6309\u5220\u9664\u89C4\u5219\u5904\u7406 ${deleteCount} \u6761`, "\u6587\u672C\u6539\u5199");
@@ -28521,7 +29773,7 @@ async function onAutoTriggerRewrite() {
 function bindAutoTriggerEvents() {
   if (autoTriggerBound) return;
   autoTriggerBound = true;
-  eventSource.on(event_types.GENERATION_ENDED, onAutoTriggerRewrite);
+  eventSource2.on(event_types2.GENERATION_ENDED, onAutoTriggerRewrite);
 }
 function buildKwRowHtml(rule = {}) {
   const action = normalizeRuleAction(rule?.action);
@@ -29474,7 +30726,7 @@ __export(floorNav_exports, {
   jumpToTopFloor: () => jumpToTopFloor,
   refreshFloorNavButton: () => refreshFloorNavButton
 });
-import { eventSource as eventSource2, event_types as event_types2, showMoreMessages } from "../../../../script.js";
+import { eventSource as eventSource3, event_types as event_types3, showMoreMessages } from "../../../../script.js";
 import { hideChatMessageRange } from "../../../chats.js";
 function isEnabled2() {
   return getExtData()?.floor_nav?.enabled !== false;
@@ -29609,16 +30861,16 @@ function initFloorNav() {
     void onFloorHideClick(mesid);
   });
   const rerenderEvents = [
-    event_types2.CHAT_CHANGED,
-    event_types2.CHARACTER_MESSAGE_RENDERED,
-    event_types2.USER_MESSAGE_RENDERED,
-    event_types2.MESSAGE_SWIPED,
-    event_types2.MESSAGE_DELETED,
-    event_types2.MORE_MESSAGES_LOADED
+    event_types3.CHAT_CHANGED,
+    event_types3.CHARACTER_MESSAGE_RENDERED,
+    event_types3.USER_MESSAGE_RENDERED,
+    event_types3.MESSAGE_SWIPED,
+    event_types3.MESSAGE_DELETED,
+    event_types3.MORE_MESSAGES_LOADED
   ];
   for (const eventName of rerenderEvents) {
     if (!eventName) continue;
-    eventSource2.on(eventName, () => scheduleRefreshButtons(0));
+    eventSource3.on(eventName, () => scheduleRefreshButtons(0));
   }
   scheduleRefreshButtons(300);
   TitaniaLogger.info("\u697C\u5C42\u5FEB\u6377\u64CD\u4F5C\u5DF2\u521D\u59CB\u5316");
@@ -32264,10 +33516,10 @@ async function req(path, options = {}) {
   return data;
 }
 async function fetchList({ force = false } = {}) {
-  if (!force && cache2.list && Date.now() - cache2.at < LIST_TTL) return cache2.list;
+  if (!force && cache3.list && Date.now() - cache3.at < LIST_TTL) return cache3.list;
   const data = await req("/api/list");
-  cache2.list = data;
-  cache2.at = Date.now();
+  cache3.list = data;
+  cache3.at = Date.now();
   return data;
 }
 function fetchScript(id3) {
@@ -32293,13 +33545,13 @@ function countDownloads(ids) {
 function countDownload(id3) {
   return countDownloads([id3]);
 }
-var WORKSHOP_ORIGIN, LIST_TTL, TIMEOUT, cache2, DOWNLOAD_REPORT_CHUNK;
+var WORKSHOP_ORIGIN, LIST_TTL, TIMEOUT, cache3, DOWNLOAD_REPORT_CHUNK;
 var init_workshopApi = __esm({
   "src/core/workshopApi.js"() {
     WORKSHOP_ORIGIN = "https://echo-workshop.pages.dev";
     LIST_TTL = 6e4;
     TIMEOUT = 15e3;
-    cache2 = { list: null, at: 0 };
+    cache3 = { list: null, at: 0 };
     DOWNLOAD_REPORT_CHUNK = 50;
   }
 });
@@ -33712,9 +34964,9 @@ var init_scriptManager = __esm({
 
 // src/core/continuationStore.js
 import {
-  chat_metadata,
+  chat_metadata as chat_metadata2,
   getCurrentChatId,
-  saveChatConditional as saveChatConditional2
+  saveChatConditional as saveChatConditional3
 } from "../../../../script.js";
 function isConnectionUsable(db) {
   try {
@@ -33779,7 +35031,7 @@ function migrateV1ToV2(transaction) {
   sessionStore.getAll().onsuccess = (sessionEvent) => {
     branchStore.getAll().onsuccess = (branchEvent) => {
       roundStore.getAll().onsuccess = (roundEvent) => {
-        const sessions = sessionEvent.target.result || [];
+        const sessions2 = sessionEvent.target.result || [];
         const branches = branchEvent.target.result || [];
         const rounds = roundEvent.target.result || [];
         const branchIdMap = /* @__PURE__ */ new Map();
@@ -33855,7 +35107,7 @@ function migrateV1ToV2(transaction) {
             });
           }
         };
-        for (const session of sessions) {
+        for (const session of sessions2) {
           const activeKey = String(session?.activeBranchKey || "").trim();
           const activeBranchId = branchIdBySessionKey.get(`${session.id}\0${activeKey}`) || "";
           const sessionBranches = branches.filter((item) => String(item?.sessionId || "") === String(session.id)).map((item) => branchIdMap.get(String(item.id))).filter(Boolean);
@@ -33871,7 +35123,7 @@ function migrateV1ToV2(transaction) {
           });
         }
         TitaniaLogger.info("\u7EED\u5199\u5386\u53F2\u5DF2\u8FC1\u79FB\u5230 v2 \u5206\u652F\u6A21\u578B", {
-          sessions: sessions.length,
+          sessions: sessions2.length,
           branches: branchIdMap.size,
           rounds: rounds.length
         });
@@ -33935,7 +35187,7 @@ function toPublicRound(round) {
     timestamp: Number(round?.timestamp) || 0
   };
 }
-function buildGlobalSessions(sessions, branches, rounds) {
+function buildGlobalSessions(sessions2, branches, rounds) {
   const roundsByBranch = /* @__PURE__ */ new Map();
   sortBySequence(rounds).forEach((round) => {
     const branchId = String(round?.branchId || "");
@@ -33948,7 +35200,7 @@ function buildGlobalSessions(sessions, branches, rounds) {
     if (!branchesBySession.has(sessionId)) branchesBySession.set(sessionId, []);
     branchesBySession.get(sessionId).push(branch);
   }
-  return sessions.map((session) => {
+  return sessions2.map((session) => {
     const sessionBranches = (branchesBySession.get(String(session.id)) || []).map((branch) => ({
       branchId: branch.id,
       branchKey: String(branch.branchKey || branch.id),
@@ -33981,36 +35233,36 @@ async function listAllContinuationSessions() {
   await Promise.allSettled([...pendingWrites.values()]);
   const db = await openDatabase();
   const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
-  const [sessions, branches, rounds] = await Promise.all([
+  const [sessions2, branches, rounds] = await Promise.all([
     requestResult(transaction.objectStore(STORE_SESSIONS).getAll()),
     requestResult(transaction.objectStore(STORE_BRANCHES).getAll()),
     requestResult(transaction.objectStore(STORE_ROUNDS).getAll())
   ]);
-  return buildGlobalSessions(sessions, branches, rounds);
+  return buildGlobalSessions(sessions2, branches, rounds);
 }
-function buildPointerMetadata(sessions) {
+function buildPointerMetadata(sessions2) {
   const active = {};
-  for (const session of sessions) {
+  for (const session of sessions2) {
     const branchId = String(session?.activeBranchId || "").trim();
     if (branchId) active[String(session.scriptId)] = branchId;
   }
   return Object.keys(active).length > 0 ? { version: 2, active } : null;
 }
-function updateCurrentChatMetadata(sessions) {
-  const next = buildPointerMetadata(sessions);
-  const current = chat_metadata?.[CHAT_METADATA_KEY];
+function updateCurrentChatMetadata(sessions2) {
+  const next = buildPointerMetadata(sessions2);
+  const current = chat_metadata2?.[CHAT_METADATA_KEY];
   const sameShape = JSON.stringify(current?.active || null) === JSON.stringify(next?.active || null) && Number(current?.version || 0) === Number(next?.version || 0);
   if (sameShape) return false;
   if (next) {
-    chat_metadata[CHAT_METADATA_KEY] = { ...next, updatedAt: Date.now() };
+    chat_metadata2[CHAT_METADATA_KEY] = { ...next, updatedAt: Date.now() };
   } else {
-    delete chat_metadata[CHAT_METADATA_KEY];
+    delete chat_metadata2[CHAT_METADATA_KEY];
   }
   return true;
 }
 function collectRuntimeRecords(chatId) {
   const byScript = GlobalState.continuationRuntime?.byScript || {};
-  const sessions = [];
+  const sessions2 = [];
   const branches = [];
   const rounds = [];
   const currentSource = getCurrentSourceMetadata();
@@ -34027,7 +35279,7 @@ function collectRuntimeRecords(chatId) {
         ...Array.isArray(branch?.rounds) ? branch.rounds.map((round) => Number(round?.timestamp) || 0) : []
       ])
     );
-    sessions.push({
+    sessions2.push({
       id: sessionId,
       chatId,
       scriptId,
@@ -34085,7 +35337,7 @@ function collectRuntimeRecords(chatId) {
       });
     }
   }
-  return { sessions, branches, rounds };
+  return { sessions: sessions2, branches, rounds };
 }
 async function reconcileRuntimeRecords(chatId, payload) {
   const db = await openDatabase();
@@ -34138,7 +35390,7 @@ async function reconcileRuntimeRecords(chatId, payload) {
 async function writeCurrentRuntime(chatId, payload) {
   await reconcileRuntimeRecords(chatId, payload);
   if (chatId !== getCurrentChatKey()) return;
-  if (updateCurrentChatMetadata(payload.sessions)) await saveChatConditional2();
+  if (updateCurrentChatMetadata(payload.sessions)) await saveChatConditional3();
 }
 function queueRuntimeWrite(chatId, payload) {
   const previous = pendingWrites.get(chatId) || Promise.resolve();
@@ -34174,7 +35426,7 @@ async function restoreContinuationForCurrentChat() {
   const revision = runtimeRevision;
   const db = await openDatabase();
   const transaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
-  const [sessions, branches, rounds] = await Promise.all([
+  const [sessions2, branches, rounds] = await Promise.all([
     requestResult(transaction.objectStore(STORE_SESSIONS).index("chatId").getAll(chatId)),
     requestResult(transaction.objectStore(STORE_BRANCHES).index("chatId").getAll(chatId)),
     requestResult(transaction.objectStore(STORE_ROUNDS).index("chatId").getAll(chatId))
@@ -34196,7 +35448,7 @@ async function restoreContinuationForCurrentChat() {
     });
   });
   const nextByScript = {};
-  for (const session of sessions) {
+  for (const session of sessions2) {
     const sessionBranches = branches.filter((branch) => String(branch.sessionId) === String(session.id));
     const active = sessionBranches.find((branch) => branch.id === session.activeBranchId);
     if (!active) continue;
@@ -34223,16 +35475,16 @@ async function restoreContinuationForCurrentChat() {
     };
   }
   GlobalState.continuationRuntime = { chatId, byScript: nextByScript };
-  if (updateCurrentChatMetadata(sessions)) void saveChatConditional2();
+  if (updateCurrentChatMetadata(sessions2)) void saveChatConditional3();
   if (typeof window.updateSceneHistoryNav === "function") window.updateSceneHistoryNav();
-  return sessions.length > 0;
+  return sessions2.length > 0;
 }
 async function deleteGlobalContinuationSelections(selections = []) {
   const items = Array.isArray(selections) ? selections : [];
   if (items.length === 0) return { deletedSessions: 0, deletedBranches: 0, deletedRounds: 0 };
   const db = await openDatabase();
   const readTransaction = db.transaction([STORE_SESSIONS, STORE_BRANCHES, STORE_ROUNDS], "readonly");
-  const [sessions, branches, rounds] = await Promise.all([
+  const [sessions2, branches, rounds] = await Promise.all([
     requestResult(readTransaction.objectStore(STORE_SESSIONS).getAll()),
     requestResult(readTransaction.objectStore(STORE_BRANCHES).getAll()),
     requestResult(readTransaction.objectStore(STORE_ROUNDS).getAll())
@@ -34240,11 +35492,11 @@ async function deleteGlobalContinuationSelections(selections = []) {
   const sessionKeys = new Set(items.filter((item) => !item.branchKey).map((item) => `${item.chatId}\0${item.scriptId}`));
   const branchKeys = new Set(items.filter((item) => item.branchKey && !item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}`));
   const roundKeys = new Set(items.filter((item) => item.roundKey).map((item) => `${item.chatId}\0${item.scriptId}\0${item.branchKey}\0${item.roundKey}`));
-  const sessionById = new Map(sessions.map((session) => [session.id, session]));
+  const sessionById = new Map(sessions2.map((session) => [session.id, session]));
   const deletedSessionIds = /* @__PURE__ */ new Set();
   const deletedBranchIds = /* @__PURE__ */ new Set();
   const deletedRoundIds = /* @__PURE__ */ new Set();
-  for (const session of sessions) {
+  for (const session of sessions2) {
     if (sessionKeys.has(`${session.chatId}\0${session.scriptId}`)) deletedSessionIds.add(session.id);
   }
   for (const branch of branches) {
@@ -34273,7 +35525,7 @@ async function deleteGlobalContinuationSelections(selections = []) {
   const sessionStore = writeTransaction.objectStore(STORE_SESSIONS);
   const branchStore = writeTransaction.objectStore(STORE_BRANCHES);
   const roundStore = writeTransaction.objectStore(STORE_ROUNDS);
-  for (const session of sessions) {
+  for (const session of sessions2) {
     if (deletedSessionIds.has(session.id)) continue;
     const remaining = branches.filter((branch) => branch.sessionId === session.id && !deletedBranchIds.has(branch.id));
     if (remaining.length === 0) {
@@ -34285,7 +35537,7 @@ async function deleteGlobalContinuationSelections(selections = []) {
       session.activeBranchId = fallback.id;
     }
   }
-  sessions.forEach((session) => deletedSessionIds.has(session.id) ? sessionStore.delete(session.id) : sessionStore.put(session));
+  sessions2.forEach((session) => deletedSessionIds.has(session.id) ? sessionStore.delete(session.id) : sessionStore.put(session));
   branches.forEach((branch) => {
     if (deletedSessionIds.has(branch.sessionId) || deletedBranchIds.has(branch.id)) branchStore.delete(branch.id);
   });
@@ -34518,6 +35770,7 @@ function renderHtml(viewData) {
                     <button class="t-tools-icon" id="t-btn-like" type="button" title="\u6536\u85CF\u7ED3\u679C" aria-label="\u6536\u85CF\u7ED3\u679C">
                         <i class="fa-regular fa-heart"></i>
                     </button>
+                    <button class="t-tools-icon" id="t-tool-illustrate" type="button" title="\u573A\u666F\u914D\u56FE" aria-label="\u573A\u666F\u914D\u56FE"><i class="fa-solid fa-image"></i></button>
                     <button class="t-tools-icon" id="t-tool-workshop-feedback" type="button" title="\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F" aria-label="\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F" style="display:none;">
                         <i class="fa-regular fa-comment-dots"></i>
                     </button>
@@ -34688,8 +35941,8 @@ function bindEvents2(ctx) {
   const refreshContinuationHistoryCount = async () => {
     try {
       const source = ctx.getCurrentContinuationSource();
-      const sessions = await listAllContinuationSessions();
-      const count = sessions.filter((session) => session.chatId === source.chatId).reduce((total, session) => total + session.branches.reduce((sum, branch) => sum + Math.max(0, branch.rounds.length - 1), 0), 0);
+      const sessions2 = await listAllContinuationSessions();
+      const count = sessions2.filter((session) => session.chatId === source.chatId).reduce((total, session) => total + session.branches.reduce((sum, branch) => sum + Math.max(0, branch.rounds.length - 1), 0), 0);
       $("#t-continuation-history-count").text(count > 99 ? "99+" : count);
       $("#t-btn-continuation-history").attr("title", count ? `\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2\uFF08${count} \u8F6E\uFF09` : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2");
     } catch (error) {
@@ -34885,6 +36138,7 @@ function renderHtml2(viewData) {
                         <i class="fa-solid fa-pen-nib"></i>
                         <span>\u7F16\u8F91\u5185\u5BB9</span>
                     </div>
+                    <button class="t-tools-item" id="t-tool-illustrate" type="button" title="\u573A\u666F\u914D\u56FE"><i class="fa-solid fa-image"></i><span>\u573A\u666F\u914D\u56FE</span></button>
                     <div class="t-tools-item" id="t-tool-workshop-feedback" style="display:none;">
                         <i class="fa-regular fa-comment-dots"></i>
                         <span>\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F</span>
@@ -35045,6 +36299,12 @@ __export(mainWindow_exports, {
   updateScriptTitleDisplay: () => updateScriptTitleDisplay,
   updateWorkshopFeedbackButton: () => updateWorkshopFeedbackButton
 });
+function getMainIllustrationTarget() {
+  const result = getCurrentGenerationResult();
+  const view = continuationHistoryView;
+  const fallback = view ? `${view.chatId}:${view.scriptId}:${view.branchKey}:${view.roundKey}` : `legacy:${getCurrentContinuationSource().chatId}:${result?.scriptId || ""}`;
+  return createIllustrationTarget(result, fallback);
+}
 function formatRelativeTime3(ts) {
   const time = Number(ts) || 0;
   if (!time) return "\u672A\u4F7F\u7528";
@@ -35452,7 +36712,7 @@ async function openContinuationHistory(preferredScriptId = "") {
   const allSessions = await listAllContinuationSessions();
   continuationGlobalSessions = allSessions;
   const currentSource = getCurrentContinuationSource();
-  const sessions = allSessions.filter((session) => {
+  const sessions2 = allSessions.filter((session) => {
     if (continuationHistoryScope === "chat") return session.chatId === currentSource.chatId;
     if (continuationHistoryScope === "character") {
       if (session.characterAvatar && currentSource.characterAvatar) return session.characterAvatar === currentSource.characterAvatar;
@@ -35465,10 +36725,10 @@ async function openContinuationHistory(preferredScriptId = "") {
     if (window.toastr) toastr.info("\u8FD8\u6CA1\u6709\u4E3B\u52A8\u7EED\u5199\u5386\u53F2", "Titania");
     return;
   }
-  const preferredIndex = sessions.findIndex((session) => session.scriptId === preferredScriptId);
-  if (preferredIndex > 0) sessions.unshift(sessions.splice(preferredIndex, 1)[0]);
+  const preferredIndex = sessions2.findIndex((session) => session.scriptId === preferredScriptId);
+  if (preferredIndex > 0) sessions2.unshift(sessions2.splice(preferredIndex, 1)[0]);
   const selectionCheckbox = (level, chatId, scriptId, branchKey = "", roundKey = "", disabled = false) => continuationHistoryManaging ? `<input class="t-cont-select t-choice-input t-choice-input--accent t-choice-input--inline-gap-md t-choice-input--subdued-disabled" type="checkbox" data-selection-level="${level}" data-chat-id="${escapeHtmlText2(chatId)}" data-script-id="${escapeHtmlText2(scriptId)}" data-branch-key="${escapeHtmlText2(branchKey)}" data-round-key="${escapeHtmlText2(roundKey)}" ${disabled ? "disabled" : ""} aria-label="\u9009\u62E9${level === "session" ? "\u5267\u672C" : level === "branch" ? "\u5206\u652F" : "\u8F6E\u6B21"}">` : "";
-  const sessionsHtml = sessions.map((session, sessionIndex) => {
+  const sessionsHtml = sessions2.map((session, sessionIndex) => {
     const isOpen = sessionIndex === 0;
     const hasActiveBranch = session.branches.some((item) => item.isActive);
     const branchNumbers = new Map(
@@ -35531,7 +36791,7 @@ async function openContinuationHistory(preferredScriptId = "") {
         </section>`;
   }).join("");
   $("#t-main-view").append(`<div id="t-continuation-history" class="t-cont-history-panel ${continuationHistoryManaging ? "is-managing" : ""}">
-        <div class="t-cont-history-header"><div class="t-cont-history-heading"><i class="fa-solid fa-clock-rotate-left"></i><strong>${continuationHistoryManaging ? "\u6279\u91CF\u7BA1\u7406" : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2"}</strong><span>${continuationHistoryManaging ? "\u52FE\u9009\u8981\u5220\u9664\u7684\u5267\u672C\u3001\u5206\u652F\u6216\u8F6E\u6B21" : `${sessions.length} \u4E2A\u5267\u672C \xB7 ${sessions.reduce((sum, item) => sum + item.roundCount, 0)} \u8F6E`}</span></div><div class="t-cont-history-header-actions">${continuationHistoryManaging ? '<button class="t-btn" id="t-cont-history-select-all"><i class="fa-solid fa-check-double"></i> \u5168\u9009</button><button class="t-btn" id="t-cont-history-manage-cancel">\u9000\u51FA</button>' : `<select id="t-cont-history-scope" class="t-cont-history-scope" title="\u5386\u53F2\u8303\u56F4"><option value="all" ${continuationHistoryScope === "all" ? "selected" : ""}>\u5168\u90E8\u89D2\u8272</option><option value="character" ${continuationHistoryScope === "character" ? "selected" : ""}>\u5F53\u524D\u89D2\u8272</option><option value="chat" ${continuationHistoryScope === "chat" ? "selected" : ""}>\u5F53\u524D\u804A\u5929</option></select><button class="t-btn" id="t-cont-history-manage" title="\u6279\u91CF\u7BA1\u7406\u5386\u53F2"><i class="fa-solid fa-list-check"></i> \u7BA1\u7406</button>`}<button class="t-close" id="t-cont-history-close">&times;</button></div></div>
+        <div class="t-cont-history-header"><div class="t-cont-history-heading"><i class="fa-solid fa-clock-rotate-left"></i><strong>${continuationHistoryManaging ? "\u6279\u91CF\u7BA1\u7406" : "\u4E3B\u52A8\u7EED\u5199\u804A\u5929\u5386\u53F2"}</strong><span>${continuationHistoryManaging ? "\u52FE\u9009\u8981\u5220\u9664\u7684\u5267\u672C\u3001\u5206\u652F\u6216\u8F6E\u6B21" : `${sessions2.length} \u4E2A\u5267\u672C \xB7 ${sessions2.reduce((sum, item) => sum + item.roundCount, 0)} \u8F6E`}</span></div><div class="t-cont-history-header-actions">${continuationHistoryManaging ? '<button class="t-btn" id="t-cont-history-select-all"><i class="fa-solid fa-check-double"></i> \u5168\u9009</button><button class="t-btn" id="t-cont-history-manage-cancel">\u9000\u51FA</button>' : `<select id="t-cont-history-scope" class="t-cont-history-scope" title="\u5386\u53F2\u8303\u56F4"><option value="all" ${continuationHistoryScope === "all" ? "selected" : ""}>\u5168\u90E8\u89D2\u8272</option><option value="character" ${continuationHistoryScope === "character" ? "selected" : ""}>\u5F53\u524D\u89D2\u8272</option><option value="chat" ${continuationHistoryScope === "chat" ? "selected" : ""}>\u5F53\u524D\u804A\u5929</option></select><button class="t-btn" id="t-cont-history-manage" title="\u6279\u91CF\u7BA1\u7406\u5386\u53F2"><i class="fa-solid fa-list-check"></i> \u7BA1\u7406</button>`}<button class="t-close" id="t-cont-history-close">&times;</button></div></div>
         <div class="t-cont-history-body">${sessionsHtml || '<div class="t-cont-history-empty">\u5F53\u524D\u7B5B\u9009\u8303\u56F4\u5185\u6CA1\u6709\u8BB0\u5F55</div>'}</div>
         ${continuationHistoryManaging ? '<div class="t-cont-history-bulk-bar"><span id="t-cont-history-selection-count">\u5DF2\u9009\u62E9 0 \u9879</span><button class="t-btn danger" id="t-cont-history-delete-selected" disabled><i class="fa-solid fa-trash-can"></i> \u5220\u9664\u6240\u9009</button></div>' : ""}
     </div>`);
@@ -35795,6 +37055,14 @@ async function openMainWindow() {
   } else {
     outputContainer.innerHTML = placeholderContent;
   }
+  registerTeardown(bindMainIllustrations(getMainIllustrationTarget));
+  $("#t-tool-illustrate").on("click", () => {
+    try {
+      openIllustrationWindow(getMainIllustrationTarget());
+    } catch (error) {
+      if (window.toastr) toastr.warning(error.message);
+    }
+  });
   $("#t-use-history").on("change", function() {
     GlobalState.useHistoryAnalysis = $(this).is(":checked");
     updateHistoryToggleUI();
@@ -37689,6 +38957,8 @@ var init_mainWindow = __esm({
     init_headerActions();
     init_topBar();
     init_theme();
+    init_illustrationData();
+    init_illustrationWindow();
     SORT_MODE_LABELS2 = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
@@ -38919,6 +40189,7 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
   if (!isStreaming) {
     scheduleInteractiveDetection(content, scriptName);
   }
+  window.dispatchEvent(new CustomEvent("titania:scene-rendered"));
 }
 function ensureShadowContentElement(container, initialContent = "") {
   const host = container.querySelector(".t-shadow-host");
@@ -39197,10 +40468,14 @@ function showInteractiveFAB(scriptName, html, reasons) {
       $(this).css({ "transform": "scale(1)" });
     }
   );
-  $("#t-fab-export").on("click", function(e) {
+  $("#t-fab-export").on("click", async function(e) {
     e.stopPropagation();
-    exportAsHtmlFile(html, scriptName);
-    if (window.toastr) toastr.success("HTML \u5DF2\u4E0B\u8F7D", "Titania");
+    try {
+      await exportAsHtmlFile(html, scriptName);
+      if (window.toastr) toastr.success("HTML \u5DF2\u4E0B\u8F7D", "Titania");
+    } catch (error) {
+      if (window.toastr) toastr.error(error.message || "HTML \u5BFC\u51FA\u5931\u8D25", "Titania");
+    }
   }).hover(
     function() {
       $(this).css({ "background": "#383838" });
@@ -40839,7 +42114,7 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSo
 
 // src/core/extensionUpdate.js
 init_defaults();
-import { getRequestHeaders as getRequestHeaders3 } from "../../../../script.js";
+import { getRequestHeaders as getRequestHeaders4 } from "../../../../script.js";
 import { extensionTypes } from "../../../extensions.js";
 var EXTENSION_ID = "third-party/titania-theater";
 var EXTENSION_NAME = "titania-theater";
@@ -40898,7 +42173,7 @@ function getExtensionType() {
 async function updateExtension() {
   const response = await fetch("/api/extensions/update", {
     method: "POST",
-    headers: getRequestHeaders3(),
+    headers: getRequestHeaders4(),
     body: JSON.stringify({
       extensionName: EXTENSION_NAME,
       global: getExtensionType() === "global"
@@ -41062,172 +42337,9 @@ init_rewriteEntryButton();
 
 // src/ui/chatInjectButton.js
 init_state();
+init_chatInjector();
+init_logger();
 import { eventSource as eventSource4, event_types as event_types4 } from "../../../../script.js";
-
-// src/core/chatInjector.js
-init_chatTagWhitelist();
-init_storage();
-init_logger();
-import {
-  chat,
-  chat_metadata as chat_metadata2,
-  addOneMessage,
-  saveChatConditional as saveChatConditional3,
-  reloadCurrentChat as reloadCurrentChat2,
-  eventSource as eventSource3,
-  event_types as event_types3,
-  system_avatar
-} from "../../../../script.js";
-import { system_message_types } from "../../../system-messages.js";
-import { getMessageTimeStamp } from "../../../RossAscends-mods.js";
-var INJECT_MARKER_KEY = "titania_theater";
-function getChatInjectConfig() {
-  const data = getExtData();
-  const cfg = data?.chat_inject && typeof data.chat_inject === "object" ? data.chat_inject : {};
-  return {
-    enabled: cfg.enabled !== false,
-    visibleToAI: cfg.visible_to_ai !== false,
-    speakerName: String(cfg.speaker_name || "").trim() || "\u56DE\u58F0\u5C0F\u5267\u573A"
-  };
-}
-function isInjectedTheaterMessage(message) {
-  return Boolean(message?.extra?.[INJECT_MARKER_KEY]);
-}
-function normalizeTheaterHtmlForChat(html) {
-  let out = String(html || "");
-  if (!out.trim()) return "";
-  out = out.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
-  out = out.replace(/<script\b[^>]*\/?>/gi, "");
-  out = out.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "");
-  out = out.replace(/<\/?(?:html|head|body)\b[^>]*>/gi, "");
-  out = out.replace(/<(?:link|meta|base|title)\b[^>]*>/gi, "");
-  out = out.replace(/<\/title\s*>/gi, "");
-  out = out.replace(/<style\b[^>]*>/gi, "<style>");
-  const openCount = (out.match(/<style>/gi) || []).length;
-  const closeCount = (out.match(/<\/style>/gi) || []).length;
-  if (openCount > closeCount) {
-    out += "</style>".repeat(openCount - closeCount);
-  }
-  return out.trim();
-}
-var HTML_ENTITIES = {
-  "&nbsp;": " ",
-  "&amp;": "&",
-  "&lt;": "<",
-  "&gt;": ">",
-  "&quot;": '"',
-  "&#39;": "'",
-  "&apos;": "'",
-  "&hellip;": "\u2026",
-  "&mdash;": "\u2014",
-  "&ndash;": "\u2013",
-  "&ldquo;": "\u201C",
-  "&rdquo;": "\u201D",
-  "&lsquo;": "\u2018",
-  "&rsquo;": "\u2019"
-};
-function decodeHtmlEntities(text) {
-  let out = String(text || "");
-  for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
-    out = out.replace(new RegExp(entity, "gi"), char);
-  }
-  out = out.replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)));
-  out = out.replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)));
-  return out;
-}
-function buildPromptTextFromTheater(html) {
-  let text = String(html || "");
-  if (!text.trim()) return "";
-  text = text.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "\n");
-  text = text.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "\n");
-  text = text.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "\n");
-  text = text.replace(/<br\s*\/?>/gi, "\n");
-  text = text.replace(/<\/(?:p|div|section|article|header|footer|blockquote|li|tr|h[1-6]|figcaption|pre)\s*>/gi, "\n");
-  text = text.replace(/<hr\s*\/?>/gi, "\n");
-  text = text.replace(/<\/(?:td|th)\s*>/gi, " ");
-  text = extractTextByWhitelist(text, []);
-  text = decodeHtmlEntities(text);
-  return text.split("\n").map((line) => line.replace(/[ \t ]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
-}
-async function injectTheaterToChat(options = {}) {
-  const cfg = getChatInjectConfig();
-  const rawContent = String(options.content || "");
-  const displayHtml = normalizeTheaterHtmlForChat(rawContent);
-  const promptText = buildPromptTextFromTheater(rawContent);
-  if (!displayHtml && !promptText) {
-    if (window.toastr) toastr.warning("\u5C0F\u5267\u573A\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6CE8\u5165", "Titania Echo");
-    return null;
-  }
-  if (!Array.isArray(chat)) {
-    TitaniaLogger.error("\u6CE8\u5165\u5931\u8D25\uFF1AST \u804A\u5929\u6570\u7EC4\u4E0D\u53EF\u7528");
-    if (window.toastr) toastr.error("\u5F53\u524D\u6CA1\u6709\u6253\u5F00\u7684\u804A\u5929\uFF0C\u65E0\u6CD5\u6CE8\u5165", "Titania Echo");
-    return null;
-  }
-  const visibleToAI = options.visibleToAI === void 0 ? cfg.visibleToAI : options.visibleToAI === true;
-  const scriptName = String(options.scriptName || "").trim() || "\u573A\u666F";
-  const message = {
-    name: cfg.speakerName,
-    is_user: false,
-    // is_system 为 true 时不进提示词。ST 气泡上的眼睛图标（chats.js:2115）之后可随时翻转。
-    is_system: !visibleToAI,
-    send_date: getMessageTimeStamp(),
-    // mes 是发给模型的内容，display_text 才是界面显示的内容（script.js:2377）
-    mes: promptText,
-    force_avatar: system_avatar,
-    extra: {
-      // narrator 类型：对 Chat Completion 映射成 role:'system'（openai.js:528），
-      // 文本补全时不加名字前缀（script.js:5444）
-      type: system_message_types.NARRATOR,
-      display_text: displayHtml,
-      api: "manual",
-      model: "titania-theater",
-      [INJECT_MARKER_KEY]: {
-        generationId: String(options.generationId || ""),
-        scriptId: String(options.scriptId || ""),
-        scriptName,
-        injectedAt: Date.now()
-      }
-    }
-  };
-  const baseIndex = Number(options.insertAfterIndex);
-  const insertAt = Number.isFinite(baseIndex) ? baseIndex + 1 : chat.length;
-  const clamped = Math.max(0, Math.min(insertAt, chat.length));
-  const appended = clamped >= chat.length;
-  chat_metadata2["tainted"] = true;
-  try {
-    if (appended) {
-      chat.push(message);
-      const messageId = chat.length - 1;
-      await eventSource3.emit(event_types3.MESSAGE_SENT, messageId);
-      addOneMessage(message);
-      await eventSource3.emit(event_types3.USER_MESSAGE_RENDERED, messageId);
-      await saveChatConditional3();
-      TitaniaLogger.info("\u5C0F\u5267\u573A\u5DF2\u8FFD\u52A0\u5230\u804A\u5929\u672B\u5C3E", { messageId, scriptName, visibleToAI });
-      return { messageId, appended: true };
-    }
-    chat.splice(clamped, 0, message);
-    await saveChatConditional3();
-    await eventSource3.emit(event_types3.MESSAGE_SENT, clamped);
-    await reloadCurrentChat2();
-    await eventSource3.emit(event_types3.USER_MESSAGE_RENDERED, clamped);
-    scrollToMessage(clamped);
-    TitaniaLogger.info("\u5C0F\u5267\u573A\u5DF2\u63D2\u5165\u804A\u5929", { messageId: clamped, scriptName, visibleToAI });
-    return { messageId: clamped, appended: false };
-  } catch (e) {
-    TitaniaLogger.error("\u5C0F\u5267\u573A\u6CE8\u5165\u804A\u5929\u5931\u8D25", e, { insertAt: clamped, scriptName });
-    if (window.toastr) toastr.error("\u6CE8\u5165\u5931\u8D25\uFF1A" + (e?.message || String(e)), "Titania Echo");
-    return null;
-  }
-}
-function scrollToMessage(messageId) {
-  requestAnimationFrame(() => {
-    const el = document.querySelector(`#chat .mes[mesid="${messageId}"]`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  });
-}
-
-// src/ui/chatInjectButton.js
-init_logger();
 var BTN_CLASS2 = "titania-inject-btn";
 var OVERLAY_ID3 = "t-chat-inject-overlay";
 var listenersBound2 = false;
@@ -41432,6 +42544,10 @@ function initChatInjectButton() {
 
 // src/entry.js
 init_floorNav();
+init_chatInjector();
+init_illustrationPortability();
+init_illustrationData();
+init_illustrationStore();
 init_outlineEntryButton();
 async function onGenerationEnded() {
   const extData = getExtData();
@@ -41548,6 +42664,7 @@ function hideFloatingButton() {
   console.log("Titania: \u60AC\u6D6E\u7403\u5DF2\u9690\u85CF");
 }
 async function createFullBackupPayload(options = {}) {
+  await flushIllustrationWrites();
   if (isScriptsMigrated()) {
     const flushed = await flushScriptsNow();
     if (!flushed) throw new Error("\u5267\u672C\u5C1A\u672A\u6210\u529F\u843D\u76D8\uFF0C\u5DF2\u4E2D\u6B62\u5907\u4EFD\u5BFC\u51FA\u3002\u8BF7\u5148\u89E3\u51B3\u4FDD\u5B58\u5931\u8D25\u7684\u95EE\u9898\u3002");
@@ -41566,6 +42683,7 @@ async function createFullBackupPayload(options = {}) {
     version: "2.0",
     timestamp: (/* @__PURE__ */ new Date()).toISOString(),
     auto_backup: options.autoBackup === true,
+    illustrations: await exportIllustrationBackup(extDataSnapshot.favs || []),
     data: extDataSnapshot
   };
 }
@@ -41624,7 +42742,7 @@ function bindDrawerBackupControls() {
       const importData = JSON.parse(text);
       if (importData.type !== "titania_theater_backup") throw new Error("\u65E0\u6548\u7684\u5907\u4EFD\u6587\u4EF6\u683C\u5F0F");
       if (!importData.data || typeof importData.data !== "object") throw new Error("\u5907\u4EFD\u6570\u636E\u65E0\u6548");
-      const extDataPayload = importData.data;
+      let extDataPayload = importData.data;
       const confirmMsg = `\u786E\u5B9A\u8981\u5BFC\u5165\u6B64\u5907\u4EFD\u5417\uFF1F
 
 \u5907\u4EFD\u65F6\u95F4: ${importData.timestamp || "\u672A\u77E5"}
@@ -41647,8 +42765,10 @@ function bindDrawerBackupControls() {
           return;
         }
       }
+      extDataPayload = await restoreIllustrationBackup(importData.illustrations, extDataPayload);
       const currentData = getExtData();
       Object.assign(currentData, extDataPayload);
+      if (!Object.prototype.hasOwnProperty.call(extDataPayload, ILLUSTRATION_INDEX_KEY)) delete currentData[ILLUSTRATION_INDEX_KEY];
       if (!Object.prototype.hasOwnProperty.call(extDataPayload, FAVS_INDEX_KEY)) {
         delete currentData[FAVS_INDEX_KEY];
       }
