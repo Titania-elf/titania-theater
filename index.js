@@ -8307,8 +8307,8 @@ textarea.t-input {
 
 .t-stats-hud {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 0;
+    left: 0;
     z-index: 100;
 
     /* \u900F\u660E\u6BDB\u73BB\u7483\u6548\u679C */
@@ -8316,9 +8316,11 @@ textarea.t-input {
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
 
-    /* \u8FB9\u6846\u548C\u5706\u89D2 */
+    /* \u8D34\u5DE6\u4E0A\u89D2\uFF1A\u5916\u4FA7\u4E24\u8FB9\u4E0D\u63CF\u8FB9\uFF0C\u4EC5\u5185\u4FA7\u4E0B\u89D2\u7559\u5706\u89D2 */
     border: 1px solid var(--t-color-surface-hover-subtle);
-    border-radius: 4px;
+    border-top: none;
+    border-left: none;
+    border-radius: 0 0 4px 0;
 
     /* \u5185\u8FB9\u8DDD - \u66F4\u7D27\u51D1 */
     padding: 4px 8px;
@@ -8387,8 +8389,8 @@ textarea.t-input {
 
 @media screen and (max-width: 600px) {
     .t-stats-hud {
-        top: 8px;
-        left: 8px;
+        top: 0;
+        left: 0;
         padding: 3px 6px;
         font-size: 9px;
         gap: 4px;
@@ -8913,85 +8915,8 @@ textarea.t-input {
  * \u5171\u7528\u7684\u5B50\u7A97\u53E3\uFF0C\u4E0D\u968F\u4E3B\u754C\u9762\u5206\u53C9\uFF0C\u4E00\u5F8B\u6CBF\u7528 main-window.css \u7684\u65B0\u7248\u6837\u5F0F\u3002
  */
 
-#t-main-view.t-layout-legacy .t-tools-btn {
-    position: absolute;
-    top: 20px;
-    right: 25px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgb(var(--t-surface-rgb) / .6);
-    backdrop-filter: blur(4px);
-    color: var(--t-color-text-dim);
-    border: 1px solid var(--t-color-border-faint);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 100;
-    transition: all 0.2s;
-    opacity: 0.6;
-}
-
-#t-main-view.t-layout-legacy .t-tools-btn:hover {
-    opacity: 1;
-    background: var(--t-color-surface-high);
-    color: var(--t-color-text-strong);
-    transform: scale(1.05);
-}
-
-#t-main-view.t-layout-legacy .t-tools-btn.active {
-    opacity: 1;
-    background: var(--t-color-brand);
-    color: var(--t-color-text-on-accent);
-}
-
-#t-main-view.t-layout-legacy .t-tools-btn.zen-active {
-    opacity: 1;
-    background: transparent;
-    color: var(--t-color-brand);
-}
-
-#t-main-view.t-layout-legacy .t-tools-panel {
-    position: absolute;
-    top: 65px;
-    right: 25px;
-    background: var(--t-color-surface);
-    border: 1px solid var(--t-color-border-strong);
-    border-radius: 8px;
-    box-shadow: 0 5px 20px var(--t-shadow-ink-50);
-    z-index: 101;
-    min-width: 140px;
-    padding: 5px;
-    animation: t-fade-in 0.15s ease;
-}
-
-#t-main-view.t-layout-legacy .t-tools-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: var(--t-color-text-label);
-    font-size: 0.9em;
-    transition: all 0.2s;
-}
-
-#t-main-view.t-layout-legacy .t-tools-item:hover {
-    background: var(--t-color-surface-raised);
-    color: var(--t-color-text-strong);
-}
-
-#t-main-view.t-layout-legacy .t-tools-item i {
-    width: 18px;
-    text-align: center;
-    color: var(--t-color-text-muted);
-}
-
-#t-main-view.t-layout-legacy .t-tools-item:hover i {
-    color: var(--t-color-brand);
-}
+/* \u5185\u5BB9\u533A\u53F3\u4E0A\u89D2\u5DE5\u5177\u680F\uFF1A\u6CBF\u7528\u65B0\u7248\u7684 .t-tools-rail / .t-tools-icon\uFF08\u89C1 main-window.css\uFF09\uFF0C
+   \u7ECF\u5178\u7248\u4E0D\u518D\u81EA\u7ED8\u4E09\u70B9\u6309\u94AE + \u5F39\u51FA\u9762\u677F\u3002\u6B64\u5904\u65E0\u9700\u4EFB\u4F55\u5E03\u5C40\u4E13\u5C5E\u89C4\u5219\u3002 */
 
 #t-main-view.t-layout-legacy .t-bot-left {
     display: grid;
@@ -36120,25 +36045,20 @@ function renderHtml2(viewData) {
                     <span class="t-stats-sep">|</span>
                     <span class="t-stats-item"><span class="t-stats-label">\u8017\u65F6</span><span class="t-stats-value" id="t-stat-time">-</span></span>
                 </div>
-                <div class="t-tools-btn" id="t-btn-tools" title="\u5185\u5BB9\u5DE5\u5177"><i class="fa-solid fa-ellipsis-vertical"></i></div>
-                <div class="t-tools-panel" id="t-tools-panel" style="display:none;">
-                    <div class="t-tools-item" id="t-tool-zen">
+                <div class="t-tools-rail" id="t-tools-rail">
+                    <button class="t-tools-icon" id="t-tool-zen" type="button" title="\u6C89\u6D78\u9605\u8BFB" aria-label="\u6C89\u6D78\u9605\u8BFB">
                         <i class="fa-solid fa-expand"></i>
-                        <span>\u6C89\u6D78\u9605\u8BFB</span>
-                    </div>
-                    <div class="t-tools-item" id="t-tool-continue">
+                    </button>
+                    <button class="t-tools-icon" id="t-tool-continue" type="button" title="\u4E3B\u52A8\u7EED\u5199" aria-label="\u4E3B\u52A8\u7EED\u5199">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>\u4E3B\u52A8\u7EED\u5199</span>
-                    </div>
-                    <div class="t-tools-item" id="t-tool-edit-content">
+                    </button>
+                    <button class="t-tools-icon" id="t-tool-edit-content" type="button" title="\u7F16\u8F91\u5185\u5BB9" aria-label="\u7F16\u8F91\u5185\u5BB9">
                         <i class="fa-solid fa-pen-nib"></i>
-                        <span>\u7F16\u8F91\u5185\u5BB9</span>
-                    </div>
-                    <button class="t-tools-item" id="t-tool-illustrate" type="button" title="\u573A\u666F\u914D\u56FE"><i class="fa-solid fa-image"></i><span>\u573A\u666F\u914D\u56FE</span></button>
-                    <div class="t-tools-item" id="t-tool-workshop-feedback" style="display:none;">
+                    </button>
+                    <button class="t-tools-icon" id="t-tool-illustrate" type="button" title="\u573A\u666F\u914D\u56FE" aria-label="\u573A\u666F\u914D\u56FE"><i class="fa-solid fa-image"></i></button>
+                    <button class="t-tools-icon" id="t-tool-workshop-feedback" type="button" title="\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F" aria-label="\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F" style="display:none;">
                         <i class="fa-regular fa-comment-dots"></i>
-                        <span>\u8BC4\u8BBA\u5DE5\u574A\u6295\u7A3F</span>
-                    </div>
+                    </button>
                 </div>
                 <div class="t-content-area">
                     <!-- \u7FFB\u9875\u6309\u94AE\u79FB\u5230\u5185\u5BB9\u533A\u4E24\u4FA7 -->
@@ -36207,32 +36127,10 @@ function renderHtml2(viewData) {
 function bindEvents3(ctx) {
   const {
     closeWindow: closeWindow2,
-    registerTeardown: registerTeardown2,
     runContinuation,
     openContinuationHistory: openContinuationHistory2,
     openContinuationComposer: openContinuationComposer2
   } = ctx;
-  const $toolsPanel = $("#t-tools-panel");
-  const $toolsBtn = $("#t-btn-tools");
-  const hideToolsPanel = () => {
-    $toolsPanel.hide();
-    $toolsBtn.removeClass("active");
-  };
-  $toolsBtn.on("click", function(e) {
-    e.stopPropagation();
-    const isVisible = $toolsPanel.is(":visible");
-    $toolsPanel.toggle(!isVisible);
-    $(this).toggleClass("active", !isVisible);
-  });
-  $(document).on("click.toolspanel", function(e) {
-    if (!$(e.target).closest("#t-tools-panel, #t-btn-tools").length) {
-      hideToolsPanel();
-    }
-  });
-  $toolsPanel.on("click", ".t-tools-item", function() {
-    hideToolsPanel();
-    $toolsBtn.toggleClass("zen-active", $("#t-main-view").hasClass("t-zen-mode"));
-  });
   $("#t-tool-continue").on("click", async function() {
     const composeResult = await openContinuationComposer2("");
     await runContinuation(composeResult);
@@ -36247,9 +36145,6 @@ function bindEvents3(ctx) {
     }
     closeWindow2();
     handleGenerate(null, false);
-  });
-  registerTeardown2(() => {
-    $(document).off("click.toolspanel");
   });
 }
 function syncRunButtons2({ isGenerating, isQueueRunning }) {
