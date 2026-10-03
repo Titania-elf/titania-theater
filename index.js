@@ -66,6 +66,13 @@ var init_defaults = __esm({
       //   所有读取点都能处理 undefined（getScripts / describeCurrentScriptsFootprint /
       //   shouldDualWrite / migrateScriptsToFiles 等一律先 Array.isArray 判定）。
       favs: [],
+      // 人物外观档案（场景配图专用）。形状与迁移由 src/core/characterProfiles.js 负责，
+      // 这里只声明存在，免得全新安装少一个键。注意与下面的 appearance 区分：
+      // 那是悬浮球的 UI 皮肤，与角色外观无关。
+      character_profiles: {
+        version: 1,
+        entries: []
+      },
       history_extraction: {
         whitelist: "",
         blacklist: "",
@@ -967,11 +974,16 @@ function createIllustrationTarget(result, fallbackId = "") {
   const identity = String(result.generationId || fallbackId);
   if (!identity) throw illustrationError("\u8FD9\u6BB5\u5185\u5BB9\u7F3A\u5C11\u4FDD\u5B58\u6807\u8BC6\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u540E\u518D\u8BD5\u3002", "NO_CONTENT");
   return Object.freeze({
+    // ⚠ cardKey 只作为字段带上，**绝不能**进这个散列数组：
+    //   一改，illustration_index 里所有旧指针立刻变成孤儿，用户画廊全丢。
     sceneId: `scene-${illustrationHash(JSON.stringify([identity, result.scriptId || "", content]))}`,
     content,
     scriptId: String(result.scriptId || ""),
     scriptName: String(result.scriptName || "\u573A\u666F"),
-    generationId: String(result.generationId || "")
+    generationId: String(result.generationId || ""),
+    // 目标内容的角色卡身份，由调用方给：当前聊天里就取 getCharacterCardKey()，
+    // 收藏则取该收藏自己存下的。选景时**不要**现读，那会拿到当前聊天的角色。
+    cardKey: String(result.cardKey || "")
   });
 }
 function resolveDisplayedFavoriteBranch(result, active, archived = []) {
@@ -986,7 +998,8 @@ function requireText(value, label, allowEmpty = false) {
   return value.trim();
 }
 function normalizeIllustrationDraft(value) {
-  if (value?.version !== 1 || !SOURCES.has(value.imageSource)) throw illustrationError("\u914D\u56FE\u8349\u7A3F\u7248\u672C\u6216\u56FE\u50CF\u6765\u6E90\u4E0D\u53D7\u652F\u6301\u3002");
+  const version = Number(value?.version);
+  if (version !== 1 && version !== ILLUSTRATION_DRAFT_VERSION) throw illustrationError("\u914D\u56FE\u8349\u7A3F\u7248\u672C\u4E0D\u53D7\u652F\u6301\u3002");
   if (!Array.isArray(value.prompts?.characterPrompts)) throw illustrationError("\u4EBA\u7269\u63D0\u793A\u8BCD\u5E94\u4E3A\u6570\u7EC4\u3002");
   const characterPrompts = value.prompts.characterPrompts.map((character) => {
     const { x, y } = character?.position || {};
@@ -999,17 +1012,28 @@ function normalizeIllustrationDraft(value) {
       position: { x, y }
     };
   });
+  const backend = version === 1 ? "cosmos" : requireText(value.backend, "\u751F\u56FE\u540E\u7AEF");
+  if (!BACKENDS.has(backend)) throw illustrationError("\u914D\u56FE\u8349\u7A3F\u7684\u751F\u56FE\u540E\u7AEF\u4E0D\u53D7\u652F\u6301\u3002");
+  const summary = requireText(value.scene?.summary, "\u753B\u9762\u63CF\u8FF0");
+  const excerpt = typeof value.scene?.sourceExcerpt === "string" ? value.scene.sourceExcerpt.trim() : "";
   return {
-    version: 1,
-    imageSource: value.imageSource,
-    model: requireText(value.model, "\u6A21\u578B\u6807\u8BC6"),
-    scene: { summary: requireText(value.scene?.summary, "\u753B\u9762\u63CF\u8FF0") },
+    version: ILLUSTRATION_DRAFT_VERSION,
+    backend,
+    scene: { summary, ...excerpt ? { sourceExcerpt: excerpt } : {} },
     prompts: {
       positivePrompt: requireText(value.prompts.positivePrompt, "\u6B63\u5411\u63D0\u793A\u8BCD"),
       negativePrompt: requireText(value.prompts.negativePrompt, "\u8D1F\u5411\u63D0\u793A\u8BCD", true),
       characterPrompts
     }
   };
+}
+function assertIllustrationExcerpt(draft, theaterText) {
+  const excerpt = draft?.scene?.sourceExcerpt;
+  if (!excerpt) return draft;
+  if (!String(theaterText ?? "").includes(excerpt)) {
+    throw illustrationError("\u753B\u9762\u6458\u5F55\u4E0D\u662F\u6B63\u6587\u4E2D\u7684\u8FDE\u7EED\u539F\u6587\uFF0C\u8BF7\u91CD\u65B0\u9009\u666F\u3002", "EXCERPT_MISMATCH");
+  }
+  return draft;
 }
 function illustrationExtension(mime) {
   const extension = MIME_EXTENSIONS[mime];
@@ -1058,12 +1082,13 @@ function illustrationFigure(value) {
   const caption = escapeIllustrationHtml(image.draft.scene.summary);
   return `<figure data-titania-illustration="${escapeIllustrationHtml(image.id)}" style="margin:24px auto;text-align:center;max-width:100%"><a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" alt="${caption}" width="${image.width}" height="${image.height}" loading="lazy" style="display:block;max-width:100%;height:auto;max-height:80vh;object-fit:contain;margin:auto;border-radius:12px"></a><figcaption style="margin-top:10px;font-size:0.9em;line-height:1.6">${caption}</figcaption></figure>`;
 }
-var ILLUSTRATION_INDEX_KEY, MAX_IMAGE_BYTES, SOURCES, MIME_EXTENSIONS;
+var ILLUSTRATION_INDEX_KEY, MAX_IMAGE_BYTES, ILLUSTRATION_DRAFT_VERSION, BACKENDS, MIME_EXTENSIONS;
 var init_illustrationData = __esm({
   "src/core/illustrationData.js"() {
     ILLUSTRATION_INDEX_KEY = "illustration_index";
     MAX_IMAGE_BYTES = 32 * 1024 * 1024;
-    SOURCES = /* @__PURE__ */ new Set(["novelai", "comfyui"]);
+    ILLUSTRATION_DRAFT_VERSION = 2;
+    BACKENDS = /* @__PURE__ */ new Set(["cosmos"]);
     MIME_EXTENSIONS = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
   }
 });
@@ -1143,19 +1168,28 @@ async function uploadIllustrationBlob(blob, id3 = newIllustrationId()) {
   if (payload.path !== `/user/files/${name}`) throw illustrationError("\u56FE\u7247\u4FDD\u5B58\u540E\u8FD4\u56DE\u4E86\u610F\u5916\u7684\u6587\u4EF6\u8DEF\u5F84\u3002", "SAVE_FAILED");
   return payload.path;
 }
-async function saveGeneratedIllustration(sceneId, pending) {
-  pending.id || (pending.id = newIllustrationId());
-  pending.filePath || (pending.filePath = await uploadIllustrationBlob(pending.image.blob, pending.id));
-  const image = normalizeSavedIllustration({
-    ...pending.image,
-    id: pending.id,
-    filePath: pending.filePath,
-    draft: pending.draft,
-    createdAt: pending.createdAt || Date.now()
-  });
+async function saveGeneratedIllustrations(sceneId, pending) {
+  const items = Array.isArray(pending?.images) ? pending.images : [];
+  if (!items.length) throw illustrationError("\u6CA1\u6709\u53EF\u4FDD\u5B58\u7684\u56FE\u7247\u3002", "SAVE_FAILED");
+  const saved = [];
+  for (const item of items) {
+    item.id || (item.id = newIllustrationId());
+    item.filePath || (item.filePath = await uploadIllustrationBlob(item.blob, item.id));
+    saved.push(normalizeSavedIllustration({
+      id: item.id,
+      filePath: item.filePath,
+      width: item.width,
+      height: item.height,
+      draft: pending.draft,
+      createdAt: pending.createdAt || Date.now()
+    }));
+  }
+  const adoptedId = saved[0].id;
   return mutateScene(sceneId, (record) => {
-    if (!record.images.some((item) => item.id === image.id)) record.images.push(image);
-    record.selectedId = image.id;
+    for (const image of saved) {
+      if (!record.images.some((existing) => existing.id === image.id)) record.images.push(image);
+    }
+    record.selectedId = adoptedId;
   });
 }
 function selectSceneIllustration(sceneId, imageId, savedImage = null) {
@@ -2204,6 +2238,114 @@ var init_helpers = __esm({
   }
 });
 
+// src/core/promptOrder.js
+function getPromptOrder(preset) {
+  const groups = Array.isArray(preset?.prompt_order) ? preset.prompt_order.map((group) => Array.isArray(group?.order) ? group.order : []).filter((order) => order.length > 0) : [];
+  const getIdentifier = (item) => String(item?.identifier || "").trim();
+  const getUniqueCount = (order) => new Set(order.map(getIdentifier).filter(Boolean)).size;
+  const referenceCount = groups.reduce((total, order) => total + order.length, 0);
+  if (groups.length === 0) {
+    return {
+      order: [],
+      stats: { group_count: 0, reference_count: 0, unique_count: 0, duplicate_count: 0, conflict_count: 0 }
+    };
+  }
+  let primaryIndex = 0;
+  for (let index = 1; index < groups.length; index++) {
+    if (getUniqueCount(groups[index]) > getUniqueCount(groups[primaryIndex])) primaryIndex = index;
+  }
+  const merged = [];
+  const mergedIdentifiers = /* @__PURE__ */ new Set();
+  const enabledStates = /* @__PURE__ */ new Map();
+  for (const order of groups) {
+    for (const item of order) {
+      const identifier = getIdentifier(item);
+      if (!identifier) continue;
+      if (!enabledStates.has(identifier)) enabledStates.set(identifier, /* @__PURE__ */ new Set());
+      enabledStates.get(identifier).add(item?.enabled !== false);
+    }
+  }
+  const appendUnique = (item) => {
+    const identifier = getIdentifier(item);
+    if (!identifier || mergedIdentifiers.has(identifier)) return;
+    merged.push(item);
+    mergedIdentifiers.add(identifier);
+  };
+  groups[primaryIndex].forEach(appendUnique);
+  for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+    if (groupIndex === primaryIndex) continue;
+    const order = groups[groupIndex];
+    for (let itemIndex = 0; itemIndex < order.length; itemIndex++) {
+      const item = order[itemIndex];
+      const identifier = getIdentifier(item);
+      if (!identifier || mergedIdentifiers.has(identifier)) continue;
+      const nextKnownIdentifier = order.slice(itemIndex + 1).map(getIdentifier).find((candidate) => mergedIdentifiers.has(candidate));
+      const insertAt = nextKnownIdentifier ? merged.findIndex((candidate) => getIdentifier(candidate) === nextKnownIdentifier) : merged.length;
+      merged.splice(insertAt, 0, item);
+      mergedIdentifiers.add(identifier);
+    }
+  }
+  return {
+    order: merged,
+    stats: {
+      group_count: groups.length,
+      reference_count: referenceCount,
+      unique_count: merged.length,
+      duplicate_count: referenceCount - merged.length,
+      conflict_count: [...enabledStates.values()].filter((states) => states.size > 1).length
+    }
+  };
+}
+var init_promptOrder = __esm({
+  "src/core/promptOrder.js"() {
+  }
+});
+
+// src/core/stVariables.js
+import { getVariableMacros } from "../../../variables.js";
+function applyVariableMacros(text) {
+  const source = String(text ?? "");
+  if (!source.includes("{{")) return source;
+  try {
+    let out = source;
+    for (const macro of getVariableMacros()) out = out.replace(macro.regex, macro.replace);
+    return out;
+  } catch (e) {
+    console.warn("Titania: \u53D8\u91CF\u5B8F\u6C42\u503C\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u6587", e);
+    return source;
+  }
+}
+function beginVariableSandbox({ persist = false } = {}) {
+  if (persist) return () => {
+  };
+  let ctx = null;
+  try {
+    ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+  } catch {
+    return () => {
+    };
+  }
+  if (!ctx) return () => {
+  };
+  const chatMetadata = ctx.chatMetadata;
+  const extensionSettings = ctx.extensionSettings;
+  const localSnapshot = chatMetadata && typeof chatMetadata.variables === "object" && chatMetadata.variables ? { ...chatMetadata.variables } : null;
+  const globalStore = extensionSettings?.variables;
+  const globalSnapshot = globalStore && typeof globalStore.global === "object" && globalStore.global ? { ...globalStore.global } : null;
+  return () => {
+    try {
+      if (chatMetadata && localSnapshot) chatMetadata.variables = localSnapshot;
+      if (globalStore && globalSnapshot) globalStore.global = globalSnapshot;
+    } catch (e) {
+      console.warn("Titania: \u53D8\u91CF\u6C99\u7BB1\u8FD8\u539F\u5931\u8D25", e);
+    }
+  };
+}
+var init_stVariables = __esm({
+  "src/core/stVariables.js"() {
+  }
+});
+
 // src/core/promptManager.js
 function createEntryId(prefix = "entry") {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -2340,63 +2482,6 @@ function getPromptScheme(data, mode = "narrative") {
     systemEntry.content = defaultContent;
   }
   return scheme;
-}
-function getPromptOrder(preset) {
-  const groups = Array.isArray(preset?.prompt_order) ? preset.prompt_order.map((group) => Array.isArray(group?.order) ? group.order : []).filter((order) => order.length > 0) : [];
-  const getIdentifier = (item) => String(item?.identifier || "").trim();
-  const getUniqueCount = (order) => new Set(order.map(getIdentifier).filter(Boolean)).size;
-  const referenceCount = groups.reduce((total, order) => total + order.length, 0);
-  if (groups.length === 0) {
-    return {
-      order: [],
-      stats: { group_count: 0, reference_count: 0, unique_count: 0, duplicate_count: 0, conflict_count: 0 }
-    };
-  }
-  let primaryIndex = 0;
-  for (let index = 1; index < groups.length; index++) {
-    if (getUniqueCount(groups[index]) > getUniqueCount(groups[primaryIndex])) primaryIndex = index;
-  }
-  const merged = [];
-  const mergedIdentifiers = /* @__PURE__ */ new Set();
-  const enabledStates = /* @__PURE__ */ new Map();
-  for (const order of groups) {
-    for (const item of order) {
-      const identifier = getIdentifier(item);
-      if (!identifier) continue;
-      if (!enabledStates.has(identifier)) enabledStates.set(identifier, /* @__PURE__ */ new Set());
-      enabledStates.get(identifier).add(item?.enabled !== false);
-    }
-  }
-  const appendUnique = (item) => {
-    const identifier = getIdentifier(item);
-    if (!identifier || mergedIdentifiers.has(identifier)) return;
-    merged.push(item);
-    mergedIdentifiers.add(identifier);
-  };
-  groups[primaryIndex].forEach(appendUnique);
-  for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
-    if (groupIndex === primaryIndex) continue;
-    const order = groups[groupIndex];
-    for (let itemIndex = 0; itemIndex < order.length; itemIndex++) {
-      const item = order[itemIndex];
-      const identifier = getIdentifier(item);
-      if (!identifier || mergedIdentifiers.has(identifier)) continue;
-      const nextKnownIdentifier = order.slice(itemIndex + 1).map(getIdentifier).find((candidate) => mergedIdentifiers.has(candidate));
-      const insertAt = nextKnownIdentifier ? merged.findIndex((candidate) => getIdentifier(candidate) === nextKnownIdentifier) : merged.length;
-      merged.splice(insertAt, 0, item);
-      mergedIdentifiers.add(identifier);
-    }
-  }
-  return {
-    order: merged,
-    stats: {
-      group_count: groups.length,
-      reference_count: referenceCount,
-      unique_count: merged.length,
-      duplicate_count: referenceCount - merged.length,
-      conflict_count: [...enabledStates.values()].filter((states) => states.size > 1).length
-    }
-  };
 }
 function getMarkerNameFromContent(content) {
   const exact = String(content || "").trim().match(/^\{\{\s*([\w-]+)\s*\}\}$/);
@@ -2643,31 +2728,8 @@ function safeSubstituteParams(content) {
     return source;
   }
 }
-function beginVariableSandbox() {
-  if (getPresetMacroConfig().persistVariables) return () => {
-  };
-  let ctx = null;
-  try {
-    ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
-  } catch {
-    return () => {
-    };
-  }
-  if (!ctx) return () => {
-  };
-  const chatMetadata = ctx.chatMetadata;
-  const extensionSettings = ctx.extensionSettings;
-  const localSnapshot = chatMetadata && typeof chatMetadata.variables === "object" && chatMetadata.variables ? { ...chatMetadata.variables } : null;
-  const globalStore = extensionSettings?.variables;
-  const globalSnapshot = globalStore && typeof globalStore.global === "object" && globalStore.global ? { ...globalStore.global } : null;
-  return () => {
-    try {
-      if (chatMetadata && localSnapshot) chatMetadata.variables = localSnapshot;
-      if (globalStore && globalSnapshot) globalStore.global = globalSnapshot;
-    } catch (e) {
-      console.warn("Titania: \u53D8\u91CF\u6C99\u7BB1\u8FD8\u539F\u5931\u8D25", e);
-    }
-  };
+function beginVariableSandbox2() {
+  return beginVariableSandbox({ persist: getPresetMacroConfig().persistVariables });
 }
 function resolveEntryContent(entry, contentByEntry, runtimeContext) {
   let content = Object.prototype.hasOwnProperty.call(contentByEntry, entry.id) ? String(contentByEntry[entry.id] || "") : String(entry.content || "");
@@ -2678,7 +2740,7 @@ function resolveEntryContent(entry, contentByEntry, runtimeContext) {
 }
 function buildPromptMessageDetails(scheme, contentByEntry = {}, runtimeContext = {}) {
   if (!scheme || !Array.isArray(scheme.entries)) return [];
-  const restoreVariables = beginVariableSandbox();
+  const restoreVariables = beginVariableSandbox2();
   try {
     return scheme.entries.filter((entry) => entry?.enabled !== false).map((entry) => {
       const content = resolveEntryContent(entry, contentByEntry, runtimeContext);
@@ -2704,6 +2766,8 @@ var init_promptManager = __esm({
   "src/core/promptManager.js"() {
     init_helpers();
     init_defaults();
+    init_promptOrder();
+    init_stVariables();
     DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
     DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
 
@@ -2766,6 +2830,520 @@ var init_promptManager = __esm({
   }
 });
 
+// src/core/characterProfiles.js
+function createCharacterProfile(name = "\u65B0\u6863\u6848") {
+  return {
+    id: newIllustrationId(),
+    name: String(name).trim(),
+    keywords: [],
+    content: "",
+    cardKey: "",
+    enabled: true
+  };
+}
+function normalizeCardKey(value) {
+  const key = String(value ?? "").trim();
+  return key.startsWith(CARD_KEY_PREFIX) ? key : "";
+}
+function normalizeKeyword(value) {
+  const text = String(value ?? "").trim();
+  return text.length >= MIN_KEYWORD_LENGTH ? text : "";
+}
+function normalizeEntries(value) {
+  const list = Array.isArray(value) ? value : [];
+  const seen = /* @__PURE__ */ new Set();
+  const entries = [];
+  for (const raw of list) {
+    if (!raw || typeof raw !== "object") continue;
+    const id3 = String(raw.id ?? "").trim() || newIllustrationId();
+    if (seen.has(id3)) continue;
+    seen.add(id3);
+    const keywords = (Array.isArray(raw.keywords) ? raw.keywords : []).map(normalizeKeyword).filter(Boolean);
+    entries.push({
+      id: id3,
+      name: String(raw.name ?? "").trim(),
+      keywords: [...new Set(keywords)],
+      content: typeof raw.content === "string" ? raw.content : "",
+      cardKey: normalizeCardKey(raw.cardKey),
+      enabled: raw.enabled !== false
+    });
+  }
+  return entries;
+}
+function ensureCharacterProfiles(data) {
+  if (!data || typeof data !== "object") return false;
+  const current = data[CHARACTER_PROFILES_KEY];
+  const entries = normalizeEntries(current?.entries);
+  if (current && current.version === CHARACTER_PROFILES_VERSION && JSON.stringify(current.entries) === JSON.stringify(entries)) return false;
+  data[CHARACTER_PROFILES_KEY] = { version: CHARACTER_PROFILES_VERSION, entries };
+  return true;
+}
+function readCharacterProfiles(data) {
+  const list = data?.[CHARACTER_PROFILES_KEY]?.entries;
+  return Array.isArray(list) ? list : [];
+}
+function profileMatches(entry, { cardKey = "", text = "" } = {}) {
+  if (!entry || entry.enabled === false) return false;
+  const bound = normalizeCardKey(entry.cardKey);
+  if (bound && bound === String(cardKey ?? "")) return true;
+  const haystack = String(text ?? "").toLowerCase();
+  if (!haystack) return false;
+  return (entry.keywords || []).some((keyword) => {
+    const needle = String(keyword ?? "").trim().toLowerCase();
+    return needle.length >= MIN_KEYWORD_LENGTH && haystack.includes(needle);
+  });
+}
+function matchCharacterProfiles(entries, options = {}) {
+  const list = Array.isArray(entries) ? entries : [];
+  return list.filter((entry) => profileMatches(entry, options)).slice(0, MAX_MATCHED_PROFILES);
+}
+function composeProfileBlock(entry) {
+  const content = String(entry?.content ?? "").trim();
+  if (!content) return "";
+  const name = String(entry?.name ?? "").trim() || "\u672A\u547D\u540D\u89D2\u8272";
+  const block = `\u3010${name}\u3011
+${content}`;
+  return block.length > MAX_PROFILE_BLOCK_CHARS ? block.slice(0, MAX_PROFILE_BLOCK_CHARS) + TRUNCATED_SUFFIX : block;
+}
+var CHARACTER_PROFILES_KEY, CHARACTER_PROFILES_VERSION, CARD_KEY_PREFIX, MIN_KEYWORD_LENGTH, MAX_MATCHED_PROFILES, MAX_PROFILE_BLOCK_CHARS, TRUNCATED_SUFFIX;
+var init_characterProfiles = __esm({
+  "src/core/characterProfiles.js"() {
+    init_illustrationData();
+    CHARACTER_PROFILES_KEY = "character_profiles";
+    CHARACTER_PROFILES_VERSION = 1;
+    CARD_KEY_PREFIX = "card:";
+    MIN_KEYWORD_LENGTH = 2;
+    MAX_MATCHED_PROFILES = 4;
+    MAX_PROFILE_BLOCK_CHARS = 2e3;
+    TRUNCATED_SUFFIX = "\n\u2026\uFF08\u6863\u6848\u5185\u5BB9\u8FC7\u957F\u5DF2\u622A\u65AD\uFF09";
+  }
+});
+
+// src/core/illustrationPresets.js
+function isManagedEntry(id3) {
+  return MANAGED_BY_ID.has(String(id3));
+}
+function managedEntryDefault(id3) {
+  const factory = MANAGED_BY_ID.get(String(id3));
+  return factory ? { ...factory } : null;
+}
+function materializeManagedEntries() {
+  return MANAGED_ENTRIES.map((entry) => ({
+    id: entry.id,
+    name: entry.name,
+    role: entry.role,
+    enabled: entry.enabled,
+    content: entry.content,
+    managed: true
+  }));
+}
+function createEntryId2(prefix = "entry") {
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+function normalizeRole(value) {
+  const role = String(value ?? "").trim();
+  return role === "system" || role === "assistant" ? role : "user";
+}
+function createPresetEntry(overrides = {}) {
+  return {
+    id: createEntryId2("entry"),
+    name: "\u65B0\u6761\u76EE",
+    role: "system",
+    enabled: true,
+    content: "",
+    ...overrides
+  };
+}
+function createUserPreset(name = "\u65B0\u9884\u8BBE") {
+  return {
+    id: createEntryId2("preset"),
+    name: String(name).trim() || "\u65B0\u9884\u8BBE",
+    entries: materializeManagedEntries()
+  };
+}
+function normalizeEntry(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const entry = {
+    id: String(raw.id ?? "").trim() || createEntryId2("entry"),
+    name: String(raw.name ?? "").trim() || "\u672A\u547D\u540D\u6761\u76EE",
+    role: normalizeRole(raw.role),
+    enabled: raw.enabled !== false,
+    content: typeof raw.content === "string" ? raw.content : ""
+  };
+  if (raw.managed === true && isManagedEntry(entry.id)) entry.managed = true;
+  return entry;
+}
+function normalizeUserPreset(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const entries = (Array.isArray(raw.entries) ? raw.entries : []).map(normalizeEntry).filter(Boolean);
+  return {
+    id: String(raw.id ?? "").trim() || createEntryId2("preset"),
+    name: String(raw.name ?? "").trim() || "\u672A\u547D\u540D\u9884\u8BBE",
+    entries
+  };
+}
+function normalizeState(current) {
+  const presets = (Array.isArray(current?.presets) ? current.presets : []).map(normalizeUserPreset).filter(Boolean);
+  const requested = String(current?.active_preset_id ?? "").trim();
+  const active = presets.some((preset) => preset.id === requested) ? requested : presets[0]?.id || "";
+  return { version: ILLUSTRATION_PRESETS_VERSION, active_preset_id: active, presets };
+}
+function migrateLegacySpec(data) {
+  const legacy = data?.[LEGACY_SPEC_KEY];
+  if (!legacy || typeof legacy !== "object" || legacy.v !== LEGACY_SPEC_VERSION) return null;
+  const text = typeof legacy.text === "string" ? legacy.text.trim() : "";
+  if (!text) return null;
+  return {
+    id: createEntryId2("preset"),
+    name: "\u6211\u7684\u9009\u666F\u89C4\u8303",
+    entries: [
+      { id: createEntryId2("entry"), name: "\u539F\u9009\u666F\u89C4\u8303", role: "system", enabled: true, content: text },
+      ...materializeManagedEntries()
+    ]
+  };
+}
+function isCanonicalEntry2(entry) {
+  return Boolean(entry) && typeof entry === "object" && typeof entry.id === "string" && entry.id.length > 0 && typeof entry.name === "string" && entry.name.length > 0 && typeof entry.content === "string" && typeof entry.enabled === "boolean" && ROLES.has(entry.role) && (entry.managed === void 0 || entry.managed === true && isManagedEntry(entry.id));
+}
+function isCanonicalPreset(preset) {
+  return Boolean(preset) && typeof preset === "object" && typeof preset.id === "string" && preset.id.length > 0 && typeof preset.name === "string" && preset.name.length > 0 && Array.isArray(preset.entries) && preset.entries.every(isCanonicalEntry2);
+}
+function ensureIllustrationPresets(data) {
+  if (!data || typeof data !== "object") return false;
+  const current = data[ILLUSTRATION_PRESETS_KEY];
+  const activeOk = current && typeof current.active_preset_id === "string" && (current.active_preset_id === "" ? current.presets?.length === 0 : current.presets?.some((preset) => preset?.id === current.active_preset_id));
+  if (current && current.version === ILLUSTRATION_PRESETS_VERSION && Array.isArray(current.presets) && current.presets.every(isCanonicalPreset) && activeOk) return false;
+  const next = normalizeState(current);
+  if (!current) {
+    const migrated = migrateLegacySpec(data);
+    if (migrated) {
+      next.presets.push(migrated);
+      next.active_preset_id = migrated.id;
+      data[ILLUSTRATION_PRESETS_KEY] = next;
+      delete data[LEGACY_SPEC_KEY];
+      return true;
+    }
+  }
+  data[ILLUSTRATION_PRESETS_KEY] = next;
+  return true;
+}
+function listPresets(data) {
+  const presets = data?.[ILLUSTRATION_PRESETS_KEY]?.presets;
+  return (Array.isArray(presets) ? presets : []).map((preset) => ({ id: preset.id, name: preset.name }));
+}
+function resolveActivePreset(data) {
+  const state = data?.[ILLUSTRATION_PRESETS_KEY];
+  const activeId = String(state?.active_preset_id ?? "");
+  if (!activeId) return null;
+  const found = (Array.isArray(state?.presets) ? state.presets : []).find((preset) => preset.id === activeId);
+  return found ? normalizeUserPreset(found) : null;
+}
+function formatPreviousScenes(previousScenes) {
+  const list = Array.isArray(previousScenes) ? previousScenes : [];
+  const lines = list.map((item) => String(typeof item === "string" ? item : item?.summary || "").trim()).filter(Boolean);
+  return lines.map((line, index) => `${index + 1}. ${line}`).join("\n");
+}
+function blockValue(heading, value) {
+  const text = String(value ?? "").trim();
+  return text ? `\u3010${heading}\u3011
+${text}` : "";
+}
+function placeholderValues(request) {
+  return {
+    theater_text: String(request?.theaterText ?? "").trim(),
+    participants: blockValue("\u4EBA\u7269\u8D44\u6599", request?.participants),
+    special_request: blockValue("\u672C\u6B21\u989D\u5916\u8981\u6C42", request?.specialRequest),
+    previous_scenes: blockValue("\u5DF2\u7ECF\u9009\u8FC7\u7684\u753B\u9762\uFF0C\u8BF7\u6362\u4E00\u4E2A\u4E0D\u540C\u7684\u77AC\u95F4", formatPreviousScenes(request?.previousScenes))
+  };
+}
+function renderEntryContent(template, values, runMacros) {
+  const authored = String(template ?? "");
+  const source = typeof runMacros === "function" ? String(runMacros(authored) ?? "") : authored;
+  const lines = source.split("\n").map((line) => {
+    const trimmed = line.trim();
+    const onlyPlaceholders = trimmed.length > 0 && PLACEHOLDER_ONLY_LINE.test(trimmed);
+    const rendered = (onlyPlaceholders ? trimmed : line).replace(PLACEHOLDER_PATTERN, (match, rawName) => {
+      const name = String(rawName).toLowerCase();
+      return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
+    });
+    return onlyPlaceholders && rendered.trim() === "" ? null : rendered;
+  }).filter((line) => line !== null);
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function validatePresetForSelection(preset) {
+  const enabled = (preset?.entries || []).filter((entry) => entry.enabled !== false);
+  const carriers = enabled.filter((entry) => new RegExp(`\\{\\{\\s*${THEATER_TEXT_PLACEHOLDER}\\s*\\}\\}`, "i").test(String(entry.content ?? "")));
+  if (!carriers.length) {
+    return {
+      ok: false,
+      code: "MISSING_THEATER_TEXT",
+      reason: `\u5F53\u524D\u9009\u666F\u9884\u8BBE\u91CC\u6CA1\u6709 {{${THEATER_TEXT_PLACEHOLDER}}} \u5360\u4F4D\u7B26\uFF0C\u6B63\u6587\u4E0D\u4F1A\u88AB\u9001\u8FDB\u6A21\u578B\u3002\u8BF7\u5728\u300C${preset?.name || "\u5F53\u524D\u9884\u8BBE"}\u300D\u7684\u7D20\u6750\u6761\u76EE\u91CC\u8865\u4E0A\u3002`
+    };
+  }
+  if (carriers.length > 1) {
+    return {
+      ok: false,
+      code: "DUPLICATE_THEATER_TEXT",
+      reason: `\u5F53\u524D\u9009\u666F\u9884\u8BBE\u91CC\u6709 ${carriers.length} \u6761\u542F\u7528\u6761\u76EE\u90FD\u5E26 {{${THEATER_TEXT_PLACEHOLDER}}}\uFF0C\u6B63\u6587\u4F1A\u88AB\u91CD\u590D\u53D1\u9001\u591A\u904D\u3002\u8BF7\u53EA\u4FDD\u7559\u4E00\u5904\u3002`
+    };
+  }
+  return { ok: true };
+}
+function buildIllustrationMessages(request, data, runMacros) {
+  const preset = resolveActivePreset(data);
+  if (!preset) {
+    throw Object.assign(
+      new Error("\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE\u3002\u6253\u5F00\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF0C\u5BFC\u5165\u4E00\u4EFD\u9884\u8BBE\u6216\u65B0\u5EFA\u4E00\u4EFD\u3002"),
+      { code: "NO_PRESET" }
+    );
+  }
+  const check = validatePresetForSelection(preset);
+  if (!check.ok) {
+    throw Object.assign(new Error(check.reason), { code: check.code });
+  }
+  const values = placeholderValues(request);
+  const messages = [];
+  for (const entry of preset.entries) {
+    if (entry.enabled === false) continue;
+    const content = renderEntryContent(entry.content, values, runMacros);
+    if (!content) continue;
+    messages.push({ role: normalizeRole(entry.role), content });
+  }
+  return messages;
+}
+function isContextEntry(identifier, definition) {
+  if (definition?.marker === true) return true;
+  return ST_CONTEXT_IDENTIFIERS.has(identifier);
+}
+function readChatCompletionPreset(raw, options = {}) {
+  if (!raw || typeof raw !== "object") throw new Error("\u9884\u8BBE\u6570\u636E\u65E0\u6548");
+  const definitions = /* @__PURE__ */ new Map();
+  for (const prompt2 of Array.isArray(raw.prompts) ? raw.prompts : []) {
+    const identifier = String(prompt2?.identifier ?? "").trim();
+    if (!identifier || definitions.has(identifier)) continue;
+    definitions.set(identifier, prompt2);
+  }
+  if (!definitions.size) throw new Error("\u8FD9\u4E2A\u6587\u4EF6\u91CC\u6CA1\u6709\u53EF\u7528\u7684\u63D0\u793A\u8BCD\u6761\u76EE");
+  const { order } = getPromptOrder(raw);
+  const sequence = order.length ? order.map((item) => ({ identifier: String(item?.identifier ?? "").trim(), enabled: item?.enabled !== false })) : [...definitions.keys()].map((identifier) => ({ identifier, enabled: true }));
+  const entries = [];
+  let droppedContextEntries = 0;
+  for (const item of sequence) {
+    const definition = definitions.get(item.identifier);
+    if (!definition) continue;
+    if (isContextEntry(item.identifier, definition)) {
+      droppedContextEntries += 1;
+      continue;
+    }
+    entries.push({
+      id: createEntryId2("st"),
+      name: String(definition.name ?? "").trim() || item.identifier,
+      role: normalizeRole(definition.role),
+      enabled: item.enabled,
+      content: typeof definition.content === "string" ? definition.content : ""
+    });
+  }
+  const name = String(options.name ?? raw.name ?? "").trim() || "\u5BFC\u5165\u7684\u9884\u8BBE";
+  return {
+    id: createEntryId2("preset"),
+    name,
+    // 导入的是别人写的预设，末尾补上小剧场自己的那一套，否则它压根没法用来选景。
+    entries: [...entries, ...materializeManagedEntries()],
+    droppedContextEntries,
+    importedEntries: entries.length
+  };
+}
+function serializeIllustrationPreset(preset) {
+  const prompts = [];
+  const order = [];
+  const used = /* @__PURE__ */ new Set();
+  (Array.isArray(preset?.entries) ? preset.entries : []).forEach((entry, index) => {
+    let identifier = String(entry?.id ?? "").trim() || `illustration_entry_${index}`;
+    while (used.has(identifier)) identifier = `${identifier}_${index}`;
+    used.add(identifier);
+    prompts.push({
+      identifier,
+      name: String(entry?.name ?? "").trim() || identifier,
+      role: normalizeRole(entry?.role),
+      content: typeof entry?.content === "string" ? entry.content : ""
+    });
+    order.push({ identifier, enabled: entry?.enabled !== false });
+  });
+  return {
+    name: String(preset?.name ?? "").trim() || "\u9009\u666F\u9884\u8BBE",
+    prompts,
+    prompt_order: [{ character_id: 100001, order }]
+  };
+}
+function isChatCompletionPreset(raw) {
+  return Boolean(raw && typeof raw === "object" && (Array.isArray(raw.prompts) || Array.isArray(raw.prompt_order)));
+}
+var ILLUSTRATION_PRESETS_KEY, ILLUSTRATION_PRESETS_VERSION, LEGACY_SPEC_KEY, LEGACY_SPEC_VERSION, PLACEHOLDER_NAMES, THEATER_TEXT_PLACEHOLDER, PLACEHOLDER_PATTERN, PLACEHOLDER_ONLY_LINE, ST_CONTEXT_IDENTIFIERS, MANAGED_ENTRIES, MANAGED_BY_ID, ROLES;
+var init_illustrationPresets = __esm({
+  "src/core/illustrationPresets.js"() {
+    init_promptOrder();
+    ILLUSTRATION_PRESETS_KEY = "illustration_presets";
+    ILLUSTRATION_PRESETS_VERSION = 2;
+    LEGACY_SPEC_KEY = "illustration_prompt_spec";
+    LEGACY_SPEC_VERSION = 1;
+    PLACEHOLDER_NAMES = ["theater_text", "participants", "special_request", "previous_scenes"];
+    THEATER_TEXT_PLACEHOLDER = "theater_text";
+    PLACEHOLDER_PATTERN = /\{\{\s*([\w-]+)\s*\}\}/g;
+    PLACEHOLDER_ONLY_LINE = /^(?:\{\{\s*[\w-]+\s*\}\}\s*)+$/;
+    ST_CONTEXT_IDENTIFIERS = /* @__PURE__ */ new Set([
+      "main",
+      "worldInfoBefore",
+      "worldInfoAfter",
+      "charDescription",
+      "charPersonality",
+      "personaDescription",
+      "scenario",
+      "dialogueExamples",
+      "chatHistory",
+      "enhanceDefinitions"
+    ]);
+    MANAGED_ENTRIES = [
+      {
+        id: "select",
+        name: "\u9009\u666F\u8981\u6C42",
+        role: "system",
+        enabled: true,
+        content: `\u4F60\u662F\u63D2\u56FE\u9009\u666F\u52A9\u624B\u3002\u901A\u8BFB\u7528\u6237\u7ED9\u51FA\u7684\u5C0F\u5267\u573A\u6B63\u6587\uFF0C\u4E3A\u5B83\u9009\u62E9\u552F\u4E00\u4E00\u4E2A\u6700\u9002\u5408\u753B\u6210\u5355\u5E45\u63D2\u56FE\u7684\u77AC\u95F4\uFF0C\u5E76\u5199\u51FA\u8BE5\u753B\u9762\u7684\u63D0\u793A\u8BCD\u3002
+
+## \u9009\u666F\u8981\u6C42
+- \u9009\u4EBA\u7269\u5173\u7CFB\u9C9C\u660E\u3001\u52A8\u4F5C\u6216\u8868\u60C5\u660E\u786E\u3001\u73AF\u5883\u53EF\u4EE5\u753B\u51FA\u6765\u3001\u80FD\u4F53\u73B0\u6545\u4E8B\u6838\u5FC3\u60C5\u7EEA\u7684\u90A3\u4E2A\u77AC\u95F4\u3002
+- \u753B\u9762\u5FC5\u987B\u5C5E\u4E8E\u540C\u4E00\u65F6\u95F4\u3001\u540C\u4E00\u5730\u70B9\u3002\u4E0D\u8981\u62FC\u63A5\u4E0D\u540C\u4E8B\u4EF6\uFF0C\u4E0D\u8981\u6DF7\u5408\u4E0D\u540C\u65F6\u95F4\u7684\u670D\u88C5\u72B6\u6001\uFF0C\u4E0D\u8981\u8BA9\u5168\u6587\u6240\u6709\u4EBA\u7269\u4E00\u8D77\u51FA\u573A\u3002
+- \u89D2\u8272\u5916\u89C2\u4EE5\u300C\u4EBA\u7269\u8D44\u6599\u300D\u4E3A\u4F9D\u636E\uFF0C\u52A8\u6001\u72B6\u6001\u4EE5\u9009\u5B9A\u7684\u539F\u6587\u4E3A\u4F9D\u636E\u3002
+- \u4EE5\u5185\u5FC3\u72EC\u767D\u6216\u5BF9\u8BDD\u4E3A\u4E3B\u7684\u4F5C\u54C1\uFF0C\u4F18\u5148\u5BFB\u627E\u627F\u8F7D\u60C5\u7EEA\u7684\u795E\u6001\u3001\u52A8\u4F5C\u6216\u73AF\u5883\u7EC6\u8282\uFF0C\u4E0D\u8981\u865A\u6784\u91CD\u5927\u60C5\u8282\u3002
+- \u7528\u6237\u63D0\u51FA\u4E86\u989D\u5916\u8981\u6C42\u65F6\uFF0C\u4F18\u5148\u6EE1\u8DB3\u5B83\u3002
+- \u5982\u679C\u786E\u5B9E\u6CA1\u6709\u53EF\u4EE5\u843D\u7B14\u7684\u753B\u9762\uFF0C\u53EA\u8F93\u51FA {"error":"NO_SCENE"}\uFF0C\u4E0D\u8981\u786C\u51D1\u3002`
+      },
+      {
+        id: "comfyui",
+        name: "ComfyUI \u63D0\u793A\u8BCD\u89C4\u8303",
+        role: "system",
+        enabled: false,
+        content: `## ComfyUI \u63D0\u793A\u8BCD\u89C4\u8303
+
+### \u8BED\u6CD5
+- \u63D0\u793A\u8BCD\u7528\u82F1\u6587\uFF0C\u5168\u90E8\u5C0F\u5199\uFF1B\u77ED\u8BED\u4E4B\u95F4\u7528\u300C\u82F1\u6587\u9017\u53F7 + \u7A7A\u683C\u300D\u5206\u9694\u3002
+- \u5355\u8BCD\u4E4B\u95F4\u53EA\u80FD\u7528\u666E\u901A\u7A7A\u683C\uFF08\u5982 long blonde hair\u3001sheer curtains\uFF09\u3002\u7981\u7528\u8FDE\u5B57\u7B26\u5199\u6CD5\uFF08long-blonde-hair\uFF09\u4E0E\u4E0B\u5212\u7EBF\u5199\u6CD5\uFF08long_blonde_hair\uFF09\uFF0C\u5B83\u4EEC\u4F1A\u88AB\u5207\u6210\u8BCD\u8868\u5916\u7684\u788E\u7247 token\u3002
+- \u5C5E\u6027\u8F74\u72EC\u7ACB\uFF0C\u4E0D\u8981\u5408\u5E76\uFF1A\u989C\u8272 / \u957F\u77ED / \u82B1\u7EB9 / \u6750\u8D28 / \u7ED3\u6784\u662F\u4E92\u76F8\u72EC\u7ACB\u7684\u8F74\uFF0C\u540C\u4E00\u4EF6\u8863\u7269\u8981\u5168\u90E8\u4FDD\u7559\u3002\u4F8B\u5982\u4E00\u6761\u84DD\u8272\u767E\u8936\u683C\u7EB9\u77ED\u88D9\u5E94\u5199\u5168 blue skirt, plaid skirt, pleated skirt, miniskirt\uFF0C\u4E0D\u8981\u56E0\u4E3A\u90FD\u5E26 skirt \u5C31\u5408\u5E76\u6210\u4E00\u4E2A\u3002
+- \u4EBA\u6570\u524D\u7F6E\uFF1A\u5355\u4EBA\u5199 1girl, solo\uFF1B\u591A\u89D2\u8272\u5148\u5199\u603B\u4EBA\u6570\uFF0C\u5982 2girls\u3002
+- \u7981\u6B62\u81EA\u76F8\u77DB\u76FE\uFF1Ashort hair \u4E0E very long hair\u3001front view \u4E0E from behind\u3001solo \u4E0E 2girls \u540C\u5199\u4F1A\u8BA9\u7ED3\u6784\u5D29\u574F\uFF0C\u800C\u4E0D\u662F\u88AB\u5FFD\u7565\u3002
+
+### \u53CC\u8F68\u5199\u6CD5\uFF08\u6807\u7B7E + \u672B\u5C3E\u81EA\u7136\u8BED\u8A00\uFF09
+\u6807\u7B7E\u8D1F\u8D23\u300C\u753B\u9762\u4E0A\u6709\u4EC0\u4E48\u300D\uFF08\u5916\u89C2\u3001\u670D\u88C5\u3001\u8868\u60C5\u3001\u955C\u5934\u3001\u73AF\u5883\uFF09\uFF0C\u672B\u5C3E 2\u20134 \u53E5\u82F1\u6587\u81EA\u7136\u8BED\u8A00\uFF08NL\uFF09\u8D1F\u8D23\u6807\u7B7E\u8868\u8FBE\u4E0D\u4E86\u7684\u6D3B\u5173\u7CFB\uFF08\u7A7A\u95F4\u5C42\u6B21\u3001\u52A8\u4F5C\u56E0\u679C\u3001\u5149\u5F71\u53CD\u5C04\u3001\u80A2\u4F53\u63A5\u89E6\u70B9\uFF09\u3002**\u4E24\u8005\u6DF7\u6392\u662F\u63A8\u8350\u5199\u6CD5**\uFF0C\u5168\u90E8\u5C0F\u5199\u3002
+- \u6807\u7B7E\u4E4B\u95F4\u4E00\u5F8B\u7528\u9017\u53F7\u52A0\u7A7A\u683C\uFF1B\u8FDB\u5165 NL \u540E\u6BCF\u53E5\u90FD\u662F\u5B8C\u6574\u82F1\u6587\u9648\u8FF0\u53E5\uFF0C\u53E5\u95F4\u4E0E\u53E5\u5C3E\u7528\u82F1\u6587\u53E5\u53F7\u52A0\u7A7A\u683C\u6536\u5C3E\uFF0C**NL \u53E5\u672B\u4E0D\u8981\u7528\u9017\u53F7**\uFF0C\u514D\u5F97\u548C\u6807\u7B7E\u6DF7\u6DC6\u3002
+- \u52A8\u4F5C\u4E0E\u59FF\u52BF\u4E00\u5F8B\u7528\u6807\u7B7E\u9489\u4F4F\uFF08\u5982 standing on one leg, outstretched arm, holding umbrella\uFF09\uFF0C\u4E0D\u8981\u5728 NL \u91CC\u957F\u7BC7\u590D\u8FF0\u52A8\u4F5C\uFF1BNL \u53EA\u8865\u7A7A\u95F4\u3001\u4E92\u52A8\u4E0E\u5149\u5F71\u3002
+
+### \u7EC4\u7EC7\u987A\u5E8F
+1. \u4E3B\u4F53\u4EBA\u6570\uFF1A1girl, solo \u6216 2girls
+2. \u89D2\u8272\u5916\u89C2\u951A\u70B9\uFF1A\u53D1\u8272\u53D1\u578B \u2192 \u77B3\u8272 \u2192 \u8868\u60C5 \u2192 \u670D\u88C5\u4E0E\u6750\u8D28
+3. \u955C\u5934 / \u6784\u56FE\uFF1A\u5982 upper body, cowboy shot, from above, looking at viewer
+4. \u573A\u666F / \u73AF\u5883 / \u65F6\u95F4\uFF1A\u5982 classroom, night, rain
+5. \u5149\u5F71 / \u6C1B\u56F4
+6. \u672B\u5C3E 2\u20134 \u53E5\u81EA\u7136\u8BED\u8A00\uFF08\u89C1\u4E0B\uFF09
+
+### \u672B\u5C3E\u81EA\u7136\u8BED\u8A00\uFF1A\u56DB\u5C97\u4F4D\uFF0C\u4E00\u53E5\u7BA1\u4E00\u4EF6\u4E8B
+\u6807\u7B7E\u9489\u300C\u6B7B\u7269\u300D\uFF0CNL \u8BB2\u300C\u6D3B\u7684\u52A8\u6001\u300D\u3002\u6309\u5206\u955C\u987A\u5E8F\u5199\uFF0C\u6BCF\u53E5\u53EA\u7BA1\u4E00\u4EF6\u4E8B\uFF0C\u4EE5\u82F1\u6587\u53E5\u53F7\u6536\u5C3E\uFF1A
+1. **\u7F16\u5267**\u2014\u2014\u753B\u9762\u6B63\u505C\u5728\u54EA\u4E2A\u9AD8\u5149\u77AC\u95F4\u3001\u52A8\u4F5C\u7684\u5373\u65F6\u7ED3\u679C\u3002
+2. **\u76D1\u7763**\u2014\u2014\u4E3B\u4F53\u5728\u753B\u5E45\u91CC\u5360\u591A\u5927\u3001\u524D\u4E2D\u540E\u666F\u600E\u4E48\u5206\u5C42\u3001\u88AB\u4EC0\u4E48\u6321\u5728\u54EA\u4E00\u5C42\u3002
+3. **\u539F\u753B**\u2014\u2014\u8C01\u5BF9\u8C01\u505A\u4E86\u4EC0\u4E48\u3001\u80A2\u4F53\u63A5\u89E6\u70B9\u5F52\u5C5E\u3002
+4. **\u6444\u5F71**\u2014\u2014\u5149\u4ECE\u54EA\u4E2A\u65B9\u5411\u6765\u3001\u8D28\u611F\u4E0E\u53CD\u5C04\u3002
+
+\u9700\u8981\u7CBE\u7B80\uFF08\u903C\u8FD1 512\uFF09\u65F6**\u4F18\u5148\u53EA\u52A8 NL**\uFF1A\u5148\u53BB\u5F62\u5BB9\u8BCD\u6C34\u8BCD\uFF0C\u518D\u5408\u5E76\u77ED\u53E5\uFF0C\u6700\u540E\u780D\u300C\u4E0D\u5199\u6A21\u578B\u4E5F\u4F1A\u753B\u300D\u7684\u5E9F\u8BDD\uFF1B\u52A1\u5FC5\u4FDD\u4F4F\u7F16\u5267\u53E5\uFF08\u9AD8\u5149\u52A8\u4F5C\uFF09\u4E0E\u76D1\u7763\u53E5\uFF08\u5360\u5E45\u4E0E\u5DE6\u53F3\u4F4D\u7F6E\uFF09\u3002**\u7EDD\u4E0D\u5220\u6539\u524D\u9762\u7684\u6807\u7B7E**\u3002
+
+### \u591A\u89D2\u8272\u7279\u5F81\u5206\u79BB\uFF08\u6838\u5FC3\uFF09
+1. \u6BB5\u9996\u5148\u4EA4\u4EE3\u603B\u4EBA\u6570\uFF0C\u518D\u8865\u4E00\u53E5\u6574\u4F53\u6784\u56FE\uFF08\u5982\u300C\u4E09\u4EBA\u5E76\u6392\u7AD9\u5728\u821E\u53F0\u524D\u65B9\uFF0C\u9F13\u624B\u5728\u540E\u65B9\u300D\uFF09\u3002
+2. \u6BCF\u4E2A\u89D2\u8272\u5199\u6210\u4E00\u4E2A\u8FDE\u7EED\u4ECE\u53E5\uFF1A\u540D\u5B57 \u2192 \u6781\u7B80\u5916\u89C2\u951A\u70B9\uFF08\u53D1\u8272 + \u77B3\u8272 + \u4E00\u4E2A\u8FA8\u8BC6\u7279\u5F81\uFF09\u2192 \u4F4D\u7F6E\uFF08\u5DE6/\u53F3/\u524D/\u540E\uFF09\u2192 \u52A8\u4F5C/\u9053\u5177\u3002\u540C\u4E00\u89D2\u8272\u4ECE\u53E5\u5185\u90E8\u7528\u9017\u53F7\u8FDE\u8D2F\uFF0C**\u4E0D\u8981\u7528\u53E5\u53F7\u5207\u65AD**\uFF1B\u89D2\u8272\u4E4B\u95F4\u6362\u884C\u63CF\u5199\uFF0C\u9632\u6B62\u7279\u5F81\u4E71\u4E32\u3002
+3. \u7ED3\u5C3E\u7528\u4E00\u53E5\u8BDD\u590D\u8FF0\u5404\u89D2\u8272\u7684\u4F4D\u7F6E\u4E0E\u89D2\u8272\uFF08\u5982\u300C\u4E09\u4F4D\u4E3B\u5531\u5728\u524D\uFF0C\u9F13\u624B\u5728\u540E\u300D\uFF09\uFF0C\u53EF\u663E\u8457\u63D0\u5347\u5F52\u5C5E\u6B63\u786E\u7387\u3002
+4. \u540C\u7C7B\u9053\u5177\u4E0D\u8981\u53EA\u9760\u989C\u8272\u533A\u5206\uFF0C\u540C\u65F6\u5199\u5F62\u72B6 / \u6570\u91CF / \u5927\u5C0F\u5DEE\u5F02\u3002
+5. **\u7981\u6B62\u4F7F\u7528 BREAK \u6216\u4EFB\u4F55\u5206\u5757\u6807\u8BB0\u505A\u89D2\u8272\u9694\u79BB\u3002**
+\u793A\u4F8B\uFF1A2girls, the girl on the left has long blonde hair, the girl on the right has short black hair, holding hands
+
+### \u6743\u91CD
+- **\u9ED8\u8BA4\u4E0D\u52A0\u4EFB\u4F55\u62EC\u53F7\u6216\u6743\u91CD\u6570\u503C\u3002** \u4E25\u7981\u60F3\u5F53\u7136\u5730\u52A0\u6743\u91CD\u3002
+- \u683C\u5F0F\u4E3A (keyword: \u6570\u503C)\u3002\u4E0D\u8981\u5D4C\u5957\u62EC\u53F7\uFF0C\u4E0D\u8981\u4F7F\u7528 ((keyword)) \u6216 [keyword]\u3002
+- \u672C\u6A21\u578B\u523B\u5EA6\u6BD4\u65E7\u6A21\u578B\u8FDF\u949D\uFF1A1.1\u20131.2 \u57FA\u672C\u6CA1\u6709\u4F53\u611F\uFF0C\u8981\u7528\u66F4\u660E\u663E\u7684\u6570\u503C\u624D\u770B\u5F97\u5230\u63A8\u52A8\uFF0C\u5B83\u540C\u65F6\u80FD\u7528\u6765\u300C\u62AC\u300D\u548C\u300C\u538B\u300D\u3002\u6709\u6548\u533A\u95F4\u7EA6 0.4\u20132.0\uFF0C**\u7EDD\u5BF9\u4E0D\u8981\u8D85\u8FC7 2.0**\u3002
+- \u53EA\u5728\u4E09\u79CD\u60C5\u51B5\u4E0B\u7528\uFF1A\u5173\u952E\u6982\u5FF5\u53CD\u590D\u4E22\u5931 / \u753B\u5E08\u98CE\u683C\u76D6\u8FC7\u89D2\u8272 / \u67D0\u6761\u975E\u5E38\u89C4\u955C\u5934\u6307\u4EE4\u4E0D\u751F\u6548\u3002
+- \u4E25\u7981\u7528\u6743\u91CD\u53BB\u4FEE\u8865\u81EA\u76F8\u77DB\u76FE\u7684\u63CF\u8FF0\uFF0C\u4E25\u7981\u5BF9\u666E\u901A\u7269\u54C1\u3001\u666E\u901A\u52A8\u4F5C\u3001\u666E\u901A\u989C\u8272\u52A0\u6743\u3002
+
+### \u6240\u89C1\u5373\u6240\u5F97\uFF08NL \u94C1\u5F8B\uFF09
+\u5224\u636E\u53EA\u6709\u4E00\u6761\uFF1A**\u4F60\u5199\u8FDB NL \u7684\u6BCF\u6837\u4E1C\u897F\uFF0C\u6700\u7EC8\u753B\u9762\u4E0A\u627E\u5F97\u5230\u5417\uFF1F** \u627E\u4E0D\u5230\u7684\u4E00\u5F8B\u4E0D\u51C6\u5199\u3002
+- \u7981\u955C\u5934\u5916\u88C5\u7F6E\u4E0E\u62CD\u6444\u884C\u4E3A\uFF1A\u8C01\u5728\u6309\u5FEB\u95E8\u3001\u76F8\u673A\u67B6\u5728\u54EA\u3001\u63E1\u5728\u54EA\u53EA\u624B\u2014\u2014\u753B\u91CC\u6CA1\u8FD9\u53F0\u8BBE\u5907\uFF0C\u6A21\u578B\u53EA\u4F1A\u7167\u5B57\u9762\u753B\u51FA\u4E00\u53F0\u4E0D\u5B58\u5728\u7684\u76F8\u673A\u3002\u53D6\u666F\u4E0E\u8FDC\u8FD1\u53EA\u7528\u753B\u9762\u5185\u7684\u8FD1\u666F / \u8FDC\u7AEF / \u906E\u6321\u5173\u7CFB\u4EA4\u4EE3\u3002
+- \u7981\u8D1F\u5411\u53E5\uFF1A\u4E0D\u8981\u5199\u300C\u753B\u9762\u91CC\u6CA1\u6709\xD7\xD7\u300D\u300C\u4E0D\u8981\u51FA\u73B0\xD7\xD7\u300D\u2014\u2014\u63D0\u4EC0\u4E48\u753B\u4EC0\u4E48\uFF0C\u53CD\u628A\u7F3A\u7684\u52FE\u51FA\u6765\uFF1B\u7F3A\u7684\u4E1C\u897F\u53EA\u5B57\u4E0D\u63D0\u3002
+- \u7981\u770B\u4E0D\u89C1\u7684\u56E0\u679C\u4E0E\u5FC3\u7406\uFF1A\u4E0D\u5199\u300C\u5979\u6B63\u51C6\u5907\u6536\u4F1E\u300D\u300C\u56E0\u4E3A\u521A\u4E0B\u8FC7\u96E8\u300D\uFF0C\u53EA\u5199\u8FD9\u4E00\u523B\u53EF\u89C1\u7684\u7ED3\u679C\uFF08\u4F1E\u9AA8\u4E0A\u7684\u6C34\u73E0\u3001\u5730\u9762\u7684\u6C34\u6D3C\u3001\u88AB\u98CE\u6380\u8D77\u7684\u4F1E\u8FB9\uFF09\u3002
+- \u7981\u4EE3\u8BCD\u6CDB\u6307\uFF1A\u4E0D\u7528 she / her / they \u6216\u300C\u89D2\u8272 1 / 2\u300D\u8FD9\u7C7B\u6307\u4EE3\uFF0C\u4E00\u5F8B\u7528 the character \u6216\u660E\u786E\u7684\u5916\u8C8C\u6307\u8BA4\u3002
+- \u7981\u53CC\u5F15\u53F7\u5305\u6574\u6BB5 NL\uFF1A\u4F1A\u88AB\u6A21\u578B\u7406\u89E3\u6210\u8981\u5728\u753B\u9762\u6B63\u4E2D\u5370\u51FA\u8FD9\u884C\u6587\u5B57\u3002
+
+### \u957F\u5EA6
+- \u5355\u4EBA 40\u2013150 token\uFF1B\u590D\u6742\u591A\u4EBA\u573A\u666F 200\u2013500 token\uFF0C**\u4E0D\u8981\u8D85\u8FC7 512**\u3002
+- \u6807\u7B7E\u6570\u91CF\u53C2\u8003\uFF1A\u5355\u4EBA 16\u201330 \u4E2A\uFF0C\u53CC\u4EBA 22\u201338 \u4E2A\uFF0C\u590D\u6742\u573A\u666F 30\u201348 \u4E2A\u3002
+- \u8D28\u91CF\u7C7B\u3001\u8BC4\u5206\u7C7B\u6807\u7B7E\u7531\u63D2\u4EF6\u7EDF\u4E00\u6CE8\u5165\uFF0C\u4E0D\u8981\u81EA\u5DF1\u586B\u5199\u3002
+
+### negativePrompt
+- \u53EA\u5199\u753B\u9762\u91CC\u4E0D\u5E94\u51FA\u73B0\u7684\u5177\u4F53\u4E8B\u7269\u3001\u9519\u8BEF\u6982\u5FF5\u6216\u591A\u4F59\u80A2\u4F53\uFF0C\u5982 glasses, hat, bag, crowd, extra arms, extra fingers\uFF0C\u6309\u753B\u9762\u9700\u8981\u6392\u9664\u3002
+- \u4FDD\u6301\u7CBE\u70BC\uFF1A\u672C\u6A21\u578B\u5BF9\u8D1F\u9762\u6761\u4EF6\u8F83\u654F\u611F\uFF0C\u8FC7\u957F\u7684\u8D1F\u9762\u4F1A\u538B\u5236\u7EC6\u8282\u5E76\u5F15\u5165\u504F\u79FB\uFF0C\u5EFA\u8BAE 3\u201310 \u9879\uFF0C\u53EA\u8FFD\u52A0\u5B9E\u9645\u51FA\u73B0\u8FC7\u7684\u5931\u8D25\u9879\u3002
+- **\u4E0D\u8981\u91CD\u590D\u8D28\u91CF\u8BCD**\uFF08lowres\u3001worst quality\u3001blurry\u3001jpeg artifacts\u3001score_* \u7B49\uFF09\uFF0C\u5B83\u4EEC\u7531\u63D2\u4EF6\u7EDF\u4E00\u6CE8\u5165\u3002
+- \u91C7\u6837\u5668\u3001\u6B65\u6570\u3001\u5C3A\u5BF8\u3001\u6A21\u578B\u4E0E LoRA \u89E6\u53D1\u8BCD\u7531\u5DE5\u4F5C\u6D41\u8D1F\u8D23\uFF0C\u4E0D\u8981\u5199\u8FDB\u63D0\u793A\u8BCD\u3002`
+      },
+      {
+        id: "nai",
+        name: "NovelAI \u63D0\u793A\u8BCD\u89C4\u8303",
+        role: "system",
+        enabled: false,
+        content: `## NovelAI \u63D0\u793A\u8BCD\u89C4\u8303
+- \u63D0\u793A\u8BCD\u7528\u82F1\u6587 danbooru \u98CE\u683C tag\uFF0C\u9017\u53F7\u5206\u9694\u3002
+- \u5355\u89D2\u8272\u65F6\u6309\u300C\u4EBA\u6570 \u2192 \u89D2\u8272\u7279\u5F81 \u2192 \u52A8\u4F5C \u2192 \u8868\u60C5 \u2192 \u670D\u88C5 \u2192 \u73AF\u5883 \u2192 \u6784\u56FE \u2192 \u5149\u7EBF\u300D\u7EC4\u7EC7\u3002
+- \u591A\u89D2\u8272\u65F6\u628A\u6BCF\u4E2A\u89D2\u8272\u7684 tag \u5206\u522B\u5199\u8FDB characters \u6570\u7EC4\uFF0C\u4E0D\u8981\u5168\u585E\u8FDB\u5168\u5C40\u63D0\u793A\u8BCD\u3002
+- characters \u91CC\u7684 position \u7528 0\u20131 \u5C0F\u6570\uFF0C\u8868\u793A\u8BE5\u89D2\u8272\u5728\u753B\u9762\u4E2D\u7684\u4F4D\u7F6E\u3002
+- negativePrompt \u53EA\u5199\u753B\u9762\u91CC\u4E0D\u8BE5\u51FA\u73B0\u7684\u4E1C\u897F\uFF1BUC \u8BCD\u8868\u4E0E\u8D28\u91CF\u8BCD\u7531\u63D2\u4EF6\u8FFD\u52A0\uFF0C\u4E0D\u8981\u5199\u3002`
+      },
+      {
+        id: "material",
+        name: "\u7D20\u6750",
+        role: "user",
+        enabled: true,
+        content: `\u3010\u5C0F\u5267\u573A\u6B63\u6587\u3011
+{{theater_text}}
+
+{{participants}}
+
+{{special_request}}
+
+{{previous_scenes}}`
+      },
+      {
+        id: "format",
+        name: "\u8F93\u51FA\u683C\u5F0F",
+        role: "system",
+        enabled: true,
+        content: `## \u8F93\u51FA\u683C\u5F0F
+\u53EA\u8F93\u51FA\u4E00\u4E2A JSON \u5BF9\u8C61\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u4EE3\u7801\u56F4\u680F\uFF1A
+
+{
+  "summary": "\u4E00\u81F3\u4E09\u53E5\u4E2D\u6587\u753B\u9762\u63CF\u8FF0",
+  "sourceExcerpt": "\u6B63\u6587\u4E2D\u8FDE\u7EED\u3001\u9010\u5B57\u4E00\u81F4\u7684\u4E00\u6BB5\u539F\u6587",
+  "positivePrompt": "\u82F1\u6587\u5185\u5BB9\u63D0\u793A\u8BCD",
+  "negativePrompt": "\u82F1\u6587\u5185\u5BB9\u63D0\u793A\u8BCD\uFF0C\u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32",
+  "characters": [
+    { "positivePrompt": "\u8BE5\u89D2\u8272\u7684\u82F1\u6587\u63D0\u793A\u8BCD", "negativePrompt": "", "position": { "x": 0.4, "y": 0.5 } }
+  ]
+}
+
+\u8865\u5145\u7EA6\u675F\uFF1A
+- \u63D0\u793A\u8BCD\u7528\u82F1\u6587\uFF0Csummary \u4E0E sourceExcerpt \u7528\u4E2D\u6587\u3002
+- sourceExcerpt \u5FC5\u987B\u80FD\u5728\u6B63\u6587\u91CC\u539F\u6837\u627E\u5230\uFF0C\u4E0D\u8981\u6539\u5199\u3001\u4E0D\u8981\u62FC\u63A5\u3001\u4E0D\u8981\u52A0\u7701\u7565\u53F7\u3002
+- position \u662F 0\u20131 \u7684\u5F52\u4E00\u5316\u5C0F\u6570\uFF08\u5982 0.35\uFF09\uFF0C\u4E0D\u8981\u7528 0\u20134 \u7684\u6574\u6570\u3002
+- characters \u53EA\u5217\u771F\u6B63\u51FA\u73B0\u5728\u8FD9\u4E2A\u753B\u9762\u91CC\u7684\u89D2\u8272\uFF1B\u5355\u4EBA\u573A\u666F\u53EF\u4EE5\u53EA\u6709\u4E00\u9879\uFF0C\u6CA1\u6709\u660E\u786E\u89D2\u8272\u65F6\u53EF\u4EE5\u662F\u7A7A\u6570\u7EC4\u3002`
+      }
+    ];
+    MANAGED_BY_ID = new Map(MANAGED_ENTRIES.map((entry) => [entry.id, entry]));
+    ROLES = /* @__PURE__ */ new Set(["system", "user", "assistant"]);
+  }
+});
+
 // src/utils/storage.js
 import { extension_settings } from "../../../extensions.js";
 import { saveSettingsDebounced, saveSettings } from "../../../../script.js";
@@ -2774,7 +3352,9 @@ function getExtData() {
     extension_settings[extensionName] = JSON.parse(JSON.stringify(defaultSettings));
   }
   const changed = ensurePromptManager(extension_settings[extensionName]);
-  if (changed) saveSettingsDebounced();
+  const profilesChanged = ensureCharacterProfiles(extension_settings[extensionName]);
+  const presetsChanged = ensureIllustrationPresets(extension_settings[extensionName]);
+  if (changed || profilesChanged || presetsChanged) saveSettingsDebounced();
   return extension_settings[extensionName];
 }
 function saveExtData() {
@@ -2793,6 +3373,8 @@ var init_storage = __esm({
   "src/utils/storage.js"() {
     init_defaults();
     init_promptManager();
+    init_characterProfiles();
+    init_illustrationPresets();
   }
 });
 
@@ -12241,8 +12823,97 @@ textarea.t-input {
 .t-illustration-candidate img { width: 100%; height: 160px; object-fit: contain; }
 .t-illustration-candidate p { font-size: 0.9em; line-height: 1.5; }
 .t-illustration-pending img { width: 100%; max-height: 360px; object-fit: contain; }
+.t-illustration-preview img { width: 100%; max-height: 360px; object-fit: contain; }
 .t-illustration-panel [hidden] { display: none; }
 .t-illustration-panel button:disabled { opacity: 0.5; cursor: default; }
+
+/* \u4EBA\u7269\u5916\u89C2\u6863\u6848\uFF1A\u9762\u677F\u91CC\u7684\u52FE\u9009\u6761 */
+.t-profile-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.t-profile-chip {
+    padding: 4px 10px;
+    border: 1px solid var(--t-color-border);
+    border-radius: 999px;
+    background: var(--t-color-surface);
+    color: var(--t-color-text-secondary);
+    font-size: 0.85em;
+    cursor: pointer;
+}
+.t-profile-chip.is-on {
+    border-color: var(--t-color-brand);
+    background: var(--t-color-brand-soft);
+    color: var(--t-color-brand);
+}
+.t-profile-chip:disabled { opacity: 0.5; cursor: default; }
+
+/* \u4EBA\u7269\u5916\u89C2\u6863\u6848\u7BA1\u7406\u7A97 / \u573A\u666F\u914D\u56FE\u8BBE\u7F6E\u7A97\uFF1A\u5171\u7528\u540C\u4E00\u5957\u5916\u58F3 */
+.t-root.t-profile-window,
+.t-root.t-illustration-settings-window {
+    position: fixed;
+    /* \u4E0E\u914D\u56FE\u7A97\u53E3\u540C\u6837\u7684\u53D6\u820D\uFF1AST \u79FB\u52A8\u7AEF\u7684 fixed body + html transform \u4F1A\u8BA9 inset:0 \u9AD8\u5EA6\u584C\u7F29\u3002 */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 20070;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    box-sizing: border-box;
+}
+.t-profile-panel {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    width: min(680px, 100%);
+    max-height: 88vh;
+    background: var(--t-color-surface);
+    border: 1px solid var(--t-color-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.t-profile-body { padding: 16px; overflow-y: auto; }
+.t-profile-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+/* \u5DE5\u5177\u6761\u4E0A\u7684\u6309\u94AE\u662F\u7EAF\u56FE\u6807\uFF1A\u538B\u6389\u5DE6\u53F3\u5185\u8FB9\u8DDD\u7701\u7A7A\u95F4\uFF0C\u4F46\u4FDD\u4F4F\u4E00\u4E2A\u70B9\u5F97\u4E2D\u7684\u65B9\u5757\u3002 */
+.t-profile-actions .t-btn { min-width: 32px; padding-left: 8px; padding-right: 8px; }
+.t-profile-list { display: flex; flex-direction: column; gap: 12px; }
+.t-profile-card { border: 1px solid var(--t-color-border); border-radius: 10px; padding: 12px; }
+.t-profile-card.is-dragging { opacity: 0.5; }
+.t-profile-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+/* \u6298\u53E0\u65F6\u6807\u9898\u5C31\u662F\u6700\u540E\u4E00\u9879\uFF0C\u4E0D\u8981\u518D\u7559\u4E00\u6BB5\u7A7A\u767D */
+.t-profile-card-header:last-child { margin-bottom: 0; }
+.t-profile-grip { cursor: grab; color: var(--t-color-text-faint); }
+.t-profile-expand {
+    flex: 1;
+    min-width: 0;
+    padding: 2px 6px;
+    border: none;
+    background: none;
+    color: var(--t-color-text);
+    font-size: 0.9em;
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.t-profile-expand:hover { color: var(--t-color-brand); }
+.t-profile-entry-body { margin-top: 4px; }
+.t-profile-toggle {
+    padding: 2px 10px;
+    border: 1px solid var(--t-color-border);
+    border-radius: 999px;
+    background: var(--t-color-surface);
+    color: var(--t-color-text-muted);
+    font-size: 0.8em;
+    cursor: pointer;
+}
+.t-profile-toggle.is-on { border-color: var(--t-color-brand); color: var(--t-color-brand); }
+.t-profile-order { color: var(--t-color-text-muted); font-size: 0.8em; }
+.t-profile-card-header .t-btn { margin-left: auto; }
 
 @media (max-width: 600px) {
     .t-root.t-illustration-window {
@@ -12251,6 +12922,13 @@ textarea.t-input {
     }
     .t-illustration-panel { max-height: 100%; }
     .t-illustration-body { padding: 12px; }
+    .t-root.t-profile-window,
+    .t-root.t-illustration-settings-window {
+        padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+            max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    }
+    .t-profile-panel { max-height: 100%; }
+    .t-profile-body { padding: 12px; }
 }
 
 
@@ -20060,9 +20738,42 @@ function getCharacterCardKey(stCtx = null) {
   const charId = ctx.characterId;
   if (charId !== void 0 && charId !== null) {
     const avatar = String(ctx.characters?.[charId]?.avatar || "").trim();
-    if (avatar) return CARD_KEY_PREFIX + avatar.replace(/\.[^/.]+$/, "");
+    if (avatar) return CARD_KEY_PREFIX2 + avatar.replace(/\.[^/.]+$/, "");
   }
   return NAME_KEY_PREFIX + getCurrentCharNameFromContext(ctx);
+}
+function characterCardKeyFromAvatar(avatar) {
+  const file = String(avatar ?? "").trim();
+  if (!file) return "";
+  return CARD_KEY_PREFIX2 + file.replace(/\.[^/.]+$/, "");
+}
+function listCharacterCards() {
+  let ctx = null;
+  try {
+    if (typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+  } catch {
+    ctx = null;
+  }
+  const raw = ctx?.characters;
+  const list = Array.isArray(raw) ? raw : Object.values(raw || {});
+  return list.map((card) => ({
+    cardKey: characterCardKeyFromAvatar(card?.avatar),
+    name: String(card?.name ?? "").trim(),
+    avatar: String(card?.avatar ?? "").trim()
+  })).filter((card) => card.cardKey && card.name).sort((a, b) => a.name.localeCompare(b.name, "zh"));
+}
+function getCurrentCharacterDescription() {
+  let ctx = null;
+  try {
+    if (typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+  } catch {
+    ctx = null;
+  }
+  const charId = ctx?.characterId;
+  if (charId === void 0 || charId === null) return "";
+  const card = ctx?.characters?.[charId];
+  const description = card?.data?.description ?? card?.description ?? "";
+  return typeof description === "string" ? description.trim() : "";
 }
 function isNameSharedByMultipleCards(ctx, charName) {
   const characters = Array.isArray(ctx?.characters) ? ctx.characters : [];
@@ -20268,11 +20979,11 @@ async function getWorldInfoEntriesByBookName(bookName) {
     isDisabled: e.disable === true && e.enabled !== true
   }));
 }
-var CARD_KEY_PREFIX, NAME_KEY_PREFIX, legacyAmbiguityNotified;
+var CARD_KEY_PREFIX2, NAME_KEY_PREFIX, legacyAmbiguityNotified;
 var init_context = __esm({
   "src/core/context.js"() {
     init_storage();
-    CARD_KEY_PREFIX = "card:";
+    CARD_KEY_PREFIX2 = "card:";
     NAME_KEY_PREFIX = "name:";
     legacyAmbiguityNotified = false;
   }
@@ -21028,30 +21739,145 @@ var init_chatInjector = __esm({
   }
 });
 
+// src/core/imageBytes.js
+function startsWith(bytes, sequence, offset = 0) {
+  if (bytes.length < offset + sequence.length) return false;
+  for (let index = 0; index < sequence.length; index++) {
+    if (bytes[offset + index] !== sequence[index]) return false;
+  }
+  return true;
+}
+function readUint16BE(bytes, offset) {
+  return bytes[offset] << 8 | bytes[offset + 1];
+}
+function readUint32BE(bytes, offset) {
+  return (bytes[offset] << 24 | bytes[offset + 1] << 16 | bytes[offset + 2] << 8 | bytes[offset + 3]) >>> 0;
+}
+function readUint16LE(bytes, offset) {
+  return bytes[offset] | bytes[offset + 1] << 8;
+}
+function readUint24LE(bytes, offset) {
+  return bytes[offset] | bytes[offset + 1] << 8 | bytes[offset + 2] << 16;
+}
+function positiveSize(width, height) {
+  const valid = Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0;
+  return valid ? { width, height } : null;
+}
+function sniffImageMime(bytes) {
+  if (!(bytes instanceof Uint8Array)) return null;
+  if (startsWith(bytes, PNG_SIGNATURE)) return MIME_PNG;
+  if (startsWith(bytes, JPEG_SIGNATURE)) return MIME_JPEG;
+  if (startsWith(bytes, RIFF_SIGNATURE) && startsWith(bytes, WEBP_SIGNATURE, 8)) return MIME_WEBP;
+  return null;
+}
+function readPngSize(bytes) {
+  if (bytes.length < 24) return null;
+  if (!startsWith(bytes, [73, 72, 68, 82], 12)) return null;
+  return positiveSize(readUint32BE(bytes, 16), readUint32BE(bytes, 20));
+}
+function readJpegSize(bytes) {
+  let offset = 2;
+  while (offset + 3 < bytes.length) {
+    if (bytes[offset] !== 255) {
+      offset += 1;
+      continue;
+    }
+    const marker = bytes[offset + 1];
+    if (marker === 255) {
+      offset += 1;
+      continue;
+    }
+    if (marker === 1 || marker >= 208 && marker <= 215) {
+      offset += 2;
+      continue;
+    }
+    if (marker === 217 || marker === 218) return null;
+    if (offset + 3 >= bytes.length) return null;
+    const length = readUint16BE(bytes, offset + 2);
+    if (length < 2) return null;
+    const isSof = marker >= 192 && marker <= 207 && marker !== 196 && marker !== 200 && marker !== 204;
+    if (isSof) {
+      if (offset + 8 >= bytes.length) return null;
+      return positiveSize(readUint16BE(bytes, offset + 7), readUint16BE(bytes, offset + 5));
+    }
+    offset += 2 + length;
+  }
+  return null;
+}
+function readWebpSize(bytes) {
+  if (bytes.length < 16) return null;
+  const chunk = String.fromCharCode(bytes[12], bytes[13], bytes[14], bytes[15]);
+  if (chunk === "VP8X") {
+    if (bytes.length < 30) return null;
+    return positiveSize(readUint24LE(bytes, 24) + 1, readUint24LE(bytes, 27) + 1);
+  }
+  if (chunk === "VP8L") {
+    if (bytes.length < 25 || bytes[20] !== 47) return null;
+    const bits = (bytes[21] | bytes[22] << 8 | bytes[23] << 16 | bytes[24] << 24) >>> 0;
+    return positiveSize((bits & 16383) + 1, (bits >>> 14 & 16383) + 1);
+  }
+  if (chunk === "VP8 ") {
+    if (bytes.length < 30 || !startsWith(bytes, WEBP_VP8_START_CODE, 23)) return null;
+    return positiveSize(readUint16LE(bytes, 26) & 16383, readUint16LE(bytes, 28) & 16383);
+  }
+  return null;
+}
+function readImageSize(bytes) {
+  if (!(bytes instanceof Uint8Array)) return null;
+  const mime = sniffImageMime(bytes);
+  if (mime === MIME_PNG) return readPngSize(bytes);
+  if (mime === MIME_JPEG) return readJpegSize(bytes);
+  if (mime === MIME_WEBP) return readWebpSize(bytes);
+  return null;
+}
+async function inspectImageBlob(blob) {
+  if (!(blob instanceof Blob) || !blob.size) return null;
+  const prefixLength = Math.min(blob.size, IMAGE_PREFIX_BYTES);
+  const prefix = new Uint8Array(await blob.slice(0, prefixLength).arrayBuffer());
+  const mimeType = sniffImageMime(prefix);
+  if (!mimeType) return null;
+  let size = readImageSize(prefix);
+  if (!size && blob.size > prefixLength) {
+    size = readImageSize(new Uint8Array(await blob.arrayBuffer()));
+  }
+  if (!size) return null;
+  const typed = blob.type === mimeType ? blob : new Blob([blob], { type: mimeType });
+  return { blob: typed, mimeType, width: size.width, height: size.height };
+}
+var PNG_SIGNATURE, RIFF_SIGNATURE, WEBP_SIGNATURE, JPEG_SIGNATURE, WEBP_VP8_START_CODE, MIME_PNG, MIME_JPEG, MIME_WEBP, IMAGE_PREFIX_BYTES;
+var init_imageBytes = __esm({
+  "src/core/imageBytes.js"() {
+    PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+    RIFF_SIGNATURE = [82, 73, 70, 70];
+    WEBP_SIGNATURE = [87, 69, 66, 80];
+    JPEG_SIGNATURE = [255, 216, 255];
+    WEBP_VP8_START_CODE = [157, 1, 42];
+    MIME_PNG = "image/png";
+    MIME_JPEG = "image/jpeg";
+    MIME_WEBP = "image/webp";
+    IMAGE_PREFIX_BYTES = 1024 * 1024;
+  }
+});
+
 // src/core/cosmosVisionBridge.js
-function getApi() {
-  const api = globalThis.window?.CosmosVision;
-  if (!api) throw illustrationError("\u8BF7\u542F\u7528\u652F\u6301\u516C\u5F00\u63A5\u53E3\u7684 Cosmos Vision\uFF0C\u7136\u540E\u70B9\u51FB\u91CD\u65B0\u68C0\u6D4B\u3002", "NOT_READY");
-  if (!/^1\./.test(String(api.apiVersion || "")) || !["getCapabilities", "preparePrompt", "generate"].every((key) => typeof api[key] === "function")) {
-    throw illustrationError("Cosmos Vision \u63A5\u53E3\u7248\u672C\u4E0D\u517C\u5BB9\uFF0C\u9700\u8981\u516C\u5F00\u63A5\u53E3 v1\u3002", "UNSUPPORTED_API");
-  }
-  return api;
-}
-async function getCosmosCapabilities() {
-  const api = getApi();
-  const capabilities = await api.getCapabilities();
-  if (!capabilities?.ready) throw illustrationError(capabilities?.reason || "Cosmos Vision \u6B63\u5728\u521D\u59CB\u5316\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002", "NOT_READY");
-  if (!capabilities.enabled) throw illustrationError("\u8BF7\u5148\u5728\u6269\u5C55\u8BBE\u7F6E\u4E2D\u542F\u7528 Cosmos Vision\u3002", "DISABLED");
-  if (!capabilities.features?.theaterPrompt || !capabilities.features?.providedContext) {
-    throw illustrationError("Cosmos Vision \u5C1A\u4E0D\u652F\u6301\u5C0F\u5267\u573A\u9009\u666F\u4E0E\u663E\u5F0F\u4E0A\u4E0B\u6587\u3002", "UNSUPPORTED_MODE");
-  }
-  if (!Array.isArray(capabilities.imageSources) || !Number.isInteger(capabilities.limits?.maxTextChars) || capabilities.limits.maxTextChars < 1) {
-    throw illustrationError("Cosmos Vision \u80FD\u529B\u4FE1\u606F\u4E0D\u5B8C\u6574\u3002");
-  }
-  return capabilities;
-}
 function abortError() {
   return Object.assign(new Error("\u914D\u56FE\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002"), { name: "AbortError", code: "ABORTED" });
+}
+function detectIllustrationBackend() {
+  const api = globalThis.window?.CosmosVision;
+  if (!api) return { ready: false, status: "missing", reason: "\u672A\u68C0\u6D4B\u5230 Cosmos Vision\uFF0C\u8BF7\u5B89\u88C5\u5E76\u542F\u7528\u8BE5\u6269\u5C55\u3002" };
+  if (typeof api.generateImage !== "function") {
+    if (typeof api.preparePrompt === "function" || api.apiVersion) {
+      return { ready: false, status: "legacy", reason: "\u68C0\u6D4B\u5230\u65E7\u7248 Cosmos Vision \u63A5\u53E3\uFF0C\u8BF7\u5347\u7EA7\u5230\u63D0\u4F9B generateImage \u7684\u7248\u672C\u3002" };
+    }
+    return { ready: false, status: "unsupported", reason: "Cosmos Vision \u6CA1\u6709\u63D0\u4F9B\u751F\u56FE\u63A5\u53E3\u3002" };
+  }
+  return { ready: true, status: "ready", reason: "Cosmos Vision \u5DF2\u8FDE\u63A5\u3002" };
+}
+function requireBackend() {
+  const state = detectIllustrationBackend();
+  if (!state.ready) throw illustrationError(state.reason, state.status === "legacy" ? "UNSUPPORTED_API" : "NOT_READY");
+  return globalThis.window.CosmosVision;
 }
 function runAbortableIllustrationTask(task, signal) {
   if (signal?.aborted) return Promise.reject(abortError());
@@ -21067,60 +21893,1322 @@ function runAbortableIllustrationTask(task, signal) {
     }).then((value) => signal?.aborted ? reject(abortError()) : resolve(value), reject).finally(() => signal?.removeEventListener("abort", abort));
   });
 }
-function requestControl(options) {
-  const requestId = newIllustrationId();
-  return {
-    requestId,
-    signal: options.signal,
-    onProgress(event) {
-      if (options.signal?.aborted || event?.requestId !== requestId) return;
-      try {
-        options.onProgress?.(event);
-      } catch {
-      }
-    }
-  };
+function normalizeBackendError(error, signal) {
+  if (signal?.aborted) return abortError();
+  if (error?.name === "AbortError" || error?.code === "ABORTED") return abortError();
+  const message = typeof error?.message === "string" && error.message.trim();
+  return illustrationError(message || "\u751F\u56FE\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002", "GENERATION_FAILED");
 }
-async function prepareTheaterIllustration(request, options = {}) {
-  return runAbortableIllustrationTask(async () => {
-    const capabilities = await getCosmosCapabilities();
-    if (!request.theaterText?.trim()) throw illustrationError("\u6B63\u6587\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u9009\u62E9\u753B\u9762\u3002", "NO_CONTENT");
-    if (request.theaterText.length > capabilities.limits.maxTextChars) {
-      throw illustrationError(`\u6B63\u6587\u8D85\u8FC7 Cosmos \u652F\u6301\u7684 ${capabilities.limits.maxTextChars} \u5B57\u7B26\uFF0C\u8BF7\u7F29\u77ED\u672C\u6B21\u914D\u56FE\u7D20\u6750\u3002`, "TEXT_TOO_LONG");
-    }
-    const source = capabilities.imageSources.find((item) => item.id === request.imageSource);
-    if (!source?.ready) throw illustrationError(source?.reason || "\u6240\u9009\u751F\u56FE\u6765\u6E90\u5C1A\u672A\u914D\u7F6E\u3002", "PROVIDER_NOT_CONFIGURED");
-    if (options.signal?.aborted) throw abortError();
-    const draft = normalizeIllustrationDraft(await getApi().preparePrompt(request, requestControl(options)));
-    if (draft.imageSource !== request.imageSource) throw illustrationError("\u8FD4\u56DE\u8349\u7A3F\u7684\u56FE\u50CF\u6765\u6E90\u4E0E\u8BF7\u6C42\u4E0D\u4E00\u81F4\u3002");
-    return draft;
-  }, options.signal);
+async function readGeneratedImages(blobs) {
+  const images = [];
+  for (const blob of blobs) {
+    const inspected = await inspectImageBlob(blob);
+    if (!inspected) throw illustrationError("\u8FD4\u56DE\u7684\u6587\u4EF6\u4E0D\u662F\u53EF\u8BC6\u522B\u7684\u56FE\u7247\uFF0C\u8BF7\u68C0\u67E5\u751F\u56FE\u63A5\u53E3\u3002", "GENERATION_FAILED");
+    await validateIllustrationBlob(inspected.blob);
+    images.push({ blob: inspected.blob, width: inspected.width, height: inspected.height });
+  }
+  return images;
 }
 async function generateTheaterIllustration(draft, options = {}) {
   return runAbortableIllustrationTask(async () => {
-    const normalized = normalizeIllustrationDraft(draft);
-    const capabilities = await getCosmosCapabilities();
-    const source = capabilities.imageSources.find((item) => item.id === normalized.imageSource);
-    if (!source?.ready) throw illustrationError(source?.reason || "\u6240\u9009\u751F\u56FE\u6765\u6E90\u5C1A\u672A\u914D\u7F6E\u3002", "PROVIDER_NOT_CONFIGURED");
-    if (options.signal?.aborted) throw abortError();
-    const control = requestControl(options);
-    const result = await getApi().generate({ draft: normalized, count: 1 }, control);
-    if (result?.requestId !== control.requestId || !Array.isArray(result.images) || result.images.length !== 1) {
-      throw illustrationError("\u751F\u56FE\u7ED3\u679C\u7684\u4EFB\u52A1\u6807\u8BC6\u6216\u56FE\u7247\u6570\u91CF\u4E0D\u7B26\u5408\u63A5\u53E3\u7EA6\u5B9A\u3002");
+    const api = requireBackend();
+    const requestId = newIllustrationId();
+    let result;
+    try {
+      result = await api.generateImage({
+        // 只给「画面里有什么」。质量词、UC 词、画风预设与 LoRA 触发词由 Cosmos 追加，
+        // 这里再写一遍就会重复叠加 —— v1 需求与联调清单都点名过这条。
+        prompts: {
+          positivePrompt: draft.prompts.positivePrompt,
+          negativePrompt: draft.prompts.negativePrompt,
+          characterPrompts: draft.prompts.characterPrompts
+        },
+        requestId,
+        signal: options.signal,
+        // 每次调用各有独立回调闭包，事件不会串任务，所以不做 requestId 过滤
+        // （Cosmos 缺省会自增 requestId，硬比会误伤合法事件）。
+        onProgress: (progress) => {
+          if (options.signal?.aborted) return;
+          const max = Number(progress?.max);
+          const value = Number(progress?.value);
+          const fraction = Number.isFinite(max) && max > 0 && Number.isFinite(value) ? Math.min(1, Math.max(0, value / max)) : void 0;
+          try {
+            options.onProgress?.({ stage: "generating", fraction });
+          } catch {
+          }
+        },
+        onStreamPreview: (event) => {
+          if (options.signal?.aborted) return;
+          try {
+            options.onStreamPreview?.({ blob: event?.previewBlob, isFinal: Boolean(event?.isFinal) });
+          } catch {
+          }
+        }
+      });
+    } catch (error) {
+      throw normalizeBackendError(error, options.signal);
     }
-    const actualDraft = normalizeIllustrationDraft(result.draft);
-    if (actualDraft.imageSource !== normalized.imageSource || actualDraft.model !== normalized.model || actualDraft.scene.summary !== normalized.scene.summary) throw illustrationError("\u751F\u56FE\u7ED3\u679C\u6765\u6E90\u3001\u6A21\u578B\u6216\u753B\u9762\u63CF\u8FF0\u4E0D\u4E00\u81F4\u3002");
-    const image = result.images[0];
-    await validateIllustrationBlob(image.blob);
-    if (image.mimeType !== image.blob.type || ![image.width, image.height].every((n) => Number.isInteger(n) && n > 0)) {
-      throw illustrationError("\u751F\u56FE\u7ED3\u679C\u7684\u683C\u5F0F\u6216\u5C3A\u5BF8\u65E0\u6548\u3002");
-    }
-    return { draft: actualDraft, image };
+    const blobs = Array.isArray(result?.imageBlobs) ? result.imageBlobs : [];
+    if (!blobs.length) throw illustrationError("\u751F\u56FE\u63A5\u53E3\u6CA1\u6709\u8FD4\u56DE\u56FE\u7247\u3002", "GENERATION_FAILED");
+    const kept = blobs.slice(0, MAX_ILLUSTRATION_BATCH);
+    return { images: await readGeneratedImages(kept), dropped: blobs.length - kept.length };
   }, options.signal);
 }
+var MAX_ILLUSTRATION_BATCH;
 var init_cosmosVisionBridge = __esm({
   "src/core/cosmosVisionBridge.js"() {
+    init_imageBytes();
     init_illustrationData();
+    MAX_ILLUSTRATION_BATCH = 8;
+  }
+});
+
+// src/core/relayClient.js
+import { getRequestHeaders as getRequestHeaders3 } from "../../../../script.js";
+import EventSourceStream from "../../../sse-stream.js";
+import { tryParseStreamingError } from "../../../openai.js";
+function toOpenAiBase(url) {
+  const base = normalizeApiBaseUrl(url);
+  if (!base) return "";
+  if (/^https?:\/\/[^/?#]+$/i.test(base)) return `${base}/v1`;
+  return base;
+}
+async function fetchModelList({ url, key = "" }) {
+  const base = toOpenAiBase(url);
+  if (!base) throw new Error("API \u5730\u5740\u65E0\u6548");
+  const res = await fetch(ST_STATUS_URL, {
+    method: "POST",
+    headers: getRequestHeaders3(),
+    body: JSON.stringify({
+      chat_completion_source: "openai",
+      reverse_proxy: base,
+      // 后端允许 reverse_proxy 存在时空 key，但必须是字符串，否则拼出 "Bearer undefined"
+      proxy_password: String(key || "")
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}${errText ? " - " + errText.substring(0, 120) : ""}`);
+  }
+  const json = await res.json().catch(() => null);
+  if (!json || json.error === true) {
+    throw new Error("\u4E2D\u8F6C\u670D\u52A1\u5668\u8FDE\u63A5\u5931\u8D25\uFF08\u7ECF ST \u540E\u7AEF\u4EE3\u7406\uFF09\uFF0C\u8BF7\u68C0\u67E5\u5730\u5740\u4E0E Key");
+  }
+  const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
+  return [...new Set(
+    list.map((m) => typeof m === "string" ? m : String(m?.id || "").trim()).filter(Boolean)
+  )].sort();
+}
+function toStJsonSchema(responseFormat) {
+  const js = responseFormat?.json_schema;
+  if (!js || typeof js !== "object") return null;
+  return {
+    name: String(js.name || "response"),
+    strict: js.strict ?? true,
+    value: js.schema
+  };
+}
+async function consumeSse(res, { onProgress, signal }) {
+  const eventStream = new EventSourceStream();
+  res.body.pipeThrough(eventStream);
+  const reader = eventStream.readable.getReader();
+  let content = "";
+  let chunkCount = 0;
+  let parseFailCount = 0;
+  try {
+    while (true) {
+      if (signal?.aborted) {
+        await reader.cancel();
+        throw new DOMException("Generation aborted", "AbortError");
+      }
+      const { done, value } = await reader.read();
+      if (done) break;
+      const data = value.data;
+      if (data === "[DONE]") break;
+      try {
+        tryParseStreamingError(res, data, { quiet: true });
+      } catch (streamParseErr) {
+        throw streamParseErr;
+      }
+      chunkCount++;
+      try {
+        const json = JSON.parse(data);
+        const chunk = json.choices?.[0]?.delta?.content ?? json.choices?.[0]?.message?.content ?? "";
+        if (chunk) {
+          content += chunk;
+          if (onProgress) onProgress(content);
+        }
+      } catch (parseErr) {
+        parseFailCount++;
+        if (parseFailCount <= 3) {
+          TitaniaLogger.warn("\u6D41\u5F0F chunk \u89E3\u6790\u5931\u8D25 (#" + parseFailCount + ")", {
+            data: String(data).substring(0, 100),
+            error: parseErr.message
+          });
+        }
+      }
+    }
+  } finally {
+    try {
+      reader.cancel();
+    } catch {
+    }
+  }
+  return { content, chunkCount, parseFailCount };
+}
+function throwHttpError(res, bodyText, prefix = "") {
+  const e = new Error(`${prefix}HTTP ${res.status}${res.statusText ? ": " + res.statusText : ""}${bodyText ? " - " + bodyText.substring(0, 180) : ""}`);
+  e.status = res.status;
+  e.body = bodyText || "";
+  throw e;
+}
+async function sendChatCompletion(options = {}) {
+  const {
+    url,
+    key = "",
+    model,
+    messages,
+    stream = false,
+    maxTokens,
+    temperature,
+    signal = null,
+    onProgress = null,
+    responseFormat = null,
+    wireStreamOverride = null,
+    diagnostics = null
+  } = options;
+  const base = toOpenAiBase(url);
+  if (!base) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
+  if (!Array.isArray(messages)) {
+    throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4\uFF08\u5B57\u7B26\u4E32\u4F1A\u88AB ST \u540E\u7AEF\u6539\u8D70 /completions\uFF09");
+  }
+  const wireStream = wireStreamOverride !== null ? wireStreamOverride : stream;
+  const suppressProgress = wireStream === true && stream !== true;
+  if (diagnostics) {
+    diagnostics.transport = "st_proxy";
+    diagnostics.endpoint = `[ST \u4EE3\u7406] ${base}/chat/completions`;
+  }
+  const body = {
+    chat_completion_source: "openai",
+    reverse_proxy: base,
+    proxy_password: String(key || ""),
+    model,
+    messages,
+    stream: wireStream
+  };
+  if (Number.isFinite(maxTokens)) body.max_tokens = maxTokens;
+  if (temperature !== void 0) body.temperature = temperature;
+  const stJsonSchema = toStJsonSchema(responseFormat);
+  if (stJsonSchema) body.json_schema = stJsonSchema;
+  const startedAt = Date.now();
+  const res = await fetch(ST_GENERATE_URL, {
+    method: "POST",
+    headers: getRequestHeaders3(),
+    body: JSON.stringify(body),
+    signal
+  });
+  if (diagnostics) {
+    diagnostics.network = diagnostics.network || {};
+    diagnostics.network.status = res.status;
+    diagnostics.network.latency = Date.now() - startedAt;
+  }
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    if (diagnostics) diagnostics.raw_response_snippet = errText.substring(0, 500);
+    try {
+      tryParseStreamingError(res, errText, { quiet: true });
+    } catch (parsedErr) {
+      throw parsedErr;
+    }
+    throwHttpError(res, errText, "ST \u540E\u7AEF\u4EE3\u7406\u8BF7\u6C42\u5931\u8D25: ");
+  }
+  if (wireStream) {
+    if (diagnostics) diagnostics.phase = "streaming";
+    const attemptStartTime = Date.now();
+    const { content: content2, chunkCount, parseFailCount } = await consumeSse(res, {
+      onProgress: suppressProgress ? null : onProgress,
+      signal
+    });
+    if (chunkCount === 0 && suppressProgress) {
+      return sendChatCompletion({ ...options, wireStreamOverride: false, signal, diagnostics });
+    }
+    if (chunkCount === 0) {
+      throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
+    }
+    if (diagnostics) {
+      diagnostics.stream_stats = diagnostics.stream_stats || {};
+      diagnostics.stream_stats.ttft = Date.now() - attemptStartTime;
+      diagnostics.stream_stats.chunks = chunkCount;
+    }
+    if (parseFailCount > 0 && !content2) {
+      throw new Error("ERR_STREAM_PARSE_FAILED: \u6D41\u5F0F\u54CD\u5E94\u89E3\u6790\u5931\u8D25");
+    }
+    if (!content2) {
+      throw new Error("ERR_STREAM_EMPTY: \u672A\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E\u5757");
+    }
+    if (suppressProgress && onProgress) onProgress(content2);
+    return content2;
+  }
+  if (diagnostics) diagnostics.phase = "parsing_json";
+  const text = await res.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("Invalid JSON response");
+  }
+  if (json?.error) {
+    const e = new Error(`\u4E0A\u6E38\u8FD4\u56DE\u9519\u8BEF\uFF08\u7ECF ST \u540E\u7AEF\u4EE3\u7406\uFF09: ${json.error?.message || json.error}`);
+    e.proxy = true;
+    throw e;
+  }
+  if (!Array.isArray(json.choices)) {
+    throw new Error("ERR_INVALID_API_RESPONSE: \u54CD\u5E94\u7F3A\u5C11 choices \u6570\u7EC4");
+  }
+  const content = json.choices[0]?.message?.content || "";
+  if (onProgress) onProgress(content);
+  return content;
+}
+var ST_STATUS_URL, ST_GENERATE_URL;
+var init_relayClient = __esm({
+  "src/core/relayClient.js"() {
+    init_apiProfileRegistry();
+    init_logger();
+    ST_STATUS_URL = "/api/backends/chat-completions/status";
+    ST_GENERATE_URL = "/api/backends/chat-completions/generate";
+  }
+});
+
+// src/core/connection.js
+import { ChatCompletionService } from "../../../custom-request.js";
+import { oai_settings as oai_settings2, getChatCompletionModel } from "../../../openai.js";
+function getActiveConnection() {
+  const data = getExtData();
+  const normalized = ensureMainApiProfiles(data.config || {});
+  const activeProfileId = normalized.active_profile_id;
+  const profiles = normalized.profiles;
+  const currentProfile = profiles.find((p) => p.id === activeProfileId) || profiles[0];
+  const useSTConnection = currentProfile.type === "internal";
+  const stream = (data.config || {}).stream !== false;
+  let url = "";
+  let key = "";
+  let model = "";
+  if (useSTConnection) {
+    try {
+      model = getChatCompletionModel() || "gpt-3.5-turbo";
+      url = oai_settings2.custom_url || oai_settings2.reverse_proxy || `[${oai_settings2.chat_completion_source}]`;
+      key = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
+    } catch (e) {
+      TitaniaLogger.warn("\u65E0\u6CD5\u8BFB\u53D6 ST API \u914D\u7F6E", e);
+      model = "gpt-3.5-turbo";
+    }
+  } else {
+    url = currentProfile.url || "";
+    key = currentProfile.key || "";
+    model = currentProfile.model || "gpt-3.5-turbo";
+  }
+  return {
+    useSTConnection,
+    profileName: currentProfile.name,
+    url,
+    key,
+    model,
+    stream,
+    rawProfile: currentProfile
+  };
+}
+async function sendChatRequestWithConnection(conn, messages, options = {}) {
+  const model = options.model || conn.model;
+  const useStream = options.stream !== void 0 ? options.stream : conn.stream;
+  const maxTokens = options.maxTokens || 2048;
+  const temperature = options.temperature || 0.7;
+  const signal = options.signal;
+  const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
+  let rawContent = "";
+  if (conn.useSTConnection) {
+    const requestData = ChatCompletionService.createRequestData({
+      stream: useStream,
+      messages,
+      chat_completion_source: oai_settings2.chat_completion_source,
+      model,
+      max_tokens: oai_settings2.openai_max_tokens || maxTokens,
+      temperature: oai_settings2.temp_openai || temperature,
+      custom_url: oai_settings2.custom_url,
+      reverse_proxy: oai_settings2.reverse_proxy,
+      proxy_password: oai_settings2.proxy_password,
+      custom_prompt_post_processing: oai_settings2.custom_prompt_post_processing
+    });
+    if (useStream) {
+      const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, null);
+      if (typeof streamGenerator === "function") {
+        for await (const chunk of streamGenerator()) {
+          rawContent = chunk.text || "";
+          if (onProgress) onProgress(rawContent);
+        }
+      } else {
+        rawContent = streamGenerator?.content || "";
+        if (onProgress) onProgress(rawContent);
+      }
+    } else {
+      const result = await ChatCompletionService.sendRequest(requestData, true, null);
+      rawContent = result?.content || "";
+      if (onProgress) onProgress(rawContent);
+    }
+  } else {
+    if (!conn.key && options.allowEmptyKey !== true) {
+      throw new Error("\u914D\u7F6E\u7F3A\u5931\uFF1A\u8BF7\u5148\u53BB\u8BBE\u7F6E\u586B API Key\uFF01");
+    }
+    if (!conn.url || !conn.url.trim()) {
+      throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
+    }
+    rawContent = await sendChatCompletion({
+      url: conn.url,
+      key: conn.key,
+      model,
+      messages,
+      stream: useStream,
+      maxTokens,
+      temperature,
+      signal,
+      onProgress
+    });
+  }
+  return rawContent;
+}
+function validateConnection() {
+  const conn = getActiveConnection();
+  if (conn.useSTConnection) {
+    return { valid: true };
+  }
+  if (!conn.url) {
+    return { valid: false, error: "API URL \u672A\u8BBE\u7F6E" };
+  }
+  if (!conn.key) {
+    return { valid: false, error: "API Key \u672A\u8BBE\u7F6E" };
+  }
+  return { valid: true };
+}
+function getConnectionByProfileId(profileId, modelOverride = null) {
+  const data = getExtData();
+  const normalized = ensureMainApiProfiles(data.config || {});
+  const profiles = normalized.profiles;
+  const profile = profiles.find((p) => p.id === profileId);
+  if (!profile) return null;
+  const useSTConnection = profile.type === "internal";
+  const stream = (data.config || {}).stream !== false;
+  let url = "";
+  let key = "";
+  let model = "";
+  if (useSTConnection) {
+    try {
+      model = modelOverride || getChatCompletionModel() || "gpt-3.5-turbo";
+      url = oai_settings2.custom_url || oai_settings2.reverse_proxy || `[${oai_settings2.chat_completion_source}]`;
+      key = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
+    } catch (e) {
+      TitaniaLogger.warn("\u65E0\u6CD5\u8BFB\u53D6 ST API \u914D\u7F6E", e);
+      model = modelOverride || "gpt-3.5-turbo";
+    }
+  } else {
+    url = profile.url || "";
+    key = profile.key || "";
+    model = modelOverride || profile.model || "gpt-3.5-turbo";
+  }
+  return {
+    useSTConnection,
+    profileName: profile.name,
+    profileId: profile.id,
+    url,
+    key,
+    model,
+    stream,
+    rawProfile: profile
+  };
+}
+var init_connection = __esm({
+  "src/core/connection.js"() {
+    init_storage();
+    init_logger();
+    init_apiProfileRegistry();
+    init_relayClient();
+  }
+});
+
+// src/core/llmJson.js
+function normalizeSmartQuotes(text) {
+  return String(text || "").replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'");
+}
+function dropTrailingCommas(text) {
+  return String(text || "").replace(/,\s*([}\]])/g, "$1");
+}
+function quoteSingleQuotedKeys(text) {
+  return String(text || "").replace(/([{,]\s*)'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, '$1"$2":');
+}
+function quoteSingleQuotedValues(text) {
+  return String(text || "").replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_match, value) => {
+    const escaped = String(value).replace(/\\'/g, "'").replace(/"/g, '\\"');
+    return `: "${escaped}"`;
+  });
+}
+function stabilizeBrokenJson(text) {
+  const raw = String(text || "");
+  if (!raw) return "";
+  let out = "";
+  let inString = false;
+  let escaped = false;
+  for (let index = 0; index < raw.length; index += 1) {
+    const char = raw[index];
+    if (inString) {
+      if (escaped) {
+        out += char;
+        escaped = false;
+        continue;
+      }
+      if (char === "\\") {
+        out += char;
+        escaped = true;
+        continue;
+      }
+      if (char === '"') {
+        out += char;
+        inString = false;
+        continue;
+      }
+      if (char === "\n" || char === "\r") {
+        out += "\\n";
+        continue;
+      }
+      out += char;
+      continue;
+    }
+    if (char === '"') inString = true;
+    out += char;
+  }
+  if (inString) out += '"';
+  out = dropTrailingCommas(out);
+  let braces = 0;
+  let brackets = 0;
+  for (let index = 0; index < out.length; index += 1) {
+    const char = out[index];
+    if (char === "{") braces += 1;
+    else if (char === "}") braces = Math.max(0, braces - 1);
+    else if (char === "[") brackets += 1;
+    else if (char === "]") brackets = Math.max(0, brackets - 1);
+  }
+  if (brackets > 0) out += "]".repeat(brackets);
+  if (braces > 0) out += "}".repeat(braces);
+  return out.trim();
+}
+function buildCandidates(raw) {
+  const text = String(raw || "");
+  const attempts = [text.trim()];
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced?.[1]) attempts.push(fenced[1].trim());
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) attempts.push(text.slice(start, end + 1).trim());
+  return attempts.filter(Boolean);
+}
+function extractJsonObject(raw) {
+  for (const attempt of buildCandidates(raw)) {
+    const base = normalizeSmartQuotes(attempt);
+    const repaired = quoteSingleQuotedValues(quoteSingleQuotedKeys(dropTrailingCommas(base)));
+    const variants = [base, repaired, stabilizeBrokenJson(base), stabilizeBrokenJson(repaired)];
+    for (const variant of variants) {
+      try {
+        const parsed = JSON.parse(variant);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+      } catch {
+      }
+    }
+  }
+  return null;
+}
+var init_llmJson = __esm({
+  "src/core/llmJson.js"() {
+  }
+});
+
+// src/core/illustrationScene.js
+function draftFromSceneReply(raw, theaterText) {
+  const parsed = extractJsonObject(raw);
+  if (!parsed) throw illustrationError("\u6A21\u578B\u6CA1\u6709\u8FD4\u56DE\u53EF\u89E3\u6790\u7684\u753B\u9762\u4FE1\u606F\uFF0C\u8BF7\u91CD\u8BD5\u6216\u6362\u4E00\u4E2A\u6A21\u578B\u3002", "INVALID_RESPONSE");
+  if (String(parsed.error || "").trim() === "NO_SCENE") {
+    throw illustrationError("\u8FD9\u6BB5\u6B63\u6587\u91CC\u6CA1\u6709\u627E\u5230\u9002\u5408\u843D\u7B14\u7684\u753B\u9762\uFF0C\u53EF\u4EE5\u8865\u5145\u4EBA\u7269\u8D44\u6599\u6216\u6362\u4E2A\u8981\u6C42\u518D\u8BD5\u3002", "NO_SCENE");
+  }
+  const scene = {
+    summary: parsed.summary,
+    ...typeof parsed.sourceExcerpt === "string" && parsed.sourceExcerpt.trim() ? { sourceExcerpt: parsed.sourceExcerpt.trim() } : {}
+  };
+  const characters = Array.isArray(parsed.characters) ? parsed.characters : Array.isArray(parsed.characterPrompts) ? parsed.characterPrompts : [];
+  const draft = normalizeIllustrationDraft({
+    version: 2,
+    backend: "cosmos",
+    scene,
+    prompts: {
+      positivePrompt: parsed.positivePrompt,
+      negativePrompt: parsed.negativePrompt ?? "",
+      characterPrompts: characters.map((character) => ({
+        positivePrompt: character?.positivePrompt ?? "",
+        negativePrompt: character?.negativePrompt ?? "",
+        position: character?.position ?? { x: 0.5, y: 0.5 }
+      }))
+    }
+  });
+  return assertIllustrationExcerpt(draft, theaterText);
+}
+function buildMessages(request, data) {
+  const restoreVariables = beginVariableSandbox();
+  try {
+    return buildIllustrationMessages(request, data, applyVariableMacros);
+  } finally {
+    restoreVariables();
+  }
+}
+async function selectIllustrationScene(request, options = {}) {
+  const theaterText = String(request?.theaterText || "").trim();
+  if (!theaterText) throw illustrationError("\u6B63\u6587\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u9009\u62E9\u753B\u9762\u3002", "NO_CONTENT");
+  const conn = getActiveConnection();
+  if (!conn) throw illustrationError("\u8BF7\u5148\u5728\u8BBE\u7F6E\u91CC\u914D\u7F6E API \u65B9\u6848\u3002", "LLM_NOT_CONFIGURED");
+  const data = getExtData();
+  const messages = buildMessages(request, data);
+  const send = (extra) => sendChatRequestWithConnection(conn, extra, {
+    signal: options.signal,
+    maxTokens: 2048,
+    // 选景是结构化任务，温度低于创作类请求以提高 JSON 合规率。
+    temperature: 0.6,
+    stream: false
+  });
+  let raw = await send(messages);
+  try {
+    return draftFromSceneReply(raw, theaterText);
+  } catch (error) {
+    if (error?.code !== "INVALID_RESPONSE" || options.signal?.aborted) throw error;
+    raw = await send([...messages, { role: "user", content: RETRY_NUDGE }]);
+    return draftFromSceneReply(raw, theaterText);
+  }
+}
+var RETRY_NUDGE;
+var init_illustrationScene = __esm({
+  "src/core/illustrationScene.js"() {
+    init_storage();
+    init_connection();
+    init_llmJson();
+    init_illustrationPresets();
+    init_stVariables();
+    init_illustrationData();
+    RETRY_NUDGE = "\u4E0A\u4E00\u6761\u56DE\u590D\u4E0D\u662F\u5408\u6CD5\u7684 JSON\u3002\u8BF7\u53EA\u8F93\u51FA\u90A3\u4E2A JSON \u5BF9\u8C61\u672C\u8EAB\uFF0C\u4E0D\u8981\u4EFB\u4F55\u89E3\u91CA\u6587\u5B57\u6216\u4EE3\u7801\u56F4\u680F\u3002";
+  }
+});
+
+// src/ui/shared/floatingWindow.js
+function claimFloatingWindow(close) {
+  const previous = activeClose;
+  activeClose = close;
+  if (previous && previous !== close) {
+    displacing = true;
+    try {
+      previous();
+    } catch {
+    } finally {
+      displacing = false;
+    }
+  }
+  return () => releaseFloatingWindow(close);
+}
+function isFloatingWindowDisplaced() {
+  return displacing;
+}
+function releaseFloatingWindow(close) {
+  if (activeClose === close) activeClose = null;
+}
+var activeClose, displacing;
+var init_floatingWindow = __esm({
+  "src/ui/shared/floatingWindow.js"() {
+    activeClose = null;
+    displacing = false;
+  }
+});
+
+// src/ui/illustrationSettingsWindow.js
+function openIllustrationSettingsWindow(options = {}) {
+  const { onClose } = options;
+  const root = document.createElement("div");
+  root.className = "t-root t-illustration-settings-window";
+  root.innerHTML = `
+        <section class="t-profile-panel" role="dialog" aria-labelledby="t-illustration-settings-title">
+            <div class="t-panel-header">
+                <strong id="t-illustration-settings-title">\u573A\u666F\u914D\u56FE\u8BBE\u7F6E</strong>
+                <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u8BBE\u7F6E" aria-label="\u5173\u95ED\u8BBE\u7F6E"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="t-profile-body">
+                <div style="font-weight:bold; color:var(--t-color-accent); margin-bottom:8px;">\u9009\u666F\u9884\u8BBE</div>
+                <p class="t-illustration-hint">
+                    \u9884\u8BBE\u51B3\u5B9A\u9001\u7ED9\u9009\u666F\u6A21\u578B\u7684\u6D88\u606F\u3002\u6761\u76EE\u6309\u987A\u5E8F\u62FC\u6210\u6D88\u606F\uFF0C\u7D20\u6750\u9760\u5360\u4F4D\u7B26\u8FDB\u5165\uFF1A
+                    ${PLACEHOLDER_NAMES.map((name) => `<code>{{${name}}}</code>`).join(" ")}
+                    <br>\u9009\u666F\u7528\u7684\u662F\u5C0F\u5267\u573A\u5F53\u524D\u7684 API \u65B9\u6848\uFF08\u8BBE\u7F6E \u2192 API \u8FDE\u63A5\uFF09\uFF0C\u4E0E\u672C\u9884\u8BBE\u76F8\u4E92\u72EC\u7ACB\u3002
+                    <strong>\u53D8\u91CF\u5B8F\u4F1A\u5C55\u5F00</strong>\uFF1A<code>{{setvar::\u540D::\u503C}}</code>\u3001<code>{{getvar::\u540D}}</code>
+                    \u7B49 10 \u4E2A STscript \u53D8\u91CF\u5B8F\u53EF\u7528\uFF0C\u8DE8\u6761\u76EE\u5171\u4EAB\uFF0C\u4E14\u53EA\u5728\u672C\u6B21\u9009\u666F\u5185\u6709\u6548\u2014\u2014\u9009\u666F\u7ED3\u675F\u540E\u53D8\u91CF\u4F1A\u8FD8\u539F\uFF0C
+                    \u4E0D\u5199\u8FDB\u4F60\u7684\u804A\u5929\u5B58\u6863\u3002<strong>{{char}}\u3001{{user}} \u8FD9\u7C7B\u8BFB\u5F53\u524D\u804A\u5929\u7684\u5B8F\u4E0D\u4F1A\u5C55\u5F00\u3002</strong>
+                </p>
+                <div class="t-profile-actions">
+                    <select class="t-input" data-role="preset-select" style="width:auto; min-width:180px;"></select>
+                    <button type="button" class="t-btn primary" data-action="new-preset" title="\u65B0\u5EFA\u9884\u8BBE\uFF08\u81EA\u52A8\u5E26\u4E0A\u5C0F\u5267\u573A\u7684\u9009\u666F\u6761\u76EE\uFF09" aria-label="\u65B0\u5EFA\u9884\u8BBE"><i class="fa-solid fa-plus"></i></button>
+                    <button type="button" class="t-btn" data-action="rename-preset" title="\u91CD\u547D\u540D\u5F53\u524D\u9884\u8BBE" aria-label="\u91CD\u547D\u540D\u5F53\u524D\u9884\u8BBE"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="t-btn" data-action="delete-preset" title="\u5220\u9664\u5F53\u524D\u9884\u8BBE" aria-label="\u5220\u9664\u5F53\u524D\u9884\u8BBE"><i class="fa-solid fa-trash"></i></button>
+                    <button type="button" class="t-btn" data-action="import" title="\u5BFC\u5165\u9884\u8BBE\uFF1A\u9152\u9986 Chat Completion \u9884\u8BBE\uFF0C\u6216\u672C\u63D2\u4EF6\u5BFC\u51FA\u7684\u9009\u666F\u9884\u8BBE" aria-label="\u5BFC\u5165\u9884\u8BBE"><i class="fa-solid fa-file-import"></i></button>
+                    <button type="button" class="t-btn" data-action="export" title="\u5BFC\u51FA\u5F53\u524D\u9884\u8BBE\u4E3A JSON" aria-label="\u5BFC\u51FA\u5F53\u524D\u9884\u8BBE"><i class="fa-solid fa-file-export"></i></button>
+                    <input type="file" accept=".json,application/json" data-role="file" style="display:none;">
+                </div>
+                <p class="t-illustration-hint" data-role="validation"></p>
+                <div class="t-profile-list" data-role="entries"></div>
+                <p class="t-illustration-hint" data-role="entry-actions"></p>
+            </div>
+        </section>`;
+  document.body.append(root);
+  const role = (name) => root.querySelector(`[data-role="${name}"]`);
+  const action = (name) => root.querySelector(`[data-action="${name}"]`);
+  let disposed = false;
+  let draggedId = "";
+  const expandedIds = /* @__PURE__ */ new Set();
+  function toggleExpanded(id3) {
+    if (expandedIds.has(id3)) expandedIds.delete(id3);
+    else expandedIds.add(id3);
+    render();
+  }
+  const state = () => {
+    const data = getExtData();
+    ensureIllustrationPresets(data);
+    return data[ILLUSTRATION_PRESETS_KEY];
+  };
+  const activePreset = () => resolveActivePreset(getExtData());
+  const livePreset = () => state().presets.find((item) => item.id === state().active_preset_id) || null;
+  function commit() {
+    saveExtData();
+    if (!disposed) render();
+  }
+  function patchEntry(id3, patch, { rerender = false } = {}) {
+    const entry = livePreset()?.entries.find((item) => item.id === id3);
+    if (entry) Object.assign(entry, patch);
+    saveExtData();
+    if (disposed) return;
+    renderValidation();
+    if (rerender) render();
+  }
+  function deleteEntry(id3) {
+    const live = livePreset();
+    if (!live) return;
+    live.entries = live.entries.filter((item) => item.id !== id3);
+    commit();
+  }
+  function restoreEntry(id3) {
+    const factory = managedEntryDefault(id3);
+    const entry = livePreset()?.entries.find((item) => item.id === id3);
+    if (!factory || !entry) return;
+    entry.content = factory.content;
+    commit();
+  }
+  function reorderEntries(orderedIds) {
+    const live = livePreset();
+    if (!live) return;
+    live.entries.sort((a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id));
+    commit();
+  }
+  function insertEntry(position) {
+    const live = livePreset();
+    if (!live) return;
+    const entry = createPresetEntry();
+    live.entries.splice(Math.min(Math.max(0, position), live.entries.length), 0, entry);
+    expandedIds.add(entry.id);
+    commit();
+  }
+  function renderToolbar() {
+    const presets = listPresets(getExtData());
+    const active = state().active_preset_id;
+    const select = role("preset-select");
+    select.replaceChildren();
+    if (!presets.length) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "\u8FD8\u6CA1\u6709\u9884\u8BBE";
+      select.append(option);
+    } else {
+      for (const preset of presets) {
+        const option = document.createElement("option");
+        option.value = preset.id;
+        option.textContent = preset.name;
+        select.append(option);
+      }
+    }
+    select.value = presets.some((item) => item.id === active) ? active : "";
+    const hasActive = Boolean(select.value);
+    action("rename-preset").disabled = !hasActive;
+    action("delete-preset").disabled = !hasActive;
+    action("export").disabled = !hasActive;
+  }
+  function renderValidation() {
+    const node = role("validation");
+    const preset = activePreset();
+    if (!preset) {
+      node.textContent = "\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE\uFF0C\u914D\u56FE\u6682\u65F6\u4E0D\u53EF\u7528\u3002\u5BFC\u5165\u4E00\u4EFD\u9884\u8BBE\uFF0C\u6216\u65B0\u5EFA\u4E00\u4EFD\u3002";
+      node.style.color = "var(--t-color-danger, #e06c75)";
+      return;
+    }
+    const check = validatePresetForSelection(preset);
+    if (check.ok) {
+      node.textContent = `\u5F53\u524D\u9884\u8BBE\u300C${preset.name}\u300D\u53EF\u4EE5\u9009\u666F\u3002`;
+      node.style.color = "";
+    } else {
+      node.textContent = `\u26A0 ${check.reason}`;
+      node.style.color = "var(--t-color-danger, #e06c75)";
+    }
+  }
+  function labeled(labelText, control) {
+    const wrap = document.createElement("label");
+    wrap.className = "t-illustration-field";
+    wrap.append(document.createTextNode(labelText), control);
+    return wrap;
+  }
+  function iconElement(className) {
+    const icon = document.createElement("i");
+    icon.className = className;
+    return icon;
+  }
+  function button(label, iconClass, title, onClick) {
+    const element = document.createElement("button");
+    element.type = "button";
+    element.className = "t-btn";
+    element.title = title;
+    element.setAttribute("aria-label", label);
+    element.append(iconElement(iconClass));
+    element.addEventListener("click", onClick);
+    return element;
+  }
+  function buildEntrySummary(entry, index) {
+    const header = document.createElement("div");
+    header.className = "t-profile-card-header";
+    const grip = document.createElement("span");
+    grip.className = "t-profile-grip";
+    grip.title = "\u62D6\u52A8\u6392\u5E8F";
+    grip.textContent = "\u283F";
+    const order = document.createElement("span");
+    order.className = "t-profile-order";
+    order.textContent = `#${index + 1}`;
+    const open = expandedIds.has(entry.id);
+    const expand = document.createElement("button");
+    expand.type = "button";
+    expand.className = "t-profile-expand";
+    expand.dataset.expand = entry.id;
+    expand.title = open ? "\u6536\u8D77" : "\u5C55\u5F00\u7F16\u8F91";
+    const tags = [entry.role, entry.enabled ? "" : "\u5DF2\u505C\u7528"].filter(Boolean).join(" \xB7 ");
+    expand.textContent = `${open ? "\u25BE" : "\u25B8"} ${entry.name || "\u672A\u547D\u540D\u6761\u76EE"}\uFF08${tags}\uFF09`;
+    expand.addEventListener("click", () => toggleExpanded(entry.id));
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = `t-profile-toggle${entry.enabled ? " is-on" : ""}`;
+    toggle.textContent = entry.enabled ? "\u542F\u7528" : "\u505C\u7528";
+    toggle.title = entry.enabled ? "\u70B9\u51FB\u505C\u7528\uFF1A\u505C\u7528\u540E\u4E0D\u53C2\u4E0E\u9009\u666F" : "\u70B9\u51FB\u542F\u7528";
+    toggle.addEventListener("click", () => patchEntry(entry.id, { enabled: !entry.enabled }, { rerender: true }));
+    header.append(grip, order, expand, toggle);
+    if (isManagedEntry(entry.id)) {
+      header.append(button("\u6062\u590D\u9ED8\u8BA4\u5185\u5BB9", "fa-solid fa-rotate-left", "\u628A\u8FD9\u6761\u6062\u590D\u4E3A\u5C0F\u5267\u573A\u7684\u9ED8\u8BA4\u5185\u5BB9", () => {
+        if (!confirm(`\u786E\u5B9A\u628A\u300C${entry.name}\u300D\u6062\u590D\u4E3A\u9ED8\u8BA4\u5185\u5BB9\u5417\uFF1F\u4F60\u5BF9\u5B83\u7684\u4FEE\u6539\u4F1A\u4E22\u5931\u3002`)) return;
+        restoreEntry(entry.id);
+      }));
+    } else {
+      header.append(button("\u5220\u9664\u8FD9\u6761\u6761\u76EE", "fa-solid fa-trash", "\u5220\u9664\u8FD9\u6761\u6761\u76EE", () => {
+        if (!confirm(`\u786E\u5B9A\u5220\u9664\u6761\u76EE\u300C${entry.name || "\u672A\u547D\u540D"}\u300D\u5417\uFF1F`)) return;
+        deleteEntry(entry.id);
+      }));
+    }
+    return header;
+  }
+  function buildEntryBody(entry) {
+    const body = document.createElement("div");
+    body.className = "t-profile-entry-body";
+    const name = document.createElement("input");
+    name.type = "text";
+    name.className = "t-input";
+    name.value = entry.name;
+    name.addEventListener("input", () => patchEntry(entry.id, { name: name.value }));
+    body.append(labeled("\u6761\u76EE\u540D\u79F0", name));
+    const roleSelect = document.createElement("select");
+    roleSelect.className = "t-input";
+    for (const value of ["system", "user", "assistant"]) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = value;
+      roleSelect.append(option);
+    }
+    roleSelect.value = entry.role;
+    roleSelect.addEventListener("change", () => patchEntry(entry.id, { role: roleSelect.value }, { rerender: true }));
+    body.append(labeled("\u6D88\u606F\u89D2\u8272", roleSelect));
+    const content = document.createElement("textarea");
+    content.className = "t-input";
+    content.rows = 6;
+    content.value = entry.content;
+    const stat = document.createElement("p");
+    stat.className = "t-illustration-hint";
+    const refreshStat = () => {
+      const names = [...new Set([...content.value.matchAll(/\{\{\s*([\w-]+)\s*\}\}/g)].map((match) => match[1]))];
+      const vars = [...new Set([...content.value.matchAll(/\{\{\s*(?:get|set|add|inc|dec)(?:global)?var::\s*([^:}]+)/gi)].map((match) => match[1].trim()).filter(Boolean))];
+      const parts = [];
+      if (names.length) parts.push(`\u5360\u4F4D\u7B26\uFF1A${names.join("\u3001")}`);
+      if (vars.length) parts.push(`\u53D8\u91CF\uFF1A${vars.join("\u3001")}`);
+      stat.textContent = parts.length ? parts.join(" \xB7 ") : "\u8FD9\u6761\u4E0D\u542B\u5360\u4F4D\u7B26\u6216\u53D8\u91CF";
+    };
+    content.addEventListener("input", () => {
+      patchEntry(entry.id, { content: content.value });
+      refreshStat();
+    });
+    refreshStat();
+    body.append(labeled("\u5185\u5BB9", content), stat);
+    return body;
+  }
+  function buildEntryCard(entry, index) {
+    const card = document.createElement("article");
+    card.className = "t-profile-card";
+    card.dataset.entryId = entry.id;
+    card.draggable = true;
+    card.append(buildEntrySummary(entry, index));
+    if (expandedIds.has(entry.id)) card.append(buildEntryBody(entry));
+    card.addEventListener("dragstart", (event) => {
+      if (event.target.closest("input, textarea, select")) {
+        event.preventDefault();
+        return;
+      }
+      draggedId = entry.id;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", entry.id);
+      card.classList.add("is-dragging");
+    });
+    card.addEventListener("dragend", () => card.classList.remove("is-dragging"));
+    card.addEventListener("dragover", (event) => event.preventDefault());
+    card.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const sourceId = draggedId || event.dataTransfer.getData("text/plain");
+      if (!sourceId || sourceId === entry.id) return;
+      const ids = (activePreset()?.entries || []).map((item) => item.id).filter((id3) => id3 !== sourceId);
+      const rect = card.getBoundingClientRect();
+      const insertAfter = event.clientY >= rect.top + rect.height / 2;
+      const base = ids.indexOf(entry.id);
+      if (base < 0) return;
+      ids.splice(insertAfter ? base + 1 : base, 0, sourceId);
+      draggedId = "";
+      reorderEntries(ids);
+    });
+    return card;
+  }
+  function renderSetup() {
+    const list = role("entries");
+    list.replaceChildren();
+    const box = document.createElement("div");
+    box.className = "t-profile-card";
+    const title = document.createElement("p");
+    title.style.cssText = "margin:0 0 8px; font-weight:bold;";
+    title.textContent = "\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE";
+    const hint = document.createElement("p");
+    hint.className = "t-illustration-hint";
+    hint.textContent = "\u300C\u5206\u6790\u753B\u9762\u300D\u9700\u8981\u4E00\u4EFD\u9884\u8BBE\u6765\u51B3\u5B9A\u9001\u7ED9\u6A21\u578B\u7684\u6D88\u606F\u3002\u5BFC\u5165\u9152\u9986\u9884\u8BBE\u6216\u672C\u63D2\u4EF6\u5BFC\u51FA\u7684\u9884\u8BBE\uFF0C\u4F1A\u81EA\u52A8\u8865\u4E0A\u5C0F\u5267\u573A\u7684\u9009\u666F\u6761\u76EE\uFF1B\u65B0\u5EFA\u5219\u76F4\u63A5\u5F97\u5230\u4E00\u4EFD\u53EF\u7528\u7684\u9ED8\u8BA4\u914D\u7F6E\u3002";
+    const actions = document.createElement("div");
+    actions.className = "t-profile-actions";
+    const importBtn = document.createElement("button");
+    importBtn.type = "button";
+    importBtn.className = "t-btn primary";
+    importBtn.textContent = "\u5BFC\u5165\u9884\u8BBE";
+    importBtn.addEventListener("click", () => role("file").click());
+    const newBtn = document.createElement("button");
+    newBtn.type = "button";
+    newBtn.className = "t-btn";
+    newBtn.textContent = "\u65B0\u5EFA\u9884\u8BBE";
+    newBtn.addEventListener("click", () => createPreset());
+    actions.append(importBtn, newBtn);
+    box.append(title, hint, actions);
+    list.append(box);
+    role("entry-actions").textContent = "";
+  }
+  function renderEntries() {
+    const preset = activePreset();
+    const list = role("entries");
+    list.replaceChildren();
+    preset.entries.forEach((entry, index) => list.append(buildEntryCard(entry, index)));
+    const actions = role("entry-actions");
+    actions.replaceChildren();
+    const note = document.createElement("span");
+    note.className = "t-illustration-hint";
+    note.textContent = "\u5E26 \u21BA \u7684\u662F\u5C0F\u5267\u573A\u8865\u4E0A\u7684\u6761\u76EE\uFF1A\u53EF\u6539\u5199\u3001\u53EF\u505C\u7528\u3001\u53EF\u6392\u5E8F\uFF0C\u4F46\u4E0D\u80FD\u5220\uFF0C\u6539\u574F\u4E86\u7528 \u21BA \u8FD8\u539F\u3002";
+    actions.append(note, button("\u65B0\u589E\u6761\u76EE", "fa-solid fa-plus", "\u5728\u5F53\u524D\u9884\u8BBE\u672B\u5C3E\u65B0\u589E\u4E00\u6761\u6761\u76EE", () => insertEntry(preset.entries.length)));
+  }
+  function render() {
+    if (disposed) return;
+    renderToolbar();
+    renderValidation();
+    if (activePreset()) renderEntries();
+    else renderSetup();
+  }
+  function createPreset() {
+    const preset = createUserPreset("\u65B0\u9884\u8BBE");
+    state().presets.push(preset);
+    state().active_preset_id = preset.id;
+    for (const entry of preset.entries) expandedIds.add(entry.id);
+    commit();
+  }
+  role("preset-select").addEventListener("change", (event) => {
+    state().active_preset_id = event.target.value;
+    commit();
+  });
+  root.addEventListener("click", (event) => {
+    const button2 = event.target.closest("button");
+    if (!button2 || button2.disabled) return;
+    const operation = button2.dataset.action;
+    if (operation === "close") {
+      close();
+      return;
+    }
+    if (operation === "new-preset") {
+      createPreset();
+      return;
+    }
+    if (operation === "rename-preset") {
+      const live = livePreset();
+      if (!live) return;
+      const name = prompt("\u9884\u8BBE\u540D\u79F0", live.name);
+      if (name === null) return;
+      live.name = String(name).trim() || live.name;
+      commit();
+      return;
+    }
+    if (operation === "delete-preset") {
+      const live = livePreset();
+      if (!live) return;
+      if (!confirm(`\u786E\u5B9A\u5220\u9664\u9884\u8BBE\u300C${live.name}\u300D\u5417\uFF1F`)) return;
+      state().presets = state().presets.filter((item) => item.id !== live.id);
+      state().active_preset_id = state().presets[0]?.id || "";
+      commit();
+      return;
+    }
+    if (operation === "import") {
+      role("file").click();
+      return;
+    }
+    if (operation === "export") {
+      const preset = activePreset();
+      if (!preset) return;
+      const blob = new Blob([JSON.stringify(serializeIllustrationPreset(preset), null, 4)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${(preset.name || "\u9009\u666F\u9884\u8BBE").replace(/[\\/:*?"<>|]/g, "_")}.json`;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      return;
+    }
+  });
+  role("file").addEventListener("change", function() {
+    const file = this.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const raw = JSON.parse(String(reader.result || ""));
+        if (!isChatCompletionPreset(raw)) throw new Error("\u8FD9\u4E0D\u50CF\u4E00\u4EFD\u9884\u8BBE\u6587\u4EF6");
+        const preset = readChatCompletionPreset(raw, { name: file.name.replace(/\.json$/i, "") });
+        const existing = state().presets.findIndex((item) => item.name === preset.name);
+        if (existing >= 0) preset.id = state().presets[existing].id;
+        if (existing >= 0) state().presets[existing] = preset;
+        else state().presets.push(preset);
+        state().active_preset_id = preset.id;
+        commit();
+        const skipped = preset.droppedContextEntries ? `\uFF0C\u8DF3\u8FC7 ${preset.droppedContextEntries} \u6761\u4E0A\u4E0B\u6587\u6CE8\u5165\u6761\u76EE` : "";
+        if (window.toastr) {
+          toastr.success(
+            `\u5DF2\u5BFC\u5165 ${preset.importedEntries} \u6761\uFF0C\u5E76\u8865\u4E0A\u5C0F\u5267\u573A\u7684\u9009\u666F\u6761\u76EE${skipped}`,
+            `\u9009\u666F\u9884\u8BBE\uFF1A${preset.name}`
+          );
+        }
+      } catch (error) {
+        if (window.toastr) toastr.error(`\u9884\u8BBE\u5BFC\u5165\u5931\u8D25\uFF1A${error?.message || error}`, "Titania");
+      } finally {
+        this.value = "";
+      }
+    };
+    reader.readAsText(file);
+  });
+  function close() {
+    if (disposed) return;
+    disposed = true;
+    const displaced = isFloatingWindowDisplaced();
+    releaseFloatingWindow(close);
+    root.remove();
+    if (!displaced) onClose?.();
+  }
+  claimFloatingWindow(close);
+  render();
+  action("close").focus();
+  return close;
+}
+var init_illustrationSettingsWindow = __esm({
+  "src/ui/illustrationSettingsWindow.js"() {
+    init_storage();
+    init_illustrationPresets();
+    init_floatingWindow();
+  }
+});
+
+// src/ui/characterProfileWindow.js
+function notifyProfilesChanged() {
+  window.dispatchEvent(new CustomEvent("titania:character-profiles-changed"));
+}
+function stripHtml(value) {
+  return String(value ?? "").replace(/<[^>]*>/g, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+function bindingLabel(cardKey) {
+  return cardKey ? cardKey.slice(CARD_KEY_PREFIX.length) : "\u4E0D\u7ED1\u5B9A\u89D2\u8272\u5361";
+}
+function openCharacterProfileWindow(options = {}) {
+  const { onClose } = options;
+  const root = document.createElement("div");
+  root.className = "t-root t-profile-window";
+  root.innerHTML = `
+        <section class="t-profile-panel" role="dialog" aria-labelledby="t-profile-title">
+            <div class="t-panel-header">
+                <strong id="t-profile-title">\u4EBA\u7269\u5916\u89C2\u6863\u6848</strong>
+                <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u6863\u6848\u7BA1\u7406" aria-label="\u5173\u95ED\u6863\u6848\u7BA1\u7406"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="t-profile-body">
+                <p class="t-illustration-hint">
+                    \u4E3A\u89D2\u8272\u5199\u4E00\u6B21\u5916\u89C2\uFF0C\u4E4B\u540E\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u914D\u56FE\u4F1A\u81EA\u52A8\u5E26\u4E0A\u3002\u7ED1\u5B9A\u89D2\u8272\u5361\u540E\u5728\u8BE5\u89D2\u8272\u7684\u804A\u5929\u91CC\u5FC5\u4E2D\uFF1B
+                    \u6CA1\u7ED1\u5B9A\u7684\u9760\u89E6\u53D1\u8BCD\u5728\u6B63\u6587\u91CC\u5339\u914D\u3002\u6863\u6848\u53EA\u63CF\u8FF0\u300C\u753B\u9762\u91CC\u6709\u4EC0\u4E48\u300D\u2014\u2014\u8D28\u91CF\u8BCD\u3001\u753B\u5E08\u4E32\u4E0E\u9884\u8BBE\u4ECD\u7531 Cosmos Vision \u8FFD\u52A0\u3002
+                    <br>\u7FA4\u804A\u91CC\u6CA1\u6709\u5355\u4E00\u89D2\u8272\u5361\uFF0C\u7ED1\u5B9A\u4E0D\u4F1A\u751F\u6548\uFF0C\u8BF7\u7528\u89E6\u53D1\u8BCD\uFF0C\u6216\u5230\u914D\u56FE\u9762\u677F\u91CC\u624B\u52A8\u52FE\u9009\u3002
+                </p>
+                <div class="t-profile-actions">
+                    <button type="button" class="t-btn primary" data-action="add" title="\u65B0\u5EFA\u4E00\u6761\u5916\u89C2\u6863\u6848" aria-label="\u65B0\u5EFA\u6863\u6848"><i class="fa-solid fa-plus"></i></button>
+                    <button type="button" class="t-btn" data-action="import" title="\u4ECE\u5F53\u524D\u6253\u5F00\u7684\u89D2\u8272\u5361\u5BFC\u5165\u63CF\u8FF0" aria-label="\u4ECE\u5F53\u524D\u89D2\u8272\u5361\u5BFC\u5165"><i class="fa-solid fa-id-card"></i></button>
+                    <span class="t-illustration-hint" data-role="status"></span>
+                </div>
+                <div class="t-profile-list" data-role="list"></div>
+            </div>
+        </section>`;
+  document.body.append(root);
+  const role = (name) => root.querySelector(`[data-role="${name}"]`);
+  const action = (name) => root.querySelector(`[data-action="${name}"]`);
+  let disposed = false;
+  let draggedId = "";
+  function writeEntries(mutate, rerender = false) {
+    const data = getExtData();
+    const current = data[CHARACTER_PROFILES_KEY];
+    if (!current || !Array.isArray(current.entries)) {
+      data[CHARACTER_PROFILES_KEY] = { version: CHARACTER_PROFILES_VERSION, entries: [] };
+    }
+    mutate(data[CHARACTER_PROFILES_KEY].entries);
+    saveExtData();
+    notifyProfilesChanged();
+    if (rerender && !disposed) renderList();
+  }
+  function withEntry(id3, apply) {
+    return (list) => {
+      const found = list.find((item) => item.id === id3);
+      if (found) apply(found);
+    };
+  }
+  function labeled(labelText, control) {
+    const wrap = document.createElement("label");
+    wrap.className = "t-illustration-field";
+    wrap.append(document.createTextNode(labelText), control);
+    return wrap;
+  }
+  function textInput(value, placeholder, onInput) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "t-input";
+    input.value = value;
+    input.placeholder = placeholder;
+    input.addEventListener("input", () => onInput(input.value));
+    return input;
+  }
+  function cardSelect(entry) {
+    const select = document.createElement("select");
+    select.className = "t-input";
+    const none = document.createElement("option");
+    none.value = "";
+    none.textContent = "\u4E0D\u7ED1\u5B9A\u89D2\u8272\u5361";
+    select.append(none);
+    const cards = listCharacterCards();
+    for (const card of cards) {
+      const option = document.createElement("option");
+      option.value = card.cardKey;
+      option.textContent = card.name;
+      select.append(option);
+    }
+    if (entry.cardKey && !cards.some((card) => card.cardKey === entry.cardKey)) {
+      const stale = document.createElement("option");
+      stale.value = entry.cardKey;
+      stale.textContent = `${bindingLabel(entry.cardKey)}\uFF08\u672C\u5730\u5DF2\u627E\u4E0D\u5230\uFF09`;
+      select.append(stale);
+    }
+    select.value = entry.cardKey;
+    select.addEventListener("change", () => writeEntries(withEntry(entry.id, (target) => {
+      target.cardKey = select.value;
+    })));
+    return select;
+  }
+  function buildCard(entry) {
+    const card = document.createElement("article");
+    card.className = "t-profile-card";
+    card.dataset.profileId = entry.id;
+    card.draggable = true;
+    const header = document.createElement("div");
+    header.className = "t-profile-card-header";
+    const grip = document.createElement("span");
+    grip.className = "t-profile-grip";
+    grip.title = "\u62D6\u52A8\u6392\u5E8F";
+    grip.textContent = "\u283F";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = `t-profile-toggle${entry.enabled ? " is-on" : ""}`;
+    toggle.textContent = entry.enabled ? "\u542F\u7528" : "\u505C\u7528";
+    toggle.title = entry.enabled ? "\u70B9\u51FB\u505C\u7528\uFF1A\u505C\u7528\u540E\u4E0D\u53C2\u4E0E\u5339\u914D" : "\u70B9\u51FB\u542F\u7528";
+    toggle.addEventListener("click", () => writeEntries(withEntry(entry.id, (target) => {
+      target.enabled = !target.enabled;
+    }), true));
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "t-btn";
+    del.title = "\u5220\u9664\u8FD9\u6761\u6863\u6848";
+    del.setAttribute("aria-label", "\u5220\u9664\u8FD9\u6761\u6863\u6848");
+    const trash = document.createElement("i");
+    trash.className = "fa-solid fa-trash";
+    del.append(trash);
+    del.addEventListener("click", () => {
+      if (!confirm(`\u786E\u5B9A\u5220\u9664\u5916\u89C2\u6863\u6848\u300C${entry.name || "\u672A\u547D\u540D\u89D2\u8272"}\u300D\u5417\uFF1F`)) return;
+      writeEntries((list) => {
+        const index = list.findIndex((item) => item.id === entry.id);
+        if (index >= 0) list.splice(index, 1);
+      }, true);
+    });
+    header.append(grip, toggle, del);
+    card.append(header);
+    card.append(labeled("\u6863\u6848\u540D\u79F0", textInput(entry.name, "\u4F8B\u5982\uFF1A\u963F\u79BB", (value) => {
+      writeEntries(withEntry(entry.id, (target) => {
+        target.name = value;
+      }));
+    })));
+    card.append(labeled("\u89E6\u53D1\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF09", textInput(entry.keywords.join("\uFF0C"), "\u4F8B\u5982\uFF1A\u963F\u79BB\uFF0C\u5C0F\u79BB\uFF0C\u79BB\u59D1\u5A18", (value) => {
+      const keywords = value.split(/[,，、]/).map((text) => text.trim()).filter(Boolean);
+      writeEntries(withEntry(entry.id, (target) => {
+        target.keywords = keywords;
+      }));
+    })));
+    card.append(labeled("\u7ED1\u5B9A\u89D2\u8272\u5361", cardSelect(entry)));
+    const content = document.createElement("textarea");
+    content.className = "t-input";
+    content.rows = 5;
+    content.value = entry.content;
+    content.placeholder = "\u4F8B\u5982\uFF1A\u94F6\u767D\u957F\u53D1\uFF0C\u7EA2\u77B3\uFF0C\u5E38\u7A7F\u6DF1\u8272\u957F\u5916\u5957\uFF0C\u5DE6\u8033\u6709\u4E00\u679A\u94F6\u8272\u8033\u73AF\u3002";
+    const counter = document.createElement("p");
+    counter.className = "t-illustration-hint";
+    const refreshCounter = () => {
+      counter.textContent = `\u5F53\u524D ${content.value.length} \u5B57\u7B26 \xB7 ${bindingLabel(entry.cardKey)}`;
+    };
+    content.addEventListener("input", () => {
+      writeEntries(withEntry(entry.id, (target) => {
+        target.content = content.value;
+      }));
+      refreshCounter();
+    });
+    refreshCounter();
+    card.append(labeled(`\u5916\u89C2\u63CF\u5199\uFF08\u6700\u591A ${MAX_PROFILE_BLOCK_CHARS} \u5B57\u7B26\uFF09`, content), counter);
+    card.addEventListener("dragstart", (event) => {
+      draggedId = entry.id;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", entry.id);
+      card.classList.add("is-dragging");
+    });
+    card.addEventListener("dragend", () => card.classList.remove("is-dragging"));
+    card.addEventListener("dragover", (event) => event.preventDefault());
+    card.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const sourceId = draggedId || event.dataTransfer.getData("text/plain");
+      if (!sourceId || sourceId === entry.id) return;
+      const rect = card.getBoundingClientRect();
+      const insertBefore = event.clientY < rect.top + rect.height / 2;
+      writeEntries((list) => {
+        const from = list.findIndex((item) => item.id === sourceId);
+        if (from < 0) return;
+        const [moved] = list.splice(from, 1);
+        const base = list.findIndex((item) => item.id === entry.id);
+        if (base < 0) {
+          list.push(moved);
+          return;
+        }
+        list.splice(insertBefore ? base : base + 1, 0, moved);
+      }, true);
+      draggedId = "";
+    });
+    return card;
+  }
+  function renderList() {
+    const list = role("list");
+    list.replaceChildren();
+    const items = readCharacterProfiles(getExtData());
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "t-illustration-hint";
+      empty.textContent = "\u8FD8\u6CA1\u6709\u6863\u6848\u3002\u70B9\u300C\u65B0\u5EFA\u6863\u6848\u300D\uFF0C\u6216\u7528\u300C\u4ECE\u5F53\u524D\u89D2\u8272\u5361\u5BFC\u5165\u300D\u628A\u5F53\u524D\u89D2\u8272\u5361\u7684\u63CF\u8FF0\u62C9\u8FDB\u6765\u5F53\u8349\u7A3F\u3002";
+      list.append(empty);
+      return;
+    }
+    for (const entry of items) list.append(buildCard(entry));
+  }
+  function importFromCard() {
+    const description = stripHtml(getCurrentCharacterDescription());
+    if (!description) {
+      role("status").textContent = "\u5F53\u524D\u804A\u5929\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u89D2\u8272\u5361\u63CF\u8FF0\u3002";
+      return;
+    }
+    const cardKey = getCharacterCardKey();
+    const name = listCharacterCards().find((card) => card.cardKey === cardKey)?.name || "\u5BFC\u5165\u7684\u89D2\u8272";
+    const created = { ...createCharacterProfile(name), content: description, cardKey };
+    writeEntries((list) => list.push(created), true);
+    role("status").textContent = cardKey.startsWith(CARD_KEY_PREFIX) ? `\u5DF2\u5BFC\u5165\u300C${name}\u300D\u7684\u89D2\u8272\u5361\u63CF\u8FF0\uFF0C\u53EF\u5728\u4E0B\u9762\u7EE7\u7EED\u7CBE\u7B80\u3002` : "\u5DF2\u5BFC\u5165\u63CF\u8FF0\uFF0C\u4F46\u5F53\u524D\u662F\u7FA4\u804A\uFF0C\u65E0\u6CD5\u7ED1\u5B9A\u89D2\u8272\u5361\u3002";
+  }
+  root.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button || button.disabled) return;
+    const operation = button.dataset.action;
+    if (operation === "close") {
+      close();
+      return;
+    }
+    if (operation === "add") {
+      writeEntries((list) => list.push(createCharacterProfile("\u65B0\u6863\u6848")), true);
+      return;
+    }
+    if (operation === "import") {
+      importFromCard();
+      return;
+    }
+  });
+  function close() {
+    if (disposed) return;
+    disposed = true;
+    const displaced = isFloatingWindowDisplaced();
+    releaseFloatingWindow(close);
+    root.remove();
+    if (!displaced) onClose?.();
+  }
+  claimFloatingWindow(close);
+  renderList();
+  action("close").focus();
+  return close;
+}
+var init_characterProfileWindow = __esm({
+  "src/ui/characterProfileWindow.js"() {
+    init_storage();
+    init_characterProfiles();
+    init_context();
+    init_floatingWindow();
   }
 });
 
@@ -21130,7 +23218,23 @@ function showError(error) {
 }
 function sessionFor(sceneId, initialText) {
   if (!sessions.has(sceneId)) {
-    sessions.set(sceneId, { text: initialText || "", request: "", participants: "", draft: null, pending: null, previousScenes: [], adopted: void 0, notice: "", job: null });
+    sessions.set(sceneId, {
+      text: initialText || "",
+      request: "",
+      participants: "",
+      draft: null,
+      pending: null,
+      previewBlob: null,
+      previousScenes: [],
+      adopted: void 0,
+      notice: "",
+      job: null,
+      // 外观档案：profileIds 是勾选态，profileBlocks 记下我们插入过的那几块原文，
+      // 取消勾选时只移除仍逐字存在的那块 —— 用户改过的内容永不删除。
+      profileIds: [],
+      profileBlocks: {},
+      profilesInitialized: false
+    });
   }
   return sessions.get(sceneId);
 }
@@ -21139,7 +23243,9 @@ function notifyView(sceneId) {
 }
 function jobProgress(job) {
   return (event) => {
-    job.status = PROGRESS_LABELS[event.stage] || "\u6B63\u5728\u5904\u7406\u2026";
+    const label = PROGRESS_LABELS[event.stage] || "\u6B63\u5728\u5904\u7406\u2026";
+    const percent = Number.isFinite(event.fraction) ? ` ${Math.round(event.fraction * 100)}%` : "";
+    job.status = `${label}${percent}`;
     notifyView(job.sceneId);
   };
 }
@@ -21166,7 +23272,7 @@ function notifyBackgroundResult(job) {
   else if (titles[job.kind]) window.toastr.info(titles[job.kind], "Titania Echo");
 }
 async function persistPending(current, currentTarget) {
-  current.record = await saveGeneratedIllustration(currentTarget.sceneId, current.pending);
+  current.record = await saveGeneratedIllustrations(currentTarget.sceneId, current.pending);
   const image = selectedIllustration(current.record);
   await currentTarget.onSelected?.(image);
   current.adopted = image;
@@ -21174,8 +23280,7 @@ async function persistPending(current, currentTarget) {
   current.notice = "\u914D\u56FE\u5DF2\u4FDD\u5B58\u3002\u53EF\u5728\u4E0B\u65B9\u6311\u9009\u56FE\u7247\uFF0C\u6216\u6CBF\u7528\u63D0\u793A\u8BCD\u91CD\u65B0\u751F\u6210\u3002";
   return current.record;
 }
-function openIllustrationWindow(targetOrTargets) {
-  closeActiveWindow?.();
+function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
   const targets = Array.isArray(targetOrTargets) ? targetOrTargets : [targetOrTargets];
   if (!targets.length) return;
   const previousFocus = document.activeElement;
@@ -21185,23 +23290,31 @@ function openIllustrationWindow(targetOrTargets) {
         <section class="t-illustration-panel" role="dialog" aria-labelledby="t-illustration-title">
             <div class="t-panel-header">
                 <strong id="t-illustration-title">\u573A\u666F\u914D\u56FE</strong>
-                <button type="button" class="t-btn" data-action="close" aria-label="\u5173\u95ED\u914D\u56FE\u9762\u677F">\u5173\u95ED</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" class="t-btn" data-action="profiles" title="\u4EBA\u7269\u5916\u89C2\u6863\u6848" aria-label="\u4EBA\u7269\u5916\u89C2\u6863\u6848"><i class="fa-solid fa-address-book"></i></button>
+                    <button type="button" class="t-btn" data-action="settings" title="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF1A\u9009\u666F\u9884\u8BBE" aria-label="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E"><i class="fa-solid fa-gear"></i></button>
+                    <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u914D\u56FE\u9762\u677F" aria-label="\u5173\u95ED\u914D\u56FE\u9762\u677F"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
             <div class="t-illustration-body">
                 <label class="t-illustration-field">\u914D\u56FE\u5185\u5BB9<select class="t-input" data-field="target"></select></label>
                 <p class="t-illustration-hint">\u4E3A\u9009\u4E2D\u7684\u8FD9\u4E00\u8F6E\u5267\u573A\u6311\u9009\u4E00\u4E2A\u753B\u9762\u3002\u5207\u6362\u6B63\u6587\u540E\uFF0C\u672C\u6B21\u4EFB\u52A1\u4ECD\u5C5E\u4E8E\u8FD9\u91CC\u663E\u793A\u7684\u5185\u5BB9\u3002</p>
                 <div class="t-illustration-connection"><span data-role="connection">\u6B63\u5728\u68C0\u6D4B Cosmos Vision\u2026</span><button class="t-btn" type="button" data-action="detect">\u91CD\u65B0\u68C0\u6D4B</button></div>
-                <label class="t-illustration-field">\u751F\u56FE\u6765\u6E90<select class="t-input" data-field="source"></select></label>
-                <p class="t-illustration-hint">\u753B\u5E45\u3001\u753B\u98CE\u548C\u91C7\u6837\u8BBE\u7F6E\u6CBF\u7528 Cosmos Vision \u7684\u914D\u7F6E\u3002</p>
+                <p class="t-illustration-hint">\u753B\u9762\u7531\u672C\u63D2\u4EF6\u7684 API \u65B9\u6848\u9009\u51FA\uFF1B\u753B\u5E45\u3001\u753B\u98CE\u3001\u8D28\u91CF\u8BCD\u4E0E\u9884\u8BBE\u6CBF\u7528 Cosmos Vision \u7684\u914D\u7F6E\uFF0C\u4E0D\u5728\u8FD9\u91CC\u9009\u62E9\u3002</p>
                 <label class="t-illustration-field">\u60F3\u753B\u4EC0\u4E48\uFF08\u53EF\u9009\uFF09<textarea class="t-input" data-field="request" rows="2" placeholder="\u4F8B\u5982\uFF1A\u753B\u96E8\u4E2D\u91CD\u9022\u7684\u77AC\u95F4\uFF0C\u8FDC\u666F\uFF0C\u504F\u51B7\u8272"></textarea></label>
                 <details class="t-illustration-details"><summary>\u6B63\u6587\u4E0E\u4EBA\u7269\u8D44\u6599</summary>
                     <label class="t-illustration-field">\u672C\u6B21\u914D\u56FE\u7D20\u6750<textarea class="t-input" data-field="text" rows="6"></textarea></label>
-                    <label class="t-illustration-field">\u4EBA\u7269\u5916\u89C2\u7B49\u8865\u5145\u8D44\u6599\uFF08\u53EF\u9009\uFF09<textarea class="t-input" data-field="participants" rows="3" placeholder="\u53EF\u4EE5\u8865\u5145\u53D1\u8272\u3001\u670D\u88C5\u7B49\u4FE1\u606F\uFF1B\u7559\u7A7A\u5219\u6839\u636E\u6B63\u6587\u9009\u666F\u3002"></textarea></label>
+                    <div class="t-illustration-field">\u4EBA\u7269\u5916\u89C2\u6863\u6848
+                        <div class="t-profile-chips" data-role="profiles"></div>
+                    </div>
+                    <label class="t-illustration-field">\u4EBA\u7269\u5916\u89C2\u7B49\u8865\u5145\u8D44\u6599\uFF08\u53EF\u9009\uFF09<textarea class="t-input" data-field="participants" rows="3" placeholder="\u9009\u4E2D\u7684\u5916\u89C2\u6863\u6848\u4F1A\u81EA\u52A8\u586B\u5230\u8FD9\u91CC\uFF0C\u4E5F\u53EF\u4EE5\u76F4\u63A5\u624B\u5199\uFF1B\u7559\u7A7A\u5219\u5B8C\u5168\u6839\u636E\u6B63\u6587\u9009\u666F\u3002"></textarea></label>
                 </details>
                 <div class="t-illustration-actions"><button class="t-btn primary" type="button" data-action="prepare">\u5206\u6790\u753B\u9762</button><button class="t-btn" type="button" data-action="alternate">\u6362\u4E2A\u753B\u9762</button></div>
                 <div data-role="draft" hidden>
                     <p class="t-illustration-summary" data-role="summary"></p>
+                    <p class="t-illustration-hint" data-role="excerpt" hidden></p>
                     <details class="t-illustration-details"><summary>\u7F16\u8F91\u7ED8\u753B\u63D0\u793A\u8BCD</summary>
+                        <p class="t-illustration-hint">\u8FD9\u91CC\u53EA\u5199\u300C\u753B\u9762\u91CC\u6709\u4EC0\u4E48\u300D\u3002\u8D28\u91CF\u8BCD\u3001\u753B\u5E08\u4E32\u3001\u753B\u98CE\u9884\u8BBE\u4E0E LoRA \u89E6\u53D1\u8BCD\u7531 Cosmos Vision \u8FFD\u52A0\uFF0C\u91CD\u590D\u586B\u5199\u4F1A\u53E0\u52A0\u3002</p>
                         <label class="t-illustration-field">\u6B63\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-field="positive" rows="5"></textarea></label>
                         <label class="t-illustration-field">\u8D1F\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-field="negative" rows="3"></textarea></label>
                         <div data-role="characters"></div>
@@ -21210,6 +23323,7 @@ function openIllustrationWindow(targetOrTargets) {
                 </div>
                 <div class="t-illustration-status" role="status" aria-live="polite" data-role="status"></div>
                 <div class="t-illustration-actions"><button class="t-btn" type="button" data-action="cancel" hidden>\u53D6\u6D88\u7B49\u5F85</button><button class="t-btn" type="button" data-action="save" hidden>\u91CD\u8BD5\u4FDD\u5B58</button></div>
+                <div class="t-illustration-preview" data-role="preview" hidden><p class="t-illustration-hint">\u751F\u6210\u4E2D\u7684\u8FC7\u7A0B\u56FE\uFF0C\u4EC5\u4F9B\u9884\u89C8\u3002</p><img alt="\u751F\u6210\u4E2D\u7684\u9884\u89C8" data-role="preview-image"></div>
                 <div class="t-illustration-pending" data-role="pending" hidden><p>\u56FE\u7247\u5DF2\u751F\u6210\uFF0C\u7B49\u5F85\u4FDD\u5B58\u3002</p><img alt="\u5F85\u4FDD\u5B58\u7684\u914D\u56FE" data-role="pending-image"></div>
                 <div class="t-illustration-gallery" data-role="gallery"></div>
             </div>
@@ -21221,6 +23335,7 @@ function openIllustrationWindow(targetOrTargets) {
   targets.forEach((target2, index) => field("target").add(new Option(target2.label || target2.scriptName, String(index))));
   let target = targets[0], session, localBusy = false, ready = false, disposed = false;
   let selectionSequence = 0, detectionSequence = 0, pendingUrl = null, renderedDraft, renderedPending;
+  let previewUrl = null, renderedPreviewBlob = null, previewUpdatedAt = 0;
   const isBusy = () => localBusy || Boolean(session?.job);
   const view = { sceneId: "", sync: () => refreshFromState() };
   activeView = view;
@@ -21235,6 +23350,9 @@ function openIllustrationWindow(targetOrTargets) {
     action("cancel").hidden = !job || job.phase === "saving";
     action("save").hidden = !session?.pending;
     action("save").disabled = busy;
+    root.querySelectorAll("[data-profile-id]").forEach((el) => {
+      el.disabled = busy;
+    });
     root.querySelectorAll("[data-image-id]").forEach((el) => {
       el.disabled = busy;
     });
@@ -21254,6 +23372,9 @@ function openIllustrationWindow(targetOrTargets) {
     role("draft").hidden = !draft;
     if (draft) {
       role("summary").textContent = draft.scene.summary;
+      const excerpt = draft.scene.sourceExcerpt || "";
+      role("excerpt").hidden = !excerpt;
+      role("excerpt").textContent = excerpt ? `\u539F\u6587\u6458\u5F55\uFF1A${excerpt}` : "";
       field("positive").value = draft.prompts.positivePrompt;
       field("negative").value = draft.prompts.negativePrompt;
       role("characters").innerHTML = draft.prompts.characterPrompts.map((character, index) => `
@@ -21274,7 +23395,75 @@ function openIllustrationWindow(targetOrTargets) {
       if (input.dataset.key === "x" || input.dataset.key === "y") character.position[input.dataset.key] = Number(input.value);
       else character[input.dataset.key] = input.value;
     });
-    return normalizeIllustrationDraft(draft, session.text);
+    return normalizeIllustrationDraft(draft);
+  }
+  function syncPreview() {
+    const blob = session?.previewBlob || null;
+    if (blob !== renderedPreviewBlob) {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = null;
+      }
+      if (blob) previewUrl = URL.createObjectURL(blob);
+      renderedPreviewBlob = blob;
+    }
+    role("preview").hidden = !previewUrl;
+    if (previewUrl) role("preview-image").src = previewUrl;
+    else role("preview-image").removeAttribute("src");
+  }
+  function syncParticipantsField() {
+    field("participants").value = session.participants;
+  }
+  function insertProfileBlock(current, entry) {
+    const block = composeProfileBlock(entry);
+    if (!block) return;
+    current.profileBlocks[entry.id] = block;
+    if (!current.profileIds.includes(entry.id)) current.profileIds.push(entry.id);
+    const text = String(current.participants || "").trim();
+    if (text.includes(block)) return;
+    current.participants = text ? `${text}
+
+${block}` : block;
+  }
+  function removeProfileBlock(current, id3) {
+    const block = current.profileBlocks[id3];
+    current.profileIds = current.profileIds.filter((item) => item !== id3);
+    if (!block || !String(current.participants || "").includes(block)) return;
+    current.participants = current.participants.replace(block, "").replace(/\n{3,}/g, "\n\n").trim();
+  }
+  function renderProfileChips() {
+    const holder = role("profiles");
+    const profiles = readCharacterProfiles(getExtData()).filter((entry) => entry.enabled !== false);
+    holder.replaceChildren();
+    if (!profiles.length) {
+      const empty = document.createElement("span");
+      empty.className = "t-illustration-hint";
+      empty.textContent = "\u8FD8\u6CA1\u6709\u5916\u89C2\u6863\u6848\u3002\u53EF\u4EE5\u70B9\u300C\u7BA1\u7406\u5916\u89C2\u6863\u6848\u300D\u65B0\u5EFA\u4E00\u4EFD\uFF0C\u6216\u76F4\u63A5\u5728\u4E0B\u65B9\u624B\u586B\u3002";
+      holder.append(empty);
+      return;
+    }
+    for (const entry of profiles) {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "t-profile-chip";
+      chip.dataset.profileId = entry.id;
+      chip.textContent = entry.name || "\u672A\u547D\u540D\u89D2\u8272";
+      chip.classList.toggle("is-on", session.profileIds.includes(entry.id));
+      chip.disabled = isBusy();
+      chip.title = entry.cardKey ? `\u5DF2\u7ED1\u5B9A\u89D2\u8272\u5361\uFF1A${entry.cardKey.slice("card:".length)}` : "\u672A\u7ED1\u5B9A\u89D2\u8272\u5361\uFF0C\u9760\u89E6\u53D1\u8BCD\u5339\u914D";
+      holder.append(chip);
+    }
+  }
+  function applyAutoProfiles(current) {
+    if (current.profilesInitialized) return;
+    current.profilesInitialized = true;
+    const matched = matchCharacterProfiles(readCharacterProfiles(getExtData()), {
+      cardKey: target.cardKey,
+      // 只用正文匹配。把 participants 也算进去的话，档案自动填入后自己就成了
+      // 匹配依据，匹配不再幂等、且依赖操作顺序。
+      text: current.text
+    });
+    for (const entry of matched) insertProfileBlock(current, entry);
   }
   function renderGallery() {
     const images = session?.record?.images || [];
@@ -21289,36 +23478,21 @@ function openIllustrationWindow(targetOrTargets) {
       pendingUrl = null;
     }
     if (session?.pending && session.pending !== renderedPending) {
-      pendingUrl = URL.createObjectURL(session.pending.image.blob);
+      pendingUrl = URL.createObjectURL(session.pending.images[0].blob);
     }
     renderedPending = session?.pending || null;
     role("pending").hidden = !pendingUrl;
     if (pendingUrl) role("pending-image").src = pendingUrl;
     else role("pending-image").removeAttribute("src");
+    syncPreview();
     updateControls();
   }
-  async function detect() {
+  function detect() {
     const sequence = ++detectionSequence;
-    ready = false;
-    updateControls();
-    try {
-      const capabilities = await getCosmosCapabilities();
-      if (disposed || sequence !== detectionSequence) return;
-      const previous = session?.draft?.imageSource || field("source").value || capabilities.defaultImageSource;
-      field("source").replaceChildren();
-      for (const source of capabilities.imageSources) {
-        const option = new Option(`${source.label}${source.ready ? "" : "\uFF08\u672A\u914D\u7F6E\uFF09"}`, source.id);
-        option.disabled = !source.ready;
-        option.title = source.reason || "";
-        field("source").add(option);
-      }
-      field("source").value = capabilities.imageSources.some((item) => item.id === previous && item.ready) ? previous : capabilities.imageSources.find((item) => item.ready)?.id || "";
-      ready = Boolean(field("source").value);
-      role("connection").textContent = ready ? "Cosmos Vision \u5DF2\u8FDE\u63A5" : "\u8BF7\u5148\u5728 Cosmos Vision \u914D\u7F6E\u4E00\u4E2A\u751F\u56FE\u6765\u6E90\u3002";
-    } catch (error) {
-      if (disposed || sequence !== detectionSequence) return;
-      role("connection").textContent = showError(error);
-    }
+    const state = detectIllustrationBackend();
+    if (disposed || sequence !== detectionSequence) return;
+    ready = state.ready;
+    role("connection").textContent = state.reason;
     updateControls();
   }
   async function loadTarget(index) {
@@ -21329,9 +23503,11 @@ function openIllustrationWindow(targetOrTargets) {
     view.sceneId = "";
     localBusy = true;
     ready = false;
+    applyAutoProfiles(session);
     field("text").value = session.text;
     field("request").value = session.request;
     field("participants").value = session.participants;
+    renderProfileChips();
     role("status").textContent = "\u6B63\u5728\u8BFB\u53D6\u914D\u56FE\u8BB0\u5F55\u2026";
     renderDraft();
     try {
@@ -21383,10 +23559,6 @@ function openIllustrationWindow(targetOrTargets) {
   });
   root.addEventListener("change", (event) => {
     if (event.target === field("target")) void loadTarget(Number(event.target.value));
-    if (event.target === field("source")) {
-      session.draft = null;
-      renderDraft();
-    }
   });
   root.addEventListener("click", (event) => {
     const button = event.target.closest("button");
@@ -21405,7 +23577,28 @@ function openIllustrationWindow(targetOrTargets) {
       else void detect();
       return;
     }
+    if (operation === "settings") {
+      const index = Number(field("target").value) || 0;
+      openIllustrationSettingsWindow({ onClose: () => openIllustrationWindow(targets, index) });
+      return;
+    }
+    if (operation === "profiles") {
+      const index = Number(field("target").value) || 0;
+      openCharacterProfileWindow({ onClose: () => openIllustrationWindow(targets, index) });
+      return;
+    }
     const current = session, currentTarget = target;
+    if (button.dataset.profileId) {
+      const id3 = button.dataset.profileId;
+      const entry = readCharacterProfiles(getExtData()).find((item) => item.id === id3);
+      if (!entry) return;
+      if (current.profileIds.includes(id3)) removeProfileBlock(current, id3);
+      else insertProfileBlock(current, entry);
+      syncParticipantsField();
+      renderProfileChips();
+      updateControls();
+      return;
+    }
     if (operation === "save") {
       void run(async () => {
         await persistPending(current, currentTarget);
@@ -21424,19 +23617,17 @@ function openIllustrationWindow(targetOrTargets) {
         role("status").textContent = "\u8BF7\u5148\u4FDD\u5B58\u4E0A\u6B21\u751F\u6210\u7684\u56FE\u7247\u3002";
         return;
       }
-      const imageSource = field("source").value;
       const alternate = operation === "alternate";
+      const request = {
+        theaterText: current.text,
+        participants: current.participants,
+        specialRequest: current.request,
+        ...alternate ? { previousScenes: current.previousScenes.slice(-6) } : {}
+      };
       startJob(current, currentTarget, "prepare", async (job) => {
-        job.status = PROGRESS_LABELS.analyzing;
+        job.status = PROGRESS_LABELS.selecting;
         notifyView(job.sceneId);
-        const draft = await prepareTheaterIllustration({
-          mode: "theater",
-          imageSource,
-          theaterText: current.text,
-          context: { mode: "provided", source: { client: "titania-theater", sceneId: currentTarget.sceneId }, participants: current.participants, history: [] },
-          specialRequest: current.request,
-          ...alternate ? { previousScenes: current.previousScenes.slice(-6) } : {}
-        }, { signal: job.controller.signal, onProgress: jobProgress(job) });
+        const draft = await selectIllustrationScene(request, { signal: job.controller.signal });
         current.draft = draft;
         current.previousScenes.push(draft.scene);
         current.notice = "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
@@ -21459,11 +23650,29 @@ function openIllustrationWindow(targetOrTargets) {
       startJob(current, currentTarget, "generate", async (job) => {
         job.status = PROGRESS_LABELS.generating;
         notifyView(job.sceneId);
-        current.pending = await generateTheaterIllustration(draft, { signal: job.controller.signal, onProgress: jobProgress(job) });
-        job.phase = "saving";
-        job.status = "\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026";
-        notifyView(job.sceneId);
-        await persistPending(current, currentTarget);
+        try {
+          const result = await generateTheaterIllustration(draft, {
+            signal: job.controller.signal,
+            onProgress: jobProgress(job),
+            // NovelAI 流式会推过程图；非流式与 ComfyUI 不会走到这里。
+            onStreamPreview: (event2) => {
+              if (!event2.blob) return;
+              const now = Date.now();
+              if (now - previewUpdatedAt < PREVIEW_THROTTLE_MS) return;
+              previewUpdatedAt = now;
+              current.previewBlob = event2.blob;
+              notifyView(job.sceneId);
+            }
+          });
+          current.pending = { images: result.images, draft, createdAt: Date.now() };
+          job.phase = "saving";
+          job.status = "\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026";
+          notifyView(job.sceneId);
+          await persistPending(current, currentTarget);
+          if (result.dropped) current.notice += ` \u672C\u6B21\u8FD4\u56DE ${result.images.length + result.dropped} \u5F20\uFF0C\u8D85\u8FC7\u4E0A\u9650\u7684 ${result.dropped} \u5F20\u672A\u4FDD\u5B58\u3002`;
+        } finally {
+          current.previewBlob = null;
+        }
       });
       return;
     }
@@ -21489,20 +23698,27 @@ function openIllustrationWindow(targetOrTargets) {
     disposed = true;
     if (activeView === view) activeView = null;
     if (pendingUrl) URL.revokeObjectURL(pendingUrl);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     root.remove();
-    window.removeEventListener("cosmos-vision:ready", detect);
-    window.removeEventListener("cosmos-vision:capabilities-changed", detect);
-    if (closeActiveWindow === close) closeActiveWindow = null;
+    window.removeEventListener("cosmos-vision:api-ready", detect);
+    window.removeEventListener("titania:character-profiles-changed", profilesChanged);
+    releaseFloatingWindow(close);
     if (previousFocus?.isConnected) previousFocus.focus();
     for (const [key, value] of sessions) {
       if (sessions.size <= 20) break;
       if (!value.pending && !value.job && key !== target.sceneId) sessions.delete(key);
     }
   }
-  closeActiveWindow = close;
-  window.addEventListener("cosmos-vision:ready", detect);
-  window.addEventListener("cosmos-vision:capabilities-changed", detect);
-  void loadTarget(0);
+  claimFloatingWindow(close);
+  window.addEventListener("cosmos-vision:api-ready", detect);
+  const profilesChanged = () => {
+    if (!disposed) {
+      renderProfileChips();
+      updateControls();
+    }
+  };
+  window.addEventListener("titania:character-profiles-changed", profilesChanged);
+  void loadTarget(Math.min(Math.max(0, Number(initialIndex) || 0), targets.length - 1));
   action("close").focus();
 }
 function findSceneContentRoot(container) {
@@ -21588,18 +23804,24 @@ function bindMainIllustrations(getTarget) {
     clearSceneIllustration(findSceneContentRoot(content));
   };
 }
-var PROGRESS_LABELS, sessions, activeView, closeActiveWindow, SCENE_ILLUSTRATION_SELECTOR;
+var PROGRESS_LABELS, PREVIEW_THROTTLE_MS, sessions, activeView, SCENE_ILLUSTRATION_SELECTOR;
 var init_illustrationWindow = __esm({
   "src/ui/illustrationWindow.js"() {
     init_chatInjector();
     init_cosmosVisionBridge();
+    init_illustrationScene();
+    init_characterProfiles();
+    init_storage();
+    init_illustrationSettingsWindow();
+    init_characterProfileWindow();
     init_illustrationStore();
     init_illustrationData();
     init_helpers();
-    PROGRESS_LABELS = { queued: "\u6B63\u5728\u6392\u961F\u2026", analyzing: "\u6B63\u5728\u5206\u6790\u5267\u573A\u3001\u9009\u62E9\u753B\u9762\u2026", generating: "\u6B63\u5728\u751F\u6210\u56FE\u7247\u2026", downloading: "\u6B63\u5728\u63A5\u6536\u56FE\u7247\u2026" };
+    init_floatingWindow();
+    PROGRESS_LABELS = { selecting: "\u6B63\u5728\u901A\u8BFB\u6B63\u6587\u3001\u9009\u62E9\u753B\u9762\u2026", generating: "\u6B63\u5728\u751F\u6210\u56FE\u7247\u2026" };
+    PREVIEW_THROTTLE_MS = 150;
     sessions = /* @__PURE__ */ new Map();
     activeView = null;
-    closeActiveWindow = null;
     SCENE_ILLUSTRATION_SELECTOR = "[data-titania-illustration],[data-titania-illustration-notice]";
   }
 });
@@ -21988,6 +24210,7 @@ async function saveContinuationChainFavorite() {
   const scriptName = String(chainData?.scriptName || script?.name || display?.scriptName || "\u573A\u666F");
   const branchKey = String(chainData?.branchKey || "").trim();
   const avatarSrc = getCurrentAvatarSrc();
+  const cardKey = getCharacterCardKey();
   const chainSignature = buildChainSignature(scriptId, items);
   const data = getExtData();
   if (!Array.isArray(data.favs) && !isFavsMigrated()) data.favs = [];
@@ -22020,6 +24243,7 @@ async function saveContinuationChainFavorite() {
       existingChain.date = new Date(now).toLocaleString();
       existingChain.html = mergedHtml;
       existingChain.avatar = avatarSrc;
+      existingChain.cardKey = cardKey;
       existingChain.branchKey = branchKey;
       existingChain.chainSignature = chainSignature;
       existingChain.items = items;
@@ -22041,6 +24265,7 @@ async function saveContinuationChainFavorite() {
     date: new Date(now).toLocaleString(),
     html: mergedHtml,
     avatar: avatarSrc,
+    cardKey,
     branchKey,
     chainSignature,
     items
@@ -22827,7 +25052,7 @@ function openFavsWindow() {
       const targets = segments.map((segment, index) => {
         const content = String(segment.html || "");
         const fallback = `favorite:${favorite.id}:${index}`;
-        const target = createIllustrationTarget({ ...segment, content, scriptId: favorite.scriptId, scriptName: favorite.scriptName || favorite.title }, fallback);
+        const target = createIllustrationTarget({ ...segment, content, cardKey: favorite.cardKey || "", scriptId: favorite.scriptId, scriptName: favorite.scriptName || favorite.title }, fallback);
         return {
           ...target,
           label: segments.length > 1 ? `\u7B2C ${index + 1} \u6BB5 \xB7 ${target.scriptName}` : target.scriptName,
@@ -24131,376 +26356,6 @@ var init_debugWindow = __esm({
     init_helpers();
     init_logView();
     tokenCountRun = 0;
-  }
-});
-
-// src/core/relayClient.js
-import { getRequestHeaders as getRequestHeaders3 } from "../../../../script.js";
-import EventSourceStream from "../../../sse-stream.js";
-import { tryParseStreamingError } from "../../../openai.js";
-function toOpenAiBase(url) {
-  const base = normalizeApiBaseUrl(url);
-  if (!base) return "";
-  if (/^https?:\/\/[^/?#]+$/i.test(base)) return `${base}/v1`;
-  return base;
-}
-async function fetchModelList({ url, key = "" }) {
-  const base = toOpenAiBase(url);
-  if (!base) throw new Error("API \u5730\u5740\u65E0\u6548");
-  const res = await fetch(ST_STATUS_URL, {
-    method: "POST",
-    headers: getRequestHeaders3(),
-    body: JSON.stringify({
-      chat_completion_source: "openai",
-      reverse_proxy: base,
-      // 后端允许 reverse_proxy 存在时空 key，但必须是字符串，否则拼出 "Bearer undefined"
-      proxy_password: String(key || "")
-    })
-  });
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status}${errText ? " - " + errText.substring(0, 120) : ""}`);
-  }
-  const json = await res.json().catch(() => null);
-  if (!json || json.error === true) {
-    throw new Error("\u4E2D\u8F6C\u670D\u52A1\u5668\u8FDE\u63A5\u5931\u8D25\uFF08\u7ECF ST \u540E\u7AEF\u4EE3\u7406\uFF09\uFF0C\u8BF7\u68C0\u67E5\u5730\u5740\u4E0E Key");
-  }
-  const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : [];
-  return [...new Set(
-    list.map((m) => typeof m === "string" ? m : String(m?.id || "").trim()).filter(Boolean)
-  )].sort();
-}
-function toStJsonSchema(responseFormat) {
-  const js = responseFormat?.json_schema;
-  if (!js || typeof js !== "object") return null;
-  return {
-    name: String(js.name || "response"),
-    strict: js.strict ?? true,
-    value: js.schema
-  };
-}
-async function consumeSse(res, { onProgress, signal }) {
-  const eventStream = new EventSourceStream();
-  res.body.pipeThrough(eventStream);
-  const reader = eventStream.readable.getReader();
-  let content = "";
-  let chunkCount = 0;
-  let parseFailCount = 0;
-  try {
-    while (true) {
-      if (signal?.aborted) {
-        await reader.cancel();
-        throw new DOMException("Generation aborted", "AbortError");
-      }
-      const { done, value } = await reader.read();
-      if (done) break;
-      const data = value.data;
-      if (data === "[DONE]") break;
-      try {
-        tryParseStreamingError(res, data, { quiet: true });
-      } catch (streamParseErr) {
-        throw streamParseErr;
-      }
-      chunkCount++;
-      try {
-        const json = JSON.parse(data);
-        const chunk = json.choices?.[0]?.delta?.content ?? json.choices?.[0]?.message?.content ?? "";
-        if (chunk) {
-          content += chunk;
-          if (onProgress) onProgress(content);
-        }
-      } catch (parseErr) {
-        parseFailCount++;
-        if (parseFailCount <= 3) {
-          TitaniaLogger.warn("\u6D41\u5F0F chunk \u89E3\u6790\u5931\u8D25 (#" + parseFailCount + ")", {
-            data: String(data).substring(0, 100),
-            error: parseErr.message
-          });
-        }
-      }
-    }
-  } finally {
-    try {
-      reader.cancel();
-    } catch {
-    }
-  }
-  return { content, chunkCount, parseFailCount };
-}
-function throwHttpError(res, bodyText, prefix = "") {
-  const e = new Error(`${prefix}HTTP ${res.status}${res.statusText ? ": " + res.statusText : ""}${bodyText ? " - " + bodyText.substring(0, 180) : ""}`);
-  e.status = res.status;
-  e.body = bodyText || "";
-  throw e;
-}
-async function sendChatCompletion(options = {}) {
-  const {
-    url,
-    key = "",
-    model,
-    messages,
-    stream = false,
-    maxTokens,
-    temperature,
-    signal = null,
-    onProgress = null,
-    responseFormat = null,
-    wireStreamOverride = null,
-    diagnostics = null
-  } = options;
-  const base = toOpenAiBase(url);
-  if (!base) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
-  if (!Array.isArray(messages)) {
-    throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4\uFF08\u5B57\u7B26\u4E32\u4F1A\u88AB ST \u540E\u7AEF\u6539\u8D70 /completions\uFF09");
-  }
-  const wireStream = wireStreamOverride !== null ? wireStreamOverride : stream;
-  const suppressProgress = wireStream === true && stream !== true;
-  if (diagnostics) {
-    diagnostics.transport = "st_proxy";
-    diagnostics.endpoint = `[ST \u4EE3\u7406] ${base}/chat/completions`;
-  }
-  const body = {
-    chat_completion_source: "openai",
-    reverse_proxy: base,
-    proxy_password: String(key || ""),
-    model,
-    messages,
-    stream: wireStream
-  };
-  if (Number.isFinite(maxTokens)) body.max_tokens = maxTokens;
-  if (temperature !== void 0) body.temperature = temperature;
-  const stJsonSchema = toStJsonSchema(responseFormat);
-  if (stJsonSchema) body.json_schema = stJsonSchema;
-  const startedAt = Date.now();
-  const res = await fetch(ST_GENERATE_URL, {
-    method: "POST",
-    headers: getRequestHeaders3(),
-    body: JSON.stringify(body),
-    signal
-  });
-  if (diagnostics) {
-    diagnostics.network = diagnostics.network || {};
-    diagnostics.network.status = res.status;
-    diagnostics.network.latency = Date.now() - startedAt;
-  }
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    if (diagnostics) diagnostics.raw_response_snippet = errText.substring(0, 500);
-    try {
-      tryParseStreamingError(res, errText, { quiet: true });
-    } catch (parsedErr) {
-      throw parsedErr;
-    }
-    throwHttpError(res, errText, "ST \u540E\u7AEF\u4EE3\u7406\u8BF7\u6C42\u5931\u8D25: ");
-  }
-  if (wireStream) {
-    if (diagnostics) diagnostics.phase = "streaming";
-    const attemptStartTime = Date.now();
-    const { content: content2, chunkCount, parseFailCount } = await consumeSse(res, {
-      onProgress: suppressProgress ? null : onProgress,
-      signal
-    });
-    if (chunkCount === 0 && suppressProgress) {
-      return sendChatCompletion({ ...options, wireStreamOverride: false, signal, diagnostics });
-    }
-    if (chunkCount === 0) {
-      throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
-    }
-    if (diagnostics) {
-      diagnostics.stream_stats = diagnostics.stream_stats || {};
-      diagnostics.stream_stats.ttft = Date.now() - attemptStartTime;
-      diagnostics.stream_stats.chunks = chunkCount;
-    }
-    if (parseFailCount > 0 && !content2) {
-      throw new Error("ERR_STREAM_PARSE_FAILED: \u6D41\u5F0F\u54CD\u5E94\u89E3\u6790\u5931\u8D25");
-    }
-    if (!content2) {
-      throw new Error("ERR_STREAM_EMPTY: \u672A\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E\u5757");
-    }
-    if (suppressProgress && onProgress) onProgress(content2);
-    return content2;
-  }
-  if (diagnostics) diagnostics.phase = "parsing_json";
-  const text = await res.text();
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    throw new Error("Invalid JSON response");
-  }
-  if (json?.error) {
-    const e = new Error(`\u4E0A\u6E38\u8FD4\u56DE\u9519\u8BEF\uFF08\u7ECF ST \u540E\u7AEF\u4EE3\u7406\uFF09: ${json.error?.message || json.error}`);
-    e.proxy = true;
-    throw e;
-  }
-  if (!Array.isArray(json.choices)) {
-    throw new Error("ERR_INVALID_API_RESPONSE: \u54CD\u5E94\u7F3A\u5C11 choices \u6570\u7EC4");
-  }
-  const content = json.choices[0]?.message?.content || "";
-  if (onProgress) onProgress(content);
-  return content;
-}
-var ST_STATUS_URL, ST_GENERATE_URL;
-var init_relayClient = __esm({
-  "src/core/relayClient.js"() {
-    init_apiProfileRegistry();
-    init_logger();
-    ST_STATUS_URL = "/api/backends/chat-completions/status";
-    ST_GENERATE_URL = "/api/backends/chat-completions/generate";
-  }
-});
-
-// src/core/connection.js
-import { ChatCompletionService } from "../../../custom-request.js";
-import { oai_settings as oai_settings2, getChatCompletionModel } from "../../../openai.js";
-function getActiveConnection() {
-  const data = getExtData();
-  const normalized = ensureMainApiProfiles(data.config || {});
-  const activeProfileId = normalized.active_profile_id;
-  const profiles = normalized.profiles;
-  const currentProfile = profiles.find((p) => p.id === activeProfileId) || profiles[0];
-  const useSTConnection = currentProfile.type === "internal";
-  const stream = (data.config || {}).stream !== false;
-  let url = "";
-  let key = "";
-  let model = "";
-  if (useSTConnection) {
-    try {
-      model = getChatCompletionModel() || "gpt-3.5-turbo";
-      url = oai_settings2.custom_url || oai_settings2.reverse_proxy || `[${oai_settings2.chat_completion_source}]`;
-      key = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
-    } catch (e) {
-      TitaniaLogger.warn("\u65E0\u6CD5\u8BFB\u53D6 ST API \u914D\u7F6E", e);
-      model = "gpt-3.5-turbo";
-    }
-  } else {
-    url = currentProfile.url || "";
-    key = currentProfile.key || "";
-    model = currentProfile.model || "gpt-3.5-turbo";
-  }
-  return {
-    useSTConnection,
-    profileName: currentProfile.name,
-    url,
-    key,
-    model,
-    stream,
-    rawProfile: currentProfile
-  };
-}
-async function sendChatRequestWithConnection(conn, messages, options = {}) {
-  const model = options.model || conn.model;
-  const useStream = options.stream !== void 0 ? options.stream : conn.stream;
-  const maxTokens = options.maxTokens || 2048;
-  const temperature = options.temperature || 0.7;
-  const signal = options.signal;
-  const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
-  let rawContent = "";
-  if (conn.useSTConnection) {
-    const requestData = ChatCompletionService.createRequestData({
-      stream: useStream,
-      messages,
-      chat_completion_source: oai_settings2.chat_completion_source,
-      model,
-      max_tokens: oai_settings2.openai_max_tokens || maxTokens,
-      temperature: oai_settings2.temp_openai || temperature,
-      custom_url: oai_settings2.custom_url,
-      reverse_proxy: oai_settings2.reverse_proxy,
-      proxy_password: oai_settings2.proxy_password,
-      custom_prompt_post_processing: oai_settings2.custom_prompt_post_processing
-    });
-    if (useStream) {
-      const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, null);
-      if (typeof streamGenerator === "function") {
-        for await (const chunk of streamGenerator()) {
-          rawContent = chunk.text || "";
-          if (onProgress) onProgress(rawContent);
-        }
-      } else {
-        rawContent = streamGenerator?.content || "";
-        if (onProgress) onProgress(rawContent);
-      }
-    } else {
-      const result = await ChatCompletionService.sendRequest(requestData, true, null);
-      rawContent = result?.content || "";
-      if (onProgress) onProgress(rawContent);
-    }
-  } else {
-    if (!conn.key && options.allowEmptyKey !== true) {
-      throw new Error("\u914D\u7F6E\u7F3A\u5931\uFF1A\u8BF7\u5148\u53BB\u8BBE\u7F6E\u586B API Key\uFF01");
-    }
-    if (!conn.url || !conn.url.trim()) {
-      throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
-    }
-    rawContent = await sendChatCompletion({
-      url: conn.url,
-      key: conn.key,
-      model,
-      messages,
-      stream: useStream,
-      maxTokens,
-      temperature,
-      signal,
-      onProgress
-    });
-  }
-  return rawContent;
-}
-function validateConnection() {
-  const conn = getActiveConnection();
-  if (conn.useSTConnection) {
-    return { valid: true };
-  }
-  if (!conn.url) {
-    return { valid: false, error: "API URL \u672A\u8BBE\u7F6E" };
-  }
-  if (!conn.key) {
-    return { valid: false, error: "API Key \u672A\u8BBE\u7F6E" };
-  }
-  return { valid: true };
-}
-function getConnectionByProfileId(profileId, modelOverride = null) {
-  const data = getExtData();
-  const normalized = ensureMainApiProfiles(data.config || {});
-  const profiles = normalized.profiles;
-  const profile = profiles.find((p) => p.id === profileId);
-  if (!profile) return null;
-  const useSTConnection = profile.type === "internal";
-  const stream = (data.config || {}).stream !== false;
-  let url = "";
-  let key = "";
-  let model = "";
-  if (useSTConnection) {
-    try {
-      model = modelOverride || getChatCompletionModel() || "gpt-3.5-turbo";
-      url = oai_settings2.custom_url || oai_settings2.reverse_proxy || `[${oai_settings2.chat_completion_source}]`;
-      key = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
-    } catch (e) {
-      TitaniaLogger.warn("\u65E0\u6CD5\u8BFB\u53D6 ST API \u914D\u7F6E", e);
-      model = modelOverride || "gpt-3.5-turbo";
-    }
-  } else {
-    url = profile.url || "";
-    key = profile.key || "";
-    model = modelOverride || profile.model || "gpt-3.5-turbo";
-  }
-  return {
-    useSTConnection,
-    profileName: profile.name,
-    profileId: profile.id,
-    url,
-    key,
-    model,
-    stream,
-    rawProfile: profile
-  };
-}
-var init_connection = __esm({
-  "src/core/connection.js"() {
-    init_storage();
-    init_logger();
-    init_apiProfileRegistry();
-    init_relayClient();
   }
 });
 
@@ -28555,7 +30410,7 @@ function sanitizeJsonLike(text) {
   });
   return s.trim();
 }
-function stabilizeBrokenJson(text) {
+function stabilizeBrokenJson2(text) {
   const raw = String(text || "");
   if (!raw) return "";
   const fixed = raw.replace(/\"([^\"]*?)\"\s*:\s*\"([\s\S]*?)(?=\n\s*\"[A-Za-z0-9_]+\"\s*:|\n\s*[}\]]|\s*}\s*$|\s*]\s*$)/g, (m, key, value) => {
@@ -28617,8 +30472,8 @@ function parseRewriteJson(raw) {
   const candidates = [
     base,
     sanitizeJsonLike(base),
-    stabilizeBrokenJson(base),
-    stabilizeBrokenJson(sanitizeJsonLike(base))
+    stabilizeBrokenJson2(base),
+    stabilizeBrokenJson2(sanitizeJsonLike(base))
   ].filter(Boolean);
   let lastErr = null;
   for (const c of candidates) {
@@ -36194,7 +38049,7 @@ function getMainIllustrationTarget() {
   const result = getCurrentGenerationResult();
   const view = continuationHistoryView;
   const fallback = view ? `${view.chatId}:${view.scriptId}:${view.branchKey}:${view.roundKey}` : `legacy:${getCurrentContinuationSource().chatId}:${result?.scriptId || ""}`;
-  return createIllustrationTarget(result, fallback);
+  return createIllustrationTarget({ ...result, cardKey: getCharacterCardKey() }, fallback);
 }
 function formatRelativeTime3(ts) {
   const time = Number(ts) || 0;
