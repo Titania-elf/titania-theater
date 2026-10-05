@@ -3860,12 +3860,14 @@ highly detailed, extremely detailed, intricate details
 \u53EA\u8F93\u51FA\u4E00\u4E2A JSON \u5BF9\u8C61\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u4EE3\u7801\u56F4\u680F\uFF1A
 
 {
+  "summary": "\u4E00\u81F3\u4E09\u53E5\u4E2D\u6587\u753B\u9762\u63CF\u8FF0",
   "positivePrompt": "\u82F1\u6587\u751F\u56FE\u63D0\u793A\u8BCD"
 }
 
 \u8865\u5145\u7EA6\u675F\uFF1A
 - positivePrompt \u7528\u82F1\u6587\uFF0C\u5199\u6210\u4E00\u884C\uFF0C\u4E0D\u8981\u6362\u884C\u3002
-- \u53EA\u8F93\u51FA\u8FD9\u4E00\u4E2A\u5B57\u6BB5\uFF1A\u4E0D\u8981\u518D\u8F93\u51FA\u753B\u9762\u63CF\u8FF0\u3001\u539F\u6587\u6458\u5F55\u3001\u8D1F\u5411\u63D0\u793A\u8BCD\u6216\u4EBA\u7269\u5206\u6BB5\u63D0\u793A\u8BCD\u3002`
+- summary \u7528\u4E2D\u6587\uFF0C\u5199\u6E05\u300C\u8C01\u3001\u5728\u505A\u4EC0\u4E48\u3001\u5728\u54EA\u300D\u3002\u5B83\u663E\u793A\u5728\u914D\u56FE\u9762\u677F\u4E0A\uFF0C\u4E5F\u662F\u300C\u6362\u4E2A\u753B\u9762\u300D\u65F6\u533A\u5206\u65B0\u65E7\u753B\u9762\u7684\u4F9D\u636E\uFF0C\u6240\u4EE5\u8981\u4E0E\u8FD9\u4E00\u5E45\u753B\u9762\u5BF9\u5F97\u4E0A\uFF0C\u4E0D\u8981\u5199\u6210\u63D0\u793A\u8BCD\u7684\u7FFB\u8BD1\u3002
+- \u53EA\u8F93\u51FA\u8FD9\u4E24\u4E2A\u5B57\u6BB5\uFF1A\u4E0D\u8981\u518D\u8F93\u51FA\u539F\u6587\u6458\u5F55\u3001\u8D1F\u5411\u63D0\u793A\u8BCD\u6216\u4EBA\u7269\u5206\u6BB5\u63D0\u793A\u8BCD\u3002`
       }
     ];
     MANAGED_BY_ID = new Map(MANAGED_ENTRIES.map((entry) => [entry.id, entry]));
@@ -21425,6 +21427,19 @@ function getCurrentCharacterDescription() {
   const description = card?.data?.description ?? card?.description ?? "";
   return typeof description === "string" ? description.trim() : "";
 }
+function getCurrentUserPersona() {
+  let ctx = null;
+  try {
+    if (typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+  } catch {
+    ctx = null;
+  }
+  const description = ctx?.powerUserSettings?.persona_description;
+  return {
+    name: String(ctx?.name1 ?? "").trim(),
+    description: typeof description === "string" ? description.trim() : ""
+  };
+}
 function isNameSharedByMultipleCards(ctx, charName) {
   const characters = Array.isArray(ctx?.characters) ? ctx.characters : [];
   const target = String(charName || "").trim();
@@ -23180,6 +23195,12 @@ var init_floatingWindow = __esm({
 });
 
 // src/ui/illustrationSettingsWindow.js
+function placeholderHelpLines() {
+  return PLACEHOLDER_NAMES.map((name) => {
+    const help = PLACEHOLDER_HELP[name];
+    return `<br><code>{{${name}}}</code>${help ? ` \u2014 ${help}` : ""}`;
+  }).join("");
+}
 function openIllustrationSettingsWindow(options = {}) {
   const { onClose } = options;
   const root = document.createElement("div");
@@ -23193,12 +23214,7 @@ function openIllustrationSettingsWindow(options = {}) {
             <div class="t-profile-body">
                 <div style="font-weight:bold; color:var(--t-color-accent); margin-bottom:8px;">\u9009\u666F\u9884\u8BBE</div>
                 <p class="t-illustration-hint">
-                    \u9884\u8BBE\u51B3\u5B9A\u9001\u7ED9\u9009\u666F\u6A21\u578B\u7684\u6D88\u606F\u3002\u6761\u76EE\u6309\u987A\u5E8F\u62FC\u6210\u6D88\u606F\uFF0C\u7D20\u6750\u9760\u5360\u4F4D\u7B26\u8FDB\u5165\uFF1A
-                    ${PLACEHOLDER_NAMES.map((name) => `<code>{{${name}}}</code>`).join(" ")}
-                    <br>\u9009\u666F\u7528\u7684\u662F\u5C0F\u5267\u573A\u5F53\u524D\u7684 API \u65B9\u6848\uFF08\u8BBE\u7F6E \u2192 API \u8FDE\u63A5\uFF09\uFF0C\u4E0E\u672C\u9884\u8BBE\u76F8\u4E92\u72EC\u7ACB\u3002
-                    <strong>\u53D8\u91CF\u5B8F\u4F1A\u5C55\u5F00</strong>\uFF1A<code>{{setvar::\u540D::\u503C}}</code>\u3001<code>{{getvar::\u540D}}</code>
-                    \u7B49 10 \u4E2A STscript \u53D8\u91CF\u5B8F\u53EF\u7528\uFF0C\u8DE8\u6761\u76EE\u5171\u4EAB\uFF0C\u4E14\u53EA\u5728\u672C\u6B21\u9009\u666F\u5185\u6709\u6548\u2014\u2014\u9009\u666F\u7ED3\u675F\u540E\u53D8\u91CF\u4F1A\u8FD8\u539F\uFF0C
-                    \u4E0D\u5199\u8FDB\u4F60\u7684\u804A\u5929\u5B58\u6863\u3002<strong>{{char}}\u3001{{user}} \u8FD9\u7C7B\u8BFB\u5F53\u524D\u804A\u5929\u7684\u5B8F\u4E0D\u4F1A\u5C55\u5F00\u3002</strong>
+                    \u7D20\u6750\u9760\u5360\u4F4D\u7B26\u8FDB\u5165\u6D88\u606F\uFF0C\u53EA\u6709\u8FD9\u56DB\u4E2A\uFF1A${placeholderHelpLines()}
                 </p>
                 <div class="t-profile-actions">
                     <select class="t-input" data-role="preset-select" style="width:auto; min-width:180px;"></select>
@@ -23598,11 +23614,18 @@ function openIllustrationSettingsWindow(options = {}) {
   action("close").focus();
   return close;
 }
+var PLACEHOLDER_HELP;
 var init_illustrationSettingsWindow = __esm({
   "src/ui/illustrationSettingsWindow.js"() {
     init_storage();
     init_illustrationPresets();
     init_floatingWindow();
+    PLACEHOLDER_HELP = {
+      theater_text: "\u914D\u56FE\u9762\u677F\u91CC\u300C\u672C\u6B21\u914D\u56FE\u7D20\u6750\u300D\u7684\u5185\u5BB9\uFF0C\u4E5F\u5C31\u662F\u672C\u8F6E\u6B63\u6587\u3002",
+      participants: "\u914D\u56FE\u9762\u677F\u91CC\u300C\u4EBA\u7269\u5916\u89C2\u7B49\u8865\u5145\u8D44\u6599\u300D\u7684\u5185\u5BB9\uFF1B\u547D\u4E2D\u7684\u5916\u89C2\u6863\u6848\u4F1A\u81EA\u52A8\u586B\u5230\u8FD9\u91CC\u3002",
+      special_request: "\u914D\u56FE\u9762\u677F\u91CC\u300C\u60F3\u753B\u4EC0\u4E48\u300D\u7684\u5185\u5BB9\u3002",
+      previous_scenes: "\u70B9\u8FC7\u300C\u6362\u4E2A\u753B\u9762\u300D\u65F6\uFF0C\u6B64\u524D\u5DF2\u7ECF\u9009\u8FC7\u7684\u753B\u9762\u3002"
+    };
   }
 });
 
@@ -23630,11 +23653,13 @@ function openCharacterProfileWindow(options = {}) {
                 <p class="t-illustration-hint">
                     \u4E3A\u89D2\u8272\u5199\u4E00\u6B21\u5916\u89C2\uFF0C\u4E4B\u540E\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u914D\u56FE\u4F1A\u81EA\u52A8\u5E26\u4E0A\u3002\u7ED1\u5B9A\u89D2\u8272\u5361\u540E\u5728\u8BE5\u89D2\u8272\u7684\u804A\u5929\u91CC\u5FC5\u4E2D\uFF1B
                     \u6CA1\u7ED1\u5B9A\u7684\u9760\u89E6\u53D1\u8BCD\u5728\u6B63\u6587\u91CC\u5339\u914D\u3002\u6863\u6848\u53EA\u63CF\u8FF0\u300C\u753B\u9762\u91CC\u6709\u4EC0\u4E48\u300D\u2014\u2014\u8D28\u91CF\u8BCD\u3001\u753B\u5E08\u4E32\u4E0E\u9884\u8BBE\u4ECD\u7531 Cosmos Vision \u8FFD\u52A0\u3002
+                    <br>\u4F60\u81EA\u5DF1\uFF08\u7528\u6237\u8BBE\u5B9A\uFF09\u4E5F\u80FD\u8FD9\u4E48\u8BB0\u4E00\u4EFD\uFF1A\u5BFC\u5165\u540E\u4E0D\u7ED1\u5361\uFF0C\u9760\u540D\u5B57\u5728\u6B63\u6587\u91CC\u5339\u914D\u3002
                     <br>\u7FA4\u804A\u91CC\u6CA1\u6709\u5355\u4E00\u89D2\u8272\u5361\uFF0C\u7ED1\u5B9A\u4E0D\u4F1A\u751F\u6548\uFF0C\u8BF7\u7528\u89E6\u53D1\u8BCD\uFF0C\u6216\u5230\u914D\u56FE\u9762\u677F\u91CC\u624B\u52A8\u52FE\u9009\u3002
                 </p>
                 <div class="t-profile-actions">
                     <button type="button" class="t-btn primary" data-action="add" title="\u65B0\u5EFA\u4E00\u6761\u5916\u89C2\u6863\u6848" aria-label="\u65B0\u5EFA\u6863\u6848"><i class="fa-solid fa-plus"></i></button>
                     <button type="button" class="t-btn" data-action="import" title="\u4ECE\u5F53\u524D\u6253\u5F00\u7684\u89D2\u8272\u5361\u5BFC\u5165\u63CF\u8FF0" aria-label="\u4ECE\u5F53\u524D\u89D2\u8272\u5361\u5BFC\u5165"><i class="fa-solid fa-id-card"></i></button>
+                    <button type="button" class="t-btn" data-action="import-persona" title="\u4ECE\u5F53\u524D\u7528\u6237\u8BBE\u5B9A\uFF08Persona\uFF09\u5BFC\u5165\u63CF\u8FF0" aria-label="\u4ECE\u5F53\u524D\u7528\u6237\u8BBE\u5B9A\u5BFC\u5165"><i class="fa-solid fa-user"></i></button>
                     <span class="t-illustration-hint" data-role="status"></span>
                 </div>
                 <div class="t-profile-list" data-role="list"></div>
@@ -23805,7 +23830,7 @@ function openCharacterProfileWindow(options = {}) {
     if (!items.length) {
       const empty = document.createElement("p");
       empty.className = "t-illustration-hint";
-      empty.textContent = "\u8FD8\u6CA1\u6709\u6863\u6848\u3002\u70B9\u300C\u65B0\u5EFA\u6863\u6848\u300D\uFF0C\u6216\u7528\u300C\u4ECE\u5F53\u524D\u89D2\u8272\u5361\u5BFC\u5165\u300D\u628A\u5F53\u524D\u89D2\u8272\u5361\u7684\u63CF\u8FF0\u62C9\u8FDB\u6765\u5F53\u8349\u7A3F\u3002";
+      empty.textContent = "\u8FD8\u6CA1\u6709\u6863\u6848\u3002\u70B9\u300C\u65B0\u5EFA\u6863\u6848\u300D\uFF0C\u6216\u7528\u4E0A\u9762\u4E24\u4E2A\u5BFC\u5165\u6309\u94AE\u628A\u5F53\u524D\u89D2\u8272\u5361 / \u7528\u6237\u8BBE\u5B9A\u7684\u63CF\u8FF0\u62C9\u8FDB\u6765\u5F53\u8349\u7A3F\u3002";
       list.append(empty);
       return;
     }
@@ -23823,6 +23848,18 @@ function openCharacterProfileWindow(options = {}) {
     writeEntries((list) => list.push(created), true);
     role("status").textContent = cardKey.startsWith(CARD_KEY_PREFIX) ? `\u5DF2\u5BFC\u5165\u300C${name}\u300D\u7684\u89D2\u8272\u5361\u63CF\u8FF0\uFF0C\u53EF\u5728\u4E0B\u9762\u7EE7\u7EED\u7CBE\u7B80\u3002` : "\u5DF2\u5BFC\u5165\u63CF\u8FF0\uFF0C\u4F46\u5F53\u524D\u662F\u7FA4\u804A\uFF0C\u65E0\u6CD5\u7ED1\u5B9A\u89D2\u8272\u5361\u3002";
   }
+  function importFromPersona() {
+    const { name, description } = getCurrentUserPersona();
+    const content = stripHtml(description);
+    if (!content) {
+      role("status").textContent = "\u5F53\u524D\u6CA1\u6709\u542F\u7528\u4E2D\u7684\u7528\u6237\u8BBE\u5B9A\uFF08Persona\uFF09\u53EF\u5BFC\u5165\u3002";
+      return;
+    }
+    const label = name || "\u6211";
+    const created = { ...createCharacterProfile(label), content, keywords: name ? [name] : [] };
+    writeEntries((list) => list.push(created), true);
+    role("status").textContent = name.length < MIN_KEYWORD_LENGTH ? `\u5DF2\u5BFC\u5165\u300C${label}\u300D\u7684\u7528\u6237\u8BBE\u5B9A\uFF0C\u4F46\u540D\u5B57\u77ED\u4E8E ${MIN_KEYWORD_LENGTH} \u5B57\uFF0C\u6CA1\u80FD\u5199\u6210\u89E6\u53D1\u8BCD\uFF0C\u8BF7\u624B\u52A8\u8865\u4E00\u4E2A\u3002` : `\u5DF2\u5BFC\u5165\u300C${label}\u300D\u7684\u7528\u6237\u8BBE\u5B9A\uFF0C\u89E6\u53D1\u8BCD\u5DF2\u586B\u597D\uFF0C\u53EF\u5728\u4E0B\u9762\u7EE7\u7EED\u7CBE\u7B80\u3002`;
+  }
   root.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button || button.disabled) return;
@@ -23837,6 +23874,10 @@ function openCharacterProfileWindow(options = {}) {
     }
     if (operation === "import") {
       importFromCard();
+      return;
+    }
+    if (operation === "import-persona") {
+      importFromPersona();
       return;
     }
   });
