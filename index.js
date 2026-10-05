@@ -1027,13 +1027,12 @@ function normalizeIllustrationDraft(value) {
     }
   };
 }
-function assertIllustrationExcerpt(draft, theaterText) {
+function sanitizeIllustrationExcerpt(draft, theaterText) {
   const excerpt = draft?.scene?.sourceExcerpt;
-  if (!excerpt) return draft;
-  if (!String(theaterText ?? "").includes(excerpt)) {
-    throw illustrationError("\u753B\u9762\u6458\u5F55\u4E0D\u662F\u6B63\u6587\u4E2D\u7684\u8FDE\u7EED\u539F\u6587\uFF0C\u8BF7\u91CD\u65B0\u9009\u666F\u3002", "EXCERPT_MISMATCH");
-  }
-  return draft;
+  if (!excerpt || String(theaterText ?? "").includes(excerpt)) return draft;
+  const scene = { ...draft.scene };
+  delete scene.sourceExcerpt;
+  return { ...draft, scene };
 }
 function illustrationExtension(mime) {
   const extension = MIME_EXTENSIONS[mime];
@@ -3861,13 +3860,15 @@ highly detailed, extremely detailed, intricate details
 
 {
   "summary": "\u4E00\u81F3\u4E09\u53E5\u4E2D\u6587\u753B\u9762\u63CF\u8FF0",
+  "sourceExcerpt": "\u6B63\u6587\u4E2D\u8FDE\u7EED\u3001\u9010\u5B57\u4E00\u81F4\u7684\u4E00\u6BB5\u539F\u6587",
   "positivePrompt": "\u82F1\u6587\u751F\u56FE\u63D0\u793A\u8BCD"
 }
 
 \u8865\u5145\u7EA6\u675F\uFF1A
 - positivePrompt \u7528\u82F1\u6587\uFF0C\u5199\u6210\u4E00\u884C\uFF0C\u4E0D\u8981\u6362\u884C\u3002
 - summary \u7528\u4E2D\u6587\uFF0C\u5199\u6E05\u300C\u8C01\u3001\u5728\u505A\u4EC0\u4E48\u3001\u5728\u54EA\u300D\u3002\u5B83\u663E\u793A\u5728\u914D\u56FE\u9762\u677F\u4E0A\uFF0C\u4E5F\u662F\u300C\u6362\u4E2A\u753B\u9762\u300D\u65F6\u533A\u5206\u65B0\u65E7\u753B\u9762\u7684\u4F9D\u636E\uFF0C\u6240\u4EE5\u8981\u4E0E\u8FD9\u4E00\u5E45\u753B\u9762\u5BF9\u5F97\u4E0A\uFF0C\u4E0D\u8981\u5199\u6210\u63D0\u793A\u8BCD\u7684\u7FFB\u8BD1\u3002
-- \u53EA\u8F93\u51FA\u8FD9\u4E24\u4E2A\u5B57\u6BB5\uFF1A\u4E0D\u8981\u518D\u8F93\u51FA\u539F\u6587\u6458\u5F55\u3001\u8D1F\u5411\u63D0\u793A\u8BCD\u6216\u4EBA\u7269\u5206\u6BB5\u63D0\u793A\u8BCD\u3002`
+- sourceExcerpt \u7528\u4E2D\u6587\uFF0C\u4ECE\u6B63\u6587\u91CC\u539F\u6837\u590D\u5236\u753B\u9762\u6240\u4F9D\u636E\u7684\u90A3\u51E0\u53E5\uFF0C\u4E0D\u8981\u6539\u5199\u3001\u4E0D\u8981\u62FC\u63A5\u3001\u4E0D\u8981\u52A0\u7701\u7565\u53F7\u3002\u5B83\u5FC5\u987B\u80FD\u5728\u6B63\u6587\u91CC\u9010\u5B57\u627E\u5230\uFF0C\u9762\u677F\u4F1A\u663E\u793A\u51FA\u6765\u4F9B\u4F60\u6838\u5BF9\u753B\u9762\u9009\u5F97\u5BF9\u4E0D\u5BF9\u3002
+- \u53EA\u8F93\u51FA\u8FD9\u4E09\u4E2A\u5B57\u6BB5\uFF1A\u4E0D\u8981\u518D\u8F93\u51FA\u8D1F\u5411\u63D0\u793A\u8BCD\u6216\u4EBA\u7269\u5206\u6BB5\u63D0\u793A\u8BCD\u3002`
       }
     ];
     MANAGED_BY_ID = new Map(MANAGED_ENTRIES.map((entry) => [entry.id, entry]));
@@ -23119,7 +23120,10 @@ function draftFromSceneReply(raw, theaterText) {
       }))
     }
   });
-  return assertIllustrationExcerpt(draft, theaterText);
+  const hasExcerpt = Boolean(draft.scene.sourceExcerpt);
+  const sanitized = sanitizeIllustrationExcerpt(draft, theaterText);
+  if (hasExcerpt && !sanitized.scene.sourceExcerpt) sanitized.excerptDropped = true;
+  return sanitized;
 }
 function buildMessages(request, data) {
   const restoreVariables = beginVariableSandbox();
@@ -24326,7 +24330,7 @@ ${block}` : block;
         const draft = await selectIllustrationScene(request, { signal: job.controller.signal });
         current.draft = draft;
         current.previousScenes.push({ ...draft.scene, positivePrompt: draft.prompts.positivePrompt });
-        current.notice = "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
+        current.notice = draft.excerptDropped ? "\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u4F46\u6A21\u578B\u7ED9\u7684\u539F\u6587\u6458\u5F55\u4E0E\u6B63\u6587\u5BF9\u4E0D\u4E0A\uFF0C\u5DF2\u4E22\u5F03\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002" : "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
       });
       return;
     }
