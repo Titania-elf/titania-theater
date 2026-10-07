@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.3.0";
+    CURRENT_VERSION = "5.4.0";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -70,7 +70,8 @@ var init_defaults = __esm({
       // 这里只声明存在，免得全新安装少一个键。注意与下面的 appearance 区分：
       // 那是悬浮球的 UI 皮肤，与角色外观无关。
       character_profiles: {
-        version: 1,
+        // 与 characterProfiles.js 的 CHARACTER_PROFILES_VERSION 同步（有测试盯着两份一致）。
+        version: 2,
         entries: []
       },
       history_extraction: {
@@ -1014,7 +1015,7 @@ function normalizeIllustrationDraft(value) {
   });
   const backend = version === 1 ? "cosmos" : requireText(value.backend, "\u751F\u56FE\u540E\u7AEF");
   if (!BACKENDS.has(backend)) throw illustrationError("\u914D\u56FE\u8349\u7A3F\u7684\u751F\u56FE\u540E\u7AEF\u4E0D\u53D7\u652F\u6301\u3002");
-  const summary = requireText(value.scene?.summary, "\u753B\u9762\u63CF\u8FF0");
+  const summary = typeof value.scene?.summary === "string" ? value.scene.summary.trim() : "";
   const excerpt = typeof value.scene?.sourceExcerpt === "string" ? value.scene.sourceExcerpt.trim() : "";
   return {
     version: ILLUSTRATION_DRAFT_VERSION,
@@ -1027,13 +1028,12 @@ function normalizeIllustrationDraft(value) {
     }
   };
 }
-function assertIllustrationExcerpt(draft, theaterText) {
+function sanitizeIllustrationExcerpt(draft, theaterText) {
   const excerpt = draft?.scene?.sourceExcerpt;
-  if (!excerpt) return draft;
-  if (!String(theaterText ?? "").includes(excerpt)) {
-    throw illustrationError("\u753B\u9762\u6458\u5F55\u4E0D\u662F\u6B63\u6587\u4E2D\u7684\u8FDE\u7EED\u539F\u6587\uFF0C\u8BF7\u91CD\u65B0\u9009\u666F\u3002", "EXCERPT_MISMATCH");
-  }
-  return draft;
+  if (!excerpt || String(theaterText ?? "").includes(excerpt)) return draft;
+  const scene = { ...draft.scene };
+  delete scene.sourceExcerpt;
+  return { ...draft, scene };
 }
 function illustrationExtension(mime) {
   const extension = MIME_EXTENSIONS[mime];
@@ -1053,6 +1053,13 @@ async function validateIllustrationBlob(blob) {
 }
 function isIllustrationPath(path) {
   return typeof path === "string" && /^\/user\/files\/titania-illustration-[a-zA-Z0-9-]+\.(png|jpg|webp)$/.test(path);
+}
+function collectIllustrationPaths(value, result = /* @__PURE__ */ new Set()) {
+  if (typeof value === "string") {
+    for (const match of value.matchAll(/\/user\/files\/titania-illustration-[a-zA-Z0-9-]+\.(?:png|jpg|webp)/g)) result.add(match[0]);
+  } else if (Array.isArray(value)) value.forEach((item) => collectIllustrationPaths(item, result));
+  else if (value && typeof value === "object") Object.values(value).forEach((item) => collectIllustrationPaths(item, result));
+  return result;
 }
 function normalizeSavedIllustration(value) {
   if (!value || !isIllustrationPath(value.filePath)) throw illustrationError("\u914D\u56FE\u6587\u4EF6\u8DEF\u5F84\u65E0\u6548\u3002");
@@ -1080,15 +1087,17 @@ function illustrationFigure(value) {
     return "";
   }
   const caption = escapeIllustrationHtml(image.draft.scene.summary);
-  return `<figure data-titania-illustration="${escapeIllustrationHtml(image.id)}" style="margin:24px auto;text-align:center;max-width:100%"><a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" alt="${caption}" width="${image.width}" height="${image.height}" loading="lazy" style="display:block;max-width:100%;height:auto;max-height:80vh;object-fit:contain;margin:auto;border-radius:12px"></a><figcaption style="margin-top:10px;font-size:0.9em;line-height:1.6">${caption}</figcaption></figure>`;
+  const captionHtml = caption ? `<figcaption style="margin-top:10px;font-size:0.9em;line-height:1.6">${caption}</figcaption>` : "";
+  return `<figure data-titania-illustration="${escapeIllustrationHtml(image.id)}" style="margin:24px auto;text-align:center;max-width:100%"><a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" alt="${caption || "\u914D\u56FE"}" width="${image.width}" height="${image.height}" loading="lazy" style="display:block;max-width:100%;height:auto;max-height:80vh;object-fit:contain;margin:auto;border-radius:12px"></a>${captionHtml}</figure>`;
 }
-var ILLUSTRATION_INDEX_KEY, MAX_IMAGE_BYTES, ILLUSTRATION_DRAFT_VERSION, BACKENDS, MIME_EXTENSIONS;
+var ILLUSTRATION_INDEX_KEY, MAX_IMAGE_BYTES, ILLUSTRATION_DRAFT_VERSION, ILLUSTRATION_BACKEND_IDS, BACKENDS, MIME_EXTENSIONS;
 var init_illustrationData = __esm({
   "src/core/illustrationData.js"() {
     ILLUSTRATION_INDEX_KEY = "illustration_index";
     MAX_IMAGE_BYTES = 32 * 1024 * 1024;
     ILLUSTRATION_DRAFT_VERSION = 2;
-    BACKENDS = /* @__PURE__ */ new Set(["cosmos"]);
+    ILLUSTRATION_BACKEND_IDS = ["cosmos", "baibai"];
+    BACKENDS = new Set(ILLUSTRATION_BACKEND_IDS);
     MIME_EXTENSIONS = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
   }
 });
@@ -1134,7 +1143,12 @@ function mutateScene(sceneId, mutate) {
       throw illustrationError("\u56FE\u7247\u5DF2\u751F\u6210\uFF0C\u4F46\u914D\u56FE\u8BB0\u5F55\u4FDD\u5B58\u5931\u8D25\u3002\u8BF7\u70B9\u51FB\u91CD\u8BD5\u4FDD\u5B58\u3002", "SAVE_FAILED");
     }
     cache.set(`${file}:${rev}`, structuredClone(record));
-    window.dispatchEvent(new CustomEvent("titania:illustrations-changed", { detail: { sceneId } }));
+    if (oldPointer?.file && oldPointer.file !== file) {
+      try {
+        await deleteUserFile(oldPointer.file, { label: "\u573A\u666F\u8BB0\u5F55" });
+      } catch {
+      }
+    }
     return record;
   });
   writes.set(sceneId, operation);
@@ -1181,6 +1195,8 @@ async function saveGeneratedIllustrations(sceneId, pending) {
       width: item.width,
       height: item.height,
       draft: pending.draft,
+      // 后端报回来的实际种子（柏宝绘会给，Cosmos 不给）。存下来才能照原样复现这一张。
+      seed: pending.seed,
       createdAt: pending.createdAt || Date.now()
     }));
   }
@@ -1204,6 +1220,29 @@ function selectSceneIllustration(sceneId, imageId, savedImage = null) {
 async function flushIllustrationWrites() {
   await Promise.all([...writes.values()]);
 }
+async function deleteSceneIllustrations(sceneId, targets, options = {}) {
+  const list = (Array.isArray(targets) ? targets : []).filter((target) => target && target.id);
+  if (!list.length) throw illustrationError("\u6CA1\u6709\u8981\u5220\u9664\u7684\u914D\u56FE\u3002", "INVALID_ARGS");
+  const removeIds = new Set(list.map((target) => String(target.id)));
+  const record = await mutateScene(sceneId, (current) => {
+    current.images = current.images.filter((image) => !removeIds.has(String(image.id)));
+    if (current.selectedId !== null && !current.images.some((image) => image.id === current.selectedId)) {
+      current.selectedId = current.images.length ? current.images[0].id : null;
+    }
+  });
+  const paths = [...new Set(list.map((target) => String(target.filePath || "")).filter(Boolean))];
+  const referenced = typeof options.collectReferenced === "function" ? new Set(await options.collectReferenced(paths)) : new Set(paths);
+  const deletedFiles = [], keptReferenced = [], failedFiles = [];
+  for (const path of paths) {
+    if (referenced.has(path)) {
+      keptReferenced.push(path);
+      continue;
+    }
+    if (await deleteUserFile(path, { label: "\u914D\u56FE\u6587\u4EF6" })) deletedFiles.push(path);
+    else failedFiles.push(path);
+  }
+  return { record, removedIds: [...removeIds], removedPaths: paths, deletedFiles, keptReferenced, failedFiles };
+}
 var writes, cache, writeTail;
 var init_illustrationStore = __esm({
   "src/core/illustrationStore.js"() {
@@ -1217,13 +1256,6 @@ var init_illustrationStore = __esm({
 });
 
 // src/core/illustrationPortability.js
-function collectPaths(value, result = /* @__PURE__ */ new Set()) {
-  if (typeof value === "string") {
-    for (const match of value.matchAll(/\/user\/files\/titania-illustration-[a-zA-Z0-9-]+\.(?:png|jpg|webp)/g)) result.add(match[0]);
-  } else if (Array.isArray(value)) value.forEach((item) => collectPaths(item, result));
-  else if (value && typeof value === "object") Object.values(value).forEach((item) => collectPaths(item, result));
-  return result;
-}
 function replaceIllustrationPaths(value, replacements) {
   if (typeof value === "string") {
     return value.replace(/\/user\/files\/titania-illustration-[a-zA-Z0-9-]+\.(?:png|jpg|webp)/g, (path) => replacements[path] || path);
@@ -1246,7 +1278,7 @@ async function exportIllustrationBackup(favorites = []) {
   for (const sceneId of Object.keys(getExtData()[ILLUSTRATION_INDEX_KEY] || {})) {
     scenes.push(await readSceneIllustrations(sceneId));
   }
-  const paths = collectPaths([scenes, favorites]);
+  const paths = collectIllustrationPaths([scenes, favorites]);
   if (!scenes.length && !paths.size) return void 0;
   const assets = {};
   for (const path of paths) assets[path] = await blobToIllustrationDataUrl(await loadAsset(path));
@@ -1261,7 +1293,7 @@ function decodeIllustrationDataUrl(value) {
 }
 async function restoreIllustrationBackup(bundle, data) {
   const next = structuredClone(data);
-  const referenced = collectPaths(next.favs || []);
+  const referenced = collectIllustrationPaths(next.favs || []);
   if (!bundle) {
     if (referenced.size || Object.keys(next[ILLUSTRATION_INDEX_KEY] || {}).length) throw illustrationError("\u5907\u4EFD\u542B\u914D\u56FE\u5F15\u7528\u4F46\u7F3A\u5C11\u56FE\u7247\u6587\u4EF6\uFF0C\u65E0\u6CD5\u5B8C\u6574\u6062\u590D\u3002");
     delete next[ILLUSTRATION_INDEX_KEY];
@@ -1275,7 +1307,7 @@ async function restoreIllustrationBackup(bundle, data) {
     record.images.forEach(normalizeSavedIllustration);
     if (record.selectedId !== null && !record.images.some((image) => image.id === record.selectedId)) throw illustrationError("\u5907\u4EFD\u7F3A\u5C11\u5F53\u524D\u91C7\u7528\u7684\u56FE\u7247\u3002");
   }
-  collectPaths(bundle.scenes, referenced);
+  collectIllustrationPaths(bundle.scenes, referenced);
   for (const path of referenced) if (!Object.hasOwn(bundle.assets, path)) throw illustrationError("\u5907\u4EFD\u4E2D\u7F3A\u5C11\u88AB\u5F15\u7528\u7684\u914D\u56FE\uFF0C\u5DF2\u505C\u6B62\u6062\u590D\u3002");
   for (const [path, encoded] of Object.entries(bundle.assets)) {
     if (!isIllustrationPath(path)) throw illustrationError("\u5907\u4EFD\u5305\u542B\u4E0D\u652F\u6301\u7684\u56FE\u7247\u8DEF\u5F84\u3002");
@@ -1295,7 +1327,7 @@ async function restoreIllustrationBackup(bundle, data) {
 }
 async function embedIllustrationsInHtml(html) {
   const replacements = {};
-  for (const path of collectPaths(String(html || ""))) replacements[path] = await blobToIllustrationDataUrl(await loadAsset(path));
+  for (const path of collectIllustrationPaths(String(html || ""))) replacements[path] = await blobToIllustrationDataUrl(await loadAsset(path));
   return replaceIllustrationPaths(String(html || ""), replacements);
 }
 var init_illustrationPortability = __esm({
@@ -1707,6 +1739,25 @@ function getChatHistory(limit, whitelist = [], blacklist = void 0, aiOnly = fals
     return `${name}: ${cleanContent}`;
   }).join("\n");
 }
+function stripTheaterTags(text) {
+  return String(text || "").replace(THEATER_TAG_ANY, "");
+}
+function dropPartialTheaterTag(text) {
+  const value = String(text || "");
+  const at = value.lastIndexOf("<");
+  if (at === -1) return value;
+  const tail = value.slice(at + 1);
+  if (tail.includes(">")) return value;
+  return THEATER_TAG_PARTIAL.test(tail) ? value.slice(0, at) : value;
+}
+function takeTheaterWrapper(content) {
+  const match = THEATER_TAG_OPEN.exec(String(content || ""));
+  if (!match) return null;
+  const bodyStart = match.index + match[0].length;
+  const close = String(content).indexOf(`</${THEATER_TAG}`, bodyStart);
+  const body = close === -1 ? String(content).slice(bodyStart) : String(content).slice(bodyStart, close);
+  return body.trim();
+}
 function sanitizeAIOutputLite(rawContent) {
   if (!rawContent || typeof rawContent !== "string") return "";
   let content = rawContent;
@@ -1714,7 +1765,7 @@ function sanitizeAIOutputLite(rawContent) {
   content = content.replace(/```\s*/g, "");
   content = content.replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/gi, "");
   content = content.replace(/<think[^>]*>[\s\S]*?<\/think>/gi, "");
-  return content.trim();
+  return dropPartialTheaterTag(stripTheaterTags(content)).trim();
 }
 function sanitizeAIOutput(rawContent) {
   if (!rawContent || typeof rawContent !== "string") return "";
@@ -1750,6 +1801,28 @@ function sanitizeAIOutput(rawContent) {
   });
   content = content.replace(/```html\s*/gi, "");
   content = content.replace(/```\s*/g, "");
+  const wrapped = takeTheaterWrapper(content);
+  if (wrapped !== null) {
+    content = wrapped;
+  } else {
+    content = extractHtmlByHeuristic(content);
+  }
+  content = content.replace(/(\s|>)\*\*([^*<>]+)\*\*(\s|<)/g, "$1$2$3");
+  content = content.replace(/(\s|>)__([^_<>]+)__(\s|<)/g, "$1$2$3");
+  content = content.replace(/(\s|>)\*([^*<>\n]+)\*(\s|<)/g, "$1$2$3");
+  content = content.replace(/^\s*#{1,6}\s+/gm, "");
+  content = content.replace(/^\s*[-*+]\s+(?=[^\s<])/gm, "");
+  content = content.replace(/^\s*\d+\.\s+(?=[^\s<])/gm, "");
+  content = content.replace(/\n{3,}/g, "\n\n");
+  content = content.trim();
+  if (!content || content.length < 10) {
+    console.warn("Titania: \u6E05\u6D17\u540E\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u56DE\u9000\u5230\u539F\u59CB\u5185\u5BB9");
+    return originalContent.replace(/```html\s*/gi, "").replace(/```\s*/g, "").trim();
+  }
+  return content;
+}
+function extractHtmlByHeuristic(input) {
+  let content = String(input || "");
   const htmlStartPatterns = [
     /<!DOCTYPE\s+html/i,
     // DOCTYPE 声明
@@ -1820,18 +1893,6 @@ function sanitizeAIOutput(rawContent) {
   }
   if (lastHtmlEndIndex > 0 && lastHtmlEndIndex < content.length) {
     content = content.substring(0, lastHtmlEndIndex);
-  }
-  content = content.replace(/(\s|>)\*\*([^*<>]+)\*\*(\s|<)/g, "$1$2$3");
-  content = content.replace(/(\s|>)__([^_<>]+)__(\s|<)/g, "$1$2$3");
-  content = content.replace(/(\s|>)\*([^*<>\n]+)\*(\s|<)/g, "$1$2$3");
-  content = content.replace(/^\s*#{1,6}\s+/gm, "");
-  content = content.replace(/^\s*[-*+]\s+(?=[^\s<])/gm, "");
-  content = content.replace(/^\s*\d+\.\s+(?=[^\s<])/gm, "");
-  content = content.replace(/\n{3,}/g, "\n\n");
-  content = content.trim();
-  if (!content || content.length < 10) {
-    console.warn("Titania: \u6E05\u6D17\u540E\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u56DE\u9000\u5230\u539F\u59CB\u5185\u5BB9");
-    return originalContent.replace(/```html\s*/gi, "").replace(/```\s*/g, "").trim();
   }
   return content;
 }
@@ -2207,7 +2268,7 @@ ${mergedBody}`;
   }
   return mergedBody;
 }
-var fileToBase64, parseMeta, getSnippet;
+var fileToBase64, parseMeta, getSnippet, THEATER_TAG, THEATER_TAG_OPEN, THEATER_TAG_ANY, THEATER_TAG_PARTIAL;
 var init_helpers = __esm({
   "src/utils/helpers.js"() {
     init_storage();
@@ -2235,6 +2296,10 @@ var init_helpers = __esm({
       text = text.replace(/\s+/g, " ").trim();
       return text.length > 60 ? text.substring(0, 60) + "..." : text;
     };
+    THEATER_TAG = "\u5C0F\u5267\u573A";
+    THEATER_TAG_OPEN = /<小剧场\s*>/;
+    THEATER_TAG_ANY = /<\/?\s*小剧场\s*\/?>/g;
+    THEATER_TAG_PARTIAL = /^\/?\s*小?剧?场?\s*$/;
   }
 });
 
@@ -2784,14 +2849,15 @@ var init_promptManager = __esm({
     TITANIA_OUTPUT_CONTRACT = `\u4F60\u6B63\u5728\u751F\u6210\u53EF\u76F4\u63A5\u6E32\u67D3\u7684\u5C0F\u5267\u573A\u5185\u5BB9\u3002
 
 [\u8F93\u51FA\u8981\u6C42]
-1. \u6839\u636E\u968F\u540E\u63D0\u4F9B\u7684\u201C\u5C0F\u5267\u573A\u6307\u4EE4\u201D\u5B8C\u6210\u521B\u4F5C\uFF0C\u4E0D\u8981\u590D\u8FF0\u6216\u89E3\u91CA\u6307\u4EE4\u3002
-2. \u8F93\u51FA\u5FC5\u987B\u662F\u5B8C\u6574\u3001\u6709\u6548\u4E14\u53EF\u76F4\u63A5\u5D4C\u5165\u9875\u9762\u7684 HTML \u7247\u6BB5\u3002
-3. \u4F7F\u7528 HTML \u7ED3\u6784\u4E0E CSS \u5BF9\u5185\u5BB9\u8FDB\u884C\u89C6\u89C9\u7F16\u6392\uFF0C\u4F7F\u6837\u5F0F\u670D\u52A1\u4E8E\u573A\u666F\u6C1B\u56F4\u3001\u53D9\u4E8B\u5C42\u6B21\u548C\u9605\u8BFB\u4F53\u9A8C\u3002
-4. \u53EF\u4EE5\u4F7F\u7528\u5185\u8054\u6837\u5F0F\u6216\u7247\u6BB5\u5185\u7684 <style>\uFF0C\u4F46\u4E0D\u8981\u8F93\u51FA <html>\u3001<head>\u3001<body> \u7B49\u5B8C\u6574\u6587\u6863\u5916\u58F3\u3002
-5. \u4E0D\u8981\u8F93\u51FA Markdown \u4EE3\u7801\u5757\u3001\u5B9E\u73B0\u8BF4\u660E\u3001\u524D\u8A00\u3001\u603B\u7ED3\u6216 HTML \u4E4B\u5916\u7684\u6587\u672C\u3002
-6. \u4FDD\u8BC1\u7ED3\u6784\u95ED\u5408\uFF0C\u4E0D\u8981\u4F9D\u8D56\u5916\u90E8\u811A\u672C\u3001\u5916\u90E8\u6837\u5F0F\u8868\u6216\u7F51\u7EDC\u8D44\u6E90\u3002
-7. \u9ED8\u8BA4\u4F7F\u7528\u4E2D\u6587\uFF0C\u9664\u975E\u5C0F\u5267\u573A\u6307\u4EE4\u53E6\u6709\u8981\u6C42\u3002
-8. \u5185\u5BB9\u8868\u8FBE\u4F18\u5148\u4E8E\u88C5\u9970\u3002\u4FDD\u6301\u6B63\u6587\u6E05\u6670\u3001\u5C42\u6B21\u660E\u786E\uFF1B\u89C6\u89C9\u6548\u679C\u5E94\u589E\u5F3A\u5185\u5BB9\uFF0C\u4E0D\u5F97\u906E\u6321\u3001\u538B\u7F29\u6216\u5E72\u6270\u9605\u8BFB\u3002`;
+1. \u628A\u5168\u90E8\u5185\u5BB9\u5305\u5728\u4E00\u5BF9 <\u5C0F\u5267\u573A> \u6807\u7B7E\u4E4B\u95F4\uFF1A\u5F00\u5934\u5199 <\u5C0F\u5267\u573A>\uFF0C\u7ED3\u5C3E\u5199 </\u5C0F\u5267\u573A>\u3002\u8FD9\u4E24\u4E2A\u6807\u7B7E\u4E4B\u5916\u4E0D\u8981\u6709\u4EFB\u4F55\u5B57\u7B26\u2014\u2014\u4E0D\u8981\u95EE\u5019\u3001\u4E0D\u8981\u8BF4\u660E\u3001\u4E0D\u8981\u603B\u7ED3\u3001\u4E0D\u8981\u4EE3\u7801\u56F4\u680F\u3002
+2. \u6807\u7B7E\u4E4B\u5185\u662F\u5B8C\u6574\u3001\u6709\u6548\u4E14\u53EF\u76F4\u63A5\u5D4C\u5165\u9875\u9762\u7684 HTML \u7247\u6BB5\u3002
+3. \u6839\u636E\u968F\u540E\u63D0\u4F9B\u7684\u201C\u5C0F\u5267\u573A\u6307\u4EE4\u201D\u5B8C\u6210\u521B\u4F5C\uFF0C\u4E0D\u8981\u590D\u8FF0\u6216\u89E3\u91CA\u6307\u4EE4\u3002
+4. \u4F7F\u7528 HTML \u7ED3\u6784\u4E0E CSS \u5BF9\u5185\u5BB9\u8FDB\u884C\u89C6\u89C9\u7F16\u6392\uFF0C\u4F7F\u6837\u5F0F\u670D\u52A1\u4E8E\u573A\u666F\u6C1B\u56F4\u3001\u53D9\u4E8B\u5C42\u6B21\u548C\u9605\u8BFB\u4F53\u9A8C\u3002
+5. \u53EF\u4EE5\u4F7F\u7528\u5185\u8054\u6837\u5F0F\u6216\u7247\u6BB5\u5185\u7684 <style>\uFF0C\u4F46\u4E0D\u8981\u8F93\u51FA <html>\u3001<head>\u3001<body> \u7B49\u5B8C\u6574\u6587\u6863\u5916\u58F3\u3002
+6. \u4E0D\u8981\u8F93\u51FA Markdown \u4EE3\u7801\u5757\u3001\u5B9E\u73B0\u8BF4\u660E\u3001\u524D\u8A00\u6216\u603B\u7ED3\u3002
+7. \u4FDD\u8BC1\u7ED3\u6784\u95ED\u5408\uFF0C\u4E0D\u8981\u4F9D\u8D56\u5916\u90E8\u811A\u672C\u3001\u5916\u90E8\u6837\u5F0F\u8868\u6216\u7F51\u7EDC\u8D44\u6E90\u3002
+8. \u9ED8\u8BA4\u4F7F\u7528\u4E2D\u6587\uFF0C\u9664\u975E\u5C0F\u5267\u573A\u6307\u4EE4\u53E6\u6709\u8981\u6C42\u3002
+9. \u5185\u5BB9\u8868\u8FBE\u4F18\u5148\u4E8E\u88C5\u9970\u3002\u4FDD\u6301\u6B63\u6587\u6E05\u6670\u3001\u5C42\u6B21\u660E\u786E\uFF1B\u89C6\u89C9\u6548\u679C\u5E94\u589E\u5F3A\u5185\u5BB9\uFF0C\u4E0D\u5F97\u906E\u6321\u3001\u538B\u7F29\u6216\u5E72\u6270\u9605\u8BFB\u3002`;
     BUILTIN_MODES = ["narrative", "visual"];
     EDITOR_VIEWS = [...BUILTIN_MODES, "preset"];
     MESSAGE_ROLES = ["system", "user", "assistant"];
@@ -2831,13 +2897,19 @@ var init_promptManager = __esm({
 });
 
 // src/core/characterProfiles.js
-function createCharacterProfile(name = "\u65B0\u6863\u6848") {
+function profileKind(entry) {
+  return entry?.kind === PROFILE_KIND_USER ? PROFILE_KIND_USER : PROFILE_KIND_CHARACTER;
+}
+function createCharacterProfile(name = "\u65B0\u6863\u6848", kind = PROFILE_KIND_CHARACTER) {
+  const resolved = profileKind({ kind });
   return {
     id: newIllustrationId(),
     name: String(name).trim(),
     keywords: [],
     content: "",
+    // 用户档案恒定不绑卡：绑上去会在别的角色的聊天里也被强行带入。
     cardKey: "",
+    kind: resolved,
     enabled: true
   };
 }
@@ -2849,6 +2921,15 @@ function normalizeKeyword(value) {
   const text = String(value ?? "").trim();
   return text.length >= MIN_KEYWORD_LENGTH ? text : "";
 }
+function isAutoKeywords(entry) {
+  const keywords = Array.isArray(entry?.keywords) ? entry.keywords : [];
+  if (!keywords.length) return true;
+  return keywords.length === 1 && keywords[0] === String(entry?.name || "").trim();
+}
+function keywordsFromName(name) {
+  const text = String(name || "").trim();
+  return text.length >= MIN_KEYWORD_LENGTH ? [text] : [];
+}
 function normalizeEntries(value) {
   const list = Array.isArray(value) ? value : [];
   const seen = /* @__PURE__ */ new Set();
@@ -2859,12 +2940,16 @@ function normalizeEntries(value) {
     if (seen.has(id3)) continue;
     seen.add(id3);
     const keywords = (Array.isArray(raw.keywords) ? raw.keywords : []).map(normalizeKeyword).filter(Boolean);
+    const kind = profileKind(raw);
     entries.push({
       id: id3,
       name: String(raw.name ?? "").trim(),
       keywords: [...new Set(keywords)],
       content: typeof raw.content === "string" ? raw.content : "",
-      cardKey: normalizeCardKey(raw.cardKey),
+      // 「用户本人」与「绑了卡」是互斥状态：绑卡的用户档案在下拉框里既表达不出来、
+      // 也退不回去，所以在模型层直接掐掉，手改设置文件也造不出来。
+      cardKey: kind === PROFILE_KIND_USER ? "" : normalizeCardKey(raw.cardKey),
+      kind,
       enabled: raw.enabled !== false
     });
   }
@@ -2901,21 +2986,20 @@ function composeProfileBlock(entry) {
   const content = String(entry?.content ?? "").trim();
   if (!content) return "";
   const name = String(entry?.name ?? "").trim() || "\u672A\u547D\u540D\u89D2\u8272";
-  const block = `\u3010${name}\u3011
+  return `\u3010${name}\u3011
 ${content}`;
-  return block.length > MAX_PROFILE_BLOCK_CHARS ? block.slice(0, MAX_PROFILE_BLOCK_CHARS) + TRUNCATED_SUFFIX : block;
 }
-var CHARACTER_PROFILES_KEY, CHARACTER_PROFILES_VERSION, CARD_KEY_PREFIX, MIN_KEYWORD_LENGTH, MAX_MATCHED_PROFILES, MAX_PROFILE_BLOCK_CHARS, TRUNCATED_SUFFIX;
+var CHARACTER_PROFILES_KEY, CHARACTER_PROFILES_VERSION, CARD_KEY_PREFIX, PROFILE_KIND_CHARACTER, PROFILE_KIND_USER, MIN_KEYWORD_LENGTH, MAX_MATCHED_PROFILES;
 var init_characterProfiles = __esm({
   "src/core/characterProfiles.js"() {
     init_illustrationData();
     CHARACTER_PROFILES_KEY = "character_profiles";
-    CHARACTER_PROFILES_VERSION = 1;
+    CHARACTER_PROFILES_VERSION = 2;
     CARD_KEY_PREFIX = "card:";
+    PROFILE_KIND_CHARACTER = "character";
+    PROFILE_KIND_USER = "user";
     MIN_KEYWORD_LENGTH = 2;
     MAX_MATCHED_PROFILES = 4;
-    MAX_PROFILE_BLOCK_CHARS = 2e3;
-    TRUNCATED_SUFFIX = "\n\u2026\uFF08\u6863\u6848\u5185\u5BB9\u8FC7\u957F\u5DF2\u622A\u65AD\uFF09";
   }
 });
 
@@ -3040,7 +3124,10 @@ function resolveActivePreset(data) {
 }
 function formatPreviousScenes(previousScenes) {
   const list = Array.isArray(previousScenes) ? previousScenes : [];
-  const lines = list.map((item) => String(typeof item === "string" ? item : item?.summary || "").trim()).filter(Boolean);
+  const lines = list.map((item) => {
+    if (typeof item === "string") return item.trim();
+    return String(item?.summary || item?.sourceExcerpt || item?.positivePrompt || "").trim();
+  }).filter(Boolean);
   return lines.map((line, index) => `${index + 1}. ${line}`).join("\n");
 }
 function blockValue(heading, value) {
@@ -3208,10 +3295,11 @@ var init_illustrationPresets = __esm({
         name: "\u9009\u666F\u8981\u6C42",
         role: "system",
         enabled: true,
-        content: `\u4F60\u662F\u63D2\u56FE\u9009\u666F\u52A9\u624B\u3002\u901A\u8BFB\u7528\u6237\u7ED9\u51FA\u7684\u5C0F\u5267\u573A\u6B63\u6587\uFF0C\u4E3A\u5B83\u9009\u62E9\u552F\u4E00\u4E00\u4E2A\u6700\u9002\u5408\u753B\u6210\u5355\u5E45\u63D2\u56FE\u7684\u77AC\u95F4\uFF0C\u5E76\u5199\u51FA\u8BE5\u753B\u9762\u7684\u63D0\u793A\u8BCD\u3002
+        content: `\u901A\u8BFB\u7528\u6237\u7ED9\u51FA\u7684\u5C0F\u5267\u573A\u6B63\u6587\uFF0C\u4E3A\u5B83\u9009\u62E9\u552F\u4E00\u4E00\u4E2A\u6700\u9002\u5408\u753B\u6210\u5355\u5E45\u63D2\u56FE\u7684\u77AC\u95F4\uFF0C\u5E76\u5199\u51FA\u8BE5\u753B\u9762\u7684\u63D0\u793A\u8BCD\u3002
 
 ## \u9009\u666F\u8981\u6C42
 - \u9009\u4EBA\u7269\u5173\u7CFB\u9C9C\u660E\u3001\u52A8\u4F5C\u6216\u8868\u60C5\u660E\u786E\u3001\u73AF\u5883\u53EF\u4EE5\u753B\u51FA\u6765\u3001\u80FD\u4F53\u73B0\u6545\u4E8B\u6838\u5FC3\u60C5\u7EEA\u7684\u90A3\u4E2A\u77AC\u95F4\u3002
+- **\u7528\u6237\u5217\u51FA\u4E86\u300C\u5DF2\u7ECF\u9009\u8FC7\u7684\u753B\u9762\u300D\u65F6\uFF0C\u5FC5\u987B\u6362\u4E00\u4E2A\u4E0D\u540C\u7684\u77AC\u95F4** \u2014\u2014 \u53E6\u4E00\u4E2A\u540C\u6837\u6709\u539F\u6587\u4F9D\u636E\u3001\u540C\u6837\u53EF\u4EE5\u843D\u7B14\u7684\u753B\u9762\uFF0C\u4E0D\u8981\u91CD\u590D\u5176\u4E2D\u4EFB\u4F55\u4E00\u4E2A\u3002\u53EA\u6709\u6B63\u6587\u91CC\u786E\u5B9E\u4E0D\u5B58\u5728\u7B2C\u4E8C\u4E2A\u53EF\u4EE5\u843D\u7B14\u7684\u77AC\u95F4\uFF0C\u624D\u5141\u8BB8\u590D\u7528\u540C\u4E00\u5E45\u3002
 - \u753B\u9762\u5FC5\u987B\u5C5E\u4E8E\u540C\u4E00\u65F6\u95F4\u3001\u540C\u4E00\u5730\u70B9\u3002\u4E0D\u8981\u62FC\u63A5\u4E0D\u540C\u4E8B\u4EF6\uFF0C\u4E0D\u8981\u6DF7\u5408\u4E0D\u540C\u65F6\u95F4\u7684\u670D\u88C5\u72B6\u6001\uFF0C\u4E0D\u8981\u8BA9\u5168\u6587\u6240\u6709\u4EBA\u7269\u4E00\u8D77\u51FA\u573A\u3002
 - \u89D2\u8272\u5916\u89C2\u4EE5\u300C\u4EBA\u7269\u8D44\u6599\u300D\u4E3A\u4F9D\u636E\uFF0C\u52A8\u6001\u72B6\u6001\u4EE5\u9009\u5B9A\u7684\u539F\u6587\u4E3A\u4F9D\u636E\u3002
 - \u4EE5\u5185\u5FC3\u72EC\u767D\u6216\u5BF9\u8BDD\u4E3A\u4E3B\u7684\u4F5C\u54C1\uFF0C\u4F18\u5148\u5BFB\u627E\u627F\u8F7D\u60C5\u7EEA\u7684\u795E\u6001\u3001\u52A8\u4F5C\u6216\u73AF\u5883\u7EC6\u8282\uFF0C\u4E0D\u8981\u865A\u6784\u91CD\u5927\u60C5\u8282\u3002
@@ -3219,90 +3307,557 @@ var init_illustrationPresets = __esm({
 - \u5982\u679C\u786E\u5B9E\u6CA1\u6709\u53EF\u4EE5\u843D\u7B14\u7684\u753B\u9762\uFF0C\u53EA\u8F93\u51FA {"error":"NO_SCENE"}\uFF0C\u4E0D\u8981\u786C\u51D1\u3002`
       },
       {
-        id: "comfyui",
-        name: "ComfyUI \u63D0\u793A\u8BCD\u89C4\u8303",
+        id: "prompt",
+        name: "\u751F\u56FE\u63D0\u793A\u8BCD\u89C4\u8303",
         role: "system",
-        enabled: false,
-        content: `## ComfyUI \u63D0\u793A\u8BCD\u89C4\u8303
+        enabled: true,
+        content: `# \u901A\u7528\u751F\u56FE\u63D0\u793A\u8BCD\u7F16\u5199\u89C4\u5219
 
-### \u8BED\u6CD5
-- \u63D0\u793A\u8BCD\u7528\u82F1\u6587\uFF0C\u5168\u90E8\u5C0F\u5199\uFF1B\u77ED\u8BED\u4E4B\u95F4\u7528\u300C\u82F1\u6587\u9017\u53F7 + \u7A7A\u683C\u300D\u5206\u9694\u3002
-- \u5355\u8BCD\u4E4B\u95F4\u53EA\u80FD\u7528\u666E\u901A\u7A7A\u683C\uFF08\u5982 long blonde hair\u3001sheer curtains\uFF09\u3002\u7981\u7528\u8FDE\u5B57\u7B26\u5199\u6CD5\uFF08long-blonde-hair\uFF09\u4E0E\u4E0B\u5212\u7EBF\u5199\u6CD5\uFF08long_blonde_hair\uFF09\uFF0C\u5B83\u4EEC\u4F1A\u88AB\u5207\u6210\u8BCD\u8868\u5916\u7684\u788E\u7247 token\u3002
-- \u5C5E\u6027\u8F74\u72EC\u7ACB\uFF0C\u4E0D\u8981\u5408\u5E76\uFF1A\u989C\u8272 / \u957F\u77ED / \u82B1\u7EB9 / \u6750\u8D28 / \u7ED3\u6784\u662F\u4E92\u76F8\u72EC\u7ACB\u7684\u8F74\uFF0C\u540C\u4E00\u4EF6\u8863\u7269\u8981\u5168\u90E8\u4FDD\u7559\u3002\u4F8B\u5982\u4E00\u6761\u84DD\u8272\u767E\u8936\u683C\u7EB9\u77ED\u88D9\u5E94\u5199\u5168 blue skirt, plaid skirt, pleated skirt, miniskirt\uFF0C\u4E0D\u8981\u56E0\u4E3A\u90FD\u5E26 skirt \u5C31\u5408\u5E76\u6210\u4E00\u4E2A\u3002
-- \u89D2\u8272\u5757\u524D\u7F6E\uFF1A**\u5F00\u5934\u4E0D\u5199\u603B\u4EBA\u6570**\uFF08\u4E0D\u5199 1girl / 2girls / solo\uFF09\uFF0C\u76F4\u63A5\u5199\u7B2C\u4E00\u4E2A\u89D2\u8272\u5757\uFF1B\u4EBA\u6570\u7531\u89D2\u8272\u5757\u7684\u4E2A\u6570\u672C\u8EAB\u8868\u8FBE\u3002\u8981\u538B\u6389\u753B\u9762\u4E0A\u591A\u51FA\u6765\u7684\u4EBA\uFF0C\u5199\u8FDB negativePrompt\uFF0C\u4E0D\u8981\u9760\u6B63\u5411\u58F0\u660E\u3002
-- \u7981\u6B62\u81EA\u76F8\u77DB\u76FE\uFF1A\u540C\u4E00\u4E2A\u89D2\u8272\u5757\u91CC short hair \u4E0E very long hair\u3001front view \u4E0E from behind \u540C\u5199\u4F1A\u8BA9\u7ED3\u6784\u5D29\u574F\uFF0C\u800C\u4E0D\u662F\u88AB\u5FFD\u7565\uFF1B\u540C\u4E00\u5C5E\u6027\u8F74\u5728\u4E00\u4E2A\u89D2\u8272\u5757\u91CC\u53EA\u7559\u4E00\u4E2A\u53D6\u503C\u3002
+## 1. \u6838\u5FC3\u76EE\u6807
 
-### \u53CC\u8F68\u5199\u6CD5\uFF08\u6807\u7B7E + \u672B\u5C3E\u81EA\u7136\u8BED\u8A00\uFF09
-\u6807\u7B7E\u8D1F\u8D23\u300C\u753B\u9762\u4E0A\u6709\u4EC0\u4E48\u300D\uFF08\u5916\u89C2\u3001\u670D\u88C5\u3001\u8868\u60C5\u3001\u955C\u5934\u3001\u73AF\u5883\uFF09\uFF0C\u672B\u5C3E 2\u20134 \u53E5\u82F1\u6587\u81EA\u7136\u8BED\u8A00\uFF08NL\uFF09\u8D1F\u8D23\u6807\u7B7E\u8868\u8FBE\u4E0D\u4E86\u7684\u6D3B\u5173\u7CFB\uFF08\u7A7A\u95F4\u5C42\u6B21\u3001\u52A8\u4F5C\u56E0\u679C\u3001\u5149\u5F71\u53CD\u5C04\u3001\u80A2\u4F53\u63A5\u89E6\u70B9\uFF09\u3002**\u4E24\u8005\u6DF7\u6392\u662F\u63A8\u8350\u5199\u6CD5**\uFF0C\u5168\u90E8\u5C0F\u5199\u3002
-- \u6807\u7B7E\u4E4B\u95F4\u4E00\u5F8B\u7528\u9017\u53F7\u52A0\u7A7A\u683C\uFF1B\u8FDB\u5165 NL \u540E\u6BCF\u53E5\u90FD\u662F\u5B8C\u6574\u82F1\u6587\u9648\u8FF0\u53E5\uFF0C\u53E5\u95F4\u4E0E\u53E5\u5C3E\u7528\u82F1\u6587\u53E5\u53F7\u52A0\u7A7A\u683C\u6536\u5C3E\uFF0C**NL \u53E5\u672B\u4E0D\u8981\u7528\u9017\u53F7**\uFF0C\u514D\u5F97\u548C\u6807\u7B7E\u6DF7\u6DC6\u3002
-- \u52A8\u4F5C\u4E0E\u59FF\u52BF\u4E00\u5F8B\u7528\u6807\u7B7E\u9489\u4F4F\uFF08\u5982 standing on one leg, outstretched arm, holding umbrella\uFF09\uFF0C\u4E0D\u8981\u5728 NL \u91CC\u957F\u7BC7\u590D\u8FF0\u52A8\u4F5C\uFF1BNL \u53EA\u8865\u7A7A\u95F4\u3001\u4E92\u52A8\u4E0E\u5149\u5F71\u3002
+\u6839\u636E\u7528\u6237\u63D0\u4F9B\u7684\u89D2\u8272\u3001\u573A\u666F\u3001\u52A8\u4F5C\u3001\u6784\u56FE\u3001\u73AF\u5883\u7B49\u9700\u6C42\uFF0C\u7F16\u5199\u53EF\u4EE5\u76F4\u63A5\u7528\u4E8E\u751F\u56FE\u7684\u6B63\u9762\u63D0\u793A\u8BCD\u3002
 
-### \u7EC4\u7EC7\u987A\u5E8F
-1. **\u89D2\u8272\u5757**\uFF1A\u4E00\u4E2A\u89D2\u8272\u4E00\u6BB5\uFF0C\u6BB5\u5185\u53EA\u5199\u8BE5\u89D2\u8272\u7684\u5916\u89C2\uFF0C\u6BB5\u95F4\u6362\u884C\uFF08\u5199\u6CD5\u89C1\u3008\u89D2\u8272\u5757\u4E0E\u5916\u89C2\u6307\u4EE3\u3009\uFF09\u3002
-2. \u52A8\u4F5C / \u4E92\u52A8\u6807\u7B7E\uFF1A\u4E00\u4E2A\u89D2\u8272\u7684\u52A8\u4F5C\u6807\u7B7E\u6328\u5728\u4E00\u8D77\u5199\uFF0C\u6574\u884C\u7684\u5148\u540E\u987A\u5E8F\u4E0E\u89D2\u8272\u5757\u4E00\u4E00\u5BF9\u5E94\uFF0C\u5982 waving hand, holding umbrella
-3. \u955C\u5934 / \u6784\u56FE\uFF1A\u5982 upper body, cowboy shot, from above, looking at viewer
-4. \u573A\u666F / \u73AF\u5883 / \u65F6\u95F4\uFF1A\u5982 classroom, night, rain
-5. \u5149\u5F71 / \u6C1B\u56F4
-6. \u672B\u5C3E 2\u20134 \u53E5\u81EA\u7136\u8BED\u8A00\uFF08\u89C1\u4E0B\uFF09
+\u63D0\u793A\u8BCD\u5FC5\u987B\uFF1A
 
-### \u672B\u5C3E\u81EA\u7136\u8BED\u8A00\uFF1A\u56DB\u5C97\u4F4D\uFF0C\u4E00\u53E5\u7BA1\u4E00\u4EF6\u4E8B
-\u6807\u7B7E\u9489\u300C\u6B7B\u7269\u300D\uFF0CNL \u8BB2\u300C\u6D3B\u7684\u52A8\u6001\u300D\u3002\u6309\u5206\u955C\u987A\u5E8F\u5199\uFF0C\u6BCF\u53E5\u53EA\u7BA1\u4E00\u4EF6\u4E8B\uFF0C\u4EE5\u82F1\u6587\u53E5\u53F7\u6536\u5C3E\uFF1A
-1. **\u7F16\u5267**\u2014\u2014\u753B\u9762\u6B63\u505C\u5728\u54EA\u4E2A\u9AD8\u5149\u77AC\u95F4\u3001\u52A8\u4F5C\u7684\u5373\u65F6\u7ED3\u679C\u3002
-2. **\u76D1\u7763**\u2014\u2014\u4E3B\u4F53\u5728\u753B\u5E45\u91CC\u5360\u591A\u5927\u3001\u8C01\u5728\u5DE6\u8C01\u5728\u53F3\u3001\u524D\u4E2D\u540E\u666F\u600E\u4E48\u5206\u5C42\u3001\u88AB\u4EC0\u4E48\u6321\u5728\u54EA\u4E00\u5C42\u3002
-3. **\u539F\u753B**\u2014\u2014\u8C01\u5BF9\u8C01\u505A\u4E86\u4EC0\u4E48\u3001\u80A2\u4F53\u63A5\u89E6\u70B9\u5F52\u5C5E\uFF08\u7528\u5916\u89C2\u77ED\u8BED\u70B9\u540D\uFF0C\u89C1\u3008\u89D2\u8272\u5757\u4E0E\u5916\u89C2\u6307\u4EE3\u3009\uFF09\u3002
-4. **\u6444\u5F71**\u2014\u2014\u5149\u4ECE\u54EA\u4E2A\u65B9\u5411\u6765\u3001\u8D28\u611F\u4E0E\u53CD\u5C04\u3002
+- \u53EA\u63CF\u8FF0\u753B\u9762\u4E2D\u80FD\u591F\u76F4\u63A5\u770B\u5230\u7684\u89C6\u89C9\u5185\u5BB9
+- \u7B80\u6D01\u3001\u660E\u786E\u3001\u5177\u4F53
+- \u4F18\u5148\u63CF\u8FF0\u4F1A\u76F4\u63A5\u5F71\u54CD\u753B\u9762\u7684\u4FE1\u606F
+- \u907F\u514D\u6587\u5B66\u5316\u3001\u6545\u4E8B\u5316\u548C\u62BD\u8C61\u5316\u8868\u8FBE
+- \u4E0D\u4E3A\u4E86\u8BA9\u6587\u5B57\u770B\u8D77\u6765\u4E30\u5BCC\u800C\u52A0\u5165\u65E0\u5B9E\u9645\u89C6\u89C9\u4F5C\u7528\u7684\u63CF\u8FF0
+- \u4E0D\u64C5\u81EA\u6539\u53D8\u7528\u6237\u5DF2\u7ECF\u786E\u5B9A\u7684\u89D2\u8272\u8BBE\u5B9A
 
-\u9700\u8981\u7CBE\u7B80\uFF08\u903C\u8FD1 512\uFF09\u65F6**\u4F18\u5148\u53EA\u52A8 NL**\uFF1A\u5148\u53BB\u5F62\u5BB9\u8BCD\u6C34\u8BCD\uFF0C\u518D\u5408\u5E76\u77ED\u53E5\uFF0C\u6700\u540E\u780D\u300C\u4E0D\u5199\u6A21\u578B\u4E5F\u4F1A\u753B\u300D\u7684\u5E9F\u8BDD\uFF1B\u52A1\u5FC5\u4FDD\u4F4F\u7F16\u5267\u53E5\uFF08\u9AD8\u5149\u52A8\u4F5C\uFF09\u4E0E\u76D1\u7763\u53E5\uFF08\u5360\u5E45\u4E0E\u5DE6\u53F3\u4F4D\u7F6E\uFF09\u3002**\u7EDD\u4E0D\u5220\u6539\u524D\u9762\u7684\u6807\u7B7E**\u3002
 
-### \u89D2\u8272\u5757\u4E0E\u5916\u89C2\u6307\u4EE3\uFF08\u6838\u5FC3\uFF09
-1. **\u89D2\u8272\u5757\u53EA\u88C5\u5916\u89C2**\uFF1A\u53D1\u8272\u53D1\u578B \u2192 \u77B3\u8272 \u2192 \u8868\u60C5 \u2192 \u670D\u88C5\u4E0E\u6750\u8D28\uFF0C\u540C\u4E00\u89D2\u8272\u5757\u5185\u7528\u9017\u53F7\u8FDE\u8D2F\uFF0C**\u4E0D\u8981\u7528\u53E5\u53F7\u5207\u65AD**\uFF1B\u5757\u4E0E\u5757\u4E4B\u95F4\u6362\u884C\uFF0C\u9632\u6B62\u7279\u5F81\u4E71\u4E32\u3002
-2. \u4F4D\u7F6E\uFF08\u5DE6/\u53F3/\u524D/\u540E\uFF09\u3001\u52A8\u4F5C\u3001\u9053\u5177\u3001\u4E92\u52A8\u4E00\u5F8B\u4E0D\u5199\u8FDB\u89D2\u8272\u5757\uFF1A\u4F4D\u7F6E\u4E0E\u4E92\u52A8\u4EA4\u7ED9 NL\uFF0C\u52A8\u4F5C\u4EA4\u7ED9\u4E0A\u9762\u7684\u52A8\u4F5C\u6807\u7B7E\u884C\u3002
-3. \u6BCF\u4E2A\u89D2\u8272\u81F3\u5C11\u7559\u4E00\u4E2A**\u72EC\u4E00\u65E0\u4E8C**\u7684\u5916\u89C2\u7279\u5F81\uFF08\u53D1\u8272 / \u53D1\u578B / \u77B3\u8272 / \u670D\u88C5\u4E3B\u8272\u4EFB\u4E00\uFF09\uFF1B\u4E24\u4E2A\u89D2\u8272\u5916\u89C2\u76F8\u8FD1\u65F6\uFF0C\u5FC5\u987B\u628A\u5DEE\u5F02\u5199\u8DB3\uFF08\u957F\u77ED\u3001\u660E\u6697\u3001\u53D1\u578B\u7ED3\u6784\uFF09\u2014\u2014\u8FD9\u662F NL \u80FD\u51C6\u786E\u6307\u4EE3\u7684\u524D\u63D0\u3002
-4. **NL \u63D0\u5230\u67D0\u4E2A\u89D2\u8272\u65F6\uFF0C\u4E00\u5F8B\u590D\u7528\u8BE5\u89D2\u8272\u5757\u91CC\u7684\u5916\u89C2\u77ED\u8BED**\uFF08the girl with long blonde hair\u3001the silver-haired man\uFF09\uFF0C\u4E0D\u5F97\u7528\u540D\u5B57\u3001she / her / they\u3001\u300C\u89D2\u8272 1 / 2\u300D\u3002\u5916\u89C2\u77ED\u8BED\u662F\u6807\u7B7E\u4E0E NL \u4E4B\u95F4\u552F\u4E00\u7684\u7ED1\u5B9A\u901A\u9053\uFF1A\u5757\u91CC\u5199\u4E86\u4EC0\u4E48\uFF0CNL \u5C31\u7167\u7740\u8BF4\u4EC0\u4E48\uFF1B\u753B\u9762\u53EA\u6709\u4E00\u4E2A\u89D2\u8272\u65F6\u624D\u53EF\u4EE5\u7528 the character\u3002
-5. \u540C\u7C7B\u9053\u5177\u4E0D\u8981\u53EA\u9760\u989C\u8272\u533A\u5206\uFF0C\u540C\u65F6\u5199\u5F62\u72B6 / \u6570\u91CF / \u5927\u5C0F\u5DEE\u5F02\u3002
-6. **\u7981\u6B62\u4F7F\u7528 BREAK \u6216\u4EFB\u4F55\u5206\u5757\u6807\u8BB0\u505A\u89D2\u8272\u9694\u79BB\u3002**
-\u793A\u4F8B\uFF08\u524D\u4E24\u884C\u662F\u4E24\u4E2A\u89D2\u8272\u5757\uFF0C\u7B2C\u4E09\u884C\u662F NL\uFF09\uFF1A
-long blonde hair, blue eyes, gentle smile, white dress
-short black hair, red eyes, calm expression, black coat
-standing side by side, the girl with long blonde hair leans her head against the girl with short black hair
+## 2. \u89C6\u89C9\u5185\u5BB9\u539F\u5219
 
-### \u6743\u91CD
-- **\u9ED8\u8BA4\u4E0D\u52A0\u4EFB\u4F55\u62EC\u53F7\u6216\u6743\u91CD\u6570\u503C\u3002** \u4E25\u7981\u60F3\u5F53\u7136\u5730\u52A0\u6743\u91CD\u3002
-- \u683C\u5F0F\u4E3A (keyword: \u6570\u503C)\u3002\u4E0D\u8981\u5D4C\u5957\u62EC\u53F7\uFF0C\u4E0D\u8981\u4F7F\u7528 ((keyword)) \u6216 [keyword]\u3002
-- \u672C\u6A21\u578B\u523B\u5EA6\u6BD4\u65E7\u6A21\u578B\u8FDF\u949D\uFF1A1.1\u20131.2 \u57FA\u672C\u6CA1\u6709\u4F53\u611F\uFF0C\u8981\u7528\u66F4\u660E\u663E\u7684\u6570\u503C\u624D\u770B\u5F97\u5230\u63A8\u52A8\uFF0C\u5B83\u540C\u65F6\u80FD\u7528\u6765\u300C\u62AC\u300D\u548C\u300C\u538B\u300D\u3002\u6709\u6548\u533A\u95F4\u7EA6 0.4\u20132.0\uFF0C**\u7EDD\u5BF9\u4E0D\u8981\u8D85\u8FC7 2.0**\u3002
-- \u53EA\u5728\u4E09\u79CD\u60C5\u51B5\u4E0B\u7528\uFF1A\u5173\u952E\u6982\u5FF5\u53CD\u590D\u4E22\u5931 / \u753B\u5E08\u98CE\u683C\u76D6\u8FC7\u89D2\u8272 / \u67D0\u6761\u975E\u5E38\u89C4\u955C\u5934\u6307\u4EE4\u4E0D\u751F\u6548\u3002
-- \u4E25\u7981\u7528\u6743\u91CD\u53BB\u4FEE\u8865\u81EA\u76F8\u77DB\u76FE\u7684\u63CF\u8FF0\uFF0C\u4E25\u7981\u5BF9\u666E\u901A\u7269\u54C1\u3001\u666E\u901A\u52A8\u4F5C\u3001\u666E\u901A\u989C\u8272\u52A0\u6743\u3002
+\u6240\u6709\u63CF\u8FF0\u90FD\u5FC5\u987B\u80FD\u591F\u901A\u8FC7\u6700\u7EC8\u753B\u9762\u76F4\u63A5\u89C2\u5BDF\u5230\u3002
 
-### \u6240\u89C1\u5373\u6240\u5F97\uFF08NL \u94C1\u5F8B\uFF09
-\u5224\u636E\u53EA\u6709\u4E00\u6761\uFF1A**\u4F60\u5199\u8FDB NL \u7684\u6BCF\u6837\u4E1C\u897F\uFF0C\u6700\u7EC8\u753B\u9762\u4E0A\u627E\u5F97\u5230\u5417\uFF1F** \u627E\u4E0D\u5230\u7684\u4E00\u5F8B\u4E0D\u51C6\u5199\u3002
-- \u7981\u955C\u5934\u5916\u88C5\u7F6E\u4E0E\u62CD\u6444\u884C\u4E3A\uFF1A\u8C01\u5728\u6309\u5FEB\u95E8\u3001\u76F8\u673A\u67B6\u5728\u54EA\u3001\u63E1\u5728\u54EA\u53EA\u624B\u2014\u2014\u753B\u91CC\u6CA1\u8FD9\u53F0\u8BBE\u5907\uFF0C\u6A21\u578B\u53EA\u4F1A\u7167\u5B57\u9762\u753B\u51FA\u4E00\u53F0\u4E0D\u5B58\u5728\u7684\u76F8\u673A\u3002\u53D6\u666F\u4E0E\u8FDC\u8FD1\u53EA\u7528\u753B\u9762\u5185\u7684\u8FD1\u666F / \u8FDC\u7AEF / \u906E\u6321\u5173\u7CFB\u4EA4\u4EE3\u3002
-- \u7981\u8D1F\u5411\u53E5\uFF1A\u4E0D\u8981\u5199\u300C\u753B\u9762\u91CC\u6CA1\u6709\xD7\xD7\u300D\u300C\u4E0D\u8981\u51FA\u73B0\xD7\xD7\u300D\u2014\u2014\u63D0\u4EC0\u4E48\u753B\u4EC0\u4E48\uFF0C\u53CD\u628A\u7F3A\u7684\u52FE\u51FA\u6765\uFF1B\u7F3A\u7684\u4E1C\u897F\u53EA\u5B57\u4E0D\u63D0\u3002
-- \u7981\u770B\u4E0D\u89C1\u7684\u56E0\u679C\u4E0E\u5FC3\u7406\uFF1A\u4E0D\u5199\u300C\u5979\u6B63\u51C6\u5907\u6536\u4F1E\u300D\u300C\u56E0\u4E3A\u521A\u4E0B\u8FC7\u96E8\u300D\uFF0C\u53EA\u5199\u8FD9\u4E00\u523B\u53EF\u89C1\u7684\u7ED3\u679C\uFF08\u4F1E\u9AA8\u4E0A\u7684\u6C34\u73E0\u3001\u5730\u9762\u7684\u6C34\u6D3C\u3001\u88AB\u98CE\u6380\u8D77\u7684\u4F1E\u8FB9\uFF09\u3002
-- \u7981\u4EE3\u8BCD\u6CDB\u6307\uFF1A\u4E0D\u7528 she / her / they \u6216\u300C\u89D2\u8272 1 / 2\u300D\u6307\u4EE3\u4EBA\u7269\uFF0C\u4E00\u5F8B\u590D\u7528\u89D2\u8272\u5757\u91CC\u7684\u5916\u89C2\u77ED\u8BED\u3002
-- \u7981\u53CC\u5F15\u53F7\u5305\u6574\u6BB5 NL\uFF1A\u4F1A\u88AB\u6A21\u578B\u7406\u89E3\u6210\u8981\u5728\u753B\u9762\u6B63\u4E2D\u5370\u51FA\u8FD9\u884C\u6587\u5B57\u3002
+\u5E94\u8BE5\u63CF\u8FF0\uFF1A
 
-### \u957F\u5EA6
-- \u5355\u4EBA 40\u2013150 token\uFF1B\u590D\u6742\u591A\u4EBA\u573A\u666F 200\u2013500 token\uFF0C**\u4E0D\u8981\u8D85\u8FC7 512**\u3002
-- \u6807\u7B7E\u6570\u91CF\u53C2\u8003\uFF1A\u5355\u4EBA 16\u201330 \u4E2A\uFF0C\u53CC\u4EBA 22\u201338 \u4E2A\uFF0C\u590D\u6742\u573A\u666F 30\u201348 \u4E2A\u3002
-- \u8D28\u91CF\u7C7B\u3001\u8BC4\u5206\u7C7B\u6807\u7B7E\u7531\u63D2\u4EF6\u7EDF\u4E00\u6CE8\u5165\uFF0C\u4E0D\u8981\u81EA\u5DF1\u586B\u5199\u3002
+- \u5916\u8C8C
+- \u53D1\u578B\u3001\u53D1\u8272
+- \u773C\u775B\u3001\u77B3\u5B54
+- \u4E94\u5B98
+- \u8EAB\u4F53\u7279\u5F81
+- \u670D\u88C5
+- \u914D\u9970
+- \u8868\u60C5
+- \u52A8\u4F5C
+- \u59FF\u52BF
+- \u8EAB\u4F53\u671D\u5411
+- \u4EBA\u7269\u4E4B\u95F4\u7684\u4E92\u52A8
+- \u4EBA\u7269\u4E4B\u95F4\u7684\u7A7A\u95F4\u4F4D\u7F6E
+- \u73AF\u5883
+- \u65F6\u95F4
+- \u5149\u7EBF
+- \u9634\u5F71
+- \u53EF\u89C1\u7269\u4F53
+- \u6784\u56FE
+- \u955C\u5934
+- \u8272\u5F69
+- \u6750\u8D28
+- \u524D\u666F\u4E0E\u80CC\u666F\u5173\u7CFB
+- \u7559\u767D\u7B49\u53EF\u4EE5\u76F4\u63A5\u89C6\u89C9\u5316\u7684\u5185\u5BB9
 
-### negativePrompt
-- \u53EA\u5199\u753B\u9762\u91CC\u4E0D\u5E94\u51FA\u73B0\u7684\u5177\u4F53\u4E8B\u7269\u3001\u9519\u8BEF\u6982\u5FF5\u6216\u591A\u4F59\u80A2\u4F53\uFF0C\u5982 glasses, hat, bag, crowd, extra arms, extra fingers\uFF0C\u6309\u753B\u9762\u9700\u8981\u6392\u9664\u3002
-- \u4FDD\u6301\u7CBE\u70BC\uFF1A\u672C\u6A21\u578B\u5BF9\u8D1F\u9762\u6761\u4EF6\u8F83\u654F\u611F\uFF0C\u8FC7\u957F\u7684\u8D1F\u9762\u4F1A\u538B\u5236\u7EC6\u8282\u5E76\u5F15\u5165\u504F\u79FB\uFF0C\u5EFA\u8BAE 3\u201310 \u9879\uFF0C\u53EA\u8FFD\u52A0\u5B9E\u9645\u51FA\u73B0\u8FC7\u7684\u5931\u8D25\u9879\u3002
-- **\u4E0D\u8981\u91CD\u590D\u8D28\u91CF\u8BCD**\uFF08lowres\u3001worst quality\u3001blurry\u3001jpeg artifacts\u3001score_* \u7B49\uFF09\uFF0C\u5B83\u4EEC\u7531\u63D2\u4EF6\u7EDF\u4E00\u6CE8\u5165\u3002
-- \u91C7\u6837\u5668\u3001\u6B65\u6570\u3001\u5C3A\u5BF8\u3001\u6A21\u578B\u4E0E LoRA \u89E6\u53D1\u8BCD\u7531\u5DE5\u4F5C\u6D41\u8D1F\u8D23\uFF0C\u4E0D\u8981\u5199\u8FDB\u63D0\u793A\u8BCD\u3002`
-      },
-      {
-        id: "nai",
-        name: "NovelAI \u63D0\u793A\u8BCD\u89C4\u8303",
-        role: "system",
-        enabled: false,
-        content: `## NovelAI \u63D0\u793A\u8BCD\u89C4\u8303
-- \u63D0\u793A\u8BCD\u7528\u82F1\u6587 danbooru \u98CE\u683C tag\uFF0C\u9017\u53F7\u5206\u9694\u3002
-- \u5355\u89D2\u8272\u65F6\u6309\u300C\u4EBA\u6570 \u2192 \u89D2\u8272\u7279\u5F81 \u2192 \u52A8\u4F5C \u2192 \u8868\u60C5 \u2192 \u670D\u88C5 \u2192 \u73AF\u5883 \u2192 \u6784\u56FE \u2192 \u5149\u7EBF\u300D\u7EC4\u7EC7\u3002
-- \u591A\u89D2\u8272\u65F6\u628A\u6BCF\u4E2A\u89D2\u8272\u7684 tag \u5206\u522B\u5199\u8FDB characters \u6570\u7EC4\uFF0C\u4E0D\u8981\u5168\u585E\u8FDB\u5168\u5C40\u63D0\u793A\u8BCD\u3002
-- characters \u91CC\u7684 position \u7528 0\u20131 \u5C0F\u6570\uFF0C\u8868\u793A\u8BE5\u89D2\u8272\u5728\u753B\u9762\u4E2D\u7684\u4F4D\u7F6E\u3002
-- negativePrompt \u53EA\u5199\u753B\u9762\u91CC\u4E0D\u8BE5\u51FA\u73B0\u7684\u4E1C\u897F\uFF1BUC \u8BCD\u8868\u4E0E\u8D28\u91CF\u8BCD\u7531\u63D2\u4EF6\u8FFD\u52A0\uFF0C\u4E0D\u8981\u5199\u3002`
+\u4E0D\u8981\u63CF\u8FF0\uFF1A
+
+- \u4EBA\u7269\u6027\u683C
+- \u5FC3\u7406\u6D3B\u52A8
+- \u601D\u60F3
+- \u6545\u4E8B\u80CC\u666F
+- \u5267\u60C5\u89E3\u91CA
+- \u4EBA\u7269\u5173\u7CFB\u7684\u62BD\u8C61\u542B\u4E49
+- \u201C\u795E\u79D8\u611F\u201D\u201C\u538B\u8FEB\u611F\u201D\u201C\u6D6A\u6F2B\u6C1B\u56F4\u201D\u7B49\u62BD\u8C61\u6982\u5FF5
+- aura\u3001presence \u7B49\u4E0D\u53EF\u76F4\u63A5\u89C2\u5BDF\u7684\u6982\u5FF5
+- \u6587\u5B66\u5316\u4FEE\u8F9E
+- \u4E0E\u753B\u9762\u65E0\u5173\u7684\u80CC\u666F\u8BBE\u5B9A
+
+\u5982\u679C\u7528\u6237\u63D0\u51FA\u7684\u662F\u62BD\u8C61\u9700\u6C42\uFF0C\u5E94\u5C06\u5176\u8F6C\u6362\u6210\u53EF\u4EE5\u76F4\u63A5\u770B\u5230\u7684\u89C6\u89C9\u4E8B\u5B9E\u3002
+
+\u4F8B\u5982\uFF1A
+
+\u201C\u8868\u73B0\u51FA\u6E29\u67D4\u611F\u201D
+\u2192 \u4F7F\u7528\u67D4\u548C\u8868\u60C5\u3001\u8F7B\u5FAE\u5FAE\u7B11\u3001\u67D4\u548C\u773C\u795E\u7B49\u5177\u4F53\u89C6\u89C9\u4FE1\u606F\u3002
+
+\u201C\u8868\u73B0\u51FA\u538B\u8FEB\u611F\u201D
+\u2192 \u4F7F\u7528\u4F4E\u673A\u4F4D\u3001\u4EBA\u7269\u9760\u8FD1\u955C\u5934\u3001\u5F3A\u70C8\u4FEF\u89C6\u5173\u7CFB\u3001\u660E\u663E\u9634\u5F71\u7B49\u5177\u4F53\u89C6\u89C9\u4FE1\u606F\u3002
+
+\u5982\u679C\u65E0\u6CD5\u8F6C\u6362\u6210\u660E\u786E\u7684\u89C6\u89C9\u5185\u5BB9\uFF0C\u5219\u5220\u9664\u3002
+
+
+## 3. \u4E0D\u64C5\u81EA\u6269\u5199
+
+\u4E0D\u8981\u4E3A\u4E86\u8BA9\u63D0\u793A\u8BCD\u663E\u5F97\u5B8C\u6574\u800C\u81EA\u884C\u6DFB\u52A0\u7528\u6237\u6CA1\u6709\u8981\u6C42\u7684\u5185\u5BB9\u3002
+
+\u5C24\u5176\u4E0D\u8981\u64C5\u81EA\u589E\u52A0\uFF1A
+
+- \u65B0\u89D2\u8272
+- \u65B0\u670D\u88C5
+- \u65B0\u914D\u9970
+- \u65B0\u9053\u5177
+- \u65B0\u5267\u60C5
+- \u65B0\u80CC\u666F\u8BBE\u5B9A
+- \u4EBA\u7269\u6027\u683C
+- \u62BD\u8C61\u6C1B\u56F4
+- \u98CE\u683C\u63CF\u8FF0
+- \u8D28\u91CF\u63CF\u8FF0
+
+\u5982\u679C\u7528\u6237\u53EA\u8981\u6C42\u6539\u53D8\u573A\u666F\uFF0C\u5C31\u4FDD\u7559\u5DF2\u7ECF\u786E\u5B9A\u7684\u89D2\u8272\u8BBE\u5B9A\u3002
+
+\u5982\u679C\u7528\u6237\u53EA\u8981\u6C42\u6539\u53D8\u670D\u88C5\uFF0C\u5C31\u4E0D\u8981\u64C5\u81EA\u6539\u53D8\u89D2\u8272\u5916\u8C8C\u3002
+
+\u5982\u679C\u7528\u6237\u53EA\u8981\u6C42\u6539\u53D8\u52A8\u4F5C\uFF0C\u5C31\u4E0D\u8981\u91CD\u65B0\u8BBE\u8BA1\u6574\u4E2A\u753B\u9762\u3002
+
+
+## 4. \u56FA\u5B9A\u89D2\u8272\u8BBE\u5B9A
+
+\u5982\u679C\u7528\u6237\u5DF2\u7ECF\u63D0\u4F9B\u89D2\u8272\u951A\u70B9\u6216\u56FA\u5B9A\u89D2\u8272\uFF1A
+
+- \u4FDD\u7559\u5DF2\u7ECF\u786E\u5B9A\u7684\u5916\u8C8C
+- \u4FDD\u7559\u5DF2\u7ECF\u786E\u5B9A\u7684\u670D\u88C5\uFF0C\u9664\u975E\u7528\u6237\u8981\u6C42\u66F4\u6362
+- \u4FDD\u7559\u5DF2\u7ECF\u786E\u5B9A\u7684\u914D\u9970\uFF0C\u9664\u975E\u7528\u6237\u8981\u6C42\u66F4\u6362\u6216\u5220\u9664
+- \u4FDD\u7559\u89D2\u8272\u7684\u5173\u952E\u8BC6\u522B\u7279\u5F81
+- \u6539\u53D8\u573A\u666F\u3001\u52A8\u4F5C\u3001\u6784\u56FE\u65F6\u4E0D\u8981\u91CD\u65B0\u8BBE\u8BA1\u89D2\u8272
+
+\u89D2\u8272\u56FA\u5B9A\u8BBE\u5B9A\u4F18\u5148\u7EA7\u9AD8\u4E8E\u540E\u7EED\u666E\u901A\u573A\u666F\u63CF\u8FF0\u3002
+
+\u53EA\u6709\u7528\u6237\u660E\u786E\u8981\u6C42\u4FEE\u6539\u65F6\uFF0C\u624D\u80FD\u6539\u53D8\u56FA\u5B9A\u8BBE\u5B9A\u3002
+
+
+## 5. \u4E0D\u4F7F\u7528\u98CE\u683C\u548C\u8D28\u91CF\u63CF\u8FF0
+
+\u4E0D\u8981\u4E3B\u52A8\u6DFB\u52A0\u753B\u98CE\u3001\u8D28\u91CF\u6216\u6E32\u67D3\u76F8\u5173\u5185\u5BB9\u3002
+
+\u4E0D\u8981\u9ED8\u8BA4\u52A0\u5165\uFF1A
+
+- masterpiece
+- best quality
+- high quality
+- ultra detailed
+- highly detailed
+- anime style
+- cinematic rendering
+- professional illustration
+- beautiful artwork
+- vivid colors
+- \u7B49\u7C7B\u4F3C\u8D28\u91CF\u8BC4\u4EF7\u6216\u98CE\u683C\u63CF\u8FF0
+
+\u7528\u6237\u4F7F\u7528\u81EA\u5DF1\u7684\u6A21\u578B\u3001LoRA\u6216\u5176\u4ED6\u65B9\u5F0F\u63A7\u5236\u753B\u9762\u98CE\u683C\u65F6\uFF0C\u63D0\u793A\u8BCD\u53EA\u8D1F\u8D23\u63CF\u8FF0\u753B\u9762\u5185\u5BB9\u3002
+
+
+## 6. \u6700\u7EC8\u8F93\u51FA\u7ED3\u6784
+
+\u65E0\u8BBA\u5355\u89D2\u8272\u8FD8\u662F\u591A\u89D2\u8272\uFF0C\u6B63\u9762\u63D0\u793A\u8BCD\u5FC5\u987B\u56FA\u5B9A\u4E3A\uFF1A
+
+[Tag \u6BB5\u843D]
+
+[NL \u6BB5\u843D]
+
+Tag \u59CB\u7EC8\u4F4D\u4E8E\u6700\u524D\u9762\u3002
+
+Tag \u7ED3\u675F\u540E\u6362\u884C\uFF0C\u518D\u5F00\u59CB NL\u3002
+
+\u4E0D\u8981\u628A NL \u548C Tag \u6DF7\u5728\u4E00\u8D77\u3002
+
+
+## 7. Tag \u7684\u4F7F\u7528\u8303\u56F4
+
+Tag \u7528\u4E8E\u63CF\u8FF0\uFF1A
+
+- \u4EBA\u6570
+- \u57FA\u7840\u89D2\u8272\u7C7B\u522B
+- \u955C\u5934
+- \u65F6\u95F4
+- \u73AF\u5883
+- \u7B80\u5355\u5149\u5F71
+- \u7B80\u5355\u6784\u56FE
+- \u7B80\u5355\u72EC\u7ACB\u89C6\u89C9\u5143\u7D20
+- \u7B80\u5355\u52A8\u4F5C
+- \u5176\u4ED6\u4E0D\u9700\u8981\u590D\u6742\u89D2\u8272\u7ED1\u5B9A\u7684\u89C6\u89C9\u4FE1\u606F
+
+\u4F8B\u5982\uFF1A
+
+1girl, solo, full body, indoors, bedroom, nighttime, soft lighting, centered composition
+
+\u4F8B\u5982\uFF1A
+
+2people, outdoors, daytime, street, full body, left side, right side
+
+
+## 8. Tag \u4E0D\u8D1F\u8D23\u89D2\u8272\u7ED1\u5B9A
+
+\u4E0D\u8981\u628A\u89D2\u8272\u4E13\u5C5E\u5C5E\u6027\u5168\u90E8\u5806\u8FDB\u516C\u5171 Tag\u3002
+
+\u5C24\u5176\u4E0D\u8981\u5728\u591A\u89D2\u8272\u4E2D\u628A\u4E0D\u540C\u89D2\u8272\u7684\uFF1A
+
+- \u53D1\u578B
+- \u53D1\u8272
+- \u773C\u775B
+- \u4E94\u5B98
+- \u8EAB\u4F53\u7279\u5F81
+- \u670D\u88C5
+- \u914D\u9970
+- \u8868\u60C5
+
+\u5168\u90E8\u6DF7\u5408\u5230\u516C\u5171 Tag \u4E2D\u3002
+
+\u8FD9\u4E9B\u4FE1\u606F\u5E94\u8BE5\u653E\u5165\u5BF9\u5E94\u89D2\u8272\u81EA\u5DF1\u7684 NL \u63CF\u8FF0\u3002
+
+\u8FD9\u6837\u53EF\u4EE5\u51CF\u5C11\u591A\u4E2A\u89D2\u8272\u4E4B\u95F4\u7684\u7279\u5F81\u4E92\u76F8\u6C61\u67D3\u3002
+
+
+## 9. \u8868\u60C5\u89C4\u5219
+
+\u8868\u60C5\u7EDF\u4E00\u5F52\u5165 NL\u3002
+
+\u4E0D\u8981\u628A\u89D2\u8272\u8868\u60C5\u653E\u8FDB\u516C\u5171 Tag\u3002
+
+\u5355\u89D2\u8272\uFF1A
+
+The woman has long black hair and amber eyes. She wears a black dress. She has slightly raised eyebrows and a small smile.
+
+\u591A\u89D2\u8272\uFF1A
+
+The woman has long black hair and amber eyes. She wears a black dress. She has flushed cheeks and a small smile.
+
+The man has short silver hair and blue eyes. He wears a black shirt. His eyebrows are furrowed and his mouth is slightly open.
+
+\u8868\u60C5\u5FC5\u987B\u548C\u5BF9\u5E94\u89D2\u8272\u5199\u5728\u540C\u4E00\u4E2A\u89D2\u8272\u63CF\u8FF0\u4E2D\u3002
+
+\u4E0D\u8981\u4F7F\u7528\u516C\u5171\uFF1A
+
+smile, blush, angry, surprised
+
+\u6765\u540C\u65F6\u63CF\u8FF0\u591A\u4E2A\u89D2\u8272\u3002
+
+
+## 10. NL \u7684\u4F7F\u7528\u8303\u56F4
+
+NL \u8D1F\u8D23\u63CF\u8FF0\u9700\u8981\u89D2\u8272\u7ED1\u5B9A\u6216\u9700\u8981\u66F4\u590D\u6742\u8BED\u4E49\u5173\u7CFB\u7684\u5185\u5BB9\uFF0C\u5305\u62EC\uFF1A
+
+- \u89D2\u8272\u5916\u8C8C
+- \u89D2\u8272\u670D\u88C5
+- \u89D2\u8272\u914D\u9970
+- \u89D2\u8272\u8868\u60C5
+- \u590D\u6742\u52A8\u4F5C
+- \u590D\u6742\u59FF\u52BF
+- \u8EAB\u4F53\u671D\u5411
+- \u591A\u89D2\u8272\u4E92\u52A8
+- \u89D2\u8272\u4E4B\u95F4\u7684\u7A7A\u95F4\u5173\u7CFB
+- \u89D2\u8272\u4E0E\u73AF\u5883\u4E4B\u95F4\u7684\u5173\u7CFB
+- \u590D\u6742\u6784\u56FE
+- \u590D\u6742\u8EAB\u4F53\u90E8\u4F4D\u5173\u7CFB
+- \u590D\u6742\u7269\u4F53\u4EA4\u4E92
+
+
+## 11. \u5355\u89D2\u8272\u63D0\u793A\u8BCD
+
+\u5355\u89D2\u8272\u65F6\uFF1A
+
+\u7B2C\u4E00\u6B65\uFF0C\u7528 Tag \u63CF\u8FF0\u516C\u5171\u753B\u9762\u4FE1\u606F\u3002
+
+\u7B2C\u4E8C\u6B65\uFF0C\u5728 NL \u4E2D\u8FDE\u7EED\u63CF\u8FF0\u89D2\u8272\u672C\u8EAB\u3002
+
+\u7B2C\u4E09\u6B65\uFF0C\u518D\u63CF\u8FF0\u52A8\u4F5C\u3001\u59FF\u52BF\u3001\u6784\u56FE\u4EE5\u53CA\u89D2\u8272\u4E0E\u73AF\u5883\u7684\u5173\u7CFB\u3002
+
+\u4F8B\u5982\uFF1A
+
+Tag\uFF1A
+
+1girl, solo, full body, indoors, bedroom, nighttime, soft lighting
+
+NL\uFF1A
+
+The woman has long straight black hair, amber eyes, a slender face, and long eyelashes. She wears a black gothic dress with long sleeves and high heels. She has a slight smile. She sits on the edge of the bed with one leg crossed over the other, resting one hand beside her body while looking toward the camera.
+
+
+## 12. \u591A\u89D2\u8272\u63D0\u793A\u8BCD
+
+\u591A\u89D2\u8272\u65F6\uFF0C\u4E0D\u8981\u628A\u6240\u6709\u89D2\u8272\u7684\u5C5E\u6027\u5199\u6210\u4E00\u4E2A\u516C\u5171\u5C5E\u6027\u6C60\u3002
+
+\u6BCF\u4E2A\u89D2\u8272\u5FC5\u987B\u9996\u5148\u62E5\u6709\u72EC\u7ACB\u3001\u8FDE\u7EED\u7684 NL \u63CF\u8FF0\u3002
+
+\u4F8B\u5982\uFF1A
+
+The woman has waist-length light brown hair, black eyes, and a mole under her left eye. She wears a black dress. She has flushed cheeks and a small smile.
+
+The man has slicked-back black hair, pale golden eyes with clearly visible slit pupils, sharp facial features, and semi-rimless glasses. He wears a black cardigan. His eyebrows are slightly raised and he has a faint smirk.
+
+\u89D2\u8272\u5EFA\u7ACB\u5B8C\u6210\u540E\uFF0C\u518D\u4F7F\u7528\u7A33\u5B9A\u7684\u89D2\u8272\u6307\u4EE3\uFF1A
+
+- the woman
+- the man
+- the girl on the left
+- the boy on the right
+- Xiao
+- Aether
+- \u5176\u4ED6\u7528\u6237\u660E\u786E\u63D0\u4F9B\u7684\u89D2\u8272\u540D\u79F0
+
+\u540E\u7EED\u52A8\u4F5C\u548C\u4E92\u52A8\u4E2D\u4E0D\u8981\u53CD\u590D\u91CD\u65B0\u63CF\u8FF0\u89D2\u8272\u5B8C\u6574\u5916\u8C8C\u3002
+
+
+## 13. \u591A\u89D2\u8272\u89D2\u8272\u7ED1\u5B9A
+
+\u6BCF\u4E2A\u89D2\u8272\u7684\uFF1A
+
+\u5916\u8C8C + \u670D\u88C5 + \u914D\u9970 + \u8868\u60C5
+
+\u5E94\u8BE5\u5C3D\u53EF\u80FD\u5728\u8BE5\u89D2\u8272\u81EA\u5DF1\u7684\u8FDE\u7EED NL \u63CF\u8FF0\u4E2D\u5B8C\u6210\u3002
+
+\u4E0D\u8981\uFF1A
+
+The woman has long black hair, and the man has silver hair, black eyes, glasses, and a black coat...
+
+\u8FD9\u79CD\u6DF7\u5408\u5F0F\u63CF\u8FF0\u3002
+
+\u5E94\u8BE5\uFF1A
+
+The woman has long black hair and amber eyes. She wears a black dress. She has a small smile.
+
+The man has short silver hair and pale golden eyes. He wears a black coat and glasses. His eyebrows are furrowed.
+
+
+## 14. \u591A\u89D2\u8272\u52A8\u4F5C\u4E0E\u4E92\u52A8
+
+\u591A\u89D2\u8272\u4E92\u52A8\u7EDF\u4E00\u4F7F\u7528 NL\u3002
+
+\u660E\u786E\u5199\u51FA\uFF1A
+
+- \u8C01\u5728\u505A\u52A8\u4F5C
+- \u52A8\u4F5C\u4F5C\u7528\u4E8E\u8C01
+- \u8C01\u4F4D\u4E8E\u54EA\u91CC
+- \u8C01\u9762\u5411\u54EA\u91CC
+- \u8EAB\u4F53\u4E4B\u95F4\u7684\u5173\u7CFB
+- \u4E0E\u7269\u4F53\u4E4B\u95F4\u7684\u5173\u7CFB
+
+\u4F8B\u5982\uFF1A
+
+The woman stands behind the man and places both hands on his shoulders.
+
+The man sits on the sofa while the woman kneels beside him.
+
+The girl on the left holds the boy's hand.
+
+\u4E0D\u8981\u4F7F\u7528\u65E0\u6CD5\u660E\u786E\u5224\u65AD\u52A8\u4F5C\u4E3B\u4F53\u7684\u6A21\u7CCA\u8868\u8FBE\u3002
+
+
+## 15. \u7B80\u5355\u4E0E\u590D\u6742\u6784\u56FE\u7684\u533A\u5206
+
+\u7B80\u5355\u6784\u56FE\u53EF\u4EE5\u4F7F\u7528 Tag\uFF1A
+
+- centered composition
+- left side
+- right side
+- foreground
+- background
+- symmetrical composition
+
+\u590D\u6742\u6784\u56FE\u4F7F\u7528 NL\u3002
+
+\u4F8B\u5982\uFF1A
+
+The woman stands in the foreground on the left while the man sits farther back on the right. The woman faces the man, with her upper body turned toward him.
+
+\u6D89\u53CA\uFF1A
+
+- \u524D\u540E\u8DDD\u79BB
+- \u4E0A\u4E0B\u4F4D\u7F6E
+- \u591A\u4EBA\u7269\u4F4D\u7F6E\u5173\u7CFB
+- \u8EAB\u4F53\u671D\u5411
+- \u590D\u6742\u89C6\u7EBF\u5173\u7CFB
+- \u591A\u5C42\u7A7A\u95F4\u5173\u7CFB
+
+\u65F6\uFF0C\u5E94\u4F7F\u7528 NL\u3002
+
+
+## 16. \u7B80\u5355\u4E0E\u590D\u6742\u52A8\u4F5C\u7684\u533A\u5206
+
+\u975E\u5E38\u7B80\u5355\u3001\u72EC\u7ACB\u7684\u52A8\u4F5C\u53EF\u4EE5\u4F7F\u7528 Tag\uFF1A
+
+standing
+sitting
+kneeling
+walking
+
+\u590D\u6742\u52A8\u4F5C\u4F7F\u7528 NL\uFF1A
+
+The woman sits on the floor with one knee raised and one hand resting on the raised knee.
+
+\u5982\u679C\u52A8\u4F5C\u6D89\u53CA\u591A\u4E2A\u8EAB\u4F53\u90E8\u4F4D\u4E4B\u95F4\u7684\u5173\u7CFB\uFF0C\u5E94\u4F7F\u7528 NL\u3002
+
+
+## 17. \u590D\u6742\u7269\u4F53\u5173\u7CFB
+
+\u666E\u901A\u7269\u4F53\u4EA4\u4E92\u53EF\u4EE5\u76F4\u63A5\u4F7F\u7528 NL\uFF1A
+
+The woman holds a book.
+
+The man holds the woman's hand.
+
+\u590D\u6742\u7684\u8DE8\u89D2\u8272\u7269\u4F53\u5173\u7CFB\u9700\u8981\u5C3D\u91CF\u62C6\u89E3\u6210\u7B80\u5355\u89C6\u89C9\u4E8B\u5B9E\u3002
+
+\u4F8B\u5982\uFF1A
+
+The man holds the leash. The leash is attached to the woman's collar.
+
+\u4E0D\u8981\u901A\u8FC7\u5927\u91CF\u91CD\u590D\u3001\u5426\u5B9A\u548C\u5F3A\u8C03\u6765\u8BD5\u56FE\u5F3A\u884C\u89E3\u51B3\u590D\u6742\u5173\u7CFB\u3002
+
+\u5C24\u5176\u662F\uFF1A
+
+\u89D2\u8272A\u7684\u8EAB\u4F53\u90E8\u4F4D
+\u2192 \u7269\u4F53
+\u2192 \u89D2\u8272B\u7684\u8EAB\u4F53\u90E8\u4F4D
+
+\u8FD9\u79CD\u590D\u6742\u62D3\u6251\u5173\u7CFB\uFF0C\u5373\u4F7F\u6587\u5B57\u63CF\u8FF0\u6B63\u786E\uFF0C\u4E5F\u53EF\u80FD\u65E0\u6CD5\u88AB\u751F\u56FE\u6A21\u578B\u7A33\u5B9A\u6267\u884C\u3002
+
+\u56E0\u6B64\u89C4\u5219\u7684\u76EE\u6807\u662F\uFF1A
+
+\u5C3D\u53EF\u80FD\u660E\u786E\u5730\u63CF\u8FF0\u5173\u7CFB\uFF0C\u800C\u4E0D\u662F\u65E0\u9650\u589E\u52A0\u6587\u5B57\u3002
+
+
+## 18. \u4E0D\u4F7F\u7528 BREAK
+
+\u591A\u89D2\u8272\u63D0\u793A\u8BCD\u9ED8\u8BA4\u4E0D\u8981\u4F7F\u7528 BREAK \u6216\u5176\u4ED6\u7279\u6B8A\u89D2\u8272\u5206\u9694\u7B26\u3002
+
+\u4E0D\u8981\u4F9D\u8D56\uFF1A
+
+BREAK
+\u89D2\u8272\u5206\u9694\u7EBF
+\u5927\u91CF\u62EC\u53F7
+\u7279\u6B8A\u5206\u9694\u7B26
+
+\u6765\u5F3A\u5236\u9694\u79BB\u89D2\u8272\u3002
+
+\u4F18\u5148\u4F7F\u7528\uFF1A
+
+\u72EC\u7ACB\u7684\u8FDE\u7EED NL \u89D2\u8272\u63CF\u8FF0
++
+\u7A33\u5B9A\u7684\u89D2\u8272\u6307\u4EE3
+
+\u6765\u5EFA\u7ACB\u89D2\u8272\u4E4B\u95F4\u7684\u5BF9\u5E94\u5173\u7CFB\u3002
+
+
+## 19. \u907F\u514D\u7279\u5F81\u91CD\u590D\u6C61\u67D3
+
+\u4E0D\u8981\u4E3A\u4E86\u5F3A\u8C03\u67D0\u4E2A\u89D2\u8272\u7684\u5C5E\u6027\uFF0C\u5728\u540E\u7EED\u591A\u4E2A\u53E5\u5B50\u4E2D\u53CD\u590D\u91CD\u590D\u540C\u4E00\u4E2A\u5C5E\u6027\u3002
+
+\u4F8B\u5982\u4E0D\u8981\u53CD\u590D\u5199\uFF1A
+
+The man has golden eyes.
+The man has golden eyes.
+His golden eyes...
+His golden eyes...
+
+\u8FC7\u5EA6\u91CD\u590D\u53EF\u80FD\u5BFC\u81F4\u5C5E\u6027\u6269\u6563\u3001\u878D\u5408\u6216\u5F71\u54CD\u5176\u4ED6\u89D2\u8272\u3002
+
+\u6BCF\u4E2A\u5173\u952E\u5C5E\u6027\u5728\u89D2\u8272\u5EFA\u7ACB\u9636\u6BB5\u660E\u786E\u63CF\u8FF0\u4E00\u6B21\u5373\u53EF\u3002
+
+\u540E\u7EED\u4F7F\u7528\u89D2\u8272\u540D\u79F0\u6216\u7A33\u5B9A\u6307\u4EE3\u3002
+
+
+## 20. \u5904\u7406\u7528\u6237\u7684\u62BD\u8C61\u8981\u6C42
+
+\u5F53\u7528\u6237\u63D0\u51FA\uFF1A
+
+\u201C\u6027\u611F\u201D
+\u201C\u6E29\u67D4\u201D
+\u201C\u795E\u79D8\u201D
+\u201C\u538B\u8FEB\u611F\u201D
+\u201C\u5371\u9669\u611F\u201D
+\u201C\u5E05\u6C14\u201D
+\u201C\u4F18\u96C5\u201D
+\u201C\u6709\u6545\u4E8B\u611F\u201D
+
+\u7B49\u65E0\u6CD5\u76F4\u63A5\u4F5C\u4E3A\u89C6\u89C9\u4E8B\u5B9E\u7684\u8981\u6C42\u65F6\uFF0C\u4E0D\u8981\u76F4\u63A5\u628A\u8FD9\u4E9B\u8BCD\u585E\u8FDB\u63D0\u793A\u8BCD\u3002
+
+\u5E94\u8BE5\u8F6C\u6362\u6210\u5177\u4F53\u53EF\u89C1\u5185\u5BB9\u3002
+
+\u4F8B\u5982\uFF1A
+
+\u201C\u6E29\u67D4\u201D
+\u2192 slight smile, relaxed eyebrows, soft gaze
+
+\u201C\u5371\u9669\u611F\u201D
+\u2192 sharp eyes, narrowed eyes, dark shadows across the face
+
+\u201C\u4F18\u96C5\u201D
+\u2192 upright posture, controlled hand position, long flowing clothing
+
+\u5982\u679C\u65E0\u6CD5\u5408\u7406\u8F6C\u6362\u4E3A\u5177\u4F53\u89C6\u89C9\u4FE1\u606F\uFF0C\u5219\u4E0D\u8981\u52A0\u5165\u3002
+
+
+## 21. \u63D0\u793A\u8BCD\u8BED\u8A00
+
+Tag \u4F7F\u7528\u7B80\u6D01\u7684\u6807\u7B7E\u5F0F\u8868\u8FBE\u3002
+
+NL \u4F7F\u7528\u81EA\u7136\u3001\u76F4\u63A5\u3001\u660E\u786E\u7684\u82F1\u6587\u53E5\u5B50\u3002
+
+NL \u4E0D\u9700\u8981\u6587\u5B66\u5316\u3002
+
+\u4E0D\u8981\u4E3A\u4E86\u8FFD\u6C42\u81EA\u7136\u8BED\u8A00\u800C\u5199\u6210\u957F\u7BC7\u5C0F\u8BF4\u3002
+
+\u6BCF\u4E2A\u53E5\u5B50\u90FD\u5E94\u8BE5\u5177\u6709\u660E\u786E\u7684\u89C6\u89C9\u4F5C\u7528\u3002
+
+\u5982\u679C\u5220\u9664\u4E00\u4E2A\u53E5\u5B50\u4E0D\u4F1A\u635F\u5931\u4EFB\u4F55\u89C6\u89C9\u4FE1\u606F\uFF0C\u5219\u5E94\u8BE5\u8003\u8651\u5220\u9664\u3002
+
+
+## 22. \u6807\u7B7E\u9009\u62E9\u539F\u5219
+
+Tag \u4E0D\u9700\u8981\u628A\u6240\u6709\u80FD\u60F3\u5230\u7684\u6807\u7B7E\u90FD\u585E\u8FDB\u53BB\u3002
+
+\u53EA\u4FDD\u7559\uFF1A
+
+- \u80FD\u660E\u786E\u8868\u8FBE\u753B\u9762\u7ED3\u6784
+- \u80FD\u660E\u786E\u8868\u8FBE\u955C\u5934
+- \u80FD\u660E\u786E\u8868\u8FBE\u73AF\u5883
+- \u80FD\u660E\u786E\u8868\u8FBE\u65F6\u95F4
+- \u80FD\u660E\u786E\u8868\u8FBE\u5149\u5F71
+- \u80FD\u660E\u786E\u8868\u8FBE\u7B80\u5355\u6784\u56FE
+- \u80FD\u660E\u786E\u8868\u8FBE\u7B80\u5355\u52A8\u4F5C
+
+\u7684\u6807\u7B7E\u3002
+
+\u907F\u514D\uFF1A
+
+- \u540C\u4E49\u8BCD\u5806\u53E0
+- \u65E0\u610F\u4E49\u91CD\u590D
+- \u62BD\u8C61\u5F62\u5BB9\u8BCD
+- \u6587\u5B66\u5316\u6807\u7B7E
+- \u8D28\u91CF\u6807\u7B7E
+- \u98CE\u683C\u6807\u7B7E
+
+
+## 23. \u6700\u7EC8\u68C0\u67E5
+
+\u751F\u6210\u63D0\u793A\u8BCD\u524D\uFF0C\u68C0\u67E5\uFF1A
+
+1. \u662F\u5426 Tag \u4F4D\u4E8E\u6700\u524D\u9762\uFF1F
+2. Tag \u540E\u662F\u5426\u6362\u884C\u8FDB\u5165 NL\uFF1F
+3. Tag \u662F\u5426\u53EA\u8D1F\u8D23\u516C\u5171\u3001\u7B80\u5355\u7684\u89C6\u89C9\u4FE1\u606F\uFF1F
+4. \u89D2\u8272\u5916\u8C8C\u662F\u5426\u653E\u5728 NL\uFF1F
+5. \u670D\u88C5\u662F\u5426\u653E\u5728 NL\uFF1F
+6. \u914D\u9970\u662F\u5426\u653E\u5728 NL\uFF1F
+7. \u8868\u60C5\u662F\u5426\u653E\u5728\u5BF9\u5E94\u89D2\u8272\u7684 NL\uFF1F
+8. \u591A\u89D2\u8272\u662F\u5426\u5206\u522B\u5EFA\u7ACB\u72EC\u7ACB\u7684\u89D2\u8272\u63CF\u8FF0\uFF1F
+9. \u540E\u7EED\u662F\u5426\u4F7F\u7528\u7A33\u5B9A\u7684\u89D2\u8272\u6307\u4EE3\uFF1F
+10. \u662F\u5426\u907F\u514D\u628A\u4E0D\u540C\u89D2\u8272\u7684\u5C5E\u6027\u6DF7\u5728\u4E00\u8D77\uFF1F
+11. \u662F\u5426\u6CA1\u6709\u4F7F\u7528 BREAK\uFF1F
+12. \u590D\u6742\u52A8\u4F5C\u662F\u5426\u4F7F\u7528 NL\uFF1F
+13. \u590D\u6742\u7A7A\u95F4\u5173\u7CFB\u662F\u5426\u4F7F\u7528 NL\uFF1F
+14. \u591A\u89D2\u8272\u4E92\u52A8\u662F\u5426\u4F7F\u7528 NL\uFF1F
+15. \u662F\u5426\u53EA\u63CF\u8FF0\u53EF\u89C1\u89C6\u89C9\u5185\u5BB9\uFF1F
+16. \u662F\u5426\u5220\u9664\u4E86\u62BD\u8C61\u3001\u5FC3\u7406\u3001\u6545\u4E8B\u548C\u6587\u5B66\u5316\u63CF\u8FF0\uFF1F
+17. \u662F\u5426\u6CA1\u6709\u64C5\u81EA\u6539\u53D8\u56FA\u5B9A\u89D2\u8272\u8BBE\u5B9A\uFF1F
+18. \u662F\u5426\u6CA1\u6709\u52A0\u5165\u98CE\u683C\u548C\u8D28\u91CF\u8BCD\uFF1F
+19. \u662F\u5426\u5B58\u5728\u65E0\u610F\u4E49\u7684\u91CD\u590D\uFF1F
+20. \u662F\u5426\u5C3D\u53EF\u80FD\u4FDD\u6301\u7B80\u6D01\uFF1F
+
+\u6700\u7EC8\u63D0\u793A\u8BCD\u5E94\u8BE5\u662F\uFF1A
+
+**Tag \u8D1F\u8D23\u516C\u5171\u753B\u9762\u7ED3\u6784\uFF0CNL \u8D1F\u8D23\u89D2\u8272\u4E0E\u590D\u6742\u89C6\u89C9\u5173\u7CFB\u3002**
+
+**\u5355\u89D2\u8272\u4E5F\u9075\u5B88 Tag \u2192 NL\u3002**
+
+**\u591A\u89D2\u8272\u5219\u5728 NL \u4E2D\u5206\u522B\u5EFA\u7ACB\u89D2\u8272\uFF0C\u518D\u63CF\u8FF0\u89D2\u8272\u4E4B\u95F4\u7684\u52A8\u4F5C\u3001\u4E92\u52A8\u548C\u7A7A\u95F4\u5173\u7CFB\u3002**`
       },
       {
         id: "material",
@@ -3329,22 +3884,420 @@ standing side by side, the girl with long blonde hair leans her head against the
 {
   "summary": "\u4E00\u81F3\u4E09\u53E5\u4E2D\u6587\u753B\u9762\u63CF\u8FF0",
   "sourceExcerpt": "\u6B63\u6587\u4E2D\u8FDE\u7EED\u3001\u9010\u5B57\u4E00\u81F4\u7684\u4E00\u6BB5\u539F\u6587",
-  "positivePrompt": "\u82F1\u6587\u5185\u5BB9\u63D0\u793A\u8BCD",
-  "negativePrompt": "\u82F1\u6587\u5185\u5BB9\u63D0\u793A\u8BCD\uFF0C\u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32",
-  "characters": [
-    { "positivePrompt": "\u8BE5\u89D2\u8272\u7684\u82F1\u6587\u63D0\u793A\u8BCD", "negativePrompt": "", "position": { "x": 0.4, "y": 0.5 } }
-  ]
+  "positivePrompt": "\u82F1\u6587\u751F\u56FE\u63D0\u793A\u8BCD"
 }
 
 \u8865\u5145\u7EA6\u675F\uFF1A
-- \u63D0\u793A\u8BCD\u7528\u82F1\u6587\uFF0Csummary \u4E0E sourceExcerpt \u7528\u4E2D\u6587\u3002
-- sourceExcerpt \u5FC5\u987B\u80FD\u5728\u6B63\u6587\u91CC\u539F\u6837\u627E\u5230\uFF0C\u4E0D\u8981\u6539\u5199\u3001\u4E0D\u8981\u62FC\u63A5\u3001\u4E0D\u8981\u52A0\u7701\u7565\u53F7\u3002
-- position \u662F 0\u20131 \u7684\u5F52\u4E00\u5316\u5C0F\u6570\uFF08\u5982 0.35\uFF09\uFF0C\u4E0D\u8981\u7528 0\u20134 \u7684\u6574\u6570\u3002
-- characters \u53EA\u5217\u771F\u6B63\u51FA\u73B0\u5728\u8FD9\u4E2A\u753B\u9762\u91CC\u7684\u89D2\u8272\uFF1B\u5355\u4EBA\u573A\u666F\u53EF\u4EE5\u53EA\u6709\u4E00\u9879\uFF0C\u6CA1\u6709\u660E\u786E\u89D2\u8272\u65F6\u53EF\u4EE5\u662F\u7A7A\u6570\u7EC4\u3002`
+- positivePrompt \u7528\u82F1\u6587\uFF0C\u6309\u4E0A\u9762\u7684\u89C4\u8303\u5199\u6210\u4E24\u6BB5\uFF1ATag \u4E00\u6BB5\uFF0C\u6362\u884C\u540E\u63A5 NL \u4E00\u6BB5\u3002\u8FD9\u4E2A\u6362\u884C\u5728 JSON \u5B57\u7B26\u4E32\u91CC\u5199\u6210 \\n\uFF0C\u4E0D\u8981\u628A JSON \u771F\u7684\u6362\u884C\u5199\u574F\u3002
+- summary \u7528\u4E2D\u6587\uFF0C\u5199\u6E05\u300C\u8C01\u3001\u5728\u505A\u4EC0\u4E48\u3001\u5728\u54EA\u300D\u3002\u5B83\u663E\u793A\u5728\u914D\u56FE\u9762\u677F\u4E0A\uFF0C\u4E5F\u662F\u300C\u6362\u4E2A\u753B\u9762\u300D\u65F6\u533A\u5206\u65B0\u65E7\u753B\u9762\u7684\u4F9D\u636E\uFF0C\u6240\u4EE5\u8981\u4E0E\u8FD9\u4E00\u5E45\u753B\u9762\u5BF9\u5F97\u4E0A\uFF0C\u4E0D\u8981\u5199\u6210\u63D0\u793A\u8BCD\u7684\u7FFB\u8BD1\u3002
+- sourceExcerpt \u7528\u4E2D\u6587\uFF0C\u4ECE\u6B63\u6587\u91CC\u539F\u6837\u590D\u5236\u753B\u9762\u6240\u4F9D\u636E\u7684\u90A3\u51E0\u53E5\uFF0C\u4E0D\u8981\u6539\u5199\u3001\u4E0D\u8981\u62FC\u63A5\u3001\u4E0D\u8981\u52A0\u7701\u7565\u53F7\u3002\u5B83\u5FC5\u987B\u80FD\u5728\u6B63\u6587\u91CC\u9010\u5B57\u627E\u5230\uFF0C\u9762\u677F\u4F1A\u663E\u793A\u51FA\u6765\u4F9B\u4F60\u6838\u5BF9\u753B\u9762\u9009\u5F97\u5BF9\u4E0D\u5BF9\u3002
+- \u53EA\u8F93\u51FA\u8FD9\u4E09\u4E2A\u5B57\u6BB5\uFF1A\u4E0D\u8981\u518D\u8F93\u51FA\u8D1F\u5411\u63D0\u793A\u8BCD\u6216\u4EBA\u7269\u5206\u6BB5\u63D0\u793A\u8BCD\u3002`
       }
     ];
     MANAGED_BY_ID = new Map(MANAGED_ENTRIES.map((entry) => [entry.id, entry]));
     ROLES = /* @__PURE__ */ new Set(["system", "user", "assistant"]);
+  }
+});
+
+// src/core/imageBytes.js
+function startsWith(bytes, sequence, offset = 0) {
+  if (bytes.length < offset + sequence.length) return false;
+  for (let index = 0; index < sequence.length; index++) {
+    if (bytes[offset + index] !== sequence[index]) return false;
+  }
+  return true;
+}
+function readUint16BE(bytes, offset) {
+  return bytes[offset] << 8 | bytes[offset + 1];
+}
+function readUint32BE(bytes, offset) {
+  return (bytes[offset] << 24 | bytes[offset + 1] << 16 | bytes[offset + 2] << 8 | bytes[offset + 3]) >>> 0;
+}
+function readUint16LE(bytes, offset) {
+  return bytes[offset] | bytes[offset + 1] << 8;
+}
+function readUint24LE(bytes, offset) {
+  return bytes[offset] | bytes[offset + 1] << 8 | bytes[offset + 2] << 16;
+}
+function positiveSize(width, height) {
+  const valid = Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0;
+  return valid ? { width, height } : null;
+}
+function sniffImageMime(bytes) {
+  if (!(bytes instanceof Uint8Array)) return null;
+  if (startsWith(bytes, PNG_SIGNATURE)) return MIME_PNG;
+  if (startsWith(bytes, JPEG_SIGNATURE)) return MIME_JPEG;
+  if (startsWith(bytes, RIFF_SIGNATURE) && startsWith(bytes, WEBP_SIGNATURE, 8)) return MIME_WEBP;
+  return null;
+}
+function readPngSize(bytes) {
+  if (bytes.length < 24) return null;
+  if (!startsWith(bytes, [73, 72, 68, 82], 12)) return null;
+  return positiveSize(readUint32BE(bytes, 16), readUint32BE(bytes, 20));
+}
+function readJpegSize(bytes) {
+  let offset = 2;
+  while (offset + 3 < bytes.length) {
+    if (bytes[offset] !== 255) {
+      offset += 1;
+      continue;
+    }
+    const marker = bytes[offset + 1];
+    if (marker === 255) {
+      offset += 1;
+      continue;
+    }
+    if (marker === 1 || marker >= 208 && marker <= 215) {
+      offset += 2;
+      continue;
+    }
+    if (marker === 217 || marker === 218) return null;
+    if (offset + 3 >= bytes.length) return null;
+    const length = readUint16BE(bytes, offset + 2);
+    if (length < 2) return null;
+    const isSof = marker >= 192 && marker <= 207 && marker !== 196 && marker !== 200 && marker !== 204;
+    if (isSof) {
+      if (offset + 8 >= bytes.length) return null;
+      return positiveSize(readUint16BE(bytes, offset + 7), readUint16BE(bytes, offset + 5));
+    }
+    offset += 2 + length;
+  }
+  return null;
+}
+function readWebpSize(bytes) {
+  if (bytes.length < 16) return null;
+  const chunk = String.fromCharCode(bytes[12], bytes[13], bytes[14], bytes[15]);
+  if (chunk === "VP8X") {
+    if (bytes.length < 30) return null;
+    return positiveSize(readUint24LE(bytes, 24) + 1, readUint24LE(bytes, 27) + 1);
+  }
+  if (chunk === "VP8L") {
+    if (bytes.length < 25 || bytes[20] !== 47) return null;
+    const bits = (bytes[21] | bytes[22] << 8 | bytes[23] << 16 | bytes[24] << 24) >>> 0;
+    return positiveSize((bits & 16383) + 1, (bits >>> 14 & 16383) + 1);
+  }
+  if (chunk === "VP8 ") {
+    if (bytes.length < 30 || !startsWith(bytes, WEBP_VP8_START_CODE, 23)) return null;
+    return positiveSize(readUint16LE(bytes, 26) & 16383, readUint16LE(bytes, 28) & 16383);
+  }
+  return null;
+}
+function readImageSize(bytes) {
+  if (!(bytes instanceof Uint8Array)) return null;
+  const mime = sniffImageMime(bytes);
+  if (mime === MIME_PNG) return readPngSize(bytes);
+  if (mime === MIME_JPEG) return readJpegSize(bytes);
+  if (mime === MIME_WEBP) return readWebpSize(bytes);
+  return null;
+}
+function dataUrlToBlob(dataUrl, { maxBytes = Infinity } = {}) {
+  const match = typeof dataUrl === "string" ? DATA_URL_PATTERN.exec(dataUrl.trim()) : null;
+  if (!match) throw new Error("\u8FD4\u56DE\u7684\u4E0D\u662F\u53EF\u8BC6\u522B\u7684\u56FE\u7247 data URL\u3002");
+  const [, mimeType, base64] = match;
+  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
+  const byteLength = Math.floor(base64.length * 3 / 4) - padding;
+  if (byteLength <= 0) throw new Error("\u8FD4\u56DE\u7684\u56FE\u7247\u6570\u636E\u662F\u7A7A\u7684\u3002");
+  if (byteLength > maxBytes) throw new Error(`\u56FE\u7247\u8D85\u8FC7 ${Math.round(maxBytes / (1024 * 1024))} MB\uFF0C\u65E0\u6CD5\u4FDD\u5B58\u3002`);
+  let binary;
+  try {
+    binary = atob(base64);
+  } catch {
+    throw new Error("\u8FD4\u56DE\u7684\u56FE\u7247\u6570\u636E\u4E0D\u662F\u5408\u6CD5\u7684 base64\u3002");
+  }
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return new Blob([bytes], { type: mimeType });
+}
+async function inspectImageBlob(blob) {
+  if (!(blob instanceof Blob) || !blob.size) return null;
+  const prefixLength = Math.min(blob.size, IMAGE_PREFIX_BYTES);
+  const prefix = new Uint8Array(await blob.slice(0, prefixLength).arrayBuffer());
+  const mimeType = sniffImageMime(prefix);
+  if (!mimeType) return null;
+  let size = readImageSize(prefix);
+  if (!size && blob.size > prefixLength) {
+    size = readImageSize(new Uint8Array(await blob.arrayBuffer()));
+  }
+  if (!size) return null;
+  const typed = blob.type === mimeType ? blob : new Blob([blob], { type: mimeType });
+  return { blob: typed, mimeType, width: size.width, height: size.height };
+}
+var PNG_SIGNATURE, RIFF_SIGNATURE, WEBP_SIGNATURE, JPEG_SIGNATURE, WEBP_VP8_START_CODE, MIME_PNG, MIME_JPEG, MIME_WEBP, IMAGE_PREFIX_BYTES, DATA_URL_PATTERN;
+var init_imageBytes = __esm({
+  "src/core/imageBytes.js"() {
+    PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+    RIFF_SIGNATURE = [82, 73, 70, 70];
+    WEBP_SIGNATURE = [87, 69, 66, 80];
+    JPEG_SIGNATURE = [255, 216, 255];
+    WEBP_VP8_START_CODE = [157, 1, 42];
+    MIME_PNG = "image/png";
+    MIME_JPEG = "image/jpeg";
+    MIME_WEBP = "image/webp";
+    IMAGE_PREFIX_BYTES = 1024 * 1024;
+    DATA_URL_PATTERN = /^data:(image\/(?:png|jpeg|webp));base64,([\s\S]*)$/;
+  }
+});
+
+// src/core/illustrationBackends/baibai.js
+function deriveCapabilities(status) {
+  return Object.freeze({
+    characterPrompts: status?.supportsCharacters === true,
+    // 它把每个角色提示词的位置硬编码成画面中心（nai.ts 里 centers: [{x:0.5,y:0.5}]），
+    // 调用方没有任何办法指定。位置仍然留在草稿里，切回 Cosmos 就能用。
+    characterPositions: false,
+    // characters[] 只有 {name, tag, nl}，没有逐角色负向词。
+    characterNegative: false,
+    // NAI 忽略 negative（用它自己渠道配置的负向词）；只有 ComfyUI 会填进工作流。
+    negativePrompt: status?.backend === "comfyui",
+    size: true,
+    // 一次一张，没有 count 参数。
+    batch: false,
+    streamPreview: false
+  });
+}
+function probe() {
+  const api = globalThis.window?.STBaiBaiImage;
+  if (!api) return { ready: false, status: "missing", reason: "\u672A\u68C0\u6D4B\u5230\u67CF\u5B9D\u7ED8\uFF0C\u8BF7\u5B89\u88C5\u5E76\u542F\u7528\u8BE5\u6269\u5C55\u3002" };
+  if (Number(api.apiVersion) !== 1) {
+    const seen = api.apiVersion === void 0 ? "\u672A\u77E5" : String(api.apiVersion);
+    return { ready: false, status: "legacy", reason: `\u67CF\u5B9D\u7ED8\u7684\u516C\u5F00\u63A5\u53E3\u7248\u672C\u662F ${seen}\uFF0C\u672C\u63D2\u4EF6\u53EA\u8BA4 1\uFF0C\u8BF7\u5347\u7EA7\u67CF\u5B9D\u7ED8\u3002` };
+  }
+  if (typeof api.generate !== "function") {
+    return { ready: false, status: "unsupported", reason: "\u67CF\u5B9D\u7ED8\u6CA1\u6709\u63D0\u4F9B\u751F\u56FE\u63A5\u53E3\u3002" };
+  }
+  let status;
+  try {
+    status = api.getBackendStatus();
+  } catch {
+    return { ready: false, status: "not_configured", reason: "\u67CF\u5B9D\u7ED8\u8FD8\u6CA1\u6709\u5C31\u7EEA\uFF0C\u8BF7\u7A0D\u540E\u5728\u5B83\u7684\u8BBE\u7F6E\u91CC\u68C0\u67E5\u51FA\u56FE\u540E\u7AEF\u3002" };
+  }
+  if (!status || typeof status !== "object") {
+    return { ready: false, status: "unsupported", reason: "\u67CF\u5B9D\u7ED8\u6CA1\u6709\u8FD4\u56DE\u540E\u7AEF\u72B6\u6001\u3002" };
+  }
+  const detail = { provider: status.backend, model: status.model };
+  const capabilities = deriveCapabilities(status);
+  if (status.configured !== true) {
+    const reason = typeof status.reason === "string" && status.reason.trim() ? status.reason.trim() : "\u67CF\u5B9D\u7ED8\u8FD8\u6CA1\u6709\u914D\u7F6E\u597D\u51FA\u56FE\u540E\u7AEF\uFF0C\u8BF7\u5148\u5728\u5B83\u7684\u8BBE\u7F6E\u91CC\u5B8C\u6210\u914D\u7F6E\u3002";
+    return { ready: false, status: "not_configured", reason, capabilities, detail };
+  }
+  const provider = PROVIDER_LABELS[status.backend] || status.backend || "\u672A\u77E5\u540E\u7AEF";
+  const model = typeof status.model === "string" && status.model.trim() ? ` \xB7 ${status.model.trim()}` : "";
+  return { ready: true, status: "ready", reason: `\u67CF\u5B9D\u7ED8\u5DF2\u8FDE\u63A5\uFF08${provider}${model}\uFF09\u3002`, capabilities, detail };
+}
+function buildCharacters(characterPrompts) {
+  if (!Array.isArray(characterPrompts)) return [];
+  return characterPrompts.filter((character) => typeof character?.positivePrompt === "string" && character.positivePrompt.trim()).map((character, index) => ({ name: `\u89D2\u8272${index + 1}`, tag: character.positivePrompt.trim() }));
+}
+function progressFraction(progress) {
+  const max = Number(progress?.max);
+  const attempt = Number(progress?.attempt);
+  return Number.isFinite(max) && max > 0 && Number.isFinite(attempt) ? Math.min(1, Math.max(0, attempt / max)) : void 0;
+}
+function translateError(error) {
+  const code = typeof error?.code === "string" ? error.code : "";
+  if (code === "aborted") return Object.assign(new Error("\u914D\u56FE\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002"), { name: "AbortError", code: "ABORTED" });
+  const [pluginCode, lead] = ERROR_MAP[code] || ["GENERATION_FAILED", ""];
+  const detail = typeof error?.message === "string" && error.message.trim() ? error.message.trim() : "";
+  const message = lead && detail ? `${lead}\uFF08${detail}\uFF09` : lead || detail || "\u67CF\u5B9D\u7ED8\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002";
+  return Object.assign(new Error(message), { code: pluginCode });
+}
+async function generate(draft, options = {}) {
+  const api = globalThis.window?.STBaiBaiImage;
+  if (typeof api?.generate !== "function") {
+    throw Object.assign(new Error("\u67CF\u5B9D\u7ED8\u5C1A\u672A\u5C31\u7EEA\u3002"), { code: "NOT_READY" });
+  }
+  const characters = buildCharacters(draft.prompts.characterPrompts);
+  const request = {
+    prompt: draft.prompts.positivePrompt,
+    // NAI 下它会忽略这个字段；照发即可，切到 ComfyUI 时就有用。
+    negative: draft.prompts.negativePrompt,
+    // ⚠ 必须显式传 false：它的默认是 true，会把图也存进它自己的图库。
+    //   本插件的收藏、备份与图文导出都依赖自己的 /user/files 存储，不要两份。
+    save: false
+  };
+  if (characters.length) request.characters = characters;
+  if (options.size) request.size = options.size;
+  if (options.seed !== void 0 && options.seed !== null && Number.isFinite(Number(options.seed))) {
+    request.seed = Number(options.seed);
+  }
+  let result;
+  try {
+    result = await api.generate(request, {
+      signal: options.signal,
+      onProgress: (progress) => {
+        if (options.signal?.aborted) return;
+        try {
+          options.onProgress?.({ stage: "generating", fraction: progressFraction(progress) });
+        } catch {
+        }
+      }
+    });
+  } catch (error) {
+    throw translateError(error);
+  }
+  let blob;
+  try {
+    blob = dataUrlToBlob(result?.dataUrl, { maxBytes: MAX_IMAGE_BYTES });
+  } catch (error) {
+    throw Object.assign(new Error(error?.message || "\u67CF\u5B9D\u7ED8\u6CA1\u6709\u8FD4\u56DE\u56FE\u7247\u3002"), { code: "GENERATION_FAILED" });
+  }
+  return {
+    blobs: [blob],
+    seed: result?.seed,
+    // 不推断：它明说这次到底用上没有。传了 characters 但这里是 false = 被丢弃了
+    //（通常用户在用 ComfyUI），界面要如实告诉用户。
+    applied: { characters: result?.charactersApplied === true }
+  };
+}
+var READY_EVENTS, PROVIDER_LABELS, ERROR_MAP, baibaiBackend;
+var init_baibai = __esm({
+  "src/core/illustrationBackends/baibai.js"() {
+    init_illustrationData();
+    init_imageBytes();
+    READY_EVENTS = ["st-baibai-image:ready", "st-baibai-image:changed"];
+    PROVIDER_LABELS = { nai: "NovelAI", comfyui: "ComfyUI" };
+    ERROR_MAP = {
+      not_configured: ["NOT_READY", "\u67CF\u5B9D\u7ED8\u8FD8\u6CA1\u6709\u914D\u7F6E\u597D\u51FA\u56FE\u540E\u7AEF"],
+      invalid_args: ["INVALID_ARGS", "\u67CF\u5B9D\u7ED8\u62D2\u7EDD\u4E86\u8FD9\u6B21\u8BF7\u6C42"],
+      rate_limited: ["RATE_LIMITED", "\u67CF\u5B9D\u7ED8\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\u6216\u989D\u5EA6\u4E0D\u8DB3\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5"],
+      backend_error: ["GENERATION_FAILED", ""]
+    };
+    baibaiBackend = {
+      id: "baibai",
+      label: "\u67CF\u5B9D\u7ED8",
+      readyEvents: READY_EVENTS,
+      probe,
+      generate
+    };
+  }
+});
+
+// src/core/illustrationBackends/cosmos.js
+function probe2() {
+  const api = globalThis.window?.CosmosVision;
+  if (!api) return { ready: false, status: "missing", reason: "\u672A\u68C0\u6D4B\u5230 Cosmos Vision\uFF0C\u8BF7\u5B89\u88C5\u5E76\u542F\u7528\u8BE5\u6269\u5C55\u3002" };
+  if (typeof api.generateImage !== "function") {
+    if (typeof api.preparePrompt === "function" || api.apiVersion) {
+      return { ready: false, status: "legacy", reason: "\u68C0\u6D4B\u5230\u65E7\u7248 Cosmos Vision \u63A5\u53E3\uFF0C\u8BF7\u5347\u7EA7\u5230\u63D0\u4F9B generateImage \u7684\u7248\u672C\u3002" };
+    }
+    return { ready: false, status: "unsupported", reason: "Cosmos Vision \u6CA1\u6709\u63D0\u4F9B\u751F\u56FE\u63A5\u53E3\u3002" };
+  }
+  return { ready: true, status: "ready", reason: "Cosmos Vision \u5DF2\u8FDE\u63A5\u3002", capabilities: CAPABILITIES };
+}
+async function generate2(draft, options = {}) {
+  const api = globalThis.window?.CosmosVision;
+  if (typeof api?.generateImage !== "function") {
+    const state = probe2();
+    throw Object.assign(new Error(state.reason), { code: "NOT_READY" });
+  }
+  const result = await api.generateImage({
+    // 只给「画面里有什么」。质量词、UC 词、画风预设与 LoRA 触发词由 Cosmos 追加，
+    // 这里再写一遍就会重复叠加 —— v1 需求与联调清单都点名过这条。
+    prompts: {
+      positivePrompt: draft.prompts.positivePrompt,
+      negativePrompt: draft.prompts.negativePrompt,
+      characterPrompts: draft.prompts.characterPrompts
+    },
+    requestId: newIllustrationId(),
+    signal: options.signal,
+    // 每次调用各有独立回调闭包，事件不会串任务，所以不做 requestId 过滤
+    // （Cosmos 缺省会自增 requestId，硬比会误伤合法事件）。
+    onProgress: (progress) => {
+      if (options.signal?.aborted) return;
+      const max = Number(progress?.max);
+      const value = Number(progress?.value);
+      const fraction = Number.isFinite(max) && max > 0 && Number.isFinite(value) ? Math.min(1, Math.max(0, value / max)) : void 0;
+      try {
+        options.onProgress?.({ stage: "generating", fraction });
+      } catch {
+      }
+    },
+    onStreamPreview: (event) => {
+      if (options.signal?.aborted) return;
+      try {
+        options.onStreamPreview?.({ blob: event?.previewBlob, isFinal: Boolean(event?.isFinal) });
+      } catch {
+      }
+    }
+  });
+  return { blobs: Array.isArray(result?.imageBlobs) ? result.imageBlobs : [] };
+}
+var CAPABILITIES, cosmosBackend;
+var init_cosmos = __esm({
+  "src/core/illustrationBackends/cosmos.js"() {
+    init_illustrationData();
+    CAPABILITIES = Object.freeze({
+      characterPrompts: true,
+      characterPositions: true,
+      characterNegative: true,
+      negativePrompt: true,
+      size: false,
+      batch: true,
+      streamPreview: true
+    });
+    cosmosBackend = {
+      id: "cosmos",
+      label: "Cosmos Vision",
+      // 它准备好的广播事件。界面订阅所有后端的这一份，任何一个就绪都会重新探测。
+      readyEvents: ["cosmos-vision:api-ready"],
+      probe: probe2,
+      generate: generate2
+    };
+  }
+});
+
+// src/core/illustrationBackends/registry.js
+function statusToErrorCode(status) {
+  return status === "legacy" || status === "unsupported" ? "UNSUPPORTED_API" : "NOT_READY";
+}
+function listIllustrationBackends() {
+  return [...ADAPTERS.values()];
+}
+function getIllustrationBackend(id3) {
+  return ADAPTERS.get(String(id3 ?? "")) || null;
+}
+function subscribeBackendReady(handler) {
+  const target = globalThis.window;
+  if (!target?.addEventListener) return () => {
+  };
+  const events = listIllustrationBackends().flatMap((adapter) => adapter.readyEvents || []);
+  for (const name of events) target.addEventListener(name, handler);
+  return () => {
+    for (const name of events) target.removeEventListener(name, handler);
+  };
+}
+function resolveActiveBackendId(data) {
+  const id3 = data?.[ILLUSTRATION_BACKEND_KEY]?.active_id;
+  return ADAPTERS.has(id3) ? id3 : DEFAULT_BACKEND_ID;
+}
+function ensureIllustrationBackend(data) {
+  if (!data || typeof data !== "object") return false;
+  const current = data[ILLUSTRATION_BACKEND_KEY];
+  if (current && current.version === ILLUSTRATION_BACKEND_VERSION && ADAPTERS.has(current.active_id)) return false;
+  data[ILLUSTRATION_BACKEND_KEY] = {
+    version: ILLUSTRATION_BACKEND_VERSION,
+    active_id: resolveActiveBackendId(data)
+  };
+  return true;
+}
+var EMPTY_CAPABILITIES, DEFAULT_BACKEND_ID, ADAPTERS, ILLUSTRATION_BACKEND_KEY, ILLUSTRATION_BACKEND_VERSION;
+var init_registry = __esm({
+  "src/core/illustrationBackends/registry.js"() {
+    init_baibai();
+    init_cosmos();
+    EMPTY_CAPABILITIES = Object.freeze({
+      characterPrompts: false,
+      characterPositions: false,
+      characterNegative: false,
+      negativePrompt: false,
+      size: false,
+      batch: false,
+      streamPreview: false
+    });
+    DEFAULT_BACKEND_ID = "cosmos";
+    ADAPTERS = new Map([cosmosBackend, baibaiBackend].map((adapter) => [adapter.id, adapter]));
+    ILLUSTRATION_BACKEND_KEY = "illustration_backend";
+    ILLUSTRATION_BACKEND_VERSION = 1;
   }
 });
 
@@ -3358,7 +4311,8 @@ function getExtData() {
   const changed = ensurePromptManager(extension_settings[extensionName]);
   const profilesChanged = ensureCharacterProfiles(extension_settings[extensionName]);
   const presetsChanged = ensureIllustrationPresets(extension_settings[extensionName]);
-  if (changed || profilesChanged || presetsChanged) saveSettingsDebounced();
+  const backendChanged = ensureIllustrationBackend(extension_settings[extensionName]);
+  if (changed || profilesChanged || presetsChanged || backendChanged) saveSettingsDebounced();
   return extension_settings[extensionName];
 }
 function saveExtData() {
@@ -3379,6 +4333,7 @@ var init_storage = __esm({
     init_promptManager();
     init_characterProfiles();
     init_illustrationPresets();
+    init_registry();
   }
 });
 
@@ -6300,6 +7255,24 @@ function loadCssFiles() {
     align-items: center;
     border-radius: var(--t-radius-panel) var(--t-radius-panel) 0 0;
     flex-shrink: 0;
+}
+
+/* \u9876\u680F\u53F3\u4FA7\u90A3\u4E00\u7C07\u6309\u94AE\u3002\u653E\u5728\u8FD9\u91CC\u800C\u4E0D\u662F\u5404\u7A97\u53E3\u5185\u8054\uFF0C\u662F\u56E0\u4E3A\u4E09\u4E2A\u914D\u56FE\u7A97\u53E3\u7684\u9876\u680F\u90FD\u8981\u7528\uFF0C
+   \u800C\u4E14\u95EE\u53F7\u6C14\u6CE1\u8981\u9760\u5B83\u505A\u5B9A\u4F4D\u53C2\u7167\uFF08.t-help \u662F position: relative\uFF09\u3002 */
+.t-panel-header-actions {
+    display: flex;
+    align-items: center;
+    /* \u6309\u94AE\u7EC4\u5185\u7684\u95F4\u8DDD\uFF086px\uFF09\u3002\u6BD4\u901A\u7528\u5217\u8868\u95F4\u8DDD\u7D27\u4E00\u6863\uFF1A\u8FD9\u91CC\u662F\u4E00\u6392\u65E0\u8FB9\u6846\u56FE\u6807\uFF0C
+       \u6CA1\u6709\u8FB9\u6846\u5E2E\u5FD9\u5206\u9694\uFF0C\u95F4\u8DDD\u5927\u4E86\u4F1A\u6563\u3002 */
+    gap: var(--t-gap-inline);
+}
+
+/* \u8FD9\u4E00\u7C07\u4E00\u5F8B\u662F\u65E0\u8FB9\u6846\u56FE\u6807\u94AE\uFF08\u6863\u6848 / \u8BBE\u7F6E / \u95EE\u53F7 / \u5173\u95ED\uFF09\u3002
+   \u26A0 \u5B57\u5F62\u5927\u5C0F\u8DDF\u7740\u4E0A\u4E0B\u6587\u8D70\uFF0C\u4E0E\u6362\u7EC4\u4EF6\u4E4B\u524D\u4E00\u81F4 \u2014\u2014 \u7EC4\u4EF6\u9ED8\u8BA4\u7684 1.2em \u4F1A\u628A\u8FD9\u51E0\u4E2A\u56FE\u6807
+     \u653E\u5927\u4E00\u6863\uFF0C\u800C\u90A3\u4E0D\u5728\u672C\u6B21\u6539\u52A8\u8303\u56F4\u5185\u3002icon-button.css \u660E\u786E\u628A font-size \u7559\u7ED9
+     \u6D88\u8D39\u65B9\u51B3\u5B9A\uFF0C\u8981\u8C03\u53EA\u6539\u8FD9\u4E00\u4E2A\u53D8\u91CF\u3002 */
+.t-panel-header-actions .t-icon-btn {
+    --t-icon-btn-font-size: var(--t-text-body);
 }
 
 .t-panel-footer {
@@ -12826,6 +13799,24 @@ textarea.t-input {
 .t-illustration-candidate { min-width: 0; border: 1px solid var(--t-color-border-faint); padding: 8px; border-radius: 10px; }
 .t-illustration-candidate img { width: 100%; height: 160px; object-fit: contain; }
 .t-illustration-candidate p { font-size: 0.9em; line-height: 1.5; }
+
+/* \u7F29\u7565\u56FE\u672C\u8EAB\u5C31\u662F\u300C\u770B\u5927\u56FE\u300D\u7684\u6309\u94AE\uFF1A\u70B9\u5B83\u5F00\u706F\u7BB1\uFF08\u66FE\u662F\u4E2A target="_blank" \u7684\u94FE\u63A5\uFF09\u3002
+   \u505A\u6210 <button> \u800C\u4E0D\u662F\u7ED9 <a> \u6302 click \u2014\u2014 \u952E\u76D8\u80FD Tab \u5230\u3001\u56DE\u8F66\u80FD\u5F00\u3002
+   \u539F\u751F\u6309\u94AE\u7684\u8FB9\u6846/\u5E95\u8272/\u5185\u8FB9\u8DDD\u8981\u4E00\u5E76\u6E05\u6389\uFF0C\u5426\u5219\u56FE\u4E2D\u56FE\u4F1A\u7F29\u4E00\u5708\u3002 */
+.t-illustration-candidate-open {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+}
+
+/* \u56FE\u5E93\u7684\u300C\u7BA1\u7406\u300D\u591A\u9009\u6001\uFF1A\u5DE5\u5177\u680F + \u52FE\u9009 + \u9009\u4E2D\u9AD8\u4EAE */
+.t-illustration-gallery-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.t-illustration-select-count { color: var(--t-color-text-muted); font-size: 0.9em; }
+.t-illustration-select { display: flex; align-items: center; gap: 6px; font-size: 0.85em; color: var(--t-color-text-secondary); }
+.t-illustration-candidate.is-selected { border-color: var(--t-color-danger-border); background: var(--t-color-danger-soft); }
 .t-illustration-pending img { width: 100%; max-height: 360px; object-fit: contain; }
 .t-illustration-preview img { width: 100%; max-height: 360px; object-fit: contain; }
 .t-illustration-panel [hidden] { display: none; }
@@ -12919,6 +13910,221 @@ textarea.t-input {
 .t-profile-order { color: var(--t-color-text-muted); font-size: 0.8em; }
 .t-profile-card-header .t-btn { margin-left: auto; }
 
+/* \u2500\u2500 \u4EBA\u7269\u5916\u89C2\u6863\u6848\u7BA1\u7406\u7A97\uFF1A\u9876\u4E0A\u4E00\u5206\u4E3A\u4E8C\u7684\u9875\u7B7E\uFF0C\u4E0B\u9762\u662F\u5F53\u524D\u7EC4\u7684\u7D27\u51D1\u5C0F\u5361\u7F51\u683C \u2500\u2500\u2500\u2500\u2500
+   \u26A0 \u4E0A\u9762\u90A3\u6279 .t-profile-window / -panel / -body / -list / -card / -card-header /
+     -grip / -toggle \u4E0E\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\u7A97\uFF08\u9009\u666F\u9884\u8BBE\u7F16\u8F91\u5668\uFF09**\u5171\u7528**\uFF0C\u89C4\u5219\u4E00\u4E2A\u5B57\u90FD\u4E0D\u80FD\u6539 \u2014\u2014
+     \u52A8\u5B83\u4EEC\u4F1A\u628A\u90A3\u4E2A\u7A97\u53E3\u4E00\u8D77\u6539\u6389\u3002\u672C\u7A97\u53E3\u81EA\u5DF1\u7684\u5E03\u5C40\u4E00\u5F8B\u7528\u4E0B\u9762\u8FD9\u4E9B\u65B0\u540D\u5B57\uFF0C
+     \u5171\u7528\u7C7B\u53EA\u6309\u539F\u6837\u590D\u7528\u3001\u4E0D\u5728\u8FD9\u91CC\u91CD\u5B9A\u4E49\u3002
+     \uFF08.t-profile-expand \u662F\u9884\u8BBE\u7F16\u8F91\u5668\u72EC\u5360\u7684\uFF0C\u53EF\u4EE5\u653E\u5FC3\u590D\u7528\u3002\uFF09 */
+
+.t-profile-tabs { display: flex; border-bottom: 1px solid var(--t-color-border); margin-bottom: 12px; }
+/* \u4E24\u4E2A\u9875\u7B7E\u7B49\u5BBD\uFF0C\u6A2A\u680F\u4E00\u5206\u4E3A\u4E8C\uFF1Bflex:1 1 0 \u800C\u4E0D\u662F 1 1 auto\uFF0C\u5BBD\u5EA6\u624D\u4E0D\u53D7\u6587\u5B57\u957F\u77ED\u5F71\u54CD\u3002 */
+.t-profile-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 10px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--t-color-text-muted);
+    font: inherit;
+    cursor: pointer;
+}
+.t-profile-tab:hover { color: var(--t-color-text); }
+.t-profile-tab.is-active { color: var(--t-color-brand); border-bottom-color: var(--t-color-brand); }
+.t-profile-tab-count { color: var(--t-color-text-faint); font-size: 0.85em; }
+
+.t-profile-groups { display: flex; flex-direction: column; gap: 18px; }
+.t-profile-group { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.t-profile-grid {
+    display: grid;
+    /* \u5185\u5BB9\u5BBD\u7EA6 648px\uFF08\u9762\u677F min(680px, 100%) \u51CF\u53BB\u4E24\u4FA7 16px \u5185\u8FB9\u8DDD\uFF09\uFF1A200px \u4E00\u884C\u4E09\u5F20\uFF0C
+       \u6458\u8981\u884C\u300C\u4E0D\u7ED1\u5B9A\u89D2\u8272\u5361 \xB7 42 \u5B57\u7B26\u300D\u8FD8\u8BFB\u5F97\u5168\u3002 */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    align-content: start;
+}
+
+.t-profile-tile {
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--t-color-border);
+    border-radius: 10px;
+    cursor: pointer;
+}
+/* \u5C55\u5F00\u7684\u90A3\u5F20\u5360\u6EE1\u6574\u884C\uFF0C\u7F16\u8F91\u533A\u624D\u591F\u5BBD\uFF1B\u5176\u4F59\u5361\u7247\u7559\u5728\u7F51\u683C\u91CC\u4E0D\u52A8\u3002 */
+.t-profile-tile.is-expanded { grid-column: 1 / -1; cursor: default; }
+.t-profile-tile.is-dragging { opacity: 0.5; }
+/* \u843D\u70B9\u63D0\u793A\u7528 inset \u9634\u5F71\u800C\u4E0D\u662F border\uFF1Aborder \u4F1A\u6539\u53D8\u5C3A\u5BF8\uFF0C\u628A\u7F51\u683C\u6324\u5F97\u6296\u4E00\u4E0B\uFF0C
+   dragover \u671F\u95F4\u53CD\u590D\u6296\u52A8\u4F1A\u8BA9\u6307\u793A\u7EBF\u95EA\u3002 */
+.t-profile-tile.is-drop-before { box-shadow: inset 3px 0 0 0 var(--t-color-brand); }
+.t-profile-tile.is-drop-after { box-shadow: inset -3px 0 0 0 var(--t-color-brand); }
+.t-profile-tile-meta { margin: 4px 0 0; color: var(--t-color-text-muted); font-size: 0.85em; }
+.t-profile-tile-body { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.t-profile-tile-foot { display: flex; justify-content: flex-end; }
+.t-profile-tile-empty { grid-column: 1 / -1; }
+
+/* \u2500\u2500 \u9876\u680F\u95EE\u53F7\uFF1A\u9759\u6001\u8BF4\u660E\u6536\u5728\u4E00\u5904\uFF08\u4E09\u4E2A\u914D\u56FE\u7A97\u53E3\u5171\u7528\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   \u6C14\u6CE1\u6302\u5728\u6309\u94AE\u5BB9\u5668\u4E0A\u505A\u7EDD\u5BF9\u5B9A\u4F4D\uFF0C\u6240\u4EE5\u5BB9\u5668\u5FC5\u987B\u6709 position: relative\u3002
+   \u5934\u90E8\u672C\u8EAB\u6CA1\u6709 overflow: hidden\uFF0C\u6C14\u6CE1\u4E0D\u4F1A\u88AB\u88C1\u6389\uFF1Bz-index \u8981\u9AD8\u8FC7\u7A97\u53E3\u5185\u5BB9\u3002 */
+
+.t-help {
+    position: relative;
+    display: inline-flex;
+}
+
+.t-help-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 20;
+    /* \u8BF4\u660E\u662F\u6210\u6BB5\u7684\uFF0C\u7ED9\u5BBD\u4E00\u70B9\u4F46\u522B\u628A\u7A97\u53E3\u6491\u7834\uFF1B\u7A84\u5C4F\u9760 vw \u515C\u5E95\u3002 */
+    width: min(430px, 76vw);
+    max-height: min(60vh, 460px);
+    overflow-y: auto;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    text-align: left;
+    background: var(--t-color-surface-elevated);
+    border: 1px solid var(--t-color-border-strong);
+    border-radius: var(--t-radius-panel);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    color: var(--t-color-text-secondary);
+    font-size: 0.85em;
+    line-height: 1.6;
+    font-weight: normal;
+}
+
+.t-help-title {
+    color: var(--t-color-accent);
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.t-help-section + .t-help-section { margin-top: 10px; }
+
+.t-help-heading {
+    color: var(--t-color-text-label);
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.t-help-lines,
+.t-help-terms {
+    margin: 0;
+    padding-left: 1.2em;
+}
+
+.t-help-terms {
+    padding-left: 0;
+}
+
+.t-help-lines > li + li,
+.t-help-terms > dd + dt { margin-top: 4px; }
+
+.t-help-terms > dt {
+    font-weight: normal;
+    margin-top: 6px;
+}
+
+.t-help-terms > dd {
+    margin: 0 0 0 1.2em;
+}
+
+.t-help code {
+    padding: 1px 4px;
+    border-radius: var(--t-radius-inline);
+    background: var(--t-color-surface-code);
+    color: var(--t-color-text);
+}
+
+/* \u2500\u2500 \u914D\u56FE\u706F\u7BB1 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   \u6302\u5728**\u914D\u56FE\u9762\u677F\u81EA\u5DF1\u7684 root \u91CC**\uFF08.t-root.t-illustration-window\uFF09\u3002
+   \u9762\u677F root \u662F z-index: 20060 \u7684\u5C42\u53E0\u4E0A\u4E0B\u6587\uFF0C\u706F\u7BB1\u4F5C\u4E3A\u5B83\u7684\u540E\u4EE3\u5FC5\u7136\u76D6\u5728\u9762\u677F\u5185\u5BB9\u4E4B\u4E0A\uFF1B
+   \u6302\u5230 #t-overlay \u53CD\u800C\u66F4\u7CDF \u2014\u2014 \u90A3\u4E2A\u5BB9\u5668\u5E26 isolation: isolate + z-index: 20000\uFF0C
+   \u4F1A\u628A\u706F\u7BB1\u56F0\u5728 20000 \u90A3\u4E00\u5C42\uFF0C\u6574\u5757\u85CF\u5728\u9762\u677F\uFF0820060\uFF09\u540E\u9762\u3002
+   \u26A0 \u5B83\u4E5F\u4E0D\u80FD\u6302 .t-content-wrapper\uFF1A\u90A3\u4E2A\u5BB9\u5668\u5E26 transform: translateZ(0) +
+     overflow: hidden\uFF0C\u4F1A\u628A position: fixed \u7684\u540E\u4EE3\u6574\u4E2A\u88C1\u6389\u3002 */
+
+.t-illustration-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    /* \u8FD9\u4E2A\u503C\u53EA\u5728\u9762\u677F\u81EA\u5DF1\u7684\u5C42\u53E0\u4E0A\u4E0B\u6587\u91CC\u6BD4\u5927\u5C0F\uFF08\u540C\u5C42\u7684\u5144\u5F1F\u90FD\u662F z-index: auto\uFF09\uFF0C
+       \u4E0E\u9762\u677F root \u7684 20060 \u4E0D\u662F\u4E00\u56DE\u4E8B \u2014\u2014 \u540E\u4EE3\u8FDB\u4E0D\u5230\u5916\u9762\u90A3\u4E00\u5C42\u53BB\u3002 */
+    z-index: var(--t-z-window);
+    /* \u26A0 \u9762\u677F root \u662F pointer-events: none\uFF08\u5B83\u662F\u4E00\u5C42\u76D6\u6EE1\u89C6\u53E3\u7684\u5C45\u4E2D\u5BB9\u5668\uFF0C
+       \u53EA\u8BA9 .t-illustration-panel \u81EA\u5DF1\u6536\u4E8B\u4EF6\uFF09\u3002\u706F\u7BB1\u5FC5\u987B\u81EA\u5DF1\u6536\u56DE\u6765\u3002 */
+    pointer-events: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.t-illustration-lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.82);
+}
+
+/* \u821E\u53F0\u662F\u6EDA\u52A8\u5BB9\u5668\uFF1A\u6A2A\u56FE\u7F29\u5230\u5BBD\u5EA6\u5185\uFF0C\u7AD6\u56FE\u4FDD\u6301\u539F\u5C3A\u5BF8\u7EB5\u5411\u6EDA\u52A8\u3002 */
+.t-illustration-lightbox-stage {
+    position: relative;
+    max-width: 100%;
+    max-height: calc(100dvh - 150px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--t-radius-panel);
+}
+
+.t-illustration-lightbox-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    /* \u523B\u610F\u4E0D\u8BBE max-height\uFF1A\u8BBE\u4E86\u4F1A\u628A\u957F\u7AD6\u56FE\u538B\u6210\u770B\u4E0D\u6E05\u7684\u4E00\u6761\u3002
+       \u821E\u53F0\u7684 max-height + overflow \u5DF2\u7ECF\u8D1F\u8D23\u88C5\u4E0B\u5B83\u3002 */
+    border-radius: var(--t-radius-panel);
+}
+
+.t-illustration-lightbox-caption {
+    position: relative;
+    margin: 0;
+    max-width: 42em;
+    text-align: center;
+    font-size: 0.9em;
+    line-height: 1.6;
+    color: var(--t-color-text-secondary);
+}
+
+.t-illustration-lightbox-close {
+    position: absolute;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--t-color-border-strong);
+    border-radius: var(--t-radius-circle);
+    background: var(--t-color-surface-elevated);
+    color: var(--t-color-text);
+    cursor: pointer;
+}
+
+.t-illustration-lightbox [hidden] { display: none; }
+
 @media (max-width: 600px) {
     .t-root.t-illustration-window {
         padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
@@ -12933,6 +14139,8 @@ textarea.t-input {
     }
     .t-profile-panel { max-height: 100%; }
     .t-profile-body { padding: 12px; }
+    /* \u7A84\u5C4F\u585E\u4E0D\u4E0B\u4E09\u5217\uFF0C\u4E24\u5217\u662F\u6458\u8981\u884C\u8FD8\u8BFB\u5F97\u5168\u7684\u4E0B\u9650\u3002 */
+    .t-profile-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 }
 
 
@@ -19533,6 +20741,127 @@ body.t-reader-zen .t-reader-topbar {
 }
 
 
+/* === 04-features/image-cropper.css === */
+/* ============================================================
+   04-features/image-cropper.css \u2014\u2014 \u60AC\u6D6E\u7403\u81EA\u5B9A\u4E49\u56FE\u7247\u7684\u88C1\u526A\u5F39\u7A97
+   \uFF08src/ui/imageCropper.js\uFF09
+
+   \u2500\u2500 \u5206\u5DE5 \u2500\u2500
+   \u5F39\u7A97\u5916\u58F3\u7684\u5B9A\u4F4D/\u906E\u7F69/z-index \u6765\u81EA\u7EC4\u4EF6\u5C42 .t-dialog-overlay\uFF0C
+   \u9762\u677F\u7684\u5E95/\u63CF\u8FB9/\u5706\u89D2/\u6295\u5F71\u6765\u81EA .t-dialog-panel\uFF0C
+   \u6807\u9898\u680F\u4E0E\u5173\u95ED\u6309\u94AE\u6765\u81EA .t-dialog-header / .t-dialog-close\uFF0C
+   \u6309\u94AE\u6765\u81EA .t-btn / .t-btn--primary / .t-btn--ghost\u3002
+   \u672C\u6587\u4EF6\u53EA\u8D1F\u8D23\u88C1\u526A\u5668\u81EA\u5DF1\u7684\u5E03\u5C40\u4E0E\u53D6\u666F\u6846\u5916\u89C2\uFF0C\u6545\u5168\u90E8\u9009\u62E9\u5668\u90FD\u662F\u81EA\u6709\u7C7B\u540D
+   \uFF08\u5BA1\u8BA1 A5 \u53EA\u5728\u89C4\u5219\u9876\u5C42\u7C7B\u547D\u4E2D 02-components \u5DF2\u5B9A\u4E49\u7684\u7C7B\u65F6\u624D\u68C0\u67E5\u89C6\u89C9\u5C5E\u6027\uFF09\u3002
+
+   \u2500\u2500 z-index \u4E00\u5F8B\u4E0D\u5199 \u2500\u2500
+   \u53D6\u666F\u6846\u538B\u5728\u56FE\u7247\u4E4B\u4E0A\u662F\u9760 DOM \u987A\u5E8F\uFF08.t-crop-frame \u6392\u5728 <img> \u4E4B\u540E\uFF0C
+   \u4E24\u8005\u90FD\u662F positioned + z-index:auto\uFF09\uFF0C\u5BA1\u8BA1 A19 \u8981\u6C42 z-index \u8D70 var(--t-z-*)\uFF0C
+   \u8FD9\u91CC\u6839\u672C\u4E0D\u9700\u8981\u3002
+
+   \u2500\u2500 \u4E0D\u5199 @media \u2500\u2500
+   \u54CD\u5E94\u5F0F\u5168\u9760 min() \u8868\u8FBE\uFF08\u5BA1\u8BA1 A18 \u628A\u65AD\u70B9\u9650\u5B9A\u5728 600/768/920\uFF09\u3002
+   ============================================================ */
+
+.t-crop-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--t-space-lg);
+    width: min(360px, 92vw);
+    /* .t-dialog-panel \u523B\u610F\u4E0D\u5E26\u5C3A\u5BF8\u7EA6\u675F\uFF08\u89C1 02-components/dialog.css \u7684\u8BF4\u660E\uFF09\uFF0C
+       \u8FD9\u91CC\u8865\u4E0A\uFF0C\u5426\u5219\u6A2A\u5C4F\u7B49\u77EE\u89C6\u53E3\u4E0B\u6309\u94AE\u884C\u4F1A\u88AB\u9876\u51FA\u5C4F\u5E55\u4E14\u65E0\u6CD5\u6EDA\u52A8\uFF0C
+       \u7528\u6237\u53EA\u80FD\u770B\u5230\u53D6\u666F\u6846\u5374\u70B9\u4E0D\u5230\u300C\u786E\u5B9A\u300D\u3002 */
+    max-height: 85vh;
+    overflow: auto;
+    padding: var(--t-space-lg);
+}
+
+/* \u53D6\u666F\u6846\uFF1A\u6B63\u65B9\u5F62\u3002\u26A0 \u4E0D\u8981\u7ED9\u5B83\u52A0 border-radius: 50% \u2014\u2014 \u90A3\u4F1A\u628A
+   .t-crop-frame \u7684\u538B\u6697\u5C42\u4E00\u8D77\u88C1\u6389\uFF0C\u5706\u5916\u5C31\u5B8C\u5168\u4E0D\u663E\u793A\u4E86\u3002
+   \u5706\u89D2\u53EA\u53D6\u4E00\u70B9\u70B9\uFF0C\u8BA9\u56DB\u4E2A\u6697\u89D2\u7684\u5916\u8F6E\u5ED3\u4E0D\u90A3\u4E48\u786C\u3002 */
+.t-crop-stage {
+    position: relative;
+    align-self: center;
+    width: min(320px, 72vw, 42vh);
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--t-radius-container);
+    background: var(--t-color-surface-recess-deep);
+    cursor: grab;
+    /* \u62D6\u52A8\u65F6\u4E0D\u5E26\u52A8\u9875\u9762\u6EDA\u52A8 */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.t-crop-stage.is-dragging {
+    cursor: grabbing;
+}
+
+/* \u4F4D\u7F6E\u4E0E\u5C3A\u5BF8\u5168\u90E8\u7531 JS \u6309\u50CF\u7D20\u5199\u5185\u8054\u6837\u5F0F\uFF08\u51B3\u5B9A\u88C1\u526A\u8303\u56F4\u7684\u5C31\u662F\u5B83\u4EEC\uFF09\u3002
+   max-width/max-height \u663E\u5F0F\u7F6E none\uFF1A\u63D2\u4EF6\u4E0E\u5BBF\u4E3B\u5F53\u524D\u90FD\u6CA1\u6709\u5168\u5C40 img \u89C4\u5219\uFF0C
+   \u4F46\u7B2C\u4E09\u65B9\u4E3B\u9898/\u6269\u5C55\u53EF\u80FD\u52A0\uFF0C\u4E00\u6761\u5C31\u8DB3\u4EE5\u628A\u653E\u5927\u540E\u7684\u56FE\u7247\u5939\u4F4F\u3002 */
+.t-crop-image {
+    position: absolute;
+    max-width: none;
+    max-height: none;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* \u53D6\u666F\u6846\u672C\u4F53 = \u5706\u5FC3\u7559\u7A7A + \u5706\u5916\u538B\u6697\u3002
+   inset: 0 \u5FC5\u987B\u4FDD\u6301 \u2014\u2014 \u6316\u7A7A\u76F4\u5F84\u8981\u4E0E\u8F93\u51FA\u6B63\u65B9\u5F62\u7684\u5185\u5207\u5706\u4E25\u683C\u4E00\u81F4\uFF0C
+   \u5426\u5219\u9884\u89C8\u4F1A\u5BF9\u7528\u6237\u8BF4\u8C0E\uFF08\u770B\u89C1\u7684\u5706 \u2260 \u5B9E\u9645\u88C1\u51FA\u7684\u65B9\uFF09\u3002
+   \u8D85\u5927 spread \u7684 box-shadow \u4F1A\u88AB .t-crop-stage \u7684 overflow \u6536\u8FB9\uFF0C
+   \u4E8E\u662F\u53EA\u5269\u5706\u5916\u90A3\u4E00\u5708\u6DF1\u8272\u3002 */
+.t-crop-frame {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--t-radius-circle);
+    box-shadow: 0 0 0 9999px var(--t-color-dialog-scrim-strongest);
+    border: 1px solid var(--t-color-border-glass);
+    pointer-events: none;
+}
+
+.t-crop-hint {
+    margin: 0;
+    text-align: center;
+    font-size: var(--t-font-size-sm);
+    color: var(--t-color-text-faint);
+}
+
+.t-crop-zoom-row {
+    display: flex;
+    align-items: center;
+    gap: var(--t-gap-inline);
+    color: var(--t-color-text-muted);
+}
+
+.t-crop-zoom {
+    flex: 1;
+}
+
+.t-crop-error {
+    margin: 0;
+    text-align: center;
+    font-size: var(--t-font-size-sm);
+    color: var(--t-color-danger);
+}
+
+.t-crop-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--t-gap-inline);
+}
+
+.t-crop-actions-right {
+    display: flex;
+    gap: var(--t-gap-inline);
+}
+
+
 /* === 04-features/st-embedded.css === */
 /* css/04-features/st-embedded.css \u2014\u2014 \u6CE8\u5165 SillyTavern DOM \u7684\u5143\u7D20
    ============================================================
@@ -19811,7 +21140,7 @@ var CSS_FILES;
 var init_dom = __esm({
   "src/utils/dom.js"() {
     init_defaults();
-    CSS_FILES = ["00-tokens/primitives.css", "00-tokens/semantic.css", "00-tokens/theme-dark.css", "00-tokens/theme-light.css", "00-tokens/legacy-aliases.css", "01-base/scope.css", "01-base/base.css", "01-base/scrollbar.css", "01-base/form-controls.css", "01-base/keyframes.css", "02-components/window.css", "02-components/panel.css", "02-components/settings-shell.css", "02-components/dialog.css", "02-components/button.css", "02-components/icon-button.css", "02-components/field.css", "02-components/choice-input.css", "02-components/radio-card.css", "02-components/_legacy.css", "03-layout/button-groups.css", "03-layout/utilities.css", "04-features/floating.css", "04-features/main-window.css", "04-features/main-window-legacy.css", "04-features/script-picker.css", "04-features/wi-selector.css", "04-features/continuation.css", "04-features/queue.css", "04-features/content-editor.css", "04-features/illustration.css", "04-features/settings-drawer.css", "04-features/settings.css", "04-features/manager.css", "04-features/workshop.css", "04-features/favs.css", "04-features/debug.css", "04-features/story-outline.css", "04-features/outline-entry-menu.css", "04-features/rewrite.css", "04-features/reader.css", "04-features/confirm-dialog.css", "04-features/st-embedded.css"];
+    CSS_FILES = ["00-tokens/primitives.css", "00-tokens/semantic.css", "00-tokens/theme-dark.css", "00-tokens/theme-light.css", "00-tokens/legacy-aliases.css", "01-base/scope.css", "01-base/base.css", "01-base/scrollbar.css", "01-base/form-controls.css", "01-base/keyframes.css", "02-components/window.css", "02-components/panel.css", "02-components/settings-shell.css", "02-components/dialog.css", "02-components/button.css", "02-components/icon-button.css", "02-components/field.css", "02-components/choice-input.css", "02-components/radio-card.css", "02-components/_legacy.css", "03-layout/button-groups.css", "03-layout/utilities.css", "04-features/floating.css", "04-features/main-window.css", "04-features/main-window-legacy.css", "04-features/script-picker.css", "04-features/wi-selector.css", "04-features/continuation.css", "04-features/queue.css", "04-features/content-editor.css", "04-features/illustration.css", "04-features/settings-drawer.css", "04-features/settings.css", "04-features/manager.css", "04-features/workshop.css", "04-features/favs.css", "04-features/debug.css", "04-features/story-outline.css", "04-features/outline-entry-menu.css", "04-features/rewrite.css", "04-features/reader.css", "04-features/confirm-dialog.css", "04-features/image-cropper.css", "04-features/st-embedded.css"];
   }
 });
 
@@ -20779,6 +22108,19 @@ function getCurrentCharacterDescription() {
   const description = card?.data?.description ?? card?.description ?? "";
   return typeof description === "string" ? description.trim() : "";
 }
+function getCurrentUserPersona() {
+  let ctx = null;
+  try {
+    if (typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+  } catch {
+    ctx = null;
+  }
+  const description = ctx?.powerUserSettings?.persona_description;
+  return {
+    name: String(ctx?.name1 ?? "").trim(),
+    description: typeof description === "string" ? description.trim() : ""
+  };
+}
 function isNameSharedByMultipleCards(ctx, charName) {
   const characters = Array.isArray(ctx?.characters) ? ctx.characters : [];
   const target = String(charName || "").trim();
@@ -21743,145 +23085,42 @@ var init_chatInjector = __esm({
   }
 });
 
-// src/core/imageBytes.js
-function startsWith(bytes, sequence, offset = 0) {
-  if (bytes.length < offset + sequence.length) return false;
-  for (let index = 0; index < sequence.length; index++) {
-    if (bytes[offset + index] !== sequence[index]) return false;
-  }
-  return true;
-}
-function readUint16BE(bytes, offset) {
-  return bytes[offset] << 8 | bytes[offset + 1];
-}
-function readUint32BE(bytes, offset) {
-  return (bytes[offset] << 24 | bytes[offset + 1] << 16 | bytes[offset + 2] << 8 | bytes[offset + 3]) >>> 0;
-}
-function readUint16LE(bytes, offset) {
-  return bytes[offset] | bytes[offset + 1] << 8;
-}
-function readUint24LE(bytes, offset) {
-  return bytes[offset] | bytes[offset + 1] << 8 | bytes[offset + 2] << 16;
-}
-function positiveSize(width, height) {
-  const valid = Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0;
-  return valid ? { width, height } : null;
-}
-function sniffImageMime(bytes) {
-  if (!(bytes instanceof Uint8Array)) return null;
-  if (startsWith(bytes, PNG_SIGNATURE)) return MIME_PNG;
-  if (startsWith(bytes, JPEG_SIGNATURE)) return MIME_JPEG;
-  if (startsWith(bytes, RIFF_SIGNATURE) && startsWith(bytes, WEBP_SIGNATURE, 8)) return MIME_WEBP;
-  return null;
-}
-function readPngSize(bytes) {
-  if (bytes.length < 24) return null;
-  if (!startsWith(bytes, [73, 72, 68, 82], 12)) return null;
-  return positiveSize(readUint32BE(bytes, 16), readUint32BE(bytes, 20));
-}
-function readJpegSize(bytes) {
-  let offset = 2;
-  while (offset + 3 < bytes.length) {
-    if (bytes[offset] !== 255) {
-      offset += 1;
-      continue;
-    }
-    const marker = bytes[offset + 1];
-    if (marker === 255) {
-      offset += 1;
-      continue;
-    }
-    if (marker === 1 || marker >= 208 && marker <= 215) {
-      offset += 2;
-      continue;
-    }
-    if (marker === 217 || marker === 218) return null;
-    if (offset + 3 >= bytes.length) return null;
-    const length = readUint16BE(bytes, offset + 2);
-    if (length < 2) return null;
-    const isSof = marker >= 192 && marker <= 207 && marker !== 196 && marker !== 200 && marker !== 204;
-    if (isSof) {
-      if (offset + 8 >= bytes.length) return null;
-      return positiveSize(readUint16BE(bytes, offset + 7), readUint16BE(bytes, offset + 5));
-    }
-    offset += 2 + length;
-  }
-  return null;
-}
-function readWebpSize(bytes) {
-  if (bytes.length < 16) return null;
-  const chunk = String.fromCharCode(bytes[12], bytes[13], bytes[14], bytes[15]);
-  if (chunk === "VP8X") {
-    if (bytes.length < 30) return null;
-    return positiveSize(readUint24LE(bytes, 24) + 1, readUint24LE(bytes, 27) + 1);
-  }
-  if (chunk === "VP8L") {
-    if (bytes.length < 25 || bytes[20] !== 47) return null;
-    const bits = (bytes[21] | bytes[22] << 8 | bytes[23] << 16 | bytes[24] << 24) >>> 0;
-    return positiveSize((bits & 16383) + 1, (bits >>> 14 & 16383) + 1);
-  }
-  if (chunk === "VP8 ") {
-    if (bytes.length < 30 || !startsWith(bytes, WEBP_VP8_START_CODE, 23)) return null;
-    return positiveSize(readUint16LE(bytes, 26) & 16383, readUint16LE(bytes, 28) & 16383);
-  }
-  return null;
-}
-function readImageSize(bytes) {
-  if (!(bytes instanceof Uint8Array)) return null;
-  const mime = sniffImageMime(bytes);
-  if (mime === MIME_PNG) return readPngSize(bytes);
-  if (mime === MIME_JPEG) return readJpegSize(bytes);
-  if (mime === MIME_WEBP) return readWebpSize(bytes);
-  return null;
-}
-async function inspectImageBlob(blob) {
-  if (!(blob instanceof Blob) || !blob.size) return null;
-  const prefixLength = Math.min(blob.size, IMAGE_PREFIX_BYTES);
-  const prefix = new Uint8Array(await blob.slice(0, prefixLength).arrayBuffer());
-  const mimeType = sniffImageMime(prefix);
-  if (!mimeType) return null;
-  let size = readImageSize(prefix);
-  if (!size && blob.size > prefixLength) {
-    size = readImageSize(new Uint8Array(await blob.arrayBuffer()));
-  }
-  if (!size) return null;
-  const typed = blob.type === mimeType ? blob : new Blob([blob], { type: mimeType });
-  return { blob: typed, mimeType, width: size.width, height: size.height };
-}
-var PNG_SIGNATURE, RIFF_SIGNATURE, WEBP_SIGNATURE, JPEG_SIGNATURE, WEBP_VP8_START_CODE, MIME_PNG, MIME_JPEG, MIME_WEBP, IMAGE_PREFIX_BYTES;
-var init_imageBytes = __esm({
-  "src/core/imageBytes.js"() {
-    PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
-    RIFF_SIGNATURE = [82, 73, 70, 70];
-    WEBP_SIGNATURE = [87, 69, 66, 80];
-    JPEG_SIGNATURE = [255, 216, 255];
-    WEBP_VP8_START_CODE = [157, 1, 42];
-    MIME_PNG = "image/png";
-    MIME_JPEG = "image/jpeg";
-    MIME_WEBP = "image/webp";
-    IMAGE_PREFIX_BYTES = 1024 * 1024;
-  }
-});
-
 // src/core/cosmosVisionBridge.js
 function abortError() {
   return Object.assign(new Error("\u914D\u56FE\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002"), { name: "AbortError", code: "ABORTED" });
 }
-function detectIllustrationBackend() {
-  const api = globalThis.window?.CosmosVision;
-  if (!api) return { ready: false, status: "missing", reason: "\u672A\u68C0\u6D4B\u5230 Cosmos Vision\uFF0C\u8BF7\u5B89\u88C5\u5E76\u542F\u7528\u8BE5\u6269\u5C55\u3002" };
-  if (typeof api.generateImage !== "function") {
-    if (typeof api.preparePrompt === "function" || api.apiVersion) {
-      return { ready: false, status: "legacy", reason: "\u68C0\u6D4B\u5230\u65E7\u7248 Cosmos Vision \u63A5\u53E3\uFF0C\u8BF7\u5347\u7EA7\u5230\u63D0\u4F9B generateImage \u7684\u7248\u672C\u3002" };
-    }
-    return { ready: false, status: "unsupported", reason: "Cosmos Vision \u6CA1\u6709\u63D0\u4F9B\u751F\u56FE\u63A5\u53E3\u3002" };
+function detectIllustrationBackend(backendId = DEFAULT_BACKEND_ID) {
+  const adapter = getIllustrationBackend(backendId);
+  if (!adapter) {
+    return {
+      ready: false,
+      status: "unsupported",
+      reason: `\u672A\u5B89\u88C5\u751F\u56FE\u540E\u7AEF\u300C${backendId}\u300D\u3002`,
+      capabilities: EMPTY_CAPABILITIES,
+      detail: {}
+    };
   }
-  return { ready: true, status: "ready", reason: "Cosmos Vision \u5DF2\u8FDE\u63A5\u3002" };
-}
-function requireBackend() {
-  const state = detectIllustrationBackend();
-  if (!state.ready) throw illustrationError(state.reason, state.status === "legacy" ? "UNSUPPORTED_API" : "NOT_READY");
-  return globalThis.window.CosmosVision;
+  let state;
+  try {
+    state = adapter.probe() || {};
+  } catch {
+    return {
+      ready: false,
+      status: "unsupported",
+      reason: `\u63A2\u6D4B ${adapter.label} \u65F6\u51FA\u9519\u3002`,
+      capabilities: EMPTY_CAPABILITIES,
+      detail: {}
+    };
+  }
+  const ready = Boolean(state.ready);
+  return {
+    ready,
+    status: state.status || (ready ? "ready" : "unsupported"),
+    reason: state.reason || "",
+    // 没就绪就不谈能力：界面据此收起控件，而不是拿一份半可信的列表去渲染。
+    capabilities: ready && state.capabilities ? state.capabilities : EMPTY_CAPABILITIES,
+    detail: state.detail || {}
+  };
 }
 function runAbortableIllustrationTask(task, signal) {
   if (signal?.aborted) return Promise.reject(abortError());
@@ -21900,6 +23139,7 @@ function runAbortableIllustrationTask(task, signal) {
 function normalizeBackendError(error, signal) {
   if (signal?.aborted) return abortError();
   if (error?.name === "AbortError" || error?.code === "ABORTED") return abortError();
+  if (typeof error?.code === "string" && PLUGIN_ERROR_CODES.has(error.code)) return error;
   const message = typeof error?.message === "string" && error.message.trim();
   return illustrationError(message || "\u751F\u56FE\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002", "GENERATION_FAILED");
 }
@@ -21915,55 +23155,54 @@ async function readGeneratedImages(blobs) {
 }
 async function generateTheaterIllustration(draft, options = {}) {
   return runAbortableIllustrationTask(async () => {
-    const api = requireBackend();
-    const requestId = newIllustrationId();
+    const backendId = draft?.backend;
+    const adapter = getIllustrationBackend(backendId);
+    if (!adapter) throw illustrationError(`\u914D\u56FE\u8349\u7A3F\u7684\u751F\u56FE\u540E\u7AEF\u300C${backendId}\u300D\u4E0D\u53D7\u652F\u6301\u3002`, "UNSUPPORTED_API");
+    const state = detectIllustrationBackend(backendId);
+    if (!state.ready) throw illustrationError(state.reason, statusToErrorCode(state.status));
     let result;
     try {
-      result = await api.generateImage({
-        // 只给「画面里有什么」。质量词、UC 词、画风预设与 LoRA 触发词由 Cosmos 追加，
-        // 这里再写一遍就会重复叠加 —— v1 需求与联调清单都点名过这条。
-        prompts: {
-          positivePrompt: draft.prompts.positivePrompt,
-          negativePrompt: draft.prompts.negativePrompt,
-          characterPrompts: draft.prompts.characterPrompts
-        },
-        requestId,
+      result = await adapter.generate(draft, {
         signal: options.signal,
-        // 每次调用各有独立回调闭包，事件不会串任务，所以不做 requestId 过滤
-        // （Cosmos 缺省会自增 requestId，硬比会误伤合法事件）。
-        onProgress: (progress) => {
-          if (options.signal?.aborted) return;
-          const max = Number(progress?.max);
-          const value = Number(progress?.value);
-          const fraction = Number.isFinite(max) && max > 0 && Number.isFinite(value) ? Math.min(1, Math.max(0, value / max)) : void 0;
-          try {
-            options.onProgress?.({ stage: "generating", fraction });
-          } catch {
-          }
-        },
-        onStreamPreview: (event) => {
-          if (options.signal?.aborted) return;
-          try {
-            options.onStreamPreview?.({ blob: event?.previewBlob, isFinal: Boolean(event?.isFinal) });
-          } catch {
-          }
-        }
+        onProgress: options.onProgress,
+        onStreamPreview: options.onStreamPreview,
+        size: options.size,
+        seed: options.seed
       });
     } catch (error) {
       throw normalizeBackendError(error, options.signal);
     }
-    const blobs = Array.isArray(result?.imageBlobs) ? result.imageBlobs : [];
+    const blobs = Array.isArray(result?.blobs) ? result.blobs : [];
     if (!blobs.length) throw illustrationError("\u751F\u56FE\u63A5\u53E3\u6CA1\u6709\u8FD4\u56DE\u56FE\u7247\u3002", "GENERATION_FAILED");
     const kept = blobs.slice(0, MAX_ILLUSTRATION_BATCH);
-    return { images: await readGeneratedImages(kept), dropped: blobs.length - kept.length };
+    return {
+      images: await readGeneratedImages(kept),
+      dropped: blobs.length - kept.length,
+      seed: result?.seed,
+      applied: result?.applied
+    };
   }, options.signal);
 }
-var MAX_ILLUSTRATION_BATCH;
+var MAX_ILLUSTRATION_BATCH, PLUGIN_ERROR_CODES;
 var init_cosmosVisionBridge = __esm({
   "src/core/cosmosVisionBridge.js"() {
     init_imageBytes();
     init_illustrationData();
+    init_registry();
     MAX_ILLUSTRATION_BATCH = 8;
+    PLUGIN_ERROR_CODES = /* @__PURE__ */ new Set([
+      "ABORTED",
+      "GENERATION_FAILED",
+      "NOT_READY",
+      "UNSUPPORTED_API",
+      "INVALID_ARGS",
+      "RATE_LIMITED",
+      "SAVE_FAILED",
+      "LLM_NOT_CONFIGURED",
+      "INVALID_RESPONSE",
+      "NO_CONTENT",
+      "NO_SCENE"
+    ]);
   }
 });
 
@@ -22433,7 +23672,7 @@ var init_llmJson = __esm({
 });
 
 // src/core/illustrationScene.js
-function draftFromSceneReply(raw, theaterText) {
+function draftFromSceneReply(raw, theaterText, backendId = "cosmos") {
   const parsed = extractJsonObject(raw);
   if (!parsed) throw illustrationError("\u6A21\u578B\u6CA1\u6709\u8FD4\u56DE\u53EF\u89E3\u6790\u7684\u753B\u9762\u4FE1\u606F\uFF0C\u8BF7\u91CD\u8BD5\u6216\u6362\u4E00\u4E2A\u6A21\u578B\u3002", "INVALID_RESPONSE");
   if (String(parsed.error || "").trim() === "NO_SCENE") {
@@ -22446,7 +23685,9 @@ function draftFromSceneReply(raw, theaterText) {
   const characters = Array.isArray(parsed.characters) ? parsed.characters : Array.isArray(parsed.characterPrompts) ? parsed.characterPrompts : [];
   const draft = normalizeIllustrationDraft({
     version: 2,
-    backend: "cosmos",
+    // 草稿记下这次交给哪个后端。提示词本身是后端无关的（只有内容、没有风格），
+    // 所以换个后端重画不必重新选景。
+    backend: backendId,
     scene,
     prompts: {
       positivePrompt: parsed.positivePrompt,
@@ -22458,7 +23699,10 @@ function draftFromSceneReply(raw, theaterText) {
       }))
     }
   });
-  return assertIllustrationExcerpt(draft, theaterText);
+  const hasExcerpt = Boolean(draft.scene.sourceExcerpt);
+  const sanitized = sanitizeIllustrationExcerpt(draft, theaterText);
+  if (hasExcerpt && !sanitized.scene.sourceExcerpt) sanitized.excerptDropped = true;
+  return sanitized;
 }
 function buildMessages(request, data) {
   const restoreVariables = beginVariableSandbox();
@@ -22474,6 +23718,7 @@ async function selectIllustrationScene(request, options = {}) {
   const conn = getActiveConnection();
   if (!conn) throw illustrationError("\u8BF7\u5148\u5728\u8BBE\u7F6E\u91CC\u914D\u7F6E API \u65B9\u6848\u3002", "LLM_NOT_CONFIGURED");
   const data = getExtData();
+  const backendId = resolveActiveBackendId(data);
   const messages = buildMessages(request, data);
   const send = (extra) => sendChatRequestWithConnection(conn, extra, {
     signal: options.signal,
@@ -22484,17 +23729,18 @@ async function selectIllustrationScene(request, options = {}) {
   });
   let raw = await send(messages);
   try {
-    return draftFromSceneReply(raw, theaterText);
+    return draftFromSceneReply(raw, theaterText, backendId);
   } catch (error) {
     if (error?.code !== "INVALID_RESPONSE" || options.signal?.aborted) throw error;
     raw = await send([...messages, { role: "user", content: RETRY_NUDGE }]);
-    return draftFromSceneReply(raw, theaterText);
+    return draftFromSceneReply(raw, theaterText, backendId);
   }
 }
 var RETRY_NUDGE;
 var init_illustrationScene = __esm({
   "src/core/illustrationScene.js"() {
     init_storage();
+    init_registry();
     init_connection();
     init_llmJson();
     init_illustrationPresets();
@@ -22533,7 +23779,119 @@ var init_floatingWindow = __esm({
   }
 });
 
+// src/ui/shared/helpPopover.js
+function buildSection(section) {
+  const block = document.createElement("div");
+  block.className = "t-help-section";
+  if (section.heading) {
+    const heading = document.createElement("div");
+    heading.className = "t-help-heading";
+    heading.textContent = section.heading;
+    block.append(heading);
+  }
+  if (Array.isArray(section.terms) && section.terms.length) {
+    const list = document.createElement("dl");
+    list.className = "t-help-terms";
+    for (const item of section.terms) {
+      const term = document.createElement("dt");
+      const code = document.createElement("code");
+      code.textContent = item.term;
+      term.append(code);
+      const text = document.createElement("dd");
+      text.textContent = item.text;
+      list.append(term, text);
+    }
+    block.append(list);
+  }
+  if (Array.isArray(section.lines) && section.lines.length) {
+    const list = document.createElement("ul");
+    list.className = "t-help-lines";
+    for (const line of section.lines) {
+      const entry = document.createElement("li");
+      entry.textContent = line;
+      list.append(entry);
+    }
+    block.append(list);
+  }
+  return block;
+}
+function createHelpTip({ label = "\u4F7F\u7528\u8BF4\u660E", title = "\u4F7F\u7528\u8BF4\u660E", sections = [], action = "" } = {}) {
+  const root = document.createElement("span");
+  root.className = "t-help";
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "t-icon-btn";
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  button.setAttribute("aria-expanded", "false");
+  if (action) button.dataset.action = action;
+  const icon = document.createElement("i");
+  icon.className = "fa-solid fa-circle-question";
+  button.append(icon);
+  const popover = document.createElement("div");
+  popover.className = "t-help-popover";
+  popover.hidden = true;
+  const heading = document.createElement("div");
+  heading.className = "t-help-title";
+  heading.textContent = title;
+  popover.append(heading);
+  for (const section of sections) popover.append(buildSection(section));
+  root.append(button, popover);
+  let open = false;
+  function onDocumentClick(event) {
+    if (!root.contains(event.target)) setOpen(false);
+  }
+  function onKeydown(event) {
+    if (event.key === "Escape") setOpen(false);
+  }
+  function setOpen(next) {
+    if (open === next) return;
+    open = next;
+    popover.hidden = !next;
+    button.setAttribute("aria-expanded", String(next));
+    if (next) {
+      document.addEventListener("click", onDocumentClick, true);
+      document.addEventListener("keydown", onKeydown);
+    } else {
+      document.removeEventListener("click", onDocumentClick, true);
+      document.removeEventListener("keydown", onKeydown);
+    }
+  }
+  button.addEventListener("click", () => setOpen(!open));
+  return { root, close: () => setOpen(false) };
+}
+var init_helpPopover = __esm({
+  "src/ui/shared/helpPopover.js"() {
+  }
+});
+
 // src/ui/illustrationSettingsWindow.js
+function helpSections() {
+  return [
+    {
+      heading: "\u751F\u56FE\u540E\u7AEF",
+      lines: [
+        "\u56FE\u7247\u7531\u88C5\u4E86\u7684\u5916\u90E8\u63D2\u4EF6\u6765\u753B\u3002\u8FD9\u91CC\u9009\u7684\u662F\u5168\u5C40\u9ED8\u8BA4\uFF0C\u573A\u666F\u914D\u56FE\u9762\u677F\u6309\u5B83\u51B3\u5B9A\u8FD9\u6B21\u4EA4\u7ED9\u8C01\u3002",
+        "\u8349\u7A3F\u843D\u76D8\u65F6\u4F1A\u8BB0\u4E0B\u5F53\u65F6\u7528\u7684\u540E\u7AEF\uFF0C\u6240\u4EE5\u6362\u540E\u7AEF\u91CD\u753B\u4E0D\u7528\u91CD\u65B0\u9009\u666F\uFF1B\u540E\u7AEF\u5378\u8F7D\u540E\u65E7\u8BB0\u5F55\u7167\u6837\u80FD\u770B\u3001\u80FD\u5BFC\u51FA\u3002"
+      ],
+      terms: listIllustrationBackends().map((backend) => ({ term: backend.label, text: BACKEND_HELP[backend.id] || "" }))
+    },
+    {
+      heading: "\u7D20\u6750\u5360\u4F4D\u7B26",
+      lines: ["\u7D20\u6750\u9760\u5360\u4F4D\u7B26\u8FDB\u5165\u6D88\u606F\uFF0C\u53EA\u6709\u8FD9\u56DB\u4E2A\uFF1A"],
+      terms: PLACEHOLDER_NAMES.map((name) => ({ term: `{{${name}}}`, text: PLACEHOLDER_HELP[name] || "" }))
+    },
+    {
+      heading: "\u9009\u666F\u9884\u8BBE",
+      lines: [
+        "\u6CA1\u6709\u5185\u7F6E\u9884\u8BBE\uFF0C\u4E00\u5F8B\u9760\u300C\u5BFC\u5165\u300D\u6216\u300C\u65B0\u5EFA\u300D\u3002\u5BFC\u5165\u8BA4\u4E24\u79CD\u6587\u4EF6\uFF1A\u9152\u9986\u7684 Chat Completion \u9884\u8BBE\uFF0C\u4EE5\u53CA\u672C\u63D2\u4EF6\u5BFC\u51FA\u7684\u9009\u666F\u9884\u8BBE\u3002",
+        "\u5BFC\u5165\u65F6\u4F1A\u4E22\u5F03\u4E0A\u4E0B\u6587\u6CE8\u5165\u7C7B\u6761\u76EE\uFF08chatHistory\u3001worldInfoBefore \u8FD9\u7C7B\uFF09\u2014\u2014 \u9009\u666F\u8FD9\u6761\u94FE\u8DEF\u4E0D\u80FD\u628A\u5F53\u524D\u804A\u5929\u585E\u8FDB\u6765\u3002",
+        "\u6761\u76EE\u6309\u987A\u5E8F\u62FC\u6210\u6D88\u606F\uFF0C\u53EF\u62D6\u52A8\u6392\u5E8F\u3002\u672B\u5C3E\u90A3\u51E0\u6761\u5E26 \u21BA \u7684\u662F\u5C0F\u5267\u573A\u81EA\u5DF1\u7684\uFF1A\u53EF\u6539\u5199\u3001\u53EF\u505C\u7528\u3001\u53EF\u6392\u5E8F\uFF0C\u4F46\u4E0D\u80FD\u5220\u3002",
+        "\u63D2\u4EF6\u5347\u7EA7**\u4E0D\u4F1A**\u81EA\u52A8\u5237\u65B0\u8FD9\u51E0\u6761\u7684\u5185\u5BB9 \u2014\u2014 \u9884\u8BBE\u91CC\u5B58\u7684\u662F\u4F60\u90A3\u4EFD\u526F\u672C\u3002\u6240\u4EE5\u5C0F\u5267\u573A\u6539\u4E86\u9ED8\u8BA4\u6587\u6848\uFF08\u6BD4\u5982\u300C\u9009\u666F\u8981\u6C42\u300D\u65B0\u589E\u4E86\u4E00\u6761\u7EA6\u675F\uFF09\u65F6\u8981\u81EA\u5DF1\u70B9 \u21BA \u8FD8\u539F\u624D\u4F1A\u751F\u6548\u3002\u8FD9\u662F\u523B\u610F\u7684\uFF1A\u5206\u4E0D\u6E05\u300C\u6CA1\u6539\u8FC7\u300D\u548C\u300C\u6539\u6210\u4E86\u522B\u7684\u6837\u5B50\u300D\uFF0C\u81EA\u52A8\u8986\u76D6\u4F1A\u6BC1\u6389\u4F60\u5199\u7684\u7248\u672C\u3002"
+      ]
+    }
+  ];
+}
 function openIllustrationSettingsWindow(options = {}) {
   const { onClose } = options;
   const root = document.createElement("div");
@@ -22542,18 +23900,17 @@ function openIllustrationSettingsWindow(options = {}) {
         <section class="t-profile-panel" role="dialog" aria-labelledby="t-illustration-settings-title">
             <div class="t-panel-header">
                 <strong id="t-illustration-settings-title">\u573A\u666F\u914D\u56FE\u8BBE\u7F6E</strong>
-                <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u8BBE\u7F6E" aria-label="\u5173\u95ED\u8BBE\u7F6E"><i class="fa-solid fa-xmark"></i></button>
+                <div class="t-panel-header-actions" data-role="header-actions">
+                    <button type="button" class="t-icon-btn" data-action="close" title="\u5173\u95ED\u8BBE\u7F6E" aria-label="\u5173\u95ED\u8BBE\u7F6E"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
             <div class="t-profile-body">
-                <div style="font-weight:bold; color:var(--t-color-accent); margin-bottom:8px;">\u9009\u666F\u9884\u8BBE</div>
-                <p class="t-illustration-hint">
-                    \u9884\u8BBE\u51B3\u5B9A\u9001\u7ED9\u9009\u666F\u6A21\u578B\u7684\u6D88\u606F\u3002\u6761\u76EE\u6309\u987A\u5E8F\u62FC\u6210\u6D88\u606F\uFF0C\u7D20\u6750\u9760\u5360\u4F4D\u7B26\u8FDB\u5165\uFF1A
-                    ${PLACEHOLDER_NAMES.map((name) => `<code>{{${name}}}</code>`).join(" ")}
-                    <br>\u9009\u666F\u7528\u7684\u662F\u5C0F\u5267\u573A\u5F53\u524D\u7684 API \u65B9\u6848\uFF08\u8BBE\u7F6E \u2192 API \u8FDE\u63A5\uFF09\uFF0C\u4E0E\u672C\u9884\u8BBE\u76F8\u4E92\u72EC\u7ACB\u3002
-                    <strong>\u53D8\u91CF\u5B8F\u4F1A\u5C55\u5F00</strong>\uFF1A<code>{{setvar::\u540D::\u503C}}</code>\u3001<code>{{getvar::\u540D}}</code>
-                    \u7B49 10 \u4E2A STscript \u53D8\u91CF\u5B8F\u53EF\u7528\uFF0C\u8DE8\u6761\u76EE\u5171\u4EAB\uFF0C\u4E14\u53EA\u5728\u672C\u6B21\u9009\u666F\u5185\u6709\u6548\u2014\u2014\u9009\u666F\u7ED3\u675F\u540E\u53D8\u91CF\u4F1A\u8FD8\u539F\uFF0C
-                    \u4E0D\u5199\u8FDB\u4F60\u7684\u804A\u5929\u5B58\u6863\u3002<strong>{{char}}\u3001{{user}} \u8FD9\u7C7B\u8BFB\u5F53\u524D\u804A\u5929\u7684\u5B8F\u4E0D\u4F1A\u5C55\u5F00\u3002</strong>
-                </p>
+                <div style="font-weight:bold; color:var(--t-color-accent); margin-bottom:8px;">\u751F\u56FE\u540E\u7AEF</div>
+                <div class="t-profile-actions">
+                    <select class="t-input" data-role="backend-select" style="width:auto; min-width:180px;"></select>
+                </div>
+                <p class="t-illustration-hint" data-role="backend-validation"></p>
+                <div style="font-weight:bold; color:var(--t-color-accent); margin:14px 0 8px;">\u9009\u666F\u9884\u8BBE</div>
                 <div class="t-profile-actions">
                     <select class="t-input" data-role="preset-select" style="width:auto; min-width:180px;"></select>
                     <button type="button" class="t-btn primary" data-action="new-preset" title="\u65B0\u5EFA\u9884\u8BBE\uFF08\u81EA\u52A8\u5E26\u4E0A\u5C0F\u5267\u573A\u7684\u9009\u666F\u6761\u76EE\uFF09" aria-label="\u65B0\u5EFA\u9884\u8BBE"><i class="fa-solid fa-plus"></i></button>
@@ -22571,6 +23928,8 @@ function openIllustrationSettingsWindow(options = {}) {
   document.body.append(root);
   const role = (name) => root.querySelector(`[data-role="${name}"]`);
   const action = (name) => root.querySelector(`[data-action="${name}"]`);
+  const help = createHelpTip({ title: "\u573A\u666F\u914D\u56FE\u8BBE\u7F6E", sections: helpSections() });
+  role("header-actions").insertBefore(help.root, action("close"));
   let disposed = false;
   let draggedId = "";
   const expandedIds = /* @__PURE__ */ new Set();
@@ -22624,6 +23983,24 @@ function openIllustrationSettingsWindow(options = {}) {
     live.entries.splice(Math.min(Math.max(0, position), live.entries.length), 0, entry);
     expandedIds.add(entry.id);
     commit();
+  }
+  function renderBackend() {
+    const data = getExtData();
+    ensureIllustrationBackend(data);
+    const active = resolveActiveBackendId(data);
+    const select = role("backend-select");
+    select.replaceChildren();
+    for (const backend of listIllustrationBackends()) {
+      const option = document.createElement("option");
+      option.value = backend.id;
+      option.textContent = backend.label;
+      select.append(option);
+    }
+    select.value = active;
+    const state2 = detectIllustrationBackend(active);
+    const node = role("backend-validation");
+    node.textContent = state2.reason;
+    node.style.color = state2.ready ? "" : "var(--t-color-danger, #e06c75)";
   }
   function renderToolbar() {
     const presets = listPresets(getExtData());
@@ -22844,6 +24221,7 @@ function openIllustrationSettingsWindow(options = {}) {
   }
   function render() {
     if (disposed) return;
+    renderBackend();
     renderToolbar();
     renderValidation();
     if (activePreset()) renderEntries();
@@ -22856,6 +24234,12 @@ function openIllustrationSettingsWindow(options = {}) {
     for (const entry of preset.entries) expandedIds.add(entry.id);
     commit();
   }
+  role("backend-select").addEventListener("change", (event) => {
+    const data = getExtData();
+    ensureIllustrationBackend(data);
+    data[ILLUSTRATION_BACKEND_KEY].active_id = event.target.value;
+    commit();
+  });
   role("preset-select").addEventListener("change", (event) => {
     state().active_preset_id = event.target.value;
     commit();
@@ -22944,6 +24328,7 @@ function openIllustrationSettingsWindow(options = {}) {
     disposed = true;
     const displaced = isFloatingWindowDisplaced();
     releaseFloatingWindow(close);
+    help.close();
     root.remove();
     if (!displaced) onClose?.();
   }
@@ -22952,11 +24337,25 @@ function openIllustrationSettingsWindow(options = {}) {
   action("close").focus();
   return close;
 }
+var PLACEHOLDER_HELP, BACKEND_HELP;
 var init_illustrationSettingsWindow = __esm({
   "src/ui/illustrationSettingsWindow.js"() {
     init_storage();
+    init_cosmosVisionBridge();
+    init_registry();
     init_illustrationPresets();
     init_floatingWindow();
+    init_helpPopover();
+    PLACEHOLDER_HELP = {
+      theater_text: "\u914D\u56FE\u9762\u677F\u91CC\u300C\u672C\u6B21\u914D\u56FE\u7D20\u6750\u300D\u7684\u5185\u5BB9\uFF0C\u4E5F\u5C31\u662F\u672C\u8F6E\u6B63\u6587\u3002",
+      participants: "\u914D\u56FE\u9762\u677F\u91CC\u300C\u4EBA\u7269\u5916\u89C2\u7B49\u8865\u5145\u8D44\u6599\u300D\u7684\u5185\u5BB9\uFF1B\u547D\u4E2D\u7684\u5916\u89C2\u6863\u6848\u4F1A\u81EA\u52A8\u586B\u5230\u8FD9\u91CC\u3002",
+      special_request: "\u914D\u56FE\u9762\u677F\u91CC\u300C\u60F3\u753B\u4EC0\u4E48\u300D\u7684\u5185\u5BB9\u3002",
+      previous_scenes: "\u70B9\u8FC7\u300C\u6362\u4E2A\u753B\u9762\u300D\u65F6\uFF0C\u6B64\u524D\u5DF2\u7ECF\u9009\u8FC7\u7684\u753B\u9762\u3002"
+    };
+    BACKEND_HELP = {
+      cosmos: "\u652F\u6301\u4E00\u6B21\u51FA\u591A\u5F20\uFF0C\u4EBA\u7269\u4F4D\u7F6E\u53EF\u7528\u3002\u753B\u5E45\u3001\u753B\u98CE\u4E0E\u8D28\u91CF\u8BCD\u5728\u5B83\u90A3\u8FB9\u914D\u7F6E\u3002",
+      baibai: "\u4E00\u6B21\u51FA\u4E00\u5F20\uFF0C\u4EBA\u7269\u4F4D\u7F6E\u56FA\u5B9A\u5728\u753B\u9762\u4E2D\u5FC3\uFF1BNovelAI \u4E0B\u4E0D\u4F7F\u7528\u8FD9\u91CC\u586B\u7684\u8D1F\u5411\u63D0\u793A\u8BCD\u3002"
+    };
   }
 });
 
@@ -22967,8 +24366,12 @@ function notifyProfilesChanged() {
 function stripHtml(value) {
   return String(value ?? "").replace(/<[^>]*>/g, "").replace(/\n{3,}/g, "\n\n").trim();
 }
-function bindingLabel(cardKey) {
-  return cardKey ? cardKey.slice(CARD_KEY_PREFIX.length) : "\u4E0D\u7ED1\u5B9A\u89D2\u8272\u5361";
+function ownerLabel(entry) {
+  if (profileKind(entry) === PROFILE_KIND_USER) return "\u7528\u6237\u672C\u4EBA";
+  return entry.cardKey ? entry.cardKey.slice(CARD_KEY_PREFIX.length) : "\u4E0D\u7ED1\u5B9A\u89D2\u8272\u5361";
+}
+function tileMeta(entry) {
+  return `${ownerLabel(entry)} \xB7 ${String(entry.content ?? "").length} \u5B57\u7B26`;
 }
 function openCharacterProfileWindow(options = {}) {
   const { onClose } = options;
@@ -22978,27 +24381,31 @@ function openCharacterProfileWindow(options = {}) {
         <section class="t-profile-panel" role="dialog" aria-labelledby="t-profile-title">
             <div class="t-panel-header">
                 <strong id="t-profile-title">\u4EBA\u7269\u5916\u89C2\u6863\u6848</strong>
-                <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u6863\u6848\u7BA1\u7406" aria-label="\u5173\u95ED\u6863\u6848\u7BA1\u7406"><i class="fa-solid fa-xmark"></i></button>
+                <div class="t-panel-header-actions" data-role="header-actions">
+                    <button type="button" class="t-icon-btn" data-action="close" title="\u5173\u95ED\u6863\u6848\u7BA1\u7406" aria-label="\u5173\u95ED\u6863\u6848\u7BA1\u7406"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
             <div class="t-profile-body">
-                <p class="t-illustration-hint">
-                    \u4E3A\u89D2\u8272\u5199\u4E00\u6B21\u5916\u89C2\uFF0C\u4E4B\u540E\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u914D\u56FE\u4F1A\u81EA\u52A8\u5E26\u4E0A\u3002\u7ED1\u5B9A\u89D2\u8272\u5361\u540E\u5728\u8BE5\u89D2\u8272\u7684\u804A\u5929\u91CC\u5FC5\u4E2D\uFF1B
-                    \u6CA1\u7ED1\u5B9A\u7684\u9760\u89E6\u53D1\u8BCD\u5728\u6B63\u6587\u91CC\u5339\u914D\u3002\u6863\u6848\u53EA\u63CF\u8FF0\u300C\u753B\u9762\u91CC\u6709\u4EC0\u4E48\u300D\u2014\u2014\u8D28\u91CF\u8BCD\u3001\u753B\u5E08\u4E32\u4E0E\u9884\u8BBE\u4ECD\u7531 Cosmos Vision \u8FFD\u52A0\u3002
-                    <br>\u7FA4\u804A\u91CC\u6CA1\u6709\u5355\u4E00\u89D2\u8272\u5361\uFF0C\u7ED1\u5B9A\u4E0D\u4F1A\u751F\u6548\uFF0C\u8BF7\u7528\u89E6\u53D1\u8BCD\uFF0C\u6216\u5230\u914D\u56FE\u9762\u677F\u91CC\u624B\u52A8\u52FE\u9009\u3002
-                </p>
                 <div class="t-profile-actions">
                     <button type="button" class="t-btn primary" data-action="add" title="\u65B0\u5EFA\u4E00\u6761\u5916\u89C2\u6863\u6848" aria-label="\u65B0\u5EFA\u6863\u6848"><i class="fa-solid fa-plus"></i></button>
                     <button type="button" class="t-btn" data-action="import" title="\u4ECE\u5F53\u524D\u6253\u5F00\u7684\u89D2\u8272\u5361\u5BFC\u5165\u63CF\u8FF0" aria-label="\u4ECE\u5F53\u524D\u89D2\u8272\u5361\u5BFC\u5165"><i class="fa-solid fa-id-card"></i></button>
+                    <button type="button" class="t-btn" data-action="import-persona" title="\u4ECE\u5F53\u524D\u7528\u6237\u8BBE\u5B9A\uFF08Persona\uFF09\u5BFC\u5165\u63CF\u8FF0" aria-label="\u4ECE\u5F53\u524D\u7528\u6237\u8BBE\u5B9A\u5BFC\u5165"><i class="fa-solid fa-user"></i></button>
                     <span class="t-illustration-hint" data-role="status"></span>
                 </div>
-                <div class="t-profile-list" data-role="list"></div>
+                <div class="t-profile-tabs" data-role="tabs" role="tablist"></div>
+                <div class="t-profile-groups" data-role="list"></div>
             </div>
         </section>`;
   document.body.append(root);
   const role = (name) => root.querySelector(`[data-role="${name}"]`);
   const action = (name) => root.querySelector(`[data-action="${name}"]`);
+  const help = createHelpTip({ title: "\u4EBA\u7269\u5916\u89C2\u6863\u6848", sections: PROFILE_HELP });
+  role("header-actions").insertBefore(help.root, action("close"));
   let disposed = false;
+  const expandedIds = /* @__PURE__ */ new Set();
+  let activeKind = GROUPS[0].kind;
   let draggedId = "";
+  let draggedKind = "";
   function writeEntries(mutate, rerender = false) {
     const data = getExtData();
     const current = data[CHARACTER_PROFILES_KEY];
@@ -23008,13 +24415,18 @@ function openCharacterProfileWindow(options = {}) {
     mutate(data[CHARACTER_PROFILES_KEY].entries);
     saveExtData();
     notifyProfilesChanged();
-    if (rerender && !disposed) renderList();
+    if (rerender && !disposed) renderGroups();
   }
   function withEntry(id3, apply) {
     return (list) => {
       const found = list.find((item) => item.id === id3);
       if (found) apply(found);
     };
+  }
+  function currentEntries() {
+    const data = getExtData();
+    ensureCharacterProfiles(data);
+    return readCharacterProfiles(data);
   }
   function labeled(labelText, control) {
     const wrap = document.createElement("label");
@@ -23031,13 +24443,17 @@ function openCharacterProfileWindow(options = {}) {
     input.addEventListener("input", () => onInput(input.value));
     return input;
   }
-  function cardSelect(entry) {
+  function bindingSelect(entry) {
     const select = document.createElement("select");
     select.className = "t-input";
     const none = document.createElement("option");
     none.value = "";
     none.textContent = "\u4E0D\u7ED1\u5B9A\u89D2\u8272\u5361";
     select.append(none);
+    const self = document.createElement("option");
+    self.value = USER_BINDING_VALUE;
+    self.textContent = "\u7528\u6237\u672C\u4EBA\uFF08{{user}}\uFF09";
+    select.append(self);
     const cards = listCharacterCards();
     for (const card of cards) {
       const option = document.createElement("option");
@@ -23048,37 +24464,70 @@ function openCharacterProfileWindow(options = {}) {
     if (entry.cardKey && !cards.some((card) => card.cardKey === entry.cardKey)) {
       const stale = document.createElement("option");
       stale.value = entry.cardKey;
-      stale.textContent = `${bindingLabel(entry.cardKey)}\uFF08\u672C\u5730\u5DF2\u627E\u4E0D\u5230\uFF09`;
+      stale.textContent = `${entry.cardKey.slice(CARD_KEY_PREFIX.length)}\uFF08\u672C\u5730\u5DF2\u627E\u4E0D\u5230\uFF09`;
       select.append(stale);
     }
-    select.value = entry.cardKey;
-    select.addEventListener("change", () => writeEntries(withEntry(entry.id, (target) => {
-      target.cardKey = select.value;
-    })));
+    select.value = profileKind(entry) === PROFILE_KIND_USER ? USER_BINDING_VALUE : entry.cardKey;
+    select.addEventListener("change", () => {
+      const wasUser = profileKind(entry) === PROFILE_KIND_USER;
+      writeEntries(withEntry(entry.id, (target) => {
+        if (select.value === USER_BINDING_VALUE) {
+          target.kind = PROFILE_KIND_USER;
+          target.cardKey = "";
+        } else {
+          target.kind = PROFILE_KIND_CHARACTER;
+          target.cardKey = select.value;
+        }
+      }), true);
+      if (wasUser !== (select.value === USER_BINDING_VALUE)) {
+        role("status").textContent = select.value === USER_BINDING_VALUE ? `\u300C${entry.name || "\u672A\u547D\u540D\u89D2\u8272"}\u300D\u5DF2\u79FB\u5230\u7528\u6237\u6863\u6848\u3002` : `\u300C${entry.name || "\u672A\u547D\u540D\u89D2\u8272"}\u300D\u5DF2\u79FB\u5230\u89D2\u8272\u6863\u6848\u3002`;
+      }
+    });
     return select;
   }
-  function buildCard(entry) {
-    const card = document.createElement("article");
-    card.className = "t-profile-card";
-    card.dataset.profileId = entry.id;
-    card.draggable = true;
-    const header = document.createElement("div");
-    header.className = "t-profile-card-header";
-    const grip = document.createElement("span");
-    grip.className = "t-profile-grip";
-    grip.title = "\u62D6\u52A8\u6392\u5E8F";
-    grip.textContent = "\u283F";
-    const toggle = document.createElement("button");
-    toggle.type = "button";
-    toggle.className = `t-profile-toggle${entry.enabled ? " is-on" : ""}`;
-    toggle.textContent = entry.enabled ? "\u542F\u7528" : "\u505C\u7528";
-    toggle.title = entry.enabled ? "\u70B9\u51FB\u505C\u7528\uFF1A\u505C\u7528\u540E\u4E0D\u53C2\u4E0E\u5339\u914D" : "\u70B9\u51FB\u542F\u7528";
-    toggle.addEventListener("click", () => writeEntries(withEntry(entry.id, (target) => {
-      target.enabled = !target.enabled;
-    }), true));
+  function buildTileBody(entry, syncSummary) {
+    const body = document.createElement("div");
+    body.className = "t-profile-tile-body";
+    const keywordsInput = textInput(entry.keywords.join("\uFF0C"), "\u4F8B\u5982\uFF1A\u963F\u79BB\uFF0C\u5C0F\u79BB\uFF0C\u79BB\u59D1\u5A18", (value) => {
+      const keywords = value.split(/[,，、]/).map((text) => text.trim()).filter(Boolean);
+      writeEntries(withEntry(entry.id, (target) => {
+        target.keywords = keywords;
+      }));
+    });
+    body.append(labeled("\u6863\u6848\u540D\u79F0", textInput(entry.name, "\u4F8B\u5982\uFF1A\u963F\u79BB", (value) => {
+      writeEntries(withEntry(entry.id, (target) => {
+        const follow = isAutoKeywords(target);
+        target.name = value;
+        if (!follow) return;
+        target.keywords = keywordsFromName(value);
+        keywordsInput.value = target.keywords.join("\uFF0C");
+      }));
+      syncSummary();
+    })));
+    body.append(labeled("\u89E6\u53D1\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF09", keywordsInput));
+    body.append(labeled("\u5F52\u5C5E\u4E0E\u7ED1\u5B9A", bindingSelect(entry)));
+    const content = document.createElement("textarea");
+    content.className = "t-input";
+    content.rows = 5;
+    content.value = entry.content;
+    content.placeholder = "\u4F8B\u5982\uFF1A\u94F6\u767D\u957F\u53D1\uFF0C\u7EA2\u77B3\uFF0C\u5E38\u7A7F\u6DF1\u8272\u957F\u5916\u5957\uFF0C\u5DE6\u8033\u6709\u4E00\u679A\u94F6\u8272\u8033\u73AF\u3002";
+    const counter = document.createElement("p");
+    counter.className = "t-illustration-hint";
+    const refreshCounter = () => {
+      counter.textContent = `\u5F53\u524D ${content.value.length} \u5B57\u7B26 \xB7 ${ownerLabel(entry)}`;
+    };
+    content.addEventListener("input", () => {
+      writeEntries(withEntry(entry.id, (target) => {
+        target.content = content.value;
+      }));
+      refreshCounter();
+      syncSummary();
+    });
+    refreshCounter();
+    body.append(labeled("\u5916\u89C2\u63CF\u5199", content), counter);
     const del = document.createElement("button");
     del.type = "button";
-    del.className = "t-btn";
+    del.className = "t-btn t-btn-danger";
     del.title = "\u5220\u9664\u8FD9\u6761\u6863\u6848";
     del.setAttribute("aria-label", "\u5220\u9664\u8FD9\u6761\u6863\u6848");
     const trash = document.createElement("i");
@@ -23089,81 +24538,206 @@ function openCharacterProfileWindow(options = {}) {
       writeEntries((list) => {
         const index = list.findIndex((item) => item.id === entry.id);
         if (index >= 0) list.splice(index, 1);
-      }, true);
+      });
+      expandedIds.delete(entry.id);
+      renderGroups();
     });
-    header.append(grip, toggle, del);
+    const foot = document.createElement("div");
+    foot.className = "t-profile-tile-foot";
+    foot.append(del);
+    body.append(foot);
+    return body;
+  }
+  function buildTile(entry) {
+    const open = expandedIds.has(entry.id);
+    const card = document.createElement("article");
+    card.className = `t-profile-tile${open ? " is-expanded" : ""}`;
+    card.dataset.profileId = entry.id;
+    card.dataset.kind = profileKind(entry);
+    card.draggable = true;
+    const header = document.createElement("div");
+    header.className = "t-profile-card-header";
+    const grip = document.createElement("span");
+    grip.className = "t-profile-grip";
+    grip.title = "\u62D6\u52A8\u6392\u5E8F\uFF08\u53EA\u80FD\u5728\u540C\u7EC4\u5185\u62D6\u52A8\uFF09";
+    grip.textContent = "\u283F";
+    const expand = document.createElement("button");
+    expand.type = "button";
+    expand.className = "t-profile-expand";
+    expand.setAttribute("aria-expanded", String(open));
+    expand.title = open ? "\u6536\u8D77" : "\u5C55\u5F00\u7F16\u8F91";
+    expand.textContent = `${open ? "\u25BE" : "\u25B8"} ${entry.name || "\u672A\u547D\u540D\u89D2\u8272"}`;
+    expand.addEventListener("click", () => toggleExpanded(entry.id));
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = `t-profile-toggle${entry.enabled ? " is-on" : ""}`;
+    toggle.textContent = entry.enabled ? "\u542F\u7528" : "\u505C\u7528";
+    toggle.title = entry.enabled ? "\u70B9\u51FB\u505C\u7528\uFF1A\u505C\u7528\u540E\u4E0D\u53C2\u4E0E\u5339\u914D" : "\u70B9\u51FB\u542F\u7528";
+    toggle.addEventListener("click", () => writeEntries(withEntry(entry.id, (target) => {
+      target.enabled = !target.enabled;
+    }), true));
+    header.append(grip, expand, toggle);
     card.append(header);
-    card.append(labeled("\u6863\u6848\u540D\u79F0", textInput(entry.name, "\u4F8B\u5982\uFF1A\u963F\u79BB", (value) => {
-      writeEntries(withEntry(entry.id, (target) => {
-        target.name = value;
-      }));
-    })));
-    card.append(labeled("\u89E6\u53D1\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF09", textInput(entry.keywords.join("\uFF0C"), "\u4F8B\u5982\uFF1A\u963F\u79BB\uFF0C\u5C0F\u79BB\uFF0C\u79BB\u59D1\u5A18", (value) => {
-      const keywords = value.split(/[,，、]/).map((text) => text.trim()).filter(Boolean);
-      writeEntries(withEntry(entry.id, (target) => {
-        target.keywords = keywords;
-      }));
-    })));
-    card.append(labeled("\u7ED1\u5B9A\u89D2\u8272\u5361", cardSelect(entry)));
-    const content = document.createElement("textarea");
-    content.className = "t-input";
-    content.rows = 5;
-    content.value = entry.content;
-    content.placeholder = "\u4F8B\u5982\uFF1A\u94F6\u767D\u957F\u53D1\uFF0C\u7EA2\u77B3\uFF0C\u5E38\u7A7F\u6DF1\u8272\u957F\u5916\u5957\uFF0C\u5DE6\u8033\u6709\u4E00\u679A\u94F6\u8272\u8033\u73AF\u3002";
-    const counter = document.createElement("p");
-    counter.className = "t-illustration-hint";
-    const refreshCounter = () => {
-      counter.textContent = `\u5F53\u524D ${content.value.length} \u5B57\u7B26 \xB7 ${bindingLabel(entry.cardKey)}`;
+    const meta = document.createElement("p");
+    meta.className = "t-profile-tile-meta";
+    meta.textContent = tileMeta(entry);
+    card.append(meta);
+    const syncSummary = () => {
+      meta.textContent = tileMeta(entry);
+      expand.textContent = `${expandedIds.has(entry.id) ? "\u25BE" : "\u25B8"} ${entry.name || "\u672A\u547D\u540D\u89D2\u8272"}`;
     };
-    content.addEventListener("input", () => {
-      writeEntries(withEntry(entry.id, (target) => {
-        target.content = content.value;
-      }));
-      refreshCounter();
+    if (open) card.append(buildTileBody(entry, syncSummary));
+    card.addEventListener("click", (event) => {
+      if (event.target.closest("button, input, textarea, select, label, .t-profile-grip")) return;
+      toggleExpanded(entry.id);
     });
-    refreshCounter();
-    card.append(labeled(`\u5916\u89C2\u63CF\u5199\uFF08\u6700\u591A ${MAX_PROFILE_BLOCK_CHARS} \u5B57\u7B26\uFF09`, content), counter);
-    card.addEventListener("dragstart", (event) => {
-      draggedId = entry.id;
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", entry.id);
-      card.classList.add("is-dragging");
-    });
-    card.addEventListener("dragend", () => card.classList.remove("is-dragging"));
-    card.addEventListener("dragover", (event) => event.preventDefault());
-    card.addEventListener("drop", (event) => {
-      event.preventDefault();
-      const sourceId = draggedId || event.dataTransfer.getData("text/plain");
-      if (!sourceId || sourceId === entry.id) return;
-      const rect = card.getBoundingClientRect();
-      const insertBefore = event.clientY < rect.top + rect.height / 2;
-      writeEntries((list) => {
-        const from = list.findIndex((item) => item.id === sourceId);
-        if (from < 0) return;
-        const [moved] = list.splice(from, 1);
-        const base = list.findIndex((item) => item.id === entry.id);
-        if (base < 0) {
-          list.push(moved);
-          return;
-        }
-        list.splice(insertBefore ? base : base + 1, 0, moved);
-      }, true);
-      draggedId = "";
-    });
+    bindDrag(card, entry);
     return card;
   }
-  function renderList() {
-    const list = role("list");
-    list.replaceChildren();
-    const items = readCharacterProfiles(getExtData());
-    if (!items.length) {
-      const empty = document.createElement("p");
-      empty.className = "t-illustration-hint";
-      empty.textContent = "\u8FD8\u6CA1\u6709\u6863\u6848\u3002\u70B9\u300C\u65B0\u5EFA\u6863\u6848\u300D\uFF0C\u6216\u7528\u300C\u4ECE\u5F53\u524D\u89D2\u8272\u5361\u5BFC\u5165\u300D\u628A\u5F53\u524D\u89D2\u8272\u5361\u7684\u63CF\u8FF0\u62C9\u8FDB\u6765\u5F53\u8349\u7A3F\u3002";
-      list.append(empty);
-      return;
+  function clearDropMarks(scope) {
+    for (const tile of (scope || root).querySelectorAll(".t-profile-tile")) {
+      tile.classList.remove("is-drop-before", "is-drop-after");
     }
-    for (const entry of items) list.append(buildCard(entry));
+  }
+  function markDropTarget(card, after) {
+    for (const tile of root.querySelectorAll(".t-profile-tile")) {
+      tile.classList.toggle("is-drop-before", tile === card && !after);
+      tile.classList.toggle("is-drop-after", tile === card && after);
+    }
+  }
+  function dropAfter(event, card) {
+    const rect = card.getBoundingClientRect();
+    const nextRect = card.nextElementSibling?.getBoundingClientRect?.();
+    const sameRow = Boolean(nextRect) && Math.abs(nextRect.top - rect.top) < rect.height / 2;
+    return sameRow ? event.clientX >= rect.left + rect.width / 2 : event.clientY >= rect.top + rect.height / 2;
+  }
+  function reorderedIds(kind, sourceId, targetId, after) {
+    const ids = currentEntries().filter((entry) => profileKind(entry) === kind).map((entry) => entry.id);
+    const from = ids.indexOf(sourceId);
+    if (from < 0 || !ids.includes(targetId)) return null;
+    ids.splice(from, 1);
+    const landing = ids.indexOf(targetId);
+    if (landing < 0) return null;
+    ids.splice(after ? landing + 1 : landing, 0, sourceId);
+    return ids;
+  }
+  function reorderWithinKind(kind, ids) {
+    if (!ids) return;
+    writeEntries((list) => {
+      const byId = new Map(list.map((item) => [item.id, item]));
+      const slots = [];
+      list.forEach((item, index) => {
+        if (profileKind(item) === kind) slots.push(index);
+      });
+      slots.forEach((index, i) => {
+        const moved = byId.get(ids[i]);
+        if (moved) list[index] = moved;
+      });
+    }, true);
+  }
+  function bindDrag(card, entry) {
+    card.addEventListener("dragstart", (event) => {
+      if (event.target.closest?.("input, textarea, select, button, a")) {
+        event.preventDefault();
+        return;
+      }
+      draggedId = entry.id;
+      draggedKind = profileKind(entry);
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", entry.id);
+      }
+      card.classList.add("is-dragging");
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("is-dragging");
+      draggedId = "";
+      draggedKind = "";
+      clearDropMarks();
+    });
+    card.addEventListener("dragover", (event) => {
+      if (!draggedId || draggedKind !== profileKind(entry)) return;
+      event.preventDefault();
+      markDropTarget(card, dropAfter(event, card));
+    });
+    card.addEventListener("dragleave", (event) => {
+      if (event.target === card) clearDropMarks(card);
+    });
+    card.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const sourceId = draggedId || event.dataTransfer?.getData("text/plain") || "";
+      const after = dropAfter(event, card);
+      const kind = profileKind(entry);
+      clearDropMarks();
+      draggedId = "";
+      draggedKind = "";
+      const source = currentEntries().find((item) => item.id === sourceId);
+      if (!source || source.id === entry.id || profileKind(source) !== kind) return;
+      reorderWithinKind(kind, reorderedIds(kind, source.id, entry.id, after));
+    });
+  }
+  function toggleExpanded(id3) {
+    if (expandedIds.has(id3)) expandedIds.delete(id3);
+    else expandedIds.add(id3);
+    renderGroups();
+  }
+  function renderTabs(counts) {
+    const host = role("tabs");
+    host.replaceChildren();
+    for (const group of GROUPS) {
+      const active = group.kind === activeKind;
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.className = `t-profile-tab${active ? " is-active" : ""}`;
+      tab.dataset.action = "switch-tab";
+      tab.dataset.tab = group.kind;
+      tab.setAttribute("role", "tab");
+      tab.setAttribute("aria-selected", String(active));
+      tab.append(document.createTextNode(`${group.title} `));
+      const count = document.createElement("span");
+      count.className = "t-profile-tab-count";
+      count.dataset.role = `count-${group.kind}`;
+      count.textContent = String(counts.get(group.kind) || 0);
+      tab.append(count);
+      host.append(tab);
+    }
+  }
+  function buildGroup(group, entries) {
+    const section = document.createElement("section");
+    section.className = "t-profile-group";
+    section.dataset.kind = group.kind;
+    const grid = document.createElement("div");
+    grid.className = "t-profile-grid";
+    grid.dataset.role = `grid-${group.kind}`;
+    if (!entries.length) {
+      const empty = document.createElement("p");
+      empty.className = "t-profile-tile-empty t-illustration-hint";
+      empty.textContent = group.empty;
+      grid.append(empty);
+    }
+    for (const entry of entries) grid.append(buildTile(entry));
+    section.append(grid);
+    return section;
+  }
+  function renderGroups() {
+    const items = currentEntries();
+    const present = new Set(items.map((item) => item.id));
+    for (const id3 of [...expandedIds]) if (!present.has(id3)) expandedIds.delete(id3);
+    const counts = new Map(GROUPS.map((group2) => [
+      group2.kind,
+      items.filter((entry) => profileKind(entry) === group2.kind).length
+    ]));
+    renderTabs(counts);
+    const host = role("list");
+    host.replaceChildren();
+    const group = GROUPS.find((item) => item.kind === activeKind) || GROUPS[0];
+    host.append(buildGroup(group, items.filter((entry) => profileKind(entry) === group.kind)));
+  }
+  function revealEntry(id3, kind) {
+    activeKind = kind;
+    expandedIds.add(id3);
+    renderGroups();
+    root.querySelector(`[data-profile-id="${id3}"]`)?.scrollIntoView?.({ block: "nearest" });
   }
   function importFromCard() {
     const description = stripHtml(getCurrentCharacterDescription());
@@ -23174,8 +24748,22 @@ function openCharacterProfileWindow(options = {}) {
     const cardKey = getCharacterCardKey();
     const name = listCharacterCards().find((card) => card.cardKey === cardKey)?.name || "\u5BFC\u5165\u7684\u89D2\u8272";
     const created = { ...createCharacterProfile(name), content: description, cardKey };
-    writeEntries((list) => list.push(created), true);
+    writeEntries((list) => list.push(created));
+    revealEntry(created.id, PROFILE_KIND_CHARACTER);
     role("status").textContent = cardKey.startsWith(CARD_KEY_PREFIX) ? `\u5DF2\u5BFC\u5165\u300C${name}\u300D\u7684\u89D2\u8272\u5361\u63CF\u8FF0\uFF0C\u53EF\u5728\u4E0B\u9762\u7EE7\u7EED\u7CBE\u7B80\u3002` : "\u5DF2\u5BFC\u5165\u63CF\u8FF0\uFF0C\u4F46\u5F53\u524D\u662F\u7FA4\u804A\uFF0C\u65E0\u6CD5\u7ED1\u5B9A\u89D2\u8272\u5361\u3002";
+  }
+  function importFromPersona() {
+    const { name, description } = getCurrentUserPersona();
+    const content = stripHtml(description);
+    if (!content) {
+      role("status").textContent = "\u5F53\u524D\u6CA1\u6709\u542F\u7528\u4E2D\u7684\u7528\u6237\u8BBE\u5B9A\uFF08Persona\uFF09\u53EF\u5BFC\u5165\u3002";
+      return;
+    }
+    const label = name || "\u6211";
+    const created = { ...createCharacterProfile(label, PROFILE_KIND_USER), content, keywords: name ? [name] : [] };
+    writeEntries((list) => list.push(created));
+    revealEntry(created.id, PROFILE_KIND_USER);
+    role("status").textContent = name.length < MIN_KEYWORD_LENGTH ? `\u5DF2\u5BFC\u5165\u300C${label}\u300D\u7684\u7528\u6237\u8BBE\u5B9A\uFF0C\u4F46\u540D\u5B57\u77ED\u4E8E ${MIN_KEYWORD_LENGTH} \u5B57\uFF0C\u6CA1\u80FD\u5199\u6210\u89E6\u53D1\u8BCD\uFF0C\u8BF7\u624B\u52A8\u8865\u4E00\u4E2A\u3002` : `\u5DF2\u5BFC\u5165\u300C${label}\u300D\u7684\u7528\u6237\u8BBE\u5B9A\uFF0C\u89E6\u53D1\u8BCD\u5DF2\u586B\u597D\uFF0C\u53EF\u5728\u4E0B\u9762\u7EE7\u7EED\u7CBE\u7B80\u3002`;
   }
   root.addEventListener("click", (event) => {
     const button = event.target.closest("button");
@@ -23185,12 +24773,26 @@ function openCharacterProfileWindow(options = {}) {
       close();
       return;
     }
+    if (operation === "switch-tab") {
+      const next = GROUPS.find((group) => group.kind === button.dataset.tab);
+      if (next && next.kind !== activeKind) {
+        activeKind = next.kind;
+        renderGroups();
+      }
+      return;
+    }
     if (operation === "add") {
-      writeEntries((list) => list.push(createCharacterProfile("\u65B0\u6863\u6848")), true);
+      const created = createCharacterProfile("\u65B0\u6863\u6848");
+      writeEntries((list) => list.push(created));
+      revealEntry(created.id, PROFILE_KIND_CHARACTER);
       return;
     }
     if (operation === "import") {
       importFromCard();
+      return;
+    }
+    if (operation === "import-persona") {
+      importFromPersona();
       return;
     }
   });
@@ -23199,20 +24801,203 @@ function openCharacterProfileWindow(options = {}) {
     disposed = true;
     const displaced = isFloatingWindowDisplaced();
     releaseFloatingWindow(close);
+    help.close();
     root.remove();
     if (!displaced) onClose?.();
   }
   claimFloatingWindow(close);
-  renderList();
+  renderGroups();
   action("close").focus();
   return close;
 }
+var PROFILE_HELP, GROUPS, USER_BINDING_VALUE;
 var init_characterProfileWindow = __esm({
   "src/ui/characterProfileWindow.js"() {
     init_storage();
     init_characterProfiles();
     init_context();
     init_floatingWindow();
+    init_helpPopover();
+    PROFILE_HELP = [
+      {
+        heading: "\u5E72\u4EC0\u4E48\u7528\u7684",
+        lines: [
+          "\u4E3A\u89D2\u8272\u5199\u4E00\u6B21\u5916\u89C2\uFF0C\u4E4B\u540E\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u914D\u56FE\u4F1A\u81EA\u52A8\u5E26\u4E0A \u2014\u2014 \u6B63\u6587\u6CA1\u5199\u53D1\u8272\u670D\u88C5\u65F6\uFF0C\u753B\u9762\u624D\u4E0D\u4F1A\u98D8\u3002",
+          "\u6863\u6848\u53EA\u63CF\u8FF0\u300C\u753B\u9762\u91CC\u6709\u4EC0\u4E48\u300D\u3002\u8D28\u91CF\u8BCD\u3001\u753B\u5E08\u4E32\u4E0E\u9884\u8BBE\u4ECD\u7531\u751F\u56FE\u540E\u7AEF\u8FFD\u52A0\uFF0C\u5199\u5728\u8FD9\u91CC\u4F1A\u91CD\u590D\u53E0\u52A0\u3002"
+        ]
+      },
+      {
+        heading: "\u4E24\u7EC4\u6863\u6848",
+        lines: [
+          "**\u89D2\u8272\u6863\u6848**\uFF1A\u7ED9\u67D0\u4E2A\u89D2\u8272\u5199\u7684\u3002\u7ED1\u5B9A\u4E86\u89D2\u8272\u5361\u7684\uFF0C\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u4EFB\u4F55\u804A\u5929\u90FD\u5FC5\u4E2D\u3002",
+          "**\u7528\u6237\u6863\u6848**\uFF1A\u7ED9\u4F60\u81EA\u5DF1\uFF08{{user}} / Persona\uFF09\u5199\u7684\uFF0C\u6052\u5B9A\u4E0D\u7ED1\u5361\uFF0C\u53EA\u6309\u89E6\u53D1\u8BCD\u5339\u914D\u3002",
+          "\u5F52\u5C5E\u8BB0\u5728\u6863\u6848\u91CC\uFF0C\u4E0D\u662F\u9760\u7ED1\u6CA1\u7ED1\u5361\u63A8\u51FA\u6765\u7684 \u2014\u2014 \u6CA1\u7ED1\u5361\u7684\u89D2\u8272\u6863\u6848\u4ECD\u7136\u5C5E\u4E8E\u89D2\u8272\u6863\u6848\u3002",
+          "\u5206\u7EC4\u53EA\u662F\u65B9\u4FBF\u627E\u3002\u62D6\u52A8\u6392\u5E8F\u53EA\u80FD\u5728\u540C\u7EC4\u5185\u8FDB\u884C\uFF1B\u8981\u6362\u7EC4\uFF0C\u7528\u7F16\u8F91\u533A\u91CC\u7684\u300C\u5F52\u5C5E\u4E0E\u7ED1\u5B9A\u300D\u4E0B\u62C9\u3002"
+        ]
+      },
+      {
+        heading: "\u4EC0\u4E48\u65F6\u5019\u4F1A\u88AB\u7528\u4E0A",
+        lines: [
+          "\u7ED1\u5B9A\u4E86\u89D2\u8272\u5361\u7684\uFF1A\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u4EFB\u4F55\u804A\u5929\u90FD\u5FC5\u4E2D\uFF0C\u7ED1\u5B9A\u7528\u7684\u662F\u89D2\u8272\u5361\u8EAB\u4EFD\uFF08\u57FA\u4E8E\u5934\u50CF\u6587\u4EF6\u540D\uFF09\u3002",
+          "\u6CA1\u7ED1\u5B9A\u7684\u3001\u6216\u7ED1\u5B9A\u6CA1\u547D\u4E2D\u7684\uFF1A\u6309\u89E6\u53D1\u8BCD\u5728\u672C\u8F6E\u6B63\u6587\u91CC\u5339\u914D\uFF0C\u89E6\u53D1\u8BCD\u81F3\u5C11\u4E24\u4E2A\u5B57\u7B26\u3002",
+          "\u89E6\u53D1\u8BCD\u9ED8\u8BA4\u8DDF\u7740\u6863\u6848\u540D\u8D70\uFF1A\u586B\u4E2A\u540D\u5B57\u5B83\u5C31\u81EA\u52A8\u586B\u597D\uFF1B\u4F60\u81EA\u5DF1\u5199\u8FC7\u4E4B\u540E\u5B83\u5C31\u5F52\u4F60\uFF0C\u6539\u540D\u4E0D\u518D\u8986\u76D6\u3002",
+          "\u5355\u6B21\u6700\u591A\u81EA\u52A8\u5E26\u5165 4 \u6761\uFF0C\u6309\u5217\u8868\u987A\u5E8F\u53D6\u3002\u547D\u4E2D\u7684\u4F1A\u586B\u8FDB\u914D\u56FE\u9762\u677F\u7684\u300C\u4EBA\u7269\u8D44\u6599\u300D\u5E76\u9884\u52FE\u9009\uFF0C\u4F60\u624B\u6253\u7684\u5185\u5BB9\u6C38\u8FDC\u4E0D\u4F1A\u88AB\u8986\u76D6\u3002"
+        ]
+      },
+      {
+        heading: "\u4ECE\u54EA\u513F\u5BFC\u5165",
+        lines: [
+          "\u300C\u4ECE\u5F53\u524D\u89D2\u8272\u5361\u5BFC\u5165\u300D\u8BFB\u5F53\u524D\u6253\u5F00\u90A3\u5F20\u5361\u7684\u63CF\u8FF0\u539F\u6587\uFF0C\u5BFC\u5165\u540E\u5F52\u5165\u89D2\u8272\u6863\u6848\u5E76\u81EA\u52A8\u7ED1\u5B9A\u8BE5\u5361\u3002",
+          "\u300C\u4ECE\u5F53\u524D\u7528\u6237\u8BBE\u5B9A\u5BFC\u5165\u300D\u8BFB\u5F53\u524D\u751F\u6548\u7684 Persona \u6B63\u6587\uFF0C\u5F52\u5165\u7528\u6237\u6863\u6848\u3001\u4E0D\u7ED1\u5361 \u2014\u2014 \u7528\u6237\u8BBE\u5B9A\u4E0D\u5C5E\u4E8E\u4EFB\u4F55\u4E00\u5F20\u5361\uFF0C\u7ED1\u4E0A\u53BB\u4F1A\u5728\u522B\u7684\u89D2\u8272\u7684\u804A\u5929\u91CC\u4E5F\u88AB\u5F3A\u884C\u5E26\u5165\u3002"
+        ]
+      },
+      {
+        heading: "\u7FA4\u804A",
+        lines: [
+          "\u7FA4\u804A\u91CC\u6CA1\u6709\u5355\u4E00\u89D2\u8272\u5361\uFF0C\u7ED1\u5B9A\u4E0D\u4F1A\u751F\u6548\uFF08{{char}} \u4E0D\u6307\u5411\u5177\u4F53\u6210\u5458\uFF09\u3002\u8BF7\u7528\u89E6\u53D1\u8BCD\u5339\u914D\uFF0C\u6216\u5230\u914D\u56FE\u9762\u677F\u91CC\u624B\u52A8\u52FE\u9009\u3002",
+          "\u4E00\u5BF9\u4E00\u91CC\u7ED1\u5B9A\u7684\u6863\u6848\u4E0D\u4F1A\u8DDF\u7740\u89D2\u8272\u8FDB\u7FA4\u3002"
+        ]
+      }
+    ];
+    GROUPS = [
+      {
+        kind: PROFILE_KIND_CHARACTER,
+        title: "\u89D2\u8272\u6863\u6848",
+        empty: "\u8FD8\u6CA1\u6709\u89D2\u8272\u6863\u6848\u3002\u70B9\u300C\u65B0\u5EFA\u6863\u6848\u300D\uFF0C\u6216\u7528\u300C\u4ECE\u5F53\u524D\u89D2\u8272\u5361\u5BFC\u5165\u300D\u628A\u5F53\u524D\u89D2\u8272\u5361\u7684\u63CF\u8FF0\u62C9\u8FDB\u6765\u5F53\u8349\u7A3F\u3002"
+      },
+      {
+        kind: PROFILE_KIND_USER,
+        title: "\u7528\u6237\u6863\u6848",
+        empty: "\u8FD8\u6CA1\u6709\u7528\u6237\u6863\u6848\u3002\u7528\u300C\u4ECE\u5F53\u524D\u7528\u6237\u8BBE\u5B9A\u5BFC\u5165\u300D\u628A\u4F60\u7684 Persona \u8BB0\u4E00\u4EFD\u5728\u8FD9\u91CC\u3002"
+      }
+    ];
+    USER_BINDING_VALUE = "__user__";
+  }
+});
+
+// src/core/illustrationReferences.js
+async function forEachLimited(items, limit, worker) {
+  const queue = [...items];
+  const runners = Array.from({ length: Math.min(limit, queue.length) }, async () => {
+    while (queue.length) await worker(queue.shift());
+  });
+  await Promise.all(runners);
+}
+async function findReferencedIllustrationPaths(paths, options = {}) {
+  const candidates = new Set([...paths].map((path) => String(path || "")).filter(Boolean));
+  const referenced = /* @__PURE__ */ new Set();
+  const favoriteReferenced = /* @__PURE__ */ new Set();
+  let incomplete = false;
+  if (!candidates.size) return { referenced, favoriteReferenced, incomplete };
+  const settled = () => referenced.size >= candidates.size;
+  const scan = (value, fromFavorite) => {
+    for (const path of collectIllustrationPaths(value)) {
+      if (!candidates.has(path)) continue;
+      referenced.add(path);
+      if (fromFavorite) favoriteReferenced.add(path);
+    }
+  };
+  for (const sceneId of Object.keys(getExtData()[ILLUSTRATION_INDEX_KEY] || {})) {
+    if (settled()) break;
+    try {
+      scan(await readSceneIllustrations(sceneId), false);
+    } catch {
+      incomplete = true;
+    }
+  }
+  if (!settled()) {
+    if (isFavsMigrated()) {
+      const entries = listFavsForUi() || [];
+      const targets = entries.filter((entry) => String(entry?.id) !== String(options.excludeFavoriteId ?? ""));
+      await forEachLimited(targets, FAVORITE_SCAN_CONCURRENCY, async (entry) => {
+        if (settled()) return;
+        try {
+          scan(await ensureFavBody(entry), true);
+        } catch {
+          incomplete = true;
+        }
+      });
+    } else {
+      scan(getExtData().favs || [], true);
+    }
+  }
+  if (incomplete) {
+    for (const path of candidates) referenced.add(path);
+  }
+  return { referenced, favoriteReferenced, incomplete };
+}
+var FAVORITE_SCAN_CONCURRENCY;
+var init_illustrationReferences = __esm({
+  "src/core/illustrationReferences.js"() {
+    init_storage();
+    init_illustrationData();
+    init_illustrationStore();
+    init_favsStore();
+    FAVORITE_SCAN_CONCURRENCY = 8;
+  }
+});
+
+// src/ui/illustrationLightbox.js
+function openIllustrationLightbox({ image, container = null, onClose = null } = {}) {
+  const root = document.createElement("div");
+  root.className = "t-root t-illustration-lightbox";
+  root.setAttribute("role", "dialog");
+  root.setAttribute("aria-modal", "true");
+  root.setAttribute("aria-label", "\u914D\u56FE\u5927\u56FE");
+  root.tabIndex = -1;
+  const backdrop = document.createElement("div");
+  backdrop.className = "t-illustration-lightbox-backdrop";
+  const stage = document.createElement("div");
+  stage.className = "t-illustration-lightbox-stage";
+  const img = document.createElement("img");
+  img.className = "t-illustration-lightbox-image";
+  img.alt = "";
+  stage.append(img);
+  const caption = document.createElement("p");
+  caption.className = "t-illustration-lightbox-caption";
+  caption.hidden = true;
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "t-illustration-lightbox-close";
+  closeButton.title = "\u5173\u95ED";
+  closeButton.setAttribute("aria-label", "\u5173\u95ED");
+  const closeIcon = document.createElement("i");
+  closeIcon.className = CLOSE_ICON;
+  closeButton.append(closeIcon);
+  root.append(backdrop, stage, caption, closeButton);
+  (container || document.body).append(root);
+  let disposed = false;
+  const restoreFocus = document.activeElement;
+  function onKeydown(event) {
+    if (event.key !== "Escape") return;
+    event.stopPropagation();
+    close();
+  }
+  function close() {
+    if (disposed) return;
+    disposed = true;
+    document.removeEventListener("keydown", onKeydown, true);
+    root.remove();
+    if (restoreFocus?.isConnected) restoreFocus.focus?.();
+    onClose?.();
+  }
+  img.src = image.filePath || "";
+  if (image.width) img.width = image.width;
+  if (image.height) img.height = image.height;
+  const summary = image.draft?.scene?.summary || "";
+  img.alt = summary || "\u914D\u56FE";
+  caption.textContent = summary;
+  caption.hidden = !summary;
+  backdrop.addEventListener("click", close);
+  closeButton.addEventListener("click", close);
+  document.addEventListener("keydown", onKeydown, true);
+  closeButton.focus?.();
+  return { element: root, close };
+}
+var CLOSE_ICON;
+var init_illustrationLightbox = __esm({
+  "src/ui/illustrationLightbox.js"() {
+    CLOSE_ICON = "fa-solid fa-xmark";
   }
 });
 
@@ -23233,6 +25018,9 @@ function sessionFor(sceneId, initialText) {
       adopted: void 0,
       notice: "",
       job: null,
+      // 画幅：只给支持指定画幅的后端显示。与 request/participants 同为会话级
+      //（草稿 DTO 不记它，刷新页面后重开会丢）。
+      size: "",
       // 外观档案：profileIds 是勾选态，profileBlocks 记下我们插入过的那几块原文，
       // 取消勾选时只移除仍逐字存在的那块 —— 用户改过的内容永不删除。
       profileIds: [],
@@ -23244,6 +25032,13 @@ function sessionFor(sceneId, initialText) {
 }
 function notifyView(sceneId) {
   if (activeView?.sceneId === sceneId) activeView.sync();
+}
+function sceneIdentity(entry) {
+  return String(entry?.summary || entry?.sourceExcerpt || entry?.positivePrompt || "").trim();
+}
+function repeatsPreviousScene(previousScenes, picked) {
+  const key = sceneIdentity(picked);
+  return Boolean(key) && previousScenes.some((item) => sceneIdentity(item) === key);
 }
 function jobProgress(job) {
   return (event) => {
@@ -23294,17 +25089,15 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
         <section class="t-illustration-panel" role="dialog" aria-labelledby="t-illustration-title">
             <div class="t-panel-header">
                 <strong id="t-illustration-title">\u573A\u666F\u914D\u56FE</strong>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <button type="button" class="t-btn" data-action="profiles" title="\u4EBA\u7269\u5916\u89C2\u6863\u6848" aria-label="\u4EBA\u7269\u5916\u89C2\u6863\u6848"><i class="fa-solid fa-address-book"></i></button>
-                    <button type="button" class="t-btn" data-action="settings" title="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF1A\u9009\u666F\u9884\u8BBE" aria-label="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E"><i class="fa-solid fa-gear"></i></button>
-                    <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u914D\u56FE\u9762\u677F" aria-label="\u5173\u95ED\u914D\u56FE\u9762\u677F"><i class="fa-solid fa-xmark"></i></button>
+                <div class="t-panel-header-actions" data-role="header-actions">
+                    <button type="button" class="t-icon-btn" data-action="profiles" title="\u4EBA\u7269\u5916\u89C2\u6863\u6848" aria-label="\u4EBA\u7269\u5916\u89C2\u6863\u6848"><i class="fa-solid fa-address-book"></i></button>
+                    <button type="button" class="t-icon-btn" data-action="settings" title="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF1A\u9009\u666F\u9884\u8BBE" aria-label="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E"><i class="fa-solid fa-gear"></i></button>
+                    <button type="button" class="t-icon-btn" data-action="close" title="\u5173\u95ED\u914D\u56FE\u9762\u677F" aria-label="\u5173\u95ED\u914D\u56FE\u9762\u677F"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <div class="t-illustration-body">
                 <label class="t-illustration-field">\u914D\u56FE\u5185\u5BB9<select class="t-input" data-field="target"></select></label>
-                <p class="t-illustration-hint">\u4E3A\u9009\u4E2D\u7684\u8FD9\u4E00\u8F6E\u5267\u573A\u6311\u9009\u4E00\u4E2A\u753B\u9762\u3002\u5207\u6362\u6B63\u6587\u540E\uFF0C\u672C\u6B21\u4EFB\u52A1\u4ECD\u5C5E\u4E8E\u8FD9\u91CC\u663E\u793A\u7684\u5185\u5BB9\u3002</p>
-                <div class="t-illustration-connection"><span data-role="connection">\u6B63\u5728\u68C0\u6D4B Cosmos Vision\u2026</span><button class="t-btn" type="button" data-action="detect">\u91CD\u65B0\u68C0\u6D4B</button></div>
-                <p class="t-illustration-hint">\u753B\u9762\u7531\u672C\u63D2\u4EF6\u7684 API \u65B9\u6848\u9009\u51FA\uFF1B\u753B\u5E45\u3001\u753B\u98CE\u3001\u8D28\u91CF\u8BCD\u4E0E\u9884\u8BBE\u6CBF\u7528 Cosmos Vision \u7684\u914D\u7F6E\uFF0C\u4E0D\u5728\u8FD9\u91CC\u9009\u62E9\u3002</p>
+                <div class="t-illustration-connection"><span data-role="connection">\u6B63\u5728\u68C0\u6D4B\u751F\u56FE\u540E\u7AEF\u2026</span><button class="t-btn" type="button" data-action="detect">\u91CD\u65B0\u68C0\u6D4B</button></div>
                 <label class="t-illustration-field">\u60F3\u753B\u4EC0\u4E48\uFF08\u53EF\u9009\uFF09<textarea class="t-input" data-field="request" rows="2" placeholder="\u4F8B\u5982\uFF1A\u753B\u96E8\u4E2D\u91CD\u9022\u7684\u77AC\u95F4\uFF0C\u8FDC\u666F\uFF0C\u504F\u51B7\u8272"></textarea></label>
                 <details class="t-illustration-details"><summary>\u6B63\u6587\u4E0E\u4EBA\u7269\u8D44\u6599</summary>
                     <label class="t-illustration-field">\u672C\u6B21\u914D\u56FE\u7D20\u6750<textarea class="t-input" data-field="text" rows="6"></textarea></label>
@@ -23318,10 +25111,16 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
                     <p class="t-illustration-summary" data-role="summary"></p>
                     <p class="t-illustration-hint" data-role="excerpt" hidden></p>
                     <details class="t-illustration-details"><summary>\u7F16\u8F91\u7ED8\u753B\u63D0\u793A\u8BCD</summary>
-                        <p class="t-illustration-hint">\u8FD9\u91CC\u53EA\u5199\u300C\u753B\u9762\u91CC\u6709\u4EC0\u4E48\u300D\u3002\u8D28\u91CF\u8BCD\u3001\u753B\u5E08\u4E32\u3001\u753B\u98CE\u9884\u8BBE\u4E0E LoRA \u89E6\u53D1\u8BCD\u7531 Cosmos Vision \u8FFD\u52A0\uFF0C\u91CD\u590D\u586B\u5199\u4F1A\u53E0\u52A0\u3002</p>
+                        <label class="t-illustration-field" data-role="size-field" hidden>\u753B\u5E45<select class="t-input" data-field="size">
+                            <option value="">\u9ED8\u8BA4\uFF08\u7531\u540E\u7AEF\u51B3\u5B9A\uFF09</option>
+                            <option value="portrait">\u7AD6\u5E45</option>
+                            <option value="landscape">\u6A2A\u5E45</option>
+                        </select></label>
                         <label class="t-illustration-field">\u6B63\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-field="positive" rows="5"></textarea></label>
                         <label class="t-illustration-field">\u8D1F\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-field="negative" rows="3"></textarea></label>
+                        <p class="t-illustration-hint" data-role="negative-hint" hidden></p>
                         <div data-role="characters"></div>
+                        <p class="t-illustration-hint" data-role="characters-hint" hidden></p>
                     </details>
                     <button class="t-btn primary" type="button" data-action="generate">\u751F\u6210\u56FE\u7247</button>
                 </div>
@@ -23336,10 +25135,18 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
   const field = (name) => root.querySelector(`[data-field="${name}"]`);
   const role = (name) => root.querySelector(`[data-role="${name}"]`);
   const action = (name) => root.querySelector(`[data-action="${name}"]`);
+  const help = createHelpTip({ title: "\u573A\u666F\u914D\u56FE", sections: PANEL_HELP });
+  role("header-actions").insertBefore(help.root, action("close"));
   targets.forEach((target2, index) => field("target").add(new Option(target2.label || target2.scriptName, String(index))));
   let target = targets[0], session, localBusy = false, ready = false, disposed = false;
+  let activeBackendId = "cosmos", activeCapabilities = null;
+  let unsubscribeBackends = () => {
+  };
   let selectionSequence = 0, detectionSequence = 0, pendingUrl = null, renderedDraft, renderedPending;
+  let managing = false;
+  const selectedImageIds = /* @__PURE__ */ new Set();
   let previewUrl = null, renderedPreviewBlob = null, previewUpdatedAt = 0;
+  let lightbox = null;
   const isBusy = () => localBusy || Boolean(session?.job);
   const view = { sceneId: "", sync: () => refreshFromState() };
   activeView = view;
@@ -23357,9 +25164,11 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     root.querySelectorAll("[data-profile-id]").forEach((el) => {
       el.disabled = busy;
     });
-    root.querySelectorAll("[data-image-id]").forEach((el) => {
+    root.querySelectorAll("[data-image-id], [data-manage-control]").forEach((el) => {
       el.disabled = busy;
     });
+    const bulk = root.querySelector('[data-action="delete-selected-images"]');
+    if (bulk) bulk.disabled = busy || selectedImageIds.size === 0;
     field("target").disabled = busy || targets.length === 1;
   }
   function refreshFromState() {
@@ -23375,7 +25184,9 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     const draft = session?.draft;
     role("draft").hidden = !draft;
     if (draft) {
-      role("summary").textContent = draft.scene.summary;
+      const summary = draft.scene.summary || "";
+      role("summary").hidden = !summary;
+      role("summary").textContent = summary;
       const excerpt = draft.scene.sourceExcerpt || "";
       role("excerpt").hidden = !excerpt;
       role("excerpt").textContent = excerpt ? `\u539F\u6587\u6458\u5F55\uFF1A${excerpt}` : "";
@@ -23388,6 +25199,7 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
                     <div class="t-illustration-coordinates">${["x", "y"].map((axis) => `<label>${axis.toUpperCase()} <input class="t-input" type="number" min="0" max="1" step="0.05" data-character="${index}" data-key="${axis}" value="${character.position[axis]}"></label>`).join("")}</div>
                 </fieldset>`).join("");
     }
+    renderCapabilities();
     updateControls();
   }
   function readDraft() {
@@ -23469,14 +25281,37 @@ ${block}` : block;
     });
     for (const entry of matched) insertProfileBlock(current, entry);
   }
+  function openLightbox(image) {
+    lightbox?.close();
+    lightbox = openIllustrationLightbox({
+      image,
+      container: root,
+      onClose: () => {
+        lightbox = null;
+      }
+    });
+  }
   function renderGallery() {
     const images = session?.record?.images || [];
-    role("gallery").innerHTML = images.length ? `<strong>\u5DF2\u4FDD\u5B58\u7684\u914D\u56FE</strong><div class="t-illustration-candidates">${images.map((image) => `
-            <article class="t-illustration-candidate">
-                <a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" loading="lazy" alt="${escapeIllustrationHtml(image.draft.scene.summary)}"></a>
-                <p>${escapeIllustrationHtml(image.draft.scene.summary)}</p>
-                <div class="t-illustration-actions"><button class="t-btn" type="button" data-image-id="${escapeIllustrationHtml(image.id)}">${session.record.selectedId === image.id ? "\u5F53\u524D\u914D\u56FE" : "\u91C7\u7528\u8FD9\u5F20"}</button><a class="t-btn" href="${image.filePath}" download>\u4E0B\u8F7D</a></div>
-            </article>`).join("")}</div><div class="t-illustration-actions"><button class="t-btn" type="button" data-image-id="">\u6682\u4E0D\u5C55\u793A\u914D\u56FE</button><button class="t-btn" type="button" data-action="export">\u5BFC\u51FA\u56FE\u6587 HTML</button></div>` : "";
+    for (const id3 of [...selectedImageIds]) if (!images.some((image) => image.id === id3)) selectedImageIds.delete(id3);
+    const toolbar = managing ? `<div class="t-illustration-gallery-bar">
+                    <span class="t-illustration-select-count">\u5DF2\u9009\u62E9 ${selectedImageIds.size} \u5F20</span>
+                    <button class="t-btn" type="button" data-manage-control data-action="select-all-images">\u5168\u9009</button>
+                    <button class="t-btn" type="button" data-manage-control data-action="deselect-all-images">\u53D6\u6D88\u5168\u9009</button>
+                    <button class="t-btn t-btn-danger" type="button" data-manage-control data-action="delete-selected-images" ${selectedImageIds.size ? "" : "disabled"}>\u5220\u9664\u9009\u4E2D</button>
+                    <button class="t-btn" type="button" data-manage-control data-action="exit-manage-images">\u9000\u51FA\u7BA1\u7406</button>
+                </div>` : `<div class="t-illustration-gallery-bar"><button class="t-btn" type="button" data-manage-control data-action="enter-manage-images">\u7BA1\u7406</button></div>`;
+    role("gallery").innerHTML = images.length ? `<strong>\u5DF2\u4FDD\u5B58\u7684\u914D\u56FE</strong>${toolbar}<div class="t-illustration-candidates">${images.map((image) => {
+      const summary = image.draft.scene.summary || "";
+      const picked = selectedImageIds.has(image.id);
+      return `
+            <article class="t-illustration-candidate${picked ? " is-selected" : ""}">
+                ${managing ? `<label class="t-illustration-select"><input type="checkbox" data-select-image-id="${escapeIllustrationHtml(image.id)}" ${picked ? "checked" : ""}> \u9009\u62E9</label>` : ""}
+                <button class="t-illustration-candidate-open" type="button" data-preview-image-id="${escapeIllustrationHtml(image.id)}" title="\u653E\u5927\u67E5\u770B" aria-label="\u653E\u5927\u67E5\u770B\u8FD9\u5F20\u914D\u56FE"><img src="${image.filePath}" loading="lazy" alt="${escapeIllustrationHtml(summary || "\u914D\u56FE")}"></button>
+                ${summary ? `<p>${escapeIllustrationHtml(summary)}</p>` : ""}
+                <div class="t-illustration-actions"><button class="t-btn" type="button" data-image-id="${escapeIllustrationHtml(image.id)}">${session.record.selectedId === image.id ? "\u5F53\u524D\u914D\u56FE" : "\u91C7\u7528\u8FD9\u5F20"}</button><a class="t-btn" href="${image.filePath}" download>\u4E0B\u8F7D</a>${managing ? "" : `<button class="t-btn t-btn-danger" type="button" data-action="delete-image" data-image-id="${escapeIllustrationHtml(image.id)}" title="\u5220\u9664\u8FD9\u5F20\u914D\u56FE" aria-label="\u5220\u9664\u8FD9\u5F20\u914D\u56FE"><i class="fa-solid fa-trash"></i></button>`}</div>
+            </article>`;
+    }).join("")}</div><div class="t-illustration-actions"><button class="t-btn" type="button" data-image-id="">\u6682\u4E0D\u5C55\u793A\u914D\u56FE</button><button class="t-btn" type="button" data-action="export">\u5BFC\u51FA\u56FE\u6587 HTML</button></div>` : "";
     if (pendingUrl && session?.pending !== renderedPending) {
       URL.revokeObjectURL(pendingUrl);
       pendingUrl = null;
@@ -23491,12 +25326,76 @@ ${block}` : block;
     syncPreview();
     updateControls();
   }
+  async function deleteImages(targets2) {
+    if (!targets2.length) return;
+    const current = session, currentTarget = target;
+    const ids = new Set(targets2.map((item) => String(item.id)));
+    const wasAdopted = ids.has(String(current.record?.selectedId));
+    role("status").textContent = "\u6B63\u5728\u68C0\u67E5\u56FE\u7247\u5F15\u7528\u2026";
+    let reference;
+    try {
+      reference = await findReferencedIllustrationPaths(targets2.map((item) => item.filePath), {
+        excludeFavoriteId: currentTarget.favoriteId
+      });
+    } finally {
+      if (!disposed) role("status").textContent = "";
+    }
+    const lines = [targets2.length > 1 ? `\u786E\u5B9A\u5220\u9664\u9009\u4E2D\u7684 ${targets2.length} \u5F20\u914D\u56FE\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002` : "\u786E\u5B9A\u5220\u9664\u8FD9\u5F20\u914D\u56FE\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002"];
+    if (reference.favoriteReferenced.size) lines.push(`\u5176\u4E2D ${reference.favoriteReferenced.size} \u5F20\u4ECD\u88AB\u6536\u85CF\u5F15\u7528\uFF0C\u56FE\u7247\u6587\u4EF6\u4F1A\u4FDD\u7559\u3002`);
+    if (wasAdopted) lines.push("\u8FD9\u662F\u5F53\u524D\u91C7\u7528\u7684\u914D\u56FE\uFF0C\u5220\u9664\u540E\u4F1A\u6539\u7528\u5269\u4F59\u7684\u7B2C\u4E00\u5F20\u3002");
+    if (reference.incomplete) lines.push("\u6709\u6536\u85CF\u6B63\u6587\u8BFB\u53D6\u5931\u8D25\uFF0C\u4E3A\u907F\u514D\u8BEF\u5220\uFF0C\u672C\u6B21\u4E0D\u4F1A\u5220\u9664\u4EFB\u4F55\u56FE\u7247\u6587\u4EF6\u3002");
+    if (!confirm(lines.join(""))) return;
+    if (Object.hasOwn(currentTarget, "illustration") && wasAdopted) {
+      const remaining = current.record.images.filter((image) => !ids.has(String(image.id)));
+      await currentTarget.onSelected?.(remaining[0] || null);
+    }
+    const result = await deleteSceneIllustrations(currentTarget.sceneId, targets2, {
+      collectReferenced: (paths) => findReferencedIllustrationPaths(paths).then((found) => found.referenced)
+    });
+    current.record = result.record;
+    current.adopted = selectedIllustration(result.record);
+    selectedImageIds.clear();
+    managing = false;
+    const bits = [`\u5DF2\u5220\u9664 ${result.removedIds.length} \u5F20\u914D\u56FE`];
+    if (result.deletedFiles.length) bits.push(`\u5220\u9664\u6587\u4EF6 ${result.deletedFiles.length} \u4E2A`);
+    if (result.keptReferenced.length) bits.push(`${result.keptReferenced.length} \u4E2A\u6587\u4EF6\u4ECD\u88AB\u5F15\u7528\u5DF2\u4FDD\u7559`);
+    if (result.failedFiles.length) bits.push(`${result.failedFiles.length} \u4E2A\u6587\u4EF6\u5220\u9664\u5931\u8D25`);
+    current.notice = `${bits.join("\uFF0C")}\u3002`;
+  }
+  function renderCapabilities() {
+    const caps = activeCapabilities;
+    const coordinates = root.querySelectorAll(".t-illustration-coordinates");
+    if (!caps) {
+      role("size-field").hidden = true;
+      role("negative-hint").hidden = true;
+      role("characters-hint").hidden = true;
+      role("characters").hidden = false;
+      coordinates.forEach((node) => {
+        node.hidden = false;
+      });
+      return;
+    }
+    role("size-field").hidden = !caps.size;
+    coordinates.forEach((node) => {
+      node.hidden = !caps.characterPositions;
+    });
+    role("characters").hidden = !caps.characterPrompts;
+    const characterHint = !caps.characterPrompts ? "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u4E0D\u652F\u6301\u5206\u4EBA\u7269\u63D0\u793A\u8BCD\uFF0C\u8FD9\u4E00\u90E8\u5206\u4E0D\u4F1A\u8FDB\u5165\u63D0\u793A\u8BCD\u3002" : !caps.characterPositions ? "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u628A\u4EBA\u7269\u4F4D\u7F6E\u56FA\u5B9A\u5728\u753B\u9762\u4E2D\u5FC3\uFF0CX / Y \u4E0D\u4F1A\u751F\u6548\u3002" : "";
+    role("characters-hint").hidden = !characterHint;
+    role("characters-hint").textContent = characterHint;
+    const negativeHint = caps.negativePrompt ? "" : "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u5728 NovelAI \u4E0B\u4F7F\u7528\u4F60\u6E20\u9053\u914D\u7F6E\u7684\u8D1F\u5411\u8BCD\uFF0C\u8FD9\u91CC\u586B\u5199\u7684\u4E0D\u4F1A\u751F\u6548\u3002";
+    role("negative-hint").hidden = !negativeHint;
+    role("negative-hint").textContent = negativeHint;
+  }
   function detect() {
     const sequence = ++detectionSequence;
-    const state = detectIllustrationBackend();
+    activeBackendId = resolveActiveBackendId(getExtData());
+    const state = detectIllustrationBackend(activeBackendId);
     if (disposed || sequence !== detectionSequence) return;
     ready = state.ready;
+    activeCapabilities = state.ready ? state.capabilities : null;
     role("connection").textContent = state.reason;
+    renderCapabilities();
     updateControls();
   }
   async function loadTarget(index) {
@@ -23504,6 +25403,9 @@ ${block}` : block;
     const sequence = ++selectionSequence;
     const current = target;
     session = sessionFor(current.sceneId, buildPromptTextFromTheater(current.content));
+    managing = false;
+    selectedImageIds.clear();
+    activeBackendId = resolveActiveBackendId(getExtData());
     view.sceneId = "";
     localBusy = true;
     ready = false;
@@ -23511,6 +25413,7 @@ ${block}` : block;
     field("text").value = session.text;
     field("request").value = session.request;
     field("participants").value = session.participants;
+    field("size").value = session.size || "";
     renderProfileChips();
     role("status").textContent = "\u6B63\u5728\u8BFB\u53D6\u914D\u56FE\u8BB0\u5F55\u2026";
     renderDraft();
@@ -23525,6 +25428,9 @@ ${block}` : block;
       }
       session.record = record;
       session.draft || (session.draft = selectedIllustration(record)?.draft || null);
+      if (!session.previousScenes.length && session.draft?.scene) {
+        session.previousScenes.push({ ...session.draft.scene, positivePrompt: session.draft.prompts?.positivePrompt || "" });
+      }
       renderDraft();
       renderGallery();
     } catch (error) {
@@ -23562,7 +25468,20 @@ ${block}` : block;
     }
   });
   root.addEventListener("change", (event) => {
-    if (event.target === field("target")) void loadTarget(Number(event.target.value));
+    if (event.target === field("target")) {
+      void loadTarget(Number(event.target.value));
+      return;
+    }
+    if (event.target === field("size")) {
+      session.size = event.target.value;
+      return;
+    }
+    const selectId = event.target.dataset?.selectImageId;
+    if (selectId) {
+      if (event.target.checked) selectedImageIds.add(selectId);
+      else selectedImageIds.delete(selectId);
+      renderGallery();
+    }
   });
   root.addEventListener("click", (event) => {
     const button = event.target.closest("button");
@@ -23616,6 +25535,39 @@ ${block}` : block;
       });
       return;
     }
+    if (operation === "delete-image") {
+      void run(async () => {
+        const id3 = button.dataset.imageId;
+        const image = current.record?.images.find((item) => String(item.id) === String(id3));
+        if (image) await deleteImages([image]);
+      });
+      return;
+    }
+    if (operation === "enter-manage-images") {
+      managing = true;
+      selectedImageIds.clear();
+      renderGallery();
+      return;
+    }
+    if (operation === "exit-manage-images") {
+      managing = false;
+      selectedImageIds.clear();
+      renderGallery();
+      return;
+    }
+    if (operation === "select-all-images" || operation === "deselect-all-images") {
+      selectedImageIds.clear();
+      if (operation === "select-all-images") (current.record?.images || []).forEach((image) => selectedImageIds.add(image.id));
+      renderGallery();
+      return;
+    }
+    if (operation === "delete-selected-images") {
+      void run(async () => {
+        const targets2 = (current.record?.images || []).filter((image) => selectedImageIds.has(image.id));
+        if (targets2.length) await deleteImages(targets2);
+      });
+      return;
+    }
     if (operation === "prepare" || operation === "alternate") {
       if (current.pending) {
         role("status").textContent = "\u8BF7\u5148\u4FDD\u5B58\u4E0A\u6B21\u751F\u6210\u7684\u56FE\u7247\u3002";
@@ -23633,8 +25585,10 @@ ${block}` : block;
         notifyView(job.sceneId);
         const draft = await selectIllustrationScene(request, { signal: job.controller.signal });
         current.draft = draft;
-        current.previousScenes.push(draft.scene);
-        current.notice = "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
+        const picked = { ...draft.scene, positivePrompt: draft.prompts.positivePrompt };
+        const repeated = alternate && repeatsPreviousScene(current.previousScenes, picked);
+        current.previousScenes.push(picked);
+        current.notice = repeated ? "\u6A21\u578B\u53C8\u9009\u4E86\u540C\u4E00\u5E45\u753B\u9762\uFF0C\u591A\u534A\u662F\u6B63\u6587\u91CC\u53EA\u6709\u4E00\u4E2A\u53EF\u843D\u7B14\u7684\u77AC\u95F4\u3002\u60F3\u6307\u5B9A\u522B\u7684\u753B\u9762\uFF0C\u5199\u8FDB\u300C\u672C\u6B21\u989D\u5916\u8981\u6C42\u300D\u3002" : draft.excerptDropped ? "\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u4F46\u6A21\u578B\u7ED9\u7684\u539F\u6587\u6458\u5F55\u4E0E\u6B63\u6587\u5BF9\u4E0D\u4E0A\uFF0C\u5DF2\u4E22\u5F03\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002" : "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
       });
       return;
     }
@@ -23650,6 +25604,7 @@ ${block}` : block;
         role("status").textContent = showError(error);
         return;
       }
+      if (draft.backend !== activeBackendId) draft = normalizeIllustrationDraft({ ...draft, backend: activeBackendId });
       current.draft = draft;
       startJob(current, currentTarget, "generate", async (job) => {
         job.status = PROGRESS_LABELS.generating;
@@ -23658,7 +25613,8 @@ ${block}` : block;
           const result = await generateTheaterIllustration(draft, {
             signal: job.controller.signal,
             onProgress: jobProgress(job),
-            // NovelAI 流式会推过程图；非流式与 ComfyUI 不会走到这里。
+            size: current.size || void 0,
+            // 只有流式的后端会推过程图（Cosmos + NovelAI）；其余不会走到这里。
             onStreamPreview: (event2) => {
               if (!event2.blob) return;
               const now = Date.now();
@@ -23668,16 +25624,26 @@ ${block}` : block;
               notifyView(job.sceneId);
             }
           });
-          current.pending = { images: result.images, draft, createdAt: Date.now() };
+          current.pending = { images: result.images, draft, seed: result.seed, createdAt: Date.now() };
           job.phase = "saving";
           job.status = "\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026";
           notifyView(job.sceneId);
           await persistPending(current, currentTarget);
           if (result.dropped) current.notice += ` \u672C\u6B21\u8FD4\u56DE ${result.images.length + result.dropped} \u5F20\uFF0C\u8D85\u8FC7\u4E0A\u9650\u7684 ${result.dropped} \u5F20\u672A\u4FDD\u5B58\u3002`;
+          const wantsCharacters = draft.prompts.characterPrompts.some((character) => character.positivePrompt.trim());
+          if (wantsCharacters && result.applied?.characters === false) {
+            current.notice += " \u672C\u6B21\u672A\u4F7F\u7528\u5206\u4EBA\u7269\u63D0\u793A\u8BCD\uFF08\u5F53\u524D\u540E\u7AEF\u6216\u6A21\u578B\u4E0D\u652F\u6301\uFF09\uFF0C\u753B\u9762\u6309\u6574\u5E45\u63CF\u8FF0\u751F\u6210\u3002";
+          }
         } finally {
           current.previewBlob = null;
         }
       });
+      return;
+    }
+    const previewId = button.dataset.previewImageId;
+    if (previewId) {
+      const image = current.record?.images.find((item) => String(item.id) === String(previewId));
+      if (image) openLightbox(image);
       return;
     }
     if (button.hasAttribute("data-image-id")) {
@@ -23701,10 +25667,13 @@ ${block}` : block;
     }
     disposed = true;
     if (activeView === view) activeView = null;
+    lightbox?.close();
+    lightbox = null;
     if (pendingUrl) URL.revokeObjectURL(pendingUrl);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     root.remove();
-    window.removeEventListener("cosmos-vision:api-ready", detect);
+    unsubscribeBackends();
+    help.close();
     window.removeEventListener("titania:character-profiles-changed", profilesChanged);
     releaseFloatingWindow(close);
     if (previousFocus?.isConnected) previousFocus.focus();
@@ -23714,7 +25683,7 @@ ${block}` : block;
     }
   }
   claimFloatingWindow(close);
-  window.addEventListener("cosmos-vision:api-ready", detect);
+  unsubscribeBackends = subscribeBackendReady(() => detect());
   const profilesChanged = () => {
     if (!disposed) {
       renderProfileChips();
@@ -23725,108 +25694,62 @@ ${block}` : block;
   void loadTarget(Math.min(Math.max(0, Number(initialIndex) || 0), targets.length - 1));
   action("close").focus();
 }
-function findSceneContentRoot(container) {
-  return container.querySelector(".t-shadow-host")?.shadowRoot?.querySelector(".t-shadow-content") || container;
-}
-function clearSceneIllustration(root) {
-  root?.querySelectorAll(SCENE_ILLUSTRATION_SELECTOR).forEach((node) => node.remove());
-}
-function hasSceneIllustration(root) {
-  return Boolean(root?.querySelector(SCENE_ILLUSTRATION_SELECTOR));
-}
-function buildSceneIllustrationNotice(message) {
-  const notice = document.createElement("p");
-  notice.setAttribute("data-titania-illustration-notice", "");
-  notice.style.cssText = "margin:16px 0;text-align:center;font-size:13px;opacity:0.75";
-  notice.textContent = message;
-  return notice;
-}
-function bindMainIllustrations(getTarget) {
-  const content = document.getElementById("t-output-content");
-  if (!content) return () => {
-  };
-  let disposed = false, sequence = 0, timer;
-  let currentKey = "", currentImage = null, currentError = "";
-  function draw() {
-    const root = findSceneContentRoot(content);
-    if (!root) return;
-    clearSceneIllustration(root);
-    if (currentImage) {
-      const holder = document.createElement("div");
-      holder.innerHTML = illustrationFigure(currentImage);
-      const figure = holder.firstElementChild;
-      if (figure) {
-        root.prepend(figure);
-        return;
-      }
-    }
-    if (currentError) root.prepend(buildSceneIllustrationNotice(currentError));
-  }
-  const refresh = async (force = false) => {
-    let target;
-    try {
-      target = getTarget();
-    } catch {
-      target = null;
-    }
-    const key = target?.sceneId || "";
-    if (!force && key === currentKey && (!key || hasSceneIllustration(findSceneContentRoot(content)))) return;
-    if (force || key !== currentKey) {
-      currentKey = key;
-      currentImage = null;
-      currentError = "";
-      const request = ++sequence;
-      if (key) {
-        try {
-          const record = await readSceneIllustrations(key);
-          if (disposed || request !== sequence) return;
-          currentImage = selectedIllustration(record);
-        } catch {
-          if (disposed || request !== sequence) return;
-          currentError = "\u914D\u56FE\u8BFB\u53D6\u5931\u8D25\uFF0C\u53EF\u6253\u5F00\u573A\u666F\u914D\u56FE\u9762\u677F\u91CD\u8BD5\u3002";
-        }
-      } else if (disposed || request !== sequence) return;
-    }
-    if (!disposed) draw();
-  };
-  const schedule = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => void refresh(), 80);
-  };
-  const observer = new MutationObserver(schedule);
-  observer.observe(content, { childList: true, subtree: true });
-  window.addEventListener("titania:scene-rendered", schedule);
-  const changed = () => void refresh(true);
-  window.addEventListener("titania:illustrations-changed", changed);
-  void refresh(true);
-  return () => {
-    disposed = true;
-    clearTimeout(timer);
-    observer.disconnect();
-    window.removeEventListener("titania:scene-rendered", schedule);
-    window.removeEventListener("titania:illustrations-changed", changed);
-    clearSceneIllustration(findSceneContentRoot(content));
-  };
-}
-var PROGRESS_LABELS, PREVIEW_THROTTLE_MS, sessions, activeView, SCENE_ILLUSTRATION_SELECTOR;
+var PROGRESS_LABELS, PREVIEW_THROTTLE_MS, PANEL_HELP, sessions, activeView;
 var init_illustrationWindow = __esm({
   "src/ui/illustrationWindow.js"() {
     init_chatInjector();
     init_cosmosVisionBridge();
+    init_registry();
     init_illustrationScene();
     init_characterProfiles();
     init_storage();
     init_illustrationSettingsWindow();
     init_characterProfileWindow();
     init_illustrationStore();
+    init_illustrationReferences();
     init_illustrationData();
     init_helpers();
     init_floatingWindow();
+    init_helpPopover();
+    init_illustrationLightbox();
     PROGRESS_LABELS = { selecting: "\u6B63\u5728\u901A\u8BFB\u6B63\u6587\u3001\u9009\u62E9\u753B\u9762\u2026", generating: "\u6B63\u5728\u751F\u6210\u56FE\u7247\u2026" };
     PREVIEW_THROTTLE_MS = 150;
+    PANEL_HELP = [
+      {
+        heading: "\u600E\u4E48\u7528",
+        lines: [
+          "\u9009\u4E00\u8F6E\u5267\u573A\u5185\u5BB9 \u2192 \u300C\u5206\u6790\u753B\u9762\u300D\u6311\u51FA\u9002\u5408\u843D\u7B14\u7684\u77AC\u95F4 \u2192 \u53EF\u4EE5\u6539\u63D0\u793A\u8BCD \u2192 \u300C\u751F\u6210\u56FE\u7247\u300D\u3002",
+          "\u300C\u6362\u4E2A\u753B\u9762\u300D\u4F1A\u91CD\u65B0\u9009\u666F\uFF0C\u5E76\u628A\u6B64\u524D\u9009\u8FC7\u7684\u753B\u9762\u4F5C\u4E3A\u6392\u9664\u53C2\u8003\u3002",
+          "\u6392\u9664\u53EA\u662F\u8981\u6C42\uFF0C\u4E0D\u662F\u4FDD\u8BC1\uFF1A\u6B63\u6587\u91CC\u82E5\u53EA\u6709\u4E00\u4E2A\u53EF\u843D\u7B14\u7684\u77AC\u95F4\uFF0C\u6A21\u578B\u53EF\u4EE5\u590D\u7528\u540C\u4E00\u5E45 \u2014\u2014 \u771F\u590D\u7528\u4E86\u9762\u677F\u4F1A\u660E\u8BF4\u3002\u60F3\u6307\u5B9A\u753B\u9762\u5C31\u5199\u8FDB\u300C\u672C\u6B21\u989D\u5916\u8981\u6C42\u300D\uFF0C\u5B83\u4F18\u5148\u4E8E\u9009\u666F\u8981\u6C42\u3002",
+          "\u5207\u6362\u6B63\u6587\u4E0D\u6539\u53D8\u4EFB\u52A1\u5F52\u5C5E\uFF1A\u6B63\u5728\u8DD1\u7684\u90A3\u6B21\u4ECD\u5C5E\u4E8E\u53D1\u8D77\u65F6\u7684\u90A3\u4E00\u8F6E\u5185\u5BB9\u3002"
+        ]
+      },
+      {
+        heading: "\u63D0\u793A\u8BCD\u53EA\u5199\u300C\u753B\u9762\u91CC\u6709\u4EC0\u4E48\u300D",
+        lines: [
+          "\u8D28\u91CF\u8BCD\u3001\u753B\u5E08\u4E32\u3001\u753B\u98CE\u9884\u8BBE\u3001LoRA \u89E6\u53D1\u8BCD\u4E0E\u753B\u5E45\u91C7\u6837\u5668\u4E00\u5F8B\u7531\u751F\u56FE\u540E\u7AEF\u8FFD\u52A0\uFF0C\u8FD9\u91CC\u518D\u5199\u4E00\u904D\u5C31\u4F1A\u91CD\u590D\u53E0\u52A0\u3002",
+          "\u6240\u4EE5\u9762\u677F\u91CC\u663E\u793A\u7684\u63D0\u793A\u8BCD\u4E0D\u7B49\u4E8E\u6700\u7EC8\u53D1\u7ED9\u540E\u7AEF\u7684\u5185\u5BB9\u3002",
+          "\u753B\u9762\u5F20\u6570\u4E0E\u56FE\u6E90\u540C\u6837\u7531\u540E\u7AEF\u51B3\u5B9A\uFF1A\u7528\u54EA\u4E2A\u6A21\u578B\u3001\u51FA\u51E0\u5F20\uFF0C\u5C0F\u5267\u573A\u90FD\u65E0\u6CD5\u6307\u5B9A\u3002"
+        ]
+      },
+      {
+        heading: "\u751F\u56FE\u540E\u7AEF",
+        lines: [
+          "\u5728\u300C\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\u300D\u91CC\u5207\u6362\uFF1B\u9876\u680F\u4E0B\u65B9\u7684\u72B6\u6001\u884C\u663E\u793A\u5B83\u5F53\u524D\u662F\u5426\u53EF\u7528\u3002",
+          "\u8349\u7A3F\u843D\u76D8\u65F6\u4F1A\u8BB0\u4E0B\u5F53\u65F6\u7528\u7684\u540E\u7AEF\uFF0C\u6240\u4EE5\u6362\u540E\u7AEF\u91CD\u753B\u4E0D\u7528\u91CD\u65B0\u9009\u666F\u3002",
+          "\u540E\u7AEF\u5378\u8F7D\u540E\uFF0C\u5DF2\u4FDD\u5B58\u56FE\u7247\u7684\u6D4F\u89C8\u3001\u91C7\u7528\u3001\u4E0B\u8F7D\u4E0E\u5BFC\u51FA\u90FD\u4E0D\u53D7\u5F71\u54CD\uFF0C\u53EA\u6709\u518D\u70B9\u300C\u751F\u6210\u56FE\u7247\u300D\u624D\u4F1A\u62A5\u9519\u3002"
+        ]
+      },
+      {
+        heading: "\u4EBA\u7269\u5916\u89C2\u6863\u6848",
+        lines: [
+          "\u9876\u680F\u7684\u901A\u8BAF\u5F55\u56FE\u6807\u3002\u4E3A\u89D2\u8272\u8BB0\u4E00\u6B21\u5916\u89C2\uFF0C\u4E4B\u540E\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u914D\u56FE\u4F1A\u81EA\u52A8\u5E26\u4E0A\u3002",
+          "\u547D\u4E2D\u7684\u6863\u6848\u4F1A\u586B\u8FDB\u300C\u4EBA\u7269\u8D44\u6599\u300D\u5E76\u9884\u52FE\u9009\uFF1B\u4F60\u624B\u6253\u7684\u5185\u5BB9\u6C38\u8FDC\u4E0D\u4F1A\u88AB\u8986\u76D6\u3002"
+        ]
+      }
+    ];
     sessions = /* @__PURE__ */ new Map();
     activeView = null;
-    SCENE_ILLUSTRATION_SELECTOR = "[data-titania-illustration],[data-titania-illustration-notice]";
   }
 });
 
@@ -25061,6 +26984,9 @@ function openFavsWindow() {
           ...target,
           label: segments.length > 1 ? `\u7B2C ${index + 1} \u6BB5 \xB7 ${target.scriptName}` : target.scriptName,
           illustration: segment.illustration || null,
+          // 删除时要用它把这个收藏排除在引用扫描之外 —— 我们马上就会清掉它的
+          // 快照，扫进去的话那个文件会永远留着成为孤儿。主界面来的目标没有这个字段。
+          favoriteId: favorite.id,
           async onSelected(image) {
             const fresh = await loadFavForWrite(favorite.id);
             if (!fresh) throw new Error("\u539F\u6536\u85CF\u5DF2\u88AB\u5220\u9664\uFF1B\u56FE\u7247\u5DF2\u4FDD\u5B58\u5728\u914D\u56FE\u8BB0\u5F55\u4E2D\u3002");
@@ -26360,6 +28286,348 @@ var init_debugWindow = __esm({
     init_helpers();
     init_logView();
     tokenCountRun = 0;
+  }
+});
+
+// src/ui/imageCropper.js
+function clampNumber(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+function closeImageCropper() {
+  shutdown(null);
+}
+function shutdown(result) {
+  sessionSeq += 1;
+  const session = activeSession;
+  activeSession = null;
+  if (session) session.dispose(result);
+}
+function openImageCropper(options = {}) {
+  const src = typeof options.src === "string" ? options.src : "";
+  const outputSize = Math.round(clampNumber(options.outputSize, 64, 2048, OUTPUT_SIZE_DEFAULT));
+  const quality = clampNumber(options.quality, 0.1, 1, OUTPUT_QUALITY_DEFAULT);
+  shutdown(null);
+  const seq = sessionSeq;
+  if (!src) return Promise.reject(new Error("\u6CA1\u6709\u53EF\u88C1\u526A\u7684\u56FE\u7247"));
+  return loadImage(src).then(
+    (image) => new Promise((resolve) => {
+      if (seq !== sessionSeq) {
+        resolve(null);
+        return;
+      }
+      activeSession = createSession({ image, outputSize, quality, resolve });
+    }),
+    (error) => {
+      if (seq !== sessionSeq) return null;
+      throw error;
+    }
+  );
+}
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      if (!image.naturalWidth || !image.naturalHeight) {
+        reject(new Error("\u8FD9\u5F20\u56FE\u7247\u6CA1\u6709\u53EF\u7528\u7684\u50CF\u7D20\u5C3A\u5BF8\uFF0C\u8BF7\u6362\u4E00\u5F20"));
+        return;
+      }
+      resolve(image);
+    };
+    image.onerror = () => {
+      reject(new Error("\u65E0\u6CD5\u8BFB\u53D6\u8FD9\u5F20\u56FE\u7247\uFF0C\u8BF7\u6362\u4E00\u5F20\uFF08\u9700\u8981\u6D4F\u89C8\u5668\u80FD\u89E3\u7801\u7684\u5E38\u89C1\u56FE\u7247\u683C\u5F0F\uFF09"));
+    };
+    image.src = src;
+  });
+}
+function createSession({ image, outputSize, quality, resolve }) {
+  let settled = false;
+  const $modal = $(`
+        <div id="t-crop-modal" class="t-dialog-overlay t-root">
+            <div class="t-crop-panel t-dialog-panel" role="dialog" aria-modal="true" aria-label="\u88C1\u526A\u56FE\u7247">
+                <div class="t-dialog-header">
+                    <span>\u88C1\u526A\u56FE\u7247</span>
+                    <span class="t-dialog-close" id="t-crop-close" role="button" tabindex="0" aria-label="\u53D6\u6D88">&times;</span>
+                </div>
+                <div class="t-crop-stage" id="t-crop-stage">
+                    <div class="t-crop-frame"></div>
+                </div>
+                <p class="t-crop-hint">\u62D6\u52A8\u56FE\u7247\u8C03\u6574\u4F4D\u7F6E\uFF0C\u6EDA\u8F6E\u6216\u53CC\u6307\u7F29\u653E</p>
+                <div class="t-crop-zoom-row">
+                    <i class="fa-solid fa-image" aria-hidden="true"></i>
+                    <input type="range" class="t-crop-zoom" id="t-crop-zoom" min="100" max="400" step="1" value="100" aria-label="\u7F29\u653E">
+                    <i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i>
+                </div>
+                <p class="t-crop-error" id="t-crop-error" style="display:none"></p>
+                <div class="t-crop-actions">
+                    <button type="button" class="t-btn t-btn--ghost" id="t-crop-reset">\u91CD\u7F6E</button>
+                    <span class="t-crop-actions-right">
+                        <button type="button" class="t-btn t-btn--ghost" id="t-crop-cancel">\u53D6\u6D88</button>
+                        <button type="button" class="t-btn t-btn--primary" id="t-crop-confirm">\u786E\u5B9A</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    `);
+  const $stage = $modal.find("#t-crop-stage");
+  const $zoom = $modal.find("#t-crop-zoom");
+  const $error = $modal.find("#t-crop-error");
+  const $confirm = $modal.find("#t-crop-confirm");
+  const stage = $stage[0];
+  image.className = "t-crop-image";
+  image.alt = "";
+  image.draggable = false;
+  $stage.prepend(image);
+  ensureOverlay();
+  $("#t-overlay").append($modal);
+  const naturalW = image.naturalWidth;
+  const naturalH = image.naturalHeight;
+  let stageSize = 0;
+  let baseScale = 1;
+  const state = { scale: SCALE_MIN, panNatX: 0, panNatY: 0 };
+  let drag = null;
+  let pinch = null;
+  function measure() {
+    stageSize = stage.getBoundingClientRect().width || parseFloat(window.getComputedStyle(stage).width) || 1;
+    baseScale = Math.max(stageSize / naturalW, stageSize / naturalH);
+  }
+  function metrics() {
+    const k = baseScale * state.scale;
+    return { k, dispW: naturalW * k, dispH: naturalH * k, srcSize: stageSize / k };
+  }
+  function clampPan() {
+    const { srcSize } = metrics();
+    const limitX = Math.max(0, (naturalW - srcSize) / 2);
+    const limitY = Math.max(0, (naturalH - srcSize) / 2);
+    state.panNatX = Math.min(limitX, Math.max(-limitX, state.panNatX));
+    state.panNatY = Math.min(limitY, Math.max(-limitY, state.panNatY));
+  }
+  function render() {
+    clampPan();
+    const { k, dispW, dispH } = metrics();
+    image.style.width = `${dispW}px`;
+    image.style.height = `${dispH}px`;
+    image.style.left = `${(stageSize - dispW) / 2 + state.panNatX * k}px`;
+    image.style.top = `${(stageSize - dispH) / 2 + state.panNatY * k}px`;
+  }
+  function syncZoom() {
+    $zoom.val(String(Math.round(state.scale * 100)));
+  }
+  function setScale(next) {
+    state.scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, next));
+    render();
+    syncZoom();
+  }
+  function reset() {
+    state.scale = SCALE_MIN;
+    state.panNatX = 0;
+    state.panNatY = 0;
+    render();
+    syncZoom();
+  }
+  function beginDrag(clientX, clientY) {
+    drag = { x: clientX, y: clientY, panX: state.panNatX, panY: state.panNatY };
+    $stage.addClass("is-dragging");
+  }
+  function moveDrag(clientX, clientY) {
+    if (!drag) return;
+    const { k } = metrics();
+    state.panNatX = drag.panX + (clientX - drag.x) / k;
+    state.panNatY = drag.panY + (clientY - drag.y) / k;
+    render();
+  }
+  function endDrag() {
+    drag = null;
+    $stage.removeClass("is-dragging");
+  }
+  function touchDistance(a, b) {
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  }
+  function touchMid(a, b) {
+    return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 };
+  }
+  function onTouchStart(e) {
+    const touches = e.touches;
+    if (touches.length >= 2) {
+      endDrag();
+      pinch = {
+        dist: touchDistance(touches[0], touches[1]),
+        mid: touchMid(touches[0], touches[1]),
+        scale: state.scale,
+        panX: state.panNatX,
+        panY: state.panNatY
+      };
+    } else if (touches.length === 1) {
+      pinch = null;
+      beginDrag(touches[0].clientX, touches[0].clientY);
+    }
+    e.preventDefault();
+  }
+  function onTouchMove(e) {
+    const touches = e.touches;
+    if (pinch && touches.length >= 2) {
+      const dist = touchDistance(touches[0], touches[1]);
+      const mid = touchMid(touches[0], touches[1]);
+      const ratio = pinch.dist > 0 ? dist / pinch.dist : 1;
+      state.scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, pinch.scale * ratio));
+      const { k } = metrics();
+      state.panNatX = pinch.panX + (mid.x - pinch.mid.x) / k;
+      state.panNatY = pinch.panY + (mid.y - pinch.mid.y) / k;
+      render();
+      syncZoom();
+    } else if (drag && touches.length === 1) {
+      moveDrag(touches[0].clientX, touches[0].clientY);
+    }
+    e.preventDefault();
+  }
+  function onTouchEnd(e) {
+    const touches = e.touches;
+    if (!touches.length) {
+      endDrag();
+      pinch = null;
+    } else if (touches.length === 1) {
+      pinch = null;
+      beginDrag(touches[0].clientX, touches[0].clientY);
+    }
+    e.preventDefault();
+  }
+  function onWheel(e) {
+    e.preventDefault();
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1;
+    setScale(state.scale * Math.exp(-e.deltaY * unit * WHEEL_ZOOM_RATE));
+  }
+  function onResize() {
+    measure();
+    render();
+  }
+  function toDataUrlSafe(canvas, mime, q) {
+    try {
+      return q === void 0 ? canvas.toDataURL(mime) : canvas.toDataURL(mime, q);
+    } catch (err) {
+      return "";
+    }
+  }
+  function buildCroppedDataUrl() {
+    const { srcSize } = metrics();
+    const srcX = naturalW / 2 - state.panNatX - srcSize / 2;
+    const srcY = naturalH / 2 - state.panNatY - srcSize / 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("\u5F53\u524D\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 canvas\uFF0C\u65E0\u6CD5\u5BFC\u51FA\u88C1\u526A\u7ED3\u679C");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(image, srcX, srcY, srcSize, srcSize, 0, 0, outputSize, outputSize);
+    let dataUrl = toDataUrlSafe(canvas, "image/webp", quality);
+    if (!dataUrl.startsWith("data:image/webp")) {
+      dataUrl = toDataUrlSafe(canvas, "image/png");
+    }
+    if (!dataUrl || dataUrl === "data:,") throw new Error("\u65E0\u6CD5\u5BFC\u51FA\u88C1\u526A\u7ED3\u679C");
+    return dataUrl;
+  }
+  function unbind() {
+    $(document).off(".titaniaCrop");
+    $(window).off(".titaniaCrop");
+    $stage.off(".titaniaCrop");
+    $modal.off(".titaniaCrop");
+    stage.removeEventListener("wheel", onWheel);
+    stage.removeEventListener("touchstart", onTouchStart);
+    stage.removeEventListener("touchmove", onTouchMove);
+    stage.removeEventListener("touchend", onTouchEnd);
+    stage.removeEventListener("touchcancel", onTouchEnd);
+  }
+  function finish(result) {
+    if (settled) return;
+    settled = true;
+    if (activeSession === session) activeSession = null;
+    unbind();
+    $modal.remove();
+    resolve(result);
+  }
+  function showError2(message) {
+    $error.text(message).css("display", "");
+  }
+  const session = { dispose: (result) => finish(result) };
+  $stage.on("mousedown.titaniaCrop", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    beginDrag(e.clientX, e.clientY);
+  });
+  $(document).on("mousemove.titaniaCrop", (e) => {
+    if (drag) moveDrag(e.clientX, e.clientY);
+  });
+  $(document).on("mouseup.titaniaCrop", () => {
+    if (drag) endDrag();
+  });
+  stage.addEventListener("wheel", onWheel, { passive: false });
+  stage.addEventListener("touchstart", onTouchStart, { passive: false });
+  stage.addEventListener("touchmove", onTouchMove, { passive: false });
+  stage.addEventListener("touchend", onTouchEnd, { passive: false });
+  stage.addEventListener("touchcancel", onTouchEnd, { passive: false });
+  $(window).on("resize.titaniaCrop orientationchange.titaniaCrop", onResize);
+  $zoom.on("input.titaniaCrop", function() {
+    setScale((parseFloat(this.value) || 100) / 100);
+  });
+  $modal.find("#t-crop-reset").on("click.titaniaCrop", reset);
+  $modal.find("#t-crop-cancel").on("click.titaniaCrop", () => finish(null));
+  $modal.find("#t-crop-close").on("click.titaniaCrop", () => finish(null));
+  $modal.find("#t-crop-close").on("keydown.titaniaCrop", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      finish(null);
+    }
+  });
+  $confirm.on("click.titaniaCrop", () => {
+    try {
+      finish(buildCroppedDataUrl());
+    } catch (err) {
+      showError2(err?.message || "\u88C1\u526A\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5");
+    }
+  });
+  $modal.on("click.titaniaCrop", (e) => {
+    if (e.target === $modal[0]) finish(null);
+  });
+  $(document).on("keydown.titaniaCrop", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      finish(null);
+      return;
+    }
+    if (e.key === "Tab") trapTab(e);
+  });
+  function trapTab(e) {
+    const focusables = $modal.find("button, input, [tabindex]:not([tabindex='-1'])").filter(":visible").toArray();
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    const inside = $modal[0].contains(active);
+    if (e.shiftKey && (!inside || active === first)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (!inside || active === last)) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+  measure();
+  reset();
+  $confirm[0].focus();
+  return session;
+}
+var OUTPUT_SIZE_DEFAULT, OUTPUT_QUALITY_DEFAULT, SCALE_MIN, SCALE_MAX, WHEEL_ZOOM_RATE, activeSession, sessionSeq;
+var init_imageCropper = __esm({
+  "src/ui/imageCropper.js"() {
+    init_dom();
+    OUTPUT_SIZE_DEFAULT = 512;
+    OUTPUT_QUALITY_DEFAULT = 0.92;
+    SCALE_MIN = 1;
+    SCALE_MAX = 4;
+    WHEEL_ZOOM_RATE = 15e-4;
+    activeSession = null;
+    sessionSeq = 0;
   }
 });
 
@@ -33431,7 +35699,11 @@ function openSettingsWindow() {
                         </div>
                         <div id="box-image" style="display:${tempApp.type === "image" ? "block" : "none"}">
                             <input class="is-hidden" type="file" id="p-file-input" accept="image/*">
-                            <div class="t-upload-card" id="btn-upload-card" title="\u70B9\u51FB\u66F4\u6362\u56FE\u7247"><i class="fa-solid fa-camera fa-2x"></i><span>\u70B9\u51FB\u4E0A\u4F20</span></div>
+                            <div class="t-set-inline-group" style="align-items:center;">
+                                <div class="t-upload-card" id="btn-upload-card" title="\u70B9\u51FB\u66F4\u6362\u56FE\u7247"><i class="fa-solid fa-camera fa-2x"></i><span>\u70B9\u51FB\u4E0A\u4F20</span></div>
+                                <button type="button" class="t-btn t-btn--ghost" id="btn-recrop" style="display:none;">\u91CD\u65B0\u88C1\u526A</button>
+                            </div>
+                            <p class="t-set-note">\u4E0A\u4F20\u540E\u53EF\u62D6\u52A8\u3001\u7F29\u653E\uFF0C\u81EA\u884C\u51B3\u5B9A\u60AC\u6D6E\u7403\u91CC\u663E\u793A\u56FE\u7247\u7684\u54EA\u4E00\u90E8\u5206</p>
                         </div>
                     </div>
                     
@@ -34068,19 +36340,50 @@ function openSettingsWindow() {
     tempApp.content = $(this).val();
     renderPreview();
   });
+  const applyImageMode = () => {
+    tempApp.type = "image";
+    $("input[name='p-type'][value='image']").prop("checked", true);
+    $("#box-emoji").hide();
+    $("#box-image").show();
+  };
+  let lastPickedFile = null;
+  const syncRecropButton = () => {
+    $("#btn-recrop").css("display", lastPickedFile ? "" : "none");
+  };
+  const openCropperFor = async (file) => {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const cropped = await openImageCropper({ src: objectUrl });
+      if (!cropped) return false;
+      tempApp.content = cropped;
+      applyImageMode();
+      renderPreview();
+      return true;
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
   $("#btn-upload-card").on("click", () => $("#p-file-input").click());
+  $("#btn-recrop").on("click", async () => {
+    if (!lastPickedFile) return;
+    try {
+      await openCropperFor(lastPickedFile);
+    } catch (e) {
+      alert(e?.message || "\u56FE\u7247\u5904\u7406\u5931\u8D25");
+    }
+  });
   $("#p-file-input").on("change", async function() {
-    const file = this.files[0];
+    const file = this.files && this.files[0];
     if (!file) return;
     try {
-      tempApp.content = await fileToBase64(file);
-      tempApp.type = "image";
-      $("input[name='p-type'][value='image']").prop("checked", true);
-      $("#box-emoji").hide();
-      $("#box-image").show();
-      renderPreview();
+      if (await openCropperFor(file)) {
+        lastPickedFile = file;
+        syncRecropButton();
+      }
     } catch (e) {
-      alert("Fail");
+      alert(e?.message || "\u65E0\u6CD5\u8BFB\u53D6\u8FD9\u5F20\u56FE\u7247");
+    } finally {
+      this.value = "";
     }
   });
   $("#btn-test-anim").on("click", () => playAnimationPreview());
@@ -35083,11 +37386,13 @@ function openSettingsWindow() {
   });
   $("#btn-open-mgr").on("click", () => {
     document.getElementById("t-prompt-editor-modal")?.remove();
+    closeImageCropper();
     $("#t-settings-view").remove();
     openScriptManager();
   });
   $("#t-set-close").on("click", () => {
     document.getElementById("t-prompt-editor-modal")?.remove();
+    closeImageCropper();
     $("#t-settings-view").remove();
     const $mainView2 = $("#t-main-view");
     if ($mainView2.length > 0) {
@@ -35219,6 +37524,7 @@ function openSettingsWindow() {
     };
     saveExtData();
     document.getElementById("t-prompt-editor-modal")?.remove();
+    closeImageCropper();
     $("#t-settings-view").remove();
     const $mainViewOnSave = $("#t-main-view");
     if ($mainViewOnSave.length > 0) {
@@ -35251,6 +37557,7 @@ var init_settingsWindow = __esm({
     init_logger();
     init_defaults();
     init_helpers();
+    init_imageCropper();
     init_floatingBtn();
     init_scriptData();
     init_scriptStore();
@@ -38805,7 +41112,6 @@ async function openMainWindow() {
   } else {
     outputContainer.innerHTML = placeholderContent;
   }
-  registerTeardown(bindMainIllustrations(getMainIllustrationTarget));
   $("#t-tool-illustrate").on("click", () => {
     try {
       openIllustrationWindow(getMainIllustrationTarget());
@@ -41306,11 +43612,11 @@ function archiveContinuationBranch(entry) {
     archivedAt: Date.now()
   }, ...entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== branchKey)].slice(0, CONTINUATION_ARCHIVED_BRANCH_MAX);
 }
-function findContinuationRoundAnchor(scriptId, probe = {}) {
+function findContinuationRoundAnchor(scriptId, probe3 = {}) {
   const entry = getContinuationRuntimeStore()[scriptId];
   if (!entry) return null;
-  const wantedId = String(probe.generationId || "").trim();
-  const wantedContent = String(probe.content || "").trim();
+  const wantedId = String(probe3.generationId || "").trim();
+  const wantedContent = String(probe3.content || "").trim();
   if (!wantedId && !wantedContent) return null;
   const activeBranchKey = String(entry.branchKey || "").trim();
   const candidates = [
