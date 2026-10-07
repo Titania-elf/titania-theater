@@ -74,6 +74,12 @@ var init_defaults = __esm({
         version: 2,
         entries: []
       },
+      // 自动配图（场景配图）：开启后每次「单次演绎 / 重演」成功会自动跑一次选景 + 生图。
+      // ⚠ 刻意**不**写 ensure：默认关的布尔值不需要迁移，读端一律 `?.enabled === true`，
+      //   老用户没有这个键时勾选框自然是未勾。给一个布尔值加版本化迁移是过度设计。
+      illustration_auto: {
+        enabled: false
+      },
       history_extraction: {
         whitelist: "",
         blacklist: "",
@@ -954,6 +960,22 @@ var init_userFiles = __esm({
 // src/core/illustrationData.js
 function illustrationError(message, code = "INVALID_RESPONSE") {
   return Object.assign(new Error(message), { code });
+}
+function formatIllustrationError(error) {
+  return error?.name === "AbortError" || error?.code === "ABORTED" || error?.code === "aborted" ? "\u5DF2\u53D6\u6D88\u7B49\u5F85\u3002\u540E\u7AEF\u53EF\u80FD\u4ECD\u5728\u8BA1\u7B97\uFF1B\u9700\u8981\u65F6\u53EF\u91CD\u65B0\u53D1\u8D77\u3002" : String(error?.message || "\u914D\u56FE\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+}
+function createPendingIllustrationTarget({ scriptId = "", scriptName = "\u573A\u666F", reason = "" } = {}) {
+  const id3 = String(scriptId || "");
+  return Object.freeze({
+    sceneId: `scene-pending-${illustrationHash(JSON.stringify([id3]))}`,
+    content: "",
+    scriptId: id3,
+    scriptName: String(scriptName || "\u573A\u666F"),
+    generationId: "",
+    cardKey: "",
+    // 面板据此说明原因并收起「分析画面」这些按钮（见 illustrationWindow.js）。
+    unavailable: String(reason || "\u8FD9\u4E00\u8F6E\u8FD8\u6CA1\u6709\u53EF\u914D\u56FE\u7684\u6B63\u6587\u3002")
+  });
 }
 function newIllustrationId() {
   return globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
@@ -23750,6 +23772,142 @@ var init_illustrationScene = __esm({
   }
 });
 
+// src/core/illustrationAuto.js
+function getAutoIllustrationJob(sceneId) {
+  const key = String(sceneId || "");
+  if (!activeJob || !key || activeJob.sceneId !== key) return null;
+  return activeJob;
+}
+function shouldAutoIllustrate({ source, enabled, content, hasImages, busy } = {}) {
+  if (!enabled) return { ok: false, silent: true };
+  if (source !== "manual") return { ok: false, silent: true };
+  if (!String(content || "").trim()) return { ok: false, silent: true };
+  if (hasImages) return { ok: false, silent: true };
+  if (busy) {
+    return { ok: false, reason: "\u81EA\u52A8\u914D\u56FE\uFF1A\u4E0A\u4E00\u5F20\u8FD8\u5728\u751F\u6210\uFF0C\u8FD9\u4E00\u8F6E\u5148\u8DF3\u8FC7\uFF08\u60F3\u8865\u56FE\u8BF7\u5728\u914D\u56FE\u9762\u677F\u91CC\u624B\u52A8\u914D\uFF09\u3002" };
+  }
+  return { ok: true };
+}
+function notify(kind, message) {
+  if (!window.toastr) return;
+  const fn = window.toastr[kind] || window.toastr.info;
+  if (typeof fn === "function") fn.call(window.toastr, message, "Titania Echo");
+}
+function maybeAutoIllustrate({ source, generationId, scriptId, scriptName, content } = {}) {
+  try {
+    const data = getExtData();
+    const enabled = data?.[ILLUSTRATION_AUTO_KEY]?.enabled === true;
+    if (!shouldAutoIllustrate({ source, enabled, content }).ok) return;
+    const cardKey = getCharacterCardKey();
+    const target = createIllustrationTarget({ content, generationId, scriptId, scriptName, cardKey });
+    void readSceneIllustrations(target.sceneId).then((record) => (record?.images?.length || 0) > 0, () => null).then((hasImages) => {
+      if (hasImages === null) {
+        notify("warning", "\u81EA\u52A8\u914D\u56FE\u8DF3\u8FC7\uFF1A\u8FD9\u4E00\u8F6E\u7684\u914D\u56FE\u8BB0\u5F55\u8BFB\u4E0D\u51FA\u6765\uFF0C\u8BF7\u6253\u5F00\u914D\u56FE\u9762\u677F\u91CD\u8BD5\u3002");
+        return;
+      }
+      const verdict = shouldAutoIllustrate({
+        source,
+        enabled,
+        content: target.content,
+        hasImages,
+        busy: Boolean(activeJob)
+      });
+      if (!verdict.ok) {
+        if (verdict.reason) notify("info", verdict.reason);
+        return;
+      }
+      startAutoJob(target, data);
+    });
+  } catch (error) {
+    console.warn("[Titania] \u81EA\u52A8\u914D\u56FE\u672A\u80FD\u542F\u52A8\uFF1A", error?.message || error);
+  }
+}
+function startAutoJob(target, data) {
+  const job = {
+    sceneId: target.sceneId,
+    kind: "auto",
+    status: AUTO_STATUS.selecting,
+    phase: "running",
+    controller: new AbortController(),
+    error: null
+  };
+  activeJob = job;
+  job.promise = runAutoJob(job, target, data).catch((error) => {
+    job.error = error;
+    const aborted = error?.name === "AbortError" || error?.code === "ABORTED" || error?.code === "aborted";
+    if (aborted) notify("info", "\u81EA\u52A8\u914D\u56FE\u5DF2\u53D6\u6D88\u3002");
+    else notify("warning", `\u81EA\u52A8\u914D\u56FE\u5931\u8D25\uFF1A${formatIllustrationError(error)}`);
+  }).finally(() => {
+    if (activeJob === job) activeJob = null;
+  });
+  return job;
+}
+async function runAutoJob(job, target, data) {
+  const { signal } = job.controller;
+  const cancelled = () => {
+    if (!signal.aborted) return false;
+    notify("info", "\u81EA\u52A8\u914D\u56FE\u5DF2\u53D6\u6D88\u3002");
+    return true;
+  };
+  const backendId = resolveActiveBackendId(data);
+  const state = detectIllustrationBackend(backendId);
+  if (!state.ready) throw illustrationError(state.reason);
+  const preset = resolveActivePreset(data);
+  if (!preset) throw illustrationError("\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE\u3002\u6253\u5F00\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF0C\u5BFC\u5165\u4E00\u4EFD\u9884\u8BBE\u6216\u65B0\u5EFA\u4E00\u4EFD\u3002", "NO_PRESET");
+  const check = validatePresetForSelection(preset);
+  if (!check.ok) throw illustrationError(check.reason, check.code);
+  const theaterText = buildPromptTextFromTheater(target.content);
+  const participants = matchCharacterProfiles(readCharacterProfiles(data), {
+    cardKey: target.cardKey,
+    text: theaterText
+  }).map(composeProfileBlock).filter(Boolean).join("\n\n");
+  job.phase = "selecting";
+  job.status = AUTO_STATUS.selecting;
+  let draft = await selectIllustrationScene(
+    { theaterText, participants, specialRequest: "", previousScenes: [] },
+    { signal }
+  );
+  if (cancelled()) return;
+  const currentBackend = resolveActiveBackendId(getExtData());
+  if (draft.backend !== currentBackend) draft = normalizeIllustrationDraft({ ...draft, backend: currentBackend });
+  job.phase = "generating";
+  job.status = AUTO_STATUS.generating;
+  const result = await generateTheaterIllustration(draft, { signal });
+  if (cancelled()) return;
+  job.phase = "saving";
+  job.status = AUTO_STATUS.saving;
+  await saveGeneratedIllustrations(target.sceneId, {
+    draft,
+    images: result.images,
+    seed: result.seed,
+    createdAt: Date.now()
+  });
+  const count = result.images.length;
+  notify("info", `\u81EA\u52A8\u914D\u56FE\u5B8C\u6210\uFF1A\u5DF2\u4E3A\u672C\u8F6E\u4FDD\u5B58 ${count} \u5F20\uFF0C\u5728\u914D\u56FE\u9762\u677F\u7684\u56FE\u5E93\u91CC\u67E5\u770B\u3002`);
+}
+var ILLUSTRATION_AUTO_KEY, AUTO_STATUS, activeJob;
+var init_illustrationAuto = __esm({
+  "src/core/illustrationAuto.js"() {
+    init_storage();
+    init_context();
+    init_chatInjector();
+    init_characterProfiles();
+    init_cosmosVisionBridge();
+    init_registry();
+    init_illustrationPresets();
+    init_illustrationScene();
+    init_illustrationStore();
+    init_illustrationData();
+    ILLUSTRATION_AUTO_KEY = "illustration_auto";
+    AUTO_STATUS = {
+      selecting: "\u81EA\u52A8\u914D\u56FE\uFF1A\u6B63\u5728\u901A\u8BFB\u6B63\u6587\u3001\u9009\u62E9\u753B\u9762\u2026",
+      generating: "\u81EA\u52A8\u914D\u56FE\uFF1A\u6B63\u5728\u751F\u6210\u56FE\u7247\u2026",
+      saving: "\u81EA\u52A8\u914D\u56FE\uFF1A\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026"
+    };
+    activeJob = null;
+  }
+});
+
 // src/ui/shared/floatingWindow.js
 function claimFloatingWindow(close) {
   const previous = activeClose;
@@ -23882,6 +24040,17 @@ function helpSections() {
       terms: PLACEHOLDER_NAMES.map((name) => ({ term: `{{${name}}}`, text: PLACEHOLDER_HELP[name] || "" }))
     },
     {
+      heading: "\u81EA\u52A8\u914D\u56FE",
+      lines: [
+        "\u9ED8\u8BA4\u5173\u95ED\u3002\u6253\u5F00\u540E\uFF0C\u6BCF\u6B21\u300C\u5355\u6B21\u6F14\u7ECE\u300D\u6216\u300C\u91CD\u6F14\u300D\u5B8C\u6210\u4F1A\u81EA\u52A8\u8DD1\u4E00\u6B21\u9009\u666F + \u751F\u56FE\u5E76\u5B58\u4E0B\u6765\u3002",
+        "\u7EED\u5199\u3001\u961F\u5217\u751F\u6210\u3001ST \u4E8B\u4EF6\u89E6\u53D1\u7684\u81EA\u52A8\u6F14\u7ECE\u90FD\u4E0D\u89E6\u53D1 \u2014\u2014 \u90A3\u51E0\u79CD\u662F\u65E0\u4EBA\u770B\u7740\u7684\u8FDE\u7EED\u751F\u6210\uFF0C\u8DDF\u7740\u914D\u56FE\u4F1A\u4E00\u53E3\u6C14\u70E7\u6389\u591A\u5F20\u56FE\u7684\u989D\u5EA6\u3002",
+        "\u6210\u672C\uFF1A\u6BCF\u4E00\u8F6E\u81EA\u52A8\u914D\u56FE\u90FD\u662F\u4E00\u6B21\u771F\u5B9E\u7684\u9009\u666F\u8C03\u7528 + \u4E00\u6B21\u771F\u5B9E\u7684\u751F\u56FE\uFF08\u9009\u666F\u5931\u8D25\u91CD\u8BD5\u65F6\u6700\u591A\u4E24\u6B21\uFF09\uFF0C\u4E0E\u624B\u52A8\u70B9\u300C\u5206\u6790\u753B\u9762\u300D\u300C\u751F\u6210\u56FE\u7247\u300D\u5B8C\u5168\u4E00\u6837\u3002",
+        "\u8DD1\u5B8C\u53EA\u53D1\u4E00\u6761\u63D0\u793A\uFF0C\u4E0D\u5F39\u706F\u7BB1\u3001\u4E0D\u6253\u65AD\u9605\u8BFB\uFF1B\u56FE\u7247\u5728\u914D\u56FE\u9762\u677F\u7684\u56FE\u5E93\u91CC\u3002",
+        "\u81EA\u52A8\u4EFB\u52A1\u8DD1\u7740\u7684\u65F6\u5019\u6253\u5F00\u914D\u56FE\u9762\u677F\uFF0C\u4F1A\u770B\u5230\u5B83\u7684\u8FDB\u5EA6\uFF0C\u4E5F\u80FD\u5728\u90A3\u91CC\u53D6\u6D88\u7B49\u5F85\u3002",
+        "\u4E0A\u4E00\u5F20\u8FD8\u5728\u914D\u7684\u65F6\u5019\u4E0D\u4F1A\u5F00\u59CB\u4E0B\u4E00\u5F20\uFF1A\u90A3\u4E00\u8F6E\u4F1A\u8DF3\u8FC7\u5E76\u63D0\u793A\u4E00\u53E5\u3002"
+      ]
+    },
+    {
       heading: "\u9009\u666F\u9884\u8BBE",
       lines: [
         "\u6CA1\u6709\u5185\u7F6E\u9884\u8BBE\uFF0C\u4E00\u5F8B\u9760\u300C\u5BFC\u5165\u300D\u6216\u300C\u65B0\u5EFA\u300D\u3002\u5BFC\u5165\u8BA4\u4E24\u79CD\u6587\u4EF6\uFF1A\u9152\u9986\u7684 Chat Completion \u9884\u8BBE\uFF0C\u4EE5\u53CA\u672C\u63D2\u4EF6\u5BFC\u51FA\u7684\u9009\u666F\u9884\u8BBE\u3002",
@@ -23910,6 +24079,9 @@ function openIllustrationSettingsWindow(options = {}) {
                     <select class="t-input" data-role="backend-select" style="width:auto; min-width:180px;"></select>
                 </div>
                 <p class="t-illustration-hint" data-role="backend-validation"></p>
+                <div style="font-weight:bold; color:var(--t-color-accent); margin:14px 0 8px;">\u81EA\u52A8\u914D\u56FE</div>
+                <label class="t-illustration-field"><input type="checkbox" data-role="auto-enabled"> \u5355\u6B21\u6F14\u7ECE\u5B8C\u6210\u540E\u81EA\u52A8\u914D\u56FE\uFF08\u9ED8\u8BA4\u5173\u95ED\uFF09</label>
+                <p class="t-illustration-hint" data-role="auto-hint"></p>
                 <div style="font-weight:bold; color:var(--t-color-accent); margin:14px 0 8px;">\u9009\u666F\u9884\u8BBE</div>
                 <div class="t-profile-actions">
                     <select class="t-input" data-role="preset-select" style="width:auto; min-width:180px;"></select>
@@ -24219,9 +24391,28 @@ function openIllustrationSettingsWindow(options = {}) {
     note.textContent = "\u5E26 \u21BA \u7684\u662F\u5C0F\u5267\u573A\u8865\u4E0A\u7684\u6761\u76EE\uFF1A\u53EF\u6539\u5199\u3001\u53EF\u505C\u7528\u3001\u53EF\u6392\u5E8F\uFF0C\u4F46\u4E0D\u80FD\u5220\uFF0C\u6539\u574F\u4E86\u7528 \u21BA \u8FD8\u539F\u3002";
     actions.append(note, button("\u65B0\u589E\u6761\u76EE", "fa-solid fa-plus", "\u5728\u5F53\u524D\u9884\u8BBE\u672B\u5C3E\u65B0\u589E\u4E00\u6761\u6761\u76EE", () => insertEntry(preset.entries.length)));
   }
+  function renderAuto() {
+    const data = getExtData();
+    const enabled = data?.[ILLUSTRATION_AUTO_KEY]?.enabled === true;
+    role("auto-enabled").checked = enabled;
+    const node = role("auto-hint");
+    if (!enabled) {
+      node.textContent = "";
+      node.style.color = "";
+      return;
+    }
+    const backendId = resolveActiveBackendId(data);
+    const backend = detectIllustrationBackend(backendId);
+    const preset = activePreset();
+    const check = preset ? validatePresetForSelection(preset) : { ok: false, reason: "\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE\u3002" };
+    const blocked = !backend.ready ? backend.reason : !check.ok ? check.reason : "";
+    node.textContent = blocked ? `\u73B0\u5728\u6253\u5F00\u4E5F\u4E0D\u4F1A\u914D\uFF1A${blocked}` : "\u5DF2\u5F00\u542F\uFF1A\u6BCF\u6B21\u300C\u5355\u6B21\u6F14\u7ECE\u300D\u6216\u300C\u91CD\u6F14\u300D\u5B8C\u6210\u540E\u4F1A\u81EA\u52A8\u9009\u666F\u5E76\u51FA\u4E00\u5F20\u56FE\uFF0C\u7EED\u5199\u4E0E\u961F\u5217\u751F\u6210\u4E0D\u89E6\u53D1\u3002\u6BCF\u8F6E\u90FD\u4F1A\u771F\u5B9E\u8C03\u7528\u4E00\u6B21\u9009\u666F\u4E0E\u751F\u56FE\u3002";
+    node.style.color = blocked ? "var(--t-color-danger, #e06c75)" : "";
+  }
   function render() {
     if (disposed) return;
     renderBackend();
+    renderAuto();
     renderToolbar();
     renderValidation();
     if (activePreset()) renderEntries();
@@ -24238,6 +24429,13 @@ function openIllustrationSettingsWindow(options = {}) {
     const data = getExtData();
     ensureIllustrationBackend(data);
     data[ILLUSTRATION_BACKEND_KEY].active_id = event.target.value;
+    commit();
+  });
+  role("auto-enabled").addEventListener("change", (event) => {
+    var _a;
+    const data = getExtData();
+    data[_a = ILLUSTRATION_AUTO_KEY] || (data[_a] = {});
+    data[ILLUSTRATION_AUTO_KEY].enabled = event.target.checked === true;
     commit();
   });
   role("preset-select").addEventListener("change", (event) => {
@@ -24344,6 +24542,7 @@ var init_illustrationSettingsWindow = __esm({
     init_cosmosVisionBridge();
     init_registry();
     init_illustrationPresets();
+    init_illustrationAuto();
     init_floatingWindow();
     init_helpPopover();
     PLACEHOLDER_HELP = {
@@ -25002,9 +25201,6 @@ var init_illustrationLightbox = __esm({
 });
 
 // src/ui/illustrationWindow.js
-function showError(error) {
-  return error?.name === "AbortError" || error?.code === "ABORTED" ? "\u5DF2\u53D6\u6D88\u7B49\u5F85\u3002\u540E\u7AEF\u53EF\u80FD\u4ECD\u5728\u8BA1\u7B97\uFF1B\u9700\u8981\u65F6\u53EF\u91CD\u65B0\u53D1\u8D77\u3002" : String(error?.message || "\u914D\u56FE\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
-}
 function sessionFor(sceneId, initialText) {
   if (!sessions.has(sceneId)) {
     sessions.set(sceneId, {
@@ -25055,7 +25251,7 @@ function startJob(current, currentTarget, kind, operation) {
   current.notice = "";
   job.promise = Promise.resolve().then(() => operation(job)).catch((error) => {
     job.error = error;
-    current.notice = showError(error);
+    current.notice = formatIllustrationError(error);
   }).finally(() => {
     if (current.job === job) current.job = null;
     if (activeView?.sceneId === job.sceneId) activeView.sync();
@@ -25067,7 +25263,7 @@ function startJob(current, currentTarget, kind, operation) {
 function notifyBackgroundResult(job) {
   if (!window.toastr) return;
   const titles = { prepare: "\u573A\u666F\u914D\u56FE\uFF1A\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u91CD\u65B0\u6253\u5F00\u914D\u56FE\u9762\u677F\u5373\u53EF\u7EE7\u7EED\u3002", generate: "\u573A\u666F\u914D\u56FE\uFF1A\u56FE\u7247\u5DF2\u751F\u6210\u5E76\u4FDD\u5B58\u3002" };
-  if (job.error) window.toastr.warning(showError(job.error), "Titania Echo");
+  if (job.error) window.toastr.warning(formatIllustrationError(job.error), "Titania Echo");
   else if (titles[job.kind]) window.toastr.info(titles[job.kind], "Titania Echo");
 }
 async function persistPending(current, currentTarget) {
@@ -25156,7 +25352,8 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     root.querySelectorAll("input, textarea, select").forEach((el) => {
       el.disabled = busy;
     });
-    for (const name of ["prepare", "alternate", "generate"]) action(name).disabled = busy || !ready || !session?.record || name !== "prepare" && !session?.draft;
+    const hasContent2 = Boolean(String(target?.content || "").trim());
+    for (const name of ["prepare", "alternate", "generate"]) action(name).disabled = busy || !ready || !session?.record || !hasContent2 || name !== "prepare" && !session?.draft;
     action("detect").disabled = busy;
     action("cancel").hidden = !job || job.phase === "saving";
     action("save").hidden = !session?.pending;
@@ -25398,6 +25595,51 @@ ${block}` : block;
     renderCapabilities();
     updateControls();
   }
+  function applyRecord(current, record) {
+    if (Object.hasOwn(current, "illustration")) {
+      const adopted = session.adopted === void 0 ? current.illustration : session.adopted;
+      const saved = adopted ? normalizeSavedIllustration(adopted) : null;
+      if (saved && !record.images.some((image) => image.id === saved.id)) record.images.push(saved);
+      record.selectedId = saved?.id || null;
+    }
+    session.record = record;
+    session.draft || (session.draft = selectedIllustration(record)?.draft || null);
+    if (!session.previousScenes.length && session.draft?.scene) {
+      session.previousScenes.push({ ...session.draft.scene, positivePrompt: session.draft.prompts?.positivePrompt || "" });
+    }
+    renderDraft();
+    renderGallery();
+  }
+  async function reloadRecord() {
+    const current = target;
+    const sequence = selectionSequence;
+    let record = null, failure = null;
+    try {
+      record = await readSceneIllustrations(current.sceneId);
+    } catch (error) {
+      failure = error;
+    }
+    if (disposed || !session || sequence !== selectionSequence) return;
+    if (failure) {
+      session.notice = formatIllustrationError(failure);
+      session.record = null;
+      return;
+    }
+    applyRecord(current, record);
+  }
+  function adoptAutoJob(sceneId) {
+    const autoJob = getAutoIllustrationJob(sceneId);
+    if (!autoJob || session?.job === autoJob) return;
+    session.job = autoJob;
+    void autoJob.promise.finally(() => {
+      if (disposed || !session || session.job !== autoJob) return;
+      session.job = null;
+      void reloadRecord().then(() => {
+        if (!disposed) refreshFromState();
+      });
+    }).catch(() => {
+    });
+  }
   async function loadTarget(index) {
     target = targets[index];
     const sequence = ++selectionSequence;
@@ -25410,6 +25652,7 @@ ${block}` : block;
     localBusy = true;
     ready = false;
     applyAutoProfiles(session);
+    if (current.unavailable) session.notice = current.unavailable;
     field("text").value = session.text;
     field("request").value = session.request;
     field("participants").value = session.participants;
@@ -25420,26 +25663,15 @@ ${block}` : block;
     try {
       const record = await readSceneIllustrations(current.sceneId);
       if (disposed || sequence !== selectionSequence) return;
-      if (Object.hasOwn(current, "illustration")) {
-        const adopted = session.adopted === void 0 ? current.illustration : session.adopted;
-        const saved = adopted ? normalizeSavedIllustration(adopted) : null;
-        if (saved && !record.images.some((image) => image.id === saved.id)) record.images.push(saved);
-        record.selectedId = saved?.id || null;
-      }
-      session.record = record;
-      session.draft || (session.draft = selectedIllustration(record)?.draft || null);
-      if (!session.previousScenes.length && session.draft?.scene) {
-        session.previousScenes.push({ ...session.draft.scene, positivePrompt: session.draft.prompts?.positivePrompt || "" });
-      }
-      renderDraft();
-      renderGallery();
+      applyRecord(current, record);
     } catch (error) {
-      session.notice = showError(error);
+      session.notice = formatIllustrationError(error);
       session.record = null;
     } finally {
       if (!disposed && sequence === selectionSequence) {
         localBusy = false;
         view.sceneId = current.sceneId;
+        adoptAutoJob(current.sceneId);
         refreshFromState();
         void detect();
       }
@@ -25452,7 +25684,7 @@ ${block}` : block;
     try {
       await operation();
     } catch (error) {
-      session.notice = showError(error);
+      session.notice = formatIllustrationError(error);
     } finally {
       localBusy = false;
       refreshFromState();
@@ -25601,7 +25833,7 @@ ${block}` : block;
       try {
         draft = readDraft();
       } catch (error) {
-        role("status").textContent = showError(error);
+        role("status").textContent = formatIllustrationError(error);
         return;
       }
       if (draft.backend !== activeBackendId) draft = normalizeIllustrationDraft({ ...draft, backend: activeBackendId });
@@ -25706,6 +25938,7 @@ var init_illustrationWindow = __esm({
     init_illustrationSettingsWindow();
     init_characterProfileWindow();
     init_illustrationStore();
+    init_illustrationAuto();
     init_illustrationReferences();
     init_illustrationData();
     init_helpers();
@@ -28546,7 +28779,7 @@ function createSession({ image, outputSize, quality, resolve }) {
     $modal.remove();
     resolve(result);
   }
-  function showError2(message) {
+  function showError(message) {
     $error.text(message).css("display", "");
   }
   const session = { dispose: (result) => finish(result) };
@@ -28583,7 +28816,7 @@ function createSession({ image, outputSize, quality, resolve }) {
     try {
       finish(buildCroppedDataUrl());
     } catch (err) {
-      showError2(err?.message || "\u88C1\u526A\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5");
+      showError(err?.message || "\u88C1\u526A\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5");
     }
   });
   $modal.on("click.titaniaCrop", (e) => {
@@ -40356,11 +40589,24 @@ __export(mainWindow_exports, {
   updateScriptTitleDisplay: () => updateScriptTitleDisplay,
   updateWorkshopFeedbackButton: () => updateWorkshopFeedbackButton
 });
+function describeUnavailableResult(result) {
+  if (result?.status === "running") return "\u8FD9\u4E00\u8F6E\u8FD8\u5728\u751F\u6210\u4E2D\u3002\u7B49\u5B83\u5199\u5B8C\u4E4B\u540E\u518D\u70B9\u4E00\u6B21\u914D\u56FE\u3002";
+  if (result?.status === "failed") return "\u8FD9\u4E00\u8F6E\u751F\u6210\u5931\u8D25\u4E86\uFF0C\u6CA1\u6709\u53EF\u914D\u56FE\u7684\u6B63\u6587\u3002";
+  return "\u8FD8\u6CA1\u6709\u53EF\u4EE5\u914D\u56FE\u7684\u6B63\u6587\u3002\u5148\u6F14\u7ECE\u4E00\u6B21\uFF0C\u518D\u6765\u914D\u56FE\u3002";
+}
 function getMainIllustrationTarget() {
   const result = getCurrentGenerationResult();
   const view = continuationHistoryView;
   const fallback = view ? `${view.chatId}:${view.scriptId}:${view.branchKey}:${view.roundKey}` : `legacy:${getCurrentContinuationSource().chatId}:${result?.scriptId || ""}`;
-  return createIllustrationTarget({ ...result, cardKey: getCharacterCardKey() }, fallback);
+  try {
+    return createIllustrationTarget({ ...result, cardKey: getCharacterCardKey() }, fallback);
+  } catch {
+    return createPendingIllustrationTarget({
+      scriptId: result?.scriptId || "",
+      scriptName: result?.scriptName || "\u573A\u666F",
+      reason: describeUnavailableResult(result)
+    });
+  }
 }
 function formatRelativeTime3(ts) {
   const time = Number(ts) || 0;
@@ -45295,6 +45541,13 @@ ${processedPrompt}`;
         generationId
       });
     }
+    maybeAutoIllustrate({
+      source: generationSource,
+      generationId,
+      scriptId: script.id,
+      scriptName: script.name,
+      content: finalOutput
+    });
     recordScriptGenerated(script.id, {
       isQueue: silent === true && GlobalState.queueState.isRunning,
       mode: GlobalState.generationMode,
@@ -46138,6 +46391,7 @@ var init_api = __esm({
     init_scriptData();
     init_promptManager();
     init_continuationStore();
+    init_illustrationAuto();
     CONTINUATION_SESSION_MAX_ROUNDS = 30;
     CONTINUATION_INJECT_MAX = 20;
     CONTINUATION_INJECT_MIN = 3;
