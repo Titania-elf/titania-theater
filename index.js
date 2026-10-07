@@ -1118,7 +1118,7 @@ var init_illustrationData = __esm({
     ILLUSTRATION_INDEX_KEY = "illustration_index";
     MAX_IMAGE_BYTES = 32 * 1024 * 1024;
     ILLUSTRATION_DRAFT_VERSION = 2;
-    ILLUSTRATION_BACKEND_IDS = ["cosmos", "baibai"];
+    ILLUSTRATION_BACKEND_IDS = ["cosmos", "baibai", "chatu8"];
     BACKENDS = new Set(ILLUSTRATION_BACKEND_IDS);
     MIME_EXTENSIONS = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
   }
@@ -4194,8 +4194,179 @@ var init_baibai = __esm({
   }
 });
 
-// src/core/illustrationBackends/cosmos.js
+// src/core/illustrationBackends/chatu8.js
+function readSettings() {
+  try {
+    const settings2 = globalThis.SillyTavern?.getContext?.()?.extensionSettings?.["st-chatu8"];
+    return settings2 && typeof settings2 === "object" ? settings2 : null;
+  } catch {
+    return null;
+  }
+}
+function getBus() {
+  try {
+    const bus = globalThis.SillyTavern?.getContext?.()?.eventSource;
+    return bus && typeof bus.emit === "function" && typeof bus.on === "function" ? bus : null;
+  } catch {
+    return null;
+  }
+}
+function isEnabled(settings2) {
+  return settings2?.scriptEnabled === true || settings2?.scriptEnabled === "true";
+}
+function readMode(settings2) {
+  const mode = String(settings2?.mode || "");
+  return Object.hasOwn(MODE_LABELS, mode) ? mode : "";
+}
+function deriveCapabilities2(mode) {
+  return Object.freeze({
+    // 请求里只有一个 prompt：分人物与位置都无处安放。草稿里仍然留着，
+    // 切回支持它们的后端就用得上。
+    characterPrompts: false,
+    characterPositions: false,
+    characterNegative: false,
+    negativePrompt: NEGATIVE_MODES.has(mode),
+    // 它按自己渠道里配的宽高出图，不从这里指定画幅。
+    size: false,
+    // 一个响应一张图。
+    batch: false,
+    streamPreview: false
+  });
+}
 function probe2() {
+  const settings2 = readSettings();
+  if (!settings2) {
+    return { ready: false, status: "missing", reason: "\u672A\u68C0\u6D4B\u5230\u667A\u7ED8\u59EC\uFF08st-chatu8\uFF09\uFF0C\u8BF7\u5B89\u88C5\u5E76\u542F\u7528\u8BE5\u6269\u5C55\u3002" };
+  }
+  if (!isEnabled(settings2)) {
+    return { ready: false, status: "not_configured", reason: "\u667A\u7ED8\u59EC\u5DF2\u5B89\u88C5\u4F46\u6CA1\u6709\u542F\u7528\uFF0C\u8BF7\u6253\u5F00\u5B83\u7684\u63D2\u4EF6\u5F00\u5173\u3002" };
+  }
+  const mode = readMode(settings2);
+  if (!mode) {
+    const seen = String(settings2.mode || "").trim();
+    return {
+      ready: false,
+      status: "not_configured",
+      reason: seen ? `\u667A\u7ED8\u59EC\u7684\u6E20\u9053\u300C${seen}\u300D\u4E0D\u80FD\u7528\u6765\u51FA\u56FE\uFF0C\u8BF7\u5728\u5B83\u7684\u300C\u4E3B\u8981\u8BBE\u7F6E\u300D\u91CC\u6539\u9009 SD / NovelAI / ComfyUI / Banana / RunningHub\u3002` : "\u667A\u7ED8\u59EC\u8FD8\u6CA1\u6709\u9009\u6E20\u9053\uFF0C\u8BF7\u5728\u5B83\u7684\u300C\u4E3B\u8981\u8BBE\u7F6E\u300D\u91CC\u9009\u4E00\u4E2A\u80FD\u51FA\u56FE\u7684\u6E20\u9053\u3002"
+    };
+  }
+  if (!getBus()) {
+    return { ready: false, status: "not_configured", reason: "\u9152\u9986\u7684\u4E8B\u4EF6\u603B\u7EBF\u8FD8\u6CA1\u5C31\u7EEA\uFF0C\u8BF7\u5237\u65B0\u9875\u9762\u540E\u518D\u8BD5\u3002" };
+  }
+  return {
+    ready: true,
+    status: "ready",
+    reason: `\u667A\u7ED8\u59EC\u5DF2\u8FDE\u63A5\uFF08${MODE_LABELS[mode]} \u6E20\u9053\uFF09\u3002`,
+    capabilities: deriveCapabilities2(mode),
+    detail: { mode }
+  };
+}
+function abortError() {
+  return Object.assign(new Error("\u914D\u56FE\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002"), { name: "AbortError", code: "ABORTED" });
+}
+function requestImage(bus, request, options) {
+  const { signal } = options;
+  const waitMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : RESPONSE_TIMEOUT_MS;
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      bus.removeListener?.(RESPONSE_EVENT, onResponse);
+      signal?.removeEventListener?.("abort", onAbort);
+    };
+    const done = (error, value) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (error) reject(error);
+      else resolve(value);
+    };
+    const onResponse = (data) => {
+      if (!data || String(data?.id) !== String(request.id)) return;
+      done(null, data);
+    };
+    const onAbort = () => done(abortError());
+    const timer = setTimeout(() => done(Object.assign(
+      new Error("\u667A\u7ED8\u59EC\u6CA1\u6709\u56DE\u5E94\u3002\u8BF7\u786E\u8BA4\u5B83\u5728\u8BBE\u7F6E\u91CC\u5DF2\u542F\u7528\u3001\u6E20\u9053\u5DF2\u9009\u597D\uFF0C\u6216\u7A0D\u540E\u91CD\u8BD5\u3002"),
+      { code: "NOT_READY" }
+    )), waitMs);
+    if (signal?.aborted) {
+      done(abortError());
+      return;
+    }
+    signal?.addEventListener?.("abort", onAbort, { once: true });
+    bus.on(RESPONSE_EVENT, onResponse);
+    bus.emit(REQUEST_EVENT, request);
+  });
+}
+async function generate2(draft, options = {}) {
+  const state = probe2();
+  const bus = getBus();
+  if (!state.ready || !bus) {
+    throw Object.assign(new Error(state.reason), { code: "NOT_READY" });
+  }
+  const settings2 = readSettings();
+  const mode = readMode(settings2);
+  const request = {
+    id: newIllustrationId(),
+    prompt: draft.prompts.positivePrompt,
+    // 文档给的形状就是 null = 用它自己渠道里配的尺寸。
+    width: null,
+    height: null
+  };
+  if (NEGATIVE_MODES.has(mode) && String(draft.prompts.negativePrompt || "").trim()) {
+    request.negative_prompt = draft.prompts.negativePrompt;
+  }
+  const response = await requestImage(bus, request, options);
+  if (response.success === false) {
+    const detail = String(response.error || "").trim();
+    throw Object.assign(
+      new Error(detail ? `\u667A\u7ED8\u59EC\u751F\u6210\u5931\u8D25\uFF1A${detail}` : "\u667A\u7ED8\u59EC\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002"),
+      { code: "GENERATION_FAILED" }
+    );
+  }
+  if (response.isVideo) {
+    throw Object.assign(new Error("\u667A\u7ED8\u59EC\u8FD9\u6B21\u8FD4\u56DE\u7684\u662F\u89C6\u9891\uFF0C\u914D\u56FE\u53EA\u6536\u56FE\u7247\u3002"), { code: "GENERATION_FAILED" });
+  }
+  let blob;
+  try {
+    blob = dataUrlToBlob(response.imageData, { maxBytes: MAX_IMAGE_BYTES });
+  } catch (error) {
+    throw Object.assign(new Error(error?.message || "\u667A\u7ED8\u59EC\u6CA1\u6709\u8FD4\u56DE\u56FE\u7247\u3002"), { code: "GENERATION_FAILED" });
+  }
+  return { blobs: [blob] };
+}
+var REQUEST_EVENT, RESPONSE_EVENT, MODE_LABELS, NEGATIVE_MODES, RESPONSE_TIMEOUT_MS, chatu8Backend;
+var init_chatu8 = __esm({
+  "src/core/illustrationBackends/chatu8.js"() {
+    init_illustrationData();
+    init_imageBytes();
+    REQUEST_EVENT = "generate-image-request";
+    RESPONSE_EVENT = "generate-image-response";
+    MODE_LABELS = {
+      sd: "Stable Diffusion",
+      novelai: "NovelAI",
+      comfyui: "ComfyUI",
+      banana: "Banana / Grok",
+      runninghub: "RunningHub"
+    };
+    NEGATIVE_MODES = /* @__PURE__ */ new Set(["sd", "novelai", "comfyui", "runninghub"]);
+    RESPONSE_TIMEOUT_MS = 15 * 60 * 1e3;
+    chatu8Backend = {
+      id: "chatu8",
+      label: "\u667A\u7ED8\u59EC",
+      // 它没有「我准备好了」的广播：配置变化派发的是 document 上的
+      // st-chatu8-config-updated，而界面订阅的是 window 上的事件（且那个 CustomEvent 不冒泡）。
+      // 所以这里不挂就绪事件 —— 用户在面板上点「重新检测」即可，这也正是那个按钮的用途。
+      readyEvents: [],
+      probe: probe2,
+      generate: generate2
+    };
+  }
+});
+
+// src/core/illustrationBackends/cosmos.js
+function probe3() {
   const api = globalThis.window?.CosmosVision;
   if (!api) return { ready: false, status: "missing", reason: "\u672A\u68C0\u6D4B\u5230 Cosmos Vision\uFF0C\u8BF7\u5B89\u88C5\u5E76\u542F\u7528\u8BE5\u6269\u5C55\u3002" };
   if (typeof api.generateImage !== "function") {
@@ -4206,10 +4377,10 @@ function probe2() {
   }
   return { ready: true, status: "ready", reason: "Cosmos Vision \u5DF2\u8FDE\u63A5\u3002", capabilities: CAPABILITIES };
 }
-async function generate2(draft, options = {}) {
+async function generate3(draft, options = {}) {
   const api = globalThis.window?.CosmosVision;
   if (typeof api?.generateImage !== "function") {
-    const state = probe2();
+    const state = probe3();
     throw Object.assign(new Error(state.reason), { code: "NOT_READY" });
   }
   const result = await api.generateImage({
@@ -4262,8 +4433,8 @@ var init_cosmos = __esm({
       label: "Cosmos Vision",
       // 它准备好的广播事件。界面订阅所有后端的这一份，任何一个就绪都会重新探测。
       readyEvents: ["cosmos-vision:api-ready"],
-      probe: probe2,
-      generate: generate2
+      probe: probe3,
+      generate: generate3
     };
   }
 });
@@ -4306,6 +4477,7 @@ var EMPTY_CAPABILITIES, DEFAULT_BACKEND_ID, ADAPTERS, ILLUSTRATION_BACKEND_KEY, 
 var init_registry = __esm({
   "src/core/illustrationBackends/registry.js"() {
     init_baibai();
+    init_chatu8();
     init_cosmos();
     EMPTY_CAPABILITIES = Object.freeze({
       characterPrompts: false,
@@ -4317,7 +4489,7 @@ var init_registry = __esm({
       streamPreview: false
     });
     DEFAULT_BACKEND_ID = "cosmos";
-    ADAPTERS = new Map([cosmosBackend, baibaiBackend].map((adapter) => [adapter.id, adapter]));
+    ADAPTERS = new Map([cosmosBackend, baibaiBackend, chatu8Backend].map((adapter) => [adapter.id, adapter]));
     ILLUSTRATION_BACKEND_KEY = "illustration_backend";
     ILLUSTRATION_BACKEND_VERSION = 1;
   }
@@ -23108,7 +23280,7 @@ var init_chatInjector = __esm({
 });
 
 // src/core/cosmosVisionBridge.js
-function abortError() {
+function abortError2() {
   return Object.assign(new Error("\u914D\u56FE\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002"), { name: "AbortError", code: "ABORTED" });
 }
 function detectIllustrationBackend(backendId = DEFAULT_BACKEND_ID) {
@@ -23145,22 +23317,22 @@ function detectIllustrationBackend(backendId = DEFAULT_BACKEND_ID) {
   };
 }
 function runAbortableIllustrationTask(task, signal) {
-  if (signal?.aborted) return Promise.reject(abortError());
+  if (signal?.aborted) return Promise.reject(abortError2());
   return new Promise((resolve, reject) => {
     const abort = () => {
       signal?.removeEventListener("abort", abort);
-      reject(abortError());
+      reject(abortError2());
     };
     signal?.addEventListener("abort", abort, { once: true });
     Promise.resolve().then(() => {
-      if (signal?.aborted) throw abortError();
+      if (signal?.aborted) throw abortError2();
       return task();
-    }).then((value) => signal?.aborted ? reject(abortError()) : resolve(value), reject).finally(() => signal?.removeEventListener("abort", abort));
+    }).then((value) => signal?.aborted ? reject(abortError2()) : resolve(value), reject).finally(() => signal?.removeEventListener("abort", abort));
   });
 }
 function normalizeBackendError(error, signal) {
-  if (signal?.aborted) return abortError();
-  if (error?.name === "AbortError" || error?.code === "ABORTED") return abortError();
+  if (signal?.aborted) return abortError2();
+  if (error?.name === "AbortError" || error?.code === "ABORTED") return abortError2();
   if (typeof error?.code === "string" && PLUGIN_ERROR_CODES.has(error.code)) return error;
   const message = typeof error?.message === "string" && error.message.trim();
   return illustrationError(message || "\u751F\u56FE\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002", "GENERATION_FAILED");
@@ -24553,7 +24725,8 @@ var init_illustrationSettingsWindow = __esm({
     };
     BACKEND_HELP = {
       cosmos: "\u652F\u6301\u4E00\u6B21\u51FA\u591A\u5F20\uFF0C\u4EBA\u7269\u4F4D\u7F6E\u53EF\u7528\u3002\u753B\u5E45\u3001\u753B\u98CE\u4E0E\u8D28\u91CF\u8BCD\u5728\u5B83\u90A3\u8FB9\u914D\u7F6E\u3002",
-      baibai: "\u4E00\u6B21\u51FA\u4E00\u5F20\uFF0C\u4EBA\u7269\u4F4D\u7F6E\u56FA\u5B9A\u5728\u753B\u9762\u4E2D\u5FC3\uFF1BNovelAI \u4E0B\u4E0D\u4F7F\u7528\u8FD9\u91CC\u586B\u7684\u8D1F\u5411\u63D0\u793A\u8BCD\u3002"
+      baibai: "\u4E00\u6B21\u51FA\u4E00\u5F20\uFF0C\u4EBA\u7269\u4F4D\u7F6E\u56FA\u5B9A\u5728\u753B\u9762\u4E2D\u5FC3\uFF1BNovelAI \u4E0B\u4E0D\u4F7F\u7528\u8FD9\u91CC\u586B\u7684\u8D1F\u5411\u63D0\u793A\u8BCD\u3002",
+      chatu8: "\u4E00\u6B21\u51FA\u4E00\u5F20\uFF0C\u4E0D\u652F\u6301\u5206\u4EBA\u7269\u63D0\u793A\u8BCD\u4E0E\u4EBA\u7269\u4F4D\u7F6E\uFF1B\u7528\u54EA\u4E2A\u6E20\u9053\uFF08SD / NovelAI / ComfyUI / Banana / RunningHub\uFF09\u7531\u5B83\u81EA\u5DF1\u7684\u300C\u4E3B\u8981\u8BBE\u7F6E\u300D\u51B3\u5B9A\uFF0C\u66FF\u6362\u8BCD\u4E0E\u8D28\u91CF\u8BCD\u4E5F\u5728\u5B83\u90A3\u8FB9\u914D\u3002\u5B83\u6CA1\u6709\u53D6\u6D88\u63A5\u53E3\uFF0C\u53D6\u6D88\u53EA\u662F\u8FD9\u8FB9\u4E0D\u518D\u7B49\u3002"
     };
   }
 });
@@ -25580,7 +25753,7 @@ ${block}` : block;
     const characterHint = !caps.characterPrompts ? "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u4E0D\u652F\u6301\u5206\u4EBA\u7269\u63D0\u793A\u8BCD\uFF0C\u8FD9\u4E00\u90E8\u5206\u4E0D\u4F1A\u8FDB\u5165\u63D0\u793A\u8BCD\u3002" : !caps.characterPositions ? "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u628A\u4EBA\u7269\u4F4D\u7F6E\u56FA\u5B9A\u5728\u753B\u9762\u4E2D\u5FC3\uFF0CX / Y \u4E0D\u4F1A\u751F\u6548\u3002" : "";
     role("characters-hint").hidden = !characterHint;
     role("characters-hint").textContent = characterHint;
-    const negativeHint = caps.negativePrompt ? "" : "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u5728 NovelAI \u4E0B\u4F7F\u7528\u4F60\u6E20\u9053\u914D\u7F6E\u7684\u8D1F\u5411\u8BCD\uFF0C\u8FD9\u91CC\u586B\u5199\u7684\u4E0D\u4F1A\u751F\u6548\u3002";
+    const negativeHint = caps.negativePrompt ? "" : "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u4E0D\u4F7F\u7528\u8FD9\u91CC\u586B\u5199\u7684\u8D1F\u5411\u63D0\u793A\u8BCD\uFF0C\u5B83\u7528\u81EA\u5DF1\u90A3\u8FB9\u914D\u7F6E\u7684\u3002";
     role("negative-hint").hidden = !negativeHint;
     role("negative-hint").textContent = negativeHint;
   }
@@ -32291,7 +32464,7 @@ __export(rewriteEntryButton_exports, {
   refreshRewriteEntryButton: () => refreshRewriteEntryButton
 });
 import { saveChatConditional as saveChatConditional2, reloadCurrentChat as reloadCurrentChat2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
-function isEnabled() {
+function isEnabled2() {
   const data = getExtData();
   return data?.rewrite_entry?.enabled === true;
 }
@@ -32671,7 +32844,7 @@ function ensureInlineRewriteToolbar(latest) {
 }
 function refreshInlineRewriteEntry() {
   const data = ensureRewriteDataShape();
-  if (!isEnabled() || data.selected_sentence_enabled === false) {
+  if (!isEnabled2() || data.selected_sentence_enabled === false) {
     clearInlineSentenceSelection();
     return;
   }
@@ -33616,7 +33789,7 @@ async function runManualRewrite() {
 async function onAutoTriggerRewrite() {
   const data = ensureRewriteDataShape();
   if (!data.auto_trigger) return;
-  if (!isEnabled()) return;
+  if (!isEnabled2()) return;
   if (isAutoRewriting) return;
   if (activeRewriteAbortController) return;
   if (!getActiveScheme()) return;
@@ -33635,7 +33808,7 @@ async function onAutoTriggerRewrite() {
     autoRewriteTimer = null;
     const freshData = ensureRewriteDataShape();
     if (!freshData.auto_trigger) return;
-    if (!isEnabled()) return;
+    if (!isEnabled2()) return;
     if (isAutoRewriting) return;
     if (activeRewriteAbortController) return;
     const freshLatest = getLatestAssistantMessageFromChat();
@@ -34493,7 +34666,7 @@ function bindGlobalEvents() {
   });
 }
 function syncEntryButton() {
-  if (!isEnabled()) {
+  if (!isEnabled2()) {
     clearInlineSentenceSelection();
     removeButton(true);
     return;
@@ -34522,7 +34695,7 @@ function refreshRewriteEntryButton() {
   refreshInlineRewriteEntry();
 }
 function openRewritePanelFromMenu() {
-  if (!isEnabled()) return;
+  if (!isEnabled2()) return;
   openPanel();
 }
 var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, latestSentenceUnits, selectedSentenceIds, inlineSelectionMessageIndex, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE;
@@ -34619,7 +34792,7 @@ __export(floorNav_exports, {
 });
 import { eventSource as eventSource3, event_types as event_types3, showMoreMessages } from "../../../../script.js";
 import { hideChatMessageRange } from "../../../chats.js";
-function isEnabled2() {
+function isEnabled3() {
   return getExtData()?.floor_nav?.enabled !== false;
 }
 function getChat() {
@@ -34678,7 +34851,7 @@ function removeAllButtons() {
   document.querySelectorAll(`#chat .${BTN_CLASS}`).forEach((node) => node.remove());
 }
 function refreshButtons() {
-  if (!isEnabled2()) {
+  if (!isEnabled3()) {
     removeAllButtons();
     return;
   }
@@ -34973,7 +35146,7 @@ var init_readerWindow = __esm({
 });
 
 // src/ui/outlineEntryButton.js
-function isEnabled3() {
+function isEnabled4() {
   const data = getExtData();
   return data?.outline_entry?.enabled === true;
 }
@@ -35160,7 +35333,7 @@ function ensureButton() {
   bindClick($btn);
 }
 function syncEntryButton2() {
-  if (!isEnabled3()) {
+  if (!isEnabled4()) {
     removeButton2();
     return;
   }
@@ -35198,7 +35371,7 @@ function loadApi() {
   if (!apiPromise) apiPromise = Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
   return apiPromise;
 }
-function isEnabled4() {
+function isEnabled5() {
   return getExtData()?.outline_entry?.show_outline_actions === true;
 }
 function escapeHtmlText2(str) {
@@ -35283,7 +35456,7 @@ function updateStrip(strip, { progress, expanded } = {}) {
   }
 }
 function refreshStrips() {
-  if (!isEnabled4()) {
+  if (!isEnabled5()) {
     removeAllStrips();
     destroyPanel();
     return;
@@ -43858,11 +44031,11 @@ function archiveContinuationBranch(entry) {
     archivedAt: Date.now()
   }, ...entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== branchKey)].slice(0, CONTINUATION_ARCHIVED_BRANCH_MAX);
 }
-function findContinuationRoundAnchor(scriptId, probe3 = {}) {
+function findContinuationRoundAnchor(scriptId, probe4 = {}) {
   const entry = getContinuationRuntimeStore()[scriptId];
   if (!entry) return null;
-  const wantedId = String(probe3.generationId || "").trim();
-  const wantedContent = String(probe3.content || "").trim();
+  const wantedId = String(probe4.generationId || "").trim();
+  const wantedContent = String(probe4.content || "").trim();
   if (!wantedId && !wantedContent) return null;
   const activeBranchKey = String(entry.branchKey || "").trim();
   const candidates = [
@@ -46658,14 +46831,14 @@ var lastVisibleChoice = null;
 function escapeHtmlText4(str) {
   return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function isEnabled5() {
+function isEnabled6() {
   return getChatInjectConfig().enabled;
 }
 function removeAllButtons2() {
   document.querySelectorAll(`#chat .${BTN_CLASS2}`).forEach((node) => node.remove());
 }
 function refreshButtons2() {
-  if (!isEnabled5()) {
+  if (!isEnabled6()) {
     removeAllButtons2();
     return;
   }
