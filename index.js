@@ -1009,10 +1009,10 @@ function createIllustrationTarget(result, fallbackId = "") {
     cardKey: String(result.cardKey || "")
   });
 }
-function resolveDisplayedFavoriteBranch(result, active, archived = []) {
+function resolveDisplayedFavoriteBranch(result, active2, archived = []) {
   const matches = (round) => result?.generationId ? round?.generationId === result.generationId : String(round?.content || "").trim() === String(result?.content || "").trim();
-  const source = [active, ...archived].find((branch) => branch?.rounds?.some(matches));
-  return source ? { ...active, ...source } : { ...active, branchKey: "", rounds: [] };
+  const source = [active2, ...archived].find((branch) => branch?.rounds?.some(matches));
+  return source ? { ...active2, ...source } : { ...active2, branchKey: "", rounds: [] };
 }
 function requireText(value, label, allowEmpty = false) {
   if (typeof value !== "string" || !allowEmpty && !value.trim()) {
@@ -1050,12 +1050,12 @@ function normalizeIllustrationDraft(value) {
     }
   };
 }
-function sanitizeIllustrationExcerpt(draft, theaterText) {
-  const excerpt = draft?.scene?.sourceExcerpt;
-  if (!excerpt || String(theaterText ?? "").includes(excerpt)) return draft;
-  const scene = { ...draft.scene };
+function sanitizeIllustrationExcerpt(draft2, theaterText) {
+  const excerpt = draft2?.scene?.sourceExcerpt;
+  if (!excerpt || String(theaterText ?? "").includes(excerpt)) return draft2;
+  const scene = { ...draft2.scene };
   delete scene.sourceExcerpt;
-  return { ...draft, scene };
+  return { ...draft2, scene };
 }
 function illustrationExtension(mime) {
   const extension = MIME_EXTENSIONS[mime];
@@ -3091,8 +3091,8 @@ function normalizeUserPreset(raw) {
 function normalizeState(current) {
   const presets = (Array.isArray(current?.presets) ? current.presets : []).map(normalizeUserPreset).filter(Boolean);
   const requested = String(current?.active_preset_id ?? "").trim();
-  const active = presets.some((preset) => preset.id === requested) ? requested : presets[0]?.id || "";
-  return { version: ILLUSTRATION_PRESETS_VERSION, active_preset_id: active, presets };
+  const active2 = presets.some((preset) => preset.id === requested) ? requested : presets[0]?.id || "";
+  return { version: ILLUSTRATION_PRESETS_VERSION, active_preset_id: active2, presets };
 }
 function migrateLegacySpec(data) {
   const legacy = data?.[LEGACY_SPEC_KEY];
@@ -4123,16 +4123,16 @@ function translateError(error) {
   const message = lead && detail ? `${lead}\uFF08${detail}\uFF09` : lead || detail || "\u67CF\u5B9D\u7ED8\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002";
   return Object.assign(new Error(message), { code: pluginCode });
 }
-async function generate(draft, options = {}) {
+async function generate(draft2, options = {}) {
   const api = globalThis.window?.STBaiBaiImage;
   if (typeof api?.generate !== "function") {
     throw Object.assign(new Error("\u67CF\u5B9D\u7ED8\u5C1A\u672A\u5C31\u7EEA\u3002"), { code: "NOT_READY" });
   }
-  const characters = buildCharacters(draft.prompts.characterPrompts);
+  const characters = buildCharacters(draft2.prompts.characterPrompts);
   const request = {
-    prompt: draft.prompts.positivePrompt,
+    prompt: draft2.prompts.positivePrompt,
     // NAI 下它会忽略这个字段；照发即可，切到 ComfyUI 时就有用。
-    negative: draft.prompts.negativePrompt,
+    negative: draft2.prompts.negativePrompt,
     // ⚠ 必须显式传 false：它的默认是 true，会把图也存进它自己的图库。
     //   本插件的收藏、备份与图文导出都依赖自己的 /user/files 存储，不要两份。
     save: false
@@ -4299,7 +4299,7 @@ function requestImage(bus, request, options) {
     bus.emit(REQUEST_EVENT, request);
   });
 }
-async function generate2(draft, options = {}) {
+async function generate2(draft2, options = {}) {
   const state = probe2();
   const bus = getBus();
   if (!state.ready || !bus) {
@@ -4309,13 +4309,13 @@ async function generate2(draft, options = {}) {
   const mode = readMode(settings2);
   const request = {
     id: newIllustrationId(),
-    prompt: draft.prompts.positivePrompt,
+    prompt: draft2.prompts.positivePrompt,
     // 文档给的形状就是 null = 用它自己渠道里配的尺寸。
     width: null,
     height: null
   };
-  if (NEGATIVE_MODES.has(mode) && String(draft.prompts.negativePrompt || "").trim()) {
-    request.negative_prompt = draft.prompts.negativePrompt;
+  if (NEGATIVE_MODES.has(mode) && String(draft2.prompts.negativePrompt || "").trim()) {
+    request.negative_prompt = draft2.prompts.negativePrompt;
   }
   const response = await requestImage(bus, request, options);
   if (response.success === false) {
@@ -4377,7 +4377,7 @@ function probe3() {
   }
   return { ready: true, status: "ready", reason: "Cosmos Vision \u5DF2\u8FDE\u63A5\u3002", capabilities: CAPABILITIES };
 }
-async function generate3(draft, options = {}) {
+async function generate3(draft2, options = {}) {
   const api = globalThis.window?.CosmosVision;
   if (typeof api?.generateImage !== "function") {
     const state = probe3();
@@ -4387,9 +4387,9 @@ async function generate3(draft, options = {}) {
     // 只给「画面里有什么」。质量词、UC 词、画风预设与 LoRA 触发词由 Cosmos 追加，
     // 这里再写一遍就会重复叠加 —— v1 需求与联调清单都点名过这条。
     prompts: {
-      positivePrompt: draft.prompts.positivePrompt,
-      negativePrompt: draft.prompts.negativePrompt,
-      characterPrompts: draft.prompts.characterPrompts
+      positivePrompt: draft2.prompts.positivePrompt,
+      negativePrompt: draft2.prompts.negativePrompt,
+      characterPrompts: draft2.prompts.characterPrompts
     },
     requestId: newIllustrationId(),
     signal: options.signal,
@@ -9066,6 +9066,7 @@ textarea.t-input {
 /* Zen Mode (\u6C89\u6D78\u6A21\u5F0F) */
 #t-main-view.t-zen-mode .t-header,
 #t-main-view.t-zen-mode .t-top-bar,
+#t-main-view.t-zen-mode .t-temp-bar,
 #t-main-view.t-zen-mode .t-bottom-bar,
 #t-main-view.t-zen-mode .t-toolbox-panel,
 #t-main-view.t-zen-mode .t-toolbox-backdrop {
@@ -9166,6 +9167,121 @@ textarea.t-input {
     box-sizing: border-box;
     flex-shrink: 0;
     z-index: 20;
+}
+
+/* \u2500\u2500 \u300C\u672C\u6B21\u8865\u5145\u300D\u6761\uFF08\u4E34\u65F6\u6307\u4EE4\uFF09\u2500\u2500
+
+   \u4F4D\u7F6E\uFF1A.t-top-bar \u7684**\u5144\u5F1F**\uFF0C\u4E0D\u662F\u5B83\u7684\u4E00\u884C\u3002
+   \u4E3A\u4EC0\u4E48\u4E0D\u505A\u6210\u680F\u5185\u7B2C\u4E8C\u884C\uFF1A.t-top-bar \u662F\u5199\u6B7B height:52px \u7684\u5355\u884C\u80F6\u56CA\u6761\uFF0C\u4E0A\u65B9\u6CE8\u91CA
+   \u5DF2\u8BF4\u660E\u8FD9\u4E00\u680F\u7684\u7A7A\u95F4\u9884\u7B97\u662F\u6309 950px \u7A97\u53E3\u5B9E\u6D4B\u8C03\u8FC7\u7684\uFF0C\u4E14 modern/legacy \u4E24\u53D8\u4F53\u523B\u610F
+   \u5206\u53C9 \u2014\u2014 \u585E\u7B2C\u4E8C\u884C\u8981\u4E48\u9876\u7834\u56FA\u5B9A\u9AD8\u5EA6\u3001\u8981\u4E48\u5F97\u628A\u6574\u680F\u6539\u6210 column \u91CD\u65B0\u914D\u5E73\u3002
+
+   \u505A\u6210\u5144\u5F1F\u540E\u9760\u4E24\u70B9\u4F2A\u88C5\u6210\u300C\u9876\u680F\u957F\u51FA\u7684\u7B2C\u4E8C\u884C\u300D\uFF1A
+     1. \u540C\u6B3E\u80CC\u666F\u4E0E\u5DE6\u53F3\u5185\u8FB9\u8DDD\uFF1B
+     2. \u5B83\u53EF\u89C1\u65F6\u7531 JS \u7ED9 .t-top-bar \u6302 .has-temp-bar\uFF0C\u628A\u90A3\u9053 border-bottom \u5173\u6389\u3002
+        \uFF08\u4E0D\u7528 :has()\uFF0C\u90A3\u5BF9\u65E7\u5185\u6838\u4E0D\u53EF\u9760\u3002\uFF09
+   \u4E8E\u662F\u4E24\u884C\u4E4B\u95F4\u6CA1\u6709\u5206\u9694\u7EBF\uFF0C\u4E0B\u9762\u90A3\u6761 border-bottom \u624D\u662F\u4E0E\u5185\u5BB9\u533A\u7684\u5206\u754C\u3002
+
+   \u53EA\u5728\u300C\u5F85\u6F14\u7ECE\u300D\u4E0E\u300C\u8865\u5145\u5DF2\u751F\u6548\u300D\u4E24\u4E2A\u77AC\u6001\u51FA\u73B0\uFF0C\u5176\u4F59\u65F6\u5019\u6574\u6761 hidden\u3002 */
+.t-temp-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 20px;
+    background: var(--t-color-surface);
+    border-bottom: 1px solid var(--t-color-border);
+    flex-shrink: 0;
+}
+
+/* display:flex \u4F1A\u76D6\u6389 hidden \u5C5E\u6027\u7684 display:none\uFF0C\u5FC5\u987B\u663E\u5F0F\u8865\u56DE\u6765 */
+.t-temp-bar[hidden] {
+    display: none;
+}
+
+/* \u5B83\u53EF\u89C1\u65F6\uFF0C\u4E0A\u9762\u90A3\u4E00\u680F\u7684\u5206\u9694\u7EBF\u8BA9\u4F4D\uFF0C\u4E24\u884C\u8BFB\u6210\u4E00\u6574\u5757 */
+.t-top-bar.has-temp-bar {
+    border-bottom-color: transparent;
+}
+
+.t-temp-edit,
+.t-temp-active {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.t-temp-edit[hidden],
+.t-temp-active[hidden] {
+    display: none;
+}
+
+.t-temp-label {
+    flex: 0 0 auto;
+    font-size: 0.85em;
+    color: var(--t-color-text-muted);
+    white-space: nowrap;
+}
+
+/* \u590D\u7528 .t-input \u7EC4\u4EF6\uFF08\u5B83\u81EA\u5E26\u80CC\u666F/\u8FB9\u6846/\u5706\u89D2/\u7126\u70B9\u6001\uFF09\uFF0C\u8FD9\u91CC\u53EA\u8865\u672C\u6761\u7684\u5E03\u5C40\u3002
+   \u8986\u76D6\u5C3A\u5BF8\u7C7B\u81EA\u5B9A\u4E49\u5C5E\u6027\u4E0D\u7B97\u91CD\u5B9A\u4E49\u7EC4\u4EF6\u89C6\u89C9\uFF08\u89C1 icon-button.css \u5934\u90E8\u540C\u6B3E\u7406\u7531\uFF09\u3002 */
+.t-temp-bar .t-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 4px 8px;
+    font-size: 0.85em;
+}
+
+.t-temp-input::placeholder {
+    color: var(--t-color-text-dim);
+}
+
+/* \u6E05\u7A7A / \u64A4\u9500\u90FD\u662F\u5C0F\u53F7\u63A7\u4EF6\uFF0C\u95F4\u8DDD\u4EA4\u7ED9\u7236\u7EA7 gap\uFF08B13 \u7684\u6838\u5FC3\u7EA6\u5B9A\uFF09 */
+.t-temp-bar .t-icon-btn {
+    --t-icon-btn-size: 26px;
+    --t-icon-btn-font-size: 0.95em;
+}
+
+.t-temp-active-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.85em;
+    color: var(--t-color-text-faint);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.t-temp-active-text .fa-check {
+    color: var(--t-color-accent);
+}
+
+.t-temp-undo {
+    flex: 0 0 auto;
+    padding: 3px 10px;
+    font-size: 0.85em;
+    color: var(--t-color-text-muted);
+    background: transparent;
+    border: 1px solid var(--t-color-border);
+    border-radius: var(--t-radius-inline);
+    cursor: pointer;
+    transition: var(--t-transition-hover);
+}
+
+.t-temp-undo:hover {
+    color: var(--t-color-text);
+    border-color: var(--t-color-border-strong);
+}
+
+@media screen and (max-width: 600px) {
+    .t-temp-bar {
+        padding: 5px 12px;
+    }
+
+    .t-temp-label {
+        display: none; /* \u7A84\u5C4F\u4F18\u5148\u628A\u5BBD\u5EA6\u7559\u7ED9\u8F93\u5165\u6846\uFF0C\u94C5\u7B14\u56FE\u6807\u5DF2\u8DB3\u591F\u793A\u610F */
+    }
 }
 
 /* \u5386\u53F2\u5F00\u5173\u7EC4 */
@@ -23347,16 +23463,16 @@ async function readGeneratedImages(blobs) {
   }
   return images;
 }
-async function generateTheaterIllustration(draft, options = {}) {
+async function generateTheaterIllustration(draft2, options = {}) {
   return runAbortableIllustrationTask(async () => {
-    const backendId = draft?.backend;
+    const backendId = draft2?.backend;
     const adapter = getIllustrationBackend(backendId);
     if (!adapter) throw illustrationError(`\u914D\u56FE\u8349\u7A3F\u7684\u751F\u56FE\u540E\u7AEF\u300C${backendId}\u300D\u4E0D\u53D7\u652F\u6301\u3002`, "UNSUPPORTED_API");
     const state = detectIllustrationBackend(backendId);
     if (!state.ready) throw illustrationError(state.reason, statusToErrorCode(state.status));
     let result;
     try {
-      result = await adapter.generate(draft, {
+      result = await adapter.generate(draft2, {
         signal: options.signal,
         onProgress: options.onProgress,
         onStreamPreview: options.onStreamPreview,
@@ -23877,7 +23993,7 @@ function draftFromSceneReply(raw, theaterText, backendId = "cosmos") {
     ...typeof parsed.sourceExcerpt === "string" && parsed.sourceExcerpt.trim() ? { sourceExcerpt: parsed.sourceExcerpt.trim() } : {}
   };
   const characters = Array.isArray(parsed.characters) ? parsed.characters : Array.isArray(parsed.characterPrompts) ? parsed.characterPrompts : [];
-  const draft = normalizeIllustrationDraft({
+  const draft2 = normalizeIllustrationDraft({
     version: 2,
     // 草稿记下这次交给哪个后端。提示词本身是后端无关的（只有内容、没有风格），
     // 所以换个后端重画不必重新选景。
@@ -23893,8 +24009,8 @@ function draftFromSceneReply(raw, theaterText, backendId = "cosmos") {
       }))
     }
   });
-  const hasExcerpt = Boolean(draft.scene.sourceExcerpt);
-  const sanitized = sanitizeIllustrationExcerpt(draft, theaterText);
+  const hasExcerpt = Boolean(draft2.scene.sourceExcerpt);
+  const sanitized = sanitizeIllustrationExcerpt(draft2, theaterText);
   if (hasExcerpt && !sanitized.scene.sourceExcerpt) sanitized.excerptDropped = true;
   return sanitized;
 }
@@ -24035,21 +24151,21 @@ async function runAutoJob(job, target, data) {
   }).map(composeProfileBlock).filter(Boolean).join("\n\n");
   job.phase = "selecting";
   job.status = AUTO_STATUS.selecting;
-  let draft = await selectIllustrationScene(
+  let draft2 = await selectIllustrationScene(
     { theaterText, participants, specialRequest: "", previousScenes: [] },
     { signal }
   );
   if (cancelled()) return;
   const currentBackend = resolveActiveBackendId(getExtData());
-  if (draft.backend !== currentBackend) draft = normalizeIllustrationDraft({ ...draft, backend: currentBackend });
+  if (draft2.backend !== currentBackend) draft2 = normalizeIllustrationDraft({ ...draft2, backend: currentBackend });
   job.phase = "generating";
   job.status = AUTO_STATUS.generating;
-  const result = await generateTheaterIllustration(draft, { signal });
+  const result = await generateTheaterIllustration(draft2, { signal });
   if (cancelled()) return;
   job.phase = "saving";
   job.status = AUTO_STATUS.saving;
   await saveGeneratedIllustrations(target.sceneId, {
-    draft,
+    draft: draft2,
     images: result.images,
     seed: result.seed,
     createdAt: Date.now()
@@ -24331,7 +24447,7 @@ function openIllustrationSettingsWindow(options = {}) {
   function renderBackend() {
     const data = getExtData();
     ensureIllustrationBackend(data);
-    const active = resolveActiveBackendId(data);
+    const active2 = resolveActiveBackendId(data);
     const select = role("backend-select");
     select.replaceChildren();
     for (const backend of listIllustrationBackends()) {
@@ -24340,15 +24456,15 @@ function openIllustrationSettingsWindow(options = {}) {
       option.textContent = backend.label;
       select.append(option);
     }
-    select.value = active;
-    const state2 = detectIllustrationBackend(active);
+    select.value = active2;
+    const state2 = detectIllustrationBackend(active2);
     const node = role("backend-validation");
     node.textContent = state2.reason;
     node.style.color = state2.ready ? "" : "var(--t-color-danger, #e06c75)";
   }
   function renderToolbar() {
     const presets = listPresets(getExtData());
-    const active = state().active_preset_id;
+    const active2 = state().active_preset_id;
     const select = role("preset-select");
     select.replaceChildren();
     if (!presets.length) {
@@ -24364,7 +24480,7 @@ function openIllustrationSettingsWindow(options = {}) {
         select.append(option);
       }
     }
-    select.value = presets.some((item) => item.id === active) ? active : "";
+    select.value = presets.some((item) => item.id === active2) ? active2 : "";
     const hasActive = Boolean(select.value);
     action("rename-preset").disabled = !hasActive;
     action("delete-preset").disabled = !hasActive;
@@ -25057,14 +25173,14 @@ function openCharacterProfileWindow(options = {}) {
     const host = role("tabs");
     host.replaceChildren();
     for (const group of GROUPS) {
-      const active = group.kind === activeKind;
+      const active2 = group.kind === activeKind;
       const tab = document.createElement("button");
       tab.type = "button";
-      tab.className = `t-profile-tab${active ? " is-active" : ""}`;
+      tab.className = `t-profile-tab${active2 ? " is-active" : ""}`;
       tab.dataset.action = "switch-tab";
       tab.dataset.tab = group.kind;
       tab.setAttribute("role", "tab");
-      tab.setAttribute("aria-selected", String(active));
+      tab.setAttribute("aria-selected", String(active2));
       tab.append(document.createTextNode(`${group.title} `));
       const count = document.createElement("span");
       count.className = "t-profile-tab-count";
@@ -25551,18 +25667,18 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     renderGallery();
   }
   function renderDraft() {
-    const draft = session?.draft;
-    role("draft").hidden = !draft;
-    if (draft) {
-      const summary = draft.scene.summary || "";
+    const draft2 = session?.draft;
+    role("draft").hidden = !draft2;
+    if (draft2) {
+      const summary = draft2.scene.summary || "";
       role("summary").hidden = !summary;
       role("summary").textContent = summary;
-      const excerpt = draft.scene.sourceExcerpt || "";
+      const excerpt = draft2.scene.sourceExcerpt || "";
       role("excerpt").hidden = !excerpt;
       role("excerpt").textContent = excerpt ? `\u539F\u6587\u6458\u5F55\uFF1A${excerpt}` : "";
-      field("positive").value = draft.prompts.positivePrompt;
-      field("negative").value = draft.prompts.negativePrompt;
-      role("characters").innerHTML = draft.prompts.characterPrompts.map((character, index) => `
+      field("positive").value = draft2.prompts.positivePrompt;
+      field("negative").value = draft2.prompts.negativePrompt;
+      role("characters").innerHTML = draft2.prompts.characterPrompts.map((character, index) => `
                 <fieldset class="t-illustration-character"><legend>\u4EBA\u7269 ${index + 1}</legend>
                     <label class="t-illustration-field">\u6B63\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-character="${index}" data-key="positivePrompt" rows="2">${escapeIllustrationHtml(character.positivePrompt)}</textarea></label>
                     <label class="t-illustration-field">\u8D1F\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-character="${index}" data-key="negativePrompt" rows="2">${escapeIllustrationHtml(character.negativePrompt)}</textarea></label>
@@ -25573,15 +25689,15 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     updateControls();
   }
   function readDraft() {
-    const draft = structuredClone(session.draft);
-    draft.prompts.positivePrompt = field("positive").value;
-    draft.prompts.negativePrompt = field("negative").value;
+    const draft2 = structuredClone(session.draft);
+    draft2.prompts.positivePrompt = field("positive").value;
+    draft2.prompts.negativePrompt = field("negative").value;
     root.querySelectorAll("[data-character]").forEach((input) => {
-      const character = draft.prompts.characterPrompts[Number(input.dataset.character)];
+      const character = draft2.prompts.characterPrompts[Number(input.dataset.character)];
       if (input.dataset.key === "x" || input.dataset.key === "y") character.position[input.dataset.key] = Number(input.value);
       else character[input.dataset.key] = input.value;
     });
-    return normalizeIllustrationDraft(draft);
+    return normalizeIllustrationDraft(draft2);
   }
   function syncPreview() {
     const blob = session?.previewBlob || null;
@@ -25988,12 +26104,12 @@ ${block}` : block;
       startJob(current, currentTarget, "prepare", async (job) => {
         job.status = PROGRESS_LABELS.selecting;
         notifyView(job.sceneId);
-        const draft = await selectIllustrationScene(request, { signal: job.controller.signal });
-        current.draft = draft;
-        const picked = { ...draft.scene, positivePrompt: draft.prompts.positivePrompt };
+        const draft2 = await selectIllustrationScene(request, { signal: job.controller.signal });
+        current.draft = draft2;
+        const picked = { ...draft2.scene, positivePrompt: draft2.prompts.positivePrompt };
         const repeated = alternate && repeatsPreviousScene(current.previousScenes, picked);
         current.previousScenes.push(picked);
-        current.notice = repeated ? "\u6A21\u578B\u53C8\u9009\u4E86\u540C\u4E00\u5E45\u753B\u9762\uFF0C\u591A\u534A\u662F\u6B63\u6587\u91CC\u53EA\u6709\u4E00\u4E2A\u53EF\u843D\u7B14\u7684\u77AC\u95F4\u3002\u60F3\u6307\u5B9A\u522B\u7684\u753B\u9762\uFF0C\u5199\u8FDB\u300C\u672C\u6B21\u989D\u5916\u8981\u6C42\u300D\u3002" : draft.excerptDropped ? "\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u4F46\u6A21\u578B\u7ED9\u7684\u539F\u6587\u6458\u5F55\u4E0E\u6B63\u6587\u5BF9\u4E0D\u4E0A\uFF0C\u5DF2\u4E22\u5F03\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002" : "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
+        current.notice = repeated ? "\u6A21\u578B\u53C8\u9009\u4E86\u540C\u4E00\u5E45\u753B\u9762\uFF0C\u591A\u534A\u662F\u6B63\u6587\u91CC\u53EA\u6709\u4E00\u4E2A\u53EF\u843D\u7B14\u7684\u77AC\u95F4\u3002\u60F3\u6307\u5B9A\u522B\u7684\u753B\u9762\uFF0C\u5199\u8FDB\u300C\u672C\u6B21\u989D\u5916\u8981\u6C42\u300D\u3002" : draft2.excerptDropped ? "\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u4F46\u6A21\u578B\u7ED9\u7684\u539F\u6587\u6458\u5F55\u4E0E\u6B63\u6587\u5BF9\u4E0D\u4E0A\uFF0C\u5DF2\u4E22\u5F03\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002" : "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
       });
       return;
     }
@@ -26002,20 +26118,20 @@ ${block}` : block;
         role("status").textContent = current?.pending ? "\u8BF7\u5148\u4FDD\u5B58\u4E0A\u6B21\u751F\u6210\u7684\u56FE\u7247\u3002" : "";
         return;
       }
-      let draft;
+      let draft2;
       try {
-        draft = readDraft();
+        draft2 = readDraft();
       } catch (error) {
         role("status").textContent = formatIllustrationError(error);
         return;
       }
-      if (draft.backend !== activeBackendId) draft = normalizeIllustrationDraft({ ...draft, backend: activeBackendId });
-      current.draft = draft;
+      if (draft2.backend !== activeBackendId) draft2 = normalizeIllustrationDraft({ ...draft2, backend: activeBackendId });
+      current.draft = draft2;
       startJob(current, currentTarget, "generate", async (job) => {
         job.status = PROGRESS_LABELS.generating;
         notifyView(job.sceneId);
         try {
-          const result = await generateTheaterIllustration(draft, {
+          const result = await generateTheaterIllustration(draft2, {
             signal: job.controller.signal,
             onProgress: jobProgress(job),
             size: current.size || void 0,
@@ -26029,13 +26145,13 @@ ${block}` : block;
               notifyView(job.sceneId);
             }
           });
-          current.pending = { images: result.images, draft, seed: result.seed, createdAt: Date.now() };
+          current.pending = { images: result.images, draft: draft2, seed: result.seed, createdAt: Date.now() };
           job.phase = "saving";
           job.status = "\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026";
           notifyView(job.sceneId);
           await persistPending(current, currentTarget);
           if (result.dropped) current.notice += ` \u672C\u6B21\u8FD4\u56DE ${result.images.length + result.dropped} \u5F20\uFF0C\u8D85\u8FC7\u4E0A\u9650\u7684 ${result.dropped} \u5F20\u672A\u4FDD\u5B58\u3002`;
-          const wantsCharacters = draft.prompts.characterPrompts.some((character) => character.positivePrompt.trim());
+          const wantsCharacters = draft2.prompts.characterPrompts.some((character) => character.positivePrompt.trim());
           if (wantsCharacters && result.applied?.characters === false) {
             current.notice += " \u672C\u6B21\u672A\u4F7F\u7528\u5206\u4EBA\u7269\u63D0\u793A\u8BCD\uFF08\u5F53\u524D\u540E\u7AEF\u6216\u6A21\u578B\u4E0D\u652F\u6301\uFF09\uFF0C\u753B\u9762\u6309\u6574\u5E45\u63CF\u8FF0\u751F\u6210\u3002";
           }
@@ -26939,22 +27055,22 @@ function openFavsWindow() {
     gridEl.innerHTML = "";
     const total = currentFilteredList.length;
     if (total <= 0) return;
-    const active = normalizeCarouselIndex(activeIndex);
+    const active2 = normalizeCarouselIndex(activeIndex);
     const appendIndexIfNew = (list, idx) => {
       if (!list.includes(idx)) list.push(idx);
     };
     const visibleIndexes = [];
-    appendIndexIfNew(visibleIndexes, active);
+    appendIndexIfNew(visibleIndexes, active2);
     for (let i = 1; i <= POSTER_CARD_BUFFER; i += 1) {
-      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active - i));
-      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active + i));
+      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active2 - i));
+      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active2 + i));
     }
     const cardFrag = document.createDocumentFragment();
     visibleIndexes.forEach((idx) => {
       const item = currentFilteredList[idx];
       if (!item) return;
       const card = buildCardElement(item, idx, currentMap);
-      if (idx === active) {
+      if (idx === active2) {
         card.classList.add("is-active");
         card.setAttribute("aria-hidden", "false");
       } else {
@@ -28296,7 +28412,11 @@ function expandBuiltinContextDetails(details, trace, meta) {
     ["scriptInstruction", "\u5267\u672C\u6307\u4EE4"],
     ["continuationPreamble", "\u7EED\u5199\u6A21\u5F0F\u8BF4\u660E"],
     ["continuationContext", "\u7EED\u5199\u4F1A\u8BDD\u4E0A\u4E0B\u6587"],
-    ["continuationInstruction", "\u672C\u8F6E\u7EED\u5199\u6307\u4EE4"]
+    ["continuationInstruction", "\u672C\u8F6E\u7EED\u5199\u6307\u4EE4"],
+    // 「本次补充」是 api.js 拼在 [剧本指令] 块**之后**的独立一段，故排在最后。
+    // ⚠ 这个顺序就是 user 串的拼接顺序，切片靠它连续累加；api.js 那两处组装点
+    //   若把它挪到别处，这里必须同步挪，否则后面的分段会全部错位。
+    ["tempInstruction", "\u672C\u6B21\u8865\u5145\u8981\u6C42"]
   ];
   return details.flatMap((detail) => {
     if (detail?.entryId !== userEntryId) return [detail];
@@ -29008,12 +29128,12 @@ function createSession({ image, outputSize, quality, resolve }) {
     if (!focusables.length) return;
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
-    const active = document.activeElement;
-    const inside = $modal[0].contains(active);
-    if (e.shiftKey && (!inside || active === first)) {
+    const active2 = document.activeElement;
+    const inside = $modal[0].contains(active2);
+    if (e.shiftKey && (!inside || active2 === first)) {
       e.preventDefault();
       last.focus();
-    } else if (!e.shiftKey && (!inside || active === last)) {
+    } else if (!e.shiftKey && (!inside || active2 === last)) {
       e.preventDefault();
       first.focus();
     }
@@ -29411,8 +29531,8 @@ function createApiConnectionEditor(options = {}) {
       state.activeProfileId = nextActiveProfileId;
       render();
       emitChange();
-      const active = findActiveProfile();
-      if (active && active.type !== "internal" && modelInputMode !== "manual" && options.autoFetchOnProfileSwitch !== false) {
+      const active2 = findActiveProfile();
+      if (active2 && active2.type !== "internal" && modelInputMode !== "manual" && options.autoFetchOnProfileSwitch !== false) {
         setTimeout(() => {
           fetchModels(false);
         }, 100);
@@ -29429,10 +29549,10 @@ function createApiConnectionEditor(options = {}) {
     });
     $del.on("click", (e) => {
       e.preventDefault();
-      const active = findActiveProfile();
-      if (!active || active.type === "internal" || active.readonly) return;
+      const active2 = findActiveProfile();
+      if (!active2 || active2.type === "internal" || active2.readonly) return;
       if (!window.confirm("\u5220\u9664\u65B9\u6848\uFF1F")) return;
-      state.profiles = state.profiles.filter((p) => p.id !== active.id);
+      state.profiles = state.profiles.filter((p) => p.id !== active2.id);
       if (state.profiles.length === 0) state.profiles.push(createProfile());
       state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
       render();
@@ -29769,16 +29889,16 @@ async function sendOutlineRequest(messages, options = {}) {
     onProgress: typeof options.onProgress === "function" ? options.onProgress : void 0
   });
 }
-function setRawWaitingAnimation(active) {
+function setRawWaitingAnimation(active2) {
   const $anim = $("#t-outline-raw-mood");
   if ($anim.length === 0) return;
-  $anim.toggleClass("is-active", !!active);
+  $anim.toggleClass("is-active", !!active2);
 }
 function syncAbortButtonUI() {
   const $btn = $("#t-outline-raw-abort");
   if ($btn.length === 0) return;
-  const active = !!activeOutlineAbortController;
-  $btn.prop("disabled", !active).toggle(active);
+  const active2 = !!activeOutlineAbortController;
+  $btn.prop("disabled", !active2).toggle(active2);
 }
 async function runOutlineGeneration(task, { timeoutSec = 0 } = {}) {
   const controller = new AbortController();
@@ -30826,15 +30946,15 @@ function saveDraftInsertModeOnly(insertMode) {
   saveExtData();
 }
 function loadDraft() {
-  const draft = getDraft();
-  if (!draft) {
+  const draft2 = getDraft();
+  if (!draft2) {
     return { storyInput: "", insertMode: "overwrite", items: [] };
   }
   return {
-    storyInput: typeof draft.storyInput === "string" ? draft.storyInput : "",
-    insertMode: draft.insertMode === "append" ? "append" : "overwrite",
-    streamEnabled: draft.streamEnabled === true,
-    items: normalizeItems(draft.items)
+    storyInput: typeof draft2.storyInput === "string" ? draft2.storyInput : "",
+    insertMode: draft2.insertMode === "append" ? "append" : "overwrite",
+    streamEnabled: draft2.streamEnabled === true,
+    items: normalizeItems(draft2.items)
   };
 }
 function isStreamingEnabled() {
@@ -30842,8 +30962,8 @@ function isStreamingEnabled() {
   if ($main.length > 0) return $main.is(":checked");
   const $settings = $("#t-outline-settings-stream-enabled");
   if ($settings.length > 0) return $settings.is(":checked");
-  const draft = getDraft();
-  return draft?.streamEnabled === true;
+  const draft2 = getDraft();
+  return draft2?.streamEnabled === true;
 }
 function getPlans() {
   const data = getExtData();
@@ -31028,9 +31148,9 @@ function flushAutoSaveCurrentPlan() {
 }
 function ensureEditingPlanContext() {
   if (editingPlanId) return true;
-  const active = getActivePlan();
-  if (active) {
-    loadPlanToEditor(active);
+  const active2 = getActivePlan();
+  if (active2) {
+    loadPlanToEditor(active2);
     return true;
   }
   if (window.toastr) toastr.warning("\u8BF7\u5148\u65B0\u5EFA\u6216\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
@@ -31145,8 +31265,8 @@ function getCurrentPlanForEditor() {
     if (editing) return editing;
   }
   if (activePlanId) {
-    const active = plans.find((p) => p.id === activePlanId);
-    if (active) return active;
+    const active2 = plans.find((p) => p.id === activePlanId);
+    if (active2) return active2;
   }
   return plans[0] || null;
 }
@@ -31395,13 +31515,13 @@ function renderPlanHub() {
     setActivePlanId(activePlanId);
   }
   $list.html(plans.map((plan) => {
-    const active = plan.id === activePlanId;
+    const active2 = plan.id === activePlanId;
     const updated = new Date(plan.updatedAt || Date.now());
     const timeText = `${updated.getMonth() + 1}/${updated.getDate()} ${String(updated.getHours()).padStart(2, "0")}:${String(updated.getMinutes()).padStart(2, "0")}`;
     const items = normalizeItems(plan.items || []);
     const isSource = sceneSourcePlanId === plan.id;
     return `
-            <div class="t-plan-accordion-item ${active ? "expanded" : ""}" data-plan-id="${plan.id}">
+            <div class="t-plan-accordion-item ${active2 ? "expanded" : ""}" data-plan-id="${plan.id}">
                 <div class="t-plan-accordion-head" data-action="select-plan" data-plan-id="${plan.id}">
                     <div class="t-plan-accordion-main">
                         <div class="t-plan-name">${escapeHtml4(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
@@ -32233,7 +32353,7 @@ function openStoryOutlineWindow() {
   const plans = getPlans();
   ensureCssLoaded();
   $("#t-story-outline-overlay").remove();
-  const draft = loadDraft();
+  const draft2 = loadDraft();
   outlineItems = [];
   lastRawResponse = "";
   rawResponseHistory = loadRawResponseHistory();
@@ -32260,7 +32380,7 @@ function openStoryOutlineWindow() {
             <div class="t-window-body t-outline-body">
                 <div id="t-outline-top" class="t-outline-top">
                     <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml4(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
-                    <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml4(draft.storyInput)}</textarea>
+                    <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml4(draft2.storyInput)}</textarea>
                     <div class="t-outline-actions">
                         <div class="t-outline-primary-actions">
                             <button id="t-outline-generate" class="t-btn t-btn-primary">
@@ -32277,8 +32397,8 @@ function openStoryOutlineWindow() {
                         <button id="t-outline-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
                     </div>
                     <select id="t-outline-insert-mode" class="t-outline-select" style="display:none;">
-                        <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
-                        <option value="append" ${draft.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                        <option value="overwrite" ${draft2.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
+                        <option value="append" ${draft2.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
                     </select>
                 </div>
 
@@ -32340,7 +32460,7 @@ function openStoryOutlineWindow() {
   if (preferred) {
     loadPlanToEditor(preferred);
   } else {
-    $("#t-outline-story-input").val(draft.storyInput || "");
+    $("#t-outline-story-input").val(draft2.storyInput || "");
     renderRows();
   }
   bindEvents();
@@ -33045,11 +33165,11 @@ function renderLiveHistory() {
     return;
   }
   const html = liveResponseHistory.map((item) => {
-    const active = String(item.text || "") === String(lastRawResponseText || "");
+    const active2 = String(item.text || "") === String(lastRawResponseText || "");
     const streamText = item.stream ? "\u6D41\u5F0F" : "\u975E\u6D41\u5F0F";
     const modelText = item.model ? ` \xB7 ${escapeHtml5(item.model)}` : "";
     return `
-            <div class="t-rewrite-live-history-item ${active ? "active" : ""}" data-history-id="${escapeHtml5(item.id)}">
+            <div class="t-rewrite-live-history-item ${active2 ? "active" : ""}" data-history-id="${escapeHtml5(item.id)}">
                 <div class="t-rewrite-live-history-head">
                     <span>${escapeHtml5(formatHistoryTime(item.at))} \xB7 ${escapeHtml5(item.source)} \xB7 ${escapeHtml5(item.phase)} \xB7 ${streamText}${modelText}</span>
                     <span>${item.chars} chars</span>
@@ -35854,8 +35974,8 @@ function saveHeaderActions(list) {
   return data.ui_prefs.header_actions;
 }
 function getOverflowActions() {
-  const active = new Set(getHeaderActions());
-  return HEADER_ACTION_REGISTRY.filter((item) => !active.has(item.id));
+  const active2 = new Set(getHeaderActions());
+  return HEADER_ACTION_REGISTRY.filter((item) => !active2.has(item.id));
 }
 function renderHeaderActionsHtml() {
   const iconsHtml = getHeaderActions().map((id3) => {
@@ -37686,9 +37806,9 @@ function openSettingsWindow() {
   });
   initToolbarCheckboxes();
   let headerActionOrder = (() => {
-    const active = getHeaderActions();
-    const rest = HEADER_ACTION_REGISTRY.map((item) => item.id).filter((id3) => !active.includes(id3));
-    return [...active, ...rest];
+    const active2 = getHeaderActions();
+    const rest = HEADER_ACTION_REGISTRY.map((item) => item.id).filter((id3) => !active2.includes(id3));
+    return [...active2, ...rest];
   })();
   const applyHeaderActions = () => {
     const selected = headerActionOrder.filter((id3) => $(`.t-header-action-chk[data-action-id="${id3}"]`).is(":checked"));
@@ -37707,12 +37827,12 @@ function openSettingsWindow() {
   const renderHeaderActionCards = () => {
     const $list = $("#p-header-actions");
     if (!$list.length) return;
-    const active = getHeaderActions();
+    const active2 = getHeaderActions();
     $list.empty();
     headerActionOrder.forEach((id3) => {
       const meta = HEADER_ACTION_REGISTRY.find((item) => item.id === id3);
       if (!meta) return;
-      const checked = active.includes(id3);
+      const checked = active2.includes(id3);
       const $card = $(`<div class="t-header-action-card" data-action-id="${id3}" draggable="true">
                 <span class="t-header-action-grip" title="\u62D6\u52A8\u6392\u5E8F"><i class="fa-solid fa-grip-vertical"></i></span>
                 <i class="fa-solid ${meta.icon} t-header-action-icon"></i>
@@ -39734,12 +39854,12 @@ async function listAllContinuationSessions() {
   return buildGlobalSessions(sessions2, branches, rounds);
 }
 function buildPointerMetadata(sessions2) {
-  const active = {};
+  const active2 = {};
   for (const session of sessions2) {
     const branchId = String(session?.activeBranchId || "").trim();
-    if (branchId) active[String(session.scriptId)] = branchId;
+    if (branchId) active2[String(session.scriptId)] = branchId;
   }
-  return Object.keys(active).length > 0 ? { version: 2, active } : null;
+  return Object.keys(active2).length > 0 ? { version: 2, active: active2 } : null;
 }
 function updateCurrentChatMetadata(sessions2) {
   const next = buildPointerMetadata(sessions2);
@@ -39943,8 +40063,8 @@ async function restoreContinuationForCurrentChat() {
   const nextByScript = {};
   for (const session of sessions2) {
     const sessionBranches = branches.filter((branch) => String(branch.sessionId) === String(session.id));
-    const active = sessionBranches.find((branch) => branch.id === session.activeBranchId);
-    if (!active) continue;
+    const active2 = sessionBranches.find((branch) => branch.id === session.activeBranchId);
+    if (!active2) continue;
     nextByScript[session.scriptId] = {
       scriptId: session.scriptId,
       scriptName: session.scriptName,
@@ -39954,11 +40074,11 @@ async function restoreContinuationForCurrentChat() {
       chatName: session.chatName,
       origin: session.origin || null,
       updatedAt: Number(session.updatedAt) || 0,
-      branchKey: String(active.branchKey || active.id),
-      parentBranchKey: String(active.parentBranchId || ""),
-      branchedAtRound: Number(active.branchedAtSequence) || null,
-      rounds: roundsByBranch.get(active.id) || [],
-      archivedBranches: sessionBranches.filter((branch) => branch.id !== active.id).map((branch) => ({
+      branchKey: String(active2.branchKey || active2.id),
+      parentBranchKey: String(active2.parentBranchId || ""),
+      branchedAtRound: Number(active2.branchedAtSequence) || null,
+      rounds: roundsByBranch.get(active2.id) || [],
+      archivedBranches: sessionBranches.filter((branch) => branch.id !== active2.id).map((branch) => ({
         branchKey: String(branch.branchKey || branch.id),
         parentBranchKey: String(branch.parentBranchId || ""),
         branchedAtRound: Number(branch.branchedAtSequence) || null,
@@ -40108,12 +40228,83 @@ var init_viewState = __esm({
   }
 });
 
+// src/core/tempInstruction.js
+function isTempInstructionGenerationSource(source) {
+  return source === "manual" || source === "user_continuation";
+}
+function buildTempInstructionBlock(text, options = {}) {
+  const body = String(text ?? "").trim();
+  if (!body) return "";
+  const hint = options?.continuation === true ? HINT_CONTINUATION : HINT_CREATE;
+  return `
+
+${TEMP_INSTRUCTION_HEADER}
+${hint}
+${body}`;
+}
+function getTempInstructionDraft() {
+  return draft;
+}
+function setTempInstructionDraft(text) {
+  draft = String(text ?? "").trim();
+  return draft;
+}
+function getActiveTempInstruction(scriptId) {
+  if (!active) return "";
+  return active.scriptId === String(scriptId || "") ? active.text : "";
+}
+function hasActiveTempInstruction(scriptId) {
+  return getActiveTempInstruction(scriptId) !== "";
+}
+function consumeTempInstruction(scriptId) {
+  const id3 = String(scriptId || "");
+  const text = draft.trim();
+  draft = "";
+  active = text && id3 ? { scriptId: id3, text } : null;
+  return active ? active.text : "";
+}
+function takeActiveTempInstruction() {
+  const taken = active;
+  active = null;
+  return taken;
+}
+function clearTempInstruction() {
+  draft = "";
+  active = null;
+}
+var TEMP_INSTRUCTION_HEADER, HINT_CREATE, HINT_CONTINUATION, draft, active;
+var init_tempInstruction = __esm({
+  "src/core/tempInstruction.js"() {
+    TEMP_INSTRUCTION_HEADER = "[\u672C\u6B21\u8865\u5145\u8981\u6C42]";
+    HINT_CREATE = "\uFF08\u5728\u4E0A\u8FF0\u5267\u672C\u57FA\u7840\u4E0A\uFF0C\u672C\u6B21\u521B\u4F5C\u989D\u5916\u9075\u5FAA\u4EE5\u4E0B\u8981\u6C42\uFF1B\u4E0E\u4E0A\u6587\u51B2\u7A81\u65F6\u4EE5\u672C\u8282\u4E3A\u51C6\uFF09";
+    HINT_CONTINUATION = "\uFF08\u5728\u672C\u6B21\u7EED\u5199\u8981\u6C42\u4E4B\u5916\uFF0C\u672C\u6B21\u521B\u4F5C\u989D\u5916\u9075\u5FAA\u4EE5\u4E0B\u8981\u6C42\uFF1B\u4E0E\u4E0A\u6587\u51B2\u7A81\u65F6\u4EE5\u672C\u8282\u4E3A\u51C6\uFF09";
+    draft = "";
+    active = null;
+  }
+});
+
 // src/ui/mainWindow/topBar.js
 function getGenerationModeMeta(id3) {
   return GENERATION_MODES.find((item) => item.id === String(id3 || "")) || GENERATION_MODES[0];
 }
 function renderTopBarHtml(variant = "modern") {
-  return variant === "legacy" ? renderLegacyTopBar() : renderModernTopBar();
+  const bar = variant === "legacy" ? renderLegacyTopBar() : renderModernTopBar();
+  return bar + renderTempInstructionHtml();
+}
+function renderTempInstructionHtml() {
+  return `
+            <div class="t-temp-bar" id="t-temp-bar" hidden>
+                <div class="t-temp-edit" id="t-temp-edit" hidden>
+                    <span class="t-temp-label"><i class="fa-solid fa-pen"></i> \u672C\u6B21\u8865\u5145</span>
+                    <input type="text" class="t-input t-temp-input" id="t-temp-input" autocomplete="off"
+                        placeholder="\u53EA\u5BF9\u8FD9\u6B21\u751F\u6210\u751F\u6548\uFF0C\u4F8B\u5982\uFF1A\u5199\u5F97\u8F7B\u677E\u4E00\u70B9\uFF0C\u52A0\u4E00\u6BB5\u65E5\u5E38\u5BF9\u8BDD">
+                    <button type="button" class="t-icon-btn t-temp-clear" id="t-temp-clear" title="\u6E05\u9664\u672C\u6B21\u8865\u5145" aria-label="\u6E05\u9664\u672C\u6B21\u8865\u5145"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="t-temp-active" id="t-temp-active" hidden>
+                    <span class="t-temp-active-text"><i class="fa-solid fa-check"></i> \u672C\u6B21\u8865\u5145\u5DF2\u751F\u6548\uFF0C\u7EED\u5199\u6CBF\u7528</span>
+                    <button type="button" class="t-temp-undo" id="t-temp-undo">\u64A4\u9500</button>
+                </div>
+            </div>`;
 }
 function renderModernTopBar() {
   const mode = getGenerationModeMeta(GlobalState.generationMode);
@@ -41482,6 +41673,23 @@ function updateDesc() {
   const s = GlobalState.runtimeScripts.find((x) => x.id === $("#t-sel-script").val());
   if (s) $("#t-txt-desc").val(s.desc);
 }
+function updateTempInstructionUI() {
+  const $bar = $("#t-temp-bar");
+  if (!$bar.length) return;
+  const pendingScriptId = getPendingGenerationScriptId();
+  const draft2 = getTempInstructionDraft();
+  const currentScriptId = pendingScriptId || GlobalState.lastUsedScriptId || "";
+  const editMode = Boolean(pendingScriptId || draft2);
+  const visible = editMode || hasActiveTempInstruction(currentScriptId);
+  $bar.prop("hidden", !visible);
+  $("#t-temp-edit").prop("hidden", !editMode);
+  $("#t-temp-active").prop("hidden", editMode);
+  $(".t-top-bar").toggleClass("has-temp-bar", visible);
+  if (editMode) {
+    const $input = $("#t-temp-input");
+    if ($input.val() !== draft2) $input.val(draft2);
+  }
+}
 function applyScriptSelection(id3, options = {}) {
   const s = GlobalState.runtimeScripts.find((x) => x.id === id3);
   if (!s) return;
@@ -41494,6 +41702,7 @@ function applyScriptSelection(id3, options = {}) {
     setPendingGenerationScriptId(s.id);
     setContinuationQuickDraft("");
     $("#t-continuation-quick-input").val("");
+    clearTempInstruction();
     if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
   }
   $("#t-lbl-name").text(s.name);
@@ -41502,6 +41711,7 @@ function applyScriptSelection(id3, options = {}) {
   $catTag.text(category).removeClass("is-missing").addClass("is-category");
   $("#t-lbl-desc-mini").text(s.desc || "\u65E0\u7B80\u4ECB");
   $("#t-txt-desc").val(s.desc);
+  updateTempInstructionUI();
 }
 async function openMainWindow() {
   if ($("#t-overlay").length) return;
@@ -41589,6 +41799,25 @@ async function openMainWindow() {
     });
   }
   $("#t-trigger-btn").on("click", () => showScriptSelector(GlobalState.currentCategoryFilter));
+  $("#t-temp-input").on("input", function() {
+    setTempInstructionDraft($(this).val());
+    updateTempInstructionUI();
+  });
+  $("#t-temp-clear").on("click", () => {
+    setTempInstructionDraft("");
+    updateTempInstructionUI();
+  });
+  $("#t-temp-undo").on("click", () => {
+    const taken = takeActiveTempInstruction();
+    if (!taken) {
+      updateTempInstructionUI();
+      return;
+    }
+    setTempInstructionDraft(taken.text);
+    if (taken.scriptId) setPendingGenerationScriptId(taken.scriptId);
+    updateTempInstructionUI();
+    updateRunButtonsState();
+  });
   $("#t-btn-filter").on("click", function(e) {
     renderFilterMenu(GlobalState.currentCategoryFilter, $(this), (newCat) => {
       GlobalState.currentCategoryFilter = newCat;
@@ -41893,6 +42122,7 @@ async function openMainWindow() {
   window.updateRunButtonsState = updateRunButtonsState;
   window.updateFavButtonUI = updateFavButtonUI;
   window.updateScriptTitleDisplay = updateScriptTitleDisplay;
+  window.updateTempInstructionUI = updateTempInstructionUI;
   window.refreshHeaderActions = refreshHeaderActions;
   let initialScriptId = GlobalState.lastUsedScriptId;
   if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
@@ -41922,6 +42152,7 @@ async function openMainWindow() {
   updateQueueButtonUI();
 }
 function updateRunButtonsState() {
+  updateTempInstructionUI();
   if (!activeLayout) return;
   activeLayout.syncRunButtons({
     isGenerating: GlobalState.isGenerating,
@@ -43427,6 +43658,7 @@ var init_mainWindow = __esm({
     init_continuationStore();
     init_scriptData();
     init_viewState();
+    init_tempInstruction();
     init_modern();
     init_legacy();
     init_headerActions();
@@ -44550,8 +44782,8 @@ function deleteContinuationHistorySelections(selections = []) {
       deletedSessions++;
       continue;
     }
-    const active = keptBranches.find((branch) => branch.isActive) || keptBranches.slice().sort((a, b) => Math.max(...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
-    const activeBranch = keptBranches.find((branch) => branch.branchKey === active.branchKey);
+    const active2 = keptBranches.find((branch) => branch.isActive) || keptBranches.slice().sort((a, b) => Math.max(...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
+    const activeBranch = keptBranches.find((branch) => branch.branchKey === active2.branchKey);
     entry.branchKey = activeBranch.branchKey;
     entry.parentBranchKey = activeBranch.parentBranchKey || "";
     entry.branchedAtRound = activeBranch.branchedAtRound || null;
@@ -45023,7 +45255,10 @@ async function buildPromptCompositionPreview(options = {}) {
       // 仅续写口径下非零：把 [剧本指令] 块再拆三段（顺序即查看器的切片顺序）
       continuationPreamble: 0,
       continuationContext: 0,
-      continuationInstruction: 0
+      continuationInstruction: 0,
+      // 「本次补充」：独立成段拼在 [剧本指令] 之后，故记在最后。
+      // ⚠ 顺序必须与 user 串的拼接顺序一致，也要与 debugWindow.js 的 definitions 对齐。
+      tempInstruction: 0
     };
     const dirInstruction = dirDefaults.instruction || "";
     const styleProfiles = data.style_profiles || [{ id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }];
@@ -45105,6 +45340,14 @@ ${ctx.worldInfo}
 ${processedPrompt}`;
     applyScriptInstructionSectionLengths(sectionLengths, scriptBlock, processedPrompt, continuationPlan?.override.lengths || null);
     user += scriptBlock;
+    const tempInstructionBlock = buildTempInstructionBlock(
+      continuationPlan ? getActiveTempInstruction(script.id) : getTempInstructionDraft(),
+      { continuation: Boolean(continuationPlan) }
+    );
+    if (tempInstructionBlock) {
+      sectionLengths.tempInstruction = tempInstructionBlock.length;
+      user += tempInstructionBlock;
+    }
     const meta = {
       source: generationSource,
       hasPromptOverride: hasExplicitOverride,
@@ -45129,7 +45372,10 @@ ${processedPrompt}`;
       worldInfoBefore: ctx.worldInfo,
       worldInfoAfter: "",
       chatHistory: runtimeChatHistory,
-      titaniaScript: processedPrompt
+      // 选用预设模式下整条 user 串**不会被注入**（预设条目 id 永远不等于 preset_user），
+      // {{titaniaScript}} 才是剧本正文进提示词的唯一通道 —— 补充段必须一并带上，
+      // 否则预设模式用户静默看不到它。builtin 模式下没有条目消费这个键，并入是惰性的。
+      titaniaScript: processedPrompt + tempInstructionBlock
     };
     const messageDetails = buildPromptMessageDetails(promptScheme, {
       [`${GlobalState.generationMode}_system`]: sys,
@@ -45298,6 +45544,10 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   }
   const keepOverlayOpen = generationOverrides?.keepOverlayOpen === true;
   if (!silent && !keepOverlayOpen) $("#t-overlay").remove();
+  const tempInstructionText = generationSource === "manual" ? consumeTempInstruction(script.id) : isTempInstructionGenerationSource(generationSource) ? getActiveTempInstruction(script.id) : "";
+  const tempInstructionBlock = buildTempInstructionBlock(tempInstructionText, {
+    continuation: generationSource === "user_continuation"
+  });
   GlobalState.abortController = new AbortController();
   const signal = GlobalState.abortController.signal;
   GlobalState.isGenerating = true;
@@ -45350,7 +45600,10 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
       // 仅续写口径下非零：把 [剧本指令] 块再拆三段（顺序即查看器的切片顺序）
       continuationPreamble: 0,
       continuationContext: 0,
-      continuationInstruction: 0
+      continuationInstruction: 0,
+      // 「本次补充」：独立成段拼在 [剧本指令] 之后，故记在最后。
+      // ⚠ 顺序必须与 user 串的拼接顺序一致，也要与 debugWindow.js 的 definitions 对齐。
+      tempInstruction: 0
     };
     let directorSection = "";
     if (dirInstruction.trim()) {
@@ -45466,6 +45719,10 @@ ${processedPrompt}`;
       generationOverrides?.continuationSectionLengths || null
     );
     user += scriptBlock;
+    if (tempInstructionBlock) {
+      sectionLengths.tempInstruction = tempInstructionBlock.length;
+      user += tempInstructionBlock;
+    }
     diagnostics.input_stats.sys_len = sys.length;
     diagnostics.input_stats.user_len = user.length;
     const traceMeta = {
@@ -45474,6 +45731,13 @@ ${processedPrompt}`;
       promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
       skipMacroEvaluation,
       sectionLengths,
+      // 「本次补充」只记是否生效与长度：全文本来就随 user 串进了 messageDetails，
+      // 再抄一份没有意义。查看器靠 sectionLengths 把它切成独立一段。
+      tempInstruction: {
+        applied: Boolean(tempInstructionBlock),
+        mode: generationSource === "user_continuation" ? "continuation" : "create",
+        length: tempInstructionBlock.length
+      },
       estimatedTokens: {
         system: estimateTokens(sys),
         user: estimateTokens(user)
@@ -45493,7 +45757,10 @@ ${processedPrompt}`;
       worldInfoBefore: ctx.worldInfo,
       worldInfoAfter: "",
       chatHistory: runtimeChatHistory,
-      titaniaScript: processedPrompt
+      // 选用预设模式下整条 user 串**不会被注入**（预设条目 id 永远不等于 preset_user），
+      // {{titaniaScript}} 才是剧本正文进提示词的唯一通道 —— 补充段必须一并带上，
+      // 否则预设模式用户静默看不到它。builtin 模式下没有条目消费这个键，并入是惰性的。
+      titaniaScript: processedPrompt + tempInstructionBlock
     };
     const messageDetails = buildPromptMessageDetails(promptScheme, {
       [`${GlobalState.generationMode}_system`]: sys,
@@ -46563,6 +46830,7 @@ var init_api = __esm({
     init_relayClient();
     init_scriptData();
     init_promptManager();
+    init_tempInstruction();
     init_continuationStore();
     init_illustrationAuto();
     CONTINUATION_SESSION_MAX_ROUNDS = 30;
