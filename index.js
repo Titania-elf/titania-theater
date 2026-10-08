@@ -9035,6 +9035,9 @@ textarea.t-input {
     width: 950px;
     max-width: 95vw;
     height: 85vh;
+    /* \u79FB\u52A8\u7AEF\u5730\u5740\u680F/\u5DE5\u5177\u680F\u6536\u653E\u65F6 100vh \u5927\u4E8E\u771F\u5B9E\u53EF\u89C6\u9AD8\u5EA6\uFF0C\u7A97\u53E3\u4E0B\u534A\u622A\u4F1A\u88AB\u63A8\u51FA\u5C4F\u5E55\u3002
+       dvh \u8DDF\u968F\u5B9E\u9645\u89C6\u53E3\uFF0C\u53CC\u5199\u4E00\u904D\u505A\u65E7\u5185\u6838\u56DE\u9000\uFF08\u540C settings-drawer.css / illustration.css\uFF09\u3002 */
+    height: 85dvh;
     display: flex;
     flex-direction: column;
     background: var(--t-color-bg);
@@ -9233,8 +9236,28 @@ textarea.t-input {
     font-size: 0.85em;
 }
 
+/* \u8F93\u5165\u6846\u662F\u5355\u884C\u8D77\u6B65\u7684 <textarea> \u800C\u4E0D\u662F <input>\uFF1A\u8865\u5145\u5199\u957F\u4E86\u5F97\u80FD\u6362\u884C\u770B\u5168\uFF0C
+   input \u53EA\u4F1A\u6A2A\u5411\u6EDA\uFF0C\u540E\u534A\u622A\u6C38\u8FDC\u770B\u4E0D\u89C1\u3002\u9AD8\u5EA6\u7531 JS \u6309\u5185\u5BB9\u6491\uFF08\u89C1 mainWindow.js
+   \u7684 syncTempInstructionInputHeight\uFF09\uFF0C\u5C01\u9876 3 \u884C\u540E\u5185\u90E8\u6EDA\u52A8 \u2014\u2014 \u4E0D\u5C01\u9876\u7684\u8BDD
+   \u8FD9\u6761\u4F1A\u628A\u5185\u5BB9\u533A\u4E00\u8DEF\u6324\u4E0A\u53BB\u3002
+
+   \u26A0 \u9009\u62E9\u5668\u5FC5\u987B\u5E26 .t-temp-bar \u524D\u7F00\uFF1Afield.css \u7684 \`textarea.t-input\` \u7ED9\u6240\u6709
+   \u591A\u884C\u6846\u4E0A\u4E86 resize:vertical \u4E0E\u7B49\u5BBD\u5B57\u4F53\uFF0C\u5355\u7C7B .t-temp-input\uFF080,1,0\uFF09\u76D6\u4E0D\u4F4F\u5B83\u3002 */
+.t-temp-bar .t-temp-input {
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+    overflow-y: auto;
+    white-space: pre-wrap; /* \u663E\u5F0F\u5199\u6B7B\uFF1A\u6362\u884C\u662F\u672C\u6761\u7684\u7ACB\u8EAB\u4E4B\u672C\uFF0C\u4E0D\u80FD\u88AB\u4E3B\u9898\u5C42\u7684 textarea \u89C4\u5219\u6539\u6389 */
+    /* \u957F\u4E32\uFF08URL\u3001\u6CA1\u6709\u7A7A\u683C\u7684\u957F\u53E5\uFF09\u4E5F\u5F3A\u5236\u65AD\u884C\uFF0C\u5426\u5219\u6362\u884C\u89C4\u5219\u6551\u4E0D\u4E86\u5B83 */
+    overflow-wrap: anywhere;
+}
+
+/* \u5360\u4F4D\u6587\u6848\u662F\u6309\u4E00\u884C\u5199\u7684\u3002\u6846\u7A84\u5230\u5B83\u6362\u884C\u65F6\uFF0C\u7B2C\u4E8C\u884C\u4F1A\u88AB\u53EA\u6709\u4E00\u884C\u7684\u76D2\u9AD8\u88C1\u6389\u534A\u622A\uFF0C
+   \u770B\u7740\u50CF\u574F\u4E86 \u2014\u2014 \u5E72\u8106\u7167 <input> \u65F6\u4EE3\u7684\u8001\u89C4\u77E9\uFF1A\u4E0D\u6362\u884C\uFF0C\u653E\u4E0D\u4E0B\u5C31\u5728\u53F3\u8FB9\u622A\u65AD\u3002 */
 .t-temp-input::placeholder {
     color: var(--t-color-text-dim);
+    white-space: nowrap;
 }
 
 /* \u6E05\u7A7A / \u64A4\u9500\u90FD\u662F\u5C0F\u53F7\u63A7\u4EF6\uFF0C\u95F4\u8DDD\u4EA4\u7ED9\u7236\u7EA7 gap\uFF08B13 \u7684\u6838\u5FC3\u7EA6\u5B9A\uFF09 */
@@ -9988,6 +10011,7 @@ textarea.t-input {
     #t-main-view {
         width: 100%;
         height: 95vh;
+        height: 95dvh; /* \u7A84\u5C4F\u51E0\u4E4E\u94FA\u6EE1\uFF0Cdvh \u4E0E vh \u7684\u5DEE\u503C\u5728\u8FD9\u91CC\u6700\u8981\u547D\uFF08\u89C1\u9876\u90E8\u6CE8\u91CA\uFF09 */
         max-width: 100vw;
         border-radius: 10px 10px 0 0;
     }
@@ -40296,8 +40320,8 @@ function renderTempInstructionHtml() {
             <div class="t-temp-bar" id="t-temp-bar" hidden>
                 <div class="t-temp-edit" id="t-temp-edit" hidden>
                     <span class="t-temp-label"><i class="fa-solid fa-pen"></i> \u672C\u6B21\u8865\u5145</span>
-                    <input type="text" class="t-input t-temp-input" id="t-temp-input" autocomplete="off"
-                        placeholder="\u53EA\u5BF9\u8FD9\u6B21\u751F\u6210\u751F\u6548\uFF0C\u4F8B\u5982\uFF1A\u5199\u5F97\u8F7B\u677E\u4E00\u70B9\uFF0C\u52A0\u4E00\u6BB5\u65E5\u5E38\u5BF9\u8BDD">
+                    <textarea class="t-input t-temp-input" id="t-temp-input" rows="1" autocomplete="off"
+                        placeholder="\u53EA\u5BF9\u8FD9\u6B21\u751F\u6210\u751F\u6548\uFF0C\u4F8B\u5982\uFF1A\u5199\u5F97\u8F7B\u677E\u4E00\u70B9\uFF0C\u52A0\u4E00\u6BB5\u65E5\u5E38\u5BF9\u8BDD"></textarea>
                     <button type="button" class="t-icon-btn t-temp-clear" id="t-temp-clear" title="\u6E05\u9664\u672C\u6B21\u8865\u5145" aria-label="\u6E05\u9664\u672C\u6B21\u8865\u5145"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="t-temp-active" id="t-temp-active" hidden>
@@ -41098,6 +41122,7 @@ function closeWindow() {
   $("#t-overlay").remove();
   $(document).off("keydown.zenmode");
   $(document).off("click.tinlinebranch");
+  $(window).off("resize.ttempinput");
 }
 function escapeHtmlText3(str) {
   return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
@@ -41673,6 +41698,19 @@ function updateDesc() {
   const s = GlobalState.runtimeScripts.find((x) => x.id === $("#t-sel-script").val());
   if (s) $("#t-txt-desc").val(s.desc);
 }
+function syncTempInstructionInputHeight() {
+  const el = document.getElementById("t-temp-input");
+  if (!el) return;
+  el.style.height = "auto";
+  const cs = getComputedStyle(el);
+  const lineHeight = parseFloat(cs.lineHeight);
+  const borders = el.offsetHeight - el.clientHeight;
+  const verticalSpace = borders + (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+  const capped = Number.isFinite(lineHeight) && lineHeight >= 8;
+  const contentHeight = el.scrollHeight + borders;
+  const maxHeight = lineHeight * TEMP_INSTRUCTION_INPUT_MAX_ROWS + verticalSpace;
+  el.style.height = `${capped ? Math.min(contentHeight, maxHeight) : contentHeight}px`;
+}
 function updateTempInstructionUI() {
   const $bar = $("#t-temp-bar");
   if (!$bar.length) return;
@@ -41687,7 +41725,8 @@ function updateTempInstructionUI() {
   $(".t-top-bar").toggleClass("has-temp-bar", visible);
   if (editMode) {
     const $input = $("#t-temp-input");
-    if ($input.val() !== draft2) $input.val(draft2);
+    if ($input.val().trim() !== draft2) $input.val(draft2);
+    syncTempInstructionInputHeight();
   }
 }
 function applyScriptSelection(id3, options = {}) {
@@ -41802,6 +41841,10 @@ async function openMainWindow() {
   $("#t-temp-input").on("input", function() {
     setTempInstructionDraft($(this).val());
     updateTempInstructionUI();
+  });
+  $(window).on("resize.ttempinput", () => {
+    if ($("#t-temp-edit").prop("hidden")) return;
+    syncTempInstructionInputHeight();
   });
   $("#t-temp-clear").on("click", () => {
     setTempInstructionDraft("");
@@ -43641,7 +43684,7 @@ function disableQueueMode() {
   GlobalState.queueState.enabled = false;
   updateQueueButtonUI();
 }
-var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, continuationHistoryView, continuationHistoryManaging, continuationHistorySelection, continuationGlobalSessions, continuationHistoryScope, layoutTeardownHooks, activeLayout;
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, continuationHistoryView, continuationHistoryManaging, continuationHistorySelection, continuationGlobalSessions, continuationHistoryScope, layoutTeardownHooks, activeLayout, TEMP_INSTRUCTION_INPUT_MAX_ROWS;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -43683,6 +43726,7 @@ var init_mainWindow = __esm({
     continuationHistoryScope = "all";
     layoutTeardownHooks = [];
     activeLayout = null;
+    TEMP_INSTRUCTION_INPUT_MAX_ROWS = 3;
   }
 });
 
