@@ -28910,9 +28910,9 @@ function createSession({ image, outputSize, quality, resolve }) {
                 <div class="t-crop-stage" id="t-crop-stage">
                     <div class="t-crop-frame"></div>
                 </div>
-                <p class="t-crop-hint">\u62D6\u52A8\u56FE\u7247\u8C03\u6574\u4F4D\u7F6E\uFF0C\u6EDA\u8F6E\u6216\u53CC\u6307\u7F29\u653E</p>
+                <p class="t-crop-hint">\u62D6\u52A8\u56FE\u7247\u8C03\u6574\u4F4D\u7F6E\uFF0C\u6EDA\u8F6E\u3001\u53CC\u6307\u6216\u4E0B\u65B9\u6ED1\u6746\u7F29\u653E\uFF08\u5411\u5DE6\u7F29\u5230\u5E95\u53EF\u770B\u5168\u6574\u5F20\u56FE\uFF09</p>
                 <div class="t-crop-zoom-row">
-                    <i class="fa-solid fa-image" aria-hidden="true"></i>
+                    <i class="fa-solid fa-magnifying-glass-minus" aria-hidden="true"></i>
                     <input type="range" class="t-crop-zoom" id="t-crop-zoom" min="100" max="400" step="1" value="100" aria-label="\u7F29\u653E">
                     <i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i>
                 </div>
@@ -28940,9 +28940,10 @@ function createSession({ image, outputSize, quality, resolve }) {
   $("#t-overlay").append($modal);
   const naturalW = image.naturalWidth;
   const naturalH = image.naturalHeight;
+  const scaleMin = Math.min(naturalW, naturalH) / Math.hypot(naturalW, naturalH);
   let stageSize = 0;
   let baseScale = 1;
-  const state = { scale: SCALE_MIN, panNatX: 0, panNatY: 0 };
+  const state = { scale: SCALE_DEFAULT, panNatX: 0, panNatY: 0 };
   let drag = null;
   let pinch = null;
   function measure() {
@@ -28972,12 +28973,12 @@ function createSession({ image, outputSize, quality, resolve }) {
     $zoom.val(String(Math.round(state.scale * 100)));
   }
   function setScale(next) {
-    state.scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, next));
+    state.scale = Math.min(SCALE_MAX, Math.max(scaleMin, next));
     render();
     syncZoom();
   }
   function reset() {
-    state.scale = SCALE_MIN;
+    state.scale = SCALE_DEFAULT;
     state.panNatX = 0;
     state.panNatY = 0;
     render();
@@ -29027,7 +29028,7 @@ function createSession({ image, outputSize, quality, resolve }) {
       const dist = touchDistance(touches[0], touches[1]);
       const mid = touchMid(touches[0], touches[1]);
       const ratio = pinch.dist > 0 ? dist / pinch.dist : 1;
-      state.scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, pinch.scale * ratio));
+      state.scale = Math.min(SCALE_MAX, Math.max(scaleMin, pinch.scale * ratio));
       const { k } = metrics();
       state.panNatX = pinch.panX + (mid.x - pinch.mid.x) / k;
       state.panNatY = pinch.panY + (mid.y - pinch.mid.y) / k;
@@ -29170,17 +29171,18 @@ function createSession({ image, outputSize, quality, resolve }) {
     }
   }
   measure();
+  $zoom.attr("min", String(Math.floor(scaleMin * 100)));
   reset();
   $confirm[0].focus();
   return session;
 }
-var OUTPUT_SIZE_DEFAULT, OUTPUT_QUALITY_DEFAULT, SCALE_MIN, SCALE_MAX, WHEEL_ZOOM_RATE, activeSession, sessionSeq;
+var OUTPUT_SIZE_DEFAULT, OUTPUT_QUALITY_DEFAULT, SCALE_DEFAULT, SCALE_MAX, WHEEL_ZOOM_RATE, activeSession, sessionSeq;
 var init_imageCropper = __esm({
   "src/ui/imageCropper.js"() {
     init_dom();
     OUTPUT_SIZE_DEFAULT = 512;
     OUTPUT_QUALITY_DEFAULT = 0.92;
-    SCALE_MIN = 1;
+    SCALE_DEFAULT = 1;
     SCALE_MAX = 4;
     WHEEL_ZOOM_RATE = 15e-4;
     activeSession = null;
