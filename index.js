@@ -172,6 +172,13 @@ var init_defaults = __esm({
         recent_instructions: [],
         inject_rounds_count: 3
       },
+      // 「本次补充」（临时指令）功能总开关。
+      // ⚠ 这是**默认开启**的既有功能，读端一律 `?.enabled !== false`（见 tempInstruction.js
+      //   的 isTempInstructionFeatureEnabled）——getExtData 不做深合并，老用户没有这个键，
+      //   用 `=== true` 判会把他们正用着的功能静默关掉。这里写 true 只服务全新安装。
+      temp_instruction: {
+        enabled: true
+      },
       // 自定义系统提示词配置
       custom_prompts: {
         override_enabled: false,
@@ -36284,6 +36291,14 @@ function openSettingsWindow() {
                     </div>
 
                     <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid var(--t-color-border);">
+                        <label style="cursor:pointer; display:flex; align-items:center;">
+                            <input type="checkbox" id="cfg-temp-instruction" ${data.temp_instruction?.enabled !== false ? "checked" : ""} style="margin-right:10px;">
+                            <span style="color:var(--t-color-text-label);">\u270F\uFE0F \u672C\u6B21\u8865\u5145\uFF08\u4E34\u65F6\u6307\u4EE4\uFF09</span>
+                        </label>
+                        <p style="font-size:0.75em; color:var(--t-color-text-faint); margin-top:5px; margin-left:22px;">\u5F00\u542F\u540E\uFF0C\u5C0F\u5267\u573A\u9876\u680F\u5267\u672C\u5361\u4E0B\u65B9\u4F1A\u51FA\u73B0\u300C\u672C\u6B21\u8865\u5145\u300D\u8F93\u5165\u6846\uFF0C\u53EF\u5BF9\u5355\u6B21\u751F\u6210\u8FFD\u52A0\u4E00\u53E5\u4E34\u65F6\u8981\u6C42\uFF08\u7528\u5B8C\u81EA\u52A8\u6E05\u7A7A\uFF09\u3002\u5173\u95ED\u5219\u9690\u85CF\u8BE5\u5165\u53E3\uFF0C\u63D0\u793A\u8BCD\u91CC\u4E0D\u518D\u5E26\u8865\u5145\u6BB5\u3002</p>
+                    </div>
+
+                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid var(--t-color-border);">
                         <label style="color:var(--t-color-text-label); display:block; margin-bottom:8px;">\u{1F3A8} \u6807\u9898\u680F\u56FE\u6807 <span id="p-header-actions-count" class="t-header-action-count"></span></label>
                         <div id="p-header-actions" class="t-header-action-list"></div>
                         <p style="font-size:0.75em; color:var(--t-color-text-faint); margin-top:6px;">\u52FE\u9009\u8981\u5E38\u9A7B\u6807\u9898\u680F\u7684\u529F\u80FD\uFF08\u6700\u591A ${HEADER_ACTION_MAX} \u4E2A\uFF09\uFF0C\u62D6\u52A8\u53EF\u8C03\u6574\u987A\u5E8F\u3002\u6CA1\u9009\u4E2D\u7684\u4F1A\u6536\u8FDB\u6807\u9898\u680F\u7684\u300C\u66F4\u591A\u300D\u83DC\u5355\u3002\u6539\u52A8\u7ACB\u5373\u751F\u6548\u3002</p>
@@ -38019,6 +38034,9 @@ function openSettingsWindow() {
       d.ui_prefs.header_actions = headerActionOrder.filter((id3) => $(`.t-header-action-chk[data-action-id="${id3}"]`).is(":checked")).slice(0, HEADER_ACTION_MAX);
     }
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
+    d.temp_instruction = {
+      enabled: $("#cfg-temp-instruction").is(":checked")
+    };
     const clampInt = (value, min, max, fallback) => {
       const n = parseInt(value, 10);
       if (!Number.isFinite(n)) return fallback;
@@ -38099,6 +38117,7 @@ function openSettingsWindow() {
     applyFontSettings(d.font_settings);
     applyUIFontScale(d.appearance?.ui_font_scale);
     applyUITheme(d.appearance?.ui_theme);
+    if (typeof window.updateTempInstructionUI === "function") window.updateTempInstructionUI();
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   renderPreview();
@@ -40265,6 +40284,9 @@ var init_viewState = __esm({
 function isTempInstructionGenerationSource(source) {
   return source === "manual" || source === "user_continuation";
 }
+function isTempInstructionFeatureEnabled(data) {
+  return data?.temp_instruction?.enabled !== false;
+}
 function buildTempInstructionBlock(text, options = {}) {
   const body = String(text ?? "").trim();
   if (!body) return "";
@@ -41723,6 +41745,11 @@ function syncTempInstructionInputHeight() {
 function updateTempInstructionUI() {
   const $bar = $("#t-temp-bar");
   if (!$bar.length) return;
+  if (!isTempInstructionFeatureEnabled(getExtData())) {
+    $bar.prop("hidden", true);
+    $(".t-top-bar").removeClass("has-temp-bar");
+    return;
+  }
   const pendingScriptId = getPendingGenerationScriptId();
   const draft2 = getTempInstructionDraft();
   const currentScriptId = pendingScriptId || GlobalState.lastUsedScriptId || "";
@@ -45394,7 +45421,7 @@ ${processedPrompt}`;
     applyScriptInstructionSectionLengths(sectionLengths, scriptBlock, processedPrompt, continuationPlan?.override.lengths || null);
     user += scriptBlock;
     const tempInstructionBlock = buildTempInstructionBlock(
-      continuationPlan ? getActiveTempInstruction(script.id) : getTempInstructionDraft(),
+      isTempInstructionFeatureEnabled(data) ? continuationPlan ? getActiveTempInstruction(script.id) : getTempInstructionDraft() : "",
       { continuation: Boolean(continuationPlan) }
     );
     if (tempInstructionBlock) {
@@ -45597,7 +45624,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   }
   const keepOverlayOpen = generationOverrides?.keepOverlayOpen === true;
   if (!silent && !keepOverlayOpen) $("#t-overlay").remove();
-  const tempInstructionText = generationSource === "manual" ? consumeTempInstruction(script.id) : isTempInstructionGenerationSource(generationSource) ? getActiveTempInstruction(script.id) : "";
+  const tempInstructionText = !isTempInstructionFeatureEnabled(data) ? "" : generationSource === "manual" ? consumeTempInstruction(script.id) : isTempInstructionGenerationSource(generationSource) ? getActiveTempInstruction(script.id) : "";
   const tempInstructionBlock = buildTempInstructionBlock(tempInstructionText, {
     continuation: generationSource === "user_continuation"
   });
