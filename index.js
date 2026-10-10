@@ -179,6 +179,16 @@ var init_defaults = __esm({
       temp_instruction: {
         enabled: true
       },
+      // 「叙事节奏把控」（剧情推进面板的第二能力）的注入参数。
+      // ⚠ 只放注入侧参数：判断用的提示词模板走 story_outline_prompt_templates.pacing、
+      //   采样参数走 story_outline_gen_params.pacing、API 方案复用大纲——都不在这里。
+      //   读端一律 `?? 默认`（老用户没这个键时 depth=0 / role=system）。
+      pacing: {
+        inject_depth: 0,
+        // setExtensionPrompt 的 IN_CHAT 深度，0 = 紧贴最新消息
+        inject_role: "system"
+        // system | user | assistant
+      },
       // 自定义系统提示词配置
       custom_prompts: {
         override_enabled: false,
@@ -21455,6 +21465,51 @@ body.t-reader-zen .t-reader-topbar {
 
 .tsa-panel .tsa-preview-item.todo .tsa-preview-marker { color: var(--t-glass-text-secondary); }
 
+/* \u2500\u2500 \u8282\u594F\u628A\u63A7\uFF08\u5267\u60C5\u63A8\u8FDB\u9762\u677F\u7684\u7B2C\u4E8C\u6A21\u5F0F\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+.tsa-panel .tsa-mode-tabs { display: flex; gap: 6px; padding: 8px 10px 0; }
+
+.tsa-panel .tsa-mode-tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text-secondary); cursor: pointer; font-size: 12px; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease; }
+
+.tsa-panel .tsa-mode-tab:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
+
+.tsa-panel .tsa-mode-tab.is-active { color: var(--t-glass-text); background: var(--t-color-accent-soft); border-color: var(--t-color-accent-border-hover); }
+
+.tsa-panel .tsa-mode-tab i { color: var(--t-color-accent); }
+
+.tsa-panel .tsa-pacing-diag { margin-bottom: 8px; padding: 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); }
+
+.tsa-panel .tsa-pacing-state { display: inline-block; padding: 1px 8px; margin-right: 6px; border-radius: 999px; border: 1px solid var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); color: var(--t-glass-text); font-weight: 700; }
+
+.tsa-panel .tsa-pacing-focus { display: inline-block; padding: 1px 7px; margin-right: 6px; border-radius: 999px; border: 1px solid var(--t-color-accent-border); font-size: 11px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-pacing-intensity { font-size: 11px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-pacing-assessment { margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
+
+.tsa-panel .tsa-pacing-input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 6px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); font: inherit; resize: vertical; }
+
+.tsa-panel .tsa-pacing-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+.tsa-panel .tsa-pacing-preset { padding: 3px 10px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text); cursor: pointer; font-size: 12px; }
+
+.tsa-panel .tsa-pacing-preset:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
+
+.tsa-panel .tsa-pacing-adv { margin-bottom: 8px; font-size: 12px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-pacing-adv summary { cursor: pointer; user-select: none; }
+
+.tsa-panel .tsa-pacing-adv-fields { display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
+
+.tsa-panel .tsa-pacing-adv-fields label { display: inline-flex; align-items: center; gap: 5px; }
+
+.tsa-panel .tsa-pacing-adv-fields input, .tsa-panel .tsa-pacing-adv-fields select { width: 92px; padding: 2px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); }
+
+.tsa-panel .tsa-pacing-armed { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--t-color-success-border); border-radius: var(--t-radius-sm); background: var(--t-color-success-soft); font-size: 12px; }
+
+.tsa-panel .tsa-pacing-armed i { color: var(--t-color-success-border); }
+
+.tsa-panel .tsa-pacing-apply { background: var(--t-color-success-soft); border-color: var(--t-color-success-border); }
+
 
 `;
   document.head.appendChild(style);
@@ -29670,12 +29725,14 @@ var storyOutlineWindow_exports = {};
 __export(storyOutlineWindow_exports, {
   applySceneProgress: () => applyProgressFromModel,
   ensureSceneSourceLoaded: () => ensureSceneSourceLoaded,
+  generatePacingAssessment: () => generatePacingAssessment,
   generateSceneRecommendations: () => generateRecommendations,
   getSceneAdvanceState: () => getSceneAdvanceState,
   getSceneInsertMode: () => getCurrentInsertMode,
   markSceneCandidateUsed: () => markSceneCandidateUsed,
   openPromptTemplateManager: () => openPromptTemplateManager,
   openStoryOutlineWindow: () => openStoryOutlineWindow,
+  parsePacingResponse: () => parsePacingResponse,
   switchSceneSourcePlan: () => switchSceneSourcePlan,
   toggleSceneInsertMode: () => toggleSceneInsertMode,
   writeSceneToInput: () => writePlotToInput
@@ -29684,7 +29741,9 @@ function getGenParamDefaults() {
   return {
     outline: { temperature: 0.4, maxTokens: 2e4, timeoutSec: 0 },
     // scenes 存储键沿用旧名（细纲时代遗留），现服务剧情推进推荐；2~3 条候选用不到 60k。
-    scenes: { temperature: 0.8, maxTokens: 8e3, timeoutSec: 0 }
+    scenes: { temperature: 0.8, maxTokens: 8e3, timeoutSec: 0 },
+    // pacing：节奏判断只回一小段 JSON，低温要稳、上限给小。
+    pacing: { temperature: 0.3, maxTokens: 1024, timeoutSec: 0 }
   };
 }
 function normalizeGenParamGroup(raw, fallback) {
@@ -29704,7 +29763,8 @@ function getOutlineGenParams() {
   const raw = data?.[GEN_PARAMS_KEY] && typeof data[GEN_PARAMS_KEY] === "object" ? data[GEN_PARAMS_KEY] : {};
   return {
     outline: normalizeGenParamGroup(raw.outline, defaults.outline),
-    scenes: normalizeGenParamGroup(raw.scenes, defaults.scenes)
+    scenes: normalizeGenParamGroup(raw.scenes, defaults.scenes),
+    pacing: normalizeGenParamGroup(raw.pacing, defaults.pacing)
   };
 }
 function saveOutlineGenParams(params) {
@@ -29712,7 +29772,8 @@ function saveOutlineGenParams(params) {
   const defaults = getGenParamDefaults();
   data[GEN_PARAMS_KEY] = {
     outline: normalizeGenParamGroup(params?.outline, defaults.outline),
-    scenes: normalizeGenParamGroup(params?.scenes, defaults.scenes)
+    scenes: normalizeGenParamGroup(params?.scenes, defaults.scenes),
+    pacing: normalizeGenParamGroup(params?.pacing, defaults.pacing)
   };
   saveExtData();
 }
@@ -30499,6 +30560,67 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 1) \u5148\u5224\u65AD\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\uFF0C\u586B\u8FDB current_item_index\uFF08\u786E\u5B9E\u65E0\u6CD5\u5224\u65AD\u586B null\uFF09\u3002
 2) \u518D\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF1A\u90FD\u4ECE\u8BE5\u4F4D\u7F6E\u51FA\u53D1\uFF0C\u627F\u63A5\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF0C\u5F7C\u6B64\u65B9\u5411\u4E0D\u540C\uFF0C\u671D\u7ED3\u5C40\u7A33\u6B65\u63A8\u8FDB\u4F46\u4E0D\u8981\u8DF3\u5230\u7ED3\u5C40\u3002\u6BCF\u4E2A\u5019\u9009\u7684 item_index \u586B\u5B83\u63A8\u8FDB\u5230\u7684\u90A3\u4E00\u6761\uFF08\u901A\u5E38\u5F7C\u6B64\u76F8\u540C\u6216\u76F8\u90BB\uFF09\u3002
 \u4E25\u683C\u6309 version 1.6 \u7ED3\u6784\u8FD4\u56DE\u3002\u53EA\u8FD4\u56DE JSON\u3002`
+    },
+    pacing: {
+      system: `\u4F60\u662F\u53D9\u4E8B\u8282\u594F\u5206\u6790\u5E08\uFF0C\u5728\u5199\u4F5C\u6A21\u578B\u52A8\u7B14\u524D\u4E3A\u300C\u672C\u6B21\u8FD9\u4E00\u6761\u56DE\u590D\u300D\u628A\u63A7\u8282\u594F\u3002
+\u4F60\u4E0D\u6267\u7B14\u2014\u2014\u4E0D\u5199\u6B63\u6587\u3001\u4E0D\u5199\u5BF9\u767D\u3001\u4E0D\u66FF\u89D2\u8272\u884C\u52A8\uFF0C\u53EA\u505A\u4E24\u4EF6\u4E8B\uFF1A\u5224\u65AD\u5F53\u524D\u53D9\u4E8B\u8282\u594F\uFF0C\u7ED9\u51FA\u4E00\u53E5\u9488\u5BF9\u4E0B\u4E00\u6761\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\u3002
+
+[\u5224\u65AD\u951A\u70B9]
+1) \u8BFB\u300C\u6700\u8FD1\u6B63\u6587\u300D\u628A\u63E1\u5F53\u524D\u8FD9\u51E0\u62CD\u5728\u505A\u4EC0\u4E48\uFF1A\u662F\u5728\u63A8\u8FDB\u4E8B\u4EF6\uFF0C\u8FD8\u662F\u5728\u539F\u5730\u6253\u8F6C/\u53CD\u590D\u94FA\u57AB\u3002
+2) \u5BF9\u7167\u300C\u6545\u4E8B\u5927\u7EB2\u300D\u4E0E\u300C\u5F53\u524D\u8FDB\u5EA6\u300D\u5224\u65AD\u8BE5\u5FEB\u8FD8\u662F\u8BE5\u6162\uFF1A
+   - \u62D6\u6C93\uFF1A\u6B63\u6587\u5728\u5F53\u524D\u8FD9\u62CD\u53CD\u590D\u505C\u7559\u3001\u5927\u7EB2\u5374\u8FDF\u8FDF\u6CA1\u5F80\u524D \u2192 \u8BE5\u63A8\u8FDB\u3002
+   - \u4ED3\u4FC3\uFF1A\u8DF3\u5F97\u592A\u5FEB\u3001\u60C5\u7EEA\u6216\u4FE1\u606F\u6CA1\u94FA\u591F\u5C31\u786C\u63A8 \u2192 \u8BE5\u653E\u6162\u8865\u94FA\u57AB\u3002
+   - \u7D27\u51D1/\u5E73\u7A33\uFF1A\u8282\u594F\u672C\u5C31\u5408\u9002 \u2192 \u7EF4\u6301\uFF0C\u522B\u4E3A\u6539\u800C\u6539\u3002
+3) \u6CA1\u6709\u5927\u7EB2\u6216\u8FDB\u5EA6\u4E0D\u660E\u65F6\uFF0C\u4EC5\u51ED\u6B63\u6587\u7684\u5F20\u5F1B\u5224\u65AD\uFF0C\u5B81\u53EF\u5224\u5F97\u4FDD\u5B88\u3002
+
+[directive \u600E\u4E48\u5199]
+1) \u662F\u7ED9\u5199\u4F5C\u6A21\u578B\u7684\u7948\u4F7F\u53E5\uFF0C\u53EA\u7EA6\u675F\u300C\u672C\u6B21\u8FD9\u4E00\u6761\u56DE\u590D\u300D\uFF0C\u4E0D\u662F\u5BF9\u6574\u6BB5\u6545\u4E8B\u7684\u89C4\u5212\u3002
+2) \u5177\u4F53\u53EF\u6267\u884C\uFF1A\u8BF4\u6E05\u8FD9\u6B21\u8BE5\u653E\u6162\u8FD8\u662F\u52A0\u5FEB\u3001\u7B14\u58A8\u8BE5\u843D\u5728\u54EA\u4E00\u62CD\uFF08\u67D0\u6BB5\u60C5\u7EEA/\u67D0\u4E2A\u51B2\u7A81/\u67D0\u6B21\u8F6C\u573A/\u67D0\u6761\u4F0F\u7B14\uFF09\uFF0C\u8BE5\u5F15\u5165\u4EC0\u4E48\u6216\u5148\u6309\u4E0B\u4EC0\u4E48\u3002
+3) \u7981\u6B62\u7A7A\u6CDB\uFF08\u4E0D\u8981\u53EA\u8BF4"\u5199\u5F97\u66F4\u597D/\u66F4\u7CBE\u5F69"\uFF09\uFF0C\u7981\u6B62\u76F4\u63A5\u4EE3\u5199\u6B63\u6587\u6216\u5BF9\u767D\uFF0C\u7981\u6B62\u6539\u53D8\u89D2\u8272\u8BBE\u5B9A\u4E0E\u65E2\u5B9A\u4E8B\u5B9E\u3002
+4) \u8282\u594F\u672C\u5C31\u5408\u9002\u65F6\uFF0Cdirective \u53EF\u4EE5\u662F\u300C\u4FDD\u6301\u5F53\u524D\u8282\u594F\uFF0C\u7EE7\u7EED\u628A\u5F53\u524D\u8FD9\u62CD\u5199\u5B8C\u6574\u300D\uFF0C\u5E76\u628A intensity \u8C03\u4F4E\u3002
+
+[\u786C\u6027\u8981\u6C42]
+1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
+2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u662F\uFF1A
+{
+  "version": "1.0",
+  "pacing_state": "\u62D6\u6C93|\u5E73\u7A33|\u7D27\u51D1|\u4ED3\u4FC3 \u56DB\u9009\u4E00",
+  "assessment": "\u4E00\u4E24\u53E5\u8BCA\u65AD",
+  "directive": "\u4E00\u53E5\u9488\u5BF9\u672C\u6B21\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4",
+  "focus": "\u63A8\u8FDB\u573A\u666F|\u6DF1\u5316\u60C5\u7EEA|\u5F15\u5165\u51B2\u7A81|\u6536\u675F\u60AC\u5FF5|\u7559\u767D\u505C\u987F \u4E4B\u4E00\uFF0C\u53EF\u7559\u7A7A\u5B57\u7B26\u4E32",
+  "intensity": 3
+}
+3) pacing_state \u5FC5\u987B\u662F\u56DB\u4E2A\u503C\u4E4B\u4E00\u3002
+4) intensity \u662F 1-5 \u7684\u6574\u6570\uFF1A1=\u8F7B\u5FAE\u5FAE\u8C03\uFF0C5=\u5F3A\u70C8\u7EA0\u504F\u3002
+5) directive \u4E0D\u8D85\u8FC7 80 \u5B57\uFF0C\u7948\u4F7F\u53E5\uFF0C\u4E2D\u6587\u3002
+6) \u6240\u6709\u5B57\u6BB5\u5FC5\u987B\u5B58\u5728\uFF0Cfocus \u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32\u3002
+7) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+      user: `[\u89D2\u8272\u8BBE\u5B9A]
+{{persona}}
+
+[\u7528\u6237\u8BBE\u5B9A]
+{{userDesc}}
+
+[\u4E16\u754C\u4E66/\u8BBE\u5B9A]
+{{worldInfo}}
+
+[\u5267\u60C5\u8BBE\u5B9A]
+{{scenario}}
+
+[\u6545\u4E8B\u5927\u7EB2\uFF08\u8DEF\u6807\uFF0C\u6700\u540E\u4E00\u6761=\u7ED3\u5C40\uFF09]
+{{outlineItemsJson}}
+
+[\u5F53\u524D\u8FDB\u5EA6]
+{{outlineProgress}}
+
+[\u6700\u8FD1\u6B63\u6587\uFF08\u8D8A\u9760\u540E\u8D8A\u65B0\uFF0C\u4EC5\u4E3A\u6700\u8FD1\u7247\u6BB5\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u5F00\u5934\uFF09]
+{{recentChat}}
+
+[\u672C\u5361\u7684\u6545\u4E8B\u9700\u6C42]
+{{storyInput}}
+
+[\u4EFB\u52A1]
+\u5224\u65AD\u300C\u6700\u8FD1\u6B63\u6587\u300D\u6B64\u523B\u7684\u53D9\u4E8B\u8282\u594F\uFF0C\u5BF9\u7167\u5927\u7EB2\u4E0E\u5F53\u524D\u8FDB\u5EA6\uFF0C\u7ED9\u51FA\u4E00\u53E5\u53EA\u7EA6\u675F\u672C\u6B21\u8FD9\u4E00\u6761\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\u3002\u4E25\u683C\u6309 version 1.0 \u7ED3\u6784\u8FD4\u56DE\uFF0C\u53EA\u8FD4\u56DE JSON\u3002`
     }
   };
 }
@@ -30528,7 +30650,11 @@ function getPromptTemplates() {
         return JSON.parse(JSON.stringify(defaults.rolling));
       }
       return { system: sys, user: usr };
-    })()
+    })(),
+    pacing: {
+      system: String(raw?.pacing?.system || defaults.pacing.system),
+      user: String(raw?.pacing?.user || defaults.pacing.user)
+    }
   };
 }
 function savePromptTemplates(templates) {
@@ -30542,6 +30668,7 @@ function renderPromptTemplate(template, vars) {
 }
 function getPromptTemplateSection(templates, type) {
   if (type === "rolling") return templates.rolling;
+  if (type === "pacing") return templates.pacing;
   return templates.outline;
 }
 function getUnknownPromptVars(text) {
@@ -30555,7 +30682,9 @@ function getUnknownPromptVars(text) {
     "scenario",
     "dialogueExamples",
     // 剧情推进专用变量
-    "recentChat"
+    "recentChat",
+    // 节奏把控专用变量
+    "outlineProgress"
   ]);
   const unknown = /* @__PURE__ */ new Set();
   String(text || "").replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key) => {
@@ -30576,7 +30705,9 @@ function buildPromptTemplateVars(ctx, userStoryInput, openingText, outlinePayloa
     scenario: String(ctx?.scenario || "").trim() || "(\u65E0)",
     dialogueExamples: String(ctx?.dialogueExamples || "").trim() || "(\u65E0)",
     // 剧情推进专用；非推荐场景为 "(无)"，模板里没引用就不影响。
-    recentChat: String(extras?.recentChat || "").trim() || "(\u65E0)"
+    recentChat: String(extras?.recentChat || "").trim() || "(\u65E0)",
+    // 节奏把控专用：当前大纲进度，无方案时为 "(无大纲)"。
+    outlineProgress: String(extras?.outlineProgress || "").trim() || "(\u65E0)"
   };
 }
 function renderGenParamRow(moduleKey, moduleLabel, group) {
@@ -30691,6 +30822,7 @@ async function openPromptTemplateManager() {
                             <div class="t-outline-genparam-hint">\u5206\u522B\u63A7\u5236\u5927\u7EB2/\u5267\u60C5\u63A8\u8350\u7684\u91C7\u6837\u4E0E\u4E0A\u9650\u3002\u63A8\u8350\u7ED3\u679C\u88AB\u4E2D\u9014\u6390\u65AD\u65F6\u591A\u4E3A\u7F51\u5173\u8D85\u65F6\uFF0C\u5EFA\u8BAE\u8C03\u4F4E max_tokens\u3002\u8D85\u65F6\u4E3A\u5BA2\u6237\u7AEF\u5B89\u5168\u4E0A\u9650\uFF080=\u4E0D\u9650\u5236\uFF09\u3002</div>
                             ${renderGenParamRow("outline", "\u5927\u7EB2", settingsDraft.genParams.outline)}
                             ${renderGenParamRow("scenes", "\u5267\u60C5\u63A8\u8350", settingsDraft.genParams.scenes)}
+                            ${renderGenParamRow("pacing", "\u8282\u594F\u5224\u65AD", settingsDraft.genParams.pacing)}
                         </div>
 
                         <div class="t-form-group">
@@ -30720,10 +30852,11 @@ async function openPromptTemplateManager() {
                                 <select id="t-prompt-target" class="t-outline-select">
                                     <option value="outline">\u6545\u4E8B\u5927\u7EB2</option>
                                     <option value="rolling">\u5267\u60C5\u63A8\u8FDB</option>
+                                    <option value="pacing">\u53D9\u4E8B\u8282\u594F</option>
                                 </select>
                                 <button id="t-prompt-reset-current" class="t-btn t-btn-xs"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u5F53\u524D\u9ED8\u8BA4</button>
                             </div>
-                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}}</div>
+                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}}<br>\u53D9\u4E8B\u8282\u594F\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{outlineProgress}}</div>
                         </div>
 
                         <div class="t-form-group">
@@ -30825,7 +30958,10 @@ async function openPromptTemplateManager() {
     const openingMode = getOpeningSourceMode();
     const openingSourceRef = getOpeningSourceRef();
     const opening2 = getOpeningTextForPreview(openingMode, openingSourceRef);
-    const varsLocal = buildPromptTemplateVars(ctx, currentStoryInput, opening2, outlinePayload);
+    const varsLocal = buildPromptTemplateVars(ctx, currentStoryInput, opening2, outlinePayload, {
+      recentChat: collectRecentChatText(getRollingChatFloors()),
+      outlineProgress: buildOutlineProgressText()
+    });
     const renderedSys = renderPromptTemplate(section.system, varsLocal);
     const renderedUser = renderPromptTemplate(section.user, varsLocal);
     $("#t-prompt-preview-system").text(renderedSys);
@@ -31844,6 +31980,59 @@ function collectRecentChatText(floors) {
   if (!entries.length) return "";
   return entries.slice(-n).map((e) => `\u3010${e.role}\u3011${e.text}`).join("\n\n");
 }
+function buildOutlineProgressText() {
+  const plan = getRollingPlan();
+  const total = Array.isArray(plan?.items) ? plan.items.length : 0;
+  if (!plan || total <= 0) return "(\u65E0\u5927\u7EB2)";
+  const { itemIndex } = getPlanProgress(plan);
+  const item = normalizeItems(plan.items)[itemIndex];
+  const title = String(item?.title || "").trim() || "\u672A\u547D\u540D";
+  return `\u5F53\u524D\u7EA6\u5728\u7B2C ${itemIndex + 1} / ${total} \u6761\uFF1A${title}`;
+}
+function buildPacingPrompt(ctx) {
+  const outlinePayload = buildOutlinePayloadForPrompt();
+  const templates = getPromptTemplates();
+  const vars = buildPromptTemplateVars(ctx, "(\u7A7A)", "", outlinePayload, {
+    recentChat: collectRecentChatText(getRollingChatFloors()),
+    outlineProgress: buildOutlineProgressText()
+  });
+  return [
+    { role: "system", content: renderPromptTemplate(templates.pacing.system, vars) },
+    { role: "user", content: renderPromptTemplate(templates.pacing.user, vars) }
+  ];
+}
+function parsePacingResponse(raw) {
+  if (!raw || typeof raw !== "string") throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
+  const data = tryParseLooseJsonObject(raw);
+  const directive = String(data?.directive || "").trim();
+  if (!directive) throw new Error("\u8282\u594F\u5224\u65AD\u8FD4\u56DE\u7F3A\u5C11\u6709\u6548 directive");
+  const pacingState = PACING_STATES.includes(data?.pacing_state) ? data.pacing_state : "\u5E73\u7A33";
+  let intensity = Number(data?.intensity);
+  if (!Number.isFinite(intensity)) intensity = 3;
+  intensity = Math.min(5, Math.max(1, Math.round(intensity)));
+  return {
+    pacingState,
+    assessment: String(data?.assessment || "").trim(),
+    directive,
+    focus: String(data?.focus || "").trim(),
+    intensity
+  };
+}
+async function generatePacingAssessment() {
+  try {
+    const ctx = await getContextData();
+    const params = getOutlineGenParams().pacing;
+    const raw = await sendOutlineRequest(buildPacingPrompt(ctx), {
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+      stream: false
+    });
+    return parsePacingResponse(raw);
+  } catch (e) {
+    reportGenerationError(e, "\u53D9\u4E8B\u8282\u594F", "\u8282\u594F\u5206\u6790\u5931\u8D25");
+    return null;
+  }
+}
 function buildRecommendationPrompt(ctx, userStoryInput, openingText) {
   const outlinePayload = buildOutlinePayloadForPrompt();
   const templates = getPromptTemplates();
@@ -32568,7 +32757,7 @@ function markSceneCandidateUsed(planId, index) {
   candidates[index] = { ...candidates[index], used: true };
   setPlanCandidates(id3, candidates, { keepTimestamp: true });
 }
-var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID;
+var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, PACING_STATES;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -32613,6 +32802,7 @@ var init_storyOutlineWindow = __esm({
     planRenameSnapshot = "";
     MAX_RAW_HISTORY = 24;
     OUTLINE_ST_FOLLOW_ID = "st_sync";
+    PACING_STATES = ["\u62D6\u6C93", "\u5E73\u7A33", "\u7D27\u51D1", "\u4ED3\u4FC3"];
   }
 });
 
@@ -35525,8 +35715,106 @@ var init_outlineEntryButton = __esm({
   }
 });
 
+// src/core/pacingInjection.js
+import {
+  setExtensionPrompt,
+  extension_prompt_types,
+  extension_prompt_roles,
+  eventSource as eventSource4,
+  event_types as event_types4
+} from "../../../../script.js";
+function normalizeRole2(role) {
+  const name = String(role || "system").toLowerCase();
+  return name in ROLE_NAME_TO_ENUM ? name : "system";
+}
+function normalizeDepth(depth) {
+  const n = Number(depth);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(1e4, Math.floor(n));
+}
+function briefSummary(text, maxLen = 40) {
+  const s = String(text || "").replace(/\s+/g, " ").trim();
+  return s.length > maxLen ? `${s.slice(0, maxLen)}\u2026` : s;
+}
+function armPacingDirective(text, options = {}) {
+  const body = String(text || "").trim();
+  if (!body) {
+    clearPacingDirective();
+    return false;
+  }
+  const roleName = normalizeRole2(options.role);
+  const depth = normalizeDepth(options.depth);
+  setExtensionPrompt(
+    PACING_PROMPT_KEY,
+    DIRECTIVE_HEADER + body,
+    extension_prompt_types.IN_CHAT,
+    depth,
+    false,
+    ROLE_NAME_TO_ENUM[roleName]
+  );
+  armed = true;
+  armedSummary = briefSummary(body);
+  armedDepth = depth;
+  armedRole = roleName;
+  TitaniaLogger.info("\u8282\u594F\u6307\u4EE4\u5DF2\u6B66\u88C5", { depth, role: roleName });
+  return true;
+}
+function clearPacingDirective() {
+  setExtensionPrompt(PACING_PROMPT_KEY, "", extension_prompt_types.IN_CHAT, 0);
+  armed = false;
+  armedSummary = "";
+}
+function getArmedPacing() {
+  return { armed, summary: armedSummary, depth: armedDepth, role: armedRole };
+}
+function initPacingInjection() {
+  if (listenersBound2) return;
+  listenersBound2 = true;
+  clearPacingDirective();
+  eventSource4.on(event_types4.GENERATION_ENDED, () => {
+    if (armed) clearPacingDirective();
+  });
+  if (event_types4.CHAT_CHANGED) {
+    eventSource4.on(event_types4.CHAT_CHANGED, () => {
+      if (armed) clearPacingDirective();
+    });
+  }
+  TitaniaLogger.info("\u53D9\u4E8B\u8282\u594F\u6CE8\u5165\u5DF2\u521D\u59CB\u5316");
+}
+var PACING_PROMPT_KEY, DIRECTIVE_HEADER, ROLE_NAME_TO_ENUM, listenersBound2, armed, armedSummary, armedDepth, armedRole;
+var init_pacingInjection = __esm({
+  "src/core/pacingInjection.js"() {
+    init_logger();
+    PACING_PROMPT_KEY = "TITANIA_PACING";
+    DIRECTIVE_HEADER = "\u3010\u53D9\u4E8B\u8282\u594F\u63D0\u793A\u3011\n";
+    ROLE_NAME_TO_ENUM = {
+      system: extension_prompt_roles.SYSTEM,
+      user: extension_prompt_roles.USER,
+      assistant: extension_prompt_roles.ASSISTANT
+    };
+    listenersBound2 = false;
+    armed = false;
+    armedSummary = "";
+    armedDepth = 0;
+    armedRole = "system";
+  }
+});
+
 // src/ui/sceneAdvanceBubble.js
-import { eventSource as eventSource4, event_types as event_types4 } from "../../../../script.js";
+import { eventSource as eventSource5, event_types as event_types5 } from "../../../../script.js";
+function getPacingConfig() {
+  const p = getExtData()?.pacing || {};
+  const role = ["system", "user", "assistant"].includes(p.inject_role) ? p.inject_role : "system";
+  const depthRaw = Number(p.inject_depth);
+  const depth = Number.isFinite(depthRaw) && depthRaw >= 0 ? Math.floor(depthRaw) : 0;
+  return { depth, role };
+}
+function savePacingConfig(patch) {
+  const data = getExtData();
+  const prev = data.pacing && typeof data.pacing === "object" ? data.pacing : {};
+  data.pacing = { ...prev, ...patch };
+  saveExtData();
+}
 function loadApi() {
   if (!apiPromise) apiPromise = Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
   return apiPromise;
@@ -35726,15 +36014,22 @@ function buildCandidatesHtml(state) {
     `).join("");
 }
 function buildPanelHtml(state) {
-  const planOptions = state.plans.length ? state.plans.map((p) => `<option value="${escapeHtmlText2(p.id)}" ${p.id === state.planId ? "selected" : ""}>${escapeHtmlText2(p.name)}</option>`).join("") : `<option value="">\uFF08\u6682\u65E0\u65B9\u6848\uFF09</option>`;
+  const tabs = `
+        <div class="tsa-mode-tabs">
+            <button type="button" class="tsa-mode-tab ${panelMode === "recommend" ? "is-active" : ""}" data-mode="recommend"><i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5</button>
+            <button type="button" class="tsa-mode-tab ${panelMode === "pacing" ? "is-active" : ""}" data-mode="pacing"><i class="fa-solid fa-gauge-high"></i> \u8282\u594F\u628A\u63A7</button>
+        </div>`;
+  const body = panelMode === "pacing" ? buildPacingBody() : buildRecommendBody(state);
+  return `<div id="${PANEL_ID}" class="tsa-panel">${tabs}${body}</div>`;
+}
+function buildRecommendBody(state) {
   const generateLabel = state.candidates.length > 0 ? "\u6362\u4E00\u6279" : "\u63A8\u8350\u5267\u60C5";
   return `
-    <div id="${PANEL_ID}" class="tsa-panel">
         <div class="tsa-scroll">
             ${buildPreviewHtml(state)}
             <div class="tsa-plan-row">
                 <label class="tsa-plan-label">\u65B9\u6848
-                    <select class="tsa-plan-select" id="tsa-plan-select">${planOptions}</select>
+                    <select class="tsa-plan-select" id="tsa-plan-select">${buildPlanOptions(state)}</select>
                 </label>
             </div>
             ${buildProgressHtml(state)}
@@ -35748,8 +36043,52 @@ function buildPanelHtml(state) {
             <button type="button" class="tsa-generate" id="tsa-generate" ${generating || !state.hasPlan ? "disabled" : ""}>
                 <i class="fa-solid ${generating ? "fa-spinner fa-spin" : "fa-forward-step"}"></i> ${generating ? "\u63A8\u8350\u4E2D..." : generateLabel}
             </button>
+        </div>`;
+}
+function buildPlanOptions(state) {
+  return state.plans.length ? state.plans.map((p) => `<option value="${escapeHtmlText2(p.id)}" ${p.id === state.planId ? "selected" : ""}>${escapeHtmlText2(p.name)}</option>`).join("") : `<option value="">\uFF08\u6682\u65E0\u65B9\u6848\uFF09</option>`;
+}
+function buildPacingBody() {
+  const cfg = getPacingConfig();
+  const r = pacingResult;
+  const diag = r ? `<div class="tsa-pacing-diag">
+                <span class="tsa-pacing-state">${escapeHtmlText2(r.pacingState)}</span>
+                ${r.focus ? `<span class="tsa-pacing-focus">${escapeHtmlText2(r.focus)}</span>` : ""}
+                <span class="tsa-pacing-intensity">\u5F3A\u5EA6 ${r.intensity}/5</span>
+                ${r.assessment ? `<div class="tsa-pacing-assessment">${escapeHtmlText2(r.assessment)}</div>` : ""}
+            </div>` : `<div class="tsa-empty">\u70B9\u4E0B\u65B9\u300C\u5206\u6790\u8282\u594F\u300D\uFF0C\u8BA9\u5916\u90E8\u6A21\u578B\u8BFB\u6700\u8FD1\u6B63\u6587\u4E0E\u5927\u7EB2\u8FDB\u5EA6\uFF0C\u7ED9\u4E00\u6761\u53EA\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\u3002\u65E0\u5927\u7EB2\u4E5F\u80FD\u7528\u3002</div>`;
+  const presets = PACING_PRESETS.map(
+    (p) => `<button type="button" class="tsa-pacing-preset" data-preset="${escapeHtmlText2(p.text)}">${escapeHtmlText2(p.label)}</button>`
+  ).join("");
+  const armed2 = getArmedPacing();
+  const armedHtml = armed2.armed ? `<div class="tsa-pacing-armed"><i class="fa-solid fa-circle-check"></i> \u5DF2\u6B66\u88C5\uFF1A${escapeHtmlText2(armed2.summary)} \xB7 \u4E0B\u6761\u56DE\u590D\u751F\u6548</div>` : "";
+  return `
+        <div class="tsa-scroll">
+            ${diag}
+            <textarea class="tsa-pacing-input" id="tsa-pacing-directive" rows="3" placeholder="\u672C\u6B21\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91\uFF0C\u6216\u70B9\u4E0B\u65B9\u9884\u8BBE\u586B\u5165">${escapeHtmlText2(pacingDraft)}</textarea>
+            <div class="tsa-pacing-presets">${presets}</div>
+            <details class="tsa-pacing-adv">
+                <summary>\u6CE8\u5165\u9AD8\u7EA7\u8BBE\u7F6E</summary>
+                <div class="tsa-pacing-adv-fields">
+                    <label>\u6DF1\u5EA6<input type="number" id="tsa-pacing-depth" min="0" max="10000" step="1" value="${cfg.depth}"></label>
+                    <label>\u89D2\u8272
+                        <select id="tsa-pacing-role">
+                            <option value="system" ${cfg.role === "system" ? "selected" : ""}>system</option>
+                            <option value="user" ${cfg.role === "user" ? "selected" : ""}>user</option>
+                            <option value="assistant" ${cfg.role === "assistant" ? "selected" : ""}>assistant</option>
+                        </select>
+                    </label>
+                </div>
+            </details>
+            ${armedHtml}
         </div>
-    </div>`;
+        <div class="tsa-footer">
+            <button type="button" class="tsa-chip" id="tsa-pacing-clear" title="\u6E05\u9664\u5DF2\u6B66\u88C5\u7684\u8282\u594F\u6307\u4EE4"><i class="fa-solid fa-eraser"></i> \u6E05\u9664</button>
+            <button type="button" class="tsa-generate" id="tsa-pacing-analyze" ${pacingAnalyzing ? "disabled" : ""}>
+                <i class="fa-solid ${pacingAnalyzing ? "fa-spinner fa-spin" : "fa-gauge-high"}"></i> ${pacingAnalyzing ? "\u5206\u6790\u4E2D..." : "\u5206\u6790\u8282\u594F"}
+            </button>
+            <button type="button" class="tsa-generate tsa-pacing-apply" id="tsa-pacing-apply"><i class="fa-solid fa-syringe"></i> \u5E94\u7528\u5230\u4E0B\u6B21\u56DE\u590D</button>
+        </div>`;
 }
 async function refreshPanel() {
   const $panel = $(`#${PANEL_ID}`);
@@ -35772,6 +36111,7 @@ function destroyPanel() {
   expandedForMesid = null;
   previewItemIdx = -1;
   previewOpen = false;
+  panelMode = "recommend";
   const strip = getStrip();
   if (strip) updateStrip(strip, { expanded: false });
 }
@@ -35845,6 +36185,35 @@ async function onGenerate() {
     await refreshPanel();
   }
 }
+async function onAnalyzePacing() {
+  if (pacingAnalyzing) return;
+  pacingAnalyzing = true;
+  await refreshPanel();
+  try {
+    const api = await loadApi();
+    const result = await api.generatePacingAssessment();
+    if (result) {
+      pacingResult = result;
+      pacingDraft = result.directive;
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u8282\u594F\u5206\u6790\u5931\u8D25", e?.message || String(e));
+  } finally {
+    pacingAnalyzing = false;
+    await refreshPanel();
+  }
+}
+function onApplyPacing() {
+  const text = String($("#tsa-pacing-directive").val() || "").trim();
+  if (!text) {
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u586B\u5199\u6216\u5206\u6790\u51FA\u4E00\u6761\u8282\u594F\u6307\u4EE4", "\u53D9\u4E8B\u8282\u594F");
+    return;
+  }
+  pacingDraft = text;
+  const ok = armPacingDirective(text, getPacingConfig());
+  if (ok && window.toastr) toastr.success("\u5DF2\u5E94\u7528\uFF0C\u5C06\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D", "\u53D9\u4E8B\u8282\u594F");
+  void refreshPanel();
+}
 async function togglePanel(strip, mesid) {
   if (document.getElementById(PANEL_ID)) {
     destroyPanel();
@@ -35888,31 +36257,58 @@ function bindPanelNode(panel) {
   $panel.on("click", ".tsa-item", function() {
     onPickCandidate(Number($(this).data("candidate-index")));
   });
+  $panel.on("click", ".tsa-mode-tab", async function() {
+    const next = String($(this).data("mode") || "recommend") === "pacing" ? "pacing" : "recommend";
+    if (next === panelMode) return;
+    panelMode = next;
+    await refreshPanel();
+  });
+  $panel.on("input", "#tsa-pacing-directive", function() {
+    pacingDraft = String($(this).val() || "");
+  });
+  $panel.on("click", ".tsa-pacing-preset", function() {
+    pacingDraft = String($(this).data("preset") || "");
+    $panel.find("#tsa-pacing-directive").val(pacingDraft);
+  });
+  $panel.on("change", "#tsa-pacing-depth", function() {
+    const n = Math.max(0, Math.floor(Number($(this).val()) || 0));
+    savePacingConfig({ inject_depth: n });
+  });
+  $panel.on("change", "#tsa-pacing-role", function() {
+    const role = String($(this).val() || "system");
+    savePacingConfig({ inject_role: ["system", "user", "assistant"].includes(role) ? role : "system" });
+  });
+  $panel.on("click", "#tsa-pacing-analyze", () => onAnalyzePacing());
+  $panel.on("click", "#tsa-pacing-apply", () => onApplyPacing());
+  $panel.on("click", "#tsa-pacing-clear", async () => {
+    clearPacingDirective();
+    await refreshPanel();
+  });
   $panel.on("click mousedown", (event) => event.stopPropagation());
 }
 function initSceneAdvanceBubble() {
-  if (listenersBound2) {
+  if (listenersBound3) {
     scheduleRefreshStrips(0);
     return;
   }
-  listenersBound2 = true;
+  listenersBound3 = true;
   $(document).on("keydown.tsceneadvance", (event) => {
     if (event.key === "Escape" && document.getElementById(PANEL_ID)) destroyPanel();
   });
   const rerenderEvents = [
-    event_types4.CHARACTER_MESSAGE_RENDERED,
-    event_types4.USER_MESSAGE_RENDERED,
-    event_types4.MESSAGE_SWIPED,
-    event_types4.MESSAGE_DELETED,
-    event_types4.MESSAGE_EDITED,
-    event_types4.MORE_MESSAGES_LOADED
+    event_types5.CHARACTER_MESSAGE_RENDERED,
+    event_types5.USER_MESSAGE_RENDERED,
+    event_types5.MESSAGE_SWIPED,
+    event_types5.MESSAGE_DELETED,
+    event_types5.MESSAGE_EDITED,
+    event_types5.MORE_MESSAGES_LOADED
   ];
   for (const eventName of rerenderEvents) {
     if (!eventName) continue;
-    eventSource4.on(eventName, () => scheduleRefreshStrips(0));
+    eventSource5.on(eventName, () => scheduleRefreshStrips(0));
   }
-  if (event_types4.CHAT_CHANGED) {
-    eventSource4.on(event_types4.CHAT_CHANGED, () => {
+  if (event_types5.CHAT_CHANGED) {
+    eventSource5.on(event_types5.CHAT_CHANGED, () => {
       destroyPanel();
       scheduleRefreshStrips(0);
     });
@@ -35920,17 +36316,18 @@ function initSceneAdvanceBubble() {
   scheduleRefreshStrips(300);
   TitaniaLogger.info("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u5DF2\u521D\u59CB\u5316");
 }
-var STRIP_CLASS, PANEL_ID, PLANS_KEY2, ACTIVE_PLAN_KEY2, SCENE_SOURCE_PLAN_KEY2, listenersBound2, refreshQueued2, apiPromise, expandedForMesid, generating, opening, restoring, previewItemIdx, previewOpen;
+var STRIP_CLASS, PANEL_ID, PLANS_KEY2, ACTIVE_PLAN_KEY2, SCENE_SOURCE_PLAN_KEY2, listenersBound3, refreshQueued2, apiPromise, expandedForMesid, generating, opening, restoring, previewItemIdx, previewOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, PACING_PRESETS;
 var init_sceneAdvanceBubble = __esm({
   "src/ui/sceneAdvanceBubble.js"() {
     init_storage();
     init_logger();
+    init_pacingInjection();
     STRIP_CLASS = "titania-scene-advance-strip";
     PANEL_ID = "t-scene-advance-panel";
     PLANS_KEY2 = "story_outline_plans";
     ACTIVE_PLAN_KEY2 = "story_outline_active_plan_id";
     SCENE_SOURCE_PLAN_KEY2 = "story_outline_scene_source_plan_id";
-    listenersBound2 = false;
+    listenersBound3 = false;
     refreshQueued2 = false;
     apiPromise = null;
     expandedForMesid = null;
@@ -35939,6 +36336,18 @@ var init_sceneAdvanceBubble = __esm({
     restoring = false;
     previewItemIdx = -1;
     previewOpen = false;
+    panelMode = "recommend";
+    pacingResult = null;
+    pacingDraft = "";
+    pacingAnalyzing = false;
+    PACING_PRESETS = [
+      { label: "\u653E\u6162", text: "\u672C\u6B21\u56DE\u590D\u653E\u6162\u8282\u594F\uFF0C\u505C\u7559\u5728\u5F53\u524D\u573A\u666F\uFF0C\u6DF1\u5316\u4EBA\u7269\u60C5\u7EEA\u4E0E\u611F\u5B98\u7EC6\u8282\uFF0C\u4E0D\u8981\u63A8\u8FDB\u5230\u65B0\u4E8B\u4EF6\u3002" },
+      { label: "\u52A0\u5FEB", text: "\u672C\u6B21\u56DE\u590D\u52A0\u5FEB\u8282\u594F\uFF0C\u7565\u53BB\u8FC7\u573A\u4E0E\u5BD2\u6684\uFF0C\u76F4\u63A5\u63A8\u8FDB\u5230\u4E0B\u4E00\u4E2A\u5173\u952E\u4E8B\u4EF6\u6216\u573A\u666F\u3002" },
+      { label: "\u8D77\u5F20\u529B", text: "\u672C\u6B21\u56DE\u590D\u63D0\u5347\u5F20\u529B\uFF0C\u5236\u9020\u51B2\u7A81\u6216\u60AC\u5FF5\u8BA9\u5C40\u52BF\u5347\u7EA7\uFF0C\u907F\u514D\u5E73\u6DE1\u4EA4\u4EE3\u3002" },
+      { label: "\u6536\u675F", text: "\u672C\u6B21\u56DE\u590D\u6536\u675F\u5F53\u524D\u8FD9\u6761\u7EBF\u7D22\uFF0C\u7ED9\u5DF2\u6709\u4F0F\u7B14\u6216\u51B2\u7A81\u4E00\u4E2A\u9636\u6BB5\u6027\u7ED3\u679C\uFF0C\u4E0D\u8981\u518D\u629B\u65B0\u7EBF\u3002" },
+      { label: "\u7559\u767D", text: "\u672C\u6B21\u56DE\u590D\u514B\u5236\u7B14\u58A8\uFF0C\u4EE5\u672A\u5C3D\u4E4B\u8BED\u548C\u7559\u767D\u6536\u5C3E\uFF0C\u7ED9\u56DE\u5473\u7A7A\u95F4\u3002" },
+      { label: "\u8F6C\u573A", text: "\u672C\u6B21\u56DE\u590D\u5B8C\u6210\u4E00\u6B21\u573A\u666F\u6216\u65F6\u95F4\u8F6C\u6362\uFF0C\u81EA\u7136\u8FC7\u6E21\u5230\u4E0B\u4E00\u4E2A\u573A\u666F\u3002" }
+    ];
   }
 });
 
@@ -46941,7 +47350,7 @@ init_continuationStore();
 init_favsStore();
 init_scriptStore();
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource6, event_types as event_types6 } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource7, event_types as event_types7 } from "../../../../script.js";
 
 // src/core/extensionUpdate.js
 init_defaults();
@@ -47170,10 +47579,10 @@ init_rewriteEntryButton();
 init_state();
 init_chatInjector();
 init_logger();
-import { eventSource as eventSource5, event_types as event_types5 } from "../../../../script.js";
+import { eventSource as eventSource6, event_types as event_types6 } from "../../../../script.js";
 var BTN_CLASS2 = "titania-inject-btn";
 var OVERLAY_ID3 = "t-chat-inject-overlay";
-var listenersBound3 = false;
+var listenersBound4 = false;
 var refreshQueued3 = false;
 var lastVisibleChoice = null;
 function escapeHtmlText4(str) {
@@ -47343,11 +47752,11 @@ function openInjectPickerWindow(mesid) {
   });
 }
 function initChatInjectButton() {
-  if (listenersBound3) {
+  if (listenersBound4) {
     scheduleRefreshButtons2(0);
     return;
   }
-  listenersBound3 = true;
+  listenersBound4 = true;
   $(document).on("click", `.${BTN_CLASS2}`, function(event) {
     event.stopPropagation();
     const mesid = Number($(this).closest(".mes").attr("mesid"));
@@ -47358,16 +47767,16 @@ function initChatInjectButton() {
     openInjectPickerWindow(mesid);
   });
   const rerenderEvents = [
-    event_types5.CHAT_CHANGED,
-    event_types5.CHARACTER_MESSAGE_RENDERED,
-    event_types5.USER_MESSAGE_RENDERED,
-    event_types5.MESSAGE_SWIPED,
-    event_types5.MESSAGE_DELETED,
-    event_types5.MORE_MESSAGES_LOADED
+    event_types6.CHAT_CHANGED,
+    event_types6.CHARACTER_MESSAGE_RENDERED,
+    event_types6.USER_MESSAGE_RENDERED,
+    event_types6.MESSAGE_SWIPED,
+    event_types6.MESSAGE_DELETED,
+    event_types6.MORE_MESSAGES_LOADED
   ];
   for (const eventName of rerenderEvents) {
     if (!eventName) continue;
-    eventSource5.on(eventName, () => scheduleRefreshButtons2(0));
+    eventSource6.on(eventName, () => scheduleRefreshButtons2(0));
   }
   scheduleRefreshButtons2(300);
   TitaniaLogger.info("\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u521D\u59CB\u5316");
@@ -47375,6 +47784,7 @@ function initChatInjectButton() {
 
 // src/entry.js
 init_sceneAdvanceBubble();
+init_pacingInjection();
 init_floorNav();
 init_chatInjector();
 init_illustrationPortability();
@@ -47457,8 +47867,8 @@ function initCoreFeatures() {
   }
   applyUIFontScale(extData.appearance?.ui_font_scale);
   applyUITheme(extData.appearance?.ui_theme);
-  eventSource6.on(event_types6.GENERATION_ENDED, onGenerationEnded);
-  eventSource6.on(event_types6.CHAT_CHANGED, () => {
+  eventSource7.on(event_types7.GENERATION_ENDED, onGenerationEnded);
+  eventSource7.on(event_types7.CHAT_CHANGED, () => {
     void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
   });
   void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u521D\u59CB\u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
@@ -47466,6 +47876,7 @@ function initCoreFeatures() {
   initRewriteEntryButton();
   initChatInjectButton();
   initSceneAdvanceBubble();
+  initPacingInjection();
   initFloorNav();
 }
 function loadQueueConfig() {
