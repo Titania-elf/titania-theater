@@ -33666,12 +33666,48 @@ function matchKeywordRule(unitText, rule) {
 function normalizeDeleteMode(mode) {
   const value = String(mode || "").trim().toLowerCase();
   if (value === "fragment" || value === "delete_range") return "fragment";
+  if (value === "clause") return "clause";
   return "sentence";
 }
-function applyDeletesToUnit(unitText, mode, fragment) {
+function splitIntoClauses(sentence) {
+  const s = String(sentence || "");
+  const parts = [];
+  let buf = "";
+  for (const ch of s) {
+    buf += ch;
+    if (/[，、；,;]/.test(ch)) {
+      parts.push(buf);
+      buf = "";
+    }
+  }
+  if (buf) parts.push(buf);
+  return parts;
+}
+function applyClauseDeleteToUnit(unitText, anchor) {
+  const text = String(unitText || "");
+  const anchorList = parseCommaList(String(anchor || ""));
+  if (anchorList.length === 0) return text;
+  const clauses = splitIntoClauses(text);
+  const kept = clauses.filter((clause) => {
+    const norm = normalizeToken(clause);
+    return !anchorList.some((kw) => norm.includes(kw));
+  });
+  if (kept.length === clauses.length) return text;
+  let out = kept.join("");
+  if (!out.trim()) return "";
+  out = out.replace(/[，、；,;]\s*$/, "");
+  const endMatch = /[。！？!?…]+\s*$/.exec(text);
+  const endPunct = endMatch ? endMatch[0].trim() : "";
+  if (endPunct && !/[。！？!?…”」』）)]\s*$/.test(out)) {
+    out += endPunct;
+  }
+  return out;
+}
+function applyDeletesToUnit(unitText, mode, fragment, anchor) {
   const text = String(unitText || "");
   const normMode = normalizeDeleteMode(mode);
   if (normMode === "sentence") return "";
+  if (normMode === "clause") return applyClauseDeleteToUnit(text, anchor);
   const frag = String(fragment || "").trim();
   if (!frag) return text;
   const idx = text.indexOf(frag);
@@ -33713,25 +33749,30 @@ function evaluateDeleteRules(text, splitMode, rules) {
   const units = splitText(String(text || ""), mode);
   const unitResults = units.map((unit, idx) => {
     let matchedRule = null;
+    let bestRank = 0;
+    const rankOf = (m) => ({ sentence: 3, clause: 2, fragment: 1 })[normalizeDeleteMode(m)] || 1;
     for (const rule of activeRules) {
       if (matchKeywordRule(unit, rule)) {
-        const rMode = normalizeDeleteMode(rule.mode);
-        if (!matchedRule || rMode === "sentence" && normalizeDeleteMode(matchedRule.mode) === "fragment") {
+        const r = rankOf(rule.mode);
+        if (r > bestRank) {
           matchedRule = rule;
+          bestRank = r;
         }
-        if (rMode === "sentence") break;
+        if (bestRank === 3) break;
       }
     }
     const hit = !!matchedRule;
     const deleteMode = hit ? normalizeDeleteMode(matchedRule.mode) : null;
     const fragment = hit && deleteMode === "fragment" ? String(matchedRule.fragment || "") : "";
+    const anchor = hit && deleteMode === "clause" ? String(matchedRule.anchor || "") : "";
     return {
       unitIndex: idx + 1,
       text: unit,
       hit,
       deleteMode,
       fragment,
-      after: hit ? applyDeletesToUnit(unit, deleteMode, fragment) : unit,
+      anchor,
+      after: hit ? applyDeletesToUnit(unit, deleteMode, fragment, anchor) : unit,
       matchedRule: hit ? { anchor: matchedRule.anchor, extras: matchedRule.extras } : null
     };
   });
@@ -33747,7 +33788,7 @@ function evaluateDeleteRules(text, splitMode, rules) {
 function buildDeleteReplacements(deleteUnits = []) {
   return (Array.isArray(deleteUnits) ? deleteUnits : []).map((u) => ({
     before: String(u?.text || ""),
-    after: applyDeletesToUnit(u?.text, u?.deleteMode, u?.fragment)
+    after: applyDeletesToUnit(u?.text, u?.deleteMode, u?.fragment, u?.anchor)
   }));
 }
 function evaluateRewriteRules(text, splitMode, categories) {
@@ -35492,9 +35533,9 @@ function renderDeleteResult(result, sourceText = "") {
                 <div class="t-rewrite-match-text">${escapeHtml5(item.text)}</div>
             </div>`;
     }
-    const modeLabel = item.deleteMode === "fragment" ? "\u5220\u9664\u7247\u6BB5" : "\u5220\u9664\u6574\u53E5";
+    const modeLabel = item.deleteMode === "fragment" ? "\u5220\u9664\u7247\u6BB5" : item.deleteMode === "clause" ? "\u5220\u9664\u5C0F\u53E5" : "\u5220\u9664\u6574\u53E5";
     const kw = item.matchedRule ? `${item.matchedRule.anchor} + ${item.matchedRule.extras}` : "";
-    const afterHtml = item.deleteMode === "fragment" ? `<div class="t-rewrite-match-text t-delete-after">\u5220\u540E\uFF1A${escapeHtml5(item.after || "")}</div>` : "";
+    const afterHtml = item.deleteMode === "fragment" || item.deleteMode === "clause" ? `<div class="t-rewrite-match-text t-delete-after">\u5220\u540E\uFF1A${escapeHtml5(item.after || "\uFF08\u5DF2\u5220\u7A7A\uFF09")}</div>` : "";
     return `
             <div class="t-rewrite-match-row ${cls} t-delete-hit">
                 <div class="t-rewrite-match-head">
@@ -35833,7 +35874,8 @@ function buildDeleteRuleRowHtml(rule = {}) {
                     <span class="t-rewrite-kw-and">\u4E0E</span>
                     <input class="text_pole t-delete-rule-extras" type="text" value="${escapeHtml5(rule?.extras || "")}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
                     <select class="text_pole t-delete-rule-mode" title="\u5220\u9664\u7C92\u5EA6">
-                        <option value="sentence" ${!isFragment ? "selected" : ""}>\u5220\u9664\u6574\u53E5</option>
+                        <option value="sentence" ${mode === "sentence" ? "selected" : ""}>\u5220\u9664\u6574\u53E5</option>
+                        <option value="clause" ${mode === "clause" ? "selected" : ""}>\u5220\u9664\u5C0F\u53E5</option>
                         <option value="fragment" ${isFragment ? "selected" : ""}>\u5220\u9664\u7247\u6BB5</option>
                     </select>
                     <input class="text_pole t-delete-rule-fragment" type="text" value="${escapeHtml5(rule?.fragment || "")}" placeholder="\u5220\u9664\u8D77\u70B9\u7247\u6BB5\uFF0C\u5220\u5230\u53E5\u5C3E\uFF08\u5982\uFF1A\u90A3\u7B11\u58F0\u50CF\uFF09" style="${isFragment ? "" : "display:none;"}">
