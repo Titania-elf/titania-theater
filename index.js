@@ -34650,6 +34650,111 @@ function bindRewriteDecorationEvents() {
     setTimeout(refreshInlineRewriteEntry, 160);
   });
 }
+function collectVisibleTextNodes(containerEl) {
+  const walker = document.createTreeWalker(containerEl, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+      if (parent.closest("script, style, pre, code")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  let n = walker.nextNode();
+  while (n) {
+    nodes.push(n);
+    n = walker.nextNode();
+  }
+  return nodes;
+}
+function cleanupEmptiedWrappers(elements) {
+  (elements || []).forEach((start) => {
+    let cur = start;
+    while (cur && cur.nodeType === 1 && T_INLINE_WRAP_TAGS.has(cur.tagName) && !cur.textContent.trim() && cur.children.length === 0) {
+      const parent = cur.parentNode;
+      if (!parent) break;
+      parent.removeChild(cur);
+      cur = parent.nodeType === 1 ? parent : null;
+    }
+  });
+}
+function replaceAcrossTextNodes(containerEl, before, after, { mark = false, title = "" } = {}) {
+  const needle = String(before || "");
+  if (!containerEl || !needle) return false;
+  const nodes = collectVisibleTextNodes(containerEl);
+  let full = "";
+  const spans = [];
+  for (const node of nodes) {
+    const val = node.nodeValue || "";
+    spans.push({ node, start: full.length, end: full.length + val.length });
+    full += val;
+  }
+  const idx = full.indexOf(needle);
+  if (idx < 0) return false;
+  const matchStart = idx;
+  const matchEnd = idx + needle.length;
+  const covered = spans.filter((s) => s.end > matchStart && s.start < matchEnd);
+  if (covered.length === 0) return false;
+  const first = covered[0];
+  const last = covered[covered.length - 1];
+  const prefix = (first.node.nodeValue || "").slice(0, matchStart - first.start);
+  const suffix = (last.node.nodeValue || "").slice(matchEnd - last.start);
+  let afterNode = null;
+  if (String(after || "") !== "") {
+    if (mark) {
+      const span = document.createElement("span");
+      span.className = "t-rewrite-mark";
+      if (title) span.title = title;
+      span.textContent = String(after);
+      afterNode = span;
+    } else {
+      afterNode = document.createTextNode(String(after));
+    }
+  }
+  const touchedParents = covered.map((s) => s.node.parentElement).filter(Boolean);
+  const firstParent = first.node.parentNode;
+  if (!firstParent) return false;
+  const frag = document.createDocumentFragment();
+  if (prefix) frag.appendChild(document.createTextNode(prefix));
+  if (afterNode) frag.appendChild(afterNode);
+  if (covered.length === 1 && suffix) frag.appendChild(document.createTextNode(suffix));
+  if (!frag.childNodes.length) frag.appendChild(document.createTextNode(""));
+  firstParent.replaceChild(frag, first.node);
+  if (covered.length > 1) {
+    for (let i = 1; i < covered.length; i += 1) {
+      covered[i].node.nodeValue = covered[i] === last ? suffix : "";
+    }
+  }
+  cleanupEmptiedWrappers(touchedParents);
+  if (firstParent.normalize) firstParent.normalize();
+  return true;
+}
+function applyInPlaceEdits(index, edits) {
+  const list = Array.isArray(edits) ? edits : [];
+  const $message = getChatMessageElementByIndex(index);
+  const containerEl = getMessageRenderContainer($message);
+  if (!containerEl) return { containerFound: false, applied: 0, total: list.length };
+  containerEl.querySelectorAll(".t-rewrite-select-sentence, .t-rewrite-mark").forEach((el) => {
+    el.replaceWith(document.createTextNode(el.textContent || ""));
+  });
+  if (containerEl.normalize) containerEl.normalize();
+  let applied = 0;
+  list.forEach((edit) => {
+    const before = String(edit?.before || "");
+    const after = String(edit?.after || "");
+    if (!before || after === before) return;
+    const ok = replaceAcrossTextNodes(containerEl, before, after, {
+      mark: edit?.mark === true,
+      title: edit?.mark === true ? `\u539F\u53E5\uFF1A${before}` : ""
+    });
+    if (ok) applied += 1;
+  });
+  return { containerFound: true, applied, total: list.length };
+}
+function buildInPlaceRewriteEdits(evaluated, parsed) {
+  const map = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
+  return (evaluated?.unitResults || []).filter((u) => u.hit).map((unit) => ({ before: String(unit.text || ""), after: map.get(`s_${unit.unitIndex}`), mark: true })).filter((e) => e.before && typeof e.after === "string" && e.after && e.after !== e.before);
+}
 function applyDeleteToFullText(sourceText, deleteUnits) {
   return applyReplacements(sourceText, buildDeleteReplacements(deleteUnits));
 }
@@ -34668,9 +34773,11 @@ function writeBackMessageContent(targetMsg, rewrittenText) {
     targetMsg.swipes[idx] = text;
   }
 }
-function rerenderMessageInPlace(index, msg) {
+async function rerenderMessageInPlace(index, msg) {
   try {
+    await eventSource3.emit(event_types3.MESSAGE_EDITED, index);
     updateMessageBlock(index, msg);
+    await eventSource3.emit(event_types3.MESSAGE_UPDATED, index);
   } catch (e) {
     return false;
   }
@@ -34923,9 +35030,14 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
     latest.msg.extra.titania_rewrite_done = true;
     latest.msg.extra.titania_rewrite_marks = rewriteMarks;
     await saveChatConditional2();
-    await reloadCurrentChat2();
-    scheduleApplyAllRewriteMarks(180);
-    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+    const editRes = applyInPlaceEdits(latest.index, buildInPlaceRewriteEdits(evaluated, parsed));
+    if (!editRes.containerFound) {
+      const rerendered = await rerenderMessageInPlace(latest.index, latest.msg);
+      if (!rerendered) await reloadCurrentChat2();
+      scheduleApplyAllRewriteMarks(180);
+    }
+    const appliedNote = editRes.containerFound && editRes.applied < editRes.total ? `\uFF08\u539F\u5730\u56DE\u5199 ${editRes.applied}/${editRes.total} \u53E5\uFF0C\u5176\u4F59\u5DF2\u5B58\u5165\u697C\u5C42\uFF0C\u91CD\u8F7D\u540E\u751F\u6548\uFF09` : "";
+    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C${appliedNote}`, "ok");
     success = true;
   } catch (e) {
     renderDiffRows([]);
@@ -35017,11 +35129,15 @@ async function runDelete(options = {}) {
   if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
   latest.msg.extra.titania_delete_done = true;
   await saveChatConditional2();
-  const rerendered = rerenderMessageInPlace(latest.index, latest.msg);
-  if (!rerendered) await reloadCurrentChat2();
-  scheduleApplyAllRewriteMarks(180);
+  const deleteEdits = buildDeleteReplacements(result.deleteUnits).map((e) => ({ before: e.before, after: e.after, mark: false }));
+  const editRes = applyInPlaceEdits(latest.index, deleteEdits);
+  if (!editRes.containerFound) {
+    const rerendered = await rerenderMessageInPlace(latest.index, latest.msg);
+    if (!rerendered) await reloadCurrentChat2();
+  }
   refreshInlineRewriteEntry();
-  setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u5220\u9664 ${result.hitCount} \u5904\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+  const delNote = editRes.containerFound && editRes.applied < editRes.total ? `\uFF08\u539F\u5730\u5220\u9664 ${editRes.applied}/${editRes.total} \u5904\uFF0C\u5176\u4F59\u5DF2\u5B58\u5165\u697C\u5C42\uFF0C\u91CD\u8F7D\u540E\u751F\u6548\uFF09` : "";
+  setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u5220\u9664 ${result.hitCount} \u5904\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C${delNote}`, "ok");
   if (options.source !== "auto" && window.toastr) toastr.success(`\u5DF2\u6309\u5220\u9664\u89C4\u5219\u5904\u7406 ${result.hitCount} \u5904`, "\u6587\u672C\u5220\u9664");
   return true;
 }
@@ -36091,7 +36207,7 @@ function openRewritePanelFromMenu() {
   if (!isEnabled2()) return;
   openPanel();
 }
-var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, isAutoDeleting, activePanelTab, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, lastDeleteResult, lastDeleteSourceText, latestSentenceUnits, selectedSentenceIds, inlineSelectionMessageIndex, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE;
+var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, isAutoDeleting, activePanelTab, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, lastDeleteResult, lastDeleteSourceText, latestSentenceUnits, selectedSentenceIds, inlineSelectionMessageIndex, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, T_INLINE_WRAP_TAGS;
 var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
@@ -36177,6 +36293,7 @@ var init_rewriteEntryButton = __esm({
 3) \u53EA\u8F93\u51FA JSON\u3002`;
     REWRITE_DEFAULT_SELECTED_PROMPT_USER = '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_selected_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\n\u8F93\u5165 payload\uFF1A\n{{payload}}\n\n\u6267\u884C\u89C4\u5219\uFF1A\n1) \u7528\u6237\u5DF2\u624B\u52A8\u9009\u62E9 targets\uFF0C\u8BF7\u9010\u6761\u6539\u5199 original_text\u3002\n2) \u6539\u5199\u65B9\u5411\u59CB\u7EC8\u662F\u767D\u63CF\uFF1A\u5220\u9664\u5FC3\u7406\u76F4\u8FF0\uFF0C\u8F6C\u4E3A\u53EF\u89C2\u5BDF\u7684\u52A8\u4F5C\u548C\u7EC6\u8282\uFF1B\u514B\u5236\u4FEE\u9970\uFF0C\u7528\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\u3002\n3) \u6BCF\u6761 rewritten_text \u5FC5\u987B\u80FD\u66FF\u6362\u56DE\u539F\u4F4D\u7F6E\uFF0C\u5E76\u4E0E\u4E0A\u4E0B\u6587\u81EA\u7136\u8854\u63A5\u3002\n4) \u4E0D\u8981\u8F93\u51FA\u672A\u9009\u62E9\u7684\u53E5\u5B50\uFF0C\u4E0D\u8981\u6539\u53D8 segment_id\u3002\n5) results \u6570\u91CF\u5FC5\u987B\u4E0E targets \u4E00\u81F4\u3002\n6) \u53EA\u8F93\u51FA JSON\u3002';
     REWRITE_DEFAULT_PROMPT_JSON_RULE = "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u5FC5\u987B\u4E3A\u6574\u53E5\u91CD\u5199\uFF0C\u7981\u6B62\u53EA\u505A\u8BCD\u6C47\u66FF\u6362\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u8BE5 target \u7684 matched_keywords \u4E2D\u7684\u8BCD";
+    T_INLINE_WRAP_TAGS = /* @__PURE__ */ new Set(["Q", "EM", "STRONG", "I", "B", "DEL", "MARK", "SPAN", "CODE", "U", "SMALL", "SUB", "SUP"]);
   }
 });
 
