@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.3.0";
+    CURRENT_VERSION = "5.4.0";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -73,6 +73,12 @@ var init_defaults = __esm({
         // 与 characterProfiles.js 的 CHARACTER_PROFILES_VERSION 同步（有测试盯着两份一致）。
         version: 2,
         entries: []
+      },
+      // 自动配图（场景配图）：开启后每次「单次演绎 / 重演」成功会自动跑一次选景 + 生图。
+      // ⚠ 刻意**不**写 ensure：默认关的布尔值不需要迁移，读端一律 `?.enabled === true`，
+      //   老用户没有这个键时勾选框自然是未勾。给一个布尔值加版本化迁移是过度设计。
+      illustration_auto: {
+        enabled: false
       },
       history_extraction: {
         whitelist: "",
@@ -166,6 +172,23 @@ var init_defaults = __esm({
         recent_instructions: [],
         inject_rounds_count: 3
       },
+      // 「本次补充」（临时指令）功能总开关。
+      // ⚠ 这是**默认开启**的既有功能，读端一律 `?.enabled !== false`（见 tempInstruction.js
+      //   的 isTempInstructionFeatureEnabled）——getExtData 不做深合并，老用户没有这个键，
+      //   用 `=== true` 判会把他们正用着的功能静默关掉。这里写 true 只服务全新安装。
+      temp_instruction: {
+        enabled: true
+      },
+      // 「叙事节奏把控」（剧情推进面板的第二能力）的注入参数。
+      // ⚠ 只放注入侧参数：判断用的提示词模板走 story_outline_prompt_templates.pacing、
+      //   采样参数走 story_outline_gen_params.pacing、API 方案复用大纲——都不在这里。
+      //   读端一律 `?? 默认`（老用户没这个键时 depth=0 / role=system）。
+      pacing: {
+        inject_depth: 0,
+        // setExtensionPrompt 的 IN_CHAT 深度，0 = 紧贴最新消息
+        inject_role: "system"
+        // system | user | assistant
+      },
       // 自定义系统提示词配置
       custom_prompts: {
         override_enabled: false,
@@ -240,26 +263,37 @@ var init_defaults = __esm({
         // 不写进用户的聊天存档。开启后写入照常落盘（少数依赖变量跨次留存的预设才需要）。
         persist_variables: false
       },
-      // 文本改写入口（显示在故事大纲菜单中）
+      // 文本改写入口（显示在故事大纲菜单中）：改写 / 删除两套独立子系统
       rewrite_entry: {
         enabled: false,
+        // —— 共享：模型连接与切分 ——
         profile_mode: "custom",
         profile_id: "",
         api_url: "",
         api_key: "",
         model: "",
         split_mode: "sentence",
-        stream_live: true,
-        auto_trigger: false,
-        selected_sentence_enabled: true,
         tag_whitelist: "",
-        active_scheme_id: "",
-        schemes: [],
-        prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u3002\u4EC5\u6839\u636E\u8F93\u5165 targets \u5BF9\u547D\u4E2D\u7247\u6BB5\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u547D\u4E2D\u4FE1\u606F\u3002\u4FDD\u6301\u8BED\u4E49\u4E00\u81F4\u3001\u8BED\u6C14\u81EA\u7136\u3001\u8FDE\u8D2F\uFF0C\u5E76\u4E0E\u539F\u4E0A\u4E0B\u6587\u98CE\u683C\u4E00\u81F4\u3002",
-        prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE\n4) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
-        selected_prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u7684\u624B\u52A8\u9009\u53E5\u6A21\u5F0F\uFF0C\u4E13\u95E8\u5C06\u53E5\u5B50\u6539\u5199\u4E3A\u767D\u63CF\u98CE\u683C\u3002\u767D\u63CF\u6838\u5FC3\u51C6\u5219\uFF1A\u7528\u5177\u4F53\u52A8\u4F5C\u3001\u7269\u8C61\u3001\u7EC6\u8282\u8BF4\u8BDD\uFF0C\u4E0D\u76F4\u8FF0\u89D2\u8272\u5185\u5FC3\u611F\u53D7\uFF1B\u514B\u5236\u5F62\u5BB9\u8BCD\u526F\u8BCD\uFF0C\u4EE5\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\uFF1B\u5220\u9664\u5FC3\u7406\u6982\u62EC\u53E5\uFF0C\u8F6C\u4E3A\u5916\u90E8\u53EF\u89C2\u5BDF\u7684\u884C\u4E3A\u6216\u73AF\u5883\u6620\u886C\uFF1B\u53E5\u5F0F\u7B80\u6D01\u786C\u6717\uFF0C\u4E0D\u865A\u9970\u4E0D\u717D\u60C5\u3002\u7528\u6237\u5DF2\u9009\u5B9A\u9700\u8981\u6539\u5199\u7684\u53E5\u5B50\uFF1B\u53EA\u5BF9\u8F93\u5165 targets \u9010\u6761\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u9009\u5185\u5BB9\u3002\u6539\u540E\u80FD\u81EA\u7136\u66FF\u6362\u56DE\u539F\u4F4D\u7F6E\u3002",
-        selected_prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_selected_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) targets \u662F\u7528\u6237\u624B\u52A8\u9009\u4E2D\u7684\u53E5\u5B50\uFF0C\u53EA\u6539\u5199\u8FD9\u4E9B\u53E5\u5B50\n2) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n3) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n4) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF0C\u4E14\u5E94\u80FD\u539F\u4F4D\u66FF\u6362\u56DE\u4E0A\u4E0B\u6587\n5) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
-        prompt_json_rule: "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09"
+        stream_live: true,
+        // —— 改写子系统（LLM）——
+        rewrite: {
+          enabled: false,
+          auto_trigger: false,
+          active_scheme_id: "",
+          schemes: [],
+          selected_sentence_enabled: true,
+          prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u3002\u4EC5\u6839\u636E\u8F93\u5165 targets \u5BF9\u547D\u4E2D\u7247\u6BB5\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u547D\u4E2D\u4FE1\u606F\u3002\u4FDD\u6301\u8BED\u4E49\u4E00\u81F4\u3001\u8BED\u6C14\u81EA\u7136\u3001\u8FDE\u8D2F\uFF0C\u5E76\u4E0E\u539F\u4E0A\u4E0B\u6587\u98CE\u683C\u4E00\u81F4\u3002\u82E5 target \u5E26\u6709 category\uFF08\u5206\u7C7B\uFF09\u4FE1\u606F\uFF0C\u8BF7\u4E25\u683C\u6309\u8BE5\u5206\u7C7B\u7684 guidance\uFF08\u6539\u5199\u6307\u5BFC\uFF09\u8C03\u6574\u65B9\u5411\uFF0C\u5E76\u53C2\u8003 bad_example\uFF08\u5DEE\u53E5\u793A\u4F8B\uFF09\u4E0E good_example\uFF08\u4F18\u79C0\u793A\u4F8B\uFF09\uFF1A\u628A\u5DEE\u53E5\u90A3\u6837\u7684\u5199\u6CD5\u6539\u6210\u4F18\u79C0\u793A\u4F8B\u90A3\u6837\u7684\u5199\u6CD5\u3002",
+          prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n2) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n3) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF1B\u82E5\u65E0\u9700\u6539\u5199\u5219\u539F\u6837\u8FD4\u56DE\n4) \u6BCF\u4E2A target \u82E5\u542B category\uFF0C\u5FC5\u987B\u9075\u5FAA\u5176 guidance \u5E76\u5411 good_example \u98CE\u683C\u9760\u62E2\uFF0C\u8FDC\u79BB bad_example \u98CE\u683C\n5) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
+          selected_prompt_system: "\u4F60\u662F\u4E13\u4E1A\u4E2D\u6587\u6587\u672C\u6539\u5199\u52A9\u624B\u7684\u624B\u52A8\u9009\u53E5\u6A21\u5F0F\uFF0C\u4E13\u95E8\u5C06\u53E5\u5B50\u6539\u5199\u4E3A\u767D\u63CF\u98CE\u683C\u3002\u767D\u63CF\u6838\u5FC3\u51C6\u5219\uFF1A\u7528\u5177\u4F53\u52A8\u4F5C\u3001\u7269\u8C61\u3001\u7EC6\u8282\u8BF4\u8BDD\uFF0C\u4E0D\u76F4\u8FF0\u89D2\u8272\u5185\u5FC3\u611F\u53D7\uFF1B\u514B\u5236\u5F62\u5BB9\u8BCD\u526F\u8BCD\uFF0C\u4EE5\u540D\u8BCD\u548C\u52A8\u8BCD\u652F\u6491\u53E5\u5B50\uFF1B\u5220\u9664\u5FC3\u7406\u6982\u62EC\u53E5\uFF0C\u8F6C\u4E3A\u5916\u90E8\u53EF\u89C2\u5BDF\u7684\u884C\u4E3A\u6216\u73AF\u5883\u6620\u886C\uFF1B\u53E5\u5F0F\u7B80\u6D01\u786C\u6717\uFF0C\u4E0D\u865A\u9970\u4E0D\u717D\u60C5\u3002\u7528\u6237\u5DF2\u9009\u5B9A\u9700\u8981\u6539\u5199\u7684\u53E5\u5B50\uFF1B\u53EA\u5BF9\u8F93\u5165 targets \u9010\u6761\u6539\u5199\uFF0C\u4E0D\u65B0\u589E\u672A\u9009\u5185\u5BB9\u3002\u6539\u540E\u80FD\u81EA\u7136\u66FF\u6362\u56DE\u539F\u4F4D\u7F6E\u3002",
+          selected_prompt_user: '\u8FD4\u56DE JSON schema\uFF1A\n{{schema}}\n\u552F\u4E00\u5408\u6CD5\u793A\u4F8B\uFF1A\n{"task_id":"rewrite_selected_x","results":[{"segment_id":"s_1","rewritten_text":"\u793A\u4F8B\u6587\u672C"}]}\n\u786C\u7EA6\u675F\uFF1A\n1) targets \u662F\u7528\u6237\u624B\u52A8\u9009\u4E2D\u7684\u53E5\u5B50\uFF0C\u53EA\u6539\u5199\u8FD9\u4E9B\u53E5\u5B50\n2) results \u6761\u76EE\u6570\u5FC5\u987B\u7B49\u4E8E targets \u6761\u76EE\u6570\n3) segment_id \u5FC5\u987B\u6765\u81EA targets \u4E14\u4E0D\u91CD\u590D\n4) rewritten_text \u4E0D\u80FD\u4E3A\u7A7A\uFF0C\u4E14\u5E94\u80FD\u539F\u4F4D\u66FF\u6362\u56DE\u4E0A\u4E0B\u6587\n5) \u4E0D\u5F97\u8F93\u51FA\u4EFB\u4F55 JSON \u4E4B\u5916\u7684\u5185\u5BB9\n\n\u8F93\u5165\u6570\u636E\uFF1A\n{{payload}}',
+          prompt_json_rule: "JSON\u683C\u5F0F\u6307\u4EE4\uFF08\u8C28\u614E\u4FEE\u6539\uFF09\uFF1A\n- \u53EA\u8F93\u51FA JSON\uFF0C\u4E0D\u8F93\u51FA\u89E3\u91CA\u6216 markdown\n- \u9876\u5C42\u5FC5\u987B\u5305\u542B task_id \u548C results\n- results \u6BCF\u9879\u5FC5\u987B\u5305\u542B segment_id \u548C rewritten_text\n- rewritten_text \u4E2D\u4E0D\u80FD\u51FA\u73B0\u76EE\u6807\u547D\u4E2D\u8BCD\uFF08anchor / matched_extra\uFF09"
+        },
+        // —— 删除子系统（本地确定性，无 LLM，命中即删）——
+        deletion: {
+          enabled: false,
+          auto_trigger: true,
+          rules: []
+        }
       }
     };
   }
@@ -955,6 +989,22 @@ var init_userFiles = __esm({
 function illustrationError(message, code = "INVALID_RESPONSE") {
   return Object.assign(new Error(message), { code });
 }
+function formatIllustrationError(error) {
+  return error?.name === "AbortError" || error?.code === "ABORTED" || error?.code === "aborted" ? "\u5DF2\u53D6\u6D88\u7B49\u5F85\u3002\u540E\u7AEF\u53EF\u80FD\u4ECD\u5728\u8BA1\u7B97\uFF1B\u9700\u8981\u65F6\u53EF\u91CD\u65B0\u53D1\u8D77\u3002" : String(error?.message || "\u914D\u56FE\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+}
+function createPendingIllustrationTarget({ scriptId = "", scriptName = "\u573A\u666F", reason = "" } = {}) {
+  const id3 = String(scriptId || "");
+  return Object.freeze({
+    sceneId: `scene-pending-${illustrationHash(JSON.stringify([id3]))}`,
+    content: "",
+    scriptId: id3,
+    scriptName: String(scriptName || "\u573A\u666F"),
+    generationId: "",
+    cardKey: "",
+    // 面板据此说明原因并收起「分析画面」这些按钮（见 illustrationWindow.js）。
+    unavailable: String(reason || "\u8FD9\u4E00\u8F6E\u8FD8\u6CA1\u6709\u53EF\u914D\u56FE\u7684\u6B63\u6587\u3002")
+  });
+}
 function newIllustrationId() {
   return globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
@@ -987,10 +1037,10 @@ function createIllustrationTarget(result, fallbackId = "") {
     cardKey: String(result.cardKey || "")
   });
 }
-function resolveDisplayedFavoriteBranch(result, active, archived = []) {
+function resolveDisplayedFavoriteBranch(result, active2, archived = []) {
   const matches = (round) => result?.generationId ? round?.generationId === result.generationId : String(round?.content || "").trim() === String(result?.content || "").trim();
-  const source = [active, ...archived].find((branch) => branch?.rounds?.some(matches));
-  return source ? { ...active, ...source } : { ...active, branchKey: "", rounds: [] };
+  const source = [active2, ...archived].find((branch) => branch?.rounds?.some(matches));
+  return source ? { ...active2, ...source } : { ...active2, branchKey: "", rounds: [] };
 }
 function requireText(value, label, allowEmpty = false) {
   if (typeof value !== "string" || !allowEmpty && !value.trim()) {
@@ -1028,12 +1078,12 @@ function normalizeIllustrationDraft(value) {
     }
   };
 }
-function sanitizeIllustrationExcerpt(draft, theaterText) {
-  const excerpt = draft?.scene?.sourceExcerpt;
-  if (!excerpt || String(theaterText ?? "").includes(excerpt)) return draft;
-  const scene = { ...draft.scene };
+function sanitizeIllustrationExcerpt(draft2, theaterText) {
+  const excerpt = draft2?.scene?.sourceExcerpt;
+  if (!excerpt || String(theaterText ?? "").includes(excerpt)) return draft2;
+  const scene = { ...draft2.scene };
   delete scene.sourceExcerpt;
-  return { ...draft, scene };
+  return { ...draft2, scene };
 }
 function illustrationExtension(mime) {
   const extension = MIME_EXTENSIONS[mime];
@@ -1096,7 +1146,7 @@ var init_illustrationData = __esm({
     ILLUSTRATION_INDEX_KEY = "illustration_index";
     MAX_IMAGE_BYTES = 32 * 1024 * 1024;
     ILLUSTRATION_DRAFT_VERSION = 2;
-    ILLUSTRATION_BACKEND_IDS = ["cosmos", "baibai"];
+    ILLUSTRATION_BACKEND_IDS = ["cosmos", "baibai", "chatu8"];
     BACKENDS = new Set(ILLUSTRATION_BACKEND_IDS);
     MIME_EXTENSIONS = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
   }
@@ -1149,7 +1199,6 @@ function mutateScene(sceneId, mutate) {
       } catch {
       }
     }
-    window.dispatchEvent(new CustomEvent("titania:illustrations-changed", { detail: { sceneId } }));
     return record;
   });
   writes.set(sceneId, operation);
@@ -1490,9 +1539,9 @@ ${bodyContent}
 </body>
 </html>`;
 }
-function escapeHtml(str) {
-  if (str === null || str === void 0 || str === "") return "";
-  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+function escapeHtml(str2) {
+  if (str2 === null || str2 === void 0 || str2 === "") return "";
+  return String(str2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
   console.log("[Titania] openInNewWindow \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
@@ -1942,16 +1991,16 @@ function extractFromShadowDOM(container) {
   return container.innerHTML;
 }
 async function countTokens(text) {
-  const str = String(text || "");
-  if (!str) return { count: 0, exact: true };
+  const str2 = String(text || "");
+  if (!str2) return { count: 0, exact: true };
   try {
     const { getTokenCountAsync } = await import("../../../tokenizers.js");
-    const count = await getTokenCountAsync(str);
+    const count = await getTokenCountAsync(str2);
     if (Number.isFinite(count)) return { count, exact: true };
   } catch (error) {
     console.warn("Titania: ST \u5206\u8BCD\u5668\u4E0D\u53EF\u7528\uFF0C\u56DE\u9000\u5230\u4F30\u7B97", error);
   }
-  return { count: estimateTokens(str), exact: false };
+  return { count: estimateTokens(str2), exact: false };
 }
 async function countTokensBatch(texts) {
   const list = Array.isArray(texts) ? texts : [];
@@ -3070,8 +3119,8 @@ function normalizeUserPreset(raw) {
 function normalizeState(current) {
   const presets = (Array.isArray(current?.presets) ? current.presets : []).map(normalizeUserPreset).filter(Boolean);
   const requested = String(current?.active_preset_id ?? "").trim();
-  const active = presets.some((preset) => preset.id === requested) ? requested : presets[0]?.id || "";
-  return { version: ILLUSTRATION_PRESETS_VERSION, active_preset_id: active, presets };
+  const active2 = presets.some((preset) => preset.id === requested) ? requested : presets[0]?.id || "";
+  return { version: ILLUSTRATION_PRESETS_VERSION, active_preset_id: active2, presets };
 }
 function migrateLegacySpec(data) {
   const legacy = data?.[LEGACY_SPEC_KEY];
@@ -3312,615 +3361,553 @@ var init_illustrationPresets = __esm({
         name: "\u751F\u56FE\u63D0\u793A\u8BCD\u89C4\u8303",
         role: "system",
         enabled: true,
-        content: `\u4F60\u7684\u4EFB\u52A1\u662F\u6839\u636E\u7528\u6237\u63D0\u4F9B\u7684\u89D2\u8272\u8BBE\u5B9A\u3001\u573A\u666F\u3001\u52A8\u4F5C\u3001\u6784\u56FE\u548C\u753B\u9762\u9700\u6C42\uFF0C\u751F\u6210\u6E05\u6670\u3001\u51C6\u786E\u3001\u6613\u4E8E\u56FE\u50CF\u6A21\u578B\u7406\u89E3\u7684\u751F\u56FE\u63D0\u793A\u8BCD\u3002
+        content: `# \u901A\u7528\u751F\u56FE\u63D0\u793A\u8BCD\u7F16\u5199\u89C4\u5219
 
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u4E00\u3001\u6838\u5FC3\u539F\u5219
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+## 1. \u6838\u5FC3\u76EE\u6807
 
-1. \u53EA\u63CF\u8FF0\u753B\u9762\u4E2D\u80FD\u591F\u76F4\u63A5\u770B\u5230\u7684\u89C6\u89C9\u5185\u5BB9\u3002
+\u6839\u636E\u7528\u6237\u63D0\u4F9B\u7684\u89D2\u8272\u3001\u573A\u666F\u3001\u52A8\u4F5C\u3001\u6784\u56FE\u3001\u73AF\u5883\u7B49\u9700\u6C42\uFF0C\u7F16\u5199\u53EF\u4EE5\u76F4\u63A5\u7528\u4E8E\u751F\u56FE\u7684\u6B63\u9762\u63D0\u793A\u8BCD\u3002
 
-2. \u4E0D\u52A0\u5165\u65E0\u6CD5\u76F4\u63A5\u89C6\u89C9\u786E\u8BA4\u7684\u5185\u5BB9\uFF0C\u4F8B\u5982\uFF1A
-   - \u6545\u4E8B\u60C5\u8282\u89E3\u91CA
-   - \u4EBA\u7269\u80CC\u666F
-   - \u4EBA\u7269\u6027\u683C
-   - \u5FC3\u7406\u72B6\u6001
-   - \u8C61\u5F81\u610F\u4E49
-   - \u62BD\u8C61\u6982\u5FF5
-   - \u6C14\u8D28
-   - aura
-   - \u65E0\u6CD5\u89C6\u89C9\u786E\u8BA4\u7684\u60C5\u7EEA\u6216\u6C1B\u56F4
+\u63D0\u793A\u8BCD\u5FC5\u987B\uFF1A
 
-3. \u4E0D\u52A0\u5165\u827A\u672F\u98CE\u683C\u3001\u753B\u98CE\u3001\u8D28\u91CF\u3001\u6E32\u67D3\u8D28\u91CF\u7B49\u5185\u5BB9\uFF0C\u9664\u975E\u7528\u6237\u660E\u786E\u8981\u6C42\u3002
+- \u53EA\u63CF\u8FF0\u753B\u9762\u4E2D\u80FD\u591F\u76F4\u63A5\u770B\u5230\u7684\u89C6\u89C9\u5185\u5BB9
+- \u7B80\u6D01\u3001\u660E\u786E\u3001\u5177\u4F53
+- \u4F18\u5148\u63CF\u8FF0\u4F1A\u76F4\u63A5\u5F71\u54CD\u753B\u9762\u7684\u4FE1\u606F
+- \u907F\u514D\u6587\u5B66\u5316\u3001\u6545\u4E8B\u5316\u548C\u62BD\u8C61\u5316\u8868\u8FBE
+- \u4E0D\u4E3A\u4E86\u8BA9\u6587\u5B57\u770B\u8D77\u6765\u4E30\u5BCC\u800C\u52A0\u5165\u65E0\u5B9E\u9645\u89C6\u89C9\u4F5C\u7528\u7684\u63CF\u8FF0
+- \u4E0D\u64C5\u81EA\u6539\u53D8\u7528\u6237\u5DF2\u7ECF\u786E\u5B9A\u7684\u89D2\u8272\u8BBE\u5B9A
 
-4. \u4E0D\u4E3A\u4E86\u8BA9\u63D0\u793A\u8BCD\u663E\u5F97\u590D\u6742\u800C\u6DFB\u52A0\u65E0\u5B9E\u9645\u4F5C\u7528\u7684\u4FEE\u9970\u8BCD\u3002
 
-5. \u907F\u514D\u540C\u4E49\u8BCD\u5806\u53E0\u548C\u91CD\u590D\u63CF\u8FF0\u3002
+## 2. \u89C6\u89C9\u5185\u5BB9\u539F\u5219
 
-6. \u6BCF\u4E00\u9879\u89C6\u89C9\u4FE1\u606F\u90FD\u5E94\u8BE5\u5C3D\u53EF\u80FD\u5177\u6709\u660E\u786E\u7684\u5F52\u5C5E\u3002
+\u6240\u6709\u63CF\u8FF0\u90FD\u5FC5\u987B\u80FD\u591F\u901A\u8FC7\u6700\u7EC8\u753B\u9762\u76F4\u63A5\u89C2\u5BDF\u5230\u3002
 
-7. \u56FA\u5B9A\u89D2\u8272\u7684\u5916\u8C8C\u3001\u670D\u88C5\u548C\u914D\u9970\u5C5E\u4E8E\u89D2\u8272\u951A\u70B9\u3002\u9664\u975E\u7528\u6237\u660E\u786E\u8981\u6C42\uFF0C\u5426\u5219\u4E0D\u8981\u64C5\u81EA\u4FEE\u6539\u3002
+\u5E94\u8BE5\u63CF\u8FF0\uFF1A
 
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u4E8C\u3001Tag \u4E0E Natural Language \u7684\u5206\u5DE5
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+- \u5916\u8C8C
+- \u53D1\u578B\u3001\u53D1\u8272
+- \u773C\u775B\u3001\u77B3\u5B54
+- \u4E94\u5B98
+- \u8EAB\u4F53\u7279\u5F81
+- \u670D\u88C5
+- \u914D\u9970
+- \u8868\u60C5
+- \u52A8\u4F5C
+- \u59FF\u52BF
+- \u8EAB\u4F53\u671D\u5411
+- \u4EBA\u7269\u4E4B\u95F4\u7684\u4E92\u52A8
+- \u4EBA\u7269\u4E4B\u95F4\u7684\u7A7A\u95F4\u4F4D\u7F6E
+- \u73AF\u5883
+- \u65F6\u95F4
+- \u5149\u7EBF
+- \u9634\u5F71
+- \u53EF\u89C1\u7269\u4F53
+- \u6784\u56FE
+- \u955C\u5934
+- \u8272\u5F69
+- \u6750\u8D28
+- \u524D\u666F\u4E0E\u80CC\u666F\u5173\u7CFB
+- \u7559\u767D\u7B49\u53EF\u4EE5\u76F4\u63A5\u89C6\u89C9\u5316\u7684\u5185\u5BB9
 
-\u4E0D\u8981\u5F3A\u5236\u6240\u6709\u5185\u5BB9\u90FD\u4F7F\u7528 Tag\uFF0C\u4E5F\u4E0D\u8981\u5F3A\u5236\u6240\u6709\u5185\u5BB9\u90FD\u4F7F\u7528 Natural Language\u3002
+\u4E0D\u8981\u63CF\u8FF0\uFF1A
 
-\u6839\u636E\u89C6\u89C9\u4FE1\u606F\u7684\u590D\u6742\u7A0B\u5EA6\u9009\u62E9\u8868\u8FBE\u65B9\u5F0F\u3002
+- \u4EBA\u7269\u6027\u683C
+- \u5FC3\u7406\u6D3B\u52A8
+- \u601D\u60F3
+- \u6545\u4E8B\u80CC\u666F
+- \u5267\u60C5\u89E3\u91CA
+- \u4EBA\u7269\u5173\u7CFB\u7684\u62BD\u8C61\u542B\u4E49
+- \u201C\u795E\u79D8\u611F\u201D\u201C\u538B\u8FEB\u611F\u201D\u201C\u6D6A\u6F2B\u6C1B\u56F4\u201D\u7B49\u62BD\u8C61\u6982\u5FF5
+- aura\u3001presence \u7B49\u4E0D\u53EF\u76F4\u63A5\u89C2\u5BDF\u7684\u6982\u5FF5
+- \u6587\u5B66\u5316\u4FEE\u8F9E
+- \u4E0E\u753B\u9762\u65E0\u5173\u7684\u80CC\u666F\u8BBE\u5B9A
 
-\u7B80\u5355\u3001\u72EC\u7ACB\u3001\u9759\u6001\u7684\u89C6\u89C9\u4FE1\u606F \u2192 Tag
-
-\u590D\u6742\u52A8\u4F5C\u3001\u590D\u6742\u59FF\u52BF\u3001\u89D2\u8272\u4E92\u52A8\u3001\u7A7A\u95F4\u5173\u7CFB \u2192 Natural Language
-
-\u57FA\u672C\u539F\u5219\uFF1A
-
-\u201C\u662F\u4EC0\u4E48\u201D \u2192 \u4F18\u5148 Tag
-
-\u201C\u8C01\u5728\u505A\u4EC0\u4E48\u201D \u2192 Natural Language
-
-\u201C\u8C01\u548C\u8C01\u53D1\u751F\u4EC0\u4E48\u5173\u7CFB\u201D \u2192 Natural Language
-
-\u201C\u8C01\u4F4D\u4E8E\u54EA\u91CC\u201D \u2192 Natural Language
-
-\u201C\u7269\u4F53\u4E0E\u8C01\u53D1\u751F\u4EC0\u4E48\u5173\u7CFB\u201D \u2192 \u6839\u636E\u5173\u7CFB\u590D\u6742\u7A0B\u5EA6\u51B3\u5B9A
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u4E09\u3001\u9002\u5408\u4F7F\u7528 Tag \u7684\u5185\u5BB9
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u4EE5\u4E0B\u5185\u5BB9\u901A\u5E38\u9002\u5408\u4F7F\u7528 Tag\uFF1A
-
-1. \u89D2\u8272\u6570\u91CF\u548C\u57FA\u672C\u7C7B\u522B
-
-1girl
-1boy
-2girls
-2boys
-solo
-multiple people
-
-2. \u7B80\u5355\u9759\u6001\u5916\u8C8C
-
-long straight black hair
-silver-gray highlights
-amber eyes
-long eyelashes
-pointed chin
-fair skin
-muscular body
-
-3. \u7B80\u5355\u670D\u88C5
-
-black gothic dress
-high collar
-long sleeves
-high heels
-black cardigan
-
-4. \u7B80\u5355\u9970\u54C1
-
-glasses
-necklace
-earrings
-hair ribbon
-choker
-
-5. \u7B80\u5355\u8EAB\u4F53\u72B6\u6001
-
-blushing
-open mouth
-closed eyes
-sweaty skin
-
-6. \u7B80\u5355\u52A8\u4F5C
-
-standing
-sitting
-walking
-running
-kneeling
-
-\u53EA\u6709\u52A8\u4F5C\u672C\u8EAB\u5F88\u7B80\u5355\u65F6\u624D\u4F7F\u7528\u3002
-
-7. \u57FA\u7840\u955C\u5934
-
-full body
-upper body
-portrait
-close-up
-eye level
-low angle
-high angle
-side view
-profile
-wide shot
-
-8. \u7B80\u5355\u73AF\u5883
-
-bedroom
-office
-forest
-castle
-window
-sofa
-street
-indoors
-outdoors
-daytime
-night
-rain
-snow
-
-9. \u7B80\u5355\u5149\u5F71\u548C\u89C6\u89C9\u6548\u679C
-
-soft shadows
-strong shadows
-reflections
-light rays
-glow
-rim lighting
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u56DB\u3001\u9002\u5408\u4F7F\u7528 Natural Language \u7684\u5185\u5BB9
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u4EE5\u4E0B\u5185\u5BB9\u4F18\u5148\u4F7F\u7528 Natural Language\uFF1A
-
-1. \u590D\u6742\u52A8\u4F5C
-
-The woman reaches toward the table with her right hand.
-
-2. \u590D\u6742\u59FF\u52BF
-
-The woman sits cross-legged on the floor with one hand supporting her head.
-
-3. \u591A\u89D2\u8272\u4E92\u52A8
-
-The woman holds the man's hand.
-
-The man places one hand on the woman's shoulder.
-
-4. \u591A\u89D2\u8272\u7A7A\u95F4\u5173\u7CFB
-
-The woman stands in front of the man.
-
-The man stands behind the woman.
-
-The woman sits on the sofa while the man stands beside her.
-
-5. \u89D2\u8272\u4E0E\u73AF\u5883\u4E4B\u95F4\u7684\u5173\u7CFB
-
-The woman stands beside the window and looks outside.
-
-The man leans against the wall.
-
-6. \u590D\u6742\u8EAB\u4F53\u90E8\u4F4D\u5173\u7CFB
-
-The woman raises her left arm while her right hand rests on her hip.
-
-7. \u590D\u6742\u6784\u56FE
-
-The woman stands in the center of the frame while two men stand behind her on both sides.
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u4E94\u3001\u5355\u89D2\u8272\u63D0\u793A\u8BCD\u7ED3\u6784
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u5355\u89D2\u8272\u53EF\u4EE5\u4F7F\u7528\uFF1A
-
-[Character Tags]
-\u2192 [Action / Pose NL]
-\u2192 [Camera Tags]
-\u2192 [Composition NL]
-\u2192 [Environment Tags]
-\u2192 [Lighting / Visual Effects Tags]
+\u5982\u679C\u7528\u6237\u63D0\u51FA\u7684\u662F\u62BD\u8C61\u9700\u6C42\uFF0C\u5E94\u5C06\u5176\u8F6C\u6362\u6210\u53EF\u4EE5\u76F4\u63A5\u770B\u5230\u7684\u89C6\u89C9\u4E8B\u5B9E\u3002
 
 \u4F8B\u5982\uFF1A
 
-1girl, full body,
-long straight black hair, silver-gray highlights, amber eyes, long eyelashes,
-black gothic dress, high collar, long sleeves, high heels,
+\u201C\u8868\u73B0\u51FA\u6E29\u67D4\u611F\u201D
+\u2192 \u4F7F\u7528\u67D4\u548C\u8868\u60C5\u3001\u8F7B\u5FAE\u5FAE\u7B11\u3001\u67D4\u548C\u773C\u795E\u7B49\u5177\u4F53\u89C6\u89C9\u4FE1\u606F\u3002
 
-The woman sits cross-legged on the floor with one hand supporting her head.
+\u201C\u8868\u73B0\u51FA\u538B\u8FEB\u611F\u201D
+\u2192 \u4F7F\u7528\u4F4E\u673A\u4F4D\u3001\u4EBA\u7269\u9760\u8FD1\u955C\u5934\u3001\u5F3A\u70C8\u4FEF\u89C6\u5173\u7CFB\u3001\u660E\u663E\u9634\u5F71\u7B49\u5177\u4F53\u89C6\u89C9\u4FE1\u606F\u3002
 
-bedroom, window, night, moonlight,
-soft shadows
-\`\`\`
+\u5982\u679C\u65E0\u6CD5\u8F6C\u6362\u6210\u660E\u786E\u7684\u89C6\u89C9\u5185\u5BB9\uFF0C\u5219\u5220\u9664\u3002
 
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u516D\u3001\u591A\u89D2\u8272\u63D0\u793A\u8BCD\u7ED3\u6784
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 
-\u591A\u89D2\u8272\u4E0D\u8981\u7B80\u5355\u5730\u628A\u6240\u6709\u89D2\u8272\u7684\u9759\u6001\u5C5E\u6027\u62C6\u6210\u4E00\u4E2A\u5171\u4EAB Tag \u5217\u8868\u3002
+## 3. \u4E0D\u64C5\u81EA\u6269\u5199
 
-\u63A8\u8350\uFF1A
+\u4E0D\u8981\u4E3A\u4E86\u8BA9\u63D0\u793A\u8BCD\u663E\u5F97\u5B8C\u6574\u800C\u81EA\u884C\u6DFB\u52A0\u7528\u6237\u6CA1\u6709\u8981\u6C42\u7684\u5185\u5BB9\u3002
 
-[Character A Natural Language Description]
-\u2192 [Character B Natural Language Description]
-\u2192 [Other Character Descriptions]
-\u2192 [Actions / Poses NL]
-\u2192 [Interaction / Spatial Relationship NL]
-\u2192 [Camera Tags]
-\u2192 [Composition NL]
-\u2192 [Environment Tags]
-\u2192 [Lighting / Visual Effects Tags]
+\u5C24\u5176\u4E0D\u8981\u64C5\u81EA\u589E\u52A0\uFF1A
 
-\u591A\u89D2\u8272\u65F6\uFF0C\u6BCF\u4E2A\u89D2\u8272\u5E94\u8BE5\u5F62\u6210\u72EC\u7ACB\u3001\u8FDE\u7EED\u7684\u89C6\u89C9\u63CF\u8FF0\u3002
+- \u65B0\u89D2\u8272
+- \u65B0\u670D\u88C5
+- \u65B0\u914D\u9970
+- \u65B0\u9053\u5177
+- \u65B0\u5267\u60C5
+- \u65B0\u80CC\u666F\u8BBE\u5B9A
+- \u4EBA\u7269\u6027\u683C
+- \u62BD\u8C61\u6C1B\u56F4
+- \u98CE\u683C\u63CF\u8FF0
+- \u8D28\u91CF\u63CF\u8FF0
 
-\u4F8B\u5982\uFF1A
+\u5982\u679C\u7528\u6237\u53EA\u8981\u6C42\u6539\u53D8\u573A\u666F\uFF0C\u5C31\u4FDD\u7559\u5DF2\u7ECF\u786E\u5B9A\u7684\u89D2\u8272\u8BBE\u5B9A\u3002
 
-The woman has waist-length light brown hair, black eyes, a mole under her left eye, and a mature female appearance. She wears a black dress.
+\u5982\u679C\u7528\u6237\u53EA\u8981\u6C42\u6539\u53D8\u670D\u88C5\uFF0C\u5C31\u4E0D\u8981\u64C5\u81EA\u6539\u53D8\u89D2\u8272\u5916\u8C8C\u3002
 
-The man has slicked-back black hair, pale golden eyes with slit pupils, sharp facial features, and semi-rimless glasses. He wears a black cardigan.
+\u5982\u679C\u7528\u6237\u53EA\u8981\u6C42\u6539\u53D8\u52A8\u4F5C\uFF0C\u5C31\u4E0D\u8981\u91CD\u65B0\u8BBE\u8BA1\u6574\u4E2A\u753B\u9762\u3002
 
-The woman stands in front of the man.
 
-The man stands behind the woman and places one hand on her shoulder.
+## 4. \u56FA\u5B9A\u89D2\u8272\u8BBE\u5B9A
 
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u4E03\u3001\u591A\u89D2\u8272\u89D2\u8272\u7ED1\u5B9A
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\u5982\u679C\u7528\u6237\u5DF2\u7ECF\u63D0\u4F9B\u89D2\u8272\u951A\u70B9\u6216\u56FA\u5B9A\u89D2\u8272\uFF1A
 
-\u6BCF\u4E2A\u89D2\u8272\u7684\uFF1A
+- \u4FDD\u7559\u5DF2\u7ECF\u786E\u5B9A\u7684\u5916\u8C8C
+- \u4FDD\u7559\u5DF2\u7ECF\u786E\u5B9A\u7684\u670D\u88C5\uFF0C\u9664\u975E\u7528\u6237\u8981\u6C42\u66F4\u6362
+- \u4FDD\u7559\u5DF2\u7ECF\u786E\u5B9A\u7684\u914D\u9970\uFF0C\u9664\u975E\u7528\u6237\u8981\u6C42\u66F4\u6362\u6216\u5220\u9664
+- \u4FDD\u7559\u89D2\u8272\u7684\u5173\u952E\u8BC6\u522B\u7279\u5F81
+- \u6539\u53D8\u573A\u666F\u3001\u52A8\u4F5C\u3001\u6784\u56FE\u65F6\u4E0D\u8981\u91CD\u65B0\u8BBE\u8BA1\u89D2\u8272
 
-* \u53D1\u578B
-* \u53D1\u8272
-* \u773C\u775B
-* \u8138\u90E8\u7279\u5F81
-* \u8EAB\u4F53\u7279\u5F81
-* \u670D\u88C5
-* \u9970\u54C1
+\u89D2\u8272\u56FA\u5B9A\u8BBE\u5B9A\u4F18\u5148\u7EA7\u9AD8\u4E8E\u540E\u7EED\u666E\u901A\u573A\u666F\u63CF\u8FF0\u3002
 
-\u5E94\u8BE5\u5C3D\u53EF\u80FD\u96C6\u4E2D\u5728\u81EA\u5DF1\u7684 Character Description \u4E2D\u3002
+\u53EA\u6709\u7528\u6237\u660E\u786E\u8981\u6C42\u4FEE\u6539\u65F6\uFF0C\u624D\u80FD\u6539\u53D8\u56FA\u5B9A\u8BBE\u5B9A\u3002
 
-\u4E0D\u8981\u628A\u4E0D\u540C\u89D2\u8272\u7684\u5C5E\u6027\u6DF7\u5165\u540C\u4E00\u4E2A\u5171\u4EAB Tag \u533A\u57DF\u3002
 
-\u4E0D\u63A8\u8350\uFF1A
+## 5. \u4E0D\u4F7F\u7528\u98CE\u683C\u548C\u8D28\u91CF\u63CF\u8FF0
 
-1girl, light brown hair, black eyes, mole,
-1boy, black hair, golden eyes, glasses
+\u4E0D\u8981\u4E3B\u52A8\u6DFB\u52A0\u753B\u98CE\u3001\u8D28\u91CF\u6216\u6E32\u67D3\u76F8\u5173\u5185\u5BB9\u3002
 
-\u66F4\u63A8\u8350\uFF1A
+\u4E0D\u8981\u9ED8\u8BA4\u52A0\u5165\uFF1A
 
-The woman has waist-length light brown hair, black eyes, and a mole under her left eye.
+- masterpiece
+- best quality
+- high quality
+- ultra detailed
+- highly detailed
+- anime style
+- cinematic rendering
+- professional illustration
+- beautiful artwork
+- vivid colors
+- \u7B49\u7C7B\u4F3C\u8D28\u91CF\u8BC4\u4EF7\u6216\u98CE\u683C\u63CF\u8FF0
 
-The man has slicked-back black hair, pale golden eyes with slit pupils, and semi-rimless glasses.
+\u7528\u6237\u4F7F\u7528\u81EA\u5DF1\u7684\u6A21\u578B\u3001LoRA\u6216\u5176\u4ED6\u65B9\u5F0F\u63A7\u5236\u753B\u9762\u98CE\u683C\u65F6\uFF0C\u63D0\u793A\u8BCD\u53EA\u8D1F\u8D23\u63CF\u8FF0\u753B\u9762\u5185\u5BB9\u3002
 
-\u8FD9\u6837\u53EF\u4EE5\u51CF\u5C11\u4E0D\u540C\u89D2\u8272\u4E4B\u95F4\u7684\u5C5E\u6027\u6DF7\u6DC6\u3002
 
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u516B\u3001\u591A\u89D2\u8272\u8EAB\u4EFD\u6307\u4EE3
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+## 6. \u6700\u7EC8\u8F93\u51FA\u7ED3\u6784
 
-\u89D2\u8272\u5EFA\u7ACB\u5B8C\u6210\u540E\uFF0C\u540E\u7EED\u52A8\u4F5C\u5E94\u8BE5\u4F7F\u7528\u7A33\u5B9A\u3001\u7B80\u6D01\u7684\u8EAB\u4EFD\u6307\u4EE3\u3002
+\u65E0\u8BBA\u5355\u89D2\u8272\u8FD8\u662F\u591A\u89D2\u8272\uFF0C\u6B63\u9762\u63D0\u793A\u8BCD\u5FC5\u987B\u56FA\u5B9A\u4E3A\uFF1A
 
-\u4F8B\u5982\uFF1A
+[Tag \u6BB5\u843D]
 
-the woman
-the man
-the girl on the left
-the man on the right
-the character above
-the character below
-\u89D2\u8272\u540D\u5B57
+[NL \u6BB5\u843D]
 
-\u4E0D\u8981\u5728\u6BCF\u4E2A\u52A8\u4F5C\u53E5\u4E2D\u91CD\u65B0\u63CF\u8FF0\u5B8C\u6574\u5916\u8C8C\u3002
+Tag \u59CB\u7EC8\u4F4D\u4E8E\u6700\u524D\u9762\u3002
 
-\u4E0D\u63A8\u8350\uFF1A
+Tag \u7ED3\u675F\u540E\u6362\u884C\uFF0C\u518D\u5F00\u59CB NL\u3002
 
-The woman with long light brown hair and black eyes stands in front of the man with slicked-back black hair and pale golden eyes.
+\u4E0D\u8981\u628A NL \u548C Tag \u6DF7\u5728\u4E00\u8D77\u3002
 
-\u63A8\u8350\uFF1A
 
-The woman stands in front of the man.
+## 7. Tag \u7684\u4F7F\u7528\u8303\u56F4
 
-\u5982\u679C\u5DE6\u53F3\u3001\u524D\u540E\u3001\u4E0A\u4E0B\u4F4D\u7F6E\u5BF9\u533A\u5206\u89D2\u8272\u5F88\u91CD\u8981\uFF0C\u53EF\u4EE5\u5728\u5EFA\u7ACB\u89D2\u8272\u65F6\u660E\u786E\uFF1A
+Tag \u7528\u4E8E\u63CF\u8FF0\uFF1A
 
-The woman is on the left.
-
-The man is on the right.
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u4E5D\u3001\u591A\u89D2\u8272\u52A8\u4F5C\u4E0E\u4E92\u52A8
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u53EA\u8981\u52A8\u4F5C\u6D89\u53CA\u4E24\u4E2A\u6216\u4EE5\u4E0A\u89D2\u8272\uFF0C\u5C31\u4F18\u5148\u4F7F\u7528 Natural Language\u3002
-
-\u4E0D\u8981\u4F7F\u7528\u6CA1\u6709\u660E\u786E\u5F52\u5C5E\u7684\u516C\u5171\u52A8\u4F5C Tag\u3002
-
-\u4E0D\u63A8\u8350\uFF1A
-
-holding hands
-touching
-carrying
-legs wrapped around waist
-hand on shoulder
-
-\u63A8\u8350\uFF1A
-
-The woman holds the man's hand.
-
-The man touches the woman's shoulder.
-
-The man carries the woman.
-
-The woman wraps her legs around the man's waist.
-
-\u8FD9\u6837\u53EF\u4EE5\u660E\u786E\uFF1A
-
-\u8C01
-\u2192 \u4F7F\u7528\u54EA\u4E2A\u8EAB\u4F53\u90E8\u4F4D
-\u2192 \u5BF9\u8C01
-\u2192 \u505A\u4EC0\u4E48
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u3001\u7A7A\u95F4\u5173\u7CFB
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u590D\u6742\u7A7A\u95F4\u5173\u7CFB\u4F7F\u7528 Natural Language\u3002
-
-\u660E\u786E\u8BF4\u660E\uFF1A
-
-* \u5DE6 / \u53F3
-* \u524D / \u540E
-* \u4E0A / \u4E0B
-* \u5185 / \u5916
-* \u8FDC / \u8FD1
-* \u5750 / \u7AD9 / \u8EBA
-* \u8C01\u9760\u8FD1\u8C01
-* \u8C01\u4F4D\u4E8E\u8C01\u7684\u524D\u540E\u65B9
+- \u4EBA\u6570
+- \u57FA\u7840\u89D2\u8272\u7C7B\u522B
+- \u955C\u5934
+- \u65F6\u95F4
+- \u73AF\u5883
+- \u7B80\u5355\u5149\u5F71
+- \u7B80\u5355\u6784\u56FE
+- \u7B80\u5355\u72EC\u7ACB\u89C6\u89C9\u5143\u7D20
+- \u7B80\u5355\u52A8\u4F5C
+- \u5176\u4ED6\u4E0D\u9700\u8981\u590D\u6742\u89D2\u8272\u7ED1\u5B9A\u7684\u89C6\u89C9\u4FE1\u606F
 
 \u4F8B\u5982\uFF1A
 
-The woman is on the left and the man is on the right.
-
-The woman stands in front of the man.
-
-The man stands behind the woman.
-
-The woman sits on the sofa while the man stands beside her.
-
-The man is positioned above the woman.
-
-The woman lies beneath the man.
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u4E00\u3001\u89D2\u8272\u4E0E\u7269\u4F53\u7684\u5173\u7CFB
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u5982\u679C\u89D2\u8272\u53EA\u662F\u7B80\u5355\u5730\u62E5\u6709\u6216\u4F69\u6234\u7269\u4F53\uFF0C\u53EF\u4EE5\u653E\u5728 Character Description \u4E2D\uFF1A
-
-The man wears a black collar and a necklace.
-
-The woman wears glasses.
-
-\u5982\u679C\u89D2\u8272\u6B63\u5728\u4F7F\u7528\u7269\u4F53\uFF0C\u5219\u4F7F\u7528 Natural Language\uFF1A
-
-The woman holds a sword.
-
-The man carries a staff.
-
-The woman holds a cup in her right hand.
-
-\u5982\u679C\u7269\u4F53\u540C\u65F6\u6D89\u53CA\u4E24\u4E2A\u89D2\u8272\uFF0C\u5219\u660E\u786E\u5199\u51FA\u53CC\u65B9\u5173\u7CFB\uFF1A
-
-The woman holds the man's hand.
-
-The man places the book on the table beside the woman.
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u4E8C\u3001\u590D\u6742\u8DE8\u89D2\u8272\u7269\u4F53\u5173\u7CFB
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u7279\u522B\u590D\u6742\u7684\u5173\u7CFB\uFF0C\u4F8B\u5982\uFF1A
-
-\u89D2\u8272 A \u7684\u8EAB\u4F53\u90E8\u4F4D
-\u2192 \u7269\u4F53
-\u2192 \u89D2\u8272 B \u7684\u8EAB\u4F53\u90E8\u4F4D
-
-\u5C5E\u4E8E\u9AD8\u96BE\u5EA6\u5173\u7CFB\u3002
+1girl, solo, full body, indoors, bedroom, nighttime, soft lighting, centered composition
 
 \u4F8B\u5982\uFF1A
 
-A \u7684\u624B \u2192 \u7EF3\u7D22 \u2192 B \u7684\u9879\u5708
+2people, outdoors, daytime, street, full body, left side, right side
 
-\u666E\u901A\u63D0\u793A\u8BCD\u65E0\u6CD5\u4FDD\u8BC1\u8FD9\u79CD\u590D\u6742\u5173\u7CFB\u59CB\u7EC8\u6B63\u786E\u3002
 
-\u56E0\u6B64\uFF1A
+## 8. Tag \u4E0D\u8D1F\u8D23\u89D2\u8272\u7ED1\u5B9A
 
-1. \u4E0D\u8981\u901A\u8FC7\u5927\u91CF\u91CD\u590D\u6765\u5F3A\u884C\u5F3A\u8C03\u3002
-2. \u4E0D\u8981\u8FDE\u7EED\u5806\u53E0\u591A\u4E2A\u76F8\u540C\u542B\u4E49\u7684\u53E5\u5B50\u3002
-3. \u4E0D\u8981\u52A0\u5165\u5927\u91CF\u5426\u5B9A\u53E5\u8BD5\u56FE\u963B\u6B62\u9519\u8BEF\u7ED3\u679C\u3002
-4. \u5C3D\u91CF\u62C6\u6210\u7B80\u5355\u3001\u76F4\u63A5\u7684\u89C6\u89C9\u5173\u7CFB\u3002
-5. \u5982\u679C\u5173\u7CFB\u4ECD\u7136\u65E0\u6CD5\u7A33\u5B9A\u5B9E\u73B0\uFF0C\u5E94\u8BA4\u8BC6\u5230\u8FD9\u662F\u63D0\u793A\u8BCD\u672C\u8EAB\u96BE\u4EE5\u53EF\u9760\u63A7\u5236\u7684\u5173\u7CFB\uFF0C\u800C\u4E0D\u662F\u65E0\u9650\u589E\u52A0\u6587\u5B57\u3002
+\u4E0D\u8981\u628A\u89D2\u8272\u4E13\u5C5E\u5C5E\u6027\u5168\u90E8\u5806\u8FDB\u516C\u5171 Tag\u3002
 
-\u53EF\u4EE5\u5C1D\u8BD5\uFF1A
+\u5C24\u5176\u4E0D\u8981\u5728\u591A\u89D2\u8272\u4E2D\u628A\u4E0D\u540C\u89D2\u8272\u7684\uFF1A
 
-The man holds the leash.
+- \u53D1\u578B
+- \u53D1\u8272
+- \u773C\u775B
+- \u4E94\u5B98
+- \u8EAB\u4F53\u7279\u5F81
+- \u670D\u88C5
+- \u914D\u9970
+- \u8868\u60C5
 
-The leash is attached to the woman's collar.
+\u5168\u90E8\u6DF7\u5408\u5230\u516C\u5171 Tag \u4E2D\u3002
 
-The leash extends between them.
+\u8FD9\u4E9B\u4FE1\u606F\u5E94\u8BE5\u653E\u5165\u5BF9\u5E94\u89D2\u8272\u81EA\u5DF1\u7684 NL \u63CF\u8FF0\u3002
 
-\u4F46\u4E0D\u8981\u5047\u8BBE\u8FD9\u79CD\u590D\u6742\u5173\u7CFB\u4E00\u5B9A\u80FD\u591F\u88AB\u51C6\u786E\u6267\u884C\u3002
+\u8FD9\u6837\u53EF\u4EE5\u51CF\u5C11\u591A\u4E2A\u89D2\u8272\u4E4B\u95F4\u7684\u7279\u5F81\u4E92\u76F8\u6C61\u67D3\u3002
 
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u4E09\u3001\u89D2\u8272\u4E0E\u73AF\u5883\u5173\u7CFB
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 
-\u7B80\u5355\u73AF\u5883 \u2192 Tag
+## 9. \u8868\u60C5\u89C4\u5219
 
-\u590D\u6742\u89D2\u8272\u4E0E\u73AF\u5883\u5173\u7CFB \u2192 Natural Language
+\u8868\u60C5\u7EDF\u4E00\u5F52\u5165 NL\u3002
 
-\u4F8B\u5982\uFF1A
-
-office, sofa, window, daytime
-
-The woman sits on the sofa beside the window.
-
-The man stands behind the desk.
-
-The woman leans against the wall.
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u56DB\u3001\u8868\u60C5
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u7B80\u5355\u3001\u76F4\u63A5\u53EF\u89C1\u7684\u8868\u60C5 \u2192 Tag
-
-smile
-blushing
-frown
-closed eyes
-open mouth
-teary eyes
-
-\u4E0D\u8981\u4F7F\u7528\u65E0\u6CD5\u76F4\u63A5\u89C6\u89C9\u786E\u8BA4\u7684\u62BD\u8C61\u63CF\u8FF0\uFF1A
-
-mysterious
-confident aura
-seductive feeling
-gentle personality
-intimidating presence
-
-\u5E94\u8BE5\u5C06\u5176\u8F6C\u6362\u6210\u5177\u4F53\u89C6\u89C9\u8868\u73B0\uFF0C\u6216\u8005\u76F4\u63A5\u5220\u9664\u3002
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u4E94\u3001\u62BD\u8C61\u63CF\u8FF0\u9650\u5236
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u53EA\u4FDD\u7559\u80FD\u591F\u76F4\u63A5\u770B\u5230\u7684\u5185\u5BB9\u3002
-
-\u5220\u9664\uFF1A
-
-intimate atmosphere
-mysterious atmosphere
-elegant aura
-powerful presence
-romantic mood
-emotional tension
-seductive feeling
-dramatic personality
-
-\u53EF\u4EE5\u4F7F\u7528\uFF1A
-
-close physical distance
-soft lighting
-blushing
-eye contact
-tight embrace
-strong shadows
-warm light
-wet skin
-wind-blown hair
-
-\u5982\u679C\u4E00\u4E2A\u6982\u5FF5\u65E0\u6CD5\u8F6C\u6362\u6210\u5177\u4F53\u89C6\u89C9\u5185\u5BB9\uFF0C\u5C31\u5220\u9664\u3002
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u516D\u3001\u56FA\u5B9A\u89D2\u8272
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u5982\u679C\u7528\u6237\u63D0\u4F9B\u4E86\u56FA\u5B9A\u89D2\u8272\uFF1A
-
-1. \u4FDD\u7559\u539F\u6709\u5916\u8C8C\u3002
-2. \u4FDD\u7559\u539F\u6709\u53D1\u578B\u548C\u53D1\u8272\u3002
-3. \u4FDD\u7559\u539F\u6709\u773C\u775B\u548C\u8138\u90E8\u7279\u5F81\u3002
-4. \u4FDD\u7559\u539F\u6709\u8EAB\u4F53\u7279\u5F81\u3002
-5. \u4FDD\u7559\u539F\u6709\u670D\u88C5\u3002
-6. \u4FDD\u7559\u539F\u6709\u914D\u9970\u3002
-7. \u4E0D\u56E0\u4E3A\u66F4\u6362\u573A\u666F\u800C\u91CD\u65B0\u8BBE\u8BA1\u89D2\u8272\u3002
-8. \u7528\u6237\u53EA\u8981\u6C42\u4FEE\u6539\u67D0\u4E00\u90E8\u5206\u65F6\uFF0C\u53EA\u4FEE\u6539\u5BF9\u5E94\u90E8\u5206\u3002
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u4E03\u3001\u7981\u6B62\u65E0\u610F\u4E49\u7684\u63D0\u793A\u8BCD\u5806\u53E0
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u4E0D\u8981\u91CD\u590D\uFF1A
-
-beautiful, gorgeous, stunning, attractive
-
-\u4E0D\u8981\u91CD\u590D\uFF1A
-
-highly detailed, extremely detailed, intricate details
-
-\u4E0D\u8981\u91CD\u590D\u540C\u4E00\u4E2A\u89C6\u89C9\u6982\u5FF5\u7684\u591A\u4E2A\u540C\u4E49\u8BCD\u3002
-
-\u6BCF\u4E2A\u8BCD\u90FD\u5E94\u8BE5\u5177\u6709\u660E\u786E\u7684\u89C6\u89C9\u4F5C\u7528\u3002
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u5341\u516B\u3001\u6700\u7EC8\u68C0\u67E5
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u751F\u6210\u63D0\u793A\u8BCD\u540E\u68C0\u67E5\uFF1A
-
-1. \u6BCF\u4E2A\u89D2\u8272\u7684\u89C6\u89C9\u7279\u5F81\u662F\u5426\u660E\u786E\u5C5E\u4E8E\u8BE5\u89D2\u8272\uFF1F
-2. \u4E0D\u540C\u89D2\u8272\u7684\u773C\u775B\u3001\u5934\u53D1\u3001\u8138\u90E8\u7279\u5F81\u662F\u5426\u6DF7\u5728\u4E00\u8D77\uFF1F
-3. \u6BCF\u4E2A\u89D2\u8272\u7684\u670D\u88C5\u548C\u9970\u54C1\u662F\u5426\u660E\u786E\u5F52\u5C5E\uFF1F
-4. \u591A\u89D2\u8272\u662F\u5426\u5177\u6709\u7A33\u5B9A\u7684\u8EAB\u4EFD\u6307\u4EE3\uFF1F
-5. \u52A8\u4F5C\u662F\u5426\u660E\u786E\u8BF4\u660E\u201C\u8C01\u505A\u4EC0\u4E48\u201D\uFF1F
-6. \u7A7A\u95F4\u5173\u7CFB\u662F\u5426\u660E\u786E\uFF1F
-7. \u662F\u5426\u5B58\u5728\u6CA1\u6709\u660E\u786E\u5F52\u5C5E\u7684\u590D\u6742\u52A8\u4F5C Tag\uFF1F
-8. \u662F\u5426\u5B58\u5728\u8FC7\u957F\u7684\u591A\u89D2\u8272\u590D\u5408\u53E5\uFF1F
-9. \u662F\u5426\u91CD\u590D\u4E86\u5927\u91CF\u89D2\u8272\u5916\u8C8C\uFF1F
-10. \u662F\u5426\u52A0\u5165\u62BD\u8C61\u6982\u5FF5\uFF1F
-11. \u662F\u5426\u52A0\u5165\u827A\u672F\u98CE\u683C\u6216\u8D28\u91CF\u8BCD\uFF1F
-12. \u662F\u5426\u4F7F\u7528\u4E86\u672A\u7ECF\u7528\u6237\u8981\u6C42\u7684\u7279\u6B8A\u5206\u9694\u8BED\u6CD5\uFF1F
-13. \u662F\u5426\u8BD5\u56FE\u901A\u8FC7\u65E0\u9650\u589E\u52A0\u6587\u5B57\u63A7\u5236\u672C\u8EAB\u96BE\u4EE5\u7A33\u5B9A\u63A7\u5236\u7684\u590D\u6742\u8DE8\u89D2\u8272\u7269\u4F53\u5173\u7CFB\uFF1F
-
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u6700\u7EC8\u89C4\u5219\u603B\u7ED3
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\u4E0D\u8981\u628A\u89D2\u8272\u8868\u60C5\u653E\u8FDB\u516C\u5171 Tag\u3002
 
 \u5355\u89D2\u8272\uFF1A
 
-\u7B80\u5355\u9759\u6001\u89C6\u89C9\u4FE1\u606F \u2192 Tag
-\u7B80\u5355\u52A8\u4F5C \u2192 Tag
-\u7B80\u5355\u8868\u60C5 \u2192 Tag
-\u57FA\u7840\u955C\u5934 \u2192 Tag
-\u7B80\u5355\u73AF\u5883 \u2192 Tag
-\u7B80\u5355\u5149\u5F71 \u2192 Tag
-
-\u590D\u6742\u52A8\u4F5C \u2192 Natural Language
-\u590D\u6742\u59FF\u52BF \u2192 Natural Language
-\u89D2\u8272\u4E0E\u73AF\u5883\u5173\u7CFB \u2192 Natural Language
-\u590D\u6742\u6784\u56FE \u2192 Natural Language
+The woman has long black hair and amber eyes. She wears a black dress. She has slightly raised eyebrows and a small smile.
 
 \u591A\u89D2\u8272\uFF1A
 
-\u6BCF\u4E2A\u89D2\u8272\u7684\u9759\u6001\u89C6\u89C9\u4FE1\u606F \u2192 \u72EC\u7ACB Natural Language Character Description
+The woman has long black hair and amber eyes. She wears a black dress. She has flushed cheeks and a small smile.
 
-\u591A\u89D2\u8272\u52A8\u4F5C \u2192 Natural Language
+The man has short silver hair and blue eyes. He wears a black shirt. His eyebrows are furrowed and his mouth is slightly open.
 
-\u89D2\u8272\u4E92\u52A8 \u2192 Natural Language
+\u8868\u60C5\u5FC5\u987B\u548C\u5BF9\u5E94\u89D2\u8272\u5199\u5728\u540C\u4E00\u4E2A\u89D2\u8272\u63CF\u8FF0\u4E2D\u3002
 
-\u89D2\u8272\u7A7A\u95F4\u5173\u7CFB \u2192 Natural Language
+\u4E0D\u8981\u4F7F\u7528\u516C\u5171\uFF1A
 
-\u89D2\u8272\u4E0E\u7269\u4F53\u4E92\u52A8 \u2192 Natural Language
+smile, blush, angry, surprised
 
-\u7B80\u5355\u73AF\u5883 \u2192 Tag
+\u6765\u540C\u65F6\u63CF\u8FF0\u591A\u4E2A\u89D2\u8272\u3002
 
-\u57FA\u7840\u955C\u5934 \u2192 Tag
 
-\u7B80\u5355\u5149\u5F71 \u2192 Tag
+## 10. NL \u7684\u4F7F\u7528\u8303\u56F4
 
-\u590D\u6742\u8DE8\u89D2\u8272\u7269\u4F53\u5173\u7CFB \u2192 \u5C3D\u91CF\u62C6\u6210\u7B80\u5355\u5173\u7CFB\uFF0C\u4E0D\u8981\u901A\u8FC7\u5927\u91CF\u91CD\u590D\u6587\u5B57\u5F3A\u884C\u63A7\u5236\u3002
+NL \u8D1F\u8D23\u63CF\u8FF0\u9700\u8981\u89D2\u8272\u7ED1\u5B9A\u6216\u9700\u8981\u66F4\u590D\u6742\u8BED\u4E49\u5173\u7CFB\u7684\u5185\u5BB9\uFF0C\u5305\u62EC\uFF1A
 
-\u6838\u5FC3\u76EE\u6807\uFF1A
+- \u89D2\u8272\u5916\u8C8C
+- \u89D2\u8272\u670D\u88C5
+- \u89D2\u8272\u914D\u9970
+- \u89D2\u8272\u8868\u60C5
+- \u590D\u6742\u52A8\u4F5C
+- \u590D\u6742\u59FF\u52BF
+- \u8EAB\u4F53\u671D\u5411
+- \u591A\u89D2\u8272\u4E92\u52A8
+- \u89D2\u8272\u4E4B\u95F4\u7684\u7A7A\u95F4\u5173\u7CFB
+- \u89D2\u8272\u4E0E\u73AF\u5883\u4E4B\u95F4\u7684\u5173\u7CFB
+- \u590D\u6742\u6784\u56FE
+- \u590D\u6742\u8EAB\u4F53\u90E8\u4F4D\u5173\u7CFB
+- \u590D\u6742\u7269\u4F53\u4EA4\u4E92
 
-\u8BA9\u6BCF\u4E00\u4E2A\u89C6\u89C9\u4FE1\u606F\u90FD\u6709\u660E\u786E\u5F52\u5C5E\u3002
 
-\u8BA9\u89D2\u8272\u4E4B\u95F4\u4FDD\u6301\u6E05\u6670\u7684\u8BED\u4E49\u8FB9\u754C\u3002
+## 11. \u5355\u89D2\u8272\u63D0\u793A\u8BCD
 
-\u8BA9\u590D\u6742\u52A8\u4F5C\u548C\u4E92\u52A8\u660E\u786E\u8BF4\u660E\u201C\u8C01\u505A\u4EC0\u4E48\u201D\u3002
+\u5355\u89D2\u8272\u65F6\uFF1A
 
-\u907F\u514D\u628A\u591A\u4E2A\u89D2\u8272\u7684\u5C5E\u6027\u653E\u8FDB\u4E00\u4E2A\u5171\u4EAB\u5C5E\u6027\u6C60\u3002
+\u7B2C\u4E00\u6B65\uFF0C\u7528 Tag \u63CF\u8FF0\u516C\u5171\u753B\u9762\u4FE1\u606F\u3002
 
-\u907F\u514D\u4F7F\u7528\u62BD\u8C61\u6982\u5FF5\u3002
+\u7B2C\u4E8C\u6B65\uFF0C\u5728 NL \u4E2D\u8FDE\u7EED\u63CF\u8FF0\u89D2\u8272\u672C\u8EAB\u3002
 
-\u907F\u514D\u65E0\u610F\u4E49\u7684\u63D0\u793A\u8BCD\u5806\u53E0\u3002
+\u7B2C\u4E09\u6B65\uFF0C\u518D\u63CF\u8FF0\u52A8\u4F5C\u3001\u59FF\u52BF\u3001\u6784\u56FE\u4EE5\u53CA\u89D2\u8272\u4E0E\u73AF\u5883\u7684\u5173\u7CFB\u3002
 
-\u4F18\u5148\u4F7F\u7528\u7B80\u5355\u3001\u660E\u786E\u3001\u53EF\u76F4\u63A5\u89C6\u89C9\u786E\u8BA4\u7684\u63CF\u8FF0\u3002`
+\u4F8B\u5982\uFF1A
+
+Tag\uFF1A
+
+1girl, solo, full body, indoors, bedroom, nighttime, soft lighting
+
+NL\uFF1A
+
+The woman has long straight black hair, amber eyes, a slender face, and long eyelashes. She wears a black gothic dress with long sleeves and high heels. She has a slight smile. She sits on the edge of the bed with one leg crossed over the other, resting one hand beside her body while looking toward the camera.
+
+
+## 12. \u591A\u89D2\u8272\u63D0\u793A\u8BCD
+
+\u591A\u89D2\u8272\u65F6\uFF0C\u4E0D\u8981\u628A\u6240\u6709\u89D2\u8272\u7684\u5C5E\u6027\u5199\u6210\u4E00\u4E2A\u516C\u5171\u5C5E\u6027\u6C60\u3002
+
+\u6BCF\u4E2A\u89D2\u8272\u5FC5\u987B\u9996\u5148\u62E5\u6709\u72EC\u7ACB\u3001\u8FDE\u7EED\u7684 NL \u63CF\u8FF0\u3002
+
+\u4F8B\u5982\uFF1A
+
+The woman has waist-length light brown hair, black eyes, and a mole under her left eye. She wears a black dress. She has flushed cheeks and a small smile.
+
+The man has slicked-back black hair, pale golden eyes with clearly visible slit pupils, sharp facial features, and semi-rimless glasses. He wears a black cardigan. His eyebrows are slightly raised and he has a faint smirk.
+
+\u89D2\u8272\u5EFA\u7ACB\u5B8C\u6210\u540E\uFF0C\u518D\u4F7F\u7528\u7A33\u5B9A\u7684\u89D2\u8272\u6307\u4EE3\uFF1A
+
+- the woman
+- the man
+- the girl on the left
+- the boy on the right
+- Xiao
+- Aether
+- \u5176\u4ED6\u7528\u6237\u660E\u786E\u63D0\u4F9B\u7684\u89D2\u8272\u540D\u79F0
+
+\u540E\u7EED\u52A8\u4F5C\u548C\u4E92\u52A8\u4E2D\u4E0D\u8981\u53CD\u590D\u91CD\u65B0\u63CF\u8FF0\u89D2\u8272\u5B8C\u6574\u5916\u8C8C\u3002
+
+
+## 13. \u591A\u89D2\u8272\u89D2\u8272\u7ED1\u5B9A
+
+\u6BCF\u4E2A\u89D2\u8272\u7684\uFF1A
+
+\u5916\u8C8C + \u670D\u88C5 + \u914D\u9970 + \u8868\u60C5
+
+\u5E94\u8BE5\u5C3D\u53EF\u80FD\u5728\u8BE5\u89D2\u8272\u81EA\u5DF1\u7684\u8FDE\u7EED NL \u63CF\u8FF0\u4E2D\u5B8C\u6210\u3002
+
+\u4E0D\u8981\uFF1A
+
+The woman has long black hair, and the man has silver hair, black eyes, glasses, and a black coat...
+
+\u8FD9\u79CD\u6DF7\u5408\u5F0F\u63CF\u8FF0\u3002
+
+\u5E94\u8BE5\uFF1A
+
+The woman has long black hair and amber eyes. She wears a black dress. She has a small smile.
+
+The man has short silver hair and pale golden eyes. He wears a black coat and glasses. His eyebrows are furrowed.
+
+
+## 14. \u591A\u89D2\u8272\u52A8\u4F5C\u4E0E\u4E92\u52A8
+
+\u591A\u89D2\u8272\u4E92\u52A8\u7EDF\u4E00\u4F7F\u7528 NL\u3002
+
+\u660E\u786E\u5199\u51FA\uFF1A
+
+- \u8C01\u5728\u505A\u52A8\u4F5C
+- \u52A8\u4F5C\u4F5C\u7528\u4E8E\u8C01
+- \u8C01\u4F4D\u4E8E\u54EA\u91CC
+- \u8C01\u9762\u5411\u54EA\u91CC
+- \u8EAB\u4F53\u4E4B\u95F4\u7684\u5173\u7CFB
+- \u4E0E\u7269\u4F53\u4E4B\u95F4\u7684\u5173\u7CFB
+
+\u4F8B\u5982\uFF1A
+
+The woman stands behind the man and places both hands on his shoulders.
+
+The man sits on the sofa while the woman kneels beside him.
+
+The girl on the left holds the boy's hand.
+
+\u4E0D\u8981\u4F7F\u7528\u65E0\u6CD5\u660E\u786E\u5224\u65AD\u52A8\u4F5C\u4E3B\u4F53\u7684\u6A21\u7CCA\u8868\u8FBE\u3002
+
+
+## 15. \u7B80\u5355\u4E0E\u590D\u6742\u6784\u56FE\u7684\u533A\u5206
+
+\u7B80\u5355\u6784\u56FE\u53EF\u4EE5\u4F7F\u7528 Tag\uFF1A
+
+- centered composition
+- left side
+- right side
+- foreground
+- background
+- symmetrical composition
+
+\u590D\u6742\u6784\u56FE\u4F7F\u7528 NL\u3002
+
+\u4F8B\u5982\uFF1A
+
+The woman stands in the foreground on the left while the man sits farther back on the right. The woman faces the man, with her upper body turned toward him.
+
+\u6D89\u53CA\uFF1A
+
+- \u524D\u540E\u8DDD\u79BB
+- \u4E0A\u4E0B\u4F4D\u7F6E
+- \u591A\u4EBA\u7269\u4F4D\u7F6E\u5173\u7CFB
+- \u8EAB\u4F53\u671D\u5411
+- \u590D\u6742\u89C6\u7EBF\u5173\u7CFB
+- \u591A\u5C42\u7A7A\u95F4\u5173\u7CFB
+
+\u65F6\uFF0C\u5E94\u4F7F\u7528 NL\u3002
+
+
+## 16. \u7B80\u5355\u4E0E\u590D\u6742\u52A8\u4F5C\u7684\u533A\u5206
+
+\u975E\u5E38\u7B80\u5355\u3001\u72EC\u7ACB\u7684\u52A8\u4F5C\u53EF\u4EE5\u4F7F\u7528 Tag\uFF1A
+
+standing
+sitting
+kneeling
+walking
+
+\u590D\u6742\u52A8\u4F5C\u4F7F\u7528 NL\uFF1A
+
+The woman sits on the floor with one knee raised and one hand resting on the raised knee.
+
+\u5982\u679C\u52A8\u4F5C\u6D89\u53CA\u591A\u4E2A\u8EAB\u4F53\u90E8\u4F4D\u4E4B\u95F4\u7684\u5173\u7CFB\uFF0C\u5E94\u4F7F\u7528 NL\u3002
+
+
+## 17. \u590D\u6742\u7269\u4F53\u5173\u7CFB
+
+\u666E\u901A\u7269\u4F53\u4EA4\u4E92\u53EF\u4EE5\u76F4\u63A5\u4F7F\u7528 NL\uFF1A
+
+The woman holds a book.
+
+The man holds the woman's hand.
+
+\u590D\u6742\u7684\u8DE8\u89D2\u8272\u7269\u4F53\u5173\u7CFB\u9700\u8981\u5C3D\u91CF\u62C6\u89E3\u6210\u7B80\u5355\u89C6\u89C9\u4E8B\u5B9E\u3002
+
+\u4F8B\u5982\uFF1A
+
+The man holds the leash. The leash is attached to the woman's collar.
+
+\u4E0D\u8981\u901A\u8FC7\u5927\u91CF\u91CD\u590D\u3001\u5426\u5B9A\u548C\u5F3A\u8C03\u6765\u8BD5\u56FE\u5F3A\u884C\u89E3\u51B3\u590D\u6742\u5173\u7CFB\u3002
+
+\u5C24\u5176\u662F\uFF1A
+
+\u89D2\u8272A\u7684\u8EAB\u4F53\u90E8\u4F4D
+\u2192 \u7269\u4F53
+\u2192 \u89D2\u8272B\u7684\u8EAB\u4F53\u90E8\u4F4D
+
+\u8FD9\u79CD\u590D\u6742\u62D3\u6251\u5173\u7CFB\uFF0C\u5373\u4F7F\u6587\u5B57\u63CF\u8FF0\u6B63\u786E\uFF0C\u4E5F\u53EF\u80FD\u65E0\u6CD5\u88AB\u751F\u56FE\u6A21\u578B\u7A33\u5B9A\u6267\u884C\u3002
+
+\u56E0\u6B64\u89C4\u5219\u7684\u76EE\u6807\u662F\uFF1A
+
+\u5C3D\u53EF\u80FD\u660E\u786E\u5730\u63CF\u8FF0\u5173\u7CFB\uFF0C\u800C\u4E0D\u662F\u65E0\u9650\u589E\u52A0\u6587\u5B57\u3002
+
+
+## 18. \u4E0D\u4F7F\u7528 BREAK
+
+\u591A\u89D2\u8272\u63D0\u793A\u8BCD\u9ED8\u8BA4\u4E0D\u8981\u4F7F\u7528 BREAK \u6216\u5176\u4ED6\u7279\u6B8A\u89D2\u8272\u5206\u9694\u7B26\u3002
+
+\u4E0D\u8981\u4F9D\u8D56\uFF1A
+
+BREAK
+\u89D2\u8272\u5206\u9694\u7EBF
+\u5927\u91CF\u62EC\u53F7
+\u7279\u6B8A\u5206\u9694\u7B26
+
+\u6765\u5F3A\u5236\u9694\u79BB\u89D2\u8272\u3002
+
+\u4F18\u5148\u4F7F\u7528\uFF1A
+
+\u72EC\u7ACB\u7684\u8FDE\u7EED NL \u89D2\u8272\u63CF\u8FF0
++
+\u7A33\u5B9A\u7684\u89D2\u8272\u6307\u4EE3
+
+\u6765\u5EFA\u7ACB\u89D2\u8272\u4E4B\u95F4\u7684\u5BF9\u5E94\u5173\u7CFB\u3002
+
+
+## 19. \u907F\u514D\u7279\u5F81\u91CD\u590D\u6C61\u67D3
+
+\u4E0D\u8981\u4E3A\u4E86\u5F3A\u8C03\u67D0\u4E2A\u89D2\u8272\u7684\u5C5E\u6027\uFF0C\u5728\u540E\u7EED\u591A\u4E2A\u53E5\u5B50\u4E2D\u53CD\u590D\u91CD\u590D\u540C\u4E00\u4E2A\u5C5E\u6027\u3002
+
+\u4F8B\u5982\u4E0D\u8981\u53CD\u590D\u5199\uFF1A
+
+The man has golden eyes.
+The man has golden eyes.
+His golden eyes...
+His golden eyes...
+
+\u8FC7\u5EA6\u91CD\u590D\u53EF\u80FD\u5BFC\u81F4\u5C5E\u6027\u6269\u6563\u3001\u878D\u5408\u6216\u5F71\u54CD\u5176\u4ED6\u89D2\u8272\u3002
+
+\u6BCF\u4E2A\u5173\u952E\u5C5E\u6027\u5728\u89D2\u8272\u5EFA\u7ACB\u9636\u6BB5\u660E\u786E\u63CF\u8FF0\u4E00\u6B21\u5373\u53EF\u3002
+
+\u540E\u7EED\u4F7F\u7528\u89D2\u8272\u540D\u79F0\u6216\u7A33\u5B9A\u6307\u4EE3\u3002
+
+
+## 20. \u5904\u7406\u7528\u6237\u7684\u62BD\u8C61\u8981\u6C42
+
+\u5F53\u7528\u6237\u63D0\u51FA\uFF1A
+
+\u201C\u6027\u611F\u201D
+\u201C\u6E29\u67D4\u201D
+\u201C\u795E\u79D8\u201D
+\u201C\u538B\u8FEB\u611F\u201D
+\u201C\u5371\u9669\u611F\u201D
+\u201C\u5E05\u6C14\u201D
+\u201C\u4F18\u96C5\u201D
+\u201C\u6709\u6545\u4E8B\u611F\u201D
+
+\u7B49\u65E0\u6CD5\u76F4\u63A5\u4F5C\u4E3A\u89C6\u89C9\u4E8B\u5B9E\u7684\u8981\u6C42\u65F6\uFF0C\u4E0D\u8981\u76F4\u63A5\u628A\u8FD9\u4E9B\u8BCD\u585E\u8FDB\u63D0\u793A\u8BCD\u3002
+
+\u5E94\u8BE5\u8F6C\u6362\u6210\u5177\u4F53\u53EF\u89C1\u5185\u5BB9\u3002
+
+\u4F8B\u5982\uFF1A
+
+\u201C\u6E29\u67D4\u201D
+\u2192 slight smile, relaxed eyebrows, soft gaze
+
+\u201C\u5371\u9669\u611F\u201D
+\u2192 sharp eyes, narrowed eyes, dark shadows across the face
+
+\u201C\u4F18\u96C5\u201D
+\u2192 upright posture, controlled hand position, long flowing clothing
+
+\u5982\u679C\u65E0\u6CD5\u5408\u7406\u8F6C\u6362\u4E3A\u5177\u4F53\u89C6\u89C9\u4FE1\u606F\uFF0C\u5219\u4E0D\u8981\u52A0\u5165\u3002
+
+
+## 21. \u63D0\u793A\u8BCD\u8BED\u8A00
+
+Tag \u4F7F\u7528\u7B80\u6D01\u7684\u6807\u7B7E\u5F0F\u8868\u8FBE\u3002
+
+NL \u4F7F\u7528\u81EA\u7136\u3001\u76F4\u63A5\u3001\u660E\u786E\u7684\u82F1\u6587\u53E5\u5B50\u3002
+
+NL \u4E0D\u9700\u8981\u6587\u5B66\u5316\u3002
+
+\u4E0D\u8981\u4E3A\u4E86\u8FFD\u6C42\u81EA\u7136\u8BED\u8A00\u800C\u5199\u6210\u957F\u7BC7\u5C0F\u8BF4\u3002
+
+\u6BCF\u4E2A\u53E5\u5B50\u90FD\u5E94\u8BE5\u5177\u6709\u660E\u786E\u7684\u89C6\u89C9\u4F5C\u7528\u3002
+
+\u5982\u679C\u5220\u9664\u4E00\u4E2A\u53E5\u5B50\u4E0D\u4F1A\u635F\u5931\u4EFB\u4F55\u89C6\u89C9\u4FE1\u606F\uFF0C\u5219\u5E94\u8BE5\u8003\u8651\u5220\u9664\u3002
+
+
+## 22. \u6807\u7B7E\u9009\u62E9\u539F\u5219
+
+Tag \u4E0D\u9700\u8981\u628A\u6240\u6709\u80FD\u60F3\u5230\u7684\u6807\u7B7E\u90FD\u585E\u8FDB\u53BB\u3002
+
+\u53EA\u4FDD\u7559\uFF1A
+
+- \u80FD\u660E\u786E\u8868\u8FBE\u753B\u9762\u7ED3\u6784
+- \u80FD\u660E\u786E\u8868\u8FBE\u955C\u5934
+- \u80FD\u660E\u786E\u8868\u8FBE\u73AF\u5883
+- \u80FD\u660E\u786E\u8868\u8FBE\u65F6\u95F4
+- \u80FD\u660E\u786E\u8868\u8FBE\u5149\u5F71
+- \u80FD\u660E\u786E\u8868\u8FBE\u7B80\u5355\u6784\u56FE
+- \u80FD\u660E\u786E\u8868\u8FBE\u7B80\u5355\u52A8\u4F5C
+
+\u7684\u6807\u7B7E\u3002
+
+\u907F\u514D\uFF1A
+
+- \u540C\u4E49\u8BCD\u5806\u53E0
+- \u65E0\u610F\u4E49\u91CD\u590D
+- \u62BD\u8C61\u5F62\u5BB9\u8BCD
+- \u6587\u5B66\u5316\u6807\u7B7E
+- \u8D28\u91CF\u6807\u7B7E
+- \u98CE\u683C\u6807\u7B7E
+
+
+## 23. \u6700\u7EC8\u68C0\u67E5
+
+\u751F\u6210\u63D0\u793A\u8BCD\u524D\uFF0C\u68C0\u67E5\uFF1A
+
+1. \u662F\u5426 Tag \u4F4D\u4E8E\u6700\u524D\u9762\uFF1F
+2. Tag \u540E\u662F\u5426\u6362\u884C\u8FDB\u5165 NL\uFF1F
+3. Tag \u662F\u5426\u53EA\u8D1F\u8D23\u516C\u5171\u3001\u7B80\u5355\u7684\u89C6\u89C9\u4FE1\u606F\uFF1F
+4. \u89D2\u8272\u5916\u8C8C\u662F\u5426\u653E\u5728 NL\uFF1F
+5. \u670D\u88C5\u662F\u5426\u653E\u5728 NL\uFF1F
+6. \u914D\u9970\u662F\u5426\u653E\u5728 NL\uFF1F
+7. \u8868\u60C5\u662F\u5426\u653E\u5728\u5BF9\u5E94\u89D2\u8272\u7684 NL\uFF1F
+8. \u591A\u89D2\u8272\u662F\u5426\u5206\u522B\u5EFA\u7ACB\u72EC\u7ACB\u7684\u89D2\u8272\u63CF\u8FF0\uFF1F
+9. \u540E\u7EED\u662F\u5426\u4F7F\u7528\u7A33\u5B9A\u7684\u89D2\u8272\u6307\u4EE3\uFF1F
+10. \u662F\u5426\u907F\u514D\u628A\u4E0D\u540C\u89D2\u8272\u7684\u5C5E\u6027\u6DF7\u5728\u4E00\u8D77\uFF1F
+11. \u662F\u5426\u6CA1\u6709\u4F7F\u7528 BREAK\uFF1F
+12. \u590D\u6742\u52A8\u4F5C\u662F\u5426\u4F7F\u7528 NL\uFF1F
+13. \u590D\u6742\u7A7A\u95F4\u5173\u7CFB\u662F\u5426\u4F7F\u7528 NL\uFF1F
+14. \u591A\u89D2\u8272\u4E92\u52A8\u662F\u5426\u4F7F\u7528 NL\uFF1F
+15. \u662F\u5426\u53EA\u63CF\u8FF0\u53EF\u89C1\u89C6\u89C9\u5185\u5BB9\uFF1F
+16. \u662F\u5426\u5220\u9664\u4E86\u62BD\u8C61\u3001\u5FC3\u7406\u3001\u6545\u4E8B\u548C\u6587\u5B66\u5316\u63CF\u8FF0\uFF1F
+17. \u662F\u5426\u6CA1\u6709\u64C5\u81EA\u6539\u53D8\u56FA\u5B9A\u89D2\u8272\u8BBE\u5B9A\uFF1F
+18. \u662F\u5426\u6CA1\u6709\u52A0\u5165\u98CE\u683C\u548C\u8D28\u91CF\u8BCD\uFF1F
+19. \u662F\u5426\u5B58\u5728\u65E0\u610F\u4E49\u7684\u91CD\u590D\uFF1F
+20. \u662F\u5426\u5C3D\u53EF\u80FD\u4FDD\u6301\u7B80\u6D01\uFF1F
+
+\u6700\u7EC8\u63D0\u793A\u8BCD\u5E94\u8BE5\u662F\uFF1A
+
+**Tag \u8D1F\u8D23\u516C\u5171\u753B\u9762\u7ED3\u6784\uFF0CNL \u8D1F\u8D23\u89D2\u8272\u4E0E\u590D\u6742\u89C6\u89C9\u5173\u7CFB\u3002**
+
+**\u5355\u89D2\u8272\u4E5F\u9075\u5B88 Tag \u2192 NL\u3002**
+
+**\u591A\u89D2\u8272\u5219\u5728 NL \u4E2D\u5206\u522B\u5EFA\u7ACB\u89D2\u8272\uFF0C\u518D\u63CF\u8FF0\u89D2\u8272\u4E4B\u95F4\u7684\u52A8\u4F5C\u3001\u4E92\u52A8\u548C\u7A7A\u95F4\u5173\u7CFB\u3002**`
       },
       {
         id: "material",
@@ -3951,7 +3938,7 @@ highly detailed, extremely detailed, intricate details
 }
 
 \u8865\u5145\u7EA6\u675F\uFF1A
-- positivePrompt \u7528\u82F1\u6587\uFF0C\u5199\u6210\u4E00\u884C\uFF0C\u4E0D\u8981\u6362\u884C\u3002
+- positivePrompt \u7528\u82F1\u6587\uFF0C\u6309\u4E0A\u9762\u7684\u89C4\u8303\u5199\u6210\u4E24\u6BB5\uFF1ATag \u4E00\u6BB5\uFF0C\u6362\u884C\u540E\u63A5 NL \u4E00\u6BB5\u3002\u8FD9\u4E2A\u6362\u884C\u5728 JSON \u5B57\u7B26\u4E32\u91CC\u5199\u6210 \\n\uFF0C\u4E0D\u8981\u628A JSON \u771F\u7684\u6362\u884C\u5199\u574F\u3002
 - summary \u7528\u4E2D\u6587\uFF0C\u5199\u6E05\u300C\u8C01\u3001\u5728\u505A\u4EC0\u4E48\u3001\u5728\u54EA\u300D\u3002\u5B83\u663E\u793A\u5728\u914D\u56FE\u9762\u677F\u4E0A\uFF0C\u4E5F\u662F\u300C\u6362\u4E2A\u753B\u9762\u300D\u65F6\u533A\u5206\u65B0\u65E7\u753B\u9762\u7684\u4F9D\u636E\uFF0C\u6240\u4EE5\u8981\u4E0E\u8FD9\u4E00\u5E45\u753B\u9762\u5BF9\u5F97\u4E0A\uFF0C\u4E0D\u8981\u5199\u6210\u63D0\u793A\u8BCD\u7684\u7FFB\u8BD1\u3002
 - sourceExcerpt \u7528\u4E2D\u6587\uFF0C\u4ECE\u6B63\u6587\u91CC\u539F\u6837\u590D\u5236\u753B\u9762\u6240\u4F9D\u636E\u7684\u90A3\u51E0\u53E5\uFF0C\u4E0D\u8981\u6539\u5199\u3001\u4E0D\u8981\u62FC\u63A5\u3001\u4E0D\u8981\u52A0\u7701\u7565\u53F7\u3002\u5B83\u5FC5\u987B\u80FD\u5728\u6B63\u6587\u91CC\u9010\u5B57\u627E\u5230\uFF0C\u9762\u677F\u4F1A\u663E\u793A\u51FA\u6765\u4F9B\u4F60\u6838\u5BF9\u753B\u9762\u9009\u5F97\u5BF9\u4E0D\u5BF9\u3002
 - \u53EA\u8F93\u51FA\u8FD9\u4E09\u4E2A\u5B57\u6BB5\uFF1A\u4E0D\u8981\u518D\u8F93\u51FA\u8D1F\u5411\u63D0\u793A\u8BCD\u6216\u4EBA\u7269\u5206\u6BB5\u63D0\u793A\u8BCD\u3002`
@@ -4164,16 +4151,16 @@ function translateError(error) {
   const message = lead && detail ? `${lead}\uFF08${detail}\uFF09` : lead || detail || "\u67CF\u5B9D\u7ED8\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002";
   return Object.assign(new Error(message), { code: pluginCode });
 }
-async function generate(draft, options = {}) {
+async function generate(draft2, options = {}) {
   const api = globalThis.window?.STBaiBaiImage;
   if (typeof api?.generate !== "function") {
     throw Object.assign(new Error("\u67CF\u5B9D\u7ED8\u5C1A\u672A\u5C31\u7EEA\u3002"), { code: "NOT_READY" });
   }
-  const characters = buildCharacters(draft.prompts.characterPrompts);
+  const characters = buildCharacters(draft2.prompts.characterPrompts);
   const request = {
-    prompt: draft.prompts.positivePrompt,
+    prompt: draft2.prompts.positivePrompt,
     // NAI 下它会忽略这个字段；照发即可，切到 ComfyUI 时就有用。
-    negative: draft.prompts.negativePrompt,
+    negative: draft2.prompts.negativePrompt,
     // ⚠ 必须显式传 false：它的默认是 true，会把图也存进它自己的图库。
     //   本插件的收藏、备份与图文导出都依赖自己的 /user/files 存储，不要两份。
     save: false
@@ -4235,8 +4222,179 @@ var init_baibai = __esm({
   }
 });
 
-// src/core/illustrationBackends/cosmos.js
+// src/core/illustrationBackends/chatu8.js
+function readSettings() {
+  try {
+    const settings2 = globalThis.SillyTavern?.getContext?.()?.extensionSettings?.["st-chatu8"];
+    return settings2 && typeof settings2 === "object" ? settings2 : null;
+  } catch {
+    return null;
+  }
+}
+function getBus() {
+  try {
+    const bus = globalThis.SillyTavern?.getContext?.()?.eventSource;
+    return bus && typeof bus.emit === "function" && typeof bus.on === "function" ? bus : null;
+  } catch {
+    return null;
+  }
+}
+function isEnabled(settings2) {
+  return settings2?.scriptEnabled === true || settings2?.scriptEnabled === "true";
+}
+function readMode(settings2) {
+  const mode = String(settings2?.mode || "");
+  return Object.hasOwn(MODE_LABELS, mode) ? mode : "";
+}
+function deriveCapabilities2(mode) {
+  return Object.freeze({
+    // 请求里只有一个 prompt：分人物与位置都无处安放。草稿里仍然留着，
+    // 切回支持它们的后端就用得上。
+    characterPrompts: false,
+    characterPositions: false,
+    characterNegative: false,
+    negativePrompt: NEGATIVE_MODES.has(mode),
+    // 它按自己渠道里配的宽高出图，不从这里指定画幅。
+    size: false,
+    // 一个响应一张图。
+    batch: false,
+    streamPreview: false
+  });
+}
 function probe2() {
+  const settings2 = readSettings();
+  if (!settings2) {
+    return { ready: false, status: "missing", reason: "\u672A\u68C0\u6D4B\u5230\u667A\u7ED8\u59EC\uFF08st-chatu8\uFF09\uFF0C\u8BF7\u5B89\u88C5\u5E76\u542F\u7528\u8BE5\u6269\u5C55\u3002" };
+  }
+  if (!isEnabled(settings2)) {
+    return { ready: false, status: "not_configured", reason: "\u667A\u7ED8\u59EC\u5DF2\u5B89\u88C5\u4F46\u6CA1\u6709\u542F\u7528\uFF0C\u8BF7\u6253\u5F00\u5B83\u7684\u63D2\u4EF6\u5F00\u5173\u3002" };
+  }
+  const mode = readMode(settings2);
+  if (!mode) {
+    const seen = String(settings2.mode || "").trim();
+    return {
+      ready: false,
+      status: "not_configured",
+      reason: seen ? `\u667A\u7ED8\u59EC\u7684\u6E20\u9053\u300C${seen}\u300D\u4E0D\u80FD\u7528\u6765\u51FA\u56FE\uFF0C\u8BF7\u5728\u5B83\u7684\u300C\u4E3B\u8981\u8BBE\u7F6E\u300D\u91CC\u6539\u9009 SD / NovelAI / ComfyUI / Banana / RunningHub\u3002` : "\u667A\u7ED8\u59EC\u8FD8\u6CA1\u6709\u9009\u6E20\u9053\uFF0C\u8BF7\u5728\u5B83\u7684\u300C\u4E3B\u8981\u8BBE\u7F6E\u300D\u91CC\u9009\u4E00\u4E2A\u80FD\u51FA\u56FE\u7684\u6E20\u9053\u3002"
+    };
+  }
+  if (!getBus()) {
+    return { ready: false, status: "not_configured", reason: "\u9152\u9986\u7684\u4E8B\u4EF6\u603B\u7EBF\u8FD8\u6CA1\u5C31\u7EEA\uFF0C\u8BF7\u5237\u65B0\u9875\u9762\u540E\u518D\u8BD5\u3002" };
+  }
+  return {
+    ready: true,
+    status: "ready",
+    reason: `\u667A\u7ED8\u59EC\u5DF2\u8FDE\u63A5\uFF08${MODE_LABELS[mode]} \u6E20\u9053\uFF09\u3002`,
+    capabilities: deriveCapabilities2(mode),
+    detail: { mode }
+  };
+}
+function abortError() {
+  return Object.assign(new Error("\u914D\u56FE\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002"), { name: "AbortError", code: "ABORTED" });
+}
+function requestImage(bus, request, options) {
+  const { signal } = options;
+  const waitMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : RESPONSE_TIMEOUT_MS;
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      bus.removeListener?.(RESPONSE_EVENT, onResponse);
+      signal?.removeEventListener?.("abort", onAbort);
+    };
+    const done = (error, value) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (error) reject(error);
+      else resolve(value);
+    };
+    const onResponse = (data) => {
+      if (!data || String(data?.id) !== String(request.id)) return;
+      done(null, data);
+    };
+    const onAbort = () => done(abortError());
+    const timer = setTimeout(() => done(Object.assign(
+      new Error("\u667A\u7ED8\u59EC\u6CA1\u6709\u56DE\u5E94\u3002\u8BF7\u786E\u8BA4\u5B83\u5728\u8BBE\u7F6E\u91CC\u5DF2\u542F\u7528\u3001\u6E20\u9053\u5DF2\u9009\u597D\uFF0C\u6216\u7A0D\u540E\u91CD\u8BD5\u3002"),
+      { code: "NOT_READY" }
+    )), waitMs);
+    if (signal?.aborted) {
+      done(abortError());
+      return;
+    }
+    signal?.addEventListener?.("abort", onAbort, { once: true });
+    bus.on(RESPONSE_EVENT, onResponse);
+    bus.emit(REQUEST_EVENT, request);
+  });
+}
+async function generate2(draft2, options = {}) {
+  const state = probe2();
+  const bus = getBus();
+  if (!state.ready || !bus) {
+    throw Object.assign(new Error(state.reason), { code: "NOT_READY" });
+  }
+  const settings2 = readSettings();
+  const mode = readMode(settings2);
+  const request = {
+    id: newIllustrationId(),
+    prompt: draft2.prompts.positivePrompt,
+    // 文档给的形状就是 null = 用它自己渠道里配的尺寸。
+    width: null,
+    height: null
+  };
+  if (NEGATIVE_MODES.has(mode) && String(draft2.prompts.negativePrompt || "").trim()) {
+    request.negative_prompt = draft2.prompts.negativePrompt;
+  }
+  const response = await requestImage(bus, request, options);
+  if (response.success === false) {
+    const detail = String(response.error || "").trim();
+    throw Object.assign(
+      new Error(detail ? `\u667A\u7ED8\u59EC\u751F\u6210\u5931\u8D25\uFF1A${detail}` : "\u667A\u7ED8\u59EC\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002"),
+      { code: "GENERATION_FAILED" }
+    );
+  }
+  if (response.isVideo) {
+    throw Object.assign(new Error("\u667A\u7ED8\u59EC\u8FD9\u6B21\u8FD4\u56DE\u7684\u662F\u89C6\u9891\uFF0C\u914D\u56FE\u53EA\u6536\u56FE\u7247\u3002"), { code: "GENERATION_FAILED" });
+  }
+  let blob;
+  try {
+    blob = dataUrlToBlob(response.imageData, { maxBytes: MAX_IMAGE_BYTES });
+  } catch (error) {
+    throw Object.assign(new Error(error?.message || "\u667A\u7ED8\u59EC\u6CA1\u6709\u8FD4\u56DE\u56FE\u7247\u3002"), { code: "GENERATION_FAILED" });
+  }
+  return { blobs: [blob] };
+}
+var REQUEST_EVENT, RESPONSE_EVENT, MODE_LABELS, NEGATIVE_MODES, RESPONSE_TIMEOUT_MS, chatu8Backend;
+var init_chatu8 = __esm({
+  "src/core/illustrationBackends/chatu8.js"() {
+    init_illustrationData();
+    init_imageBytes();
+    REQUEST_EVENT = "generate-image-request";
+    RESPONSE_EVENT = "generate-image-response";
+    MODE_LABELS = {
+      sd: "Stable Diffusion",
+      novelai: "NovelAI",
+      comfyui: "ComfyUI",
+      banana: "Banana / Grok",
+      runninghub: "RunningHub"
+    };
+    NEGATIVE_MODES = /* @__PURE__ */ new Set(["sd", "novelai", "comfyui", "runninghub"]);
+    RESPONSE_TIMEOUT_MS = 15 * 60 * 1e3;
+    chatu8Backend = {
+      id: "chatu8",
+      label: "\u667A\u7ED8\u59EC",
+      // 它没有「我准备好了」的广播：配置变化派发的是 document 上的
+      // st-chatu8-config-updated，而界面订阅的是 window 上的事件（且那个 CustomEvent 不冒泡）。
+      // 所以这里不挂就绪事件 —— 用户在面板上点「重新检测」即可，这也正是那个按钮的用途。
+      readyEvents: [],
+      probe: probe2,
+      generate: generate2
+    };
+  }
+});
+
+// src/core/illustrationBackends/cosmos.js
+function probe3() {
   const api = globalThis.window?.CosmosVision;
   if (!api) return { ready: false, status: "missing", reason: "\u672A\u68C0\u6D4B\u5230 Cosmos Vision\uFF0C\u8BF7\u5B89\u88C5\u5E76\u542F\u7528\u8BE5\u6269\u5C55\u3002" };
   if (typeof api.generateImage !== "function") {
@@ -4247,19 +4405,19 @@ function probe2() {
   }
   return { ready: true, status: "ready", reason: "Cosmos Vision \u5DF2\u8FDE\u63A5\u3002", capabilities: CAPABILITIES };
 }
-async function generate2(draft, options = {}) {
+async function generate3(draft2, options = {}) {
   const api = globalThis.window?.CosmosVision;
   if (typeof api?.generateImage !== "function") {
-    const state = probe2();
+    const state = probe3();
     throw Object.assign(new Error(state.reason), { code: "NOT_READY" });
   }
   const result = await api.generateImage({
     // 只给「画面里有什么」。质量词、UC 词、画风预设与 LoRA 触发词由 Cosmos 追加，
     // 这里再写一遍就会重复叠加 —— v1 需求与联调清单都点名过这条。
     prompts: {
-      positivePrompt: draft.prompts.positivePrompt,
-      negativePrompt: draft.prompts.negativePrompt,
-      characterPrompts: draft.prompts.characterPrompts
+      positivePrompt: draft2.prompts.positivePrompt,
+      negativePrompt: draft2.prompts.negativePrompt,
+      characterPrompts: draft2.prompts.characterPrompts
     },
     requestId: newIllustrationId(),
     signal: options.signal,
@@ -4303,8 +4461,8 @@ var init_cosmos = __esm({
       label: "Cosmos Vision",
       // 它准备好的广播事件。界面订阅所有后端的这一份，任何一个就绪都会重新探测。
       readyEvents: ["cosmos-vision:api-ready"],
-      probe: probe2,
-      generate: generate2
+      probe: probe3,
+      generate: generate3
     };
   }
 });
@@ -4347,6 +4505,7 @@ var EMPTY_CAPABILITIES, DEFAULT_BACKEND_ID, ADAPTERS, ILLUSTRATION_BACKEND_KEY, 
 var init_registry = __esm({
   "src/core/illustrationBackends/registry.js"() {
     init_baibai();
+    init_chatu8();
     init_cosmos();
     EMPTY_CAPABILITIES = Object.freeze({
       characterPrompts: false,
@@ -4358,7 +4517,7 @@ var init_registry = __esm({
       streamPreview: false
     });
     DEFAULT_BACKEND_ID = "cosmos";
-    ADAPTERS = new Map([cosmosBackend, baibaiBackend].map((adapter) => [adapter.id, adapter]));
+    ADAPTERS = new Map([cosmosBackend, baibaiBackend, chatu8Backend].map((adapter) => [adapter.id, adapter]));
     ILLUSTRATION_BACKEND_KEY = "illustration_backend";
     ILLUSTRATION_BACKEND_VERSION = 1;
   }
@@ -6389,6 +6548,10 @@ function loadCssFiles() {
     left: 0;
     width: 100vw;
     height: 100vh;
+    /* \u79FB\u52A8\u7AEF\u5730\u5740\u680F/\u5DE5\u5177\u680F\u6536\u653E\u65F6 100vh \u5927\u4E8E\u771F\u5B9E\u53EF\u89C6\u9AD8\u5EA6\uFF1A\u906E\u7F69\u6BD4\u5C4F\u5E55\u8FD8\u9AD8\uFF0C\u88AB\u5B83\u5C45\u4E2D\u7684\u7A97\u53E3
+       \u4E0B\u534A\u622A\u5C31\u88AB\u63A8\u51FA\u5C4F\u5E55\u3002dvh \u8DDF\u968F\u5B9E\u9645\u89C6\u53E3\uFF0C\u53CC\u5199\u4E00\u904D\u505A\u65E7\u5185\u6838\u56DE\u9000
+       \uFF08\u540C settings-drawer.css / illustration.css\uFF09\u3002 */
+    height: 100dvh;
     background: var(--t-color-scrim);
     z-index: 20000;
     backdrop-filter: blur(2px);
@@ -7325,7 +7488,17 @@ function loadCssFiles() {
 .t-panel-header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    /* \u6309\u94AE\u7EC4\u5185\u7684\u95F4\u8DDD\uFF086px\uFF09\u3002\u6BD4\u901A\u7528\u5217\u8868\u95F4\u8DDD\u7D27\u4E00\u6863\uFF1A\u8FD9\u91CC\u662F\u4E00\u6392\u65E0\u8FB9\u6846\u56FE\u6807\uFF0C
+       \u6CA1\u6709\u8FB9\u6846\u5E2E\u5FD9\u5206\u9694\uFF0C\u95F4\u8DDD\u5927\u4E86\u4F1A\u6563\u3002 */
+    gap: var(--t-gap-inline);
+}
+
+/* \u8FD9\u4E00\u7C07\u4E00\u5F8B\u662F\u65E0\u8FB9\u6846\u56FE\u6807\u94AE\uFF08\u6863\u6848 / \u8BBE\u7F6E / \u95EE\u53F7 / \u5173\u95ED\uFF09\u3002
+   \u26A0 \u5B57\u5F62\u5927\u5C0F\u8DDF\u7740\u4E0A\u4E0B\u6587\u8D70\uFF0C\u4E0E\u6362\u7EC4\u4EF6\u4E4B\u524D\u4E00\u81F4 \u2014\u2014 \u7EC4\u4EF6\u9ED8\u8BA4\u7684 1.2em \u4F1A\u628A\u8FD9\u51E0\u4E2A\u56FE\u6807
+     \u653E\u5927\u4E00\u6863\uFF0C\u800C\u90A3\u4E0D\u5728\u672C\u6B21\u6539\u52A8\u8303\u56F4\u5185\u3002icon-button.css \u660E\u786E\u628A font-size \u7559\u7ED9
+     \u6D88\u8D39\u65B9\u51B3\u5B9A\uFF0C\u8981\u8C03\u53EA\u6539\u8FD9\u4E00\u4E2A\u53D8\u91CF\u3002 */
+.t-panel-header-actions .t-icon-btn {
+    --t-icon-btn-font-size: var(--t-text-body);
 }
 
 .t-panel-footer {
@@ -8894,6 +9067,9 @@ textarea.t-input {
     width: 950px;
     max-width: 95vw;
     height: 85vh;
+    /* \u79FB\u52A8\u7AEF\u5730\u5740\u680F/\u5DE5\u5177\u680F\u6536\u653E\u65F6 100vh \u5927\u4E8E\u771F\u5B9E\u53EF\u89C6\u9AD8\u5EA6\uFF0C\u7A97\u53E3\u4E0B\u534A\u622A\u4F1A\u88AB\u63A8\u51FA\u5C4F\u5E55\u3002
+       dvh \u8DDF\u968F\u5B9E\u9645\u89C6\u53E3\uFF0C\u53CC\u5199\u4E00\u904D\u505A\u65E7\u5185\u6838\u56DE\u9000\uFF08\u540C settings-drawer.css / illustration.css\uFF09\u3002 */
+    height: 85dvh;
     display: flex;
     flex-direction: column;
     background: var(--t-color-bg);
@@ -8925,6 +9101,7 @@ textarea.t-input {
 /* Zen Mode (\u6C89\u6D78\u6A21\u5F0F) */
 #t-main-view.t-zen-mode .t-header,
 #t-main-view.t-zen-mode .t-top-bar,
+#t-main-view.t-zen-mode .t-temp-bar,
 #t-main-view.t-zen-mode .t-bottom-bar,
 #t-main-view.t-zen-mode .t-toolbox-panel,
 #t-main-view.t-zen-mode .t-toolbox-backdrop {
@@ -9025,6 +9202,141 @@ textarea.t-input {
     box-sizing: border-box;
     flex-shrink: 0;
     z-index: 20;
+}
+
+/* \u2500\u2500 \u300C\u672C\u6B21\u8865\u5145\u300D\u6761\uFF08\u4E34\u65F6\u6307\u4EE4\uFF09\u2500\u2500
+
+   \u4F4D\u7F6E\uFF1A.t-top-bar \u7684**\u5144\u5F1F**\uFF0C\u4E0D\u662F\u5B83\u7684\u4E00\u884C\u3002
+   \u4E3A\u4EC0\u4E48\u4E0D\u505A\u6210\u680F\u5185\u7B2C\u4E8C\u884C\uFF1A.t-top-bar \u662F\u5199\u6B7B height:52px \u7684\u5355\u884C\u80F6\u56CA\u6761\uFF0C\u4E0A\u65B9\u6CE8\u91CA
+   \u5DF2\u8BF4\u660E\u8FD9\u4E00\u680F\u7684\u7A7A\u95F4\u9884\u7B97\u662F\u6309 950px \u7A97\u53E3\u5B9E\u6D4B\u8C03\u8FC7\u7684\uFF0C\u4E14 modern/legacy \u4E24\u53D8\u4F53\u523B\u610F
+   \u5206\u53C9 \u2014\u2014 \u585E\u7B2C\u4E8C\u884C\u8981\u4E48\u9876\u7834\u56FA\u5B9A\u9AD8\u5EA6\u3001\u8981\u4E48\u5F97\u628A\u6574\u680F\u6539\u6210 column \u91CD\u65B0\u914D\u5E73\u3002
+
+   \u505A\u6210\u5144\u5F1F\u540E\u9760\u4E24\u70B9\u4F2A\u88C5\u6210\u300C\u9876\u680F\u957F\u51FA\u7684\u7B2C\u4E8C\u884C\u300D\uFF1A
+     1. \u540C\u6B3E\u80CC\u666F\u4E0E\u5DE6\u53F3\u5185\u8FB9\u8DDD\uFF1B
+     2. \u5B83\u53EF\u89C1\u65F6\u7531 JS \u7ED9 .t-top-bar \u6302 .has-temp-bar\uFF0C\u628A\u90A3\u9053 border-bottom \u5173\u6389\u3002
+        \uFF08\u4E0D\u7528 :has()\uFF0C\u90A3\u5BF9\u65E7\u5185\u6838\u4E0D\u53EF\u9760\u3002\uFF09
+   \u4E8E\u662F\u4E24\u884C\u4E4B\u95F4\u6CA1\u6709\u5206\u9694\u7EBF\uFF0C\u4E0B\u9762\u90A3\u6761 border-bottom \u624D\u662F\u4E0E\u5185\u5BB9\u533A\u7684\u5206\u754C\u3002
+
+   \u53EA\u5728\u300C\u5F85\u6F14\u7ECE\u300D\u4E0E\u300C\u8865\u5145\u5DF2\u751F\u6548\u300D\u4E24\u4E2A\u77AC\u6001\u51FA\u73B0\uFF0C\u5176\u4F59\u65F6\u5019\u6574\u6761 hidden\u3002 */
+.t-temp-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 20px;
+    background: var(--t-color-surface);
+    border-bottom: 1px solid var(--t-color-border);
+    flex-shrink: 0;
+}
+
+/* display:flex \u4F1A\u76D6\u6389 hidden \u5C5E\u6027\u7684 display:none\uFF0C\u5FC5\u987B\u663E\u5F0F\u8865\u56DE\u6765 */
+.t-temp-bar[hidden] {
+    display: none;
+}
+
+/* \u5B83\u53EF\u89C1\u65F6\uFF0C\u4E0A\u9762\u90A3\u4E00\u680F\u7684\u5206\u9694\u7EBF\u8BA9\u4F4D\uFF0C\u4E24\u884C\u8BFB\u6210\u4E00\u6574\u5757 */
+.t-top-bar.has-temp-bar {
+    border-bottom-color: transparent;
+}
+
+.t-temp-edit,
+.t-temp-active {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.t-temp-edit[hidden],
+.t-temp-active[hidden] {
+    display: none;
+}
+
+.t-temp-label {
+    flex: 0 0 auto;
+    font-size: 0.85em;
+    color: var(--t-color-text-muted);
+    white-space: nowrap;
+}
+
+/* \u590D\u7528 .t-input \u7EC4\u4EF6\uFF08\u5B83\u81EA\u5E26\u80CC\u666F/\u8FB9\u6846/\u5706\u89D2/\u7126\u70B9\u6001\uFF09\uFF0C\u8FD9\u91CC\u53EA\u8865\u672C\u6761\u7684\u5E03\u5C40\u3002
+   \u8986\u76D6\u5C3A\u5BF8\u7C7B\u81EA\u5B9A\u4E49\u5C5E\u6027\u4E0D\u7B97\u91CD\u5B9A\u4E49\u7EC4\u4EF6\u89C6\u89C9\uFF08\u89C1 icon-button.css \u5934\u90E8\u540C\u6B3E\u7406\u7531\uFF09\u3002 */
+.t-temp-bar .t-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 4px 8px;
+    font-size: 0.85em;
+}
+
+/* \u8F93\u5165\u6846\u662F\u5355\u884C\u8D77\u6B65\u7684 <textarea> \u800C\u4E0D\u662F <input>\uFF1A\u8865\u5145\u5199\u957F\u4E86\u5F97\u80FD\u6362\u884C\u770B\u5168\uFF0C
+   input \u53EA\u4F1A\u6A2A\u5411\u6EDA\uFF0C\u540E\u534A\u622A\u6C38\u8FDC\u770B\u4E0D\u89C1\u3002\u9AD8\u5EA6\u7531 JS \u6309\u5185\u5BB9\u6491\uFF08\u89C1 mainWindow.js
+   \u7684 syncTempInstructionInputHeight\uFF09\uFF0C\u5C01\u9876 3 \u884C\u540E\u5185\u90E8\u6EDA\u52A8 \u2014\u2014 \u4E0D\u5C01\u9876\u7684\u8BDD
+   \u8FD9\u6761\u4F1A\u628A\u5185\u5BB9\u533A\u4E00\u8DEF\u6324\u4E0A\u53BB\u3002
+
+   \u26A0 \u9009\u62E9\u5668\u5FC5\u987B\u5E26 .t-temp-bar \u524D\u7F00\uFF1Afield.css \u7684 \`textarea.t-input\` \u7ED9\u6240\u6709
+   \u591A\u884C\u6846\u4E0A\u4E86 resize:vertical \u4E0E\u7B49\u5BBD\u5B57\u4F53\uFF0C\u5355\u7C7B .t-temp-input\uFF080,1,0\uFF09\u76D6\u4E0D\u4F4F\u5B83\u3002 */
+.t-temp-bar .t-temp-input {
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+    overflow-y: auto;
+    white-space: pre-wrap; /* \u663E\u5F0F\u5199\u6B7B\uFF1A\u6362\u884C\u662F\u672C\u6761\u7684\u7ACB\u8EAB\u4E4B\u672C\uFF0C\u4E0D\u80FD\u88AB\u4E3B\u9898\u5C42\u7684 textarea \u89C4\u5219\u6539\u6389 */
+    /* \u957F\u4E32\uFF08URL\u3001\u6CA1\u6709\u7A7A\u683C\u7684\u957F\u53E5\uFF09\u4E5F\u5F3A\u5236\u65AD\u884C\uFF0C\u5426\u5219\u6362\u884C\u89C4\u5219\u6551\u4E0D\u4E86\u5B83 */
+    overflow-wrap: anywhere;
+}
+
+/* \u5360\u4F4D\u6587\u6848\u662F\u6309\u4E00\u884C\u5199\u7684\u3002\u6846\u7A84\u5230\u5B83\u6362\u884C\u65F6\uFF0C\u7B2C\u4E8C\u884C\u4F1A\u88AB\u53EA\u6709\u4E00\u884C\u7684\u76D2\u9AD8\u88C1\u6389\u534A\u622A\uFF0C
+   \u770B\u7740\u50CF\u574F\u4E86 \u2014\u2014 \u5E72\u8106\u7167 <input> \u65F6\u4EE3\u7684\u8001\u89C4\u77E9\uFF1A\u4E0D\u6362\u884C\uFF0C\u653E\u4E0D\u4E0B\u5C31\u5728\u53F3\u8FB9\u622A\u65AD\u3002 */
+.t-temp-input::placeholder {
+    color: var(--t-color-text-dim);
+    white-space: nowrap;
+}
+
+/* \u6E05\u7A7A / \u64A4\u9500\u90FD\u662F\u5C0F\u53F7\u63A7\u4EF6\uFF0C\u95F4\u8DDD\u4EA4\u7ED9\u7236\u7EA7 gap\uFF08B13 \u7684\u6838\u5FC3\u7EA6\u5B9A\uFF09 */
+.t-temp-bar .t-icon-btn {
+    --t-icon-btn-size: 26px;
+    --t-icon-btn-font-size: 0.95em;
+}
+
+.t-temp-active-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.85em;
+    color: var(--t-color-text-faint);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.t-temp-active-text .fa-check {
+    color: var(--t-color-accent);
+}
+
+.t-temp-undo {
+    flex: 0 0 auto;
+    padding: 3px 10px;
+    font-size: 0.85em;
+    color: var(--t-color-text-muted);
+    background: transparent;
+    border: 1px solid var(--t-color-border);
+    border-radius: var(--t-radius-inline);
+    cursor: pointer;
+    transition: var(--t-transition-hover);
+}
+
+.t-temp-undo:hover {
+    color: var(--t-color-text);
+    border-color: var(--t-color-border-strong);
+}
+
+@media screen and (max-width: 600px) {
+    .t-temp-bar {
+        padding: 5px 12px;
+    }
+
+    .t-temp-label {
+        display: none; /* \u7A84\u5C4F\u4F18\u5148\u628A\u5BBD\u5EA6\u7559\u7ED9\u8F93\u5165\u6846\uFF0C\u94C5\u7B14\u56FE\u6807\u5DF2\u8DB3\u591F\u793A\u610F */
+    }
 }
 
 /* \u5386\u53F2\u5F00\u5173\u7EC4 */
@@ -9731,6 +10043,7 @@ textarea.t-input {
     #t-main-view {
         width: 100%;
         height: 95vh;
+        height: 95dvh; /* \u7A84\u5C4F\u51E0\u4E4E\u94FA\u6EE1\uFF0Cdvh \u4E0E vh \u7684\u5DEE\u503C\u5728\u8FD9\u91CC\u6700\u8981\u547D\uFF08\u89C1\u9876\u90E8\u6CE8\u91CA\uFF09 */
         max-width: 100vw;
         border-radius: 10px 10px 0 0;
     }
@@ -13853,6 +14166,18 @@ textarea.t-input {
 .t-illustration-candidate img { width: 100%; height: 160px; object-fit: contain; }
 .t-illustration-candidate p { font-size: 0.9em; line-height: 1.5; }
 
+/* \u7F29\u7565\u56FE\u672C\u8EAB\u5C31\u662F\u300C\u770B\u5927\u56FE\u300D\u7684\u6309\u94AE\uFF1A\u70B9\u5B83\u5F00\u706F\u7BB1\uFF08\u66FE\u662F\u4E2A target="_blank" \u7684\u94FE\u63A5\uFF09\u3002
+   \u505A\u6210 <button> \u800C\u4E0D\u662F\u7ED9 <a> \u6302 click \u2014\u2014 \u952E\u76D8\u80FD Tab \u5230\u3001\u56DE\u8F66\u80FD\u5F00\u3002
+   \u539F\u751F\u6309\u94AE\u7684\u8FB9\u6846/\u5E95\u8272/\u5185\u8FB9\u8DDD\u8981\u4E00\u5E76\u6E05\u6389\uFF0C\u5426\u5219\u56FE\u4E2D\u56FE\u4F1A\u7F29\u4E00\u5708\u3002 */
+.t-illustration-candidate-open {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+}
+
 /* \u56FE\u5E93\u7684\u300C\u7BA1\u7406\u300D\u591A\u9009\u6001\uFF1A\u5DE5\u5177\u680F + \u52FE\u9009 + \u9009\u4E2D\u9AD8\u4EAE */
 .t-illustration-gallery-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 .t-illustration-select-count { color: var(--t-color-text-muted); font-size: 0.9em; }
@@ -14080,49 +14405,13 @@ textarea.t-input {
     color: var(--t-color-text);
 }
 
-/* \u2500\u2500 \u4E3B\u754C\u9762\u914D\u56FE\u6309\u94AE\uFF08\u5185\u5BB9\u533A\u5E95\u90E8\u4E2D\u95F4\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-   \u6302\u5728 .t-content-wrapper \u91CC\uFF1A\u5B83\u662F\u5B9A\u4F4D\u7956\u5148\uFF08position:relative\uFF09\u4E14\u4E0D\u6EDA\u52A8\u3002
-   \u26A0 \u4E0D\u8981\u632A\u8FDB .t-content-area \u2014\u2014 \u90A3\u662F\u6EDA\u52A8\u5BB9\u5668\uFF0C\u6309\u94AE\u4F1A\u8DDF\u7740\u6B63\u6587\u6EDA\u8D70\u3002
-   \u5E95\u90E8\u4E2D\u95F4\u662F\u552F\u4E00\u7A7A\u95F2\u5904\uFF1A\u9875\u7801\u5728\u53F3\u4E0B\u3001\u7FFB\u9875\u7BAD\u5934\u5728\u4E24\u4FA7\u3001\u7EED\u5199\u680F\u5728\u5BB9\u5668\u4E4B\u5916\u3002 */
-
-.t-illustration-badge {
-    position: absolute;
-    left: 50%;
-    bottom: 16px;
-    /* \u6C34\u5E73\u5C45\u4E2D\u9760 transform\u3002\u5165\u573A\u52A8\u753B\u7528 t-fade-in-centered\uFF0C\u5B83\u628A translateX(-50%)
-       \u5199\u8FDB\u4E86\u4E24\u4E2A\u5173\u952E\u5E27\uFF0C\u6240\u4EE5\u52A8\u753B\u4E0D\u4F1A\u628A\u5C45\u4E2D\u51B2\u6389\u3001\u7ED3\u675F\u6001\u4E5F\u4E0E\u8FD9\u91CC\u4E00\u81F4\u3002 */
-    transform: translateX(-50%);
-    z-index: var(--t-z-sticky);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: 1px solid var(--t-color-border-strong);
-    border-radius: var(--t-radius-circle);
-    background: var(--t-color-surface-elevated);
-    color: var(--t-color-text-secondary);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-    cursor: pointer;
-}
-
-.t-illustration-badge[hidden] { display: none; }
-
-.t-illustration-badge[data-state="error"] {
-    border-color: var(--t-color-danger-border);
-    color: var(--t-color-danger);
-}
-
-.t-illustration-badge-icon { font-size: 15px; line-height: 1; }
-
-/* \u4E00\u6B21\u6027\u5165\u573A\uFF1A\u53EA\u5728\u65B0\u56FE\u51FA\u73B0\u65F6\u6302\u4E0A\uFF0C\u64AD\u5B8C\u7531\u811A\u672C\u6458\u6389\uFF0C\u4E0D\u5FAA\u73AF\u3002 */
-.t-illustration-badge.is-entering { animation: t-fade-in-centered 0.28s ease-out; }
-
 /* \u2500\u2500 \u914D\u56FE\u706F\u7BB1 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-   \u4E0D\u5360\u6D6E\u5C42\u540D\u989D\uFF0C\u6240\u4EE5\u80FD\u4E0E\u914D\u56FE\u9762\u677F\u5E76\u5B58\u3002
-   \u26A0 \u5B83\u5FC5\u987B\u6302\u5728 #t-overlay \u8FD9\u7C7B\u5BB9\u5668\u4E0A\uFF1A.t-content-wrapper \u5E26
-     transform: translateZ(0) + overflow:hidden\uFF0C\u4F1A\u628A fixed \u540E\u4EE3\u88C1\u6389\u3002 */
+   \u6302\u5728**\u914D\u56FE\u9762\u677F\u81EA\u5DF1\u7684 root \u91CC**\uFF08.t-root.t-illustration-window\uFF09\u3002
+   \u9762\u677F root \u662F z-index: 20060 \u7684\u5C42\u53E0\u4E0A\u4E0B\u6587\uFF0C\u706F\u7BB1\u4F5C\u4E3A\u5B83\u7684\u540E\u4EE3\u5FC5\u7136\u76D6\u5728\u9762\u677F\u5185\u5BB9\u4E4B\u4E0A\uFF1B
+   \u6302\u5230 #t-overlay \u53CD\u800C\u66F4\u7CDF \u2014\u2014 \u90A3\u4E2A\u5BB9\u5668\u5E26 isolation: isolate + z-index: 20000\uFF0C
+   \u4F1A\u628A\u706F\u7BB1\u56F0\u5728 20000 \u90A3\u4E00\u5C42\uFF0C\u6574\u5757\u85CF\u5728\u9762\u677F\uFF0820060\uFF09\u540E\u9762\u3002
+   \u26A0 \u5B83\u4E5F\u4E0D\u80FD\u6302 .t-content-wrapper\uFF1A\u90A3\u4E2A\u5BB9\u5668\u5E26 transform: translateZ(0) +
+     overflow: hidden\uFF0C\u4F1A\u628A position: fixed \u7684\u540E\u4EE3\u6574\u4E2A\u88C1\u6389\u3002 */
 
 .t-illustration-lightbox {
     position: fixed;
@@ -14131,7 +14420,12 @@ textarea.t-input {
     width: 100vw;
     height: 100vh;
     height: 100dvh;
+    /* \u8FD9\u4E2A\u503C\u53EA\u5728\u9762\u677F\u81EA\u5DF1\u7684\u5C42\u53E0\u4E0A\u4E0B\u6587\u91CC\u6BD4\u5927\u5C0F\uFF08\u540C\u5C42\u7684\u5144\u5F1F\u90FD\u662F z-index: auto\uFF09\uFF0C
+       \u4E0E\u9762\u677F root \u7684 20060 \u4E0D\u662F\u4E00\u56DE\u4E8B \u2014\u2014 \u540E\u4EE3\u8FDB\u4E0D\u5230\u5916\u9762\u90A3\u4E00\u5C42\u53BB\u3002 */
     z-index: var(--t-z-window);
+    /* \u26A0 \u9762\u677F root \u662F pointer-events: none\uFF08\u5B83\u662F\u4E00\u5C42\u76D6\u6EE1\u89C6\u53E3\u7684\u5C45\u4E2D\u5BB9\u5668\uFF0C
+       \u53EA\u8BA9 .t-illustration-panel \u81EA\u5DF1\u6536\u4E8B\u4EF6\uFF09\u3002\u706F\u7BB1\u5FC5\u987B\u81EA\u5DF1\u6536\u56DE\u6765\u3002 */
+    pointer-events: auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -14176,12 +14470,6 @@ textarea.t-input {
     font-size: 0.9em;
     line-height: 1.6;
     color: var(--t-color-text-secondary);
-}
-
-.t-illustration-lightbox-actions {
-    position: relative;
-    display: flex;
-    gap: 8px;
 }
 
 .t-illustration-lightbox-close {
@@ -20517,6 +20805,38 @@ td[data-edit-field] .t-cell-editor {
     background: linear-gradient(145deg, var(--t-color-accent-soft-strong), var(--t-color-surface-hover));
 }
 
+/* ===== \u6539\u5199/\u5220\u9664\u62C6\u5206\uFF1A\u4E3B\u9762\u677F Tab \u4E0E\u5220\u9664\u89C4\u5219\u7F16\u8F91\u5668 ===== */
+
+/* \u5206\u533A\u5316\u4E3B\u9762\u677F\uFF1A\u8986\u76D6\u539F\u4E24\u680F\u7F51\u683C\uFF0C\u6539\u4E3A\u5355\u5217\u53EF\u6EDA\u52A8 */
+#t-rewrite-overlay .t-rewrite-body-tabbed { display: flex; flex-direction: column; gap: 12px; overflow: auto; }
+
+#t-rewrite-overlay .t-rewrite-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+#t-rewrite-overlay .t-rewrite-switches { display: flex; gap: 12px; flex-wrap: wrap; }
+#t-rewrite-overlay .t-rewrite-switch { display: inline-flex; align-items: center; gap: 6px; font-size: 0.86em; font-weight: 700; color: rgb(var(--t-sky-text-1-rgb)); cursor: pointer; padding: 5px 12px; border: 1px solid var(--t-color-border-subtle); border-radius: 999px; background: var(--t-glass-panel); }
+#t-rewrite-overlay .t-rewrite-switch input { margin: 0; }
+
+#t-rewrite-overlay .t-rewrite-tabs { display: flex; gap: 6px; }
+#t-rewrite-overlay .t-rewrite-tab-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--t-color-border-subtle); background: var(--t-glass-panel); color: var(--t-glass-text-secondary); font-size: 0.84em; cursor: pointer; }
+#t-rewrite-overlay .t-rewrite-tab-btn.active { border-color: var(--t-color-accent-border-strong); background: linear-gradient(135deg, var(--t-color-accent-soft-strong) 0%, var(--t-color-surface-veil) 100%); color: rgb(var(--t-sky-text-0-rgb)); font-weight: 700; }
+
+#t-rewrite-overlay .t-rewrite-tab-page { display: none; flex-direction: column; gap: 12px; }
+#t-rewrite-overlay .t-rewrite-tab-page.active { display: flex; }
+#t-rewrite-overlay .t-rewrite-tab-page .t-rewrite-section:nth-last-child(2) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+#t-rewrite-overlay .t-rewrite-inline-switch { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8em; color: var(--t-glass-text-secondary); cursor: pointer; }
+#t-rewrite-overlay .t-rewrite-inline-switch input { margin: 0; }
+
+/* \u5220\u9664\u547D\u4E2D\u9884\u89C8\uFF1A\u539F\u53E5\u5212\u5220\u3001\u7247\u6BB5\u663E\u793A\u5220\u540E\u6587\u672C */
+#t-rewrite-overlay .t-rewrite-match-row.t-delete-hit .t-delete-before { text-decoration: line-through; opacity: 0.72; }
+#t-rewrite-overlay .t-delete-after { color: rgb(var(--t-accent-diff-after-text-rgb)); margin-top: 4px; }
+
+/* \u5220\u9664\u89C4\u5219\u7F16\u8F91\u5668\u884C */
+#t-rewrite-settings-overlay .t-delete-rule-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+#t-rewrite-settings-overlay .t-delete-rule-row input[type="text"] { flex: 1; font-size: 0.82em; min-width: 80px; }
+#t-rewrite-settings-overlay .t-delete-rule-row input.t-delete-rule-fragment { flex: 2 1 160px; }
+#t-rewrite-settings-overlay .t-delete-rule-enabled-wrap { display: inline-flex; align-items: center; gap: 4px; font-size: 0.76em; color: var(--t-glass-text-tertiary); white-space: nowrap; }
+
 
 /* === 04-features/reader.css === */
 /* css/04-features/reader.css \u2014\u2014 \u5C0F\u8BF4\u6A21\u5F0F\uFF1A\u5168\u5C4F\u6C89\u6D78\u9605\u8BFB */
@@ -20539,6 +20859,9 @@ td[data-edit-field] .t-cell-editor {
     flex-direction: column;
     width: 100vw;
     height: 100vh;
+    /* \u5168\u5C4F\u9605\u8BFB\u753B\u5E03\u4E5F\u8981\u8D34\u5408\u771F\u5B9E\u89C6\u53E3\uFF1A\u6CBF\u7528 vh \u7684\u8BDD\uFF0C\u624B\u673A\u4E0A\u672B\u51E0\u884C\u843D\u5728\u5730\u5740\u680F\u5E95\u4E0B\uFF0C
+       \u800C\u8FD9\u9875\u6070\u6070\u662F\u62FF\u6765\u901A\u8BFB\u7684\u3002\u4E0E .t-overlay \u53CC\u5199 dvh\uFF08\u65E7\u5185\u6838\u56DE\u9000\u5230\u4E0A\u9762\u90A3\u884C\uFF09\u3002 */
+    height: 100dvh;
 }
 
 /* \u2014\u2014 \u9876\u680F\uFF08\u6C89\u6D78\u6A21\u5F0F\u4E0B\u6ED1\u51FA\u89C6\u53E3\uFF09\u2014\u2014 */
@@ -20985,6 +21308,11 @@ body.t-reader-zen .t-reader-topbar {
 
 #chat .mes .t-rewrite-select-sentence.selected { background: var(--t-color-success-soft); box-shadow: inset 0 0 0 1px var(--t-color-success-border); }
 
+/* \u65E0\u611F\u5220\u9664\uFF1A\u547D\u4E2D\u53E5\u539F\u5730\u5220\u9664\u540E\uFF0C\u88AB\u91CD\u6E32\u67D3\u7684\u90A3\u4E00\u697C\u6B63\u6587\u505A\u4E00\u6B21\u5F88\u77ED\u7684\u6DE1\u5165\uFF0C
+   \u8BFB\u8D77\u6765\u50CF\u6D88\u606F\u81EA\u7136\u843D\u5B9A\uFF0C\u800C\u975E reloadCurrentChat \u7684\u6574\u5C4F\u95EA\u70C1\u3002\u590D\u7528 t-fade-in\uFF08R6\uFF09\u3002 */
+#chat .mes .mes_text.t-delete-settle { animation: t-fade-in 0.28s ease; }
+
+
 #chat .mes .t-rewrite-mark {
     position: relative;
     display: inline;
@@ -21184,6 +21512,51 @@ body.t-reader-zen .t-reader-topbar {
 .tsa-panel .tsa-preview-item.current .tsa-preview-marker { color: var(--t-color-accent); }
 
 .tsa-panel .tsa-preview-item.todo .tsa-preview-marker { color: var(--t-glass-text-secondary); }
+
+/* \u2500\u2500 \u8282\u594F\u628A\u63A7\uFF08\u5267\u60C5\u63A8\u8FDB\u9762\u677F\u7684\u7B2C\u4E8C\u6A21\u5F0F\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+.tsa-panel .tsa-mode-tabs { display: flex; gap: 6px; padding: 8px 10px 0; }
+
+.tsa-panel .tsa-mode-tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text-secondary); cursor: pointer; font-size: 12px; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease; }
+
+.tsa-panel .tsa-mode-tab:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
+
+.tsa-panel .tsa-mode-tab.is-active { color: var(--t-glass-text); background: var(--t-color-accent-soft); border-color: var(--t-color-accent-border-hover); }
+
+.tsa-panel .tsa-mode-tab i { color: var(--t-color-accent); }
+
+.tsa-panel .tsa-pacing-diag { margin-bottom: 8px; padding: 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); }
+
+.tsa-panel .tsa-pacing-state { display: inline-block; padding: 1px 8px; margin-right: 6px; border-radius: 999px; border: 1px solid var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); color: var(--t-glass-text); font-weight: 700; }
+
+.tsa-panel .tsa-pacing-focus { display: inline-block; padding: 1px 7px; margin-right: 6px; border-radius: 999px; border: 1px solid var(--t-color-accent-border); font-size: 11px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-pacing-intensity { font-size: 11px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-pacing-assessment { margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
+
+.tsa-panel .tsa-pacing-input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 6px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); font: inherit; resize: vertical; }
+
+.tsa-panel .tsa-pacing-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+.tsa-panel .tsa-pacing-preset { padding: 3px 10px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text); cursor: pointer; font-size: 12px; }
+
+.tsa-panel .tsa-pacing-preset:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
+
+.tsa-panel .tsa-pacing-adv { margin-bottom: 8px; font-size: 12px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-pacing-adv summary { cursor: pointer; user-select: none; }
+
+.tsa-panel .tsa-pacing-adv-fields { display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
+
+.tsa-panel .tsa-pacing-adv-fields label { display: inline-flex; align-items: center; gap: 5px; }
+
+.tsa-panel .tsa-pacing-adv-fields input, .tsa-panel .tsa-pacing-adv-fields select { width: 92px; padding: 2px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); }
+
+.tsa-panel .tsa-pacing-armed { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--t-color-success-border); border-radius: var(--t-radius-sm); background: var(--t-color-success-soft); font-size: 12px; }
+
+.tsa-panel .tsa-pacing-armed i { color: var(--t-color-success-border); }
+
+.tsa-panel .tsa-pacing-apply { background: var(--t-color-success-soft); border-color: var(--t-color-success-border); }
 
 
 `;
@@ -23164,7 +23537,7 @@ var init_chatInjector = __esm({
 });
 
 // src/core/cosmosVisionBridge.js
-function abortError() {
+function abortError2() {
   return Object.assign(new Error("\u914D\u56FE\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002"), { name: "AbortError", code: "ABORTED" });
 }
 function detectIllustrationBackend(backendId = DEFAULT_BACKEND_ID) {
@@ -23201,22 +23574,22 @@ function detectIllustrationBackend(backendId = DEFAULT_BACKEND_ID) {
   };
 }
 function runAbortableIllustrationTask(task, signal) {
-  if (signal?.aborted) return Promise.reject(abortError());
+  if (signal?.aborted) return Promise.reject(abortError2());
   return new Promise((resolve, reject) => {
     const abort = () => {
       signal?.removeEventListener("abort", abort);
-      reject(abortError());
+      reject(abortError2());
     };
     signal?.addEventListener("abort", abort, { once: true });
     Promise.resolve().then(() => {
-      if (signal?.aborted) throw abortError();
+      if (signal?.aborted) throw abortError2();
       return task();
-    }).then((value) => signal?.aborted ? reject(abortError()) : resolve(value), reject).finally(() => signal?.removeEventListener("abort", abort));
+    }).then((value) => signal?.aborted ? reject(abortError2()) : resolve(value), reject).finally(() => signal?.removeEventListener("abort", abort));
   });
 }
 function normalizeBackendError(error, signal) {
-  if (signal?.aborted) return abortError();
-  if (error?.name === "AbortError" || error?.code === "ABORTED") return abortError();
+  if (signal?.aborted) return abortError2();
+  if (error?.name === "AbortError" || error?.code === "ABORTED") return abortError2();
   if (typeof error?.code === "string" && PLUGIN_ERROR_CODES.has(error.code)) return error;
   const message = typeof error?.message === "string" && error.message.trim();
   return illustrationError(message || "\u751F\u56FE\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002", "GENERATION_FAILED");
@@ -23231,16 +23604,16 @@ async function readGeneratedImages(blobs) {
   }
   return images;
 }
-async function generateTheaterIllustration(draft, options = {}) {
+async function generateTheaterIllustration(draft2, options = {}) {
   return runAbortableIllustrationTask(async () => {
-    const backendId = draft?.backend;
+    const backendId = draft2?.backend;
     const adapter = getIllustrationBackend(backendId);
     if (!adapter) throw illustrationError(`\u914D\u56FE\u8349\u7A3F\u7684\u751F\u56FE\u540E\u7AEF\u300C${backendId}\u300D\u4E0D\u53D7\u652F\u6301\u3002`, "UNSUPPORTED_API");
     const state = detectIllustrationBackend(backendId);
     if (!state.ready) throw illustrationError(state.reason, statusToErrorCode(state.status));
     let result;
     try {
-      result = await adapter.generate(draft, {
+      result = await adapter.generate(draft2, {
         signal: options.signal,
         onProgress: options.onProgress,
         onStreamPreview: options.onStreamPreview,
@@ -23761,7 +24134,7 @@ function draftFromSceneReply(raw, theaterText, backendId = "cosmos") {
     ...typeof parsed.sourceExcerpt === "string" && parsed.sourceExcerpt.trim() ? { sourceExcerpt: parsed.sourceExcerpt.trim() } : {}
   };
   const characters = Array.isArray(parsed.characters) ? parsed.characters : Array.isArray(parsed.characterPrompts) ? parsed.characterPrompts : [];
-  const draft = normalizeIllustrationDraft({
+  const draft2 = normalizeIllustrationDraft({
     version: 2,
     // 草稿记下这次交给哪个后端。提示词本身是后端无关的（只有内容、没有风格），
     // 所以换个后端重画不必重新选景。
@@ -23777,8 +24150,8 @@ function draftFromSceneReply(raw, theaterText, backendId = "cosmos") {
       }))
     }
   });
-  const hasExcerpt = Boolean(draft.scene.sourceExcerpt);
-  const sanitized = sanitizeIllustrationExcerpt(draft, theaterText);
+  const hasExcerpt = Boolean(draft2.scene.sourceExcerpt);
+  const sanitized = sanitizeIllustrationExcerpt(draft2, theaterText);
   if (hasExcerpt && !sanitized.scene.sourceExcerpt) sanitized.excerptDropped = true;
   return sanitized;
 }
@@ -23825,6 +24198,142 @@ var init_illustrationScene = __esm({
     init_stVariables();
     init_illustrationData();
     RETRY_NUDGE = "\u4E0A\u4E00\u6761\u56DE\u590D\u4E0D\u662F\u5408\u6CD5\u7684 JSON\u3002\u8BF7\u53EA\u8F93\u51FA\u90A3\u4E2A JSON \u5BF9\u8C61\u672C\u8EAB\uFF0C\u4E0D\u8981\u4EFB\u4F55\u89E3\u91CA\u6587\u5B57\u6216\u4EE3\u7801\u56F4\u680F\u3002";
+  }
+});
+
+// src/core/illustrationAuto.js
+function getAutoIllustrationJob(sceneId) {
+  const key = String(sceneId || "");
+  if (!activeJob || !key || activeJob.sceneId !== key) return null;
+  return activeJob;
+}
+function shouldAutoIllustrate({ source, enabled, content, hasImages, busy } = {}) {
+  if (!enabled) return { ok: false, silent: true };
+  if (source !== "manual") return { ok: false, silent: true };
+  if (!String(content || "").trim()) return { ok: false, silent: true };
+  if (hasImages) return { ok: false, silent: true };
+  if (busy) {
+    return { ok: false, reason: "\u81EA\u52A8\u914D\u56FE\uFF1A\u4E0A\u4E00\u5F20\u8FD8\u5728\u751F\u6210\uFF0C\u8FD9\u4E00\u8F6E\u5148\u8DF3\u8FC7\uFF08\u60F3\u8865\u56FE\u8BF7\u5728\u914D\u56FE\u9762\u677F\u91CC\u624B\u52A8\u914D\uFF09\u3002" };
+  }
+  return { ok: true };
+}
+function notify(kind, message) {
+  if (!window.toastr) return;
+  const fn = window.toastr[kind] || window.toastr.info;
+  if (typeof fn === "function") fn.call(window.toastr, message, "Titania Echo");
+}
+function maybeAutoIllustrate({ source, generationId, scriptId, scriptName, content } = {}) {
+  try {
+    const data = getExtData();
+    const enabled = data?.[ILLUSTRATION_AUTO_KEY]?.enabled === true;
+    if (!shouldAutoIllustrate({ source, enabled, content }).ok) return;
+    const cardKey = getCharacterCardKey();
+    const target = createIllustrationTarget({ content, generationId, scriptId, scriptName, cardKey });
+    void readSceneIllustrations(target.sceneId).then((record) => (record?.images?.length || 0) > 0, () => null).then((hasImages) => {
+      if (hasImages === null) {
+        notify("warning", "\u81EA\u52A8\u914D\u56FE\u8DF3\u8FC7\uFF1A\u8FD9\u4E00\u8F6E\u7684\u914D\u56FE\u8BB0\u5F55\u8BFB\u4E0D\u51FA\u6765\uFF0C\u8BF7\u6253\u5F00\u914D\u56FE\u9762\u677F\u91CD\u8BD5\u3002");
+        return;
+      }
+      const verdict = shouldAutoIllustrate({
+        source,
+        enabled,
+        content: target.content,
+        hasImages,
+        busy: Boolean(activeJob)
+      });
+      if (!verdict.ok) {
+        if (verdict.reason) notify("info", verdict.reason);
+        return;
+      }
+      startAutoJob(target, data);
+    });
+  } catch (error) {
+    console.warn("[Titania] \u81EA\u52A8\u914D\u56FE\u672A\u80FD\u542F\u52A8\uFF1A", error?.message || error);
+  }
+}
+function startAutoJob(target, data) {
+  const job = {
+    sceneId: target.sceneId,
+    kind: "auto",
+    status: AUTO_STATUS.selecting,
+    phase: "running",
+    controller: new AbortController(),
+    error: null
+  };
+  activeJob = job;
+  job.promise = runAutoJob(job, target, data).catch((error) => {
+    job.error = error;
+    const aborted = error?.name === "AbortError" || error?.code === "ABORTED" || error?.code === "aborted";
+    if (aborted) notify("info", "\u81EA\u52A8\u914D\u56FE\u5DF2\u53D6\u6D88\u3002");
+    else notify("warning", `\u81EA\u52A8\u914D\u56FE\u5931\u8D25\uFF1A${formatIllustrationError(error)}`);
+  }).finally(() => {
+    if (activeJob === job) activeJob = null;
+  });
+  return job;
+}
+async function runAutoJob(job, target, data) {
+  const { signal } = job.controller;
+  const cancelled = () => {
+    if (!signal.aborted) return false;
+    notify("info", "\u81EA\u52A8\u914D\u56FE\u5DF2\u53D6\u6D88\u3002");
+    return true;
+  };
+  const backendId = resolveActiveBackendId(data);
+  const state = detectIllustrationBackend(backendId);
+  if (!state.ready) throw illustrationError(state.reason);
+  const preset = resolveActivePreset(data);
+  if (!preset) throw illustrationError("\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE\u3002\u6253\u5F00\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF0C\u5BFC\u5165\u4E00\u4EFD\u9884\u8BBE\u6216\u65B0\u5EFA\u4E00\u4EFD\u3002", "NO_PRESET");
+  const check = validatePresetForSelection(preset);
+  if (!check.ok) throw illustrationError(check.reason, check.code);
+  const theaterText = buildPromptTextFromTheater(target.content);
+  const participants = matchCharacterProfiles(readCharacterProfiles(data), {
+    cardKey: target.cardKey,
+    text: theaterText
+  }).map(composeProfileBlock).filter(Boolean).join("\n\n");
+  job.phase = "selecting";
+  job.status = AUTO_STATUS.selecting;
+  let draft2 = await selectIllustrationScene(
+    { theaterText, participants, specialRequest: "", previousScenes: [] },
+    { signal }
+  );
+  if (cancelled()) return;
+  const currentBackend = resolveActiveBackendId(getExtData());
+  if (draft2.backend !== currentBackend) draft2 = normalizeIllustrationDraft({ ...draft2, backend: currentBackend });
+  job.phase = "generating";
+  job.status = AUTO_STATUS.generating;
+  const result = await generateTheaterIllustration(draft2, { signal });
+  if (cancelled()) return;
+  job.phase = "saving";
+  job.status = AUTO_STATUS.saving;
+  await saveGeneratedIllustrations(target.sceneId, {
+    draft: draft2,
+    images: result.images,
+    seed: result.seed,
+    createdAt: Date.now()
+  });
+  const count = result.images.length;
+  notify("info", `\u81EA\u52A8\u914D\u56FE\u5B8C\u6210\uFF1A\u5DF2\u4E3A\u672C\u8F6E\u4FDD\u5B58 ${count} \u5F20\uFF0C\u5728\u914D\u56FE\u9762\u677F\u7684\u56FE\u5E93\u91CC\u67E5\u770B\u3002`);
+}
+var ILLUSTRATION_AUTO_KEY, AUTO_STATUS, activeJob;
+var init_illustrationAuto = __esm({
+  "src/core/illustrationAuto.js"() {
+    init_storage();
+    init_context();
+    init_chatInjector();
+    init_characterProfiles();
+    init_cosmosVisionBridge();
+    init_registry();
+    init_illustrationPresets();
+    init_illustrationScene();
+    init_illustrationStore();
+    init_illustrationData();
+    ILLUSTRATION_AUTO_KEY = "illustration_auto";
+    AUTO_STATUS = {
+      selecting: "\u81EA\u52A8\u914D\u56FE\uFF1A\u6B63\u5728\u901A\u8BFB\u6B63\u6587\u3001\u9009\u62E9\u753B\u9762\u2026",
+      generating: "\u81EA\u52A8\u914D\u56FE\uFF1A\u6B63\u5728\u751F\u6210\u56FE\u7247\u2026",
+      saving: "\u81EA\u52A8\u914D\u56FE\uFF1A\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026"
+    };
+    activeJob = null;
   }
 });
 
@@ -23898,7 +24407,7 @@ function createHelpTip({ label = "\u4F7F\u7528\u8BF4\u660E", title = "\u4F7F\u75
   root.className = "t-help";
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "t-btn";
+  button.className = "t-icon-btn";
   button.title = label;
   button.setAttribute("aria-label", label);
   button.setAttribute("aria-expanded", "false");
@@ -23960,6 +24469,17 @@ function helpSections() {
       terms: PLACEHOLDER_NAMES.map((name) => ({ term: `{{${name}}}`, text: PLACEHOLDER_HELP[name] || "" }))
     },
     {
+      heading: "\u81EA\u52A8\u914D\u56FE",
+      lines: [
+        "\u9ED8\u8BA4\u5173\u95ED\u3002\u6253\u5F00\u540E\uFF0C\u6BCF\u6B21\u300C\u5355\u6B21\u6F14\u7ECE\u300D\u6216\u300C\u91CD\u6F14\u300D\u5B8C\u6210\u4F1A\u81EA\u52A8\u8DD1\u4E00\u6B21\u9009\u666F + \u751F\u56FE\u5E76\u5B58\u4E0B\u6765\u3002",
+        "\u7EED\u5199\u3001\u961F\u5217\u751F\u6210\u3001ST \u4E8B\u4EF6\u89E6\u53D1\u7684\u81EA\u52A8\u6F14\u7ECE\u90FD\u4E0D\u89E6\u53D1 \u2014\u2014 \u90A3\u51E0\u79CD\u662F\u65E0\u4EBA\u770B\u7740\u7684\u8FDE\u7EED\u751F\u6210\uFF0C\u8DDF\u7740\u914D\u56FE\u4F1A\u4E00\u53E3\u6C14\u70E7\u6389\u591A\u5F20\u56FE\u7684\u989D\u5EA6\u3002",
+        "\u6210\u672C\uFF1A\u6BCF\u4E00\u8F6E\u81EA\u52A8\u914D\u56FE\u90FD\u662F\u4E00\u6B21\u771F\u5B9E\u7684\u9009\u666F\u8C03\u7528 + \u4E00\u6B21\u771F\u5B9E\u7684\u751F\u56FE\uFF08\u9009\u666F\u5931\u8D25\u91CD\u8BD5\u65F6\u6700\u591A\u4E24\u6B21\uFF09\uFF0C\u4E0E\u624B\u52A8\u70B9\u300C\u5206\u6790\u753B\u9762\u300D\u300C\u751F\u6210\u56FE\u7247\u300D\u5B8C\u5168\u4E00\u6837\u3002",
+        "\u8DD1\u5B8C\u53EA\u53D1\u4E00\u6761\u63D0\u793A\uFF0C\u4E0D\u5F39\u706F\u7BB1\u3001\u4E0D\u6253\u65AD\u9605\u8BFB\uFF1B\u56FE\u7247\u5728\u914D\u56FE\u9762\u677F\u7684\u56FE\u5E93\u91CC\u3002",
+        "\u81EA\u52A8\u4EFB\u52A1\u8DD1\u7740\u7684\u65F6\u5019\u6253\u5F00\u914D\u56FE\u9762\u677F\uFF0C\u4F1A\u770B\u5230\u5B83\u7684\u8FDB\u5EA6\uFF0C\u4E5F\u80FD\u5728\u90A3\u91CC\u53D6\u6D88\u7B49\u5F85\u3002",
+        "\u4E0A\u4E00\u5F20\u8FD8\u5728\u914D\u7684\u65F6\u5019\u4E0D\u4F1A\u5F00\u59CB\u4E0B\u4E00\u5F20\uFF1A\u90A3\u4E00\u8F6E\u4F1A\u8DF3\u8FC7\u5E76\u63D0\u793A\u4E00\u53E5\u3002"
+      ]
+    },
+    {
       heading: "\u9009\u666F\u9884\u8BBE",
       lines: [
         "\u6CA1\u6709\u5185\u7F6E\u9884\u8BBE\uFF0C\u4E00\u5F8B\u9760\u300C\u5BFC\u5165\u300D\u6216\u300C\u65B0\u5EFA\u300D\u3002\u5BFC\u5165\u8BA4\u4E24\u79CD\u6587\u4EF6\uFF1A\u9152\u9986\u7684 Chat Completion \u9884\u8BBE\uFF0C\u4EE5\u53CA\u672C\u63D2\u4EF6\u5BFC\u51FA\u7684\u9009\u666F\u9884\u8BBE\u3002",
@@ -23979,7 +24499,7 @@ function openIllustrationSettingsWindow(options = {}) {
             <div class="t-panel-header">
                 <strong id="t-illustration-settings-title">\u573A\u666F\u914D\u56FE\u8BBE\u7F6E</strong>
                 <div class="t-panel-header-actions" data-role="header-actions">
-                    <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u8BBE\u7F6E" aria-label="\u5173\u95ED\u8BBE\u7F6E"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" class="t-icon-btn" data-action="close" title="\u5173\u95ED\u8BBE\u7F6E" aria-label="\u5173\u95ED\u8BBE\u7F6E"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <div class="t-profile-body">
@@ -23988,6 +24508,9 @@ function openIllustrationSettingsWindow(options = {}) {
                     <select class="t-input" data-role="backend-select" style="width:auto; min-width:180px;"></select>
                 </div>
                 <p class="t-illustration-hint" data-role="backend-validation"></p>
+                <div style="font-weight:bold; color:var(--t-color-accent); margin:14px 0 8px;">\u81EA\u52A8\u914D\u56FE</div>
+                <label class="t-illustration-field"><input type="checkbox" data-role="auto-enabled"> \u5355\u6B21\u6F14\u7ECE\u5B8C\u6210\u540E\u81EA\u52A8\u914D\u56FE\uFF08\u9ED8\u8BA4\u5173\u95ED\uFF09</label>
+                <p class="t-illustration-hint" data-role="auto-hint"></p>
                 <div style="font-weight:bold; color:var(--t-color-accent); margin:14px 0 8px;">\u9009\u666F\u9884\u8BBE</div>
                 <div class="t-profile-actions">
                     <select class="t-input" data-role="preset-select" style="width:auto; min-width:180px;"></select>
@@ -24065,7 +24588,7 @@ function openIllustrationSettingsWindow(options = {}) {
   function renderBackend() {
     const data = getExtData();
     ensureIllustrationBackend(data);
-    const active = resolveActiveBackendId(data);
+    const active2 = resolveActiveBackendId(data);
     const select = role("backend-select");
     select.replaceChildren();
     for (const backend of listIllustrationBackends()) {
@@ -24074,15 +24597,15 @@ function openIllustrationSettingsWindow(options = {}) {
       option.textContent = backend.label;
       select.append(option);
     }
-    select.value = active;
-    const state2 = detectIllustrationBackend(active);
+    select.value = active2;
+    const state2 = detectIllustrationBackend(active2);
     const node = role("backend-validation");
     node.textContent = state2.reason;
     node.style.color = state2.ready ? "" : "var(--t-color-danger, #e06c75)";
   }
   function renderToolbar() {
     const presets = listPresets(getExtData());
-    const active = state().active_preset_id;
+    const active2 = state().active_preset_id;
     const select = role("preset-select");
     select.replaceChildren();
     if (!presets.length) {
@@ -24098,7 +24621,7 @@ function openIllustrationSettingsWindow(options = {}) {
         select.append(option);
       }
     }
-    select.value = presets.some((item) => item.id === active) ? active : "";
+    select.value = presets.some((item) => item.id === active2) ? active2 : "";
     const hasActive = Boolean(select.value);
     action("rename-preset").disabled = !hasActive;
     action("delete-preset").disabled = !hasActive;
@@ -24297,9 +24820,28 @@ function openIllustrationSettingsWindow(options = {}) {
     note.textContent = "\u5E26 \u21BA \u7684\u662F\u5C0F\u5267\u573A\u8865\u4E0A\u7684\u6761\u76EE\uFF1A\u53EF\u6539\u5199\u3001\u53EF\u505C\u7528\u3001\u53EF\u6392\u5E8F\uFF0C\u4F46\u4E0D\u80FD\u5220\uFF0C\u6539\u574F\u4E86\u7528 \u21BA \u8FD8\u539F\u3002";
     actions.append(note, button("\u65B0\u589E\u6761\u76EE", "fa-solid fa-plus", "\u5728\u5F53\u524D\u9884\u8BBE\u672B\u5C3E\u65B0\u589E\u4E00\u6761\u6761\u76EE", () => insertEntry(preset.entries.length)));
   }
+  function renderAuto() {
+    const data = getExtData();
+    const enabled = data?.[ILLUSTRATION_AUTO_KEY]?.enabled === true;
+    role("auto-enabled").checked = enabled;
+    const node = role("auto-hint");
+    if (!enabled) {
+      node.textContent = "";
+      node.style.color = "";
+      return;
+    }
+    const backendId = resolveActiveBackendId(data);
+    const backend = detectIllustrationBackend(backendId);
+    const preset = activePreset();
+    const check = preset ? validatePresetForSelection(preset) : { ok: false, reason: "\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE\u3002" };
+    const blocked = !backend.ready ? backend.reason : !check.ok ? check.reason : "";
+    node.textContent = blocked ? `\u73B0\u5728\u6253\u5F00\u4E5F\u4E0D\u4F1A\u914D\uFF1A${blocked}` : "\u5DF2\u5F00\u542F\uFF1A\u6BCF\u6B21\u300C\u5355\u6B21\u6F14\u7ECE\u300D\u6216\u300C\u91CD\u6F14\u300D\u5B8C\u6210\u540E\u4F1A\u81EA\u52A8\u9009\u666F\u5E76\u51FA\u4E00\u5F20\u56FE\uFF0C\u7EED\u5199\u4E0E\u961F\u5217\u751F\u6210\u4E0D\u89E6\u53D1\u3002\u6BCF\u8F6E\u90FD\u4F1A\u771F\u5B9E\u8C03\u7528\u4E00\u6B21\u9009\u666F\u4E0E\u751F\u56FE\u3002";
+    node.style.color = blocked ? "var(--t-color-danger, #e06c75)" : "";
+  }
   function render() {
     if (disposed) return;
     renderBackend();
+    renderAuto();
     renderToolbar();
     renderValidation();
     if (activePreset()) renderEntries();
@@ -24316,6 +24858,13 @@ function openIllustrationSettingsWindow(options = {}) {
     const data = getExtData();
     ensureIllustrationBackend(data);
     data[ILLUSTRATION_BACKEND_KEY].active_id = event.target.value;
+    commit();
+  });
+  role("auto-enabled").addEventListener("change", (event) => {
+    var _a;
+    const data = getExtData();
+    data[_a = ILLUSTRATION_AUTO_KEY] || (data[_a] = {});
+    data[ILLUSTRATION_AUTO_KEY].enabled = event.target.checked === true;
     commit();
   });
   role("preset-select").addEventListener("change", (event) => {
@@ -24422,6 +24971,7 @@ var init_illustrationSettingsWindow = __esm({
     init_cosmosVisionBridge();
     init_registry();
     init_illustrationPresets();
+    init_illustrationAuto();
     init_floatingWindow();
     init_helpPopover();
     PLACEHOLDER_HELP = {
@@ -24432,7 +24982,8 @@ var init_illustrationSettingsWindow = __esm({
     };
     BACKEND_HELP = {
       cosmos: "\u652F\u6301\u4E00\u6B21\u51FA\u591A\u5F20\uFF0C\u4EBA\u7269\u4F4D\u7F6E\u53EF\u7528\u3002\u753B\u5E45\u3001\u753B\u98CE\u4E0E\u8D28\u91CF\u8BCD\u5728\u5B83\u90A3\u8FB9\u914D\u7F6E\u3002",
-      baibai: "\u4E00\u6B21\u51FA\u4E00\u5F20\uFF0C\u4EBA\u7269\u4F4D\u7F6E\u56FA\u5B9A\u5728\u753B\u9762\u4E2D\u5FC3\uFF1BNovelAI \u4E0B\u4E0D\u4F7F\u7528\u8FD9\u91CC\u586B\u7684\u8D1F\u5411\u63D0\u793A\u8BCD\u3002"
+      baibai: "\u4E00\u6B21\u51FA\u4E00\u5F20\uFF0C\u4EBA\u7269\u4F4D\u7F6E\u56FA\u5B9A\u5728\u753B\u9762\u4E2D\u5FC3\uFF1BNovelAI \u4E0B\u4E0D\u4F7F\u7528\u8FD9\u91CC\u586B\u7684\u8D1F\u5411\u63D0\u793A\u8BCD\u3002",
+      chatu8: "\u4E00\u6B21\u51FA\u4E00\u5F20\uFF0C\u4E0D\u652F\u6301\u5206\u4EBA\u7269\u63D0\u793A\u8BCD\u4E0E\u4EBA\u7269\u4F4D\u7F6E\uFF1B\u7528\u54EA\u4E2A\u6E20\u9053\uFF08SD / NovelAI / ComfyUI / Banana / RunningHub\uFF09\u7531\u5B83\u81EA\u5DF1\u7684\u300C\u4E3B\u8981\u8BBE\u7F6E\u300D\u51B3\u5B9A\uFF0C\u66FF\u6362\u8BCD\u4E0E\u8D28\u91CF\u8BCD\u4E5F\u5728\u5B83\u90A3\u8FB9\u914D\u3002\u5B83\u6CA1\u6709\u53D6\u6D88\u63A5\u53E3\uFF0C\u53D6\u6D88\u53EA\u662F\u8FD9\u8FB9\u4E0D\u518D\u7B49\u3002"
     };
   }
 });
@@ -24460,7 +25011,7 @@ function openCharacterProfileWindow(options = {}) {
             <div class="t-panel-header">
                 <strong id="t-profile-title">\u4EBA\u7269\u5916\u89C2\u6863\u6848</strong>
                 <div class="t-panel-header-actions" data-role="header-actions">
-                    <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u6863\u6848\u7BA1\u7406" aria-label="\u5173\u95ED\u6863\u6848\u7BA1\u7406"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" class="t-icon-btn" data-action="close" title="\u5173\u95ED\u6863\u6848\u7BA1\u7406" aria-label="\u5173\u95ED\u6863\u6848\u7BA1\u7406"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <div class="t-profile-body">
@@ -24763,14 +25314,14 @@ function openCharacterProfileWindow(options = {}) {
     const host = role("tabs");
     host.replaceChildren();
     for (const group of GROUPS) {
-      const active = group.kind === activeKind;
+      const active2 = group.kind === activeKind;
       const tab = document.createElement("button");
       tab.type = "button";
-      tab.className = `t-profile-tab${active ? " is-active" : ""}`;
+      tab.className = `t-profile-tab${active2 ? " is-active" : ""}`;
       tab.dataset.action = "switch-tab";
       tab.dataset.tab = group.kind;
       tab.setAttribute("role", "tab");
-      tab.setAttribute("aria-selected", String(active));
+      tab.setAttribute("aria-selected", String(active2));
       tab.append(document.createTextNode(`${group.title} `));
       const count = document.createElement("span");
       count.className = "t-profile-tab-count";
@@ -25015,102 +25566,13 @@ var init_illustrationReferences = __esm({
   }
 });
 
-// src/ui/illustrationBadge.js
-function deriveBadgeMode({ image, activity, error } = {}) {
-  if (activity && BUSY_PHASES.has(activity.phase)) return MODE_BUSY;
-  if (image) return MODE_IMAGE;
-  if (activity?.phase === "error" || error) return MODE_ERROR;
-  return MODE_HIDDEN;
-}
-function createIllustrationBadge({ container, onActivate } = {}) {
-  const element = document.createElement("button");
-  element.type = "button";
-  element.className = "t-illustration-badge";
-  element.setAttribute("data-titania-illustration-badge", "");
-  element.hidden = true;
-  const icon = document.createElement("i");
-  icon.className = `t-illustration-badge-icon ${ICON_IMAGE}`;
-  element.append(icon);
-  container?.append(element);
-  let state = { mode: MODE_HIDDEN, image: null, activity: null, error: "" };
-  let animatedImageId = null;
-  let animationTimer = 0;
-  function stopEntrance() {
-    if (animationTimer) {
-      clearTimeout(animationTimer);
-      animationTimer = 0;
-    }
-    element.classList.remove("is-entering");
-  }
-  function playEntrance() {
-    stopEntrance();
-    void element.offsetWidth;
-    element.classList.add("is-entering");
-    animationTimer = setTimeout(stopEntrance, ENTRANCE_FALLBACK_MS);
-  }
-  element.addEventListener("animationend", stopEntrance);
-  element.addEventListener("click", () => {
-    if (state.mode !== MODE_HIDDEN) onActivate?.(state);
-  });
-  function update(next = {}) {
-    const image = next.image || null;
-    const activity = next.activity || null;
-    const error = String(next.error || "");
-    const mode = deriveBadgeMode({ image, activity, error });
-    state = { mode, image, activity, error };
-    element.dataset.state = mode;
-    element.hidden = mode === MODE_HIDDEN;
-    let text = "";
-    if (mode === MODE_BUSY) {
-      icon.className = `t-illustration-badge-icon ${ICON_BUSY}`;
-      text = activity?.message || "\u6B63\u5728\u914D\u56FE\u2026";
-    } else if (mode === MODE_IMAGE) {
-      icon.className = `t-illustration-badge-icon ${ICON_IMAGE}`;
-      text = "\u67E5\u770B\u914D\u56FE";
-    } else if (mode === MODE_ERROR) {
-      icon.className = `t-illustration-badge-icon ${ICON_ERROR}`;
-      text = error || activity?.message || "\u914D\u56FE\u8BFB\u53D6\u5931\u8D25\uFF0C\u53EF\u6253\u5F00\u573A\u666F\u914D\u56FE\u9762\u677F\u91CD\u8BD5\u3002";
-    }
-    if (mode !== MODE_HIDDEN) {
-      element.title = text;
-      element.setAttribute("aria-label", text);
-    } else {
-      element.removeAttribute("title");
-      element.removeAttribute("aria-label");
-    }
-    if (mode === MODE_IMAGE && image?.id && image.id !== animatedImageId) playEntrance();
-    if (image?.id) animatedImageId = image.id;
-    return state;
-  }
-  function destroy() {
-    stopEntrance();
-    element.removeEventListener("animationend", stopEntrance);
-    element.remove();
-  }
-  return { element, update, destroy };
-}
-var MODE_HIDDEN, MODE_BUSY, MODE_IMAGE, MODE_ERROR, BUSY_PHASES, ICON_BUSY, ICON_IMAGE, ICON_ERROR, ENTRANCE_FALLBACK_MS;
-var init_illustrationBadge = __esm({
-  "src/ui/illustrationBadge.js"() {
-    MODE_HIDDEN = "hidden";
-    MODE_BUSY = "busy";
-    MODE_IMAGE = "image";
-    MODE_ERROR = "error";
-    BUSY_PHASES = /* @__PURE__ */ new Set(["selecting", "generating", "saving"]);
-    ICON_BUSY = "fa-solid fa-spinner fa-spin";
-    ICON_IMAGE = "fa-solid fa-image";
-    ICON_ERROR = "fa-solid fa-triangle-exclamation";
-    ENTRANCE_FALLBACK_MS = 400;
-  }
-});
-
 // src/ui/illustrationLightbox.js
-function openIllustrationLightbox({ image = null, container = null, onSwap = null, onClose = null } = {}) {
+function openIllustrationLightbox({ image, container = null, onClose = null } = {}) {
   const root = document.createElement("div");
   root.className = "t-root t-illustration-lightbox";
   root.setAttribute("role", "dialog");
   root.setAttribute("aria-modal", "true");
-  root.setAttribute("aria-label", "\u573A\u666F\u914D\u56FE");
+  root.setAttribute("aria-label", "\u914D\u56FE\u5927\u56FE");
   root.tabIndex = -1;
   const backdrop = document.createElement("div");
   backdrop.className = "t-illustration-lightbox-backdrop";
@@ -25123,13 +25585,6 @@ function openIllustrationLightbox({ image = null, container = null, onSwap = nul
   const caption = document.createElement("p");
   caption.className = "t-illustration-lightbox-caption";
   caption.hidden = true;
-  const actions = document.createElement("div");
-  actions.className = "t-illustration-lightbox-actions";
-  const swap = document.createElement("button");
-  swap.type = "button";
-  swap.className = "t-btn";
-  swap.textContent = "\u6362\u4E00\u5F20";
-  actions.append(swap);
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.className = "t-illustration-lightbox-close";
@@ -25138,10 +25593,9 @@ function openIllustrationLightbox({ image = null, container = null, onSwap = nul
   const closeIcon = document.createElement("i");
   closeIcon.className = CLOSE_ICON;
   closeButton.append(closeIcon);
-  root.append(backdrop, stage, caption, actions, closeButton);
+  root.append(backdrop, stage, caption, closeButton);
   (container || document.body).append(root);
   let disposed = false;
-  let renderedId = "";
   const restoreFocus = document.activeElement;
   function onKeydown(event) {
     if (event.key !== "Escape") return;
@@ -25156,29 +25610,18 @@ function openIllustrationLightbox({ image = null, container = null, onSwap = nul
     if (restoreFocus?.isConnected) restoreFocus.focus?.();
     onClose?.();
   }
-  function update(next) {
-    if (disposed) return;
-    if (!next) {
-      close();
-      return;
-    }
-    if (next.id && next.id === renderedId) return;
-    renderedId = next.id || "";
-    img.src = next.filePath || "";
-    if (next.width) img.width = next.width;
-    if (next.height) img.height = next.height;
-    const summary = next.draft?.scene?.summary || "";
-    img.alt = summary || "\u914D\u56FE";
-    caption.textContent = summary;
-    caption.hidden = !summary;
-  }
+  img.src = image.filePath || "";
+  if (image.width) img.width = image.width;
+  if (image.height) img.height = image.height;
+  const summary = image.draft?.scene?.summary || "";
+  img.alt = summary || "\u914D\u56FE";
+  caption.textContent = summary;
+  caption.hidden = !summary;
   backdrop.addEventListener("click", close);
   closeButton.addEventListener("click", close);
-  swap.addEventListener("click", () => onSwap?.());
   document.addEventListener("keydown", onKeydown, true);
-  update(image);
   closeButton.focus?.();
-  return { element: root, update, close };
+  return { element: root, close };
 }
 var CLOSE_ICON;
 var init_illustrationLightbox = __esm({
@@ -25187,43 +25630,7 @@ var init_illustrationLightbox = __esm({
   }
 });
 
-// src/core/illustrationActivity.js
-function setIllustrationActivity(sceneId, phase, message = "") {
-  const key = String(sceneId || "");
-  if (!key) return;
-  const text = String(message || "");
-  if (phase === "idle") activities.delete(key);
-  else activities.set(key, { sceneId: key, phase, message: text, at: Date.now() });
-  if (globalThis.window?.dispatchEvent) {
-    window.dispatchEvent(new CustomEvent(ILLUSTRATION_ACTIVITY_EVENT, { detail: { sceneId: key, phase, message: text } }));
-  }
-}
-function clearIllustrationActivity(sceneId) {
-  setIllustrationActivity(sceneId, "idle");
-}
-function getIllustrationActivity(sceneId) {
-  return activities.get(String(sceneId || "")) || null;
-}
-function subscribeIllustrationActivity(handler) {
-  const target = globalThis.window;
-  if (!target?.addEventListener) return () => {
-  };
-  target.addEventListener(ILLUSTRATION_ACTIVITY_EVENT, handler);
-  return () => target.removeEventListener(ILLUSTRATION_ACTIVITY_EVENT, handler);
-}
-var ILLUSTRATION_ACTIVITY_EVENT, ILLUSTRATION_ACTIVITY_PHASES, activities;
-var init_illustrationActivity = __esm({
-  "src/core/illustrationActivity.js"() {
-    ILLUSTRATION_ACTIVITY_EVENT = "titania:illustration-activity";
-    ILLUSTRATION_ACTIVITY_PHASES = Object.freeze(["selecting", "generating", "saving", "error", "idle"]);
-    activities = /* @__PURE__ */ new Map();
-  }
-});
-
 // src/ui/illustrationWindow.js
-function showError(error) {
-  return error?.name === "AbortError" || error?.code === "ABORTED" ? "\u5DF2\u53D6\u6D88\u7B49\u5F85\u3002\u540E\u7AEF\u53EF\u80FD\u4ECD\u5728\u8BA1\u7B97\uFF1B\u9700\u8981\u65F6\u53EF\u91CD\u65B0\u53D1\u8D77\u3002" : String(error?.message || "\u914D\u56FE\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
-}
 function sessionFor(sceneId, initialText) {
   if (!sessions.has(sceneId)) {
     sessions.set(sceneId, {
@@ -25252,9 +25659,6 @@ function sessionFor(sceneId, initialText) {
 function notifyView(sceneId) {
   if (activeView?.sceneId === sceneId) activeView.sync();
 }
-function activityPhaseFor(kind) {
-  return kind === "prepare" ? "selecting" : "generating";
-}
 function sceneIdentity(entry) {
   return String(entry?.summary || entry?.sourceExcerpt || entry?.positivePrompt || "").trim();
 }
@@ -25267,7 +25671,6 @@ function jobProgress(job) {
     const label = PROGRESS_LABELS[event.stage] || "\u6B63\u5728\u5904\u7406\u2026";
     const percent = Number.isFinite(event.fraction) ? ` ${Math.round(event.fraction * 100)}%` : "";
     job.status = `${label}${percent}`;
-    setIllustrationActivity(job.sceneId, activityPhaseFor(job.kind), job.status);
     notifyView(job.sceneId);
   };
 }
@@ -25276,16 +25679,11 @@ function startJob(current, currentTarget, kind, operation) {
   const job = { sceneId: currentTarget.sceneId, kind, status: "", phase: "running", controller: new AbortController(), error: null };
   current.job = job;
   current.notice = "";
-  const phase = activityPhaseFor(kind);
-  setIllustrationActivity(job.sceneId, phase, PROGRESS_LABELS[phase] || "");
   job.promise = Promise.resolve().then(() => operation(job)).catch((error) => {
     job.error = error;
-    current.notice = showError(error);
-    if (error?.name === "AbortError" || error?.code === "ABORTED") clearIllustrationActivity(job.sceneId);
-    else setIllustrationActivity(job.sceneId, "error", current.notice);
+    current.notice = formatIllustrationError(error);
   }).finally(() => {
     if (current.job === job) current.job = null;
-    if (!job.error) clearIllustrationActivity(job.sceneId);
     if (activeView?.sceneId === job.sceneId) activeView.sync();
     else notifyBackgroundResult(job);
   });
@@ -25295,23 +25693,16 @@ function startJob(current, currentTarget, kind, operation) {
 function notifyBackgroundResult(job) {
   if (!window.toastr) return;
   const titles = { prepare: "\u573A\u666F\u914D\u56FE\uFF1A\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u91CD\u65B0\u6253\u5F00\u914D\u56FE\u9762\u677F\u5373\u53EF\u7EE7\u7EED\u3002", generate: "\u573A\u666F\u914D\u56FE\uFF1A\u56FE\u7247\u5DF2\u751F\u6210\u5E76\u4FDD\u5B58\u3002" };
-  if (job.error) window.toastr.warning(showError(job.error), "Titania Echo");
+  if (job.error) window.toastr.warning(formatIllustrationError(job.error), "Titania Echo");
   else if (titles[job.kind]) window.toastr.info(titles[job.kind], "Titania Echo");
 }
 async function persistPending(current, currentTarget) {
-  setIllustrationActivity(currentTarget.sceneId, "saving", "\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026");
-  try {
-    current.record = await saveGeneratedIllustrations(currentTarget.sceneId, current.pending);
-  } catch (error) {
-    setIllustrationActivity(currentTarget.sceneId, "error", showError(error));
-    throw error;
-  }
+  current.record = await saveGeneratedIllustrations(currentTarget.sceneId, current.pending);
   const image = selectedIllustration(current.record);
   await currentTarget.onSelected?.(image);
   current.adopted = image;
   current.pending = null;
   current.notice = "\u914D\u56FE\u5DF2\u4FDD\u5B58\u3002\u53EF\u5728\u4E0B\u65B9\u6311\u9009\u56FE\u7247\uFF0C\u6216\u6CBF\u7528\u63D0\u793A\u8BCD\u91CD\u65B0\u751F\u6210\u3002";
-  clearIllustrationActivity(currentTarget.sceneId);
   return current.record;
 }
 function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
@@ -25325,9 +25716,9 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
             <div class="t-panel-header">
                 <strong id="t-illustration-title">\u573A\u666F\u914D\u56FE</strong>
                 <div class="t-panel-header-actions" data-role="header-actions">
-                    <button type="button" class="t-btn" data-action="profiles" title="\u4EBA\u7269\u5916\u89C2\u6863\u6848" aria-label="\u4EBA\u7269\u5916\u89C2\u6863\u6848"><i class="fa-solid fa-address-book"></i></button>
-                    <button type="button" class="t-btn" data-action="settings" title="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF1A\u9009\u666F\u9884\u8BBE" aria-label="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E"><i class="fa-solid fa-gear"></i></button>
-                    <button type="button" class="t-btn" data-action="close" title="\u5173\u95ED\u914D\u56FE\u9762\u677F" aria-label="\u5173\u95ED\u914D\u56FE\u9762\u677F"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" class="t-icon-btn" data-action="profiles" title="\u4EBA\u7269\u5916\u89C2\u6863\u6848" aria-label="\u4EBA\u7269\u5916\u89C2\u6863\u6848"><i class="fa-solid fa-address-book"></i></button>
+                    <button type="button" class="t-icon-btn" data-action="settings" title="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF1A\u9009\u666F\u9884\u8BBE" aria-label="\u573A\u666F\u914D\u56FE\u8BBE\u7F6E"><i class="fa-solid fa-gear"></i></button>
+                    <button type="button" class="t-icon-btn" data-action="close" title="\u5173\u95ED\u914D\u56FE\u9762\u677F" aria-label="\u5173\u95ED\u914D\u56FE\u9762\u677F"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <div class="t-illustration-body">
@@ -25381,6 +25772,7 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
   let managing = false;
   const selectedImageIds = /* @__PURE__ */ new Set();
   let previewUrl = null, renderedPreviewBlob = null, previewUpdatedAt = 0;
+  let lightbox = null;
   const isBusy = () => localBusy || Boolean(session?.job);
   const view = { sceneId: "", sync: () => refreshFromState() };
   activeView = view;
@@ -25390,7 +25782,8 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     root.querySelectorAll("input, textarea, select").forEach((el) => {
       el.disabled = busy;
     });
-    for (const name of ["prepare", "alternate", "generate"]) action(name).disabled = busy || !ready || !session?.record || name !== "prepare" && !session?.draft;
+    const hasContent2 = Boolean(String(target?.content || "").trim());
+    for (const name of ["prepare", "alternate", "generate"]) action(name).disabled = busy || !ready || !session?.record || !hasContent2 || name !== "prepare" && !session?.draft;
     action("detect").disabled = busy;
     action("cancel").hidden = !job || job.phase === "saving";
     action("save").hidden = !session?.pending;
@@ -25415,18 +25808,18 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     renderGallery();
   }
   function renderDraft() {
-    const draft = session?.draft;
-    role("draft").hidden = !draft;
-    if (draft) {
-      const summary = draft.scene.summary || "";
+    const draft2 = session?.draft;
+    role("draft").hidden = !draft2;
+    if (draft2) {
+      const summary = draft2.scene.summary || "";
       role("summary").hidden = !summary;
       role("summary").textContent = summary;
-      const excerpt = draft.scene.sourceExcerpt || "";
+      const excerpt = draft2.scene.sourceExcerpt || "";
       role("excerpt").hidden = !excerpt;
       role("excerpt").textContent = excerpt ? `\u539F\u6587\u6458\u5F55\uFF1A${excerpt}` : "";
-      field("positive").value = draft.prompts.positivePrompt;
-      field("negative").value = draft.prompts.negativePrompt;
-      role("characters").innerHTML = draft.prompts.characterPrompts.map((character, index) => `
+      field("positive").value = draft2.prompts.positivePrompt;
+      field("negative").value = draft2.prompts.negativePrompt;
+      role("characters").innerHTML = draft2.prompts.characterPrompts.map((character, index) => `
                 <fieldset class="t-illustration-character"><legend>\u4EBA\u7269 ${index + 1}</legend>
                     <label class="t-illustration-field">\u6B63\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-character="${index}" data-key="positivePrompt" rows="2">${escapeIllustrationHtml(character.positivePrompt)}</textarea></label>
                     <label class="t-illustration-field">\u8D1F\u5411\u63D0\u793A\u8BCD<textarea class="t-input" data-character="${index}" data-key="negativePrompt" rows="2">${escapeIllustrationHtml(character.negativePrompt)}</textarea></label>
@@ -25437,15 +25830,15 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     updateControls();
   }
   function readDraft() {
-    const draft = structuredClone(session.draft);
-    draft.prompts.positivePrompt = field("positive").value;
-    draft.prompts.negativePrompt = field("negative").value;
+    const draft2 = structuredClone(session.draft);
+    draft2.prompts.positivePrompt = field("positive").value;
+    draft2.prompts.negativePrompt = field("negative").value;
     root.querySelectorAll("[data-character]").forEach((input) => {
-      const character = draft.prompts.characterPrompts[Number(input.dataset.character)];
+      const character = draft2.prompts.characterPrompts[Number(input.dataset.character)];
       if (input.dataset.key === "x" || input.dataset.key === "y") character.position[input.dataset.key] = Number(input.value);
       else character[input.dataset.key] = input.value;
     });
-    return normalizeIllustrationDraft(draft);
+    return normalizeIllustrationDraft(draft2);
   }
   function syncPreview() {
     const blob = session?.previewBlob || null;
@@ -25515,6 +25908,16 @@ ${block}` : block;
     });
     for (const entry of matched) insertProfileBlock(current, entry);
   }
+  function openLightbox(image) {
+    lightbox?.close();
+    lightbox = openIllustrationLightbox({
+      image,
+      container: root,
+      onClose: () => {
+        lightbox = null;
+      }
+    });
+  }
   function renderGallery() {
     const images = session?.record?.images || [];
     for (const id3 of [...selectedImageIds]) if (!images.some((image) => image.id === id3)) selectedImageIds.delete(id3);
@@ -25531,7 +25934,7 @@ ${block}` : block;
       return `
             <article class="t-illustration-candidate${picked ? " is-selected" : ""}">
                 ${managing ? `<label class="t-illustration-select"><input type="checkbox" data-select-image-id="${escapeIllustrationHtml(image.id)}" ${picked ? "checked" : ""}> \u9009\u62E9</label>` : ""}
-                <a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" loading="lazy" alt="${escapeIllustrationHtml(summary || "\u914D\u56FE")}"></a>
+                <button class="t-illustration-candidate-open" type="button" data-preview-image-id="${escapeIllustrationHtml(image.id)}" title="\u653E\u5927\u67E5\u770B" aria-label="\u653E\u5927\u67E5\u770B\u8FD9\u5F20\u914D\u56FE"><img src="${image.filePath}" loading="lazy" alt="${escapeIllustrationHtml(summary || "\u914D\u56FE")}"></button>
                 ${summary ? `<p>${escapeIllustrationHtml(summary)}</p>` : ""}
                 <div class="t-illustration-actions"><button class="t-btn" type="button" data-image-id="${escapeIllustrationHtml(image.id)}">${session.record.selectedId === image.id ? "\u5F53\u524D\u914D\u56FE" : "\u91C7\u7528\u8FD9\u5F20"}</button><a class="t-btn" href="${image.filePath}" download>\u4E0B\u8F7D</a>${managing ? "" : `<button class="t-btn t-btn-danger" type="button" data-action="delete-image" data-image-id="${escapeIllustrationHtml(image.id)}" title="\u5220\u9664\u8FD9\u5F20\u914D\u56FE" aria-label="\u5220\u9664\u8FD9\u5F20\u914D\u56FE"><i class="fa-solid fa-trash"></i></button>`}</div>
             </article>`;
@@ -25607,7 +26010,7 @@ ${block}` : block;
     const characterHint = !caps.characterPrompts ? "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u4E0D\u652F\u6301\u5206\u4EBA\u7269\u63D0\u793A\u8BCD\uFF0C\u8FD9\u4E00\u90E8\u5206\u4E0D\u4F1A\u8FDB\u5165\u63D0\u793A\u8BCD\u3002" : !caps.characterPositions ? "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u628A\u4EBA\u7269\u4F4D\u7F6E\u56FA\u5B9A\u5728\u753B\u9762\u4E2D\u5FC3\uFF0CX / Y \u4E0D\u4F1A\u751F\u6548\u3002" : "";
     role("characters-hint").hidden = !characterHint;
     role("characters-hint").textContent = characterHint;
-    const negativeHint = caps.negativePrompt ? "" : "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u5728 NovelAI \u4E0B\u4F7F\u7528\u4F60\u6E20\u9053\u914D\u7F6E\u7684\u8D1F\u5411\u8BCD\uFF0C\u8FD9\u91CC\u586B\u5199\u7684\u4E0D\u4F1A\u751F\u6548\u3002";
+    const negativeHint = caps.negativePrompt ? "" : "\u5F53\u524D\u751F\u56FE\u540E\u7AEF\u4E0D\u4F7F\u7528\u8FD9\u91CC\u586B\u5199\u7684\u8D1F\u5411\u63D0\u793A\u8BCD\uFF0C\u5B83\u7528\u81EA\u5DF1\u90A3\u8FB9\u914D\u7F6E\u7684\u3002";
     role("negative-hint").hidden = !negativeHint;
     role("negative-hint").textContent = negativeHint;
   }
@@ -25622,6 +26025,51 @@ ${block}` : block;
     renderCapabilities();
     updateControls();
   }
+  function applyRecord(current, record) {
+    if (Object.hasOwn(current, "illustration")) {
+      const adopted = session.adopted === void 0 ? current.illustration : session.adopted;
+      const saved = adopted ? normalizeSavedIllustration(adopted) : null;
+      if (saved && !record.images.some((image) => image.id === saved.id)) record.images.push(saved);
+      record.selectedId = saved?.id || null;
+    }
+    session.record = record;
+    session.draft || (session.draft = selectedIllustration(record)?.draft || null);
+    if (!session.previousScenes.length && session.draft?.scene) {
+      session.previousScenes.push({ ...session.draft.scene, positivePrompt: session.draft.prompts?.positivePrompt || "" });
+    }
+    renderDraft();
+    renderGallery();
+  }
+  async function reloadRecord() {
+    const current = target;
+    const sequence = selectionSequence;
+    let record = null, failure = null;
+    try {
+      record = await readSceneIllustrations(current.sceneId);
+    } catch (error) {
+      failure = error;
+    }
+    if (disposed || !session || sequence !== selectionSequence) return;
+    if (failure) {
+      session.notice = formatIllustrationError(failure);
+      session.record = null;
+      return;
+    }
+    applyRecord(current, record);
+  }
+  function adoptAutoJob(sceneId) {
+    const autoJob = getAutoIllustrationJob(sceneId);
+    if (!autoJob || session?.job === autoJob) return;
+    session.job = autoJob;
+    void autoJob.promise.finally(() => {
+      if (disposed || !session || session.job !== autoJob) return;
+      session.job = null;
+      void reloadRecord().then(() => {
+        if (!disposed) refreshFromState();
+      });
+    }).catch(() => {
+    });
+  }
   async function loadTarget(index) {
     target = targets[index];
     const sequence = ++selectionSequence;
@@ -25634,6 +26082,7 @@ ${block}` : block;
     localBusy = true;
     ready = false;
     applyAutoProfiles(session);
+    if (current.unavailable) session.notice = current.unavailable;
     field("text").value = session.text;
     field("request").value = session.request;
     field("participants").value = session.participants;
@@ -25644,26 +26093,15 @@ ${block}` : block;
     try {
       const record = await readSceneIllustrations(current.sceneId);
       if (disposed || sequence !== selectionSequence) return;
-      if (Object.hasOwn(current, "illustration")) {
-        const adopted = session.adopted === void 0 ? current.illustration : session.adopted;
-        const saved = adopted ? normalizeSavedIllustration(adopted) : null;
-        if (saved && !record.images.some((image) => image.id === saved.id)) record.images.push(saved);
-        record.selectedId = saved?.id || null;
-      }
-      session.record = record;
-      session.draft || (session.draft = selectedIllustration(record)?.draft || null);
-      if (!session.previousScenes.length && session.draft?.scene) {
-        session.previousScenes.push({ ...session.draft.scene, positivePrompt: session.draft.prompts?.positivePrompt || "" });
-      }
-      renderDraft();
-      renderGallery();
+      applyRecord(current, record);
     } catch (error) {
-      session.notice = showError(error);
+      session.notice = formatIllustrationError(error);
       session.record = null;
     } finally {
       if (!disposed && sequence === selectionSequence) {
         localBusy = false;
         view.sceneId = current.sceneId;
+        adoptAutoJob(current.sceneId);
         refreshFromState();
         void detect();
       }
@@ -25676,7 +26114,7 @@ ${block}` : block;
     try {
       await operation();
     } catch (error) {
-      session.notice = showError(error);
+      session.notice = formatIllustrationError(error);
     } finally {
       localBusy = false;
       refreshFromState();
@@ -25807,12 +26245,12 @@ ${block}` : block;
       startJob(current, currentTarget, "prepare", async (job) => {
         job.status = PROGRESS_LABELS.selecting;
         notifyView(job.sceneId);
-        const draft = await selectIllustrationScene(request, { signal: job.controller.signal });
-        current.draft = draft;
-        const picked = { ...draft.scene, positivePrompt: draft.prompts.positivePrompt };
+        const draft2 = await selectIllustrationScene(request, { signal: job.controller.signal });
+        current.draft = draft2;
+        const picked = { ...draft2.scene, positivePrompt: draft2.prompts.positivePrompt };
         const repeated = alternate && repeatsPreviousScene(current.previousScenes, picked);
         current.previousScenes.push(picked);
-        current.notice = repeated ? "\u6A21\u578B\u53C8\u9009\u4E86\u540C\u4E00\u5E45\u753B\u9762\uFF0C\u591A\u534A\u662F\u6B63\u6587\u91CC\u53EA\u6709\u4E00\u4E2A\u53EF\u843D\u7B14\u7684\u77AC\u95F4\u3002\u60F3\u6307\u5B9A\u522B\u7684\u753B\u9762\uFF0C\u5199\u8FDB\u300C\u672C\u6B21\u989D\u5916\u8981\u6C42\u300D\u3002" : draft.excerptDropped ? "\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u4F46\u6A21\u578B\u7ED9\u7684\u539F\u6587\u6458\u5F55\u4E0E\u6B63\u6587\u5BF9\u4E0D\u4E0A\uFF0C\u5DF2\u4E22\u5F03\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002" : "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
+        current.notice = repeated ? "\u6A21\u578B\u53C8\u9009\u4E86\u540C\u4E00\u5E45\u753B\u9762\uFF0C\u591A\u534A\u662F\u6B63\u6587\u91CC\u53EA\u6709\u4E00\u4E2A\u53EF\u843D\u7B14\u7684\u77AC\u95F4\u3002\u60F3\u6307\u5B9A\u522B\u7684\u753B\u9762\uFF0C\u5199\u8FDB\u300C\u672C\u6B21\u989D\u5916\u8981\u6C42\u300D\u3002" : draft2.excerptDropped ? "\u753B\u9762\u5DF2\u9009\u597D\uFF0C\u4F46\u6A21\u578B\u7ED9\u7684\u539F\u6587\u6458\u5F55\u4E0E\u6B63\u6587\u5BF9\u4E0D\u4E0A\uFF0C\u5DF2\u4E22\u5F03\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002" : "\u753B\u9762\u5DF2\u9009\u597D\u3002\u53EF\u4EE5\u5C55\u5F00\u4FEE\u6539\u63D0\u793A\u8BCD\uFF0C\u518D\u751F\u6210\u56FE\u7247\u3002";
       });
       return;
     }
@@ -25821,20 +26259,20 @@ ${block}` : block;
         role("status").textContent = current?.pending ? "\u8BF7\u5148\u4FDD\u5B58\u4E0A\u6B21\u751F\u6210\u7684\u56FE\u7247\u3002" : "";
         return;
       }
-      let draft;
+      let draft2;
       try {
-        draft = readDraft();
+        draft2 = readDraft();
       } catch (error) {
-        role("status").textContent = showError(error);
+        role("status").textContent = formatIllustrationError(error);
         return;
       }
-      if (draft.backend !== activeBackendId) draft = normalizeIllustrationDraft({ ...draft, backend: activeBackendId });
-      current.draft = draft;
+      if (draft2.backend !== activeBackendId) draft2 = normalizeIllustrationDraft({ ...draft2, backend: activeBackendId });
+      current.draft = draft2;
       startJob(current, currentTarget, "generate", async (job) => {
         job.status = PROGRESS_LABELS.generating;
         notifyView(job.sceneId);
         try {
-          const result = await generateTheaterIllustration(draft, {
+          const result = await generateTheaterIllustration(draft2, {
             signal: job.controller.signal,
             onProgress: jobProgress(job),
             size: current.size || void 0,
@@ -25848,13 +26286,13 @@ ${block}` : block;
               notifyView(job.sceneId);
             }
           });
-          current.pending = { images: result.images, draft, seed: result.seed, createdAt: Date.now() };
+          current.pending = { images: result.images, draft: draft2, seed: result.seed, createdAt: Date.now() };
           job.phase = "saving";
           job.status = "\u6B63\u5728\u4FDD\u5B58\u914D\u56FE\u2026";
           notifyView(job.sceneId);
           await persistPending(current, currentTarget);
           if (result.dropped) current.notice += ` \u672C\u6B21\u8FD4\u56DE ${result.images.length + result.dropped} \u5F20\uFF0C\u8D85\u8FC7\u4E0A\u9650\u7684 ${result.dropped} \u5F20\u672A\u4FDD\u5B58\u3002`;
-          const wantsCharacters = draft.prompts.characterPrompts.some((character) => character.positivePrompt.trim());
+          const wantsCharacters = draft2.prompts.characterPrompts.some((character) => character.positivePrompt.trim());
           if (wantsCharacters && result.applied?.characters === false) {
             current.notice += " \u672C\u6B21\u672A\u4F7F\u7528\u5206\u4EBA\u7269\u63D0\u793A\u8BCD\uFF08\u5F53\u524D\u540E\u7AEF\u6216\u6A21\u578B\u4E0D\u652F\u6301\uFF09\uFF0C\u753B\u9762\u6309\u6574\u5E45\u63CF\u8FF0\u751F\u6210\u3002";
           }
@@ -25862,6 +26300,12 @@ ${block}` : block;
           current.previewBlob = null;
         }
       });
+      return;
+    }
+    const previewId = button.dataset.previewImageId;
+    if (previewId) {
+      const image = current.record?.images.find((item) => String(item.id) === String(previewId));
+      if (image) openLightbox(image);
       return;
     }
     if (button.hasAttribute("data-image-id")) {
@@ -25885,6 +26329,8 @@ ${block}` : block;
     }
     disposed = true;
     if (activeView === view) activeView = null;
+    lightbox?.close();
+    lightbox = null;
     if (pendingUrl) URL.revokeObjectURL(pendingUrl);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     root.remove();
@@ -25910,93 +26356,6 @@ ${block}` : block;
   void loadTarget(Math.min(Math.max(0, Number(initialIndex) || 0), targets.length - 1));
   action("close").focus();
 }
-function bindMainIllustrations(getTarget) {
-  const content = document.getElementById("t-output-content");
-  if (!content) return () => {
-  };
-  const container = content.closest(".t-content-wrapper") || content.parentElement || document.body;
-  const overlay = document.getElementById("t-overlay");
-  let disposed = false, sequence = 0, timer, lightbox = null;
-  let currentKey = "", currentImage = null, currentError = "";
-  const badge = createIllustrationBadge({ container, onActivate: activate });
-  function openPanel2() {
-    try {
-      openIllustrationWindow(getTarget());
-    } catch (error) {
-      if (window.toastr) window.toastr.warning(showError(error), "Titania Echo");
-    }
-  }
-  function openLightbox() {
-    lightbox = openIllustrationLightbox({
-      image: currentImage,
-      container: overlay || document.body,
-      onSwap: openPanel2,
-      onClose: () => {
-        lightbox = null;
-      }
-    });
-  }
-  function activate(state) {
-    if (state.mode === "image") openLightbox();
-    else openPanel2();
-  }
-  function draw() {
-    if (disposed) return;
-    badge.update({
-      image: currentImage,
-      error: currentError,
-      activity: currentKey ? getIllustrationActivity(currentKey) : null
-    });
-    if (lightbox) {
-      if (currentImage) lightbox.update(currentImage);
-      else lightbox.close();
-    }
-  }
-  const refresh = async (force = false) => {
-    let target;
-    try {
-      target = getTarget();
-    } catch {
-      target = null;
-    }
-    const key = target?.sceneId || "";
-    if (!force && key === currentKey) return;
-    currentKey = key;
-    currentImage = null;
-    currentError = "";
-    const request = ++sequence;
-    if (key) {
-      try {
-        const record = await readSceneIllustrations(key);
-        if (disposed || request !== sequence) return;
-        currentImage = selectedIllustration(record);
-      } catch {
-        if (disposed || request !== sequence) return;
-        currentError = "\u914D\u56FE\u8BFB\u53D6\u5931\u8D25\uFF0C\u53EF\u6253\u5F00\u573A\u666F\u914D\u56FE\u9762\u677F\u91CD\u8BD5\u3002";
-      }
-    } else if (disposed || request !== sequence) return;
-    draw();
-  };
-  const schedule = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => void refresh(), 80);
-  };
-  window.addEventListener("titania:scene-rendered", schedule);
-  const changed = () => void refresh(true);
-  window.addEventListener("titania:illustrations-changed", changed);
-  const unsubscribeActivity = subscribeIllustrationActivity(() => draw());
-  void refresh(true);
-  return () => {
-    disposed = true;
-    clearTimeout(timer);
-    window.removeEventListener("titania:scene-rendered", schedule);
-    window.removeEventListener("titania:illustrations-changed", changed);
-    unsubscribeActivity();
-    lightbox?.close();
-    lightbox = null;
-    badge.destroy();
-  };
-}
 var PROGRESS_LABELS, PREVIEW_THROTTLE_MS, PANEL_HELP, sessions, activeView;
 var init_illustrationWindow = __esm({
   "src/ui/illustrationWindow.js"() {
@@ -26009,14 +26368,13 @@ var init_illustrationWindow = __esm({
     init_illustrationSettingsWindow();
     init_characterProfileWindow();
     init_illustrationStore();
+    init_illustrationAuto();
     init_illustrationReferences();
     init_illustrationData();
     init_helpers();
     init_floatingWindow();
     init_helpPopover();
-    init_illustrationBadge();
     init_illustrationLightbox();
-    init_illustrationActivity();
     PROGRESS_LABELS = { selecting: "\u6B63\u5728\u901A\u8BFB\u6B63\u6587\u3001\u9009\u62E9\u753B\u9762\u2026", generating: "\u6B63\u5728\u751F\u6210\u56FE\u7247\u2026" };
     PREVIEW_THROTTLE_MS = 150;
     PANEL_HELP = [
@@ -26156,8 +26514,8 @@ function getCurrentAvatarSrc() {
   console.log("Titania: Captured Avatar Path ->", avatarSrc);
   return avatarSrc;
 }
-function escapeHtmlText(str) {
-  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtmlText(str2) {
+  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function buildChainSegmentsHtml(chainItems) {
   const items = Array.isArray(chainItems) ? chainItems : [];
@@ -26210,9 +26568,9 @@ function buildChainSignature(scriptId, rounds) {
   }
   return `chain:${scriptId || "none"}:${Math.abs(hash)}`;
 }
-function replaceAllLiteral(str, search, replacement) {
-  if (!str || !search) return str;
-  return str.split(search).join(replacement);
+function replaceAllLiteral(str2, search, replacement) {
+  if (!str2 || !search) return str2;
+  return str2.split(search).join(replacement);
 }
 function maskStringSameLength(value, maskChar = "\u2588") {
   if (!value) return value;
@@ -26838,22 +27196,22 @@ function openFavsWindow() {
     gridEl.innerHTML = "";
     const total = currentFilteredList.length;
     if (total <= 0) return;
-    const active = normalizeCarouselIndex(activeIndex);
+    const active2 = normalizeCarouselIndex(activeIndex);
     const appendIndexIfNew = (list, idx) => {
       if (!list.includes(idx)) list.push(idx);
     };
     const visibleIndexes = [];
-    appendIndexIfNew(visibleIndexes, active);
+    appendIndexIfNew(visibleIndexes, active2);
     for (let i = 1; i <= POSTER_CARD_BUFFER; i += 1) {
-      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active - i));
-      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active + i));
+      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active2 - i));
+      appendIndexIfNew(visibleIndexes, normalizeCarouselIndex(active2 + i));
     }
     const cardFrag = document.createDocumentFragment();
     visibleIndexes.forEach((idx) => {
       const item = currentFilteredList[idx];
       if (!item) return;
       const card = buildCardElement(item, idx, currentMap);
-      if (idx === active) {
+      if (idx === active2) {
         card.classList.add("is-active");
         card.setAttribute("aria-hidden", "false");
       } else {
@@ -28087,9 +28445,9 @@ var init_favsWindow = __esm({
 
 // src/ui/shared/logView.js
 function clip(text) {
-  const str = String(text ?? "");
-  if (str.length <= MAX_DETAIL_CHARS) return str;
-  return `${str.slice(0, MAX_DETAIL_CHARS)}\u2026\uFF08\u5DF2\u622A\u65AD\uFF0C\u5B8C\u6574\u5185\u5BB9\u89C1\u300C\u5BFC\u51FA\u65E5\u5FD7\u300D\uFF09`;
+  const str2 = String(text ?? "");
+  if (str2.length <= MAX_DETAIL_CHARS) return str2;
+  return `${str2.slice(0, MAX_DETAIL_CHARS)}\u2026\uFF08\u5DF2\u622A\u65AD\uFF0C\u5B8C\u6574\u5185\u5BB9\u89C1\u300C\u5BFC\u51FA\u65E5\u5FD7\u300D\uFF09`;
 }
 function safeStringify(value) {
   try {
@@ -28159,8 +28517,8 @@ __export(debugWindow_exports, {
   showDebugInfo: () => showDebugInfo,
   showDiagnosticsWindow: () => showDiagnosticsWindow
 });
-function escapeHtml2(str) {
-  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtml2(str2) {
+  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function makePreview(text, maxLen = 260) {
   const normalized = String(text || "").replace(/\s+/g, " ").trim();
@@ -28195,7 +28553,11 @@ function expandBuiltinContextDetails(details, trace, meta) {
     ["scriptInstruction", "\u5267\u672C\u6307\u4EE4"],
     ["continuationPreamble", "\u7EED\u5199\u6A21\u5F0F\u8BF4\u660E"],
     ["continuationContext", "\u7EED\u5199\u4F1A\u8BDD\u4E0A\u4E0B\u6587"],
-    ["continuationInstruction", "\u672C\u8F6E\u7EED\u5199\u6307\u4EE4"]
+    ["continuationInstruction", "\u672C\u8F6E\u7EED\u5199\u6307\u4EE4"],
+    // 「本次补充」是 api.js 拼在 [剧本指令] 块**之后**的独立一段，故排在最后。
+    // ⚠ 这个顺序就是 user 串的拼接顺序，切片靠它连续累加；api.js 那两处组装点
+    //   若把它挪到别处，这里必须同步挪，否则后面的分段会全部错位。
+    ["tempInstruction", "\u672C\u6B21\u8865\u5145\u8981\u6C42"]
   ];
   return details.flatMap((detail) => {
     if (detail?.entryId !== userEntryId) return [detail];
@@ -28614,18 +28976,18 @@ function openImageCropper(options = {}) {
   const outputSize = Math.round(clampNumber(options.outputSize, 64, 2048, OUTPUT_SIZE_DEFAULT));
   const quality = clampNumber(options.quality, 0.1, 1, OUTPUT_QUALITY_DEFAULT);
   shutdown(null);
-  const seq = sessionSeq;
+  const seq2 = sessionSeq;
   if (!src) return Promise.reject(new Error("\u6CA1\u6709\u53EF\u88C1\u526A\u7684\u56FE\u7247"));
   return loadImage(src).then(
     (image) => new Promise((resolve) => {
-      if (seq !== sessionSeq) {
+      if (seq2 !== sessionSeq) {
         resolve(null);
         return;
       }
       activeSession = createSession({ image, outputSize, quality, resolve });
     }),
     (error) => {
-      if (seq !== sessionSeq) return null;
+      if (seq2 !== sessionSeq) return null;
       throw error;
     }
   );
@@ -28658,9 +29020,9 @@ function createSession({ image, outputSize, quality, resolve }) {
                 <div class="t-crop-stage" id="t-crop-stage">
                     <div class="t-crop-frame"></div>
                 </div>
-                <p class="t-crop-hint">\u62D6\u52A8\u56FE\u7247\u8C03\u6574\u4F4D\u7F6E\uFF0C\u6EDA\u8F6E\u6216\u53CC\u6307\u7F29\u653E</p>
+                <p class="t-crop-hint">\u62D6\u52A8\u56FE\u7247\u8C03\u6574\u4F4D\u7F6E\uFF0C\u6EDA\u8F6E\u3001\u53CC\u6307\u6216\u4E0B\u65B9\u6ED1\u6746\u7F29\u653E\uFF08\u5411\u5DE6\u7F29\u5230\u5E95\u53EF\u770B\u5168\u6574\u5F20\u56FE\uFF09</p>
                 <div class="t-crop-zoom-row">
-                    <i class="fa-solid fa-image" aria-hidden="true"></i>
+                    <i class="fa-solid fa-magnifying-glass-minus" aria-hidden="true"></i>
                     <input type="range" class="t-crop-zoom" id="t-crop-zoom" min="100" max="400" step="1" value="100" aria-label="\u7F29\u653E">
                     <i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i>
                 </div>
@@ -28688,9 +29050,10 @@ function createSession({ image, outputSize, quality, resolve }) {
   $("#t-overlay").append($modal);
   const naturalW = image.naturalWidth;
   const naturalH = image.naturalHeight;
+  const scaleMin = Math.min(naturalW, naturalH) / Math.hypot(naturalW, naturalH);
   let stageSize = 0;
   let baseScale = 1;
-  const state = { scale: SCALE_MIN, panNatX: 0, panNatY: 0 };
+  const state = { scale: SCALE_DEFAULT, panNatX: 0, panNatY: 0 };
   let drag = null;
   let pinch = null;
   function measure() {
@@ -28720,12 +29083,12 @@ function createSession({ image, outputSize, quality, resolve }) {
     $zoom.val(String(Math.round(state.scale * 100)));
   }
   function setScale(next) {
-    state.scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, next));
+    state.scale = Math.min(SCALE_MAX, Math.max(scaleMin, next));
     render();
     syncZoom();
   }
   function reset() {
-    state.scale = SCALE_MIN;
+    state.scale = SCALE_DEFAULT;
     state.panNatX = 0;
     state.panNatY = 0;
     render();
@@ -28775,7 +29138,7 @@ function createSession({ image, outputSize, quality, resolve }) {
       const dist = touchDistance(touches[0], touches[1]);
       const mid = touchMid(touches[0], touches[1]);
       const ratio = pinch.dist > 0 ? dist / pinch.dist : 1;
-      state.scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, pinch.scale * ratio));
+      state.scale = Math.min(SCALE_MAX, Math.max(scaleMin, pinch.scale * ratio));
       const { k } = metrics();
       state.panNatX = pinch.panX + (mid.x - pinch.mid.x) / k;
       state.panNatY = pinch.panY + (mid.y - pinch.mid.y) / k;
@@ -28851,7 +29214,7 @@ function createSession({ image, outputSize, quality, resolve }) {
     $modal.remove();
     resolve(result);
   }
-  function showError2(message) {
+  function showError(message) {
     $error.text(message).css("display", "");
   }
   const session = { dispose: (result) => finish(result) };
@@ -28888,7 +29251,7 @@ function createSession({ image, outputSize, quality, resolve }) {
     try {
       finish(buildCroppedDataUrl());
     } catch (err) {
-      showError2(err?.message || "\u88C1\u526A\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5");
+      showError(err?.message || "\u88C1\u526A\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5");
     }
   });
   $modal.on("click.titaniaCrop", (e) => {
@@ -28907,28 +29270,29 @@ function createSession({ image, outputSize, quality, resolve }) {
     if (!focusables.length) return;
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
-    const active = document.activeElement;
-    const inside = $modal[0].contains(active);
-    if (e.shiftKey && (!inside || active === first)) {
+    const active2 = document.activeElement;
+    const inside = $modal[0].contains(active2);
+    if (e.shiftKey && (!inside || active2 === first)) {
       e.preventDefault();
       last.focus();
-    } else if (!e.shiftKey && (!inside || active === last)) {
+    } else if (!e.shiftKey && (!inside || active2 === last)) {
       e.preventDefault();
       first.focus();
     }
   }
   measure();
+  $zoom.attr("min", String(Math.floor(scaleMin * 100)));
   reset();
   $confirm[0].focus();
   return session;
 }
-var OUTPUT_SIZE_DEFAULT, OUTPUT_QUALITY_DEFAULT, SCALE_MIN, SCALE_MAX, WHEEL_ZOOM_RATE, activeSession, sessionSeq;
+var OUTPUT_SIZE_DEFAULT, OUTPUT_QUALITY_DEFAULT, SCALE_DEFAULT, SCALE_MAX, WHEEL_ZOOM_RATE, activeSession, sessionSeq;
 var init_imageCropper = __esm({
   "src/ui/imageCropper.js"() {
     init_dom();
     OUTPUT_SIZE_DEFAULT = 512;
     OUTPUT_QUALITY_DEFAULT = 0.92;
-    SCALE_MIN = 1;
+    SCALE_DEFAULT = 1;
     SCALE_MAX = 4;
     WHEEL_ZOOM_RATE = 15e-4;
     activeSession = null;
@@ -29310,8 +29674,8 @@ function createApiConnectionEditor(options = {}) {
       state.activeProfileId = nextActiveProfileId;
       render();
       emitChange();
-      const active = findActiveProfile();
-      if (active && active.type !== "internal" && modelInputMode !== "manual" && options.autoFetchOnProfileSwitch !== false) {
+      const active2 = findActiveProfile();
+      if (active2 && active2.type !== "internal" && modelInputMode !== "manual" && options.autoFetchOnProfileSwitch !== false) {
         setTimeout(() => {
           fetchModels(false);
         }, 100);
@@ -29328,10 +29692,10 @@ function createApiConnectionEditor(options = {}) {
     });
     $del.on("click", (e) => {
       e.preventDefault();
-      const active = findActiveProfile();
-      if (!active || active.type === "internal" || active.readonly) return;
+      const active2 = findActiveProfile();
+      if (!active2 || active2.type === "internal" || active2.readonly) return;
       if (!window.confirm("\u5220\u9664\u65B9\u6848\uFF1F")) return;
-      state.profiles = state.profiles.filter((p) => p.id !== active.id);
+      state.profiles = state.profiles.filter((p) => p.id !== active2.id);
       if (state.profiles.length === 0) state.profiles.push(createProfile());
       state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
       render();
@@ -29404,17 +29768,318 @@ var init_apiConnectionEditor = __esm({
   }
 });
 
+// src/core/blindboxPlan.js
+function getPlanKind(plan) {
+  return plan && plan.kind === BLINDBOX_KIND ? BLINDBOX_KIND : "normal";
+}
+function isBlindboxPlan(plan) {
+  return getPlanKind(plan) === BLINDBOX_KIND;
+}
+function clampNodeCount(v) {
+  return clampInt(v, NODE_COUNT_MIN, NODE_COUNT_MAX, NODE_COUNT_DEFAULT);
+}
+function clampEventsPerGap(v) {
+  return clampInt(v, EVENTS_PER_GAP_MIN, EVENTS_PER_GAP_MAX, EVENTS_PER_GAP_MIN);
+}
+function normalizeEvent(raw) {
+  const status = VALID_STATUS.has(raw?.status) ? raw.status : EVENT_STATUS.PENDING;
+  return {
+    id: str(raw?.id) || genId("ev"),
+    content: str(raw?.content),
+    status,
+    // 导演把事件判成 done/skipped 时留下的一句「实际怎么发生的」回顾。
+    // 这是导演私有的 durable 记忆：不随聊天楼层被总结/隐藏而消失，判定时随骨架一起回灌，
+    // 让导演即便读不到最近正文也知道这拍已经翻过去了（见方案第 5 节 A+B）。
+    recap: str(raw?.recap)
+  };
+}
+function normalizeNode(raw) {
+  const events = Array.isArray(raw?.events) ? raw.events.map(normalizeEvent) : [];
+  return {
+    id: str(raw?.id) || genId("nd"),
+    title: str(raw?.title),
+    anchor: str(raw?.anchor),
+    events
+  };
+}
+function normalizeProgress(raw, nodes) {
+  const nodeCount = nodes.length;
+  let nodeIndex = clampInt(raw?.nodeIndex, 0, Math.max(0, nodeCount - 1), 0);
+  const evCount = nodes[nodeIndex] ? nodes[nodeIndex].events.length : 0;
+  let eventIndex = clampInt(raw?.eventIndex, 0, Math.max(0, evCount - 1), 0);
+  const revealed = Array.isArray(raw?.revealed) ? raw.revealed.map((r) => ({ nodeIndex: Math.floor(Number(r?.nodeIndex)), eventIndex: Math.floor(Number(r?.eventIndex)) })).filter((r) => Number.isFinite(r.nodeIndex) && Number.isFinite(r.eventIndex)) : [];
+  return { nodeIndex, eventIndex, revealed };
+}
+function normalizeBlindbox(raw) {
+  const bb = raw && typeof raw === "object" ? raw : {};
+  const nodes = Array.isArray(bb.nodes) ? bb.nodes.map(normalizeNode) : [];
+  return {
+    tone: str(bb.tone),
+    redlines: str(bb.redlines),
+    nodeCount: clampNodeCount(bb.nodeCount),
+    eventsPerGap: clampEventsPerGap(bb.eventsPerGap),
+    sealed: bb.sealed === true,
+    unsealed: bb.unsealed === true,
+    generatedAt: Number(bb.generatedAt) || 0,
+    nodes,
+    progress: normalizeProgress(bb.progress, nodes)
+  };
+}
+function createBlindboxDraft({ tone, redlines, nodeCount, eventsPerGap } = {}) {
+  return normalizeBlindbox({
+    tone,
+    redlines,
+    nodeCount,
+    eventsPerGap,
+    sealed: false,
+    unsealed: false,
+    nodes: []
+  });
+}
+function sealWithNodes(blindbox, nodes) {
+  const bb = normalizeBlindbox(blindbox);
+  bb.nodes = Array.isArray(nodes) ? nodes.map(normalizeNode) : [];
+  bb.sealed = true;
+  bb.unsealed = false;
+  bb.generatedAt = Date.now();
+  bb.progress = normalizeProgress({ nodeIndex: 0, eventIndex: 0, revealed: [] }, bb.nodes);
+  const first = bb.nodes[0]?.events?.[0];
+  if (first && first.status === EVENT_STATUS.PENDING) first.status = EVENT_STATUS.ACTIVE;
+  return bb;
+}
+function unseal(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  bb.unsealed = true;
+  return bb;
+}
+function flattenEvents(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  const out = [];
+  bb.nodes.forEach((node, nodeIndex) => {
+    node.events.forEach((event, eventIndex) => {
+      out.push({ nodeIndex, eventIndex, node, event });
+    });
+  });
+  return out;
+}
+function getProgressStats(blindbox) {
+  const flat = flattenEvents(blindbox);
+  const total = flat.length;
+  let done = 0;
+  let skipped = 0;
+  flat.forEach(({ event }) => {
+    if (event.status === EVENT_STATUS.DONE) done += 1;
+    else if (event.status === EVENT_STATUS.SKIPPED) skipped += 1;
+  });
+  const bb = normalizeBlindbox(blindbox);
+  return { total, done, skipped, passed: done + skipped, nodeCount: bb.nodes.length };
+}
+function toVisibleItems(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  const items = [];
+  bb.nodes.forEach((node, i) => {
+    items.push({ time: `\u8282\u70B9 ${i + 1}`, title: node.title, plot: node.anchor, foreshadowing: "" });
+    node.events.forEach((ev, j) => {
+      items.push({ time: `${i + 1}.${j + 1}`, title: "", plot: ev.content, foreshadowing: "" });
+    });
+  });
+  return items;
+}
+function extractBlindboxNodes(data) {
+  if (!data || !Array.isArray(data.nodes)) throw new Error("\u8FD4\u56DE\u683C\u5F0F\u7F3A\u5C11 nodes \u6570\u7EC4");
+  const nodes = data.nodes.map(normalizeNode).filter((n) => n.events.length > 0 || n.title || n.anchor);
+  if (nodes.length === 0) throw new Error("\u8FD4\u56DE\u7684 nodes \u4E3A\u7A7A");
+  return nodes;
+}
+function parseDirectorDecision(data) {
+  const obj = data && typeof data === "object" ? data : {};
+  const updates = (Array.isArray(obj.updates) ? obj.updates : []).map((u) => ({
+    node: Math.floor(Number(u?.node)),
+    event: Math.floor(Number(u?.event)),
+    status: u?.status === EVENT_STATUS.DONE || u?.status === EVENT_STATUS.SKIPPED ? u.status : null,
+    // 一句话回顾，达成/跳过时写进事件；缺省空串，由 applyDirectorDecision 决定是否覆盖。
+    recap: typeof u?.recap === "string" ? u.recap.trim() : ""
+  })).filter((u) => Number.isFinite(u.node) && Number.isFinite(u.event) && u.status);
+  const t = obj.target && typeof obj.target === "object" ? obj.target : {};
+  const targetNode = Number.isFinite(Math.floor(Number(t.node))) ? Math.max(0, Math.floor(Number(t.node))) : 0;
+  const targetEvent = Number.isFinite(Math.floor(Number(t.event))) ? Math.max(0, Math.floor(Number(t.event))) : 0;
+  return {
+    updates,
+    target: { node: targetNode, event: targetEvent },
+    directive: typeof obj.directive === "string" ? obj.directive.trim() : "",
+    intensity: VALID_INTENSITY.has(obj.intensity) ? obj.intensity : DIRECTOR_INTENSITY.GENTLE
+  };
+}
+function applyDirectorDecision(blindbox, decision) {
+  const bb = normalizeBlindbox(blindbox);
+  const dec = decision || {};
+  (dec.updates || []).forEach((u) => {
+    const ev = bb.nodes[u?.node]?.events?.[u?.event];
+    if (ev && (u.status === EVENT_STATUS.DONE || u.status === EVENT_STATUS.SKIPPED)) {
+      ev.status = u.status;
+      if (u.recap) ev.recap = u.recap;
+    }
+  });
+  const nodeIdx = Math.min(Math.max(Math.floor(Number(dec.target?.node)) || 0, 0), Math.max(0, bb.nodes.length - 1));
+  const evCount = bb.nodes[nodeIdx] ? bb.nodes[nodeIdx].events.length : 0;
+  const evIdx = Math.min(Math.max(Math.floor(Number(dec.target?.event)) || 0, 0), Math.max(0, evCount - 1));
+  bb.progress.nodeIndex = nodeIdx;
+  bb.progress.eventIndex = evIdx;
+  const targetEv = bb.nodes[nodeIdx]?.events?.[evIdx];
+  if (targetEv && targetEv.status === EVENT_STATUS.PENDING) targetEv.status = EVENT_STATUS.ACTIVE;
+  return bb;
+}
+var BLINDBOX_KIND, EVENTS_PER_GAP_MIN, EVENTS_PER_GAP_MAX, NODE_COUNT_MIN, NODE_COUNT_MAX, NODE_COUNT_DEFAULT, EVENT_STATUS, VALID_STATUS, clampInt, str, seq, genId, DIRECTOR_INTENSITY, VALID_INTENSITY;
+var init_blindboxPlan = __esm({
+  "src/core/blindboxPlan.js"() {
+    BLINDBOX_KIND = "blindbox";
+    EVENTS_PER_GAP_MIN = 3;
+    EVENTS_PER_GAP_MAX = 10;
+    NODE_COUNT_MIN = 2;
+    NODE_COUNT_MAX = 20;
+    NODE_COUNT_DEFAULT = 4;
+    EVENT_STATUS = Object.freeze({
+      PENDING: "pending",
+      ACTIVE: "active",
+      DONE: "done",
+      SKIPPED: "skipped"
+    });
+    VALID_STATUS = new Set(Object.values(EVENT_STATUS));
+    clampInt = (v, lo, hi, dflt) => {
+      const n = Math.floor(Number(v));
+      if (!Number.isFinite(n)) return dflt;
+      return Math.min(hi, Math.max(lo, n));
+    };
+    str = (v) => typeof v === "string" ? v : "";
+    seq = 0;
+    genId = (prefix) => `${prefix}_${Date.now().toString(36)}_${(seq++).toString(36)}`;
+    DIRECTOR_INTENSITY = Object.freeze({ NONE: "none", GENTLE: "gentle", FIRM: "firm" });
+    VALID_INTENSITY = new Set(Object.values(DIRECTOR_INTENSITY));
+  }
+});
+
+// src/core/directorInjection.js
+import {
+  setExtensionPrompt,
+  extension_prompt_types,
+  extension_prompt_roles,
+  eventSource as eventSource2,
+  event_types as event_types2
+} from "../../../../script.js";
+function normalizeRole2(role) {
+  const name = String(role || "system").toLowerCase();
+  return name in ROLE_NAME_TO_ENUM ? name : "system";
+}
+function normalizeDepth(depth) {
+  const n = Number(depth);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(1e4, Math.floor(n));
+}
+function getDirectorInjectConfig() {
+  const d = getExtData()?.director || {};
+  const role = ["system", "user", "assistant"].includes(d.inject_role) ? d.inject_role : "system";
+  const depthRaw = Number(d.inject_depth);
+  const depth = Number.isFinite(depthRaw) && depthRaw >= 0 ? Math.floor(depthRaw) : 0;
+  return { depth, role };
+}
+function armDirectorDirective(text, options = {}) {
+  const body = String(text || "").trim();
+  if (!body) {
+    clearDirectorDirective();
+    return false;
+  }
+  const roleName = normalizeRole2(options.role);
+  setExtensionPrompt(
+    DIRECTOR_PROMPT_KEY,
+    body,
+    extension_prompt_types.IN_CHAT,
+    normalizeDepth(options.depth),
+    false,
+    ROLE_NAME_TO_ENUM[roleName]
+  );
+  armed = true;
+  return true;
+}
+function clearDirectorDirective() {
+  setExtensionPrompt(DIRECTOR_PROMPT_KEY, "", extension_prompt_types.IN_CHAT, 0);
+  armed = false;
+}
+function isDirectorActive() {
+  try {
+    const data = getExtData();
+    const plans = Array.isArray(data?.[PLANS_KEY]) ? data[PLANS_KEY] : [];
+    if (plans.length === 0) return false;
+    const activeId = typeof data?.[ACTIVE_PLAN_KEY] === "string" ? data[ACTIVE_PLAN_KEY] : "";
+    const plan = plans.find((p) => p?.id === activeId) || plans[0];
+    if (!plan || plan.kind !== BLINDBOX_KIND2) return false;
+    const bb = plan.blindbox;
+    return !!bb && bb.sealed === true && bb.unsealed !== true && bb.directorPaused !== true;
+  } catch {
+    return false;
+  }
+}
+async function onGenerationEnded() {
+  if (running) return;
+  if (!isDirectorActive()) {
+    if (armed) clearDirectorDirective();
+    return;
+  }
+  running = true;
+  try {
+    const mod = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+    if (typeof mod.runDirectorTurn === "function") await mod.runDirectorTurn();
+  } catch (e) {
+    TitaniaLogger.warn("\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u5931\u8D25\uFF08\u5DF2\u5FFD\u7565\uFF0C\u4E0D\u6253\u65AD\u5BF9\u8BDD\uFF09", e);
+  } finally {
+    running = false;
+  }
+}
+function initDirectorInjection() {
+  if (listenersBound) return;
+  listenersBound = true;
+  clearDirectorDirective();
+  eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
+  if (event_types2.CHAT_CHANGED) {
+    eventSource2.on(event_types2.CHAT_CHANGED, () => {
+      if (armed) clearDirectorDirective();
+    });
+  }
+  TitaniaLogger.info("\u76F2\u76D2\u5BFC\u6F14\u6CE8\u5165\u5DF2\u521D\u59CB\u5316");
+}
+var DIRECTOR_PROMPT_KEY, ROLE_NAME_TO_ENUM, PLANS_KEY, ACTIVE_PLAN_KEY, BLINDBOX_KIND2, listenersBound, armed, running;
+var init_directorInjection = __esm({
+  "src/core/directorInjection.js"() {
+    init_storage();
+    init_logger();
+    DIRECTOR_PROMPT_KEY = "TITANIA_DIRECTOR";
+    ROLE_NAME_TO_ENUM = {
+      system: extension_prompt_roles.SYSTEM,
+      user: extension_prompt_roles.USER,
+      assistant: extension_prompt_roles.ASSISTANT
+    };
+    PLANS_KEY = "story_outline_plans";
+    ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
+    BLINDBOX_KIND2 = "blindbox";
+    listenersBound = false;
+    armed = false;
+    running = false;
+  }
+});
+
 // src/ui/storyOutlineWindow.js
 var storyOutlineWindow_exports = {};
 __export(storyOutlineWindow_exports, {
   applySceneProgress: () => applyProgressFromModel,
   ensureSceneSourceLoaded: () => ensureSceneSourceLoaded,
+  generatePacingAssessment: () => generatePacingAssessment,
   generateSceneRecommendations: () => generateRecommendations,
   getSceneAdvanceState: () => getSceneAdvanceState,
   getSceneInsertMode: () => getCurrentInsertMode,
   markSceneCandidateUsed: () => markSceneCandidateUsed,
   openPromptTemplateManager: () => openPromptTemplateManager,
   openStoryOutlineWindow: () => openStoryOutlineWindow,
+  parsePacingResponse: () => parsePacingResponse,
+  runDirectorTurn: () => runDirectorTurn,
   switchSceneSourcePlan: () => switchSceneSourcePlan,
   toggleSceneInsertMode: () => toggleSceneInsertMode,
   writeSceneToInput: () => writePlotToInput
@@ -29423,7 +30088,9 @@ function getGenParamDefaults() {
   return {
     outline: { temperature: 0.4, maxTokens: 2e4, timeoutSec: 0 },
     // scenes 存储键沿用旧名（细纲时代遗留），现服务剧情推进推荐；2~3 条候选用不到 60k。
-    scenes: { temperature: 0.8, maxTokens: 8e3, timeoutSec: 0 }
+    scenes: { temperature: 0.8, maxTokens: 8e3, timeoutSec: 0 },
+    // pacing：节奏判断只回一小段 JSON，低温要稳、上限给小。
+    pacing: { temperature: 0.3, maxTokens: 1024, timeoutSec: 0 }
   };
 }
 function normalizeGenParamGroup(raw, fallback) {
@@ -29443,7 +30110,8 @@ function getOutlineGenParams() {
   const raw = data?.[GEN_PARAMS_KEY] && typeof data[GEN_PARAMS_KEY] === "object" ? data[GEN_PARAMS_KEY] : {};
   return {
     outline: normalizeGenParamGroup(raw.outline, defaults.outline),
-    scenes: normalizeGenParamGroup(raw.scenes, defaults.scenes)
+    scenes: normalizeGenParamGroup(raw.scenes, defaults.scenes),
+    pacing: normalizeGenParamGroup(raw.pacing, defaults.pacing)
   };
 }
 function saveOutlineGenParams(params) {
@@ -29451,7 +30119,8 @@ function saveOutlineGenParams(params) {
   const defaults = getGenParamDefaults();
   data[GEN_PARAMS_KEY] = {
     outline: normalizeGenParamGroup(params?.outline, defaults.outline),
-    scenes: normalizeGenParamGroup(params?.scenes, defaults.scenes)
+    scenes: normalizeGenParamGroup(params?.scenes, defaults.scenes),
+    pacing: normalizeGenParamGroup(params?.pacing, defaults.pacing)
   };
   saveExtData();
 }
@@ -29668,16 +30337,16 @@ async function sendOutlineRequest(messages, options = {}) {
     onProgress: typeof options.onProgress === "function" ? options.onProgress : void 0
   });
 }
-function setRawWaitingAnimation(active) {
+function setRawWaitingAnimation(active2) {
   const $anim = $("#t-outline-raw-mood");
   if ($anim.length === 0) return;
-  $anim.toggleClass("is-active", !!active);
+  $anim.toggleClass("is-active", !!active2);
 }
 function syncAbortButtonUI() {
   const $btn = $("#t-outline-raw-abort");
   if ($btn.length === 0) return;
-  const active = !!activeOutlineAbortController;
-  $btn.prop("disabled", !active).toggle(active);
+  const active2 = !!activeOutlineAbortController;
+  $btn.prop("disabled", !active2).toggle(active2);
 }
 async function runOutlineGeneration(task, { timeoutSec = 0 } = {}) {
   const controller = new AbortController();
@@ -29889,7 +30558,8 @@ function getCardOpeningEntries() {
     return [];
   }
 }
-function getChatHistoryEntries() {
+function getChatHistoryEntries(opts = {}) {
+  const includeHidden = opts.includeHidden === true;
   try {
     if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
     const stCtx = SillyTavern.getContext();
@@ -29897,12 +30567,14 @@ function getChatHistoryEntries() {
     const whitelist = parseTagWhitelistInput(getOutlineChatTagWhitelistRaw());
     return chat2.map((msg, idx) => {
       const raw = typeof msg?.mes === "string" ? msg.mes : "";
-      const text = extractTextByWhitelist(raw, whitelist);
+      const hidden = !!(msg?.is_system || msg?.is_hidden);
+      let text = extractTextByWhitelist(raw, whitelist);
+      if (!text && includeHidden && hidden) text = raw.trim();
       if (!text) return null;
-      if (msg?.is_system || msg?.is_hidden) return null;
+      if (hidden && !includeHidden) return null;
       return {
         chatIndex: idx,
-        role: msg?.is_user ? "\u7528\u6237" : "\u89D2\u8272",
+        role: hidden ? "\u80CC\u666F" : msg?.is_user ? "\u7528\u6237" : "\u89D2\u8272",
         text
       };
     }).filter(Boolean);
@@ -30183,6 +30855,61 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 [\u4EFB\u52A1]
 \u8BF7\u8BBE\u8BA1\u6545\u4E8B\u5927\u7EB2\uFF08plot \u7528\u5BA2\u89C2\u6897\u6982\u4F53\u6982\u8FF0\uFF0C\u4E0D\u5199\u5BF9\u767D\u4E0E\u8868\u6F14\u6027\u7EC6\u8282\uFF09\uFF0C\u5E76\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     },
+    blindbox: {
+      system: `\u4F60\u662F\u6545\u4E8B\u7ED3\u6784\u8BBE\u8BA1\u5E08\uFF08\u5267\u96C6 showrunner\uFF09\uFF0C\u4E3A\u4E00\u90E8"\u76F2\u76D2\u5267\u672C"\u89C4\u5212\u5206\u5C42\u9AA8\u67B6\u2014\u2014\u4F5C\u8005\u672C\u4EBA\u4E0D\u4F1A\u770B\u5230\u4F60\u5199\u7684\u5185\u5BB9\uFF0C\u5168\u51ED\u5B83\u5728\u540E\u7EED\u6E38\u73A9\u4E2D\u88AB\u6084\u6084\u5F15\u5BFC\u7740\u6D6E\u73B0\uFF0C\u6240\u4EE5\u7ED3\u6784\u8981\u7A33\u3001\u56E0\u679C\u8981\u786C\u3002
+\u4F60\u4EE5"\u4E8B\u4EF6\u4E0E\u540E\u679C"\u4E3A\u601D\u8003\u5355\u4F4D\uFF0C\u4EA7\u51FA\u4E24\u5C42\u7ED3\u6784\uFF1A
+- \u8282\u70B9\uFF08node\uFF09\uFF1D\u4E3B\u7EBF\u4E0A\u7684\u5FC5\u8FBE\u91CC\u7A0B\u7891\uFF08\u786C\u951A\uFF09\u3002\u5B83\u662F\u6545\u4E8B\u5FC5\u987B\u62B5\u8FBE\u7684\u72B6\u6001\uFF0C\u4E0D\u53EF\u7ED5\u8FC7\u3002anchor \u5B57\u6BB5\u5BA2\u89C2\u6982\u8FF0"\u8FD9\u4E2A\u8282\u70B9\u8FBE\u6210\u65F6\uFF0C\u4E16\u754C/\u4EBA\u7269\u5904\u4E8E\u4EC0\u4E48\u72B6\u6001"\u3002
+- \u5173\u952E\u4E8B\u4EF6\uFF08event\uFF09\uFF1D\u901A\u5F80\u8BE5\u8282\u70B9\u7684\u57AB\u811A\u77F3\uFF08\u8F6F\uFF09\u3002\u6BCF\u4E2A\u8282\u70B9\u4E0B\u6302\u82E5\u5E72\u5173\u952E\u4E8B\u4EF6\uFF0C\u6309\u5148\u540E\u987A\u5E8F\u628A\u5267\u60C5\u4ECE\u4E0A\u4E00\u4E2A\u8282\u70B9\u81EA\u7136\u63A8\u5230\u8FD9\u4E2A\u8282\u70B9\uFF1B\u5B83\u4EEC\u5141\u8BB8\u5728\u6E38\u73A9\u4E2D\u88AB\u652F\u7EBF\u987A\u5E26\u5B8C\u6210\u3001\u6216\u5728\u5931\u53BB\u610F\u4E49\u65F6\u8DF3\u8FC7\u3002
+
+[\u786C\u6027\u8981\u6C42]
+1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
+2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u662F\uFF1A
+{
+  "version": "1.0",
+  "story_summary": "\u4E00\u53E5\u8BDD\u6982\u62EC\uFF08\u4EC5\u4F9B\u5185\u90E8\uFF0C\u7528\u6237\u4E0D\u4F1A\u770B\u5230\uFF09",
+  "nodes": [
+    {
+      "title": "\u8282\u70B9\u6807\u9898",
+      "anchor": "\u8BE5\u8282\u70B9\u8FBE\u6210\u65F6\u7684\u5BA2\u89C2\u72B6\u6001\uFF08\u6897\u6982\u4F53\uFF09",
+      "events": [
+        { "content": "\u5173\u952E\u4E8B\u4EF6\uFF08\u6897\u6982\u4F53\uFF0C\u5BA2\u89C2\u6982\u8FF0\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u5BFC\u81F4\u4E86\u4EC0\u4E48\uFF09" }
+      ]
+    }
+  ]
+}
+3) \u5FC5\u987B\u751F\u6210**\u6070\u597D {{nodeCount}} \u4E2A\u8282\u70B9**\uFF1B\u6BCF\u4E2A\u8282\u70B9\u4E0B\u7684 events **\u6570\u91CF\u5C3D\u91CF\u8D34\u8FD1 {{eventsPerGap}} \u4E2A**\uFF08\u53EF\u56E0\u5267\u60C5\u5206\u91CF\u4E0A\u4E0B\u6D6E\u52A8\u4E00\u4E24\u4E2A\uFF0C\u4F46\u4E0D\u8981\u60AC\u6B8A\uFF09\u3002
+4) \u8282\u70B9\u4E4B\u95F4\u3001\u4EE5\u53CA\u540C\u4E00\u8282\u70B9\u5185\u7684\u4E8B\u4EF6\u4E4B\u95F4\uFF0C\u5FC5\u987B\u56E0\u679C\u8854\u63A5\uFF08\u4E0A\u4E00\u6B65\u7684\u540E\u679C\u9A71\u52A8\u4E0B\u4E00\u6B65\uFF09\uFF0C\u7528"\u56E0\u6B64/\u4F46\u662F"\u800C\u975E"\u7136\u540E"\u3002\u6700\u540E\u4E00\u4E2A\u8282\u70B9\u5373\u7ED3\u5C40\u3002
+5) anchor \u4E0E content \u4E00\u5F8B\u7528\u6897\u6982\u4F53\uFF08\u5BA2\u89C2\u6982\u8FF0\uFF09\u4E66\u5199\uFF0C\u8FD9\u662F\u6587\u98CE\u786C\u7EA6\u675F\uFF1A
+   - \u53EA\u5199"\u53D1\u751F\u4E86\u4EC0\u4E48\u4E8B\u4EF6\u3001\u4EA7\u751F\u4EC0\u4E48\u540E\u679C\u3001\u4EBA\u7269\u5904\u5883\u6216\u5173\u7CFB\u53D1\u751F\u4EC0\u4E48\u53D8\u5316"\uFF0C\u7528\u9648\u8FF0\u53E5\uFF1B
+   - \u7981\u6B62\u5BF9\u767D\u4E0E\u53F0\u8BCD\u3001\u7981\u6B62\u795E\u6001/\u52A8\u4F5C/\u8BED\u6C14\u7B49\u8868\u6F14\u6027\u63CF\u5199\u4E0E\u5FC3\u7406\u6D3B\u52A8\u6E32\u67D3\uFF1B
+   - \u6B63\u4F8B\uFF1A\u6797\u7136\u6574\u7406\u9057\u7269\u65F6\u53D1\u73B0\u4E00\u5F20\u964C\u751F\u5408\u5F71\uFF0C\u8FFD\u95EE\u4E0B\u6BCD\u4EB2\u627F\u8BA4\u4ED6\u6709\u4E00\u4E2A\u4ECE\u672A\u8C0B\u9762\u7684\u59D0\u59D0\u3002
+   - \u53CD\u4F8B\uFF1A\u6797\u7136\u98A4\u6296\u7740\u62FF\u8D77\u7167\u7247\uFF0C\u6BCD\u4EB2\u82E6\u7B11\u7740\u522B\u8FC7\u8138\u53BB\u3002
+6) \u4E25\u683C\u9075\u5B88\u4E0B\u65B9[\u7EA2\u7EBF/\u7981\u5FCC]\u2014\u2014\u5176\u4E2D\u5217\u51FA\u7684\u5185\u5BB9\u4E00\u5F8B\u4E0D\u5F97\u51FA\u73B0\u5728\u4EFB\u4F55\u8282\u70B9\u6216\u4E8B\u4EF6\u91CC\u3002
+7) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+      user: `[\u89D2\u8272\u8BBE\u5B9A]
+{{persona}}
+
+[\u7528\u6237\u8BBE\u5B9A]
+{{userDesc}}
+
+[\u4E16\u754C\u4E66/\u8BBE\u5B9A]
+{{worldInfo}}
+
+[\u5267\u60C5\u8BBE\u5B9A]
+{{scenario}}
+
+[\u5F00\u573A\u767D]
+{{openingText}}
+
+[\u6545\u4E8B\u57FA\u8C03\u4E0E\u8D70\u5411]
+{{storyInput}}
+
+[\u7EA2\u7EBF/\u7981\u5FCC]
+{{redlines}}
+
+[\u4EFB\u52A1]
+\u8BF7\u4E3A\u8FD9\u90E8\u76F2\u76D2\u5267\u672C\u8BBE\u8BA1\u5206\u5C42\u9AA8\u67B6\uFF1A\u6070\u597D {{nodeCount}} \u4E2A\u8282\u70B9\u3001\u6BCF\u8282\u70B9\u7EA6 {{eventsPerGap}} \u4E2A\u5173\u952E\u4E8B\u4EF6\uFF0Canchor \u4E0E content \u7528\u5BA2\u89C2\u6897\u6982\u4F53\uFF0C\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
+    },
     rolling: {
       system: `\u4F60\u662F\u5267\u60C5\u63A8\u8FDB\u7B56\u5212\u3002\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\u5DF2\u7ED9\u5B9A\uFF08\u6700\u540E\u4E00\u6761\u5373\u7ED3\u5C40\uFF09\u3002\u4F60\u7684\u804C\u8D23\u662F\uFF1A\u81EA\u884C\u5224\u65AD\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\uFF0C\u5E76\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF0C\u4F9B\u73A9\u5BB6\u6311\u9009\u540E\u4F5C\u4E3A\u4E0B\u4E00\u56DE\u5408\u7684\u73A9\u5BB6\u8F93\u5165\u6765\u63A8\u8FDB\u6545\u4E8B\u3002
 
@@ -30231,13 +30958,109 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 [\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\uFF08\u8DEF\u6807\uFF0C\u6700\u540E\u4E00\u6761=\u7ED3\u5C40\uFF09]
 {{outlineItemsJson}}
 
-[\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF08\u4EC5\u4E3A\u6700\u8FD1\u6B63\u6587\u7247\u6BB5\uFF0C\u8D8A\u9760\u540E\u8D8A\u65B0\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u5F00\u5934\uFF09]
+[\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF08\u4EC5\u4E3A\u6700\u8FD1\u6B63\u6587\u7247\u6BB5\uFF0C\u8D8A\u9760\u540E\u8D8A\u65B0\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u5F00\u5934\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u6216\u6458\u8981\uFF09]
 {{recentChat}}
 
 [\u4EFB\u52A1]
 1) \u5148\u5224\u65AD\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\uFF0C\u586B\u8FDB current_item_index\uFF08\u786E\u5B9E\u65E0\u6CD5\u5224\u65AD\u586B null\uFF09\u3002
 2) \u518D\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF1A\u90FD\u4ECE\u8BE5\u4F4D\u7F6E\u51FA\u53D1\uFF0C\u627F\u63A5\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF0C\u5F7C\u6B64\u65B9\u5411\u4E0D\u540C\uFF0C\u671D\u7ED3\u5C40\u7A33\u6B65\u63A8\u8FDB\u4F46\u4E0D\u8981\u8DF3\u5230\u7ED3\u5C40\u3002\u6BCF\u4E2A\u5019\u9009\u7684 item_index \u586B\u5B83\u63A8\u8FDB\u5230\u7684\u90A3\u4E00\u6761\uFF08\u901A\u5E38\u5F7C\u6B64\u76F8\u540C\u6216\u76F8\u90BB\uFF09\u3002
 \u4E25\u683C\u6309 version 1.6 \u7ED3\u6784\u8FD4\u56DE\u3002\u53EA\u8FD4\u56DE JSON\u3002`
+    },
+    pacing: {
+      system: `\u4F60\u662F\u53D9\u4E8B\u8282\u594F\u5206\u6790\u5E08\uFF0C\u5728\u5199\u4F5C\u6A21\u578B\u52A8\u7B14\u524D\u4E3A\u300C\u672C\u6B21\u8FD9\u4E00\u6761\u56DE\u590D\u300D\u628A\u63A7\u8282\u594F\u3002
+\u4F60\u4E0D\u6267\u7B14\u2014\u2014\u4E0D\u5199\u6B63\u6587\u3001\u4E0D\u5199\u5BF9\u767D\u3001\u4E0D\u66FF\u89D2\u8272\u884C\u52A8\uFF0C\u53EA\u505A\u4E24\u4EF6\u4E8B\uFF1A\u5224\u65AD\u5F53\u524D\u53D9\u4E8B\u8282\u594F\uFF0C\u7ED9\u51FA\u4E00\u53E5\u9488\u5BF9\u4E0B\u4E00\u6761\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\u3002
+
+[\u5224\u65AD\u951A\u70B9]
+1) \u8BFB\u300C\u6700\u8FD1\u6B63\u6587\u300D\u628A\u63E1\u5F53\u524D\u8FD9\u51E0\u62CD\u5728\u505A\u4EC0\u4E48\uFF1A\u662F\u5728\u63A8\u8FDB\u4E8B\u4EF6\uFF0C\u8FD8\u662F\u5728\u539F\u5730\u6253\u8F6C/\u53CD\u590D\u94FA\u57AB\u3002
+2) \u5BF9\u7167\u300C\u6545\u4E8B\u5927\u7EB2\u300D\u4E0E\u300C\u5F53\u524D\u8FDB\u5EA6\u300D\u5224\u65AD\u8BE5\u5FEB\u8FD8\u662F\u8BE5\u6162\uFF1A
+   - \u62D6\u6C93\uFF1A\u6B63\u6587\u5728\u5F53\u524D\u8FD9\u62CD\u53CD\u590D\u505C\u7559\u3001\u5927\u7EB2\u5374\u8FDF\u8FDF\u6CA1\u5F80\u524D \u2192 \u8BE5\u63A8\u8FDB\u3002
+   - \u4ED3\u4FC3\uFF1A\u8DF3\u5F97\u592A\u5FEB\u3001\u60C5\u7EEA\u6216\u4FE1\u606F\u6CA1\u94FA\u591F\u5C31\u786C\u63A8 \u2192 \u8BE5\u653E\u6162\u8865\u94FA\u57AB\u3002
+   - \u7D27\u51D1/\u5E73\u7A33\uFF1A\u8282\u594F\u672C\u5C31\u5408\u9002 \u2192 \u7EF4\u6301\uFF0C\u522B\u4E3A\u6539\u800C\u6539\u3002
+3) \u6CA1\u6709\u5927\u7EB2\u6216\u8FDB\u5EA6\u4E0D\u660E\u65F6\uFF0C\u4EC5\u51ED\u6B63\u6587\u7684\u5F20\u5F1B\u5224\u65AD\uFF0C\u5B81\u53EF\u5224\u5F97\u4FDD\u5B88\u3002
+
+[directive \u600E\u4E48\u5199]
+1) \u662F\u7ED9\u5199\u4F5C\u6A21\u578B\u7684\u7948\u4F7F\u53E5\uFF0C\u53EA\u7EA6\u675F\u300C\u672C\u6B21\u8FD9\u4E00\u6761\u56DE\u590D\u300D\uFF0C\u4E0D\u662F\u5BF9\u6574\u6BB5\u6545\u4E8B\u7684\u89C4\u5212\u3002
+2) \u5177\u4F53\u53EF\u6267\u884C\uFF1A\u8BF4\u6E05\u8FD9\u6B21\u8BE5\u653E\u6162\u8FD8\u662F\u52A0\u5FEB\u3001\u7B14\u58A8\u8BE5\u843D\u5728\u54EA\u4E00\u62CD\uFF08\u67D0\u6BB5\u60C5\u7EEA/\u67D0\u4E2A\u51B2\u7A81/\u67D0\u6B21\u8F6C\u573A/\u67D0\u6761\u4F0F\u7B14\uFF09\uFF0C\u8BE5\u5F15\u5165\u4EC0\u4E48\u6216\u5148\u6309\u4E0B\u4EC0\u4E48\u3002
+3) \u7981\u6B62\u7A7A\u6CDB\uFF08\u4E0D\u8981\u53EA\u8BF4"\u5199\u5F97\u66F4\u597D/\u66F4\u7CBE\u5F69"\uFF09\uFF0C\u7981\u6B62\u76F4\u63A5\u4EE3\u5199\u6B63\u6587\u6216\u5BF9\u767D\uFF0C\u7981\u6B62\u6539\u53D8\u89D2\u8272\u8BBE\u5B9A\u4E0E\u65E2\u5B9A\u4E8B\u5B9E\u3002
+4) \u8282\u594F\u672C\u5C31\u5408\u9002\u65F6\uFF0Cdirective \u53EF\u4EE5\u662F\u300C\u4FDD\u6301\u5F53\u524D\u8282\u594F\uFF0C\u7EE7\u7EED\u628A\u5F53\u524D\u8FD9\u62CD\u5199\u5B8C\u6574\u300D\uFF0C\u5E76\u628A intensity \u8C03\u4F4E\u3002
+
+[\u786C\u6027\u8981\u6C42]
+1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
+2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u662F\uFF1A
+{
+  "version": "1.0",
+  "pacing_state": "\u62D6\u6C93|\u5E73\u7A33|\u7D27\u51D1|\u4ED3\u4FC3 \u56DB\u9009\u4E00",
+  "assessment": "\u4E00\u4E24\u53E5\u8BCA\u65AD",
+  "directive": "\u4E00\u53E5\u9488\u5BF9\u672C\u6B21\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4",
+  "focus": "\u63A8\u8FDB\u573A\u666F|\u6DF1\u5316\u60C5\u7EEA|\u5F15\u5165\u51B2\u7A81|\u6536\u675F\u60AC\u5FF5|\u7559\u767D\u505C\u987F \u4E4B\u4E00\uFF0C\u53EF\u7559\u7A7A\u5B57\u7B26\u4E32",
+  "intensity": 3
+}
+3) pacing_state \u5FC5\u987B\u662F\u56DB\u4E2A\u503C\u4E4B\u4E00\u3002
+4) intensity \u662F 1-5 \u7684\u6574\u6570\uFF1A1=\u8F7B\u5FAE\u5FAE\u8C03\uFF0C5=\u5F3A\u70C8\u7EA0\u504F\u3002
+5) directive \u4E0D\u8D85\u8FC7 80 \u5B57\uFF0C\u7948\u4F7F\u53E5\uFF0C\u4E2D\u6587\u3002
+6) \u6240\u6709\u5B57\u6BB5\u5FC5\u987B\u5B58\u5728\uFF0Cfocus \u53EF\u4E3A\u7A7A\u5B57\u7B26\u4E32\u3002
+7) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+      user: `[\u89D2\u8272\u8BBE\u5B9A]
+{{persona}}
+
+[\u7528\u6237\u8BBE\u5B9A]
+{{userDesc}}
+
+[\u4E16\u754C\u4E66/\u8BBE\u5B9A]
+{{worldInfo}}
+
+[\u5267\u60C5\u8BBE\u5B9A]
+{{scenario}}
+
+[\u6545\u4E8B\u5927\u7EB2\uFF08\u8DEF\u6807\uFF0C\u6700\u540E\u4E00\u6761=\u7ED3\u5C40\uFF09]
+{{outlineItemsJson}}
+
+[\u5F53\u524D\u8FDB\u5EA6]
+{{outlineProgress}}
+
+[\u6700\u8FD1\u6B63\u6587\uFF08\u8D8A\u9760\u540E\u8D8A\u65B0\uFF0C\u4EC5\u4E3A\u6700\u8FD1\u7247\u6BB5\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u5F00\u5934\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u6216\u6458\u8981\uFF0C\u53EF\u5F53\u80CC\u666F\u53C2\u8003\uFF0C\u522B\u5355\u51ED\u5B83\u5224\u8282\u594F\u5FEB\u6162\uFF09]
+{{recentChat}}
+
+[\u672C\u5361\u7684\u6545\u4E8B\u9700\u6C42]
+{{storyInput}}
+
+[\u4EFB\u52A1]
+\u5224\u65AD\u300C\u6700\u8FD1\u6B63\u6587\u300D\u6B64\u523B\u7684\u53D9\u4E8B\u8282\u594F\uFF0C\u5BF9\u7167\u5927\u7EB2\u4E0E\u5F53\u524D\u8FDB\u5EA6\uFF0C\u7ED9\u51FA\u4E00\u53E5\u53EA\u7EA6\u675F\u672C\u6B21\u8FD9\u4E00\u6761\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\u3002\u4E25\u683C\u6309 version 1.0 \u7ED3\u6784\u8FD4\u56DE\uFF0C\u53EA\u8FD4\u56DE JSON\u3002`
+    },
+    director: {
+      system: `\u4F60\u662F\u4E00\u90E8"\u76F2\u76D2\u5267\u672C"\u7684\u9690\u5F62\u5BFC\u6F14\u3002\u5B8C\u6574\u5206\u5C42\u9AA8\u67B6\uFF08\u8282\u70B9=\u5FC5\u8FBE\u786C\u951A\u3001\u5173\u952E\u4E8B\u4EF6=\u901A\u5F80\u8282\u70B9\u7684\u57AB\u811A\u77F3\uFF09\u4E0E\u5F53\u524D\u8FDB\u5EA6\u5DF2\u7ED9\u5B9A\u3002\u8BFB[\u6700\u8FD1\u6B63\u6587]\uFF0C\u53EA\u505A\u5224\u5B9A\u3001\u4E0D\u5199\u6B63\u6587\uFF1A
+1) \u54EA\u4E9B\u5173\u952E\u4E8B\u4EF6\u5728\u6700\u8FD1\u6B63\u6587\u91CC\u5DF2\u7ECF\u8FBE\u6210\uFF08done\uFF09\uFF0C\u6216\u88AB\u73A9\u5BB6\u7684\u652F\u7EBF\u5E26\u8FC7/\u5DF2\u5931\u53BB\u610F\u4E49\uFF08skipped\uFF09\uFF1B
+2) \u4E0B\u4E00\u6B65\u8BE5\u628A\u6545\u4E8B\u5F80\u54EA\u4E2A\u5173\u952E\u4E8B\u4EF6\u63A8\uFF08target\uFF09\uFF1B
+3) \u7ED9\u4E00\u53E5\u53EA\u7EA6\u675F"\u4E0B\u4E00\u6761\u56DE\u590D"\u7684\u5F15\u5BFC\uFF08directive\uFF09\u4E0E\u529B\u5EA6\uFF08intensity\uFF09\u3002
+
+[\u4E24\u7EA7\u5F3A\u5EA6\u2014\u2014\u8FD9\u662F\u5173\u952E]
+- \u5173\u952E\u4E8B\u4EF6\u662F\u8F6F\u57AB\u811A\u77F3\uFF1A\u5F53\u6B63\u6587\u81EA\u5DF1\u6B63\u671D target \u81EA\u7136\u63A8\u8FDB\u65F6\uFF0Cdirective \u7559\u7A7A\u3001intensity \u586B "none"\uFF08\u5728\u7EBF\u4E0A\u5C31\u95ED\u5634\uFF0C\u7EDD\u4E0D\u751F\u786C railroad\uFF09\uFF1B\u53EA\u5728\u8F7B\u5FAE\u8DD1\u504F\u65F6\u7528 "gentle" \u8F7B\u63A8\u3002
+- \u8282\u70B9\u662F\u786C\u951A\uFF1A\u5F53\u6B63\u6587\u5DF2\u63A5\u8FD1\u5F53\u524D\u8282\u70B9\u7684\u6700\u540E\u4E00\u4E2A\u4E8B\u4EF6\u3001\u6216\u660E\u663E\u8981\u8D8A\u8FC7\u672C\u8282\u70B9\u5F80\u540E\u8DD1\u504F\uFF0C\u7528 "firm" \u628A\u4E3B\u7EBF\u6536\u56DE\u6765\u3002
+- \u652F\u7EBF\u81EA\u7531\uFF1A\u73A9\u5BB6\u6545\u610F\u8DD1\u652F\u7EBF\u662F\u4E50\u8DA3\uFF0C\u5BB9\u5FCD\u51E0\u62CD\u522B\u6025\u7740\u62FD\uFF1B\u53EA\u6709\u8FDF\u8FDF\u56DE\u4E0D\u6765\u624D\u5347\u7EA7\u529B\u5EA6\u3002\u786E\u5B9E\u5DF2 moot \u7684\u4E8B\u4EF6\u6807 skipped\uFF0C\u5E76\u628A target \u987A\u52BF\u632A\u5230\u66F4\u5408\u9002\u7684\u4F4D\u7F6E\uFF0C\u800C\u4E0D\u662F\u786C\u903C\u56DE\u53BB\u3002
+
+[\u5DF2\u8FBE\u6210\u7684\u8BB0\u5FC6\u2014\u2014\u52A1\u5FC5\u9075\u5B88]
+- [\u76F2\u76D2\u9AA8\u67B6]\u91CC status \u5DF2\u662F done/skipped \u7684\u4E8B\u4EF6\u5C31\u662F"\u5DF2\u7ECF\u7FFB\u8FC7\u53BB\u7684\u7BC7\u7AE0"\uFF0C\u5176 recap \u5B57\u6BB5\u662F\u4E0A\u51E0\u56DE\u5408\u8BB0\u4E0B\u7684\u5B9E\u9645\u7ECF\u8FC7\u3002
+- [\u6700\u8FD1\u6B63\u6587]\u53EF\u80FD\u88AB\u603B\u7ED3\u63D2\u4EF6\u6298\u53E0\u6216\u9690\u85CF\uFF0C\u53EA\u5269\u5F88\u77ED\u4E00\u622A\u751A\u81F3\u7A7A\u767D\u3002\u6240\u4EE5\uFF1A\u51E1\u9AA8\u67B6\u91CC\u5DF2 done/skipped \u7684\u4E8B\u4EF6\uFF0C\u4E00\u5F8B\u5F53\u4F5C\u65E2\u6210\u4E8B\u5B9E\uFF0C**\u7EDD\u4E0D**\u56E0\u4E3A\u6700\u8FD1\u6B63\u6587\u91CC\u770B\u4E0D\u5230\u5C31\u628A\u5B83\u91CD\u65B0\u6807\u56DE\u672A\u8FBE\u6210\u3001\u4E5F\u4E0D\u8981\u518D\u628A target \u5F80\u56DE\u62E8\u5230\u5B83\u8EAB\u4E0A\u3002\u53EA\u5224\u65AD"\u8FD8\u6CA1\u7FFB\u8FC7\u53BB"\u7684\u4E8B\u4EF6\u6709\u6CA1\u6709\u5728\u8FD9\u6700\u65B0\u4E00\u62CD\u91CC\u63A8\u8FDB\u3002
+- \u6BCF\u6807\u4E00\u4E2A\u4E8B\u4EF6 done/skipped\uFF0C\u90FD\u8981\u5728\u8BE5\u6761 update \u91CC\u5199\u4E00\u53E5 recap\uFF1A\u5BA2\u89C2\u8BB0\u4E0B\u5B83\u5728\u73A9\u5BB6\u7684\u6545\u4E8B\u91CC\u5B9E\u9645\u662F\u600E\u4E48\u53D1\u751F/\u600E\u4E48\u88AB\u5E26\u8FC7\u7684\uFF08\u4E00\u53E5\u8BDD\uFF0C\u4E2D\u6587\uFF09\uFF0C\u4F9B\u4EE5\u540E\u56DE\u987E\u2014\u2014\u8FD9\u53E5\u8BDD\u4F1A\u88AB\u6C38\u4E45\u4FDD\u5B58\uFF0C\u4E0D\u968F\u697C\u5C42\u9690\u85CF\u4E22\u5931\u3002
+
+[directive \u5199\u6CD5] \u5B83\u662F\u7ED9\u5199\u4F5C\u6A21\u578B\u7684\u5E55\u540E\u65C1\u767D\u63D0\u793A\uFF08\u73A9\u5BB6\u770B\u4E0D\u5230\uFF09\uFF0C\u7528\u5BA2\u89C2\u7948\u4F7F\u53E5\u70B9\u4E00\u4E2A\u65B9\u5411\u5373\u53EF\uFF0C\u4E0D\u66FF\u89D2\u8272\u5199\u5BF9\u767D\u3001\u4E0D\u66FF\u89D2\u8272\u884C\u52A8\uFF1B\u53EF\u4EE5\u5177\u4F53\u6307\u5411 target \u4E8B\u4EF6\u8BE5\u5982\u4F55\u81EA\u7136\u6D6E\u73B0\u3002
+
+[\u786C\u6027\u8981\u6C42] \u53EA\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF1A
+{
+  "updates": [ { "node": 0, "event": 1, "status": "done", "recap": "\u4E00\u53E5\u8BDD\uFF1A\u8FD9\u4E2A\u4E8B\u4EF6\u5728\u73A9\u5BB6\u7684\u6545\u4E8B\u91CC\u5B9E\u9645\u600E\u4E48\u53D1\u751F\u7684" } ],
+  "target": { "node": 1, "event": 0 },
+  "directive": "\u4E00\u53E5\u5F15\u5BFC\uFF0C\u6216\u7A7A\u5B57\u7B26\u4E32",
+  "intensity": "none" | "gentle" | "firm"
+}`,
+      user: `[\u6700\u8FD1\u6B63\u6587\uFF08\u53EF\u80FD\u5DF2\u88AB\u603B\u7ED3\u63D2\u4EF6\u6298\u53E0/\u9690\u85CF\uFF0C\u53EA\u5269\u5F88\u77ED\u4E00\u622A\u751A\u81F3\u7A7A\u767D\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u6458\u8981\u6216\u5DF2\u9690\u85CF\u697C\u5C42\uFF09]
+{{recentChat}}
+
+[\u76F2\u76D2\u9AA8\u67B6] \u8282\u70B9=\u786C\u951A\uFF0C\u4E8B\u4EF6=\u57AB\u811A\u77F3\uFF1Bstatus\uFF1Apending\u672A\u5230 / active\u8FDB\u884C\u4E2D / done\u5DF2\u8FBE\u6210 / skipped\u5DF2\u8DF3\u8FC7\uFF1Bdone/skipped \u7684 recap \u662F\u4EE5\u5F80\u56DE\u5408\u8BB0\u4E0B\u7684\u5B9E\u9645\u7ECF\u8FC7
+{{blindboxOutline}}
+
+[\u5F53\u524D\u76EE\u6807\u6307\u9488] {{blindboxProgress}}
+
+[\u4EFB\u52A1] \u8BFB\u6700\u8FD1\u6B63\u6587\uFF0C\u66F4\u65B0\u8FD9\u4E00\u62CD\u91CC\u65B0\u8FBE\u6210/\u8DF3\u8FC7\u7684\u4E8B\u4EF6\uFF08\u5E76\u4E3A\u6BCF\u6761\u5199\u4E00\u53E5 recap\uFF09\u3001\u7ED9\u51FA\u4E0B\u4E00\u6B65 target \u4E0E\u4E00\u53E5\u5F15\u5BFC directive\uFF08\u53CA intensity\uFF09\u3002\u9AA8\u67B6\u91CC\u5DF2 done/skipped \u7684\u4E8B\u4EF6\u89C6\u4E3A\u65E2\u6210\u4E8B\u5B9E\uFF0C\u4E0D\u5F97\u7FFB\u56DE\u3002\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     }
   };
 }
@@ -30267,7 +31090,19 @@ function getPromptTemplates() {
         return JSON.parse(JSON.stringify(defaults.rolling));
       }
       return { system: sys, user: usr };
-    })()
+    })(),
+    pacing: {
+      system: String(raw?.pacing?.system || defaults.pacing.system),
+      user: String(raw?.pacing?.user || defaults.pacing.user)
+    },
+    blindbox: {
+      system: String(raw?.blindbox?.system || defaults.blindbox.system),
+      user: String(raw?.blindbox?.user || defaults.blindbox.user)
+    },
+    director: {
+      system: String(raw?.director?.system || defaults.director.system),
+      user: String(raw?.director?.user || defaults.director.user)
+    }
   };
 }
 function savePromptTemplates(templates) {
@@ -30281,6 +31116,9 @@ function renderPromptTemplate(template, vars) {
 }
 function getPromptTemplateSection(templates, type) {
   if (type === "rolling") return templates.rolling;
+  if (type === "pacing") return templates.pacing;
+  if (type === "blindbox") return templates.blindbox;
+  if (type === "director") return templates.director;
   return templates.outline;
 }
 function getUnknownPromptVars(text) {
@@ -30294,7 +31132,16 @@ function getUnknownPromptVars(text) {
     "scenario",
     "dialogueExamples",
     // 剧情推进专用变量
-    "recentChat"
+    "recentChat",
+    // 节奏把控专用变量
+    "outlineProgress",
+    // 盲盒生成专用变量
+    "nodeCount",
+    "eventsPerGap",
+    "redlines",
+    // 盲盒导演判定专用变量
+    "blindboxOutline",
+    "blindboxProgress"
   ]);
   const unknown = /* @__PURE__ */ new Set();
   String(text || "").replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key) => {
@@ -30315,7 +31162,16 @@ function buildPromptTemplateVars(ctx, userStoryInput, openingText, outlinePayloa
     scenario: String(ctx?.scenario || "").trim() || "(\u65E0)",
     dialogueExamples: String(ctx?.dialogueExamples || "").trim() || "(\u65E0)",
     // 剧情推进专用；非推荐场景为 "(无)"，模板里没引用就不影响。
-    recentChat: String(extras?.recentChat || "").trim() || "(\u65E0)"
+    recentChat: String(extras?.recentChat || "").trim() || "(\u65E0)",
+    // 节奏把控专用：当前大纲进度，无方案时为 "(无大纲)"。
+    outlineProgress: String(extras?.outlineProgress || "").trim() || "(\u65E0)",
+    // 盲盒生成专用：下单参数。缺省给占位串，预览时不至于渲染成空。
+    nodeCount: String(extras?.nodeCount ?? "") || "(\u8282\u70B9\u6570)",
+    eventsPerGap: String(extras?.eventsPerGap ?? "") || "(\u6BCF\u6BB5\u5173\u952E\u4E8B\u4EF6\u6570)",
+    redlines: String(extras?.redlines || "").trim() || "\uFF08\u65E0\u7279\u522B\u7981\u5FCC\uFF09",
+    // 盲盒导演判定专用：封印骨架 JSON 与当前目标指针（实际判定时注入，预览只给占位）。
+    blindboxOutline: String(extras?.blindboxOutline || "").trim() || "\uFF08\u5C01\u5370\u9AA8\u67B6\uFF0C\u5224\u5B9A\u65F6\u6CE8\u5165\uFF09",
+    blindboxProgress: String(extras?.blindboxProgress || "").trim() || "\uFF08\u5F53\u524D\u76EE\u6807\u6307\u9488\uFF0C\u5224\u5B9A\u65F6\u6CE8\u5165\uFF09"
   };
 }
 function renderGenParamRow(moduleKey, moduleLabel, group) {
@@ -30430,6 +31286,7 @@ async function openPromptTemplateManager() {
                             <div class="t-outline-genparam-hint">\u5206\u522B\u63A7\u5236\u5927\u7EB2/\u5267\u60C5\u63A8\u8350\u7684\u91C7\u6837\u4E0E\u4E0A\u9650\u3002\u63A8\u8350\u7ED3\u679C\u88AB\u4E2D\u9014\u6390\u65AD\u65F6\u591A\u4E3A\u7F51\u5173\u8D85\u65F6\uFF0C\u5EFA\u8BAE\u8C03\u4F4E max_tokens\u3002\u8D85\u65F6\u4E3A\u5BA2\u6237\u7AEF\u5B89\u5168\u4E0A\u9650\uFF080=\u4E0D\u9650\u5236\uFF09\u3002</div>
                             ${renderGenParamRow("outline", "\u5927\u7EB2", settingsDraft.genParams.outline)}
                             ${renderGenParamRow("scenes", "\u5267\u60C5\u63A8\u8350", settingsDraft.genParams.scenes)}
+                            ${renderGenParamRow("pacing", "\u8282\u594F\u5224\u65AD", settingsDraft.genParams.pacing)}
                         </div>
 
                         <div class="t-form-group">
@@ -30459,10 +31316,13 @@ async function openPromptTemplateManager() {
                                 <select id="t-prompt-target" class="t-outline-select">
                                     <option value="outline">\u6545\u4E8B\u5927\u7EB2</option>
                                     <option value="rolling">\u5267\u60C5\u63A8\u8FDB</option>
+                                    <option value="pacing">\u53D9\u4E8B\u8282\u594F</option>
+                                    <option value="blindbox">\u76F2\u76D2\u5267\u672C\u751F\u6210</option>
+                                    <option value="director">\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A</option>
                                 </select>
                                 <button id="t-prompt-reset-current" class="t-btn t-btn-xs"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u5F53\u524D\u9ED8\u8BA4</button>
                             </div>
-                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}}</div>
+                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}}<br>\u53D9\u4E8B\u8282\u594F\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{outlineProgress}}<br>\u76F2\u76D2\u5267\u672C\u751F\u6210\u989D\u5916\u53D8\u91CF\uFF1A{{nodeCount}} {{eventsPerGap}} {{redlines}}<br>\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{blindboxOutline}} {{blindboxProgress}}</div>
                         </div>
 
                         <div class="t-form-group">
@@ -30564,7 +31424,10 @@ async function openPromptTemplateManager() {
     const openingMode = getOpeningSourceMode();
     const openingSourceRef = getOpeningSourceRef();
     const opening2 = getOpeningTextForPreview(openingMode, openingSourceRef);
-    const varsLocal = buildPromptTemplateVars(ctx, currentStoryInput, opening2, outlinePayload);
+    const varsLocal = buildPromptTemplateVars(ctx, currentStoryInput, opening2, outlinePayload, {
+      recentChat: collectRecentChatText(getRollingChatFloors()),
+      outlineProgress: buildOutlineProgressText()
+    });
     const renderedSys = renderPromptTemplate(section.system, varsLocal);
     const renderedUser = renderPromptTemplate(section.user, varsLocal);
     $("#t-prompt-preview-system").text(renderedSys);
@@ -30725,15 +31588,15 @@ function saveDraftInsertModeOnly(insertMode) {
   saveExtData();
 }
 function loadDraft() {
-  const draft = getDraft();
-  if (!draft) {
+  const draft2 = getDraft();
+  if (!draft2) {
     return { storyInput: "", insertMode: "overwrite", items: [] };
   }
   return {
-    storyInput: typeof draft.storyInput === "string" ? draft.storyInput : "",
-    insertMode: draft.insertMode === "append" ? "append" : "overwrite",
-    streamEnabled: draft.streamEnabled === true,
-    items: normalizeItems(draft.items)
+    storyInput: typeof draft2.storyInput === "string" ? draft2.storyInput : "",
+    insertMode: draft2.insertMode === "append" ? "append" : "overwrite",
+    streamEnabled: draft2.streamEnabled === true,
+    items: normalizeItems(draft2.items)
   };
 }
 function isStreamingEnabled() {
@@ -30741,17 +31604,17 @@ function isStreamingEnabled() {
   if ($main.length > 0) return $main.is(":checked");
   const $settings = $("#t-outline-settings-stream-enabled");
   if ($settings.length > 0) return $settings.is(":checked");
-  const draft = getDraft();
-  return draft?.streamEnabled === true;
+  const draft2 = getDraft();
+  return draft2?.streamEnabled === true;
 }
 function getPlans() {
   const data = getExtData();
-  if (!Array.isArray(data[PLANS_KEY])) data[PLANS_KEY] = [];
-  return data[PLANS_KEY];
+  if (!Array.isArray(data[PLANS_KEY2])) data[PLANS_KEY2] = [];
+  return data[PLANS_KEY2];
 }
 function getActivePlanId() {
   const data = getExtData();
-  return typeof data[ACTIVE_PLAN_KEY] === "string" ? data[ACTIVE_PLAN_KEY] : "";
+  return typeof data[ACTIVE_PLAN_KEY2] === "string" ? data[ACTIVE_PLAN_KEY2] : "";
 }
 function getSceneSourcePlanId() {
   const data = getExtData();
@@ -30764,7 +31627,7 @@ function setSceneSourcePlanId(planId) {
 }
 function setActivePlanId(planId) {
   const data = getExtData();
-  data[ACTIVE_PLAN_KEY] = planId || "";
+  data[ACTIVE_PLAN_KEY2] = planId || "";
   saveExtData();
 }
 function getCurrentCharCardName() {
@@ -30839,7 +31702,7 @@ function createDistinctPlanName(baseName = "") {
   }
   return candidate;
 }
-function insertPlan({ name, storyInput, instruction, items }) {
+function insertPlan({ name, storyInput, instruction, items, kind, blindbox }) {
   const plans = getPlans();
   const now = Date.now();
   const plan = {
@@ -30851,6 +31714,10 @@ function insertPlan({ name, storyInput, instruction, items }) {
     createdAt: now,
     updatedAt: now
   };
+  if (kind === BLINDBOX_KIND) {
+    plan.kind = BLINDBOX_KIND;
+    plan.blindbox = blindbox || createBlindboxDraft({});
+  }
   plans.unshift(plan);
   activePlanId = plan.id;
   setActivePlanId(plan.id);
@@ -30877,6 +31744,17 @@ function createEmptyPlan(nameInput = "", defaultName = "") {
     storyInput: instruction,
     instruction,
     items: []
+  });
+}
+function createBlindboxPlan({ name, tone, redlines, nodeCount, eventsPerGap }) {
+  const draft2 = createBlindboxDraft({ tone, redlines, nodeCount, eventsPerGap });
+  return insertPlan({
+    name,
+    storyInput: tone || "",
+    instruction: tone || "",
+    items: [],
+    kind: BLINDBOX_KIND,
+    blindbox: draft2
   });
 }
 function createBranchPlanFromSource(sourcePlan) {
@@ -30927,9 +31805,9 @@ function flushAutoSaveCurrentPlan() {
 }
 function ensureEditingPlanContext() {
   if (editingPlanId) return true;
-  const active = getActivePlan();
-  if (active) {
-    loadPlanToEditor(active);
+  const active2 = getActivePlan();
+  if (active2) {
+    loadPlanToEditor(active2);
     return true;
   }
   if (window.toastr) toastr.warning("\u8BF7\u5148\u65B0\u5EFA\u6216\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u6545\u4E8B\u5927\u7EB2");
@@ -30938,10 +31816,21 @@ function ensureEditingPlanContext() {
 function updatePlanWorkflowUI() {
   const hasPlans = getPlans().length > 0;
   const inEditor = currentView === "editor";
+  const bb = inEditor && isBlindboxPlan(getCurrentPlanForEditor());
   $("#t-outline-plan-name-wrap").toggle(hasPlans && inEditor);
-  $("#t-outline-save-plan").toggle(hasPlans && inEditor);
-  $("#t-outline-top").toggle(inEditor);
+  $("#t-outline-save-plan").toggle(hasPlans && inEditor && !bb);
+  $("#t-outline-top").toggle(inEditor && !bb);
   $("#t-outline-hub-view").toggle(currentView === "hub");
+  $("#t-outline-subview-blindbox").toggle(bb);
+  if (bb) {
+    $("#t-outline-subview-outline").hide();
+    $("#t-outline-mobile-list").hide();
+  } else {
+    $("#t-outline-subview-outline").css("display", "");
+    $("#t-outline-mobile-list").css("display", "");
+  }
+  $("#t-editor-tab-outline").toggle(inEditor && !bb);
+  $("#t-outline-add-item").toggle(inEditor && !bb);
   refreshPlanNameDisplay();
 }
 function updatePlanHubActionState() {
@@ -30966,9 +31855,27 @@ function openPlanCreationDialog() {
                 <div class="t-plan-tip" style="font-size:13px; margin-bottom:10px;">\u521B\u5EFA\u540E\u4F1A\u76F4\u63A5\u8FDB\u5165\u300C\u5927\u7EB2\u751F\u6210\u300D\u7F16\u8F91\u9875\u3002</div>
                 <label class="t-outline-label">\u65B9\u6848\u540D\u79F0</label>
                 <input id="t-create-plan-name" class="t-outline-input" value="${escapeHtml4(defaultPlanName)}" />
-                <label class="t-outline-label" style="margin-top:10px;">\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09</label>
+                <label class="t-outline-label" style="margin-top:10px;">\u65B9\u6848\u7C7B\u578B</label>
+                <div class="t-bb-kind-toggle" style="display:flex; gap:8px; margin-top:4px;">
+                    <button type="button" class="t-btn t-btn-xs t-btn-primary t-bb-kind-btn is-active" data-kind="normal"><i class="fa-solid fa-table-list"></i> \u666E\u901A\u5927\u7EB2</button>
+                    <button type="button" class="t-btn t-btn-xs t-bb-kind-btn" data-kind="blindbox"><i class="fa-solid fa-gift"></i> \u76F2\u76D2\u5267\u672C</button>
+                </div>
+                <label class="t-outline-label" id="t-create-plan-story-label" style="margin-top:10px;">\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09</label>
                 <textarea id="t-create-plan-story" class="t-outline-story-input" rows="4" placeholder="\u53EF\u5148\u5199\u4E00\u4E2A\u65B9\u5411\uFF0C\u540E\u7EED\u4ECD\u53EF\u968F\u65F6\u4FEE\u6539">${escapeHtml4(draftStoryInput)}</textarea>
-                <div class="t-plan-tip" style="margin-top:8px;">\u63D0\u793A\uFF1A\u5982\u679C\u7559\u7A7A\uFF0C\u4F1A\u521B\u5EFA\u4E00\u4E2A\u7A7A\u767D\u65B9\u6848\u3002</div>
+                <div class="t-plan-tip" id="t-create-plan-normal-tip" style="margin-top:8px;">\u63D0\u793A\uFF1A\u5982\u679C\u7559\u7A7A\uFF0C\u4F1A\u521B\u5EFA\u4E00\u4E2A\u7A7A\u767D\u65B9\u6848\u3002</div>
+                <div id="t-create-plan-bb-fields" style="display:none; margin-top:10px;">
+                    <div style="display:flex; gap:12px;">
+                        <label class="t-outline-label" style="flex:1;">\u8282\u70B9\u6570\uFF08\u4E3B\u7EBF\u91CC\u7A0B\u7891\uFF09
+                            <input id="t-create-plan-bb-nodes" type="number" class="t-outline-input" value="4" min="2" max="20" step="1" />
+                        </label>
+                        <label class="t-outline-label" style="flex:1;">\u6BCF\u6BB5\u5173\u952E\u4E8B\u4EF6\uFF083\u201310\uFF09
+                            <input id="t-create-plan-bb-events" type="number" class="t-outline-input" value="3" min="3" max="10" step="1" />
+                        </label>
+                    </div>
+                    <label class="t-outline-label" style="margin-top:10px;">\u7EA2\u7EBF / \u7981\u5FCC\uFF08\u53EF\u9009\uFF09</label>
+                    <textarea id="t-create-plan-bb-redlines" class="t-outline-story-input" rows="2" placeholder="\u4E0D\u60F3\u51FA\u73B0\u7684\u5185\u5BB9\uFF0C\u4F8B\u5982\uFF1A\u4E0D\u8981\u89D2\u8272\u6B7B\u4EA1\u3001\u4E0D\u8981\u8840\u8165\u63CF\u5199"></textarea>
+                    <div class="t-plan-tip" style="margin-top:8px;">\u76F2\u76D2\u5267\u672C\u751F\u6210\u540E\u4F1A\u7ACB\u5373\u5C01\u5370\u2014\u2014\u4F60\u672C\u4EBA\u4E5F\u770B\u4E0D\u5230\u5185\u5BB9\uFF0C\u9760\u6E38\u73A9\u65F6\u88AB\u6084\u6084\u5F15\u5BFC\u7740\u6D6E\u73B0\u3002</div>
+                </div>
                 <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
                     <button id="t-create-plan-cancel" class="t-btn">\u53D6\u6D88</button>
                     <button id="t-create-plan-confirm" class="t-btn t-btn-primary"><i class="fa-solid fa-check"></i> \u521B\u5EFA\u5E76\u8FDB\u5165\u7F16\u8F91</button>
@@ -30979,17 +31886,53 @@ function openPlanCreationDialog() {
   $("body").append(html);
   const close = () => $("#t-outline-create-plan-dialog").remove();
   $("#t-create-plan-close, #t-create-plan-cancel").on("click", close);
-  $("#t-create-plan-confirm").on("click", () => {
+  const selectedKind = () => $("#t-outline-create-plan-dialog .t-bb-kind-btn.is-active").data("kind") || "normal";
+  $("#t-outline-create-plan-dialog").on("click", ".t-bb-kind-btn", function() {
+    $("#t-outline-create-plan-dialog .t-bb-kind-btn").removeClass("is-active t-btn-primary");
+    $(this).addClass("is-active t-btn-primary");
+    const isBB = selectedKind() === "blindbox";
+    $("#t-create-plan-bb-fields").toggle(isBB);
+    $("#t-create-plan-normal-tip").toggle(!isBB);
+    $("#t-create-plan-story-label").text(isBB ? "\u6545\u4E8B\u57FA\u8C03\u4E0E\u8D70\u5411" : "\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09");
+    $("#t-create-plan-confirm").html(isBB ? '<i class="fa-solid fa-gift"></i> \u521B\u5EFA\u5E76\u5C01\u5370\u751F\u6210' : '<i class="fa-solid fa-check"></i> \u521B\u5EFA\u5E76\u8FDB\u5165\u7F16\u8F91');
+  });
+  $("#t-create-plan-confirm").on("click", async () => {
     const planName = String($("#t-create-plan-name").val() || "").trim();
     const planStory = String($("#t-create-plan-story").val() || "").trim();
-    $("#t-outline-story-input").val(planStory);
-    const created = createEmptyPlan(planName);
+    if (selectedKind() !== "blindbox") {
+      $("#t-outline-story-input").val(planStory);
+      const created2 = createEmptyPlan(planName);
+      close();
+      if (window.toastr) toastr.success(`\u5DF2\u65B0\u5EFA\u65B9\u6848\uFF1A${created2.name}`, "\u6545\u4E8B\u5927\u7EB2");
+      loadPlanToEditor(created2);
+      renderPlanHub();
+      showOutlineView("editor");
+      updatePlanWorkflowUI();
+      return;
+    }
+    if (!planStory) {
+      if (window.toastr) toastr.warning("\u8BF7\u5148\u586B\u5199\u6545\u4E8B\u57FA\u8C03\u4E0E\u8D70\u5411", "\u76F2\u76D2\u5267\u672C");
+      return;
+    }
+    const created = createBlindboxPlan({
+      name: planName,
+      tone: planStory,
+      redlines: String($("#t-create-plan-bb-redlines").val() || "").trim(),
+      nodeCount: Number($("#t-create-plan-bb-nodes").val()),
+      eventsPerGap: Number($("#t-create-plan-bb-events").val())
+    });
     close();
-    if (window.toastr) toastr.success(`\u5DF2\u65B0\u5EFA\u65B9\u6848\uFF1A${created.name}`, "\u6545\u4E8B\u5927\u7EB2");
-    loadPlanToEditor(created);
     renderPlanHub();
-    showOutlineView("editor");
+    showOutlineView("hub");
     updatePlanWorkflowUI();
+    if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u76F2\u76D2\u5267\u672C\uFF0C\u8BF7\u7A0D\u5019\u2026\uFF08\u5185\u5BB9\u5C06\u76F4\u63A5\u5C01\u5370\uFF09", "\u76F2\u76D2\u5267\u672C");
+    try {
+      await runBlindboxGeneration(created);
+      if (window.toastr) toastr.success(`\u76F2\u76D2\u5267\u672C\u5DF2\u751F\u6210\u5E76\u5C01\u5370\uFF1A${created.name}`, "\u76F2\u76D2\u5267\u672C");
+    } catch (e) {
+      reportGenerationError(e, "\u76F2\u76D2\u5267\u672C", "\u76F2\u76D2\u5267\u672C\u751F\u6210\u5931\u8D25");
+    }
+    renderPlanHub();
   });
 }
 function overwritePlan(planId, nameInput = "") {
@@ -31044,8 +31987,8 @@ function getCurrentPlanForEditor() {
     if (editing) return editing;
   }
   if (activePlanId) {
-    const active = plans.find((p) => p.id === activePlanId);
-    if (active) return active;
+    const active2 = plans.find((p) => p.id === activePlanId);
+    if (active2) return active2;
   }
   return plans[0] || null;
 }
@@ -31176,16 +32119,163 @@ function showOutlineView(view) {
 }
 function loadPlanToEditor(plan) {
   if (!plan) return false;
+  setEditingPlan(plan);
+  planRenameMode = false;
+  if (isBlindboxPlan(plan)) {
+    renderBlindboxSubview(plan);
+    refreshPlanNameDisplay();
+    return true;
+  }
   outlineItems = normalizeItems(plan.items || []);
   selectedRowIndex = -1;
   const planInstruction = getPlanInstruction(plan);
   $("#t-outline-story-input").val(planInstruction);
-  setEditingPlan(plan);
-  planRenameMode = false;
   saveDraft(planInstruction, $("#t-outline-insert-mode").val() || "overwrite");
   renderRows();
   refreshPlanNameDisplay();
   return true;
+}
+function bbConfigLine(bb) {
+  const tone = String(bb?.tone || "").trim();
+  const toneBrief = tone ? escapeHtml4(getBriefText(tone, 60)) : "\uFF08\u672A\u586B\uFF09";
+  return `\u57FA\u8C03\uFF1A${toneBrief} \xB7 \u8282\u70B9 ${bb?.nodeCount ?? "?"} \xB7 \u6BCF\u6BB5\u7EA6 ${bb?.eventsPerGap ?? "?"} \u4EF6`;
+}
+function bbEventDot(status, isTarget) {
+  const base = "display:inline-block;width:14px;text-align:center;";
+  if (status === EVENT_STATUS.DONE) return `<span style="${base}color:#49c17a">\u25CF</span>`;
+  if (status === EVENT_STATUS.SKIPPED) return `<span style="${base}color:#8a8f98" title="\u5DF2\u8DF3\u8FC7">\u25CF</span>`;
+  if (isTarget || status === EVENT_STATUS.ACTIVE) return `<span style="${base}color:#e0a63a">\u25C9</span>`;
+  return `<span style="${base}color:#555b66">\u25CB</span>`;
+}
+function bbNodeDots(node, nodeIndex, bb) {
+  const curNode = bb.progress?.nodeIndex;
+  const curEv = bb.progress?.eventIndex;
+  const dots = node.events.map((ev, j) => bbEventDot(ev.status, nodeIndex === curNode && j === curEv)).join("");
+  const passed = node.events.length > 0 && node.events.every((ev) => ev.status === EVENT_STATUS.DONE || ev.status === EVENT_STATUS.SKIPPED);
+  return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+        <span style="color:${passed ? "#49c17a" : "#777"};width:18px;">${passed ? "\u25C6" : "\u25C7"}</span>
+        <span style="opacity:.75;min-width:52px;">\u8282\u70B9 ${nodeIndex + 1}</span>
+        <span>${dots}</span>
+    </div>`;
+}
+function bbRevealWall(bb) {
+  const revealed = flattenEvents(bb).filter(
+    ({ event }) => event.status === EVENT_STATUS.DONE || event.status === EVENT_STATUS.SKIPPED
+  );
+  if (revealed.length === 0) {
+    return `<div class="t-plan-tip">\u8FD8\u6CA1\u6709\u5DF2\u63ED\u6653\u7684\u4E8B\u4EF6\u2014\u2014\u5F00\u59CB\u6E38\u73A9\u540E\uFF0C\u8E29\u4E2D\u7684\u5173\u952E\u8282\u70B9\u4F1A\u663E\u793A\u5728\u8FD9\u91CC\u3002</div>`;
+  }
+  return revealed.map(({ nodeIndex, eventIndex, event }) => {
+    const tag = event.status === EVENT_STATUS.SKIPPED ? `<span style="color:#8a8f98">\uFF08\u8DF3\u8FC7\uFF09</span>` : "";
+    const recap = String(event.recap || "").trim();
+    const recapLine = recap ? `<div style="opacity:.55;font-size:12px;padding:2px 0 0 18px;">\u21B3 ${escapeHtml4(recap)}</div>` : "";
+    return `<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+            <span style="opacity:.6;">${nodeIndex + 1}.${eventIndex + 1}</span>
+            ${escapeHtml4(event.content)} ${tag}
+            ${recapLine}
+        </div>`;
+  }).join("");
+}
+function bbNodeFull(node, nodeIndex) {
+  const statusLabel = {
+    [EVENT_STATUS.DONE]: "\u5DF2\u8FBE\u6210",
+    [EVENT_STATUS.SKIPPED]: "\u5DF2\u8DF3\u8FC7",
+    [EVENT_STATUS.ACTIVE]: "\u8FDB\u884C\u4E2D",
+    [EVENT_STATUS.PENDING]: "\u672A\u5230"
+  };
+  const events = node.events.map((ev, j) => `<div style="padding:3px 0 3px 16px;">
+        <span style="opacity:.55;">${nodeIndex + 1}.${j + 1}</span>
+        <span style="opacity:.6;font-size:11px;">[${statusLabel[ev.status] || ""}]</span>
+        ${escapeHtml4(ev.content)}
+    </div>`).join("");
+  return `<div style="margin-bottom:10px;">
+        <div style="font-weight:600;">\u25C6 \u8282\u70B9 ${nodeIndex + 1}\uFF1A${escapeHtml4(node.title || "")}</div>
+        <div style="opacity:.8;padding:2px 0 2px 16px;">${escapeHtml4(node.anchor || "")}</div>
+        ${events}
+    </div>`;
+}
+function renderBlindboxSubview(plan) {
+  const $root = $("#t-outline-subview-blindbox");
+  if ($root.length === 0) return;
+  const bb = plan?.blindbox ? normalizeBlindbox(plan.blindbox) : null;
+  const sealed = !!bb && bb.sealed === true;
+  const unsealed = !!bb && bb.unsealed === true;
+  if (!sealed) {
+    $root.html(`<div class="t-bb-view">
+            <div style="font-weight:600;margin-bottom:6px;"><i class="fa-solid fa-gift"></i> \u76F2\u76D2\u5267\u672C \xB7 \u5F85\u751F\u6210</div>
+            <div class="t-plan-tip" style="margin-bottom:6px;">${bbConfigLine(bb)}</div>
+            <div class="t-plan-tip">\u8FD9\u672C\u8FD8\u6CA1\u6709\u751F\u6210\uFF08\u6216\u4E0A\u6B21\u751F\u6210\u5931\u8D25\uFF09\u3002\u70B9\u4E0B\u9762\u6309\u94AE\u7528\u4E0A\u8FF0\u8BBE\u5B9A\u76F2\u63B7\u4E00\u672C\u2014\u2014\u5185\u5BB9\u4F1A\u76F4\u63A5\u5C01\u5370\u3002</div>
+            <div style="margin-top:12px;"><button class="t-btn t-btn-primary" data-action="bb-generate"><i class="fa-solid fa-wand-magic-sparkles"></i> \u751F\u6210\u76F2\u76D2\u5267\u672C</button></div>
+        </div>`);
+    return;
+  }
+  const stats = getProgressStats(bb);
+  if (!unsealed) {
+    const skeleton = bb.nodes.map((n, i) => bbNodeDots(n, i, bb)).join("");
+    $root.html(`<div class="t-bb-view">
+            <div style="font-weight:600;margin-bottom:6px;"><i class="fa-solid fa-lock"></i> \u76F2\u76D2\u5267\u672C \xB7 \u5DF2\u5C01\u5370</div>
+            <div class="t-plan-tip">\u5DF2\u63A8\u8FDB ${stats.passed} / ${stats.total} \u4E2A\u5173\u952E\u4E8B\u4EF6 \xB7 \u5171 ${stats.nodeCount} \u4E2A\u8282\u70B9</div>
+            <div style="margin:10px 0;">${skeleton}</div>
+            <div style="font-weight:600;margin:12px 0 4px;">\u56DE\u987E\u5899</div>
+            ${bbRevealWall(bb)}
+            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="t-btn" data-action="bb-reroll"><i class="fa-solid fa-dice"></i> \u91CD\u65B0\u751F\u6210\uFF08\u76F2\u63B7\uFF09</button>
+                <button class="t-btn t-btn-danger" data-action="bb-unseal"><i class="fa-solid fa-unlock"></i> \u5267\u900F\u9003\u751F\uFF08\u89E3\u5C01\u67E5\u770B\uFF09</button>
+            </div>
+        </div>`);
+    return;
+  }
+  const full = bb.nodes.map((n, i) => bbNodeFull(n, i)).join("");
+  $root.html(`<div class="t-bb-view">
+        <div style="font-weight:600;margin-bottom:6px;"><i class="fa-solid fa-unlock"></i> \u76F2\u76D2\u5267\u672C \xB7 \u5DF2\u89E3\u5C01</div>
+        <div class="t-plan-tip">\u5DF2\u7ECF\u770B\u8FC7\u4E86\uFF0C\u60CA\u559C\u4E0D\u590D\u2014\u2014\u8FD9\u5C31\u662F\u5355\u5411\u95E8\u7684\u4EE3\u4EF7\u3002\u60F3\u4FEE\u6539\u5185\u5BB9\u53EF\u8F6C\u6210\u666E\u901A\u5927\u7EB2\u3002</div>
+        <div style="margin:10px 0;">${full}</div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="t-btn" data-action="bb-reroll"><i class="fa-solid fa-dice"></i> \u91CD\u65B0\u751F\u6210\uFF08\u76F2\u63B7\uFF09</button>
+            <button class="t-btn t-btn-primary" data-action="bb-to-normal"><i class="fa-solid fa-table-list"></i> \u8F6C\u4E3A\u666E\u901A\u5927\u7EB2\uFF08\u53EF\u7F16\u8F91\uFF09</button>
+        </div>
+    </div>`);
+}
+async function blindboxGenerateFromView(reroll) {
+  const plan = getPlans().find((p) => p.id === editingPlanId);
+  if (!plan || !isBlindboxPlan(plan)) return;
+  if (reroll && !window.confirm("\u91CD\u65B0\u751F\u6210\u4F1A\u4E22\u5F03\u5F53\u524D\u8FD9\u672C\uFF08\u4F60\u672C\u5C31\u6CA1\u770B\u8FC7\uFF09\uFF0C\u7528\u76F8\u540C\u8BBE\u5B9A\u91CD\u63B7\u4E00\u672C\u3002\u786E\u5B9A\uFF1F")) return;
+  if (window.toastr) toastr.info("\u6B63\u5728\u751F\u6210\u76F2\u76D2\u5267\u672C\u2026\uFF08\u5185\u5BB9\u5C06\u76F4\u63A5\u5C01\u5370\uFF09", "\u76F2\u76D2\u5267\u672C");
+  try {
+    await runBlindboxGeneration(plan);
+    if (window.toastr) toastr.success("\u76F2\u76D2\u5267\u672C\u5DF2\u751F\u6210\u5E76\u5C01\u5370", "\u76F2\u76D2\u5267\u672C");
+  } catch (e) {
+    reportGenerationError(e, "\u76F2\u76D2\u5267\u672C", "\u76F2\u76D2\u5267\u672C\u751F\u6210\u5931\u8D25");
+  }
+  renderBlindboxSubview(getPlans().find((p) => p.id === editingPlanId));
+  renderPlanHub();
+}
+function blindboxUnsealFromView() {
+  const plan = getPlans().find((p) => p.id === editingPlanId);
+  if (!plan || !isBlindboxPlan(plan) || !plan.blindbox?.sealed) return;
+  if (!window.confirm("\u5267\u900F\u9003\u751F\u662F\u5355\u5411\u95E8\uFF1A\u770B\u8FC7\u5C31\u56DE\u4E0D\u53BB\u4E86\uFF0C\u76F2\u73A9\u7684\u60CA\u559C\u5C06\u4E0D\u590D\u5B58\u5728\u3002\u786E\u5B9A\u89E3\u5C01\u67E5\u770B\uFF1F")) return;
+  plan.blindbox = unseal(plan.blindbox);
+  plan.updatedAt = Date.now();
+  saveExtData();
+  renderBlindboxSubview(plan);
+  renderPlanHub();
+  if (window.toastr) toastr.success("\u5DF2\u89E3\u5C01\uFF0C\u5185\u5BB9\u73B0\u5728\u5BF9\u4F60\u53EF\u89C1", "\u76F2\u76D2\u5267\u672C");
+}
+function blindboxConvertToNormal() {
+  const plan = getPlans().find((p) => p.id === editingPlanId);
+  if (!plan || !isBlindboxPlan(plan)) return;
+  if (!window.confirm("\u8F6C\u4E3A\u666E\u901A\u5927\u7EB2\u540E\uFF0C\u8FD9\u672C\u4F1A\u53D8\u6210\u53EF\u7F16\u8F91\u7684\u5E73\u94FA\u5927\u7EB2\u3001\u4E0D\u518D\u662F\u76F2\u76D2\uFF08\u4E0D\u53EF\u9006\uFF09\u3002\u786E\u5B9A\uFF1F")) return;
+  const items = toVisibleItems(plan.blindbox);
+  delete plan.kind;
+  delete plan.blindbox;
+  plan.items = normalizeItems(items);
+  plan.updatedAt = Date.now();
+  saveExtData();
+  setEditingPlan(plan);
+  loadPlanToEditor(plan);
+  renderPlanHub();
+  updatePlanWorkflowUI();
+  if (window.toastr) toastr.success("\u5DF2\u8F6C\u4E3A\u666E\u901A\u5927\u7EB2\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91", "\u76F2\u76D2\u5267\u672C");
 }
 function getPlanItemCursor(planId, totalItems) {
   const total = Number(totalItems) || 0;
@@ -31294,17 +32384,21 @@ function renderPlanHub() {
     setActivePlanId(activePlanId);
   }
   $list.html(plans.map((plan) => {
-    const active = plan.id === activePlanId;
+    const active2 = plan.id === activePlanId;
     const updated = new Date(plan.updatedAt || Date.now());
     const timeText = `${updated.getMonth() + 1}/${updated.getDate()} ${String(updated.getHours()).padStart(2, "0")}:${String(updated.getMinutes()).padStart(2, "0")}`;
     const items = normalizeItems(plan.items || []);
     const isSource = sceneSourcePlanId === plan.id;
+    const bb = isBlindboxPlan(plan);
+    const bbSealed = bb && plan.blindbox?.sealed === true;
+    const nameHtml = bb ? `<i class="fa-solid fa-gift" title="\u76F2\u76D2\u5267\u672C"></i> ${escapeHtml4(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}` : escapeHtml4(plan.name || "\u672A\u547D\u540D\u65B9\u6848");
+    const metaHtml = bb ? `${timeText} \xB7 \u76F2\u76D2\u5267\u672C \xB7 ${bbSealed ? "\u{1F512} \u5DF2\u5C01\u5370" : "\u5F85\u751F\u6210"}` : `${timeText} \xB7 ${items.length} \u6761`;
     return `
-            <div class="t-plan-accordion-item ${active ? "expanded" : ""}" data-plan-id="${plan.id}">
+            <div class="t-plan-accordion-item ${active2 ? "expanded" : ""}" data-plan-id="${plan.id}">
                 <div class="t-plan-accordion-head" data-action="select-plan" data-plan-id="${plan.id}">
                     <div class="t-plan-accordion-main">
-                        <div class="t-plan-name">${escapeHtml4(plan.name || "\u672A\u547D\u540D\u65B9\u6848")}</div>
-                        <div class="t-plan-meta">${timeText} \xB7 ${items.length} \u6761</div>
+                        <div class="t-plan-name">${nameHtml}</div>
+                        <div class="t-plan-meta">${metaHtml}</div>
                         <div class="t-plan-tip">${isSource ? "\u5F53\u524D\u5267\u60C5\u63A8\u8FDB\u6765\u6E90\u65B9\u6848" : "\u5355\u51FB\u9009\u4E2D\u65B9\u6848"}</div>
                     </div>
                 </div>
@@ -31576,18 +32670,75 @@ function buildOutlinePayloadForPrompt() {
     foreshadowing: item.foreshadowing || ""
   }));
 }
-function collectRecentChatText(floors) {
+function collectRecentChatText(floors, opts = {}) {
   const n = Number(floors) || 0;
   if (n <= 0) return "";
-  const entries = getChatHistoryEntries();
+  const entries = getChatHistoryEntries(opts);
   if (!entries.length) return "";
   return entries.slice(-n).map((e) => `\u3010${e.role}\u3011${e.text}`).join("\n\n");
+}
+function buildOutlineProgressText() {
+  const plan = getRollingPlan();
+  const total = Array.isArray(plan?.items) ? plan.items.length : 0;
+  if (!plan || total <= 0) return "(\u65E0\u5927\u7EB2)";
+  const { itemIndex } = getPlanProgress(plan);
+  const item = normalizeItems(plan.items)[itemIndex];
+  const title = String(item?.title || "").trim() || "\u672A\u547D\u540D";
+  return `\u5F53\u524D\u7EA6\u5728\u7B2C ${itemIndex + 1} / ${total} \u6761\uFF1A${title}`;
+}
+function buildPacingPrompt(ctx) {
+  const outlinePayload = buildOutlinePayloadForPrompt();
+  const templates = getPromptTemplates();
+  const vars = buildPromptTemplateVars(ctx, "(\u7A7A)", "", outlinePayload, {
+    // 带上被总结/隐藏的楼层：聊天变长后玩家常把前文折叠隐藏，否则节奏判断读不到最近几拍的实际文字
+    // 就等于没了判断对象（进度指针另有持久来源 buildOutlineProgressText，不受影响）。
+    recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true }),
+    outlineProgress: buildOutlineProgressText()
+  });
+  return [
+    { role: "system", content: renderPromptTemplate(templates.pacing.system, vars) },
+    { role: "user", content: renderPromptTemplate(templates.pacing.user, vars) }
+  ];
+}
+function parsePacingResponse(raw) {
+  if (!raw || typeof raw !== "string") throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
+  const data = tryParseLooseJsonObject(raw);
+  const directive = String(data?.directive || "").trim();
+  if (!directive) throw new Error("\u8282\u594F\u5224\u65AD\u8FD4\u56DE\u7F3A\u5C11\u6709\u6548 directive");
+  const pacingState = PACING_STATES.includes(data?.pacing_state) ? data.pacing_state : "\u5E73\u7A33";
+  let intensity = Number(data?.intensity);
+  if (!Number.isFinite(intensity)) intensity = 3;
+  intensity = Math.min(5, Math.max(1, Math.round(intensity)));
+  return {
+    pacingState,
+    assessment: String(data?.assessment || "").trim(),
+    directive,
+    focus: String(data?.focus || "").trim(),
+    intensity
+  };
+}
+async function generatePacingAssessment() {
+  try {
+    const ctx = await getContextData();
+    const params = getOutlineGenParams().pacing;
+    const raw = await sendOutlineRequest(buildPacingPrompt(ctx), {
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+      stream: false
+    });
+    return parsePacingResponse(raw);
+  } catch (e) {
+    reportGenerationError(e, "\u53D9\u4E8B\u8282\u594F", "\u8282\u594F\u5206\u6790\u5931\u8D25");
+    return null;
+  }
 }
 function buildRecommendationPrompt(ctx, userStoryInput, openingText) {
   const outlinePayload = buildOutlinePayloadForPrompt();
   const templates = getPromptTemplates();
   const vars = buildPromptTemplateVars(ctx, userStoryInput || "(\u7A7A)", openingText, outlinePayload, {
-    recentChat: collectRecentChatText(getRollingChatFloors())
+    // 带上被总结/隐藏的楼层：否则前文一折叠，模型既判不出 current_item_index、也凑不出贴合剧情的候选。
+    // 判不出时解析器回退保留旧指针（见 parseRecommendationResponse 注释），不会把进度冲掉。
+    recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true })
   });
   const sys = renderPromptTemplate(templates.rolling.system, vars);
   const user = renderPromptTemplate(templates.rolling.user, vars);
@@ -31818,6 +32969,106 @@ async function runGenerationFlow(cfg) {
     if (window.toastr) toastr.success(cfg.successMessage(false), cfg.label);
   }, { timeoutSec: cfg.timeoutSec });
 }
+function buildBlindboxPrompt(ctx, openingText, blindbox) {
+  const templates = getPromptTemplates().blindbox;
+  const vars = buildPromptTemplateVars(ctx, blindbox.tone, openingText, [], {
+    nodeCount: blindbox.nodeCount,
+    eventsPerGap: blindbox.eventsPerGap,
+    redlines: blindbox.redlines
+  });
+  return [
+    { role: "system", content: renderPromptTemplate(templates.system, vars) },
+    { role: "user", content: renderPromptTemplate(templates.user, vars) }
+  ];
+}
+function parseBlindboxResponse(raw) {
+  return extractBlindboxNodes(tryParseLooseJsonObject(raw));
+}
+async function runBlindboxGeneration(plan) {
+  if (!plan || !isBlindboxPlan(plan)) throw new Error("\u8BE5\u65B9\u6848\u4E0D\u662F\u76F2\u76D2\u5267\u672C");
+  const bb = plan.blindbox || createBlindboxDraft({});
+  const params = getOutlineGenParams().outline;
+  return runOutlineGeneration(async (signal) => {
+    const ctx = await getContextData();
+    const opening2 = await ensureOpeningTextForGeneration();
+    const messages = buildBlindboxPrompt(ctx, opening2, bb);
+    const raw = await sendOutlineRequest(messages, {
+      stream: false,
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+      signal
+    });
+    const nodes = parseBlindboxResponse(raw);
+    const sealed = sealWithNodes(bb, nodes);
+    const target = getPlans().find((p) => p.id === plan.id);
+    if (!target) throw new Error("\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728");
+    target.blindbox = sealed;
+    target.updatedAt = Date.now();
+    saveExtData();
+    return true;
+  }, { timeoutSec: params.timeoutSec || 0 });
+}
+function buildDirectorOutlineJson(bb) {
+  return bb.nodes.map((node, i) => ({
+    node: i,
+    title: node.title,
+    anchor: node.anchor,
+    is_final: i === bb.nodes.length - 1,
+    events: node.events.map((ev, j) => {
+      const e = { event: j, content: ev.content, status: ev.status };
+      if ((ev.status === EVENT_STATUS.DONE || ev.status === EVENT_STATUS.SKIPPED) && ev.recap) e.recap = ev.recap;
+      return e;
+    })
+  }));
+}
+function buildDirectorMessages(ctx, bb) {
+  const templates = getPromptTemplates().director;
+  const cur = bb.progress || { nodeIndex: 0, eventIndex: 0 };
+  const vars = buildPromptTemplateVars(ctx, "(\u7A7A)", "", [], {
+    // 导演专用：带上被总结/隐藏的楼层（includeHidden），否则总结一跑导演就瞎了。
+    recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true }),
+    blindboxOutline: JSON.stringify(buildDirectorOutlineJson(bb), null, 2),
+    blindboxProgress: `\u8282\u70B9 ${cur.nodeIndex} \xB7 \u4E8B\u4EF6 ${cur.eventIndex}`
+  });
+  return [
+    { role: "system", content: renderPromptTemplate(templates.system, vars) },
+    { role: "user", content: renderPromptTemplate(templates.user, vars) }
+  ];
+}
+async function runDirectorTurn() {
+  const plan = getActivePlan();
+  if (!plan || !isBlindboxPlan(plan)) return;
+  const bb0 = plan.blindbox;
+  if (!bb0 || bb0.sealed !== true || bb0.unsealed === true || bb0.directorPaused === true) return;
+  const ctx = await getContextData();
+  const params = getOutlineGenParams().pacing;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6e4);
+  let raw = "";
+  try {
+    raw = await sendOutlineRequest(buildDirectorMessages(ctx, normalizeBlindbox(bb0)), {
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+      stream: false,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+  const decision = parseDirectorDecision(tryParseLooseJsonObject(raw));
+  const target = getPlans().find((p) => p.id === plan.id);
+  if (!target || !isBlindboxPlan(target)) return;
+  target.blindbox = applyDirectorDecision(target.blindbox, decision);
+  target.updatedAt = Date.now();
+  saveExtData();
+  if (editingPlanId === target.id) renderBlindboxSubview(target);
+  if (decision.directive && decision.intensity !== DIRECTOR_INTENSITY.NONE) {
+    const header = decision.intensity === DIRECTOR_INTENSITY.FIRM ? "\u3010\u5267\u60C5\u5BFC\u6F14\xB7\u6536\u675F\u3011\n" : "\u3010\u5267\u60C5\u5BFC\u6F14\xB7\u8F7B\u63A8\u3011\n";
+    armDirectorDirective(header + decision.directive, getDirectorInjectConfig());
+  } else {
+    clearDirectorDirective();
+  }
+}
 async function generateRecommendations() {
   if (!ensureEditingPlanContext()) return;
   if (!Array.isArray(outlineItems) || outlineItems.length === 0) {
@@ -31970,6 +33221,10 @@ function bindEvents() {
   $overlay.on("click", "#t-hub-view-detail", function() {
     const plan = getPlans().find((p) => p.id === activePlanId) || null;
     if (!plan) return;
+    if (isBlindboxPlan(plan)) {
+      if (window.toastr) toastr.info("\u76F2\u76D2\u5267\u672C\u5DF2\u5C01\u5370\uFF0C\u65E0\u6CD5\u67E5\u770B\u60C5\u8282\u3002", "\u76F2\u76D2\u5267\u672C");
+      return;
+    }
     showPlanDetailDialog(plan.id);
   });
   $overlay.on("click", "#t-hub-view-instruction", function() {
@@ -31977,6 +33232,10 @@ function bindEvents() {
     if (!plan) return;
     showPlanInstructionDialog(plan);
   });
+  $overlay.on("click", "[data-action='bb-generate']", () => blindboxGenerateFromView(false));
+  $overlay.on("click", "[data-action='bb-reroll']", () => blindboxGenerateFromView(true));
+  $overlay.on("click", "[data-action='bb-unseal']", () => blindboxUnsealFromView());
+  $overlay.on("click", "[data-action='bb-to-normal']", () => blindboxConvertToNormal());
   $overlay.on("click", "[data-action='delete-plan']", function(e) {
     e.stopPropagation();
     const planId = String($(this).data("plan-id") || "").trim();
@@ -32132,7 +33391,7 @@ function openStoryOutlineWindow() {
   const plans = getPlans();
   ensureCssLoaded();
   $("#t-story-outline-overlay").remove();
-  const draft = loadDraft();
+  const draft2 = loadDraft();
   outlineItems = [];
   lastRawResponse = "";
   rawResponseHistory = loadRawResponseHistory();
@@ -32159,7 +33418,7 @@ function openStoryOutlineWindow() {
             <div class="t-window-body t-outline-body">
                 <div id="t-outline-top" class="t-outline-top">
                     <label class="t-outline-label">\u8FD9\u5F20\u5361\u60F3\u8BB2\u4EC0\u4E48\u6545\u4E8B\uFF08\u5F53\u524D\u89D2\u8272\u5361\uFF1A${escapeHtml4(getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272")})</label>
-                    <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml4(draft.storyInput)}</textarea>
+                    <textarea id="t-outline-story-input" class="t-outline-story-input" rows="4" placeholder="\u8F93\u5165\u6545\u4E8B\u65B9\u5411\u3001\u4E3B\u9898\u3001\u51B2\u7A81\u3001\u60F3\u8981\u7684\u8282\u594F\u7B49">${escapeHtml4(draft2.storyInput)}</textarea>
                     <div class="t-outline-actions">
                         <div class="t-outline-primary-actions">
                             <button id="t-outline-generate" class="t-btn t-btn-primary">
@@ -32176,8 +33435,8 @@ function openStoryOutlineWindow() {
                         <button id="t-outline-opening-source-pick" class="t-btn t-btn-xs"><i class="fa-solid fa-list"></i> \u9009\u62E9\u6765\u6E90</button>
                     </div>
                     <select id="t-outline-insert-mode" class="t-outline-select" style="display:none;">
-                        <option value="overwrite" ${draft.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
-                        <option value="append" ${draft.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
+                        <option value="overwrite" ${draft2.insertMode === "overwrite" ? "selected" : ""}>\u8986\u76D6\u8F93\u5165\u6846</option>
+                        <option value="append" ${draft2.insertMode === "append" ? "selected" : ""}>\u8FFD\u52A0\u5230\u8F93\u5165\u6846</option>
                     </select>
                 </div>
 
@@ -32229,6 +33488,8 @@ function openStoryOutlineWindow() {
                         </div>
                     </div>
 
+                    <div id="t-outline-subview-blindbox" class="t-outline-subview" style="display:none;"></div>
+
                     <div id="t-outline-mobile-list" class="t-outline-mobile-list"></div>
                 </div>
             </div>
@@ -32239,7 +33500,7 @@ function openStoryOutlineWindow() {
   if (preferred) {
     loadPlanToEditor(preferred);
   } else {
-    $("#t-outline-story-input").val(draft.storyInput || "");
+    $("#t-outline-story-input").val(draft2.storyInput || "");
     renderRows();
   }
   bindEvents();
@@ -32307,7 +33568,7 @@ function markSceneCandidateUsed(planId, index) {
   candidates[index] = { ...candidates[index], used: true };
   setPlanCandidates(id3, candidates, { keepTimestamp: true });
 }
-var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID;
+var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY2, ACTIVE_PLAN_KEY2, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, PACING_STATES;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -32317,6 +33578,8 @@ var init_storyOutlineWindow = __esm({
     init_storage();
     init_chatTagWhitelist();
     init_apiConnectionEditor();
+    init_blindboxPlan();
+    init_directorInjection();
     outlineItems = [];
     lastRawResponse = "";
     rawResponseHistory = [];
@@ -32328,8 +33591,8 @@ var init_storyOutlineWindow = __esm({
     responseTimerRunning = false;
     activeOutlineAbortController = null;
     DRAFT_KEY = "story_outline_draft";
-    PLANS_KEY = "story_outline_plans";
-    ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
+    PLANS_KEY2 = "story_outline_plans";
+    ACTIVE_PLAN_KEY2 = "story_outline_active_plan_id";
     SCENE_SOURCE_PLAN_KEY = "story_outline_scene_source_plan_id";
     PROMPT_TEMPLATES_KEY = "story_outline_prompt_templates";
     OPENING_SOURCE_MODE_KEY = "story_outline_opening_source_mode";
@@ -32352,24 +33615,11 @@ var init_storyOutlineWindow = __esm({
     planRenameSnapshot = "";
     MAX_RAW_HISTORY = 24;
     OUTLINE_ST_FOLLOW_ID = "st_sync";
+    PACING_STATES = ["\u62D6\u6C93", "\u5E73\u7A33", "\u7D27\u51D1", "\u4ED3\u4FC3"];
   }
 });
 
-// src/ui/rewriteEntryButton.js
-var rewriteEntryButton_exports = {};
-__export(rewriteEntryButton_exports, {
-  initRewriteEntryButton: () => initRewriteEntryButton,
-  openRewritePanelFromMenu: () => openRewritePanelFromMenu,
-  refreshRewriteEntryButton: () => refreshRewriteEntryButton
-});
-import { saveChatConditional as saveChatConditional2, reloadCurrentChat as reloadCurrentChat2, eventSource as eventSource2, event_types as event_types2 } from "../../../../script.js";
-function isEnabled() {
-  const data = getExtData();
-  return data?.rewrite_entry?.enabled === true;
-}
-function escapeHtml5(text) {
-  return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
-}
+// src/core/textRewriteCore.js
 function normalizeToken(s) {
   return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
 }
@@ -32382,32 +33632,232 @@ function parseCommaList(input) {
 function uniq(arr) {
   return [...new Set(arr)];
 }
-function normalizeRuleAction(action) {
-  const value = String(action || "").trim().toLowerCase();
-  if (value === "delete") return "delete";
-  if (value === "delete_range") return "delete_range";
-  return "rewrite";
-}
-function actionLabel(action) {
-  const normalized = normalizeRuleAction(action);
-  if (normalized === "delete") return "\u5220\u9664";
-  if (normalized === "delete_range") return "\u5220\u7247\u6BB5";
-  return "\u6539\u5199";
-}
-function mergeUnitDeleteAction(matchedRules) {
-  let deleteAction = null;
-  let deleteFragment = "";
-  (Array.isArray(matchedRules) ? matchedRules : []).forEach((rule) => {
-    const action = normalizeRuleAction(rule?.action);
-    if (action === "delete") {
-      deleteAction = "delete";
-      deleteFragment = "";
-    } else if (action === "delete_range" && deleteAction !== "delete") {
-      deleteAction = "delete_range";
-      deleteFragment = String(rule?.fragment || "").trim();
+function splitBySentence(text) {
+  const src = String(text || "");
+  if (!src.trim()) return [];
+  const lines = src.split(/\r?\n/);
+  const chunks = [];
+  lines.forEach((line) => {
+    if (!line.trim()) return;
+    const arr = line.split(/(?<=[。！？!?])/u).filter((s) => s.trim());
+    if (arr.length === 0) {
+      chunks.push(line);
+    } else {
+      chunks.push(...arr);
     }
   });
-  return { deleteAction, deleteFragment };
+  return chunks;
+}
+function splitByParagraph(text) {
+  return String(text || "").split(/\r?\n\s*\r?\n+/).map((s) => s.trim()).filter(Boolean);
+}
+function splitText(text, splitMode) {
+  return splitMode === "paragraph" ? splitByParagraph(text) : splitBySentence(text);
+}
+function matchKeywordRule(unitText, rule) {
+  const anchorList = parseCommaList(String(rule?.anchor || ""));
+  const extrasList = parseCommaList(String(rule?.extras || ""));
+  if (anchorList.length === 0 || extrasList.length === 0) return false;
+  const source = normalizeToken(unitText);
+  const anchorHit = anchorList.some((kw) => source.includes(kw));
+  if (!anchorHit) return false;
+  return extrasList.some((kw) => source.includes(kw));
+}
+function normalizeDeleteMode(mode) {
+  const value = String(mode || "").trim().toLowerCase();
+  if (value === "fragment" || value === "delete_range") return "fragment";
+  return "sentence";
+}
+function applyDeletesToUnit(unitText, mode, fragment) {
+  const text = String(unitText || "");
+  const normMode = normalizeDeleteMode(mode);
+  if (normMode === "sentence") return "";
+  const frag = String(fragment || "").trim();
+  if (!frag) return text;
+  const idx = text.indexOf(frag);
+  if (idx < 0) return text;
+  const tail = text.slice(idx + frag.length);
+  const punct = /[。！？!?…]\s*$/.exec(tail);
+  const rawHead = text.slice(0, idx);
+  let cleanedHead = rawHead.replace(/[，、；,;]\s*$/, "");
+  const closedByQuote = /[”」』）)]\s*$/.test(cleanedHead);
+  let keptTail = punct && !closedByQuote ? punct[0] : "";
+  const openMatch = /[（(]\s*$/.exec(cleanedHead);
+  if (openMatch) {
+    const closeChar = cleanedHead.endsWith("\uFF08") ? "\uFF09" : ")";
+    cleanedHead = cleanedHead.replace(/[（(]\s*$/, closeChar);
+    keptTail = "";
+  }
+  return cleanedHead + keptTail;
+}
+function applyReplacements(sourceText, entries) {
+  let out = String(sourceText || "");
+  let cursor = 0;
+  let replaced = 0;
+  const ordered = (Array.isArray(entries) ? entries : []).map((e) => ({
+    before: String(e?.before || ""),
+    after: typeof e?.after === "string" ? e.after : ""
+  })).filter((e) => e.before && e.after !== e.before).map((e) => ({ ...e, srcIdx: out.indexOf(e.before) })).filter((e) => e.srcIdx >= 0).sort((a, b) => a.srcIdx - b.srcIdx);
+  ordered.forEach((item) => {
+    const idx = out.indexOf(item.before, cursor);
+    if (idx < 0) return;
+    out = out.slice(0, idx) + item.after + out.slice(idx + item.before.length);
+    cursor = idx + item.after.length;
+    replaced += 1;
+  });
+  return { text: out, replaced };
+}
+function evaluateDeleteRules(text, splitMode, rules) {
+  const mode = splitMode === "paragraph" ? "paragraph" : "sentence";
+  const activeRules = (Array.isArray(rules) ? rules : []).filter((r) => r && r.enabled !== false);
+  const units = splitText(String(text || ""), mode);
+  const unitResults = units.map((unit, idx) => {
+    let matchedRule = null;
+    for (const rule of activeRules) {
+      if (matchKeywordRule(unit, rule)) {
+        const rMode = normalizeDeleteMode(rule.mode);
+        if (!matchedRule || rMode === "sentence" && normalizeDeleteMode(matchedRule.mode) === "fragment") {
+          matchedRule = rule;
+        }
+        if (rMode === "sentence") break;
+      }
+    }
+    const hit = !!matchedRule;
+    const deleteMode = hit ? normalizeDeleteMode(matchedRule.mode) : null;
+    const fragment = hit && deleteMode === "fragment" ? String(matchedRule.fragment || "") : "";
+    return {
+      unitIndex: idx + 1,
+      text: unit,
+      hit,
+      deleteMode,
+      fragment,
+      after: hit ? applyDeletesToUnit(unit, deleteMode, fragment) : unit,
+      matchedRule: hit ? { anchor: matchedRule.anchor, extras: matchedRule.extras } : null
+    };
+  });
+  const deleteUnits = unitResults.filter((u) => u.hit);
+  return {
+    splitMode: mode,
+    unitCount: unitResults.length,
+    hitCount: deleteUnits.length,
+    unitResults,
+    deleteUnits
+  };
+}
+function buildDeleteReplacements(deleteUnits = []) {
+  return (Array.isArray(deleteUnits) ? deleteUnits : []).map((u) => ({
+    before: String(u?.text || ""),
+    after: applyDeletesToUnit(u?.text, u?.deleteMode, u?.fragment)
+  }));
+}
+function evaluateRewriteRules(text, splitMode, categories) {
+  const mode = splitMode === "paragraph" ? "paragraph" : "sentence";
+  const cats = Array.isArray(categories) ? categories : [];
+  const units = splitText(String(text || ""), mode);
+  const unitResults = units.map((unit, idx) => {
+    const matchedCategories = [];
+    cats.forEach((cat) => {
+      const matchedRules = (Array.isArray(cat.rules) ? cat.rules : []).filter((rule) => matchKeywordRule(unit, rule)).map((rule) => ({ anchor: String(rule.anchor || ""), extras: String(rule.extras || "") }));
+      if (matchedRules.length > 0) {
+        matchedCategories.push({
+          categoryId: String(cat.id || ""),
+          categoryName: String(cat.name || ""),
+          guidance: String(cat.guidance || ""),
+          bad_example: String(cat.bad_example || ""),
+          good_example: String(cat.good_example || ""),
+          matchedRules
+        });
+      }
+    });
+    return {
+      unitIndex: idx + 1,
+      text: unit,
+      hit: matchedCategories.length > 0,
+      matchedCategories
+    };
+  });
+  const hitUnits = unitResults.filter((u) => u.hit);
+  const hitCategoryIds = /* @__PURE__ */ new Set();
+  hitUnits.forEach((u) => u.matchedCategories.forEach((c) => hitCategoryIds.add(c.categoryId)));
+  return {
+    splitMode: mode,
+    unitCount: unitResults.length,
+    hitCount: hitUnits.length,
+    categoryCount: hitCategoryIds.size,
+    unitResults
+  };
+}
+function splitLegacyRules(legacyItem) {
+  const schemes = Array.isArray(legacyItem?.schemes) ? legacyItem.schemes : [];
+  const deletionRules = [];
+  const rewriteSchemes = schemes.map((scheme) => {
+    const categories = (Array.isArray(scheme?.categories) ? scheme.categories : []).map((cat) => {
+      const rewriteRules = [];
+      (Array.isArray(cat?.rules) ? cat.rules : []).forEach((rule) => {
+        const action = String(rule?.action || "rewrite").trim().toLowerCase();
+        const anchor = String(rule?.anchor || "").trim();
+        const extras = String(rule?.extras || "").trim();
+        if (!anchor || !extras) return;
+        if (action === "delete" || action === "delete_range") {
+          deletionRules.push({
+            anchor,
+            extras,
+            mode: action === "delete_range" ? "fragment" : "sentence",
+            fragment: action === "delete_range" ? String(rule?.fragment || "").trim() : "",
+            enabled: true
+          });
+        } else {
+          rewriteRules.push({ anchor, extras });
+        }
+      });
+      return {
+        id: String(cat?.id || ""),
+        name: String(cat?.name || "").trim(),
+        bad_example: String(cat?.bad_example || "").trim(),
+        good_example: String(cat?.good_example || "").trim(),
+        guidance: String(cat?.guidance || "").trim(),
+        rules: rewriteRules
+      };
+    }).filter((cat) => cat.name);
+    return {
+      id: String(scheme?.id || ""),
+      name: String(scheme?.name || "").trim(),
+      categories
+    };
+  }).filter((s) => s.name);
+  return { rewriteSchemes, deletionRules };
+}
+var init_textRewriteCore = __esm({
+  "src/core/textRewriteCore.js"() {
+  }
+});
+
+// src/ui/rewriteEntryButton.js
+var rewriteEntryButton_exports = {};
+__export(rewriteEntryButton_exports, {
+  initRewriteEntryButton: () => initRewriteEntryButton,
+  openRewritePanelFromMenu: () => openRewritePanelFromMenu,
+  refreshRewriteEntryButton: () => refreshRewriteEntryButton
+});
+import { saveChatConditional as saveChatConditional2, reloadCurrentChat as reloadCurrentChat2, updateMessageBlock, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
+function isEnabled2() {
+  const data = getExtData();
+  return data?.rewrite_entry?.enabled === true;
+}
+function escapeHtml5(text) {
+  return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function getRewriteState() {
+  return ensureRewriteDataShape().rewrite;
+}
+function getDeletionState() {
+  return ensureRewriteDataShape().deletion;
+}
+function isRewriteEnabled() {
+  return getRewriteState().enabled === true;
+}
+function isDeleteEnabled() {
+  return getDeletionState().enabled === true;
 }
 function generateId(prefix) {
   const ts = Date.now().toString(36);
@@ -32415,9 +33865,9 @@ function generateId(prefix) {
   return `${prefix}_${ts}_${rand}`;
 }
 function getActiveScheme() {
-  const data = ensureRewriteDataShape();
-  const schemes = Array.isArray(data.schemes) ? data.schemes : [];
-  const activeId = String(data.active_scheme_id || "").trim();
+  const rw = getRewriteState();
+  const schemes = Array.isArray(rw.schemes) ? rw.schemes : [];
+  const activeId = String(rw.active_scheme_id || "").trim();
   if (!activeId) return null;
   return schemes.find((s) => s.id === activeId) || null;
 }
@@ -32433,16 +33883,10 @@ function normalizeCategory(cat) {
     bad_example: String(cat?.bad_example || "").trim(),
     good_example: String(cat?.good_example || "").trim(),
     guidance: String(cat?.guidance || "").trim(),
-    rules: (Array.isArray(cat?.rules) ? cat.rules : []).map((r) => {
-      const action = normalizeRuleAction(r?.action);
-      return {
-        anchor: uniq(parseCommaList(r?.anchor || "").filter(Boolean)).join(", "),
-        extras: uniq(parseCommaList(r?.extras || "").filter(Boolean)).join(", "),
-        action,
-        // 仅片段删除需要删除起点；其他动作不存，避免无谓字段
-        fragment: action === "delete_range" ? String(r?.fragment || "").trim() : ""
-      };
-    }).filter((r) => r.anchor && r.extras)
+    rules: (Array.isArray(cat?.rules) ? cat.rules : []).map((r) => ({
+      anchor: uniq(parseCommaList(r?.anchor || "")).join(", "),
+      extras: uniq(parseCommaList(r?.extras || "")).join(", ")
+    })).filter((r) => r.anchor && r.extras)
   };
 }
 function normalizeScheme(scheme) {
@@ -32452,55 +33896,95 @@ function normalizeScheme(scheme) {
     categories: (Array.isArray(scheme?.categories) ? scheme.categories : []).map(normalizeCategory).filter((cat) => cat.name)
   };
 }
+function normalizeDeleteRule(rule) {
+  const mode = normalizeDeleteMode(rule?.mode);
+  return {
+    anchor: uniq(parseCommaList(rule?.anchor || "")).join(", "),
+    extras: uniq(parseCommaList(rule?.extras || "")).join(", "),
+    mode,
+    fragment: mode === "fragment" ? String(rule?.fragment || "").trim() : "",
+    enabled: rule?.enabled !== false
+  };
+}
 function ensureRewriteDataShape() {
   const data = getExtData();
   if (!data.rewrite_entry || typeof data.rewrite_entry !== "object") {
-    data.rewrite_entry = {
-      enabled: false,
-      api_url: "",
-      api_key: "",
-      model: "",
-      split_mode: "sentence",
-      active_scheme_id: "",
-      schemes: []
-    };
+    data.rewrite_entry = { enabled: false };
   }
   const item = data.rewrite_entry;
+  if (!item.rewrite || typeof item.rewrite !== "object") {
+    const legacy = { schemes: Array.isArray(item.schemes) ? item.schemes : [] };
+    const { rewriteSchemes, deletionRules } = splitLegacyRules(legacy);
+    const hasRewriteRules = rewriteSchemes.some((s) => (s.categories || []).some((c) => (c.rules || []).length > 0));
+    const wasOn = item.enabled === true;
+    item.rewrite = {
+      enabled: wasOn && hasRewriteRules,
+      auto_trigger: item.auto_trigger === true,
+      active_scheme_id: typeof item.active_scheme_id === "string" ? item.active_scheme_id : "",
+      schemes: rewriteSchemes,
+      selected_sentence_enabled: item.selected_sentence_enabled !== false,
+      prompt_system: typeof item.prompt_system === "string" ? item.prompt_system : REWRITE_DEFAULT_PROMPT_SYSTEM,
+      prompt_user: typeof item.prompt_user === "string" ? item.prompt_user : REWRITE_DEFAULT_PROMPT_USER,
+      selected_prompt_system: typeof item.selected_prompt_system === "string" ? item.selected_prompt_system : REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM,
+      selected_prompt_user: typeof item.selected_prompt_user === "string" ? item.selected_prompt_user : REWRITE_DEFAULT_SELECTED_PROMPT_USER,
+      prompt_json_rule: typeof item.prompt_json_rule === "string" ? item.prompt_json_rule : REWRITE_DEFAULT_PROMPT_JSON_RULE
+    };
+    item.deletion = { enabled: wasOn && deletionRules.length > 0, auto_trigger: item.auto_trigger === true, rules: deletionRules };
+    [
+      "schemes",
+      "active_scheme_id",
+      "auto_trigger",
+      "selected_sentence_enabled",
+      "prompt_system",
+      "prompt_user",
+      "selected_prompt_system",
+      "selected_prompt_user",
+      "prompt_json_rule"
+    ].forEach((k) => {
+      delete item[k];
+    });
+  }
+  if (typeof item.enabled !== "boolean") item.enabled = false;
   item.profile_mode = "custom";
   if (typeof item.profile_id !== "string") item.profile_id = "";
   item.custom_profiles = normalizeRewriteCustomProfiles(item.custom_profiles, item);
-  if (!item.profile_id) {
-    item.profile_id = item.custom_profiles[0]?.id || "";
-  }
+  if (!item.profile_id) item.profile_id = item.custom_profiles[0]?.id || "";
   if (!item.split_mode || !["sentence", "paragraph"].includes(item.split_mode)) item.split_mode = "sentence";
   if (typeof item.stream_live !== "boolean") item.stream_live = true;
-  if (typeof item.auto_trigger !== "boolean") item.auto_trigger = false;
-  if (typeof item.selected_sentence_enabled !== "boolean") item.selected_sentence_enabled = true;
   if (typeof item.tag_whitelist !== "string") item.tag_whitelist = "";
-  if (typeof item.active_scheme_id !== "string") item.active_scheme_id = "";
-  if (!Array.isArray(item.schemes)) item.schemes = [];
-  if (typeof item.prompt_system !== "string") item.prompt_system = REWRITE_DEFAULT_PROMPT_SYSTEM;
-  if (typeof item.prompt_user !== "string") item.prompt_user = REWRITE_DEFAULT_PROMPT_USER;
-  if (typeof item.selected_prompt_system !== "string") item.selected_prompt_system = REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM;
-  if (typeof item.selected_prompt_user !== "string") item.selected_prompt_user = REWRITE_DEFAULT_SELECTED_PROMPT_USER;
-  if (typeof item.prompt_json_rule !== "string") item.prompt_json_rule = REWRITE_DEFAULT_PROMPT_JSON_RULE;
-  item.schemes = item.schemes.map(normalizeScheme).filter((s) => s.name);
+  const rw = item.rewrite && typeof item.rewrite === "object" ? item.rewrite : item.rewrite = {};
+  if (typeof rw.enabled !== "boolean") rw.enabled = false;
+  if (typeof rw.auto_trigger !== "boolean") rw.auto_trigger = false;
+  if (typeof rw.active_scheme_id !== "string") rw.active_scheme_id = "";
+  if (!Array.isArray(rw.schemes)) rw.schemes = [];
+  if (typeof rw.selected_sentence_enabled !== "boolean") rw.selected_sentence_enabled = true;
+  if (typeof rw.prompt_system !== "string") rw.prompt_system = REWRITE_DEFAULT_PROMPT_SYSTEM;
+  if (typeof rw.prompt_user !== "string") rw.prompt_user = REWRITE_DEFAULT_PROMPT_USER;
+  if (typeof rw.selected_prompt_system !== "string") rw.selected_prompt_system = REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM;
+  if (typeof rw.selected_prompt_user !== "string") rw.selected_prompt_user = REWRITE_DEFAULT_SELECTED_PROMPT_USER;
+  if (typeof rw.prompt_json_rule !== "string") rw.prompt_json_rule = REWRITE_DEFAULT_PROMPT_JSON_RULE;
+  rw.schemes = rw.schemes.map(normalizeScheme).filter((s) => s.name);
+  const del = item.deletion && typeof item.deletion === "object" ? item.deletion : item.deletion = {};
+  if (typeof del.enabled !== "boolean") del.enabled = false;
+  if (typeof del.auto_trigger !== "boolean") del.auto_trigger = true;
+  if (!Array.isArray(del.rules)) del.rules = [];
+  del.rules = del.rules.map(normalizeDeleteRule).filter((r) => r.anchor && r.extras);
   return item;
 }
 function getRewritePromptState() {
-  const item = ensureRewriteDataShape();
+  const rw = getRewriteState();
   return {
-    prompt_system: String(item.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM),
-    prompt_user: String(item.prompt_user || REWRITE_DEFAULT_PROMPT_USER),
-    prompt_json_rule: String(item.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
+    prompt_system: String(rw.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM),
+    prompt_user: String(rw.prompt_user || REWRITE_DEFAULT_PROMPT_USER),
+    prompt_json_rule: String(rw.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
 }
 function getSelectedRewritePromptState() {
-  const item = ensureRewriteDataShape();
+  const rw = getRewriteState();
   return {
-    prompt_system: String(item.selected_prompt_system || REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM),
-    prompt_user: String(item.selected_prompt_user || REWRITE_DEFAULT_SELECTED_PROMPT_USER),
-    prompt_json_rule: String(item.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
+    prompt_system: String(rw.selected_prompt_system || REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM),
+    prompt_user: String(rw.selected_prompt_user || REWRITE_DEFAULT_SELECTED_PROMPT_USER),
+    prompt_json_rule: String(rw.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
 }
 function buildCombinedPromptText(promptSystem, promptUser) {
@@ -32557,13 +34041,13 @@ function persistPromptStateFromSettings() {
   const parsed = parseCombinedPromptText(combinedText, getRewritePromptState());
   const selectedCombinedText = String($overlay.find("#t-rewrite-settings-selected-prompt-combined").val() || "");
   const selectedParsed = parseCombinedPromptText(selectedCombinedText, getSelectedRewritePromptState());
-  data.rewrite_entry = {
-    ...prev,
+  prev.rewrite = {
+    ...prev.rewrite,
     prompt_system: parsed.prompt_system,
     prompt_user: parsed.prompt_user,
     selected_prompt_system: selectedParsed.prompt_system,
     selected_prompt_user: selectedParsed.prompt_user,
-    prompt_json_rule: String(prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
+    prompt_json_rule: String(prev.rewrite.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
   };
   saveExtData();
 }
@@ -32607,22 +34091,6 @@ function setStatus(text, tone = "muted") {
   $targets.each((_, el) => {
     $(el).removeClass("ok warn err muted").addClass(tone).text(text || "");
   });
-}
-function splitBySentence(text) {
-  const src = String(text || "");
-  if (!src.trim()) return [];
-  const lines = src.split(/\r?\n/);
-  const chunks = [];
-  lines.forEach((line) => {
-    if (!line.trim()) return;
-    const arr = line.split(/(?<=[。！？!?])/u).filter((s) => s.trim());
-    if (arr.length === 0) {
-      chunks.push(line);
-    } else {
-      chunks.push(...arr);
-    }
-  });
-  return chunks;
 }
 function getSelectedSentenceIdSet() {
   return selectedSentenceIds instanceof Set ? selectedSentenceIds : /* @__PURE__ */ new Set();
@@ -32742,8 +34210,8 @@ function ensureInlineRewriteToolbar(latest) {
   }
 }
 function refreshInlineRewriteEntry() {
-  const data = ensureRewriteDataShape();
-  if (!isEnabled() || data.selected_sentence_enabled === false) {
+  const rw = getRewriteState();
+  if (!isEnabled2() || !isRewriteEnabled() || rw.selected_sentence_enabled === false) {
     clearInlineSentenceSelection();
     return;
   }
@@ -32780,83 +34248,13 @@ function enterInlineSentenceSelection() {
   $toolbar.find(".t-rewrite-inline-confirm, .t-rewrite-inline-cancel, .t-rewrite-inline-count").show();
   updateInlineRewriteCount();
 }
-function splitByParagraph(text) {
-  return String(text || "").split(/\r?\n\s*\r?\n+/).map((s) => s.trim()).filter(Boolean);
-}
-function splitText(text, splitMode) {
-  return splitMode === "paragraph" ? splitByParagraph(text) : splitBySentence(text);
-}
-function evaluateUnitAgainstRule(unitText, rule) {
-  const anchorList = parseCommaList(String(rule?.anchor || ""));
-  const extrasList = parseCommaList(String(rule?.extras || ""));
-  if (anchorList.length === 0 || extrasList.length === 0) return false;
-  const source = normalizeToken(unitText);
-  const anchorHit = anchorList.some((kw) => source.includes(kw));
-  if (!anchorHit) return false;
-  const extrasHit = extrasList.some((kw) => source.includes(kw));
-  return extrasHit;
-}
-function evaluateUnitAgainstCategory(unitText, category) {
-  const rules = Array.isArray(category.rules) ? category.rules : [];
-  const matchedRules = [];
-  rules.forEach((rule) => {
-    if (evaluateUnitAgainstRule(unitText, rule)) {
-      matchedRules.push({
-        anchor: String(rule.anchor || ""),
-        extras: String(rule.extras || ""),
-        action: normalizeRuleAction(rule?.action),
-        fragment: String(rule?.fragment || "")
-      });
-    }
-  });
-  return matchedRules;
-}
-function evaluateRules(payload, sourceText = null) {
-  const splitMode = payload?.split_mode === "paragraph" ? "paragraph" : "sentence";
-  const categories = Array.isArray(payload?.categories) ? payload.categories : [];
-  const testText = String(sourceText || "");
-  const units = splitText(testText, splitMode);
-  const unitResults = units.map((unit, idx) => {
-    const matchedCategories = [];
-    categories.forEach((cat) => {
-      const matchedRules = evaluateUnitAgainstCategory(unit, cat);
-      if (matchedRules.length > 0) {
-        matchedCategories.push({
-          categoryId: String(cat.id || ""),
-          categoryName: String(cat.name || ""),
-          matchedRules
-        });
-      }
-    });
-    const allMatchedRules = matchedCategories.flatMap((c) => c.matchedRules);
-    const { deleteAction, deleteFragment } = mergeUnitDeleteAction(allMatchedRules);
-    return {
-      unitIndex: idx + 1,
-      text: unit,
-      hit: matchedCategories.length > 0,
-      matchedCategories,
-      deleteAction,
-      deleteFragment
-    };
-  });
-  const hitUnits = unitResults.filter((item) => item.hit);
-  const hitCategoryIds = /* @__PURE__ */ new Set();
-  hitUnits.forEach((u) => u.matchedCategories.forEach((c) => hitCategoryIds.add(c.categoryId)));
-  return {
-    splitMode,
-    unitCount: unitResults.length,
-    hitCount: hitUnits.length,
-    categoryCount: hitCategoryIds.size,
-    unitResults
-  };
-}
 function renderDiffRows(rows = []) {
   if (Array.isArray(rows)) {
     lastDiffRows = rows.map((item) => ({
       before: String(item?.before || ""),
       after: String(item?.after || ""),
       ruleHint: String(item?.ruleHint || ""),
-      action: normalizeRuleAction(item?.action)
+      action: item?.action === "delete" ? "delete" : "rewrite"
     }));
   } else {
     lastDiffRows = [];
@@ -32871,9 +34269,9 @@ function renderDiffRows(rows = []) {
     const before = escapeHtml5(item.before || "");
     const after = escapeHtml5(item.after || "");
     const ruleHint = escapeHtml5(item.ruleHint || "");
-    const action = normalizeRuleAction(item.action);
-    const afterLabel = action === "delete" ? "\u5220\u9664" : "\u6539\u5199";
-    const afterText = action === "delete" ? "\uFF08\u5DF2\u5220\u9664\uFF09" : after;
+    const isDelete = item.action === "delete";
+    const afterLabel = isDelete ? "\u5220\u9664" : "\u6539\u5199";
+    const afterText = isDelete && !item.after ? "\uFF08\u5DF2\u5220\u9664\uFF09" : after;
     return `
             <div class="t-rewrite-diff-row">
                 <div class="t-rewrite-diff-cell t-rewrite-diff-before">
@@ -32944,11 +34342,11 @@ function renderLiveHistory() {
     return;
   }
   const html = liveResponseHistory.map((item) => {
-    const active = String(item.text || "") === String(lastRawResponseText || "");
+    const active2 = String(item.text || "") === String(lastRawResponseText || "");
     const streamText = item.stream ? "\u6D41\u5F0F" : "\u975E\u6D41\u5F0F";
     const modelText = item.model ? ` \xB7 ${escapeHtml5(item.model)}` : "";
     return `
-            <div class="t-rewrite-live-history-item ${active ? "active" : ""}" data-history-id="${escapeHtml5(item.id)}">
+            <div class="t-rewrite-live-history-item ${active2 ? "active" : ""}" data-history-id="${escapeHtml5(item.id)}">
                 <div class="t-rewrite-live-history-head">
                     <span>${escapeHtml5(formatHistoryTime(item.at))} \xB7 ${escapeHtml5(item.source)} \xB7 ${escapeHtml5(item.phase)} \xB7 ${streamText}${modelText}</span>
                     <span>${item.chars} chars</span>
@@ -33064,36 +34462,32 @@ function parseRewriteJson(raw) {
 }
 function buildRewritePayload(data, sourceText) {
   const categories = getActiveSchemeCategories();
-  const payload = {
-    split_mode: data.split_mode || "sentence",
-    categories
-  };
-  const evaluated = evaluateRules(payload, sourceText || "");
+  const evaluated = evaluateRewriteRules(sourceText || "", data.split_mode || "sentence", categories);
   const targets = [];
   const catNames = /* @__PURE__ */ new Set();
-  const deleteUnits = [];
   evaluated.unitResults.forEach((unit) => {
     if (!unit.hit) return;
-    if (unit.deleteAction) {
-      deleteUnits.push({
-        unitIndex: unit.unitIndex,
-        text: unit.text,
-        deleteAction: unit.deleteAction,
-        deleteFragment: unit.deleteFragment || "",
-        ruleHint: unit.matchedCategories.map((c) => c.categoryName).join(" | ")
-      });
-      unit.matchedCategories.forEach((mc) => catNames.add(mc.categoryName));
-      return;
-    }
+    const allKeywords = [];
+    const unitCats = [];
     unit.matchedCategories.forEach((mc) => {
       catNames.add(mc.categoryName);
-      const allKeywords = mc.matchedRules.map((r) => [...parseCommaList(r.anchor), ...parseCommaList(r.extras)]).flat();
-      targets.push({
-        segment_id: `s_${unit.unitIndex}`,
-        original_text: unit.text,
-        matched_keywords: uniq(allKeywords)
+      mc.matchedRules.forEach((r) => {
+        allKeywords.push(...parseCommaList(r.anchor), ...parseCommaList(r.extras));
       });
+      const cat = { name: mc.categoryName };
+      if (mc.guidance) cat.guidance = mc.guidance;
+      if (mc.bad_example) cat.bad_example = mc.bad_example;
+      if (mc.good_example) cat.good_example = mc.good_example;
+      unitCats.push(cat);
     });
+    const target = {
+      segment_id: `s_${unit.unitIndex}`,
+      original_text: unit.text,
+      matched_keywords: uniq(allKeywords)
+    };
+    if (unitCats.length === 1) target.category = unitCats[0];
+    else if (unitCats.length > 1) target.categories = unitCats;
+    targets.push(target);
   });
   return {
     evaluated,
@@ -33101,8 +34495,7 @@ function buildRewritePayload(data, sourceText) {
       task_id: `rewrite_${Date.now()}`,
       targets
     },
-    hitCategoryCount: catNames.size,
-    deleteUnits
+    hitCategoryCount: catNames.size
   };
 }
 function getLatestAssistantMessageFromChat() {
@@ -33248,61 +34641,22 @@ function scheduleApplyAllRewriteMarks(delay = 80) {
 function bindRewriteDecorationEvents() {
   if (rewriteDecorBound) return;
   rewriteDecorBound = true;
-  eventSource2.on(event_types2.MESSAGE_RECEIVED, () => {
+  eventSource3.on(event_types3.MESSAGE_RECEIVED, () => {
     scheduleApplyAllRewriteMarks(120);
     setTimeout(refreshInlineRewriteEntry, 160);
   });
-  eventSource2.on(event_types2.GENERATION_ENDED, () => {
+  eventSource3.on(event_types3.GENERATION_ENDED, () => {
     scheduleApplyAllRewriteMarks(120);
     setTimeout(refreshInlineRewriteEntry, 160);
   });
 }
-function applyDeletesToUnit(unitText, deleteAction, fragment) {
-  const text = String(unitText || "");
-  if (deleteAction === "delete") return "";
-  if (deleteAction !== "delete_range") return text;
-  const frag = String(fragment || "").trim();
-  if (!frag) return text;
-  const idx = text.indexOf(frag);
-  if (idx < 0) return text;
-  const tail = text.slice(idx + frag.length);
-  const punct = /[。！？!?…]\s*$/.exec(tail);
-  const rawHead = text.slice(0, idx);
-  let cleanedHead = rawHead.replace(/[，、；,;]\s*$/, "");
-  const closedByQuote = /[”」』）)]\s*$/.test(cleanedHead);
-  let keptTail = punct && !closedByQuote ? punct[0] : "";
-  const openMatch = /[（(]\s*$/.exec(cleanedHead);
-  if (openMatch) {
-    const closeChar = cleanedHead.endsWith("\uFF08") ? "\uFF09" : ")";
-    cleanedHead = cleanedHead.replace(/[（(]\s*$/, closeChar);
-    keptTail = "";
-  }
-  return cleanedHead + keptTail;
+function applyDeleteToFullText(sourceText, deleteUnits) {
+  return applyReplacements(sourceText, buildDeleteReplacements(deleteUnits));
 }
-function applyRewriteToFullText(sourceText, evaluated, parsed, request = null, deleteUnits = []) {
-  const deletes = (Array.isArray(deleteUnits) ? deleteUnits : []).map((unit) => ({
-    before: String(unit?.text || ""),
-    after: applyDeletesToUnit(unit?.text, unit?.deleteAction, unit?.deleteFragment)
-  })).filter((item) => item.before && item.after !== item.before);
+function applyRewriteToFullText(sourceText, evaluated, parsed) {
   const map = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
-  let rewritten = String(sourceText || "");
-  let cursor = 0;
-  let replaced = 0;
-  const rewriteEntries = evaluated.unitResults.filter((u) => u.hit && !u.deleteAction).map((unit) => {
-    const segmentId = `s_${unit.unitIndex}`;
-    return { before: String(unit.text || ""), after: map.get(segmentId) };
-  }).filter((item) => item.before && typeof item.after === "string" && item.after !== item.before);
-  const entries = [...deletes, ...rewriteEntries].map((item) => {
-    const idx = rewritten.indexOf(item.before, cursor);
-    return { ...item, idx };
-  }).filter((item) => item.idx >= 0).sort((a, b) => a.idx - b.idx);
-  entries.forEach((item) => {
-    if (item.idx < cursor) return;
-    rewritten = `${rewritten.slice(0, item.idx)}${item.after}${rewritten.slice(item.idx + item.before.length)}`;
-    cursor = item.idx + item.after.length;
-    replaced += 1;
-  });
-  return { text: rewritten, replaced };
+  const entries = (evaluated?.unitResults || []).filter((u) => u.hit).map((unit) => ({ before: String(unit.text || ""), after: map.get(`s_${unit.unitIndex}`) })).filter((item) => item.before && typeof item.after === "string");
+  return applyReplacements(sourceText, entries);
 }
 function writeBackMessageContent(targetMsg, rewrittenText) {
   const text = stripRewriteMarkWrappers(String(rewrittenText || ""));
@@ -33313,6 +34667,22 @@ function writeBackMessageContent(targetMsg, rewrittenText) {
     const idx = Number.isInteger(swipeId) && swipeId >= 0 && swipeId < targetMsg.swipes.length ? swipeId : targetMsg.swipes.length - 1;
     targetMsg.swipes[idx] = text;
   }
+}
+function rerenderMessageInPlace(index, msg) {
+  try {
+    updateMessageBlock(index, msg);
+  } catch (e) {
+    return false;
+  }
+  const el = getChatMessageElementByIndex(index).get(0);
+  const textEl = el ? el.querySelector(".mes_text") : null;
+  if (textEl) {
+    textEl.classList.remove("t-delete-settle");
+    void textEl.offsetWidth;
+    textEl.classList.add("t-delete-settle");
+    setTimeout(() => textEl.classList.remove("t-delete-settle"), 400);
+  }
+  return true;
 }
 function buildRewriteMessages(payload, promptState = null) {
   const schemaText = '{"task_id":"string","results":[{"segment_id":"string","rewritten_text":"string"}]}';
@@ -33469,18 +34839,10 @@ function normalizeRewriteResponseShape(parsed, payload) {
     results
   };
 }
-function buildDiffRowsFromResults(evaluated, payload, parsed, deleteUnits = []) {
-  const rewrittenMap = new Map(parsed.results.map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
+function buildDiffRowsFromResults(evaluated, payload, parsed) {
+  const rewrittenMap = new Map((parsed?.results || []).map((r) => [String(r.segment_id), String(r.rewritten_text || "")]));
   return evaluated.unitResults.filter((u) => u.hit).map((u) => {
     const categoryNames = Array.isArray(u.matchedCategories) ? u.matchedCategories.map((c) => c.categoryName).join(" | ") : "";
-    if (u.deleteAction) {
-      return {
-        before: u.text,
-        after: applyDeletesToUnit(u.text, u.deleteAction, u.deleteFragment),
-        ruleHint: categoryNames,
-        action: "delete"
-      };
-    }
     const segmentId = `s_${u.unitIndex}`;
     const after = rewrittenMap.get(segmentId) || u.text;
     return {
@@ -33491,7 +34853,7 @@ function buildDiffRowsFromResults(evaluated, payload, parsed, deleteUnits = []) 
     };
   });
 }
-async function executeRewriteRequest({ data, latest, evaluated, request, rewriteCount, hitCategoryCount = 0, source = "manual", buttonSelector = "#t-rewrite-trigger", promptState = null, deleteUnits = [] }) {
+async function executeRewriteRequest({ data, latest, evaluated, request, rewriteCount, hitCategoryCount = 0, source = "manual", buttonSelector = "#t-rewrite-trigger", promptState = null }) {
   const apiUrl = String(data.api_url || "").trim();
   const apiKey = String(data.api_key || "").trim();
   const model = String(data.model || "").trim();
@@ -33552,10 +34914,10 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
       valid = validateRewriteResponse(parsed, request);
       if (!valid.ok) throw new Error(`\u8FD4\u56DE\u6821\u9A8C\u5931\u8D25: ${valid.reason}`);
     }
-    const rows = buildDiffRowsFromResults(evaluated, request, parsed, deleteUnits);
+    const rows = buildDiffRowsFromResults(evaluated, request, parsed);
     renderDiffRows(rows);
     const rewriteMarks = buildRewriteMarksFromRows(rows);
-    const applied = applyRewriteToFullText(latest.content, evaluated, parsed, request, deleteUnits);
+    const applied = applyRewriteToFullText(latest.content, evaluated, parsed);
     writeBackMessageContent(latest.msg, applied.text);
     if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
     latest.msg.extra.titania_rewrite_done = true;
@@ -33563,8 +34925,7 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
     await saveChatConditional2();
     await reloadCurrentChat2();
     scheduleApplyAllRewriteMarks(180);
-    const deleteCount = Array.isArray(deleteUnits) ? deleteUnits.length : 0;
-    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761${deleteCount > 0 ? `\uFF0C\u5220\u9664 ${deleteCount} \u6761` : ""}\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u6539\u5199 ${rewriteCount} \u6761\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
     success = true;
   } catch (e) {
     renderDiffRows([]);
@@ -33584,10 +34945,15 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
 async function runRewrite(options = {}) {
   persistPanelState();
   const data = ensureRewriteDataShape();
+  if (!isRewriteEnabled()) {
+    setStatus("\u6539\u5199\u529F\u80FD\u672A\u542F\u7528\uFF0C\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u5F00\u542F", "warn");
+    if (options.source !== "auto" && window.toastr) toastr.warning("\u6539\u5199\u529F\u80FD\u672A\u542F\u7528", "\u6587\u672C\u6539\u5199");
+    return;
+  }
   const scheme = getActiveScheme();
   if (!scheme) {
     setStatus("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "warn");
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "Titania \u6539\u5199");
+    if (options.source !== "auto" && window.toastr) toastr.warning("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u521B\u5EFA\u5E76\u4FDD\u5B58\u6539\u5199\u65B9\u6848", "Titania \u6539\u5199");
     return;
   }
   const latest = getLatestAssistantMessageFromChat();
@@ -33595,35 +34961,17 @@ async function runRewrite(options = {}) {
     setStatus("\u672A\u627E\u5230\u53EF\u6539\u5199\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
     return;
   }
-  const { evaluated, request, hitCategoryCount, deleteUnits } = buildRewritePayload(data, latest.content);
+  const { evaluated, request, hitCategoryCount } = buildRewritePayload(data, latest.content);
   renderMatchResult(evaluated, latest.content);
   if (!String(latest.content || "").trim()) {
     setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u6539\u5199", "warn");
     return;
   }
-  const rewriteTargets = Array.isArray(request.targets) ? request.targets : [];
-  const rewriteCount = rewriteTargets.length;
-  const deleteCount = Array.isArray(deleteUnits) ? deleteUnits.length : 0;
-  if (rewriteCount === 0 && deleteCount === 0) {
+  const rewriteCount = Array.isArray(request.targets) ? request.targets.length : 0;
+  if (rewriteCount === 0) {
     setStatus("\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u5206\u7C7B\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF0C\u672A\u6267\u884C\u6539\u5199", "warn");
     renderDiffRows([]);
     return;
-  }
-  if (rewriteCount === 0) {
-    const rows = buildDiffRowsFromResults(evaluated, request, { results: [] }, deleteUnits);
-    renderDiffRows(rows);
-    const rewriteMarks = buildRewriteMarksFromRows(rows);
-    const applied = applyRewriteToFullText(latest.content, evaluated, { results: [] }, null, deleteUnits);
-    writeBackMessageContent(latest.msg, applied.text);
-    if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
-    latest.msg.extra.titania_rewrite_done = true;
-    latest.msg.extra.titania_rewrite_marks = rewriteMarks;
-    await saveChatConditional2();
-    await reloadCurrentChat2();
-    scheduleApplyAllRewriteMarks(180);
-    setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u5220\u9664 ${deleteCount} \u6761\uFF08\u79BB\u7EBF\u5904\u7406\uFF0C\u672A\u8BF7\u6C42\u6A21\u578B\uFF09\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
-    if (window.toastr) toastr.success(`\u5DF2\u6309\u5220\u9664\u89C4\u5219\u5904\u7406 ${deleteCount} \u6761`, "\u6587\u672C\u6539\u5199");
-    return true;
   }
   return executeRewriteRequest({
     data,
@@ -33633,9 +34981,52 @@ async function runRewrite(options = {}) {
     rewriteCount,
     hitCategoryCount,
     source: options.source || "manual",
-    buttonSelector: "#t-rewrite-trigger",
-    deleteUnits
+    buttonSelector: "#t-rewrite-trigger"
   });
+}
+async function runDelete(options = {}) {
+  const data = ensureRewriteDataShape();
+  const del = data.deletion;
+  if (!isDeleteEnabled()) {
+    setStatus("\u5220\u9664\u529F\u80FD\u672A\u542F\u7528\uFF0C\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u5F00\u542F", "warn");
+    if (options.source !== "auto" && window.toastr) toastr.warning("\u5220\u9664\u529F\u80FD\u672A\u542F\u7528", "\u6587\u672C\u5220\u9664");
+    return false;
+  }
+  if (!Array.isArray(del.rules) || del.rules.length === 0) {
+    setStatus("\u5C1A\u672A\u914D\u7F6E\u5220\u9664\u89C4\u5219", "warn");
+    if (options.source !== "auto" && window.toastr) toastr.warning("\u5C1A\u672A\u914D\u7F6E\u5220\u9664\u89C4\u5219", "\u6587\u672C\u5220\u9664");
+    return false;
+  }
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest) {
+    setStatus("\u672A\u627E\u5230\u53EF\u5904\u7406\u7684\u6700\u65B0\u56DE\u590D\u697C\u5C42", "warn");
+    return false;
+  }
+  if (!String(latest.content || "").trim()) {
+    setStatus("\u6700\u65B0\u697C\u5C42\u5185\u5BB9\u4E3A\u7A7A\uFF0C\u65E0\u6CD5\u5220\u9664", "warn");
+    return false;
+  }
+  const result = evaluateDeleteRules(latest.content, data.split_mode, del.rules);
+  renderDeleteResult(result, latest.content);
+  if (result.hitCount === 0) {
+    setStatus("\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u5220\u9664\u89C4\u5219\u7684\u6587\u672C\u5355\u5143\uFF0C\u672A\u6267\u884C\u5220\u9664", "warn");
+    return false;
+  }
+  const applied = applyDeleteToFullText(latest.content, result.deleteUnits);
+  writeBackMessageContent(latest.msg, applied.text);
+  if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
+  latest.msg.extra.titania_delete_done = true;
+  await saveChatConditional2();
+  const rerendered = rerenderMessageInPlace(latest.index, latest.msg);
+  if (!rerendered) await reloadCurrentChat2();
+  scheduleApplyAllRewriteMarks(180);
+  refreshInlineRewriteEntry();
+  setStatus(`\u6267\u884C\u5B8C\u6210\uFF1A\u5220\u9664 ${result.hitCount} \u5904\uFF0C\u5DF2\u56DE\u5199\u7B2C ${latest.index + 1} \u697C`, "ok");
+  if (options.source !== "auto" && window.toastr) toastr.success(`\u5DF2\u6309\u5220\u9664\u89C4\u5219\u5904\u7406 ${result.hitCount} \u5904`, "\u6587\u672C\u5220\u9664");
+  return true;
+}
+async function runManualDelete() {
+  return runDelete({ source: "manual" });
 }
 async function runSelectedSentenceRewrite() {
   persistPanelState();
@@ -33685,10 +35076,36 @@ async function runSelectedSentenceRewrite() {
 async function runManualRewrite() {
   return runRewrite({ source: "manual" });
 }
-async function onAutoTriggerRewrite() {
+async function onGenerationEndedAuto() {
+  if (!isEnabled2()) return;
+  try {
+    await maybeAutoDelete();
+  } catch (e) {
+  }
+  maybeScheduleAutoRewrite();
+}
+async function maybeAutoDelete() {
   const data = ensureRewriteDataShape();
-  if (!data.auto_trigger) return;
-  if (!isEnabled()) return;
+  if (!data.deletion.enabled || !data.deletion.auto_trigger) return;
+  if (isAutoDeleting) return;
+  if (!Array.isArray(data.deletion.rules) || data.deletion.rules.length === 0) return;
+  const latest = getLatestAssistantMessageFromChat();
+  if (!latest || !latest.msg) return;
+  if (!latest.msg.extra || typeof latest.msg.extra !== "object") latest.msg.extra = {};
+  if (latest.msg.extra.titania_delete_done === true) return;
+  const result = evaluateDeleteRules(latest.content, data.split_mode, data.deletion.rules);
+  if (result.hitCount <= 0) return;
+  try {
+    isAutoDeleting = true;
+    const ok = await runDelete({ source: "auto" });
+    if (ok && window.toastr) toastr.success(`\u5DF2\u6309\u5220\u9664\u89C4\u5219\u5904\u7406 ${result.hitCount} \u5904`, "\u6587\u672C\u5220\u9664");
+  } finally {
+    isAutoDeleting = false;
+  }
+}
+function maybeScheduleAutoRewrite() {
+  const data = ensureRewriteDataShape();
+  if (!data.rewrite.enabled || !data.rewrite.auto_trigger) return;
   if (isAutoRewriting) return;
   if (activeRewriteAbortController) return;
   if (!getActiveScheme()) return;
@@ -33706,8 +35123,8 @@ async function onAutoTriggerRewrite() {
   autoRewriteTimer = setTimeout(async () => {
     autoRewriteTimer = null;
     const freshData = ensureRewriteDataShape();
-    if (!freshData.auto_trigger) return;
-    if (!isEnabled()) return;
+    if (!freshData.rewrite.enabled || !freshData.rewrite.auto_trigger) return;
+    if (!isEnabled2()) return;
     if (isAutoRewriting) return;
     if (activeRewriteAbortController) return;
     const freshLatest = getLatestAssistantMessageFromChat();
@@ -33736,23 +35153,14 @@ async function onAutoTriggerRewrite() {
 function bindAutoTriggerEvents() {
   if (autoTriggerBound) return;
   autoTriggerBound = true;
-  eventSource2.on(event_types2.GENERATION_ENDED, onAutoTriggerRewrite);
+  eventSource3.on(event_types3.GENERATION_ENDED, onGenerationEndedAuto);
 }
 function buildKwRowHtml(rule = {}) {
-  const action = normalizeRuleAction(rule?.action);
-  const fragment = String(rule?.fragment || "");
-  const isRange = action === "delete_range";
   return `
-                <div class="t-rewrite-kw-row${isRange ? " t-rewrite-kw-row--range" : ""}">
+                <div class="t-rewrite-kw-row">
                     <input class="text_pole t-rewrite-kw-anchor" type="text" value="${escapeHtml5(rule?.anchor || "")}" placeholder="\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
                     <span class="t-rewrite-kw-and">\u4E0E</span>
                     <input class="text_pole t-rewrite-kw-extras" type="text" value="${escapeHtml5(rule?.extras || "")}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
-                    <select class="text_pole t-rewrite-kw-action" title="\u547D\u4E2D\u540E\u7684\u52A8\u4F5C">
-                        <option value="rewrite" ${!isRange && action !== "delete" ? "selected" : ""}>\u6539\u5199</option>
-                        <option value="delete" ${action === "delete" ? "selected" : ""}>\u5220\u9664\u6574\u53E5</option>
-                        <option value="delete_range" ${isRange ? "selected" : ""}>\u5220\u9664\u7247\u6BB5</option>
-                    </select>
-                    <input class="text_pole t-rewrite-kw-fragment" type="text" value="${escapeHtml5(fragment)}" placeholder="\u5220\u9664\u8D77\u70B9\u7247\u6BB5\uFF0C\u5220\u5230\u53E5\u5C3E\uFF08\u5982\uFF1A\u90A3\u7B11\u58F0\u50CF\uFF09" style="${isRange ? "" : "display:none;"}">
                     <button class="t-btn t-btn--glass t-rewrite-kw-del" type="button" title="\u5220\u9664\u6B64\u5173\u952E\u8BCD\u89C4\u5219"><i class="fa-solid fa-xmark"></i></button>
                 </div>`;
 }
@@ -33769,9 +35177,7 @@ function readCategoriesFromDom() {
     $card.find(".t-rewrite-kw-row").each((_2, kwEl) => {
       const anchor = String($(kwEl).find(".t-rewrite-kw-anchor").val() || "").trim();
       const extras = String($(kwEl).find(".t-rewrite-kw-extras").val() || "").trim();
-      const action = normalizeRuleAction($(kwEl).find(".t-rewrite-kw-action").val() || "rewrite");
-      const fragment = action === "delete_range" ? String($(kwEl).find(".t-rewrite-kw-fragment").val() || "").trim() : "";
-      if (anchor && extras) rules.push({ anchor, extras, action, fragment });
+      if (anchor && extras) rules.push({ anchor, extras });
     });
     categories.push({ id: id3 || generateId("cat"), name, bad_example, good_example, guidance, rules });
   });
@@ -33821,7 +35227,7 @@ function renderSchemeCategoriesList(scheme) {
                         <textarea class="text_pole t-rewrite-cat-guidance" rows="2" placeholder="\u544A\u8BC9\u6A21\u578B\u5177\u4F53\u600E\u4E48\u6539">${escapeHtml5(cat.guidance || "")}</textarea>
                     </div>
                     <div class="t-rewrite-cat-field">
-                        <label>\u5173\u952E\u8BCD\u89C4\u5219<span class="t-rewrite-cat-field-hint">\uFF08\u4E3B\u8BCD AND \u9644\u52A0\u8BCD\u540C\u65F6\u547D\u4E2D\u624D\u751F\u6548\uFF1B\u52A8\u4F5C\u53EF\u9009\u6539\u5199/\u5220\u9664\u6574\u53E5/\u5220\u9664\u7247\u6BB5\uFF0C\u540C\u65F6\u547D\u4E2D\u65F6\u5220\u9664\u4F18\u5148\uFF09</span></label>
+                        <label>\u5173\u952E\u8BCD\u89C4\u5219<span class="t-rewrite-cat-field-hint">\uFF08\u4E3B\u8BCD AND \u9644\u52A0\u8BCD\u540C\u65F6\u547D\u4E2D\u624D\u89E6\u53D1\u6539\u5199\uFF1B\u547D\u4E2D\u53E5\u5C06\u8FDE\u540C\u672C\u5206\u7C7B\u7684\u793A\u4F8B/\u6307\u5BFC\u4E00\u8D77\u4EA4\u7ED9\u6A21\u578B\uFF09</span></label>
                         <div class="t-rewrite-cat-kw-list">${kwRows}</div>
                         <button class="t-btn t-btn--glass t-rewrite-cat-add-kw" type="button"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u5173\u952E\u8BCD</button>
                     </div>
@@ -33834,45 +35240,36 @@ function renderSchemeCategoriesList(scheme) {
 function persistPanelState() {
   const $overlay = getOverlay();
   if (!$overlay.length) return;
-  const data = getExtData();
   const prev = ensureRewriteDataShape();
-  const readValue = (selector, fallback = "") => {
-    const $el = $overlay.find(selector);
-    return $el.length > 0 ? String($el.val() || "").trim() : fallback;
-  };
   const readChecked = (selector, fallback = false) => {
     const $el = $overlay.find(selector);
     return $el.length > 0 ? $el.prop("checked") === true : fallback;
   };
-  data.rewrite_entry = {
-    enabled: prev.enabled === true,
-    profile_mode: prev.profile_mode || "custom",
-    profile_id: prev.profile_id || "",
-    custom_profiles: normalizeRewriteCustomProfiles(prev.custom_profiles, prev),
-    api_url: readValue("#t-rewrite-api-url", prev.api_url || ""),
-    api_key: readValue("#t-rewrite-api-key", prev.api_key || ""),
-    model: readValue("#t-rewrite-model", prev.model || ""),
-    split_mode: readValue("input[name='t-rewrite-split-mode']:checked", prev.split_mode || "sentence"),
-    active_scheme_id: prev.active_scheme_id || "",
-    schemes: prev.schemes || [],
-    stream_live: readChecked("#t-rewrite-stream-live", prev.stream_live === true),
-    auto_trigger: prev.auto_trigger === true,
-    selected_sentence_enabled: prev.selected_sentence_enabled !== false,
-    tag_whitelist: prev.tag_whitelist || "",
-    prompt_system: prev.prompt_system || REWRITE_DEFAULT_PROMPT_SYSTEM,
-    prompt_user: prev.prompt_user || REWRITE_DEFAULT_PROMPT_USER,
-    selected_prompt_system: prev.selected_prompt_system || REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM,
-    selected_prompt_user: prev.selected_prompt_user || REWRITE_DEFAULT_SELECTED_PROMPT_USER,
-    prompt_json_rule: prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE
-  };
+  prev.rewrite.enabled = readChecked("#t-rewrite-enable", prev.rewrite.enabled);
+  prev.rewrite.auto_trigger = readChecked("#t-rewrite-auto", prev.rewrite.auto_trigger);
+  prev.deletion.enabled = readChecked("#t-delete-enable", prev.deletion.enabled);
+  prev.deletion.auto_trigger = readChecked("#t-delete-auto", prev.deletion.auto_trigger);
   saveExtData();
   const categories = getActiveSchemeCategories();
   $("#t-rewrite-rule-count").text(String(categories.length));
 }
+function readDeleteRulesFromDom($scope) {
+  const rules = [];
+  const $root = $scope && $scope.length ? $scope : getSettingsOverlay();
+  $root.find("#t-delete-rules-list .t-delete-rule-row").each((_, el) => {
+    const $row = $(el);
+    const anchor = String($row.find(".t-delete-rule-anchor").val() || "").trim();
+    const extras = String($row.find(".t-delete-rule-extras").val() || "").trim();
+    const mode = normalizeDeleteMode($row.find(".t-delete-rule-mode").val() || "sentence");
+    const fragment = mode === "fragment" ? String($row.find(".t-delete-rule-fragment").val() || "").trim() : "";
+    const enabled = $row.find(".t-delete-rule-enabled").prop("checked") !== false;
+    if (anchor && extras) rules.push({ anchor, extras, mode, fragment, enabled });
+  });
+  return rules;
+}
 function persistSettingsPanelState() {
   const $overlay = getSettingsOverlay();
   if (!$overlay.length) return;
-  const data = getExtData();
   const prev = ensureRewriteDataShape();
   const rawProfileId = String($overlay.find("#t-rewrite-settings-profile-select").val() || prev.profile_id || "").trim();
   const customProfilesRaw = $overlay.data("rewriteCustomProfiles");
@@ -33885,7 +35282,7 @@ function persistSettingsPanelState() {
     current.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
     profileId = current.id;
   }
-  const activeSchemeId = String($overlay.find("#t-rewrite-scheme-select").val() || prev.active_scheme_id || "").trim();
+  const activeSchemeId = String($overlay.find("#t-rewrite-scheme-select").val() || prev.rewrite.active_scheme_id || "").trim();
   const rulePromptParsed = parseCombinedPromptText(
     String($overlay.find("#t-rewrite-settings-prompt-combined").val() || ""),
     getRewritePromptState()
@@ -33894,27 +35291,22 @@ function persistSettingsPanelState() {
     String($overlay.find("#t-rewrite-settings-selected-prompt-combined").val() || ""),
     getSelectedRewritePromptState()
   );
-  data.rewrite_entry = {
-    enabled: prev.enabled === true,
-    profile_mode: "custom",
-    profile_id: profileId,
-    custom_profiles: customProfiles,
-    api_url: String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim(),
-    api_key: String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim(),
-    model: String($overlay.find("#t-rewrite-settings-model").val() || "").trim(),
-    split_mode: String($overlay.find("input[name='t-rewrite-settings-split-mode']:checked").val() || "sentence"),
-    active_scheme_id: activeSchemeId,
-    schemes: prev.schemes || [],
-    stream_live: $overlay.find("#t-rewrite-settings-stream-live").prop("checked") === true,
-    auto_trigger: $overlay.find("#t-rewrite-settings-auto-trigger").prop("checked") === true,
-    selected_sentence_enabled: $overlay.find("#t-rewrite-settings-selected-sentence-enabled").prop("checked") === true,
-    tag_whitelist: String($overlay.find("#t-rewrite-settings-tag-whitelist").val() || "").trim(),
-    prompt_system: rulePromptParsed.prompt_system,
-    prompt_user: rulePromptParsed.prompt_user,
-    selected_prompt_system: selectedPromptParsed.prompt_system,
-    selected_prompt_user: selectedPromptParsed.prompt_user,
-    prompt_json_rule: String(prev.prompt_json_rule || REWRITE_DEFAULT_PROMPT_JSON_RULE)
-  };
+  prev.profile_mode = "custom";
+  prev.profile_id = profileId;
+  prev.custom_profiles = customProfiles;
+  prev.api_url = String($overlay.find("#t-rewrite-settings-api-url").val() || "").trim();
+  prev.api_key = String($overlay.find("#t-rewrite-settings-api-key").val() || "").trim();
+  prev.model = String($overlay.find("#t-rewrite-settings-model").val() || "").trim();
+  prev.split_mode = String($overlay.find("input[name='t-rewrite-settings-split-mode']:checked").val() || "sentence");
+  prev.stream_live = $overlay.find("#t-rewrite-settings-stream-live").prop("checked") === true;
+  prev.tag_whitelist = String($overlay.find("#t-rewrite-settings-tag-whitelist").val() || "").trim();
+  prev.rewrite.active_scheme_id = activeSchemeId;
+  prev.rewrite.selected_sentence_enabled = $overlay.find("#t-rewrite-settings-selected-sentence-enabled").prop("checked") === true;
+  prev.rewrite.prompt_system = rulePromptParsed.prompt_system;
+  prev.rewrite.prompt_user = rulePromptParsed.prompt_user;
+  prev.rewrite.selected_prompt_system = selectedPromptParsed.prompt_system;
+  prev.rewrite.selected_prompt_user = selectedPromptParsed.prompt_user;
+  prev.deletion.rules = readDeleteRulesFromDom($overlay).map(normalizeDeleteRule).filter((r) => r.anchor && r.extras);
   saveExtData();
   refreshRuntimeStateView();
 }
@@ -33929,7 +35321,7 @@ function refreshRuntimeStateView() {
   $overlay.find("#t-rewrite-runtime-scheme").text(scheme ? scheme.name : "\u65E0\u65B9\u6848");
   $overlay.find("#t-rewrite-rule-count").text(String(categories.length));
   $overlay.find("#t-rewrite-runtime-stream").text(data.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F");
-  $overlay.find("#t-rewrite-runtime-auto").text(data.auto_trigger ? "\u5F00\u542F" : "\u5173\u95ED");
+  $overlay.find("#t-rewrite-runtime-delete-count").text(String((data.deletion.rules || []).length));
   $overlay.find("#t-rewrite-runtime-whitelist").text(data.tag_whitelist || "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09");
 }
 function renderMatchResult(result, sourceText = "") {
@@ -33946,10 +35338,10 @@ function renderMatchResult(result, sourceText = "") {
   const html = lastMatchResult.unitResults.map((item) => {
     const cls = item.hit ? "hit" : "miss";
     const tag = lastMatchResult.splitMode === "paragraph" ? "\u6BB5" : "\u53E5";
-    const tags = item.hit ? (Array.isArray(item.matchedCategories) && item.matchedCategories.length > 0 ? item.matchedCategories.map((c) => {
+    const tags = item.hit ? Array.isArray(item.matchedCategories) && item.matchedCategories.length > 0 ? item.matchedCategories.map((c) => {
       const keywords = c.matchedRules.map((r) => `${r.anchor} + ${r.extras}`).join(" | ");
       return `<span class="t-rewrite-hit-tag">\u3010${escapeHtml5(c.categoryName)}\u3011${escapeHtml5(keywords)}</span>`;
-    }).join("") : '<span class="t-rewrite-hit-tag">\u7528\u6237\u9009\u4E2D</span>') + (item.deleteAction ? `<span class="t-rewrite-hit-tag t-rewrite-hit-tag--delete">${escapeHtml5(actionLabel(item.deleteAction))}</span>` : "") : lastMatchResult.sourceMode === "selected" ? '<span class="t-rewrite-hit-tag miss">\u672A\u9009\u4E2D</span>' : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
+    }).join("") : '<span class="t-rewrite-hit-tag">\u7528\u6237\u9009\u4E2D</span>' : lastMatchResult.sourceMode === "selected" ? '<span class="t-rewrite-hit-tag miss">\u672A\u9009\u4E2D</span>' : '<span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span>';
     return `
             <div class="t-rewrite-match-row ${cls}">
                 <div class="t-rewrite-match-head">
@@ -33964,9 +35356,47 @@ function renderMatchResult(result, sourceText = "") {
   const src = lastMatchSourceText ? `<div class="t-rewrite-hit-source">\u6765\u6E90\uFF1A\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF08\u957F\u5EA6 ${lastMatchSourceText.length}\uFF09</div>` : "";
   $body.html(`${header}${src}${html}`);
 }
+function renderDeleteResult(result, sourceText = "") {
+  const hasUnits = !!(result && Array.isArray(result.unitResults) && result.unitResults.length > 0);
+  lastDeleteResult = hasUnits ? result : null;
+  lastDeleteSourceText = hasUnits ? String(sourceText || "") : "";
+  const $body = $("#t-delete-match-body");
+  if (!$body.length) return;
+  if (!lastDeleteResult) {
+    $body.html('<div class="t-rewrite-diff-empty">\u7B49\u5F85\u6267\u884C\u5220\u9664\u540E\u5C55\u793A\u547D\u4E2D\u7ED3\u679C</div>');
+    return;
+  }
+  const tag = lastDeleteResult.splitMode === "paragraph" ? "\u6BB5" : "\u53E5";
+  const html = lastDeleteResult.unitResults.map((item) => {
+    const cls = item.hit ? "hit" : "miss";
+    if (!item.hit) {
+      return `
+            <div class="t-rewrite-match-row ${cls}">
+                <div class="t-rewrite-match-head"><div>${tag} #${item.unitIndex}</div><div class="t-rewrite-match-tags"><span class="t-rewrite-hit-tag miss">\u672A\u547D\u4E2D</span></div></div>
+                <div class="t-rewrite-match-text">${escapeHtml5(item.text)}</div>
+            </div>`;
+    }
+    const modeLabel = item.deleteMode === "fragment" ? "\u5220\u9664\u7247\u6BB5" : "\u5220\u9664\u6574\u53E5";
+    const kw = item.matchedRule ? `${item.matchedRule.anchor} + ${item.matchedRule.extras}` : "";
+    const afterHtml = item.deleteMode === "fragment" ? `<div class="t-rewrite-match-text t-delete-after">\u5220\u540E\uFF1A${escapeHtml5(item.after || "")}</div>` : "";
+    return `
+            <div class="t-rewrite-match-row ${cls} t-delete-hit">
+                <div class="t-rewrite-match-head">
+                    <div>${tag} #${item.unitIndex}</div>
+                    <div class="t-rewrite-match-tags"><span class="t-rewrite-hit-tag t-rewrite-hit-tag--delete">${modeLabel}</span><span class="t-rewrite-hit-tag">${escapeHtml5(kw)}</span></div>
+                </div>
+                <div class="t-rewrite-match-text t-delete-before">${escapeHtml5(item.text)}</div>
+                ${afterHtml}
+            </div>`;
+  }).join("");
+  const header = `<div class="t-rewrite-hit-summary">\u5207\u5206 ${lastDeleteResult.unitCount} \u4E2A\u5355\u5143\uFF0C\u547D\u4E2D ${lastDeleteResult.hitCount} \u4E2A</div>`;
+  const src = lastDeleteSourceText ? `<div class="t-rewrite-hit-source">\u6765\u6E90\uFF1A\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF08\u957F\u5EA6 ${lastDeleteSourceText.length}\uFF09</div>` : "";
+  $body.html(`${header}${src}${html}`);
+}
 function renderPersistedRewriteViews() {
   renderMatchResult(lastMatchResult, lastMatchSourceText);
   renderDiffRows(lastDiffRows);
+  renderDeleteResult(lastDeleteResult, lastDeleteSourceText);
 }
 function bindPanelEvents() {
   const $overlay = getOverlay();
@@ -33975,8 +35405,22 @@ function bindPanelEvents() {
     e.preventDefault();
     closePanel();
   });
+  $overlay.on("click", ".t-rewrite-tab-btn", function(e) {
+    e.preventDefault();
+    const tab = String($(this).attr("data-tab") || "rewrite");
+    activePanelTab = tab === "delete" ? "delete" : "rewrite";
+    syncPanelTabUi();
+  });
+  $overlay.on("change", "#t-rewrite-enable, #t-rewrite-auto, #t-delete-enable, #t-delete-auto", () => {
+    persistPanelState();
+    refreshInlineRewriteEntry();
+    syncPanelTabUi();
+  });
   $overlay.on("click", "#t-rewrite-trigger", () => {
     runManualRewrite();
+  });
+  $overlay.on("click", "#t-delete-trigger", () => {
+    runManualDelete();
   });
   $overlay.on("click", "#t-rewrite-open-settings", (e) => {
     e.preventDefault();
@@ -33990,6 +35434,16 @@ function bindPanelEvents() {
     e.preventDefault();
     runtimeCollapsed = !runtimeCollapsed;
     syncRuntimeCollapseUi();
+  });
+}
+function syncPanelTabUi() {
+  const $overlay = getOverlay();
+  if (!$overlay.length) return;
+  $overlay.find(".t-rewrite-tab-btn").each((_, el) => {
+    $(el).toggleClass("active", String($(el).attr("data-tab")) === activePanelTab);
+  });
+  $overlay.find(".t-rewrite-tab-page").each((_, el) => {
+    $(el).toggleClass("active", String($(el).attr("data-tab")) === activePanelTab);
   });
 }
 function bindLivePanelEvents() {
@@ -34081,14 +35535,10 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     $overlay.find("#t-rewrite-settings-prompt-combined").val(
       buildCombinedPromptText(REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER)
     );
-    const data = getExtData();
     const prev = ensureRewriteDataShape();
-    data.rewrite_entry = {
-      ...prev,
-      prompt_system: REWRITE_DEFAULT_PROMPT_SYSTEM,
-      prompt_user: REWRITE_DEFAULT_PROMPT_USER,
-      prompt_json_rule: REWRITE_DEFAULT_PROMPT_JSON_RULE
-    };
+    prev.rewrite.prompt_system = REWRITE_DEFAULT_PROMPT_SYSTEM;
+    prev.rewrite.prompt_user = REWRITE_DEFAULT_PROMPT_USER;
+    prev.rewrite.prompt_json_rule = REWRITE_DEFAULT_PROMPT_JSON_RULE;
     saveExtData();
     persistPromptStateFromSettings();
     if (window.toastr) toastr.success("\u89C4\u5219\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
@@ -34098,14 +35548,10 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     $overlay.find("#t-rewrite-settings-selected-prompt-combined").val(
       buildCombinedPromptText(REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER)
     );
-    const data = getExtData();
     const prev = ensureRewriteDataShape();
-    data.rewrite_entry = {
-      ...prev,
-      selected_prompt_system: REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM,
-      selected_prompt_user: REWRITE_DEFAULT_SELECTED_PROMPT_USER,
-      prompt_json_rule: REWRITE_DEFAULT_PROMPT_JSON_RULE
-    };
+    prev.rewrite.selected_prompt_system = REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM;
+    prev.rewrite.selected_prompt_user = REWRITE_DEFAULT_SELECTED_PROMPT_USER;
+    prev.rewrite.prompt_json_rule = REWRITE_DEFAULT_PROMPT_JSON_RULE;
     saveExtData();
     persistPromptStateFromSettings();
     if (window.toastr) toastr.success("\u9009\u53E5\u63D0\u793A\u8BCD\u5DF2\u6062\u590D\u9ED8\u8BA4", "\u6587\u672C\u6539\u5199");
@@ -34114,16 +35560,16 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     e.preventDefault();
     const name = window.prompt && window.prompt("\u8BF7\u8F93\u5165\u65B0\u65B9\u6848\u540D\u79F0\uFF1A", "") || "";
     if (!name.trim()) return;
-    const data = getExtData();
     const prev = ensureRewriteDataShape();
-    const schemes = [...prev.schemes || []];
+    const schemes = [...prev.rewrite.schemes || []];
     if (schemes.some((s) => s.name === name.trim())) {
       if (window.toastr) toastr.warning("\u65B9\u6848\u540D\u79F0\u5DF2\u5B58\u5728", "\u6587\u672C\u6539\u5199");
       return;
     }
     const newScheme = { id: generateId("scheme"), name: name.trim(), categories: [] };
     schemes.push(newScheme);
-    data.rewrite_entry = { ...prev, schemes, active_scheme_id: newScheme.id };
+    prev.rewrite.schemes = schemes;
+    prev.rewrite.active_scheme_id = newScheme.id;
     saveExtData();
     refreshSettingsSchemeUI();
     if (window.toastr) toastr.success(`\u5DF2\u521B\u5EFA\u65B9\u6848\u300C${name}\u300D`, "\u6587\u672C\u6539\u5199");
@@ -34137,10 +35583,8 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     }
     const name = window.prompt && window.prompt("\u8BF7\u8F93\u5165\u65B0\u540D\u79F0\uFF1A", scheme.name) || "";
     if (!name.trim()) return;
-    const data = getExtData();
     const prev = ensureRewriteDataShape();
-    const schemes = (prev.schemes || []).map((s) => s.id === scheme.id ? { ...s, name: name.trim() } : s);
-    data.rewrite_entry = { ...prev, schemes };
+    prev.rewrite.schemes = (prev.rewrite.schemes || []).map((s) => s.id === scheme.id ? { ...s, name: name.trim() } : s);
     saveExtData();
     refreshSettingsSchemeUI();
     if (window.toastr) toastr.success("\u65B9\u6848\u5DF2\u91CD\u547D\u540D", "\u6587\u672C\u6539\u5199");
@@ -34153,23 +35597,20 @@ function bindSettingsPanelEvents(connectionEditor = null) {
       return;
     }
     if (!window.confirm(`\u786E\u5B9A\u5220\u9664\u65B9\u6848\u300C${scheme.name}\u300D\u5417\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002`)) return;
-    const data = getExtData();
     const prev = ensureRewriteDataShape();
-    const schemes = (prev.schemes || []).filter((s) => s.id !== scheme.id);
-    const newActiveId = schemes.length > 0 ? schemes[0].id : "";
-    data.rewrite_entry = { ...prev, schemes, active_scheme_id: newActiveId };
+    const schemes = (prev.rewrite.schemes || []).filter((s) => s.id !== scheme.id);
+    prev.rewrite.schemes = schemes;
+    prev.rewrite.active_scheme_id = schemes.length > 0 ? schemes[0].id : "";
     saveExtData();
     refreshSettingsSchemeUI();
     if (window.toastr) toastr.success("\u65B9\u6848\u5DF2\u5220\u9664", "\u6587\u672C\u6539\u5199");
   });
   $overlay.on("change", "#t-rewrite-scheme-select", () => {
-    const data = getExtData();
     const prev = ensureRewriteDataShape();
     const newId = String($overlay.find("#t-rewrite-scheme-select").val() || "").trim();
-    data.rewrite_entry = { ...prev, active_scheme_id: newId };
+    prev.rewrite.active_scheme_id = newId;
     saveExtData();
-    const schemes = prev.schemes || [];
-    const scheme = schemes.find((s) => s.id === newId) || null;
+    const scheme = (prev.rewrite.schemes || []).find((s) => s.id === newId) || null;
     renderSchemeCategoriesList(scheme);
     const $status = $overlay.find("#t-rewrite-scheme-status");
     if ($status.length) $status.text(scheme ? `\u6FC0\u6D3B\u65B9\u6848\u300C${escapeHtml5(scheme.name)}\u300D` : "\u65E0\u65B9\u6848\uFF0C\u8BF7\u65B0\u5EFA\u6216\u9009\u62E9\u5DF2\u6709\u65B9\u6848");
@@ -34181,7 +35622,7 @@ function bindSettingsPanelEvents(connectionEditor = null) {
       if (window.toastr) toastr.warning("\u8BF7\u5148\u521B\u5EFA\u65B9\u6848", "\u6587\u672C\u6539\u5199");
       return;
     }
-    const newCat = { id: generateId("cat"), name: "", bad_example: "", good_example: "", guidance: "", rules: [{ keywords: "" }] };
+    const newCat = { id: generateId("cat"), name: "", bad_example: "", good_example: "", guidance: "", rules: [{ anchor: "", extras: "" }] };
     const categories = [...Array.isArray(scheme.categories) ? scheme.categories : [], newCat];
     renderSchemeCategoriesList({ ...scheme, categories });
   });
@@ -34204,12 +35645,6 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     const $card = $(e.currentTarget).closest(".t-rewrite-category-card");
     $card.find(".t-rewrite-cat-kw-list").append(buildKwRowHtml());
   });
-  $overlay.on("change", ".t-rewrite-kw-action", function() {
-    const $row = $(this).closest(".t-rewrite-kw-row");
-    const isRange = normalizeRuleAction($(this).val()) === "delete_range";
-    $row.toggleClass("t-rewrite-kw-row--range", isRange);
-    $row.find(".t-rewrite-kw-fragment").toggle(isRange);
-  });
   $overlay.on("click", ".t-rewrite-kw-del", (e) => {
     e.preventDefault();
     const $row = $(e.currentTarget).closest(".t-rewrite-kw-row");
@@ -34217,18 +35652,33 @@ function bindSettingsPanelEvents(connectionEditor = null) {
     if ($list.find(".t-rewrite-kw-row").length <= 1) {
       $row.find(".t-rewrite-kw-anchor").val("");
       $row.find(".t-rewrite-kw-extras").val("");
-      $row.find(".t-rewrite-kw-fragment").val("");
-      $row.find(".t-rewrite-kw-action").val("rewrite").trigger("change");
       return;
     }
     $row.remove();
   });
+  $overlay.on("click", "#t-delete-rule-add", (e) => {
+    e.preventDefault();
+    $overlay.find("#t-delete-rules-list .t-delete-rules-empty").remove();
+    $overlay.find("#t-delete-rules-list").append(buildDeleteRuleRowHtml());
+  });
+  $overlay.on("change", ".t-delete-rule-mode", function() {
+    const $row = $(this).closest(".t-delete-rule-row");
+    const isFragment = normalizeDeleteMode($(this).val()) === "fragment";
+    $row.toggleClass("t-delete-rule-row--fragment", isFragment);
+    $row.find(".t-delete-rule-fragment").toggle(isFragment);
+  });
+  $overlay.on("click", ".t-delete-rule-del", (e) => {
+    e.preventDefault();
+    $(e.currentTarget).closest(".t-delete-rule-row").remove();
+    if ($overlay.find("#t-delete-rules-list .t-delete-rule-row").length === 0) {
+      $overlay.find("#t-delete-rules-list").html('<div class="t-rewrite-empty-rule t-delete-rules-empty">\u6682\u65E0\u5220\u9664\u89C4\u5219\uFF0C\u70B9\u51FB\u201C\u6DFB\u52A0\u5220\u9664\u89C4\u5219\u201D\u5F00\u59CB</div>');
+    }
+  });
 }
 function getActiveSchemeFromSettings() {
-  const data = getExtData();
-  ensureRewriteDataShape();
-  const schemes = Array.isArray(data.rewrite_entry?.schemes) ? data.rewrite_entry.schemes : [];
-  const activeId = String($("#t-rewrite-scheme-select").val() || data.rewrite_entry?.active_scheme_id || "").trim();
+  const rw = getRewriteState();
+  const schemes = Array.isArray(rw.schemes) ? rw.schemes : [];
+  const activeId = String($("#t-rewrite-scheme-select").val() || rw.active_scheme_id || "").trim();
   return schemes.find((s) => s.id === activeId) || null;
 }
 function saveCurrentSchemeFromDom() {
@@ -34238,19 +35688,16 @@ function saveCurrentSchemeFromDom() {
     return;
   }
   const categories = readCategoriesFromDom();
-  const data = getExtData();
   const prev = ensureRewriteDataShape();
-  const schemes = (prev.schemes || []).map(
+  prev.rewrite.schemes = (prev.rewrite.schemes || []).map(
     (s) => s.id === scheme.id ? { ...s, categories } : s
   );
-  data.rewrite_entry = { ...prev, schemes };
   saveExtData();
 }
 function refreshSettingsSchemeUI() {
-  const data = getExtData();
-  ensureRewriteDataShape();
-  const schemes = Array.isArray(data.rewrite_entry?.schemes) ? data.rewrite_entry.schemes : [];
-  const activeId = data.rewrite_entry?.active_scheme_id || "";
+  const rw = getRewriteState();
+  const schemes = Array.isArray(rw.schemes) ? rw.schemes : [];
+  const activeId = rw.active_scheme_id || "";
   const scheme = schemes.find((s) => s.id === activeId) || null;
   const $select = $("#t-rewrite-scheme-select");
   if ($select.length) {
@@ -34259,6 +35706,34 @@ function refreshSettingsSchemeUI() {
   const $status = $("#t-rewrite-scheme-status");
   if ($status.length) $status.text(scheme ? `\u6FC0\u6D3B\u65B9\u6848\u300C${escapeHtml5(scheme.name)}\u300D` : "\u65E0\u65B9\u6848\uFF0C\u8BF7\u65B0\u5EFA\u6216\u9009\u62E9\u5DF2\u6709\u65B9\u6848");
   renderSchemeCategoriesList(scheme);
+}
+function buildDeleteRuleRowHtml(rule = {}) {
+  const mode = normalizeDeleteMode(rule?.mode);
+  const isFragment = mode === "fragment";
+  const enabled = rule?.enabled !== false;
+  return `
+                <div class="t-delete-rule-row${isFragment ? " t-delete-rule-row--fragment" : ""}">
+                    <input class="text_pole t-delete-rule-anchor" type="text" value="${escapeHtml5(rule?.anchor || "")}" placeholder="\u4E3B\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
+                    <span class="t-rewrite-kw-and">\u4E0E</span>
+                    <input class="text_pole t-delete-rule-extras" type="text" value="${escapeHtml5(rule?.extras || "")}" placeholder="\u9644\u52A0\u8BCD\uFF08\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u4E00\u547D\u4E2D\uFF09">
+                    <select class="text_pole t-delete-rule-mode" title="\u5220\u9664\u7C92\u5EA6">
+                        <option value="sentence" ${!isFragment ? "selected" : ""}>\u5220\u9664\u6574\u53E5</option>
+                        <option value="fragment" ${isFragment ? "selected" : ""}>\u5220\u9664\u7247\u6BB5</option>
+                    </select>
+                    <input class="text_pole t-delete-rule-fragment" type="text" value="${escapeHtml5(rule?.fragment || "")}" placeholder="\u5220\u9664\u8D77\u70B9\u7247\u6BB5\uFF0C\u5220\u5230\u53E5\u5C3E\uFF08\u5982\uFF1A\u90A3\u7B11\u58F0\u50CF\uFF09" style="${isFragment ? "" : "display:none;"}">
+                    <label class="t-delete-rule-enabled-wrap" title="\u542F\u7528\u6B64\u89C4\u5219"><input class="t-delete-rule-enabled" type="checkbox" ${enabled ? "checked" : ""}> \u542F\u7528</label>
+                    <button class="t-btn t-btn--glass t-delete-rule-del" type="button" title="\u5220\u9664\u6B64\u89C4\u5219"><i class="fa-solid fa-xmark"></i></button>
+                </div>`;
+}
+function renderDeleteRulesList(rules) {
+  const $box = $("#t-delete-rules-list");
+  if (!$box.length) return;
+  const list = Array.isArray(rules) ? rules : [];
+  if (list.length === 0) {
+    $box.html('<div class="t-rewrite-empty-rule t-delete-rules-empty">\u6682\u65E0\u5220\u9664\u89C4\u5219\uFF0C\u70B9\u51FB\u201C\u6DFB\u52A0\u5220\u9664\u89C4\u5219\u201D\u5F00\u59CB</div>');
+    return;
+  }
+  $box.html(list.map((r) => buildDeleteRuleRowHtml(r)).join(""));
 }
 function openSettingsPanel() {
   closeSettingsPanel();
@@ -34274,8 +35749,8 @@ function openSettingsPanel() {
   const initApiUrl = String(initProfile?.api_url || rewriteData.api_url || "");
   const promptState = getRewritePromptState();
   const selectedPromptState = getSelectedRewritePromptState();
-  const schemes = Array.isArray(rewriteData.schemes) ? rewriteData.schemes : [];
-  const activeScheme = schemes.find((s) => s.id === rewriteData.active_scheme_id) || null;
+  const schemes = Array.isArray(rewriteData.rewrite.schemes) ? rewriteData.rewrite.schemes : [];
+  const activeScheme = schemes.find((s) => s.id === rewriteData.rewrite.active_scheme_id) || null;
   const schemeOptions = schemes.map((s) => `<option value="${escapeHtml5(s.id)}" ${s.id === (activeScheme?.id || "") ? "selected" : ""}>${escapeHtml5(s.name)}</option>`).join("");
   const html = `
     <div id="${SETTINGS_OVERLAY_ID}" class="t-overlay t-root" aria-modal="true" role="dialog">
@@ -34290,9 +35765,10 @@ function openSettingsPanel() {
             <div class="t-set-shell-body t-set-glass-body t-set-body">
                 <div class="t-set-shell-nav t-set-glass-nav t-set-nav">
                     <div class="t-set-shell-tab t-set-glass-tab t-set-tab-btn active" data-tab="api"><i class="fa-solid fa-plug"></i> API \u8FDE\u63A5</div>
-                    <div class="t-set-shell-tab t-set-glass-tab t-set-tab-btn" data-tab="runtime"><i class="fa-solid fa-sliders"></i> \u8FD0\u884C\u8BBE\u7F6E</div>
-                    <div class="t-set-shell-tab t-set-glass-tab t-set-tab-btn" data-tab="prompt"><i class="fa-solid fa-file-lines"></i> \u63D0\u793A\u8BCD\u7BA1\u7406</div>
-                    <div class="t-set-shell-tab t-set-glass-tab t-set-tab-btn" data-tab="scheme"><i class="fa-solid fa-list-check"></i> \u89C4\u5219\u65B9\u6848</div>
+                    <div class="t-set-shell-tab t-set-glass-tab t-set-tab-btn" data-tab="runtime"><i class="fa-solid fa-sliders"></i> \u901A\u7528</div>
+                    <div class="t-set-shell-tab t-set-glass-tab t-set-tab-btn" data-tab="prompt"><i class="fa-solid fa-file-lines"></i> \u63D0\u793A\u8BCD</div>
+                    <div class="t-set-shell-tab t-set-glass-tab t-set-tab-btn" data-tab="scheme"><i class="fa-solid fa-highlighter"></i> \u6539\u5199\u89C4\u5219</div>
+                    <div class="t-set-shell-tab t-set-glass-tab t-set-tab-btn" data-tab="delete"><i class="fa-solid fa-eraser"></i> \u5220\u9664\u89C4\u5219</div>
                 </div>
 
                 <div class="t-set-shell-content t-set-glass-content t-set-content">
@@ -34350,15 +35826,12 @@ function openSettingsPanel() {
                         <div class="t-form-group">
                             <label class="t-form-label">\u8BF7\u6C42\u884C\u4E3A</label>
                             <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
-                                <label><input id="t-rewrite-settings-stream-live" type="checkbox" ${rewriteData.stream_live === false ? "" : "checked"}> \u542F\u7528\u6D41\u5F0F\u5E76\u663E\u793A\u5B9E\u65F6\u54CD\u5E94</label>
+                                <label><input id="t-rewrite-settings-stream-live" type="checkbox" ${rewriteData.stream_live === false ? "" : "checked"}> \u542F\u7528\u6D41\u5F0F\u5E76\u663E\u793A\u5B9E\u65F6\u54CD\u5E94\uFF08\u4EC5\u6539\u5199\uFF09</label>
                             </div>
                             <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
-                                <label><input id="t-rewrite-settings-auto-trigger" type="checkbox" ${rewriteData.auto_trigger ? "checked" : ""}> \u81EA\u52A8\u89E6\u53D1\u6539\u5199\uFF08\u65B0\u56DE\u590D\u751F\u6210\u540E\uFF09</label>
+                                <label><input id="t-rewrite-settings-selected-sentence-enabled" type="checkbox" ${rewriteData.rewrite.selected_sentence_enabled === false ? "" : "checked"}> \u542F\u7528\u697C\u5C42\u5185\u9009\u53E5\u6539\u5199</label>
                             </div>
-                            <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
-                                <label><input id="t-rewrite-settings-selected-sentence-enabled" type="checkbox" ${rewriteData.selected_sentence_enabled === false ? "" : "checked"}> \u542F\u7528\u697C\u5C42\u5185\u9009\u53E5\u6539\u5199</label>
-                            </div>
-                            <div class="t-rewrite-rule-guide">\u5173\u95ED\u540E\u4EC5\u9690\u85CF\u6700\u65B0\u697C\u5C42\u5185\u7684\u201C\u9009\u53E5\u6539\u5199\u201D\u5165\u53E3\uFF0C\u4E0D\u5F71\u54CD\u6309\u89C4\u5219\u6539\u5199\u3002</div>
+                            <div class="t-rewrite-rule-guide">\u6539\u5199/\u5220\u9664\u7684\u542F\u7528\u4E0E\u81EA\u52A8\u89E6\u53D1\u5F00\u5173\u5728\u4E3B\u9762\u677F\u9876\u90E8\uFF1B\u8FD9\u91CC\u53EA\u7BA1\u5171\u4EAB\u9879\u3002</div>
                         </div>
 
                         <div class="t-form-group">
@@ -34413,8 +35886,16 @@ function openSettingsPanel() {
                         </div>
                         <div class="t-form-group">
                             <button id="t-rewrite-scheme-add-category" class="t-btn t-btn--glass" type="button"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u5206\u7C7B</button>
-                            <div class="t-rewrite-rule-guide" style="margin: 6px 0 4px;">\u6BCF\u4E2A\u5206\u7C7B\u5305\u542B\u793A\u4F8B\u548C\u6539\u5199\u6307\u5BFC\uFF0C\u547D\u4E2D\u53E5\u5C06\u6309\u5206\u7C7B\u6CE8\u5165\u63D0\u793A\u8BCD\u3002</div>
+                            <div class="t-rewrite-rule-guide" style="margin: 6px 0 4px;">\u6BCF\u4E2A\u5206\u7C7B\u5305\u542B\u793A\u4F8B\u548C\u6539\u5199\u6307\u5BFC\uFF0C\u547D\u4E2D\u53E5\u5C06\u8FDE\u540C\u672C\u5206\u7C7B\u7684\u793A\u4F8B/\u6307\u5BFC\u4E00\u8D77\u6CE8\u5165\u6A21\u578B\u3002</div>
                             <div id="t-rewrite-scheme-categories-list"></div>
+                        </div>
+                    </div>
+
+                    <div id="t-rewrite-page-delete" class="t-set-page">
+                        <div class="t-form-group">
+                            <button id="t-delete-rule-add" class="t-btn t-btn--glass" type="button"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u5220\u9664\u89C4\u5219</button>
+                            <div class="t-rewrite-rule-guide" style="margin: 6px 0 4px;">\u547D\u4E2D\u89C4\u5219\uFF08\u4E3B\u8BCD AND \u9644\u52A0\u8BCD\uFF09\u5373\u5220\u9664\uFF1A\u6574\u53E5\u5220\u9664\u79FB\u9664\u8BE5\u53E5\uFF0C\u7247\u6BB5\u5220\u9664\u4ECE\u7247\u6BB5\u5220\u5230\u53E5\u5C3E\u3002\u5220\u9664\u662F\u672C\u5730\u786E\u5B9A\u6027\u64CD\u4F5C\uFF0C\u4E0D\u8BF7\u6C42\u6A21\u578B\u3002</div>
+                            <div id="t-delete-rules-list"></div>
                         </div>
                     </div>
                 </div>
@@ -34428,6 +35909,7 @@ function openSettingsPanel() {
   $("body").append(html);
   const $overlay = getSettingsOverlay();
   renderSchemeCategoriesList(activeScheme);
+  renderDeleteRulesList(rewriteData.deletion.rules);
   const rewriteSettingsConnectionEditor = createApiConnectionEditor({
     root: $overlay,
     ids: {
@@ -34475,12 +35957,23 @@ function openPanel() {
                 </div>
             </div>
 
-            <div class="t-window-body t-rewrite-body">
-                <div class="t-rewrite-left">
+            <div class="t-window-body t-rewrite-body t-rewrite-body-tabbed">
+                <div class="t-rewrite-toolbar">
+                    <div class="t-rewrite-switches">
+                        <label class="t-rewrite-switch"><input type="checkbox" id="t-rewrite-enable" ${rewriteData.rewrite.enabled ? "checked" : ""}> <span>\u542F\u7528\u6539\u5199</span></label>
+                        <label class="t-rewrite-switch"><input type="checkbox" id="t-delete-enable" ${rewriteData.deletion.enabled ? "checked" : ""}> <span>\u542F\u7528\u5220\u9664</span></label>
+                    </div>
+                    <div class="t-rewrite-tabs">
+                        <button class="t-rewrite-tab-btn" data-tab="rewrite" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i> \u6539\u5199</button>
+                        <button class="t-rewrite-tab-btn" data-tab="delete" type="button"><i class="fa-solid fa-eraser"></i> \u5220\u9664</button>
+                    </div>
+                </div>
+
+                <div class="t-rewrite-tab-page" data-tab="rewrite">
                     <div class="t-rewrite-section">
                         <div class="t-rewrite-runtime-head">
                             <div class="t-rewrite-section-title">\u8FD0\u884C\u72B6\u6001</div>
-                            <button id="t-rewrite-runtime-toggle" class="t-btn" type="button">\u6298\u53E0</button>
+                            <label class="t-rewrite-inline-switch"><input type="checkbox" id="t-rewrite-auto" ${rewriteData.rewrite.auto_trigger ? "checked" : ""}> \u81EA\u52A8\u6539\u5199</label>
                         </div>
                         <div id="t-rewrite-runtime-body" class="t-rewrite-runtime-meta">
                             <div>\u5F53\u524D\u6A21\u578B\uFF1A<b id="t-rewrite-runtime-model">${escapeHtml5(rewriteData.model || "\u672A\u8BBE\u7F6E")}</b></div>
@@ -34488,44 +35981,45 @@ function openPanel() {
                             <div>\u5F53\u524D\u65B9\u6848\uFF1A<b id="t-rewrite-runtime-scheme">${scheme ? escapeHtml5(scheme.name) : "\u65E0\u65B9\u6848"}</b></div>
                             <div>\u5206\u7C7B\u6570\u91CF\uFF1A<b id="t-rewrite-rule-count">${categories.length}</b></div>
                             <div>\u6D41\u5F0F\u663E\u793A\uFF1A<b id="t-rewrite-runtime-stream">${rewriteData.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F"}</b></div>
-                            <div>\u81EA\u52A8\u89E6\u53D1\uFF1A<b id="t-rewrite-runtime-auto">${rewriteData.auto_trigger ? "\u5F00\u542F" : "\u5173\u95ED"}</b></div>
+                            <div>\u5220\u9664\u89C4\u5219\uFF1A<b id="t-rewrite-runtime-delete-count">${(rewriteData.deletion.rules || []).length}</b></div>
                             <div>\u63D0\u53D6\u767D\u540D\u5355\uFF1A<b id="t-rewrite-runtime-whitelist">${rewriteData.tag_whitelist ? escapeHtml5(rewriteData.tag_whitelist) : "\u672A\u8BBE\u7F6E\uFF08\u5168\u6587\uFF09"}</b></div>
                         </div>
-                        <div id="t-rewrite-status" class="t-rewrite-status muted">\u6539\u5199\u4F1A\u81EA\u52A8\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u5E76\u56DE\u5199\u539F\u6D88\u606F</div>
                     </div>
-
-                </div>
-
-                <div class="t-rewrite-right">
                     <div class="t-rewrite-section t-rewrite-test-section">
-                        <div class="t-rewrite-diff-head">
-                            <div class="t-rewrite-section-title">\u547D\u4E2D\u7ED3\u679C\u9884\u89C8</div>
-                        </div>
+                        <div class="t-rewrite-diff-head"><div class="t-rewrite-section-title">\u547D\u4E2D\u7ED3\u679C\u9884\u89C8</div></div>
                         <div id="t-rewrite-match-body" class="t-rewrite-diff-body"></div>
                     </div>
-
                     <div class="t-rewrite-section">
-                        <div class="t-rewrite-diff-head">
-                            <div class="t-rewrite-section-title">\u6539\u5199\u7ED3\u679C Diff</div>
-                        </div>
+                        <div class="t-rewrite-diff-head"><div class="t-rewrite-section-title">\u6539\u5199\u7ED3\u679C Diff</div></div>
                         <div id="t-rewrite-diff-body" class="t-rewrite-diff-body"></div>
                     </div>
+                    <div class="t-rewrite-actions">
+                        <button id="t-rewrite-trigger" class="t-btn" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i> \u6267\u884C\u6539\u5199</button>
+                        <span class="t-rewrite-action-hint">\u9009\u53E5\u6539\u5199\u5165\u53E3\u4F1A\u663E\u793A\u5728\u6700\u65B0\u56DE\u590D\u697C\u5C42\u5185</span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="t-rewrite-footer-actions">
-                <div class="t-rewrite-actions">
-                    <button id="t-rewrite-trigger" class="t-btn" type="button">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> \u6309\u89C4\u5219\u6539\u5199
-                    </button>
-                    <span class="t-rewrite-action-hint">\u9009\u53E5\u6539\u5199\u5165\u53E3\u4F1A\u663E\u793A\u5728\u6700\u65B0\u56DE\u590D\u697C\u5C42\u5185</span>
+                <div class="t-rewrite-tab-page" data-tab="delete">
+                    <div class="t-rewrite-section">
+                        <div class="t-rewrite-runtime-head">
+                            <div class="t-rewrite-section-title">\u5220\u9664\u547D\u4E2D\u9884\u89C8</div>
+                            <label class="t-rewrite-inline-switch"><input type="checkbox" id="t-delete-auto" ${rewriteData.deletion.auto_trigger ? "checked" : ""}> \u81EA\u52A8\u5220\u9664\uFF08\u547D\u4E2D\u5373\u5220\uFF09</label>
+                        </div>
+                        <div id="t-delete-match-body" class="t-rewrite-diff-body"></div>
+                    </div>
+                    <div class="t-rewrite-actions">
+                        <button id="t-delete-trigger" class="t-btn" type="button"><i class="fa-solid fa-eraser"></i> \u6267\u884C\u5220\u9664</button>
+                        <span class="t-rewrite-action-hint">\u5220\u9664\u4E3A\u672C\u5730\u786E\u5B9A\u6027\u64CD\u4F5C\uFF0C\u4E0D\u8BF7\u6C42\u6A21\u578B</span>
+                    </div>
                 </div>
+
+                <div id="t-rewrite-status" class="t-rewrite-status muted">\u6539\u5199/\u5220\u9664\u4F1A\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\u697C\u5C42\u5E76\u56DE\u5199\u539F\u6D88\u606F</div>
             </div>
         </div>
     </div>`;
   $("body").append(html);
   bindPanelEvents();
-  syncRuntimeCollapseUi();
+  syncPanelTabUi();
   renderPersistedRewriteViews();
   refreshInlineRewriteEntry();
   setRawResponse("");
@@ -34565,7 +36059,7 @@ function bindGlobalEvents() {
   });
 }
 function syncEntryButton() {
-  if (!isEnabled()) {
+  if (!isEnabled2()) {
     clearInlineSentenceSelection();
     removeButton(true);
     return;
@@ -34594,16 +36088,17 @@ function refreshRewriteEntryButton() {
   refreshInlineRewriteEntry();
 }
 function openRewritePanelFromMenu() {
-  if (!isEnabled()) return;
+  if (!isEnabled2()) return;
   openPanel();
 }
-var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, latestSentenceUnits, selectedSentenceIds, inlineSelectionMessageIndex, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE;
+var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, isAutoDeleting, activePanelTab, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, lastDeleteResult, lastDeleteSourceText, latestSentenceUnits, selectedSentenceIds, inlineSelectionMessageIndex, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE;
 var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
     init_chatTagWhitelist();
     init_apiProfileRegistry();
     init_relayClient();
+    init_textRewriteCore();
     init_apiConnectionEditor();
     BTN_ID = "titania-rewrite-entry-btn";
     OVERLAY_ID = "t-rewrite-overlay";
@@ -34617,6 +36112,8 @@ var init_rewriteEntryButton = __esm({
     autoRewriteTimer = null;
     activeRewriteAbortController = null;
     isAutoRewriting = false;
+    isAutoDeleting = false;
+    activePanelTab = "rewrite";
     runtimeCollapsed = false;
     lastRawResponseText = "";
     lastRawMetaText = "\u7B49\u5F85\u8BF7\u6C42";
@@ -34625,6 +36122,8 @@ var init_rewriteEntryButton = __esm({
     lastMatchResult = null;
     lastMatchSourceText = "";
     lastDiffRows = [];
+    lastDeleteResult = null;
+    lastDeleteSourceText = "";
     latestSentenceUnits = [];
     selectedSentenceIds = /* @__PURE__ */ new Set();
     inlineSelectionMessageIndex = null;
@@ -34689,9 +36188,9 @@ __export(floorNav_exports, {
   jumpToTopFloor: () => jumpToTopFloor,
   refreshFloorNavButton: () => refreshFloorNavButton
 });
-import { eventSource as eventSource3, event_types as event_types3, showMoreMessages } from "../../../../script.js";
+import { eventSource as eventSource4, event_types as event_types4, showMoreMessages } from "../../../../script.js";
 import { hideChatMessageRange } from "../../../chats.js";
-function isEnabled2() {
+function isEnabled3() {
   return getExtData()?.floor_nav?.enabled !== false;
 }
 function getChat() {
@@ -34750,7 +36249,7 @@ function removeAllButtons() {
   document.querySelectorAll(`#chat .${BTN_CLASS}`).forEach((node) => node.remove());
 }
 function refreshButtons() {
-  if (!isEnabled2()) {
+  if (!isEnabled3()) {
     removeAllButtons();
     return;
   }
@@ -34812,11 +36311,11 @@ async function onFloorHideClick(mesid) {
   }
 }
 function initFloorNav() {
-  if (listenersBound) {
+  if (listenersBound2) {
     scheduleRefreshButtons(0);
     return;
   }
-  listenersBound = true;
+  listenersBound2 = true;
   $(document).on("click", `.${BTN_CLASS}`, function(event) {
     event.stopPropagation();
     const mesid = Number($(this).closest(".mes").attr("mesid"));
@@ -34824,27 +36323,27 @@ function initFloorNav() {
     void onFloorHideClick(mesid);
   });
   const rerenderEvents = [
-    event_types3.CHAT_CHANGED,
-    event_types3.CHARACTER_MESSAGE_RENDERED,
-    event_types3.USER_MESSAGE_RENDERED,
-    event_types3.MESSAGE_SWIPED,
-    event_types3.MESSAGE_DELETED,
-    event_types3.MORE_MESSAGES_LOADED
+    event_types4.CHAT_CHANGED,
+    event_types4.CHARACTER_MESSAGE_RENDERED,
+    event_types4.USER_MESSAGE_RENDERED,
+    event_types4.MESSAGE_SWIPED,
+    event_types4.MESSAGE_DELETED,
+    event_types4.MORE_MESSAGES_LOADED
   ];
   for (const eventName of rerenderEvents) {
     if (!eventName) continue;
-    eventSource3.on(eventName, () => scheduleRefreshButtons(0));
+    eventSource4.on(eventName, () => scheduleRefreshButtons(0));
   }
   scheduleRefreshButtons(300);
   TitaniaLogger.info("\u697C\u5C42\u5FEB\u6377\u64CD\u4F5C\u5DF2\u521D\u59CB\u5316");
 }
-var BTN_CLASS, listenersBound, refreshQueued;
+var BTN_CLASS, listenersBound2, refreshQueued;
 var init_floorNav = __esm({
   "src/ui/floorNav.js"() {
     init_storage();
     init_logger();
     BTN_CLASS = "titania-floorhide-btn";
-    listenersBound = false;
+    listenersBound2 = false;
     refreshQueued = false;
   }
 });
@@ -35045,7 +36544,7 @@ var init_readerWindow = __esm({
 });
 
 // src/ui/outlineEntryButton.js
-function isEnabled3() {
+function isEnabled4() {
   const data = getExtData();
   return data?.outline_entry?.enabled === true;
 }
@@ -35232,7 +36731,7 @@ function ensureButton() {
   bindClick($btn);
 }
 function syncEntryButton2() {
-  if (!isEnabled3()) {
+  if (!isEnabled4()) {
     removeButton2();
     return;
   }
@@ -35264,17 +36763,115 @@ var init_outlineEntryButton = __esm({
   }
 });
 
+// src/core/pacingInjection.js
+import {
+  setExtensionPrompt as setExtensionPrompt2,
+  extension_prompt_types as extension_prompt_types2,
+  extension_prompt_roles as extension_prompt_roles2,
+  eventSource as eventSource5,
+  event_types as event_types5
+} from "../../../../script.js";
+function normalizeRole3(role) {
+  const name = String(role || "system").toLowerCase();
+  return name in ROLE_NAME_TO_ENUM2 ? name : "system";
+}
+function normalizeDepth2(depth) {
+  const n = Number(depth);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(1e4, Math.floor(n));
+}
+function briefSummary(text, maxLen = 40) {
+  const s = String(text || "").replace(/\s+/g, " ").trim();
+  return s.length > maxLen ? `${s.slice(0, maxLen)}\u2026` : s;
+}
+function armPacingDirective(text, options = {}) {
+  const body = String(text || "").trim();
+  if (!body) {
+    clearPacingDirective();
+    return false;
+  }
+  const roleName = normalizeRole3(options.role);
+  const depth = normalizeDepth2(options.depth);
+  setExtensionPrompt2(
+    PACING_PROMPT_KEY,
+    DIRECTIVE_HEADER + body,
+    extension_prompt_types2.IN_CHAT,
+    depth,
+    false,
+    ROLE_NAME_TO_ENUM2[roleName]
+  );
+  armed2 = true;
+  armedSummary = briefSummary(body);
+  armedDepth = depth;
+  armedRole = roleName;
+  TitaniaLogger.info("\u8282\u594F\u6307\u4EE4\u5DF2\u6B66\u88C5", { depth, role: roleName });
+  return true;
+}
+function clearPacingDirective() {
+  setExtensionPrompt2(PACING_PROMPT_KEY, "", extension_prompt_types2.IN_CHAT, 0);
+  armed2 = false;
+  armedSummary = "";
+}
+function getArmedPacing() {
+  return { armed: armed2, summary: armedSummary, depth: armedDepth, role: armedRole };
+}
+function initPacingInjection() {
+  if (listenersBound3) return;
+  listenersBound3 = true;
+  clearPacingDirective();
+  eventSource5.on(event_types5.GENERATION_ENDED, () => {
+    if (armed2) clearPacingDirective();
+  });
+  if (event_types5.CHAT_CHANGED) {
+    eventSource5.on(event_types5.CHAT_CHANGED, () => {
+      if (armed2) clearPacingDirective();
+    });
+  }
+  TitaniaLogger.info("\u53D9\u4E8B\u8282\u594F\u6CE8\u5165\u5DF2\u521D\u59CB\u5316");
+}
+var PACING_PROMPT_KEY, DIRECTIVE_HEADER, ROLE_NAME_TO_ENUM2, listenersBound3, armed2, armedSummary, armedDepth, armedRole;
+var init_pacingInjection = __esm({
+  "src/core/pacingInjection.js"() {
+    init_logger();
+    PACING_PROMPT_KEY = "TITANIA_PACING";
+    DIRECTIVE_HEADER = "\u3010\u53D9\u4E8B\u8282\u594F\u63D0\u793A\u3011\n";
+    ROLE_NAME_TO_ENUM2 = {
+      system: extension_prompt_roles2.SYSTEM,
+      user: extension_prompt_roles2.USER,
+      assistant: extension_prompt_roles2.ASSISTANT
+    };
+    listenersBound3 = false;
+    armed2 = false;
+    armedSummary = "";
+    armedDepth = 0;
+    armedRole = "system";
+  }
+});
+
 // src/ui/sceneAdvanceBubble.js
-import { eventSource as eventSource4, event_types as event_types4 } from "../../../../script.js";
+import { eventSource as eventSource6, event_types as event_types6 } from "../../../../script.js";
+function getPacingConfig() {
+  const p = getExtData()?.pacing || {};
+  const role = ["system", "user", "assistant"].includes(p.inject_role) ? p.inject_role : "system";
+  const depthRaw = Number(p.inject_depth);
+  const depth = Number.isFinite(depthRaw) && depthRaw >= 0 ? Math.floor(depthRaw) : 0;
+  return { depth, role };
+}
+function savePacingConfig(patch) {
+  const data = getExtData();
+  const prev = data.pacing && typeof data.pacing === "object" ? data.pacing : {};
+  data.pacing = { ...prev, ...patch };
+  saveExtData();
+}
 function loadApi() {
   if (!apiPromise) apiPromise = Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
   return apiPromise;
 }
-function isEnabled4() {
+function isEnabled5() {
   return getExtData()?.outline_entry?.show_outline_actions === true;
 }
-function escapeHtmlText2(str) {
-  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtmlText2(str2) {
+  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function briefText(text, maxLen = 48) {
   const s = String(text || "").replace(/\s+/g, " ").trim();
@@ -35283,9 +36880,9 @@ function briefText(text, maxLen = 48) {
 }
 function readProgressFromSettings() {
   const data = getExtData();
-  const plans = Array.isArray(data?.[PLANS_KEY2]) ? data[PLANS_KEY2] : [];
+  const plans = Array.isArray(data?.[PLANS_KEY3]) ? data[PLANS_KEY3] : [];
   const sourceId = String(data?.[SCENE_SOURCE_PLAN_KEY2] || "");
-  const activeId = String(data?.[ACTIVE_PLAN_KEY2] || "");
+  const activeId = String(data?.[ACTIVE_PLAN_KEY3] || "");
   const plan = plans.find((p) => p.id === sourceId) || plans.find((p) => p.id === activeId) || null;
   if (!plan) return null;
   const total = Array.isArray(plan.items) ? plan.items.length : 0;
@@ -35297,6 +36894,31 @@ function readProgressFromSettings() {
 function formatProgressLabel(progress) {
   if (!progress) return "";
   return `\u7B2C ${progress.index + 1} / ${progress.total} \u6761`;
+}
+function getActiveBlindboxInfo() {
+  try {
+    const data = getExtData();
+    const plans = Array.isArray(data?.[PLANS_KEY3]) ? data[PLANS_KEY3] : [];
+    if (plans.length === 0) return null;
+    const activeId = String(data?.[ACTIVE_PLAN_KEY3] || "");
+    const plan = plans.find((p) => p?.id === activeId) || plans[0];
+    if (!plan || !isBlindboxPlan(plan)) return null;
+    const bb = plan.blindbox;
+    if (!bb || bb.sealed !== true || bb.unsealed === true) return null;
+    const nbb = normalizeBlindbox(bb);
+    return { planId: plan.id, stats: getProgressStats(nbb), paused: bb.directorPaused === true };
+  } catch {
+    return null;
+  }
+}
+function toggleBlindboxDirectorPaused(planId) {
+  const data = getExtData();
+  const plans = Array.isArray(data?.[PLANS_KEY3]) ? data[PLANS_KEY3] : [];
+  const plan = plans.find((p) => p?.id === planId);
+  if (!plan || !plan.blindbox) return;
+  plan.blindbox.directorPaused = plan.blindbox.directorPaused !== true;
+  plan.updatedAt = Date.now();
+  saveExtData();
 }
 function progressFromState(state) {
   const total = Number(state?.total) || 0;
@@ -35347,15 +36969,22 @@ function buildStrip() {
 }
 function updateStrip(strip, { progress, expanded } = {}) {
   if (!strip) return;
-  const target = progress === void 0 ? readProgressFromSettings() : progress;
-  const label = formatProgressLabel(target);
-  $(strip).find(".tsa-strip-progress").text(label ? `\xB7 ${label}` : "");
+  const bbInfo = getActiveBlindboxInfo();
+  if (bbInfo) {
+    $(strip).find(".tsa-strip-title").text(bbInfo.paused ? "\u76F2\u76D2\u5BFC\u6F14 \xB7 \u5DF2\u6682\u505C" : "\u76F2\u76D2\u5BFC\u6F14");
+    $(strip).find(".tsa-strip-progress").text(`\xB7 \u5DF2\u8FBE\u6210 ${bbInfo.stats.passed}/${bbInfo.stats.total}`);
+  } else {
+    $(strip).find(".tsa-strip-title").text("\u5267\u60C5\u63A8\u8FDB");
+    const target = progress === void 0 ? readProgressFromSettings() : progress;
+    const label = formatProgressLabel(target);
+    $(strip).find(".tsa-strip-progress").text(label ? `\xB7 ${label}` : "");
+  }
   if (expanded !== void 0) {
     $(strip).attr("aria-expanded", String(expanded)).toggleClass("is-open", expanded);
   }
 }
 function refreshStrips() {
-  if (!isEnabled4()) {
+  if (!isEnabled5()) {
     removeAllStrips();
     destroyPanel();
     return;
@@ -35465,15 +37094,42 @@ function buildCandidatesHtml(state) {
     `).join("");
 }
 function buildPanelHtml(state) {
-  const planOptions = state.plans.length ? state.plans.map((p) => `<option value="${escapeHtmlText2(p.id)}" ${p.id === state.planId ? "selected" : ""}>${escapeHtmlText2(p.name)}</option>`).join("") : `<option value="">\uFF08\u6682\u65E0\u65B9\u6848\uFF09</option>`;
+  const bbInfo = getActiveBlindboxInfo();
+  if (bbInfo) {
+    return `<div id="${PANEL_ID}" class="tsa-panel">${buildBlindboxBody(bbInfo)}</div>`;
+  }
+  const tabs = `
+        <div class="tsa-mode-tabs">
+            <button type="button" class="tsa-mode-tab ${panelMode === "recommend" ? "is-active" : ""}" data-mode="recommend"><i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5</button>
+            <button type="button" class="tsa-mode-tab ${panelMode === "pacing" ? "is-active" : ""}" data-mode="pacing"><i class="fa-solid fa-gauge-high"></i> \u8282\u594F\u628A\u63A7</button>
+        </div>`;
+  const body = panelMode === "pacing" ? buildPacingBody() : buildRecommendBody(state);
+  return `<div id="${PANEL_ID}" class="tsa-panel">${tabs}${body}</div>`;
+}
+function buildBlindboxBody(info) {
+  const s = info.stats;
+  return `
+        <div class="tsa-scroll">
+            <div class="tsa-empty" style="line-height:1.6;">
+                <div style="font-weight:600;"><i class="fa-solid fa-clapperboard"></i> \u76F2\u76D2\u5BFC\u6F14${info.paused ? " \xB7 \u5DF2\u6682\u505C" : "\u5F15\u5BFC\u4E2D"}</div>
+                <div style="margin-top:6px;">\u5185\u5BB9\u5DF2\u5C01\u5370\uFF0C\u7531\u5BFC\u6F14\u5728\u5E55\u540E\u628A\u6BCF\u56DE\u5408\u6084\u6084\u5F15\u5BFC\u5411\u4E3B\u7EBF\u3002\u5DF2\u8FBE\u6210 ${s.passed}/${s.total} \u4E2A\u5173\u952E\u4E8B\u4EF6 \xB7 \u5171 ${s.nodeCount} \u4E2A\u8282\u70B9\u3002</div>
+                <div style="margin-top:6px;opacity:.7;">\u60F3\u770B\u8FDB\u5EA6\u9AA8\u67B6 / \u56DE\u987E\u5899\uFF0C\u6216\u5267\u900F\u9003\u751F\uFF0C\u8BF7\u5230\u300C\u5927\u7EB2\u751F\u6210\u300D\u7A97\u53E3\u6253\u5F00\u8FD9\u672C\u65B9\u6848\u3002</div>
+            </div>
+        </div>
+        <div class="tsa-footer">
+            <button type="button" class="tsa-generate" id="tsa-bb-pause">
+                <i class="fa-solid ${info.paused ? "fa-play" : "fa-pause"}"></i> ${info.paused ? "\u6062\u590D\u5BFC\u6F14" : "\u6682\u505C\u5BFC\u6F14"}
+            </button>
+        </div>`;
+}
+function buildRecommendBody(state) {
   const generateLabel = state.candidates.length > 0 ? "\u6362\u4E00\u6279" : "\u63A8\u8350\u5267\u60C5";
   return `
-    <div id="${PANEL_ID}" class="tsa-panel">
         <div class="tsa-scroll">
             ${buildPreviewHtml(state)}
             <div class="tsa-plan-row">
                 <label class="tsa-plan-label">\u65B9\u6848
-                    <select class="tsa-plan-select" id="tsa-plan-select">${planOptions}</select>
+                    <select class="tsa-plan-select" id="tsa-plan-select">${buildPlanOptions(state)}</select>
                 </label>
             </div>
             ${buildProgressHtml(state)}
@@ -35487,8 +37143,52 @@ function buildPanelHtml(state) {
             <button type="button" class="tsa-generate" id="tsa-generate" ${generating || !state.hasPlan ? "disabled" : ""}>
                 <i class="fa-solid ${generating ? "fa-spinner fa-spin" : "fa-forward-step"}"></i> ${generating ? "\u63A8\u8350\u4E2D..." : generateLabel}
             </button>
+        </div>`;
+}
+function buildPlanOptions(state) {
+  return state.plans.length ? state.plans.map((p) => `<option value="${escapeHtmlText2(p.id)}" ${p.id === state.planId ? "selected" : ""}>${escapeHtmlText2(p.name)}</option>`).join("") : `<option value="">\uFF08\u6682\u65E0\u65B9\u6848\uFF09</option>`;
+}
+function buildPacingBody() {
+  const cfg = getPacingConfig();
+  const r = pacingResult;
+  const diag = r ? `<div class="tsa-pacing-diag">
+                <span class="tsa-pacing-state">${escapeHtmlText2(r.pacingState)}</span>
+                ${r.focus ? `<span class="tsa-pacing-focus">${escapeHtmlText2(r.focus)}</span>` : ""}
+                <span class="tsa-pacing-intensity">\u5F3A\u5EA6 ${r.intensity}/5</span>
+                ${r.assessment ? `<div class="tsa-pacing-assessment">${escapeHtmlText2(r.assessment)}</div>` : ""}
+            </div>` : `<div class="tsa-empty">\u70B9\u4E0B\u65B9\u300C\u5206\u6790\u8282\u594F\u300D\uFF0C\u8BA9\u5916\u90E8\u6A21\u578B\u8BFB\u6700\u8FD1\u6B63\u6587\u4E0E\u5927\u7EB2\u8FDB\u5EA6\uFF0C\u7ED9\u4E00\u6761\u53EA\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\u3002\u65E0\u5927\u7EB2\u4E5F\u80FD\u7528\u3002</div>`;
+  const presets = PACING_PRESETS.map(
+    (p) => `<button type="button" class="tsa-pacing-preset" data-preset="${escapeHtmlText2(p.text)}">${escapeHtmlText2(p.label)}</button>`
+  ).join("");
+  const armed3 = getArmedPacing();
+  const armedHtml = armed3.armed ? `<div class="tsa-pacing-armed"><i class="fa-solid fa-circle-check"></i> \u5DF2\u6B66\u88C5\uFF1A${escapeHtmlText2(armed3.summary)} \xB7 \u4E0B\u6761\u56DE\u590D\u751F\u6548</div>` : "";
+  return `
+        <div class="tsa-scroll">
+            ${diag}
+            <textarea class="tsa-pacing-input" id="tsa-pacing-directive" rows="3" placeholder="\u672C\u6B21\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91\uFF0C\u6216\u70B9\u4E0B\u65B9\u9884\u8BBE\u586B\u5165">${escapeHtmlText2(pacingDraft)}</textarea>
+            <div class="tsa-pacing-presets">${presets}</div>
+            <details class="tsa-pacing-adv">
+                <summary>\u6CE8\u5165\u9AD8\u7EA7\u8BBE\u7F6E</summary>
+                <div class="tsa-pacing-adv-fields">
+                    <label>\u6DF1\u5EA6<input type="number" id="tsa-pacing-depth" min="0" max="10000" step="1" value="${cfg.depth}"></label>
+                    <label>\u89D2\u8272
+                        <select id="tsa-pacing-role">
+                            <option value="system" ${cfg.role === "system" ? "selected" : ""}>system</option>
+                            <option value="user" ${cfg.role === "user" ? "selected" : ""}>user</option>
+                            <option value="assistant" ${cfg.role === "assistant" ? "selected" : ""}>assistant</option>
+                        </select>
+                    </label>
+                </div>
+            </details>
+            ${armedHtml}
         </div>
-    </div>`;
+        <div class="tsa-footer">
+            <button type="button" class="tsa-chip" id="tsa-pacing-clear" title="\u6E05\u9664\u5DF2\u6B66\u88C5\u7684\u8282\u594F\u6307\u4EE4"><i class="fa-solid fa-eraser"></i> \u6E05\u9664</button>
+            <button type="button" class="tsa-generate" id="tsa-pacing-analyze" ${pacingAnalyzing ? "disabled" : ""}>
+                <i class="fa-solid ${pacingAnalyzing ? "fa-spinner fa-spin" : "fa-gauge-high"}"></i> ${pacingAnalyzing ? "\u5206\u6790\u4E2D..." : "\u5206\u6790\u8282\u594F"}
+            </button>
+            <button type="button" class="tsa-generate tsa-pacing-apply" id="tsa-pacing-apply"><i class="fa-solid fa-syringe"></i> \u5E94\u7528\u5230\u4E0B\u6B21\u56DE\u590D</button>
+        </div>`;
 }
 async function refreshPanel() {
   const $panel = $(`#${PANEL_ID}`);
@@ -35511,6 +37211,7 @@ function destroyPanel() {
   expandedForMesid = null;
   previewItemIdx = -1;
   previewOpen = false;
+  panelMode = "recommend";
   const strip = getStrip();
   if (strip) updateStrip(strip, { expanded: false });
 }
@@ -35584,6 +37285,35 @@ async function onGenerate() {
     await refreshPanel();
   }
 }
+async function onAnalyzePacing() {
+  if (pacingAnalyzing) return;
+  pacingAnalyzing = true;
+  await refreshPanel();
+  try {
+    const api = await loadApi();
+    const result = await api.generatePacingAssessment();
+    if (result) {
+      pacingResult = result;
+      pacingDraft = result.directive;
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u8282\u594F\u5206\u6790\u5931\u8D25", e?.message || String(e));
+  } finally {
+    pacingAnalyzing = false;
+    await refreshPanel();
+  }
+}
+function onApplyPacing() {
+  const text = String($("#tsa-pacing-directive").val() || "").trim();
+  if (!text) {
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u586B\u5199\u6216\u5206\u6790\u51FA\u4E00\u6761\u8282\u594F\u6307\u4EE4", "\u53D9\u4E8B\u8282\u594F");
+    return;
+  }
+  pacingDraft = text;
+  const ok = armPacingDirective(text, getPacingConfig());
+  if (ok && window.toastr) toastr.success("\u5DF2\u5E94\u7528\uFF0C\u5C06\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D", "\u53D9\u4E8B\u8282\u594F");
+  void refreshPanel();
+}
 async function togglePanel(strip, mesid) {
   if (document.getElementById(PANEL_ID)) {
     destroyPanel();
@@ -35624,34 +37354,69 @@ function bindPanelNode(panel) {
     $(this).attr("data-mode", next).find(".tsa-chip-label").text(next === "append" ? "\u8FFD\u52A0" : "\u8986\u76D6");
   });
   $panel.on("click", "#tsa-generate", () => onGenerate());
+  $panel.on("click", "#tsa-bb-pause", async function() {
+    const info = getActiveBlindboxInfo();
+    if (!info) return;
+    toggleBlindboxDirectorPaused(info.planId);
+    const strip = getStrip();
+    if (strip) updateStrip(strip);
+    await refreshPanel();
+  });
   $panel.on("click", ".tsa-item", function() {
     onPickCandidate(Number($(this).data("candidate-index")));
+  });
+  $panel.on("click", ".tsa-mode-tab", async function() {
+    const next = String($(this).data("mode") || "recommend") === "pacing" ? "pacing" : "recommend";
+    if (next === panelMode) return;
+    panelMode = next;
+    await refreshPanel();
+  });
+  $panel.on("input", "#tsa-pacing-directive", function() {
+    pacingDraft = String($(this).val() || "");
+  });
+  $panel.on("click", ".tsa-pacing-preset", function() {
+    pacingDraft = String($(this).data("preset") || "");
+    $panel.find("#tsa-pacing-directive").val(pacingDraft);
+  });
+  $panel.on("change", "#tsa-pacing-depth", function() {
+    const n = Math.max(0, Math.floor(Number($(this).val()) || 0));
+    savePacingConfig({ inject_depth: n });
+  });
+  $panel.on("change", "#tsa-pacing-role", function() {
+    const role = String($(this).val() || "system");
+    savePacingConfig({ inject_role: ["system", "user", "assistant"].includes(role) ? role : "system" });
+  });
+  $panel.on("click", "#tsa-pacing-analyze", () => onAnalyzePacing());
+  $panel.on("click", "#tsa-pacing-apply", () => onApplyPacing());
+  $panel.on("click", "#tsa-pacing-clear", async () => {
+    clearPacingDirective();
+    await refreshPanel();
   });
   $panel.on("click mousedown", (event) => event.stopPropagation());
 }
 function initSceneAdvanceBubble() {
-  if (listenersBound2) {
+  if (listenersBound4) {
     scheduleRefreshStrips(0);
     return;
   }
-  listenersBound2 = true;
+  listenersBound4 = true;
   $(document).on("keydown.tsceneadvance", (event) => {
     if (event.key === "Escape" && document.getElementById(PANEL_ID)) destroyPanel();
   });
   const rerenderEvents = [
-    event_types4.CHARACTER_MESSAGE_RENDERED,
-    event_types4.USER_MESSAGE_RENDERED,
-    event_types4.MESSAGE_SWIPED,
-    event_types4.MESSAGE_DELETED,
-    event_types4.MESSAGE_EDITED,
-    event_types4.MORE_MESSAGES_LOADED
+    event_types6.CHARACTER_MESSAGE_RENDERED,
+    event_types6.USER_MESSAGE_RENDERED,
+    event_types6.MESSAGE_SWIPED,
+    event_types6.MESSAGE_DELETED,
+    event_types6.MESSAGE_EDITED,
+    event_types6.MORE_MESSAGES_LOADED
   ];
   for (const eventName of rerenderEvents) {
     if (!eventName) continue;
-    eventSource4.on(eventName, () => scheduleRefreshStrips(0));
+    eventSource6.on(eventName, () => scheduleRefreshStrips(0));
   }
-  if (event_types4.CHAT_CHANGED) {
-    eventSource4.on(event_types4.CHAT_CHANGED, () => {
+  if (event_types6.CHAT_CHANGED) {
+    eventSource6.on(event_types6.CHAT_CHANGED, () => {
       destroyPanel();
       scheduleRefreshStrips(0);
     });
@@ -35659,17 +37424,19 @@ function initSceneAdvanceBubble() {
   scheduleRefreshStrips(300);
   TitaniaLogger.info("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u5DF2\u521D\u59CB\u5316");
 }
-var STRIP_CLASS, PANEL_ID, PLANS_KEY2, ACTIVE_PLAN_KEY2, SCENE_SOURCE_PLAN_KEY2, listenersBound2, refreshQueued2, apiPromise, expandedForMesid, generating, opening, restoring, previewItemIdx, previewOpen;
+var STRIP_CLASS, PANEL_ID, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY2, listenersBound4, refreshQueued2, apiPromise, expandedForMesid, generating, opening, restoring, previewItemIdx, previewOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, PACING_PRESETS;
 var init_sceneAdvanceBubble = __esm({
   "src/ui/sceneAdvanceBubble.js"() {
     init_storage();
     init_logger();
+    init_pacingInjection();
+    init_blindboxPlan();
     STRIP_CLASS = "titania-scene-advance-strip";
     PANEL_ID = "t-scene-advance-panel";
-    PLANS_KEY2 = "story_outline_plans";
-    ACTIVE_PLAN_KEY2 = "story_outline_active_plan_id";
+    PLANS_KEY3 = "story_outline_plans";
+    ACTIVE_PLAN_KEY3 = "story_outline_active_plan_id";
     SCENE_SOURCE_PLAN_KEY2 = "story_outline_scene_source_plan_id";
-    listenersBound2 = false;
+    listenersBound4 = false;
     refreshQueued2 = false;
     apiPromise = null;
     expandedForMesid = null;
@@ -35678,6 +37445,18 @@ var init_sceneAdvanceBubble = __esm({
     restoring = false;
     previewItemIdx = -1;
     previewOpen = false;
+    panelMode = "recommend";
+    pacingResult = null;
+    pacingDraft = "";
+    pacingAnalyzing = false;
+    PACING_PRESETS = [
+      { label: "\u653E\u6162", text: "\u672C\u6B21\u56DE\u590D\u653E\u6162\u8282\u594F\uFF0C\u505C\u7559\u5728\u5F53\u524D\u573A\u666F\uFF0C\u6DF1\u5316\u4EBA\u7269\u60C5\u7EEA\u4E0E\u611F\u5B98\u7EC6\u8282\uFF0C\u4E0D\u8981\u63A8\u8FDB\u5230\u65B0\u4E8B\u4EF6\u3002" },
+      { label: "\u52A0\u5FEB", text: "\u672C\u6B21\u56DE\u590D\u52A0\u5FEB\u8282\u594F\uFF0C\u7565\u53BB\u8FC7\u573A\u4E0E\u5BD2\u6684\uFF0C\u76F4\u63A5\u63A8\u8FDB\u5230\u4E0B\u4E00\u4E2A\u5173\u952E\u4E8B\u4EF6\u6216\u573A\u666F\u3002" },
+      { label: "\u8D77\u5F20\u529B", text: "\u672C\u6B21\u56DE\u590D\u63D0\u5347\u5F20\u529B\uFF0C\u5236\u9020\u51B2\u7A81\u6216\u60AC\u5FF5\u8BA9\u5C40\u52BF\u5347\u7EA7\uFF0C\u907F\u514D\u5E73\u6DE1\u4EA4\u4EE3\u3002" },
+      { label: "\u6536\u675F", text: "\u672C\u6B21\u56DE\u590D\u6536\u675F\u5F53\u524D\u8FD9\u6761\u7EBF\u7D22\uFF0C\u7ED9\u5DF2\u6709\u4F0F\u7B14\u6216\u51B2\u7A81\u4E00\u4E2A\u9636\u6BB5\u6027\u7ED3\u679C\uFF0C\u4E0D\u8981\u518D\u629B\u65B0\u7EBF\u3002" },
+      { label: "\u7559\u767D", text: "\u672C\u6B21\u56DE\u590D\u514B\u5236\u7B14\u58A8\uFF0C\u4EE5\u672A\u5C3D\u4E4B\u8BED\u548C\u7559\u767D\u6536\u5C3E\uFF0C\u7ED9\u56DE\u5473\u7A7A\u95F4\u3002" },
+      { label: "\u8F6C\u573A", text: "\u672C\u6B21\u56DE\u590D\u5B8C\u6210\u4E00\u6B21\u573A\u666F\u6216\u65F6\u95F4\u8F6C\u6362\uFF0C\u81EA\u7136\u8FC7\u6E21\u5230\u4E0B\u4E00\u4E2A\u573A\u666F\u3002" }
+    ];
   }
 });
 
@@ -35753,8 +37532,8 @@ function saveHeaderActions(list) {
   return data.ui_prefs.header_actions;
 }
 function getOverflowActions() {
-  const active = new Set(getHeaderActions());
-  return HEADER_ACTION_REGISTRY.filter((item) => !active.has(item.id));
+  const active2 = new Set(getHeaderActions());
+  return HEADER_ACTION_REGISTRY.filter((item) => !active2.has(item.id));
 }
 function renderHeaderActionsHtml() {
   const iconsHtml = getHeaderActions().map((id3) => {
@@ -36027,6 +37806,14 @@ function openSettingsWindow() {
                             <option value="legacy" ${mainWindowMode === "legacy" ? "selected" : ""}>\u7ECF\u5178\u7248\uFF08\u53CC\u6F14\u7ECE\u6309\u94AE + \u5DE5\u5177\u7F51\u683C\uFF09</option>
                         </select>
                         <p style="font-size:0.75em; color:var(--t-color-text-faint); margin-top:6px;">\u4E24\u7248\u529F\u80FD\u5B8C\u5168\u76F8\u540C\uFF0C\u4EC5\u5E03\u5C40\u4E0D\u540C\u3002\u5207\u6362\u540E\u9700\u91CD\u65B0\u6253\u5F00\u5C0F\u5267\u573A\u751F\u6548\u3002</p>
+                    </div>
+
+                    <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid var(--t-color-border);">
+                        <label style="cursor:pointer; display:flex; align-items:center;">
+                            <input type="checkbox" id="cfg-temp-instruction" ${data.temp_instruction?.enabled !== false ? "checked" : ""} style="margin-right:10px;">
+                            <span style="color:var(--t-color-text-label);">\u270F\uFE0F \u672C\u6B21\u8865\u5145\uFF08\u4E34\u65F6\u6307\u4EE4\uFF09</span>
+                        </label>
+                        <p style="font-size:0.75em; color:var(--t-color-text-faint); margin-top:5px; margin-left:22px;">\u5F00\u542F\u540E\uFF0C\u5C0F\u5267\u573A\u9876\u680F\u5267\u672C\u5361\u4E0B\u65B9\u4F1A\u51FA\u73B0\u300C\u672C\u6B21\u8865\u5145\u300D\u8F93\u5165\u6846\uFF0C\u53EF\u5BF9\u5355\u6B21\u751F\u6210\u8FFD\u52A0\u4E00\u53E5\u4E34\u65F6\u8981\u6C42\uFF08\u7528\u5B8C\u81EA\u52A8\u6E05\u7A7A\uFF09\u3002\u5173\u95ED\u5219\u9690\u85CF\u8BE5\u5165\u53E3\uFF0C\u63D0\u793A\u8BCD\u91CC\u4E0D\u518D\u5E26\u8865\u5145\u6BB5\u3002</p>
                     </div>
 
                     <div class="t-form-group" style="margin-top:15px; padding-top:15px; border-top:1px solid var(--t-color-border);">
@@ -37585,9 +39372,9 @@ function openSettingsWindow() {
   });
   initToolbarCheckboxes();
   let headerActionOrder = (() => {
-    const active = getHeaderActions();
-    const rest = HEADER_ACTION_REGISTRY.map((item) => item.id).filter((id3) => !active.includes(id3));
-    return [...active, ...rest];
+    const active2 = getHeaderActions();
+    const rest = HEADER_ACTION_REGISTRY.map((item) => item.id).filter((id3) => !active2.includes(id3));
+    return [...active2, ...rest];
   })();
   const applyHeaderActions = () => {
     const selected = headerActionOrder.filter((id3) => $(`.t-header-action-chk[data-action-id="${id3}"]`).is(":checked"));
@@ -37606,12 +39393,12 @@ function openSettingsWindow() {
   const renderHeaderActionCards = () => {
     const $list = $("#p-header-actions");
     if (!$list.length) return;
-    const active = getHeaderActions();
+    const active2 = getHeaderActions();
     $list.empty();
     headerActionOrder.forEach((id3) => {
       const meta = HEADER_ACTION_REGISTRY.find((item) => item.id === id3);
       if (!meta) return;
-      const checked = active.includes(id3);
+      const checked = active2.includes(id3);
       const $card = $(`<div class="t-header-action-card" data-action-id="${id3}" draggable="true">
                 <span class="t-header-action-grip" title="\u62D6\u52A8\u6392\u5E8F"><i class="fa-solid fa-grip-vertical"></i></span>
                 <i class="fa-solid ${meta.icon} t-header-action-icon"></i>
@@ -37765,7 +39552,10 @@ function openSettingsWindow() {
       d.ui_prefs.header_actions = headerActionOrder.filter((id3) => $(`.t-header-action-chk[data-action-id="${id3}"]`).is(":checked")).slice(0, HEADER_ACTION_MAX);
     }
     d.director = { instruction: $("#set-dir-instruction").val().trim() };
-    const clampInt = (value, min, max, fallback) => {
+    d.temp_instruction = {
+      enabled: $("#cfg-temp-instruction").is(":checked")
+    };
+    const clampInt2 = (value, min, max, fallback) => {
       const n = parseInt(value, 10);
       if (!Number.isFinite(n)) return fallback;
       return Math.max(min, Math.min(max, n));
@@ -37845,6 +39635,7 @@ function openSettingsWindow() {
     applyFontSettings(d.font_settings);
     applyUIFontScale(d.appearance?.ui_font_scale);
     applyUITheme(d.appearance?.ui_theme);
+    if (typeof window.updateTempInstructionUI === "function") window.updateTempInstructionUI();
     if (window.toastr) toastr.success("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
   });
   renderPreview();
@@ -39633,12 +41424,12 @@ async function listAllContinuationSessions() {
   return buildGlobalSessions(sessions2, branches, rounds);
 }
 function buildPointerMetadata(sessions2) {
-  const active = {};
+  const active2 = {};
   for (const session of sessions2) {
     const branchId = String(session?.activeBranchId || "").trim();
-    if (branchId) active[String(session.scriptId)] = branchId;
+    if (branchId) active2[String(session.scriptId)] = branchId;
   }
-  return Object.keys(active).length > 0 ? { version: 2, active } : null;
+  return Object.keys(active2).length > 0 ? { version: 2, active: active2 } : null;
 }
 function updateCurrentChatMetadata(sessions2) {
   const next = buildPointerMetadata(sessions2);
@@ -39842,8 +41633,8 @@ async function restoreContinuationForCurrentChat() {
   const nextByScript = {};
   for (const session of sessions2) {
     const sessionBranches = branches.filter((branch) => String(branch.sessionId) === String(session.id));
-    const active = sessionBranches.find((branch) => branch.id === session.activeBranchId);
-    if (!active) continue;
+    const active2 = sessionBranches.find((branch) => branch.id === session.activeBranchId);
+    if (!active2) continue;
     nextByScript[session.scriptId] = {
       scriptId: session.scriptId,
       scriptName: session.scriptName,
@@ -39853,11 +41644,11 @@ async function restoreContinuationForCurrentChat() {
       chatName: session.chatName,
       origin: session.origin || null,
       updatedAt: Number(session.updatedAt) || 0,
-      branchKey: String(active.branchKey || active.id),
-      parentBranchKey: String(active.parentBranchId || ""),
-      branchedAtRound: Number(active.branchedAtSequence) || null,
-      rounds: roundsByBranch.get(active.id) || [],
-      archivedBranches: sessionBranches.filter((branch) => branch.id !== active.id).map((branch) => ({
+      branchKey: String(active2.branchKey || active2.id),
+      parentBranchKey: String(active2.parentBranchId || ""),
+      branchedAtRound: Number(active2.branchedAtSequence) || null,
+      rounds: roundsByBranch.get(active2.id) || [],
+      archivedBranches: sessionBranches.filter((branch) => branch.id !== active2.id).map((branch) => ({
         branchKey: String(branch.branchKey || branch.id),
         parentBranchKey: String(branch.parentBranchId || ""),
         branchedAtRound: Number(branch.branchedAtSequence) || null,
@@ -40007,12 +41798,86 @@ var init_viewState = __esm({
   }
 });
 
+// src/core/tempInstruction.js
+function isTempInstructionGenerationSource(source) {
+  return source === "manual" || source === "user_continuation";
+}
+function isTempInstructionFeatureEnabled(data) {
+  return data?.temp_instruction?.enabled !== false;
+}
+function buildTempInstructionBlock(text, options = {}) {
+  const body = String(text ?? "").trim();
+  if (!body) return "";
+  const hint = options?.continuation === true ? HINT_CONTINUATION : HINT_CREATE;
+  return `
+
+${TEMP_INSTRUCTION_HEADER}
+${hint}
+${body}`;
+}
+function getTempInstructionDraft() {
+  return draft;
+}
+function setTempInstructionDraft(text) {
+  draft = String(text ?? "").trim();
+  return draft;
+}
+function getActiveTempInstruction(scriptId) {
+  if (!active) return "";
+  return active.scriptId === String(scriptId || "") ? active.text : "";
+}
+function hasActiveTempInstruction(scriptId) {
+  return getActiveTempInstruction(scriptId) !== "";
+}
+function consumeTempInstruction(scriptId) {
+  const id3 = String(scriptId || "");
+  const text = draft.trim();
+  draft = "";
+  active = text && id3 ? { scriptId: id3, text } : null;
+  return active ? active.text : "";
+}
+function takeActiveTempInstruction() {
+  const taken = active;
+  active = null;
+  return taken;
+}
+function clearTempInstruction() {
+  draft = "";
+  active = null;
+}
+var TEMP_INSTRUCTION_HEADER, HINT_CREATE, HINT_CONTINUATION, draft, active;
+var init_tempInstruction = __esm({
+  "src/core/tempInstruction.js"() {
+    TEMP_INSTRUCTION_HEADER = "[\u672C\u6B21\u8865\u5145\u8981\u6C42]";
+    HINT_CREATE = "\uFF08\u5728\u4E0A\u8FF0\u5267\u672C\u57FA\u7840\u4E0A\uFF0C\u672C\u6B21\u521B\u4F5C\u989D\u5916\u9075\u5FAA\u4EE5\u4E0B\u8981\u6C42\uFF1B\u4E0E\u4E0A\u6587\u51B2\u7A81\u65F6\u4EE5\u672C\u8282\u4E3A\u51C6\uFF09";
+    HINT_CONTINUATION = "\uFF08\u5728\u672C\u6B21\u7EED\u5199\u8981\u6C42\u4E4B\u5916\uFF0C\u672C\u6B21\u521B\u4F5C\u989D\u5916\u9075\u5FAA\u4EE5\u4E0B\u8981\u6C42\uFF1B\u4E0E\u4E0A\u6587\u51B2\u7A81\u65F6\u4EE5\u672C\u8282\u4E3A\u51C6\uFF09";
+    draft = "";
+    active = null;
+  }
+});
+
 // src/ui/mainWindow/topBar.js
 function getGenerationModeMeta(id3) {
   return GENERATION_MODES.find((item) => item.id === String(id3 || "")) || GENERATION_MODES[0];
 }
 function renderTopBarHtml(variant = "modern") {
-  return variant === "legacy" ? renderLegacyTopBar() : renderModernTopBar();
+  const bar = variant === "legacy" ? renderLegacyTopBar() : renderModernTopBar();
+  return bar + renderTempInstructionHtml();
+}
+function renderTempInstructionHtml() {
+  return `
+            <div class="t-temp-bar" id="t-temp-bar" hidden>
+                <div class="t-temp-edit" id="t-temp-edit" hidden>
+                    <span class="t-temp-label"><i class="fa-solid fa-pen"></i> \u672C\u6B21\u8865\u5145</span>
+                    <textarea class="t-input t-temp-input" id="t-temp-input" rows="1" autocomplete="off"
+                        placeholder="\u53EA\u5BF9\u8FD9\u6B21\u751F\u6210\u751F\u6548\uFF0C\u4F8B\u5982\uFF1A\u5199\u5F97\u8F7B\u677E\u4E00\u70B9\uFF0C\u52A0\u4E00\u6BB5\u65E5\u5E38\u5BF9\u8BDD"></textarea>
+                    <button type="button" class="t-icon-btn t-temp-clear" id="t-temp-clear" title="\u6E05\u9664\u672C\u6B21\u8865\u5145" aria-label="\u6E05\u9664\u672C\u6B21\u8865\u5145"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="t-temp-active" id="t-temp-active" hidden>
+                    <span class="t-temp-active-text"><i class="fa-solid fa-check"></i> \u672C\u6B21\u8865\u5145\u5DF2\u751F\u6548\uFF0C\u7EED\u5199\u6CBF\u7528</span>
+                    <button type="button" class="t-temp-undo" id="t-temp-undo">\u64A4\u9500</button>
+                </div>
+            </div>`;
 }
 function renderModernTopBar() {
   const mode = getGenerationModeMeta(GlobalState.generationMode);
@@ -40661,11 +42526,24 @@ __export(mainWindow_exports, {
   updateScriptTitleDisplay: () => updateScriptTitleDisplay,
   updateWorkshopFeedbackButton: () => updateWorkshopFeedbackButton
 });
+function describeUnavailableResult(result) {
+  if (result?.status === "running") return "\u8FD9\u4E00\u8F6E\u8FD8\u5728\u751F\u6210\u4E2D\u3002\u7B49\u5B83\u5199\u5B8C\u4E4B\u540E\u518D\u70B9\u4E00\u6B21\u914D\u56FE\u3002";
+  if (result?.status === "failed") return "\u8FD9\u4E00\u8F6E\u751F\u6210\u5931\u8D25\u4E86\uFF0C\u6CA1\u6709\u53EF\u914D\u56FE\u7684\u6B63\u6587\u3002";
+  return "\u8FD8\u6CA1\u6709\u53EF\u4EE5\u914D\u56FE\u7684\u6B63\u6587\u3002\u5148\u6F14\u7ECE\u4E00\u6B21\uFF0C\u518D\u6765\u914D\u56FE\u3002";
+}
 function getMainIllustrationTarget() {
   const result = getCurrentGenerationResult();
   const view = continuationHistoryView;
   const fallback = view ? `${view.chatId}:${view.scriptId}:${view.branchKey}:${view.roundKey}` : `legacy:${getCurrentContinuationSource().chatId}:${result?.scriptId || ""}`;
-  return createIllustrationTarget({ ...result, cardKey: getCharacterCardKey() }, fallback);
+  try {
+    return createIllustrationTarget({ ...result, cardKey: getCharacterCardKey() }, fallback);
+  } catch {
+    return createPendingIllustrationTarget({
+      scriptId: result?.scriptId || "",
+      scriptName: result?.scriptName || "\u573A\u666F",
+      reason: describeUnavailableResult(result)
+    });
+  }
 }
 function formatRelativeTime3(ts) {
   const time = Number(ts) || 0;
@@ -40793,9 +42671,10 @@ function closeWindow() {
   $("#t-overlay").remove();
   $(document).off("keydown.zenmode");
   $(document).off("click.tinlinebranch");
+  $(window).off("resize.ttempinput");
 }
-function escapeHtmlText3(str) {
-  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtmlText3(str2) {
+  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function getContinuationRecentInstructions() {
   const data = getExtData();
@@ -41368,6 +43247,42 @@ function updateDesc() {
   const s = GlobalState.runtimeScripts.find((x) => x.id === $("#t-sel-script").val());
   if (s) $("#t-txt-desc").val(s.desc);
 }
+function syncTempInstructionInputHeight() {
+  const el = document.getElementById("t-temp-input");
+  if (!el) return;
+  el.style.height = "auto";
+  const cs = getComputedStyle(el);
+  const lineHeight = parseFloat(cs.lineHeight);
+  const borders = el.offsetHeight - el.clientHeight;
+  const verticalSpace = borders + (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+  const capped = Number.isFinite(lineHeight) && lineHeight >= 8;
+  const contentHeight = el.scrollHeight + borders;
+  const maxHeight = lineHeight * TEMP_INSTRUCTION_INPUT_MAX_ROWS + verticalSpace;
+  el.style.height = `${capped ? Math.min(contentHeight, maxHeight) : contentHeight}px`;
+}
+function updateTempInstructionUI() {
+  const $bar = $("#t-temp-bar");
+  if (!$bar.length) return;
+  if (!isTempInstructionFeatureEnabled(getExtData())) {
+    $bar.prop("hidden", true);
+    $(".t-top-bar").removeClass("has-temp-bar");
+    return;
+  }
+  const pendingScriptId = getPendingGenerationScriptId();
+  const draft2 = getTempInstructionDraft();
+  const currentScriptId = pendingScriptId || GlobalState.lastUsedScriptId || "";
+  const editMode = Boolean(pendingScriptId || draft2);
+  const visible = editMode || hasActiveTempInstruction(currentScriptId);
+  $bar.prop("hidden", !visible);
+  $("#t-temp-edit").prop("hidden", !editMode);
+  $("#t-temp-active").prop("hidden", editMode);
+  $(".t-top-bar").toggleClass("has-temp-bar", visible);
+  if (editMode) {
+    const $input = $("#t-temp-input");
+    if ($input.val().trim() !== draft2) $input.val(draft2);
+    syncTempInstructionInputHeight();
+  }
+}
 function applyScriptSelection(id3, options = {}) {
   const s = GlobalState.runtimeScripts.find((x) => x.id === id3);
   if (!s) return;
@@ -41380,6 +43295,7 @@ function applyScriptSelection(id3, options = {}) {
     setPendingGenerationScriptId(s.id);
     setContinuationQuickDraft("");
     $("#t-continuation-quick-input").val("");
+    clearTempInstruction();
     if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
   }
   $("#t-lbl-name").text(s.name);
@@ -41388,6 +43304,7 @@ function applyScriptSelection(id3, options = {}) {
   $catTag.text(category).removeClass("is-missing").addClass("is-category");
   $("#t-lbl-desc-mini").text(s.desc || "\u65E0\u7B80\u4ECB");
   $("#t-txt-desc").val(s.desc);
+  updateTempInstructionUI();
 }
 async function openMainWindow() {
   if ($("#t-overlay").length) return;
@@ -41417,7 +43334,6 @@ async function openMainWindow() {
   } else {
     outputContainer.innerHTML = placeholderContent;
   }
-  registerTeardown(bindMainIllustrations(getMainIllustrationTarget));
   $("#t-tool-illustrate").on("click", () => {
     try {
       openIllustrationWindow(getMainIllustrationTarget());
@@ -41476,6 +43392,29 @@ async function openMainWindow() {
     });
   }
   $("#t-trigger-btn").on("click", () => showScriptSelector(GlobalState.currentCategoryFilter));
+  $("#t-temp-input").on("input", function() {
+    setTempInstructionDraft($(this).val());
+    updateTempInstructionUI();
+  });
+  $(window).on("resize.ttempinput", () => {
+    if ($("#t-temp-edit").prop("hidden")) return;
+    syncTempInstructionInputHeight();
+  });
+  $("#t-temp-clear").on("click", () => {
+    setTempInstructionDraft("");
+    updateTempInstructionUI();
+  });
+  $("#t-temp-undo").on("click", () => {
+    const taken = takeActiveTempInstruction();
+    if (!taken) {
+      updateTempInstructionUI();
+      return;
+    }
+    setTempInstructionDraft(taken.text);
+    if (taken.scriptId) setPendingGenerationScriptId(taken.scriptId);
+    updateTempInstructionUI();
+    updateRunButtonsState();
+  });
   $("#t-btn-filter").on("click", function(e) {
     renderFilterMenu(GlobalState.currentCategoryFilter, $(this), (newCat) => {
       GlobalState.currentCategoryFilter = newCat;
@@ -41780,6 +43719,7 @@ async function openMainWindow() {
   window.updateRunButtonsState = updateRunButtonsState;
   window.updateFavButtonUI = updateFavButtonUI;
   window.updateScriptTitleDisplay = updateScriptTitleDisplay;
+  window.updateTempInstructionUI = updateTempInstructionUI;
   window.refreshHeaderActions = refreshHeaderActions;
   let initialScriptId = GlobalState.lastUsedScriptId;
   if (GlobalState.lastGeneratedContent && GlobalState.lastGeneratedScriptId) {
@@ -41809,6 +43749,7 @@ async function openMainWindow() {
   updateQueueButtonUI();
 }
 function updateRunButtonsState() {
+  updateTempInstructionUI();
   if (!activeLayout) return;
   activeLayout.syncRunButtons({
     isGenerating: GlobalState.isGenerating,
@@ -43297,7 +45238,7 @@ function disableQueueMode() {
   GlobalState.queueState.enabled = false;
   updateQueueButtonUI();
 }
-var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, continuationHistoryView, continuationHistoryManaging, continuationHistorySelection, continuationGlobalSessions, continuationHistoryScope, layoutTeardownHooks, activeLayout;
+var SORT_MODE_LABELS2, CONTINUATION_RECENT_MAX, continuationHistoryView, continuationHistoryManaging, continuationHistorySelection, continuationGlobalSessions, continuationHistoryScope, layoutTeardownHooks, activeLayout, TEMP_INSTRUCTION_INPUT_MAX_ROWS;
 var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
@@ -43314,6 +45255,7 @@ var init_mainWindow = __esm({
     init_continuationStore();
     init_scriptData();
     init_viewState();
+    init_tempInstruction();
     init_modern();
     init_legacy();
     init_headerActions();
@@ -43338,6 +45280,7 @@ var init_mainWindow = __esm({
     continuationHistoryScope = "all";
     layoutTeardownHooks = [];
     activeLayout = null;
+    TEMP_INSTRUCTION_INPUT_MAX_ROWS = 3;
   }
 });
 
@@ -43918,11 +45861,11 @@ function archiveContinuationBranch(entry) {
     archivedAt: Date.now()
   }, ...entry.archivedBranches.filter((item) => String(item?.branchKey || "") !== branchKey)].slice(0, CONTINUATION_ARCHIVED_BRANCH_MAX);
 }
-function findContinuationRoundAnchor(scriptId, probe3 = {}) {
+function findContinuationRoundAnchor(scriptId, probe4 = {}) {
   const entry = getContinuationRuntimeStore()[scriptId];
   if (!entry) return null;
-  const wantedId = String(probe3.generationId || "").trim();
-  const wantedContent = String(probe3.content || "").trim();
+  const wantedId = String(probe4.generationId || "").trim();
+  const wantedContent = String(probe4.content || "").trim();
   if (!wantedId && !wantedContent) return null;
   const activeBranchKey = String(entry.branchKey || "").trim();
   const candidates = [
@@ -44437,8 +46380,8 @@ function deleteContinuationHistorySelections(selections = []) {
       deletedSessions++;
       continue;
     }
-    const active = keptBranches.find((branch) => branch.isActive) || keptBranches.slice().sort((a, b) => Math.max(...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
-    const activeBranch = keptBranches.find((branch) => branch.branchKey === active.branchKey);
+    const active2 = keptBranches.find((branch) => branch.isActive) || keptBranches.slice().sort((a, b) => Math.max(...(b.rounds || []).map((round) => Number(round.timestamp) || 0)) - Math.max(...(a.rounds || []).map((round) => Number(round.timestamp) || 0)))[0];
+    const activeBranch = keptBranches.find((branch) => branch.branchKey === active2.branchKey);
     entry.branchKey = activeBranch.branchKey;
     entry.parentBranchKey = activeBranch.parentBranchKey || "";
     entry.branchedAtRound = activeBranch.branchedAtRound || null;
@@ -44910,7 +46853,10 @@ async function buildPromptCompositionPreview(options = {}) {
       // 仅续写口径下非零：把 [剧本指令] 块再拆三段（顺序即查看器的切片顺序）
       continuationPreamble: 0,
       continuationContext: 0,
-      continuationInstruction: 0
+      continuationInstruction: 0,
+      // 「本次补充」：独立成段拼在 [剧本指令] 之后，故记在最后。
+      // ⚠ 顺序必须与 user 串的拼接顺序一致，也要与 debugWindow.js 的 definitions 对齐。
+      tempInstruction: 0
     };
     const dirInstruction = dirDefaults.instruction || "";
     const styleProfiles = data.style_profiles || [{ id: "default", name: "\u9ED8\u8BA4 (\u65E0)", content: "" }];
@@ -44992,6 +46938,14 @@ ${ctx.worldInfo}
 ${processedPrompt}`;
     applyScriptInstructionSectionLengths(sectionLengths, scriptBlock, processedPrompt, continuationPlan?.override.lengths || null);
     user += scriptBlock;
+    const tempInstructionBlock = buildTempInstructionBlock(
+      isTempInstructionFeatureEnabled(data) ? continuationPlan ? getActiveTempInstruction(script.id) : getTempInstructionDraft() : "",
+      { continuation: Boolean(continuationPlan) }
+    );
+    if (tempInstructionBlock) {
+      sectionLengths.tempInstruction = tempInstructionBlock.length;
+      user += tempInstructionBlock;
+    }
     const meta = {
       source: generationSource,
       hasPromptOverride: hasExplicitOverride,
@@ -45016,7 +46970,10 @@ ${processedPrompt}`;
       worldInfoBefore: ctx.worldInfo,
       worldInfoAfter: "",
       chatHistory: runtimeChatHistory,
-      titaniaScript: processedPrompt
+      // 选用预设模式下整条 user 串**不会被注入**（预设条目 id 永远不等于 preset_user），
+      // {{titaniaScript}} 才是剧本正文进提示词的唯一通道 —— 补充段必须一并带上，
+      // 否则预设模式用户静默看不到它。builtin 模式下没有条目消费这个键，并入是惰性的。
+      titaniaScript: processedPrompt + tempInstructionBlock
     };
     const messageDetails = buildPromptMessageDetails(promptScheme, {
       [`${GlobalState.generationMode}_system`]: sys,
@@ -45185,6 +47142,10 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   }
   const keepOverlayOpen = generationOverrides?.keepOverlayOpen === true;
   if (!silent && !keepOverlayOpen) $("#t-overlay").remove();
+  const tempInstructionText = !isTempInstructionFeatureEnabled(data) ? "" : generationSource === "manual" ? consumeTempInstruction(script.id) : isTempInstructionGenerationSource(generationSource) ? getActiveTempInstruction(script.id) : "";
+  const tempInstructionBlock = buildTempInstructionBlock(tempInstructionText, {
+    continuation: generationSource === "user_continuation"
+  });
   GlobalState.abortController = new AbortController();
   const signal = GlobalState.abortController.signal;
   GlobalState.isGenerating = true;
@@ -45237,7 +47198,10 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
       // 仅续写口径下非零：把 [剧本指令] 块再拆三段（顺序即查看器的切片顺序）
       continuationPreamble: 0,
       continuationContext: 0,
-      continuationInstruction: 0
+      continuationInstruction: 0,
+      // 「本次补充」：独立成段拼在 [剧本指令] 之后，故记在最后。
+      // ⚠ 顺序必须与 user 串的拼接顺序一致，也要与 debugWindow.js 的 definitions 对齐。
+      tempInstruction: 0
     };
     let directorSection = "";
     if (dirInstruction.trim()) {
@@ -45353,6 +47317,10 @@ ${processedPrompt}`;
       generationOverrides?.continuationSectionLengths || null
     );
     user += scriptBlock;
+    if (tempInstructionBlock) {
+      sectionLengths.tempInstruction = tempInstructionBlock.length;
+      user += tempInstructionBlock;
+    }
     diagnostics.input_stats.sys_len = sys.length;
     diagnostics.input_stats.user_len = user.length;
     const traceMeta = {
@@ -45361,6 +47329,13 @@ ${processedPrompt}`;
       promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
       skipMacroEvaluation,
       sectionLengths,
+      // 「本次补充」只记是否生效与长度：全文本来就随 user 串进了 messageDetails，
+      // 再抄一份没有意义。查看器靠 sectionLengths 把它切成独立一段。
+      tempInstruction: {
+        applied: Boolean(tempInstructionBlock),
+        mode: generationSource === "user_continuation" ? "continuation" : "create",
+        length: tempInstructionBlock.length
+      },
       estimatedTokens: {
         system: estimateTokens(sys),
         user: estimateTokens(user)
@@ -45380,7 +47355,10 @@ ${processedPrompt}`;
       worldInfoBefore: ctx.worldInfo,
       worldInfoAfter: "",
       chatHistory: runtimeChatHistory,
-      titaniaScript: processedPrompt
+      // 选用预设模式下整条 user 串**不会被注入**（预设条目 id 永远不等于 preset_user），
+      // {{titaniaScript}} 才是剧本正文进提示词的唯一通道 —— 补充段必须一并带上，
+      // 否则预设模式用户静默看不到它。builtin 模式下没有条目消费这个键，并入是惰性的。
+      titaniaScript: processedPrompt + tempInstructionBlock
     };
     const messageDetails = buildPromptMessageDetails(promptScheme, {
       [`${GlobalState.generationMode}_system`]: sys,
@@ -45601,6 +47579,13 @@ ${processedPrompt}`;
         generationId
       });
     }
+    maybeAutoIllustrate({
+      source: generationSource,
+      generationId,
+      scriptId: script.id,
+      scriptName: script.name,
+      content: finalOutput
+    });
     recordScriptGenerated(script.id, {
       isQueue: silent === true && GlobalState.queueState.isRunning,
       mode: GlobalState.generationMode,
@@ -46443,7 +48428,9 @@ var init_api = __esm({
     init_relayClient();
     init_scriptData();
     init_promptManager();
+    init_tempInstruction();
     init_continuationStore();
+    init_illustrationAuto();
     CONTINUATION_SESSION_MAX_ROUNDS = 30;
     CONTINUATION_INJECT_MAX = 20;
     CONTINUATION_INJECT_MIN = 3;
@@ -46472,7 +48459,7 @@ init_continuationStore();
 init_favsStore();
 init_scriptStore();
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource6, event_types as event_types6 } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource8, event_types as event_types8 } from "../../../../script.js";
 
 // src/core/extensionUpdate.js
 init_defaults();
@@ -46701,23 +48688,23 @@ init_rewriteEntryButton();
 init_state();
 init_chatInjector();
 init_logger();
-import { eventSource as eventSource5, event_types as event_types5 } from "../../../../script.js";
+import { eventSource as eventSource7, event_types as event_types7 } from "../../../../script.js";
 var BTN_CLASS2 = "titania-inject-btn";
 var OVERLAY_ID3 = "t-chat-inject-overlay";
-var listenersBound3 = false;
+var listenersBound5 = false;
 var refreshQueued3 = false;
 var lastVisibleChoice = null;
-function escapeHtmlText4(str) {
-  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtmlText4(str2) {
+  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function isEnabled5() {
+function isEnabled6() {
   return getChatInjectConfig().enabled;
 }
 function removeAllButtons2() {
   document.querySelectorAll(`#chat .${BTN_CLASS2}`).forEach((node) => node.remove());
 }
 function refreshButtons2() {
-  if (!isEnabled5()) {
+  if (!isEnabled6()) {
     removeAllButtons2();
     return;
   }
@@ -46874,11 +48861,11 @@ function openInjectPickerWindow(mesid) {
   });
 }
 function initChatInjectButton() {
-  if (listenersBound3) {
+  if (listenersBound5) {
     scheduleRefreshButtons2(0);
     return;
   }
-  listenersBound3 = true;
+  listenersBound5 = true;
   $(document).on("click", `.${BTN_CLASS2}`, function(event) {
     event.stopPropagation();
     const mesid = Number($(this).closest(".mes").attr("mesid"));
@@ -46889,16 +48876,16 @@ function initChatInjectButton() {
     openInjectPickerWindow(mesid);
   });
   const rerenderEvents = [
-    event_types5.CHAT_CHANGED,
-    event_types5.CHARACTER_MESSAGE_RENDERED,
-    event_types5.USER_MESSAGE_RENDERED,
-    event_types5.MESSAGE_SWIPED,
-    event_types5.MESSAGE_DELETED,
-    event_types5.MORE_MESSAGES_LOADED
+    event_types7.CHAT_CHANGED,
+    event_types7.CHARACTER_MESSAGE_RENDERED,
+    event_types7.USER_MESSAGE_RENDERED,
+    event_types7.MESSAGE_SWIPED,
+    event_types7.MESSAGE_DELETED,
+    event_types7.MORE_MESSAGES_LOADED
   ];
   for (const eventName of rerenderEvents) {
     if (!eventName) continue;
-    eventSource5.on(eventName, () => scheduleRefreshButtons2(0));
+    eventSource7.on(eventName, () => scheduleRefreshButtons2(0));
   }
   scheduleRefreshButtons2(300);
   TitaniaLogger.info("\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u521D\u59CB\u5316");
@@ -46906,13 +48893,15 @@ function initChatInjectButton() {
 
 // src/entry.js
 init_sceneAdvanceBubble();
+init_pacingInjection();
+init_directorInjection();
 init_floorNav();
 init_chatInjector();
 init_illustrationPortability();
 init_illustrationData();
 init_illustrationStore();
 init_outlineEntryButton();
-async function onGenerationEnded() {
+async function onGenerationEnded2() {
   const extData = getExtData();
   const cfg = extData.config || {};
   if (!cfg.auto_generate) return;
@@ -46988,8 +48977,8 @@ function initCoreFeatures() {
   }
   applyUIFontScale(extData.appearance?.ui_font_scale);
   applyUITheme(extData.appearance?.ui_theme);
-  eventSource6.on(event_types6.GENERATION_ENDED, onGenerationEnded);
-  eventSource6.on(event_types6.CHAT_CHANGED, () => {
+  eventSource8.on(event_types8.GENERATION_ENDED, onGenerationEnded2);
+  eventSource8.on(event_types8.CHAT_CHANGED, () => {
     void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
   });
   void restoreContinuationForCurrentChat().catch((error) => console.error("Titania: \u521D\u59CB\u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error));
@@ -46997,6 +48986,8 @@ function initCoreFeatures() {
   initRewriteEntryButton();
   initChatInjectButton();
   initSceneAdvanceBubble();
+  initPacingInjection();
+  initDirectorInjection();
   initFloorNav();
 }
 function loadQueueConfig() {
