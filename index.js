@@ -189,6 +189,19 @@ var init_defaults = __esm({
         inject_role: "system"
         // system | user | assistant
       },
+      // 盲盒解锁提示音的设置。
+      // ⚠ 必须是**独立顶层块**：settingsWindow.js 保存时会把 director 整个对象换掉，
+      //   塞进去会被静默清空。读端一律 `?? 默认`（老用户没这个键时按 开启/30/事件也响）。
+      // ⚠ enabled 的默认是 true，读端用 `!== false` 判：老用户没这个键，
+      //   用 `=== true` 会把全新功能静默关掉，谁也发现不了。
+      blindbox_reveal: {
+        enabled: true,
+        // 解锁时响提示音
+        volume: 30,
+        // 0–100，平方律映射到增益；面板底部的按钮循环 0/30/60/90
+        cue_event: true
+        // 事件解锁也响（关掉就只保留阶段通关那一声）
+      },
       // 自定义系统提示词配置
       custom_prompts: {
         override_enabled: false,
@@ -1740,8 +1753,8 @@ function extractContent(text, whitelist = []) {
 }
 function getChatHistory(limit, whitelist = [], blacklist = void 0, aiOnly = false) {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return "";
-  const ctx = SillyTavern.getContext();
-  const history = ctx.chat || [];
+  const ctx2 = SillyTavern.getContext();
+  const history = ctx2.chat || [];
   const safeLimit = parseInt(limit) || 10;
   const effectiveBlacklist = blacklist === void 0 ? parseChatHistoryBlacklistInput(getExtData().history_extraction?.blacklist || "") : blacklist;
   const domMessages = document.querySelectorAll("#chat .mes");
@@ -1777,9 +1790,9 @@ function getChatHistory(limit, whitelist = [], blacklist = void 0, aiOnly = fals
   const recent = scoped.slice(-safeLimit);
   return recent.map((msg) => {
     let name = msg.name;
-    if (msg.is_user) name = ctx.name1 || "User";
-    if (name === "{{user}}") name = ctx.name1 || "User";
-    if (name === "{{char}}") name = ctx.characters[ctx.characterId]?.name || "Char";
+    if (msg.is_user) name = ctx2.name1 || "User";
+    if (name === "{{user}}") name = ctx2.name1 || "User";
+    if (name === "{{char}}") name = ctx2.characters[ctx2.characterId]?.name || "Char";
     let rawContent = msg.message || msg.mes || "";
     rawContent = removeChatHistoryBlacklist(rawContent, effectiveBlacklist);
     let cleanContent = extractContent(rawContent, whitelist);
@@ -2433,17 +2446,17 @@ function applyVariableMacros(text) {
 function beginVariableSandbox({ persist = false } = {}) {
   if (persist) return () => {
   };
-  let ctx = null;
+  let ctx2 = null;
   try {
-    ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+    ctx2 = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
   } catch {
     return () => {
     };
   }
-  if (!ctx) return () => {
+  if (!ctx2) return () => {
   };
-  const chatMetadata = ctx.chatMetadata;
-  const extensionSettings = ctx.extensionSettings;
+  const chatMetadata = ctx2.chatMetadata;
+  const extensionSettings = ctx2.extensionSettings;
   const localSnapshot = chatMetadata && typeof chatMetadata.variables === "object" && chatMetadata.variables ? { ...chatMetadata.variables } : null;
   const globalStore = extensionSettings?.variables;
   const globalSnapshot = globalStore && typeof globalStore.global === "object" && globalStore.global ? { ...globalStore.global } : null;
@@ -2822,8 +2835,8 @@ function resolveMacro(marker, runtimeContext, originalText) {
 }
 function getPresetMacroConfig() {
   try {
-    const ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
-    const data = ctx?.extensionSettings?.[extensionName];
+    const ctx2 = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+    const data = ctx2?.extensionSettings?.[extensionName];
     const cfg = data?.preset_macros;
     return { persistVariables: cfg?.persist_variables === true };
   } catch {
@@ -2834,10 +2847,10 @@ function safeSubstituteParams(content) {
   const source = String(content || "");
   if (!source.includes("{{")) return source;
   try {
-    const ctx = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
-    const substitute = ctx?.substituteParamsExtended || ctx?.substituteParams;
+    const ctx2 = typeof SillyTavern !== "undefined" ? SillyTavern.getContext?.() : null;
+    const substitute = ctx2?.substituteParamsExtended || ctx2?.substituteParams;
     if (typeof substitute !== "function") return source;
-    return String(substitute.call(ctx, source) ?? source);
+    return String(substitute.call(ctx2, source) ?? source);
   } catch (e) {
     console.warn("Titania: ST \u5B8F\u6C42\u503C\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u6587", e);
     return source;
@@ -3197,9 +3210,9 @@ function renderEntryContent(template, values, runMacros) {
   const authored = String(template ?? "");
   const source = typeof runMacros === "function" ? String(runMacros(authored) ?? "") : authored;
   const lines = source.split("\n").map((line) => {
-    const trimmed = line.trim();
-    const onlyPlaceholders = trimmed.length > 0 && PLACEHOLDER_ONLY_LINE.test(trimmed);
-    const rendered = (onlyPlaceholders ? trimmed : line).replace(PLACEHOLDER_PATTERN, (match, rawName) => {
+    const trimmed2 = line.trim();
+    const onlyPlaceholders = trimmed2.length > 0 && PLACEHOLDER_ONLY_LINE.test(trimmed2);
+    const rendered = (onlyPlaceholders ? trimmed2 : line).replace(PLACEHOLDER_PATTERN, (match, rawName) => {
       const name = String(rawName).toLowerCase();
       return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
     });
@@ -7344,6 +7357,34 @@ function loadCssFiles() {
 
 /* rewriteEntryButton.js */
 @keyframes t-rewrite-mark-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* sceneAdvanceBubble.js\uFF08\u76F2\u76D2\u89E3\u9501\u754C\u9762\uFF09\uFF1A\u65B0\u89E3\u9501\u7684\u6761\u76EE"\u4ECE\u6A21\u7CCA\u5230\u6E05\u6670"\u5730\u63ED\u6653\u51FA\u6765\u3002
+   \u53EA\u8DD1\u4E00\u6B21\uFF08\u52A8\u753B\u7ED3\u675F\u5373\u505C\u5728\u7EC8\u6001\uFF09\uFF0C\u6240\u4EE5\u7528 forwards \u4E4B\u5916\u7684\u9ED8\u8BA4\u503C\u4E5F\u884C\u2014\u2014\u7531\u7C7B\u540D\u63A7\u5236\u662F\u5426\u6302\u5728\u5143\u7D20\u4E0A\u3002 */
+@keyframes t-bb-reveal-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+        filter: blur(3px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+        filter: none;
+    }
+}
+
+/* sceneAdvanceBubble.js\uFF1A\u672A\u89E3\u9501\u5360\u4F4D\u6761\u4E0A\u90A3\u9053\u6162\u6162\u626B\u8FC7\u7684\u5FAE\u5149\u3002
+   \u53EA\u7528\u5728\u5F53\u524D\u9636\u6BB5\u90A3\u4E24\u4E09\u6761\u9501\u884C\u4E0A\uFF0C\u4E0D\u7ED9\u6574\u7247\u5C01\u5370\u9636\u6BB5\u7528\uFF08\u7701\u6027\u80FD\uFF09\u3002 */
+@keyframes t-bb-shimmer-sweep {
+    0% {
+        background-position: -160% 0;
+    }
+
+    100% {
+        background-position: 260% 0;
+    }
+}
 
 
 /* === 02-components/window.css === */
@@ -14925,6 +14966,50 @@ textarea.t-input {
     cursor: not-allowed;
 }
 
+/* ---- \u76F2\u76D2\u89E3\u9501\u63D0\u793A\u97F3\uFF1A\u97F3\u91CF + \u8BD5\u542C + \u4E8B\u4EF6\u6863\u5F00\u5173\uFF08settings.html \u7684\u90A3\u4E00\u884C\uFF09 ---- */
+.titania-blindbox-sound-extra {
+    /* \u4E0E\u4E0A\u9762\u7684\u5F00\u5173\u884C\u540C\u6784\uFF0C\u4F46\u5185\u5BB9\u662F\u4E00\u7EC4\u63A7\u4EF6\uFF0C\u6240\u4EE5\u5BF9\u9F50\u65B9\u5F0F\u4E0D\u540C */
+    align-items: center;
+    margin-top: -2px;
+    margin-bottom: 12px;
+}
+
+/* \u4E3B\u5F00\u5173\u5173\u6389\u65F6\u6574\u5757\u6DE1\u51FA\u4F46\u4FDD\u7559\u5360\u4F4D\uFF0C\u907F\u514D\u5F00\u5173\u884C\u5728\u62BD\u5C49\u91CC\u8DF3\u52A8 */
+.titania-blindbox-sound-extra.is-muted {
+    opacity: 0.55;
+}
+
+.titania-sound-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.titania-sound-controls input[type="range"] {
+    flex: 1;
+    min-width: 80px;
+    accent-color: var(--t-color-accent);
+}
+
+.titania-sound-volume {
+    min-width: 26px;
+    text-align: right;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--t-glass-text-faint);
+}
+
+.titania-sound-event-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--t-glass-text-faint);
+}
+
 
 /* === 04-features/settings.css === */
 /* css/04-features/settings.css - \u63D2\u4EF6\u81EA\u5DF1\u7684\u8BBE\u7F6E\u7A97\u53E3\uFF08#t-settings-view\uFF09
@@ -21558,6 +21643,151 @@ body.t-reader-zen .t-reader-topbar {
 
 .tsa-panel .tsa-pacing-apply { background: var(--t-color-success-soft); border-color: var(--t-color-success-border); }
 
+/* \u2500\u2500 \u76F2\u76D2\u89E3\u9501\u754C\u9762\uFF08\u9636\u6BB5\u5316\u63ED\u6653\uFF0CsceneAdvanceBubble.js\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   \u9636\u6BB5\uFF1D\u76F2\u76D2\u8282\u70B9\uFF1A\u5DF2\u901A\u5173\u7684\u63ED\u6653\u6807\u9898\uFF0B\u786C\u951A\uFF08\u63ED\u6653\u672C\u8EAB\u662F\u5956\u52B1\uFF09\u3001\u8FDB\u884C\u4E2D\u7684\u53EA\u7ED9\u8FDB\u5EA6\u70B9\u4E0E
+   "\u672A\u89E3\u9501"\u5360\u4F4D\u3001\u540E\u9762\u7684\u53EA\u7559\u4E00\u884C\u5C01\u5370\u3002\u672A\u89E3\u9501\u7684\u5185\u5BB9\u5728\u6570\u636E\u5C42\u5C31\u4E0D\u5B58\u5728\uFF0C\u8FD9\u91CC\u4E0D\u9700\u8981\u9690\u85CF\u903B\u8F91\u3002
+   \u26A0 \u53EA\u7528\u8BED\u4E49 token\uFF1A\u6DF1\u6D45\u4E3B\u9898\u9760 token \u91CD\u6620\u5C04\u81EA\u52A8\u8DDF\u968F\uFF0C\u5199\u5B57\u9762\u91CF\u4F1A\u53CC\u53CC\u5931\u914D\u3002 */
+
+.tsa-panel .tsa-bb { display: flex; flex-direction: column; gap: 8px; }
+
+.tsa-panel .tsa-bb-top { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+
+.tsa-panel .tsa-bb-title i { color: var(--t-color-accent); }
+
+.tsa-panel .tsa-bb-state { font-size: 11px; font-weight: 600; color: var(--t-color-accent); }
+
+.tsa-panel .tsa-bb-stages-count { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-bb-dwell { font-size: 11px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-bb-empty { font-size: 11px; line-height: 1.5; color: var(--t-glass-text-muted); }
+
+/* \u9636\u6BB5\u5217\u8868 */
+.tsa-panel .tsa-bb-stages { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.tsa-panel .tsa-bb-stage { padding: 5px 7px; border: 1px solid transparent; border-radius: var(--t-radius-sm); }
+
+.tsa-panel .tsa-bb-stage-head { display: flex; align-items: center; gap: 6px; }
+
+.tsa-panel .tsa-bb-stage-mark { flex-shrink: 0; width: 14px; text-align: center; color: var(--t-glass-text-muted); }
+
+.tsa-panel .tsa-bb-stage-label { font-weight: 700; }
+
+.tsa-panel .tsa-bb-stage-title { overflow: hidden; color: var(--t-color-accent); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+
+.tsa-panel .tsa-bb-stage-count { margin-left: auto; font-size: 11px; color: var(--t-glass-text-secondary); }
+
+/* \u8FDB\u884C\u4E2D\uFF1A\u8FD9\u4E00\u6B65\u7684\u4E3B\u89D2\uFF0C\u7ED9\u5E95\u8272\u4E0E\u6696\u8272\u6807\u8BB0 */
+.tsa-panel .tsa-bb-stage.is-current { border-color: var(--t-color-accent-border); background: var(--t-color-accent-soft); }
+
+.tsa-panel .tsa-bb-stage.is-current .tsa-bb-stage-mark,
+.tsa-panel .tsa-bb-stage.is-current .tsa-bb-stage-count { color: var(--t-color-warning); }
+
+/* \u5DF2\u901A\u5173\uFF1A\u7EFF\u7CFB + \u53EF\u6298\u53E0\uFF08\u70B9\u8868\u5934\uFF09 */
+.tsa-panel .tsa-bb-stage.is-cleared { border-color: var(--t-color-success-border); background: var(--t-color-success-soft); }
+
+.tsa-panel .tsa-bb-stage.is-cleared .tsa-bb-stage-mark { color: var(--t-color-success); }
+
+.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head { cursor: pointer; user-select: none; }
+
+.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-body { display: none; margin-top: 6px; }
+
+.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head[aria-expanded="true"] + .tsa-bb-stage-body { display: block; }
+
+.tsa-panel .tsa-bb-stage-arrow { flex-shrink: 0; margin-left: 2px; color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }
+
+.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head[aria-expanded="true"] .tsa-bb-stage-arrow { transform: rotate(180deg); }
+
+/* \u8FD8\u6CA1\u5230\u7684\u9636\u6BB5\uFF1A\u538B\u6697\uFF0C\u4E0D\u53EF\u4EA4\u4E92\uFF0C\u53EA\u6709\u4E00\u884C */
+.tsa-panel .tsa-bb-stage.is-sealed { opacity: 0.5; }
+
+/* \u786C\u951A\uFF08\u4EC5\u901A\u5173\u540E\u63ED\u6653\uFF09\u4E0E"\u7B49\u786C\u951A\u843D\u5730"\u7684\u8BF4\u660E */
+.tsa-panel .tsa-bb-anchor { margin-bottom: 5px; font-size: 11px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-bb-anchor-tag { display: inline-block; margin-right: 6px; padding: 1px 5px; border: 1px solid var(--t-color-success-border); border-radius: 999px; color: var(--t-color-success); font-size: 10px; }
+
+.tsa-panel .tsa-bb-holding { margin-bottom: 5px; font-size: 11px; color: var(--t-color-warning); }
+
+/* \u4E8B\u4EF6\u884C */
+.tsa-panel .tsa-bb-events { margin: 0; padding: 0; list-style: none; }
+
+.tsa-panel .tsa-bb-ev { display: flex; gap: 7px; padding: 4px 2px; border-bottom: 1px solid var(--t-color-accent-border); }
+
+.tsa-panel .tsa-bb-ev:last-child { border-bottom: 0; }
+
+.tsa-panel .tsa-bb-ev-no { flex-shrink: 0; width: 18px; color: var(--t-glass-text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+.tsa-panel .tsa-bb-ev-main { flex: 1; min-width: 0; }
+
+.tsa-panel .tsa-bb-ev-text { color: var(--t-glass-text); white-space: pre-wrap; word-break: break-word; }
+
+.tsa-panel .tsa-bb-ev-recap { margin-top: 2px; color: var(--t-glass-text-secondary); font-size: 11px; }
+
+.tsa-panel .tsa-bb-ev-span { flex-shrink: 0; color: var(--t-glass-text-muted); font-size: 11px; }
+
+.tsa-panel .tsa-bb-ev-tag { margin-left: 5px; color: var(--t-glass-text-muted); font-size: 10px; }
+
+.tsa-panel .tsa-bb-ev.is-skipped .tsa-bb-ev-text { color: var(--t-glass-text-secondary); }
+
+/* \u672A\u89E3\u9501\uFF1A\u53EA\u6709\u4E00\u884C\u72B6\u6001 + \u4E00\u6761\u5FAE\u5149\u5360\u4F4D\uFF0C\u6CA1\u6709\u5185\u5BB9 */
+.tsa-panel .tsa-bb-ev-lock { color: var(--t-glass-text-muted); font-size: 11px; }
+
+.tsa-panel .tsa-bb-ev.is-target .tsa-bb-ev-lock { color: var(--t-color-warning); }
+
+.tsa-panel .tsa-bb-shimmer {
+    display: block;
+    height: 7px;
+    margin-top: 4px;
+    border-radius: 999px;
+    background-image: linear-gradient(90deg, transparent 0%, var(--t-glass-row-hover) 45%, var(--t-glass-row-hover) 55%, transparent 100%);
+    background-repeat: no-repeat;
+    background-size: 60% 100%;
+    animation: t-bb-shimmer-sweep 1.8s ease-in-out infinite;
+}
+
+/* \u521A\u89E3\u9501\uFF1A\u4ECE\u6A21\u7CCA\u5230\u6E05\u6670\u5730\u63ED\u6653\u51FA\u6765\uFF08\u53EA\u6302\u5728\u9996\u6B21\u770B\u5230\u7684\u6761\u76EE\u4E0A\uFF0C\u89C1 consumeUnlockMarks\uFF09 */
+.tsa-panel .tsa-bb-ev.is-fresh { animation: t-bb-reveal-in 0.32s ease-out both; }
+
+.tsa-panel .tsa-bb-stage.is-fresh { animation: t-bb-reveal-in 0.32s ease-out both; }
+
+/* \u9762\u677F\u5E95\u90E8\u7684\u56FE\u6807\u6309\u94AE\uFF08\u97F3\u91CF\u5FAA\u73AF\uFF09\u2014\u2014\u4E0E .tsa-generate \u540C\u4E00\u5957\u89C2\u611F\uFF0C\u4F46\u505A\u5706\u7684 */
+.tsa-panel .tsa-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--t-color-accent-border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--t-glass-text-secondary);
+    cursor: pointer;
+    transition: border-color 0.16s ease, color 0.16s ease, background-color 0.16s ease;
+}
+
+.tsa-panel .tsa-icon-btn:hover { border-color: var(--t-color-accent-border-hover); color: var(--t-glass-text); background: var(--t-glass-row-hover); }
+
+/* \u6A2A\u6761\u4E0A\u7684"\u6709\u65B0\u89E3\u9501"\u63D0\u793A\u70B9\uFF08\u6253\u5F00\u9762\u677F\u505A\u5B8C\u63ED\u6653\u52A8\u753B\u540E\u7531 updateStrip \u6458\u6389\uFF09 */
+#chat .mes .tsa-strip.has-unlock { border-color: var(--t-color-success-border); }
+
+#chat .mes .tsa-strip .tsa-strip-unlock-dot {
+    width: 7px;
+    height: 7px;
+    margin-left: 6px;
+    border-radius: 999px;
+    background: var(--t-color-success);
+    animation: t-pulse-green 1.6s ease-in-out infinite;
+}
+
+/* \u51CF\u5C11\u52A8\u6001\u6548\u679C\uFF1A\u52A8\u753B\u662F\u70B9\u7F00\uFF0C\u5148\u628A\u72B6\u6001\u4FE1\u606F\u7559\u5728\u539F\u5730\uFF08\u672C\u4ED3\u5E93\u7B2C\u4E00\u4E2A reduced-motion \u515C\u5E95\uFF09 */
+@media (prefers-reduced-motion: reduce) {
+    .tsa-panel .tsa-bb-ev.is-fresh,
+    .tsa-panel .tsa-bb-stage.is-fresh,
+    .tsa-panel .tsa-bb-shimmer,
+    #chat .mes .tsa-strip .tsa-strip-unlock-dot { animation: none; }
+}
+
 
 `;
   document.head.appendChild(style);
@@ -22381,14 +22611,14 @@ function withTimeout(promise, timeout = 5e3, errorMsg = "Operation timed out") {
     )
   ]);
 }
-async function safeLoadWorldInfo(ctx, bookName, timeout = 5e3) {
+async function safeLoadWorldInfo(ctx2, bookName, timeout = 5e3) {
   try {
-    if (!ctx.loadWorldInfo || typeof ctx.loadWorldInfo !== "function") {
+    if (!ctx2.loadWorldInfo || typeof ctx2.loadWorldInfo !== "function") {
       console.warn(`Titania: loadWorldInfo \u51FD\u6570\u4E0D\u53EF\u7528`);
       return null;
     }
     const result = await withTimeout(
-      ctx.loadWorldInfo(bookName),
+      ctx2.loadWorldInfo(bookName),
       timeout,
       `\u52A0\u8F7D\u4E16\u754C\u4E66 [${bookName}] \u8D85\u65F6`
     );
@@ -22400,20 +22630,20 @@ async function safeLoadWorldInfo(ctx, bookName, timeout = 5e3) {
 }
 async function getActiveWorldInfoEntries() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
-  let ctx;
+  let ctx2;
   try {
-    ctx = SillyTavern.getContext();
-    if (!ctx) return [];
+    ctx2 = SillyTavern.getContext();
+    if (!ctx2) return [];
   } catch (e) {
     console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
     return [];
   }
   const wiVars = getWorldInfoVars();
-  const charName = getCurrentCharNameFromContext(ctx);
-  const activeBooks = collectSessionActiveBooks(ctx, wiVars, charName, true);
+  const charName = getCurrentCharNameFromContext(ctx2);
+  const activeBooks = collectSessionActiveBooks(ctx2, wiVars, charName, true);
   const result = [];
   for (const bookName of activeBooks) {
-    const bookData = await safeLoadWorldInfo(ctx, bookName);
+    const bookData = await safeLoadWorldInfo(ctx2, bookName);
     if (!bookData || !bookData.entries) continue;
     const allEntries = Object.values(bookData.entries);
     if (allEntries.length > 0) {
@@ -22445,34 +22675,34 @@ async function getContextData() {
     dialogueExamples: ""
   };
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return data;
-  let ctx;
+  let ctx2;
   try {
-    ctx = SillyTavern.getContext();
-    if (!ctx) return data;
+    ctx2 = SillyTavern.getContext();
+    if (!ctx2) return data;
   } catch (e) {
     console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
     return data;
   }
   try {
-    data.userName = ctx.substituteParams("{{user}}") || "User";
-    data.charName = ctx.substituteParams("{{char}}") || "Char";
-    data.userDesc = ctx.substituteParams("{{persona}}") || "";
-    data.persona = ctx.substituteParams("{{description}}") || "";
-    const character = ctx.characterId !== void 0 ? ctx.characters?.[ctx.characterId] : null;
+    data.userName = ctx2.substituteParams("{{user}}") || "User";
+    data.charName = ctx2.substituteParams("{{char}}") || "Char";
+    data.userDesc = ctx2.substituteParams("{{persona}}") || "";
+    data.persona = ctx2.substituteParams("{{description}}") || "";
+    const character = ctx2.characterId !== void 0 ? ctx2.characters?.[ctx2.characterId] : null;
     const rawScenario = String(character?.data?.scenario || character?.scenario || "");
     const rawDialogueExamples = String(character?.data?.mes_example || character?.mes_example || "");
-    data.scenario = ctx.substituteParams(rawScenario);
-    data.dialogueExamples = ctx.substituteParams(rawDialogueExamples);
+    data.scenario = ctx2.substituteParams(rawScenario);
+    data.dialogueExamples = ctx2.substituteParams(rawDialogueExamples);
   } catch (e) {
     console.error("Titania: \u5B8F\u89E3\u6790\u5931\u8D25", e);
   }
   const wiVars = getWorldInfoVars();
-  const activeBooks = collectSessionActiveBooks(ctx, wiVars, data.charName, true);
+  const activeBooks = collectSessionActiveBooks(ctx2, wiVars, data.charName, true);
   const contentParts = [];
   const extData = getExtData();
-  const charSelections = readWorldInfoSelections(extData, ctx, data.charName);
+  const charSelections = readWorldInfoSelections(extData, ctx2, data.charName);
   for (const bookName of activeBooks) {
-    const bookData = await safeLoadWorldInfo(ctx, bookName);
+    const bookData = await safeLoadWorldInfo(ctx2, bookName);
     if (!bookData || !bookData.entries) continue;
     let enabledEntries;
     if (charSelections && charSelections[bookName]) {
@@ -22490,7 +22720,7 @@ async function getContextData() {
     enabledEntries.forEach((e) => {
       if (e.content && e.content.trim()) {
         try {
-          contentParts.push(ctx.substituteParams(e.content.trim()));
+          contentParts.push(ctx2.substituteParams(e.content.trim()));
         } catch (subErr) {
           contentParts.push(e.content.trim());
         }
@@ -22501,30 +22731,30 @@ async function getContextData() {
     data.worldInfo = "[World Info / Lore]\n" + contentParts.join("\n\n") + "\n\n";
   }
   data.worldInfoBefore = data.worldInfo;
-  data.charId = ctx.characterId;
+  data.charId = ctx2.characterId;
   return data;
 }
-function getCurrentCharNameFromContext(ctx) {
+function getCurrentCharNameFromContext(ctx2) {
   try {
-    return ctx?.substituteParams?.("{{char}}") || "Char";
+    return ctx2?.substituteParams?.("{{char}}") || "Char";
   } catch {
     return "Char";
   }
 }
 function getCharacterCardKey(stCtx = null) {
-  let ctx = stCtx;
+  let ctx2 = stCtx;
   try {
-    if (!ctx && typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+    if (!ctx2 && typeof SillyTavern !== "undefined") ctx2 = SillyTavern.getContext?.();
   } catch {
-    ctx = null;
+    ctx2 = null;
   }
-  if (!ctx) return `${NAME_KEY_PREFIX}Char`;
-  const charId = ctx.characterId;
+  if (!ctx2) return `${NAME_KEY_PREFIX}Char`;
+  const charId = ctx2.characterId;
   if (charId !== void 0 && charId !== null) {
-    const avatar = String(ctx.characters?.[charId]?.avatar || "").trim();
+    const avatar = String(ctx2.characters?.[charId]?.avatar || "").trim();
     if (avatar) return CARD_KEY_PREFIX2 + avatar.replace(/\.[^/.]+$/, "");
   }
-  return NAME_KEY_PREFIX + getCurrentCharNameFromContext(ctx);
+  return NAME_KEY_PREFIX + getCurrentCharNameFromContext(ctx2);
 }
 function characterCardKeyFromAvatar(avatar) {
   const file = String(avatar ?? "").trim();
@@ -22532,13 +22762,13 @@ function characterCardKeyFromAvatar(avatar) {
   return CARD_KEY_PREFIX2 + file.replace(/\.[^/.]+$/, "");
 }
 function listCharacterCards() {
-  let ctx = null;
+  let ctx2 = null;
   try {
-    if (typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+    if (typeof SillyTavern !== "undefined") ctx2 = SillyTavern.getContext?.();
   } catch {
-    ctx = null;
+    ctx2 = null;
   }
-  const raw = ctx?.characters;
+  const raw = ctx2?.characters;
   const list = Array.isArray(raw) ? raw : Object.values(raw || {});
   return list.map((card) => ({
     cardKey: characterCardKeyFromAvatar(card?.avatar),
@@ -22547,33 +22777,33 @@ function listCharacterCards() {
   })).filter((card) => card.cardKey && card.name).sort((a, b) => a.name.localeCompare(b.name, "zh"));
 }
 function getCurrentCharacterDescription() {
-  let ctx = null;
+  let ctx2 = null;
   try {
-    if (typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+    if (typeof SillyTavern !== "undefined") ctx2 = SillyTavern.getContext?.();
   } catch {
-    ctx = null;
+    ctx2 = null;
   }
-  const charId = ctx?.characterId;
+  const charId = ctx2?.characterId;
   if (charId === void 0 || charId === null) return "";
-  const card = ctx?.characters?.[charId];
+  const card = ctx2?.characters?.[charId];
   const description = card?.data?.description ?? card?.description ?? "";
   return typeof description === "string" ? description.trim() : "";
 }
 function getCurrentUserPersona() {
-  let ctx = null;
+  let ctx2 = null;
   try {
-    if (typeof SillyTavern !== "undefined") ctx = SillyTavern.getContext?.();
+    if (typeof SillyTavern !== "undefined") ctx2 = SillyTavern.getContext?.();
   } catch {
-    ctx = null;
+    ctx2 = null;
   }
-  const description = ctx?.powerUserSettings?.persona_description;
+  const description = ctx2?.powerUserSettings?.persona_description;
   return {
-    name: String(ctx?.name1 ?? "").trim(),
+    name: String(ctx2?.name1 ?? "").trim(),
     description: typeof description === "string" ? description.trim() : ""
   };
 }
-function isNameSharedByMultipleCards(ctx, charName) {
-  const characters = Array.isArray(ctx?.characters) ? ctx.characters : [];
+function isNameSharedByMultipleCards(ctx2, charName) {
+  const characters = Array.isArray(ctx2?.characters) ? ctx2.characters : [];
   const target = String(charName || "").trim();
   if (!target) return false;
   let seen = 0;
@@ -22604,24 +22834,24 @@ function notifyLegacyAmbiguityOnce(charName) {
     );
   }
 }
-function canInheritLegacy(ctx, charName, hasLegacyData) {
-  if (!isNameSharedByMultipleCards(ctx, charName)) return true;
+function canInheritLegacy(ctx2, charName, hasLegacyData) {
+  if (!isNameSharedByMultipleCards(ctx2, charName)) return true;
   if (hasLegacyData) notifyLegacyAmbiguityOnce(charName);
   return false;
 }
-function readWorldInfoSelections(extData, ctx, charName) {
+function readWorldInfoSelections(extData, ctx2, charName) {
   const cfg = getWorldInfoConfig(extData);
-  const cardKey = getCharacterCardKey(ctx);
+  const cardKey = getCharacterCardKey(ctx2);
   const byCard = cfg.cardSelections?.[cardKey];
   if (byCard && typeof byCard === "object") return byCard;
   const legacy = cfg.legacySelections?.[charName];
   const hasLegacy = Boolean(legacy && typeof legacy === "object");
-  if (hasLegacy && canInheritLegacy(ctx, charName, true)) return legacy;
+  if (hasLegacy && canInheritLegacy(ctx2, charName, true)) return legacy;
   return null;
 }
-function readAutoActiveBooks(extData, ctx, charName) {
+function readAutoActiveBooks(extData, ctx2, charName) {
   const cfg = getWorldInfoConfig(extData);
-  const cardKey = getCharacterCardKey(ctx);
+  const cardKey = getCharacterCardKey(ctx2);
   const deriveFromSelections = (selections) => Object.keys(selections).filter((bookName) => {
     const selected = selections[bookName];
     return Array.isArray(selected) && selected.length > 0;
@@ -22633,17 +22863,17 @@ function readAutoActiveBooks(extData, ctx, charName) {
   const legacyExplicit = cfg.legacyAutoActiveBooks?.[charName];
   const legacySelections = cfg.legacySelections?.[charName];
   const hasLegacy = Array.isArray(legacyExplicit) || Boolean(legacySelections && typeof legacySelections === "object");
-  if (!canInheritLegacy(ctx, charName, hasLegacy)) return [];
+  if (!canInheritLegacy(ctx2, charName, hasLegacy)) return [];
   if (Array.isArray(legacyExplicit)) return legacyExplicit;
   if (legacySelections && typeof legacySelections === "object") return deriveFromSelections(legacySelections);
   return [];
 }
-function writeWorldInfoSelections(extData, ctx, selections, autoActiveBooks) {
+function writeWorldInfoSelections(extData, ctx2, selections, autoActiveBooks) {
   if (!extData.worldinfo || typeof extData.worldinfo !== "object") extData.worldinfo = {};
   const wiConfig = extData.worldinfo;
   if (!wiConfig.card_selections || typeof wiConfig.card_selections !== "object") wiConfig.card_selections = {};
   if (!wiConfig.card_auto_active_books || typeof wiConfig.card_auto_active_books !== "object") wiConfig.card_auto_active_books = {};
-  const cardKey = getCharacterCardKey(ctx);
+  const cardKey = getCharacterCardKey(ctx2);
   wiConfig.card_selections[cardKey] = selections ? structuredClone(selections) : {};
   wiConfig.card_auto_active_books[cardKey] = Array.isArray(autoActiveBooks) ? [...autoActiveBooks] : [];
   return cardKey;
@@ -22661,9 +22891,9 @@ function normalizeSchemeSelections(selections) {
 function isValidSchemeItem(item) {
   return Boolean(item && typeof item === "object" && typeof item.id === "string" && item.id);
 }
-function readWorldInfoSchemes(extData, ctx) {
+function readWorldInfoSchemes(extData, ctx2) {
   const cfg = getWorldInfoConfig(extData);
-  const cardKey = getCharacterCardKey(ctx);
+  const cardKey = getCharacterCardKey(ctx2);
   const stored = cfg.cardSchemes?.[cardKey];
   if (!stored || typeof stored !== "object") return { activeId: "", items: [] };
   const items = (Array.isArray(stored.items) ? stored.items : []).filter(isValidSchemeItem).map((item) => ({
@@ -22675,11 +22905,11 @@ function readWorldInfoSchemes(extData, ctx) {
   const activeId = items.some((item) => item.id === stored.active_id) ? String(stored.active_id) : "";
   return { activeId, items };
 }
-function writeWorldInfoSchemes(extData, ctx, schemes) {
+function writeWorldInfoSchemes(extData, ctx2, schemes) {
   if (!extData.worldinfo || typeof extData.worldinfo !== "object") extData.worldinfo = {};
   const wiConfig = extData.worldinfo;
   if (!wiConfig.card_schemes || typeof wiConfig.card_schemes !== "object") wiConfig.card_schemes = {};
-  const cardKey = getCharacterCardKey(ctx);
+  const cardKey = getCharacterCardKey(ctx2);
   const items = (Array.isArray(schemes?.items) ? schemes.items : []).filter(isValidSchemeItem).map((item) => ({
     id: item.id,
     name: String(item.name || ""),
@@ -22689,17 +22919,17 @@ function writeWorldInfoSchemes(extData, ctx, schemes) {
   wiConfig.card_schemes[cardKey] = { active_id: String(schemes?.activeId || ""), items };
   return cardKey;
 }
-function getLocalAutoActiveBooks(charName, ctx = null) {
-  return readAutoActiveBooks(getExtData(), ctx, charName);
+function getLocalAutoActiveBooks(charName, ctx2 = null) {
+  return readAutoActiveBooks(getExtData(), ctx2, charName);
 }
-function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalAuto = false) {
+function collectSessionActiveBooks(ctx2, wiVars, charName = "Char", includeLocalAuto = false) {
   const activeBooks = /* @__PURE__ */ new Set();
-  const charId = ctx.characterId;
+  const charId = ctx2.characterId;
   if (wiVars.selected_world_info && Array.isArray(wiVars.selected_world_info)) {
     wiVars.selected_world_info.forEach((name) => activeBooks.add(name));
   }
-  if (charId !== void 0 && ctx.characters && ctx.characters[charId]) {
-    const charObj = ctx.characters[charId];
+  if (charId !== void 0 && ctx2.characters && ctx2.characters[charId]) {
+    const charObj = ctx2.characters[charId];
     const primary = charObj.data?.extensions?.world;
     if (primary) activeBooks.add(primary);
     const fileName = (charObj.avatar || "").replace(/\.[^/.]+$/, "");
@@ -22710,8 +22940,8 @@ function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalA
       }
     }
   }
-  if (ctx.chatMetadata && ctx.chatMetadata.world_info) {
-    activeBooks.add(ctx.chatMetadata.world_info);
+  if (ctx2.chatMetadata && ctx2.chatMetadata.world_info) {
+    activeBooks.add(ctx2.chatMetadata.world_info);
   }
   try {
     const personaWorld = power_user?.persona_description_lorebook;
@@ -22720,24 +22950,24 @@ function collectSessionActiveBooks(ctx, wiVars, charName = "Char", includeLocalA
     console.warn("Titania: \u83B7\u53D6 Persona \u4E16\u754C\u4E66\u5931\u8D25", e);
   }
   if (includeLocalAuto) {
-    const localAutoBooks = getLocalAutoActiveBooks(charName, ctx);
+    const localAutoBooks = getLocalAutoActiveBooks(charName, ctx2);
     localAutoBooks.forEach((name) => activeBooks.add(name));
   }
   return activeBooks;
 }
 function getActiveWorldBookNames() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
-  let ctx;
+  let ctx2;
   try {
-    ctx = SillyTavern.getContext();
-    if (!ctx) return [];
+    ctx2 = SillyTavern.getContext();
+    if (!ctx2) return [];
   } catch (e) {
     console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
     return [];
   }
   const wiVars = getWorldInfoVars();
-  const charName = getCurrentCharNameFromContext(ctx);
-  return Array.from(collectSessionActiveBooks(ctx, wiVars, charName, true));
+  const charName = getCurrentCharNameFromContext(ctx2);
+  return Array.from(collectSessionActiveBooks(ctx2, wiVars, charName, true));
 }
 async function getAllWorldBookNames() {
   try {
@@ -22757,15 +22987,15 @@ async function getWorldInfoEntriesByBookName(bookName) {
   if (!bookName || typeof SillyTavern === "undefined" || !SillyTavern.getContext) {
     return [];
   }
-  let ctx;
+  let ctx2;
   try {
-    ctx = SillyTavern.getContext();
-    if (!ctx) return [];
+    ctx2 = SillyTavern.getContext();
+    if (!ctx2) return [];
   } catch (e) {
     console.warn("Titania: \u65E0\u6CD5\u83B7\u53D6 SillyTavern context", e);
     return [];
   }
-  const bookData = await safeLoadWorldInfo(ctx, bookName, 1e4);
+  const bookData = await safeLoadWorldInfo(ctx2, bookName, 1e4);
   if (!bookData || !bookData.entries) return [];
   return Object.values(bookData.entries).sort((a, b) => (a.order || 100) - (b.order || 100)).map((e) => ({
     uid: e.uid,
@@ -26621,9 +26851,9 @@ function maskHtmlByToken(html, token, replacement) {
 async function getExpandedUserNameForMasking() {
   try {
     if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
-      const ctx = SillyTavern.getContext();
-      const u = ctx?.substituteParams?.("{{user}}");
-      const name1 = ctx?.name1;
+      const ctx2 = SillyTavern.getContext();
+      const u = ctx2?.substituteParams?.("{{user}}");
+      const name1 = ctx2?.name1;
       if (u && typeof u === "string" && u.trim() && u !== "{{user}}" && u !== "User") return u;
       if (name1 && typeof name1 === "string" && name1.trim() && name1 !== "{{user}}") return name1;
       if (u && typeof u === "string" && u.trim() && u !== "{{user}}") return u;
@@ -26762,7 +26992,7 @@ async function saveContinuationChainFavorite() {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5267\u672C\uFF0C\u65E0\u6CD5\u6536\u85CF\u7EED\u5199\u94FE");
     return false;
   }
-  const ctx = await getContextData();
+  const ctx2 = await getContextData();
   const chainData = resolveDisplayedFavoriteBranch(
     currentResult,
     getContinuationRoundsForFav(scriptId),
@@ -26826,8 +27056,8 @@ async function saveContinuationChainFavorite() {
   if (existingMeta) {
     const existingChain = await loadFavForWrite(existingMeta.id);
     if (existingChain) {
-      existingChain.title = `${scriptName} - ${ctx.charName}`;
-      existingChain.charName = ctx.charName;
+      existingChain.title = `${scriptName} - ${ctx2.charName}`;
+      existingChain.charName = ctx2.charName;
       existingChain.scriptName = scriptName;
       existingChain.scriptId = scriptId;
       existingChain.date = new Date(now).toLocaleString();
@@ -26848,8 +27078,8 @@ async function saveContinuationChainFavorite() {
   const entry = {
     id: now,
     type: "chain",
-    title: `${scriptName} - ${ctx.charName}`,
-    charName: ctx.charName,
+    title: `${scriptName} - ${ctx2.charName}`,
+    charName: ctx2.charName,
     scriptName,
     scriptId,
     date: new Date(now).toLocaleString(),
@@ -28227,9 +28457,9 @@ function openCharImageManager(onCloseCallback) {
     let foundAvatar = null;
     try {
       if (SillyTavern && SillyTavern.getContext) {
-        const ctx = SillyTavern.getContext();
-        if (ctx.characters) {
-          Object.values(ctx.characters).forEach((c) => {
+        const ctx2 = SillyTavern.getContext();
+        if (ctx2.characters) {
+          Object.values(ctx2.characters).forEach((c) => {
             if (c.name === charName && c.avatar) foundAvatar = c.avatar;
           });
         }
@@ -29183,11 +29413,11 @@ function createSession({ image, outputSize, quality, resolve }) {
     const canvas = document.createElement("canvas");
     canvas.width = outputSize;
     canvas.height = outputSize;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("\u5F53\u524D\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 canvas\uFF0C\u65E0\u6CD5\u5BFC\u51FA\u88C1\u526A\u7ED3\u679C");
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(image, srcX, srcY, srcSize, srcSize, 0, 0, outputSize, outputSize);
+    const ctx2 = canvas.getContext("2d");
+    if (!ctx2) throw new Error("\u5F53\u524D\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 canvas\uFF0C\u65E0\u6CD5\u5BFC\u51FA\u88C1\u526A\u7ED3\u679C");
+    ctx2.imageSmoothingEnabled = true;
+    ctx2.imageSmoothingQuality = "high";
+    ctx2.drawImage(image, srcX, srcY, srcSize, srcSize, 0, 0, outputSize, outputSize);
     let dataUrl = toDataUrlSafe(canvas, "image/webp", quality);
     if (!dataUrl.startsWith("data:image/webp")) {
       dataUrl = toDataUrlSafe(canvas, "image/png");
@@ -29769,6 +29999,32 @@ var init_apiConnectionEditor = __esm({
 });
 
 // src/core/blindboxPlan.js
+function isEventPassed(ev) {
+  return ev?.status === EVENT_STATUS.DONE || ev?.status === EVENT_STATUS.SKIPPED;
+}
+function normalizeRevealMarks(raw) {
+  if (!Array.isArray(raw)) return [];
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  raw.forEach((v) => {
+    const mark = trimmed(v);
+    if (!REVEAL_MARK_RE.test(mark) || seen.has(mark)) return;
+    seen.add(mark);
+    out.push(mark);
+  });
+  return out.slice(-MAX_REVEAL_MARKS);
+}
+function addRevealMarks(list, marks) {
+  const seen = new Set(Array.isArray(list) ? list : []);
+  const out = [...seen];
+  (Array.isArray(marks) ? marks : []).forEach((v) => {
+    const mark = trimmed(v);
+    if (!REVEAL_MARK_RE.test(mark) || seen.has(mark)) return;
+    seen.add(mark);
+    out.push(mark);
+  });
+  return out.slice(-MAX_REVEAL_MARKS);
+}
 function getPlanKind(plan) {
   return plan && plan.kind === BLINDBOX_KIND ? BLINDBOX_KIND : "normal";
 }
@@ -29781,16 +30037,35 @@ function clampNodeCount(v) {
 function clampEventsPerGap(v) {
   return clampInt(v, EVENTS_PER_GAP_MIN, EVENTS_PER_GAP_MAX, EVENTS_PER_GAP_MIN);
 }
+function normalizeStrictness(v) {
+  return VALID_STRICTNESS.has(v) ? v : STRICTNESS.STANDARD;
+}
+function normalizeStrList(raw, maxItems = 5, maxLen = 200) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((s) => trimmed(s).slice(0, maxLen)).filter(Boolean).slice(0, maxItems);
+}
 function normalizeEvent(raw) {
   const status = VALID_STATUS.has(raw?.status) ? raw.status : EVENT_STATUS.PENDING;
   return {
     id: str(raw?.id) || genId("ev"),
     content: str(raw?.content),
+    // ── v2 骨架字段（模型回的是 snake_case；老存档两者都没有 → 空值退化成 v1 行为）──
+    // doneWhen：1~3 条可在正文里被指认的成立条件。靶子软，判定就必然松，这是治本的一条。
+    doneWhen: normalizeStrList(raw?.doneWhen ?? raw?.done_when, 5, 200),
+    // span：本事件相对上一拍的时间跨度标记（"三天后"/"两周后"），导演据此要求正文做时间推移。
+    span: trimmed(raw?.span).slice(0, 60),
+    // beats：这个事件至少该占几条回复。停留预算不足时 done 会被降级（见 applyDirectorDecision）。
+    beats: clampInt(raw?.beats, 0, BEATS_MAX, 0),
     status,
+    // turns：这个事件作为「当前目标」已经被判定过几拍。由代码累加，不信模型自报。
+    turns: clampInt(raw?.turns, 0, 9999, 0),
+    // notes：导演回报 progress（或 done 被闸门降级）时留下的推进笔记，滚动保留最近几条。
+    notes: normalizeStrList(raw?.notes, MAX_EVENT_NOTES, 200),
     // 导演把事件判成 done/skipped 时留下的一句「实际怎么发生的」回顾。
     // 这是导演私有的 durable 记忆：不随聊天楼层被总结/隐藏而消失，判定时随骨架一起回灌，
     // 让导演即便读不到最近正文也知道这拍已经翻过去了（见方案第 5 节 A+B）。
-    recap: str(raw?.recap)
+    recap: str(raw?.recap),
+    skipReason: VALID_SKIP_REASON.has(raw?.skipReason) ? raw.skipReason : ""
   };
 }
 function normalizeNode(raw) {
@@ -29799,38 +30074,96 @@ function normalizeNode(raw) {
     id: str(raw?.id) || genId("nd"),
     title: str(raw?.title),
     anchor: str(raw?.anchor),
+    // anchorWhen：节点硬锚的成立条件。跨节点要双钥匙（见 applyDirectorDecision 第 ④ 步）。
+    anchorWhen: normalizeStrList(raw?.anchorWhen ?? raw?.anchor_when, 5, 200),
+    // span：本节点覆盖多长时间（"约两个月"）。生成侧据此拉开节点之间的时间跨度。
+    span: trimmed(raw?.span).slice(0, 60),
     events
   };
 }
 function normalizeProgress(raw, nodes) {
   const nodeCount = nodes.length;
-  let nodeIndex = clampInt(raw?.nodeIndex, 0, Math.max(0, nodeCount - 1), 0);
+  const nodeIndex = clampInt(raw?.nodeIndex, 0, Math.max(0, nodeCount - 1), 0);
   const evCount = nodes[nodeIndex] ? nodes[nodeIndex].events.length : 0;
-  let eventIndex = clampInt(raw?.eventIndex, 0, Math.max(0, evCount - 1), 0);
-  const revealed = Array.isArray(raw?.revealed) ? raw.revealed.map((r) => ({ nodeIndex: Math.floor(Number(r?.nodeIndex)), eventIndex: Math.floor(Number(r?.eventIndex)) })).filter((r) => Number.isFinite(r.nodeIndex) && Number.isFinite(r.eventIndex)) : [];
-  return { nodeIndex, eventIndex, revealed };
+  const eventIndex = clampInt(raw?.eventIndex, 0, Math.max(0, evCount - 1), 0);
+  return { nodeIndex, eventIndex, awaitingAnchor: raw?.awaitingAnchor === true };
+}
+function normalizeLastJudged(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const floor = Math.floor(Number(r.floor));
+  return {
+    floor: Number.isFinite(floor) && floor >= 0 ? floor : -1,
+    swipeId: str(r.swipeId),
+    sig: str(r.sig),
+    at: Number(r.at) || 0
+  };
+}
+function normalizeJournalEntry(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const floor = Math.floor(Number(r.floor));
+  const changes = (Array.isArray(r.changes) ? r.changes : []).map((c) => ({
+    node: Math.floor(Number(c?.node)),
+    event: Math.floor(Number(c?.event)),
+    prevStatus: VALID_STATUS.has(c?.prevStatus) ? c.prevStatus : EVENT_STATUS.PENDING,
+    prevRecap: str(c?.prevRecap),
+    prevTurns: clampInt(c?.prevTurns, 0, 9999, 0),
+    prevSkipReason: VALID_SKIP_REASON.has(c?.prevSkipReason) ? c.prevSkipReason : ""
+  })).filter((c) => Number.isFinite(c.node) && Number.isFinite(c.event));
+  const d = r.dwell && typeof r.dwell === "object" ? {
+    node: Math.floor(Number(r.dwell.node)),
+    event: Math.floor(Number(r.dwell.event)),
+    prevTurns: clampInt(r.dwell.prevTurns, 0, 9999, 0)
+  } : null;
+  return {
+    floor: Number.isFinite(floor) ? floor : -1,
+    swipeId: str(r.swipeId),
+    at: Number(r.at) || 0,
+    changes,
+    dwell: d && Number.isFinite(d.node) && Number.isFinite(d.event) ? d : null,
+    prevProgress: r.prevProgress && typeof r.prevProgress === "object" ? {
+      nodeIndex: clampInt(r.prevProgress.nodeIndex, 0, 9999, 0),
+      eventIndex: clampInt(r.prevProgress.eventIndex, 0, 9999, 0),
+      awaitingAnchor: r.prevProgress.awaitingAnchor === true
+    } : null
+  };
 }
 function normalizeBlindbox(raw) {
   const bb = raw && typeof raw === "object" ? raw : {};
   const nodes = Array.isArray(bb.nodes) ? bb.nodes.map(normalizeNode) : [];
+  const journal = (Array.isArray(bb.journal) ? bb.journal : []).map(normalizeJournalEntry).slice(-MAX_JOURNAL);
   return {
     tone: str(bb.tone),
     redlines: str(bb.redlines),
     nodeCount: clampNodeCount(bb.nodeCount),
     eventsPerGap: clampEventsPerGap(bb.eventsPerGap),
+    // timescale：故事总时长（"约三年"/"跨越半生"）。生成侧据此分配 span，是时间跨度的总闸门。
+    timescale: trimmed(bb.timescale).slice(0, 120),
+    strictness: normalizeStrictness(bb.strictness),
     sealed: bb.sealed === true,
     unsealed: bb.unsealed === true,
+    // 手动暂停导演。v1 没写进 normalize，判定落盘时会被洗掉（暂停只靠 undefined !== true 侥幸成立）。
+    directorPaused: bb.directorPaused === true,
     generatedAt: Number(bb.generatedAt) || 0,
     nodes,
-    progress: normalizeProgress(bb.progress, nodes)
+    progress: normalizeProgress(bb.progress, nodes),
+    lastJudged: normalizeLastJudged(bb.lastJudged),
+    journal,
+    // 解锁播报账本（判定侧只写 announced，揭晓侧只写 viewed，见 blindboxReveal.js）。
+    // marksReady=false ＝ 本功能上线前就存在的存档：首次接触时静默补记，否则一开面板
+    // 会把陈年旧账一次性响一遍。
+    announced: normalizeRevealMarks(bb.announced),
+    viewed: normalizeRevealMarks(bb.viewed),
+    marksReady: bb.marksReady === true
   };
 }
-function createBlindboxDraft({ tone, redlines, nodeCount, eventsPerGap } = {}) {
+function createBlindboxDraft({ tone, redlines, nodeCount, eventsPerGap, timescale, strictness } = {}) {
   return normalizeBlindbox({
     tone,
     redlines,
     nodeCount,
     eventsPerGap,
+    timescale,
+    strictness,
     sealed: false,
     unsealed: false,
     nodes: []
@@ -29842,7 +30175,12 @@ function sealWithNodes(blindbox, nodes) {
   bb.sealed = true;
   bb.unsealed = false;
   bb.generatedAt = Date.now();
-  bb.progress = normalizeProgress({ nodeIndex: 0, eventIndex: 0, revealed: [] }, bb.nodes);
+  bb.progress = normalizeProgress({ nodeIndex: 0, eventIndex: 0 }, bb.nodes);
+  bb.lastJudged = normalizeLastJudged(null);
+  bb.journal = [];
+  bb.announced = [];
+  bb.viewed = [];
+  bb.marksReady = true;
   const first = bb.nodes[0]?.events?.[0];
   if (first && first.status === EVENT_STATUS.PENDING) first.status = EVENT_STATUS.ACTIVE;
   return bb;
@@ -29851,6 +30189,13 @@ function unseal(blindbox) {
   const bb = normalizeBlindbox(blindbox);
   bb.unsealed = true;
   return bb;
+}
+function getCurrentTarget(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  const node = bb.nodes[bb.progress.nodeIndex] || null;
+  if (!node) return null;
+  const event = node.events[bb.progress.eventIndex] || null;
+  return { nodeIndex: bb.progress.nodeIndex, eventIndex: bb.progress.eventIndex, node, event };
 }
 function flattenEvents(blindbox) {
   const bb = normalizeBlindbox(blindbox);
@@ -29863,7 +30208,8 @@ function flattenEvents(blindbox) {
   return out;
 }
 function getProgressStats(blindbox) {
-  const flat = flattenEvents(blindbox);
+  const bb = normalizeBlindbox(blindbox);
+  const flat = flattenEvents(bb);
   const total = flat.length;
   let done = 0;
   let skipped = 0;
@@ -29871,16 +30217,37 @@ function getProgressStats(blindbox) {
     if (event.status === EVENT_STATUS.DONE) done += 1;
     else if (event.status === EVENT_STATUS.SKIPPED) skipped += 1;
   });
-  const bb = normalizeBlindbox(blindbox);
-  return { total, done, skipped, passed: done + skipped, nodeCount: bb.nodes.length };
+  const cur = getCurrentTarget(bb);
+  return {
+    total,
+    done,
+    skipped,
+    passed: done + skipped,
+    nodeCount: bb.nodes.length,
+    // 停留信息不是剧情内容（它讲的是玩家自己打了几拍），封印态也能安全显示。
+    dwellTurns: cur?.event?.turns || 0,
+    dwellBeats: cur?.event?.beats || 0,
+    awaitingAnchor: bb.progress.awaitingAnchor === true
+  };
 }
 function toVisibleItems(blindbox) {
   const bb = normalizeBlindbox(blindbox);
   const items = [];
+  const label = (base, span) => span ? `${base} \xB7 ${span}` : base;
   bb.nodes.forEach((node, i) => {
-    items.push({ time: `\u8282\u70B9 ${i + 1}`, title: node.title, plot: node.anchor, foreshadowing: "" });
+    items.push({
+      time: label(`\u8282\u70B9 ${i + 1}`, node.span),
+      title: node.title,
+      plot: node.anchor,
+      foreshadowing: node.anchorWhen.join("\uFF1B")
+    });
     node.events.forEach((ev, j) => {
-      items.push({ time: `${i + 1}.${j + 1}`, title: "", plot: ev.content, foreshadowing: "" });
+      items.push({
+        time: label(`${i + 1}.${j + 1}`, ev.span),
+        title: "",
+        plot: ev.content,
+        foreshadowing: ev.doneWhen.join("\uFF1B")
+      });
     });
   });
   return items;
@@ -29891,45 +30258,295 @@ function extractBlindboxNodes(data) {
   if (nodes.length === 0) throw new Error("\u8FD4\u56DE\u7684 nodes \u4E3A\u7A7A");
   return nodes;
 }
+function normalizeUpdateKind(v) {
+  const s = trimmed(v).toLowerCase();
+  if (s === UPDATE_KIND.DONE) return UPDATE_KIND.DONE;
+  if (s === UPDATE_KIND.SKIPPED || s === "skip") return UPDATE_KIND.SKIPPED;
+  return UPDATE_KIND.PROGRESS;
+}
+function normalizeSkipReason(v) {
+  const s = trimmed(v).toLowerCase();
+  return VALID_SKIP_REASON.has(s) ? s : "";
+}
 function parseDirectorDecision(data) {
   const obj = data && typeof data === "object" ? data : {};
-  const updates = (Array.isArray(obj.updates) ? obj.updates : []).map((u) => ({
-    node: Math.floor(Number(u?.node)),
-    event: Math.floor(Number(u?.event)),
-    status: u?.status === EVENT_STATUS.DONE || u?.status === EVENT_STATUS.SKIPPED ? u.status : null,
-    // 一句话回顾，达成/跳过时写进事件；缺省空串，由 applyDirectorDecision 决定是否覆盖。
-    recap: typeof u?.recap === "string" ? u.recap.trim() : ""
-  })).filter((u) => Number.isFinite(u.node) && Number.isFinite(u.event) && u.status);
+  const updates = (Array.isArray(obj.updates) ? obj.updates : []).map((u) => {
+    const floorRaw = Math.floor(Number(u?.evidenceFloor ?? u?.evidence_floor));
+    const metRaw = u?.criteriaMet ?? u?.criteria_met;
+    return {
+      node: Math.floor(Number(u?.node)),
+      event: Math.floor(Number(u?.event)),
+      status: normalizeUpdateKind(u?.status),
+      // 正文指认：标准/严格档下 done/skipped 没有它就降级成 progress。
+      evidence: trimmed(u?.evidence).slice(0, 200),
+      // 证据楼层：≤ 上次判定楼层的，说明在拿已经判过的旧正文充新进展。
+      evidenceFloor: Number.isFinite(floorRaw) && floorRaw >= 0 ? floorRaw : null,
+      criteriaMet: (Array.isArray(metRaw) ? metRaw : []).map((n) => Math.floor(Number(n))).filter((n) => Number.isFinite(n) && n >= 0),
+      confidence: trimmed(u?.confidence).toLowerCase() === "high" ? "high" : "low",
+      reason: normalizeSkipReason(u?.reason ?? u?.skip_reason),
+      // 一句话回顾，达成/跳过时写进事件；缺省空串，由 applyDirectorDecision 决定是否覆盖。
+      recap: trimmed(u?.recap)
+    };
+  }).filter((u) => Number.isFinite(u.node) && Number.isFinite(u.event));
   const t = obj.target && typeof obj.target === "object" ? obj.target : {};
   const targetNode = Number.isFinite(Math.floor(Number(t.node))) ? Math.max(0, Math.floor(Number(t.node))) : 0;
   const targetEvent = Number.isFinite(Math.floor(Number(t.event))) ? Math.max(0, Math.floor(Number(t.event))) : 0;
   return {
     updates,
     target: { node: targetNode, event: targetEvent },
+    // 跨节点的第二把钥匙：模型必须显式确认本节点硬锚已兑现。
+    anchorMet: (obj.anchorMet ?? obj.anchor_met) === true,
     directive: typeof obj.directive === "string" ? obj.directive.trim() : "",
     intensity: VALID_INTENSITY.has(obj.intensity) ? obj.intensity : DIRECTOR_INTENSITY.GENTLE
   };
 }
-function applyDirectorDecision(blindbox, decision) {
+function checkDoneGate(ev, u, level, quota, isPointer) {
+  if (quota <= 0) return "done-quota";
+  if (level === STRICTNESS.LOOSE) return "";
+  if (!u.evidence) return "no-evidence";
+  const need = ev.doneWhen.length;
+  if (need > 0) {
+    const hit = new Set(u.criteriaMet.filter((n) => n < need)).size;
+    if (level === STRICTNESS.STRICT && hit < need) return "criteria-incomplete";
+    if (hit < 1) return "criteria-none";
+  }
+  if (isPointer && ev.beats > 0 && ev.turns < ev.beats) {
+    if (level === STRICTNESS.STRICT) return "too-early";
+    if (u.confidence !== "high") return "too-early-low-confidence";
+  }
+  return "";
+}
+function checkSkipGate(ev, u, level, quota, isPointer) {
+  if (quota <= 0) return "skip-quota";
+  if (level === STRICTNESS.LOOSE) return "";
+  if (!u.reason) return "no-skip-reason";
+  if (!u.evidence) return "no-evidence";
+  if (!isPointer && ev.turns < 1) return "skip-ahead";
+  return "";
+}
+function pushNote(ev, note) {
+  const text = trimmed(note).slice(0, 200);
+  if (!text) return;
+  ev.notes = [...ev.notes.filter((n) => n !== text), text].slice(-MAX_EVENT_NOTES);
+}
+function applyDirectorDecision(blindbox, decision, options = {}) {
   const bb = normalizeBlindbox(blindbox);
-  const dec = decision || {};
-  (dec.updates || []).forEach((u) => {
+  const dec = decision && typeof decision === "object" ? decision : {};
+  const level = normalizeStrictness(options.strictness ?? bb.strictness);
+  const report = options.report && typeof options.report === "object" ? options.report : {};
+  report.strictness = level;
+  report.applied = [];
+  report.refused = [];
+  const sinceRaw = Math.floor(Number(options.sinceFloor));
+  const sinceFloor = Number.isFinite(sinceRaw) ? sinceRaw : bb.lastJudged.floor;
+  const floorRaw = Math.floor(Number(options.floor));
+  const floor = Number.isFinite(floorRaw) && floorRaw >= 0 ? floorRaw : -1;
+  const prevProgress = { ...bb.progress };
+  const changes = [];
+  const cur = bb.nodes[prevProgress.nodeIndex]?.events?.[prevProgress.eventIndex];
+  let dwell = null;
+  if (cur && !isPassed(cur)) {
+    dwell = { node: prevProgress.nodeIndex, event: prevProgress.eventIndex, prevTurns: cur.turns };
+    cur.turns = Math.min(9999, cur.turns + 1);
+  }
+  let stepQuota = level === STRICTNESS.LOOSE ? Infinity : 1;
+  const sorted = (Array.isArray(dec.updates) ? dec.updates : []).slice().sort((a, b) => a.node - b.node || a.event - b.event);
+  sorted.forEach((u) => {
+    const where = `${u?.node}.${u?.event}`;
     const ev = bb.nodes[u?.node]?.events?.[u?.event];
-    if (ev && (u.status === EVENT_STATUS.DONE || u.status === EVENT_STATUS.SKIPPED)) {
-      ev.status = u.status;
+    if (!ev) {
+      report.refused.push({ where, want: u?.status, why: "no-such-event" });
+      return;
+    }
+    if (isPassed(ev)) {
+      report.refused.push({ where, want: u?.status, why: "already-passed" });
+      return;
+    }
+    const isPointer = u.node === prevProgress.nodeIndex && u.event === prevProgress.eventIndex;
+    let want = u.status;
+    let why = "";
+    if (want !== UPDATE_KIND.PROGRESS && level !== STRICTNESS.LOOSE && u.node > prevProgress.nodeIndex) {
+      why = "future-node";
+      want = UPDATE_KIND.PROGRESS;
+    }
+    if (want !== UPDATE_KIND.PROGRESS && level !== STRICTNESS.LOOSE && sinceFloor >= 0 && u.evidenceFloor !== null && u.evidenceFloor <= sinceFloor) {
+      why = "stale-evidence";
+      want = UPDATE_KIND.PROGRESS;
+    }
+    if (want === UPDATE_KIND.DONE) {
+      const gate = checkDoneGate(ev, u, level, stepQuota, isPointer);
+      if (gate) {
+        why = gate;
+        want = UPDATE_KIND.PROGRESS;
+      }
+    } else if (want === UPDATE_KIND.SKIPPED) {
+      const gate = checkSkipGate(ev, u, level, stepQuota, isPointer);
+      if (gate) {
+        why = gate;
+        want = UPDATE_KIND.PROGRESS;
+      }
+    }
+    if (want === UPDATE_KIND.DONE || want === UPDATE_KIND.SKIPPED) {
+      changes.push({
+        node: u.node,
+        event: u.event,
+        prevStatus: ev.status,
+        prevRecap: ev.recap,
+        prevTurns: ev.turns,
+        prevSkipReason: ev.skipReason
+      });
+      ev.status = want;
       if (u.recap) ev.recap = u.recap;
+      if (want === UPDATE_KIND.SKIPPED) ev.skipReason = u.reason || SKIP_REASONS.MOOT;
+      stepQuota -= 1;
+      report.applied.push({ where, status: want });
+    } else {
+      pushNote(ev, u.evidence || u.recap);
+      if (u.status !== UPDATE_KIND.PROGRESS) report.refused.push({ where, want: u.status, why: why || "downgraded" });
     }
   });
-  const nodeIdx = Math.min(Math.max(Math.floor(Number(dec.target?.node)) || 0, 0), Math.max(0, bb.nodes.length - 1));
-  const evCount = bb.nodes[nodeIdx] ? bb.nodes[nodeIdx].events.length : 0;
-  const evIdx = Math.min(Math.max(Math.floor(Number(dec.target?.event)) || 0, 0), Math.max(0, evCount - 1));
-  bb.progress.nodeIndex = nodeIdx;
-  bb.progress.eventIndex = evIdx;
+  const flat = flattenEvents(bb);
+  let nodeIdx = 0;
+  let evIdx = 0;
+  if (level === STRICTNESS.LOOSE) {
+    nodeIdx = clampInt(dec.target?.node, 0, Math.max(0, bb.nodes.length - 1), 0);
+    const evCount = bb.nodes[nodeIdx] ? bb.nodes[nodeIdx].events.length : 0;
+    evIdx = clampInt(dec.target?.event, 0, Math.max(0, evCount - 1), 0);
+  } else {
+    const first = flat.find(({ event }) => !isPassed(event)) || flat[flat.length - 1] || null;
+    nodeIdx = first ? first.nodeIndex : 0;
+    evIdx = first ? first.eventIndex : 0;
+  }
+  let awaitingAnchor = false;
+  if (level !== STRICTNESS.LOOSE && nodeIdx > prevProgress.nodeIndex) {
+    const prevNode = bb.nodes[prevProgress.nodeIndex];
+    const allPassed = !!prevNode && prevNode.events.length > 0 && prevNode.events.every(isPassed);
+    if (allPassed && dec.anchorMet !== true) {
+      awaitingAnchor = true;
+      nodeIdx = prevProgress.nodeIndex;
+      evIdx = Math.max(0, prevNode.events.length - 1);
+    }
+  }
+  bb.progress = { nodeIndex: nodeIdx, eventIndex: evIdx, awaitingAnchor };
   const targetEv = bb.nodes[nodeIdx]?.events?.[evIdx];
   if (targetEv && targetEv.status === EVENT_STATUS.PENDING) targetEv.status = EVENT_STATUS.ACTIVE;
+  if (floor >= 0) {
+    bb.journal = [...bb.journal, {
+      floor,
+      swipeId: str(options.swipeId),
+      at: Date.now(),
+      changes,
+      dwell,
+      prevProgress
+    }].slice(-MAX_JOURNAL);
+  }
+  bb.lastJudged = normalizeLastJudged({
+    floor: floor >= 0 ? floor : bb.lastJudged.floor,
+    swipeId: str(options.swipeId),
+    sig: str(options.sig),
+    at: Date.now()
+  });
+  report.progress = { ...bb.progress };
   return bb;
 }
-var BLINDBOX_KIND, EVENTS_PER_GAP_MIN, EVENTS_PER_GAP_MAX, NODE_COUNT_MIN, NODE_COUNT_MAX, NODE_COUNT_DEFAULT, EVENT_STATUS, VALID_STATUS, clampInt, str, seq, genId, DIRECTOR_INTENSITY, VALID_INTENSITY;
+function rollbackJournalFrom(blindbox, floor) {
+  const bb = normalizeBlindbox(blindbox);
+  const from = Math.floor(Number(floor));
+  if (!Number.isFinite(from) || from < 0) return bb;
+  let rolled = 0;
+  let earliestProgress = null;
+  while (bb.journal.length > 0) {
+    const last = bb.journal[bb.journal.length - 1];
+    if (!(last.floor >= 0 && last.floor >= from)) break;
+    bb.journal.pop();
+    rolled += 1;
+    last.changes.forEach((c) => {
+      const ev = bb.nodes[c.node]?.events?.[c.event];
+      if (!ev) return;
+      ev.status = c.prevStatus;
+      ev.recap = c.prevRecap;
+      ev.turns = c.prevTurns;
+      ev.skipReason = c.prevSkipReason;
+      const mark = eventMark(c.node, c.event);
+      bb.announced = bb.announced.filter((m) => m !== mark);
+      bb.viewed = bb.viewed.filter((m) => m !== mark);
+      const node = bb.nodes[c.node];
+      const stillCleared = !!node && node.events.length > 0 && node.events.every(isPassed);
+      if (!stillCleared) {
+        const sm = stageMark(c.node);
+        bb.announced = bb.announced.filter((m) => m !== sm);
+        bb.viewed = bb.viewed.filter((m) => m !== sm);
+      }
+    });
+    if (last.dwell) {
+      const ev = bb.nodes[last.dwell.node]?.events?.[last.dwell.event];
+      if (ev) ev.turns = last.dwell.prevTurns;
+    }
+    if (last.prevProgress) earliestProgress = last.prevProgress;
+  }
+  if (rolled === 0) return bb;
+  if (earliestProgress) bb.progress = normalizeProgress(earliestProgress, bb.nodes);
+  const tail = bb.journal[bb.journal.length - 1];
+  bb.lastJudged = normalizeLastJudged(tail ? { floor: tail.floor, swipeId: tail.swipeId, at: tail.at } : null);
+  return bb;
+}
+function buildDirectorSkeleton(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  return bb.nodes.map((node, i) => {
+    const n = { node: i, title: node.title, anchor: node.anchor, is_final: i === bb.nodes.length - 1 };
+    if (node.span) n.span = node.span;
+    if (node.anchorWhen.length) n.anchor_when = node.anchorWhen;
+    n.events = node.events.map((ev, j) => {
+      const e = { event: j, content: ev.content, status: ev.status };
+      if (ev.span) e.span = ev.span;
+      if (ev.doneWhen.length) e.done_when = ev.doneWhen;
+      if (ev.beats > 0) e.beats = ev.beats;
+      if (ev.status === EVENT_STATUS.ACTIVE) e.turns_spent = ev.turns;
+      if (ev.notes.length) e.notes = ev.notes;
+      if (isPassed(ev) && ev.recap) e.recap = ev.recap;
+      if (ev.status === EVENT_STATUS.SKIPPED && ev.skipReason) e.skip_reason = ev.skipReason;
+      return e;
+    });
+    return n;
+  });
+}
+function describeDirectorProgress(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  const t = getCurrentTarget(bb);
+  if (!t || !t.event) return "\uFF08\u9AA8\u67B6\u4E3A\u7A7A\uFF0C\u65E0\u76EE\u6807\uFF09";
+  const lines = [`\u5F53\u524D\u76EE\u6807\uFF1A\u8282\u70B9 ${t.nodeIndex} \xB7 \u4E8B\u4EF6 ${t.eventIndex}`];
+  lines.push(t.event.beats > 0 ? `\u8BE5\u4E8B\u4EF6\u5DF2\u505C\u7559 ${t.event.turns} \u62CD / \u62CD\u6570\u9884\u7B97 ${t.event.beats} \u62CD` : `\u8BE5\u4E8B\u4EF6\u5DF2\u505C\u7559 ${t.event.turns} \u62CD\uFF08\u9AA8\u67B6\u672A\u7ED9\u62CD\u6570\u9884\u7B97\uFF09`);
+  if (t.event.span) lines.push(`\u8BE5\u4E8B\u4EF6\u76F8\u5BF9\u4E0A\u4E00\u62CD\u5E94\u6709\u7684\u65F6\u95F4\u8DE8\u5EA6\uFF1A${t.event.span}`);
+  if (t.node.span) lines.push(`\u672C\u8282\u70B9\u8986\u76D6\u7684\u65F6\u95F4\uFF1A${t.node.span}`);
+  lines.push(bb.lastJudged.floor >= 0 ? `\u4E0A\u6B21\u5224\u5B9A\u4F9D\u636E\u5230\u6B63\u6587 #${bb.lastJudged.floor} \u697C\uFF1A\u53EA\u6709 #${bb.lastJudged.floor} \u4E4B\u540E\u7684\u697C\u5C42\u7B97\u65B0\u8BC1\u636E` : "\u8FD9\u662F\u7B2C\u4E00\u6B21\u5224\u5B9A\uFF1A\u5168\u90E8\u6B63\u6587\u90FD\u7B97\u65B0\u8BC1\u636E");
+  if (bb.progress.awaitingAnchor) {
+    lines.push(`\u26A0 \u672C\u8282\u70B9\u7684\u5173\u952E\u4E8B\u4EF6\u90FD\u5DF2\u7FFB\u8FC7\uFF0C\u4F46\u786C\u951A\u5C1A\u672A\u5151\u73B0\uFF1A\u8FD9\u4E00\u62CD\u8981\u628A\u8282\u70B9\u300C${t.node.title}\u300D\u7684 anchor \u771F\u6B63\u843D\u5730\uFF0C\u5E76\u5728\u56DE\u62A5\u91CC\u7ED9 anchor_met=true\uFF0C\u624D\u80FD\u8FDB\u5165\u4E0B\u4E00\u8282\u70B9`);
+  }
+  return lines.join("\n");
+}
+function describeStrictness(strictness) {
+  const level = normalizeStrictness(strictness);
+  if (level === STRICTNESS.LOOSE) {
+    return "\u5BBD\u677E\uFF08\u517C\u5BB9\u65E7\u884C\u4E3A\uFF09\uFF1A\u540C\u4E00\u56DE\u5408\u53EF\u5224\u591A\u4E2A\u4E8B\u4EF6\u8FBE\u6210\uFF0C\u8BC1\u636E\u5B57\u6BB5\u53EF\u7701\u3002\u4E0D\u63A8\u8350\u2014\u2014\u5224\u5B9A\u4F1A\u8D8A\u5224\u8D8A\u98D8\u3002";
+  }
+  if (level === STRICTNESS.STRICT) {
+    return [
+      "\u4E25\u683C\uFF1A\u6BCF\u56DE\u5408\u6700\u591A\u5F80\u524D\u8D70\u4E00\u6B65\uFF08done \u4E0E skipped \u5171\u7528 1 \u4E2A\u914D\u989D\uFF0C\u591A\u62A5\u7684\u6309\u4E0B\u6807\u53D6\u6700\u65E9\u4E00\u4E2A\uFF0C\u5176\u4F59\u81EA\u52A8\u964D\u7EA7\u4E3A progress\uFF09\uFF1B",
+      "\u53EA\u8BB8\u52A8\u5F53\u524D\u8282\u70B9\u4EE5\u5185\u7684\u4E8B\u4EF6\uFF0C\u8D8A\u8FC7\u5F53\u524D\u8282\u70B9\u53BB\u5224\u540E\u9762\u7684\u4E8B\u4EF6\u4E00\u5F8B\u964D\u7EA7\uFF1B",
+      "done \u5FC5\u987B\u7ED9 evidence \uFF0B evidence_floor\uFF0C\u4E14 criteria_met \u8986\u76D6\u8BE5\u4E8B\u4EF6 done_when \u7684**\u5168\u90E8**\u6761\u76EE\uFF1B",
+      "\u5F53\u524D\u76EE\u6807\u4E8B\u4EF6\u505C\u7559\u62CD\u6570\u672A\u8FBE beats \u9884\u7B97\u65F6\uFF0Cdone \u4E00\u5F8B\u964D\u7EA7\u4E3A progress\uFF1B",
+      "skipped \u5FC5\u987B\u7ED9 reason\uFF08moot/superseded/refused\uFF09\uFF0B evidence\uFF0C\u4E14\u4E0D\u5F97\u8D8A\u8FC7\u5F53\u524D\u76EE\u6807\u9020\u6210\u8DE8\u6B65\u3002"
+    ].join("\n");
+  }
+  return [
+    "\u6807\u51C6\uFF1A\u6BCF\u56DE\u5408\u6700\u591A\u5F80\u524D\u8D70\u4E00\u6B65\uFF08done \u4E0E skipped \u5171\u7528 1 \u4E2A\u914D\u989D\uFF0C\u591A\u62A5\u7684\u6309\u4E0B\u6807\u53D6\u6700\u65E9\u4E00\u4E2A\uFF0C\u5176\u4F59\u81EA\u52A8\u964D\u7EA7\u4E3A progress\uFF09\uFF1B",
+    "\u53EA\u8BB8\u52A8\u5F53\u524D\u8282\u70B9\u4EE5\u5185\u7684\u4E8B\u4EF6\uFF0C\u8D8A\u8FC7\u5F53\u524D\u8282\u70B9\u53BB\u5224\u540E\u9762\u7684\u4E8B\u4EF6\u4E00\u5F8B\u964D\u7EA7\uFF1B",
+    "done \u5FC5\u987B\u7ED9 evidence \uFF0B evidence_floor\uFF0C\u4E14 criteria_met \u81F3\u5C11\u547D\u4E2D\u4E00\u6761 done_when\uFF1B",
+    "\u5F53\u524D\u76EE\u6807\u4E8B\u4EF6\u505C\u7559\u62CD\u6570\u672A\u8FBE beats \u9884\u7B97\u65F6\uFF0C\u53EA\u6709 confidence=high \u624D\u653E\u884C\uFF0C\u5426\u5219\u964D\u7EA7\u4E3A progress\uFF1B",
+    "skipped \u5FC5\u987B\u7ED9 reason\uFF08moot/superseded/refused\uFF09\uFF0B evidence\uFF0C\u4E14\u4E0D\u5F97\u8D8A\u8FC7\u5F53\u524D\u76EE\u6807\u9020\u6210\u8DE8\u6B65\u3002"
+  ].join("\n");
+}
+var BLINDBOX_KIND, EVENTS_PER_GAP_MIN, EVENTS_PER_GAP_MAX, NODE_COUNT_MIN, NODE_COUNT_MAX, NODE_COUNT_DEFAULT, BEATS_MAX, MAX_EVENT_NOTES, MAX_REVEAL_MARKS, eventMark, stageMark, REVEAL_MARK_RE, MAX_JOURNAL, EVENT_STATUS, VALID_STATUS, isPassed, UPDATE_KIND, SKIP_REASONS, VALID_SKIP_REASON, STRICTNESS, VALID_STRICTNESS, clampInt, str, trimmed, seq, genId, DIRECTOR_INTENSITY, VALID_INTENSITY;
 var init_blindboxPlan = __esm({
   "src/core/blindboxPlan.js"() {
     BLINDBOX_KIND = "blindbox";
@@ -29938,6 +30555,13 @@ var init_blindboxPlan = __esm({
     NODE_COUNT_MIN = 2;
     NODE_COUNT_MAX = 20;
     NODE_COUNT_DEFAULT = 4;
+    BEATS_MAX = 20;
+    MAX_EVENT_NOTES = 3;
+    MAX_REVEAL_MARKS = 300;
+    eventMark = (nodeIndex, eventIndex) => `e:${nodeIndex}.${eventIndex}`;
+    stageMark = (nodeIndex) => `s:${nodeIndex}`;
+    REVEAL_MARK_RE = /^[es]:\d+(\.\d+)?$/;
+    MAX_JOURNAL = 40;
     EVENT_STATUS = Object.freeze({
       PENDING: "pending",
       ACTIVE: "active",
@@ -29945,12 +30569,19 @@ var init_blindboxPlan = __esm({
       SKIPPED: "skipped"
     });
     VALID_STATUS = new Set(Object.values(EVENT_STATUS));
+    isPassed = (ev) => ev?.status === EVENT_STATUS.DONE || ev?.status === EVENT_STATUS.SKIPPED;
+    UPDATE_KIND = Object.freeze({ DONE: "done", SKIPPED: "skipped", PROGRESS: "progress" });
+    SKIP_REASONS = Object.freeze({ MOOT: "moot", SUPERSEDED: "superseded", REFUSED: "refused" });
+    VALID_SKIP_REASON = new Set(Object.values(SKIP_REASONS));
+    STRICTNESS = Object.freeze({ LOOSE: "loose", STANDARD: "standard", STRICT: "strict" });
+    VALID_STRICTNESS = new Set(Object.values(STRICTNESS));
     clampInt = (v, lo, hi, dflt) => {
       const n = Math.floor(Number(v));
       if (!Number.isFinite(n)) return dflt;
       return Math.min(hi, Math.max(lo, n));
     };
     str = (v) => typeof v === "string" ? v : "";
+    trimmed = (v) => str(v).trim();
     seq = 0;
     genId = (prefix) => `${prefix}_${Date.now().toString(36)}_${(seq++).toString(36)}`;
     DIRECTOR_INTENSITY = Object.freeze({ NONE: "none", GENTLE: "gentle", FIRM: "firm" });
@@ -29958,7 +30589,7 @@ var init_blindboxPlan = __esm({
   }
 });
 
-// src/core/directorInjection.js
+// src/core/pacingInjection.js
 import {
   setExtensionPrompt,
   extension_prompt_types,
@@ -29971,6 +30602,1265 @@ function normalizeRole2(role) {
   return name in ROLE_NAME_TO_ENUM ? name : "system";
 }
 function normalizeDepth(depth) {
+  const n = Number(depth);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(1e4, Math.floor(n));
+}
+function briefSummary(text, maxLen = 40) {
+  const s = String(text || "").replace(/\s+/g, " ").trim();
+  return s.length > maxLen ? `${s.slice(0, maxLen)}\u2026` : s;
+}
+function armPacingDirective(text, options = {}) {
+  const body = String(text || "").trim();
+  if (!body) {
+    clearPacingDirective();
+    return false;
+  }
+  const roleName = normalizeRole2(options.role);
+  const depth = normalizeDepth(options.depth);
+  setExtensionPrompt(
+    PACING_PROMPT_KEY,
+    DIRECTIVE_HEADER + body,
+    extension_prompt_types.IN_CHAT,
+    depth,
+    false,
+    ROLE_NAME_TO_ENUM[roleName]
+  );
+  armed = true;
+  armedSummary = briefSummary(body);
+  armedDepth = depth;
+  armedRole = roleName;
+  TitaniaLogger.info("\u8282\u594F\u6307\u4EE4\u5DF2\u6B66\u88C5", { depth, role: roleName });
+  return true;
+}
+function clearPacingDirective() {
+  setExtensionPrompt(PACING_PROMPT_KEY, "", extension_prompt_types.IN_CHAT, 0);
+  armed = false;
+  armedSummary = "";
+}
+function getArmedPacing() {
+  return { armed, summary: armedSummary, depth: armedDepth, role: armedRole };
+}
+function initPacingInjection() {
+  if (listenersBound) return;
+  listenersBound = true;
+  clearPacingDirective();
+  eventSource2.on(event_types2.GENERATION_ENDED, () => {
+    if (armed) clearPacingDirective();
+  });
+  if (event_types2.CHAT_CHANGED) {
+    eventSource2.on(event_types2.CHAT_CHANGED, () => {
+      if (armed) clearPacingDirective();
+    });
+  }
+  TitaniaLogger.info("\u53D9\u4E8B\u8282\u594F\u6CE8\u5165\u5DF2\u521D\u59CB\u5316");
+}
+var PACING_PROMPT_KEY, DIRECTIVE_HEADER, ROLE_NAME_TO_ENUM, listenersBound, armed, armedSummary, armedDepth, armedRole;
+var init_pacingInjection = __esm({
+  "src/core/pacingInjection.js"() {
+    init_logger();
+    PACING_PROMPT_KEY = "TITANIA_PACING";
+    DIRECTIVE_HEADER = "\u3010\u53D9\u4E8B\u8282\u594F\u63D0\u793A\u3011\n";
+    ROLE_NAME_TO_ENUM = {
+      system: extension_prompt_roles.SYSTEM,
+      user: extension_prompt_roles.USER,
+      assistant: extension_prompt_roles.ASSISTANT
+    };
+    listenersBound = false;
+    armed = false;
+    armedSummary = "";
+    armedDepth = 0;
+    armedRole = "system";
+  }
+});
+
+// src/core/blindboxReveal.js
+function markSets(bb) {
+  return {
+    announced: new Set(bb.announced || []),
+    viewed: new Set(bb.viewed || [])
+  };
+}
+function getPassedMarks(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  return flattenEvents(bb).filter(({ event }) => isEventPassed(event)).map(({ nodeIndex, eventIndex }) => eventMark(nodeIndex, eventIndex));
+}
+function getClearedStageIndexes(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  const out = [];
+  bb.nodes.forEach((node, i) => {
+    if (node.events.length > 0 && node.events.every(isEventPassed)) out.push(i);
+  });
+  return out;
+}
+function resolveUnlocks(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  const { announced, viewed } = markSets(bb);
+  const passedMarks = getPassedMarks(bb);
+  const clearedStages = getClearedStageIndexes(bb);
+  const stageMarks = clearedStages.map(stageMark);
+  if (bb.marksReady !== true) {
+    return {
+      backfill: true,
+      freshMarks: [],
+      freshStages: [],
+      unviewedMarks: [],
+      unviewedStages: [],
+      passedMarks,
+      clearedStages
+    };
+  }
+  return {
+    backfill: false,
+    freshMarks: passedMarks.filter((m) => !announced.has(m)),
+    freshStages: stageMarks.filter((m) => !announced.has(m)),
+    unviewedMarks: passedMarks.filter((m) => !viewed.has(m)),
+    unviewedStages: stageMarks.filter((m) => !viewed.has(m)),
+    passedMarks,
+    clearedStages
+  };
+}
+function applyRevealMarks(blindbox, { announced, viewed, marksReady } = {}) {
+  const bb = normalizeBlindbox(blindbox);
+  if (Array.isArray(announced) && announced.length) bb.announced = addRevealMarks(bb.announced, announced);
+  if (Array.isArray(viewed) && viewed.length) bb.viewed = addRevealMarks(bb.viewed, viewed);
+  if (marksReady === true) bb.marksReady = true;
+  return bb;
+}
+function backfillRevealMarks(blindbox) {
+  const bb = normalizeBlindbox(blindbox);
+  const u = resolveUnlocks(bb);
+  return applyRevealMarks(bb, {
+    announced: [...u.passedMarks, ...u.clearedStages.map(stageMark)],
+    viewed: [...u.passedMarks, ...u.clearedStages.map(stageMark)],
+    marksReady: true
+  });
+}
+function pickUnlockCue({ freshMarks = [], freshStages = [], config } = {}) {
+  const cfg = config && typeof config === "object" ? config : {};
+  if (cfg.enabled !== true) return null;
+  if (freshStages.length > 0) return "stage";
+  if (freshMarks.length > 0 && cfg.cue_event !== false) return "event";
+  return null;
+}
+function buildRevealView(blindbox, options = {}) {
+  const bb = normalizeBlindbox(blindbox);
+  const { viewed } = markSets(bb);
+  const u = resolveUnlocks(bb);
+  const freshAllowed = options.suppressFresh !== true && u.backfill !== true;
+  const curNode = bb.progress.nodeIndex;
+  const curEvent = bb.progress.eventIndex;
+  const flat = flattenEvents(bb);
+  const total = flat.length;
+  const passed = flat.filter(({ event }) => isEventPassed(event)).length;
+  const skipped = flat.filter(({ event }) => event.status === EVENT_STATUS.SKIPPED).length;
+  const stages = bb.nodes.map((node, nodeIndex) => {
+    const passedInNode = node.events.filter(isEventPassed).length;
+    const counts = { passed: passedInNode, total: node.events.length };
+    const allPassed = counts.total > 0 && passedInNode === counts.total;
+    const isHolding = allPassed && nodeIndex === curNode && bb.progress.awaitingAnchor === true;
+    const revealed = allPassed && !isHolding;
+    const state = allPassed ? "cleared" : nodeIndex === curNode ? "current" : "sealed";
+    const stageFresh = freshAllowed && revealed && !viewed.has(stageMark(nodeIndex));
+    const events = node.events.map((event, eventIndex) => {
+      const key = eventMark(nodeIndex, eventIndex);
+      const unlocked = isEventPassed(event);
+      const isTarget = nodeIndex === curNode && eventIndex === curEvent;
+      const base = {
+        key,
+        no: String(eventIndex + 1).padStart(2, "0"),
+        status: event.status,
+        unlocked,
+        isTarget,
+        isFresh: freshAllowed && unlocked && !viewed.has(key)
+      };
+      if (!unlocked) {
+        return {
+          ...base,
+          locked: true,
+          dwell: isTarget ? { turns: event.turns || 0, beats: event.beats || 0 } : null
+        };
+      }
+      return {
+        ...base,
+        locked: false,
+        content: event.content,
+        recap: event.recap || "",
+        spanLabel: event.span || "",
+        skipReason: event.skipReason || ""
+      };
+    });
+    const stage = {
+      nodeIndex,
+      state,
+      label: `\u9636\u6BB5${["\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D", "\u4E03", "\u516B", "\u4E5D", "\u5341"][nodeIndex] || ` ${nodeIndex + 1}`}`,
+      counts,
+      cleared: allPassed,
+      revealed,
+      isFresh: stageFresh,
+      // 事件都翻过了、但硬锚还没落地：导演这几拍会收紧。这是给玩家的解释，不是剧透。
+      isHolding,
+      events
+    };
+    if (revealed) {
+      stage.title = node.title || "";
+      stage.anchor = node.anchor || "";
+      stage.span = node.span || "";
+    }
+    return stage;
+  });
+  return {
+    header: {
+      paused: bb.directorPaused === true,
+      stageIndex: curNode,
+      stageCount: stages.length,
+      passed,
+      skipped,
+      total,
+      strictness: bb.strictness,
+      timescale: bb.timescale || "",
+      clearedStages: u.clearedStages.length,
+      // 横条角标看这个：有未揭晓的事件、或有已通关但还没看过揭晓动画的阶段。
+      hasUnviewed: u.unviewedMarks.length > 0 || u.unviewedStages.length > 0,
+      isHolding: bb.progress.awaitingAnchor === true,
+      dwell: {
+        turns: stages[curNode]?.events?.[curEvent]?.dwell?.turns || 0,
+        beats: stages[curNode]?.events?.[curEvent]?.dwell?.beats || 0
+      }
+    },
+    stages
+  };
+}
+var init_blindboxReveal = __esm({
+  "src/core/blindboxReveal.js"() {
+    init_blindboxPlan();
+  }
+});
+
+// src/core/unlockChime.js
+function getUnlockSoundConfig() {
+  const raw = getExtData()?.[SOUND_KEY];
+  const cfg = raw && typeof raw === "object" ? raw : {};
+  const vol = Number(cfg.volume);
+  return {
+    enabled: cfg.enabled !== false,
+    // 老用户没这个键 → 默认开
+    volume: Number.isFinite(vol) ? Math.min(100, Math.max(0, Math.floor(vol))) : UNLOCK_SOUND_DEFAULTS.volume,
+    cue_event: cfg.cue_event !== false
+  };
+}
+function setUnlockSound(patch) {
+  const data = getExtData();
+  const prev = data[SOUND_KEY] && typeof data[SOUND_KEY] === "object" ? data[SOUND_KEY] : {};
+  data[SOUND_KEY] = { ...UNLOCK_SOUND_DEFAULTS, ...prev, ...patch || {} };
+  saveExtData();
+  return getUnlockSoundConfig();
+}
+function cycleUnlockVolume() {
+  const cfg = getUnlockSoundConfig();
+  if (cfg.enabled === false) return setUnlockSound({ enabled: true, volume: UNLOCK_VOLUME_STEPS[1] });
+  const idx = UNLOCK_VOLUME_STEPS.indexOf(cfg.volume);
+  const next = UNLOCK_VOLUME_STEPS[(idx < 0 ? 1 : idx + 1) % UNLOCK_VOLUME_STEPS.length];
+  if (next === 0) return setUnlockSound({ enabled: false });
+  return setUnlockSound({ enabled: true, volume: next });
+}
+function describeUnlockVolume(cfg = getUnlockSoundConfig()) {
+  if (cfg.enabled === false || cfg.volume <= 0) return "\u5DF2\u5173\u95ED";
+  if (cfg.volume <= 35) return "\u8F7B";
+  if (cfg.volume <= 70) return "\u4E2D";
+  return "\u54CD";
+}
+function audioContextCtor() {
+  if (typeof window === "undefined") return null;
+  return window.AudioContext || window.webkitAudioContext || null;
+}
+function ensureGraph() {
+  if (graphFailed) return null;
+  if (ctx) return ctx;
+  const Ctor = audioContextCtor();
+  if (!Ctor) {
+    graphFailed = true;
+    return null;
+  }
+  try {
+    ctx = new Ctor();
+    master = ctx.createGain();
+    master.gain.value = 0;
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 5200;
+    const dry = ctx.createGain();
+    dry.gain.value = 0.82;
+    master.connect(lp);
+    lp.connect(dry);
+    dry.connect(ctx.destination);
+    [[0.09, 0.18, -0.35], [0.17, 0.12, 0.35]].forEach(([time, wet, pan]) => {
+      const delay = ctx.createDelay(1);
+      delay.delayTime.value = time;
+      const damp = ctx.createBiquadFilter();
+      damp.type = "lowpass";
+      damp.frequency.value = 3e3;
+      const g = ctx.createGain();
+      g.gain.value = wet;
+      lp.connect(delay);
+      delay.connect(damp);
+      damp.connect(g);
+      if (typeof ctx.createStereoPanner === "function") {
+        const p = ctx.createStereoPanner();
+        p.pan.value = pan;
+        g.connect(p);
+        p.connect(ctx.destination);
+      } else {
+        g.connect(ctx.destination);
+      }
+    });
+    return ctx;
+  } catch (e) {
+    graphFailed = true;
+    ctx = null;
+    master = null;
+    TitaniaLogger.warn("\u89E3\u9501\u63D0\u793A\u97F3\u521D\u59CB\u5316\u5931\u8D25\uFF08\u5DF2\u9759\u9ED8\u5173\u95ED\uFF09", e);
+    return null;
+  }
+}
+function initUnlockSound() {
+  if (resumeArmed || typeof document === "undefined") return;
+  resumeArmed = true;
+  const unlock = () => {
+    try {
+      const c = ensureGraph();
+      if (c && c.state === "suspended") c.resume().catch(() => {
+      });
+    } catch (e) {
+    }
+    document.removeEventListener("pointerdown", unlock, true);
+    document.removeEventListener("keydown", unlock, true);
+  };
+  document.addEventListener("pointerdown", unlock, true);
+  document.addEventListener("keydown", unlock, true);
+}
+function playNote(c, target, { freq, at = 0, dur = 0.8, peak = 0.16, bloom = false }) {
+  const t0 = c.currentTime + 0.01 + at;
+  const parts = [
+    { ratio: 1, level: 1, type: "sine" },
+    { ratio: 2, level: 0.18, type: "sine" },
+    { ratio: 3, level: 0.07, type: "sine" }
+  ];
+  if (bloom) parts.push({ ratio: 2.76, level: 0.05, type: "sine" });
+  parts.forEach(({ ratio, level, type }) => {
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type;
+    osc.frequency.value = freq * ratio;
+    const top = peak * level;
+    g.gain.setValueAtTime(1e-4, t0);
+    g.gain.linearRampToValueAtTime(top, t0 + 7e-3);
+    g.gain.exponentialRampToValueAtTime(1e-4, t0 + dur);
+    osc.connect(g);
+    g.connect(target);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  });
+  const mallet = c.createOscillator();
+  const mg = c.createGain();
+  mallet.type = "triangle";
+  mallet.frequency.value = freq;
+  mg.gain.setValueAtTime(1e-4, t0);
+  mg.gain.linearRampToValueAtTime(peak * 0.08, t0 + 3e-3);
+  mg.gain.exponentialRampToValueAtTime(1e-4, t0 + 0.06);
+  mallet.connect(mg);
+  mg.connect(target);
+  mallet.start(t0);
+  mallet.stop(t0 + 0.09);
+}
+function playUnlockCue(kind, options = {}) {
+  const cfg = options.config || getUnlockSoundConfig();
+  if (cfg.enabled === false || cfg.volume <= 0) return false;
+  const cueName = kind === "stage" ? "fanfare" : "chime";
+  const cue = CUES[cueName];
+  if (!cue) return false;
+  const c = ensureGraph();
+  if (!c) return false;
+  try {
+    if (c.state !== "running") {
+      c.resume?.().catch(() => {
+      });
+      return false;
+    }
+    master.gain.cancelScheduledValues(c.currentTime);
+    master.gain.setValueAtTime((cfg.volume / 100) ** 2 * 0.6 * cue.gain, c.currentTime);
+    cue.notes.forEach((note) => playNote(c, master, note));
+    return true;
+  } catch (e) {
+    TitaniaLogger.warn("\u89E3\u9501\u63D0\u793A\u97F3\u64AD\u653E\u5931\u8D25\uFF08\u5DF2\u5FFD\u7565\uFF09", e);
+    return false;
+  }
+}
+function previewUnlockCues() {
+  const ok = playUnlockCue("event");
+  setTimeout(() => playUnlockCue("stage"), 420);
+  return ok;
+}
+var SOUND_KEY, UNLOCK_SOUND_DEFAULTS, UNLOCK_VOLUME_STEPS, CUES, ctx, master, graphFailed, resumeArmed;
+var init_unlockChime = __esm({
+  "src/core/unlockChime.js"() {
+    init_storage();
+    init_logger();
+    SOUND_KEY = "blindbox_reveal";
+    UNLOCK_SOUND_DEFAULTS = Object.freeze({
+      enabled: true,
+      volume: 30,
+      // 0–100；平方律映射到增益，30 已经不轻
+      cue_event: true
+      // 事件解锁的那一声可以单独关（只留里程碑的人很多）
+    });
+    UNLOCK_VOLUME_STEPS = Object.freeze([0, 30, 60, 90]);
+    CUES = {
+      // 事件解锁：纯五度，短。peak 略低于 fanfare。
+      chime: {
+        gain: 1,
+        notes: [
+          { freq: 1046.5, at: 0, dur: 0.8, peak: 0.16 },
+          // C6
+          { freq: 1568, at: 0.07, dur: 0.9, peak: 0.16 }
+          // G6
+        ]
+      },
+      // 阶段通关：琶音 + 钟感分音，长尾。顶音压低。
+      fanfare: {
+        gain: 0.85,
+        notes: [
+          { freq: 1046.5, at: 0, dur: 1.6, peak: 0.16, bloom: true },
+          // C6
+          { freq: 1318.5, at: 0.09, dur: 1.6, peak: 0.15, bloom: true },
+          // E6
+          { freq: 1568, at: 0.18, dur: 1.6, peak: 0.14, bloom: true },
+          // G6
+          { freq: 2093, at: 0.3, dur: 1.7, peak: 0.1, bloom: true }
+          // C7
+        ]
+      }
+    };
+    ctx = null;
+    master = null;
+    graphFailed = false;
+    resumeArmed = false;
+  }
+});
+
+// src/ui/sceneAdvanceBubble.js
+var sceneAdvanceBubble_exports = {};
+__export(sceneAdvanceBubble_exports, {
+  initSceneAdvanceBubble: () => initSceneAdvanceBubble,
+  notifyBlindboxUnlocks: () => notifyBlindboxUnlocks,
+  refreshSceneAdvanceBubble: () => refreshSceneAdvanceBubble
+});
+import { eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
+function getPacingConfig() {
+  const p = getExtData()?.pacing || {};
+  const role = ["system", "user", "assistant"].includes(p.inject_role) ? p.inject_role : "system";
+  const depthRaw = Number(p.inject_depth);
+  const depth = Number.isFinite(depthRaw) && depthRaw >= 0 ? Math.floor(depthRaw) : 0;
+  return { depth, role };
+}
+function savePacingConfig(patch) {
+  const data = getExtData();
+  const prev = data.pacing && typeof data.pacing === "object" ? data.pacing : {};
+  data.pacing = { ...prev, ...patch };
+  saveExtData();
+}
+function loadApi() {
+  if (!apiPromise) apiPromise = Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
+  return apiPromise;
+}
+function isEnabled2() {
+  return getExtData()?.outline_entry?.show_outline_actions === true;
+}
+function escapeHtmlText2(str2) {
+  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function briefText(text, maxLen = 48) {
+  const s = String(text || "").replace(/\s+/g, " ").trim();
+  if (!s) return "(\u7A7A)";
+  return s.length > maxLen ? `${s.slice(0, maxLen)}...` : s;
+}
+function readProgressFromSettings() {
+  const data = getExtData();
+  const plans = Array.isArray(data?.[PLANS_KEY]) ? data[PLANS_KEY] : [];
+  const sourceId = String(data?.[SCENE_SOURCE_PLAN_KEY] || "");
+  const activeId = String(data?.[ACTIVE_PLAN_KEY] || "");
+  const plan = plans.find((p) => p.id === sourceId) || plans.find((p) => p.id === activeId) || null;
+  if (!plan) return null;
+  const total = Array.isArray(plan.items) ? plan.items.length : 0;
+  if (total <= 0) return null;
+  const raw = Number(plan.progress?.itemIndex);
+  const index = Number.isFinite(raw) ? Math.max(0, Math.min(raw, total - 1)) : 0;
+  return { index, total };
+}
+function formatProgressLabel(progress) {
+  if (!progress) return "";
+  return `\u7B2C ${progress.index + 1} / ${progress.total} \u6761`;
+}
+function getActiveBlindboxInfo() {
+  try {
+    const data = getExtData();
+    const plans = Array.isArray(data?.[PLANS_KEY]) ? data[PLANS_KEY] : [];
+    if (plans.length === 0) return null;
+    const activeId = String(data?.[ACTIVE_PLAN_KEY] || "");
+    const plan = plans.find((p) => p?.id === activeId) || plans[0];
+    if (!plan || !isBlindboxPlan(plan)) return null;
+    const bb = plan.blindbox;
+    if (!bb || bb.sealed !== true || bb.unsealed === true) return null;
+    const nbb = normalizeBlindbox(bb);
+    return {
+      planId: plan.id,
+      stats: getProgressStats(nbb),
+      paused: bb.directorPaused === true,
+      // 阶段化视图：纯数据，防剧透（未解锁项在数据层就没有内容）由 blindboxReveal 保证
+      view: buildRevealView(nbb),
+      sound: getUnlockSoundConfig()
+    };
+  } catch {
+    return null;
+  }
+}
+function toggleBlindboxDirectorPaused(planId) {
+  const data = getExtData();
+  const plans = Array.isArray(data?.[PLANS_KEY]) ? data[PLANS_KEY] : [];
+  const plan = plans.find((p) => p?.id === planId);
+  if (!plan || !plan.blindbox) return;
+  plan.blindbox.directorPaused = plan.blindbox.directorPaused !== true;
+  plan.updatedAt = Date.now();
+  saveExtData();
+}
+function progressFromState(state) {
+  const total = Number(state?.total) || 0;
+  if (total <= 0) return null;
+  const index = Math.max(0, Math.min(Number(state.progress?.itemIndex) || 0, total - 1));
+  return { index, total };
+}
+function getStrip() {
+  return document.querySelector(`#chat .${STRIP_CLASS}`);
+}
+function removeAllStrips() {
+  document.querySelectorAll(`#chat .${STRIP_CLASS}`).forEach((node) => node.remove());
+}
+function getLastAiMessage() {
+  const all = document.querySelectorAll('#chat .mes[is_user="false"]');
+  for (let i = all.length - 1; i >= 0; i--) {
+    if (all[i].getAttribute("is_system") !== "true") return all[i];
+  }
+  return null;
+}
+function buildStrip() {
+  const strip = document.createElement("div");
+  strip.className = `${STRIP_CLASS} tsa-strip`;
+  strip.setAttribute("role", "button");
+  strip.setAttribute("tabindex", "0");
+  strip.setAttribute("aria-expanded", "false");
+  strip.innerHTML = `
+        <i class="fa-solid fa-clapperboard tsa-strip-icon"></i>
+        <span class="tsa-strip-title">\u5267\u60C5\u63A8\u8FDB</span>
+        <span class="tsa-strip-progress"></span>
+        <i class="fa-solid fa-chevron-down tsa-strip-arrow"></i>`;
+  strip.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const mesid = Number(strip.closest(".mes")?.getAttribute("mesid"));
+    if (!Number.isFinite(mesid)) return;
+    togglePanel(strip, mesid);
+  });
+  strip.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    event.stopPropagation();
+    const mesid = Number(strip.closest(".mes")?.getAttribute("mesid"));
+    if (!Number.isFinite(mesid)) return;
+    togglePanel(strip, mesid);
+  });
+  return strip;
+}
+function updateStrip(strip, { progress, expanded } = {}) {
+  if (!strip) return;
+  const bbInfo = getActiveBlindboxInfo();
+  if (bbInfo) {
+    $(strip).find(".tsa-strip-title").text(bbInfo.paused ? "\u76F2\u76D2\u5BFC\u6F14 \xB7 \u5DF2\u6682\u505C" : "\u76F2\u76D2\u5BFC\u6F14");
+    $(strip).find(".tsa-strip-progress").text(`\xB7 \u5DF2\u89E3\u9501 ${bbInfo.stats.passed}/${bbInfo.stats.total}`);
+    const pending = bbInfo.view.header.hasUnviewed && !bbInfo.paused;
+    $(strip).toggleClass("has-unlock", pending);
+    if (pending) {
+      if (!strip.querySelector(".tsa-strip-unlock-dot")) {
+        $(strip).find(".tsa-strip-arrow").before('<span class="tsa-strip-unlock-dot" aria-hidden="true"></span>');
+      }
+    } else {
+      $(strip).find(".tsa-strip-unlock-dot").remove();
+    }
+  } else {
+    $(strip).find(".tsa-strip-title").text("\u5267\u60C5\u63A8\u8FDB");
+    const target = progress === void 0 ? readProgressFromSettings() : progress;
+    const label = formatProgressLabel(target);
+    $(strip).find(".tsa-strip-progress").text(label ? `\xB7 ${label}` : "");
+    $(strip).removeClass("has-unlock");
+    $(strip).find(".tsa-strip-unlock-dot").remove();
+  }
+  if (expanded !== void 0) {
+    $(strip).attr("aria-expanded", String(expanded)).toggleClass("is-open", expanded);
+  }
+}
+function refreshStrips() {
+  if (!isEnabled2()) {
+    removeAllStrips();
+    destroyPanel();
+    return;
+  }
+  const last = getLastAiMessage();
+  if (!last) {
+    removeAllStrips();
+    destroyPanel();
+    return;
+  }
+  const lastMesid = Number(last.getAttribute("mesid"));
+  if (expandedForMesid !== null && expandedForMesid !== lastMesid) destroyPanel();
+  for (const node of document.querySelectorAll(`#chat .${STRIP_CLASS}`)) {
+    if (node.closest(".mes") !== last) node.remove();
+  }
+  const mesText = last.querySelector(".mes_text");
+  if (!mesText) return;
+  let strip = last.querySelector(`.${STRIP_CLASS}`);
+  if (!strip) {
+    strip = buildStrip();
+    mesText.after(strip);
+  }
+  updateStrip(strip, { progress: readProgressFromSettings(), expanded: expandedForMesid === lastMesid });
+  if (expandedForMesid === lastMesid && !document.getElementById(PANEL_ID)) {
+    restorePanel(strip);
+  }
+}
+function scheduleRefreshStrips(delay = 0) {
+  if (refreshQueued) return;
+  refreshQueued = true;
+  setTimeout(() => {
+    refreshQueued = false;
+    try {
+      refreshStrips();
+    } catch (e) {
+      TitaniaLogger.warn("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u6302\u8F7D\u5931\u8D25", e?.message || String(e));
+    }
+  }, delay);
+}
+function refreshSceneAdvanceBubble() {
+  scheduleRefreshStrips(0);
+}
+async function notifyBlindboxUnlocks(planId) {
+  try {
+    const plans = Array.isArray(getExtData()?.[PLANS_KEY]) ? getExtData()[PLANS_KEY] : [];
+    const plan = plans.find((p) => p?.id === planId);
+    if (!plan || !isBlindboxPlan(plan) || !plan.blindbox) return;
+    if (plan.blindbox.sealed !== true || plan.blindbox.unsealed === true) return;
+    const visible = isEnabled2();
+    const bb = normalizeBlindbox(plan.blindbox);
+    const u = resolveUnlocks(bb);
+    if (u.backfill) {
+      plan.blindbox = backfillRevealMarks(bb);
+      plan.updatedAt = Date.now();
+      saveExtData();
+      return;
+    }
+    if (u.freshMarks.length === 0 && u.freshStages.length === 0) return;
+    const cue = visible ? pickUnlockCue({
+      freshMarks: u.freshMarks,
+      freshStages: u.freshStages,
+      config: getUnlockSoundConfig()
+    }) : null;
+    plan.blindbox = applyRevealMarks(bb, { announced: [...u.freshMarks, ...u.freshStages] });
+    plan.updatedAt = Date.now();
+    saveExtData();
+    if (cue) playUnlockCue(cue);
+    if (!visible) return;
+    if (document.getElementById(PANEL_ID)) await refreshPanel();
+    else scheduleRefreshStrips(0);
+  } catch (e) {
+    TitaniaLogger.warn("\u76F2\u76D2\u89E3\u9501\u63D0\u793A\u5931\u8D25\uFF08\u5DF2\u5FFD\u7565\uFF0C\u4E0D\u5F71\u54CD\u6E38\u73A9\uFF09", e);
+  }
+}
+function syncStripProgress(progress) {
+  const strip = getStrip();
+  if (strip) updateStrip(strip, { progress });
+}
+function buildProgressHtml(state) {
+  if (!state.hasPlan || state.total <= 0) return "";
+  const idx = state.progress.itemIndex;
+  const percent = Math.round((idx + 1) / state.total * 100);
+  return `
+        <div class="tsa-progress">
+            <div class="tsa-progress-text">\u7B2C ${idx + 1} / ${state.total} \u6761</div>
+            <div class="tsa-bar"><div class="tsa-bar-fill" style="width:${percent}%"></div></div>
+        </div>`;
+}
+function buildPreviewHtml(state) {
+  const items = Array.isArray(state.items) ? state.items : [];
+  if (items.length === 0) return "";
+  if (previewItemIdx >= items.length) previewItemIdx = -1;
+  const head = `
+            <div class="tsa-preview-head tsa-preview-toggle ${previewOpen ? "is-open" : ""}" role="button" tabindex="0" aria-expanded="${previewOpen}" title="\u5C55\u5F00/\u6536\u8D77\u5927\u7EB2\u60C5\u8282\u9884\u89C8">
+                <i class="fa-solid fa-map"></i> \u5927\u7EB2\u60C5\u8282\u9884\u89C8
+                <span class="tsa-preview-count">${items.length} \u6761</span>
+                <i class="fa-solid fa-chevron-down tsa-preview-arrow"></i>
+            </div>`;
+  if (!previewOpen) {
+    return `<div class="tsa-preview tsa-preview--collapsed">${head}</div>`;
+  }
+  const current = state.progress.itemIndex;
+  const rows = items.map((item, idx) => {
+    const cls = idx < current ? "done" : idx === current ? state.reachedEnding ? "done" : "current" : "todo";
+    const marker = cls === "done" ? '<i class="fa-solid fa-check"></i>' : cls === "current" ? '<i class="fa-solid fa-location-dot"></i>' : '<i class="fa-regular fa-circle"></i>';
+    const expanded = previewItemIdx === idx;
+    const plotHtml = expanded ? `<div class="tsa-preview-plot tsa-preview-plot--full">${escapeHtmlText2(item.plot || "(\u7A7A)")}</div>` : `<div class="tsa-preview-plot">${escapeHtmlText2(briefText(item.plot))}</div>`;
+    const foreshadowing = String(item.foreshadowing || "").trim();
+    const foreshadowHtml = expanded && foreshadowing ? `<div class="tsa-preview-foreshadow"><i class="fa-solid fa-seedling"></i> \u4F0F\u7B14\uFF1A${escapeHtmlText2(foreshadowing)}</div>` : "";
+    return `
+            <div class="tsa-preview-item ${cls} ${expanded ? "expanded" : ""}" data-preview-idx="${idx}" title="${escapeHtmlText2(item.plot || "(\u7A7A)")}">
+                <span class="tsa-preview-marker">${marker}</span>
+                <div class="tsa-preview-main">
+                    <div class="tsa-preview-title">${escapeHtmlText2(item.time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtmlText2(item.title || "\u672A\u547D\u540D")}</div>
+                    ${plotHtml}
+                    ${foreshadowHtml}
+                </div>
+            </div>`;
+  }).join("");
+  return `<div class="tsa-preview">${head}${rows}</div>`;
+}
+function buildCandidatesHtml(state) {
+  if (!state.hasPlan) {
+    return `<div class="tsa-empty">\u8BF7\u5148\u5728\u300C\u6545\u4E8B\u5927\u7EB2\u300D\u91CC\u65B0\u5EFA\u5E76\u9009\u62E9\u4E00\u4E2A\u65B9\u6848\uFF0C\u518D\u56DE\u6765\u63A8\u8FDB\u5267\u60C5\u3002</div>`;
+  }
+  if (state.candidates.length === 0) {
+    return `<div class="tsa-empty">\u70B9\u51FB\u4E0B\u65B9\u300C\u63A8\u8350\u5267\u60C5\u300D\uFF0C\u751F\u6210 2~3 \u4E2A\u5019\u9009\u8D70\u5411\u3002</div>`;
+  }
+  return state.candidates.map((c, idx) => `
+        <div class="tsa-item ${c.used ? "used" : ""}" data-candidate-index="${idx}" title="\u70B9\u51FB\u5199\u5165\u8F93\u5165\u6846\uFF08\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\uFF09">
+            <div class="tsa-item-head">
+                <span class="tsa-item-no">#${idx + 1}</span>
+                <span class="tsa-item-title">${escapeHtmlText2(c.title || `\u5019\u9009 ${idx + 1}`)}</span>
+                ${c.used ? '<span class="tsa-item-used">\u5DF2\u5199\u5165</span>' : ""}
+            </div>
+            <div class="tsa-item-meta">\u63A8\u8FDB\u81F3\u5927\u7EB2\u7B2C ${Number(c.itemIndex) || 0} \u6761</div>
+            <div class="tsa-item-text">${escapeHtmlText2(c.text)}</div>
+        </div>
+    `).join("");
+}
+function buildPanelHtml(state) {
+  const bbInfo = getActiveBlindboxInfo();
+  if (bbInfo) {
+    return `<div id="${PANEL_ID}" class="tsa-panel">${buildBlindboxBody(bbInfo)}</div>`;
+  }
+  const tabs = `
+        <div class="tsa-mode-tabs">
+            <button type="button" class="tsa-mode-tab ${panelMode === "recommend" ? "is-active" : ""}" data-mode="recommend"><i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5</button>
+            <button type="button" class="tsa-mode-tab ${panelMode === "pacing" ? "is-active" : ""}" data-mode="pacing"><i class="fa-solid fa-gauge-high"></i> \u8282\u594F\u628A\u63A7</button>
+        </div>`;
+  const body = panelMode === "pacing" ? buildPacingBody() : buildRecommendBody(state);
+  return `<div id="${PANEL_ID}" class="tsa-panel">${tabs}${body}</div>`;
+}
+function bbEventRow(ev) {
+  const cls = ["tsa-bb-ev", `is-${ev.status}`];
+  if (ev.isFresh) cls.push("is-fresh");
+  const tag = ev.status === "skipped" ? `<span class="tsa-bb-ev-tag">\u8DF3\u8FC7</span>` : "";
+  const recap = ev.recap ? `<div class="tsa-bb-ev-recap">\u21B3 ${escapeHtmlText2(ev.recap)}</div>` : "";
+  const span = ev.spanLabel ? `<span class="tsa-bb-ev-span">${escapeHtmlText2(ev.spanLabel)}</span>` : "";
+  return `<li class="${cls.join(" ")}">
+        <span class="tsa-bb-ev-no">${ev.no}</span>
+        <div class="tsa-bb-ev-main">
+            <div class="tsa-bb-ev-text">${escapeHtmlText2(ev.content)}${tag}</div>
+            ${recap}
+        </div>
+        ${span}
+    </li>`;
+}
+function bbLockedRow(ev) {
+  const cls = ["tsa-bb-ev", "is-locked"];
+  if (ev.isTarget) cls.push("is-target");
+  const dwell = ev.dwell && ev.dwell.turns > 0 ? ev.dwell.beats > 0 ? `\u5DF2\u8D70 ${ev.dwell.turns} / ${ev.dwell.beats} \u62CD` : `\u5DF2\u8D70 ${ev.dwell.turns} \u62CD` : "\u672A\u89E3\u9501";
+  const icon = ev.isTarget ? "fa-hourglass-half" : "fa-lock";
+  return `<li class="${cls.join(" ")}">
+        <span class="tsa-bb-ev-no">${ev.no}</span>
+        <div class="tsa-bb-ev-main">
+            <div class="tsa-bb-ev-lock"><i class="fa-solid ${icon}"></i> ${dwell}</div>
+            <span class="tsa-bb-shimmer" aria-hidden="true"></span>
+        </div>
+    </li>`;
+}
+function bbStageBlock(stage, openIdx) {
+  const counts = `${stage.counts.passed}/${stage.counts.total}`;
+  const fresh = stage.isFresh ? " is-fresh" : "";
+  if (stage.state === "sealed") {
+    return `<li class="tsa-bb-stage is-sealed">
+            <div class="tsa-bb-stage-head">
+                <span class="tsa-bb-stage-mark"><i class="fa-solid fa-lock"></i></span>
+                <span class="tsa-bb-stage-label">${bbStageLabel(stage.nodeIndex)}</span>
+                <span class="tsa-bb-stage-count">${stage.counts.total} \u4EF6</span>
+            </div>
+        </li>`;
+  }
+  const rows = stage.events.map((ev) => ev.unlocked ? bbEventRow(ev) : bbLockedRow(ev)).join("");
+  const events = `<ul class="tsa-bb-events">${rows}</ul>`;
+  if (stage.state === "current") {
+    const holding = stage.isHolding ? `<div class="tsa-bb-holding">\u8FD9\u4E00\u9636\u6BB5\u7684\u5173\u952E\u4E8B\u4EF6\u90FD\u7FFB\u8FC7\u53BB\u4E86\uFF0C\u6B63\u5728\u7B49\u4E00\u4E2A\u8F6C\u6298\u771F\u6B63\u843D\u5730\u2014\u2014\u5BFC\u6F14\u8FD9\u51E0\u62CD\u4F1A\u6536\u7D27\u3002</div>` : "";
+    return `<li class="tsa-bb-stage is-current">
+            <div class="tsa-bb-stage-head">
+                <span class="tsa-bb-stage-mark">\u25C7</span>
+                <span class="tsa-bb-stage-label">${bbStageLabel(stage.nodeIndex)}</span>
+                <span class="tsa-bb-stage-count">\u8FDB\u884C\u4E2D ${counts}</span>
+            </div>
+            <div class="tsa-bb-stage-body">${holding}${events}</div>
+        </li>`;
+  }
+  const open = openIdx === stage.nodeIndex;
+  const titleText = stage.revealed ? escapeHtmlText2(stage.title || "") : "";
+  const anchor = stage.revealed && stage.anchor ? `<div class="tsa-bb-anchor"><span class="tsa-bb-anchor-tag">\u786C\u951A</span>${escapeHtmlText2(stage.anchor)}</div>` : "";
+  return `<li class="tsa-bb-stage is-cleared${stage.isHolding ? " is-holding" : ""}${fresh}" data-stage-idx="${stage.nodeIndex}">
+        <div class="tsa-bb-stage-head" role="button" tabindex="0" aria-expanded="${open ? "true" : "false"}">
+            <span class="tsa-bb-stage-mark">\u25C6</span>
+            <span class="tsa-bb-stage-label">${bbStageLabel(stage.nodeIndex)}</span>
+            <span class="tsa-bb-stage-title">${titleText}</span>
+            <span class="tsa-bb-stage-count">${counts}</span>
+            <i class="fa-solid fa-chevron-down tsa-bb-stage-arrow"></i>
+        </div>
+        <div class="tsa-bb-stage-body">${anchor}${events}</div>
+    </li>`;
+}
+function consumeUnlockMarks(info) {
+  if (!info?.planId || info.view?.header?.hasUnviewed !== true) return;
+  const plans = Array.isArray(getExtData()?.[PLANS_KEY]) ? getExtData()[PLANS_KEY] : [];
+  const plan = plans.find((x) => x?.id === info.planId);
+  if (!plan || !isBlindboxPlan(plan) || !plan.blindbox) return;
+  const bb = normalizeBlindbox(plan.blindbox);
+  plan.blindbox = bb.marksReady === true ? applyRevealMarks(bb, {
+    viewed: [...getPassedMarks(bb), ...getClearedStageIndexes(bb).map((i) => `s:${i}`)],
+    marksReady: true
+  }) : backfillRevealMarks(bb);
+  plan.updatedAt = Date.now();
+  saveExtData();
+  const strip = getStrip();
+  if (strip) updateStrip(strip);
+}
+function buildBlindboxBody(info) {
+  const view = info.view || { header: {}, stages: [] };
+  const h = view.header || {};
+  const percent = h.total > 0 ? Math.round(h.passed / h.total * 100) : 0;
+  const revealedIdx = view.stages.filter((st) => st.revealed).map((st) => st.nodeIndex);
+  const defaultOpen = revealedIdx.length ? revealedIdx[revealedIdx.length - 1] : -1;
+  const openIdx = bbStageOpenIdx === -1 ? defaultOpen : bbStageOpenIdx;
+  const dwell = h.isHolding ? "\u672C\u9636\u6BB5\u4E8B\u4EF6\u90FD\u7FFB\u8FC7\u53BB\u4E86\uFF0C\u5728\u7B49\u4E00\u4E2A\u8F6C\u6298\u843D\u5730" : h.dwell?.beats > 0 ? `\u5F53\u524D\u8FD9\u4E00\u62CD\u5DF2\u8D70 ${h.dwell.turns} / ${h.dwell.beats} \u62CD` : `\u5F53\u524D\u8FD9\u4E00\u62CD\u5DF2\u8D70 ${h.dwell?.turns ?? 0} \u62CD`;
+  const stages = view.stages.map((st) => bbStageBlock(st, openIdx)).join("");
+  const emptyHint = h.passed === 0 ? `<div class="tsa-bb-empty">\u8FD8\u6CA1\u6709\u5DF2\u63ED\u6653\u7684\u7247\u6BB5\u2014\u2014\u7167\u5E38\u73A9\u5C31\u597D\uFF0C\u8E29\u4E2D\u5173\u952E\u60C5\u8282\u65F6\u8FD9\u91CC\u4F1A\u4E00\u6BB5\u6BB5\u4EAE\u8D77\u6765\u3002</div>` : "";
+  const sound = info.sound || {};
+  const soundOn = sound.enabled !== false && Number(sound.volume) > 0;
+  const soundIcon = soundOn ? Number(sound.volume) > 70 ? "fa-volume-high" : "fa-volume-low" : "fa-volume-xmark";
+  const soundLabel = describeUnlockVolume(sound);
+  consumeUnlockMarks(info);
+  return `
+        <div class="tsa-scroll">
+            <div class="tsa-bb">
+                <div class="tsa-bb-top">
+                    <span class="tsa-bb-title"><i class="fa-solid fa-clapperboard"></i> \u76F2\u76D2\u5BFC\u6F14</span>
+                    <span class="tsa-bb-state">${info.paused ? "\u5DF2\u6682\u505C" : "\u5F15\u5BFC\u4E2D"}</span>
+                    <span class="tsa-bb-stages-count">\u9636\u6BB5 ${Math.min(h.stageIndex + 1, h.stageCount)}/${h.stageCount}</span>
+                </div>
+                <div class="tsa-progress tsa-bb-progress">
+                    <div class="tsa-progress-text">\u5DF2\u89E3\u9501 ${h.passed} / ${h.total} \u4E2A\u5173\u952E\u4E8B\u4EF6${h.skipped > 0 ? ` \xB7 \u8DF3\u8FC7 ${h.skipped}` : ""}</div>
+                    <div class="tsa-bar"><div class="tsa-bar-fill" style="width:${percent}%"></div></div>
+                </div>
+                <div class="tsa-bb-dwell">${dwell}</div>
+                ${emptyHint}
+                <ol class="tsa-bb-stages">${stages}</ol>
+            </div>
+        </div>
+        <div class="tsa-footer">
+            <button type="button" class="tsa-icon-btn" id="tsa-bb-sound" title="\u89E3\u9501\u63D0\u793A\u97F3\uFF1A${soundLabel}\uFF08\u70B9\u51FB\u5207\u6362 \u5173/\u8F7B/\u4E2D/\u54CD\uFF09" aria-label="\u5207\u6362\u89E3\u9501\u63D0\u793A\u97F3\u97F3\u91CF">
+                <i class="fa-solid ${soundIcon}"></i>
+            </button>
+            <button type="button" class="tsa-generate" id="tsa-bb-pause">
+                <i class="fa-solid ${info.paused ? "fa-play" : "fa-pause"}"></i> ${info.paused ? "\u6062\u590D\u5BFC\u6F14" : "\u6682\u505C\u5BFC\u6F14"}
+            </button>
+        </div>`;
+}
+function buildRecommendBody(state) {
+  const generateLabel = state.candidates.length > 0 ? "\u6362\u4E00\u6279" : "\u63A8\u8350\u5267\u60C5";
+  return `
+        <div class="tsa-scroll">
+            ${buildPreviewHtml(state)}
+            <div class="tsa-plan-row">
+                <label class="tsa-plan-label">\u65B9\u6848
+                    <select class="tsa-plan-select" id="tsa-plan-select">${buildPlanOptions(state)}</select>
+                </label>
+            </div>
+            ${buildProgressHtml(state)}
+            <div class="tsa-list" id="tsa-list">${buildCandidatesHtml(state)}</div>
+        </div>
+        <div class="tsa-footer">
+            <button type="button" class="tsa-chip" id="tsa-insert-chip" data-mode="${state.insertMode}" title="\u5207\u6362\u5199\u5165\u65B9\u5F0F\uFF1A\u8986\u76D6/\u8FFD\u52A0">
+                <i class="fa-solid fa-arrows-left-right"></i>
+                <span class="tsa-chip-label">${state.insertMode === "append" ? "\u8FFD\u52A0" : "\u8986\u76D6"}</span>
+            </button>
+            <button type="button" class="tsa-generate" id="tsa-generate" ${generating || !state.hasPlan ? "disabled" : ""}>
+                <i class="fa-solid ${generating ? "fa-spinner fa-spin" : "fa-forward-step"}"></i> ${generating ? "\u63A8\u8350\u4E2D..." : generateLabel}
+            </button>
+        </div>`;
+}
+function buildPlanOptions(state) {
+  return state.plans.length ? state.plans.map((p) => `<option value="${escapeHtmlText2(p.id)}" ${p.id === state.planId ? "selected" : ""}>${escapeHtmlText2(p.name)}</option>`).join("") : `<option value="">\uFF08\u6682\u65E0\u65B9\u6848\uFF09</option>`;
+}
+function buildPacingBody() {
+  const cfg = getPacingConfig();
+  const r = pacingResult;
+  const diag = r ? `<div class="tsa-pacing-diag">
+                <span class="tsa-pacing-state">${escapeHtmlText2(r.pacingState)}</span>
+                ${r.focus ? `<span class="tsa-pacing-focus">${escapeHtmlText2(r.focus)}</span>` : ""}
+                <span class="tsa-pacing-intensity">\u5F3A\u5EA6 ${r.intensity}/5</span>
+                ${r.assessment ? `<div class="tsa-pacing-assessment">${escapeHtmlText2(r.assessment)}</div>` : ""}
+            </div>` : `<div class="tsa-empty">\u70B9\u4E0B\u65B9\u300C\u5206\u6790\u8282\u594F\u300D\uFF0C\u8BA9\u5916\u90E8\u6A21\u578B\u8BFB\u6700\u8FD1\u6B63\u6587\u4E0E\u5927\u7EB2\u8FDB\u5EA6\uFF0C\u7ED9\u4E00\u6761\u53EA\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\u3002\u65E0\u5927\u7EB2\u4E5F\u80FD\u7528\u3002</div>`;
+  const presets = PACING_PRESETS.map(
+    (p) => `<button type="button" class="tsa-pacing-preset" data-preset="${escapeHtmlText2(p.text)}">${escapeHtmlText2(p.label)}</button>`
+  ).join("");
+  const armed3 = getArmedPacing();
+  const armedHtml = armed3.armed ? `<div class="tsa-pacing-armed"><i class="fa-solid fa-circle-check"></i> \u5DF2\u6B66\u88C5\uFF1A${escapeHtmlText2(armed3.summary)} \xB7 \u4E0B\u6761\u56DE\u590D\u751F\u6548</div>` : "";
+  return `
+        <div class="tsa-scroll">
+            ${diag}
+            <textarea class="tsa-pacing-input" id="tsa-pacing-directive" rows="3" placeholder="\u672C\u6B21\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91\uFF0C\u6216\u70B9\u4E0B\u65B9\u9884\u8BBE\u586B\u5165">${escapeHtmlText2(pacingDraft)}</textarea>
+            <div class="tsa-pacing-presets">${presets}</div>
+            <details class="tsa-pacing-adv">
+                <summary>\u6CE8\u5165\u9AD8\u7EA7\u8BBE\u7F6E</summary>
+                <div class="tsa-pacing-adv-fields">
+                    <label>\u6DF1\u5EA6<input type="number" id="tsa-pacing-depth" min="0" max="10000" step="1" value="${cfg.depth}"></label>
+                    <label>\u89D2\u8272
+                        <select id="tsa-pacing-role">
+                            <option value="system" ${cfg.role === "system" ? "selected" : ""}>system</option>
+                            <option value="user" ${cfg.role === "user" ? "selected" : ""}>user</option>
+                            <option value="assistant" ${cfg.role === "assistant" ? "selected" : ""}>assistant</option>
+                        </select>
+                    </label>
+                </div>
+            </details>
+            ${armedHtml}
+        </div>
+        <div class="tsa-footer">
+            <button type="button" class="tsa-chip" id="tsa-pacing-clear" title="\u6E05\u9664\u5DF2\u6B66\u88C5\u7684\u8282\u594F\u6307\u4EE4"><i class="fa-solid fa-eraser"></i> \u6E05\u9664</button>
+            <button type="button" class="tsa-generate" id="tsa-pacing-analyze" ${pacingAnalyzing ? "disabled" : ""}>
+                <i class="fa-solid ${pacingAnalyzing ? "fa-spinner fa-spin" : "fa-gauge-high"}"></i> ${pacingAnalyzing ? "\u5206\u6790\u4E2D..." : "\u5206\u6790\u8282\u594F"}
+            </button>
+            <button type="button" class="tsa-generate tsa-pacing-apply" id="tsa-pacing-apply"><i class="fa-solid fa-syringe"></i> \u5E94\u7528\u5230\u4E0B\u6B21\u56DE\u590D</button>
+        </div>`;
+}
+async function refreshPanel() {
+  const $panel = $(`#${PANEL_ID}`);
+  if ($panel.length === 0) return;
+  let state;
+  try {
+    const api = await loadApi();
+    state = api.getSceneAdvanceState();
+  } catch (e) {
+    TitaniaLogger.warn("\u5267\u60C5\u63A8\u8FDB\u72B6\u6001\u8BFB\u53D6\u5931\u8D25", e?.message || String(e));
+    return;
+  }
+  const scrollTop = $panel.find(".tsa-scroll").scrollTop() || 0;
+  $panel.html($(buildPanelHtml(state)).html());
+  $panel.find(".tsa-scroll").scrollTop(scrollTop);
+  syncStripProgress(progressFromState(state));
+}
+function destroyPanel() {
+  $(`#${PANEL_ID}`).remove();
+  expandedForMesid = null;
+  previewItemIdx = -1;
+  previewOpen = false;
+  panelMode = "recommend";
+  bbStageOpenIdx = -1;
+  const strip = getStrip();
+  if (strip) updateStrip(strip, { expanded: false });
+}
+async function restorePanel(strip) {
+  if (restoring) return;
+  restoring = true;
+  try {
+    let state;
+    try {
+      const api = await loadApi();
+      state = api.getSceneAdvanceState();
+    } catch (e) {
+      expandedForMesid = null;
+      updateStrip(strip, { expanded: false });
+      return;
+    }
+    if (document.getElementById(PANEL_ID)) return;
+    insertPanel(strip, buildPanelHtml(state));
+  } finally {
+    restoring = false;
+  }
+}
+async function expandPanel(strip, mesid) {
+  if (opening) return;
+  opening = true;
+  try {
+    let state;
+    try {
+      const api = await loadApi();
+      state = api.getSceneAdvanceState();
+    } catch (e) {
+      TitaniaLogger.error("\u5267\u60C5\u63A8\u8FDB\u6A21\u5757\u52A0\u8F7D\u5931\u8D25", e);
+      if (window.toastr) toastr.error("\u5267\u60C5\u63A8\u8FDB\u6A21\u5757\u52A0\u8F7D\u5931\u8D25", "\u5267\u60C5\u63A8\u8FDB");
+      return;
+    }
+    if (expandedForMesid !== mesid) return;
+    if (document.getElementById(PANEL_ID)) return;
+    insertPanel(strip, buildPanelHtml(state));
+    updateStrip(strip, { progress: progressFromState(state), expanded: true });
+  } finally {
+    opening = false;
+  }
+}
+async function onPickCandidate(index) {
+  const api = await loadApi();
+  const state = api.getSceneAdvanceState();
+  const candidate = state.candidates[index];
+  if (!candidate || !String(candidate.text || "").trim()) return;
+  api.writeSceneToInput(candidate.text, api.getSceneInsertMode());
+  if (state.planId) {
+    api.applySceneProgress(state.planId, candidate.itemIndex - 1);
+    api.markSceneCandidateUsed(state.planId, index);
+  }
+  await refreshPanel();
+}
+async function onGenerate() {
+  if (generating) return;
+  const api = await loadApi();
+  if (!api.ensureSceneSourceLoaded()) {
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u300C\u6545\u4E8B\u5927\u7EB2\u300D\u91CC\u65B0\u5EFA\u5E76\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u5267\u60C5\u63A8\u8FDB");
+    return;
+  }
+  generating = true;
+  await refreshPanel();
+  try {
+    await api.generateSceneRecommendations();
+  } catch (e) {
+    TitaniaLogger.error("\u5267\u60C5\u63A8\u8350\u5931\u8D25", e);
+  } finally {
+    generating = false;
+    await refreshPanel();
+  }
+}
+async function onAnalyzePacing() {
+  if (pacingAnalyzing) return;
+  pacingAnalyzing = true;
+  await refreshPanel();
+  try {
+    const api = await loadApi();
+    const result = await api.generatePacingAssessment();
+    if (result) {
+      pacingResult = result;
+      pacingDraft = result.directive;
+    }
+  } catch (e) {
+    TitaniaLogger.warn("\u8282\u594F\u5206\u6790\u5931\u8D25", e?.message || String(e));
+  } finally {
+    pacingAnalyzing = false;
+    await refreshPanel();
+  }
+}
+function onApplyPacing() {
+  const text = String($("#tsa-pacing-directive").val() || "").trim();
+  if (!text) {
+    if (window.toastr) toastr.warning("\u8BF7\u5148\u586B\u5199\u6216\u5206\u6790\u51FA\u4E00\u6761\u8282\u594F\u6307\u4EE4", "\u53D9\u4E8B\u8282\u594F");
+    return;
+  }
+  pacingDraft = text;
+  const ok = armPacingDirective(text, getPacingConfig());
+  if (ok && window.toastr) toastr.success("\u5DF2\u5E94\u7528\uFF0C\u5C06\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D", "\u53D9\u4E8B\u8282\u594F");
+  void refreshPanel();
+}
+async function togglePanel(strip, mesid) {
+  if (document.getElementById(PANEL_ID)) {
+    destroyPanel();
+    return;
+  }
+  if (opening) return;
+  expandedForMesid = mesid;
+  await expandPanel(strip, mesid);
+}
+function insertPanel(strip, html) {
+  strip.insertAdjacentHTML("afterend", html);
+  const panel = document.getElementById(PANEL_ID);
+  if (panel) bindPanelNode(panel);
+  return panel;
+}
+function bindPanelNode(panel) {
+  const $panel = $(panel);
+  $panel.on("click", ".tsa-preview-toggle", async function() {
+    previewOpen = !previewOpen;
+    if (!previewOpen) previewItemIdx = -1;
+    await refreshPanel();
+  });
+  $panel.on("click", ".tsa-preview-item", async function() {
+    const idx = Number($(this).data("preview-idx"));
+    if (!Number.isFinite(idx)) return;
+    previewItemIdx = previewItemIdx === idx ? -1 : idx;
+    await refreshPanel();
+  });
+  $panel.on("change", "#tsa-plan-select", async function() {
+    const api = await loadApi();
+    api.switchSceneSourcePlan(String($(this).val() || ""));
+    previewItemIdx = -1;
+    await refreshPanel();
+  });
+  $panel.on("click", "#tsa-insert-chip", async function() {
+    const api = await loadApi();
+    const next = api.toggleSceneInsertMode();
+    $(this).attr("data-mode", next).find(".tsa-chip-label").text(next === "append" ? "\u8FFD\u52A0" : "\u8986\u76D6");
+  });
+  $panel.on("click", "#tsa-generate", () => onGenerate());
+  $panel.on("click", "#tsa-bb-pause", async function() {
+    const info = getActiveBlindboxInfo();
+    if (!info) return;
+    toggleBlindboxDirectorPaused(info.planId);
+    const strip = getStrip();
+    if (strip) updateStrip(strip);
+    await refreshPanel();
+  });
+  $panel.on("click", "#tsa-bb-sound", async function() {
+    const next = cycleUnlockVolume();
+    if (next.enabled !== false && next.volume > 0) playUnlockCue("event", { config: next });
+    await refreshPanel();
+  });
+  const toggleStage = async function() {
+    const $stage = $(this).closest(".tsa-bb-stage");
+    const idx = Number($stage.data("stage-idx"));
+    if (!Number.isFinite(idx)) return;
+    const isOpen = $stage.find(".tsa-bb-stage-head").attr("aria-expanded") === "true";
+    bbStageOpenIdx = isOpen ? -2 : idx;
+    await refreshPanel();
+  };
+  $panel.on("click", ".tsa-bb-stage.is-cleared > .tsa-bb-stage-head", toggleStage);
+  $panel.on("keydown", ".tsa-bb-stage.is-cleared > .tsa-bb-stage-head", function(event) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    toggleStage.call(this);
+  });
+  $panel.on("click", ".tsa-item", function() {
+    onPickCandidate(Number($(this).data("candidate-index")));
+  });
+  $panel.on("click", ".tsa-mode-tab", async function() {
+    const next = String($(this).data("mode") || "recommend") === "pacing" ? "pacing" : "recommend";
+    if (next === panelMode) return;
+    panelMode = next;
+    await refreshPanel();
+  });
+  $panel.on("input", "#tsa-pacing-directive", function() {
+    pacingDraft = String($(this).val() || "");
+  });
+  $panel.on("click", ".tsa-pacing-preset", function() {
+    pacingDraft = String($(this).data("preset") || "");
+    $panel.find("#tsa-pacing-directive").val(pacingDraft);
+  });
+  $panel.on("change", "#tsa-pacing-depth", function() {
+    const n = Math.max(0, Math.floor(Number($(this).val()) || 0));
+    savePacingConfig({ inject_depth: n });
+  });
+  $panel.on("change", "#tsa-pacing-role", function() {
+    const role = String($(this).val() || "system");
+    savePacingConfig({ inject_role: ["system", "user", "assistant"].includes(role) ? role : "system" });
+  });
+  $panel.on("click", "#tsa-pacing-analyze", () => onAnalyzePacing());
+  $panel.on("click", "#tsa-pacing-apply", () => onApplyPacing());
+  $panel.on("click", "#tsa-pacing-clear", async () => {
+    clearPacingDirective();
+    await refreshPanel();
+  });
+  $panel.on("click mousedown", (event) => event.stopPropagation());
+}
+function initSceneAdvanceBubble() {
+  if (listenersBound2) {
+    scheduleRefreshStrips(0);
+    return;
+  }
+  listenersBound2 = true;
+  $(document).on("keydown.tsceneadvance", (event) => {
+    if (event.key === "Escape" && document.getElementById(PANEL_ID)) destroyPanel();
+  });
+  const rerenderEvents = [
+    event_types3.CHARACTER_MESSAGE_RENDERED,
+    event_types3.USER_MESSAGE_RENDERED,
+    event_types3.MESSAGE_SWIPED,
+    event_types3.MESSAGE_DELETED,
+    event_types3.MESSAGE_EDITED,
+    event_types3.MORE_MESSAGES_LOADED
+  ];
+  for (const eventName of rerenderEvents) {
+    if (!eventName) continue;
+    eventSource3.on(eventName, () => scheduleRefreshStrips(0));
+  }
+  if (event_types3.CHAT_CHANGED) {
+    eventSource3.on(event_types3.CHAT_CHANGED, () => {
+      destroyPanel();
+      scheduleRefreshStrips(0);
+    });
+  }
+  scheduleRefreshStrips(300);
+  TitaniaLogger.info("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u5DF2\u521D\u59CB\u5316");
+}
+var STRIP_CLASS, PANEL_ID, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, listenersBound2, refreshQueued, apiPromise, expandedForMesid, generating, opening, restoring, previewItemIdx, previewOpen, bbStageOpenIdx, panelMode, pacingResult, pacingDraft, pacingAnalyzing, PACING_PRESETS, BB_STAGE_LABELS, bbStageLabel;
+var init_sceneAdvanceBubble = __esm({
+  "src/ui/sceneAdvanceBubble.js"() {
+    init_storage();
+    init_logger();
+    init_pacingInjection();
+    init_blindboxPlan();
+    init_blindboxReveal();
+    init_unlockChime();
+    STRIP_CLASS = "titania-scene-advance-strip";
+    PANEL_ID = "t-scene-advance-panel";
+    PLANS_KEY = "story_outline_plans";
+    ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
+    SCENE_SOURCE_PLAN_KEY = "story_outline_scene_source_plan_id";
+    listenersBound2 = false;
+    refreshQueued = false;
+    apiPromise = null;
+    expandedForMesid = null;
+    generating = false;
+    opening = false;
+    restoring = false;
+    previewItemIdx = -1;
+    previewOpen = false;
+    bbStageOpenIdx = -1;
+    panelMode = "recommend";
+    pacingResult = null;
+    pacingDraft = "";
+    pacingAnalyzing = false;
+    PACING_PRESETS = [
+      { label: "\u653E\u6162", text: "\u672C\u6B21\u56DE\u590D\u653E\u6162\u8282\u594F\uFF0C\u505C\u7559\u5728\u5F53\u524D\u573A\u666F\uFF0C\u6DF1\u5316\u4EBA\u7269\u60C5\u7EEA\u4E0E\u611F\u5B98\u7EC6\u8282\uFF0C\u4E0D\u8981\u63A8\u8FDB\u5230\u65B0\u4E8B\u4EF6\u3002" },
+      { label: "\u52A0\u5FEB", text: "\u672C\u6B21\u56DE\u590D\u52A0\u5FEB\u8282\u594F\uFF0C\u7565\u53BB\u8FC7\u573A\u4E0E\u5BD2\u6684\uFF0C\u76F4\u63A5\u63A8\u8FDB\u5230\u4E0B\u4E00\u4E2A\u5173\u952E\u4E8B\u4EF6\u6216\u573A\u666F\u3002" },
+      { label: "\u8D77\u5F20\u529B", text: "\u672C\u6B21\u56DE\u590D\u63D0\u5347\u5F20\u529B\uFF0C\u5236\u9020\u51B2\u7A81\u6216\u60AC\u5FF5\u8BA9\u5C40\u52BF\u5347\u7EA7\uFF0C\u907F\u514D\u5E73\u6DE1\u4EA4\u4EE3\u3002" },
+      { label: "\u6536\u675F", text: "\u672C\u6B21\u56DE\u590D\u6536\u675F\u5F53\u524D\u8FD9\u6761\u7EBF\u7D22\uFF0C\u7ED9\u5DF2\u6709\u4F0F\u7B14\u6216\u51B2\u7A81\u4E00\u4E2A\u9636\u6BB5\u6027\u7ED3\u679C\uFF0C\u4E0D\u8981\u518D\u629B\u65B0\u7EBF\u3002" },
+      { label: "\u7559\u767D", text: "\u672C\u6B21\u56DE\u590D\u514B\u5236\u7B14\u58A8\uFF0C\u4EE5\u672A\u5C3D\u4E4B\u8BED\u548C\u7559\u767D\u6536\u5C3E\uFF0C\u7ED9\u56DE\u5473\u7A7A\u95F4\u3002" },
+      { label: "\u8F6C\u573A", text: "\u672C\u6B21\u56DE\u590D\u5B8C\u6210\u4E00\u6B21\u573A\u666F\u6216\u65F6\u95F4\u8F6C\u6362\uFF0C\u81EA\u7136\u8FC7\u6E21\u5230\u4E0B\u4E00\u4E2A\u573A\u666F\u3002" }
+    ];
+    BB_STAGE_LABELS = ["\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D", "\u4E03", "\u516B", "\u4E5D", "\u5341"];
+    bbStageLabel = (i) => `\u9636\u6BB5${BB_STAGE_LABELS[i] || ` ${i + 1}`}`;
+  }
+});
+
+// src/core/directorInjection.js
+import {
+  setExtensionPrompt as setExtensionPrompt2,
+  extension_prompt_types as extension_prompt_types2,
+  extension_prompt_roles as extension_prompt_roles2,
+  eventSource as eventSource4,
+  event_types as event_types4
+} from "../../../../script.js";
+function normalizeRole3(role) {
+  const name = String(role || "system").toLowerCase();
+  return name in ROLE_NAME_TO_ENUM2 ? name : "system";
+}
+function normalizeDepth2(depth) {
   const n = Number(depth);
   if (!Number.isFinite(n) || n < 0) return 0;
   return Math.min(1e4, Math.floor(n));
@@ -29988,28 +31878,28 @@ function armDirectorDirective(text, options = {}) {
     clearDirectorDirective();
     return false;
   }
-  const roleName = normalizeRole2(options.role);
-  setExtensionPrompt(
+  const roleName = normalizeRole3(options.role);
+  setExtensionPrompt2(
     DIRECTOR_PROMPT_KEY,
     body,
-    extension_prompt_types.IN_CHAT,
-    normalizeDepth(options.depth),
+    extension_prompt_types2.IN_CHAT,
+    normalizeDepth2(options.depth),
     false,
-    ROLE_NAME_TO_ENUM[roleName]
+    ROLE_NAME_TO_ENUM2[roleName]
   );
-  armed = true;
+  armed2 = true;
   return true;
 }
 function clearDirectorDirective() {
-  setExtensionPrompt(DIRECTOR_PROMPT_KEY, "", extension_prompt_types.IN_CHAT, 0);
-  armed = false;
+  setExtensionPrompt2(DIRECTOR_PROMPT_KEY, "", extension_prompt_types2.IN_CHAT, 0);
+  armed2 = false;
 }
 function isDirectorActive() {
   try {
     const data = getExtData();
-    const plans = Array.isArray(data?.[PLANS_KEY]) ? data[PLANS_KEY] : [];
+    const plans = Array.isArray(data?.[PLANS_KEY2]) ? data[PLANS_KEY2] : [];
     if (plans.length === 0) return false;
-    const activeId = typeof data?.[ACTIVE_PLAN_KEY] === "string" ? data[ACTIVE_PLAN_KEY] : "";
+    const activeId = typeof data?.[ACTIVE_PLAN_KEY2] === "string" ? data[ACTIVE_PLAN_KEY2] : "";
     const plan = plans.find((p) => p?.id === activeId) || plans[0];
     if (!plan || plan.kind !== BLINDBOX_KIND2) return false;
     const bb = plan.blindbox;
@@ -30018,16 +31908,56 @@ function isDirectorActive() {
     return false;
   }
 }
+function fingerprint(text) {
+  const s = String(text || "");
+  const tail = s.length > 400 ? s.slice(-400) : s;
+  let h = 2166136261;
+  for (let i = 0; i < tail.length; i += 1) {
+    h ^= tail.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+function getDirectorTrigger() {
+  const none = { eligible: false, floor: -1, swipeId: "", sig: "" };
+  try {
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return none;
+    const chat2 = SillyTavern.getContext()?.chat;
+    if (!Array.isArray(chat2) || chat2.length === 0) return none;
+    const floor = chat2.length - 1;
+    const msg = chat2[floor];
+    const text = typeof msg?.mes === "string" ? msg.mes.trim() : "";
+    const eligible = !!text && msg?.is_user !== true && msg?.is_system !== true && msg?.is_hidden !== true;
+    const swipeId = Number.isFinite(Number(msg?.swipe_id)) ? String(Math.floor(Number(msg.swipe_id))) : "0";
+    return {
+      eligible,
+      floor,
+      swipeId,
+      sig: `${chat2.length}:${floor}:${swipeId}:${text.length}:${fingerprint(text)}`
+    };
+  } catch {
+    return none;
+  }
+}
 async function onGenerationEnded() {
   if (running) return;
   if (!isDirectorActive()) {
-    if (armed) clearDirectorDirective();
+    if (armed2) clearDirectorDirective();
     return;
   }
+  const trigger = getDirectorTrigger();
+  if (!trigger.eligible || !trigger.sig || trigger.sig === lastSig) return;
+  lastSig = trigger.sig;
   running = true;
   try {
     const mod = await Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
-    if (typeof mod.runDirectorTurn === "function") await mod.runDirectorTurn();
+    let turn = null;
+    if (typeof mod.runDirectorTurn === "function") turn = await mod.runDirectorTurn(trigger);
+    const planId = turn?.planId;
+    if (planId) {
+      const bubble = await Promise.resolve().then(() => (init_sceneAdvanceBubble(), sceneAdvanceBubble_exports));
+      if (typeof bubble.notifyBlindboxUnlocks === "function") await bubble.notifyBlindboxUnlocks(planId);
+    }
   } catch (e) {
     TitaniaLogger.warn("\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u5931\u8D25\uFF08\u5DF2\u5FFD\u7565\uFF0C\u4E0D\u6253\u65AD\u5BF9\u8BDD\uFF09", e);
   } finally {
@@ -30035,34 +31965,36 @@ async function onGenerationEnded() {
   }
 }
 function initDirectorInjection() {
-  if (listenersBound) return;
-  listenersBound = true;
+  if (listenersBound3) return;
+  listenersBound3 = true;
   clearDirectorDirective();
-  eventSource2.on(event_types2.GENERATION_ENDED, onGenerationEnded);
-  if (event_types2.CHAT_CHANGED) {
-    eventSource2.on(event_types2.CHAT_CHANGED, () => {
-      if (armed) clearDirectorDirective();
+  eventSource4.on(event_types4.GENERATION_ENDED, onGenerationEnded);
+  if (event_types4.CHAT_CHANGED) {
+    eventSource4.on(event_types4.CHAT_CHANGED, () => {
+      lastSig = "";
+      if (armed2) clearDirectorDirective();
     });
   }
   TitaniaLogger.info("\u76F2\u76D2\u5BFC\u6F14\u6CE8\u5165\u5DF2\u521D\u59CB\u5316");
 }
-var DIRECTOR_PROMPT_KEY, ROLE_NAME_TO_ENUM, PLANS_KEY, ACTIVE_PLAN_KEY, BLINDBOX_KIND2, listenersBound, armed, running;
+var DIRECTOR_PROMPT_KEY, ROLE_NAME_TO_ENUM2, PLANS_KEY2, ACTIVE_PLAN_KEY2, BLINDBOX_KIND2, listenersBound3, armed2, running, lastSig;
 var init_directorInjection = __esm({
   "src/core/directorInjection.js"() {
     init_storage();
     init_logger();
     DIRECTOR_PROMPT_KEY = "TITANIA_DIRECTOR";
-    ROLE_NAME_TO_ENUM = {
-      system: extension_prompt_roles.SYSTEM,
-      user: extension_prompt_roles.USER,
-      assistant: extension_prompt_roles.ASSISTANT
+    ROLE_NAME_TO_ENUM2 = {
+      system: extension_prompt_roles2.SYSTEM,
+      user: extension_prompt_roles2.USER,
+      assistant: extension_prompt_roles2.ASSISTANT
     };
-    PLANS_KEY = "story_outline_plans";
-    ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
+    PLANS_KEY2 = "story_outline_plans";
+    ACTIVE_PLAN_KEY2 = "story_outline_active_plan_id";
     BLINDBOX_KIND2 = "blindbox";
-    listenersBound = false;
-    armed = false;
+    listenersBound3 = false;
+    armed2 = false;
     running = false;
+    lastSig = "";
   }
 });
 
@@ -30090,7 +32022,10 @@ function getGenParamDefaults() {
     // scenes 存储键沿用旧名（细纲时代遗留），现服务剧情推进推荐；2~3 条候选用不到 60k。
     scenes: { temperature: 0.8, maxTokens: 8e3, timeoutSec: 0 },
     // pacing：节奏判断只回一小段 JSON，低温要稳、上限给小。
-    pacing: { temperature: 0.3, maxTokens: 1024, timeoutSec: 0 }
+    pacing: { temperature: 0.3, maxTokens: 1024, timeoutSec: 0 },
+    // director：盲盒判定要的是「稳」不是「活」——温度压到底。v2 的回报带 evidence/criteria，
+    // 比 v1 长不少，上限给够：截断 → JSON 解析失败 → 这一拍白判。
+    director: { temperature: 0.15, maxTokens: 2048, timeoutSec: 0 }
   };
 }
 function normalizeGenParamGroup(raw, fallback) {
@@ -30111,7 +32046,8 @@ function getOutlineGenParams() {
   return {
     outline: normalizeGenParamGroup(raw.outline, defaults.outline),
     scenes: normalizeGenParamGroup(raw.scenes, defaults.scenes),
-    pacing: normalizeGenParamGroup(raw.pacing, defaults.pacing)
+    pacing: normalizeGenParamGroup(raw.pacing, defaults.pacing),
+    director: normalizeGenParamGroup(raw.director, defaults.director)
   };
 }
 function saveOutlineGenParams(params) {
@@ -30120,7 +32056,8 @@ function saveOutlineGenParams(params) {
   data[GEN_PARAMS_KEY] = {
     outline: normalizeGenParamGroup(params?.outline, defaults.outline),
     scenes: normalizeGenParamGroup(params?.scenes, defaults.scenes),
-    pacing: normalizeGenParamGroup(params?.pacing, defaults.pacing)
+    pacing: normalizeGenParamGroup(params?.pacing, defaults.pacing),
+    director: normalizeGenParamGroup(params?.director, defaults.director)
   };
   saveExtData();
 }
@@ -30134,6 +32071,24 @@ function saveRollingChatFloors(n) {
   const data = getExtData();
   const raw = Number(n);
   data[ROLLING_CHAT_FLOORS_KEY] = Number.isFinite(raw) && raw >= 0 ? Math.min(ROLLING_CHAT_FLOORS_MAX, Math.floor(raw)) : ROLLING_CHAT_FLOORS_DEFAULT;
+  saveExtData();
+}
+function getDirectorChatFloors() {
+  const data = getExtData();
+  const raw = Number(data?.[DIRECTOR_CHAT_FLOORS_KEY]);
+  if (!Number.isFinite(raw) || raw < 0) return DIRECTOR_CHAT_FLOORS_DEFAULT;
+  const n = Math.min(ROLLING_CHAT_FLOORS_MAX, Math.floor(raw));
+  return n === 0 ? getRollingChatFloors() : n;
+}
+function getDirectorChatFloorsRaw() {
+  const raw = Number(getExtData()?.[DIRECTOR_CHAT_FLOORS_KEY]);
+  if (!Number.isFinite(raw) || raw < 0) return DIRECTOR_CHAT_FLOORS_DEFAULT;
+  return Math.min(ROLLING_CHAT_FLOORS_MAX, Math.floor(raw));
+}
+function saveDirectorChatFloors(n) {
+  const data = getExtData();
+  const raw = Number(n);
+  data[DIRECTOR_CHAT_FLOORS_KEY] = Number.isFinite(raw) && raw >= 0 ? Math.min(ROLLING_CHAT_FLOORS_MAX, Math.floor(raw)) : DIRECTOR_CHAT_FLOORS_DEFAULT;
   saveExtData();
 }
 function pushRawResponseHistory(content, typeLabel = "\u6A21\u578B\u54CD\u5E94") {
@@ -30856,7 +32811,7 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 \u8BF7\u8BBE\u8BA1\u6545\u4E8B\u5927\u7EB2\uFF08plot \u7528\u5BA2\u89C2\u6897\u6982\u4F53\u6982\u8FF0\uFF0C\u4E0D\u5199\u5BF9\u767D\u4E0E\u8868\u6F14\u6027\u7EC6\u8282\uFF09\uFF0C\u5E76\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     },
     blindbox: {
-      system: `\u4F60\u662F\u6545\u4E8B\u7ED3\u6784\u8BBE\u8BA1\u5E08\uFF08\u5267\u96C6 showrunner\uFF09\uFF0C\u4E3A\u4E00\u90E8"\u76F2\u76D2\u5267\u672C"\u89C4\u5212\u5206\u5C42\u9AA8\u67B6\u2014\u2014\u4F5C\u8005\u672C\u4EBA\u4E0D\u4F1A\u770B\u5230\u4F60\u5199\u7684\u5185\u5BB9\uFF0C\u5168\u51ED\u5B83\u5728\u540E\u7EED\u6E38\u73A9\u4E2D\u88AB\u6084\u6084\u5F15\u5BFC\u7740\u6D6E\u73B0\uFF0C\u6240\u4EE5\u7ED3\u6784\u8981\u7A33\u3001\u56E0\u679C\u8981\u786C\u3002
+      system: `\u4F60\u662F\u6545\u4E8B\u7ED3\u6784\u8BBE\u8BA1\u5E08\uFF08\u5267\u96C6 showrunner\uFF09\uFF0C\u4E3A\u4E00\u90E8"\u76F2\u76D2\u5267\u672C"\u89C4\u5212\u5206\u5C42\u9AA8\u67B6\u2014\u2014\u4F5C\u8005\u672C\u4EBA\u4E0D\u4F1A\u770B\u5230\u4F60\u5199\u7684\u5185\u5BB9\uFF0C\u5168\u51ED\u5B83\u5728\u540E\u7EED\u6E38\u73A9\u4E2D\u88AB\u6084\u6084\u5F15\u5BFC\u7740\u6D6E\u73B0\uFF0C\u6240\u4EE5\u7ED3\u6784\u8981\u7A33\u3001\u56E0\u679C\u8981\u786C\u3001\u65F6\u95F4\u8981\u62C9\u5F97\u5F00\u3002
 \u4F60\u4EE5"\u4E8B\u4EF6\u4E0E\u540E\u679C"\u4E3A\u601D\u8003\u5355\u4F4D\uFF0C\u4EA7\u51FA\u4E24\u5C42\u7ED3\u6784\uFF1A
 - \u8282\u70B9\uFF08node\uFF09\uFF1D\u4E3B\u7EBF\u4E0A\u7684\u5FC5\u8FBE\u91CC\u7A0B\u7891\uFF08\u786C\u951A\uFF09\u3002\u5B83\u662F\u6545\u4E8B\u5FC5\u987B\u62B5\u8FBE\u7684\u72B6\u6001\uFF0C\u4E0D\u53EF\u7ED5\u8FC7\u3002anchor \u5B57\u6BB5\u5BA2\u89C2\u6982\u8FF0"\u8FD9\u4E2A\u8282\u70B9\u8FBE\u6210\u65F6\uFF0C\u4E16\u754C/\u4EBA\u7269\u5904\u4E8E\u4EC0\u4E48\u72B6\u6001"\u3002
 - \u5173\u952E\u4E8B\u4EF6\uFF08event\uFF09\uFF1D\u901A\u5F80\u8BE5\u8282\u70B9\u7684\u57AB\u811A\u77F3\uFF08\u8F6F\uFF09\u3002\u6BCF\u4E2A\u8282\u70B9\u4E0B\u6302\u82E5\u5E72\u5173\u952E\u4E8B\u4EF6\uFF0C\u6309\u5148\u540E\u987A\u5E8F\u628A\u5267\u60C5\u4ECE\u4E0A\u4E00\u4E2A\u8282\u70B9\u81EA\u7136\u63A8\u5230\u8FD9\u4E2A\u8282\u70B9\uFF1B\u5B83\u4EEC\u5141\u8BB8\u5728\u6E38\u73A9\u4E2D\u88AB\u652F\u7EBF\u987A\u5E26\u5B8C\u6210\u3001\u6216\u5728\u5931\u53BB\u610F\u4E49\u65F6\u8DF3\u8FC7\u3002
@@ -30865,27 +32820,49 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
 2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u662F\uFF1A
 {
-  "version": "1.0",
+  "version": "2.0",
   "story_summary": "\u4E00\u53E5\u8BDD\u6982\u62EC\uFF08\u4EC5\u4F9B\u5185\u90E8\uFF0C\u7528\u6237\u4E0D\u4F1A\u770B\u5230\uFF09",
+  "total_span": "\u6574\u4E2A\u6545\u4E8B\u6A2A\u8DE8\u7684\u603B\u65F6\u957F\uFF08\u4E0E[\u6545\u4E8B\u603B\u65F6\u957F]\u4E00\u81F4\uFF09",
   "nodes": [
     {
       "title": "\u8282\u70B9\u6807\u9898",
+      "span": "\u672C\u8282\u70B9\u8986\u76D6\u7684\u65F6\u95F4\uFF08\u5982\uFF1A\u7EA6\u4E24\u5468 / \u7EA6\u4E09\u4E2A\u6708 / \u6B21\u5E74\u6625\u5929\u8D77\u7684\u534A\u5E74\uFF09",
       "anchor": "\u8BE5\u8282\u70B9\u8FBE\u6210\u65F6\u7684\u5BA2\u89C2\u72B6\u6001\uFF08\u6897\u6982\u4F53\uFF09",
+      "anchor_when": ["\u786C\u951A\u7684\u6210\u7ACB\u6761\u4EF6\uFF08\u53EF\u89C2\u6D4B\u3001\u53EF\u6307\u8BA4\uFF09"],
       "events": [
-        { "content": "\u5173\u952E\u4E8B\u4EF6\uFF08\u6897\u6982\u4F53\uFF0C\u5BA2\u89C2\u6982\u8FF0\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u5BFC\u81F4\u4E86\u4EC0\u4E48\uFF09" }
+        {
+          "content": "\u5173\u952E\u4E8B\u4EF6\uFF08\u6897\u6982\u4F53\uFF0C\u5BA2\u89C2\u6982\u8FF0\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u5BFC\u81F4\u4E86\u4EC0\u4E48\uFF09",
+          "span": "\u672C\u4E8B\u4EF6\u8DDD\u4E0A\u4E00\u62CD\u7684\u65F6\u95F4\u8DE8\u5EA6\uFF08\u5982\uFF1A\u5F00\u573A\u5F53\u665A / \u4E09\u5929\u540E / \u4E24\u5468\u540E\uFF09",
+          "done_when": ["\u6210\u7ACB\u6761\u4EF61\uFF08\u53EF\u89C2\u6D4B\uFF09", "\u6210\u7ACB\u6761\u4EF62"],
+          "beats": 3
+        }
       ]
     }
   ]
 }
-3) \u5FC5\u987B\u751F\u6210**\u6070\u597D {{nodeCount}} \u4E2A\u8282\u70B9**\uFF1B\u6BCF\u4E2A\u8282\u70B9\u4E0B\u7684 events **\u6570\u91CF\u5C3D\u91CF\u8D34\u8FD1 {{eventsPerGap}} \u4E2A**\uFF08\u53EF\u56E0\u5267\u60C5\u5206\u91CF\u4E0A\u4E0B\u6D6E\u52A8\u4E00\u4E24\u4E2A\uFF0C\u4F46\u4E0D\u8981\u60AC\u6B8A\uFF09\u3002
-4) \u8282\u70B9\u4E4B\u95F4\u3001\u4EE5\u53CA\u540C\u4E00\u8282\u70B9\u5185\u7684\u4E8B\u4EF6\u4E4B\u95F4\uFF0C\u5FC5\u987B\u56E0\u679C\u8854\u63A5\uFF08\u4E0A\u4E00\u6B65\u7684\u540E\u679C\u9A71\u52A8\u4E0B\u4E00\u6B65\uFF09\uFF0C\u7528"\u56E0\u6B64/\u4F46\u662F"\u800C\u975E"\u7136\u540E"\u3002\u6700\u540E\u4E00\u4E2A\u8282\u70B9\u5373\u7ED3\u5C40\u3002
-5) anchor \u4E0E content \u4E00\u5F8B\u7528\u6897\u6982\u4F53\uFF08\u5BA2\u89C2\u6982\u8FF0\uFF09\u4E66\u5199\uFF0C\u8FD9\u662F\u6587\u98CE\u786C\u7EA6\u675F\uFF1A
+3) \u5FC5\u987B\u751F\u6210**\u6070\u597D {{nodeCount}} \u4E2A\u8282\u70B9**\uFF1B\u6BCF\u4E2A\u8282\u70B9\u4E0B\u7684 events **\u6570\u91CF\u5C3D\u91CF\u8D34\u8FD1 {{eventsPerGap}} \u4E2A**\uFF08\u53EF\u56E0\u5267\u60C5\u5206\u91CF\u4E0A\u4E0B\u6D6E\u52A8\u4E00\u4E24\u4E2A\uFF0C\u4F46\u4E0D\u8981\u60AC\u6B8A\uFF09\u3002\u6700\u540E\u4E00\u4E2A\u8282\u70B9\u5373\u7ED3\u5C40\u3002
+4) \u56E0\u679C\u8854\u63A5\uFF1A\u8282\u70B9\u4E4B\u95F4\u3001\u4EE5\u53CA\u540C\u4E00\u8282\u70B9\u5185\u7684\u4E8B\u4EF6\u4E4B\u95F4\uFF0C\u4E0A\u4E00\u6B65\u7684\u540E\u679C\u8981\u9A71\u52A8\u4E0B\u4E00\u6B65\uFF0C\u7528"\u56E0\u6B64/\u4F46\u662F"\u800C\u975E"\u7136\u540E"\u3002
+   \u26A0 \u56E0\u679C\u8FDE\u5F97\u7D27**\u4E0D\u7B49\u4E8E**\u65F6\u95F4\u6328\u5F97\u8FD1\uFF1A\u540E\u679C\u53EF\u4EE5\u5728\u6570\u65E5\u3001\u6570\u5468\u3001\u6570\u6708\u4E4B\u540E\u624D\u663E\u5F62\u3002\u4E0D\u8981\u4E3A\u4E86\u56E0\u679C\u7D27\u51D1\u628A\u6574\u6761\u7EBF\u538B\u5728\u8FDE\u7EED\u51E0\u5929\u91CC\u3002
+5) \u65F6\u95F4\u8DE8\u5EA6\uFF08\u4E0E\u7B2C 4 \u6761\u540C\u7B49\u91CD\u8981\uFF0C\u8FDD\u53CD\u5373\u7B97\u4E0D\u5408\u683C\uFF09\uFF1A
+   - \u5148\u8BA4\u4E0B[\u6545\u4E8B\u603B\u65F6\u957F]\uFF0C\u518D\u628A\u8FD9\u6BB5\u603B\u65F6\u957F\u5206\u914D\u7ED9\u5404\u8282\u70B9\u4E0E\u5404\u4E8B\u4EF6\uFF0C\u5206\u522B\u586B\u8FDB node.span \u4E0E event.span\uFF1B
+   - span \u5199\u6210\u65F6\u95F4\u8DE8\u5EA6\u6807\u8BB0\u800C\u975E\u77AC\u65F6\u65F6\u523B\uFF0C\u683C\u5F0F\u53C2\u8003\uFF1A\u5F00\u573A\u5F53\u665A / \u4E09\u5929\u540E / \u4E00\u5468\u540E / \u534A\u5E74\u540E / \u6B21\u5E74\u6625\u5929 / \u4E09\u5E74\u540E\uFF1B
+   - \u7981\u6B62\u9ED8\u8BA4\u9010\u65E5\u63A8\u8FDB\uFF0C\u7981\u6B62\u628A\u6574\u4E2A\u6545\u4E8B\u538B\u7F29\u5728\u8FDE\u7EED\u6570\u65E5\u4E4B\u5185\uFF08\u9664\u975E[\u6545\u4E8B\u603B\u65F6\u957F]\u660E\u786E\u5C31\u662F\u77ED\u65F6\u95F4\u7EBF\uFF0C\u5982\u5355\u65E5\u5BC6\u5BA4\uFF09\uFF1B
+   - \u540C\u4E00\u8282\u70B9\u5185\u7684\u76F8\u90BB\u4E8B\u4EF6\u4E4B\u95F4\u4E5F\u8981\u6709\u53EF\u611F\u77E5\u7684\u95F4\u9694\uFF0C\u4E0D\u8981\u8FDE\u6210"\u5F53\u665A\u2192\u6B21\u65E5\u2192\u7B2C\u4E09\u5929"\u7684\u8FDE\u7EED\u573A\u666F\u4E32\uFF1B
+   - **\u300C\u672C\u8282\u70B9\u6700\u540E\u4E00\u4E2A\u4E8B\u4EF6 \u2192 \u4E0B\u4E00\u4E2A\u8282\u70B9\u300D\u662F\u5168\u6BB5\u6700\u5927\u7684\u4E00\u8DF3**\uFF1A\u8DE8\u8282\u70B9\u5FC5\u987B\u53D1\u751F\u660E\u663E\u7684\u65F6\u95F4\u63A8\u79FB\uFF1B
+   - \u8DF3\u8FC7\u7684\u90A3\u6BB5\u65F6\u95F4\u91CC\u53D1\u751F\u7684\u5173\u952E\u53D8\u5316\uFF0C\u76F4\u63A5\u5199\u8FDB content / anchor\uFF0C\u4E0D\u8981\u7559\u7A7A\u767D\u3002
+6) done_when \u662F\u8FD9\u4E2A\u4E8B\u4EF6"\u7B97\u4E0D\u7B97\u5DF2\u7ECF\u53D1\u751F"\u7684\u5224\u5B9A\u6807\u51C6\u2014\u2014\u540E\u53F0\u5BFC\u6F14\u4F1A\u62FF\u5B83\u5BF9\u7740\u6B63\u6587\u9010\u6761\u6838\u5BF9\uFF0C\u6240\u4EE5\uFF1A
+   - \u6BCF\u6761\u90FD\u5FC5\u987B\u53EF\u89C2\u6D4B\u3001\u53EF\u6307\u8BA4\uFF1A\u8C01\u77E5\u9053\u4E86\u4EC0\u4E48 / \u8C01\u4E0E\u8C01\u8FBE\u6210\u4EC0\u4E48 / \u67D0\u7269\u5230\u4E86\u8C01\u624B\u4E0A / \u67D0\u5173\u7CFB\u6216\u5904\u5883\u53D1\u751F\u4EC0\u4E48\u4E0D\u53EF\u9006\u53D8\u5316 / \u67D0\u4E8B\u5B9E\u88AB\u516C\u5F00\uFF1B
+   - \u7981\u6B62\u4E0D\u53EF\u9A8C\u8BC1\u7684\u5FC3\u7406\u4E0E\u7A0B\u5EA6\u63CF\u8FF0\uFF08"\u5173\u7CFB\u66F4\u4EB2\u5BC6\u4E86""\u6C14\u6C1B\u53D8\u7D27\u5F20"\u90FD\u4E0D\u7B97\u6761\u4EF6\uFF09\uFF1B
+   - \u6BCF\u4E2A\u4E8B\u4EF6 1~3 \u6761\uFF0C\u5B81\u5C11\u52FF\u6EE5\uFF1B\u6761\u6761\u72EC\u7ACB\uFF0C\u522B\u628A\u540C\u4E00\u4EF6\u4E8B\u62C6\u6210\u4E24\u6761\u3002
+7) beats \u662F\u8FD9\u4E2A\u4E8B\u4EF6\u81F3\u5C11\u5E94\u5F53\u5360\u636E\u7684"\u56DE\u590D\u62CD\u6570"\uFF08\u6574\u6570 1~8\uFF09\uFF1A\u65F6\u95F4\u8DE8\u5EA6\u5927\u3001\u4FE1\u606F\u91CF\u5927\u3001\u60C5\u7EEA\u8F6C\u6298\u91CD\u7684\u7ED9 3~5\uFF0C\u8FC7\u573A\u6027\u8D28\u7684\u7ED9 1~2\u3002\u5B83\u51B3\u5B9A\u5BFC\u6F14\u591A\u4E45\u4E4B\u540E\u624D\u5141\u8BB8\u628A\u8FD9\u4E2A\u4E8B\u4EF6\u5224\u4E3A\u5DF2\u8FBE\u6210\u3002
+8) anchor \u4E0E content \u4E00\u5F8B\u7528\u6897\u6982\u4F53\uFF08\u5BA2\u89C2\u6982\u8FF0\uFF09\u4E66\u5199\uFF0C\u8FD9\u662F\u6587\u98CE\u786C\u7EA6\u675F\uFF1A
    - \u53EA\u5199"\u53D1\u751F\u4E86\u4EC0\u4E48\u4E8B\u4EF6\u3001\u4EA7\u751F\u4EC0\u4E48\u540E\u679C\u3001\u4EBA\u7269\u5904\u5883\u6216\u5173\u7CFB\u53D1\u751F\u4EC0\u4E48\u53D8\u5316"\uFF0C\u7528\u9648\u8FF0\u53E5\uFF1B
    - \u7981\u6B62\u5BF9\u767D\u4E0E\u53F0\u8BCD\u3001\u7981\u6B62\u795E\u6001/\u52A8\u4F5C/\u8BED\u6C14\u7B49\u8868\u6F14\u6027\u63CF\u5199\u4E0E\u5FC3\u7406\u6D3B\u52A8\u6E32\u67D3\uFF1B
    - \u6B63\u4F8B\uFF1A\u6797\u7136\u6574\u7406\u9057\u7269\u65F6\u53D1\u73B0\u4E00\u5F20\u964C\u751F\u5408\u5F71\uFF0C\u8FFD\u95EE\u4E0B\u6BCD\u4EB2\u627F\u8BA4\u4ED6\u6709\u4E00\u4E2A\u4ECE\u672A\u8C0B\u9762\u7684\u59D0\u59D0\u3002
    - \u53CD\u4F8B\uFF1A\u6797\u7136\u98A4\u6296\u7740\u62FF\u8D77\u7167\u7247\uFF0C\u6BCD\u4EB2\u82E6\u7B11\u7740\u522B\u8FC7\u8138\u53BB\u3002
-6) \u4E25\u683C\u9075\u5B88\u4E0B\u65B9[\u7EA2\u7EBF/\u7981\u5FCC]\u2014\u2014\u5176\u4E2D\u5217\u51FA\u7684\u5185\u5BB9\u4E00\u5F8B\u4E0D\u5F97\u51FA\u73B0\u5728\u4EFB\u4F55\u8282\u70B9\u6216\u4E8B\u4EF6\u91CC\u3002
-7) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+9) \u4E25\u683C\u9075\u5B88\u4E0B\u65B9[\u7EA2\u7EBF/\u7981\u5FCC]\u2014\u2014\u5176\u4E2D\u5217\u51FA\u7684\u5185\u5BB9\u4E00\u5F8B\u4E0D\u5F97\u51FA\u73B0\u5728\u4EFB\u4F55\u8282\u70B9\u6216\u4E8B\u4EF6\u91CC\u3002
+10) \u8FD4\u56DE\u524D\u81EA\u68C0\uFF1A\u8282\u70B9\u6570\u662F\u5426\u6070\u597D {{nodeCount}}\uFF1B\u6240\u6709 span \u662F\u5426\u6CBF\u65F6\u95F4\u8F74\u5355\u8C03\u524D\u8FDB\u3001\u7D2F\u52A0\u662F\u5426\u2248[\u6545\u4E8B\u603B\u65F6\u957F]\uFF1B\u662F\u5426\u51FA\u73B0"\u6574\u672C\u6324\u5728\u51E0\u5929\u5185"\uFF1B\u6BCF\u4E2A\u4E8B\u4EF6\u662F\u5426\u90FD\u6709 done_when \u4E0E beats\u3002\u4E0D\u6EE1\u8DB3\u5C31\u91CD\u6392\u540E\u518D\u8FD4\u56DE\u3002
+11) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
       user: `[\u89D2\u8272\u8BBE\u5B9A]
 {{persona}}
 
@@ -30904,11 +32881,14 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 [\u6545\u4E8B\u57FA\u8C03\u4E0E\u8D70\u5411]
 {{storyInput}}
 
+[\u6545\u4E8B\u603B\u65F6\u957F]
+{{timescale}}
+
 [\u7EA2\u7EBF/\u7981\u5FCC]
 {{redlines}}
 
 [\u4EFB\u52A1]
-\u8BF7\u4E3A\u8FD9\u90E8\u76F2\u76D2\u5267\u672C\u8BBE\u8BA1\u5206\u5C42\u9AA8\u67B6\uFF1A\u6070\u597D {{nodeCount}} \u4E2A\u8282\u70B9\u3001\u6BCF\u8282\u70B9\u7EA6 {{eventsPerGap}} \u4E2A\u5173\u952E\u4E8B\u4EF6\uFF0Canchor \u4E0E content \u7528\u5BA2\u89C2\u6897\u6982\u4F53\uFF0C\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
+\u8BF7\u4E3A\u8FD9\u90E8\u76F2\u76D2\u5267\u672C\u8BBE\u8BA1\u5206\u5C42\u9AA8\u67B6\uFF1A\u6070\u597D {{nodeCount}} \u4E2A\u8282\u70B9\u3001\u6BCF\u8282\u70B9\u7EA6 {{eventsPerGap}} \u4E2A\u5173\u952E\u4E8B\u4EF6\uFF1B\u628A[\u6545\u4E8B\u603B\u65F6\u957F]\u5206\u914D\u8FDB\u5404\u7EA7 span\uFF08\u8DE8\u8282\u70B9\u8981\u6709\u660E\u663E\u65F6\u95F4\u63A8\u79FB\uFF09\uFF0C\u6BCF\u4E2A\u4E8B\u4EF6\u90FD\u8981\u7ED9 done_when \u4E0E beats\uFF0Canchor \u4E0E content \u7528\u5BA2\u89C2\u6897\u6982\u4F53\u3002\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     },
     rolling: {
       system: `\u4F60\u662F\u5267\u60C5\u63A8\u8FDB\u7B56\u5212\u3002\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\u5DF2\u7ED9\u5B9A\uFF08\u6700\u540E\u4E00\u6761\u5373\u7ED3\u5C40\uFF09\u3002\u4F60\u7684\u804C\u8D23\u662F\uFF1A\u81EA\u884C\u5224\u65AD\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\uFF0C\u5E76\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF0C\u4F9B\u73A9\u5BB6\u6311\u9009\u540E\u4F5C\u4E3A\u4E0B\u4E00\u56DE\u5408\u7684\u73A9\u5BB6\u8F93\u5165\u6765\u63A8\u8FDB\u6545\u4E8B\u3002
@@ -31029,38 +33009,66 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
     },
     director: {
       system: `\u4F60\u662F\u4E00\u90E8"\u76F2\u76D2\u5267\u672C"\u7684\u9690\u5F62\u5BFC\u6F14\u3002\u5B8C\u6574\u5206\u5C42\u9AA8\u67B6\uFF08\u8282\u70B9=\u5FC5\u8FBE\u786C\u951A\u3001\u5173\u952E\u4E8B\u4EF6=\u901A\u5F80\u8282\u70B9\u7684\u57AB\u811A\u77F3\uFF09\u4E0E\u5F53\u524D\u8FDB\u5EA6\u5DF2\u7ED9\u5B9A\u3002\u8BFB[\u6700\u8FD1\u6B63\u6587]\uFF0C\u53EA\u505A\u5224\u5B9A\u3001\u4E0D\u5199\u6B63\u6587\uFF1A
-1) \u54EA\u4E9B\u5173\u952E\u4E8B\u4EF6\u5728\u6700\u8FD1\u6B63\u6587\u91CC\u5DF2\u7ECF\u8FBE\u6210\uFF08done\uFF09\uFF0C\u6216\u88AB\u73A9\u5BB6\u7684\u652F\u7EBF\u5E26\u8FC7/\u5DF2\u5931\u53BB\u610F\u4E49\uFF08skipped\uFF09\uFF1B
-2) \u4E0B\u4E00\u6B65\u8BE5\u628A\u6545\u4E8B\u5F80\u54EA\u4E2A\u5173\u952E\u4E8B\u4EF6\u63A8\uFF08target\uFF09\uFF1B
-3) \u7ED9\u4E00\u53E5\u53EA\u7EA6\u675F"\u4E0B\u4E00\u6761\u56DE\u590D"\u7684\u5F15\u5BFC\uFF08directive\uFF09\u4E0E\u529B\u5EA6\uFF08intensity\uFF09\u3002
+1) \u300C\u8FD8\u6CA1\u7FFB\u8FC7\u53BB\u300D\u7684\u5173\u952E\u4E8B\u4EF6\u5728\u8FD9\u4E00\u62CD\u91CC\u7684\u8FDB\u5C55\uFF08done / skipped / progress \u4E09\u6863\uFF0C\u89C1\u4E0B\uFF09\uFF1B
+2) \u4E00\u53E5\u53EA\u7EA6\u675F"\u4E0B\u4E00\u6761\u56DE\u590D"\u7684\u5F15\u5BFC\uFF08directive\uFF09\u4E0E\u529B\u5EA6\uFF08intensity\uFF09\uFF1B
+3) \u82E5\u672C\u8282\u70B9\u7684\u5173\u952E\u4E8B\u4EF6\u90FD\u5DF2\u7FFB\u8FC7\uFF0C\u786E\u8BA4\u786C\u951A\u662F\u5426\u771F\u7684\u5151\u73B0\uFF08anchor_met\uFF09\u3002
 
-[\u4E24\u7EA7\u5F3A\u5EA6\u2014\u2014\u8FD9\u662F\u5173\u952E]
-- \u5173\u952E\u4E8B\u4EF6\u662F\u8F6F\u57AB\u811A\u77F3\uFF1A\u5F53\u6B63\u6587\u81EA\u5DF1\u6B63\u671D target \u81EA\u7136\u63A8\u8FDB\u65F6\uFF0Cdirective \u7559\u7A7A\u3001intensity \u586B "none"\uFF08\u5728\u7EBF\u4E0A\u5C31\u95ED\u5634\uFF0C\u7EDD\u4E0D\u751F\u786C railroad\uFF09\uFF1B\u53EA\u5728\u8F7B\u5FAE\u8DD1\u504F\u65F6\u7528 "gentle" \u8F7B\u63A8\u3002
-- \u8282\u70B9\u662F\u786C\u951A\uFF1A\u5F53\u6B63\u6587\u5DF2\u63A5\u8FD1\u5F53\u524D\u8282\u70B9\u7684\u6700\u540E\u4E00\u4E2A\u4E8B\u4EF6\u3001\u6216\u660E\u663E\u8981\u8D8A\u8FC7\u672C\u8282\u70B9\u5F80\u540E\u8DD1\u504F\uFF0C\u7528 "firm" \u628A\u4E3B\u7EBF\u6536\u56DE\u6765\u3002
-- \u652F\u7EBF\u81EA\u7531\uFF1A\u73A9\u5BB6\u6545\u610F\u8DD1\u652F\u7EBF\u662F\u4E50\u8DA3\uFF0C\u5BB9\u5FCD\u51E0\u62CD\u522B\u6025\u7740\u62FD\uFF1B\u53EA\u6709\u8FDF\u8FDF\u56DE\u4E0D\u6765\u624D\u5347\u7EA7\u529B\u5EA6\u3002\u786E\u5B9E\u5DF2 moot \u7684\u4E8B\u4EF6\u6807 skipped\uFF0C\u5E76\u628A target \u987A\u52BF\u632A\u5230\u66F4\u5408\u9002\u7684\u4F4D\u7F6E\uFF0C\u800C\u4E0D\u662F\u786C\u903C\u56DE\u53BB\u3002
+[\u4E09\u6863\u56DE\u62A5\u2014\u2014\u6700\u91CD\u8981\u7684\u4E00\u8282]
+- done\uFF1A\u8FD9\u4E2A\u4E8B\u4EF6\u5DF2\u7ECF**\u5151\u73B0\u5B8C\u6BD5**\u3002\u5FC5\u987B\u540C\u65F6\u7ED9\uFF1A\u8BE5\u4E8B\u4EF6 done_when \u91CC\u88AB\u771F\u5B9E\u5151\u73B0\u7684\u6761\u76EE\u4E0B\u6807\uFF08criteria_met\uFF09\uFF0B evidence\uFF08\u6B63\u6587\u91CC\u7684\u6307\u8BA4\uFF0C\u7167\u6284\u6216\u7D27\u8D34\u539F\u6587\u7684\u4E00\u53E5\uFF09\uFF0B evidence_floor\uFF08\u8BE5\u6B63\u6587\u6240\u5728\u7684 #\u697C\u5C42\u53F7\uFF09\u3002
+- progress\uFF1A\u8FD9\u4E00\u62CD\u5728\u671D\u5B83\u63A8\u8FDB\uFF0C\u4F46\u8FD8\u6CA1\u5151\u73B0\u5B8C\u3002**\u8FD9\u662F\u9ED8\u8BA4\u6863**\u2014\u2014\u62FF\u4E0D\u51C6\u5C31\u62A5 progress\uFF0C\u522B\u62FF done \u51D1\u3002progress \u4E0D\u6D88\u8017\u4E8B\u4EF6\uFF0C\u53EA\u7559\u4E00\u6761\u7B14\u8BB0\u7ED9\u4E0B\u56DE\u5408\u7684\u4F60\u81EA\u5DF1\u770B\u3002
+- skipped\uFF1A\u5B83\u5DF2\u4E0D\u53EF\u80FD\u53D1\u751F\u6216\u5DF2\u5931\u53BB\u610F\u4E49\u3002\u5FC5\u987B\u7ED9 reason\uFF08moot=\u524D\u63D0\u4E0D\u6210\u7ACB / superseded=\u88AB\u652F\u7EBF\u53D6\u4EE3 / refused=\u73A9\u5BB6\u660E\u786E\u62D2\u7EDD\uFF09\uFF0B evidence\u3002
 
-[\u5DF2\u8FBE\u6210\u7684\u8BB0\u5FC6\u2014\u2014\u52A1\u5FC5\u9075\u5B88]
-- [\u76F2\u76D2\u9AA8\u67B6]\u91CC status \u5DF2\u662F done/skipped \u7684\u4E8B\u4EF6\u5C31\u662F"\u5DF2\u7ECF\u7FFB\u8FC7\u53BB\u7684\u7BC7\u7AE0"\uFF0C\u5176 recap \u5B57\u6BB5\u662F\u4E0A\u51E0\u56DE\u5408\u8BB0\u4E0B\u7684\u5B9E\u9645\u7ECF\u8FC7\u3002
-- [\u6700\u8FD1\u6B63\u6587]\u53EF\u80FD\u88AB\u603B\u7ED3\u63D2\u4EF6\u6298\u53E0\u6216\u9690\u85CF\uFF0C\u53EA\u5269\u5F88\u77ED\u4E00\u622A\u751A\u81F3\u7A7A\u767D\u3002\u6240\u4EE5\uFF1A\u51E1\u9AA8\u67B6\u91CC\u5DF2 done/skipped \u7684\u4E8B\u4EF6\uFF0C\u4E00\u5F8B\u5F53\u4F5C\u65E2\u6210\u4E8B\u5B9E\uFF0C**\u7EDD\u4E0D**\u56E0\u4E3A\u6700\u8FD1\u6B63\u6587\u91CC\u770B\u4E0D\u5230\u5C31\u628A\u5B83\u91CD\u65B0\u6807\u56DE\u672A\u8FBE\u6210\u3001\u4E5F\u4E0D\u8981\u518D\u628A target \u5F80\u56DE\u62E8\u5230\u5B83\u8EAB\u4E0A\u3002\u53EA\u5224\u65AD"\u8FD8\u6CA1\u7FFB\u8FC7\u53BB"\u7684\u4E8B\u4EF6\u6709\u6CA1\u6709\u5728\u8FD9\u6700\u65B0\u4E00\u62CD\u91CC\u63A8\u8FDB\u3002
-- \u6BCF\u6807\u4E00\u4E2A\u4E8B\u4EF6 done/skipped\uFF0C\u90FD\u8981\u5728\u8BE5\u6761 update \u91CC\u5199\u4E00\u53E5 recap\uFF1A\u5BA2\u89C2\u8BB0\u4E0B\u5B83\u5728\u73A9\u5BB6\u7684\u6545\u4E8B\u91CC\u5B9E\u9645\u662F\u600E\u4E48\u53D1\u751F/\u600E\u4E48\u88AB\u5E26\u8FC7\u7684\uFF08\u4E00\u53E5\u8BDD\uFF0C\u4E2D\u6587\uFF09\uFF0C\u4F9B\u4EE5\u540E\u56DE\u987E\u2014\u2014\u8FD9\u53E5\u8BDD\u4F1A\u88AB\u6C38\u4E45\u4FDD\u5B58\uFF0C\u4E0D\u968F\u697C\u5C42\u9690\u85CF\u4E22\u5931\u3002
+[\u5224\u5B9A\u7EAA\u5F8B\u2014\u2014\u52A1\u5FC5\u9075\u5B88]
+1) **\u4F60\u7684\u5F15\u5BFC\u88AB\u7167\u505A \u2260 \u4E8B\u4EF6\u8FBE\u6210\u3002** \u4E0A\u4E00\u62CD\u4F60\u8BA9\u5199\u4F5C\u6A21\u578B"\u5F80 X \u63A8"\uFF0C\u5B83\u5199\u4E86\u4E00\u7B14\u671D X \u7684\u52A8\u4F5C\uFF0C\u90A3\u53EA\u662F progress\uFF1B\u53EA\u6709 done_when \u771F\u7684\u88AB\u5151\u73B0\u624D\u662F done\u3002
+2) **\u53EA\u6709\u65B0\u6B63\u6587\u7B97\u65B0\u8BC1\u636E\u3002** [\u5F53\u524D\u76EE\u6807\u6307\u9488]\u5199\u660E\u4E86\u4E0A\u6B21\u5224\u5B9A\u5230\u7B2C\u51E0\u697C\uFF0Cevidence_floor \u5FC5\u987B\u5927\u4E8E\u5B83\uFF1B\u62FF\u66F4\u65E9\u697C\u5C42\u5F53\u4F9D\u636E\u7684\u56DE\u62A5\u4F1A\u88AB\u7CFB\u7EDF\u4E22\u5F03\u3002
+3) **\u7FFB\u8FC7\u53BB\u7684\u4E0D\u8BB8\u7FFB\u56DE\u3002** \u9AA8\u67B6\u91CC status \u5DF2\u662F done/skipped \u7684\u4E8B\u4EF6\u662F\u65E2\u6210\u4E8B\u5B9E\uFF08recap \u662F\u5F53\u65F6\u8BB0\u4E0B\u7684\u5B9E\u9645\u7ECF\u8FC7\uFF09\u3002[\u6700\u8FD1\u6B63\u6587]\u53EF\u80FD\u88AB\u603B\u7ED3\u63D2\u4EF6\u6298\u53E0/\u9690\u85CF\u3001\u53EA\u5269\u5F88\u77ED\u4E00\u622A\u751A\u81F3\u7A7A\u767D\uFF0C\u8FD9\u4E5F\u4E0D\u6784\u6210\u7FFB\u56DE\u7684\u7406\u7531\u2014\u2014\u4F60\u53EA\u5224\u65AD\u8FD8\u6CA1\u7FFB\u8FC7\u53BB\u7684\u4E8B\u4EF6\u3002
+4) **\u4E00\u62CD\u4E00\u6B65\u3002** \u540C\u4E00\u56DE\u5408\u6700\u591A\u53EA\u6709\u4E00\u4E2A\u4E8B\u4EF6\u4F1A\u88AB\u63A5\u53D7\u4E3A\u7FFB\u7BC7\uFF08done \u4E0E skipped \u5171\u7528\u8FD9\u4E00\u4E2A\u914D\u989D\uFF0C\u591A\u62A5\u7684\u6309\u4E0B\u6807\u53D6\u6700\u65E9\u4E00\u4E2A\uFF0C\u5176\u4F59\u81EA\u52A8\u964D\u7EA7\u4E3A progress\uFF09\u3002\u522B\u60F3\u4E00\u53E3\u6C14\u63A8\u5B8C\u4E00\u4E2A\u8282\u70B9\u3002
+4b) **\u53EA\u8BB8\u52A8\u5F53\u524D\u8282\u70B9\u4EE5\u5185\u7684\u4E8B\u4EF6**\uFF08\u542B\u5F53\u524D\u76EE\u6807\u672C\u8EAB\uFF09\u3002\u8D8A\u8FC7\u5F53\u524D\u8282\u70B9\u53BB\u5224\u66F4\u540E\u9762\u7684\u4E8B\u4EF6\u8FBE\u6210/\u8DF3\u8FC7\uFF0C\u4E00\u5F8B\u88AB\u964D\u7EA7\u2014\u2014\u56E0\u679C\u4E0A\u540E\u9762\u7684\u8282\u70B9\u4EE5\u672C\u8282\u70B9\u4E3A\u524D\u63D0\uFF0C\u8D8A\u7EA7\u5224\u5B9A\u57FA\u672C\u90FD\u662F\u731C\u3002\u786E\u5B9E\u5DF2 moot \u7684\uFF0C\u7B49\u6307\u9488\u8D70\u5230\u90A3\u513F\u518D\u6807\u3002
+5) **\u62CD\u6570\u9884\u7B97\u3002** beats \u662F\u8BE5\u4E8B\u4EF6\u81F3\u5C11\u5E94\u5360\u7684\u56DE\u590D\u6570\uFF0Cturns_spent \u662F\u5B83\u5B9E\u9645\u5DF2\u5360\u7684\u62CD\u6570\uFF1Bturns_spent < beats \u65F6\u5224 done \u9700\u8981 confidence=high\uFF08\u4E25\u683C\u6863\u4E00\u5F8B\u4E0D\u63A5\u53D7\uFF09\u3002\u8BE5\u6162\u7684\u5730\u65B9\u522B\u62A2\u3002
+6) **\u652F\u7EBF\u81EA\u7531\u3002** \u73A9\u5BB6\u6545\u610F\u8DD1\u652F\u7EBF\u662F\u4E50\u8DA3\uFF0C\u5BB9\u5FCD\u51E0\u62CD\u522B\u6025\u7740\u62FD\uFF1B\u53EA\u6709\u8FDF\u8FDF\u56DE\u4E0D\u6765\u624D\u5347\u7EA7\u529B\u5EA6\u3002
+7) target \u53EA\u662F\u4F60\u7684\u5EFA\u8BAE\uFF1A\u6807\u51C6/\u4E25\u683C\u6863\u4E0B\u7CFB\u7EDF\u4F1A\u81EA\u884C\u628A\u6307\u9488\u63A8\u5BFC\u6210"\u7B2C\u4E00\u4E2A\u8FD8\u6CA1\u7FFB\u8FC7\u53BB\u7684\u4E8B\u4EF6"\u3002\u60F3\u8DE8\u8FC7\u4E2D\u95F4\u4E8B\u4EF6\uFF0C\u552F\u4E00\u7684\u6B63\u9053\u662F\u628A\u5B83\u663E\u5F0F\u62A5\u6210 skipped\uFF08\u4E14\u8981\u8FC7\u4E0A\u9762\u7684\u95F8\u95E8\uFF09\u3002
 
-[directive \u5199\u6CD5] \u5B83\u662F\u7ED9\u5199\u4F5C\u6A21\u578B\u7684\u5E55\u540E\u65C1\u767D\u63D0\u793A\uFF08\u73A9\u5BB6\u770B\u4E0D\u5230\uFF09\uFF0C\u7528\u5BA2\u89C2\u7948\u4F7F\u53E5\u70B9\u4E00\u4E2A\u65B9\u5411\u5373\u53EF\uFF0C\u4E0D\u66FF\u89D2\u8272\u5199\u5BF9\u767D\u3001\u4E0D\u66FF\u89D2\u8272\u884C\u52A8\uFF1B\u53EF\u4EE5\u5177\u4F53\u6307\u5411 target \u4E8B\u4EF6\u8BE5\u5982\u4F55\u81EA\u7136\u6D6E\u73B0\u3002
+[\u4E24\u7EA7\u5F3A\u5EA6]
+- \u5173\u952E\u4E8B\u4EF6\u662F\u8F6F\u57AB\u811A\u77F3\uFF1A\u5F53\u6B63\u6587\u81EA\u5DF1\u6B63\u671D\u76EE\u6807\u81EA\u7136\u63A8\u8FDB\u65F6\uFF0Cdirective \u7559\u7A7A\u3001intensity \u586B "none"\uFF08\u5728\u7EBF\u4E0A\u5C31\u95ED\u5634\uFF0C\u7EDD\u4E0D\u751F\u786C railroad\uFF09\uFF1B\u53EA\u5728\u8F7B\u5FAE\u8DD1\u504F\u65F6\u7528 "gentle" \u8F7B\u63A8\u3002
+- \u8282\u70B9\u662F\u786C\u951A\uFF1A\u5F53\u6B63\u6587\u5DF2\u63A5\u8FD1\u672C\u8282\u70B9\u6700\u540E\u4E00\u4E2A\u4E8B\u4EF6\u3001\u6216\u660E\u663E\u8981\u8D8A\u8FC7\u672C\u8282\u70B9\u5F80\u540E\u8DD1\u504F\uFF0C\u7528 "firm" \u628A\u4E3B\u7EBF\u6536\u56DE\u6765\u3002
+- \u6307\u9488\u6807\u51FA \u26A0 \u786C\u951A\u5F85\u5151\u73B0\u65F6\uFF1A\u672C\u8282\u70B9\u4E8B\u4EF6\u90FD\u7FFB\u8FC7\u4E86\u4F46 anchor \u8FD8\u6CA1\u843D\u5730\uFF0C\u8FD9\u4E00\u62CD\u7528 "firm" \u628A anchor \u505A\u5B9E\uFF0C\u786E\u8BA4\u5151\u73B0\u540E\u56DE\u62A5 anchor_met=true\u3002
+
+[recap] \u6BCF\u6807\u4E00\u4E2A done/skipped\uFF0C\u90FD\u8981\u5199\u4E00\u53E5 recap\uFF1A\u5BA2\u89C2\u8BB0\u4E0B\u5B83\u5728\u73A9\u5BB6\u7684\u6545\u4E8B\u91CC\u5B9E\u9645\u600E\u4E48\u53D1\u751F/\u600E\u4E48\u88AB\u5E26\u8FC7\uFF08\u4E00\u53E5\u8BDD\uFF0C\u4E2D\u6587\uFF09\u3002\u5B83\u4F1A\u88AB\u6C38\u4E45\u4FDD\u5B58\u3001\u4E0D\u968F\u697C\u5C42\u9690\u85CF\u4E22\u5931\uFF0C\u662F\u4F60\u4EE5\u540E\u552F\u4E00\u8FD8\u8BB0\u5F97\u8FD9\u6BB5\u7684\u51ED\u636E\u3002
+
+[directive \u5199\u6CD5]
+1) \u7ED9\u5199\u4F5C\u6A21\u578B\u7684\u5E55\u540E\u65C1\u767D\u63D0\u793A\uFF08\u73A9\u5BB6\u770B\u4E0D\u5230\uFF09\uFF0C\u5BA2\u89C2\u7948\u4F7F\u53E5\uFF0C\u70B9\u4E00\u4E2A\u65B9\u5411\u5373\u53EF\uFF1B\u4E0D\u66FF\u89D2\u8272\u5199\u5BF9\u767D\u3001\u4E0D\u66FF\u89D2\u8272\u884C\u52A8\u3002
+2) **\u65F6\u95F4\u63A8\u79FB**\uFF1A\u76EE\u6807\u4E8B\u4EF6\u7684 span \u82E5\u76F8\u5BF9\u4E0A\u4E00\u62CD\u6709\u660E\u663E\u95F4\u9694\uFF08"\u4E09\u5929\u540E"/"\u4E24\u5468\u540E"/"\u6B21\u5E74\u6625\u5929"\uFF09\uFF0Cdirective \u5FC5\u987B\u5148\u8981\u6C42\u5B8C\u6210\u8FD9\u6B21\u65F6\u95F4\u63A8\u79FB\u2014\u2014\u4F8B\u5982"\u5148\u4EE5\u53D9\u8FF0\u5E26\u8FC7\u7EA6\u4E24\u5468\uFF0C\u518D\u8FDB\u5165\u2026"\u3002\u4E0D\u8BF4\uFF0C\u5199\u4F5C\u6A21\u578B\u5C31\u4F1A\u9ED8\u8BA4\u63A5\u7740\u4E0A\u4E00\u62CD\u6F14\u4E0B\u53BB\uFF0C\u6574\u672C\u7684\u65F6\u95F4\u8DE8\u5EA6\u4F1A\u584C\u6389\u3002
+3) \u4E0D\u8D85\u8FC7 80 \u5B57\u3002
+
+[\u672C\u6B21\u5224\u5B9A\u4E25\u683C\u5EA6]
+{{blindboxStrictness}}
 
 [\u786C\u6027\u8981\u6C42] \u53EA\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF1A
 {
-  "updates": [ { "node": 0, "event": 1, "status": "done", "recap": "\u4E00\u53E5\u8BDD\uFF1A\u8FD9\u4E2A\u4E8B\u4EF6\u5728\u73A9\u5BB6\u7684\u6545\u4E8B\u91CC\u5B9E\u9645\u600E\u4E48\u53D1\u751F\u7684" } ],
+  "updates": [
+    { "node": 0, "event": 1, "status": "done",
+      "evidence": "\u6B63\u6587\u91CC\u7684\u6307\u8BA4\uFF08\u226430\u5B57\uFF09", "evidence_floor": 42,
+      "criteria_met": [0, 1], "confidence": "high",
+      "recap": "\u4E00\u53E5\u8BDD\uFF1A\u8FD9\u4E2A\u4E8B\u4EF6\u5B9E\u9645\u600E\u4E48\u53D1\u751F\u7684" },
+    { "node": 0, "event": 2, "status": "progress", "evidence": "\u2026", "evidence_floor": 42 }
+  ],
+  "anchor_met": false,
   "target": { "node": 1, "event": 0 },
   "directive": "\u4E00\u53E5\u5F15\u5BFC\uFF0C\u6216\u7A7A\u5B57\u7B26\u4E32",
   "intensity": "none" | "gentle" | "firm"
 }`,
-      user: `[\u6700\u8FD1\u6B63\u6587\uFF08\u53EF\u80FD\u5DF2\u88AB\u603B\u7ED3\u63D2\u4EF6\u6298\u53E0/\u9690\u85CF\uFF0C\u53EA\u5269\u5F88\u77ED\u4E00\u622A\u751A\u81F3\u7A7A\u767D\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u6458\u8981\u6216\u5DF2\u9690\u85CF\u697C\u5C42\uFF09]
+      user: `[\u6700\u8FD1\u6B63\u6587\uFF08\u5E26 #\u697C\u5C42\u53F7\uFF1B\u53EF\u80FD\u5DF2\u88AB\u603B\u7ED3\u63D2\u4EF6\u6298\u53E0/\u9690\u85CF\uFF0C\u53EA\u5269\u5F88\u77ED\u4E00\u622A\u751A\u81F3\u7A7A\u767D\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u6458\u8981\u6216\u5DF2\u9690\u85CF\u697C\u5C42\uFF09]
 {{recentChat}}
 
-[\u76F2\u76D2\u9AA8\u67B6] \u8282\u70B9=\u786C\u951A\uFF0C\u4E8B\u4EF6=\u57AB\u811A\u77F3\uFF1Bstatus\uFF1Apending\u672A\u5230 / active\u8FDB\u884C\u4E2D / done\u5DF2\u8FBE\u6210 / skipped\u5DF2\u8DF3\u8FC7\uFF1Bdone/skipped \u7684 recap \u662F\u4EE5\u5F80\u56DE\u5408\u8BB0\u4E0B\u7684\u5B9E\u9645\u7ECF\u8FC7
+[\u76F2\u76D2\u9AA8\u67B6] \u8282\u70B9=\u786C\u951A\uFF0C\u4E8B\u4EF6=\u57AB\u811A\u77F3
+- status\uFF1Apending\u672A\u5230 / active\u8FDB\u884C\u4E2D / done\u5DF2\u8FBE\u6210 / skipped\u5DF2\u8DF3\u8FC7\uFF1Bdone/skipped \u7684 recap \u662F\u4EE5\u5F80\u56DE\u5408\u8BB0\u4E0B\u7684\u5B9E\u9645\u7ECF\u8FC7
+- done_when=\u6210\u7ACB\u6761\u4EF6\uFF08\u5224 done \u8981\u9010\u6761\u6838\u5BF9\uFF0C\u547D\u4E2D\u7684\u4E0B\u6807\u586B\u8FDB criteria_met\uFF09\uFF1Bspan=\u5E94\u6709\u7684\u65F6\u95F4\u8DE8\u5EA6\uFF1Bbeats=\u62CD\u6570\u9884\u7B97\uFF1Bturns_spent=\u5DF2\u505C\u7559\u62CD\u6570\uFF1Bnotes=\u4EE5\u5F80\u56DE\u5408\u7559\u4E0B\u7684\u63A8\u8FDB\u7B14\u8BB0
 {{blindboxOutline}}
 
-[\u5F53\u524D\u76EE\u6807\u6307\u9488] {{blindboxProgress}}
+[\u5F53\u524D\u76EE\u6807\u6307\u9488]
+{{blindboxProgress}}
 
-[\u4EFB\u52A1] \u8BFB\u6700\u8FD1\u6B63\u6587\uFF0C\u66F4\u65B0\u8FD9\u4E00\u62CD\u91CC\u65B0\u8FBE\u6210/\u8DF3\u8FC7\u7684\u4E8B\u4EF6\uFF08\u5E76\u4E3A\u6BCF\u6761\u5199\u4E00\u53E5 recap\uFF09\u3001\u7ED9\u51FA\u4E0B\u4E00\u6B65 target \u4E0E\u4E00\u53E5\u5F15\u5BFC directive\uFF08\u53CA intensity\uFF09\u3002\u9AA8\u67B6\u91CC\u5DF2 done/skipped \u7684\u4E8B\u4EF6\u89C6\u4E3A\u65E2\u6210\u4E8B\u5B9E\uFF0C\u4E0D\u5F97\u7FFB\u56DE\u3002\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
+[\u4EFB\u52A1] \u8BFB\u6700\u8FD1\u6B63\u6587\uFF0C\u5224\u65AD\u8FD8\u6CA1\u7FFB\u8FC7\u53BB\u7684\u4E8B\u4EF6\u5728\u8FD9\u4E00\u62CD\u91CC\u7684\u8FDB\u5C55\uFF08done/skipped/progress\uFF0C\u5404\u5E26 evidence \u4E0E evidence_floor\uFF09\uFF0C\u4E3A done/skipped \u5199\u4E00\u53E5 recap\uFF0C\u5E76\u7ED9\u51FA directive \u4E0E intensity\u3002\u62FF\u4E0D\u51C6\u4E00\u5F8B\u62A5 progress\u3002\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
     }
   };
 }
@@ -31095,14 +33103,32 @@ function getPromptTemplates() {
       system: String(raw?.pacing?.system || defaults.pacing.system),
       user: String(raw?.pacing?.user || defaults.pacing.user)
     },
-    blindbox: {
-      system: String(raw?.blindbox?.system || defaults.blindbox.system),
-      user: String(raw?.blindbox?.user || defaults.blindbox.user)
-    },
-    director: {
-      system: String(raw?.director?.system || defaults.director.system),
-      user: String(raw?.director?.user || defaults.director.user)
-    }
+    // blindbox / director：和 rolling 同理，模板与解析器/闸门是一条链。v1 → v2 不兼容——
+    // savePromptTemplates 是整块存五类模板的，只要用户打开过设置点了保存，这两份就被
+    // 冻结在 v1；而 v1 的生成模板不会要 done_when/span/beats、v1 的判定模板不会回
+    // evidence/criteria_met，新闸门拿不到这些字段就只能一路降级，等于白改。故照抄一份重置。
+    blindbox: (() => {
+      const sys = String(raw?.blindbox?.system || defaults.blindbox.system);
+      const usr = String(raw?.blindbox?.user || defaults.blindbox.user);
+      if (!sys.includes("done_when") || !usr.includes("{{timescale}}")) {
+        if (raw?.blindbox?.system || raw?.blindbox?.user) {
+          console.info("[Titania] \u68C0\u6D4B\u5230\u65E7\u7248\u76F2\u76D2\u751F\u6210\u6A21\u677F\uFF08v1\uFF0C\u65E0 done_when/span/timescale\uFF09\uFF0C\u5DF2\u91CD\u7F6E\u4E3A\u9ED8\u8BA4\u6A21\u677F");
+        }
+        return JSON.parse(JSON.stringify(defaults.blindbox));
+      }
+      return { system: sys, user: usr };
+    })(),
+    director: (() => {
+      const sys = String(raw?.director?.system || defaults.director.system);
+      const usr = String(raw?.director?.user || defaults.director.user);
+      if (!sys.includes("evidence_floor") || !sys.includes("{{blindboxStrictness}}")) {
+        if (raw?.director?.system || raw?.director?.user) {
+          console.info("[Titania] \u68C0\u6D4B\u5230\u65E7\u7248\u76F2\u76D2\u5224\u5B9A\u6A21\u677F\uFF08v1\uFF0C\u65E0 evidence/\u4E09\u6863\u56DE\u62A5\uFF09\uFF0C\u5DF2\u91CD\u7F6E\u4E3A\u9ED8\u8BA4\u6A21\u677F");
+        }
+        return JSON.parse(JSON.stringify(defaults.director));
+      }
+      return { system: sys, user: usr };
+    })()
   };
 }
 function savePromptTemplates(templates) {
@@ -31139,9 +33165,11 @@ function getUnknownPromptVars(text) {
     "nodeCount",
     "eventsPerGap",
     "redlines",
+    "timescale",
     // 盲盒导演判定专用变量
     "blindboxOutline",
-    "blindboxProgress"
+    "blindboxProgress",
+    "blindboxStrictness"
   ]);
   const unknown = /* @__PURE__ */ new Set();
   String(text || "").replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key) => {
@@ -31150,17 +33178,17 @@ function getUnknownPromptVars(text) {
   });
   return Array.from(unknown);
 }
-function buildPromptTemplateVars(ctx, userStoryInput, openingText, outlinePayload = [], extras = {}) {
-  const rawWorldInfo = String(ctx?.worldInfo || "").replace(/^\[World Info \/ Lore\]\n/, "").trim();
+function buildPromptTemplateVars(ctx2, userStoryInput, openingText, outlinePayload = [], extras = {}) {
+  const rawWorldInfo = String(ctx2?.worldInfo || "").replace(/^\[World Info \/ Lore\]\n/, "").trim();
   return {
-    persona: String(ctx?.persona || "(\u7A7A)"),
-    userDesc: String(ctx?.userDesc || "(\u7A7A)"),
+    persona: String(ctx2?.persona || "(\u7A7A)"),
+    userDesc: String(ctx2?.userDesc || "(\u7A7A)"),
     openingText: String(openingText || "(\u7A7A)"),
     storyInput: String(userStoryInput || "\u672A\u586B\u5199\u6545\u4E8B\u65B9\u5411\uFF0C\u8BF7\u7ED3\u5408\u4E0A\u65B9\u8BBE\u5B9A\u751F\u6210"),
     outlineItemsJson: JSON.stringify(outlinePayload, null, 2),
     worldInfo: rawWorldInfo || "(\u65E0)",
-    scenario: String(ctx?.scenario || "").trim() || "(\u65E0)",
-    dialogueExamples: String(ctx?.dialogueExamples || "").trim() || "(\u65E0)",
+    scenario: String(ctx2?.scenario || "").trim() || "(\u65E0)",
+    dialogueExamples: String(ctx2?.dialogueExamples || "").trim() || "(\u65E0)",
     // 剧情推进专用；非推荐场景为 "(无)"，模板里没引用就不影响。
     recentChat: String(extras?.recentChat || "").trim() || "(\u65E0)",
     // 节奏把控专用：当前大纲进度，无方案时为 "(无大纲)"。
@@ -31169,9 +33197,12 @@ function buildPromptTemplateVars(ctx, userStoryInput, openingText, outlinePayloa
     nodeCount: String(extras?.nodeCount ?? "") || "(\u8282\u70B9\u6570)",
     eventsPerGap: String(extras?.eventsPerGap ?? "") || "(\u6BCF\u6BB5\u5173\u952E\u4E8B\u4EF6\u6570)",
     redlines: String(extras?.redlines || "").trim() || "\uFF08\u65E0\u7279\u522B\u7981\u5FCC\uFF09",
-    // 盲盒导演判定专用：封印骨架 JSON 与当前目标指针（实际判定时注入，预览只给占位）。
+    // 故事总时长：时间跨度的总闸门。没填就让模型自己按基调定一个，但要它显式定。
+    timescale: String(extras?.timescale || "").trim() || "\uFF08\u672A\u6307\u5B9A\uFF1A\u8BF7\u5148\u636E\u6545\u4E8B\u57FA\u8C03\u81EA\u884C\u5224\u65AD\u4E00\u4E2A\u5408\u7406\u7684\u603B\u65F6\u957F\u2014\u2014\u4E00\u591C/\u6570\u65E5/\u6570\u6708/\u6570\u5E74/\u4E00\u751F\u2014\u2014\u518D\u636E\u6B64\u5206\u914D\u5404\u7EA7 span\uFF09",
+    // 盲盒导演判定专用：封印骨架 JSON、当前目标指针、本次严格度（实际判定时注入，预览只给占位）。
     blindboxOutline: String(extras?.blindboxOutline || "").trim() || "\uFF08\u5C01\u5370\u9AA8\u67B6\uFF0C\u5224\u5B9A\u65F6\u6CE8\u5165\uFF09",
-    blindboxProgress: String(extras?.blindboxProgress || "").trim() || "\uFF08\u5F53\u524D\u76EE\u6807\u6307\u9488\uFF0C\u5224\u5B9A\u65F6\u6CE8\u5165\uFF09"
+    blindboxProgress: String(extras?.blindboxProgress || "").trim() || "\uFF08\u5F53\u524D\u76EE\u6807\u6307\u9488\uFF0C\u5224\u5B9A\u65F6\u6CE8\u5165\uFF09",
+    blindboxStrictness: String(extras?.blindboxStrictness || "").trim() || describeStrictness(STRICTNESS.STANDARD)
   };
 }
 function renderGenParamRow(moduleKey, moduleLabel, group) {
@@ -31202,12 +33233,13 @@ async function openPromptTemplateManager() {
     streamEnabled: loadDraft().streamEnabled === true,
     genParams: getOutlineGenParams(),
     rollingChatFloors: getRollingChatFloors(),
+    directorChatFloors: getDirectorChatFloorsRaw(),
     promptTemplates: JSON.parse(JSON.stringify(getPromptTemplates()))
   };
   const working = settingsDraft.promptTemplates;
-  let ctx = { persona: "(\u7A7A)", userDesc: "(\u7A7A)" };
+  let ctx2 = { persona: "(\u7A7A)", userDesc: "(\u7A7A)" };
   try {
-    ctx = await getContextData();
+    ctx2 = await getContextData();
   } catch {
   }
   const outlinePayload = normalizeItems(outlineItems).map((item) => ({
@@ -31287,6 +33319,7 @@ async function openPromptTemplateManager() {
                             ${renderGenParamRow("outline", "\u5927\u7EB2", settingsDraft.genParams.outline)}
                             ${renderGenParamRow("scenes", "\u5267\u60C5\u63A8\u8350", settingsDraft.genParams.scenes)}
                             ${renderGenParamRow("pacing", "\u8282\u594F\u5224\u65AD", settingsDraft.genParams.pacing)}
+                            ${renderGenParamRow("director", "\u76F2\u76D2\u5224\u5B9A", settingsDraft.genParams.director)}
                         </div>
 
                         <div class="t-form-group">
@@ -31296,6 +33329,15 @@ async function openPromptTemplateManager() {
                                 <input id="t-outline-settings-rolling-floors" type="number" class="t-outline-select" value="${escapeHtml4(settingsDraft.rollingChatFloors)}" min="0" max="20" step="1" style="width:80px;">
                             </label>
                             <div class="t-outline-genparam-hint">\u5267\u60C5\u63A8\u8350\u65F6\u8BFB\u53D6\u9152\u9986\u6700\u8FD1 N \u697C\u6B63\u6587\u4F5C\u4E3A"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\uFF08\u8D70\u4E0B\u65B9\u804A\u5929\u63D0\u53D6\u767D\u540D\u5355\u8FC7\u6EE4\uFF09\u3002\u6A21\u578B\u636E\u6B64\u81EA\u884C\u5224\u65AD\u6545\u4E8B\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\u30020=\u4E0D\u8BFB\u6B63\u6587\uFF0C\u4EC5\u9760\u5927\u7EB2\u5224\u65AD\u3002</div>
+                        </div>
+
+                        <div class="t-form-group">
+                            <label class="t-form-label">\u76F2\u76D2\u5BFC\u6F14</label>
+                            <label class="t-outline-mode t-outline-mode-source" style="margin-left:0;">
+                                \u5224\u5B9A\u8BFB\u53D6\u6700\u8FD1\u6B63\u6587\u697C\u5C42\u6570
+                                <input id="t-outline-settings-director-floors" type="number" class="t-outline-select" value="${escapeHtml4(settingsDraft.directorChatFloors)}" min="0" max="20" step="1" style="width:80px;">
+                            </label>
+                            <div class="t-outline-genparam-hint">\u5BFC\u6F14\u5224\u5B9A\u300C\u8FD9\u4E2A\u5173\u952E\u4E8B\u4EF6\u5151\u73B0\u5B8C\u4E86\u6CA1\u6709\u300D\u8981\u770B\u5F97\u5230\u524D\u51E0\u62CD\u7684\u94FA\u57AB\uFF0C\u8BFB\u5F97\u592A\u5C11\u5C31\u53EA\u80FD\u51ED\u6700\u540E\u4E00\u53E5\u8BDD\u4E0B\u7ED3\u8BBA\uFF08\u5224\u5B9A\u4F1A\u504F\u677E\uFF09\u3002\u9ED8\u8BA4 6\uFF0C0=\u8DDF\u968F\u4E0A\u9762\u5267\u60C5\u63A8\u8FDB\u7684\u8BBE\u7F6E\u3002\u5224\u5B9A\u4E00\u5F8B\u8FDE\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u4E00\u8D77\u8BFB\u3002</div>
                         </div>
 
                         <div class="t-form-group">
@@ -31322,7 +33364,7 @@ async function openPromptTemplateManager() {
                                 </select>
                                 <button id="t-prompt-reset-current" class="t-btn t-btn-xs"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u5F53\u524D\u9ED8\u8BA4</button>
                             </div>
-                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}}<br>\u53D9\u4E8B\u8282\u594F\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{outlineProgress}}<br>\u76F2\u76D2\u5267\u672C\u751F\u6210\u989D\u5916\u53D8\u91CF\uFF1A{{nodeCount}} {{eventsPerGap}} {{redlines}}<br>\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{blindboxOutline}} {{blindboxProgress}}</div>
+                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}}<br>\u53D9\u4E8B\u8282\u594F\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{outlineProgress}}<br>\u76F2\u76D2\u5267\u672C\u751F\u6210\u989D\u5916\u53D8\u91CF\uFF1A{{nodeCount}} {{eventsPerGap}} {{redlines}} {{timescale}}<br>\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{blindboxOutline}} {{blindboxProgress}} {{blindboxStrictness}}</div>
                         </div>
 
                         <div class="t-form-group">
@@ -31424,7 +33466,7 @@ async function openPromptTemplateManager() {
     const openingMode = getOpeningSourceMode();
     const openingSourceRef = getOpeningSourceRef();
     const opening2 = getOpeningTextForPreview(openingMode, openingSourceRef);
-    const varsLocal = buildPromptTemplateVars(ctx, currentStoryInput, opening2, outlinePayload, {
+    const varsLocal = buildPromptTemplateVars(ctx2, currentStoryInput, opening2, outlinePayload, {
       recentChat: collectRecentChatText(getRollingChatFloors()),
       outlineProgress: buildOutlineProgressText()
     });
@@ -31457,6 +33499,9 @@ async function openPromptTemplateManager() {
   });
   $("#t-outline-settings-rolling-floors").on("input change", function() {
     settingsDraft.rollingChatFloors = Number($(this).val());
+  });
+  $("#t-outline-settings-director-floors").on("input change", function() {
+    settingsDraft.directorChatFloors = Number($(this).val());
   });
   $("#t-prompt-target").on("change", () => {
     syncToEditor();
@@ -31494,6 +33539,7 @@ async function openPromptTemplateManager() {
     setOutlineChatTagWhitelistRaw(settingsDraft.chatTagWhitelist);
     saveOutlineGenParams(settingsDraft.genParams);
     saveRollingChatFloors(settingsDraft.rollingChatFloors);
+    saveDirectorChatFloors(settingsDraft.directorChatFloors);
     savePromptTemplates(settingsDraft.promptTemplates);
     $("#t-outline-stream-enabled").prop("checked", settingsDraft.streamEnabled === true);
     saveDraftStreamEnabledOnly(settingsDraft.streamEnabled === true);
@@ -31509,9 +33555,9 @@ function refreshOutlineOpeningSourceControls() {
   $("#t-outline-opening-source-pick").prop("disabled", false);
   $("#t-outline-chat-tag-whitelist, #t-outline-settings-chat-tag-whitelist").val(whitelist);
 }
-function buildPrompt(ctx, userStoryInput, openingText) {
+function buildPrompt(ctx2, userStoryInput, openingText) {
   const templates = getPromptTemplates();
-  const vars = buildPromptTemplateVars(ctx, userStoryInput, openingText);
+  const vars = buildPromptTemplateVars(ctx2, userStoryInput, openingText);
   const sys = renderPromptTemplate(templates.outline.system, vars);
   const user = renderPromptTemplate(templates.outline.user, vars);
   return [
@@ -31609,25 +33655,25 @@ function isStreamingEnabled() {
 }
 function getPlans() {
   const data = getExtData();
-  if (!Array.isArray(data[PLANS_KEY2])) data[PLANS_KEY2] = [];
-  return data[PLANS_KEY2];
+  if (!Array.isArray(data[PLANS_KEY3])) data[PLANS_KEY3] = [];
+  return data[PLANS_KEY3];
 }
 function getActivePlanId() {
   const data = getExtData();
-  return typeof data[ACTIVE_PLAN_KEY2] === "string" ? data[ACTIVE_PLAN_KEY2] : "";
+  return typeof data[ACTIVE_PLAN_KEY3] === "string" ? data[ACTIVE_PLAN_KEY3] : "";
 }
 function getSceneSourcePlanId() {
   const data = getExtData();
-  return typeof data[SCENE_SOURCE_PLAN_KEY] === "string" ? data[SCENE_SOURCE_PLAN_KEY] : "";
+  return typeof data[SCENE_SOURCE_PLAN_KEY2] === "string" ? data[SCENE_SOURCE_PLAN_KEY2] : "";
 }
 function setSceneSourcePlanId(planId) {
   const data = getExtData();
-  data[SCENE_SOURCE_PLAN_KEY] = planId || "";
+  data[SCENE_SOURCE_PLAN_KEY2] = planId || "";
   saveExtData();
 }
 function setActivePlanId(planId) {
   const data = getExtData();
-  data[ACTIVE_PLAN_KEY2] = planId || "";
+  data[ACTIVE_PLAN_KEY3] = planId || "";
   saveExtData();
 }
 function getCurrentCharCardName() {
@@ -31746,8 +33792,8 @@ function createEmptyPlan(nameInput = "", defaultName = "") {
     items: []
   });
 }
-function createBlindboxPlan({ name, tone, redlines, nodeCount, eventsPerGap }) {
-  const draft2 = createBlindboxDraft({ tone, redlines, nodeCount, eventsPerGap });
+function createBlindboxPlan({ name, tone, redlines, nodeCount, eventsPerGap, timescale, strictness }) {
+  const draft2 = createBlindboxDraft({ tone, redlines, nodeCount, eventsPerGap, timescale, strictness });
   return insertPlan({
     name,
     storyInput: tone || "",
@@ -31872,6 +33918,23 @@ function openPlanCreationDialog() {
                             <input id="t-create-plan-bb-events" type="number" class="t-outline-input" value="3" min="3" max="10" step="1" />
                         </label>
                     </div>
+                    <label class="t-outline-label" style="margin-top:10px;">\u6545\u4E8B\u603B\u65F6\u957F\uFF08\u51B3\u5B9A\u8282\u70B9\u4E4B\u95F4\u7684\u65F6\u95F4\u8DE8\u5EA6\uFF09</label>
+                    <input id="t-create-plan-bb-timescale" class="t-outline-input" type="text" placeholder="\u4F8B\u5982\uFF1A\u7EA6\u4E09\u4E2A\u6708 / \u4E00\u4E24\u5E74 / \u8DE8\u8D8A\u534A\u751F" />
+                    <div class="t-bb-timescale-presets" style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                        <button type="button" class="t-btn t-btn-xs t-bb-ts-btn" data-ts="\u4E00\u591C\u4E4B\u95F4">\u4E00\u591C</button>
+                        <button type="button" class="t-btn t-btn-xs t-bb-ts-btn" data-ts="\u7EA6\u4E00\u5468">\u6570\u65E5</button>
+                        <button type="button" class="t-btn t-btn-xs t-bb-ts-btn" data-ts="\u7EA6\u4E00\u4E2A\u6708">\u6570\u5468</button>
+                        <button type="button" class="t-btn t-btn-xs t-bb-ts-btn" data-ts="\u7EA6\u534A\u5E74">\u6570\u6708</button>
+                        <button type="button" class="t-btn t-btn-xs t-bb-ts-btn" data-ts="\u7EA6\u4E24\u5E74">\u4E00\u4E24\u5E74</button>
+                        <button type="button" class="t-btn t-btn-xs t-bb-ts-btn" data-ts="\u8DE8\u8D8A\u534A\u751F\uFF08\u5341\u5E74\u4EE5\u4E0A\uFF09">\u8DE8\u8D8A\u534A\u751F</button>
+                    </div>
+                    <div class="t-plan-tip" style="margin-top:6px;">\u7559\u7A7A\uFF1D\u4EA4\u7ED9\u6A21\u578B\u81EA\u5DF1\u5B9A\u3002\u586B\u4E86\u5B83\u4F1A\u628A\u8FD9\u6BB5\u65F6\u957F\u5206\u914D\u7ED9\u5404\u8282\u70B9\uFF0C\u8DE8\u8282\u70B9\u5FC5\u6709\u660E\u663E\u65F6\u95F4\u63A8\u79FB\uFF08\u4E0D\u518D\u6324\u5728\u8FDE\u7EED\u51E0\u5929\u91CC\uFF09\u3002</div>
+                    <label class="t-outline-label" style="margin-top:10px;">\u5224\u5B9A\u4E25\u683C\u5EA6\uFF08\u5BFC\u6F14\u591A\u4E45\u624D\u8BA4\u4E00\u4E2A\u4E8B\u4EF6\u5DF2\u8FBE\u6210\uFF09</label>
+                    <select id="t-create-plan-bb-strictness" class="t-outline-select">
+                        <option value="standard" selected>\u6807\u51C6\uFF08\u63A8\u8350\uFF09</option>
+                        <option value="strict">\u4E25\u683C\uFF08\u5B81\u53EF\u6162\u4E00\u62CD\uFF09</option>
+                        <option value="loose">\u5BBD\u677E\uFF08\u65E7\u884C\u4E3A\uFF0C\u63A8\u8FDB\u6700\u5FEB\uFF09</option>
+                    </select>
                     <label class="t-outline-label" style="margin-top:10px;">\u7EA2\u7EBF / \u7981\u5FCC\uFF08\u53EF\u9009\uFF09</label>
                     <textarea id="t-create-plan-bb-redlines" class="t-outline-story-input" rows="2" placeholder="\u4E0D\u60F3\u51FA\u73B0\u7684\u5185\u5BB9\uFF0C\u4F8B\u5982\uFF1A\u4E0D\u8981\u89D2\u8272\u6B7B\u4EA1\u3001\u4E0D\u8981\u8840\u8165\u63CF\u5199"></textarea>
                     <div class="t-plan-tip" style="margin-top:8px;">\u76F2\u76D2\u5267\u672C\u751F\u6210\u540E\u4F1A\u7ACB\u5373\u5C01\u5370\u2014\u2014\u4F60\u672C\u4EBA\u4E5F\u770B\u4E0D\u5230\u5185\u5BB9\uFF0C\u9760\u6E38\u73A9\u65F6\u88AB\u6084\u6084\u5F15\u5BFC\u7740\u6D6E\u73B0\u3002</div>
@@ -31896,6 +33959,9 @@ function openPlanCreationDialog() {
     $("#t-create-plan-story-label").text(isBB ? "\u6545\u4E8B\u57FA\u8C03\u4E0E\u8D70\u5411" : "\u521D\u59CB\u6545\u4E8B\u6307\u4EE4\uFF08\u53EF\u9009\uFF09");
     $("#t-create-plan-confirm").html(isBB ? '<i class="fa-solid fa-gift"></i> \u521B\u5EFA\u5E76\u5C01\u5370\u751F\u6210' : '<i class="fa-solid fa-check"></i> \u521B\u5EFA\u5E76\u8FDB\u5165\u7F16\u8F91');
   });
+  $("#t-outline-create-plan-dialog").on("click", ".t-bb-ts-btn", function() {
+    $("#t-create-plan-bb-timescale").val(String($(this).data("ts") || ""));
+  });
   $("#t-create-plan-confirm").on("click", async () => {
     const planName = String($("#t-create-plan-name").val() || "").trim();
     const planStory = String($("#t-create-plan-story").val() || "").trim();
@@ -31919,7 +33985,9 @@ function openPlanCreationDialog() {
       tone: planStory,
       redlines: String($("#t-create-plan-bb-redlines").val() || "").trim(),
       nodeCount: Number($("#t-create-plan-bb-nodes").val()),
-      eventsPerGap: Number($("#t-create-plan-bb-events").val())
+      eventsPerGap: Number($("#t-create-plan-bb-events").val()),
+      timescale: String($("#t-create-plan-bb-timescale").val() || "").trim(),
+      strictness: String($("#t-create-plan-bb-strictness").val() || "")
     });
     close();
     renderPlanHub();
@@ -32138,7 +34206,24 @@ function loadPlanToEditor(plan) {
 function bbConfigLine(bb) {
   const tone = String(bb?.tone || "").trim();
   const toneBrief = tone ? escapeHtml4(getBriefText(tone, 60)) : "\uFF08\u672A\u586B\uFF09";
-  return `\u57FA\u8C03\uFF1A${toneBrief} \xB7 \u8282\u70B9 ${bb?.nodeCount ?? "?"} \xB7 \u6BCF\u6BB5\u7EA6 ${bb?.eventsPerGap ?? "?"} \u4EF6`;
+  const ts = String(bb?.timescale || "").trim();
+  const tsText = ts ? ` \xB7 \u603B\u65F6\u957F ${escapeHtml4(getBriefText(ts, 20))}` : "";
+  return `\u57FA\u8C03\uFF1A${toneBrief} \xB7 \u8282\u70B9 ${bb?.nodeCount ?? "?"} \xB7 \u6BCF\u6BB5\u7EA6 ${bb?.eventsPerGap ?? "?"} \u4EF6${tsText}`;
+}
+function bbDirectorPanel(bb) {
+  const stats = getProgressStats(bb);
+  const level = normalizeStrictness(bb?.strictness);
+  const opts = [STRICTNESS.STANDARD, STRICTNESS.STRICT, STRICTNESS.LOOSE].map((v) => `<option value="${v}"${v === level ? " selected" : ""}>${escapeHtml4(BB_STRICTNESS_LABEL[v])}</option>`).join("");
+  const dwell = stats.dwellBeats > 0 ? `\u5F53\u524D\u8FD9\u62CD\u5DF2\u505C\u7559 ${stats.dwellTurns} / \u9884\u7B97 ${stats.dwellBeats} \u62CD` : `\u5F53\u524D\u8FD9\u62CD\u5DF2\u505C\u7559 ${stats.dwellTurns} \u62CD`;
+  const anchorWarn = stats.awaitingAnchor ? `<div style="margin-top:4px;color:#e0a63a;">\u25C6 \u672C\u8282\u70B9\u7684\u4E8B\u4EF6\u90FD\u5DF2\u7FFB\u8FC7\uFF0C\u6B63\u5728\u7B49\u786C\u951A\u843D\u5730\u2014\u2014\u5BFC\u6F14\u8FD9\u51E0\u62CD\u4F1A\u6536\u7D27\u3002</div>` : "";
+  return `<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);">
+        <div style="font-weight:600;margin-bottom:6px;"><i class="fa-solid fa-clapperboard"></i> \u5BFC\u6F14</div>
+        <label class="t-outline-label" style="display:block;">\u5224\u5B9A\u4E25\u683C\u5EA6
+            <select class="t-outline-select" data-action="bb-strictness">${opts}</select>
+        </label>
+        <div class="t-plan-tip" style="margin-top:6px;">${escapeHtml4(dwell)}\uFF1B\u5224\u5B9A\u8D8A\u4E25\uFF0C\u4E00\u4E2A\u5173\u952E\u4E8B\u4EF6\u8981\u5360\u7684\u56DE\u590D\u8D8A\u591A\uFF08\u6545\u4E8B\u63A8\u5F97\u8D8A\u6162\u3001\u8D8A\u4E0D\u5BB9\u6613\u88AB\u4E00\u53E5\u8BDD\u5E26\u8FC7\uFF09\u3002</div>
+        ${anchorWarn}
+    </div>`;
 }
 function bbEventDot(status, isTarget) {
   const base = "display:inline-block;width:14px;text-align:center;";
@@ -32158,24 +34243,6 @@ function bbNodeDots(node, nodeIndex, bb) {
         <span>${dots}</span>
     </div>`;
 }
-function bbRevealWall(bb) {
-  const revealed = flattenEvents(bb).filter(
-    ({ event }) => event.status === EVENT_STATUS.DONE || event.status === EVENT_STATUS.SKIPPED
-  );
-  if (revealed.length === 0) {
-    return `<div class="t-plan-tip">\u8FD8\u6CA1\u6709\u5DF2\u63ED\u6653\u7684\u4E8B\u4EF6\u2014\u2014\u5F00\u59CB\u6E38\u73A9\u540E\uFF0C\u8E29\u4E2D\u7684\u5173\u952E\u8282\u70B9\u4F1A\u663E\u793A\u5728\u8FD9\u91CC\u3002</div>`;
-  }
-  return revealed.map(({ nodeIndex, eventIndex, event }) => {
-    const tag = event.status === EVENT_STATUS.SKIPPED ? `<span style="color:#8a8f98">\uFF08\u8DF3\u8FC7\uFF09</span>` : "";
-    const recap = String(event.recap || "").trim();
-    const recapLine = recap ? `<div style="opacity:.55;font-size:12px;padding:2px 0 0 18px;">\u21B3 ${escapeHtml4(recap)}</div>` : "";
-    return `<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-            <span style="opacity:.6;">${nodeIndex + 1}.${eventIndex + 1}</span>
-            ${escapeHtml4(event.content)} ${tag}
-            ${recapLine}
-        </div>`;
-  }).join("");
-}
 function bbNodeFull(node, nodeIndex) {
   const statusLabel = {
     [EVENT_STATUS.DONE]: "\u5DF2\u8FBE\u6210",
@@ -32183,14 +34250,26 @@ function bbNodeFull(node, nodeIndex) {
     [EVENT_STATUS.ACTIVE]: "\u8FDB\u884C\u4E2D",
     [EVENT_STATUS.PENDING]: "\u672A\u5230"
   };
-  const events = node.events.map((ev, j) => `<div style="padding:3px 0 3px 16px;">
-        <span style="opacity:.55;">${nodeIndex + 1}.${j + 1}</span>
-        <span style="opacity:.6;font-size:11px;">[${statusLabel[ev.status] || ""}]</span>
-        ${escapeHtml4(ev.content)}
-    </div>`).join("");
+  const events = node.events.map((ev, j) => {
+    const meta = [
+      ev.span ? `\u8DE8\u5EA6 ${ev.span}` : "",
+      ev.beats > 0 ? `\u9884\u7B97 ${ev.beats} \u62CD` : "",
+      ev.turns > 0 ? `\u5DF2\u5360 ${ev.turns} \u62CD` : ""
+    ].filter(Boolean).join(" \xB7 ");
+    const metaLine = meta ? `<div style="opacity:.45;font-size:11px;padding:0 0 0 32px;">${escapeHtml4(meta)}</div>` : "";
+    const cond = ev.doneWhen.length ? `<div style="opacity:.55;font-size:11px;padding:0 0 0 32px;">\u6210\u7ACB\u6761\u4EF6\uFF1A${escapeHtml4(ev.doneWhen.join("\uFF1B"))}</div>` : "";
+    return `<div style="padding:3px 0 3px 16px;">
+            <span style="opacity:.55;">${nodeIndex + 1}.${j + 1}</span>
+            <span style="opacity:.6;font-size:11px;">[${statusLabel[ev.status] || ""}]</span>
+            ${escapeHtml4(ev.content)}
+        </div>${metaLine}${cond}`;
+  }).join("");
+  const nodeSpan = node.span ? `<span style="opacity:.5;font-size:12px;">\uFF08${escapeHtml4(node.span)}\uFF09</span>` : "";
+  const anchorWhen = node.anchorWhen.length ? `<div style="opacity:.55;font-size:11px;padding:0 0 2px 16px;">\u786C\u951A\u6761\u4EF6\uFF1A${escapeHtml4(node.anchorWhen.join("\uFF1B"))}</div>` : "";
   return `<div style="margin-bottom:10px;">
-        <div style="font-weight:600;">\u25C6 \u8282\u70B9 ${nodeIndex + 1}\uFF1A${escapeHtml4(node.title || "")}</div>
+        <div style="font-weight:600;">\u25C6 \u8282\u70B9 ${nodeIndex + 1}\uFF1A${escapeHtml4(node.title || "")} ${nodeSpan}</div>
         <div style="opacity:.8;padding:2px 0 2px 16px;">${escapeHtml4(node.anchor || "")}</div>
+        ${anchorWhen}
         ${events}
     </div>`;
 }
@@ -32216,8 +34295,8 @@ function renderBlindboxSubview(plan) {
             <div style="font-weight:600;margin-bottom:6px;"><i class="fa-solid fa-lock"></i> \u76F2\u76D2\u5267\u672C \xB7 \u5DF2\u5C01\u5370</div>
             <div class="t-plan-tip">\u5DF2\u63A8\u8FDB ${stats.passed} / ${stats.total} \u4E2A\u5173\u952E\u4E8B\u4EF6 \xB7 \u5171 ${stats.nodeCount} \u4E2A\u8282\u70B9</div>
             <div style="margin:10px 0;">${skeleton}</div>
-            <div style="font-weight:600;margin:12px 0 4px;">\u56DE\u987E\u5899</div>
-            ${bbRevealWall(bb)}
+            ${bbDirectorPanel(bb)}
+            <div class="t-plan-tip" style="margin-top:10px;">\u9010\u6BB5\u63ED\u6653\u7684\u56DE\u987E\u5728\u6D88\u606F\u6D41\u5E95\u90E8\u7684\u300C\u5267\u60C5\u63A8\u8FDB\u300D\u9762\u677F\u91CC\uFF08\u70B9\u5F00\u5C31\u770B\u5F97\u89C1\u8FDB\u5EA6\u70B9\u600E\u4E48\u4E00\u6BB5\u6BB5\u4EAE\u8D77\u6765\uFF09\u3002\u627E\u4E0D\u5230\u5B83\u7684\u8BDD\uFF0C\u53BB\u8BBE\u7F6E\u91CC\u6253\u5F00\u300C\u542F\u7528\u5267\u60C5\u63A8\u8FDB\u4E0E\u5927\u7EB2\u5165\u53E3\u300D\u3002</div>
             <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="t-btn" data-action="bb-reroll"><i class="fa-solid fa-dice"></i> \u91CD\u65B0\u751F\u6210\uFF08\u76F2\u63B7\uFF09</button>
                 <button class="t-btn t-btn-danger" data-action="bb-unseal"><i class="fa-solid fa-unlock"></i> \u5267\u900F\u9003\u751F\uFF08\u89E3\u5C01\u67E5\u770B\uFF09</button>
@@ -32230,11 +34309,21 @@ function renderBlindboxSubview(plan) {
         <div style="font-weight:600;margin-bottom:6px;"><i class="fa-solid fa-unlock"></i> \u76F2\u76D2\u5267\u672C \xB7 \u5DF2\u89E3\u5C01</div>
         <div class="t-plan-tip">\u5DF2\u7ECF\u770B\u8FC7\u4E86\uFF0C\u60CA\u559C\u4E0D\u590D\u2014\u2014\u8FD9\u5C31\u662F\u5355\u5411\u95E8\u7684\u4EE3\u4EF7\u3002\u60F3\u4FEE\u6539\u5185\u5BB9\u53EF\u8F6C\u6210\u666E\u901A\u5927\u7EB2\u3002</div>
         <div style="margin:10px 0;">${full}</div>
+        ${bbDirectorPanel(bb)}
         <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
             <button class="t-btn" data-action="bb-reroll"><i class="fa-solid fa-dice"></i> \u91CD\u65B0\u751F\u6210\uFF08\u76F2\u63B7\uFF09</button>
             <button class="t-btn t-btn-primary" data-action="bb-to-normal"><i class="fa-solid fa-table-list"></i> \u8F6C\u4E3A\u666E\u901A\u5927\u7EB2\uFF08\u53EF\u7F16\u8F91\uFF09</button>
         </div>
     </div>`);
+}
+function blindboxSetStrictness(value) {
+  const plan = getPlans().find((p) => p.id === editingPlanId);
+  if (!plan || !isBlindboxPlan(plan) || !plan.blindbox) return;
+  plan.blindbox = normalizeBlindbox({ ...plan.blindbox, strictness: normalizeStrictness(value) });
+  plan.updatedAt = Date.now();
+  saveExtData();
+  renderBlindboxSubview(plan);
+  if (window.toastr) toastr.success(`\u5224\u5B9A\u4E25\u683C\u5EA6\u5DF2\u8BBE\u4E3A\u300C${BB_STRICTNESS_LABEL[plan.blindbox.strictness]}\u300D`, "\u76F2\u76D2\u5267\u672C");
 }
 async function blindboxGenerateFromView(reroll) {
   const plan = getPlans().find((p) => p.id === editingPlanId);
@@ -32675,7 +34764,8 @@ function collectRecentChatText(floors, opts = {}) {
   if (n <= 0) return "";
   const entries = getChatHistoryEntries(opts);
   if (!entries.length) return "";
-  return entries.slice(-n).map((e) => `\u3010${e.role}\u3011${e.text}`).join("\n\n");
+  const withFloors = opts.withFloors === true;
+  return entries.slice(-n).map((e) => withFloors ? `\u3010#${e.chatIndex} ${e.role}\u3011${e.text}` : `\u3010${e.role}\u3011${e.text}`).join("\n\n");
 }
 function buildOutlineProgressText() {
   const plan = getRollingPlan();
@@ -32686,10 +34776,10 @@ function buildOutlineProgressText() {
   const title = String(item?.title || "").trim() || "\u672A\u547D\u540D";
   return `\u5F53\u524D\u7EA6\u5728\u7B2C ${itemIndex + 1} / ${total} \u6761\uFF1A${title}`;
 }
-function buildPacingPrompt(ctx) {
+function buildPacingPrompt(ctx2) {
   const outlinePayload = buildOutlinePayloadForPrompt();
   const templates = getPromptTemplates();
-  const vars = buildPromptTemplateVars(ctx, "(\u7A7A)", "", outlinePayload, {
+  const vars = buildPromptTemplateVars(ctx2, "(\u7A7A)", "", outlinePayload, {
     // 带上被总结/隐藏的楼层：聊天变长后玩家常把前文折叠隐藏，否则节奏判断读不到最近几拍的实际文字
     // 就等于没了判断对象（进度指针另有持久来源 buildOutlineProgressText，不受影响）。
     recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true }),
@@ -32719,9 +34809,9 @@ function parsePacingResponse(raw) {
 }
 async function generatePacingAssessment() {
   try {
-    const ctx = await getContextData();
+    const ctx2 = await getContextData();
     const params = getOutlineGenParams().pacing;
-    const raw = await sendOutlineRequest(buildPacingPrompt(ctx), {
+    const raw = await sendOutlineRequest(buildPacingPrompt(ctx2), {
       temperature: params.temperature,
       maxTokens: params.maxTokens,
       stream: false
@@ -32732,10 +34822,10 @@ async function generatePacingAssessment() {
     return null;
   }
 }
-function buildRecommendationPrompt(ctx, userStoryInput, openingText) {
+function buildRecommendationPrompt(ctx2, userStoryInput, openingText) {
   const outlinePayload = buildOutlinePayloadForPrompt();
   const templates = getPromptTemplates();
-  const vars = buildPromptTemplateVars(ctx, userStoryInput || "(\u7A7A)", openingText, outlinePayload, {
+  const vars = buildPromptTemplateVars(ctx2, userStoryInput || "(\u7A7A)", openingText, outlinePayload, {
     // 带上被总结/隐藏的楼层：否则前文一折叠，模型既判不出 current_item_index、也凑不出贴合剧情的候选。
     // 判不出时解析器回退保留旧指针（见 parseRecommendationResponse 注释），不会把进度冲掉。
     recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true })
@@ -32930,9 +35020,9 @@ function getRollingPlan() {
 async function runGenerationFlow(cfg) {
   const useStream = isStreamingEnabled();
   return runOutlineGeneration(async (signal) => {
-    const ctx = await getContextData();
+    const ctx2 = await getContextData();
     const opening2 = await ensureOpeningTextForGeneration();
-    const messages = cfg.buildMessages(ctx, opening2);
+    const messages = cfg.buildMessages(ctx2, opening2);
     startResponseTimer(true);
     if (useStream) {
       lastRawResponse = "";
@@ -32969,12 +35059,13 @@ async function runGenerationFlow(cfg) {
     if (window.toastr) toastr.success(cfg.successMessage(false), cfg.label);
   }, { timeoutSec: cfg.timeoutSec });
 }
-function buildBlindboxPrompt(ctx, openingText, blindbox) {
+function buildBlindboxPrompt(ctx2, openingText, blindbox) {
   const templates = getPromptTemplates().blindbox;
-  const vars = buildPromptTemplateVars(ctx, blindbox.tone, openingText, [], {
+  const vars = buildPromptTemplateVars(ctx2, blindbox.tone, openingText, [], {
     nodeCount: blindbox.nodeCount,
     eventsPerGap: blindbox.eventsPerGap,
-    redlines: blindbox.redlines
+    redlines: blindbox.redlines,
+    timescale: blindbox.timescale
   });
   return [
     { role: "system", content: renderPromptTemplate(templates.system, vars) },
@@ -32989,9 +35080,9 @@ async function runBlindboxGeneration(plan) {
   const bb = plan.blindbox || createBlindboxDraft({});
   const params = getOutlineGenParams().outline;
   return runOutlineGeneration(async (signal) => {
-    const ctx = await getContextData();
+    const ctx2 = await getContextData();
     const opening2 = await ensureOpeningTextForGeneration();
-    const messages = buildBlindboxPrompt(ctx, opening2, bb);
+    const messages = buildBlindboxPrompt(ctx2, opening2, bb);
     const raw = await sendOutlineRequest(messages, {
       stream: false,
       temperature: params.temperature,
@@ -33008,45 +35099,47 @@ async function runBlindboxGeneration(plan) {
     return true;
   }, { timeoutSec: params.timeoutSec || 0 });
 }
-function buildDirectorOutlineJson(bb) {
-  return bb.nodes.map((node, i) => ({
-    node: i,
-    title: node.title,
-    anchor: node.anchor,
-    is_final: i === bb.nodes.length - 1,
-    events: node.events.map((ev, j) => {
-      const e = { event: j, content: ev.content, status: ev.status };
-      if ((ev.status === EVENT_STATUS.DONE || ev.status === EVENT_STATUS.SKIPPED) && ev.recap) e.recap = ev.recap;
-      return e;
-    })
-  }));
-}
-function buildDirectorMessages(ctx, bb) {
+function buildDirectorMessages(ctx2, bb) {
   const templates = getPromptTemplates().director;
-  const cur = bb.progress || { nodeIndex: 0, eventIndex: 0 };
-  const vars = buildPromptTemplateVars(ctx, "(\u7A7A)", "", [], {
-    // 导演专用：带上被总结/隐藏的楼层（includeHidden），否则总结一跑导演就瞎了。
-    recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true }),
-    blindboxOutline: JSON.stringify(buildDirectorOutlineJson(bb), null, 2),
-    blindboxProgress: `\u8282\u70B9 ${cur.nodeIndex} \xB7 \u4E8B\u4EF6 ${cur.eventIndex}`
+  const vars = buildPromptTemplateVars(ctx2, "(\u7A7A)", "", [], {
+    // 导演专用：① includeHidden 带上被总结/隐藏的楼层，否则总结一跑导演就瞎了；
+    //           ② withFloors 带上 #楼层号，判定才能回报 evidence_floor、代码才能校验是不是新证据。
+    recentChat: collectRecentChatText(getDirectorChatFloors(), { includeHidden: true, withFloors: true }),
+    blindboxOutline: JSON.stringify(buildDirectorSkeleton(bb), null, 2),
+    blindboxProgress: describeDirectorProgress(bb),
+    blindboxStrictness: describeStrictness(bb.strictness)
   });
   return [
     { role: "system", content: renderPromptTemplate(templates.system, vars) },
     { role: "user", content: renderPromptTemplate(templates.user, vars) }
   ];
 }
-async function runDirectorTurn() {
+async function runDirectorTurn(trigger = null) {
   const plan = getActivePlan();
-  if (!plan || !isBlindboxPlan(plan)) return;
+  if (!plan || !isBlindboxPlan(plan)) return null;
   const bb0 = plan.blindbox;
-  if (!bb0 || bb0.sealed !== true || bb0.unsealed === true || bb0.directorPaused === true) return;
-  const ctx = await getContextData();
-  const params = getOutlineGenParams().pacing;
+  if (!bb0 || bb0.sealed !== true || bb0.unsealed === true || bb0.directorPaused === true) return null;
+  const judgedPlanId = plan.id;
+  const trig = trigger && typeof trigger === "object" ? trigger : getDirectorTrigger();
+  const floor = Number.isFinite(Number(trig?.floor)) ? Math.floor(Number(trig.floor)) : -1;
+  const swipeId = String(trig?.swipeId ?? "");
+  let before = normalizeBlindbox(bb0);
+  if (floor >= 0 && before.lastJudged.floor === floor && before.lastJudged.swipeId !== swipeId) {
+    before = rollbackJournalFrom(before, floor);
+    const pre = getPlans().find((p) => p.id === plan.id);
+    if (pre && isBlindboxPlan(pre)) {
+      pre.blindbox = before;
+      pre.updatedAt = Date.now();
+      saveExtData();
+    }
+  }
+  const ctx2 = await getContextData();
+  const params = getOutlineGenParams().director;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 6e4);
+  const timer = setTimeout(() => controller.abort(), (params.timeoutSec > 0 ? params.timeoutSec : 60) * 1e3);
   let raw = "";
   try {
-    raw = await sendOutlineRequest(buildDirectorMessages(ctx, normalizeBlindbox(bb0)), {
+    raw = await sendOutlineRequest(buildDirectorMessages(ctx2, before), {
       temperature: params.temperature,
       maxTokens: params.maxTokens,
       stream: false,
@@ -33055,19 +35148,51 @@ async function runDirectorTurn() {
   } finally {
     clearTimeout(timer);
   }
-  const decision = parseDirectorDecision(tryParseLooseJsonObject(raw));
+  const parsed = tryParseLooseJsonObject(raw);
+  if (!parsed) {
+    console.warn("[Titania] \u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u8FD4\u56DE\u65E0\u6CD5\u89E3\u6790\uFF0C\u672C\u62CD\u8DF3\u8FC7\uFF08\u4FDD\u7559\u4E0A\u4E00\u62CD\u5F15\u5BFC\uFF09");
+    return { planId: judgedPlanId, updated: false };
+  }
+  const decision = parseDirectorDecision(parsed);
   const target = getPlans().find((p) => p.id === plan.id);
-  if (!target || !isBlindboxPlan(target)) return;
-  target.blindbox = applyDirectorDecision(target.blindbox, decision);
+  if (!target || !isBlindboxPlan(target)) return { planId: judgedPlanId, updated: false };
+  const report = {};
+  target.blindbox = applyDirectorDecision(before, decision, {
+    strictness: before.strictness,
+    floor,
+    swipeId,
+    sig: String(trig?.sig || ""),
+    sinceFloor: before.lastJudged.floor,
+    report
+  });
   target.updatedAt = Date.now();
   saveExtData();
+  const after = normalizeBlindbox(target.blindbox);
+  if (report.refused?.length) {
+    console.info("[Titania] \u76F2\u76D2\u5BFC\u6F14\uFF1A\u672C\u62CD\u88AB\u95F8\u95E8\u62E6\u4E0B\u7684\u56DE\u62A5", report.strictness, report.refused);
+  }
   if (editingPlanId === target.id) renderBlindboxSubview(target);
-  if (decision.directive && decision.intensity !== DIRECTOR_INTENSITY.NONE) {
-    const header = decision.intensity === DIRECTOR_INTENSITY.FIRM ? "\u3010\u5267\u60C5\u5BFC\u6F14\xB7\u6536\u675F\u3011\n" : "\u3010\u5267\u60C5\u5BFC\u6F14\xB7\u8F7B\u63A8\u3011\n";
-    armDirectorDirective(header + decision.directive, getDirectorInjectConfig());
+  const moved = after.progress.nodeIndex !== before.progress.nodeIndex || after.progress.eventIndex !== before.progress.eventIndex;
+  const nextEv = after.nodes[after.progress.nodeIndex]?.events?.[after.progress.eventIndex];
+  const spanLine = moved && nextEv?.span ? `
+\u3010\u65F6\u95F4\u63A8\u79FB\u3011\u5148\u4EE5\u53D9\u8FF0\u628A\u65F6\u95F4\u63A8\u8FDB\u5230\u300C${nextEv.span}\u300D\uFF0C\u518D\u5C55\u5F00\u8FD9\u4E00\u62CD\u3002` : "";
+  const awaiting = after.progress.awaitingAnchor === true;
+  const curNode = after.nodes[after.progress.nodeIndex];
+  let directive = decision.directive;
+  let intensity = decision.intensity;
+  if (awaiting) {
+    intensity = DIRECTOR_INTENSITY.FIRM;
+    if (!directive) directive = `\u628A\u8FD9\u4E00\u6BB5\u7684\u5173\u952E\u8F6C\u6298\u771F\u6B63\u843D\u5730\uFF1A${String(curNode?.anchor || "").slice(0, 80)}`;
+  }
+  if (directive && intensity !== DIRECTOR_INTENSITY.NONE) {
+    const header = intensity === DIRECTOR_INTENSITY.FIRM ? "\u3010\u5267\u60C5\u5BFC\u6F14\xB7\u6536\u675F\u3011\n" : "\u3010\u5267\u60C5\u5BFC\u6F14\xB7\u8F7B\u63A8\u3011\n";
+    armDirectorDirective(header + directive + spanLine, getDirectorInjectConfig());
+  } else if (spanLine) {
+    armDirectorDirective("\u3010\u5267\u60C5\u5BFC\u6F14\xB7\u8F7B\u63A8\u3011" + spanLine, getDirectorInjectConfig());
   } else {
     clearDirectorDirective();
   }
+  return { planId: judgedPlanId, updated: true };
 }
 async function generateRecommendations() {
   if (!ensureEditingPlanContext()) return;
@@ -33092,7 +35217,7 @@ async function generateRecommendations() {
       temperature: params.temperature,
       maxTokens: params.maxTokens,
       timeoutSec: params.timeoutSec,
-      buildMessages: (ctx, opening2) => buildRecommendationPrompt(ctx, storyInput, opening2),
+      buildMessages: (ctx2, opening2) => buildRecommendationPrompt(ctx2, storyInput, opening2),
       parse: (raw) => parseRecommendationResponse(raw, fallbackItemIndex, total),
       apply: (parsed) => {
         generatedCandidateCount = parsed.candidates.length;
@@ -33127,7 +35252,7 @@ async function generateOutline() {
       temperature: params.temperature,
       maxTokens: params.maxTokens,
       timeoutSec: params.timeoutSec,
-      buildMessages: (ctx, opening2) => buildPrompt(ctx, storyInput, opening2),
+      buildMessages: (ctx2, opening2) => buildPrompt(ctx2, storyInput, opening2),
       parse: parseOutlineResponse,
       apply: (parsed) => applyParsedOutline(parsed, storyInput, insertMode),
       reparseLabel: "\u91CD\u65B0\u89E3\u6790\u5927\u7EB2\u5E76\u5E94\u7528",
@@ -33236,6 +35361,9 @@ function bindEvents() {
   $overlay.on("click", "[data-action='bb-reroll']", () => blindboxGenerateFromView(true));
   $overlay.on("click", "[data-action='bb-unseal']", () => blindboxUnsealFromView());
   $overlay.on("click", "[data-action='bb-to-normal']", () => blindboxConvertToNormal());
+  $overlay.on("change", "[data-action='bb-strictness']", function() {
+    blindboxSetStrictness(String($(this).val() || ""));
+  });
   $overlay.on("click", "[data-action='delete-plan']", function(e) {
     e.stopPropagation();
     const planId = String($(this).data("plan-id") || "").trim();
@@ -33568,7 +35696,7 @@ function markSceneCandidateUsed(planId, index) {
   candidates[index] = { ...candidates[index], used: true };
   setPlanCandidates(id3, candidates, { keepTimestamp: true });
 }
-var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY2, ACTIVE_PLAN_KEY2, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, PACING_STATES;
+var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY2, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, DIRECTOR_CHAT_FLOORS_KEY, DIRECTOR_CHAT_FLOORS_DEFAULT, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, BB_STRICTNESS_LABEL, PACING_STATES;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -33591,9 +35719,9 @@ var init_storyOutlineWindow = __esm({
     responseTimerRunning = false;
     activeOutlineAbortController = null;
     DRAFT_KEY = "story_outline_draft";
-    PLANS_KEY2 = "story_outline_plans";
-    ACTIVE_PLAN_KEY2 = "story_outline_active_plan_id";
-    SCENE_SOURCE_PLAN_KEY = "story_outline_scene_source_plan_id";
+    PLANS_KEY3 = "story_outline_plans";
+    ACTIVE_PLAN_KEY3 = "story_outline_active_plan_id";
+    SCENE_SOURCE_PLAN_KEY2 = "story_outline_scene_source_plan_id";
     PROMPT_TEMPLATES_KEY = "story_outline_prompt_templates";
     OPENING_SOURCE_MODE_KEY = "story_outline_opening_source_mode";
     OPENING_SOURCE_REF_KEY = "story_outline_opening_source_ref";
@@ -33605,6 +35733,8 @@ var init_storyOutlineWindow = __esm({
     ROLLING_CHAT_FLOORS_KEY = "story_outline_rolling_chat_floors";
     ROLLING_CHAT_FLOORS_DEFAULT = 3;
     ROLLING_CHAT_FLOORS_MAX = 20;
+    DIRECTOR_CHAT_FLOORS_KEY = "story_outline_director_chat_floors";
+    DIRECTOR_CHAT_FLOORS_DEFAULT = 6;
     currentView = "hub";
     activePlanId = "";
     editingPlanId = "";
@@ -33615,6 +35745,11 @@ var init_storyOutlineWindow = __esm({
     planRenameSnapshot = "";
     MAX_RAW_HISTORY = 24;
     OUTLINE_ST_FOLLOW_ID = "st_sync";
+    BB_STRICTNESS_LABEL = {
+      [STRICTNESS.LOOSE]: "\u5BBD\u677E\uFF08\u65E7\u884C\u4E3A\uFF09",
+      [STRICTNESS.STANDARD]: "\u6807\u51C6\uFF08\u63A8\u8350\uFF09",
+      [STRICTNESS.STRICT]: "\u4E25\u683C\uFF08\u5B81\u53EF\u6162\u4E00\u62CD\uFF09"
+    };
     PACING_STATES = ["\u62D6\u6C93", "\u5E73\u7A33", "\u7D27\u51D1", "\u4ED3\u4FC3"];
   }
 });
@@ -33880,8 +36015,8 @@ __export(rewriteEntryButton_exports, {
   openRewritePanelFromMenu: () => openRewritePanelFromMenu,
   refreshRewriteEntryButton: () => refreshRewriteEntryButton
 });
-import { saveChatConditional as saveChatConditional2, reloadCurrentChat as reloadCurrentChat2, updateMessageBlock, eventSource as eventSource3, event_types as event_types3 } from "../../../../script.js";
-function isEnabled2() {
+import { saveChatConditional as saveChatConditional2, reloadCurrentChat as reloadCurrentChat2, updateMessageBlock, eventSource as eventSource5, event_types as event_types5 } from "../../../../script.js";
+function isEnabled3() {
   const data = getExtData();
   return data?.rewrite_entry?.enabled === true;
 }
@@ -34252,7 +36387,7 @@ function ensureInlineRewriteToolbar(latest) {
 }
 function refreshInlineRewriteEntry() {
   const rw = getRewriteState();
-  if (!isEnabled2() || !isRewriteEnabled() || rw.selected_sentence_enabled === false) {
+  if (!isEnabled3() || !isRewriteEnabled() || rw.selected_sentence_enabled === false) {
     clearInlineSentenceSelection();
     return;
   }
@@ -34541,8 +36676,8 @@ function buildRewritePayload(data, sourceText) {
 }
 function getLatestAssistantMessageFromChat() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return null;
-  const ctx = SillyTavern.getContext();
-  const chat2 = Array.isArray(ctx?.chat) ? ctx.chat : [];
+  const ctx2 = SillyTavern.getContext();
+  const chat2 = Array.isArray(ctx2?.chat) ? ctx2.chat : [];
   const whitelist = parseTagWhitelistInput(ensureRewriteDataShape().tag_whitelist || "");
   if (chat2.length === 0) return null;
   for (let i = chat2.length - 1; i >= 0; i -= 1) {
@@ -34665,8 +36800,8 @@ function applyRewriteMarksToMessage(index, marksInput) {
 }
 function applyAllRewriteMarksFromChat() {
   if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return;
-  const ctx = SillyTavern.getContext();
-  const chat2 = Array.isArray(ctx?.chat) ? ctx.chat : [];
+  const ctx2 = SillyTavern.getContext();
+  const chat2 = Array.isArray(ctx2?.chat) ? ctx2.chat : [];
   chat2.forEach((msg, index) => {
     const marks = normalizeRewriteMarks(msg?.extra?.titania_rewrite_marks);
     applyRewriteMarksToMessage(index, marks);
@@ -34682,11 +36817,11 @@ function scheduleApplyAllRewriteMarks(delay = 80) {
 function bindRewriteDecorationEvents() {
   if (rewriteDecorBound) return;
   rewriteDecorBound = true;
-  eventSource3.on(event_types3.MESSAGE_RECEIVED, () => {
+  eventSource5.on(event_types5.MESSAGE_RECEIVED, () => {
     scheduleApplyAllRewriteMarks(120);
     setTimeout(refreshInlineRewriteEntry, 160);
   });
-  eventSource3.on(event_types3.GENERATION_ENDED, () => {
+  eventSource5.on(event_types5.GENERATION_ENDED, () => {
     scheduleApplyAllRewriteMarks(120);
     setTimeout(refreshInlineRewriteEntry, 160);
   });
@@ -34816,9 +36951,9 @@ function writeBackMessageContent(targetMsg, rewrittenText) {
 }
 async function rerenderMessageInPlace(index, msg) {
   try {
-    await eventSource3.emit(event_types3.MESSAGE_EDITED, index);
+    await eventSource5.emit(event_types5.MESSAGE_EDITED, index);
     updateMessageBlock(index, msg);
-    await eventSource3.emit(event_types3.MESSAGE_UPDATED, index);
+    await eventSource5.emit(event_types5.MESSAGE_UPDATED, index);
   } catch (e) {
     return false;
   }
@@ -35234,7 +37369,7 @@ async function runManualRewrite() {
   return runRewrite({ source: "manual" });
 }
 async function onGenerationEndedAuto() {
-  if (!isEnabled2()) return;
+  if (!isEnabled3()) return;
   try {
     await maybeAutoDelete();
   } catch (e) {
@@ -35281,7 +37416,7 @@ function maybeScheduleAutoRewrite() {
     autoRewriteTimer = null;
     const freshData = ensureRewriteDataShape();
     if (!freshData.rewrite.enabled || !freshData.rewrite.auto_trigger) return;
-    if (!isEnabled2()) return;
+    if (!isEnabled3()) return;
     if (isAutoRewriting) return;
     if (activeRewriteAbortController) return;
     const freshLatest = getLatestAssistantMessageFromChat();
@@ -35310,7 +37445,7 @@ function maybeScheduleAutoRewrite() {
 function bindAutoTriggerEvents() {
   if (autoTriggerBound) return;
   autoTriggerBound = true;
-  eventSource3.on(event_types3.GENERATION_ENDED, onGenerationEndedAuto);
+  eventSource5.on(event_types5.GENERATION_ENDED, onGenerationEndedAuto);
 }
 function buildKwRowHtml(rule = {}) {
   return `
@@ -36217,7 +38352,7 @@ function bindGlobalEvents() {
   });
 }
 function syncEntryButton() {
-  if (!isEnabled2()) {
+  if (!isEnabled3()) {
     clearInlineSentenceSelection();
     removeButton(true);
     return;
@@ -36246,7 +38381,7 @@ function refreshRewriteEntryButton() {
   refreshInlineRewriteEntry();
 }
 function openRewritePanelFromMenu() {
-  if (!isEnabled2()) return;
+  if (!isEnabled3()) return;
   openPanel();
 }
 var BTN_ID, OVERLAY_ID, SETTINGS_OVERLAY_ID, LIVE_OVERLAY_ID, observerBound, docEventBound, autoTriggerBound, rewriteDecorBound, rewriteDecorTimer, autoRewriteTimer, activeRewriteAbortController, isAutoRewriting, isAutoDeleting, activePanelTab, runtimeCollapsed, lastRawResponseText, lastRawMetaText, liveResponseHistory, liveResponseHistorySeq, lastMatchResult, lastMatchSourceText, lastDiffRows, lastDeleteResult, lastDeleteSourceText, latestSentenceUnits, selectedSentenceIds, inlineSelectionMessageIndex, LIVE_RESPONSE_HISTORY_MAX, AUTO_REWRITE_DELAY_MS, REWRITE_TEMPERATURE, REWRITE_FIX_TEMPERATURE, REWRITE_MAX_TOKENS, REWRITE_DEFAULT_PROMPT_SYSTEM, REWRITE_DEFAULT_PROMPT_USER, REWRITE_DEFAULT_SELECTED_PROMPT_SYSTEM, REWRITE_DEFAULT_SELECTED_PROMPT_USER, REWRITE_DEFAULT_PROMPT_JSON_RULE, T_INLINE_WRAP_TAGS;
@@ -36347,9 +38482,9 @@ __export(floorNav_exports, {
   jumpToTopFloor: () => jumpToTopFloor,
   refreshFloorNavButton: () => refreshFloorNavButton
 });
-import { eventSource as eventSource4, event_types as event_types4, showMoreMessages } from "../../../../script.js";
+import { eventSource as eventSource6, event_types as event_types6, showMoreMessages } from "../../../../script.js";
 import { hideChatMessageRange } from "../../../chats.js";
-function isEnabled3() {
+function isEnabled4() {
   return getExtData()?.floor_nav?.enabled !== false;
 }
 function getChat() {
@@ -36408,7 +38543,7 @@ function removeAllButtons() {
   document.querySelectorAll(`#chat .${BTN_CLASS}`).forEach((node) => node.remove());
 }
 function refreshButtons() {
-  if (!isEnabled3()) {
+  if (!isEnabled4()) {
     removeAllButtons();
     return;
   }
@@ -36427,10 +38562,10 @@ function refreshButtons() {
   }
 }
 function scheduleRefreshButtons(delay = 0) {
-  if (refreshQueued) return;
-  refreshQueued = true;
+  if (refreshQueued2) return;
+  refreshQueued2 = true;
   setTimeout(() => {
-    refreshQueued = false;
+    refreshQueued2 = false;
     try {
       refreshButtons();
     } catch (e) {
@@ -36470,11 +38605,11 @@ async function onFloorHideClick(mesid) {
   }
 }
 function initFloorNav() {
-  if (listenersBound2) {
+  if (listenersBound4) {
     scheduleRefreshButtons(0);
     return;
   }
-  listenersBound2 = true;
+  listenersBound4 = true;
   $(document).on("click", `.${BTN_CLASS}`, function(event) {
     event.stopPropagation();
     const mesid = Number($(this).closest(".mes").attr("mesid"));
@@ -36482,28 +38617,28 @@ function initFloorNav() {
     void onFloorHideClick(mesid);
   });
   const rerenderEvents = [
-    event_types4.CHAT_CHANGED,
-    event_types4.CHARACTER_MESSAGE_RENDERED,
-    event_types4.USER_MESSAGE_RENDERED,
-    event_types4.MESSAGE_SWIPED,
-    event_types4.MESSAGE_DELETED,
-    event_types4.MORE_MESSAGES_LOADED
+    event_types6.CHAT_CHANGED,
+    event_types6.CHARACTER_MESSAGE_RENDERED,
+    event_types6.USER_MESSAGE_RENDERED,
+    event_types6.MESSAGE_SWIPED,
+    event_types6.MESSAGE_DELETED,
+    event_types6.MORE_MESSAGES_LOADED
   ];
   for (const eventName of rerenderEvents) {
     if (!eventName) continue;
-    eventSource4.on(eventName, () => scheduleRefreshButtons(0));
+    eventSource6.on(eventName, () => scheduleRefreshButtons(0));
   }
   scheduleRefreshButtons(300);
   TitaniaLogger.info("\u697C\u5C42\u5FEB\u6377\u64CD\u4F5C\u5DF2\u521D\u59CB\u5316");
 }
-var BTN_CLASS, listenersBound2, refreshQueued;
+var BTN_CLASS, listenersBound4, refreshQueued2;
 var init_floorNav = __esm({
   "src/ui/floorNav.js"() {
     init_storage();
     init_logger();
     BTN_CLASS = "titania-floorhide-btn";
-    listenersBound2 = false;
-    refreshQueued = false;
+    listenersBound4 = false;
+    refreshQueued2 = false;
   }
 });
 
@@ -36551,9 +38686,9 @@ function escapeHtml6(text) {
   return String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function renderFloorHtml(msg, index) {
-  const ctx = SillyTavern.getContext();
+  const ctx2 = SillyTavern.getContext();
   try {
-    return ctx.messageFormatting(getFloorText(msg), msg.name, msg.is_system, msg.is_user, index, {}, false);
+    return ctx2.messageFormatting(getFloorText(msg), msg.name, msg.is_system, msg.is_user, index, {}, false);
   } catch {
     return `<p>${escapeHtml6(getFloorText(msg))}</p>`;
   }
@@ -36562,9 +38697,9 @@ function buildFloors(config) {
   let chat2 = [];
   let charName = "";
   try {
-    const ctx = SillyTavern.getContext();
-    chat2 = Array.isArray(ctx?.chat) ? ctx.chat : [];
-    charName = String(ctx?.name || "");
+    const ctx2 = SillyTavern.getContext();
+    chat2 = Array.isArray(ctx2?.chat) ? ctx2.chat : [];
+    charName = String(ctx2?.name || "");
   } catch {
     chat2 = [];
   }
@@ -36703,7 +38838,7 @@ var init_readerWindow = __esm({
 });
 
 // src/ui/outlineEntryButton.js
-function isEnabled4() {
+function isEnabled5() {
   const data = getExtData();
   return data?.outline_entry?.enabled === true;
 }
@@ -36890,7 +39025,7 @@ function ensureButton() {
   bindClick($btn);
 }
 function syncEntryButton2() {
-  if (!isEnabled4()) {
+  if (!isEnabled5()) {
     removeButton2();
     return;
   }
@@ -36919,703 +39054,6 @@ var init_outlineEntryButton = __esm({
     ANCHOR_SELECTOR = "#send_but";
     MENU_ID = "titania-outline-entry-menu";
     observerBound2 = false;
-  }
-});
-
-// src/core/pacingInjection.js
-import {
-  setExtensionPrompt as setExtensionPrompt2,
-  extension_prompt_types as extension_prompt_types2,
-  extension_prompt_roles as extension_prompt_roles2,
-  eventSource as eventSource5,
-  event_types as event_types5
-} from "../../../../script.js";
-function normalizeRole3(role) {
-  const name = String(role || "system").toLowerCase();
-  return name in ROLE_NAME_TO_ENUM2 ? name : "system";
-}
-function normalizeDepth2(depth) {
-  const n = Number(depth);
-  if (!Number.isFinite(n) || n < 0) return 0;
-  return Math.min(1e4, Math.floor(n));
-}
-function briefSummary(text, maxLen = 40) {
-  const s = String(text || "").replace(/\s+/g, " ").trim();
-  return s.length > maxLen ? `${s.slice(0, maxLen)}\u2026` : s;
-}
-function armPacingDirective(text, options = {}) {
-  const body = String(text || "").trim();
-  if (!body) {
-    clearPacingDirective();
-    return false;
-  }
-  const roleName = normalizeRole3(options.role);
-  const depth = normalizeDepth2(options.depth);
-  setExtensionPrompt2(
-    PACING_PROMPT_KEY,
-    DIRECTIVE_HEADER + body,
-    extension_prompt_types2.IN_CHAT,
-    depth,
-    false,
-    ROLE_NAME_TO_ENUM2[roleName]
-  );
-  armed2 = true;
-  armedSummary = briefSummary(body);
-  armedDepth = depth;
-  armedRole = roleName;
-  TitaniaLogger.info("\u8282\u594F\u6307\u4EE4\u5DF2\u6B66\u88C5", { depth, role: roleName });
-  return true;
-}
-function clearPacingDirective() {
-  setExtensionPrompt2(PACING_PROMPT_KEY, "", extension_prompt_types2.IN_CHAT, 0);
-  armed2 = false;
-  armedSummary = "";
-}
-function getArmedPacing() {
-  return { armed: armed2, summary: armedSummary, depth: armedDepth, role: armedRole };
-}
-function initPacingInjection() {
-  if (listenersBound3) return;
-  listenersBound3 = true;
-  clearPacingDirective();
-  eventSource5.on(event_types5.GENERATION_ENDED, () => {
-    if (armed2) clearPacingDirective();
-  });
-  if (event_types5.CHAT_CHANGED) {
-    eventSource5.on(event_types5.CHAT_CHANGED, () => {
-      if (armed2) clearPacingDirective();
-    });
-  }
-  TitaniaLogger.info("\u53D9\u4E8B\u8282\u594F\u6CE8\u5165\u5DF2\u521D\u59CB\u5316");
-}
-var PACING_PROMPT_KEY, DIRECTIVE_HEADER, ROLE_NAME_TO_ENUM2, listenersBound3, armed2, armedSummary, armedDepth, armedRole;
-var init_pacingInjection = __esm({
-  "src/core/pacingInjection.js"() {
-    init_logger();
-    PACING_PROMPT_KEY = "TITANIA_PACING";
-    DIRECTIVE_HEADER = "\u3010\u53D9\u4E8B\u8282\u594F\u63D0\u793A\u3011\n";
-    ROLE_NAME_TO_ENUM2 = {
-      system: extension_prompt_roles2.SYSTEM,
-      user: extension_prompt_roles2.USER,
-      assistant: extension_prompt_roles2.ASSISTANT
-    };
-    listenersBound3 = false;
-    armed2 = false;
-    armedSummary = "";
-    armedDepth = 0;
-    armedRole = "system";
-  }
-});
-
-// src/ui/sceneAdvanceBubble.js
-import { eventSource as eventSource6, event_types as event_types6 } from "../../../../script.js";
-function getPacingConfig() {
-  const p = getExtData()?.pacing || {};
-  const role = ["system", "user", "assistant"].includes(p.inject_role) ? p.inject_role : "system";
-  const depthRaw = Number(p.inject_depth);
-  const depth = Number.isFinite(depthRaw) && depthRaw >= 0 ? Math.floor(depthRaw) : 0;
-  return { depth, role };
-}
-function savePacingConfig(patch) {
-  const data = getExtData();
-  const prev = data.pacing && typeof data.pacing === "object" ? data.pacing : {};
-  data.pacing = { ...prev, ...patch };
-  saveExtData();
-}
-function loadApi() {
-  if (!apiPromise) apiPromise = Promise.resolve().then(() => (init_storyOutlineWindow(), storyOutlineWindow_exports));
-  return apiPromise;
-}
-function isEnabled5() {
-  return getExtData()?.outline_entry?.show_outline_actions === true;
-}
-function escapeHtmlText2(str2) {
-  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
-function briefText(text, maxLen = 48) {
-  const s = String(text || "").replace(/\s+/g, " ").trim();
-  if (!s) return "(\u7A7A)";
-  return s.length > maxLen ? `${s.slice(0, maxLen)}...` : s;
-}
-function readProgressFromSettings() {
-  const data = getExtData();
-  const plans = Array.isArray(data?.[PLANS_KEY3]) ? data[PLANS_KEY3] : [];
-  const sourceId = String(data?.[SCENE_SOURCE_PLAN_KEY2] || "");
-  const activeId = String(data?.[ACTIVE_PLAN_KEY3] || "");
-  const plan = plans.find((p) => p.id === sourceId) || plans.find((p) => p.id === activeId) || null;
-  if (!plan) return null;
-  const total = Array.isArray(plan.items) ? plan.items.length : 0;
-  if (total <= 0) return null;
-  const raw = Number(plan.progress?.itemIndex);
-  const index = Number.isFinite(raw) ? Math.max(0, Math.min(raw, total - 1)) : 0;
-  return { index, total };
-}
-function formatProgressLabel(progress) {
-  if (!progress) return "";
-  return `\u7B2C ${progress.index + 1} / ${progress.total} \u6761`;
-}
-function getActiveBlindboxInfo() {
-  try {
-    const data = getExtData();
-    const plans = Array.isArray(data?.[PLANS_KEY3]) ? data[PLANS_KEY3] : [];
-    if (plans.length === 0) return null;
-    const activeId = String(data?.[ACTIVE_PLAN_KEY3] || "");
-    const plan = plans.find((p) => p?.id === activeId) || plans[0];
-    if (!plan || !isBlindboxPlan(plan)) return null;
-    const bb = plan.blindbox;
-    if (!bb || bb.sealed !== true || bb.unsealed === true) return null;
-    const nbb = normalizeBlindbox(bb);
-    return { planId: plan.id, stats: getProgressStats(nbb), paused: bb.directorPaused === true };
-  } catch {
-    return null;
-  }
-}
-function toggleBlindboxDirectorPaused(planId) {
-  const data = getExtData();
-  const plans = Array.isArray(data?.[PLANS_KEY3]) ? data[PLANS_KEY3] : [];
-  const plan = plans.find((p) => p?.id === planId);
-  if (!plan || !plan.blindbox) return;
-  plan.blindbox.directorPaused = plan.blindbox.directorPaused !== true;
-  plan.updatedAt = Date.now();
-  saveExtData();
-}
-function progressFromState(state) {
-  const total = Number(state?.total) || 0;
-  if (total <= 0) return null;
-  const index = Math.max(0, Math.min(Number(state.progress?.itemIndex) || 0, total - 1));
-  return { index, total };
-}
-function getStrip() {
-  return document.querySelector(`#chat .${STRIP_CLASS}`);
-}
-function removeAllStrips() {
-  document.querySelectorAll(`#chat .${STRIP_CLASS}`).forEach((node) => node.remove());
-}
-function getLastAiMessage() {
-  const all = document.querySelectorAll('#chat .mes[is_user="false"]');
-  for (let i = all.length - 1; i >= 0; i--) {
-    if (all[i].getAttribute("is_system") !== "true") return all[i];
-  }
-  return null;
-}
-function buildStrip() {
-  const strip = document.createElement("div");
-  strip.className = `${STRIP_CLASS} tsa-strip`;
-  strip.setAttribute("role", "button");
-  strip.setAttribute("tabindex", "0");
-  strip.setAttribute("aria-expanded", "false");
-  strip.innerHTML = `
-        <i class="fa-solid fa-clapperboard tsa-strip-icon"></i>
-        <span class="tsa-strip-title">\u5267\u60C5\u63A8\u8FDB</span>
-        <span class="tsa-strip-progress"></span>
-        <i class="fa-solid fa-chevron-down tsa-strip-arrow"></i>`;
-  strip.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const mesid = Number(strip.closest(".mes")?.getAttribute("mesid"));
-    if (!Number.isFinite(mesid)) return;
-    togglePanel(strip, mesid);
-  });
-  strip.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    event.stopPropagation();
-    const mesid = Number(strip.closest(".mes")?.getAttribute("mesid"));
-    if (!Number.isFinite(mesid)) return;
-    togglePanel(strip, mesid);
-  });
-  return strip;
-}
-function updateStrip(strip, { progress, expanded } = {}) {
-  if (!strip) return;
-  const bbInfo = getActiveBlindboxInfo();
-  if (bbInfo) {
-    $(strip).find(".tsa-strip-title").text(bbInfo.paused ? "\u76F2\u76D2\u5BFC\u6F14 \xB7 \u5DF2\u6682\u505C" : "\u76F2\u76D2\u5BFC\u6F14");
-    $(strip).find(".tsa-strip-progress").text(`\xB7 \u5DF2\u8FBE\u6210 ${bbInfo.stats.passed}/${bbInfo.stats.total}`);
-  } else {
-    $(strip).find(".tsa-strip-title").text("\u5267\u60C5\u63A8\u8FDB");
-    const target = progress === void 0 ? readProgressFromSettings() : progress;
-    const label = formatProgressLabel(target);
-    $(strip).find(".tsa-strip-progress").text(label ? `\xB7 ${label}` : "");
-  }
-  if (expanded !== void 0) {
-    $(strip).attr("aria-expanded", String(expanded)).toggleClass("is-open", expanded);
-  }
-}
-function refreshStrips() {
-  if (!isEnabled5()) {
-    removeAllStrips();
-    destroyPanel();
-    return;
-  }
-  const last = getLastAiMessage();
-  if (!last) {
-    removeAllStrips();
-    destroyPanel();
-    return;
-  }
-  const lastMesid = Number(last.getAttribute("mesid"));
-  if (expandedForMesid !== null && expandedForMesid !== lastMesid) destroyPanel();
-  for (const node of document.querySelectorAll(`#chat .${STRIP_CLASS}`)) {
-    if (node.closest(".mes") !== last) node.remove();
-  }
-  const mesText = last.querySelector(".mes_text");
-  if (!mesText) return;
-  let strip = last.querySelector(`.${STRIP_CLASS}`);
-  if (!strip) {
-    strip = buildStrip();
-    mesText.after(strip);
-  }
-  updateStrip(strip, { progress: readProgressFromSettings(), expanded: expandedForMesid === lastMesid });
-  if (expandedForMesid === lastMesid && !document.getElementById(PANEL_ID)) {
-    restorePanel(strip);
-  }
-}
-function scheduleRefreshStrips(delay = 0) {
-  if (refreshQueued2) return;
-  refreshQueued2 = true;
-  setTimeout(() => {
-    refreshQueued2 = false;
-    try {
-      refreshStrips();
-    } catch (e) {
-      TitaniaLogger.warn("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u6302\u8F7D\u5931\u8D25", e?.message || String(e));
-    }
-  }, delay);
-}
-function refreshSceneAdvanceBubble() {
-  scheduleRefreshStrips(0);
-}
-function syncStripProgress(progress) {
-  const strip = getStrip();
-  if (strip) updateStrip(strip, { progress });
-}
-function buildProgressHtml(state) {
-  if (!state.hasPlan || state.total <= 0) return "";
-  const idx = state.progress.itemIndex;
-  const percent = Math.round((idx + 1) / state.total * 100);
-  return `
-        <div class="tsa-progress">
-            <div class="tsa-progress-text">\u7B2C ${idx + 1} / ${state.total} \u6761</div>
-            <div class="tsa-bar"><div class="tsa-bar-fill" style="width:${percent}%"></div></div>
-        </div>`;
-}
-function buildPreviewHtml(state) {
-  const items = Array.isArray(state.items) ? state.items : [];
-  if (items.length === 0) return "";
-  if (previewItemIdx >= items.length) previewItemIdx = -1;
-  const head = `
-            <div class="tsa-preview-head tsa-preview-toggle ${previewOpen ? "is-open" : ""}" role="button" tabindex="0" aria-expanded="${previewOpen}" title="\u5C55\u5F00/\u6536\u8D77\u5927\u7EB2\u60C5\u8282\u9884\u89C8">
-                <i class="fa-solid fa-map"></i> \u5927\u7EB2\u60C5\u8282\u9884\u89C8
-                <span class="tsa-preview-count">${items.length} \u6761</span>
-                <i class="fa-solid fa-chevron-down tsa-preview-arrow"></i>
-            </div>`;
-  if (!previewOpen) {
-    return `<div class="tsa-preview tsa-preview--collapsed">${head}</div>`;
-  }
-  const current = state.progress.itemIndex;
-  const rows = items.map((item, idx) => {
-    const cls = idx < current ? "done" : idx === current ? state.reachedEnding ? "done" : "current" : "todo";
-    const marker = cls === "done" ? '<i class="fa-solid fa-check"></i>' : cls === "current" ? '<i class="fa-solid fa-location-dot"></i>' : '<i class="fa-regular fa-circle"></i>';
-    const expanded = previewItemIdx === idx;
-    const plotHtml = expanded ? `<div class="tsa-preview-plot tsa-preview-plot--full">${escapeHtmlText2(item.plot || "(\u7A7A)")}</div>` : `<div class="tsa-preview-plot">${escapeHtmlText2(briefText(item.plot))}</div>`;
-    const foreshadowing = String(item.foreshadowing || "").trim();
-    const foreshadowHtml = expanded && foreshadowing ? `<div class="tsa-preview-foreshadow"><i class="fa-solid fa-seedling"></i> \u4F0F\u7B14\uFF1A${escapeHtmlText2(foreshadowing)}</div>` : "";
-    return `
-            <div class="tsa-preview-item ${cls} ${expanded ? "expanded" : ""}" data-preview-idx="${idx}" title="${escapeHtmlText2(item.plot || "(\u7A7A)")}">
-                <span class="tsa-preview-marker">${marker}</span>
-                <div class="tsa-preview-main">
-                    <div class="tsa-preview-title">${escapeHtmlText2(item.time || "\u672A\u8BBE\u65F6\u95F4")} \xB7 ${escapeHtmlText2(item.title || "\u672A\u547D\u540D")}</div>
-                    ${plotHtml}
-                    ${foreshadowHtml}
-                </div>
-            </div>`;
-  }).join("");
-  return `<div class="tsa-preview">${head}${rows}</div>`;
-}
-function buildCandidatesHtml(state) {
-  if (!state.hasPlan) {
-    return `<div class="tsa-empty">\u8BF7\u5148\u5728\u300C\u6545\u4E8B\u5927\u7EB2\u300D\u91CC\u65B0\u5EFA\u5E76\u9009\u62E9\u4E00\u4E2A\u65B9\u6848\uFF0C\u518D\u56DE\u6765\u63A8\u8FDB\u5267\u60C5\u3002</div>`;
-  }
-  if (state.candidates.length === 0) {
-    return `<div class="tsa-empty">\u70B9\u51FB\u4E0B\u65B9\u300C\u63A8\u8350\u5267\u60C5\u300D\uFF0C\u751F\u6210 2~3 \u4E2A\u5019\u9009\u8D70\u5411\u3002</div>`;
-  }
-  return state.candidates.map((c, idx) => `
-        <div class="tsa-item ${c.used ? "used" : ""}" data-candidate-index="${idx}" title="\u70B9\u51FB\u5199\u5165\u8F93\u5165\u6846\uFF08\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\uFF09">
-            <div class="tsa-item-head">
-                <span class="tsa-item-no">#${idx + 1}</span>
-                <span class="tsa-item-title">${escapeHtmlText2(c.title || `\u5019\u9009 ${idx + 1}`)}</span>
-                ${c.used ? '<span class="tsa-item-used">\u5DF2\u5199\u5165</span>' : ""}
-            </div>
-            <div class="tsa-item-meta">\u63A8\u8FDB\u81F3\u5927\u7EB2\u7B2C ${Number(c.itemIndex) || 0} \u6761</div>
-            <div class="tsa-item-text">${escapeHtmlText2(c.text)}</div>
-        </div>
-    `).join("");
-}
-function buildPanelHtml(state) {
-  const bbInfo = getActiveBlindboxInfo();
-  if (bbInfo) {
-    return `<div id="${PANEL_ID}" class="tsa-panel">${buildBlindboxBody(bbInfo)}</div>`;
-  }
-  const tabs = `
-        <div class="tsa-mode-tabs">
-            <button type="button" class="tsa-mode-tab ${panelMode === "recommend" ? "is-active" : ""}" data-mode="recommend"><i class="fa-solid fa-forward-step"></i> \u63A8\u8350\u5267\u60C5</button>
-            <button type="button" class="tsa-mode-tab ${panelMode === "pacing" ? "is-active" : ""}" data-mode="pacing"><i class="fa-solid fa-gauge-high"></i> \u8282\u594F\u628A\u63A7</button>
-        </div>`;
-  const body = panelMode === "pacing" ? buildPacingBody() : buildRecommendBody(state);
-  return `<div id="${PANEL_ID}" class="tsa-panel">${tabs}${body}</div>`;
-}
-function buildBlindboxBody(info) {
-  const s = info.stats;
-  return `
-        <div class="tsa-scroll">
-            <div class="tsa-empty" style="line-height:1.6;">
-                <div style="font-weight:600;"><i class="fa-solid fa-clapperboard"></i> \u76F2\u76D2\u5BFC\u6F14${info.paused ? " \xB7 \u5DF2\u6682\u505C" : "\u5F15\u5BFC\u4E2D"}</div>
-                <div style="margin-top:6px;">\u5185\u5BB9\u5DF2\u5C01\u5370\uFF0C\u7531\u5BFC\u6F14\u5728\u5E55\u540E\u628A\u6BCF\u56DE\u5408\u6084\u6084\u5F15\u5BFC\u5411\u4E3B\u7EBF\u3002\u5DF2\u8FBE\u6210 ${s.passed}/${s.total} \u4E2A\u5173\u952E\u4E8B\u4EF6 \xB7 \u5171 ${s.nodeCount} \u4E2A\u8282\u70B9\u3002</div>
-                <div style="margin-top:6px;opacity:.7;">\u60F3\u770B\u8FDB\u5EA6\u9AA8\u67B6 / \u56DE\u987E\u5899\uFF0C\u6216\u5267\u900F\u9003\u751F\uFF0C\u8BF7\u5230\u300C\u5927\u7EB2\u751F\u6210\u300D\u7A97\u53E3\u6253\u5F00\u8FD9\u672C\u65B9\u6848\u3002</div>
-            </div>
-        </div>
-        <div class="tsa-footer">
-            <button type="button" class="tsa-generate" id="tsa-bb-pause">
-                <i class="fa-solid ${info.paused ? "fa-play" : "fa-pause"}"></i> ${info.paused ? "\u6062\u590D\u5BFC\u6F14" : "\u6682\u505C\u5BFC\u6F14"}
-            </button>
-        </div>`;
-}
-function buildRecommendBody(state) {
-  const generateLabel = state.candidates.length > 0 ? "\u6362\u4E00\u6279" : "\u63A8\u8350\u5267\u60C5";
-  return `
-        <div class="tsa-scroll">
-            ${buildPreviewHtml(state)}
-            <div class="tsa-plan-row">
-                <label class="tsa-plan-label">\u65B9\u6848
-                    <select class="tsa-plan-select" id="tsa-plan-select">${buildPlanOptions(state)}</select>
-                </label>
-            </div>
-            ${buildProgressHtml(state)}
-            <div class="tsa-list" id="tsa-list">${buildCandidatesHtml(state)}</div>
-        </div>
-        <div class="tsa-footer">
-            <button type="button" class="tsa-chip" id="tsa-insert-chip" data-mode="${state.insertMode}" title="\u5207\u6362\u5199\u5165\u65B9\u5F0F\uFF1A\u8986\u76D6/\u8FFD\u52A0">
-                <i class="fa-solid fa-arrows-left-right"></i>
-                <span class="tsa-chip-label">${state.insertMode === "append" ? "\u8FFD\u52A0" : "\u8986\u76D6"}</span>
-            </button>
-            <button type="button" class="tsa-generate" id="tsa-generate" ${generating || !state.hasPlan ? "disabled" : ""}>
-                <i class="fa-solid ${generating ? "fa-spinner fa-spin" : "fa-forward-step"}"></i> ${generating ? "\u63A8\u8350\u4E2D..." : generateLabel}
-            </button>
-        </div>`;
-}
-function buildPlanOptions(state) {
-  return state.plans.length ? state.plans.map((p) => `<option value="${escapeHtmlText2(p.id)}" ${p.id === state.planId ? "selected" : ""}>${escapeHtmlText2(p.name)}</option>`).join("") : `<option value="">\uFF08\u6682\u65E0\u65B9\u6848\uFF09</option>`;
-}
-function buildPacingBody() {
-  const cfg = getPacingConfig();
-  const r = pacingResult;
-  const diag = r ? `<div class="tsa-pacing-diag">
-                <span class="tsa-pacing-state">${escapeHtmlText2(r.pacingState)}</span>
-                ${r.focus ? `<span class="tsa-pacing-focus">${escapeHtmlText2(r.focus)}</span>` : ""}
-                <span class="tsa-pacing-intensity">\u5F3A\u5EA6 ${r.intensity}/5</span>
-                ${r.assessment ? `<div class="tsa-pacing-assessment">${escapeHtmlText2(r.assessment)}</div>` : ""}
-            </div>` : `<div class="tsa-empty">\u70B9\u4E0B\u65B9\u300C\u5206\u6790\u8282\u594F\u300D\uFF0C\u8BA9\u5916\u90E8\u6A21\u578B\u8BFB\u6700\u8FD1\u6B63\u6587\u4E0E\u5927\u7EB2\u8FDB\u5EA6\uFF0C\u7ED9\u4E00\u6761\u53EA\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\u3002\u65E0\u5927\u7EB2\u4E5F\u80FD\u7528\u3002</div>`;
-  const presets = PACING_PRESETS.map(
-    (p) => `<button type="button" class="tsa-pacing-preset" data-preset="${escapeHtmlText2(p.text)}">${escapeHtmlText2(p.label)}</button>`
-  ).join("");
-  const armed3 = getArmedPacing();
-  const armedHtml = armed3.armed ? `<div class="tsa-pacing-armed"><i class="fa-solid fa-circle-check"></i> \u5DF2\u6B66\u88C5\uFF1A${escapeHtmlText2(armed3.summary)} \xB7 \u4E0B\u6761\u56DE\u590D\u751F\u6548</div>` : "";
-  return `
-        <div class="tsa-scroll">
-            ${diag}
-            <textarea class="tsa-pacing-input" id="tsa-pacing-directive" rows="3" placeholder="\u672C\u6B21\u56DE\u590D\u7684\u8282\u594F\u6307\u4EE4\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91\uFF0C\u6216\u70B9\u4E0B\u65B9\u9884\u8BBE\u586B\u5165">${escapeHtmlText2(pacingDraft)}</textarea>
-            <div class="tsa-pacing-presets">${presets}</div>
-            <details class="tsa-pacing-adv">
-                <summary>\u6CE8\u5165\u9AD8\u7EA7\u8BBE\u7F6E</summary>
-                <div class="tsa-pacing-adv-fields">
-                    <label>\u6DF1\u5EA6<input type="number" id="tsa-pacing-depth" min="0" max="10000" step="1" value="${cfg.depth}"></label>
-                    <label>\u89D2\u8272
-                        <select id="tsa-pacing-role">
-                            <option value="system" ${cfg.role === "system" ? "selected" : ""}>system</option>
-                            <option value="user" ${cfg.role === "user" ? "selected" : ""}>user</option>
-                            <option value="assistant" ${cfg.role === "assistant" ? "selected" : ""}>assistant</option>
-                        </select>
-                    </label>
-                </div>
-            </details>
-            ${armedHtml}
-        </div>
-        <div class="tsa-footer">
-            <button type="button" class="tsa-chip" id="tsa-pacing-clear" title="\u6E05\u9664\u5DF2\u6B66\u88C5\u7684\u8282\u594F\u6307\u4EE4"><i class="fa-solid fa-eraser"></i> \u6E05\u9664</button>
-            <button type="button" class="tsa-generate" id="tsa-pacing-analyze" ${pacingAnalyzing ? "disabled" : ""}>
-                <i class="fa-solid ${pacingAnalyzing ? "fa-spinner fa-spin" : "fa-gauge-high"}"></i> ${pacingAnalyzing ? "\u5206\u6790\u4E2D..." : "\u5206\u6790\u8282\u594F"}
-            </button>
-            <button type="button" class="tsa-generate tsa-pacing-apply" id="tsa-pacing-apply"><i class="fa-solid fa-syringe"></i> \u5E94\u7528\u5230\u4E0B\u6B21\u56DE\u590D</button>
-        </div>`;
-}
-async function refreshPanel() {
-  const $panel = $(`#${PANEL_ID}`);
-  if ($panel.length === 0) return;
-  let state;
-  try {
-    const api = await loadApi();
-    state = api.getSceneAdvanceState();
-  } catch (e) {
-    TitaniaLogger.warn("\u5267\u60C5\u63A8\u8FDB\u72B6\u6001\u8BFB\u53D6\u5931\u8D25", e?.message || String(e));
-    return;
-  }
-  const scrollTop = $panel.find(".tsa-scroll").scrollTop() || 0;
-  $panel.html($(buildPanelHtml(state)).html());
-  $panel.find(".tsa-scroll").scrollTop(scrollTop);
-  syncStripProgress(progressFromState(state));
-}
-function destroyPanel() {
-  $(`#${PANEL_ID}`).remove();
-  expandedForMesid = null;
-  previewItemIdx = -1;
-  previewOpen = false;
-  panelMode = "recommend";
-  const strip = getStrip();
-  if (strip) updateStrip(strip, { expanded: false });
-}
-async function restorePanel(strip) {
-  if (restoring) return;
-  restoring = true;
-  try {
-    let state;
-    try {
-      const api = await loadApi();
-      state = api.getSceneAdvanceState();
-    } catch (e) {
-      expandedForMesid = null;
-      updateStrip(strip, { expanded: false });
-      return;
-    }
-    if (document.getElementById(PANEL_ID)) return;
-    insertPanel(strip, buildPanelHtml(state));
-  } finally {
-    restoring = false;
-  }
-}
-async function expandPanel(strip, mesid) {
-  if (opening) return;
-  opening = true;
-  try {
-    let state;
-    try {
-      const api = await loadApi();
-      state = api.getSceneAdvanceState();
-    } catch (e) {
-      TitaniaLogger.error("\u5267\u60C5\u63A8\u8FDB\u6A21\u5757\u52A0\u8F7D\u5931\u8D25", e);
-      if (window.toastr) toastr.error("\u5267\u60C5\u63A8\u8FDB\u6A21\u5757\u52A0\u8F7D\u5931\u8D25", "\u5267\u60C5\u63A8\u8FDB");
-      return;
-    }
-    if (expandedForMesid !== mesid) return;
-    if (document.getElementById(PANEL_ID)) return;
-    insertPanel(strip, buildPanelHtml(state));
-    updateStrip(strip, { progress: progressFromState(state), expanded: true });
-  } finally {
-    opening = false;
-  }
-}
-async function onPickCandidate(index) {
-  const api = await loadApi();
-  const state = api.getSceneAdvanceState();
-  const candidate = state.candidates[index];
-  if (!candidate || !String(candidate.text || "").trim()) return;
-  api.writeSceneToInput(candidate.text, api.getSceneInsertMode());
-  if (state.planId) {
-    api.applySceneProgress(state.planId, candidate.itemIndex - 1);
-    api.markSceneCandidateUsed(state.planId, index);
-  }
-  await refreshPanel();
-}
-async function onGenerate() {
-  if (generating) return;
-  const api = await loadApi();
-  if (!api.ensureSceneSourceLoaded()) {
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u5728\u300C\u6545\u4E8B\u5927\u7EB2\u300D\u91CC\u65B0\u5EFA\u5E76\u9009\u62E9\u4E00\u4E2A\u65B9\u6848", "\u5267\u60C5\u63A8\u8FDB");
-    return;
-  }
-  generating = true;
-  await refreshPanel();
-  try {
-    await api.generateSceneRecommendations();
-  } catch (e) {
-    TitaniaLogger.error("\u5267\u60C5\u63A8\u8350\u5931\u8D25", e);
-  } finally {
-    generating = false;
-    await refreshPanel();
-  }
-}
-async function onAnalyzePacing() {
-  if (pacingAnalyzing) return;
-  pacingAnalyzing = true;
-  await refreshPanel();
-  try {
-    const api = await loadApi();
-    const result = await api.generatePacingAssessment();
-    if (result) {
-      pacingResult = result;
-      pacingDraft = result.directive;
-    }
-  } catch (e) {
-    TitaniaLogger.warn("\u8282\u594F\u5206\u6790\u5931\u8D25", e?.message || String(e));
-  } finally {
-    pacingAnalyzing = false;
-    await refreshPanel();
-  }
-}
-function onApplyPacing() {
-  const text = String($("#tsa-pacing-directive").val() || "").trim();
-  if (!text) {
-    if (window.toastr) toastr.warning("\u8BF7\u5148\u586B\u5199\u6216\u5206\u6790\u51FA\u4E00\u6761\u8282\u594F\u6307\u4EE4", "\u53D9\u4E8B\u8282\u594F");
-    return;
-  }
-  pacingDraft = text;
-  const ok = armPacingDirective(text, getPacingConfig());
-  if (ok && window.toastr) toastr.success("\u5DF2\u5E94\u7528\uFF0C\u5C06\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D", "\u53D9\u4E8B\u8282\u594F");
-  void refreshPanel();
-}
-async function togglePanel(strip, mesid) {
-  if (document.getElementById(PANEL_ID)) {
-    destroyPanel();
-    return;
-  }
-  if (opening) return;
-  expandedForMesid = mesid;
-  await expandPanel(strip, mesid);
-}
-function insertPanel(strip, html) {
-  strip.insertAdjacentHTML("afterend", html);
-  const panel = document.getElementById(PANEL_ID);
-  if (panel) bindPanelNode(panel);
-  return panel;
-}
-function bindPanelNode(panel) {
-  const $panel = $(panel);
-  $panel.on("click", ".tsa-preview-toggle", async function() {
-    previewOpen = !previewOpen;
-    if (!previewOpen) previewItemIdx = -1;
-    await refreshPanel();
-  });
-  $panel.on("click", ".tsa-preview-item", async function() {
-    const idx = Number($(this).data("preview-idx"));
-    if (!Number.isFinite(idx)) return;
-    previewItemIdx = previewItemIdx === idx ? -1 : idx;
-    await refreshPanel();
-  });
-  $panel.on("change", "#tsa-plan-select", async function() {
-    const api = await loadApi();
-    api.switchSceneSourcePlan(String($(this).val() || ""));
-    previewItemIdx = -1;
-    await refreshPanel();
-  });
-  $panel.on("click", "#tsa-insert-chip", async function() {
-    const api = await loadApi();
-    const next = api.toggleSceneInsertMode();
-    $(this).attr("data-mode", next).find(".tsa-chip-label").text(next === "append" ? "\u8FFD\u52A0" : "\u8986\u76D6");
-  });
-  $panel.on("click", "#tsa-generate", () => onGenerate());
-  $panel.on("click", "#tsa-bb-pause", async function() {
-    const info = getActiveBlindboxInfo();
-    if (!info) return;
-    toggleBlindboxDirectorPaused(info.planId);
-    const strip = getStrip();
-    if (strip) updateStrip(strip);
-    await refreshPanel();
-  });
-  $panel.on("click", ".tsa-item", function() {
-    onPickCandidate(Number($(this).data("candidate-index")));
-  });
-  $panel.on("click", ".tsa-mode-tab", async function() {
-    const next = String($(this).data("mode") || "recommend") === "pacing" ? "pacing" : "recommend";
-    if (next === panelMode) return;
-    panelMode = next;
-    await refreshPanel();
-  });
-  $panel.on("input", "#tsa-pacing-directive", function() {
-    pacingDraft = String($(this).val() || "");
-  });
-  $panel.on("click", ".tsa-pacing-preset", function() {
-    pacingDraft = String($(this).data("preset") || "");
-    $panel.find("#tsa-pacing-directive").val(pacingDraft);
-  });
-  $panel.on("change", "#tsa-pacing-depth", function() {
-    const n = Math.max(0, Math.floor(Number($(this).val()) || 0));
-    savePacingConfig({ inject_depth: n });
-  });
-  $panel.on("change", "#tsa-pacing-role", function() {
-    const role = String($(this).val() || "system");
-    savePacingConfig({ inject_role: ["system", "user", "assistant"].includes(role) ? role : "system" });
-  });
-  $panel.on("click", "#tsa-pacing-analyze", () => onAnalyzePacing());
-  $panel.on("click", "#tsa-pacing-apply", () => onApplyPacing());
-  $panel.on("click", "#tsa-pacing-clear", async () => {
-    clearPacingDirective();
-    await refreshPanel();
-  });
-  $panel.on("click mousedown", (event) => event.stopPropagation());
-}
-function initSceneAdvanceBubble() {
-  if (listenersBound4) {
-    scheduleRefreshStrips(0);
-    return;
-  }
-  listenersBound4 = true;
-  $(document).on("keydown.tsceneadvance", (event) => {
-    if (event.key === "Escape" && document.getElementById(PANEL_ID)) destroyPanel();
-  });
-  const rerenderEvents = [
-    event_types6.CHARACTER_MESSAGE_RENDERED,
-    event_types6.USER_MESSAGE_RENDERED,
-    event_types6.MESSAGE_SWIPED,
-    event_types6.MESSAGE_DELETED,
-    event_types6.MESSAGE_EDITED,
-    event_types6.MORE_MESSAGES_LOADED
-  ];
-  for (const eventName of rerenderEvents) {
-    if (!eventName) continue;
-    eventSource6.on(eventName, () => scheduleRefreshStrips(0));
-  }
-  if (event_types6.CHAT_CHANGED) {
-    eventSource6.on(event_types6.CHAT_CHANGED, () => {
-      destroyPanel();
-      scheduleRefreshStrips(0);
-    });
-  }
-  scheduleRefreshStrips(300);
-  TitaniaLogger.info("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u5DF2\u521D\u59CB\u5316");
-}
-var STRIP_CLASS, PANEL_ID, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY2, listenersBound4, refreshQueued2, apiPromise, expandedForMesid, generating, opening, restoring, previewItemIdx, previewOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, PACING_PRESETS;
-var init_sceneAdvanceBubble = __esm({
-  "src/ui/sceneAdvanceBubble.js"() {
-    init_storage();
-    init_logger();
-    init_pacingInjection();
-    init_blindboxPlan();
-    STRIP_CLASS = "titania-scene-advance-strip";
-    PANEL_ID = "t-scene-advance-panel";
-    PLANS_KEY3 = "story_outline_plans";
-    ACTIVE_PLAN_KEY3 = "story_outline_active_plan_id";
-    SCENE_SOURCE_PLAN_KEY2 = "story_outline_scene_source_plan_id";
-    listenersBound4 = false;
-    refreshQueued2 = false;
-    apiPromise = null;
-    expandedForMesid = null;
-    generating = false;
-    opening = false;
-    restoring = false;
-    previewItemIdx = -1;
-    previewOpen = false;
-    panelMode = "recommend";
-    pacingResult = null;
-    pacingDraft = "";
-    pacingAnalyzing = false;
-    PACING_PRESETS = [
-      { label: "\u653E\u6162", text: "\u672C\u6B21\u56DE\u590D\u653E\u6162\u8282\u594F\uFF0C\u505C\u7559\u5728\u5F53\u524D\u573A\u666F\uFF0C\u6DF1\u5316\u4EBA\u7269\u60C5\u7EEA\u4E0E\u611F\u5B98\u7EC6\u8282\uFF0C\u4E0D\u8981\u63A8\u8FDB\u5230\u65B0\u4E8B\u4EF6\u3002" },
-      { label: "\u52A0\u5FEB", text: "\u672C\u6B21\u56DE\u590D\u52A0\u5FEB\u8282\u594F\uFF0C\u7565\u53BB\u8FC7\u573A\u4E0E\u5BD2\u6684\uFF0C\u76F4\u63A5\u63A8\u8FDB\u5230\u4E0B\u4E00\u4E2A\u5173\u952E\u4E8B\u4EF6\u6216\u573A\u666F\u3002" },
-      { label: "\u8D77\u5F20\u529B", text: "\u672C\u6B21\u56DE\u590D\u63D0\u5347\u5F20\u529B\uFF0C\u5236\u9020\u51B2\u7A81\u6216\u60AC\u5FF5\u8BA9\u5C40\u52BF\u5347\u7EA7\uFF0C\u907F\u514D\u5E73\u6DE1\u4EA4\u4EE3\u3002" },
-      { label: "\u6536\u675F", text: "\u672C\u6B21\u56DE\u590D\u6536\u675F\u5F53\u524D\u8FD9\u6761\u7EBF\u7D22\uFF0C\u7ED9\u5DF2\u6709\u4F0F\u7B14\u6216\u51B2\u7A81\u4E00\u4E2A\u9636\u6BB5\u6027\u7ED3\u679C\uFF0C\u4E0D\u8981\u518D\u629B\u65B0\u7EBF\u3002" },
-      { label: "\u7559\u767D", text: "\u672C\u6B21\u56DE\u590D\u514B\u5236\u7B14\u58A8\uFF0C\u4EE5\u672A\u5C3D\u4E4B\u8BED\u548C\u7559\u767D\u6536\u5C3E\uFF0C\u7ED9\u56DE\u5473\u7A7A\u95F4\u3002" },
-      { label: "\u8F6C\u573A", text: "\u672C\u6B21\u56DE\u590D\u5B8C\u6210\u4E00\u6B21\u573A\u666F\u6216\u65F6\u95F4\u8F6C\u6362\uFF0C\u81EA\u7136\u8FC7\u6E21\u5230\u4E0B\u4E00\u4E2A\u573A\u666F\u3002" }
-    ];
   }
 });
 
@@ -42296,14 +43734,14 @@ function renderHtml(viewData) {
         </div>
     </div>`;
 }
-function bindEvents2(ctx) {
+function bindEvents2(ctx2) {
   const {
     closeWindow: closeWindow2,
     registerTeardown: registerTeardown2,
     runContinuation,
     openContinuationHistory: openContinuationHistory2,
     openContinuationComposer: openContinuationComposer2
-  } = ctx;
+  } = ctx2;
   const $quickInput = $("#t-continuation-quick-input");
   const $contextPopover = $("#t-continuation-context-popover");
   let quickInjectRounds = getContinuationDefaultInjectCount();
@@ -42356,7 +43794,7 @@ function bindEvents2(ctx) {
   };
   const refreshContinuationHistoryCount = async () => {
     try {
-      const source = ctx.getCurrentContinuationSource();
+      const source = ctx2.getCurrentContinuationSource();
       const sessions2 = await listAllContinuationSessions();
       const count = sessions2.filter((session) => session.chatId === source.chatId).reduce((total, session) => total + session.branches.reduce((sum, branch) => sum + Math.max(0, branch.rounds.length - 1), 0), 0);
       $("#t-continuation-history-count").text(count > 99 ? "99+" : count);
@@ -42619,13 +44057,13 @@ function renderHtml2(viewData) {
         </div>
     </div>`;
 }
-function bindEvents3(ctx) {
+function bindEvents3(ctx2) {
   const {
     closeWindow: closeWindow2,
     runContinuation,
     openContinuationHistory: openContinuationHistory2,
     openContinuationComposer: openContinuationComposer2
-  } = ctx;
+  } = ctx2;
   $("#t-tool-continue").on("click", async function() {
     const composeResult = await openContinuationComposer2("");
     await runContinuation(composeResult);
@@ -44065,10 +45503,10 @@ function updateContinuationInlineActions() {
   $actions.show();
 }
 function loadContextDataAsync() {
-  getContextData().then((ctx) => {
+  getContextData().then((ctx2) => {
     const $charName = $("#t-char-name");
     if ($charName.length) {
-      $charName.text(ctx.charName || "\u672A\u77E5\u89D2\u8272");
+      $charName.text(ctx2.charName || "\u672A\u77E5\u89D2\u8272");
     }
   }).catch((e) => {
     console.warn("Titania: \u5F02\u6B65\u52A0\u8F7D\u4E0A\u4E0B\u6587\u5931\u8D25", e);
@@ -44086,11 +45524,11 @@ async function updateWorldInfoBadge() {
       (_, reject) => setTimeout(() => reject(new Error("\u4E16\u754C\u4E66\u52A0\u8F7D\u8D85\u65F6")), BADGE_TIMEOUT)
     );
     const entries = await Promise.race([entriesPromise, timeoutPromise]);
-    let ctx;
+    let ctx2;
     try {
-      ctx = await getContextData();
+      ctx2 = await getContextData();
     } catch (e) {
-      ctx = { charName: "Char" };
+      ctx2 = { charName: "Char" };
     }
     const data = getExtData();
     let totalCount = 0;
@@ -44101,7 +45539,7 @@ async function updateWorldInfoBadge() {
     } catch {
       stCtx = null;
     }
-    const charSelections = readWorldInfoSelections(data, stCtx, ctx.charName);
+    const charSelections = readWorldInfoSelections(data, stCtx, ctx2.charName);
     entries.forEach((book) => {
       book.entries.forEach((entry) => {
         totalCount++;
@@ -44175,12 +45613,12 @@ async function openWorldInfoSelector() {
     loadingCancelled = true;
     $loadingPanel.remove();
   });
-  let ctx;
+  let ctx2;
   let allBookNames;
   let activeBookNames;
   const loadWarnings = [];
   try {
-    ctx = getSelectorContext();
+    ctx2 = getSelectorContext();
     try {
       allBookNames = await withTimeout2(
         Promise.resolve(getAllWorldBookNames()),
@@ -44218,8 +45656,8 @@ async function openWorldInfoSelector() {
   if (loadingCancelled || !$loadingPanel[0]?.isConnected) return;
   const data = getExtData();
   if (!data.worldinfo) data.worldinfo = {};
-  const charName = ctx.charName;
-  const savedSelections = readWorldInfoSelections(data, ctx.stCtx, charName);
+  const charName = ctx2.charName;
+  const savedSelections = readWorldInfoSelections(data, ctx2.stCtx, charName);
   const workingSelections = savedSelections ? structuredClone(savedSelections) : {};
   const allBooks = Array.isArray(allBookNames) ? allBookNames.slice() : [];
   const baseActiveBooks = Array.isArray(activeBookNames) ? activeBookNames.filter((name) => allBooks.includes(name)) : [];
@@ -44265,7 +45703,7 @@ async function openWorldInfoSelector() {
             <div style="display:flex; align-items:center; gap:10px;">
                 <i class="fa-solid fa-book-atlas" style="color:var(--t-color-accent);"></i>
                 <span style="font-weight:bold;">\u4E16\u754C\u4E66\u7BA1\u7406</span>
-                <span style="font-size:0.8em; color:var(--t-color-text-faint);">${ctx.charName}</span>
+                <span style="font-size:0.8em; color:var(--t-color-text-faint);">${ctx2.charName}</span>
             </div>
             <div class="t-close" id="t-wi-close">&times;</div>
         </div>
@@ -44354,7 +45792,7 @@ async function openWorldInfoSelector() {
     $q("#t-wi-active-count").text(activeCount);
   };
   const MAX_WI_SCHEMES = 20;
-  let schemeState = readWorldInfoSchemes(data, ctx.stCtx);
+  let schemeState = readWorldInfoSchemes(data, ctx2.stCtx);
   const selectionsSignature = (selections) => {
     const source = selections && typeof selections === "object" ? selections : {};
     const normalized = {};
@@ -44373,13 +45811,13 @@ async function openWorldInfoSelector() {
   };
   const persistWorldInfo = (autoActiveBooks) => {
     const autoActive = Array.isArray(autoActiveBooks) ? autoActiveBooks : getAutoActiveBooksFromSelections();
-    writeWorldInfoSelections(data, ctx.stCtx, workingSelections, autoActive);
-    writeWorldInfoSchemes(data, ctx.stCtx, schemeState);
+    writeWorldInfoSelections(data, ctx2.stCtx, workingSelections, autoActive);
+    writeWorldInfoSchemes(data, ctx2.stCtx, schemeState);
     lastPersistedSignature = selectionsSignature(workingSelections);
     saveExtData();
   };
   const persistSchemesOnly = () => {
-    writeWorldInfoSchemes(data, ctx.stCtx, schemeState);
+    writeWorldInfoSchemes(data, ctx2.stCtx, schemeState);
     saveExtData();
   };
   const renderSchemeBar = () => {
@@ -46991,7 +48429,7 @@ async function buildPromptCompositionPreview(options = {}) {
     }
     const scriptPromptSource = hasExplicitOverride ? promptOverride : continuationPlan?.override.text ?? script.prompt;
     const generationSource = generationOverrides?.source || "preview";
-    const ctx = await getContextData();
+    const ctx2 = await getContextData();
     let sys;
     let promptScheme = getPromptScheme(data, GlobalState.generationMode);
     if (!promptScheme) {
@@ -47041,28 +48479,28 @@ ${directorSection}
       sectionLengths.director = block.length;
       user += block;
     }
-    if (ctx.persona) {
+    if (ctx2.persona) {
       const block = `[\u89D2\u8272\u4EBA\u8BBE]
 \uFF08\u4EE5\u4E0B\u662F\u89D2\u8272\u7684\u6027\u683C\u8BBE\u5B9A\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u91CD\u590D\u8FD9\u4E9B\u5185\u5BB9\uFF09
-${ctx.persona}
+${ctx2.persona}
 
 `;
       sectionLengths.persona = block.length;
       user += block;
     }
-    if (ctx.userDesc) {
+    if (ctx2.userDesc) {
       const block = `[\u7528\u6237\u8BBE\u5B9A]
 \uFF08\u4EE5\u4E0B\u662F\u7528\u6237\u7684\u63CF\u8FF0\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u80CC\u666F\u53C2\u8003\uFF09
-${ctx.userDesc}
+${ctx2.userDesc}
 
 `;
       sectionLengths.userDesc = block.length;
       user += block;
     }
-    if (ctx.worldInfo) {
+    if (ctx2.worldInfo) {
       const block = `[\u4E16\u754C\u89C2\u8BBE\u5B9A]
 \uFF08\u4EE5\u4E0B\u662F\u80CC\u666F\u8BBE\u5B9A\u548C\u4E16\u754C\u89C2\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u76F4\u63A5\u590D\u5236\uFF09
-${ctx.worldInfo}
+${ctx2.worldInfo}
 
 `;
       sectionLengths.worldInfo = block.length;
@@ -47084,12 +48522,12 @@ ${ctx.worldInfo}
     if (!skipMacroEvaluation) {
       try {
         const macroEnv = {
-          char: ctx.charName,
-          user: ctx.userName
+          char: ctx2.charName,
+          user: ctx2.userName
         };
         processedPrompt = evaluateMacros(scriptPromptSource, macroEnv);
       } catch (e) {
-        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
+        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx2.charName).replace(/{{user}}/gi, ctx2.userName);
       }
     }
     const scriptBlock = `[\u5267\u672C\u6307\u4EE4]
@@ -47125,8 +48563,8 @@ ${processedPrompt}`;
       };
     }
     const runtimePromptContext = {
-      ...ctx,
-      worldInfoBefore: ctx.worldInfo,
+      ...ctx2,
+      worldInfoBefore: ctx2.worldInfo,
       worldInfoAfter: "",
       chatHistory: runtimeChatHistory,
       // 选用预设模式下整条 user 串**不会被注入**（预设条目 id 永远不等于 preset_user），
@@ -47249,11 +48687,11 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
     GlobalState.lastUsedScriptId = script.id;
     if ($("#t-main-view").length > 0) applyScriptSelection(script.id);
   }
-  const ctx = await getContextData();
+  const ctx2 = await getContextData();
   const $floatBtn = $("#titania-float-btn");
   const useStream = cfg.stream !== false;
   if (!GlobalState.skipWorldBookCheck) {
-    if (!ctx.worldInfo || ctx.worldInfo.trim() === "" || ctx.worldInfo.trim() === "[World Info / Lore]\n\n") {
+    if (!ctx2.worldInfo || ctx2.worldInfo.trim() === "" || ctx2.worldInfo.trim() === "[World Info / Lore]\n\n") {
       const confirmMsg = "\u4E16\u754C\u4E66\u5DF2\u9009\u4E2D\u7684\u6761\u76EE\u4E3A 0\uFF0C\u662F\u5426\u7EE7\u7EED\u751F\u6210\uFF1F";
       const userConfirmed = await new Promise((resolve) => {
         const confirmHtml = `
@@ -47381,28 +48819,28 @@ ${directorSection}
       sectionLengths.director = block.length;
       user += block;
     }
-    if (ctx.persona) {
+    if (ctx2.persona) {
       const block = `[\u89D2\u8272\u4EBA\u8BBE]
 \uFF08\u4EE5\u4E0B\u662F\u89D2\u8272\u7684\u6027\u683C\u8BBE\u5B9A\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u91CD\u590D\u8FD9\u4E9B\u5185\u5BB9\uFF09
-${ctx.persona}
+${ctx2.persona}
 
 `;
       sectionLengths.persona = block.length;
       user += block;
     }
-    if (ctx.userDesc) {
+    if (ctx2.userDesc) {
       const block = `[\u7528\u6237\u8BBE\u5B9A]
 \uFF08\u4EE5\u4E0B\u662F\u7528\u6237\u7684\u63CF\u8FF0\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u80CC\u666F\u53C2\u8003\uFF09
-${ctx.userDesc}
+${ctx2.userDesc}
 
 `;
       sectionLengths.userDesc = block.length;
       user += block;
     }
-    if (ctx.worldInfo) {
+    if (ctx2.worldInfo) {
       const block = `[\u4E16\u754C\u89C2\u8BBE\u5B9A]
 \uFF08\u4EE5\u4E0B\u662F\u80CC\u666F\u8BBE\u5B9A\u548C\u4E16\u754C\u89C2\u4FE1\u606F\uFF0C\u4EC5\u4F5C\u4E3A\u521B\u4F5C\u53C2\u8003\uFF0C\u4E0D\u8981\u5728\u8F93\u51FA\u4E2D\u76F4\u63A5\u590D\u5236\uFF09
-${ctx.worldInfo}
+${ctx2.worldInfo}
 
 `;
       sectionLengths.worldInfo = block.length;
@@ -47424,8 +48862,8 @@ ${ctx.worldInfo}
     if (!skipMacroEvaluation) {
       try {
         const macroEnv = {
-          char: ctx.charName,
-          user: ctx.userName
+          char: ctx2.charName,
+          user: ctx2.userName
           // 可以根据需要添加更多环境变量
         };
         processedPrompt = evaluateMacros(scriptPromptSource, macroEnv);
@@ -47443,7 +48881,7 @@ ${ctx.worldInfo}
         });
       } catch (e) {
         TitaniaLogger.warn("ST \u5B8F\u5904\u7406\u5931\u8D25\uFF0C\u4F7F\u7528\u7B80\u5355\u66FF\u6362", e);
-        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx.charName).replace(/{{user}}/gi, ctx.userName);
+        processedPrompt = scriptPromptSource.replace(/{{char}}/gi, ctx2.charName).replace(/{{user}}/gi, ctx2.userName);
         appendPromptTraceStage(promptTraceId, "macro_processed", {
           skipped: false,
           fallback: true,
@@ -47510,8 +48948,8 @@ ${processedPrompt}`;
     }
     appendPromptTraceStage(promptTraceId, "user_composed", traceMeta);
     const runtimePromptContext = {
-      ...ctx,
-      worldInfoBefore: ctx.worldInfo,
+      ...ctx2,
+      worldInfoBefore: ctx2.worldInfo,
       worldInfoAfter: "",
       chatHistory: runtimeChatHistory,
       // 选用预设模式下整条 user 串**不会被注入**（预设条目 id 永远不等于 preset_user），
@@ -47677,8 +49115,8 @@ ${processedPrompt}`;
             GlobalState.continuation.originalContent = finalOutput;
             GlobalState.continuation.accumulatedContent = finalOutput;
             GlobalState.continuation.originalPrompt = effectiveScriptInstruction;
-            GlobalState.continuation.characterName = ctx.charName;
-            GlobalState.continuation.userName = ctx.userName;
+            GlobalState.continuation.characterName = ctx2.charName;
+            GlobalState.continuation.userName = ctx2.userName;
           } else {
             GlobalState.continuation.accumulatedContent = mergeContinuationContent(
               GlobalState.continuation.accumulatedContent,
@@ -47692,7 +49130,7 @@ ${processedPrompt}`;
           }
           const continuationSuccess = await performContinuation(
             script,
-            ctx,
+            ctx2,
             cfg,
             finalUrl,
             finalKey,
@@ -48036,7 +49474,7 @@ function cancelQueueGeneration() {
     TitaniaLogger.info("\u961F\u5217\u751F\u6210\u5DF2\u53D6\u6D88");
   }
 }
-async function performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false, initialInstruction = "") {
+async function performContinuation(script, ctx2, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false, initialInstruction = "") {
   const $floatBtn = $("#titania-float-btn");
   const generationId = `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const useStream = cfg.stream !== false;
@@ -48288,7 +49726,7 @@ Generate ONLY the continuation (no repetition):`;
         retryCount: GlobalState.continuation.retryCount,
         maxRetries
       });
-      return await performContinuation(script, ctx, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, userInstruction, continuationType, autoLocate, initialInstruction);
+      return await performContinuation(script, ctx2, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection, userInstruction, continuationType, autoLocate, initialInstruction);
     } else {
       const finalOutput = smartMergeContinuation(
         GlobalState.continuation.accumulatedContent,
@@ -49052,6 +50490,7 @@ function initChatInjectButton() {
 
 // src/entry.js
 init_sceneAdvanceBubble();
+init_unlockChime();
 init_pacingInjection();
 init_directorInjection();
 init_floorNav();
@@ -49145,6 +50584,7 @@ function initCoreFeatures() {
   initRewriteEntryButton();
   initChatInjectButton();
   initSceneAdvanceBubble();
+  initUnlockSound();
   initPacingInjection();
   initDirectorInjection();
   initFloorNav();
@@ -49919,6 +51359,14 @@ ${hydration.error}`,
   $("#cfg-chat-inject-enabled").prop("checked", extData.chat_inject.enabled === true);
   $("#cfg-floor-nav-enabled").prop("checked", extData.floor_nav?.enabled !== false);
   $("#cfg-preset-persist-vars").prop("checked", extData.preset_macros.persist_variables === true);
+  (() => {
+    const cfg = getUnlockSoundConfig();
+    $("#cfg-blindbox-sound-enabled").prop("checked", cfg.enabled);
+    $("#cfg-blindbox-sound-event").prop("checked", cfg.cue_event);
+    $("#cfg-blindbox-sound-volume").val(cfg.volume);
+    $("#cfg-blindbox-sound-volume-label").text(describeUnlockVolume(cfg));
+    $("#titania-blindbox-sound-extra").toggleClass("is-muted", !cfg.enabled);
+  })();
   $("#cfg-float-edge-tuck").on("input", function() {
     const enabled = $(this).prop("checked") === true;
     const data = getExtData();
@@ -49961,6 +51409,35 @@ ${hydration.error}`,
     refreshOutlineEntryButton();
     refreshSceneAdvanceBubble();
     if (window.toastr) toastr.success(enabled ? "\u5267\u60C5\u63A8\u8FDB\u5165\u53E3\u5DF2\u542F\u7528" : "\u5267\u60C5\u63A8\u8FDB\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  const syncBlindboxSoundControls = (cfg) => {
+    $("#cfg-blindbox-sound-volume-label").text(describeUnlockVolume(cfg));
+    $("#titania-blindbox-sound-extra").toggleClass("is-muted", !cfg.enabled);
+    refreshSceneAdvanceBubble();
+  };
+  $("#cfg-blindbox-sound-enabled").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    syncBlindboxSoundControls(setUnlockSound({ enabled }));
+    if (window.toastr) toastr.success(enabled ? "\u76F2\u76D2\u89E3\u9501\u63D0\u793A\u97F3\u5DF2\u542F\u7528" : "\u76F2\u76D2\u89E3\u9501\u63D0\u793A\u97F3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-blindbox-sound-event").on("input", function() {
+    const on = $(this).prop("checked") === true;
+    setUnlockSound({ cue_event: on });
+    if (on) previewUnlockCues();
+  });
+  $("#cfg-blindbox-sound-volume").on("input", function() {
+    const vol = Number($(this).val());
+    const cfg = setUnlockSound({ volume: vol, enabled: vol > 0 });
+    $("#cfg-blindbox-sound-enabled").prop("checked", cfg.enabled);
+    $("#cfg-blindbox-sound-volume-label").text(describeUnlockVolume(cfg));
+  });
+  $("#cfg-blindbox-sound-preview").on("click", () => {
+    const cfg = getUnlockSoundConfig();
+    if (cfg.enabled === false || cfg.volume <= 0) {
+      if (window.toastr) toastr.info("\u63D0\u793A\u97F3\u5F53\u524D\u662F\u5173\u95ED\u7684\uFF0C\u5148\u6253\u5F00\u5F00\u5173\u6216\u628A\u97F3\u91CF\u8C03\u4E0A\u53BB", "Titania Echo");
+      return;
+    }
+    previewUnlockCues();
   });
   $("#cfg-rewrite-entry-enabled").on("input", function() {
     const enabled = $(this).prop("checked") === true;
