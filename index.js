@@ -32185,9 +32185,11 @@ var init_directorInjection = __esm({
 var storyOutlineWindow_exports = {};
 __export(storyOutlineWindow_exports, {
   applySceneProgress: () => applyProgressFromModel,
+  collectRecentChatText: () => collectRecentChatText,
   ensureSceneSourceLoaded: () => ensureSceneSourceLoaded,
   generatePacingAssessment: () => generatePacingAssessment,
   generateSceneRecommendations: () => generateRecommendations,
+  getRollingOpeningText: () => getRollingOpeningText,
   getSceneAdvanceState: () => getSceneAdvanceState,
   getSceneInsertMode: () => getCurrentInsertMode,
   markSceneCandidateUsed: () => markSceneCandidateUsed,
@@ -32929,6 +32931,13 @@ async function ensureOpeningTextForGeneration() {
   openingText = getOpeningFromCardRef(sourceRef, cardEntries);
   return openingText || cardEntries[0]?.text || getOpeningFromContext();
 }
+function getRollingOpeningText() {
+  const entries = getChatHistoryEntries();
+  for (let i = entries.length - 1; i >= 0; i--) {
+    if (entries[i].role === "\u89D2\u8272") return entries[i].text;
+  }
+  return entries[entries.length - 1]?.text || getOpeningFromContext();
+}
 function getDefaultPromptTemplates() {
   return {
     outline: {
@@ -33511,7 +33520,7 @@ async function openPromptTemplateManager() {
                                 \u8BFB\u53D6\u6700\u8FD1\u6B63\u6587\u697C\u5C42\u6570
                                 <input id="t-outline-settings-rolling-floors" type="number" class="t-outline-select" value="${escapeHtml4(settingsDraft.rollingChatFloors)}" min="0" max="20" step="1" style="width:80px;">
                             </label>
-                            <div class="t-outline-genparam-hint">\u5267\u60C5\u63A8\u8350\u65F6\u8BFB\u53D6\u9152\u9986\u6700\u8FD1 N \u697C\u6B63\u6587\u4F5C\u4E3A"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\uFF08\u8D70\u4E0B\u65B9\u804A\u5929\u63D0\u53D6\u767D\u540D\u5355\u8FC7\u6EE4\uFF09\u3002\u6A21\u578B\u636E\u6B64\u81EA\u884C\u5224\u65AD\u6545\u4E8B\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\u30020=\u4E0D\u8BFB\u6B63\u6587\uFF0C\u4EC5\u9760\u5927\u7EB2\u5224\u65AD\u3002</div>
+                            <div class="t-outline-genparam-hint">\u5267\u60C5\u63A8\u8350\u4E0E\u8282\u594F\u5224\u65AD\u8BFB\u53D6\u9152\u9986\u300C\u6700\u65B0 N \u5C42\u300D\u6B63\u6587\u4F5C\u4E3A"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\uFF08\u8D70\u4E0B\u65B9\u804A\u5929\u63D0\u53D6\u767D\u540D\u5355\u8FC7\u6EE4\uFF09\u3002\u7A97\u53E3\u6309\u697C\u5C42\u5207\uFF1A\u4E2D\u95F4\u697C\u5C42\u88AB\u6EE4\u7A7A\u6216\u88AB\u6298\u53E0\u9690\u85CF\u65F6\u7559\u4E00\u884C\u5360\u4F4D\uFF0C\u4E0D\u4F1A\u62FF\u66F4\u65E9\u7684\u697C\u5C42\u9876\u66FF\u2014\u2014\u8BBE\u7F6E\u91CC\u7684 N \u5C31\u662F\u6A21\u578B\u5B9E\u9645\u80FD\u770B\u5230\u7684\u6700\u8FDC\u697C\u5C42\u3002\u6A21\u578B\u636E\u6B64\u81EA\u884C\u5224\u65AD\u6545\u4E8B\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\u30020=\u4E0D\u8BFB\u6B63\u6587\uFF0C\u4EC5\u9760\u5927\u7EB2\u5224\u65AD\u3002</div>
                         </div>
 
                         <div class="t-form-group">
@@ -33520,7 +33529,7 @@ async function openPromptTemplateManager() {
                                 \u5224\u5B9A\u8BFB\u53D6\u6700\u8FD1\u6B63\u6587\u697C\u5C42\u6570
                                 <input id="t-outline-settings-director-floors" type="number" class="t-outline-select" value="${escapeHtml4(settingsDraft.directorChatFloors)}" min="0" max="20" step="1" style="width:80px;">
                             </label>
-                            <div class="t-outline-genparam-hint">\u5BFC\u6F14\u5224\u5B9A\u300C\u8FD9\u4E2A\u5173\u952E\u4E8B\u4EF6\u5151\u73B0\u5B8C\u4E86\u6CA1\u6709\u300D\u8981\u770B\u5F97\u5230\u524D\u51E0\u62CD\u7684\u94FA\u57AB\uFF0C\u8BFB\u5F97\u592A\u5C11\u5C31\u53EA\u80FD\u51ED\u6700\u540E\u4E00\u53E5\u8BDD\u4E0B\u7ED3\u8BBA\uFF08\u5224\u5B9A\u4F1A\u504F\u677E\uFF09\u3002\u9ED8\u8BA4 6\uFF0C0=\u8DDF\u968F\u4E0A\u9762\u5267\u60C5\u63A8\u8FDB\u7684\u8BBE\u7F6E\u3002\u5224\u5B9A\u4E00\u5F8B\u8FDE\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u4E00\u8D77\u8BFB\u3002</div>
+                            <div class="t-outline-genparam-hint">\u5BFC\u6F14\u5224\u5B9A\u300C\u8FD9\u4E2A\u5173\u952E\u4E8B\u4EF6\u5151\u73B0\u5B8C\u4E86\u6CA1\u6709\u300D\u8981\u770B\u5F97\u5230\u524D\u51E0\u62CD\u7684\u94FA\u57AB\uFF0C\u8BFB\u5F97\u592A\u5C11\u5C31\u53EA\u80FD\u51ED\u6700\u540E\u4E00\u53E5\u8BDD\u4E0B\u7ED3\u8BBA\uFF08\u5224\u5B9A\u4F1A\u504F\u677E\uFF09\u3002\u9ED8\u8BA4 6\uFF0C0=\u8DDF\u968F\u4E0A\u9762\u5267\u60C5\u63A8\u8FDB\u7684\u8BBE\u7F6E\u3002\u7A97\u53E3\u540C\u6837\u6309\u697C\u5C42\u5207\uFF0C\u4E00\u5F8B\u8FDE\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u4E00\u8D77\u8BFB\u3002</div>
                         </div>
 
                         <div class="t-form-group">
@@ -33648,7 +33657,7 @@ async function openPromptTemplateManager() {
     const currentStoryInput = String($("#t-outline-story-input").val() || "").trim();
     const openingMode = getOpeningSourceMode();
     const openingSourceRef = getOpeningSourceRef();
-    const opening2 = getOpeningTextForPreview(openingMode, openingSourceRef);
+    const opening2 = type === "rolling" ? getRollingOpeningText() : getOpeningTextForPreview(openingMode, openingSourceRef);
     const varsLocal = buildPromptTemplateVars(ctx2, currentStoryInput, opening2, outlinePayload, {
       recentChat: collectRecentChatText(getRollingChatFloors()),
       outlineProgress: buildOutlineProgressText()
@@ -34995,13 +35004,41 @@ function buildOutlinePayloadForPrompt() {
     foreshadowing: item.foreshadowing || ""
   }));
 }
-function collectRecentChatText(floors, opts = {}) {
+function getRecentFloorWindow(floors, opts = {}) {
   const n = Number(floors) || 0;
-  if (n <= 0) return "";
-  const entries = getChatHistoryEntries(opts);
+  if (n <= 0) return [];
+  const includeHidden = opts.includeHidden === true;
+  try {
+    if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
+    const stCtx = SillyTavern.getContext();
+    const chat2 = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
+    if (chat2.length === 0) return [];
+    const whitelist = parseTagWhitelistInput(getOutlineChatTagWhitelistRaw());
+    const start = Math.max(0, chat2.length - n);
+    return chat2.slice(start).map((msg, i) => {
+      const raw = typeof msg?.mes === "string" ? msg.mes : "";
+      const hidden = !!(msg?.is_system || msg?.is_hidden);
+      let text = extractTextByWhitelist(raw, whitelist);
+      if (!text && includeHidden && hidden) text = raw.trim();
+      if (hidden && !includeHidden) text = "";
+      return {
+        chatIndex: start + i,
+        role: hidden ? "\u80CC\u666F" : msg?.is_user ? "\u7528\u6237" : "\u89D2\u8272",
+        text
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+function collectRecentChatText(floors, opts = {}) {
+  const entries = getRecentFloorWindow(floors, opts);
   if (!entries.length) return "";
   const withFloors = opts.withFloors === true;
-  return entries.slice(-n).map((e) => withFloors ? `\u3010#${e.chatIndex} ${e.role}\u3011${e.text}` : `\u3010${e.role}\u3011${e.text}`).join("\n\n");
+  return entries.map((e) => {
+    const head = withFloors ? `\u3010#${e.chatIndex} ${e.role}\u3011` : `\u3010${e.role}\u3011`;
+    return head + (e.text || EMPTY_FLOOR_MARK);
+  }).join("\n\n");
 }
 function buildOutlineProgressText() {
   const plan = getRollingPlan();
@@ -35257,7 +35294,8 @@ async function runGenerationFlow(cfg) {
   const useStream = isStreamingEnabled();
   return runOutlineGeneration(async (signal) => {
     const ctx2 = await getContextData();
-    const opening2 = await ensureOpeningTextForGeneration();
+    const resolveOpening = typeof cfg.resolveOpening === "function" ? cfg.resolveOpening : ensureOpeningTextForGeneration;
+    const opening2 = await resolveOpening();
     const messages = cfg.buildMessages(ctx2, opening2);
     startResponseTimer(true);
     if (useStream) {
@@ -35495,6 +35533,10 @@ async function generateRecommendations() {
       temperature: params.temperature,
       maxTokens: params.maxTokens,
       timeoutSec: params.timeoutSec,
+      // 剧情推进不指定参考楼层：永远取最新一条角色回复（见 getRollingOpeningText）。
+      // 少了这一行，点「推荐剧情」会弹出「选择聊天记录参考来源」，点取消还会直接报
+      // 「未选择参考来源，已取消生成」——而 rolling 模板里其实用不上这个变量。
+      resolveOpening: getRollingOpeningText,
       buildMessages: (ctx2, opening2) => buildRecommendationPrompt(ctx2, storyInput, opening2),
       parse: (raw) => parseRecommendationResponse(raw, fallbackItemIndex, total),
       apply: (parsed) => {
@@ -35832,7 +35874,7 @@ function openStoryOutlineWindow() {
                                 <i class="fa-solid fa-wand-magic-sparkles"></i> \u5927\u7EB2\u751F\u6210
                             </button>
                         </div>
-                        <label class="t-outline-mode t-outline-mode-source">
+                        <label class="t-outline-mode t-outline-mode-source" title="\u53EA\u5F71\u54CD\u300C\u5927\u7EB2\u751F\u6210\u300D\u4E0E\u300C\u76F2\u76D2\u5267\u672C\u751F\u6210\u300D\u3002\u300C\u63A8\u8350\u5267\u60C5\u300D\u4E0D\u9700\u8981\u6307\u5B9A\u697C\u5C42\uFF0C\u6C38\u8FDC\u53D6\u6700\u65B0\u4E00\u6761\u89D2\u8272\u56DE\u590D\u3002">
                             \u53C2\u8003\u6765\u6E90
                             <select id="t-outline-opening-source-mode" class="t-outline-select">
                                 <option value="auto_first">\u5F00\u573A\u767D</option>
@@ -35975,7 +36017,7 @@ function markSceneCandidateUsed(planId, index) {
   candidates[index] = { ...candidates[index], used: true };
   setPlanCandidates(id3, candidates, { keepTimestamp: true });
 }
-var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY2, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, DIRECTOR_CHAT_FLOORS_KEY, DIRECTOR_CHAT_FLOORS_DEFAULT, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, BB_STRICTNESS_LABEL, PACING_STATES;
+var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY2, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, DIRECTOR_CHAT_FLOORS_KEY, DIRECTOR_CHAT_FLOORS_DEFAULT, EMPTY_FLOOR_MARK, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, BB_STRICTNESS_LABEL, PACING_STATES;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -36014,6 +36056,7 @@ var init_storyOutlineWindow = __esm({
     ROLLING_CHAT_FLOORS_MAX = 20;
     DIRECTOR_CHAT_FLOORS_KEY = "story_outline_director_chat_floors";
     DIRECTOR_CHAT_FLOORS_DEFAULT = 6;
+    EMPTY_FLOOR_MARK = "\uFF08\u672C\u697C\u65E0\u53EF\u7528\u6B63\u6587\uFF09";
     currentView = "hub";
     activePlanId = "";
     editingPlanId = "";
