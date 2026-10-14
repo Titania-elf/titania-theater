@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.4.0";
+    CURRENT_VERSION = "5.5.0";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -1552,9 +1552,9 @@ ${bodyContent}
 </body>
 </html>`;
 }
-function escapeHtml(str2) {
-  if (str2 === null || str2 === void 0 || str2 === "") return "";
-  return String(str2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+function escapeHtml(str3) {
+  if (str3 === null || str3 === void 0 || str3 === "") return "";
+  return String(str3).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 function openInNewWindow(html, scriptName = "\u4E92\u52A8\u573A\u666F") {
   console.log("[Titania] openInNewWindow \u88AB\u8C03\u7528\uFF0C\u539F\u59CBHTML\u957F\u5EA6:", html?.length || 0);
@@ -2004,16 +2004,16 @@ function extractFromShadowDOM(container) {
   return container.innerHTML;
 }
 async function countTokens(text) {
-  const str2 = String(text || "");
-  if (!str2) return { count: 0, exact: true };
+  const str3 = String(text || "");
+  if (!str3) return { count: 0, exact: true };
   try {
     const { getTokenCountAsync } = await import("../../../tokenizers.js");
-    const count = await getTokenCountAsync(str2);
+    const count = await getTokenCountAsync(str3);
     if (Number.isFinite(count)) return { count, exact: true };
   } catch (error) {
     console.warn("Titania: ST \u5206\u8BCD\u5668\u4E0D\u53EF\u7528\uFF0C\u56DE\u9000\u5230\u4F30\u7B97", error);
   }
-  return { count: estimateTokens(str2), exact: false };
+  return { count: estimateTokens(str3), exact: false };
 }
 async function countTokensBatch(texts) {
   const list = Array.isArray(texts) ? texts : [];
@@ -3210,9 +3210,9 @@ function renderEntryContent(template, values, runMacros) {
   const authored = String(template ?? "");
   const source = typeof runMacros === "function" ? String(runMacros(authored) ?? "") : authored;
   const lines = source.split("\n").map((line) => {
-    const trimmed2 = line.trim();
-    const onlyPlaceholders = trimmed2.length > 0 && PLACEHOLDER_ONLY_LINE.test(trimmed2);
-    const rendered = (onlyPlaceholders ? trimmed2 : line).replace(PLACEHOLDER_PATTERN, (match, rawName) => {
+    const trimmed3 = line.trim();
+    const onlyPlaceholders = trimmed3.length > 0 && PLACEHOLDER_ONLY_LINE.test(trimmed3);
+    const rendered = (onlyPlaceholders ? trimmed3 : line).replace(PLACEHOLDER_PATTERN, (match, rawName) => {
       const name = String(rawName).toLowerCase();
       return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
     });
@@ -21598,6 +21598,104 @@ body.t-reader-zen .t-reader-topbar {
 
 .tsa-panel .tsa-preview-item.todo .tsa-preview-marker { color: var(--t-glass-text-secondary); }
 
+/* \u2500\u2500 \u8FC7\u6E21\u884C\u7A0B\u5355\uFF08\u63A8\u8350\u5267\u60C5\u9875\u5185\u5D4C\u5757\uFF1A\u628A\u76F8\u90BB\u4E24\u6761\u5927\u7EB2\u4E4B\u95F4\u7684\u7A7A\u767D\u8865\u6210\u6709\u5E8F\u7684\u51E0\u6B65\uFF09\u2500\u2500
+   \u26A0 \u53EA\u7528\u8BED\u4E49 token\uFF08\u540C\u672C\u6587\u4EF6\u5176\u5B83\u9762\u677F\u5757\uFF09\uFF1A\u6DF1\u6D45\u4E3B\u9898\u9760 token \u91CD\u6620\u5C04\u81EA\u52A8\u8DDF\u968F\u3002 */
+
+.tsa-panel .tsa-transition { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--t-color-accent-border); }
+
+/* \u6807\u9898\u884C\u517C\u4F5C\u6298\u53E0\u5F00\u5173\uFF08\u540C .tsa-preview-head \u7684\u505A\u6CD5\uFF09\uFF1A\u672C\u6BB5\u8FD8\u6CA1\u6392\u65F6\u6574\u5757\u53EA\u5360\u4E00\u884C\u3002
+   \u884C\u8DDD\u6BD4\u5927\u7EB2\u9884\u89C8\u7D27\u4E00\u6863\u2014\u2014\u884C\u7A0B\u5355\u6700\u591A\u5341\u6B65\uFF0C\u6574\u5757\u8981\u80FD\u585E\u8FDB\u9762\u677F\u800C\u4E0D\u6324\u6389\u5019\u9009\u5361\u7247\u3002 */
+.tsa-panel .tsa-transition-head { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; font-weight: 700; }
+
+.tsa-panel .tsa-transition-toggle { cursor: pointer; user-select: none; transition: color 0.16s ease; }
+
+.tsa-panel .tsa-transition-toggle:hover { color: var(--t-color-text-strong); }
+
+.tsa-panel .tsa-transition-head i { color: var(--t-color-accent); }
+
+.tsa-panel .tsa-transition-gap { flex-shrink: 0; padding: 0 6px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; font-size: 11px; font-weight: 400; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-transition-arrow { margin-left: auto; color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }
+
+.tsa-panel .tsa-transition-toggle.is-open .tsa-transition-arrow { transform: rotate(180deg); }
+
+/* \u6B65\u6570\u5FBD\u6807\uFF1A\u7B49\u5BBD\u6570\u5B57\u2014\u2014\u300C1 / 4 \u6B65\u300D\u4F1A\u968F\u8FDB\u5EA6\u9010\u5B57\u53D8\u5316\uFF0C\u6BD4\u4F8B\u6570\u5B57\u4F1A\u8BA9\u6574\u884C\u5DE6\u53F3\u6296\u3002 */
+.tsa-panel .tsa-transition-badge { margin-left: auto; font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--t-glass-text-secondary); }
+
+/* \u4E0B\u5355\u8868\u5355\uFF08\u672C\u6BB5\u8FD8\u6CA1\u6392\u884C\u7A0B\u5355\u65F6\uFF09 */
+
+.tsa-panel .tsa-transition-form { display: flex; flex-direction: column; gap: 6px; }
+
+.tsa-panel .tsa-transition-brief { width: 100%; padding: 6px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); font-family: inherit; resize: vertical; }
+
+.tsa-panel .tsa-transition-form-row { display: flex; align-items: center; gap: 8px; }
+
+.tsa-panel .tsa-transition-count-label { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-transition-count { width: 56px; padding: 3px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); }
+
+.tsa-panel .tsa-transition-gen { margin-left: auto; }
+
+.tsa-panel .tsa-transition-hint { font-size: 11px; color: var(--t-glass-text-secondary); }
+
+/* \u6709\u5E8F\u6E05\u5355\uFF08\u5DF2\u6392\u884C\u7A0B\u5355\uFF09\u3002\u884C\u8DDD\u6BD4\u5927\u7EB2\u9884\u89C8\u66F4\u7D27\u51D1\uFF1A\u6700\u591A\u5341\u6B65\uFF0C\u6491\u4E0D\u8D77\u90A3\u4E48\u5927\u7684\u884C\u9AD8\u3002 */
+
+.tsa-panel .tsa-transition-purpose { margin-bottom: 5px; font-size: 11px; color: var(--t-glass-text-secondary); white-space: pre-wrap; word-break: break-word; }
+
+.tsa-panel .tsa-transition-list { margin: 0; padding: 0; list-style: none; }
+
+.tsa-panel .tsa-transition-step { display: flex; gap: 6px; margin-bottom: 3px; padding: 4px 7px; border: 1px solid transparent; border-radius: var(--t-radius-sm); cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease; }
+
+.tsa-panel .tsa-transition-step:hover { border-color: var(--t-color-accent-border); background: var(--t-glass-row-hover); }
+
+/* \u7F16\u8F91\u6001\u4E0D\u53EF\u70B9\uFF08\u70B9\u5B83\u6CA1\u6709\u5B9A\u4F4D\u8BED\u4E49\uFF09\uFF0C\u5149\u6807\u8981\u5982\u5B9E\u53CD\u6620 */
+.tsa-panel .tsa-transition-step.is-editing { cursor: default; }
+
+.tsa-panel .tsa-transition-marker { flex-shrink: 0; width: 14px; text-align: center; }
+
+.tsa-panel .tsa-transition-main { flex: 1; min-width: 0; }
+
+.tsa-panel .tsa-transition-title { margin-bottom: 2px; font-weight: 700; }
+
+.tsa-panel .tsa-transition-span { margin-left: 6px; padding: 0 5px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; font-size: 10px; font-weight: 400; color: var(--t-glass-text-secondary); }
+
+.tsa-panel .tsa-transition-brief-text { color: var(--t-glass-text-secondary); white-space: pre-wrap; word-break: break-word; }
+
+/* \u5DF2\u8D70\u5B8C\uFF1A\u6DE1\u5316 + \u6253\u52FE\uFF1B\u5F53\u524D\u8FD9\u4E00\u6B65\uFF1A\u9AD8\u4EAE\u5DE6\u8FB9\u6761\uFF08\u4E0E\u5927\u7EB2\u9884\u89C8\u540C\u4E00\u5957\u8BED\u6C47\uFF09 */
+.tsa-panel .tsa-transition-step.done { opacity: 0.55; }
+
+.tsa-panel .tsa-transition-step.done .tsa-transition-marker { color: var(--t-color-success-border); }
+
+.tsa-panel .tsa-transition-step.current { border-color: var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); }
+
+.tsa-panel .tsa-transition-step.current .tsa-transition-marker { color: var(--t-color-accent); }
+
+.tsa-panel .tsa-transition-step.todo .tsa-transition-marker { color: var(--t-glass-text-secondary); }
+
+/* \u7EC8\u70B9\u884C\uFF1A\u865A\u7EBF\uFF1D\u8FD8\u6CA1\u8D70\u5230\uFF1B\u8D70\u5B8C\u6700\u540E\u4E00\u6B65\u5C31\u70B9\u4EAE\u6210\u5B9E\u7EBF\u5E76\u53EF\u70B9\uFF08\u8DE8\u6BB5\uFF09 */
+.tsa-panel .tsa-transition-final { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; padding: 4px 7px; border: 1px dashed var(--t-color-accent-border); border-radius: var(--t-radius-sm); color: var(--t-glass-text-secondary); cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease; }
+
+.tsa-panel .tsa-transition-final:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
+
+.tsa-panel .tsa-transition-final.is-ready { border-style: solid; border-color: var(--t-color-success-border); background: var(--t-color-success-soft); color: var(--t-glass-text); }
+
+/* \u7F16\u8F91\u6001 */
+
+.tsa-panel .tsa-transition-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+
+.tsa-panel .tsa-transition-edit-title,
+.tsa-panel .tsa-transition-edit-span,
+.tsa-panel .tsa-transition-edit-brief { width: 100%; padding: 3px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); font-family: inherit; resize: vertical; }
+
+.tsa-panel .tsa-transition-edit-title { font-weight: 700; }
+
+.tsa-panel .tsa-transition-edit-ops { display: flex; gap: 4px; }
+
+/* \u5E95\u90E8\u64CD\u4F5C\u6761\uFF1A\u6700\u540E\u4E00\u6761\u6E05\u5355\u884C\u81EA\u5DF1\u5E26 3px \u4E0B\u8FB9\u8DDD\uFF0C\u8FD9\u91CC\u53EA\u8865 2px \u51D1\u9F50\u5757\u5185\u7684 5px \u8282\u594F\u3002 */
+.tsa-panel .tsa-transition-ops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+
+.tsa-panel .tsa-transition-edit-toggle.is-active { border-color: var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); }
+
 /* \u2500\u2500 \u8282\u594F\u628A\u63A7\uFF08\u5267\u60C5\u63A8\u8FDB\u9762\u677F\u7684\u7B2C\u4E8C\u6A21\u5F0F\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 .tsa-panel .tsa-mode-tabs { display: flex; gap: 6px; padding: 8px 10px 0; }
 
@@ -26783,8 +26881,8 @@ function getCurrentAvatarSrc() {
   console.log("Titania: Captured Avatar Path ->", avatarSrc);
   return avatarSrc;
 }
-function escapeHtmlText(str2) {
-  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtmlText(str3) {
+  return String(str3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function buildChainSegmentsHtml(chainItems) {
   const items = Array.isArray(chainItems) ? chainItems : [];
@@ -26837,9 +26935,9 @@ function buildChainSignature(scriptId, rounds) {
   }
   return `chain:${scriptId || "none"}:${Math.abs(hash)}`;
 }
-function replaceAllLiteral(str2, search, replacement) {
-  if (!str2 || !search) return str2;
-  return str2.split(search).join(replacement);
+function replaceAllLiteral(str3, search, replacement) {
+  if (!str3 || !search) return str3;
+  return str3.split(search).join(replacement);
 }
 function maskStringSameLength(value, maskChar = "\u2588") {
   if (!value) return value;
@@ -28714,9 +28812,9 @@ var init_favsWindow = __esm({
 
 // src/ui/shared/logView.js
 function clip(text) {
-  const str2 = String(text ?? "");
-  if (str2.length <= MAX_DETAIL_CHARS) return str2;
-  return `${str2.slice(0, MAX_DETAIL_CHARS)}\u2026\uFF08\u5DF2\u622A\u65AD\uFF0C\u5B8C\u6574\u5185\u5BB9\u89C1\u300C\u5BFC\u51FA\u65E5\u5FD7\u300D\uFF09`;
+  const str3 = String(text ?? "");
+  if (str3.length <= MAX_DETAIL_CHARS) return str3;
+  return `${str3.slice(0, MAX_DETAIL_CHARS)}\u2026\uFF08\u5DF2\u622A\u65AD\uFF0C\u5B8C\u6574\u5185\u5BB9\u89C1\u300C\u5BFC\u51FA\u65E5\u5FD7\u300D\uFF09`;
 }
 function safeStringify(value) {
   try {
@@ -28786,8 +28884,8 @@ __export(debugWindow_exports, {
   showDebugInfo: () => showDebugInfo,
   showDiagnosticsWindow: () => showDiagnosticsWindow
 });
-function escapeHtml2(str2) {
-  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtml2(str3) {
+  return String(str3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function makePreview(text, maxLen = 260) {
   const normalized = String(text || "").replace(/\s+/g, " ").trim();
@@ -30804,6 +30902,130 @@ var init_pacingInjection = __esm({
   }
 });
 
+// src/core/transitionPlan.js
+function clampEventCount(v) {
+  return clampInt2(v, EVENT_COUNT_MIN, EVENT_COUNT_MAX, EVENT_COUNT_DEFAULT);
+}
+function normalizeEvent2(raw) {
+  return {
+    title: trimmed2(raw?.title).slice(0, TITLE_MAX),
+    // span：本步相对上一拍的时间跨度标记（"两天后"/"周末"）。它把"一周"切成可感知的刻度，
+    // 正是治"没有过渡"的那味药——所以它是一等字段，不是附注。
+    span: trimmed2(raw?.span).slice(0, SPAN_MAX),
+    brief: trimmed2(raw?.brief ?? raw?.content).slice(0, EVENT_BRIEF_MAX)
+  };
+}
+function normalizeEvents(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(normalizeEvent2).filter((e) => e.brief).slice(0, MAX_EVENTS);
+}
+function normalizeTransition(raw) {
+  const t = raw && typeof raw === "object" ? raw : {};
+  const events = normalizeEvents(t.events);
+  return {
+    // fromIndex：本段过渡的起点大纲条目下标（0-based）。toIndex 恒为 fromIndex + 1，
+    // 故不单独存——存了就有两个真相来源，大纲一改就打架。
+    fromIndex: clampInt2(t.fromIndex, 0, INDEX_MAX, 0),
+    brief: trimmed2(t.brief).slice(0, GAP_BRIEF_MAX),
+    events,
+    // cursor：已走完的事件数，0..events.length。cursor === events.length 即整段走完。
+    // 夹紧到 events.length 很关键——用户删掉几步之后，旧 cursor 不能悬空。
+    cursor: clampInt2(t.cursor, 0, events.length, 0),
+    generatedAt: Number(t.generatedAt) || 0
+  };
+}
+function normalizeTransitions(raw) {
+  if (!Array.isArray(raw)) return [];
+  const byIndex = /* @__PURE__ */ new Map();
+  for (const item of raw) {
+    const t = normalizeTransition(item);
+    byIndex.set(t.fromIndex, t);
+  }
+  return [...byIndex.values()].sort((a, b) => a.fromIndex - b.fromIndex);
+}
+function getTransitionFor(transitions, fromIndex) {
+  const idx = clampInt2(fromIndex, 0, INDEX_MAX, 0);
+  return normalizeTransitions(transitions).find((t) => t.fromIndex === idx) || null;
+}
+function getActiveTransition(plan, itemIndex) {
+  return getTransitionFor(plan?.transitions, itemIndex);
+}
+function upsertTransition(transitions, transition) {
+  const next = normalizeTransition(transition);
+  const list = normalizeTransitions(transitions).filter((t) => t.fromIndex !== next.fromIndex);
+  list.push(next);
+  list.sort((a, b) => a.fromIndex - b.fromIndex);
+  return list;
+}
+function dropTransition(transitions, fromIndex) {
+  const idx = clampInt2(fromIndex, 0, INDEX_MAX, 0);
+  return normalizeTransitions(transitions).filter((t) => t.fromIndex !== idx);
+}
+function isTransitionDone(transition) {
+  const t = normalizeTransition(transition);
+  if (t.events.length === 0) return true;
+  return t.cursor >= t.events.length;
+}
+function clampCursor(transition, stepIndex) {
+  const t = normalizeTransition(transition);
+  return clampInt2(stepIndex, 0, t.events.length, t.cursor);
+}
+function itemLabel(item, fallbackIndex) {
+  if (!item) return `\u7B2C ${fallbackIndex + 1} \u6761\uFF08\u672A\u77E5\u6761\u76EE\uFF09`;
+  const n = Number.isFinite(Number(item.index)) ? Number(item.index) : fallbackIndex + 1;
+  const title = trimmed2(item.title) || "\u672A\u547D\u540D";
+  const time = trimmed2(item.time);
+  return `\u7B2C ${n} \u6761\u300C${title}\u300D${time ? `\uFF08${time}\uFF09` : ""}`;
+}
+function buildTransitionContextText(transition, items = []) {
+  const t = normalizeTransition(transition);
+  if (t.events.length === 0) return "";
+  const list = Array.isArray(items) ? items : [];
+  const fromIdx = t.fromIndex;
+  const toIdx = fromIdx + 1;
+  const fromLabel = itemLabel(list[fromIdx], fromIdx);
+  const toLabel = itemLabel(list[toIdx], toIdx);
+  const lines = t.events.map((e, i) => {
+    const mark = i < t.cursor ? "[\u5DF2\u8D70\u5B8C]" : i === t.cursor ? "[\u5F53\u524D\u8FD9\u4E00\u6B65]" : "";
+    const span = e.span ? `\uFF08${e.span}\uFF09` : "";
+    return `${mark}${i + 1}. ${e.title ? `${e.title}${span} \u2014\u2014 ` : ""}${e.brief}`;
+  });
+  const head = [
+    `\u672C\u6BB5\u8FC7\u6E21\uFF1A${fromLabel} \u2192 ${toLabel}`,
+    t.brief ? `\u672C\u6BB5\u7684\u7528\u610F\uFF1A${t.brief}` : "",
+    "",
+    `\u884C\u7A0B\u5355\uFF08\u6709\u5E8F\uFF0C\u5FC5\u987B\u6309\u5E8F\u63A8\u8FDB\uFF0C\u5171 ${t.events.length} \u6B65\uFF09\uFF1A`,
+    ...lines
+  ].filter((s) => s !== "").join("\n");
+  const tail = isTransitionDone(t) ? `
+\u5F53\u524D\u8FDB\u5EA6\uFF1A${t.events.length} / ${t.events.length} \u6B65\u5DF2\u5168\u90E8\u8D70\u5B8C\u2014\u2014\u672C\u6BB5\u8FC7\u6E21\u5DF2\u6536\u675F\uFF0C\u672C\u56DE\u5408\u7684\u5019\u9009\u53EF\u4EE5\u628A\u6545\u4E8B\u63A8\u8FDB\u5230 ${toLabel}\uFF08item_index \u586B ${toIdx + 1}\uFF0Cstep_index \u586B ${t.events.length}\uFF09\u3002` : `
+\u5F53\u524D\u8FDB\u5EA6\uFF1A\u5DF2\u8D70\u5B8C ${t.cursor} / ${t.events.length} \u6B65\uFF0C\u8BE5\u6F14\u7684\u662F\u7B2C ${t.cursor + 1} \u6B65\u3002
+\u672C\u56DE\u5408\u7684\u5019\u9009\u81F3\u591A\u628A\u8FD9\u4E00\u6B65\u6F14\u5B8C\uFF08step_index \u586B ${t.cursor + 1}\uFF09\uFF1B\u82E5\u5019\u9009\u53EA\u5728\u539F\u5730\u6DF1\u5316\u3001\u4E0D\u63A8\u8FDB\u8FC7\u6E21\uFF0Cstep_index \u586B ${t.cursor}\u3002
+\u26D4 item_index \u4E00\u5F8B\u586B ${fromIdx + 1}\uFF08\u5F53\u524D\u6240\u5728\u6761\u76EE\uFF09\uFF0C**\u4E0D\u5F97\u8D8A\u8FC7\u672C\u6BB5\u8FC7\u6E21**\u3002`;
+  return head + tail;
+}
+var EVENT_COUNT_DEFAULT, EVENT_COUNT_MIN, EVENT_COUNT_MAX, MAX_EVENTS, TITLE_MAX, SPAN_MAX, EVENT_BRIEF_MAX, GAP_BRIEF_MAX, INDEX_MAX, clampInt2, str2, trimmed2;
+var init_transitionPlan = __esm({
+  "src/core/transitionPlan.js"() {
+    EVENT_COUNT_DEFAULT = 4;
+    EVENT_COUNT_MIN = 1;
+    EVENT_COUNT_MAX = 10;
+    MAX_EVENTS = 20;
+    TITLE_MAX = 40;
+    SPAN_MAX = 60;
+    EVENT_BRIEF_MAX = 300;
+    GAP_BRIEF_MAX = 600;
+    INDEX_MAX = 9999;
+    clampInt2 = (v, lo, hi, dflt) => {
+      const n = Math.floor(Number(v));
+      if (!Number.isFinite(n)) return dflt;
+      return Math.min(hi, Math.max(lo, n));
+    };
+    str2 = (v) => typeof v === "string" ? v : "";
+    trimmed2 = (v) => str2(v).trim();
+  }
+});
+
 // src/core/blindboxReveal.js
 function markSets(bb) {
   return {
@@ -31207,8 +31429,8 @@ function loadApi() {
 function isEnabled2() {
   return getExtData()?.outline_entry?.show_outline_actions === true;
 }
-function escapeHtmlText2(str2) {
-  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtmlText2(str3) {
+  return String(str3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function briefText(text, maxLen = 48) {
   const s = String(text || "").replace(/\s+/g, " ").trim();
@@ -31226,11 +31448,15 @@ function readProgressFromSettings() {
   if (total <= 0) return null;
   const raw = Number(plan.progress?.itemIndex);
   const index = Number.isFinite(raw) ? Math.max(0, Math.min(raw, total - 1)) : 0;
-  return { index, total };
+  const tr = Array.isArray(plan.transitions) ? plan.transitions.find((t) => Number(t?.fromIndex) === index) : null;
+  const transitionTotal = Array.isArray(tr?.events) ? tr.events.length : 0;
+  const transitionStep = transitionTotal > 0 ? Math.max(0, Math.min(Math.floor(Number(tr?.cursor)) || 0, transitionTotal)) : -1;
+  return { index, total, transitionStep, transitionTotal };
 }
 function formatProgressLabel(progress) {
   if (!progress) return "";
-  return `\u7B2C ${progress.index + 1} / ${progress.total} \u6761`;
+  const base = `\u7B2C ${progress.index + 1} / ${progress.total} \u6761`;
+  return progress.transitionStep >= 0 ? `${base} \xB7 \u8FC7\u6E21 ${progress.transitionStep}/${progress.transitionTotal}` : base;
 }
 function getActiveBlindboxInfo() {
   try {
@@ -31271,7 +31497,14 @@ function progressFromState(state) {
   const total = Number(state?.total) || 0;
   if (total <= 0) return null;
   const index = Math.max(0, Math.min(Number(state.progress?.itemIndex) || 0, total - 1));
-  return { index, total };
+  const t = state?.transition;
+  const transitionTotal = t && Array.isArray(t.events) ? t.events.length : 0;
+  return {
+    index,
+    total,
+    transitionStep: transitionTotal > 0 ? Math.max(0, Math.min(Number(t.cursor) || 0, transitionTotal)) : -1,
+    transitionTotal
+  };
 }
 function getStrip() {
   return document.querySelector(`#chat .${STRIP_CLASS}`);
@@ -31442,10 +31675,13 @@ function buildProgressHtml(state) {
   if (!state.hasPlan || state.total <= 0) return "";
   const idx = state.progress.itemIndex;
   const percent = Math.round((idx + 1) / state.total * 100);
+  const t = state.transition;
+  const stepText = t && t.events.length > 0 ? `<div class="tsa-progress-step"><i class="fa-solid fa-diagram-project"></i> \u672C\u6BB5\u8FC7\u6E21 ${t.cursor} / ${t.events.length} \u6B65</div>` : "";
   return `
         <div class="tsa-progress">
             <div class="tsa-progress-text">\u7B2C ${idx + 1} / ${state.total} \u6761</div>
             <div class="tsa-bar"><div class="tsa-bar-fill" style="width:${percent}%"></div></div>
+            ${stepText}
         </div>`;
 }
 function buildPreviewHtml(state) {
@@ -31495,10 +31731,99 @@ function buildCandidatesHtml(state) {
                 <span class="tsa-item-title">${escapeHtmlText2(c.title || `\u5019\u9009 ${idx + 1}`)}</span>
                 ${c.used ? '<span class="tsa-item-used">\u5DF2\u5199\u5165</span>' : ""}
             </div>
-            <div class="tsa-item-meta">\u63A8\u8FDB\u81F3\u5927\u7EB2\u7B2C ${Number(c.itemIndex) || 0} \u6761</div>
+            <div class="tsa-item-meta">${candidateMetaLine(c, state)}</div>
             <div class="tsa-item-text">${escapeHtmlText2(c.text)}</div>
         </div>
     `).join("");
+}
+function candidateMetaLine(c, state) {
+  const itemNo = Number(c.itemIndex) || 0;
+  if (c.stepIndex === null || c.stepIndex === void 0) return `\u63A8\u8FDB\u81F3\u5927\u7EB2\u7B2C ${itemNo} \u6761`;
+  const total = state?.transition?.events?.length || 0;
+  return `\u505C\u7559\u5728\u7B2C ${itemNo} \u6761 \xB7 \u8D70\u5B8C\u8FC7\u6E21\u7B2C ${c.stepIndex} / ${total} \u6B65`;
+}
+function buildTransitionHtml(state) {
+  if (!state.hasPlan || !state.canTransition) return "";
+  const gap = state.transitionGap;
+  const gapLabel = `\u7B2C ${gap.fromIndex + 1} \u2192 ${gap.toIndex + 1} \u6761`;
+  const t = state.transition;
+  if (!t) {
+    const form = transitionOpen ? `
+            <div class="tsa-transition-form">
+                <textarea class="tsa-transition-brief" id="tsa-transition-brief" rows="2"
+                    placeholder="\u8FD9\u4E00\u6BB5\u5927\u6982\u600E\u4E48\u8D70\uFF1F\uFF08\u4F8B\uFF1A\u4E24\u4EBA\u4ECE\u51B7\u6218\u5230\u91CD\u65B0\u642D\u8BDD\uFF0C\u4E2D\u95F4\u9694\u7740\u4E00\u6B21\u610F\u5916\uFF09">${escapeHtmlText2(transitionDraft)}</textarea>
+                <div class="tsa-transition-form-row">
+                    <label class="tsa-transition-count-label">\u4E8B\u4EF6\u6570
+                        <input type="number" class="tsa-transition-count" id="tsa-transition-count" min="1" max="10" step="1" value="${transitionCount}">
+                    </label>
+                    <button type="button" class="tsa-generate tsa-transition-gen" id="tsa-transition-gen" ${transitionGenerating ? "disabled" : ""}>
+                        <i class="fa-solid ${transitionGenerating ? "fa-spinner fa-spin" : "fa-diagram-project"}"></i> ${transitionGenerating ? "\u751F\u6210\u4E2D..." : "\u751F\u6210\u884C\u7A0B\u5355"}
+                    </button>
+                </div>
+                <div class="tsa-transition-hint">\u628A\u300C${escapeHtmlText2(gap.fromTitle || "\u5F53\u524D\u6761")}\u300D\u5230\u300C${escapeHtmlText2(gap.toTitle || "\u4E0B\u4E00\u6761")}\u300D\u4E4B\u95F4\u7684\u7A7A\u6863\u6392\u6210\u51E0\u6B65\uFF0C\u5267\u60C5\u63A8\u8FDB\u5C31\u4F1A\u6CBF\u7740\u5B83\u4EEC\u8D70\uFF0C\u800C\u4E0D\u662F\u4E00\u6B65\u8DE8\u8FC7\u53BB\u3002</div>
+            </div>` : "";
+    return `
+            <div class="tsa-transition ${transitionOpen ? "is-open" : ""}">
+                <div class="tsa-transition-head tsa-transition-toggle ${transitionOpen ? "is-open" : ""}" role="button" tabindex="0" aria-expanded="${transitionOpen}" title="\u5C55\u5F00/\u6536\u8D77\u8FC7\u6E21\u884C\u7A0B\u5355">
+                    <i class="fa-solid fa-diagram-project"></i> \u8FC7\u6E21\u884C\u7A0B\u5355
+                    <span class="tsa-transition-gap">${escapeHtmlText2(gapLabel)}</span>
+                    <i class="fa-solid fa-chevron-down tsa-transition-arrow"></i>
+                </div>
+                ${form}
+            </div>`;
+  }
+  const shown = transitionEditing && Array.isArray(transitionEditDraft) ? transitionEditDraft : t.events;
+  const total = shown.length;
+  const doneCount = Math.min(t.cursor, total);
+  const rows = shown.map((e, i) => {
+    const cls = i < t.cursor ? "done" : i === t.cursor ? "current" : "todo";
+    const marker = cls === "done" ? '<i class="fa-solid fa-check"></i>' : cls === "current" ? '<i class="fa-solid fa-location-dot"></i>' : '<i class="fa-regular fa-circle"></i>';
+    if (transitionEditing) {
+      return `
+            <li class="tsa-transition-step ${cls} is-editing">
+                <span class="tsa-transition-marker">${marker}</span>
+                <div class="tsa-transition-edit">
+                    <input class="tsa-transition-edit-title" data-step-idx="${i}" data-field="title" value="${escapeHtmlText2(e.title)}" placeholder="\u6807\u9898" maxlength="40">
+                    <input class="tsa-transition-edit-span" data-step-idx="${i}" data-field="span" value="${escapeHtmlText2(e.span)}" placeholder="\u65F6\u95F4\uFF08\u5982 \u4E09\u5929\u540E\uFF09" maxlength="60">
+                    <textarea class="tsa-transition-edit-brief" data-step-idx="${i}" data-field="brief" rows="2" placeholder="\u8FD9\u4E00\u6B65\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u5BFC\u81F4\u4E86\u4EC0\u4E48">${escapeHtmlText2(e.brief)}</textarea>
+                    <div class="tsa-transition-edit-ops">
+                        <button type="button" class="tsa-icon-btn tsa-transition-up" data-step-idx="${i}" title="\u4E0A\u79FB" ${i === 0 ? "disabled" : ""}><i class="fa-solid fa-arrow-up"></i></button>
+                        <button type="button" class="tsa-icon-btn tsa-transition-down" data-step-idx="${i}" title="\u4E0B\u79FB" ${i === total - 1 ? "disabled" : ""}><i class="fa-solid fa-arrow-down"></i></button>
+                        <button type="button" class="tsa-icon-btn tsa-transition-del" data-step-idx="${i}" title="\u5220\u9664\u8FD9\u4E00\u6B65"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            </li>`;
+    }
+    return `
+            <li class="tsa-transition-step ${cls}" data-step-idx="${i}" title="\u628A\u8FD9\u4E00\u6B65\u8BBE\u4E3A\u5F53\u524D\uFF08\u4E0D\u4F1A\u5199\u5165\u8F93\u5165\u6846\uFF09">
+                <span class="tsa-transition-marker">${marker}</span>
+                <div class="tsa-transition-main">
+                    <div class="tsa-transition-title">${escapeHtmlText2(e.title || `\u7B2C ${i + 1} \u6B65`)}${e.span ? `<span class="tsa-transition-span">${escapeHtmlText2(e.span)}</span>` : ""}</div>
+                    <div class="tsa-transition-brief-text">${escapeHtmlText2(e.brief)}</div>
+                </div>
+            </li>`;
+  }).join("");
+  const left = total - doneCount;
+  const finalRow = `
+        <li class="tsa-transition-final ${state.transitionDone ? "is-ready" : ""}" data-action="cross-gap"
+            title="${state.transitionDone ? "\u8DE8\u5230\u4E0B\u4E00\u4E2A\u9636\u6BB5" : `\u8FD8\u6709 ${left} \u6B65\u6CA1\u8D70\uFF1B\u70B9\u5B83\u4F1A\u8DF3\u8FC7\u5269\u4E0B\u51E0\u6B65\u76F4\u63A5\u8DE8\u6BB5`}">
+            <i class="fa-solid fa-flag-checkered"></i> \u8FDB\u5165\u300C${escapeHtmlText2(gap.toTitle || `\u7B2C ${gap.toIndex + 1} \u6761`)}\u300D
+        </li>`;
+  const ops = transitionEditing ? `<button type="button" class="tsa-chip tsa-transition-add" id="tsa-transition-add"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u4E00\u6761</button>
+           <button type="button" class="tsa-chip tsa-transition-edit-toggle is-active" id="tsa-transition-edit-toggle"><i class="fa-solid fa-check"></i> \u5B8C\u6210\u7F16\u8F91</button>` : `<button type="button" class="tsa-chip tsa-transition-edit-toggle" id="tsa-transition-edit-toggle"><i class="fa-solid fa-pen"></i> \u7F16\u8F91</button>
+           <button type="button" class="tsa-chip tsa-transition-regen" id="tsa-transition-regen" ${transitionGenerating ? "disabled" : ""}><i class="fa-solid fa-rotate"></i> \u91CD\u65B0\u751F\u6210</button>
+           <button type="button" class="tsa-chip tsa-transition-drop" id="tsa-transition-drop"><i class="fa-solid fa-trash"></i> \u5220\u9664</button>`;
+  return `
+        <div class="tsa-transition is-open has-list">
+            <div class="tsa-transition-head">
+                <i class="fa-solid fa-diagram-project"></i> \u8FC7\u6E21\u884C\u7A0B\u5355
+                <span class="tsa-transition-gap">${escapeHtmlText2(gapLabel)}</span>
+                <span class="tsa-transition-badge">${doneCount} / ${total} \u6B65</span>
+            </div>
+            ${t.brief ? `<div class="tsa-transition-purpose">\u7528\u610F\uFF1A${escapeHtmlText2(t.brief)}</div>` : ""}
+            <ol class="tsa-transition-list">${rows}${finalRow}</ol>
+            <div class="tsa-transition-ops">${ops}</div>
+        </div>`;
 }
 function buildPanelHtml(state) {
   const bbInfo = getActiveBlindboxInfo();
@@ -31661,7 +31986,9 @@ function buildDirectorFlow(info) {
     </div>`;
 }
 function buildRecommendBody(state) {
-  const generateLabel = state.candidates.length > 0 ? "\u6362\u4E00\u6279" : "\u63A8\u8350\u5267\u60C5";
+  const inTransition = !!(state.transition && state.transition.events.length > 0);
+  const idleLabel = inTransition ? "\u63A8\u8350\u8FD9\u4E00\u6B65\u7684\u5267\u60C5" : "\u63A8\u8350\u5267\u60C5";
+  const generateLabel = state.candidates.length > 0 ? "\u6362\u4E00\u6279" : idleLabel;
   return `
         <div class="tsa-scroll">
             ${buildPreviewHtml(state)}
@@ -31671,6 +31998,7 @@ function buildRecommendBody(state) {
                 </label>
             </div>
             ${buildProgressHtml(state)}
+            ${buildTransitionHtml(state)}
             <div class="tsa-list" id="tsa-list">${buildCandidatesHtml(state)}</div>
         </div>
         <div class="tsa-footer">
@@ -31745,6 +32073,9 @@ async function refreshPanel() {
   syncStripProgress(progressFromState(state));
 }
 function destroyPanel() {
+  if (transitionEditing) void commitTransitionEditDraft();
+  transitionOpen = false;
+  transitionEditing = false;
   $(`#${PANEL_ID}`).remove();
   expandedForMesid = null;
   previewItemIdx = -1;
@@ -31801,9 +32132,109 @@ async function onPickCandidate(index) {
   if (!candidate || !String(candidate.text || "").trim()) return;
   api.writeSceneToInput(candidate.text, api.getSceneInsertMode());
   if (state.planId) {
-    api.applySceneProgress(state.planId, candidate.itemIndex - 1);
+    if (candidate.stepIndex !== null && candidate.stepIndex !== void 0) {
+      api.setSceneStep(state.planId, candidate.stepIndex);
+    } else {
+      api.applySceneProgress(state.planId, candidate.itemIndex - 1);
+    }
     api.markSceneCandidateUsed(state.planId, index);
   }
+  await refreshPanel();
+}
+async function commitTransitionEditDraft() {
+  const draft2 = transitionEditDraft;
+  transitionEditing = false;
+  transitionEditDraft = null;
+  if (!Array.isArray(draft2)) return;
+  try {
+    const api = await loadApi();
+    const state = api.getSceneAdvanceState();
+    if (state.planId) api.saveSceneTransitionEvents(state.planId, draft2);
+  } catch (e) {
+    TitaniaLogger.warn("\u8FC7\u6E21\u884C\u7A0B\u5355\u843D\u76D8\u5931\u8D25", e?.message || String(e));
+  }
+}
+async function onGenerateTransition(regen = false) {
+  if (transitionGenerating) return;
+  const api = await loadApi();
+  const state = api.getSceneAdvanceState();
+  let brief;
+  let count;
+  if (regen && state.transition) {
+    brief = state.transition.brief;
+    count = state.transition.events.length || EVENT_COUNT_DEFAULT;
+  } else {
+    brief = String($("#tsa-transition-brief").val() ?? transitionDraft).trim();
+    count = clampEventCount($("#tsa-transition-count").val() ?? transitionCount);
+  }
+  transitionDraft = brief;
+  transitionCount = count;
+  transitionGenerating = true;
+  await refreshPanel();
+  try {
+    await api.generateSceneTransition({ brief, count });
+  } catch (e) {
+    TitaniaLogger.error("\u8FC7\u6E21\u884C\u7A0B\u5355\u751F\u6210\u5931\u8D25", e);
+  } finally {
+    transitionGenerating = false;
+    const after = api.getSceneAdvanceState();
+    if (after.transition && after.transition.events.length > 0) transitionOpen = false;
+    await refreshPanel();
+  }
+}
+async function onPickStep(stepIndex) {
+  await commitTransitionEditDraft();
+  const api = await loadApi();
+  const state = api.getSceneAdvanceState();
+  if (!state.planId || !state.transition) return;
+  if (state.transition.cursor === stepIndex) return;
+  api.clearSceneCandidates(state.planId);
+  api.setSceneStep(state.planId, stepIndex);
+  await refreshPanel();
+}
+async function onCrossGap() {
+  await commitTransitionEditDraft();
+  const api = await loadApi();
+  const state = api.getSceneAdvanceState();
+  if (!state.planId) return;
+  const left = state.transition && !state.transitionDone ? state.transition.events.length - state.transition.cursor : 0;
+  if (left > 0 && !window.confirm(`\u8FD8\u6709 ${left} \u6B65\u8FC7\u6E21\u6CA1\u8D70\uFF0C\u786E\u5B9A\u8DF3\u8FC7\u5B83\u4EEC\u3001\u76F4\u63A5\u8FDB\u5165\u4E0B\u4E00\u6761\u5927\u7EB2\uFF1F`)) return;
+  api.clearSceneCandidates(state.planId);
+  api.crossSceneGap(state.planId);
+  await refreshPanel();
+}
+async function onToggleTransitionEdit() {
+  if (transitionEditing) {
+    await commitTransitionEditDraft();
+  } else {
+    const api = await loadApi();
+    const state = api.getSceneAdvanceState();
+    if (!state.transition) return;
+    transitionEditing = true;
+    transitionEditDraft = state.transition.events.map((e) => ({ ...e }));
+  }
+  await refreshPanel();
+}
+async function mutateTransitionDraft(mutator) {
+  if (!Array.isArray(transitionEditDraft)) return;
+  transitionEditDraft = mutator(transitionEditDraft.map((e) => ({ ...e })));
+  await refreshPanel();
+}
+function swapAt(list, a, b) {
+  const next = list.slice();
+  const tmp = next[a];
+  next[a] = next[b];
+  next[b] = tmp;
+  return next;
+}
+async function onDropTransition() {
+  const api = await loadApi();
+  const state = api.getSceneAdvanceState();
+  if (!state.planId) return;
+  if (!window.confirm("\u5220\u9664\u8FD9\u4E00\u6BB5\u7684\u8FC7\u6E21\u884C\u7A0B\u5355\uFF1F\u5267\u60C5\u63A8\u8FDB\u5C06\u9000\u56DE\u6309\u5927\u7EB2\u6761\u76EE\u76F4\u63A5\u63A8\u8FDB\u3002")) return;
+  transitionEditing = false;
+  transitionEditDraft = null;
+  api.clearSceneTransition(state.planId);
   await refreshPanel();
 }
 async function onGenerate() {
@@ -31893,6 +32324,44 @@ function bindPanelNode(panel) {
     $(this).attr("data-mode", next).find(".tsa-chip-label").text(next === "append" ? "\u8FFD\u52A0" : "\u8986\u76D6");
   });
   $panel.on("click", "#tsa-generate", () => onGenerate());
+  $panel.on("click", ".tsa-transition-toggle", async function() {
+    transitionOpen = !transitionOpen;
+    await refreshPanel();
+  });
+  $panel.on("input", "#tsa-transition-brief", function() {
+    transitionDraft = String($(this).val() || "");
+  });
+  $panel.on("change", "#tsa-transition-count", function() {
+    transitionCount = clampEventCount($(this).val());
+  });
+  $panel.on("click", "#tsa-transition-gen", () => onGenerateTransition(false));
+  $panel.on("click", "#tsa-transition-regen", () => onGenerateTransition(true));
+  $panel.on("click", "#tsa-transition-drop", () => onDropTransition());
+  $panel.on("click", ".tsa-transition-step:not(.is-editing)", function() {
+    return onPickStep(Number($(this).data("step-idx")));
+  });
+  $panel.on("click", ".tsa-transition-final", () => onCrossGap());
+  $panel.on("click", "#tsa-transition-edit-toggle", () => onToggleTransitionEdit());
+  $panel.on("click", ".tsa-transition-up", function() {
+    const i = Number($(this).data("step-idx"));
+    return mutateTransitionDraft((list) => i > 0 ? swapAt(list, i, i - 1) : list);
+  });
+  $panel.on("click", ".tsa-transition-down", function() {
+    const i = Number($(this).data("step-idx"));
+    return mutateTransitionDraft((list) => i >= 0 && i < list.length - 1 ? swapAt(list, i, i + 1) : list);
+  });
+  $panel.on("click", ".tsa-transition-del", function() {
+    const i = Number($(this).data("step-idx"));
+    return mutateTransitionDraft((list) => list.filter((_, idx) => idx !== i));
+  });
+  $panel.on("click", "#tsa-transition-add", () => mutateTransitionDraft((list) => [...list, { title: "", span: "", brief: "" }]));
+  $panel.on("input", ".tsa-transition-edit-title, .tsa-transition-edit-span, .tsa-transition-edit-brief", function() {
+    if (!Array.isArray(transitionEditDraft)) return;
+    const i = Number($(this).data("step-idx"));
+    const field = String($(this).data("field") || "");
+    if (!transitionEditDraft[i] || !field) return;
+    transitionEditDraft[i] = { ...transitionEditDraft[i], [field]: String($(this).val() || "") };
+  });
   $panel.on("click", "#tsa-bb-pause", async function() {
     const info = getActiveBlindboxInfo();
     if (!info) return;
@@ -31986,13 +32455,14 @@ function initSceneAdvanceBubble() {
   scheduleRefreshStrips(300);
   TitaniaLogger.info("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u5DF2\u521D\u59CB\u5316");
 }
-var STRIP_CLASS, PANEL_ID, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, listenersBound2, refreshQueued, apiPromise, expandedForMesid, generating, opening, restoring, previewItemIdx, previewOpen, bbStageOpenIdx, bbFlowOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, PACING_PRESETS, BB_STAGE_LABELS, bbStageLabel;
+var STRIP_CLASS, PANEL_ID, PLANS_KEY, ACTIVE_PLAN_KEY, SCENE_SOURCE_PLAN_KEY, listenersBound2, refreshQueued, apiPromise, expandedForMesid, generating, opening, restoring, previewItemIdx, previewOpen, bbStageOpenIdx, bbFlowOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, transitionOpen, transitionDraft, transitionCount, transitionEditing, transitionEditDraft, transitionGenerating, PACING_PRESETS, BB_STAGE_LABELS, bbStageLabel;
 var init_sceneAdvanceBubble = __esm({
   "src/ui/sceneAdvanceBubble.js"() {
     init_storage();
     init_logger();
     init_pacingInjection();
     init_blindboxPlan();
+    init_transitionPlan();
     init_blindboxReveal();
     init_unlockChime();
     STRIP_CLASS = "titania-scene-advance-strip";
@@ -32015,6 +32485,12 @@ var init_sceneAdvanceBubble = __esm({
     pacingResult = null;
     pacingDraft = "";
     pacingAnalyzing = false;
+    transitionOpen = false;
+    transitionDraft = "";
+    transitionCount = EVENT_COUNT_DEFAULT;
+    transitionEditing = false;
+    transitionEditDraft = null;
+    transitionGenerating = false;
     PACING_PRESETS = [
       { label: "\u653E\u6162", text: "\u672C\u6B21\u56DE\u590D\u653E\u6162\u8282\u594F\uFF0C\u505C\u7559\u5728\u5F53\u524D\u573A\u666F\uFF0C\u6DF1\u5316\u4EBA\u7269\u60C5\u7EEA\u4E0E\u611F\u5B98\u7EC6\u8282\uFF0C\u4E0D\u8981\u63A8\u8FDB\u5230\u65B0\u4E8B\u4EF6\u3002" },
       { label: "\u52A0\u5FEB", text: "\u672C\u6B21\u56DE\u590D\u52A0\u5FEB\u8282\u594F\uFF0C\u7565\u53BB\u8FC7\u573A\u4E0E\u5BD2\u6684\uFF0C\u76F4\u63A5\u63A8\u8FDB\u5230\u4E0B\u4E00\u4E2A\u5173\u952E\u4E8B\u4EF6\u6216\u573A\u666F\u3002" },
@@ -32185,10 +32661,15 @@ var init_directorInjection = __esm({
 var storyOutlineWindow_exports = {};
 __export(storyOutlineWindow_exports, {
   applySceneProgress: () => applyProgressFromModel,
+  clearSceneCandidates: () => clearSceneCandidates,
+  clearSceneTransition: () => clearSceneTransition,
   collectRecentChatText: () => collectRecentChatText,
+  crossSceneGap: () => crossSceneGap,
   ensureSceneSourceLoaded: () => ensureSceneSourceLoaded,
   generatePacingAssessment: () => generatePacingAssessment,
   generateSceneRecommendations: () => generateRecommendations,
+  generateSceneTransition: () => generateTransitionItinerary,
+  generateTransitionItinerary: () => generateTransitionItinerary,
   getRollingOpeningText: () => getRollingOpeningText,
   getSceneAdvanceState: () => getSceneAdvanceState,
   getSceneInsertMode: () => getCurrentInsertMode,
@@ -32196,7 +32677,11 @@ __export(storyOutlineWindow_exports, {
   openPromptTemplateManager: () => openPromptTemplateManager,
   openStoryOutlineWindow: () => openStoryOutlineWindow,
   parsePacingResponse: () => parsePacingResponse,
+  parseRecommendationResponse: () => parseRecommendationResponse,
+  parseTransitionResponse: () => parseTransitionResponse,
   runDirectorTurn: () => runDirectorTurn,
+  saveSceneTransitionEvents: () => saveSceneTransitionEvents,
+  setSceneStep: () => setSceneStep,
   switchSceneSourcePlan: () => switchSceneSourcePlan,
   toggleSceneInsertMode: () => toggleSceneInsertMode,
   writeSceneToInput: () => writePlotToInput
@@ -33095,26 +33580,32 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 3) \u4E0D\u5F97\u5012\u9000\uFF1A\u5019\u9009\u63A8\u8FDB\u5230\u7684\u6761\u76EE\u4E0D\u5F97\u65E9\u4E8E\u4F60\u5224\u65AD\u7684\u5F53\u524D\u4F4D\u7F6E\uFF0C\u4E5F\u4E0D\u8981\u4E00\u6B21\u8DE8\u8FC7\u591A\u6761\u3002
 4) \u627F\u63A5\u5DF2\u53D1\u751F\u7684\u5267\u60C5\uFF1A\u5019\u9009\u5FC5\u987B\u81EA\u7136\u8854\u63A5"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\u7684\u6700\u540E\u72B6\u6001\uFF0C\u4E0D\u91CD\u590D\u5DF2\u7ECF\u5199\u8FC7\u7684\u60C5\u8282\u3002
 5) \u4E34\u8FD1\u7ED3\u5C40\uFF1A\u82E5\u4F60\u5224\u65AD\u6545\u4E8B\u5DF2\u63A8\u8FDB\u5230\u6700\u540E\u4E00\u6761\u5927\u7EB2\u3001\u6216\u5DF2\u7ECF\u8BE5\u6536\u5C3E\u4E86\uFF0C\u5019\u9009\u5E94\u5F53\u662F\u6536\u675F\u4E0E\u843D\u5730\u65B9\u5411\uFF08\u628A\u65E2\u6709\u7EBF\u7D22\u7ED3\u6E05\u3001\u7ED9\u51FA\u7ED3\u5C40\uFF09\uFF0C\u4E0D\u8981\u53E6\u8D77\u65B0\u7684\u5C55\u5F00\u3002
+6) \u6709\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\uFF08\u89C1[\u8FC7\u6E21\u884C\u7A0B\u5355]\u4E00\u8282\uFF09\uFF0C\u5019\u9009\u7684\u63A8\u8FDB\u5355\u4F4D**\u4E0D\u662F\u5927\u7EB2\u6761\u76EE\u3001\u800C\u662F\u884C\u7A0B\u5355\u91CC\u7684\u4E00\u6B65**\uFF1A\u53EA\u80FD\u5728\u884C\u7A0B\u5355\u5185\u5F80\u524D\u63A8\u8FDB**\u81F3\u591A\u4E00\u6B65**\uFF0Citem_index \u4E00\u5F8B\u586B\u5F53\u524D\u6240\u5904\u7684\u90A3\u4E00\u6761\u3001\u4E0D\u5F97\u8D8A\u8FC7\u672C\u6BB5\u8FC7\u6E21\uFF1B\u53EA\u6709\u884C\u7A0B\u5355\u5DF2\u5168\u90E8\u8D70\u5B8C\uFF0C\u624D\u5141\u8BB8\u628A\u6545\u4E8B\u63A8\u8FDB\u5230\u4E0B\u4E00\u4E2A\u5927\u7EB2\u6761\u76EE\u3002\u884C\u7A0B\u5355\u662F\u73A9\u5BB6\u4E3A\u672C\u6BB5\u4EB2\u624B\u6307\u5B9A\u7684\u8FC7\u573A\uFF0C\u8D8A\u8FC7\u5B83\u5C31\u7B49\u4E8E\u628A\u73A9\u5BB6\u7684\u5B89\u6392\u4F5C\u5E9F\u3002
 
 [\u786C\u6027\u8981\u6C42]
 1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
 2) \u53EA\u5141\u8BB8\u8FD4\u56DE\u4EE5\u4E0B\u7ED3\u6784\uFF1A
 {
-  "version": "1.6",
+  "version": "1.7",
   "current_item_index": 1,
   "candidates": [
     {
       "title": "\u5019\u9009\u6807\u9898\uFF088\u5B57\u4EE5\u5185\uFF09",
       "text": "\u53EF\u76F4\u63A5\u4F5C\u4E3A\u73A9\u5BB6\u8F93\u5165\u53D1\u9001\u7684\u5267\u60C5\u6BB5\u843D",
-      "item_index": 1
+      "item_index": 1,
+      "step_index": 1
     }
   ]
 }
 3) current_item_index \u586B\u4F60\u5224\u65AD\u7684"\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u7B2C\u51E0\u6761"\uFF08\u5BF9\u5E94\u8F93\u5165\u5927\u7EB2\u91CC\u7684 index\uFF09\u3002\u786E\u5B9E\u65E0\u6CD5\u5224\u65AD\u65F6\u586B null\uFF0C\u4E0D\u8981\u968F\u4FBF\u586B 1\u3002
 4) candidates \u6570\u91CF\u5FC5\u987B\u4E3A 2~3 \u4E2A\u3002
 5) text \u662F\u4EE5\u73A9\u5BB6\u89C6\u89D2\u9A71\u52A8\u5267\u60C5\u7684\u6307\u4EE4\u5F0F\u60C5\u8282\u6BB5\u843D\uFF0C120-220 \u5B57\uFF0C\u4E2D\u6587\uFF0C\u5177\u4F53\u53EF\u5EF6\u5C55\uFF0C\u53EF\u76F4\u63A5\u53D1\u9001\u7ED9\u6A21\u578B\u7EED\u5199\uFF0C\u4E0D\u5199"\u8BF7\u4F60/\u4F60\u9700\u8981"\u3002
-6) item_index \u586B\u8BE5\u5019\u9009\u63A8\u8FDB\u5230\u7684\u5927\u7EB2\u6761\u76EE\u5E8F\u53F7\uFF0C\u5FC5\u987B\u6765\u81EA\u8F93\u5165\u5927\u7EB2\uFF0C\u4E0D\u5F97\u65B0\u589E\uFF1B\u5404\u5019\u9009\u76F8\u540C\u6216\u76F8\u90BB\u90FD\u5C5E\u4E8E\u6B63\u5E38\u3002
-7) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+6) item_index \u586B\u8BE5\u5019\u9009\u63A8\u8FDB\u5230\u7684\u5927\u7EB2\u6761\u76EE\u5E8F\u53F7\uFF0C\u5FC5\u987B\u6765\u81EA\u8F93\u5165\u5927\u7EB2\uFF0C\u4E0D\u5F97\u65B0\u589E\uFF1B\u5404\u5019\u9009\u76F8\u540C\u6216\u76F8\u90BB\u90FD\u5C5E\u4E8E\u6B63\u5E38\u3002\u6709\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\u4E00\u5F8B\u586B\u5F53\u524D\u6761\u76EE\uFF08\u89C1\u6838\u5FC3\u539F\u5219 6\uFF09\u3002
+7) step_index \u586B"\u8FD9\u4E2A\u5019\u9009\u8D70\u5B8C\u540E\uFF0C\u672C\u6BB5\u8FC7\u6E21\u884C\u7A0B\u5355\u91CC\u5DF2\u5B8C\u6210\u51E0\u6B65"\uFF080 \u8D77\u7B97\u7684\u6574\u6570\uFF09\uFF1A
+   - \u65E0\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\u586B null\uFF1B
+   - \u6709\u884C\u7A0B\u5355\u65F6\uFF0C[\u8FC7\u6E21\u884C\u7A0B\u5355]\u4E00\u8282\u4F1A\u76F4\u63A5\u5199\u660E\u672C\u56DE\u5408\u8BE5\u586B\u51E0\uFF0C\u7167\u6284\u5373\u53EF\uFF1B
+   - \u5019\u9009\u53EA\u5728\u539F\u5730\u6DF1\u5316\u3001\u4E0D\u63A8\u8FDB\u8FC7\u6E21 \u2192 \u586B\u5F53\u524D\u5DF2\u5B8C\u6210\u6B65\u6570\uFF1B\u628A\u5F53\u524D\u8FD9\u4E00\u6B65\u6F14\u5B8C \u2192 \u5DF2\u5B8C\u6210\u6B65\u6570 + 1\uFF1B\u884C\u7A0B\u5355\u5168\u90E8\u8D70\u5B8C \u2192 \u586B\u884C\u7A0B\u5355\u603B\u6B65\u6570\u3002
+8) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
       user: `[\u89D2\u8272\u8BBE\u5B9A]
 {{persona}}
 
@@ -33130,13 +33621,17 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 [\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\uFF08\u8DEF\u6807\uFF0C\u6700\u540E\u4E00\u6761=\u7ED3\u5C40\uFF09]
 {{outlineItemsJson}}
 
+[\u8FC7\u6E21\u884C\u7A0B\u5355\uFF08\u73A9\u5BB6\u4E3A\u4E0B\u9762\u8FD9\u4E00\u6BB5\u8FC7\u573A\u4EB2\u624B\u6392\u7684\u987A\u5E8F\uFF1B\u6CA1\u6709\u5185\u5BB9\u65F6\uFF1D\u672C\u6BB5\u6CA1\u6709\u884C\u7A0B\u5355\uFF0C\u6309\u666E\u901A\u63A8\u8FDB\u5904\u7406\uFF09]
+{{transitionContext}}
+
 [\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF08\u4EC5\u4E3A\u6700\u8FD1\u6B63\u6587\u7247\u6BB5\uFF0C\u8D8A\u9760\u540E\u8D8A\u65B0\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u5F00\u5934\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u6216\u6458\u8981\uFF09]
 {{recentChat}}
 
 [\u4EFB\u52A1]
 1) \u5148\u5224\u65AD\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\uFF0C\u586B\u8FDB current_item_index\uFF08\u786E\u5B9E\u65E0\u6CD5\u5224\u65AD\u586B null\uFF09\u3002
 2) \u518D\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF1A\u90FD\u4ECE\u8BE5\u4F4D\u7F6E\u51FA\u53D1\uFF0C\u627F\u63A5\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF0C\u5F7C\u6B64\u65B9\u5411\u4E0D\u540C\uFF0C\u671D\u7ED3\u5C40\u7A33\u6B65\u63A8\u8FDB\u4F46\u4E0D\u8981\u8DF3\u5230\u7ED3\u5C40\u3002\u6BCF\u4E2A\u5019\u9009\u7684 item_index \u586B\u5B83\u63A8\u8FDB\u5230\u7684\u90A3\u4E00\u6761\uFF08\u901A\u5E38\u5F7C\u6B64\u76F8\u540C\u6216\u76F8\u90BB\uFF09\u3002
-\u4E25\u683C\u6309 version 1.6 \u7ED3\u6784\u8FD4\u56DE\u3002\u53EA\u8FD4\u56DE JSON\u3002`
+3) \u82E5\u4E0A\u9762\u7ED9\u4E86[\u8FC7\u6E21\u884C\u7A0B\u5355]\uFF0C\u5019\u9009\u8981**\u9488\u5BF9\u884C\u7A0B\u5355\u91CC\u5F53\u524D\u90A3\u4E00\u6B65**\u6765\u5199\uFF08\u5199\u51FA\u8FD9\u4E00\u6B65\u5177\u4F53\u600E\u4E48\u53D1\u751F\u3001\u600E\u4E48\u6F14\uFF09\uFF0C\u5E76\u6309\u5176\u6307\u793A\u586B step_index \u4E0E item_index\u2014\u2014\u4E0D\u8981\u8D8A\u8FC7\u884C\u7A0B\u5355\u53BB\u5199\u540E\u9762\u7684\u5185\u5BB9\u3002\u6CA1\u6709\u884C\u7A0B\u5355\u65F6 step_index \u4E00\u5F8B\u586B null\u3002
+\u4E25\u683C\u6309 version 1.7 \u7ED3\u6784\u8FD4\u56DE\u3002\u53EA\u8FD4\u56DE JSON\u3002`
     },
     pacing: {
       system: `\u4F60\u662F\u53D9\u4E8B\u8282\u594F\u5206\u6790\u5E08\uFF0C\u5728\u5199\u4F5C\u6A21\u578B\u52A8\u7B14\u524D\u4E3A\u300C\u672C\u6B21\u8FD9\u4E00\u6761\u56DE\u590D\u300D\u628A\u63A7\u8282\u594F\u3002
@@ -33261,6 +33756,69 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 {{blindboxProgress}}
 
 [\u4EFB\u52A1] \u8BFB\u6700\u8FD1\u6B63\u6587\uFF0C\u5224\u65AD\u8FD8\u6CA1\u7FFB\u8FC7\u53BB\u7684\u4E8B\u4EF6\u5728\u8FD9\u4E00\u62CD\u91CC\u7684\u8FDB\u5C55\uFF08done/skipped/progress\uFF0C\u5404\u5E26 evidence \u4E0E evidence_floor\uFF09\uFF0C\u4E3A done/skipped \u5199\u4E00\u53E5 recap\uFF0C\u5E76\u7ED9\u51FA directive \u4E0E intensity\u3002\u62FF\u4E0D\u51C6\u4E00\u5F8B\u62A5 progress\u3002\u4E25\u683C\u6309\u7EA6\u5B9A JSON \u8FD4\u56DE\u3002`
+    },
+    transition: {
+      system: `\u4F60\u662F\u5267\u60C5\u8FC7\u573A\u8BBE\u8BA1\u5E08\u3002\u73A9\u5BB6\u5DF2\u7ECF\u6709\u4E00\u4EFD\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\uFF0C\u4F46\u76F8\u90BB\u4E24\u6761\u4E4B\u95F4\u5F80\u5F80\u9694\u7740\u4E00\u6BB5\u4E0D\u77ED\u7684\u65F6\u95F4\uFF08"\u4E00\u5468\u540E""\u534A\u5E74\u540E"\uFF09\uFF0C\u5927\u7EB2\u672C\u8EAB\u5BF9\u8FD9\u6BB5\u7A7A\u767D\u6CA1\u6709\u4EFB\u4F55\u4EA4\u4EE3\u2014\u2014\u4F60\u7684\u804C\u8D23\u5C31\u662F\u628A\u8FD9\u6BB5\u7A7A\u767D\u586B\u6210\u4E00\u6761**\u6709\u5E8F\u7684\u4E8B\u4EF6\u884C\u7A0B\u5355**\uFF0C\u8BA9\u6545\u4E8B\u80FD\u4ECE\u5F53\u524D\u8FD9\u6761\u81EA\u7136\u8D70\u5230\u4E0B\u4E00\u6761\u3002
+
+[\u786C\u6027\u8981\u6C42]
+1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
+2) \u8FD4\u56DE\u683C\u5F0F\u5FC5\u987B\u662F\uFF1A
+{
+  "version": "1.0",
+  "from_index": 2,
+  "to_index": 3,
+  "events": [
+    {
+      "title": "\u672C\u6B65\u6807\u9898\uFF088\u5B57\u4EE5\u5185\uFF09",
+      "span": "\u672C\u6B65\u8DDD\u4E0A\u4E00\u62CD\u7684\u65F6\u95F4\u8DE8\u5EA6",
+      "brief": "\u672C\u6B65\u6897\u6982\uFF08\u5BA2\u89C2\u6982\u8FF0\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u5BFC\u81F4\u4E86\u4EC0\u4E48\uFF09"
+    }
+  ]
+}
+3) events \u6570\u91CF\u5FC5\u987B**\u6070\u597D {{eventCount}} \u6761**\uFF0C\u4E14**\u6309\u65F6\u95F4\u5148\u540E\u6392\u5217**\u3002
+4) \u56E0\u679C\u8854\u63A5\uFF1A\u4E0A\u4E00\u6B65\u7684\u540E\u679C\u8981\u9A71\u52A8\u4E0B\u4E00\u6B65\uFF0C\u7528"\u56E0\u6B64/\u4F46\u662F"\u800C\u975E"\u7136\u540E"\u3002\u4E0D\u8981\u5199\u6210\u51E0\u4EF6\u4E92\u4E0D\u76F8\u5E72\u7684\u5E76\u5217\u4E8B\u4EF6\u3002
+5) \u65F6\u95F4\u8DE8\u5EA6\uFF08\u4E0E\u672C\u6761\u540C\u7B49\u91CD\u8981\uFF09\uFF1A
+   - span \u5199\u6210\u65F6\u95F4\u8DE8\u5EA6\u6807\u8BB0\u800C\u975E\u77AC\u65F6\u65F6\u523B\uFF0C\u683C\u5F0F\u53C2\u8003\uFF1A\u5F53\u665A / \u6B21\u65E5 / \u4E09\u5929\u540E / \u4E24\u5468\u540E / \u5165\u79CB\u65F6 / \u6B21\u5E74\u6625\u5929\uFF1B
+   - \u7B2C\u4E00\u6761\u76F8\u5BF9[\u6700\u8FD1\u6B63\u6587]\u7684\u6700\u540E\u72B6\u6001\u8D77\u7B97\uFF0C\u6700\u540E\u4E00\u6761\u5FC5\u987B**\u521A\u597D\u843D\u5728\u4E0B\u4E00\u4E2A\u6761\u76EE\u7684\u5165\u53E3**\uFF08\u5373\u4E0B\u4E00\u6761\u7684\u65F6\u95F4\u70B9\u4E4B\u524D\uFF09\uFF1B
+   - \u6240\u6709 span \u6CBF\u65F6\u95F4\u8F74\u5355\u8C03\u524D\u8FDB\uFF0C\u7D2F\u52A0\u8D77\u6765\u4E0D\u5F97\u8D85\u8FC7\u8FD9\u4E00\u6BB5 gap \u7684\u603B\u8DE8\u5EA6\uFF08\u89C1[\u672C\u6B21\u8981\u8865\u7684\u8FC7\u6E21\u6BB5]\uFF09\uFF1B
+   - \u7981\u6B62\u628A\u6574\u6BB5 gap \u5199\u6210\u8FDE\u7EED\u51E0\u5929\u7684\u573A\u666F\u4E32\uFF0C\u4E5F\u4E0D\u8981\u5168\u7A0B\u4E00\u53E5"\u6570\u6708\u540E"\u8349\u8349\u5E26\u8FC7\u2014\u2014\u8BE5\u5FEB\u5219\u5FEB\u3001\u8BE5\u6162\u5219\u6162\u3002
+6) brief \u4E00\u5F8B\u7528\u6897\u6982\u4F53\uFF08\u5BA2\u89C2\u6982\u8FF0\uFF09\u4E66\u5199\uFF0C\u8FD9\u662F\u6587\u98CE\u786C\u7EA6\u675F\uFF1A
+   - \u53EA\u5199"\u53D1\u751F\u4E86\u4EC0\u4E48\u4E8B\u4EF6\u3001\u4EA7\u751F\u4EC0\u4E48\u540E\u679C\u3001\u4EBA\u7269\u5904\u5883\u6216\u5173\u7CFB\u53D1\u751F\u4EC0\u4E48\u53D8\u5316"\uFF0C\u7528\u9648\u8FF0\u53E5\uFF1B
+   - \u7981\u6B62\u5BF9\u767D\u4E0E\u53F0\u8BCD\uFF0C\u7981\u6B62\u795E\u6001/\u52A8\u4F5C/\u8BED\u6C14\u7B49\u8868\u6F14\u6027\u63CF\u5199\u4E0E\u5FC3\u7406\u6D3B\u52A8\u6E32\u67D3\uFF1B
+   - \u6B63\u4F8B\uFF1A\u6797\u7136\u5F00\u59CB\u6BCF\u5929\u7ED5\u8FDC\u8DEF\u7ECF\u8FC7\u90A3\u5BB6\u5E97\uFF0C\u4E24\u4EBA\u4ECE\u70B9\u5934\u4E4B\u4EA4\u53D8\u6210\u4F1A\u505C\u4E0B\u6765\u8BF4\u4E24\u53E5\u3002
+   - \u53CD\u4F8B\uFF1A\u6797\u7136\u7EA2\u7740\u8138\u8BF4\uFF1A"\u597D\u5DE7\u554A\u3002"\u5979\u62BF\u5634\u4E00\u7B11\uFF0C\u522B\u8FC7\u8138\u53BB\u3002
+7) \u7B2C\u4E00\u6761\u8981\u627F\u63A5[\u6700\u8FD1\u6B63\u6587]\u91CC\u5DF2\u7ECF\u53D1\u751F\u7684\u6700\u540E\u72B6\u6001\uFF0C\u4E0D\u91CD\u590D\u5DF2\u7ECF\u5199\u8FC7\u7684\u60C5\u8282\uFF1B\u6700\u540E\u4E00\u6761\u8981\u628A\u4EBA\u4E0E\u4E8B**\u6446\u5230\u4E0B\u4E00\u6761\u5F00\u573A\u6240\u9700\u7684\u4F4D\u7F6E\u4E0A**\uFF0C\u8BA9\u4E0B\u4E00\u6761\u7684\u60C5\u8282\u80FD\u76F4\u63A5\u63A5\u4E0A\u3002
+8) \u4E25\u683C\u9075\u5B88[\u8FC7\u6E21\u6897\u6982]\u2014\u2014\u90A3\u662F\u73A9\u5BB6\u5BF9\u8FD9\u4E00\u6BB5\u8FC7\u573A\u7684\u7528\u610F\u3002\u4F60\u53EF\u4EE5\u7EC6\u5316\uFF0C\u4F46\u4E0D\u8981\u6539\u65B9\u5411\u3002
+9) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+      user: `[\u89D2\u8272\u8BBE\u5B9A]
+{{persona}}
+
+[\u7528\u6237\u8BBE\u5B9A]
+{{userDesc}}
+
+[\u4E16\u754C\u4E66/\u8BBE\u5B9A]
+{{worldInfo}}
+
+[\u5267\u60C5\u8BBE\u5B9A]
+{{scenario}}
+
+[\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\uFF08\u8DEF\u6807\uFF0C\u6700\u540E\u4E00\u6761=\u7ED3\u5C40\uFF09]
+{{outlineItemsJson}}
+
+[\u672C\u6B21\u8981\u8865\u7684\u8FC7\u6E21\u6BB5]
+{{gapPair}}
+
+[\u8FC7\u6E21\u6897\u6982\uFF08\u73A9\u5BB6\u586B\u7684\uFF1A\u8FD9\u4E00\u6BB5\u5927\u6982\u600E\u4E48\u8D70\uFF09]
+{{gapBrief}}
+
+[\u6700\u8FD1\u6B63\u6587\uFF08\u8D8A\u9760\u540E\u8D8A\u65B0\uFF0C\u4EC5\u4E3A\u6700\u8FD1\u7247\u6BB5\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u5F00\u5934\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u6216\u6458\u8981\uFF09]
+{{recentChat}}
+
+[\u6545\u4E8B\u9700\u6C42]
+{{storyInput}}
+
+[\u4EFB\u52A1]
+\u4E3A\u4E0A\u9762\u8FD9\u4E00\u6BB5 gap \u6392 {{eventCount}} \u6761\u6709\u5E8F\u7684\u8FC7\u6E21\u5173\u952E\u4E8B\u4EF6\uFF1A\u4ECE[\u6700\u8FD1\u6B63\u6587]\u7684\u6700\u540E\u72B6\u6001\u8D77\uFF0C\u5230\u4E0B\u4E00\u4E2A\u6761\u76EE\u7684\u5165\u53E3\u6B62\uFF1Bspan \u6CBF\u65F6\u95F4\u8F74\u5355\u8C03\u524D\u8FDB\u4E14\u603B\u548C\u4E0D\u8D85\u51FA\u672C\u6BB5\u8DE8\u5EA6\uFF1Bbrief \u7528\u5BA2\u89C2\u6897\u6982\u4F53\uFF0C\u4E0D\u5199\u5BF9\u767D\u4E0E\u8868\u6F14\u6027\u7EC6\u8282\u3002\u4E25\u683C\u6309 version 1.0 \u7ED3\u6784\u8FD4\u56DE\uFF0C\u53EA\u8FD4\u56DE JSON\u3002`
     }
   };
 }
@@ -33281,10 +33839,13 @@ function getPromptTemplates() {
     //   1.5 → 1.6：候选语义改为「同一步的不同走法」，并新增 current_item_index
     //              回报；1.5 模板的「各候选可以指向不同的条目，不要照搬同一个值」
     //              与新语义正好相反。
+    //   1.6 → 1.7：候选新增 step_index，并引入过渡行程单（{{transitionContext}}）。
+    //              1.6 模板不会填 step_index，解析器只能一路回退成 null，
+    //              于是行程单生成了也没人用——用户手上那份清单等于白做。
     rolling: (() => {
       const sys = String(raw?.rolling?.system || defaults.rolling.system);
       const usr = String(raw?.rolling?.user || defaults.rolling.user);
-      const legacy = sys.includes('"1.3"') || usr.includes("scenesSoFar") ? "1.3" : sys.includes('"1.4"') || usr.includes("{{progressHint}}") || usr.includes("[\u5F53\u524D\u8FDB\u5EA6]") ? "1.4" : sys.includes('"1.5"') || !sys.includes("current_item_index") ? "1.5" : "";
+      const legacy = sys.includes('"1.3"') || usr.includes("scenesSoFar") ? "1.3" : sys.includes('"1.4"') || usr.includes("{{progressHint}}") || usr.includes("[\u5F53\u524D\u8FDB\u5EA6]") ? "1.4" : sys.includes('"1.5"') || !sys.includes("current_item_index") ? "1.5" : !sys.includes("step_index") ? "1.6" : "";
       if (legacy) {
         console.info(`[Titania] \u68C0\u6D4B\u5230\u65E7\u7248\u5267\u60C5\u63A8\u8FDB\u6A21\u677F\uFF08${legacy}\uFF09\uFF0C\u5DF2\u91CD\u7F6E\u4E3A\u9ED8\u8BA4\u6A21\u677F`);
         return JSON.parse(JSON.stringify(defaults.rolling));
@@ -33320,7 +33881,13 @@ function getPromptTemplates() {
         return JSON.parse(JSON.stringify(defaults.director));
       }
       return { system: sys, user: usr };
-    })()
+    })(),
+    // transition（过渡行程单生成）：全新功能，没有历史包袱——逐键回退到默认即可，
+    // 不需要 legacy 重置档。老用户存着的模板对象里根本没有这个键，天然取到默认值。
+    transition: {
+      system: String(raw?.transition?.system || defaults.transition.system),
+      user: String(raw?.transition?.user || defaults.transition.user)
+    }
   };
 }
 function savePromptTemplates(templates) {
@@ -33337,6 +33904,7 @@ function getPromptTemplateSection(templates, type) {
   if (type === "pacing") return templates.pacing;
   if (type === "blindbox") return templates.blindbox;
   if (type === "director") return templates.director;
+  if (type === "transition") return templates.transition;
   return templates.outline;
 }
 function getUnknownPromptVars(text) {
@@ -33361,7 +33929,12 @@ function getUnknownPromptVars(text) {
     // 盲盒导演判定专用变量
     "blindboxOutline",
     "blindboxProgress",
-    "blindboxStrictness"
+    "blindboxStrictness",
+    // 过渡行程单专用变量：生成侧（gapPair/gapBrief/eventCount）+ 推进侧（transitionContext）
+    "gapPair",
+    "gapBrief",
+    "eventCount",
+    "transitionContext"
   ]);
   const unknown = /* @__PURE__ */ new Set();
   String(text || "").replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key) => {
@@ -33394,7 +33967,15 @@ function buildPromptTemplateVars(ctx2, userStoryInput, openingText, outlinePaylo
     // 盲盒导演判定专用：封印骨架 JSON、当前目标指针、本次严格度（实际判定时注入，预览只给占位）。
     blindboxOutline: String(extras?.blindboxOutline || "").trim() || "\uFF08\u5C01\u5370\u9AA8\u67B6\uFF0C\u5224\u5B9A\u65F6\u6CE8\u5165\uFF09",
     blindboxProgress: String(extras?.blindboxProgress || "").trim() || "\uFF08\u5F53\u524D\u76EE\u6807\u6307\u9488\uFF0C\u5224\u5B9A\u65F6\u6CE8\u5165\uFF09",
-    blindboxStrictness: String(extras?.blindboxStrictness || "").trim() || describeStrictness(STRICTNESS.STANDARD)
+    blindboxStrictness: String(extras?.blindboxStrictness || "").trim() || describeStrictness(STRICTNESS.STANDARD),
+    // 过渡行程单生成专用：本段两个条目的完整信息 + 玩家填的过渡梗概 + 下单事件数。
+    // 缺省给占位串，预览时不至于渲染成空（同 nodeCount 的做法）。
+    gapPair: String(extras?.gapPair || "").trim() || "\uFF08\u8FC7\u6E21\u6BB5\uFF1A\u7B2C N \u6761 \u2192 \u7B2C N+1 \u6761\uFF0C\u751F\u6210\u65F6\u6CE8\u5165\uFF09",
+    gapBrief: String(extras?.gapBrief || "").trim() || "\uFF08\u672A\u586B\u5199\uFF1A\u8BF7\u4F9D\u5927\u7EB2\u81EA\u884C\u5224\u65AD\u8FD9\u4E00\u6BB5\u8BE5\u600E\u4E48\u8FC7\u6E21\uFF09",
+    eventCount: String(extras?.eventCount ?? "") || "(\u4E8B\u4EF6\u6570)",
+    // 剧情推进（rolling）专用：当前 gap 的行程单上下文。无行程单时给一行的占位说明，
+    // 让模型明确"本段没有行程单"，而不是把空当成"随便推进"。
+    transitionContext: String(extras?.transitionContext || "").trim() || "\uFF08\u672C\u6BB5\u6CA1\u6709\u8FC7\u6E21\u884C\u7A0B\u5355\uFF0C\u6309\u666E\u901A\u63A8\u8FDB\u5904\u7406\uFF1Bstep_index \u4E00\u5F8B\u586B null\uFF09"
   };
 }
 function renderGenParamRow(moduleKey, moduleLabel, group) {
@@ -33550,13 +34131,14 @@ async function openPromptTemplateManager() {
                                 <select id="t-prompt-target" class="t-outline-select">
                                     <option value="outline">\u6545\u4E8B\u5927\u7EB2</option>
                                     <option value="rolling">\u5267\u60C5\u63A8\u8FDB</option>
+                                    <option value="transition">\u8FC7\u6E21\u884C\u7A0B\u5355</option>
                                     <option value="pacing">\u53D9\u4E8B\u8282\u594F</option>
                                     <option value="blindbox">\u76F2\u76D2\u5267\u672C\u751F\u6210</option>
                                     <option value="director">\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A</option>
                                 </select>
                                 <button id="t-prompt-reset-current" class="t-btn t-btn-xs"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u5F53\u524D\u9ED8\u8BA4</button>
                             </div>
-                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}}<br>\u53D9\u4E8B\u8282\u594F\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{outlineProgress}}<br>\u76F2\u76D2\u5267\u672C\u751F\u6210\u989D\u5916\u53D8\u91CF\uFF1A{{nodeCount}} {{eventsPerGap}} {{redlines}} {{timescale}}<br>\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{blindboxOutline}} {{blindboxProgress}} {{blindboxStrictness}}</div>
+                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{transitionContext}}<br>\u8FC7\u6E21\u884C\u7A0B\u5355\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{gapPair}} {{gapBrief}} {{eventCount}}<br>\u53D9\u4E8B\u8282\u594F\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{outlineProgress}}<br>\u76F2\u76D2\u5267\u672C\u751F\u6210\u989D\u5916\u53D8\u91CF\uFF1A{{nodeCount}} {{eventsPerGap}} {{redlines}} {{timescale}}<br>\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{blindboxOutline}} {{blindboxProgress}} {{blindboxStrictness}}</div>
                         </div>
 
                         <div class="t-form-group">
@@ -34331,25 +34913,27 @@ function setPlanProgress(planId, progress) {
   plan.updatedAt = Date.now();
   saveExtData();
 }
-function getPlanCandidates(plan) {
-  const items = plan && Array.isArray(plan.candidates?.items) ? plan.candidates.items : [];
-  return items.map((c) => ({
+function normalizeCandidate(c) {
+  const rawStep = c?.stepIndex;
+  const hasStep = rawStep !== null && rawStep !== void 0 && String(rawStep).trim() !== "";
+  const step = Number(rawStep);
+  return {
     title: String(c?.title || ""),
     text: String(c?.text || ""),
     itemIndex: Number(c?.itemIndex) || 1,
+    stepIndex: hasStep && Number.isFinite(step) ? Math.max(0, Math.floor(step)) : null,
     used: c?.used === true
-  })).filter((c) => c.text.trim());
+  };
+}
+function getPlanCandidates(plan) {
+  const items = plan && Array.isArray(plan.candidates?.items) ? plan.candidates.items : [];
+  return items.map(normalizeCandidate).filter((c) => c.text.trim());
 }
 function setPlanCandidates(planId, candidates, opts = {}) {
   const plans = getPlans();
   const plan = plans.find((p) => p.id === planId);
   if (!plan) return;
-  const items = (Array.isArray(candidates) ? candidates : []).map((c) => ({
-    title: String(c?.title || ""),
-    text: String(c?.text || ""),
-    itemIndex: Number(c?.itemIndex) || 1,
-    used: c?.used === true
-  })).filter((c) => c.text.trim());
+  const items = (Array.isArray(candidates) ? candidates : []).map(normalizeCandidate).filter((c) => c.text.trim());
   if (items.length === 0) {
     delete plan.candidates;
   } else {
@@ -34366,9 +34950,58 @@ function applyProgressFromModel(planId, itemIndex) {
   if (!plan) return;
   const total = Array.isArray(plan.items) ? plan.items.length : 0;
   if (total <= 0) return;
-  const nextIdx = Math.min(Math.max(Number(itemIndex) || 0, 0), total - 1);
+  let nextIdx = Math.min(Math.max(Number(itemIndex) || 0, 0), total - 1);
+  const active2 = getActiveTransition(plan, getPlanProgress(plan).itemIndex);
+  if (active2 && !isTransitionDone(active2) && nextIdx > active2.fromIndex) {
+    nextIdx = active2.fromIndex;
+  }
   setPlanProgress(planId, { itemIndex: nextIdx, reachedEnding: nextIdx >= total - 1 });
   if (editingPlanId === planId) setEditingPlan(getPlans().find((p) => p.id === planId));
+}
+function setPlanTransition(planId, transition) {
+  const plan = getPlans().find((p) => p.id === planId);
+  if (!plan) return null;
+  const next = normalizeTransition(transition);
+  if (next.events.length === 0) {
+    plan.transitions = dropTransition(plan.transitions, next.fromIndex);
+    if (plan.transitions.length === 0) delete plan.transitions;
+    plan.updatedAt = Date.now();
+    saveExtData();
+    return null;
+  }
+  plan.transitions = upsertTransition(plan.transitions, next);
+  plan.updatedAt = Date.now();
+  saveExtData();
+  return next;
+}
+function setPlanTransitionCursor(planId, stepIndex) {
+  const plan = getPlans().find((p) => p.id === planId);
+  if (!plan) return null;
+  const active2 = getActiveTransition(plan, getPlanProgress(plan).itemIndex);
+  if (!active2) return null;
+  return setPlanTransition(planId, { ...active2, cursor: clampCursor(active2, stepIndex) });
+}
+function setPlanTransitionEvents(planId, events) {
+  const plan = getPlans().find((p) => p.id === planId);
+  if (!plan) return null;
+  const active2 = getActiveTransition(plan, getPlanProgress(plan).itemIndex);
+  if (!active2) return null;
+  return setPlanTransition(planId, { ...active2, events });
+}
+function dropPlanTransition(planId) {
+  const plan = getPlans().find((p) => p.id === planId);
+  if (!plan) return;
+  plan.transitions = dropTransition(plan.transitions, getPlanProgress(plan).itemIndex);
+  if (plan.transitions.length === 0) delete plan.transitions;
+  plan.updatedAt = Date.now();
+  saveExtData();
+}
+function clearPlanTransitions(planId) {
+  const plan = getPlans().find((p) => p.id === planId);
+  if (!plan) return;
+  delete plan.transitions;
+  plan.updatedAt = Date.now();
+  saveExtData();
 }
 function showOutlineView(view) {
   currentView = view === "editor" ? "editor" : "hub";
@@ -34991,6 +35624,7 @@ function applyParsedOutline(parsed, storyInput, insertMode) {
   if (editingPlanId) {
     setPlanProgress(editingPlanId, { itemIndex: 0, reachedEnding: false });
     setPlanCandidates(editingPlanId, []);
+    clearPlanTransitions(editingPlanId);
     setEditingPlan(getPlans().find((p) => p.id === editingPlanId));
   }
   saveDraft(storyInput, insertMode);
@@ -35098,10 +35732,13 @@ async function generatePacingAssessment() {
 function buildRecommendationPrompt(ctx2, userStoryInput, openingText) {
   const outlinePayload = buildOutlinePayloadForPrompt();
   const templates = getPromptTemplates();
+  const plan = getRollingPlan();
+  const active2 = plan ? getActiveTransition(plan, getPlanProgress(plan).itemIndex) : null;
   const vars = buildPromptTemplateVars(ctx2, userStoryInput || "(\u7A7A)", openingText, outlinePayload, {
     // 带上被总结/隐藏的楼层：否则前文一折叠，模型既判不出 current_item_index、也凑不出贴合剧情的候选。
     // 判不出时解析器回退保留旧指针（见 parseRecommendationResponse 注释），不会把进度冲掉。
-    recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true })
+    recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true }),
+    transitionContext: active2 ? buildTransitionContextText(active2, outlinePayload) : ""
   });
   const sys = renderPromptTemplate(templates.rolling.system, vars);
   const user = renderPromptTemplate(templates.rolling.user, vars);
@@ -35110,20 +35747,29 @@ function buildRecommendationPrompt(ctx2, userStoryInput, openingText) {
     { role: "user", content: user }
   ];
 }
-function parseRecommendationResponse(raw, fallbackItemIndex, totalItems) {
+function parseRecommendationResponse(raw, fallbackItemIndex, totalItems, transition = null) {
   if (!raw || typeof raw !== "string") {
     throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
   }
   const data = tryParseLooseJsonObject(raw);
   const list = Array.isArray(data?.candidates) ? data.candidates : [];
   const maxIdx = Math.max(Number(totalItems) || 1, 1);
+  const stepMax = transition ? normalizeTransition(transition).events.length : null;
   const candidates = list.map((c) => {
     const text = String(c?.text || "").trim();
     if (!text) return null;
     let idx = Number(c?.item_index);
     if (!Number.isFinite(idx)) idx = (Number(fallbackItemIndex) || 0) + 1;
     idx = Math.min(Math.max(Math.floor(idx), 1), maxIdx);
-    return { title: String(c?.title || "").trim(), text, itemIndex: idx };
+    let stepIndex = null;
+    if (stepMax !== null) {
+      const rawStep = c?.step_index;
+      if (rawStep !== null && rawStep !== void 0 && String(rawStep).trim() !== "") {
+        const s = Number(rawStep);
+        stepIndex = Number.isFinite(s) ? Math.min(Math.max(Math.floor(s), 0), stepMax) : null;
+      }
+    }
+    return { title: String(c?.title || "").trim(), text, itemIndex: idx, stepIndex };
   }).filter(Boolean);
   if (candidates.length === 0) {
     throw new Error("\u5267\u60C5\u63A8\u8350\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON\uFF08\u7F3A\u5C11\u6709\u6548 candidates\uFF09");
@@ -35137,6 +35783,109 @@ function parseRecommendationResponse(raw, fallbackItemIndex, totalItems) {
     }
   }
   return { candidates, currentItemIndex };
+}
+function buildGapPairText(outlinePayload, fromIndex) {
+  const list = Array.isArray(outlinePayload) ? outlinePayload : [];
+  const from = list[fromIndex];
+  const to = list[fromIndex + 1];
+  if (!from || !to) return "";
+  const fmt = (it, n) => [
+    `\u7B2C ${n} \u6761`,
+    `  \u65F6\u95F4\uFF1A${it.time || "(\u672A\u6807\u6CE8)"}`,
+    `  \u6807\u9898\uFF1A${it.title || "\u672A\u547D\u540D"}`,
+    `  \u60C5\u8282\uFF1A${it.plot || "(\u7A7A)"}`,
+    it.foreshadowing ? `  \u4F0F\u7B14\uFF1A${it.foreshadowing}` : ""
+  ].filter(Boolean).join("\n");
+  return [
+    "[\u8D77\u70B9] \u6545\u4E8B\u5F53\u524D\u6240\u5904\uFF0C\u4E5F\u5C31\u662F\u8FD9\u4E00\u6BB5\u7684\u5165\u53E3\uFF1A",
+    fmt(from, fromIndex + 1),
+    "",
+    "[\u7EC8\u70B9] \u8FD9\u4E00\u6BB5\u8D70\u5B8C\u5FC5\u987B\u62B5\u8FBE\u7684\u72B6\u6001\uFF0C\u4E5F\u662F\u4E0B\u4E00\u6761\u7684\u5165\u53E3\uFF1A",
+    fmt(to, fromIndex + 2),
+    "",
+    `[\u672C\u6BB5\u8DE8\u5EA6] \u4ECE\u300C${from.time || "\u4E0A\u4E00\u62CD"}\u300D\u5230\u300C${to.time || "\u4E0B\u4E00\u6761"}\u300D\u2014\u2014\u884C\u7A0B\u5355\u91CC\u6240\u6709\u4E8B\u4EF6\u7684 span \u7D2F\u52A0\u8D77\u6765\u4E0D\u5F97\u8D85\u8FC7\u8FD9\u4E00\u6BB5\uFF0C\u6700\u540E\u4E00\u6761\u8981\u521A\u597D\u843D\u5728\u7EC8\u70B9\u7684\u5165\u53E3\u4E0A\u3002`
+  ].join("\n");
+}
+function buildTransitionPrompt(ctx2, fromIndex, brief, count) {
+  const outlinePayload = buildOutlinePayloadForPrompt();
+  const templates = getPromptTemplates();
+  const vars = buildPromptTemplateVars(
+    ctx2,
+    getPlanInstruction(getRollingPlan()),
+    "",
+    outlinePayload,
+    {
+      recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true }),
+      gapPair: buildGapPairText(outlinePayload, fromIndex),
+      gapBrief: brief,
+      eventCount: String(count)
+    }
+  );
+  return [
+    { role: "system", content: renderPromptTemplate(templates.transition.system, vars) },
+    { role: "user", content: renderPromptTemplate(templates.transition.user, vars) }
+  ];
+}
+function parseTransitionResponse(raw, opts = {}) {
+  if (!raw || typeof raw !== "string") throw new Error("\u6A21\u578B\u8FD4\u56DE\u4E3A\u7A7A");
+  const data = tryParseLooseJsonObject(raw);
+  const list = Array.isArray(data?.events) ? data.events : [];
+  const cap = clampEventCount(opts?.eventCount);
+  const events = list.map((e) => ({
+    title: String(e?.title || "").trim(),
+    span: String(e?.span || "").trim(),
+    brief: String(e?.brief ?? e?.content ?? "").trim()
+  })).filter((e) => e.brief).slice(0, cap);
+  if (events.length === 0) {
+    throw new Error("\u8FC7\u6E21\u884C\u7A0B\u5355\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON\uFF08\u7F3A\u5C11\u6709\u6548 events\uFF09");
+  }
+  return normalizeTransition({
+    fromIndex: Number(opts?.fromIndex) || 0,
+    brief: String(opts?.brief || ""),
+    events,
+    cursor: 0,
+    generatedAt: Date.now()
+  });
+}
+async function generateTransitionItinerary(opts = {}) {
+  if (!ensureEditingPlanContext()) return;
+  const plan = getPlans().find((p) => p.id === editingPlanId);
+  if (!plan) return;
+  const total = Array.isArray(plan.items) ? plan.items.length : 0;
+  const fromIndex = getPlanProgress(plan).itemIndex;
+  if (fromIndex + 1 >= total) {
+    if (window.toastr) toastr.warning("\u5DF2\u7ECF\u662F\u6700\u540E\u4E00\u6761\u5927\u7EB2\uFF0C\u540E\u9762\u6CA1\u6709\u53EF\u8865\u7684\u8FC7\u6E21\u6BB5", "\u8FC7\u6E21\u884C\u7A0B\u5355");
+    return;
+  }
+  const brief = String(opts?.brief || "").trim();
+  const count = clampEventCount(opts?.count);
+  let saved = null;
+  try {
+    const params = getOutlineGenParams().scenes;
+    await runGenerationFlow({
+      label: "\u8FC7\u6E21\u884C\u7A0B\u5355",
+      historyLabel: "\u8FC7\u6E21\u884C\u7A0B\u5355",
+      streamingTitle: "\u6D41\u5F0F\u751F\u6210\u8FC7\u6E21\u884C\u7A0B\u5355\u4E2D...",
+      doneTitle: "\u8FC7\u6E21\u884C\u7A0B\u5355\u751F\u6210\u5B8C\u6210",
+      failTitle: "\u8FC7\u6E21\u884C\u7A0B\u5355\u89E3\u6790\u5931\u8D25 - \u53EF\u624B\u52A8\u4FEE\u590D",
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+      timeoutSec: params.timeoutSec,
+      // 同剧情推进：永远取最新一条角色回复，绕开「选择聊天记录参考来源」对话框。
+      resolveOpening: getRollingOpeningText,
+      buildMessages: (ctx2) => buildTransitionPrompt(ctx2, fromIndex, brief, count),
+      parse: (raw) => parseTransitionResponse(raw, { fromIndex, brief, eventCount: count }),
+      apply: (parsed) => {
+        saved = setPlanTransition(editingPlanId, parsed);
+      },
+      reparseLabel: "\u91CD\u65B0\u89E3\u6790\u5E76\u5E94\u7528",
+      successMessage: () => `\u5DF2\u6392\u597D ${saved ? saved.events.length : 0} \u6761\u8FC7\u6E21\u4E8B\u4EF6`
+    });
+  } catch (e) {
+    reportGenerationError(e, "\u8FC7\u6E21\u884C\u7A0B\u5355", "\u8FC7\u6E21\u884C\u7A0B\u5355\u751F\u6210\u5931\u8D25");
+  } finally {
+    stopResponseTimer();
+  }
 }
 function renderRows() {
   const $tbody = $("#t-outline-tbody");
@@ -35517,7 +36266,9 @@ async function generateRecommendations() {
     return;
   }
   const plan = getPlans().find((p) => p.id === editingPlanId);
-  const fallbackItemIndex = getPlanProgress(plan).itemIndex;
+  const progress = getPlanProgress(plan);
+  const fallbackItemIndex = progress.itemIndex;
+  const activeTransition = plan ? getActiveTransition(plan, progress.itemIndex) : null;
   const total = outlineItems.length;
   let generatedCandidateCount = 0;
   try {
@@ -35538,7 +36289,9 @@ async function generateRecommendations() {
       // 「未选择参考来源，已取消生成」——而 rolling 模板里其实用不上这个变量。
       resolveOpening: getRollingOpeningText,
       buildMessages: (ctx2, opening2) => buildRecommendationPrompt(ctx2, storyInput, opening2),
-      parse: (raw) => parseRecommendationResponse(raw, fallbackItemIndex, total),
+      // 把当前 gap 的行程单交给解析器：候选的 step_index 要按它的步数夹紧。
+      // 没有行程单时传 null，解析出来的 stepIndex 一律为 null（走旧的 item_index 路径）。
+      parse: (raw) => parseRecommendationResponse(raw, fallbackItemIndex, total, activeTransition),
       apply: (parsed) => {
         generatedCandidateCount = parsed.candidates.length;
         setPlanCandidates(editingPlanId, parsed.candidates);
@@ -35977,6 +36730,9 @@ function getSceneAdvanceState() {
   const total = Array.isArray(plan?.items) ? plan.items.length : 0;
   const progress = plan ? getPlanProgress(plan) : { itemIndex: 0, reachedEnding: false };
   const candidates = plan ? getPlanCandidates(plan) : [];
+  const items = plan ? normalizeItems(plan.items || []) : [];
+  const transition = plan ? getActiveTransition(plan, progress.itemIndex) : null;
+  const toIndex = progress.itemIndex + 1;
   return {
     hasPlan: !!plan,
     sourcePlanId: getSceneSourcePlanId(),
@@ -35987,9 +36743,20 @@ function getSceneAdvanceState() {
     reachedEnding: progress.reachedEnding,
     candidates,
     // 大纲情节预览用的完整条目（原「剧情推进」窗口的预览面板已迁至气泡浮层）
-    items: plan ? normalizeItems(plan.items || []) : [],
+    items,
     insertMode: getCurrentInsertMode(),
-    plans: getPlans().map((p) => ({ id: p.id, name: p.name || "\u672A\u547D\u540D\u65B9\u6848" }))
+    plans: getPlans().map((p) => ({ id: p.id, name: p.name || "\u672A\u547D\u540D\u65B9\u6848" })),
+    // ── 过渡行程单 ──
+    transition,
+    transitionDone: transition ? isTransitionDone(transition) : false,
+    // 后面还有大纲条目才谈得上"补过渡"；已在最后一条则整块隐藏。
+    canTransition: !!plan && total >= 2 && toIndex < total,
+    transitionGap: {
+      fromIndex: progress.itemIndex,
+      toIndex,
+      fromTitle: items[progress.itemIndex]?.title || "",
+      toTitle: items[toIndex]?.title || ""
+    }
   };
 }
 function switchSceneSourcePlan(planId) {
@@ -36017,6 +36784,43 @@ function markSceneCandidateUsed(planId, index) {
   candidates[index] = { ...candidates[index], used: true };
   setPlanCandidates(id3, candidates, { keepTimestamp: true });
 }
+function resolveScenePlanId(planId) {
+  return String(planId || "").trim() || getSceneSourcePlanId();
+}
+function setSceneStep(planId, stepIndex) {
+  const id3 = resolveScenePlanId(planId);
+  if (id3) setPlanTransitionCursor(id3, stepIndex);
+  return getSceneAdvanceState();
+}
+function crossSceneGap(planId) {
+  const id3 = resolveScenePlanId(planId);
+  const plan = id3 ? getPlans().find((p) => p.id === id3) : null;
+  if (!plan) return getSceneAdvanceState();
+  const progress = getPlanProgress(plan);
+  const total = Array.isArray(plan.items) ? plan.items.length : 0;
+  if (progress.itemIndex + 1 >= total) return getSceneAdvanceState();
+  const active2 = getActiveTransition(plan, progress.itemIndex);
+  if (active2 && !isTransitionDone(active2)) {
+    setPlanTransition(id3, { ...active2, cursor: active2.events.length });
+  }
+  applyProgressFromModel(id3, progress.itemIndex + 1);
+  return getSceneAdvanceState();
+}
+function saveSceneTransitionEvents(planId, events) {
+  const id3 = resolveScenePlanId(planId);
+  if (id3) setPlanTransitionEvents(id3, events);
+  return getSceneAdvanceState();
+}
+function clearSceneCandidates(planId) {
+  const id3 = resolveScenePlanId(planId);
+  if (id3) setPlanCandidates(id3, []);
+  return getSceneAdvanceState();
+}
+function clearSceneTransition(planId) {
+  const id3 = resolveScenePlanId(planId);
+  if (id3) dropPlanTransition(id3);
+  return getSceneAdvanceState();
+}
 var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY2, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, DIRECTOR_CHAT_FLOORS_KEY, DIRECTOR_CHAT_FLOORS_DEFAULT, EMPTY_FLOOR_MARK, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, BB_STRICTNESS_LABEL, PACING_STATES;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
@@ -36029,6 +36833,7 @@ var init_storyOutlineWindow = __esm({
     init_apiConnectionEditor();
     init_blindboxPlan();
     init_directorInjection();
+    init_transitionPlan();
     outlineItems = [];
     lastRawResponse = "";
     rawResponseHistory = [];
@@ -41474,7 +42279,7 @@ function openSettingsWindow() {
     d.temp_instruction = {
       enabled: $("#cfg-temp-instruction").is(":checked")
     };
-    const clampInt2 = (value, min, max, fallback) => {
+    const clampInt3 = (value, min, max, fallback) => {
       const n = parseInt(value, 10);
       if (!Number.isFinite(n)) return fallback;
       return Math.max(min, Math.min(max, n));
@@ -44592,8 +45397,8 @@ function closeWindow() {
   $(document).off("click.tinlinebranch");
   $(window).off("resize.ttempinput");
 }
-function escapeHtmlText3(str2) {
-  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtmlText3(str3) {
+  return String(str3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function getContinuationRecentInstructions() {
   const data = getExtData();
@@ -50613,8 +51418,8 @@ var OVERLAY_ID3 = "t-chat-inject-overlay";
 var listenersBound5 = false;
 var refreshQueued3 = false;
 var lastVisibleChoice = null;
-function escapeHtmlText4(str2) {
-  return String(str2 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtmlText4(str3) {
+  return String(str3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function isEnabled6() {
   return getChatInjectConfig().enabled;
