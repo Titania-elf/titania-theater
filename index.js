@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.5.0";
+    CURRENT_VERSION = "5.6.0";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -276,6 +276,7 @@ var init_defaults = __esm({
         enabled: true
       },
       // 自动整理开关随聊天保存；这里只放跨聊天共用的运行参数。
+      // 没有"单独指定总结模型"这一项：用哪个模型由所选 API 方案决定（见 storyMemoryData 的规范化）。
       story_memory: {
         keep_floors: 16,
         trigger_tokens: 6e3,
@@ -283,7 +284,6 @@ var init_defaults = __esm({
         batch_tokens: 12e3,
         memory_tokens: 2400,
         profile_id: "",
-        model: "",
         inject_depth: 4
       },
       // 导入预设的宏求值行为
@@ -21669,6 +21669,11 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 .tsa-panel .tsa-item-meta { margin-bottom: 3px; font-size: 11px; color: var(--t-glass-text-secondary); }
 
+/* \u300C\u627F\u63A5\uFF1A\u2026\u300D\u2014\u2014\u6A21\u578B\u6307\u8BA4\u5B83\u63A5\u4F4F\u4E86\u6700\u65B0\u4E00\u5C42\u56DE\u590D\u91CC\u7684\u54EA\u4E00\u62CD\u3002\u4E00\u884C\u622A\u65AD\uFF1A\u5B83\u662F\u81EA\u67E5\u7528\u7684\u8DEF\u6807\uFF0C\u4E0D\u662F\u6B63\u6587\u3002 */
+.tsa-panel .tsa-item-from { margin-bottom: 3px; font-size: 11px; color: var(--t-glass-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.tsa-panel .tsa-item-from i { margin-right: 3px; color: var(--t-color-accent); }
+
 /* \u5019\u9009\u6B63\u6587\u53EF\u80FD\u5F88\u957F\uFF1A\u9650\u9AD8\u6EDA\u52A8\uFF0C\u4FDD\u8BC1\u5361\u7247\u5217\u8868\u6574\u4F53\u4ECD\u53EF\u626B\u8BFB */
 .tsa-panel .tsa-item-text { max-height: 88px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
 
@@ -21763,6 +21768,10 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 /* \u6B65\u6570\u5FBD\u6807\uFF1A\u7B49\u5BBD\u6570\u5B57\u2014\u2014\u300C1 / 4 \u6B65\u300D\u4F1A\u968F\u8FDB\u5EA6\u9010\u5B57\u53D8\u5316\uFF0C\u6BD4\u4F8B\u6570\u5B57\u4F1A\u8BA9\u6574\u884C\u5DE6\u53F3\u6296\u3002 */
 .tsa-panel .tsa-transition-badge { margin-left: auto; font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--t-glass-text-secondary); }
+
+/* \u300C\u672C\u6B65 \u8FDB\u884C\u4E2D\u300D\uFF1A\u6A21\u578B\u8BFB\u6700\u65B0\u6B63\u6587\u5F97\u51FA\u7684\u8BFB\u6570\uFF0C\u4E0D\u662F\u6743\u5A01\u8FDB\u5EA6\uFF08cursor \u4ECD\u7531\u73A9\u5BB6\u70B9\u9009\u51B3\u5B9A\uFF09\uFF0C
+   \u6240\u4EE5\u7528\u865A\u7EBF\u6846\u5F31\u5316\uFF0C\u522B\u4E0E\u6B65\u6570\u5FBD\u6807\u62A2\u773C\u3002\u6A21\u578B\u6CA1\u5224\u65AD\u51FA\u6765\u5C31\u4E0D\u753B\u3002 */
+.tsa-panel .tsa-transition-state { flex-shrink: 0; padding: 0 6px; border: 1px dashed var(--t-color-accent-border); border-radius: 999px; font-size: 10px; font-weight: 400; color: var(--t-glass-text-secondary); }
 
 /* \u4E0B\u5355\u8868\u5355\uFF08\u672C\u6BB5\u8FD8\u6CA1\u6392\u884C\u7A0B\u5355\u65F6\uFF09 */
 
@@ -31146,8 +31155,12 @@ function buildTransitionContextText(transition, items = []) {
   ].filter((s) => s !== "").join("\n");
   const tail = isTransitionDone(t) ? `
 \u5F53\u524D\u8FDB\u5EA6\uFF1A${t.events.length} / ${t.events.length} \u6B65\u5DF2\u5168\u90E8\u8D70\u5B8C\u2014\u2014\u672C\u6BB5\u8FC7\u6E21\u5DF2\u6536\u675F\uFF0C\u672C\u56DE\u5408\u7684\u5019\u9009\u53EF\u4EE5\u628A\u6545\u4E8B\u63A8\u8FDB\u5230 ${toLabel}\uFF08item_index \u586B ${toIdx + 1}\uFF0Cstep_index \u586B ${t.events.length}\uFF09\u3002` : `
-\u5F53\u524D\u8FDB\u5EA6\uFF1A\u5DF2\u8D70\u5B8C ${t.cursor} / ${t.events.length} \u6B65\uFF0C\u8BE5\u6F14\u7684\u662F\u7B2C ${t.cursor + 1} \u6B65\u3002
-\u672C\u56DE\u5408\u7684\u5019\u9009\u81F3\u591A\u628A\u8FD9\u4E00\u6B65\u6F14\u5B8C\uFF08step_index \u586B ${t.cursor + 1}\uFF09\uFF1B\u82E5\u5019\u9009\u53EA\u5728\u539F\u5730\u6DF1\u5316\u3001\u4E0D\u63A8\u8FDB\u8FC7\u6E21\uFF0Cstep_index \u586B ${t.cursor}\u3002
+\u5F53\u524D\u8FDB\u5EA6\uFF1A\u5DF2\u8D70\u5B8C ${t.cursor} / ${t.events.length} \u6B65\uFF0C**\u5F53\u524D\u8FD9\u4E00\u6B65**\u662F\u7B2C ${t.cursor + 1} \u6B65\u3002
+\u8FD9\u4E00\u6B65\u662F**\u53BB\u5411**\uFF0C\u4E0D\u662F\u8981\u4F60\u590D\u8FF0\u7684\u5185\u5BB9\u2014\u2014\u5B83\u7684\u5F00\u5934\u5F88\u53EF\u80FD\u5DF2\u7ECF\u5728[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u91CC\u6F14\u8FC7\u4E86\uFF1A\u5148\u770B\u90A3\u4E00\u6B65\u6F14\u5230\u54EA\u4E86\uFF0C\u5019\u9009\u5C31\u4ECE\u90A3\u91CC**\u5F80\u4E0B\u7EED\u6F14**\u3002\u4E0D\u8981\u91CD\u6F14\u5F00\u5934\uFF0C\u4E5F\u4E0D\u8981\u628A\u5B83\u7684\u6897\u6982\u6362\u4E2A\u8BF4\u6CD5\u91CD\u5199\u4E00\u904D\u3002
+\u672C\u56DE\u5408\u8BE5\u586B\u7684 step_index\uFF0C\u6309[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u91CC\u7684\u5B9E\u9645\u8FDB\u5EA6\u5B9A\uFF08\u4E00\u6B21\u81F3\u591A\u524D\u8FDB 1 \u6B65\uFF0C\u4E0D\u8BB8\u4E00\u8DF3\u5230\u5E95\uFF09\uFF1A
+  \xB7 \u8FD8\u5728\u8FD9\u4E00\u6B65\u4E4B\u5185\u518D\u6F14\u4E00\u62CD\uFF08\u8FD9\u4E00\u6B65\u8FD8\u6CA1\u6F14\u5B8C\uFF09\u2192 \u586B ${t.cursor}\uFF1B
+  \xB7 \u672C\u56DE\u5408\u628A\u8FD9\u4E00\u6B65\u6F14\u5B8C \u2192 \u586B ${t.cursor + 1}\uFF1B
+  \xB7 [\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u663E\u793A\u8FD9\u4E00\u6B65\u5176\u5B9E\u5DF2\u7ECF\u6F14\u5B8C\u3001\u5019\u9009\u56E0\u6B64\u5E26\u5411\u4E0B\u4E00\u6B65 \u2192 \u586B ${t.cursor + 1}\u3002
 \u26D4 item_index \u4E00\u5F8B\u586B ${fromIdx + 1}\uFF08\u5F53\u524D\u6240\u5728\u6761\u76EE\uFF09\uFF0C**\u4E0D\u5F97\u8D8A\u8FC7\u672C\u6BB5\u8FC7\u6E21**\u3002`;
   return head + tail;
 }
@@ -31879,6 +31892,7 @@ function buildCandidatesHtml(state) {
                 ${c.used ? '<span class="tsa-item-used">\u5DF2\u5199\u5165</span>' : ""}
             </div>
             <div class="tsa-item-meta">${candidateMetaLine(c, state)}</div>
+            ${c.from ? `<div class="tsa-item-from"><i class="fa-solid fa-turn-up"></i> \u627F\u63A5\uFF1A${escapeHtmlText2(c.from)}</div>` : ""}
             <div class="tsa-item-text">${escapeHtmlText2(c.text)}</div>
         </div>
     `).join("");
@@ -31966,6 +31980,7 @@ function buildTransitionHtml(state) {
                 <i class="fa-solid fa-diagram-project"></i> \u8FC7\u6E21\u884C\u7A0B\u5355
                 <span class="tsa-transition-gap">${escapeHtmlText2(gapLabel)}</span>
                 <span class="tsa-transition-badge">${doneCount} / ${total} \u6B65</span>
+                ${state.stepState ? `<span class="tsa-transition-state" title="\u6A21\u578B\u8BFB\u6700\u65B0\u4E00\u5C42\u56DE\u590D\u5F97\u51FA\u7684\u300C\u5F53\u524D\u8FD9\u4E00\u6B65\u6F14\u5230\u54EA\u4E86\u300D\uFF0C\u4EE3\u8868\u5B83\u8FD9\u4E00\u6279\u5019\u9009\u662F\u4ECE\u54EA\u513F\u5F80\u4E0B\u63A5\u7684">\u672C\u6B65 ${escapeHtmlText2(state.stepState)}</span>` : ""}
             </div>
             ${t.brief ? `<div class="tsa-transition-purpose">\u7528\u610F\uFF1A${escapeHtmlText2(t.brief)}</div>` : ""}
             <ol class="tsa-transition-list">${rows}${finalRow}</ol>
@@ -32810,6 +32825,7 @@ __export(storyOutlineWindow_exports, {
   applySceneProgress: () => applyProgressFromModel,
   clearSceneCandidates: () => clearSceneCandidates,
   clearSceneTransition: () => clearSceneTransition,
+  collectRecentChatParts: () => collectRecentChatParts,
   collectRecentChatText: () => collectRecentChatText,
   crossSceneGap: () => crossSceneGap,
   ensureSceneSourceLoaded: () => ensureSceneSourceLoaded,
@@ -33717,6 +33733,12 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
     rolling: {
       system: `\u4F60\u662F\u5267\u60C5\u63A8\u8FDB\u7B56\u5212\u3002\u5B8C\u6574\u6545\u4E8B\u5927\u7EB2\u5DF2\u7ED9\u5B9A\uFF08\u6700\u540E\u4E00\u6761\u5373\u7ED3\u5C40\uFF09\u3002\u4F60\u7684\u804C\u8D23\u662F\uFF1A\u81EA\u884C\u5224\u65AD\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\uFF0C\u5E76\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF0C\u4F9B\u73A9\u5BB6\u6311\u9009\u540E\u4F5C\u4E3A\u4E0B\u4E00\u56DE\u5408\u7684\u73A9\u5BB6\u8F93\u5165\u6765\u63A8\u8FDB\u6545\u4E8B\u3002
 
+[\u8D77\u70B9\u4E0E\u843D\u70B9\u2014\u2014\u6700\u91CD\u8981\u7684\u4E00\u8282]
+1) \u8D77\u70B9\u6C38\u8FDC\u662F[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\uFF1A\u5019\u9009\u5FC5\u987B\u4ECE\u90A3\u4E00\u5C42\u6B63\u6587**\u6700\u540E\u505C\u4F4F\u7684\u72B6\u6001**\u63A5\u4E0B\u53BB\u2014\u2014\u8C01\u5728\u54EA\u3001\u521A\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u4EC0\u4E48\u8FD8\u60AC\u7740\u3002\u5B83\u4E0D\u662F"\u53C2\u8003\u80CC\u666F"\uFF0C\u662F\u4F60\u552F\u4E00\u7684\u4E0B\u7B14\u5904\u3002
+2) \u843D\u70B9\u662F[\u8FC7\u6E21\u884C\u7A0B\u5355]\u91CC\u7684\u5F53\u524D\u8FD9\u4E00\u6B65\uFF08\u6CA1\u6709\u884C\u7A0B\u5355\u65F6\uFF0C\u843D\u70B9\u662F\u6838\u5FC3\u539F\u5219 1 \u5224\u65AD\u51FA\u7684\u5F53\u524D\u4F4D\u7F6E\u8BE5\u5F80\u54EA\u8D70\uFF09\u3002
+3) \u843D\u70B9\u8BF4\u7684\u662F"\u8FD9\u4E00\u6B65\u8981\u8D70\u5230\u54EA"\uFF0C**\u4E0D\u662F"\u8FD9\u4E00\u6B65\u7684\u5185\u5BB9\u662F\u4EC0\u4E48"**\u3002\u884C\u7A0B\u5355\u7684 brief \u662F\u5199\u7ED9\u4F5C\u8005\u770B\u7684\u843D\u70B9\u8BF4\u660E\uFF0C\u4E0D\u662F\u8BA9\u4F60\u590D\u8FF0\u6216\u6269\u5199\u7684\u7A3F\u5B50\u3002
+4) \u6240\u4EE5\u6BCF\u4E2A\u5019\u9009\u5199\u6210\u7684\u662F\u540C\u4E00\u4EF6\u4E8B\uFF1A**\u73A9\u5BB6\u63A5\u4E0B\u6765\u505A\u4E86\u4EC0\u4E48**\uFF0C\u628A\u6545\u4E8B\u4ECE[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u7684\u672B\u6001\u5F80\u524D\u63A8\u3002
+
 [\u6838\u5FC3\u539F\u5219]
 1) \u8FDB\u5EA6\u7531\u4F60\u5224\u65AD\uFF1A\u5148\u8BFB"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\uFF0C\u636E\u6B64\u5224\u65AD\u6545\u4E8B\u5B9E\u9645\u63A8\u8FDB\u5230\u4E86\u7B2C\u51E0\u6761\u5927\u7EB2\u3002
    - \u63D0\u4F9B\u7ED9\u4F60\u7684\u6B63\u6587\u53EA\u662F\u6545\u4E8B**\u6700\u8FD1\u7684\u7247\u6BB5**\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u4ECE\u5934\u5F00\u59CB\uFF0C\u4E0D\u8981\u9ED8\u8BA4\u4ECE\u7B2C\u4E00\u6761\u8D77\u6B65\u3002
@@ -33727,32 +33749,43 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 3) \u4E0D\u5F97\u5012\u9000\uFF1A\u5019\u9009\u63A8\u8FDB\u5230\u7684\u6761\u76EE\u4E0D\u5F97\u65E9\u4E8E\u4F60\u5224\u65AD\u7684\u5F53\u524D\u4F4D\u7F6E\uFF0C\u4E5F\u4E0D\u8981\u4E00\u6B21\u8DE8\u8FC7\u591A\u6761\u3002
 4) \u627F\u63A5\u5DF2\u53D1\u751F\u7684\u5267\u60C5\uFF1A\u5019\u9009\u5FC5\u987B\u81EA\u7136\u8854\u63A5"\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5"\u7684\u6700\u540E\u72B6\u6001\uFF0C\u4E0D\u91CD\u590D\u5DF2\u7ECF\u5199\u8FC7\u7684\u60C5\u8282\u3002
 5) \u4E34\u8FD1\u7ED3\u5C40\uFF1A\u82E5\u4F60\u5224\u65AD\u6545\u4E8B\u5DF2\u63A8\u8FDB\u5230\u6700\u540E\u4E00\u6761\u5927\u7EB2\u3001\u6216\u5DF2\u7ECF\u8BE5\u6536\u5C3E\u4E86\uFF0C\u5019\u9009\u5E94\u5F53\u662F\u6536\u675F\u4E0E\u843D\u5730\u65B9\u5411\uFF08\u628A\u65E2\u6709\u7EBF\u7D22\u7ED3\u6E05\u3001\u7ED9\u51FA\u7ED3\u5C40\uFF09\uFF0C\u4E0D\u8981\u53E6\u8D77\u65B0\u7684\u5C55\u5F00\u3002
-6) \u6709\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\uFF08\u89C1[\u8FC7\u6E21\u884C\u7A0B\u5355]\u4E00\u8282\uFF09\uFF0C\u5019\u9009\u7684\u63A8\u8FDB\u5355\u4F4D**\u4E0D\u662F\u5927\u7EB2\u6761\u76EE\u3001\u800C\u662F\u884C\u7A0B\u5355\u91CC\u7684\u4E00\u6B65**\uFF1A\u53EA\u80FD\u5728\u884C\u7A0B\u5355\u5185\u5F80\u524D\u63A8\u8FDB**\u81F3\u591A\u4E00\u6B65**\uFF0Citem_index \u4E00\u5F8B\u586B\u5F53\u524D\u6240\u5904\u7684\u90A3\u4E00\u6761\u3001\u4E0D\u5F97\u8D8A\u8FC7\u672C\u6BB5\u8FC7\u6E21\uFF1B\u53EA\u6709\u884C\u7A0B\u5355\u5DF2\u5168\u90E8\u8D70\u5B8C\uFF0C\u624D\u5141\u8BB8\u628A\u6545\u4E8B\u63A8\u8FDB\u5230\u4E0B\u4E00\u4E2A\u5927\u7EB2\u6761\u76EE\u3002\u884C\u7A0B\u5355\u662F\u73A9\u5BB6\u4E3A\u672C\u6BB5\u4EB2\u624B\u6307\u5B9A\u7684\u8FC7\u573A\uFF0C\u8D8A\u8FC7\u5B83\u5C31\u7B49\u4E8E\u628A\u73A9\u5BB6\u7684\u5B89\u6392\u4F5C\u5E9F\u3002
+6) \u6709\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\uFF08\u89C1[\u8FC7\u6E21\u884C\u7A0B\u5355]\u4E00\u8282\uFF09\uFF0C\u63A8\u8FDB\u5355\u4F4D**\u4E0D\u662F\u5927\u7EB2\u6761\u76EE\u3001\u800C\u662F\u884C\u7A0B\u5355\u91CC\u7684\u4E00\u6B65**\uFF1A
+   - item_index \u4E00\u5F8B\u586B\u5F53\u524D\u6240\u5904\u7684\u90A3\u4E00\u6761\uFF0C\u4E0D\u5F97\u8D8A\u8FC7\u672C\u6BB5\u8FC7\u6E21\uFF1B\u53EA\u6709\u884C\u7A0B\u5355\u5DF2\u5168\u90E8\u8D70\u5B8C\uFF0C\u624D\u5141\u8BB8\u628A\u6545\u4E8B\u63A8\u8FDB\u5230\u4E0B\u4E00\u4E2A\u5927\u7EB2\u6761\u76EE\u3002
+   - \u6BCF\u4E00\u6B65\u90FD\u662F\u4E00\u4E2A\u8981\u7528\u597D\u51E0\u62CD\u624D\u6F14\u5B8C\u7684\u6BB5\u843D\uFF0C\u4E0D\u662F\u4E00\u53E5\u8BDD\u3002\u5148\u770B[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u5DF2\u7ECF\u628A**\u5F53\u524D\u8FD9\u4E00\u6B65**\u6F14\u5230\u54EA\u4E86\uFF0C\u5019\u9009\u4ECE\u90A3\u91CC\u7EE7\u7EED\u5F80\u4E0B\u6F14\u3002
+   - \u26D4 \u4E24\u79CD\u6700\u5E38\u89C1\u7684\u9519\u6CD5\uFF0C\u90FD\u4E0D\u8981\u72AF\uFF1A
+     \u2460 **\u590D\u8FF0**\uFF1A\u628A\u8FD9\u4E00\u6B65\u7684 brief \u6362\u4E2A\u8BF4\u6CD5\u91CD\u5199\u4E00\u904D\uFF08\u8FDE\u6B63\u6587\u91CC\u5DF2\u7ECF\u6F14\u8FC7\u7684\u5F00\u5934\u4E5F\u91CD\u6F14\u4E00\u904D\uFF09\uFF1B
+     \u2461 **\u8DF3\u6B65**\uFF1A\u6700\u65B0\u6B63\u6587\u8FD8\u505C\u5728\u6DF1\u591C\u88AB\u6302\u65AD\u7684\u7535\u8BDD\u91CC\uFF0C\u5019\u9009\u5374\u76F4\u63A5\u5199"\u6211\u63A8\u5F00\u65E7\u4E66\u5E97\u7684\u95E8"\uFF0C\u628A\u8FD9\u4E00\u6B65\u7684\u573A\u666F\u51ED\u7A7A\u642C\u51FA\u6765\u3002
+   - \u884C\u7A0B\u5355\u662F\u73A9\u5BB6\u4E3A\u672C\u6BB5\u4EB2\u624B\u6307\u5B9A\u7684\u8FC7\u573A\uFF0C\u8D8A\u8FC7\u5B83\u5C31\u7B49\u4E8E\u628A\u73A9\u5BB6\u7684\u5B89\u6392\u4F5C\u5E9F\u3002
 
 [\u786C\u6027\u8981\u6C42]
 1) \u53EA\u80FD\u8FD4\u56DE JSON\uFF0C\u4E0D\u8981 markdown\uFF0C\u4E0D\u8981\u89E3\u91CA\uFF0C\u4E0D\u8981\u591A\u4F59\u6587\u672C\u3002
 2) \u53EA\u5141\u8BB8\u8FD4\u56DE\u4EE5\u4E0B\u7ED3\u6784\uFF1A
 {
-  "version": "1.7",
+  "version": "1.8",
   "current_item_index": 1,
+  "step_state": "\u8FDB\u884C\u4E2D",
   "candidates": [
     {
       "title": "\u5019\u9009\u6807\u9898\uFF088\u5B57\u4EE5\u5185\uFF09",
       "text": "\u53EF\u76F4\u63A5\u4F5C\u4E3A\u73A9\u5BB6\u8F93\u5165\u53D1\u9001\u7684\u5267\u60C5\u6BB5\u843D",
+      "from": "\u8FD9\u4E2A\u5019\u9009\u4ECE\u6700\u65B0\u4E00\u5C42\u56DE\u590D\u7684\u54EA\u4E00\u62CD\u63A5\u4F4F\uFF08\u226430\u5B57\uFF09",
       "item_index": 1,
       "step_index": 1
     }
   ]
 }
 3) current_item_index \u586B\u4F60\u5224\u65AD\u7684"\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u7B2C\u51E0\u6761"\uFF08\u5BF9\u5E94\u8F93\u5165\u5927\u7EB2\u91CC\u7684 index\uFF09\u3002\u786E\u5B9E\u65E0\u6CD5\u5224\u65AD\u65F6\u586B null\uFF0C\u4E0D\u8981\u968F\u4FBF\u586B 1\u3002
-4) candidates \u6570\u91CF\u5FC5\u987B\u4E3A 2~3 \u4E2A\u3002
-5) text \u662F\u4EE5\u73A9\u5BB6\u89C6\u89D2\u9A71\u52A8\u5267\u60C5\u7684\u6307\u4EE4\u5F0F\u60C5\u8282\u6BB5\u843D\uFF0C120-220 \u5B57\uFF0C\u4E2D\u6587\uFF0C\u5177\u4F53\u53EF\u5EF6\u5C55\uFF0C\u53EF\u76F4\u63A5\u53D1\u9001\u7ED9\u6A21\u578B\u7EED\u5199\uFF0C\u4E0D\u5199"\u8BF7\u4F60/\u4F60\u9700\u8981"\u3002
-6) item_index \u586B\u8BE5\u5019\u9009\u63A8\u8FDB\u5230\u7684\u5927\u7EB2\u6761\u76EE\u5E8F\u53F7\uFF0C\u5FC5\u987B\u6765\u81EA\u8F93\u5165\u5927\u7EB2\uFF0C\u4E0D\u5F97\u65B0\u589E\uFF1B\u5404\u5019\u9009\u76F8\u540C\u6216\u76F8\u90BB\u90FD\u5C5E\u4E8E\u6B63\u5E38\u3002\u6709\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\u4E00\u5F8B\u586B\u5F53\u524D\u6761\u76EE\uFF08\u89C1\u6838\u5FC3\u539F\u5219 6\uFF09\u3002
-7) step_index \u586B"\u8FD9\u4E2A\u5019\u9009\u8D70\u5B8C\u540E\uFF0C\u672C\u6BB5\u8FC7\u6E21\u884C\u7A0B\u5355\u91CC\u5DF2\u5B8C\u6210\u51E0\u6B65"\uFF080 \u8D77\u7B97\u7684\u6574\u6570\uFF09\uFF1A
+4) step_state \u586B[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u91CC"\u5F53\u524D\u8FD9\u4E00\u6B65\u6F14\u5230\u54EA\u4E86"\uFF1A\u672A\u5F00\u59CB / \u8FDB\u884C\u4E2D / \u5DF2\u5B8C\u6210 \u4E09\u9009\u4E00\uFF1B\u65E0\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\u586B null\u3002\u4F9D\u636E\u5FC5\u987B\u662F\u6B63\u6587\u91CC\u7684\u5177\u4F53\u60C5\u8282\uFF0C\u4E0D\u662F\u731C\u6D4B\u3002
+5) candidates \u6570\u91CF\u5FC5\u987B\u4E3A 2~3 \u4E2A\u3002
+6) text \u662F\u4EE5\u73A9\u5BB6\u89C6\u89D2\u9A71\u52A8\u5267\u60C5\u7684\u6307\u4EE4\u5F0F\u60C5\u8282\u6BB5\u843D\uFF0C120-220 \u5B57\uFF0C\u4E2D\u6587\uFF0C\u5177\u4F53\u53EF\u5EF6\u5C55\uFF0C\u53EF\u76F4\u63A5\u53D1\u9001\u7ED9\u6A21\u578B\u7EED\u5199\uFF0C\u4E0D\u5199"\u8BF7\u4F60/\u4F60\u9700\u8981"\u3002\u8D77\u53E5\u8981\u843D\u5728[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u7684\u672B\u6001\u4E0A\uFF0C\u8BA9\u4EBA\u4E00\u773C\u770B\u51FA\u5B83\u662F\u63A5\u7740\u90A3\u4E00\u5C42\u5F80\u4E0B\u8D70\u7684\uFF0C\u800C\u4E0D\u662F\u53E6\u8D77\u4E00\u573A\u620F\u3002
+7) from \u586B\u8FD9\u4E2A\u5019\u9009\u63A5\u4F4F\u7684**\u6700\u5177\u4F53\u7684\u90A3\u4E00\u62CD**\uFF08\u8C01\u5728\u54EA / \u521A\u8BF4\u4E86\u4EC0\u4E48 / \u6B63\u505A\u5230\u54EA\u4E00\u6B65\uFF09\uFF0C\u226430 \u5B57\uFF0C\u7167\u6284\u6216\u7D27\u8D34\u539F\u6587\u3002\u5199\u4E0D\u51FA\u5177\u4F53\u6307\u8BA4\uFF0C\u8BF4\u660E\u4F60\u6CA1\u8BFB\u90A3\u4E00\u5C42\u2014\u2014\u90A3\u5C31\u56DE\u53BB\u8BFB\u3002
+8) item_index \u586B\u8BE5\u5019\u9009\u63A8\u8FDB\u5230\u7684\u5927\u7EB2\u6761\u76EE\u5E8F\u53F7\uFF0C\u5FC5\u987B\u6765\u81EA\u8F93\u5165\u5927\u7EB2\uFF0C\u4E0D\u5F97\u65B0\u589E\uFF1B\u5404\u5019\u9009\u76F8\u540C\u6216\u76F8\u90BB\u90FD\u5C5E\u4E8E\u6B63\u5E38\u3002\u6709\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\u4E00\u5F8B\u586B\u5F53\u524D\u6761\u76EE\uFF08\u89C1\u6838\u5FC3\u539F\u5219 6\uFF09\u3002
+9) step_index \u586B"\u8FD9\u4E2A\u5019\u9009\u8D70\u5B8C\u540E\uFF0C\u672C\u6BB5\u8FC7\u6E21\u884C\u7A0B\u5355\u91CC\u5DF2\u5B8C\u6210\u51E0\u6B65"\uFF080 \u8D77\u7B97\u7684\u6574\u6570\uFF09\uFF1A
    - \u65E0\u8FC7\u6E21\u884C\u7A0B\u5355\u65F6\u586B null\uFF1B
    - \u6709\u884C\u7A0B\u5355\u65F6\uFF0C[\u8FC7\u6E21\u884C\u7A0B\u5355]\u4E00\u8282\u4F1A\u76F4\u63A5\u5199\u660E\u672C\u56DE\u5408\u8BE5\u586B\u51E0\uFF0C\u7167\u6284\u5373\u53EF\uFF1B
-   - \u5019\u9009\u53EA\u5728\u539F\u5730\u6DF1\u5316\u3001\u4E0D\u63A8\u8FDB\u8FC7\u6E21 \u2192 \u586B\u5F53\u524D\u5DF2\u5B8C\u6210\u6B65\u6570\uFF1B\u628A\u5F53\u524D\u8FD9\u4E00\u6B65\u6F14\u5B8C \u2192 \u5DF2\u5B8C\u6210\u6B65\u6570 + 1\uFF1B\u884C\u7A0B\u5355\u5168\u90E8\u8D70\u5B8C \u2192 \u586B\u884C\u7A0B\u5355\u603B\u6B65\u6570\u3002
-8) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
+   - \u8FD8\u5728\u8FD9\u4E00\u6B65\u4E4B\u5185\u518D\u6F14\u4E00\u62CD\uFF08\u6CA1\u6F14\u5B8C\u8FD9\u4E00\u6B65\uFF09\u2192 \u586B\u5F53\u524D\u5DF2\u5B8C\u6210\u6B65\u6570\uFF1B\u672C\u56DE\u5408\u628A\u8FD9\u4E00\u6B65\u6F14\u5B8C \u2192 \u5DF2\u5B8C\u6210\u6B65\u6570 + 1\uFF1B[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u663E\u793A\u8FD9\u4E00\u6B65\u5176\u5B9E\u5DF2\u7ECF\u6F14\u5B8C\u3001\u5019\u9009\u56E0\u6B64\u5E26\u5411\u4E0B\u4E00\u6B65 \u2192 \u5DF2\u5B8C\u6210\u6B65\u6570 + 1\uFF08\u4E00\u6B21\u81F3\u591A\u524D\u8FDB 1 \u6B65\uFF09\u3002
+10) \u65F6\u95F4\u63A8\u79FB\uFF1A\u82E5[\u8FC7\u6E21\u884C\u7A0B\u5355]\u91CC\u5F53\u524D\u8FD9\u4E00\u6B65\u7684 span \u76F8\u5BF9\u4E0A\u4E00\u62CD\u6709\u660E\u663E\u95F4\u9694\uFF08"\u4E09\u5929\u540E""\u4E24\u5468\u540E"\uFF09\uFF0C\u800C\u6B63\u6587\u8FD8\u6CA1\u505A\u8FC7\u8FD9\u6B21\u63A8\u79FB\uFF0C\u5019\u9009\u8981\u5148\u5199\u660E\u8FD9\u6B21\u65F6\u95F4\u63A8\u79FB\u518D\u8FDB\u5165\u573A\u666F\uFF0C\u4E0D\u8981\u9ED8\u8BA4\u63A5\u7740\u4E0A\u4E00\u62CD\u5F80\u4E0B\u6F14\u3002
+11) \u8F93\u51FA\u8BED\u8A00\u4F7F\u7528\u4E2D\u6587\u3002`,
       user: `[\u89D2\u8272\u8BBE\u5B9A]
 {{persona}}
 
@@ -33771,14 +33804,19 @@ plot \u7684\u6587\u4F53\u662F\u300C\u5206\u96C6\u6897\u6982\u300D\uFF1A\u5199\u7
 [\u8FC7\u6E21\u884C\u7A0B\u5355\uFF08\u73A9\u5BB6\u4E3A\u4E0B\u9762\u8FD9\u4E00\u6BB5\u8FC7\u573A\u4EB2\u624B\u6392\u7684\u987A\u5E8F\uFF1B\u6CA1\u6709\u5185\u5BB9\u65F6\uFF1D\u672C\u6BB5\u6CA1\u6709\u884C\u7A0B\u5355\uFF0C\u6309\u666E\u901A\u63A8\u8FDB\u5904\u7406\uFF09]
 {{transitionContext}}
 
-[\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF08\u4EC5\u4E3A\u6700\u8FD1\u6B63\u6587\u7247\u6BB5\uFF0C\u8D8A\u9760\u540E\u8D8A\u65B0\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u5F00\u5934\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u6216\u6458\u8981\uFF09]
+[\u66F4\u65E9\u7684\u5267\u60C5\uFF08\u80CC\u666F\uFF1B\u8D8A\u9760\u540E\u8D8A\u65B0\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u5F00\u5934\uFF1B\u5E26\u3010\u80CC\u666F\u3011\u524D\u7F00\u7684\u662F\u88AB\u603B\u7ED3/\u9690\u85CF\u7684\u697C\u5C42\u6216\u6458\u8981\uFF09]
 {{recentChat}}
 
+[\u6700\u65B0\u4E00\u5C42\u56DE\u590D\uFF08\u8D77\u70B9\u2014\u2014\u5019\u9009\u5FC5\u987B\u4ECE\u5B83\u7684\u672B\u6001\u63A5\u4E0B\u53BB\uFF1B\u5B83\u4E0D\u662F\u53C2\u8003\u80CC\u666F\uFF0C\u662F\u4E0B\u7B14\u5904\uFF09]
+{{latestReply}}
+
 [\u4EFB\u52A1]
-1) \u5148\u5224\u65AD\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\uFF0C\u586B\u8FDB current_item_index\uFF08\u786E\u5B9E\u65E0\u6CD5\u5224\u65AD\u586B null\uFF09\u3002
-2) \u518D\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\u5267\u60C5\u8D70\u5411\uFF1A\u90FD\u4ECE\u8BE5\u4F4D\u7F6E\u51FA\u53D1\uFF0C\u627F\u63A5\u5DF2\u7ECF\u53D1\u751F\u7684\u5267\u60C5\uFF0C\u5F7C\u6B64\u65B9\u5411\u4E0D\u540C\uFF0C\u671D\u7ED3\u5C40\u7A33\u6B65\u63A8\u8FDB\u4F46\u4E0D\u8981\u8DF3\u5230\u7ED3\u5C40\u3002\u6BCF\u4E2A\u5019\u9009\u7684 item_index \u586B\u5B83\u63A8\u8FDB\u5230\u7684\u90A3\u4E00\u6761\uFF08\u901A\u5E38\u5F7C\u6B64\u76F8\u540C\u6216\u76F8\u90BB\uFF09\u3002
-3) \u82E5\u4E0A\u9762\u7ED9\u4E86[\u8FC7\u6E21\u884C\u7A0B\u5355]\uFF0C\u5019\u9009\u8981**\u9488\u5BF9\u884C\u7A0B\u5355\u91CC\u5F53\u524D\u90A3\u4E00\u6B65**\u6765\u5199\uFF08\u5199\u51FA\u8FD9\u4E00\u6B65\u5177\u4F53\u600E\u4E48\u53D1\u751F\u3001\u600E\u4E48\u6F14\uFF09\uFF0C\u5E76\u6309\u5176\u6307\u793A\u586B step_index \u4E0E item_index\u2014\u2014\u4E0D\u8981\u8D8A\u8FC7\u884C\u7A0B\u5355\u53BB\u5199\u540E\u9762\u7684\u5185\u5BB9\u3002\u6CA1\u6709\u884C\u7A0B\u5355\u65F6 step_index \u4E00\u5F8B\u586B null\u3002
-\u4E25\u683C\u6309 version 1.7 \u7ED3\u6784\u8FD4\u56DE\u3002\u53EA\u8FD4\u56DE JSON\u3002`
+1) \u5148\u8BFB[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\uFF0C\u628A\u5B83\u7684**\u672B\u6001**\u5B9A\u4F4D\u51FA\u6765\uFF1A\u8C01\u5728\u54EA\u3001\u521A\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u4EC0\u4E48\u8FD8\u60AC\u7740\u3002
+2) \u518D\u5224\u65AD\u6545\u4E8B\u76EE\u524D\u63A8\u8FDB\u5230\u4E86\u5927\u7EB2\u7684\u54EA\u4E00\u6761\uFF0C\u586B\u8FDB current_item_index\uFF08\u786E\u5B9E\u65E0\u6CD5\u5224\u65AD\u586B null\uFF09\u3002
+3) \u7136\u540E\u7ED9\u51FA 2~3 \u4E2A\u5019\u9009\uFF1A\u6BCF\u4E2A\u90FD\u4ECE\u4E0A\u9762\u90A3\u4E2A\u672B\u6001\u5F80\u4E0B\u63A5\uFF0C\u5199\u73A9\u5BB6\u63A5\u4E0B\u6765\u505A\u4E86\u4EC0\u4E48\uFF0C\u5F7C\u6B64\u65B9\u5411\u4E0D\u540C\uFF1B\u6BCF\u4E2A\u5019\u9009\u7684 from \u6307\u8BA4\u5B83\u63A5\u4F4F\u7684\u90A3\u4E00\u62CD\u3002
+4) \u5019\u9009\u8981\u5728\u5F53\u524D\u8FD9\u4E00\u6B65**\u4E4B\u5185**\u7EE7\u7EED\u6F14\uFF1A\u8FD9\u4E00\u6B65\u7684\u5F00\u5934\u82E5\u5DF2\u7ECF\u5728[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u91CC\u6F14\u8FC7\u4E86\uFF0C\u5C31\u522B\u91CD\u6F14\uFF1B\u4E0D\u8981\u590D\u8FF0\u8FD9\u4E00\u6B65\u7684 brief\uFF0C\u4E5F\u4E0D\u8981\u63D0\u524D\u8DF3\u5230\u4E0B\u4E00\u6B65\u2014\u2014\u9664\u975E[\u6700\u65B0\u4E00\u5C42\u56DE\u590D]\u663E\u793A\u8FD9\u4E00\u6B65\u786E\u5B9E\u5DF2\u7ECF\u6F14\u5B8C\u3002\u6CA1\u6709\u884C\u7A0B\u5355\u65F6 step_index \u4E0E step_state \u4E00\u5F8B\u586B null\uFF0C\u5019\u9009\u6309\u666E\u901A\u63A8\u8FDB\u5904\u7406\u3002
+5) item_index \u4E0E step_index \u6309\u6838\u5FC3\u539F\u5219 6 \u4E0E[\u8FC7\u6E21\u884C\u7A0B\u5355]\u7684\u6307\u793A\u586B\u3002
+\u4E25\u683C\u6309 version 1.8 \u7ED3\u6784\u8FD4\u56DE\u3002\u53EA\u8FD4\u56DE JSON\u3002`
     },
     pacing: {
       system: `\u4F60\u662F\u53D9\u4E8B\u8282\u594F\u5206\u6790\u5E08\uFF0C\u5728\u5199\u4F5C\u6A21\u578B\u52A8\u7B14\u524D\u4E3A\u300C\u672C\u6B21\u8FD9\u4E00\u6761\u56DE\u590D\u300D\u628A\u63A7\u8282\u594F\u3002
@@ -33989,10 +34027,15 @@ function getPromptTemplates() {
     //   1.6 → 1.7：候选新增 step_index，并引入过渡行程单（{{transitionContext}}）。
     //              1.6 模板不会填 step_index，解析器只能一路回退成 null，
     //              于是行程单生成了也没人用——用户手上那份清单等于白做。
+    //   1.7 → 1.8：起点改为[最新一层回复]（新增 {{latestReply}}），候选新增 from（承接点）
+    //              与顶层 step_state。1.7 模板把候选定义成"演这一步"（写出这一步具体
+    //              怎么发生），拿到的行程单 brief 又是一段完整梗概，模型只能把它换个
+    //              说法扩写——用户看到的候选永远在围绕这一步打转，而不是接着最新一层
+    //              回复往下演。这两个字段都不填，新约束等于没下。
     rolling: (() => {
       const sys = String(raw?.rolling?.system || defaults.rolling.system);
       const usr = String(raw?.rolling?.user || defaults.rolling.user);
-      const legacy = sys.includes('"1.3"') || usr.includes("scenesSoFar") ? "1.3" : sys.includes('"1.4"') || usr.includes("{{progressHint}}") || usr.includes("[\u5F53\u524D\u8FDB\u5EA6]") ? "1.4" : sys.includes('"1.5"') || !sys.includes("current_item_index") ? "1.5" : !sys.includes("step_index") ? "1.6" : "";
+      const legacy = sys.includes('"1.3"') || usr.includes("scenesSoFar") ? "1.3" : sys.includes('"1.4"') || usr.includes("{{progressHint}}") || usr.includes("[\u5F53\u524D\u8FDB\u5EA6]") ? "1.4" : sys.includes('"1.5"') || !sys.includes("current_item_index") ? "1.5" : !sys.includes("step_index") ? "1.6" : !usr.includes("{{latestReply}}") ? "1.7" : "";
       if (legacy) {
         console.info(`[Titania] \u68C0\u6D4B\u5230\u65E7\u7248\u5267\u60C5\u63A8\u8FDB\u6A21\u677F\uFF08${legacy}\uFF09\uFF0C\u5DF2\u91CD\u7F6E\u4E3A\u9ED8\u8BA4\u6A21\u677F`);
         return JSON.parse(JSON.stringify(defaults.rolling));
@@ -34064,8 +34107,9 @@ function getUnknownPromptVars(text) {
     "worldInfo",
     "scenario",
     "dialogueExamples",
-    // 剧情推进专用变量
+    // 剧情推进专用变量（latestReply ＝ 最新一层角色回复，v1.8 起单独成节作为起点）
     "recentChat",
+    "latestReply",
     // 节奏把控专用变量
     "outlineProgress",
     // 盲盒生成专用变量
@@ -34103,6 +34147,9 @@ function buildPromptTemplateVars(ctx2, userStoryInput, openingText, outlinePaylo
     dialogueExamples: String(ctx2?.dialogueExamples || "").trim() || "(\u65E0)",
     // 剧情推进专用；非推荐场景为 "(无)"，模板里没引用就不影响。
     recentChat: String(extras?.recentChat || "").trim() || "(\u65E0)",
+    // 剧情推进专用（v1.8）：最新一层角色回复，候选的起点。读不到时给一句说明，
+    // 让模型知道"这次没有起点可接"，而不是把空当成"随便写"。
+    latestReply: String(extras?.latestReply || "").trim() || "\uFF08\u8BFB\u4E0D\u5230\u6700\u8FD1\u6B63\u6587\uFF1A\u672C\u6B21\u65E0\u6CD5\u786E\u8BA4\u6545\u4E8B\u505C\u5728\u54EA\uFF0C\u8BF7\u53EA\u6309\u5927\u7EB2\u4E0E\u8FC7\u6E21\u884C\u7A0B\u5355\u63A8\u8FDB\uFF0C\u5E76\u5982\u5B9E\u8BF4\u660E\uFF09",
     // 节奏把控专用：当前大纲进度，无方案时为 "(无大纲)"。
     outlineProgress: String(extras?.outlineProgress || "").trim() || "(\u65E0)",
     // 盲盒生成专用：下单参数。缺省给占位串，预览时不至于渲染成空。
@@ -34285,7 +34332,7 @@ async function openPromptTemplateManager() {
                                 </select>
                                 <button id="t-prompt-reset-current" class="t-btn t-btn-xs"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u5F53\u524D\u9ED8\u8BA4</button>
                             </div>
-                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{transitionContext}}<br>\u8FC7\u6E21\u884C\u7A0B\u5355\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{gapPair}} {{gapBrief}} {{eventCount}}<br>\u53D9\u4E8B\u8282\u594F\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{outlineProgress}}<br>\u76F2\u76D2\u5267\u672C\u751F\u6210\u989D\u5916\u53D8\u91CF\uFF1A{{nodeCount}} {{eventsPerGap}} {{redlines}} {{timescale}}<br>\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{blindboxOutline}} {{blindboxProgress}} {{blindboxStrictness}}</div>
+                            <div class="t-plan-tip" style="margin-top:8px;">\u901A\u7528\u53D8\u91CF\uFF1A{{persona}} {{userDesc}} {{worldInfo}} {{scenario}} {{dialogueExamples}} {{openingText}} {{storyInput}} {{outlineItemsJson}}<br>\u5267\u60C5\u63A8\u8FDB\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{latestReply}} {{transitionContext}}<br>\u8FC7\u6E21\u884C\u7A0B\u5355\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{gapPair}} {{gapBrief}} {{eventCount}}<br>\u53D9\u4E8B\u8282\u594F\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{outlineProgress}}<br>\u76F2\u76D2\u5267\u672C\u751F\u6210\u989D\u5916\u53D8\u91CF\uFF1A{{nodeCount}} {{eventsPerGap}} {{redlines}} {{timescale}}<br>\u76F2\u76D2\u5BFC\u6F14\u5224\u5B9A\u989D\u5916\u53D8\u91CF\uFF1A{{recentChat}} {{blindboxOutline}} {{blindboxProgress}} {{blindboxStrictness}}</div>
                         </div>
 
                         <div class="t-form-group">
@@ -34387,8 +34434,10 @@ async function openPromptTemplateManager() {
     const openingMode = getOpeningSourceMode();
     const openingSourceRef = getOpeningSourceRef();
     const opening2 = type === "rolling" ? getRollingOpeningText() : getOpeningTextForPreview(openingMode, openingSourceRef);
+    const chatParts = collectRecentChatParts(getRollingChatFloors());
     const varsLocal = buildPromptTemplateVars(ctx2, currentStoryInput, opening2, outlinePayload, {
-      recentChat: collectRecentChatText(getRollingChatFloors()),
+      recentChat: type === "rolling" ? chatParts.earlierChat : collectRecentChatText(getRollingChatFloors()),
+      latestReply: chatParts.latestReply,
       outlineProgress: buildOutlineProgressText()
     });
     const renderedSys = renderPromptTemplate(section.system, varsLocal);
@@ -35067,6 +35116,8 @@ function normalizeCandidate(c) {
   return {
     title: String(c?.title || ""),
     text: String(c?.text || ""),
+    // from：候选接住的那一拍（最新一层回复里的具体指认），v1.8 新增。只用于展示与自查。
+    from: String(c?.from || "").trim().slice(0, FROM_MAX),
     itemIndex: Number(c?.itemIndex) || 1,
     stepIndex: hasStep && Number.isFinite(step) ? Math.max(0, Math.floor(step)) : null,
     used: c?.used === true
@@ -35085,7 +35136,8 @@ function setPlanCandidates(planId, candidates, opts = {}) {
     delete plan.candidates;
   } else {
     const generatedAt = opts.keepTimestamp && Number(plan.candidates?.generatedAt) || Date.now();
-    plan.candidates = { items, generatedAt };
+    const stepState = "stepState" in opts ? STEP_STATES.includes(opts.stepState) ? opts.stepState : null : STEP_STATES.includes(plan.candidates?.stepState) ? plan.candidates.stepState : null;
+    plan.candidates = stepState ? { items, generatedAt, stepState } : { items, generatedAt };
   }
   plan.updatedAt = Date.now();
   saveExtData();
@@ -35812,14 +35864,38 @@ function getRecentFloorWindow(floors, opts = {}) {
     return [];
   }
 }
+function formatChatEntry(entry, withFloors) {
+  const head = withFloors ? `\u3010#${entry.chatIndex} ${entry.role}\u3011` : `\u3010${entry.role}\u3011`;
+  return head + (entry.text || EMPTY_FLOOR_MARK);
+}
 function collectRecentChatText(floors, opts = {}) {
   const entries = getRecentFloorWindow(floors, opts);
   if (!entries.length) return "";
+  return entries.map((e) => formatChatEntry(e, opts.withFloors === true)).join("\n\n");
+}
+function collectRecentChatParts(floors, opts = {}) {
+  const entries = getRecentFloorWindow(floors, opts);
+  if (!entries.length) return { latestReply: "", earlierChat: "" };
+  let latest = -1;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    if (entries[i].role === "\u89D2\u8272" && entries[i].text) {
+      latest = i;
+      break;
+    }
+  }
+  if (latest < 0) {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (entries[i].text) {
+        latest = i;
+        break;
+      }
+    }
+  }
   const withFloors = opts.withFloors === true;
-  return entries.map((e) => {
-    const head = withFloors ? `\u3010#${e.chatIndex} ${e.role}\u3011` : `\u3010${e.role}\u3011`;
-    return head + (e.text || EMPTY_FLOOR_MARK);
-  }).join("\n\n");
+  return {
+    latestReply: latest >= 0 ? formatChatEntry(entries[latest], withFloors) : "",
+    earlierChat: entries.filter((_, i) => i !== latest).map((e) => formatChatEntry(e, withFloors)).join("\n\n")
+  };
 }
 function buildOutlineProgressText() {
   const plan = getRollingPlan();
@@ -35881,10 +35957,10 @@ function buildRecommendationPrompt(ctx2, userStoryInput, openingText) {
   const templates = getPromptTemplates();
   const plan = getRollingPlan();
   const active2 = plan ? getActiveTransition(plan, getPlanProgress(plan).itemIndex) : null;
+  const chat2 = collectRecentChatParts(getRollingChatFloors(), { includeHidden: true });
   const vars = buildPromptTemplateVars(ctx2, userStoryInput || "(\u7A7A)", openingText, outlinePayload, {
-    // 带上被总结/隐藏的楼层：否则前文一折叠，模型既判不出 current_item_index、也凑不出贴合剧情的候选。
-    // 判不出时解析器回退保留旧指针（见 parseRecommendationResponse 注释），不会把进度冲掉。
-    recentChat: collectRecentChatText(getRollingChatFloors(), { includeHidden: true }),
+    recentChat: chat2.earlierChat,
+    latestReply: chat2.latestReply,
     transitionContext: active2 ? buildTransitionContextText(active2, outlinePayload) : ""
   });
   const sys = renderPromptTemplate(templates.rolling.system, vars);
@@ -35916,7 +35992,13 @@ function parseRecommendationResponse(raw, fallbackItemIndex, totalItems, transit
         stepIndex = Number.isFinite(s) ? Math.min(Math.max(Math.floor(s), 0), stepMax) : null;
       }
     }
-    return { title: String(c?.title || "").trim(), text, itemIndex: idx, stepIndex };
+    return {
+      title: String(c?.title || "").trim(),
+      text,
+      from: String(c?.from || "").trim().slice(0, FROM_MAX),
+      itemIndex: idx,
+      stepIndex
+    };
   }).filter(Boolean);
   if (candidates.length === 0) {
     throw new Error("\u5267\u60C5\u63A8\u8350\u8FD4\u56DE\u683C\u5F0F\u65E0\u6CD5\u89E3\u6790\u4E3A JSON\uFF08\u7F3A\u5C11\u6709\u6548 candidates\uFF09");
@@ -35929,7 +36011,8 @@ function parseRecommendationResponse(raw, fallbackItemIndex, totalItems, transit
       currentItemIndex = Math.min(Math.max(Math.floor(n), 1), maxIdx);
     }
   }
-  return { candidates, currentItemIndex };
+  const stepState = stepMax !== null && STEP_STATES.includes(data?.step_state) ? data.step_state : null;
+  return { candidates, currentItemIndex, stepState };
 }
 function buildGapPairText(outlinePayload, fromIndex) {
   const list2 = Array.isArray(outlinePayload) ? outlinePayload : [];
@@ -36441,7 +36524,7 @@ async function generateRecommendations() {
       parse: (raw) => parseRecommendationResponse(raw, fallbackItemIndex, total, activeTransition),
       apply: (parsed) => {
         generatedCandidateCount = parsed.candidates.length;
-        setPlanCandidates(editingPlanId, parsed.candidates);
+        setPlanCandidates(editingPlanId, parsed.candidates, { stepState: parsed.stepState });
         if (parsed.currentItemIndex > 0) {
           applyProgressFromModel(editingPlanId, parsed.currentItemIndex - 1);
         }
@@ -36877,6 +36960,7 @@ function getSceneAdvanceState() {
   const total = Array.isArray(plan?.items) ? plan.items.length : 0;
   const progress = plan ? getPlanProgress(plan) : { itemIndex: 0, reachedEnding: false };
   const candidates = plan ? getPlanCandidates(plan) : [];
+  const stepState = STEP_STATES.includes(plan?.candidates?.stepState) ? plan.candidates.stepState : null;
   const items = plan ? normalizeItems(plan.items || []) : [];
   const transition = plan ? getActiveTransition(plan, progress.itemIndex) : null;
   const toIndex = progress.itemIndex + 1;
@@ -36889,6 +36973,8 @@ function getSceneAdvanceState() {
     progress,
     reachedEnding: progress.reachedEnding,
     candidates,
+    // 模型上一批候选时读最新正文得出的「当前这一步演到哪了」；没有行程单/没判断出来时 null。
+    stepState,
     // 大纲情节预览用的完整条目（原「剧情推进」窗口的预览面板已迁至气泡浮层）
     items,
     insertMode: getCurrentInsertMode(),
@@ -36968,7 +37054,7 @@ function clearSceneTransition(planId) {
   if (id3) dropPlanTransition(id3);
   return getSceneAdvanceState();
 }
-var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY2, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, DIRECTOR_CHAT_FLOORS_KEY, DIRECTOR_CHAT_FLOORS_DEFAULT, EMPTY_FLOOR_MARK, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, BB_STRICTNESS_LABEL, PACING_STATES;
+var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY2, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, OUTLINE_CHAT_TAG_WHITELIST_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, DIRECTOR_CHAT_FLOORS_KEY, DIRECTOR_CHAT_FLOORS_DEFAULT, EMPTY_FLOOR_MARK, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, BB_STRICTNESS_LABEL, PACING_STATES, FROM_MAX, STEP_STATES;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -37025,6 +37111,8 @@ var init_storyOutlineWindow = __esm({
       [STRICTNESS.STRICT]: "\u4E25\u683C\uFF08\u5B81\u53EF\u6162\u4E00\u62CD\uFF09"
     };
     PACING_STATES = ["\u62D6\u6C93", "\u5E73\u7A33", "\u7D27\u51D1", "\u4ED3\u4FC3"];
+    FROM_MAX = 60;
+    STEP_STATES = ["\u672A\u5F00\u59CB", "\u8FDB\u884C\u4E2D", "\u5DF2\u5B8C\u6210"];
   }
 });
 
@@ -40107,8 +40195,8 @@ function normalizeMemoryConfig(raw = {}) {
     const n = Number(config[key]);
     config[key] = Number.isFinite(n) ? Math.max(min, Math.min(max, Math.floor(n))) : MEMORY_DEFAULTS[key];
   }
+  delete config.model;
   config.profile_id = String(config.profile_id || "");
-  config.model = String(config.model || "").trim();
   return config;
 }
 function memoryFloorFingerprint(message) {
@@ -40289,7 +40377,6 @@ var init_storyMemoryData = __esm({
       batch_tokens: 12e3,
       memory_tokens: 2400,
       profile_id: "",
-      model: "",
       inject_depth: 4
     });
     copyMemory = (value) => JSON.parse(JSON.stringify(value));
@@ -40610,8 +40697,8 @@ async function runStoryMemory(force = true) {
     notify2();
     return false;
   }
-  const conn = config.profile_id ? getConnectionByProfileId(config.profile_id, config.model || null) : getActiveConnection();
-  if (!conn) throw new Error("\u603B\u7ED3 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002");
+  const conn = config.profile_id ? getConnectionByProfileId(config.profile_id) : getActiveConnection();
+  if (!conn) throw new Error("\u6574\u7406\u65F6\u7528\u7684 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u5230\u300C\u8FD0\u884C\u8BBE\u7F6E\u300D\u91CC\u91CD\u65B0\u9009\u62E9\u3002");
   if (!conn.useSTConnection && !conn.url?.trim()) throw new Error("\u8BF7\u5148\u914D\u7F6E\u5DE5\u5177\u7BB1 API\uFF0C\u6216\u9009\u62E9\u8DDF\u968F\u9152\u9986\u4E3B\u8FDE\u63A5\u3002");
   const controller = new AbortController();
   const task = { ctx: ctx2, batch, revision: memory.revision, controller };
@@ -40626,7 +40713,6 @@ async function runStoryMemory(force = true) {
       maxTokens: 4096,
       temperature: 0.2,
       signal: controller.signal,
-      model: config.model || void 0,
       allowEmptyKey: true,
       respectRequestLimits: true
     });
@@ -40957,16 +41043,15 @@ function openStoryMemoryWindow() {
     const profiles = getAllProfiles();
     const missing = settingsDraft.profile_id && !profiles.some((profile) => profile.id === settingsDraft.profile_id);
     return `<div class="t-memory-settings"><p class="t-memory-hint">\u8FD9\u4E9B\u53C2\u6570\u5728\u5404\u804A\u5929\u95F4\u5171\u7528\uFF1B\u81EA\u52A8\u6574\u7406\u5F00\u5173\u6309\u804A\u5929\u5206\u522B\u4FDD\u5B58\u3002</p>
-            <div class="t-memory-settings-grid"><label class="t-memory-field"><span>\u603B\u7ED3 API \u65B9\u6848</span><select class="t-input" data-setting="profile_id"><option value="">\u8DDF\u968F\u5DE5\u5177\u7BB1\u5F53\u524D\u65B9\u6848</option>
+            <div class="t-memory-settings-grid"><label class="t-memory-field"><span>\u6574\u7406\u65F6\u7528\u54EA\u4E2A API \u65B9\u6848</span><select class="t-input" data-setting="profile_id"><option value="">\u8DDF\u968F\u5DE5\u5177\u7BB1\u5F53\u524D\u65B9\u6848</option>
                 ${missing ? `<option value="${escape(settingsDraft.profile_id)}" selected>\u539F\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9</option>` : ""}
-                ${profiles.map((profile) => `<option value="${escape(profile.id)}" ${settingsDraft.profile_id === profile.id ? "selected" : ""}>${escape(profile.name)}</option>`).join("")}</select><small>\u65B9\u6848\u5728\u5DE5\u5177\u7BB1\u7684 API \u914D\u7F6E\u4E2D\u7BA1\u7406\u3002</small></label>
-            <label class="t-memory-field"><span>\u603B\u7ED3\u6A21\u578B\u8986\u76D6\uFF08\u53EF\u9009\uFF09</span><input class="t-input" data-setting="model" value="${escape(settingsDraft.model)}"><small>\u7559\u7A7A\u6CBF\u7528\u6240\u9009\u65B9\u6848\u7684\u6A21\u578B\u3002</small></label>
-            ${numeric("keep_floors", "\u81F3\u5C11\u4FDD\u7559\u6700\u8FD1\u697C\u5C42", 2, 500, "\u5207\u5206\u4F1A\u5411\u524D\u5EF6\u4F38\u5230\u5B8C\u6574\u5BF9\u8BDD\u5F00\u5934\u3002")}
-            ${numeric("trigger_tokens", "\u65E7\u6B63\u6587\u89E6\u53D1\u91CF\uFF08\u9884\u8BA1 token\uFF09", 100, 1e5, "\u8FBE\u5230 token \u6216\u697C\u5C42\u6761\u4EF6\u4E4B\u4E00\u4FBF\u5F00\u59CB\u6574\u7406\u3002")}
-            ${numeric("trigger_floors", "\u65E7\u6B63\u6587\u89E6\u53D1\u697C\u5C42\u6570", 2, 1e3, "\u53EA\u8BA1\u5165\u53EF\u8BFB\u6B63\u6587\uFF0C\u9690\u85CF\u7684\u7CFB\u7EDF\u6D88\u606F\u4E0D\u8BA1\u5165\u3002")}
-            ${numeric("batch_tokens", "\u5355\u6B21\u6B63\u6587\u8BFB\u53D6\u4E0A\u9650\uFF08\u9884\u8BA1 token\uFF09", 1e3, 1e5, "\u6BCF\u6B21\u5904\u7406\u4E00\u6BB5\u5B8C\u6574\u5BF9\u8BDD\uFF0C\u8D85\u5927\u5355\u7EC4\u4E0D\u4F1A\u622A\u65AD\u540E\u9690\u85CF\u3002")}
-            ${numeric("memory_tokens", "\u6CE8\u5165\u8BB0\u5FC6\u76EE\u6807\u9884\u7B97\uFF08\u9884\u8BA1 token\uFF09", 300, 2e4, "\u5386\u53F2\u8109\u7EDC\u53CA\u9501\u5B9A\u6761\u76EE\u4F18\u5148\u5B8C\u6574\u4FDD\u7559\uFF1B\u8D85\u9884\u7B97\u4F1A\u663E\u793A\u3002")}
-            ${numeric("inject_depth", "\u6CE8\u5165\u6DF1\u5EA6", 0, 1e3, "0\u7D27\u8D34\u6700\u65B0\u6D88\u606F\uFF1B\u9ED8\u8BA44\uFF0C\u8BA9\u6700\u8FD1\u6B63\u6587\u5728\u8BB0\u5FC6\u4E4B\u540E\u3002")}</div>
+                ${profiles.map((profile) => `<option value="${escape(profile.id)}" ${settingsDraft.profile_id === profile.id ? "selected" : ""}>${escape(profile.name)}</option>`).join("")}</select><small>\u6574\u7406\u7528\u54EA\u4E2A\u6A21\u578B\u7531\u6240\u9009\u65B9\u6848\u51B3\u5B9A\u3002\u65B9\u6848\u672C\u8EAB\u5728\u5DE5\u5177\u7BB1\u7684 API \u914D\u7F6E\u91CC\u7BA1\u7406\u3002</small></label>
+            ${numeric("keep_floors", "\u6700\u8FD1\u591A\u5C11\u697C\u4E0D\u6574\u7406", 2, 500, "\u8FD9\u51E0\u697C\u59CB\u7EC8\u7559\u5728\u6B63\u6587\u91CC\u3002\u6574\u7406\u8303\u56F4\u4F1A\u5411\u524D\u907F\u8BA9\u5230\u4E00\u6BB5\u5B8C\u6574\u5BF9\u8BDD\u7684\u5F00\u5934\u3002")}
+            ${numeric("trigger_tokens", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11 token \u5C31\u5F00\u59CB\u6574\u7406", 100, 1e5, "\u548C\u4E0B\u9762\u90A3\u6761\u697C\u5C42\u6570\u6EE1\u8DB3\u4EFB\u610F\u4E00\u4E2A\u5C31\u89E6\u53D1\uFF1B\u4E24\u4E2A\u90FD\u8C03\u5927\uFF1D\u6574\u7406\u5F97\u66F4\u5C11\u66F4\u665A\u3002")}
+            ${numeric("trigger_floors", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11\u697C\u5C31\u5F00\u59CB\u6574\u7406", 2, 1e3, "\u53EA\u7B97\u8BFB\u5F97\u5230\u7684\u6B63\u6587\uFF0C\u9690\u85CF\u7684\u7CFB\u7EDF\u6D88\u606F\u4E0D\u8BA1\u5165\u3002")}
+            ${numeric("batch_tokens", "\u4E00\u6B21\u6574\u7406\u6700\u591A\u8BFB\u591A\u5C11 token", 1e3, 1e5, "\u6BCF\u6B21\u6210\u6BB5\u5904\u7406\uFF0C\u8D85\u5927\u7684\u5355\u6BB5\u4E0D\u4F1A\u53EA\u8BFB\u4E00\u534A\u518D\u628A\u5269\u4E0B\u85CF\u8D77\u6765\u3002")}
+            ${numeric("memory_tokens", "\u6BCF\u6B21\u6CE8\u5165\u7684\u8BB0\u5FC6\u6700\u591A\u5360\u591A\u5C11 token", 300, 2e4, "\u5386\u53F2\u8109\u7EDC\u548C\u9501\u5B9A\u7684\u6761\u76EE\u4F18\u5148\u5B8C\u6574\u4FDD\u7559\uFF1B\u653E\u4E0D\u4E0B\u7684\u4F1A\u5728\u300C\u6CE8\u5165\u9884\u89C8\u300D\u91CC\u5217\u51FA\u6765\u3002")}
+            ${numeric("inject_depth", "\u8BB0\u5FC6\u63D2\u5728\u5BF9\u8BDD\u7684\u54EA\u4E2A\u4F4D\u7F6E", 0, 1e3, "0\uFF1D\u7D27\u8D34\u6700\u65B0\u4E00\u6761\u6D88\u606F\uFF1B\u9ED8\u8BA4 4\uFF0C\u8BA9\u6700\u8FD1\u51E0\u697C\u7684\u6B63\u6587\u6392\u5728\u8BB0\u5FC6\u4E4B\u540E\u3002")}</div>
             ${button2("save-settings", "\u4FDD\u5B58\u8FD0\u884C\u8BBE\u7F6E")}</div>`;
   }
   function renderContent(view) {
