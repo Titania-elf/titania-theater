@@ -38,106 +38,158 @@
                 <div id="titania-update-inline-error" class="titania-update-inline-error" role="alert" hidden></div>
             </section>
 
-            <section class="titania-panel-card">
-                <div class="titania-card-title"><i class="fa-solid fa-sliders"></i> 快速开关</div>
-
-                <label class="checkbox_label titania-switch-row">
-                    <input id="enable_echo_theater" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">显示悬浮球</span>
-                        <small>开启后在屏幕边缘显示 🎭 悬浮球，也可从发送键菜单进入回声小剧场。</small>
-                    </span>
-                </label>
-
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-float-edge-tuck" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用悬浮球半隐藏</span>
-                        <small>开启后可把悬浮球拖到屏幕边缘、只露出一半以减少遮挡；关闭则始终完整显示。</small>
-                    </span>
-                </label>
-
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-outline-entry-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用发送键菜单入口</span>
-                        <small>在发送按钮旁显示菜单入口，故事大纲/剧情推进/回声小剧场等功能从该菜单进入。</small>
-                    </span>
-                </label>
-
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-outline-actions-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用剧情推进与大纲入口</span>
-                        <small>在最后一条消息气泡上显示「剧情推进」按钮（基于大纲推荐下一步剧情），并在发送键菜单中显示「生成大纲」入口。</small>
-                    </span>
-                </label>
-
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-outline-theater-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用回声小剧场入口</span>
-                        <small>在发送键菜单中显示「回声小剧场」项。</small>
-                    </span>
-                </label>
-
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-blindbox-sound-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">盲盒解锁提示音</span>
-                        <small>盲盒剧本解开一个关键事件时响一声轻音，通关一个阶段时响一段更长的琶音。音量可在「剧情推进」面板底部就地循环调整。</small>
-                    </span>
-                </label>
-
-                <div class="checkbox_label titania-switch-row titania-blindbox-sound-extra" id="titania-blindbox-sound-extra">
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">音量与试听</span>
-                        <small>事件解锁的提示音可单独关掉，只保留阶段通关那一声。</small>
-                        <div class="titania-sound-controls">
-                            <input id="cfg-blindbox-sound-volume" type="range" min="0" max="100" step="5" />
-                            <span id="cfg-blindbox-sound-volume-label" class="titania-sound-volume">30</span>
-                            <button id="cfg-blindbox-sound-preview" class="titania-mini-btn" type="button"><i class="fa-solid fa-volume-high"></i> 试听</button>
-                        </div>
-                        <label class="titania-sound-event-toggle">
-                            <input id="cfg-blindbox-sound-event" type="checkbox" />
-                            <span>事件解锁也响</span>
+            <div class="titania-settings-groups" aria-label="功能开关">
+                <details class="titania-settings-group" data-settings-group="interface" open>
+                    <summary class="titania-settings-summary">
+                        <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                        <span class="titania-settings-group-title">界面与入口</span>
+                        <span class="titania-settings-count" role="status"></span>
+                        <i class="fa-solid fa-chevron-down titania-settings-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="titania-settings-group-body">
+                        <label class="checkbox_label titania-switch-row">
+                            <input id="enable_echo_theater" type="checkbox" data-settings-toggle />
+                            <span class="titania-switch-text">
+                                <span class="titania-switch-main">显示悬浮球</span>
+                                <small>在屏幕边缘显示 🎭，点按进入小剧场。</small>
+                            </span>
                         </label>
-                    </span>
-                </div>
+                        <div class="titania-settings-dependent" data-settings-parent="enable_echo_theater" hidden>
+                            <label class="checkbox_label titania-switch-row">
+                                <input id="cfg-float-edge-tuck" type="checkbox" />
+                                <span class="titania-switch-text">
+                                    <span class="titania-switch-main">悬浮球半隐藏</span>
+                                    <small>拖到屏幕边缘时只露出一半，减少遮挡。</small>
+                                </span>
+                            </label>
+                        </div>
+                        <label class="checkbox_label titania-switch-row">
+                            <input id="cfg-outline-entry-enabled" type="checkbox" data-settings-toggle />
+                            <span class="titania-switch-text">
+                                <span class="titania-switch-main">发送键菜单入口</span>
+                                <small>在发送按钮旁显示工具菜单。</small>
+                            </span>
+                        </label>
+                        <label class="checkbox_label titania-switch-row">
+                            <input id="cfg-outline-theater-enabled" type="checkbox" data-settings-toggle />
+                            <span class="titania-switch-text">
+                                <span class="titania-switch-main">回声小剧场入口</span>
+                                <small>在发送键菜单中显示「回声小剧场」。</small>
+                            </span>
+                        </label>
+                    </div>
+                </details>
 
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-rewrite-entry-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用文本改写入口</span>
-                        <small>在发送键菜单中显示「文本改写」项。</small>
-                    </span>
-                </label>
+                <details class="titania-settings-group" data-settings-group="reading">
+                    <summary class="titania-settings-summary">
+                        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                        <span class="titania-settings-group-title">阅读与楼层</span>
+                        <span class="titania-settings-count" role="status"></span>
+                        <i class="fa-solid fa-chevron-down titania-settings-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="titania-settings-group-body">
+                        <label class="checkbox_label titania-switch-row">
+                            <input id="cfg-reader-entry-enabled" type="checkbox" data-settings-toggle />
+                            <span class="titania-switch-text">
+                                <span class="titania-switch-main">全屏阅读按钮</span>
+                                <small>在最新 AI 回复的操作栏中打开全屏阅读。</small>
+                            </span>
+                        </label>
+                        <label class="checkbox_label titania-switch-row">
+                            <input id="cfg-chat-inject-enabled" type="checkbox" data-settings-toggle />
+                            <span class="titania-switch-text">
+                                <span class="titania-switch-main">小剧场注入入口</span>
+                                <small>从消息的「…」菜单把小剧场插入到该楼下方。</small>
+                            </span>
+                        </label>
+                        <div class="titania-settings-item">
+                            <label class="checkbox_label titania-switch-row">
+                                <input id="cfg-floor-nav-enabled" type="checkbox" data-settings-toggle />
+                                <span class="titania-switch-text">
+                                    <span class="titania-switch-main">楼层快捷操作</span>
+                                    <small>快速跳转楼层，或批量隐藏旧消息。</small>
+                                </span>
+                            </label>
+                            <button type="button" class="titania-settings-help" aria-label="楼层快捷操作说明" aria-controls="titania-help-floor-nav" aria-expanded="false"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></button>
+                            <p id="titania-help-floor-nav" class="titania-settings-help-text" hidden>发送键菜单提供「回到顶楼 / 跳到最新 AI 回复」。消息操作中提供「隐藏到此为止」，可把该楼之前的旧消息批量排除出提示词。</p>
+                        </div>
+                    </div>
+                </details>
 
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-chat-inject-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用小剧场注入入口</span>
-                        <small>在每条消息气泡的「…」菜单中显示注入按钮，可把已生成的小剧场插入到该楼层下方。</small>
-                    </span>
-                </label>
+                <details class="titania-settings-group" data-settings-group="story">
+                    <summary class="titania-settings-summary">
+                        <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>
+                        <span class="titania-settings-group-title">剧情与改写</span>
+                        <span class="titania-settings-count" role="status"></span>
+                        <i class="fa-solid fa-chevron-down titania-settings-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="titania-settings-group-body">
+                        <div class="titania-settings-item">
+                            <label class="checkbox_label titania-switch-row">
+                                <input id="cfg-outline-actions-enabled" type="checkbox" data-settings-toggle />
+                                <span class="titania-switch-text">
+                                    <span class="titania-switch-main">剧情推进与大纲入口</span>
+                                    <small>在消息下方推进剧情，在发送键菜单生成大纲。</small>
+                                </span>
+                            </label>
+                            <button type="button" class="titania-settings-help" aria-label="剧情推进与大纲说明" aria-controls="titania-help-outline" aria-expanded="false"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></button>
+                            <p id="titania-help-outline" class="titania-settings-help-text" hidden>「剧情推进」显示在最新 AI 回复下方，基于大纲推荐下一步剧情。「生成大纲」通过发送键菜单进入，需要开启该菜单入口。</p>
+                        </div>
+                        <label class="checkbox_label titania-switch-row">
+                            <input id="cfg-rewrite-entry-enabled" type="checkbox" data-settings-toggle />
+                            <span class="titania-switch-text">
+                                <span class="titania-switch-main">文本改写入口</span>
+                                <small>在发送键菜单中显示「文本改写」。</small>
+                            </span>
+                        </label>
+                    </div>
+                </details>
 
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-floor-nav-enabled" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">启用楼层快捷操作</span>
-                        <small>在入口菜单中显示「回到顶楼 / 跳到最新AI回复」，并在每条消息气泡上显示「隐藏到此为止」按钮（一键隐藏该楼之前的全部旧楼，不进提示词）。</small>
-                    </span>
-                </label>
-
-                <label class="checkbox_label titania-switch-row">
-                    <input id="cfg-preset-persist-vars" type="checkbox" />
-                    <span class="titania-switch-text">
-                        <span class="titania-switch-main">允许预设变量写入聊天存档</span>
-                        <small>关闭时（推荐）预设里的 {{setvar}} 只在本次提示词构建内生效，不污染聊天存档；提示词展开结果不受影响。仅当预设依赖变量跨次留存时才需要开启。</small>
-                    </span>
-                </label>
-
-            </section>
+                <details class="titania-settings-group" data-settings-group="advanced">
+                    <summary class="titania-settings-summary">
+                        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                        <span class="titania-settings-group-title">声音与高级</span>
+                        <span class="titania-settings-count" role="status"></span>
+                        <i class="fa-solid fa-chevron-down titania-settings-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="titania-settings-group-body">
+                        <div class="titania-settings-item">
+                            <label class="checkbox_label titania-switch-row">
+                                <input id="cfg-blindbox-sound-enabled" type="checkbox" data-settings-toggle />
+                                <span class="titania-switch-text">
+                                    <span class="titania-switch-main">盲盒解锁提示音</span>
+                                    <small>关键事件解锁、阶段通关时播放提示音。</small>
+                                </span>
+                            </label>
+                            <button type="button" class="titania-settings-help" aria-label="盲盒提示音说明" aria-controls="titania-help-sound" aria-expanded="false"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></button>
+                            <p id="titania-help-sound" class="titania-settings-help-text" hidden>关键事件解锁时响一声轻音，阶段通关时响一段琶音。可以只保留阶段通关提示，也可在「剧情推进」面板底部调整音量。</p>
+                        </div>
+                        <div class="titania-settings-dependent" id="titania-blindbox-sound-extra" data-settings-parent="cfg-blindbox-sound-enabled" hidden>
+                            <label class="titania-switch-main" for="cfg-blindbox-sound-volume">音量与试听</label>
+                            <div class="titania-sound-controls">
+                                <input id="cfg-blindbox-sound-volume" type="range" min="0" max="100" step="5" />
+                                <span id="cfg-blindbox-sound-volume-label" class="titania-sound-volume">30</span>
+                                <button id="cfg-blindbox-sound-preview" class="titania-mini-btn" type="button"><i class="fa-solid fa-volume-high" aria-hidden="true"></i> 试听</button>
+                            </div>
+                            <label class="titania-sound-event-toggle">
+                                <input id="cfg-blindbox-sound-event" type="checkbox" />
+                                <span>事件解锁也响</span>
+                            </label>
+                        </div>
+                        <div class="titania-settings-item">
+                            <label class="checkbox_label titania-switch-row">
+                                <input id="cfg-preset-persist-vars" type="checkbox" data-settings-toggle />
+                                <span class="titania-switch-text">
+                                    <span class="titania-switch-main">预设变量写入聊天存档</span>
+                                    <small>仅在预设需要跨次保留变量时开启，默认关闭。</small>
+                                </span>
+                            </label>
+                            <button type="button" class="titania-settings-help" aria-label="预设变量写入说明" aria-controls="titania-help-preset-vars" aria-expanded="false"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></button>
+                            <p id="titania-help-preset-vars" class="titania-settings-help-text" hidden>关闭时，预设里的 {{setvar}} 只在本次提示词构建内生效，提示词展开结果不受影响。开启后变量会写入聊天存档，供后续生成使用。</p>
+                        </div>
+                    </div>
+                </details>
+            </div>
 
             <section class="titania-panel-card">
                 <div class="titania-card-title"><i class="fa-solid fa-database"></i> 数据备份与恢复</div>
