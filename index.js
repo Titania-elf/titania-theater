@@ -287,6 +287,11 @@ var init_defaults = __esm({
         trigger_floors: 32,
         batch_tokens: 12e3,
         memory_tokens: 2400,
+        max_output_tokens: 4096,
+        recent_segments: 2,
+        recent_tokens: 1e3,
+        recall_segments: 4,
+        recall_tokens: 1200,
         profile_id: "",
         inject_depth: 4
       },
@@ -21322,6 +21327,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-memory-title > div { display: grid; gap: 4px; }
 .t-memory-title strong { font-size: 1.25em; }
 .t-memory-title small { color: var(--t-color-text-secondary); overflow-wrap: anywhere; }
+.t-memory-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .t-memory-toolbar { padding: 14px 18px 8px; flex-wrap: wrap; }
 .t-memory-toggle { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
 .t-memory-status { flex: 1; color: var(--t-color-text-secondary); }
@@ -21366,16 +21372,472 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-memory-empty > i { font-size: 2em; color: var(--t-color-accent); }
 .t-memory-archive { margin-top: 24px; }
 
+/* ===== \u5F53\u524D\u5267\u60C5\uFF1A\u6545\u4E8B\u4EEA\u8868\u76D8 ===== */
+.t-memory-progress { margin-bottom: 14px; }
+.t-memory-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+    color: var(--t-color-text-secondary);
+    font-size: .9em;
+}
+.t-memory-progress-meta i { color: var(--t-color-accent); }
+.t-memory-progress-track {
+    height: 6px;
+    border-radius: var(--t-radius-track);
+    background: var(--t-color-surface-code);
+    overflow: hidden;
+}
+.t-memory-progress-track > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--t-color-accent);
+    transition: width .25s ease;
+}
+.t-memory-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.t-memory-stat {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 0 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--t-color-border-faint);
+    border-radius: var(--t-radius-container);
+    background: var(--t-color-surface-sunken);
+    color: var(--t-color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .2s, background-color .2s;
+}
+.t-memory-stat:hover {
+    border-color: var(--t-color-accent-border-subtle);
+    background: var(--t-color-surface-raised);
+}
+.t-memory-stat i { grid-row: 1 / span 2; color: var(--t-color-accent); font-size: 1.1em; }
+.t-memory-stat strong { font-size: 1.3em; line-height: 1.1; }
+.t-memory-stat span { color: var(--t-color-text-secondary); font-size: .8em; }
+.t-memory-current-grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+.t-memory-timeline { padding-left: 18px; }
+.t-memory-timeline-body { position: relative; padding-left: 16px; }
+.t-memory-timeline-body::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--t-color-border-control);
+}
+.t-memory-beat { position: relative; margin-bottom: 12px; }
+.t-memory-beat:last-child { margin-bottom: 0; }
+.t-memory-beat::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    top: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--t-color-accent);
+    background: var(--t-color-surface-sunken);
+}
+.t-memory-beat:last-child::before {
+    border-color: var(--t-color-brand);
+    background: var(--t-color-brand-soft);
+}
+.t-memory-beat .t-memory-text { margin: 0 0 4px; }
+.t-memory-timeline-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--t-color-border-faint);
+    color: var(--t-color-text-faint);
+    font-size: .8em;
+}
+.t-memory-now {
+    border-color: var(--t-color-accent-border-subtle);
+    background: var(--t-color-surface-raised);
+    overflow: hidden;
+}
+.t-memory-now::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--t-color-accent);
+}
+.t-memory-now .t-memory-card-heading { margin-top: 4px; }
+.t-memory-now-foot {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--t-color-border-faint);
+}
+.t-memory-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--t-color-accent);
+    cursor: pointer;
+    font: inherit;
+    font-size: .88em;
+    text-align: left;
+}
+.t-memory-link:hover { color: var(--t-color-accent-hover); text-decoration: underline; }
+
+/* ===== \u4EBA\u7269\u5173\u7CFB\u4E0E\u4F0F\u7B14\uFF1A\u5361\u7247 ===== */
+.t-memory-card {
+    position: relative;
+    transition: border-color .2s, background-color .2s, box-shadow .2s;
+}
+.t-memory-card:hover:not(.is-locked):not(.is-focus) { border-color: var(--t-color-border-hover-subtle); }
+.t-memory-card.is-focus {
+    border-color: var(--t-color-accent-border);
+    box-shadow: 0 0 0 1px var(--t-color-accent-border-subtle);
+}
+.t-memory-section-heading strong { display: inline-flex; align-items: center; gap: 6px; }
+.t-memory-section-heading strong i { color: var(--t-color-accent); }
+.t-memory-rel-head,
+.t-memory-thread-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.t-memory-rel-people { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.t-memory-rel-people > i { color: var(--t-color-text-muted); font-size: .9em; }
+.t-memory-person { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.t-memory-person strong { overflow-wrap: anywhere; }
+.t-memory-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: .95em;
+}
+.t-memory-avatar--0 { color: var(--t-color-accent); background: var(--t-color-accent-soft); border-color: var(--t-color-accent-border-subtle); }
+.t-memory-avatar--1 { color: var(--t-color-brand); background: var(--t-color-brand-soft); border-color: var(--t-color-brand-border-subtle); }
+.t-memory-avatar--2 { color: var(--t-color-teal); background: var(--t-color-teal-veil); border-color: var(--t-color-teal-border-subtle); }
+.t-memory-avatar--3 { color: var(--t-color-text-cool); background: var(--t-color-surface-code); border-color: var(--t-color-border-faint); }
+.t-memory-badges { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.t-memory-badge { white-space: nowrap; }
+.t-memory-badge.is-locked { color: var(--t-color-brand); border-color: var(--t-color-brand-border-subtle); background: var(--t-color-brand-veil); }
+.t-memory-badge.is-manual { color: var(--t-color-teal); border-color: var(--t-color-teal-border-subtle); background: var(--t-color-teal-veil); }
+.t-memory-badge.is-pending { color: var(--t-color-accent); border-color: var(--t-color-accent-border-subtle); background: var(--t-color-accent-veil); }
+.t-memory-badge.is-auto { color: var(--t-color-text-secondary); }
+.t-memory-badge.is-open { color: var(--t-color-brand); border-color: var(--t-color-brand-border-subtle); background: var(--t-color-brand-veil); }
+.t-memory-badge.is-progress { color: var(--t-color-accent); border-color: var(--t-color-accent-border-subtle); background: var(--t-color-accent-veil); }
+.t-memory-badge.is-resolved { color: var(--t-color-teal); border-color: var(--t-color-teal-border-subtle); background: var(--t-color-teal-veil); }
+.t-memory-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+.t-memory-sources { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.t-memory-source-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border: 1px solid var(--t-color-border-faint);
+    border-radius: var(--t-radius-pill);
+    background: transparent;
+    color: var(--t-color-text-secondary);
+    font: inherit;
+    font-size: .8em;
+    cursor: pointer;
+}
+.t-memory-source-chip:hover { color: var(--t-color-accent); border-color: var(--t-color-accent-border-subtle); }
+.t-memory-source-chip.is-static { cursor: default; }
+.t-memory-icon-actions { gap: 0; }
+.t-memory-icon-btn { --t-icon-btn-size: 28px; --t-icon-btn-font-size: .9em; }
+.t-memory-thread-head { align-items: center; }
+.t-memory-thread-head strong { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.t-memory-status-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; font-size: 1.05em; }
+.t-memory-status-icon.is-open { color: var(--t-color-brand); }
+.t-memory-status-icon.is-progress { color: var(--t-color-accent); }
+.t-memory-status-icon.is-resolved { color: var(--t-color-teal); }
+.t-memory-thread-card.is-open { border-left: 3px solid var(--t-color-brand); }
+.t-memory-thread-card.is-progress { border-left: 3px solid var(--t-color-accent); }
+.t-memory-thread-card.is-resolved { border-left: 3px solid var(--t-color-teal); }
+.t-memory-card.is-locked { border-color: var(--t-color-brand-border); }
+.t-memory-suggestion {
+    margin: 10px 0 12px;
+    padding: 12px;
+    border: 1px solid var(--t-color-accent-border-subtle);
+    border-radius: var(--t-radius-container);
+    background: var(--t-color-accent-veil);
+}
+.t-memory-suggestion-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    color: var(--t-color-accent);
+    font-size: .88em;
+}
+.t-memory-suggestion-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.t-memory-suggestion-grid small { color: var(--t-color-text-secondary); }
+.t-memory-suggestion-grid p {
+    margin: 4px 0 0;
+    max-height: 7em;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.7;
+}
+.t-memory-suggestion blockquote { margin: 8px 0 0; }
+.t-memory-suggestion-title { margin: 8px 0 0; color: var(--t-color-text-secondary); font-size: .88em; }
+.t-memory-suggestion .t-memory-card-actions { margin-top: 8px; }
+.t-memory-text.is-clamped { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.t-memory-empty-inline { margin: 12px 0; color: var(--t-color-text-secondary); line-height: 1.7; }
+.t-memory-more {
+    align-self: flex-start;
+    margin: 0 0 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--t-color-accent);
+    cursor: pointer;
+    font: inherit;
+    font-size: .85em;
+}
+.t-memory-more:hover { color: var(--t-color-accent-hover); text-decoration: underline; }
+.t-memory-empty .t-btn { margin-top: 10px; }
+
+/* ===== \u7B5B\u9009\u3001\u5206\u7EC4 ===== */
+.t-memory-filterbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.t-memory-pills { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.t-memory-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border: 1px solid var(--t-color-border-faint);
+    border-radius: var(--t-radius-pill);
+    background: transparent;
+    color: var(--t-color-text-secondary);
+    font: inherit;
+    font-size: .82em;
+    cursor: pointer;
+}
+.t-memory-pill span {
+    min-width: 14px;
+    padding: 0 4px;
+    border-radius: var(--t-radius-pill);
+    background: var(--t-color-surface-code);
+    color: var(--t-color-text-muted);
+    font-size: .9em;
+    text-align: center;
+}
+.t-memory-pill.is-active {
+    color: var(--t-color-accent);
+    border-color: var(--t-color-accent-border-subtle);
+    background: var(--t-color-accent-soft);
+}
+.t-memory-pill.is-active span { color: var(--t-color-accent); background: var(--t-color-accent-veil); }
+.t-memory-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 180px;
+    padding: 4px 10px;
+    border: 1px solid var(--t-color-border-faint);
+    border-radius: var(--t-radius-pill);
+    color: var(--t-color-text-muted);
+}
+.t-memory-search:focus-within { border-color: var(--t-color-accent-border-subtle); }
+.t-memory-search input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--t-color-text);
+    font: inherit;
+    font-size: .88em;
+}
+.t-memory-search input::placeholder { color: var(--t-color-text-faint); }
+.t-memory-focus-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0 0 12px;
+    color: var(--t-color-accent);
+    font-size: .88em;
+}
+.t-memory-group { margin-bottom: 18px; }
+.t-memory-group-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: .95em;
+    color: var(--t-color-text-secondary);
+}
+.t-memory-group-head strong { color: var(--t-color-text); }
+.t-memory-group-dot { display: inline-block; flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; }
+.t-memory-group-dot.is-open { background: var(--t-color-brand); }
+.t-memory-group-dot.is-progress { background: var(--t-color-accent); }
+.t-memory-group-dot.is-resolved { background: var(--t-color-teal); }
+.t-memory-archive.t-memory-group { margin-top: 0; }
+.t-memory-tabs button { display: inline-flex; align-items: center; gap: 6px; }
+.t-memory-tabs button i { color: var(--t-color-text-muted); }
+.t-memory-tabs .is-active i { color: var(--t-color-accent); }
+.t-memory-tab-count {
+    min-width: 16px;
+    padding: 0 4px;
+    border-radius: var(--t-radius-pill);
+    background: var(--t-color-surface-code);
+    color: var(--t-color-text-secondary);
+    font-size: .72em;
+    line-height: 16px;
+    text-align: center;
+}
+.t-memory-tab-count:empty { display: none; }
+
+/* ===== \u5173\u7CFB\u56FE ===== */
+.t-memory-graph-panel {
+    margin-bottom: 16px;
+    border: 1px solid var(--t-color-border-faint);
+    border-radius: var(--t-radius-container);
+    background: var(--t-color-surface-sunken);
+    overflow: hidden;
+}
+.t-memory-graph-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--t-color-border-faint);
+}
+.t-memory-graph-head strong { display: inline-flex; align-items: center; gap: 6px; }
+.t-memory-graph-head strong i { color: var(--t-color-accent); }
+.t-memory-graph { padding: 4px 10px 10px; }
+.t-memory-graph svg { display: block; width: 100%; height: auto; }
+.t-memory-graph-edge { stroke: var(--t-color-accent-border-subtle); stroke-width: 1.4; }
+.t-memory-graph-edge.is-mention { stroke: var(--t-color-border-control); stroke-dasharray: 3 4; }
+.t-memory-graph-edge.is-active { stroke: var(--t-color-accent); stroke-width: 2.2; }
+.t-memory-graph-edge.is-dimmed { opacity: .18; }
+.t-memory-graph-node { cursor: pointer; outline: none; }
+.t-memory-graph-node circle { fill: var(--t-color-surface-raised); stroke: var(--t-color-accent-border); stroke-width: 1.4; }
+.t-memory-graph-node.is-character circle { fill: var(--t-color-accent-veil); stroke: var(--t-color-accent); }
+.t-memory-graph-node.is-thread circle { fill: var(--t-color-surface); stroke: var(--t-color-border-control); stroke-width: 1.2; }
+.t-memory-graph-node.is-thread.is-open circle { fill: var(--t-color-brand-veil); stroke: var(--t-color-brand); }
+.t-memory-graph-node.is-thread.is-progress circle { fill: var(--t-color-accent-veil); stroke: var(--t-color-accent); }
+.t-memory-graph-node.is-thread.is-resolved circle { fill: var(--t-color-teal-veil); stroke: var(--t-color-teal); }
+.t-memory-graph-node.is-selected circle { stroke-width: 2.6; }
+.t-memory-graph-node.is-dimmed { opacity: .35; }
+.t-memory-graph-node:focus-visible circle { stroke: var(--t-color-focus-ring); stroke-width: 2.6; }
+.t-memory-graph-initial { fill: var(--t-color-text); font-size: 12px; font-weight: 700; dominant-baseline: middle; pointer-events: none; }
+.t-memory-graph-node.is-thread .t-memory-graph-initial { font-size: 10px; }
+.t-memory-graph-node.is-thread.is-open .t-memory-graph-initial { fill: var(--t-color-brand); }
+.t-memory-graph-node.is-thread.is-progress .t-memory-graph-initial { fill: var(--t-color-accent); }
+.t-memory-graph-node.is-thread.is-resolved .t-memory-graph-initial { fill: var(--t-color-teal); }
+.t-memory-graph-label { fill: var(--t-color-text-secondary); font-size: 11px; }
+.t-memory-graph-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 0 14px 10px;
+    color: var(--t-color-text-secondary);
+    font-size: .8em;
+}
+.t-memory-graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.t-memory-legend-node { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.t-memory-legend-node.is-character { border: 1px solid var(--t-color-accent); background: var(--t-color-accent-veil); }
+.t-memory-legend-node.is-thread { border: 1px solid var(--t-color-teal); background: var(--t-color-teal-veil); }
+.t-memory-legend-edge { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--t-color-accent-border-subtle); }
+.t-memory-legend-edge.is-mention { border-top-style: dashed; border-top-color: var(--t-color-border-control); }
+.t-memory-graph-focus,
+.t-memory-graph-hint { margin: 0; padding: 0 14px 10px; font-size: .82em; }
+.t-memory-graph-focus { color: var(--t-color-accent); }
+.t-memory-graph-hint { color: var(--t-color-text-secondary); }
+.t-memory-graph-empty { padding: 14px 14px 18px; text-align: center; color: var(--t-color-text-secondary); line-height: 1.7; }
+.t-memory-graph-empty > i { display: block; margin-bottom: 6px; font-size: 1.6em; color: var(--t-color-accent); }
+
+/* \u8FD0\u884C\u8BBE\u7F6E\uFF1A\u72EC\u7ACB\u7A97\u53E3\uFF0C\u4ECE\u6545\u4E8B\u8BB0\u5FC6\u9876\u680F\u7684\u9F7F\u8F6E\u8FDB\u5165\u3002 */
+.t-memory-settings-window {
+    width: min(760px, 96vw);
+    max-width: 760px;
+    max-height: 92dvh;
+    background: var(--t-color-surface);
+}
+.t-memory-settings-body {
+    padding: 18px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+.t-memory-settings-wide { grid-column: 1 / -1; }
+.t-memory-settings-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--t-color-border-faint);
+    flex-shrink: 0;
+}
+.t-memory-settings-footer .t-memory-hint { flex: 1; }
+.t-memory-settings-footer .t-memory-card-actions { flex-shrink: 0; }
+
 @media (max-width: 600px) {
     .t-memory-window { width: 100vw; height: 100vh; height: 100dvh; max-height: 100dvh; border-radius: 0; }
+    .t-memory-settings-window { width: 100vw; max-width: 100vw; height: 100vh; height: 100dvh; max-height: 100dvh; border-radius: 0; }
     .t-memory-current-grid,
     .t-memory-card-grid,
     .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }
+    .t-memory-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .t-memory-suggestion-grid { grid-template-columns: minmax(0, 1fr); }
+    .t-memory-filterbar { align-items: stretch; }
+    .t-memory-search { flex: 1 1 100%; }
+    .t-memory-graph { overflow-x: auto; }
+    .t-memory-graph svg { min-width: 560px; }
     .t-memory-toolbar,
     .t-memory-tabs,
-    .t-memory-body { padding-inline: 12px; }
+    .t-memory-body,
+    .t-memory-settings-body { padding-inline: 12px; }
     .t-memory-card { padding: 14px; }
     .t-memory-status { flex-basis: 100%; order: 3; }
+    .t-memory-settings-footer { flex-wrap: wrap; padding-inline: 12px; }
+    .t-memory-settings-footer .t-memory-hint { flex-basis: 100%; order: 2; }
 }
 
 
@@ -40307,16 +40769,21 @@ function newStoryMemory() {
 }
 function normalizeMemoryConfig(raw = {}) {
   const config = { ...MEMORY_DEFAULTS, ...raw };
-  for (const [key, min, max] of [
-    ["keep_floors", 2, 500],
-    ["trigger_tokens", 100, 1e5],
-    ["trigger_floors", 2, 1e3],
-    ["batch_tokens", 1e3, 1e5],
-    ["memory_tokens", 300, 2e4],
-    ["inject_depth", 0, 1e3]
+  for (const [key, min] of [
+    ["keep_floors", 2],
+    ["trigger_tokens", 1],
+    ["trigger_floors", 1],
+    ["batch_tokens", 1],
+    ["memory_tokens", 1],
+    ["max_output_tokens", 1],
+    ["recent_segments", 0],
+    ["recent_tokens", 0],
+    ["recall_segments", 0],
+    ["recall_tokens", 0],
+    ["inject_depth", 0]
   ]) {
     const n = Number(config[key]);
-    config[key] = Number.isFinite(n) ? Math.max(min, Math.min(max, Math.floor(n))) : MEMORY_DEFAULTS[key];
+    config[key] = Number.isFinite(n) ? Math.max(min, Math.floor(n)) : MEMORY_DEFAULTS[key];
   }
   delete config.model;
   config.profile_id = String(config.profile_id || "");
@@ -40459,15 +40926,51 @@ function rollbackMemory(memory, segmentIndex) {
   next.revision++;
   return next;
 }
-function composeMemoryPrompt(memory, rawConfig, estimate) {
+function composeMemoryPrompt(memory, rawConfig, estimate, options = {}) {
   const config = normalizeMemoryConfig(rawConfig);
   const active2 = [...memory.threads.filter((item) => item.status !== "resolved"), ...memory.relationships];
-  if (!memory.recap && !memory.scene && !active2.length) return { text: "", tokens: 0, omitted: [], overBudget: false };
+  const candidates = Array.isArray(options.recalled) ? options.recalled : [];
+  const recent = [];
+  const recentOmitted = [];
+  const recentParts = [];
+  const recentIds = /* @__PURE__ */ new Set();
+  if (config.recent_segments > 0 && config.recent_tokens > 0) {
+    const segments = (memory.segments || []).filter((segment) => String(segment.summary || "").trim()).slice(-config.recent_segments).reverse();
+    for (const segment of segments) {
+      const title = `\u7B2C ${segment.start}\uFF5E${segment.end} \u697C`;
+      const block = `[\u6700\u8FD1\u5206\u6BB5\uFF1A${title}]
+${String(segment.summary).trim()}`;
+      if (estimate([...recentParts, block].join("\n\n")) > config.recent_tokens) {
+        recentOmitted.push(title);
+        continue;
+      }
+      recentParts.push(block);
+      recentIds.add(segment.id);
+      recent.push({ id: segment.id, title });
+    }
+    recentParts.reverse();
+    recent.reverse();
+  }
+  const recentText = recentParts.join("\n\n");
+  if (!memory.recap && !memory.scene && !active2.length && !candidates.length && !recentText) {
+    return {
+      text: "",
+      tokens: 0,
+      memoryTokens: 0,
+      recentTokens: 0,
+      recallTokens: 0,
+      omitted: [],
+      overBudget: false,
+      recalled: [],
+      recallOmitted: [],
+      recent: [],
+      recentOmitted: []
+    };
+  }
   const covered = memory.segments.at(-1)?.end;
-  const parts = [
-    `\u3010\u6545\u4E8B\u8BB0\u5FC6${covered == null ? "" : `\uFF1A\u622A\u81F3\u7B2C ${covered} \u697C`}\u3011
-\u4EE5\u4E0B\u662F\u5386\u53F2\u80CC\u666F\uFF0C\u4E0D\u662F\u672C\u8F6E\u884C\u52A8\u6307\u4EE4\u3002\u6700\u8FD1\u6B63\u6587\u4E2D\u7684\u5B9E\u9645\u8FDB\u5C55\u4F18\u5148\uFF1B\u4F0F\u7B14\u65E0\u9700\u96C6\u4E2D\u5151\u73B0\u3002\u533A\u5206\u8BFB\u8005\u77E5\u60C5\u4E0E\u89D2\u8272\u77E5\u60C5\uFF0C\u4E0D\u628A\u63A8\u6D4B\u5F53\u6210\u4E8B\u5B9E\u3002`
-  ];
+  const header = `\u3010\u6545\u4E8B\u8BB0\u5FC6${covered == null ? "" : `\uFF1A\u622A\u81F3\u7B2C ${covered} \u697C`}\u3011
+\u4EE5\u4E0B\u662F\u5386\u53F2\u80CC\u666F\uFF0C\u4E0D\u662F\u672C\u8F6E\u884C\u52A8\u6307\u4EE4\u3002\u6700\u8FD1\u6B63\u6587\u4E2D\u7684\u5B9E\u9645\u8FDB\u5C55\u4F18\u5148\uFF1B\u4F0F\u7B14\u65E0\u9700\u96C6\u4E2D\u5151\u73B0\u3002\u533A\u5206\u8BFB\u8005\u77E5\u60C5\u4E0E\u89D2\u8272\u77E5\u60C5\uFF0C\u4E0D\u628A\u63A8\u6D4B\u5F53\u6210\u4E8B\u5B9E\u3002${recentText ? " \u6700\u8FD1\u5206\u6BB5\u6458\u8981\u6BD4\u5386\u53F2\u8109\u7EDC\u66F4\u8BE6\u7EC6\uFF1B\u4E24\u8005\u4E0D\u4E00\u81F4\u65F6\uFF0C\u4EE5\u5206\u6BB5\u6458\u8981\u4E3A\u51C6\u3002" : ""}`;
+  const parts = [];
   if (memory.recap) parts.push(`[\u5386\u53F2\u8109\u7EDC]
 ${memory.recap}`);
   if (memory.scene) parts.push(`[\u622A\u81F3\u6574\u7406\u8303\u56F4\u7684\u5267\u60C5\u72B6\u6001]
@@ -40480,12 +40983,48 @@ ${locked.map(formatItem).join("\n\n")}`);
   for (const item of sorted) {
     const block = `[${memory.threads.some((thread) => thread.id === item.id) ? "\u4F0F\u7B14\u4E0E\u7EA6\u5B9A" : "\u4EBA\u7269\u5173\u7CFB"}]
 ${formatItem(item)}`;
-    if (estimate([...parts, block].join("\n\n")) > config.memory_tokens) omitted.push(item.title);
+    if (estimate([header, ...parts, block].join("\n\n")) > config.memory_tokens) omitted.push(item.title);
     else parts.push(block);
   }
-  const text = parts.join("\n\n");
-  const tokens = estimate(text);
-  return { text, tokens, omitted, overBudget: tokens > config.memory_tokens };
+  const memoryText = [header, ...parts].join("\n\n");
+  const memoryTokens = estimate(memoryText);
+  const recalled = [];
+  const recallOmitted = [];
+  const recallParts = [];
+  if (config.recall_tokens > 0) {
+    for (const entry of candidates) {
+      if (entry?.id && recentIds.has(entry.id)) continue;
+      const body = String(entry?.summary || entry?.text || "").trim();
+      if (!body) continue;
+      const title = String(entry?.title || "\u8F83\u65E9\u6BB5\u843D");
+      const quotes = (Array.isArray(entry?.evidence) ? entry.evidence : []).map((quote) => String(quote || "").trim()).filter((quote) => quote && !body.includes(quote)).slice(0, 2);
+      const quoteText = quotes.length ? `
+\u539F\u6587\u6458\u53E5\uFF1A${quotes.join(" / ")}` : "";
+      const block = `[\u65E7\u4E8B\u56DE\u5FC6\uFF1A${title}]
+${body}${quoteText}`;
+      if (estimate([...recallParts, block].join("\n\n")) > config.recall_tokens) {
+        recallOmitted.push(title);
+        continue;
+      }
+      recallParts.push(block);
+      recalled.push({ id: entry.id, title, text: `${body}${quoteText}` });
+    }
+  }
+  const recallText = recallParts.join("\n\n");
+  const text = [header, recentText, ...parts, recallText].filter(Boolean).join("\n\n");
+  return {
+    text,
+    tokens: estimate(text),
+    memoryTokens,
+    recentTokens: estimate(recentText),
+    recallTokens: estimate(recallText),
+    omitted,
+    overBudget: memoryTokens > config.memory_tokens,
+    recalled,
+    recallOmitted,
+    recent,
+    recentOmitted
+  };
 }
 var MEMORY_KEY, MEMORY_HIDE_KEY, MEMORY_ID_KEY, MEMORY_DEFAULTS, copyMemory, newMemoryId, formatItem;
 var init_storyMemoryData = __esm({
@@ -40499,6 +41038,11 @@ var init_storyMemoryData = __esm({
       trigger_floors: 32,
       batch_tokens: 12e3,
       memory_tokens: 2400,
+      max_output_tokens: 4096,
+      recent_segments: 2,
+      recent_tokens: 1e3,
+      recall_segments: 4,
+      recall_tokens: 1200,
       profile_id: "",
       inject_depth: 4
     });
@@ -40506,6 +41050,123 @@ var init_storyMemoryData = __esm({
     newMemoryId = () => globalThis.crypto?.randomUUID?.() || `mem-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
     formatItem = (item) => `${item.title}${item.status === "progress" ? "\uFF08\u6709\u8FDB\u5C55\uFF09" : ""}
 ${item.body}`;
+  }
+});
+
+// src/core/memoryIndex.js
+function tokenize(text) {
+  const source = String(text || "").toLowerCase();
+  const tokens = [];
+  let ascii = "";
+  let cjk = "";
+  const flushAscii = () => {
+    if (ascii) {
+      tokens.push(ascii);
+      ascii = "";
+    }
+  };
+  const flushCjk = () => {
+    if (!cjk) return;
+    if (cjk.length === 1) tokens.push(cjk);
+    else for (let i = 0; i < cjk.length - 1; i++) tokens.push(cjk.slice(i, i + 2));
+    cjk = "";
+  };
+  for (const char of source) {
+    if (/[a-z0-9]/.test(char)) {
+      flushCjk();
+      ascii += char;
+    } else if (CJK.test(char)) {
+      flushAscii();
+      cjk += char;
+    } else {
+      flushAscii();
+      flushCjk();
+    }
+  }
+  flushAscii();
+  flushCjk();
+  return tokens;
+}
+function buildMemoryIndex(memory) {
+  const evidenceBySegment = /* @__PURE__ */ new Map();
+  for (const kind of ["relationships", "threads"]) {
+    for (const item of memory?.[kind] || []) {
+      for (const source of item.sources || []) {
+        if (!source?.segmentId || !String(source.evidence || "").trim()) continue;
+        const list2 = evidenceBySegment.get(source.segmentId) || [];
+        list2.push(String(source.evidence));
+        evidenceBySegment.set(source.segmentId, list2);
+      }
+    }
+  }
+  const docs = [];
+  for (const segment of memory?.segments || []) {
+    const evidence = evidenceBySegment.get(segment.id) || [];
+    const summary = String(segment.summary || "").trim();
+    const text = [summary, ...evidence].filter(Boolean).join("\n");
+    if (!text) continue;
+    docs.push({
+      id: segment.id,
+      title: `\u7B2C ${segment.start}\uFF5E${segment.end} \u697C`,
+      text,
+      summary,
+      evidence
+    });
+  }
+  const postings = /* @__PURE__ */ new Map();
+  const lengths = [];
+  let totalLength = 0;
+  docs.forEach((doc, index) => {
+    const tokens = tokenize(doc.text);
+    lengths[index] = tokens.length;
+    totalLength += tokens.length;
+    const termFreq = /* @__PURE__ */ new Map();
+    for (const token of tokens) termFreq.set(token, (termFreq.get(token) || 0) + 1);
+    for (const [term, count] of termFreq) {
+      const posting = postings.get(term);
+      if (posting) posting.push(index, count);
+      else postings.set(term, [index, count]);
+    }
+  });
+  return { docs, postings, lengths, avgLength: docs.length ? totalLength / docs.length : 0 };
+}
+function queryMemoryIndex(index, queryText, options = {}) {
+  const limit = options.limit == null ? 4 : Math.max(0, Math.floor(Number(options.limit) || 0));
+  if (!index?.docs?.length || limit <= 0) return [];
+  const queryTerms = [...new Set(tokenize(queryText))];
+  if (!queryTerms.length) return [];
+  const total = index.docs.length;
+  const minScore = Number(options.minScore) || 0;
+  const scores = /* @__PURE__ */ new Map();
+  for (const term of queryTerms) {
+    const posting = index.postings.get(term);
+    if (!posting) continue;
+    const df = posting.length / 2;
+    const idf = Math.log(1 + (total - df + 0.5) / (df + 0.5));
+    for (let i = 0; i < posting.length; i += 2) {
+      const docIndex = posting[i];
+      const tf = posting[i + 1];
+      const length = index.lengths[docIndex] || 0;
+      const norm = 1 - B + B * (index.avgLength ? length / index.avgLength : 0);
+      const score = idf * (tf * (K1 + 1)) / (tf + K1 * norm);
+      const entry = scores.get(docIndex) || { score: 0, matched: 0 };
+      entry.score += score;
+      entry.matched += 1;
+      scores.set(docIndex, entry);
+    }
+  }
+  return [...scores.entries()].filter(([, entry]) => entry.score > minScore).sort((a, b) => b[1].score - a[1].score || a[0] - b[0]).slice(0, limit).map(([docIndex, entry]) => ({
+    ...index.docs[docIndex],
+    score: Math.round(entry.score * 1e4) / 1e4,
+    matched: entry.matched
+  }));
+}
+var CJK, K1, B;
+var init_memoryIndex = __esm({
+  "src/core/memoryIndex.js"() {
+    CJK = /[㐀-䶿一-鿿豈-﫿]/;
+    K1 = 1.2;
+    B = 0.75;
   }
 });
 
@@ -40548,6 +41209,28 @@ function memoryFor(ctx2) {
 function getStoryMemoryConfig() {
   return normalizeMemoryConfig(getExtData().story_memory);
 }
+function recallQuery(chat2) {
+  if (!Array.isArray(chat2)) return "";
+  const texts = [];
+  for (let i = chat2.length - 1; i >= 0 && texts.length < RECALL_QUERY_FLOORS; i--) {
+    const message = chat2[i];
+    if (!message || !String(message.mes || "").trim()) continue;
+    if (message.is_system || message.is_hidden || message.extra?.is_hidden) continue;
+    texts.push(String(message.mes));
+  }
+  return texts.reverse().join("\n").slice(-RECALL_QUERY_CHARS);
+}
+function recallCandidatesFor(ctx2, memory, config) {
+  if (!ctx2 || config.recall_segments <= 0 || config.recall_tokens <= 0) return [];
+  const key = `${ctx2.key}\0${memory.revision}\0${memory.segments?.length || 0}`;
+  if (recallCache?.key !== key) {
+    recallCache = { key, index: buildMemoryIndex(memory) };
+  }
+  if (!recallCache.index.docs.length) return [];
+  const query = recallQuery(ctx2.chat);
+  if (!query) return [];
+  return queryMemoryIndex(recallCache.index, query, { limit: config.recall_segments });
+}
 function notify2() {
   for (const callback of subscribers) {
     try {
@@ -40572,7 +41255,7 @@ function getStoryMemoryView() {
   } catch (cause) {
     planError = cause.message;
   }
-  const injection = composeMemoryPrompt(memory, config, estimateTokens);
+  const injection = composeMemoryPrompt(memory, config, estimateTokens, { recalled: recallCandidatesFor(ctx2, memory, config) });
   return {
     available: !!ctx2,
     key: ctx2?.key || "",
@@ -40595,7 +41278,10 @@ function refreshInjection() {
   if (ctx2) {
     const config = getStoryMemoryConfig();
     const memory = memoryFor(ctx2);
-    if (firstInvalidSegment(memory, ctx2.chat) < 0) text = composeMemoryPrompt(memory, config, estimateTokens).text;
+    if (firstInvalidSegment(memory, ctx2.chat) < 0) {
+      const recalled = recallCandidatesFor(ctx2, memory, config);
+      text = composeMemoryPrompt(memory, config, estimateTokens, { recalled }).text;
+    }
     depth = Math.min(config.inject_depth, Math.max(0, ctx2.chat.filter((message) => !message.is_system).length - 1));
   }
   setExtensionPrompt3(MEMORY_PROMPT_KEY, text, extension_prompt_types3.IN_CHAT, depth, false, extension_prompt_roles3.SYSTEM);
@@ -40833,7 +41519,7 @@ async function runStoryMemory(force = true) {
   try {
     const raw = await sendChatRequestWithConnection(conn, buildMessages2(memory, batch), {
       stream: false,
-      maxTokens: 4096,
+      maxTokens: config.max_output_tokens,
       temperature: 0.2,
       signal: controller.signal,
       allowEmptyKey: true,
@@ -41068,7 +41754,7 @@ function initStoryMemory() {
   refreshInjection();
   schedule();
 }
-var MEMORY_PROMPT_KEY, subscribers, initialized, generationActive, generationType, stopped, timer, retryAt, failureCount, job, pending, writing2, status, error;
+var MEMORY_PROMPT_KEY, RECALL_QUERY_FLOORS, RECALL_QUERY_CHARS, subscribers, initialized, generationActive, generationType, stopped, timer, retryAt, failureCount, job, pending, writing2, recallCache, status, error;
 var init_storyMemory = __esm({
   "src/core/storyMemory.js"() {
     init_storage();
@@ -41076,7 +41762,10 @@ var init_storyMemory = __esm({
     init_helpers();
     init_connection();
     init_storyMemoryData();
+    init_memoryIndex();
     MEMORY_PROMPT_KEY = "TITANIA_STORY_MEMORY";
+    RECALL_QUERY_FLOORS = 4;
+    RECALL_QUERY_CHARS = 6e3;
     subscribers = /* @__PURE__ */ new Set();
     initialized = false;
     generationActive = false;
@@ -41088,8 +41777,277 @@ var init_storyMemory = __esm({
     job = null;
     pending = null;
     writing2 = null;
+    recallCache = null;
     status = "idle";
     error = "";
+  }
+});
+
+// src/ui/storyMemorySettingsWindow.js
+function openStoryMemorySettingsWindow(options = {}) {
+  ensureFeatureCss("story-memory.css");
+  const { onClose } = options;
+  const root = document.createElement("div");
+  root.className = "t-overlay t-root t-memory-settings-overlay";
+  let draft2 = { ...getStoryMemoryConfig() };
+  const priorFocus = document.activeElement;
+  let closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    document.removeEventListener("keydown", onKeydown, true);
+    root.remove();
+    if (priorFocus?.isConnected) priorFocus.focus?.();
+    onClose?.();
+  };
+  const numeric = (key, label, min, hint) => `<label class="t-memory-field"><span>${label}</span>
+        <input class="t-input" type="number" data-setting="${key}" value="${escape(draft2[key])}" min="${min}" step="1">
+        <small>${hint}</small></label>`;
+  function render() {
+    const profiles = getAllProfiles();
+    const missing = draft2.profile_id && !profiles.some((profile) => profile.id === draft2.profile_id);
+    root.innerHTML = `<section class="t-box t-memory-settings-window" role="dialog" aria-modal="true" aria-labelledby="t-memory-settings-title">
+            <header class="t-header"><div class="t-memory-title"><i class="fa-solid fa-gear"></i><div>
+                <strong id="t-memory-settings-title">\u8FD0\u884C\u8BBE\u7F6E</strong><small>\u6545\u4E8B\u8BB0\u5FC6 \xB7 \u8DE8\u804A\u5929\u5171\u7528</small></div></div>
+                <button type="button" class="t-tool-btn" data-action="close" aria-label="\u5173\u95ED\u8FD0\u884C\u8BBE\u7F6E"><i class="fa-solid fa-xmark"></i></button></header>
+            <main class="t-memory-settings-body">
+                <p class="t-memory-hint">\u8FD9\u4E9B\u53C2\u6570\u5728\u5404\u804A\u5929\u95F4\u5171\u7528\u3002\u81EA\u52A8\u6574\u7406\u5F00\u5173\u4ECD\u6309\u804A\u5929\u5206\u522B\u4FDD\u5B58\u3002</p>
+                <div class="t-memory-settings-grid">
+                    <label class="t-memory-field t-memory-settings-wide"><span>\u6574\u7406\u65F6\u7528\u54EA\u4E2A API \u65B9\u6848</span><select class="t-input" data-setting="profile_id"><option value="">\u8DDF\u968F\u5DE5\u5177\u7BB1\u5F53\u524D\u65B9\u6848</option>
+                        ${missing ? `<option value="${escape(draft2.profile_id)}" selected>\u539F\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9</option>` : ""}
+                        ${profiles.map((profile) => `<option value="${escape(profile.id)}" ${draft2.profile_id === profile.id ? "selected" : ""}>${escape(profile.name)}</option>`).join("")}</select>
+                        <small>\u6574\u7406\u7528\u54EA\u4E2A\u6A21\u578B\u7531\u6240\u9009\u65B9\u6848\u51B3\u5B9A\u3002\u65B9\u6848\u672C\u8EAB\u5728\u5DE5\u5177\u7BB1\u7684 API \u914D\u7F6E\u91CC\u7BA1\u7406\u3002</small></label>
+                    ${numeric("keep_floors", "\u6700\u8FD1\u591A\u5C11\u697C\u4E0D\u6574\u7406", 2, "\u8FD9\u51E0\u697C\u59CB\u7EC8\u7559\u5728\u6B63\u6587\u91CC\u3002\u6574\u7406\u8303\u56F4\u4F1A\u5411\u524D\u907F\u8BA9\u5230\u4E00\u6BB5\u5B8C\u6574\u5BF9\u8BDD\u7684\u5F00\u5934\u3002")}
+                    ${numeric("inject_depth", "\u8BB0\u5FC6\u63D2\u5728\u5BF9\u8BDD\u7684\u54EA\u4E2A\u4F4D\u7F6E", 0, "0\uFF1D\u7D27\u8D34\u6700\u65B0\u4E00\u6761\u6D88\u606F\uFF1B\u9ED8\u8BA4 4\uFF0C\u8BA9\u6700\u8FD1\u51E0\u697C\u7684\u6B63\u6587\u6392\u5728\u8BB0\u5FC6\u4E4B\u540E\u3002")}
+                    ${numeric("trigger_tokens", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11 token \u5C31\u5F00\u59CB\u6574\u7406", 1, "\u548C\u4E0B\u9762\u90A3\u6761\u697C\u5C42\u6570\u6EE1\u8DB3\u4EFB\u610F\u4E00\u4E2A\u5C31\u89E6\u53D1\uFF1B\u4E24\u4E2A\u90FD\u8C03\u5927\uFF1D\u6574\u7406\u5F97\u66F4\u5C11\u66F4\u665A\u3002")}
+                    ${numeric("trigger_floors", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11\u697C\u5C31\u5F00\u59CB\u6574\u7406", 1, "\u53EA\u7B97\u8BFB\u5F97\u5230\u7684\u6B63\u6587\uFF0C\u9690\u85CF\u7684\u7CFB\u7EDF\u6D88\u606F\u4E0D\u8BA1\u5165\u3002")}
+                    ${numeric("batch_tokens", "\u4E00\u6B21\u6574\u7406\u6700\u591A\u8BFB\u591A\u5C11 token", 1, "\u6BCF\u6B21\u6210\u6BB5\u5904\u7406\uFF0C\u8D85\u5927\u7684\u5355\u6BB5\u4E0D\u4F1A\u53EA\u8BFB\u4E00\u534A\u518D\u628A\u5269\u4E0B\u85CF\u8D77\u6765\u3002")}
+                    ${numeric("max_output_tokens", "\u4E00\u6B21\u6574\u7406\u6700\u591A\u5199\u56DE\u591A\u5C11 token", 1, "\u6574\u7406\u8BF7\u6C42\u7684\u56DE\u590D\u957F\u5EA6\u4E0A\u9650\u3002\u6BB5\u843D\u5185\u5BB9\u591A\u65F6\u53EF\u8C03\u5927\uFF1B\u592A\u5C0F\u4F1A\u56E0\u8FD4\u56DE\u4E0D\u5B8C\u6574\u800C\u4FDD\u7559\u6B63\u6587\u3002")}
+                    ${numeric("memory_tokens", "\u6BCF\u6B21\u6CE8\u5165\u7684\u8BB0\u5FC6\u6700\u591A\u5360\u591A\u5C11 token", 1, "\u5386\u53F2\u8109\u7EDC\u548C\u9501\u5B9A\u7684\u6761\u76EE\u4F18\u5148\u5B8C\u6574\u4FDD\u7559\uFF1B\u653E\u4E0D\u4E0B\u7684\u4F1A\u5728\u300C\u6CE8\u5165\u9884\u89C8\u300D\u91CC\u5217\u51FA\u6765\u3002")}
+                    ${numeric("recent_segments", "\u6BCF\u6B21\u76F4\u63A5\u6CE8\u5165\u6700\u8FD1\u51E0\u6BB5\u6458\u8981", 0, "\u8FD9\u4E9B\u6458\u8981\u6BCF\u6BB5\u53EA\u538B\u7F29\u8FC7\u4E00\u6B21\uFF0C\u4E0D\u518D\u53C2\u4E0E\u540E\u7EED\u6539\u5199\uFF0C\u6BD4\u5386\u53F2\u8109\u7EDC\u66F4\u7EC6\u30020\uFF1D\u4E0D\u6CE8\u5165\u3002")}
+                    ${numeric("recent_tokens", "\u6700\u8FD1\u5206\u6BB5\u6458\u8981\u6700\u591A\u5360\u591A\u5C11 token", 0, "\u72EC\u7ACB\u9884\u7B97\uFF0C\u4E0D\u6324\u5360\u5386\u53F2\u8109\u7EDC\u548C\u65E7\u4E8B\u53EC\u56DE\u3002")}
+                    ${numeric("recall_segments", "\u6BCF\u6B21\u6700\u591A\u53EC\u56DE\u51E0\u6BB5\u65E7\u4E8B", 0, "\u6309\u6700\u8FD1\u5BF9\u8BDD\u91CC\u7684\u540D\u5B57\u548C\u5173\u952E\u8BCD\uFF0C\u4ECE\u5DF2\u6574\u7406\u7684\u65E7\u6BB5\u843D\u4E2D\u6311\u51FA\u76F8\u5173\u7247\u6BB5\u30020\uFF1D\u5173\u95ED\u53EC\u56DE\u3002")}
+                    ${numeric("recall_tokens", "\u53EC\u56DE\u5185\u5BB9\u6700\u591A\u5360\u591A\u5C11 token", 0, "\u5355\u72EC\u9884\u7559\u7684\u9884\u7B97\uFF0C\u4E0D\u6324\u5360\u4E0A\u9762\u7684\u8BB0\u5FC6\u9884\u7B97\uFF1B0\uFF1D\u5173\u95ED\u53EC\u56DE\u3002")}
+                </div>
+            </main>
+            <footer class="t-memory-settings-footer">
+                <span class="t-memory-hint" data-role="status" role="status" aria-live="polite"></span>
+                <div class="t-memory-card-actions">
+                    <button type="button" class="t-btn" data-action="cancel">\u53D6\u6D88</button>
+                    <button type="button" class="t-btn" data-action="save">\u4FDD\u5B58\u8BBE\u7F6E</button>
+                </div>
+            </footer>
+        </section>`;
+  }
+  function syncDraft() {
+    draft2 = { ...getStoryMemoryConfig() };
+    root.querySelectorAll("[data-setting]").forEach((input) => {
+      input.value = draft2[input.dataset.setting] ?? "";
+    });
+  }
+  function onKeydown(event) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const focusable = [...root.querySelectorAll("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)")];
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  }
+  root.addEventListener("input", (event) => {
+    if (event.target.dataset.setting) draft2[event.target.dataset.setting] = event.target.value;
+  });
+  root.addEventListener("change", (event) => {
+    if (event.target.dataset.setting) draft2[event.target.dataset.setting] = event.target.value;
+  });
+  root.addEventListener("click", (event) => {
+    if (event.target === root) {
+      close();
+      return;
+    }
+    const target = event.target.closest("button");
+    if (!target || target.disabled) return;
+    if (target.dataset.action === "close" || target.dataset.action === "cancel") close();
+    else if (target.dataset.action === "save") {
+      saveStoryMemoryConfig(draft2);
+      syncDraft();
+      const status3 = root.querySelector('[data-role="status"]');
+      if (status3) status3.textContent = "\u5DF2\u4FDD\u5B58";
+    }
+  });
+  document.addEventListener("keydown", onKeydown, true);
+  render();
+  document.body.appendChild(root);
+  root.querySelector('[data-setting="profile_id"]')?.focus();
+  return close;
+}
+var escape;
+var init_storyMemorySettingsWindow = __esm({
+  "src/ui/storyMemorySettingsWindow.js"() {
+    init_storyMemory();
+    init_connection();
+    init_dom();
+    escape = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+  }
+});
+
+// src/ui/storyMemoryGraph.js
+function relationNames(title) {
+  const text = String(title || "").trim();
+  if (!text) return ["", ""];
+  const parts = text.split(RELATION_ARROW).map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2) return [parts[0], parts.slice(1).join(" \u2192 ")];
+  return [text, ""];
+}
+function buildMemoryGraph(memory, options = {}) {
+  const maxCharacters = Math.max(1, Math.floor(Number(options.maxCharacters) || 12));
+  const maxThreads = Math.max(0, Math.floor(Number(options.maxThreads) || 12));
+  const characters = /* @__PURE__ */ new Map();
+  const edges = [];
+  const edgeKeys = /* @__PURE__ */ new Set();
+  for (const item of memory?.relationships || []) {
+    const [left, right] = relationNames(item.title);
+    for (const name of [left, right].filter(Boolean)) {
+      const node = characters.get(name) || { id: `c:${name}`, kind: "character", name, count: 0, updatedAt: 0 };
+      node.count += 1;
+      node.updatedAt = Math.max(node.updatedAt, item.updatedAt || 0);
+      characters.set(name, node);
+    }
+    if (left && right && left !== right) {
+      const key = [left, right].sort().join("\0");
+      if (!edgeKeys.has(key)) {
+        edgeKeys.add(key);
+        edges.push({ a: `c:${left}`, b: `c:${right}`, kind: "relationship", id: item.id });
+      }
+    }
+  }
+  const characterNodes = [...characters.values()].sort((a, b) => b.count - a.count || b.updatedAt - a.updatedAt || a.name.localeCompare(b.name)).slice(0, maxCharacters);
+  const characterIds = new Set(characterNodes.map((node) => node.id));
+  const statusRank = { open: 0, progress: 1, resolved: 2 };
+  const allThreads = (memory?.threads || []).map((item) => {
+    const status3 = ["open", "progress", "resolved"].includes(item.status) ? item.status : "open";
+    return {
+      id: `t:${item.id}`,
+      kind: "thread",
+      status: status3,
+      title: String(item.title || "\u672A\u547D\u540D"),
+      text: `${item.title || ""}
+${item.body || ""}`,
+      updatedAt: item.updatedAt || 0
+    };
+  }).sort((a, b) => statusRank[a.status] - statusRank[b.status] || b.updatedAt - a.updatedAt || a.title.localeCompare(b.title));
+  const threadNodes = allThreads.slice(0, maxThreads);
+  const threadIds = new Set(threadNodes.map((node) => node.id));
+  const links = [];
+  const linkKeys = /* @__PURE__ */ new Set();
+  for (const thread of threadNodes) {
+    for (const character of characterNodes) {
+      if (!thread.text.includes(character.name)) continue;
+      const key = `${thread.id}\0${character.id}`;
+      if (linkKeys.has(key)) continue;
+      linkKeys.add(key);
+      links.push({ a: thread.id, b: character.id, kind: "mention" });
+    }
+  }
+  return {
+    nodes: [...characterNodes, ...threadNodes],
+    edges: edges.filter((edge) => characterIds.has(edge.a) && characterIds.has(edge.b)),
+    links: links.filter((link) => threadIds.has(link.a) && characterIds.has(link.b)),
+    truncated: {
+      characters: Math.max(0, characters.size - characterNodes.length),
+      threads: Math.max(0, allThreads.length - threadNodes.length)
+    }
+  };
+}
+function graphFocusNames(memory, selected) {
+  const value = String(selected || "");
+  if (value.startsWith("c:")) return [value.slice(2)];
+  if (!value.startsWith("t:")) return [];
+  const id3 = value.slice(2);
+  const thread = (memory?.threads || []).find((item) => item.id === id3);
+  if (!thread) return [];
+  const text = `${thread.title || ""}
+${thread.body || ""}`;
+  return buildMemoryGraph(memory).nodes.filter((node) => node.kind === "character" && text.includes(node.name)).map((node) => node.name);
+}
+function renderMemoryGraph(memory, options = {}) {
+  const graph = buildMemoryGraph(memory, options);
+  if (!graph.nodes.length) {
+    return '<div class="t-memory-graph-empty"><i class="fa-solid fa-diagram-project"></i><p>\u4EBA\u7269\u5173\u7CFB\u548C\u4F0F\u7B14\u51FA\u73B0\u540E\uFF0C\u8FD9\u91CC\u4F1A\u753B\u51FA\u5B83\u4EEC\u4E4B\u95F4\u7684\u8054\u7CFB\u3002</p></div>';
+  }
+  const width = 820;
+  const height = 360;
+  const cx = width / 2;
+  const cy = height / 2;
+  const radius = graph.nodes.length === 1 ? 0 : 132;
+  graph.nodes.forEach((node, index) => {
+    const angle = -Math.PI / 2 + index * 2 * Math.PI / graph.nodes.length;
+    node.x = cx + radius * Math.cos(angle);
+    node.y = cy + radius * Math.sin(angle);
+    node.cos = Math.cos(angle);
+    node.sin = Math.sin(angle);
+  });
+  const positions = new Map(graph.nodes.map((node) => [node.id, node]));
+  const selected = String(options.selected || "");
+  const adjacent = new Set(selected ? [selected] : []);
+  const edges = [
+    ...graph.edges.map((edge) => ({ ...edge, cls: "is-relationship" })),
+    ...graph.links.map((edge) => ({ ...edge, cls: "is-mention" }))
+  ];
+  for (const edge of edges) {
+    if (edge.a === selected) adjacent.add(edge.b);
+    if (edge.b === selected) adjacent.add(edge.a);
+  }
+  const edgeHtml = edges.map((edge) => {
+    const a = positions.get(edge.a);
+    const b = positions.get(edge.b);
+    if (!a || !b) return "";
+    const active2 = !!selected && (edge.a === selected || edge.b === selected);
+    const dim = !!selected && !active2;
+    return `<line class="t-memory-graph-edge ${edge.cls}${active2 ? " is-active" : ""}${dim ? " is-dimmed" : ""}" x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"></line>`;
+  }).join("");
+  const nodeHtml = graph.nodes.map((node) => {
+    const isSelected = node.id === selected;
+    const dim = !!selected && !adjacent.has(node.id);
+    const classes = [
+      "t-memory-graph-node",
+      node.kind === "character" ? "is-character" : `is-thread is-${node.status}`,
+      isSelected ? "is-selected" : "",
+      dim ? "is-dimmed" : ""
+    ].filter(Boolean).join(" ");
+    const label = node.kind === "character" ? node.name : node.title;
+    const chars = [...label];
+    const shortLabel = chars.slice(0, 10).join("") + (chars.length > 10 ? "\u2026" : "");
+    const anchor = node.cos > 0.3 ? "start" : node.cos < -0.3 ? "end" : "middle";
+    const offset = node.kind === "character" ? 27 : 21;
+    const lx = (node.x + node.cos * offset).toFixed(1);
+    const ly = (node.y + node.sin * offset + 4).toFixed(1);
+    const glyph = node.kind === "character" ? [...node.name][0] || "?" : node.status === "resolved" ? "\u2713" : node.status === "progress" ? "\u2026" : "?";
+    const nodeRadius = node.kind === "character" ? 18 : 11;
+    return `<g class="${classes}" data-node="${escape2(node.id)}" tabindex="0" role="button" aria-label="${escape2(label)}"><title>${escape2(label)}</title><circle cx="${node.x.toFixed(1)}" cy="${node.y.toFixed(1)}" r="${nodeRadius}"></circle><text class="t-memory-graph-initial" x="${node.x.toFixed(1)}" y="${(node.y + 4).toFixed(1)}" text-anchor="middle">${escape2(glyph)}</text><text class="t-memory-graph-label" x="${lx}" y="${ly}" text-anchor="${anchor}">${escape2(shortLabel)}</text></g>`;
+  }).join("");
+  const truncated = graph.truncated.characters || graph.truncated.threads ? `<p class="t-memory-graph-hint">\u56FE\u4E2D\u53EA\u663E\u793A\u6700\u76F8\u5173\u7684\u8282\u70B9${graph.truncated.characters ? `\uFF0C\u8FD8\u6709 ${graph.truncated.characters} \u4E2A\u4EBA\u7269\u672A\u753B\u51FA` : ""}${graph.truncated.threads ? `\uFF0C\u8FD8\u6709 ${graph.truncated.threads} \u4E2A\u4F0F\u7B14\u672A\u753B\u51FA` : ""}\u3002</p>` : "";
+  return `<div class="t-memory-graph">
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="\u4EBA\u7269\u5173\u7CFB\u4E0E\u4F0F\u7B14\u5173\u7CFB\u56FE">${edgeHtml}${nodeHtml}</svg>
+        <div class="t-memory-graph-legend"><span><i class="t-memory-legend-node is-character"></i>\u4EBA\u7269</span><span><i class="t-memory-legend-node is-thread"></i>\u4F0F\u7B14</span><span><i class="t-memory-legend-edge is-relationship"></i>\u5173\u7CFB</span><span><i class="t-memory-legend-edge is-mention"></i>\u6D89\u53CA</span></div>
+        ${truncated}
+    </div>`;
+}
+var escape2, RELATION_ARROW;
+var init_storyMemoryGraph = __esm({
+  "src/ui/storyMemoryGraph.js"() {
+    escape2 = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+    RELATION_ARROW = /\s*(?:→|⟶|->|—>|⇒|➜)\s*/;
   }
 });
 
@@ -41105,19 +42063,25 @@ function openStoryMemoryWindow() {
   root.className = "t-overlay t-root t-memory-overlay";
   root.innerHTML = `<section class="t-box t-memory-window" role="dialog" aria-modal="true" aria-labelledby="t-memory-title">
         <header class="t-header"><div class="t-memory-title"><i class="fa-solid fa-brain"></i><div><strong id="t-memory-title">\u6545\u4E8B\u8BB0\u5FC6</strong><small data-role="chat-name"></small></div></div>
-            <button type="button" class="t-tool-btn" data-action="close" aria-label="\u5173\u95ED\u6545\u4E8B\u8BB0\u5FC6"><i class="fa-solid fa-xmark"></i></button></header>
+            <div class="t-memory-header-actions"><button type="button" class="t-tool-btn" data-action="settings" title="\u8FD0\u884C\u8BBE\u7F6E" aria-label="\u6253\u5F00\u8FD0\u884C\u8BBE\u7F6E"><i class="fa-solid fa-gear"></i></button>
+            <button type="button" class="t-tool-btn" data-action="close" aria-label="\u5173\u95ED\u6545\u4E8B\u8BB0\u5FC6"><i class="fa-solid fa-xmark"></i></button></div></header>
         <div class="t-memory-toolbar"><label class="t-memory-toggle"><input type="checkbox" data-role="enabled"> \u540E\u53F0\u81EA\u52A8\u6574\u7406</label>
             <span class="t-memory-status" data-role="status" role="status" aria-live="polite"></span>
             <button type="button" class="t-btn" data-action="run"><i class="fa-solid fa-wand-magic-sparkles"></i> \u7ACB\u5373\u6574\u7406</button></div>
         <div class="t-memory-metrics" data-role="metrics"></div><div class="t-memory-error" data-role="error" role="alert" hidden></div>
-        <nav class="t-memory-tabs" aria-label="\u8BB0\u5FC6\u5185\u5BB9">${TABS.map(([id3, label]) => `<button type="button" class="t-btn" data-tab="${id3}">${label}</button>`).join("")}</nav>
+        <nav class="t-memory-tabs" aria-label="\u8BB0\u5FC6\u5185\u5BB9">${TABS.map(([id3, label, icon]) => `<button type="button" class="t-btn" data-tab="${id3}" aria-label="${label}"><i class="fa-solid ${icon}" aria-hidden="true"></i><span>${label}</span><span class="t-memory-tab-count" data-count="${id3}"></span></button>`).join("")}</nav>
         <main class="t-memory-body" data-role="body"></main>
         <footer class="t-memory-footer">\u8BB0\u5FC6\u968F\u5F53\u524D\u804A\u5929\u4FDD\u5B58 \xB7 \u6682\u505C\u81EA\u52A8\u6574\u7406\u540E\uFF0C\u5DF2\u6709\u8BB0\u5FC6\u7EE7\u7EED\u6CE8\u5165</footer>
     </section>`;
   let tab = "current";
   let editor = null;
   let source = null;
-  let settingsDraft = null;
+  let settingsClose = null;
+  let filter = "all";
+  let query = "";
+  let graphSelection = "";
+  let graphOpen = true;
+  const expanded = /* @__PURE__ */ new Set();
   let previousKey = "";
   let localBusy = false;
   let localError = "";
@@ -41125,6 +42089,7 @@ function openStoryMemoryWindow() {
   let unsubscribe = () => {
   };
   const close = () => {
+    settingsClose?.();
     unsubscribe();
     document.removeEventListener("keydown", onKeydown, true);
     root.remove();
@@ -41135,19 +42100,199 @@ function openStoryMemoryWindow() {
   closeWindow = close;
   claimFloatingWindow(close);
   document.body.appendChild(root);
-  const field = (label, name, value, multiline = true) => `<label class="t-memory-field"><span>${escape(label)}</span>${multiline ? `<textarea class="t-input" data-field="${name}" rows="5">${escape(value)}</textarea>` : `<input class="t-input" data-field="${name}" value="${escape(value)}" maxlength="200">`}</label>`;
+  const field = (label, name, value, multiline = true) => `<label class="t-memory-field"><span>${escape3(label)}</span>${multiline ? `<textarea class="t-input" data-field="${name}" rows="5">${escape3(value)}</textarea>` : `<input class="t-input" data-field="${name}" value="${escape3(value)}" maxlength="200">`}</label>`;
   const button2 = (action, text, attrs = "") => `<button type="button" class="t-btn" data-action="${action}" ${attrs}>${text}</button>`;
-  const itemActions = (kind, item) => {
-    const attrs = `data-kind="${kind}" data-id="${escape(item.id)}"`;
-    return `<div class="t-memory-card-actions">${button2("edit", "\u7F16\u8F91", attrs)}${button2("lock", item.locked ? "\u89E3\u9501" : "\u9501\u5B9A", attrs)}${button2("history", "\u6765\u6E90\u4E0E\u53D8\u5316", attrs)}</div>`;
+  const iconButton = (action, icon, label, attrs = "") => `<button type="button" class="t-icon-btn t-memory-icon-btn" data-action="${action}" title="${escape3(label)}" aria-label="${escape3(label)}" ${attrs}><i class="fa-solid ${icon}" aria-hidden="true"></i></button>`;
+  const badge = (text, cls) => `<span class="t-memory-badge ${cls}">${escape3(text)}</span>`;
+  const avatarClass = (name) => {
+    let hash = 0;
+    for (const char of String(name || "")) hash = hash * 31 + (char.codePointAt(0) || 0) >>> 0;
+    return hash % 4;
   };
-  function renderItem(kind, item) {
-    return `<article class="t-memory-card${item.locked ? " is-locked" : ""}"><div class="t-memory-card-heading"><strong>${escape(item.title)}</strong>
-            <span class="t-memory-badge">${item.locked ? "\u5DF2\u9501\u5B9A" : kind === "threads" ? THREAD_STATUS[item.status] : item.manual ? "\u4EBA\u5DE5\u7EF4\u62A4" : "\u5173\u7CFB"}</span></div>
-            <p class="t-memory-text">${escape(item.body)}</p>${itemActions(kind, item)}
-            ${item.pending ? `<details class="t-memory-pending"><summary>\u6709\u65B0\u7684\u4FEE\u6539\u5EFA\u8BAE</summary><strong>${escape(item.pending.title)}</strong><p class="t-memory-text">${escape(item.pending.body)}</p>
-                ${kind === "threads" ? `<small>${THREAD_STATUS[item.pending.status]}</small>` : ""}
-                <blockquote>${escape(item.pending.source.evidence)}</blockquote><div class="t-memory-card-actions">${button2("accept", "\u91C7\u7528\u5EFA\u8BAE", `data-kind="${kind}" data-id="${escape(item.id)}"`)}${button2("dismiss", "\u5FFD\u7565", `data-kind="${kind}" data-id="${escape(item.id)}"`)}</div></details>` : ""}</article>`;
+  const person = (name) => {
+    const text = String(name || "").trim();
+    if (!text) return "";
+    return `<span class="t-memory-person"><span class="t-memory-avatar t-memory-avatar--${avatarClass(text)}">${escape3([...text][0] || "?")}</span><strong>${escape3(text)}</strong></span>`;
+  };
+  function textBlock(text, key, placeholder = "") {
+    const value = String(text || "").trim();
+    if (!value) return `<p class="t-memory-empty-inline">${escape3(placeholder || "\u6682\u65E0\u5185\u5BB9")}</p>`;
+    const long = value.length > 180;
+    const open = expanded.has(key);
+    return `<p class="t-memory-text${long && !open ? " is-clamped" : ""}">${escape3(value)}</p>${long ? `<button type="button" class="t-memory-more" data-action="expand" data-key="${escape3(key)}">${open ? "\u6536\u8D77" : "\u5C55\u5F00\u5168\u6587"}</button>` : ""}`;
+  }
+  function sourceChips(item) {
+    const seen = /* @__PURE__ */ new Set();
+    const sources = [];
+    for (const source2 of item.sources || []) {
+      const start = Number(source2.start);
+      const end = Number(source2.end);
+      if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+      const key = `${start}-${end}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      sources.push({ start, end });
+    }
+    if (!sources.length) return '<span class="t-memory-hint">\u65E0\u539F\u6587\u6765\u6E90</span>';
+    const chips = sources.slice(0, 2).map((source2) => `<button type="button" class="t-memory-source-chip" data-action="segment-source" data-start="${source2.start}" data-end="${source2.end}" title="\u67E5\u770B\u7B2C ${source2.start}\uFF5E${source2.end} \u697C\u539F\u6587"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> \u7B2C ${source2.start}\uFF5E${source2.end} \u697C</button>`).join("");
+    const rest = sources.length > 2 ? `<span class="t-memory-source-chip is-static">+${sources.length - 2}</span>` : "";
+    return `<div class="t-memory-sources">${chips}${rest}</div>`;
+  }
+  function renderSuggestion(item, kind) {
+    const pending2 = item.pending;
+    if (!pending2) return "";
+    const status3 = kind === "threads" && pending2.status ? `<span>\xB7 ${THREAD_STATUS[pending2.status] || ""}</span>` : "";
+    const titleChange = pending2.title && pending2.title !== item.title ? `<p class="t-memory-suggestion-title">\u6807\u9898\uFF1A${escape3(pending2.title)}</p>` : "";
+    const evidence = pending2.source?.evidence ? `<blockquote>${escape3(pending2.source.evidence)}</blockquote>` : "";
+    const attrs = `data-kind="${kind}" data-id="${escape3(item.id)}"`;
+    return `<div class="t-memory-suggestion">
+            <div class="t-memory-suggestion-head"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><strong>\u6709\u65B0\u7684\u4FEE\u6539\u5EFA\u8BAE</strong>${status3}</div>
+            <div class="t-memory-suggestion-grid"><div><small>\u73B0\u5728</small><p>${escape3(item.body || "")}</p></div><div><small>\u5EFA\u8BAE</small><p>${escape3(pending2.body || "")}</p></div></div>
+            ${titleChange}${evidence}
+            <div class="t-memory-card-actions">${button2("accept", "\u91C7\u7528\u5EFA\u8BAE", attrs)}${button2("dismiss", "\u5FFD\u7565", attrs)}</div>
+        </div>`;
+  }
+  function cardActions(kind, item) {
+    const attrs = `data-kind="${kind}" data-id="${escape3(item.id)}"`;
+    return `<div class="t-memory-card-actions t-memory-icon-actions">${iconButton("edit", "fa-pen", "\u7F16\u8F91", attrs)}${iconButton("lock", item.locked ? "fa-lock-open" : "fa-lock", item.locked ? "\u89E3\u9501" : "\u9501\u5B9A", attrs)}${iconButton("history", "fa-clock-rotate-left", "\u6765\u6E90\u4E0E\u53D8\u5316", attrs)}</div>`;
+  }
+  function defaultBadges(kind, item) {
+    const badges = [];
+    if (kind === "threads") badges.push(badge(THREAD_STATUS[item.status] || THREAD_STATUS.open, `is-${item.status || "open"}`));
+    if (item.locked) badges.push(badge("\u5DF2\u9501\u5B9A", "is-locked"));
+    if (item.manual) badges.push(badge("\u4EBA\u5DE5\u7EF4\u62A4", "is-manual"));
+    if (item.pending) badges.push(badge("\u5F85\u786E\u8BA4", "is-pending"));
+    if (kind === "relationships" && !item.locked && !item.manual) badges.push(badge("\u81EA\u52A8\u6574\u7406", "is-auto"));
+    return badges.join("");
+  }
+  function renderRelationship(item, focusNames) {
+    const [left, right] = relationNames(item.title);
+    const focused = focusNames.length > 0 && focusNames.some((name) => `${left}
+${right}
+${item.title}
+${item.body}`.includes(name));
+    return `<article class="t-memory-card t-memory-rel-card${item.locked ? " is-locked" : ""}${item.pending ? " is-pending" : ""}${focused ? " is-focus" : ""}" data-card-kind="relationships" data-card-id="${escape3(item.id)}">
+            <div class="t-memory-rel-head"><div class="t-memory-rel-people">${person(left)}${right ? `<i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>${person(right)}` : ""}</div><div class="t-memory-badges">${defaultBadges("relationships", item)}</div></div>
+            ${renderSuggestion(item, "relationships")}
+            ${textBlock(item.body, `rel:${item.id}`, "\u5C1A\u65E0\u5173\u7CFB\u63CF\u8FF0\u3002")}
+            <div class="t-memory-card-footer">${sourceChips(item)}${cardActions("relationships", item)}</div>
+        </article>`;
+  }
+  function threadStatusIcon(status3) {
+    return status3 === "resolved" ? "fa-circle-check" : status3 === "progress" ? "fa-circle-half-stroke" : "fa-circle";
+  }
+  function renderThread(item, focusNames, focusThreadId) {
+    const status3 = item.status || "open";
+    const focused = focusThreadId ? item.id === focusThreadId : focusNames.some((name) => `${item.title}
+${item.body}`.includes(name));
+    return `<article class="t-memory-card t-memory-thread-card is-${status3}${item.locked ? " is-locked" : ""}${item.pending ? " is-pending" : ""}${focused ? " is-focus" : ""}" data-card-kind="threads" data-card-id="${escape3(item.id)}">
+            <div class="t-memory-thread-head"><span class="t-memory-status-icon is-${status3}" aria-hidden="true"><i class="fa-solid ${threadStatusIcon(status3)}"></i></span><strong>${escape3(item.title)}</strong><div class="t-memory-badges">${defaultBadges("threads", item)}</div></div>
+            ${renderSuggestion(item, "threads")}
+            ${textBlock(item.body, `thread:${item.id}`, "\u5C1A\u65E0\u5185\u5BB9\u3002")}
+            <div class="t-memory-card-footer">${sourceChips(item)}${cardActions("threads", item)}</div>
+        </article>`;
+  }
+  function filterDefs(kind) {
+    return kind === "relationships" ? [["all", "\u5168\u90E8"], ["pending", "\u5F85\u786E\u8BA4"], ["locked", "\u5DF2\u9501\u5B9A"], ["manual", "\u4EBA\u5DE5\u7EF4\u62A4"]] : [["all", "\u5168\u90E8"], ["open", "\u672A\u89E3\u51B3"], ["progress", "\u6709\u8FDB\u5C55"], ["resolved", "\u5DF2\u89E3\u51B3"], ["pending", "\u5F85\u786E\u8BA4"]];
+  }
+  function filterCounts(items) {
+    return {
+      all: items.length,
+      pending: items.filter((item) => item.pending).length,
+      locked: items.filter((item) => item.locked).length,
+      manual: items.filter((item) => item.manual).length,
+      open: items.filter((item) => (item.status || "open") === "open").length,
+      progress: items.filter((item) => item.status === "progress").length,
+      resolved: items.filter((item) => item.status === "resolved").length
+    };
+  }
+  function renderFilterBar(kind, items) {
+    const counts = filterCounts(items);
+    return `<div class="t-memory-filterbar"><div class="t-memory-pills" role="group" aria-label="\u7B5B\u9009">${filterDefs(kind).map(([value, label]) => `<button type="button" class="t-memory-pill${filter === value ? " is-active" : ""}" data-action="set-filter" data-filter="${value}">${label}<span>${counts[value] || 0}</span></button>`).join("")}</div>
+            <label class="t-memory-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" data-role="memory-search" value="${escape3(query)}" placeholder="\u641C\u7D22${kind === "relationships" ? "\u4EBA\u7269\u6216\u5173\u7CFB" : "\u4F0F\u7B14\u6216\u7EA6\u5B9A"}" aria-label="\u641C\u7D22${kind === "relationships" ? "\u4EBA\u7269\u6216\u5173\u7CFB" : "\u4F0F\u7B14\u6216\u7EA6\u5B9A"}"></label></div>`;
+  }
+  function visibleItems(items) {
+    const term = query.trim().toLowerCase();
+    return items.filter((item) => {
+      if (term && !`${item.title || ""}
+${item.body || ""}`.toLowerCase().includes(term)) return false;
+      if (filter === "all") return true;
+      if (filter === "pending") return !!item.pending;
+      if (filter === "locked") return !!item.locked;
+      if (filter === "manual") return !!item.manual;
+      return (item.status || "open") === filter;
+    });
+  }
+  function statTile(tabName, filterValue, count, label, icon) {
+    return `<button type="button" class="t-memory-stat" data-jump-tab="${tabName}" data-jump-filter="${filterValue}"><i class="fa-solid ${icon}" aria-hidden="true"></i><strong>${count}</strong><span>${label}</span></button>`;
+  }
+  function graphPanel(memory, focusNames, focusThreadId) {
+    const label = graphSelection.startsWith("c:") ? graphSelection.slice(2) : graphSelection.startsWith("t:") ? memory.threads.find((item) => `t:${item.id}` === graphSelection)?.title || "\u6240\u9009\u4F0F\u7B14" : "";
+    return `<section class="t-memory-graph-panel">
+            <div class="t-memory-graph-head"><strong><i class="fa-solid fa-diagram-project" aria-hidden="true"></i> \u5173\u7CFB\u56FE</strong>
+                <div class="t-memory-card-actions">${graphSelection ? button2("clear-graph", "\u6E05\u9664\u805A\u7126") : ""}${button2("toggle-graph", graphOpen ? "\u6536\u8D77" : "\u5C55\u5F00")}</div></div>
+            ${graphOpen ? renderMemoryGraph(memory, { selected: graphSelection }) : ""}
+            ${graphSelection ? `<p class="t-memory-graph-focus">\u5DF2\u805A\u7126\uFF1A${escape3(label)}${focusThreadId ? " \xB7 \u53EA\u663E\u793A\u8FD9\u6761\u4F0F\u7B14" : focusNames.length ? ` \xB7 \u53EA\u663E\u793A\u6D89\u53CA ${escape3(focusNames.join("\u3001"))} \u7684\u6761\u76EE` : ""}</p>` : ""}
+        </section>`;
+  }
+  function renderCurrent(view) {
+    const memory = view.memory;
+    const segments = memory.segments || [];
+    const last = segments.at(-1);
+    const end = last?.end;
+    const total = view.total || 0;
+    const pct = total > 0 && end != null ? Math.min(100, Math.round((end + 1) / total * 100)) : 0;
+    const pending2 = [...memory.relationships, ...memory.threads].filter((item) => item.pending).length;
+    const activeThreads = memory.threads.filter((item) => item.status !== "resolved").length;
+    const pendingTab = memory.threads.some((item) => item.pending) ? "threads" : "relationships";
+    const recap = String(memory.recap || "").trim();
+    const beats = recap ? recap.split(/\n+/).filter(Boolean) : [];
+    const timeline = beats.length > 1 ? beats.map((beat, index) => `<div class="t-memory-beat">${textBlock(beat, `current:recap:${index}`)}</div>`).join("") : `<div class="t-memory-beat">${textBlock(recap, "current:recap", "\u5F00\u542F\u540E\u53F0\u81EA\u52A8\u6574\u7406\u540E\uFF0C\u8F83\u65E9\u6B63\u6587\u4F1A\u5728\u8FD9\u91CC\u5F62\u6210\u8FDE\u7EED\u7684\u5267\u60C5\u8109\u7EDC\u3002")}</div>`;
+    const lastLabel = last?.createdAt ? escape3(new Date(last.createdAt).toLocaleString()) : "";
+    return `<div class="t-memory-section-heading"><strong><i class="fa-solid fa-compass" aria-hidden="true"></i> \u6545\u4E8B\u8D70\u5230\u4E86\u54EA\u91CC</strong>${button2("edit-narrative", "\u7F16\u8F91")}</div>
+            <div class="t-memory-progress"><div class="t-memory-progress-meta"><span><i class="fa-solid fa-circle-dot" aria-hidden="true"></i> ${end == null ? "\u5C1A\u672A\u6574\u7406\u6B63\u6587" : `\u5DF2\u6574\u7406\u81F3\u7B2C ${end} \u697C`}</span><span>\u6700\u8FD1 ${view.config.keep_floors} \u697C\u4FDD\u7559\u539F\u6587</span></div><div class="t-memory-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="\u6574\u7406\u8FDB\u5EA6"><span style="width:${pct}%"></span></div></div>
+            <div class="t-memory-stats">${statTile("records", "all", segments.length, "\u6574\u7406\u6BB5\u6570", "fa-layer-group")}${statTile("relationships", "all", memory.relationships.length, "\u4EBA\u7269\u5173\u7CFB", "fa-user-group")}${statTile("threads", "all", activeThreads, "\u672A\u89E3\u51B3\u4F0F\u7B14", "fa-link")}${statTile(pendingTab, "pending", pending2, "\u5F85\u786E\u8BA4\u5EFA\u8BAE", "fa-wand-magic-sparkles")}</div>
+            <div class="t-memory-current-grid">
+                <article class="t-memory-card t-memory-timeline"><div class="t-memory-card-heading"><h3><i class="fa-solid fa-book-open" aria-hidden="true"></i> \u5386\u53F2\u8109\u7EDC</h3>${last ? `<small>\u622A\u81F3\u7B2C ${last.end} \u697C</small>` : ""}</div><div class="t-memory-timeline-body">${timeline}</div><div class="t-memory-timeline-foot"><span>\u8D77</span><span>\u73B0\u5728</span></div></article>
+                <article class="t-memory-card t-memory-now"><div class="t-memory-card-heading"><h3><i class="fa-solid fa-location-dot" aria-hidden="true"></i> \u6B64\u523B</h3><small>${end == null ? "\u5C1A\u672A\u6574\u7406" : `\u622A\u81F3\u7B2C ${end} \u697C`}</small></div>${textBlock(String(memory.scene || ""), "current:scene", "\u4FDD\u7559\u5730\u70B9\u3001\u5904\u5883\u3001\u76EE\u6807\u53CA\u672A\u89E3\u51B3\u7684\u51B2\u7A81\uFF1B\u6700\u65B0\u53D1\u5C55\u7EE7\u7EED\u7531\u6700\u8FD1\u6B63\u6587\u63D0\u4F9B\u3002")}<div class="t-memory-now-foot">${last ? `<button type="button" class="t-memory-link" data-jump-tab="records" data-jump-filter="all"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> \u6700\u8FD1\u6574\u7406\uFF1A\u7B2C ${last.start}\uFF5E${last.end} \u697C${lastLabel ? ` \xB7 ${lastLabel}` : ""}</button>` : '<span class="t-memory-hint">\u8FD8\u6CA1\u6709\u6574\u7406\u8BB0\u5F55\u3002</span>'}</div></article>
+            </div>`;
+  }
+  function renderThreadGroups(items, focusNames, focusThreadId) {
+    const groups = [["open", "\u672A\u89E3\u51B3"], ["progress", "\u6709\u8FDB\u5C55"], ["resolved", "\u5DF2\u89E3\u51B3"]];
+    return groups.map(([status3, label]) => {
+      const groupItems = items.filter((item) => (item.status || "open") === status3);
+      if (!groupItems.length) return "";
+      const cards = groupItems.map((item) => renderThread(item, focusNames, focusThreadId)).join("");
+      if (status3 === "resolved") {
+        return `<details class="t-memory-archive t-memory-group"${filter === "resolved" ? " open" : ""}><summary><span class="t-memory-group-dot is-resolved" aria-hidden="true"></span>${label} \xB7 ${groupItems.length} \u9879</summary><div class="t-memory-card-grid">${cards}</div></details>`;
+      }
+      return `<section class="t-memory-group"><h4 class="t-memory-group-head"><span class="t-memory-group-dot is-${status3}" aria-hidden="true"></span><strong>${label}</strong><span>${groupItems.length}</span></h4><div class="t-memory-card-grid">${cards}</div></section>`;
+    }).join("");
+  }
+  function emptyState(kind) {
+    return `<div class="t-memory-empty"><i class="fa-solid ${kind === "relationships" ? "fa-user-group" : "fa-link"}" aria-hidden="true"></i><p>${kind === "relationships" ? "\u8FD8\u6CA1\u6709\u4EBA\u7269\u5173\u7CFB\u3002\u81EA\u52A8\u6574\u7406\u4F1A\u4ECE\u6B63\u6587\u4E2D\u63D0\u53D6\uFF0C\u4E5F\u53EF\u4EE5\u624B\u52A8\u6DFB\u52A0\u3002" : "\u8FD8\u6CA1\u6709\u4F0F\u7B14\u4E0E\u7EA6\u5B9A\u3002\u81EA\u52A8\u6574\u7406\u4F1A\u4ECE\u6B63\u6587\u4E2D\u63D0\u53D6\uFF0C\u4E5F\u53EF\u4EE5\u624B\u52A8\u6DFB\u52A0\u3002"}</p>${button2("add", "\u65B0\u589E\u6761\u76EE", `data-kind="${kind}"`)}</div>`;
+  }
+  function emptyFiltered() {
+    return `<div class="t-memory-empty"><i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i><p>${graphSelection ? "\u5DF2\u6309\u5173\u7CFB\u56FE\u805A\u7126\uFF0C\u4F46\u6CA1\u6709\u5339\u914D\u7684\u6761\u76EE\u3002" : "\u6CA1\u6709\u7B26\u5408\u7B5B\u9009\u6761\u4EF6\u7684\u6761\u76EE\u3002"}</p><div class="t-memory-card-actions">${button2("clear-filter", "\u6E05\u9664\u7B5B\u9009")}</div></div>`;
+  }
+  function renderItemsTab(view, kind) {
+    const memory = view.memory;
+    const items = kind === "relationships" ? memory.relationships : memory.threads;
+    if (!items.length) return emptyState(kind);
+    const focusNames = graphFocusNames(memory, graphSelection);
+    const focusThreadId = graphSelection.startsWith("t:") ? graphSelection.slice(2) : "";
+    let shown = visibleItems(items);
+    if (graphSelection) {
+      shown = shown.filter((item) => kind === "relationships" ? focusNames.some((name) => `${item.title || ""}
+${item.body || ""}`.includes(name)) : focusThreadId ? item.id === focusThreadId : focusNames.some((name) => `${item.title || ""}
+${item.body || ""}`.includes(name)));
+    }
+    const heading = kind === "relationships" ? "\u5173\u7CFB\u3001\u77DB\u76FE\u4E0E\u77E5\u60C5\u8FB9\u754C" : "\u60AC\u5FF5\u3001\u627F\u8BFA\u4E0E\u672A\u5B8C\u6210\u76EE\u6807";
+    return `${graphPanel(memory, focusNames, focusThreadId)}
+            <div class="t-memory-section-heading"><strong>${heading}</strong>${button2("add", "\u65B0\u589E\u6761\u76EE", `data-kind="${kind}"`)}</div>
+            ${renderFilterBar(kind, items)}
+            ${graphSelection ? `<p class="t-memory-focus-hint">\u5173\u7CFB\u56FE\u805A\u7126\u4E2D\uFF0C\u53EA\u663E\u793A\u76F8\u5173\u6761\u76EE\u3002${button2("clear-graph", "\u6E05\u9664")}</p>` : ""}
+            ${shown.length ? kind === "relationships" ? `<div class="t-memory-card-grid">${shown.map((item) => renderRelationship(item, focusNames)).join("")}</div>` : renderThreadGroups(shown, focusNames, focusThreadId) : emptyFiltered()}`;
   }
   function renderEditor() {
     let html = `<div class="t-memory-section-heading"><strong>${editor.kind === "narrative" ? "\u7F16\u8F91\u5267\u60C5\u8BB0\u5FC6" : editor.kind === "summary" ? "\u7F16\u8F91\u5206\u6BB5\u6458\u8981" : editor.kind === "relationships" ? "\u7F16\u8F91\u4EBA\u7269\u5173\u7CFB" : "\u7F16\u8F91\u4F0F\u7B14\u4E0E\u7EA6\u5B9A"}</strong></div>`;
@@ -41160,51 +42305,27 @@ function openStoryMemoryWindow() {
     }
     return `<div class="t-memory-editor">${html}<p class="t-memory-hint">\u4EBA\u5DE5\u7F16\u8F91\u7684\u6761\u76EE\u5728\u81EA\u52A8\u6574\u7406\u65F6\u4FDD\u7559\uFF0C\u65B0\u53D8\u5316\u4F1A\u4F5C\u4E3A\u5EFA\u8BAE\u5C55\u793A\u3002</p><div class="t-memory-card-actions">${button2("save-edit", "\u4FDD\u5B58")}${button2("cancel-edit", "\u53D6\u6D88")}</div></div>`;
   }
-  function renderSettings(view) {
-    settingsDraft || (settingsDraft = { ...view.config });
-    const numeric = (key, label, min, max, hint) => `<label class="t-memory-field"><span>${label}</span><input class="t-input" type="number" data-setting="${key}" value="${escape(settingsDraft[key])}" min="${min}" max="${max}" step="1"><small>${hint}</small></label>`;
-    const profiles = getAllProfiles();
-    const missing = settingsDraft.profile_id && !profiles.some((profile) => profile.id === settingsDraft.profile_id);
-    return `<div class="t-memory-settings"><p class="t-memory-hint">\u8FD9\u4E9B\u53C2\u6570\u5728\u5404\u804A\u5929\u95F4\u5171\u7528\uFF1B\u81EA\u52A8\u6574\u7406\u5F00\u5173\u6309\u804A\u5929\u5206\u522B\u4FDD\u5B58\u3002</p>
-            <div class="t-memory-settings-grid"><label class="t-memory-field"><span>\u6574\u7406\u65F6\u7528\u54EA\u4E2A API \u65B9\u6848</span><select class="t-input" data-setting="profile_id"><option value="">\u8DDF\u968F\u5DE5\u5177\u7BB1\u5F53\u524D\u65B9\u6848</option>
-                ${missing ? `<option value="${escape(settingsDraft.profile_id)}" selected>\u539F\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9</option>` : ""}
-                ${profiles.map((profile) => `<option value="${escape(profile.id)}" ${settingsDraft.profile_id === profile.id ? "selected" : ""}>${escape(profile.name)}</option>`).join("")}</select><small>\u6574\u7406\u7528\u54EA\u4E2A\u6A21\u578B\u7531\u6240\u9009\u65B9\u6848\u51B3\u5B9A\u3002\u65B9\u6848\u672C\u8EAB\u5728\u5DE5\u5177\u7BB1\u7684 API \u914D\u7F6E\u91CC\u7BA1\u7406\u3002</small></label>
-            ${numeric("keep_floors", "\u6700\u8FD1\u591A\u5C11\u697C\u4E0D\u6574\u7406", 2, 500, "\u8FD9\u51E0\u697C\u59CB\u7EC8\u7559\u5728\u6B63\u6587\u91CC\u3002\u6574\u7406\u8303\u56F4\u4F1A\u5411\u524D\u907F\u8BA9\u5230\u4E00\u6BB5\u5B8C\u6574\u5BF9\u8BDD\u7684\u5F00\u5934\u3002")}
-            ${numeric("trigger_tokens", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11 token \u5C31\u5F00\u59CB\u6574\u7406", 100, 1e5, "\u548C\u4E0B\u9762\u90A3\u6761\u697C\u5C42\u6570\u6EE1\u8DB3\u4EFB\u610F\u4E00\u4E2A\u5C31\u89E6\u53D1\uFF1B\u4E24\u4E2A\u90FD\u8C03\u5927\uFF1D\u6574\u7406\u5F97\u66F4\u5C11\u66F4\u665A\u3002")}
-            ${numeric("trigger_floors", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11\u697C\u5C31\u5F00\u59CB\u6574\u7406", 2, 1e3, "\u53EA\u7B97\u8BFB\u5F97\u5230\u7684\u6B63\u6587\uFF0C\u9690\u85CF\u7684\u7CFB\u7EDF\u6D88\u606F\u4E0D\u8BA1\u5165\u3002")}
-            ${numeric("batch_tokens", "\u4E00\u6B21\u6574\u7406\u6700\u591A\u8BFB\u591A\u5C11 token", 1e3, 1e5, "\u6BCF\u6B21\u6210\u6BB5\u5904\u7406\uFF0C\u8D85\u5927\u7684\u5355\u6BB5\u4E0D\u4F1A\u53EA\u8BFB\u4E00\u534A\u518D\u628A\u5269\u4E0B\u85CF\u8D77\u6765\u3002")}
-            ${numeric("memory_tokens", "\u6BCF\u6B21\u6CE8\u5165\u7684\u8BB0\u5FC6\u6700\u591A\u5360\u591A\u5C11 token", 300, 2e4, "\u5386\u53F2\u8109\u7EDC\u548C\u9501\u5B9A\u7684\u6761\u76EE\u4F18\u5148\u5B8C\u6574\u4FDD\u7559\uFF1B\u653E\u4E0D\u4E0B\u7684\u4F1A\u5728\u300C\u6CE8\u5165\u9884\u89C8\u300D\u91CC\u5217\u51FA\u6765\u3002")}
-            ${numeric("inject_depth", "\u8BB0\u5FC6\u63D2\u5728\u5BF9\u8BDD\u7684\u54EA\u4E2A\u4F4D\u7F6E", 0, 1e3, "0\uFF1D\u7D27\u8D34\u6700\u65B0\u4E00\u6761\u6D88\u606F\uFF1B\u9ED8\u8BA4 4\uFF0C\u8BA9\u6700\u8FD1\u51E0\u697C\u7684\u6B63\u6587\u6392\u5728\u8BB0\u5FC6\u4E4B\u540E\u3002")}</div>
-            ${button2("save-settings", "\u4FDD\u5B58\u8FD0\u884C\u8BBE\u7F6E")}</div>`;
-  }
   function renderContent(view) {
     const memory = view.memory;
     if (!view.available) return '<div class="t-memory-empty"><i class="fa-solid fa-comments"></i><p>\u6253\u5F00\u4E00\u6BB5\u89D2\u8272\u804A\u5929\u540E\uFF0C\u5373\u53EF\u4E3A\u8FD9\u6BB5\u6545\u4E8B\u5EFA\u7ACB\u8BB0\u5FC6\u3002</p></div>';
-    if (source) return `<div class="t-memory-section-heading"><strong>${escape(source.title)}</strong>${button2("close-source", "\u8FD4\u56DE")}</div>
+    if (source) return `<div class="t-memory-section-heading"><strong>${escape3(source.title)}</strong>${button2("close-source", "\u8FD4\u56DE")}</div>
             ${source.links?.length ? `<div class="t-memory-card-actions">${source.links.map((entry) => button2("segment-source", `\u67E5\u770B\u7B2C ${entry.start}\uFF5E${entry.end} \u697C\u539F\u6587`, `data-start="${entry.start}" data-end="${entry.end}"`)).join("")}</div>` : ""}
-            <pre class="t-memory-source">${escape(source.text)}</pre>`;
+            <pre class="t-memory-source">${escape3(source.text)}</pre>`;
     if (editor) return renderEditor();
-    if (tab === "settings") return renderSettings(view);
-    if (tab === "preview") return `<p class="t-memory-hint">\u4EE5\u4E0B\u5185\u5BB9\u901A\u8FC7\u72EC\u7ACB\u63D0\u793A\u8BCD\u6301\u7EED\u6CE8\u5165\uFF0C\u4E0D\u6DFB\u52A0\u804A\u5929\u697C\u5C42\u3002\u4F30\u7B97\u7EA6 ${view.injection.tokens} token\u3002</p>
+    if (tab === "preview") return `<p class="t-memory-hint">\u4EE5\u4E0B\u5185\u5BB9\u901A\u8FC7\u72EC\u7ACB\u63D0\u793A\u8BCD\u6301\u7EED\u6CE8\u5165\uFF0C\u4E0D\u6DFB\u52A0\u804A\u5929\u697C\u5C42\u3002\u4F30\u7B97\u7EA6 ${view.injection.tokens} token\uFF08\u8BB0\u5FC6 ${view.injection.memoryTokens} \xB7 \u6700\u8FD1\u5206\u6BB5 ${view.injection.recentTokens} \xB7 \u65E7\u4E8B\u53EC\u56DE ${view.injection.recallTokens}\uFF09\u3002</p>
             ${view.injection.overBudget ? '<p class="t-memory-error">\u5386\u53F2\u8109\u7EDC\u548C\u9501\u5B9A\u6761\u76EE\u5DF2\u8D85\u8FC7\u76EE\u6807\u9884\u7B97\uFF0C\u8BF7\u7CBE\u7B80\u5185\u5BB9\u6216\u63D0\u9AD8\u9884\u7B97\u3002</p>' : ""}
-            ${view.injection.omitted.length ? `<p class="t-memory-error">\u672C\u8F6E\u9884\u7B97\u672A\u5BB9\u7EB3\uFF1A${escape(view.injection.omitted.join("\u3001"))}\u3002\u6761\u76EE\u4ECD\u4FDD\u5B58\u5728\u8BB0\u5FC6\u4E2D\uFF0C\u53EF\u9501\u5B9A\u91CD\u8981\u6761\u76EE\u6216\u63D0\u9AD8\u9884\u7B97\u3002</p>` : ""}
-            <pre class="t-memory-source">${escape(view.injection.text || "\u5C1A\u672A\u5EFA\u7ACB\u8BB0\u5FC6\u3002")}</pre>`;
-    if (tab === "current") return `<div class="t-memory-section-heading"><strong>\u6545\u4E8B\u8D70\u5230\u4E86\u54EA\u91CC</strong>${button2("edit-narrative", "\u7F16\u8F91")}</div>
-            <div class="t-memory-current-grid"><article class="t-memory-card"><h3>\u5386\u53F2\u8109\u7EDC</h3><p class="t-memory-text">${escape(memory.recap || "\u5F00\u542F\u540E\u53F0\u81EA\u52A8\u6574\u7406\u540E\uFF0C\u8F83\u65E9\u6B63\u6587\u4F1A\u5728\u8FD9\u91CC\u5F62\u6210\u8FDE\u7EED\u7684\u5267\u60C5\u8109\u7EDC\u3002")}</p></article>
-            <article class="t-memory-card"><h3>\u622A\u81F3\u6574\u7406\u8303\u56F4\u7684\u5267\u60C5\u72B6\u6001</h3><p class="t-memory-text">${escape(memory.scene || "\u4FDD\u7559\u5730\u70B9\u3001\u5904\u5883\u3001\u76EE\u6807\u53CA\u672A\u89E3\u51B3\u7684\u51B2\u7A81\uFF1B\u6700\u65B0\u53D1\u5C55\u7EE7\u7EED\u7531\u6700\u8FD1\u6B63\u6587\u63D0\u4F9B\u3002")}</p></article></div>
-            <div class="t-memory-overview"><span>\u4EBA\u7269\u5173\u7CFB <strong>${memory.relationships.length}</strong></span><span>\u672A\u89E3\u51B3\u4E8B\u9879 <strong>${memory.threads.filter((item) => item.status !== "resolved").length}</strong></span><span>\u5DF2\u5F52\u6863\u4E8B\u9879 <strong>${memory.threads.filter((item) => item.status === "resolved").length}</strong></span></div>`;
-    if (tab === "relationships" || tab === "threads") {
-      const items = memory[tab];
-      const active2 = items.filter((item) => item.status !== "resolved");
-      const archived = items.filter((item) => item.status === "resolved");
-      return `<div class="t-memory-section-heading"><strong>${tab === "relationships" ? "\u5173\u7CFB\u3001\u77DB\u76FE\u4E0E\u77E5\u60C5\u8FB9\u754C" : "\u60AC\u5FF5\u3001\u627F\u8BFA\u4E0E\u672A\u5B8C\u6210\u76EE\u6807"}</strong>${button2("add", "\u65B0\u589E\u6761\u76EE", `data-kind="${tab}"`)}</div>
-                ${active2.length ? `<div class="t-memory-card-grid">${active2.map((item) => renderItem(tab, item)).join("")}</div>` : '<p class="t-memory-empty">\u8FD8\u6CA1\u6709\u6761\u76EE\u3002\u81EA\u52A8\u6574\u7406\u4F1A\u4ECE\u6B63\u6587\u4E2D\u63D0\u53D6\uFF0C\u4E5F\u53EF\u4EE5\u624B\u52A8\u6DFB\u52A0\u3002</p>'}
-                ${archived.length ? `<details class="t-memory-archive"><summary>\u5DF2\u89E3\u51B3 \xB7 ${archived.length} \u9879</summary><div class="t-memory-card-grid">${archived.map((item) => renderItem(tab, item)).join("")}</div></details>` : ""}`;
-    }
+            ${view.injection.omitted.length ? `<p class="t-memory-error">\u672C\u8F6E\u9884\u7B97\u672A\u5BB9\u7EB3\uFF1A${escape3(view.injection.omitted.join("\u3001"))}\u3002\u6761\u76EE\u4ECD\u4FDD\u5B58\u5728\u8BB0\u5FC6\u4E2D\uFF0C\u53EF\u9501\u5B9A\u91CD\u8981\u6761\u76EE\u6216\u63D0\u9AD8\u9884\u7B97\u3002</p>` : ""}
+            ${view.injection.recent?.length ? `<p class="t-memory-hint">\u672C\u8F6E\u76F4\u63A5\u6CE8\u5165\u6700\u8FD1\u6574\u7406\u7684\u5206\u6BB5\uFF1A${escape3(view.injection.recent.map((entry) => entry.title).join("\u3001"))}\u3002\u8FD9\u4E9B\u6458\u8981\u53EA\u538B\u7F29\u8FC7\u4E00\u6B21\uFF0C\u6BD4\u5386\u53F2\u8109\u7EDC\u66F4\u7EC6\u3002</p>` : ""}
+            ${view.injection.recentOmitted?.length ? `<p class="t-memory-error">\u6700\u8FD1\u5206\u6BB5\u9884\u7B97\u672A\u5BB9\u7EB3\uFF1A${escape3(view.injection.recentOmitted.join("\u3001"))}\u3002\u53EF\u63D0\u9AD8\u300C\u6700\u8FD1\u5206\u6BB5\u6458\u8981\u6700\u591A\u5360\u591A\u5C11 token\u300D\u6216\u51CF\u5C11\u6CE8\u5165\u6BB5\u6570\u3002</p>` : ""}
+            ${view.injection.recalled?.length ? `<p class="t-memory-hint">\u672C\u8F6E\u4ECE\u65E7\u6BB5\u843D\u53EC\u56DE\uFF1A${escape3(view.injection.recalled.map((entry) => entry.title).join("\u3001"))}\u3002\u53EC\u56DE\u53EA\u6309\u6700\u8FD1\u5BF9\u8BDD\u7684\u5173\u952E\u8BCD\u5339\u914D\uFF0C\u4E0D\u4EE3\u8868\u8FD9\u4E9B\u65E7\u4E8B\u4E00\u5B9A\u4E0E\u672C\u8F6E\u6709\u5173\u3002</p>` : ""}
+            ${view.injection.recallOmitted?.length ? `<p class="t-memory-error">\u53EC\u56DE\u9884\u7B97\u672A\u5BB9\u7EB3\uFF1A${escape3(view.injection.recallOmitted.join("\u3001"))}\u3002\u53EF\u63D0\u9AD8\u300C\u53EC\u56DE\u5185\u5BB9\u6700\u591A\u5360\u591A\u5C11 token\u300D\u6216\u51CF\u5C11\u53EC\u56DE\u6BB5\u6570\u3002</p>` : ""}
+            <pre class="t-memory-source">${escape3(view.injection.text || "\u5C1A\u672A\u5EFA\u7ACB\u8BB0\u5FC6\u3002")}</pre>`;
+    if (tab === "current") return renderCurrent(view);
+    if (tab === "relationships" || tab === "threads") return renderItemsTab(view, tab);
     return `<div class="t-memory-section-heading"><strong>\u5DF2\u6574\u7406 ${memory.segments.length} \u6BB5</strong><div class="t-memory-card-actions">${button2("undo", "\u64A4\u9500\u6700\u8FD1\u6574\u7406", memory.segments.length ? "" : "disabled")}${button2("undo-all", "\u64A4\u9500\u5168\u90E8\u6574\u7406", memory.segments.length ? "" : "disabled")}</div></div>
             <p class="t-memory-hint">\u64A4\u9500\u4F1A\u6062\u590D\u5BF9\u5E94\u6B63\u6587\uFF0C\u5E76\u6682\u505C\u81EA\u52A8\u6574\u7406\u3002\u539F\u5148\u7531\u4F60\u6216\u5176\u4ED6\u63D2\u4EF6\u9690\u85CF\u7684\u697C\u5C42\u4FDD\u6301\u539F\u72B6\u6001\u3002</p>
-            ${[...memory.segments].reverse().map((segment) => `<article class="t-memory-card"><div class="t-memory-card-heading"><strong>\u7B2C ${segment.start}\uFF5E${segment.end} \u697C</strong><small>${escape(new Date(segment.createdAt).toLocaleString())}</small></div>
-                <p class="t-memory-text">${escape(segment.summary)}</p><div class="t-memory-card-actions">${button2("segment-source", "\u67E5\u770B\u539F\u6587", `data-start="${segment.start}" data-end="${segment.end}"`)}${button2("edit-summary", "\u7F16\u8F91\u6458\u8981", `data-id="${escape(segment.id)}"`)}</div></article>`).join("") || '<p class="t-memory-empty">\u5C1A\u672A\u6574\u7406\u3002\u6700\u8FD1\u6B63\u6587\u4F1A\u5B8C\u6574\u4FDD\u7559\uFF0C\u8F83\u65E9\u6B63\u6587\u8FBE\u5230\u89E6\u53D1\u6761\u4EF6\u540E\u81EA\u52A8\u5904\u7406\u3002</p>'}`;
+            ${[...memory.segments].reverse().map((segment) => `<article class="t-memory-card"><div class="t-memory-card-heading"><strong>\u7B2C ${segment.start}\uFF5E${segment.end} \u697C</strong><small>${escape3(new Date(segment.createdAt).toLocaleString())}</small></div>
+                <p class="t-memory-text">${escape3(segment.summary)}</p><div class="t-memory-card-actions">${button2("segment-source", "\u67E5\u770B\u539F\u6587", `data-start="${segment.start}" data-end="${segment.end}"`)}${button2("edit-summary", "\u7F16\u8F91\u6458\u8981", `data-id="${escape3(segment.id)}"`)}</div></article>`).join("") || '<p class="t-memory-empty">\u5C1A\u672A\u6574\u7406\u3002\u6700\u8FD1\u6B63\u6587\u4F1A\u5B8C\u6574\u4FDD\u7559\uFF0C\u8F83\u65E9\u6B63\u6587\u8FBE\u5230\u89E6\u53D1\u6761\u4EF6\u540E\u81EA\u52A8\u5904\u7406\u3002</p>'}`;
   }
   function render() {
     if (!root.isConnected) return;
@@ -41218,8 +42339,11 @@ function openStoryMemoryWindow() {
     if (previousKey && previousKey !== view.key) {
       editor = null;
       source = null;
-      settingsDraft = null;
       localError = "";
+      filter = "all";
+      query = "";
+      graphSelection = "";
+      expanded.clear();
     }
     previousKey = view.key;
     root.querySelector('[data-role="chat-name"]').textContent = view.chatName || "\u5F53\u524D\u804A\u5929";
@@ -41230,6 +42354,15 @@ function openStoryMemoryWindow() {
     root.querySelector('[data-action="run"]').disabled = !view.available || !view.memory.enabled || view.busy || view.generating || localBusy;
     const end = view.memory.segments.at(-1)?.end;
     root.querySelector('[data-role="metrics"]').textContent = `${end == null ? "\u5C1A\u672A\u6574\u7406\u6B63\u6587" : `\u5DF2\u6574\u7406\u81F3\u7B2C ${end} \u697C`} \xB7 \u81F3\u5C11\u4FDD\u7559\u6700\u8FD1 ${view.config.keep_floors} \u697C \xB7 \u8BB0\u5FC6\u7EA6 ${view.injection.tokens} token${view.batch ? ` \xB7 \u5F85\u6574\u7406\u7B2C ${view.batch.start}\uFF5E${view.batch.end} \u697C` : ""}`;
+    const counts = {
+      relationships: view.memory.relationships.length,
+      threads: view.memory.threads.filter((item) => item.status !== "resolved").length,
+      records: view.memory.segments.length
+    };
+    root.querySelectorAll("[data-count]").forEach((element) => {
+      const count = counts[element.dataset.count];
+      element.textContent = count ? String(count) : "";
+    });
     const alert2 = root.querySelector('[data-role="error"]');
     alert2.hidden = !(localError || view.error);
     alert2.textContent = localError || view.error;
@@ -41240,6 +42373,9 @@ function openStoryMemoryWindow() {
     const body = root.querySelector('[data-role="body"]');
     const scroll = body.scrollTop;
     const focused = document.activeElement;
+    const focusedSearch = body.contains(focused) && focused?.dataset?.role === "memory-search" ? focused : null;
+    const focusedNode = body.contains(focused) && focused?.matches?.("[data-node]") ? focused.dataset.node : "";
+    const searchRange = focusedSearch && typeof focusedSearch.selectionStart === "number" ? [focusedSearch.selectionStart, focusedSearch.selectionEnd] : null;
     const focusField = body.contains(focused) ? focused.dataset.field || focused.dataset.setting : "";
     const focusAttribute = focused?.dataset.field ? "data-field" : "data-setting";
     const selection = focusField && typeof focused.selectionStart === "number" ? [focused.selectionStart, focused.selectionEnd] : null;
@@ -41249,14 +42385,30 @@ function openStoryMemoryWindow() {
       if (["close-source", "cancel-edit"].includes(element.dataset.action)) return;
       if (view.busy || view.generating || localBusy) element.disabled = true;
     });
-    if (focusField) {
+    if (focusedSearch) {
+      const input = body.querySelector('[data-role="memory-search"]');
+      input?.focus({ preventScroll: true });
+      if (searchRange) input?.setSelectionRange?.(...searchRange);
+    } else if (focusField) {
       const replacement = body.querySelector(`[${focusAttribute}="${focusField}"]`);
       replacement?.focus({ preventScroll: true });
       if (selection) replacement?.setSelectionRange?.(...selection);
+    } else if (focusedNode) {
+      const replacement = [...body.querySelectorAll("[data-node]")].find((element) => element.dataset.node === focusedNode);
+      replacement?.focus({ preventScroll: true });
     }
   }
   function writingView(view) {
     return view.busy && view.status !== "summarizing" && view.status !== "waiting";
+  }
+  function switchTab(next, filterValue = "all") {
+    tab = next;
+    filter = filterValue;
+    query = "";
+    graphSelection = "";
+    editor = null;
+    source = null;
+    render();
   }
   async function perform(callback) {
     localError = "";
@@ -41279,7 +42431,10 @@ function openStoryMemoryWindow() {
   }
   root.addEventListener("input", (event) => {
     if (event.target.dataset.field && editor) editor[event.target.dataset.field] = event.target.value;
-    if (event.target.dataset.setting && settingsDraft) settingsDraft[event.target.dataset.setting] = event.target.value;
+    if (event.target.dataset.role === "memory-search") {
+      query = event.target.value;
+      render();
+    }
   });
   root.addEventListener("change", (event) => {
     if (event.target.dataset.role === "enabled") {
@@ -41287,17 +42442,26 @@ function openStoryMemoryWindow() {
       void perform(() => setStoryMemoryEnabled(checked));
     }
     if (event.target.dataset.field && editor) editor[event.target.dataset.field] = event.target.value;
-    if (event.target.dataset.setting && settingsDraft) settingsDraft[event.target.dataset.setting] = event.target.value;
+    if (event.target.dataset.role === "memory-search") {
+      query = event.target.value;
+      render();
+    }
   });
   root.addEventListener("click", (event) => {
+    const node = event.target.closest?.("[data-node]");
+    if (node) {
+      graphSelection = graphSelection === node.dataset.node ? "" : node.dataset.node;
+      render();
+      return;
+    }
     const target = event.target.closest("button");
     if (!target || target.disabled) return;
+    if (target.dataset.jumpTab) {
+      switchTab(target.dataset.jumpTab, target.dataset.jumpFilter || "all");
+      return;
+    }
     if (target.dataset.tab) {
-      tab = target.dataset.tab;
-      editor = null;
-      source = null;
-      settingsDraft = null;
-      render();
+      switchTab(target.dataset.tab);
       return;
     }
     const action = target.dataset.action;
@@ -41305,13 +42469,33 @@ function openStoryMemoryWindow() {
     const kind = target.dataset.kind;
     const item = kind ? view.memory[kind]?.find((entry) => entry.id === target.dataset.id) : null;
     if (action === "close") close();
-    else if (action === "run") void perform(() => runStoryMemory(true));
+    else if (action === "settings") {
+      settingsClose?.();
+      settingsClose = openStoryMemorySettingsWindow({ onClose: () => {
+        settingsClose = null;
+      } });
+    } else if (action === "run") void perform(() => runStoryMemory(true));
     else if (action === "undo" || action === "undo-all") void perform(() => undoStoryMemory(action === "undo-all"));
-    else if (action === "save-settings") void perform(() => {
-      saveStoryMemoryConfig(settingsDraft);
-      settingsDraft = null;
-    });
-    else if (action === "add" || action === "edit") {
+    else if (action === "set-filter") {
+      filter = target.dataset.filter || "all";
+      render();
+    } else if (action === "toggle-graph") {
+      graphOpen = !graphOpen;
+      render();
+    } else if (action === "clear-graph") {
+      graphSelection = "";
+      render();
+    } else if (action === "clear-filter") {
+      filter = "all";
+      query = "";
+      graphSelection = "";
+      render();
+    } else if (action === "expand") {
+      const key = target.dataset.key;
+      if (expanded.has(key)) expanded.delete(key);
+      else expanded.add(key);
+      render();
+    } else if (action === "add" || action === "edit") {
       editor = { kind, id: item?.id || "", title: item?.title || "", body: item?.body || "", status: item?.status || "open" };
       render();
     } else if (action === "lock" || action === "accept" || action === "dismiss") void perform(() => editStoryMemoryItem(kind, item.id, {}, action));
@@ -41349,13 +42533,14 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
     }
   });
   function onKeydown(event) {
+    if (settingsClose) return;
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       close();
     }
     if (event.key === "Tab") {
-      const focusable = [...root.querySelectorAll("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary")];
+      const focusable = [...root.querySelectorAll("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [data-node]")];
       const first = focusable[0];
       const last = focusable.at(-1);
       if (event.shiftKey && document.activeElement === first) {
@@ -41367,6 +42552,14 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
       }
     }
   }
+  root.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const node = event.target.closest?.("[data-node]");
+    if (!node) return;
+    event.preventDefault();
+    graphSelection = graphSelection === node.dataset.node ? "" : node.dataset.node;
+    render();
+  });
   document.addEventListener("keydown", onKeydown, true);
   root.addEventListener("click", (event) => {
     if (event.target === root) close();
@@ -41376,17 +42569,24 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
   root.querySelector('[data-action="close"]').focus();
   return close;
 }
-var escape, STATUS, THREAD_STATUS, TABS, closeWindow;
+var escape3, STATUS, THREAD_STATUS, TABS, closeWindow;
 var init_storyMemoryWindow = __esm({
   "src/ui/storyMemoryWindow.js"() {
     init_storyMemory();
-    init_connection();
+    init_storyMemorySettingsWindow();
+    init_storyMemoryGraph();
     init_floatingWindow();
     init_dom();
-    escape = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+    escape3 = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
     STATUS = { idle: "\u7B49\u5F85\u4E0B\u4E00\u6BB5\u5267\u60C5", summarizing: "\u6B63\u5728\u540E\u53F0\u6574\u7406\u2026", waiting: "\u5DF2\u6574\u7406\uFF0C\u7B49\u5F85\u751F\u6210\u7ED3\u675F\u540E\u5E94\u7528", rebuilding: "\u6B63\u6587\u6709\u53D8\u5316\uFF0C\u6B63\u5728\u91CD\u6574", error: "\u6682\u672A\u5B8C\u6210\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559" };
     THREAD_STATUS = { open: "\u672A\u89E3\u51B3", progress: "\u6709\u8FDB\u5C55", resolved: "\u5DF2\u89E3\u51B3" };
-    TABS = [["current", "\u5F53\u524D\u5267\u60C5"], ["relationships", "\u4EBA\u7269\u5173\u7CFB"], ["threads", "\u4F0F\u7B14\u4E0E\u7EA6\u5B9A"], ["records", "\u6574\u7406\u8BB0\u5F55"], ["preview", "\u6CE8\u5165\u9884\u89C8"], ["settings", "\u8FD0\u884C\u8BBE\u7F6E"]];
+    TABS = [
+      ["current", "\u5F53\u524D\u5267\u60C5", "fa-compass"],
+      ["relationships", "\u4EBA\u7269\u5173\u7CFB", "fa-user-group"],
+      ["threads", "\u4F0F\u7B14\u4E0E\u7EA6\u5B9A", "fa-link"],
+      ["records", "\u6574\u7406\u8BB0\u5F55", "fa-clock-rotate-left"],
+      ["preview", "\u6CE8\u5165\u9884\u89C8", "fa-eye"]
+    ];
     closeWindow = null;
   }
 });
@@ -53292,9 +54492,9 @@ function createReaderStoryPanel(root, { refreshBody, close }) {
             <p data-reader-index-status></p><p class="t-reader-index-error" data-reader-error hidden></p>
             <div class="t-reader-index-actions">${button("index", "\u6574\u7406\u7D22\u5F15")}${button("stop", "\u505C\u6B62", "disabled")}</div>
             <details class="t-reader-index-settings"><summary>\u6574\u7406\u8BBE\u7F6E</summary>
-                <label>\u8FDE\u63A5\u65B9\u6848<select data-reader-profile><option value="">\u5F53\u524D\u5DE5\u5177\u7BB1\u8FDE\u63A5</option>${readerStoryProfiles().map((profile) => `<option value="${escape2(profile.id)}" ${profile.id === config.profile_id ? "selected" : ""}>${escape2(profile.name)}</option>`).join("")}</select></label>
-                <label>\u6A21\u578B\u8986\u76D6<input data-reader-model value="${escape2(config.model)}" placeholder="\u7559\u7A7A\u4F7F\u7528\u65B9\u6848\u6A21\u578B"></label>
-                <label>\u6B63\u6587\u6807\u7B7E<input data-reader-whitelist value="${escape2(config.tag_whitelist)}" placeholder="\u53EF\u7559\u7A7A\uFF1B\u4F8B\u5982 \u6B63\u6587, content"></label>
+                <label>\u8FDE\u63A5\u65B9\u6848<select data-reader-profile><option value="">\u5F53\u524D\u5DE5\u5177\u7BB1\u8FDE\u63A5</option>${readerStoryProfiles().map((profile) => `<option value="${escape4(profile.id)}" ${profile.id === config.profile_id ? "selected" : ""}>${escape4(profile.name)}</option>`).join("")}</select></label>
+                <label>\u6A21\u578B\u8986\u76D6<input data-reader-model value="${escape4(config.model)}" placeholder="\u7559\u7A7A\u4F7F\u7528\u65B9\u6848\u6A21\u578B"></label>
+                <label>\u6B63\u6587\u6807\u7B7E<input data-reader-whitelist value="${escape4(config.tag_whitelist)}" placeholder="\u53EF\u7559\u7A7A\uFF1B\u4F8B\u5982 \u6B63\u6587, content"></label>
                 <label>\u4E0A\u4E0B\u6587\u4E0A\u9650\uFF08token\uFF09<input type="number" min="1000" max="64000" data-reader-budget value="${config.context_tokens}"></label>
                 <p>\u8C03\u7528\u6240\u9009\u6A21\u578B\u9010\u697C\u6574\u7406\uFF0C\u7ED3\u679C\u4FDD\u5B58\u5728\u5F53\u524D\u804A\u5929\u3002\u505C\u6B62\u6216\u5173\u95ED\u9605\u8BFB\u7A97\u53E3\u4F1A\u4FDD\u7559\u5DF2\u5B8C\u6210\u90E8\u5206\u3002</p>
                 ${button("save-settings", "\u4FDD\u5B58\u8BBE\u7F6E")}${button("rebuild", "\u91CD\u65B0\u6574\u7406")}
@@ -53328,22 +54528,22 @@ function createReaderStoryPanel(root, { refreshBody, close }) {
     const person = view.characters.find((item) => item.id === selectedPerson);
     if (selectedPerson && !person) selectedPerson = "";
     if (!person) return `<p class="t-reader-index-hint">\u9009\u62E9\u4EBA\u7269\u67E5\u770B\u6B64\u65F6\u7684\u5904\u5883\u3001\u5173\u7CFB\u548C\u77E5\u60C5\u8FB9\u754C\u3002\u9AD8\u4EAE\u7684\u6B63\u6587\u59D3\u540D\u4E5F\u53EF\u70B9\u51FB\u3002</p>
-            ${view.characters.map((item) => button("person", item.name, `data-reader-person="${escape2(item.id)}"`)).join("")}`;
-    return `${button("people-list", "\u5168\u90E8\u4EBA\u7269")}<h3>${escape2(person.name)}</h3>${person.aliases.length ? `<p class="t-reader-index-hint">${escape2(person.aliases.join(" / "))}</p>` : ""}
+            ${view.characters.map((item) => button("person", item.name, `data-reader-person="${escape4(item.id)}"`)).join("")}`;
+    return `${button("people-list", "\u5168\u90E8\u4EBA\u7269")}<h3>${escape4(person.name)}</h3>${person.aliases.length ? `<p class="t-reader-index-hint">${escape4(person.aliases.join(" / "))}</p>` : ""}
             ${Object.entries(KINDS).map(([kind, label]) => {
       const facts = person.facts.filter((fact) => fact.kind === kind);
-      return facts.length ? `<section class="t-reader-index-card"><h4>${label}</h4>${facts.map((fact) => `<p>${escape2(fact.text)}</p>${proof(fact.evidence, `\u7B2C ${fact.evidence.floor} \u697C\u4F9D\u636E`)}`).join("")}</section>` : "";
+      return facts.length ? `<section class="t-reader-index-card"><h4>${label}</h4>${facts.map((fact) => `<p>${escape4(fact.text)}</p>${proof(fact.evidence, `\u7B2C ${fact.evidence.floor} \u697C\u4F9D\u636E`)}`).join("")}</section>` : "";
     }).join("") || '<p class="t-reader-index-empty">\u5DF2\u51FA\u73B0\uFF0C\u5C1A\u672A\u63D0\u53D6\u5230\u6709\u539F\u6587\u4F9D\u636E\u7684\u72B6\u6001\u3002</p>'}`;
   }
   function renderEchoes(view) {
     const echo = view.echoes.find((item) => item.id === selectedEcho);
     if (selectedEcho && !echo) selectedEcho = "";
-    if (echo) return `${button("echo-list", "\u5168\u90E8\u56DE\u58F0")}<h3>${escape2(echo.title)}</h3>
-            <p class="t-reader-index-hint">${echo.certainty === "explicit" ? "\u6B63\u6587\u51FA\u73B0\u4E86\u5BF9\u5E94\u56DE\u5E94" : "\u53EF\u80FD\u5173\u8054\uFF0C\u4ECD\u9700\u6838\u5BF9\u539F\u6587"}</p><p>${escape2(echo.explanation)}</p>
-            <section class="t-reader-index-card"><h4>\u8F83\u65E9\u7EBF\u7D22 \xB7 \u7B2C ${echo.clue.floor} \u697C</h4><blockquote>${escape2(echo.clue.quote)}</blockquote>${proof(echo.clue)}</section>
-            <section class="t-reader-index-card"><h4>\u5F53\u524D\u56DE\u5E94 \xB7 \u7B2C ${echo.reply.floor} \u697C</h4><blockquote>${escape2(echo.reply.quote)}</blockquote>${proof(echo.reply)}</section>`;
-    return `${view.echoes.length ? view.echoes.map((item) => button("echo", `${item.certainty === "possible" ? "\u5F85\u786E\u8BA4 \xB7 " : ""}${item.title} \xB7 \u7B2C ${item.reply.floor} \u697C`, `data-reader-echo="${escape2(item.id)}"`)).join("") : '<p class="t-reader-index-empty">\u622A\u81F3\u6B64\u5904\uFF0C\u8FD8\u6CA1\u6709\u5DF2\u51FA\u73B0\u7684\u4F0F\u7B14\u56DE\u5E94\u3002</p>'}
-            ${view.threads.filter((thread) => thread.status !== "resolved").length ? `<h3>\u6B64\u65F6\u5C1A\u672A\u89E3\u5F00\u7684\u7EBF\u7D22</h3>${view.threads.filter((thread) => thread.status !== "resolved").map((thread) => `<section class="t-reader-index-card"><h4>${escape2(thread.title)}</h4><p>${escape2(thread.question)}</p>${proof(thread.clue, "\u6700\u65E9\u7EBF\u7D22")}</section>`).join("")}` : ""}`;
+    if (echo) return `${button("echo-list", "\u5168\u90E8\u56DE\u58F0")}<h3>${escape4(echo.title)}</h3>
+            <p class="t-reader-index-hint">${echo.certainty === "explicit" ? "\u6B63\u6587\u51FA\u73B0\u4E86\u5BF9\u5E94\u56DE\u5E94" : "\u53EF\u80FD\u5173\u8054\uFF0C\u4ECD\u9700\u6838\u5BF9\u539F\u6587"}</p><p>${escape4(echo.explanation)}</p>
+            <section class="t-reader-index-card"><h4>\u8F83\u65E9\u7EBF\u7D22 \xB7 \u7B2C ${echo.clue.floor} \u697C</h4><blockquote>${escape4(echo.clue.quote)}</blockquote>${proof(echo.clue)}</section>
+            <section class="t-reader-index-card"><h4>\u5F53\u524D\u56DE\u5E94 \xB7 \u7B2C ${echo.reply.floor} \u697C</h4><blockquote>${escape4(echo.reply.quote)}</blockquote>${proof(echo.reply)}</section>`;
+    return `${view.echoes.length ? view.echoes.map((item) => button("echo", `${item.certainty === "possible" ? "\u5F85\u786E\u8BA4 \xB7 " : ""}${item.title} \xB7 \u7B2C ${item.reply.floor} \u697C`, `data-reader-echo="${escape4(item.id)}"`)).join("") : '<p class="t-reader-index-empty">\u622A\u81F3\u6B64\u5904\uFF0C\u8FD8\u6CA1\u6709\u5DF2\u51FA\u73B0\u7684\u4F0F\u7B14\u56DE\u5E94\u3002</p>'}
+            ${view.threads.filter((thread) => thread.status !== "resolved").length ? `<h3>\u6B64\u65F6\u5C1A\u672A\u89E3\u5F00\u7684\u7EBF\u7D22</h3>${view.threads.filter((thread) => thread.status !== "resolved").map((thread) => `<section class="t-reader-index-card"><h4>${escape4(thread.title)}</h4><p>${escape4(thread.question)}</p>${proof(thread.clue, "\u6700\u65E9\u7EBF\u7D22")}</section>`).join("")}` : ""}`;
   }
   function renderContent(view) {
     if (source) {
@@ -53351,8 +54551,8 @@ function createReaderStoryPanel(root, { refreshBody, close }) {
       else {
         try {
           const original = getReaderStoryEvidence(source, readFloor);
-          return `${button("back", "\u8FD4\u56DE\u8D44\u6599")}<h3>\u7B2C ${original.index} \u697C\u539F\u6587</h3><blockquote>${escape2(original.quote)}</blockquote>
-                        ${button("goto", "\u5B9A\u4F4D\u6B63\u6587", `data-reader-index="${original.index}"`)}<pre class="t-reader-index-source">${escape2(original.text)}</pre>`;
+          return `${button("back", "\u8FD4\u56DE\u8D44\u6599")}<h3>\u7B2C ${original.index} \u697C\u539F\u6587</h3><blockquote>${escape4(original.quote)}</blockquote>
+                        ${button("goto", "\u5B9A\u4F4D\u6B63\u6587", `data-reader-index="${original.index}"`)}<pre class="t-reader-index-source">${escape4(original.text)}</pre>`;
         } catch (cause) {
           source = null;
           localError = cause.message;
@@ -53362,7 +54562,7 @@ function createReaderStoryPanel(root, { refreshBody, close }) {
     if (tab === "people") return renderPeople(view);
     if (tab === "echoes") return renderEchoes(view);
     return `${view.scenes.length ? view.scenes.map((scene) => `<button type="button" class="t-reader-scene-entry" data-reader-action="goto" data-reader-index="${scene.start}">
-            <strong>${escape2(scene.title)}</strong><small>\u7B2C ${scene.start}\uFF5E${scene.end} \u697C${scene.pending ? " \xB7 \u5F85\u6574\u7406" : ""}</small>${scene.place ? `<span>${escape2(scene.place)}</span>` : ""}</button>`).join("") : '<p class="t-reader-index-empty">\u672A\u627E\u5230\u53EF\u63D0\u53D6\u7684\u6B63\u6587\u3002</p>'}
+            <strong>${escape4(scene.title)}</strong><small>\u7B2C ${scene.start}\uFF5E${scene.end} \u697C${scene.pending ? " \xB7 \u5F85\u6574\u7406" : ""}</small>${scene.place ? `<span>${escape4(scene.place)}</span>` : ""}</button>`).join("") : '<p class="t-reader-index-empty">\u672A\u627E\u5230\u53EF\u63D0\u53D6\u7684\u6B63\u6587\u3002</p>'}
             <p class="t-reader-index-hint">\u672A\u8BFB\u573A\u666F\u5148\u663E\u793A\u7F16\u53F7\u3002\u6574\u7406\u7D22\u5F15\u4F1A\u6309\u5730\u70B9\u3001\u65F6\u95F4\u4E0E\u4E3B\u8981\u51B2\u7A81\u5212\u5206\u573A\u666F\uFF1B\u5C1A\u672A\u6574\u7406\u65F6\u4F7F\u7528\u539F\u6587\u5206\u9694\u3002</p>`;
   }
   function decorate(view) {
@@ -53376,7 +54576,7 @@ function createReaderStoryPanel(root, { refreshBody, close }) {
     for (const section of root.querySelectorAll("[data-reader-floor]")) {
       const index = Number(section.dataset.readerFloor);
       const marker = section.querySelector("[data-reader-echo-markers]");
-      if (marker) marker.innerHTML = (visibleEchoes.get(index) || []).map((echo) => button("echo", `${echo.certainty === "possible" ? "\u5F85\u786E\u8BA4\u5173\u8054" : "\u4F0F\u7B14\u56DE\u58F0"} \u21B6`, `data-reader-echo="${escape2(echo.id)}"`)).join("");
+      if (marker) marker.innerHTML = (visibleEchoes.get(index) || []).map((echo) => button("echo", `${echo.certainty === "possible" ? "\u5F85\u786E\u8BA4\u5173\u8054" : "\u4F0F\u7B14\u56DE\u58F0"} \u21B6`, `data-reader-echo="${escape4(echo.id)}"`)).join("");
       if (index > readFloor) continue;
       const content = section.querySelector("[data-reader-prose]");
       if (!content) continue;
@@ -53550,14 +54750,14 @@ function createReaderStoryPanel(root, { refreshBody, close }) {
     }
   };
 }
-var escape2, button, proof, KINDS;
+var escape4, button, proof, KINDS;
 var init_readerStoryPanel = __esm({
   "src/ui/readerStoryPanel.js"() {
     init_readerStory();
     init_textRewriteDom();
-    escape2 = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-    button = (action, label, attributes = "") => `<button type="button" class="t-reader-index-button" data-reader-action="${action}" ${attributes}>${escape2(label)}</button>`;
-    proof = (reference, label = "\u539F\u6587\u4F9D\u636E") => button("source", label, `data-reader-reference="${escape2(JSON.stringify(reference))}"`);
+    escape4 = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+    button = (action, label, attributes = "") => `<button type="button" class="t-reader-index-button" data-reader-action="${action}" ${attributes}>${escape4(label)}</button>`;
+    proof = (reference, label = "\u539F\u6587\u4F9D\u636E") => button("source", label, `data-reader-reference="${escape4(JSON.stringify(reference))}"`);
     KINDS = { situation: "\u5904\u5883", location: "\u5730\u70B9", relationship: "\u4EBA\u7269\u5173\u7CFB", knowledge: "\u77E5\u60C5\u8FB9\u754C", promise: "\u627F\u8BFA\u4E0E\u7EA6\u5B9A" };
   }
 });
