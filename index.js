@@ -1664,10 +1664,10 @@ function buildFontStylesForShadowDOM() {
 }
 function renderToShadowDOMReal(container, html) {
   container.innerHTML = "";
-  const host = document.createElement("div");
-  host.className = "t-shadow-host";
-  host.style.cssText = "width:100%; min-height:100%;";
-  const shadow = host.attachShadow({ mode: "open" });
+  const host2 = document.createElement("div");
+  host2.className = "t-shadow-host";
+  host2.style.cssText = "width:100%; min-height:100%;";
+  const shadow = host2.attachShadow({ mode: "open" });
   const isEditableNode = (node) => {
     if (!(node instanceof HTMLElement)) return false;
     const tag = node.tagName.toLowerCase();
@@ -1745,7 +1745,7 @@ function renderToShadowDOMReal(container, html) {
         </style>
     `;
   shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
-  container.appendChild(host);
+  container.appendChild(host2);
   return shadow;
 }
 function parseWhitelistInput(input) {
@@ -23112,7 +23112,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .tsa-panel button { cursor: pointer; }
 .tsa-panel button:disabled { cursor: not-allowed; }
 .tsa-panel button:focus-visible, .tsa-panel [role="button"]:focus-visible, .tsa-panel input:focus-visible, .tsa-panel textarea:focus-visible, .tsa-panel select:focus-visible, #chat .mes .tsa-strip:focus-visible { outline: 2px solid var(--t-studio-gold); outline-offset: 2px; }
-.tsa-panel .tsa-scroll { padding: 0; scrollbar-width: thin; scrollbar-color: var(--t-studio-gold-border) transparent; overscroll-behavior: contain; }
+/* \u5230\u8FBE\u4E0A\u4E0B\u8FB9\u7F18\u540E\uFF0C\u7EE7\u7EED\u6CBF\u6D88\u606F\u6D41\u6EDA\u52A8\u9152\u9986\u804A\u5929\u3002 */
+.tsa-panel .tsa-scroll { padding: 0; scrollbar-width: thin; scrollbar-color: var(--t-studio-gold-border) transparent; overscroll-behavior-y: auto; }
 .tsa-panel .tsa-mode-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--t-studio-line); flex-shrink: 0; }
 .tsa-panel .tsa-mode-tabs { display: flex; gap: 24px; padding: 0; }
 .tsa-panel .tsa-mode-tab { position: relative; flex: none; padding: 13px 0; gap: 6px; border: 0; border-radius: 0; font-size: 12px; color: var(--t-studio-muted); background: transparent; white-space: nowrap; }
@@ -23190,7 +23191,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .tsa-panel .tsa-item-choose svg { width: 14px; height: 14px; }
 .tsa-panel .tsa-item-used { font-size: 9px; color: var(--t-studio-teal); border-color: var(--t-studio-teal); }
 .tsa-panel .tsa-empty { grid-column: 1 / -1; padding: 26px 16px; color: var(--t-studio-muted); line-height: 1.9; }
-.tsa-panel .tsa-footer { flex-shrink: 0; padding: 12px 20px; background: var(--t-studio-deep); border-color: var(--t-studio-line); flex-wrap: wrap; }
+.tsa-panel .tsa-footer { flex-shrink: 0; padding: 12px 20px; background: var(--t-studio-deep); border-color: var(--t-studio-line); flex-wrap: wrap; cursor: pointer; }
 .tsa-panel .tsa-footer-note { margin-left: auto; font-size: 10px; color: var(--t-studio-faint); }
 .tsa-panel .tsa-chip { font-size: 11px; padding: 6px 9px; border-radius: 5px; border-color: var(--t-studio-line); color: var(--t-studio-muted); }
 .tsa-panel .tsa-generate { padding: 9px 13px; font-size: 11px; border: 1px solid var(--t-studio-gold-border); border-radius: 5px; background: var(--t-studio-button); color: var(--t-studio-button-text); }
@@ -27059,8 +27060,8 @@ function openCharacterProfileWindow(options = {}) {
     renderGroups();
   }
   function renderTabs(counts) {
-    const host = role("tabs");
-    host.replaceChildren();
+    const host2 = role("tabs");
+    host2.replaceChildren();
     for (const group of GROUPS) {
       const active2 = group.kind === activeKind;
       const tab = document.createElement("button");
@@ -27076,7 +27077,7 @@ function openCharacterProfileWindow(options = {}) {
       count.dataset.role = `count-${group.kind}`;
       count.textContent = String(counts.get(group.kind) || 0);
       tab.append(count);
-      host.append(tab);
+      host2.append(tab);
     }
   }
   function buildGroup(group, entries) {
@@ -27105,10 +27106,10 @@ function openCharacterProfileWindow(options = {}) {
       items.filter((entry) => profileKind(entry) === group2.kind).length
     ]));
     renderTabs(counts);
-    const host = role("list");
-    host.replaceChildren();
+    const host2 = role("list");
+    host2.replaceChildren();
     const group = GROUPS.find((item2) => item2.kind === activeKind) || GROUPS[0];
-    host.append(buildGroup(group, items.filter((entry) => profileKind(entry) === group.kind)));
+    host2.append(buildGroup(group, items.filter((entry) => profileKind(entry) === group.kind)));
   }
   function revealEntry(id3, kind) {
     activeKind = kind;
@@ -28423,8 +28424,8 @@ function collectImagesDeep(rootEl) {
   const imgs = [];
   try {
     rootEl.querySelectorAll?.("img")?.forEach((img) => imgs.push(img));
-    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host) => {
-      const shadow = host.shadowRoot;
+    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host2) => {
+      const shadow = host2.shadowRoot;
       if (shadow) {
         shadow.querySelectorAll("img").forEach((img) => imgs.push(img));
       }
@@ -29840,8 +29841,8 @@ function openFavsWindow() {
   const getChainMetaNodes = () => {
     const container = document.getElementById("t-read-content");
     if (!container) return [];
-    const host = container.querySelector(".t-shadow-host");
-    const root = host?.shadowRoot || container;
+    const host2 = container.querySelector(".t-shadow-host");
+    const root = host2?.shadowRoot || container;
     return Array.from(root.querySelectorAll("details.t-chain-meta"));
   };
   const syncToggleMetaButton = (expanded) => {
@@ -32248,6 +32249,69 @@ var init_blindboxPlan = __esm({
   }
 });
 
+// src/ui/shared/chatScrollChain.js
+function bindChatScrollChain(panel) {
+  let gesture = null;
+  const canScroll = (element, delta) => delta < 0 ? element.scrollTop > 1 : element.scrollTop < element.scrollHeight - element.clientHeight - 1;
+  panel.addEventListener("touchstart", (event) => {
+    gesture = null;
+    if (event.touches.length !== 1 || event.target.closest('input, select, [contenteditable="true"]')) return;
+    const chat2 = panel.closest("#chat");
+    if (!chat2) return;
+    const touch = event.touches[0];
+    const chain = [];
+    for (let node = event.target; node; node = node.parentElement) {
+      if (node.scrollHeight > node.clientHeight + 1 && /^(auto|scroll)$/.test(getComputedStyle(node).overflowY)) chain.push(node);
+      if (node === chat2) break;
+    }
+    gesture = { id: touch.identifier, startX: touch.clientX, startY: touch.clientY, lastY: touch.clientY, chain, owner: -1, resolved: false };
+  }, { passive: true });
+  panel.addEventListener("touchmove", (event) => {
+    if (!gesture) return;
+    if (event.touches.length !== 1) {
+      gesture = null;
+      return;
+    }
+    const touch = event.touches[0];
+    if (touch.identifier !== gesture.id) return;
+    const delta = gesture.lastY - touch.clientY;
+    gesture.lastY = touch.clientY;
+    if (!gesture.resolved) {
+      const x = Math.abs(touch.clientX - gesture.startX);
+      const y = Math.abs(touch.clientY - gesture.startY);
+      if (Math.max(x, y) < 6) return;
+      if (x > y) {
+        gesture = null;
+        return;
+      }
+      gesture.resolved = true;
+      gesture.owner = gesture.chain.findIndex((node) => canScroll(node, delta));
+      if (gesture.owner < 0 || !panel.contains(gesture.chain[gesture.owner])) {
+        gesture = null;
+        return;
+      }
+    }
+    if (!delta || canScroll(gesture.chain[gesture.owner], delta)) return;
+    let remaining = delta;
+    for (const node of gesture.chain.slice(gesture.owner + 1)) {
+      const before = node.scrollTop;
+      node.scrollTop = Math.max(0, Math.min(node.scrollHeight - node.clientHeight, before + remaining));
+      remaining -= node.scrollTop - before;
+      if (Math.abs(remaining) < 1) break;
+    }
+    if (remaining !== delta && event.cancelable) event.preventDefault();
+  }, { passive: false });
+  const finish = () => {
+    gesture = null;
+  };
+  panel.addEventListener("touchend", finish, { passive: true });
+  panel.addEventListener("touchcancel", finish, { passive: true });
+}
+var init_chatScrollChain = __esm({
+  "src/ui/shared/chatScrollChain.js"() {
+  }
+});
+
 // src/core/pacingInjection.js
 import {
   setExtensionPrompt,
@@ -33427,7 +33491,7 @@ function buildBlindboxBody(info) {
                 <ol class="tsa-bb-stages">${stages}</ol>
             </div>
         </div>
-        <div class="tsa-footer">
+        <div class="tsa-footer" title="\u70B9\u51FB\u5E95\u680F\u7A7A\u767D\u5904\u6536\u8D77\u5267\u60C5\u63A8\u8FDB">
             <button type="button" class="tsa-icon-btn" id="tsa-bb-sound" title="\u89E3\u9501\u63D0\u793A\u97F3\uFF1A${soundLabel}\uFF08\u70B9\u51FB\u5207\u6362 \u5173/\u8F7B/\u4E2D/\u54CD\uFF09" aria-label="\u5207\u6362\u89E3\u9501\u63D0\u793A\u97F3\u97F3\u91CF">
                 <i class="fa-solid ${soundIcon}"></i>
             </button>
@@ -33472,7 +33536,7 @@ function buildRecommendBody(state) {
             <section class="tsa-candidates"><div class="tsa-candidate-heading"><div><div class="tsa-eyebrow">POSSIBLE TAKES</div><h3>\u63A5\u4E0B\u6765\uFF0C\u6545\u4E8B\u5982\u4F55\u53D1\u751F</h3></div><span class="tsa-candidate-count">${String(state.candidates.length).padStart(2, "0")}<small>\u4E2A\u5019\u9009</small></span></div>
             <div class="tsa-list" id="tsa-list">${buildCandidatesHtml(state)}</div></section>
         </div>
-        <div class="tsa-footer">
+        <div class="tsa-footer" title="\u70B9\u51FB\u5E95\u680F\u7A7A\u767D\u5904\u6536\u8D77\u5267\u60C5\u63A8\u8FDB">
             <button type="button" class="tsa-chip" id="tsa-insert-chip" data-mode="${state.insertMode}" title="\u5207\u6362\u5199\u5165\u65B9\u5F0F\uFF1A\u8986\u76D6/\u8FFD\u52A0">
                 <i class="fa-solid fa-arrows-left-right"></i>
                 <span class="tsa-chip-label">${state.insertMode === "append" ? "\u8FFD\u52A0\u5199\u5165" : "\u8986\u76D6\u5199\u5165"}</span>
@@ -33523,7 +33587,7 @@ function buildPacingBody() {
             </details>
             ${armedHtml}
         </div>
-        <div class="tsa-footer">
+        <div class="tsa-footer" title="\u70B9\u51FB\u5E95\u680F\u7A7A\u767D\u5904\u6536\u8D77\u5267\u60C5\u63A8\u8FDB">
             <button type="button" class="tsa-chip" id="tsa-pacing-clear" title="\u6E05\u9664\u5DF2\u6B66\u88C5\u7684\u8282\u594F\u6307\u4EE4"><i class="fa-solid fa-eraser"></i> \u6E05\u9664</button>
             <button type="button" class="tsa-generate" id="tsa-pacing-analyze" ${pacingAnalyzing ? "disabled" : ""}>
                 <i class="fa-solid ${pacingAnalyzing ? "fa-spinner fa-spin" : "fa-gauge-high"}"></i> ${pacingAnalyzing ? "\u5206\u6790\u4E2D..." : "\u5206\u6790\u8282\u594F"}
@@ -33796,6 +33860,12 @@ function insertPanel(strip, html) {
 }
 function bindPanelNode(panel) {
   const $panel = $(panel);
+  bindChatScrollChain(panel);
+  $panel.on("click", ".tsa-footer", (event) => {
+    if (event.target.closest('button, input, select, textarea, a, label, [role="button"]')) return;
+    destroyPanel();
+    getStrip()?.focus({ preventScroll: true });
+  });
   $panel.on("click", ".tsa-track-stop", async function() {
     const index = Number(this.dataset.trackIdx);
     previewItemIdx = previewItemIdx === index ? -1 : index;
@@ -33982,6 +34052,7 @@ var init_sceneAdvanceBubble = __esm({
     init_storage();
     init_logger();
     init_echoIcons();
+    init_chatScrollChain();
     init_pacingInjection();
     init_blindboxPlan();
     init_transitionPlan();
@@ -38489,6 +38560,18 @@ var init_storyOutlineWindow = __esm({
   }
 });
 
+// src/core/hostGeneration.js
+import * as host from "../../../../script.js";
+import { is_group_generating } from "../../../group-chats.js";
+function isHostGenerating() {
+  if (typeof host.isGenerating === "function") return Boolean(host.isGenerating());
+  return Boolean(host.is_send_press || is_group_generating);
+}
+var init_hostGeneration = __esm({
+  "src/core/hostGeneration.js"() {
+  }
+});
+
 // src/core/textRewritePatch.js
 function parseRewriteWhitelist(input) {
   return [...new Set(String(input || "").split(/[,，\n]/).map((tag) => tag.trim().replace(/^<|>$/g, "").toLowerCase()).filter((tag) => /^[\p{L}_][\p{L}\p{N}_-]*$/u.test(tag)))];
@@ -38915,17 +38998,17 @@ function rewriteTargetStillMatches(target, current, expectedSource = target.proj
   const snapshot = sourceFields(target.message);
   return !snapshot.reason && snapshot.fields.length === target.fields.length && snapshot.fields.every((field, i) => field.object === target.fields[i].object && field.key === target.fields[i].key && field.original === (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : expectedSource));
 }
-async function persistRewriteTarget(target, rewritten, host) {
-  if (!rewriteTargetStillMatches(target, host.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+async function persistRewriteTarget(target, rewritten, host2) {
+  if (!rewriteTargetStillMatches(target, host2.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
   const ctx2 = target.ctx;
   const group = ctx2.groupId != null && ctx2.groupId !== "";
   const character = ctx2.characters?.[ctx2.characterId];
   if (!ctx2.chatId || !group && !character?.avatar) throw new Error("\u5F53\u524D\u804A\u5929\u65E0\u6CD5\u786E\u8BA4\u4FDD\u5B58\u7ED3\u679C");
-  await host.save();
-  if (!rewriteTargetStillMatches(target, host.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
-  const response = await host.fetch(group ? "/api/chats/group/get" : "/api/chats/get", {
+  await host2.save();
+  if (!rewriteTargetStillMatches(target, host2.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+  const response = await host2.fetch(group ? "/api/chats/group/get" : "/api/chats/get", {
     method: "POST",
-    headers: host.getHeaders(),
+    headers: host2.getHeaders(),
     cache: "no-store",
     body: JSON.stringify(group ? { id: ctx2.chatId } : { ch_name: character.name, file_name: ctx2.chatId, avatar_url: character.avatar })
   });
@@ -38935,7 +39018,7 @@ async function persistRewriteTarget(target, rewritten, host) {
   const message = Array.isArray(saved) ? saved[target.index + offset] : null;
   const fields = message ? sourceFields(message) : { fields: [], reason: "\u672A\u627E\u5230\u4FDD\u5B58\u7684\u697C\u5C42" };
   if (fields.reason || fields.fields.length !== target.fields.length || fields.fields.some((field, i) => field.key !== target.fields[i].key || field.original !== (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : rewritten))) throw new Error("\u697C\u5C42\u8865\u4E01\u672A\u6210\u529F\u4FDD\u5B58");
-  if (!rewriteTargetStillMatches(target, host.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+  if (!rewriteTargetStillMatches(target, host2.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
 }
 async function commitRewritePatches(target, units, replacements, options) {
   const mapped = mapRewriteUnits(target.projection, units);
@@ -39293,7 +39376,7 @@ __export(rewriteEntryButton_exports, {
   openRewritePanelFromMenu: () => openRewritePanelFromMenu,
   refreshRewriteEntryButton: () => refreshRewriteEntryButton
 });
-import { saveChatConditional as saveChatConditional2, getRequestHeaders as getRequestHeaders4, isGenerating, eventSource as eventSource5, event_types as event_types5 } from "../../../../script.js";
+import { saveChatConditional as saveChatConditional2, getRequestHeaders as getRequestHeaders4, eventSource as eventSource5, event_types as event_types5 } from "../../../../script.js";
 function isEnabled3() {
   const data = getExtData();
   return data?.rewrite_entry?.enabled === true;
@@ -39988,7 +40071,7 @@ async function writeSafeMessagePatches(latest, units, replacements, action) {
   return commitRewritePatches(latest.target, units, replacements, {
     action,
     getContext: () => globalThis.SillyTavern?.getContext?.(),
-    isGenerating,
+    isGenerating: isHostGenerating,
     getContainer: () => getMessageRenderContainer(getChatMessageElementByIndex(latest.index)),
     persist: (target, rewritten) => persistRewriteTarget(target, rewritten, {
       getContext: () => globalThis.SillyTavern?.getContext?.(),
@@ -41526,6 +41609,7 @@ var init_rewriteEntryButton = __esm({
   "src/ui/rewriteEntryButton.js"() {
     init_storage();
     init_studioHeading();
+    init_hostGeneration();
     init_textRewritePatch();
     init_textRewriteWriteback();
     init_textRewriteDom();
@@ -43135,10 +43219,7 @@ function openStoryMemorySettingsWindow(options = {}) {
   root.addEventListener("input", updateDraft);
   root.addEventListener("change", updateDraft);
   root.addEventListener("click", (event) => {
-    if (event.target === root) {
-      close();
-      return;
-    }
+    if (event.target === root) return;
     const target = event.target.closest("button");
     if (!target || target.disabled) return;
     if (target.dataset.action === "close" || target.dataset.action === "cancel") close();
@@ -46115,8 +46196,8 @@ function openSettingsWindow() {
     if (!isCreate && entry.readonly === true) return;
     document.getElementById("t-prompt-editor-modal")?.remove();
     const isDynamic = entry.type === "dynamic";
-    const host = document.createElement("div");
-    host.id = "t-prompt-editor-modal";
+    const host2 = document.createElement("div");
+    host2.id = "t-prompt-editor-modal";
     const isolatedHostStyles = {
       position: "fixed",
       inset: "0",
@@ -46139,9 +46220,9 @@ function openSettingsWindow() {
       colorScheme: "dark"
     };
     for (const [property, value] of Object.entries(isolatedHostStyles)) {
-      host.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
+      host2.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
     }
-    const shadow = host.attachShadow({ mode: "closed" });
+    const shadow = host2.attachShadow({ mode: "closed" });
     shadow.innerHTML = `
             <style>
                 :host {
@@ -46295,7 +46376,7 @@ function openSettingsWindow() {
     contentInput.disabled = isDynamic;
     const close = () => {
       if (modal.open) modal.close();
-      host.remove();
+      host2.remove();
     };
     shadow.querySelector(".close").addEventListener("click", close);
     shadow.querySelector(".backdrop").addEventListener("click", (event) => {
@@ -46317,7 +46398,7 @@ function openSettingsWindow() {
       close();
       renderPromptManager();
     });
-    document.body.appendChild(host);
+    document.body.appendChild(host2);
     modal.showModal();
     nameInput.focus();
     if (isCreate) nameInput.select();
@@ -49375,12 +49456,12 @@ function bindEvents2(ctx2) {
     $(document).off("click.tcontinuationquick");
   });
 }
-function syncRunButtons({ isGenerating: isGenerating3, isQueueRunning }) {
+function syncRunButtons({ isGenerating: isGenerating2, isQueueRunning }) {
   const $queueBtn = $("#t-btn-run-queue");
   const $secondaryContinuationBtns = $("#t-btn-continuation-compose, #t-btn-continuation-history");
   const $stopBtn = $("#t-btn-stop");
   if (!$queueBtn.length) return;
-  if (isGenerating3 || isQueueRunning) {
+  if (isGenerating2 || isQueueRunning) {
     $queueBtn.prop("disabled", true);
     $secondaryContinuationBtns.prop("disabled", true);
     $stopBtn.addClass("is-active");
@@ -49544,11 +49625,11 @@ function bindEvents3(ctx2) {
     handleGenerate(null, false);
   });
 }
-function syncRunButtons2({ isGenerating: isGenerating3, isQueueRunning }) {
+function syncRunButtons2({ isGenerating: isGenerating2, isQueueRunning }) {
   const $singleBtn = $("#t-btn-run-single");
   const $queueBtn = $("#t-btn-run-queue");
   if (!$singleBtn.length || !$queueBtn.length) return;
-  const busy = isGenerating3 || isQueueRunning;
+  const busy = isGenerating2 || isQueueRunning;
   $singleBtn.prop("disabled", busy);
   $queueBtn.prop("disabled", busy);
 }
@@ -53558,8 +53639,8 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
   window.dispatchEvent(new CustomEvent("titania:scene-rendered"));
 }
 function ensureShadowContentElement(container, initialContent = "") {
-  const host = container.querySelector(".t-shadow-host");
-  const existingShadow = host && host.shadowRoot ? host.shadowRoot : null;
+  const host2 = container.querySelector(".t-shadow-host");
+  const existingShadow = host2 && host2.shadowRoot ? host2.shadowRoot : null;
   const existingContentEl = existingShadow ? existingShadow.querySelector(".t-shadow-content") : null;
   if (existingContentEl) return existingContentEl;
   const shadow = renderToShadowDOMReal(container, initialContent || "");
@@ -55739,7 +55820,7 @@ var init_readerStoryData = __esm({
 });
 
 // src/core/readerStory.js
-import { eventSource as eventSource9, event_types as event_types9, isGenerating as isGenerating2, saveChatConditional as saveChatConditional5, getRequestHeaders as getRequestHeaders7 } from "../../../../script.js";
+import { eventSource as eventSource9, event_types as event_types9, saveChatConditional as saveChatConditional5, getRequestHeaders as getRequestHeaders7 } from "../../../../script.js";
 function context2() {
   const ctx2 = globalThis.SillyTavern?.getContext?.();
   if (!ctx2?.chatId || !Array.isArray(ctx2.chat) || !ctx2.chatMetadata) return null;
@@ -55813,7 +55894,7 @@ function getReaderStoryView(floor = -1) {
     busy: !!job2 && sameChat2(job2.ctx),
     status: statusKey === ctx2?.key ? status2 : "idle",
     error: statusKey === ctx2?.key ? error2 : "",
-    generating: isGenerating2(),
+    generating: isHostGenerating(),
     nextFloor: sources[story.checkpoints.length]?.index ?? null
   };
 }
@@ -55894,7 +55975,7 @@ async function startReaderStoryIndex({ rebuild = false } = {}) {
   const ctx2 = context2();
   if (!ctx2) throw new Error("\u8BF7\u5148\u6253\u5F00\u89D2\u8272\u804A\u5929\u3002");
   if (job2) throw new Error("\u9605\u8BFB\u7D22\u5F15\u4ECD\u5728\u6574\u7406\u6216\u4FDD\u5B58\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002");
-  if (isGenerating2()) throw new Error("\u9152\u9986\u751F\u6210\u7ED3\u675F\u540E\u5373\u53EF\u6574\u7406\u9605\u8BFB\u7D22\u5F15\u3002");
+  if (isHostGenerating()) throw new Error("\u9152\u9986\u751F\u6210\u7ED3\u675F\u540E\u5373\u53EF\u6574\u7406\u9605\u8BFB\u7D22\u5F15\u3002");
   const config = getReaderStoryConfig();
   const sources = buildReaderStorySources(ctx2.chat, config.tag_whitelist);
   if (!sources.length) throw new Error("\u672A\u627E\u5230\u53EF\u5206\u6790\u7684\u6B63\u6587\uFF0C\u8BF7\u68C0\u67E5\u6B63\u6587\u6807\u7B7E\u4E0E\u63D0\u53D6\u8BBE\u7F6E\u3002");
@@ -55911,7 +55992,7 @@ async function startReaderStoryIndex({ rebuild = false } = {}) {
   notify3();
   try {
     for (let i = story.checkpoints.length; i < sources.length; i++) {
-      if (controller.signal.aborted || isGenerating2()) return false;
+      if (controller.signal.aborted || isHostGenerating()) return false;
       if (!prefixStillMatches(ctx2, sources, i, config)) throw new Error("\u6B63\u6587\u3001swipe \u6216\u804A\u5929\u5DF2\u53D8\u5316\uFF1B\u53D7\u5F71\u54CD\u8D44\u6599\u5DF2\u505C\u6B62\u5C55\u793A\u3002");
       const source = sources[i];
       const previous = readerStateAt(story, source.index - 1);
@@ -55944,7 +56025,7 @@ async function startReaderStoryIndex({ rebuild = false } = {}) {
           clearTimeout(timeout);
         }
         if (timedOut) throw new Error("\u672C\u697C\u7D22\u5F15\u8BF7\u6C42\u8D85\u65F6\uFF0C\u5DF2\u4FDD\u7559\u5148\u524D\u6574\u7406\u7ED3\u679C\u3002");
-        if (controller.signal.aborted || isGenerating2()) return false;
+        if (controller.signal.aborted || isHostGenerating()) return false;
         if (!prefixStillMatches(ctx2, sources, i, config)) throw new Error("\u8BF7\u6C42\u671F\u95F4\u7D22\u5F15\u6765\u6E90\u5DF2\u53D8\u5316\u3002");
         checkpoint = parseReaderStoryResponse(raw, previous, source);
       }
@@ -55971,6 +56052,7 @@ async function startReaderStoryIndex({ rebuild = false } = {}) {
 var subscribers2, job2, saving, initialized2, status2, error2, statusKey;
 var init_readerStory = __esm({
   "src/core/readerStory.js"() {
+    init_hostGeneration();
     init_storage();
     init_helpers();
     init_connection();
