@@ -261,7 +261,9 @@ var init_defaults = __esm({
       outline_entry: {
         enabled: true,
         show_theater: true,
-        show_outline_actions: true
+        show_outline_actions: true,
+        show_memory: true
+        // 故事记忆入口默认显示；旧配置缺失时按开启处理
       },
       // 小剧场注入聊天（挂在每条消息气泡的「…」菜单里）
       chat_inject: {
@@ -44459,7 +44461,7 @@ function getEnabledFeatureList(data) {
   if (data?.outline_entry?.show_theater === true) features.push("theater");
   if (data?.outline_entry?.show_outline_actions === true) features.push("outline_actions");
   if (data?.rewrite_entry?.enabled === true) features.push("rewrite");
-  features.push("memory");
+  if (data?.outline_entry?.show_memory !== false) features.push("memory");
   return features;
 }
 async function openFeatureDirect(featureKey) {
@@ -44534,8 +44536,8 @@ function openMenu(focusFirst = false) {
   $("body").append(`<div id="${MENU_ID}" role="menu" aria-label="\u56DE\u58F0\u5DE5\u5177\u7BB1">
         <div class="t-outline-menu-heading" role="presentation"><span class="t-outline-menu-mark">${echoIcon("echo")}</span><div><strong>\u56DE\u58F0\u5DE5\u5177\u7BB1</strong><small>ECHO / CREATIVE SUITE</small></div></div>
         ${creation ? `<div class="t-outline-menu-label" role="presentation"><span>\u521B\u4F5C\u4E0E\u6F14\u7ECE</span><i></i><small>CREATE</small></div><div class="t-outline-menu-group" role="group" aria-label="\u521B\u4F5C\u4E0E\u6F14\u7ECE">${creation}</div>` : ""}
-        <div class="t-outline-menu-label" role="presentation"><span>\u6545\u4E8B\u4E0E\u8BB0\u5FC6</span><i></i><small>REMEMBER</small></div>
-        ${item("memory", "t-outline-entry-open-memory", "memory", "\u6545\u4E8B\u8BB0\u5FC6", "\u4EBA\u7269\u3001\u4F0F\u7B14\u4E0E\u6765\u65F6\u7684\u8DEF", "is-memory")}
+        ${data?.outline_entry?.show_memory !== false ? `<div class="t-outline-menu-label" role="presentation"><span>\u6545\u4E8B\u4E0E\u8BB0\u5FC6</span><i></i><small>REMEMBER</small></div>
+        ${item("memory", "t-outline-entry-open-memory", "memory", "\u6545\u4E8B\u8BB0\u5FC6", "\u4EBA\u7269\u3001\u4F0F\u7B14\u4E0E\u6765\u65F6\u7684\u8DEF", "is-memory")}` : ""}
         ${data?.floor_nav?.enabled !== false ? `<div class="t-outline-menu-nav" role="group" aria-label="\u697C\u5C42\u5BFC\u822A">
             <button type="button" id="t-outline-entry-jump-top" data-feature="top" role="menuitem">${echoIcon("up")}\u56DE\u5230\u9876\u697C</button>
             <button type="button" id="t-outline-entry-jump-latest" data-feature="latest" role="menuitem">${echoIcon("down")}\u6700\u65B0 AI \u56DE\u590D</button>
@@ -58054,6 +58056,7 @@ ${hydration.error}`,
   $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
+  $("#cfg-memory-entry-enabled").prop("checked", extData.outline_entry.show_memory !== false);
   $("#cfg-chat-inject-enabled").prop("checked", extData.chat_inject.enabled === true);
   $("#cfg-reader-entry-enabled").prop("checked", extData.reader_entry?.enabled === true);
   $("#cfg-floor-nav-enabled").prop("checked", extData.floor_nav?.enabled !== false);
@@ -58107,6 +58110,17 @@ ${hydration.error}`,
     refreshOutlineEntryButton();
     refreshSceneAdvanceBubble();
     if (window.toastr) toastr.success(enabled ? "\u5267\u60C5\u63A8\u8FDB\u5165\u53E3\u5DF2\u542F\u7528" : "\u5267\u60C5\u63A8\u8FDB\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
+  });
+  $("#cfg-memory-entry-enabled").on("input", function() {
+    const enabled = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.outline_entry || typeof data.outline_entry !== "object") {
+      data.outline_entry = { enabled: false, show_theater: true, show_outline_actions: true };
+    }
+    data.outline_entry.show_memory = enabled;
+    saveExtData();
+    refreshOutlineEntryButton();
+    if (window.toastr) toastr.success(enabled ? "\u6545\u4E8B\u8BB0\u5FC6\u5165\u53E3\u5DF2\u542F\u7528" : "\u6545\u4E8B\u8BB0\u5FC6\u5165\u53E3\u5DF2\u5173\u95ED", "Titania Echo");
   });
   const syncBlindboxSoundControls = (cfg) => {
     $("#cfg-blindbox-sound-volume-label").text(describeUnlockVolume(cfg));
