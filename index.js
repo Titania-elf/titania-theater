@@ -9140,6 +9140,32 @@ textarea.t-input {
     --t-color-surface-recess: var(--t-studio-deep);
     --t-color-surface-hover: var(--t-studio-gold-soft);
     --t-color-surface-active: var(--t-studio-gold-soft);
+    /* \u8BBE\u7F6E\u7A97\u53E3 / \u6536\u85CF\u9986 / \u914D\u56FE\u9762\u677F\u6D88\u8D39\u7684\u8868\u9762\u4E0E\u63CF\u8FB9\u6863\u4F4D\u3002\u7F3A\u4E00\u6761\u5C31\u4F1A\u6389\u56DE
+       \u9ED8\u8BA4\u4E3B\u9898\u7684\u7070\u9636\uFF0C\u5728\u58A8\u84DD\u5E95\u4E0A\u51FA\u73B0\u4E00\u5757\u4E0D\u5C5E\u4E8E\u8FD9\u91CC\u7684\u51B7\u7070\u3002 */
+    --t-color-surface-elevated: var(--t-studio-raised);
+    --t-color-surface-inset: var(--t-studio-deep);
+    --t-color-surface-sunken: var(--t-studio-deep);
+    --t-color-surface-well: var(--t-studio-deep);
+    --t-color-surface-code: var(--t-studio-gold-soft);
+    --t-color-window-header: var(--t-studio-raised);
+    --t-color-panel-header: var(--t-studio-raised);
+    --t-color-text-soft: var(--t-studio-text);
+    --t-color-text-label: var(--t-studio-text);
+    --t-color-text-dim: var(--t-studio-faint);
+    --t-color-text-disabled: var(--t-studio-faint);
+    --t-color-border-bright: var(--t-studio-gold-border);
+    --t-color-border-dim: var(--t-studio-line);
+    --t-color-border-mid: var(--t-studio-line);
+    /* .t-tool-btn \u7684\u300C\u51F9\u9677\u836F\u4E38\u300D\u5E95\uFF0801-base/base.css\uFF09\u3002\u4E0D\u6620\u5C04\u7684\u8BDD\u6D45\u8272\u4E3B\u9898\u4E0B
+       \u4F1A\u7559\u4E0B\u4E00\u6392\u6DF1\u8272\u5C0F\u80F6\u56CA\uFF0C\u4E0E\u6696\u7EB8\u5E95\u660E\u663E\u4E0D\u662F\u4E00\u5957\u3002 */
+    --t-color-surface-recess-deep: var(--t-studio-deep);
+    --t-color-surface-hover-solid: var(--t-studio-raised);
+    --t-color-brand-veil: var(--t-studio-gold-soft);
+    --t-color-brand-soft-strong: var(--t-studio-gold-soft);
+    --t-color-brand-border-subtle: var(--t-studio-gold-border);
+    --t-color-brand-border-soft: var(--t-studio-gold-border);
+    --t-color-brand-strong: var(--t-studio-gold);
+    --t-color-decor: var(--t-studio-violet);
     --t-color-set-nav-surface: var(--t-studio-deep);
     --t-color-set-tab-hover-surface: var(--t-studio-gold-soft);
     --t-color-set-tab-hover-text: var(--t-studio-gold);
@@ -9178,6 +9204,136 @@ textarea.t-input {
 }
 .t-studio-workspace input::placeholder,
 .t-studio-workspace textarea::placeholder { color: var(--t-studio-faint); opacity: 1; }
+
+/* \u2500\u2500 \u6696\u8272\u4E09\u5143\u7EC4 \u2192 \u5348\u591C\u8272\u9636 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   \u6536\u85CF\u9986\u4E0E\u5DE5\u574A\u628A\u989C\u8272\u5B58\u6210 \`rgb(var(--t-warm-surface-*-rgb))\` \u8FD9\u7C7B\u4E09\u5143\u7EC4
+   \uFF08\u56E0\u4E3A\u8981\u5728\u6E10\u53D8\u91CC\u914D alpha\uFF09\uFF0C\u6CA1\u6CD5\u76F4\u63A5\u5F15\u7528 --t-studio-* \u7684\u5341\u516D\u8FDB\u5236\u503C\u3002
+   \u5728\u8FD9\u91CC\u6574\u7EC4\u6362\u6389\uFF0C35 \u5904\u80CC\u666F\u6E10\u53D8\u5C31\u4E0D\u7528\u9010\u6761\u6539\uFF1B\u6D45\u8272\u4E3B\u9898\u6362\u6210\u6696\u7EB8\u8272\u9636\u3002
+
+   \u26A0 \u53EA\u4F5C\u7528\u4E8E .t-studio-workspace \u5185\uFF0C\u672A\u63A5\u5165\u4E3B\u9898\u7684\u5DE5\u574A\u4E0D\u53D7\u5F71\u54CD\u3002
+   \u26A0 \u65B0\u7A97\u53E3\u82E5\u8FD8\u8981\u7528\u6696\u8272\u4E09\u5143\u7EC4\uFF0C\u5148\u786E\u8BA4\u5B83\u6302\u4E86 t-studio-workspace\uFF0C\u5426\u5219\u4ECD\u662F\u539F\u503C\u3002
+   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+.t-studio-workspace {
+    --t-warm-surface-0-rgb: 12 21 34;
+    --t-warm-surface-1-rgb: 16 27 42;
+    --t-warm-surface-2-rgb: 30 44 62;
+    --t-warm-surface-3-rgb: 22 34 50;
+    --t-warm-surface-4-rgb: 26 39 56;
+    --t-warm-surface-5-rgb: 12 21 34;
+    --t-cream-0-rgb: 226 231 238;
+    --t-cream-1-rgb: 220 192 139;
+    --t-cream-2-rgb: 226 231 238;
+    --t-cream-3-rgb: 160 174 192;
+    --t-cream-4-rgb: 124 144 168;
+    --t-cream-5-rgb: 187 162 120;
+    --t-cream-6-rgb: 160 174 192;
+    --t-cream-7-rgb: 124 144 168;
+    --t-accent-fav-gold-rgb: 220 192 139;
+    --t-accent-fav-gold-focus-rgb: 232 209 160;
+    --t-accent-fav-gold-dim-rgb: 187 162 120;
+    --t-accent-fav-fill-rgb: 30 44 62;
+    --t-accent-fav-fill-soft-rgb: 30 44 62;
+    --t-accent-fav-fill-warm-rgb: 26 39 56;
+    --t-accent-fav-chain-rgb: 220 192 139;
+    --t-accent-fav-checkbox-rgb: 220 192 139;
+    --t-accent-fav-edit-fill-rgb: 20 35 52;
+    --t-accent-fav-edit-border-rgb: 220 192 139;
+    --t-accent-interactive-rgb: 134 184 208;
+}
+:root[data-t-theme="light"] .t-studio-workspace {
+    --t-warm-surface-0-rgb: 236 229 216;    --t-warm-surface-1-rgb: 246 241 231;
+    --t-warm-surface-2-rgb: 255 250 240;
+    --t-warm-surface-3-rgb: 240 234 223;
+    --t-warm-surface-4-rgb: 250 246 238;
+    --t-warm-surface-5-rgb: 255 252 246;
+    --t-cream-0-rgb: 48 57 67;
+    --t-cream-1-rgb: 134 96 34;
+    --t-cream-2-rgb: 48 57 67;
+    --t-cream-3-rgb: 94 102 112;
+    --t-cream-4-rgb: 115 123 129;
+    --t-cream-5-rgb: 136 109 66;
+    --t-cream-6-rgb: 94 102 112;
+    --t-cream-7-rgb: 115 123 129;
+    --t-accent-fav-gold-rgb: 134 96 34;
+    --t-accent-fav-gold-focus-rgb: 150 108 40;
+    --t-accent-fav-gold-dim-rgb: 136 109 66;
+    --t-accent-fav-fill-rgb: 236 229 216;
+    --t-accent-fav-fill-soft-rgb: 236 229 216;
+    --t-accent-fav-fill-warm-rgb: 240 234 223;
+    --t-accent-fav-chain-rgb: 134 96 34;
+    --t-accent-fav-checkbox-rgb: 134 96 34;
+    --t-accent-fav-edit-fill-rgb: 232 240 232;
+    --t-accent-fav-edit-border-rgb: 134 96 34;
+    --t-accent-interactive-rgb: 57 111 139;
+}
+
+/* \u5C0F\u8BF4\u6A21\u5F0F\u7684\u9605\u8BFB\u914D\u8272\u662F\u72EC\u7ACB\u7684\u4E00\u7EC4\u6696\u8272\uFF08\u7F8A\u76AE\u7EB8\uFF09\uFF0C\u4E0D\u8DDF\u901A\u7528 surface \u8D70\u3002
+   \u5728\u5DE5\u4F5C\u5BA4\u4F5C\u7528\u57DF\u5185\u6362\u6210\u58A8\u84DD/\u6696\u7EB8\uFF0C\u6B63\u6587\u4E0E\u4FA7\u680F\u624D\u548C\u4E3B\u9898\u662F\u4E00\u5957\u3002 */
+.t-studio-workspace {
+    --t-reader-bg: #101b2a;
+    --t-reader-topbar-bg: rgb(30 44 62 / .92);
+    --t-reader-text: #e2e7ee;
+    --t-reader-user-edge: #bba278;
+    --t-reader-user-bg: rgb(220 192 139 / .08);
+    --t-reader-user-text: #a0aec0;
+    --t-reader-code-bg: #0c1522;
+    --t-reader-quote: #dcc08b;
+}
+:root[data-t-theme="light"] .t-studio-workspace {
+    --t-reader-bg: #f6f1e7;
+    --t-reader-topbar-bg: rgb(255 250 240 / .92);
+    --t-reader-text: #303943;
+    --t-reader-user-edge: #886d42;
+    --t-reader-user-bg: rgb(134 96 34 / .1);
+    --t-reader-user-text: #5e6670;
+    --t-reader-code-bg: #ece5d8;
+    --t-reader-quote: #866022;
+}
+
+/* \u2500\u2500 \u7A97\u53E3\u6807\u9898\u680F\uFF08\u8BBE\u7F6E / \u6536\u85CF\u9986\u7528\u7684 .t-header\uFF0C\u4E0D\u662F .t-window-header\uFF09\u2500\u2500 */
+.t-studio-workspace .t-header {
+    padding: 20px 24px;
+    background: linear-gradient(110deg, var(--t-studio-raised), var(--t-studio-bg) 70%);
+    border-bottom: 1px solid var(--t-studio-gold-border);
+}
+.t-studio-workspace .t-header .t-title-main {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--t-studio-text);
+    font: 22px/1.45 "Songti SC", "STSong", "SimSun", serif;
+    letter-spacing: 2px;
+}
+.t-studio-workspace .t-close {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--t-studio-line);
+    border-radius: 8px;
+    background: var(--t-studio-gold-soft);
+    color: var(--t-studio-muted);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+.t-studio-workspace .t-close:hover {
+    color: var(--t-studio-gold);
+    border-color: var(--t-studio-gold-border);
+}
+
+/* \u914D\u56FE / \u6863\u6848\u9762\u677F\u5934\uFF08.t-panel-header\uFF09\u3002\u6539\u5199\u4E0E\u5927\u7EB2\u7528 .t-window-header\uFF0C\u4E0D\u53D7\u5F71\u54CD\u3002 */
+.t-studio-workspace .t-panel-header {
+    padding: 15px 18px;
+    background: linear-gradient(110deg, var(--t-studio-raised), var(--t-studio-bg));
+    border-bottom: 1px solid var(--t-studio-gold-border);
+}
+.t-studio-workspace .t-panel-header strong {
+    color: var(--t-studio-text);
+    font-family: "Songti SC", "STSong", "SimSun", serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
 .t-studio-workspace .t-btn {
     --t-btn-color: var(--t-studio-text);
     border-radius: 7px;
@@ -9648,6 +9804,64 @@ textarea.t-input {
 
 #titania-timer.done {
     color: var(--t-color-notify);
+}
+
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4
+   ------------------------------------------------------------
+   \u7403\u7684\u5C3A\u5BF8\u4E0E\u989C\u8272\u662F B5 \u8FD0\u884C\u65F6\u53D8\u91CF\uFF08--t-size / --t-border-color / --t-bg-color\uFF09\uFF0C
+   \u7531 floatingBtn.js \u5199\u5728**\u5185\u8054 style** \u4E0A\u3002CSS \u53D8\u91CF\u540C\u6837\u53D7\u5C42\u53E0\u7EA6\u675F\uFF0C\u6837\u5F0F\u8868\u6539\u4E0D\u52A8
+   \u5185\u8054\u58F0\u660E\uFF0C\u6240\u4EE5\u8FD9\u91CC\u4E0D\u8986\u76D6\u53D8\u91CF\uFF0C\u53EA\u8986\u76D6\u6D88\u8D39\u53D8\u91CF\u7684\u90A3\u51E0\u6761\u5C5E\u6027\u3002
+
+   \u53EA\u63A5\u7BA1\u300C\u7528\u6237\u6CA1\u6311\u8FC7\u989C\u8272\u300D\u7684\u7403\uFF1AfloatingBtn.js \u5728\u7528\u6237\u81EA\u5B9A\u4E49\u8FC7\u989C\u8272\u65F6\u6253
+   data-float-custom\uFF0C\u9009\u62E9\u5668\u7528 :not() \u8BA9\u51FA\u3002\u51FA\u5382\u914D\u8272\uFF08\u6DF1\u7070\u5E95 + \u6DE1\u84DD\u8FB9\uFF09\u5728
+   \u58A8\u84DD\u4E0E\u6696\u7EB8\u4E0A\u90FD\u4E0D\u5C5E\u4E8E\u8FD9\u4E00\u5957\uFF0C\u624D\u9700\u8981\u6362\u6210\u9999\u69DF\u91D1\u3002
+   ============================================================ */
+
+#titania-float-btn.t-studio-workspace:not([data-float-custom]) {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-gold-border);
+    color: var(--t-studio-gold);
+}
+
+/* \u52A0\u8F7D\u52A8\u753B\u7684\u6CE2\u7EB9\u4E0E\u7535\u5F27\u4E5F\u662F\u7528 --t-border-color \u753B\u7684\uFF0C\u540C\u6837\u7ED5\u4E0D\u5F00\u5185\u8054\u53D8\u91CF\u3002 */
+#titania-float-btn.t-studio-workspace:not([data-float-custom]).t-loading.t-anim-ripple::before,
+#titania-float-btn.t-studio-workspace:not([data-float-custom]).t-loading.t-anim-ripple::after {
+    border-color: var(--t-studio-gold);
+}
+
+#titania-float-btn.t-studio-workspace:not([data-float-custom]).t-loading.t-anim-arc::before {
+    background:
+        radial-gradient(circle at 20% 0%, var(--t-studio-gold) 0%, transparent 30%),
+        radial-gradient(circle at 80% 100%, var(--t-studio-gold) 0%, transparent 30%);
+}
+
+#titania-float-btn.t-studio-workspace:not([data-float-custom]).t-loading.t-anim-arc::after {
+    background:
+        radial-gradient(circle at 50% 0%, var(--t-studio-gold) 0%, transparent 25%),
+        radial-gradient(circle at 50% 100%, var(--t-studio-gold) 0%, transparent 25%);
+}
+
+#titania-float-btn.t-studio-workspace:not([data-float-custom]).t-notify {
+    border-color: var(--t-studio-gold);
+}
+
+/* \u8BA1\u65F6\u5668\u6CA1\u6709\u5185\u8054\u53D8\u91CF\uFF0C\u6574\u5757\u6362\u6389\u5373\u53EF\uFF1B\u6BDB\u73BB\u7483\u4FDD\u7559\uFF0C\u5E95\u8272\u6539\u6210\u58A8\u84DD\u7684 78% \u4E0D\u900F\u660E\u3002 */
+#titania-timer.t-studio-workspace {
+    background: color-mix(in srgb, var(--t-studio-deep) 78%, transparent);
+    border-color: var(--t-studio-gold-border);
+    color: var(--t-studio-gold);
+}
+
+#titania-timer.t-studio-workspace.done {
+    color: var(--t-studio-teal);
+}
+
+/* \u6D45\u8272\u4E0B --t-studio-gold-border \u53EA\u6709 30% \u4E0D\u900F\u660E\u5EA6\uFF0C\u843D\u5728\u767D/\u6D45\u7070\u804A\u5929\u5E95\u4E0A\u51E0\u4E4E\u770B\u4E0D\u89C1\uFF0C
+   \u7403\u4F1A\u50CF\u6D6E\u4E0D\u8D77\u6765\u7684\u4E00\u56E2\u7C73\u8272\u3002\u6D45\u8272\u4E13\u9879\u6539\u7528\u5B9E\u8272\u91D1\u8FB9 + \u66F4\u4EAE\u7684\u7403\u5E95\u3002 */
+:root[data-t-theme="light"] #titania-float-btn.t-studio-workspace:not([data-float-custom]) {
+    background: var(--t-studio-raised);
+    border-color: var(--t-studio-gold);
 }
 
 
@@ -11453,6 +11667,81 @@ textarea.t-input {
 
 .t-output-placeholder-text {
     font-size: 1.1em;
+}
+
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u6CE8\u5165\u804A\u5929\u6B63\u6587\u5F39\u7A97
+   ------------------------------------------------------------
+   #t-chat-inject-overlay \u7531 chatInjectButton.js \u521B\u5EFA\uFF0C\u6302\u5728 body \u4E0A\uFF0C
+   \u81EA\u8EAB\u5E26 .t-overlay.t-root\uFF0C\u4E3B\u9898\u5F00\u5173\u76F4\u63A5\u52A0\u5728\u5B83\u8EAB\u4E0A\uFF0C\u56E0\u6B64\u8FD9\u91CC\u5168\u90E8\u7528
+   \`#t-chat-inject-overlay.t-studio-workspace\` \u6536\u53E3\uFF0C\u4E0D\u5F71\u54CD\u539F\u98CE\u683C\u3002
+
+   \u5916\u58F3\u7684\u5927\u90E8\u5206\u989C\u8272\u8D70 .t-studio-workspace \u7684 token \u6620\u5C04\uFF08dialog-surface \u7B49\uFF09\uFF0C
+   \u4E0B\u9762\u53EA\u8865\u6CA1\u6709\u6620\u5C04\u7684\u4E09\u6761\uFF1A\u5F3A\u8C03\u8272\u8584\u7EB1\u3001\u6B21\u8981\u6587\u5B57\u4E0E\u5361\u7247\u5E95\u3002
+   ============================================================ */
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-window {
+    border-color: var(--t-studio-gold-border);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-window-title {
+    color: var(--t-studio-text);
+    font-family: "Songti SC", "STSong", "SimSun", serif;
+    letter-spacing: 1px;
+}
+
+/* \u63D2\u5165\u4F4D\u7F6E\u63D0\u793A\uFF1A\u5DE6\u4FA7\u91D1\u8272\u7AD6\u6761 + \u9999\u69DF\u91D1\u8584\u7EB1\uFF0C\u4E0E\u5DE5\u574A\u7684\u63D0\u793A\u6761\u540C\u4E00\u8BED\u8A00\u3002 */
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-target {
+    background: var(--t-studio-gold-soft);
+    border-left-color: var(--t-studio-gold);
+    color: var(--t-studio-muted);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-target b {
+    color: var(--t-studio-gold);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-visible,
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-item {
+    background: var(--t-studio-raised);
+    border-color: var(--t-studio-line);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-visible-main {
+    color: var(--t-studio-text);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-visible small {
+    color: var(--t-studio-faint);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-item:hover {
+    background: var(--t-studio-gold-soft);
+    border-color: var(--t-studio-gold);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-item-name {
+    color: var(--t-studio-gold);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-item-time {
+    color: var(--t-studio-faint);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-item-preview {
+    color: var(--t-studio-muted);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-empty {
+    color: var(--t-studio-faint);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-empty > i {
+    color: var(--t-studio-gold-border);
+}
+
+#t-chat-inject-overlay.t-studio-workspace .t-chat-inject-empty-title {
+    color: var(--t-studio-text);
 }
 
 
@@ -15144,6 +15433,96 @@ textarea.t-input {
     .t-profile-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 }
 
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u573A\u666F\u914D\u56FE\uFF08\u9762\u677F / \u914D\u56FE\u8BBE\u7F6E / \u4EBA\u7269\u5916\u89C2\u6863\u6848 / \u706F\u7BB1\uFF09
+   ------------------------------------------------------------
+   \u8FD9\u56DB\u4E2A\u754C\u9762\u90FD\u6302 \`t-studio-workspace\`\uFF08\u7531 studioTheme.js \u6309\u4E3B\u9898\u5F00\u5173\u51B3\u5B9A\uFF09\uFF0C
+   \u9762\u677F\u5934\u4E0E\u901A\u7528\u63A7\u4EF6\u5DF2\u5728 02-components/studio-workspace.css \u5904\u7406\uFF0C\u8FD9\u91CC\u8865
+   \u5404\u9762\u677F\u81EA\u5DF1\u7684\u8868\u9762\u3001\u5361\u7247\u4E0E\u706F\u7BB1\u5E95\u8272\u3002
+   ============================================================ */
+
+.t-studio-workspace .t-illustration-panel,
+.t-studio-workspace .t-profile-panel {
+    background: var(--t-studio-bg);
+    border-color: var(--t-studio-gold-border);
+    border-radius: 14px;
+    box-shadow: 0 24px 80px var(--t-shadow-ink-50);
+    color: var(--t-studio-text);
+}
+
+.t-studio-workspace .t-illustration-body,
+.t-studio-workspace .t-profile-body {
+    background: var(--t-studio-bg);
+}
+
+.t-studio-workspace .t-illustration-details {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace .t-illustration-details summary {
+    color: var(--t-studio-gold);
+    letter-spacing: .5px;
+}
+
+.t-studio-workspace .t-illustration-candidate {
+    background: var(--t-studio-raised);
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace .t-illustration-candidate.is-selected {
+    border-color: var(--t-studio-gold);
+    background: var(--t-studio-gold-soft);
+}
+
+.t-studio-workspace .t-illustration-gallery-bar,
+.t-studio-workspace .t-illustration-connection {
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace .t-profile-chip,
+.t-studio-workspace .t-profile-toggle {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace .t-profile-chip.is-on,
+.t-studio-workspace .t-profile-toggle.is-on {
+    background: var(--t-studio-gold-soft);
+    border-color: var(--t-studio-gold-border);
+    color: var(--t-studio-gold);
+}
+
+.t-studio-workspace .t-profile-card,
+.t-studio-workspace .t-profile-tile {
+    background: var(--t-studio-raised);
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace .t-profile-tabs {
+    border-bottom-color: var(--t-studio-line);
+}
+
+.t-studio-workspace .t-profile-tab.is-active {
+    color: var(--t-studio-gold);
+    border-bottom-color: var(--t-studio-gold);
+}
+
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-backdrop {
+    background: rgb(6 11 18 / .9);
+}
+
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-close {
+    background: var(--t-studio-raised);
+    border: 1px solid var(--t-studio-gold-border);
+    color: var(--t-studio-muted);
+}
+
+@media screen and (max-width: 700px) {
+    .t-studio-workspace .t-illustration-panel,
+    .t-studio-workspace .t-profile-panel { border-radius: 12px; }
+}
+
 
 /* === 04-features/settings-drawer.css === */
 /* css/04-features/settings-drawer.css - ST \u6269\u5C55\u8BBE\u7F6E\u62BD\u5C49
@@ -15721,6 +16100,109 @@ textarea.t-input {
     cursor: pointer;
     font-size: 12px;
     color: var(--t-glass-text-faint);
+}
+
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4
+   ------------------------------------------------------------
+   \u62BD\u5C49\u6765\u81EA settings.html\uFF0C\u66F4\u65B0\u5F39\u7A97\u7531 extensionUpdate.js \u52A8\u6001\u63D2\u5165\uFF0C\u4E24\u8005\u90FD\u4E0D\u5E26
+   \`.t-root\`\uFF1Bstudio \u53EA\u5F53\u914D\u8272\u4F5C\u7528\u57DF\u7528\uFF0C\u5B57\u53F7\u57FA\u51C6\u4FDD\u6301\u5BBF\u4E3B\u539F\u6837\uFF08\u4E0E\u786E\u8BA4\u6846\u540C\u7406\uFF09\u3002
+
+   \u62BD\u5C49\u91CC\u5927\u90E8\u5206\u989C\u8272\u5DF2\u662F\u8BED\u4E49 token\uFF0C\u4F1A\u88AB .t-studio-workspace \u7684\u6620\u5C04\u63A5\u7BA1\u3002
+   \u8FD9\u91CC\u53EA\u8865\u4E09\u5904\u6CA1\u6709\u6620\u5C04\u7684\uFF1A
+     --t-accent-update-rgb     \u8584\u8377\u7EFF \u2192 \u4E3B\u9898\u9752
+     --t-color-surface-highest \u4E2D\u6027\u7070 \u2192 \u62AC\u8D77\u9762
+     --t-surface-mid-rgb       \u4E2D\u6027\u7070 \u2192 \u62AC\u8D77\u9762
+   ============================================================ */
+
+#titania-settings-drawer.t-studio-workspace .titania-panel-card,
+#titania-settings-drawer.t-studio-workspace .titania-settings-group {
+    border-color: var(--t-studio-line);
+}
+
+/* \u62BD\u5C49\u4E0D\u5E26 .t-root\uFF0Caccent-color \u6CA1\u4EBA\u4E0B\u53D1\uFF0C\u539F\u751F\u52FE\u9009\u6846\u4F1A\u7559\u5728\u6D4F\u89C8\u5668\u9ED8\u8BA4\u84DD\u3002 */
+#titania-settings-drawer.t-studio-workspace,
+#titania-update-overlay.t-studio-workspace {
+    accent-color: var(--t-studio-gold);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-settings-group-body,
+#titania-settings-drawer.t-studio-workspace .titania-settings-dependent {
+    border-color: var(--t-studio-line);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-settings-summary:focus-visible,
+#titania-settings-drawer.t-studio-workspace .titania-settings-help:focus-visible {
+    outline-color: var(--t-studio-gold);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-settings-help-text {
+    background: var(--t-studio-gold-soft);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-version-badge {
+    background: var(--t-studio-raised);
+    color: var(--t-studio-faint);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-mini-btn {
+    border-color: var(--t-studio-line);
+    color: var(--t-studio-text);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-update-card {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--t-studio-teal) 10%, transparent), transparent);
+    border-color: var(--t-studio-line);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-update-card[data-state="available"] {
+    border-color: color-mix(in srgb, var(--t-studio-teal) 45%, transparent);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-mini-btn.is-update {
+    background: color-mix(in srgb, var(--t-studio-teal) 24%, transparent);
+    color: var(--t-studio-teal);
+}
+
+#titania-settings-drawer.t-studio-workspace .titania-mini-btn.is-update:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--t-studio-teal) 34%, transparent);
+}
+
+/* ---- \u66F4\u65B0\u8BF4\u660E\u5F39\u7A97 ---- */
+
+#titania-update-overlay.t-studio-workspace {
+    background: color-mix(in srgb, var(--t-studio-bg) 90%, transparent);
+}
+
+#titania-update-overlay.t-studio-workspace .titania-update-dialog {
+    border-color: var(--t-studio-gold-border);
+}
+
+#titania-update-overlay.t-studio-workspace .titania-update-header,
+#titania-update-overlay.t-studio-workspace .titania-update-entry {
+    border-color: var(--t-studio-line);
+}
+
+#titania-update-overlay.t-studio-workspace .titania-update-kicker,
+#titania-update-overlay.t-studio-workspace .titania-update-entry h3 {
+    color: var(--t-studio-gold);
+}
+
+#titania-update-overlay.t-studio-workspace .titania-update-header h2 {
+    color: var(--t-studio-text);
+}
+
+#titania-update-overlay.t-studio-workspace .titania-update-entry {
+    color: var(--t-studio-muted);
+}
+
+#titania-update-overlay.t-studio-workspace .titania-update-close {
+    color: var(--t-studio-faint);
+}
+
+#titania-update-overlay.t-studio-workspace #titania-update-now {
+    background: var(--t-studio-button);
+    color: var(--t-studio-button-text);
 }
 
 
@@ -16685,6 +17167,101 @@ textarea.t-input {
     margin-top: 8px;
 }
 
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u8BBE\u7F6E\u7A97\u53E3
+   ------------------------------------------------------------
+   \u53EA\u505A\u300C\u8868\u9762\u4E0E\u5C42\u7EA7\u300D\u7684\u8986\u76D6\uFF0C\u63A7\u4EF6\u89C6\u89C9\u6CBF\u7528 02-components/studio-workspace.css
+   \uFF08\u8F93\u5165\u6846\u3001\u6309\u94AE\u3001\u4E0B\u62C9\u3001\u7126\u70B9\u73AF\u90FD\u5DF2\u5728\u90A3\u91CC\u7EDF\u4E00\uFF09\u3002\u9009\u62E9\u5668\u5E26
+   \`.t-studio-workspace#t-settings-view\`\uFF081,1,0\uFF09\uFF0C\u538B\u5F97\u8FC7\u672C\u6587\u4EF6\u65E2\u6709\u7684
+   \`#t-settings-view\`\uFF081,0,0\uFF09\uFF0C\u4E0D\u4F9D\u8D56\u52A0\u8F7D\u987A\u5E8F\u3002
+   ============================================================ */
+
+.t-studio-workspace#t-settings-view {
+    background: var(--t-studio-bg);
+    border: 1px solid var(--t-studio-gold-border);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px var(--t-shadow-ink-50);
+}
+
+.t-studio-workspace#t-settings-view .t-set-shell-nav {
+    padding: 14px 0;
+    background: var(--t-studio-deep);
+    border-right-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-settings-view .t-set-shell-tab {
+    padding: 11px 18px;
+    font-size: 12.5px;
+    letter-spacing: .5px;
+}
+
+.t-studio-workspace#t-settings-view .t-set-shell-tab.active {
+    background: var(--t-studio-gold-soft);
+    border-left-width: 2px;
+    font-weight: 500;
+}
+
+.t-studio-workspace#t-settings-view .t-set-shell-content {
+    padding: 22px 26px;
+    background: var(--t-studio-bg);
+}
+
+.t-studio-workspace#t-settings-view .t-preview-container {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-line);
+    border-radius: 12px;
+}
+
+.t-studio-workspace#t-settings-view .t-anim-option,
+.t-studio-workspace#t-settings-view .t-upload-card,
+.t-studio-workspace#t-settings-view .t-css-hints,
+.t-studio-workspace#t-settings-view .t-prompt-entry-card,
+.t-studio-workspace#t-settings-view .t-log-box,
+.t-studio-workspace#t-settings-view .t-code-editor {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-settings-view .t-anim-option:hover,
+.t-studio-workspace#t-settings-view .t-prompt-entry-card:hover {
+    background: var(--t-studio-raised);
+    border-color: var(--t-studio-gold-border);
+}
+
+.t-studio-workspace#t-settings-view .t-anim-option.active {
+    background: var(--t-studio-gold-soft);
+    border-color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-settings-view .t-upload-card:hover {
+    border-color: var(--t-studio-gold);
+    background-color: var(--t-studio-gold-soft);
+}
+
+.t-studio-workspace#t-settings-view .t-css-hint-item {
+    border-bottom-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-settings-view .t-css-hint-item code {
+    background: var(--t-studio-gold-soft);
+    color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-settings-view .t-set-warn {
+    background: var(--t-studio-gold-soft);
+    border-color: var(--t-studio-gold-border);
+}
+
+/* \u5E95\u90E8\u4FDD\u5B58\u6761\u662F\u5185\u8054\u6837\u5F0F\uFF0C\u8FD9\u91CC\u53EA\u8865\u63CF\u8FB9\uFF1B\u5E95\u8272\u9760 --t-color-surface-inset \u6620\u5C04\u3002 */
+.t-studio-workspace#t-settings-view > div:last-child {
+    border-top-color: var(--t-studio-gold-border) !important;
+}
+
+@media screen and (max-width: 700px) {
+    .t-studio-workspace#t-settings-view .t-set-shell-content { padding: 16px; }
+    .t-studio-workspace#t-settings-view .t-header { padding: 16px; }
+}
+
 
 /* === 04-features/manager.css === */
 /* css/04-features/manager.css - \u5267\u672C\u7BA1\u7406 */
@@ -17161,6 +17738,97 @@ textarea.t-input {
     text-align: center;
     color: var(--t-color-text-disabled);
     margin-top: 50px;
+}
+
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u5267\u672C\u7BA1\u7406\u5668
+   ------------------------------------------------------------
+   #t-mgr-view / #t-editor-view / #t-large-edit-view \u662F\u4E09\u4E2A\u72EC\u7ACB\u6839\uFF0C
+   \u90FD\u7531 studioTheme.js \u6309\u4E3B\u9898\u5F00\u5173\u6302 \`t-studio-workspace\`\u3002
+   \u56DB\u4E2A\u5BFC\u5165/\u5BFC\u51FA/\u79FB\u52A8/\u91CD\u547D\u540D\u5F39\u7A97\u662F #t-mgr-view \u7684\u540E\u4EE3\uFF0C\u81EA\u52A8\u7EE7\u627F\u3002
+   ============================================================ */
+
+.t-studio-workspace#t-mgr-view,
+.t-studio-workspace#t-editor-view,
+.t-studio-workspace#t-large-edit-view {
+    background: var(--t-studio-bg);
+    border: 1px solid var(--t-studio-gold-border);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px var(--t-shadow-ink-50);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-sidebar {
+    background: var(--t-studio-deep);
+    border-right-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-sb-title {
+    color: var(--t-studio-gold-muted);
+    letter-spacing: 1px;
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-sb-item.active {
+    background: var(--t-studio-gold-soft);
+    border-left-color: var(--t-studio-gold);
+    color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-toolbar {
+    background: var(--t-studio-bg);
+    border-bottom-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-search,
+.t-studio-workspace#t-mgr-view .t-mgr-sort,
+.t-studio-workspace#t-mgr-view .t-mgr-cat-dropdown {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-line);
+    color: var(--t-studio-text);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-overview {
+    background: var(--t-studio-deep);
+    border-bottom-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-ov-item {
+    background: var(--t-studio-gold-soft);
+    border-color: var(--t-studio-gold-border);
+    color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-item {
+    border-bottom-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-item:hover {
+    background: var(--t-studio-raised);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-tag {
+    background: var(--t-studio-raised);
+    color: var(--t-studio-muted);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-tag--preset {
+    background: var(--t-studio-gold-soft);
+    color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-mgr-view .t-mgr-footer-bar {
+    background: var(--t-studio-gold-soft);
+    border-top-color: var(--t-studio-gold-border);
+    color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-editor-view .t-body label,
+.t-studio-workspace#t-large-edit-view .t-body label {
+    color: var(--t-studio-muted);
+}
+
+@media screen and (max-width: 700px) {
+    .t-studio-workspace#t-mgr-view,
+    .t-studio-workspace#t-editor-view { border-radius: 12px; }
 }
 
 
@@ -17929,6 +18597,80 @@ textarea.t-input {
     .t-ws-bulk-count {
         min-width: 0;
     }
+}
+
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u56DE\u58F0\u5DE5\u574A
+   ------------------------------------------------------------
+   \u5DE5\u574A\u6CBF\u7528\u6536\u85CF\u9986\u7684\u6696\u8272\u5E95\uFF08--t-warm-* \u4E09\u5143\u7EC4\u5DF2\u5728
+   02-components/studio-workspace.css \u91CC\u6362\u6210\u5348\u591C\u8272\u9636\uFF09\uFF0C\u8FD9\u91CC\u53EA\u6539
+   \u5927\u9762\u79EF\u6E10\u53D8\u3001\u5361\u7247\u8868\u9762\u4E0E\u9884\u89C8\u5F39\u5C42\u3002#t-ws-preview-overlay \u81EA\u5DF1\u6302
+   t-studio-workspace\uFF0C\u9884\u89C8\u6846\u662F\u5B83\u7684\u540E\u4EE3\u3002
+   ============================================================ */
+
+.t-studio-workspace#t-ws-view,
+.t-studio-workspace .t-ws-preview-box {
+    background: var(--t-studio-bg);
+    border: 1px solid var(--t-studio-gold-border);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px var(--t-shadow-ink-50);
+}
+
+.t-studio-workspace#t-ws-view .t-ws-toolbar {
+    background: var(--t-studio-deep);
+    border-bottom-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-ws-view .t-ws-search,
+.t-studio-workspace#t-ws-view .t-ws-select {
+    background: var(--t-studio-bg);
+    border-color: var(--t-studio-line);
+    color: var(--t-studio-text);
+}
+
+.t-studio-workspace#t-ws-view .t-ws-grid {
+    background:
+        linear-gradient(180deg, var(--t-studio-deep), var(--t-studio-bg)),
+        radial-gradient(90% 140% at 100% 0%, var(--t-studio-gold-soft), transparent 70%);
+}
+
+.t-studio-workspace#t-ws-view .t-ws-card {
+    background: linear-gradient(160deg, var(--t-studio-raised), var(--t-studio-bg));
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-ws-view .t-ws-card:hover {
+    border-color: var(--t-studio-gold-border);
+    box-shadow: 0 6px 20px var(--t-shadow-ink-50);
+}
+
+.t-studio-workspace#t-ws-view .t-ws-tag {
+    background: var(--t-studio-raised);
+    color: var(--t-studio-muted);
+}
+
+.t-studio-workspace#t-ws-view .t-ws-tag-cat {
+    background: var(--t-studio-gold-soft);
+    color: var(--t-studio-gold);
+}
+
+.t-studio-workspace .t-ws-pv-bar,
+.t-studio-workspace .t-ws-pv-comments {
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace .t-ws-pv-desc {
+    background: var(--t-studio-deep);
+    border-left-color: var(--t-studio-gold);
+}
+
+.t-studio-workspace.t-ws-preview-overlay {
+    background: rgb(6 11 18 / .72);
+}
+
+@media screen and (max-width: 700px) {
+    .t-studio-workspace#t-ws-view,
+    .t-studio-workspace .t-ws-preview-box { border-radius: 12px; }
 }
 
 
@@ -19144,6 +19886,114 @@ textarea.t-input {
     color: var(--t-color-text-disabled);
 }
 
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u6536\u85CF\u753B\u5ECA
+   ------------------------------------------------------------
+   \u6536\u85CF\u9986\u539F\u672C\u662F\u300C\u6696\u8272\u535A\u7269\u9986\u300D\u8BED\u8A00\uFF08--t-warm-* / --t-cream-*\uFF09\u3002\u8FD9\u4E9B\u4E09\u5143\u7EC4
+   \u5DF2\u5728 02-components/studio-workspace.css \u91CC\u6574\u7EC4\u6362\u6210\u5348\u591C\u8272\u9636\uFF0C\u672C\u6BB5\u53EA\u5904\u7406
+   \u90A3\u4E9B\u9760\u4E09\u5143\u7EC4\u8868\u8FBE\u4E0D\u4E86\u7684\u5927\u9762\u79EF\u6E10\u53D8\u4E0E\u5C42\u6B21\uFF0C\u907F\u514D\u51FA\u73B0\u6696\u68D5\u5E95\u914D\u58A8\u84DD\u5361\u7247\u7684\u5939\u751F\u611F\u3002
+   \u9605\u8BFB\u5668\u3001\u5BFC\u51FA\u9762\u677F\u3001\u914D\u56FE\u7BA1\u7406\u5F39\u7A97\u90FD\u662F #t-favs-view \u7684\u540E\u4EE3\uFF0C\u4E00\u5E76\u7EE7\u627F\u3002
+   ============================================================ */
+
+.t-studio-workspace#t-favs-view {
+    background:
+        radial-gradient(120% 120% at 0% 0%, var(--t-studio-raised) 0%, var(--t-studio-bg) 44%, var(--t-studio-deep) 100%);
+    border: 1px solid var(--t-studio-gold-border);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px var(--t-shadow-ink-50);
+}
+
+.t-studio-workspace#t-favs-view::before {
+    background:
+        radial-gradient(90% 65% at 85% -10%, var(--t-studio-gold-soft), transparent 55%),
+        radial-gradient(70% 45% at 8% 110%, var(--t-studio-teal-soft), transparent 65%);
+}
+
+.t-studio-workspace#t-favs-view .t-fav-toolbar {
+    background: linear-gradient(180deg, var(--t-studio-raised), var(--t-studio-bg));
+    border-bottom: 1px solid var(--t-studio-line);
+}
+
+.t-studio-workspace#t-favs-view .t-fav-grid-area {
+    background:
+        linear-gradient(180deg, var(--t-studio-deep), var(--t-studio-bg)),
+        radial-gradient(90% 140% at 100% 0%, var(--t-studio-gold-soft), transparent 70%);
+}
+
+.t-studio-workspace#t-favs-view .t-fav-carousel-stage {
+    border-color: var(--t-studio-gold-border);
+    background: radial-gradient(130% 120% at 20% 0%, var(--t-studio-raised), var(--t-studio-bg));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .05), 0 14px 36px var(--t-shadow-ink-45);
+}
+
+.t-studio-workspace#t-favs-view .t-fav-card {
+    background: linear-gradient(180deg, var(--t-studio-bg), var(--t-studio-deep));
+}
+
+.t-studio-workspace#t-favs-view .t-fav-card-overlay {
+    background: linear-gradient(to bottom, rgb(0 0 0 / .06) 14%, rgb(0 0 0 / .46) 58%, var(--t-studio-deep) 100%);
+}
+
+/* \u6D45\u8272\u4E0B\u5361\u7247\u6587\u5B57\u662F\u6DF1\u8272\uFF0C\u518D\u538B 46% \u9ED1\u4F1A\u5728\u7EB8\u4E0A\u7CCA\u51FA\u4E00\u9053\u7070\u5E26\uFF1B
+   \u6539\u7528\u767D\u8272\u8584\u7EB1\u6536\u5230\u5E95\u90E8\u7684\u6696\u7EB8\u8272\u3002 */
+:root[data-t-theme="light"] .t-studio-workspace#t-favs-view .t-fav-card-overlay {
+    background: linear-gradient(to bottom, rgb(255 255 255 / .04) 14%, rgb(255 255 255 / .34) 58%, var(--t-studio-deep) 100%);
+}
+
+/* \u5361\u7247\u6587\u5B57\u533A\u539F\u672C\u6536\u5728 --t-color-dialog-scrim\uFF08\u6D45\u8272\u4E0B\u4ECD\u662F\u9ED1 .7\uFF09\uFF0C\u6DF1\u8272\u6587\u5B57
+   \u4F1A\u76F4\u63A5\u6C89\u8FDB\u9ED1\u5E95\u3002\u6D45\u8272\u6539\u6210\u6536\u5728\u6696\u7EB8\u8272\u3002 */
+:root[data-t-theme="light"] .t-studio-workspace#t-favs-view .t-fav-card-content {
+    background: linear-gradient(180deg, rgb(255 255 255 / .02), rgb(255 250 240 / .94));
+    text-shadow: none;
+}
+
+/* \u7FFB\u9875\u5706\u94AE\u7684\u5E95\u662F --t-color-scrim\uFF08\u6D45\u8272\u4E0B\u4ECD\u662F\u9ED1 .6\uFF09\uFF0C\u4F1A\u53D8\u6210\u4E24\u9897\u6DF1\u8272\u5706\u70B9\u3002 */
+:root[data-t-theme="light"] .t-studio-workspace#t-favs-view .t-fav-carousel-nav {
+    background: rgb(255 250 240 / .88);
+    color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-favs-view .t-fav-card.no-img .t-fav-card-poster::before {
+    border-color: var(--t-studio-gold-border);
+    background: linear-gradient(160deg, var(--t-studio-gold-soft), var(--t-studio-raised));
+}
+
+.t-studio-workspace#t-favs-view .t-fav-thumb {
+    border-color: var(--t-studio-line);
+    background: var(--t-studio-deep);
+}
+
+.t-studio-workspace#t-favs-view .t-fav-thumb.is-active {
+    border-color: var(--t-studio-gold);
+    box-shadow: 0 0 0 1px var(--t-studio-gold-border) inset;
+}
+
+.t-studio-workspace#t-favs-view .t-fav-reader,
+.t-studio-workspace#t-favs-view .t-read-body,
+.t-studio-workspace#t-favs-view #t-read-capture-zone {
+    background: var(--t-studio-deep);
+}
+
+.t-studio-workspace#t-favs-view .t-read-header {
+    background: linear-gradient(110deg, var(--t-studio-raised), var(--t-studio-bg));
+    border-bottom-color: var(--t-studio-gold-border);
+}
+
+.t-studio-workspace#t-favs-view .t-read-more-menu {
+    border-color: var(--t-studio-gold-border);
+    background: var(--t-studio-raised);
+}
+
+.t-studio-workspace#t-favs-view .t-fav-export-sheet {
+    border-color: var(--t-studio-gold-border);
+    background: var(--t-studio-bg);
+}
+
+@media screen and (max-width: 700px) {
+    .t-studio-workspace#t-favs-view { border-radius: 12px; }
+    .t-studio-workspace#t-favs-view .t-header { padding: 16px; }
+}
+
 
 /* === 04-features/debug.css === */
 
@@ -19742,6 +20592,72 @@ textarea.t-input {
 .t-diag-log-empty i {
     font-size: 2em;
     margin-bottom: 10px;
+}
+
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u63D0\u793A\u8BCD\u67E5\u770B\u5668 / \u8BCA\u65AD\u65E5\u5FD7
+   ------------------------------------------------------------
+   \u4E24\u4E2A\u7A97\u53E3\u662F\u72EC\u7ACB\u6839\uFF0C\u5404\u81EA\u6302 t-studio-workspace\u3002\u89D2\u8272\u8272\uFF08system/user/
+   assistant\uFF09\u4FDD\u7559\u539F\u6709\u7684\u8BED\u4E49\u533A\u5206\uFF0C\u53EA\u7EDF\u4E00\u8868\u9762\u4E0E\u5206\u9694\u3002
+   ============================================================ */
+
+.t-studio-workspace#t-debug-view,
+.t-studio-workspace#t-diagnostics-view {
+    background: var(--t-studio-bg);
+    border: 1px solid var(--t-studio-gold-border);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px var(--t-shadow-ink-50);
+}
+
+.t-studio-workspace#t-debug-view .t-prompt-source-bar,
+.t-studio-workspace#t-debug-view .t-prompt-summary {
+    background: var(--t-studio-deep);
+    border-bottom-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-debug-view .t-prompt-source-tab.active {
+    color: var(--t-studio-gold);
+    border-color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-debug-view .t-prompt-tool-btn {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-debug-view .t-prompt-tool-btn:hover {
+    background: var(--t-studio-raised);
+    border-color: var(--t-studio-gold-border);
+}
+
+.t-studio-workspace#t-debug-view .t-prompt-section-card {
+    background: var(--t-studio-raised);
+    border-bottom-color: var(--t-studio-line);
+    border-left-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-debug-view .t-prompt-section-card.expanded {
+    border-left-color: var(--t-studio-gold);
+}
+
+.t-studio-workspace#t-debug-view .t-prompt-section-content {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-diagnostics-view .t-diag-notice-band,
+.t-studio-workspace#t-diagnostics-view .t-diag-actions {
+    background: var(--t-studio-deep);
+    border-color: var(--t-studio-line);
+}
+
+.t-studio-workspace#t-diagnostics-view .t-diag-guide {
+    background: var(--t-studio-gold-soft);
+    border-color: var(--t-studio-gold-border);
+}
+
+.t-studio-workspace#t-diagnostics-view .t-diag-guide-title {
+    color: var(--t-studio-gold);
 }
 
 
@@ -21956,6 +22872,37 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     }
 }
 
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u5C0F\u8BF4\u6A21\u5F0F\u9605\u8BFB\u5668
+   ------------------------------------------------------------
+   \u6B63\u6587\u4E0E\u4FA7\u680F\u7684\u914D\u8272\u8D70 --t-reader-*\uFF0C\u8FD9\u7EC4\u503C\u5DF2\u5728
+   02-components/studio-workspace.css \u5185\u6362\u6210\u58A8\u84DD/\u6696\u7EB8\uFF1B
+   \u8FD9\u91CC\u53EA\u8865\u9876\u680F\u5206\u9694\u4E0E\u6807\u9898\u7684\u5B57\u5F62\u3002
+   ============================================================ */
+
+.t-studio-workspace.t-reader-overlay {
+    background: var(--t-reader-bg);
+}
+
+.t-studio-workspace .t-reader-topbar {
+    border-bottom-color: var(--t-studio-gold-border);
+}
+
+.t-studio-workspace .t-reader-topbar-title {
+    color: var(--t-studio-text);
+    font-family: "Songti SC", "STSong", "SimSun", serif;
+    letter-spacing: 2px;
+}
+
+.t-studio-workspace .t-reader-inspector {
+    border-left-color: var(--t-studio-line);
+}
+
+.t-studio-workspace .t-reader-index-tabs button[aria-selected="true"] {
+    color: var(--t-studio-gold);
+    border-bottom-color: var(--t-studio-gold);
+}
+
 
 /* === 04-features/story-memory.css === */
 /* \u547D\u8FD0\u661F\u56FE\u3002\u8C03\u8272\u677F\u53EA\u4F5C\u7528\u4E8E\u6545\u4E8B\u8BB0\u5FC6\uFF0C\u8DDF\u968F\u5DE5\u5177\u7BB1\u6DF1\u6D45\u4E3B\u9898\u3002 */
@@ -22500,6 +23447,45 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     background: var(--t-color-surface-highest);
 }
 
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4
+   ------------------------------------------------------------
+   \u8FD9\u4E2A\u5F39\u7A97**\u4E0D\u5E26** \`.t-root\`\uFF08\u89C1\u6587\u4EF6\u5934\uFF09\uFF0C\u6240\u4EE5\u6302 studio \u53EA\u662F\u52A0\u914D\u8272\u4F5C\u7528\u57DF\uFF0C
+   \u5B57\u53F7\u57FA\u51C6\u4ECD\u662F\u5BBF\u4E3B\u7684 15px \u2014\u2014 1.1em / 0.9em \u7684\u6362\u7B97\u5173\u7CFB\u4E0D\u53D8\uFF0C\u89C6\u89C9\u5C3A\u5BF8\u4E0D\u52A8\u3002
+
+   \u4E24\u4E2A\u6309\u94AE\u4E0D\u662F .t-btn\uFF0C\u62FF\u4E0D\u5230 studio \u7684\u6309\u94AE\u6837\u5F0F\uFF0C\u8FD9\u91CC\u76F4\u63A5\u7ED9\u503C\uFF1A
+   \u4E3B\u6309\u94AE\u7528\u9999\u69DF\u91D1\u6E10\u53D8 + \u6DF1\u5B57\uFF0C\u6B21\u6309\u94AE\u7528\u62AC\u8D77\u9762\u3002
+   ============================================================ */
+
+#t-confirm-overlay.t-studio-workspace .t-confirm-box {
+    background: var(--t-studio-bg);
+    border-color: var(--t-studio-gold-border);
+}
+
+/* \u6CA1\u6709 .t-root \u5C31\u6CA1\u4EBA\u4E0B\u53D1 accent-color\uFF08\u89C1 01-base/scope.css\uFF09\uFF0C
+   \u539F\u751F\u52FE\u9009\u6846\u4F1A\u7559\u5728\u6D4F\u89C8\u5668\u9ED8\u8BA4\u7684\u84DD\u8272\u3002\u8FD9\u91CC\u8865\u4E00\u6B21\uFF0C\u52FE\u9009\u8272\u624D\u8DDF\u4E3B\u9898\u4E00\u81F4\u3002 */
+#t-confirm-overlay.t-studio-workspace {
+    accent-color: var(--t-studio-gold);
+}
+
+#t-confirm-overlay.t-studio-workspace .t-confirm-msg {
+    color: var(--t-studio-text);
+}
+
+#t-confirm-overlay.t-studio-workspace .t-confirm-skip-row {
+    color: var(--t-studio-muted);
+}
+
+#t-confirm-overlay.t-studio-workspace #t-confirm-yes {
+    background: var(--t-studio-button);
+    color: var(--t-studio-button-text);
+}
+
+#t-confirm-overlay.t-studio-workspace #t-confirm-no {
+    background: var(--t-studio-raised);
+    color: var(--t-studio-text);
+}
+
 
 /* === 04-features/image-cropper.css === */
 /* ============================================================
@@ -22619,6 +23605,38 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-crop-actions-right {
     display: flex;
     gap: var(--t-gap-inline);
+}
+
+/* ============================================================
+   \u5348\u591C\u653E\u6620\u5BA4
+   ------------------------------------------------------------
+   \u5F39\u7A97\u6302\u5728 #t-overlay \u5185\uFF0C\u4E3B\u9898\u5F00\u5173\u76F4\u63A5\u52A0\u5728 #t-crop-modal \u4E0A\u3002
+   \u9762\u677F\u5E95/\u63CF\u8FB9\u3001\u6807\u9898\u680F\u3001\u5173\u95ED\u94AE\u3001\u6309\u94AE\u90FD\u6765\u81EA\u7EC4\u4EF6\u5C42\uFF0C\u5DF2\u7531
+   .t-studio-workspace \u7684 token \u6620\u5C04\u63A5\u7BA1\uFF0C\u8FD9\u91CC\u53EA\u8865\u88C1\u526A\u5668\u81EA\u5DF1\u7684\u51E0\u5904\uFF1A
+
+   - \u53D6\u666F\u6846\u5916\u538B\u6697\uFF08--t-color-dialog-scrim-strongest\uFF09**\u4E0D\u6362**\uFF1A\u90A3\u662F\u300C\u906E\u4F4F\u6846\u5916\u300D
+     \u7684\u8BED\u4E49\uFF0C\u4EFB\u4F55\u914D\u8272\u4E0B\u90FD\u8BE5\u662F\u6DF1\u8272\uFF0C\u6D45\u8272\u4E3B\u9898\u91CC\u6362\u6210\u6696\u7EB8\u4F1A\u8BA9\u53D6\u666F\u5706\u5931\u53BB\u8FB9\u754C\u3002
+   - \u63D0\u793A\u6587\u5B57\u7528\u7684\u662F --t-color-text-faint\uFF0C\u6620\u5C04\u8868\u91CC\u6CA1\u6709\u8FD9\u4E00\u6863\uFF0C\u5355\u72EC\u7ED9\u503C\u3002
+   ============================================================ */
+
+.t-studio-workspace#t-crop-modal .t-crop-panel {
+    border-color: var(--t-studio-gold-border);
+}
+
+.t-studio-workspace#t-crop-modal .t-crop-stage {
+    background: var(--t-studio-deep);
+}
+
+.t-studio-workspace#t-crop-modal .t-crop-frame {
+    border-color: var(--t-studio-gold-border);
+}
+
+.t-studio-workspace#t-crop-modal .t-crop-hint {
+    color: var(--t-studio-faint);
+}
+
+.t-studio-workspace#t-crop-modal .t-crop-zoom-row {
+    color: var(--t-studio-muted);
 }
 
 
@@ -27615,6 +28633,30 @@ var init_toolboxApiSelector = __esm({
   }
 });
 
+// src/ui/shared/studioTheme.js
+function isStudioThemeActive(data = getExtData()) {
+  return data?.ui_prefs?.theater_theme === "midnight";
+}
+function applyStudioTheme(root, active2 = isStudioThemeActive()) {
+  if (!root) return null;
+  root.setAttribute(STUDIO_SURFACE_ATTR, "");
+  root.classList.toggle(STUDIO_WORKSPACE_CLASS, Boolean(active2));
+  return root;
+}
+function syncStudioSurfaces(active2 = isStudioThemeActive()) {
+  document.querySelectorAll(`[${STUDIO_SURFACE_ATTR}]`).forEach((root) => {
+    root.classList.toggle(STUDIO_WORKSPACE_CLASS, Boolean(active2));
+  });
+}
+var STUDIO_WORKSPACE_CLASS, STUDIO_SURFACE_ATTR;
+var init_studioTheme = __esm({
+  "src/ui/shared/studioTheme.js"() {
+    init_storage();
+    STUDIO_WORKSPACE_CLASS = "t-studio-workspace";
+    STUDIO_SURFACE_ATTR = "data-studio-surface";
+  }
+});
+
 // src/ui/illustrationSettingsWindow.js
 function helpSections() {
   return [
@@ -27657,6 +28699,7 @@ function openIllustrationSettingsWindow(options = {}) {
   const { onClose } = options;
   const root = document.createElement("div");
   root.className = "t-root t-illustration-settings-window";
+  applyStudioTheme(root);
   root.innerHTML = `
         <section class="t-profile-panel" role="dialog" aria-labelledby="t-illustration-settings-title">
             <div class="t-panel-header">
@@ -28149,6 +29192,7 @@ var init_illustrationSettingsWindow = __esm({
     init_floatingWindow();
     init_helpPopover();
     init_toolboxApiSelector();
+    init_studioTheme();
     PLACEHOLDER_HELP = {
       theater_text: "\u914D\u56FE\u9762\u677F\u91CC\u300C\u672C\u6B21\u914D\u56FE\u7D20\u6750\u300D\u7684\u5185\u5BB9\uFF0C\u4E5F\u5C31\u662F\u672C\u8F6E\u6B63\u6587\u3002",
       participants: "\u914D\u56FE\u9762\u677F\u91CC\u300C\u4EBA\u7269\u5916\u89C2\u7B49\u8865\u5145\u8D44\u6599\u300D\u7684\u5185\u5BB9\uFF1B\u547D\u4E2D\u7684\u5916\u89C2\u6863\u6848\u4F1A\u81EA\u52A8\u586B\u5230\u8FD9\u91CC\u3002",
@@ -28181,6 +29225,7 @@ function openCharacterProfileWindow(options = {}) {
   const { onClose } = options;
   const root = document.createElement("div");
   root.className = "t-root t-profile-window";
+  applyStudioTheme(root);
   root.innerHTML = `
         <section class="t-profile-panel" role="dialog" aria-labelledby="t-profile-title">
             <div class="t-panel-header">
@@ -28622,6 +29667,7 @@ var init_characterProfileWindow = __esm({
     init_context();
     init_floatingWindow();
     init_helpPopover();
+    init_studioTheme();
     PROFILE_HELP = [
       {
         heading: "\u5E72\u4EC0\u4E48\u7528\u7684",
@@ -28745,6 +29791,7 @@ var init_illustrationReferences = __esm({
 function openIllustrationLightbox({ image, container = null, onClose = null } = {}) {
   const root = document.createElement("div");
   root.className = "t-root t-illustration-lightbox";
+  applyStudioTheme(root);
   root.setAttribute("role", "dialog");
   root.setAttribute("aria-modal", "true");
   root.setAttribute("aria-label", "\u914D\u56FE\u5927\u56FE");
@@ -28801,6 +29848,7 @@ function openIllustrationLightbox({ image, container = null, onClose = null } = 
 var CLOSE_ICON;
 var init_illustrationLightbox = __esm({
   "src/ui/illustrationLightbox.js"() {
+    init_studioTheme();
     CLOSE_ICON = "fa-solid fa-xmark";
   }
 });
@@ -28886,6 +29934,7 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
   const previousFocus = document.activeElement;
   const root = document.createElement("div");
   root.className = "t-root t-illustration-window";
+  applyStudioTheme(root);
   root.innerHTML = `
         <section class="t-illustration-panel" role="dialog" aria-labelledby="t-illustration-title">
             <div class="t-panel-header">
@@ -29542,6 +30591,7 @@ var init_illustrationWindow = __esm({
     init_storage();
     init_illustrationSettingsWindow();
     init_characterProfileWindow();
+    init_studioTheme();
     init_illustrationStore();
     init_illustrationAuto();
     init_illustrationReferences();
@@ -30220,6 +31270,7 @@ function openFavsWindow() {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  applyStudioTheme(document.getElementById("t-favs-view"));
   const saveFavViewMode = (mode) => {
     data.favs_view_mode = mode === "compact" ? "compact" : "poster";
     saveExtData();
@@ -31530,6 +32581,7 @@ var init_favsWindow = __esm({
     init_illustrationStore();
     init_illustrationWindow();
     init_illustrationPortability();
+    init_studioTheme();
     CHAIN_SEGMENT_STYLE_ID = "t-chain-segment-style";
     CHAIN_SEGMENT_STYLES = `
 <style data-t-style="${CHAIN_SEGMENT_STYLE_ID}">
@@ -31840,6 +32892,7 @@ async function showDebugInfo() {
         <div class="t-prompt-sections" id="t-prompt-sections"></div>
     </div>`;
   $("#t-overlay").append(html);
+  applyStudioTheme(document.getElementById("t-debug-view"));
   let activeSource = "preview";
   let currentPreview = null;
   let previewLoading = false;
@@ -32065,6 +33118,7 @@ function showDiagnosticsWindow() {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  applyStudioTheme(document.getElementById("t-diagnostics-view"));
   const renderLogView = () => {
     const logs = TitaniaLogger.logs;
     const $viewer = $("#t-diag-log-viewer");
@@ -32114,6 +33168,7 @@ var init_debugWindow = __esm({
     init_dom();
     init_helpers();
     init_logView();
+    init_studioTheme();
     tokenCountRun = 0;
   }
 });
@@ -32228,12 +33283,14 @@ var init_echoIcons = __esm({
 
 // src/ui/mainWindow/theaterTheme.js
 function getTheaterTheme(data = getExtData()) {
-  return data?.ui_prefs?.theater_theme === "midnight" ? "midnight" : "original";
+  return isStudioThemeActive(data) ? "midnight" : "original";
 }
 function applyTheaterTheme(theme = getTheaterTheme()) {
+  const midnight = theme === "midnight";
+  syncStudioSurfaces(midnight);
   const view = document.getElementById("t-main-view");
   if (!view) return;
-  view.classList.toggle("t-theater-midnight", theme === "midnight");
+  view.classList.toggle("t-theater-midnight", midnight);
   updateTheaterStage();
 }
 function renderTheaterTitle(charName) {
@@ -32322,6 +33379,7 @@ var init_theaterTheme = __esm({
     init_state();
     init_viewState();
     init_echoIcons();
+    init_studioTheme();
     escapeText = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
       "&": "&amp;",
       "<": "&lt;",
@@ -32424,6 +33482,7 @@ function createSession({ image, outputSize, quality, resolve }) {
   $stage.prepend(image);
   ensureOverlay();
   $("#t-overlay").append($modal);
+  applyStudioTheme($modal[0]);
   const naturalW = image.naturalWidth;
   const naturalH = image.naturalHeight;
   const scaleMin = Math.min(naturalW, naturalH) / Math.hypot(naturalW, naturalH);
@@ -32666,6 +33725,7 @@ var OUTPUT_SIZE_DEFAULT, OUTPUT_QUALITY_DEFAULT, SCALE_DEFAULT, SCALE_MAX, WHEEL
 var init_imageCropper = __esm({
   "src/ui/imageCropper.js"() {
     init_dom();
+    init_studioTheme();
     OUTPUT_SIZE_DEFAULT = 512;
     OUTPUT_QUALITY_DEFAULT = 0.92;
     SCALE_DEFAULT = 1;
@@ -46045,6 +47105,7 @@ function openSettingsWindow() {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  applyStudioTheme(document.getElementById("t-settings-view"));
   mountToolboxSettingsLink(document.getElementById("t-theater-extraction-link"), "theater", { api: false });
   const apiSelector = mountToolboxApiSelector(document.getElementById("t-theater-api-selector"), "theater");
   $(".t-set-tab-btn").on("click", function() {
@@ -47297,6 +48358,7 @@ var init_settingsWindow = __esm({
     init_toolboxApiSelector();
     init_state();
     init_theaterTheme();
+    init_studioTheme();
     init_logger();
     init_defaults();
     init_helpers();
@@ -47534,6 +48596,7 @@ function openWorkshopWindow(source = "manager") {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  applyStudioTheme(document.getElementById("t-ws-view"));
   const closeWindow3 = () => {
     $("#t-ws-view").remove();
     if (source === "manager") {
@@ -47807,6 +48870,7 @@ function openWorkshopWindow(source = "manager") {
             </div>
         </div>`;
     $("body").append(previewHtml);
+    applyStudioTheme(document.getElementById("t-ws-preview-overlay"));
     bindAvatarFallback($("#t-ws-preview-overlay"));
     const closePreview = () => {
       $("#t-ws-preview-overlay").remove();
@@ -47944,6 +49008,7 @@ var init_workshopWindow = __esm({
     init_state();
     init_mainWindow();
     init_workshopRating();
+    init_studioTheme();
     HOT_THRESHOLD = 50;
     BATCH_CONCURRENCY = 3;
     BATCH_CONFIRM_THRESHOLD = 10;
@@ -48134,6 +49199,7 @@ function openScriptManager() {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  applyStudioTheme(document.getElementById("t-mgr-view"));
   const renderSidebarCats = () => {
     const cats = getCategories();
     $("#t-mgr-cat-list").empty();
@@ -48683,6 +49749,7 @@ function openEditor(id3, source = "main") {
         </div>
     </div>`;
   $("#t-overlay").append(html);
+  applyStudioTheme(document.getElementById("t-editor-view"));
   $("#ed-cancel").on("click", () => {
     $("#t-editor-view").remove();
     if (source === "manager") {
@@ -48712,6 +49779,7 @@ function openEditor(id3, source = "main") {
             </div>
         </div>`;
     $("body").append(largeEditHtml);
+    applyStudioTheme(document.getElementById("t-large-edit-view"));
     const checkUnsavedChanges = () => {
       const currentContent = $("#ed-large-text").val();
       return currentContent !== originalContent;
@@ -48779,6 +49847,7 @@ var init_scriptManager = __esm({
     init_mainWindow();
     init_settingsWindow();
     init_workshopWindow();
+    init_studioTheme();
     SORT_MODE_LABELS = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
@@ -53065,11 +54134,11 @@ function createFloatingButton() {
   if (settings.enabled !== true) {
     return;
   }
-  const app = settings.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: "#90cdf4", bg_color: "#2b2b2b", border_opacity: 100, bg_opacity: 100 };
+  const app = settings.appearance || { type: "emoji", content: "\u{1F3AD}", size: 56, animation: "ripple", border_color: DEFAULT_FLOAT_BORDER_COLOR, bg_color: DEFAULT_FLOAT_BG_COLOR, border_opacity: 100, bg_opacity: 100 };
   const size = parseInt(app.size) || 56;
   const animationType = app.animation || "ripple";
-  const borderColor = app.border_color || "#90cdf4";
-  const bgColor = app.bg_color || "#2b2b2b";
+  const borderColor = app.border_color || DEFAULT_FLOAT_BORDER_COLOR;
+  const bgColor = app.bg_color || DEFAULT_FLOAT_BG_COLOR;
   const borderOpacity = app.border_opacity !== void 0 ? app.border_opacity : 100;
   const bgOpacity = app.bg_opacity !== void 0 ? app.bg_opacity : 100;
   const rawAppContent = typeof app.content === "string" ? app.content.trim() : "";
@@ -53103,6 +54172,13 @@ function createFloatingButton() {
     "--t-border-opacity": borderOpacity / 100,
     "--t-bg-opacity": bgOpacity / 100
   });
+  const usesDefaultPalette = borderColor === DEFAULT_FLOAT_BORDER_COLOR && bgColor === DEFAULT_FLOAT_BG_COLOR;
+  if (!usesDefaultPalette) {
+    btn.attr("data-float-custom", "");
+    timer2.attr("data-float-custom", "");
+  }
+  applyStudioTheme(btn[0]);
+  applyStudioTheme(timer2[0]);
   $("body").append(btn);
   $("body").append(timer2);
   refreshFloatTuckCache();
@@ -53157,18 +54233,21 @@ function createFloatingButton() {
     }, 120);
   });
 }
-var FLOAT_POSITION_STORAGE_KEY, FLOAT_POSITION_MARGIN, FLOAT_POSITION_MOBILE_BREAKPOINT, FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, FLOAT_TUCK_RATIO, floatResizeTimer, floatTuckEnabled, ANIMATION_CLASSES;
+var FLOAT_POSITION_STORAGE_KEY, FLOAT_POSITION_MARGIN, FLOAT_POSITION_MOBILE_BREAKPOINT, FLOAT_POSITION_DEFAULT_LEFT, FLOAT_POSITION_DEFAULT_TOP, FLOAT_TUCK_RATIO, DEFAULT_FLOAT_BORDER_COLOR, DEFAULT_FLOAT_BG_COLOR, floatResizeTimer, floatTuckEnabled, ANIMATION_CLASSES;
 var init_floatingBtn = __esm({
   "src/ui/floatingBtn.js"() {
     init_storage();
     init_state();
     init_mainWindow();
+    init_studioTheme();
     FLOAT_POSITION_STORAGE_KEY = "titania-theater:float-position:v1";
     FLOAT_POSITION_MARGIN = 8;
     FLOAT_POSITION_MOBILE_BREAKPOINT = 768;
     FLOAT_POSITION_DEFAULT_LEFT = 20;
     FLOAT_POSITION_DEFAULT_TOP = 100;
     FLOAT_TUCK_RATIO = 0.5;
+    DEFAULT_FLOAT_BORDER_COLOR = "#90cdf4";
+    DEFAULT_FLOAT_BG_COLOR = "#2b2b2b";
     floatResizeTimer = null;
     floatTuckEnabled = true;
     ANIMATION_CLASSES = {
@@ -54534,6 +55613,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
                     </div>
                 </div>`;
         $("body").append(confirmHtml);
+        applyStudioTheme(document.getElementById("t-confirm-overlay"));
         $("#t-confirm-yes").on("click", () => {
           if ($("#t-confirm-skip").is(":checked")) {
             GlobalState.skipWorldBookCheck = true;
@@ -55839,6 +56919,7 @@ var init_api = __esm({
     init_helpers();
     init_chatHistoryBlacklist();
     init_floatingBtn();
+    init_studioTheme();
     init_mainWindow();
     init_viewState();
     init_connection();
@@ -56810,6 +57891,7 @@ function openReaderWindow() {
         </div>
     </div>`;
   $("body").append(html);
+  applyStudioTheme(document.getElementById(OVERLAY_ID3));
   const $overlay = $(`#${OVERLAY_ID3}`);
   $overlay.css("--t-reader-font-size", `${config.fontSize}px`);
   const renderBody = () => {
@@ -56879,6 +57961,7 @@ var init_readerWindow = __esm({
     init_storyMemoryData();
     init_readerStoryData();
     init_readerStoryPanel();
+    init_studioTheme();
     OVERLAY_ID3 = "t-reader-overlay";
     ZEN_BODY_CLASS = "t-reader-zen";
     FONT_MIN = 14;
@@ -56903,6 +57986,7 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSo
 
 // src/core/extensionUpdate.js
 init_defaults();
+init_studioTheme();
 import { getRequestHeaders as getRequestHeaders6 } from "../../../../script.js";
 import { extensionTypes } from "../../../extensions.js";
 var EXTENSION_ID = "third-party/titania-theater";
@@ -57092,6 +58176,7 @@ function showUpdateDialog(update) {
             </div>
         </div>
     `);
+  applyStudioTheme(document.getElementById("titania-update-overlay"));
   const dismiss = () => {
     if (isInstalling) return;
     sessionStorage.setItem(DISMISSED_KEY, update.latestVersion);
@@ -57128,6 +58213,7 @@ init_rewriteEntryButton();
 init_state();
 init_chatInjector();
 init_logger();
+init_studioTheme();
 import { eventSource as eventSource8, event_types as event_types8 } from "../../../../script.js";
 var BTN_CLASS2 = "titania-inject-btn";
 var OVERLAY_ID2 = "t-chat-inject-overlay";
@@ -57268,6 +58354,7 @@ function openInjectPickerWindow(mesid) {
         </div>
     </div>`;
   $("body").append(html);
+  applyStudioTheme(document.getElementById(OVERLAY_ID2));
   const $overlay = getOverlay2();
   $overlay.on("click", "#t-chat-inject-close", closePicker);
   $overlay.on("click", (event) => {
@@ -57416,6 +58503,7 @@ function initReaderEntryButton() {
 
 // src/ui/settingsDrawer.js
 init_storage();
+init_studioTheme();
 var initializedRoots = /* @__PURE__ */ new WeakSet();
 function refreshSettingsDrawer() {
   const root = document.getElementById("titania-settings-drawer");
@@ -57434,6 +58522,7 @@ function refreshSettingsDrawer() {
 function initSettingsDrawer() {
   const root = document.getElementById("titania-settings-drawer");
   if (!root) return;
+  applyStudioTheme(root);
   refreshSettingsDrawer();
   if (initializedRoots.has(root)) return;
   initializedRoots.add(root);
