@@ -7987,6 +7987,22 @@ function loadCssFiles() {
     }
 }
 
+/* \u5348\u591C\u653E\u6620\u5BA4\u7248\u901A\u77E5\u547C\u5438\u706F\uFF1A\u4E0E\u539F t-notify-glow \u540C\u8282\u594F\uFF0C\u53EA\u628A\u989C\u8272\u4ECE
+   --t-border-color\uFF08\u5185\u8054\u7684\u7528\u6237\u8272\uFF09\u6362\u6210\u4E3B\u9898\u91D1\u3002\u60AC\u6D6E\u7403\u6362\u80A4\u540E\u8FB9\u6846\u4E0E\u5149\u6655\u624D\u540C\u8272\u3002 */
+@keyframes t-notify-glow-studio {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px var(--t-studio-gold);
+        border-color: var(--t-studio-gold);
+    }
+
+    50% {
+        box-shadow: 0 0 25px var(--t-studio-gold);
+        border-color: var(--t-studio-gold);
+    }
+}
+
 
 /* === 02-components/window.css === */
 /* ============================================================
@@ -9300,7 +9316,8 @@ textarea.t-input {
     background: none;
     -webkit-text-fill-color: currentColor;
     color: var(--t-studio-text);
-    font: 22px/1.45 "Songti SC", "STSong", "SimSun", serif;
+    /* 22px / 12px \u57FA\u51C6 \u2248 1.83em\u3002\u5199 em \u800C\u4E0D\u662F px\uFF0C\u6807\u9898\u624D\u4F1A\u8DDF\u7740\u300CUI \u5B57\u4F53\u5927\u5C0F\u300D\u7F29\u653E\u3002 */
+    font: 1.83em/1.45 "Songti SC", "STSong", "SimSun", serif;
     letter-spacing: 2px;
 }
 .t-studio-workspace .t-close {
@@ -9330,7 +9347,8 @@ textarea.t-input {
 .t-studio-workspace .t-panel-header strong {
     color: var(--t-studio-text);
     font-family: "Songti SC", "STSong", "SimSun", serif;
-    font-size: 16px;
+    /* 16px / 12px \u57FA\u51C6 \u2248 1.35em\uFF0C\u540C\u4E0A\uFF1A\u8DDF\u968F UI \u7F29\u653E\u3002 */
+    font-size: 1.35em;
     letter-spacing: 2px;
     font-weight: 600;
 }
@@ -9339,8 +9357,11 @@ textarea.t-input {
     border-radius: 7px;
     box-shadow: none;
 }
-.t-studio-workspace .t-btn-xs { min-height: 32px; padding: 6px 10px; font-size: 12px; }
-.t-studio-workspace .text_pole { width: 100%; min-width: 0; min-height: 34px; padding: 7px 10px; font-size: 13px; border-radius: 6px; }
+/* \u26A0 \u5B57\u53F7\u4E00\u5F8B\u4E0D\u5199\u56FA\u5B9A px\uFF1A\u8FD9\u4E9B\u63A7\u4EF6\u539F\u672C\u7528 token \u6216 em\uFF08.t-btn-xs \u662F 0.8em\u3001
+   .t-set-shell-tab \u662F 0.95em\u3001.text_pole \u7EE7\u627F\u5BBF\u4E3B\uFF09\uFF0C\u6362\u6210 px \u4F1A\u8BA9\u300CUI \u5B57\u4F53\u5927\u5C0F\u300D
+   \u5728\u4E3B\u9898\u4E0B\u53EA\u653E\u5927\u7A97\u53E3\u3001\u4E0D\u653E\u5927\u8FD9\u4E9B\u63A7\u4EF6\u3002\u53EA\u8C03\u51E0\u4F55\uFF0C\u5B57\u53F7\u4EA4\u8FD8\u7ED9\u7EC4\u4EF6\u5C42\u3002 */
+.t-studio-workspace .t-btn-xs { min-height: 32px; padding: 6px 10px; }
+.t-studio-workspace .text_pole { width: 100%; min-width: 0; min-height: 34px; padding: 7px 10px; border-radius: 6px; }
 .t-studio-workspace .t-prof-header { min-width: 0; }
 .t-studio-workspace .t-prof-header select { flex: 1; min-width: 0; }
 .t-studio-workspace .t-prof-header button { flex-shrink: 0; }
@@ -9379,7 +9400,7 @@ textarea.t-input {
 .t-studio-workspace .t-dialog-close i { margin: 0; }
 .t-studio-workspace .t-dialog-box { border-color: var(--t-studio-gold-border); }
 .t-studio-workspace .t-set-shell-nav { padding: 16px 0; }
-.t-studio-workspace .t-set-shell-tab { font-size: 13px; }
+.t-studio-workspace .t-set-shell-tab { font-size: 0.95em; }
 .t-studio-workspace .t-set-shell-tab.active { background: var(--t-studio-gold-soft); }
 .t-studio-workspace .t-set-shell-content { min-width: 0; }
 .t-studio-heading { display: flex; align-items: center; gap: 17px; min-width: 0; }
@@ -9390,24 +9411,26 @@ textarea.t-input {
 }
 .t-studio-emblem .t-echo-icon { width: 28px; height: 28px; }
 .t-studio-heading-copy { min-width: 0; }
-.t-studio-eyebrow { font-size: 9px; font-weight: 500; letter-spacing: 2px; color: var(--t-studio-gold-muted); line-height: 1.5; }
+/* \u6807\u9898\u7EC4\u4EF6\u4E00\u5F8B\u7528 em\uFF1A\u8FD9\u51E0\u7EC4\u662F\u5DE5\u574A/\u6536\u85CF\u9986\u7684\u95E8\u9762\uFF0C\u5199 px \u7684\u8BDD\u7528\u6237\u628A UI \u5B57\u4F53
+   \u8C03\u5927\u540E\u7A97\u53E3\u6491\u5F00\u4E86\u3001\u6807\u9898\u5374\u7EB9\u4E1D\u4E0D\u52A8\u3002\u62EC\u53F7\u91CC\u662F 12px \u57FA\u51C6\u4E0B\u7684\u539F\u503C\u3002 */
+.t-studio-eyebrow { font-size: 0.75em; font-weight: 500; letter-spacing: 2px; color: var(--t-studio-gold-muted); line-height: 1.5; } /* 9px */
 .t-studio-eyebrow span { margin-left: 10px; letter-spacing: 1px; }
-.t-studio-heading-title { font: 26px/1.45 "Songti SC", "STSong", "SimSun", serif; letter-spacing: 3px; color: var(--t-studio-text); margin: 3px 0; }
-.t-studio-caption { font-size: 11px; font-weight: 400; line-height: 1.6; letter-spacing: .5px; color: var(--t-studio-muted); }
+.t-studio-heading-title { font: 2.17em/1.45 "Songti SC", "STSong", "SimSun", serif; letter-spacing: 3px; color: var(--t-studio-text); margin: 3px 0; } /* 26px */
+.t-studio-caption { font-size: 0.92em; font-weight: 400; line-height: 1.6; letter-spacing: .5px; color: var(--t-studio-muted); } /* 11px */
 @media (max-width: 700px) {
     .t-studio-workspace :is(.t-window-header, .t-dialog-header) { padding: 16px; }
     .t-studio-heading { gap: 11px; }
     .t-studio-emblem { width: 40px; height: 48px; }
     .t-studio-emblem .t-echo-icon { width: 22px; height: 22px; }
-    .t-studio-heading-title { font-size: 21px; letter-spacing: 2px; }
-    .t-studio-eyebrow { font-size: 8px; letter-spacing: 1.1px; }
+    .t-studio-heading-title { font-size: 1.75em; letter-spacing: 2px; } /* 21px */
+    .t-studio-eyebrow { font-size: 0.67em; letter-spacing: 1.1px; } /* 8px */
     .t-studio-eyebrow span { display: none; }
-    .t-studio-caption { font-size: 10px; }
+    .t-studio-caption { font-size: 0.83em; } /* 10px */
 }
 @media (max-width: 420px) {
     .t-studio-workspace .t-window-controls { gap: 5px; }
     .t-studio-caption { max-width: 195px; }
-    .t-studio-heading-title { font-size: 19px; }
+    .t-studio-heading-title { font-size: 1.58em; } /* 19px */
     .t-studio-emblem { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -9818,9 +9841,12 @@ textarea.t-input {
    \u58A8\u84DD\u4E0E\u6696\u7EB8\u4E0A\u90FD\u4E0D\u5C5E\u4E8E\u8FD9\u4E00\u5957\uFF0C\u624D\u9700\u8981\u6362\u6210\u9999\u69DF\u91D1\u3002
    ============================================================ */
 
+/* \u4E3B\u9898\u53EA\u6362\u8272\u76F8\uFF0C**\u4E0D\u63A5\u7BA1\u900F\u660E\u5EA6**\uFF1A--t-bg-opacity / --t-border-opacity \u662F\u7528\u6237\u5728
+   \u8BBE\u7F6E\u91CC\u62C9\u7684\u6ED1\u6746\uFF0C\u76F4\u63A5\u5199\u6210\u4E0D\u900F\u660E\u8272\u4F1A\u628A\u5B83\u4EEC\u5403\u6389\uFF08\u75C7\u72B6\u5C31\u662F\u300C\u81EA\u5B9A\u4E49\u4E86\u5374\u4E0D\u751F\u6548\u300D\uFF09\u3002
+   color-mix \u7684\u767E\u5206\u6BD4\u7528 calc \u53D6\u8FD9\u4E24\u4E2A 0~1 \u7684\u7CFB\u6570\uFF0C\u7528\u6237\u8BBE\u591A\u5C11\u5C31\u900F\u591A\u5C11\u3002 */
 #titania-float-btn.t-studio-workspace:not([data-float-custom]) {
-    background: var(--t-studio-deep);
-    border-color: var(--t-studio-gold-border);
+    background: color-mix(in srgb, var(--t-studio-deep) calc(var(--t-bg-opacity, 1) * 100%), transparent);
+    border-color: color-mix(in srgb, var(--t-studio-gold) calc(var(--t-border-opacity, 1) * 100%), transparent);
     color: var(--t-studio-gold);
 }
 
@@ -9842,8 +9868,12 @@ textarea.t-input {
         radial-gradient(circle at 50% 100%, var(--t-studio-gold) 0%, transparent 25%);
 }
 
+/* \u901A\u77E5\u547C\u5438\u706F\uFF1A\u539F keyframes \u7684 box-shadow \u8BFB --t-border-color\uFF08\u5185\u8054\u7684\u7528\u6237\u8272\uFF09\uFF0C
+   \u8FB9\u6846\u6362\u6210\u91D1\u8272\u540E\u5149\u6655\u8FD8\u662F\u84DD\u7684\u3002\u6362\u4E00\u6761\u540C\u8282\u594F\u7684 keyframes\uFF0C\u53EA\u628A\u989C\u8272\u6539\u6210\u4E3B\u9898\u91D1\u3002
+   animation-name \u5355\u72EC\u8986\u76D6\uFF0C\u65F6\u957F\u4E0E\u7F13\u52A8\u4ECD\u6CBF\u7528\u539F\u7B80\u5199\u3002 */
 #titania-float-btn.t-studio-workspace:not([data-float-custom]).t-notify {
     border-color: var(--t-studio-gold);
+    animation-name: t-notify-glow-studio;
 }
 
 /* \u8BA1\u65F6\u5668\u6CA1\u6709\u5185\u8054\u53D8\u91CF\uFF0C\u6574\u5757\u6362\u6389\u5373\u53EF\uFF1B\u6BDB\u73BB\u7483\u4FDD\u7559\uFF0C\u5E95\u8272\u6539\u6210\u58A8\u84DD\u7684 78% \u4E0D\u900F\u660E\u3002 */
@@ -9858,10 +9888,11 @@ textarea.t-input {
 }
 
 /* \u6D45\u8272\u4E0B --t-studio-gold-border \u53EA\u6709 30% \u4E0D\u900F\u660E\u5EA6\uFF0C\u843D\u5728\u767D/\u6D45\u7070\u804A\u5929\u5E95\u4E0A\u51E0\u4E4E\u770B\u4E0D\u89C1\uFF0C
-   \u7403\u4F1A\u50CF\u6D6E\u4E0D\u8D77\u6765\u7684\u4E00\u56E2\u7C73\u8272\u3002\u6D45\u8272\u4E13\u9879\u6539\u7528\u5B9E\u8272\u91D1\u8FB9 + \u66F4\u4EAE\u7684\u7403\u5E95\u3002 */
+   \u7403\u4F1A\u50CF\u6D6E\u4E0D\u8D77\u6765\u7684\u4E00\u56E2\u7C73\u8272\u3002\u6D45\u8272\u4E13\u9879\u6539\u7528\u5B9E\u8272\u91D1\u8FB9 + \u66F4\u4EAE\u7684\u7403\u5E95\uFF1B
+   \u900F\u660E\u5EA6\u540C\u6837\u4EA4\u7ED9\u7528\u6237\u7684\u4E24\u4E2A\u6ED1\u6746\u3002 */
 :root[data-t-theme="light"] #titania-float-btn.t-studio-workspace:not([data-float-custom]) {
-    background: var(--t-studio-raised);
-    border-color: var(--t-studio-gold);
+    background: color-mix(in srgb, var(--t-studio-raised) calc(var(--t-bg-opacity, 1) * 100%), transparent);
+    border-color: color-mix(in srgb, var(--t-studio-gold) calc(var(--t-border-opacity, 1) * 100%), transparent);
 }
 
 
@@ -16120,10 +16151,16 @@ textarea.t-input {
     border-color: var(--t-studio-line);
 }
 
-/* \u62BD\u5C49\u4E0D\u5E26 .t-root\uFF0Caccent-color \u6CA1\u4EBA\u4E0B\u53D1\uFF0C\u539F\u751F\u52FE\u9009\u6846\u4F1A\u7559\u5728\u6D4F\u89C8\u5668\u9ED8\u8BA4\u84DD\u3002 */
+/* \u62BD\u5C49\u4E0D\u5E26 .t-root\uFF0Caccent-color \u6CA1\u4EBA\u4E0B\u53D1\uFF0C\u539F\u751F\u52FE\u9009\u6846\u4F1A\u7559\u5728\u6D4F\u89C8\u5668\u9ED8\u8BA4\u84DD\uFF1B
+   \u5B57\u53F7\u540C\u7406\uFF0C\u8865\u4E00\u6761\u76F8\u5BF9\u7F29\u653E\uFF08100% \u65F6\u4E0E\u539F\u5C3A\u5BF8\u4E00\u81F4\uFF0C\u653E\u5927\u65F6\u624D\u8DDF\u968F\uFF09\u3002 */
 #titania-settings-drawer.t-studio-workspace,
 #titania-update-overlay.t-studio-workspace {
     accent-color: var(--t-studio-gold);
+}
+
+#titania-settings-drawer.t-studio-workspace,
+#titania-update-overlay.t-studio-workspace {
+    font-size: calc(1em * var(--t-ui-font-scale, 1));
 }
 
 #titania-settings-drawer.t-studio-workspace .titania-settings-group-body,
@@ -17191,7 +17228,7 @@ textarea.t-input {
 
 .t-studio-workspace#t-settings-view .t-set-shell-tab {
     padding: 11px 18px;
-    font-size: 12.5px;
+    /* \u53EA\u8C03\u51E0\u4F55\uFF1A\u5B57\u53F7\u6CBF\u7528\u7EC4\u4EF6\u5C42\u7684 0.95em\uFF0C\u624D\u80FD\u8DDF\u7740\u300CUI \u5B57\u4F53\u5927\u5C0F\u300D\u4E00\u8D77\u7F29\u653E\u3002 */
     letter-spacing: .5px;
 }
 
@@ -21942,8 +21979,10 @@ td[data-edit-field] .t-cell-editor {
 .t-echo-icon { width: 20px; height: 20px; flex-shrink: 0; vertical-align: middle; }
 #titania-outline-entry-btn { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; padding: 3px; margin-left: 5px; border: 1px solid transparent; border-radius: 8px; color: var(--t-studio-gold-muted); cursor: pointer; transition: color .2s, background .2s, border-color .2s; }
 #titania-outline-entry-btn .t-echo-icon { width: 28px; height: 28px; transition: transform .2s; }
-/* \u5BBF\u4E3B #rightSendForm > div:not(.mes_stop) \u8BBE\u7F6E\u5C3A\u5BF8\u3001\u65E0\u8FB9\u6846\u4E0E\u900F\u660E\u5EA6\uFF1B\u6B64\u5904\u660E\u786E\u8986\u76D6\u5165\u53E3\u3002 */
-#rightSendForm #titania-outline-entry-btn { order: 3; width: var(--bottomFormBlockSize, 36px); height: var(--bottomFormBlockSize, 36px); margin: 0; border: 1px solid transparent; opacity: 1; }
+/* \u5BBF\u4E3B #rightSendForm > div:not(.mes_stop) \u8BBE\u7F6E\u5C3A\u5BF8\u3001\u65E0\u8FB9\u6846\u4E0E\u900F\u660E\u5EA6\uFF1B\u6B64\u5904\u660E\u786E\u8986\u76D6\u5165\u53E3\u3002
+   \u4F4D\u7F6E\u7531 DOM \u51B3\u5B9A\uFF08\u5165\u53E3\u63D2\u5728 #send_but \u4E4B\u524D\uFF09\uFF0C\u8FD9\u91CC**\u4E0D\u5199 order**\uFF1A
+   order \u53EA\u6539\u7ED8\u5236\u987A\u5E8F\uFF0C\u952E\u76D8\u7126\u70B9\u4ECD\u6309 DOM \u8D70\uFF0C\u4E24\u8005\u4E0D\u4E00\u81F4\u65F6\u6309 Tab \u4F1A\u8DF3\u8FC7\u6309\u94AE\u3002 */
+#rightSendForm #titania-outline-entry-btn { width: var(--bottomFormBlockSize, 36px); height: var(--bottomFormBlockSize, 36px); margin: 0; border: 1px solid transparent; opacity: 1; }
 #rightSendForm #titania-outline-entry-btn:hover, #rightSendForm #titania-outline-entry-btn.is-open { border-color: var(--t-studio-gold-border); background: var(--t-studio-bg); color: var(--t-studio-gold); }
 #titania-outline-entry-btn:hover, #titania-outline-entry-btn.is-open { color: var(--t-studio-gold); background: var(--t-studio-bg); border-color: var(--t-studio-gold-border); }
 #titania-outline-entry-btn:hover .t-echo-icon { transform: scale(1.07); }
@@ -23466,6 +23505,10 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
    \u539F\u751F\u52FE\u9009\u6846\u4F1A\u7559\u5728\u6D4F\u89C8\u5668\u9ED8\u8BA4\u7684\u84DD\u8272\u3002\u8FD9\u91CC\u8865\u4E00\u6B21\uFF0C\u52FE\u9009\u8272\u624D\u8DDF\u4E3B\u9898\u4E00\u81F4\u3002 */
 #t-confirm-overlay.t-studio-workspace {
     accent-color: var(--t-studio-gold);
+    /* \u4E5F\u6CA1\u6709 .t-root \u7684\u5B57\u53F7\u57FA\u51C6\uFF0C\u8865\u4E00\u6761**\u76F8\u5BF9**\u7F29\u653E\uFF1A1em \u53D6\u5BBF\u4E3B\u5B57\u53F7\uFF08\u9ED8\u8BA4 15px\uFF09\uFF0C
+       100% \u65F6\u4E0E\u539F\u5C3A\u5BF8\u4E00\u81F4\uFF0C\u7528\u6237\u8C03\u5927\u300CUI \u5B57\u4F53\u5927\u5C0F\u300D\u65F6\u624D\u8DDF\u7740\u653E\u5927\u3002
+       \u76F4\u63A5\u5199 calc(12px * scale) \u4F1A\u628A\u57FA\u51C6\u4ECE 15px \u62FD\u5230 12px\uFF0C\u662F\u53E6\u4E00\u56DE\u4E8B\u3002 */
+    font-size: calc(1em * var(--t-ui-font-scale, 1));
 }
 
 #t-confirm-overlay.t-studio-workspace .t-confirm-msg {
@@ -46379,7 +46422,7 @@ function syncEntryButton2() {
   if (document.getElementById(BTN_ID2)) return;
   closeMenu();
   const $button = $(`<div id="${BTN_ID2}" class="interactable" role="button" tabindex="0" title="\u56DE\u58F0\u5DE5\u5177\u7BB1" aria-label="\u56DE\u58F0\u5DE5\u5177\u7BB1" aria-haspopup="menu" aria-expanded="false" aria-controls="${MENU_ID}">${echoIcon("echo")}</div>`);
-  $(anchor).after($button);
+  $(anchor).before($button);
   $button.on("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
