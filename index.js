@@ -27036,9 +27036,9 @@ var init_cosmosVisionBridge = __esm({
 });
 
 // src/core/relayClient.js
-import { getRequestHeaders as getRequestHeaders3 } from "../../../../script.js";
+import { getRequestHeaders as getRequestHeaders3, extractMessageFromData } from "../../../../script.js";
 import EventSourceStream from "../../../sse-stream.js";
-import { tryParseStreamingError } from "../../../openai.js";
+import { tryParseStreamingError, getStreamingReply } from "../../../openai.js";
 function toOpenAiBase(url2) {
   const base = normalizeApiBaseUrl(url2);
   if (!base) return "";
@@ -27080,36 +27080,36 @@ function toStJsonSchema(responseFormat) {
     value: js.schema
   };
 }
-async function consumeSse(res, { onProgress, signal }) {
+async function consumeSse(res, { onProgress, signal, source, diagnostics, startedAt }) {
   const eventStream = new EventSourceStream();
   res.body.pipeThrough(eventStream);
   const reader = eventStream.readable.getReader();
   let content = "";
   let chunkCount = 0;
   let parseFailCount = 0;
+  const state = { reasoning: "", images: [], signature: "", toolSignatures: {} };
+  const stats = diagnostics?.stream_stats;
+  const abortReader = () => {
+    reader.cancel().catch(() => {
+    });
+  };
+  signal?.addEventListener("abort", abortReader, { once: true });
   try {
     while (true) {
-      if (signal?.aborted) {
-        await reader.cancel();
-        throw new DOMException("Generation aborted", "AbortError");
-      }
+      assertNotAborted(signal);
       const { done, value } = await reader.read();
+      assertNotAborted(signal);
       if (done) break;
       const data = value.data;
       if (data === "[DONE]") break;
-      try {
-        tryParseStreamingError(res, data, { quiet: true });
-      } catch (streamParseErr) {
-        throw streamParseErr;
-      }
       chunkCount++;
+      if (stats) {
+        stats.chunks = chunkCount;
+        stats.first_event_ms ?? (stats.first_event_ms = Date.now() - startedAt);
+      }
+      let json;
       try {
-        const json = JSON.parse(data);
-        const chunk = json.choices?.[0]?.delta?.content ?? json.choices?.[0]?.message?.content ?? "";
-        if (chunk) {
-          content += chunk;
-          if (onProgress) onProgress(content);
-        }
+        json = JSON.parse(data);
       } catch (parseErr) {
         parseFailCount++;
         if (parseFailCount <= 3) {
@@ -27118,15 +27118,134 @@ async function consumeSse(res, { onProgress, signal }) {
             error: parseErr.message
           });
         }
+        continue;
+      }
+      checkResponseError(res, data, diagnostics, json);
+      if (json.choices?.[0]?.index > 0) continue;
+      const previousReasoningLength = state.reasoning.length;
+      const chunk = getStreamingReply(json, state, {
+        chatCompletionSource: ["openai", "azure_openai"].includes(source) ? "custom" : source,
+        overrideShowThoughts: true
+      });
+      if (stats && state.reasoning.length > previousReasoningLength) {
+        stats.first_reasoning_ms ?? (stats.first_reasoning_ms = Date.now() - startedAt);
+        stats.reasoning_chars = state.reasoning.length;
+      }
+      if (chunk) {
+        const text2 = Array.isArray(chunk) ? chunk.map((part) => part.text || "").join("") : chunk;
+        if (typeof text2 !== "string") throw new Error("ERR_STREAM_PARSE_FAILED: \u6B63\u6587\u4E0D\u662F\u6587\u672C");
+        content += text2;
+        if (stats) stats.ttft ?? (stats.ttft = Date.now() - startedAt);
+        if (onProgress) onProgress(content);
       }
     }
   } finally {
+    signal?.removeEventListener("abort", abortReader);
     try {
-      reader.cancel();
+      await reader.cancel();
     } catch {
+    }
+    reader.releaseLock?.();
+    if (stats) {
+      stats.duration_ms = Date.now() - startedAt;
+      stats.parse_failures = parseFailCount;
     }
   }
   return { content, chunkCount, parseFailCount };
+}
+function assertNotAborted(signal) {
+  if (signal?.aborted) throw new DOMException("Generation aborted", "AbortError");
+}
+function checkResponseError(res, text2, diagnostics, parsed) {
+  let json = parsed;
+  if (json === void 0) {
+    try {
+      json = JSON.parse(text2);
+    } catch {
+      return;
+    }
+  }
+  const detail = json?.error || json?.detail?.error || (typeof json?.message === "string" ? json.message : null) || (typeof json?.detail === "string" ? json.detail : null);
+  if (!detail) return;
+  try {
+    tryParseStreamingError(res, text2, { quiet: true });
+  } catch (error4) {
+    if (diagnostics) diagnostics.raw_response_snippet = String(text2).substring(0, 500);
+    error4.status = res.status;
+    error4.body = String(text2);
+    throw error4;
+  }
+  const error3 = new Error(typeof detail === "string" ? detail : detail.message || JSON.stringify(detail));
+  error3.status = res.status;
+  error3.body = String(text2);
+  error3.proxy = true;
+  if (diagnostics) diagnostics.raw_response_snippet = String(text2).substring(0, 500);
+  throw error3;
+}
+async function sendGenerationRequest(body, options = {}) {
+  const { signal = null, onProgress = null, diagnostics = null, allowEmptyStream = false } = options;
+  assertNotAborted(signal);
+  if (!Array.isArray(body.messages)) throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4");
+  const startedAt = Date.now();
+  if (diagnostics) {
+    diagnostics.transport = "st_proxy";
+    diagnostics.endpoint = `[ST \u540E\u7AEF: ${body.chat_completion_source}]`;
+    diagnostics.stream_stats = { chunks: 0, ttft: null, first_event_ms: null, first_reasoning_ms: null };
+  }
+  const res = await fetch(ST_GENERATE_URL, {
+    method: "POST",
+    headers: getRequestHeaders3(),
+    body: JSON.stringify(body),
+    signal
+  });
+  assertNotAborted(signal);
+  if (diagnostics) {
+    Object.assign(diagnostics.network || (diagnostics.network = {}), {
+      status: res.status,
+      statusText: res.statusText || "",
+      contentType: res.headers?.get("content-type") || "",
+      latency: Date.now() - startedAt
+    });
+  }
+  if (!res.ok) {
+    const text3 = await res.text();
+    assertNotAborted(signal);
+    if (diagnostics) diagnostics.raw_response_snippet = text3.substring(0, 500);
+    checkResponseError(res, text3, diagnostics);
+    throwHttpError(res, text3, "ST \u540E\u7AEF\u4EE3\u7406\u8BF7\u6C42\u5931\u8D25: ");
+  }
+  const isJson = /application\/json/i.test(res.headers?.get("content-type") || "");
+  if (body.stream && !isJson) {
+    if (diagnostics) diagnostics.phase = "streaming";
+    const { content: content2, chunkCount, parseFailCount } = await consumeSse(res, {
+      onProgress,
+      signal,
+      source: body.chat_completion_source,
+      diagnostics,
+      startedAt
+    });
+    if (chunkCount === 0 && allowEmptyStream) return "";
+    if (chunkCount === 0) throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
+    if (parseFailCount > 0 && !content2) throw new Error("ERR_STREAM_PARSE_FAILED: \u6D41\u5F0F\u54CD\u5E94\u89E3\u6790\u5931\u8D25");
+    if (!content2) throw new Error("ERR_STREAM_EMPTY: \u672A\u63A5\u6536\u5230\u4EFB\u4F55\u6B63\u6587");
+    return content2;
+  }
+  if (diagnostics) diagnostics.phase = "parsing_json";
+  const text2 = await res.text();
+  assertNotAborted(signal);
+  let json;
+  try {
+    json = JSON.parse(text2);
+  } catch {
+    throw new Error("Invalid JSON response");
+  }
+  checkResponseError(res, text2, diagnostics, json);
+  const content = extractMessageFromData(json, "openai");
+  if (typeof content !== "string") throw new Error("ERR_INVALID_API_RESPONSE: \u6B63\u6587\u4E0D\u662F\u6587\u672C");
+  if (onProgress) onProgress(content);
+  assertNotAborted(signal);
+  if (diagnostics) diagnostics.stream_stats.duration_ms = Date.now() - startedAt;
+  return content;
 }
 function throwHttpError(res, bodyText, prefix = "") {
   const e = new Error(`${prefix}HTTP ${res.status}${res.statusText ? ": " + res.statusText : ""}${bodyText ? " - " + bodyText.substring(0, 180) : ""}`);
@@ -27157,10 +27276,6 @@ async function sendChatCompletion(options = {}) {
   }
   const wireStream = wireStreamOverride !== null ? wireStreamOverride : stream;
   const suppressProgress = wireStream === true && stream !== true;
-  if (diagnostics) {
-    diagnostics.transport = "st_proxy";
-    diagnostics.endpoint = `[ST \u4EE3\u7406] ${base}/chat/completions`;
-  }
   const body = {
     chat_completion_source: "openai",
     reverse_proxy: base,
@@ -27175,73 +27290,16 @@ async function sendChatCompletion(options = {}) {
   if (temperature !== void 0) body.temperature = temperature;
   const stJsonSchema = toStJsonSchema(responseFormat);
   if (stJsonSchema) body.json_schema = stJsonSchema;
-  const startedAt = Date.now();
-  const res = await fetch(ST_GENERATE_URL, {
-    method: "POST",
-    headers: getRequestHeaders3(),
-    body: JSON.stringify(body),
-    signal
+  const content = await sendGenerationRequest(body, {
+    signal,
+    diagnostics,
+    onProgress: suppressProgress ? null : onProgress,
+    allowEmptyStream: suppressProgress
   });
-  if (diagnostics) {
-    diagnostics.network = diagnostics.network || {};
-    diagnostics.network.status = res.status;
-    diagnostics.network.latency = Date.now() - startedAt;
+  if (!content && suppressProgress) {
+    return sendChatCompletion({ ...options, wireStreamOverride: false });
   }
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    if (diagnostics) diagnostics.raw_response_snippet = errText.substring(0, 500);
-    try {
-      tryParseStreamingError(res, errText, { quiet: true });
-    } catch (parsedErr) {
-      throw parsedErr;
-    }
-    throwHttpError(res, errText, "ST \u540E\u7AEF\u4EE3\u7406\u8BF7\u6C42\u5931\u8D25: ");
-  }
-  if (wireStream) {
-    if (diagnostics) diagnostics.phase = "streaming";
-    const attemptStartTime = Date.now();
-    const { content: content2, chunkCount, parseFailCount } = await consumeSse(res, {
-      onProgress: suppressProgress ? null : onProgress,
-      signal
-    });
-    if (chunkCount === 0 && suppressProgress) {
-      return sendChatCompletion({ ...options, wireStreamOverride: false, signal, diagnostics });
-    }
-    if (chunkCount === 0) {
-      throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
-    }
-    if (diagnostics) {
-      diagnostics.stream_stats = diagnostics.stream_stats || {};
-      diagnostics.stream_stats.ttft = Date.now() - attemptStartTime;
-      diagnostics.stream_stats.chunks = chunkCount;
-    }
-    if (parseFailCount > 0 && !content2) {
-      throw new Error("ERR_STREAM_PARSE_FAILED: \u6D41\u5F0F\u54CD\u5E94\u89E3\u6790\u5931\u8D25");
-    }
-    if (!content2) {
-      throw new Error("ERR_STREAM_EMPTY: \u672A\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E\u5757");
-    }
-    if (suppressProgress && onProgress) onProgress(content2);
-    return content2;
-  }
-  if (diagnostics) diagnostics.phase = "parsing_json";
-  const text2 = await res.text();
-  let json;
-  try {
-    json = JSON.parse(text2);
-  } catch {
-    throw new Error("Invalid JSON response");
-  }
-  if (json?.error) {
-    const e = new Error(`\u4E0A\u6E38\u8FD4\u56DE\u9519\u8BEF\uFF08\u7ECF ST \u540E\u7AEF\u4EE3\u7406\uFF09: ${json.error?.message || json.error}`);
-    e.proxy = true;
-    throw e;
-  }
-  if (!Array.isArray(json.choices)) {
-    throw new Error("ERR_INVALID_API_RESPONSE: \u54CD\u5E94\u7F3A\u5C11 choices \u6570\u7EC4");
-  }
-  const content = json.choices[0]?.message?.content || "";
-  if (onProgress) onProgress(content);
+  if (suppressProgress && onProgress) onProgress(content);
   return content;
 }
 var ST_STATUS_URL, ST_GENERATE_URL;
@@ -27252,6 +27310,75 @@ var init_relayClient = __esm({
     init_promptProcessing();
     ST_STATUS_URL = "/api/backends/chat-completions/status";
     ST_GENERATE_URL = "/api/backends/chat-completions/generate";
+  }
+});
+
+// src/core/theaterRequest.js
+import { createGenerationParameters, oai_settings as oai_settings2 } from "../../../openai.js";
+async function buildTheaterRequest(conn, messages, options = {}) {
+  if (!Array.isArray(messages)) throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4");
+  const host2 = structuredClone(oai_settings2);
+  const settings = conn.useSTConnection ? host2 : Object.fromEntries(
+    SHARED_SETTINGS.filter((key) => host2[key] !== void 0).map((key) => [key, host2[key]])
+  );
+  const model = options.model || conn.model;
+  const stream = options.stream ?? conn.stream ?? true;
+  const base = conn.useSTConnection ? null : toOpenAiBase(conn.url);
+  if (!conn.useSTConnection && !base) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
+  if (!conn.useSTConnection) {
+    settings.chat_completion_source = "openai";
+    settings.custom_prompt_post_processing = "";
+  }
+  settings.openai_max_tokens = options.maxTokens ?? host2.openai_max_tokens ?? 2048;
+  settings.temp_openai = options.temperature ?? host2.temp_openai ?? 0.7;
+  settings.stream_openai = stream;
+  settings.n = 1;
+  settings.function_calling = false;
+  settings.assistant_prefill = "";
+  settings.assistant_impersonation = "";
+  settings.enable_web_search = false;
+  settings.request_images = false;
+  const processing = normalizePromptProcessing(options.promptPostProcessing);
+  if (processing !== null) settings.custom_prompt_post_processing = processing;
+  if (!conn.useSTConnection) {
+    settings.reverse_proxy = "";
+    settings.proxy_password = "";
+  }
+  const { generate_data } = await createGenerationParameters(
+    settings,
+    model,
+    "normal",
+    structuredClone(messages)
+  );
+  if (!conn.useSTConnection) {
+    generate_data.reverse_proxy = base;
+    generate_data.proxy_password = String(conn.key || "");
+  }
+  return generate_data;
+}
+async function sendTheaterRequest(conn, messages, options = {}) {
+  const request = await buildTheaterRequest(conn, messages, options);
+  return sendGenerationRequest(request, options);
+}
+var SHARED_SETTINGS;
+var init_theaterRequest = __esm({
+  "src/core/theaterRequest.js"() {
+    init_promptProcessing();
+    init_relayClient();
+    SHARED_SETTINGS = [
+      "temp_openai",
+      "freq_pen_openai",
+      "pres_pen_openai",
+      "top_p_openai",
+      "top_k_openai",
+      "min_p_openai",
+      "repetition_penalty_openai",
+      "top_a_openai",
+      "seed",
+      "reasoning_effort",
+      "verbosity",
+      "show_thoughts"
+    ];
   }
 });
 
@@ -27269,7 +27396,7 @@ __export(connection_exports, {
   validateFeatureConnection: () => validateFeatureConnection
 });
 import { ChatCompletionService } from "../../../custom-request.js";
-import { oai_settings as oai_settings2, getChatCompletionModel } from "../../../openai.js";
+import { oai_settings as oai_settings3, getChatCompletionModel } from "../../../openai.js";
 function getActiveConnection() {
   const data = getExtData();
   const normalized = ensureMainApiProfiles(data.config || {});
@@ -27284,7 +27411,7 @@ function getActiveConnection() {
   if (useSTConnection) {
     try {
       model = currentProfile.model_override || getChatCompletionModel() || "gpt-3.5-turbo";
-      url2 = oai_settings2.custom_url || oai_settings2.reverse_proxy || `[${oai_settings2.chat_completion_source}]`;
+      url2 = oai_settings3.custom_url || oai_settings3.reverse_proxy || `[${oai_settings3.chat_completion_source}]`;
       key = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
     } catch (e) {
       TitaniaLogger.warn("\u65E0\u6CD5\u8BFB\u53D6 ST API \u914D\u7F6E", e);
@@ -27310,10 +27437,13 @@ async function sendChatRequest(messages, options = {}) {
   return sendChatRequestWithConnection(conn, messages, options);
 }
 async function sendChatRequestWithConnection(conn, messages, options = {}) {
+  if (options.alignWithHost === true) {
+    return sendTheaterRequest(conn, messages, options);
+  }
   const model = options.model || conn.model;
   const useStream = options.stream !== void 0 ? options.stream : conn.stream;
   const maxTokens = options.maxTokens || 2048;
-  const temperature = options.temperature || 0.7;
+  const temperature = options.temperature ?? 0.7;
   const signal = options.signal;
   const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
   let rawContent = "";
@@ -27321,14 +27451,14 @@ async function sendChatRequestWithConnection(conn, messages, options = {}) {
     const requestData = ChatCompletionService.createRequestData({
       stream: useStream,
       messages,
-      chat_completion_source: oai_settings2.chat_completion_source,
+      chat_completion_source: oai_settings3.chat_completion_source,
       model,
-      max_tokens: options.respectRequestLimits === true ? maxTokens : oai_settings2.openai_max_tokens || maxTokens,
-      temperature: options.respectRequestLimits === true ? temperature : oai_settings2.temp_openai || temperature,
-      custom_url: oai_settings2.custom_url,
-      reverse_proxy: oai_settings2.reverse_proxy,
-      proxy_password: oai_settings2.proxy_password,
-      custom_prompt_post_processing: oai_settings2.custom_prompt_post_processing
+      max_tokens: options.respectRequestLimits === true ? maxTokens : oai_settings3.openai_max_tokens || maxTokens,
+      temperature: options.respectRequestLimits === true ? temperature : oai_settings3.temp_openai || temperature,
+      custom_url: oai_settings3.custom_url,
+      reverse_proxy: oai_settings3.reverse_proxy,
+      proxy_password: oai_settings3.proxy_password,
+      custom_prompt_post_processing: oai_settings3.custom_prompt_post_processing
     });
     if (useStream) {
       const streamGenerator = await ChatCompletionService.sendRequest(requestData, false, signal || null);
@@ -27403,7 +27533,7 @@ function getConnectionByProfileId(profileId, modelOverride = null) {
   if (useSTConnection) {
     try {
       model = modelOverride || profile.model_override || getChatCompletionModel() || "gpt-3.5-turbo";
-      url2 = oai_settings2.custom_url || oai_settings2.reverse_proxy || `[${oai_settings2.chat_completion_source}]`;
+      url2 = oai_settings3.custom_url || oai_settings3.reverse_proxy || `[${oai_settings3.chat_completion_source}]`;
       key = "[\u7531 ST \u540E\u7AEF\u7BA1\u7406]";
     } catch (e) {
       TitaniaLogger.warn("\u65E0\u6CD5\u8BFB\u53D6 ST API \u914D\u7F6E", e);
@@ -27500,6 +27630,7 @@ var init_connection = __esm({
     init_logger();
     init_apiProfileRegistry();
     init_relayClient();
+    init_theaterRequest();
     init_toolboxSettings();
   }
 });
@@ -54601,7 +54732,7 @@ __export(api_exports, {
   syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
 });
 import { ChatCompletionService as ChatCompletionService2 } from "../../../custom-request.js";
-import { oai_settings as oai_settings3, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
+import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
 import { evaluateMacros } from "../../../macros.js";
 function clampContinuationInjectRounds(value) {
   if (String(value ?? "").trim() === "") return 3;
@@ -55774,7 +55905,7 @@ ${processedPrompt}`;
       source: generationSource,
       promptProcessing: resolvePromptProcessing(promptScheme, {
         useSTConnection: !!conn.useSTConnection,
-        hostMode: oai_settings3.custom_prompt_post_processing
+        hostMode: oai_settings4.custom_prompt_post_processing
       }),
       hasPromptOverride: hasExplicitOverride,
       promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
@@ -56155,7 +56286,7 @@ ${processedPrompt}`;
       source: generationSource,
       promptProcessing: resolvePromptProcessing(promptScheme, {
         useSTConnection,
-        hostMode: oai_settings3.custom_prompt_post_processing
+        hostMode: oai_settings4.custom_prompt_post_processing
       }),
       hasPromptOverride: typeof promptOverride === "string" && promptOverride.trim().length > 0,
       promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
@@ -56211,112 +56342,29 @@ ${processedPrompt}`;
     });
     TitaniaLogger.info(`\u5F00\u59CB\u751F\u6210: ${script.name}`, { profile: conn.profileName });
     diagnostics.phase = "fetch_start";
-    if (useSTConnection) {
-      diagnostics.endpoint = `[ST Backend: ${oai_settings3.chat_completion_source}]`;
-      const requestData = ChatCompletionService2.createRequestData({
-        stream: useStream,
-        messages,
-        chat_completion_source: oai_settings3.chat_completion_source,
-        model: finalModel,
-        max_tokens: oai_settings3.openai_max_tokens || 2048,
-        temperature: oai_settings3.temp_openai || 0.7,
-        // 传递反代/自定义配置
-        custom_url: oai_settings3.custom_url,
-        reverse_proxy: oai_settings3.reverse_proxy,
-        proxy_password: oai_settings3.proxy_password,
-        custom_prompt_post_processing: traceMeta.promptProcessing.mode
-      });
-      diagnostics.phase = useStream ? "streaming" : "parsing_json";
-      if (useStream) {
-        let streamGenerator;
-        try {
-          streamGenerator = await ChatCompletionService2.sendRequest(requestData, false, signal);
-        } catch (streamErr) {
-          try {
-            await ChatCompletionService2.sendRequest(requestData, true, null);
-          } catch (detailErr) {
-            if (detailErr && typeof detailErr === "object") {
-              diagnostics.raw_response_snippet = JSON.stringify(
-                detailErr.error || detailErr.message || detailErr
-              ).substring(0, 500);
-            } else if (typeof detailErr === "string") {
-              diagnostics.raw_response_snippet = detailErr.substring(0, 500);
-            }
-          }
-          throw streamErr;
+    rawContent = await sendChatRequestWithConnection(conn, messages, {
+      alignWithHost: true,
+      model: finalModel,
+      stream: useStream,
+      // 主连接沿用宿主上限，独立方案保留插件的输出上限。
+      maxTokens: useSTConnection ? void 0 : cfg.max_tokens || 4096,
+      promptPostProcessing: traceMeta.promptProcessing.mode,
+      signal,
+      diagnostics,
+      // 非流式也同步原文；取消或读取失败时沿用现有部分内容保存流程。
+      onProgress: (accumulated) => {
+        rawContent = accumulated;
+        if (useStream && rawContent.length > 0 && ($("#t-output-content").length > 0 || $("#t-main-view").length > 0)) {
+          const streamCleanContent = sanitizeAIOutputLite(rawContent);
+          scheduleStreamRender(streamCleanContent, script.name);
         }
-        if (typeof streamGenerator === "function") {
-          let chunkCount = 0;
-          try {
-            for await (const chunk of streamGenerator()) {
-              if (signal.aborted) {
-                throw new DOMException("Generation aborted", "AbortError");
-              }
-              if (chunkCount === 0) diagnostics.stream_stats.ttft = Date.now() - startTime;
-              chunkCount++;
-              diagnostics.stream_stats.chunks = chunkCount;
-              rawContent = chunk.text || "";
-              if (($("#t-output-content").length > 0 || $("#t-main-view").length > 0) && rawContent.length > 0) {
-                const streamCleanContent = sanitizeAIOutputLite(rawContent);
-                scheduleStreamRender(streamCleanContent, script.name);
-              }
-            }
-          } catch (streamErr) {
-            if (streamErr.name === "AbortError") {
-              throw streamErr;
-            }
-            TitaniaLogger.warn("ST \u6D41\u5F0F\u4F20\u8F93\u5F02\u5E38", {
-              error: streamErr.message,
-              contentSoFar: rawContent.length,
-              chunks: chunkCount
-            });
-            if (rawContent.length === 0) {
-              throw new Error(`ERR_ST_STREAM: ${streamErr.message}`);
-            }
-          }
-          if (chunkCount === 0) {
-            throw new Error("ERR_STREAM_NO_CHUNKS: \u672A\u4ECE ST \u540E\u7AEF\u63A5\u6536\u5230\u4EFB\u4F55\u6570\u636E\u5757");
-          }
-        } else if (streamGenerator && typeof streamGenerator === "object") {
-          rawContent = streamGenerator?.content || "";
-          if (!rawContent) {
-            TitaniaLogger.warn("ST \u8FD4\u56DE\u975E\u751F\u6210\u5668\u54CD\u5E94\u4F46\u5185\u5BB9\u4E3A\u7A7A", { response: typeof streamGenerator });
-          }
-        } else {
-          throw new Error("ERR_INVALID_ST_RESPONSE: ST \u540E\u7AEF\u8FD4\u56DE\u4E86\u610F\u5916\u7684\u54CD\u5E94\u683C\u5F0F");
-        }
-      } else {
-        const result = await ChatCompletionService2.sendRequest(requestData, true, null);
-        rawContent = result?.content || "";
       }
-      diagnostics.network.latency = Date.now() - startTime;
-      diagnostics.network.status = 200;
-    } else {
-      if (!finalUrl || !finalUrl.trim()) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
-      rawContent = await sendChatCompletion({
-        url: finalUrl,
-        key: finalKey,
-        model: finalModel,
-        messages,
-        promptPostProcessing: traceMeta.promptProcessing.mode,
-        stream: useStream,
-        maxTokens: cfg.max_tokens || 4096,
-        // 保持原有请求形状：自定义分支此前不发送 temperature
-        signal,
-        diagnostics,
-        onProgress: useStream ? (accumulated) => {
-          rawContent = accumulated;
-          if ($("#t-output-content").length > 0 || $("#t-main-view").length > 0) {
-            const streamCleanContent = sanitizeAIOutputLite(rawContent);
-            scheduleStreamRender(streamCleanContent, script.name);
-          }
-        } : null
-      });
-      TitaniaLogger.info(`\u6D41\u5F0F\u4F20\u8F93\u5B8C\u6210`, {
-        chunks: diagnostics.stream_stats?.chunks || 0,
-        contentLength: rawContent.length
-      });
-    }
+    });
+    TitaniaLogger.info("\u5267\u573A\u8BF7\u6C42\u5B8C\u6210", {
+      network: diagnostics.network,
+      stream: diagnostics.stream_stats,
+      contentLength: rawContent.length
+    });
     diagnostics.phase = "validation";
     if (!rawContent) {
       throw new Error("ERR_EMPTY_RESPONSE: API \u672A\u8FD4\u56DE\u4EFB\u4F55\u5185\u5BB9");
@@ -56510,7 +56558,7 @@ ${processedPrompt}`;
     resetContinuationState();
     clearStreamingCache();
     removeNewContentIndicator();
-    diagnostics.network.latency = Date.now() - startTime;
+    diagnostics.total_ms = Date.now() - startTime;
     diagnostics.phase += "_failed";
     if (isAbortError2) {
       TitaniaLogger.info("\u751F\u6210\u5DF2\u4E2D\u65AD", {
@@ -56817,14 +56865,14 @@ Generate ONLY the continuation (no repetition):`;
           { role: "system", content: continuationSys },
           { role: "user", content: continuationUser }
         ],
-        chat_completion_source: oai_settings3.chat_completion_source,
+        chat_completion_source: oai_settings4.chat_completion_source,
         model: finalModel,
-        max_tokens: oai_settings3.openai_max_tokens || 2048,
-        temperature: oai_settings3.temp_openai || 0.7,
-        custom_url: oai_settings3.custom_url,
-        reverse_proxy: oai_settings3.reverse_proxy,
-        proxy_password: oai_settings3.proxy_password,
-        custom_prompt_post_processing: oai_settings3.custom_prompt_post_processing
+        max_tokens: oai_settings4.openai_max_tokens || 2048,
+        temperature: oai_settings4.temp_openai || 0.7,
+        custom_url: oai_settings4.custom_url,
+        reverse_proxy: oai_settings4.reverse_proxy,
+        proxy_password: oai_settings4.proxy_password,
+        custom_prompt_post_processing: oai_settings4.custom_prompt_post_processing
       });
       if (useStream) {
         const streamGenerator = await ChatCompletionService2.sendRequest(requestData, false, null);
