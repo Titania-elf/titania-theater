@@ -2822,6 +2822,41 @@ var init_promptOrder = __esm({
   }
 });
 
+// src/core/promptProcessing.js
+function normalizePromptProcessing(value) {
+  if (value === "claude") return "merge";
+  return PROMPT_PROCESSING_OPTIONS.some((option) => option.value !== "connection" && option.value === value) ? value : null;
+}
+function getPromptProcessingLabel(value) {
+  return PROMPT_PROCESSING_OPTIONS.find((option) => option.value === (normalizePromptProcessing(value) ?? "connection")).label;
+}
+function resolvePromptProcessing(scheme, { useSTConnection = false, hostMode } = {}) {
+  const override = scheme?.type === "preset" ? normalizePromptProcessing(scheme.custom_prompt_post_processing) : null;
+  const mode = override ?? (useSTConnection ? normalizePromptProcessing(hostMode) ?? "" : void 0);
+  return {
+    mode,
+    source: override === null ? "connection" : "preset",
+    label: getPromptProcessingLabel(mode ?? ""),
+    stage: "before_host_processing"
+  };
+}
+var PROMPT_PROCESSING_OPTIONS;
+var init_promptProcessing = __esm({
+  "src/core/promptProcessing.js"() {
+    PROMPT_PROCESSING_OPTIONS = [
+      { value: "connection", label: "\u6CBF\u7528\u8FDE\u63A5\uFF08\u517C\u5BB9\u65E7\u9884\u8BBE\uFF09" },
+      { value: "", label: "\u4E0D\u5904\u7406" },
+      { value: "merge", label: "\u5408\u5E76\u8FDE\u7EED\u540C\u89D2\u8272\u6D88\u606F\uFF08\u4E0D\u5E26\u5DE5\u5177\uFF09" },
+      { value: "semi", label: "\u534A\u4E25\u683C\uFF08\u4E0D\u5E26\u5DE5\u5177\uFF09" },
+      { value: "strict", label: "\u4E25\u683C\uFF08\u4E0D\u5E26\u5DE5\u5177\uFF09" },
+      { value: "single", label: "\u5355\u6761\u7528\u6237\u6D88\u606F" },
+      { value: "merge_tools", label: "\u5408\u5E76\u8FDE\u7EED\u540C\u89D2\u8272\u6D88\u606F\uFF08\u5E26\u5DE5\u5177\uFF09" },
+      { value: "semi_tools", label: "\u534A\u4E25\u683C\uFF08\u5E26\u5DE5\u5177\uFF09" },
+      { value: "strict_tools", label: "\u4E25\u683C\uFF08\u5E26\u5DE5\u5177\uFF09" }
+    ];
+  }
+});
+
 // src/core/stVariables.js
 import { getVariableMacros } from "../../../variables.js";
 function applyVariableMacros(text2) {
@@ -2949,6 +2984,13 @@ function ensurePromptManager(data) {
       changed = true;
     }
     for (const preset of manager.presets) {
+      if (preset && typeof preset === "object") {
+        const processing = normalizePromptProcessing(preset.custom_prompt_post_processing);
+        if (preset.custom_prompt_post_processing !== processing) {
+          preset.custom_prompt_post_processing = processing;
+          changed = true;
+        }
+      }
       if (ensureTitaniaPresetEntries(preset)) changed = true;
     }
     if (manager.active_preset_id && !manager.presets.some((preset) => preset?.id === manager.active_preset_id)) {
@@ -3161,6 +3203,7 @@ function normalizeChatCompletionPreset(preset, options = {}) {
     type: "preset",
     source: "sillytavern_chat_completion",
     imported_at: Date.now(),
+    custom_prompt_post_processing: normalizePromptProcessing(preset.custom_prompt_post_processing),
     entries: normalized.entries,
     model_settings: {
       model: preset.model || "",
@@ -3203,8 +3246,10 @@ function serializeToChatCompletionPreset(preset) {
     order.push({ identifier, enabled: entry.enabled !== false });
   }
   const modelSettings = preset.model_settings || {};
+  const processing = normalizePromptProcessing(preset.custom_prompt_post_processing);
   return {
     name: preset.name || "\u5BFC\u51FA\u9884\u8BBE",
+    ...processing === null ? {} : { custom_prompt_post_processing: processing },
     prompts,
     prompt_order: [{ character_id: 100001, order }],
     model: modelSettings.model || "",
@@ -3288,6 +3333,7 @@ var init_promptManager = __esm({
     init_helpers();
     init_defaults();
     init_promptOrder();
+    init_promptProcessing();
     init_stVariables();
     DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
     DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
@@ -27100,6 +27146,7 @@ async function sendChatCompletion(options = {}) {
     signal = null,
     onProgress = null,
     responseFormat = null,
+    promptPostProcessing,
     wireStreamOverride = null,
     diagnostics = null
   } = options;
@@ -27122,6 +27169,8 @@ async function sendChatCompletion(options = {}) {
     messages,
     stream: wireStream
   };
+  const processing = normalizePromptProcessing(promptPostProcessing);
+  if (processing !== null) body.custom_prompt_post_processing = processing;
   if (Number.isFinite(maxTokens)) body.max_tokens = maxTokens;
   if (temperature !== void 0) body.temperature = temperature;
   const stJsonSchema = toStJsonSchema(responseFormat);
@@ -27200,6 +27249,7 @@ var init_relayClient = __esm({
   "src/core/relayClient.js"() {
     init_apiProfileRegistry();
     init_logger();
+    init_promptProcessing();
     ST_STATUS_URL = "/api/backends/chat-completions/status";
     ST_GENERATE_URL = "/api/backends/chat-completions/generate";
   }
@@ -32958,13 +33008,15 @@ async function showDebugInfo() {
     const scriptName = isPreview ? source?.script?.name : source?.scriptName;
     const time = isPreview ? source?.timestamp : source?.endedAt || source?.startedAt;
     const continuation = isPreview ? getPreviewContinuation(source) : null;
-    const description = !isPreview ? "\u8FD9\u662F\u6700\u8FD1\u4E00\u6B21\u5B9E\u9645\u53D1\u9001\u7ED9\u6A21\u578B\u7684\u56FA\u5B9A\u6D88\u606F\u5FEB\u7167\u3002" : continuation ? `\u4E0B\u4E00\u6B65\u52A8\u4F5C\u662F\u7EED\u5199\uFF0C\u56E0\u6B64\u6309\u7EED\u5199\u53E3\u5F84\u6784\u9020\uFF1A\u5DF2\u6CE8\u5165 ${continuation.injectedRounds}/${continuation.totalRounds} \u8F6E\u5386\u53F2\uFF08\u542B\u6700\u8FD1\u4E00\u6B21\u7EED\u5199\u7ED3\u679C\uFF09\uFF0Ctoken \u5DF2\u8BA1\u5165\u3002\u52A8\u6001\u5B8F\u4E0E\u4E0A\u4E0B\u6587\u53EF\u80FD\u5728\u5B9E\u9645\u751F\u6210\u65F6\u53D8\u5316\u3002` : "\u57FA\u4E8E\u5F53\u524D\u89D2\u8272\u3001\u4E16\u754C\u4E66\u3001\u804A\u5929\u5386\u53F2\u548C\u8BBE\u7F6E\u5373\u65F6\u6784\u9020\uFF0C\u6CA1\u6709\u53D1\u9001\u8BF7\u6C42\u3002\u52A8\u6001\u5B8F\u4E0E\u4E0A\u4E0B\u6587\u53EF\u80FD\u5728\u5B9E\u9645\u751F\u6210\u65F6\u53D8\u5316\u3002";
+    const processing = isPreview ? source?.meta?.promptProcessing : source?.finalMessages?.meta?.promptProcessing;
+    const description = !isPreview ? "\u8FD9\u662F\u6700\u8FD1\u4E00\u6B21\u63D0\u4EA4\u7ED9\u9152\u9986\u540E\u7AEF\u7684\u6D88\u606F\u5FEB\u7167\uFF0C\u663E\u793A\u540E\u5904\u7406\u524D\u7684\u6761\u76EE\u3002\u540E\u7AEF\u6309\u6240\u9009\u6A21\u5F0F\u5904\u7406\u540E\u518D\u8F6C\u53D1\u7ED9\u6A21\u578B\u3002" : continuation ? `\u4E0B\u4E00\u6B65\u52A8\u4F5C\u662F\u7EED\u5199\uFF0C\u56E0\u6B64\u6309\u7EED\u5199\u53E3\u5F84\u6784\u9020\uFF1A\u5DF2\u6CE8\u5165 ${continuation.injectedRounds}/${continuation.totalRounds} \u8F6E\u5386\u53F2\uFF08\u542B\u6700\u8FD1\u4E00\u6B21\u7EED\u5199\u7ED3\u679C\uFF09\uFF0Ctoken \u5DF2\u8BA1\u5165\u3002\u52A8\u6001\u5B8F\u4E0E\u4E0A\u4E0B\u6587\u53EF\u80FD\u5728\u5B9E\u9645\u751F\u6210\u65F6\u53D8\u5316\u3002` : "\u57FA\u4E8E\u5F53\u524D\u89D2\u8272\u3001\u4E16\u754C\u4E66\u3001\u804A\u5929\u5386\u53F2\u548C\u8BBE\u7F6E\u5373\u65F6\u6784\u9020\uFF0C\u6CA1\u6709\u53D1\u9001\u8BF7\u6C42\u3002\u52A8\u6001\u5B8F\u4E0E\u4E0A\u4E0B\u6587\u53EF\u80FD\u5728\u5B9E\u9645\u751F\u6210\u65F6\u53D8\u5316\u3002";
     $("#t-prompt-info-popover").html(`
             <strong>${isPreview ? continuation ? "\u5F53\u524D\u6784\u9020\u9884\u89C8 \xB7 \u7EED\u5199\u53E3\u5F84" : "\u5F53\u524D\u6784\u9020\u9884\u89C8" : "\u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42"}</strong>
             <p>${description}</p>
             <dl>
                 <div><dt>\u6A21\u5F0F</dt><dd>${escapeHtml3(modeName || "-")}</dd></div>
                 <div><dt>\u5267\u672C</dt><dd>${escapeHtml3(scriptName || "-")}</dd></div>
+                <div><dt>\u540E\u5904\u7406</dt><dd>${escapeHtml3(processing?.label || "\u672A\u8BB0\u5F55")}${processing?.source === "preset" ? "\uFF08\u5F53\u524D\u9884\u8BBE\uFF09" : ""}</dd></div>
                 <div><dt>${isPreview ? "\u6784\u5EFA\u65F6\u95F4" : "\u53D1\u9001\u65F6\u95F4"}</dt><dd>${escapeHtml3(formatTimeText(time))}</dd></div>
             </dl>`);
   };
@@ -33024,6 +33076,11 @@ async function showDebugInfo() {
     } else {
       $("#t-prompt-source-state").html('<i class="fa-solid fa-circle"></i> \u6700\u8FD1\u5B9E\u9645\u8BF7\u6C42');
       $("#t-prompt-request-meta").text(`${getTraceSourceLabel(source.source)} \xB7 ${source.scriptName || "\u672A\u77E5\u5267\u672C"} \xB7 ${formatTimeText(source.endedAt || source.startedAt)}`);
+    }
+    const processing = isPreview ? source?.meta?.promptProcessing : source?.finalMessages?.meta?.promptProcessing;
+    if (processing) {
+      const $meta = $("#t-prompt-request-meta");
+      $meta.text(`${$meta.text()} \xB7 \u540E\u5904\u7406\uFF1A${processing.label} \xB7 \u5904\u7406\u524D\u6761\u76EE`);
     }
     updateInfoPopover();
   };
@@ -33253,6 +33310,42 @@ var init_toolboxSettingsLink = __esm({
   "src/ui/shared/toolboxSettingsLink.js"() {
     init_storage();
     init_toolboxSettings();
+  }
+});
+
+// src/ui/shared/presetPromptProcessing.js
+function mountPresetPromptProcessing(host2, preset) {
+  if (!host2) return;
+  host2.replaceChildren();
+  host2.hidden = !preset;
+  if (!preset) return;
+  const label = document.createElement("label");
+  label.className = "t-form-label";
+  label.htmlFor = "t-prompt-post-processing";
+  label.textContent = "\u63D0\u793A\u8BCD\u540E\u5904\u7406\uFF08\u5F53\u524D\u9884\u8BBE\uFF09";
+  const select = document.createElement("select");
+  select.id = "t-prompt-post-processing";
+  select.className = "t-input";
+  select.setAttribute("aria-describedby", "t-prompt-post-processing-help");
+  for (const item2 of PROMPT_PROCESSING_OPTIONS) {
+    const option = document.createElement("option");
+    option.value = item2.value;
+    option.textContent = item2.label;
+    select.append(option);
+  }
+  select.value = normalizePromptProcessing(preset.custom_prompt_post_processing) ?? "connection";
+  select.addEventListener("change", () => {
+    preset.custom_prompt_post_processing = normalizePromptProcessing(select.value);
+  });
+  const help = document.createElement("div");
+  help.id = "t-prompt-post-processing-help";
+  help.style.cssText = "margin-top:0.5em; font-size:0.85em; color:var(--t-color-text-muted); line-height:1.6;";
+  help.textContent = "\u968F\u5F53\u524D\u9884\u8BBE\u4FDD\u5B58\uFF0C\u5BF9\u81EA\u5B9A\u4E49 API \u548C\u9152\u9986\u8FDE\u63A5\u5747\u751F\u6548\u3002Kemini \u9009\u62E9\u201C\u4E25\u683C\uFF08\u4E0D\u5E26\u5DE5\u5177\uFF09\u201D\uFF1B\u6696\u9633\u9009\u62E9\u201C\u4E0D\u5904\u7406\u201D\u3002\u6CBF\u7528\u8FDE\u63A5\u65F6\uFF0C\u81EA\u5B9A\u4E49 API \u4E0D\u5904\u7406\uFF0C\u9152\u9986\u8FDE\u63A5\u4F7F\u7528\u9152\u9986\u8BBE\u7F6E\u3002\u4E25\u683C\u6A21\u5F0F\u4F1A\u5408\u5E76\u6D88\u606F\u5E76\u8C03\u6574\u4E2D\u9014\u7684\u7CFB\u7EDF\u89D2\u8272\uFF0C\u4FDD\u7559\u6587\u672C\u3002";
+  host2.append(label, select, help);
+}
+var init_presetPromptProcessing = __esm({
+  "src/ui/shared/presetPromptProcessing.js"() {
+    init_promptProcessing();
   }
 });
 
@@ -47301,6 +47394,7 @@ function openSettingsWindow() {
                             <button id="t-prompt-reset-builtin" class="t-tool-btn" title="\u6062\u590D\u5F53\u524D\u5185\u7F6E\u65B9\u6848\u9ED8\u8BA4\u503C" style="display:none;"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u9ED8\u8BA4</button>
                             <input type="file" id="t-prompt-file" accept=".json,application/json" style="display:none;">
                         </div>
+                        <div id="t-prompt-processing-panel" hidden style="margin-top:1em;"></div>
                         <div id="t-prompt-entry-list" class="t-prompt-entry-list" style="margin-top:15px;"></div>
                     </div>
                 </div>
@@ -47921,6 +48015,7 @@ function openSettingsWindow() {
     $("#t-prompt-reset-builtin").toggle(!isPreset);
     const scheme = isPreset ? tempPromptManager.presets.find((p) => p.id === $select.val()) : tempPromptManager.builtin[view];
     const entries = scheme ? getPresetEntrySummary(scheme) : [];
+    mountPresetPromptProcessing(document.getElementById("t-prompt-processing-panel"), isPreset ? scheme : null);
     const $list = $("#t-prompt-entry-list").empty();
     if (!scheme) {
       $list.html('<div style="color:var(--t-color-text-muted); padding:12px 0;">\u6682\u65E0\u5BFC\u5165\u7684\u9884\u8BBE</div>');
@@ -48584,6 +48679,7 @@ var init_settingsWindow = __esm({
     init_storage();
     init_toolboxSettingsLink();
     init_toolboxApiSelector();
+    init_presetPromptProcessing();
     init_state();
     init_theaterTheme();
     init_studioTheme();
@@ -55676,6 +55772,10 @@ ${processedPrompt}`;
     }
     const meta = {
       source: generationSource,
+      promptProcessing: resolvePromptProcessing(promptScheme, {
+        useSTConnection: !!conn.useSTConnection,
+        hostMode: oai_settings3.custom_prompt_post_processing
+      }),
       hasPromptOverride: hasExplicitOverride,
       promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
       skipMacroEvaluation,
@@ -56053,6 +56153,10 @@ ${processedPrompt}`;
     diagnostics.input_stats.user_len = user.length;
     const traceMeta = {
       source: generationSource,
+      promptProcessing: resolvePromptProcessing(promptScheme, {
+        useSTConnection,
+        hostMode: oai_settings3.custom_prompt_post_processing
+      }),
       hasPromptOverride: typeof promptOverride === "string" && promptOverride.trim().length > 0,
       promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
       skipMacroEvaluation,
@@ -56120,7 +56224,7 @@ ${processedPrompt}`;
         custom_url: oai_settings3.custom_url,
         reverse_proxy: oai_settings3.reverse_proxy,
         proxy_password: oai_settings3.proxy_password,
-        custom_prompt_post_processing: oai_settings3.custom_prompt_post_processing
+        custom_prompt_post_processing: traceMeta.promptProcessing.mode
       });
       diagnostics.phase = useStream ? "streaming" : "parsing_json";
       if (useStream) {
@@ -56194,6 +56298,7 @@ ${processedPrompt}`;
         key: finalKey,
         model: finalModel,
         messages,
+        promptPostProcessing: traceMeta.promptProcessing.mode,
         stream: useStream,
         maxTokens: cfg.max_tokens || 4096,
         // 保持原有请求形状：自定义分支此前不发送 temperature
@@ -57154,6 +57259,7 @@ var init_api = __esm({
     init_relayClient();
     init_scriptData();
     init_promptManager();
+    init_promptProcessing();
     init_tempInstruction();
     init_continuationStore();
     init_illustrationAuto();
