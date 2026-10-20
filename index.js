@@ -2024,10 +2024,10 @@ function buildFontStylesForShadowDOM() {
 }
 function renderToShadowDOMReal(container, html) {
   container.innerHTML = "";
-  const host3 = document.createElement("div");
-  host3.className = "t-shadow-host";
-  host3.style.cssText = "width:100%; min-height:100%;";
-  const shadow = host3.attachShadow({ mode: "open" });
+  const host2 = document.createElement("div");
+  host2.className = "t-shadow-host";
+  host2.style.cssText = "width:100%; min-height:100%;";
+  const shadow = host2.attachShadow({ mode: "open" });
   const isEditableNode = (node) => {
     if (!(node instanceof HTMLElement)) return false;
     const tag = node.tagName.toLowerCase();
@@ -2105,7 +2105,7 @@ function renderToShadowDOMReal(container, html) {
         </style>
     `;
   shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
-  container.appendChild(host3);
+  container.appendChild(host2);
   return shadow;
 }
 function parseWhitelistInput(input) {
@@ -29581,8 +29581,8 @@ function openCharacterProfileWindow(options = {}) {
     renderGroups();
   }
   function renderTabs(counts) {
-    const host3 = role("tabs");
-    host3.replaceChildren();
+    const host2 = role("tabs");
+    host2.replaceChildren();
     for (const group of GROUPS) {
       const active2 = group.kind === activeKind;
       const tab = document.createElement("button");
@@ -29598,7 +29598,7 @@ function openCharacterProfileWindow(options = {}) {
       count.dataset.role = `count-${group.kind}`;
       count.textContent = String(counts.get(group.kind) || 0);
       tab.append(count);
-      host3.append(tab);
+      host2.append(tab);
     }
   }
   function buildGroup(group, entries) {
@@ -29627,10 +29627,10 @@ function openCharacterProfileWindow(options = {}) {
       items.filter((entry) => profileKind(entry) === group2.kind).length
     ]));
     renderTabs(counts);
-    const host3 = role("list");
-    host3.replaceChildren();
+    const host2 = role("list");
+    host2.replaceChildren();
     const group = GROUPS.find((item2) => item2.kind === activeKind) || GROUPS[0];
-    host3.append(buildGroup(group, items.filter((entry) => profileKind(entry) === group.kind)));
+    host2.append(buildGroup(group, items.filter((entry) => profileKind(entry) === group.kind)));
   }
   function revealEntry(id3, kind) {
     activeKind = kind;
@@ -30942,8 +30942,8 @@ function collectImagesDeep(rootEl) {
   const imgs = [];
   try {
     rootEl.querySelectorAll?.("img")?.forEach((img) => imgs.push(img));
-    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host3) => {
-      const shadow = host3.shadowRoot;
+    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host2) => {
+      const shadow = host2.shadowRoot;
       if (shadow) {
         shadow.querySelectorAll("img").forEach((img) => imgs.push(img));
       }
@@ -32360,8 +32360,8 @@ function openFavsWindow() {
   const getChainMetaNodes = () => {
     const container = document.getElementById("t-read-content");
     if (!container) return [];
-    const host3 = container.querySelector(".t-shadow-host");
-    const root = host3?.shadowRoot || container;
+    const host2 = container.querySelector(".t-shadow-host");
+    const root = host2?.shadowRoot || container;
     return Array.from(root.querySelectorAll("details.t-chain-meta"));
   };
   const syncToggleMetaButton = (expanded) => {
@@ -40861,17 +40861,17 @@ function rewriteTargetStillMatches(target, current, expectedSource = target.proj
   const snapshot = sourceFields(target.message);
   return !snapshot.reason && snapshot.fields.length === target.fields.length && snapshot.fields.every((field, i) => field.object === target.fields[i].object && field.key === target.fields[i].key && field.original === (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : expectedSource));
 }
-async function persistRewriteTarget(target, rewritten, host3) {
-  if (!rewriteTargetStillMatches(target, host3.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+async function persistRewriteTarget(target, rewritten, host2) {
+  if (!rewriteTargetStillMatches(target, host2.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
   const ctx2 = target.ctx;
   const group = ctx2.groupId != null && ctx2.groupId !== "";
   const character = ctx2.characters?.[ctx2.characterId];
   if (!ctx2.chatId || !group && !character?.avatar) throw new Error("\u5F53\u524D\u804A\u5929\u65E0\u6CD5\u786E\u8BA4\u4FDD\u5B58\u7ED3\u679C");
-  await host3.save();
-  if (!rewriteTargetStillMatches(target, host3.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
-  const response = await host3.fetch(group ? "/api/chats/group/get" : "/api/chats/get", {
+  await host2.save();
+  if (!rewriteTargetStillMatches(target, host2.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+  const response = await host2.fetch(group ? "/api/chats/group/get" : "/api/chats/get", {
     method: "POST",
-    headers: host3.getHeaders(),
+    headers: host2.getHeaders(),
     cache: "no-store",
     body: JSON.stringify(group ? { id: ctx2.chatId } : { ch_name: character.name, file_name: ctx2.chatId, avatar_url: character.avatar })
   });
@@ -40881,7 +40881,7 @@ async function persistRewriteTarget(target, rewritten, host3) {
   const message = Array.isArray(saved) ? saved[target.index + offset] : null;
   const fields = message ? sourceFields(message) : { fields: [], reason: "\u672A\u627E\u5230\u4FDD\u5B58\u7684\u697C\u5C42" };
   if (fields.reason || fields.fields.length !== target.fields.length || fields.fields.some((field, i) => field.key !== target.fields[i].key || field.original !== (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : rewritten))) throw new Error("\u697C\u5C42\u8865\u4E01\u672A\u6210\u529F\u4FDD\u5B58");
-  if (!rewriteTargetStillMatches(target, host3.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+  if (!rewriteTargetStillMatches(target, host2.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
 }
 async function commitRewritePatches(target, units, replacements, options) {
   const mapped = mapRewriteUnits(target.projection, units);
@@ -43742,22 +43742,16 @@ function measurePendingMemory(chat2, memory, rawConfig, estimate) {
   const { start, keepStart, floors, tokens } = planRange(chat2, memory, config, estimate);
   return { start, keepStart, floors: keepStart > start ? floors : 0, tokens: keepStart > start ? tokens : 0 };
 }
-function planMemoryBatch(chat2, memory, rawConfig, estimate, force = false, budget = DEFAULT_BATCH_BUDGET) {
+function planMemoryBatch(chat2, memory, rawConfig, estimate, force = false) {
   const config = normalizeMemoryConfig(rawConfig);
-  const limit = Math.max(1, Math.floor(Number(budget) || DEFAULT_BATCH_BUDGET));
   const { start, keepStart, floors: pendingFloors, textFor, includeInSummary } = planRange(chat2, memory, config, estimate);
   if (keepStart <= start) return null;
   let end = start - 1;
-  let tokens = 0;
   let counted = 0;
   for (let i = start; i < keepStart; i++) {
-    if (includeInSummary(chat2[i])) {
-      tokens += estimate(textFor(chat2[i]));
-      counted++;
-    }
+    if (includeInSummary(chat2[i])) counted++;
     const boundary = i + 1 === keepStart || chat2[i + 1]?.is_user;
     if (!boundary) continue;
-    if (tokens > limit && end >= start) break;
     end = i;
     if (counted >= config.trigger_floors) break;
   }
@@ -44067,7 +44061,7 @@ ${body}${quoteText}`;
     recentOmitted
   };
 }
-var MEMORY_KEY, MEMORY_HIDE_KEY, MEMORY_ID_KEY, MEMORY_DEFAULTS, DEFAULT_BATCH_BUDGET, copyMemory, newMemoryId, isDigestSegment, formatItem;
+var MEMORY_KEY, MEMORY_HIDE_KEY, MEMORY_ID_KEY, MEMORY_DEFAULTS, copyMemory, newMemoryId, isDigestSegment, formatItem;
 var init_storyMemoryData = __esm({
   "src/core/storyMemoryData.js"() {
     init_storyMemoryStages();
@@ -44089,49 +44083,11 @@ var init_storyMemoryData = __esm({
       profile_id: "",
       inject_depth: 4
     });
-    DEFAULT_BATCH_BUDGET = 12e3;
     copyMemory = (value) => JSON.parse(JSON.stringify(value));
     newMemoryId = () => globalThis.crypto?.randomUUID?.() || `mem-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
     isDigestSegment = (segment) => segment?.level === 2;
     formatItem = (item2) => `${item2.title}${item2.status === "progress" ? "\uFF08\u6709\u8FDB\u5C55\uFF09" : ""}
 ${item2.body}`;
-  }
-});
-
-// src/core/memoryBudget.js
-import * as host2 from "../../../../script.js";
-function promptBudget() {
-  try {
-    const value = Number(host2.getMaxPromptTokens?.());
-    if (Number.isFinite(value) && value > 0) return value;
-  } catch {
-  }
-  return 0;
-}
-function memoryBatchBudget() {
-  const prompt2 = promptBudget();
-  const target = prompt2 > 0 ? Math.floor(prompt2 * PROMPT_SHARE) : DEFAULT_BATCH_BUDGET;
-  const ceiling = prompt2 > 0 ? Math.min(BATCH_BUDGET_MAX, prompt2) : BATCH_BUDGET_MAX;
-  const floor = Math.min(BATCH_BUDGET_MIN, ceiling);
-  return Math.max(1, Math.floor(Math.min(ceiling, Math.max(floor, target)) * scale));
-}
-function noteContextOverflow(message) {
-  if (!CONTEXT_OVERFLOW.test(String(message || ""))) return false;
-  scale = Math.max(0.25, scale / 2);
-  return true;
-}
-function resetMemoryBatchBudget() {
-  scale = 1;
-}
-var BATCH_BUDGET_MIN, BATCH_BUDGET_MAX, PROMPT_SHARE, scale, CONTEXT_OVERFLOW;
-var init_memoryBudget = __esm({
-  "src/core/memoryBudget.js"() {
-    init_storyMemoryData();
-    BATCH_BUDGET_MIN = 4e3;
-    BATCH_BUDGET_MAX = 24e3;
-    PROMPT_SHARE = 0.7;
-    scale = 1;
-    CONTEXT_OVERFLOW = /context[ _-]?length|maximum context|context window|prompt is too long|too many tokens|reduce the length|input.{0,8}too long|超出.{0,8}上下文|上下文.{0,8}(超|过长)|输入.{0,8}过长|token.{0,10}(超|过多)/i;
   }
 });
 
@@ -44339,9 +44295,8 @@ function getStoryMemoryView() {
   const memory = ctx2 ? memoryFor(ctx2) : newStoryMemory();
   let batch = null;
   let planError = "";
-  const budget = memoryBatchBudget();
   try {
-    batch = ctx2 ? planMemoryBatch(ctx2.chat, memory, config, estimateTokens, true, budget) : null;
+    batch = ctx2 ? planMemoryBatch(ctx2.chat, memory, config, estimateTokens, true) : null;
   } catch (cause) {
     planError = cause.message;
   }
@@ -44356,7 +44311,6 @@ function getStoryMemoryView() {
     injection,
     batch,
     backlog,
-    budget,
     busy: !!job || !!writing2 || !!pending,
     generating: generationActive,
     status,
@@ -44444,7 +44398,6 @@ function schedule(delay = 1e3) {
 }
 function reportError(cause) {
   error = cause?.message || String(cause);
-  noteContextOverflow(error);
   status = "error";
   failureCount++;
   retryAt = Date.now() + Math.min(3e5, 6e4 * 2 ** Math.min(failureCount - 1, 3));
@@ -44691,7 +44644,7 @@ async function runStoryMemory(force = true) {
   }
   const memory = memoryFor(ctx2);
   const config = getStoryMemoryConfig();
-  const batch = planMemoryBatch(ctx2.chat, memory, config, estimateTokens, force, memoryBatchBudget());
+  const batch = planMemoryBatch(ctx2.chat, memory, config, estimateTokens, force);
   if (!batch) {
     status = "idle";
     notify2();
@@ -44796,7 +44749,6 @@ function saveStoryMemoryConfig(patch) {
     failureCount = 0;
   }
   saveExtData();
-  resetMemoryBatchBudget();
   refreshInjection();
   notify2();
   schedule();
@@ -44935,20 +44887,18 @@ async function editStoryMemoryStages(patch) {
       const before = next.stages.filter((stage) => stage.end < edit.range.start);
       const after = next.stages.filter((stage) => stage.start > edit.range.end);
       const rebuilding = { ...next, stages: before, segments: [] };
-      const budget = memoryBatchBudget();
       for (let start = edit.range.start; start <= edit.range.end; ) {
         ensureCurrent();
         const rows = [];
-        let end = start - 1, tokens = 0;
+        let end = start - 1;
         for (let index = start; index <= edit.range.end; index++) {
           const message = ctx2.chat[index];
           const text2 = config.text_extraction ? extractToolboxText(message?.mes, config.text_extraction) : String(message?.mes || "");
           const readable = isMemoryReadable(message) && !(config.skip_user_messages && message.is_user) && !!text2.trim();
-          const cost = readable ? estimateTokens(text2) : 0;
-          if (tokens + cost > budget && end >= start) break;
           if (readable) rows.push({ index, text: text2 });
-          tokens += cost;
           end = index;
+          const boundary = index === edit.range.end || ctx2.chat[index + 1]?.is_user;
+          if (rows.length >= config.trigger_floors && boundary) break;
         }
         const markers = next.stageBoundaries.filter((marker) => marker.start > start && marker.start <= end);
         const cuts = [start, ...markers.map((marker) => marker.start), end + 1];
@@ -45117,7 +45067,6 @@ var init_storyMemory = __esm({
     init_helpers();
     init_connection();
     init_storyMemoryData();
-    init_memoryBudget();
     init_storyMemoryStages();
     init_memoryIndex();
     MEMORY_PROMPT_KEY = "TITANIA_STORY_MEMORY";
@@ -45162,11 +45111,10 @@ function openStoryMemorySettingsWindow(options = {}) {
         <input class="t-input" type="number" data-setting="${key}" value="${escape2(draft2[key])}" min="${min}" step="1">
         <small>${hint}</small></label>`;
   const formatTokens = (value) => Number(value || 0).toLocaleString("zh-CN");
-  const budgetHint = () => {
+  const backlogHint = () => {
     const view = getStoryMemoryView();
-    const budget = view.budget || 0;
-    const floors = Number(view.config?.trigger_floors) || 0;
-    const head = `\u6BCF\u6BB5\u6700\u591A\u8BFB\u7EA6 ${formatTokens(budget)} token\uFF0C\u6309\u5F53\u524D\u8FDE\u63A5\u6A21\u578B\u7684\u4E0A\u4E0B\u6587\u81EA\u52A8\u8BA1\u7B97\uFF1B\u5B9E\u9645\u5207\u6BB5\u7531\u4E0A\u9762\u586B\u7684\u697C\u5C42\u6570\u51B3\u5B9A\u3002`;
+    const floors = Math.max(1, Math.floor(Number(draft2.trigger_floors) || 1));
+    const head = "\u6BCF\u6BB5\u6309\u586B\u5199\u7684\u697C\u5C42\u6570\u8BFB\u53D6\uFF0C\u5E76\u4FDD\u7559\u5B8C\u6574\u5BF9\u8BDD\u3002";
     const backlog = view.backlog;
     if (!backlog || !backlog.floors) return `${head}\u5F53\u524D\u6CA1\u6709\u5F85\u6574\u7406\u7684\u6B63\u6587\u3002`;
     const segments = floors > 0 ? Math.max(1, Math.ceil(backlog.floors / floors)) : 0;
@@ -45184,14 +45132,14 @@ function openStoryMemorySettingsWindow(options = {}) {
                     <div class="t-memory-settings-wide" data-memory-extraction-link></div>
                     <label class="t-memory-field t-memory-settings-wide">
                         <span><input type="checkbox" data-setting="skip_user_messages" ${draft2.skip_user_messages ? "checked" : ""}> \u603B\u7ED3\u65F6\u8DF3\u8FC7\u7528\u6237\uFF08user\uFF09\u697C\u5C42</span>
-                        <small>\u4EC5\u5C06\u89D2\u8272\u697C\u5C42\u9001\u5165\u603B\u7ED3\uFF0C\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u89E6\u53D1\u91CF\u548C\u8BFB\u53D6\u9884\u7B97\u3002\u6574\u7406\u540E\u4ECD\u6309\u5B8C\u6574\u8303\u56F4\u9690\u85CF\u7528\u6237\u697C\u5C42\uFF1B\u5DF2\u6709\u6458\u8981\u9700\u64A4\u9500\u540E\u91CD\u65B0\u6574\u7406\u624D\u4F1A\u91C7\u7528\u65B0\u89C4\u5219\u3002</small>
+                        <small>\u4EC5\u5C06\u89D2\u8272\u697C\u5C42\u9001\u5165\u603B\u7ED3\uFF0C\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u89E6\u53D1\u91CF\u548C\u6BCF\u6BB5\u697C\u5C42\u6570\u3002\u6574\u7406\u540E\u4ECD\u6309\u5B8C\u6574\u8303\u56F4\u9690\u85CF\u7528\u6237\u697C\u5C42\uFF1B\u5DF2\u6709\u6458\u8981\u9700\u64A4\u9500\u540E\u91CD\u65B0\u6574\u7406\u624D\u4F1A\u91C7\u7528\u65B0\u89C4\u5219\u3002</small>
                     </label>
                     ${numeric("keep_floors", "\u6700\u8FD1\u591A\u5C11\u697C\u4E0D\u6574\u7406", 2, "\u8FD9\u51E0\u697C\u59CB\u7EC8\u7559\u5728\u6B63\u6587\u91CC\u3002\u6574\u7406\u8303\u56F4\u4F1A\u5411\u524D\u907F\u8BA9\u5230\u4E00\u6BB5\u5B8C\u6574\u5BF9\u8BDD\u7684\u5F00\u5934\u3002")}
                     ${numeric("inject_depth", "\u8BB0\u5FC6\u63D2\u5728\u5BF9\u8BDD\u7684\u54EA\u4E2A\u4F4D\u7F6E", 0, "0\uFF1D\u7D27\u8D34\u6700\u65B0\u4E00\u6761\u6D88\u606F\uFF1B\u9ED8\u8BA4 4\uFF0C\u8BA9\u6700\u8FD1\u51E0\u697C\u7684\u6B63\u6587\u6392\u5728\u8BB0\u5FC6\u4E4B\u540E\u3002")}
-                    ${numeric("trigger_floors", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11\u697C\u5C31\u5F00\u59CB\u6574\u7406", 1, "\u53EA\u7B97\u53C2\u4E0E\u603B\u7ED3\u7684\u6B63\u6587\uFF1B\u9690\u85CF\u7684\u7CFB\u7EDF\u6D88\u606F\u548C\u9009\u62E9\u8DF3\u8FC7\u7684\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u3002\u697C\u5C42\u6570\u662F\u552F\u4E00\u7684\u89E6\u53D1\u6761\u4EF6\uFF0C\u4E5F\u51B3\u5B9A\u6BCF\u6BB5\u591A\u5927\u3002")}
+                    ${numeric("trigger_floors", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11\u697C\u5C31\u5F00\u59CB\u6574\u7406", 1, "\u53EA\u7B97\u53C2\u4E0E\u603B\u7ED3\u7684\u6B63\u6587\uFF1B\u9690\u85CF\u7684\u7CFB\u7EDF\u6D88\u606F\u548C\u9009\u62E9\u8DF3\u8FC7\u7684\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u3002\u697C\u5C42\u6570\u51B3\u5B9A\u89E6\u53D1\u6761\u4EF6\u548C\u6BCF\u6BB5\u5927\u5C0F\uFF1B\u8FBE\u5230\u540E\u5728\u5B8C\u6574\u5BF9\u8BDD\u8FB9\u754C\u7ED3\u675F\uFF0C\u53EF\u80FD\u591A\u5E26\u697C\u5C42\u3002")}
                     <div class="t-memory-field t-memory-settings-wide">
-                        <span>\u6BCF\u6B21\u6574\u7406\u8BFB\u591A\u5C11\u6B63\u6587</span>
-                        <small>${budgetHint()}</small>
+                        <span>\u5F85\u6574\u7406\u6B63\u6587</span>
+                        <small data-role="backlog">${backlogHint()}</small>
                     </div>
                     ${numeric("merge_segments", "\u5C0F\u603B\u7ED3\u6512\u5230\u591A\u5C11\u6BB5\u5C31\u5408\u5E76\u6210\u4E00\u6761", 0, "\u6512\u591F\u8FD9\u4E2A\u6570\u5C31\u628A\u6700\u65E9\u7684\u4E00\u6279\u5408\u6210\u4E00\u6761\u66F4\u6982\u62EC\u7684\u4E8C\u7EA7\u603B\u7ED3\uFF1B\u6700\u65B0\u4E00\u6BB5\u4FDD\u6301\u539F\u6837\uFF0C\u4ECD\u6309\u7EC6\u7C92\u5EA6\u6CE8\u5165\u30020\uFF1D\u4E0D\u5408\u5E76\u3002")}
                     ${numeric("max_output_tokens", "\u4E00\u6B21\u6574\u7406\u6700\u591A\u5199\u56DE\u591A\u5C11 token", 1, "\u6574\u7406\u8BF7\u6C42\u7684\u56DE\u590D\u957F\u5EA6\u4E0A\u9650\u3002\u6BB5\u843D\u5185\u5BB9\u591A\u65F6\u53EF\u8C03\u5927\uFF1B\u592A\u5C0F\u4F1A\u56E0\u8FD4\u56DE\u4E0D\u5B8C\u6574\u800C\u4FDD\u7559\u6B63\u6587\u3002")}
@@ -45258,6 +45206,7 @@ function openStoryMemorySettingsWindow(options = {}) {
         const patch = Object.fromEntries([...root.querySelectorAll("[data-setting]")].map((input) => [input.dataset.setting, draft2[input.dataset.setting]]));
         saveStoryMemoryConfig(patch);
         syncDraft();
+        root.querySelector('[data-role="backlog"]').textContent = backlogHint();
         if (status3) status3.textContent = "\u5DF2\u4FDD\u5B58";
       } catch (error3) {
         if (status3) status3.textContent = error3.message;
@@ -48090,8 +48039,8 @@ function openSettingsWindow() {
     if (!isCreate && entry.readonly === true) return;
     document.getElementById("t-prompt-editor-modal")?.remove();
     const isDynamic = entry.type === "dynamic";
-    const host3 = document.createElement("div");
-    host3.id = "t-prompt-editor-modal";
+    const host2 = document.createElement("div");
+    host2.id = "t-prompt-editor-modal";
     const isolatedHostStyles = {
       position: "fixed",
       inset: "0",
@@ -48114,9 +48063,9 @@ function openSettingsWindow() {
       colorScheme: "dark"
     };
     for (const [property, value] of Object.entries(isolatedHostStyles)) {
-      host3.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
+      host2.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
     }
-    const shadow = host3.attachShadow({ mode: "closed" });
+    const shadow = host2.attachShadow({ mode: "closed" });
     shadow.innerHTML = `
             <style>
                 :host {
@@ -48270,7 +48219,7 @@ function openSettingsWindow() {
     contentInput.disabled = isDynamic;
     const close = () => {
       if (modal.open) modal.close();
-      host3.remove();
+      host2.remove();
     };
     shadow.querySelector(".close").addEventListener("click", close);
     shadow.querySelector(".backdrop").addEventListener("click", (event) => {
@@ -48292,7 +48241,7 @@ function openSettingsWindow() {
       close();
       renderPromptManager();
     });
-    document.body.appendChild(host3);
+    document.body.appendChild(host2);
     modal.showModal();
     nameInput.focus();
     if (isCreate) nameInput.select();
@@ -55276,8 +55225,8 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
   window.dispatchEvent(new CustomEvent("titania:scene-rendered"));
 }
 function ensureShadowContentElement(container, initialContent = "") {
-  const host3 = container.querySelector(".t-shadow-host");
-  const existingShadow = host3 && host3.shadowRoot ? host3.shadowRoot : null;
+  const host2 = container.querySelector(".t-shadow-host");
+  const existingShadow = host2 && host2.shadowRoot ? host2.shadowRoot : null;
   const existingContentEl = existingShadow ? existingShadow.querySelector(".t-shadow-content") : null;
   if (existingContentEl) return existingContentEl;
   const shadow = renderToShadowDOMReal(container, initialContent || "");
