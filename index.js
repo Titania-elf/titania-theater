@@ -612,12 +612,38 @@ function readToolboxSettings(data = {}) {
     },
     features: Object.fromEntries(TOOLBOX_FEATURES.map(({ id: id3 }) => [id3, {
       api: String(stored.features?.[id3]?.api || defaultApiChoice(data, id3)),
+      ...stored.features?.[id3]?.models ? { models: { ...stored.features[id3].models } } : {},
       extraction: stored.features?.[id3]?.extraction === "global" ? "global" : stored.features?.[id3]?.extraction === "local" ? "local" : hasLocalExtraction(data, id3) ? "local" : "global"
     }]))
   };
 }
 function getToolboxApiChoice(data, feature) {
   return data?.toolbox_settings?.features?.[feature]?.api || "local";
+}
+function getToolboxModelOverride(data, feature) {
+  const id3 = toolboxProfileId(data, feature);
+  if (id3 === null) return "";
+  return String(data?.toolbox_settings?.features?.[feature]?.models?.[id3 || data.config?.active_profile_id] || "").trim();
+}
+function mergeToolboxFeatureApis(original, draft2, current) {
+  const merged = {};
+  const mergeValue = (before, edited, latest) => {
+    if (edited === before) return latest;
+    if (latest === before || latest === edited) return edited;
+    throw new Error("\u529F\u80FD\u7684 API \u65B9\u6848\u6216\u6A21\u578B\u5DF2\u5728\u5176\u4ED6\u7A97\u53E3\u4FEE\u6539\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u540E\u518D\u7F16\u8F91\u3002");
+  };
+  for (const { id: id3 } of TOOLBOX_FEATURES) {
+    const before = original[id3] || {}, edited = draft2[id3] || {}, latest = current[id3] || {};
+    const models = {};
+    for (const profile of /* @__PURE__ */ new Set([...Object.keys(before.models || {}), ...Object.keys(edited.models || {}), ...Object.keys(latest.models || {})])) {
+      const value = mergeValue(before.models?.[profile] || "", edited.models?.[profile] || "", latest.models?.[profile] || "");
+      if (value) models[profile] = value;
+    }
+    merged[id3] = { ...edited, api: mergeValue(before.api, edited.api, latest.api) };
+    if (Object.keys(models).length) merged[id3].models = models;
+    else delete merged[id3].models;
+  }
+  return merged;
 }
 function getToolboxExtraction(data, feature) {
   if (data?.toolbox_settings?.features?.[feature]?.extraction !== "global") return null;
@@ -3469,6 +3495,9 @@ function readCharacterProfiles(data) {
   const list2 = data?.[CHARACTER_PROFILES_KEY]?.entries;
   return Array.isArray(list2) ? list2 : [];
 }
+function hasConfiguredCharacterProfiles(data) {
+  return readCharacterProfiles(data).some((entry) => entry && entry.enabled !== false && Boolean(String(entry.content ?? "").trim()));
+}
 function profileMatches(entry, { cardKey = "", text: text2 = "" } = {}) {
   if (!entry || entry.enabled === false) return false;
   const bound = normalizeCardKey(entry.cardKey);
@@ -3491,7 +3520,7 @@ function composeProfileBlock(entry) {
   return `\u3010${name}\u3011
 ${content}`;
 }
-var CHARACTER_PROFILES_KEY, CHARACTER_PROFILES_VERSION, CARD_KEY_PREFIX, PROFILE_KIND_CHARACTER, PROFILE_KIND_USER, MIN_KEYWORD_LENGTH, MAX_MATCHED_PROFILES;
+var CHARACTER_PROFILES_KEY, CHARACTER_PROFILES_VERSION, CARD_KEY_PREFIX, PROFILE_KIND_CHARACTER, PROFILE_KIND_USER, MIN_KEYWORD_LENGTH, MAX_MATCHED_PROFILES, MISSING_CHARACTER_PROFILE_MESSAGE;
 var init_characterProfiles = __esm({
   "src/core/characterProfiles.js"() {
     init_illustrationData();
@@ -3502,6 +3531,7 @@ var init_characterProfiles = __esm({
     PROFILE_KIND_USER = "user";
     MIN_KEYWORD_LENGTH = 2;
     MAX_MATCHED_PROFILES = 4;
+    MISSING_CHARACTER_PROFILE_MESSAGE = "\u8BF7\u5148\u586B\u5199\u5E76\u542F\u7528\u81F3\u5C11\u4E00\u4EFD\u4EBA\u7269\u5916\u89C2\u6863\u6848\uFF0C\u518D\u7EE7\u7EED\u573A\u666F\u914D\u56FE\u3002";
   }
 });
 
@@ -8214,6 +8244,80 @@ function loadCssFiles() {
     align-items: center;
     border-radius: 0 0 var(--t-radius-panel) var(--t-radius-panel);
     flex-shrink: 0;
+}
+
+/* \u2500\u2500 \u9876\u680F\u95EE\u53F7\uFF1A\u9759\u6001\u8BF4\u660E\u6536\u5728\u4E00\u5904\uFF08\u914D\u56FE\u3001\u6863\u6848\u3001\u6545\u4E8B\u8BB0\u5FC6\u5171\u7528\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   \u6C14\u6CE1\u6302\u5728\u6309\u94AE\u5BB9\u5668\u4E0A\u505A\u7EDD\u5BF9\u5B9A\u4F4D\uFF0C\u6240\u4EE5\u5BB9\u5668\u5FC5\u987B\u6709 position: relative\u3002
+   \u5934\u90E8\u672C\u8EAB\u6CA1\u6709 overflow: hidden\uFF0C\u6C14\u6CE1\u4E0D\u4F1A\u88AB\u88C1\u6389\uFF1Bz-index \u8981\u9AD8\u8FC7\u7A97\u53E3\u5185\u5BB9\u3002 */
+
+.t-help {
+    position: relative;
+    display: inline-flex;
+}
+
+.t-help-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 20;
+    /* \u8BF4\u660E\u662F\u6210\u6BB5\u7684\uFF0C\u7ED9\u5BBD\u4E00\u70B9\u4F46\u522B\u628A\u7A97\u53E3\u6491\u7834\uFF1B\u7A84\u5C4F\u9760 vw \u515C\u5E95\u3002 */
+    width: min(430px, 76vw);
+    max-height: min(60vh, 460px);
+    overflow-y: auto;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    text-align: left;
+    background: var(--t-color-surface-elevated);
+    border: 1px solid var(--t-color-border-strong);
+    border-radius: var(--t-radius-panel);
+    box-shadow: 0 10px 28px var(--t-shadow-ink-45);
+    color: var(--t-color-text-secondary);
+    font-size: 0.85em;
+    line-height: 1.6;
+    font-weight: normal;
+}
+
+.t-help-title {
+    color: var(--t-color-accent);
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.t-help-section + .t-help-section { margin-top: 10px; }
+
+.t-help-heading {
+    color: var(--t-color-text-label);
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.t-help-lines,
+.t-help-terms {
+    margin: 0;
+    padding-left: 1.2em;
+}
+
+.t-help-terms {
+    padding-left: 0;
+}
+
+.t-help-lines > li + li,
+.t-help-terms > dd + dt { margin-top: 4px; }
+
+.t-help-terms > dt {
+    font-weight: normal;
+    margin-top: 6px;
+}
+
+.t-help-terms > dd {
+    margin: 0 0 0 1.2em;
+}
+
+.t-help code {
+    padding: 1px 4px;
+    border-radius: var(--t-radius-inline);
+    background: var(--t-color-surface-code);
+    color: var(--t-color-text);
 }
 
 
@@ -15332,79 +15436,6 @@ textarea.t-input {
 .t-profile-tile-foot { display: flex; justify-content: flex-end; }
 .t-profile-tile-empty { grid-column: 1 / -1; }
 
-/* \u2500\u2500 \u9876\u680F\u95EE\u53F7\uFF1A\u9759\u6001\u8BF4\u660E\u6536\u5728\u4E00\u5904\uFF08\u4E09\u4E2A\u914D\u56FE\u7A97\u53E3\u5171\u7528\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-   \u6C14\u6CE1\u6302\u5728\u6309\u94AE\u5BB9\u5668\u4E0A\u505A\u7EDD\u5BF9\u5B9A\u4F4D\uFF0C\u6240\u4EE5\u5BB9\u5668\u5FC5\u987B\u6709 position: relative\u3002
-   \u5934\u90E8\u672C\u8EAB\u6CA1\u6709 overflow: hidden\uFF0C\u6C14\u6CE1\u4E0D\u4F1A\u88AB\u88C1\u6389\uFF1Bz-index \u8981\u9AD8\u8FC7\u7A97\u53E3\u5185\u5BB9\u3002 */
-
-.t-help {
-    position: relative;
-    display: inline-flex;
-}
-
-.t-help-popover {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    z-index: 20;
-    /* \u8BF4\u660E\u662F\u6210\u6BB5\u7684\uFF0C\u7ED9\u5BBD\u4E00\u70B9\u4F46\u522B\u628A\u7A97\u53E3\u6491\u7834\uFF1B\u7A84\u5C4F\u9760 vw \u515C\u5E95\u3002 */
-    width: min(430px, 76vw);
-    max-height: min(60vh, 460px);
-    overflow-y: auto;
-    padding: 12px 14px;
-    box-sizing: border-box;
-    text-align: left;
-    background: var(--t-color-surface-elevated);
-    border: 1px solid var(--t-color-border-strong);
-    border-radius: var(--t-radius-panel);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-    color: var(--t-color-text-secondary);
-    font-size: 0.85em;
-    line-height: 1.6;
-    font-weight: normal;
-}
-
-.t-help-title {
-    color: var(--t-color-accent);
-    font-weight: bold;
-    margin-bottom: 8px;
-}
-
-.t-help-section + .t-help-section { margin-top: 10px; }
-
-.t-help-heading {
-    color: var(--t-color-text-label);
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.t-help-lines,
-.t-help-terms {
-    margin: 0;
-    padding-left: 1.2em;
-}
-
-.t-help-terms {
-    padding-left: 0;
-}
-
-.t-help-lines > li + li,
-.t-help-terms > dd + dt { margin-top: 4px; }
-
-.t-help-terms > dt {
-    font-weight: normal;
-    margin-top: 6px;
-}
-
-.t-help-terms > dd {
-    margin: 0 0 0 1.2em;
-}
-
-.t-help code {
-    padding: 1px 4px;
-    border-radius: var(--t-radius-inline);
-    background: var(--t-color-surface-code);
-    color: var(--t-color-text);
-}
 
 /* \u2500\u2500 \u914D\u56FE\u706F\u7BB1 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
    \u6302\u5728**\u914D\u56FE\u9762\u677F\u81EA\u5DF1\u7684 root \u91CC**\uFF08.t-root.t-illustration-window\uFF09\u3002
@@ -23055,7 +23086,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     background: var(--t-memory-shell); color: var(--t-memory-text);
     overflow: hidden; border: 1px solid var(--t-memory-border); border-radius: 18px;
 }
-.t-memory-reading-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.t-memory-reading-shell { position: relative; z-index: var(--t-z-base); isolation: isolate; display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .t-memory-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 28px; border-bottom: 1px solid var(--t-memory-line); flex-shrink: 0; }
 .t-memory-title, .t-memory-header-actions, .t-memory-section-heading, .t-memory-card-actions, .t-memory-rel-head, .t-memory-card-footer { display: flex; align-items: center; gap: 12px; }
 .t-memory-title { min-width: 0; }
@@ -23065,6 +23096,14 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-memory-chat-name { color: var(--t-memory-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .t-memory-header-actions { flex-shrink: 0; gap: 8px; }
 .t-memory-header .t-icon-btn { --t-icon-btn-size: 32px; border: 1px solid var(--t-memory-border); border-radius: 50%; color: var(--t-memory-muted); }
+.t-memory-header .t-help-popover {
+    width: min(480px, calc(96vw - 100px)); max-height: min(70dvh, 650px);
+    background: var(--t-memory-raised); border-color: var(--t-memory-border);
+    color: var(--t-memory-muted); line-height: 1.8; overflow-wrap: anywhere;
+    overscroll-behavior: contain;
+}
+.t-memory-header .t-help-heading { color: var(--t-memory-text); }
+.t-memory-header .t-help-popover:focus-visible { outline: 2px solid var(--t-memory-gold); outline-offset: -2px; }
 .t-memory-layout { display: grid; grid-template-columns: 88px minmax(0, 1fr); flex: 1; min-height: 0; }
 .t-memory-sidebar { display: flex; flex-direction: column; padding: 20px 12px; border-right: 1px solid var(--t-memory-line); overflow: auto; }
 .t-memory-tabs { display: grid; gap: 8px; }
@@ -23192,14 +23231,22 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-memory-editor { padding-block: 18px; }
 .t-memory-editor .t-memory-hint { font-size: .85em; }
 
-.t-memory-source-layer { position: absolute; inset: 0; z-index: var(--t-z-raised); }
+.t-memory-source-layer { position: absolute; inset: 0; z-index: var(--t-z-sticky); isolation: isolate; }
 .t-memory-source-shade { position: absolute; inset: 0; background: var(--t-color-scrim); }
-.t-memory-source-drawer { position: absolute; inset: 0 0 0 auto; width: min(480px, 90%); display: flex; flex-direction: column; background: var(--t-color-surface); border-left: 1px solid var(--t-color-border-control); box-shadow: var(--t-shadow-xl); }
-.t-memory-source-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px; border-bottom: 1px solid var(--t-color-border-faint); }
+/* \u62BD\u5C49\u72EC\u7ACB\u4F7F\u7528\u8BB0\u5FC6\u8C03\u8272\u677F\uFF0C\u907F\u514D\u901A\u7528\u8868\u9762\u53D8\u91CF\u88AB\u4E3B\u9898\u8BBE\u4E3A\u900F\u660E\uFF1B\u4E0B\u5C42\u661F\u56FE\u7531 reading-shell \u9694\u79BB\u3002 */
+.t-memory-window .t-memory-source-drawer {
+    position: absolute; inset: 0 0 0 auto; width: min(480px, 90%); min-width: 0;
+    display: flex; flex-direction: column; overflow: hidden;
+    background: var(--t-memory-raised); color: var(--t-memory-text);
+    border-left: 1px solid var(--t-memory-border); box-shadow: var(--t-shadow-xl);
+}
+.t-memory-source-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px; flex: 0 0 auto; max-height: 40%; overflow-y: auto; background: var(--t-memory-raised); border-bottom: 1px solid var(--t-memory-line); }
+.t-memory-source-header > div { flex: 1; min-width: 0; }
 .t-memory-source-header h2 { font-size: 1.15em; margin: 0; overflow-wrap: anywhere; }
 .t-memory-source-header .t-memory-eyebrow { margin-bottom: 8px; }
 .t-memory-source-header > button { flex-shrink: 0; }
-.t-memory-source-body { padding: 24px 26px; overflow-y: auto; min-height: 0; font-size: 1.1em; }
+.t-memory-source-body { flex: 1; padding: 24px 26px; overflow-y: auto; min-width: 0; min-height: 0; overscroll-behavior: contain; background: var(--t-memory-raised); color: var(--t-memory-text); font-size: 1.1em; }
+.t-memory-source-body .t-memory-source { color: inherit; }
 .t-memory-source { margin: 18px 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.9; color: var(--t-color-text-secondary); }
 .t-memory-error { margin: 8px 18px; padding: 10px 12px; background: var(--t-color-surface-sunken); border-left: 3px solid var(--t-color-accent); color: var(--t-color-text); line-height: 1.6; }
 .t-memory-body .t-memory-error { margin-inline: 0; }
@@ -23382,6 +23429,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .t-memory-brand-mark { font-size: 34px; width: 28px; }
     .t-memory-chat-name { display: none; }
     .t-memory-header-actions { gap: 5px; }
+    .t-memory-header .t-help-popover { right: -37px; width: calc(100vw - 34px); max-height: min(70dvh, 650px); }
     .t-memory-layout { display: flex; flex-direction: column; }
     .t-memory-sidebar { padding: 4px 12px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); overflow: visible; flex-shrink: 0; }
     .t-memory-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
@@ -23424,9 +23472,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .t-memory-chapter { margin-left: 4px; padding-left: 14px; }
     .t-memory-chapter:first-child { padding-left: 14px; }
     .t-memory-chapter .t-memory-detail-body { padding-left: 0; }
-    .t-memory-source-drawer { width: 100%; border: 0; }
+    .t-memory-window .t-memory-source-drawer { width: 100%; border: 0; }
     .t-memory-source-header, .t-memory-source-body { padding: 20px; }
-    .t-memory-source-layer { position: fixed; }
     .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }
     .t-memory-settings-body { padding-inline: 16px; }
     .t-memory-settings-footer { flex-wrap: wrap; padding-inline: 16px; }
@@ -26127,6 +26174,14 @@ import { openai_setting_names, openai_settings, oai_settings } from "../../../op
 function normalizeApiBaseUrl(inputUrl) {
   return String(inputUrl || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "").replace(/\/v1\/models$/, "").replace(/\/models$/, "");
 }
+function normalizeApiProfileModelSettings(profile) {
+  return {
+    ...Array.isArray(profile?.model_list) ? {
+      model_list: [...new Set(profile.model_list.map((value) => String(value || "").trim()).filter(Boolean))]
+    } : {},
+    ...["list", "manual"].includes(profile?.model_input_mode) ? { model_input_mode: profile.model_input_mode } : {}
+  };
+}
 function ensureMainApiProfiles(config = {}) {
   const cfg = config && typeof config === "object" ? config : {};
   let profiles = Array.isArray(cfg.profiles) ? cfg.profiles : [];
@@ -26148,6 +26203,7 @@ function ensureMainApiProfiles(config = {}) {
       url: String(profile?.url || "").trim(),
       key: String(profile?.key || "").trim(),
       model: String(profile?.model || "gpt-3.5-turbo").trim() || "gpt-3.5-turbo",
+      ...normalizeApiProfileModelSettings(profile),
       ...type === "internal" && profile?.model_override ? { model_override: String(profile.model_override).trim() } : {}
     };
   });
@@ -27516,8 +27572,11 @@ function getAllProfiles() {
   return normalized.profiles;
 }
 function getToolboxConnection(feature) {
-  const id3 = toolboxProfileId(getExtData(), feature);
-  return id3 ? getConnectionByProfileId(id3) : getActiveConnection();
+  const data = getExtData();
+  const id3 = toolboxProfileId(data, feature);
+  const model = getToolboxModelOverride(data, feature);
+  const connection = id3 ? getConnectionByProfileId(id3, model || null) : getActiveConnection();
+  return connection && model ? { ...connection, model } : connection;
 }
 function getConnectionByProfileId(profileId, modelOverride = null) {
   const data = getExtData();
@@ -27893,6 +27952,9 @@ async function runAutoJob(job3, target, data) {
   if (!preset) throw illustrationError("\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE\u3002\u6253\u5F00\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF0C\u5BFC\u5165\u4E00\u4EFD\u9884\u8BBE\u6216\u65B0\u5EFA\u4E00\u4EFD\u3002", "NO_PRESET");
   const check = validatePresetForSelection(preset);
   if (!check.ok) throw illustrationError(check.reason, check.code);
+  if (!hasConfiguredCharacterProfiles(getExtData())) {
+    throw illustrationError(`${MISSING_CHARACTER_PROFILE_MESSAGE}\u6253\u5F00\u573A\u666F\u914D\u56FE\u9762\u677F\uFF0C\u70B9\u51FB\u300C\u586B\u5199\u5916\u89C2\u6863\u6848\u300D\u3002`, "NO_CHARACTER_PROFILE");
+  }
   const theaterText = buildPromptTextFromTheater(target.content);
   const participants = matchCharacterProfiles(readCharacterProfiles(data), {
     cardKey: target.cardKey,
@@ -27907,6 +27969,9 @@ async function runAutoJob(job3, target, data) {
   if (cancelled()) return;
   const currentBackend = resolveActiveBackendId(getExtData());
   if (draft2.backend !== currentBackend) draft2 = normalizeIllustrationDraft({ ...draft2, backend: currentBackend });
+  if (!hasConfiguredCharacterProfiles(getExtData())) {
+    throw illustrationError(MISSING_CHARACTER_PROFILE_MESSAGE, "NO_CHARACTER_PROFILE");
+  }
   job3.phase = "generating";
   job3.status = AUTO_STATUS.generating;
   const result = await generateTheaterIllustration(draft2, { signal });
@@ -28086,6 +28151,7 @@ function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
     url: String(profile?.url || "").trim(),
     key: String(profile?.key || "").trim(),
     model: String(profile?.model || defaultModel).trim() || defaultModel,
+    ...normalizeApiProfileModelSettings(profile),
     ...type === "internal" && profile?.model_override ? { model_override: String(profile.model_override).trim() } : {}
   };
 }
@@ -28140,6 +28206,7 @@ function renderApiConnectionEditorHTML(options = {}) {
   const flags = {
     showProfileName: true,
     showDeleteProfile: true,
+    showCopyProfile: false,
     showStream: false,
     showMaxTokens: false,
     showManualModelInput: false,
@@ -28167,6 +28234,7 @@ function renderApiConnectionEditorHTML(options = {}) {
             <div class="t-prof-header">
                 <select id="${escapeHtml2(ids2.profileSelectId || "")}" class="${escapeHtml2(classes.profileSelect)}"></select>
                 <button id="${escapeHtml2(ids2.profileAddId || "")}" class="${escapeHtml2(classes.button)}" title="\u65B0\u5EFA\u65B9\u6848"><i class="fa-solid fa-plus"></i></button>
+                ${flags.showCopyProfile ? `<button id="${escapeHtml2(ids2.profileCopyId || "")}" class="${escapeHtml2(classes.button)}" title="\u590D\u5236\u5F53\u524D\u65B9\u6848\uFF0C\u53E6\u9009\u6A21\u578B" aria-label="\u590D\u5236\u5F53\u524D\u65B9\u6848\uFF0C\u53E6\u9009\u6A21\u578B"><i class="fa-solid fa-copy"></i></button>` : ""}
                 ${flags.showDeleteProfile ? `<button id="${escapeHtml2(ids2.profileDeleteId || "")}" class="${escapeHtml2(classes.button)}" title="\u5220\u9664\u5F53\u524D\u65B9\u6848" style="color:var(--t-color-danger);"><i class="fa-solid fa-trash"></i></button>` : ""}
             </div>
             ${profileNameBlock}
@@ -28202,7 +28270,7 @@ function createApiConnectionEditor(options = {}) {
   const autoFetchDelay = Number.isFinite(Number(options.autoFetchDelayMs)) ? Number(options.autoFetchDelayMs) : 500;
   const createProfileIdPrefix = String(options.profileIdPrefix || "custom").trim() || "custom";
   const statusTexts = {
-    default: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868",
+    default: "\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868\uFF0C\u4E5F\u53EF\u5207\u6362\u4E3A\u624B\u52A8\u586B\u5199\u6A21\u578B ID\u3002",
     missingUrl: "\u8BF7\u5148\u586B\u5199 API \u5730\u5740",
     loading: "\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868...",
     empty: "\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B",
@@ -28224,7 +28292,6 @@ function createApiConnectionEditor(options = {}) {
     state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
   }
   let autoFetchTimer = null;
-  let modelInputMode = "list";
   let modelRequestVersion = 0;
   const emitChange = () => {
     if (typeof options.onChange === "function") {
@@ -28241,6 +28308,23 @@ function createApiConnectionEditor(options = {}) {
   };
   const findActiveProfileIndex = () => state.profiles.findIndex((p) => p.id === state.activeProfileId);
   const findActiveProfile = () => state.profiles[findActiveProfileIndex()] || null;
+  const currentModelMode = () => showManualModelInput && findActiveProfile()?.model_input_mode === "manual" ? "manual" : "list";
+  const invalidateModelRequest = () => {
+    modelRequestVersion += 1;
+    if (autoFetchTimer) clearTimeout(autoFetchTimer);
+    autoFetchTimer = null;
+  };
+  const renderModelOptions = (profile) => {
+    const currentModel = profile.model || defaultModel;
+    const models = profile.model_list || [];
+    const $model = getById($root, ids2.modelId);
+    $model.empty();
+    uniqStrings([currentModel, ...models]).forEach((model) => {
+      const label = model === currentModel && !models.includes(model) ? `${model}\uFF08\u5F53\u524D\uFF09` : model;
+      $model.append(`<option value="${escapeHtml2(model)}">${escapeHtml2(label)}</option>`);
+    });
+    $model.val(currentModel);
+  };
   const persistCurrentProfileInputs = () => {
     const idx = findActiveProfileIndex();
     if (idx === -1) return;
@@ -28258,6 +28342,8 @@ function createApiConnectionEditor(options = {}) {
     const $key = getById($root, ids2.apiKeyId);
     const $model = getById($root, ids2.modelId);
     const $modelInput = getById($root, ids2.modelInputId);
+    const previousUrl = normalizeUrl(profile.url);
+    const previousKey = profile.key;
     if ($name.length) {
       profile.name = String($name.val() || "").trim() || profile.name;
     }
@@ -28267,10 +28353,17 @@ function createApiConnectionEditor(options = {}) {
     if ($key.length) {
       profile.key = String($key.val() || "").trim();
     }
-    if (modelInputMode === "manual" && $modelInput.length) {
+    if (currentModelMode() === "manual" && $modelInput.length) {
       profile.model = String($modelInput.val() || "").trim() || defaultModel;
     } else if ($model.length) {
       profile.model = String($model.val() || "").trim() || defaultModel;
+    }
+    if (profile.url !== previousUrl || profile.key !== previousKey) {
+      invalidateModelRequest();
+      delete profile.model_list;
+      renderModelOptions(profile);
+      getById($root, ids2.fetchModelsId).prop("disabled", currentModelMode() === "manual").html('<i class="fa-solid fa-rotate"></i>');
+      setStatus2(currentModelMode() === "manual" ? statusTexts.manual : statusTexts.default);
     }
     emitChange();
   };
@@ -28297,6 +28390,7 @@ function createApiConnectionEditor(options = {}) {
     const profile = findActiveProfile();
     if (!profile) return;
     const isInternal = profile.type === "internal";
+    const modelInputMode = currentModelMode();
     const editableInternal = isInternal && !!profile.model_override && !profile.readonly;
     if ($name.length) {
       $name.val(profile.name || "").prop("disabled", isInternal && !editableInternal || profile.readonly === true);
@@ -28319,7 +28413,7 @@ function createApiConnectionEditor(options = {}) {
         $urlHint.show();
       }
       if ($tip.length) $tip.text(editableInternal ? "\u4F7F\u7528\u9152\u9986\u6258\u7BA1\u7684\u8FDE\u63A5\uFF0C\u6A21\u578B\u7531\u672C\u65B9\u6848\u6307\u5B9A\u3002" : statusTexts.internalTip);
-      setStatus2(statusTexts.default, "muted");
+      setStatus2(editableInternal ? "\u586B\u5199\u6B64\u65B9\u6848\u4F7F\u7528\u7684\u6A21\u578B ID\u3002\u590D\u5236\u4E3B\u8FDE\u63A5\u53EF\u521B\u5EFA\u53E6\u4E00\u4E2A\u6A21\u578B\u65B9\u6848\u3002" : "\u8DDF\u968F\u9152\u9986\u5F53\u524D\u6A21\u578B\uFF1B\u53EF\u590D\u5236\u6B64\u65B9\u6848\u540E\u6307\u5B9A\u5176\u4ED6\u6A21\u578B\u3002", "muted");
       return;
     }
     $url.val(profile.url || "").prop("disabled", false).prop("placeholder", options.apiUrlPlaceholder || "https://api.example.com/v1");
@@ -28332,12 +28426,8 @@ function createApiConnectionEditor(options = {}) {
     $modelManualWrap.toggle(modelInputMode === "manual");
     if ($urlHint.length) $urlHint.hide();
     if ($tip.length) $tip.text(statusTexts.customTip);
-    const currentModel = profile.model || defaultModel;
-    const hasCurrentModel = $model.find("option").toArray().some((option) => String(option.value) === currentModel);
-    if (!hasCurrentModel) {
-      $model.empty().append(`<option value="${escapeHtml2(currentModel)}" selected>${escapeHtml2(currentModel)}</option>`);
-    }
-    $model.val(currentModel);
+    renderModelOptions(profile);
+    setStatus2(modelInputMode === "manual" ? statusTexts.manual : profile.model_list?.length ? `\u5DF2\u4FDD\u5B58 ${profile.model_list.length} \u4E2A\u6A21\u578B\uFF0C\u53EF\u76F4\u63A5\u5207\u6362\u6216\u5237\u65B0\u5217\u8868\u3002` : statusTexts.default);
   };
   const createProfile = () => {
     const customCount = state.profiles.filter((p) => p.type !== "internal").length;
@@ -28352,10 +28442,10 @@ function createApiConnectionEditor(options = {}) {
     }, customCount, defaultModel);
   };
   const fetchModels = async (showToast = false) => {
+    invalidateModelRequest();
     persistCurrentProfileInputs();
-    if (modelInputMode === "manual") return [];
+    if (currentModelMode() === "manual") return [];
     const profile = findActiveProfile();
-    const $model = getById($root, ids2.modelId);
     const $fetchBtn = getById($root, ids2.fetchModelsId);
     if (!profile || profile.type === "internal") return [];
     const apiUrl = normalizeUrl(profile.url);
@@ -28374,13 +28464,8 @@ function createApiConnectionEditor(options = {}) {
         setStatus2(statusTexts.empty, "warn");
         return [];
       }
-      const selectedModel = profile.model || defaultModel;
-      const displayModels = uniqStrings([selectedModel, ...models]);
-      $model.empty();
-      displayModels.forEach((m) => {
-        const label = m === selectedModel && !models.includes(m) ? `${m}\uFF08\u5F53\u524D\uFF09` : m;
-        $model.append(`<option value="${escapeHtml2(m)}" ${m === selectedModel ? "selected" : ""}>${escapeHtml2(label)}</option>`);
-      });
+      profile.model_list = models;
+      renderModelOptions(profile);
       setStatus2(typeof statusTexts.success === "function" ? statusTexts.success(models.length) : statusTexts.success, "ok");
       emitChange();
       if (showToast && window.toastr) {
@@ -28404,6 +28489,7 @@ function createApiConnectionEditor(options = {}) {
   const bind = () => {
     const $select = getById($root, ids2.profileSelectId);
     const $add = getById($root, ids2.profileAddId);
+    const $copy = getById($root, ids2.profileCopyId);
     const $del = getById($root, ids2.profileDeleteId);
     const $fetch = getById($root, ids2.fetchModelsId);
     const $name = getById($root, ids2.profileNameId);
@@ -28415,13 +28501,13 @@ function createApiConnectionEditor(options = {}) {
     $select.on("change", () => {
       const nextActiveProfileId = String($select.val() || "").trim();
       persistCurrentProfileInputs();
-      modelRequestVersion += 1;
+      invalidateModelRequest();
       state.activeProfileId = nextActiveProfileId;
       render();
       emitChange();
       const active2 = findActiveProfile();
-      if (active2 && active2.type !== "internal" && modelInputMode !== "manual" && options.autoFetchOnProfileSwitch !== false) {
-        setTimeout(() => {
+      if (active2 && active2.type !== "internal" && currentModelMode() !== "manual" && !active2.model_list?.length && options.autoFetchOnProfileSwitch !== false) {
+        autoFetchTimer = setTimeout(() => {
           fetchModels(false);
         }, 100);
       }
@@ -28429,7 +28515,32 @@ function createApiConnectionEditor(options = {}) {
     $add.on("click", (e) => {
       e.preventDefault();
       persistCurrentProfileInputs();
+      invalidateModelRequest();
       const profile = typeof options.createProfile === "function" ? normalizeProfile(options.createProfile({ state: { ...state } }) || createProfile(), state.profiles.length, defaultModel) : createProfile();
+      state.profiles.push(profile);
+      state.activeProfileId = profile.id;
+      render();
+      emitChange();
+    });
+    $copy.on("click", (e) => {
+      e.preventDefault();
+      persistCurrentProfileInputs();
+      const source = findActiveProfile();
+      if (!source) return;
+      invalidateModelRequest();
+      const names = new Set(state.profiles.map((profile2) => profile2.name));
+      const baseName = `${source.name}\uFF08\u526F\u672C\uFF09`;
+      let name = baseName, suffix = 2;
+      while (names.has(name)) name = `${baseName} ${suffix++}`;
+      const model = source.type === "internal" ? source.model_override || String(options.getInternalModel?.() || defaultModel).trim() || defaultModel : source.model;
+      const profile = normalizeProfile({
+        ...source,
+        id: createProfile().id,
+        name,
+        readonly: false,
+        model,
+        ...source.type === "internal" ? { model_override: model, model_input_mode: "manual" } : {}
+      }, state.profiles.length, defaultModel);
       state.profiles.push(profile);
       state.activeProfileId = profile.id;
       render();
@@ -28440,6 +28551,7 @@ function createApiConnectionEditor(options = {}) {
       const active2 = findActiveProfile();
       if (!active2 || active2.type === "internal" && !active2.model_override || active2.readonly) return;
       if (!window.confirm("\u5220\u9664\u65B9\u6848\uFF1F")) return;
+      invalidateModelRequest();
       state.profiles = state.profiles.filter((p) => p.id !== active2.id);
       if (state.profiles.length === 0) state.profiles.push(createProfile());
       state.activeProfileId = state.profiles.find((p) => p.type !== "internal")?.id || state.profiles[0]?.id || "";
@@ -28451,10 +28563,12 @@ function createApiConnectionEditor(options = {}) {
     $modelInput.on("input", persistCurrentProfileInputs);
     $modelMode.on("change", () => {
       persistCurrentProfileInputs();
-      modelRequestVersion += 1;
-      modelInputMode = String($modelMode.val() || "list") === "manual" ? "manual" : "list";
+      invalidateModelRequest();
+      const profile = findActiveProfile();
+      if (!profile || profile.type === "internal" || profile.readonly) return;
+      profile.model_input_mode = String($modelMode.val() || "list") === "manual" ? "manual" : "list";
       render();
-      setStatus2(modelInputMode === "manual" ? statusTexts.manual : statusTexts.default, "muted");
+      emitChange();
     });
     $url.on("input", () => {
       persistCurrentProfileInputs();
@@ -28482,7 +28596,7 @@ function createApiConnectionEditor(options = {}) {
     emitChange();
   };
   const setState = (nextState = {}) => {
-    modelRequestVersion += 1;
+    invalidateModelRequest();
     const nextProfiles = Array.isArray(nextState.profiles) ? nextState.profiles : state.profiles;
     state.profiles = normalizeProfilesWithUniqueIds(nextProfiles, defaultModel);
     state.activeProfileId = String(nextState.activeProfileId || state.activeProfileId || "").trim();
@@ -28503,7 +28617,8 @@ function createApiConnectionEditor(options = {}) {
     getState,
     fetchModels,
     persistCurrentProfileInputs,
-    setStatus: setStatus2
+    setStatus: setStatus2,
+    destroy: invalidateModelRequest
   };
 }
 var init_apiConnectionEditor = __esm({
@@ -28518,6 +28633,7 @@ var toolboxSettingsWindow_exports = {};
 __export(toolboxSettingsWindow_exports, {
   openToolboxSettingsWindow: () => openToolboxSettingsWindow
 });
+import { getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
 function focusExtractionFeature(root, feature) {
   const control = root.querySelector(`[data-toolbox-extraction="${feature}"]`);
   if (!control) return;
@@ -28550,6 +28666,7 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
   const data = getExtData();
   if (ensureToolboxApiProfiles(data)) saveExtData();
   const draft2 = readToolboxSettings(data);
+  let savedFeatures = JSON.parse(JSON.stringify(draft2.features));
   let localDraft = readToolboxLocalExtraction(data);
   let savedLocal = JSON.parse(JSON.stringify(localDraft));
   const api = ensureMainApiProfiles(data.config || {});
@@ -28568,7 +28685,8 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
         <main class="t-toolbox-content">
             <section role="tabpanel" id="t-toolbox-page-api" aria-labelledby="t-toolbox-tab-api" data-toolbox-page="api">
                 <p class="t-toolbox-hint">\u7EDF\u4E00\u7BA1\u7406\u5404\u529F\u80FD\u7684\u5730\u5740\u3001\u5BC6\u94A5\u548C\u6A21\u578B\u3002\u539F\u6709\u72EC\u7ACB API \u65B9\u6848\u5DF2\u5F52\u5165\u6B64\u5904\uFF0C\u5404\u529F\u80FD\u53EF\u8DDF\u968F\u5168\u5C40\u9ED8\u8BA4\u6216\u6307\u5B9A\u65B9\u6848\u3002</p>
-                ${renderApiConnectionEditorHTML({ ids, classes: { input: "t-input t-input--glass", select: "t-input t-input--glass", profileSelect: "t-input t-input--glass" }, flags: { showManualModelInput: true }, labels: { profile: "\u5168\u5C40\u9ED8\u8BA4 API \u65B9\u6848" } })}
+                ${renderApiConnectionEditorHTML({ ids, classes: { input: "t-input t-input--glass", select: "t-input t-input--glass", profileSelect: "t-input t-input--glass" }, flags: { showManualModelInput: true, showCopyProfile: true }, labels: { profile: "\u5168\u5C40\u9ED8\u8BA4 API \u65B9\u6848" } })}
+                <p class="t-toolbox-hint">\u5404\u529F\u80FD\u53EF\u5728\u4E0B\u65B9\u6216\u81EA\u5DF1\u7684\u8BBE\u7F6E\u9875\uFF0C\u9009\u62E9\u540C\u4E00\u65B9\u6848\u5185\u7684\u5176\u4ED6\u6A21\u578B\u3002\u529F\u80FD\u8BBE\u7F6E\u9875\u4E5F\u53EF\u83B7\u53D6\u6A21\u578B\u5217\u8868\u6216\u624B\u52A8\u586B\u5199\u6A21\u578B ID\u3002</p>
                 <h3>\u5404\u529F\u80FD\u4F7F\u7528\u7684\u8FDE\u63A5</h3><div class="t-toolbox-usage" data-toolbox-api-usage></div>
             </section>
             <section role="tabpanel" id="t-toolbox-page-extraction" aria-labelledby="t-toolbox-tab-extraction" data-toolbox-page="extraction" hidden>
@@ -28598,10 +28716,17 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
       const selected = draft2.features[id3].api;
       const profiles = state.profiles;
       const missing = selected.startsWith("profile:") && !profiles.some((p) => `profile:${p.id}` === selected);
-      return `<label class="t-toolbox-usage-row"><span>${name}</span><select class="t-input t-input--glass" data-toolbox-api="${id3}">
+      const profile = profiles.find((p) => p.id === (selected === "global" ? state.activeProfileId : selected.slice(8)));
+      const model = profile ? draft2.features[id3].models?.[profile.id] || "" : "";
+      const defaultModel = profile?.type === "internal" ? profile.model_override || getChatCompletionModel2() : profile?.model;
+      const models = [...new Set([model, defaultModel, ...profile?.model_list || []].filter(Boolean))];
+      return `<div><label class="t-toolbox-usage-row"><span>${name}</span><select class="t-input t-input--glass" data-toolbox-api="${id3}">
                 <option value="global" ${selected === "global" ? "selected" : ""}>\u8DDF\u968F\u5168\u5C40\u9ED8\u8BA4</option>
                 ${missing ? `<option value="${escape(selected)}" selected>\u539F\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9</option>` : ""}
-                ${profiles.map((p) => `<option value="profile:${escape(p.id)}" ${selected === `profile:${p.id}` ? "selected" : ""}>${escape(p.name)}</option>`).join("")}</select></label>`;
+                ${profiles.map((p) => `<option value="profile:${escape(p.id)}" ${selected === `profile:${p.id}` ? "selected" : ""}>${escape(p.name)}</option>`).join("")}</select></label>
+                <label class="t-toolbox-usage-row"><span>\u6A21\u578B</span><select class="t-input t-input--glass" data-toolbox-model="${id3}" ${profile ? "" : "disabled"}>
+                    <option value="" ${model ? "" : "selected"}>\u8DDF\u968F\u65B9\u6848\u6A21\u578B${defaultModel ? `\uFF08${escape(defaultModel)}\uFF09` : ""}</option>
+                    ${models.map((value) => `<option value="${escape(value)}" ${value === model ? "selected" : ""}>${escape(value)}</option>`).join("")}</select></label></div>`;
     }).join("");
   };
   editor = createApiConnectionEditor({
@@ -28613,6 +28738,7 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
     autoFetchOnInput: false,
     autoFetchOnProfileSwitch: false,
     getInternalUrl: () => "\u7531\u9152\u9986\u4E3B\u8FDE\u63A5\u7BA1\u7406",
+    getInternalModel: getChatCompletionModel2,
     onChange: renderUsage
   });
   editor.bind();
@@ -28653,8 +28779,21 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
     return true;
   };
   root.addEventListener("change", (event) => {
+    var _a;
     const feature2 = event.target.dataset.toolboxApi;
-    if (feature2) draft2.features[feature2].api = event.target.value;
+    if (feature2) {
+      draft2.features[feature2].api = event.target.value;
+      renderUsage(editor.getState());
+    }
+    const modelFeature = event.target.dataset.toolboxModel;
+    if (modelFeature) {
+      const state = editor.getState();
+      const choice = draft2.features[modelFeature].api;
+      const id3 = choice === "global" ? state.activeProfileId : choice.slice(8);
+      (_a = draft2.features[modelFeature]).models || (_a.models = {});
+      if (event.target.value) draft2.features[modelFeature].models[id3] = event.target.value;
+      else delete draft2.features[modelFeature].models[id3];
+    }
     const extraction = event.target.dataset.toolboxExtraction;
     if (extraction) {
       draft2.features[extraction].extraction = event.target.value;
@@ -28670,6 +28809,7 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
     for (const el of root.querySelectorAll("[data-toolbox-page]")) el.hidden = el.dataset.toolboxPage !== tab;
   };
   const close = () => {
+    editor.destroy();
     root.remove();
     restoreFocus?.isConnected && restoreFocus.focus();
   };
@@ -28694,24 +28834,27 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
       editor.persistCurrentProfileInputs();
       const state = editor.getState();
       const current = getExtData();
-      let nextApi, nextLocal;
+      let nextApi, nextLocal, nextFeatures;
       try {
         nextApi = mergeToolboxApiDraft(savedApi, ensureMainApiProfiles({ profiles: state.profiles, active_profile_id: state.activeProfileId }), ensureMainApiProfiles(current.config || {}));
         nextLocal = mergeToolboxLocalExtraction(savedLocal, localDraft, readToolboxLocalExtraction(current));
+        nextFeatures = mergeToolboxFeatureApis(savedFeatures, draft2.features, readToolboxSettings(current).features);
       } catch (error3) {
         status3(error3.message);
         return;
       }
-      const missing = TOOLBOX_FEATURES.find(({ id: id3 }) => draft2.features[id3].api.startsWith("profile:") && !nextApi.profiles.some((p) => `profile:${p.id}` === draft2.features[id3].api));
+      const missing = TOOLBOX_FEATURES.find(({ id: id3 }) => nextFeatures[id3].api.startsWith("profile:") && !nextApi.profiles.some((p) => `profile:${p.id}` === nextFeatures[id3].api));
       if (missing) {
         status3(`${missing.name}\u4F7F\u7528\u7684\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002`);
         return;
       }
       current.config = { ...current.config || {}, ...nextApi };
+      draft2.features = nextFeatures;
       current.toolbox_settings = JSON.parse(JSON.stringify(draft2));
       applyToolboxLocalExtraction(current, nextLocal);
       saveExtData();
       savedApi = nextApi;
+      savedFeatures = JSON.parse(JSON.stringify(nextFeatures));
       localDraft = nextLocal;
       savedLocal = JSON.parse(JSON.stringify(nextLocal));
       for (const el of root.querySelectorAll("[data-toolbox-local-field]")) {
@@ -28765,6 +28908,7 @@ var init_toolboxSettingsWindow = __esm({
     ids = Object.fromEntries([
       "profileSelect",
       "profileAdd",
+      "profileCopy",
       "profileDelete",
       "profileName",
       "profileMeta",
@@ -28786,9 +28930,11 @@ var init_toolboxSettingsWindow = __esm({
 });
 
 // src/ui/shared/toolboxApiSelector.js
+import { getChatCompletionModel as getChatCompletionModel3 } from "../../../openai.js";
 function mountToolboxApiSelector(container, feature) {
   if (!container) return { save() {
   }, refresh() {
+  }, destroy() {
   } };
   const data = getExtData();
   if (ensureToolboxApiProfiles(data)) saveExtData();
@@ -28807,51 +28953,198 @@ function mountToolboxApiSelector(container, feature) {
   manage.type = "button";
   manage.className = "t-btn";
   manage.textContent = "\u7BA1\u7406\u5168\u5C40 API \u65B9\u6848";
-  let dirty2 = false;
+  const modelGroup = document.createElement("div");
+  modelGroup.className = "t-form-group";
+  const modelLabel = document.createElement("label");
+  modelLabel.className = "t-form-label";
+  modelLabel.textContent = feature === "illustration" ? "\u9009\u666F\u6A21\u578B" : "\u6A21\u578B";
+  const modelSelect = document.createElement("select");
+  modelSelect.className = "t-input t-input--glass";
+  modelSelect.dataset.toolboxFeatureModel = feature;
+  modelLabel.append(modelSelect);
+  const fetch2 = document.createElement("button");
+  fetch2.type = "button";
+  fetch2.className = "t-btn";
+  fetch2.textContent = "\u83B7\u53D6\u6A21\u578B\u5217\u8868";
+  fetch2.dataset.toolboxFeatureFetchModels = feature;
+  const manual = document.createElement("button");
+  manual.type = "button";
+  manual.className = "t-btn";
+  manual.textContent = "\u624B\u52A8\u586B\u5199";
+  manual.dataset.toolboxFeatureManualModel = feature;
+  manual.setAttribute("aria-expanded", "false");
+  const inputLabel = document.createElement("label");
+  inputLabel.className = "t-form-label";
+  inputLabel.textContent = "\u6A21\u578B ID";
+  inputLabel.hidden = true;
+  inputLabel.style.display = "none";
+  const input = document.createElement("input");
+  input.className = "t-input t-input--glass";
+  input.placeholder = "\u586B\u5199\u6A21\u578B ID\uFF0C\u7559\u7A7A\u5219\u8DDF\u968F\u65B9\u6848\u6A21\u578B";
+  input.dataset.toolboxFeatureModelInput = feature;
+  inputLabel.append(input);
+  const modelStatus = document.createElement("p");
+  modelStatus.className = "t-conn-hint";
+  modelStatus.setAttribute("role", "status");
+  modelGroup.append(modelLabel, fetch2, manual, inputLabel, modelStatus);
+  let apiDirty = false, requestVersion = 0, fetching = false, renderedProfileId = "";
+  const models = /* @__PURE__ */ new Map();
+  const lists = /* @__PURE__ */ new Map();
   const currentValue = () => getToolboxApiChoice(getExtData(), feature);
+  const profileFor = () => {
+    const current = getExtData();
+    const id3 = select.value === "global" ? current.config.active_profile_id : select.value.slice(8);
+    return current.config.profiles.find((profile) => profile.id === id3);
+  };
+  const selectedModel = (profile) => models.has(profile.id) ? models.get(profile.id) : String(getExtData().toolbox_settings.features[feature]?.models?.[profile.id] || "").trim();
+  const signature2 = (profile) => JSON.stringify([profile.type, normalizeApiBaseUrl(profile.url), profile.key || ""]);
+  const addOption = (target, value, name) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = name;
+    target.append(option);
+  };
+  function renderModels(profile) {
+    modelSelect.replaceChildren();
+    if (!profile) {
+      addOption(modelSelect, "", "\u8BF7\u5148\u9009\u62E9\u53EF\u7528\u65B9\u6848");
+      modelSelect.disabled = input.disabled = fetch2.disabled = manual.disabled = true;
+      modelStatus.textContent = "\u6240\u9009 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002";
+      return;
+    }
+    const model = selectedModel(profile);
+    const defaultModel = profile.type === "internal" ? profile.model_override || getChatCompletionModel3() : profile.model;
+    addOption(modelSelect, "", `\u8DDF\u968F\u65B9\u6848\u6A21\u578B${defaultModel ? `\uFF08${defaultModel}\uFF09` : ""}`);
+    const cached = lists.get(profile.id);
+    const available = cached?.signature === signature2(profile) ? cached.models : profile.model_list || [];
+    for (const value of new Set([model, defaultModel, ...available].map((value2) => String(value2 || "").trim()).filter(Boolean))) {
+      addOption(modelSelect, value, value);
+    }
+    modelSelect.value = model;
+    input.value = model;
+    modelSelect.disabled = input.disabled = manual.disabled = false;
+    fetch2.disabled = fetching || profile.type === "internal" || !normalizeApiBaseUrl(profile.url);
+    modelStatus.textContent = profile.type === "internal" ? "\u53EF\u624B\u52A8\u6307\u5B9A\u6B64\u529F\u80FD\u4F7F\u7528\u7684\u6A21\u578B\uFF1B\u7559\u7A7A\u5219\u8DDF\u968F\u65B9\u6848\u3002" : "\u4ECE\u5217\u8868\u9009\u62E9\u6216\u624B\u52A8\u586B\u5199\u6A21\u578B\uFF1B\u6B64\u9009\u62E9\u4EC5\u7528\u4E8E\u5F53\u524D\u529F\u80FD\u3002";
+  }
   function refresh() {
     const current = getExtData();
-    const selected = dirty2 ? select.value : currentValue();
+    const selected = apiDirty ? select.value : currentValue();
     select.replaceChildren();
-    const option = (value, name) => {
-      const el = document.createElement("option");
-      el.value = value;
-      el.textContent = name;
-      select.append(el);
-    };
-    option("global", "\u8DDF\u968F\u5168\u5C40\u9ED8\u8BA4");
-    for (const p of current.config.profiles) option(`profile:${p.id}`, p.name);
-    if (![...select.options].some((p) => p.value === selected)) option(selected, "\u539F\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9");
+    addOption(select, "global", "\u8DDF\u968F\u5168\u5C40\u9ED8\u8BA4");
+    for (const profile2 of current.config.profiles) addOption(select, `profile:${profile2.id}`, profile2.name);
+    if (![...select.options].some((option) => option.value === selected)) addOption(select, selected, "\u539F\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9");
     select.value = selected;
-    const id3 = selected === "global" ? current.config.active_profile_id : selected.slice(8);
-    const profile = current.config.profiles.find((p) => p.id === id3);
-    hint.textContent = profile ? `${profile.name} \xB7 ${profile.type === "internal" ? profile.model_override || "\u9152\u9986\u5F53\u524D\u6A21\u578B" : profile.model || "\u5C1A\u672A\u9009\u62E9\u6A21\u578B"}\u3002\u5730\u5740\u3001\u5BC6\u94A5\u548C\u6A21\u578B\u5728\u5168\u5C40\u8BBE\u7F6E\u4E2D\u7BA1\u7406\u3002` : "\u8BF7\u91CD\u65B0\u9009\u62E9\u53EF\u7528\u7684\u5168\u5C40\u65B9\u6848\u3002";
+    const profile = profileFor();
+    if (profile?.id !== renderedProfileId) {
+      requestVersion++;
+      fetching = false;
+      renderedProfileId = profile?.id;
+      inputLabel.hidden = true;
+      inputLabel.style.display = "none";
+      manual.setAttribute("aria-expanded", "false");
+    }
+    hint.textContent = profile ? `${profile.name}\u3002\u5730\u5740\u548C\u5BC6\u94A5\u5728\u5168\u5C40\u8BBE\u7F6E\u4E2D\u7BA1\u7406\uFF0C\u6A21\u578B\u53EF\u5728\u4E0B\u65B9\u5207\u6362\u3002` : "\u8BF7\u91CD\u65B0\u9009\u62E9\u53EF\u7528\u7684\u5168\u5C40\u65B9\u6848\u3002";
+    renderModels(profile);
   }
   select.addEventListener("change", () => {
-    dirty2 = true;
+    apiDirty = true;
+    requestVersion++;
+    fetching = false;
     refresh();
   });
-  group.addEventListener("focusin", () => {
-    if (!dirty2) refresh();
+  modelSelect.addEventListener("change", () => {
+    const profile = profileFor();
+    if (!profile) return;
+    models.set(profile.id, modelSelect.value);
+    input.value = modelSelect.value;
+  });
+  modelSelect.addEventListener("focus", () => renderModels(profileFor()));
+  input.addEventListener("input", () => {
+    const profile = profileFor();
+    if (!profile) return;
+    models.set(profile.id, input.value.trim());
+    const raw = input.value;
+    renderModels(profile);
+    input.value = raw;
+  });
+  input.addEventListener("change", () => {
+    const profile = profileFor();
+    if (profile) models.set(profile.id, input.value.trim());
+  });
+  manual.addEventListener("click", () => {
+    inputLabel.hidden = !inputLabel.hidden;
+    inputLabel.style.display = inputLabel.hidden ? "none" : "";
+    manual.setAttribute("aria-expanded", String(!inputLabel.hidden));
+    if (!inputLabel.hidden) input.focus();
+  });
+  fetch2.addEventListener("click", async () => {
+    const profile = profileFor();
+    if (!profile || profile.type === "internal" || !normalizeApiBaseUrl(profile.url)) return;
+    const capturedSignature = signature2(profile), version = ++requestVersion;
+    fetching = true;
+    fetch2.disabled = true;
+    modelStatus.textContent = "\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868\u2026";
+    const isCurrent = () => group.isConnected && version === requestVersion && profileFor()?.id === profile.id && signature2(profileFor()) === capturedSignature;
+    try {
+      const result = await fetchModelList({ url: normalizeApiBaseUrl(profile.url), key: profile.key || "" });
+      if (!isCurrent()) return;
+      const available = [...new Set((Array.isArray(result) ? result : []).map((value) => String(value || "").trim()).filter(Boolean))];
+      if (!available.length) {
+        modelStatus.textContent = "\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B\uFF0C\u53EF\u624B\u52A8\u586B\u5199\u6A21\u578B ID\u3002";
+        return;
+      }
+      lists.set(profile.id, { signature: capturedSignature, models: available });
+      renderModels(profile);
+      modelStatus.textContent = `\u5DF2\u83B7\u53D6 ${available.length} \u4E2A\u6A21\u578B\uFF0C\u8BF7\u9009\u62E9\u3002`;
+    } catch (error3) {
+      if (isCurrent()) modelStatus.textContent = `\u6A21\u578B\u83B7\u53D6\u5931\u8D25\uFF1A${error3.message || "\u672A\u77E5\u9519\u8BEF"}\u3002\u53EF\u624B\u52A8\u586B\u5199\u6A21\u578B ID\u3002`;
+    } finally {
+      if (version === requestVersion) {
+        fetching = false;
+        const active2 = profileFor();
+        fetch2.disabled = !active2 || active2.type === "internal" || !normalizeApiBaseUrl(active2.url);
+      }
+    }
+  });
+  group.addEventListener("focusin", (event) => {
+    if (event.target === select && !apiDirty) refresh();
   });
   manage.addEventListener("click", async () => {
     const { openToolboxSettingsWindow: openToolboxSettingsWindow2 } = await Promise.resolve().then(() => (init_toolboxSettingsWindow(), toolboxSettingsWindow_exports));
     openToolboxSettingsWindow2();
   });
-  group.append(label, hint, manage);
+  group.append(label, hint, modelGroup, manage);
   container.append(group);
   refresh();
   return {
     refresh,
+    destroy() {
+      requestVersion++;
+    },
     save() {
-      if (!dirty2) return;
+      if (!apiDirty && !models.size && !lists.size) return;
       const current = getExtData();
-      const value = select.value;
+      const value = apiDirty ? select.value : currentValue();
       const id3 = value.startsWith("profile:") ? value.slice(8) : "";
-      if (id3 && !current.config.profiles.some((p) => p.id === id3) || !id3 && value !== "global") throw new Error("\u6240\u9009 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002");
-      current.toolbox_settings.features[feature].api = value;
+      if (id3 && !current.config.profiles.some((profile) => profile.id === id3) || !id3 && value !== "global") throw new Error("\u6240\u9009 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002");
+      const settings = current.toolbox_settings.features[feature];
+      if (apiDirty) settings.api = value;
+      for (const [profileId, model] of models) {
+        if (!current.config.profiles.some((profile) => profile.id === profileId)) continue;
+        settings.models || (settings.models = {});
+        if (model) settings.models[profileId] = model;
+        else delete settings.models[profileId];
+      }
+      for (const [profileId, cached] of lists) {
+        const profile = current.config.profiles.find((profile2) => profile2.id === profileId);
+        if (profile && signature2(profile) === cached.signature) profile.model_list = [...cached.models];
+      }
+      requestVersion++;
+      fetching = false;
       saveExtData();
-      dirty2 = false;
+      apiDirty = false;
+      models.clear();
+      lists.clear();
       refresh();
     }
   };
@@ -28861,6 +29154,8 @@ var init_toolboxApiSelector = __esm({
     init_storage();
     init_toolboxApiProfiles();
     init_toolboxSettings();
+    init_apiProfileRegistry();
+    init_relayClient();
   }
 });
 
@@ -28972,7 +29267,7 @@ function openIllustrationSettingsWindow(options = {}) {
   role("api-selector").addEventListener("change", () => {
     try {
       apiSelector.save();
-      role("api-status").textContent = "\u9009\u666F API \u65B9\u6848\u5DF2\u4FDD\u5B58\uFF0C\u4E0B\u6B21\u5206\u6790\u753B\u9762\u65F6\u751F\u6548\u3002";
+      role("api-status").textContent = "\u9009\u666F API \u65B9\u6848\u4E0E\u6A21\u578B\u5DF2\u4FDD\u5B58\uFF0C\u4E0B\u6B21\u5206\u6790\u753B\u9762\u65F6\u751F\u6548\u3002";
     } catch (error3) {
       role("api-status").textContent = error3.message;
     }
@@ -29479,6 +29774,7 @@ function openCharacterProfileWindow(options = {}) {
   document.body.append(root);
   const role = (name) => root.querySelector(`[data-role="${name}"]`);
   const action = (name) => root.querySelector(`[data-action="${name}"]`);
+  if (options.notice) role("status").textContent = options.notice;
   const help = createHelpTip({ title: "\u4EBA\u7269\u5916\u89C2\u6863\u6848", sections: PROFILE_HELP });
   role("header-actions").insertBefore(help.root, action("close"));
   let disposed = false;
@@ -29604,7 +29900,12 @@ function openCharacterProfileWindow(options = {}) {
       syncSummary();
     });
     refreshCounter();
-    body.append(labeled("\u5916\u89C2\u63CF\u5199", content), counter);
+    const contentField = labeled("\u5916\u89C2\u63CF\u5199", content);
+    const languageHint = document.createElement("small");
+    languageHint.className = "t-illustration-hint";
+    languageHint.textContent = "\u53EF\u4EE5\u4F7F\u7528\u4E2D\u6587\u586B\u5199\uFF0C\u4F8B\u5982\u53D1\u8272\u3001\u77B3\u8272\u3001\u670D\u88C5\u548C\u9970\u54C1\u3002";
+    contentField.append(languageHint);
+    body.append(contentField, counter);
     const del = document.createElement("button");
     del.type = "button";
     del.className = "t-btn t-btn-danger";
@@ -30179,6 +30480,10 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
             <div class="t-illustration-body">
                 <label class="t-illustration-field">\u914D\u56FE\u5185\u5BB9<select class="t-input" data-field="target"></select></label>
                 <div class="t-illustration-connection"><span data-role="connection">\u6B63\u5728\u68C0\u6D4B\u751F\u56FE\u540E\u7AEF\u2026</span><button class="t-btn" type="button" data-action="detect">\u91CD\u65B0\u68C0\u6D4B</button></div>
+                <div class="t-illustration-details" data-role="profile-required" role="alert" hidden>
+                    <p class="t-illustration-hint">${MISSING_CHARACTER_PROFILE_MESSAGE}</p>
+                    <button class="t-btn" type="button" data-action="profiles">\u586B\u5199\u5916\u89C2\u6863\u6848</button>
+                </div>
                 <label class="t-illustration-field">\u60F3\u753B\u4EC0\u4E48\uFF08\u53EF\u9009\uFF09<textarea class="t-input" data-field="request" rows="2" placeholder="\u4F8B\u5982\uFF1A\u753B\u96E8\u4E2D\u91CD\u9022\u7684\u77AC\u95F4\uFF0C\u8FDC\u666F\uFF0C\u504F\u51B7\u8272"></textarea></label>
                 <details class="t-illustration-details"><summary>\u6B63\u6587\u4E0E\u4EBA\u7269\u8D44\u6599</summary>
                     <label class="t-illustration-field">\u672C\u6B21\u914D\u56FE\u7D20\u6750<textarea class="t-input" data-field="text" rows="6"></textarea></label>
@@ -30331,12 +30636,14 @@ ${block}` : block;
   }
   function renderProfileChips() {
     const holder = role("profiles");
-    const profiles = readCharacterProfiles(getExtData()).filter((entry) => entry.enabled !== false);
+    const data = getExtData();
+    const profiles = readCharacterProfiles(data).filter((entry) => entry.enabled !== false);
+    role("profile-required").hidden = hasConfiguredCharacterProfiles(data);
     holder.replaceChildren();
     if (!profiles.length) {
       const empty = document.createElement("span");
       empty.className = "t-illustration-hint";
-      empty.textContent = "\u8FD8\u6CA1\u6709\u5916\u89C2\u6863\u6848\u3002\u53EF\u4EE5\u70B9\u300C\u7BA1\u7406\u5916\u89C2\u6863\u6848\u300D\u65B0\u5EFA\u4E00\u4EFD\uFF0C\u6216\u76F4\u63A5\u5728\u4E0B\u65B9\u624B\u586B\u3002";
+      empty.textContent = "\u8FD8\u6CA1\u6709\u5916\u89C2\u6863\u6848\u3002\u8BF7\u70B9\u300C\u586B\u5199\u5916\u89C2\u6863\u6848\u300D\u65B0\u5EFA\u5E76\u586B\u5199\u5916\u89C2\u63CF\u5199\u3002";
       holder.append(empty);
       return;
     }
@@ -30362,6 +30669,11 @@ ${block}` : block;
       text: current.text
     });
     for (const entry of matched) insertProfileBlock(current, entry);
+  }
+  function openProfiles(notice = "") {
+    const index = Number(field("target").value) || 0;
+    if (!hasConfiguredCharacterProfiles(getExtData())) session.profilesInitialized = false;
+    openCharacterProfileWindow({ notice, onClose: () => openIllustrationWindow(targets, index) });
   }
   function openLightbox(image) {
     lightbox?.close();
@@ -30527,6 +30839,7 @@ ${block}` : block;
   }
   async function loadTarget(index) {
     target = targets[index];
+    field("target").value = String(index);
     const sequence = ++selectionSequence;
     const current = target;
     session = sessionFor(current.sceneId, buildPromptTextFromTheater(current.content));
@@ -30623,11 +30936,14 @@ ${block}` : block;
       return;
     }
     if (operation === "profiles") {
-      const index = Number(field("target").value) || 0;
-      openCharacterProfileWindow({ onClose: () => openIllustrationWindow(targets, index) });
+      openProfiles();
       return;
     }
     const current = session, currentTarget = target;
+    if (["prepare", "alternate", "generate"].includes(operation) && !hasConfiguredCharacterProfiles(getExtData())) {
+      openProfiles(MISSING_CHARACTER_PROFILE_MESSAGE);
+      return;
+    }
     if (button2.dataset.profileId) {
       const id3 = button2.dataset.profileId;
       const entry = readCharacterProfiles(getExtData()).find((item2) => item2.id === id3);
@@ -30863,6 +31179,7 @@ var init_illustrationWindow = __esm({
         heading: "\u4EBA\u7269\u5916\u89C2\u6863\u6848",
         lines: [
           "\u9876\u680F\u7684\u901A\u8BAF\u5F55\u56FE\u6807\u3002\u4E3A\u89D2\u8272\u8BB0\u4E00\u6B21\u5916\u89C2\uFF0C\u4E4B\u540E\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u914D\u56FE\u4F1A\u81EA\u52A8\u5E26\u4E0A\u3002",
+          "\u5F00\u59CB\u914D\u56FE\u524D\uFF0C\u5FC5\u987B\u586B\u5199\u5E76\u542F\u7528\u81F3\u5C11\u4E00\u4EFD\u5916\u89C2\u6863\u6848\uFF1B\u5916\u89C2\u63CF\u5199\u53EF\u4EE5\u4F7F\u7528\u4E2D\u6587\u586B\u5199\u3002",
           "\u547D\u4E2D\u7684\u6863\u6848\u4F1A\u586B\u8FDB\u300C\u4EBA\u7269\u8D44\u6599\u300D\u5E76\u9884\u52FE\u9009\uFF1B\u4F60\u624B\u6253\u7684\u5185\u5BB9\u6C38\u8FDC\u4E0D\u4F1A\u88AB\u8986\u76D6\u3002"
         ]
       }
@@ -36958,7 +37275,8 @@ function resolveOutlineConnection(model) {
   if (globalId !== null) {
     const conn = globalId ? getConnectionByProfileId(globalId) : getActiveConnection();
     if (!conn) throw new Error("\u5168\u5C40 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u5230\u5DE5\u5177\u7BB1\u8BBE\u7F6E\u4E2D\u91CD\u65B0\u9009\u62E9\u3002");
-    return conn;
+    const modelOverride = getToolboxModelOverride(getExtData(), "outline");
+    return modelOverride ? { ...conn, model: modelOverride } : conn;
   }
   if (isOutlineStFollowSelected()) {
     const conn = getConnectionByProfileId(OUTLINE_ST_FOLLOW_ID, model || null) || getActiveConnection();
@@ -42453,6 +42771,8 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
       setStatus("\u5168\u5C40 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u5230\u5DE5\u5177\u7BB1\u8BBE\u7F6E\u4E2D\u91CD\u65B0\u9009\u62E9\u3002", "warn");
       return false;
     }
+    const modelOverride = getToolboxModelOverride(getExtData(), "rewrite");
+    if (modelOverride) connection = { ...connection, model: modelOverride };
   }
   const apiUrl = String(connection ? connection.url : data.api_url || "").trim();
   const apiKey = String(connection ? connection.key : data.api_key || "").trim();
@@ -42909,7 +43229,7 @@ function refreshRuntimeStateView() {
   const globalData = getExtData();
   const globalId = toolboxProfileId(globalData, "rewrite");
   const globalProfile = globalId !== null ? globalData.config?.profiles?.find((p) => p.id === (globalId || globalData.config.active_profile_id)) : null;
-  const modelLabel = globalId === null ? data.model : globalProfile?.type === "internal" ? globalProfile.model_override || "\u8DDF\u968F\u9152\u9986\u4E3B\u8FDE\u63A5" : globalProfile?.model;
+  const modelLabel = globalId === null ? data.model : getToolboxModelOverride(globalData, "rewrite") || (globalProfile?.type === "internal" ? globalProfile.model_override || "\u8DDF\u968F\u9152\u9986\u4E3B\u8FDE\u63A5" : globalProfile?.model);
   const rules = getToolboxExtraction(globalData, "rewrite");
   $overlay.find("#t-rewrite-runtime-model").text(modelLabel || (globalId !== null ? "\u8BF7\u68C0\u67E5\u5168\u5C40\u65B9\u6848" : "\u672A\u8BBE\u7F6E"));
   $overlay.find("#t-rewrite-runtime-split").text(data.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50");
@@ -44473,8 +44793,13 @@ function getStoryMemoryConfig() {
   const config = normalizeMemoryConfig(data.story_memory);
   const profile = toolboxProfileId(data, "memory");
   if (profile !== null) config.profile_id = profile;
+  config.model_override = getToolboxModelOverride(data, "memory");
   config.text_extraction = getToolboxExtraction(data, "memory");
   return config;
+}
+function memoryConnection(config) {
+  const conn = config.profile_id ? getConnectionByProfileId(config.profile_id) : getActiveConnection();
+  return conn && config.model_override ? { ...conn, model: config.model_override } : conn;
 }
 function recallQuery(chat2) {
   if (!Array.isArray(chat2)) return "";
@@ -44809,7 +45134,7 @@ async function mergeSegmentsIfDue(ctx2) {
   const config = getStoryMemoryConfig();
   const group = planSegmentMerge(memory, config);
   if (!group) return false;
-  const conn = config.profile_id ? getConnectionByProfileId(config.profile_id) : getActiveConnection();
+  const conn = memoryConnection(config);
   if (!conn) throw new Error("\u6574\u7406\u65F6\u7528\u7684 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u5230\u300C\u8FD0\u884C\u8BBE\u7F6E\u300D\u91CC\u91CD\u65B0\u9009\u62E9\u3002");
   if (!conn.useSTConnection && !conn.url?.trim()) throw new Error("\u8BF7\u5148\u914D\u7F6E\u5DE5\u5177\u7BB1 API\uFF0C\u6216\u9009\u62E9\u8DDF\u968F\u9152\u9986\u4E3B\u8FDE\u63A5\u3002");
   const controller = new AbortController();
@@ -44879,7 +45204,7 @@ async function runStoryMemory(force = true) {
     }
     return false;
   }
-  const conn = config.profile_id ? getConnectionByProfileId(config.profile_id) : getActiveConnection();
+  const conn = memoryConnection(config);
   if (!conn) throw new Error("\u6574\u7406\u65F6\u7528\u7684 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u5230\u300C\u8FD0\u884C\u8BBE\u7F6E\u300D\u91CC\u91CD\u65B0\u9009\u62E9\u3002");
   if (!conn.useSTConnection && !conn.url?.trim()) throw new Error("\u8BF7\u5148\u914D\u7F6E\u5DE5\u5177\u7BB1 API\uFF0C\u6216\u9009\u62E9\u8DDF\u968F\u9152\u9986\u4E3B\u8FDE\u63A5\u3002");
   const controller = new AbortController();
@@ -45106,7 +45431,7 @@ async function editStoryMemoryStages(patch) {
     next.stages = edit.stages;
     next.stageBoundaries = edit.boundaries;
     if (edit.range) {
-      const conn = config.profile_id ? getConnectionByProfileId(config.profile_id) : getActiveConnection();
+      const conn = memoryConnection(config);
       if (!conn || !conn.useSTConnection && !conn.url?.trim()) throw new Error("\u8BF7\u5728\u8FD0\u884C\u8BBE\u7F6E\u4E2D\u9009\u62E9\u53EF\u7528\u7684\u6574\u7406 API \u65B9\u6848\u3002");
       const before = next.stages.filter((stage) => stage.end < edit.range.start);
       const after = next.stages.filter((stage) => stage.start > edit.range.end);
@@ -45763,6 +46088,16 @@ function openStoryMemoryWindow() {
         </div>
         <div class="t-memory-source-layer" data-role="source-layer" hidden></div>
     </section>`;
+  const help = createHelpTip({ label: "\u6545\u4E8B\u8BB0\u5FC6\u4F7F\u7528\u6559\u7A0B", title: "\u6545\u4E8B\u8BB0\u5FC6 \xB7 \u4F7F\u7528\u6559\u7A0B", sections: MEMORY_HELP, action: "help" });
+  const helpButton = help.root.querySelector("button");
+  const helpPopover = help.root.querySelector(".t-help-popover");
+  helpPopover.tabIndex = 0;
+  helpPopover.setAttribute("role", "region");
+  helpPopover.setAttribute("aria-label", "\u6545\u4E8B\u8BB0\u5FC6\u4F7F\u7528\u6559\u7A0B");
+  helpButton.addEventListener("click", () => {
+    if (!helpPopover.hidden) helpPopover.focus({ preventScroll: true });
+  });
+  root.querySelector(".t-memory-header-actions").insertBefore(help.root, root.querySelector('[data-action="close"]'));
   let tab = "current";
   let editor = null;
   let source = null;
@@ -45793,6 +46128,7 @@ function openStoryMemoryWindow() {
   };
   const close = () => {
     settingsClose?.();
+    help.close();
     unsubscribe();
     document.removeEventListener("keydown", onKeydown, true);
     disposeGraph();
@@ -46301,6 +46637,7 @@ ${item2.body || ""}`.includes(name)));
       return;
     }
     const action = target.dataset.action;
+    if (action === "help") return;
     const view = getStoryMemoryView();
     if (["stage-boundary", "stage-rename", "stage-move"].includes(action)) {
       const stage = memoryStages(view.memory).find((stage2) => stage2.id === target.dataset.id);
@@ -46427,7 +46764,10 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
-      if (source) closeSource();
+      if (!helpPopover.hidden) {
+        help.close();
+        helpButton.focus({ preventScroll: true });
+      } else if (source) closeSource();
       else if (editor) {
         editor = null;
         render();
@@ -46436,7 +46776,7 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
     }
     if (event.key === "Tab") {
       const scope = source ? root.querySelector('[data-role="source-layer"]') : root;
-      const focusable = [...scope.querySelectorAll("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [data-node], [data-relation]")].filter((element) => {
+      const focusable = [...scope.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [tabindex="0"], [data-node], [data-relation]')].filter((element) => {
         if (element.closest("[hidden]") || window.getComputedStyle(element).display === "none") return false;
         for (let parent = element; parent && parent !== root; parent = parent.parentElement) {
           if (parent.inert) return false;
@@ -46471,7 +46811,7 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
   root.querySelector('[data-action="close"]').focus();
   return close;
 }
-var escape4, STATUS, THREAD_STATUS, TABS, closeWindow;
+var escape4, STATUS, THREAD_STATUS, TABS, MEMORY_HELP, closeWindow;
 var init_storyMemoryWindow = __esm({
   "src/ui/storyMemoryWindow.js"() {
     init_storyMemory();
@@ -46480,6 +46820,7 @@ var init_storyMemoryWindow = __esm({
     init_storyMemoryGraph();
     init_theme();
     init_floatingWindow();
+    init_helpPopover();
     init_dom();
     escape4 = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
     STATUS = { idle: "\u7B49\u5F85\u4E0B\u4E00\u6BB5\u5267\u60C5", summarizing: "\u6B63\u5728\u540E\u53F0\u6574\u7406\u2026", merging: "\u6B63\u5728\u5408\u5E76\u5C0F\u603B\u7ED3\u2026", staging: "\u6B63\u5728\u6574\u7406\u5267\u60C5\u9636\u6BB5\u2026", waiting: "\u5DF2\u6574\u7406\uFF0C\u7B49\u5F85\u751F\u6210\u7ED3\u675F\u540E\u5E94\u7528", rebuilding: "\u6B63\u6587\u6709\u53D8\u5316\uFF0C\u6B63\u5728\u91CD\u6574", error: "\u6682\u672A\u5B8C\u6210\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559" };
@@ -46490,6 +46831,39 @@ var init_storyMemoryWindow = __esm({
       ["threads", "\u4F0F\u7B14\u4E0E\u7EA6\u5B9A", "fa-link"],
       ["records", "\u5267\u60C5\u7F16\u5E74\u53F2", "fa-clock-rotate-left"],
       ["preview", "\u6CE8\u5165\u9884\u89C8", "fa-eye"]
+    ];
+    MEMORY_HELP = [
+      { heading: "\u7B2C\u4E00\u6B21\u4F7F\u7528", lines: [
+        "\u5148\u6253\u5F00\u4E00\u4E2A\u89D2\u8272\u804A\u5929\uFF0C\u70B9\u51FB\u9876\u680F\u9F7F\u8F6E\u300C\u8FD0\u884C\u8BBE\u7F6E\u300D\uFF0C\u9009\u62E9\u6574\u7406\u7528\u7684 API \u65B9\u6848\u3002\u65B9\u6848\u4E0B\u65B9\u53EF\u4EE5\u9009\u62E9\u6A21\u578B\uFF0C\u4E5F\u53EF\u4EE5\u62C9\u53D6\u6A21\u578B\u5217\u8868\u6216\u624B\u52A8\u586B\u5199\u6A21\u578B ID\uFF1B\u4FDD\u5B58\u8BBE\u7F6E\u540E\u8FD4\u56DE\u3002",
+        "\u5F00\u542F\u5E95\u90E8\u300C\u540E\u53F0\u81EA\u52A8\u6574\u7406\u300D\u3002\u5F00\u5173\u6309\u804A\u5929\u4FDD\u5B58\uFF0C\u5F00\u542F\u540E\u4F1A\u68C0\u67E5\u5DF2\u6709\u5386\u53F2\uFF0C\u5E76\u5728\u89D2\u8272\u56DE\u590D\u7ED3\u675F\u540E\u7EE7\u7EED\u6574\u7406\u3002",
+        "\u60F3\u5148\u6574\u7406\u4E00\u6B21\uFF0C\u53EF\u4EE5\u5728\u5F00\u542F\u540E\u70B9\u51FB\u300C\u7ACB\u5373\u6574\u7406\u300D\uFF1A\u5B83\u8DF3\u8FC7\u7B49\u5F85\u697C\u6570\uFF0C\u4F46\u4ECD\u4FDD\u7559\u6700\u8FD1\u5BF9\u8BDD\u3002\u6CA1\u6709\u8F83\u65E9\u7684\u5F85\u6574\u7406\u6B63\u6587\u65F6\u4E0D\u4F1A\u53D1\u9001\u8BF7\u6C42\u3002"
+      ] },
+      { heading: "\u6574\u7406\u54EA\u4E9B\u6B63\u6587", lines: [
+        "\u9ED8\u8BA4\u4FDD\u7559\u6700\u8FD1\u81F3\u5C11 16 \u697C\uFF0C\u8F83\u65E9\u7684\u5F85\u6574\u7406\u6B63\u6587\u6512\u5230 32 \u697C\u540E\u5F00\u59CB\u6574\u7406\uFF0C\u6BCF\u6BB5\u6309\u8BBE\u7F6E\u7684\u697C\u6570\u8BFB\u53D6\uFF0C\u5E76\u4FDD\u7559\u5B8C\u6574\u5BF9\u8BDD\u3002\u300C\u4FDD\u7559\u591A\u5C11\u697C\u300D\u4E0E\u300C\u6512\u5230\u591A\u5C11\u697C\u300D\u5404\u7BA1\u4E00\u6BB5\uFF1B\u4FDD\u7559\u533A\u548C\u5DF2\u6574\u7406\u6B63\u6587\u4E0D\u8BA1\u5165\u5F85\u6574\u7406\u91CF\u3002",
+        "\u60F3\u4FDD\u7559\u66F4\u591A\u7EC6\u8282\uFF0C\u53EF\u4EE5\u8C03\u5C0F\u6BCF\u6BB5\u697C\u6570\u3002\u6B63\u6587\u592A\u957F\u5BFC\u81F4\u6A21\u578B\u4E0A\u4E0B\u6587\u8D85\u9650\u65F6\uFF0C\u8BF7\u51CF\u5C11\u6BCF\u6BB5\u697C\u6570\uFF0C\u6216\u6362\u7528\u4E0A\u4E0B\u6587\u66F4\u5927\u7684\u6A21\u578B\u3002",
+        "\u6574\u7406\u6210\u529F\u5E76\u4FDD\u5B58\u540E\u624D\u9690\u85CF\u5BF9\u5E94\u6B63\u6587\uFF0C\u539F\u6587\u4ECD\u53EF\u67E5\u770B\u548C\u6062\u590D\u3002\u300C\u603B\u7ED3\u65F6\u8DF3\u8FC7\u7528\u6237\u697C\u5C42\u300D\u53EA\u8BA9\u6A21\u578B\u4E0D\u8BFB\u7528\u6237\u5185\u5BB9\uFF0C\u6210\u529F\u540E\u6574\u7406\u8303\u56F4\u5185\u7684\u7528\u6237\u697C\u5C42\u4ECD\u4F1A\u9690\u85CF\u3002"
+      ] },
+      { heading: "\u4E94\u4E2A\u9875\u9762\u600E\u4E48\u770B", terms: [
+        { term: "\u5267\u60C5\u6982\u89C8", text: "\u67E5\u770B\u5168\u7A0B\u6897\u6982\u3001\u622A\u81F3\u6574\u7406\u8303\u56F4\u7684\u5267\u60C5\u72B6\u6001\u548C\u9636\u6BB5\uFF1B\u6700\u65B0\u8FDB\u5C55\u4EE5\u5C1A\u672A\u6574\u7406\u7684\u804A\u5929\u6B63\u6587\u4E3A\u51C6\u3002" },
+        { term: "\u4EBA\u7269\u661F\u56FE", text: "\u70B9\u4EBA\u7269\u805A\u7126\uFF0C\u70B9\u8FDE\u7EBF\u67E5\u770B\u5B8C\u6574\u5173\u7CFB\u3001\u539F\u6587\u4F9D\u636E\u548C\u53D8\u5316\uFF1B\u652F\u6301\u62D6\u52A8\u3001\u7F29\u653E\u4E0E\u7B5B\u9009\u3002" },
+        { term: "\u4F0F\u7B14\u4E0E\u7EA6\u5B9A", text: "\u6309\u672A\u89E3\u51B3\u3001\u6709\u8FDB\u5C55\u3001\u5DF2\u89E3\u51B3\u67E5\u770B\u4E8B\u9879\uFF0C\u5C55\u5F00\u5361\u7247\u9605\u8BFB\u5168\u6587\u4E0E\u6765\u6E90\u3002" },
+        { term: "\u5267\u60C5\u7F16\u5E74\u53F2", text: "\u5C55\u5F00\u7AE0\u8282\u67E5\u770B\u6458\u8981\u548C\u539F\u6587\uFF1B\u5408\u5E76\u8FC7\u7684\u5C0F\u603B\u7ED3\u4ECD\u53EF\u5C55\u5F00\u67E5\u770B\uFF0C\u4E5F\u53EF\u64A4\u9500\u6574\u7406\u3002" },
+        { term: "\u6CE8\u5165\u9884\u89C8", text: "\u67E5\u770B\u672C\u8F6E\u9001\u7ED9\u804A\u5929\u6A21\u578B\u7684\u8BB0\u5FC6\u3001\u6700\u8FD1\u6458\u8981\u3001\u53EC\u56DE\u65E7\u4E8B\uFF0C\u4EE5\u53CA\u9884\u7B97\u672A\u5BB9\u7EB3\u7684\u5185\u5BB9\u3002" }
+      ] },
+      { heading: "\u4FEE\u6B63\u8BB0\u5FC6\u4E0E\u5267\u60C5\u9636\u6BB5", lines: [
+        "\u6897\u6982\u548C\u5267\u60C5\u72B6\u6001\u53EF\u5728\u6982\u89C8\u4E2D\u7F16\u8F91\uFF1B\u5173\u7CFB\u3001\u4F0F\u7B14\u548C\u7AE0\u8282\u6458\u8981\u4E5F\u53EF\u5C31\u5730\u4FEE\u6539\u3002\u5173\u7CFB\u6216\u4F0F\u7B14\u9700\u8981\u4FDD\u7559\u624B\u52A8\u4FEE\u6539\u65F6\uFF0C\u8BF7\u300C\u9501\u5B9A\u300D\u6761\u76EE\uFF0C\u907F\u514D\u4E4B\u540E\u7684\u81EA\u52A8\u6574\u7406\u8986\u76D6\u5B83\uFF1B\u9501\u5B9A\u540E\u4ECD\u53EF\u624B\u52A8\u7F16\u8F91\u3002",
+        "\u5728\u9636\u6BB5\u533A\u70B9\u51FB\u300C\u5F00\u59CB\u65B0\u9636\u6BB5\u300D\uFF0C\u586B\u5199\u8D77\u59CB\u697C\u5C42\u548C\u540D\u79F0\uFF0C\u4E5F\u53EF\u4ECE\u7F16\u5E74\u53F2\u539F\u6587\u4E2D\u5B9A\u4F4D\u8D77\u70B9\u3002\u697C\u5C42\u7F16\u53F7\u4ECE 0 \u5F00\u59CB\uFF0C\u624B\u52A8\u8D77\u70B9\u4F1A\u7EA6\u675F\u540E\u7EED\u81EA\u52A8\u5206\u671F\u3002\u5DF2\u6709\u9636\u6BB5\u53EF\u6539\u540D\u3001\u62C6\u5206\u3001\u5408\u5E76\u6216\u91CD\u6574\u3002"
+      ] },
+      { heading: "\u81EA\u52A8\u6574\u7406\u4E0E\u8BB0\u5FC6\u6CE8\u5165", lines: [
+        "\u6682\u505C\u300C\u540E\u53F0\u81EA\u52A8\u6574\u7406\u300D\u540E\uFF0C\u5DF2\u6709\u8BB0\u5FC6\u4ECD\u4F1A\u7528\u4E8E\u540E\u7EED\u804A\u5929\u3002\u4E0D\u540C\u804A\u5929\u7684\u8BB0\u5FC6\u72EC\u7ACB\u4FDD\u5B58\uFF1BAPI\u3001\u6A21\u578B\u548C\u6574\u7406\u53C2\u6570\u5728\u5404\u804A\u5929\u95F4\u5171\u7528\u3002",
+        "\u8FD0\u884C\u8BBE\u7F6E\u53EF\u8C03\u6574\u8BB0\u5FC6\u9884\u7B97\u3001\u6700\u8FD1\u6458\u8981\u548C\u65E7\u4E8B\u53EC\u56DE\u7684\u6570\u91CF\u53CA\u9884\u7B97\u3002\u6700\u8FD1\u6458\u8981\u548C\u53EC\u56DE\u53EF\u5206\u522B\u5C06\u6570\u91CF\u6216\u9884\u7B97\u8BBE\u4E3A 0 \u6765\u5173\u95ED\uFF1B\u6CE8\u5165\u9884\u7B97\u9650\u5236\u9001\u7ED9\u804A\u5929\u6A21\u578B\u7684\u8BB0\u5FC6\uFF0C\u4E0D\u51B3\u5B9A\u4E00\u6B21\u6574\u7406\u8BFB\u53D6\u591A\u5C11\u6B63\u6587\u3002",
+        "\u60F3\u77E5\u9053\u6A21\u578B\u5B9E\u9645\u4F1A\u8BFB\u5230\u4EC0\u4E48\uFF0C\u8BF7\u770B\u300C\u6CE8\u5165\u9884\u89C8\u300D\u3002\u9884\u7B97\u4E0D\u8DB3\u65F6\uFF0C\u90E8\u5206\u5185\u5BB9\u4ECD\u4FDD\u5B58\u5728\u6863\u6848\u91CC\uFF0C\u9884\u89C8\u4F1A\u6CE8\u660E\u54EA\u4E9B\u6CA1\u6709\u5E26\u5165\u3002"
+      ] },
+      { heading: "\u64A4\u9500\u4E0E\u95EE\u9898\u5904\u7406", lines: [
+        "\u5728\u300C\u5267\u60C5\u7F16\u5E74\u53F2\u300D\u53EF\u64A4\u9500\u6700\u8FD1\u6216\u5168\u90E8\u6574\u7406\uFF0C\u6062\u590D\u672C\u529F\u80FD\u9690\u85CF\u7684\u6B63\u6587\uFF0C\u5E76\u6682\u505C\u540E\u53F0\u81EA\u52A8\u6574\u7406\u3002\u7528\u6237\u6216\u5176\u4ED6\u63D2\u4EF6\u539F\u5148\u9690\u85CF\u7684\u6B63\u6587\u4FDD\u6301\u539F\u72B6\u3002",
+        "\u4FEE\u6539\u3001\u5220\u9664\u6216\u5207\u6362\u5DF2\u6574\u7406\u697C\u5C42\u7684\u56DE\u590D\u7248\u672C\uFF0C\u4F1A\u64A4\u56DE\u53D7\u5F71\u54CD\u7684\u8BB0\u5FC6\u5E76\u6062\u590D\u5BF9\u5E94\u6B63\u6587\uFF1B\u6062\u590D\u81EA\u52A8\u6574\u7406\u540E\u4F1A\u6309\u65B0\u6B63\u6587\u91CD\u6574\u3002",
+        "\u6A21\u578B\u8FD4\u56DE\u6216\u4FDD\u5B58\u5931\u8D25\u65F6\uFF0C\u539F\u6587\u4F1A\u4FDD\u7559\u3002\u53EF\u67E5\u770B\u7A97\u53E3\u72B6\u6001\u548C\u9519\u8BEF\u63D0\u793A\uFF0C\u518D\u68C0\u67E5 API\u3001\u6A21\u578B\u548C\u6BCF\u6BB5\u697C\u6570\u3002\u70B9\u95EE\u53F7\u3001\u70B9\u51FB\u6559\u7A0B\u5916\u90E8\u6216\u6309 Esc \u53EF\u6536\u8D77\u6559\u7A0B\u3002"
+      ] }
     ];
     closeWindow = null;
   }
@@ -54732,7 +55106,7 @@ __export(api_exports, {
   syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
 });
 import { ChatCompletionService as ChatCompletionService2 } from "../../../custom-request.js";
-import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
+import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel4 } from "../../../openai.js";
 import { evaluateMacros } from "../../../macros.js";
 function clampContinuationInjectRounds(value) {
   if (String(value ?? "").trim() === "") return 3;
@@ -57592,7 +57966,7 @@ function getReaderStoryConfig() {
   const budget = Number(reader.index_context_tokens);
   return {
     profile_id: profile === null ? String(reader.index_profile_id || "") : profile,
-    model: profile === null ? String(reader.index_model || "").trim() : "",
+    model: profile === null ? String(reader.index_model || "").trim() : getToolboxModelOverride(data, "reader"),
     tag_whitelist: rules ? rules.whitelist : String(reader.index_tag_whitelist || "").trim(),
     tag_exclusions: rules ? rules.exclusions : "",
     context_tokens: Number.isFinite(budget) ? Math.max(1e3, Math.min(64e3, Math.floor(budget))) : 16e3
@@ -57734,7 +58108,8 @@ async function startReaderStoryIndex({ rebuild = false } = {}) {
   const config = getReaderStoryConfig();
   const sources = buildReaderStorySources(ctx2.chat, config.tag_whitelist, config.tag_exclusions);
   if (!sources.length) throw new Error("\u672A\u627E\u5230\u53EF\u5206\u6790\u7684\u6B63\u6587\uFF0C\u8BF7\u68C0\u67E5\u6B63\u6587\u6807\u7B7E\u4E0E\u63D0\u53D6\u8BBE\u7F6E\u3002");
-  const conn = config.profile_id ? getConnectionByProfileId(config.profile_id, config.model || null) : getActiveConnection();
+  const baseConnection = config.profile_id ? getConnectionByProfileId(config.profile_id, config.model || null) : getActiveConnection();
+  const conn = baseConnection && config.model ? { ...baseConnection, model: config.model } : baseConnection;
   if (!conn) throw new Error("\u7D22\u5F15 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002");
   if (!conn.useSTConnection && !conn.url?.trim()) throw new Error("\u8BF7\u914D\u7F6E\u5DE5\u5177\u7BB1 API\uFF0C\u6216\u9009\u62E9\u8DDF\u968F\u9152\u9986\u7684\u8FDE\u63A5\u65B9\u6848\u3002");
   let story = rebuild ? newReaderStory(config.tag_whitelist, config.tag_exclusions) : validReaderStory(ctx2.chatMetadata[READER_STORY_KEY], sources, config.tag_whitelist, config.tag_exclusions).story;
