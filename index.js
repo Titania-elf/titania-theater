@@ -3495,6 +3495,9 @@ function readCharacterProfiles(data) {
   const list2 = data?.[CHARACTER_PROFILES_KEY]?.entries;
   return Array.isArray(list2) ? list2 : [];
 }
+function hasConfiguredCharacterProfiles(data) {
+  return readCharacterProfiles(data).some((entry) => entry && entry.enabled !== false && Boolean(String(entry.content ?? "").trim()));
+}
 function profileMatches(entry, { cardKey = "", text: text2 = "" } = {}) {
   if (!entry || entry.enabled === false) return false;
   const bound = normalizeCardKey(entry.cardKey);
@@ -3517,7 +3520,7 @@ function composeProfileBlock(entry) {
   return `\u3010${name}\u3011
 ${content}`;
 }
-var CHARACTER_PROFILES_KEY, CHARACTER_PROFILES_VERSION, CARD_KEY_PREFIX, PROFILE_KIND_CHARACTER, PROFILE_KIND_USER, MIN_KEYWORD_LENGTH, MAX_MATCHED_PROFILES;
+var CHARACTER_PROFILES_KEY, CHARACTER_PROFILES_VERSION, CARD_KEY_PREFIX, PROFILE_KIND_CHARACTER, PROFILE_KIND_USER, MIN_KEYWORD_LENGTH, MAX_MATCHED_PROFILES, MISSING_CHARACTER_PROFILE_MESSAGE;
 var init_characterProfiles = __esm({
   "src/core/characterProfiles.js"() {
     init_illustrationData();
@@ -3528,6 +3531,7 @@ var init_characterProfiles = __esm({
     PROFILE_KIND_USER = "user";
     MIN_KEYWORD_LENGTH = 2;
     MAX_MATCHED_PROFILES = 4;
+    MISSING_CHARACTER_PROFILE_MESSAGE = "\u8BF7\u5148\u586B\u5199\u5E76\u542F\u7528\u81F3\u5C11\u4E00\u4EFD\u4EBA\u7269\u5916\u89C2\u6863\u6848\uFF0C\u518D\u7EE7\u7EED\u573A\u666F\u914D\u56FE\u3002";
   }
 });
 
@@ -8904,19 +8908,21 @@ function loadCssFiles() {
     line-height: 1;
 }
 
-/* \u83B7\u53D6\u6A21\u578B\u5217\u8868\u6309\u94AE\uFF08\u7EAF\u56FE\u6807\uFF0C\u65E0\u6587\u5B57\uFF09\u3002
-   \u4E09\u4E2A\u8C03\u7528\u65B9\u5404\u81EA\u4F20\u4E0D\u540C\u7684\u6309\u94AE\u7C7B\uFF08t-tool-btn / t-btn--glass / t-btn-xs\uFF09\uFF0C
-   \u8FD9\u91CC\u53EA\u8D1F\u8D23\u201C\u6536\u6210\u65B9\u5F62\u3001\u56FE\u6807\u5C45\u4E2D\u3001\u4E0D\u88AB\u5F39\u6027\u5E03\u5C40\u62C9\u957F\u201D\uFF0C
+/* \u6A21\u578B\u5217\u8868\u5237\u65B0\u6309\u94AE\u3002
+   \u8C03\u7528\u65B9\u53EF\u4F20\u4E0D\u540C\u7684\u6309\u94AE\u7C7B\uFF0C
+   \u8FD9\u91CC\u53EA\u8D1F\u8D23\u56FE\u6807\u4E0E\u6587\u5B57\u5C45\u4E2D\u3001\u4E0D\u88AB\u5F39\u6027\u5E03\u5C40\u62C9\u957F\uFF0C
    \u914D\u8272\u4E0E\u8FB9\u6846\u7EE7\u7EED\u7531\u5404\u81EA\u7684\u6309\u94AE\u7C7B\u51B3\u5B9A\uFF08\u4E0D\u8986\u5199\u89C6\u89C9\u5C5E\u6027\uFF0CR4\uFF09\u3002 */
 .t-fetch-models-btn {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
+    gap: 6px;
+    width: auto;
     min-width: 34px;
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    white-space: nowrap;
 }
 
 
@@ -9088,6 +9094,11 @@ textarea.t-input {
     font-family: var(--t-font-mono);
     line-height: 1.5;
 }
+
+/* Keep model selectors and their refresh action usable in narrow sidebars. */
+.t-model-list-controls { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.t-model-list-controls > select { flex: 1; width: 0; min-width: 0; }
+.t-model-list-controls > button { flex: 0 0 auto; }
 
 
 /* === 02-components/choice-input.css === */
@@ -10740,6 +10751,10 @@ textarea.t-input {
 
 #t-main-view.t-zen-mode .t-tools-icon {
     background: transparent;
+}
+
+#t-main-view.t-zen-mode .t-tools-icon:not(#t-tool-zen) {
+    display: none !important; /* also hide conditionally visible workshop feedback */
 }
 
 /* \u6838\u5FC3\u64CD\u4F5C\u680F */
@@ -23082,7 +23097,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     background: var(--t-memory-shell); color: var(--t-memory-text);
     overflow: hidden; border: 1px solid var(--t-memory-border); border-radius: 18px;
 }
-.t-memory-reading-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.t-memory-reading-shell { position: relative; z-index: var(--t-z-base); isolation: isolate; display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .t-memory-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 28px; border-bottom: 1px solid var(--t-memory-line); flex-shrink: 0; }
 .t-memory-title, .t-memory-header-actions, .t-memory-section-heading, .t-memory-card-actions, .t-memory-rel-head, .t-memory-card-footer { display: flex; align-items: center; gap: 12px; }
 .t-memory-title { min-width: 0; }
@@ -23227,14 +23242,22 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-memory-editor { padding-block: 18px; }
 .t-memory-editor .t-memory-hint { font-size: .85em; }
 
-.t-memory-source-layer { position: absolute; inset: 0; z-index: var(--t-z-raised); }
+.t-memory-source-layer { position: absolute; inset: 0; z-index: var(--t-z-sticky); isolation: isolate; }
 .t-memory-source-shade { position: absolute; inset: 0; background: var(--t-color-scrim); }
-.t-memory-source-drawer { position: absolute; inset: 0 0 0 auto; width: min(480px, 90%); display: flex; flex-direction: column; background: var(--t-color-surface); border-left: 1px solid var(--t-color-border-control); box-shadow: var(--t-shadow-xl); }
-.t-memory-source-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px; border-bottom: 1px solid var(--t-color-border-faint); }
+/* \u62BD\u5C49\u72EC\u7ACB\u4F7F\u7528\u8BB0\u5FC6\u8C03\u8272\u677F\uFF0C\u907F\u514D\u901A\u7528\u8868\u9762\u53D8\u91CF\u88AB\u4E3B\u9898\u8BBE\u4E3A\u900F\u660E\uFF1B\u4E0B\u5C42\u661F\u56FE\u7531 reading-shell \u9694\u79BB\u3002 */
+.t-memory-window .t-memory-source-drawer {
+    position: absolute; inset: 0 0 0 auto; width: min(480px, 90%); min-width: 0;
+    display: flex; flex-direction: column; overflow: hidden;
+    background: var(--t-memory-raised); color: var(--t-memory-text);
+    border-left: 1px solid var(--t-memory-border); box-shadow: var(--t-shadow-xl);
+}
+.t-memory-source-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px; flex: 0 0 auto; max-height: 40%; overflow-y: auto; background: var(--t-memory-raised); border-bottom: 1px solid var(--t-memory-line); }
+.t-memory-source-header > div { flex: 1; min-width: 0; }
 .t-memory-source-header h2 { font-size: 1.15em; margin: 0; overflow-wrap: anywhere; }
 .t-memory-source-header .t-memory-eyebrow { margin-bottom: 8px; }
 .t-memory-source-header > button { flex-shrink: 0; }
-.t-memory-source-body { padding: 24px 26px; overflow-y: auto; min-height: 0; font-size: 1.1em; }
+.t-memory-source-body { flex: 1; padding: 24px 26px; overflow-y: auto; min-width: 0; min-height: 0; overscroll-behavior: contain; background: var(--t-memory-raised); color: var(--t-memory-text); font-size: 1.1em; }
+.t-memory-source-body .t-memory-source { color: inherit; }
 .t-memory-source { margin: 18px 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.9; color: var(--t-color-text-secondary); }
 .t-memory-error { margin: 8px 18px; padding: 10px 12px; background: var(--t-color-surface-sunken); border-left: 3px solid var(--t-color-accent); color: var(--t-color-text); line-height: 1.6; }
 .t-memory-body .t-memory-error { margin-inline: 0; }
@@ -23460,9 +23483,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .t-memory-chapter { margin-left: 4px; padding-left: 14px; }
     .t-memory-chapter:first-child { padding-left: 14px; }
     .t-memory-chapter .t-memory-detail-body { padding-left: 0; }
-    .t-memory-source-drawer { width: 100%; border: 0; }
+    .t-memory-window .t-memory-source-drawer { width: 100%; border: 0; }
     .t-memory-source-header, .t-memory-source-body { padding: 20px; }
-    .t-memory-source-layer { position: fixed; }
     .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }
     .t-memory-settings-body { padding-inline: 16px; }
     .t-memory-settings-footer { flex-wrap: wrap; padding-inline: 16px; }
@@ -24685,15 +24707,35 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     letter-spacing: 4px; color: var(--t-studio-text); text-shadow: none;
 }
 #t-main-view.t-theater-midnight .t-title-sub { font-size: 11px; line-height: 1.7; letter-spacing: 1px; opacity: 1; color: var(--t-studio-muted); }
-#t-main-view.t-theater-midnight .t-header .t-header-actions { gap: 6px; }
+#t-main-view.t-theater-midnight .t-header .t-header-actions { gap: 2px; }
 #t-main-view.t-theater-midnight .t-header .t-header-actions .t-icon-btn {
     --t-icon-btn-size: 34px; --t-icon-btn-font-size: 15px;
-    background: var(--t-studio-gold-soft); color: var(--t-studio-muted);
-    border: 1px solid var(--t-studio-line); border-radius: 8px;
+    background: transparent; color: var(--t-studio-muted);
+    border: 0; border-radius: 8px;
 }
 #t-main-view.t-theater-midnight .t-header .t-header-actions .t-icon-btn:hover {
-    color: var(--t-studio-gold); border-color: var(--t-studio-gold-border);
+    color: var(--t-studio-gold); background: var(--t-studio-gold-soft);
 }
+
+/* The overflow menu lives under body and opts into the same studio palette. */
+.t-filter-popover.t-studio-workspace {
+    padding: 6px;
+    background: var(--t-studio-bg);
+    color: var(--t-studio-text);
+    border: 1px solid var(--t-studio-gold-border);
+    border-radius: 9px;
+    text-shadow: none;
+}
+.t-filter-popover.t-studio-workspace .t-filter-item {
+    color: var(--t-studio-muted);
+    border-radius: 5px;
+}
+.t-filter-popover.t-studio-workspace .t-filter-item:hover {
+    background: var(--t-studio-gold-soft);
+    color: var(--t-studio-gold);
+}
+.t-filter-popover.t-studio-workspace .t-more-pin { color: var(--t-studio-faint); }
+.t-filter-popover.t-studio-workspace .t-more-pin:hover:not(:disabled) { color: var(--t-studio-gold); }
 
 /* Script selection reads as the featured program, with quieter controls. */
 #t-main-view.t-theater-midnight > .t-top-bar {
@@ -24745,12 +24787,14 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     border-radius: 5px; font-size: 9px;
 }
 #t-main-view.t-theater-midnight .t-stats-value { color: var(--t-studio-muted); }
-#t-main-view.t-theater-midnight .t-tools-rail { top: 48px; right: 10px; gap: 7px; }
+#t-main-view.t-theater-midnight .t-tools-rail { top: 38px; right: 0; gap: 0; margin: 0; padding: 0; }
 #t-main-view.t-theater-midnight .t-tools-icon {
     width: 32px; height: 32px; border-radius: 8px; opacity: .85;
-    background: var(--t-studio-bg); border-color: var(--t-studio-line); color: var(--t-studio-muted);
+    margin: 0; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; color: var(--t-studio-muted);
 }
-#t-main-view.t-theater-midnight .t-tools-icon:hover { color: var(--t-studio-gold); border-color: var(--t-studio-gold-border); opacity: 1; }
+#t-main-view.t-theater-midnight .t-tools-icon:hover { background: var(--t-studio-gold-soft); color: var(--t-studio-gold); opacity: 1; transform: none; }
+#t-main-view.t-theater-midnight .t-tools-icon:focus-visible { outline: 2px solid var(--t-studio-gold); outline-offset: -2px; opacity: 1; }
+#t-main-view.t-theater-midnight .t-tools-icon.active { color: var(--t-studio-gold); }
 #t-main-view.t-theater-midnight .t-page-nav { background: var(--t-studio-bg); border-color: var(--t-studio-line); color: var(--t-studio-gold); border-radius: 7px; }
 #t-main-view.t-theater-midnight .t-page-indicator { background: var(--t-studio-bg); color: var(--t-studio-muted); padding: 4px 8px; border-radius: 5px; }
 #t-main-view.t-theater-midnight .t-output-placeholder { padding: 24px 44px; text-align: center; gap: 0; color: var(--t-studio-text); }
@@ -24831,7 +24875,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 #t-main-view.t-theater-midnight.t-zen-mode > .t-content-wrapper { margin: 0; border: 0; border-radius: inherit; }
 #t-main-view.t-theater-midnight.t-zen-mode .t-theater-stage-heading { display: none; }
 #t-main-view.t-theater-midnight.t-zen-mode .t-content-area { top: 0; height: 100%; }
-#t-main-view.t-theater-midnight.t-zen-mode .t-tools-rail { top: 15px; }
+#t-main-view.t-theater-midnight.t-zen-mode .t-tools-rail { top: 12px; right: 12px; }
+#t-main-view.t-theater-midnight.t-zen-mode #t-tool-zen { font-size: 14px; }
 #t-main-view.t-theater-midnight[data-theater-state="failed"] .t-stats-hud { visibility: hidden; }
 
 /* The picker belongs to settings, independently of the selected skin. */
@@ -24879,7 +24924,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     #t-main-view.t-theater-midnight .t-theater-emblem { display: none; }
     #t-main-view.t-theater-midnight .t-title-main { font-size: 22px; }
     #t-main-view.t-theater-midnight .t-theater-eyebrow { font-size: 8px; letter-spacing: 1.6px; }
-    #t-main-view.t-theater-midnight .t-header .t-header-actions { gap: 4px; }
+    #t-main-view.t-theater-midnight .t-header .t-header-actions { gap: 2px; }
     #t-main-view.t-theater-midnight .t-header .t-header-actions .t-icon-btn { --t-icon-btn-size: 32px; --t-icon-btn-font-size: 13px; }
     #t-main-view.t-theater-midnight > .t-top-bar { padding: 10px 12px 8px; gap: 7px; }
     #t-main-view.t-theater-midnight .t-trigger-card { min-height: 42px; padding: 8px 10px; }
@@ -27090,13 +27135,13 @@ function toOpenAiBase(url2) {
   if (/^https?:\/\/[^/?#]+$/i.test(base)) return `${base}/v1`;
   return base;
 }
-async function fetchModelList({ url: url2, key = "" }) {
-  const base = toOpenAiBase(url2);
-  if (!base) throw new Error("API \u5730\u5740\u65E0\u6548");
+async function fetchModelList({ url: url2, key = "", statusBody }) {
+  const base = statusBody ? "" : toOpenAiBase(url2);
+  if (!statusBody && !base) throw new Error("API \u5730\u5740\u65E0\u6548");
   const res = await fetch(ST_STATUS_URL, {
     method: "POST",
     headers: getRequestHeaders3(),
-    body: JSON.stringify({
+    body: JSON.stringify(statusBody || {
       chat_completion_source: "openai",
       reverse_proxy: base,
       // 后端允许 reverse_proxy 存在时空 key，但必须是字符串，否则拼出 "Bearer undefined"
@@ -27941,6 +27986,9 @@ async function runAutoJob(job3, target, data) {
   if (!preset) throw illustrationError("\u8FD8\u6CA1\u6709\u9009\u666F\u9884\u8BBE\u3002\u6253\u5F00\u573A\u666F\u914D\u56FE\u8BBE\u7F6E\uFF0C\u5BFC\u5165\u4E00\u4EFD\u9884\u8BBE\u6216\u65B0\u5EFA\u4E00\u4EFD\u3002", "NO_PRESET");
   const check = validatePresetForSelection(preset);
   if (!check.ok) throw illustrationError(check.reason, check.code);
+  if (!hasConfiguredCharacterProfiles(getExtData())) {
+    throw illustrationError(`${MISSING_CHARACTER_PROFILE_MESSAGE}\u6253\u5F00\u573A\u666F\u914D\u56FE\u9762\u677F\uFF0C\u70B9\u51FB\u300C\u586B\u5199\u5916\u89C2\u6863\u6848\u300D\u3002`, "NO_CHARACTER_PROFILE");
+  }
   const theaterText = buildPromptTextFromTheater(target.content);
   const participants = matchCharacterProfiles(readCharacterProfiles(data), {
     cardKey: target.cardKey,
@@ -27955,6 +28003,9 @@ async function runAutoJob(job3, target, data) {
   if (cancelled()) return;
   const currentBackend = resolveActiveBackendId(getExtData());
   if (draft2.backend !== currentBackend) draft2 = normalizeIllustrationDraft({ ...draft2, backend: currentBackend });
+  if (!hasConfiguredCharacterProfiles(getExtData())) {
+    throw illustrationError(MISSING_CHARACTER_PROFILE_MESSAGE, "NO_CHARACTER_PROFILE");
+  }
   job3.phase = "generating";
   job3.status = AUTO_STATUS.generating;
   const result = await generateTheaterIllustration(draft2, { signal });
@@ -28108,6 +28159,46 @@ var init_helpPopover = __esm({
   }
 });
 
+// src/core/modelList.js
+import { oai_settings as oai_settings4 } from "../../../openai.js";
+function modelListRequest(profile) {
+  if (!profile) return null;
+  if (profile.type !== "internal") {
+    const url2 = normalizeApiBaseUrl(profile.url);
+    return url2 ? { url: url2, key: profile.key || "" } : null;
+  }
+  const source = oai_settings4.chat_completion_source;
+  if (!source) return null;
+  const statusBody = {
+    chat_completion_source: source,
+    reverse_proxy: oai_settings4.reverse_proxy || "",
+    proxy_password: oai_settings4.proxy_password || ""
+  };
+  const fields = {
+    custom: ["custom_url", "custom_include_headers"],
+    azure_openai: ["azure_base_url", "azure_deployment_name", "azure_api_version"],
+    siliconflow: ["siliconflow_endpoint"],
+    minimax: ["minimax_endpoint"],
+    workers_ai: ["workers_ai_account_id"]
+  };
+  for (const field of fields[source] || []) statusBody[field] = oai_settings4[field];
+  return { statusBody };
+}
+async function fetchProfileModels(profile) {
+  const request = modelListRequest(profile);
+  if (!request) throw new Error("\u8BF7\u5148\u914D\u7F6E\u6240\u9009\u65B9\u6848\u7684 API \u8FDE\u63A5\u3002");
+  const result = await fetchModelList(request);
+  return [...new Set((Array.isArray(result) ? result : []).map((value) => String(value || "").trim()).filter(Boolean))];
+}
+var modelListSignature;
+var init_modelList = __esm({
+  "src/core/modelList.js"() {
+    init_apiProfileRegistry();
+    init_relayClient();
+    modelListSignature = (profile) => JSON.stringify(modelListRequest(profile));
+  }
+});
+
 // src/ui/shared/apiConnectionEditor.js
 function escapeHtml2(value) {
   return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
@@ -28119,8 +28210,8 @@ function getById($root, id3) {
 function uniqStrings(values) {
   return [...new Set((Array.isArray(values) ? values : []).map((v) => String(v || "").trim()).filter(Boolean))];
 }
-function defaultModelFetcher({ apiUrl, apiKey }) {
-  return fetchModelList({ url: apiUrl, key: apiKey });
+function defaultModelFetcher({ profile }) {
+  return fetchProfileModels(profile);
 }
 function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
   const type = profile?.type === "internal" ? "internal" : "custom";
@@ -28234,7 +28325,7 @@ function renderApiConnectionEditorHTML(options = {}) {
             <div class="t-form-group">
                 <label class="t-form-label">${escapeHtml2(labels.model)}</label>
                 ${flags.showManualModelInput ? `<div style="display:flex; gap:10px; margin-bottom:8px;"><select id="${escapeHtml2(ids2.modelModeId || "")}" class="${escapeHtml2(classes.select)}" style="width:auto; cursor:pointer;"><option value="list">\u83B7\u53D6\u5217\u8868</option><option value="manual">\u624B\u52A8\u586B\u5199</option></select></div>` : ""}
-                <div id="${escapeHtml2(ids2.modelListWrapId || "")}" style="display:flex; gap:10px;"><select id="${escapeHtml2(ids2.modelId || "")}" class="${escapeHtml2(classes.select)}" style="cursor:pointer;"></select><button id="${escapeHtml2(ids2.fetchModelsId || "")}" class="${escapeHtml2(classes.button)} t-fetch-models-btn" title="\u83B7\u53D6\u6A21\u578B\u5217\u8868" aria-label="\u83B7\u53D6\u6A21\u578B\u5217\u8868"><i class="fa-solid fa-rotate"></i></button></div>
+                <div id="${escapeHtml2(ids2.modelListWrapId || "")}" class="t-model-list-controls"><select id="${escapeHtml2(ids2.modelId || "")}" class="${escapeHtml2(classes.select)}" style="cursor:pointer;"></select><button type="button" id="${escapeHtml2(ids2.fetchModelsId || "")}" class="${escapeHtml2(classes.button)} t-fetch-models-btn" title="\u5237\u65B0\u5F53\u524D API \u65B9\u6848\u7684\u6A21\u578B\u5217\u8868" aria-label="\u5237\u65B0\u5F53\u524D API \u65B9\u6848\u7684\u6A21\u578B\u5217\u8868"><i class="fa-solid fa-rotate" aria-hidden="true"></i><span>\u5237\u65B0</span></button></div>
                 ${flags.showManualModelInput ? `<div id="${escapeHtml2(ids2.modelManualWrapId || "")}" style="display:none;"><input id="${escapeHtml2(ids2.modelInputId || "")}" class="${escapeHtml2(classes.input)}" placeholder="\u6A21\u578B ID\uFF0C\u4F8B\u5982\uFF1Agpt-4o"></div>` : ""}
                 <div id="${escapeHtml2(ids2.statusId || "")}" class="t-conn-hint">${escapeHtml2(values.statusText)}</div>
             </div>
@@ -28298,7 +28389,7 @@ function createApiConnectionEditor(options = {}) {
     autoFetchTimer = null;
   };
   const renderModelOptions = (profile) => {
-    const currentModel = profile.model || defaultModel;
+    const currentModel = profile.type === "internal" ? profile.model_override || (typeof options.getInternalModel === "function" ? options.getInternalModel() : "") || defaultModel : profile.model || defaultModel;
     const models = profile.model_list || [];
     const $model = getById($root, ids2.modelId);
     $model.empty();
@@ -28345,7 +28436,7 @@ function createApiConnectionEditor(options = {}) {
       invalidateModelRequest();
       delete profile.model_list;
       renderModelOptions(profile);
-      getById($root, ids2.fetchModelsId).prop("disabled", currentModelMode() === "manual").html('<i class="fa-solid fa-rotate"></i>');
+      getById($root, ids2.fetchModelsId).prop("disabled", currentModelMode() === "manual").html('<i class="fa-solid fa-rotate" aria-hidden="true"></i><span>\u5237\u65B0</span>');
       setStatus2(currentModelMode() === "manual" ? statusTexts.manual : statusTexts.default);
     }
     emitChange();
@@ -28384,10 +28475,11 @@ function createApiConnectionEditor(options = {}) {
     if (isInternal) {
       $url.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
       $key.val("").prop("disabled", true).prop("placeholder", "(\u7531 ST \u6258\u7BA1)");
-      $model.empty().append("<option selected>(ST \u8BBE\u7F6E)</option>").prop("disabled", true);
+      renderModelOptions(profile);
+      $model.prop("disabled", true);
       $modelMode.prop("disabled", true).val(editableInternal ? "manual" : "list");
       $modelInput.prop("disabled", !editableInternal).val(editableInternal ? profile.model_override : "");
-      $fetchBtn.prop("disabled", true).html('<i class="fa-solid fa-rotate"></i>');
+      $fetchBtn.prop("disabled", !modelListRequest(profile)).html('<i class="fa-solid fa-rotate" aria-hidden="true"></i><span>\u5237\u65B0</span>');
       $modelListWrap.toggle(!editableInternal);
       $modelManualWrap.toggle(editableInternal);
       if ($urlHint.length) {
@@ -28404,7 +28496,7 @@ function createApiConnectionEditor(options = {}) {
     $model.prop("disabled", false);
     $modelMode.prop("disabled", !showManualModelInput).val(modelInputMode);
     $modelInput.prop("disabled", modelInputMode !== "manual").val(profile.model || defaultModel);
-    $fetchBtn.prop("disabled", modelInputMode === "manual").html('<i class="fa-solid fa-rotate"></i>');
+    $fetchBtn.prop("disabled", modelInputMode === "manual").html('<i class="fa-solid fa-rotate" aria-hidden="true"></i><span>\u5237\u65B0</span>');
     $modelListWrap.toggle(modelInputMode !== "manual");
     $modelManualWrap.toggle(modelInputMode === "manual");
     if ($urlHint.length) $urlHint.hide();
@@ -28427,22 +28519,23 @@ function createApiConnectionEditor(options = {}) {
   const fetchModels = async (showToast = false) => {
     invalidateModelRequest();
     persistCurrentProfileInputs();
-    if (currentModelMode() === "manual") return [];
     const profile = findActiveProfile();
     const $fetchBtn = getById($root, ids2.fetchModelsId);
-    if (!profile || profile.type === "internal") return [];
+    if (!profile || profile.type !== "internal" && currentModelMode() === "manual") return [];
     const apiUrl = normalizeUrl(profile.url);
-    if (!apiUrl) {
+    if (!modelListRequest(profile)) {
       setStatus2(statusTexts.missingUrl, "warn");
       if (showToast && window.toastr) window.toastr.warning(statusTexts.missingUrl);
       return [];
     }
     const requestVersion = ++modelRequestVersion;
+    const signature2 = modelListSignature(profile);
+    const isCurrent = () => requestVersion === modelRequestVersion && profile.id === state.activeProfileId && modelListSignature(findActiveProfile()) === signature2;
     try {
-      $fetchBtn.prop("disabled", true).html('<i class="fa-solid fa-rotate fa-spin"></i>');
+      $fetchBtn.prop("disabled", true).html('<i class="fa-solid fa-rotate fa-spin" aria-hidden="true"></i><span>\u5237\u65B0</span>');
       setStatus2(statusTexts.loading, "muted");
       const models = uniqStrings(await modelFetcher({ apiUrl, apiKey: profile.key, profile, state: { ...state } }));
-      if (requestVersion !== modelRequestVersion || profile.id !== state.activeProfileId) return [];
+      if (!isCurrent()) return [];
       if (!models.length) {
         setStatus2(statusTexts.empty, "warn");
         return [];
@@ -28456,7 +28549,7 @@ function createApiConnectionEditor(options = {}) {
       }
       return models;
     } catch (error3) {
-      if (requestVersion !== modelRequestVersion || profile.id !== state.activeProfileId) return [];
+      if (!isCurrent()) return [];
       const msg = error3?.message || "\u672A\u77E5\u9519\u8BEF";
       setStatus2(typeof statusTexts.failed === "function" ? statusTexts.failed(msg) : statusTexts.failed, "err");
       if (showToast && window.toastr) {
@@ -28465,7 +28558,7 @@ function createApiConnectionEditor(options = {}) {
       return [];
     } finally {
       if (requestVersion === modelRequestVersion) {
-        $fetchBtn.prop("disabled", false).html('<i class="fa-solid fa-rotate"></i>');
+        $fetchBtn.prop("disabled", !modelListRequest(findActiveProfile())).html('<i class="fa-solid fa-rotate" aria-hidden="true"></i><span>\u5237\u65B0</span>');
       }
     }
   };
@@ -28598,6 +28691,14 @@ function createApiConnectionEditor(options = {}) {
     render,
     setState,
     getState,
+    updateProfileModels(profileId, models, signature2) {
+      const profile = state.profiles.find((item2) => item2.id === profileId);
+      if (!profile || modelListSignature(profile) !== signature2) return false;
+      profile.model_list = uniqStrings(models);
+      if (profile.id === state.activeProfileId) renderModelOptions(profile);
+      emitChange();
+      return true;
+    },
     fetchModels,
     persistCurrentProfileInputs,
     setStatus: setStatus2,
@@ -28607,7 +28708,7 @@ function createApiConnectionEditor(options = {}) {
 var init_apiConnectionEditor = __esm({
   "src/ui/shared/apiConnectionEditor.js"() {
     init_apiProfileRegistry();
-    init_relayClient();
+    init_modelList();
   }
 });
 
@@ -28694,6 +28795,13 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
     </section>`;
   document.body.append(root);
   let editor;
+  let modelRequestVersion = 0;
+  const modelRequests = /* @__PURE__ */ new Map();
+  const modelStatuses = /* @__PURE__ */ new Map();
+  const usageProfile = (state, feature2) => {
+    const choice = draft2.features[feature2].api;
+    return state.profiles.find((profile) => profile.id === (choice === "global" ? state.activeProfileId : choice.slice(8)));
+  };
   const renderUsage = (state) => {
     root.querySelector("[data-toolbox-api-usage]").innerHTML = TOOLBOX_FEATURES.map(({ id: id3, name }) => {
       const selected = draft2.features[id3].api;
@@ -28703,13 +28811,24 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
       const model = profile ? draft2.features[id3].models?.[profile.id] || "" : "";
       const defaultModel = profile?.type === "internal" ? profile.model_override || getChatCompletionModel2() : profile?.model;
       const models = [...new Set([model, defaultModel, ...profile?.model_list || []].filter(Boolean))];
+      const signature2 = modelListSignature(profile);
+      let pending2 = modelRequests.get(id3);
+      if (pending2 && (pending2.profileId !== profile?.id || pending2.signature !== signature2)) {
+        modelRequests.delete(id3);
+        pending2 = null;
+      }
+      const loading = pending2?.profileId === profile?.id && pending2?.signature === signature2;
+      const notice = modelStatuses.get(id3);
+      const message = loading ? "\u6B63\u5728\u5237\u65B0\u6A21\u578B\u5217\u8868\u2026" : notice?.profileId === profile?.id && notice?.signature === signature2 ? notice.text : "";
       return `<div><label class="t-toolbox-usage-row"><span>${name}</span><select class="t-input t-input--glass" data-toolbox-api="${id3}">
                 <option value="global" ${selected === "global" ? "selected" : ""}>\u8DDF\u968F\u5168\u5C40\u9ED8\u8BA4</option>
                 ${missing ? `<option value="${escape(selected)}" selected>\u539F\u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9</option>` : ""}
                 ${profiles.map((p) => `<option value="profile:${escape(p.id)}" ${selected === `profile:${p.id}` ? "selected" : ""}>${escape(p.name)}</option>`).join("")}</select></label>
-                <label class="t-toolbox-usage-row"><span>\u6A21\u578B</span><select class="t-input t-input--glass" data-toolbox-model="${id3}" ${profile ? "" : "disabled"}>
+                <div class="t-toolbox-usage-row"><label for="t-toolbox-feature-model-${id3}">\u6A21\u578B</label><div class="t-model-list-controls"><select id="t-toolbox-feature-model-${id3}" class="t-input t-input--glass" data-toolbox-model="${id3}" ${profile ? "" : "disabled"}>
                     <option value="" ${model ? "" : "selected"}>\u8DDF\u968F\u65B9\u6848\u6A21\u578B${defaultModel ? `\uFF08${escape(defaultModel)}\uFF09` : ""}</option>
-                    ${models.map((value) => `<option value="${escape(value)}" ${value === model ? "selected" : ""}>${escape(value)}</option>`).join("")}</select></label></div>`;
+                    ${models.map((value) => `<option value="${escape(value)}" ${value === model ? "selected" : ""}>${escape(value)}</option>`).join("")}</select>
+                    <button type="button" class="t-btn t-fetch-models-btn" data-toolbox-refresh-models="${id3}" title="\u5237\u65B0${escape(name)}\u5F53\u524D API \u65B9\u6848\u7684\u6A21\u578B\u5217\u8868" aria-label="\u5237\u65B0${escape(name)}\u5F53\u524D API \u65B9\u6848\u7684\u6A21\u578B\u5217\u8868" aria-busy="${Boolean(loading)}" ${loading || !modelListRequest(profile) ? "disabled" : ""}><i class="fa-solid fa-rotate${loading ? " fa-spin" : ""}" aria-hidden="true"></i><span>\u5237\u65B0</span></button></div></div>
+                <p class="t-toolbox-hint" role="status" data-toolbox-model-status="${id3}">${escape(message)}</p></div>`;
     }).join("");
   };
   editor = createApiConnectionEditor({
@@ -28726,6 +28845,32 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
   });
   editor.bind();
   renderUsage(editor.getState());
+  const refreshUsageModels = async (feature2) => {
+    editor.persistCurrentProfileInputs();
+    const profile = usageProfile(editor.getState(), feature2);
+    if (!modelListRequest(profile)) return;
+    const signature2 = modelListSignature(profile);
+    const existing = modelRequests.get(feature2);
+    if (existing?.profileId === profile.id && existing.signature === signature2) return;
+    const request = { profileId: profile.id, signature: signature2, version: modelRequestVersion };
+    modelRequests.set(feature2, request);
+    renderUsage(editor.getState());
+    const isCurrent = () => root.isConnected && request.version === modelRequestVersion && modelRequests.get(feature2) === request && (() => {
+      const active2 = usageProfile(editor.getState(), feature2);
+      return active2?.id === profile.id && modelListSignature(active2) === signature2;
+    })();
+    try {
+      const models = await fetchProfileModels(profile);
+      if (!isCurrent()) return;
+      if (models.length) editor.updateProfileModels(profile.id, models, signature2);
+      modelStatuses.set(feature2, { profileId: profile.id, signature: signature2, text: models.length ? `\u5DF2\u5237\u65B0 ${models.length} \u4E2A\u6A21\u578B\u3002` : "\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B\uFF0C\u4FDD\u7559\u539F\u5217\u8868\u548C\u5F53\u524D\u9009\u62E9\u3002" });
+    } catch (error3) {
+      if (isCurrent()) modelStatuses.set(feature2, { profileId: profile.id, signature: signature2, text: `\u6A21\u578B\u5237\u65B0\u5931\u8D25\uFF1A${error3.message || "\u672A\u77E5\u9519\u8BEF"}\u3002` });
+    } finally {
+      if (modelRequests.get(feature2) === request) modelRequests.delete(feature2);
+      if (root.isConnected) renderUsage(editor.getState());
+    }
+  };
   const status3 = (message) => {
     root.querySelector("[data-toolbox-status]").textContent = message;
   };
@@ -28766,6 +28911,8 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
     const feature2 = event.target.dataset.toolboxApi;
     if (feature2) {
       draft2.features[feature2].api = event.target.value;
+      modelRequests.delete(feature2);
+      modelStatuses.delete(feature2);
       renderUsage(editor.getState());
     }
     const modelFeature = event.target.dataset.toolboxModel;
@@ -28792,6 +28939,7 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
     for (const el of root.querySelectorAll("[data-toolbox-page]")) el.hidden = el.dataset.toolboxPage !== tab;
   };
   const close = () => {
+    modelRequestVersion++;
     editor.destroy();
     root.remove();
     restoreFocus?.isConnected && restoreFocus.focus();
@@ -28801,6 +28949,7 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
     if (!button2) return;
     if (button2.hasAttribute("data-toolbox-close")) close();
     if (button2.dataset.toolboxTab) selectTab(button2.dataset.toolboxTab);
+    if (button2.dataset.toolboxRefreshModels) void refreshUsageModels(button2.dataset.toolboxRefreshModels);
     if (button2.hasAttribute("data-toolbox-preview")) {
       capture();
       if (!validTags()) return;
@@ -28812,6 +28961,8 @@ function openToolboxSettingsWindow(initialTab = "api", feature = null) {
       root.querySelector("[data-toolbox-preview-meta]").textContent = !latest ? "\u5F53\u524D\u6CA1\u6709\u53EF\u9884\u89C8\u7684\u89D2\u8272\u56DE\u590D\u3002" : preview.textContent ? `\u6309\u5F53\u524D\u5168\u5C40\u89C4\u5219\u63D0\u53D6\uFF0C\u5171 ${preview.textContent.length} \u5B57\u3002` : "\u5F53\u524D\u89C4\u5219\u672A\u63D0\u53D6\u5230\u6B63\u6587\uFF0C\u8BF7\u68C0\u67E5\u6807\u7B7E\u3002";
     }
     if (button2.hasAttribute("data-toolbox-save")) {
+      modelRequestVersion++;
+      modelRequests.clear();
       capture();
       if (!validTags() || !validLocalRules()) return;
       editor.persistCurrentProfileInputs();
@@ -28886,6 +29037,7 @@ var init_toolboxSettingsWindow = __esm({
     init_toolboxSettings();
     init_chatHistoryBlacklist();
     init_apiConnectionEditor();
+    init_modelList();
     ID = "t-toolbox-settings";
     escape = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
     ids = Object.fromEntries([
@@ -28944,12 +29096,17 @@ function mountToolboxApiSelector(container, feature) {
   const modelSelect = document.createElement("select");
   modelSelect.className = "t-input t-input--glass";
   modelSelect.dataset.toolboxFeatureModel = feature;
-  modelLabel.append(modelSelect);
+  const modelControls = document.createElement("div");
+  modelControls.className = "t-model-list-controls";
   const fetch2 = document.createElement("button");
   fetch2.type = "button";
-  fetch2.className = "t-btn";
-  fetch2.textContent = "\u83B7\u53D6\u6A21\u578B\u5217\u8868";
+  fetch2.className = "t-btn t-fetch-models-btn";
+  fetch2.innerHTML = '<i class="fa-solid fa-rotate" aria-hidden="true"></i><span>\u5237\u65B0</span>';
+  fetch2.title = "\u5237\u65B0\u5F53\u524D API \u65B9\u6848\u7684\u6A21\u578B\u5217\u8868";
+  fetch2.setAttribute("aria-label", fetch2.title);
   fetch2.dataset.toolboxFeatureFetchModels = feature;
+  modelControls.append(modelSelect, fetch2);
+  modelLabel.append(modelControls);
   const manual = document.createElement("button");
   manual.type = "button";
   manual.className = "t-btn";
@@ -28969,7 +29126,7 @@ function mountToolboxApiSelector(container, feature) {
   const modelStatus = document.createElement("p");
   modelStatus.className = "t-conn-hint";
   modelStatus.setAttribute("role", "status");
-  modelGroup.append(modelLabel, fetch2, manual, inputLabel, modelStatus);
+  modelGroup.append(modelLabel, manual, inputLabel, modelStatus);
   let apiDirty = false, requestVersion = 0, fetching = false, renderedProfileId = "";
   const models = /* @__PURE__ */ new Map();
   const lists = /* @__PURE__ */ new Map();
@@ -28980,7 +29137,7 @@ function mountToolboxApiSelector(container, feature) {
     return current.config.profiles.find((profile) => profile.id === id3);
   };
   const selectedModel = (profile) => models.has(profile.id) ? models.get(profile.id) : String(getExtData().toolbox_settings.features[feature]?.models?.[profile.id] || "").trim();
-  const signature2 = (profile) => JSON.stringify([profile.type, normalizeApiBaseUrl(profile.url), profile.key || ""]);
+  const signature2 = modelListSignature;
   const addOption = (target, value, name) => {
     const option = document.createElement("option");
     option.value = value;
@@ -29006,8 +29163,8 @@ function mountToolboxApiSelector(container, feature) {
     modelSelect.value = model;
     input.value = model;
     modelSelect.disabled = input.disabled = manual.disabled = false;
-    fetch2.disabled = fetching || profile.type === "internal" || !normalizeApiBaseUrl(profile.url);
-    modelStatus.textContent = profile.type === "internal" ? "\u53EF\u624B\u52A8\u6307\u5B9A\u6B64\u529F\u80FD\u4F7F\u7528\u7684\u6A21\u578B\uFF1B\u7559\u7A7A\u5219\u8DDF\u968F\u65B9\u6848\u3002" : "\u4ECE\u5217\u8868\u9009\u62E9\u6216\u624B\u52A8\u586B\u5199\u6A21\u578B\uFF1B\u6B64\u9009\u62E9\u4EC5\u7528\u4E8E\u5F53\u524D\u529F\u80FD\u3002";
+    fetch2.disabled = fetching || !modelListRequest(profile);
+    modelStatus.textContent = fetching ? "\u6B63\u5728\u5237\u65B0\u6A21\u578B\u5217\u8868\u2026" : profile.type === "internal" ? "\u53EF\u624B\u52A8\u6307\u5B9A\u6B64\u529F\u80FD\u4F7F\u7528\u7684\u6A21\u578B\uFF1B\u7559\u7A7A\u5219\u8DDF\u968F\u65B9\u6848\u3002" : "\u4ECE\u5217\u8868\u9009\u62E9\u6216\u624B\u52A8\u586B\u5199\u6A21\u578B\uFF1B\u6B64\u9009\u62E9\u4EC5\u7528\u4E8E\u5F53\u524D\u529F\u80FD\u3002";
   }
   function refresh() {
     const current = getExtData();
@@ -29028,6 +29185,8 @@ function mountToolboxApiSelector(container, feature) {
     }
     hint.textContent = profile ? `${profile.name}\u3002\u5730\u5740\u548C\u5BC6\u94A5\u5728\u5168\u5C40\u8BBE\u7F6E\u4E2D\u7BA1\u7406\uFF0C\u6A21\u578B\u53EF\u5728\u4E0B\u65B9\u5207\u6362\u3002` : "\u8BF7\u91CD\u65B0\u9009\u62E9\u53EF\u7528\u7684\u5168\u5C40\u65B9\u6848\u3002";
     renderModels(profile);
+    fetch2.setAttribute("aria-busy", String(fetching));
+    fetch2.querySelector("i").classList.toggle("fa-spin", fetching);
   }
   select.addEventListener("change", () => {
     apiDirty = true;
@@ -29062,16 +29221,17 @@ function mountToolboxApiSelector(container, feature) {
   });
   fetch2.addEventListener("click", async () => {
     const profile = profileFor();
-    if (!profile || profile.type === "internal" || !normalizeApiBaseUrl(profile.url)) return;
+    if (fetching || !modelListRequest(profile)) return;
     const capturedSignature = signature2(profile), version = ++requestVersion;
     fetching = true;
     fetch2.disabled = true;
-    modelStatus.textContent = "\u6B63\u5728\u83B7\u53D6\u6A21\u578B\u5217\u8868\u2026";
+    fetch2.setAttribute("aria-busy", "true");
+    fetch2.querySelector("i").classList.add("fa-spin");
+    modelStatus.textContent = "\u6B63\u5728\u5237\u65B0\u6A21\u578B\u5217\u8868\u2026";
     const isCurrent = () => group.isConnected && version === requestVersion && profileFor()?.id === profile.id && signature2(profileFor()) === capturedSignature;
     try {
-      const result = await fetchModelList({ url: normalizeApiBaseUrl(profile.url), key: profile.key || "" });
+      const available = await fetchProfileModels(profile);
       if (!isCurrent()) return;
-      const available = [...new Set((Array.isArray(result) ? result : []).map((value) => String(value || "").trim()).filter(Boolean))];
       if (!available.length) {
         modelStatus.textContent = "\u672A\u8FD4\u56DE\u53EF\u7528\u6A21\u578B\uFF0C\u53EF\u624B\u52A8\u586B\u5199\u6A21\u578B ID\u3002";
         return;
@@ -29085,7 +29245,9 @@ function mountToolboxApiSelector(container, feature) {
       if (version === requestVersion) {
         fetching = false;
         const active2 = profileFor();
-        fetch2.disabled = !active2 || active2.type === "internal" || !normalizeApiBaseUrl(active2.url);
+        fetch2.disabled = !modelListRequest(active2);
+        fetch2.setAttribute("aria-busy", "false");
+        fetch2.querySelector("i").classList.remove("fa-spin");
       }
     }
   });
@@ -29137,8 +29299,7 @@ var init_toolboxApiSelector = __esm({
     init_storage();
     init_toolboxApiProfiles();
     init_toolboxSettings();
-    init_apiProfileRegistry();
-    init_relayClient();
+    init_modelList();
   }
 });
 
@@ -29757,6 +29918,7 @@ function openCharacterProfileWindow(options = {}) {
   document.body.append(root);
   const role = (name) => root.querySelector(`[data-role="${name}"]`);
   const action = (name) => root.querySelector(`[data-action="${name}"]`);
+  if (options.notice) role("status").textContent = options.notice;
   const help = createHelpTip({ title: "\u4EBA\u7269\u5916\u89C2\u6863\u6848", sections: PROFILE_HELP });
   role("header-actions").insertBefore(help.root, action("close"));
   let disposed = false;
@@ -29882,7 +30044,12 @@ function openCharacterProfileWindow(options = {}) {
       syncSummary();
     });
     refreshCounter();
-    body.append(labeled("\u5916\u89C2\u63CF\u5199", content), counter);
+    const contentField = labeled("\u5916\u89C2\u63CF\u5199", content);
+    const languageHint = document.createElement("small");
+    languageHint.className = "t-illustration-hint";
+    languageHint.textContent = "\u53EF\u4EE5\u4F7F\u7528\u4E2D\u6587\u586B\u5199\uFF0C\u4F8B\u5982\u53D1\u8272\u3001\u77B3\u8272\u3001\u670D\u88C5\u548C\u9970\u54C1\u3002";
+    contentField.append(languageHint);
+    body.append(contentField, counter);
     const del = document.createElement("button");
     del.type = "button";
     del.className = "t-btn t-btn-danger";
@@ -30457,6 +30624,10 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
             <div class="t-illustration-body">
                 <label class="t-illustration-field">\u914D\u56FE\u5185\u5BB9<select class="t-input" data-field="target"></select></label>
                 <div class="t-illustration-connection"><span data-role="connection">\u6B63\u5728\u68C0\u6D4B\u751F\u56FE\u540E\u7AEF\u2026</span><button class="t-btn" type="button" data-action="detect">\u91CD\u65B0\u68C0\u6D4B</button></div>
+                <div class="t-illustration-details" data-role="profile-required" role="alert" hidden>
+                    <p class="t-illustration-hint">${MISSING_CHARACTER_PROFILE_MESSAGE}</p>
+                    <button class="t-btn" type="button" data-action="profiles">\u586B\u5199\u5916\u89C2\u6863\u6848</button>
+                </div>
                 <label class="t-illustration-field">\u60F3\u753B\u4EC0\u4E48\uFF08\u53EF\u9009\uFF09<textarea class="t-input" data-field="request" rows="2" placeholder="\u4F8B\u5982\uFF1A\u753B\u96E8\u4E2D\u91CD\u9022\u7684\u77AC\u95F4\uFF0C\u8FDC\u666F\uFF0C\u504F\u51B7\u8272"></textarea></label>
                 <details class="t-illustration-details"><summary>\u6B63\u6587\u4E0E\u4EBA\u7269\u8D44\u6599</summary>
                     <label class="t-illustration-field">\u672C\u6B21\u914D\u56FE\u7D20\u6750<textarea class="t-input" data-field="text" rows="6"></textarea></label>
@@ -30609,12 +30780,14 @@ ${block}` : block;
   }
   function renderProfileChips() {
     const holder = role("profiles");
-    const profiles = readCharacterProfiles(getExtData()).filter((entry) => entry.enabled !== false);
+    const data = getExtData();
+    const profiles = readCharacterProfiles(data).filter((entry) => entry.enabled !== false);
+    role("profile-required").hidden = hasConfiguredCharacterProfiles(data);
     holder.replaceChildren();
     if (!profiles.length) {
       const empty = document.createElement("span");
       empty.className = "t-illustration-hint";
-      empty.textContent = "\u8FD8\u6CA1\u6709\u5916\u89C2\u6863\u6848\u3002\u53EF\u4EE5\u70B9\u300C\u7BA1\u7406\u5916\u89C2\u6863\u6848\u300D\u65B0\u5EFA\u4E00\u4EFD\uFF0C\u6216\u76F4\u63A5\u5728\u4E0B\u65B9\u624B\u586B\u3002";
+      empty.textContent = "\u8FD8\u6CA1\u6709\u5916\u89C2\u6863\u6848\u3002\u8BF7\u70B9\u300C\u586B\u5199\u5916\u89C2\u6863\u6848\u300D\u65B0\u5EFA\u5E76\u586B\u5199\u5916\u89C2\u63CF\u5199\u3002";
       holder.append(empty);
       return;
     }
@@ -30640,6 +30813,11 @@ ${block}` : block;
       text: current.text
     });
     for (const entry of matched) insertProfileBlock(current, entry);
+  }
+  function openProfiles(notice = "") {
+    const index = Number(field("target").value) || 0;
+    if (!hasConfiguredCharacterProfiles(getExtData())) session.profilesInitialized = false;
+    openCharacterProfileWindow({ notice, onClose: () => openIllustrationWindow(targets, index) });
   }
   function openLightbox(image) {
     lightbox?.close();
@@ -30805,6 +30983,7 @@ ${block}` : block;
   }
   async function loadTarget(index) {
     target = targets[index];
+    field("target").value = String(index);
     const sequence = ++selectionSequence;
     const current = target;
     session = sessionFor(current.sceneId, buildPromptTextFromTheater(current.content));
@@ -30901,11 +31080,14 @@ ${block}` : block;
       return;
     }
     if (operation === "profiles") {
-      const index = Number(field("target").value) || 0;
-      openCharacterProfileWindow({ onClose: () => openIllustrationWindow(targets, index) });
+      openProfiles();
       return;
     }
     const current = session, currentTarget = target;
+    if (["prepare", "alternate", "generate"].includes(operation) && !hasConfiguredCharacterProfiles(getExtData())) {
+      openProfiles(MISSING_CHARACTER_PROFILE_MESSAGE);
+      return;
+    }
     if (button2.dataset.profileId) {
       const id3 = button2.dataset.profileId;
       const entry = readCharacterProfiles(getExtData()).find((item2) => item2.id === id3);
@@ -31141,6 +31323,7 @@ var init_illustrationWindow = __esm({
         heading: "\u4EBA\u7269\u5916\u89C2\u6863\u6848",
         lines: [
           "\u9876\u680F\u7684\u901A\u8BAF\u5F55\u56FE\u6807\u3002\u4E3A\u89D2\u8272\u8BB0\u4E00\u6B21\u5916\u89C2\uFF0C\u4E4B\u540E\u8FDB\u8FD9\u4E2A\u89D2\u8272\u7684\u914D\u56FE\u4F1A\u81EA\u52A8\u5E26\u4E0A\u3002",
+          "\u5F00\u59CB\u914D\u56FE\u524D\uFF0C\u5FC5\u987B\u586B\u5199\u5E76\u542F\u7528\u81F3\u5C11\u4E00\u4EFD\u5916\u89C2\u6863\u6848\uFF1B\u5916\u89C2\u63CF\u5199\u53EF\u4EE5\u4F7F\u7528\u4E2D\u6587\u586B\u5199\u3002",
           "\u547D\u4E2D\u7684\u6863\u6848\u4F1A\u586B\u8FDB\u300C\u4EBA\u7269\u8D44\u6599\u300D\u5E76\u9884\u52FE\u9009\uFF1B\u4F60\u624B\u6253\u7684\u5185\u5BB9\u6C38\u8FDC\u4E0D\u4F1A\u88AB\u8986\u76D6\u3002"
         ]
       }
@@ -52128,6 +52311,8 @@ function closeWindow2() {
   layoutTeardownHooks = [];
   activeLayout = null;
   $("#t-overlay").remove();
+  $("#t-more-popover").remove();
+  $(document).off("click.closemore");
   $(document).off("keydown.zenmode");
   $(document).off("click.tinlinebranch");
   $(window).off("resize.ttempinput");
@@ -52893,6 +53078,13 @@ async function openMainWindow() {
     view.toggleClass("t-zen-mode");
     const isZen = view.hasClass("t-zen-mode");
     $(this).toggleClass("active", isZen);
+    const label = isZen ? "\u8FD4\u56DE\u5C0F\u5267\u573A" : "\u6C89\u6D78\u9605\u8BFB";
+    $(this).attr({ title: label, "aria-label": label, "aria-pressed": String(isZen) });
+    $(this).find("i").toggleClass("fa-expand", !isZen).toggleClass("fa-compress", isZen);
+    if (isZen) {
+      $("#t-more-popover").remove();
+      $(document).off("click.closemore");
+    }
   });
   $("#t-tool-edit-content").on("click", function() {
     if (!GlobalState.lastGeneratedContent) {
@@ -54295,6 +54487,7 @@ function refreshHeaderActions() {
 function renderMoreMenu($targetBtn) {
   if ($("#t-more-popover").length) {
     $("#t-more-popover").remove();
+    $(document).off("click.closemore");
     return;
   }
   const items = getOverflowActions();
@@ -54302,7 +54495,7 @@ function renderMoreMenu($targetBtn) {
   const isFull = getHeaderActions().length >= HEADER_ACTION_MAX;
   const pinTitle = isFull ? `\u6700\u591A ${HEADER_ACTION_MAX} \u4E2A\uFF0C\u53D6\u6D88\u4E00\u4E2A\u518D\u9009` : "\u56FA\u5B9A\u5230\u680F\u4E0A";
   const html = `
-    <div id="t-more-popover" class="t-filter-popover" style="width: 190px; z-index: 21000;">
+    <div id="t-more-popover" class="t-filter-popover t-root" style="width: 190px; z-index: 21000;">
         ${items.map((it) => `
             <div class="t-filter-item t-more-item" data-action="${it.id}">
                 <span><i class="fa-solid ${it.icon}" style="width:1.1em; margin-right:8px;"></i>${it.label}</span>
@@ -54312,6 +54505,7 @@ function renderMoreMenu($targetBtn) {
     </div>`;
   $("body").append(html);
   const pop = $("#t-more-popover");
+  applyStudioTheme(pop[0]);
   const rect = $targetBtn[0].getBoundingClientRect();
   const left = rect.left + 190 > window.innerWidth ? rect.right - 190 : rect.left;
   pop.css({ top: rect.bottom + 10, left });
@@ -54337,6 +54531,7 @@ function renderMoreMenu($targetBtn) {
     runHeaderAction(action, $targetBtn);
   });
   setTimeout(() => {
+    if (!pop[0].isConnected) return;
     $(document).on("click.closemore", (e) => {
       if (!$(e.target).closest("#t-more-popover, #t-btn-more").length) closeMenu2();
     });
@@ -54725,6 +54920,7 @@ var init_mainWindow = __esm({
     init_topBar();
     init_theme();
     init_theaterTheme();
+    init_studioTheme();
     init_illustrationData();
     init_illustrationWindow();
     SORT_MODE_LABELS2 = {
@@ -55067,7 +55263,7 @@ __export(api_exports, {
   syncEditedContentToContinuationSession: () => syncEditedContentToContinuationSession
 });
 import { ChatCompletionService as ChatCompletionService2 } from "../../../custom-request.js";
-import { oai_settings as oai_settings4, getChatCompletionModel as getChatCompletionModel4 } from "../../../openai.js";
+import { oai_settings as oai_settings5, getChatCompletionModel as getChatCompletionModel4 } from "../../../openai.js";
 import { evaluateMacros } from "../../../macros.js";
 function clampContinuationInjectRounds(value) {
   if (String(value ?? "").trim() === "") return 3;
@@ -56240,7 +56436,7 @@ ${processedPrompt}`;
       source: generationSource,
       promptProcessing: resolvePromptProcessing(promptScheme, {
         useSTConnection: !!conn.useSTConnection,
-        hostMode: oai_settings4.custom_prompt_post_processing
+        hostMode: oai_settings5.custom_prompt_post_processing
       }),
       hasPromptOverride: hasExplicitOverride,
       promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
@@ -56621,7 +56817,7 @@ ${processedPrompt}`;
       source: generationSource,
       promptProcessing: resolvePromptProcessing(promptScheme, {
         useSTConnection,
-        hostMode: oai_settings4.custom_prompt_post_processing
+        hostMode: oai_settings5.custom_prompt_post_processing
       }),
       hasPromptOverride: typeof promptOverride === "string" && promptOverride.trim().length > 0,
       promptOverrideLength: promptOverride ? String(promptOverride).length : 0,
@@ -57200,14 +57396,14 @@ Generate ONLY the continuation (no repetition):`;
           { role: "system", content: continuationSys },
           { role: "user", content: continuationUser }
         ],
-        chat_completion_source: oai_settings4.chat_completion_source,
+        chat_completion_source: oai_settings5.chat_completion_source,
         model: finalModel,
-        max_tokens: oai_settings4.openai_max_tokens || 2048,
-        temperature: oai_settings4.temp_openai || 0.7,
-        custom_url: oai_settings4.custom_url,
-        reverse_proxy: oai_settings4.reverse_proxy,
-        proxy_password: oai_settings4.proxy_password,
-        custom_prompt_post_processing: oai_settings4.custom_prompt_post_processing
+        max_tokens: oai_settings5.openai_max_tokens || 2048,
+        temperature: oai_settings5.temp_openai || 0.7,
+        custom_url: oai_settings5.custom_url,
+        reverse_proxy: oai_settings5.reverse_proxy,
+        proxy_password: oai_settings5.proxy_password,
+        custom_prompt_post_processing: oai_settings5.custom_prompt_post_processing
       });
       if (useStream) {
         const streamGenerator = await ChatCompletionService2.sendRequest(requestData, false, null);
