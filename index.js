@@ -5222,6 +5222,8 @@ function loadCssFiles() {
     --t-z-popover: 20200;
     /* \u4E0B\u62C9 / \u9009\u62E9\u5668 / \u66F4\u591A\u83DC\u5355 */
     --t-z-toast: 20300;
+    /* \u6210\u4E66\u4ECE\u5DE5\u5177\u7BB1\u83DC\u5355\uFF0830050\uFF09\u6253\u5F00\uFF0C\u6B63\u6587\u89C4\u5219\u8BBE\u7F6E\uFF0830100\uFF09\u53E0\u5728\u5B83\u4E0A\u65B9\u3002 */
+    --t-z-book: 30060;
     /* \u5168\u5C40\u8BBE\u7F6E\u53EF\u4ECE\u6539\u5199\u4E8C\u7EA7\u5F39\u7A97\uFF0830070\uFF09\u6253\u5F00\u3002 */
     --t-z-toolbox-settings: 30100;
 
@@ -23066,7 +23068,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 /* === 04-features/chat-book.css === */
 /* Standalone viewport: settings and preview scroll inside their own columns. */
-.t-book-overlay { position: fixed; inset: 0; z-index: var(--t-z-dialog); background: var(--t-color-surface); color: var(--t-color-text); font-family: var(--t-font-global); overflow: hidden; }
+/* The host can transform a zero-height html root with a fixed body; inset alone then collapses this overlay. */
+.t-book-overlay { position: fixed; inset: 0; height: 100vh; height: 100dvh; z-index: var(--t-z-book, 30060); background: var(--t-color-surface); color: var(--t-color-text); font-family: var(--t-font-global); overflow: hidden; }
 .t-book-overlay *, .t-book-overlay *::before, .t-book-overlay *::after { box-sizing: border-box; }
 .t-book-overlay [hidden] { display: none !important; }
 .t-book-shell { display: flex; flex-direction: column; height: 100%; height: 100dvh; min-height: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
@@ -35495,7 +35498,7 @@ function buildBookChapters(messages, boundaries) {
   const chapters = [];
   for (const message of flow) {
     const boundary = [...sorted].reverse().find((b) => b.start <= message.index) || { start: flow[0].index, title: "\u5F00\u7BC7" };
-    let chapter = chapters.at(-1);
+    let chapter = chapters[chapters.length - 1];
     if (!chapter || chapter.boundary !== boundary.start) {
       chapter = { boundary: boundary.start, title: boundary.title, start: message.index, end: message.index, messages: [], words: 0 };
       chapters.push(chapter);
@@ -35560,7 +35563,7 @@ var init_chatBookData = __esm({
   "src/core/chatBookData.js"() {
     CHAT_BOOK_KEY = "chat_books";
     BOOK_THEMES = Object.freeze({ paper: "\u6696\u7EB8", white: "\u6E05\u767D", night: "\u591C\u8BFB", midnight: "\u5348\u591C" });
-    bookEscape = (value) => String(value ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g, "").replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "\uFFFD").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]);
+    bookEscape = (value) => String(value ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g, "").replace(/[\uD800-\uDFFF]/gu, "\uFFFD").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]);
     clamp = (value, min, max, fallback) => Number.isFinite(Number(value)) ? Math.max(min, Math.min(max, Number(value))) : fallback;
   }
 });
@@ -36793,10 +36796,11 @@ function previewFonts() {
 }
 function openChatBookWindow() {
   if (getExtData().chat_books?.enabled === false) return null;
-  if (active) {
+  if (active?.root.isConnected) {
     active.root.querySelector('[data-action="close"]').focus();
     return active;
   }
+  if (active) active.close({ restoreFocus: false });
   let snapshot;
   try {
     snapshot = currentBookSnapshot();
@@ -36939,19 +36943,26 @@ function openChatBookWindow() {
       panel.hidden = panel.dataset.panel !== name;
     });
   }
-  function close() {
+  const removalObserver = new window.MutationObserver(() => {
+    if (!root.isConnected) close({ restoreFocus: false });
+  });
+  function close({ restoreFocus = true, saveDraft: saveDraft2 = true } = {}) {
     if (disposed) return;
     disposed = true;
     controller?.abort();
     clearTimeout(timer2);
-    save();
-    root.remove();
-    window.removeEventListener("focus", detectChanges);
-    document.removeEventListener("keydown", onKey);
-    document.removeEventListener(TOOLBOX_EXTRACTION_CHANGED, refreshExtraction);
-    for (const [name, handler] of events) eventSource11?.removeListener?.(name, handler);
-    active = null;
-    if (previousFocus?.isConnected) previousFocus.focus();
+    removalObserver.disconnect();
+    try {
+      if (saveDraft2) save();
+    } finally {
+      root.remove();
+      window.removeEventListener("focus", detectChanges);
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener(TOOLBOX_EXTRACTION_CHANGED, refreshExtraction);
+      for (const [name, handler] of events) eventSource11?.removeListener?.(name, handler);
+      if (active?.root === root) active = null;
+      if (restoreFocus && previousFocus?.isConnected) previousFocus.focus();
+    }
   }
   function onKey(event) {
     if (document.getElementById("t-toolbox-settings")) return;
@@ -36964,8 +36975,8 @@ function openChatBookWindow() {
       const nodes = [...root.querySelectorAll("button,input,select,textarea,summary")].filter((el) => !el.disabled && !el.closest("[hidden]") && el.tabIndex !== -1);
       if (event.shiftKey && document.activeElement === nodes[0]) {
         event.preventDefault();
-        nodes.at(-1)?.focus();
-      } else if (!event.shiftKey && document.activeElement === nodes.at(-1)) {
+        nodes[nodes.length - 1]?.focus();
+      } else if (!event.shiftKey && document.activeElement === nodes[nodes.length - 1]) {
         event.preventDefault();
         nodes[0]?.focus();
       }
@@ -37185,27 +37196,34 @@ function openChatBookWindow() {
     alert2("\u5DF2\u6309\u6700\u65B0\u5168\u5C40\u6B63\u6587\u89C4\u5219\u66F4\u65B0\u9884\u89C8\u3002");
   }
   const host2 = globalThis.SillyTavern?.getContext?.(), eventSource11 = host2?.eventSource;
-  const events = ["CHAT_CHANGED", "MESSAGE_RECEIVED", "MESSAGE_EDITED", "MESSAGE_UPDATED", "MESSAGE_DELETED", "MESSAGE_SWIPED", "MESSAGE_SWIPE_DELETED"].flatMap((key) => {
-    const name = host2?.eventTypes?.[key];
-    if (!name || !eventSource11?.on || !eventSource11?.removeListener) return [];
-    eventSource11.on(name, detectChanges);
-    return [[name, detectChanges]];
-  });
-  window.addEventListener("focus", detectChanges);
-  document.addEventListener("keydown", onKey);
-  document.addEventListener(TOOLBOX_EXTRACTION_CHANGED, refreshExtraction);
-  mountToolboxSettingsLink(root.querySelector("[data-book-extraction-link]"), "book", { api: false });
-  active = { root, close };
-  syncFields();
-  rebuild();
-  if (draft2.sourceSignature !== snapshot.signature) {
-    const removed = draft2.reanchorRemoved || 0;
-    draft2.sourceSignature = snapshot.signature;
+  const events = [];
+  try {
+    for (const key of ["CHAT_CHANGED", "MESSAGE_RECEIVED", "MESSAGE_EDITED", "MESSAGE_UPDATED", "MESSAGE_DELETED", "MESSAGE_SWIPED", "MESSAGE_SWIPE_DELETED"]) {
+      const name = host2?.eventTypes?.[key];
+      if (!name || !eventSource11?.on || !eventSource11?.removeListener) continue;
+      eventSource11.on(name, detectChanges);
+      events.push([name, detectChanges]);
+    }
+    window.addEventListener("focus", detectChanges);
+    document.addEventListener("keydown", onKey);
+    document.addEventListener(TOOLBOX_EXTRACTION_CHANGED, refreshExtraction);
+    mountToolboxSettingsLink(root.querySelector("[data-book-extraction-link]"), "book", { api: false });
+    active = { root, close };
+    syncFields();
     rebuild();
-    alert2(`\u804A\u5929\u4E0E\u4E0A\u6B21\u8349\u7A3F\u76F8\u6BD4\u5DF2\u6709\u53D8\u5316\uFF0C\u5DF2\u91CD\u65B0\u5BF9\u5E94\u7AE0\u8282\u3002${removed ? `\u79FB\u9664\u4E86 ${removed} \u4E2A\u65E0\u6CD5\u5BF9\u5E94\u7684\u5206\u754C\u3002` : ""}\u8BF7\u68C0\u67E5\u76EE\u5F55\u548C\u8303\u56F4\u3002`);
+    if (draft2.sourceSignature !== snapshot.signature) {
+      const removed = draft2.reanchorRemoved || 0;
+      draft2.sourceSignature = snapshot.signature;
+      rebuild();
+      alert2(`\u804A\u5929\u4E0E\u4E0A\u6B21\u8349\u7A3F\u76F8\u6BD4\u5DF2\u6709\u53D8\u5316\uFF0C\u5DF2\u91CD\u65B0\u5BF9\u5E94\u7AE0\u8282\u3002${removed ? `\u79FB\u9664\u4E86 ${removed} \u4E2A\u65E0\u6CD5\u5BF9\u5E94\u7684\u5206\u754C\u3002` : ""}\u8BF7\u68C0\u67E5\u76EE\u5F55\u548C\u8303\u56F4\u3002`);
+    }
+    removalObserver.observe(document.body, { childList: true });
+    q('[data-action="close"]').focus();
+    return active;
+  } catch (error2) {
+    close({ restoreFocus: false, saveDraft: false });
+    throw error2;
   }
-  q('[data-action="close"]').focus();
-  return active;
 }
 var active, check, field, select, textArea, button;
 var init_chatBookWindow = __esm({
@@ -49414,12 +49432,48 @@ function openMenu(focusFirst = false) {
   $(`#${BTN_ID2}`).attr("aria-expanded", "true").addClass("is-open");
   positionMenu();
   const $menu = $(`#${MENU_ID}`);
-  $menu.on("click", "[data-feature]", async function(event) {
+  let activating = false, touch = null;
+  async function selectFeature(item2, event) {
+    if (activating || !$menu[0].isConnected) return;
+    activating = true;
     event.preventDefault();
     event.stopPropagation();
-    const feature = this.dataset.feature;
+    const feature = item2.dataset.feature;
+    const title = item2.querySelector("strong")?.textContent || item2.textContent.trim();
     closeMenu(true);
-    await openFeatureDirect(feature);
+    try {
+      await openFeatureDirect(feature);
+    } catch (error2) {
+      TitaniaLogger.error(`${title}\u6253\u5F00\u5931\u8D25`, error2);
+      window.toastr?.error(`${title}\u6253\u5F00\u5931\u8D25\uFF1A${error2?.message || "\u8BF7\u5237\u65B0\u9875\u9762\u540E\u91CD\u8BD5\u3002"}`, "Titania Echo", { escapeHtml: true });
+    }
+  }
+  $menu.on("click", "[data-feature]", function(event) {
+    void selectFeature(this, event);
+  });
+  $menu[0].addEventListener("touchstart", (event) => {
+    touch = null;
+    const item2 = event.target.closest?.("[data-feature]");
+    if (event.touches.length !== 1 || !item2 || !$menu[0].contains(item2)) return;
+    const point = event.touches[0];
+    touch = { item: item2, id: point.identifier, x: point.clientX, y: point.clientY, scrollTop: $menu[0].scrollTop };
+  }, { passive: true });
+  $menu[0].addEventListener("touchmove", (event) => {
+    const point = [...event.touches].find((point2) => point2.identifier === touch?.id);
+    if (!point || event.touches.length !== 1 || Math.hypot(point.clientX - touch.x, point.clientY - touch.y) > 10) touch = null;
+  }, { passive: true });
+  $menu[0].addEventListener("touchend", (event) => {
+    const tap = touch;
+    touch = null;
+    const point = [...event.changedTouches].find((point2) => point2.identifier === tap?.id);
+    if (!tap || !point || event.touches.length || $menu[0].scrollTop !== tap.scrollTop || Math.hypot(point.clientX - tap.x, point.clientY - tap.y) > 10) return;
+    void selectFeature(tap.item, event);
+  }, { passive: false });
+  $menu[0].addEventListener("touchcancel", () => {
+    touch = null;
+  }, { passive: true });
+  $menu[0].addEventListener("contextmenu", () => {
+    touch = null;
   });
   $menu.on("keydown", (event) => {
     const items = [...$menu[0].querySelectorAll('[role="menuitem"]')];
@@ -49501,6 +49555,7 @@ var BTN_ID2, MENU_ID, observerBound2;
 var init_outlineEntryButton = __esm({
   "src/ui/outlineEntryButton.js"() {
     init_storage();
+    init_logger();
     init_echoIcons();
     BTN_ID2 = "titania-outline-entry-btn";
     MENU_ID = "titania-outline-entry-menu";
