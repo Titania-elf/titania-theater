@@ -10,6 +10,11 @@
 
     <div class="inline-drawer-content">
         <div class="titania-panel-grid">
+            <section class="titania-panel-card">
+                <div class="titania-card-title"><i class="fa-solid fa-gear"></i> 工具箱设置</div>
+                <p class="titania-backup-desc">统一管理 API 方案、正文标签提取与排除。</p>
+                <button id="titania-global-settings-open" class="titania-mini-btn" type="button">打开工具箱设置</button>
+            </section>
             <section id="titania-update-card" class="titania-panel-card titania-update-card" data-state="checking">
                 <div class="titania-update-card-head">
                     <div class="titania-update-card-copy">
@@ -89,12 +94,21 @@
                     </summary>
                     <div class="titania-settings-group-body">
                         <label class="checkbox_label titania-switch-row">
-                            <input id="cfg-reader-entry-enabled" type="checkbox" data-settings-toggle />
+                            <input id="cfg-chat-book-enabled" type="checkbox" data-settings-toggle />
                             <span class="titania-switch-text">
-                                <span class="titania-switch-main">全屏阅读按钮</span>
-                                <small>在最新 AI 回复的操作栏中打开全屏阅读。</small>
+                                <span class="titania-switch-main">启用聊天成书</span>
+                                <small>在回声工具箱中编排章节、预览并导出 EPUB / TXT；关闭后保留已有草稿。</small>
                             </span>
                         </label>
+                        <div class="titania-settings-dependent" data-settings-parent="cfg-chat-book-enabled" hidden>
+                            <label class="checkbox_label titania-switch-row">
+                                <input id="cfg-reader-entry-enabled" type="checkbox" />
+                                <span class="titania-switch-text">
+                                    <span class="titania-switch-main">聊天成书快捷按钮</span>
+                                    <small>同时在最新 AI 回复的操作栏中显示聊天成书入口。</small>
+                                </span>
+                            </label>
+                        </div>
                         <label class="checkbox_label titania-switch-row">
                             <input id="cfg-chat-inject-enabled" type="checkbox" data-settings-toggle />
                             <span class="titania-switch-text">
