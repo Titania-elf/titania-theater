@@ -343,13 +343,16 @@ var init_defaults = __esm({
   }
 });
 
-// src/core/textRewritePatch.js
-function parseRewriteWhitelist(input) {
+// src/core/textExtraction.js
+function parseTextTags(input) {
   return [...new Set(String(input || "").split(/[,，\n]/).map((tag) => tag.trim().replace(/^<|>$/g, "").toLowerCase()).filter((tag) => /^[\p{L}_][\p{L}\p{N}_-]*$/u.test(tag)))];
 }
-function isProtectedRewriteElement(name, attributes = "", whitelist = [], exclusions = []) {
+function isProtectedTextElement(name, attributes = "", exclusions = [], protectState = true) {
   const tag = String(name).toLowerCase();
-  return exclusions.includes(tag) || PROTECTED_TAGS.has(tag) || THOUGHT_TAGS.has(tag) || STATE_NAME.test(tag) || !REWRITE_STATIC_TAGS.has(tag) && !whitelist.includes(tag) || /\bon[\w]+\s*=|\b(?:contenteditable|data-[\w-]+)\b/i.test(attributes) || /\b(?:class|id)\s*=\s*["'][^"']*(?:状态|status|state|stats|card|panel|widget|render|component)[^"']*["']/i.test(attributes);
+  if (exclusions.includes(tag) || DROP_TAGS.has(tag) || THOUGHT_TAGS.has(tag)) return true;
+  if (!protectState) return false;
+  if (STATE_NAME.test(tag) || /\bdata-(?:state|status|stats|widget|component|react|vue|th-render)\b/i.test(attributes)) return true;
+  return [...String(attributes).matchAll(/([^\s=<>/]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g)].some((match) => /^(?:class|id)$/i.test(match[1]) && STATE_NAME.test(match[2] ?? match[3] ?? match[4]));
 }
 function codeRanges(raw) {
   const ranges = [];
@@ -464,7 +467,7 @@ function excludedRegionEnd(raw, tag, start, protectedRanges) {
     const closing = token.closing;
     if (name === tag) {
       if (closing && --depth === 0) return scan;
-      if (!closing && !token.value.endsWith("/>") && (!VOID_TAGS.has(name) || name === "img" && !hasImageSource(token))) depth++;
+      if (!closing && !token.value.endsWith("/>") && (!TEXT_VOID_TAGS.has(name) || name === "img" && !hasImageSource(token))) depth++;
     } else if (!closing && RAW_TEXT_TAGS.has(name) && !token.value.endsWith("/>")) {
       const end = closeRawText(name, scan);
       if (end < 0) return -1;
@@ -473,11 +476,12 @@ function excludedRegionEnd(raw, tag, start, protectedRanges) {
   }
   return -1;
 }
-function extractRewriteProjection(source, whitelistInput = "", exclusionsInput = "", { allowPartial = false } = {}) {
+function extractTextProjection(source, whitelistInput = "", exclusionsInput = "", { allowPartial = false, protectState = true } = {}) {
   const raw = String(source ?? "");
-  const whitelist = parseRewriteWhitelist(whitelistInput);
-  const exclusions = parseRewriteWhitelist(exclusionsInput);
+  const whitelist = parseTextTags(whitelistInput);
+  const exclusions = parseTextTags(exclusionsInput);
   const runs = [];
+  const content = [];
   const excludedRanges = [];
   const stack = [];
   let reason = "";
@@ -489,15 +493,24 @@ function extractRewriteProjection(source, whitelistInput = "", exclusionsInput =
   let scan = 0;
   let sourceEnd = raw.length;
   let matchedWhitelist = false;
-  const append = (start, end) => {
-    if (invalidRules || reason && !allowPartial || stack.some((item2) => item2.blocked) || whitelist.length && !stack.some((item2) => whitelist.includes(item2.tag))) return;
+  const selected = () => !invalidRules && !(reason && !allowPartial) && (!whitelist.length || stack.some((item2) => whitelist.includes(item2.tag)));
+  const appendRun = (start, end, literal = false) => {
+    if (start >= end) return;
+    const previous = runs[runs.length - 1];
+    if (previous?.end === start) runs[runs.length - 1] = { ...decodeRun(raw, previous.start, end), elements: previous.elements };
+    else runs.push({ ...decodeRun(raw, start, end), elements: stack.map((item2) => ({ ...item2 })) });
+    const value = raw.slice(start, end);
+    content.push(literal ? value.replace(/</g, "&lt;").replace(/>/g, "&gt;") : value);
+  };
+  const append = (start, end, literal = false) => {
+    if (!selected()) return;
     const cuts = protectedRanges.filter(([a, b]) => b > start && a < end);
     let pos = start;
     for (const [a, b] of cuts) {
-      if (a > pos) runs.push(decodeRun(raw, pos, Math.min(a, end)));
+      if (a > pos) appendRun(pos, Math.min(a, end), literal);
       pos = Math.max(pos, b);
     }
-    if (pos < end) runs.push(decodeRun(raw, pos, end));
+    if (pos < end) appendRun(pos, end, literal);
   };
   let token;
   while (token = nextProjectionToken(raw, scan)) {
@@ -516,19 +529,25 @@ function extractRewriteProjection(source, whitelistInput = "", exclusionsInput =
       cursor = raw.length;
       break;
     }
-    if (tag && !closing && /^<[\p{L}_][\p{L}\p{N}_:-]*\s*>$/u.test(token.value) && !REWRITE_STATIC_TAGS.has(tag) && !VOID_TAGS.has(tag) && !PROTECTED_TAGS.has(tag) && !THOUGHT_TAGS.has(tag) && !STATE_NAME.test(tag) && !whitelist.includes(tag) && !exclusions.includes(tag)) {
+    if (tag && !closing && /\S/.test(raw.slice(raw.lastIndexOf("\n", token.index - 1) + 1, token.index).replace(/<[^>]*>/g, "")) && /^<[\p{L}_][\p{L}\p{N}_:-]*\s*>$/u.test(token.value) && !STRUCTURAL_TAGS.has(tag) && !TEXT_VOID_TAGS.has(tag) && !isProtectedTextElement(tag, token.value, exclusions, protectState) && !whitelist.includes(tag)) {
       const close = new RegExp(`</${tag}\\s*>`, "giu");
       close.lastIndex = scan;
       let match;
       while ((match = close.exec(raw)) && protectedRanges.some(([a, b]) => a <= match.index && match.index < b)) {
       }
-      if (!match) continue;
+      if (!match) {
+        append(cursor, token.index);
+        append(token.index, token.end, true);
+        cursor = scan;
+        continue;
+      }
     }
     append(cursor, token.index);
     cursor = scan;
     if (token.value.startsWith("<!")) continue;
     if (closing) {
-      if (stack.at(-1)?.tag !== tag) {
+      if (selected()) content.push(token.value);
+      if (stack[stack.length - 1]?.tag !== tag) {
         reason || (reason = "\u539F\u6587\u6807\u7B7E\u7ED3\u6784\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94");
         if (!allowPartial) break;
         const ancestor = stack.map((item2) => item2.tag).lastIndexOf(tag);
@@ -537,35 +556,27 @@ function extractRewriteProjection(source, whitelistInput = "", exclusionsInput =
       }
       stack.pop();
     } else {
-      if (whitelist.includes(tag)) matchedWhitelist = true;
-      if (exclusions.includes(tag)) {
-        if ((!VOID_TAGS.has(tag) || tag === "img") && !token.value.endsWith("/>")) {
+      if (isProtectedTextElement(tag, token.value, exclusions, protectState)) {
+        if (exclusions.includes(tag)) {
+          if (whitelist.includes(tag)) matchedWhitelist = true;
+          excludedRanges.push([token.index, cursor]);
+        }
+        if ((!TEXT_VOID_TAGS.has(tag) || tag === "img" && !hasImageSource(token)) && !token.value.endsWith("/>")) {
           const end = excludedRegionEnd(raw, tag, cursor, protectedRanges);
-          if (end < 0 && !VOID_TAGS.has(tag)) {
-            reason || (reason = `\u539F\u6587\u542B\u6709\u672A\u95ED\u5408\u7684\u6392\u9664\u6807\u7B7E <${tag}>`);
+          if (end < 0 && !TEXT_VOID_TAGS.has(tag)) {
+            reason || (reason = exclusions.includes(tag) ? `\u539F\u6587\u542B\u6709\u672A\u95ED\u5408\u7684\u6392\u9664\u6807\u7B7E <${tag}>` : THOUGHT_TAGS.has(tag) ? "\u539F\u6587\u542B\u6709\u672A\u95ED\u5408\u7684\u601D\u8003\u533A\u57DF" : "\u539F\u6587\u542B\u6709\u672A\u95ED\u5408\u7684\u53D7\u4FDD\u62A4\u533A\u57DF");
             sourceEnd = token.index;
-            excludedRanges.push([token.index, raw.length]);
             cursor = raw.length;
-            break;
-          }
-          if (end >= 0) cursor = scan = end;
+          } else if (end >= 0) cursor = scan = end;
         }
-        excludedRanges.push([token.index, cursor]);
+        if (exclusions.includes(tag)) excludedRanges[excludedRanges.length - 1][1] = cursor;
+        if (cursor === raw.length && sourceEnd < raw.length) break;
         continue;
       }
-      if (RAW_TEXT_TAGS.has(tag) && !token.value.endsWith("/>")) {
-        const close = new RegExp(`</${tag}\\s*>`, "gi");
-        close.lastIndex = cursor;
-        if (!close.exec(raw)) {
-          reason || (reason = THOUGHT_TAGS.has(tag) ? "\u539F\u6587\u542B\u6709\u672A\u95ED\u5408\u7684\u601D\u8003\u533A\u57DF" : "\u539F\u6587\u542B\u6709\u672A\u95ED\u5408\u7684\u524D\u7AEF\u6216\u4EE3\u7801\u533A\u57DF");
-          sourceEnd = token.index;
-          cursor = raw.length;
-          break;
-        }
-        cursor = scan = close.lastIndex;
-        continue;
-      }
-      if (!VOID_TAGS.has(tag) && !token.value.endsWith("/>")) stack.push({ tag, blocked: isProtectedRewriteElement(tag, token.value, whitelist, exclusions) });
+      if (whitelist.includes(tag)) matchedWhitelist = true;
+      const wasSelected = selected();
+      if (!TEXT_VOID_TAGS.has(tag) && !token.value.endsWith("/>")) stack.push({ tag, attributes: token.value });
+      if (wasSelected || selected() || !invalidRules && whitelist.includes(tag)) content.push(token.value);
     }
   }
   append(cursor, raw.length);
@@ -584,7 +595,7 @@ function extractRewriteProjection(source, whitelistInput = "", exclusionsInput =
       pos = stop + match[0].length;
     }
     if (pos < run.end) parts.push(decodeRun(raw, pos, run.end));
-    return parts;
+    return parts.map((part) => ({ ...part, elements: run.elements }));
   }).filter((run) => run.text.trim());
   for (const [index, run] of usable.entries()) {
     if (text3) {
@@ -599,74 +610,39 @@ function extractRewriteProjection(source, whitelistInput = "", exclusionsInput =
         tags.push(tag);
       }
       plain += gap.slice(end);
-      const inlineOnly = tags.length && !plain.trim() && tags.every((token2) => !token2.incomplete && INLINE_TAGS.has(token2.tag) && !isProtectedRewriteElement(token2.tag, token2.value, whitelist, exclusions));
+      const inlineOnly = tags.length && !plain.trim() && tags.every((token2) => !token2.incomplete && INLINE_TAGS.has(token2.tag) && !isProtectedTextElement(token2.tag, token2.value, exclusions, protectState));
       if (!inlineOnly) text3 += "\n\n";
     }
     run.projectionStart = text3.length;
     text3 += run.text;
     run.projectionEnd = text3.length;
   }
-  return { raw, text: text3, runs: usable, whitelist, exclusions, excludedRanges, reason, fatalReason, sourceEnd };
+  return {
+    raw,
+    text: text3,
+    content: fatalReason || reason && !allowPartial ? "" : content.join(""),
+    runs: usable,
+    whitelist,
+    exclusions,
+    excludedRanges,
+    reason,
+    fatalReason,
+    sourceEnd
+  };
 }
-function mapRewriteUnits(projection, units) {
-  let cursor = 0;
-  return units.map((unit) => {
-    const before = String(unit.text || "");
-    const start = before ? projection.text.indexOf(before, cursor) : -1;
-    if (start >= 0) cursor = start + before.length;
-    const run = projection.runs.find((item2) => item2.projectionStart <= start && item2.projectionEnd >= start + before.length);
-    const local = run ? start - run.projectionStart : -1;
-    return { ...unit, run, local, reason: run ? "" : "\u8BE5\u5355\u5143\u8DE8\u8D8A\u6807\u7B7E\u6216\u53D7\u4FDD\u62A4\u533A\u57DF\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
-  });
-}
-function prepareSourcePatch(mappedUnit, after) {
-  const { run } = mappedUnit;
-  const original = String(mappedUnit.text || "");
-  const before = original.trim();
-  const local = mappedUnit.local + original.length - original.trimStart().length;
-  const replacement = String(after ?? "").trim();
-  let reason = mappedUnit.reason;
-  if (run?.unsupportedEntity) reason = "\u6B63\u6587\u5305\u542B\u6682\u4E0D\u652F\u6301\u7684\u5B57\u7B26\u5B9E\u4F53";
-  const markup = /[`*_~\\<>]|\[[^\]]*\]|^\s*(?:#{1,6}\s|>\s|[-+]\s|\d+[.)]\s)/m;
-  if (run && markup.test(run.text)) reason = "\u6B63\u6587\u5305\u542B Markdown \u6216\u5D4C\u5957\u683C\u5F0F\uFF0C\u9700\u8981\u4E13\u7528\u9002\u914D\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8";
-  if (markup.test(replacement) || /[\r\n]/.test(replacement)) reason = "\u6539\u5199\u7ED3\u679C\u5305\u542B\u683C\u5F0F\u6216\u6362\u884C\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8";
-  if (!run || local < 0 || run.text.slice(local, local + before.length) !== before) reason || (reason = "\u539F\u6587\u4F4D\u7F6E\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94");
-  if (reason) return { reason };
-  const first = run.map[local];
-  const last = run.map[local + before.length - 1];
-  if (!first || !last || local > 0 && run.map[local - 1].end > first.start || local + before.length < run.map.length && run.map[local + before.length].start < last.end) return { reason: "\u66FF\u6362\u8303\u56F4\u5207\u5F00\u4E86\u5B57\u7B26\u5B9E\u4F53" };
-  return { start: first.start, end: last.end, after: replacement.replace(/&/g, "&amp;"), before, replacement, run, local, reason: "" };
-}
-function applySourcePatches(raw, patches) {
-  let output = raw;
-  let boundary = raw.length;
-  for (const patch of [...patches].sort((a, b) => b.start - a.start)) {
-    if (patch.start < 0 || patch.end > boundary || patch.start >= patch.end) throw new Error("\u539F\u6587\u8865\u4E01\u8303\u56F4\u91CD\u53E0\u6216\u5931\u6548");
-    output = output.slice(0, patch.start) + patch.after + output.slice(patch.end);
-    boundary = patch.start;
-  }
-  return output;
-}
-var REWRITE_STATIC_TAGS, VOID_TAGS, THOUGHT_TAGS, RAW_TEXT_TAGS, PROTECTED_TAGS, INLINE_TAGS, STATE_NAME, ENTITIES;
-var init_textRewritePatch = __esm({
-  "src/core/textRewritePatch.js"() {
-    REWRITE_STATIC_TAGS = /* @__PURE__ */ new Set([
+var TEXT_VOID_TAGS, THOUGHT_TAGS, RAW_TEXT_TAGS, DROP_TAGS, INLINE_TAGS, STRUCTURAL_TAGS, STATE_NAME, ENTITIES;
+var init_textExtraction = __esm({
+  "src/core/textExtraction.js"() {
+    TEXT_VOID_TAGS = /* @__PURE__ */ new Set(["br", "hr", "img", "input", "meta", "link", "wbr", "source", "embed", "area", "base", "col", "param", "track"]);
+    THOUGHT_TAGS = /* @__PURE__ */ new Set(["think", "thinking", "analysis", "reasoning", "reflection", "planning", "internal", "cot", "\u601D\u8003", "\u601D\u8003\u8FC7\u7A0B", "\u63A8\u7406"]);
+    RAW_TEXT_TAGS = /* @__PURE__ */ new Set(["script", "style", "iframe", "pre", "code", ...THOUGHT_TAGS]);
+    DROP_TAGS = /* @__PURE__ */ new Set(["script", "style", "iframe", "pre", "code", "svg", "math", "canvas", "template", "head", "button", "input", "form", "select", "textarea", "audio", "video", "object", "embed"]);
+    INLINE_TAGS = /* @__PURE__ */ new Set(["span", "q", "em", "strong", "i", "b", "u", "s", "del", "mark", "small", "sub", "sup", "a"]);
+    STRUCTURAL_TAGS = /* @__PURE__ */ new Set([
+      "html",
+      "body",
       "p",
       "div",
-      "span",
-      "q",
-      "em",
-      "strong",
-      "i",
-      "b",
-      "u",
-      "s",
-      "del",
-      "mark",
-      "small",
-      "sub",
-      "sup",
-      "blockquote",
       "section",
       "article",
       "main",
@@ -675,13 +651,29 @@ var init_textRewritePatch = __esm({
       "narration",
       "\u6B63\u6587",
       "\u5BF9\u8BDD",
-      "\u65C1\u767D"
+      "\u65C1\u767D",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "blockquote",
+      "ul",
+      "ol",
+      "li",
+      "table",
+      "thead",
+      "tbody",
+      "tfoot",
+      "tr",
+      "th",
+      "td",
+      "caption",
+      "details",
+      "summary",
+      ...INLINE_TAGS
     ]);
-    VOID_TAGS = /* @__PURE__ */ new Set(["br", "hr", "img", "input", "meta", "link", "wbr", "source", "embed", "area", "base", "col", "param", "track"]);
-    THOUGHT_TAGS = /* @__PURE__ */ new Set(["think", "thinking", "analysis", "reasoning", "reflection", "planning", "internal", "cot", "\u601D\u8003", "\u601D\u8003\u8FC7\u7A0B", "\u63A8\u7406"]);
-    RAW_TEXT_TAGS = /* @__PURE__ */ new Set(["script", "style", "iframe", "pre", "code", ...THOUGHT_TAGS]);
-    PROTECTED_TAGS = /* @__PURE__ */ new Set(["script", "style", "iframe", "pre", "code", "svg", "math", "canvas", "template", "html", "head", "body", "button", "a", "form", "select", "textarea", "details", "table", "audio", "video", "object"]);
-    INLINE_TAGS = /* @__PURE__ */ new Set(["span", "q", "em", "strong", "i", "b", "u", "s", "del", "mark", "small", "sub", "sup"]);
     STATE_NAME = /(?:状态|面板|属性|数值|资料|信息栏|status|state|stats|widget|component|react|vue|th-render)/i;
     ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\xA0", hellip: "\u2026", mdash: "\u2014", ndash: "\u2013", laquo: "\xAB", raquo: "\xBB" };
   }
@@ -748,12 +740,15 @@ function mergeToolboxExtraction(original, draft2, current) {
   if (latest === before || latest === edited) return draft2;
   throw new Error("\u5168\u5C40\u6B63\u6587\u89C4\u5219\u5DF2\u5728\u5176\u4ED6\u7A97\u53E3\u4FEE\u6539\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u540E\u518D\u7F16\u8F91\u3002");
 }
-function extractToolboxText(raw, rules) {
-  return extractRewriteProjection(raw, rules.whitelist, rules.exclusions, { allowPartial: true }).text;
+function extractToolboxProjection(raw, rules = {}) {
+  return extractTextProjection(raw, rules.whitelist, rules.exclusions, { allowPartial: true });
+}
+function extractToolboxText(raw, rules = {}) {
+  return extractToolboxProjection(raw, rules).text;
 }
 function validateToolboxTags(input) {
   const tokens = String(input || "").split(/[,，\n]/).map((s) => s.trim()).filter(Boolean);
-  return tokens.every((token) => parseRewriteWhitelist(token).length === 1);
+  return tokens.every((token) => parseTextTags(token).length === 1);
 }
 function toolboxProfileId(data, feature) {
   const choice = getToolboxApiChoice(data, feature);
@@ -773,7 +768,7 @@ function mergeToolboxApiDraft(original, draft2, current) {
 var TOOLBOX_FEATURES, TOOLBOX_EXTRACTION_CHANGED;
 var init_toolboxSettings = __esm({
   "src/core/toolboxSettings.js"() {
-    init_textRewritePatch();
+    init_textExtraction();
     TOOLBOX_FEATURES = Object.freeze([
       { id: "theater", name: "\u56DE\u58F0\u5C0F\u5267\u573A" },
       { id: "illustration", name: "\u573A\u666F\u914D\u56FE\u9009\u666F" },
@@ -29465,7 +29460,7 @@ function openToolboxSettingsWindow(initialTab = "api") {
                 <p class="t-toolbox-hint">\u5C0F\u5267\u573A\u3001\u5927\u7EB2\u4E0E\u5267\u60C5\u63A8\u8FDB\u3001\u6587\u672C\u6539\u5199\u4E0E\u5220\u9664\u3001\u6545\u4E8B\u8BB0\u5FC6\u3001\u804A\u5929\u6210\u4E66\u53CA\u65E7\u9605\u8BFB\u7D22\u5F15\u7EDF\u4E00\u4F7F\u7528\u4EE5\u4E0B\u89C4\u5219\u3002</p>
                 <label class="t-toolbox-field" for="t-toolbox-whitelist"><span>\u6B63\u6587\u63D0\u53D6\u6807\u7B7E</span>
                     <input id="t-toolbox-whitelist" class="t-input t-input--glass" value="${escape(draft2.extraction.whitelist)}" placeholder="\u4F8B\u5982\uFF1A\u6B63\u6587, content, dialogue">
-                    <small>\u586B\u5199\u6807\u7B7E\u540D\uFF0C\u7528\u4E2D\u82F1\u6587\u9017\u53F7\u5206\u9694\u3002\u672A\u627E\u5230\u6307\u5B9A\u6807\u7B7E\u65F6\u4E0D\u63D0\u53D6\uFF1B\u7559\u7A7A\u5219\u63D0\u53D6\u53EF\u8BC6\u522B\u7684\u6B63\u6587\u3002</small></label>
+                    <small>\u586B\u5199\u6807\u7B7E\u540D\uFF0C\u7528\u4E2D\u82F1\u6587\u9017\u53F7\u5206\u9694\u3002\u672A\u627E\u5230\u6307\u5B9A\u6807\u7B7E\u65F6\u4E0D\u63D0\u53D6\uFF1B\u7559\u7A7A\u5219\u8BFB\u53D6\u5168\u6587\u6B63\u6587\uFF0C\u666E\u901A HTML \u4E0E\u81EA\u5B9A\u4E49\u6B63\u6587\u6807\u7B7E\u4E0D\u4F1A\u963B\u65AD\u63D0\u53D6\u3002</small></label>
                 <label class="t-toolbox-field" for="t-toolbox-exclusions"><span>\u6392\u9664\u6807\u7B7E</span>
                     <input id="t-toolbox-exclusions" class="t-input t-input--glass" value="${escape(draft2.extraction.exclusions)}" placeholder="\u4F8B\u5982\uFF1Athinking, \u601D\u8003, \u5907\u6CE8">
                     <small>\u6392\u9664\u8FD9\u4E9B\u6807\u7B7E\u53CA\u5176\u5168\u90E8\u5185\u5BB9\uFF0C\u4F18\u5148\u4E8E\u63D0\u53D6\u6807\u7B7E\u3002\u601D\u8003\u3001\u811A\u672C\u548C\u524D\u7AEF\u7EC4\u4EF6\u4ECD\u6309\u6B63\u6587\u4FDD\u62A4\u89C4\u5219\u8DF3\u8FC7\u3002</small></label>
@@ -36171,16 +36166,9 @@ var init_chatBookData = __esm({
 });
 
 // src/core/chatBookContent.js
-function parseBookHtml(html, document2, exclusions = "") {
+function parseBookHtml(html, document2) {
   const names = /* @__PURE__ */ new Map();
-  let source = String(html || "");
-  if (exclusions) {
-    const projection = extractRewriteProjection(source, "", exclusions, { allowPartial: true });
-    for (let i = projection.excludedRanges.length - 1; i >= 0; i--) {
-      const [start, end] = projection.excludedRanges[i];
-      source = source.slice(0, start) + source.slice(end);
-    }
-  }
+  const source = String(html || "");
   const mapped = source.replace(/(<\/?)([\p{L}_][\p{L}\p{N}_:-]*)(?=[\s/>])/gu, (all, prefix, name) => {
     if (/^[a-zA-Z][a-zA-Z0-9:_-]*$/.test(name)) return all;
     const lower = name.toLowerCase(), alias = `book-tag-${Array.from(lower).map((c) => c.codePointAt(0).toString(16)).join("-")}`;
@@ -36189,7 +36177,7 @@ function parseBookHtml(html, document2, exclusions = "") {
   });
   const normalized = mapped.replace(
     /<([a-zA-Z][a-zA-Z0-9:_-]*)((?:"[^"]*"|'[^']*'|[^<>"'])*?)\/\s*>/g,
-    (all, name, attrs) => VOID.has(name.toLowerCase()) ? all : `<${name}${attrs}></${name}>`
+    (all, name, attrs) => TEXT_VOID_TAGS.has(name.toLowerCase()) ? all : `<${name}${attrs}></${name}>`
   );
   const template = document2.createElement("template");
   template.innerHTML = normalized;
@@ -36208,8 +36196,8 @@ function safeBookUrl(value, image = false) {
   }
 }
 function sanitizeBookFragment(html, { document: document2 = globalThis.document, keepImages = true, extraction = true, exclusions = "", markdown = false } = {}) {
-  const { template, names } = parseBookHtml(html, document2, exclusions);
-  const excluded = new Set(parseRewriteWhitelist(exclusions));
+  const projection = extractTextProjection(html, "", exclusions, { allowPartial: true, protectState: extraction });
+  const { template, names } = parseBookHtml(projection.content, document2);
   function clean(parent) {
     for (const node2 of [...parent.childNodes]) {
       if (node2.nodeType === 8) {
@@ -36218,7 +36206,8 @@ function sanitizeBookFragment(html, { document: document2 = globalThis.document,
       }
       if (node2.nodeType !== 1) continue;
       const tag = names.get(node2.localName) || node2.localName.toLowerCase();
-      if (DROP.has(tag) || THOUGHT.test(tag) || excluded.has(tag) || extraction && (STATE.test(tag) || STATE.test(`${node2.className} ${node2.id}`))) {
+      const attributes = [...node2.attributes].map((attr) => `${attr.name}="${attr.value}"`).join(" ");
+      if (isProtectedTextElement(tag, attributes, projection.exclusions, extraction)) {
         node2.remove();
         continue;
       }
@@ -36288,31 +36277,12 @@ function extractBookMessages(snapshot, draft2, { document: document2 = globalThi
       messages.push({ index, separator: true, text: "", fingerprint: bookHash(msg) });
       return;
     }
-    let content = raw;
-    {
-      const projection = extractRewriteProjection(raw, rules.whitelist, rules.exclusions, { allowPartial: true });
-      if (projection.fatalReason) {
-        omitted.push({ index, reason: projection.fatalReason });
-        return;
-      }
-      content = raw.slice(0, projection.sourceEnd);
-      const tags = parseRewriteWhitelist(rules.whitelist);
-      if (tags.length) {
-        const { template, names } = parseBookHtml(content, document2, rules.exclusions);
-        const excluded = new Set(parseRewriteWhitelist(rules.exclusions));
-        const matches = [...template.content.querySelectorAll("*")].filter((node2) => {
-          if (!tags.includes(names.get(node2.localName) || node2.localName.toLowerCase())) return false;
-          for (let parent = node2; parent?.nodeType === 1; parent = parent.parentElement) {
-            const tag = names.get(parent.localName) || parent.localName.toLowerCase();
-            if (DROP.has(tag) || THOUGHT.test(tag) || excluded.has(tag) || STATE.test(tag) || STATE.test(`${parent.className} ${parent.id}`)) return false;
-          }
-          return true;
-        });
-        const selected = matches.filter((node2) => !matches.some((ancestor) => ancestor !== node2 && ancestor.contains(node2)));
-        content = selected.map((node2) => node2.innerHTML).join("\n\n");
-        for (const [alias, name] of names) content = content.replaceAll(alias, name);
-      }
+    const projection = extractToolboxProjection(raw, rules);
+    if (projection.fatalReason) {
+      omitted.push({ index, reason: projection.fatalReason });
+      return;
     }
+    let content = projection.content;
     content = sanitizeBookFragment(content, { document: document2, keepImages: draft2.keepImages, exclusions: rules.exclusions, markdown: true });
     let formatted;
     try {
@@ -36352,17 +36322,14 @@ function bookXhtmlFragment(html, document2 = globalThis.document) {
   };
   return [...template.content.childNodes].map(walk).join("");
 }
-var ALLOWED, DROP, THOUGHT, STATE, BLOCK, VOID;
+var ALLOWED, BLOCK;
 var init_chatBookContent = __esm({
   "src/core/chatBookContent.js"() {
     init_chatBookData();
-    init_textRewritePatch();
+    init_textExtraction();
+    init_toolboxSettings();
     ALLOWED = /* @__PURE__ */ new Set(["p", "div", "span", "section", "article", "h1", "h2", "h3", "h4", "h5", "h6", "br", "hr", "strong", "b", "em", "i", "u", "s", "del", "blockquote", "ul", "ol", "li", "a", "img", "sub", "sup", "table", "thead", "tbody", "tr", "th", "td", "caption"]);
-    DROP = /* @__PURE__ */ new Set(["script", "style", "iframe", "object", "embed", "svg", "math", "canvas", "template", "head", "button", "input", "form", "textarea", "select", "audio", "video", "pre", "code"]);
-    THOUGHT = /^(think|thinking|analysis|reasoning|reflection|planning|internal|cot|思考|思考过程|推理)$/i;
-    STATE = /(?:状态|面板|属性|数值|信息栏|status|state|stats|widget|component|react|vue|th-render)/i;
     BLOCK = /* @__PURE__ */ new Set(["p", "div", "section", "article", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "ul", "ol", "li", "tr"]);
-    VOID = /* @__PURE__ */ new Set(["br", "hr", "img", "input", "meta", "link", "wbr", "source", "embed", "area", "base", "col", "param", "track"]);
   }
 });
 
@@ -37147,7 +37114,7 @@ function buildReaderStorySources(chat2, whitelist = "", exclusions = "") {
     if (!isReaderNarrative(message)) return [];
     const raw = String(message.mes ?? message.message ?? "");
     const separator = isReaderSeparator(raw);
-    const projection = separator ? { text: raw.trim() } : extractRewriteProjection(raw, whitelist, exclusions, { allowPartial: true });
+    const projection = separator ? { text: raw.trim() } : extractToolboxProjection(raw, { whitelist, exclusions });
     if (!projection.text.trim()) return [];
     return [{
       index,
@@ -37199,12 +37166,13 @@ function readerSceneDirectory(story, sources, floor) {
 var READER_STORY_KEY, readerScope, newReaderStory;
 var init_readerStoryData = __esm({
   "src/core/readerStoryData.js"() {
-    init_textRewritePatch();
+    init_textExtraction();
+    init_toolboxSettings();
     init_storyMemoryData();
     READER_STORY_KEY = "titania_reader_story";
     readerScope = (whitelist, exclusions = "") => {
-      const included = parseRewriteWhitelist(whitelist).join(",");
-      const excluded = parseRewriteWhitelist(exclusions).join(",");
+      const included = parseTextTags(whitelist).join(",");
+      const excluded = parseTextTags(exclusions).join(",");
       return excluded ? JSON.stringify([included, excluded]) : included;
     };
     newReaderStory = (whitelist = "", exclusions = "") => ({ version: 1, scope: readerScope(whitelist, exclusions), checkpoints: [] });
@@ -42436,7 +42404,7 @@ function getDirectorTrigger() {
     const floor = chat2.length - 1;
     const msg = chat2[floor];
     const text3 = typeof msg?.mes === "string" ? msg.mes.trim() : "";
-    const eligible = !!text3 && msg?.is_user !== true && msg?.is_system !== true && msg?.is_hidden !== true;
+    const eligible = !!text3 && msg?.is_user !== true && msg?.is_system !== true && msg?.is_hidden !== true && !!extractToolboxText(text3, getToolboxExtraction(getExtData())).trim();
     const swipeId = Number.isFinite(Number(msg?.swipe_id)) ? String(Math.floor(Number(msg.swipe_id))) : "0";
     return {
       eligible,
@@ -42543,6 +42511,7 @@ var init_directorInjection = __esm({
     init_logger();
     init_blindboxRuntime();
     init_hostGeneration();
+    init_toolboxSettings();
     DIRECTOR_PROMPT_KEY = "TITANIA_DIRECTOR";
     ROLE_NAME_TO_ENUM2 = {
       system: extension_prompt_roles3.SYSTEM,
@@ -42951,7 +42920,7 @@ function getOpeningFromContext() {
       if (typeof item2 === "string" && item2.trim()) return item2.trim();
     }
     const firstChat = Array.isArray(stCtx?.chat) ? stCtx.chat[0] : null;
-    if (firstChat?.mes && typeof firstChat.mes === "string") return firstChat.mes.trim();
+    if (firstChat?.mes && typeof firstChat.mes === "string") return extractToolboxText(firstChat.mes, getToolboxExtraction(getExtData())).trim();
   } catch (e) {
     console.warn("Titania: \u83B7\u53D6\u5F00\u573A\u767D\u5931\u8D25", e);
   }
@@ -47445,6 +47414,86 @@ var init_deleteRulesEditor = __esm({
   }
 });
 
+// src/core/textRewritePatch.js
+function isProtectedRewriteElement(name, attributes = "", whitelist = [], exclusions = []) {
+  const tag = String(name).toLowerCase();
+  return isProtectedTextElement(tag, attributes, exclusions) || WRITE_PROTECTED_TAGS.has(tag) || !REWRITE_STATIC_TAGS.has(tag) && !whitelist.includes(tag) || /\bon[\w]+\s*=|\b(?:contenteditable|data-[\w-]+)\b/i.test(attributes) || /\b(?:class|id)\s*=\s*["'][^"']*(?:状态|status|state|stats|card|panel|widget|render|component)[^"']*["']/i.test(attributes);
+}
+function mapRewriteUnits(projection, units) {
+  let cursor = 0;
+  return units.map((unit) => {
+    const before = String(unit.text || "");
+    const start = before ? projection.text.indexOf(before, cursor) : -1;
+    if (start >= 0) cursor = start + before.length;
+    const run = projection.runs.find((item2) => item2.projectionStart <= start && item2.projectionEnd >= start + before.length);
+    const local = run ? start - run.projectionStart : -1;
+    const protectedSource = run?.elements?.some((item2) => isProtectedRewriteElement(item2.tag, item2.attributes, projection.whitelist, projection.exclusions));
+    return { ...unit, run, local, reason: protectedSource ? "\u6B63\u6587\u4F4D\u4E8E\u4E0D\u652F\u6301\u5B89\u5168\u5199\u56DE\u7684\u6E90\u6587\u5BB9\u5668\u5185\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" : run ? "" : "\u8BE5\u5355\u5143\u8DE8\u8D8A\u6807\u7B7E\u6216\u53D7\u4FDD\u62A4\u533A\u57DF\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+  });
+}
+function prepareSourcePatch(mappedUnit, after) {
+  const { run } = mappedUnit;
+  const original = String(mappedUnit.text || "");
+  const before = original.trim();
+  const local = mappedUnit.local + original.length - original.trimStart().length;
+  const replacement = String(after ?? "").trim();
+  let reason = mappedUnit.reason;
+  if (run?.unsupportedEntity) reason = "\u6B63\u6587\u5305\u542B\u6682\u4E0D\u652F\u6301\u7684\u5B57\u7B26\u5B9E\u4F53";
+  const markup = /[`*_~\\<>]|\[[^\]]*\]|^\s*(?:#{1,6}\s|>\s|[-+]\s|\d+[.)]\s)/m;
+  if (run && markup.test(run.text)) reason = "\u6B63\u6587\u5305\u542B Markdown \u6216\u5D4C\u5957\u683C\u5F0F\uFF0C\u9700\u8981\u4E13\u7528\u9002\u914D\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8";
+  if (markup.test(replacement) || /[\r\n]/.test(replacement)) reason = "\u6539\u5199\u7ED3\u679C\u5305\u542B\u683C\u5F0F\u6216\u6362\u884C\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8";
+  if (!run || local < 0 || run.text.slice(local, local + before.length) !== before) reason || (reason = "\u539F\u6587\u4F4D\u7F6E\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94");
+  if (reason) return { reason };
+  const first = run.map[local];
+  const last = run.map[local + before.length - 1];
+  if (!first || !last || local > 0 && run.map[local - 1].end > first.start || local + before.length < run.map.length && run.map[local + before.length].start < last.end) return { reason: "\u66FF\u6362\u8303\u56F4\u5207\u5F00\u4E86\u5B57\u7B26\u5B9E\u4F53" };
+  return { start: first.start, end: last.end, after: replacement.replace(/&/g, "&amp;"), before, replacement, run, local, reason: "" };
+}
+function applySourcePatches(raw, patches) {
+  let output = raw;
+  let boundary = raw.length;
+  for (const patch of [...patches].sort((a, b) => b.start - a.start)) {
+    if (patch.start < 0 || patch.end > boundary || patch.start >= patch.end) throw new Error("\u539F\u6587\u8865\u4E01\u8303\u56F4\u91CD\u53E0\u6216\u5931\u6548");
+    output = output.slice(0, patch.start) + patch.after + output.slice(patch.end);
+    boundary = patch.start;
+  }
+  return output;
+}
+var REWRITE_STATIC_TAGS, WRITE_PROTECTED_TAGS;
+var init_textRewritePatch = __esm({
+  "src/core/textRewritePatch.js"() {
+    init_textExtraction();
+    REWRITE_STATIC_TAGS = /* @__PURE__ */ new Set([
+      "p",
+      "div",
+      "span",
+      "q",
+      "em",
+      "strong",
+      "i",
+      "b",
+      "u",
+      "s",
+      "del",
+      "mark",
+      "small",
+      "sub",
+      "sup",
+      "blockquote",
+      "section",
+      "article",
+      "main",
+      "content",
+      "dialogue",
+      "narration",
+      "\u6B63\u6587",
+      "\u5BF9\u8BDD",
+      "\u65C1\u767D"
+    ]);
+    WRITE_PROTECTED_TAGS = /* @__PURE__ */ new Set(["html", "body", "a", "details", "table"]);
+  }
+});
+
 // src/ui/textRewriteDom.js
 function collectRewriteTextGroups(container, whitelist = [], exclusions = []) {
   const groups = [];
@@ -48428,7 +48477,7 @@ function getLatestAssistantMessageFromChat() {
     const raw = String(msg.mes ?? msg.message ?? "");
     const settings = ensureRewriteDataShape();
     const rules = getToolboxExtraction(getExtData());
-    const projection = extractRewriteProjection(raw, rules.whitelist, rules.exclusions, { allowPartial: true });
+    const projection = extractToolboxProjection(raw, rules);
     const container = getMessageRenderContainer(getChatMessageElementByIndex(i));
     const target = captureRewriteTarget(ctx2, i, projection, container);
     return { index: i, msg, content: projection.text, raw, projection, target };
@@ -48500,7 +48549,7 @@ function applyRewriteMarksToMessage(index, marksInput) {
     unwrapOwnRewriteSpans(container);
     const settings = ensureRewriteDataShape();
     const rules = getToolboxExtraction(getExtData());
-    const projection = extractRewriteProjection(message.mes ?? message.message ?? "", rules.whitelist, rules.exclusions, { allowPartial: true });
+    const projection = extractToolboxProjection(message.mes ?? message.message ?? "", rules);
     const groups = collectRewriteTextGroups(container, projection.whitelist, projection.exclusions);
     for (const mark of normalizeRewriteMarks(marksInput)) {
       const matches = projection.runs.flatMap((run) => {
