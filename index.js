@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.9.1";
+    CURRENT_VERSION = "5.9.2";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -23800,69 +23800,6 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-memory-stage-editor { padding: 20px; margin: 18px 0; border: 1px solid var(--t-memory-gold); border-radius: 10px; background: var(--t-memory-surface); }\r
 .t-memory-stage-editor > strong { display: block; margin-bottom: 20px; }\r
 .t-memory-settings-body .t-input { color: var(--t-memory-text); background: var(--t-memory-surface); border-color: var(--t-memory-border); }\r
-/* \u89D2\u8272\u6F14\u53D8\u5DE5\u4F5C\u53F0\uFF1A\u7F16\u8F91\u5F0F\u9605\u8BFB\u5361\u7247\uFF0C\u800C\u975E\u91CF\u5316\u4EBA\u7269\u7684\u4EEA\u8868\u6216\u65F6\u95F4\u7EBF\u3002 */\r
-.t-evolution-view { min-width: 0; overflow-wrap: anywhere; }\r
-.t-evolution-view [hidden] { display: none; }\r
-.t-evolution-caption { margin: 0 0 8px; color: var(--t-memory-gold); font-size: .72em; letter-spacing: .12em; line-height: 1.6; }\r
-.t-evolution-person { min-width: 0; padding: 0 0 26px; }\r
-.t-evolution-person > div { min-width: 0; }\r
-.t-evolution-person h3 { margin: 0; font: 2.2em/1.4 var(--t-memory-serif); letter-spacing: .08em; color: var(--t-memory-text); }\r
-.t-evolution-person .t-memory-hint { margin-bottom: 0; font-size: .83em; }\r
-.t-evolution-guidance { padding: 24px 28px; border: 1px solid var(--t-memory-border); border-left: 3px solid var(--t-memory-gold); border-radius: 3px 16px 16px 3px; background: linear-gradient(120deg, var(--t-memory-gold-soft), transparent), var(--t-memory-raised); }\r
-.t-evolution-guidance h3 { margin: 0; color: var(--t-memory-text); font-size: 1.25em; font-weight: 500; }\r
-.t-evolution-guidance .t-memory-section-heading { margin-bottom: 12px; }\r
-.t-evolution-guidance .t-memory-source { margin-block: 12px 18px; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--t-memory-text); }\r
-.t-evolution-guidance .t-memory-hint { margin-block: 7px 0; font-size: .77em; white-space: pre-wrap; }\r
-.t-evolution-coverage { padding-left: 12px; border-left: 2px solid var(--t-memory-violet); color: var(--t-memory-muted); font-size: .85em; line-height: 1.8; }\r
-.t-evolution-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 22px; padding-block: 16px; border-block: 1px solid var(--t-memory-border); font-size: .86em; }\r
-.t-evolution-controls .t-memory-card-actions { margin-left: auto; }\r
-.t-evolution-view [data-evolution-role="status"] { font-size: .8em; }\r
-.t-evolution-details { min-width: 0; padding-block: 16px; border-bottom: 1px solid var(--t-memory-border); }\r
-.t-evolution-details > summary { cursor: pointer; color: var(--t-memory-gold); line-height: 1.8; overflow-wrap: anywhere; }\r
-.t-evolution-settings-link { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; padding-block: 16px; border-bottom: 1px solid var(--t-memory-border); }\r
-.t-evolution-settings-link > div { flex: 1 1 280px; min-width: 0; }\r
-.t-evolution-settings-link .t-memory-hint { margin-block: 4px; font-size: .8em; overflow-wrap: anywhere; }\r
-.t-evolution-settings-link > button { flex-shrink: 0; }\r
-.t-evolution-view .t-input { width: 100%; min-width: 0; margin: 0; font: inherit; background: var(--t-memory-surface); color: var(--t-memory-text); border-color: var(--t-memory-border); }\r
-.t-evolution-view :is(.t-input, button, summary, [tabindex="0"]):focus-visible { outline: 2px solid var(--t-memory-gold); outline-offset: 3px; }\r
-.t-evolution-view .t-input:invalid { border-color: var(--t-memory-gold); }\r
-.t-evolution-dossier { margin-block: 32px; }\r
-.t-evolution-dossier h3 { margin: 0; font-size: 1.35em; font-weight: 500; }\r
-.t-evolution-dossier > .t-memory-hint { font-size: .83em; margin-block: 8px; }\r
-.t-evolution-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 22px; margin-top: 22px; }\r
-.t-evolution-item { min-width: 0; padding: 24px; border: 1px solid var(--t-memory-border); border-radius: 4px 18px 4px 4px; background: var(--t-memory-raised); }\r
-.t-evolution-category { margin-block: 26px; min-width: 0; }\r
-.t-evolution-category > h4 { margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--t-memory-line); font-size: 1.05em; font-weight: 500; color: var(--t-memory-text); }\r
-.t-evolution-category > h4 .t-memory-badge { margin-left: 8px; color: var(--t-memory-muted); font-size: .75em; }\r
-.t-evolution-state-heading { padding-bottom: 14px; }\r
-.t-evolution-state-heading .t-memory-badge { padding: 3px 8px; border: 1px solid var(--t-memory-border); border-radius: 5px; white-space: normal; }\r
-.t-evolution-state-text { margin: 0; min-width: 0; max-width: 100%; font: inherit; font-size: .92em; line-height: 1.95; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--t-memory-text); background: transparent; }\r
-.t-evolution-latest { margin-block: 28px; }\r
-.t-evolution-latest > h3 { font-size: 1.15em; font-weight: 500; }\r
-.t-evolution-legacy { padding: 16px 20px; border: 1px dashed var(--t-memory-border); border-left: 3px solid var(--t-memory-violet); border-radius: 8px; background: var(--t-memory-surface); }\r
-.t-evolution-comparison { min-width: 0; margin: 0 0 20px; padding: 16px; border: 1px solid var(--t-memory-border); }\r
-.t-evolution-comparison legend { padding-inline: 8px; color: var(--t-memory-gold); }\r
-.t-evolution-item > .t-memory-card-actions { padding-top: 14px; margin-top: 18px; border-top: 1px solid var(--t-memory-line); }\r
-.t-evolution-item > .t-memory-card-actions .t-memory-action { padding: 6px 10px; font-size: .76em; }\r
-.t-evolution-item .t-evolution-details { margin-top: 12px; padding-block: 8px 0; border-bottom: 0; }\r
-.t-evolution-item .t-evolution-details > summary { font-size: .8em; }\r
-.t-evolution-source, .t-evolution-change { padding-block: 16px; border-top: 1px solid var(--t-memory-line); }\r
-.t-evolution-source > strong { font-size: .85em; font-weight: 500; color: var(--t-memory-muted); }\r
-.t-evolution-source blockquote { margin: 12px 0; padding-left: 16px; border-left: 2px solid var(--t-memory-border); white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.9; color: var(--t-memory-muted); }\r
-.t-evolution-change h4 { margin: 0; min-width: 0; font-size: 1.05em; overflow-wrap: anywhere; }\r
-.t-evolution-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }\r
-.t-evolution-editor-flags { display: flex; flex-wrap: wrap; gap: 16px 24px; }\r
-.t-evolution-edit-fields textarea { min-height: 112px; resize: vertical; }\r
-@media (max-width: 920px) {\r
-    .t-evolution-gallery { grid-template-columns: minmax(0, 1fr); }\r
-}\r
-@media (max-width: 600px) {\r
-    .t-evolution-edit-fields { grid-template-columns: minmax(0, 1fr); }\r
-    .t-evolution-guidance, .t-evolution-item, .t-evolution-legacy { padding: 18px 16px; }\r
-    .t-evolution-gallery { gap: 18px; }\r
-    .t-evolution-item > .t-memory-card-actions .t-memory-action { min-height: 40px; padding-inline: 12px; }\r
-    .t-evolution-details > summary { padding-block: 6px; }\r
-}\r
 @media (max-width: 1100px) {\r
     .t-memory-body { padding-inline: 24px; }\r
     .t-memory-map-layout { grid-template-columns: minmax(0, 1fr) 280px; }\r
@@ -23942,11 +23879,6 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .t-memory-window .t-memory-source-drawer { width: 100%; border: 0; }\r
     .t-memory-source-header, .t-memory-source-body { padding: 20px; }\r
     .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }\r
-    .t-evolution-controls { align-items: flex-start; flex-direction: column; gap: 16px; }\r
-    .t-evolution-controls .t-memory-card-actions { margin-left: 0; }\r
-    .t-evolution-view .t-memory-action { min-height: 40px; padding-inline: 12px; }\r
-    .t-evolution-view .t-memory-toggle { min-height: 32px; }\r
-    .t-evolution-item .t-memory-rel-head { align-items: flex-start; }\r
     .t-memory-settings-body { padding-inline: 16px; }\r
     .t-memory-settings-group > summary, .t-memory-settings-content { padding: 14px; }\r
     .t-memory-settings-content .t-memory-time-advanced { padding-inline: 12px; }\r
@@ -23960,6 +23892,365 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .t-memory-progress-fill { transition: none; }\r
     .t-memory-progress.is-active .t-memory-progress-seal::after, .t-memory-progress.is-active .t-memory-progress-track::after { animation: none; }\r
 }\r
+
+
+/* === 04-features/character-evolution.css === */
+/* \u89D2\u8272\u6F14\u53D8\uFF1A\u6210\u957F\u4E3B\u9898 / \u53D8\u5316\u8F68\u8FF9 / \u8BC1\u636E\u3002\u6CBF\u7528\u6545\u4E8B\u8BB0\u5FC6\u4E3B\u9898\u4E0E\u63D2\u4EF6\u5B57\u53F7\u3002
+   \u5BB9\u5668\u662F\u9875\u9762\u6839\uFF0C\u4E0D\u662F viewport\uFF1B\u53EA\u6709\u4E0D\u652F\u6301\u5BB9\u5668\u67E5\u8BE2\u7684\u6D4F\u89C8\u5668\u624D\u4F7F\u7528 media \u515C\u5E95\u3002
+   \u4E3B\u9898\u6D4F\u89C8\u5668\u4F7F\u7528\u539F\u751F details[open]\uFF0C\u5173\u95ED\u540E\u59CB\u7EC8\u4FDD\u7559 summary\uFF0C\u907F\u514D\u7F29\u653E\u540E\u65E0\u6CD5\u91CD\u5F00\u3002 */
+.t-memory-window .t-memory-body.is-evolution { padding: 22px 18px 28px; }
+.t-evolution-view {
+    container-name: t-evolution;
+    container-type: inline-size;
+    width: 100%;
+    min-width: 0;
+    font-family: var(--t-font-global);
+    font-size: 1em;
+    line-height: 1.7;
+    color: var(--t-memory-text);
+    overflow-wrap: anywhere;
+}
+
+/* hidden \u662F\u5207\u6362\u9605\u8BFB\u9762\u677F\u3001\u7A7A\u6001\u4E0E\u9519\u8BEF\u63D0\u793A\u7684\u5951\u7EA6\uFF0C\u4E0D\u5F97\u88AB\u5E03\u5C40 display \u8986\u76D6\u3002 */
+.t-evolution-view [hidden] { display: none !important; }
+.t-evolution-view :where(section, aside, article, nav, header, footer, details, div, button, label) { min-width: 0; }
+.t-evolution-view :where(h2, h3, h4, p, blockquote) { margin: 0; }
+.t-evolution-view :where(h2, h3, h4) { text-wrap: balance; }
+.t-evolution-view :is(button, input, select, textarea) { font-family: var(--t-font-global); }
+.t-evolution-view button { max-width: 100%; min-height: 40px; font-size: 1em; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
+.t-evolution-view button:disabled { opacity: .45; cursor: default; }
+.t-evolution-view :is(button, summary, input, select, textarea, a, [tabindex]):focus-visible {
+    outline: 2px solid var(--t-memory-gold);
+    outline-offset: 3px;
+}
+.t-evolution-view .t-input {
+    width: 100%; min-width: 0; min-height: 40px; margin: 0;
+    font: inherit; background: var(--t-memory-surface); color: var(--t-memory-text);
+    border-color: var(--t-memory-border);
+}
+.t-evolution-view .t-input:invalid { border-color: var(--t-memory-gold); }
+.t-evolution-view .t-memory-action { min-height: 40px; padding: 7px 12px; font-size: 1em; }
+.t-evolution-view .t-memory-toggle { min-height: 40px; line-height: 1.6; }
+.t-evolution-view .t-memory-toggle input { flex-shrink: 0; }
+.t-evolution-view pre {
+    min-width: 0; max-width: 100%; padding: 0; margin: 0;
+    font: inherit; line-height: 1.95; white-space: pre-wrap; overflow-wrap: anywhere;
+    color: var(--t-memory-text); background: transparent;
+}
+
+/* \u9876\u90E8\u53EA\u4FDD\u7559\u7D27\u51D1\u6807\u9898\uFF1B\u8FD0\u884C\u63A7\u5236\u4E0E\u7F16\u8F91\u5668\u5747\u5728\u4E09\u680F\u4E4B\u5916\u3002 */
+.t-evolution-view .t-evolution-page-head {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px 20px; margin: 0 0 16px;
+}
+.t-evolution-view .t-evolution-page-head h2 { margin: 0; font-size: 1.65em; line-height: 1.5; font-weight: 500; letter-spacing: .06em; }
+.t-evolution-view .t-evolution-page-head :is(.t-memory-eyebrow, .t-memory-hint) { margin: 4px 0 0; font-size: 1em; }
+.t-evolution-view .t-evolution-operations {
+    margin-bottom: 18px; padding: 0 16px;
+    border: 1px solid var(--t-memory-border); border-radius: 10px;
+    background: var(--t-memory-surface);
+}
+.t-evolution-view .t-evolution-operations > summary { min-height: 40px; padding-block: 9px; color: var(--t-memory-muted); cursor: pointer; }
+.t-evolution-view .t-evolution-operations[open] > summary { color: var(--t-memory-gold); border-bottom: 1px solid var(--t-memory-line); }
+.t-evolution-view .t-evolution-controls {
+    display: flex; flex-direction: row; flex-wrap: wrap; align-items: center;
+    gap: 10px 20px; margin: 0; padding-block: 12px; border: 0; font-size: 1em;
+}
+.t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: auto; }
+.t-evolution-view .t-evolution-settings-link {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+    padding-block: 12px; border-top: 1px solid var(--t-memory-line); border-bottom: 0;
+}
+.t-evolution-view .t-evolution-settings-link > div { flex: 1 1 280px; min-width: 0; }
+.t-evolution-view .t-evolution-settings-link > button { flex-shrink: 1; }
+.t-evolution-view .t-evolution-settings-link .t-memory-hint { margin-block: 4px; font-size: 1em; }
+.t-evolution-view [data-evolution-role="status"] { margin-block: 8px; font-size: 1em; color: var(--t-memory-muted); }
+.t-evolution-view .t-evolution-coverage { margin-block: 12px; padding-left: 12px; border-left: 2px solid var(--t-memory-violet); color: var(--t-memory-muted); font-size: 1em; line-height: 1.8; }
+.t-evolution-view .t-evolution-editor-host { min-width: 0; }
+.t-evolution-view .t-evolution-editor { margin: 0 0 20px; padding: 20px; font-size: 1em; }
+.t-evolution-view .t-evolution-editor :is(.t-memory-hint, .t-memory-field small) { font-size: 1em; }
+.t-evolution-view .t-evolution-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+.t-evolution-view .t-evolution-edit-fields textarea { min-height: 112px; resize: vertical; }
+.t-evolution-view .t-evolution-editor-flags { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.t-evolution-view .t-evolution-comparison { min-width: 0; margin: 0 0 20px; padding: 16px; border: 1px solid var(--t-memory-border); }
+.t-evolution-view .t-evolution-comparison legend { max-width: 100%; padding-inline: 8px; color: var(--t-memory-gold); }
+
+/* \u4E09\u79CD\u9605\u8BFB\u6DF1\u5EA6\u3002\u6B63\u6587\u968F\u5185\u5BB9\u81EA\u7136\u589E\u9AD8\uFF0C\u4E0D\u53E6\u5916\u5236\u9020\u4E09\u5217\u72EC\u7ACB\u6EDA\u52A8\u3002 */
+.t-evolution-view .t-evolution-workspace {
+    display: grid; grid-template-columns: 220px minmax(0, 1fr) 280px;
+    align-items: stretch; min-width: 0;
+    border: 1px solid var(--t-memory-border); border-radius: 12px;
+    background: var(--t-memory-surface);
+}
+.t-evolution-view .t-evolution-sidebar {
+    grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 22px;
+    padding: 24px 14px; border-right: 1px solid var(--t-memory-line);
+    border-radius: 11px 0 0 11px; background: var(--t-memory-shell);
+}
+.t-evolution-view .t-evolution-person { display: flex; align-items: center; gap: 12px; padding: 0 4px; }
+.t-evolution-view .t-evolution-person > div { min-width: 0; }
+/* monogram \u53EF\u7528\u7C7B\u540D\u6216 data-evolution-role="monogram"\uFF0C\u59D3\u540D/\u7248\u6B21\u6CBF\u7528\u73B0\u6709 role\u3002 */
+.t-evolution-view .t-evolution-person :is(.t-evolution-monogram, [data-evolution-role="monogram"]) {
+    display: grid; place-items: center; flex: 0 0 42px; min-height: 50px;
+    padding: 4px; border: 1px solid var(--t-memory-gold); border-radius: 24px 24px 7px 7px;
+    background: var(--t-memory-gold-soft); color: var(--t-memory-gold);
+    font: 1.8em/1.3 var(--t-font-global);
+}
+.t-evolution-view .t-evolution-person :is(h2, h3, [data-evolution-role="character"]) { margin: 0; color: var(--t-memory-text); font: 1.65em/1.5 var(--t-font-global); letter-spacing: .05em; }
+.t-evolution-view .t-evolution-person :is(p, .t-memory-hint, [data-evolution-role="edition"]) { margin: 4px 0 0; font-size: .95em; line-height: 1.7; color: var(--t-memory-muted); }
+.t-evolution-view .t-evolution-topic-browser { padding: 0; margin: 0; border: 0; }
+.t-evolution-view .t-evolution-topic-toggle {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    min-height: 40px; padding: 9px 10px; border: 1px solid var(--t-memory-border); border-radius: 7px;
+    list-style: none; color: var(--t-memory-gold); background: var(--t-memory-gold-soft); cursor: pointer;
+}
+.t-evolution-view .t-evolution-topic-toggle::-webkit-details-marker,
+.t-evolution-view .t-evolution-evidence > summary::-webkit-details-marker { display: none; }
+.t-evolution-view .t-evolution-topic-toggle::after,
+.t-evolution-view .t-evolution-evidence > summary::after {
+    content: ""; width: 7px; height: 7px; flex-shrink: 0;
+    border-right: 1px solid currentColor; border-bottom: 1px solid currentColor;
+    transform: rotate(45deg);
+}
+.t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle::after,
+.t-evolution-view .t-evolution-evidence[open] > summary::after { transform: rotate(225deg); }
+.t-evolution-view .t-evolution-topic-browser:where([open]) > .t-evolution-topic-toggle { display: none; }
+.t-evolution-view .t-evolution-theme-search { display: grid; gap: 6px; margin-block: 0 18px; color: var(--t-memory-muted); font-size: 1em; }
+.t-evolution-view .t-evolution-theme-search input { width: 100%; min-width: 0; min-height: 40px; padding: 8px 10px; border: 1px solid var(--t-memory-border); border-radius: 7px; font: inherit; color: var(--t-memory-text); background: var(--t-memory-surface); }
+.t-evolution-view .t-evolution-theme-groups { display: grid; gap: 22px; }
+.t-evolution-view .t-evolution-theme-group { display: grid; gap: 7px; }
+.t-evolution-view .t-evolution-theme-group > h4 { margin: 0 0 2px; padding-inline: 9px; color: var(--t-memory-muted); font-size: 1em; font-weight: 400; letter-spacing: .04em; }
+.t-evolution-view button.t-evolution-theme {
+    display: grid; gap: 5px; width: 100%; padding: 12px 10px; text-align: left;
+    border: 1px solid transparent; border-radius: 8px; background: transparent;
+    color: var(--t-memory-text); font: inherit;
+}
+.t-evolution-view button.t-evolution-theme:hover { background: var(--t-memory-raised); }
+.t-evolution-view button.t-evolution-theme[data-selected="true"] { border-color: var(--t-memory-gold); background: var(--t-memory-gold-soft); }
+.t-evolution-view .t-evolution-theme > strong { font-size: 1.05em; line-height: 1.7; font-weight: 500; }
+.t-evolution-view .t-evolution-theme[data-selected="true"] > strong { color: var(--t-memory-gold); }
+.t-evolution-view .t-evolution-theme-category,
+.t-evolution-view .t-evolution-theme > small { color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; }
+.t-evolution-view .t-evolution-theme-category { display: flex; align-items: center; gap: 6px; }
+.t-evolution-view .t-evolution-history-themes { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--t-memory-line); }
+.t-evolution-view .t-evolution-history-themes > summary { min-height: 40px; padding-block: 8px; color: var(--t-memory-muted); cursor: pointer; }
+.t-evolution-view .t-evolution-history-themes[open] > summary { margin-bottom: 10px; }
+
+/* \u5F53\u524D\u72B6\u6001\u56FA\u5B9A\u5728\u8F68\u8FF9\u4E0A\u65B9\uFF1B\u5386\u53F2\u9009\u62E9\u53EA\u5F71\u54CD\u4E0B\u65B9\u5BF9\u7167\u548C\u53F3\u4FA7\u4F9D\u636E\u3002 */
+.t-evolution-view .t-evolution-center { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 22px; padding: 24px; }
+.t-evolution-view .t-evolution-dossier { margin: 0; }
+.t-evolution-view .t-evolution-now-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }
+.t-evolution-view .t-evolution-caption { margin: 0; color: var(--t-memory-gold); font-size: 1em; letter-spacing: .07em; line-height: 1.7; }
+.t-evolution-view h3[data-evolution-role="dossier-title"] { margin: 0 0 10px; color: var(--t-memory-text); font: 1.85em/1.5 var(--t-font-global); letter-spacing: .03em; }
+.t-evolution-view .t-evolution-now-text { margin: 0; max-width: 64ch; font-size: 1.06em; line-height: 1.95; white-space: pre-wrap; }
+.t-evolution-view .t-evolution-dossier > .t-memory-hint { margin-block: 8px; font-size: 1em; }
+.t-evolution-view .t-evolution-now-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; color: var(--t-memory-muted); font-size: 1em; }
+.t-evolution-view .t-evolution-state-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.t-evolution-view .t-evolution-state-badges > span,
+.t-evolution-view .t-evolution-state-heading .t-memory-badge { padding: 2px 7px; border: 1px solid var(--t-memory-border); border-radius: 5px; color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; white-space: normal; }
+.t-evolution-view .t-evolution-state-badges > .is-current { color: var(--t-memory-teal); border-color: var(--t-memory-teal); }
+.t-evolution-view .t-evolution-item { min-width: 0; padding: 14px 0 0; margin-top: 16px; border: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0; background: transparent; }
+.t-evolution-view .t-evolution-state-heading { padding-bottom: 12px; }
+.t-evolution-view .t-evolution-state-text { max-width: 100%; margin: 0; font-size: 1em; line-height: 1.95; white-space: pre-wrap; overflow-wrap: anywhere; }
+.t-evolution-view .t-evolution-item > .t-memory-card-actions { margin-top: 12px; padding-top: 0; border-top: 0; }
+.t-evolution-view .t-evolution-item > .t-memory-card-actions .t-memory-action { min-height: 40px; padding: 6px 10px; font-size: 1em; }
+.t-evolution-view .t-evolution-item .t-evolution-details { margin-top: 12px; padding-block: 8px 0; border-bottom: 0; }
+.t-evolution-view .t-evolution-item .t-evolution-details > summary { font-size: 1em; }
+.t-evolution-view .t-evolution-read-tabs { display: flex; flex-wrap: wrap; gap: 8px 24px; border-bottom: 1px solid var(--t-memory-line); }
+.t-evolution-view .t-evolution-read-tab { padding: 8px 0 10px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--t-memory-muted); background: transparent; font: inherit; }
+.t-evolution-view .t-evolution-read-tab:hover { color: var(--t-memory-text); }
+.t-evolution-view .t-evolution-read-tab[aria-selected="true"] { color: var(--t-memory-text); border-bottom-color: var(--t-memory-gold); }
+.t-evolution-view .t-evolution-journey { min-width: 0; }
+.t-evolution-view .t-evolution-path-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 14px; color: var(--t-memory-muted); font-size: 1em; }
+.t-evolution-view .t-evolution-path-head strong { color: var(--t-memory-text); font-size: 1.05em; font-weight: 500; }
+.t-evolution-view .t-evolution-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.t-evolution-view button.t-evolution-step {
+    display: flex; flex-direction: column; gap: 7px; padding: 12px 10px; text-align: left;
+    border: 1px solid var(--t-memory-border); border-radius: 7px;
+    background: transparent; color: var(--t-memory-text); font: inherit;
+}
+.t-evolution-view button.t-evolution-step:hover { background: var(--t-memory-raised); }
+.t-evolution-view button.t-evolution-step[aria-pressed="true"] { border-color: var(--t-memory-gold); background: var(--t-memory-gold-soft); }
+.t-evolution-view .t-evolution-step-floor { color: var(--t-memory-muted); font-size: .95em; font-variant-numeric: tabular-nums; }
+.t-evolution-view .t-evolution-step-dot { display: block; width: 8px; height: 8px; flex-shrink: 0; margin-block: 2px; border: 1px solid var(--t-memory-muted); border-radius: 50%; }
+.t-evolution-view .t-evolution-step[aria-pressed="true"] .t-evolution-step-dot { border-color: var(--t-memory-gold); background: var(--t-memory-gold); box-shadow: 0 0 0 3px var(--t-memory-gold-soft); }
+.t-evolution-view .t-evolution-step > strong { font-size: 1em; line-height: 1.7; font-weight: 500; }
+.t-evolution-view .t-evolution-step > small { margin-top: auto; color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; }
+.t-evolution-view .t-evolution-path-pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px 12px; margin-top: 12px; color: var(--t-memory-muted); }
+.t-evolution-view .t-evolution-path-pagination button { padding: 6px 12px; border: 1px solid var(--t-memory-border); border-radius: 7px; color: var(--t-memory-muted); background: transparent; }
+.t-evolution-view .t-evolution-path-pagination button:hover:not(:disabled) { border-color: var(--t-memory-gold); color: var(--t-memory-gold); }
+.t-evolution-view .t-evolution-history-note { margin-top: 10px; color: var(--t-memory-muted); font-size: .95em; line-height: 1.8; }
+.t-evolution-view .t-evolution-change-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-block: 22px 13px; }
+.t-evolution-view .t-evolution-change-heading h4 { margin: 0; font-size: 1.1em; font-weight: 500; }
+.t-evolution-view .t-evolution-change-heading :is(span, small) { color: var(--t-memory-muted); font-size: .95em; }
+.t-evolution-view .t-evolution-compare { display: grid; grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 12px; align-items: stretch; }
+.t-evolution-view .t-evolution-compare-cell { display: grid; align-content: start; gap: 9px; padding-top: 12px; border-top: 1px solid var(--t-memory-border); }
+.t-evolution-view .t-evolution-compare-cell.is-after { border-top-color: var(--t-memory-gold); }
+.t-evolution-view .t-evolution-compare-label { color: var(--t-memory-muted); font-size: 1em; }
+.t-evolution-view .t-evolution-compare-text { margin: 0; font-size: 1em; line-height: 1.95; white-space: pre-wrap; color: var(--t-memory-muted); }
+.t-evolution-view .t-evolution-compare-cell.is-after .t-evolution-compare-text { color: var(--t-memory-text); }
+.t-evolution-view .t-evolution-compare-arrow { display: grid; place-items: center; color: var(--t-memory-muted); font-size: 1.4em; }
+.t-evolution-view .t-evolution-scope { display: flex; align-items: flex-start; gap: 12px; margin-top: 18px; padding: 13px 14px; border-radius: 7px; background: var(--t-memory-raised); }
+.t-evolution-view .t-evolution-scope > span { flex: 0 0 3em; color: var(--t-memory-gold); font-size: 1em; }
+.t-evolution-view .t-evolution-scope > p { margin: 0; min-width: 0; color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; white-space: pre-wrap; }
+.t-evolution-view .t-evolution-canonical { min-width: 0; font-size: 1em; line-height: 1.95; }
+.t-evolution-view .t-evolution-canonical h3 { margin: 0 0 12px; font-size: 1.1em; font-weight: 500; }
+/* \u539F\u6587\u4FDD\u7559\u5168\u90E8\u5185\u5BB9\uFF0C\u4E0D\u4F7F\u7528\u9AD8\u5EA6\u88C1\u5207\u3001\u884C\u6570\u622A\u65AD\u6216 display:none\u3002 */
+.t-evolution-view .t-evolution-canonical pre { max-height: none; overflow: visible; white-space: pre-wrap; }
+.t-evolution-view .t-evolution-canonical .t-evolution-item { margin: 0; padding: 0; border: 0; }
+
+/* \u8BC1\u636E\u5141\u8BB8\u72EC\u7ACB\u6298\u53E0\uFF0C\u4F46\u59CB\u7EC8\u4F4D\u4E8E\u88AB\u9009\u53D8\u5316\u7684\u9605\u8BFB\u987A\u5E8F\u4E4B\u540E\u3002 */
+.t-evolution-view .t-evolution-evidence {
+    grid-column: 3; grid-row: 1; padding: 24px 20px;
+    border-left: 1px solid var(--t-memory-line); border-radius: 0 11px 11px 0;
+    background: var(--t-memory-shell);
+}
+.t-evolution-view .t-evolution-evidence > summary { display: grid; grid-template-columns: minmax(0, 1fr) 12px; align-items: center; gap: 5px 12px; min-height: 40px; list-style: none; cursor: pointer; }
+.t-evolution-view .t-evolution-evidence > summary h3 { grid-column: 1; margin: 0; font-size: 1.1em; font-weight: 500; }
+.t-evolution-view .t-evolution-evidence > summary small { grid-column: 1; color: var(--t-memory-muted); font-size: .95em; }
+.t-evolution-view .t-evolution-evidence > summary::after { grid-column: 2; grid-row: 1 / span 2; color: var(--t-memory-muted); }
+.t-evolution-view .t-evolution-evidence-body { display: grid; gap: 22px; padding-top: 22px; }
+.t-evolution-view .t-evolution-reason { display: grid; gap: 9px; }
+.t-evolution-view .t-evolution-reason > h4 { margin: 0; color: var(--t-memory-gold); font-size: 1em; font-weight: 400; }
+.t-evolution-view .t-evolution-reason > p { margin: 0; color: var(--t-memory-text); font-size: 1.1em; line-height: 1.95; white-space: pre-wrap; }
+.t-evolution-view .t-evolution-evidence-sources { display: grid; gap: 20px; }
+.t-evolution-view .t-evolution-source { padding-block: 16px 0; border-top: 1px solid var(--t-memory-line); }
+.t-evolution-view .t-evolution-source > strong { display: block; color: var(--t-memory-muted); font-size: 1em; font-weight: 500; font-variant-numeric: tabular-nums; }
+.t-evolution-view .t-evolution-source blockquote { margin: 12px 0 0; padding: 0 0 0 12px; border: 0; border-left: 2px solid var(--t-memory-border); border-radius: 0; background: transparent; color: var(--t-memory-text); font: 1.15em/1.95 var(--t-font-global); white-space: pre-wrap; overflow-wrap: anywhere; }
+.t-evolution-view .t-evolution-evidence-note { margin: 0; padding-top: 16px; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; }
+
+/* \u5B8C\u6574\u6279\u6B21\u3001\u6CE8\u5165\u9884\u89C8\u3001\u57FA\u7EBF\u4ECD\u53EF\u6838\u5BF9\uFF1B\u4E0D\u4E0E\u4E3B\u9605\u8BFB\u4E09\u680F\u7ADE\u4E89\u7A7A\u95F4\u3002 */
+.t-evolution-view .t-evolution-tools { grid-column: 1 / -1; margin-top: 20px; padding: 0 18px; border: 1px solid var(--t-memory-border); border-radius: 10px; background: var(--t-memory-surface); }
+.t-evolution-view .t-evolution-details { min-width: 0; padding-block: 12px; border-bottom: 1px solid var(--t-memory-line); }
+.t-evolution-view .t-evolution-details > summary { min-height: 40px; padding-block: 8px; color: var(--t-memory-gold); font-size: 1em; line-height: 1.8; cursor: pointer; overflow-wrap: anywhere; }
+.t-evolution-view .t-evolution-details[open] > summary { margin-bottom: 10px; }
+.t-evolution-view .t-evolution-tools > .t-evolution-details:last-child { border-bottom: 0; }
+.t-evolution-view .t-evolution-tools .t-evolution-guidance { padding: 12px 0; border: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 0; background: transparent; }
+.t-evolution-view .t-evolution-guidance .t-memory-source { margin-block: 12px 18px; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--t-memory-text); font-size: 1em; }
+.t-evolution-view .t-evolution-guidance .t-memory-hint { margin-block: 7px 0; font-size: 1em; white-space: pre-wrap; }
+.t-evolution-view .t-evolution-change { padding-block: 16px; border-top: 1px solid var(--t-memory-line); }
+.t-evolution-view .t-evolution-change h4 { margin: 0 0 10px; font-size: 1.05em; }
+.t-evolution-view .t-evolution-workspace-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; padding-block: 12px; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); font-size: 1em; line-height: 1.8; }
+.t-evolution-view .t-evolution-empty { grid-column: 1 / -1; margin: 0; padding: 20px 16px; color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; }
+.t-evolution-view .t-evolution-empty :is(h3, strong) { color: var(--t-memory-text); font-size: 1.1em; font-weight: 500; }
+.t-evolution-view .t-evolution-empty p { margin-top: 8px; }
+
+/* 1100 \u4EE5\u4E0B\u538B\u7F29\u4E09\u680F\uFF1B1000 \u4EE5\u4E0B\u5C06\u8BC1\u636E\u79FB\u5230\u4E2D\u680F\u4E0B\u65B9\uFF1B680 \u4EE5\u4E0B\u5355\u680F\u3002
+   \u4E0D\u5728\u652F\u6301 container \u7684\u6D4F\u89C8\u5668\u53E0\u52A0 viewport \u65AD\u70B9\uFF0C\u7236\u7A97\u53E3\u7F29\u653E\u624D\u662F\u552F\u4E00\u4F9D\u636E\u3002 */
+@container t-evolution (max-width: 1100px) {
+    .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr) 240px; }
+    .t-evolution-view .t-evolution-sidebar { padding-inline: 12px; }
+    .t-evolution-view .t-evolution-center { padding-inline: 18px; }
+    .t-evolution-view .t-evolution-evidence { padding-inline: 16px; }
+    .t-evolution-view .t-evolution-steps { gap: 6px; }
+    .t-evolution-view button.t-evolution-step { padding-inline: 8px; }
+}
+@container t-evolution (max-width: 1000px) {
+    .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr); }
+    .t-evolution-view .t-evolution-sidebar { grid-row: 1 / span 2; }
+    .t-evolution-view .t-evolution-evidence { grid-column: 2; grid-row: 2; border-left: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0 0 11px 0; }
+    .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container t-evolution (max-width: 680px) {
+    .t-evolution-view .t-evolution-workspace { grid-template-columns: minmax(0, 1fr); }
+    .t-evolution-view .t-evolution-sidebar { grid-column: 1; grid-row: 1; gap: 16px; padding: 20px 16px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 11px 11px 0 0; }
+    .t-evolution-view .t-evolution-topic-browser > .t-evolution-topic-toggle { display: flex; }
+    .t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle { margin-bottom: 16px; }
+    .t-evolution-view .t-evolution-center { grid-column: 1; grid-row: 2; gap: 20px; padding: 22px 16px; }
+    .t-evolution-view h3[data-evolution-role="dossier-title"] { font-size: 1.7em; }
+    .t-evolution-view .t-evolution-now-meta { gap: 8px; }
+    .t-evolution-view .t-evolution-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .t-evolution-view button.t-evolution-step { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 4px 9px; padding: 12px 10px; }
+    .t-evolution-view .t-evolution-step-floor { grid-column: 2; }
+    .t-evolution-view .t-evolution-step-dot { grid-column: 1; grid-row: 2; margin-top: 6px; }
+    .t-evolution-view .t-evolution-step > :is(strong, small) { grid-column: 2; }
+    .t-evolution-view .t-evolution-compare { grid-template-columns: minmax(0, 1fr); }
+    .t-evolution-view .t-evolution-compare-arrow { display: none; }
+    .t-evolution-view .t-evolution-evidence { grid-column: 1; grid-row: 3; padding: 20px 16px; border-radius: 0 0 11px 11px; }
+    .t-evolution-view .t-evolution-evidence-body { padding-top: 18px; }
+    .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: minmax(0, 1fr); }
+    .t-evolution-view .t-evolution-controls { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: 0; }
+    .t-evolution-view .t-evolution-editor { padding: 16px; }
+    .t-evolution-view .t-evolution-edit-fields,
+    .t-evolution-view .t-evolution-editor .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }
+    .t-evolution-view .t-evolution-tools { padding-inline: 16px; }
+}
+
+@supports not (container-type: inline-size) {
+    @media (max-width: 1100px) {
+        .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr) 240px; }
+        .t-evolution-view .t-evolution-sidebar { padding-inline: 12px; }
+        .t-evolution-view .t-evolution-center { padding-inline: 18px; }
+        .t-evolution-view .t-evolution-evidence { padding-inline: 16px; }
+        .t-evolution-view .t-evolution-steps { gap: 6px; }
+        .t-evolution-view button.t-evolution-step { padding-inline: 8px; }
+    }
+    @media (max-width: 1000px) {
+        .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr); }
+        .t-evolution-view .t-evolution-sidebar { grid-row: 1 / span 2; }
+        .t-evolution-view .t-evolution-evidence { grid-column: 2; grid-row: 2; border-left: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0 0 11px 0; }
+        .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+        .t-evolution-view .t-evolution-workspace { grid-template-columns: minmax(0, 1fr); }
+        .t-evolution-view .t-evolution-sidebar { grid-column: 1; grid-row: 1; gap: 16px; padding: 20px 16px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 11px 11px 0 0; }
+        .t-evolution-view .t-evolution-topic-browser > .t-evolution-topic-toggle { display: flex; }
+        .t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle { margin-bottom: 16px; }
+        .t-evolution-view .t-evolution-center { grid-column: 1; grid-row: 2; gap: 20px; padding: 22px 16px; }
+        .t-evolution-view h3[data-evolution-role="dossier-title"] { font-size: 1.7em; }
+        .t-evolution-view .t-evolution-now-meta { gap: 8px; }
+        .t-evolution-view .t-evolution-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .t-evolution-view button.t-evolution-step { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 4px 9px; padding: 12px 10px; }
+        .t-evolution-view .t-evolution-step-floor { grid-column: 2; }
+        .t-evolution-view .t-evolution-step-dot { grid-column: 1; grid-row: 2; margin-top: 6px; }
+        .t-evolution-view .t-evolution-step > :is(strong, small) { grid-column: 2; }
+        .t-evolution-view .t-evolution-compare { grid-template-columns: minmax(0, 1fr); }
+        .t-evolution-view .t-evolution-compare-arrow { display: none; }
+        .t-evolution-view .t-evolution-evidence { grid-column: 1; grid-row: 3; padding: 20px 16px; border-radius: 0 0 11px 11px; }
+        .t-evolution-view .t-evolution-evidence-body { padding-top: 18px; }
+        .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: minmax(0, 1fr); }
+        .t-evolution-view .t-evolution-controls { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: 0; }
+        .t-evolution-view .t-evolution-editor { padding: 16px; }
+        .t-evolution-view .t-evolution-edit-fields,
+        .t-evolution-view .t-evolution-editor .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }
+        .t-evolution-view .t-evolution-tools { padding-inline: 16px; }
+    }
+}
+
+
+/* === 04-features/story-memory-notifications.css === */
+/* Send-area notice: in normal flow, never covering or disabling the composer. */
+.t-memory-notice {
+    --t-memory-notice-accent: var(--t-color-accent);
+    display: flex; align-items: flex-start; gap: 10px;
+    width: 100%; min-width: 0; padding: 10px 16px;
+    border: 1px solid var(--t-color-border-faint); border-left: 3px solid var(--t-memory-notice-accent);
+    border-radius: 10px 10px 0 0; background: var(--t-color-surface);
+    color: var(--t-color-text); font-family: var(--t-font-global); font-size: 12px; line-height: 1.6;
+    white-space: normal; text-shadow: none; box-sizing: border-box;
+}
+.t-memory-notice[data-state="done"] { --t-memory-notice-accent: var(--t-color-teal); }
+.t-memory-notice[data-state="error"], .t-memory-notice[data-state="retry"] { --t-memory-notice-accent: var(--t-color-warning); }
+.t-memory-notice[data-state="paused"] { --t-memory-notice-accent: var(--t-color-text-muted); }
+.t-memory-notice-icon { flex: 0 0 20px; color: var(--t-memory-notice-accent); font-size: 20px; line-height: 1.2; text-align: center; }
+.t-memory-notice-content { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.t-memory-notice-title { display: block; font-weight: 600; color: var(--t-memory-notice-accent); }
+.t-memory-notice-tasks { white-space: pre-line; max-height: 6.4em; overflow-y: auto; overscroll-behavior: contain; }
+.t-memory-notice-hint { margin-top: 3px; color: var(--t-color-text-secondary); font-size: 11px; }
+.t-memory-notice-close {
+    flex: 0 0 28px; width: 28px; height: 28px; padding: 0;
+    border: 0; border-radius: 5px; background: transparent; color: var(--t-color-text-secondary);
+    font: inherit; font-size: 20px; line-height: 1; cursor: pointer;
+}
+.t-memory-notice-close[hidden] { display: none; }
+.t-memory-notice-close:hover { color: var(--t-color-text); background: var(--t-color-surface-hover); }
+.t-memory-notice-close:focus-visible { outline: 2px solid var(--t-color-focus-ring); outline-offset: 2px; }
+@media (max-width: 600px) {
+    .t-memory-notice { gap: 8px; padding-block: 8px; }
+    .t-memory-notice-close { flex-basis: 32px; width: 32px; height: 32px; }
+}
 
 
 /* === 04-features/story-timetrace.css === */
@@ -25577,7 +25868,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90898], "01-base/base.css": [90931, 95153], "01-base/scrollbar.css": [95191, 103565], "01-base/form-controls.css": [103607, 114413], "01-base/keyframes.css": [114451, 122354], "02-components/window.css": [122395, 125527], "02-components/panel.css": [125567, 129187], "02-components/settings-shell.css": [129236, 133634], "02-components/dialog.css": [133675, 139020], "02-components/button.css": [139061, 145561], "02-components/icon-button.css": [145607, 148087], "02-components/field.css": [148127, 151202], "02-components/choice-input.css": [151249, 152540], "02-components/radio-card.css": [152585, 154827], "02-components/studio-workspace.css": [154878, 169767], "02-components/_legacy.css": [169809, 172773], "03-layout/button-groups.css": [172817, 174238], "03-layout/utilities.css": [174278, 176089], "04-features/floating.css": [176130, 183332], "04-features/toolbox-settings.css": [183381, 186236], "04-features/main-window.css": [186280, 231173], "04-features/main-window-legacy.css": [231224, 255090], "04-features/script-picker.css": [255136, 261631], "04-features/wi-selector.css": [261675, 278728], "04-features/continuation.css": [278773, 302642], "04-features/queue.css": [302680, 309240], "04-features/content-editor.css": [309287, 311594], "04-features/illustration.css": [311639, 326754], "04-features/settings-drawer.css": [326802, 343348], "04-features/settings.css": [343389, 368049], "04-features/manager.css": [368089, 380724], "04-features/workshop.css": [380765, 403547], "04-features/favs.css": [403584, 443510], "04-features/debug.css": [443548, 460313], "04-features/story-outline.css": [460359, 494665], "04-features/outline-entry-menu.css": [494716, 501469], "04-features/rewrite.css": [501509, 552408], "04-features/reader.css": [552447, 561806], "04-features/chat-book.css": [561848, 568389], "04-features/story-memory.css": [568434, 620502], "04-features/story-timetrace.css": [620550, 633398], "04-features/confirm-dialog.css": [633445, 637443], "04-features/image-cropper.css": [637489, 641347], "04-features/st-embedded.css": [641391, 671895], "04-features/scene-advance.css": [671941, 694026], "04-features/theater-midnight.css": [694075, 719403] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90898], "01-base/base.css": [90931, 95153], "01-base/scrollbar.css": [95191, 103565], "01-base/form-controls.css": [103607, 114413], "01-base/keyframes.css": [114451, 122354], "02-components/window.css": [122395, 125527], "02-components/panel.css": [125567, 129187], "02-components/settings-shell.css": [129236, 133634], "02-components/dialog.css": [133675, 139020], "02-components/button.css": [139061, 145561], "02-components/icon-button.css": [145607, 148087], "02-components/field.css": [148127, 151202], "02-components/choice-input.css": [151249, 152540], "02-components/radio-card.css": [152585, 154827], "02-components/studio-workspace.css": [154878, 169767], "02-components/_legacy.css": [169809, 172773], "03-layout/button-groups.css": [172817, 174238], "03-layout/utilities.css": [174278, 176089], "04-features/floating.css": [176130, 183332], "04-features/toolbox-settings.css": [183381, 186236], "04-features/main-window.css": [186280, 231173], "04-features/main-window-legacy.css": [231224, 255090], "04-features/script-picker.css": [255136, 261631], "04-features/wi-selector.css": [261675, 278728], "04-features/continuation.css": [278773, 302642], "04-features/queue.css": [302680, 309240], "04-features/content-editor.css": [309287, 311594], "04-features/illustration.css": [311639, 326754], "04-features/settings-drawer.css": [326802, 343348], "04-features/settings.css": [343389, 368049], "04-features/manager.css": [368089, 380724], "04-features/workshop.css": [380765, 403547], "04-features/favs.css": [403584, 443510], "04-features/debug.css": [443548, 460313], "04-features/story-outline.css": [460359, 494665], "04-features/outline-entry-menu.css": [494716, 501469], "04-features/rewrite.css": [501509, 552408], "04-features/reader.css": [552447, 561806], "04-features/chat-book.css": [561848, 568389], "04-features/story-memory.css": [568434, 613751], "04-features/character-evolution.css": [613803, 641901], "04-features/story-memory-notifications.css": [641960, 644079], "04-features/story-timetrace.css": [644127, 656975], "04-features/confirm-dialog.css": [657022, 661020], "04-features/image-cropper.css": [661066, 664924], "04-features/st-embedded.css": [664968, 695472], "04-features/scene-advance.css": [695518, 717603], "04-features/theater-midnight.css": [717652, 742980] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -37496,7 +37787,7 @@ function openChatBookWindow() {
       window.removeEventListener("focus", detectChanges);
       document.removeEventListener("keydown", onKey);
       document.removeEventListener(TOOLBOX_EXTRACTION_CHANGED, refreshExtraction);
-      for (const [name, handler] of events) eventSource13?.removeListener?.(name, handler);
+      for (const [name, handler] of events) eventSource14?.removeListener?.(name, handler);
       if (active?.root === root) active = null;
       if (restoreFocus && previousFocus?.isConnected) previousFocus.focus();
     }
@@ -37732,13 +38023,13 @@ function openChatBookWindow() {
     rebuild();
     alert2("\u5DF2\u6309\u6700\u65B0\u5168\u5C40\u6B63\u6587\u89C4\u5219\u66F4\u65B0\u9884\u89C8\u3002");
   }
-  const host3 = globalThis.SillyTavern?.getContext?.(), eventSource13 = host3?.eventSource;
+  const host3 = globalThis.SillyTavern?.getContext?.(), eventSource14 = host3?.eventSource;
   const events = [];
   try {
     for (const key of ["CHAT_CHANGED", "MESSAGE_RECEIVED", "MESSAGE_EDITED", "MESSAGE_UPDATED", "MESSAGE_DELETED", "MESSAGE_SWIPED", "MESSAGE_SWIPE_DELETED"]) {
       const name = host3?.eventTypes?.[key];
-      if (!name || !eventSource13?.on || !eventSource13?.removeListener) continue;
-      eventSource13.on(name, detectChanges);
+      if (!name || !eventSource14?.on || !eventSource14?.removeListener) continue;
+      eventSource14.on(name, detectChanges);
       events.push([name, detectChanges]);
     }
     window.addEventListener("focus", detectChanges);
@@ -39725,7 +40016,6 @@ function refreshInjection() {
   setExtensionPrompt(TIMETRACE_PROMPT_KEY, text3, extension_prompt_types.IN_CHAT, depth, false, extension_prompt_roles.SYSTEM);
 }
 function getTimetraceRuntime() {
-  const ctx2 = context();
   return {
     busy: starting || !!job || !!writing2,
     saving: !!writing2,
@@ -39733,7 +40023,7 @@ function getTimetraceRuntime() {
     paused,
     error,
     warning,
-    progress: progress?.key === ctx2?.key ? { ...progress, percent: progress.state === "done" ? 100 : progress.total > 0 ? Math.min(99, Math.floor(progress.completed * 100 / progress.total)) : 0 } : null
+    progress: progress && progressContext && sameChat(progressContext) ? { ...progress, percent: progress.state === "done" ? 100 : progress.total > 0 ? Math.min(99, Math.floor(progress.completed * 100 / progress.total)) : 0 } : null
   };
 }
 function getTimetraceView() {
@@ -40101,8 +40391,10 @@ async function runTimetraceTask({ history = false, rebuild = false, ingestOnly =
   }
   const task = { ctx: ctx2, epoch, scope: scope(), controller: new AbortController() };
   job = task;
+  progressContext = ctx2;
   progress = {
     key: ctx2.key,
+    runId: ++progressSequence,
     state: "running",
     phase: "timeline",
     completed: 0,
@@ -40284,6 +40576,7 @@ function initStoryTimetrace() {
     generationTarget = null;
     generationType = "";
     progress = null;
+    progressContext = null;
     error = "";
     warning = "";
     refreshInjection();
@@ -40328,7 +40621,7 @@ function initStoryTimetrace() {
     }).catch(report);
   }
 }
-var TIMETRACE_PROMPT_KEY, listeners2, initialized, generating, generationType, stopped, epoch, job, writing2, timer, paused, queuedHistory, starting, progress, error, warning, generationTarget, memoryHost;
+var TIMETRACE_PROMPT_KEY, listeners2, initialized, generating, generationType, stopped, epoch, job, writing2, timer, paused, queuedHistory, starting, progress, error, warning, progressContext, progressSequence, generationTarget, memoryHost;
 var init_storyTimetrace = __esm({
   "src/core/storyTimetrace.js"() {
     init_storage();
@@ -40356,6 +40649,8 @@ var init_storyTimetrace = __esm({
     progress = null;
     error = "";
     warning = "";
+    progressContext = null;
+    progressSequence = 0;
     generationTarget = null;
     memoryHost = null;
   }
@@ -50513,14 +50808,18 @@ function memoryFor2(ctx2) {
   }
   if (wrongCharacter) return newEvolution();
   if (value.version < 3) {
-    return { ...newEvolution(), enabled: value.enabled === true, auto: false, legacyArchive: cloneEvolution(value) };
+    return { ...newEvolution(), enabled: value.enabled === true, auto: false, baselineCapturedAfterUpgrade: true };
+  }
+  if (Object.hasOwn(value, "legacyArchive")) {
+    const { legacyArchive, ...next } = value;
+    if (!next.baseline && legacyArchive) next.baselineCapturedAfterUpgrade = true;
+    return next;
   }
   return value;
 }
 function freezeBaseline(memory, ctx2) {
   if (!memory.baseline) {
     memory.baseline = { id: newMemoryId(), text: baseline(ctx2) };
-    if (memory.legacyArchive) memory.baselineCapturedAfterUpgrade = true;
   }
   memory.baselineSignature = baselineSignature(ctx2);
 }
@@ -50594,6 +50893,7 @@ function startProgress(ctx2, memory, batch, config) {
     }
     evolutionProgress = {
       ctx: ctx2,
+      runId: ++progressSequence2,
       scope: signature2,
       baseline: card,
       kind: "evolution",
@@ -50757,7 +51057,6 @@ function getEvolutionView() {
     baselineCapturedAfterUpgrade: memory.baselineCapturedAfterUpgrade === true,
     baselineFrozen: !!memory.baseline,
     references: cloneEvolution(evolutionReferences(previewMemory)),
-    legacyArchive: memory.legacyArchive ? cloneEvolution(memory.legacyArchive) : null,
     version: memory.version,
     coverageGaps,
     enabled: memory.enabled,
@@ -51157,7 +51456,7 @@ function initCharacterEvolution() {
     if (sameChat2(ctx2)) report2(cause);
   });
 }
-var EVOLUTION_PROMPT_KEY, listeners3, initialized2, generating3, generationType2, stopped2, epoch2, replacementFloor, job2, timer2, status, error2, blocked, evolutionProgress;
+var EVOLUTION_PROMPT_KEY, listeners3, initialized2, generating3, generationType2, stopped2, epoch2, replacementFloor, job2, timer2, status, error2, blocked, evolutionProgress, progressSequence2;
 var init_characterEvolution = __esm({
   "src/core/characterEvolution.js"() {
     init_storage();
@@ -51183,6 +51482,7 @@ var init_characterEvolution = __esm({
     error2 = "";
     blocked = false;
     evolutionProgress = null;
+    progressSequence2 = 0;
   }
 });
 
@@ -51271,10 +51571,10 @@ async function prepareTime(ctx2, taskOwner, epoch3) {
   status2 = previousStatus;
   return true;
 }
-function combinedProgress(ctx2, time) {
-  if (!ctx2) return null;
+function timetraceProgress(time) {
   const p = time.progress;
-  const timeline = p ? {
+  return p ? {
+    runId: p.runId,
     kind: "timetrace",
     state: p.state === "retry" ? "error" : p.state,
     phase: p.phase,
@@ -51291,6 +51591,17 @@ function combinedProgress(ctx2, time) {
     retryInterval: time.config?.retry_interval_seconds,
     message: p.message
   } : null;
+}
+function getStoryMemoryActivity() {
+  const ctx2 = context3();
+  return {
+    identity: ctx2 ? { key: ctx2.key, chat: ctx2.chat, chatMetadata: ctx2.chatMetadata } : null,
+    progress: ctx2 ? [progressView(ctx2), timetraceProgress(getTimetraceRuntime()), getEvolutionProgress()].filter(Boolean) : []
+  };
+}
+function combinedProgress(ctx2, time) {
+  if (!ctx2) return null;
+  const timeline = timetraceProgress(time);
   const memory = progressView(ctx2), evolution = getEvolutionProgress();
   const latest = latestProgressTask?.ctx && sameChat3(latestProgressTask.ctx) ? latestProgressTask : null;
   const active4 = getStoryMemoryTask();
@@ -51308,6 +51619,7 @@ function combinedProgress(ctx2, time) {
 function startProgress2(ctx2, kind, patch = {}) {
   memoryProgress = {
     ctx: ctx2,
+    runId: ++progressSequence3,
     kind,
     state: "running",
     phase: "preparing",
@@ -52726,7 +53038,7 @@ function initStoryMemory() {
   refreshInjection3();
   schedule3();
 }
-var MEMORY_PROMPT_KEY, RECALL_QUERY_FLOORS, RECALL_QUERY_CHARS, subscribers, reportedErrors, initialized3, generationActive, generationType3, stopped3, timer3, retryTimer, retryOperation, job3, pending, writing3, recallCache, status2, error3, memoryProgress, memoryEpoch, latestProgressTask;
+var MEMORY_PROMPT_KEY, RECALL_QUERY_FLOORS, RECALL_QUERY_CHARS, subscribers, reportedErrors, initialized3, generationActive, generationType3, stopped3, timer3, retryTimer, retryOperation, job3, pending, writing3, recallCache, status2, error3, memoryProgress, progressSequence3, memoryEpoch, latestProgressTask;
 var init_storyMemory = __esm({
   "src/core/storyMemory.js"() {
     init_storage();
@@ -52760,6 +53072,7 @@ var init_storyMemory = __esm({
     status2 = "idle";
     error3 = "";
     memoryProgress = null;
+    progressSequence3 = 0;
     memoryEpoch = 0;
     latestProgressTask = null;
     configureTimetraceMemoryHost({ enabled: () => {
@@ -52791,7 +53104,7 @@ function renderTimetraceNodes(nodes, { search = "", filter = "all", expanded = /
   const floorMatch = /^(?:第\s*|#\s*)(\d+)\s*楼?$|^(\d+)\s*楼$/.exec(query);
   const floor = floorMatch ? Number(floorMatch[1] ?? floorMatch[2]) : null;
   const frame = Object.hasOwn(TIMETRACE_FRAMES, filter) ? filter : "all";
-  const visible = nodes.filter((node2) => (!query || (floor !== null ? Number.isSafeInteger(floor) && (node2.source_start ?? node2.floor) <= floor && (node2.source_end ?? node2.end_floor ?? node2.floor) >= floor : [node2.time, node2.time_end, node2.raw_time, node2.precision, node2.title, node2.elapsed, node2.anchor, node2.location, node2.season, node2.weather, node2.thread, node2.evidence].join(" ").toLowerCase().includes(query))) && (frame === "all" || (node2.frame || "main") === frame));
+  const visible = nodes.filter((node2) => (!query || (floor !== null ? Number.isSafeInteger(floor) && (node2.source_start ?? node2.floor) <= floor && (node2.source_end ?? node2.end_floor ?? node2.floor) >= floor : [node2.time, node2.time_end, node2.raw_time, node2.precision, node2.title, node2.elapsed, node2.anchor, node2.location, node2.season, node2.weather, node2.thread, node2.evidence].join(" ").toLowerCase().includes(query))) && (frame === "all" || (node2.frame || "main") === frame)).sort((a, b) => (b.source_start ?? b.floor) - (a.source_start ?? a.floor) || (b.order ?? 0) - (a.order ?? 0));
   if (!visible.length) return nodes.length ? '<div class="t-timetrace-empty"><span aria-hidden="true">\u25F7</span><strong>\u6CA1\u6709\u627E\u5230\u5339\u914D\u7684\u65F6\u95F4\u6BB5</strong><p>\u8BD5\u8BD5\u5176\u4ED6\u65E5\u671F\u3001\u63A8\u8FDB\u4F9D\u636E\u6216\u697C\u5C42\u7F16\u53F7\u3002</p><button type="button" class="t-memory-action" data-action="time-clear-query">\u663E\u793A\u5168\u90E8\u65F6\u95F4\u6BB5</button></div>' : '<div class="t-timetrace-empty"><span aria-hidden="true">\u25F7</span><strong>\u8FD9\u91CC\u8FD8\u6CA1\u6709\u65F6\u95F4\u8DB3\u8FF9</strong><p>\u542F\u7528\u56DE\u58F0\u65F6\u75D5\u540E\uFF0C\u65B0\u6B63\u6587\u4F1A\u7559\u4E0B\u65F6\u95F4\u8BB0\u5F55\u3002\u65E7\u804A\u5929\u53EF\u4EE5\u901A\u8FC7\u201C\u8865\u5EFA\u5386\u53F2\u201D\u6574\u7406\u3002</p></div>';
   return `<ol class="t-timetrace-list">${visible.map((node2) => {
     const environment = [node2.location, node2.season, node2.weather, node2.environment].filter(Boolean);
@@ -52830,7 +53143,7 @@ function renderTimetracePanel(view, { query = "", searchOpen = false, filter = "
   const scene = scenes.some(([key]) => key === filter) ? filter : "all";
   const searchQuery = searchOpen ? query : "";
   const actions = `<div class="t-memory-card-actions"><button type="button" class="t-memory-action" data-action="time-toggle-search" aria-expanded="${searchOpen}" aria-controls="t-timetrace-search-panel"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> ${searchOpen ? "\u6536\u8D77\u67E5\u627E" : "\u67E5\u627E"}</button><button type="button" class="t-memory-action" data-action="time-edit-base" ${disabled ? "disabled" : ""}>\u5386\u6CD5\u4E0E\u8D77\u70B9</button><button type="button" class="t-memory-action" data-action="time-rebuild" ${disabled || !view.memory.enabled ? "disabled" : ""}>\u91CD\u65B0\u6821\u51C6</button><button type="button" class="t-memory-action" data-action="time-run" ${disabled || !view.memory.enabled ? "disabled" : ""}>${view.paused ? "\u7EE7\u7EED\u8865\u5EFA" : "\u8865\u5EFA\u5386\u53F2"}</button></div>`;
-  return `<div class="t-memory-section-heading"><div><p class="t-memory-eyebrow">ECHO / TIME TRACE</p><h2 tabindex="-1">\u56DE\u58F0\u65F6\u75D5</h2><p class="t-memory-hint">${view.coveredFloors || 0} / ${view.totalFloors || 0} \u6761\u6765\u6E90\u5DF2\u8BB0\u5F55 \xB7 \u4E3A\u6545\u4E8B\u8BB0\u5FC6\u63D0\u4F9B\u65F6\u95F4\u4F9D\u636E</p></div>${actions}</div>
+  return `<div class="t-memory-section-heading"><div><p class="t-memory-eyebrow">ECHO / TIME TRACE</p><h2 tabindex="-1">\u56DE\u58F0\u65F6\u75D5</h2><p class="t-memory-hint">${view.coveredFloors || 0} / ${view.totalFloors || 0} \u6761\u6765\u6E90\u5DF2\u8BB0\u5F55 \xB7 \u6700\u65B0\u5386\u53F2\u5728\u524D</p></div>${actions}</div>
         ${renderTimetraceCurrent(view, false, disabled)}
         ${view.error || view.warning ? `<p class="t-timetrace-feedback" role="status">${escape3(view.error || view.warning)}</p>` : ""}
         ${!view.memory.enabled ? '<p class="t-memory-hint">\u5728\u9876\u680F\u300C\u8FD0\u884C\u8BBE\u7F6E \u2192 \u56DE\u58F0\u65F6\u75D5\u300D\u4E2D\u542F\u7528\u5F53\u524D\u804A\u5929\u7684\u65F6\u95F4\u589E\u5F3A\u3002</p>' : ""}
@@ -53479,6 +53792,50 @@ var init_storyMemoryProgress = __esm({
   }
 });
 
+// src/ui/characterEvolutionJourney.js
+function buildEvolutionThemes(items = [], batches = []) {
+  const themes = /* @__PURE__ */ new Map();
+  for (const item2 of items) themes.set(item2.id, { id: item2.id, item: item2, latest: item2, changes: [] });
+  for (const batch of batches) {
+    for (const [index, change] of (batch.changes || []).entries()) {
+      const id3 = change.id || change.after?.id || change.before?.id;
+      if (!id3) continue;
+      if (!themes.has(id3)) themes.set(id3, { id: id3, item: null, latest: null, changes: [] });
+      const theme = themes.get(id3);
+      if (!theme.item) theme.latest = change.after || change.before || theme.latest;
+      theme.changes.push({ key: JSON.stringify([batch.id, index]), start: batch.start, end: batch.end, change });
+    }
+  }
+  return [...themes.values()].filter((theme) => theme.latest).map((theme) => ({
+    ...theme,
+    title: theme.latest.title,
+    category: theme.latest.category,
+    subject: theme.latest.subject,
+    status: theme.item?.status || "deleted"
+  }));
+}
+function selectEvolutionChange(theme, key = null) {
+  return theme?.changes.find((entry) => entry.key === key) || theme?.changes.at(-1) || null;
+}
+function evolutionStepPage(theme, selected) {
+  const changes = theme?.changes || [];
+  const index = Math.max(0, changes.findIndex((entry) => entry.key === selected?.key));
+  const start = Math.floor(index / EVOLUTION_STEP_PAGE_SIZE) * EVOLUTION_STEP_PAGE_SIZE;
+  return {
+    entries: changes.slice(start, start + EVOLUTION_STEP_PAGE_SIZE),
+    start,
+    total: changes.length,
+    previous: changes[start - 1]?.key || null,
+    next: changes[start + EVOLUTION_STEP_PAGE_SIZE]?.key || null
+  };
+}
+var EVOLUTION_STEP_PAGE_SIZE;
+var init_characterEvolutionJourney = __esm({
+  "src/ui/characterEvolutionJourney.js"() {
+    EVOLUTION_STEP_PAGE_SIZE = 4;
+  }
+});
+
 // src/ui/characterEvolutionView.js
 function sourceList(sources) {
   return sources.map((source) => `<div class="t-evolution-source"><strong>${escapeHtml(range(source.start, source.end))}${Number.isInteger(source.floor) ? ` \xB7 \u6458\u81EA\u7B2C ${source.floor} \u697C` : ""}</strong>${source.evidence ? `<blockquote>${escapeHtml(source.evidence)}</blockquote>` : ""}</div>`).join("");
@@ -53489,17 +53846,45 @@ function itemHtml(item2, { injection = {} } = {}) {
   return `<article class="t-evolution-item" data-evolution-item="${escapeHtml(item2.id)}" data-evolution-status="${escapeHtml(item2.status)}" aria-label="${escapeHtml(item2.title)}">
         <header class="t-evolution-state-heading"><div class="t-memory-badges">${badges.map((label) => `<span class="t-memory-badge">${escapeHtml(label)}</span>`).join("")}</div></header>
         ${stateBodyHtml(item2)}
-        <div class="t-memory-card-actions">${button2("edit", "\u7F16\u8F91", item2.id)}${button2("pin", item2.pinned ? "\u53D6\u6D88\u56FA\u5B9A" : "\u56FA\u5B9A\u6CE8\u5165", item2.id, !!item2.pinned)}${button2("lock", item2.locked ? "\u89E3\u9501" : "\u9501\u5B9A", item2.id, !!item2.locked)}${item2.status !== "retired" ? button2("archive", "\u9000\u5F79", item2.id) : ""}${button2("delete", "\u5220\u9664", item2.id)}</div>
         <details class="t-evolution-details" data-evolution-detail="source:${escapeHtml(item2.id)}"><summary>\u8BC1\u636E\u539F\u6587${item2.sources?.length ? ` \xB7 ${item2.sources.length} \u6761\u6458\u53E5` : ""}</summary>${sourceList(item2.sources || []) || '<p class="t-memory-hint">\u624B\u52A8\u6761\u76EE\u6682\u65E0\u539F\u6587\u6458\u53E5\uFF1B\u5B83\u4ECD\u53D7\u6240\u5C5E\u804A\u5929\u4E0E\u6709\u6548\u5267\u60C5\u8303\u56F4\u7EA6\u675F\u3002</p>'}${item2.comparisonReference ? `<section class="t-evolution-source"><strong>\u5BF9\u7167\u53C2\u7167\u539F\u6587 \xB7 ${item2.comparisonReference.kind === "baseline" ? item2.comparisonReference.capturedAfterUpgrade ? "\u5347\u7EA7\u65F6\u53C2\u8003\u5361\uFF08\u975E\u6545\u4E8B\u8D77\u70B9\uFF09" : "\u521D\u59CB\u89D2\u8272\u57FA\u7EBF" : "\u6B64\u6761\u8FC7\u5F80\u72B6\u6001"}</strong><pre class="t-memory-source" data-evolution-comparison-reference>${escapeHtml(item2.comparisonReference.text)}</pre></section>` : ""}</details>
     </article>`;
 }
-function itemsHtml(items, settings = {}) {
-  const render = (item2) => itemHtml(item2, settings);
-  const retired = items.filter((item2) => item2.status === "retired");
-  return Object.entries(EVOLUTION_CATEGORIES).map(([category, label]) => {
-    const active4 = items.filter((item2) => item2.status === "active" && item2.category === category);
-    return `<section class="t-evolution-category" data-evolution-category="${escapeHtml(category)}"><h4>${escapeHtml(label)} <span class="t-memory-badge">${active4.length} \u6761</span></h4><div class="t-evolution-gallery">${active4.map(render).join("") || '<p class="t-memory-empty-inline">\u6682\u65E0\u6709\u4F9D\u636E\u7684\u5F53\u524D\u72B6\u6001\u3002</p>'}</div></section>`;
-  }).join("") + (retired.length ? `<details class="t-memory-archive" data-evolution-detail="archive"><summary>\u5DF2\u9000\u5F79 \xB7 ${retired.length} \u6761\uFF08\u4E0D\u6CE8\u5165\uFF09</summary><div class="t-evolution-gallery">${retired.map(render).join("")}</div></details>` : "");
+function themesHtml(themes, selectedId, query) {
+  const visible = themes.filter((theme) => !query || `${theme.title}
+${theme.subject || ""}
+${EVOLUTION_CATEGORIES[theme.category] || ""}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+  const render = (theme) => `<button type="button" class="t-evolution-theme" data-evolution-action="theme" data-evolution-id="${escapeHtml(theme.id)}" data-selected="${theme.id === selectedId}" aria-pressed="${theme.id === selectedId}">
+        <span class="t-evolution-theme-category">${escapeHtml(theme.subject || EVOLUTION_CATEGORIES[theme.category] || "\u72B6\u6001\u8BB0\u5F55")}</span><strong>${escapeHtml(theme.title)}</strong>
+        <small>${theme.changes.length} \u6B21\u5206\u6790\u53D8\u5316 \xB7 ${theme.status === "deleted" ? "\u5DF2\u5220\u9664\uFF0C\u4EC5\u5386\u53F2" : theme.status === "retired" ? "\u5DF2\u9000\u5F79\uFF0C\u4E0D\u6CE8\u5165" : theme.item.manual ? "\u542B\u624B\u52A8\u4FEE\u8BA2" : range(theme.item.updatedThrough)}</small></button>`;
+  const active4 = Object.entries(EVOLUTION_CATEGORIES).map(([category, label]) => {
+    const list = visible.filter((theme) => theme.category === category && theme.status === "active");
+    return `<section class="t-evolution-theme-group" data-evolution-category="${category}"><h4>${escapeHtml(label)}</h4>${list.map(render).join("") || '<p class="t-memory-empty-inline">\u6682\u65E0\u5F53\u524D\u72B6\u6001</p>'}</section>`;
+  }).join("");
+  const historical = visible.filter((theme) => theme.status !== "active");
+  return active4 + (historical.length ? `<details class="t-evolution-history-themes" data-evolution-detail="archive"${historical.some((theme) => theme.id === selectedId) ? " open" : ""}><summary>\u5DF2\u9000\u5F79 / \u5DF2\u5220\u9664 \xB7 ${historical.length} \u6761\uFF08\u4E0D\u6CE8\u5165\uFF09</summary>${historical.map(render).join("")}</details>` : "");
+}
+function journeyHtml(theme, selected) {
+  if (!theme) return '<div class="t-evolution-empty">\u5C1A\u65E0\u6210\u957F\u4E3B\u9898\u3002\u53EF\u5728\u300C\u5206\u6790\u4E0E\u8FD0\u884C\u300D\u4E2D\u542F\u7528\u5E76\u5206\u6790\u5DF2\u6709\u5267\u60C5\u3002</div>';
+  if (!selected) return '<div class="t-evolution-empty">\u8FD9\u6761\u72B6\u6001\u5C1A\u65E0\u5206\u6790\u53D8\u5316\u8BB0\u5F55\u3002\u624B\u52A8\u4FEE\u8BA2\u53EA\u66F4\u65B0\u5F53\u524D\u6863\u6848\uFF0C\u4E0D\u865A\u6784\u5386\u53F2\u8282\u70B9\u3002</div>';
+  const page = evolutionStepPage(theme, selected);
+  const step = (entry) => `<button type="button" class="t-evolution-step" data-evolution-action="step" data-evolution-step="${escapeHtml(entry.key)}" aria-pressed="${entry.key === selected.key}" title="${escapeHtml(range(entry.start, entry.end))}">
+        <span class="t-evolution-step-floor">${escapeHtml(range(entry.start, entry.end))}</span><span class="t-evolution-step-dot" aria-hidden="true"></span>
+        <strong>${escapeHtml(entry.change.after?.title || entry.change.before?.title || "\u6761\u76EE\u53D8\u5316")}</strong><small>${entry.change.changeType === "retire" || entry.change.after?.status === "retired" ? "\u9000\u5F79" : !entry.change.before ? "\u9996\u6B21\u8BB0\u5F55" : "\u72B6\u6001\u4FEE\u8BA2"}</small></button>`;
+  const { change } = selected;
+  const cell = (item2, label, after = false) => `<div class="t-evolution-compare-cell${after ? " is-after" : ""}"><span class="t-evolution-compare-label">${label}${item2?.status === "retired" ? " \xB7 \u5DF2\u9000\u5F79\uFF0C\u4E0D\u6CE8\u5165" : ""}</span><p class="t-evolution-compare-text">${escapeHtml(item2?.current || (after ? "\u6B64\u6761\u76EE\u5DF2\u79FB\u9664\u3002" : "\u6B64\u524D\u5C1A\u65E0\u8FD9\u4E00\u6761\u72B6\u6001\u8BB0\u5F55\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u8D77\u70B9\u3002"))}</p>${item2 ? `<small>${escapeHtml(EVOLUTION_CATEGORIES[item2.category] || "")}${item2.subject ? ` \xB7 ${escapeHtml(item2.subject)}` : ""} \xB7 ${escapeHtml(EVOLUTION_TIMESCALES[item2.timescale] || "")}</small>` : ""}</div>`;
+  return `<div class="t-evolution-path-head"><strong>\u8FD9\u6761\u72B6\u6001\uFF0C\u5982\u4F55\u8D70\u5230\u73B0\u5728</strong><span>${page.total} \u6B21\u8BB0\u5F55</span></div>
+        <nav class="t-evolution-steps" aria-label="\u9009\u62E9\u5267\u60C5\u53D8\u5316\u8BB0\u5F55">${page.entries.map(step).join("")}</nav>
+        <div class="t-evolution-path-pagination">${page.previous ? `<button type="button" class="t-memory-link" data-evolution-action="step" data-evolution-step="${escapeHtml(page.previous)}">\u66F4\u65E9\u8BB0\u5F55</button>` : "<span></span>"}<span>${page.start + 1}\u2013${page.start + page.entries.length} / ${page.total}</span>${page.next ? `<button type="button" class="t-memory-link" data-evolution-action="step" data-evolution-step="${escapeHtml(page.next)}">\u8F83\u65B0\u8BB0\u5F55</button>` : "<span></span>"}</div>
+        <p class="t-evolution-history-note">\u6309\u5267\u60C5\u987A\u5E8F\u6392\u5217\uFF1B\u95F4\u8DDD\u4E0D\u4EE3\u8868\u65F6\u95F4\u957F\u77ED\u6216\u6210\u957F\u5E45\u5EA6\u3002</p>
+        <header class="t-evolution-change-heading"><h4>\u8FD9\u4E00\u6BB5\uFF0C\u5177\u4F53\u6539\u53D8\u4E86\u4EC0\u4E48</h4><span>${escapeHtml(range(selected.start, selected.end))} \xB7 \u5386\u53F2\u5FEB\u7167</span></header>
+        <div class="t-evolution-compare">${cell(change.before, "\u53D8\u5316\u524D")}<span class="t-evolution-compare-arrow" aria-hidden="true">\u2192</span>${cell(change.after, "\u53D8\u5316\u540E \xB7 \u5F53\u65F6\u72B6\u6001", true)}</div>
+        ${change.after ? `<div class="t-evolution-scope"><span>\u5F53\u65F6\u8FB9\u754C</span><p>${escapeHtml(change.after.scope)}</p></div>` : ""}
+        <details class="t-evolution-details" data-evolution-detail="snapshot:${escapeHtml(selected.key)}"><summary>\u5B8C\u6574\u5386\u53F2\u5FEB\u7167 \xB7 \u5BF9\u7167\u3001\u8FB9\u754C\u4E0E\u4F9D\u636E</summary><p class="t-memory-hint">\u53D8\u5316\u524D</p>${snapshotHtml(change.before, "\u6B64\u524D\u5C1A\u65E0\u6B64\u6761\u8BB0\u5F55\u3002")}<p class="t-memory-hint">\u53D8\u5316\u540E</p>${snapshotHtml(change.after, "\u6B64\u6761\u76EE\u5DF2\u79FB\u9664\u3002")}</details>`;
+}
+function evidenceHtml(theme, selected, current = false) {
+  if (!theme) return '<p class="t-memory-empty-inline">\u9009\u62E9\u4E00\u6761\u72B6\u6001\u540E\u67E5\u770B\u539F\u6587\u4F9D\u636E\u3002</p>';
+  if (current || !selected) return theme.item ? `<section class="t-evolution-reason"><h4>\u5F53\u524D\u5224\u65AD\u7684\u7B80\u77ED\u4F9D\u636E</h4><p>${escapeHtml(theme.item.basis)}</p></section>${sourceList(theme.item.sources || []) || '<p class="t-memory-hint">\u624B\u52A8\u6761\u76EE\u6682\u65E0\u539F\u6587\u6458\u53E5\u3002</p>'}` : '<p class="t-memory-hint">\u8FD9\u6761\u72B6\u6001\u5DF2\u5220\u9664\uFF0C\u53EA\u4FDD\u7559\u5386\u53F2\u8BB0\u5F55\u3002</p>';
+  return `<section class="t-evolution-reason"><h4>\u4E3A\u4EC0\u4E48\u4FEE\u6539\u8FD9\u6761\u72B6\u6001</h4><p>${escapeHtml(selected.change.reason || "\u672C\u6279\u672A\u8BB0\u5F55\u4FEE\u6539\u7406\u7531\u3002")}</p></section><div class="t-evolution-evidence-sources">${(selected.change.evidence || []).map((source) => `<article class="t-evolution-source"><strong>${escapeHtml(range(source.floor))}</strong><blockquote>${escapeHtml(source.quote)}</blockquote></article>`).join("") || '<p class="t-memory-hint">\u672C\u6B21\u53D8\u5316\u6CA1\u6709\u8BB0\u5F55\u539F\u6587\u6458\u53E5\u3002</p>'}</div>`;
 }
 function snapshotHtml(item2, absent) {
   if (!item2) return `<p class="t-memory-hint">${escapeHtml(absent)}</p>`;
@@ -53508,12 +53893,8 @@ function snapshotHtml(item2, absent) {
 function changeEvidenceHtml(change, detail) {
   return `<details class="t-evolution-details" data-evolution-detail="${escapeHtml(detail)}"><summary>\u8BC1\u636E\u539F\u6587 \xB7 ${change.evidence?.length || 0} \u6761\u6458\u53E5</summary>${(change.evidence || []).map((evidence) => `<div class="t-evolution-source"><strong>${escapeHtml(range(evidence.floor))}</strong><blockquote>${escapeHtml(evidence.quote)}</blockquote></div>`).join("") || '<p class="t-memory-hint">\u672A\u8BB0\u5F55\u539F\u6587\u6458\u53E5\u3002</p>'}</details>`;
 }
-function changesHtml(batch, compact = false) {
-  return (batch.changes || []).map((change, index) => `<section class="t-evolution-change"><h4>${change.changeType === "retire" || change.after?.status === "retired" ? "\u9000\u5F79 \xB7 \u4E0D\u518D\u6709\u6548" : "\u66F4\u65B0"} \xB7 ${escapeHtml(change.after?.title || change.before?.title || "\u6761\u76EE\u53D8\u5316")}</h4>${compact ? "" : `<p class="t-memory-hint">\u53D8\u5316\u524D</p>${snapshotHtml(change.before, "\u6B64\u524D\u6CA1\u6709\u8FD9\u4E00\u6761\u76EE\u3002")}<p class="t-memory-hint">\u53D8\u5316\u540E</p>${snapshotHtml(change.after, "\u6B64\u6761\u76EE\u5DF2\u79FB\u9664\u3002")}`}${change.reason ? text2(change.reason) : ""}${changeEvidenceHtml(change, `${compact ? "latest" : "history"}:${batch.id}:${index}`)}</section>`).join("") || '<p class="t-memory-hint">\u672C\u6279\u6CA1\u6709\u66F4\u65B0\uFF0C\u4FDD\u7559\u5F53\u524D\u72B6\u6001\u3002</p>';
-}
-function latestBatchHtml(batches) {
-  const latest = batches.at(-1);
-  return latest ? `<p class="t-memory-hint">${escapeHtml(range(latest.start, latest.end))} \xB7 ${latest.changes?.length || 0} \u9879\u66F4\u65B0</p>${changesHtml(latest, true)}` : '<p class="t-memory-empty-inline">\u5C1A\u65E0\u5206\u6790\u8BB0\u5F55\u3002\u9996\u6B21\u5206\u6790\u4ECE\u804A\u5929\u8D77\u70B9\u9010\u6279\u8BFB\u53D6\u5DF2\u6709\u5386\u53F2\u3002</p>';
+function changesHtml(batch) {
+  return (batch.changes || []).map((change, index) => `<section class="t-evolution-change"><h4>${change.changeType === "retire" || change.after?.status === "retired" ? "\u9000\u5F79 \xB7 \u4E0D\u518D\u6709\u6548" : "\u66F4\u65B0"} \xB7 ${escapeHtml(change.after?.title || change.before?.title || "\u6761\u76EE\u53D8\u5316")}</h4><p class="t-memory-hint">\u53D8\u5316\u524D</p>${snapshotHtml(change.before, "\u6B64\u524D\u6CA1\u6709\u8FD9\u4E00\u6761\u76EE\u3002")}<p class="t-memory-hint">\u53D8\u5316\u540E</p>${snapshotHtml(change.after, "\u6B64\u6761\u76EE\u5DF2\u79FB\u9664\u3002")}${change.reason ? text2(change.reason) : ""}${changeEvidenceHtml(change, `history:${batch.id}:${index}`)}</section>`).join("") || '<p class="t-memory-hint">\u672C\u6279\u6CA1\u6709\u66F4\u65B0\uFF0C\u4FDD\u7559\u5F53\u524D\u72B6\u6001\u3002</p>';
 }
 function batchesHtml(batches) {
   return [...batches].reverse().map((batch) => `<details class="t-evolution-details" data-evolution-detail="batch:${escapeHtml(batch.id)}"><summary>${escapeHtml(range(batch.start, batch.end))} \xB7 ${batch.changes?.length || 0} \u9879\u66F4\u65B0</summary>${changesHtml(batch)}</details>`).join("") || '<p class="t-memory-empty-inline">\u5C1A\u65E0\u5206\u6790\u8BB0\u5F55\u3002</p>';
@@ -53528,42 +53909,62 @@ function coverageText(view) {
 }
 function mountCharacterEvolutionView(container, { onSettings = () => {
 } } = {}) {
+  ensureFeatureCss("character-evolution.css");
+  const prefix = `t-evolution-${++viewSequence}`;
   const root = document.createElement("section");
   root.className = "t-evolution-view";
-  root.innerHTML = `<div class="t-memory-page-heading"><div><p class="t-memory-eyebrow">06 / THE CHARACTER WITHIN</p><h2 tabindex="-1">\u89D2\u8272\u6F14\u53D8</h2><p class="t-memory-hint">\u7ECF\u5386\u7559\u4E0B\u5DEE\u5F02\uFF0C\u800C\u975E\u91CD\u5199\u4E00\u4E2A\u4EBA\u3002\u6BCF\u6BB5\u804A\u5929\uFF0C\u72EC\u7ACB\u4FDD\u5B58\u3002</p></div></div>
+  root.innerHTML = `<header class="t-evolution-page-head"><div><p class="t-evolution-caption">\u4EBA\u7269\u6F14\u53D8\u5DE5\u4F5C\u53F0</p><h2 tabindex="-1">\u89D2\u8272\u6F14\u53D8</h2><p class="t-memory-hint">\u6CBF\u7740\u7ECF\u5386\uFF0C\u770B\u89C1\u53D8\u5316\u7559\u4E0B\u7684\u75D5\u8FF9\u3002</p></div>${button2("add", "\u65B0\u589E\u72B6\u6001")}</header>
         <p class="t-memory-error" data-evolution-role="unsupported" hidden></p>
         <p class="t-memory-error" data-evolution-role="error" role="alert" hidden></p>
         <div data-evolution-role="archive">
-            <header class="t-evolution-person"><div><p class="t-evolution-caption">\u4EBA\u7269\u6F14\u53D8\u5DE5\u4F5C\u53F0</p><h3 data-evolution-role="character"></h3><p class="t-memory-hint" data-evolution-role="edition"></p></div></header>
-            <div class="t-evolution-controls">
-                <label class="t-memory-toggle"><input type="checkbox" data-evolution-toggle="enabled"> \u5728\u672C\u804A\u5929\u542F\u7528\u89D2\u8272\u6F14\u53D8</label>
-                <label class="t-memory-toggle"><input type="checkbox" data-evolution-toggle="auto"> \u81EA\u52A8\u5206\u6790</label>
-                <div class="t-memory-card-actions">${button2("run", "\u7ACB\u5373\u5206\u6790\u4E00\u6279")}${button2("pause", "\u6682\u505C\u5206\u6790")}${button2("undo", "\u64A4\u9500\u6700\u8FD1\u5206\u6790")}</div>
-            </div>
-            <p class="t-memory-error" data-evolution-role="run-feedback" role="status" aria-live="polite" hidden></p>
-            <p class="t-memory-hint" data-evolution-role="status" role="status" aria-live="polite"></p>
-            <div class="t-evolution-settings-link"><div><p class="t-memory-hint">\u5206\u6790\u4E0E\u6CE8\u5165\u53C2\u6570\u7EDF\u4E00\u5728\u8FD0\u884C\u8BBE\u7F6E\u4E2D\u8C03\u6574\uFF1B\u65B9\u6848\u4E0E\u6A21\u578B\u8DDF\u968F\u6545\u4E8B\u8BB0\u5FC6\u3002</p><p class="t-memory-hint" data-evolution-role="connection"></p></div>${button2("settings", "\u8C03\u6574\u6F14\u53D8\u8FD0\u884C\u8BBE\u7F6E")}</div>
-            <p class="t-evolution-coverage" data-evolution-role="coverage" hidden></p>
-            <section class="t-evolution-legacy" data-evolution-role="legacy" hidden>
-                <p class="t-memory-hint">\u65E7\u7248\u6CA1\u6709\u53EF\u9760\u4E09\u5206\u7C7B\uFF0C\u65E7\u6863\u6848\u5DF2\u4FDD\u7559\u5907\u4EFD\u3001\u4E0D\u6CE8\u5165\uFF1B\u5347\u7EA7\u65F6\u81EA\u52A8\u5206\u6790\u5DF2\u6682\u505C\u3002\u5347\u7EA7\u9700\u4ECE\u5934\u91CD\u65B0\u5206\u6790\uFF0C\u4E0D\u4F1A\u628A\u65E7\u7ED3\u8BBA\u81EA\u52A8\u6539\u6210\u5F53\u524D\u72B6\u6001\u3002\u8BF7\u70B9\u300C\u7ACB\u5373\u5206\u6790\u4E00\u6279\u300D\uFF0C\u6216\u5F00\u542F\u300C\u81EA\u52A8\u5206\u6790\u300D\u9010\u6279\u91CD\u6790\u3002</p>
-                <details class="t-evolution-details" data-evolution-detail="legacy"><summary>\u65E7\u6863\u6848\u5907\u4EFD \xB7 \u53EA\u8BFB\uFF0C\u4E0D\u6CE8\u5165</summary><pre class="t-memory-source" data-evolution-role="legacy-archive" tabindex="0"></pre></details>
-            </section>
-            <section class="t-evolution-dossier"><div class="t-memory-section-heading"><div><p class="t-evolution-caption">\u6B64\u523B\u5982\u4F55\u626E\u6F14</p><h3 data-evolution-role="dossier-title">\u5F53\u524D\u72B6\u6001</h3></div>${button2("add", "\u65B0\u589E\u72B6\u6001")}</div>
-                <p class="t-memory-hint">\u5C55\u793A\u4E0E\u6CE8\u5165\u5171\u7528\u540C\u4E00\u4EFD\u5F53\u524D\u72B6\u6001\uFF0C\u4E0D\u53E6\u4F5C\u603B\u7ED3\u3002\u5F53\u524D\u6709\u6548\u4E0D\u4EE3\u8868\u6C38\u4E45\u6539\u53D8\uFF1B\u4EC5\u5728\u6240\u8FF0\u5BF9\u8C61\u3001\u65F6\u95F4\u5C3A\u5EA6\u4E0E\u9002\u7528\u8FB9\u754C\u5185\u53C2\u8003\uFF0C\u5DF2\u9000\u5F79\u4E0D\u6CE8\u5165\u3002</p>
-                <p class="t-memory-hint">\u56FA\u5B9A\u6CE8\u5165\u53EA\u63D0\u9AD8\u9884\u7B97\u4F18\u5148\u7EA7\uFF0C\u4E0D\u4FDD\u8BC1\u4E00\u5B9A\u7EB3\u5165\uFF1B\u9501\u5B9A\u4EC5\u963B\u6B62\u81EA\u52A8\u8986\u76D6\uFF0C\u4E24\u8005\u72EC\u7ACB\u3002\u6765\u6E90\u64A4\u56DE\u65F6\uFF0C\u4F9D\u8D56\u5B83\u7684\u6761\u76EE\u4ECD\u4F1A\u56DE\u9000\u3002</p>
-                <div data-evolution-role="editor"></div><div data-evolution-role="items"></div>
-            </section>
-            <details class="t-evolution-details t-evolution-guidance" data-evolution-detail="preview"><summary>\u672C\u8F6E\u5B9E\u9645\u6CE8\u5165\u9884\u89C8 <span class="t-memory-badge" data-evolution-role="guidance-state"></span></summary>
-                <pre class="t-memory-source" data-evolution-role="preview" tabindex="0" aria-label="\u672C\u8F6E\u5B9E\u9645\u6CE8\u5165\u6B63\u6587"></pre>
-                <p class="t-memory-hint" data-evolution-role="budget"></p><p class="t-memory-hint" data-evolution-role="omitted"></p>
+            <details class="t-evolution-operations" data-evolution-detail="operations"><summary>\u5206\u6790\u4E0E\u8FD0\u884C <span data-evolution-role="run-summary"></span></summary>
+                <div class="t-evolution-controls">
+                    <label class="t-memory-toggle"><input type="checkbox" data-evolution-toggle="enabled"> \u5728\u672C\u804A\u5929\u542F\u7528\u89D2\u8272\u6F14\u53D8</label>
+                    <label class="t-memory-toggle"><input type="checkbox" data-evolution-toggle="auto"> \u81EA\u52A8\u5206\u6790</label>
+                    <div class="t-memory-card-actions">${button2("run", "\u7ACB\u5373\u5206\u6790\u4E00\u6279")}${button2("pause", "\u6682\u505C\u5206\u6790")}${button2("undo", "\u64A4\u9500\u6700\u8FD1\u5206\u6790")}</div>
+                </div>
+                <p class="t-memory-error" data-evolution-role="run-feedback" role="status" aria-live="polite" hidden></p>
+                <p class="t-memory-hint" data-evolution-role="status" role="status" aria-live="polite"></p>
+                <div class="t-evolution-settings-link"><div><p class="t-memory-hint">\u5206\u6790\u4E0E\u6CE8\u5165\u53C2\u6570\u7EDF\u4E00\u5728\u8FD0\u884C\u8BBE\u7F6E\u4E2D\u8C03\u6574\uFF1B\u65B9\u6848\u4E0E\u6A21\u578B\u8DDF\u968F\u6545\u4E8B\u8BB0\u5FC6\u3002</p><p class="t-memory-hint" data-evolution-role="connection"></p></div>${button2("settings", "\u8C03\u6574\u6F14\u53D8\u8FD0\u884C\u8BBE\u7F6E")}</div>
             </details>
-            <section class="t-evolution-latest" aria-label="\u6700\u65B0\u4E00\u6279\u66F4\u65B0"><h3>\u6700\u65B0\u4E00\u6279\u66F4\u65B0</h3><div data-evolution-role="latest"></div></section>
-            <details class="t-evolution-details" data-evolution-detail="history"><summary>\u5B8C\u6574\u5206\u6790\u5386\u53F2</summary><div data-evolution-role="batches"></div></details>
-            <details class="t-evolution-details" data-evolution-detail="baseline"><summary data-evolution-role="baseline-title">\u89D2\u8272\u57FA\u7EBF \xB7 \u53EA\u8BFB</summary><p class="t-memory-hint" data-evolution-role="baseline-hint"></p><pre class="t-memory-source" data-evolution-role="baseline"></pre></details>
+            <p class="t-evolution-coverage" data-evolution-role="coverage" hidden></p>
+            <div class="t-evolution-editor-host" data-evolution-role="editor"></div>
+            <div class="t-evolution-workspace">
+                <aside class="t-evolution-sidebar">
+                    <header class="t-evolution-person"><span class="t-evolution-monogram" data-evolution-role="monogram" aria-hidden="true"></span><div><h3 data-evolution-role="character"></h3><p data-evolution-role="edition"></p></div></header>
+                    <details class="t-evolution-topic-browser" data-evolution-detail="topics" open><summary class="t-evolution-topic-toggle">\u9009\u62E9\u6210\u957F\u4E3B\u9898 <span data-evolution-role="topic-label"></span></summary>
+                        <label class="t-evolution-theme-search" for="${prefix}-search"><span>\u67E5\u627E\u4E3B\u9898\u6216\u4EBA\u7269</span><input class="t-input" id="${prefix}-search" type="search" data-evolution-role="theme-search" placeholder="\u641C\u7D22\u72B6\u6001\u6807\u9898\u3001\u5BF9\u8C61"></label>
+                        <nav class="t-evolution-theme-groups" data-evolution-role="themes" aria-label="\u6210\u957F\u4E3B\u9898"></nav>
+                    </details>
+                </aside>
+                <section class="t-evolution-center">
+                    <section class="t-evolution-dossier" aria-label="\u5F53\u524D\u72B6\u6001">
+                        <div class="t-evolution-now-heading"><span class="t-evolution-caption" data-evolution-role="now-label"></span><div class="t-evolution-state-badges" data-evolution-role="now-badges"></div></div>
+                        <h3 data-evolution-role="dossier-title" tabindex="-1">\u5F53\u524D\u72B6\u6001</h3><p class="t-evolution-now-text" data-evolution-role="now-text"></p>
+                        <div class="t-evolution-scope" data-evolution-role="now-scope-wrap"><span>\u9002\u7528\u8FB9\u754C</span><p data-evolution-role="now-scope"></p></div>
+                        <div class="t-evolution-now-meta"><span data-evolution-role="now-meta"></span>${button2("latest", "\u56DE\u5230\u6700\u65B0\u53D8\u5316")}</div>
+                        <div class="t-memory-card-actions" data-evolution-role="item-actions"></div>
+                    </section>
+                    <div class="t-evolution-read-tabs" role="tablist" aria-label="\u9605\u8BFB\u65B9\u5F0F"><button type="button" class="t-evolution-read-tab" data-evolution-action="read-tab" data-evolution-tab="journey" id="${prefix}-journey-tab" role="tab" aria-selected="true" aria-controls="${prefix}-journey">\u53D8\u5316\u8F68\u8FF9</button><button type="button" class="t-evolution-read-tab" data-evolution-action="read-tab" data-evolution-tab="current" id="${prefix}-current-tab" role="tab" aria-selected="false" aria-controls="${prefix}-current" tabindex="-1">\u5F53\u524D\u72B6\u6001\u539F\u6587</button></div>
+                    <section class="t-evolution-journey" id="${prefix}-journey" role="tabpanel" aria-labelledby="${prefix}-journey-tab" data-evolution-role="journey"></section>
+                    <section class="t-evolution-canonical" id="${prefix}-current" role="tabpanel" aria-labelledby="${prefix}-current-tab" data-evolution-role="current-panel" hidden><div data-evolution-role="items"></div><p class="t-memory-hint">\u539F\u6587\u4E0E\u6CE8\u5165\u5171\u7528\u540C\u4E00\u4EFD renderer\uFF0C\u4E0D\u53E6\u4F5C\u603B\u7ED3\u3002\u56FA\u5B9A\u6CE8\u5165\u53EA\u63D0\u9AD8\u9884\u7B97\u4F18\u5148\u7EA7\uFF1B\u9501\u5B9A\u963B\u6B62\u81EA\u52A8\u8986\u76D6\uFF0C\u4F46\u4E0D\u4FDD\u7559\u5DF2\u5931\u6548\u7684\u5267\u60C5\u3002</p></section>
+                </section>
+                <details class="t-evolution-evidence" data-evolution-detail="evidence" open><summary><h3 data-evolution-role="evidence-title">\u8FD9\u6B21\u53D8\u5316\u7684\u4F9D\u636E</h3><small data-evolution-role="evidence-range"></small></summary><div class="t-evolution-evidence-body" data-evolution-role="evidence"></div><p class="t-evolution-evidence-note">\u539F\u6587\u4F9B\u6838\u5BF9\uFF0C\u4E0D\u662F\u5FC5\u987B\u590D\u6F14\u7684\u53F0\u8BCD\u3002\u6458\u53E5\u5B58\u5728\u4E5F\u4E0D\u4FDD\u8BC1\u5FC3\u7406\u63A8\u65AD\u6B63\u786E\uFF1B\u624B\u52A8\u4FEE\u8BA2\u4E0D\u4EE3\u8868\u539F\u6587\u5DF2\u6838\u9A8C\u624B\u6539\u5224\u65AD\u3002</p></details>
+            </div>
+            <footer class="t-evolution-workspace-footer"><span>\u5F53\u524D\u6709\u6548\u4E0D\u4EE3\u8868\u6C38\u4E45\u4E0D\u53D8</span><span>\u5386\u53F2\u53EA\u4F9B\u56DE\u770B \xB7 \u540E\u7EED\u626E\u6F14\u4ECD\u4F7F\u7528\u5F53\u524D\u72B6\u6001</span></footer>
+            <div class="t-evolution-tools">
+                <details class="t-evolution-details t-evolution-guidance" data-evolution-detail="preview"><summary>\u672C\u8F6E\u5B9E\u9645\u6CE8\u5165\u9884\u89C8 <span class="t-memory-badge" data-evolution-role="guidance-state"></span></summary><pre class="t-memory-source" data-evolution-role="preview" tabindex="0" aria-label="\u672C\u8F6E\u5B9E\u9645\u6CE8\u5165\u6B63\u6587"></pre><p class="t-memory-hint" data-evolution-role="budget"></p><p class="t-memory-hint" data-evolution-role="omitted"></p></details>
+                <details class="t-evolution-details" data-evolution-detail="history"><summary>\u5B8C\u6574\u5206\u6790\u5386\u53F2 \xB7 \u5305\u542B\u65E0\u53D8\u5316\u6279\u6B21</summary><div data-evolution-role="batches"></div></details>
+                <details class="t-evolution-details" data-evolution-detail="baseline"><summary data-evolution-role="baseline-title">\u89D2\u8272\u57FA\u7EBF \xB7 \u53EA\u8BFB</summary><p class="t-memory-hint" data-evolution-role="baseline-hint"></p><pre class="t-memory-source" data-evolution-role="baseline"></pre></details>
+            </div>
         </div>`;
   container.appendChild(root);
   const role = (name) => root.querySelector(`[data-evolution-role="${name}"]`);
-  let contextKey = null;
+  let contextKey = null, identity = null;
+  let selectedThemeId = null, selectedChangeKey = null, readTab = "journey";
+  let themes = [], query = "";
+  const media = root.ownerDocument.defaultView.matchMedia?.("(max-width: 680px)");
+  root.querySelector('[data-evolution-detail="topics"]').open = !media?.matches;
   let draft2 = null;
   let operation = null;
   let localError = "";
@@ -53575,14 +53976,17 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
     const open = new Set([...element.querySelectorAll("details[open]")].map((item2) => item2.dataset.evolutionDetail));
     const focused = root.ownerDocument.activeElement;
     const focusAction = element.contains(focused) ? focused?.dataset?.evolutionAction : null;
-    const focusId = focused?.dataset?.evolutionId;
+    const focusId = focused?.dataset?.evolutionId, focusStep = focused?.dataset?.evolutionStep;
     const focusDetail = focused?.tagName === "SUMMARY" && element.contains(focused) ? focused.parentElement.dataset.evolutionDetail : null;
+    const existingDetails = new Set([...element.querySelectorAll("details")].map((item2) => item2.dataset.evolutionDetail));
+    const scroll = element.scrollTop;
     element.innerHTML = html;
     element.querySelectorAll("details").forEach((item2) => {
-      item2.open = open.has(item2.dataset.evolutionDetail);
+      if (existingDetails.has(item2.dataset.evolutionDetail)) item2.open = open.has(item2.dataset.evolutionDetail);
     });
+    element.scrollTop = scroll;
     lastHtml.set(name, html);
-    if (focusAction) [...element.querySelectorAll("[data-evolution-action]")].find((item2) => item2.dataset.evolutionAction === focusAction && item2.dataset.evolutionId === focusId)?.focus({ preventScroll: true });
+    if (focusAction) [...element.querySelectorAll("[data-evolution-action]")].find((item2) => item2.dataset.evolutionAction === focusAction && item2.dataset.evolutionId === focusId && item2.dataset.evolutionStep === focusStep)?.focus({ preventScroll: true });
     if (focusDetail) [...element.querySelectorAll("details")].find((item2) => item2.dataset.evolutionDetail === focusDetail)?.querySelector("summary")?.focus({ preventScroll: true });
   }
   function closeEditor() {
@@ -53596,7 +54000,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
   }
   function current(expected) {
     const view = getEvolutionView();
-    if (disposed || !root.isConnected || expected !== view.contextKey || !available(view)) {
+    if (disposed || !root.isConnected || expected !== view.contextKey || !sameIdentity(identity, getStoryMemoryContextIdentity()) || !available(view)) {
       if (!disposed) {
         refresh();
         localError = "\u804A\u5929\u6216\u89D2\u8272\u5DF2\u5207\u6362\uFF0C\u65E7\u64CD\u4F5C\u672A\u6267\u884C\u3002\u8BF7\u5728\u5F53\u524D\u804A\u5929\u91CD\u65B0\u64CD\u4F5C\u3002";
@@ -53615,17 +54019,23 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
   }
   function refresh() {
     if (disposed || !root.isConnected) return;
-    const view = getEvolutionView();
-    if (contextKey !== view.contextKey) {
+    const view = getEvolutionView(), nextIdentity = getStoryMemoryContextIdentity();
+    if (contextKey !== view.contextKey || !sameIdentity(identity, nextIdentity)) {
       const hadDraft = !!draft2;
       closeEditor();
       root.querySelectorAll("details").forEach((details) => {
-        details.open = false;
+        details.open = ["evidence", "topics"].includes(details.dataset.evolutionDetail) && (details.dataset.evolutionDetail !== "topics" || !media?.matches);
       });
       lastHtml.clear();
+      role("batches").replaceChildren();
       operation = null;
+      selectedThemeId = selectedChangeKey = null;
+      readTab = "journey";
+      query = "";
+      role("theme-search").value = "";
       localError = hadDraft ? "\u5DF2\u5207\u6362\u804A\u5929\uFF0C\u65E7\u804A\u5929\u7684\u7F16\u8F91\u8349\u7A3F\u5DF2\u5173\u95ED\u3002" : "";
       contextKey = view.contextKey;
+      identity = nextIdentity;
     }
     const supported = available(view);
     root.dataset.evolutionVersion = String(view.version);
@@ -53668,14 +54078,48 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
     role("character").textContent = supported ? view.characterName || "\u5F53\u524D\u89D2\u8272" : "";
     const frozenBaseline = view.baselineFrozen === true;
     role("baseline-title").textContent = frozenBaseline ? view.baselineCapturedAfterUpgrade ? "\u51BB\u7ED3\u7684\u5347\u7EA7\u53C2\u8003\u5361 \xB7 \u975E\u6545\u4E8B\u8D77\u70B9" : "\u51BB\u7ED3\u7684\u521D\u59CB\u89D2\u8272\u57FA\u7EBF \xB7 \u53EA\u8BFB" : "\u5F53\u524D\u89D2\u8272\u8D44\u6599 \xB7 \u5C1A\u672A\u51BB\u7ED3";
-    role("baseline-hint").textContent = !supported ? "" : view.baselineCapturedAfterUpgrade ? "\u5347\u7EA7\u540E\u91C7\u96C6\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u8D77\u70B9\uFF1B\u4EC5\u4F5C\u4E3A\u6B64\u6B21\u91CD\u6790\u7684\u51BB\u7ED3\u53C2\u7167\uFF0C\u4E0D\u968F\u5F53\u524D\u89D2\u8272\u5361\u6539\u5199\u3002" : frozenBaseline ? "\u521D\u6B21\u5EFA\u6863\u65F6\u51BB\u7ED3\u7684\u89D2\u8272 JSON\uFF0C\u7528\u4E8E\u53EF\u6838\u5BF9\u7684\u5BF9\u7167\uFF0C\u4E0D\u968F\u5F53\u524D\u89D2\u8272\u5361\u6539\u5199\u3002" : "\u5C1A\u672A\u5EFA\u6863\uFF0C\u4EE5\u4E0B\u662F\u5F53\u524D\u89D2\u8272\u5361\u8D44\u6599\uFF1B\u5EFA\u6863\u540E\u624D\u4F1A\u51BB\u7ED3\u4E3A\u53EF\u6838\u5BF9\u7684\u53C2\u7167\u3002";
+    role("baseline-hint").textContent = !supported ? "" : view.baselineCapturedAfterUpgrade ? frozenBaseline ? "\u5347\u7EA7\u540E\u91C7\u96C6\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u8D77\u70B9\uFF1B\u4EC5\u4F5C\u4E3A\u6B64\u6B21\u91CD\u6790\u7684\u51BB\u7ED3\u53C2\u7167\uFF0C\u4E0D\u968F\u5F53\u524D\u89D2\u8272\u5361\u6539\u5199\u3002" : "\u5C1A\u672A\u51BB\u7ED3\uFF1B\u4EE5\u4E0B\u4E3A\u5F53\u524D\u89D2\u8272\u5361\u8D44\u6599\uFF0C\u5EFA\u6863\u65F6\u5C06\u4F5C\u4E3A\u5347\u7EA7\u53C2\u8003\u5361\u51BB\u7ED3\uFF0C\u4E0D\u4EE3\u8868\u6545\u4E8B\u8D77\u70B9\u3002" : frozenBaseline ? "\u521D\u6B21\u5EFA\u6863\u65F6\u51BB\u7ED3\u7684\u89D2\u8272 JSON\uFF0C\u7528\u4E8E\u53EF\u6838\u5BF9\u7684\u5BF9\u7167\uFF0C\u4E0D\u968F\u5F53\u524D\u89D2\u8272\u5361\u6539\u5199\u3002" : "\u5C1A\u672A\u5EFA\u6863\uFF0C\u4EE5\u4E0B\u662F\u5F53\u524D\u89D2\u8272\u5361\u8D44\u6599\uFF1B\u5EFA\u6863\u540E\u624D\u4F1A\u51BB\u7ED3\u4E3A\u53EF\u6838\u5BF9\u7684\u53C2\u7167\u3002";
     role("baseline").textContent = supported ? archiveText(view.baseline) || "\u5C1A\u672A\u51BB\u7ED3\u521D\u59CB\u89D2\u8272\u57FA\u7EBF\u3002" : "";
-    role("legacy").hidden = !supported || view.legacyArchive == null;
-    role("legacy-archive").textContent = supported && view.legacyArchive != null ? archiveText(view.legacyArchive) : "";
-    role("edition").textContent = supported ? "\u5F53\u524D\u72B6\u6001 \xB7 \u5F53\u524D\u804A\u5929\u72EC\u7ACB\u6863\u6848" : "";
-    replaceReading("items", supported ? itemsHtml(view.items || [], { injection: view.enabled ? view.injection || {} : {} }) : "");
-    replaceReading("latest", supported ? latestBatchHtml(view.batches || []) : "");
-    replaceReading("batches", supported ? batchesHtml(view.batches || []) : "");
+    role("edition").textContent = supported ? "\u5F53\u524D\u804A\u5929\u7684\u72EC\u7ACB\u6863\u6848" : "";
+    role("monogram").textContent = supported ? Array.from(view.characterName || "\u89D2")[0] : "";
+    role("run-summary").textContent = supported ? `${view.enabled ? view.auto ? "\u81EA\u52A8\u5206\u6790\u5DF2\u5F00\u542F" : "\u81EA\u52A8\u5206\u6790\u5DF2\u6682\u505C" : "\u672C\u804A\u5929\u672A\u542F\u7528"} \xB7 ${Number.isInteger(view.processedThrough) && view.processedThrough >= 0 ? `\u622A\u81F3\u7B2C ${view.processedThrough} \u697C` : "\u5C1A\u672A\u5206\u6790"} \xB7 \u5F85\u5206\u6790 ${view.pendingFloors || 0} \u697C` : "";
+    themes = supported ? buildEvolutionThemes(view.items, view.batches) : [];
+    if (!themes.some((theme2) => theme2.id === selectedThemeId)) {
+      selectedThemeId = (themes.find((theme2) => theme2.status === "active") || themes[0])?.id || null;
+      selectedChangeKey = null;
+    }
+    const theme = themes.find((entry) => entry.id === selectedThemeId), item2 = theme?.item;
+    const selected = selectEvolutionChange(theme, selectedChangeKey);
+    if (selectedChangeKey && selected?.key !== selectedChangeKey) selectedChangeKey = null;
+    replaceReading("themes", supported ? themesHtml(themes, selectedThemeId, query) : "");
+    role("theme-search").disabled = !supported;
+    role("topic-label").textContent = theme?.title || "\u6682\u65E0\u72B6\u6001";
+    role("now-label").textContent = theme ? item2?.status === "active" ? `\u6B64\u523B / ${EVOLUTION_CATEGORIES[item2.category]}` : item2 ? "\u5DF2\u9000\u5F79 / \u4E0D\u6CE8\u5165" : "\u5DF2\u5220\u9664 / \u4EC5\u4F9B\u5386\u53F2\u56DE\u770B" : "\u6B64\u523B";
+    role("dossier-title").textContent = theme?.title || "\u5F53\u524D\u72B6\u6001";
+    role("now-text").textContent = item2 ? item2.status === "active" ? item2.current : "\u8FD9\u6761\u72B6\u6001\u5DF2\u9000\u5F79\uFF0C\u4E0D\u518D\u4F5C\u4E3A\u5F53\u524D\u72B6\u6001\u6CE8\u5165\u3002\u539F\u72B6\u6001\u4E0E\u53D8\u5316\u8BB0\u5F55\u4ECD\u53EF\u67E5\u770B\u3002" : theme ? "\u6B64\u6761\u76EE\u5DF2\u4ECE\u5F53\u524D\u6863\u6848\u5220\u9664\uFF0C\u4E0B\u9762\u4EC5\u5C55\u793A\u4FDD\u7559\u7684\u5386\u53F2\u53D8\u5316\uFF0C\u4E0D\u4F1A\u6062\u590D\u6216\u6CE8\u5165\u65E7\u7ED3\u8BBA\u3002" : "\u5C1A\u65E0\u6709\u4F9D\u636E\u7684\u5F53\u524D\u72B6\u6001\u3002\u542F\u7528\u672C\u804A\u5929\u7684\u89D2\u8272\u6F14\u53D8\u5E76\u5F00\u59CB\u5206\u6790\uFF0C\u6216\u624B\u52A8\u65B0\u589E\u4E00\u6761\u72B6\u6001\u3002";
+    role("now-scope-wrap").hidden = !item2 || item2.status !== "active";
+    role("now-scope").textContent = item2?.status === "active" ? item2.scope : "";
+    role("now-meta").textContent = item2 ? `${item2.manual ? "\u542B\u624B\u52A8\u4FEE\u8BA2 \xB7 " : ""}${range(item2.updatedThrough)} \xB7 ${theme.changes.length} \u6B21\u5206\u6790\u53D8\u5316` : "";
+    replaceReading("now-badges", item2 ? [ITEM_STATUS[item2.status], EVOLUTION_TIMESCALES[item2.timescale], item2.manual ? "\u624B\u52A8\u4FEE\u8BA2" : "", item2.pinned ? "\u56FA\u5B9A\u6CE8\u5165\u4F18\u5148" : "", item2.locked ? "\u5DF2\u9501\u5B9A" : "", view.enabled && item2.status === "active" && view.injection?.included?.includes(item2.id) ? "\u672C\u8F6E\u6CE8\u5165\u5DF2\u7EB3\u5165" : ""].filter(Boolean).map((label) => `<span class="t-memory-badge${label === ITEM_STATUS.active ? " is-current" : ""}">${escapeHtml(label)}</span>`).join("") : "");
+    replaceReading("item-actions", item2 ? `${button2("edit", "\u7F16\u8F91", item2.id)}${button2("pin", item2.pinned ? "\u53D6\u6D88\u56FA\u5B9A" : "\u56FA\u5B9A\u6CE8\u5165", item2.id, !!item2.pinned)}${button2("lock", item2.locked ? "\u89E3\u9501" : "\u9501\u5B9A", item2.id, !!item2.locked)}${item2.status !== "retired" ? button2("archive", "\u9000\u5F79", item2.id) : ""}${button2("delete", "\u5220\u9664", item2.id)}` : "");
+    replaceReading("items", item2 ? itemHtml(item2, { injection: view.enabled ? view.injection || {} : {} }) : theme ? '<p class="t-memory-hint">\u5F53\u524D\u6863\u6848\u4E2D\u5DF2\u65E0\u6B64\u6761\u76EE\uFF0C\u5386\u53F2\u72B6\u6001\u4E0D\u4F1A\u6CE8\u5165\u3002</p>' : "");
+    replaceReading("journey", supported ? journeyHtml(theme, selected) : "");
+    root.querySelectorAll("[data-evolution-tab]").forEach((element) => {
+      const active4 = element.dataset.evolutionTab === readTab;
+      element.setAttribute("aria-selected", String(active4));
+      element.tabIndex = active4 ? 0 : -1;
+    });
+    role("journey").hidden = readTab !== "journey";
+    role("current-panel").hidden = readTab !== "current";
+    role("evidence-title").textContent = readTab === "current" || !selected ? "\u5F53\u524D\u72B6\u6001\u7684\u4F9D\u636E" : "\u8FD9\u6B21\u53D8\u5316\u7684\u4F9D\u636E";
+    role("evidence-range").textContent = selected && readTab === "journey" ? `${range(selected.start, selected.end)} \xB7 ${selected.change.evidence?.length || 0} \u6761\u539F\u6587\u6458\u53E5` : `${item2?.sources?.length || 0} \u6761\u539F\u6587\u6458\u53E5`;
+    replaceReading("evidence", supported ? evidenceHtml(theme, selected, readTab === "current") : "");
+    if (root.querySelector('[data-evolution-detail="history"]').open) replaceReading("batches", supported ? batchesHtml(view.batches || []) : "");
+    else if (!supported) replaceReading("batches", "");
+    states.theme = !supported || !!draft2 || !!operation;
+    states.step = !supported;
+    states["read-tab"] = !supported;
+    states.latest = !supported || !selected;
     const injection = view.injection || {};
     role("guidance-state").textContent = !supported ? "" : !view.enabled ? "\u5DF2\u5173\u95ED\u6CE8\u5165" : "\u5F53\u524D\u72B6\u6001\u539F\u6587";
     role("budget").textContent = supported ? `\u4F30\u7B97\u7EA6 ${injection.tokens || 0} token / \u9884\u7B97 ${view.config?.inject_tokens ?? 1200} token\u3002\u56FA\u5B9A\u6CE8\u5165\u4F18\u5148\uFF1B\u9884\u7B97\u4E0D\u8DB3\u65F6\u6574\u6761\u7701\u7565\uFF0C\u7EDD\u4E0D\u5220\u51CF\u9002\u7528\u8FB9\u754C\u6216\u7B80\u77ED\u4F9D\u636E\u3002${!view.enabled ? "\u672C\u804A\u5929\u672A\u542F\u7528\uFF0C\u4E0D\u4F1A\u6CE8\u5165\u3002" : ""}` : "";
@@ -53691,7 +54135,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
   }
   async function perform(expected, callback, kind = "write") {
     if (operation && !(operation.kind === "run" && kind === "interrupt") || !current(expected)) return;
-    const ticket = { kind };
+    const ticket = { kind, identity };
     operation = ticket;
     localError = "";
     refresh();
@@ -53699,7 +54143,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
       if (!current(expected)) return;
       await callback();
     } catch (cause) {
-      if (!disposed && expected === getEvolutionView().contextKey) localError = cause.message || String(cause);
+      if (!disposed && expected === getEvolutionView().contextKey && sameIdentity(ticket.identity, getStoryMemoryContextIdentity())) localError = cause.message || String(cause);
     } finally {
       if (operation === ticket) operation = null;
       refresh();
@@ -53760,6 +54204,11 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
   }
   function onInput(event) {
     if (event.target.dataset.evolutionField) readDraft();
+    else if (event.target.dataset.evolutionRole === "theme-search") {
+      if (!current(contextKey)) return;
+      query = event.target.value;
+      refresh();
+    }
   }
   function onChange(event) {
     const input = event.target;
@@ -53790,6 +54239,34 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
     if (!view) return;
     const action = target.dataset.evolutionAction;
     const item2 = (view.items || []).find((entry) => entry.id === target.dataset.evolutionId);
+    if (action === "theme") {
+      if (draft2 || operation || !themes.some((theme) => theme.id === target.dataset.evolutionId)) return;
+      selectedThemeId = target.dataset.evolutionId;
+      selectedChangeKey = null;
+      if (media?.matches) root.querySelector('[data-evolution-detail="topics"]').open = false;
+      refresh();
+      if (media?.matches) role("dossier-title").focus({ preventScroll: true });
+      return;
+    }
+    if (action === "step") {
+      const theme = themes.find((entry) => entry.id === selectedThemeId);
+      if (theme?.changes.some((entry) => entry.key === target.dataset.evolutionStep)) {
+        selectedChangeKey = target.dataset.evolutionStep;
+        refresh();
+      }
+      return;
+    }
+    if (action === "read-tab") {
+      readTab = target.dataset.evolutionTab;
+      refresh();
+      return;
+    }
+    if (action === "latest") {
+      selectedChangeKey = null;
+      readTab = "journey";
+      refresh();
+      return;
+    }
     if (action === "settings") {
       onSettings();
       return;
@@ -53858,6 +54335,19 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
   const onSubmit = (event) => {
     event.preventDefault();
   };
+  const onToggle = (event) => {
+    if (event.target.dataset.evolutionDetail === "history" && event.target.open && current(contextKey)) refresh();
+  };
+  const onKeyDown = (event) => {
+    const target = event.target.closest?.("[data-evolution-tab]");
+    if (!target || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key) || !current(contextKey)) return;
+    event.preventDefault();
+    readTab = event.key === "Home" ? "journey" : event.key === "End" ? "current" : readTab === "journey" ? "current" : "journey";
+    refresh();
+    root.querySelector(`[data-evolution-tab="${readTab}"]`).focus({ preventScroll: true });
+  };
+  root.addEventListener("toggle", onToggle, true);
+  root.addEventListener("keydown", onKeyDown);
   root.addEventListener("input", onInput);
   root.addEventListener("change", onChange);
   root.addEventListener("click", onClick);
@@ -53878,17 +54368,24 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
       root.removeEventListener("change", onChange);
       root.removeEventListener("click", onClick);
       root.removeEventListener("submit", onSubmit);
+      root.removeEventListener("toggle", onToggle, true);
+      root.removeEventListener("keydown", onKeyDown);
       draft2 = null;
       root.remove();
     }
   };
 }
-var ITEM_STATUS, comparisonReferences, archiveText, RUN_STATUS, button2, range, text2, options, stateBodyHtml;
+var viewSequence, sameIdentity, ITEM_STATUS, comparisonReferences, archiveText, RUN_STATUS, button2, range, text2, options, stateBodyHtml;
 var init_characterEvolutionView = __esm({
   "src/ui/characterEvolutionView.js"() {
     init_characterEvolution();
     init_characterEvolutionData();
     init_helpers();
+    init_dom();
+    init_storyMemory();
+    init_characterEvolutionJourney();
+    viewSequence = 0;
+    sameIdentity = (a, b) => a === b || !!a && !!b && a.key === b.key && a.chat === b.chat && a.chatMetadata === b.chatMetadata;
     ITEM_STATUS = { active: "\u5F53\u524D\u6709\u6548", retired: "\u5DF2\u9000\u5F79" };
     comparisonReferences = (view, id3) => (view.references || []).filter((reference) => reference.kind === "baseline" || id3 && reference.kind === "state" && reference.item_id === id3);
     archiveText = (value) => typeof value === "string" ? value : JSON.stringify(value, null, 2);
@@ -54273,9 +54770,10 @@ ${item2.body || ""}`.includes(name)));
     return `<button type="button" class="t-memory-time-range" data-action="time-range" data-start="${record.start}" data-end="${record.end}">${escape6(range2.start)}${range2.end !== range2.start ? ` \uFF5E ${escape6(range2.end)}` : ""}<small>${escape6(TIMETRACE_BASES[range2.basis])} \u2197</small></button>`;
   }
   function renderRecords(memory) {
-    const top = memory.segments.filter((segment) => !segment.mergedInto);
+    const newestFirst = (a, b) => b.end - a.end || b.start - a.start;
+    const top = memory.segments.filter((segment) => !segment.mergedInto).sort(newestFirst);
     const mergedAway = memory.segments.length - top.length;
-    const summary = mergedAway ? `\u6309\u6545\u4E8B\u53D1\u751F\u7684\u987A\u5E8F\u7FFB\u9605\uFF0C\u5171 ${top.length} \u6BB5\uFF0C\u5176\u4E2D ${mergedAway} \u6BB5\u5DF2\u5408\u5E76\u3002` : `\u6309\u6545\u4E8B\u53D1\u751F\u7684\u987A\u5E8F\u7FFB\u9605\uFF0C\u5171 ${top.length} \u6BB5\u3002`;
+    const summary = mergedAway ? `\u6700\u65B0\u5386\u53F2\u5728\u524D\uFF0C\u5171 ${top.length} \u6BB5\uFF0C\u5176\u4E2D ${mergedAway} \u6BB5\u5DF2\u5408\u5E76\u3002` : `\u6700\u65B0\u5386\u53F2\u5728\u524D\uFF0C\u5171 ${top.length} \u6BB5\u3002`;
     return pageHeading(
       "\u5267\u60C5\u7F16\u5E74\u53F2",
       summary,
@@ -54284,11 +54782,11 @@ ${item2.body || ""}`.includes(name)));
       const key = `segment:${segment.id}`;
       const editing = editor?.kind === "summary" && editor.segmentId === segment.id;
       const digest = segment.level === 2;
-      const children = digest ? memory.segments.filter((child) => (segment.children || []).includes(child.id)) : [];
+      const children = digest ? memory.segments.filter((child) => (segment.children || []).includes(child.id)).sort(newestFirst) : [];
       const badge2 = digest ? `<span class="t-memory-merged-badge">\u5408\u5E76 ${children.length} \u6BB5</span>` : "";
       const childList = digest && children.length ? `<details class="t-memory-merged-list"><summary>\u88AB\u5408\u5E76\u7684 ${children.length} \u6BB5\u539F\u6587\u6458\u8981</summary>${children.map((child) => `<div class="t-memory-merged-item"><strong>\u7B2C ${child.start}\uFF5E${child.end} \u697C</strong><p>${escape6(child.summary)}</p></div>`).join("")}</details>` : "";
       return `<details class="t-memory-entry t-memory-chapter" data-detail-key="${escape6(key)}" ${expanded.has(key) || editing ? "open" : ""}>
-                    <summary><span class="t-memory-chapter-number">${String(index + 1).padStart(2, "0")}</span><span class="t-memory-row-label"><strong>\u7B2C ${segment.start}\uFF5E${segment.end} \u697C</strong><span class="t-memory-row-excerpt">${escape6(segment.summary)}</span></span>${badge2}<i class="fa-solid fa-chevron-down t-memory-disclosure" aria-hidden="true"></i></summary>
+                    <summary><span class="t-memory-chapter-number">${String(top.length - index).padStart(2, "0")}</span><span class="t-memory-row-label"><strong>\u7B2C ${segment.start}\uFF5E${segment.end} \u697C</strong><span class="t-memory-row-excerpt">${escape6(segment.summary)}</span></span>${badge2}<i class="fa-solid fa-chevron-down t-memory-disclosure" aria-hidden="true"></i></summary>
                     <div class="t-memory-detail-body">${editing ? renderEditor() : `<p class="t-memory-hint">${digest ? "\u7531 " + children.length + " \u6BB5\u5C0F\u603B\u7ED3\u5408\u5E76 \xB7 " : ""}\u6574\u7406\u4E8E ${escape6(new Date(segment.createdAt).toLocaleString())}</p>${rangeTime(segment)}${segment.timeNeedsUpdate ? `<p class="t-memory-hint t-memory-time-stale">\u65F6\u95F4\u4F9D\u636E\u6709\u66F4\u65B0${segment.manual ? " \xB7 \u672C\u6BB5\u624B\u52A8\u6458\u8981\u8BF7\u81EA\u884C\u6838\u5BF9\u65E5\u671F" : ""}</p>` : ""}${textBlock(segment.summary, key, "", true)}<div class="t-memory-card-actions">${segment.timeNeedsUpdate && !segment.manual ? button3("time-refresh", "\u66F4\u65B0\u65F6\u95F4\u8868\u8FF0", `data-id="${escape6(segment.id)}"`) : ""}${button3("segment-source", "\u67E5\u770B\u539F\u6587", `data-start="${segment.start}" data-end="${segment.end}"`)}${button3("edit-summary", "\u7F16\u8F91\u6458\u8981", `data-id="${escape6(segment.id)}"`)}${button3("stage-boundary", "\u8BBE\u4E3A\u9636\u6BB5\u8D77\u70B9\u2026", `data-start="${segment.start}"`)}</div>${childList}`}</div>
                 </details>`;
     }).join("") || '<p class="t-memory-empty">\u8FD8\u6CA1\u6709\u6574\u7406\u8BB0\u5F55\u3002\u8F83\u65E9\u6B63\u6587\u8FBE\u5230\u89E6\u53D1\u6761\u4EF6\u540E\uFF0C\u4F1A\u5728\u8FD9\u91CC\u7559\u4E0B\u4E00\u6BB5\u6BB5\u6458\u8981\u3002</p>');
@@ -54356,7 +54854,7 @@ ${item2.body || ""}`.includes(name)));
     else root.querySelector('[data-role="body"]').focus({ preventScroll: true });
     sourceReturnFocus = null;
   }
-  function sameIdentity(left, right) {
+  function sameIdentity3(left, right) {
     return left === right || !!left && !!right && left.key === right.key && left.chat === right.chat && left.chatMetadata === right.chatMetadata;
   }
   function queueRender() {
@@ -54375,10 +54873,10 @@ ${item2.body || ""}`.includes(name)));
     queueRender();
   }
   function readView(identity = getStoryMemoryContextIdentity()) {
-    if (cachedView && !viewDirty && sameIdentity(identity, cachedIdentity)) return cachedView;
+    if (cachedView && !viewDirty && sameIdentity3(identity, cachedIdentity)) return cachedView;
     const version = viewVersion;
     const view = getStoryMemoryView();
-    if (!sameIdentity(identity, getStoryMemoryContextIdentity()) || view.key !== (identity?.key || "")) {
+    if (!sameIdentity3(identity, getStoryMemoryContextIdentity()) || view.key !== (identity?.key || "")) {
       cachedView = null;
       invalidateView();
       return null;
@@ -54390,7 +54888,7 @@ ${item2.body || ""}`.includes(name)));
   }
   function guardInteraction() {
     if (closed || !root.isConnected) return false;
-    if (renderedIdentity !== void 0 && sameIdentity(renderedIdentity, getStoryMemoryContextIdentity())) return true;
+    if (renderedIdentity !== void 0 && sameIdentity3(renderedIdentity, getStoryMemoryContextIdentity())) return true;
     invalidateView();
     render();
     return false;
@@ -54399,7 +54897,7 @@ ${item2.body || ""}`.includes(name)));
     if (closed || !root.isConnected) return;
     queuedRefresh = null;
     const identity = getStoryMemoryContextIdentity();
-    if (renderedIdentity !== void 0 && !sameIdentity(renderedIdentity, identity)) {
+    if (renderedIdentity !== void 0 && !sameIdentity3(renderedIdentity, identity)) {
       timeQuery = "";
       timeSearchOpen = false;
       timeFilter = "all";
@@ -54463,6 +54961,7 @@ ${item2.body || ""}`.includes(name)));
       element.setAttribute("aria-current", element.dataset.tab === tab ? "page" : "false");
     });
     const body = root.querySelector('[data-role="body"]');
+    body.classList.toggle("is-evolution", tab === "evolution");
     root.querySelector(".t-memory-footer").hidden = tab === "evolution";
     if (tab === "evolution" && evolutionPage) {
       evolutionPage.refresh();
@@ -54559,7 +55058,7 @@ ${item2.body || ""}`.includes(name)));
     const identity = renderedIdentity;
     const operation = {};
     activeOperation = operation;
-    const current = () => !closed && activeOperation === operation && sameIdentity(identity, getStoryMemoryContextIdentity());
+    const current = () => !closed && activeOperation === operation && sameIdentity3(identity, getStoryMemoryContextIdentity());
     localError = "";
     localBusy = true;
     try {
@@ -54587,7 +55086,7 @@ ${item2.body || ""}`.includes(name)));
   function guardEvolutionReload(event) {
     if (!event.target.closest?.('[data-role="evolution-mount"]')) return;
     const identity = getStoryMemoryContextIdentity();
-    if (closed || renderedIdentity?.key === identity?.key && !sameIdentity(renderedIdentity, identity)) {
+    if (closed || renderedIdentity?.key === identity?.key && !sameIdentity3(renderedIdentity, identity)) {
       event.preventDefault();
       event.stopImmediatePropagation();
       if (!closed) guardInteraction();
@@ -54868,7 +55367,7 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
         else if (draft2.kind === "stage") await editStoryMemoryStages(draft2);
         else if (draft2.kind === "narrative" || draft2.kind === "summary") await editStoryMemoryNarrative(draft2);
         else await editStoryMemoryItem(draft2.kind, draft2.id, draft2);
-        if (!closed && sameIdentity(identity, getStoryMemoryContextIdentity()) && editor === draft2) editor = null;
+        if (!closed && sameIdentity3(identity, getStoryMemoryContextIdentity()) && editor === draft2) editor = null;
       });
     } else if (action === "cancel-edit") {
       editor = null;
@@ -65928,7 +66427,7 @@ init_continuationStore();
 init_favsStore();
 init_scriptStore();
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource12, event_types as event_types12 } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource13, event_types as event_types13 } from "../../../../script.js";
 
 // src/core/extensionUpdate.js
 init_defaults();
@@ -66553,6 +67052,178 @@ init_directorInjection();
 init_storyMemory();
 init_storyTimetrace();
 init_characterEvolution();
+
+// src/ui/storyMemoryNotifications.js
+init_storyMemory();
+init_dom();
+import { eventSource as eventSource12, event_types as event_types12 } from "../../../../script.js";
+var TITLES = { summary: "\u6545\u4E8B\u603B\u7ED3", merge: "\u5C0F\u603B\u7ED3\u5F52\u5E76", stages: "\u5267\u60C5\u9636\u6BB5\u91CD\u6574", "time-refresh": "\u6458\u8981\u65F6\u95F4\u66F4\u65B0", evolution: "\u89D2\u8272\u6F14\u53D8\u5206\u6790", timetrace: "\u56DE\u58F0\u65F6\u75D5\u5206\u6790" };
+var PHASES2 = { preparing: "\u51C6\u5907\u4E2D", request: "\u5206\u6790\u4E2D", saving: "\u786E\u8BA4\u4FDD\u5B58\u4E2D", waiting: "\u7B49\u5F85\u804A\u5929\u751F\u6210\u7ED3\u675F\u540E\u4FDD\u5B58", queued: "\u7B49\u5F85\u4E0B\u4E00\u6279", merging: "\u5F52\u5E76\u4E2D", anchors: "\u626B\u63CF\u65F6\u95F4\u951A\u70B9", timeline: "\u5206\u6790\u4E2D" };
+var SETTLE_DELAY = 2e3;
+var DISPLAY_TIME = 8e3;
+var dispose = null;
+var sameIdentity2 = (a, b) => a === b || !!a && !!b && a.key === b.key && a.chat === b.chat && a.chatMetadata === b.chatMetadata;
+var running2 = (progress2) => progress2.state === "running" || progress2.state === "error" && !!progress2.retryAt;
+var titleFor = (progress2) => TITLES[progress2.kind] || "\u6545\u4E8B\u6574\u7406";
+function phaseFor(progress2) {
+  if (progress2.state === "done") return "\u5DF2\u4FDD\u5B58";
+  if (progress2.state === "paused") return "\u5DF2\u6682\u505C";
+  if (progress2.state === "error") return progress2.retryAt ? progress2.retryWaitingForGeneration ? "\u7B49\u5F85\u804A\u5929\u751F\u6210\u7ED3\u675F\u540E\u91CD\u8BD5" : "\u7B49\u5F85\u81EA\u52A8\u91CD\u8BD5" : "\u672A\u5B8C\u6210\uFF0C\u8BF7\u5230\u6545\u4E8B\u8BB0\u5FC6\u4E2D\u91CD\u8BD5";
+  return PHASES2[progress2.phase] || "\u5904\u7406\u4E2D";
+}
+function lineFor(progress2) {
+  const range2 = Number.isInteger(progress2.currentStart) && Number.isInteger(progress2.currentEnd) ? ` \xB7 \u7B2C ${progress2.currentStart}\uFF5E${progress2.currentEnd} \u697C` : "";
+  return `${titleFor(progress2)} \xB7 ${phaseFor(progress2)}${range2}`;
+}
+function initStoryMemoryNotifications() {
+  if (dispose) return dispose;
+  let identity = null, element = null, finishTimer = null, hideTimer = null, chatTimer = null;
+  let notified = false, changingChat = false, dismissed = false, toastHandle = null, toastApi = null;
+  const records = /* @__PURE__ */ new Map();
+  function remove() {
+    element?.remove();
+    element = null;
+  }
+  function reset() {
+    clearTimeout(finishTimer);
+    clearTimeout(hideTimer);
+    finishTimer = hideTimer = null;
+    records.clear();
+    notified = dismissed = false;
+    if (toastHandle) {
+      if (toastApi?.clear) toastApi.clear(toastHandle, { force: true });
+      else toastHandle.remove?.();
+    }
+    toastHandle = toastApi = null;
+    remove();
+  }
+  function current() {
+    return sameIdentity2(identity, getStoryMemoryActivity().identity);
+  }
+  function ensureElement() {
+    if (element?.isConnected) return element;
+    const sendForm = document.getElementById("send_form");
+    if (!sendForm?.parentElement) return null;
+    ensureFeatureCss("story-memory-notifications.css");
+    element = document.createElement("section");
+    element.id = "t-story-memory-notice";
+    element.className = "t-memory-notice";
+    element.setAttribute("aria-label", "\u540E\u53F0\u6574\u7406\u901A\u77E5");
+    element.innerHTML = `<span class="t-memory-notice-icon" aria-hidden="true"></span>
+            <div class="t-memory-notice-content" role="status" aria-live="polite" aria-atomic="true">
+                <strong class="t-memory-notice-title"></strong>
+                <div class="t-memory-notice-tasks"></div>
+                <div class="t-memory-notice-hint"></div>
+            </div>
+            <button type="button" class="t-memory-notice-close" aria-label="\u5173\u95ED\u672C\u6B21\u901A\u77E5" title="\u5173\u95ED\u672C\u6B21\u901A\u77E5">\xD7</button>`;
+    element.querySelector("button").addEventListener("click", () => {
+      dismissed = true;
+      remove();
+    });
+    sendForm.before(element);
+    return element;
+  }
+  function render() {
+    const node2 = ensureElement();
+    if (!node2) return;
+    const tasks = [...records.values()];
+    const active4 = tasks.some(running2);
+    const failed = tasks.some((progress2) => progress2.state === "error");
+    const done = !active4 && tasks.every((progress2) => progress2.state === "done");
+    node2.dataset.state = active4 ? failed ? "retry" : "running" : done ? "done" : failed ? "error" : "paused";
+    const title = active4 ? "\u540E\u53F0\u6574\u7406\u8FDB\u884C\u4E2D" : done ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u5DF2\u4FDD\u5B58" : failed ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u6709\u4EFB\u52A1\u672A\u5B8C\u6210" : "\u540E\u53F0\u6574\u7406\u5DF2\u6682\u505C";
+    const hint = active4 ? "\u5EFA\u8BAE\u6574\u7406\u5B8C\u6210\u540E\u518D\u53D1\u9001\uFF1B\u53EF\u4EE5\u7EE7\u7EED\u7F16\u8F91\u8F93\u5165\uFF0C\u4E0D\u4F1A\u62E6\u622A\u53D1\u9001\u3002" : done ? "\u4EE5\u4E0A\u4E3A\u672C\u8F6E\u5904\u7406\u7ED3\u679C\uFF0C\u4E0D\u4EE3\u8868\u6240\u6709\u6700\u65B0\u697C\u5C42\u90FD\u5DF2\u6574\u7406\u3002" : "\u5DF2\u4FDD\u5B58\u7684\u7ED3\u679C\u4FDD\u7559\uFF0C\u53EF\u4EE5\u7EE7\u7EED\u804A\u5929\uFF1B\u8BE6\u60C5\u89C1\u300C\u6545\u4E8B\u8BB0\u5FC6\u300D\u3002";
+    const text3 = (selector, value) => {
+      const target = node2.querySelector(selector);
+      if (target.textContent !== value) target.textContent = value;
+    };
+    text3(".t-memory-notice-icon", active4 ? "\u25CC" : done ? "\u2713" : failed ? "!" : "\u2161");
+    text3(".t-memory-notice-title", title);
+    text3(".t-memory-notice-tasks", tasks.map(lineFor).join("\n"));
+    text3(".t-memory-notice-hint", hint);
+    node2.querySelector("button").hidden = active4;
+  }
+  function finish() {
+    finishTimer = null;
+    if (!current()) {
+      reset();
+      return;
+    }
+    if (!records.size || [...records.values()].some(running2) || notified) return;
+    notified = true;
+    const tasks = [...records.values()];
+    const failed = tasks.some((progress2) => progress2.state === "error");
+    const done = tasks.every((progress2) => progress2.state === "done");
+    const toast = globalThis.toastr || globalThis.window?.toastr;
+    const message = tasks.map((progress2) => `${titleFor(progress2)}\uFF1A${phaseFor(progress2)}`).join("\uFF1B");
+    toastApi = toast;
+    toastHandle = toast?.[done ? "success" : failed ? "warning" : "info"]?.(
+      message,
+      done ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u5DF2\u4FDD\u5B58" : failed ? "\u540E\u53F0\u6574\u7406\u672A\u5168\u90E8\u5B8C\u6210" : "\u540E\u53F0\u6574\u7406\u5DF2\u6682\u505C",
+      { timeOut: DISPLAY_TIME, escapeHtml: true }
+    );
+    hideTimer = setTimeout(() => {
+      hideTimer = null;
+      remove();
+    }, DISPLAY_TIME);
+  }
+  function refresh() {
+    if (changingChat) return;
+    const snapshot = getStoryMemoryActivity();
+    if (!sameIdentity2(identity, snapshot.identity)) {
+      reset();
+      identity = snapshot.identity;
+    }
+    if (!identity) return;
+    if (notified) {
+      if (!snapshot.progress.some(running2)) return;
+      reset();
+    }
+    const present = /* @__PURE__ */ new Set();
+    for (const progress2 of snapshot.progress) {
+      present.add(`${progress2.kind}:${progress2.runId}`);
+      const previous = records.get(progress2.kind);
+      if (previous?.runId !== progress2.runId && !running2(progress2)) continue;
+      if (previous?.runId === progress2.runId && previous.state === "done" && !running2(progress2)) continue;
+      records.set(progress2.kind, { ...progress2 });
+    }
+    for (const [kind, progress2] of records) {
+      if (!present.has(`${kind}:${progress2.runId}`) && running2(progress2)) records.set(kind, { ...progress2, state: "paused", retryAt: 0 });
+    }
+    if (!records.size) return;
+    const active4 = [...records.values()].some(running2);
+    if (active4) dismissed = false;
+    if (!dismissed) render();
+    if (active4) {
+      clearTimeout(finishTimer);
+      finishTimer = null;
+    } else if (!finishTimer) finishTimer = setTimeout(finish, SETTLE_DELAY);
+  }
+  function onChatChanged() {
+    changingChat = true;
+    reset();
+    identity = null;
+    clearTimeout(chatTimer);
+    chatTimer = setTimeout(() => {
+      chatTimer = null;
+      changingChat = false;
+      refresh();
+    }, 0);
+  }
+  const unsubscribe = subscribeStoryMemory(refresh);
+  eventSource12.on(event_types12.CHAT_CHANGED, onChatChanged);
+  dispose = () => {
+    unsubscribe();
+    eventSource12.removeListener(event_types12.CHAT_CHANGED, onChatChanged);
+    clearTimeout(chatTimer);
+    reset();
+    dispose = null;
+  };
+  refresh();
+  return dispose;
+}
+
+// src/entry.js
 init_floorNav();
 init_chatInjector();
 init_illustrationPortability();
@@ -66639,8 +67310,8 @@ function initCoreFeatures(legacyConfigMissing = false) {
   applyUIFontScale(extData.appearance?.ui_font_scale);
   applyUITheme(extData.appearance?.ui_theme);
   initCharacterGalleryEvents();
-  eventSource12.on(event_types12.GENERATION_ENDED, onGenerationEnded2);
-  eventSource12.on(event_types12.CHAT_CHANGED, () => {
+  eventSource13.on(event_types13.GENERATION_ENDED, onGenerationEnded2);
+  eventSource13.on(event_types13.CHAT_CHANGED, () => {
     void restoreContinuationForCurrentChat().catch((error4) => console.error("Titania: \u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error4));
   });
   void restoreContinuationForCurrentChat().catch((error4) => console.error("Titania: \u521D\u59CB\u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error4));
@@ -66652,6 +67323,7 @@ function initCoreFeatures(legacyConfigMissing = false) {
   initUnlockSound();
   initPacingInjection();
   initDirectorInjection();
+  initStoryMemoryNotifications();
   initStoryMemory();
   initStoryTimetrace();
   initCharacterEvolution();
