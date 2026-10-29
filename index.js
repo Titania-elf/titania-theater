@@ -272,6 +272,7 @@ var init_defaults = __esm({
       // 没有"单独指定总结模型"这一项：用哪个模型由所选 API 方案决定（见 storyMemoryData 的规范化）。
       story_memory: {
         skip_user_messages: false,
+        // 全局总结与分析共用；保留旧键兼容已有选择
         keep_floors: 3,
         // 触发只看楼层数：token 门槛与楼层数本质同义（正文长度和楼层数成正比），
         // 两个门槛并存时用户无法预期到底哪个先到，故只保留楼层。
@@ -680,6 +681,12 @@ var init_textExtraction = __esm({
 });
 
 // src/core/toolboxSettings.js
+function getAnalysisScope(data = {}) {
+  return { skip_user_messages: data.story_memory?.skip_user_messages === true };
+}
+function isAnalysisMessage(message, scope3 = {}) {
+  return !!message && !(scope3.skip_user_messages === true && message.is_user === true);
+}
 function defaultApiChoice(data, feature) {
   if (feature === "theater" || feature === "illustration") return `profile:${data.config?.active_profile_id || data.config?.profiles?.[0]?.id || "default"}`;
   if (feature === "reader" && data.appearance?.reader?.index_model) return "local";
@@ -774,7 +781,7 @@ function mergeToolboxApiDraft(original, draft2, current) {
   if (latest === before || latest === edited) return draft2;
   throw new Error("API \u65B9\u6848\u5DF2\u5728\u5176\u4ED6\u7A97\u53E3\u4FEE\u6539\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u540E\u518D\u7F16\u8F91\u3002");
 }
-var TOOLBOX_FEATURES, TOOLBOX_EXTRACTION_CHANGED;
+var TOOLBOX_FEATURES, TOOLBOX_EXTRACTION_CHANGED, ANALYSIS_SCOPE_CHANGED;
 var init_toolboxSettings = __esm({
   "src/core/toolboxSettings.js"() {
     init_textExtraction();
@@ -788,6 +795,7 @@ var init_toolboxSettings = __esm({
       { id: "reader", name: "\u65E7\u9605\u8BFB\u7D22\u5F15\uFF08\u517C\u5BB9\uFF09" }
     ]);
     TOOLBOX_EXTRACTION_CHANGED = "titania:toolbox-extraction-changed";
+    ANALYSIS_SCOPE_CHANGED = "titania:analysis-scope-changed";
   }
 });
 
@@ -23895,362 +23903,362 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 /* === 04-features/character-evolution.css === */
-/* \u89D2\u8272\u6F14\u53D8\uFF1A\u6210\u957F\u4E3B\u9898 / \u53D8\u5316\u8F68\u8FF9 / \u8BC1\u636E\u3002\u6CBF\u7528\u6545\u4E8B\u8BB0\u5FC6\u4E3B\u9898\u4E0E\u63D2\u4EF6\u5B57\u53F7\u3002
-   \u5BB9\u5668\u662F\u9875\u9762\u6839\uFF0C\u4E0D\u662F viewport\uFF1B\u53EA\u6709\u4E0D\u652F\u6301\u5BB9\u5668\u67E5\u8BE2\u7684\u6D4F\u89C8\u5668\u624D\u4F7F\u7528 media \u515C\u5E95\u3002
-   \u4E3B\u9898\u6D4F\u89C8\u5668\u4F7F\u7528\u539F\u751F details[open]\uFF0C\u5173\u95ED\u540E\u59CB\u7EC8\u4FDD\u7559 summary\uFF0C\u907F\u514D\u7F29\u653E\u540E\u65E0\u6CD5\u91CD\u5F00\u3002 */
-.t-memory-window .t-memory-body.is-evolution { padding: 22px 18px 28px; }
-.t-evolution-view {
-    container-name: t-evolution;
-    container-type: inline-size;
-    width: 100%;
-    min-width: 0;
-    font-family: var(--t-font-global);
-    font-size: 1em;
-    line-height: 1.7;
-    color: var(--t-memory-text);
-    overflow-wrap: anywhere;
-}
-
-/* hidden \u662F\u5207\u6362\u9605\u8BFB\u9762\u677F\u3001\u7A7A\u6001\u4E0E\u9519\u8BEF\u63D0\u793A\u7684\u5951\u7EA6\uFF0C\u4E0D\u5F97\u88AB\u5E03\u5C40 display \u8986\u76D6\u3002 */
-.t-evolution-view [hidden] { display: none !important; }
-.t-evolution-view :where(section, aside, article, nav, header, footer, details, div, button, label) { min-width: 0; }
-.t-evolution-view :where(h2, h3, h4, p, blockquote) { margin: 0; }
-.t-evolution-view :where(h2, h3, h4) { text-wrap: balance; }
-.t-evolution-view :is(button, input, select, textarea) { font-family: var(--t-font-global); }
-.t-evolution-view button { max-width: 100%; min-height: 40px; font-size: 1em; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
-.t-evolution-view button:disabled { opacity: .45; cursor: default; }
-.t-evolution-view :is(button, summary, input, select, textarea, a, [tabindex]):focus-visible {
-    outline: 2px solid var(--t-memory-gold);
-    outline-offset: 3px;
-}
-.t-evolution-view .t-input {
-    width: 100%; min-width: 0; min-height: 40px; margin: 0;
-    font: inherit; background: var(--t-memory-surface); color: var(--t-memory-text);
-    border-color: var(--t-memory-border);
-}
-.t-evolution-view .t-input:invalid { border-color: var(--t-memory-gold); }
-.t-evolution-view .t-memory-action { min-height: 40px; padding: 7px 12px; font-size: 1em; }
-.t-evolution-view .t-memory-toggle { min-height: 40px; line-height: 1.6; }
-.t-evolution-view .t-memory-toggle input { flex-shrink: 0; }
-.t-evolution-view pre {
-    min-width: 0; max-width: 100%; padding: 0; margin: 0;
-    font: inherit; line-height: 1.95; white-space: pre-wrap; overflow-wrap: anywhere;
-    color: var(--t-memory-text); background: transparent;
-}
-
-/* \u9876\u90E8\u53EA\u4FDD\u7559\u7D27\u51D1\u6807\u9898\uFF1B\u8FD0\u884C\u63A7\u5236\u4E0E\u7F16\u8F91\u5668\u5747\u5728\u4E09\u680F\u4E4B\u5916\u3002 */
-.t-evolution-view .t-evolution-page-head {
-    display: flex; justify-content: space-between; align-items: center;
-    flex-wrap: wrap; gap: 10px 20px; margin: 0 0 16px;
-}
-.t-evolution-view .t-evolution-page-head h2 { margin: 0; font-size: 1.65em; line-height: 1.5; font-weight: 500; letter-spacing: .06em; }
-.t-evolution-view .t-evolution-page-head :is(.t-memory-eyebrow, .t-memory-hint) { margin: 4px 0 0; font-size: 1em; }
-.t-evolution-view .t-evolution-operations {
-    margin-bottom: 18px; padding: 0 16px;
-    border: 1px solid var(--t-memory-border); border-radius: 10px;
-    background: var(--t-memory-surface);
-}
-.t-evolution-view .t-evolution-operations > summary { min-height: 40px; padding-block: 9px; color: var(--t-memory-muted); cursor: pointer; }
-.t-evolution-view .t-evolution-operations[open] > summary { color: var(--t-memory-gold); border-bottom: 1px solid var(--t-memory-line); }
-.t-evolution-view .t-evolution-controls {
-    display: flex; flex-direction: row; flex-wrap: wrap; align-items: center;
-    gap: 10px 20px; margin: 0; padding-block: 12px; border: 0; font-size: 1em;
-}
-.t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: auto; }
-.t-evolution-view .t-evolution-settings-link {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
-    padding-block: 12px; border-top: 1px solid var(--t-memory-line); border-bottom: 0;
-}
-.t-evolution-view .t-evolution-settings-link > div { flex: 1 1 280px; min-width: 0; }
-.t-evolution-view .t-evolution-settings-link > button { flex-shrink: 1; }
-.t-evolution-view .t-evolution-settings-link .t-memory-hint { margin-block: 4px; font-size: 1em; }
-.t-evolution-view [data-evolution-role="status"] { margin-block: 8px; font-size: 1em; color: var(--t-memory-muted); }
-.t-evolution-view .t-evolution-coverage { margin-block: 12px; padding-left: 12px; border-left: 2px solid var(--t-memory-violet); color: var(--t-memory-muted); font-size: 1em; line-height: 1.8; }
-.t-evolution-view .t-evolution-editor-host { min-width: 0; }
-.t-evolution-view .t-evolution-editor { margin: 0 0 20px; padding: 20px; font-size: 1em; }
-.t-evolution-view .t-evolution-editor :is(.t-memory-hint, .t-memory-field small) { font-size: 1em; }
-.t-evolution-view .t-evolution-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
-.t-evolution-view .t-evolution-edit-fields textarea { min-height: 112px; resize: vertical; }
-.t-evolution-view .t-evolution-editor-flags { display: flex; flex-wrap: wrap; gap: 12px 24px; }
-.t-evolution-view .t-evolution-comparison { min-width: 0; margin: 0 0 20px; padding: 16px; border: 1px solid var(--t-memory-border); }
-.t-evolution-view .t-evolution-comparison legend { max-width: 100%; padding-inline: 8px; color: var(--t-memory-gold); }
-
-/* \u4E09\u79CD\u9605\u8BFB\u6DF1\u5EA6\u3002\u6B63\u6587\u968F\u5185\u5BB9\u81EA\u7136\u589E\u9AD8\uFF0C\u4E0D\u53E6\u5916\u5236\u9020\u4E09\u5217\u72EC\u7ACB\u6EDA\u52A8\u3002 */
-.t-evolution-view .t-evolution-workspace {
-    display: grid; grid-template-columns: 220px minmax(0, 1fr) 280px;
-    align-items: stretch; min-width: 0;
-    border: 1px solid var(--t-memory-border); border-radius: 12px;
-    background: var(--t-memory-surface);
-}
-.t-evolution-view .t-evolution-sidebar {
-    grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 22px;
-    padding: 24px 14px; border-right: 1px solid var(--t-memory-line);
-    border-radius: 11px 0 0 11px; background: var(--t-memory-shell);
-}
-.t-evolution-view .t-evolution-person { display: flex; align-items: center; gap: 12px; padding: 0 4px; }
-.t-evolution-view .t-evolution-person > div { min-width: 0; }
-/* monogram \u53EF\u7528\u7C7B\u540D\u6216 data-evolution-role="monogram"\uFF0C\u59D3\u540D/\u7248\u6B21\u6CBF\u7528\u73B0\u6709 role\u3002 */
-.t-evolution-view .t-evolution-person :is(.t-evolution-monogram, [data-evolution-role="monogram"]) {
-    display: grid; place-items: center; flex: 0 0 42px; min-height: 50px;
-    padding: 4px; border: 1px solid var(--t-memory-gold); border-radius: 24px 24px 7px 7px;
-    background: var(--t-memory-gold-soft); color: var(--t-memory-gold);
-    font: 1.8em/1.3 var(--t-font-global);
-}
-.t-evolution-view .t-evolution-person :is(h2, h3, [data-evolution-role="character"]) { margin: 0; color: var(--t-memory-text); font: 1.65em/1.5 var(--t-font-global); letter-spacing: .05em; }
-.t-evolution-view .t-evolution-person :is(p, .t-memory-hint, [data-evolution-role="edition"]) { margin: 4px 0 0; font-size: .95em; line-height: 1.7; color: var(--t-memory-muted); }
-.t-evolution-view .t-evolution-topic-browser { padding: 0; margin: 0; border: 0; }
-.t-evolution-view .t-evolution-topic-toggle {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    min-height: 40px; padding: 9px 10px; border: 1px solid var(--t-memory-border); border-radius: 7px;
-    list-style: none; color: var(--t-memory-gold); background: var(--t-memory-gold-soft); cursor: pointer;
-}
-.t-evolution-view .t-evolution-topic-toggle::-webkit-details-marker,
-.t-evolution-view .t-evolution-evidence > summary::-webkit-details-marker { display: none; }
-.t-evolution-view .t-evolution-topic-toggle::after,
-.t-evolution-view .t-evolution-evidence > summary::after {
-    content: ""; width: 7px; height: 7px; flex-shrink: 0;
-    border-right: 1px solid currentColor; border-bottom: 1px solid currentColor;
-    transform: rotate(45deg);
-}
-.t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle::after,
-.t-evolution-view .t-evolution-evidence[open] > summary::after { transform: rotate(225deg); }
-.t-evolution-view .t-evolution-topic-browser:where([open]) > .t-evolution-topic-toggle { display: none; }
-.t-evolution-view .t-evolution-theme-search { display: grid; gap: 6px; margin-block: 0 18px; color: var(--t-memory-muted); font-size: 1em; }
-.t-evolution-view .t-evolution-theme-search input { width: 100%; min-width: 0; min-height: 40px; padding: 8px 10px; border: 1px solid var(--t-memory-border); border-radius: 7px; font: inherit; color: var(--t-memory-text); background: var(--t-memory-surface); }
-.t-evolution-view .t-evolution-theme-groups { display: grid; gap: 22px; }
-.t-evolution-view .t-evolution-theme-group { display: grid; gap: 7px; }
-.t-evolution-view .t-evolution-theme-group > h4 { margin: 0 0 2px; padding-inline: 9px; color: var(--t-memory-muted); font-size: 1em; font-weight: 400; letter-spacing: .04em; }
-.t-evolution-view button.t-evolution-theme {
-    display: grid; gap: 5px; width: 100%; padding: 12px 10px; text-align: left;
-    border: 1px solid transparent; border-radius: 8px; background: transparent;
-    color: var(--t-memory-text); font: inherit;
-}
-.t-evolution-view button.t-evolution-theme:hover { background: var(--t-memory-raised); }
-.t-evolution-view button.t-evolution-theme[data-selected="true"] { border-color: var(--t-memory-gold); background: var(--t-memory-gold-soft); }
-.t-evolution-view .t-evolution-theme > strong { font-size: 1.05em; line-height: 1.7; font-weight: 500; }
-.t-evolution-view .t-evolution-theme[data-selected="true"] > strong { color: var(--t-memory-gold); }
-.t-evolution-view .t-evolution-theme-category,
-.t-evolution-view .t-evolution-theme > small { color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; }
-.t-evolution-view .t-evolution-theme-category { display: flex; align-items: center; gap: 6px; }
-.t-evolution-view .t-evolution-history-themes { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--t-memory-line); }
-.t-evolution-view .t-evolution-history-themes > summary { min-height: 40px; padding-block: 8px; color: var(--t-memory-muted); cursor: pointer; }
-.t-evolution-view .t-evolution-history-themes[open] > summary { margin-bottom: 10px; }
-
-/* \u5F53\u524D\u72B6\u6001\u56FA\u5B9A\u5728\u8F68\u8FF9\u4E0A\u65B9\uFF1B\u5386\u53F2\u9009\u62E9\u53EA\u5F71\u54CD\u4E0B\u65B9\u5BF9\u7167\u548C\u53F3\u4FA7\u4F9D\u636E\u3002 */
-.t-evolution-view .t-evolution-center { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 22px; padding: 24px; }
-.t-evolution-view .t-evolution-dossier { margin: 0; }
-.t-evolution-view .t-evolution-now-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }
-.t-evolution-view .t-evolution-caption { margin: 0; color: var(--t-memory-gold); font-size: 1em; letter-spacing: .07em; line-height: 1.7; }
-.t-evolution-view h3[data-evolution-role="dossier-title"] { margin: 0 0 10px; color: var(--t-memory-text); font: 1.85em/1.5 var(--t-font-global); letter-spacing: .03em; }
-.t-evolution-view .t-evolution-now-text { margin: 0; max-width: 64ch; font-size: 1.06em; line-height: 1.95; white-space: pre-wrap; }
-.t-evolution-view .t-evolution-dossier > .t-memory-hint { margin-block: 8px; font-size: 1em; }
-.t-evolution-view .t-evolution-now-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; color: var(--t-memory-muted); font-size: 1em; }
-.t-evolution-view .t-evolution-state-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.t-evolution-view .t-evolution-state-badges > span,
-.t-evolution-view .t-evolution-state-heading .t-memory-badge { padding: 2px 7px; border: 1px solid var(--t-memory-border); border-radius: 5px; color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; white-space: normal; }
-.t-evolution-view .t-evolution-state-badges > .is-current { color: var(--t-memory-teal); border-color: var(--t-memory-teal); }
-.t-evolution-view .t-evolution-item { min-width: 0; padding: 14px 0 0; margin-top: 16px; border: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0; background: transparent; }
-.t-evolution-view .t-evolution-state-heading { padding-bottom: 12px; }
-.t-evolution-view .t-evolution-state-text { max-width: 100%; margin: 0; font-size: 1em; line-height: 1.95; white-space: pre-wrap; overflow-wrap: anywhere; }
-.t-evolution-view .t-evolution-item > .t-memory-card-actions { margin-top: 12px; padding-top: 0; border-top: 0; }
-.t-evolution-view .t-evolution-item > .t-memory-card-actions .t-memory-action { min-height: 40px; padding: 6px 10px; font-size: 1em; }
-.t-evolution-view .t-evolution-item .t-evolution-details { margin-top: 12px; padding-block: 8px 0; border-bottom: 0; }
-.t-evolution-view .t-evolution-item .t-evolution-details > summary { font-size: 1em; }
-.t-evolution-view .t-evolution-read-tabs { display: flex; flex-wrap: wrap; gap: 8px 24px; border-bottom: 1px solid var(--t-memory-line); }
-.t-evolution-view .t-evolution-read-tab { padding: 8px 0 10px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--t-memory-muted); background: transparent; font: inherit; }
-.t-evolution-view .t-evolution-read-tab:hover { color: var(--t-memory-text); }
-.t-evolution-view .t-evolution-read-tab[aria-selected="true"] { color: var(--t-memory-text); border-bottom-color: var(--t-memory-gold); }
-.t-evolution-view .t-evolution-journey { min-width: 0; }
-.t-evolution-view .t-evolution-path-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 14px; color: var(--t-memory-muted); font-size: 1em; }
-.t-evolution-view .t-evolution-path-head strong { color: var(--t-memory-text); font-size: 1.05em; font-weight: 500; }
-.t-evolution-view .t-evolution-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.t-evolution-view button.t-evolution-step {
-    display: flex; flex-direction: column; gap: 7px; padding: 12px 10px; text-align: left;
-    border: 1px solid var(--t-memory-border); border-radius: 7px;
-    background: transparent; color: var(--t-memory-text); font: inherit;
-}
-.t-evolution-view button.t-evolution-step:hover { background: var(--t-memory-raised); }
-.t-evolution-view button.t-evolution-step[aria-pressed="true"] { border-color: var(--t-memory-gold); background: var(--t-memory-gold-soft); }
-.t-evolution-view .t-evolution-step-floor { color: var(--t-memory-muted); font-size: .95em; font-variant-numeric: tabular-nums; }
-.t-evolution-view .t-evolution-step-dot { display: block; width: 8px; height: 8px; flex-shrink: 0; margin-block: 2px; border: 1px solid var(--t-memory-muted); border-radius: 50%; }
-.t-evolution-view .t-evolution-step[aria-pressed="true"] .t-evolution-step-dot { border-color: var(--t-memory-gold); background: var(--t-memory-gold); box-shadow: 0 0 0 3px var(--t-memory-gold-soft); }
-.t-evolution-view .t-evolution-step > strong { font-size: 1em; line-height: 1.7; font-weight: 500; }
-.t-evolution-view .t-evolution-step > small { margin-top: auto; color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; }
-.t-evolution-view .t-evolution-path-pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px 12px; margin-top: 12px; color: var(--t-memory-muted); }
-.t-evolution-view .t-evolution-path-pagination button { padding: 6px 12px; border: 1px solid var(--t-memory-border); border-radius: 7px; color: var(--t-memory-muted); background: transparent; }
-.t-evolution-view .t-evolution-path-pagination button:hover:not(:disabled) { border-color: var(--t-memory-gold); color: var(--t-memory-gold); }
-.t-evolution-view .t-evolution-history-note { margin-top: 10px; color: var(--t-memory-muted); font-size: .95em; line-height: 1.8; }
-.t-evolution-view .t-evolution-change-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-block: 22px 13px; }
-.t-evolution-view .t-evolution-change-heading h4 { margin: 0; font-size: 1.1em; font-weight: 500; }
-.t-evolution-view .t-evolution-change-heading :is(span, small) { color: var(--t-memory-muted); font-size: .95em; }
-.t-evolution-view .t-evolution-compare { display: grid; grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 12px; align-items: stretch; }
-.t-evolution-view .t-evolution-compare-cell { display: grid; align-content: start; gap: 9px; padding-top: 12px; border-top: 1px solid var(--t-memory-border); }
-.t-evolution-view .t-evolution-compare-cell.is-after { border-top-color: var(--t-memory-gold); }
-.t-evolution-view .t-evolution-compare-label { color: var(--t-memory-muted); font-size: 1em; }
-.t-evolution-view .t-evolution-compare-text { margin: 0; font-size: 1em; line-height: 1.95; white-space: pre-wrap; color: var(--t-memory-muted); }
-.t-evolution-view .t-evolution-compare-cell.is-after .t-evolution-compare-text { color: var(--t-memory-text); }
-.t-evolution-view .t-evolution-compare-arrow { display: grid; place-items: center; color: var(--t-memory-muted); font-size: 1.4em; }
-.t-evolution-view .t-evolution-scope { display: flex; align-items: flex-start; gap: 12px; margin-top: 18px; padding: 13px 14px; border-radius: 7px; background: var(--t-memory-raised); }
-.t-evolution-view .t-evolution-scope > span { flex: 0 0 3em; color: var(--t-memory-gold); font-size: 1em; }
-.t-evolution-view .t-evolution-scope > p { margin: 0; min-width: 0; color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; white-space: pre-wrap; }
-.t-evolution-view .t-evolution-canonical { min-width: 0; font-size: 1em; line-height: 1.95; }
-.t-evolution-view .t-evolution-canonical h3 { margin: 0 0 12px; font-size: 1.1em; font-weight: 500; }
-/* \u539F\u6587\u4FDD\u7559\u5168\u90E8\u5185\u5BB9\uFF0C\u4E0D\u4F7F\u7528\u9AD8\u5EA6\u88C1\u5207\u3001\u884C\u6570\u622A\u65AD\u6216 display:none\u3002 */
-.t-evolution-view .t-evolution-canonical pre { max-height: none; overflow: visible; white-space: pre-wrap; }
-.t-evolution-view .t-evolution-canonical .t-evolution-item { margin: 0; padding: 0; border: 0; }
-
-/* \u8BC1\u636E\u5141\u8BB8\u72EC\u7ACB\u6298\u53E0\uFF0C\u4F46\u59CB\u7EC8\u4F4D\u4E8E\u88AB\u9009\u53D8\u5316\u7684\u9605\u8BFB\u987A\u5E8F\u4E4B\u540E\u3002 */
-.t-evolution-view .t-evolution-evidence {
-    grid-column: 3; grid-row: 1; padding: 24px 20px;
-    border-left: 1px solid var(--t-memory-line); border-radius: 0 11px 11px 0;
-    background: var(--t-memory-shell);
-}
-.t-evolution-view .t-evolution-evidence > summary { display: grid; grid-template-columns: minmax(0, 1fr) 12px; align-items: center; gap: 5px 12px; min-height: 40px; list-style: none; cursor: pointer; }
-.t-evolution-view .t-evolution-evidence > summary h3 { grid-column: 1; margin: 0; font-size: 1.1em; font-weight: 500; }
-.t-evolution-view .t-evolution-evidence > summary small { grid-column: 1; color: var(--t-memory-muted); font-size: .95em; }
-.t-evolution-view .t-evolution-evidence > summary::after { grid-column: 2; grid-row: 1 / span 2; color: var(--t-memory-muted); }
-.t-evolution-view .t-evolution-evidence-body { display: grid; gap: 22px; padding-top: 22px; }
-.t-evolution-view .t-evolution-reason { display: grid; gap: 9px; }
-.t-evolution-view .t-evolution-reason > h4 { margin: 0; color: var(--t-memory-gold); font-size: 1em; font-weight: 400; }
-.t-evolution-view .t-evolution-reason > p { margin: 0; color: var(--t-memory-text); font-size: 1.1em; line-height: 1.95; white-space: pre-wrap; }
-.t-evolution-view .t-evolution-evidence-sources { display: grid; gap: 20px; }
-.t-evolution-view .t-evolution-source { padding-block: 16px 0; border-top: 1px solid var(--t-memory-line); }
-.t-evolution-view .t-evolution-source > strong { display: block; color: var(--t-memory-muted); font-size: 1em; font-weight: 500; font-variant-numeric: tabular-nums; }
-.t-evolution-view .t-evolution-source blockquote { margin: 12px 0 0; padding: 0 0 0 12px; border: 0; border-left: 2px solid var(--t-memory-border); border-radius: 0; background: transparent; color: var(--t-memory-text); font: 1.15em/1.95 var(--t-font-global); white-space: pre-wrap; overflow-wrap: anywhere; }
-.t-evolution-view .t-evolution-evidence-note { margin: 0; padding-top: 16px; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; }
-
-/* \u5B8C\u6574\u6279\u6B21\u3001\u6CE8\u5165\u9884\u89C8\u3001\u57FA\u7EBF\u4ECD\u53EF\u6838\u5BF9\uFF1B\u4E0D\u4E0E\u4E3B\u9605\u8BFB\u4E09\u680F\u7ADE\u4E89\u7A7A\u95F4\u3002 */
-.t-evolution-view .t-evolution-tools { grid-column: 1 / -1; margin-top: 20px; padding: 0 18px; border: 1px solid var(--t-memory-border); border-radius: 10px; background: var(--t-memory-surface); }
-.t-evolution-view .t-evolution-details { min-width: 0; padding-block: 12px; border-bottom: 1px solid var(--t-memory-line); }
-.t-evolution-view .t-evolution-details > summary { min-height: 40px; padding-block: 8px; color: var(--t-memory-gold); font-size: 1em; line-height: 1.8; cursor: pointer; overflow-wrap: anywhere; }
-.t-evolution-view .t-evolution-details[open] > summary { margin-bottom: 10px; }
-.t-evolution-view .t-evolution-tools > .t-evolution-details:last-child { border-bottom: 0; }
-.t-evolution-view .t-evolution-tools .t-evolution-guidance { padding: 12px 0; border: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 0; background: transparent; }
-.t-evolution-view .t-evolution-guidance .t-memory-source { margin-block: 12px 18px; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--t-memory-text); font-size: 1em; }
-.t-evolution-view .t-evolution-guidance .t-memory-hint { margin-block: 7px 0; font-size: 1em; white-space: pre-wrap; }
-.t-evolution-view .t-evolution-change { padding-block: 16px; border-top: 1px solid var(--t-memory-line); }
-.t-evolution-view .t-evolution-change h4 { margin: 0 0 10px; font-size: 1.05em; }
-.t-evolution-view .t-evolution-workspace-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; padding-block: 12px; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); font-size: 1em; line-height: 1.8; }
-.t-evolution-view .t-evolution-empty { grid-column: 1 / -1; margin: 0; padding: 20px 16px; color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; }
-.t-evolution-view .t-evolution-empty :is(h3, strong) { color: var(--t-memory-text); font-size: 1.1em; font-weight: 500; }
-.t-evolution-view .t-evolution-empty p { margin-top: 8px; }
-
-/* 1100 \u4EE5\u4E0B\u538B\u7F29\u4E09\u680F\uFF1B1000 \u4EE5\u4E0B\u5C06\u8BC1\u636E\u79FB\u5230\u4E2D\u680F\u4E0B\u65B9\uFF1B680 \u4EE5\u4E0B\u5355\u680F\u3002
-   \u4E0D\u5728\u652F\u6301 container \u7684\u6D4F\u89C8\u5668\u53E0\u52A0 viewport \u65AD\u70B9\uFF0C\u7236\u7A97\u53E3\u7F29\u653E\u624D\u662F\u552F\u4E00\u4F9D\u636E\u3002 */
-@container t-evolution (max-width: 1100px) {
-    .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr) 240px; }
-    .t-evolution-view .t-evolution-sidebar { padding-inline: 12px; }
-    .t-evolution-view .t-evolution-center { padding-inline: 18px; }
-    .t-evolution-view .t-evolution-evidence { padding-inline: 16px; }
-    .t-evolution-view .t-evolution-steps { gap: 6px; }
-    .t-evolution-view button.t-evolution-step { padding-inline: 8px; }
-}
-@container t-evolution (max-width: 1000px) {
-    .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr); }
-    .t-evolution-view .t-evolution-sidebar { grid-row: 1 / span 2; }
-    .t-evolution-view .t-evolution-evidence { grid-column: 2; grid-row: 2; border-left: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0 0 11px 0; }
-    .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@container t-evolution (max-width: 680px) {
-    .t-evolution-view .t-evolution-workspace { grid-template-columns: minmax(0, 1fr); }
-    .t-evolution-view .t-evolution-sidebar { grid-column: 1; grid-row: 1; gap: 16px; padding: 20px 16px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 11px 11px 0 0; }
-    .t-evolution-view .t-evolution-topic-browser > .t-evolution-topic-toggle { display: flex; }
-    .t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle { margin-bottom: 16px; }
-    .t-evolution-view .t-evolution-center { grid-column: 1; grid-row: 2; gap: 20px; padding: 22px 16px; }
-    .t-evolution-view h3[data-evolution-role="dossier-title"] { font-size: 1.7em; }
-    .t-evolution-view .t-evolution-now-meta { gap: 8px; }
-    .t-evolution-view .t-evolution-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .t-evolution-view button.t-evolution-step { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 4px 9px; padding: 12px 10px; }
-    .t-evolution-view .t-evolution-step-floor { grid-column: 2; }
-    .t-evolution-view .t-evolution-step-dot { grid-column: 1; grid-row: 2; margin-top: 6px; }
-    .t-evolution-view .t-evolution-step > :is(strong, small) { grid-column: 2; }
-    .t-evolution-view .t-evolution-compare { grid-template-columns: minmax(0, 1fr); }
-    .t-evolution-view .t-evolution-compare-arrow { display: none; }
-    .t-evolution-view .t-evolution-evidence { grid-column: 1; grid-row: 3; padding: 20px 16px; border-radius: 0 0 11px 11px; }
-    .t-evolution-view .t-evolution-evidence-body { padding-top: 18px; }
-    .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: minmax(0, 1fr); }
-    .t-evolution-view .t-evolution-controls { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: 0; }
-    .t-evolution-view .t-evolution-editor { padding: 16px; }
-    .t-evolution-view .t-evolution-edit-fields,
-    .t-evolution-view .t-evolution-editor .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }
-    .t-evolution-view .t-evolution-tools { padding-inline: 16px; }
-}
-
-@supports not (container-type: inline-size) {
-    @media (max-width: 1100px) {
-        .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr) 240px; }
-        .t-evolution-view .t-evolution-sidebar { padding-inline: 12px; }
-        .t-evolution-view .t-evolution-center { padding-inline: 18px; }
-        .t-evolution-view .t-evolution-evidence { padding-inline: 16px; }
-        .t-evolution-view .t-evolution-steps { gap: 6px; }
-        .t-evolution-view button.t-evolution-step { padding-inline: 8px; }
-    }
-    @media (max-width: 1000px) {
-        .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr); }
-        .t-evolution-view .t-evolution-sidebar { grid-row: 1 / span 2; }
-        .t-evolution-view .t-evolution-evidence { grid-column: 2; grid-row: 2; border-left: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0 0 11px 0; }
-        .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 680px) {
-        .t-evolution-view .t-evolution-workspace { grid-template-columns: minmax(0, 1fr); }
-        .t-evolution-view .t-evolution-sidebar { grid-column: 1; grid-row: 1; gap: 16px; padding: 20px 16px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 11px 11px 0 0; }
-        .t-evolution-view .t-evolution-topic-browser > .t-evolution-topic-toggle { display: flex; }
-        .t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle { margin-bottom: 16px; }
-        .t-evolution-view .t-evolution-center { grid-column: 1; grid-row: 2; gap: 20px; padding: 22px 16px; }
-        .t-evolution-view h3[data-evolution-role="dossier-title"] { font-size: 1.7em; }
-        .t-evolution-view .t-evolution-now-meta { gap: 8px; }
-        .t-evolution-view .t-evolution-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-        .t-evolution-view button.t-evolution-step { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 4px 9px; padding: 12px 10px; }
-        .t-evolution-view .t-evolution-step-floor { grid-column: 2; }
-        .t-evolution-view .t-evolution-step-dot { grid-column: 1; grid-row: 2; margin-top: 6px; }
-        .t-evolution-view .t-evolution-step > :is(strong, small) { grid-column: 2; }
-        .t-evolution-view .t-evolution-compare { grid-template-columns: minmax(0, 1fr); }
-        .t-evolution-view .t-evolution-compare-arrow { display: none; }
-        .t-evolution-view .t-evolution-evidence { grid-column: 1; grid-row: 3; padding: 20px 16px; border-radius: 0 0 11px 11px; }
-        .t-evolution-view .t-evolution-evidence-body { padding-top: 18px; }
-        .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: minmax(0, 1fr); }
-        .t-evolution-view .t-evolution-controls { flex-direction: column; align-items: flex-start; gap: 10px; }
-        .t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: 0; }
-        .t-evolution-view .t-evolution-editor { padding: 16px; }
-        .t-evolution-view .t-evolution-edit-fields,
-        .t-evolution-view .t-evolution-editor .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }
-        .t-evolution-view .t-evolution-tools { padding-inline: 16px; }
-    }
-}
+/* \u89D2\u8272\u6F14\u53D8\uFF1A\u6210\u957F\u4E3B\u9898 / \u53D8\u5316\u8F68\u8FF9 / \u8BC1\u636E\u3002\u6CBF\u7528\u6545\u4E8B\u8BB0\u5FC6\u4E3B\u9898\u4E0E\u63D2\u4EF6\u5B57\u53F7\u3002\r
+   \u5BB9\u5668\u662F\u9875\u9762\u6839\uFF0C\u4E0D\u662F viewport\uFF1B\u53EA\u6709\u4E0D\u652F\u6301\u5BB9\u5668\u67E5\u8BE2\u7684\u6D4F\u89C8\u5668\u624D\u4F7F\u7528 media \u515C\u5E95\u3002\r
+   \u4E3B\u9898\u6D4F\u89C8\u5668\u4F7F\u7528\u539F\u751F details[open]\uFF0C\u5173\u95ED\u540E\u59CB\u7EC8\u4FDD\u7559 summary\uFF0C\u907F\u514D\u7F29\u653E\u540E\u65E0\u6CD5\u91CD\u5F00\u3002 */\r
+.t-memory-window .t-memory-body.is-evolution { padding: 22px 18px 28px; }\r
+.t-evolution-view {\r
+    container-name: t-evolution;\r
+    container-type: inline-size;\r
+    width: 100%;\r
+    min-width: 0;\r
+    font-family: var(--t-font-global);\r
+    font-size: 1em;\r
+    line-height: 1.7;\r
+    color: var(--t-memory-text);\r
+    overflow-wrap: anywhere;\r
+}\r
+\r
+/* hidden \u662F\u5207\u6362\u9605\u8BFB\u9762\u677F\u3001\u7A7A\u6001\u4E0E\u9519\u8BEF\u63D0\u793A\u7684\u5951\u7EA6\uFF0C\u4E0D\u5F97\u88AB\u5E03\u5C40 display \u8986\u76D6\u3002 */\r
+.t-evolution-view [hidden] { display: none !important; }\r
+.t-evolution-view :where(section, aside, article, nav, header, footer, details, div, button, label) { min-width: 0; }\r
+.t-evolution-view :where(h2, h3, h4, p, blockquote) { margin: 0; }\r
+.t-evolution-view :where(h2, h3, h4) { text-wrap: balance; }\r
+.t-evolution-view :is(button, input, select, textarea) { font-family: var(--t-font-global); }\r
+.t-evolution-view button { max-width: 100%; min-height: 40px; font-size: 1em; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }\r
+.t-evolution-view button:disabled { opacity: .45; cursor: default; }\r
+.t-evolution-view :is(button, summary, input, select, textarea, a, [tabindex]):focus-visible {\r
+    outline: 2px solid var(--t-memory-gold);\r
+    outline-offset: 3px;\r
+}\r
+.t-evolution-view .t-input {\r
+    width: 100%; min-width: 0; min-height: 40px; margin: 0;\r
+    font: inherit; background: var(--t-memory-surface); color: var(--t-memory-text);\r
+    border-color: var(--t-memory-border);\r
+}\r
+.t-evolution-view .t-input:invalid { border-color: var(--t-memory-gold); }\r
+.t-evolution-view .t-memory-action { min-height: 40px; padding: 7px 12px; font-size: 1em; }\r
+.t-evolution-view .t-memory-toggle { min-height: 40px; line-height: 1.6; }\r
+.t-evolution-view .t-memory-toggle input { flex-shrink: 0; }\r
+.t-evolution-view pre {\r
+    min-width: 0; max-width: 100%; padding: 0; margin: 0;\r
+    font: inherit; line-height: 1.95; white-space: pre-wrap; overflow-wrap: anywhere;\r
+    color: var(--t-memory-text); background: transparent;\r
+}\r
+\r
+/* \u9876\u90E8\u53EA\u4FDD\u7559\u7D27\u51D1\u6807\u9898\uFF1B\u8FD0\u884C\u63A7\u5236\u4E0E\u7F16\u8F91\u5668\u5747\u5728\u4E09\u680F\u4E4B\u5916\u3002 */\r
+.t-evolution-view .t-evolution-page-head {\r
+    display: flex; justify-content: space-between; align-items: center;\r
+    flex-wrap: wrap; gap: 10px 20px; margin: 0 0 16px;\r
+}\r
+.t-evolution-view .t-evolution-page-head h2 { margin: 0; font-size: 1.65em; line-height: 1.5; font-weight: 500; letter-spacing: .06em; }\r
+.t-evolution-view .t-evolution-page-head :is(.t-memory-eyebrow, .t-memory-hint) { margin: 4px 0 0; font-size: 1em; }\r
+.t-evolution-view .t-evolution-operations {\r
+    margin-bottom: 18px; padding: 0 16px;\r
+    border: 1px solid var(--t-memory-border); border-radius: 10px;\r
+    background: var(--t-memory-surface);\r
+}\r
+.t-evolution-view .t-evolution-operations > summary { min-height: 40px; padding-block: 9px; color: var(--t-memory-muted); cursor: pointer; }\r
+.t-evolution-view .t-evolution-operations[open] > summary { color: var(--t-memory-gold); border-bottom: 1px solid var(--t-memory-line); }\r
+.t-evolution-view .t-evolution-controls {\r
+    display: flex; flex-direction: row; flex-wrap: wrap; align-items: center;\r
+    gap: 10px 20px; margin: 0; padding-block: 12px; border: 0; font-size: 1em;\r
+}\r
+.t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: auto; }\r
+.t-evolution-view .t-evolution-settings-link {\r
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;\r
+    padding-block: 12px; border-top: 1px solid var(--t-memory-line); border-bottom: 0;\r
+}\r
+.t-evolution-view .t-evolution-settings-link > div { flex: 1 1 280px; min-width: 0; }\r
+.t-evolution-view .t-evolution-settings-link > button { flex-shrink: 1; }\r
+.t-evolution-view .t-evolution-settings-link .t-memory-hint { margin-block: 4px; font-size: 1em; }\r
+.t-evolution-view [data-evolution-role="status"] { margin-block: 8px; font-size: 1em; color: var(--t-memory-muted); }\r
+.t-evolution-view .t-evolution-coverage { margin-block: 12px; padding-left: 12px; border-left: 2px solid var(--t-memory-violet); color: var(--t-memory-muted); font-size: 1em; line-height: 1.8; }\r
+.t-evolution-view .t-evolution-editor-host { min-width: 0; }\r
+.t-evolution-view .t-evolution-editor { margin: 0 0 20px; padding: 20px; font-size: 1em; }\r
+.t-evolution-view .t-evolution-editor :is(.t-memory-hint, .t-memory-field small) { font-size: 1em; }\r
+.t-evolution-view .t-evolution-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }\r
+.t-evolution-view .t-evolution-edit-fields textarea { min-height: 112px; resize: vertical; }\r
+.t-evolution-view .t-evolution-editor-flags { display: flex; flex-wrap: wrap; gap: 12px 24px; }\r
+.t-evolution-view .t-evolution-comparison { min-width: 0; margin: 0 0 20px; padding: 16px; border: 1px solid var(--t-memory-border); }\r
+.t-evolution-view .t-evolution-comparison legend { max-width: 100%; padding-inline: 8px; color: var(--t-memory-gold); }\r
+\r
+/* \u4E09\u79CD\u9605\u8BFB\u6DF1\u5EA6\u3002\u6B63\u6587\u968F\u5185\u5BB9\u81EA\u7136\u589E\u9AD8\uFF0C\u4E0D\u53E6\u5916\u5236\u9020\u4E09\u5217\u72EC\u7ACB\u6EDA\u52A8\u3002 */\r
+.t-evolution-view .t-evolution-workspace {\r
+    display: grid; grid-template-columns: 220px minmax(0, 1fr) 280px;\r
+    align-items: stretch; min-width: 0;\r
+    border: 1px solid var(--t-memory-border); border-radius: 12px;\r
+    background: var(--t-memory-surface);\r
+}\r
+.t-evolution-view .t-evolution-sidebar {\r
+    grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 22px;\r
+    padding: 24px 14px; border-right: 1px solid var(--t-memory-line);\r
+    border-radius: 11px 0 0 11px; background: var(--t-memory-shell);\r
+}\r
+.t-evolution-view .t-evolution-person { display: flex; align-items: center; gap: 12px; padding: 0 4px; }\r
+.t-evolution-view .t-evolution-person > div { min-width: 0; }\r
+/* monogram \u53EF\u7528\u7C7B\u540D\u6216 data-evolution-role="monogram"\uFF0C\u59D3\u540D/\u7248\u6B21\u6CBF\u7528\u73B0\u6709 role\u3002 */\r
+.t-evolution-view .t-evolution-person :is(.t-evolution-monogram, [data-evolution-role="monogram"]) {\r
+    display: grid; place-items: center; flex: 0 0 42px; min-height: 50px;\r
+    padding: 4px; border: 1px solid var(--t-memory-gold); border-radius: 24px 24px 7px 7px;\r
+    background: var(--t-memory-gold-soft); color: var(--t-memory-gold);\r
+    font: 1.8em/1.3 var(--t-font-global);\r
+}\r
+.t-evolution-view .t-evolution-person :is(h2, h3, [data-evolution-role="character"]) { margin: 0; color: var(--t-memory-text); font: 1.65em/1.5 var(--t-font-global); letter-spacing: .05em; }\r
+.t-evolution-view .t-evolution-person :is(p, .t-memory-hint, [data-evolution-role="edition"]) { margin: 4px 0 0; font-size: .95em; line-height: 1.7; color: var(--t-memory-muted); }\r
+.t-evolution-view .t-evolution-topic-browser { padding: 0; margin: 0; border: 0; }\r
+.t-evolution-view .t-evolution-topic-toggle {\r
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;\r
+    min-height: 40px; padding: 9px 10px; border: 1px solid var(--t-memory-border); border-radius: 7px;\r
+    list-style: none; color: var(--t-memory-gold); background: var(--t-memory-gold-soft); cursor: pointer;\r
+}\r
+.t-evolution-view .t-evolution-topic-toggle::-webkit-details-marker,\r
+.t-evolution-view .t-evolution-evidence > summary::-webkit-details-marker { display: none; }\r
+.t-evolution-view .t-evolution-topic-toggle::after,\r
+.t-evolution-view .t-evolution-evidence > summary::after {\r
+    content: ""; width: 7px; height: 7px; flex-shrink: 0;\r
+    border-right: 1px solid currentColor; border-bottom: 1px solid currentColor;\r
+    transform: rotate(45deg);\r
+}\r
+.t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle::after,\r
+.t-evolution-view .t-evolution-evidence[open] > summary::after { transform: rotate(225deg); }\r
+.t-evolution-view .t-evolution-topic-browser:where([open]) > .t-evolution-topic-toggle { display: none; }\r
+.t-evolution-view .t-evolution-theme-search { display: grid; gap: 6px; margin-block: 0 18px; color: var(--t-memory-muted); font-size: 1em; }\r
+.t-evolution-view .t-evolution-theme-search input { width: 100%; min-width: 0; min-height: 40px; padding: 8px 10px; border: 1px solid var(--t-memory-border); border-radius: 7px; font: inherit; color: var(--t-memory-text); background: var(--t-memory-surface); }\r
+.t-evolution-view .t-evolution-theme-groups { display: grid; gap: 22px; }\r
+.t-evolution-view .t-evolution-theme-group { display: grid; gap: 7px; }\r
+.t-evolution-view .t-evolution-theme-group > h4 { margin: 0 0 2px; padding-inline: 9px; color: var(--t-memory-muted); font-size: 1em; font-weight: 400; letter-spacing: .04em; }\r
+.t-evolution-view button.t-evolution-theme {\r
+    display: grid; gap: 5px; width: 100%; padding: 12px 10px; text-align: left;\r
+    border: 1px solid transparent; border-radius: 8px; background: transparent;\r
+    color: var(--t-memory-text); font: inherit;\r
+}\r
+.t-evolution-view button.t-evolution-theme:hover { background: var(--t-memory-raised); }\r
+.t-evolution-view button.t-evolution-theme[data-selected="true"] { border-color: var(--t-memory-gold); background: var(--t-memory-gold-soft); }\r
+.t-evolution-view .t-evolution-theme > strong { font-size: 1.05em; line-height: 1.7; font-weight: 500; }\r
+.t-evolution-view .t-evolution-theme[data-selected="true"] > strong { color: var(--t-memory-gold); }\r
+.t-evolution-view .t-evolution-theme-category,\r
+.t-evolution-view .t-evolution-theme > small { color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; }\r
+.t-evolution-view .t-evolution-theme-category { display: flex; align-items: center; gap: 6px; }\r
+.t-evolution-view .t-evolution-history-themes { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--t-memory-line); }\r
+.t-evolution-view .t-evolution-history-themes > summary { min-height: 40px; padding-block: 8px; color: var(--t-memory-muted); cursor: pointer; }\r
+.t-evolution-view .t-evolution-history-themes[open] > summary { margin-bottom: 10px; }\r
+\r
+/* \u5F53\u524D\u72B6\u6001\u56FA\u5B9A\u5728\u8F68\u8FF9\u4E0A\u65B9\uFF1B\u5386\u53F2\u9009\u62E9\u53EA\u5F71\u54CD\u4E0B\u65B9\u5BF9\u7167\u548C\u53F3\u4FA7\u4F9D\u636E\u3002 */\r
+.t-evolution-view .t-evolution-center { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 22px; padding: 24px; }\r
+.t-evolution-view .t-evolution-dossier { margin: 0; }\r
+.t-evolution-view .t-evolution-now-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }\r
+.t-evolution-view .t-evolution-caption { margin: 0; color: var(--t-memory-gold); font-size: 1em; letter-spacing: .07em; line-height: 1.7; }\r
+.t-evolution-view h3[data-evolution-role="dossier-title"] { margin: 0 0 10px; color: var(--t-memory-text); font: 1.85em/1.5 var(--t-font-global); letter-spacing: .03em; }\r
+.t-evolution-view .t-evolution-now-text { margin: 0; max-width: 64ch; font-size: 1.06em; line-height: 1.95; white-space: pre-wrap; }\r
+.t-evolution-view .t-evolution-dossier > .t-memory-hint { margin-block: 8px; font-size: 1em; }\r
+.t-evolution-view .t-evolution-now-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; color: var(--t-memory-muted); font-size: 1em; }\r
+.t-evolution-view .t-evolution-state-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }\r
+.t-evolution-view .t-evolution-state-badges > span,\r
+.t-evolution-view .t-evolution-state-heading .t-memory-badge { padding: 2px 7px; border: 1px solid var(--t-memory-border); border-radius: 5px; color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; white-space: normal; }\r
+.t-evolution-view .t-evolution-state-badges > .is-current { color: var(--t-memory-teal); border-color: var(--t-memory-teal); }\r
+.t-evolution-view .t-evolution-item { min-width: 0; padding: 14px 0 0; margin-top: 16px; border: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0; background: transparent; }\r
+.t-evolution-view .t-evolution-state-heading { padding-bottom: 12px; }\r
+.t-evolution-view .t-evolution-state-text { max-width: 100%; margin: 0; font-size: 1em; line-height: 1.95; white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.t-evolution-view .t-evolution-item > .t-memory-card-actions { margin-top: 12px; padding-top: 0; border-top: 0; }\r
+.t-evolution-view .t-evolution-item > .t-memory-card-actions .t-memory-action { min-height: 40px; padding: 6px 10px; font-size: 1em; }\r
+.t-evolution-view .t-evolution-item .t-evolution-details { margin-top: 12px; padding-block: 8px 0; border-bottom: 0; }\r
+.t-evolution-view .t-evolution-item .t-evolution-details > summary { font-size: 1em; }\r
+.t-evolution-view .t-evolution-read-tabs { display: flex; flex-wrap: wrap; gap: 8px 24px; border-bottom: 1px solid var(--t-memory-line); }\r
+.t-evolution-view .t-evolution-read-tab { padding: 8px 0 10px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--t-memory-muted); background: transparent; font: inherit; }\r
+.t-evolution-view .t-evolution-read-tab:hover { color: var(--t-memory-text); }\r
+.t-evolution-view .t-evolution-read-tab[aria-selected="true"] { color: var(--t-memory-text); border-bottom-color: var(--t-memory-gold); }\r
+.t-evolution-view .t-evolution-journey { min-width: 0; }\r
+.t-evolution-view .t-evolution-path-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 14px; color: var(--t-memory-muted); font-size: 1em; }\r
+.t-evolution-view .t-evolution-path-head strong { color: var(--t-memory-text); font-size: 1.05em; font-weight: 500; }\r
+.t-evolution-view .t-evolution-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }\r
+.t-evolution-view button.t-evolution-step {\r
+    display: flex; flex-direction: column; gap: 7px; padding: 12px 10px; text-align: left;\r
+    border: 1px solid var(--t-memory-border); border-radius: 7px;\r
+    background: transparent; color: var(--t-memory-text); font: inherit;\r
+}\r
+.t-evolution-view button.t-evolution-step:hover { background: var(--t-memory-raised); }\r
+.t-evolution-view button.t-evolution-step[aria-pressed="true"] { border-color: var(--t-memory-gold); background: var(--t-memory-gold-soft); }\r
+.t-evolution-view .t-evolution-step-floor { color: var(--t-memory-muted); font-size: .95em; font-variant-numeric: tabular-nums; }\r
+.t-evolution-view .t-evolution-step-dot { display: block; width: 8px; height: 8px; flex-shrink: 0; margin-block: 2px; border: 1px solid var(--t-memory-muted); border-radius: 50%; }\r
+.t-evolution-view .t-evolution-step[aria-pressed="true"] .t-evolution-step-dot { border-color: var(--t-memory-gold); background: var(--t-memory-gold); box-shadow: 0 0 0 3px var(--t-memory-gold-soft); }\r
+.t-evolution-view .t-evolution-step > strong { font-size: 1em; line-height: 1.7; font-weight: 500; }\r
+.t-evolution-view .t-evolution-step > small { margin-top: auto; color: var(--t-memory-muted); font-size: .95em; line-height: 1.6; }\r
+.t-evolution-view .t-evolution-path-pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px 12px; margin-top: 12px; color: var(--t-memory-muted); }\r
+.t-evolution-view .t-evolution-path-pagination button { padding: 6px 12px; border: 1px solid var(--t-memory-border); border-radius: 7px; color: var(--t-memory-muted); background: transparent; }\r
+.t-evolution-view .t-evolution-path-pagination button:hover:not(:disabled) { border-color: var(--t-memory-gold); color: var(--t-memory-gold); }\r
+.t-evolution-view .t-evolution-history-note { margin-top: 10px; color: var(--t-memory-muted); font-size: .95em; line-height: 1.8; }\r
+.t-evolution-view .t-evolution-change-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-block: 22px 13px; }\r
+.t-evolution-view .t-evolution-change-heading h4 { margin: 0; font-size: 1.1em; font-weight: 500; }\r
+.t-evolution-view .t-evolution-change-heading :is(span, small) { color: var(--t-memory-muted); font-size: .95em; }\r
+.t-evolution-view .t-evolution-compare { display: grid; grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 12px; align-items: stretch; }\r
+.t-evolution-view .t-evolution-compare-cell { display: grid; align-content: start; gap: 9px; padding-top: 12px; border-top: 1px solid var(--t-memory-border); }\r
+.t-evolution-view .t-evolution-compare-cell.is-after { border-top-color: var(--t-memory-gold); }\r
+.t-evolution-view .t-evolution-compare-label { color: var(--t-memory-muted); font-size: 1em; }\r
+.t-evolution-view .t-evolution-compare-text { margin: 0; font-size: 1em; line-height: 1.95; white-space: pre-wrap; color: var(--t-memory-muted); }\r
+.t-evolution-view .t-evolution-compare-cell.is-after .t-evolution-compare-text { color: var(--t-memory-text); }\r
+.t-evolution-view .t-evolution-compare-arrow { display: grid; place-items: center; color: var(--t-memory-muted); font-size: 1.4em; }\r
+.t-evolution-view .t-evolution-scope { display: flex; align-items: flex-start; gap: 12px; margin-top: 18px; padding: 13px 14px; border-radius: 7px; background: var(--t-memory-raised); }\r
+.t-evolution-view .t-evolution-scope > span { flex: 0 0 3em; color: var(--t-memory-gold); font-size: 1em; }\r
+.t-evolution-view .t-evolution-scope > p { margin: 0; min-width: 0; color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; white-space: pre-wrap; }\r
+.t-evolution-view .t-evolution-canonical { min-width: 0; font-size: 1em; line-height: 1.95; }\r
+.t-evolution-view .t-evolution-canonical h3 { margin: 0 0 12px; font-size: 1.1em; font-weight: 500; }\r
+/* \u539F\u6587\u4FDD\u7559\u5168\u90E8\u5185\u5BB9\uFF0C\u4E0D\u4F7F\u7528\u9AD8\u5EA6\u88C1\u5207\u3001\u884C\u6570\u622A\u65AD\u6216 display:none\u3002 */\r
+.t-evolution-view .t-evolution-canonical pre { max-height: none; overflow: visible; white-space: pre-wrap; }\r
+.t-evolution-view .t-evolution-canonical .t-evolution-item { margin: 0; padding: 0; border: 0; }\r
+\r
+/* \u8BC1\u636E\u5141\u8BB8\u72EC\u7ACB\u6298\u53E0\uFF0C\u4F46\u59CB\u7EC8\u4F4D\u4E8E\u88AB\u9009\u53D8\u5316\u7684\u9605\u8BFB\u987A\u5E8F\u4E4B\u540E\u3002 */\r
+.t-evolution-view .t-evolution-evidence {\r
+    grid-column: 3; grid-row: 1; padding: 24px 20px;\r
+    border-left: 1px solid var(--t-memory-line); border-radius: 0 11px 11px 0;\r
+    background: var(--t-memory-shell);\r
+}\r
+.t-evolution-view .t-evolution-evidence > summary { display: grid; grid-template-columns: minmax(0, 1fr) 12px; align-items: center; gap: 5px 12px; min-height: 40px; list-style: none; cursor: pointer; }\r
+.t-evolution-view .t-evolution-evidence > summary h3 { grid-column: 1; margin: 0; font-size: 1.1em; font-weight: 500; }\r
+.t-evolution-view .t-evolution-evidence > summary small { grid-column: 1; color: var(--t-memory-muted); font-size: .95em; }\r
+.t-evolution-view .t-evolution-evidence > summary::after { grid-column: 2; grid-row: 1 / span 2; color: var(--t-memory-muted); }\r
+.t-evolution-view .t-evolution-evidence-body { display: grid; gap: 22px; padding-top: 22px; }\r
+.t-evolution-view .t-evolution-reason { display: grid; gap: 9px; }\r
+.t-evolution-view .t-evolution-reason > h4 { margin: 0; color: var(--t-memory-gold); font-size: 1em; font-weight: 400; }\r
+.t-evolution-view .t-evolution-reason > p { margin: 0; color: var(--t-memory-text); font-size: 1.1em; line-height: 1.95; white-space: pre-wrap; }\r
+.t-evolution-view .t-evolution-evidence-sources { display: grid; gap: 20px; }\r
+.t-evolution-view .t-evolution-source { padding-block: 16px 0; border-top: 1px solid var(--t-memory-line); }\r
+.t-evolution-view .t-evolution-source > strong { display: block; color: var(--t-memory-muted); font-size: 1em; font-weight: 500; font-variant-numeric: tabular-nums; }\r
+.t-evolution-view .t-evolution-source blockquote { margin: 12px 0 0; padding: 0 0 0 12px; border: 0; border-left: 2px solid var(--t-memory-border); border-radius: 0; background: transparent; color: var(--t-memory-text); font: 1.15em/1.95 var(--t-font-global); white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.t-evolution-view .t-evolution-evidence-note { margin: 0; padding-top: 16px; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; }\r
+\r
+/* \u5B8C\u6574\u6279\u6B21\u3001\u6CE8\u5165\u9884\u89C8\u3001\u57FA\u7EBF\u4ECD\u53EF\u6838\u5BF9\uFF1B\u4E0D\u4E0E\u4E3B\u9605\u8BFB\u4E09\u680F\u7ADE\u4E89\u7A7A\u95F4\u3002 */\r
+.t-evolution-view .t-evolution-tools { grid-column: 1 / -1; margin-top: 20px; padding: 0 18px; border: 1px solid var(--t-memory-border); border-radius: 10px; background: var(--t-memory-surface); }\r
+.t-evolution-view .t-evolution-details { min-width: 0; padding-block: 12px; border-bottom: 1px solid var(--t-memory-line); }\r
+.t-evolution-view .t-evolution-details > summary { min-height: 40px; padding-block: 8px; color: var(--t-memory-gold); font-size: 1em; line-height: 1.8; cursor: pointer; overflow-wrap: anywhere; }\r
+.t-evolution-view .t-evolution-details[open] > summary { margin-bottom: 10px; }\r
+.t-evolution-view .t-evolution-tools > .t-evolution-details:last-child { border-bottom: 0; }\r
+.t-evolution-view .t-evolution-tools .t-evolution-guidance { padding: 12px 0; border: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 0; background: transparent; }\r
+.t-evolution-view .t-evolution-guidance .t-memory-source { margin-block: 12px 18px; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; color: var(--t-memory-text); font-size: 1em; }\r
+.t-evolution-view .t-evolution-guidance .t-memory-hint { margin-block: 7px 0; font-size: 1em; white-space: pre-wrap; }\r
+.t-evolution-view .t-evolution-change { padding-block: 16px; border-top: 1px solid var(--t-memory-line); }\r
+.t-evolution-view .t-evolution-change h4 { margin: 0 0 10px; font-size: 1.05em; }\r
+.t-evolution-view .t-evolution-workspace-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; padding-block: 12px; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); font-size: 1em; line-height: 1.8; }\r
+.t-evolution-view .t-evolution-empty { grid-column: 1 / -1; margin: 0; padding: 20px 16px; color: var(--t-memory-muted); font-size: 1em; line-height: 1.9; }\r
+.t-evolution-view .t-evolution-empty :is(h3, strong) { color: var(--t-memory-text); font-size: 1.1em; font-weight: 500; }\r
+.t-evolution-view .t-evolution-empty p { margin-top: 8px; }\r
+\r
+/* 1100 \u4EE5\u4E0B\u538B\u7F29\u4E09\u680F\uFF1B1000 \u4EE5\u4E0B\u5C06\u8BC1\u636E\u79FB\u5230\u4E2D\u680F\u4E0B\u65B9\uFF1B680 \u4EE5\u4E0B\u5355\u680F\u3002\r
+   \u4E0D\u5728\u652F\u6301 container \u7684\u6D4F\u89C8\u5668\u53E0\u52A0 viewport \u65AD\u70B9\uFF0C\u7236\u7A97\u53E3\u7F29\u653E\u624D\u662F\u552F\u4E00\u4F9D\u636E\u3002 */\r
+@container t-evolution (max-width: 1100px) {\r
+    .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr) 240px; }\r
+    .t-evolution-view .t-evolution-sidebar { padding-inline: 12px; }\r
+    .t-evolution-view .t-evolution-center { padding-inline: 18px; }\r
+    .t-evolution-view .t-evolution-evidence { padding-inline: 16px; }\r
+    .t-evolution-view .t-evolution-steps { gap: 6px; }\r
+    .t-evolution-view button.t-evolution-step { padding-inline: 8px; }\r
+}\r
+@container t-evolution (max-width: 1000px) {\r
+    .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr); }\r
+    .t-evolution-view .t-evolution-sidebar { grid-row: 1 / span 2; }\r
+    .t-evolution-view .t-evolution-evidence { grid-column: 2; grid-row: 2; border-left: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0 0 11px 0; }\r
+    .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
+}\r
+@container t-evolution (max-width: 680px) {\r
+    .t-evolution-view .t-evolution-workspace { grid-template-columns: minmax(0, 1fr); }\r
+    .t-evolution-view .t-evolution-sidebar { grid-column: 1; grid-row: 1; gap: 16px; padding: 20px 16px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 11px 11px 0 0; }\r
+    .t-evolution-view .t-evolution-topic-browser > .t-evolution-topic-toggle { display: flex; }\r
+    .t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle { margin-bottom: 16px; }\r
+    .t-evolution-view .t-evolution-center { grid-column: 1; grid-row: 2; gap: 20px; padding: 22px 16px; }\r
+    .t-evolution-view h3[data-evolution-role="dossier-title"] { font-size: 1.7em; }\r
+    .t-evolution-view .t-evolution-now-meta { gap: 8px; }\r
+    .t-evolution-view .t-evolution-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }\r
+    .t-evolution-view button.t-evolution-step { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 4px 9px; padding: 12px 10px; }\r
+    .t-evolution-view .t-evolution-step-floor { grid-column: 2; }\r
+    .t-evolution-view .t-evolution-step-dot { grid-column: 1; grid-row: 2; margin-top: 6px; }\r
+    .t-evolution-view .t-evolution-step > :is(strong, small) { grid-column: 2; }\r
+    .t-evolution-view .t-evolution-compare { grid-template-columns: minmax(0, 1fr); }\r
+    .t-evolution-view .t-evolution-compare-arrow { display: none; }\r
+    .t-evolution-view .t-evolution-evidence { grid-column: 1; grid-row: 3; padding: 20px 16px; border-radius: 0 0 11px 11px; }\r
+    .t-evolution-view .t-evolution-evidence-body { padding-top: 18px; }\r
+    .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: minmax(0, 1fr); }\r
+    .t-evolution-view .t-evolution-controls { flex-direction: column; align-items: flex-start; gap: 10px; }\r
+    .t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: 0; }\r
+    .t-evolution-view .t-evolution-editor { padding: 16px; }\r
+    .t-evolution-view .t-evolution-edit-fields,\r
+    .t-evolution-view .t-evolution-editor .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }\r
+    .t-evolution-view .t-evolution-tools { padding-inline: 16px; }\r
+}\r
+\r
+@supports not (container-type: inline-size) {\r
+    @media (max-width: 1100px) {\r
+        .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr) 240px; }\r
+        .t-evolution-view .t-evolution-sidebar { padding-inline: 12px; }\r
+        .t-evolution-view .t-evolution-center { padding-inline: 18px; }\r
+        .t-evolution-view .t-evolution-evidence { padding-inline: 16px; }\r
+        .t-evolution-view .t-evolution-steps { gap: 6px; }\r
+        .t-evolution-view button.t-evolution-step { padding-inline: 8px; }\r
+    }\r
+    @media (max-width: 1000px) {\r
+        .t-evolution-view .t-evolution-workspace { grid-template-columns: 190px minmax(0, 1fr); }\r
+        .t-evolution-view .t-evolution-sidebar { grid-row: 1 / span 2; }\r
+        .t-evolution-view .t-evolution-evidence { grid-column: 2; grid-row: 2; border-left: 0; border-top: 1px solid var(--t-memory-line); border-radius: 0 0 11px 0; }\r
+        .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
+    }\r
+    @media (max-width: 680px) {\r
+        .t-evolution-view .t-evolution-workspace { grid-template-columns: minmax(0, 1fr); }\r
+        .t-evolution-view .t-evolution-sidebar { grid-column: 1; grid-row: 1; gap: 16px; padding: 20px 16px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); border-radius: 11px 11px 0 0; }\r
+        .t-evolution-view .t-evolution-topic-browser > .t-evolution-topic-toggle { display: flex; }\r
+        .t-evolution-view .t-evolution-topic-browser[open] > .t-evolution-topic-toggle { margin-bottom: 16px; }\r
+        .t-evolution-view .t-evolution-center { grid-column: 1; grid-row: 2; gap: 20px; padding: 22px 16px; }\r
+        .t-evolution-view h3[data-evolution-role="dossier-title"] { font-size: 1.7em; }\r
+        .t-evolution-view .t-evolution-now-meta { gap: 8px; }\r
+        .t-evolution-view .t-evolution-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }\r
+        .t-evolution-view button.t-evolution-step { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 4px 9px; padding: 12px 10px; }\r
+        .t-evolution-view .t-evolution-step-floor { grid-column: 2; }\r
+        .t-evolution-view .t-evolution-step-dot { grid-column: 1; grid-row: 2; margin-top: 6px; }\r
+        .t-evolution-view .t-evolution-step > :is(strong, small) { grid-column: 2; }\r
+        .t-evolution-view .t-evolution-compare { grid-template-columns: minmax(0, 1fr); }\r
+        .t-evolution-view .t-evolution-compare-arrow { display: none; }\r
+        .t-evolution-view .t-evolution-evidence { grid-column: 1; grid-row: 3; padding: 20px 16px; border-radius: 0 0 11px 11px; }\r
+        .t-evolution-view .t-evolution-evidence-body { padding-top: 18px; }\r
+        .t-evolution-view .t-evolution-evidence-sources { grid-template-columns: minmax(0, 1fr); }\r
+        .t-evolution-view .t-evolution-controls { flex-direction: column; align-items: flex-start; gap: 10px; }\r
+        .t-evolution-view .t-evolution-controls .t-memory-card-actions { margin-left: 0; }\r
+        .t-evolution-view .t-evolution-editor { padding: 16px; }\r
+        .t-evolution-view .t-evolution-edit-fields,\r
+        .t-evolution-view .t-evolution-editor .t-memory-settings-grid { grid-template-columns: minmax(0, 1fr); }\r
+        .t-evolution-view .t-evolution-tools { padding-inline: 16px; }\r
+    }\r
+}\r
 
 
 /* === 04-features/story-memory-notifications.css === */
-/* Send-area notice: in normal flow, never covering or disabling the composer. */
-.t-memory-notice {
-    --t-memory-notice-accent: var(--t-color-accent);
-    display: flex; align-items: flex-start; gap: 10px;
-    width: 100%; min-width: 0; padding: 10px 16px;
-    border: 1px solid var(--t-color-border-faint); border-left: 3px solid var(--t-memory-notice-accent);
-    border-radius: 10px 10px 0 0; background: var(--t-color-surface);
-    color: var(--t-color-text); font-family: var(--t-font-global); font-size: 12px; line-height: 1.6;
-    white-space: normal; text-shadow: none; box-sizing: border-box;
-}
-.t-memory-notice[data-state="done"] { --t-memory-notice-accent: var(--t-color-teal); }
-.t-memory-notice[data-state="error"], .t-memory-notice[data-state="retry"] { --t-memory-notice-accent: var(--t-color-warning); }
-.t-memory-notice[data-state="paused"] { --t-memory-notice-accent: var(--t-color-text-muted); }
-.t-memory-notice-icon { flex: 0 0 20px; color: var(--t-memory-notice-accent); font-size: 20px; line-height: 1.2; text-align: center; }
-.t-memory-notice-content { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.t-memory-notice-title { display: block; font-weight: 600; color: var(--t-memory-notice-accent); }
-.t-memory-notice-tasks { white-space: pre-line; max-height: 6.4em; overflow-y: auto; overscroll-behavior: contain; }
-.t-memory-notice-hint { margin-top: 3px; color: var(--t-color-text-secondary); font-size: 11px; }
-.t-memory-notice-close {
-    flex: 0 0 28px; width: 28px; height: 28px; padding: 0;
-    border: 0; border-radius: 5px; background: transparent; color: var(--t-color-text-secondary);
-    font: inherit; font-size: 20px; line-height: 1; cursor: pointer;
-}
-.t-memory-notice-close[hidden] { display: none; }
-.t-memory-notice-close:hover { color: var(--t-color-text); background: var(--t-color-surface-hover); }
-.t-memory-notice-close:focus-visible { outline: 2px solid var(--t-color-focus-ring); outline-offset: 2px; }
-@media (max-width: 600px) {
-    .t-memory-notice { gap: 8px; padding-block: 8px; }
-    .t-memory-notice-close { flex-basis: 32px; width: 32px; height: 32px; }
-}
+/* Send-area notice: in normal flow, never covering or disabling the composer. */\r
+.t-memory-notice {\r
+    --t-memory-notice-accent: var(--t-color-accent);\r
+    display: flex; align-items: flex-start; gap: 10px;\r
+    width: 100%; min-width: 0; padding: 10px 16px;\r
+    border: 1px solid var(--t-color-border-faint); border-left: 3px solid var(--t-memory-notice-accent);\r
+    border-radius: 10px 10px 0 0; background: var(--t-color-surface);\r
+    color: var(--t-color-text); font-family: var(--t-font-global); font-size: 12px; line-height: 1.6;\r
+    white-space: normal; text-shadow: none; box-sizing: border-box;\r
+}\r
+.t-memory-notice[data-state="done"] { --t-memory-notice-accent: var(--t-color-teal); }\r
+.t-memory-notice[data-state="error"], .t-memory-notice[data-state="retry"] { --t-memory-notice-accent: var(--t-color-warning); }\r
+.t-memory-notice[data-state="paused"] { --t-memory-notice-accent: var(--t-color-text-muted); }\r
+.t-memory-notice-icon { flex: 0 0 20px; color: var(--t-memory-notice-accent); font-size: 20px; line-height: 1.2; text-align: center; }\r
+.t-memory-notice-content { flex: 1; min-width: 0; overflow-wrap: anywhere; }\r
+.t-memory-notice-title { display: block; font-weight: 600; color: var(--t-memory-notice-accent); }\r
+.t-memory-notice-tasks { white-space: pre-line; max-height: 6.4em; overflow-y: auto; overscroll-behavior: contain; }\r
+.t-memory-notice-hint { margin-top: 3px; color: var(--t-color-text-secondary); font-size: 11px; }\r
+.t-memory-notice-close {\r
+    flex: 0 0 28px; width: 28px; height: 28px; padding: 0;\r
+    border: 0; border-radius: 5px; background: transparent; color: var(--t-color-text-secondary);\r
+    font: inherit; font-size: 20px; line-height: 1; cursor: pointer;\r
+}\r
+.t-memory-notice-close[hidden] { display: none; }\r
+.t-memory-notice-close:hover { color: var(--t-color-text); background: var(--t-color-surface-hover); }\r
+.t-memory-notice-close:focus-visible { outline: 2px solid var(--t-color-focus-ring); outline-offset: 2px; }\r
+@media (max-width: 600px) {\r
+    .t-memory-notice { gap: 8px; padding-block: 8px; }\r
+    .t-memory-notice-close { flex-basis: 32px; width: 32px; height: 32px; }\r
+}\r
 
 
 /* === 04-features/story-timetrace.css === */
@@ -25868,7 +25876,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90898], "01-base/base.css": [90931, 95153], "01-base/scrollbar.css": [95191, 103565], "01-base/form-controls.css": [103607, 114413], "01-base/keyframes.css": [114451, 122354], "02-components/window.css": [122395, 125527], "02-components/panel.css": [125567, 129187], "02-components/settings-shell.css": [129236, 133634], "02-components/dialog.css": [133675, 139020], "02-components/button.css": [139061, 145561], "02-components/icon-button.css": [145607, 148087], "02-components/field.css": [148127, 151202], "02-components/choice-input.css": [151249, 152540], "02-components/radio-card.css": [152585, 154827], "02-components/studio-workspace.css": [154878, 169767], "02-components/_legacy.css": [169809, 172773], "03-layout/button-groups.css": [172817, 174238], "03-layout/utilities.css": [174278, 176089], "04-features/floating.css": [176130, 183332], "04-features/toolbox-settings.css": [183381, 186236], "04-features/main-window.css": [186280, 231173], "04-features/main-window-legacy.css": [231224, 255090], "04-features/script-picker.css": [255136, 261631], "04-features/wi-selector.css": [261675, 278728], "04-features/continuation.css": [278773, 302642], "04-features/queue.css": [302680, 309240], "04-features/content-editor.css": [309287, 311594], "04-features/illustration.css": [311639, 326754], "04-features/settings-drawer.css": [326802, 343348], "04-features/settings.css": [343389, 368049], "04-features/manager.css": [368089, 380724], "04-features/workshop.css": [380765, 403547], "04-features/favs.css": [403584, 443510], "04-features/debug.css": [443548, 460313], "04-features/story-outline.css": [460359, 494665], "04-features/outline-entry-menu.css": [494716, 501469], "04-features/rewrite.css": [501509, 552408], "04-features/reader.css": [552447, 561806], "04-features/chat-book.css": [561848, 568389], "04-features/story-memory.css": [568434, 613751], "04-features/character-evolution.css": [613803, 641901], "04-features/story-memory-notifications.css": [641960, 644079], "04-features/story-timetrace.css": [644127, 656975], "04-features/confirm-dialog.css": [657022, 661020], "04-features/image-cropper.css": [661066, 664924], "04-features/st-embedded.css": [664968, 695472], "04-features/scene-advance.css": [695518, 717603], "04-features/theater-midnight.css": [717652, 742980] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90898], "01-base/base.css": [90931, 95153], "01-base/scrollbar.css": [95191, 103565], "01-base/form-controls.css": [103607, 114413], "01-base/keyframes.css": [114451, 122354], "02-components/window.css": [122395, 125527], "02-components/panel.css": [125567, 129187], "02-components/settings-shell.css": [129236, 133634], "02-components/dialog.css": [133675, 139020], "02-components/button.css": [139061, 145561], "02-components/icon-button.css": [145607, 148087], "02-components/field.css": [148127, 151202], "02-components/choice-input.css": [151249, 152540], "02-components/radio-card.css": [152585, 154827], "02-components/studio-workspace.css": [154878, 169767], "02-components/_legacy.css": [169809, 172773], "03-layout/button-groups.css": [172817, 174238], "03-layout/utilities.css": [174278, 176089], "04-features/floating.css": [176130, 183332], "04-features/toolbox-settings.css": [183381, 186236], "04-features/main-window.css": [186280, 231173], "04-features/main-window-legacy.css": [231224, 255090], "04-features/script-picker.css": [255136, 261631], "04-features/wi-selector.css": [261675, 278728], "04-features/continuation.css": [278773, 302642], "04-features/queue.css": [302680, 309240], "04-features/content-editor.css": [309287, 311594], "04-features/illustration.css": [311639, 326754], "04-features/settings-drawer.css": [326802, 343348], "04-features/settings.css": [343389, 368049], "04-features/manager.css": [368089, 380724], "04-features/workshop.css": [380765, 403547], "04-features/favs.css": [403584, 443510], "04-features/debug.css": [443548, 460313], "04-features/story-outline.css": [460359, 494665], "04-features/outline-entry-menu.css": [494716, 501469], "04-features/rewrite.css": [501509, 552408], "04-features/reader.css": [552447, 561806], "04-features/chat-book.css": [561848, 568389], "04-features/story-memory.css": [568434, 613751], "04-features/character-evolution.css": [613803, 642224], "04-features/story-memory-notifications.css": [642283, 644432], "04-features/story-timetrace.css": [644480, 657328], "04-features/confirm-dialog.css": [657375, 661373], "04-features/image-cropper.css": [661419, 665277], "04-features/st-embedded.css": [665321, 695825], "04-features/scene-advance.css": [695871, 717956], "04-features/theater-midnight.css": [718005, 743333] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -36897,7 +36905,7 @@ function planRange(chat2, memory, config, estimate) {
     if (!texts.has(message)) texts.set(message, config.text_extraction ? extractToolboxText(message.mes, config.text_extraction) : String(message.mes));
     return texts.get(message);
   };
-  const includeInSummary = (message) => isMemoryReadable(message) && !(config.skip_user_messages && message.is_user === true) && !!textFor(message).trim();
+  const includeInSummary = (message) => isMemoryReadable(message) && isAnalysisMessage(message, config) && !!textFor(message).trim();
   const start = memory.segments.at(-1)?.end + 1 || 0;
   const readable = chat2.map((message, index) => isMemoryReadable(message) ? index : -1).filter((i) => i >= 0);
   let keepStart = readable[Math.max(0, readable.length - config.keep_floors)] ?? 0;
@@ -39224,9 +39232,9 @@ function timetraceFingerprint(message) {
 function timetraceReadable(message) {
   return !!message && !!String(message.mes || "").trim() && !message.is_hidden && !message.extra?.is_hidden && (!message.is_system || !!message.extra?.titania_memory_hidden);
 }
-function timetraceRows(chat2, extract = stripTimetraceComments) {
+function timetraceRows(chat2, extract = stripTimetraceComments, scope3 = {}) {
   return (chat2 || []).flatMap((message, index) => {
-    if (!timetraceReadable(message)) return [];
+    if (!timetraceReadable(message) || !isAnalysisMessage(message, scope3)) return [];
     const text3 = String(extract(stripTimetraceComments(message.mes)) || "").trim();
     return text3 ? [{
       index,
@@ -39739,6 +39747,7 @@ function clockBatch(rows, config, estimate) {
 var TIMETRACE_KEY, TIMETRACE_ID_KEY, TIMETRACE_BASES, TIMETRACE_FRAMES, LEGACY_TIMETRACE_RULES, TIMETRACE_RULES, TIMETRACE_DEFAULTS, cloneTimetrace, timetraceId, smallText, containsQuote, overlaps, beforeRange;
 var init_storyTimetraceData = __esm({
   "src/core/storyTimetraceData.js"() {
+    init_toolboxSettings();
     init_storyClock();
     TIMETRACE_KEY = "echo_timetrace";
     TIMETRACE_ID_KEY = "echo_timetrace_id";
@@ -39832,7 +39841,7 @@ function memoryFor(ctx2) {
 }
 function getTimetraceConfig() {
   const data = getExtData();
-  const config = normalizeTimetraceConfig(data.story_timetrace);
+  const config = { ...normalizeTimetraceConfig(data.story_timetrace), ...getAnalysisScope(data) };
   const profile = toolboxProfileId(data, "timetrace");
   if (profile !== null) config.profile_id = profile;
   config.model_override = getToolboxModelOverride(data, "timetrace");
@@ -39841,13 +39850,13 @@ function getTimetraceConfig() {
 }
 function scope() {
   const config = getTimetraceConfig();
-  return JSON.stringify([config.mode, config.profile_id, config.model_override, config.prompt, config.extraction]);
+  return JSON.stringify([config.mode, config.profile_id, config.model_override, config.prompt, config.extraction, config.skip_user_messages]);
 }
 function fallbackFor(ctx2) {
   return timetraceFallbackRows(ctx2.chat, ctx2.chatMetadata.titania_story_memory);
 }
 function rowsFor(ctx2, config = getTimetraceConfig(), fallback = fallbackFor(ctx2)) {
-  return [...timetraceRows(ctx2.chat, (text3) => extractToolboxText(text3, config.extraction)), ...fallback].sort((a, b) => a.index - b.index);
+  return [...timetraceRows(ctx2.chat, (text3) => extractToolboxText(text3, config.extraction), config), ...fallback].sort((a, b) => a.index - b.index);
 }
 function sourcesMatch(rows, ctx2) {
   return timetraceSourcesMatch(rows, ctx2.chat, fallbackFor(ctx2));
@@ -39933,9 +39942,11 @@ function abortable(promise, signal) {
   });
   return Promise.race([promise, cancelled]).finally(() => signal.removeEventListener("abort", abort));
 }
-async function commitBatch(ctx2, rows, result, phase, kind = "api", expectedRevision = null) {
+async function commitBatch(ctx2, rows, result, phase, kind = "api", expectedRevision = null, valid = () => true) {
+  const inputScope2 = scope(), inputEpoch = epoch;
   return mutate(async () => {
     var _a, _b;
+    if (!valid() || inputScope2 !== scope() || inputEpoch !== epoch) throw new Error("\u5206\u6790\u8303\u56F4\u5DF2\u53D8\u5316\uFF0C\u65F6\u95F4\u5206\u6790\u7ED3\u679C\u5DF2\u53D6\u6D88\u3002");
     if (!sameChat(ctx2) || !sourcesMatch(rows, ctx2)) throw new Error("\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u65F6\u95F4\u5206\u6790\u7ED3\u679C\u5DF2\u53D6\u6D88\u3002");
     const memory = memoryFor(ctx2);
     if (reconciledFor(ctx2).changed) throw new Error("\u5386\u53F2\u6765\u6E90\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u5206\u6790\u65F6\u95F4\u8F74\u3002");
@@ -39966,9 +39977,11 @@ async function reconcile(ctx2) {
 }
 async function ingestComments(ctx2, { allowFloor = null } = {}) {
   if (!sameChat(ctx2) || !memoryFor(ctx2).enabled) return;
-  const rows = rowsFor(ctx2);
+  const rows = rowsFor(ctx2), inputScope2 = scope(), inputEpoch = epoch;
+  const current = () => inputScope2 === scope() && inputEpoch === epoch;
   let missing = 0;
   for (const row of pendingTimetraceRows(memoryFor(ctx2), rows)) {
+    if (!current()) return;
     if (row.isUser || row.kind === "summary" || !sameChat(ctx2)) continue;
     if (memoryFor(ctx2).invalidatedFrom !== void 0 && row.index >= memoryFor(ctx2).invalidatedFrom && row.index !== allowFloor) {
       missing++;
@@ -39986,9 +39999,9 @@ async function ingestComments(ctx2, { allowFloor = null } = {}) {
       const preceding = [];
       for (let i = rows.indexOf(row) - 1; i >= 0 && rows[i].isUser; i--) preceding.unshift(rows[i]);
       const uncovered = pendingTimetraceRows(memory, [...preceding, row]);
-      await commitBatch(ctx2, uncovered, result, "timeline", "inline", memory.revision);
+      await commitBatch(ctx2, uncovered, result, "timeline", "inline", memory.revision, current);
     } catch (cause) {
-      if (!sameChat(ctx2)) return;
+      if (!sameChat(ctx2) || !current()) return;
       missing++;
       warning = `\u90E8\u5206\u65F6\u95F4\u6CE8\u91CA\u672A\u80FD\u8BFB\u53D6\uFF1A${cause.message} \u53EF\u7528\u201C\u8865\u5EFA\u5386\u53F2\u65F6\u95F4\u8F74\u201D\u5206\u6790\u539F\u6B63\u6587\u3002`;
     }
@@ -40298,7 +40311,7 @@ async function analyseBatch(task, conn, config, world, rows, phase) {
       if (!taskCurrent(task)) return false;
       const basis = timetraceAnalysisContext(memory, rows[0].index);
       const result = parseTimetraceResponse(raw, rows, parserOptions(memory, rows[0].index, basis));
-      await commitBatch(task.ctx, rows, result, phase, "api", revision);
+      await commitBatch(task.ctx, rows, result, phase, "api", revision, () => taskCurrent(task));
       updateProgress({ state: "running", completed: progress.completed + rows.length, batches: progress.batches + 1, retryAt: 0, message: "" });
       return true;
     } catch (cause) {
@@ -40610,6 +40623,21 @@ function initStoryTimetrace() {
     if (ctx3 && memoryFor(ctx3).enabled && !paused && getTimetraceConfig().mode === "api") schedule(false);
   };
   for (const event of [TITANIA_TEXT_PATCHED, TOOLBOX_EXTRACTION_CHANGED, ...["MESSAGE_SENT", "MESSAGE_RECEIVED", "MESSAGE_EDITED", "MESSAGE_UPDATED", "MESSAGE_DELETED", "MESSAGE_SWIPED", "MESSAGE_SWIPE_DELETED"].map((name) => event_types2[name])]) bind(event, changed);
+  if (typeof document !== "undefined") document.addEventListener(ANALYSIS_SCOPE_CHANGED, () => {
+    epoch++;
+    job?.controller.abort();
+    clearTimer();
+    queuedHistory = false;
+    error = "";
+    warning = "";
+    if (progress?.state === "running" || progress?.state === "retry") {
+      updateProgress({ state: "paused", retryAt: 0, message: "\u5168\u5C40\u5206\u6790\u697C\u5C42\u8303\u56F4\u5DF2\u6539\u53D8\uFF0C\u672A\u4FDD\u5B58\u7684\u5206\u6790\u5DF2\u53D6\u6D88\u3002" });
+    }
+    refreshInjection();
+    notify3();
+    const ctx3 = context();
+    if (ctx3 && memoryFor(ctx3).enabled && !paused && getTimetraceConfig().mode === "api") schedule(false);
+  });
   refreshInjection();
   const ctx2 = context();
   if (ctx2 && memoryFor(ctx2).enabled) {
@@ -43137,7 +43165,9 @@ function getOpeningFromContext() {
       if (typeof item2 === "string" && item2.trim()) return item2.trim();
     }
     const firstChat = Array.isArray(stCtx?.chat) ? stCtx.chat[0] : null;
-    if (firstChat?.mes && typeof firstChat.mes === "string") return extractToolboxText(firstChat.mes, getToolboxExtraction(getExtData())).trim();
+    if (isAnalysisMessage(firstChat, getAnalysisScope(getExtData())) && typeof firstChat.mes === "string") {
+      return extractToolboxText(firstChat.mes, getToolboxExtraction(getExtData())).trim();
+    }
   } catch (e) {
     console.warn("Titania: \u83B7\u53D6\u5F00\u573A\u767D\u5931\u8D25", e);
   }
@@ -43251,8 +43281,11 @@ function getChatHistoryEntries(opts = {}) {
     if (typeof SillyTavern === "undefined" || !SillyTavern.getContext) return [];
     const stCtx = SillyTavern.getContext();
     const chat2 = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
-    const rules = getToolboxExtraction(getExtData());
+    const data = getExtData();
+    const rules = getToolboxExtraction(data);
+    const scope3 = getAnalysisScope(data);
     return chat2.map((msg, idx) => {
+      if (!isAnalysisMessage(msg, scope3)) return null;
       const raw = typeof msg?.mes === "string" ? msg.mes : "";
       const hidden = !!(msg?.is_system || msg?.is_hidden);
       const text3 = extractToolboxText(raw, rules);
@@ -45689,13 +45722,14 @@ function getRecentFloorWindow(floors, opts = {}) {
     const stCtx = SillyTavern.getContext();
     const chat2 = Array.isArray(stCtx?.chat) ? stCtx.chat : [];
     if (chat2.length === 0) return [];
-    const rules = getToolboxExtraction(getExtData());
+    const data = getExtData();
+    const rules = getToolboxExtraction(data);
+    const scope3 = getAnalysisScope(data);
     const start = Math.max(0, chat2.length - n);
     return chat2.slice(start).map((msg, i) => {
       const raw = typeof msg?.mes === "string" ? msg.mes : "";
       const hidden = !!(msg?.is_system || msg?.is_hidden);
-      let text3 = extractToolboxText(raw, rules);
-      if (hidden && !includeHidden) text3 = "";
+      const text3 = isAnalysisMessage(msg, scope3) && (!hidden || includeHidden) ? extractToolboxText(raw, rules) : "";
       return {
         chatIndex: start + i,
         role: hidden ? "\u80CC\u666F" : msg?.is_user ? "\u7528\u6237" : "\u89D2\u8272",
@@ -46117,17 +46151,19 @@ function getSceneHistorySession() {
     groupId: stCtx.groupId,
     planId: getRollingPlan()?.id || "",
     sourceMode: getExtData()[SCENE_MODE_KEY] || "auto",
-    sourceId: getSceneSourcePlanId()
+    sourceId: getSceneSourcePlanId(),
+    skipUserMessages: getAnalysisScope(getExtData()).skip_user_messages,
+    analysisScopeEpoch
   } : null;
 }
 function isSameSceneHistorySession(left, right) {
-  return ["chat", "chatId", "characterId", "groupId", "planId", "sourceMode", "sourceId"].every((key) => left?.[key] === right?.[key]);
+  return ["chat", "chatId", "characterId", "groupId", "planId", "sourceMode", "sourceId", "skipUserMessages", "analysisScopeEpoch"].every((key) => left?.[key] === right?.[key]);
 }
 function assertSceneHistoryReady(expectedSession) {
   if (isHostGenerating()) throw new Error("\u9152\u9986\u6B63\u5728\u751F\u6210\u56DE\u590D\uFF0C\u8BF7\u7B49\u5F53\u524D\u56DE\u590D\u5B8C\u6210\u540E\u518D\u8BFB\u53D6\u5267\u60C5\u6B63\u6587");
   const session = getSceneHistorySession();
   if (expectedSession !== void 0 && !isSameSceneHistorySession(session, expectedSession)) {
-    throw new Error("\u804A\u5929\u5DF2\u5207\u6362\uFF0C\u8BF7\u5728\u5F53\u524D\u804A\u5929\u4E2D\u91CD\u65B0\u8BFB\u53D6\u5267\u60C5\u6B63\u6587");
+    throw new Error("\u804A\u5929\u6216\u5206\u6790\u8303\u56F4\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u8BFB\u53D6\u5267\u60C5\u6B63\u6587");
   }
   return session;
 }
@@ -46139,6 +46175,8 @@ function getSceneHistorySignature() {
     length: chat2.length,
     floors,
     rules: getToolboxExtraction(getExtData()),
+    // false 不添键，兼容升级前已保存的自由候选签名；开关往返由会话 epoch 拦截在途结果。
+    ...getAnalysisScope(getExtData()).skip_user_messages ? { skipUserMessages: true } : {},
     opening: getRollingOpeningText(),
     entries: entries.map((entry) => [entry.chatIndex, entry.role, entry.text, chat2[entry.chatIndex]?.swipe_id ?? 0])
   });
@@ -47081,7 +47119,7 @@ function clearSceneTransition(planId) {
   if (id3) dropPlanTransition(id3);
   return getSceneAdvanceState();
 }
-var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, blindboxOriginalReviewKey, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, DRAFT_KEY, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, DIRECTOR_CHAT_FLOORS_KEY, DIRECTOR_CHAT_FLOORS_DEFAULT, EMPTY_FLOOR_MARK, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, BB_STRICTNESS_LABEL, PACING_STATES, FROM_MAX, STEP_STATES;
+var outlineItems, lastRawResponse, rawResponseHistory, selectedRowIndex, isRawDialogOpen, blindboxOriginalReviewKey, responseTimerStartAt, responseElapsedMs, responseTimerId, responseTimerRunning, activeOutlineAbortController, analysisScopeEpoch, DRAFT_KEY, PLANS_KEY3, ACTIVE_PLAN_KEY3, SCENE_SOURCE_PLAN_KEY, PROMPT_TEMPLATES_KEY, OPENING_SOURCE_MODE_KEY, OPENING_SOURCE_REF_KEY, RAW_HISTORY_KEY, OUTLINE_SELECTED_PROFILE_KEY, OUTLINE_CUSTOM_PROFILES_KEY, GEN_PARAMS_KEY, ROLLING_CHAT_FLOORS_KEY, ROLLING_CHAT_FLOORS_DEFAULT, ROLLING_CHAT_FLOORS_MAX, DIRECTOR_CHAT_FLOORS_KEY, DIRECTOR_CHAT_FLOORS_DEFAULT, EMPTY_FLOOR_MARK, currentView, activePlanId, editingPlanId, editingPlanBaseline, planItemCursorMap, autoSavePlanTimer, planRenameMode, planRenameSnapshot, MAX_RAW_HISTORY, OUTLINE_ST_FOLLOW_ID, BB_STRICTNESS_LABEL, PACING_STATES, FROM_MAX, STEP_STATES;
 var init_storyOutlineWindow = __esm({
   "src/ui/storyOutlineWindow.js"() {
     init_context();
@@ -47113,6 +47151,10 @@ var init_storyOutlineWindow = __esm({
     responseTimerId = null;
     responseTimerRunning = false;
     activeOutlineAbortController = null;
+    analysisScopeEpoch = 0;
+    if (typeof document !== "undefined") document.addEventListener(ANALYSIS_SCOPE_CHANGED, () => {
+      analysisScopeEpoch++;
+    });
     DRAFT_KEY = "story_outline_draft";
     PLANS_KEY3 = "story_outline_plans";
     ACTIVE_PLAN_KEY3 = "story_outline_active_plan_id";
@@ -50363,7 +50405,7 @@ function planEvolutionBatch(chat2, memory, rawConfig, extract = (text3) => Strin
   const completed = readable.slice(0, lastReply + 1);
   const rows = completed.map((index) => ({
     index,
-    text: extract(chat2[index].mes, config.extraction),
+    text: isAnalysisMessage(chat2[index], config) ? extract(chat2[index].mes, config.extraction) : "",
     name: String(chat2[index].name || ""),
     isUser: chat2[index].is_user === true
   }));
@@ -50700,6 +50742,7 @@ var EVOLUTION_KEY, EVOLUTION_CATEGORIES, EVOLUTION_TIMESCALES, EVOLUTION_STATE_F
 var init_characterEvolutionData = __esm({
   "src/core/characterEvolutionData.js"() {
     init_storyMemoryData();
+    init_toolboxSettings();
     EVOLUTION_KEY = "titania_character_evolution";
     EVOLUTION_CATEGORIES = Object.freeze({ relationship: "\u5BF9\u4E3B\u8981\u4EBA\u7269\u7684\u6001\u5EA6", mindset: "\u81EA\u8EAB\u5FC3\u5883", behavior: "\u884C\u4E3A\u6A21\u5F0F\u7684\u53D8\u5316" });
     EVOLUTION_TIMESCALES = Object.freeze({ scene: "\u5F53\u524D\u573A\u666F", phase: "\u9636\u6BB5\u6027", enduring: "\u957F\u671F\u503E\u5411" });
@@ -50827,7 +50870,7 @@ function recentContext(ctx2) {
   return ctx2.chat.map((message, index) => ({ message, index })).filter(({ message, index }) => isMemoryReadable(message) && (replacementFloor === null || index < replacementFloor)).slice(-4).map(({ message }) => extractToolboxText(message.mes, getEvolutionConfig().extraction)).join("\n");
 }
 function getEvolutionConfig() {
-  const data = getExtData(), config = normalizeEvolutionConfig(data.character_evolution);
+  const data = getExtData(), config = normalizeEvolutionConfig({ ...data.character_evolution, ...getAnalysisScope(data) });
   const profile = toolboxProfileId(data, "memory");
   config.profile_id = profile !== null ? profile : String(data.story_memory?.profile_id || "");
   config.model_override = getToolboxModelOverride(data, "memory");
@@ -51043,9 +51086,9 @@ function getEvolutionView() {
     readError = cause.message;
   }
   const processedThrough = memory.batches.at(-1)?.end ?? -1;
-  const pendingFloors = ctx2 ? ctx2.chat.filter((message, index) => index > processedThrough && isMemoryReadable(message) && extractToolboxText(message.mes, config.extraction).trim()).length : 0;
+  const pendingFloors = ctx2 ? ctx2.chat.filter((message, index) => index > processedThrough && isMemoryReadable(message) && isAnalysisMessage(message, config) && extractToolboxText(message.mes, config.extraction).trim()).length : 0;
   const covered = new Set(memory.batches.flatMap((batch) => (batch.sources || []).map((source) => source.index)));
-  const coverageGaps = ctx2 ? ctx2.chat.flatMap((message, index) => !covered.has(index) && typeof message.mes === "string" && message.mes.trim() && (index <= processedThrough || !isMemoryReadable(message) || !extractToolboxText(message.mes, config.extraction).trim()) ? [index] : []) : [];
+  const coverageGaps = ctx2 ? ctx2.chat.flatMap((message, index) => !covered.has(index) && isAnalysisMessage(message, config) && typeof message.mes === "string" && message.mes.trim() && (index <= processedThrough || !isMemoryReadable(message) || !extractToolboxText(message.mes, config.extraction).trim()) ? [index] : []) : [];
   const previewMemory = ctx2 && !readError ? injectionMemory(ctx2) : memory;
   const query = ctx2 ? recentContext(ctx2) : "";
   return {
@@ -51125,8 +51168,9 @@ async function runEvolution(force = true) {
   if (force) {
     blocked = false;
     error2 = "";
-    const readable = ctx2.chat.filter(isMemoryReadable);
-    const rules = getEvolutionConfig().extraction;
+    const config = getEvolutionConfig();
+    const readable = ctx2.chat.filter((message) => isMemoryReadable(message) && isAnalysisMessage(message, config));
+    const rules = config.extraction;
     if (readable.length && !readable.some((message) => extractToolboxText(message.mes, rules).trim())) {
       const cause = new Error(toolboxEmptyTextMessage(rules));
       report2(cause);
@@ -51443,6 +51487,14 @@ function initCharacterEvolution() {
     schedule2();
   };
   for (const event of [TITANIA_TEXT_PATCHED, TOOLBOX_EXTRACTION_CHANGED, ...["MESSAGE_EDITED", "MESSAGE_UPDATED", "MESSAGE_DELETED", "MESSAGE_SWIPED", "MESSAGE_SWIPE_DELETED", "CHARACTER_EDITED"].map((name) => event_types7[name])]) bind(event, changed);
+  if (typeof document !== "undefined") document.addEventListener(ANALYSIS_SCOPE_CHANGED, () => {
+    pauseEvolution("\u5168\u5C40\u5206\u6790\u697C\u5C42\u8303\u56F4\u5DF2\u6539\u53D8\uFF0C\u672A\u4FDD\u5B58\u7684\u5206\u6790\u5DF2\u53D6\u6D88\u3002");
+    blocked = false;
+    error2 = "";
+    refreshInjection2();
+    schedule2();
+    notify4();
+  });
   subscribeStoryMemoryTask(() => {
     if (!getStoryMemoryTask()) schedule2();
     notify4();
@@ -51839,7 +51891,7 @@ function memoryFor3(ctx2) {
 }
 function getStoryMemoryConfig() {
   const data = getExtData();
-  const config = normalizeMemoryConfig(data.story_memory);
+  const config = normalizeMemoryConfig({ ...data.story_memory, ...getAnalysisScope(data) });
   const profile = toolboxProfileId(data, "memory");
   if (profile !== null) config.profile_id = profile;
   config.model_override = getToolboxModelOverride(data, "memory");
@@ -52596,7 +52648,7 @@ async function refreshStoryMemoryTime(segmentId, retrying = null) {
     const config = getStoryMemoryConfig(), scope3 = inputScope(config);
     const fingerprints = ctx2.chat.slice(segment.start, segment.end + 1).map(memoryFloorFingerprint);
     const original = ctx2.chat.slice(segment.start, segment.end + 1).flatMap((message, offset) => {
-      if (!isMemoryReadable(message) || config.skip_user_messages && message.is_user) return [];
+      if (!isMemoryReadable(message) || !isAnalysisMessage(message, config)) return [];
       const text3 = extractToolboxText(message.mes, config.text_extraction).trim();
       return text3 ? [`[#${segment.start + offset}]
 ${text3}`] : [];
@@ -52691,6 +52743,7 @@ function saveStoryMemoryConfig(patch) {
     cancelJob();
     if (!writing3) status2 = "idle";
     error3 = "";
+    if (typeof document !== "undefined") document.dispatchEvent(new window.CustomEvent(ANALYSIS_SCOPE_CHANGED));
   }
   saveExtData();
   refreshInjection3();
@@ -52816,7 +52869,7 @@ async function editStoryMemoryStagesTask(patch, retrying, forceAfterRebuild, tas
   const edit = planStageEdit(previous, patch, ctx2.chat.length);
   const config = getStoryMemoryConfig();
   const fingerprints = edit.range ? ctx2.chat.slice(edit.range.start, edit.range.end + 1).map(memoryFloorFingerprint) : [];
-  const totalFloors = edit.range ? ctx2.chat.slice(edit.range.start, edit.range.end + 1).filter((message) => isMemoryReadable(message) && !(config.skip_user_messages && message.is_user) && !!extractToolboxText(message.mes, config.text_extraction).trim()).length : 0;
+  const totalFloors = edit.range ? ctx2.chat.slice(edit.range.start, edit.range.end + 1).filter((message) => isMemoryReadable(message) && isAnalysisMessage(message, config) && !!extractToolboxText(message.mes, config.text_extraction).trim()).length : 0;
   const owner = edit.range ? startProgress2(ctx2, "stages", { totalFloors, currentStart: edit.range.start, currentEnd: edit.range.end }) : null;
   const scope3 = inputScope(config), wasEnabled = previous.enabled;
   const operation = memoryOperation(ctx2, "stages", async (retry, token) => {
@@ -52853,7 +52906,7 @@ async function editStoryMemoryStagesTask(patch, retrying, forceAfterRebuild, tas
         for (let index = start; index <= edit.range.end; index++) {
           const message = ctx2.chat[index];
           const text3 = extractToolboxText(message?.mes, config.text_extraction);
-          const readable = isMemoryReadable(message) && !(config.skip_user_messages && message.is_user) && !!text3.trim();
+          const readable = isMemoryReadable(message) && isAnalysisMessage(message, config) && !!text3.trim();
           if (readable) rows.push({ index, text: text3 });
           end = index;
           const boundary = index === edit.range.end || ctx2.chat[index + 1]?.is_user;
@@ -53215,15 +53268,17 @@ function openStoryMemorySettingsWindow(options2 = {}) {
             <main class="t-memory-settings-body">
                 <p class="t-memory-hint">\u6309\u529F\u80FD\u5C55\u5F00\u8C03\u6574\uFF0C\u70B9\u51FB\u300C\u4FDD\u5B58\u8BBE\u7F6E\u300D\u540E\u751F\u6548\u3002\u53C2\u6570\u8DE8\u804A\u5929\u5171\u7528\uFF0C\u542F\u7528\u4E0E\u81EA\u52A8\u5206\u6790\u5F00\u5173\u4ECD\u6309\u804A\u5929\u5206\u522B\u4FDD\u5B58\u3002</p>
                 <div class="t-memory-settings-groups">
-                    ${group("connection", "\u8FDE\u63A5\u4E0E\u6B63\u6587", "API \u65B9\u6848\u3001\u6A21\u578B\u4E0E\u6B63\u6587\u63D0\u53D6\u89C4\u5219", `
+                    ${group("connection", "\u8FDE\u63A5\u4E0E\u6B63\u6587", "API \u65B9\u6848\u3001\u6A21\u578B\u4E0E\u5168\u5C40\u603B\u7ED3\u5206\u6790\u8303\u56F4", `
+                        <label class="t-memory-field">
+                            <span><input type="checkbox" data-setting="skip_user_messages" ${draft2.skip_user_messages ? "checked" : ""}> \u603B\u7ED3\u4E0E\u5206\u6790\u8DF3\u8FC7\u7528\u6237\uFF08user\uFF09\u697C\u5C42\uFF08\u5168\u5C40\uFF09</span>
+                            <small>\u9ED8\u8BA4\u5173\u95ED\uFF0C\u5305\u542B\u7528\u6237\u697C\u5C42\uFF1B\u5F00\u542F\u540E\u8DF3\u8FC7\u7528\u6237\u697C\u5C42\u3002\u7EDF\u4E00\u63A7\u5236\u6545\u4E8B\u8BB0\u5FC6\u3001\u89D2\u8272\u6F14\u53D8\u3001\u56DE\u58F0\u65F6\u75D5\u3001\u5927\u7EB2\u4E0E\u5267\u60C5\u63A8\u8FDB\u91C7\u96C6\u7684\u804A\u5929\u6B63\u6587\uFF0C\u8DE8\u804A\u5929\u751F\u6548\uFF1B\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u5206\u6790\u89E6\u53D1\u91CF\u548C\u6279\u6B21\u697C\u6570\u3002</small>
+                            <small>\u5C0F\u5267\u573A\u5386\u53F2\u4ECD\u7531\u5C0F\u5267\u573A\u4E3B\u754C\u9762\u7684\u300C\u53EA\u8981\u89D2\u8272\u53D1\u8A00\u300D\u72EC\u7ACB\u63A7\u5236\u3002\u4E0D\u5F71\u54CD\u804A\u5929\u663E\u793A\u3001\u804A\u5929\u6210\u4E66\u548C\u539F\u6587\u67E5\u770B\u3002\u5DF2\u4FDD\u5B58\u7ED3\u679C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u505A\uFF0C\u9700\u64A4\u9500\u6216\u91CD\u5EFA\u540E\u91C7\u7528\u65B0\u89C4\u5219\uFF1B\u81EA\u5B9A\u4E49\u63D0\u793A\u8BCD\u3001\u5B8F\u4E0E\u5DF2\u6709\u6458\u8981\u4E0D\u5728\u6B64\u5904\u8FC7\u6EE4\u3002</small>
+                        </label>
                         <div data-memory-api-selector></div>
                         <div data-memory-extraction-link></div>
                         <p class="t-memory-hint">\u89D2\u8272\u6F14\u53D8\u6CBF\u7528\u6545\u4E8B\u8BB0\u5FC6\u7684\u5206\u6790\u65B9\u6848\u4E0E\u6A21\u578B\uFF0C\u4E0D\u53E6\u8BBE API\u3002\u5168\u5C40\u65B9\u6848\u7BA1\u7406\u4E0E\u6B63\u6587\u63D0\u53D6\u5728\u5404\u81EA\u7684\u7A97\u53E3\u4FDD\u5B58\u3002</p>`)}
                     ${group("memory", "\u5267\u60C5\u6574\u7406", "\u6B63\u6587\u8303\u56F4\u3001\u5206\u6BB5\u5408\u5E76\u4E0E\u5931\u8D25\u91CD\u8BD5", `<div class="t-memory-settings-grid">
-                        <label class="t-memory-field t-memory-settings-wide">
-                            <span><input type="checkbox" data-setting="skip_user_messages" ${draft2.skip_user_messages ? "checked" : ""}> \u603B\u7ED3\u65F6\u8DF3\u8FC7\u7528\u6237\uFF08user\uFF09\u697C\u5C42</span>
-                            <small>\u4EC5\u5C06\u89D2\u8272\u697C\u5C42\u9001\u5165\u603B\u7ED3\uFF0C\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u89E6\u53D1\u91CF\u548C\u6BCF\u6BB5\u697C\u5C42\u6570\u3002\u6574\u7406\u540E\u4ECD\u6309\u5B8C\u6574\u8303\u56F4\u9690\u85CF\u7528\u6237\u697C\u5C42\uFF1B\u5DF2\u6709\u6458\u8981\u9700\u64A4\u9500\u540E\u91CD\u65B0\u6574\u7406\u624D\u4F1A\u91C7\u7528\u65B0\u89C4\u5219\u3002</small>
-                        </label>
+                        <p class="t-memory-hint t-memory-settings-wide">\u662F\u5426\u8BFB\u53D6\u7528\u6237\u697C\u5C42\u8DDF\u968F\u300C\u8FDE\u63A5\u4E0E\u6B63\u6587\u300D\u7684\u5168\u5C40\u5F00\u5173\u3002\u6574\u7406\u540E\u4ECD\u6309\u5B8C\u6574\u8303\u56F4\u9690\u85CF\u697C\u5C42\uFF0C\u64A4\u9500\u65F6\u5B8C\u6574\u6062\u590D\uFF0C\u4E0D\u6539\u53D8\u539F\u804A\u5929\u697C\u5C42\u7F16\u53F7\u3002</p>
                         ${numeric("keep_floors", "\u6700\u8FD1\u591A\u5C11\u697C\u4E0D\u6574\u7406", 2, "\u8FD9\u51E0\u697C\u59CB\u7EC8\u7559\u5728\u6B63\u6587\u91CC\u3002\u6574\u7406\u8303\u56F4\u4F1A\u5411\u524D\u907F\u8BA9\u5230\u4E00\u6BB5\u5B8C\u6574\u5BF9\u8BDD\u7684\u5F00\u5934\u3002")}
                         ${numeric("trigger_floors", "\u672A\u6574\u7406\u7684\u6B63\u6587\u6512\u5230\u591A\u5C11\u697C\u5C31\u5F00\u59CB\u6574\u7406", 1, "\u53EA\u7B97\u53C2\u4E0E\u603B\u7ED3\u7684\u6B63\u6587\uFF1B\u9690\u85CF\u7684\u7CFB\u7EDF\u6D88\u606F\u548C\u9009\u62E9\u8DF3\u8FC7\u7684\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u3002\u697C\u5C42\u6570\u51B3\u5B9A\u89E6\u53D1\u6761\u4EF6\u548C\u6BCF\u6BB5\u5927\u5C0F\uFF1B\u8FBE\u5230\u540E\u5728\u5B8C\u6574\u5BF9\u8BDD\u8FB9\u754C\u7ED3\u675F\uFF0C\u53EF\u80FD\u591A\u5E26\u697C\u5C42\u3002")}
                         <div class="t-memory-field t-memory-settings-wide"><span>\u5F85\u6574\u7406\u6B63\u6587</span><small data-role="backlog">${backlogHint()}</small></div>
@@ -55500,7 +55555,8 @@ var init_storyMemoryWindow = __esm({
       { heading: "\u6574\u7406\u54EA\u4E9B\u6B63\u6587", lines: [
         "\u9ED8\u8BA4\u4FDD\u7559\u6700\u8FD1\u81F3\u5C11 3 \u697C\uFF0C\u8F83\u65E9\u7684\u5F85\u6574\u7406\u6B63\u6587\u6512\u5230 5 \u697C\u540E\u5F00\u59CB\u6574\u7406\uFF0C\u6BCF\u6BB5\u6309\u8BBE\u7F6E\u7684\u697C\u6570\u8BFB\u53D6\uFF0C\u5E76\u4FDD\u7559\u5B8C\u6574\u5BF9\u8BDD\u3002\u300C\u4FDD\u7559\u591A\u5C11\u697C\u300D\u4E0E\u300C\u6512\u5230\u591A\u5C11\u697C\u300D\u5404\u7BA1\u4E00\u6BB5\uFF1B\u4FDD\u7559\u533A\u548C\u5DF2\u6574\u7406\u6B63\u6587\u4E0D\u8BA1\u5165\u5F85\u6574\u7406\u91CF\u3002",
         "\u60F3\u4FDD\u7559\u66F4\u591A\u7EC6\u8282\uFF0C\u53EF\u4EE5\u8C03\u5C0F\u6BCF\u6BB5\u697C\u6570\u3002\u6B63\u6587\u592A\u957F\u5BFC\u81F4\u6A21\u578B\u4E0A\u4E0B\u6587\u8D85\u9650\u65F6\uFF0C\u8BF7\u51CF\u5C11\u6BCF\u6BB5\u697C\u6570\uFF0C\u6216\u6362\u7528\u4E0A\u4E0B\u6587\u66F4\u5927\u7684\u6A21\u578B\u3002",
-        "\u6574\u7406\u6210\u529F\u5E76\u4FDD\u5B58\u540E\u624D\u9690\u85CF\u5BF9\u5E94\u6B63\u6587\uFF0C\u539F\u6587\u4ECD\u53EF\u67E5\u770B\u548C\u6062\u590D\u3002\u300C\u603B\u7ED3\u65F6\u8DF3\u8FC7\u7528\u6237\u697C\u5C42\u300D\u53EA\u8BA9\u6A21\u578B\u4E0D\u8BFB\u7528\u6237\u5185\u5BB9\uFF0C\u6210\u529F\u540E\u6574\u7406\u8303\u56F4\u5185\u7684\u7528\u6237\u697C\u5C42\u4ECD\u4F1A\u9690\u85CF\u3002"
+        "\u300C\u8FD0\u884C\u8BBE\u7F6E \u2192 \u8FDE\u63A5\u4E0E\u6B63\u6587\u300D\u4E2D\u7684\u300C\u603B\u7ED3\u4E0E\u5206\u6790\u8DF3\u8FC7\u7528\u6237\u697C\u5C42\u300D\u4F9B\u6545\u4E8B\u8BB0\u5FC6\u3001\u89D2\u8272\u6F14\u53D8\u3001\u56DE\u58F0\u65F6\u75D5\u3001\u5927\u7EB2\u4E0E\u5267\u60C5\u63A8\u8FDB\u8DE8\u804A\u5929\u5171\u7528\uFF1B\u5C0F\u5267\u573A\u5386\u53F2\u4ECD\u7531\u5176\u4E3B\u754C\u9762\u72EC\u7ACB\u63A7\u5236\u3002\u9ED8\u8BA4\u5305\u542B\u7528\u6237\u697C\u5C42\uFF0C\u5F00\u542F\u540E\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u5206\u6790\u89E6\u53D1\u91CF\u548C\u6279\u6B21\u697C\u6570\uFF1B\u5DF2\u6709\u7ED3\u679C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u505A\u3002",
+        "\u6574\u7406\u6210\u529F\u5E76\u4FDD\u5B58\u540E\u624D\u9690\u85CF\u5BF9\u5E94\u6B63\u6587\uFF0C\u539F\u6587\u4ECD\u53EF\u67E5\u770B\u548C\u6062\u590D\u3002\u5168\u5C40\u5F00\u5173\u53EA\u6539\u53D8\u603B\u7ED3\u4E0E\u5206\u6790\u7684\u8F93\u5165\uFF0C\u6210\u529F\u540E\u6574\u7406\u8303\u56F4\u5185\u7684\u7528\u6237\u697C\u5C42\u4ECD\u4F1A\u9690\u85CF\uFF0C\u539F\u6587\u67E5\u770B\u4E0E\u64A4\u9500\u4FDD\u6301\u5B8C\u6574\u3002"
       ] },
       { heading: "\u4E03\u4E2A\u9875\u9762\u600E\u4E48\u770B", terms: [
         { term: "\u5267\u60C5\u6982\u89C8", text: "\u67E5\u770B\u5168\u7A0B\u6897\u6982\u3001\u622A\u81F3\u6574\u7406\u8303\u56F4\u7684\u5267\u60C5\u72B6\u6001\u548C\u9636\u6BB5\uFF1B\u6700\u65B0\u8FDB\u5C55\u4EE5\u5C1A\u672A\u6574\u7406\u7684\u804A\u5929\u6B63\u6587\u4E3A\u51C6\u3002" },
