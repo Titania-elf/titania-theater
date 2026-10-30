@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.9.2";
+    CURRENT_VERSION = "5.9.3";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -376,12 +376,12 @@ function codeRanges(raw) {
   return ranges.sort((a, b) => a[0] - b[0]);
 }
 function decodeRun(raw, start, end) {
-  let text3 = "";
+  let text5 = "";
   const map = [];
   let unsupportedEntity = false;
   for (let i = start; i < end; ) {
     if (raw[i] === "\r" && raw[i + 1] === "\n") {
-      text3 += "\n";
+      text5 += "\n";
       map.push({ start: i, end: i + 2 });
       i += 2;
       continue;
@@ -401,11 +401,11 @@ function decodeRun(raw, start, end) {
       }
       length = entity[0].length;
     }
-    text3 += value;
+    text5 += value;
     for (let j = 0; j < value.length; j++) map.push({ start: i, end: i + length });
     i += length;
   }
-  return { text: text3, map, start, end, unsupportedEntity };
+  return { text: text5, map, start, end, unsupportedEntity };
 }
 function nextProjectionToken(raw, start) {
   const starts = /<!--|<!|<\/?[\p{L}_][\p{L}\p{N}_:-]*|<\/?(?=\s*$)/gu;
@@ -584,7 +584,7 @@ function extractTextProjection(source, whitelistInput = "", exclusionsInput = ""
   if (stack.length) reason || (reason = "\u539F\u6587\u542B\u6709\u672A\u95ED\u5408\u7684\u6807\u7B7E");
   const fatalReason = invalidRules ? reason : whitelist.length && !matchedWhitelist ? "\u672A\u627E\u5230\u767D\u540D\u5355\u6807\u7B7E\uFF0C\u672A\u56DE\u9000\u5230\u5168\u6587" : "";
   reason || (reason = fatalReason);
-  let text3 = "";
+  let text5 = "";
   const usable = invalidRules || reason && !allowPartial ? [] : runs.flatMap((run) => {
     const separators = /\r?\n\s*\r?\n+/g;
     const parts = [];
@@ -599,7 +599,7 @@ function extractTextProjection(source, whitelistInput = "", exclusionsInput = ""
     return parts.map((part) => ({ ...part, elements: run.elements }));
   }).filter((run) => run.text.trim());
   for (const [index, run] of usable.entries()) {
-    if (text3) {
+    if (text5) {
       const gap = raw.slice(usable[index - 1].end, run.start);
       const tags = [];
       let end = 0;
@@ -612,15 +612,15 @@ function extractTextProjection(source, whitelistInput = "", exclusionsInput = ""
       }
       plain += gap.slice(end);
       const inlineOnly = tags.length && !plain.trim() && tags.every((token2) => !token2.incomplete && INLINE_TAGS.has(token2.tag) && !isProtectedTextElement(token2.tag, token2.value, exclusions, protectState));
-      if (!inlineOnly) text3 += "\n\n";
+      if (!inlineOnly) text5 += "\n\n";
     }
-    run.projectionStart = text3.length;
-    text3 += run.text;
-    run.projectionEnd = text3.length;
+    run.projectionStart = text5.length;
+    text5 += run.text;
+    run.projectionEnd = text5.length;
   }
   return {
     raw,
-    text: text3,
+    text: text5,
     content: fatalReason || reason && !allowPartial ? "" : content.join(""),
     runs: usable,
     whitelist,
@@ -1419,22 +1419,22 @@ var init_logger = __esm({
 
 // src/utils/userFiles.js
 import { getRequestHeaders } from "../../../../script.js";
-function utf8ToBase64(text3) {
-  const bytes = new TextEncoder().encode(String(text3 ?? ""));
+function utf8ToBase64(text5) {
+  const bytes = new TextEncoder().encode(String(text5 ?? ""));
   let binary = "";
   for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK) {
     binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + BASE64_CHUNK));
   }
   return btoa(binary);
 }
-function utf8ByteLength(text3) {
-  return new TextEncoder().encode(String(text3 ?? "")).length;
+function utf8ByteLength(text5) {
+  return new TextEncoder().encode(String(text5 ?? "")).length;
 }
-async function uploadTextFile(fileName, text3) {
+async function uploadTextFile(fileName, text5) {
   const response = await fetch("/api/files/upload", {
     method: "POST",
     headers: getRequestHeaders(),
-    body: JSON.stringify({ name: fileName, data: utf8ToBase64(text3) })
+    body: JSON.stringify({ name: fileName, data: utf8ToBase64(text5) })
   });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
@@ -1519,13 +1519,13 @@ function newIllustrationId() {
   return globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 function illustrationHash(value) {
-  const text3 = String(value);
+  const text5 = String(value);
   let a = 2166136261, b = 5381;
-  for (let i = 0; i < text3.length; i++) {
-    a = Math.imul(a ^ text3.charCodeAt(i), 16777619);
-    b = Math.imul(b, 33) ^ text3.charCodeAt(i);
+  for (let i = 0; i < text5.length; i++) {
+    a = Math.imul(a ^ text5.charCodeAt(i), 16777619);
+    b = Math.imul(b, 33) ^ text5.charCodeAt(i);
   }
-  return `${(a >>> 0).toString(16)}-${(b >>> 0).toString(16)}-${text3.length.toString(16)}`;
+  return `${(a >>> 0).toString(16)}-${(b >>> 0).toString(16)}-${text5.length.toString(16)}`;
 }
 function createIllustrationTarget(result, fallbackId = "") {
   const content = String(result?.content ?? result?.html ?? "").trim();
@@ -2201,15 +2201,15 @@ function getChatHistory(limit, aiOnly = false) {
     if (msg.is_user) name = ctx2.name1 || "User";
     if (name === "{{user}}") name = ctx2.name1 || "User";
     if (name === "{{char}}") name = ctx2.characters[ctx2.characterId]?.name || "Char";
-    const text3 = extractToolboxText(msg.message || msg.mes || "", rules);
-    return text3 ? `${name}: ${text3}` : "";
+    const text5 = extractToolboxText(msg.message || msg.mes || "", rules);
+    return text5 ? `${name}: ${text5}` : "";
   }).filter(Boolean).join("\n");
 }
-function stripTheaterTags(text3) {
-  return String(text3 || "").replace(THEATER_TAG_ANY, "");
+function stripTheaterTags(text5) {
+  return String(text5 || "").replace(THEATER_TAG_ANY, "");
 }
-function dropPartialTheaterTag(text3) {
-  const value = String(text3 || "");
+function dropPartialTheaterTag(text5) {
+  const value = String(text5 || "");
   const at = value.lastIndexOf("<");
   if (at === -1) return value;
   const tail = value.slice(at + 1);
@@ -2371,9 +2371,9 @@ function extractFromShadowDOM(container) {
       if (contentDiv) {
         let userStyles = "";
         shadow.querySelectorAll("style").forEach((style) => {
-          const text3 = style.textContent || "";
-          if (!text3.includes(":host")) {
-            userStyles += `<style>${text3}</style>
+          const text5 = style.textContent || "";
+          if (!text5.includes(":host")) {
+            userStyles += `<style>${text5}</style>
 `;
           }
         });
@@ -2392,9 +2392,9 @@ function extractFromShadowDOM(container) {
         bodyClone.querySelectorAll("script").forEach((s) => s.remove());
         let userStyles = "";
         doc.querySelectorAll("head style").forEach((style) => {
-          const text3 = style.textContent || "";
-          if (!text3.includes("box-sizing: border-box") || text3.length > 500) {
-            userStyles += `<style>${text3}</style>
+          const text5 = style.textContent || "";
+          if (!text5.includes("box-sizing: border-box") || text5.length > 500) {
+            userStyles += `<style>${text5}</style>
 `;
           }
         });
@@ -2406,8 +2406,8 @@ function extractFromShadowDOM(container) {
   }
   return container.innerHTML;
 }
-async function countTokens(text3) {
-  const str3 = String(text3 || "");
+async function countTokens(text5) {
+  const str3 = String(text5 || "");
   if (!str3) return { count: 0, exact: true };
   try {
     const { getTokenCountAsync } = await import("../../../tokenizers.js");
@@ -2429,8 +2429,8 @@ async function countTokensBatch(texts) {
   }
   return { counts, total: counts.reduce((sum, n) => sum + n, 0), exact };
 }
-function estimateTokens(text3) {
-  const clean = String(text3 || "").trim();
+function estimateTokens(text5) {
+  const clean = String(text5 || "").trim();
   if (!clean) return 0;
   let cjk = 0;
   let alnum = 0;
@@ -2758,9 +2758,9 @@ var init_helpers = __esm({
     getSnippet = (html) => {
       const tmp = document.createElement("DIV");
       tmp.innerHTML = html;
-      let text3 = tmp.textContent || tmp.innerText || "";
-      text3 = text3.replace(/\s+/g, " ").trim();
-      return text3.length > 60 ? text3.substring(0, 60) + "..." : text3;
+      let text5 = tmp.textContent || tmp.innerText || "";
+      text5 = text5.replace(/\s+/g, " ").trim();
+      return text5.length > 60 ? text5.substring(0, 60) + "..." : text5;
     };
     THEATER_TAG = "\u5C0F\u5267\u573A";
     THEATER_TAG_OPEN = /<小剧场\s*>/;
@@ -2867,10 +2867,99 @@ var init_promptProcessing = __esm({
   }
 });
 
+// src/core/presetScriptExtraction.js
+function classify(entry) {
+  const name = text(entry.name), content = text(entry.content);
+  const identifier = entry.source_identifier || entry.id;
+  if (entry.type === "dynamic" || entry.marker || entry.required || entry.readonly || managedIds.has(identifier)) return "excluded";
+  if (!content) return "excluded";
+  const meaningful = content.replace(/\{\{\/\/[\s\S]*?\}\}/g, "").replace(/<\/?小(?:[剧劇]情|[剧劇][场場])(?:内容|內容|主题|主題)>/g, "").replace(/小[剧劇][场場](?:内容|內容|主题|主題)\s*[:：]/g, "").replace(/[-—\s]/g, "");
+  if (!meaningful) return "placeholder";
+  if (/字数|字數/.test(name) || /\d+\s*字/.test(name) && /字数|字數/.test(content)) return "other";
+  if (theaterName.test(name) && /规范|規範|规则|規則|格式|美化|说明|說明|修复|修復/.test(name)) return "rules";
+  if (themeHeading.test(content) || themeTag.test(content)) return "theme";
+  if (theaterName.test(name) && !/放这|放這|缝合|縫合|自缝|自縫|使用说明|使用說明/.test(name)) return "theme";
+  return "other";
+}
+function warnings(content) {
+  const macros = content.match(/\{\{[^{}]+\}\}/g) || [];
+  return macros.some((macro) => /^\{\{random(?!::)/i.test(macro) || !/^\{\{(?:random|roll|setvar|getvar|addvar|setglobalvar|getglobalvar|\/\/)::/i.test(macro) && macro.split("::").length > 3) ? ["\u542B\u7591\u4F3C\u5199\u9519\u7684\u968F\u673A\u9009\u62E9\u5199\u6CD5\uFF1B\u4FDD\u7559\u539F\u6587\uFF0C\u4E0D\u81EA\u52A8\u4FEE\u6B63\u3002"] : [];
+}
+function capturePresetScriptExtraction(raw, listedIdentifiers = []) {
+  const listed = new Set(listedIdentifiers);
+  const groups = Array.isArray(raw?.extensions?.entryGrouping) ? raw.extensions.entryGrouping : [];
+  const groupIdentifiers = [...new Set(groups.filter((group) => theaterName.test(text(group?.name))).flatMap((group) => Array.isArray(group?.memberIdentifiers) ? group.memberIdentifiers : []).filter((id3) => typeof id3 === "string" && id3.trim()).map((id3) => id3.trim()))];
+  const seen = /* @__PURE__ */ new Set();
+  const extraEntries = [];
+  for (const definition of Array.isArray(raw?.prompts) ? raw.prompts : []) {
+    const identifier = text(definition?.identifier);
+    if (!identifier || listed.has(identifier) || seen.has(identifier)) continue;
+    seen.add(identifier);
+    const entry = {
+      source_identifier: identifier,
+      name: text(definition.name) || identifier,
+      role: ["system", "user", "assistant"].includes(definition.role) ? definition.role : "user",
+      type: "text",
+      enabled: false,
+      content: typeof definition.content === "string" ? definition.content : "",
+      marker: definition.marker || null
+    };
+    if (classify(entry) !== "theme") continue;
+    extraEntries.push({ source_identifier: identifier, name: entry.name, role: entry.role, content: entry.content });
+  }
+  return { version: 1, group_identifiers: groupIdentifiers, extra_entries: extraEntries };
+}
+function getPresetScriptCandidates(preset) {
+  const groups = new Set(preset?.script_extraction?.group_identifiers || []);
+  const known = new Set((preset?.entries || []).map((entry) => entry?.source_identifier).filter(Boolean));
+  const rows = (preset?.entries || []).map((entry, index) => ({ ...entry, key: `entry:${entry?.id || index}`, unlisted: false }));
+  for (const [index, extra] of (preset?.script_extraction?.extra_entries || []).entries()) {
+    if (!extra || known.has(extra.source_identifier)) continue;
+    rows.push({ ...extra, key: `extra:${extra.source_identifier || index}`, type: "text", enabled: false, unlisted: true });
+  }
+  return rows.flatMap((entry) => {
+    const kind = classify(entry);
+    if (kind === "excluded" || kind === "placeholder") return [];
+    const inGroup = groups.has(entry.source_identifier);
+    return [{
+      key: entry.key,
+      name: text(entry.name) || "\u672A\u547D\u540D\u6761\u76EE",
+      content: String(entry.content),
+      kind,
+      suggested: kind === "theme",
+      enabled: entry.enabled !== false,
+      unlisted: entry.unlisted,
+      reason: kind === "theme" ? inGroup ? "\u5C0F\u5267\u573A\u5206\u7EC4\u4E2D\u7684\u4E3B\u9898" : "\u540D\u79F0\u6216\u6B63\u6587\u5305\u542B\u5C0F\u5267\u573A\u4E3B\u9898" : kind === "rules" ? "\u914D\u5957\u683C\u5F0F\u8981\u6C42\uFF0C\u4E0D\u9ED8\u8BA4\u9009\u4E2D" : "\u5176\u4ED6\u6761\u76EE\uFF0C\u53EF\u6309\u9700\u624B\u52A8\u9009\u62E9",
+      warnings: warnings(String(entry.content))
+    }];
+  });
+}
+function buildScriptsFromPreset(preset, selectedKeys, category = "") {
+  const selected = new Set(selectedKeys);
+  const scripts = getPresetScriptCandidates(preset).filter((entry) => selected.has(entry.key)).map((entry) => ({
+    name: entry.name,
+    desc: `\u6765\u81EA\u9884\u8BBE\u300C${text(preset.name) || "\u672A\u547D\u540D\u9884\u8BBE"}\u300D${entry.unlisted ? "\uFF08\u539F\u6761\u76EE\u672A\u52A0\u5165\u9884\u8BBE\u987A\u5E8F\uFF09" : ""}`,
+    prompt: entry.content,
+    category: text(category) || text(preset.name) || "\u9884\u8BBE\u5C0F\u5267\u573A"
+  }));
+  if (scripts.length !== selected.size) throw new Error("\u6709\u9009\u4E2D\u7684\u6761\u76EE\u5DF2\u5220\u9664\u6216\u65E0\u6CD5\u63D0\u53D6\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002");
+  return scripts;
+}
+var text, theaterName, themeHeading, themeTag, managedIds;
+var init_presetScriptExtraction = __esm({
+  "src/core/presetScriptExtraction.js"() {
+    text = (value) => typeof value === "string" ? value.trim() : "";
+    theaterName = /小[剧劇][场場]|[剧劇][场場]|番外/;
+    themeHeading = /^\s*(?:[-—]+\s*)?小[剧劇][场場](?:内容|內容|主题|主題)\s*[:：]/m;
+    themeTag = /<小(?:[剧劇]情|[剧劇][场場])(?:内容|內容|主题|主題)>/;
+    managedIds = /* @__PURE__ */ new Set(["titania_script_instruction", "titania_output_contract"]);
+  }
+});
+
 // src/core/stVariables.js
 import { getVariableMacros } from "../../../variables.js";
-function applyVariableMacros(text3) {
-  const source = String(text3 ?? "");
+function applyVariableMacros(text5) {
+  const source = String(text5 ?? "");
   if (!source.includes("{{")) return source;
   try {
     let out = source;
@@ -3215,6 +3304,8 @@ function normalizeChatCompletionPreset(preset, options2 = {}) {
     imported_at: Date.now(),
     custom_prompt_post_processing: normalizePromptProcessing(preset.custom_prompt_post_processing),
     entries: normalized.entries,
+    // Extra themes stay out of the generation list; this is only for manual script extraction.
+    script_extraction: capturePresetScriptExtraction(preset, [...usedIdentifiers]),
     model_settings: {
       model: preset.model || "",
       temperature: preset.temperature,
@@ -3255,6 +3346,13 @@ function serializeToChatCompletionPreset(preset) {
     prompts.push(definition);
     order.push({ identifier, enabled: entry.enabled !== false });
   }
+  for (const extra of preset.script_extraction?.extra_entries || []) {
+    const identifier = String(extra?.source_identifier || "").trim();
+    if (!identifier || usedIdentifiers.has(identifier) || typeof extra.content !== "string") continue;
+    usedIdentifiers.add(identifier);
+    prompts.push({ identifier, name: extra.name || identifier, role: MESSAGE_ROLES.includes(extra.role) ? extra.role : "user", content: extra.content });
+  }
+  const groupIdentifiers = (preset.script_extraction?.group_identifiers || []).filter((id3) => usedIdentifiers.has(id3));
   const modelSettings = preset.model_settings || {};
   const processing = normalizePromptProcessing(preset.custom_prompt_post_processing);
   return {
@@ -3262,6 +3360,7 @@ function serializeToChatCompletionPreset(preset) {
     ...processing === null ? {} : { custom_prompt_post_processing: processing },
     prompts,
     prompt_order: [{ character_id: 100001, order }],
+    ...groupIdentifiers.length ? { extensions: { entryGrouping: [{ name: "\u5C0F\u5267\u573A", memberIdentifiers: groupIdentifiers }] } } : {},
     model: modelSettings.model || "",
     temperature: modelSettings.temperature,
     top_p: modelSettings.top_p,
@@ -3344,6 +3443,7 @@ var init_promptManager = __esm({
     init_defaults();
     init_promptOrder();
     init_promptProcessing();
+    init_presetScriptExtraction();
     init_stVariables();
     DEFAULT_CONTENT_PROMPT = "You are a creative engine. Output ONLY valid HTML content inside a <div> with Inline CSS. Do NOT use markdown code blocks. Language: Chinese.";
     DEFAULT_VISUAL_PROMPT = `You are a Visual Director creating an immersive HTML scene.
@@ -3430,8 +3530,8 @@ function normalizeCardKey(value) {
   return key.startsWith(CARD_KEY_PREFIX) ? key : "";
 }
 function normalizeKeyword(value) {
-  const text3 = String(value ?? "").trim();
-  return text3.length >= MIN_KEYWORD_LENGTH ? text3 : "";
+  const text5 = String(value ?? "").trim();
+  return text5.length >= MIN_KEYWORD_LENGTH ? text5 : "";
 }
 function isAutoKeywords(entry) {
   const keywords = Array.isArray(entry?.keywords) ? entry.keywords : [];
@@ -3439,8 +3539,8 @@ function isAutoKeywords(entry) {
   return keywords.length === 1 && keywords[0] === String(entry?.name || "").trim();
 }
 function keywordsFromName(name) {
-  const text3 = String(name || "").trim();
-  return text3.length >= MIN_KEYWORD_LENGTH ? [text3] : [];
+  const text5 = String(name || "").trim();
+  return text5.length >= MIN_KEYWORD_LENGTH ? [text5] : [];
 }
 function normalizeEntries(value) {
   const list = Array.isArray(value) ? value : [];
@@ -3482,11 +3582,11 @@ function readCharacterProfiles(data) {
 function hasConfiguredCharacterProfiles(data) {
   return readCharacterProfiles(data).some((entry) => entry && entry.enabled !== false && Boolean(String(entry.content ?? "").trim()));
 }
-function profileMatches(entry, { cardKey = "", text: text3 = "" } = {}) {
+function profileMatches(entry, { cardKey = "", text: text5 = "" } = {}) {
   if (!entry || entry.enabled === false) return false;
   const bound = normalizeCardKey(entry.cardKey);
   if (bound && bound === String(cardKey ?? "")) return true;
-  const haystack = String(text3 ?? "").toLowerCase();
+  const haystack = String(text5 ?? "").toLowerCase();
   if (!haystack) return false;
   return (entry.keywords || []).some((keyword) => {
     const needle = String(keyword ?? "").trim().toLowerCase();
@@ -3591,13 +3691,13 @@ function normalizeState(current) {
 function migrateLegacySpec(data) {
   const legacy = data?.[LEGACY_SPEC_KEY];
   if (!legacy || typeof legacy !== "object" || legacy.v !== LEGACY_SPEC_VERSION) return null;
-  const text3 = typeof legacy.text === "string" ? legacy.text.trim() : "";
-  if (!text3) return null;
+  const text5 = typeof legacy.text === "string" ? legacy.text.trim() : "";
+  if (!text5) return null;
   return {
     id: createEntryId2("preset"),
     name: "\u6211\u7684\u9009\u666F\u89C4\u8303",
     entries: [
-      { id: createEntryId2("entry"), name: "\u539F\u9009\u666F\u89C4\u8303", role: "system", enabled: true, content: text3 },
+      { id: createEntryId2("entry"), name: "\u539F\u9009\u666F\u89C4\u8303", role: "system", enabled: true, content: text5 },
       ...materializeManagedEntries()
     ]
   };
@@ -3647,9 +3747,9 @@ function formatPreviousScenes(previousScenes) {
   return lines.map((line, index) => `${index + 1}. ${line}`).join("\n");
 }
 function blockValue(heading, value) {
-  const text3 = String(value ?? "").trim();
-  return text3 ? `\u3010${heading}\u3011
-${text3}` : "";
+  const text5 = String(value ?? "").trim();
+  return text5 ? `\u3010${heading}\u3011
+${text5}` : "";
 }
 function placeholderValues(request) {
   return {
@@ -4995,23 +5095,23 @@ function migrateLegacyToolboxApiProfiles(data) {
   data.config || (data.config = {});
   const config = data.config;
   const profiles = Array.isArray(config.profiles) ? config.profiles.map((p) => ({ ...p })) : [];
-  if (!profiles.length) profiles.push({ id: "default", type: "custom", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", url: text(config.url), key: text(config.key), model: text(config.model) || "gpt-3.5-turbo" });
+  if (!profiles.length) profiles.push({ id: "default", type: "custom", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", url: text2(config.url), key: text2(config.key), model: text2(config.model) || "gpt-3.5-turbo" });
   if (!profiles.some((p) => p.id === "st_sync")) profiles.unshift({ id: "st_sync", type: "internal", readonly: true, name: "\u8DDF\u968F SillyTavern (\u4E3B\u8FDE\u63A5)" });
   const active4 = profiles.some((p) => p.id === config.active_profile_id) ? config.active_profile_id : profiles.find((p) => p.type !== "internal")?.id || "st_sync";
   const add = (source, feature, label) => {
     const profile = {
       type: source.type === "internal" ? "internal" : "custom",
       url: url(source.api_url ?? source.url),
-      key: text(source.api_key ?? source.key),
-      model: text(source.model) || "gpt-3.5-turbo"
+      key: text2(source.api_key ?? source.key),
+      model: text2(source.model) || "gpt-3.5-turbo"
     };
     if (profile.type === "internal") return "st_sync";
     const same = profiles.find((p) => signature(p) === signature(profile));
     if (same) return same.id;
-    const base2 = `migrated_${feature}_${text(source.id) || "current"}`;
+    const base2 = `migrated_${feature}_${text2(source.id) || "current"}`;
     let id3 = base2, n = 2;
     while (profiles.some((p) => p.id === id3)) id3 = `${base2}_${n++}`;
-    const baseName = `${label} \xB7 ${text(source.name) || "\u539F\u914D\u7F6E"}`;
+    const baseName = `${label} \xB7 ${text2(source.name) || "\u539F\u914D\u7F6E"}`;
     let name = baseName;
     n = 2;
     while (profiles.some((p) => p.name === name)) name = `${baseName} ${n++}`;
@@ -5038,21 +5138,21 @@ function migrateLegacyToolboxApiProfiles(data) {
   const rewriteCurrent = configured(rewrite);
   const rewriteId = rewriteCurrent ? add(rewrite, "rewrite", "\u6539\u5199") : rewriteIds.get(rewrite.profile_id) || rewriteIds.values().next().value;
   choose("rewrite", rewriteId);
-  choose("memory", text(data.story_memory?.profile_id));
-  if (!features.timetrace.api && !text(data.story_timetrace?.profile_id)) features.timetrace.api = "memory";
-  choose("timetrace", text(data.story_timetrace?.profile_id));
+  choose("memory", text2(data.story_memory?.profile_id));
+  if (!features.timetrace.api && !text2(data.story_timetrace?.profile_id)) features.timetrace.api = "memory";
+  choose("timetrace", text2(data.story_timetrace?.profile_id));
   const reader = data.appearance?.reader || {};
   const migrateReader = !features.reader.api || features.reader.api === "local";
-  let readerId = text(reader.index_profile_id);
+  let readerId = text2(reader.index_profile_id);
   const base = profiles.find((p) => p.id === (readerId || active4));
-  if (migrateReader && text(reader.index_model) && base && base.type !== "internal") {
+  if (migrateReader && text2(reader.index_model) && base && base.type !== "internal") {
     readerId = add({ ...base, id: "model_override", model: reader.index_model, name: `${base.name}\uFF08\u7D22\u5F15\u6A21\u578B\uFF09` }, "reader", "\u9605\u8BFB");
   }
   choose("reader", readerId);
-  if (migrateReader && text(reader.index_model) && base?.type === "internal") {
+  if (migrateReader && text2(reader.index_model) && base?.type === "internal") {
     let id3 = "migrated_reader_st_model", n = 2;
     while (profiles.some((p) => p.id === id3)) id3 = `migrated_reader_st_model_${n++}`;
-    profiles.push({ id: id3, name: "\u9605\u8BFB \xB7 \u9152\u9986\u8FDE\u63A5\uFF08\u539F\u7D22\u5F15\u6A21\u578B\uFF09", type: "internal", model: text(reader.index_model), model_override: text(reader.index_model) });
+    profiles.push({ id: id3, name: "\u9605\u8BFB \xB7 \u9152\u9986\u8FDE\u63A5\uFF08\u539F\u7D22\u5F15\u6A21\u578B\uFF09", type: "internal", model: text2(reader.index_model), model_override: text2(reader.index_model) });
     features.reader.api = `profile:${id3}`;
   }
   config.profiles = profiles;
@@ -5067,13 +5167,13 @@ function ensureToolboxApiProfiles(data) {
     data.toolbox_settings || (data.toolbox_settings = { version: 1, extraction: { whitelist: "", exclusions: "" }, features: {} });
     (_a = data.toolbox_settings).features || (_a.features = {});
     if (data.toolbox_settings.features.timetrace) return false;
-    data.toolbox_settings.features.timetrace = { api: text(data.story_timetrace?.profile_id) ? `profile:${text(data.story_timetrace.profile_id)}` : "memory" };
+    data.toolbox_settings.features.timetrace = { api: text2(data.story_timetrace?.profile_id) ? `profile:${text2(data.story_timetrace.profile_id)}` : "memory" };
     return true;
   }
   if (data.toolbox_api_version !== 1) migrateLegacyToolboxApiProfiles(data);
   data.toolbox_settings || (data.toolbox_settings = { version: 1, extraction: { whitelist: "", exclusions: "" }, features: {} });
   (_b = data.toolbox_settings).features || (_b.features = {});
-  (_c = data.toolbox_settings.features).timetrace || (_c.timetrace = { api: text(data.story_timetrace?.profile_id) ? `profile:${text(data.story_timetrace.profile_id)}` : "memory" });
+  (_c = data.toolbox_settings.features).timetrace || (_c.timetrace = { api: text2(data.story_timetrace?.profile_id) ? `profile:${text2(data.story_timetrace.profile_id)}` : "memory" });
   const active4 = data.config?.active_profile_id || data.config?.profiles?.[0]?.id || "st_sync";
   for (const feature of ["theater", "illustration"]) {
     const settings = (_d = data.toolbox_settings.features)[feature] || (_d[feature] = {});
@@ -5082,13 +5182,13 @@ function ensureToolboxApiProfiles(data) {
   data.toolbox_api_version = 2;
   return true;
 }
-var url, text, signature, configured;
+var url, text2, signature, configured;
 var init_toolboxApiProfiles = __esm({
   "src/core/toolboxApiProfiles.js"() {
     url = (value) => String(value || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "").replace(/\/v1\/models$/, "").replace(/\/models$/, "");
-    text = (value) => String(value || "").trim();
-    signature = (profile) => JSON.stringify([profile.type === "internal" ? "internal" : "custom", url(profile.url), text(profile.key), text(profile.model)]);
-    configured = (profile) => !!(text(profile?.api_url ?? profile?.url) || text(profile?.api_key ?? profile?.key));
+    text2 = (value) => String(value || "").trim();
+    signature = (profile) => JSON.stringify([profile.type === "internal" ? "internal" : "custom", url(profile.url), text2(profile.key), text2(profile.model)]);
+    configured = (profile) => !!(text2(profile?.api_url ?? profile?.url) || text2(profile?.api_key ?? profile?.key));
   }
 });
 
@@ -16364,1060 +16464,1142 @@ textarea.t-input {\r
 
 
 /* === 04-features/settings.css === */
-/* css/04-features/settings.css - \u63D2\u4EF6\u81EA\u5DF1\u7684\u8BBE\u7F6E\u7A97\u53E3\uFF08#t-settings-view\uFF09
- * ST \u6269\u5C55\u62BD\u5C49\u4E0E\u66F4\u65B0\u5F39\u7A97\u5DF2\u8FC1\u5F80 settings-drawer.css\uFF08\u4FEE B10\uFF09\u3002 */
-
-#t-settings-view {
-    width: 800px;
-    height: 80vh;
-    max-width: 95vw;
-    display: flex;
-    flex-direction: column;
-    background: var(--t-color-bg);
-    overflow: hidden;
-}
-
-/* \`.t-set-body\` / \`.t-set-nav\` / \`.t-set-tab-btn\`\uFF08\u542B :hover \u4E0E .active\uFF09/
-   \`.t-set-content\` \u7684\u57FA\u7840\u89C6\u89C9\u5DF2\u8FC1\u81F3 02-components/settings-shell.css \u7684
-   \`.t-set-shell-*\`\u3002\u8FD9\u6279\u539F\u5148\u662F**\u88F8\u7C7B\u3001\u65E0\u4F5C\u7528\u57DF**\uFF0C\u5BF9\u5168\u90E8\u56DB\u4E2A\u8BBE\u7F6E\u754C\u9762\u90FD\u751F\u6548 \u2014\u2014
-   \u5B83\u65E2\u662F\u300C\u8BBE\u7F6E\u7A97\u53E3\u7684\u6837\u5F0F\u300D\u4E5F\u662F\u53E6\u5916\u4E09\u4E2A\u754C\u9762\u7684\u9690\u5F0F\u57FA\u7C7B\uFF0C\u653E\u5728 feature \u5C42\u662F\u9519\u4F4D\u3002
-
-   \u672C\u6587\u4EF6\u4FDD\u7559\u7684\u53EA\u6709\u4E0B\u65B9 @600px \u7684\u54CD\u5E94\u5F0F\u8986\u76D6\uFF08\u4ECD\u7528 \`.t-set-*\` \u9009\u62E9\u5668\uFF0C
-   \u6545\u4E0D\u89E6\u53D1 A5\uFF09\u3002\`.t-set-page\` / \`.t-set-page.active\` \u4E5F\u7559\u5728\u672C\u6587\u4EF6\uFF0C
-   \u7406\u7531\u89C1 settings-shell.css \u5934\u90E8\u6CE8\u91CA\u3002 */
-
-.t-set-page {
-    display: none;
-}
-
-.t-set-page.active {
-    display: block;
-}
-
-/* \u8868\u5355\u5143\u7D20 */
-.t-form-group {
-    margin-bottom: 20px;
-}
-
-.t-form-label {
-    display: block;
-    color: var(--t-color-text-secondary);
-    margin-bottom: 8px;
-    font-size: 0.9em;
-}
-
-/* \u9884\u89C8\u533A\u5BB9\u5668 */
-.t-preview-container {
-    background: var(--t-color-surface-sunken);
-    border-radius: 8px;
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
-    border: 1px solid var(--t-color-border);
-}
-
-/* \u9884\u89C8\u7403\u57FA\u7840\u6837\u5F0F */
-.t-preview-ball {
-    border-radius: 50%;
-    background: var(--t-color-surface-raised);
-    color: var(--t-color-text-strong);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--t-color-border-strong);
-    transition: all 0.2s;
-    position: relative;
-    overflow: visible;
-    box-shadow: 0 4px 12px var(--t-shadow-ink-60);
-}
-
-.t-preview-ball img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-}
-
-/* ===== \u9884\u89C8\u52A8\u753B\u6548\u679C ===== */
-
-/* \u52A8\u753B 1: \u8109\u51B2\u6CE2\u7EB9 */
-
-.t-preview-ball.p-anim-ripple {
-    border-color: var(--t-color-accent);
-}
-
-.t-preview-ball.p-anim-ripple::before,
-.t-preview-ball.p-anim-ripple::after {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 2px solid var(--t-color-accent);
-    animation: t-ripple-1 1.5s ease-out infinite;
-}
-
-.t-preview-ball.p-anim-ripple::after {
-    animation: t-ripple-2 1.5s ease-out 0.5s infinite;
-}
-
-/* \u52A8\u753B 2: \u7535\u78C1\u95EA\u70C1 */
-
-.t-preview-ball.p-anim-arc {
-    border-color: var(--t-color-decor);
-}
-
-.t-preview-ball.p-anim-arc::before {
-    content: "";
-    position: absolute;
-    width: 120%;
-    height: 120%;
-    border-radius: 50%;
-    background:
-        radial-gradient(circle at 20% 0%, var(--t-color-decor) 0%, transparent 30%),
-        radial-gradient(circle at 80% 100%, var(--t-color-decor) 0%, transparent 30%);
-    animation: t-arc-rotate 1s linear infinite, t-arc-flash-1 0.3s ease infinite;
-    opacity: 0.8;
-}
-
-.t-preview-ball.p-anim-arc::after {
-    content: "";
-    position: absolute;
-    width: 130%;
-    height: 130%;
-    border-radius: 50%;
-    background:
-        radial-gradient(circle at 50% 0%, rgb(var(--t-accent-azure-light-rgb)) 0%, transparent 25%),
-        radial-gradient(circle at 50% 100%, rgb(var(--t-accent-azure-light-rgb)) 0%, transparent 25%);
-    animation: t-arc-rotate 1.5s linear infinite reverse;
-    opacity: 0.6;
-}
-
-/* \u901A\u77E5\u547C\u5438\u706F\u9884\u89C8 */
-
-.t-preview-ball.p-notify {
-    border-color: var(--t-color-notify) !important; /* override color picker inline border during notify preview */
-    animation: t-notify-glow 1.5s infinite ease-in-out;
-}
-
-/* \u52A8\u753B\u9009\u62E9\u7F51\u683C */
-.t-anim-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-    margin-top: 15px;
-}
-
-.t-anim-option {
-    background: var(--t-color-surface-elevated);
-    border: 2px solid var(--t-color-border);
-    border-radius: 8px;
-    padding: 15px 10px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s;
-}
-
-.t-anim-option:hover {
-    background: var(--t-color-surface-raised);
-    border-color: var(--t-color-border-bright);
-}
-
-.t-anim-option.active {
-    border-color: var(--t-color-brand);
-    background: var(--t-color-brand-veil);
-}
-
-.t-anim-option .t-anim-name {
-    font-size: 0.9em;
-    color: var(--t-color-text-label);
-    margin-top: 8px;
-}
-
-.t-anim-option .t-anim-icon {
-    font-size: 1.5em;
-}
-
-/* \u4E0A\u4F20\u6846 */
-.t-upload-card {
-    width: 100px;
-    height: 100px;
-    border: 2px dashed var(--t-color-border-strong);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--t-color-text-faint);
-    transition: 0.2s;
-    background-size: cover;
-    background-position: center;
-}
-
-.t-upload-card:hover {
-    border-color: var(--t-color-brand);
-    color: var(--t-color-brand);
-    background-color: var(--t-color-brand-veil);
-}
-
-/* Profile \u7BA1\u7406 */
-/* API \u8FDE\u63A5\u7F16\u8F91\u5668\uFF08src/ui/shared/apiConnectionEditor.js\uFF09\u7684\u8BF4\u660E\u5C0F\u5B57\u3002
-   2 \u5904\u5728\u7528\uFF1A\u65B9\u6848\u63D0\u793A\uFF08profileTipId\uFF09\u4E0E\u72B6\u6001\u884C\uFF08statusId\uFF09\u3002
-   \u26A0 \u8BE5\u7F16\u8F91\u5668\u662F loreReviewWindow / rewriteEntryButton \u5171\u7528\u7684\u7EC4\u4EF6\uFF0C\u4F46\u5B83\u7684
-   CSS \u4E00\u76F4\u653E\u5728\u672C\u6587\u4EF6\uFF08.t-prof-header \u5C31\u5728\u4E0B\u9762\uFF09\uFF0C\u6545\u8FD9\u6761\u4E5F\u653E\u8FD9\u91CC\uFF0C\u4E0D\u53E6\u7ACB\u6587\u4EF6\u3002
-   \u26A0 #8da5b8 \u4FDD\u7559\u539F\u503C\uFF1A\u672C\u6587\u4EF6 105 \u5904\u989C\u8272\u5B57\u9762\u91CF\u3001\u4EC5 4 \u5904 token\u3002 */
-.t-conn-hint {
-    margin-top: 8px;
-    font-size: 0.8em;
-    color: var(--t-glass-text-faint);
-}
-
-.t-prof-header {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    align-items: center;
-}
-
-.t-prof-select {
-    flex-grow: 1;
-    background: var(--t-color-surface-elevated);
-    color: var(--t-color-text);
-    border: 1px solid var(--t-color-border-strong);
-    padding: 8px;
-    border-radius: 4px;
-}
-
-/* \u8BCA\u65AD\u65E5\u5FD7 */
-.t-log-box {
-    background: var(--t-color-surface-well);
-    color: var(--t-color-text-label);
-    padding: 10px;
-    border: 1px solid var(--t-color-border);
-    border-radius: 4px;
-    height: 250px;
-    overflow-y: auto;
-    font-family: var(--t-font-mono);
-    font-size: 0.8em;
-    white-space: pre-wrap;
-    word-break: break-all;
-    margin-bottom: 10px;
-}
-
-.t-log-entry-error {
-    color: var(--t-color-danger);
-    border-bottom: 1px solid var(--t-color-border);
-    padding: 2px 0;
-}
-
-.t-log-entry-info {
-    color: var(--t-color-accent);
-    border-bottom: 1px solid var(--t-color-border);
-    padding: 2px 0;
-}
-
-.t-log-entry-warn {
-    color: rgb(var(--t-accent-warn-log-rgb));
-    border-bottom: 1px solid var(--t-color-border);
-    padding: 2px 0;
-}
-
-/* ===== \u4E3B\u9898\u6837\u5F0F Tab ===== */
-
-/* CSS \u4EE3\u7801\u7F16\u8F91\u5668 */
-.t-code-editor {
-    font-family: var(--t-font-mono);
-    font-size: 0.9em;
-    line-height: 1.5;
-    tab-size: 4;
-    resize: vertical;
-    min-height: 200px;
-    background: var(--t-color-surface-well);
-    border-color: var(--t-color-border);
-    color: var(--t-color-text-label);
-}
-
-.t-code-editor::placeholder {
-    color: var(--t-color-text-disabled);
-}
-
-/* CSS \u9009\u62E9\u5668\u63D0\u793A\u5217\u8868 */
-.t-css-hints {
-    background: var(--t-color-surface-inset);
-    border: 1px solid var(--t-color-border);
-    border-radius: 6px;
-    padding: 15px;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.t-css-hint-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--t-color-border-dim);
-    font-size: 0.85em;
-}
-
-.t-css-hint-item:last-child {
-    border-bottom: none;
-}
-
-.t-css-hint-item code {
-    background: var(--t-color-surface-raised);
-    color: var(--t-color-accent);
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-family: var(--t-font-mono);
-    font-size: 0.95em;
-    min-width: 180px;
-    display: inline-block;
-}
-
-.t-css-hint-item span {
-    color: var(--t-color-text-muted);
-}
-
-@media screen and (max-width: 600px) {
-    .t-set-body {
-        flex-direction: column;
-    }
-
-    .t-set-nav {
-        width: 100%;
-        height: 50px;
-        flex-direction: row;
-        overflow-x: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--t-color-border);
-    }
-
-    .t-set-tab-btn {
-        padding: 0 15px;
-        border-left: none;
-        border-bottom: 3px solid transparent;
-        white-space: nowrap;
-    }
-
-    .t-set-tab-btn.active {
-        border-left: none;
-        border-bottom-color: var(--t-color-brand);
-        background: transparent;
-    }
-
-    .t-anim-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* \u63D0\u793A\u8BCD\u65B9\u6848\u6761\u76EE\u5361\u7247 */
-.t-prompt-entry-list {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-}
-
-/* \u6761\u76EE\u4E4B\u95F4\u7684\u63D2\u5165\u70B9\u3002
-   \u5E73\u65F6\u96F6\u9AD8\u5EA6\u3001\u4E0D\u5360\u5E03\u5C40\uFF0C\u9F20\u6807\u79FB\u8FDB\u5361\u7247\u7F1D\u9699\u624D\u6D6E\u51FA\u300C\uFF0B \u5728\u6B64\u63D2\u5165\u300D\u3002
-   \u8D1F margin \u62B5\u6D88\u6389 .t-prompt-entry-list \u4E24\u6BB5 gap\uFF0C\u4FDD\u8BC1\u63D2\u5165\u70B9\u7684\u5B58\u5728\u4E0D\u6539\u53D8\u539F\u6709\u95F4\u8DDD\uFF1B
-   \u547D\u4E2D\u533A\u4EA4\u7ED9 ::before\uFF0C\u63A7\u5236\u5728 7px \u7F1D\u9699\u4EE5\u5185\uFF0C\u907F\u514D\u62A2\u8D70\u5361\u7247\u8FB9\u7F18\u7684\u70B9\u51FB\u3002 */
-.t-prompt-insert-slot {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 0;
-    margin: -3.5px 0;
-    padding: 0;
-    border: 0;
-    background: none;
-    font: inherit;
-    cursor: pointer;
-}
-
-.t-prompt-insert-slot::before {
-    content: "";
-    position: absolute;
-    inset: -3px 0;
-}
-
-/* \u9690\u85CF\u65F6\u5FC5\u987B pointer-events:none \u2014\u2014 opacity:0 \u7684\u5143\u7D20\u7167\u6837\u5403\u70B9\u51FB\uFF0C
-   \u5426\u5219\u6EA2\u51FA\u5230\u5361\u7247\u4E0A\u7684\u6807\u7B7E\u4F1A\u6321\u4F4F\u300C\u70B9\u5361\u7247\u7F16\u8F91\u6761\u76EE\u300D */
-.t-prompt-insert-slot > * {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s;
-}
-
-.t-prompt-insert-slot:hover > *,
-.t-prompt-insert-slot:focus-visible > * {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.t-prompt-insert-slot:focus-visible {
-    outline: none;
-}
-
-.t-prompt-insert-line {
-    flex: 1;
-    height: 1px;
-    background: repeating-linear-gradient(to right, rgb(var(--t-glass-insert-rgb)) 0 4px, transparent 4px 8px);
-}
-
-.t-prompt-insert-label {
-    flex-shrink: 0;
-    padding: 3px 10px;
-    border: 1px solid rgb(var(--t-glass-insert-rgb));
-    border-radius: 999px;
-    background: var(--t-color-dialog-surface);
-    color: var(--t-color-accent);
-    font-size: 0.72em;
-    line-height: 1.4;
-    white-space: nowrap;
-    transition: border-color 0.15s, background 0.15s;
-}
-
-.t-prompt-insert-slot:hover .t-prompt-insert-label,
-.t-prompt-insert-slot:focus-visible .t-prompt-insert-label {
-    border-color: var(--t-color-accent);
-    background: rgb(var(--t-accent-slot-hover-rgb));
-}
-
-/* \u89E6\u5C4F\u6CA1\u6709 hover\uFF0C\u63D2\u5165\u70B9\u6539\u4E3A\u5E38\u9A7B\u53EF\u89C1\u5E76\u6491\u51FA\u771F\u5B9E\u9AD8\u5EA6 */
-@media (hover: none) {
-    .t-prompt-insert-slot {
-        height: 18px;
-        margin: -4px 0;
-    }
-
-    .t-prompt-insert-slot > * {
-        opacity: 0.55;
-        pointer-events: auto;
-    }
-}
-
-.t-prompt-entry-card {
-    background: var(--t-color-surface-sunken);
-    border: 1px solid var(--t-color-border-control);
-    border-radius: 6px;
-    padding: 7px 9px;
-    box-sizing: border-box;
-    transition: border-color 0.2s, background 0.2s;
-    cursor: grab;
-}
-
-.t-prompt-entry-card:active {
-    cursor: grabbing;
-}
-
-.t-prompt-entry-card:hover {
-    background: var(--t-color-surface);
-    border-color: var(--t-color-border-bright);
-}
-
-.t-prompt-entry-card.is-disabled {
-    opacity: 0.62;
-}
-
-.t-prompt-entry-card.is-locked {
-    border-color: rgb(var(--t-glass-locked-border-rgb));
-    background: var(--t-color-dialog-surface);
-}
-
-.t-prompt-entry-card.is-locked:hover {
-    border-color: rgb(var(--t-glass-locked-border-hover-rgb));
-    background: var(--t-color-dialog-surface);
-}
-
-.t-prompt-entry-card.is-locked .t-prompt-entry-drag-hint {
-    color: rgb(var(--t-glass-text-hint-rgb));
-}
-
-.t-prompt-entry-card.is-dragging {
-    opacity: 0.45;
-    border-style: dashed;
-}
-
-/* \u7528\u6237\u81EA\u5EFA\u6761\u76EE\uFF1A\u5DE6\u4FA7\u91D1\u8272\u63CF\u8FB9\uFF0C\u8DDF\u9884\u8BBE\u81EA\u5E26\u7684\u6761\u76EE\u533A\u5206\u5F00 */
-.t-prompt-entry-card.is-custom {
-    border-left: 2px solid var(--t-color-brand-strong);
-}
-
-.t-prompt-entry-delete:hover {
-    color: rgb(var(--t-accent-red-soft-rgb));
-    border-color: rgb(var(--t-accent-red-soft-rgb) / .55);
-}
-
-/* \u8F93\u51FA\u89C4\u8303\u6761\u76EE\u7684\u300C\u6062\u590D\u9ED8\u8BA4\u300D\uFF1A\u7528\u8584\u8377\u7EFF\u533A\u5206\u4E8E\u5220\u9664\u7684\u7EA2\u8272 */
-.t-prompt-entry-restore:hover:not(:disabled) {
-    color: var(--t-color-notify);
-    border-color: rgb(var(--t-accent-mint-rgb) / .55);
-}
-
-.t-prompt-entry-card.is-drag-over {
-    border-color: var(--t-color-accent);
-    box-shadow: 0 -3px 0 rgb(var(--t-accent-sky-rgb) / .75);
-}
-
-.t-prompt-entry-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    height: 28px;
-    overflow: hidden;
-}
-
-.t-prompt-entry-index {
-    color: var(--t-color-text-faint);
-    font-size: 0.78em;
-    width: 26px;
-    flex-shrink: 0;
-    font-family: var(--t-font-mono);
-}
-
-.t-prompt-entry-name {
-    flex: 1;
-    min-width: 0;
-    color: var(--t-color-text);
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.t-prompt-entry-badge {
-    color: var(--t-color-accent);
-    background: var(--t-color-accent-veil);
-    border: 1px solid var(--t-color-accent-soft-strong);
-    border-radius: 3px;
-    padding: 2px 6px;
-    font-size: 0.72em;
-    white-space: nowrap;
-    flex-shrink: 0;
-    text-transform: uppercase;
-}
-
-.t-prompt-entry-actions {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.t-prompt-entry-drag-hint {
-    color: var(--t-color-text-faint);
-    width: 12px;
-    font-size: 0.78em;
-    text-align: center;
-    flex-shrink: 0;
-    user-select: none;
-}
-
-.t-prompt-entry-actions button,
-.t-prompt-entry-toggle {
-    width: 28px;
-    height: 26px;
-    padding: 0;
-    border: 1px solid var(--t-color-border-strong);
-    border-radius: 3px;
-    background: var(--t-color-panel-header);
-    color: var(--t-color-text-secondary);
-    cursor: pointer;
-}
-
-.t-prompt-entry-toggle {
-    width: auto;
-    min-width: 64px;
-    padding: 0 8px;
-    font-size: 0.75em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-}
-
-.t-prompt-entry-toggle.is-enabled {
-    color: var(--t-color-notify);
-    border-color: rgb(var(--t-accent-mint-rgb) / .55);
-    background: rgb(var(--t-accent-mint-rgb) / .1);
-}
-
-.t-prompt-entry-toggle.is-required {
-    cursor: default;
-}
-
-.t-prompt-entry-toggle.is-required:disabled {
-    color: var(--t-color-text-secondary);
-    opacity: 1;
-}
-
-.t-prompt-entry-actions button:hover:not(:disabled),
-.t-prompt-entry-toggle:hover:not(:disabled) {
-    color: var(--t-color-text-strong);
-    border-color: var(--t-color-accent);
-}
-
-.t-prompt-entry-actions button:disabled {
-    opacity: 0.35;
-    cursor: default;
-}
-
-/* === \u6807\u9898\u680F\u56FE\u6807\u914D\u7F6E === */
-
-.t-header-action-count {
-    margin-left: 6px;
-    color: var(--t-color-text-faint);
-    font-size: 0.8em;
-    font-weight: normal;
-}
-
-.t-header-action-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.t-header-action-card {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 8px 10px;
-    box-sizing: border-box;
-    border: 1px solid var(--t-color-border-control);
-    border-radius: 6px;
-    background: var(--t-color-surface-sunken);
-    cursor: grab;
-    transition: border-color 0.2s, background 0.2s;
-}
-
-.t-header-action-card:active {
-    cursor: grabbing;
-}
-
-.t-header-action-card:hover {
-    background: var(--t-color-surface);
-    border-color: var(--t-color-border-bright);
-}
-
-.t-header-action-card.is-dragging {
-    opacity: 0.45;
-    border-style: dashed;
-}
-
-.t-header-action-card.is-drag-over {
-    border-color: var(--t-color-accent);
-    box-shadow: 0 -3px 0 rgb(var(--t-accent-sky-rgb) / .75);
-}
-
-/* \u5DF2\u8FBE\u4E0A\u9650\u65F6\u672A\u9009\u4E2D\u7684\u9879\uFF1A\u53D8\u6697\u63D0\u793A\u9009\u4E0D\u4E86\uFF0C\u4F46\u4ECD\u53EF\u62D6\u52A8\u8C03\u5E8F */
-.t-header-action-card.is-blocked {
-    opacity: 0.5;
-}
-
-.t-header-action-grip {
-    flex-shrink: 0;
-    color: var(--t-color-text-disabled);
-    cursor: grab;
-}
-
-.t-header-action-icon {
-    width: 1.2em;
-    flex-shrink: 0;
-    color: var(--t-color-brand);
-    text-align: center;
-}
-
-.t-header-action-label {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    color: var(--t-color-text-label);
-    font-size: 0.9em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.t-header-action-switch {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    margin: 0;
-    cursor: pointer;
-}
-
-@media (max-width: 600px) {
-    .t-prompt-entry-list {
-        gap: 5px;
-    }
-
-    .t-prompt-entry-card {
-        padding: 6px 7px;
-    }
-
-    .t-prompt-entry-header {
-        align-items: center;
-        flex-wrap: nowrap;
-        gap: 6px;
-        height: 28px;
-    }
-
-    .t-prompt-entry-name {
-        min-width: 0;
-        font-size: 0.88em;
-    }
-
-    .t-prompt-entry-index {
-        width: 22px;
-        font-size: 0.7em;
-    }
-
-    .t-prompt-entry-badge {
-        max-width: 54px;
-        padding: 2px 4px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .t-prompt-entry-toggle {
-        width: 28px;
-        min-width: 28px;
-        padding: 0;
-    }
-
-    .t-prompt-entry-toggle-label {
-        display: none;
-    }
-
-}
-
-/* ============================================================
-   Phase 5b-10\uFF1A\u4ECE settingsWindow.js \u7684\u5185\u8054 style \u8FC1\u51FA\uFF0814 \u4E2A\u5C5E\u6027\uFF09\u3002
-
-   \u26A0 \u989C\u8272\u4E00\u5F8B\u4FDD\u7559\u539F\u503C\uFF1A\u672C\u6587\u4EF6 105 \u5904\u989C\u8272\u5B57\u9762\u91CF\u3001\u4EC5 4 \u5904 token\uFF0C
-   \u5355\u72EC\u6362\u8FD9\u51E0\u5904\u4F1A\u4E0E\u5168\u6587\u4E0D\u4E00\u81F4\u3002\u6574\u4F53 token \u5316\u5F52 Phase 6\u3002
-   ============================================================ */
-
-/* \u2500\u2500 \u8B66\u544A\u6587\u5B57 \u2500\u2500
-   #feca57 \u5728\u8BBE\u7F6E\u7A97\u53E3\u91CC\u51FA\u73B0 4 \u6B21\uFF08\u672C\u8282 3 \u4E2A\u7C7B\u5171 4 \u5904\u7528\uFF09\uFF0C\u662F\u672C\u7A97\u53E3\u7684\u8B66\u544A\u8272\u3002
-   \u26A0 .t-set-font-warn \u7528\u7684\u662F**\u53E6\u4E00\u4E2A\u9EC4** #f1c40f \u2014\u2014 \u5168\u5E93\u7B2C 5 \u79CD\u9EC4
-   \uFF08\u5DF2\u6709 #f59e0b / #feca57 / #ecc94b / #ffd93d\uFF09\u3002\u539F\u503C\u4FDD\u7559\uFF0C
-   \u5F52\u5E76\u5F52 Phase 6\uFF0C\u4EA4\u63A5\u6587\u6863 \xA75a \u7684\u5BB6\u65CF\u8868\u5DF2\u767B\u8BB0\u3002 */
-.t-set-warn {
-    color: rgb(var(--t-accent-warn-rgb));
-}
-
-.t-set-warn-title {
-    color: rgb(var(--t-accent-warn-rgb));
-    font-weight: bold;
-}
-
-.t-set-font-warn {
-    color: rgb(var(--t-accent-warn-log-rgb));
-}
-
-/* \u300C\u6709\u672A\u4FDD\u5B58\u6539\u52A8\u300D\u63D0\u793A\u30022 \u5904\u5728\u7528\uFF08CSS \u4E3B\u9898\u9875\u3001\u6837\u5F0F\u9875\uFF09\u3002
-   \u26A0 display:none \u5199\u5728\u7C7B\u91CC\u662F**\u6545\u610F\u7684**\uFF1A\u8FD9\u4E24\u4E2A\u5143\u7D20\u7531
-   $(...).hide() / .show() / .toggle(hasChanges) \u63A7\u5236\u663E\u9690\u3002
-   \u4E24\u8005\u90FD\u662F <div> \u4E14\u672C\u7C7B\u4E4B\u5916\u65E0\u4EFB\u4F55\u89C4\u5219\u8BBE\u5B83\u4EEC\u7684 display\uFF0C\u6240\u4EE5
-   jQuery \u7684 getDefaultDisplay() \u56DE\u9000\u503C block \u4E0E\u81EA\u7136\u503C\u4E00\u81F4\uFF0C\u4E0D\u4F1A\u9519\u7248\u3002
-   \u5224\u5B9A\u65B9\u6CD5\u4E0E\u53CD\u4F8B\u89C1\u4EA4\u63A5\u6587\u6863 \xA75b\u300Cdisplay:none \u2192 \u72B6\u6001\u7C7B\u300D\u3002 */
-.t-set-unsaved-hint {
-    display: none;
-    color: rgb(var(--t-accent-warn-rgb));
-    font-size: 0.8em;
-    margin-bottom: 8px;
-}
-
-/* \u2500\u2500 \u8BF4\u660E\u5C0F\u5B57 \u2500\u2500
-   2 \u5904\u5728\u7528\uFF08\u7EED\u5199\u91CD\u8BD5\u6B21\u6570\u3001\u68C0\u6D4B\u6A21\u5F0F\uFF09\u3002
-   \u26A0 \u4E0E settingsWindow.js:446 \u90A3\u4E2A <p>\uFF08font-size \u76F8\u540C\u4F46\u7528
-   var(--t-color-text-faint) \u4E14 margin-top:8px\uFF09\u4E0D\u662F\u4E00\u5957\uFF0C\u523B\u610F\u4E0D\u5408\u5E76\u3002 */
-.t-set-field-hint {
-    font-size: 0.75em;
-    color: var(--t-color-text-disabled);
-    margin-top: 5px;
-}
-
-/* \u7EDF\u8BA1\u5361\u7247\u7684\u526F\u6807\u9898\uFF08"\u5F53\u524D\u62E5\u6709\u81EA\u5B9A\u4E49\u5267\u672C: N \u4E2A"\uFF09\u3002 */
-.t-set-stat-sub {
-    font-size: 0.85em;
-    color: var(--t-color-text-dim);
-    margin-top: 5px;
-}
-
-/* \u300C\u6062\u590D\u6240\u6709\u300D\u6309\u94AE\u7684\u63CF\u8FB9\u3002
-   \u26A0 \u5FC5\u987B\u7528 ID\uFF1Abutton.css \u7684 .t-btn:hover:not(:disabled) \u662F (0,3,0) \u4E14\u8BBE\u4E86
-   border-color\uFF0C\u4EFB\u4F55 (0,1,0) \u7684\u7C7B\u90FD\u4F1A\u5728\u60AC\u505C\u65F6\u88AB\u5B83\u593A\u8D70\u8FB9\u6846\u8272\u3002
-   \u539F\u5148\u9760\u5185\u8054\u538B\u8FC7\u5B83\uFF0C\u73B0\u5728\u9760 (1,0,0)\u3002\u540C 5b-7 \u7684 #t-diag-clear\u3002 */
-#btn-restore-presets {
-    border: 1px solid var(--t-color-border-bright);
-}
-
-/* \u65E5\u5FD7\u67E5\u770B\u5668\u7A7A\u6001\u3002
-   \u26A0 \u5168\u5E93\u7B2C 21 \u4E2A\u7A7A\u6001\u7C7B\uFF0C\u4E14 margin-top:100px \u4E0E\u5176\u4F59\u90FD\u4E0D\u540C
-   \uFF08\u5176\u5B83\u662F 50px / padding 30px / 40px / 26px 12px\uFF09\u3002
-   \u5408\u5E76\u4E00\u5B9A\u6539\u89C6\u89C9\uFF0C\u5F52 Phase 6/7\uFF0C\u89C1\u4EA4\u63A5\u6587\u6863 \xA75b\u300C\u7A7A\u6001\u7C7B\u5DF2\u6709 20+ \u4E2A\u300D\u3002 */
-.t-set-log-empty {
-    text-align: center;
-    margin-top: 100px;
-    color: var(--t-color-text-disabled);
-}
-
-/* ============================================================
-   Phase 5b-12\uFF1A\u60AC\u6D6E\u7403\u914D\u8272\u7684\u4E24\u4E2A\u8868\u5355\u7EC4\uFF0830 \u4E2A\u5C5E\u6027\uFF09
-
-   \u2500\u2500 12 \u4E2A\u9884\u8BBE\u8272\u5757 \u2500\u2500
-   \u539F\u5148\u6BCF\u4E2A\u8272\u5757\u7684 style \u91CC\u90FD\u91CD\u590D 5 \u6761\u9759\u6001\u58F0\u660E\uFF0812 x 5 = 60 \u6761\uFF09\uFF0C
-   \u800C\u7B2C 6 \u6761 background \u53C8\u4E0E\u5B83\u81EA\u5DF1\u7684 data-color \u5C5E\u6027\u91CD\u590D\u3002
-
-   \u26A0 \u8C03\u8272\u677F\u7528 [data-color] \u5C5E\u6027\u9009\u62E9\u5668\u627F\u8F7D\uFF0C\u4E0E JS \u4FA7\u65E2\u6709\u5199\u6CD5\u4E00\u81F4 \u2014\u2014
-   settingsWindow.js \u672C\u6765\u5C31\u5728\u7528 $(\`.t-color-preset[data-color="..."]\`)
-   \u505A\u9009\u4E2D\u5B9A\u4F4D\uFF0Cdata-color \u4E00\u76F4\u662F\u5355\u4E00\u53D6\u503C\u6765\u6E90\u3002
-
-   \u26A0 \u8FD9 12 \u4E2A\u989C\u8272\u523B\u610F**\u4E0D** token \u5316\uFF1A\u5B83\u4EEC\u662F**\u7528\u6237\u53EF\u9009\u8C03\u8272\u677F**\uFF0C
-   \u4E3B\u9898\u5207\u6362\u65F6\u5FC5\u987B\u4FDD\u6301\u4E0D\u53D8\uFF08"\u5929\u84DD"\u5728\u4EFB\u4F55\u4E3B\u9898\u4E0B\u90FD\u5F97\u662F\u5929\u84DD\uFF09\u3002
-   \u8FD9\u4E0E\u4EA4\u63A5\u6587\u6863 \xA75a\u300C\u4E0D\u518D\u9020 token\u300D\u7684\u7ED3\u8BBA\u65B9\u5411\u4E00\u81F4\u4F46\u7406\u7531\u4E0D\u540C\uFF1A
-   \u90A3\u8FB9\u662F\u300C\u540C\u8BED\u4E49\u7684\u968F\u624B\u53D6\u503C\u300D\uFF0C\u8FD9\u8FB9\u662F\u300C\u5B83\u672C\u6765\u5C31\u4E0D\u8BE5\u8DDF\u4E3B\u9898\u53D8\u300D\u3002
-   ============================================================ */
-
-.t-color-swatch {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid transparent;
-}
-
-/* \u9009\u4E2D\u6001\u3002\u539F\u5148\u662F JS \u7528 .css("border-color", "#fff" / "transparent") \u76F4\u63A5\u5199\u5185\u8054\uFF0C
-   \u672C\u6279\u6539\u6210\u5207\u7C7B \u2014\u2014 \u90A3\u662F\u7EAF\u70B9\u51FB\u9A71\u52A8\u7684\u72B6\u6001\uFF0C\u6CA1\u6709 hover/\u89E6\u5C4F\u7684\u884C\u4E3A\u5DEE\u5F02\uFF0C
-   \u4E0E showInteractiveFAB \u90A3\u79CD\u5E26 hover \u7684\u91CD\u6784\u4E0D\u540C\uFF08\u89C1\u4EA4\u63A5\u6587\u6863 \xA75b\uFF09\u3002
-   (0,2,0) \u538B\u8FC7 .t-color-swatch \u7684 border \u7B80\u5199\u3002 */
-.t-color-swatch.is-selected {
-    border-color: var(--t-color-text-strong);
-}
-
-/* \u26A0 \u4E0B\u9762 12 \u6761\u9884\u89C8\u7403\u7684 background **\u5FC5\u987B\u4FDD\u6301\u5B57\u9762\u91CF\uFF0C\u4E0D\u8BB8 token \u5316**\u3002
-   data-color \u662F\u7528\u6237\u6311\u7684\u90A3\u4E2A hex \u672C\u8EAB\uFF08settingsWindow.js:235-262 \u5199\u8FDB
-   border_color / bg_color \u8BBE\u7F6E\uFF09\uFF0C\u9884\u89C8\u7403\u7684\u804C\u8D23\u5C31\u662F\u628A\u90A3\u4E2A hex \u753B\u51FA\u6765\u3002
-   \u6362\u6210 token \u540E\uFF0C\u6D45\u8272\u4E3B\u9898\u4E0B\u9884\u89C8\u7403\u4F1A\u663E\u793A token \u5728\u6D45\u8272\u4E0B\u7684\u503C\uFF0C\u800C title
-   \u4E0E\u5B9E\u9645\u5199\u5165\u8BBE\u7F6E\u7684\u4ECD\u662F\u539F hex \u2014\u2014 \u9884\u89C8\u8BF4\u8C0E\uFF0C\u4E14\u6CA1\u6709\u89C6\u89C9\u57FA\u7EBF\u65F6\u6781\u96BE\u53D1\u73B0\u3002
-   \uFF08Phase 6b-2 \u4FEE\uFF1A\u5176\u4E2D 5 \u6761\u5DF2\u88AB\u524D\u51E0\u6279\u5F53\u6210\u666E\u901A\u5E95\u8272 token \u5316\uFF0C\u5DF2\u590D\u539F\uFF1B
-   \u5BA1\u8BA1 A24 \u73B0\u5728\u4F1A\u5B88\u4F4F\u8FD9\u6761\u3002\uFF09 */
-.t-color-swatch[data-color="#90cdf4"] {
-    background: #90cdf4;
-}
-
-.t-color-swatch[data-color="#a29bfe"] {
-    background: #a29bfe;
-}
-
-.t-color-swatch[data-color="#55efc4"] {
-    background: #55efc4;
-}
-
-.t-color-swatch[data-color="#ffd93d"] {
-    background: #ffd93d;
-}
-
-.t-color-swatch[data-color="#ff6b6b"] {
-    background: #ff6b6b;
-}
-
-.t-color-swatch[data-color="#fd79a8"] {
-    background: #fd79a8;
-}
-
-.t-color-swatch[data-color="#2b2b2b"] {
-    background: #2b2b2b;
-}
-
-.t-color-swatch[data-color="#1a1a2e"] {
-    background: #1a1a2e;
-}
-
-.t-color-swatch[data-color="#16213e"] {
-    background: #16213e;
-}
-
-.t-color-swatch[data-color="#1e272e"] {
-    background: #1e272e;
-}
-
-.t-color-swatch[data-color="#2d132c"] {
-    background: #2d132c;
-}
-
-.t-color-swatch[data-color="#0a3d62"] {
-    background: #0a3d62;
-}
-
-/* \u2500\u2500 \u4E24\u4E2A\u8868\u5355\u7EC4\u7684\u5176\u4F59\u91CD\u590D\u5185\u8054 \u2500\u2500
-   \u4E0B\u9762\u6BCF\u4E2A\u7C7B\u539F\u5148\u90FD\u662F\u300C\u540C\u4E00\u4E32 style \u5728\u672C\u6587\u4EF6\u91CC\u51FA\u73B0 2-3 \u6B21\u300D\uFF0C
-   \u4E14\u5168\u5E93\u8303\u56F4\u5185\u53EA\u5728 settingsWindow.js \u51FA\u73B0\uFF0C\u6545\u6574\u6587\u4EF6\u66FF\u6362\u3002 */
-
-.t-color-field-row {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-/* \u4E00\u884C\u7D27\u6392\u7684\u5C0F\u5143\u7D20\u30023 \u5904\u5728\u7528\uFF1A\u4E24\u4E2A\u8272\u5757\u884C + CSS \u4EE3\u7801\u7684\u6309\u94AE\u884C\uFF08:500\uFF09\u3002
-   \u26A0 \u9891\u6B21 3 < 10\uFF0C\u6309 03-layout/utilities.css \u5B9A\u7684\u51C6\u5165\u95E8\u69DB\u4E0D\u8FDB\u5E03\u5C40\u5C42\uFF0C
-   \u5728 feature \u91CC\u7ED9\u8BED\u4E49\u540D\u3002 */
-.t-set-inline-group {
-    display: flex;
-    gap: 8px;
-}
-
-/* \u539F\u751F\u53D6\u8272\u5668\u3002\u5168\u5E93\u65E0\u88F8 input \u89C4\u5219\u547D\u4E2D\u5B83\uFF08\u5DF2\u679A\u4E3E\u786E\u8BA4\uFF09\u3002 */
-.t-color-picker {
-    width: 50px;
-    height: 35px;
-    border: none;
-    cursor: pointer;
-    background: transparent;
-}
-
-/* \u5341\u516D\u8FDB\u5236\u6587\u672C\u6846\u3002\u26A0 \u5FC5\u987B\u7528 ID\uFF1A\u8FD9\u4E24\u4E2A\u5143\u7D20\u5E26 .t-input\uFF0C
-   field.css \u7684 \`.t-root.t-box .t-input\` \u662F (0,3,0) \u4E14\u8BBE\u4E86 width:100%\uFF0C
-   (0,1,0) \u7684\u7C7B\u538B\u4E0D\u8FC7\u3002\u540C 5b-7 \u7684 #t-diag-log-viewer\u3002 */
-#p-border-color-text,
-#p-bg-color-text {
-    width: 100px;
-    font-family: monospace;
-}
-
-.t-opacity-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.t-opacity-label {
-    font-size: 0.85em;
-    color: var(--t-color-text-muted);
-    min-width: 60px;
-}
-
-.t-opacity-value {
-    font-size: 0.85em;
-    color: var(--t-color-brand);
-    min-width: 40px;
-}
-
-/* \u8868\u5355\u7EC4\u672B\u5C3E\u7684\u8BF4\u660E\u5C0F\u5B57\u30023 \u5904\u5728\u7528\uFF08:248 :270 :444\uFF09\u3002
-   \u26A0 \u4E0E 5b-10 \u5EFA\u7684 .t-set-field-hint \u4E0D\u662F\u4E00\u5957\uFF1A\u90A3\u4E2A\u662F 0.75em / #555 /
-   margin-top:5px\uFF0C\u8FD9\u4E2A\u662F 0.75em / var(--t-color-text-faint) / margin-top:8px\u3002
-   \u523B\u610F\u4E0D\u5408\u5E76\uFF08\u5408\u5E76\u8981\u6539\u8272\uFF0C\u5C5E Phase 6\uFF09\u3002 */
-.t-set-note {
-    font-size: 0.75em;
-    color: var(--t-color-text-faint);
-    margin-top: 8px;
-}
-
-/* ============================================================
-   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u8BBE\u7F6E\u7A97\u53E3
-   ------------------------------------------------------------
-   \u53EA\u505A\u300C\u8868\u9762\u4E0E\u5C42\u7EA7\u300D\u7684\u8986\u76D6\uFF0C\u63A7\u4EF6\u89C6\u89C9\u6CBF\u7528 02-components/studio-workspace.css
-   \uFF08\u8F93\u5165\u6846\u3001\u6309\u94AE\u3001\u4E0B\u62C9\u3001\u7126\u70B9\u73AF\u90FD\u5DF2\u5728\u90A3\u91CC\u7EDF\u4E00\uFF09\u3002\u9009\u62E9\u5668\u5E26
-   \`.t-studio-workspace#t-settings-view\`\uFF081,1,0\uFF09\uFF0C\u538B\u5F97\u8FC7\u672C\u6587\u4EF6\u65E2\u6709\u7684
-   \`#t-settings-view\`\uFF081,0,0\uFF09\uFF0C\u4E0D\u4F9D\u8D56\u52A0\u8F7D\u987A\u5E8F\u3002
-   ============================================================ */
-
-.t-studio-workspace#t-settings-view {
-    background: var(--t-studio-bg);
-    border: 1px solid var(--t-studio-gold-border);
-    border-radius: 16px;
-    box-shadow: 0 24px 80px var(--t-shadow-ink-50);
-}
-
-.t-studio-workspace#t-settings-view .t-set-shell-nav {
-    padding: 14px 0;
-    background: var(--t-studio-deep);
-    border-right-color: var(--t-studio-line);
-}
-
-.t-studio-workspace#t-settings-view .t-set-shell-tab {
-    padding: 11px 18px;
-    /* \u53EA\u8C03\u51E0\u4F55\uFF1A\u5B57\u53F7\u6CBF\u7528\u7EC4\u4EF6\u5C42\u7684 0.95em\uFF0C\u624D\u80FD\u8DDF\u7740\u300CUI \u5B57\u4F53\u5927\u5C0F\u300D\u4E00\u8D77\u7F29\u653E\u3002 */
-    letter-spacing: .5px;
-}
-
-.t-studio-workspace#t-settings-view .t-set-shell-tab.active {
-    background: var(--t-studio-gold-soft);
-    border-left-width: 2px;
-    font-weight: 500;
-}
-
-.t-studio-workspace#t-settings-view .t-set-shell-content {
-    padding: 22px 26px;
-    background: var(--t-studio-bg);
-}
-
-.t-studio-workspace#t-settings-view .t-preview-container {
-    background: var(--t-studio-deep);
-    border-color: var(--t-studio-line);
-    border-radius: 12px;
-}
-
-.t-studio-workspace#t-settings-view .t-anim-option,
-.t-studio-workspace#t-settings-view .t-upload-card,
-.t-studio-workspace#t-settings-view .t-css-hints,
-.t-studio-workspace#t-settings-view .t-prompt-entry-card,
-.t-studio-workspace#t-settings-view .t-log-box,
-.t-studio-workspace#t-settings-view .t-code-editor {
-    background: var(--t-studio-deep);
-    border-color: var(--t-studio-line);
-}
-
-.t-studio-workspace#t-settings-view .t-anim-option:hover,
-.t-studio-workspace#t-settings-view .t-prompt-entry-card:hover {
-    background: var(--t-studio-raised);
-    border-color: var(--t-studio-gold-border);
-}
-
-.t-studio-workspace#t-settings-view .t-anim-option.active {
-    background: var(--t-studio-gold-soft);
-    border-color: var(--t-studio-gold);
-}
-
-.t-studio-workspace#t-settings-view .t-upload-card:hover {
-    border-color: var(--t-studio-gold);
-    background-color: var(--t-studio-gold-soft);
-}
-
-.t-studio-workspace#t-settings-view .t-css-hint-item {
-    border-bottom-color: var(--t-studio-line);
-}
-
-.t-studio-workspace#t-settings-view .t-css-hint-item code {
-    background: var(--t-studio-gold-soft);
-    color: var(--t-studio-gold);
-}
-
-.t-studio-workspace#t-settings-view .t-set-warn {
-    background: var(--t-studio-gold-soft);
-    border-color: var(--t-studio-gold-border);
-}
-
-/* \u5E95\u90E8\u4FDD\u5B58\u6761\u662F\u5185\u8054\u6837\u5F0F\uFF0C\u8FD9\u91CC\u53EA\u8865\u63CF\u8FB9\uFF1B\u5E95\u8272\u9760 --t-color-surface-inset \u6620\u5C04\u3002 */
-.t-studio-workspace#t-settings-view > div:last-child {
-    border-top-color: var(--t-studio-gold-border) !important;
-}
-
-@media screen and (max-width: 700px) {
-    .t-studio-workspace#t-settings-view .t-set-shell-content { padding: 16px; }
-    .t-studio-workspace#t-settings-view .t-header { padding: 16px; }
-}
+/* css/04-features/settings.css - \u63D2\u4EF6\u81EA\u5DF1\u7684\u8BBE\u7F6E\u7A97\u53E3\uFF08#t-settings-view\uFF09\r
+ * ST \u6269\u5C55\u62BD\u5C49\u4E0E\u66F4\u65B0\u5F39\u7A97\u5DF2\u8FC1\u5F80 settings-drawer.css\uFF08\u4FEE B10\uFF09\u3002 */\r
+\r
+#t-settings-view {\r
+    width: 800px;\r
+    height: 80vh;\r
+    max-width: 95vw;\r
+    display: flex;\r
+    flex-direction: column;\r
+    background: var(--t-color-bg);\r
+    overflow: hidden;\r
+}\r
+\r
+/* \`.t-set-body\` / \`.t-set-nav\` / \`.t-set-tab-btn\`\uFF08\u542B :hover \u4E0E .active\uFF09/\r
+   \`.t-set-content\` \u7684\u57FA\u7840\u89C6\u89C9\u5DF2\u8FC1\u81F3 02-components/settings-shell.css \u7684\r
+   \`.t-set-shell-*\`\u3002\u8FD9\u6279\u539F\u5148\u662F**\u88F8\u7C7B\u3001\u65E0\u4F5C\u7528\u57DF**\uFF0C\u5BF9\u5168\u90E8\u56DB\u4E2A\u8BBE\u7F6E\u754C\u9762\u90FD\u751F\u6548 \u2014\u2014\r
+   \u5B83\u65E2\u662F\u300C\u8BBE\u7F6E\u7A97\u53E3\u7684\u6837\u5F0F\u300D\u4E5F\u662F\u53E6\u5916\u4E09\u4E2A\u754C\u9762\u7684\u9690\u5F0F\u57FA\u7C7B\uFF0C\u653E\u5728 feature \u5C42\u662F\u9519\u4F4D\u3002\r
+\r
+   \u672C\u6587\u4EF6\u4FDD\u7559\u7684\u53EA\u6709\u4E0B\u65B9 @600px \u7684\u54CD\u5E94\u5F0F\u8986\u76D6\uFF08\u4ECD\u7528 \`.t-set-*\` \u9009\u62E9\u5668\uFF0C\r
+   \u6545\u4E0D\u89E6\u53D1 A5\uFF09\u3002\`.t-set-page\` / \`.t-set-page.active\` \u4E5F\u7559\u5728\u672C\u6587\u4EF6\uFF0C\r
+   \u7406\u7531\u89C1 settings-shell.css \u5934\u90E8\u6CE8\u91CA\u3002 */\r
+\r
+.t-set-page {\r
+    display: none;\r
+}\r
+\r
+.t-set-page.active {\r
+    display: block;\r
+}\r
+\r
+/* \u9884\u8BBE\u4E2D\u7684\u6761\u76EE\u53EF\u663E\u5F0F\u590D\u5236\u5230\u5267\u672C\u5E93\uFF0C\u4E0D\u590D\u7528\u542F\u7528/\u7981\u7528\u5F00\u5173\u3002 */\r
+#t-prompt-extract-scripts[hidden] {\r
+    display: none;\r
+}\r
+\r
+.t-preset-extract-overlay {\r
+    padding: 16px;\r
+    box-sizing: border-box;\r
+    z-index: 21010;\r
+}\r
+\r
+.t-preset-extract-box {\r
+    width: min(720px, 100%);\r
+    max-width: 720px;\r
+    max-height: 85dvh;\r
+}\r
+\r
+.t-preset-extract-category {\r
+    display: flex;\r
+    flex-direction: column;\r
+    gap: 6px;\r
+    margin-bottom: 12px;\r
+}\r
+\r
+.t-preset-extract-controls {\r
+    display: flex;\r
+    flex-direction: column;\r
+    gap: 10px;\r
+    margin-bottom: 14px;\r
+}\r
+\r
+.t-preset-extract-all,\r
+.t-preset-extract-heading {\r
+    display: flex;\r
+    align-items: flex-start;\r
+    gap: 8px;\r
+    cursor: pointer;\r
+    overflow-wrap: anywhere;\r
+}\r
+\r
+.t-preset-extract-all input,\r
+.t-preset-extract-heading input {\r
+    flex-shrink: 0;\r
+    margin-top: 4px;\r
+}\r
+\r
+.t-preset-extract-list {\r
+    display: flex;\r
+    flex-direction: column;\r
+    gap: 10px;\r
+}\r
+\r
+.t-preset-extract-item {\r
+    border: 1px solid var(--t-color-border);\r
+    border-radius: 6px;\r
+    padding: 12px;\r
+    background: var(--t-color-surface-inset);\r
+}\r
+\r
+.t-preset-extract-hint {\r
+    font-size: 0.85em;\r
+    line-height: 1.5;\r
+    color: var(--t-color-text-muted);\r
+    margin: 8px 0;\r
+    overflow-wrap: anywhere;\r
+}\r
+\r
+.t-preset-extract-warning {\r
+    font-size: 0.85em;\r
+    color: var(--t-color-warning);\r
+    margin: 8px 0;\r
+}\r
+\r
+.t-preset-extract-preview {\r
+    max-height: 220px;\r
+    overflow-y: auto;\r
+    white-space: pre-wrap;\r
+    overflow-wrap: anywhere;\r
+    font-size: 0.85em;\r
+    line-height: 1.5;\r
+}\r
+\r
+/* \u8868\u5355\u5143\u7D20 */\r
+.t-form-group {\r
+    margin-bottom: 20px;\r
+}\r
+\r
+.t-form-label {\r
+    display: block;\r
+    color: var(--t-color-text-secondary);\r
+    margin-bottom: 8px;\r
+    font-size: 0.9em;\r
+}\r
+\r
+/* \u9884\u89C8\u533A\u5BB9\u5668 */\r
+.t-preview-container {\r
+    background: var(--t-color-surface-sunken);\r
+    border-radius: 8px;\r
+    padding: 30px;\r
+    display: flex;\r
+    flex-direction: column;\r
+    align-items: center;\r
+    margin-bottom: 20px;\r
+    border: 1px solid var(--t-color-border);\r
+}\r
+\r
+/* \u9884\u89C8\u7403\u57FA\u7840\u6837\u5F0F */\r
+.t-preview-ball {\r
+    border-radius: 50%;\r
+    background: var(--t-color-surface-raised);\r
+    color: var(--t-color-text-strong);\r
+    display: flex;\r
+    align-items: center;\r
+    justify-content: center;\r
+    border: 2px solid var(--t-color-border-strong);\r
+    transition: all 0.2s;\r
+    position: relative;\r
+    overflow: visible;\r
+    box-shadow: 0 4px 12px var(--t-shadow-ink-60);\r
+}\r
+\r
+.t-preview-ball img {\r
+    width: 100%;\r
+    height: 100%;\r
+    object-fit: cover;\r
+    border-radius: 50%;\r
+}\r
+\r
+/* ===== \u9884\u89C8\u52A8\u753B\u6548\u679C ===== */\r
+\r
+/* \u52A8\u753B 1: \u8109\u51B2\u6CE2\u7EB9 */\r
+\r
+.t-preview-ball.p-anim-ripple {\r
+    border-color: var(--t-color-accent);\r
+}\r
+\r
+.t-preview-ball.p-anim-ripple::before,\r
+.t-preview-ball.p-anim-ripple::after {\r
+    content: "";\r
+    position: absolute;\r
+    width: 100%;\r
+    height: 100%;\r
+    border-radius: 50%;\r
+    border: 2px solid var(--t-color-accent);\r
+    animation: t-ripple-1 1.5s ease-out infinite;\r
+}\r
+\r
+.t-preview-ball.p-anim-ripple::after {\r
+    animation: t-ripple-2 1.5s ease-out 0.5s infinite;\r
+}\r
+\r
+/* \u52A8\u753B 2: \u7535\u78C1\u95EA\u70C1 */\r
+\r
+.t-preview-ball.p-anim-arc {\r
+    border-color: var(--t-color-decor);\r
+}\r
+\r
+.t-preview-ball.p-anim-arc::before {\r
+    content: "";\r
+    position: absolute;\r
+    width: 120%;\r
+    height: 120%;\r
+    border-radius: 50%;\r
+    background:\r
+        radial-gradient(circle at 20% 0%, var(--t-color-decor) 0%, transparent 30%),\r
+        radial-gradient(circle at 80% 100%, var(--t-color-decor) 0%, transparent 30%);\r
+    animation: t-arc-rotate 1s linear infinite, t-arc-flash-1 0.3s ease infinite;\r
+    opacity: 0.8;\r
+}\r
+\r
+.t-preview-ball.p-anim-arc::after {\r
+    content: "";\r
+    position: absolute;\r
+    width: 130%;\r
+    height: 130%;\r
+    border-radius: 50%;\r
+    background:\r
+        radial-gradient(circle at 50% 0%, rgb(var(--t-accent-azure-light-rgb)) 0%, transparent 25%),\r
+        radial-gradient(circle at 50% 100%, rgb(var(--t-accent-azure-light-rgb)) 0%, transparent 25%);\r
+    animation: t-arc-rotate 1.5s linear infinite reverse;\r
+    opacity: 0.6;\r
+}\r
+\r
+/* \u901A\u77E5\u547C\u5438\u706F\u9884\u89C8 */\r
+\r
+.t-preview-ball.p-notify {\r
+    border-color: var(--t-color-notify) !important; /* override color picker inline border during notify preview */\r
+    animation: t-notify-glow 1.5s infinite ease-in-out;\r
+}\r
+\r
+/* \u52A8\u753B\u9009\u62E9\u7F51\u683C */\r
+.t-anim-grid {\r
+    display: grid;\r
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));\r
+    gap: 12px;\r
+    margin-top: 15px;\r
+}\r
+\r
+.t-anim-option {\r
+    background: var(--t-color-surface-elevated);\r
+    border: 2px solid var(--t-color-border);\r
+    border-radius: 8px;\r
+    padding: 15px 10px;\r
+    cursor: pointer;\r
+    text-align: center;\r
+    transition: all 0.2s;\r
+}\r
+\r
+.t-anim-option:hover {\r
+    background: var(--t-color-surface-raised);\r
+    border-color: var(--t-color-border-bright);\r
+}\r
+\r
+.t-anim-option.active {\r
+    border-color: var(--t-color-brand);\r
+    background: var(--t-color-brand-veil);\r
+}\r
+\r
+.t-anim-option .t-anim-name {\r
+    font-size: 0.9em;\r
+    color: var(--t-color-text-label);\r
+    margin-top: 8px;\r
+}\r
+\r
+.t-anim-option .t-anim-icon {\r
+    font-size: 1.5em;\r
+}\r
+\r
+/* \u4E0A\u4F20\u6846 */\r
+.t-upload-card {\r
+    width: 100px;\r
+    height: 100px;\r
+    border: 2px dashed var(--t-color-border-strong);\r
+    border-radius: 8px;\r
+    display: flex;\r
+    flex-direction: column;\r
+    align-items: center;\r
+    justify-content: center;\r
+    cursor: pointer;\r
+    color: var(--t-color-text-faint);\r
+    transition: 0.2s;\r
+    background-size: cover;\r
+    background-position: center;\r
+}\r
+\r
+.t-upload-card:hover {\r
+    border-color: var(--t-color-brand);\r
+    color: var(--t-color-brand);\r
+    background-color: var(--t-color-brand-veil);\r
+}\r
+\r
+/* Profile \u7BA1\u7406 */\r
+/* API \u8FDE\u63A5\u7F16\u8F91\u5668\uFF08src/ui/shared/apiConnectionEditor.js\uFF09\u7684\u8BF4\u660E\u5C0F\u5B57\u3002\r
+   2 \u5904\u5728\u7528\uFF1A\u65B9\u6848\u63D0\u793A\uFF08profileTipId\uFF09\u4E0E\u72B6\u6001\u884C\uFF08statusId\uFF09\u3002\r
+   \u26A0 \u8BE5\u7F16\u8F91\u5668\u662F loreReviewWindow / rewriteEntryButton \u5171\u7528\u7684\u7EC4\u4EF6\uFF0C\u4F46\u5B83\u7684\r
+   CSS \u4E00\u76F4\u653E\u5728\u672C\u6587\u4EF6\uFF08.t-prof-header \u5C31\u5728\u4E0B\u9762\uFF09\uFF0C\u6545\u8FD9\u6761\u4E5F\u653E\u8FD9\u91CC\uFF0C\u4E0D\u53E6\u7ACB\u6587\u4EF6\u3002\r
+   \u26A0 #8da5b8 \u4FDD\u7559\u539F\u503C\uFF1A\u672C\u6587\u4EF6 105 \u5904\u989C\u8272\u5B57\u9762\u91CF\u3001\u4EC5 4 \u5904 token\u3002 */\r
+.t-conn-hint {\r
+    margin-top: 8px;\r
+    font-size: 0.8em;\r
+    color: var(--t-glass-text-faint);\r
+}\r
+\r
+.t-prof-header {\r
+    display: flex;\r
+    gap: 10px;\r
+    margin-bottom: 15px;\r
+    align-items: center;\r
+}\r
+\r
+.t-prof-select {\r
+    flex-grow: 1;\r
+    background: var(--t-color-surface-elevated);\r
+    color: var(--t-color-text);\r
+    border: 1px solid var(--t-color-border-strong);\r
+    padding: 8px;\r
+    border-radius: 4px;\r
+}\r
+\r
+/* \u8BCA\u65AD\u65E5\u5FD7 */\r
+.t-log-box {\r
+    background: var(--t-color-surface-well);\r
+    color: var(--t-color-text-label);\r
+    padding: 10px;\r
+    border: 1px solid var(--t-color-border);\r
+    border-radius: 4px;\r
+    height: 250px;\r
+    overflow-y: auto;\r
+    font-family: var(--t-font-mono);\r
+    font-size: 0.8em;\r
+    white-space: pre-wrap;\r
+    word-break: break-all;\r
+    margin-bottom: 10px;\r
+}\r
+\r
+.t-log-entry-error {\r
+    color: var(--t-color-danger);\r
+    border-bottom: 1px solid var(--t-color-border);\r
+    padding: 2px 0;\r
+}\r
+\r
+.t-log-entry-info {\r
+    color: var(--t-color-accent);\r
+    border-bottom: 1px solid var(--t-color-border);\r
+    padding: 2px 0;\r
+}\r
+\r
+.t-log-entry-warn {\r
+    color: rgb(var(--t-accent-warn-log-rgb));\r
+    border-bottom: 1px solid var(--t-color-border);\r
+    padding: 2px 0;\r
+}\r
+\r
+/* ===== \u4E3B\u9898\u6837\u5F0F Tab ===== */\r
+\r
+/* CSS \u4EE3\u7801\u7F16\u8F91\u5668 */\r
+.t-code-editor {\r
+    font-family: var(--t-font-mono);\r
+    font-size: 0.9em;\r
+    line-height: 1.5;\r
+    tab-size: 4;\r
+    resize: vertical;\r
+    min-height: 200px;\r
+    background: var(--t-color-surface-well);\r
+    border-color: var(--t-color-border);\r
+    color: var(--t-color-text-label);\r
+}\r
+\r
+.t-code-editor::placeholder {\r
+    color: var(--t-color-text-disabled);\r
+}\r
+\r
+/* CSS \u9009\u62E9\u5668\u63D0\u793A\u5217\u8868 */\r
+.t-css-hints {\r
+    background: var(--t-color-surface-inset);\r
+    border: 1px solid var(--t-color-border);\r
+    border-radius: 6px;\r
+    padding: 15px;\r
+    max-height: 200px;\r
+    overflow-y: auto;\r
+}\r
+\r
+.t-css-hint-item {\r
+    display: flex;\r
+    align-items: center;\r
+    gap: 15px;\r
+    padding: 8px 0;\r
+    border-bottom: 1px solid var(--t-color-border-dim);\r
+    font-size: 0.85em;\r
+}\r
+\r
+.t-css-hint-item:last-child {\r
+    border-bottom: none;\r
+}\r
+\r
+.t-css-hint-item code {\r
+    background: var(--t-color-surface-raised);\r
+    color: var(--t-color-accent);\r
+    padding: 3px 8px;\r
+    border-radius: 4px;\r
+    font-family: var(--t-font-mono);\r
+    font-size: 0.95em;\r
+    min-width: 180px;\r
+    display: inline-block;\r
+}\r
+\r
+.t-css-hint-item span {\r
+    color: var(--t-color-text-muted);\r
+}\r
+\r
+@media screen and (max-width: 600px) {\r
+    .t-set-body {\r
+        flex-direction: column;\r
+    }\r
+\r
+    .t-set-nav {\r
+        width: 100%;\r
+        height: 50px;\r
+        flex-direction: row;\r
+        overflow-x: auto;\r
+        border-right: none;\r
+        border-bottom: 1px solid var(--t-color-border);\r
+    }\r
+\r
+    .t-set-tab-btn {\r
+        padding: 0 15px;\r
+        border-left: none;\r
+        border-bottom: 3px solid transparent;\r
+        white-space: nowrap;\r
+    }\r
+\r
+    .t-set-tab-btn.active {\r
+        border-left: none;\r
+        border-bottom-color: var(--t-color-brand);\r
+        background: transparent;\r
+    }\r
+\r
+    .t-anim-grid {\r
+        grid-template-columns: repeat(2, 1fr);\r
+    }\r
+}\r
+\r
+/* \u63D0\u793A\u8BCD\u65B9\u6848\u6761\u76EE\u5361\u7247 */\r
+.t-prompt-entry-list {\r
+    display: flex;\r
+    flex-direction: column;\r
+    gap: 7px;\r
+}\r
+\r
+/* \u6761\u76EE\u4E4B\u95F4\u7684\u63D2\u5165\u70B9\u3002\r
+   \u5E73\u65F6\u96F6\u9AD8\u5EA6\u3001\u4E0D\u5360\u5E03\u5C40\uFF0C\u9F20\u6807\u79FB\u8FDB\u5361\u7247\u7F1D\u9699\u624D\u6D6E\u51FA\u300C\uFF0B \u5728\u6B64\u63D2\u5165\u300D\u3002\r
+   \u8D1F margin \u62B5\u6D88\u6389 .t-prompt-entry-list \u4E24\u6BB5 gap\uFF0C\u4FDD\u8BC1\u63D2\u5165\u70B9\u7684\u5B58\u5728\u4E0D\u6539\u53D8\u539F\u6709\u95F4\u8DDD\uFF1B\r
+   \u547D\u4E2D\u533A\u4EA4\u7ED9 ::before\uFF0C\u63A7\u5236\u5728 7px \u7F1D\u9699\u4EE5\u5185\uFF0C\u907F\u514D\u62A2\u8D70\u5361\u7247\u8FB9\u7F18\u7684\u70B9\u51FB\u3002 */\r
+.t-prompt-insert-slot {\r
+    position: relative;\r
+    z-index: 1;\r
+    display: flex;\r
+    align-items: center;\r
+    justify-content: center;\r
+    gap: 8px;\r
+    height: 0;\r
+    margin: -3.5px 0;\r
+    padding: 0;\r
+    border: 0;\r
+    background: none;\r
+    font: inherit;\r
+    cursor: pointer;\r
+}\r
+\r
+.t-prompt-insert-slot::before {\r
+    content: "";\r
+    position: absolute;\r
+    inset: -3px 0;\r
+}\r
+\r
+/* \u9690\u85CF\u65F6\u5FC5\u987B pointer-events:none \u2014\u2014 opacity:0 \u7684\u5143\u7D20\u7167\u6837\u5403\u70B9\u51FB\uFF0C\r
+   \u5426\u5219\u6EA2\u51FA\u5230\u5361\u7247\u4E0A\u7684\u6807\u7B7E\u4F1A\u6321\u4F4F\u300C\u70B9\u5361\u7247\u7F16\u8F91\u6761\u76EE\u300D */\r
+.t-prompt-insert-slot > * {\r
+    opacity: 0;\r
+    pointer-events: none;\r
+    transition: opacity 0.15s;\r
+}\r
+\r
+.t-prompt-insert-slot:hover > *,\r
+.t-prompt-insert-slot:focus-visible > * {\r
+    opacity: 1;\r
+    pointer-events: auto;\r
+}\r
+\r
+.t-prompt-insert-slot:focus-visible {\r
+    outline: none;\r
+}\r
+\r
+.t-prompt-insert-line {\r
+    flex: 1;\r
+    height: 1px;\r
+    background: repeating-linear-gradient(to right, rgb(var(--t-glass-insert-rgb)) 0 4px, transparent 4px 8px);\r
+}\r
+\r
+.t-prompt-insert-label {\r
+    flex-shrink: 0;\r
+    padding: 3px 10px;\r
+    border: 1px solid rgb(var(--t-glass-insert-rgb));\r
+    border-radius: 999px;\r
+    background: var(--t-color-dialog-surface);\r
+    color: var(--t-color-accent);\r
+    font-size: 0.72em;\r
+    line-height: 1.4;\r
+    white-space: nowrap;\r
+    transition: border-color 0.15s, background 0.15s;\r
+}\r
+\r
+.t-prompt-insert-slot:hover .t-prompt-insert-label,\r
+.t-prompt-insert-slot:focus-visible .t-prompt-insert-label {\r
+    border-color: var(--t-color-accent);\r
+    background: rgb(var(--t-accent-slot-hover-rgb));\r
+}\r
+\r
+/* \u89E6\u5C4F\u6CA1\u6709 hover\uFF0C\u63D2\u5165\u70B9\u6539\u4E3A\u5E38\u9A7B\u53EF\u89C1\u5E76\u6491\u51FA\u771F\u5B9E\u9AD8\u5EA6 */\r
+@media (hover: none) {\r
+    .t-prompt-insert-slot {\r
+        height: 18px;\r
+        margin: -4px 0;\r
+    }\r
+\r
+    .t-prompt-insert-slot > * {\r
+        opacity: 0.55;\r
+        pointer-events: auto;\r
+    }\r
+}\r
+\r
+.t-prompt-entry-card {\r
+    background: var(--t-color-surface-sunken);\r
+    border: 1px solid var(--t-color-border-control);\r
+    border-radius: 6px;\r
+    padding: 7px 9px;\r
+    box-sizing: border-box;\r
+    transition: border-color 0.2s, background 0.2s;\r
+    cursor: grab;\r
+}\r
+\r
+.t-prompt-entry-card:active {\r
+    cursor: grabbing;\r
+}\r
+\r
+.t-prompt-entry-card:hover {\r
+    background: var(--t-color-surface);\r
+    border-color: var(--t-color-border-bright);\r
+}\r
+\r
+.t-prompt-entry-card.is-disabled {\r
+    opacity: 0.62;\r
+}\r
+\r
+.t-prompt-entry-card.is-locked {\r
+    border-color: rgb(var(--t-glass-locked-border-rgb));\r
+    background: var(--t-color-dialog-surface);\r
+}\r
+\r
+.t-prompt-entry-card.is-locked:hover {\r
+    border-color: rgb(var(--t-glass-locked-border-hover-rgb));\r
+    background: var(--t-color-dialog-surface);\r
+}\r
+\r
+.t-prompt-entry-card.is-locked .t-prompt-entry-drag-hint {\r
+    color: rgb(var(--t-glass-text-hint-rgb));\r
+}\r
+\r
+.t-prompt-entry-card.is-dragging {\r
+    opacity: 0.45;\r
+    border-style: dashed;\r
+}\r
+\r
+/* \u7528\u6237\u81EA\u5EFA\u6761\u76EE\uFF1A\u5DE6\u4FA7\u91D1\u8272\u63CF\u8FB9\uFF0C\u8DDF\u9884\u8BBE\u81EA\u5E26\u7684\u6761\u76EE\u533A\u5206\u5F00 */\r
+.t-prompt-entry-card.is-custom {\r
+    border-left: 2px solid var(--t-color-brand-strong);\r
+}\r
+\r
+.t-prompt-entry-delete:hover {\r
+    color: rgb(var(--t-accent-red-soft-rgb));\r
+    border-color: rgb(var(--t-accent-red-soft-rgb) / .55);\r
+}\r
+\r
+/* \u8F93\u51FA\u89C4\u8303\u6761\u76EE\u7684\u300C\u6062\u590D\u9ED8\u8BA4\u300D\uFF1A\u7528\u8584\u8377\u7EFF\u533A\u5206\u4E8E\u5220\u9664\u7684\u7EA2\u8272 */\r
+.t-prompt-entry-restore:hover:not(:disabled) {\r
+    color: var(--t-color-notify);\r
+    border-color: rgb(var(--t-accent-mint-rgb) / .55);\r
+}\r
+\r
+.t-prompt-entry-card.is-drag-over {\r
+    border-color: var(--t-color-accent);\r
+    box-shadow: 0 -3px 0 rgb(var(--t-accent-sky-rgb) / .75);\r
+}\r
+\r
+.t-prompt-entry-header {\r
+    display: flex;\r
+    align-items: center;\r
+    gap: 8px;\r
+    min-width: 0;\r
+    height: 28px;\r
+    overflow: hidden;\r
+}\r
+\r
+.t-prompt-entry-index {\r
+    color: var(--t-color-text-faint);\r
+    font-size: 0.78em;\r
+    width: 26px;\r
+    flex-shrink: 0;\r
+    font-family: var(--t-font-mono);\r
+}\r
+\r
+.t-prompt-entry-name {\r
+    flex: 1;\r
+    min-width: 0;\r
+    color: var(--t-color-text);\r
+    font-weight: 600;\r
+    overflow: hidden;\r
+    text-overflow: ellipsis;\r
+    white-space: nowrap;\r
+}\r
+\r
+.t-prompt-entry-badge {\r
+    color: var(--t-color-accent);\r
+    background: var(--t-color-accent-veil);\r
+    border: 1px solid var(--t-color-accent-soft-strong);\r
+    border-radius: 3px;\r
+    padding: 2px 6px;\r
+    font-size: 0.72em;\r
+    white-space: nowrap;\r
+    flex-shrink: 0;\r
+    text-transform: uppercase;\r
+}\r
+\r
+.t-prompt-entry-actions {\r
+    display: flex;\r
+    gap: 4px;\r
+    align-items: center;\r
+    flex-shrink: 0;\r
+}\r
+\r
+.t-prompt-entry-drag-hint {\r
+    color: var(--t-color-text-faint);\r
+    width: 12px;\r
+    font-size: 0.78em;\r
+    text-align: center;\r
+    flex-shrink: 0;\r
+    user-select: none;\r
+}\r
+\r
+.t-prompt-entry-actions button,\r
+.t-prompt-entry-toggle {\r
+    width: 28px;\r
+    height: 26px;\r
+    padding: 0;\r
+    border: 1px solid var(--t-color-border-strong);\r
+    border-radius: 3px;\r
+    background: var(--t-color-panel-header);\r
+    color: var(--t-color-text-secondary);\r
+    cursor: pointer;\r
+}\r
+\r
+.t-prompt-entry-toggle {\r
+    width: auto;\r
+    min-width: 64px;\r
+    padding: 0 8px;\r
+    font-size: 0.75em;\r
+    display: inline-flex;\r
+    align-items: center;\r
+    justify-content: center;\r
+    gap: 5px;\r
+}\r
+\r
+.t-prompt-entry-toggle.is-enabled {\r
+    color: var(--t-color-notify);\r
+    border-color: rgb(var(--t-accent-mint-rgb) / .55);\r
+    background: rgb(var(--t-accent-mint-rgb) / .1);\r
+}\r
+\r
+.t-prompt-entry-toggle.is-required {\r
+    cursor: default;\r
+}\r
+\r
+.t-prompt-entry-toggle.is-required:disabled {\r
+    color: var(--t-color-text-secondary);\r
+    opacity: 1;\r
+}\r
+\r
+.t-prompt-entry-actions button:hover:not(:disabled),\r
+.t-prompt-entry-toggle:hover:not(:disabled) {\r
+    color: var(--t-color-text-strong);\r
+    border-color: var(--t-color-accent);\r
+}\r
+\r
+.t-prompt-entry-actions button:disabled {\r
+    opacity: 0.35;\r
+    cursor: default;\r
+}\r
+\r
+/* === \u6807\u9898\u680F\u56FE\u6807\u914D\u7F6E === */\r
+\r
+.t-header-action-count {\r
+    margin-left: 6px;\r
+    color: var(--t-color-text-faint);\r
+    font-size: 0.8em;\r
+    font-weight: normal;\r
+}\r
+\r
+.t-header-action-list {\r
+    display: flex;\r
+    flex-direction: column;\r
+    gap: 6px;\r
+}\r
+\r
+.t-header-action-card {\r
+    display: flex;\r
+    align-items: center;\r
+    gap: 9px;\r
+    padding: 8px 10px;\r
+    box-sizing: border-box;\r
+    border: 1px solid var(--t-color-border-control);\r
+    border-radius: 6px;\r
+    background: var(--t-color-surface-sunken);\r
+    cursor: grab;\r
+    transition: border-color 0.2s, background 0.2s;\r
+}\r
+\r
+.t-header-action-card:active {\r
+    cursor: grabbing;\r
+}\r
+\r
+.t-header-action-card:hover {\r
+    background: var(--t-color-surface);\r
+    border-color: var(--t-color-border-bright);\r
+}\r
+\r
+.t-header-action-card.is-dragging {\r
+    opacity: 0.45;\r
+    border-style: dashed;\r
+}\r
+\r
+.t-header-action-card.is-drag-over {\r
+    border-color: var(--t-color-accent);\r
+    box-shadow: 0 -3px 0 rgb(var(--t-accent-sky-rgb) / .75);\r
+}\r
+\r
+/* \u5DF2\u8FBE\u4E0A\u9650\u65F6\u672A\u9009\u4E2D\u7684\u9879\uFF1A\u53D8\u6697\u63D0\u793A\u9009\u4E0D\u4E86\uFF0C\u4F46\u4ECD\u53EF\u62D6\u52A8\u8C03\u5E8F */\r
+.t-header-action-card.is-blocked {\r
+    opacity: 0.5;\r
+}\r
+\r
+.t-header-action-grip {\r
+    flex-shrink: 0;\r
+    color: var(--t-color-text-disabled);\r
+    cursor: grab;\r
+}\r
+\r
+.t-header-action-icon {\r
+    width: 1.2em;\r
+    flex-shrink: 0;\r
+    color: var(--t-color-brand);\r
+    text-align: center;\r
+}\r
+\r
+.t-header-action-label {\r
+    flex: 1;\r
+    min-width: 0;\r
+    overflow: hidden;\r
+    color: var(--t-color-text-label);\r
+    font-size: 0.9em;\r
+    text-overflow: ellipsis;\r
+    white-space: nowrap;\r
+}\r
+\r
+.t-header-action-switch {\r
+    flex-shrink: 0;\r
+    display: inline-flex;\r
+    align-items: center;\r
+    margin: 0;\r
+    cursor: pointer;\r
+}\r
+\r
+@media (max-width: 600px) {\r
+    .t-prompt-entry-list {\r
+        gap: 5px;\r
+    }\r
+\r
+    .t-prompt-entry-card {\r
+        padding: 6px 7px;\r
+    }\r
+\r
+    .t-prompt-entry-header {\r
+        align-items: center;\r
+        flex-wrap: nowrap;\r
+        gap: 6px;\r
+        height: 28px;\r
+    }\r
+\r
+    .t-prompt-entry-name {\r
+        min-width: 0;\r
+        font-size: 0.88em;\r
+    }\r
+\r
+    .t-prompt-entry-index {\r
+        width: 22px;\r
+        font-size: 0.7em;\r
+    }\r
+\r
+    .t-prompt-entry-badge {\r
+        max-width: 54px;\r
+        padding: 2px 4px;\r
+        overflow: hidden;\r
+        text-overflow: ellipsis;\r
+    }\r
+\r
+    .t-prompt-entry-toggle {\r
+        width: 28px;\r
+        min-width: 28px;\r
+        padding: 0;\r
+    }\r
+\r
+    .t-prompt-entry-toggle-label {\r
+        display: none;\r
+    }\r
+\r
+}\r
+\r
+/* ============================================================\r
+   Phase 5b-10\uFF1A\u4ECE settingsWindow.js \u7684\u5185\u8054 style \u8FC1\u51FA\uFF0814 \u4E2A\u5C5E\u6027\uFF09\u3002\r
+\r
+   \u26A0 \u989C\u8272\u4E00\u5F8B\u4FDD\u7559\u539F\u503C\uFF1A\u672C\u6587\u4EF6 105 \u5904\u989C\u8272\u5B57\u9762\u91CF\u3001\u4EC5 4 \u5904 token\uFF0C\r
+   \u5355\u72EC\u6362\u8FD9\u51E0\u5904\u4F1A\u4E0E\u5168\u6587\u4E0D\u4E00\u81F4\u3002\u6574\u4F53 token \u5316\u5F52 Phase 6\u3002\r
+   ============================================================ */\r
+\r
+/* \u2500\u2500 \u8B66\u544A\u6587\u5B57 \u2500\u2500\r
+   #feca57 \u5728\u8BBE\u7F6E\u7A97\u53E3\u91CC\u51FA\u73B0 4 \u6B21\uFF08\u672C\u8282 3 \u4E2A\u7C7B\u5171 4 \u5904\u7528\uFF09\uFF0C\u662F\u672C\u7A97\u53E3\u7684\u8B66\u544A\u8272\u3002\r
+   \u26A0 .t-set-font-warn \u7528\u7684\u662F**\u53E6\u4E00\u4E2A\u9EC4** #f1c40f \u2014\u2014 \u5168\u5E93\u7B2C 5 \u79CD\u9EC4\r
+   \uFF08\u5DF2\u6709 #f59e0b / #feca57 / #ecc94b / #ffd93d\uFF09\u3002\u539F\u503C\u4FDD\u7559\uFF0C\r
+   \u5F52\u5E76\u5F52 Phase 6\uFF0C\u4EA4\u63A5\u6587\u6863 \xA75a \u7684\u5BB6\u65CF\u8868\u5DF2\u767B\u8BB0\u3002 */\r
+.t-set-warn {\r
+    color: rgb(var(--t-accent-warn-rgb));\r
+}\r
+\r
+.t-set-warn-title {\r
+    color: rgb(var(--t-accent-warn-rgb));\r
+    font-weight: bold;\r
+}\r
+\r
+.t-set-font-warn {\r
+    color: rgb(var(--t-accent-warn-log-rgb));\r
+}\r
+\r
+/* \u300C\u6709\u672A\u4FDD\u5B58\u6539\u52A8\u300D\u63D0\u793A\u30022 \u5904\u5728\u7528\uFF08CSS \u4E3B\u9898\u9875\u3001\u6837\u5F0F\u9875\uFF09\u3002\r
+   \u26A0 display:none \u5199\u5728\u7C7B\u91CC\u662F**\u6545\u610F\u7684**\uFF1A\u8FD9\u4E24\u4E2A\u5143\u7D20\u7531\r
+   $(...).hide() / .show() / .toggle(hasChanges) \u63A7\u5236\u663E\u9690\u3002\r
+   \u4E24\u8005\u90FD\u662F <div> \u4E14\u672C\u7C7B\u4E4B\u5916\u65E0\u4EFB\u4F55\u89C4\u5219\u8BBE\u5B83\u4EEC\u7684 display\uFF0C\u6240\u4EE5\r
+   jQuery \u7684 getDefaultDisplay() \u56DE\u9000\u503C block \u4E0E\u81EA\u7136\u503C\u4E00\u81F4\uFF0C\u4E0D\u4F1A\u9519\u7248\u3002\r
+   \u5224\u5B9A\u65B9\u6CD5\u4E0E\u53CD\u4F8B\u89C1\u4EA4\u63A5\u6587\u6863 \xA75b\u300Cdisplay:none \u2192 \u72B6\u6001\u7C7B\u300D\u3002 */\r
+.t-set-unsaved-hint {\r
+    display: none;\r
+    color: rgb(var(--t-accent-warn-rgb));\r
+    font-size: 0.8em;\r
+    margin-bottom: 8px;\r
+}\r
+\r
+/* \u2500\u2500 \u8BF4\u660E\u5C0F\u5B57 \u2500\u2500\r
+   2 \u5904\u5728\u7528\uFF08\u7EED\u5199\u91CD\u8BD5\u6B21\u6570\u3001\u68C0\u6D4B\u6A21\u5F0F\uFF09\u3002\r
+   \u26A0 \u4E0E settingsWindow.js:446 \u90A3\u4E2A <p>\uFF08font-size \u76F8\u540C\u4F46\u7528\r
+   var(--t-color-text-faint) \u4E14 margin-top:8px\uFF09\u4E0D\u662F\u4E00\u5957\uFF0C\u523B\u610F\u4E0D\u5408\u5E76\u3002 */\r
+.t-set-field-hint {\r
+    font-size: 0.75em;\r
+    color: var(--t-color-text-disabled);\r
+    margin-top: 5px;\r
+}\r
+\r
+/* \u7EDF\u8BA1\u5361\u7247\u7684\u526F\u6807\u9898\uFF08"\u5F53\u524D\u62E5\u6709\u81EA\u5B9A\u4E49\u5267\u672C: N \u4E2A"\uFF09\u3002 */\r
+.t-set-stat-sub {\r
+    font-size: 0.85em;\r
+    color: var(--t-color-text-dim);\r
+    margin-top: 5px;\r
+}\r
+\r
+/* \u300C\u6062\u590D\u6240\u6709\u300D\u6309\u94AE\u7684\u63CF\u8FB9\u3002\r
+   \u26A0 \u5FC5\u987B\u7528 ID\uFF1Abutton.css \u7684 .t-btn:hover:not(:disabled) \u662F (0,3,0) \u4E14\u8BBE\u4E86\r
+   border-color\uFF0C\u4EFB\u4F55 (0,1,0) \u7684\u7C7B\u90FD\u4F1A\u5728\u60AC\u505C\u65F6\u88AB\u5B83\u593A\u8D70\u8FB9\u6846\u8272\u3002\r
+   \u539F\u5148\u9760\u5185\u8054\u538B\u8FC7\u5B83\uFF0C\u73B0\u5728\u9760 (1,0,0)\u3002\u540C 5b-7 \u7684 #t-diag-clear\u3002 */\r
+#btn-restore-presets {\r
+    border: 1px solid var(--t-color-border-bright);\r
+}\r
+\r
+/* \u65E5\u5FD7\u67E5\u770B\u5668\u7A7A\u6001\u3002\r
+   \u26A0 \u5168\u5E93\u7B2C 21 \u4E2A\u7A7A\u6001\u7C7B\uFF0C\u4E14 margin-top:100px \u4E0E\u5176\u4F59\u90FD\u4E0D\u540C\r
+   \uFF08\u5176\u5B83\u662F 50px / padding 30px / 40px / 26px 12px\uFF09\u3002\r
+   \u5408\u5E76\u4E00\u5B9A\u6539\u89C6\u89C9\uFF0C\u5F52 Phase 6/7\uFF0C\u89C1\u4EA4\u63A5\u6587\u6863 \xA75b\u300C\u7A7A\u6001\u7C7B\u5DF2\u6709 20+ \u4E2A\u300D\u3002 */\r
+.t-set-log-empty {\r
+    text-align: center;\r
+    margin-top: 100px;\r
+    color: var(--t-color-text-disabled);\r
+}\r
+\r
+/* ============================================================\r
+   Phase 5b-12\uFF1A\u60AC\u6D6E\u7403\u914D\u8272\u7684\u4E24\u4E2A\u8868\u5355\u7EC4\uFF0830 \u4E2A\u5C5E\u6027\uFF09\r
+\r
+   \u2500\u2500 12 \u4E2A\u9884\u8BBE\u8272\u5757 \u2500\u2500\r
+   \u539F\u5148\u6BCF\u4E2A\u8272\u5757\u7684 style \u91CC\u90FD\u91CD\u590D 5 \u6761\u9759\u6001\u58F0\u660E\uFF0812 x 5 = 60 \u6761\uFF09\uFF0C\r
+   \u800C\u7B2C 6 \u6761 background \u53C8\u4E0E\u5B83\u81EA\u5DF1\u7684 data-color \u5C5E\u6027\u91CD\u590D\u3002\r
+\r
+   \u26A0 \u8C03\u8272\u677F\u7528 [data-color] \u5C5E\u6027\u9009\u62E9\u5668\u627F\u8F7D\uFF0C\u4E0E JS \u4FA7\u65E2\u6709\u5199\u6CD5\u4E00\u81F4 \u2014\u2014\r
+   settingsWindow.js \u672C\u6765\u5C31\u5728\u7528 $(\`.t-color-preset[data-color="..."]\`)\r
+   \u505A\u9009\u4E2D\u5B9A\u4F4D\uFF0Cdata-color \u4E00\u76F4\u662F\u5355\u4E00\u53D6\u503C\u6765\u6E90\u3002\r
+\r
+   \u26A0 \u8FD9 12 \u4E2A\u989C\u8272\u523B\u610F**\u4E0D** token \u5316\uFF1A\u5B83\u4EEC\u662F**\u7528\u6237\u53EF\u9009\u8C03\u8272\u677F**\uFF0C\r
+   \u4E3B\u9898\u5207\u6362\u65F6\u5FC5\u987B\u4FDD\u6301\u4E0D\u53D8\uFF08"\u5929\u84DD"\u5728\u4EFB\u4F55\u4E3B\u9898\u4E0B\u90FD\u5F97\u662F\u5929\u84DD\uFF09\u3002\r
+   \u8FD9\u4E0E\u4EA4\u63A5\u6587\u6863 \xA75a\u300C\u4E0D\u518D\u9020 token\u300D\u7684\u7ED3\u8BBA\u65B9\u5411\u4E00\u81F4\u4F46\u7406\u7531\u4E0D\u540C\uFF1A\r
+   \u90A3\u8FB9\u662F\u300C\u540C\u8BED\u4E49\u7684\u968F\u624B\u53D6\u503C\u300D\uFF0C\u8FD9\u8FB9\u662F\u300C\u5B83\u672C\u6765\u5C31\u4E0D\u8BE5\u8DDF\u4E3B\u9898\u53D8\u300D\u3002\r
+   ============================================================ */\r
+\r
+.t-color-swatch {\r
+    width: 24px;\r
+    height: 24px;\r
+    border-radius: 50%;\r
+    cursor: pointer;\r
+    border: 2px solid transparent;\r
+}\r
+\r
+/* \u9009\u4E2D\u6001\u3002\u539F\u5148\u662F JS \u7528 .css("border-color", "#fff" / "transparent") \u76F4\u63A5\u5199\u5185\u8054\uFF0C\r
+   \u672C\u6279\u6539\u6210\u5207\u7C7B \u2014\u2014 \u90A3\u662F\u7EAF\u70B9\u51FB\u9A71\u52A8\u7684\u72B6\u6001\uFF0C\u6CA1\u6709 hover/\u89E6\u5C4F\u7684\u884C\u4E3A\u5DEE\u5F02\uFF0C\r
+   \u4E0E showInteractiveFAB \u90A3\u79CD\u5E26 hover \u7684\u91CD\u6784\u4E0D\u540C\uFF08\u89C1\u4EA4\u63A5\u6587\u6863 \xA75b\uFF09\u3002\r
+   (0,2,0) \u538B\u8FC7 .t-color-swatch \u7684 border \u7B80\u5199\u3002 */\r
+.t-color-swatch.is-selected {\r
+    border-color: var(--t-color-text-strong);\r
+}\r
+\r
+/* \u26A0 \u4E0B\u9762 12 \u6761\u9884\u89C8\u7403\u7684 background **\u5FC5\u987B\u4FDD\u6301\u5B57\u9762\u91CF\uFF0C\u4E0D\u8BB8 token \u5316**\u3002\r
+   data-color \u662F\u7528\u6237\u6311\u7684\u90A3\u4E2A hex \u672C\u8EAB\uFF08settingsWindow.js:235-262 \u5199\u8FDB\r
+   border_color / bg_color \u8BBE\u7F6E\uFF09\uFF0C\u9884\u89C8\u7403\u7684\u804C\u8D23\u5C31\u662F\u628A\u90A3\u4E2A hex \u753B\u51FA\u6765\u3002\r
+   \u6362\u6210 token \u540E\uFF0C\u6D45\u8272\u4E3B\u9898\u4E0B\u9884\u89C8\u7403\u4F1A\u663E\u793A token \u5728\u6D45\u8272\u4E0B\u7684\u503C\uFF0C\u800C title\r
+   \u4E0E\u5B9E\u9645\u5199\u5165\u8BBE\u7F6E\u7684\u4ECD\u662F\u539F hex \u2014\u2014 \u9884\u89C8\u8BF4\u8C0E\uFF0C\u4E14\u6CA1\u6709\u89C6\u89C9\u57FA\u7EBF\u65F6\u6781\u96BE\u53D1\u73B0\u3002\r
+   \uFF08Phase 6b-2 \u4FEE\uFF1A\u5176\u4E2D 5 \u6761\u5DF2\u88AB\u524D\u51E0\u6279\u5F53\u6210\u666E\u901A\u5E95\u8272 token \u5316\uFF0C\u5DF2\u590D\u539F\uFF1B\r
+   \u5BA1\u8BA1 A24 \u73B0\u5728\u4F1A\u5B88\u4F4F\u8FD9\u6761\u3002\uFF09 */\r
+.t-color-swatch[data-color="#90cdf4"] {\r
+    background: #90cdf4;\r
+}\r
+\r
+.t-color-swatch[data-color="#a29bfe"] {\r
+    background: #a29bfe;\r
+}\r
+\r
+.t-color-swatch[data-color="#55efc4"] {\r
+    background: #55efc4;\r
+}\r
+\r
+.t-color-swatch[data-color="#ffd93d"] {\r
+    background: #ffd93d;\r
+}\r
+\r
+.t-color-swatch[data-color="#ff6b6b"] {\r
+    background: #ff6b6b;\r
+}\r
+\r
+.t-color-swatch[data-color="#fd79a8"] {\r
+    background: #fd79a8;\r
+}\r
+\r
+.t-color-swatch[data-color="#2b2b2b"] {\r
+    background: #2b2b2b;\r
+}\r
+\r
+.t-color-swatch[data-color="#1a1a2e"] {\r
+    background: #1a1a2e;\r
+}\r
+\r
+.t-color-swatch[data-color="#16213e"] {\r
+    background: #16213e;\r
+}\r
+\r
+.t-color-swatch[data-color="#1e272e"] {\r
+    background: #1e272e;\r
+}\r
+\r
+.t-color-swatch[data-color="#2d132c"] {\r
+    background: #2d132c;\r
+}\r
+\r
+.t-color-swatch[data-color="#0a3d62"] {\r
+    background: #0a3d62;\r
+}\r
+\r
+/* \u2500\u2500 \u4E24\u4E2A\u8868\u5355\u7EC4\u7684\u5176\u4F59\u91CD\u590D\u5185\u8054 \u2500\u2500\r
+   \u4E0B\u9762\u6BCF\u4E2A\u7C7B\u539F\u5148\u90FD\u662F\u300C\u540C\u4E00\u4E32 style \u5728\u672C\u6587\u4EF6\u91CC\u51FA\u73B0 2-3 \u6B21\u300D\uFF0C\r
+   \u4E14\u5168\u5E93\u8303\u56F4\u5185\u53EA\u5728 settingsWindow.js \u51FA\u73B0\uFF0C\u6545\u6574\u6587\u4EF6\u66FF\u6362\u3002 */\r
+\r
+.t-color-field-row {\r
+    display: flex;\r
+    align-items: center;\r
+    gap: 15px;\r
+}\r
+\r
+/* \u4E00\u884C\u7D27\u6392\u7684\u5C0F\u5143\u7D20\u30023 \u5904\u5728\u7528\uFF1A\u4E24\u4E2A\u8272\u5757\u884C + CSS \u4EE3\u7801\u7684\u6309\u94AE\u884C\uFF08:500\uFF09\u3002\r
+   \u26A0 \u9891\u6B21 3 < 10\uFF0C\u6309 03-layout/utilities.css \u5B9A\u7684\u51C6\u5165\u95E8\u69DB\u4E0D\u8FDB\u5E03\u5C40\u5C42\uFF0C\r
+   \u5728 feature \u91CC\u7ED9\u8BED\u4E49\u540D\u3002 */\r
+.t-set-inline-group {\r
+    display: flex;\r
+    gap: 8px;\r
+}\r
+\r
+/* \u539F\u751F\u53D6\u8272\u5668\u3002\u5168\u5E93\u65E0\u88F8 input \u89C4\u5219\u547D\u4E2D\u5B83\uFF08\u5DF2\u679A\u4E3E\u786E\u8BA4\uFF09\u3002 */\r
+.t-color-picker {\r
+    width: 50px;\r
+    height: 35px;\r
+    border: none;\r
+    cursor: pointer;\r
+    background: transparent;\r
+}\r
+\r
+/* \u5341\u516D\u8FDB\u5236\u6587\u672C\u6846\u3002\u26A0 \u5FC5\u987B\u7528 ID\uFF1A\u8FD9\u4E24\u4E2A\u5143\u7D20\u5E26 .t-input\uFF0C\r
+   field.css \u7684 \`.t-root.t-box .t-input\` \u662F (0,3,0) \u4E14\u8BBE\u4E86 width:100%\uFF0C\r
+   (0,1,0) \u7684\u7C7B\u538B\u4E0D\u8FC7\u3002\u540C 5b-7 \u7684 #t-diag-log-viewer\u3002 */\r
+#p-border-color-text,\r
+#p-bg-color-text {\r
+    width: 100px;\r
+    font-family: monospace;\r
+}\r
+\r
+.t-opacity-row {\r
+    display: flex;\r
+    align-items: center;\r
+    gap: 10px;\r
+    margin-top: 10px;\r
+}\r
+\r
+.t-opacity-label {\r
+    font-size: 0.85em;\r
+    color: var(--t-color-text-muted);\r
+    min-width: 60px;\r
+}\r
+\r
+.t-opacity-value {\r
+    font-size: 0.85em;\r
+    color: var(--t-color-brand);\r
+    min-width: 40px;\r
+}\r
+\r
+/* \u8868\u5355\u7EC4\u672B\u5C3E\u7684\u8BF4\u660E\u5C0F\u5B57\u30023 \u5904\u5728\u7528\uFF08:248 :270 :444\uFF09\u3002\r
+   \u26A0 \u4E0E 5b-10 \u5EFA\u7684 .t-set-field-hint \u4E0D\u662F\u4E00\u5957\uFF1A\u90A3\u4E2A\u662F 0.75em / #555 /\r
+   margin-top:5px\uFF0C\u8FD9\u4E2A\u662F 0.75em / var(--t-color-text-faint) / margin-top:8px\u3002\r
+   \u523B\u610F\u4E0D\u5408\u5E76\uFF08\u5408\u5E76\u8981\u6539\u8272\uFF0C\u5C5E Phase 6\uFF09\u3002 */\r
+.t-set-note {\r
+    font-size: 0.75em;\r
+    color: var(--t-color-text-faint);\r
+    margin-top: 8px;\r
+}\r
+\r
+/* ============================================================\r
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u8BBE\u7F6E\u7A97\u53E3\r
+   ------------------------------------------------------------\r
+   \u53EA\u505A\u300C\u8868\u9762\u4E0E\u5C42\u7EA7\u300D\u7684\u8986\u76D6\uFF0C\u63A7\u4EF6\u89C6\u89C9\u6CBF\u7528 02-components/studio-workspace.css\r
+   \uFF08\u8F93\u5165\u6846\u3001\u6309\u94AE\u3001\u4E0B\u62C9\u3001\u7126\u70B9\u73AF\u90FD\u5DF2\u5728\u90A3\u91CC\u7EDF\u4E00\uFF09\u3002\u9009\u62E9\u5668\u5E26\r
+   \`.t-studio-workspace#t-settings-view\`\uFF081,1,0\uFF09\uFF0C\u538B\u5F97\u8FC7\u672C\u6587\u4EF6\u65E2\u6709\u7684\r
+   \`#t-settings-view\`\uFF081,0,0\uFF09\uFF0C\u4E0D\u4F9D\u8D56\u52A0\u8F7D\u987A\u5E8F\u3002\r
+   ============================================================ */\r
+\r
+.t-studio-workspace#t-settings-view {\r
+    background: var(--t-studio-bg);\r
+    border: 1px solid var(--t-studio-gold-border);\r
+    border-radius: 16px;\r
+    box-shadow: 0 24px 80px var(--t-shadow-ink-50);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-set-shell-nav {\r
+    padding: 14px 0;\r
+    background: var(--t-studio-deep);\r
+    border-right-color: var(--t-studio-line);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-set-shell-tab {\r
+    padding: 11px 18px;\r
+    /* \u53EA\u8C03\u51E0\u4F55\uFF1A\u5B57\u53F7\u6CBF\u7528\u7EC4\u4EF6\u5C42\u7684 0.95em\uFF0C\u624D\u80FD\u8DDF\u7740\u300CUI \u5B57\u4F53\u5927\u5C0F\u300D\u4E00\u8D77\u7F29\u653E\u3002 */\r
+    letter-spacing: .5px;\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-set-shell-tab.active {\r
+    background: var(--t-studio-gold-soft);\r
+    border-left-width: 2px;\r
+    font-weight: 500;\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-set-shell-content {\r
+    padding: 22px 26px;\r
+    background: var(--t-studio-bg);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-preview-container {\r
+    background: var(--t-studio-deep);\r
+    border-color: var(--t-studio-line);\r
+    border-radius: 12px;\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-anim-option,\r
+.t-studio-workspace#t-settings-view .t-upload-card,\r
+.t-studio-workspace#t-settings-view .t-css-hints,\r
+.t-studio-workspace#t-settings-view .t-prompt-entry-card,\r
+.t-studio-workspace#t-settings-view .t-log-box,\r
+.t-studio-workspace#t-settings-view .t-code-editor {\r
+    background: var(--t-studio-deep);\r
+    border-color: var(--t-studio-line);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-anim-option:hover,\r
+.t-studio-workspace#t-settings-view .t-prompt-entry-card:hover {\r
+    background: var(--t-studio-raised);\r
+    border-color: var(--t-studio-gold-border);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-anim-option.active {\r
+    background: var(--t-studio-gold-soft);\r
+    border-color: var(--t-studio-gold);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-upload-card:hover {\r
+    border-color: var(--t-studio-gold);\r
+    background-color: var(--t-studio-gold-soft);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-css-hint-item {\r
+    border-bottom-color: var(--t-studio-line);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-css-hint-item code {\r
+    background: var(--t-studio-gold-soft);\r
+    color: var(--t-studio-gold);\r
+}\r
+\r
+.t-studio-workspace#t-settings-view .t-set-warn {\r
+    background: var(--t-studio-gold-soft);\r
+    border-color: var(--t-studio-gold-border);\r
+}\r
+\r
+/* \u5E95\u90E8\u4FDD\u5B58\u6761\u662F\u5185\u8054\u6837\u5F0F\uFF0C\u8FD9\u91CC\u53EA\u8865\u63CF\u8FB9\uFF1B\u5E95\u8272\u9760 --t-color-surface-inset \u6620\u5C04\u3002 */\r
+.t-studio-workspace#t-settings-view > div:last-child {\r
+    border-top-color: var(--t-studio-gold-border) !important;\r
+}\r
+\r
+@media screen and (max-width: 700px) {\r
+    .t-studio-workspace#t-settings-view .t-set-shell-content { padding: 16px; }\r
+    .t-studio-workspace#t-settings-view .t-header { padding: 16px; }\r
+}\r
 
 
 /* === 04-features/manager.css === */
@@ -17714,6 +17896,32 @@ textarea.t-input {\r
     font-size: 0.9em;\r
 }\r
 \r
+/* \u8BC6\u522B\u7ED3\u679C\u4F7F\u5BFC\u5165\u5F39\u7A97\u66F4\u9AD8\uFF0C\u5C0F\u5C4F\u4E0A\u6574\u5757\u6EDA\u52A8\u4EE5\u4FDD\u6301\u786E\u8BA4\u6309\u94AE\u53EF\u8FBE\u3002 */\r
+#t-imp-modal .t-imp-box {\r
+    overflow-y: auto;\r
+}\r
+\r
+/* \u5BFC\u5165\u8BC6\u522B\u7ED3\u679C\u53EA\u5217\u6807\u9898\uFF0C\u4E0D\u6E32\u67D3\u6587\u4EF6\u4E2D\u7684 HTML\u3002 */\r
+.t-imp-hint {\r
+    color: var(--t-color-text-muted);\r
+    font-size: 0.85em;\r
+    line-height: 1.5;\r
+    overflow-wrap: anywhere;\r
+}\r
+\r
+.t-imp-preview {\r
+    margin: 8px 0;\r
+    padding-left: 20px;\r
+    color: var(--t-color-text-secondary);\r
+    font-size: 0.85em;\r
+    max-height: 130px;\r
+    overflow-y: auto;\r
+    overflow-wrap: anywhere;\r
+}\r
+\r
+/* \u4E16\u754C\u4E66\u9009\u9879\u53EA\u5728\u8BC6\u522B\u540E\u663E\u793A\uFF0C\u9632\u6B62\u5BBF\u4E3B\u7684 label \u6837\u5F0F\u8986\u76D6 hidden\u3002 */\r
+#t-imp-worldbook-options[hidden] { display: none; }\r
+\r
 /* ===== \u5267\u672C\u7F16\u8F91\u5668 ===== */\r
 #t-editor-view {\r
     width: 550px;\r
@@ -17896,97 +18104,97 @@ textarea.t-input {\r
     color: var(--t-color-text-disabled);\r
     margin-top: 50px;\r
 }\r
-
-/* ============================================================
-   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u5267\u672C\u7BA1\u7406\u5668
-   ------------------------------------------------------------
-   #t-mgr-view / #t-editor-view / #t-large-edit-view \u662F\u4E09\u4E2A\u72EC\u7ACB\u6839\uFF0C
-   \u90FD\u7531 studioTheme.js \u6309\u4E3B\u9898\u5F00\u5173\u6302 \`t-studio-workspace\`\u3002
-   \u56DB\u4E2A\u5BFC\u5165/\u5BFC\u51FA/\u79FB\u52A8/\u91CD\u547D\u540D\u5F39\u7A97\u662F #t-mgr-view \u7684\u540E\u4EE3\uFF0C\u81EA\u52A8\u7EE7\u627F\u3002
-   ============================================================ */
-
-.t-studio-workspace#t-mgr-view,
-.t-studio-workspace#t-editor-view,
-.t-studio-workspace#t-large-edit-view {
-    background: var(--t-studio-bg);
-    border: 1px solid var(--t-studio-gold-border);
-    border-radius: 16px;
-    box-shadow: 0 24px 80px var(--t-shadow-ink-50);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-sidebar {
-    background: var(--t-studio-deep);
-    border-right-color: var(--t-studio-line);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-sb-title {
-    color: var(--t-studio-gold-muted);
-    letter-spacing: 1px;
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-sb-item.active {
-    background: var(--t-studio-gold-soft);
-    border-left-color: var(--t-studio-gold);
-    color: var(--t-studio-gold);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-toolbar {
-    background: var(--t-studio-bg);
-    border-bottom-color: var(--t-studio-line);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-search,
-.t-studio-workspace#t-mgr-view .t-mgr-sort,
-.t-studio-workspace#t-mgr-view .t-mgr-cat-dropdown {
-    background: var(--t-studio-deep);
-    border-color: var(--t-studio-line);
-    color: var(--t-studio-text);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-overview {
-    background: var(--t-studio-deep);
-    border-bottom-color: var(--t-studio-line);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-ov-item {
-    background: var(--t-studio-gold-soft);
-    border-color: var(--t-studio-gold-border);
-    color: var(--t-studio-gold);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-item {
-    border-bottom-color: var(--t-studio-line);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-item:hover {
-    background: var(--t-studio-raised);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-tag {
-    background: var(--t-studio-raised);
-    color: var(--t-studio-muted);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-tag--preset {
-    background: var(--t-studio-gold-soft);
-    color: var(--t-studio-gold);
-}
-
-.t-studio-workspace#t-mgr-view .t-mgr-footer-bar {
-    background: var(--t-studio-gold-soft);
-    border-top-color: var(--t-studio-gold-border);
-    color: var(--t-studio-gold);
-}
-
-.t-studio-workspace#t-editor-view .t-body label,
-.t-studio-workspace#t-large-edit-view .t-body label {
-    color: var(--t-studio-muted);
-}
-
-@media screen and (max-width: 700px) {
-    .t-studio-workspace#t-mgr-view,
-    .t-studio-workspace#t-editor-view { border-radius: 12px; }
-}
+\r
+/* ============================================================\r
+   \u5348\u591C\u653E\u6620\u5BA4\uFF1A\u5267\u672C\u7BA1\u7406\u5668\r
+   ------------------------------------------------------------\r
+   #t-mgr-view / #t-editor-view / #t-large-edit-view \u662F\u4E09\u4E2A\u72EC\u7ACB\u6839\uFF0C\r
+   \u90FD\u7531 studioTheme.js \u6309\u4E3B\u9898\u5F00\u5173\u6302 \`t-studio-workspace\`\u3002\r
+   \u56DB\u4E2A\u5BFC\u5165/\u5BFC\u51FA/\u79FB\u52A8/\u91CD\u547D\u540D\u5F39\u7A97\u662F #t-mgr-view \u7684\u540E\u4EE3\uFF0C\u81EA\u52A8\u7EE7\u627F\u3002\r
+   ============================================================ */\r
+\r
+.t-studio-workspace#t-mgr-view,\r
+.t-studio-workspace#t-editor-view,\r
+.t-studio-workspace#t-large-edit-view {\r
+    background: var(--t-studio-bg);\r
+    border: 1px solid var(--t-studio-gold-border);\r
+    border-radius: 16px;\r
+    box-shadow: 0 24px 80px var(--t-shadow-ink-50);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-sidebar {\r
+    background: var(--t-studio-deep);\r
+    border-right-color: var(--t-studio-line);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-sb-title {\r
+    color: var(--t-studio-gold-muted);\r
+    letter-spacing: 1px;\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-sb-item.active {\r
+    background: var(--t-studio-gold-soft);\r
+    border-left-color: var(--t-studio-gold);\r
+    color: var(--t-studio-gold);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-toolbar {\r
+    background: var(--t-studio-bg);\r
+    border-bottom-color: var(--t-studio-line);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-search,\r
+.t-studio-workspace#t-mgr-view .t-mgr-sort,\r
+.t-studio-workspace#t-mgr-view .t-mgr-cat-dropdown {\r
+    background: var(--t-studio-deep);\r
+    border-color: var(--t-studio-line);\r
+    color: var(--t-studio-text);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-overview {\r
+    background: var(--t-studio-deep);\r
+    border-bottom-color: var(--t-studio-line);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-ov-item {\r
+    background: var(--t-studio-gold-soft);\r
+    border-color: var(--t-studio-gold-border);\r
+    color: var(--t-studio-gold);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-item {\r
+    border-bottom-color: var(--t-studio-line);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-item:hover {\r
+    background: var(--t-studio-raised);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-tag {\r
+    background: var(--t-studio-raised);\r
+    color: var(--t-studio-muted);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-tag--preset {\r
+    background: var(--t-studio-gold-soft);\r
+    color: var(--t-studio-gold);\r
+}\r
+\r
+.t-studio-workspace#t-mgr-view .t-mgr-footer-bar {\r
+    background: var(--t-studio-gold-soft);\r
+    border-top-color: var(--t-studio-gold-border);\r
+    color: var(--t-studio-gold);\r
+}\r
+\r
+.t-studio-workspace#t-editor-view .t-body label,\r
+.t-studio-workspace#t-large-edit-view .t-body label {\r
+    color: var(--t-studio-muted);\r
+}\r
+\r
+@media screen and (max-width: 700px) {\r
+    .t-studio-workspace#t-mgr-view,\r
+    .t-studio-workspace#t-editor-view { border-radius: 12px; }\r
+}\r
 
 
 /* === 04-features/workshop.css === */
@@ -25876,7 +26084,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90898], "01-base/base.css": [90931, 95153], "01-base/scrollbar.css": [95191, 103565], "01-base/form-controls.css": [103607, 114413], "01-base/keyframes.css": [114451, 122354], "02-components/window.css": [122395, 125527], "02-components/panel.css": [125567, 129187], "02-components/settings-shell.css": [129236, 133634], "02-components/dialog.css": [133675, 139020], "02-components/button.css": [139061, 145561], "02-components/icon-button.css": [145607, 148087], "02-components/field.css": [148127, 151202], "02-components/choice-input.css": [151249, 152540], "02-components/radio-card.css": [152585, 154827], "02-components/studio-workspace.css": [154878, 169767], "02-components/_legacy.css": [169809, 172773], "03-layout/button-groups.css": [172817, 174238], "03-layout/utilities.css": [174278, 176089], "04-features/floating.css": [176130, 183332], "04-features/toolbox-settings.css": [183381, 186236], "04-features/main-window.css": [186280, 231173], "04-features/main-window-legacy.css": [231224, 255090], "04-features/script-picker.css": [255136, 261631], "04-features/wi-selector.css": [261675, 278728], "04-features/continuation.css": [278773, 302642], "04-features/queue.css": [302680, 309240], "04-features/content-editor.css": [309287, 311594], "04-features/illustration.css": [311639, 326754], "04-features/settings-drawer.css": [326802, 343348], "04-features/settings.css": [343389, 368049], "04-features/manager.css": [368089, 380724], "04-features/workshop.css": [380765, 403547], "04-features/favs.css": [403584, 443510], "04-features/debug.css": [443548, 460313], "04-features/story-outline.css": [460359, 494665], "04-features/outline-entry-menu.css": [494716, 501469], "04-features/rewrite.css": [501509, 552408], "04-features/reader.css": [552447, 561806], "04-features/chat-book.css": [561848, 568389], "04-features/story-memory.css": [568434, 613751], "04-features/character-evolution.css": [613803, 642224], "04-features/story-memory-notifications.css": [642283, 644432], "04-features/story-timetrace.css": [644480, 657328], "04-features/confirm-dialog.css": [657375, 661373], "04-features/image-cropper.css": [661419, 665277], "04-features/st-embedded.css": [665321, 695825], "04-features/scene-advance.css": [695871, 717956], "04-features/theater-midnight.css": [718005, 743333] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90898], "01-base/base.css": [90931, 95153], "01-base/scrollbar.css": [95191, 103565], "01-base/form-controls.css": [103607, 114413], "01-base/keyframes.css": [114451, 122354], "02-components/window.css": [122395, 125527], "02-components/panel.css": [125567, 129187], "02-components/settings-shell.css": [129236, 133634], "02-components/dialog.css": [133675, 139020], "02-components/button.css": [139061, 145561], "02-components/icon-button.css": [145607, 148087], "02-components/field.css": [148127, 151202], "02-components/choice-input.css": [151249, 152540], "02-components/radio-card.css": [152585, 154827], "02-components/studio-workspace.css": [154878, 169767], "02-components/_legacy.css": [169809, 172773], "03-layout/button-groups.css": [172817, 174238], "03-layout/utilities.css": [174278, 176089], "04-features/floating.css": [176130, 183332], "04-features/toolbox-settings.css": [183381, 186236], "04-features/main-window.css": [186280, 231173], "04-features/main-window-legacy.css": [231224, 255090], "04-features/script-picker.css": [255136, 261631], "04-features/wi-selector.css": [261675, 278728], "04-features/continuation.css": [278773, 302642], "04-features/queue.css": [302680, 309240], "04-features/content-editor.css": [309287, 311594], "04-features/illustration.css": [311639, 326754], "04-features/settings-drawer.css": [326802, 343348], "04-features/settings.css": [343389, 370682], "04-features/manager.css": [370722, 384020], "04-features/workshop.css": [384061, 406843], "04-features/favs.css": [406880, 446806], "04-features/debug.css": [446844, 463609], "04-features/story-outline.css": [463655, 497961], "04-features/outline-entry-menu.css": [498012, 504765], "04-features/rewrite.css": [504805, 555704], "04-features/reader.css": [555743, 565102], "04-features/chat-book.css": [565144, 571685], "04-features/story-memory.css": [571730, 617047], "04-features/character-evolution.css": [617099, 645520], "04-features/story-memory-notifications.css": [645579, 647728], "04-features/story-timetrace.css": [647776, 660624], "04-features/confirm-dialog.css": [660671, 664669], "04-features/image-cropper.css": [664715, 668573], "04-features/st-embedded.css": [668617, 699121], "04-features/scene-advance.css": [699167, 721252], "04-features/theater-midnight.css": [721301, 746629] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -25920,9 +26128,9 @@ function buildScriptsFile(scripts, rev) {
   };
 }
 async function writeScriptsFile(scripts, rev, fileName = SCRIPTS_FILE_NAME) {
-  const text3 = JSON.stringify(buildScriptsFile(scripts, rev));
-  const file = await uploadTextFile(fileName, text3);
-  return { file, bytes: utf8ByteLength(text3), rev: Number(rev) || 1, count: scripts.length };
+  const text5 = JSON.stringify(buildScriptsFile(scripts, rev));
+  const file = await uploadTextFile(fileName, text5);
+  return { file, bytes: utf8ByteLength(text5), rev: Number(rev) || 1, count: scripts.length };
 }
 async function readScriptsFile(filePath, rev = 0) {
   const raw = await fetchTextFile(filePath, rev);
@@ -27262,9 +27470,9 @@ function buildFavIndexEntry(fav, pointer2 = {}) {
 }
 async function writeFavBody(fav, rev = 1) {
   const body = buildFavBody(fav);
-  const text3 = JSON.stringify(body);
-  const file = await uploadTextFile(favFileName(fav?.id), text3);
-  return { file, bytes: utf8ByteLength(text3), rev: Number(rev) || 1, text: text3 };
+  const text5 = JSON.stringify(body);
+  const file = await uploadTextFile(favFileName(fav?.id), text5);
+  return { file, bytes: utf8ByteLength(text5), rev: Number(rev) || 1, text: text5 };
 }
 async function readFavBody(indexEntry) {
   const filePath = String(indexEntry?.file || "").trim();
@@ -27777,8 +27985,8 @@ function normalizeTheaterHtmlForChat(html) {
   }
   return out.trim();
 }
-function decodeHtmlEntities(text3) {
-  let out = String(text3 || "");
+function decodeHtmlEntities(text5) {
+  let out = String(text5 || "");
   for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
     out = out.replace(new RegExp(entity, "gi"), char);
   }
@@ -27787,18 +27995,18 @@ function decodeHtmlEntities(text3) {
   return out;
 }
 function buildPromptTextFromTheater(html) {
-  let text3 = String(html || "");
-  if (!text3.trim()) return "";
-  text3 = text3.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "\n");
-  text3 = text3.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "\n");
-  text3 = text3.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "\n");
-  text3 = text3.replace(/<br\s*\/?>/gi, "\n");
-  text3 = text3.replace(/<\/(?:p|div|section|article|header|footer|blockquote|li|tr|h[1-6]|figcaption|pre)\s*>/gi, "\n");
-  text3 = text3.replace(/<hr\s*\/?>/gi, "\n");
-  text3 = text3.replace(/<\/(?:td|th)\s*>/gi, " ");
-  text3 = extractTextByWhitelist(text3, []);
-  text3 = decodeHtmlEntities(text3);
-  return text3.split("\n").map((line) => line.replace(/[ \t ]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  let text5 = String(html || "");
+  if (!text5.trim()) return "";
+  text5 = text5.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "\n");
+  text5 = text5.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "\n");
+  text5 = text5.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, "\n");
+  text5 = text5.replace(/<br\s*\/?>/gi, "\n");
+  text5 = text5.replace(/<\/(?:p|div|section|article|header|footer|blockquote|li|tr|h[1-6]|figcaption|pre)\s*>/gi, "\n");
+  text5 = text5.replace(/<hr\s*\/?>/gi, "\n");
+  text5 = text5.replace(/<\/(?:td|th)\s*>/gi, " ");
+  text5 = extractTextByWhitelist(text5, []);
+  text5 = decodeHtmlEntities(text5);
+  return text5.split("\n").map((line) => line.replace(/[ \t ]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 async function injectTheaterToChat(options2 = {}) {
   const cfg = getChatInjectConfig();
@@ -28120,9 +28328,9 @@ async function consumeSse(res, { onProgress, signal, source, diagnostics, starte
         stats.reasoning_chars = state.reasoning.length;
       }
       if (chunk) {
-        const text3 = Array.isArray(chunk) ? chunk.map((part) => part.text || "").join("") : chunk;
-        if (typeof text3 !== "string") throw new Error("ERR_STREAM_PARSE_FAILED: \u6B63\u6587\u4E0D\u662F\u6587\u672C");
-        content += text3;
+        const text5 = Array.isArray(chunk) ? chunk.map((part) => part.text || "").join("") : chunk;
+        if (typeof text5 !== "string") throw new Error("ERR_STREAM_PARSE_FAILED: \u6B63\u6587\u4E0D\u662F\u6587\u672C");
+        content += text5;
         if (stats) stats.ttft ?? (stats.ttft = Date.now() - startedAt);
         if (onProgress) onProgress(content);
       }
@@ -28144,22 +28352,22 @@ async function consumeSse(res, { onProgress, signal, source, diagnostics, starte
 function assertNotAborted(signal) {
   if (signal?.aborted) throw new DOMException("Generation aborted", "AbortError");
 }
-function attachResponseDetails(error4, res, text3, diagnostics) {
+function attachResponseDetails(error4, res, text5, diagnostics) {
   error4.status = res.status;
   error4.statusText = res.statusText || "";
   error4.contentType = res.headers?.get("content-type") || "";
-  error4.body = String(text3 ?? "");
+  error4.body = String(text5 ?? "");
   if (diagnostics) {
     diagnostics.raw_response_body = error4.body;
     diagnostics.raw_response_snippet = error4.body.substring(0, 500);
   }
   return error4;
 }
-function checkResponseError(res, text3, diagnostics, parsed) {
+function checkResponseError(res, text5, diagnostics, parsed) {
   let json = parsed;
   if (json === void 0) {
     try {
-      json = JSON.parse(text3);
+      json = JSON.parse(text5);
     } catch {
       return;
     }
@@ -28176,7 +28384,7 @@ function checkResponseError(res, text3, diagnostics, parsed) {
   ].find((value) => typeof value === "string" && value.trim());
   let error4 = new Error(message || (typeof detail === "object" ? JSON.stringify(detail) : "\u670D\u52A1\u5668\u8FD4\u56DE\u9519\u8BEF"));
   try {
-    tryParseStreamingError(res, text3, { quiet: true });
+    tryParseStreamingError(res, text5, { quiet: true });
   } catch (hostError) {
     if (hostError && typeof hostError.message === "string") {
       error4 = hostError;
@@ -28184,7 +28392,7 @@ function checkResponseError(res, text3, diagnostics, parsed) {
     }
   }
   error4.proxy = true;
-  throw attachResponseDetails(error4, res, text3, diagnostics);
+  throw attachResponseDetails(error4, res, text5, diagnostics);
 }
 async function sendGenerationRequest(body, options2 = {}) {
   const { signal = null, onProgress = null, diagnostics = null, allowEmptyStream = false } = options2;
@@ -28212,10 +28420,10 @@ async function sendGenerationRequest(body, options2 = {}) {
     });
   }
   if (!res.ok) {
-    const text4 = await res.text();
+    const text6 = await res.text();
     assertNotAborted(signal);
-    checkResponseError(res, text4, diagnostics);
-    throwHttpError(res, text4, "ST \u540E\u7AEF\u4EE3\u7406\u8BF7\u6C42\u5931\u8D25: ", diagnostics);
+    checkResponseError(res, text6, diagnostics);
+    throwHttpError(res, text6, "ST \u540E\u7AEF\u4EE3\u7406\u8BF7\u6C42\u5931\u8D25: ", diagnostics);
   }
   const isJson = /application\/(?:[\w.+-]+\+)?json\b/i.test(res.headers?.get("content-type") || "");
   if (body.stream && !isJson) {
@@ -28234,18 +28442,18 @@ async function sendGenerationRequest(body, options2 = {}) {
     return content2;
   }
   if (diagnostics) diagnostics.phase = "parsing_json";
-  const text3 = await res.text();
+  const text5 = await res.text();
   assertNotAborted(signal);
   let json;
   try {
-    json = JSON.parse(text3);
+    json = JSON.parse(text5);
   } catch {
-    throw attachResponseDetails(new Error("Invalid JSON response"), res, text3, diagnostics);
+    throw attachResponseDetails(new Error("Invalid JSON response"), res, text5, diagnostics);
   }
-  checkResponseError(res, text3, diagnostics, json);
+  checkResponseError(res, text5, diagnostics, json);
   const content = extractMessageFromData(json, "openai");
   if (typeof content !== "string") {
-    throw attachResponseDetails(new Error("ERR_INVALID_API_RESPONSE: \u6B63\u6587\u4E0D\u662F\u6587\u672C"), res, text3, diagnostics);
+    throw attachResponseDetails(new Error("ERR_INVALID_API_RESPONSE: \u6B63\u6587\u4E0D\u662F\u6587\u672C"), res, text5, diagnostics);
   }
   if (onProgress) onProgress(content);
   assertNotAborted(signal);
@@ -28642,23 +28850,23 @@ var init_connection = __esm({
 });
 
 // src/core/llmJson.js
-function normalizeSmartQuotes(text3) {
-  return String(text3 || "").replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'");
+function normalizeSmartQuotes(text5) {
+  return String(text5 || "").replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'");
 }
-function dropTrailingCommas(text3) {
-  return String(text3 || "").replace(/,\s*([}\]])/g, "$1");
+function dropTrailingCommas(text5) {
+  return String(text5 || "").replace(/,\s*([}\]])/g, "$1");
 }
-function quoteSingleQuotedKeys(text3) {
-  return String(text3 || "").replace(/([{,]\s*)'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, '$1"$2":');
+function quoteSingleQuotedKeys(text5) {
+  return String(text5 || "").replace(/([{,]\s*)'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, '$1"$2":');
 }
-function quoteSingleQuotedValues(text3) {
-  return String(text3 || "").replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_match, value) => {
+function quoteSingleQuotedValues(text5) {
+  return String(text5 || "").replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_match, value) => {
     const escaped = String(value).replace(/\\'/g, "'").replace(/"/g, '\\"');
     return `: "${escaped}"`;
   });
 }
-function stabilizeBrokenJson(text3) {
-  const raw = String(text3 || "");
+function stabilizeBrokenJson(text5) {
+  const raw = String(text5 || "");
   if (!raw) return "";
   let out = "";
   let inString = false;
@@ -28707,13 +28915,13 @@ function stabilizeBrokenJson(text3) {
   return out.trim();
 }
 function buildCandidates(raw) {
-  const text3 = String(raw || "");
-  const attempts = [text3.trim()];
-  const fenced = text3.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const text5 = String(raw || "");
+  const attempts = [text5.trim()];
+  const fenced = text5.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fenced?.[1]) attempts.push(fenced[1].trim());
-  const start = text3.indexOf("{");
-  const end = text3.lastIndexOf("}");
-  if (start >= 0 && end > start) attempts.push(text3.slice(start, end + 1).trim());
+  const start = text5.indexOf("{");
+  const end = text5.lastIndexOf("}");
+  if (start >= 0 && end > start) attempts.push(text5.slice(start, end + 1).trim());
   return attempts.filter(Boolean);
 }
 function extractJsonObject(raw) {
@@ -29004,9 +29212,9 @@ function buildSection(section) {
       const code = document.createElement("code");
       code.textContent = item2.term;
       term.append(code);
-      const text3 = document.createElement("dd");
-      text3.textContent = item2.text;
-      list.append(term, text3);
+      const text5 = document.createElement("dd");
+      text5.textContent = item2.text;
+      list.append(term, text5);
     }
     block.append(list);
   }
@@ -29285,10 +29493,10 @@ function createApiConnectionEditor(options2 = {}) {
       options2.onChange({ profiles: state.profiles.map((p) => ({ ...p })), activeProfileId: state.activeProfileId });
     }
   };
-  const setStatus2 = (text3, tone = "muted") => {
+  const setStatus2 = (text5, tone = "muted") => {
     const $status = getById($root, ids2.statusId);
     if (!$status.length) return;
-    $status.text(String(text3 || ""));
+    $status.text(String(text5 || ""));
     if ($status.hasClass("t-rewrite-status")) {
       $status.removeClass("ok err muted warn").addClass(tone);
     }
@@ -30881,7 +31089,7 @@ function openCharacterProfileWindow(options2 = {}) {
     const body = document.createElement("div");
     body.className = "t-profile-tile-body";
     const keywordsInput = textInput(entry.keywords.join("\uFF0C"), "\u4F8B\u5982\uFF1A\u963F\u79BB\uFF0C\u5C0F\u79BB\uFF0C\u79BB\u59D1\u5A18", (value) => {
-      const keywords = value.split(/[,，、]/).map((text3) => text3.trim()).filter(Boolean);
+      const keywords = value.split(/[,，、]/).map((text5) => text5.trim()).filter(Boolean);
       writeEntries(withEntry(entry.id, (target) => {
         target.keywords = keywords;
       }));
@@ -31638,9 +31846,9 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0) {
     if (!block) return;
     current.profileBlocks[entry.id] = block;
     if (!current.profileIds.includes(entry.id)) current.profileIds.push(entry.id);
-    const text3 = String(current.participants || "").trim();
-    if (text3.includes(block)) return;
-    current.participants = text3 ? `${text3}
+    const text5 = String(current.participants || "").trim();
+    if (text5.includes(block)) return;
+    current.participants = text5 ? `${text5}
 
 ${block}` : block;
   }
@@ -32216,11 +32424,11 @@ function favoriteCharacterName(fav) {
   return parts.length > 1 ? parts.at(-1).trim() : "\u672A\u77E5\u89D2\u8272";
 }
 function avatarFilenameFromUrl(value) {
-  const text3 = String(value || "").trim();
-  if (!text3 || /^(data:|blob:)/i.test(text3)) return "";
+  const text5 = String(value || "").trim();
+  if (!text5 || /^(data:|blob:)/i.test(text5)) return "";
   try {
-    const url2 = new URL(text3, globalThis.location?.origin || "http://localhost");
-    if (/^https?:\/\//i.test(text3) && url2.origin !== (globalThis.location?.origin || "http://localhost")) return "";
+    const url2 = new URL(text5, globalThis.location?.origin || "http://localhost");
+    if (/^https?:\/\//i.test(text5) && url2.origin !== (globalThis.location?.origin || "http://localhost")) return "";
     if (url2.pathname === "/thumbnail" && url2.searchParams.get("type") === "avatar") {
       const file2 = url2.searchParams.get("file") || "";
       return file2 && !/[\\/]/.test(file2) ? file2 : "";
@@ -32764,10 +32972,10 @@ function applyGalleryCover(element, cover) {
   };
   if (probe4 !== element) probe4.src = sources[0];
 }
-function node(tag, className, text3) {
+function node(tag, className, text5) {
   const element = document.createElement(tag);
   if (className) element.className = className;
-  if (text3 !== void 0) element.textContent = text3;
+  if (text5 !== void 0) element.textContent = text5;
   return element;
 }
 function openCharacterGalleryWindow(onSaved) {
@@ -32823,8 +33031,8 @@ function openCharacterGalleryWindow(onSaved) {
     dirty2 = true;
     status3.textContent = "\u6709\u672A\u4FDD\u5B58\u7684\u4FEE\u6539\uFF0C\u70B9\u51FB\u201C\u4FDD\u5B58\u5E76\u5E94\u7528\u201D\u66F4\u65B0\u753B\u5ECA\u3002";
   };
-  const setStatus2 = (text3, error4 = false) => {
-    status3.textContent = text3;
+  const setStatus2 = (text5, error4 = false) => {
+    status3.textContent = text5;
     status3.classList.toggle("is-error", error4);
   };
   const setBusy = (value) => {
@@ -32849,8 +33057,8 @@ function openCharacterGalleryWindow(onSaved) {
     applyGalleryCover(img, coverFor(entry, thumbnail));
     return wrapper;
   };
-  const button3 = (text3, handler, className = "t-btn") => {
-    const element = node("button", className, text3);
+  const button3 = (text5, handler, className = "t-btn") => {
+    const element = node("button", className, text5);
     element.type = "button";
     element.addEventListener("click", handler);
     return element;
@@ -32976,9 +33184,9 @@ function openCharacterGalleryWindow(onSaved) {
         img.alt = card.name;
         img.loading = "lazy";
         applyGalleryCover(img, { sources: [characterCoverUrl(card.avatar, true)] });
-        const text3 = node("span");
-        text3.append(node("strong", "", card.name), node("small", "t-gallery-muted", card.avatar));
-        tile.append(img, text3);
+        const text5 = node("span");
+        text5.append(node("strong", "", card.name), node("small", "t-gallery-muted", card.avatar));
+        tile.append(img, text5);
         candidates.append(tile);
       }
       if (!candidates.children.length) candidates.append(node("p", "t-gallery-muted", "\u6CA1\u6709\u627E\u5230\u89D2\u8272\u5361"));
@@ -33048,15 +33256,15 @@ function openCharacterGalleryWindow(onSaved) {
       const crop = entry.image || entry.crop || { x: 50, y: 50 };
       const cropSection = node("section", "t-gallery-crop");
       cropSection.append(node("h3", "t-gallery-heading", "\u5C01\u9762\u88C1\u5207\u4F4D\u7F6E"));
-      for (const [axis, text3] of [["x", "\u6C34\u5E73"], ["y", "\u5782\u76F4"]]) {
+      for (const [axis, text5] of [["x", "\u6C34\u5E73"], ["y", "\u5782\u76F4"]]) {
         const field2 = node("label", "t-gallery-slider");
-        field2.append(node("span", "", text3));
+        field2.append(node("span", "", text5));
         const range2 = node("input");
         range2.type = "range";
         range2.min = "0";
         range2.max = "100";
         range2.value = String(crop[axis] ?? 50);
-        range2.setAttribute("aria-label", `${text3}\u88C1\u5207\u4F4D\u7F6E`);
+        range2.setAttribute("aria-label", `${text5}\u88C1\u5207\u4F4D\u7F6E`);
         range2.addEventListener("input", () => {
           const saved = gallery.entries[entry.key] || entry;
           if (saved.image?.src) patchEntry(entry, { image: { ...saved.image, [axis]: Number(range2.value) } });
@@ -35050,8 +35258,8 @@ var init_favsWindow = __esm({
 });
 
 // src/ui/shared/logView.js
-function clip(text3) {
-  const str3 = String(text3 ?? "");
+function clip(text5) {
+  const str3 = String(text5 ?? "");
   if (str3.length <= MAX_DETAIL_CHARS) return str3;
   return `${str3.slice(0, MAX_DETAIL_CHARS)}\u2026\uFF08\u5DF2\u622A\u65AD\uFF0C\u5B8C\u6574\u5185\u5BB9\u89C1\u300C\u5BFC\u51FA\u65E5\u5FD7\u300D\uFF09`;
 }
@@ -35108,9 +35316,9 @@ function renderLogEntriesHtml(logs) {
   return logs.map((entry) => {
     const head = `[${entry.timestamp}] [${entry.type}] ${entry.message}`;
     const detail = formatDetails(entry.details);
-    const text3 = detail ? `${head}
+    const text5 = detail ? `${head}
 ${detail}` : head;
-    return `<div class="${entryClass(entry.type)}">${escapeHtml(text3)}</div>`;
+    return `<div class="${entryClass(entry.type)}">${escapeHtml(text5)}</div>`;
   }).join("");
 }
 var MAX_DETAIL_CHARS;
@@ -35125,8 +35333,8 @@ var init_logView = __esm({
 function escapeHtml3(str3) {
   return String(str3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function makePreview(text3, maxLen = 260) {
-  const normalized = String(text3 || "").replace(/\s+/g, " ").trim();
+function makePreview(text5, maxLen = 260) {
+  const normalized = String(text5 || "").replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLen) return normalized;
   return `${normalized.slice(0, maxLen)}...`;
 }
@@ -35660,6 +35868,396 @@ var init_presetPromptProcessing = __esm({
   }
 });
 
+// src/core/scriptImport.js
+function parseTextScripts(content, category) {
+  const blocks = content.split(/(?:^|\r?\n)\s*###/).filter((block) => block.trim());
+  let empty = 0;
+  const scripts = blocks.flatMap((block) => {
+    const lines = block.split(/\r?\n/);
+    const firstLine = lines[0].trim();
+    let name = "", sourceCategory = "", desc = "";
+    let prompt2 = block.trim();
+    if (firstLine && firstLine.length < 50 && !/^(?:Title|标题|Category|分类|Desc|简介|描述)[:：]/i.test(firstLine) && lines.slice(1).join("\n").trim()) {
+      name = firstLine;
+      prompt2 = lines.slice(1).join("\n").trim();
+    }
+    for (const [field2, pattern] of [
+      ["name", /^(?:Title|标题)[:：]\s*(.+)$/im],
+      ["category", /^(?:Category|分类)[:：]\s*(.+)$/im],
+      ["desc", /^(?:Desc|简介|描述)[:：]\s*(.+)$/im]
+    ]) {
+      const match = prompt2.match(pattern);
+      if (!match) continue;
+      if (field2 === "name") name = match[1].trim();
+      else if (field2 === "category") sourceCategory = match[1].trim();
+      else desc = match[1].trim();
+      prompt2 = prompt2.replace(match[0], "").trim();
+    }
+    if (!prompt2) {
+      empty++;
+      return [];
+    }
+    name || (name = prompt2.replace(/\s+/g, " ").slice(0, 20) + "...");
+    return [{ name, desc: desc || "\u5BFC\u5165\u6570\u636E", prompt: prompt2, category: category || sourceCategory }];
+  });
+  return {
+    format: "txt",
+    formatName: "TXT \u5267\u672C",
+    scripts,
+    total: blocks.length,
+    disabledCount: 0,
+    skipped: { empty, invalid: 0, disabled: 0 }
+  };
+}
+function parseJsonScripts(rows, category) {
+  const scripts = [], skipped = { empty: 0, invalid: 0, disabled: 0 };
+  for (const row of rows) {
+    if (!isObject(row) || typeof row.prompt !== "string") {
+      skipped.invalid++;
+      continue;
+    }
+    if (!row.prompt.trim()) {
+      skipped.empty++;
+      continue;
+    }
+    scripts.push({
+      name: text3(row.name) || "\u672A\u547D\u540D\u5267\u672C",
+      desc: text3(row.desc) || "\u5BFC\u5165\u6570\u636E",
+      prompt: row.prompt,
+      category: category || text3(row.category)
+    });
+  }
+  return { format: "scripts-json", formatName: "\u5C0F\u5267\u573A JSON", scripts, total: rows.length, disabledCount: 0, skipped };
+}
+function parseWorldBook(book, fileName, category, includeDisabled) {
+  const bookName = text3(book.name) || fileBaseName(fileName);
+  const rows = Array.isArray(book.entries) ? book.entries.map((entry, index) => [String(index), entry]) : Object.entries(book.entries);
+  const position = (entry, index) => {
+    const value = entry?.displayIndex ?? entry?.extensions?.display_index;
+    return typeof value === "number" && Number.isFinite(value) ? value : index;
+  };
+  const ordered = rows.map(([id3, entry], index) => ({ id: id3, entry, index })).sort((a, b) => position(a.entry, a.index) - position(b.entry, b.index) || a.index - b.index);
+  const scripts = [], skipped = { empty: 0, invalid: 0, disabled: 0 };
+  let disabledCount = 0;
+  for (const { id: id3, entry } of ordered) {
+    if (!isObject(entry) || typeof entry.content !== "string") {
+      skipped.invalid++;
+      continue;
+    }
+    if (!entry.content.trim()) {
+      skipped.empty++;
+      continue;
+    }
+    const disabled = entry.disable === true || entry.enabled === false;
+    if (disabled) disabledCount++;
+    if (disabled && !includeDisabled) {
+      skipped.disabled++;
+      continue;
+    }
+    const keys = (Array.isArray(entry.key) ? entry.key : Array.isArray(entry.keys) ? entry.keys : []).map(text3).filter(Boolean);
+    const uid = typeof entry.uid === "number" || typeof entry.uid === "string" ? entry.uid : entry.id ?? id3;
+    scripts.push({
+      name: text3(entry.comment) || text3(entry.name) || keys[0] || `${bookName} \xB7 \u6761\u76EE ${uid}`,
+      desc: `\u6765\u81EA\u4E16\u754C\u4E66\u300C${bookName}\u300D${disabled ? "\uFF08\u539F\u6761\u76EE\u5DF2\u505C\u7528\uFF09" : ""}${keys.length ? ` \xB7 \u5173\u952E\u8BCD\uFF1A${keys.join("\u3001")}` : ""}`,
+      prompt: entry.content,
+      category: category || bookName
+    });
+  }
+  return { format: "worldbook", formatName: "\u9152\u9986\u4E16\u754C\u4E66 JSON", scripts, total: rows.length, disabledCount, skipped };
+}
+function createScriptImportCopies(scripts, existing = []) {
+  const usedIds = new Set(existing.map((script) => script.id));
+  const batchId = globalThis.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  return scripts.map((script, index) => {
+    let id3 = `imp_${batchId}_${index}`;
+    while (usedIds.has(id3)) id3 += "_new";
+    usedIds.add(id3);
+    return { name: script.name, desc: script.desc, prompt: script.prompt, category: script.category, id: id3 };
+  });
+}
+function parseScriptImport(content, { fileName = "", category = "", includeDisabled = true } = {}) {
+  if (typeof content !== "string") throw new Error("\u6587\u4EF6\u5185\u5BB9\u4E0D\u662F\u6587\u672C\u3002");
+  const source = content.replace(/^﻿/, "");
+  if (!source.trim()) throw new Error("\u6587\u4EF6\u4E3A\u7A7A\uFF0C\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u5267\u672C\u3002");
+  const targetCategory = text3(category);
+  const isJson = /\.json$/i.test(fileName) || /^\s*\{\s*(?:"|\})/.test(source) || /^\s*\[\s*(?:\{|\[|"|\]|-?\d|true\b|false\b|null\b)/.test(source);
+  if (!isJson) return parseTextScripts(source, targetCategory);
+  let data;
+  try {
+    data = JSON.parse(source);
+  } catch {
+    throw new Error("JSON \u683C\u5F0F\u9519\u8BEF\uFF0C\u8BF7\u68C0\u67E5\u6587\u4EF6\uFF1B\u672A\u6309 TXT \u5BFC\u5165\uFF0C\u4E5F\u672A\u5199\u5165\u5267\u672C\u3002");
+  }
+  const book = isObject(data?.character_book) ? data.character_book : isObject(data?.data?.character_book) ? data.data.character_book : data;
+  if (isObject(book) && Object.hasOwn(book, "entries")) {
+    if (!Array.isArray(book.entries) && !isObject(book.entries)) throw new Error("\u4E16\u754C\u4E66\u7684 entries \u5FC5\u987B\u662F\u6761\u76EE\u5BF9\u8C61\u6216\u6570\u7EC4\u3002");
+    return parseWorldBook(book, fileName, targetCategory, includeDisabled);
+  }
+  if (Array.isArray(data)) return parseJsonScripts(data, targetCategory);
+  if (isObject(data) && Array.isArray(data.scripts)) return parseJsonScripts(data.scripts, targetCategory);
+  if (isObject(data) && typeof data.prompt === "string") return parseJsonScripts([data], targetCategory);
+  throw new Error("\u672A\u8BC6\u522B\u6B64 JSON \u683C\u5F0F\u3002\u652F\u6301\u9152\u9986\u4E16\u754C\u4E66 entries \u548C\u5C0F\u5267\u573A\u5267\u672C JSON\uFF1B\u4E0D\u4F1A\u5C06\u6574\u4EFD JSON \u5F53\u4F5C\u63D0\u793A\u8BCD\u3002");
+}
+var isObject, text3, fileBaseName;
+var init_scriptImport = __esm({
+  "src/core/scriptImport.js"() {
+    isObject = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+    text3 = (value) => typeof value === "string" ? value.trim() : "";
+    fileBaseName = (value) => text3(value).replace(/\.[^/.]+$/, "") || "\u5BFC\u5165\u5267\u672C";
+  }
+});
+
+// src/ui/presetScriptExtraction.js
+function bindPresetScriptExtraction(root, { getPreset, onImported = () => {
+} }) {
+  const button3 = root.querySelector("#t-prompt-extract-scripts");
+  let overlay = null, preset = null, selected = /* @__PURE__ */ new Set(), saving = false, pendingCount = 0, disposed = false;
+  let category = "", showAll = false;
+  const connected = () => !disposed && root.isConnected;
+  const close = () => {
+    if (saving) return;
+    overlay?.remove();
+    overlay = null;
+    if (connected()) button3.focus();
+    if (!pendingCount) {
+      preset = null;
+      selected.clear();
+    }
+  };
+  const make = (tag, className, content) => {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (content !== void 0) element.textContent = content;
+    return element;
+  };
+  const action = (label, callback) => {
+    const element = make("button", "t-btn", label);
+    element.type = "button";
+    element.addEventListener("click", callback);
+    return element;
+  };
+  function createDialog(title) {
+    overlay?.remove();
+    overlay = make("div", "t-dialog-overlay t-preset-extract-overlay t-root");
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", title);
+    const panel = make("section", "t-dialog-box t-preset-extract-box");
+    const header = make("header", "t-dialog-header");
+    header.append(make("span", "", title));
+    const exit = action("\u5173\u95ED", close);
+    exit.setAttribute("aria-label", "\u5173\u95ED\u5267\u672C\u63D0\u53D6\u7A97\u53E3");
+    header.append(exit);
+    const body = make("div", "t-dialog-body"), footer = make("footer", "t-dialog-footer");
+    panel.append(header, body, footer);
+    overlay.append(panel);
+    document.body.append(overlay);
+    applyStudioTheme(overlay);
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) close();
+    });
+    overlay.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }
+      if (event.key === "Tab") {
+        const focusable = [...overlay.querySelectorAll("button, input, summary")].filter((element) => !element.disabled && element.getClientRects().length);
+        if (!focusable.length) {
+          event.preventDefault();
+          return;
+        }
+        const first = focusable[0], last = focusable.at(-1);
+        if (event.shiftKey && (event.target === first || !overlay.contains(event.target))) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && (event.target === last || !overlay.contains(event.target))) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    });
+    exit.focus();
+    return { body, footer };
+  }
+  function showSelection() {
+    if (!connected() || saving || !preset) return;
+    const { body, footer } = createDialog(`\u4ECE\u300C${preset.name}\u300D\u63D0\u53D6\u5267\u672C`);
+    body.append(make("p", "t-preset-extract-hint", "\u6BCF\u4E2A\u52FE\u9009\u7684\u6761\u76EE\u6DFB\u52A0\u4E3A\u4E00\u4E2A\u72EC\u7ACB\u5267\u672C\u3002\u53EA\u590D\u5236\u5185\u5BB9\uFF0C\u4E0D\u6539\u53D8\u9884\u8BBE\u4E2D\u7684\u542F\u7528\u72B6\u6001\uFF1B\u63D0\u53D6\u540E\u7ACB\u5373\u4FDD\u5B58\u5230\u5267\u672C\u5E93\u3002"));
+    const label = make("label", "t-preset-extract-category", "\u5B58\u5165\u5206\u7C7B");
+    const categoryInput = make("input", "t-input");
+    categoryInput.value = category;
+    categoryInput.placeholder = preset.name || "\u9884\u8BBE\u5C0F\u5267\u573A";
+    categoryInput.dataset.extractCategory = "";
+    categoryInput.addEventListener("input", () => {
+      category = categoryInput.value;
+    });
+    label.append(categoryInput);
+    body.append(label);
+    const controls = make("div", "t-preset-extract-controls");
+    const search = make("input", "t-input");
+    search.placeholder = "\u641C\u7D22\u6761\u76EE\u540D\u79F0\u6216\u5185\u5BB9";
+    search.setAttribute("aria-label", search.placeholder);
+    search.dataset.extractSearch = "";
+    const allLabel = make("label", "t-preset-extract-all");
+    const all = make("input");
+    all.type = "checkbox";
+    all.checked = showAll;
+    all.dataset.extractShowAll = "";
+    allLabel.append(all, document.createTextNode("\u663E\u793A\u5176\u4ED6\u6761\u76EE\uFF08\u53EF\u624B\u52A8\u8865\u9009\uFF09"));
+    controls.append(search, allLabel);
+    body.append(controls);
+    const list = make("div", "t-preset-extract-list");
+    body.append(list);
+    const status3 = make("p", "t-preset-extract-hint");
+    status3.dataset.extractStatus = "";
+    status3.setAttribute("role", "status");
+    body.append(status3);
+    const cancel = action("\u53D6\u6D88", close);
+    const submit = action("", async () => {
+      if (saving || !connected()) return;
+      if (!pendingCount && getPreset()?.id !== preset.id) {
+        status3.textContent = "\u9884\u8BBE\u5DF2\u5207\u6362\uFF0C\u8BF7\u5173\u95ED\u7A97\u53E3\u540E\u91CD\u65B0\u63D0\u53D6\u3002";
+        return;
+      }
+      saving = true;
+      for (const input of overlay.querySelectorAll("input, button")) input.disabled = true;
+      status3.textContent = "\u6B63\u5728\u6DFB\u52A0\u5E76\u4FDD\u5B58\u5267\u672C\u2026";
+      try {
+        if (!pendingCount) {
+          const scripts = buildScriptsFromPreset(preset, [...selected], category);
+          if (!scripts.length) throw new Error("\u8BF7\u5148\u52FE\u9009\u8981\u6DFB\u52A0\u7684\u6761\u76EE\u3002");
+          pendingCount = saveUserScripts(createScriptImportCopies(scripts, getScripts()));
+        }
+        if (!await flushScriptsNow()) throw new Error("\u5267\u672C\u5DF2\u52A0\u5165\u5F53\u524D\u5217\u8868\uFF0C\u4F46\u6587\u4EF6\u4FDD\u5B58\u5931\u8D25\u3002\u8BF7\u91CD\u8BD5\u4FDD\u5B58\uFF0C\u4E0D\u4F1A\u91CD\u590D\u6DFB\u52A0\u3002");
+        const count = pendingCount;
+        pendingCount = 0;
+        selected.clear();
+        if (connected()) {
+          try {
+            onImported(count);
+          } catch (error4) {
+            console.warn("Titania: \u5267\u672C\u5217\u8868\u5237\u65B0\u5931\u8D25", error4);
+          }
+          if (window.toastr) window.toastr.success(`\u5DF2\u6DFB\u52A0 ${count} \u4E2A\u5267\u672C\uFF0C\u53EF\u5728\u5267\u672C\u7BA1\u7406\u5668\u4E2D\u67E5\u770B\u3002`, "\u63D0\u53D6\u4E3A\u5267\u672C");
+        }
+        saving = false;
+        close();
+      } catch (error4) {
+        status3.textContent = error4.message || "\u6DFB\u52A0\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002";
+      } finally {
+        saving = false;
+        if (overlay?.isConnected) {
+          for (const input of overlay.querySelectorAll("input, button")) input.disabled = !!pendingCount;
+          cancel.disabled = submit.disabled = false;
+          overlay.querySelector(".t-dialog-header button").disabled = false;
+          submit.textContent = pendingCount ? "\u91CD\u8BD5\u4FDD\u5B58" : `\u6DFB\u52A0\u9009\u4E2D\u7684 ${selected.size} \u4E2A\u5267\u672C`;
+          submit.disabled = !pendingCount && !selected.size;
+        }
+        refresh();
+      }
+    });
+    submit.classList.add("primary");
+    submit.dataset.extractSubmit = "";
+    footer.append(cancel, submit);
+    const render = () => {
+      const candidates = getPresetScriptCandidates(preset);
+      const term = search.value.trim().toLowerCase();
+      const visible = candidates.filter((entry) => (showAll || entry.suggested || selected.has(entry.key)) && (!term || `${entry.name}
+${entry.content}`.toLowerCase().includes(term)));
+      list.replaceChildren();
+      for (const entry of visible) {
+        const item2 = make("div", "t-preset-extract-item");
+        const heading = make("label", "t-preset-extract-heading");
+        const checkbox = make("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = selected.has(entry.key);
+        checkbox.dataset.extractKey = entry.key;
+        checkbox.disabled = !!pendingCount;
+        checkbox.addEventListener("change", () => {
+          if (checkbox.checked) selected.add(entry.key);
+          else selected.delete(entry.key);
+          submit.textContent = `\u6DFB\u52A0\u9009\u4E2D\u7684 ${selected.size} \u4E2A\u5267\u672C`;
+          submit.disabled = !selected.size;
+        });
+        heading.append(checkbox, make("span", "", entry.name));
+        const state = entry.unlisted ? "\u672A\u52A0\u5165\u9884\u8BBE\u987A\u5E8F" : entry.enabled ? "\u539F\u6761\u76EE\u5DF2\u542F\u7528" : "\u539F\u6761\u76EE\u5DF2\u5173\u95ED\uFF08\u4ECD\u53EF\u63D0\u53D6\uFF09";
+        item2.append(heading, make("p", "t-preset-extract-hint", `${state} \xB7 ${entry.reason}`));
+        for (const warning2 of entry.warnings) item2.append(make("p", "t-preset-extract-warning", warning2));
+        const details = make("details");
+        details.append(make("summary", "", "\u67E5\u770B\u6B63\u6587"), make("pre", "t-preset-extract-preview", entry.content));
+        item2.append(details);
+        list.append(item2);
+      }
+      if (!visible.length) list.append(make("p", "t-preset-extract-hint", "\u6CA1\u6709\u5339\u914D\u6761\u76EE\u3002\u53EF\u52FE\u9009\u201C\u663E\u793A\u5176\u4ED6\u6761\u76EE\u201D\u67E5\u770B\u3002"));
+      submit.textContent = pendingCount ? "\u91CD\u8BD5\u4FDD\u5B58" : `\u6DFB\u52A0\u9009\u4E2D\u7684 ${selected.size} \u4E2A\u5267\u672C`;
+      submit.disabled = !pendingCount && !selected.size;
+    };
+    all.addEventListener("change", () => {
+      showAll = all.checked;
+      render();
+    });
+    search.addEventListener("input", render);
+    render();
+    if (pendingCount) {
+      for (const input of body.querySelectorAll("input")) input.disabled = true;
+      status3.textContent = "\u4E0A\u6B21\u6DFB\u52A0\u5DF2\u52A0\u5165\u5F53\u524D\u5217\u8868\uFF0C\u6587\u4EF6\u5C1A\u672A\u4FDD\u5B58\u6210\u529F\u3002\u91CD\u8BD5\u53EA\u4FDD\u5B58\uFF0C\u4E0D\u4F1A\u91CD\u590D\u6DFB\u52A0\u3002";
+    }
+  }
+  function open(target = getPreset()) {
+    if (!connected() || saving) return;
+    if (!pendingCount) {
+      if (!target) return;
+      preset = target;
+      category = "";
+      showAll = false;
+      selected = new Set(getPresetScriptCandidates(preset).filter((entry) => entry.suggested).map((entry) => entry.key));
+    }
+    showSelection();
+  }
+  function refresh() {
+    if (!connected()) return;
+    const target = getPreset();
+    button3.hidden = !target;
+    const count = target ? getPresetScriptCandidates(target).filter((entry) => entry.suggested).length : 0;
+    button3.textContent = pendingCount ? "\u91CD\u8BD5\u4FDD\u5B58\u5267\u672C" : count ? `\u63D0\u53D6\u4E3A\u5267\u672C\uFF08${count}\uFF09` : "\u63D0\u53D6\u4E3A\u5267\u672C";
+    button3.disabled = saving;
+  }
+  button3.addEventListener("click", () => open());
+  return {
+    refresh,
+    notifyImported(target) {
+      if (!connected() || saving) return;
+      if (pendingCount) {
+        open();
+        return;
+      }
+      const count = getPresetScriptCandidates(target).filter((entry) => entry.suggested).length;
+      if (!count) return;
+      preset = target;
+      const { body, footer } = createDialog("\u53D1\u73B0\u9884\u8BBE\u4E2D\u7684\u5C0F\u5267\u573A");
+      body.append(make("p", "", `\u8FD9\u4E2A\u9884\u8BBE\u91CC\u53D1\u73B0\u4E86 ${count} \u4E2A\u5C0F\u5267\u573A\u4E3B\u9898\uFF0C\u8981\u628A\u5B83\u4EEC\u6DFB\u52A0\u5230\u5267\u672C\u5E93\u5417\uFF1F`));
+      body.append(make("p", "t-preset-extract-hint", "\u6682\u65F6\u4E0D\u7528\u4E5F\u6CA1\u5173\u7CFB\uFF0C\u4EE5\u540E\u53EF\u5728\u9884\u8BBE\u7BA1\u7406\u9875\u70B9\u51FB\u201C\u63D0\u53D6\u4E3A\u5267\u672C\u201D\u3002"));
+      footer.append(action("\u6682\u65F6\u4E0D\u7528", close), action("\u9009\u62E9\u5C0F\u5267\u573A", () => open(target)));
+    },
+    destroy() {
+      disposed = true;
+      overlay?.remove();
+      overlay = null;
+    }
+  };
+}
+var init_presetScriptExtraction2 = __esm({
+  "src/ui/presetScriptExtraction.js"() {
+    init_presetScriptExtraction();
+    init_scriptImport();
+    init_scriptData();
+    init_scriptStore();
+    init_studioTheme();
+  }
+});
+
 // src/ui/mainWindow/viewState.js
 function getPendingGenerationScriptId() {
   return pendingGenerationScriptId;
@@ -35670,8 +36268,8 @@ function setPendingGenerationScriptId(scriptId) {
 function getContinuationQuickDraft() {
   return continuationQuickDraft;
 }
-function setContinuationQuickDraft(text3) {
-  continuationQuickDraft = String(text3 || "");
+function setContinuationQuickDraft(text5) {
+  continuationQuickDraft = String(text5 || "");
 }
 function clampInjectRoundsCount(value) {
   if (String(value ?? "").trim() === "") return 3;
@@ -35792,9 +36390,9 @@ function updateTheaterStage() {
   const hasContent = Boolean(display?.content?.trim());
   const state = busy ? "generating" : failed ? "failed" : hasContent ? "ready" : "empty";
   view.dataset.theaterState = state;
-  const setText = (selector, text3) => {
+  const setText = (selector, text5) => {
     const node2 = view.querySelector(selector);
-    if (node2 && node2.textContent !== text3) node2.textContent = text3;
+    if (node2 && node2.textContent !== text5) node2.textContent = text5;
   };
   const status3 = busy ? GlobalState.displayState.isViewingHistory ? "\u6B63\u5728\u67E5\u770B\u5386\u53F2 \xB7 \u65B0\u4E00\u5E55\u751F\u6210\u4E2D" : "\u65B0\u4E00\u5E55\u6B63\u5728\u751F\u6210" : failed ? "\u6F14\u7ECE\u672A\u5B8C\u6210" : getPendingGenerationScriptId() ? "\u5267\u672C\u5DF2\u5C31\u7EEA" : hasContent ? "\u6B63\u5728\u653E\u6620" : "\u51C6\u5907\u5F00\u573A";
   setText(".t-theater-stage-status", status3);
@@ -36471,10 +37069,10 @@ function bookPlainText(html, document2 = globalThis.document) {
     if (tag === "img") return node2.getAttribute("alt") ? `
 [\u56FE\u7247\uFF1A${node2.getAttribute("alt")}]
 ` : "";
-    const text3 = [...node2.childNodes].map(walk).join("");
+    const text5 = [...node2.childNodes].map(walk).join("");
     return BLOCK.has(tag) ? `
-${text3}
-` : text3;
+${text5}
+` : text5;
   };
   return walk(template.content).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
@@ -36505,8 +37103,8 @@ function extractBookMessages(snapshot, draft2, { document: document2 = globalThi
       formatted = `<p>${bookEscape(content).replace(/\n/g, "<br>")}</p>`;
     }
     const html = sanitizeBookFragment(formatted, { document: document2, keepImages: draft2.keepImages, exclusions: rules.exclusions });
-    const text3 = bookPlainText(html, document2);
-    if (!text3 && !/<img\b/i.test(html)) {
+    const text5 = bookPlainText(html, document2);
+    if (!text5 && !/<img\b/i.test(html)) {
       omitted.push({ index, reason: "\u672A\u63D0\u53D6\u5230\u6B63\u6587" });
       return;
     }
@@ -36517,7 +37115,7 @@ function extractBookMessages(snapshot, draft2, { document: document2 = globalThi
       name: msg.name || (msg.is_user ? "\u7528\u6237" : "\u89D2\u8272"),
       date: msg.send_date,
       html,
-      text: text3,
+      text: text5,
       fingerprint: bookHash(msg)
     });
   });
@@ -36885,10 +37483,10 @@ function normalizeMemoryConfig(raw = {}) {
   return config;
 }
 function memoryFloorFingerprint(message) {
-  const text3 = JSON.stringify([message?.name, message?.is_user === true, message?.mes, message?.swipe_id ?? 0]);
+  const text5 = JSON.stringify([message?.name, message?.is_user === true, message?.mes, message?.swipe_id ?? 0]);
   let hash = 2166136261;
-  for (let i = 0; i < text3.length; i++) hash = Math.imul(hash ^ text3.charCodeAt(i), 16777619);
-  return `${text3.length}:${(hash >>> 0).toString(36)}`;
+  for (let i = 0; i < text5.length; i++) hash = Math.imul(hash ^ text5.charCodeAt(i), 16777619);
+  return `${text5.length}:${(hash >>> 0).toString(36)}`;
 }
 function isMemoryReadable(message) {
   return !!message && !!String(message.mes || "").trim() && !(message.is_hidden || message.extra?.is_hidden) && (!message.is_system || !!message.extra?.[MEMORY_HIDE_KEY]);
@@ -36996,11 +37594,11 @@ function batchStillMatches(batch, chat2) {
   return batch.fingerprints.every((fp, offset) => chat2[batch.start + offset] && fp === memoryFloorFingerprint(chat2[batch.start + offset]));
 }
 function parseMemoryResponse(raw, batch) {
-  let text3 = String(raw || "").trim();
-  text3 = text3.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  let text5 = String(raw || "").trim();
+  text5 = text5.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   let result;
   try {
-    result = JSON.parse(text3);
+    result = JSON.parse(text5);
   } catch {
     throw new Error("\u603B\u7ED3\u672A\u8FD4\u56DE\u5B8C\u6574 JSON\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559\u3002");
   }
@@ -37121,11 +37719,11 @@ function applySegmentMerge(memory, group, summary, digestId, now = Date.now()) {
   return next;
 }
 function parseMergeResponse(raw) {
-  let text3 = String(raw || "").trim();
-  text3 = text3.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  let text5 = String(raw || "").trim();
+  text5 = text5.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   let result;
   try {
-    result = JSON.parse(text3);
+    result = JSON.parse(text5);
   } catch {
     throw new Error("\u5408\u5E76\u603B\u7ED3\u672A\u8FD4\u56DE\u5B8C\u6574 JSON\uFF0C\u539F\u5206\u6BB5\u5DF2\u4FDD\u7559\u3002");
   }
@@ -37262,10 +37860,10 @@ ${body}${quoteText}`;
     }
   }
   const recallText = recallParts.join("\n\n");
-  const text3 = [header, recentText, ...parts, recallText].filter(Boolean).join("\n\n");
+  const text5 = [header, recentText, ...parts, recallText].filter(Boolean).join("\n\n");
   return {
-    text: text3,
-    tokens: estimate(text3),
+    text: text5,
+    tokens: estimate(text5),
     memoryTokens,
     recentTokens: estimate(recentText),
     recallTokens: estimate(recallText),
@@ -37313,12 +37911,12 @@ ${item2.body}`;
 function isReaderNarrative(message) {
   return !!message && !(message.is_hidden || message.extra?.is_hidden || message.disabled) && (!message.is_system || !!message.extra?.[MEMORY_HIDE_KEY]);
 }
-function isReaderSeparator(text3) {
-  const lines = String(text3 || "").split(/\r?\n/).filter((line) => line.trim());
+function isReaderSeparator(text5) {
+  const lines = String(text5 || "").split(/\r?\n/).filter((line) => line.trim());
   return lines.length === 1 && /^(\*{3,}|-{3,}|—{3,}|＿{3,}|_{3,}|·{3,}|={3,})$/.test(lines[0].trim());
 }
-function fingerprint(message, text3) {
-  const input = JSON.stringify([message.name, message.is_user === true, message.mes, message.swipe_id ?? 0, text3]);
+function fingerprint(message, text5) {
+  const input = JSON.stringify([message.name, message.is_user === true, message.mes, message.swipe_id ?? 0, text5]);
   let hash = 2166136261;
   for (let i = 0; i < input.length; i++) hash = Math.imul(hash ^ input.charCodeAt(i), 16777619);
   return `${input.length}:${(hash >>> 0).toString(36)}`;
@@ -37995,8 +38593,8 @@ function openChatBookWindow() {
         controller = new AbortController();
         setBusy(true);
         try {
-          const result = await exportBookEpub(draft2, built.chapters, { signal: controller.signal, onProgress: (text3) => {
-            if (!disposed) q("[data-progress]").textContent = text3;
+          const result = await exportBookEpub(draft2, built.chapters, { signal: controller.signal, onProgress: (text5) => {
+            if (!disposed) q("[data-progress]").textContent = text5;
           } });
           if (disposed || controller.signal.aborted) return;
           if (exportRules !== JSON.stringify(getToolboxExtraction(getExtData()))) {
@@ -38077,7 +38675,7 @@ var init_chatBookWindow = __esm({
     active = null;
     check = (key, label, draft2) => `<label class="t-book-check"><input type="checkbox" data-field="${key}" ${draft2[key] ? "checked" : ""}>${label}</label>`;
     field = (key, label, value, type = "text", attrs = "") => `<label class="t-book-field"><span>${label}</span><input type="${type}" data-field="${key}" value="${bookEscape(value)}" ${attrs}></label>`;
-    select = (key, label, options2, value) => `<label class="t-book-field"><span>${label}</span><select data-field="${key}">${options2.map(([id3, text3]) => `<option value="${id3}" ${id3 === value ? "selected" : ""}>${text3}</option>`).join("")}</select></label>`;
+    select = (key, label, options2, value) => `<label class="t-book-field"><span>${label}</span><select data-field="${key}">${options2.map(([id3, text5]) => `<option value="${id3}" ${id3 === value ? "selected" : ""}>${text5}</option>`).join("")}</select></label>`;
     textArea = (key, label, value, placeholder = "") => `<label class="t-book-field"><span>${label}</span><textarea data-field="${key}" rows="3" placeholder="${bookEscape(placeholder)}">${bookEscape(value)}</textarea></label>`;
     button = (action, label, extra = "") => `<button type="button" class="t-btn${action === "epub" ? " t-btn-primary" : ""}" data-action="${action}" ${extra}>${label}</button>`;
   }
@@ -38508,8 +39106,8 @@ function evidenceGate(update, options2) {
   return "";
 }
 function pushNote(ev, note) {
-  const text3 = trimmed(note).slice(0, 200);
-  if (text3) ev.notes = [...ev.notes.filter((n) => n !== text3), text3].slice(-MAX_EVENT_NOTES);
+  const text5 = trimmed(note).slice(0, 200);
+  if (text5) ev.notes = [...ev.notes.filter((n) => n !== text5), text5].slice(-MAX_EVENT_NOTES);
 }
 function applyDirectorDecision(blindbox, decision, options2 = {}) {
   const bb = normalizeBlindbox(blindbox);
@@ -38890,9 +39488,9 @@ function importLegacyBlindboxRun(plan, key) {
   replaceBlindboxRun(plan, key, plan.blindboxLegacy);
   return true;
 }
-function blindboxSourceSignature(text3, swipe = 0) {
+function blindboxSourceSignature(text5, swipe = 0) {
   let hash = 2166136261;
-  const value = `${swipe}:${text3}`;
+  const value = `${swipe}:${text5}`;
   for (let i = 0; i < value.length; i++) hash = Math.imul(hash ^ value.charCodeAt(i), 16777619);
   return `${value.length}:${hash >>> 0}`;
 }
@@ -39088,10 +39686,10 @@ function monthLengths(year, calendar) {
   return calendar.kind === "custom" ? calendar.month_lengths : [31, leap(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 }
 function parseClockTime(value, calendar = {}) {
-  let text3 = String(value || "").trim();
+  let text5 = String(value || "").trim();
   const prefix = calendar.era || calendar.name;
-  if (prefix && text3.startsWith(`${prefix} `)) text3 = text3.slice(prefix.length + 1);
-  const match = /^(\d{1,6})[-年](\d{1,2})[-月](\d{1,4})(?:日)?(?:[ T·](\d{1,2}):(\d{2}))?$/.exec(text3);
+  if (prefix && text5.startsWith(`${prefix} `)) text5 = text5.slice(prefix.length + 1);
+  const match = /^(\d{1,6})[-年](\d{1,2})[-月](\d{1,4})(?:日)?(?:[ T·](\d{1,2}):(\d{2}))?$/.exec(text5);
   if (!match) throw new Error("\u6545\u4E8B\u65E5\u671F\u8BF7\u4F7F\u7528 \u5E74-\u6708-\u65E5 \u65F6:\u5206\uFF0C\u4F8B\u5982 2024-09-28 19:20\u3002");
   const [, y, m, d, h = "0", min = "0"] = match;
   const point = { year: Number(y), month: Number(m), day: Number(d), hour: Number(h), minute: Number(min) };
@@ -39103,8 +39701,8 @@ function clockTime(value) {
   return `${pad(value.year, 4)}-${pad(value.month)}-${pad(value.day)} ${pad(value.hour)}:${pad(value.minute)}`;
 }
 function clockTimeLabel(value, calendar = {}) {
-  const text3 = typeof value === "string" ? value : clockTime(value);
-  return calendar.kind === "custom" ? `${calendar.era || calendar.name || "\u6545\u4E8B\u5386"} ${text3}` : text3;
+  const text5 = typeof value === "string" ? value : clockTime(value);
+  return calendar.kind === "custom" ? `${calendar.era || calendar.name || "\u6545\u4E8B\u5386"} ${text5}` : text5;
 }
 function ordinal(point, calendar) {
   if (calendar.kind === "custom") {
@@ -39224,10 +39822,10 @@ function findTimetraceComment(raw) {
   return { found: true, complete: match[2] === "-->", text: match[1].trim(), offset: match.index };
 }
 function timetraceFingerprint(message) {
-  const text3 = JSON.stringify([message?.name || "", message?.is_user === true, message?.swipe_id ?? 0, message?.mes || ""]);
+  const text5 = JSON.stringify([message?.name || "", message?.is_user === true, message?.swipe_id ?? 0, message?.mes || ""]);
   let hash = 2166136261;
-  for (let i = 0; i < text3.length; i++) hash = Math.imul(hash ^ text3.charCodeAt(i), 16777619);
-  return `${text3.length}:${(hash >>> 0).toString(36)}`;
+  for (let i = 0; i < text5.length; i++) hash = Math.imul(hash ^ text5.charCodeAt(i), 16777619);
+  return `${text5.length}:${(hash >>> 0).toString(36)}`;
 }
 function timetraceReadable(message) {
   return !!message && !!String(message.mes || "").trim() && !message.is_hidden && !message.extra?.is_hidden && (!message.is_system || !!message.extra?.titania_memory_hidden);
@@ -39235,10 +39833,10 @@ function timetraceReadable(message) {
 function timetraceRows(chat2, extract = stripTimetraceComments, scope3 = {}) {
   return (chat2 || []).flatMap((message, index) => {
     if (!timetraceReadable(message) || !isAnalysisMessage(message, scope3)) return [];
-    const text3 = String(extract(stripTimetraceComments(message.mes)) || "").trim();
-    return text3 ? [{
+    const text5 = String(extract(stripTimetraceComments(message.mes)) || "").trim();
+    return text5 ? [{
       index,
-      text: text3,
+      text: text5,
       id: message.extra?.[TIMETRACE_ID_KEY] || "",
       fingerprint: timetraceFingerprint(message),
       isUser: message.is_user === true,
@@ -39253,7 +39851,7 @@ function timetraceFallbackRows(chat2, storyMemory) {
     const range2 = (chat2 || []).slice(segment.start, segment.end + 1);
     if (range2.some((item2) => String(item2?.mes || "").trim())) return [];
     if ((Array.isArray(segment.sources) ? segment.sources : []).some((source) => chat2?.[source.index] && source.id && chat2[source.index].extra?.titania_memory_id !== source.id)) return [];
-    const text3 = String(segment.summary).trim();
+    const text5 = String(segment.summary).trim();
     return [{
       index: segment.end,
       start: segment.start,
@@ -39261,8 +39859,8 @@ function timetraceFallbackRows(chat2, storyMemory) {
       kind: "summary",
       segmentId: segment.id,
       id: `summary:${segment.id}`,
-      fingerprint: timetraceFingerprint({ name: segment.id, mes: JSON.stringify([segment.start, segment.end, text3]) }),
-      text: text3,
+      fingerprint: timetraceFingerprint({ name: segment.id, mes: JSON.stringify([segment.start, segment.end, text5]) }),
+      text: text5,
       isUser: false,
       name: "\u5DF2\u6709\u5206\u6BB5\u6458\u8981\uFF08\u539F\u6B63\u6587\u7F3A\u5931\uFF09"
     }];
@@ -39302,10 +39900,10 @@ function pendingTimetraceRows(memory, rows, phase = "timeline") {
 }
 function parseJson(raw) {
   const comment = findTimetraceComment(raw);
-  let text3 = comment.found ? comment.complete ? comment.text : "" : String(raw ?? "").trim();
-  text3 = text3.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  let text5 = comment.found ? comment.complete ? comment.text : "" : String(raw ?? "").trim();
+  text5 = text5.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   try {
-    return JSON.parse(text3);
+    return JSON.parse(text5);
   } catch {
     throw new Error("\u65F6\u95F4\u5206\u6790\u672A\u8FD4\u56DE\u5B8C\u6574 JSON\u3002");
   }
@@ -39682,7 +40280,7 @@ function formatNode(node2) {
   if (node2.conflict) parts.push(`\u65F6\u95F4\u51B2\u7A81\uFF1A${node2.conflict}`);
   return parts.join("\n");
 }
-function composeTimetraceContext(memory, rawConfig = {}, estimate = (text3) => Math.ceil(String(text3).length / 2), { start = null, end = null, snapshot = null } = {}) {
+function composeTimetraceContext(memory, rawConfig = {}, estimate = (text5) => Math.ceil(String(text5).length / 2), { start = null, end = null, snapshot = null } = {}) {
   if (!memory?.enabled) return "";
   const config = normalizeTimetraceConfig(rawConfig);
   if (config.inject_tokens <= 0) return "";
@@ -39711,8 +40309,8 @@ function composeTimetraceContext(memory, rawConfig = {}, estimate = (text3) => M
     const block = `[${span}] ${content}`;
     if (estimate([...parts, ...blocks, block].join("\n\n")) <= config.inject_tokens) blocks.push(block);
   }
-  const text3 = [...parts, ...blocks.reverse()].join("\n\n");
-  if (estimate(text3) <= config.inject_tokens) return text3;
+  const text5 = [...parts, ...blocks.reverse()].join("\n\n");
+  if (estimate(text5) <= config.inject_tokens) return text5;
   const compact = [
     parts[0],
     calendar ? `\u5386\u6CD5\uFF1A${calendar.name}\u3014${TIMETRACE_BASES[calendar.basis]}\u3015` : "",
@@ -39796,7 +40394,7 @@ frame\u9ED8\u8BA4main\uFF1B\u56DE\u5FC6flashback\u3001\u68A6\u5883dream\u3001\u6
       if (typeof value !== "string" || value.length > limit) throw new Error(`\u65F6\u95F4\u8BB0\u5F55\u7684 ${key} \u5B57\u6BB5\u65E0\u6548\u6216\u8FC7\u957F\u3002`);
       return value.trim();
     };
-    containsQuote = (text3, quote) => !!quote && text3.replace(/\s+/g, "").includes(quote.replace(/\s+/g, ""));
+    containsQuote = (text5, quote) => !!quote && text5.replace(/\s+/g, "").includes(quote.replace(/\s+/g, ""));
     overlaps = (node2, start, end) => (node2.source_start ?? node2.floor) <= end && (node2.source_end ?? node2.end_floor ?? node2.floor) >= start;
     beforeRange = (node2, start) => (node2.source_end ?? node2.end_floor ?? node2.floor) < start;
   }
@@ -39856,7 +40454,7 @@ function fallbackFor(ctx2) {
   return timetraceFallbackRows(ctx2.chat, ctx2.chatMetadata.titania_story_memory);
 }
 function rowsFor(ctx2, config = getTimetraceConfig(), fallback = fallbackFor(ctx2)) {
-  return [...timetraceRows(ctx2.chat, (text3) => extractToolboxText(text3, config.extraction), config), ...fallback].sort((a, b) => a.index - b.index);
+  return [...timetraceRows(ctx2.chat, (text5) => extractToolboxText(text5, config.extraction), config), ...fallback].sort((a, b) => a.index - b.index);
 }
 function sourcesMatch(rows, ctx2) {
   return timetraceSourcesMatch(rows, ctx2.chat, fallbackFor(ctx2));
@@ -40011,22 +40609,22 @@ async function ingestComments(ctx2, { allowFloor = null } = {}) {
 }
 function refreshInjection() {
   const ctx2 = context();
-  let text3 = "", depth = 0;
+  let text5 = "", depth = 0;
   try {
     if (ctx2) {
       const config = getTimetraceConfig();
       const reconciled2 = reconciledFor(ctx2).memory;
       if (reconciled2.enabled) {
-        text3 = composeTimetraceContext(reconciled2, config, estimateTokens);
-        if (config.mode === "inline") text3 = [text3, composeTimetraceRules(reconciled2, config)].filter(Boolean).join("\n\n");
-        else text3 = [text3, "\u627F\u63A5\u4E0A\u8FF0\u6545\u4E8B\u65F6\u949F\uFF1B\u5C1A\u65E0\u5177\u4F53\u65E5\u671F\u65F6\u6839\u636E\u4E16\u754C\u89C2\u5408\u7406\u8865\u5B9A\u5E74\u6708\u65E5\u3002\u666E\u901A\u6D3B\u52A8\u4E5F\u6709\u5408\u7406\u8017\u65F6\uFF0C\u8DE8\u591C\u3001\u8DE8\u5929\u548C\u957F\u8DE8\u5EA6\u6E05\u695A\u8868\u8FBE\uFF0C\u540E\u7EED\u65F6\u95F4\u8BB0\u5F55\u4F1A\u627F\u63A5\u3002"].filter(Boolean).join("\n\n");
+        text5 = composeTimetraceContext(reconciled2, config, estimateTokens);
+        if (config.mode === "inline") text5 = [text5, composeTimetraceRules(reconciled2, config)].filter(Boolean).join("\n\n");
+        else text5 = [text5, "\u627F\u63A5\u4E0A\u8FF0\u6545\u4E8B\u65F6\u949F\uFF1B\u5C1A\u65E0\u5177\u4F53\u65E5\u671F\u65F6\u6839\u636E\u4E16\u754C\u89C2\u5408\u7406\u8865\u5B9A\u5E74\u6708\u65E5\u3002\u666E\u901A\u6D3B\u52A8\u4E5F\u6709\u5408\u7406\u8017\u65F6\uFF0C\u8DE8\u591C\u3001\u8DE8\u5929\u548C\u957F\u8DE8\u5EA6\u6E05\u695A\u8868\u8FBE\uFF0C\u540E\u7EED\u65F6\u95F4\u8BB0\u5F55\u4F1A\u627F\u63A5\u3002"].filter(Boolean).join("\n\n");
         depth = Math.min(config.inject_depth, Math.max(0, ctx2.chat.filter((message) => !message.is_system).length - 1));
       }
     }
   } catch (cause) {
     console.warn("\u56DE\u58F0\u65F6\u75D5\u63D0\u793A\u8BCD\u5237\u65B0\u5931\u8D25", cause);
   }
-  setExtensionPrompt(TIMETRACE_PROMPT_KEY, text3, extension_prompt_types.IN_CHAT, depth, false, extension_prompt_roles.SYSTEM);
+  setExtensionPrompt(TIMETRACE_PROMPT_KEY, text5, extension_prompt_types.IN_CHAT, depth, false, extension_prompt_roles.SYSTEM);
 }
 function getTimetraceRuntime() {
   return {
@@ -40783,12 +41381,12 @@ function normalizeDepth(depth) {
   if (!Number.isFinite(n) || n < 0) return 0;
   return Math.min(1e4, Math.floor(n));
 }
-function briefSummary(text3, maxLen = 40) {
-  const s = String(text3 || "").replace(/\s+/g, " ").trim();
+function briefSummary(text5, maxLen = 40) {
+  const s = String(text5 || "").replace(/\s+/g, " ").trim();
   return s.length > maxLen ? `${s.slice(0, maxLen)}\u2026` : s;
 }
-function armPacingDirective(text3, options2 = {}) {
-  const body = String(text3 || "").trim();
+function armPacingDirective(text5, options2 = {}) {
+  const body = String(text5 || "").trim();
   if (!body) {
     clearPacingDirective();
     return false;
@@ -41392,8 +41990,8 @@ function isEnabled2() {
 function escapeHtmlText2(str3) {
   return String(str3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function briefText(text3, maxLen = 48) {
-  const s = String(text3 || "").replace(/\s+/g, " ").trim();
+function briefText(text5, maxLen = 48) {
+  const s = String(text5 || "").replace(/\s+/g, " ").trim();
   if (!s) return "(\u7A7A)";
   return s.length > maxLen ? `${s.slice(0, maxLen)}...` : s;
 }
@@ -42297,13 +42895,13 @@ async function onAnalyzePacing() {
   }
 }
 function onApplyPacing() {
-  const text3 = String($("#tsa-pacing-directive").val() || "").trim();
-  if (!text3) {
+  const text5 = String($("#tsa-pacing-directive").val() || "").trim();
+  if (!text5) {
     if (window.toastr) toastr.warning("\u8BF7\u5148\u586B\u5199\u6216\u5206\u6790\u51FA\u4E00\u6761\u8282\u594F\u6307\u4EE4", "\u53D9\u4E8B\u8282\u594F");
     return;
   }
-  pacingDraft = text3;
-  const ok = armPacingDirective(text3, getPacingConfig());
+  pacingDraft = text5;
+  const ok = armPacingDirective(text5, getPacingConfig());
   if (ok && window.toastr) toastr.success("\u5DF2\u5E94\u7528\uFF0C\u5C06\u5F71\u54CD\u4E0B\u4E00\u6761\u56DE\u590D", "\u53D9\u4E8B\u8282\u594F");
   void refreshPanel();
 }
@@ -42595,8 +43193,8 @@ function getDirectorInjectConfig() {
   const depth = Number.isFinite(depthRaw) && depthRaw >= 0 ? Math.floor(depthRaw) : 0;
   return { depth, role };
 }
-function armDirectorDirective(text3, options2 = {}) {
-  const body = String(text3 || "").trim();
+function armDirectorDirective(text5, options2 = {}) {
+  const body = String(text5 || "").trim();
   if (!body) {
     clearDirectorDirective();
     return false;
@@ -42631,8 +43229,8 @@ function isDirectorActive() {
     return false;
   }
 }
-function fingerprint2(text3) {
-  const s = String(text3 || "");
+function fingerprint2(text5) {
+  const s = String(text5 || "");
   let h = 2166136261;
   for (let i = 0; i < s.length; i += 1) {
     h ^= s.charCodeAt(i);
@@ -42648,14 +43246,14 @@ function getDirectorTrigger() {
     if (!Array.isArray(chat2) || chat2.length === 0) return none;
     const floor = chat2.length - 1;
     const msg = chat2[floor];
-    const text3 = typeof msg?.mes === "string" ? msg.mes.trim() : "";
-    const eligible = !!text3 && msg?.is_user !== true && msg?.is_system !== true && msg?.is_hidden !== true && !!extractToolboxText(text3, getToolboxExtraction(getExtData())).trim();
+    const text5 = typeof msg?.mes === "string" ? msg.mes.trim() : "";
+    const eligible = !!text5 && msg?.is_user !== true && msg?.is_system !== true && msg?.is_hidden !== true && !!extractToolboxText(text5, getToolboxExtraction(getExtData())).trim();
     const swipeId = Number.isFinite(Number(msg?.swipe_id)) ? String(Math.floor(Number(msg.swipe_id))) : "0";
     return {
       eligible,
       floor,
       swipeId,
-      sig: `${chat2.length}:${floor}:${swipeId}:${text3.length}:${fingerprint2(text3)}`
+      sig: `${chat2.length}:${floor}:${swipeId}:${text5.length}:${fingerprint2(text5)}`
     };
   } catch {
     return none;
@@ -42884,11 +43482,11 @@ function saveDirectorChatFloors(n) {
   saveExtData();
 }
 function pushRawResponseHistory(content, typeLabel = "\u6A21\u578B\u54CD\u5E94") {
-  const text3 = String(content || "").trim();
-  if (!text3) return;
+  const text5 = String(content || "").trim();
+  if (!text5) return;
   const charName = getCurrentCharCardName() || "\u672A\u547D\u540D\u89D2\u8272";
-  if (rawResponseHistory[0]?.content === text3) {
-    lastRawResponse = text3;
+  if (rawResponseHistory[0]?.content === text5) {
+    lastRawResponse = text5;
     return;
   }
   rawResponseHistory.unshift({
@@ -42896,12 +43494,12 @@ function pushRawResponseHistory(content, typeLabel = "\u6A21\u578B\u54CD\u5E94")
     typeLabel,
     charName,
     createdAt: Date.now(),
-    content: text3
+    content: text5
   });
   if (rawResponseHistory.length > MAX_RAW_HISTORY) {
     rawResponseHistory = rawResponseHistory.slice(0, MAX_RAW_HISTORY);
   }
-  lastRawResponse = text3;
+  lastRawResponse = text5;
   persistRawResponseHistory();
 }
 function loadRawResponseHistory() {
@@ -43142,9 +43740,9 @@ function stopResponseTimer() {
 function ensureCssLoaded() {
   ensureFeatureCss("story-outline.css");
 }
-function escapeHtml4(text3) {
+function escapeHtml4(text5) {
   const div = document.createElement("div");
-  div.textContent = text3 == null ? "" : String(text3);
+  div.textContent = text5 == null ? "" : String(text5);
   return div.innerHTML;
 }
 function getOpeningFromContext() {
@@ -43234,8 +43832,8 @@ function getCardOpeningEntries() {
     const charObj = stCtx?.characters?.[stCtx?.characterId] || null;
     const data = charObj?.data || {};
     const list = [];
-    const pushText = (text3) => {
-      const value = String(text3 || "").trim();
+    const pushText = (text5) => {
+      const value = String(text5 || "").trim();
       if (!value) return;
       if (list.includes(value)) return;
       list.push(value);
@@ -43267,9 +43865,9 @@ function getCardOpeningEntries() {
         }
       });
     });
-    return list.map((text3, idx) => ({
+    return list.map((text5, idx) => ({
       openingIndex: idx,
-      text: text3
+      text: text5
     }));
   } catch {
     return [];
@@ -43288,13 +43886,13 @@ function getChatHistoryEntries(opts = {}) {
       if (!isAnalysisMessage(msg, scope3)) return null;
       const raw = typeof msg?.mes === "string" ? msg.mes : "";
       const hidden = !!(msg?.is_system || msg?.is_hidden);
-      const text3 = extractToolboxText(raw, rules);
-      if (!text3) return null;
+      const text5 = extractToolboxText(raw, rules);
+      if (!text5) return null;
       if (hidden && !includeHidden) return null;
       return {
         chatIndex: idx,
         role: hidden ? "\u80CC\u666F" : msg?.is_user ? "\u7528\u6237" : "\u89D2\u8272",
-        text: text3
+        text: text5
       };
     }).filter(Boolean);
   } catch {
@@ -44019,7 +44617,7 @@ function getPromptTemplateSection(templates, type) {
   if (type === "transition") return templates.transition;
   return templates.outline;
 }
-function getUnknownPromptVars(text3) {
+function getUnknownPromptVars(text5) {
   const known = /* @__PURE__ */ new Set([
     "persona",
     "userDesc",
@@ -44051,7 +44649,7 @@ function getUnknownPromptVars(text3) {
     "transitionContext"
   ]);
   const unknown = /* @__PURE__ */ new Set();
-  String(text3 || "").replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key) => {
+  String(text5 || "").replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key) => {
     if (!known.has(key)) unknown.add(key);
     return _;
   });
@@ -45542,13 +46140,13 @@ function clearEditorDraft() {
   saveDraft("", insertMode);
   refreshPlanNameDisplay();
 }
-function writePlotToInput(text3, mode = "overwrite") {
+function writePlotToInput(text5, mode = "overwrite") {
   const input = document.querySelector("#send_textarea");
   if (!input) {
     if (window.toastr) toastr.error("\u672A\u627E\u5230\u9152\u9986\u8F93\u5165\u6846");
     return;
   }
-  const payload = text3 || "";
+  const payload = text5 || "";
   const current = input.value || "";
   if (mode === "append" && current.trim()) {
     input.value = `${current}
@@ -45729,11 +46327,11 @@ function getRecentFloorWindow(floors, opts = {}) {
     return chat2.slice(start).map((msg, i) => {
       const raw = typeof msg?.mes === "string" ? msg.mes : "";
       const hidden = !!(msg?.is_system || msg?.is_hidden);
-      const text3 = isAnalysisMessage(msg, scope3) && (!hidden || includeHidden) ? extractToolboxText(raw, rules) : "";
+      const text5 = isAnalysisMessage(msg, scope3) && (!hidden || includeHidden) ? extractToolboxText(raw, rules) : "";
       return {
         chatIndex: start + i,
         role: hidden ? "\u80CC\u666F" : msg?.is_user ? "\u7528\u6237" : "\u89D2\u8272",
-        text: text3
+        text: text5
       };
     });
   } catch (e) {
@@ -45857,8 +46455,8 @@ function parseRecommendationResponse(raw, fallbackItemIndex, totalItems, transit
   const maxIdx = Math.max(Number(totalItems) || 1, 1);
   const stepMax = hasOutline && transition ? normalizeTransition(transition).events.length : null;
   const candidates = list.map((c) => {
-    const text3 = String(c?.text || "").trim();
-    if (!text3) return null;
+    const text5 = String(c?.text || "").trim();
+    if (!text5) return null;
     let idx = Number(c?.item_index);
     if (!Number.isFinite(idx)) idx = (Number(fallbackItemIndex) || 0) + 1;
     idx = Math.min(Math.max(Math.floor(idx), 1), maxIdx);
@@ -45872,7 +46470,7 @@ function parseRecommendationResponse(raw, fallbackItemIndex, totalItems, transit
     }
     return {
       title: String(c?.title || "").trim(),
-      text: text3,
+      text: text5,
       from: String(c?.from || "").trim().slice(0, FROM_MAX),
       itemIndex: hasOutline ? idx : null,
       stepIndex
@@ -46035,8 +46633,8 @@ function renderRows() {
   $tbody.html(rows);
   renderMobileCards();
 }
-function getBriefText(text3, maxLen = 38) {
-  const s = (text3 || "").replace(/\s+/g, " ").trim();
+function getBriefText(text5, maxLen = 38) {
+  const s = (text5 || "").replace(/\s+/g, " ").trim();
   if (!s) return "(\u7A7A)";
   return s.length > maxLen ? `${s.slice(0, maxLen)}...` : s;
 }
@@ -46135,9 +46733,9 @@ function renderCellDisplay(index, field2) {
   const item2 = outlineItems[index];
   const $cell = $(`#t-outline-tbody tr[data-index='${index}'] td[data-edit-field='${field2}']`);
   if (!item2 || $cell.length === 0) return;
-  const text3 = field2 === "plot" ? getBriefText(item2.plot, 70) : field2 === "foreshadowing" ? getBriefText(item2.foreshadowing, 52) : item2[field2] || "(\u7A7A)";
+  const text5 = field2 === "plot" ? getBriefText(item2.plot, 70) : field2 === "foreshadowing" ? getBriefText(item2.foreshadowing, 52) : item2[field2] || "(\u7A7A)";
   const longCls = field2 === "plot" || field2 === "foreshadowing" ? " t-cell-long" : "";
-  $cell.html(`<div class="t-cell-text${longCls}">${escapeHtml4(text3)}</div>`);
+  $cell.html(`<div class="t-cell-text${longCls}">${escapeHtml4(text5)}</div>`);
 }
 function getRollingPlan() {
   return resolveSceneSource(getExtData()).plan;
@@ -47206,8 +47804,8 @@ function parseCommaList(input) {
 function uniq(arr) {
   return [...new Set(arr)];
 }
-function splitBySentence(text3) {
-  const src = String(text3 || "");
+function splitBySentence(text5) {
+  const src = String(text5 || "");
   if (!src.trim()) return [];
   const lines = src.split(/\r?\n/);
   const chunks = [];
@@ -47222,11 +47820,11 @@ function splitBySentence(text3) {
   });
   return chunks;
 }
-function splitByParagraph(text3) {
-  return String(text3 || "").split(/\r?\n\s*\r?\n+/).map((s) => s.trim()).filter(Boolean);
+function splitByParagraph(text5) {
+  return String(text5 || "").split(/\r?\n\s*\r?\n+/).map((s) => s.trim()).filter(Boolean);
 }
-function splitText(text3, splitMode) {
-  return splitMode === "paragraph" ? splitByParagraph(text3) : splitBySentence(text3);
+function splitText(text5, splitMode) {
+  return splitMode === "paragraph" ? splitByParagraph(text5) : splitBySentence(text5);
 }
 function matchKeywordRule(unitText, rule) {
   const anchorList = parseCommaList(String(rule?.anchor || ""));
@@ -47258,19 +47856,19 @@ function splitIntoClauses(sentence) {
   return parts;
 }
 function applyClauseDeleteToUnit(unitText, anchor) {
-  const text3 = String(unitText || "");
+  const text5 = String(unitText || "");
   const anchorList = parseCommaList(String(anchor || ""));
-  if (anchorList.length === 0) return text3;
-  const clauses = splitIntoClauses(text3);
+  if (anchorList.length === 0) return text5;
+  const clauses = splitIntoClauses(text5);
   const kept = clauses.filter((clause) => {
     const norm = normalizeToken(clause);
     return !anchorList.some((kw) => norm.includes(kw));
   });
-  if (kept.length === clauses.length) return text3;
+  if (kept.length === clauses.length) return text5;
   let out = kept.join("");
   if (!out.trim()) return "";
   out = out.replace(/[，、；,;]\s*$/, "");
-  const endMatch = /[。！？!?…]+\s*$/.exec(text3);
+  const endMatch = /[。！？!?…]+\s*$/.exec(text5);
   const endPunct = endMatch ? endMatch[0].trim() : "";
   if (endPunct && !/[。！？!?…”」』）)]\s*$/.test(out)) {
     out += endPunct;
@@ -47278,17 +47876,17 @@ function applyClauseDeleteToUnit(unitText, anchor) {
   return out;
 }
 function applyDeletesToUnit(unitText, mode, fragment, anchor) {
-  const text3 = String(unitText || "");
+  const text5 = String(unitText || "");
   const normMode = normalizeDeleteMode(mode);
   if (normMode === "sentence") return "";
-  if (normMode === "clause") return applyClauseDeleteToUnit(text3, anchor);
+  if (normMode === "clause") return applyClauseDeleteToUnit(text5, anchor);
   const frag = String(fragment || "").trim();
-  if (!frag) return text3;
-  const idx = text3.indexOf(frag);
-  if (idx < 0) return text3;
-  const tail = text3.slice(idx + frag.length);
+  if (!frag) return text5;
+  const idx = text5.indexOf(frag);
+  if (idx < 0) return text5;
+  const tail = text5.slice(idx + frag.length);
   const punct = /[。！？!?…]\s*$/.exec(tail);
-  const rawHead = text3.slice(0, idx);
+  const rawHead = text5.slice(0, idx);
   let cleanedHead = rawHead.replace(/[，、；,;]\s*$/, "");
   const closedByQuote = /[”」』）)]\s*$/.test(cleanedHead);
   let keptTail = punct && !closedByQuote ? punct[0] : "";
@@ -47300,10 +47898,10 @@ function applyDeletesToUnit(unitText, mode, fragment, anchor) {
   }
   return cleanedHead + keptTail;
 }
-function evaluateDeleteRules(text3, splitMode, rules) {
+function evaluateDeleteRules(text5, splitMode, rules) {
   const mode = splitMode === "paragraph" ? "paragraph" : "sentence";
   const activeRules = (Array.isArray(rules) ? rules : []).filter((r) => r && r.enabled !== false);
-  const units = splitText(String(text3 || ""), mode);
+  const units = splitText(String(text5 || ""), mode);
   const unitResults = units.map((unit, idx) => {
     let matchedRule = null;
     let bestRank = 0;
@@ -47342,10 +47940,10 @@ function evaluateDeleteRules(text3, splitMode, rules) {
     deleteUnits
   };
 }
-function evaluateRewriteRules(text3, splitMode, categories) {
+function evaluateRewriteRules(text5, splitMode, categories) {
   const mode = splitMode === "paragraph" ? "paragraph" : "sentence";
   const cats = Array.isArray(categories) ? categories : [];
-  const units = splitText(String(text3 || ""), mode);
+  const units = splitText(String(text5 || ""), mode);
   const unitResults = units.map((unit, idx) => {
     const matchedCategories = [];
     cats.forEach((cat) => {
@@ -47489,8 +48087,8 @@ function mountDeleteRulesEditor(container, rules = []) {
     q('[data-delete-action="view-editor"]').setAttribute("aria-pressed", String(view === "editor"));
     q('[data-delete-action="view-editor"]').disabled = !current();
   };
-  const notice = (text3) => {
-    q("[data-delete-notice]").textContent = text3;
+  const notice = (text5) => {
+    q("[data-delete-notice]").textContent = text5;
   };
   function renderList() {
     const visible = entries.filter(matches);
@@ -47761,9 +48359,9 @@ function collectRewriteTextGroups(container, whitelist = [], exclusions = []) {
     if (current.text.trim()) groups.push(current);
     current = { text: "", spans: [] };
   };
-  const append = (text3, node2 = null) => {
-    current.spans.push({ node: node2, start: current.text.length, end: current.text.length + text3.length, original: text3 });
-    current.text += text3;
+  const append = (text5, node2 = null) => {
+    current.spans.push({ node: node2, start: current.text.length, end: current.text.length + text5.length, original: text5 });
+    current.text += text5;
   };
   const visit = (element) => {
     for (const child of element.childNodes) {
@@ -48057,8 +48655,8 @@ function isEnabled3() {
   const data = getExtData();
   return data?.rewrite_entry?.enabled === true;
 }
-function escapeHtml5(text3) {
-  return String(text3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeHtml5(text5) {
+  return String(text5 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function getRewriteState() {
   return ensureRewriteDataShape().rewrite;
@@ -48208,8 +48806,8 @@ function buildCombinedPromptText(promptSystem, promptUser) {
     String(promptUser || "").trim()
   ].join("\n");
 }
-function parseCombinedPromptText(text3, prevState = null) {
-  const raw = String(text3 || "").replace(/\r\n/g, "\n");
+function parseCombinedPromptText(text5, prevState = null) {
+  const raw = String(text5 || "").replace(/\r\n/g, "\n");
   const prev = prevState || getRewritePromptState();
   const markerRegex = /^\s*(\[SYS\]|\[USER\]|={2,}\s*SYS\s*={2,}|={2,}\s*USER\s*={2,}|SYS[:：]|USER[:：])\s*$/gim;
   const markers = [];
@@ -48301,11 +48899,11 @@ function removeButton(closePanelToo = true) {
   $(`#${BTN_ID}`).remove();
   if (closePanelToo) closePanel();
 }
-function setStatus(text3, tone = "muted") {
+function setStatus(text5, tone = "muted") {
   const $targets = $("#t-rewrite-status, #t-rewrite-settings-status");
   if (!$targets.length) return;
   $targets.each((_, el) => {
-    $(el).removeClass("ok warn err muted").addClass(tone).text(text3 || "");
+    $(el).removeClass("ok warn err muted").addClass(tone).text(text5 || "");
   });
 }
 function getSelectedSentenceIdSet() {
@@ -48322,10 +48920,10 @@ function setSelectedSentenceIds(ids2 = []) {
 }
 function buildSentenceUnitsFromLatest(latest) {
   const sentences = splitBySentence(latest?.content || "");
-  return sentences.map((text3, idx) => ({
+  return sentences.map((text5, idx) => ({
     unitIndex: idx + 1,
     segment_id: `s_${idx + 1}`,
-    text: String(text3 || ""),
+    text: String(text5 || ""),
     hit: false,
     matchedCategories: []
   }));
@@ -48516,8 +49114,8 @@ function renderDiffRows(rows = []) {
   }).join("");
   $body.html(html);
 }
-function setRawResponse(text3) {
-  lastRawResponseText = String(text3 || "");
+function setRawResponse(text5) {
+  lastRawResponseText = String(text5 || "");
   const $targets = $("#t-rewrite-raw-response");
   if (!$targets.length) return;
   $targets.each((_, el) => {
@@ -48528,8 +49126,8 @@ function setRawResponse(text3) {
   });
   renderLiveHistory();
 }
-function setRawMeta(text3) {
-  lastRawMetaText = String(text3 || "");
+function setRawMeta(text5) {
+  lastRawMetaText = String(text5 || "");
   const $targets = $("#t-rewrite-raw-meta");
   if (!$targets.length) return;
   $targets.each((_, el) => {
@@ -48540,13 +49138,13 @@ function formatHistoryTime(ts) {
   if (!ts) return "-";
   return new Date(ts).toLocaleTimeString("zh-CN", { hour12: false });
 }
-function makeHistoryPreview(text3, maxLen = 120) {
-  const normalized = String(text3 || "").replace(/\s+/g, " ").trim();
+function makeHistoryPreview(text5, maxLen = 120) {
+  const normalized = String(text5 || "").replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLen) return normalized;
   return `${normalized.slice(0, maxLen)}...`;
 }
-function pushLiveResponseHistory({ source = "manual", phase = "\u4E3B\u8BF7\u6C42", model = "", stream = false, text: text3 = "" } = {}) {
-  const content = String(text3 || "").trim();
+function pushLiveResponseHistory({ source = "manual", phase = "\u4E3B\u8BF7\u6C42", model = "", stream = false, text: text5 = "" } = {}) {
+  const content = String(text5 || "").trim();
   if (!content) return;
   liveResponseHistory.unshift({
     id: `live_resp_${Date.now()}_${liveResponseHistorySeq++}`,
@@ -48589,13 +49187,13 @@ function renderLiveHistory() {
 function updateAbortBtnState(isRunning) {
   $("#t-rewrite-abort").prop("disabled", !isRunning);
 }
-function stripCodeFence(text3) {
-  const raw = String(text3 || "").trim();
+function stripCodeFence(text5) {
+  const raw = String(text5 || "").trim();
   if (!raw) return "";
   return raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 }
-function extractJsonCandidate(text3) {
-  const raw = String(text3 || "").trim();
+function extractJsonCandidate(text5) {
+  const raw = String(text5 || "").trim();
   if (!raw) return "";
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
@@ -48604,8 +49202,8 @@ function extractJsonCandidate(text3) {
   }
   return raw;
 }
-function sanitizeJsonLike(text3) {
-  let s = String(text3 || "");
+function sanitizeJsonLike(text5) {
+  let s = String(text5 || "");
   s = s.replace(/[""]/g, '"').replace(/[‘’]/g, "'");
   s = s.replace(/,\s*([}\]])/g, "$1");
   s = s.replace(/([{,]\s*)'([^'\\]*(?:\\.[^'\\]*)*)'\s*:/g, '$1"$2":');
@@ -48614,8 +49212,8 @@ function sanitizeJsonLike(text3) {
   });
   return s.trim();
 }
-function stabilizeBrokenJson2(text3) {
-  const raw = String(text3 || "");
+function stabilizeBrokenJson2(text5) {
+  const raw = String(text5 || "");
   if (!raw) return "";
   const fixed = raw.replace(/\"([^\"]*?)\"\s*:\s*\"([\s\S]*?)(?=\n\s*\"[A-Za-z0-9_]+\"\s*:|\n\s*[}\]]|\s*}\s*$|\s*]\s*$)/g, (m, key, value) => {
     const safe = String(value).replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/\"/g, '\\"');
@@ -50258,8 +50856,8 @@ var init_rewriteEntryButton = __esm({
 });
 
 // src/core/memoryIndex.js
-function tokenize(text3) {
-  const source = String(text3 || "").toLowerCase();
+function tokenize(text5) {
+  const source = String(text5 || "").toLowerCase();
   const tokens = [];
   let ascii = "";
   let cjk = "";
@@ -50307,12 +50905,12 @@ function buildMemoryIndex(memory) {
   for (const segment of memory?.segments || []) {
     const evidence = evidenceBySegment.get(segment.id) || [];
     const summary = String(segment.summary || "").trim();
-    const text3 = [summary, ...evidence].filter(Boolean).join("\n");
-    if (!text3) continue;
+    const text5 = [summary, ...evidence].filter(Boolean).join("\n");
+    if (!text5) continue;
     docs.push({
       id: segment.id,
       title: `\u7B2C ${segment.start}\uFF5E${segment.end} \u697C`,
-      text: text3,
+      text: text5,
       summary,
       evidence
     });
@@ -50396,7 +50994,7 @@ function normalizeEvolutionConfig(raw = {}) {
   config.model_override = String(config.model_override || "");
   return config;
 }
-function planEvolutionBatch(chat2, memory, rawConfig, extract = (text3) => String(text3), force = false) {
+function planEvolutionBatch(chat2, memory, rawConfig, extract = (text5) => String(text5), force = false) {
   const config = normalizeEvolutionConfig(rawConfig);
   const start = (memory.batches.at(-1)?.end ?? -1) + 1;
   const readable = chat2.map((message, index) => isMemoryReadable(message) ? index : -1).filter((index) => index >= start);
@@ -50549,12 +51147,12 @@ function validateEvolutionResult(result, batch, memory) {
 }
 function parseEvolutionResponse(raw, batch, memory) {
   if (typeof raw !== "string" || raw.length > 512e3) throw new Error("\u89D2\u8272\u6F14\u53D8\u54CD\u5E94\u4E0D\u662F\u6587\u672C\uFF0C\u6216\u54CD\u5E94\u8FC7\u957F\u3002");
-  let text3 = raw.trim();
-  const fenced = text3.match(/^```(?:json)?\s*\n?([\s\S]*?)\s*```$/i);
-  if (fenced) text3 = fenced[1];
+  let text5 = raw.trim();
+  const fenced = text5.match(/^```(?:json)?\s*\n?([\s\S]*?)\s*```$/i);
+  if (fenced) text5 = fenced[1];
   let result;
   try {
-    result = JSON.parse(text3);
+    result = JSON.parse(text5);
   } catch {
     throw new Error("\u89D2\u8272\u6F14\u53D8\u672A\u8FD4\u56DE\u5B8C\u6574 JSON\uFF0C\u539F\u6863\u6848\u5DF2\u4FDD\u7559\u3002");
   }
@@ -50667,8 +51265,8 @@ function reconcileEvolution(memory, chat2, extractionScope2) {
   return { memory: next, changed: next !== memory };
 }
 function tokenCounter(estimate) {
-  return (text3) => {
-    const tokens = estimate(text3);
+  return (text5) => {
+    const tokens = estimate(text5);
     if (!Number.isFinite(tokens) || tokens < 0) throw new Error("\u89D2\u8272\u6F14\u53D8\u7684 token \u4F30\u7B97\u7ED3\u679C\u65E0\u6548\u3002");
     return tokens;
   };
@@ -50694,9 +51292,9 @@ function renderEvolutionState(item2) {
     ...item2.manual ? ["\u7528\u6237\u624B\u52A8\u4FEE\u8BA2\uFF1B\u6240\u9644\u539F\u6587\u4E0D\u4EE3\u8868\u5DF2\u6838\u9A8C\u624B\u6539\u5224\u65AD\u3002"] : []
   ].join("\n");
 }
-function localTerms(text3) {
+function localTerms(text5) {
   const terms = /* @__PURE__ */ new Set();
-  for (const word of String(text3 || "").toLowerCase().match(/[\p{Script=Han}]+|[\p{Script=Latin}\p{N}_-]+/gu) || []) {
+  for (const word of String(text5 || "").toLowerCase().match(/[\p{Script=Han}]+|[\p{Script=Latin}\p{N}_-]+/gu) || []) {
     if (word.length < 2) continue;
     terms.add(word);
     if (/\p{Script=Han}/u.test(word)) {
@@ -50707,7 +51305,7 @@ function localTerms(text3) {
   return terms;
 }
 function lineRelevance(item2, recentTerms) {
-  const overlap = (text3) => [...localTerms(text3)].reduce((score, term) => score + Number(recentTerms.has(term)), 0);
+  const overlap = (text5) => [...localTerms(text5)].reduce((score, term) => score + Number(recentTerms.has(term)), 0);
   return overlap(`${item2.subject || ""}
 ${item2.scope}`) * 3 + overlap(`${item2.title}
 ${item2.current}`);
@@ -50734,9 +51332,9 @@ function composeEvolutionStates(memory, rawConfig, estimate, recentText) {
     if (count(render([...selected, item2])) > config.inject_tokens) omitted.push(item2.title);
     else selected.push(item2);
   }
-  const text3 = selected.length ? render(selected) : "";
+  const text5 = selected.length ? render(selected) : "";
   const included = Object.keys(EVOLUTION_CATEGORIES).flatMap((category) => selected.filter((item2) => item2.category === category).map((item2) => item2.id));
-  return { text: text3, tokens: text3 ? count(text3) : 0, omitted, detailsOmitted: [], included };
+  return { text: text5, tokens: text5 ? count(text5) : 0, omitted, detailsOmitted: [], included };
 }
 var EVOLUTION_KEY, EVOLUTION_CATEGORIES, EVOLUTION_TIMESCALES, EVOLUTION_STATE_FIELDS, STATE_KEYS, EVOLUTION_INSTRUCTIONS, EVOLUTION_DEFAULTS, cloneEvolution, validString, hasFields, earlierSources, earlierManual, recentFloor, emptyPrompt;
 var init_characterEvolutionData = __esm({
@@ -51063,18 +51661,18 @@ function injectionMemory(ctx2) {
   return memory;
 }
 function refreshInjection2() {
-  let text3 = "", depth = 0;
+  let text5 = "", depth = 0;
   try {
     const ctx2 = context2();
     if (ctx2) {
       const config = getEvolutionConfig();
-      text3 = composeEvolutionPrompt(injectionMemory(ctx2), config, estimateTokens, recentContext(ctx2)).text;
+      text5 = composeEvolutionPrompt(injectionMemory(ctx2), config, estimateTokens, recentContext(ctx2)).text;
       depth = Math.min(config.inject_depth, Math.max(0, ctx2.chat.filter((message) => !message.is_system).length - 1));
     }
   } catch (cause) {
     console.warn("\u89D2\u8272\u6F14\u53D8\u6CE8\u5165\u5237\u65B0\u5931\u8D25", cause);
   }
-  setExtensionPrompt4(EVOLUTION_PROMPT_KEY, text3, extension_prompt_types4.IN_CHAT, depth, false, extension_prompt_roles4.SYSTEM);
+  setExtensionPrompt4(EVOLUTION_PROMPT_KEY, text5, extension_prompt_types4.IN_CHAT, depth, false, extension_prompt_roles4.SYSTEM);
 }
 function getEvolutionView() {
   const ctx2 = context2(), host3 = globalThis.SillyTavern?.getContext?.();
@@ -51910,8 +52508,8 @@ function recallQuery(chat2) {
     const message = chat2[i];
     if (!message || !String(message.mes || "").trim()) continue;
     if (message.is_system || message.is_hidden || message.extra?.is_hidden) continue;
-    const text3 = extractToolboxText(message.mes, rules);
-    if (text3.trim()) texts.push(text3);
+    const text5 = extractToolboxText(message.mes, rules);
+    if (text5.trim()) texts.push(text5);
   }
   return texts.reverse().join("\n").slice(-RECALL_QUERY_CHARS);
 }
@@ -51986,18 +52584,18 @@ function getStoryMemoryView() {
 }
 function refreshInjection3() {
   const ctx2 = context3();
-  let text3 = "";
+  let text5 = "";
   let depth = 0;
   if (ctx2) {
     const config = getStoryMemoryConfig();
     const memory = memoryFor3(ctx2);
     if (firstInvalidSegment(memory, ctx2.chat) < 0) {
       const recalled = recallCandidatesFor(ctx2, memory, config);
-      text3 = [memoryTimeWarning(ctx2), composeMemoryPrompt(memory, config, estimateTokens, { recalled }).text].filter(Boolean).join("\n\n");
+      text5 = [memoryTimeWarning(ctx2), composeMemoryPrompt(memory, config, estimateTokens, { recalled }).text].filter(Boolean).join("\n\n");
     }
     depth = Math.min(config.inject_depth, Math.max(0, ctx2.chat.filter((message) => !message.is_system).length - 1));
   }
-  setExtensionPrompt5(MEMORY_PROMPT_KEY, text3, extension_prompt_types5.IN_CHAT, depth, false, extension_prompt_roles5.SYSTEM);
+  setExtensionPrompt5(MEMORY_PROMPT_KEY, text5, extension_prompt_types5.IN_CHAT, depth, false, extension_prompt_roles5.SYSTEM);
 }
 async function persist3(ctx2, timeCommit = null) {
   if (!sameChat3(ctx2)) throw new Error("\u804A\u5929\u5DF2\u5207\u6362\uFF0C\u672C\u6B21\u4EFB\u52A1\u5DF2\u53D6\u6D88\u3002");
@@ -52649,9 +53247,9 @@ async function refreshStoryMemoryTime(segmentId, retrying = null) {
     const fingerprints = ctx2.chat.slice(segment.start, segment.end + 1).map(memoryFloorFingerprint);
     const original = ctx2.chat.slice(segment.start, segment.end + 1).flatMap((message, offset) => {
       if (!isMemoryReadable(message) || !isAnalysisMessage(message, config)) return [];
-      const text3 = extractToolboxText(message.mes, config.text_extraction).trim();
-      return text3 ? [`[#${segment.start + offset}]
-${text3}`] : [];
+      const text5 = extractToolboxText(message.mes, config.text_extraction).trim();
+      return text5 ? [`[#${segment.start + offset}]
+${text5}`] : [];
     }).join("\n\n");
     if (!signature2) throw new Error("\u8FD9\u6BB5\u6B63\u6587\u8FD8\u6CA1\u6709\u53EF\u7528\u7684\u65F6\u95F4\u4F9D\u636E\uFF0C\u8BF7\u5148\u8865\u5EFA\u65F6\u95F4\u8F74\u3002");
     const owner = startProgress2(ctx2, "time-refresh", { totalFloors: segment.end - segment.start + 1, currentStart: segment.start, currentEnd: segment.end });
@@ -52905,9 +53503,9 @@ async function editStoryMemoryStagesTask(patch, retrying, forceAfterRebuild, tas
         let end = start - 1;
         for (let index = start; index <= edit.range.end; index++) {
           const message = ctx2.chat[index];
-          const text3 = extractToolboxText(message?.mes, config.text_extraction);
-          const readable = isMemoryReadable(message) && isAnalysisMessage(message, config) && !!text3.trim();
-          if (readable) rows.push({ index, text: text3 });
+          const text5 = extractToolboxText(message?.mes, config.text_extraction);
+          const readable = isMemoryReadable(message) && isAnalysisMessage(message, config) && !!text5.trim();
+          if (readable) rows.push({ index, text: text5 });
           end = index;
           const boundary = index === edit.range.end || ctx2.chat[index + 1]?.is_user;
           if (rows.length >= config.trigger_floors && boundary) break;
@@ -53949,7 +54547,7 @@ function changeEvidenceHtml(change, detail) {
   return `<details class="t-evolution-details" data-evolution-detail="${escapeHtml(detail)}"><summary>\u8BC1\u636E\u539F\u6587 \xB7 ${change.evidence?.length || 0} \u6761\u6458\u53E5</summary>${(change.evidence || []).map((evidence) => `<div class="t-evolution-source"><strong>${escapeHtml(range(evidence.floor))}</strong><blockquote>${escapeHtml(evidence.quote)}</blockquote></div>`).join("") || '<p class="t-memory-hint">\u672A\u8BB0\u5F55\u539F\u6587\u6458\u53E5\u3002</p>'}</details>`;
 }
 function changesHtml(batch) {
-  return (batch.changes || []).map((change, index) => `<section class="t-evolution-change"><h4>${change.changeType === "retire" || change.after?.status === "retired" ? "\u9000\u5F79 \xB7 \u4E0D\u518D\u6709\u6548" : "\u66F4\u65B0"} \xB7 ${escapeHtml(change.after?.title || change.before?.title || "\u6761\u76EE\u53D8\u5316")}</h4><p class="t-memory-hint">\u53D8\u5316\u524D</p>${snapshotHtml(change.before, "\u6B64\u524D\u6CA1\u6709\u8FD9\u4E00\u6761\u76EE\u3002")}<p class="t-memory-hint">\u53D8\u5316\u540E</p>${snapshotHtml(change.after, "\u6B64\u6761\u76EE\u5DF2\u79FB\u9664\u3002")}${change.reason ? text2(change.reason) : ""}${changeEvidenceHtml(change, `history:${batch.id}:${index}`)}</section>`).join("") || '<p class="t-memory-hint">\u672C\u6279\u6CA1\u6709\u66F4\u65B0\uFF0C\u4FDD\u7559\u5F53\u524D\u72B6\u6001\u3002</p>';
+  return (batch.changes || []).map((change, index) => `<section class="t-evolution-change"><h4>${change.changeType === "retire" || change.after?.status === "retired" ? "\u9000\u5F79 \xB7 \u4E0D\u518D\u6709\u6548" : "\u66F4\u65B0"} \xB7 ${escapeHtml(change.after?.title || change.before?.title || "\u6761\u76EE\u53D8\u5316")}</h4><p class="t-memory-hint">\u53D8\u5316\u524D</p>${snapshotHtml(change.before, "\u6B64\u524D\u6CA1\u6709\u8FD9\u4E00\u6761\u76EE\u3002")}<p class="t-memory-hint">\u53D8\u5316\u540E</p>${snapshotHtml(change.after, "\u6B64\u6761\u76EE\u5DF2\u79FB\u9664\u3002")}${change.reason ? text4(change.reason) : ""}${changeEvidenceHtml(change, `history:${batch.id}:${index}`)}</section>`).join("") || '<p class="t-memory-hint">\u672C\u6279\u6CA1\u6709\u66F4\u65B0\uFF0C\u4FDD\u7559\u5F53\u524D\u72B6\u6001\u3002</p>';
 }
 function batchesHtml(batches) {
   return [...batches].reverse().map((batch) => `<details class="t-evolution-details" data-evolution-detail="batch:${escapeHtml(batch.id)}"><summary>${escapeHtml(range(batch.start, batch.end))} \xB7 ${batch.changes?.length || 0} \u9879\u66F4\u65B0</summary>${changesHtml(batch)}</details>`).join("") || '<p class="t-memory-empty-inline">\u5C1A\u65E0\u5206\u6790\u8BB0\u5F55\u3002</p>';
@@ -54430,7 +55028,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
     }
   };
 }
-var viewSequence, sameIdentity, ITEM_STATUS, comparisonReferences, archiveText, RUN_STATUS, button2, range, text2, options, stateBodyHtml;
+var viewSequence, sameIdentity, ITEM_STATUS, comparisonReferences, archiveText, RUN_STATUS, button2, range, text4, options, stateBodyHtml;
 var init_characterEvolutionView = __esm({
   "src/ui/characterEvolutionView.js"() {
     init_characterEvolution();
@@ -54447,7 +55045,7 @@ var init_characterEvolutionView = __esm({
     RUN_STATUS = { idle: "\u7B49\u5F85\u4E0B\u4E00\u6BB5\u5267\u60C5", analysing: "\u6B63\u5728\u540E\u53F0\u5206\u6790\u2026", saving: "\u6B63\u5728\u4FDD\u5B58\u6863\u6848\u2026", error: "\u5206\u6790\u6682\u672A\u5B8C\u6210" };
     button2 = (action, label, id3 = "", pressed = null) => `<button type="button" class="t-memory-action" data-evolution-action="${action}"${id3 ? ` data-evolution-id="${escapeHtml(id3)}"` : ""}${pressed === null ? "" : ` aria-pressed="${pressed}"`}>${escapeHtml(label)}</button>`;
     range = (start, end = start) => Number.isInteger(start) && start >= 0 ? `\u7B2C ${start}${Number.isInteger(end) && end !== start ? `\uFF5E${end}` : ""} \u697C` : "\u672A\u8BB0\u5F55\u697C\u5C42";
-    text2 = (value) => `<p class="t-memory-text">${escapeHtml(value)}</p>`;
+    text4 = (value) => `<p class="t-memory-text">${escapeHtml(value)}</p>`;
     options = (values, selected) => Object.entries(values).map(([value, label]) => `<option value="${escapeHtml(value)}"${selected === value ? " selected" : ""}>${escapeHtml(label)}</option>`).join("");
     stateBodyHtml = (item2) => `<pre class="t-evolution-state-text" data-evolution-state-text>${escapeHtml(renderEvolutionState(item2))}</pre>`;
   }
@@ -54596,21 +55194,21 @@ function openStoryMemoryWindow(options2 = {}) {
   claimFloatingWindow(close);
   document.body.appendChild(root);
   const field2 = (label, name, value, multiline = true) => `<label class="t-memory-field"><span>${escape6(label)}</span>${multiline ? `<textarea class="t-input" data-field="${name}" rows="5">${escape6(value)}</textarea>` : `<input class="t-input" data-field="${name}" value="${escape6(value)}" maxlength="200">`}</label>`;
-  const button3 = (action, text3, attrs = "") => `<button type="button" class="t-memory-action" data-action="${action}" ${attrs}>${text3}</button>`;
+  const button3 = (action, text5, attrs = "") => `<button type="button" class="t-memory-action" data-action="${action}" ${attrs}>${text5}</button>`;
   const iconButton = (action, icon, label, attrs = "") => `<button type="button" class="t-icon-btn t-memory-icon-btn" data-action="${action}" title="${escape6(label)}" aria-label="${escape6(label)}" ${attrs}><i class="fa-solid ${icon}" aria-hidden="true"></i></button>`;
-  const badge = (text3, cls) => `<span class="t-memory-badge ${cls}">${escape6(text3)}</span>`;
+  const badge = (text5, cls) => `<span class="t-memory-badge ${cls}">${escape6(text5)}</span>`;
   const avatarClass = (name) => {
     let hash = 0;
     for (const char of String(name || "")) hash = hash * 31 + (char.codePointAt(0) || 0) >>> 0;
     return hash % 4;
   };
   const person = (name) => {
-    const text3 = String(name || "").trim();
-    if (!text3) return "";
-    return `<span class="t-memory-person"><span class="t-memory-avatar t-memory-avatar--${avatarClass(text3)}">${escape6([...text3][0] || "?")}</span><strong>${escape6(text3)}</strong></span>`;
+    const text5 = String(name || "").trim();
+    if (!text5) return "";
+    return `<span class="t-memory-person"><span class="t-memory-avatar t-memory-avatar--${avatarClass(text5)}">${escape6([...text5][0] || "?")}</span><strong>${escape6(text5)}</strong></span>`;
   };
-  function textBlock(text3, key, placeholder = "", full = false) {
-    const value = String(text3 || "").trim();
+  function textBlock(text5, key, placeholder = "", full = false) {
+    const value = String(text5 || "").trim();
     if (!value) return `<p class="t-memory-empty-inline">${escape6(placeholder || "\u6682\u65E0\u5185\u5BB9")}</p>`;
     const long = !full && value.length > 180;
     const open = expanded.has(key);
@@ -55315,12 +55913,12 @@ ${item2.body || ""}`.includes(name)));
       } else {
         const ctx2 = globalThis.SillyTavern?.getContext?.();
         const end = node3.end_floor ?? node3.floor;
-        const text3 = node3.source_kind === "summary" ? ctx2?.chatMetadata?.titania_story_memory?.segments?.filter((item3) => item3.start <= node3.source_end && item3.end >= node3.source_start && item3.level !== 2).map((item3) => `[\u7B2C${item3.start}\uFF5E${item3.end}\u697C\u6458\u8981]
+        const text5 = node3.source_kind === "summary" ? ctx2?.chatMetadata?.titania_story_memory?.segments?.filter((item3) => item3.start <= node3.source_end && item3.end >= node3.source_start && item3.level !== 2).map((item3) => `[\u7B2C${item3.start}\uFF5E${item3.end}\u697C\u6458\u8981]
 ${item3.summary}`).join("\n\n") : ctx2?.chat?.slice(node3.floor, end + 1).map((message, offset) => `[#${node3.floor + offset} ${message.name || ""}]
 ${stripTimetraceComments(message.mes)}`).join("\n\n");
         openSource({ title: `\u7B2C ${node3.floor}${end !== node3.floor ? "\uFF5E" + end : ""} \u697C\u65F6\u95F4\u4F9D\u636E`, start: node3.floor, text: `\u539F\u6587\u6458\u53E5\uFF1A${node3.evidence}
 
-${stripTimetraceComments(text3 || "\u539F\u6587\u5DF2\u4E0D\u53EF\u8BFB\u53D6\u3002")}` });
+${stripTimetraceComments(text5 || "\u539F\u6587\u5DF2\u4E0D\u53EF\u8BFB\u53D6\u3002")}` });
       }
       return;
     }
@@ -56645,6 +57243,7 @@ function openSettingsWindow() {
                             <select id="t-prompt-preset-select" class="t-input" style="width:auto; min-width:210px; display:none;"></select>
                             <button id="t-prompt-import" class="t-tool-btn" title="\u5BFC\u5165 SillyTavern Chat Completion \u9884\u8BBE"><i class="fa-solid fa-file-import"></i> \u5BFC\u5165\u9884\u8BBE</button>
                             <button id="t-prompt-export" class="t-tool-btn" title="\u5BFC\u51FA\u5F53\u524D\u9884\u8BBE\u4E3A JSON \u6587\u4EF6\uFF08\u53EF\u91CD\u65B0\u5BFC\u5165\uFF0C\u6216\u7ED9 SillyTavern \u4F7F\u7528\uFF09" style="display:none;"><i class="fa-solid fa-file-export"></i> \u5BFC\u51FA</button>
+                            <button type="button" id="t-prompt-extract-scripts" class="t-tool-btn" hidden>\u63D0\u53D6\u4E3A\u5267\u672C</button>
                             <button id="t-prompt-delete" class="t-tool-btn" title="\u5220\u9664\u5F53\u524D\u9884\u8BBE" style="display:none;"><i class="fa-solid fa-trash"></i> \u5220\u9664</button>
                             <button id="t-prompt-reset-builtin" class="t-tool-btn" title="\u6062\u590D\u5F53\u524D\u5185\u7F6E\u65B9\u6848\u9ED8\u8BA4\u503C" style="display:none;"><i class="fa-solid fa-rotate-left"></i> \u6062\u590D\u9ED8\u8BA4</button>
                             <input type="file" id="t-prompt-file" accept=".json,application/json" style="display:none;">
@@ -57160,9 +57759,9 @@ function openSettingsWindow() {
   $("#t-css-file-input").on("change", function() {
     const file = this.files[0];
     if (!file) return;
-    let fileBaseName = file.name.replace(/\.json$/i, "");
-    fileBaseName = fileBaseName.replace(/^titania_theme_/i, "").replace(/_\d{8}$/, "");
-    fileBaseName = fileBaseName.replace(/_/g, " ").trim();
+    let fileBaseName2 = file.name.replace(/\.json$/i, "");
+    fileBaseName2 = fileBaseName2.replace(/^titania_theme_/i, "").replace(/_\d{8}$/, "");
+    fileBaseName2 = fileBaseName2.replace(/_/g, " ").trim();
     const reader = new FileReader();
     reader.onload = function(e) {
       try {
@@ -57171,7 +57770,7 @@ function openSettingsWindow() {
           throw new Error("\u65E0\u6548\u7684\u4E3B\u9898\u914D\u7F6E\u6587\u4EF6\u683C\u5F0F");
         }
         const importedCSS = importData.css || "";
-        const importedName = fileBaseName || importData.theme_name || "\u5BFC\u5165\u7684\u4E3B\u9898";
+        const importedName = fileBaseName2 || importData.theme_name || "\u5BFC\u5165\u7684\u4E3B\u9898";
         const action = confirm(`\u5BFC\u5165\u4E3B\u9898\u300C${importedName}\u300D
 
 \u70B9\u51FB\u300C\u786E\u5B9A\u300D\u521B\u5EFA\u4E3A\u65B0\u4E3B\u9898
@@ -57255,6 +57854,10 @@ function openSettingsWindow() {
   $("#cfg-auto-continue").on("change", function() {
     $("#auto-continue-panel").toggle($(this).is(":checked"));
   });
+  const presetExtraction = bindPresetScriptExtraction(document.getElementById("t-settings-view"), {
+    getPreset: () => $("#t-prompt-view").val() === "preset" ? tempPromptManager.presets.find((item2) => item2.id === tempPromptManager.active_preset_id) : null,
+    onImported: () => refreshScriptList()
+  });
   const renderPromptManager = () => {
     const view = $("#t-prompt-view").val() || "narrative";
     tempPromptManager.editor_view = view;
@@ -57270,6 +57873,7 @@ function openSettingsWindow() {
     $("#t-prompt-reset-builtin").toggle(!isPreset);
     const scheme = isPreset ? tempPromptManager.presets.find((p) => p.id === $select.val()) : tempPromptManager.builtin[view];
     const entries = scheme ? getPresetEntrySummary(scheme) : [];
+    presetExtraction.refresh();
     mountPresetPromptProcessing(document.getElementById("t-prompt-processing-panel"), isPreset ? scheme : null);
     const $list = $("#t-prompt-entry-list").empty();
     if (!scheme) {
@@ -57622,6 +58226,7 @@ function openSettingsWindow() {
           const summary = stats ? `\u5DF2\u5408\u5E76 ${stats.group_count} \u4E2A\u987A\u5E8F\u5206\u7EC4\uFF1A${stats.reference_count} \u6761\u5F15\u7528\uFF0C${stats.unique_count} \u4E2A\u552F\u4E00\u6761\u76EE\uFF0C\u5BFC\u5165 ${stats.imported_count} \u4E2A` + (stats.duplicate_count ? `\uFF1B\u53BB\u9664 ${stats.duplicate_count} \u6761\u91CD\u590D\u5F15\u7528` : "") + (stats.conflict_count ? `\uFF1B${stats.conflict_count} \u4E2A\u72B6\u6001\u51B2\u7A81\u4EE5\u4E3B\u5206\u7EC4\u4E3A\u51C6` : "") + (stats.removed_marker_count ? `\uFF1B\u8FC7\u6EE4 ${stats.removed_marker_count} \u4E2A\u4E0D\u652F\u6301\u6807\u8BB0` : "") + (stats.missing_definition_count ? `\uFF1B\u8DF3\u8FC7 ${stats.missing_definition_count} \u4E2A\u7F3A\u5931\u5B9A\u4E49` : "") : "";
           toastr.success(summary, `\u5DF2\u5BFC\u5165\u9884\u8BBE\uFF1A${preset.name}`);
         }
+        presetExtraction.notifyImported(preset);
       } catch (e) {
         if (window.toastr) toastr.error(`\u9884\u8BBE\u5BFC\u5165\u5931\u8D25\uFF1A${e?.message || e}`, "Titania");
       } finally {
@@ -57774,12 +58379,14 @@ function openSettingsWindow() {
     }
   });
   $("#btn-open-mgr").on("click", () => {
+    presetExtraction.destroy();
     document.getElementById("t-prompt-editor-modal")?.remove();
     closeImageCropper();
     $("#t-settings-view").remove();
     openScriptManager();
   });
   $("#t-set-close").on("click", () => {
+    presetExtraction.destroy();
     document.getElementById("t-prompt-editor-modal")?.remove();
     closeImageCropper();
     $("#t-settings-view").remove();
@@ -57901,6 +58508,7 @@ function openSettingsWindow() {
       enabled: prevRewriteEntry.enabled === true
     };
     saveExtData();
+    presetExtraction.destroy();
     document.getElementById("t-prompt-editor-modal")?.remove();
     closeImageCropper();
     $("#t-settings-view").remove();
@@ -57935,6 +58543,7 @@ var init_settingsWindow = __esm({
     init_toolboxSettingsLink();
     init_toolboxApiSelector();
     init_presetPromptProcessing();
+    init_presetScriptExtraction2();
     init_state();
     init_theaterTheme();
     init_studioTheme();
@@ -57946,6 +58555,7 @@ var init_settingsWindow = __esm({
     init_scriptData();
     init_scriptStore();
     init_scriptManager();
+    init_mainWindow();
     init_dom();
     init_outlineEntryButton();
     init_sceneAdvanceBubble();
@@ -58064,8 +58674,8 @@ var workshopWindow_exports = {};
 __export(workshopWindow_exports, {
   openWorkshopWindow: () => openWorkshopWindow
 });
-function esc(text3) {
-  return String(text3 ?? "").replace(/[&<>"']/g, (c) => ({
+function esc(text5) {
+  return String(text5 ?? "").replace(/[&<>"']/g, (c) => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -58623,6 +59233,164 @@ var init_workshopWindow = __esm({
   }
 });
 
+// src/ui/scriptImportDialog.js
+function bindScriptImportDialog(root, { onImported = () => {
+} } = {}) {
+  const query = (selector) => root.querySelector(selector);
+  const modal = query("#t-imp-modal"), input = query("#t-file-input-m");
+  const category = query("#t-imp-cat-m"), includeDisabled = query("#t-imp-include-disabled");
+  const options2 = query("#t-imp-worldbook-options"), status3 = query("#t-imp-status");
+  const preview = query("#t-imp-preview"), submit = query("#t-imp-ok"), cancel = query("#t-imp-cancel");
+  let reader = null, version = 0, content = null, fileName = "", parsed = null;
+  let saving = false, pendingCount = 0, disposed = false;
+  const current = (captured) => !disposed && root.isConnected && captured === version;
+  const invalidateRead = () => {
+    version++;
+    if (reader?.readyState === 1) reader.abort();
+    reader = null;
+  };
+  function renderPreview() {
+    parsed = null;
+    preview.replaceChildren();
+    options2.hidden = true;
+    submit.disabled = true;
+    if (content === null) return;
+    try {
+      parsed = parseScriptImport(content, { fileName, category: category.value, includeDisabled: includeDisabled.checked });
+      options2.hidden = parsed.format !== "worldbook";
+      const skipped = Object.values(parsed.skipped).reduce((sum, count) => sum + count, 0);
+      status3.textContent = `\u8BC6\u522B\u4E3A${parsed.formatName}\uFF1A\u5171 ${parsed.total} \u6761\uFF0C\u53EF\u5BFC\u5165 ${parsed.scripts.length} \u6761\uFF0C\u8DF3\u8FC7 ${skipped} \u6761\uFF08\u7A7A\u6B63\u6587 ${parsed.skipped.empty}\u3001\u65E0\u6548\u6761\u76EE ${parsed.skipped.invalid}\u3001\u505C\u7528\u6761\u76EE ${parsed.skipped.disabled}\uFF09\u3002` + (parsed.format === "worldbook" ? ` \u5176\u4E2D\u975E\u7A7A\u505C\u7528\u6761\u76EE ${parsed.disabledCount} \u6761\uFF1B\u4EC5\u8F6C\u6362\u4E3A\u5267\u672C\uFF0C\u4E0D\u4FDD\u7559\u4E16\u754C\u4E66\u89E6\u53D1\u89C4\u5219\u3002` : "");
+      for (const script of parsed.scripts.slice(0, 5)) {
+        const item2 = document.createElement("li");
+        item2.textContent = script.name;
+        preview.append(item2);
+      }
+      if (parsed.scripts.length > 5) {
+        const item2 = document.createElement("li");
+        item2.textContent = `\u53E6\u6709 ${parsed.scripts.length - 5} \u4E2A\u5267\u672C\u2026`;
+        preview.append(item2);
+      }
+      submit.disabled = parsed.scripts.length === 0;
+    } catch (error4) {
+      status3.textContent = error4.message;
+    }
+  }
+  query("#t-mgr-import-btn").addEventListener("click", () => {
+    if (saving) return;
+    if (pendingCount) {
+      status3.textContent = "\u4E0A\u6B21\u5BFC\u5165\u5DF2\u52A0\u5165\u5F53\u524D\u5217\u8868\uFF0C\u5C1A\u672A\u6210\u529F\u4FDD\u5B58\u6587\u4EF6\u3002\u8BF7\u91CD\u8BD5\u4FDD\u5B58\uFF0C\u4E0D\u4F1A\u91CD\u590D\u6DFB\u52A0\u3002";
+      submit.textContent = "\u91CD\u8BD5\u4FDD\u5B58";
+      submit.disabled = false;
+      modal.style.display = "flex";
+      return;
+    }
+    invalidateRead();
+    content = parsed = null;
+    fileName = "";
+    input.value = "";
+    includeDisabled.checked = true;
+    preview.replaceChildren();
+    options2.hidden = true;
+    query("#t-file-name-label").textContent = "\u672A\u9009\u62E9\u6587\u4EF6";
+    status3.textContent = "\u8BF7\u9009\u62E9\u6587\u4EF6\uFF0C\u8BC6\u522B\u540E\u518D\u786E\u8BA4\u5BFC\u5165\u3002";
+    submit.textContent = "\u5F00\u59CB\u5BFC\u5165";
+    submit.disabled = true;
+    modal.style.display = "flex";
+  });
+  query("#t-btn-choose-file").addEventListener("click", () => input.click());
+  input.addEventListener("change", () => {
+    if (saving || pendingCount) return;
+    invalidateRead();
+    content = parsed = null;
+    preview.replaceChildren();
+    options2.hidden = true;
+    submit.textContent = "\u5F00\u59CB\u5BFC\u5165";
+    submit.disabled = true;
+    const file = input.files[0];
+    query("#t-file-name-label").textContent = file?.name || "\u672A\u9009\u62E9\u6587\u4EF6";
+    if (!file) {
+      status3.textContent = "\u8BF7\u9009\u62E9\u6587\u4EF6\uFF0C\u8BC6\u522B\u540E\u518D\u786E\u8BA4\u5BFC\u5165\u3002";
+      return;
+    }
+    fileName = file.name;
+    const captured = version;
+    reader = new FileReader();
+    reader.onload = (event) => {
+      if (!current(captured)) return;
+      content = event.target.result;
+      reader = null;
+      renderPreview();
+    };
+    reader.onerror = () => {
+      if (!current(captured)) return;
+      reader = null;
+      status3.textContent = "\u6587\u4EF6\u8BFB\u53D6\u5931\u8D25\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u6587\u4EF6\u3002";
+    };
+    status3.textContent = "\u6B63\u5728\u8BFB\u53D6\u5E76\u8BC6\u522B\u6587\u4EF6\u2026";
+    reader.readAsText(file);
+  });
+  category.addEventListener("input", () => {
+    if (!saving && !pendingCount) renderPreview();
+  });
+  includeDisabled.addEventListener("change", () => {
+    if (!saving && !pendingCount) renderPreview();
+  });
+  cancel.addEventListener("click", () => {
+    if (saving) return;
+    invalidateRead();
+    content = parsed = null;
+    modal.style.display = "none";
+  });
+  submit.addEventListener("click", async () => {
+    if (saving || disposed || !root.isConnected || modal.style.display === "none") return;
+    if (!pendingCount) {
+      renderPreview();
+      if (!parsed?.scripts.length) return;
+    }
+    saving = true;
+    submit.disabled = cancel.disabled = input.disabled = category.disabled = includeDisabled.disabled = true;
+    query("#t-btn-choose-file").disabled = true;
+    status3.textContent = "\u6B63\u5728\u5BFC\u5165\u5E76\u4FDD\u5B58\u5267\u672C\u2026";
+    try {
+      if (!pendingCount) {
+        pendingCount = saveUserScripts(createScriptImportCopies(parsed.scripts, getScripts()));
+      }
+      if (!await flushScriptsNow()) throw new Error("\u5267\u672C\u5DF2\u52A0\u5165\u5F53\u524D\u5217\u8868\uFF0C\u4F46\u6587\u4EF6\u4FDD\u5B58\u5931\u8D25\u3002\u8BF7\u70B9\u51FB\u300C\u91CD\u8BD5\u4FDD\u5B58\u300D\uFF1B\u4E0D\u4F1A\u91CD\u590D\u6DFB\u52A0\u3002");
+      const count = pendingCount;
+      pendingCount = 0;
+      if (!disposed && root.isConnected) {
+        modal.style.display = "none";
+        onImported();
+        if (window.toastr) window.toastr.success(`\u6210\u529F\u5BFC\u5165 ${count} \u4E2A\u5267\u672C`, "\u5267\u672C\u5BFC\u5165");
+      }
+    } catch (error4) {
+      if (!disposed && root.isConnected) {
+        status3.textContent = error4.message || "\u5BFC\u5165\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002";
+        submit.textContent = pendingCount ? "\u91CD\u8BD5\u4FDD\u5B58" : "\u5F00\u59CB\u5BFC\u5165";
+      }
+    } finally {
+      saving = false;
+      if (!disposed && root.isConnected) {
+        submit.disabled = false;
+        cancel.disabled = false;
+        input.disabled = category.disabled = includeDisabled.disabled = !!pendingCount;
+        query("#t-btn-choose-file").disabled = !!pendingCount;
+      }
+    }
+  });
+  return { destroy() {
+    disposed = true;
+    invalidateRead();
+  } };
+}
+var init_scriptImportDialog = __esm({
+  "src/ui/scriptImportDialog.js"() {
+    init_scriptImport();
+    init_scriptData();
+    init_scriptStore();
+  }
+});
+
 // src/ui/scriptManager.js
 var scriptManager_exports = {};
 __export(scriptManager_exports, {
@@ -58716,16 +59484,22 @@ function openScriptManager() {
                     <datalist id="t-cat-dl-m"></datalist>
                 </div>
                 <div class="t-imp-row">
-                    <span class="t-imp-label">\u9009\u62E9\u6587\u4EF6 (.txt):</span>
+                    <span class="t-imp-label">\u9009\u62E9\u6587\u4EF6 (.txt / .json):</span>
                     <div style="display:flex; gap:10px; align-items:center; background:var(--t-color-surface-well); padding:5px; border-radius:4px; border:1px solid var(--t-color-border);">
-                        <input class="is-hidden" type="file" id="t-file-input-m" accept=".txt">
+                        <input class="is-hidden" type="file" id="t-file-input-m" accept=".txt,.json,text/plain,application/json">
                         <button id="t-btn-choose-file" class="t-btn" style="font-size:0.9em; padding:4px 10px;">\u{1F4C2} \u6D4F\u89C8\u6587\u4EF6...</button>
                         <span id="t-file-name-label" style="font-size:0.85em; color:var(--t-color-text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 150px;">\u672A\u9009\u62E9\u6587\u4EF6</span>
                     </div>
                 </div>
+                <p class="t-imp-hint">\u81EA\u52A8\u8BC6\u522B TXT \u5267\u672C\u3001\u5C0F\u5267\u573A JSON \u4E0E\u9152\u9986\u4E16\u754C\u4E66\u3002\u4E16\u754C\u4E66\u6BCF\u6761\u975E\u7A7A\u6B63\u6587\u8F6C\u6210\u4E00\u4E2A\u5267\u672C\uFF0C\u5206\u7C7B\u7559\u7A7A\u65F6\u4F7F\u7528\u4E16\u754C\u4E66\u540D\uFF1B\u586B\u5199\u5206\u7C7B\u65F6\u7EDF\u4E00\u5B58\u5165\u8BE5\u5206\u7C7B\u3002</p>
+                <label id="t-imp-worldbook-options" class="t-imp-hint" hidden>
+                    <input type="checkbox" id="t-imp-include-disabled" checked> \u5305\u542B\u4E16\u754C\u4E66\u4E2D\u5DF2\u505C\u7528\u7684\u6761\u76EE
+                </label>
+                <p id="t-imp-status" class="t-imp-hint" role="status" aria-live="polite">\u8BF7\u9009\u62E9\u6587\u4EF6\uFF0C\u8BC6\u522B\u540E\u518D\u786E\u8BA4\u5BFC\u5165\u3002</p>
+                <ul id="t-imp-preview" class="t-imp-preview"></ul>
                 <div style="display:flex; gap:10px; margin-top:20px;">
                     <button id="t-imp-cancel" class="t-btn t-flex-1">\u53D6\u6D88</button>
-                    <button id="t-imp-ok" class="t-btn primary t-flex-1">\u5F00\u59CB\u5BFC\u5165</button>
+                    <button id="t-imp-ok" class="t-btn primary t-flex-1" disabled>\u5F00\u59CB\u5BFC\u5165</button>
                 </div>
             </div>
         </div>
@@ -58796,12 +59570,12 @@ function openScriptManager() {
   const renderSidebarCats = () => {
     const cats = getCategories();
     $("#t-mgr-cat-list").empty();
-    $("#t-cat-dl-m").empty().append(cats.map((c) => `<option value="${c}">`));
+    $("#t-cat-dl-m").empty().append(cats.map((c) => `<option value="${escapeHtml(c)}">`));
     cats.forEach((c) => {
       const isAll = c === "\u5168\u90E8";
       const $item = $(`
-                <div class="t-mgr-sb-item" data-filter="category" data-val="${c}">
-                    <span class="t-cat-name">${c}</span>
+                <div class="t-mgr-sb-item" data-filter="category" data-val="${escapeHtml(c)}">
+                    <span class="t-cat-name">${escapeHtml(c)}</span>
                     ${!isAll ? '<i class="fa-solid fa-pen t-cat-edit" style="font-size:0.7em; opacity:0; margin-left:auto; padding:3px;" title="\u91CD\u547D\u540D"></i>' : ""}
                 </div>
             `);
@@ -58829,7 +59603,7 @@ function openScriptManager() {
     $select.empty();
     cats.forEach((c) => {
       const selected = currentFilter.category === c ? "selected" : "";
-      $select.append(`<option value="${c}" ${selected}>${c}</option>`);
+      $select.append(`<option value="${escapeHtml(c)}" ${selected}>${escapeHtml(c)}</option>`);
     });
     if (currentFilter.category === "\u5168\u90E8" || currentFilter.category === "all") {
       $("#t-mgr-cat-edit-mobile").hide();
@@ -58911,7 +59685,7 @@ function openScriptManager() {
     const $box = $("#t-mgr-overview");
     if (!$box.length) return;
     const topUsed = overview.top_used || [];
-    const topItems = topUsed.length > 0 ? topUsed.map((item2) => `<span class="t-mgr-ov-item" title="${item2.name}">${item2.name} (${item2.generated_count})</span>`).join("") : '<span class="t-mgr-ov-empty">\u6682\u65E0\u4F7F\u7528\u6570\u636E</span>';
+    const topItems = topUsed.length > 0 ? topUsed.map((item2) => `<span class="t-mgr-ov-item" title="${escapeHtml(item2.name)}">${escapeHtml(item2.name)} (${item2.generated_count})</span>`).join("") : '<span class="t-mgr-ov-empty">\u6682\u65E0\u4F7F\u7528\u6570\u636E</span>';
     const categoryTop = (overview.category_ranking || []).slice(0, 3);
     const categoryText = categoryTop.length > 0 ? categoryTop.map((x) => `${x.category}(${x.generated_count})`).join(" \xB7 ") : "\u6682\u65E0";
     $box.html(`
@@ -58919,7 +59693,7 @@ function openScriptManager() {
                 <span>\u6392\u5E8F\uFF1A${SORT_MODE_LABELS[currentSortMode] || currentSortMode}</span>
                 <span>\u5DF2\u8FFD\u8E2A\uFF1A${overview.total_tracked_scripts || 0}</span>
                 <span>${overview.days || 7}\u5929\u6D3B\u8DC3\uFF1A${overview.active_last_days || 0}</span>
-                <span>\u5206\u7C7B\u70ED\u5EA6\uFF1A${categoryText}</span>
+                <span>\u5206\u7C7B\u70ED\u5EA6\uFF1A${escapeHtml(categoryText)}</span>
             </div>
             <div class="t-mgr-ov-top">Top5\uFF1A${topItems}</div>
         `);
@@ -58948,7 +59722,7 @@ function openScriptManager() {
     const readStats = createScriptStatsReader();
     filtered.forEach((s) => {
       const isUser = s._type === "user";
-      const catLabel = s.category ? `<span class="t-mgr-tag">${s.category}</span>` : "";
+      const catLabel = s.category ? `<span class="t-mgr-tag">${escapeHtml(s.category)}</span>` : "";
       const presetLabel = !isUser ? `<span class="t-mgr-tag t-mgr-tag--preset">\u9884\u8BBE</span>` : "";
       const stats = readStats(s.id);
       const statsLine = `\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 \u9009\u62E9 ${stats.selected_count || 0} \u6B21 \xB7 \u6700\u8FD1 ${formatRelativeTime2(stats.last_generated_at || stats.last_selected_at)}`;
@@ -58958,8 +59732,8 @@ function openScriptManager() {
                         <input type="checkbox" class="t-mgr-check" data-id="${s.id}" data-type="${s._type}">
                     </div>
                     <div class="t-mgr-item-meta" style="cursor:pointer;">
-                        <div class="t-mgr-item-title">${s.name} ${presetLabel} ${catLabel}</div>
-                        <div class="t-mgr-item-desc">${s.desc || "..."}</div>
+                        <div class="t-mgr-item-title">${escapeHtml(s.name)} ${presetLabel} ${catLabel}</div>
+                        <div class="t-mgr-item-desc">${escapeHtml(s.desc || "...")}</div>
                         <div class="t-mgr-item-stats">${statsLine}</div>
                     </div>
                     <div style="padding-left:10px;">
@@ -59076,7 +59850,7 @@ ${s.prompt}`;
     cats.unshift("\u672A\u5206\u7C7B");
     $("#t-exp-cat").empty();
     [...new Set(cats)].forEach((c) => {
-      $("#t-exp-cat").append(`<option value="${c}">${c}</option>`);
+      $("#t-exp-cat").append(`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`);
     });
     $("#t-export-modal").css("display", "flex");
   });
@@ -59130,78 +59904,7 @@ ${s.prompt}`;
     if (window.toastr) toastr.success(`\u5DF2\u5BFC\u51FA ${scripts.length} \u4E2A\u5267\u672C`);
   });
   $("#t-mgr-workshop-btn").on("click", () => openWorkshopWindow("manager"));
-  $("#t-mgr-import-btn").on("click", () => {
-    $("#t-imp-modal").css("display", "flex");
-    $("#t-file-input-m").val("");
-    $("#t-file-name-label").text("\u672A\u9009\u62E9\u6587\u4EF6");
-  });
-  $("#t-btn-choose-file").on("click", () => $("#t-file-input-m").click());
-  $("#t-file-input-m").on("change", function() {
-    $("#t-file-name-label").text(this.files[0] ? this.files[0].name : "\u672A\u9009\u62E9\u6587\u4EF6");
-  });
-  $("#t-imp-cancel").on("click", () => $("#t-imp-modal").hide());
-  $("#t-imp-ok").on("click", () => {
-    const file = $("#t-file-input-m")[0].files[0];
-    if (!file) return alert("\u8BF7\u9009\u62E9\u6587\u4EF6");
-    const defaultCat = $("#t-imp-cat-m").val().trim();
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-      const content = evt.target.result;
-      const fileName = file.name.replace(/\.[^/.]+$/, "");
-      const blocks = content.split(/(?:^|\r?\n)\s*###/);
-      let importCount = 0;
-      blocks.forEach((block, index) => {
-        if (!block || !block.trim()) return;
-        let lines = block.split(/\r?\n/);
-        let potentialInlineTitle = lines[0].trim();
-        let bodyLines = lines;
-        let scriptTitle = "";
-        let scriptCat = defaultCat;
-        if (potentialInlineTitle.length > 0 && potentialInlineTitle.length < 50) {
-          scriptTitle = potentialInlineTitle;
-          bodyLines = lines.slice(1);
-        }
-        let rawBody = bodyLines.join("\n").trim();
-        const titleMatch = rawBody.match(/^(?:Title|标题)[:：]\s*(.+)$/im);
-        if (titleMatch) {
-          scriptTitle = titleMatch[1].trim();
-          rawBody = rawBody.replace(titleMatch[0], "").trim();
-        }
-        const catMatch = rawBody.match(/^(?:Category|分类)[:：]\s*(.+)$/im);
-        if (catMatch) {
-          scriptCat = catMatch[1].trim();
-          rawBody = rawBody.replace(catMatch[0], "").trim();
-        }
-        let scriptDesc = "";
-        const descMatch = rawBody.match(/^(?:Desc|简介|描述)[:：]\s*(.+)$/im);
-        if (descMatch) {
-          scriptDesc = descMatch[1].trim();
-          rawBody = rawBody.replace(descMatch[0], "").trim();
-        }
-        if (!scriptTitle) {
-          const cleanStart = rawBody.replace(/\s+/g, " ").substring(0, 20);
-          if (cleanStart) {
-            scriptTitle = cleanStart + "...";
-          } else {
-            scriptTitle = `${fileName}_${String(index + 1).padStart(2, "0")}`;
-          }
-        }
-        if (!rawBody) return;
-        saveUserScript({
-          id: "imp_" + Date.now() + "_" + Math.floor(Math.random() * 1e4),
-          name: scriptTitle,
-          desc: scriptDesc || "\u5BFC\u5165\u6570\u636E",
-          prompt: rawBody,
-          category: scriptCat
-        });
-        importCount++;
-      });
-      alert(`\u6210\u529F\u5BFC\u5165 ${importCount} \u4E2A\u5267\u672C`);
-      $("#t-imp-modal").hide();
-      refreshAll();
-    };
-    reader.readAsText(file);
-  });
+  const importDialog = bindScriptImportDialog(document.getElementById("t-mgr-view"), { onImported: refreshAll });
   $("#t-mgr-del-confirm").on("click", function() {
     const toDeleteUser = [];
     const toHidePreset = [];
@@ -59242,7 +59945,7 @@ ${s.prompt}`;
     const cats = getCategories().filter((c) => c !== "\u5168\u90E8");
     $("#t-move-cat-list").empty();
     cats.forEach((c) => {
-      $("#t-move-cat-list").append(`<option value="${c}">`);
+      $("#t-move-cat-list").append(`<option value="${escapeHtml(c)}">`);
     });
     $("#t-move-cat").val("");
     $("#t-move-modal").css("display", "flex");
@@ -59272,6 +59975,7 @@ ${s.prompt}`;
     if (window.toastr) toastr.success(`\u5DF2\u5C06 ${scriptsToMove.length} \u4E2A\u5267\u672C\u79FB\u81F3 "${targetCat}"`);
   });
   $("#t-mgr-close").on("click", () => {
+    importDialog.destroy();
     $("#t-mgr-view").remove();
     const $mainView = $("#t-main-view");
     if ($mainView.length > 0) {
@@ -59310,7 +60014,7 @@ function openEditor(id3, source = "main") {
     $("#t-main-view").hide();
   }
   const existingCats = [...new Set(GlobalState.runtimeScripts.map((s) => s.category).filter((c) => c))].sort();
-  const dataListOpts = existingCats.map((c) => `<option value="${c}">`).join("");
+  const dataListOpts = existingCats.map((c) => `<option value="${escapeHtml(c)}">`).join("");
   const html = `
     <div class="t-box t-root" id="t-editor-view">
         <div class="t-header"><span class="t-title-main">${isPreset ? "\u67E5\u770B" : isEdit ? "\u7F16\u8F91" : "\u65B0\u5EFA"}</span></div>
@@ -59318,22 +60022,22 @@ function openEditor(id3, source = "main") {
             <div style="display:flex; gap:10px; margin-bottom:5px;">
                 <div style="flex-grow:1;">
                     <label>\u6807\u9898:</label>
-                    <input id="ed-name" class="t-input" value="${data.name}" ${isPreset ? "disabled" : ""}>
+                    <input id="ed-name" class="t-input" value="${escapeHtml(data.name)}" ${isPreset ? "disabled" : ""}>
                 </div>
                 <div style="width: 150px;">
                     <label>\u5206\u7C7B:</label>
-                    <input id="ed-cat" list="ed-cat-list" class="t-input" value="${data.category || ""}" placeholder="\u9ED8\u8BA4" ${isPreset ? "disabled" : ""}>
+                    <input id="ed-cat" list="ed-cat-list" class="t-input" value="${escapeHtml(data.category || "")}" placeholder="\u9ED8\u8BA4" ${isPreset ? "disabled" : ""}>
                     <datalist id="ed-cat-list">${dataListOpts}</datalist>
                 </div>
             </div>
 
-            <label>\u7B80\u4ECB:</label><input id="ed-desc" class="t-input" value="${data.desc}" ${isPreset ? "disabled" : ""}>
+            <label>\u7B80\u4ECB:</label><input id="ed-desc" class="t-input" value="${escapeHtml(data.desc)}" ${isPreset ? "disabled" : ""}>
             
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
                 <label>Prompt:</label>
                 ${!isPreset ? `<div class="t-tool-btn" id="ed-btn-expand" style="cursor:pointer;"><i class="fa-solid fa-maximize"></i> \u5927\u5C4F</div>` : ""}
             </div>
-            <textarea id="ed-prompt" class="t-input" rows="6" ${isPreset ? "disabled" : ""}>${data.prompt}</textarea>
+            <textarea id="ed-prompt" class="t-input" rows="6" ${isPreset ? "disabled" : ""}></textarea>
             
             <div class="t-btn-row">
                 ${!isPreset ? '<button id="ed-save" class="t-btn primary t-flex-1">\u4FDD\u5B58</button>' : ""}
@@ -59343,6 +60047,7 @@ function openEditor(id3, source = "main") {
     </div>`;
   $("#t-overlay").append(html);
   applyStudioTheme(document.getElementById("t-editor-view"));
+  $("#ed-prompt").val(data.prompt || "");
   $("#ed-cancel").on("click", () => {
     $("#t-editor-view").remove();
     if (source === "manager") {
@@ -59363,7 +60068,7 @@ function openEditor(id3, source = "main") {
                     <span class="t-close" id="ed-large-close">&times;</span>
                 </div>
                 <div class="t-body" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
-                    <textarea id="ed-large-text" class="t-input" style="flex:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px; min-height:0;">${originalContent}</textarea>
+                    <textarea id="ed-large-text" class="t-input" style="flex:1; resize:none; font-family:monospace; line-height:1.5; font-size:14px; min-height:0;"></textarea>
                     <div class="t-btn-row" style="flex-shrink:0; margin-top:10px;">
                         <button id="ed-large-ok" class="t-btn primary t-flex-1">\u786E\u8BA4\u4FDD\u5B58</button>
                         <button id="ed-large-cancel" class="t-btn t-flex-1">\u53D6\u6D88</button>
@@ -59373,6 +60078,7 @@ function openEditor(id3, source = "main") {
         </div>`;
     $("body").append(largeEditHtml);
     applyStudioTheme(document.getElementById("t-large-edit-view"));
+    $("#ed-large-text").val(originalContent);
     const checkUnsavedChanges = () => {
       const currentContent = $("#ed-large-text").val();
       return currentContent !== originalContent;
@@ -59441,6 +60147,8 @@ var init_scriptManager = __esm({
     init_settingsWindow();
     init_workshopWindow();
     init_studioTheme();
+    init_scriptImportDialog();
+    init_helpers();
     SORT_MODE_LABELS = {
       default: "\u9ED8\u8BA4\u987A\u5E8F",
       smart: "\u667A\u80FD\u6392\u5E8F",
@@ -60071,8 +60779,8 @@ function isTempInstructionGenerationSource(source) {
 function isTempInstructionFeatureEnabled(data) {
   return data?.temp_instruction?.enabled !== false;
 }
-function buildTempInstructionBlock(text3, options2 = {}) {
-  const body = String(text3 ?? "").trim();
+function buildTempInstructionBlock(text5, options2 = {}) {
+  const body = String(text5 ?? "").trim();
   if (!body) return "";
   const hint = options2?.continuation === true ? HINT_CONTINUATION : HINT_CREATE;
   return `
@@ -60084,8 +60792,8 @@ ${body}`;
 function getTempInstructionDraft() {
   return draft;
 }
-function setTempInstructionDraft(text3) {
-  draft = String(text3 ?? "").trim();
+function setTempInstructionDraft(text5) {
+  draft = String(text5 ?? "").trim();
   return draft;
 }
 function getActiveTempInstruction(scriptId) {
@@ -60097,9 +60805,9 @@ function hasActiveTempInstruction(scriptId) {
 }
 function consumeTempInstruction(scriptId) {
   const id3 = String(scriptId || "");
-  const text3 = draft.trim();
+  const text5 = draft.trim();
   draft = "";
-  active3 = text3 && id3 ? { scriptId: id3, text: text3 } : null;
+  active3 = text5 && id3 ? { scriptId: id3, text: text5 } : null;
   return active3 ? active3.text : "";
 }
 function takeActiveTempInstruction() {
@@ -60931,8 +61639,9 @@ function closeWindow2() {
   layoutTeardownHooks = [];
   activeLayout = null;
   $("#t-overlay").remove();
-  $("#t-more-popover").remove();
+  $("#t-more-popover, #t-profile-popover").remove();
   $(document).off("click.closemore");
+  $(document).off("click.closeprofile");
   $(document).off("keydown.zenmode");
   $(document).off("click.tinlinebranch");
   $(window).off("resize.ttempinput");
@@ -60947,14 +61656,14 @@ function getContinuationRecentInstructions() {
   return list.map((item2) => String(item2 || "").trim()).filter((item2) => item2.length > 0).slice(0, CONTINUATION_RECENT_MAX);
 }
 function saveContinuationRecentInstruction(instruction) {
-  const text3 = String(instruction || "").trim();
-  if (!text3) return;
+  const text5 = String(instruction || "").trim();
+  if (!text5) return;
   const data = getExtData();
   if (!data.continuation_ui) data.continuation_ui = {};
   const prev = Array.isArray(data.continuation_ui.recent_instructions) ? data.continuation_ui.recent_instructions : [];
   const normalizedPrev = prev.map((item2) => String(item2 || "").trim()).filter((item2) => item2.length > 0);
-  const deduped = normalizedPrev.filter((item2) => item2 !== text3);
-  data.continuation_ui.recent_instructions = [text3, ...deduped].slice(0, CONTINUATION_RECENT_MAX);
+  const deduped = normalizedPrev.filter((item2) => item2 !== text5);
+  data.continuation_ui.recent_instructions = [text5, ...deduped].slice(0, CONTINUATION_RECENT_MAX);
   saveExtData();
 }
 function openContinuationComposer(initialText = "", regenerationTarget = null, baseContentOverride = null) {
@@ -61123,8 +61832,8 @@ function openContinuationComposer(initialText = "", regenerationTarget = null, b
       updateContextEstimate();
     });
     $("#t-cont-recent-list").on("click", ".t-cont-recent-item", function() {
-      const text3 = decodeURIComponent($(this).attr("data-text") || "");
-      $input.val(text3);
+      const text5 = decodeURIComponent($(this).attr("data-text") || "");
+      $input.val(text5);
       updateCharCount();
       $input.trigger("focus");
     });
@@ -61500,7 +62209,7 @@ function refreshScriptList() {
   $sel.empty();
   const validScripts = sortScripts(GlobalState.runtimeScripts, getScriptSortMode());
   validScripts.forEach((s) => {
-    $sel.append(`<option value="${s.id}">${s.name}</option>`);
+    $sel.append(`<option value="${escapeHtmlText3(s.id)}">${escapeHtmlText3(s.name)}</option>`);
   });
   if (GlobalState.lastUsedScriptId && validScripts.find((s) => s.id === GlobalState.lastUsedScriptId)) {
     $sel.val(GlobalState.lastUsedScriptId);
@@ -62651,13 +63360,13 @@ async function openWorldInfoSelector() {
     return currentEntries.filter((entry) => entry.isDisabled && selectedSet.has(Number(entry.uid))).length;
   };
   const renderEntryTitle = (title) => {
-    const text3 = String(title || "");
-    if (!entrySearchQuery) return escapeHtmlText3(text3);
-    const idx = text3.toLowerCase().indexOf(entrySearchQuery.toLowerCase());
-    if (idx === -1) return escapeHtmlText3(text3);
-    const before = text3.slice(0, idx);
-    const hit = text3.slice(idx, idx + entrySearchQuery.length);
-    const after = text3.slice(idx + entrySearchQuery.length);
+    const text5 = String(title || "");
+    if (!entrySearchQuery) return escapeHtmlText3(text5);
+    const idx = text5.toLowerCase().indexOf(entrySearchQuery.toLowerCase());
+    if (idx === -1) return escapeHtmlText3(text5);
+    const before = text5.slice(0, idx);
+    const hit = text5.slice(idx, idx + entrySearchQuery.length);
+    const after = text5.slice(idx + entrySearchQuery.length);
     return `${escapeHtmlText3(before)}<span class="t-wi-title-hit">${escapeHtmlText3(hit)}</span>${escapeHtmlText3(after)}`;
   };
   const syncSelectAllLabels = () => {
@@ -63039,8 +63748,8 @@ function showScriptSelector(initialFilter = "ALL") {
       const stats = readStats(s.id);
       const card = $(`
                 <div class="t-script-card">
-                    <div class="t-card-title">${s.name}</div>
-                    <div class="t-card-desc">${s.desc || "..."}</div>
+                    <div class="t-card-title">${escapeHtmlText3(s.name)}</div>
+                    <div class="t-card-desc">${escapeHtmlText3(s.desc || "...")}</div>
                     <div class="t-card-stats">\u4F7F\u7528 ${stats.generated_count || 0} \u6B21 \xB7 ${formatRelativeTime3(stats.last_generated_at)}</div>
                 </div>
             `);
@@ -63055,7 +63764,7 @@ function showScriptSelector(initialFilter = "ALL") {
   };
   const $sidebar = $("#t-sel-sidebar");
   categories.forEach((cat) => {
-    const btn = $(`<div class="t-sel-cat-btn">${cat}</div>`);
+    const btn = $(`<div class="t-sel-cat-btn">${escapeHtmlText3(cat)}</div>`);
     if (cat === currentCat) btn.addClass("active");
     btn.on("click", function() {
       $(".t-sel-cat-btn").removeClass("active");
@@ -63158,52 +63867,64 @@ function renderMoreMenu($targetBtn) {
   }, 10);
 }
 function renderProfileMenu($targetBtn) {
-  if ($("#t-profile-popover").length) {
+  const closeMenu2 = () => {
     $("#t-profile-popover").remove();
+    $(document).off("click.closeprofile");
+  };
+  if ($("#t-profile-popover").length) {
+    closeMenu2();
     return;
   }
   const data = getExtData();
-  if (!data.config || typeof data.config !== "object") data.config = {};
-  const normalized = ensureMainApiProfiles(data.config);
-  data.config.profiles = normalized.profiles;
-  data.config.active_profile_id = normalized.active_profile_id;
-  const profiles = normalized.profiles;
-  const activeId = normalized.active_profile_id;
+  const { profiles } = ensureMainApiProfiles(data.config);
+  const choice = getToolboxApiChoice(data, "theater");
+  const activeId = choice === "local" ? "global" : choice;
+  const items = [
+    { id: "global", name: "\u8DDF\u968F\u5168\u5C40\u9ED8\u8BA4" },
+    ...profiles.map((p) => ({ id: `profile:${p.id}`, name: p.name }))
+  ];
   const html = `
-    <div id="t-profile-popover" class="t-filter-popover" style="width: 200px; z-index: 21000;">
-        ${profiles.map((p) => `
-            <div class="t-filter-item ${p.id === activeId ? "active" : ""}" data-id="${p.id}" data-name="${p.name}">
-                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</span>
+    <div id="t-profile-popover" class="t-filter-popover t-root" style="width: 200px; z-index: 21000;">
+        ${items.map((p) => `
+            <div class="t-filter-item ${p.id === activeId ? "active" : ""}" data-id="${escapeHtmlText3(p.id)}">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText3(p.name)}</span>
                 <i class="fa-solid fa-check t-filter-check"></i>
             </div>
         `).join("")}
     </div>`;
   $("body").append(html);
   const pop = $("#t-profile-popover");
+  applyStudioTheme(pop[0]);
   const rect = $targetBtn[0].getBoundingClientRect();
   const left = rect.left + 200 > window.innerWidth ? rect.right - 200 : rect.left;
   pop.css({ top: rect.bottom + 10, left });
   $(".t-filter-item", pop).on("click", function() {
-    const newId = $(this).data("id");
-    const newName = $(this).data("name");
-    if (!data.config) data.config = {};
-    data.config.active_profile_id = newId;
+    var _a, _b;
+    const newId = String($(this).attr("data-id") || "");
+    const current = getExtData();
+    const selected = newId.startsWith("profile:") ? ensureMainApiProfiles(current.config).profiles.find((p) => p.id === newId.slice(8)) : null;
+    closeMenu2();
+    if (newId !== "global" && !selected) {
+      if (window.toastr) toastr.warning("\u6240\u9009 API \u65B9\u6848\u5DF2\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002", "\u5C0F\u5267\u573A API");
+      return;
+    }
+    current.toolbox_settings || (current.toolbox_settings = {});
+    (_a = current.toolbox_settings).features || (_a.features = {});
+    (_b = current.toolbox_settings.features).theater || (_b.theater = {});
+    current.toolbox_settings.features.theater.api = newId;
     saveExtData();
-    pop.remove();
-    $(document).off("click.closeprofile");
-    $targetBtn.css({ "color": "#55efc4", "transform": "scale(1.2)" });
+    $targetBtn.css({ "color": "var(--t-color-success)", "transform": "scale(1.2)" });
     setTimeout(() => {
       $targetBtn.css({ "color": "", "transform": "" });
       updateWorldInfoBadge();
     }, 500);
-    if (window.toastr) toastr.success(`\u5DF2\u5207\u6362\u81F3\u65B9\u6848\uFF1A${newName}`, "API Profile");
+    const newName = selected?.name || "\u8DDF\u968F\u5168\u5C40\u9ED8\u8BA4";
+    if (window.toastr) toastr.success(`\u5C0F\u5267\u573A\u5DF2\u5207\u6362\u81F3\u65B9\u6848\uFF1A${newName}`, "\u5C0F\u5267\u573A API", { escapeHtml: true });
   });
   setTimeout(() => {
+    if (!pop[0].isConnected) return;
     $(document).on("click.closeprofile", (e) => {
-      if (!$(e.target).closest("#t-profile-popover, #t-btn-profile").length) {
-        pop.remove();
-        $(document).off("click.closeprofile");
-      }
+      if (!pop[0].contains(e.target) && !$targetBtn[0].contains(e.target)) closeMenu2();
     });
   }, 10);
 }
@@ -63328,7 +64049,7 @@ function openQueueSettingsWindow() {
                 <div class="t-queue-row">
                     <div class="t-queue-label">\u5206\u7C7B\u8303\u56F4</div>
                     <select class="t-queue-select" id="t-queue-category">
-                        ${categories.map((c) => `<option value="${c === "\u5168\u90E8" ? "ALL" : c}" ${qState.categoryFilter === "ALL" && c === "\u5168\u90E8" || qState.categoryFilter === c ? "selected" : ""}>${c}</option>`).join("")}
+                        ${categories.map((c) => `<option value="${escapeHtmlText3(c === "\u5168\u90E8" ? "ALL" : c)}" ${qState.categoryFilter === "ALL" && c === "\u5168\u90E8" || qState.categoryFilter === c ? "selected" : ""}>${escapeHtmlText3(c)}</option>`).join("")}
                     </select>
                 </div>
             </div>
@@ -63341,8 +64062,8 @@ function openQueueSettingsWindow() {
                         <div class="t-queue-script-item ${qState.manualItems.includes(s.id) ? "selected" : ""}" data-id="${s.id}">
                             <input type="checkbox" class="t-choice-input t-choice-input--accent" ${qState.manualItems.includes(s.id) ? "checked" : ""}>
                             <div class="t-queue-script-info">
-                                <div class="t-queue-script-name">${s.name}</div>
-                                <div class="t-queue-script-cat">${s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B")}</div>
+                                <div class="t-queue-script-name">${escapeHtmlText3(s.name)}</div>
+                                <div class="t-queue-script-cat">${escapeHtmlText3(s.category || (s._type === "preset" ? "\u5B98\u65B9\u9884\u8BBE" : "\u672A\u5206\u7C7B"))}</div>
                             </div>
                         </div>
                     `).join("")}
@@ -63521,6 +64242,7 @@ var init_mainWindow = __esm({
   "src/ui/mainWindow.js"() {
     init_storage();
     init_apiProfileRegistry();
+    init_toolboxSettings();
     init_state();
     init_context();
     init_api();
@@ -64236,7 +64958,7 @@ function buildContinuationBranchInjection(rounds) {
       estimatedTokens: 0
     };
   }
-  const text3 = selectedRounds.map((item2) => {
+  const text5 = selectedRounds.map((item2) => {
     const instructionText = item2.instruction || "\uFF08\u81EA\u7136\u7EED\u5199\uFF09";
     return `[\u7B2C${item2.round}\u8F6E \u6307\u4EE4]
 ${instructionText}
@@ -64247,9 +64969,9 @@ ${item2.content}`;
   return {
     totalRounds: selectedRounds.length,
     selectedRounds,
-    text: text3,
-    estimatedChars: text3.length,
-    estimatedTokens: estimateTokens(text3)
+    text: text5,
+    estimatedChars: text5.length,
+    estimatedTokens: estimateTokens(text5)
   };
 }
 function composeContinuationPromptOverride({ injectionText, userInstruction, crossRoleSource = "" }) {
@@ -67021,8 +67743,8 @@ function refreshSettingsDrawer() {
   root.querySelectorAll("[data-settings-group]").forEach((group) => {
     const count = group.querySelectorAll("[data-settings-toggle]:checked").length;
     const status3 = group.querySelector(".titania-settings-count");
-    const text3 = `\u5DF2\u5F00\u542F ${count} \u9879`;
-    if (status3 && status3.textContent !== text3) status3.textContent = text3;
+    const text5 = `\u5DF2\u5F00\u542F ${count} \u9879`;
+    if (status3 && status3.textContent !== text5) status3.textContent = text5;
   });
 }
 function initSettingsDrawer() {
@@ -67189,14 +67911,14 @@ function initStoryMemoryNotifications() {
     node2.dataset.state = active4 ? failed ? "retry" : "running" : done ? "done" : failed ? "error" : "paused";
     const title = active4 ? "\u540E\u53F0\u6574\u7406\u8FDB\u884C\u4E2D" : done ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u5DF2\u4FDD\u5B58" : failed ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u6709\u4EFB\u52A1\u672A\u5B8C\u6210" : "\u540E\u53F0\u6574\u7406\u5DF2\u6682\u505C";
     const hint = active4 ? "\u5EFA\u8BAE\u6574\u7406\u5B8C\u6210\u540E\u518D\u53D1\u9001\uFF1B\u53EF\u4EE5\u7EE7\u7EED\u7F16\u8F91\u8F93\u5165\uFF0C\u4E0D\u4F1A\u62E6\u622A\u53D1\u9001\u3002" : done ? "\u4EE5\u4E0A\u4E3A\u672C\u8F6E\u5904\u7406\u7ED3\u679C\uFF0C\u4E0D\u4EE3\u8868\u6240\u6709\u6700\u65B0\u697C\u5C42\u90FD\u5DF2\u6574\u7406\u3002" : "\u5DF2\u4FDD\u5B58\u7684\u7ED3\u679C\u4FDD\u7559\uFF0C\u53EF\u4EE5\u7EE7\u7EED\u804A\u5929\uFF1B\u8BE6\u60C5\u89C1\u300C\u6545\u4E8B\u8BB0\u5FC6\u300D\u3002";
-    const text3 = (selector, value) => {
+    const text5 = (selector, value) => {
       const target = node2.querySelector(selector);
       if (target.textContent !== value) target.textContent = value;
     };
-    text3(".t-memory-notice-icon", active4 ? "\u25CC" : done ? "\u2713" : failed ? "!" : "\u2161");
-    text3(".t-memory-notice-title", title);
-    text3(".t-memory-notice-tasks", tasks.map(lineFor).join("\n"));
-    text3(".t-memory-notice-hint", hint);
+    text5(".t-memory-notice-icon", active4 ? "\u25CC" : done ? "\u2713" : failed ? "!" : "\u2161");
+    text5(".t-memory-notice-title", title);
+    text5(".t-memory-notice-tasks", tasks.map(lineFor).join("\n"));
+    text5(".t-memory-notice-hint", hint);
     node2.querySelector("button").hidden = active4;
   }
   function finish() {
@@ -67490,8 +68212,8 @@ function bindDrawerBackupControls() {
     const file = this.files?.[0];
     if (!file) return;
     try {
-      const text3 = await file.text();
-      const importData = JSON.parse(text3);
+      const text5 = await file.text();
+      const importData = JSON.parse(text5);
       if (importData.type !== "titania_theater_backup") throw new Error("\u65E0\u6548\u7684\u5907\u4EFD\u6587\u4EF6\u683C\u5F0F");
       if (!importData.data || typeof importData.data !== "object") throw new Error("\u5907\u4EFD\u6570\u636E\u65E0\u6548");
       let extDataPayload = importData.data;
