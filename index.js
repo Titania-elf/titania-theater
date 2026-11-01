@@ -25000,11 +25000,13 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-tts-window .t-tts-status.is-error { color: var(--t-color-danger); }\r
 \r
 /* A single, text-sized control after dialogue: no names or extra inline actions.\r
-   All icon geometry is relative to host text; state changes never resize the box. */\r
+   The outlined button is vertically centered on the surrounding text; all playback\r
+   states keep the same geometry and inherit the host's light/dark text color. */\r
 .t-tts-controls {\r
     display: inline-flex;\r
-    vertical-align: -0.15em;\r
-    margin-inline-start: 0.2em;\r
+    align-items: center;\r
+    vertical-align: middle;\r
+    margin-inline-start: 0.3em;\r
     padding: 0;\r
     color: inherit;\r
     font-family: inherit;\r
@@ -25020,30 +25022,38 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     justify-content: center;\r
     flex: 0 0 auto;\r
     box-sizing: border-box;\r
-    width: 1.25em;\r
-    height: 1.2em;\r
+    width: 1.35em;\r
+    height: 1.35em;\r
     min-width: 0;\r
     min-height: 0;\r
     margin: 0;\r
     padding: 0;\r
-    border: 0;\r
-    border-radius: 0.25em;\r
+    border: 1px solid currentColor;\r
+    border-color: color-mix(in srgb, currentColor 32%, transparent);\r
+    border-radius: 0.4em;\r
     background: transparent;\r
+    background: color-mix(in srgb, currentColor 4%, transparent);\r
     color: inherit;\r
     box-shadow: none;\r
     font: inherit;\r
     line-height: 1;\r
     text-shadow: none;\r
-    opacity: 0.8;\r
+    opacity: 0.9;\r
     appearance: none;\r
     cursor: pointer;\r
     touch-action: manipulation;\r
-    transition: background-color 150ms ease, opacity 150ms ease;\r
+    transition: background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;\r
 }\r
 \r
 .t-tts-controls .t-tts-play:hover {\r
-    background: color-mix(in srgb, currentColor 8%, transparent);\r
+    border-color: color-mix(in srgb, currentColor 60%, transparent);\r
+    background: color-mix(in srgb, currentColor 10%, transparent);\r
     opacity: 1;\r
+}\r
+\r
+.t-tts-controls .t-tts-play:active {\r
+    border-color: currentColor;\r
+    background: color-mix(in srgb, currentColor 16%, transparent);\r
 }\r
 \r
 .t-tts-controls .t-tts-play:focus-visible {\r
@@ -26930,7 +26940,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186574], "04-features/main-window.css": [186618, 231511], "04-features/main-window-legacy.css": [231562, 255428], "04-features/script-picker.css": [255474, 261969], "04-features/wi-selector.css": [262013, 279066], "04-features/continuation.css": [279111, 302980], "04-features/queue.css": [303018, 309578], "04-features/content-editor.css": [309625, 311932], "04-features/illustration.css": [311977, 327092], "04-features/settings-drawer.css": [327140, 345374], "04-features/settings.css": [345415, 372708], "04-features/manager.css": [372748, 386046], "04-features/workshop.css": [386087, 408869], "04-features/favs.css": [408906, 448832], "04-features/debug.css": [448870, 465635], "04-features/story-outline.css": [465681, 499987], "04-features/outline-entry-menu.css": [500038, 506791], "04-features/rewrite.css": [506831, 557730], "04-features/reader.css": [557769, 567128], "04-features/chat-book.css": [567170, 573711], "04-features/story-memory.css": [573756, 619227], "04-features/character-evolution.css": [619279, 647700], "04-features/story-memory-notifications.css": [647759, 649908], "04-features/story-timetrace.css": [649956, 662804], "04-features/tts.css": [662840, 688778], "04-features/confirm-dialog.css": [688825, 692823], "04-features/image-cropper.css": [692869, 696727], "04-features/st-embedded.css": [696771, 727275], "04-features/scene-advance.css": [727321, 749406], "04-features/theater-midnight.css": [749455, 774783] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186574], "04-features/main-window.css": [186618, 231511], "04-features/main-window-legacy.css": [231562, 255428], "04-features/script-picker.css": [255474, 261969], "04-features/wi-selector.css": [262013, 279066], "04-features/continuation.css": [279111, 302980], "04-features/queue.css": [303018, 309578], "04-features/content-editor.css": [309625, 311932], "04-features/illustration.css": [311977, 327092], "04-features/settings-drawer.css": [327140, 345374], "04-features/settings.css": [345415, 372708], "04-features/manager.css": [372748, 386046], "04-features/workshop.css": [386087, 408869], "04-features/favs.css": [408906, 448832], "04-features/debug.css": [448870, 465635], "04-features/story-outline.css": [465681, 499987], "04-features/outline-entry-menu.css": [500038, 506791], "04-features/rewrite.css": [506831, 557730], "04-features/reader.css": [557769, 567128], "04-features/chat-book.css": [567170, 573711], "04-features/story-memory.css": [573756, 619227], "04-features/character-evolution.css": [619279, 647700], "04-features/story-memory-notifications.css": [647759, 649908], "04-features/story-timetrace.css": [649956, 662804], "04-features/tts.css": [662840, 689282], "04-features/confirm-dialog.css": [689329, 693327], "04-features/image-cropper.css": [693373, 697231], "04-features/st-embedded.css": [697275, 727779], "04-features/scene-advance.css": [727825, 749910], "04-features/theater-midnight.css": [749959, 775287] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
