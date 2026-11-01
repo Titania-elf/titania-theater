@@ -14,6 +14,7 @@
                 <div class="titania-card-title"><i class="fa-solid fa-gear"></i> 工具箱设置</div>
                 <p class="titania-backup-desc">统一管理 API 方案、正文标签提取与排除。</p>
                 <button id="titania-global-settings-open" class="titania-mini-btn" type="button">打开工具箱设置</button>
+                <button id="titania-tts-settings-open" class="titania-mini-btn" type="button"><i class="fa-solid fa-volume-high" aria-hidden="true"></i> 角色配音</button>
             </section>
             <section id="titania-update-card" class="titania-panel-card titania-update-card" data-state="checking">
                 <div class="titania-update-card-head">
@@ -143,11 +144,11 @@
                                 <input id="cfg-outline-actions-enabled" type="checkbox" data-settings-toggle />
                                 <span class="titania-switch-text">
                                     <span class="titania-switch-main">剧情推进与大纲入口</span>
-                                    <small>在消息下方推进剧情，在发送键菜单生成大纲。</small>
+                                    <small>在消息下方自由推进或按大纲推进，在发送键菜单生成大纲。</small>
                                 </span>
                             </label>
                             <button type="button" class="titania-settings-help" aria-label="剧情推进与大纲说明" aria-controls="titania-help-outline" aria-expanded="false"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></button>
-                            <p id="titania-help-outline" class="titania-settings-help-text" hidden>「剧情推进」显示在最新 AI 回复下方，基于大纲推荐下一步剧情。「生成大纲」通过发送键菜单进入，需要开启该菜单入口。</p>
+                            <p id="titania-help-outline" class="titania-settings-help-text" hidden>「剧情推进」显示在最新 AI 回复下方。没有大纲时，结合角色设定与最近聊天推荐下一步行动；已有大纲时，也可在来源中选择「自由推进」。点击候选写入输入框，由你决定发送。「生成大纲」通过发送键菜单进入，需要开启该菜单入口。</p>
                         </div>
                         <label class="checkbox_label titania-switch-row">
                             <input id="cfg-rewrite-entry-enabled" type="checkbox" data-settings-toggle />
@@ -216,7 +217,7 @@
                 <div class="titania-card-title"><i class="fa-solid fa-database"></i> 数据备份与恢复</div>
                 <div class="titania-backup-desc">
                     导出包含：API 配置、用户脚本、收藏内容、外观设置、导演指令、世界书筛选等所有插件数据。
-                    <br><span style="color:#feca57;">⚠️ 导出文件包含 API 密钥，请妥善保管！</span>
+                    <br><span class="titania-backup-warning">⚠️ 导出文件包含 API 密钥，请妥善保管！</span>
                 </div>
                 <div class="titania-backup-actions">
                     <button id="titania-backup-export" class="titania-mini-btn is-export"><i class="fa-solid fa-download"></i> 导出备份</button>
