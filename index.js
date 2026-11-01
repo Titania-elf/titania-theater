@@ -477,6 +477,63 @@ function excludedRegionEnd(raw, tag, start, protectedRanges) {
   }
   return -1;
 }
+function inlineImageSlotRanges(raw, protectedRanges = codeRanges(raw)) {
+  const candidates = [...raw.matchAll(/^[\t ]*⟦cv:[a-z0-9]{8,12}⟧[\t ]*(?=\r?$)/gm)].map((match) => [match.index, match.index + match[0].length]);
+  if (!candidates.length) return [];
+  const blocked2 = [...protectedRanges];
+  let scan = 0, token;
+  while (token = nextProjectionToken(raw, scan)) {
+    scan = token.end;
+    const code = protectedRanges.find(([a, b]) => a <= token.index && token.index < b);
+    if (code) {
+      scan = code[1];
+      continue;
+    }
+    blocked2.push([token.index, token.end]);
+    if (token.tag && !token.closing && isProtectedTextElement(token.tag, token.value) && (!TEXT_VOID_TAGS.has(token.tag) || token.tag === "img" && !hasImageSource(token)) && !token.value.endsWith("/>")) {
+      const end = excludedRegionEnd(raw, token.tag, scan, protectedRanges);
+      blocked2.push([scan, end < 0 ? raw.length : end]);
+      scan = end < 0 ? raw.length : end;
+    }
+  }
+  return candidates.filter(([start, end]) => !blocked2.some(([a, b]) => a < end && start < b));
+}
+function inlineImageSlotParts(raw) {
+  const slots = inlineImageSlotRanges(raw);
+  const chunks = [], gaps = [{ text: "", slot: false }];
+  const separators = /\r?\n(?:[\t ]*\r?\n)*/g;
+  let start = 0;
+  const append = (end) => {
+    if (start === end) return;
+    if (slots.some(([a, b]) => a === start && b === end)) gaps.at(-1).slot = true;
+    else {
+      chunks.push(raw.slice(start, end));
+      gaps.push({ text: "", slot: false });
+    }
+  };
+  for (const match of raw.matchAll(separators)) {
+    append(match.index);
+    gaps.at(-1).text += match[0];
+    start = match.index + match[0].length;
+  }
+  append(raw.length);
+  return { chunks, gaps };
+}
+function sameTextWithInlineImageSlots(before, after) {
+  if (before === after) return true;
+  if (typeof before !== "string" || typeof after !== "string") return false;
+  const a = inlineImageSlotParts(before), b = inlineImageSlotParts(after);
+  return a.chunks.length === b.chunks.length && a.chunks.every((chunk, i) => chunk === b.chunks[i]) && a.gaps.every((gap, i) => gap.text === b.gaps[i].text || gap.slot || b.gaps[i].slot);
+}
+function stripInlineImageSlots(source) {
+  let raw = String(source ?? "");
+  for (const [start, end] of inlineImageSlotRanges(raw).reverse()) {
+    const prefix = /(?:\r?\n){1,2}$/.exec(raw.slice(0, start));
+    const from = prefix ? start - prefix[0].length : start;
+    raw = raw.slice(0, from) + raw.slice(end);
+  }
+  return raw;
+}
 function extractTextProjection(source, whitelistInput = "", exclusionsInput = "", { allowPartial = false, protectState = true } = {}) {
   const raw = String(source ?? "");
   const whitelist = parseTextTags(whitelistInput);
@@ -490,6 +547,8 @@ function extractTextProjection(source, whitelistInput = "", exclusionsInput = ""
   if (String(exclusionsInput).trim() && !exclusions.length) reason = "\u6392\u9664\u6807\u7B7E\u540D\u5355\u683C\u5F0F\u65E0\u6548";
   const invalidRules = !!reason;
   const protectedRanges = codeRanges(raw);
+  const slotRanges = inlineImageSlotRanges(raw, protectedRanges);
+  const skippedRanges = [...protectedRanges, ...slotRanges].sort((a, b) => a[0] - b[0]);
   let cursor = 0;
   let scan = 0;
   let sourceEnd = raw.length;
@@ -505,7 +564,7 @@ function extractTextProjection(source, whitelistInput = "", exclusionsInput = ""
   };
   const append = (start, end, literal = false) => {
     if (!selected()) return;
-    const cuts = protectedRanges.filter(([a, b]) => b > start && a < end);
+    const cuts = skippedRanges.filter(([a, b]) => b > start && a < end);
     let pos = start;
     for (const [a, b] of cuts) {
       if (a > pos) appendRun(pos, Math.min(a, end), literal);
@@ -58799,6 +58858,19 @@ function createTtsMessageView(callbacks = {}) {
   function clearAll() {
     for (const message of records2.keys()) clear(message);
   }
+  function bodyStamp(body) {
+    const copy = body.cloneNode(true);
+    copy.querySelectorAll(`[${UI_ATTRIBUTE}]`).forEach((node2) => node2.remove());
+    return copy.innerHTML;
+  }
+  function needsRender(messageElement, view) {
+    const record = records2.get(messageElement);
+    if (!record) return true;
+    const body = messageElement.matches(".mes_text") ? messageElement : messageElement.querySelector(".mes_text");
+    if (record.body !== body || record.fingerprint !== String(view.fingerprint ?? "") || record.projection !== view.projection || record.signature !== JSON.stringify([view.segments, view.voices]) || messageElement.getAttribute(FINGERPRINT_ATTRIBUTE) !== record.fingerprint) return true;
+    if (record.pending.length && record.bodyStamp !== bodyStamp(body)) return true;
+    return [...record.nodes].some((node2) => !body?.contains(node2));
+  }
   function render2(messageElement, view) {
     for (const element2 of records2.keys()) if (!element2.isConnected) clear(element2);
     clear(messageElement);
@@ -58809,7 +58881,18 @@ function createTtsMessageView(callbacks = {}) {
     const window2 = document2.defaultView;
     const fingerprint3 = String(view.fingerprint ?? "");
     const index2 = view.index;
-    const record = { nodes: /* @__PURE__ */ new Set(), disposers: [], buttons: /* @__PURE__ */ new Map(), pending: [], index: index2, fingerprint: fingerprint3, previousFingerprint: messageElement.getAttribute(FINGERPRINT_ATTRIBUTE) };
+    const record = {
+      nodes: /* @__PURE__ */ new Set(),
+      disposers: [],
+      buttons: /* @__PURE__ */ new Map(),
+      pending: [],
+      body,
+      projection: view.projection,
+      signature: JSON.stringify([view.segments, view.voices]),
+      index: index2,
+      fingerprint: fingerprint3,
+      previousFingerprint: messageElement.getAttribute(FINGERPRINT_ATTRIBUTE)
+    };
     records2.set(messageElement, record);
     messageElement.setAttribute(FINGERPRINT_ATTRIBUTE, fingerprint3);
     const current2 = () => !destroyed && records2.get(messageElement) === record && messageElement.isConnected && body.isConnected && messageElement.getAttribute(FINGERPRINT_ATTRIBUTE) === fingerprint3 && (messageElement === body || messageElement.querySelector(".mes_text") === body);
@@ -58986,6 +59069,10 @@ function createTtsMessageView(callbacks = {}) {
       quote: entry.segment.quote || entry.segment.text || "",
       reason: entry.match.reason
     }));
+    for (const entry of entries) if (entry.controls) {
+      for (const node2 of record.nodes) if (node2 === entry.controls || entry.controls.contains(node2)) record.nodes.delete(node2);
+    }
+    if (record.pending.length) record.bodyStamp = bodyStamp(body);
   }
   function setPlaybackState2(index2, fingerprint3, segmentId, state) {
     for (const [message, record] of records2) {
@@ -59000,7 +59087,7 @@ function createTtsMessageView(callbacks = {}) {
     }
     return [];
   }
-  return { render: render2, clear, clearAll, setPlaybackState: setPlaybackState2, getPending, destroy() {
+  return { render: render2, needsRender, clear, clearAll, setPlaybackState: setPlaybackState2, getPending, destroy() {
     clearAll();
     destroyed = true;
   } };
@@ -59579,12 +59666,24 @@ function context4() {
   if (!ownerKey) return null;
   return { ...ctx2, ownerKey, key: JSON.stringify([ownerKey, ctx2.chatId]), enabled: ctx2.chatMetadata.echo_tts_enabled === true };
 }
+function ttsSourceIdentity(message, raw, extraction, cfg) {
+  const fingerprintFor = (source) => ttsFingerprint(JSON.stringify([message.swipe_id ?? 0, source, extraction]));
+  const fingerprint3 = fingerprintFor(raw), variants = message.extra?.[TTS_KEY]?.variants;
+  if (!variants || variants[fingerprint3]?.mode === cfg.mode) return { raw, fingerprint: fingerprint3 };
+  const stripped = stripInlineImageSlots(raw);
+  for (const [key, saved] of Object.entries(variants).reverse()) {
+    if (saved?.mode !== cfg.mode) continue;
+    const source = typeof saved.source === "string" ? saved.source : stripped;
+    if (fingerprintFor(source) === key && sameTextWithInlineImageSlots(source, raw)) return { raw: source, fingerprint: key };
+  }
+  return { raw, fingerprint: fingerprint3 };
+}
 function capture(index2) {
   const ctx2 = context4(), cfg = config(), message = ctx2?.chat[index2];
   if (!ctx2?.enabled || !allowed(message, cfg)) throw new Error("\u8BF7\u542F\u7528\u5F53\u524D\u804A\u5929\u914D\u97F3\uFF0C\u5E76\u9009\u62E9\u53EF\u8BFB\u53D6\u7684\u697C\u5C42\u3002");
-  const raw = String(message.mes || ""), extraction = getToolboxExtraction(getExtData());
+  const extraction = getToolboxExtraction(getExtData());
+  const { raw, fingerprint: fingerprint3 } = ttsSourceIdentity(message, String(message.mes || ""), extraction, cfg);
   const display = message.extra?.display_text;
-  const fingerprint3 = ttsFingerprint(JSON.stringify([message.swipe_id ?? 0, raw, extraction]));
   return {
     ctx: ctx2,
     message,
@@ -59603,7 +59702,7 @@ function capture(index2) {
   };
 }
 function current(target) {
-  return target.epoch === epoch3 && sameContext(target.ctx) && context4()?.enabled && target.ctx.chat[target.index] === target.message && target.message.mes === target.raw && target.message.swipe_id === target.swipe && target.signature === settingSignature(target.ctx) && target.message.extra?.display_text === target.display && target.message.swipes === target.swipes && target.message.swipe_info === target.swipeInfo && JSON.stringify(target.extraction) === JSON.stringify(getToolboxExtraction(getExtData())) && (!target.connectionSignature || JSON.stringify(getToolboxConnection("tts")) === target.connectionSignature) && (target.analysisContext === void 0 || precedingContext(target.ctx, target.index, target.cfg, target.extraction) === target.analysisContext);
+  return target.epoch === epoch3 && sameContext(target.ctx) && context4()?.enabled && target.ctx.chat[target.index] === target.message && sameTextWithInlineImageSlots(target.raw, target.message.mes) && target.message.swipe_id === target.swipe && target.signature === settingSignature(target.ctx) && target.message.extra?.display_text === target.display && target.message.swipes === target.swipes && target.message.swipe_info === target.swipeInfo && JSON.stringify(target.extraction) === JSON.stringify(getToolboxExtraction(getExtData())) && (!target.connectionSignature || JSON.stringify(getToolboxConnection("tts")) === target.connectionSignature) && (target.analysisContext === void 0 || precedingContext(target.ctx, target.index, target.cfg, target.extraction) === target.analysisContext);
 }
 function cachedSegments(target, projection) {
   const saved = target.message.extra?.[TTS_KEY]?.variants?.[target.fingerprint];
@@ -59625,8 +59724,9 @@ function cachedSegments(target, projection) {
   }
 }
 function recordFor(index2) {
-  const target = capture(index2), found = records.get(index2);
+  const found = records.get(index2);
   if (found && current(found.target)) return found;
+  const target = capture(index2);
   const { projection, sources } = ttsSources(target.raw, target.extraction);
   const saved = cachedSegments(target, projection);
   const parsed = !saved ? parseInlineTts(target.raw, projection, target.voices, target.cfg.narration, target.cfg) : null;
@@ -59655,7 +59755,7 @@ function refreshPrompt() {
   const prompt2 = ctx2?.enabled && cfg.mode === "inline" && voices.length ? ttsInlinePrompt(cfg, voices) : "";
   setExtensionPrompt6(TTS_PROMPT_KEY, prompt2, extension_prompt_types6.IN_CHAT, 0, false, extension_prompt_roles6.SYSTEM);
 }
-function render() {
+function render(repairOnly = false) {
   if (!renderer) return;
   const ctx2 = context4();
   if (!ctx2?.enabled) {
@@ -59671,7 +59771,7 @@ function render() {
     }
     try {
       const r = recordFor(index2);
-      renderer.render(element2, {
+      const view = {
         index: index2,
         fingerprint: r.target.fingerprint,
         segments: r.segments.filter((s) => !s.skipped),
@@ -59681,7 +59781,8 @@ function render() {
         busy: r.busy,
         diagnostics: r.diagnostics,
         playbackStates: r.playbackStates
-      });
+      };
+      if (!repairOnly || renderer.needsRender?.(element2, view) !== false) renderer.render(element2, view);
     } catch {
       renderer.clear(element2);
     }
@@ -59732,7 +59833,7 @@ function getTtsDockView(selectedIndex = null) {
 }
 function scheduleRender() {
   clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(render, 40);
+  refreshTimer = setTimeout(() => render(true), 40);
 }
 async function readSavedChat(ctx2) {
   const group = ctx2.groupId !== void 0 && ctx2.groupId !== null && ctx2.groupId !== "";
@@ -59761,6 +59862,7 @@ async function persistRecord(record) {
     const prior = message.extra[TTS_KEY];
     const variants = { ...prior?.variants || {}, [record.target.fingerprint]: {
       mode: record.target.cfg.mode,
+      source: record.target.raw,
       segments: record.segments,
       complete: record.complete,
       completedSources: record.completedSources,
@@ -60580,7 +60682,7 @@ function initTts() {
   document.addEventListener(TOOLBOX_EXTRACTION_CHANGED, changed);
   eventSource9.on(TITANIA_TEXT_PATCHED, changed);
   observer = new MutationObserver((mutations) => {
-    if (mutations.some((m) => [...m.addedNodes, ...m.removedNodes].some((n) => n.nodeType === 1 && !n.matches?.("[data-echo-tts-ui]") && !n.closest?.("[data-echo-tts-ui]") && (n.matches?.(".mes, .mes_text") || n.querySelector?.(".mes_text"))))) scheduleRender();
+    if (mutations.some((m) => m.target.closest?.(".mes_text") || [...m.addedNodes, ...m.removedNodes].some((n) => n.nodeType === 1 && (n.matches?.(".mes, .mes_text") || n.querySelector?.(".mes_text"))))) scheduleRender();
   });
   const chat2 = document.getElementById("chat");
   if (chat2) observer.observe(chat2, { childList: true, subtree: true });
@@ -60596,6 +60698,7 @@ var init_tts = __esm({
     init_ttsData();
     init_ttsAudio();
     init_contentChangeEvents();
+    init_textExtraction();
     init_ttsMessageView();
     init_ttsDock();
     init_dom();
