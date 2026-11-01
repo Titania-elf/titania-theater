@@ -1534,12 +1534,12 @@ function createIllustrationTarget(result, fallbackId = "") {
   if (!content || result?.status === "running" || result?.status === "failed") {
     throw illustrationError("\u8BF7\u5148\u9009\u62E9\u4E00\u6BB5\u5DF2\u5B8C\u6210\u7684\u5C0F\u5267\u573A\u5185\u5BB9\u3002", "NO_CONTENT");
   }
-  const identity2 = String(result.generationId || fallbackId);
-  if (!identity2) throw illustrationError("\u8FD9\u6BB5\u5185\u5BB9\u7F3A\u5C11\u4FDD\u5B58\u6807\u8BC6\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u540E\u518D\u8BD5\u3002", "NO_CONTENT");
+  const identity3 = String(result.generationId || fallbackId);
+  if (!identity3) throw illustrationError("\u8FD9\u6BB5\u5185\u5BB9\u7F3A\u5C11\u4FDD\u5B58\u6807\u8BC6\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u540E\u518D\u8BD5\u3002", "NO_CONTENT");
   return Object.freeze({
     // ⚠ cardKey 只作为字段带上，**绝不能**进这个散列数组：
     //   一改，illustration_index 里所有旧指针立刻变成孤儿，用户画廊全丢。
-    sceneId: `scene-${illustrationHash(JSON.stringify([identity2, result.scriptId || "", content]))}`,
+    sceneId: `scene-${illustrationHash(JSON.stringify([identity3, result.scriptId || "", content]))}`,
     content,
     scriptId: String(result.scriptId || ""),
     scriptName: String(result.scriptName || "\u573A\u666F"),
@@ -2077,10 +2077,10 @@ function buildFontStylesForShadowDOM() {
 }
 function renderToShadowDOMReal(container, html) {
   container.innerHTML = "";
-  const host3 = document.createElement("div");
-  host3.className = "t-shadow-host";
-  host3.style.cssText = "width:100%; min-height:100%;";
-  const shadow = host3.attachShadow({ mode: "open" });
+  const host4 = document.createElement("div");
+  host4.className = "t-shadow-host";
+  host4.style.cssText = "width:100%; min-height:100%;";
+  const shadow = host4.attachShadow({ mode: "open" });
   const isEditableNode = (node2) => {
     if (!(node2 instanceof HTMLElement)) return false;
     const tag = node2.tagName.toLowerCase();
@@ -2158,7 +2158,7 @@ function renderToShadowDOMReal(container, html) {
         </style>
     `;
   shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
-  container.appendChild(host3);
+  container.appendChild(host4);
   return shadow;
 }
 function getChatHistory(limit, aiOnly = false) {
@@ -8164,6 +8164,18 @@ var init_dom = __esm({
 \r
 /* ===== \u6CE8\u5165 ST DOM \u7684\u5143\u7D20(\u4F9D ADR-02 \u89C6\u89C9\u72EC\u7ACB,\u4F46 keyframes \u4F9D R6 \u96C6\u4E2D\u58F0\u660E) ===== */\r
 \r
+/* tts.css: text-sized synthesis ring and voice bars; transforms never reflow text. */\r
+@keyframes t-tts-spin {\r
+    from { transform: rotate(0deg); }\r
+    to { transform: rotate(360deg); }\r
+}\r
+\r
+@keyframes t-tts-voice-wave {\r
+    0%,\r
+    100% { transform: scaleY(0.55); }\r
+    50% { transform: scaleY(1); }\r
+}\r
+\r
 /* rewriteEntryButton.js  \xB7  \u539F\u5B9A\u4E49\u5728 rewriteEntryButton.js \u7684 REWRITE_PANEL_CSS \u5185\u8054\u6837\u5F0F\u4E2D */\r
 @keyframes t-rewrite-badge-flow { 0% { background-position: 0% 50%; box-shadow: 0 6px 18px var(--t-shadow-ink-28); } 50% { background-position: 100% 50%; box-shadow: 0 6px 22px rgb(var(--t-accent-sky-glow-rgb) / .3); } 100% { background-position: 200% 50%; box-shadow: 0 6px 18px var(--t-shadow-ink-28); } }\r
 \r
@@ -8200,7 +8212,7 @@ var init_dom = __esm({
         background-position: 260% 0;\r
     }\r
 }\r
-
+\r
 /* Story memory: activity in the archive ribbon, independent of its saved count. */\r
 @keyframes t-memory-progress-sweep {\r
     0% { transform: translateX(-120%); }\r
@@ -8211,20 +8223,20 @@ var init_dom = __esm({
 }\r
 \r
 /* \u5348\u591C\u653E\u6620\u5BA4\u7248\u901A\u77E5\u547C\u5438\u706F\uFF1A\u4E0E\u539F t-notify-glow \u540C\u8282\u594F\uFF0C\u53EA\u628A\u989C\u8272\u4ECE\r
-   --t-border-color\uFF08\u5185\u8054\u7684\u7528\u6237\u8272\uFF09\u6362\u6210\u4E3B\u9898\u91D1\u3002\u60AC\u6D6E\u7403\u6362\u80A4\u540E\u8FB9\u6846\u4E0E\u5149\u6655\u624D\u540C\u8272\u3002 */
-@keyframes t-notify-glow-studio {
-
-    0%,
-    100% {
-        box-shadow: 0 0 5px var(--t-studio-gold);
-        border-color: var(--t-studio-gold);
-    }
-
-    50% {
-        box-shadow: 0 0 25px var(--t-studio-gold);
-        border-color: var(--t-studio-gold);
-    }
-}
+   --t-border-color\uFF08\u5185\u8054\u7684\u7528\u6237\u8272\uFF09\u6362\u6210\u4E3B\u9898\u91D1\u3002\u60AC\u6D6E\u7403\u6362\u80A4\u540E\u8FB9\u6846\u4E0E\u5149\u6655\u624D\u540C\u8272\u3002 */\r
+@keyframes t-notify-glow-studio {\r
+\r
+    0%,\r
+    100% {\r
+        box-shadow: 0 0 5px var(--t-studio-gold);\r
+        border-color: var(--t-studio-gold);\r
+    }\r
+\r
+    50% {\r
+        box-shadow: 0 0 25px var(--t-studio-gold);\r
+        border-color: var(--t-studio-gold);\r
+    }\r
+}\r
 
 
 /* === 02-components/window.css === */
@@ -24650,11 +24662,11 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 /* === 04-features/tts.css === */
-/* All workbench surfaces are opaque theme tokens, never host glass backgrounds.
-   Inline controls have their own scope: they do not require or wrap a .t-root. */
+/* Workbench and action-panel surfaces use opaque theme tokens.
+   Inline controls inherit host text instead and never require a .t-root. */
 .t-tts-overlay,
-.t-tts-controls,
-.t-tts-toolbar {
+.t-tts-action-overlay,
+.t-tts-dock {
     --t-tts-bg: var(--t-studio-bg);
     --t-tts-surface: var(--t-studio-raised);
     --t-tts-field: var(--t-studio-deep);
@@ -24816,81 +24828,403 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-tts-window .t-tts-api-selector .t-model-list-controls > select { flex: 1 1 0; width: 0; }
 .t-tts-window .t-tts-status.is-error { color: var(--t-color-danger); }
 
-/* Inserted after dialogue, never positioned over it or around the whole line.
-   Local opaque surfaces keep the controls legible on either host chat theme. */
+/* A single, text-sized control after dialogue: no names or extra inline actions.
+   All icon geometry is relative to host text; state changes never resize the box. */
 .t-tts-controls {
-    display: inline;
-    margin-inline-start: 0.3em;
+    display: inline-flex;
+    vertical-align: -0.15em;
+    margin-inline-start: 0.2em;
     padding: 0;
-    font-family: var(--t-font-global);
-    font-size: 0.85em;
-    white-space: normal;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1;
+    white-space: nowrap;
 }
 
-.t-tts-controls :is(.t-tts-play, .t-tts-more),
-.t-tts-toolbar button {
+.t-tts-controls .t-tts-play {
     display: inline-flex;
-    position: static;
+    position: relative;
     align-items: center;
     justify-content: center;
-    vertical-align: baseline;
-    gap: 4px;
+    flex: 0 0 auto;
     box-sizing: border-box;
-    min-width: 28px;
-    min-height: 26px;
+    width: 1.25em;
+    height: 1.2em;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0.25em;
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+    font: inherit;
+    line-height: 1;
+    text-shadow: none;
+    opacity: 0.8;
+    appearance: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color 150ms ease, opacity 150ms ease;
+}
+
+.t-tts-controls .t-tts-play:hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    opacity: 1;
+}
+
+.t-tts-controls .t-tts-play:focus-visible {
+    outline: 0.08em solid currentColor;
+    outline-offset: 0.12em;
+}
+
+.t-tts-controls .t-tts-play-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.7em;
+    height: 0.7em;
+    pointer-events: none;
+}
+
+.t-tts-controls .t-tts-play-symbol svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+.t-tts-controls .t-tts-play-bars {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12em;
+    width: 0.75em;
+    height: 0.75em;
+    pointer-events: none;
+}
+
+.t-tts-controls .t-tts-play-bar {
+    display: block;
+    flex: 0 0 0.13em;
+    height: 0.48em;
+    border-radius: 0.1em;
+    background: currentColor;
+    transform-origin: center;
+}
+
+.t-tts-controls .t-tts-play-bar:nth-child(2) { height: 0.7em; }
+.t-tts-controls .t-tts-play-bar:nth-child(3) { height: 0.56em; }
+
+.t-tts-controls .t-tts-play[data-state="synthesizing"] .t-tts-play-symbol,
+.t-tts-controls .t-tts-play[data-state="playing"] .t-tts-play-symbol { display: none; }
+
+.t-tts-controls .t-tts-play[data-state="synthesizing"]::before {
+    content: '';
+    box-sizing: border-box;
+    width: 0.7em;
+    height: 0.7em;
+    border: 0.09em solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    animation: t-tts-spin 1s linear infinite;
+    pointer-events: none;
+}
+
+.t-tts-controls .t-tts-play[data-state="playing"] { opacity: 1; }
+.t-tts-controls .t-tts-play[data-state="playing"] .t-tts-play-bars { display: inline-flex; }
+.t-tts-controls .t-tts-play[data-state="playing"] .t-tts-play-bar { animation: t-tts-voice-wave 900ms ease-in-out infinite; }
+.t-tts-controls .t-tts-play[data-state="playing"] .t-tts-play-bar:nth-child(2) { animation-delay: -300ms; }
+.t-tts-controls .t-tts-play[data-state="playing"] .t-tts-play-bar:nth-child(3) { animation-delay: -600ms; }
+.t-tts-controls .t-tts-play[data-state="paused"] { opacity: 0.65; }
+.t-tts-controls .t-tts-play[data-state="ready"] { opacity: 0.95; }
+.t-tts-controls .t-tts-play[data-state="error"] {
+    color: inherit;
+    color: color-mix(in srgb, currentColor 75%, var(--t-color-danger, currentColor));
+    opacity: 1;
+}
+
+/* Missing voices remain interactive for long-press editing; never block events. */
+.t-tts-controls .t-tts-play[aria-disabled="true"] { opacity: 0.65; }
+.t-tts-controls .t-tts-play[aria-disabled="true"]:hover { opacity: 0.85; }
+
+/* Input-attached dock only: neutral opaque surfaces, never a chat-message root. */
+.t-root.t-tts-dock {
+    --t-tts-bg: var(--t-color-bg);
+    --t-tts-surface: var(--t-color-surface);
+    --t-tts-field: var(--t-color-surface-sunken);
+    --t-tts-text: var(--t-color-text);
+    --t-tts-muted: var(--t-color-text-secondary);
+    --t-tts-border: var(--t-color-border-subtle);
+    --t-tts-line: var(--t-color-border-faint);
+    --t-tts-accent: var(--t-color-accent);
+    position: fixed;
+    z-index: var(--t-z-float);
+    display: flex;
+    justify-content: center;
+    width: max-content;
+    max-width: var(--t-tts-dock-viewport-width, calc(100vw - 32px));
+    margin: 0;
+    padding: 0;
+    transform: translateX(-50%);
+    color: var(--t-tts-text);
+    font-size: calc(12px * var(--t-ui-font-scale, 1));
+    line-height: 1.5;
+    text-align: start;
+}
+
+.t-tts-dock button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    gap: 6px;
+    min-width: 0;
+    min-height: 32px;
     width: auto;
     height: auto;
-    margin: 0 2px;
-    padding: 2px 7px;
+    margin: 0;
+    padding: 5px 10px;
     border: 1px solid var(--t-tts-border);
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--t-tts-surface);
     color: var(--t-tts-text);
     box-shadow: none;
     font: inherit;
-    line-height: 1.4;
+    line-height: 1.5;
     text-shadow: none;
     white-space: normal;
+    appearance: none;
     cursor: pointer;
     touch-action: manipulation;
+    transition: background-color 150ms ease, border-color 150ms ease;
 }
 
-.t-tts-controls :is(.t-tts-play, .t-tts-more):hover:not(:disabled),
-.t-tts-toolbar button:hover:not(:disabled) { background: var(--t-tts-field); border-color: var(--t-tts-accent); }
-.t-tts-controls :is(.t-tts-play, .t-tts-more):focus-visible,
-.t-tts-toolbar button:focus-visible { outline: 2px solid var(--t-tts-accent); outline-offset: 2px; }
-.t-tts-controls :is(.t-tts-play, .t-tts-more):disabled,
-.t-tts-toolbar button:disabled { opacity: 0.65; cursor: not-allowed; }
-.t-tts-controls .t-tts-play[aria-pressed="true"] { border-color: var(--t-tts-accent); color: var(--t-tts-accent); }
-.t-tts-controls .t-tts-more { padding-inline: 5px; }
+.t-tts-dock button:hover:not(:disabled) { background: var(--t-color-surface-hover); border-color: var(--t-tts-accent); }
+.t-tts-dock button:disabled { opacity: 0.55; cursor: not-allowed; }
+.t-tts-dock :is(button, select, summary):focus-visible { outline: 2px solid var(--t-tts-accent); outline-offset: 2px; }
+.t-tts-dock svg { display: block; width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.t-tts-dock .t-tts-dock-trigger { max-width: 100%; padding-inline: 12px; background: var(--t-tts-bg); border-radius: 8px; white-space: nowrap; }
+.t-tts-dock-chevron { display: inline-flex; color: var(--t-tts-muted); }
+.t-tts-dock-trigger[aria-expanded="true"] .t-tts-dock-chevron { transform: rotate(180deg); }
+.t-tts-dock [hidden] { display: none; }
+.t-root.t-tts-dock[hidden] { display: none; }
 
-.t-tts-toolbar {
-    display: flex;
-    position: static;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 7px;
-    max-width: 100%;
-    box-sizing: border-box;
-    margin-block: 8px;
-    padding: 8px 10px;
-    border: 1px solid var(--t-tts-line);
-    border-radius: 7px;
+.t-tts-dock-panel {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    width: var(--t-tts-dock-width, min(360px, calc(100vw - 32px)));
+    max-height: var(--t-tts-dock-height, 50vh);
+    min-width: 0;
+    min-height: 0;
+    padding: 14px;
+    transform: translateX(-50%);
+    border: 1px solid var(--t-tts-border);
+    border-radius: 12px;
     background: var(--t-tts-bg);
     color: var(--t-tts-text);
-    font: 12px/1.6 var(--t-font-global);
+    box-shadow: var(--t-shadow-lg);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
-.t-tts-toolbar button { min-height: 32px; margin: 0; }
-.t-tts-toolbar .t-tts-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-.t-tts-toolbar .t-tts-pending { flex: 1 1 100%; min-width: 0; }
-.t-tts-toolbar .t-tts-pending > summary { padding: 5px 0; color: var(--t-tts-muted); cursor: pointer; }
-.t-tts-toolbar .t-tts-pending-list { margin: 5px 0 0; padding-inline-start: 20px; }
-.t-tts-toolbar .t-tts-pending-item { margin-block: 8px; overflow-wrap: anywhere; }
-.t-tts-toolbar .t-tts-pending-reason { color: var(--t-tts-muted); }
+.t-tts-dock-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.t-tts-dock-head > strong { font-size: 1.08em; font-weight: 600; }
+.t-tts-dock .t-tts-dock-settings { width: 30px; min-height: 30px; padding: 5px; background: transparent; border-color: transparent; color: var(--t-tts-muted); }
+.t-tts-dock-field { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; margin: 0 0 12px; color: var(--t-tts-muted); }
+.t-root.t-tts-dock select.t-tts-dock-floor {
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    margin: 0;
+    padding: 6px 26px 6px 9px;
+    border: 1px solid var(--t-tts-border);
+    border-radius: 7px;
+    background-color: var(--t-tts-field);
+    color: var(--t-tts-text);
+    font: inherit;
+}
+.t-tts-dock-floor option { background: var(--t-tts-field); color: var(--t-tts-text); }
+.t-tts-dock-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 6px; }
+.t-tts-dock-actions button { padding-inline: 8px; }
+.t-tts-dock-status { margin: 10px 0 0; color: var(--t-tts-muted); font-size: 0.92em; line-height: 1.6; overflow-wrap: anywhere; }
+.t-tts-dock-status.is-error { color: var(--t-color-danger); }
+.t-tts-dock-panel > details { margin-top: 10px; border-top: 1px solid var(--t-tts-line); }
+.t-tts-dock-panel > details > summary { padding: 9px 2px 2px; color: var(--t-tts-muted); cursor: pointer; overflow-wrap: anywhere; }
+.t-tts-dock-list { display: grid; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; min-width: 0; }
+.t-tts-dock-list > li { min-width: 0; overflow-wrap: anywhere; }
+.t-tts-dock-diagnostics .t-tts-dock-list { color: var(--t-tts-muted); font-size: 0.9em; line-height: 1.65; }
+.t-tts-dock-pending-item { padding: 10px; border: 1px solid var(--t-tts-line); border-radius: 8px; background: var(--t-tts-field); }
+.t-tts-dock-quote { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.t-tts-dock-reason { margin: 5px 0 0; color: var(--t-tts-muted); font-size: 0.9em; }
+.t-tts-dock-pending-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) {
+    .t-tts-dock button { transition: none; }
+}
+
 .t-tts-status { color: var(--t-studio-muted); font-size: 0.87em; line-height: 1.65; overflow-wrap: anywhere; }
-.t-tts-toolbar .t-tts-status { flex: 1 1 160px; min-width: 0; }
-.t-tts-controls .t-tts-status { display: inline; padding: 2px 5px; border-radius: 4px; background: var(--t-tts-bg); }
+
+/* Minimal audio action sheet. Neutral surfaces separate it from the studio workbench. */
+.t-overlay.t-tts-action-overlay {
+    --t-tts-bg: var(--t-color-bg);
+    --t-tts-surface: var(--t-color-surface);
+    --t-tts-field: var(--t-color-surface-sunken);
+    --t-tts-text: var(--t-color-text);
+    --t-tts-muted: var(--t-color-text-secondary);
+    --t-tts-border: var(--t-color-border-subtle);
+    --t-tts-line: var(--t-color-border-faint);
+    --t-tts-accent: var(--t-color-accent);
+    z-index: var(--t-z-book);
+    box-sizing: border-box;
+    padding: 16px;
+    background: var(--t-color-scrim);
+}
+
+.t-tts-action-overlay .t-tts-action-panel {
+    box-sizing: border-box;
+    width: min(380px, 100%);
+    max-width: 380px;
+    max-height: 100%;
+    min-width: 0;
+    min-height: 0;
+    gap: 18px;
+    padding: 22px;
+    border: 1px solid var(--t-tts-border);
+    border-radius: 20px;
+    background: var(--t-tts-bg);
+    color: var(--t-tts-text);
+    box-shadow: var(--t-shadow-lg);
+    font-size: calc(14px * var(--t-ui-font-scale, 1));
+    line-height: 1.5;
+    text-align: start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.t-tts-action-panel .t-tts-action-head,
+.t-tts-action-panel .t-tts-action-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.t-tts-action-panel .t-tts-action-head { justify-content: space-between; flex: 0 0 auto; }
+.t-tts-action-panel .t-tts-action-head-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    height: 36px;
+    border: 1px solid var(--t-tts-line);
+    border-radius: 11px;
+    background: var(--t-tts-surface);
+    color: var(--t-tts-accent);
+}
+.t-tts-action-panel .t-tts-action-heading-copy { display: grid; gap: 3px; min-width: 0; }
+.t-tts-action-panel .t-tts-action-heading-copy > strong { color: var(--t-tts-text); font-size: 1.08em; font-weight: 600; }
+.t-tts-action-panel .t-tts-action-heading-copy > small { color: var(--t-tts-muted); font-size: 0.8em; overflow-wrap: anywhere; }
+.t-tts-action-panel .t-tts-action-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--t-tts-muted);
+    font: inherit;
+    cursor: pointer;
+}
+.t-tts-action-panel .t-tts-action-close:hover { background: var(--t-color-surface-hover); color: var(--t-tts-text); }
+
+.t-tts-action-panel .t-tts-action-preview {
+    display: grid;
+    flex: 0 0 auto;
+    gap: 7px;
+    min-width: 0;
+    padding: 13px 15px;
+    border-radius: 12px;
+    background: var(--t-tts-field);
+}
+.t-tts-action-panel .t-tts-action-preview-label { color: var(--t-tts-muted); font-size: 0.75em; letter-spacing: 0.06em; }
+.t-tts-action-panel .t-tts-action-quote {
+    min-width: 0;
+    max-height: 6.8em;
+    margin: 0;
+    color: var(--t-tts-text);
+    font-size: 0.93em;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.t-tts-action-panel .t-tts-action-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    flex: 0 0 auto;
+    gap: 4px;
+    min-width: 0;
+}
+.t-tts-action-panel .t-btn.t-tts-action-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 54px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--t-tts-text);
+    box-shadow: none;
+    font: inherit;
+    text-align: start;
+    white-space: normal;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+.t-tts-action-panel .t-btn.t-tts-action-item:hover:not(:disabled) { background: var(--t-color-surface-hover-subtle); border-color: var(--t-tts-line); }
+.t-tts-action-panel .t-btn.t-tts-action-item.is-primary { margin-bottom: 6px; border-color: var(--t-color-accent-border-subtle); background: var(--t-color-accent-veil); }
+.t-tts-action-panel .t-btn.t-tts-action-item.is-primary:hover:not(:disabled) { background: var(--t-color-accent-soft-strong); border-color: var(--t-color-accent-border); }
+.t-tts-action-panel .t-tts-action-item-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 24px; color: var(--t-tts-muted); }
+.t-tts-action-panel .is-primary .t-tts-action-item-icon { color: var(--t-tts-accent); }
+.t-tts-action-panel .is-stop .t-tts-action-item-icon { color: var(--t-color-danger); }
+.t-tts-action-panel .t-tts-action-item-copy { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.t-tts-action-panel .t-tts-action-item-copy strong { font-size: 0.92em; font-weight: 500; overflow-wrap: anywhere; }
+.t-tts-action-panel .t-tts-action-item-copy small { color: var(--t-tts-muted); font-size: 0.76em; overflow-wrap: anywhere; }
+.t-tts-action-panel .t-tts-action-item-arrow { color: var(--t-tts-muted); font-size: 0.65em; opacity: 0.65; }
+.t-tts-action-panel .t-tts-action-item:disabled { opacity: 0.55; cursor: wait; }
+.t-tts-action-panel :is(button, a):focus-visible { outline: 2px solid var(--t-tts-accent); outline-offset: 2px; }
+.t-tts-action-panel :is(.t-tts-action-hint, .t-tts-status) {
+    flex: 0 0 auto;
+    margin: 0;
+    color: var(--t-tts-muted);
+    font-size: 0.77em;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+.t-tts-action-panel .t-tts-action-hint { border-top: 1px solid var(--t-tts-line); padding-top: 12px; }
+.t-tts-action-panel .t-tts-status:empty { display: none; }
+.t-tts-action-panel .t-tts-action-download { color: var(--t-tts-accent); text-decoration: underline; text-underline-offset: 3px; }
+.t-tts-action-panel .t-tts-status.is-error { color: var(--t-color-danger); }
+.t-tts-action-panel [hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .t-tts-controls .t-tts-play,
+    .t-tts-action-panel .t-btn.t-tts-action-item { transition: none; }
+    .t-tts-controls .t-tts-play[data-state="synthesizing"]::before,
+    .t-tts-controls .t-tts-play[data-state="playing"] .t-tts-play-bar { animation: none; }
+}
 
 @media (max-width: 600px) {
     .t-tts-overlay .t-tts-window { height: 100%; }
@@ -24907,8 +25241,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .t-tts-window .t-tts-footer .t-tts-status { flex-basis: 100%; }
     .t-tts-window .t-tts-footer .t-tts-actions { width: 100%; justify-content: flex-end; }
     .t-tts-window .t-btn { min-height: 40px; }
-    .t-tts-controls :is(.t-tts-play, .t-tts-more) { min-width: 32px; min-height: 30px; }
-    .t-tts-toolbar button { min-height: 36px; }
+    .t-tts-action-panel .t-tts-action-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 
@@ -26394,7 +26727,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122362], "02-components/window.css": [122403, 125535], "02-components/panel.css": [125575, 129195], "02-components/settings-shell.css": [129244, 133642], "02-components/dialog.css": [133683, 139028], "02-components/button.css": [139069, 145569], "02-components/icon-button.css": [145615, 148095], "02-components/field.css": [148135, 151210], "02-components/choice-input.css": [151257, 152548], "02-components/radio-card.css": [152593, 154835], "02-components/studio-workspace.css": [154886, 169775], "02-components/_legacy.css": [169817, 172781], "03-layout/button-groups.css": [172825, 174246], "03-layout/utilities.css": [174286, 176097], "04-features/floating.css": [176138, 183340], "04-features/toolbox-settings.css": [183389, 186244], "04-features/main-window.css": [186288, 231181], "04-features/main-window-legacy.css": [231232, 255098], "04-features/script-picker.css": [255144, 261639], "04-features/wi-selector.css": [261683, 278736], "04-features/continuation.css": [278781, 302650], "04-features/queue.css": [302688, 309248], "04-features/content-editor.css": [309295, 311602], "04-features/illustration.css": [311647, 326762], "04-features/settings-drawer.css": [326810, 345044], "04-features/settings.css": [345085, 372378], "04-features/manager.css": [372418, 385716], "04-features/workshop.css": [385757, 408539], "04-features/favs.css": [408576, 448502], "04-features/debug.css": [448540, 465305], "04-features/story-outline.css": [465351, 499657], "04-features/outline-entry-menu.css": [499708, 506461], "04-features/rewrite.css": [506501, 557400], "04-features/reader.css": [557439, 566798], "04-features/chat-book.css": [566840, 573381], "04-features/story-memory.css": [573426, 618897], "04-features/character-evolution.css": [618949, 647370], "04-features/story-memory-notifications.css": [647429, 649578], "04-features/story-timetrace.css": [649626, 662474], "04-features/tts.css": [662510, 674859], "04-features/confirm-dialog.css": [674906, 678904], "04-features/image-cropper.css": [678950, 682808], "04-features/st-embedded.css": [682852, 713356], "04-features/scene-advance.css": [713402, 735487], "04-features/theater-midnight.css": [735536, 760864] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186574], "04-features/main-window.css": [186618, 231511], "04-features/main-window-legacy.css": [231562, 255428], "04-features/script-picker.css": [255474, 261969], "04-features/wi-selector.css": [262013, 279066], "04-features/continuation.css": [279111, 302980], "04-features/queue.css": [303018, 309578], "04-features/content-editor.css": [309625, 311932], "04-features/illustration.css": [311977, 327092], "04-features/settings-drawer.css": [327140, 345374], "04-features/settings.css": [345415, 372708], "04-features/manager.css": [372748, 386046], "04-features/workshop.css": [386087, 408869], "04-features/favs.css": [408906, 448832], "04-features/debug.css": [448870, 465635], "04-features/story-outline.css": [465681, 499987], "04-features/outline-entry-menu.css": [500038, 506791], "04-features/rewrite.css": [506831, 557730], "04-features/reader.css": [557769, 567128], "04-features/chat-book.css": [567170, 573711], "04-features/story-memory.css": [573756, 619227], "04-features/character-evolution.css": [619279, 647700], "04-features/story-memory-notifications.css": [647759, 649908], "04-features/story-timetrace.css": [649956, 662804], "04-features/tts.css": [662840, 687325], "04-features/confirm-dialog.css": [687372, 691370], "04-features/image-cropper.css": [691416, 695274], "04-features/st-embedded.css": [695318, 725822], "04-features/scene-advance.css": [725868, 747953], "04-features/theater-midnight.css": [748002, 773330] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -28845,13 +29178,198 @@ var init_relayClient = __esm({
   }
 });
 
+// src/core/legacyTheaterRequest.js
+import { getCustomStoppingStrings } from "../../../power-user.js";
+import { getGroupNames } from "../../../group-chats.js";
+import * as host from "../../../../script.js";
+function reasoningEffort(settings, model) {
+  const effort = settings.reasoning_effort;
+  if (!STRING_EFFORT_SOURCES.has(settings.chat_completion_source)) return effort;
+  if (effort === "auto") return void 0;
+  if (effort === "min") {
+    return ["openai", "azure_openai"].includes(settings.chat_completion_source) && /^gpt-5/.test(model) ? "min" : "low";
+  }
+  return effort === "max" ? "high" : effort;
+}
+function buildLegacyTheaterRequest(settings, model, input) {
+  const source = settings.chat_completion_source;
+  const messages = input.filter((message) => message && typeof message === "object");
+  const isOai = source === "openai" || source === "azure_openai";
+  const body = {
+    type: "normal",
+    messages,
+    model,
+    temperature: Number(settings.temp_openai),
+    frequency_penalty: Number(settings.freq_pen_openai),
+    presence_penalty: Number(settings.pres_pen_openai),
+    top_p: Number(settings.top_p_openai),
+    max_tokens: settings.openai_max_tokens,
+    stream: Boolean(settings.stream_openai) && !(isOai && ["o1", "o1-2024-12-17"].includes(model)),
+    stop: getCustomStoppingStrings(4),
+    chat_completion_source: source,
+    user_name: host.name1,
+    char_name: host.name2,
+    group_names: getGroupNames(),
+    include_reasoning: Boolean(settings.show_thoughts),
+    reasoning_effort: reasoningEffort(settings, model),
+    enable_web_search: false,
+    request_images: false,
+    custom_prompt_post_processing: settings.custom_prompt_post_processing
+  };
+  if (settings.reverse_proxy && PROXY_SOURCES.has(source)) {
+    body.reverse_proxy = settings.reverse_proxy;
+    body.proxy_password = settings.proxy_password;
+  }
+  if (SEED_SOURCES.has(source) && settings.seed >= 0) body.seed = settings.seed;
+  switch (source) {
+    case "azure_openai":
+      body.azure_base_url = settings.azure_base_url;
+      body.azure_deployment_name = settings.azure_deployment_name;
+      body.azure_api_version = settings.azure_api_version;
+      if (/^gpt-[34]/.test(model)) delete body.reasoning_effort;
+      break;
+    case "claude":
+      body.top_k = Number(settings.top_k_openai);
+      body.claude_use_sysprompt = settings.claude_use_sysprompt;
+      body.assistant_prefill = "";
+      body.stop = getCustomStoppingStrings();
+      break;
+    case "openrouter":
+      body.top_k = Number(settings.top_k_openai);
+      body.min_p = Number(settings.min_p_openai);
+      body.repetition_penalty = Number(settings.repetition_penalty_openai);
+      body.top_a = Number(settings.top_a_openai);
+      body.use_fallback = settings.openrouter_use_fallback;
+      body.provider = settings.openrouter_providers;
+      body.allow_fallbacks = settings.openrouter_allow_fallbacks;
+      body.middleout = settings.openrouter_middleout;
+      break;
+    case "makersuite":
+    case "vertexai":
+      body.top_k = Number(settings.top_k_openai);
+      body.stop = getCustomStoppingStrings(5).slice(0, 5).filter((text6) => text6.length >= 1 && text6.length <= 16);
+      body.use_makersuite_sysprompt = settings.use_makersuite_sysprompt;
+      if (source === "vertexai") {
+        body.vertexai_auth_mode = settings.vertexai_auth_mode;
+        body.vertexai_region = settings.vertexai_region;
+        body.vertexai_express_project_id = settings.vertexai_express_project_id;
+      }
+      break;
+    case "mistralai":
+      body.safe_prompt = false;
+      body.stop = getCustomStoppingStrings();
+      break;
+    case "custom":
+      for (const key of ["custom_url", "custom_include_body", "custom_exclude_body", "custom_include_headers"]) body[key] = settings[key];
+      break;
+    case "cohere":
+      body.top_p = Math.min(Math.max(body.top_p, 0.01), 0.99);
+      body.top_k = Number(settings.top_k_openai);
+      body.frequency_penalty = Math.min(Math.max(body.frequency_penalty, 0), 1);
+      body.presence_penalty = Math.min(Math.max(body.presence_penalty, 0), 1);
+      body.stop = getCustomStoppingStrings(5);
+      break;
+    case "perplexity":
+      body.top_k = Number(settings.top_k_openai);
+      delete body.stop;
+      break;
+    case "deepseek":
+      body.top_p || (body.top_p = Number.EPSILON);
+      break;
+    case "xai":
+      if (model.includes("grok-3-mini")) {
+        delete body.presence_penalty;
+        delete body.frequency_penalty;
+        delete body.stop;
+      } else {
+        delete body.reasoning_effort;
+      }
+      if (model.includes("grok-4") || model.includes("grok-code")) {
+        delete body.presence_penalty;
+        delete body.frequency_penalty;
+        if (!model.includes("grok-4-fast-non-reasoning")) delete body.stop;
+      }
+      break;
+    case "pollinations":
+      delete body.max_tokens;
+      break;
+    case "electronhub":
+      body.top_k = Number(settings.top_k_openai);
+      break;
+    case "zai":
+      body.top_p || (body.top_p = 0.01);
+      body.stop = getCustomStoppingStrings(1);
+      body.zai_endpoint = settings.zai_endpoint || "common";
+      delete body.presence_penalty;
+      delete body.frequency_penalty;
+      break;
+  }
+  if (isOai && /^(o1|o3|o4)/.test(model)) {
+    body.max_completion_tokens = body.max_tokens;
+    for (const key of ["max_tokens", "stop", "temperature", "top_p", "frequency_penalty", "presence_penalty"]) delete body[key];
+    if (model.startsWith("o1")) messages.forEach((message) => {
+      if (message.role === "system") message.role = "user";
+    });
+  }
+  if (isOai && /^gpt-5/.test(model)) {
+    body.max_completion_tokens = body.max_tokens;
+    delete body.max_tokens;
+    if (!/gpt-5-chat-latest/.test(model)) {
+      if (!/gpt-5\.1/.test(model) || /chat-latest/.test(model)) {
+        delete body.temperature;
+        delete body.top_p;
+      }
+      for (const key of ["frequency_penalty", "presence_penalty", "stop"]) delete body[key];
+    }
+  }
+  if (!Array.isArray(body.stop) || !body.stop.length) delete body.stop;
+  for (const [key, value] of Object.entries(body)) {
+    if (value === void 0 || typeof value === "number" && !Number.isFinite(value)) delete body[key];
+  }
+  return body;
+}
+var PROXY_SOURCES, SEED_SOURCES, STRING_EFFORT_SOURCES;
+var init_legacyTheaterRequest = __esm({
+  "src/core/legacyTheaterRequest.js"() {
+    PROXY_SOURCES = /* @__PURE__ */ new Set(["claude", "openai", "mistralai", "makersuite", "vertexai", "deepseek", "xai"]);
+    SEED_SOURCES = /* @__PURE__ */ new Set([
+      "openai",
+      "azure_openai",
+      "openrouter",
+      "mistralai",
+      "custom",
+      "cohere",
+      "groq",
+      "electronhub",
+      "nanogpt",
+      "xai",
+      "pollinations",
+      "aimlapi",
+      "vertexai",
+      "makersuite"
+    ]);
+    STRING_EFFORT_SOURCES = /* @__PURE__ */ new Set([
+      "openai",
+      "azure_openai",
+      "custom",
+      "xai",
+      "aimlapi",
+      "openrouter",
+      "pollinations",
+      "perplexity",
+      "cometapi",
+      "electronhub"
+    ]);
+  }
+});
+
 // src/core/theaterRequest.js
-import { createGenerationParameters, oai_settings as oai_settings2 } from "../../../openai.js";
+import * as openai from "../../../openai.js";
 async function buildTheaterRequest(conn, messages, options2 = {}) {
   if (!Array.isArray(messages)) throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4");
-  const host3 = structuredClone(oai_settings2);
-  const settings = conn.useSTConnection ? host3 : Object.fromEntries(
-    SHARED_SETTINGS.filter((key) => host3[key] !== void 0).map((key) => [key, host3[key]])
+  const host4 = structuredClone(openai.oai_settings);
+  const settings = conn.useSTConnection ? host4 : Object.fromEntries(
+    SHARED_SETTINGS.filter((key) => host4[key] !== void 0).map((key) => [key, host4[key]])
   );
   const model = options2.model || conn.model;
   const stream = options2.stream ?? conn.stream ?? true;
@@ -28861,8 +29379,8 @@ async function buildTheaterRequest(conn, messages, options2 = {}) {
     settings.chat_completion_source = "openai";
     settings.custom_prompt_post_processing = "";
   }
-  settings.openai_max_tokens = options2.maxTokens ?? host3.openai_max_tokens ?? 2048;
-  settings.temp_openai = options2.temperature ?? host3.temp_openai ?? 0.7;
+  settings.openai_max_tokens = options2.maxTokens ?? host4.openai_max_tokens ?? 2048;
+  settings.temp_openai = options2.temperature ?? host4.temp_openai ?? 0.7;
   settings.stream_openai = stream;
   settings.n = 1;
   settings.function_calling = false;
@@ -28876,12 +29394,8 @@ async function buildTheaterRequest(conn, messages, options2 = {}) {
     settings.reverse_proxy = "";
     settings.proxy_password = "";
   }
-  const { generate_data } = await createGenerationParameters(
-    settings,
-    model,
-    "normal",
-    structuredClone(messages)
-  );
+  const messageCopy = structuredClone(messages);
+  const generate_data = typeof openai.createGenerationParameters === "function" ? (await openai.createGenerationParameters(settings, model, "normal", messageCopy)).generate_data : buildLegacyTheaterRequest(settings, model, messageCopy);
   if (!conn.useSTConnection) {
     generate_data.reverse_proxy = base;
     generate_data.proxy_password = String(conn.key || "");
@@ -28895,6 +29409,7 @@ async function sendTheaterRequest(conn, messages, options2 = {}) {
 var SHARED_SETTINGS;
 var init_theaterRequest = __esm({
   "src/core/theaterRequest.js"() {
+    init_legacyTheaterRequest();
     init_promptProcessing();
     init_relayClient();
     SHARED_SETTINGS = [
@@ -31615,8 +32130,8 @@ function openCharacterProfileWindow(options2 = {}) {
     renderGroups();
   }
   function renderTabs(counts) {
-    const host3 = role("tabs");
-    host3.replaceChildren();
+    const host4 = role("tabs");
+    host4.replaceChildren();
     for (const group of GROUPS) {
       const active4 = group.kind === activeKind;
       const tab = document.createElement("button");
@@ -31632,7 +32147,7 @@ function openCharacterProfileWindow(options2 = {}) {
       count.dataset.role = `count-${group.kind}`;
       count.textContent = String(counts.get(group.kind) || 0);
       tab.append(count);
-      host3.append(tab);
+      host4.append(tab);
     }
   }
   function buildGroup(group, entries) {
@@ -31661,10 +32176,10 @@ function openCharacterProfileWindow(options2 = {}) {
       items.filter((entry) => profileKind(entry) === group2.kind).length
     ]));
     renderTabs(counts);
-    const host3 = role("list");
-    host3.replaceChildren();
+    const host4 = role("list");
+    host4.replaceChildren();
     const group = GROUPS.find((item2) => item2.kind === activeKind) || GROUPS[0];
-    host3.append(buildGroup(group, items.filter((entry) => profileKind(entry) === group.kind)));
+    host4.append(buildGroup(group, items.filter((entry) => profileKind(entry) === group.kind)));
   }
   function revealEntry(id3, kind) {
     activeKind = kind;
@@ -32832,15 +33347,15 @@ function buildGalleryEntries(favs, cards, gallery) {
     if (!entries.has(key)) entries.set(key, { ...saved, key, local: false, favorites: [], kind: key.startsWith("group:") ? "group" : "card" });
   }
   for (const fav of favs || []) {
-    const identity2 = resolveFavoriteCard(fav, cards, gallery);
+    const identity3 = resolveFavoriteCard(fav, cards, gallery);
     const key = favoriteGalleryKey(fav, cards, gallery);
     if (!entries.has(key)) entries.set(key, {
       key,
       name: favoriteCharacterName(fav),
-      avatar: identity2.avatar,
+      avatar: identity3.avatar,
       local: false,
       favorites: [],
-      kind: identity2.key ? identity2.key.startsWith("group:") ? "group" : "card" : "pending"
+      kind: identity3.key ? identity3.key.startsWith("group:") ? "group" : "card" : "pending"
     });
     entries.get(key).favorites.push(fav);
   }
@@ -32925,12 +33440,12 @@ function reconcileCharacterGallery() {
   for (const fav of favs) {
     const old = legacyById.get(String(fav.id));
     const source = !fav.cardKey && old?.cardKey ? { ...fav, cardKey: old.cardKey, characterAvatar: old.characterAvatar, groupKey: old.groupKey } : fav;
-    const identity2 = resolveFavoriteCard(source, cards, gallery);
-    if (!identity2.key) continue;
-    const card = cards.find((item2) => item2.cardKey === identity2.key);
-    const saved = gallery.entries[identity2.key];
+    const identity3 = resolveFavoriteCard(source, cards, gallery);
+    if (!identity3.key) continue;
+    const card = cards.find((item2) => item2.cardKey === identity3.key);
+    const saved = gallery.entries[identity3.key];
     if (!saved) {
-      gallery.entries[identity2.key] = { name: card?.name || favoriteCharacterName(fav), avatar: identity2.avatar, label: "", image: null, snapshot: "" };
+      gallery.entries[identity3.key] = { name: card?.name || favoriteCharacterName(fav), avatar: identity3.avatar, label: "", image: null, snapshot: "" };
       changed = true;
     } else if (card && (saved.avatar !== card.avatar || saved.name !== card.name)) {
       Object.assign(saved, { name: card.name, avatar: card.avatar });
@@ -32938,9 +33453,9 @@ function reconcileCharacterGallery() {
     }
     const patch = {
       id: fav.id,
-      cardKey: identity2.key.startsWith("card:") ? identity2.key : "",
-      characterAvatar: identity2.avatar,
-      groupKey: identity2.key.startsWith("group:") ? identity2.key : ""
+      cardKey: identity3.key.startsWith("card:") ? identity3.key : "",
+      characterAvatar: identity3.avatar,
+      groupKey: identity3.key.startsWith("group:") ? identity3.key : ""
     };
     if (fav.cardKey !== patch.cardKey || fav.characterAvatar !== patch.characterAvatar || (fav.groupKey || "") !== patch.groupKey) {
       patches.push(patch);
@@ -32969,22 +33484,22 @@ function reconcileCharacterGallery() {
   return { gallery, cards, favs, entries: buildGalleryEntries(favs, cards, gallery) };
 }
 function resolveFavoriteCover(fav, { gallery = getCharacterGallery(), cards = galleryCards(gallery), thumbnail = false } = {}) {
-  const identity2 = resolveFavoriteCard(fav, cards, gallery);
-  const saved = gallery.entries[identity2.key];
+  const identity3 = resolveFavoriteCard(fav, cards, gallery);
+  const saved = gallery.entries[identity3.key];
   const sources = [];
   const add = (value) => {
     const src = safeGalleryImage(value);
     if (src && !sources.includes(src)) sources.push(src);
   };
   add(saved?.image?.src);
-  if (identity2.key.startsWith("card:")) {
-    const card = cards.find((item2) => item2.cardKey === identity2.key);
+  if (identity3.key.startsWith("card:")) {
+    const card = cards.find((item2) => item2.cardKey === identity3.key);
     if (card) add(characterCoverUrl(card.avatar, thumbnail));
     add(saved?.snapshot);
-  } else if (identity2.key.startsWith("group:")) add(saved?.groupCover);
+  } else if (identity3.key.startsWith("group:")) add(saved?.groupCover);
   add(fav?.avatar);
-  if (!identity2.key) add(gallery.legacyImages[favoriteCharacterName(fav)] || getExtData().character_map?.[favoriteCharacterName(fav)]);
-  return { src: sources[0] || "", sources, image: saved?.image || saved?.crop || null, key: identity2.key };
+  if (!identity3.key) add(gallery.legacyImages[favoriteCharacterName(fav)] || getExtData().character_map?.[favoriteCharacterName(fav)]);
+  return { src: sources[0] || "", sources, image: saved?.image || saved?.crop || null, key: identity3.key };
 }
 function resolveEntryCover(entry, options2 = {}) {
   if (entry.kind === "legacy") return { src: safeGalleryImage(entry.legacyImage), sources: [safeGalleryImage(entry.legacyImage)], image: null };
@@ -33051,9 +33566,9 @@ async function uploadGalleryBytes(blob, extension) {
   if (payload.path !== `/user/files/${name}`) throw new Error("\u56FE\u7247\u4FDD\u5B58\u8DEF\u5F84\u5F02\u5E38");
   return payload.path;
 }
-function ensureGallerySnapshot(identity2, { refresh = false } = {}) {
-  const key = identity2?.cardKey || identity2?.key || identity2?.groupKey;
-  const avatar = identity2?.characterAvatar || identity2?.avatar;
+function ensureGallerySnapshot(identity3, { refresh = false } = {}) {
+  const key = identity3?.cardKey || identity3?.key || identity3?.groupKey;
+  const avatar = identity3?.characterAvatar || identity3?.avatar;
   if (!key) return Promise.resolve("");
   if (snapshots.has(key)) return snapshots.get(key);
   const operation = (async () => {
@@ -33064,8 +33579,8 @@ function ensureGallerySnapshot(identity2, { refresh = false } = {}) {
     if (key.startsWith("group:")) {
       return enqueueWrite(() => {
         const current2 = getCharacterGallery();
-        const saved = current2.entries[canonical] || { name: identity2.name, avatar: "", label: "", image: null, snapshot: "" };
-        saved.groupCover || (saved.groupCover = safeGalleryImage(identity2.avatar));
+        const saved = current2.entries[canonical] || { name: identity3.name, avatar: "", label: "", image: null, snapshot: "" };
+        saved.groupCover || (saved.groupCover = safeGalleryImage(identity3.avatar));
         current2.entries[canonical] = saved;
         getExtData()[CHARACTER_GALLERY_KEY] = current2;
         saveExtData();
@@ -33087,7 +33602,7 @@ function ensureGallerySnapshot(identity2, { refresh = false } = {}) {
         const currentKey = resolveGalleryAlias(key, current2);
         const card = listCharacterCards().find((item2) => item2.cardKey === currentKey);
         current2.entries[currentKey] = {
-          name: card?.name || identity2.name || "\u672A\u77E5\u89D2\u8272",
+          name: card?.name || identity3.name || "\u672A\u77E5\u89D2\u8272",
           avatar: card?.avatar || avatar,
           label: "",
           image: null,
@@ -33307,8 +33822,8 @@ function node(tag, className, text6) {
   return element2;
 }
 function openCharacterGalleryWindow(onSaved) {
-  const host3 = document.getElementById("t-favs-view");
-  if (!host3 || document.getElementById("t-img-mgr")) return;
+  const host4 = document.getElementById("t-favs-view");
+  if (!host4 || document.getElementById("t-img-mgr")) return;
   let { gallery, cards, favs } = reconcileCharacterGallery();
   gallery = structuredClone(gallery);
   favs = favs.map((fav) => ({ ...fav }));
@@ -33348,7 +33863,7 @@ function openCharacterGalleryWindow(onSaved) {
             </div>
             <input type="file" accept="image/*" class="is-hidden t-gallery-file">
         </section>`;
-  host3.append(root);
+  host4.append(root);
   applyStudioTheme(root.querySelector(".t-gallery-box"));
   const grid = root.querySelector(".t-gallery-grid");
   const detail = root.querySelector(".t-gallery-detail");
@@ -33859,9 +34374,9 @@ async function getExpandedUserNameForMasking() {
     if (typeof SillyTavern !== "undefined" && SillyTavern.getContext) {
       const ctx2 = SillyTavern.getContext();
       const u = ctx2?.substituteParams?.("{{user}}");
-      const name1 = ctx2?.name1;
+      const name12 = ctx2?.name1;
       if (u && typeof u === "string" && u.trim() && u !== "{{user}}" && u !== "User") return u;
-      if (name1 && typeof name1 === "string" && name1.trim() && name1 !== "{{user}}") return name1;
+      if (name12 && typeof name12 === "string" && name12.trim() && name12 !== "{{user}}") return name12;
       if (u && typeof u === "string" && u.trim() && u !== "{{user}}") return u;
     }
   } catch (e) {
@@ -33911,8 +34426,8 @@ function collectImagesDeep(rootEl) {
   const imgs = [];
   try {
     rootEl.querySelectorAll?.("img")?.forEach((img) => imgs.push(img));
-    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host3) => {
-      const shadow = host3.shadowRoot;
+    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host4) => {
+      const shadow = host4.shadowRoot;
       if (shadow) {
         shadow.querySelectorAll("img").forEach((img) => imgs.push(img));
       }
@@ -33998,7 +34513,7 @@ async function saveContinuationChainFavorite() {
     if (window.toastr) toastr.warning("\u672A\u627E\u5230\u5F53\u524D\u5267\u672C\uFF0C\u65E0\u6CD5\u6536\u85CF\u7EED\u5199\u94FE");
     return false;
   }
-  const identity2 = captureGalleryIdentity();
+  const identity3 = captureGalleryIdentity();
   const ctx2 = await getContextData();
   const chainData = resolveDisplayedFavoriteBranch(
     currentResult,
@@ -34036,13 +34551,13 @@ async function saveContinuationChainFavorite() {
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
   const scriptName = String(chainData?.scriptName || script?.name || display?.scriptName || "\u573A\u666F");
   const branchKey = String(chainData?.branchKey || "").trim();
-  const avatarSrc = identity2.avatar;
-  const cardKey = identity2.cardKey;
+  const avatarSrc = identity3.avatar;
+  const cardKey = identity3.cardKey;
   const chainSignature = buildChainSignature(scriptId, items);
   const data = getExtData();
   if (!Array.isArray(data.favs) && !isFavsMigrated()) data.favs = [];
   const favMeta = listFavMetaForDedup();
-  const favoriteIdentityKey = identity2.cardKey || identity2.groupKey;
+  const favoriteIdentityKey = identity3.cardKey || identity3.groupKey;
   const favoriteGallery = reconcileCharacterGallery();
   const sameRoleFavs = favMeta.filter((f) => favoriteIdentityKey && resolveFavoriteCard(f, favoriteGallery.cards, favoriteGallery.gallery).key === favoriteIdentityKey);
   const duplicated = sameRoleFavs.find((f) => f?.type === "chain" && f?.chainSignature === chainSignature);
@@ -34074,13 +34589,13 @@ async function saveContinuationChainFavorite() {
       existingChain.html = mergedHtml;
       existingChain.avatar = avatarSrc;
       existingChain.cardKey = cardKey;
-      existingChain.characterAvatar = identity2.characterAvatar;
-      existingChain.groupKey = identity2.groupKey;
+      existingChain.characterAvatar = identity3.characterAvatar;
+      existingChain.groupKey = identity3.groupKey;
       existingChain.branchKey = branchKey;
       existingChain.chainSignature = chainSignature;
       existingChain.items = items;
       await putFav(existingChain);
-      void ensureGallerySnapshot(identity2);
+      void ensureGallerySnapshot(identity3);
       GlobalState.lastFavId = existingChain.id;
       syncFavIdToCurrentHistory(existingChain.id);
       updateFavButtonUI();
@@ -34099,14 +34614,14 @@ async function saveContinuationChainFavorite() {
     html: mergedHtml,
     avatar: avatarSrc,
     cardKey,
-    characterAvatar: identity2.characterAvatar,
-    groupKey: identity2.groupKey,
+    characterAvatar: identity3.characterAvatar,
+    groupKey: identity3.groupKey,
     branchKey,
     chainSignature,
     items
   };
   await putFav(entry);
-  void ensureGallerySnapshot(identity2);
+  void ensureGallerySnapshot(identity3);
   GlobalState.lastFavId = entry.id;
   syncFavIdToCurrentHistory(entry.id);
   updateFavButtonUI();
@@ -35359,8 +35874,8 @@ function openFavsWindow() {
   const getChainMetaNodes = () => {
     const container = document.getElementById("t-read-content");
     if (!container) return [];
-    const host3 = container.querySelector(".t-shadow-host");
-    const root = host3?.shadowRoot || container;
+    const host4 = container.querySelector(".t-shadow-host");
+    const root = host4?.shadowRoot || container;
     return Array.from(root.querySelectorAll("details.t-chain-meta"));
   };
   const syncToggleMetaButton = (expanded) => {
@@ -36161,10 +36676,10 @@ var init_toolboxSettingsLink = __esm({
 });
 
 // src/ui/shared/presetPromptProcessing.js
-function mountPresetPromptProcessing(host3, preset) {
-  if (!host3) return;
-  host3.replaceChildren();
-  host3.hidden = !preset;
+function mountPresetPromptProcessing(host4, preset) {
+  if (!host4) return;
+  host4.replaceChildren();
+  host4.hidden = !preset;
   if (!preset) return;
   const label = document.createElement("label");
   label.className = "t-form-label";
@@ -36188,7 +36703,7 @@ function mountPresetPromptProcessing(host3, preset) {
   help.id = "t-prompt-post-processing-help";
   help.style.cssText = "margin-top:0.5em; font-size:0.85em; color:var(--t-color-text-muted); line-height:1.6;";
   help.textContent = "\u968F\u5F53\u524D\u9884\u8BBE\u4FDD\u5B58\uFF0C\u5BF9\u81EA\u5B9A\u4E49 API \u548C\u9152\u9986\u8FDE\u63A5\u5747\u751F\u6548\u3002Kemini \u9009\u62E9\u201C\u4E25\u683C\uFF08\u4E0D\u5E26\u5DE5\u5177\uFF09\u201D\uFF1B\u6696\u9633\u9009\u62E9\u201C\u4E0D\u5904\u7406\u201D\u3002\u6CBF\u7528\u8FDE\u63A5\u65F6\uFF0C\u81EA\u5B9A\u4E49 API \u4E0D\u5904\u7406\uFF0C\u9152\u9986\u8FDE\u63A5\u4F7F\u7528\u9152\u9986\u8BBE\u7F6E\u3002\u4E25\u683C\u6A21\u5F0F\u4F1A\u5408\u5E76\u6D88\u606F\u5E76\u8C03\u6574\u4E2D\u9014\u7684\u7CFB\u7EDF\u89D2\u8272\uFF0C\u4FDD\u7559\u6587\u672C\u3002";
-  host3.append(label, select2, help);
+  host4.append(label, select2, help);
 }
 var init_presetPromptProcessing = __esm({
   "src/ui/shared/presetPromptProcessing.js"() {
@@ -37941,9 +38456,9 @@ function parseMemoryResponse(raw, batch) {
       if (!item2 || !validString2(item2.title, 200) || !validString2(item2.body, 3e3) || !evidenceExists(item2.evidence) || item2.id != null && typeof item2.id !== "string" || kind === "threads" && !["open", "progress", "resolved"].includes(item2.status)) {
         throw new Error("\u6761\u76EE\u683C\u5F0F\u6216\u539F\u6587\u4F9D\u636E\u4E0D\u5B8C\u6574\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559\u3002");
       }
-      const identity2 = item2.id || item2.title.trim();
-      if (seen.has(identity2)) throw new Error("\u603B\u7ED3\u5305\u542B\u91CD\u590D\u6761\u76EE\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559\u3002");
-      seen.add(identity2);
+      const identity3 = item2.id || item2.title.trim();
+      if (seen.has(identity3)) throw new Error("\u603B\u7ED3\u5305\u542B\u91CD\u590D\u6761\u76EE\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559\u3002");
+      seen.add(identity3);
     }
   }
   return result;
@@ -38393,9 +38908,9 @@ function importBookScenes(snapshot, draft2) {
   return [{ start: 0, title: scenes[0].title || "\u5F00\u7BC7", anchor: "" }, ...scenes.slice(1).map((scene) => ({ start: scene.start, title: scene.title, anchor: bookHash(snapshot.chat[scene.start]) }))];
 }
 function bookCoverSources() {
-  const identity2 = captureGalleryIdentity();
-  const card = safeBookUrl(identity2.avatar, true);
-  const gallery = resolveFavoriteCover({ cardKey: identity2.cardKey, characterAvatar: identity2.characterAvatar, groupKey: identity2.groupKey, charName: identity2.name });
+  const identity3 = captureGalleryIdentity();
+  const card = safeBookUrl(identity3.avatar, true);
+  const gallery = resolveFavoriteCover({ cardKey: identity3.cardKey, characterAvatar: identity3.characterAvatar, groupKey: identity3.groupKey, charName: identity3.name });
   const portable = (src) => {
     try {
       const url2 = new URL(src);
@@ -38977,11 +39492,11 @@ function openChatBookWindow() {
     rebuild();
     alert2("\u5DF2\u6309\u6700\u65B0\u5168\u5C40\u6B63\u6587\u89C4\u5219\u66F4\u65B0\u9884\u89C8\u3002");
   }
-  const host3 = globalThis.SillyTavern?.getContext?.(), eventSource15 = host3?.eventSource;
+  const host4 = globalThis.SillyTavern?.getContext?.(), eventSource15 = host4?.eventSource;
   const events = [];
   try {
     for (const key of ["CHAT_CHANGED", "MESSAGE_RECEIVED", "MESSAGE_EDITED", "MESSAGE_UPDATED", "MESSAGE_DELETED", "MESSAGE_SWIPED", "MESSAGE_SWIPE_DELETED"]) {
-      const name = host3?.eventTypes?.[key];
+      const name = host4?.eventTypes?.[key];
       if (!name || !eventSource15?.on || !eventSource15?.removeListener) continue;
       eventSource15.on(name, detectChanges);
       events.push([name, detectChanges]);
@@ -39030,11 +39545,11 @@ var init_chatBookWindow = __esm({
 });
 
 // src/core/hostGeneration.js
-import * as host from "../../../../script.js";
+import * as host2 from "../../../../script.js";
 import { is_group_generating } from "../../../group-chats.js";
 function isHostGenerating() {
-  if (typeof host.isGenerating === "function") return Boolean(host.isGenerating());
-  return Boolean(host.is_send_press || is_group_generating);
+  if (typeof host2.isGenerating === "function") return Boolean(host2.isGenerating());
+  return Boolean(host2.is_send_press || is_group_generating);
 }
 var init_hostGeneration = __esm({
   "src/core/hostGeneration.js"() {
@@ -40803,9 +41318,9 @@ import {
   saveChatConditional as saveChatConditional2,
   getRequestHeaders as getRequestHeaders5
 } from "../../../../script.js";
-import * as host2 from "../../../../script.js";
-function configureTimetraceMemoryHost(host3) {
-  memoryHost = host3;
+import * as host3 from "../../../../script.js";
+function configureTimetraceMemoryHost(host4) {
+  memoryHost = host4;
   clearTimer();
 }
 function resumeTimetrace() {
@@ -41429,7 +41944,7 @@ async function runTimetraceTask({ history = false, rebuild = false, ingestOnly =
       }
       let inputBudget = config2.batch_input_tokens;
       try {
-        const promptBudget = Number(host2.getMaxPromptTokens?.());
+        const promptBudget = Number(host3.getMaxPromptTokens?.());
         if (promptBudget > 0) inputBudget = Math.max(1, Math.min(inputBudget, Math.floor(promptBudget * 0.7) - estimateTokens(world) - estimateTokens(config2.prompt) - estimateTokens(JSON.stringify(timetraceAnalysisContext(memoryFor(ctx2), consecutive[0].index)))));
       } catch {
       }
@@ -48903,17 +49418,17 @@ function rewriteTargetStillMatches(target, current2, expectedSource = target.pro
   const snapshot = sourceFields(target.message);
   return !snapshot.reason && snapshot.fields.length === target.fields.length && snapshot.fields.every((field3, i) => field3.object === target.fields[i].object && field3.key === target.fields[i].key && field3.original === (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : expectedSource));
 }
-async function persistRewriteTarget(target, rewritten, host3) {
-  if (!rewriteTargetStillMatches(target, host3.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+async function persistRewriteTarget(target, rewritten, host4) {
+  if (!rewriteTargetStillMatches(target, host4.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
   const ctx2 = target.ctx;
   const group = ctx2.groupId != null && ctx2.groupId !== "";
   const character = ctx2.characters?.[ctx2.characterId];
   if (!ctx2.chatId || !group && !character?.avatar) throw new Error("\u5F53\u524D\u804A\u5929\u65E0\u6CD5\u786E\u8BA4\u4FDD\u5B58\u7ED3\u679C");
-  await host3.save();
-  if (!rewriteTargetStillMatches(target, host3.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
-  const response = await host3.fetch(group ? "/api/chats/group/get" : "/api/chats/get", {
+  await host4.save();
+  if (!rewriteTargetStillMatches(target, host4.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+  const response = await host4.fetch(group ? "/api/chats/group/get" : "/api/chats/get", {
     method: "POST",
-    headers: host3.getHeaders(),
+    headers: host4.getHeaders(),
     cache: "no-store",
     body: JSON.stringify(group ? { id: ctx2.chatId } : { ch_name: character.name, file_name: ctx2.chatId, avatar_url: character.avatar })
   });
@@ -48923,7 +49438,7 @@ async function persistRewriteTarget(target, rewritten, host3) {
   const message = Array.isArray(saved) ? saved[target.index + offset] : null;
   const fields = message ? sourceFields(message) : { fields: [], reason: "\u672A\u627E\u5230\u4FDD\u5B58\u7684\u697C\u5C42" };
   if (fields.reason || fields.fields.length !== target.fields.length || fields.fields.some((field3, i) => field3.key !== target.fields[i].key || field3.original !== (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : rewritten))) throw new Error("\u697C\u5C42\u8865\u4E01\u672A\u6210\u529F\u4FDD\u5B58");
-  if (!rewriteTargetStillMatches(target, host3.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+  if (!rewriteTargetStillMatches(target, host4.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
 }
 async function commitRewritePatches(target, units, replacements, options2) {
   const mapped = mapRewriteUnits(target.projection, units);
@@ -52077,7 +52592,7 @@ function refreshInjection2() {
   setExtensionPrompt4(EVOLUTION_PROMPT_KEY, text6, extension_prompt_types4.IN_CHAT, depth, false, extension_prompt_roles4.SYSTEM);
 }
 function getEvolutionView() {
-  const ctx2 = context2(), host3 = globalThis.SillyTavern?.getContext?.();
+  const ctx2 = context2(), host4 = globalThis.SillyTavern?.getContext?.();
   const config2 = getEvolutionConfig();
   let memory = newEvolution(), readError = "";
   try {
@@ -52093,7 +52608,7 @@ function getEvolutionView() {
   const query = ctx2 ? recentContext(ctx2) : "";
   return {
     available: !!ctx2,
-    unsupported: ctx2 ? "" : host3?.groupId != null && host3.groupId !== "" ? "\u89D2\u8272\u6F14\u53D8\u6682\u4E0D\u652F\u6301\u7FA4\u804A\uFF0C\u8BF7\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002" : "\u8BF7\u5148\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002",
+    unsupported: ctx2 ? "" : host4?.groupId != null && host4.groupId !== "" ? "\u89D2\u8272\u6F14\u53D8\u6682\u4E0D\u652F\u6301\u7FA4\u804A\uFF0C\u8BF7\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002" : "\u8BF7\u5148\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002",
     contextKey: ctx2?.key || "",
     characterName: ctx2?.character.name || "",
     baseline: memory.baseline?.text || (ctx2 ? baseline(ctx2) : ""),
@@ -55017,7 +55532,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
         </div>`;
   container.appendChild(root);
   const role = (name) => root.querySelector(`[data-evolution-role="${name}"]`);
-  let contextKey = null, identity2 = null;
+  let contextKey = null, identity3 = null;
   let selectedThemeId = null, selectedChangeKey = null, readTab = "journey";
   let themes = [], query = "";
   const media = root.ownerDocument.defaultView.matchMedia?.("(max-width: 680px)");
@@ -55057,7 +55572,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
   }
   function current2(expected) {
     const view = getEvolutionView();
-    if (disposed || !root.isConnected || expected !== view.contextKey || !sameIdentity(identity2, getStoryMemoryContextIdentity()) || !available(view)) {
+    if (disposed || !root.isConnected || expected !== view.contextKey || !sameIdentity(identity3, getStoryMemoryContextIdentity()) || !available(view)) {
       if (!disposed) {
         refresh();
         localError = "\u804A\u5929\u6216\u89D2\u8272\u5DF2\u5207\u6362\uFF0C\u65E7\u64CD\u4F5C\u672A\u6267\u884C\u3002\u8BF7\u5728\u5F53\u524D\u804A\u5929\u91CD\u65B0\u64CD\u4F5C\u3002";
@@ -55077,7 +55592,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
   function refresh() {
     if (disposed || !root.isConnected) return;
     const view = getEvolutionView(), nextIdentity2 = getStoryMemoryContextIdentity();
-    if (contextKey !== view.contextKey || !sameIdentity(identity2, nextIdentity2)) {
+    if (contextKey !== view.contextKey || !sameIdentity(identity3, nextIdentity2)) {
       const hadDraft = !!draft2;
       closeEditor();
       root.querySelectorAll("details").forEach((details) => {
@@ -55092,7 +55607,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
       role("theme-search").value = "";
       localError = hadDraft ? "\u5DF2\u5207\u6362\u804A\u5929\uFF0C\u65E7\u804A\u5929\u7684\u7F16\u8F91\u8349\u7A3F\u5DF2\u5173\u95ED\u3002" : "";
       contextKey = view.contextKey;
-      identity2 = nextIdentity2;
+      identity3 = nextIdentity2;
     }
     const supported = available(view);
     root.dataset.evolutionVersion = String(view.version);
@@ -55192,7 +55707,7 @@ function mountCharacterEvolutionView(container, { onSettings = () => {
   }
   async function perform(expected, callback, kind = "write") {
     if (operation && !(operation.kind === "run" && kind === "interrupt") || !current2(expected)) return;
-    const ticket = { kind, identity: identity2 };
+    const ticket = { kind, identity: identity3 };
     operation = ticket;
     localError = "";
     refresh();
@@ -55911,7 +56426,7 @@ ${item2.body || ""}`.includes(name)));
     else root.querySelector('[data-role="body"]').focus({ preventScroll: true });
     sourceReturnFocus = null;
   }
-  function sameIdentity3(left, right) {
+  function sameIdentity4(left, right) {
     return left === right || !!left && !!right && left.key === right.key && left.chat === right.chat && left.chatMetadata === right.chatMetadata;
   }
   function queueRender() {
@@ -55929,23 +56444,23 @@ ${item2.body || ""}`.includes(name)));
     viewVersion++;
     queueRender();
   }
-  function readView(identity2 = getStoryMemoryContextIdentity()) {
-    if (cachedView && !viewDirty && sameIdentity3(identity2, cachedIdentity)) return cachedView;
+  function readView(identity3 = getStoryMemoryContextIdentity()) {
+    if (cachedView && !viewDirty && sameIdentity4(identity3, cachedIdentity)) return cachedView;
     const version = viewVersion;
     const view = getStoryMemoryView();
-    if (!sameIdentity3(identity2, getStoryMemoryContextIdentity()) || view.key !== (identity2?.key || "")) {
+    if (!sameIdentity4(identity3, getStoryMemoryContextIdentity()) || view.key !== (identity3?.key || "")) {
       cachedView = null;
       invalidateView();
       return null;
     }
     cachedView = view;
-    cachedIdentity = identity2;
+    cachedIdentity = identity3;
     viewDirty = version !== viewVersion;
     return view;
   }
   function guardInteraction() {
     if (closed || !root.isConnected) return false;
-    if (renderedIdentity !== void 0 && sameIdentity3(renderedIdentity, getStoryMemoryContextIdentity())) return true;
+    if (renderedIdentity !== void 0 && sameIdentity4(renderedIdentity, getStoryMemoryContextIdentity())) return true;
     invalidateView();
     render2();
     return false;
@@ -55953,8 +56468,8 @@ ${item2.body || ""}`.includes(name)));
   function render2() {
     if (closed || !root.isConnected) return;
     queuedRefresh = null;
-    const identity2 = getStoryMemoryContextIdentity();
-    if (renderedIdentity !== void 0 && !sameIdentity3(renderedIdentity, identity2)) {
+    const identity3 = getStoryMemoryContextIdentity();
+    if (renderedIdentity !== void 0 && !sameIdentity4(renderedIdentity, identity3)) {
       timeQuery = "";
       timeSearchOpen = false;
       timeFilter = "all";
@@ -55979,7 +56494,7 @@ ${item2.body || ""}`.includes(name)));
       activeOperation = null;
       localBusy = false;
       lastBodyHtml = "";
-      if (renderedIdentity?.key === identity2?.key) {
+      if (renderedIdentity?.key === identity3?.key) {
         evolutionPage?.dispose();
         evolutionPage = null;
       }
@@ -55987,7 +56502,7 @@ ${item2.body || ""}`.includes(name)));
     }
     let view;
     try {
-      view = readView(identity2);
+      view = readView(identity3);
     } catch (cause) {
       cachedView = null;
       lastBodyHtml = "";
@@ -55996,7 +56511,7 @@ ${item2.body || ""}`.includes(name)));
       return;
     }
     if (!view) return;
-    renderedIdentity = identity2;
+    renderedIdentity = identity3;
     if (timeFilter !== "all" && !timetraceSceneOptions(view.timetrace.nodes, timeFocus).some(([frame]) => frame === timeFilter)) timeFilter = "all";
     renderMemoryProgress(root.querySelector('[data-role="progress"]'), view.progress);
     const pause = root.querySelector('[data-action="pause"]');
@@ -56112,10 +56627,10 @@ ${item2.body || ""}`.includes(name)));
   }
   async function perform(callback) {
     if (!guardInteraction()) return;
-    const identity2 = renderedIdentity;
+    const identity3 = renderedIdentity;
     const operation = {};
     activeOperation = operation;
-    const current2 = () => !closed && activeOperation === operation && sameIdentity3(identity2, getStoryMemoryContextIdentity());
+    const current2 = () => !closed && activeOperation === operation && sameIdentity4(identity3, getStoryMemoryContextIdentity());
     localError = "";
     localBusy = true;
     try {
@@ -56142,8 +56657,8 @@ ${item2.body || ""}`.includes(name)));
   }
   function guardEvolutionReload(event) {
     if (!event.target.closest?.('[data-role="evolution-mount"]')) return;
-    const identity2 = getStoryMemoryContextIdentity();
-    if (closed || renderedIdentity?.key === identity2?.key && !sameIdentity3(renderedIdentity, identity2)) {
+    const identity3 = getStoryMemoryContextIdentity();
+    if (closed || renderedIdentity?.key === identity3?.key && !sameIdentity4(renderedIdentity, identity3)) {
       event.preventDefault();
       event.stopImmediatePropagation();
       if (!closed) guardInteraction();
@@ -56417,14 +56932,14 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
     } else if (action === "save-edit") {
       const draft2 = editor;
       if (!draft2) return;
-      const identity2 = renderedIdentity;
+      const identity3 = renderedIdentity;
       void perform(async () => {
         if (draft2.kind === "time-base") await editTimetrace({ initialTime: draft2.initialTime, calendar: { ...draft2, kind: draft2.calendarKind || "gregorian" } });
         else if (draft2.kind === "time-node") await editTimetrace({ nodeId: draft2.id, patch: draft2 });
         else if (draft2.kind === "stage") await editStoryMemoryStages(draft2);
         else if (draft2.kind === "narrative" || draft2.kind === "summary") await editStoryMemoryNarrative(draft2);
         else await editStoryMemoryItem(draft2.kind, draft2.id, draft2);
-        if (!closed && sameIdentity3(identity2, getStoryMemoryContextIdentity()) && editor === draft2) editor = null;
+        if (!closed && sameIdentity4(identity3, getStoryMemoryContextIdentity()) && editor === draft2) editor = null;
       });
     } else if (action === "cancel-edit") {
       editor = null;
@@ -57533,6 +58048,15 @@ var init_ttsAudio = __esm({
 });
 
 // src/ui/ttsMessageView.js
+function updatePlayButton(button4, state) {
+  const valid = ["idle", "synthesizing", "playing", "paused", "ready", "error"].includes(state) ? state : "idle";
+  const labels = { idle: "\u64AD\u653E\u8BED\u97F3", synthesizing: "\u6B63\u5728\u5408\u6210\u8BED\u97F3\uFF0C\u70B9\u51FB\u53D6\u6D88", playing: "\u6682\u505C\u8BED\u97F3", paused: "\u7EE7\u7EED\u64AD\u653E\u8BED\u97F3", ready: "\u64AD\u653E\u5DF2\u51C6\u5907\u8BED\u97F3", error: "\u91CD\u8BD5\u8BED\u97F3" };
+  button4.dataset.state = valid;
+  button4.setAttribute("aria-busy", String(valid === "synthesizing"));
+  button4.setAttribute("aria-pressed", String(valid === "playing"));
+  button4.setAttribute("aria-label", `${labels[valid]}\uFF1B\u957F\u6309\u6216\u53F3\u952E\u6253\u5F00\u914D\u97F3\u64CD\u4F5C`);
+  button4.title = `${labels[valid]} \xB7 \u957F\u6309 / \u53F3\u952E\u67E5\u770B\u64CD\u4F5C`;
+}
 function protectedElement(element2, exclusions) {
   const attributes = Array.from(element2.attributes, (attr) => `${attr.name}="${attr.value.replace(/"/g, "&quot;")}"`).join(" ");
   const style = element2.ownerDocument.defaultView?.getComputedStyle(element2);
@@ -57706,9 +58230,10 @@ function createTtsMessageView(callbacks = {}) {
     const body = messageElement.matches(".mes_text") ? messageElement : messageElement.querySelector(".mes_text");
     if (!body?.parentNode) return;
     const document2 = messageElement.ownerDocument;
+    const window2 = document2.defaultView;
     const fingerprint3 = String(view.fingerprint ?? "");
     const index2 = view.index;
-    const record = { nodes: /* @__PURE__ */ new Set(), disposers: [], fingerprint: fingerprint3, previousFingerprint: messageElement.getAttribute(FINGERPRINT_ATTRIBUTE) };
+    const record = { nodes: /* @__PURE__ */ new Set(), disposers: [], buttons: /* @__PURE__ */ new Map(), pending: [], index: index2, fingerprint: fingerprint3, previousFingerprint: messageElement.getAttribute(FINGERPRINT_ATTRIBUTE) };
     records2.set(messageElement, record);
     messageElement.setAttribute(FINGERPRINT_ATTRIBUTE, fingerprint3);
     const current2 = () => !destroyed && records2.get(messageElement) === record && messageElement.isConnected && body.isConnected && messageElement.getAttribute(FINGERPRINT_ATTRIBUTE) === fingerprint3 && (messageElement === body || messageElement.querySelector(".mes_text") === body);
@@ -57724,65 +58249,147 @@ function createTtsMessageView(callbacks = {}) {
       if (text6 !== void 0) label(element2, text6);
       return element2;
     };
-    const toolbar = create("div", "t-tts-toolbar");
-    toolbar.setAttribute("aria-label", "\u672C\u697C\u89D2\u8272\u914D\u97F3");
-    toolbar.setAttribute("aria-busy", String(!!view.busy));
-    const actions = create("div", "t-tts-actions");
-    const status3 = create("div", "t-tts-status");
-    status3.setAttribute("role", "status");
-    status3.setAttribute("aria-live", "polite");
-    status3.setAttribute("aria-atomic", "true");
     const reportError2 = (error4) => {
-      if (current2()) label(status3, `\u9519\u8BEF\uFF1A${error4 instanceof Error ? error4.message : String(error4)}`);
+      if (current2()) callbacks.error?.(index2, fingerprint3, error4 instanceof Error ? error4.message : String(error4));
     };
-    const button4 = (className, text6, ariaLabel, action, args, disabled = false) => {
-      const element2 = create("button", className, text6);
-      element2.type = "button";
-      element2.setAttribute("aria-label", ariaLabel);
-      const callback = callbacks[action];
-      element2.disabled = disabled || typeof callback !== "function";
-      const click = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (element2.disabled || !current2() || !(toolbar.contains(element2) || body.contains(element2))) return;
+    const controlsFor = (segment, voice) => {
+      const controls = create("span", "t-tts-controls");
+      const segmentId = segment.id;
+      const play = create("button", "t-tts-play");
+      play.type = "button";
+      play.dataset.ttsSegmentId = segmentId;
+      play.disabled = !callbacks.play && !callbacks.menu && !callbacks.edit;
+      play.setAttribute("aria-haspopup", "dialog");
+      play.setAttribute("aria-disabled", String(!voice.configured));
+      const symbol = create("span", "t-tts-play-symbol");
+      symbol.setAttribute("aria-hidden", "true");
+      const svg = document2.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 16 16");
+      svg.setAttribute("focusable", "false");
+      svg.setAttribute(UI_ATTRIBUTE, "");
+      const path = document2.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", "M5 3.5v9l7-4.5z");
+      path.setAttribute("fill", "currentColor");
+      path.setAttribute(UI_ATTRIBUTE, "");
+      record.nodes.add(svg);
+      record.nodes.add(path);
+      svg.append(path);
+      symbol.append(svg);
+      const bars = create("span", "t-tts-play-bars");
+      bars.setAttribute("aria-hidden", "true");
+      for (let i = 0; i < 3; i++) bars.append(create("span", "t-tts-play-bar"));
+      play.append(symbol, bars);
+      controls.append(play);
+      updatePlayButton(play, view.playbackStates?.[segmentId]);
+      record.buttons.set(segmentId, play);
+      let gesture = null, timer4, suppressClick = false, suppressTimer;
+      const cancelGesture = () => {
+        if (timer4) window2.clearTimeout(timer4);
+        timer4 = void 0;
+        gesture = null;
+        document2.removeEventListener("pointermove", move);
+        document2.removeEventListener("pointerup", up);
+        document2.removeEventListener("pointercancel", cancelled);
+      };
+      const markHandled = () => {
+        suppressClick = true;
+        window2.clearTimeout(suppressTimer);
+        suppressTimer = window2.setTimeout(() => {
+          suppressClick = false;
+        }, 800);
+      };
+      const invoke = (action) => {
+        if (play.disabled || !current2() || !body.contains(play)) return;
+        const callback = action === "menu" ? callbacks.menu || callbacks.edit : callbacks.play;
+        if (typeof callback !== "function" || action === "play" && !voice.configured) return;
         try {
-          Promise.resolve(callback(...args)).catch(reportError2);
+          Promise.resolve(callback(index2, segmentId)).catch(reportError2);
         } catch (error4) {
           reportError2(error4);
         }
       };
-      element2.addEventListener("click", click);
-      record.disposers.push(() => element2.removeEventListener("click", click));
-      return element2;
-    };
-    const controlsFor = (segment, voice) => {
-      const controls = create("span", "t-tts-controls");
-      controls.append(
-        button4("t-tts-play", `\u25B6 ${voice.name}`, `\u64AD\u653E${voice.name}\u7684\u53F0\u8BCD`, "play", [index2, segment.id], !voice.configured),
-        button4("t-tts-more", "\u2026", `\u7F16\u8F91${voice.name}\u7684\u914D\u97F3`, "edit", [index2, segment.id])
-      );
+      const listen = (target, type, callback, options2) => {
+        target.addEventListener(type, callback, options2);
+        record.disposers.push(() => target.removeEventListener(type, callback, options2));
+      };
+      const down = (event) => {
+        if (event.button !== void 0 && event.button !== 0) return;
+        if (!current2()) return;
+        cancelGesture();
+        suppressClick = false;
+        gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false, held: false };
+        document2.addEventListener("pointermove", move, { passive: true });
+        document2.addEventListener("pointerup", up);
+        document2.addEventListener("pointercancel", cancelled);
+        timer4 = window2.setTimeout(() => {
+          if (!gesture || gesture.moved || !current2()) return;
+          gesture.held = true;
+          markHandled();
+          invoke("menu");
+        }, 500);
+      };
+      const move = (event) => {
+        if (!gesture || gesture.id !== event.pointerId) return;
+        if (Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 10) {
+          gesture.moved = true;
+          window2.clearTimeout(timer4);
+          timer4 = void 0;
+        }
+      };
+      const up = (event) => {
+        if (!gesture || gesture.id !== event.pointerId) return;
+        const held = gesture.held, moved = gesture.moved;
+        cancelGesture();
+        if (held || moved) {
+          markHandled();
+          return;
+        }
+        if (event.pointerType === "touch") {
+          if (event.cancelable) event.preventDefault();
+          markHandled();
+          invoke("play");
+        }
+      };
+      const cancelled = () => {
+        if (gesture) markHandled();
+        cancelGesture();
+      };
+      listen(play, "pointerdown", down);
+      listen(play, "click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (suppressClick) {
+          suppressClick = false;
+          window2.clearTimeout(suppressTimer);
+          return;
+        }
+        invoke("play");
+      });
+      listen(play, "contextmenu", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const wasHandled = gesture?.held || suppressClick;
+        cancelGesture();
+        markHandled();
+        if (!wasHandled) invoke("menu");
+      });
+      listen(play, "keydown", (event) => {
+        if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+        event.preventDefault();
+        event.stopPropagation();
+        cancelGesture();
+        markHandled();
+        invoke("menu");
+      });
+      record.disposers.push(() => {
+        cancelGesture();
+        window2.clearTimeout(suppressTimer);
+      });
       return controls;
     };
     const voices = Array.isArray(view.voices) ? view.voices : [];
     const segments = Array.isArray(view.segments) ? view.segments : [];
     const entries = segments.map((segment) => ({ segment, voice: voiceFor(segment, voices) }));
-    actions.append(
-      button4("t-tts-analyze", "\u672C\u697C\u8BC6\u522B", "\u8BC6\u522B\u672C\u697C\u7684\u89D2\u8272\u53F0\u8BCD", "analyze", [index2], !!view.busy),
-      button4("t-tts-play-all", "\u64AD\u653E\u672C\u697C", "\u64AD\u653E\u672C\u697C\u5168\u90E8\u5DF2\u914D\u7F6E\u97F3\u8272\u7684\u53F0\u8BCD", "playAll", [index2], !entries.some((entry) => entry.voice.configured)),
-      button4("t-tts-stop", "\u505C\u6B62", "\u505C\u6B62\u89D2\u8272\u914D\u97F3", "stop", [])
-    );
-    toolbar.append(actions, status3);
-    if (Array.isArray(view.diagnostics) && view.diagnostics.length) {
-      const details = create("details", "t-tts-pending");
-      const summary = create("summary", "", "\u8BC6\u522B\u8BF7\u6C42\u8BCA\u65AD");
-      const list = create("ul", "t-tts-pending-list");
-      for (const row of view.diagnostics) {
-        list.append(create("li", "t-tts-pending-item", `\u6765\u6E90 ${(row.sources || []).join("\u3001")}\uFF1B\u8F93\u51FA\u4E0A\u9650\uFF1A${row.max_output_tokens || "\u4E0D\u4E3B\u52A8\u6307\u5B9A"}\uFF1B\u8D85\u65F6\uFF1A${row.timeout_seconds}\u79D2\uFF1B\u7ED3\u675F\u539F\u56E0\uFF1A${row.finish_reason || "\u63A5\u53E3\u672A\u63D0\u4F9B"}\uFF1B\u56DE\u590D${row.response_chars}\u5B57\u7B26${row.output_tokens == null ? "" : ` / ${row.output_tokens}\u8F93\u51FAtokens`}\uFF1B${row.complete ? "\u5B8C\u6210" : "\u90E8\u5206\u5B8C\u6210"}\uFF0C\u63A5\u7EB3${row.accepted}\u6BB5${row.warnings?.length ? `\uFF1B${row.warnings.join("\uFF1B")}` : ""}`));
-      }
-      details.append(summary, list);
-      toolbar.append(details);
-    }
-    body.before(toolbar);
     const projection = view.projection;
     const groups = collectTextGroups(body, projection?.exclusions || []);
     const variants = (projection?.runs || []).map((run) => runVariants(run.text));
@@ -57797,32 +58404,27 @@ function createTtsMessageView(callbacks = {}) {
         entry.controls = controls;
       }
     }
-    const pending3 = entries.filter((entry) => entry.match.reason);
-    if (pending3.length) {
-      const details = create("details", "t-tts-pending");
-      const summary = create("summary", "", `\u5F85\u5B9A\u4F4D\u7247\u6BB5\uFF08${pending3.length}\uFF09`);
-      const list = create("ul", "t-tts-pending-list");
-      for (const entry of pending3) {
-        const item2 = create("li", "t-tts-pending-item");
-        item2.append(
-          create("span", "t-tts-pending-quote", `${entry.voice.name}\uFF1A${entry.segment.quote || entry.segment.text || ""}`),
-          create("span", "t-tts-pending-reason", `\uFF08${entry.match.reason}\uFF09`),
-          entry.controls || controlsFor(entry.segment, entry.voice)
-        );
-        list.append(item2);
-      }
-      details.append(summary, list);
-      toolbar.append(details);
-    }
-    const statuses = [];
-    if (view.status) statuses.push(String(view.status));
-    const missing = [...new Set(entries.filter((entry) => !entry.voice.configured).map((entry) => entry.voice.name))];
-    if (missing.length) statuses.push(`\u672A\u914D\u7F6E\u97F3\u8272\uFF1A${missing.join("\u3001")}`);
-    else if (!voices.some((voice) => typeof voice?.voice === "string" && voice.voice.trim())) statuses.push("\u672A\u914D\u7F6E\u97F3\u8272");
-    if (pending3.length) statuses.push(`\u672A\u539F\u4F4D\u5B9A\u4F4D\uFF1A${pending3.length} \u6BB5\uFF08\u53EF\u5C55\u5F00\u5F85\u5B9A\u4F4D\u7247\u6BB5\u64AD\u653E\u6216\u7F16\u8F91\uFF09`);
-    label(status3, statuses.join("\uFF1B"));
+    record.pending = entries.filter((entry) => entry.match.reason).map((entry) => ({
+      id: entry.segment.id,
+      speaker: entry.segment.speaker,
+      quote: entry.segment.quote || entry.segment.text || "",
+      reason: entry.match.reason
+    }));
   }
-  return { render: render2, clear, clearAll, destroy() {
+  function setPlaybackState2(index2, fingerprint3, segmentId, state) {
+    for (const [message, record] of records2) {
+      if (!message.isConnected || record.fingerprint !== fingerprint3 || record.index !== index2) continue;
+      const play = record.buttons.get(segmentId);
+      if (play?.isConnected) updatePlayButton(play, state);
+    }
+  }
+  function getPending(index2, fingerprint3) {
+    for (const [message, record] of records2) {
+      if (message.isConnected && record.index === index2 && record.fingerprint === fingerprint3 && message.getAttribute(FINGERPRINT_ATTRIBUTE) === fingerprint3) return record.pending.map((item2) => ({ ...item2 }));
+    }
+    return [];
+  }
+  return { render: render2, clear, clearAll, setPlaybackState: setPlaybackState2, getPending, destroy() {
     clearAll();
     destroyed = true;
   } };
@@ -57860,6 +58462,532 @@ var init_ttsMessageView = __esm({
       "SUMMARY"
     ]);
     MEDIA_TAGS = /* @__PURE__ */ new Set(["IMG", "PICTURE", "SOURCE", "TRACK", "HR", "NOSCRIPT"]);
+  }
+});
+
+// src/ui/ttsDock.js
+function identity(view) {
+  const floor = view?.floor;
+  return { key: view?.key, index: floor?.index, fingerprint: floor?.fingerprint };
+}
+function sameIdentity2(a, b) {
+  return !!a && !!b && a.key === b.key && a.index === b.index && a.fingerprint === b.fingerprint;
+}
+function hasFloor(view) {
+  return view?.key != null && Number.isInteger(view?.floor?.index) && view.floor.index >= 0 && typeof view.floor.fingerprint === "string" && !!view.floor.fingerprint;
+}
+function voiceFor2(segment, voices = []) {
+  const speaker = String(segment?.speaker ?? "");
+  const byId = voices.filter((voice2) => voice2?.id === speaker);
+  const matches = byId.length ? byId : voices.filter((voice2) => voice2?.name === speaker);
+  const voice = matches.length === 1 ? matches[0] : null;
+  return { name: String(voice?.name || speaker || "\u672A\u6307\u5B9A\u89D2\u8272"), configured: typeof voice?.voice === "string" && !!voice.voice.trim() };
+}
+function diagnosticText(row) {
+  const join = (values) => Array.isArray(values) ? values.join("\u3001") : String(values ?? "");
+  return `\u6765\u6E90 ${join(row.sources)}\uFF1B\u8F93\u51FA\u4E0A\u9650\uFF1A${row.max_output_tokens || "\u4E0D\u4E3B\u52A8\u6307\u5B9A"}\uFF1B\u8D85\u65F6\uFF1A${row.timeout_seconds ?? "\u2014"}\u79D2\uFF1B\u7ED3\u675F\u539F\u56E0\uFF1A${row.finish_reason || "\u63A5\u53E3\u672A\u63D0\u4F9B"}\uFF1B\u56DE\u590D${row.response_chars ?? 0}\u5B57\u7B26${row.output_tokens == null ? "" : ` / ${row.output_tokens}\u8F93\u51FAtokens`}\uFF1B${row.complete ? "\u5B8C\u6210" : "\u90E8\u5206\u5B8C\u6210"}\uFF0C\u63A5\u7EB3${row.accepted ?? 0}\u6BB5${row.warnings?.length ? `\uFF1B${join(row.warnings)}` : ""}`;
+}
+function createTtsDock(callbacks = {}) {
+  const document2 = globalThis.document;
+  const window2 = document2?.defaultView;
+  if (!document2?.body || !window2) return { refresh() {
+  }, destroy() {
+  } };
+  const create = (tag, className, text6) => {
+    const element2 = document2.createElement(tag);
+    element2.setAttribute(UI_ATTRIBUTE2, "");
+    if (className) element2.className = className;
+    if (text6 !== void 0) element2.textContent = String(text6);
+    return element2;
+  };
+  const button4 = (className, text6, label = text6) => {
+    const element2 = create("button", className, text6);
+    element2.type = "button";
+    element2.setAttribute("aria-label", label);
+    return element2;
+  };
+  const icon = (pathData) => {
+    const svg = document2.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute(UI_ATTRIBUTE2, "");
+    svg.setAttribute("viewBox", "0 0 20 20");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const path = document2.createElementNS(svg.namespaceURI, "path");
+    path.setAttribute(UI_ATTRIBUTE2, "");
+    path.setAttribute("d", pathData);
+    svg.append(path);
+    return svg;
+  };
+  const root = create("div", "t-root t-tts-dock");
+  root.hidden = true;
+  root.style.visibility = "hidden";
+  const trigger = button4("t-tts-dock-trigger", void 0, "\u89D2\u8272\u914D\u97F3");
+  trigger.id = "t-tts-dock-trigger";
+  trigger.title = "\u89D2\u8272\u914D\u97F3";
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.setAttribute("aria-haspopup", "dialog");
+  trigger.setAttribute("aria-controls", "t-tts-dock-panel");
+  const chevron = create("span", "t-tts-dock-chevron");
+  chevron.append(icon("M6 12l4-4 4 4"));
+  trigger.append(icon("M3 10v2m4-6v10m3-13v14m3-11v8m4-5v2"), create("span", "", "\u89D2\u8272\u914D\u97F3"), chevron);
+  const panel = create("section", "t-tts-dock-panel");
+  panel.id = "t-tts-dock-panel";
+  panel.hidden = true;
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-labelledby", "t-tts-dock-heading");
+  const head = create("div", "t-tts-dock-head");
+  const heading = create("strong", "", "\u89D2\u8272\u914D\u97F3");
+  heading.id = "t-tts-dock-heading";
+  const settings = button4("t-tts-dock-settings", void 0, "\u6253\u5F00\u89D2\u8272\u914D\u97F3\u8BBE\u7F6E");
+  settings.title = "\u914D\u97F3\u8BBE\u7F6E";
+  settings.dataset.ttsAction = "settings";
+  settings.append(icon("M8 3h4l.5 2 1.5 1 2-.5 2 3-1.5 1.5v2L18 13l-2 3-2-.5-1.5 1L12 19H8l-.5-2.5-1.5-1-2 .5-2-3 1.5-1.5v-2L2 8.5l2-3 2 .5 1.5-1L8 3z M10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6"));
+  head.append(heading, settings);
+  const field3 = create("label", "t-tts-dock-field");
+  const select2 = create("select", "t-tts-dock-floor");
+  select2.id = "t-tts-dock-floor";
+  select2.setAttribute("aria-label", "\u9009\u62E9\u914D\u97F3\u697C\u5C42");
+  field3.append(create("span", "", "\u697C\u5C42"), select2);
+  const actions = create("div", "t-tts-dock-actions");
+  const analyze = button4("t-tts-analyze", "\u672C\u697C\u8BC6\u522B", "\u8BC6\u522B\u672C\u697C\u7684\u89D2\u8272\u53F0\u8BCD");
+  const playAll = button4("t-tts-play-all", "\u64AD\u653E\u672C\u697C", "\u64AD\u653E\u672C\u697C\u5DF2\u914D\u7F6E\u97F3\u8272\u7684\u53F0\u8BCD");
+  const stop = button4("t-tts-stop", "\u505C\u6B62", "\u505C\u6B62\u89D2\u8272\u914D\u97F3");
+  for (const [element2, action] of [[analyze, "analyze"], [playAll, "playAll"], [stop, "stop"]]) {
+    element2.dataset.ttsAction = action;
+    actions.append(element2);
+  }
+  const status3 = create("p", "t-tts-dock-status");
+  status3.setAttribute("role", "status");
+  status3.setAttribute("aria-live", "polite");
+  status3.setAttribute("aria-atomic", "true");
+  const makeDetails = (className) => {
+    const element2 = create("details", className);
+    const summary = create("summary");
+    const list = create("ul", "t-tts-dock-list");
+    element2.append(summary, list);
+    return { element: element2, summary, list, signature: null };
+  };
+  const diagnostics = makeDetails("t-tts-dock-diagnostics");
+  const pending3 = makeDetails("t-tts-dock-pending");
+  panel.append(head, field3, actions, status3, diagnostics.element, pending3.element);
+  root.append(trigger, panel);
+  const positionProbe = create("div");
+  positionProbe.className = "t-tts-position-probe";
+  positionProbe.setAttribute("aria-hidden", "true");
+  positionProbe.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;visibility:hidden;pointer-events:none;margin:0;padding:0;border:0;";
+  document2.body.append(positionProbe, root);
+  let destroyed = false;
+  let expanded = false;
+  let selectedIndex = null;
+  let view = null;
+  let renderedIdentity = null;
+  let errorStatus = null;
+  let operation = 0;
+  let frame = null;
+  let optionSignature = null;
+  let observed = [];
+  let gesture = null;
+  let suppressClickUntil = 0;
+  const disposers = [];
+  const pendingButtons = /* @__PURE__ */ new WeakMap();
+  const activationTargets = /* @__PURE__ */ new WeakMap();
+  const listen = (target, type, handler, options2) => {
+    target?.addEventListener(type, handler, options2);
+    disposers.push(() => target?.removeEventListener(type, handler, options2));
+  };
+  const readView = () => typeof callbacks.getView === "function" ? callbacks.getView(selectedIndex) : null;
+  const available = (current2) => !!current2?.enabled && Array.isArray(current2.floors) && current2.floors.length > 0;
+  const floorRows = () => (view?.floors || []).filter((row) => Number.isInteger(row?.index) && row.index >= 0);
+  const rows = (name) => Array.isArray(view?.floor?.[name]) ? view.floor[name] : [];
+  function clearDetails() {
+    for (const details of [diagnostics, pending3]) {
+      details.element.open = false;
+      details.list.replaceChildren();
+      details.signature = null;
+    }
+  }
+  function close(restoreFocus = false) {
+    expanded = false;
+    panel.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+    clearDetails();
+    if (restoreFocus && !root.hidden && root.isConnected) trigger.focus({ preventScroll: true });
+    schedulePosition();
+  }
+  function syncOptions() {
+    const floors = floorRows();
+    const signature2 = JSON.stringify(floors.map((row) => [row.index, String(row.label ?? `\u697C\u5C42 ${row.index}`)]));
+    if (signature2 !== optionSignature && !(document2.activeElement === select2 && select2.options.length)) {
+      select2.replaceChildren(...floors.map((row) => {
+        const option = create("option", "", row.label ?? `\u697C\u5C42 ${row.index}`);
+        option.value = String(row.index);
+        return option;
+      }));
+      optionSignature = signature2;
+    }
+    const value = hasFloor(view) ? String(view.floor.index) : "";
+    if (value && ![...select2.options].some((option) => option.value === value)) {
+      const row = floors.find((row2) => row2.index === view.floor.index);
+      if (row) {
+        const option = create("option", "", row.label ?? `\u697C\u5C42 ${row.index}`);
+        option.value = value;
+        select2.append(option);
+      }
+    }
+    if (select2.value !== value) select2.value = value;
+    select2.disabled = !floors.length;
+  }
+  function renderDetails(details, entries, renderItem) {
+    if (!expanded || !details.element.open || details.element.hidden) {
+      if (details.list.childNodes.length) details.list.replaceChildren();
+      details.signature = null;
+      return;
+    }
+    const signature2 = JSON.stringify([entries, rows("voices"), rows("segments"), !!view?.generating]);
+    if (signature2 === details.signature) return;
+    details.signature = signature2;
+    details.list.replaceChildren(...entries.map(renderItem));
+  }
+  function render2() {
+    root.hidden = !available(view);
+    if (!expanded) return;
+    const valid = available(view) && hasFloor(view);
+    const floor = view?.floor;
+    const voices = rows("voices");
+    const playable = rows("segments").some((segment) => !segment.skipped && voiceFor2(segment, voices).configured);
+    settings.disabled = !valid || typeof callbacks.settings !== "function";
+    analyze.disabled = !valid || !!floor?.busy || !!view?.generating || typeof callbacks.analyze !== "function";
+    playAll.disabled = !valid || !playable || typeof callbacks.playAll !== "function";
+    stop.disabled = !valid || typeof callbacks.stop !== "function";
+    panel.setAttribute("aria-busy", String(!!floor?.busy || !!view?.generating));
+    syncOptions();
+    const playback2 = { synthesizing: "\u6B63\u5728\u5408\u6210", playing: "\u6B63\u5728\u64AD\u653E", paused: "\u5DF2\u6682\u505C", error: "\u64AD\u653E\u5931\u8D25" }[view?.playbackState ?? floor?.playbackState];
+    const base = !valid ? "\u6682\u65E0\u53EF\u7528\u697C\u5C42" : String(floor.status || (floor.busy ? "\u6B63\u5728\u8BC6\u522B\u2026" : view.generating ? "\u6B63\u5728\u751F\u6210\uFF0C\u6682\u4E0D\u53EF\u8BC6\u522B" : rows("segments").length ? `${rows("segments").length} \u6BB5\u53F0\u8BCD` : "\u5C1A\u672A\u8BC6\u522B\u53F0\u8BCD"));
+    status3.textContent = errorStatus?.message || [base, playback2].filter(Boolean).join(" \xB7 ");
+    status3.classList.toggle("is-error", !!errorStatus);
+    diagnostics.element.hidden = !rows("diagnostics").length;
+    diagnostics.summary.textContent = `\u8BC6\u522B\u8BCA\u65AD\uFF08${rows("diagnostics").length}\uFF09`;
+    pending3.element.hidden = !rows("pending").length;
+    pending3.summary.textContent = `\u5F85\u5B9A\u4F4D\u7247\u6BB5\uFF08${rows("pending").length}\uFF09`;
+    renderDetails(diagnostics, rows("diagnostics"), (row) => create("li", "", diagnosticText(row || {})));
+    renderDetails(pending3, rows("pending"), (row) => {
+      const item2 = create("li", "t-tts-dock-pending-item");
+      const voice = voiceFor2(row, voices);
+      item2.append(
+        create("p", "t-tts-dock-quote", `${voice.name}\uFF1A${String(row.quote ?? "")}`),
+        create("p", "t-tts-dock-reason", row.reason || "\u672A\u80FD\u5728\u6B63\u6587\u4E2D\u53EF\u9760\u5B9A\u4F4D")
+      );
+      const controls = create("div", "t-tts-dock-pending-actions");
+      const segment = rows("segments").find((segment2) => segment2.id === row.id);
+      for (const [action, text6, label] of [["play", "\u25B6 \u64AD\u653E", `\u64AD\u653E${voice.name}\u7684\u5F85\u5B9A\u4F4D\u53F0\u8BCD`], ["menu", "\u66F4\u591A", `\u6253\u5F00${voice.name}\u7684\u914D\u97F3\u64CD\u4F5C`]]) {
+        const control = button4(`t-tts-dock-${action}`, text6, label);
+        control.dataset.ttsAction = action;
+        control.disabled = !valid || typeof callbacks[action] !== "function" || !segment || action === "play" && (!voice.configured || segment.skipped || row.skipped);
+        pendingButtons.set(control, { ...renderedIdentity, id: row.id, speaker: row.speaker, quote: row.quote });
+        controls.append(control);
+      }
+      item2.append(controls);
+      return item2;
+    });
+    schedulePosition();
+  }
+  function applyView(next) {
+    const nextIdentity2 = identity(next);
+    if (!renderedIdentity || nextIdentity2.key !== renderedIdentity.key) {
+      close();
+      selectedIndex = null;
+      operation++;
+      errorStatus = null;
+    } else if (!sameIdentity2(nextIdentity2, renderedIdentity)) {
+      clearDetails();
+      operation++;
+      errorStatus = null;
+    } else if (errorStatus && errorStatus.sourceStatus !== next?.floor?.status) {
+      errorStatus = null;
+    }
+    view = next;
+    renderedIdentity = nextIdentity2;
+    if (!available(view)) close();
+    render2();
+    schedulePosition();
+  }
+  function refresh() {
+    if (destroyed) return;
+    try {
+      let next = readView();
+      if (selectedIndex !== null && (next?.key !== renderedIdentity?.key || !next?.floors?.some((row) => row.index === selectedIndex))) {
+        selectedIndex = null;
+        next = readView();
+      }
+      applyView(next);
+    } catch {
+      applyView(null);
+    }
+  }
+  function currentTarget(captured) {
+    if (destroyed || !root.isConnected || !sameIdentity2(captured, renderedIdentity)) return null;
+    let fresh;
+    try {
+      fresh = readView();
+    } catch {
+      refresh();
+      return null;
+    }
+    if (!available(fresh) || !hasFloor(fresh) || !sameIdentity2(captured, identity(fresh))) {
+      refresh();
+      return null;
+    }
+    return fresh;
+  }
+  function invoke(action, control) {
+    if (destroyed || control.disabled || !panel.contains(control)) return;
+    const captured = activationTargets.get(control) || pendingButtons.get(control) || { ...renderedIdentity };
+    activationTargets.delete(control);
+    const fresh = currentTarget(captured);
+    if (!fresh || typeof callbacks[action] !== "function") return;
+    if (action === "analyze" && (fresh.generating || fresh.floor.busy)) {
+      refresh();
+      return;
+    }
+    const segments = Array.isArray(fresh.floor.segments) ? fresh.floor.segments : [];
+    const voices = Array.isArray(fresh.floor.voices) ? fresh.floor.voices : [];
+    if (action === "playAll" && !segments.some((segment) => !segment.skipped && voiceFor2(segment, voices).configured)) {
+      refresh();
+      return;
+    }
+    if (action === "play" || action === "menu") {
+      const row = fresh.floor.pending?.find((row2) => row2.id === captured.id && row2.speaker === captured.speaker && row2.quote === captured.quote);
+      const segment = segments.find((segment2) => segment2.id === captured.id);
+      if (!row || !segment || action === "play" && (row.skipped || segment.skipped || !voiceFor2(row, voices).configured)) {
+        refresh();
+        return;
+      }
+    }
+    const sequence = ++operation;
+    errorStatus = null;
+    if (action === "settings" || action === "menu") close(true);
+    const args = action === "play" || action === "menu" ? [captured.index, captured.id] : action === "stop" || action === "settings" ? [] : [captured.index];
+    const reportError2 = (error4) => {
+      if (sequence !== operation || !currentTarget(captured)) return;
+      errorStatus = { message: `\u9519\u8BEF\uFF1A${error4 instanceof Error ? error4.message : String(error4)}`, sourceStatus: fresh.floor.status };
+      render2();
+    };
+    try {
+      Promise.resolve(callbacks[action](...args)).then(() => {
+        if (sequence === operation && currentTarget(captured)) refresh();
+      }, reportError2);
+    } catch (error4) {
+      reportError2(error4);
+    }
+  }
+  function toggle() {
+    if (expanded) {
+      close(true);
+      return;
+    }
+    refresh();
+    if (!available(view) || destroyed) return;
+    expanded = true;
+    panel.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    render2();
+    if (!select2.disabled) select2.focus({ preventScroll: true });
+    else trigger.focus({ preventScroll: true });
+  }
+  const observer2 = typeof window2.ResizeObserver === "function" ? new window2.ResizeObserver(() => schedulePosition()) : null;
+  function observeInputs() {
+    const inputs = [document2.querySelector("#send_form #qr--bar"), document2.getElementById("send_textarea"), document2.getElementById("send_form")].filter(Boolean);
+    if (inputs.length === observed.length && inputs.every((input, i) => input === observed[i])) return;
+    observer2?.disconnect();
+    observed = inputs;
+    for (const input of inputs) observer2?.observe(input);
+  }
+  function visibleRect(element2, viewport) {
+    if (!element2?.isConnected) return null;
+    for (let ancestor = element2; ancestor; ancestor = ancestor.parentElement) {
+      const style = window2.getComputedStyle(ancestor);
+      if (ancestor.hidden || style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse") return null;
+    }
+    const rect = element2.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && rect.bottom > viewport.top && rect.top < viewport.bottom ? rect : null;
+  }
+  function position() {
+    frame = null;
+    if (destroyed) return;
+    observeInputs();
+    if (root.hidden) return;
+    const visual = window2.visualViewport;
+    const viewport = {
+      left: visual?.offsetLeft || 0,
+      top: visual?.offsetTop || 0,
+      width: visual?.width || window2.innerWidth,
+      height: visual?.height || window2.innerHeight
+    };
+    viewport.bottom = viewport.top + viewport.height;
+    const textarea = document2.getElementById("send_textarea");
+    const form = document2.getElementById("send_form");
+    const qr = form?.querySelector("#qr--bar");
+    const qrRect = visibleRect(qr, viewport);
+    const anchor = qrRect || visibleRect(textarea, viewport) || visibleRect(form, viewport);
+    root.dataset.anchor = qrRect ? "qr" : anchor ? "input" : "viewport";
+    if (!anchor && (textarea || form)) {
+      root.style.visibility = "hidden";
+      return;
+    }
+    const triggerRect = trigger.getBoundingClientRect();
+    const triggerHeight = triggerRect.height || 32;
+    const triggerWidth = Math.min(triggerRect.width || 132, viewport.width - GUTTER * 2);
+    const panelWidth = Math.max(0, Math.min(360, viewport.width - GUTTER * 2));
+    const bottom = Math.min(anchor ? anchor.top - GAP : viewport.bottom - GUTTER, viewport.bottom - GUTTER);
+    const top = Math.max(viewport.top + GUTTER, Math.min(bottom - triggerHeight, viewport.bottom - GUTTER - triggerHeight));
+    const halfWidth = (expanded ? Math.max(panelWidth, triggerWidth) : triggerWidth) / 2;
+    const center = anchor ? anchor.left + anchor.width / 2 : viewport.left + viewport.width / 2;
+    const x = Math.max(viewport.left + GUTTER + halfWidth, Math.min(center, viewport.left + viewport.width - GUTTER - halfWidth));
+    const origin = positionProbe.getBoundingClientRect();
+    const scaleX = origin.width > 0 ? origin.width : 1, scaleY = origin.height > 0 ? origin.height : 1;
+    root.style.left = `${(x - origin.left) / scaleX}px`;
+    root.style.top = `${(top - origin.top) / scaleY}px`;
+    root.style.bottom = "auto";
+    root.style.setProperty("--t-tts-dock-width", `${panelWidth / scaleX}px`);
+    root.style.setProperty("--t-tts-dock-height", `${Math.max(0, Math.min(520, top - GAP - viewport.top - GUTTER)) / scaleY}px`);
+    root.style.setProperty("--t-tts-dock-viewport-width", `${Math.max(0, viewport.width - GUTTER * 2) / scaleX}px`);
+    root.style.visibility = top + triggerHeight <= viewport.bottom - GUTTER && panelWidth > 0 ? "visible" : "hidden";
+  }
+  function schedulePosition() {
+    if (!destroyed && frame === null) frame = window2.requestAnimationFrame(position);
+  }
+  const anchorSelector = "#send_form, #send_textarea, #qr--bar";
+  const layoutObserver = typeof window2.MutationObserver === "function" ? new window2.MutationObserver((mutations) => {
+    const host4 = document2.getElementById("send_form");
+    const textarea = document2.getElementById("send_textarea");
+    const qr = host4?.querySelector("#qr--bar");
+    if (mutations.some((mutation) => {
+      if (mutation.target === root || root.contains(mutation.target)) return false;
+      if (mutation.type === "attributes") return mutation.target.matches?.(anchorSelector) || host4 && mutation.target.contains(host4) || textarea && mutation.target.contains(textarea) || qr && mutation.target.contains(qr);
+      return [...mutation.addedNodes, ...mutation.removedNodes].some((node2) => node2.nodeType === 1 && (node2.matches?.(anchorSelector) || node2.querySelector?.(anchorSelector)));
+    })) schedulePosition();
+  }) : null;
+  layoutObserver?.observe(document2.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style", "hidden"] });
+  const finishGesture = () => {
+    gesture = null;
+    document2.removeEventListener("pointermove", move, true);
+    document2.removeEventListener("pointerup", up, true);
+    document2.removeEventListener("pointercancel", cancelGesture, true);
+  };
+  const markHandled = () => {
+    suppressClickUntil = window2.performance.now() + 800;
+  };
+  const move = (event) => {
+    if (gesture?.id === event.pointerId && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 10) gesture.moved = true;
+  };
+  const up = (event) => {
+    if (!gesture || gesture.id !== event.pointerId) return;
+    const tap = !gesture.moved && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) <= 10 && window2.performance.now() - gesture.started < 500;
+    finishGesture();
+    markHandled();
+    if (tap) {
+      if (event.cancelable) event.preventDefault();
+      toggle();
+    }
+  };
+  const cancelGesture = () => {
+    if (gesture) markHandled();
+    finishGesture();
+  };
+  listen(trigger, "pointerdown", (event) => {
+    if (event.pointerType !== "touch" || event.button !== void 0 && event.button !== 0) return;
+    finishGesture();
+    suppressClickUntil = 0;
+    gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, started: window2.performance.now(), moved: false };
+    document2.addEventListener("pointermove", move, { capture: true, passive: true });
+    document2.addEventListener("pointerup", up, true);
+    document2.addEventListener("pointercancel", cancelGesture, true);
+  });
+  listen(trigger, "keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") suppressClickUntil = 0;
+  });
+  listen(trigger, "click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (window2.performance.now() < suppressClickUntil) {
+      suppressClickUntil = 0;
+      return;
+    }
+    toggle();
+  });
+  const captureActivation = (event) => {
+    if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
+    const control = event.target.closest?.("button[data-tts-action]");
+    if (control && panel.contains(control)) {
+      activationTargets.set(control, pendingButtons.get(control) || { ...renderedIdentity });
+    }
+  };
+  listen(panel, "pointerdown", captureActivation, true);
+  listen(panel, "keydown", captureActivation, true);
+  listen(panel, "click", (event) => {
+    const control = event.target.closest?.("button[data-tts-action]");
+    if (!control || !panel.contains(control)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    invoke(control.dataset.ttsAction, control);
+  });
+  listen(select2, "change", () => {
+    const previous = { ...renderedIdentity };
+    const choice = Number(select2.value);
+    const fresh = currentTarget(previous);
+    if (!fresh || select2.value === "" || !fresh.floors.some((row) => row.index === choice)) {
+      refresh();
+      return;
+    }
+    selectedIndex = choice;
+    operation++;
+    errorStatus = null;
+    refresh();
+  });
+  listen(select2, "blur", () => {
+    if (!destroyed && expanded) syncOptions();
+  });
+  for (const details of [diagnostics, pending3]) listen(details.element, "toggle", () => {
+    if (!destroyed && expanded) render2();
+  });
+  const outside = (event) => {
+    if (expanded && !root.contains(event.target)) close(true);
+  };
+  listen(document2, "pointerdown", outside, { capture: true, passive: true });
+  listen(document2, "click", outside, true);
+  listen(document2, "keydown", (event) => {
+    if (expanded && event.key === "Escape" && !event.defaultPrevented) {
+      close(true);
+    }
+  });
+  listen(window2, "resize", schedulePosition, { passive: true });
+  listen(window2, "scroll", schedulePosition, { capture: true, passive: true });
+  listen(window2.visualViewport, "resize", schedulePosition, { passive: true });
+  listen(window2.visualViewport, "scroll", schedulePosition, { passive: true });
+  refresh();
+  return {
+    refresh,
+    destroy() {
+      if (destroyed) return;
+      destroyed = true;
+      operation++;
+      finishGesture();
+      for (const dispose2 of disposers) dispose2();
+      observer2?.disconnect();
+      layoutObserver?.disconnect();
+      if (frame !== null) window2.cancelAnimationFrame(frame);
+      frame = null;
+      root.remove();
+      positionProbe.remove();
+    }
+  };
+}
+var UI_ATTRIBUTE2, GUTTER, GAP;
+var init_ttsDock = __esm({
+  "src/ui/ttsDock.js"() {
+    UI_ATTRIBUTE2 = "data-echo-tts-ui";
+    GUTTER = 16;
+    GAP = 8;
   }
 });
 
@@ -57936,7 +59064,8 @@ function recordFor(index2) {
     analyzed: !!saved && stored.complete !== false,
     complete: stored?.complete ?? !!saved,
     completedSources: Array.isArray(stored?.completedSources) ? stored.completedSources.filter((id3) => sources.some((s) => s.id === id3)) : [],
-    diagnostics: Array.isArray(stored?.diagnostics) ? stored.diagnostics.slice(-20) : []
+    diagnostics: Array.isArray(stored?.diagnostics) ? stored.diagnostics.slice(-20) : [],
+    playbackStates: {}
   };
   records.set(index2, record);
   return record;
@@ -57951,6 +59080,7 @@ function render() {
   const ctx2 = context4();
   if (!ctx2?.enabled) {
     renderer.clearAll();
+    dock?.refresh();
     return;
   }
   for (const element2 of document.querySelectorAll("#chat .mes[mesid]")) {
@@ -57969,12 +59099,56 @@ function render() {
         voices: r.target.voices,
         status: !r.complete && r.diagnostics.length && !r.status.includes("\u90E8\u5206\u5B8C\u6210") ? `\u8BC6\u522B\u90E8\u5206\u5B8C\u6210\uFF1B${r.status}` : r.status,
         busy: r.busy,
-        diagnostics: r.diagnostics
+        diagnostics: r.diagnostics,
+        playbackStates: r.playbackStates
       });
     } catch {
       renderer.clear(element2);
     }
   }
+  dock?.refresh();
+}
+function getTtsDockView(selectedIndex = null) {
+  const ctx2 = context4(), cfg = config();
+  const base = {
+    key: ctx2 ? `${ctx2.key}:${identity2(ctx2.chat)}:${identity2(ctx2.chatMetadata)}` : "",
+    enabled: !!ctx2?.enabled,
+    generating: generation,
+    floors: [],
+    floor: null,
+    playbackState: "idle"
+  };
+  if (!ctx2?.enabled) return base;
+  base.floors = ctx2.chat.flatMap((message, index3) => allowed(message, cfg) && String(message.mes || "").trim() ? [{ index: index3, label: `\u7B2C ${index3} \u697C \xB7 ${message.name || (message.is_user ? "\u7528\u6237" : "\u89D2\u8272")}` }] : []).reverse();
+  const valid = base.floors.some((floor) => floor.index === selectedIndex);
+  const index2 = valid ? selectedIndex : ctx2.chat.findLastIndex((message) => !message.is_user && allowed(message, cfg) && String(message.mes || "").trim());
+  const chosen = index2 >= 0 ? index2 : base.floors[0]?.index;
+  if (chosen === void 0) return base;
+  const record = recordFor(chosen);
+  const segments = record.segments.filter((segment) => !segment.skipped);
+  const messageElement = [...document.querySelectorAll("#chat .mes[mesid]")].find((element2) => Number(element2.getAttribute("mesid")) === chosen);
+  const pending3 = generation ? [] : messageElement?.querySelector(".mes_text") ? renderer?.getPending?.(chosen, record.target.fingerprint) || [] : segments.map((segment) => ({ id: segment.id, speaker: segment.speaker, quote: segment.quote, reason: "\u6B64\u697C\u5C1A\u672A\u52A0\u8F7D\u5230\u524D\u7AEF\uFF0C\u4ECD\u53EF\u64AD\u653E\u6216\u7F16\u8F91\u914D\u97F3" }));
+  const missing = [...new Set(segments.filter((segment) => !record.target.voices.some((voice) => voice.id === segment.speaker && voice.voice)).map((segment) => segment.speaker))];
+  const status3 = [
+    !record.complete && record.diagnostics.length ? "\u8BC6\u522B\u90E8\u5206\u5B8C\u6210" : "",
+    record.status,
+    missing.length ? `\u672A\u914D\u7F6E\u97F3\u8272\uFF1A${missing.join("\u3001")}` : "",
+    pending3.length ? `${pending3.length}\u6BB5\u672A\u80FD\u539F\u4F4D\u5B9A\u4F4D\uFF0C\u53EF\u5728\u4E0B\u65B9\u64CD\u4F5C` : "",
+    record.busy ? "\u6B63\u5728\u8BC6\u522B\u53F0\u8BCD\u2026" : ""
+  ].filter(Boolean).join("\uFF1B");
+  base.floor = {
+    index: chosen,
+    fingerprint: record.target.fingerprint,
+    status: status3,
+    busy: record.busy,
+    segments,
+    voices: record.target.voices,
+    diagnostics: record.diagnostics,
+    pending: pending3,
+    playbackStates: record.playbackStates
+  };
+  if (playback?.record && current(playback.record.target)) base.playbackState = playback.blob ? audio?.paused ? "paused" : "playing" : "synthesizing";
+  return base;
 }
 function scheduleRender() {
   clearTimeout(refreshTimer);
@@ -58160,6 +59334,15 @@ async function analyzeTtsMessage(index2) {
   pending2.set(index2, { controller, promise });
   return promise;
 }
+function setPlaybackState(record, id3, state) {
+  record.playbackStates[id3] = state;
+  if (current(record.target)) renderer?.setPlaybackState?.(record.target.index, record.target.fingerprint, id3, state);
+  dock?.refresh();
+}
+function speechIdentity(record, segment, voice) {
+  const speech = ttsSynthesisText(segment, record.target.cfg);
+  return { speech, key: JSON.stringify([record.target.ctx.key, record.target.fingerprint, segment.id, speech, voice.voice, record.target.cfg]) };
+}
 function player() {
   if (!audio) audio = new Audio();
   return audio;
@@ -58168,6 +59351,7 @@ function stopTtsPlayback() {
   playSerial++;
   playback?.controller.abort();
   playback?.finish?.();
+  if (playback?.record && playback.segmentId) setPlaybackState(playback.record, playback.segmentId, playback.blob ? "ready" : "idle");
   if (audio) {
     audio.pause();
     audio.removeAttribute("src");
@@ -58175,6 +59359,7 @@ function stopTtsPlayback() {
   }
   if (playback?.url) URL.revokeObjectURL(playback.url);
   playback = null;
+  dock?.refresh();
 }
 async function playBlob(blob, serial, settings) {
   if (serial !== playSerial) return;
@@ -58185,9 +59370,12 @@ async function playBlob(blob, serial, settings) {
   element2.playbackRate = settings.rate;
   const owner = playback;
   return new Promise((resolve, reject) => {
+    let finished = false;
     const cleanup = () => {
+      finished = true;
       if (element2.onended === finish) element2.onended = null;
       if (element2.onerror === failed) element2.onerror = null;
+      element2.removeEventListener?.("playing", playing);
     };
     const finish = () => {
       cleanup();
@@ -58198,9 +59386,13 @@ async function playBlob(blob, serial, settings) {
       reject(new Error("\u6D4F\u89C8\u5668\u65E0\u6CD5\u89E3\u7801\u6B64\u97F3\u9891\uFF0C\u8BF7\u68C0\u67E5MP3\u8F93\u51FA\u3002"));
     };
     owner.finish = finish;
+    const playing = () => {
+      if (!finished && playback === owner && serial === playSerial && owner.record) setPlaybackState(owner.record, owner.segmentId, "playing");
+    };
+    element2.addEventListener?.("playing", playing);
     element2.onended = finish;
     element2.onerror = failed;
-    element2.play().catch(() => {
+    element2.play().then(playing).catch(() => {
       cleanup();
       if (serial !== playSerial || playback !== owner) {
         resolve();
@@ -58212,23 +59404,32 @@ async function playBlob(blob, serial, settings) {
 }
 async function playSegments(index2, ids2, force = false) {
   const record = recordFor(index2);
-  if (!force && ids2.length === 1 && playback?.index === index2 && playback.segmentId === ids2[0] && audio?.src) {
-    const owner = playback, serial2 = playSerial;
-    if (audio.paused) {
-      await audio.play();
-      if (playback !== owner || serial2 !== playSerial || !current(record.target)) return;
-      record.status = "\u7EE7\u7EED\u64AD\u653E";
-    } else {
-      audio.pause();
-      record.status = "\u5DF2\u6682\u505C\uFF0C\u518D\u70B9\u539F\u6309\u94AE\u7EE7\u7EED";
+  if (!force && ids2.length === 1 && playback?.index === index2 && playback.segmentId === ids2[0]) {
+    if (!playback.blob) {
+      stopTtsPlayback();
+      record.status = "\u5DF2\u53D6\u6D88\u672C\u53E5\u5408\u6210";
+      dock?.refresh();
+      return;
     }
-    render();
-    return;
+    if (audio?.src) {
+      const owner = playback, serial2 = playSerial;
+      if (audio.paused) {
+        await audio.play();
+        if (playback !== owner || serial2 !== playSerial || !current(record.target)) return;
+        record.status = "\u7EE7\u7EED\u64AD\u653E";
+        setPlaybackState(record, ids2[0], "playing");
+      } else {
+        audio.pause();
+        record.status = "\u5DF2\u6682\u505C\uFF0C\u518D\u70B9\u539F\u6309\u94AE\u7EE7\u7EED";
+        setPlaybackState(record, ids2[0], "paused");
+      }
+      return;
+    }
   }
   stopTtsPlayback();
   const serial = playSerial, controller = new AbortController();
   playback = { controller };
-  let timer4;
+  let timer4, activeId, finalState = "ready";
   try {
     for (const id3 of ids2) {
       if (serial !== playSerial || !current(record.target)) return;
@@ -58236,10 +59437,14 @@ async function playSegments(index2, ids2, force = false) {
       if (!segment) continue;
       const voice = record.target.voices.find((v) => v.id === segment.speaker);
       if (!voice?.voice) throw new Error(`\u89D2\u8272 ${voice?.name || segment.speaker} \u672A\u914D\u7F6E\u97F3\u8272ID\u3002`);
-      record.status = `\u6B63\u5728\u51C6\u5907 ${voice.name} \u7684\u914D\u97F3\u2026`;
-      render();
-      const speech = ttsSynthesisText(segment, record.target.cfg);
-      const key = JSON.stringify([record.target.ctx.key, record.target.fingerprint, id3, speech, voice.voice, record.target.cfg]);
+      activeId = id3;
+      playback.index = index2;
+      playback.segmentId = id3;
+      playback.record = record;
+      playback.blob = null;
+      record.status = "\u6B63\u5728\u5408\u6210\u8BED\u97F3\u2026";
+      setPlaybackState(record, id3, "synthesizing");
+      const { speech, key } = speechIdentity(record, segment, voice);
       timer4 = setTimeout(() => controller.abort(), record.target.cfg.timeout_seconds * 1e3);
       const blob = !force && previewCache?.key === key ? previewCache.blob : await abortable3(getTtsAudio(
         record.target.cfg,
@@ -58253,12 +59458,12 @@ async function playSegments(index2, ids2, force = false) {
       clearTimeout(timer4);
       if (serial !== playSerial || !current(record.target)) return;
       previewCache = { key, blob };
-      record.status = `\u6B63\u5728\u64AD\u653E\uFF1A${voice.name}\uFF08\u518D\u70B9\u672C\u53E5\u6682\u505C\uFF09`;
-      render();
-      playback.index = index2;
-      playback.segmentId = id3;
+      playback.blob = blob;
+      record.status = "\u97F3\u9891\u5DF2\u51C6\u5907\u597D";
+      setPlaybackState(record, id3, "ready");
       await abortable3(playBlob(blob, serial, record.target.cfg), controller.signal);
       if (serial !== playSerial) return;
+      setPlaybackState(record, id3, "ready");
       if (playback?.url) {
         URL.revokeObjectURL(playback.url);
         playback.url = null;
@@ -58266,12 +59471,13 @@ async function playSegments(index2, ids2, force = false) {
     }
     if (serial === playSerial && current(record.target)) record.status = "\u64AD\u653E\u5B8C\u6210";
   } catch (error4) {
+    finalState = playback?.blob ? "ready" : "error";
     if (serial === playSerial && current(record.target)) record.status = error4.message;
   } finally {
     clearTimeout(timer4);
     if (serial === playSerial) {
       stopTtsPlayback();
-      if (current(record.target)) render();
+      if (activeId && current(record.target)) setPlaybackState(record, activeId, finalState);
     }
   }
 }
@@ -58299,6 +59505,204 @@ async function previewTtsVoice(rawConfig, voice, text6) {
     clearTimeout(timer4);
     if (serial === playSerial) stopTtsPlayback();
   }
+}
+async function downloadSegment(record, segment, status3, externalSignal) {
+  if (!current(record.target) || !record.segments.includes(segment)) throw new Error("\u804A\u5929\u3001\u6B63\u6587\u6216\u7247\u6BB5\u5DF2\u53D8\u5316\uFF0C\u4E0D\u80FD\u4FDD\u5B58\u65E7\u914D\u97F3\u3002");
+  const voice = record.target.voices.find((v) => v.id === segment.speaker);
+  if (!voice?.voice) throw new Error("\u8BF7\u5148\u914D\u7F6E\u6B64\u89D2\u8272\u97F3\u8272\u3002");
+  const { speech, key } = speechIdentity(record, segment, voice);
+  if (previewCache?.key === key) return { blob: previewCache.blob, name: voice.name };
+  if (playback?.record === record && playback.segmentId === segment.id) {
+    if (playback.blob) return { blob: playback.blob, name: voice.name };
+    throw new Error("\u672C\u53E5\u6B63\u5728\u5408\u6210\uFF0C\u8BF7\u5B8C\u6210\u540E\u518D\u4FDD\u5B58\uFF0C\u907F\u514D\u91CD\u590D\u8BF7\u6C42\u3002");
+  }
+  const controller = new AbortController();
+  downloads.add(controller);
+  const abort = () => controller.abort();
+  externalSignal?.addEventListener("abort", abort, { once: true });
+  if (externalSignal?.aborted) controller.abort();
+  const timer4 = setTimeout(() => controller.abort(), record.target.cfg.timeout_seconds * 1e3);
+  status3.textContent = "\u6B63\u5728\u51C6\u5907\u97F3\u9891\uFF1B\u672A\u7F13\u5B58\u65F6\u4F1A\u8C03\u7528TTS\u5408\u6210\u2026";
+  setPlaybackState(record, segment.id, "synthesizing");
+  try {
+    const blob = await abortable3(getTtsAudio(record.target.cfg, voice.voice, speech, record.target.ctx.key, controller.signal, () => current(record.target)), controller.signal);
+    if (!current(record.target) || !record.segments.includes(segment)) throw new Error("\u804A\u5929\u3001\u6B63\u6587\u6216\u7247\u6BB5\u5DF2\u53D8\u5316\uFF0C\u5DF2\u53D6\u6D88\u4FDD\u5B58\u3002");
+    previewCache = { key, blob };
+    if (!(playback?.record === record && playback.segmentId === segment.id)) setPlaybackState(record, segment.id, "ready");
+    return { blob, name: voice.name };
+  } catch (error4) {
+    if (current(record.target) && !(playback?.record === record && playback.segmentId === segment.id)) setPlaybackState(record, segment.id, controller.signal.aborted ? "idle" : "error");
+    throw error4;
+  } finally {
+    clearTimeout(timer4);
+    externalSignal?.removeEventListener("abort", abort);
+    downloads.delete(controller);
+  }
+}
+function openSegmentActions(index2, id3) {
+  const record = recordFor(index2), segment = record.segments.find((s) => s.id === id3);
+  if (!segment) return;
+  for (const close2 of editors) close2();
+  const root = document.createElement("div");
+  root.className = "t-overlay t-root t-tts-action-overlay";
+  const box = document.createElement("section");
+  box.className = "t-box t-tts-action-panel";
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.setAttribute("aria-label", "\u8BED\u97F3\u64CD\u4F5C");
+  const prior = document.activeElement;
+  const head = document.createElement("header");
+  head.className = "t-tts-action-head";
+  const heading = document.createElement("div");
+  heading.className = "t-tts-action-heading";
+  const headIcon = document.createElement("span");
+  headIcon.className = "t-tts-action-head-icon";
+  headIcon.setAttribute("aria-hidden", "true");
+  const wave = document.createElement("i");
+  wave.className = "fa-solid fa-wave-square";
+  headIcon.append(wave);
+  const headingCopy = document.createElement("div");
+  headingCopy.className = "t-tts-action-heading-copy";
+  const title = document.createElement("strong");
+  title.textContent = "\u8BED\u97F3\u64CD\u4F5C";
+  const subtitle = document.createElement("small");
+  subtitle.textContent = "\u7BA1\u7406\u8FD9\u6BB5\u58F0\u97F3\uFF0C\u4E0D\u6539\u53D8\u6B63\u6587";
+  headingCopy.append(title, subtitle);
+  heading.append(headIcon, headingCopy);
+  const preview = document.createElement("div");
+  preview.className = "t-tts-action-preview";
+  const previewLabel = document.createElement("span");
+  previewLabel.className = "t-tts-action-preview-label";
+  previewLabel.textContent = "\u53F0\u8BCD\u9884\u89C8";
+  const quote = document.createElement("p");
+  quote.className = "t-tts-action-quote";
+  quote.textContent = segment.quote;
+  preview.append(previewLabel, quote);
+  const hint = document.createElement("p");
+  hint.className = "t-tts-action-hint";
+  hint.textContent = "\u672A\u751F\u6210\u97F3\u9891\u65F6\uFF0C\u4FDD\u5B58\u6216\u91CD\u65B0\u5408\u6210\u4F1A\u8C03\u7528\u8BED\u97F3\u670D\u52A1\uFF0C\u53EF\u80FD\u4EA7\u751F\u8D39\u7528\u3002";
+  const status3 = document.createElement("p");
+  status3.className = "t-tts-status";
+  status3.setAttribute("role", "status");
+  const actions = document.createElement("div");
+  actions.className = "t-tts-action-grid";
+  let disposed = false;
+  const downloadController = new AbortController();
+  const urls = /* @__PURE__ */ new Set();
+  const close = () => {
+    if (disposed) return;
+    disposed = true;
+    downloadController.abort();
+    root.remove();
+    document.removeEventListener("keydown", keydown, true);
+    editors.delete(close);
+    for (const url2 of urls) URL.revokeObjectURL(url2);
+    if (prior?.isConnected) prior.focus();
+  };
+  const keydown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      close();
+    } else if (event.key === "Tab") {
+      const buttons = [...box.querySelectorAll("button:not(:disabled), a[href]")];
+      const first = buttons[0], last = buttons.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+  };
+  const button4 = (label, action, icon, description, variant = "") => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = `t-btn t-tts-action-item ${variant}`.trim();
+    b.setAttribute("aria-label", label);
+    const iconBox = document.createElement("span");
+    iconBox.className = "t-tts-action-item-icon";
+    iconBox.setAttribute("aria-hidden", "true");
+    const glyph = document.createElement("i");
+    glyph.className = `fa-solid fa-${icon}`;
+    iconBox.append(glyph);
+    const copy = document.createElement("span");
+    copy.className = "t-tts-action-item-copy";
+    const caption = document.createElement("strong");
+    caption.textContent = label;
+    const detail = document.createElement("small");
+    detail.textContent = description;
+    const arrow = document.createElement("i");
+    arrow.className = "fa-solid fa-chevron-right t-tts-action-item-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    copy.append(caption, detail);
+    b.append(iconBox, copy, arrow);
+    b.addEventListener("click", async () => {
+      if (disposed) return;
+      try {
+        if (!current(record.target) || !record.segments.includes(segment)) throw new Error("\u804A\u5929\u3001\u6B63\u6587\u6216\u7247\u6BB5\u5DF2\u53D8\u5316\u3002");
+        await action(b);
+      } catch (error4) {
+        if (!disposed) status3.textContent = error4.message;
+      }
+    });
+    return b;
+  };
+  const download = button4("\u4FDD\u5B58\u97F3\u9891", async (b) => {
+    b.disabled = true;
+    try {
+      const { blob, name } = await downloadSegment(record, segment, status3, downloadController.signal);
+      if (disposed || !current(record.target) || !record.segments.includes(segment)) return;
+      const url2 = URL.createObjectURL(blob);
+      urls.add(url2);
+      const link = document.createElement("a");
+      link.href = url2;
+      const safe = String(name || "voice").replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").slice(0, 60);
+      link.download = `echo-${safe}-${index2}-${String(id3).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 80)}.mp3`;
+      link.textContent = "\u97F3\u9891\u5DF2\u51C6\u5907\u597D\uFF0C\u70B9\u51FB\u4E0B\u8F7D";
+      link.className = "t-tts-action-download";
+      status3.replaceChildren(link);
+      link.click();
+    } finally {
+      if (!disposed) b.disabled = false;
+    }
+  }, "arrow-down", "\u4E0B\u8F7D MP3 \u97F3\u9891\u6587\u4EF6", "is-primary");
+  actions.append(
+    download,
+    button4("\u7F16\u8F91\u914D\u97F3", () => {
+      close();
+      editSegment(index2, id3);
+    }, "sliders", "\u8C03\u6574\u89D2\u8272\u4E0E\u6717\u8BFB\u6587\u672C"),
+    button4("\u91CD\u65B0\u5408\u6210\u5E76\u64AD\u653E", () => {
+      close();
+      return playSegments(index2, [id3], true);
+    }, "rotate-right", "\u91CD\u65B0\u751F\u6210\u672C\u53E5\u58F0\u97F3"),
+    button4("\u505C\u6B62\u8BED\u97F3", () => {
+      stopTtsPlayback();
+      status3.textContent = "\u5DF2\u505C\u6B62\u64AD\u653E";
+    }, "stop", "\u7ED3\u675F\u5F53\u524D\u64AD\u653E", "is-stop")
+  );
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "t-tts-action-close";
+  closeButton.setAttribute("aria-label", "\u5173\u95ED");
+  closeButton.title = "\u5173\u95ED";
+  const closeIcon = document.createElement("i");
+  closeIcon.className = "fa-solid fa-xmark";
+  closeIcon.setAttribute("aria-hidden", "true");
+  closeButton.append(closeIcon);
+  closeButton.addEventListener("click", close);
+  head.append(heading, closeButton);
+  box.append(head, preview, actions, hint, status3);
+  root.append(box);
+  document.body.append(root);
+  editors.add(close);
+  document.addEventListener("keydown", keydown, true);
+  root.addEventListener("click", (event) => {
+    if (event.target === root) close();
+  });
+  download.focus();
 }
 function editSegment(index2, id3) {
   const record = recordFor(index2), segment = record.segments.find((s) => s.id === id3);
@@ -58487,10 +59891,13 @@ function invalidate() {
   for (const item2 of pending2.values()) item2.controller.abort();
   pending2.clear();
   records.clear();
+  for (const controller of downloads) controller.abort();
+  downloads.clear();
   stopTtsPlayback();
   previewCache = null;
   renderer?.clearAll();
   for (const close of editors) close();
+  dock?.refresh();
 }
 function reportAction(action) {
   Promise.resolve().then(action).catch((error4) => globalThis.toastr?.warning(error4.message, "\u89D2\u8272\u914D\u97F3", { escapeHtml: true }));
@@ -58500,18 +59907,35 @@ function initTts() {
   initialized4 = true;
   ensureFeatureCss("tts.css");
   renderer = createTtsMessageView({
-    analyze: (index2) => reportAction(() => analyzeTtsMessage(index2)),
     play: (index2, id3) => reportAction(() => playSegments(index2, [id3])),
-    playAll: (index2) => reportAction(() => {
-      const r = recordFor(index2);
-      return playSegments(index2, r.segments.filter((s) => !s.skipped && r.target.voices.some((v) => v.id === s.speaker && v.voice)).map((s) => s.id));
-    }),
+    menu: (index2, id3) => reportAction(() => openSegmentActions(index2, id3)),
+    edit: (index2, id3) => reportAction(() => editSegment(index2, id3)),
+    error: (index2, fingerprint3, message) => {
+      const record = records.get(index2);
+      if (record && current(record.target) && record.target.fingerprint === fingerprint3) {
+        record.status = message;
+        dock?.refresh();
+      }
+    }
+  });
+  dock = createTtsDock({
+    getView: getTtsDockView,
+    analyze: analyzeTtsMessage,
+    playAll: (index2) => {
+      const record = recordFor(index2);
+      return playSegments(index2, record.segments.filter((s) => !s.skipped && record.target.voices.some((v) => v.id === s.speaker && v.voice)).map((s) => s.id));
+    },
     stop: () => {
       stopTtsPlayback();
       for (const r of records.values()) r.status = "\u5DF2\u505C\u6B62";
-      render();
+      dock?.refresh();
     },
-    edit: (index2, id3) => reportAction(() => editSegment(index2, id3))
+    play: (index2, id3) => playSegments(index2, [id3]),
+    menu: openSegmentActions,
+    settings: async () => {
+      const { openTtsSettingsWindow: openTtsSettingsWindow2 } = await Promise.resolve().then(() => (init_ttsSettingsWindow(), ttsSettingsWindow_exports));
+      openTtsSettingsWindow2();
+    }
   });
   const on = (name, callback) => {
     if (event_types9[name]) eventSource9.on(event_types9[name], callback);
@@ -58568,7 +59992,7 @@ function initTts() {
   refreshPrompt();
   render();
 }
-var initialized4, generation, epoch3, renderer, observer, refreshTimer, records, pending2, playback, playSerial, audio, previewCache, generationSnapshot, editors, config, sameContext, voicesFor, allowed, identities, nextIdentity, identity, settingSignature;
+var initialized4, generation, epoch3, renderer, dock, observer, refreshTimer, records, pending2, downloads, playback, playSerial, audio, previewCache, generationSnapshot, editors, config, sameContext, voicesFor, allowed, identities, nextIdentity, identity2, settingSignature;
 var init_tts = __esm({
   "src/core/tts.js"() {
     init_storage();
@@ -58578,6 +60002,7 @@ var init_tts = __esm({
     init_ttsAudio();
     init_contentChangeEvents();
     init_ttsMessageView();
+    init_ttsDock();
     init_dom();
     init_storyMemoryTasks();
     initialized4 = false;
@@ -58585,6 +60010,7 @@ var init_tts = __esm({
     epoch3 = 0;
     records = /* @__PURE__ */ new Map();
     pending2 = /* @__PURE__ */ new Map();
+    downloads = /* @__PURE__ */ new Set();
     playback = null;
     playSerial = 0;
     previewCache = null;
@@ -58599,12 +60025,12 @@ var init_tts = __esm({
     allowed = (message, cfg) => !!message && !message.is_system && !message.is_hidden && !message.extra?.is_hidden && (cfg.include_user || !message.is_user);
     identities = /* @__PURE__ */ new WeakMap();
     nextIdentity = 0;
-    identity = (object) => {
+    identity2 = (object) => {
       if (!object) return 0;
       if (!identities.has(object)) identities.set(object, ++nextIdentity);
       return identities.get(object);
     };
-    settingSignature = (ctx2) => JSON.stringify([ctx2?.key, identity(ctx2?.chat), identity(ctx2?.chatMetadata), config(), voicesFor(ctx2), ctx2?.enabled]);
+    settingSignature = (ctx2) => JSON.stringify([ctx2?.key, identity2(ctx2?.chat), identity2(ctx2?.chatMetadata), config(), voicesFor(ctx2), ctx2?.enabled]);
   }
 });
 
@@ -59187,8 +60613,8 @@ function openTtsSettingsWindow() {
       const heading2 = element("div", "t-tts-voice-detail-head");
       const title2 = element("strong", "", String(voice.name || "").trim() || "\u672A\u547D\u540D\u89D2\u8272");
       heading2.append(button3("\u2190 \u8FD4\u56DE\u89D2\u8272\u5361\u7247", returnToVoiceCards), title2);
-      const identity2 = element("div", "t-tts-voice-id");
-      identity2.append(element("span", "", voice.id === "narrator" ? "\u65C1\u767D ID" : "\u7A33\u5B9A ID"), element("code", "", voice.id));
+      const identity3 = element("div", "t-tts-voice-id");
+      identity3.append(element("span", "", voice.id === "narrator" ? "\u65C1\u767D ID" : "\u7A33\u5B9A ID"), element("code", "", voice.id));
       const name = element("input", "t-input");
       name.type = "text";
       name.maxLength = 100;
@@ -59232,7 +60658,7 @@ function openTtsSettingsWindow() {
       actions.append(play, remove);
       voiceDetail.append(
         heading2,
-        identity2,
+        identity3,
         fields,
         field2("\u522B\u540D", aliases, "\u7528\u9017\u53F7\u6216\u6362\u884C\u5206\u9694\uFF0C\u4E0D\u6539\u53D8\u89D2\u8272 ID\u3002"),
         element("p", "t-tts-hint", "\u8BE6\u60C5\u4FEE\u6539\u4FDD\u7559\u5728\u5DE5\u4F5C\u53F0\u8349\u7A3F\u4E2D\uFF0C\u8FD4\u56DE\u5361\u7247\u4E0D\u4F1A\u4E22\u5931\uFF1B\u70B9\u51FB\u5E95\u90E8\u201C\u4FDD\u5B58\u8BBE\u7F6E\u201D\u540E\u624D\u751F\u6548\u3002"),
@@ -61319,8 +62745,8 @@ function openSettingsWindow() {
     if (!isCreate && entry.readonly === true) return;
     document.getElementById("t-prompt-editor-modal")?.remove();
     const isDynamic = entry.type === "dynamic";
-    const host3 = document.createElement("div");
-    host3.id = "t-prompt-editor-modal";
+    const host4 = document.createElement("div");
+    host4.id = "t-prompt-editor-modal";
     const isolatedHostStyles = {
       position: "fixed",
       inset: "0",
@@ -61343,9 +62769,9 @@ function openSettingsWindow() {
       colorScheme: "dark"
     };
     for (const [property, value] of Object.entries(isolatedHostStyles)) {
-      host3.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
+      host4.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
     }
-    const shadow = host3.attachShadow({ mode: "closed" });
+    const shadow = host4.attachShadow({ mode: "closed" });
     shadow.innerHTML = `
             <style>
                 :host {
@@ -61499,7 +62925,7 @@ function openSettingsWindow() {
     contentInput.disabled = isDynamic;
     const close = () => {
       if (modal.open) modal.close();
-      host3.remove();
+      host4.remove();
     };
     shadow.querySelector(".close").addEventListener("click", close);
     shadow.querySelector(".backdrop").addEventListener("click", (event) => {
@@ -61521,7 +62947,7 @@ function openSettingsWindow() {
       close();
       renderPromptManager();
     });
-    document.body.appendChild(host3);
+    document.body.appendChild(host4);
     modal.showModal();
     nameInput.focus();
     if (isCreate) nameInput.select();
@@ -62190,8 +63616,8 @@ function openWorkshopWindow(source = "manager") {
     }
     filtered.forEach((item2) => {
       const dup = GlobalState.runtimeScripts.some((s) => s.name === item2.name);
-      const downloads = Number(item2.downloads) || 0;
-      const hot = downloads >= HOT_THRESHOLD;
+      const downloads2 = Number(item2.downloads) || 0;
+      const hot = downloads2 >= HOT_THRESHOLD;
       const tags = (item2.tags || []).slice(0, 3).map((t) => `<span class="t-ws-tag">#${esc(t)}</span>`).join("");
       const $card = $(`
                 <div class="t-ws-card${dup ? " is-dup" : ""}" style="--card-accent:${pickAvatarColor(item2.anonymous ? null : item2.author?.id)};">
@@ -62203,7 +63629,7 @@ function openWorkshopWindow(source = "manager") {
                         ${renderAvatar(item2.author, item2.anonymous)}
                         <span class="t-ws-author-name">${esc(item2.author?.name || "\u672A\u77E5\u4F5C\u8005")}</span>
                         <div class="t-ws-heat${hot ? " is-hot" : ""}" title="\u4E0B\u8F7D\u91CF">
-                            <i class="fa-solid fa-fire"></i> ${downloads}
+                            <i class="fa-solid fa-fire"></i> ${downloads2}
                         </div>
                     </div>
                     <div class="t-ws-card-title">${esc(item2.name)}</div>
@@ -62340,7 +63766,7 @@ function openWorkshopWindow(source = "manager") {
     }
   };
   const openPreview = async (item2) => {
-    const downloads = Number(item2.downloads) || 0;
+    const downloads2 = Number(item2.downloads) || 0;
     const previewHtml = `
         <div id="t-ws-preview-overlay" class="t-ws-preview-overlay t-root">
             <div class="t-box t-root t-ws-preview-box">
@@ -62359,8 +63785,8 @@ function openWorkshopWindow(source = "manager") {
                                 <div class="t-ws-author-time">v${Number(item2.version) || 1} \xB7 ${formatRelativeTime(item2.updated_at)}</div>
                             </div>
                         </div>
-                        <div class="t-ws-heat${downloads >= HOT_THRESHOLD ? " is-hot" : ""}">
-                            <i class="fa-solid fa-fire"></i> ${downloads}
+                        <div class="t-ws-heat${downloads2 >= HOT_THRESHOLD ? " is-hot" : ""}">
+                            <i class="fa-solid fa-fire"></i> ${downloads2}
                         </div>
                         ${item2.rating === "mature" ? `<span class="t-ws-tag t-ws-tag-mature">\u6210\u4EBA\u5411</span>` : ""}
                     </div>
@@ -68651,8 +70077,8 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
   window.dispatchEvent(new CustomEvent("titania:scene-rendered"));
 }
 function ensureShadowContentElement(container, initialContent = "") {
-  const host3 = container.querySelector(".t-shadow-host");
-  const existingShadow = host3 && host3.shadowRoot ? host3.shadowRoot : null;
+  const host4 = container.querySelector(".t-shadow-host");
+  const existingShadow = host4 && host4.shadowRoot ? host4.shadowRoot : null;
   const existingContentEl = existingShadow ? existingShadow.querySelector(".t-shadow-content") : null;
   if (existingContentEl) return existingContentEl;
   const shadow = renderToShadowDOMReal(container, initialContent || "");
@@ -71167,7 +72593,7 @@ var PHASES2 = { preparing: "\u51C6\u5907\u4E2D", request: "\u5206\u6790\u4E2D", 
 var SETTLE_DELAY = 2e3;
 var DISPLAY_TIME = 8e3;
 var dispose = null;
-var sameIdentity2 = (a, b) => a === b || !!a && !!b && a.key === b.key && a.chat === b.chat && a.chatMetadata === b.chatMetadata;
+var sameIdentity3 = (a, b) => a === b || !!a && !!b && a.key === b.key && a.chat === b.chat && a.chatMetadata === b.chatMetadata;
 var running2 = (progress2) => progress2.state === "running" || progress2.state === "error" && !!progress2.retryAt;
 var titleFor = (progress2) => TITLES[progress2.kind] || "\u6545\u4E8B\u6574\u7406";
 function phaseFor(progress2) {
@@ -71182,7 +72608,7 @@ function lineFor(progress2) {
 }
 function initStoryMemoryNotifications() {
   if (dispose) return dispose;
-  let identity2 = null, element2 = null, finishTimer = null, hideTimer = null, chatTimer = null;
+  let identity3 = null, element2 = null, finishTimer = null, hideTimer = null, chatTimer = null;
   let notified = false, changingChat = false, dismissed = false, toastHandle = null, toastApi = null;
   const records2 = /* @__PURE__ */ new Map();
   function remove() {
@@ -71203,7 +72629,7 @@ function initStoryMemoryNotifications() {
     remove();
   }
   function current2() {
-    return sameIdentity2(identity2, getStoryMemoryActivity().identity);
+    return sameIdentity3(identity3, getStoryMemoryActivity().identity);
   }
   function ensureElement() {
     if (element2?.isConnected) return element2;
@@ -71275,11 +72701,11 @@ function initStoryMemoryNotifications() {
   function refresh() {
     if (changingChat) return;
     const snapshot = getStoryMemoryActivity();
-    if (!sameIdentity2(identity2, snapshot.identity)) {
+    if (!sameIdentity3(identity3, snapshot.identity)) {
       reset();
-      identity2 = snapshot.identity;
+      identity3 = snapshot.identity;
     }
-    if (!identity2) return;
+    if (!identity3) return;
     if (notified) {
       if (!snapshot.progress.some(running2)) return;
       reset();
@@ -71307,7 +72733,7 @@ function initStoryMemoryNotifications() {
   function onChatChanged() {
     changingChat = true;
     reset();
-    identity2 = null;
+    identity3 = null;
     clearTimeout(chatTimer);
     chatTimer = setTimeout(() => {
       chatTimer = null;
