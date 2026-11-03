@@ -368,10 +368,10 @@ function codeRanges(raw) {
     ranges.push([opening2.index, stop]);
     fences.lastIndex = stop;
   }
-  const inline = /(`+)[^`\r\n]*\1/g;
+  const inline2 = /(`+)[^`\r\n]*\1/g;
   let match;
-  while (match = inline.exec(raw)) {
-    if (!ranges.some(([a, b]) => a <= match.index && match.index < b)) ranges.push([match.index, inline.lastIndex]);
+  while (match = inline2.exec(raw)) {
+    if (!ranges.some(([a, b]) => a <= match.index && match.index < b)) ranges.push([match.index, inline2.lastIndex]);
   }
   return ranges.sort((a, b) => a[0] - b[0]);
 }
@@ -24781,6 +24781,40 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     max-width: 100%; max-height: none; overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere;\r
     font: inherit; line-height: 1.95;\r
 }\r
+/* \u9605\u8BFB\u4E0D\u662F\u8868\u5355\uFF1A\u539F\u6587\u6309\u6807\u9898/\u6BB5\u843D/\u5217\u8868\u5448\u73B0\uFF0C\u53EA\u5728\u7F16\u8F91\u65F6\u4F7F\u7528textarea\u3002 */\r
+.t-evolution-document-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-block: 18px 14px; border-bottom: 1px solid var(--t-memory-line); }\r
+.t-evolution-document-view button.t-evolution-document-tab { padding: 10px 8px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--t-memory-muted); font-weight: 500; }\r
+.t-evolution-document-view button.t-evolution-document-tab:hover { background: var(--t-memory-raised); color: var(--t-memory-text); }\r
+.t-evolution-document-view button.t-evolution-document-tab[aria-selected="true"] { border-bottom-color: var(--t-memory-gold); color: var(--t-memory-gold); }\r
+.t-evolution-document-view .t-evolution-dossier-card { border-top: 3px solid var(--t-memory-gold); }\r
+.t-evolution-document-view .t-evolution-guidance-card { border-top: 3px solid var(--t-memory-violet); }\r
+.t-evolution-document-view .t-evolution-document-heading h3 { font-size: 1.4em; letter-spacing: .03em; }\r
+.t-evolution-document-view .t-evolution-document-meta { padding-bottom: 14px; border-bottom: 1px solid var(--t-memory-line); }\r
+.t-evolution-readable { border: 0; background: transparent; box-shadow: none; }\r
+.t-evolution-reading { max-width: 78ch; margin-inline: auto; padding-block: 10px; font: inherit; line-height: 1.95; }\r
+.t-evolution-reading-section + .t-evolution-reading-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--t-memory-line); }\r
+.t-evolution-document-view .t-evolution-reading-section h4 { margin: 0 0 12px; padding-left: 10px; border-left: 2px solid var(--t-memory-gold); color: var(--t-memory-gold); font-size: 1.12em; font-weight: 600; }\r
+.t-evolution-reading p + p { margin-top: 14px; }\r
+.t-evolution-reading :is(ul, ol) { margin: 12px 0; padding-left: 1.6em; }\r
+.t-evolution-reading ul { list-style: disc; }\r
+.t-evolution-reading ol { list-style: decimal; }\r
+.t-evolution-reading li { padding-left: 4px; }\r
+.t-evolution-reading li + li { margin-top: 8px; }\r
+.t-evolution-reading strong { color: var(--t-memory-text); font-weight: 650; }\r
+.t-evolution-reading :not(pre) > code { padding-inline: 3px; color: var(--t-memory-gold); }\r
+.t-evolution-document-view pre.t-evolution-reading-code { padding: 12px 14px; margin-block: 14px; border-left: 2px solid var(--t-memory-line); background: var(--t-memory-shell); }\r
+.t-evolution-reading-empty { display: grid; justify-items: center; gap: 12px; padding: 34px 18px; color: var(--t-memory-muted); text-align: center; }\r
+.t-evolution-reading-empty > span { font-size: 2.2em; line-height: 1.3; color: var(--t-memory-gold); }\r
+.t-evolution-version-details, .t-evolution-injection-preview { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--t-memory-line); }\r
+.t-evolution-version-list { margin-block: 12px 0; }\r
+.t-evolution-version-list > div { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 12px; padding-block: 7px; }\r
+.t-evolution-version-list dt { color: var(--t-memory-muted); }\r
+.t-evolution-version-list dd { margin: 0; overflow-wrap: anywhere; }\r
+.t-evolution-document-view pre.t-evolution-raw-text { margin-block: 14px; padding: 0; border: 0; box-shadow: none; background: transparent; white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.t-evolution-batch-list { margin-top: 18px; }\r
+.t-evolution-batch-entry { margin-block: 14px; padding: 12px 16px; border-left: 2px solid var(--t-memory-gold); background: var(--t-memory-shell); }\r
+.t-evolution-batch-entry > summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 14px; }\r
+.t-evolution-draft-indicator { color: var(--t-memory-gold); font-size: .85em; }\r
 .t-evolution-document-view .t-evolution-guidance-editor { margin: 18px 0 0; }\r
 .t-evolution-document-view .t-evolution-guidance-editor textarea { min-height: 220px; resize: vertical; font: inherit; }\r
 .t-evolution-document-view .t-evolution-document-change { padding-block: 16px; border-top: 1px solid var(--t-memory-line); }\r
@@ -27077,7 +27111,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186574], "04-features/main-window.css": [186618, 231511], "04-features/main-window-legacy.css": [231562, 255428], "04-features/script-picker.css": [255474, 261969], "04-features/wi-selector.css": [262013, 279839], "04-features/continuation.css": [279884, 303753], "04-features/queue.css": [303791, 310351], "04-features/content-editor.css": [310398, 312705], "04-features/illustration.css": [312750, 327865], "04-features/settings-drawer.css": [327913, 346147], "04-features/settings.css": [346188, 373481], "04-features/manager.css": [373521, 386819], "04-features/workshop.css": [386860, 409642], "04-features/favs.css": [409679, 449605], "04-features/debug.css": [449643, 466408], "04-features/story-outline.css": [466454, 500760], "04-features/outline-entry-menu.css": [500811, 507564], "04-features/rewrite.css": [507604, 558503], "04-features/reader.css": [558542, 567901], "04-features/chat-book.css": [567943, 574484], "04-features/story-memory.css": [574529, 621816], "04-features/character-evolution.css": [621868, 652803], "04-features/story-memory-notifications.css": [652862, 655011], "04-features/story-timetrace.css": [655059, 667907], "04-features/tts.css": [667943, 694385], "04-features/confirm-dialog.css": [694432, 698430], "04-features/image-cropper.css": [698476, 702334], "04-features/st-embedded.css": [702378, 732882], "04-features/scene-advance.css": [732928, 755013], "04-features/theater-midnight.css": [755062, 780390] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186574], "04-features/main-window.css": [186618, 231511], "04-features/main-window-legacy.css": [231562, 255428], "04-features/script-picker.css": [255474, 261969], "04-features/wi-selector.css": [262013, 279839], "04-features/continuation.css": [279884, 303753], "04-features/queue.css": [303791, 310351], "04-features/content-editor.css": [310398, 312705], "04-features/illustration.css": [312750, 327865], "04-features/settings-drawer.css": [327913, 346147], "04-features/settings.css": [346188, 373481], "04-features/manager.css": [373521, 386819], "04-features/workshop.css": [386860, 409642], "04-features/favs.css": [409679, 449605], "04-features/debug.css": [449643, 466408], "04-features/story-outline.css": [466454, 500760], "04-features/outline-entry-menu.css": [500811, 507564], "04-features/rewrite.css": [507604, 558503], "04-features/reader.css": [558542, 567901], "04-features/chat-book.css": [567943, 574484], "04-features/story-memory.css": [574529, 621816], "04-features/character-evolution.css": [621868, 656542], "04-features/story-memory-notifications.css": [656601, 658750], "04-features/story-timetrace.css": [658798, 671646], "04-features/tts.css": [671682, 698124], "04-features/confirm-dialog.css": [698171, 702169], "04-features/image-cropper.css": [702215, 706073], "04-features/st-embedded.css": [706117, 736621], "04-features/scene-advance.css": [736667, 758752], "04-features/theater-midnight.css": [758801, 784129] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -43474,7 +43508,7 @@ function archiveWarning(ctx2, key) {
   if (!state.pending) return "";
   if (ctx2.chat.length < state.expectedFloors) return `\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u5F53\u524D\u52A0\u8F7D ${ctx2.chat.length} \u697C\uFF0C\u5DF2\u6709\u6863\u6848\u5BF9\u5E94\u81F3\u5C11 ${state.expectedFloors} \u697C\u3002\u8BF7\u5148\u5B8C\u6210\u804A\u5929\u52A0\u8F7D\uFF0C\u65E7\u6863\u6848\u672A\u6E05\u7A7A\u3002`;
   if (key === "titania_character_evolution") {
-    if (state.kind === "baseline") return "\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u5F53\u524D\u89D2\u8272\u5361\u4E0E\u6863\u6848\u8BB0\u5F55\u7684\u57FA\u7EBF\u7B7E\u540D\u4E0D\u4E00\u81F4\uFF0C\u5E76\u975E\u804A\u5929\u52A0\u8F7D\u95EE\u9898\u3002\u65E7\u6863\u6848\u672A\u6E05\u7A7A\uFF1B\u8BF7\u786E\u8BA4\u89D2\u8272\u5361\u662F\u5426\u786E\u5B9E\u4FEE\u6539\u3002";
+    if (state.kind === "baseline") return "\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u51BB\u7ED3description\u7684\u5F15\u7528\u72B6\u6001\u5C1A\u672A\u786E\u8BA4\u3002\u65E7\u6863\u6848\u672A\u6E05\u7A7A\uFF1B\u73B0\u884C\u89D2\u8272\u5361\u5DF2\u4E0D\u53C2\u4E0E\u57FA\u7EBF\u6BD4\u8F83\u3002";
     if (state.kind === "settings") return "\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u6B63\u6587\u63D0\u53D6\u6216\u5206\u6790\u8303\u56F4\u5DF2\u6539\u53D8\u3002\u65E7\u6863\u6848\u5DF2\u4FDD\u7559\uFF0C\u53EF\u70B9\u624B\u52A8\u5206\u6790\u91CD\u65B0\u6838\u5BF9\u5F53\u524D\u804A\u5929\u6587\u4EF6\u3002";
     if (state.detail?.firstInvalidBatch >= 0) return `\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u7B2C ${state.detail.firstInvalidBatch + 1} \u6279\u5206\u6790\u7684\u539F\u6587\u6307\u7EB9\u6216\u8303\u56F4\u4E0D\u4E00\u81F4\u3002\u65E7\u6863\u6848\u5DF2\u4FDD\u7559\uFF0C\u53EF\u70B9\u624B\u52A8\u5206\u6790\u91CD\u65B0\u6838\u5BF9\u3002`;
   }
@@ -55735,7 +55769,8 @@ function commitEvolutionDocument(next, result, batch, makeId) {
   const previous = clone2(next.document || null), versionId = makeId();
   const unchanged = previous && /^本轮无变化[。.]?$/.test(result.changes.trim());
   const profile = unchanged ? previous.profile : result.profile;
-  const guidance = unchanged ? previous.guidance : result.guidance;
+  const keepGuidance = unchanged && (previous.manualGuidance || previous.guidanceRulesVersion === EVOLUTION_GUIDANCE_RULES_VERSION);
+  const guidance = keepGuidance ? previous.guidance : result.guidance;
   if (!validText(profile) || !validText(guidance)) throw new Error("\u89D2\u8272\u6F14\u53D8\u6B63\u5F0F\u6863\u6848\u4E0E\u6307\u5BFC\u8BCD\u5FC5\u987B\u540C\u65F6\u6709\u6548\u3002");
   next.document = {
     profile,
@@ -55743,6 +55778,7 @@ function commitEvolutionDocument(next, result, batch, makeId) {
     generatedGuidance: guidance,
     versionId,
     profileVersionId: versionId,
+    guidanceRulesVersion: keepGuidance ? previous.guidanceRulesVersion || null : EVOLUTION_GUIDANCE_RULES_VERSION,
     updatedThrough: batch.end,
     updatedAt: Date.now(),
     ...unchanged && previous.manualGuidance ? {
@@ -55847,11 +55883,77 @@ function composeEvolutionDocumentPrompt(memory, config2, estimate) {
   if (tokens > config2.inject_tokens) return { ...empty, omitted: ["\u5B8C\u6574\u6F14\u7ECE\u6307\u5BFC\u8BCD"], requiredTokens: tokens };
   return { ...empty, text: text7, tokens, included: [memory.document.versionId] };
 }
-var EVOLUTION_DOCUMENT_INSTRUCTIONS, EVOLUTION_GUIDANCE_REPAIR_INSTRUCTIONS, clone2, validText, parsedDocuments, parsedGuidances, batchRecord;
+var EVOLUTION_GUIDANCE_RULES_VERSION, EVOLUTION_GUIDANCE_RULES, EVOLUTION_DOCUMENT_INSTRUCTIONS, EVOLUTION_GUIDANCE_REPAIR_INSTRUCTIONS, clone2, validText, parsedDocuments, parsedGuidances, batchRecord;
 var init_characterEvolutionDocuments = __esm({
   "src/core/characterEvolutionDocuments.js"() {
     init_analysisFormat();
     init_storyMemoryData();
+    EVOLUTION_GUIDANCE_RULES_VERSION = "performance-v2";
+    EVOLUTION_GUIDANCE_RULES = `\u4F60\u5728\u8FD9\u91CC\u7684\u4EFB\u52A1\u662F\u4E3A\u6B63\u6587\u751F\u6210\u6A21\u578B\u7F16\u5199\u6F14\u7ECE\u6307\u5BFC\uFF0C\u800C\u4E0D\u662F\u7EE7\u7EED\u603B\u7ED3\u6216\u89E3\u91CA\u4EBA\u7269\u3002
+
+profile\u5DF2\u7ECF\u56DE\u7B54\u4E86\u201C\u89D2\u8272\u76EE\u524D\u662F\u4EC0\u4E48\u72B6\u6001\u201D\u3002
+guidance\u5FC5\u987B\u8FDB\u4E00\u6B65\u56DE\u7B54\uFF1A
+\u6B63\u6587\u6A21\u578B\u5728\u626E\u6F14\u89D2\u8272\u65F6\uFF0C\u5E94\u5F53\u5982\u4F55\u636E\u6B64\u8868\u8FBE\u3001\u9009\u62E9\u548C\u56DE\u5E94\uFF1F
+
+\u4E00\u3001\u5C06\u72B6\u6001\u8F6C\u5316\u4E3A\u6F14\u7ECE\u65B9\u5411
+
+\u4ECE\u6700\u65B0\u6863\u6848\u4E2D\u9009\u53D6\u4F1A\u5B9E\u9645\u5F71\u54CD\u5F53\u524D\u626E\u6F14\u7684\u72B6\u6001\uFF0C\u5C06\u5B83\u4EEC\u8F6C\u5316\u4E3A\uFF1A
+\u89D2\u8272\u5728\u76F8\u5173\u60C5\u5883\u4E2D\u4F18\u5148\u5173\u6CE8\u4EC0\u4E48\uFF1B
+\u503E\u5411\u7EF4\u62A4\u3001\u4E89\u53D6\u6216\u56DE\u907F\u4EC0\u4E48\uFF1B
+\u5982\u4F55\u5904\u7406\u4ED6\u4EBA\u7684\u8A00\u8BED\u3001\u884C\u4E3A\u548C\u538B\u529B\uFF1B
+\u8FD9\u4E9B\u503E\u5411\u5982\u4F55\u5F71\u54CD\u8868\u8FBE\u3001\u884C\u52A8\u4E0E\u51B3\u7B56\uFF1B
+\u54EA\u4E9B\u539F\u6709\u8FB9\u754C\u548C\u4E60\u60EF\u4ECD\u7136\u4FDD\u7559\u3002
+
+\u4E0D\u8981\u53EA\u5199\u201C\u66F4\u52A0\u4FE1\u4EFB\u201D\u201C\u4ECD\u7136\u77DB\u76FE\u201D\u201C\u5F00\u59CB\u4F9D\u8D56\u201D\u7B49\u72B6\u6001\u3002
+\u8981\u8BF4\u660E\u8FD9\u4E9B\u72B6\u6001\u5E94\u600E\u6837\u6539\u53D8\u626E\u6F14\uFF0C\u4EE5\u53CA\u4E0D\u80FD\u88AB\u6269\u5927\u89E3\u91CA\u6210\u4EC0\u4E48\u3002
+
+\u4F8B\u5982\uFF0C\u201C\u613F\u610F\u63A5\u53D7\u5E2E\u52A9\u4F46\u4E0D\u627F\u8BA4\u4F9D\u8D56\u201D\u4E0D\u5E94\u53EA\u662F\u88AB\u590D\u8FF0\uFF0C
+\u800C\u5E94\u8F6C\u5316\u4E3A\uFF1A\u9762\u5BF9\u5177\u4F53\u5E2E\u52A9\u65F6\u4E0D\u5FC5\u60EF\u6027\u62D2\u7EDD\uFF0C\u4F46\u4ECD\u4FDD\u7559\u81EA\u4E3B\u9009\u62E9\uFF1B
+\u8A00\u8BED\u4E0E\u81EA\u6211\u89E3\u91CA\u4E0D\u5E94\u76F4\u63A5\u8DF3\u5230\u5DF2\u7ECF\u627F\u8BA4\u4F9D\u8D56\u7684\u9636\u6BB5\u3002
+
+\u4E8C\u3001\u6307\u5BFC\u5904\u7406\u65B9\u5F0F\uFF0C\u4E0D\u5B89\u6392\u56FA\u5B9A\u8868\u6F14
+
+\u660E\u786E\u76F8\u5173\u60C5\u5883\u4E0B\u7684\u56DE\u5E94\u503E\u5411\u3001\u8868\u8FBE\u76EE\u7684\u548C\u9009\u62E9\u8FB9\u754C\u3002
+\u540C\u4E00\u79CD\u5FC3\u7406\u673A\u5236\u53EF\u4EE5\u901A\u8FC7\u4E0D\u540C\u7684\u8A00\u8BED\u3001\u52A8\u4F5C\u3001\u5185\u5FC3\u63CF\u5199\u6216\u51B3\u5B9A\u5448\u73B0\uFF0C
+\u5177\u4F53\u5F62\u5F0F\u7531\u6B63\u6587\u6A21\u578B\u7ED3\u5408\u5F53\u8F6E\u60C5\u5883\u9009\u62E9\u3002
+
+\u4E0D\u6307\u5B9A\u56FA\u5B9A\u53F0\u8BCD\u3001\u6807\u5FD7\u6027\u5C0F\u52A8\u4F5C\u6216\u6BCF\u8F6E\u5FC5\u987B\u51FA\u73B0\u7684\u53CD\u5E94\u3002
+\u4E0D\u628A\u89D2\u8272\u5199\u6210\u4E00\u5957\u50F5\u5316\u884C\u4E3A\u6E05\u5355\u3002
+\u6CA1\u6709\u76F8\u5173\u60C5\u5883\u65F6\uFF0C\u4E0D\u523B\u610F\u5C55\u793A\u8FD9\u9879\u53D8\u5316\u3002
+
+\u4E09\u3001\u4FDD\u6301\u5FC3\u7406\u3001\u8BA4\u77E5\u4E0E\u884C\u4E3A\u7684\u4E0D\u540C\u6B65
+
+\u89D2\u8272\u5B9E\u9645\u4EA7\u751F\u67D0\u79CD\u5FC3\u7406\uFF0C\u4E0D\u4EE3\u8868\u5DF2\u7ECF\u610F\u8BC6\u5230\u6216\u613F\u610F\u627F\u8BA4\u3002
+\u6F14\u7ECE\u53EF\u4EE5\u901A\u8FC7\u6CE8\u610F\u529B\u3001\u60C5\u7EEA\u53CD\u5E94\u548C\u9009\u62E9\u4F53\u73B0\u8FD9\u79CD\u5FC3\u7406\uFF0C
+\u4F46\u89D2\u8272\u7684\u81EA\u8FF0\u4E0E\u5185\u5FC3\u89E3\u91CA\u4ECD\u987B\u7B26\u5408\u5F53\u524D\u7684\u81EA\u6211\u8BA4\u77E5\u3002
+
+\u4E0D\u80FD\u628A\u5206\u6790\u5668\u7684\u5224\u65AD\u76F4\u63A5\u53D8\u6210\u89D2\u8272\u5DF2\u7ECF\u660E\u767D\u7684\u7ED3\u8BBA\u3002
+\u89D2\u8272\u77E5\u9053\u6216\u627F\u8BA4\u4E86\u67D0\u4EF6\u4E8B\uFF0C\u4E5F\u4E0D\u4EE3\u8868\u884C\u4E3A\u4F1A\u7ACB\u5373\u6210\u719F\u3001\u7A33\u5B9A\u6216\u4E00\u81F4\u3002
+\u4FDD\u7559\u6863\u6848\u4E2D\u5DF2\u7ECF\u5B58\u5728\u7684\u77DB\u76FE\u3001\u65E7\u4E60\u60EF\u548C\u53EF\u80FD\u9000\u56DE\u7684\u5E94\u5BF9\u65B9\u5F0F\u3002
+
+\u56DB\u3001\u8131\u79BB\u4E8B\u4EF6\u7EC6\u8282\uFF0C\u4FDD\u7559\u5F53\u524D\u673A\u5236
+
+\u4E0D\u8981\u628A\u672C\u6279\u539F\u6587\u4E2D\u7684\u9053\u5177\u3001\u52A8\u4F5C\u3001\u53F0\u8BCD\u548C\u573A\u666F\u7EC6\u8282\u91CD\u65B0\u7F16\u6392\u4E00\u904D\u3002
+\u6307\u5BFC\u8BCD\u5E94\u8BF4\u660E\u8FD9\u4E9B\u7ECF\u5386\u5DF2\u7ECF\u5F62\u6210\u7684\u5F53\u524D\u673A\u5236\uFF0C
+\u800C\u4E0D\u662F\u8981\u6C42\u6B63\u6587\u590D\u6F14\u8BC1\u660E\u8BE5\u5224\u65AD\u7684\u4E8B\u4EF6\u3002
+
+\u5386\u53F2\u539F\u56E0\u4EC5\u5728\u7406\u89E3\u6F14\u7ECE\u8FB9\u754C\u6240\u5FC5\u9700\u65F6\u7B80\u77ED\u63D0\u53CA\u3002
+\u4E0D\u590D\u5236\u5B8C\u6574\u6863\u6848\uFF0C\u4E0D\u8F93\u51FA\u5FC3\u7406\u5206\u6790\u62A5\u544A\uFF0C\u4E0D\u5217\u5267\u60C5\u7ECF\u8FC7\u3002
+
+\u4E94\u3001\u4E0D\u8D8A\u8FC7\u6863\u6848
+
+\u53EA\u8F6C\u8BD1\u5DF2\u6709\u4F9D\u636E\u7684\u72B6\u6001\uFF0C\u4E0D\u4E3A\u4E30\u5BCC\u8868\u6F14\u65B0\u589E\u5FC3\u7406\u3001\u52A8\u673A\u6216\u5173\u7CFB\u7ED3\u8BBA\u3002
+\u4E0D\u628A\u6682\u4E0D\u786E\u5B9A\u7684\u63A8\u6D4B\u5199\u6210\u6B63\u6587\u5FC5\u987B\u8868\u73B0\u7684\u4E8B\u5B9E\u3002
+\u4FDD\u7559\u521D\u59CBdescription\u4E2D\u7684\u4EBA\u7269\u8FDE\u7EED\u6027\uFF0C\u4E0D\u628A\u5C40\u90E8\u53D8\u5316\u6269\u5927\u6210\u6574\u4E2A\u4EBA\u683C\u66FF\u6362\u3002
+\u4E0D\u66FF\u7528\u6237\u51B3\u5B9A\u884C\u52A8\u3001\u601D\u60F3\u6216\u611F\u53D7\uFF0C\u4E0D\u9884\u8BBE\u540E\u7EED\u5267\u60C5\u3002
+
+\u6700\u7EC8\u8F93\u51FA\u4E00\u4EFD\u5B8C\u6574\u3001\u53EF\u76F4\u63A5\u7528\u4E8E\u626E\u6F14\u7684\u6307\u5BFC\u8BCD\u3002
+\u9762\u5411\u6B63\u6587\u6A21\u578B\u7ED9\u51FA\u6E05\u695A\u7684\u5904\u7406\u65B9\u5411\uFF0C\u4E0D\u5411\u8BFB\u8005\u8BB2\u89E3\u89D2\u8272\u7ECF\u5386\u3002
+
+\u8F93\u51FA\u524D\u68C0\u67E5\uFF1A
+\u4E3B\u8981\u5185\u5BB9\u662F\u5426\u4ECD\u5728\u56DE\u7B54\u201C\u89D2\u8272\u73B0\u5728\u662F\u4EC0\u4E48\u6837\u201D\uFF1F
+\u5982\u679C\u662F\uFF0C\u5C31\u7EE7\u7EED\u8F6C\u8BD1\u4E3A\u8868\u8FBE\u3001\u9009\u62E9\u3001\u53CD\u5E94\u548C\u8FB9\u754C\u7684\u6F14\u7ECE\u8981\u6C42\u3002
+\u4E0D\u8981\u5C55\u793A\u68C0\u67E5\u8FC7\u7A0B\u3002`;
     EVOLUTION_DOCUMENT_INSTRUCTIONS = `\u4F60\u8D1F\u8D23\u7EF4\u62A4\u5F53\u524D\u804A\u5929\u4E2D\u89D2\u8272\u7684\u6F14\u53D8\u6863\u6848\uFF0C\u5E76\u6839\u636E\u6863\u6848\u751F\u6210\u540E\u7EED\u6B63\u6587\u7684\u6F14\u7ECE\u6307\u5BFC\u3002
 
 \u4F60\u7684\u4EFB\u52A1\u4E0D\u662F\u8BC4\u4EF7\u89D2\u8272\u3001\u66FF\u89D2\u8272\u89C4\u5212\u6210\u957F\u8DEF\u7EBF\uFF0C\u4E5F\u4E0D\u662F\u628A\u6BCF\u6B21\u4E92\u52A8\u90FD\u89E3\u91CA\u6210\u4EBA\u7269\u53D8\u5316\u3002\u4F60\u9700\u8981\u4F9D\u636E\u5DF2\u63D0\u4F9B\u7684\u5267\u60C5\uFF0C\u5224\u65AD\u89D2\u8272\u76EE\u524D\u662F\u4EC0\u4E48\u72B6\u6001\u3001\u54EA\u4E9B\u5224\u65AD\u9700\u8981\u66F4\u65B0\uFF0C\u4EE5\u53CA\u6B63\u6587\u5E94\u5982\u4F55\u8868\u73B0\u8FD9\u4E2A\u5DF2\u7ECF\u7ECF\u5386\u4E86\u5F53\u524D\u5267\u60C5\u7684\u89D2\u8272\u3002
@@ -55861,12 +55963,13 @@ var init_characterEvolutionDocuments = __esm({
 \u4E00\u3001\u8D44\u6599\u7684\u6027\u8D28
 
 \u4F60\u53EF\u80FD\u6536\u5230\u4EE5\u4E0B\u8D44\u6599\uFF1A
-\u89D2\u8272\u5361\u3001\u5F53\u524D\u6F14\u53D8\u6863\u6848\u3001\u8FD1\u671F\u6F14\u53D8\u8BB0\u5F55\u3001\u8FDC\u671F\u7ECF\u5386\u6458\u8981\u3001\u76F8\u5173\u5386\u53F2\u539F\u6587\u3001\u672C\u8F6E\u5267\u60C5\u3001\u5F53\u524D\u6307\u5BFC\u8BCD\uFF0C\u4EE5\u53CA\u7528\u6237\u7684\u7F16\u8F91\u6216\u7EA0\u6B63\u8BB0\u5F55\u3002
+\u51BB\u7ED3\u521D\u59CBdescription\u3001\u5F53\u524D\u6F14\u53D8\u6863\u6848\u3001\u8FD1\u671F\u6F14\u53D8\u8BB0\u5F55\u3001\u8FDC\u671F\u7ECF\u5386\u6458\u8981\u3001\u76F8\u5173\u5386\u53F2\u539F\u6587\u3001\u672C\u8F6E\u5267\u60C5\u3001\u5F53\u524D\u6307\u5BFC\u8BCD\uFF0C\u4EE5\u53CA\u7528\u6237\u7684\u7F16\u8F91\u6216\u7EA0\u6B63\u8BB0\u5F55\u3002\u4E0D\u4F1A\u63D0\u4F9B\u5B8C\u6574\u89D2\u8272\u5361\u6216\u989D\u5916\u7684\u73B0\u884C\u89D2\u8272\u5361\u3002
 
 \u8BF7\u533A\u5206\u5B83\u4EEC\u7684\u6027\u8D28\uFF1A
 
-1. \u89D2\u8272\u5361\u662F\u4EBA\u7269\u8BBE\u5B9A\u4E0E\u521D\u59CB\u53C2\u7167\u3002
-   \u793A\u4F8B\u5BF9\u8BDD\u4E0D\u81EA\u52A8\u7B49\u4E8E\u672C\u804A\u5929\u5B9E\u9645\u53D1\u751F\u7684\u7ECF\u5386\u3002\u4EBA\u7269\u53EF\u4EE5\u5728\u5267\u60C5\u4E2D\u663E\u9732\u6F5C\u5728\u7279\u8D28\uFF0C\u4E5F\u53EF\u4EE5\u53D7\u5230\u7ECF\u5386\u5F71\u54CD\u800C\u6539\u53D8\uFF0C\u4F46\u4E0D\u80FD\u4E3A\u4E86\u5236\u9020\u53D8\u5316\u800C\u66F2\u89E3\u539F\u6709\u8BBE\u5B9A\u3002
+1. \u51BB\u7ED3\u521D\u59CBdescription\u662F\u4EBA\u7269\u8BBE\u5B9A\u4E0E\u521D\u59CB\u53C2\u7167\u3002
+   \u5B83\u53EA\u6765\u81EA\u9996\u6B21\u4FDD\u5B58\u7684\u539F\u59CBdescription\u5B57\u6BB5\uFF0C\u4E0D\u662F\u6574\u5361JSON\u6216\u6A21\u578B\u751F\u6210\u7684\u6458\u8981\uFF0C\u4E5F\u4E0D\u968F\u73B0\u884C\u5361\u4FEE\u6539\u800C\u53D8\u5316\u3002\u4E0D\u8981\u8981\u6C42\u8865\u5145\u5176\u4ED6\u5361\u5B57\u6BB5\u3002
+   description\u4E2D\u82E5\u542B\u793A\u4F8B\u6216\u5F15\u7528\uFF0C\u4E5F\u4E0D\u81EA\u52A8\u7B49\u4E8E\u672C\u804A\u5929\u5B9E\u9645\u53D1\u751F\u7684\u7ECF\u5386\u3002\u4EBA\u7269\u53EF\u4EE5\u5728\u5267\u60C5\u4E2D\u663E\u9732\u6F5C\u5728\u7279\u8D28\uFF0C\u4E5F\u53EF\u4EE5\u53D7\u5230\u7ECF\u5386\u5F71\u54CD\u800C\u6539\u53D8\uFF0C\u4F46\u4E0D\u80FD\u4E3A\u4E86\u5236\u9020\u53D8\u5316\u800C\u66F2\u89E3\u539F\u6709\u8BBE\u5B9A\u3002
 
 2. \u5267\u60C5\u539F\u6587\u662F\u5224\u65AD\u5DF2\u53D1\u751F\u4E8B\u4EF6\u7684\u4E3B\u8981\u4F9D\u636E\u3002
    \u533A\u5206\u73B0\u5B9E\u4E8B\u4EF6\u3001\u56DE\u5FC6\u3001\u68A6\u5883\u3001\u5047\u8BBE\u3001\u8C0E\u8A00\u548C\u672A\u6765\u7EA6\u5B9A\u3002\u672A\u53D1\u751F\u7684\u4E8B\u60C5\u4E0D\u80FD\u5199\u6210\u5DF2\u6709\u7ECF\u5386\u3002
@@ -55928,9 +56031,9 @@ var init_characterEvolutionDocuments = __esm({
 
 \u5982\u679C\u65E7\u5224\u65AD\u88AB\u7EA0\u6B63\uFF0C\u5E94\u68C0\u67E5\u4E0E\u5176\u6709\u5173\u7684\u5F53\u524D\u7ED3\u8BBA\u662F\u5426\u4ECD\u6709\u72EC\u7ACB\u4F9D\u636E\u3002\u8BC1\u636E\u4E0D\u8DB3\u65F6\u964D\u4F4E\u786E\u5B9A\u6027\u6216\u64A4\u9500\uFF0C\u4E0D\u58F0\u79F0\u5DF2\u7ECF\u6838\u5B9E\u672A\u63D0\u4F9B\u7684\u5386\u53F2\u3002
 
-\u9996\u6B21\u5EFA\u6863\u65F6\uFF0C\u6839\u636E\u89D2\u8272\u5361\u548C\u5DF2\u63D0\u4F9B\u5267\u60C5\u5EFA\u7ACB\u5F53\u524D\u72B6\u6001\uFF0C\u4E0D\u7F16\u9020\u6B64\u524D\u7684\u53D8\u5316\u8FC7\u7A0B\uFF0C\u4E5F\u4E0D\u628A\u5EFA\u7ACB\u6863\u6848\u672C\u8EAB\u5F53\u6210\u4EBA\u7269\u8F6C\u53D8\u3002
+\u9996\u6B21\u5EFA\u6863\u65F6\uFF0C\u6839\u636E\u51BB\u7ED3\u521D\u59CBdescription\u548C\u5DF2\u63D0\u4F9B\u5267\u60C5\u5EFA\u7ACB\u5F53\u524D\u72B6\u6001\uFF0C\u4E0D\u7F16\u9020\u6B64\u524D\u7684\u53D8\u5316\u8FC7\u7A0B\uFF0C\u4E5F\u4E0D\u628A\u5EFA\u7ACB\u6863\u6848\u672C\u8EAB\u5F53\u6210\u4EBA\u7269\u8F6C\u53D8\u3002
 
-\u5F53\u524D\u6863\u6848\u4E0D\u9700\u8981\u91CD\u6284\u5B8C\u6574\u89D2\u8272\u5361\uFF0C\u4E0D\u9700\u8981\u7F57\u5217\u5168\u90E8\u5386\u53F2\u3002\u53EA\u4FDD\u7559\u7406\u89E3\u5F53\u524D\u4EBA\u7269\u6240\u5FC5\u9700\u7684\u72B6\u6001\u3001\u8FB9\u754C\u3001\u77DB\u76FE\u548C\u7B80\u77ED\u56E0\u679C\u80CC\u666F\u3002
+\u5F53\u524D\u6863\u6848\u4E0D\u9700\u8981\u91CD\u6284\u521D\u59CBdescription\uFF0C\u4E0D\u9700\u8981\u7F57\u5217\u5168\u90E8\u5386\u53F2\u3002\u53EA\u4FDD\u7559\u7406\u89E3\u5F53\u524D\u4EBA\u7269\u6240\u5FC5\u9700\u7684\u72B6\u6001\u3001\u8FB9\u754C\u3001\u77DB\u76FE\u548C\u7B80\u77ED\u56E0\u679C\u80CC\u666F\u3002
 
 \u56DB\u3001\u8F93\u51FA\u533A\u5757
 
@@ -55960,17 +56063,7 @@ var init_characterEvolutionDocuments = __esm({
 </changes>
 
 <guidance>
-\u6839\u636E\u66F4\u65B0\u540E\u7684\u6863\u6848\uFF0C\u751F\u6210\u5B8C\u6574\u7684\u5F53\u524D\u6F14\u7ECE\u6307\u5BFC\u8BCD\u3002
-
-\u6307\u5BFC\u8BCD\u5E94\u628A\u4EBA\u7269\u72B6\u6001\u8F6C\u5316\u4E3A\u53EF\u6267\u884C\u7684\u5FC3\u7406\u673A\u5236\u3001\u884C\u4E3A\u503E\u5411\u548C\u9002\u7528\u8FB9\u754C\u3002\u91CD\u70B9\u8BF4\u660E\u89D2\u8272\u5728\u76F8\u5173\u60C5\u5883\u4E2D\u5982\u4F55\u7406\u89E3\u3001\u9009\u62E9\u548C\u56DE\u5E94\uFF0C\u4EE5\u53CA\u54EA\u4E9B\u77DB\u76FE\u3001\u8BA4\u77E5\u76F2\u533A\u6216\u65E7\u6709\u4E60\u60EF\u4ECD\u7136\u5B58\u5728\u3002
-
-\u5386\u53F2\u7ECF\u5386\u53EA\u5728\u89E3\u91CA\u5F53\u524D\u673A\u5236\u65F6\u7B80\u77ED\u63D0\u53CA\uFF0C\u4E0D\u590D\u5236\u6863\u6848\uFF0C\u4E0D\u5217\u4E3E\u5B8C\u6574\u5386\u53F2\uFF0C\u4E0D\u5C55\u793A\u5206\u6790\u8FC7\u7A0B\u3002
-
-\u4E0D\u8981\u673A\u68B0\u8FFD\u52A0\u65E7\u6307\u5BFC\u8BCD\u3002\u672A\u8FC7\u65F6\u4E14\u4ECD\u51C6\u786E\u7684\u5185\u5BB9\u53EF\u4EE5\u4FDD\u7559\uFF1B\u9700\u8981\u8C03\u6574\u65F6\uFF0C\u6839\u636E\u6700\u65B0\u6863\u6848\u91CD\u65B0\u7EC4\u7EC7\uFF0C\u907F\u514D\u91CD\u590D\u6216\u76F8\u4E92\u62B5\u89E6\u3002
-
-\u4FDD\u7559\u4EBA\u7269\u81EA\u8EAB\u7684\u771F\u5B9E\u77DB\u76FE\uFF0C\u4E0D\u628A\u4EBA\u7269\u6574\u7406\u6210\u6CA1\u6709\u51B2\u7A81\u7684\u884C\u4E3A\u6A21\u677F\u3002\u4E0D\u5199\u56FA\u5B9A\u53F0\u8BCD\u3001\u56FA\u5B9A\u52A8\u4F5C\u3001\u6BCF\u8F6E\u5FC5\u6F14\u8981\u6C42\u6216\u9884\u5B9A\u5267\u60C5\u3002
-
-\u4E0D\u628A\u5C1A\u4E0D\u786E\u5B9A\u7684\u5FC3\u7406\u63A8\u6D4B\u5199\u6210\u6B63\u6587\u5FC5\u987B\u8868\u73B0\u7684\u4E8B\u5B9E\u3002
+${EVOLUTION_GUIDANCE_RULES}
 </guidance>
 
 \u4E94\u3001\u683C\u5F0F\u8981\u6C42
@@ -55987,13 +56080,13 @@ var init_characterEvolutionDocuments = __esm({
 
 5. \u4E09\u4E2A\u533A\u5757\u90FD\u5FC5\u987B\u5B8C\u6574\u7ED3\u675F\uFF0C\u4E0D\u8F93\u51FA\u7701\u7565\u53F7\u6216\u5360\u4F4D\u8BF4\u660E\u4EE3\u66FF\u6B63\u6587\u3002
 
-6. \u6CA1\u6709\u53D8\u5316\u65F6\uFF0Cprofile\u548Cguidance\u4FDD\u7559\u5DF2\u6709\u5185\u5BB9\uFF0C\u4E0D\u505A\u65E0\u4F9D\u636E\u7684\u6539\u5199\uFF1B
-   changes\u5199\u201C\u672C\u8F6E\u65E0\u53D8\u5316\u3002\u201D\u3002
+6. \u4EBA\u7269\u6CA1\u6709\u53D8\u5316\u65F6\uFF0Cprofile\u4FDD\u7559\u5DF2\u6709\u5185\u5BB9\uFF0Cchanges\u5199\u201C\u672C\u8F6E\u65E0\u53D8\u5316\u3002\u201D\u3002
+   guidance\u4FDD\u7559\u4ECD\u51C6\u786E\u4E14\u5DF2\u7ECF\u662F\u6F14\u7ECE\u6307\u5BFC\u7684\u5185\u5BB9\uFF1B\u82E5\u65E7\u6307\u5BFC\u53EA\u662F\u5FC3\u7406\u6216\u4E8B\u4EF6\u603B\u7ED3\uFF0C\u5E94\u6309\u672C\u8282\u89C4\u5219\u8F6C\u8BD1\u4E3A\u8868\u8FBE\u3001\u9009\u62E9\u3001\u53CD\u5E94\u4E0E\u8FB9\u754C\u7684\u6307\u5BFC\uFF0C\u4F46\u4E0D\u80FD\u5BA3\u79F0\u4EBA\u7269\u56E0\u6B64\u53D1\u751F\u65B0\u53D8\u5316\u3002\u6709\u6548\u4EBA\u5DE5\u6F14\u7ECE\u8981\u6C42\u4ECD\u987B\u5C0A\u91CD\u3002
    \u9996\u6B21\u5EFA\u6863\u6CA1\u6709\u5DF2\u6709\u5185\u5BB9\u65F6\uFF0C\u4ECD\u987B\u5EFA\u7ACB\u5B8C\u6574\u7684\u5F53\u524D\u6863\u6848\u548C\u6307\u5BFC\u8BCD\u3002`;
     EVOLUTION_GUIDANCE_REPAIR_INSTRUCTIONS = `\u4F60\u8D1F\u8D23\u4FEE\u590D\u89D2\u8272\u6F14\u53D8\u5019\u9009\u7248\u672C\u7684\u6F14\u7ECE\u6307\u5BFC\u8BCD\u3002
 \u5019\u9009\u4EBA\u7269\u6863\u6848\u548C\u672C\u8F6E\u53D8\u66F4\u5DF2\u7ECF\u751F\u6210\u5E76\u6682\u5B58\uFF0C\u4E0D\u91CD\u65B0\u5206\u6790\u5267\u60C5\uFF0C\u4E0D\u6539\u5199\u5019\u9009\u6863\u6848\u6216\u53D8\u66F4\u8BB0\u5F55\u3002
 \u6839\u636E\u63D0\u4F9B\u7684\u5019\u9009\u6863\u6848\u751F\u6210\u5B8C\u6574\u7684\u5F53\u524D\u6F14\u7ECE\u6307\u5BFC\uFF0C\u5C0A\u91CD\u6709\u6548\u4EBA\u5DE5\u6F14\u7ECE\u8981\u6C42\uFF0C\u4E0D\u628A\u5B83\u4EEC\u5F53\u4F5C\u5267\u60C5\u4E8B\u5B9E\u3002
-\u8BF4\u660E\u53EF\u6267\u884C\u7684\u5FC3\u7406\u673A\u5236\u3001\u884C\u4E3A\u503E\u5411\u3001\u9002\u7528\u8FB9\u754C\u548C\u672A\u89E3\u51B3\u7684\u5185\u5728\u77DB\u76FE\uFF1B\u4E0D\u590D\u5236\u5386\u53F2\u62A5\u544A\uFF0C\u4E0D\u5B89\u6392\u56FA\u5B9A\u53F0\u8BCD\u3001\u6BCF\u8F6E\u52A8\u4F5C\u6216\u672A\u6765\u5267\u60C5\uFF0C\u4E0D\u628A\u4E0D\u786E\u5B9A\u63A8\u6D4B\u5199\u6210\u5FC5\u987B\u8868\u73B0\u7684\u4E8B\u5B9E\u3002
+${EVOLUTION_GUIDANCE_RULES}
 \u53EA\u8F93\u51FA\u4E00\u4E2A\u5B8C\u6574\u7684 <guidance>...</guidance> \u533A\u5757\uFF0C\u6807\u7B7E\u5C0F\u5199\u3001\u65E0\u5C5E\u6027\uFF1B\u6B63\u6587\u81EA\u7531\u4F7F\u7528\u81EA\u7136\u6BB5\u3001\u6807\u9898\u548C\u5217\u8868\uFF0C\u4E0D\u8F93\u51FA\u5176\u4ED6\u533A\u5757\u3001JSON\u3001\u4EE3\u7801\u56F4\u680F\u6216\u5916\u56F4\u8BF4\u660E\u3002`;
     clone2 = (value) => JSON.parse(JSON.stringify(value));
     validText = (value) => typeof value === "string" && !!value.trim() && value.length <= 512e3;
@@ -56351,39 +56444,27 @@ function sameChat2(ctx2) {
   return archiveContextCurrent(ctx2) && !!ctx2 && current2?.key === ctx2.key && current2.chat === ctx2.chat && current2.chatMetadata === ctx2.chatMetadata;
 }
 function baseline(ctx2) {
-  const card = ctx2.character;
-  if (card.data && typeof card.data === "object") return JSON.stringify({ ...card.data, name: card.data.name || card.name || "", avatar: card.avatar });
-  const { date_last_chat, chat_size, date_added, chat: chatFile, ...originalCard } = card;
-  return JSON.stringify(originalCard);
+  const value = ctx2?.character?.data?.description ?? ctx2?.character?.description;
+  return typeof value === "string" ? value : "";
 }
-function legacyBaselineSignature(ctx2) {
-  const card = ctx2.character, data = card.data || {};
-  return memoryFloorFingerprint({ mes: JSON.stringify({
-    name: card.name || data.name || "",
-    description: data.description ?? card.description ?? "",
-    personality: data.personality ?? card.personality ?? "",
-    scenario: data.scenario ?? card.scenario ?? ""
-  }) });
-}
-function canonicalCardText(text7) {
+function frozenDescription(memory) {
+  const reference = memory.baseline;
+  const text7 = typeof reference?.text === "string" ? reference.text : "";
+  if (reference?.field === "description") return text7;
   try {
-    const stable = (value) => Array.isArray(value) ? value.map(stable) : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, stable(value[key])])) : value;
-    return JSON.stringify(stable(JSON.parse(text7)));
+    const old = JSON.parse(text7);
+    if (old && typeof old === "object" && !Array.isArray(old)) {
+      if (Object.hasOwn(old, "description")) return typeof old.description === "string" ? old.description : "";
+      if (old.data && typeof old.data === "object" && Object.hasOwn(old.data, "description")) return typeof old.data.description === "string" ? old.data.description : "";
+      if (["name", "avatar", "personality", "scenario", "character_book", "extensions"].some((key) => Object.hasOwn(old, key))) return "";
+    }
   } catch {
-    return null;
   }
-}
-function rawBaselineSignature(ctx2) {
-  return memoryFloorFingerprint({ mes: baseline(ctx2) });
+  return text7;
 }
 function baselineSignature(ctx2) {
-  return memoryFloorFingerprint({ mes: canonicalCardText(baseline(ctx2)) || baseline(ctx2) });
-}
-function knownBaselineSignatureUpgrade(memory, ctx2) {
-  if (!memory.baselineSignature || memory.baselineSignatureFormat === BASELINE_SIGNATURE_FORMAT) return false;
-  if ([baselineSignature(ctx2), rawBaselineSignature(ctx2), legacyBaselineSignature(ctx2)].includes(memory.baselineSignature)) return true;
-  const frozen = memory.baseline?.text;
-  return typeof frozen === "string" && memory.baselineSignature === memoryFloorFingerprint({ mes: frozen }) && canonicalCardText(frozen) !== null && canonicalCardText(frozen) === canonicalCardText(baseline(ctx2));
+  const memory = memoryFor2(ctx2);
+  return descriptionSignature(memory.baseline ? frozenDescription(memory) : baseline(ctx2));
 }
 function memoryFor2(ctx2) {
   observeArchive(ctx2, EVOLUTION_KEY, status === "saving");
@@ -56400,20 +56481,30 @@ function memoryFor2(ctx2) {
     throw new Error("\u89D2\u8272\u6F14\u53D8\u5019\u9009\u6863\u6848\u635F\u574F\uFF0C\u672A\u8986\u76D6\u539F\u6570\u636E\u3002");
   }
   if (value.version < 3) {
-    return { ...newEvolution(), enabled: value.enabled === true, auto: false, baselineCapturedAfterUpgrade: true };
+    const oldReference = typeof value.baseline?.text === "string" ? cloneEvolution(value.baseline) : null;
+    return {
+      ...newEvolution(),
+      enabled: value.enabled === true,
+      auto: false,
+      baseline: oldReference,
+      baselineCapturedAfterUpgrade: oldReference ? value.baselineCapturedAfterUpgrade === true : true,
+      legacyEvolutionArchive: cloneEvolution(value)
+    };
   }
-  if (Object.hasOwn(value, "legacyArchive")) {
-    const { legacyArchive, ...next } = value;
-    if (!next.baseline && legacyArchive) next.baselineCapturedAfterUpgrade = true;
-    return next;
+  if (!value.baseline && value.legacyArchive && !value.baselineCapturedAfterUpgrade) {
+    return { ...value, baselineCapturedAfterUpgrade: true };
   }
   return value;
 }
 function freezeBaseline(memory, ctx2) {
   if (!memory.baseline) {
-    memory.baseline = { id: newMemoryId(), text: baseline(ctx2) };
+    memory.baseline = { id: newMemoryId(), text: baseline(ctx2), field: "description" };
+  } else if (memory.baseline.field !== "description") {
+    const description = frozenDescription(memory);
+    if (!memory.baselineLegacySnapshot) memory.baselineLegacySnapshot = cloneEvolution(memory.baseline);
+    memory.baseline = { id: memory.baseline.id, text: description, field: "description" };
   }
-  memory.baselineSignature = baselineSignature(ctx2);
+  memory.baselineSignature = descriptionSignature(frozenDescription(memory));
   memory.baselineSignatureFormat = BASELINE_SIGNATURE_FORMAT;
 }
 function recentContext(ctx2) {
@@ -56441,16 +56532,19 @@ function reconciled(ctx2) {
   if (analysisScopeChanged && result.memory.candidate) {
     result = { memory: { ...cloneEvolution(result.memory), candidate: null, revision: result.memory.revision + 1 }, changed: true };
   }
-  const signatureUpgrade = knownBaselineSignatureUpgrade(result.memory, ctx2);
-  if (signatureUpgrade || result.memory.baselineSignature && result.memory.baselineSignature !== baselineSignature(ctx2)) {
-    const next = signatureUpgrade ? cloneEvolution(result.memory) : result.memory.batches.length ? rollbackEvolution(result.memory, 0) : cloneEvolution(result.memory);
-    if (!signatureUpgrade) {
-      next.items = next.items.filter((item2) => item2.manual);
-      next.document = null;
+  const reference = result.memory.baseline;
+  const description = reference ? frozenDescription(result.memory) : "";
+  const referenceMigration = !!reference && (reference.field !== "description" || result.memory.baselineSignatureFormat !== BASELINE_SIGNATURE_FORMAT || reference.text !== description || result.memory.baselineSignature !== descriptionSignature(description));
+  if (referenceMigration) {
+    const next = cloneEvolution(result.memory);
+    if (reference.field !== "description" && !next.baselineLegacySnapshot) next.baselineLegacySnapshot = cloneEvolution(reference);
+    next.baseline = { id: reference.id, text: description, field: "description" };
+    next.baselineSignature = descriptionSignature(description);
+    next.baselineSignatureFormat = BASELINE_SIGNATURE_FORMAT;
+    if (next.candidate && reference.field !== "description") {
+      next.baselineLegacyCandidate = cloneEvolution(next.candidate);
       next.candidate = null;
     }
-    next.baselineSignature = baselineSignature(ctx2);
-    next.baselineSignatureFormat = BASELINE_SIGNATURE_FORMAT;
     next.revision++;
     result = { memory: next, changed: true };
   }
@@ -56462,7 +56556,7 @@ function reconciled(ctx2) {
     candidate: original.candidate ? { ...original.candidate, extractionScope: extractionScope() } : null,
     batches: original.batches.map((batch) => ({ ...batch, extractionScope: extractionScope() }))
   }, ctx2.chat, extractionScope()).changed : sourceResult.changed;
-  const kind = sourceChanged ? "sources" : scopeChanged || analysisScopeChanged ? "settings" : migrating || signatureUpgrade ? "migration" : "baseline";
+  const kind = sourceChanged ? "sources" : scopeChanged || analysisScopeChanged ? "settings" : migrating || referenceMigration ? "migration" : "baseline";
   return protectedArchive(
     ctx2,
     EVOLUTION_KEY,
@@ -56713,7 +56807,7 @@ function getEvolutionView() {
     unsupported: ctx2 ? "" : host5?.groupId != null && host5.groupId !== "" ? "\u89D2\u8272\u6F14\u53D8\u6682\u4E0D\u652F\u6301\u7FA4\u804A\uFF0C\u8BF7\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002" : "\u8BF7\u5148\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002",
     contextKey: ctx2?.key || "",
     characterName: ctx2?.character.name || "",
-    baseline: memory.baseline?.text || (ctx2 ? baseline(ctx2) : ""),
+    baseline: memory.baseline ? frozenDescription(memory) : ctx2 ? baseline(ctx2) : "",
     baselineCapturedAfterUpgrade: memory.baselineCapturedAfterUpgrade === true,
     baselineFrozen: !!memory.baseline,
     references: cloneEvolution(evolutionReferences(previewMemory)),
@@ -56841,11 +56935,9 @@ async function runEvolution(force = true) {
       const visibleMemory = { ...workingMemory, items: workingMemory.items.filter((item2) => (!item2.manualAnchor || item2.manualAnchor.index <= batch.end) && (!Number.isInteger(item2.updatedThrough) || item2.updatedThrough <= batch.end) && (item2.sources || []).every((source2) => source2.end <= batch.end)) };
       const frozen = workingMemory.baseline;
       const cardNote = workingMemory.baselineCapturedAfterUpgrade ? "\u5347\u7EA7\u540E\u91C7\u96C6\uFF0C\u4E0D\u4EE3\u8868\u65E7\u6545\u4E8B\u8D77\u70B9" : "\u9996\u6B21\u91C7\u96C6\u540E\u51BB\u7ED3\uFF0C\u4E0D\u968F\u5F53\u524D\u5361\u4FEE\u6539";
-      const currentCard = canonicalCardText(baseline(ctx2)) === canonicalCardText(frozen.text) ? "[\u5B8C\u6574\u73B0\u884C\u89D2\u8272\u5361]\n\u4E0E\u4E0A\u65B9\u51BB\u7ED3\u53C2\u8003\u5361\u76F8\u540C\u3002" : `[\u5B8C\u6574\u73B0\u884C\u89D2\u8272\u5361\uFF1B\u65E7\u51BB\u7ED3\u53C2\u7167\u53EF\u80FD\u4EC5\u542B\u6709\u9650\u5B57\u6BB5\uFF0C\u65B0\u589E\u8BBE\u5B9A\u4E0D\u7B49\u4E8E\u5267\u60C5\u53D8\u5316]
-${baseline(ctx2)}`;
       const visibleDocument = workingMemory.document?.updatedThrough <= batch.end ? workingMemory.document : null;
       const legacyStates = visibleMemory.items.filter((item2) => item2.status === "active").map(renderEvolutionState).join("\n\n");
-      const profile = visibleDocument?.profile || legacyStates || "\u5C1A\u672A\u5EFA\u6863\uFF1B\u8BF7\u4F9D\u636E\u89D2\u8272\u5361\u548C\u672C\u8F6E\u5267\u60C5\u5EFA\u7ACB\u5F53\u524D\u72B6\u6001\uFF0C\u4E0D\u7F16\u9020\u6B64\u524D\u6F14\u53D8\u3002";
+      const profile = visibleDocument?.profile || legacyStates || "\u5C1A\u672A\u5EFA\u6863\uFF1B\u8BF7\u4F9D\u636E\u51BB\u7ED3\u521D\u59CBdescription\u548C\u672C\u8F6E\u5267\u60C5\u5EFA\u7ACB\u5F53\u524D\u72B6\u6001\uFF0C\u4E0D\u7F16\u9020\u6B64\u524D\u6F14\u53D8\u3002";
       const guidance = visibleDocument ? visibleDocument.manualAnchor?.index > batch.end ? visibleDocument.generatedGuidance || "" : visibleDocument.guidance : "";
       const edits = (workingMemory.manualEdits || []).filter((edit) => !edit.invalidated && edit.anchor?.index <= batch.end).map((edit) => `\u6307\u5BFC\u8BCD\u4EBA\u5DE5\u7F16\u8F91\uFF08\u4E0D\u662F\u5267\u60C5\u4E8B\u5B9E\uFF09
 \u4FEE\u6539\u524D\uFF1A
@@ -56868,10 +56960,8 @@ ${candidate.changes}
 ${guidance || "\u5C1A\u65E0\u6B63\u5F0F\u6307\u5BFC\u8BCD\u3002"}
 
 [\u6709\u6548\u4EBA\u5DE5\u6F14\u7ECE\u7F16\u8F91\uFF1B\u4E0D\u662F\u5267\u60C5\u4E8B\u5B9E]
-${edits || "\u65E0\u3002"}` }] : [{ role: "system", content: EVOLUTION_INSTRUCTIONS }, { role: "user", content: `[\u51BB\u7ED3\u521D\u59CB\u53C2\u8003\u5361\uFF1B${cardNote}]
-${frozen.text}
-
-${currentCard}
+${edits || "\u65E0\u3002"}` }] : [{ role: "system", content: EVOLUTION_INSTRUCTIONS }, { role: "user", content: `[\u51BB\u7ED3\u521D\u59CBdescription\uFF1B${cardNote}]
+${frozen.text || "\u521D\u59CBdescription\u4E3A\u7A7A\uFF1B\u4E0D\u4ECE\u5176\u4ED6\u89D2\u8272\u5361\u5B57\u6BB5\u8865\u5145\uFF0C\u4E0D\u7F16\u9020\u521D\u59CB\u8BBE\u5B9A\u3002"}
 
 [\u5F53\u524D\u6F14\u53D8\u6863\u6848\uFF1B\u5DF2\u6709\u5224\u65AD\u4E0D\u662F\u65B0\u7684\u4E8B\u5B9E\u8BC1\u636E]
 ${profile}
@@ -57190,7 +57280,14 @@ function initCharacterEvolution() {
   const changed = async (trigger) => {
     if (trigger === TITANIA_TEXT_PATCHED) noteArchiveChange(context2(), trigger);
     if (trigger === TOOLBOX_EXTRACTION_CHANGED) noteArchiveChange(context2(), trigger, "settings");
-    if (trigger === event_types8.CHARACTER_EDITED) noteArchiveChange(context2(), trigger, "baseline");
+    if (trigger === event_types8.CHARACTER_EDITED) {
+      const owner = context2();
+      if (owner && (!job2 || sameChat2(job2.ctx) && baselineSignature(owner) === job2.baseline)) {
+        notify5();
+        if (!job2) schedule2();
+        return;
+      }
+    }
     pauseEvolution();
     blocked = false;
     error2 = "";
@@ -57233,7 +57330,7 @@ function initCharacterEvolution() {
     if (sameChat2(ctx2)) report2(cause);
   });
 }
-var EVOLUTION_PROMPT_KEY, listeners5, initialized3, generating3, generationType2, stopped2, epoch2, replacementFloor, job2, timer2, status, error2, blocked, savingEvolution, evolutionProgress, progressSequence2, BASELINE_SIGNATURE_FORMAT;
+var EVOLUTION_PROMPT_KEY, listeners5, initialized3, generating3, generationType2, stopped2, epoch2, replacementFloor, job2, timer2, status, error2, blocked, savingEvolution, evolutionProgress, progressSequence2, BASELINE_SIGNATURE_FORMAT, descriptionSignature;
 var init_characterEvolution = __esm({
   "src/core/characterEvolution.js"() {
     init_storage();
@@ -57264,7 +57361,8 @@ var init_characterEvolution = __esm({
     savingEvolution = null;
     evolutionProgress = null;
     progressSequence2 = 0;
-    BASELINE_SIGNATURE_FORMAT = "canonical-card-v1";
+    BASELINE_SIGNATURE_FORMAT = "frozen-description-v1";
+    descriptionSignature = (text7) => memoryFloorFingerprint({ mes: text7 });
     registerArchiveValidator(EVOLUTION_KEY, (value, ctx2) => value?.version === 3 && Array.isArray(value.items) && Array.isArray(value.batches) && !(ctx2.groupId != null && ctx2.groupId !== "") && (!value.characterAvatar || value.characterAvatar === ctx2.characters?.[ctx2.characterId]?.avatar) && (!value.document || validateEvolutionDocument(value.document)) && !reconcileEvolution(value, ctx2.chat, extractionScope()).changed);
     subscribeArchiveSafety(() => {
       refreshInjection2();
@@ -59218,7 +59316,7 @@ var init_storyTimetracePanel = __esm({
 // src/core/storyMemoryPromptCatalogue.js
 function storyMemoryPromptCatalogue(timePrompt = TIMETRACE_RULES) {
   const prompt2 = typeof timePrompt === "string" && timePrompt.trim() ? timePrompt : TIMETRACE_RULES;
-  const inline = composeTimetraceRules(newTimetrace(), { prompt: prompt2 }, {
+  const inline2 = composeTimetraceRules(newTimetrace(), { prompt: prompt2 }, {
     calendar: null,
     initial_time: "",
     current: null,
@@ -59235,8 +59333,8 @@ function storyMemoryPromptCatalogue(timePrompt = TIMETRACE_RULES) {
     entry("memory-time-revision", "\u6545\u4E8B\u8BB0\u5FC6 \xB7 \u6458\u8981\u65F6\u95F4\u6821\u51C6", "\u5B8C\u6574\u7CFB\u7EDF\u6A21\u677F", "\u5DF2\u6709\u65F6\u75D5\u65E5\u671F\u53D8\u5316\u540E\uFF0C\u53EA\u6821\u51C6\u5F52\u6863\u6458\u8981\u91CC\u7684\u65F6\u95F4\uFF0C\u4E0D\u589E\u52A0\u5267\u60C5\u3002", MEMORY_TIME_REVISION_PROMPT, MEMORY_TIME_REVISION_INPUT_TEMPLATE),
     entry("timetrace-analysis", "\u56DE\u58F0\u65F6\u75D5 \xB7 \u540E\u53F0\u5206\u6790\u4E0E\u5386\u53F2\u8865\u5EFA", "\u5F53\u524D\u5DF2\u4FDD\u5B58\u7CFB\u7EDF\u6A21\u677F", "\u5C55\u793A\u5F53\u524D\u5B9E\u9645\u751F\u6548\u7684\u65F6\u95F4\u63D0\u793A\u8BCD\uFF0C\u5305\u62EC\u7528\u6237\u5DF2\u4FDD\u5B58\u7684\u81EA\u5B9A\u4E49\u5185\u5BB9\u3002\u4E0D\u9644\u89D2\u8272\u6216\u7528\u6237\u4EBA\u8BBE\uFF1B\u4E16\u754C\u4E66\u9ED8\u8BA4\u5173\u95ED\uFF0C\u5F00\u542F\u540E\u4EC5\u63D0\u4F9B\u5C0F\u5267\u573A\u7A97\u53E3\u4E2D\u660E\u786E\u9009\u4E2D\u7684\u6761\u76EE\u3002\u4E0A\u65B9\u65F6\u95F4\u7BA1\u7406\u7F16\u8F91\u5668\u672A\u4FDD\u5B58\u7684\u8349\u7A3F\u4E0D\u6539\u53D8\u8FD9\u91CC\u3002", prompt2, TIMETRACE_INPUT_TEMPLATE),
     entry("timetrace-calibration", "\u56DE\u58F0\u65F6\u75D5 \xB7 \u5B9A\u5411\u65E5\u671F\u6821\u51C6", "\u5B8C\u6574\u7CFB\u7EDF\u6A21\u677F", "\u590D\u7528\u5F53\u524D\u65F6\u95F4\u6A21\u677F\uFF0C\u518D\u9650\u5236\u4E3A\u5DF2\u6709\u65E5\u671F\u6821\u51C6\uFF1B\u5DF2\u9A8C\u6536\u7684\u8017\u65F6\u548C\u65F6\u95F4\u6BB5\u4E0D\u91CD\u65B0\u751F\u6210\u3002", buildTimetraceCalibrationPrompt(prompt2), TIMETRACE_INPUT_TEMPLATE),
-    entry("timetrace-inline", "\u56DE\u58F0\u65F6\u75D5 \xB7 \u968F\u6B63\u6587\u8BB0\u5F55\u65F6\u95F4", "\u6B63\u6587\u6A21\u578B\u65F6\u95F4\u8BB0\u5F55\u89C4\u5219", "\u968F\u6B63\u6587\u6A21\u5F0F\u4F7F\u7528\uFF1B\u5148\u6B63\u5E38\u7EED\u5199\uFF0C\u518D\u8F93\u51FA\u9690\u85CF\u65F6\u95F4\u6CE8\u91CA\u3002\u8FD9\u4E0D\u662F\u540E\u53F0\u603B\u7ED3\u8BF7\u6C42\uFF0C\u771F\u5B9E\u65F6\u949F\u6570\u636E\u53EA\u5728\u751F\u6210\u65F6\u586B\u5165\u3002", inline),
-    entry("evolution-analysis", "\u89D2\u8272\u6F14\u53D8 \xB7 \u4EBA\u7269\u6863\u6848\u4E0E\u6F14\u7ECE\u6307\u5BFC", "\u5B8C\u6574\u7CFB\u7EDF\u6A21\u677F", "\u72EC\u7ACB\u6F14\u53D8\u8BF7\u6C42\uFF0C\u4EE5profile / changes / guidance\u4E09\u6807\u7B7E\u4EA4\u4ED8\u3002\u8FD0\u884C\u53C2\u6570\u548C\u5206\u6790\u8FDE\u63A5\u4E0D\u53D8\u3002", EVOLUTION_DOCUMENT_INSTRUCTIONS, EVOLUTION_INPUT_TEMPLATE),
+    entry("timetrace-inline", "\u56DE\u58F0\u65F6\u75D5 \xB7 \u968F\u6B63\u6587\u8BB0\u5F55\u65F6\u95F4", "\u6B63\u6587\u6A21\u578B\u65F6\u95F4\u8BB0\u5F55\u89C4\u5219", "\u968F\u6B63\u6587\u6A21\u5F0F\u4F7F\u7528\uFF1B\u5148\u6B63\u5E38\u7EED\u5199\uFF0C\u518D\u8F93\u51FA\u9690\u85CF\u65F6\u95F4\u6CE8\u91CA\u3002\u8FD9\u4E0D\u662F\u540E\u53F0\u603B\u7ED3\u8BF7\u6C42\uFF0C\u771F\u5B9E\u65F6\u949F\u6570\u636E\u53EA\u5728\u751F\u6210\u65F6\u586B\u5165\u3002", inline2),
+    entry("evolution-analysis", "\u89D2\u8272\u6F14\u53D8 \xB7 \u4EBA\u7269\u6863\u6848\u4E0E\u6F14\u7ECE\u6307\u5BFC", "\u5B8C\u6574\u7CFB\u7EDF\u6A21\u677F", "\u72EC\u7ACB\u6F14\u53D8\u8BF7\u6C42\uFF0C\u89D2\u8272\u53C2\u7167\u53EA\u63D0\u4F9B\u51BB\u7ED3\u7684\u539F\u59CBdescription\uFF0C\u4E0D\u9644\u73B0\u884C\u5361\u6216\u6574\u5361\u5176\u4ED6\u5B57\u6BB5\uFF1B\u4EE5profile / changes / guidance\u4E09\u6807\u7B7E\u4EA4\u4ED8\u3002\u8FD0\u884C\u53C2\u6570\u548C\u5206\u6790\u8FDE\u63A5\u4E0D\u53D8\u3002", EVOLUTION_DOCUMENT_INSTRUCTIONS, EVOLUTION_INPUT_TEMPLATE),
     entry("evolution-guidance-repair", "\u89D2\u8272\u6F14\u53D8 \xB7 \u5019\u9009\u6307\u5BFC\u8BCD\u4FEE\u590D", "\u5B8C\u6574\u7CFB\u7EDF\u6A21\u677F", "\u5019\u9009\u6863\u6848\u5DF2\u5B8C\u6210\u65F6\uFF0C\u4EC5\u8865\u751F\u6210guidance\uFF0C\u4E0D\u91CD\u590D\u5206\u6790\u539F\u5267\u60C5\u3002", EVOLUTION_GUIDANCE_REPAIR_INSTRUCTIONS, GUIDANCE_REPAIR_INPUT_TEMPLATE)
   ];
 }
@@ -59247,11 +59345,8 @@ var init_storyMemoryPromptCatalogue = __esm({
     init_storyTimetraceData();
     init_characterEvolutionDocuments();
     init_storyMemoryPrompts();
-    EVOLUTION_INPUT_TEMPLATE = `[\u51BB\u7ED3\u521D\u59CB\u53C2\u8003\u5361\uFF1B{{\u91C7\u96C6\u6765\u6E90\u8BF4\u660E}}]
-{{\u51BB\u7ED3\u53C2\u8003\u5361}}
-
-[\u5B8C\u6574\u73B0\u884C\u89D2\u8272\u5361]
-{{\u5B8C\u6574\u5F53\u524D\u5361\uFF1B\u76F8\u540C\u5219\u8BF4\u660E\u6CBF\u7528\u4E0A\u65B9}}
+    EVOLUTION_INPUT_TEMPLATE = `[\u51BB\u7ED3\u521D\u59CBdescription\uFF1B{{\u91C7\u96C6\u6765\u6E90\u8BF4\u660E}}]
+{{\u4EC5\u9996\u6B21\u4FDD\u5B58\u7684\u539F\u59CBdescription\uFF1B\u4E0D\u5C55\u5F00\u5B8F\uFF0C\u4E0D\u53D1\u9001\u6574\u5361\u5907\u4EFD\u6216\u73B0\u884C\u5361}}
 
 [\u5F53\u524D\u6F14\u53D8\u6863\u6848\uFF1B\u5DF2\u6709\u5224\u65AD\u4E0D\u662F\u65B0\u7684\u4E8B\u5B9E\u8BC1\u636E]
 {{\u6B63\u5F0F\u4EBA\u7269\u6863\u6848\u6216\u53EF\u590D\u6838\u7684\u65E7\u72B6\u6001}}
@@ -60039,6 +60134,92 @@ var init_characterEvolutionJourney = __esm({
   }
 });
 
+// src/ui/characterEvolutionReading.js
+function inline(text7) {
+  const raw = String(text7), parts = [];
+  let offset = 0;
+  for (const token2 of raw.matchAll(/`([^`]+)`|\*\*([^*]+)\*\*|__([^_]+)__/g)) {
+    parts.push(escapeHtml(raw.slice(offset, token2.index)));
+    parts.push(token2[1] !== void 0 ? `<code>${escapeHtml(token2[1])}</code>` : `<strong>${escapeHtml(token2[2] ?? token2[3])}</strong>`);
+    offset = token2.index + token2[0].length;
+  }
+  parts.push(escapeHtml(raw.slice(offset)));
+  return parts.join("");
+}
+function renderEvolutionReading(value, empty = "\u5C1A\u65E0\u5185\u5BB9\u3002") {
+  const raw = typeof value === "string" ? value : value == null ? "" : String(value);
+  if (!raw.trim()) return `<div class="t-evolution-reading-empty"><span aria-hidden="true">\u25C7</span><p>${escapeHtml(empty)}</p></div>`;
+  const sections = [{ title: "", blocks: [] }];
+  let section2 = sections[0], paragraph = [], list = [], listType = "", code = null;
+  const flushParagraph = () => {
+    if (paragraph.length) section2.blocks.push(`<p>${paragraph.map(inline).join("<br>")}</p>`);
+    paragraph = [];
+  };
+  const flushList = () => {
+    if (list.length) section2.blocks.push(`<${listType}>${list.map((item2) => `<li${item2.number ? ` value="${item2.number}"` : ""}>${inline(item2.text)}</li>`).join("")}</${listType}>`);
+    list = [];
+    listType = "";
+  };
+  const flushCode = () => {
+    if (code !== null) section2.blocks.push(`<pre class="t-evolution-reading-code"><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+    code = null;
+  };
+  for (const line of raw.replace(/\r\n?/g, "\n").split("\n")) {
+    const trimmed3 = line.trim();
+    if (code !== null) {
+      if (/^```\s*$/.test(trimmed3)) flushCode();
+      else code.push(line);
+      continue;
+    }
+    if (/^```[\w-]*\s*$/.test(trimmed3)) {
+      flushParagraph();
+      flushList();
+      code = [];
+      continue;
+    }
+    if (!trimmed3) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+    const markdown = trimmed3.match(/^#{1,6}\s+(.+?)(?:\s+#+)?$/);
+    const chinese = trimmed3.length <= 48 && !/[。！？；]$/.test(trimmed3) && trimmed3.match(/^[一二三四五六七八九十]+[、．.]\s*(.+)$/);
+    const boldHeading = trimmed3.length <= 80 && trimmed3.match(/^\*\*([^*]+)\*\*[:：]?$/);
+    const colonHeading = trimmed3.length <= 28 && /[:：]$/.test(trimmed3) && !/^[-*•\d]/.test(trimmed3) ? trimmed3 : null;
+    const title = markdown?.[1] || (chinese ? trimmed3 : "") || boldHeading?.[1] || colonHeading;
+    if (title) {
+      flushParagraph();
+      flushList();
+      if (!section2.title && !section2.blocks.length) section2.title = title;
+      else {
+        section2 = { title, blocks: [] };
+        sections.push(section2);
+      }
+      continue;
+    }
+    const bullet = trimmed3.match(/^[-*•]\s+(.+)$/), numbered = trimmed3.match(/^(\d{1,4})(?:[.)]\s+|、\s*)(.+)$/);
+    if (bullet || numbered) {
+      flushParagraph();
+      const type = bullet ? "ul" : "ol";
+      if (listType && listType !== type) flushList();
+      listType = type;
+      list.push({ text: bullet ? bullet[1] : numbered[2], number: numbered?.[1] || "" });
+      continue;
+    }
+    flushList();
+    paragraph.push(line);
+  }
+  flushParagraph();
+  flushList();
+  flushCode();
+  return `<div class="t-evolution-reading">${sections.map((item2) => `<section class="t-evolution-reading-section">${item2.title ? `<h4>${inline(item2.title)}</h4>` : ""}${item2.blocks.join("")}</section>`).join("")}</div>`;
+}
+var init_characterEvolutionReading = __esm({
+  "src/ui/characterEvolutionReading.js"() {
+    init_helpers();
+  }
+});
+
 // src/ui/characterEvolutionDocumentView.js
 function analysisText2(report3) {
   if (!report3) return "";
@@ -60057,13 +60238,18 @@ function legacyItemHtml(item2) {
 function batchesHtml(batches) {
   return [...batches].reverse().map((batch) => {
     const report3 = analysisText2(batch.analysis);
-    if (batch.protocol === "tagged") return `<details class="t-evolution-details" data-evolution-detail="batch:${escapeHtml(batch.id)}">
-            <summary>${escapeHtml(range(batch.start, batch.end))} \xB7 \u6B63\u5F0F\u5206\u6790\u7248\u672C</summary>
-            ${report3 ? `<p class="t-memory-hint">${escapeHtml(report3)}</p>` : ""}
-            <section class="t-evolution-document-change"><h4>\u672C\u6B21\u53D8\u66F4\u6587\u5B57</h4>${source(batch.changeText || "\u672C\u6279\u672A\u8BB0\u5F55\u53D8\u66F4\u6587\u5B57\u3002")}</section>
-            <details class="t-evolution-details" data-evolution-detail="before:${escapeHtml(batch.id)}"><summary>\u53D8\u5316\u524D \xB7 \u5B8C\u6574\u6B63\u5F0F\u7248\u672C</summary>${documentHtml(batch.documentBefore)}</details>
-            <details class="t-evolution-details" data-evolution-detail="after:${escapeHtml(batch.id)}"><summary>\u53D8\u5316\u540E \xB7 \u5F53\u65F6\u7684\u5B8C\u6574\u6B63\u5F0F\u7248\u672C</summary>${documentHtml(batch.documentAfter, "\u672A\u8BB0\u5F55\u53D8\u5316\u540E\u7248\u672C\u3002")}</details>
-        </details>`;
+    if (batch.protocol === "tagged") {
+      const before = batch.documentBefore, after = batch.documentAfter;
+      const unchanged = before && after && before.profile === after.profile;
+      const label = !before ? "\u9996\u6B21\u5EFA\u6863" : unchanged && before.guidance !== after.guidance ? "\u4EBA\u7269\u672A\u53D8 \xB7 \u6307\u5BFC\u66F4\u65B0" : unchanged ? "\u672C\u8F6E\u65E0\u53D8\u5316" : "\u4EBA\u7269\u72B6\u6001\u66F4\u65B0";
+      return `<details class="t-evolution-details t-evolution-batch-entry" data-evolution-detail="batch:${escapeHtml(batch.id)}">
+                <summary><span>${escapeHtml(range(batch.start, batch.end))}</span><span class="t-memory-badge">${label}</span></summary>
+                ${report3 ? `<p class="t-memory-hint">${escapeHtml(report3)}</p>` : ""}
+                <section class="t-evolution-document-change"><h4>\u672C\u6B21\u53D8\u66F4</h4>${source(batch.changeText || "\u672C\u6279\u672A\u8BB0\u5F55\u53D8\u66F4\u6587\u5B57\u3002")}</section>
+                <details class="t-evolution-details" data-evolution-detail="before:${escapeHtml(batch.id)}"><summary>\u53D8\u5316\u524D \xB7 \u5B8C\u6574\u6B63\u5F0F\u7248\u672C</summary>${documentHtml(before)}</details>
+                <details class="t-evolution-details" data-evolution-detail="after:${escapeHtml(batch.id)}"><summary>\u53D8\u5316\u540E \xB7 \u5F53\u65F6\u7684\u5B8C\u6574\u6B63\u5F0F\u7248\u672C</summary>${documentHtml(after, "\u672A\u8BB0\u5F55\u53D8\u5316\u540E\u7248\u672C\u3002")}</details>
+            </details>`;
+    }
     return `<details class="t-evolution-details" data-evolution-detail="batch:${escapeHtml(batch.id)}"><summary>${escapeHtml(range(batch.start, batch.end))} \xB7 \u65E7\u534F\u8BAE\u5206\u6790\u5386\u53F2\uFF08\u53EA\u8BFB\uFF0C\u4E0D\u6CE8\u5165\uFF09</summary>
             ${report3 ? `<p class="t-memory-hint">${escapeHtml(report3)}</p>` : ""}
             ${(batch.changes || []).map((change) => `<section class="t-evolution-document-change"><h4>${escapeHtml(change.after?.title || change.before?.title || "\u72B6\u6001\u53D8\u5316")}</h4><p class="t-memory-hint">\u53D8\u5316\u524D</p>${legacyItemHtml(change.before)}<p class="t-memory-hint">\u53D8\u5316\u540E</p>${legacyItemHtml(change.after)}${source(change.reason)}${(change.evidence || []).map((evidence2) => `<p class="t-memory-hint">${escapeHtml(range(evidence2.floor))}</p>${source(evidence2.quote)}`).join("")}</section>`).join("") || '<p class="t-memory-hint">\u672C\u6279\u6CA1\u6709\u6761\u76EE\u53D8\u5316\u3002</p>'}
@@ -60100,36 +60286,41 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
                 <div class="t-evolution-settings-link"><div><p class="t-memory-hint">\u5173\u95ED\u6307\u5BFC\u6CE8\u5165\u4E0D\u505C\u6B62\u5206\u6790\uFF1B\u6682\u505C\u5206\u6790\u4ECD\u4FDD\u7559\u6B63\u5F0F\u6307\u5BFC\u8BCD\u3002\u5206\u6790\u53C2\u6570\u7EDF\u4E00\u5728\u8FD0\u884C\u8BBE\u7F6E\u4E2D\u8C03\u6574\u3002</p><p class="t-memory-hint" data-evolution-role="connection"></p></div></div>
             </details>
             <p class="t-evolution-candidate-notice" data-evolution-role="candidate-notice" role="status" hidden></p>
+            <nav class="t-evolution-document-nav" role="tablist" aria-label="\u6F14\u53D8\u6863\u6848\u9605\u8BFB\u65B9\u5F0F">
+                <button type="button" class="t-evolution-document-tab" data-evolution-action="read-tab" data-evolution-panel="profile" id="${prefix}-profile-tab" role="tab" aria-selected="true" aria-controls="${prefix}-profile-panel">\u4EBA\u7269\u6863\u6848</button>
+                <button type="button" class="t-evolution-document-tab" data-evolution-action="read-tab" data-evolution-panel="guidance" id="${prefix}-guidance-tab" role="tab" aria-selected="false" aria-controls="${prefix}-guidance-panel" tabindex="-1">\u6F14\u7ECE\u6307\u5BFC<span class="t-evolution-draft-indicator" data-evolution-role="draft-indicator" hidden> \xB7 \u8349\u7A3F</span></button>
+                <button type="button" class="t-evolution-document-tab" data-evolution-action="read-tab" data-evolution-panel="history" id="${prefix}-history-tab" role="tab" aria-selected="false" aria-controls="${prefix}-history-panel" tabindex="-1">\u7248\u672C\u8F68\u8FF9</button>
+            </nav>
             <div class="t-evolution-document-stack">
-                <section class="t-evolution-document-card" aria-labelledby="${prefix}-profile">
-                    <header class="t-evolution-document-heading"><div><p class="t-evolution-caption">\u5F53\u524D\u6B63\u5F0F\u7248\u672C</p><h3 id="${prefix}-profile">\u5B8C\u6574\u4EBA\u7269\u6863\u6848</h3></div><span data-evolution-role="character"></span></header>
-                    <p class="t-memory-hint" data-evolution-role="document-meta"></p>
-                    <pre class="t-evolution-document-text" data-evolution-role="profile" tabindex="0" aria-label="\u5B8C\u6574\u5F53\u524D\u4EBA\u7269\u6863\u6848"></pre>
+                <section class="t-evolution-document-card t-evolution-dossier-card" id="${prefix}-profile-panel" data-evolution-role="profile-panel" role="tabpanel" aria-labelledby="${prefix}-profile-tab" tabindex="0">
+                    <header class="t-evolution-document-heading"><div><p class="t-evolution-caption">\u89D2\u8272\u73B0\u5728\u662F\u4EC0\u4E48\u6837</p><h3>\u4EBA\u7269\u6863\u6848</h3></div><span class="t-memory-badge" data-evolution-role="character"></span></header>
+                    <p class="t-memory-hint t-evolution-document-meta" data-evolution-role="document-meta"></p>
+                    <div class="t-evolution-readable" data-evolution-role="profile" aria-label="\u5B8C\u6574\u5F53\u524D\u4EBA\u7269\u6863\u6848"></div>
+                    <details class="t-evolution-details t-evolution-version-details" data-evolution-detail="version"><summary>\u7248\u672C\u7F16\u53F7 \xB7 \u6280\u672F\u4FE1\u606F</summary><dl class="t-evolution-version-list"><div><dt>\u6B63\u5F0F\u7248\u672C</dt><dd data-evolution-role="version-id"></dd></div><div><dt>\u6863\u6848\u7248\u672C</dt><dd data-evolution-role="profile-version-id"></dd></div></dl></details>
                 </section>
-                <section class="t-evolution-document-card" aria-labelledby="${prefix}-guidance">
-                    <header class="t-evolution-document-heading"><h3 id="${prefix}-guidance">\u6B63\u5F0F\u626E\u6F14\u6307\u5BFC\u8BCD</h3>${button2("edit-guidance", "\u7F16\u8F91\u6307\u5BFC\u8BCD")}</header>
+                <section class="t-evolution-document-card t-evolution-guidance-card" id="${prefix}-guidance-panel" data-evolution-role="guidance-panel" role="tabpanel" aria-labelledby="${prefix}-guidance-tab" tabindex="0" hidden>
+                    <header class="t-evolution-document-heading"><div><p class="t-evolution-caption">\u6B63\u6587\u5E94\u5F53\u600E\u6837\u6F14\u7ECE</p><h3>\u6B63\u5F0F\u6F14\u7ECE\u6307\u5BFC</h3></div>${button2("edit-guidance", "\u7F16\u8F91\u6307\u5BFC\u8BCD")}</header>
                     <p class="t-memory-hint" data-evolution-role="guidance-note"></p>
-                    <pre class="t-evolution-document-text" data-evolution-role="guidance" tabindex="0" aria-label="\u5B8C\u6574\u6B63\u5F0F\u6307\u5BFC\u8BCD"></pre>
+                    <div class="t-evolution-readable" data-evolution-role="guidance" aria-label="\u5B8C\u6574\u6B63\u5F0F\u6307\u5BFC\u8BCD"></div>
                     <div class="t-evolution-editor-host" data-evolution-role="editor"></div>
+                    <details class="t-evolution-details t-evolution-injection-preview" data-evolution-detail="preview"><summary>\u5B9E\u9645\u6CE8\u5165\u539F\u6587 <span class="t-memory-badge" data-evolution-role="guidance-state"></span></summary><pre class="t-evolution-raw-text" data-evolution-role="preview" tabindex="0" aria-label="\u672C\u8F6E\u5B9E\u9645\u6CE8\u5165\u539F\u6587"></pre><p class="t-memory-hint" data-evolution-role="budget"></p><p class="t-memory-hint" data-evolution-role="omitted"></p></details>
                 </section>
-                <section class="t-evolution-document-card" aria-labelledby="${prefix}-preview">
-                    <header class="t-evolution-document-heading"><h3 id="${prefix}-preview">\u672C\u8F6E\u5B9E\u9645\u6CE8\u5165\u9884\u89C8</h3><span class="t-memory-badge" data-evolution-role="guidance-state"></span></header>
-                    <pre class="t-evolution-document-text" data-evolution-role="preview" tabindex="0" aria-label="\u672C\u8F6E\u5B9E\u9645\u6CE8\u5165\u6B63\u6587"></pre>
-                    <p class="t-memory-hint" data-evolution-role="budget"></p><p class="t-memory-hint" data-evolution-role="omitted"></p>
+                <section class="t-evolution-document-card t-evolution-history-card" id="${prefix}-history-panel" data-evolution-role="history-panel" role="tabpanel" aria-labelledby="${prefix}-history-tab" tabindex="0" hidden>
+                    <header class="t-evolution-document-heading"><div><p class="t-evolution-caption">\u53D8\u5316\u4E0E\u7248\u672C\u5206\u522B\u7559\u75D5</p><h3>\u7248\u672C\u8F68\u8FF9</h3></div></header><p class="t-memory-hint">\u4EBA\u7269\u53D8\u5316\u3001\u6F14\u7ECE\u6307\u5BFC\u66F4\u65B0\u4E0E\u4EBA\u5DE5\u4FEE\u8BA2\u5206\u5F00\u9605\u8BFB\uFF1B\u65E0\u53D8\u5316\u6279\u6B21\u4E5F\u4FDD\u7559\u8303\u56F4\u8BB0\u5F55\u3002</p>
+                    <div class="t-evolution-batch-list" data-evolution-role="batches"></div>
+                    <details class="t-evolution-details" data-evolution-detail="manual-edits"><summary>\u4EBA\u5DE5\u6307\u5BFC\u8BCD\u7F16\u8F91\u8BB0\u5F55</summary><div data-evolution-role="manual-edits"></div></details>
                 </section>
             </div>
             <section class="t-evolution-document-card t-evolution-candidate" data-evolution-role="candidate" aria-labelledby="${prefix}-candidate" hidden>
                 <h3 id="${prefix}-candidate">\u672A\u63D0\u4EA4\u7684\u5206\u6790\u5019\u9009</h3><p class="t-memory-hint" data-evolution-role="candidate-meta"></p>
                 <p class="t-memory-hint">\u5019\u9009\u4E0D\u4F1A\u66FF\u6362\u5F53\u524D\u6863\u6848\u6216\u7528\u4E8E\u6B63\u6587\u6CE8\u5165\u3002\u624B\u52A8\u4FEE\u590D\u53EA\u91CD\u8BD5\u6307\u5BFC\u8BCD\uFF0C\u6210\u529F\u540E\u6863\u6848\u4E0E\u6307\u5BFC\u8BCD\u6210\u5BF9\u63D0\u4EA4\u3002</p>
                 <p class="t-memory-error" data-evolution-role="candidate-analysis"></p>
-                <details class="t-evolution-details" data-evolution-detail="candidate-profile"><summary>\u5019\u9009\u4EBA\u7269\u6863\u6848\uFF08\u672A\u63D0\u4EA4\uFF09</summary><pre class="t-evolution-document-text" data-evolution-role="candidate-profile"></pre></details>
-                <details class="t-evolution-details" data-evolution-detail="candidate-changes"><summary>\u5019\u9009\u53D8\u66F4\u6587\u5B57\uFF08\u672A\u63D0\u4EA4\uFF09</summary><pre class="t-evolution-document-text" data-evolution-role="candidate-changes"></pre></details>
+                <details class="t-evolution-details" data-evolution-detail="candidate-profile"><summary>\u5019\u9009\u4EBA\u7269\u6863\u6848\uFF08\u672A\u63D0\u4EA4\uFF09</summary><div class="t-evolution-readable" data-evolution-role="candidate-profile"></div></details>
+                <details class="t-evolution-details" data-evolution-detail="candidate-changes"><summary>\u5019\u9009\u53D8\u66F4\u6587\u5B57\uFF08\u672A\u63D0\u4EA4\uFF09</summary><div class="t-evolution-readable" data-evolution-role="candidate-changes"></div></details>
                 <div class="t-memory-card-actions">${button2("repair", "\u4FEE\u590D\u6307\u5BFC\u8BCD\u5E76\u63D0\u4EA4")}${button2("discard-candidate", "\u653E\u5F03\u5019\u9009")}</div>
             </section>
             <div class="t-evolution-tools">
-                <details class="t-evolution-details" data-evolution-detail="history"><summary>\u5B8C\u6574\u5206\u6790\u5386\u53F2 \xB7 \u53D8\u66F4\u4E0E\u524D\u540E\u7248\u672C</summary><div data-evolution-role="batches"></div></details>
-                <details class="t-evolution-details" data-evolution-detail="manual-edits"><summary>\u4EBA\u5DE5\u6307\u5BFC\u8BCD\u7F16\u8F91\u8BB0\u5F55</summary><div data-evolution-role="manual-edits"></div></details>
-                <details class="t-evolution-details" data-evolution-detail="baseline"><summary>\u5EFA\u6863\u53C2\u8003\u8D44\u6599 \xB7 \u53EA\u8BFB</summary><pre class="t-evolution-document-text" data-evolution-role="baseline"></pre></details>
+                <details class="t-evolution-details" data-evolution-detail="baseline"><summary>\u51BB\u7ED3\u521D\u59CB description \xB7 \u53EA\u8BFB</summary><pre class="t-evolution-raw-text" data-evolution-role="baseline"></pre></details>
                 <details class="t-evolution-details" data-evolution-detail="compatibility" hidden><summary>\u65E7\u72B6\u6001\u6761\u76EE \xB7 \u53EA\u8BFB\u517C\u5BB9\u5386\u53F2\uFF08\u65B0\u6B63\u5F0F\u6863\u6848\u5EFA\u7ACB\u540E\u4E0D\u518D\u5355\u72EC\u6CE8\u5165\uFF09</summary><p class="t-memory-hint">\u4FDD\u7559\u65E7\u6570\u636E\u4F9B\u6838\u5BF9\uFF0C\u4E0D\u518D\u586B\u5199\u6216\u7F16\u8F91\u591A\u5B57\u6BB5\u72B6\u6001\u6761\u76EE\u3002</p><div data-evolution-role="compatibility"></div></details>
             </div>
             <footer class="t-evolution-workspace-footer"><span>\u65B0\u6B63\u5F0F\u7248\u672C\u5EFA\u7ACB\u540E\uFF0C\u4EC5\u6B63\u5F0F\u6307\u5BFC\u8BCD\u7528\u4E8E\u540E\u7EED\u626E\u6F14</span><span>\u5386\u53F2\u7248\u672C\u53EA\u4F9B\u56DE\u770B\uFF0C\u4E0D\u81EA\u52A8\u6062\u590D\u6216\u6CE8\u5165</span></footer>
@@ -60137,6 +60328,7 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
   container.appendChild(root);
   const role = (name) => root.querySelector(`[data-evolution-role="${name}"]`);
   let contextKey = null, identity4 = null, draft2 = null, operation = null, localError = "", disposed = false;
+  let readPanel = "profile", historyLimit = 20;
   const lastHtml = /* @__PURE__ */ new Map();
   const supported = (view) => view.available && !!view.contextKey;
   const sameChat4 = (expected, expectedIdentity) => !disposed && root.isConnected && expected === getEvolutionView().contextKey && sameIdentity(expectedIdentity, getStoryMemoryContextIdentity());
@@ -60185,10 +60377,14 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
       draft2 = null;
       operation = null;
       localError = "";
+      readPanel = "profile";
+      historyLimit = 20;
       role("editor").replaceChildren();
+      role("batches").replaceChildren();
+      role("manual-edits").replaceChildren();
       lastHtml.clear();
       root.querySelectorAll("details").forEach((detail) => {
-        detail.open = detail.dataset.evolutionDetail === "operations";
+        detail.open = detail.dataset.evolutionDetail === "operations" && !view.document;
       });
       contextKey = view.contextKey;
       identity4 = nextIdentity2;
@@ -60208,10 +60404,20 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
       input.checked = available && (name === "guidanceEnabled" ? view.guidanceEnabled !== false : !!view[name]);
       input.disabled = !available || saving || writing4 || name === "auto" && !view.enabled;
     }
+    for (const panel of ["profile", "guidance", "history"]) {
+      const active4 = readPanel === panel;
+      role(`${panel}-panel`).hidden = !active4;
+      const tab = root.querySelector(`[data-evolution-panel="${panel}"]`);
+      tab.setAttribute("aria-selected", String(active4));
+      tab.tabIndex = active4 ? 0 : -1;
+    }
+    role("draft-indicator").hidden = !draft2;
     role("character").textContent = available ? view.characterName || "\u5F53\u524D\u89D2\u8272" : "";
-    role("document-meta").textContent = document2 ? `\u6B63\u5F0F\u7248\u672C ${document2.versionId || "\u672A\u8BB0\u5F55"} \xB7 \u6863\u6848\u7248\u672C ${document2.profileVersionId || "\u672A\u8BB0\u5F55"} \xB7 \u89C2\u5BDF\u622A\u81F3${range(document2.updatedThrough)} \xB7 ${dateText(document2.updatedAt)}` : available ? "\u5C1A\u65E0\u6B63\u5F0F\u7248\u672C\uFF1B\u5B8C\u6210\u6863\u6848\u5206\u6790\u4E0E\u6307\u5BFC\u8BCD\u751F\u6210\u540E\u624D\u4F1A\u6210\u5BF9\u63D0\u4EA4\u3002" : "";
-    role("profile").textContent = document2?.profile || (legacyGuidance ? "\u5C1A\u65E0\u65B0\u6B63\u5F0F\u4EBA\u7269\u6863\u6848\uFF1B\u5DF2\u4FDD\u7559\u65E7\u6863\uFF0C\u4E0B\u6B21\u6210\u529F\u5206\u6790\u540E\u5C06\u8F6C\u6362\u4E3A\u5B8C\u6574\u81EA\u7136\u8BED\u8A00\u6863\u6848\u3002" : available ? "\u5C1A\u65E0\u6B63\u5F0F\u4EBA\u7269\u6863\u6848\u3002" : "");
-    role("guidance").textContent = document2?.guidance || (legacyGuidance ? "\u5C1A\u65E0\u65B0\u6B63\u5F0F\u6307\u5BFC\u8BCD\uFF1B\u5DF2\u4FDD\u7559\u65E7\u7248\u517C\u5BB9\u6307\u5BFC\uFF0C\u5F85\u4E0B\u6B21\u6210\u529F\u5206\u6790\u5347\u7EA7\u3002" : available ? "\u5C1A\u65E0\u6B63\u5F0F\u6307\u5BFC\u8BCD\u3002" : "");
+    role("document-meta").textContent = document2 ? `\u5DF2\u786E\u8BA4\u6863\u6848 \xB7 \u89C2\u5BDF\u622A\u81F3${range(document2.updatedThrough)} \xB7 ${dateText(document2.updatedAt)}` : available ? "\u5C1A\u672A\u5EFA\u6863\uFF1B\u5B8C\u6210\u4E00\u6B21\u5206\u6790\u540E\uFF0C\u4EBA\u7269\u72B6\u6001\u4E0E\u6F14\u7ECE\u6307\u5BFC\u6210\u5BF9\u4FDD\u5B58\u3002" : "";
+    role("version-id").textContent = document2?.versionId || "\u5C1A\u65E0\u6B63\u5F0F\u7248\u672C";
+    role("profile-version-id").textContent = document2?.profileVersionId || "\u5C1A\u65E0\u6863\u6848\u7248\u672C";
+    replaceReading("profile", available ? renderEvolutionReading(document2?.profile, legacyGuidance ? "\u65E7\u6863\u5DF2\u4FDD\u7559\uFF1B\u4E0B\u4E00\u6B21\u6210\u529F\u5206\u6790\u540E\uFF0C\u5C06\u5728\u8FD9\u91CC\u5C55\u793A\u4EBA\u7269\u7684\u5F53\u524D\u72B6\u6001\u3002" : "\u5C1A\u65E0\u6B63\u5F0F\u4EBA\u7269\u6863\u6848\u3002\u8BF7\u5148\u5728\u300C\u5206\u6790\u4E0E\u8FD0\u884C\u300D\u4E2D\u542F\u7528\u5E76\u5B8C\u6210\u4E00\u6B21\u5206\u6790\u3002") : "");
+    replaceReading("guidance", available ? renderEvolutionReading(document2?.guidance, legacyGuidance ? "\u65E7\u7248\u517C\u5BB9\u6307\u5BFC\u4ECD\u4FDD\u7559\uFF0C\u4E0B\u4E00\u6B21\u6210\u529F\u5206\u6790\u540E\u5347\u7EA7\u4E3A\u72EC\u7ACB\u6F14\u7ECE\u6307\u5BFC\u3002" : "\u5C1A\u65E0\u6B63\u5F0F\u6F14\u7ECE\u6307\u5BFC\u3002\u5B8C\u6210\u5206\u6790\u540E\uFF0C\u8FD9\u91CC\u5C06\u5C55\u793A\u6B63\u6587\u5E94\u600E\u6837\u8868\u8FBE\u3001\u9009\u62E9\u548C\u56DE\u5E94\u3002") : "");
     role("guidance-note").textContent = available ? `${document2 ? document2.manualGuidance ? "\u672C\u6307\u5BFC\u8BCD\u542B\u4EBA\u5DE5\u4FEE\u8BA2\uFF0C\u4EBA\u7269\u6863\u6848\u672A\u56E0\u6B64\u6539\u53D8\u3002" : "\u7531\u6B63\u5F0F\u4EBA\u7269\u6863\u6848\u751F\u6210\uFF1B\u5B8C\u6574\u539F\u6587\u4FDD\u5B58\u5728\u5F53\u524D\u804A\u5929\u3002" : legacyGuidance ? "\u9996\u4E2A\u65B0\u6B63\u5F0F\u7248\u672C\u5EFA\u7ACB\u524D\uFF0C\u65E7\u7248\u6709\u6548\u6761\u76EE\u4ECD\u6309\u539F\u89C4\u5219\u63D0\u4F9B\u517C\u5BB9\u6307\u5BFC\u3002" : "\u5B8C\u6210\u6863\u6848\u5206\u6790\u4E0E\u6307\u5BFC\u8BCD\u751F\u6210\u540E\u624D\u4F1A\u6210\u5BF9\u63D0\u4EA4\u3002"}${view.guidanceEnabled === false ? "\u6307\u5BFC\u6CE8\u5165\u5DF2\u5173\u95ED\uFF0C\u540E\u53F0\u5206\u6790\u7167\u5E38\u8FDB\u884C\u3002" : ""}` : "";
     const injection = available ? view.injection || {} : {};
     const omitted = Array.isArray(injection.omitted) ? injection.omitted.length > 0 : !!injection.omitted;
@@ -60225,8 +60431,8 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
     role("candidate-notice").textContent = candidate ? `\u6709\u672A\u63D0\u4EA4\u5019\u9009\uFF08${range(candidate.start, candidate.end)}\uFF09\u3002${document2 ? "\u5F53\u524D\u6863\u6848\u3001\u6B63\u5F0F\u6307\u5BFC\u8BCD\u548C\u6B63\u6587\u6CE8\u5165\u4ECD\u4F7F\u7528\u65E7\u6B63\u5F0F\u7248\u672C\u3002" : "\u5C1A\u65E0\u6B63\u5F0F\u7248\u672C\uFF0C\u5019\u9009\u4E0D\u4F1A\u7528\u4E8E\u6B63\u6587\u6CE8\u5165\u3002"}\u8BF7\u624B\u52A8\u4FEE\u590D\u6307\u5BFC\u8BCD\u6216\u786E\u8BA4\u540E\u653E\u5F03\u3002` : "";
     role("candidate").hidden = !candidate;
     role("candidate-meta").textContent = candidate ? `\u89C2\u5BDF\u8303\u56F4\uFF1A${range(candidate.start, candidate.end)} \xB7 \u672A\u63D0\u4EA4` : "";
-    role("candidate-profile").textContent = candidate?.profile || "";
-    role("candidate-changes").textContent = candidate?.changes || "";
+    replaceReading("candidate-profile", candidate ? renderEvolutionReading(candidate.profile) : "");
+    replaceReading("candidate-changes", candidate ? renderEvolutionReading(candidate.changes) : "");
     role("candidate-analysis").textContent = candidate ? analysisText2(candidate.analysis) : "";
     role("candidate-analysis").hidden = !role("candidate-analysis").textContent;
     role("connection").textContent = available ? `\u65B9\u6848\uFF1A${view.config?.profile_id || "\u8DDF\u968F\u6545\u4E8B\u8BB0\u5FC6\u5F53\u524D\u8FDE\u63A5"} \xB7 \u6A21\u578B\uFF1A${view.config?.model_override || "\u4F7F\u7528\u65B9\u6848\u5F53\u524D\u6A21\u578B"}` : "";
@@ -60238,12 +60444,16 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
       candidate ? "\u5019\u9009\u5C1A\u672A\u63D0\u4EA4" : ""
     ].filter(Boolean).join(" \xB7 ") : "";
     role("run-summary").textContent = available ? `${view.enabled ? view.auto ? "\u81EA\u52A8\u5206\u6790\u5DF2\u5F00\u542F" : "\u81EA\u52A8\u5206\u6790\u5DF2\u6682\u505C" : "\u529F\u80FD\u672A\u542F\u7528"}${candidate ? " \xB7 \u7B49\u5F85\u4FEE\u590D\u5019\u9009" : ""}` : "";
-    replaceReading("batches", available ? batchesHtml(view.batches || []) : "");
-    replaceReading("manual-edits", available ? manualEditsHtml(view.manualEdits || []) : "");
+    if (!available || readPanel === "history") {
+      const batches = view.batches || [];
+      replaceReading("batches", available ? batchesHtml(batches.slice(-historyLimit)) + (batches.length > historyLimit ? `<div class="t-memory-card-actions">${button2("history-more", "\u663E\u793A\u66F4\u65E9\u7684\u7248\u672C")}</div>` : "") : "");
+      replaceReading("manual-edits", available ? manualEditsHtml(view.manualEdits || []) : "");
+    }
     const items = available ? view.items || [] : [];
     root.querySelector('[data-evolution-detail="compatibility"]').hidden = !items.length;
     replaceReading("compatibility", items.map((item2) => `<section class="t-evolution-document-change"><h4>${escapeHtml(item2.title || "\u65E7\u72B6\u6001")}</h4>${legacyItemHtml(item2)}</section>`).join(""));
     role("baseline").textContent = available ? archiveText(view.baseline) : "";
+    root.querySelector('[data-evolution-detail="baseline"] summary').textContent = view.baselineFrozen ? "\u51BB\u7ED3\u521D\u59CB description \xB7 \u53EA\u8BFB" : "description \xB7 \u5C1A\u672A\u51BB\u7ED3";
     const states = {
       run: !available || !view.enabled || busy || !!draft2,
       repair: !available || !view.enabled || busy || !!draft2 || !candidate,
@@ -60253,7 +60463,9 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
       "discard-candidate": !available || busy || !!draft2 || !candidate,
       "save-guidance": !available || busy || !draft2,
       cancel: !!operation,
-      settings: !available
+      settings: !available,
+      "read-tab": !available,
+      "history-more": !available
     };
     root.querySelector('[data-evolution-action="run"]').textContent = candidate ? "\u4FEE\u590D\u6307\u5BFC\u8BCD\u5E76\u63D0\u4EA4" : "\u7ACB\u5373\u5206\u6790\u4E00\u6279";
     root.querySelectorAll("[data-evolution-action]").forEach((element2) => {
@@ -60281,6 +60493,7 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
     }
   }
   function openEditor2(view) {
+    readPanel = "guidance";
     draft2 = { contextKey, versionId: view.document.versionId, identity: identity4, text: view.document.guidance };
     role("editor").innerHTML = `<form class="t-memory-editor t-evolution-editor t-evolution-guidance-editor"><label class="t-memory-field" for="${prefix}-draft"><span>\u4EBA\u5DE5\u4FEE\u8BA2\u6B63\u5F0F\u6307\u5BFC\u8BCD</span><textarea class="t-input" id="${prefix}-draft" data-evolution-field="guidance" rows="12" required></textarea></label><p class="t-memory-hint" data-evolution-role="draft-note"></p><div class="t-memory-card-actions">${button2("save-guidance", "\u4FDD\u5B58\u6307\u5BFC\u8BCD")}${button2("cancel", "\u53D6\u6D88")}</div></form>`;
     const input = role("editor").querySelector("textarea");
@@ -60309,6 +60522,18 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
     const expected = contextKey, view = current2(expected);
     if (!view) return;
     const action = target.dataset.evolutionAction;
+    if (action === "read-tab") {
+      if (["profile", "guidance", "history"].includes(target.dataset.evolutionPanel)) {
+        readPanel = target.dataset.evolutionPanel;
+        refresh();
+      }
+      return;
+    }
+    if (action === "history-more") {
+      historyLimit += 20;
+      refresh();
+      return;
+    }
     if (action === "settings") {
       onSettings();
       return;
@@ -60365,7 +60590,17 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
     draft2 = null;
     role("editor").replaceChildren();
   }
+  function onKeyDown(event) {
+    const tab = event.target.closest?.('[data-evolution-action="read-tab"]');
+    if (!tab || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key) || !current2(contextKey)) return;
+    event.preventDefault();
+    const panels = ["profile", "guidance", "history"], index2 = panels.indexOf(readPanel);
+    readPanel = event.key === "Home" ? panels[0] : event.key === "End" ? panels.at(-1) : panels[(index2 + (event.key === "ArrowRight" ? 1 : -1) + panels.length) % panels.length];
+    refresh();
+    root.querySelector(`[data-evolution-panel="${readPanel}"]`)?.focus({ preventScroll: true });
+  }
   const onSubmit = (event) => event.preventDefault();
+  root.addEventListener("keydown", onKeyDown);
   root.addEventListener("input", onInput);
   root.addEventListener("change", onChange);
   root.addEventListener("click", onClick);
@@ -60384,6 +60619,7 @@ function mountCharacterEvolutionDocumentView(container, { onSettings = () => {
       unsubscribe();
       draft2 = null;
       operation = null;
+      root.removeEventListener("keydown", onKeyDown);
       root.removeEventListener("input", onInput);
       root.removeEventListener("change", onChange);
       root.removeEventListener("click", onClick);
@@ -60400,11 +60636,12 @@ var init_characterEvolutionDocumentView = __esm({
     init_storyMemory();
     init_helpers();
     init_dom();
+    init_characterEvolutionReading();
     viewSequence = 0;
     sameIdentity = (a, b) => a === b || !!a && !!b && a.key === b.key && a.chat === b.chat && a.chatMetadata === b.chatMetadata;
     range = (start, end = start) => Number.isInteger(start) && start >= 0 ? `\u7B2C ${start}${Number.isInteger(end) && end >= start && end !== start ? `\uFF5E${end}` : ""} \u697C` : "\u672A\u8BB0\u5F55\u697C\u5C42";
     button2 = (action, label) => `<button type="button" class="t-memory-action" data-evolution-action="${action}">${label}</button>`;
-    source = (value) => `<pre class="t-evolution-document-text">${escapeHtml(value ?? "")}</pre>`;
+    source = (value) => renderEvolutionReading(typeof value === "string" ? value : value == null ? "" : String(value));
     archiveText = (value) => typeof value === "string" ? value : value == null ? "" : JSON.stringify(value, null, 2);
     dateText = (value) => Number.isFinite(value) && value > 0 ? new Date(value).toLocaleString("zh-CN") : "\u672A\u8BB0\u5F55\u65F6\u95F4";
     RUN_STATUS = { idle: "\u7B49\u5F85\u4E0B\u4E00\u6BB5\u5267\u60C5", analysing: "\u6B63\u5728\u540E\u53F0\u5206\u6790\u2026", saving: "\u6B63\u5728\u4FDD\u5B58\u6B63\u5F0F\u7248\u672C\u2026", error: "\u5206\u6790\u6682\u672A\u5B8C\u6210", partial: "\u6307\u5BFC\u8BCD\u5C1A\u672A\u5B8C\u6210\uFF0C\u7B49\u5F85\u624B\u52A8\u4FEE\u590D", normalized: "\u5DF2\u5B8C\u6210 \xB7 \u683C\u5F0F\u5DF2\u89C4\u8303\u5316" };
