@@ -16341,7 +16341,40 @@ textarea.t-input {\r
     text-shadow: none;
     cursor: pointer;
 }
-.t-storyboard-nameplate { flex: 0 0 auto; align-self: flex-start; max-width: 100%; padding: 0; background: transparent; color: var(--t-storyboard-ink); font-size: var(--t-text-body); line-height: var(--t-leading-ui); overflow-wrap: anywhere; }
+/* \u59D3\u540D\u724C\u8DE8\u5728\u4E0A\u8FB9\u7F18\uFF0C\u4E0D\u518D\u4F5C\u4E3A\u6B63\u6587\u5E03\u5C40\u4E2D\u7684\u4E00\u6574\u884C\uFF1B\u65C1\u767D\u4E0D\u663E\u793A\uFF0C\u4E5F\u4E0D\u9884\u7559\u7A7A\u4F4D\u3002 */
+.t-storyboard-dialogue:has(> .t-storyboard-nameplate:not([hidden])) {
+    padding-top: calc(var(--t-gap-stack) + .85em);
+}
+.t-storyboard-nameplate {
+    position: absolute;
+    top: 0;
+    left: var(--t-pad-container);
+    transform: translateY(-55%);
+    display: block;
+    max-width: min(70%, 320px);
+    padding: var(--t-gap-inline) var(--t-gap-section) var(--t-gap-inline) calc(var(--t-gap-section) + var(--t-gap-inline));
+    border: 1px solid color-mix(in srgb, var(--t-storyboard-ink) 14%, transparent);
+    border-radius: var(--t-radius-container);
+    color: var(--t-storyboard-ink);
+    background: color-mix(in srgb, var(--t-storyboard-chrome) 96%, transparent);
+    box-shadow: var(--t-shadow-sm);
+    font-size: var(--t-text-subtitle);
+    font-weight: 700;
+    line-height: var(--t-leading-ui);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.t-storyboard-nameplate::before {
+    content: '';
+    position: absolute;
+    top: var(--t-gap-stack);
+    bottom: var(--t-gap-stack);
+    left: var(--t-gap-stack);
+    width: 3px;
+    border-radius: var(--t-radius-track);
+    background: var(--t-studio-gold);
+}
 .t-storyboard-window .t-storyboard-dialogue:focus-visible { outline-color: var(--t-storyboard-ink); }
 .t-storyboard-dialogue-text {
     flex: 1 1 auto;
@@ -27458,7 +27491,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186574], "04-features/main-window.css": [186618, 231511], "04-features/main-window-legacy.css": [231562, 255428], "04-features/script-picker.css": [255474, 261969], "04-features/wi-selector.css": [262013, 279839], "04-features/continuation.css": [279884, 303753], "04-features/queue.css": [303791, 310351], "04-features/content-editor.css": [310398, 312705], "04-features/illustration.css": [312750, 327865], "04-features/storyboard.css": [327908, 340497], "04-features/settings-drawer.css": [340545, 358779], "04-features/settings.css": [358820, 386113], "04-features/manager.css": [386153, 399451], "04-features/workshop.css": [399492, 422274], "04-features/favs.css": [422311, 462237], "04-features/debug.css": [462275, 479040], "04-features/story-outline.css": [479086, 513392], "04-features/outline-entry-menu.css": [513443, 520196], "04-features/rewrite.css": [520236, 571135], "04-features/reader.css": [571174, 580533], "04-features/chat-book.css": [580575, 587116], "04-features/story-memory.css": [587161, 634448], "04-features/character-evolution.css": [634500, 669174], "04-features/story-memory-notifications.css": [669233, 671382], "04-features/story-timetrace.css": [671430, 685481], "04-features/tts.css": [685517, 711959], "04-features/confirm-dialog.css": [712006, 716004], "04-features/image-cropper.css": [716050, 719908], "04-features/st-embedded.css": [719952, 750456], "04-features/scene-advance.css": [750502, 772587], "04-features/theater-midnight.css": [772636, 797964] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186574], "04-features/main-window.css": [186618, 231511], "04-features/main-window-legacy.css": [231562, 255428], "04-features/script-picker.css": [255474, 261969], "04-features/wi-selector.css": [262013, 279839], "04-features/continuation.css": [279884, 303753], "04-features/queue.css": [303791, 310351], "04-features/content-editor.css": [310398, 312705], "04-features/illustration.css": [312750, 327865], "04-features/storyboard.css": [327908, 341448], "04-features/settings-drawer.css": [341496, 359730], "04-features/settings.css": [359771, 387064], "04-features/manager.css": [387104, 400402], "04-features/workshop.css": [400443, 423225], "04-features/favs.css": [423262, 463188], "04-features/debug.css": [463226, 479991], "04-features/story-outline.css": [480037, 514343], "04-features/outline-entry-menu.css": [514394, 521147], "04-features/rewrite.css": [521187, 572086], "04-features/reader.css": [572125, 581484], "04-features/chat-book.css": [581526, 588067], "04-features/story-memory.css": [588112, 635399], "04-features/character-evolution.css": [635451, 670125], "04-features/story-memory-notifications.css": [670184, 672333], "04-features/story-timetrace.css": [672381, 686432], "04-features/tts.css": [686468, 712910], "04-features/confirm-dialog.css": [712957, 716955], "04-features/image-cropper.css": [717001, 720859], "04-features/st-embedded.css": [720903, 751407], "04-features/scene-advance.css": [751453, 773538], "04-features/theater-midnight.css": [773587, 798915] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -37160,6 +37193,7 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
     typed = 0;
     role("title").textContent = shot?.title || "";
     role("speaker").textContent = page?.kind === "dialogue" ? page.speaker || "" : "";
+    role("speaker").title = role("speaker").textContent;
     role("speaker").hidden = !role("speaker").textContent;
     role("position").textContent = page ? `\u573A\u666F ${page.shotIndex + 1} / ${doc.shots.length} \xB7 ${index2 + 1} / ${pages.length} \u9875` : "";
     role("text").textContent = "";
