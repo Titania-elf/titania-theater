@@ -129,6 +129,8 @@ var init_defaults = __esm({
         bg_opacity: 100,
         animation: "ripple",
         // 动画类型: ripple(脉冲波纹) | arc(电磁闪烁)
+        animation_enabled: true,
+        // 悬浮球动画总开关（生成动画与通知呼吸灯）
         size: 56,
         ui_font_scale: 100,
         ui_theme: "dark",
@@ -3405,11 +3407,11 @@ function getTitaniaEntryKind(entry) {
 function isTitaniaOutputContractEntry(entry) {
   return getTitaniaEntryKind(entry) === "contract";
 }
-function isCanonicalEntry(entry, canonical) {
+function isCanonicalEntry(entry, canonical2) {
   if (!entry || typeof entry !== "object") return false;
-  const keys = Object.keys(canonical);
+  const keys = Object.keys(canonical2);
   if (Object.keys(entry).length !== keys.length) return false;
-  return keys.every((key) => entry[key] === canonical[key]);
+  return keys.every((key) => entry[key] === canonical2[key]);
 }
 function hasCanonicalTitaniaEntries(entries) {
   const seen = /* @__PURE__ */ new Set();
@@ -10669,16 +10671,17 @@ textarea.t-input {\r
 }\r
 \r
 /* ===== \u52A0\u8F7D\u52A8\u753B\u6548\u679C ===== */\r
-/* \u6CE8\uFF1A\u901A\u7528\u52A0\u8F7D\u72B6\u6001\u4FDD\u6301\u53EF\u4EA4\u4E92\u4EE5\u652F\u6301\u4FA7\u8FB9\u83DC\u5355\uFF08\u65E0\u9700\u989D\u5916\u6837\u5F0F\uFF09 */\r
+/* \u6CE8\uFF1A\u901A\u7528\u52A0\u8F7D\u72B6\u6001\u4FDD\u6301\u53EF\u4EA4\u4E92\u4EE5\u652F\u6301\u4FA7\u8FB9\u83DC\u5355\uFF08\u65E0\u9700\u989D\u5916\u6837\u5F0F\uFF09\u3002\r
+   \u52A8\u753B\u5F00\u5173\u7528 :where \u9650\u5B9A\uFF0C\u4E0D\u63D0\u9AD8\u9009\u62E9\u5668\u4F18\u5148\u7EA7\uFF0C\u907F\u514D\u76D6\u8FC7\u4E0B\u65B9\u7684\u4E3B\u9898\u914D\u8272\u3002 */\r
 \r
 /* ===== \u52A8\u753B 1: \u8109\u51B2\u6CE2\u7EB9 (Pulse Ripple) ===== */\r
 \r
-#titania-float-btn.t-loading.t-anim-ripple {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-ripple {\r
     border-color: var(--t-border-color-rgba, var(--t-border-color, var(--t-color-accent)));\r
 }\r
 \r
-#titania-float-btn.t-loading.t-anim-ripple::before,\r
-#titania-float-btn.t-loading.t-anim-ripple::after {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-ripple::before,\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-ripple::after {\r
     content: "";\r
     position: absolute;\r
     width: 100%;\r
@@ -10689,17 +10692,17 @@ textarea.t-input {\r
     animation: t-ripple-1 1.5s ease-out infinite;\r
 }\r
 \r
-#titania-float-btn.t-loading.t-anim-ripple::after {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-ripple::after {\r
     animation: t-ripple-2 1.5s ease-out 0.5s infinite;\r
 }\r
 \r
 /* ===== \u52A8\u753B 2: \u7535\u78C1\u95EA\u70C1 (Arc Flash) ===== */\r
 \r
-#titania-float-btn.t-loading.t-anim-arc {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-arc {\r
     border-color: var(--t-border-color-rgba, var(--t-border-color, var(--t-color-decor)));\r
 }\r
 \r
-#titania-float-btn.t-loading.t-anim-arc::before {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-arc::before {\r
     content: "";\r
     position: absolute;\r
     width: 120%;\r
@@ -10712,7 +10715,7 @@ textarea.t-input {\r
     opacity: 0.8;\r
 }\r
 \r
-#titania-float-btn.t-loading.t-anim-arc::after {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-arc::after {\r
     content: "";\r
     position: absolute;\r
     width: 130%;\r
@@ -10728,8 +10731,16 @@ textarea.t-input {\r
 /* ===== \u901A\u77E5\u547C\u5438\u706F ===== */\r
 \r
 #titania-float-btn.t-notify {\r
-    animation: t-notify-glow 2s infinite ease-in-out;\r
     border-color: var(--t-border-color-rgba, var(--t-border-color, var(--t-color-notify)));\r
+}\r
+\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-notify {\r
+    animation: t-notify-glow 2s infinite ease-in-out;\r
+}\r
+\r
+/* \u603B\u5F00\u5173\u5173\u95ED\u65F6\u4FDD\u7559\u72B6\u6001\u548C\u9759\u6001\u63D0\u793A\uFF0C\u53EA\u505C\u6B62\u7403\u4F53\u52A8\u6548\u3002 */\r
+#titania-float-btn.t-animation-disabled {\r
+    transition: none;\r
 }\r
 \r
 /* ===== \u8BA1\u65F6\u5668 ===== */\r
@@ -10815,6 +10826,9 @@ textarea.t-input {\r
    animation-name \u5355\u72EC\u8986\u76D6\uFF0C\u65F6\u957F\u4E0E\u7F13\u52A8\u4ECD\u6CBF\u7528\u539F\u7B80\u5199\u3002 */\r
 #titania-float-btn.t-studio-workspace:not([data-float-custom]).t-notify {\r
     border-color: var(--t-studio-gold);\r
+}\r
+\r
+#titania-float-btn.t-studio-workspace:not([data-float-custom]):where(:not(.t-animation-disabled)).t-notify {\r
     animation-name: t-notify-glow-studio;\r
 }\r
 \r
@@ -28243,7 +28257,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186954], "04-features/main-window.css": [186998, 231891], "04-features/main-window-legacy.css": [231942, 255808], "04-features/script-picker.css": [255854, 262349], "04-features/wi-selector.css": [262393, 280219], "04-features/continuation.css": [280264, 304133], "04-features/queue.css": [304171, 310731], "04-features/content-editor.css": [310778, 313085], "04-features/illustration.css": [313130, 336165], "04-features/storyboard.css": [336208, 349630], "04-features/settings-drawer.css": [349678, 367912], "04-features/settings.css": [367953, 395979], "04-features/manager.css": [396019, 409317], "04-features/workshop.css": [409358, 432140], "04-features/favs.css": [432177, 472103], "04-features/debug.css": [472141, 488906], "04-features/story-outline.css": [488952, 523258], "04-features/outline-entry-menu.css": [523309, 530062], "04-features/rewrite.css": [530102, 581001], "04-features/paragraph-editor.css": [581050, 583786], "04-features/reader.css": [583825, 593184], "04-features/chat-book.css": [593226, 599767], "04-features/story-memory.css": [599812, 647099], "04-features/character-evolution.css": [647151, 681825], "04-features/story-memory-notifications.css": [681884, 684033], "04-features/story-timetrace.css": [684081, 698132], "04-features/tts.css": [698168, 734539], "04-features/confirm-dialog.css": [734586, 738584], "04-features/image-cropper.css": [738630, 742488], "04-features/st-embedded.css": [742532, 773036], "04-features/scene-advance.css": [773082, 795167], "04-features/theater-midnight.css": [795216, 820544] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 184248], "04-features/toolbox-settings.css": [184297, 187532], "04-features/main-window.css": [187576, 232469], "04-features/main-window-legacy.css": [232520, 256386], "04-features/script-picker.css": [256432, 262927], "04-features/wi-selector.css": [262971, 280797], "04-features/continuation.css": [280842, 304711], "04-features/queue.css": [304749, 311309], "04-features/content-editor.css": [311356, 313663], "04-features/illustration.css": [313708, 336743], "04-features/storyboard.css": [336786, 350208], "04-features/settings-drawer.css": [350256, 368490], "04-features/settings.css": [368531, 396557], "04-features/manager.css": [396597, 409895], "04-features/workshop.css": [409936, 432718], "04-features/favs.css": [432755, 472681], "04-features/debug.css": [472719, 489484], "04-features/story-outline.css": [489530, 523836], "04-features/outline-entry-menu.css": [523887, 530640], "04-features/rewrite.css": [530680, 581579], "04-features/paragraph-editor.css": [581628, 584364], "04-features/reader.css": [584403, 593762], "04-features/chat-book.css": [593804, 600345], "04-features/story-memory.css": [600390, 647677], "04-features/character-evolution.css": [647729, 682403], "04-features/story-memory-notifications.css": [682462, 684611], "04-features/story-timetrace.css": [684659, 698710], "04-features/tts.css": [698746, 735117], "04-features/confirm-dialog.css": [735164, 739162], "04-features/image-cropper.css": [739208, 743066], "04-features/st-embedded.css": [743110, 773614], "04-features/scene-advance.css": [773660, 795745], "04-features/theater-midnight.css": [795794, 821122] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -33421,9 +33435,9 @@ __export(toolboxSettingsWindow_exports, {
 });
 import { getChatCompletionModel as getChatCompletionModel2 } from "../../../openai.js";
 function focusExtraction(root) {
-  const control = root.querySelector("#t-toolbox-whitelist");
-  control.scrollIntoView?.({ block: "center" });
-  control.focus();
+  const control2 = root.querySelector("#t-toolbox-whitelist");
+  control2.scrollIntoView?.({ block: "center" });
+  control2.focus();
 }
 function openToolboxSettingsWindow(initialTab = "api") {
   const previous = document.getElementById(ID);
@@ -34079,9 +34093,9 @@ function openIllustrationSettingsWindow(options2 = {}) {
     if (renderAll) render2();
     else renderValidation();
   }
-  function labeled(text8, control) {
+  function labeled(text8, control2) {
     const label2 = node("label", "t-illustration-field");
-    label2.append(document.createTextNode(text8), control);
+    label2.append(document.createTextNode(text8), control2);
     return label2;
   }
   function button5(text8, callback, title = text8) {
@@ -34558,10 +34572,10 @@ function openCharacterProfileWindow(options2 = {}) {
     ensureCharacterProfiles(data);
     return readCharacterProfiles(data);
   }
-  function labeled(labelText, control) {
+  function labeled(labelText, control2) {
     const wrap = document.createElement("label");
     wrap.className = "t-illustration-field";
-    wrap.append(document.createTextNode(labelText), control);
+    wrap.append(document.createTextNode(labelText), control2);
     return wrap;
   }
   function textInput(value, placeholder, onInput) {
@@ -36034,11 +36048,11 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
   }
   function renderDirectory() {
     role("directory").replaceChildren(...(doc?.shots || []).map((shot, shotIndex) => {
-      const control = element("button", "t-btn t-storyboard-scene-link", `${shotIndex + 1}. ${shot.title}`);
-      control.type = "button";
-      control.dataset.playerShot = shot.id;
-      if (pages[index2]?.shotId === shot.id) control.setAttribute("aria-current", "true");
-      return control;
+      const control2 = element("button", "t-btn t-storyboard-scene-link", `${shotIndex + 1}. ${shot.title}`);
+      control2.type = "button";
+      control2.dataset.playerShot = shot.id;
+      if (pages[index2]?.shotId === shot.id) control2.setAttribute("aria-current", "true");
+      return control2;
     }));
   }
   function closePanel2() {
@@ -36086,15 +36100,15 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
     root.focus({ preventScroll: true });
   }
   root.addEventListener("click", (event) => {
-    const control = event.target.closest("[data-player-action], [data-player-shot]");
-    if (control && !control.disabled) {
-      const name = control.dataset.playerAction;
+    const control2 = event.target.closest("[data-player-action], [data-player-shot]");
+    if (control2 && !control2.disabled) {
+      const name = control2.dataset.playerAction;
       if (name === "menu") {
         setControlsOpen(!controlsOpen);
         return;
       }
-      if (control.dataset.playerShot) {
-        goToShot(control.dataset.playerShot);
+      if (control2.dataset.playerShot) {
+        goToShot(control2.dataset.playerShot);
         return;
       }
       if (name === "exit") {
@@ -36180,7 +36194,7 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
       return;
     }
     if (panel && event.key === "Tab") {
-      const controls = [...role("overlay").querySelectorAll("button, input, select")].filter((control) => !control.disabled && control.getClientRects().length);
+      const controls = [...role("overlay").querySelectorAll("button, input, select")].filter((control2) => !control2.disabled && control2.getClientRects().length);
       const first = controls[0], last = controls.at(-1);
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
@@ -38056,15 +38070,15 @@ function ensureGallerySnapshot(identity4, { refresh = false } = {}) {
   if (snapshots.has(key)) return snapshots.get(key);
   const operation = (async () => {
     const gallery = getCharacterGallery();
-    const canonical = resolveGalleryAlias(key, gallery);
-    const existing = gallery.entries[canonical];
+    const canonical2 = resolveGalleryAlias(key, gallery);
+    const existing = gallery.entries[canonical2];
     if (existing?.snapshot && !refresh) return existing.snapshot;
     if (key.startsWith("group:")) {
       return enqueueWrite(() => {
         const current2 = getCharacterGallery();
-        const saved = current2.entries[canonical] || { name: identity4.name, avatar: "", label: "", image: null, snapshot: "" };
+        const saved = current2.entries[canonical2] || { name: identity4.name, avatar: "", label: "", image: null, snapshot: "" };
         saved.groupCover || (saved.groupCover = safeGalleryImage(identity4.avatar));
-        current2.entries[canonical] = saved;
+        current2.entries[canonical2] = saved;
         getExtData()[CHARACTER_GALLERY_KEY] = current2;
         saveExtData();
         return "";
@@ -38167,22 +38181,22 @@ function renameGalleryCard(oldAvatar, newAvatar) {
     const gallery = structuredClone(getCharacterGallery());
     const oldKey = cardKeyFromAvatar(oldAvatar), newKey = cardKeyFromAvatar(newAvatar);
     if (!oldKey || !newKey || oldKey === newKey) return;
-    const canonical = resolveGalleryAlias(oldKey, gallery);
-    const saved = gallery.entries[canonical];
+    const canonical2 = resolveGalleryAlias(oldKey, gallery);
+    const saved = gallery.entries[canonical2];
     delete gallery.aliases[newKey];
     for (const [alias, target] of Object.entries(gallery.aliases)) {
-      if (target === oldKey || target === canonical) gallery.aliases[alias] = newKey;
+      if (target === oldKey || target === canonical2) gallery.aliases[alias] = newKey;
     }
     gallery.aliases[oldKey] = newKey;
-    if (canonical !== oldKey) gallery.aliases[canonical] = newKey;
+    if (canonical2 !== oldKey) gallery.aliases[canonical2] = newKey;
     if (saved) {
       gallery.entries[newKey] = { ...saved, avatar: newAvatar, name: listCharacterCards().find((c) => c.avatar === newAvatar)?.name || newAvatar.replace(/\.[^/.]+$/, "") };
-      delete gallery.entries[canonical];
+      delete gallery.entries[canonical2];
     }
     getExtData()[CHARACTER_GALLERY_KEY] = gallery;
     const patches = galleryFavorites().filter((fav) => {
       const key = fav.cardKey || cardKeyFromAvatar(fav.characterAvatar);
-      return key === oldKey || key === canonical;
+      return key === oldKey || key === canonical2;
     }).map((fav) => ({ id: fav.id, cardKey: newKey, characterAvatar: newAvatar }));
     patchFavoriteIdentities(patches);
     saveExtData();
@@ -71830,11 +71844,11 @@ function createTtsDock(callbacks = {}) {
       const controls = create("div", "t-tts-dock-pending-actions");
       const segment = rows("segments").find((segment2) => segment2.id === row.id);
       for (const [action, text8, label2] of [["play", "\u25B6 \u64AD\u653E", `\u64AD\u653E${voice.name}\u7684\u5F85\u5B9A\u4F4D\u53F0\u8BCD`], ["menu", "\u66F4\u591A", `\u6253\u5F00${voice.name}\u7684\u914D\u97F3\u64CD\u4F5C`]]) {
-        const control = button5(`t-tts-dock-${action}`, text8, label2);
-        control.dataset.ttsAction = action;
-        control.disabled = !valid || typeof callbacks[action] !== "function" || !segment || action === "play" && (!voice.configured || segment.skipped || row.skipped);
-        pendingButtons.set(control, { ...renderedIdentity, id: row.id, speaker: row.speaker, quote: row.quote });
-        controls.append(control);
+        const control2 = button5(`t-tts-dock-${action}`, text8, label2);
+        control2.dataset.ttsAction = action;
+        control2.disabled = !valid || typeof callbacks[action] !== "function" || !segment || action === "play" && (!voice.configured || segment.skipped || row.skipped);
+        pendingButtons.set(control2, { ...renderedIdentity, id: row.id, speaker: row.speaker, quote: row.quote });
+        controls.append(control2);
       }
       item2.append(controls);
       return item2;
@@ -71889,10 +71903,10 @@ function createTtsDock(callbacks = {}) {
     }
     return fresh;
   }
-  function invoke(action, control) {
-    if (destroyed || control.disabled || !panel.contains(control)) return;
-    const captured = activationTargets.get(control) || pendingButtons.get(control) || { ...renderedIdentity };
-    activationTargets.delete(control);
+  function invoke(action, control2) {
+    if (destroyed || control2.disabled || !panel.contains(control2)) return;
+    const captured = activationTargets.get(control2) || pendingButtons.get(control2) || { ...renderedIdentity };
+    activationTargets.delete(control2);
     const fresh = currentTarget(captured);
     if (!fresh || typeof callbacks[action] !== "function") return;
     if (action === "analyze" && (fresh.generating || fresh.floor.busy)) {
@@ -72067,19 +72081,19 @@ function createTtsDock(callbacks = {}) {
   });
   const captureActivation = (event) => {
     if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
-    const control = event.target.closest?.("button[data-tts-action]");
-    if (control && panel.contains(control)) {
-      activationTargets.set(control, pendingButtons.get(control) || { ...renderedIdentity });
+    const control2 = event.target.closest?.("button[data-tts-action]");
+    if (control2 && panel.contains(control2)) {
+      activationTargets.set(control2, pendingButtons.get(control2) || { ...renderedIdentity });
     }
   };
   listen(panel, "pointerdown", captureActivation, true);
   listen(panel, "keydown", captureActivation, true);
   listen(panel, "click", (event) => {
-    const control = event.target.closest?.("button[data-tts-action]");
-    if (!control || !panel.contains(control)) return;
+    const control2 = event.target.closest?.("button[data-tts-action]");
+    if (!control2 || !panel.contains(control2)) return;
     event.preventDefault();
     event.stopPropagation();
-    invoke(control.dataset.ttsAction, control);
+    invoke(control2.dataset.ttsAction, control2);
   });
   listen(select2, "change", () => {
     const previous = { ...renderedIdentity };
@@ -73268,21 +73282,21 @@ function editSegment(index2, id3) {
   box.setAttribute("aria-label", "\u7F16\u8F91\u672C\u53E5\u914D\u97F3");
   const title = document.createElement("h3");
   title.textContent = "\u7F16\u8F91\u672C\u53E5\u914D\u97F3\uFF08\u4E0D\u4FEE\u6539\u6B63\u6587\uFF09";
-  const field3 = (caption, control) => {
+  const field3 = (caption, control2) => {
     const wrap = document.createElement("label");
     wrap.className = "t-tts-editor-field";
     const label2 = document.createElement("span");
     label2.textContent = caption;
-    wrap.append(label2, control);
-    control.setAttribute("aria-label", caption);
+    wrap.append(label2, control2);
+    control2.setAttribute("aria-label", caption);
     return { wrap, label: label2 };
   };
   const textarea = (rows = 4) => {
-    const control = document.createElement("textarea");
-    control.className = "t-input";
-    control.rows = rows;
-    control.maxLength = 6e3;
-    return control;
+    const control2 = document.createElement("textarea");
+    control2.className = "t-input";
+    control2.rows = rows;
+    control2.maxLength = 6e3;
+    return control2;
   };
   const original = textarea(3);
   original.value = segment.quote;
@@ -73909,14 +73923,14 @@ function section(parent, title, description = "", open = false) {
   return body;
 }
 function iconButton(iconName, label2, action) {
-  const control = button4("", action);
-  control.className = "t-icon-btn t-tts-icon-button";
-  control.title = label2;
-  control.setAttribute("aria-label", label2);
+  const control2 = button4("", action);
+  control2.className = "t-icon-btn t-tts-icon-button";
+  control2.title = label2;
+  control2.setAttribute("aria-label", label2);
   const icon = element3("i", `fa-solid ${iconName}`);
   icon.setAttribute("aria-hidden", "true");
-  control.append(icon);
-  return control;
+  control2.append(icon);
+  return control2;
 }
 function group(parent, title, description = "") {
   const box = element3("section", "t-tts-group");
@@ -73927,12 +73941,12 @@ function group(parent, title, description = "") {
   parent.append(box);
   return body;
 }
-function switchControl(control) {
+function switchControl(control2) {
   const wrap = element3("span", "t-tts-switch");
-  control.setAttribute("role", "switch");
+  control2.setAttribute("role", "switch");
   const track = element3("span", "t-tts-switch-track");
   track.setAttribute("aria-hidden", "true");
-  wrap.append(control, track);
+  wrap.append(control2, track);
   return wrap;
 }
 function promptEntry(parent, title, scope3) {
@@ -74109,19 +74123,19 @@ function openTtsSettingsWindow() {
     if (focus) tabButtons.get(id3).focus();
     help.close();
   }
-  function reveal(control) {
-    if (!control) return;
-    const panel = control.closest("[data-tts-tab-panel]");
+  function reveal(control2) {
+    if (!control2) return;
+    const panel = control2.closest("[data-tts-tab-panel]");
     if (panel) activateTab(panel.dataset.ttsTabPanel);
-    if (voiceDetail.contains(control)) {
+    if (voiceDetail.contains(control2)) {
       mobileDetail = true;
       syncCastView();
     }
-    for (let parent = control.parentElement; parent; parent = parent.parentElement) {
+    for (let parent = control2.parentElement; parent; parent = parent.parentElement) {
       if (parent.tagName === "DETAILS") parent.open = true;
     }
-    control.focus();
-    control.scrollIntoView?.({ block: "nearest" });
+    control2.focus();
+    control2.scrollIntoView?.({ block: "nearest" });
   }
   function markDirty() {
     if (disposed || saving || draftDirty) return;
@@ -74135,25 +74149,25 @@ function openTtsSettingsWindow() {
     status3.classList.toggle("is-error", error4);
   }
   function input(key2, type = "text", options2 = {}) {
-    const control = element3("input", type === "checkbox" ? "t-tts-check" : "t-input");
-    control.type = type;
-    control.name = key2;
-    control.dataset.ttsConfig = key2;
-    Object.assign(control, options2);
-    controls.set(key2, control);
-    return control;
+    const control2 = element3("input", type === "checkbox" ? "t-tts-check" : "t-input");
+    control2.type = type;
+    control2.name = key2;
+    control2.dataset.ttsConfig = key2;
+    Object.assign(control2, options2);
+    controls.set(key2, control2);
+    return control2;
   }
   function select2(key2, options2) {
-    const control = element3("select", "t-input");
-    control.name = key2;
-    control.dataset.ttsConfig = key2;
+    const control2 = element3("select", "t-input");
+    control2.name = key2;
+    control2.dataset.ttsConfig = key2;
     for (const [value, label2] of options2) {
       const option = element3("option", "", label2);
       option.value = value;
-      control.append(option);
+      control2.append(option);
     }
-    controls.set(key2, control);
-    return control;
+    controls.set(key2, control2);
+    return control2;
   }
   function checkbox(parent, key2, label2, hint = "") {
     const wrap = element3("label", "t-tts-setting-row");
@@ -74199,7 +74213,7 @@ function openTtsSettingsWindow() {
   });
   defaultLanguage.choice.name = "translation_language";
   defaultLanguage.custom.name = "translation_language_custom";
-  for (const control of [defaultLanguage.choice, defaultLanguage.custom]) control.dataset.ttsConfig = "translation_language";
+  for (const control2 of [defaultLanguage.choice, defaultLanguage.custom]) control2.dataset.ttsConfig = "translation_language";
   const languageGrid = element3("div", "t-tts-grid");
   languageGrid.append(
     defaultLanguage.root,
@@ -74370,9 +74384,9 @@ function openTtsSettingsWindow() {
     window.clearTimeout(modelTimer);
     modelTimer = window.setTimeout(() => void loadModels(), 350);
   }
-  for (const control of [endpoint, key]) {
-    control.addEventListener("input", queueModels);
-    control.addEventListener("change", queueModels);
+  for (const control2 of [endpoint, key]) {
+    control2.addEventListener("input", queueModels);
+    control2.addEventListener("change", queueModels);
   }
   let previousProtocol = draft2.protocol;
   const connectionDrafts = /* @__PURE__ */ new Map();
@@ -74590,8 +74604,8 @@ function openTtsSettingsWindow() {
     }
   }
   function capture2() {
-    for (const [name, control] of controls) {
-      draft2[name] = control.type === "checkbox" ? control.checked : control.type === "number" ? control.value.trim() ? Number(control.value) : NaN : control.value;
+    for (const [name, control2] of controls) {
+      draft2[name] = control2.type === "checkbox" ? control2.checked : control2.type === "number" ? control2.value.trim() ? Number(control2.value) : NaN : control2.value;
     }
     draft2.translation_language = defaultLanguage.read();
     for (const voice of voices) {
@@ -74639,9 +74653,9 @@ function openTtsSettingsWindow() {
     healthButton.disabled = !server || Boolean(healthController);
   }
   function fill() {
-    for (const [name, control] of controls) {
-      if (control.type === "checkbox") control.checked = Boolean(draft2[name]);
-      else if (name !== "model") control.value = String(draft2[name] ?? "");
+    for (const [name, control2] of controls) {
+      if (control2.type === "checkbox") control2.checked = Boolean(draft2[name]);
+      else if (name !== "model") control2.value = String(draft2[name] ?? "");
     }
     defaultLanguage.fill(draft2.translation_language);
     controls.get("translation_timeout_seconds").value = String(draft2.translation_timeout_seconds ?? TTS_DEFAULTS.translation_timeout_seconds ?? 180);
@@ -74830,8 +74844,8 @@ function openTtsSettingsWindow() {
     if (checkSignature && current2.signature !== baseline2.signature) throw new Error("\u804A\u5929\u6216\u914D\u97F3\u8BBE\u7F6E\u5DF2\u6539\u53D8\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u5DE5\u4F5C\u53F0\u540E\u518D\u64CD\u4F5C\u3002");
     return current2;
   }
-  function validationError(control, message) {
-    reveal(control);
+  function validationError(control2, message) {
+    reveal(control2);
     throw new Error(message);
   }
   function validateLanguages() {
@@ -74850,11 +74864,11 @@ function openTtsSettingsWindow() {
     }
   }
   function validateConfig({ audition = false } = {}) {
-    for (const [name, control] of controls) {
-      if (control.type !== "number" || control.disabled || audition && name === "translation_timeout_seconds") continue;
+    for (const [name, control2] of controls) {
+      if (control2.type !== "number" || control2.disabled || audition && name === "translation_timeout_seconds") continue;
       const value = draft2[name];
-      if (!Number.isFinite(value) || control.min !== "" && value < Number(control.min) || control.max !== "" && value > Number(control.max) || ["cache_mb", "timeout_seconds", "max_output_tokens", "analysis_timeout_seconds", "translation_timeout_seconds", "analysis_batch_chars"].includes(name) && !Number.isSafeInteger(value)) {
-        validationError(control, `${control.parentElement.querySelector(".t-tts-label").textContent}\u4E0D\u5728\u5141\u8BB8\u8303\u56F4\u5185\uFF0C\u8BF7\u68C0\u67E5\u3002`);
+      if (!Number.isFinite(value) || control2.min !== "" && value < Number(control2.min) || control2.max !== "" && value > Number(control2.max) || ["cache_mb", "timeout_seconds", "max_output_tokens", "analysis_timeout_seconds", "translation_timeout_seconds", "analysis_batch_chars"].includes(name) && !Number.isSafeInteger(value)) {
+        validationError(control2, `${control2.parentElement.querySelector(".t-tts-label").textContent}\u4E0D\u5728\u5141\u8BB8\u8303\u56F4\u5185\uFF0C\u8BF7\u68C0\u67E5\u3002`);
       }
     }
   }
@@ -74881,7 +74895,7 @@ function openTtsSettingsWindow() {
   }
   function setPreviewBusy(value) {
     previewBusy = value;
-    for (const control of previewButtons) control.disabled = value;
+    for (const control2 of previewButtons) control2.disabled = value;
   }
   async function previewVoice(voice, voiceControl) {
     if (disposed || saving || previewBusy) return;
@@ -75072,8 +75086,8 @@ function openTtsSettingsWindow() {
     syncHints();
   });
   const onDraftChange = (event) => {
-    const control = event.target;
-    if (control === enabled2 || control.dataset.ttsConfig || control.dataset.ttsVoiceField || apiContainer.contains(control)) markDirty();
+    const control2 = event.target;
+    if (control2 === enabled2 || control2.dataset.ttsConfig || control2.dataset.ttsVoiceField || apiContainer.contains(control2)) markDirty();
   };
   root.addEventListener("input", onDraftChange);
   root.addEventListener("change", onDraftChange);
@@ -75091,7 +75105,7 @@ function openTtsSettingsWindow() {
       else if (!saving && activeTab === "voices" && compactLayout.matches && mobileDetail) returnToVoiceCards();
       else close();
     } else if (event.key === "Tab") {
-      const focusable = [...root.querySelectorAll('button, input, select, textarea, summary, [tabindex="0"]')].filter((control) => !control.matches(":disabled") && !control.closest("[hidden]") && control.tabIndex >= 0 && control.getClientRects().length);
+      const focusable = [...root.querySelectorAll('button, input, select, textarea, summary, [tabindex="0"]')].filter((control2) => !control2.matches(":disabled") && !control2.closest("[hidden]") && control2.tabIndex >= 0 && control2.getClientRects().length);
       const first = focusable[0], last = focusable.at(-1);
       if (!first) {
         event.preventDefault();
@@ -77420,6 +77434,8 @@ function openSettingsWindow() {
       type: tempApp.type,
       content: tempApp.content,
       animation: tempApp.animation || "ripple",
+      // 开关由扩展设置抽屉即时保存，保留当前值，不用开窗时的快照覆盖。
+      animation_enabled: d.appearance?.animation_enabled !== false,
       size: tempApp.size || 56,
       ui_font_scale: tempApp.ui_font_scale !== void 0 ? tempApp.ui_font_scale : 100,
       // ⚠ 本对象是**整体替换**（不是合并），所以每个要持久化的字段都必须
@@ -82230,6 +82246,9 @@ function refreshFloatingTuck() {
   saveFloatingPosition(btn, size);
   updateTimerPosition();
 }
+function refreshFloatingAnimation() {
+  $("#titania-float-btn").toggleClass("t-animation-disabled", getExtData()?.appearance?.animation_enabled === false);
+}
 function destroyFloatingButton() {
   $(document).off(".titaniaFloatDrag");
   $(window).off(".titaniaFloatPosition");
@@ -82334,6 +82353,7 @@ function createFloatingButton() {
   const btnText = app.content ?? "\u{1F3AD}";
   const btnContent = isImageDataUri ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${btnText}</span>`;
   const btn = $(`<div id="titania-float-btn" class="t-root" data-animation="${animationType}">${btnContent}</div>`);
+  btn.toggleClass("t-animation-disabled", app.animation_enabled === false);
   const timer4 = $(`<div id="titania-timer" class="t-root">0.0s</div>`);
   btn.css({
     "--t-size": `${size}px`,
@@ -85288,9 +85308,341 @@ import { eventSource as eventSource12, event_types as event_types12 } from "../.
 // src/core/paragraphEditing.js
 init_storage();
 init_toolboxSettings();
+
+// src/core/paragraphFormatting.js
 init_textRewritePatch();
+var INLINE = /* @__PURE__ */ new Set(["span", "q", "em", "strong", "i", "b", "u", "s", "del", "mark", "small", "sub", "sup", "echo-tts"]);
+var ESCAPABLE = /[!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~]/;
+var canonical = (tag) => ({ b: "strong", i: "em", s: "del" })[tag] || tag;
+var htmlFormat = (elements) => elements.filter((element4) => INLINE.has(element4.tag)).map((element4) => {
+  const bare = new RegExp(`^<${element4.tag}\\s*>$`, "i").test(element4.attributes);
+  return bare && element4.tag !== "span" && element4.tag !== "echo-tts" ? canonical(element4.tag) : `${canonical(element4.tag)}:${element4.attributes}`;
+});
+var sameElements = (a, b) => a.length === b.length && a.every((element4, index2) => element4.tag === b[index2].tag && element4.attributes === b[index2].attributes);
+var control = () => ({ char: "\uFFFC", control: true, marks: [] });
+function inlineGap(projection, start, end, before, after) {
+  const raw = projection.raw.slice(start, end);
+  if (/[\r\n]/.test(raw)) return null;
+  const stack = [...before], tokens = [];
+  let cursor = 0;
+  while (cursor < raw.length) {
+    if (/\s/.test(raw[cursor])) {
+      tokens.push({
+        char: raw[cursor],
+        start: start + cursor,
+        end: start + cursor + 1,
+        html: htmlFormat(stack),
+        marks: [],
+        literal: false
+      });
+      cursor++;
+      continue;
+    }
+    const tag = /^<(\/?)([a-z][\w:-]*)(?:\s+(?:"[^"]*"|'[^']*'|[^<>"'])*)?\s*>/i.exec(raw.slice(cursor));
+    if (!tag) return null;
+    const name = tag[2].toLowerCase();
+    if (!INLINE.has(name) || isProtectedRewriteElement(name, tag[0], [...projection.whitelist, "echo-tts"], projection.exclusions)) return null;
+    if (tag[1]) {
+      if (stack.at(-1)?.tag !== name) return null;
+      stack.pop();
+    } else {
+      if (/\/\s*>$/.test(tag[0])) return null;
+      stack.push({ tag: name, attributes: tag[0] });
+    }
+    tokens.push(control());
+    cursor += tag[0].length;
+  }
+  return sameElements(stack, after) ? tokens : null;
+}
+function sourceTokens(projection, run, start, end) {
+  const html = htmlFormat(run.elements);
+  const tokens = [];
+  for (let index2 = start; index2 < end; index2++) {
+    const map = run.map[index2], char = run.text[index2];
+    tokens.push({
+      char,
+      start: map.start,
+      end: map.end,
+      html,
+      marks: [],
+      literal: projection.raw.slice(map.start, map.end) !== char
+    });
+  }
+  return tokens;
+}
+function parseInline(candidate, raw) {
+  let tokens = [];
+  const markers = [];
+  for (let index2 = 0; index2 < candidate.tokens.length; index2++) {
+    const token3 = candidate.tokens[index2], next = candidate.tokens[index2 + 1];
+    if (!token3.control && !token3.literal && token3.char === "\\" && next && !next.control && !next.literal && ESCAPABLE.test(next.char) && token3.end === next.start) {
+      tokens.push({ ...next, start: token3.start, literal: true });
+      index2++;
+    } else tokens.push({ ...token3, marks: [...token3.marks] });
+  }
+  const pairs = (pattern, length, styles, requireTrailingText = false) => {
+    const view = tokens.map((token3) => token3.literal && /[*_~]/.test(token3.char) ? "\uE000" : token3.char).join("");
+    const next = [];
+    let cursor = 0;
+    for (const match of view.matchAll(pattern)) {
+      const start = match.index, stop = start + match[0].length;
+      const open = tokens.slice(start, start + length), close = tokens.slice(stop - length, stop);
+      const body = tokens.slice(start + length, stop - length);
+      if (!body.some((token3) => !token3.control) || requireTrailingText && !/\S$/.test(match[1]) || [...open, ...close].some((token3) => token3.control || token3.literal) || open.some((token3, i) => i && open[i - 1].end !== token3.start) || close.some((token3, i) => i && close[i - 1].end !== token3.start)) continue;
+      const marker = {
+        openStart: open[0].start,
+        openEnd: open.at(-1).end,
+        closeStart: close[0].start,
+        closeEnd: close.at(-1).end,
+        styles
+      };
+      if (raw.slice(marker.openStart, marker.openEnd) !== match[0].slice(0, length) || raw.slice(marker.closeStart, marker.closeEnd) !== match[0].slice(-length)) continue;
+      markers.push(marker);
+      next.push(
+        ...tokens.slice(cursor, start),
+        control(),
+        ...body.map((token3) => ({ ...token3, marks: [...token3.marks, marker] })),
+        control()
+      );
+      cursor = stop;
+    }
+    next.push(...tokens.slice(cursor));
+    tokens = next;
+  };
+  pairs(/\b___(\S[\s\S]*?)___\b/g, 3, ["u"]);
+  pairs(/\b__(\S[\s\S]*?)__\b/g, 2, ["u"]);
+  pairs(/\*\*\*(\S[\s\S]*?)\*\*\*/g, 3, ["strong", "em"], true);
+  pairs(/\*\*(\S[\s\S]*?)\*\*/g, 2, ["strong"], true);
+  pairs(/\*([^\s*][\s\S]*?)\*/g, 1, ["em"], true);
+  pairs(/~~(\S[\s\S]*?)~~/g, 2, ["del"], true);
+  pairs(/\b(?<!_)_(?!_)(.+?)(?<!_)_(?!_)\b/g, 1, ["em"]);
+  const visible = tokens.filter((token3) => !token3.control);
+  const untrimmed = visible.map((token3) => token3.char).join("");
+  const leading = untrimmed.length - untrimmed.trimStart().length;
+  const text8 = untrimmed.trim();
+  const map = visible.slice(leading, leading + text8.length).map((token3) => ({
+    ...token3,
+    format: JSON.stringify([...token3.html, ...token3.marks.flatMap((marker) => marker.styles)].sort())
+  }));
+  return { text: text8, map, markers, start: candidate.start, end: candidate.end, reason: candidate.reason };
+}
+function protectedContainerReason(elements, projection) {
+  const element4 = elements.find((element5) => isProtectedRewriteElement(
+    element5.tag,
+    element5.attributes,
+    [...projection.whitelist, "echo-tts"],
+    projection.exclusions
+  ));
+  if (!element4) return "";
+  const attributes = element4.attributes || "";
+  const dataMarker = /\bdata-[\w-]+\b/i.exec(attributes)?.[0];
+  const component = /\b(?:class|id)\s*=\s*["'][^"']*(状态|status|state|stats|card|panel|widget|render|component)[^"']*["']/i.exec(attributes)?.[1];
+  const reason = projection.exclusions.includes(element4.tag) ? "\u547D\u4E2D\u4E86\u6B63\u6587\u6392\u9664\u6807\u7B7E" : /\bon[\w]+\s*=/i.test(attributes) ? "\u5305\u542B\u4E8B\u4EF6\u5904\u7406\u6807\u8BB0" : /\bcontenteditable\b/i.test(attributes) ? "\u5305\u542B contenteditable \u6807\u8BB0" : dataMarker ? `\u5305\u542B ${dataMarker} \u6807\u8BB0\uFF0C\u5F53\u524D\u6309\u7EC4\u4EF6\u5BB9\u5668\u4FDD\u62A4` : component ? `class/id \u547D\u4E2D\u4E86\u7EC4\u4EF6\u5173\u952E\u8BCD ${component}` : "\u8BE5\u6807\u7B7E\u4E0D\u5728\u5141\u8BB8\u5C40\u90E8\u5199\u56DE\u7684\u9759\u6001\u5BB9\u5668\u8303\u56F4\u5185";
+  return `\u6B63\u6587\u4F4D\u4E8E\u53D7\u4FDD\u62A4\u7684\u5BB9\u5668 <${element4.tag}> \u5185\uFF1A${reason}\u3002\u672A\u4FEE\u6539\u539F\u6587\uFF0C\u53EF\u4F7F\u7528\u9152\u9986\u539F\u751F\u6574\u6761\u7F16\u8F91\u3002`;
+}
+function buildParagraphSourceUnits(projection) {
+  const candidates = [];
+  let current2 = null;
+  for (const run of projection.runs) {
+    const reason = run.unsupportedEntity ? "\u6B63\u6587\u5305\u542B\u6682\u4E0D\u652F\u6301\u7684\u5B57\u7B26\u5B9E\u4F53\u3002" : protectedContainerReason(run.elements, projection);
+    for (const match of run.text.matchAll(/[^\r\n]+/g)) {
+      const start = match.index, end = start + match[0].length;
+      const part = {
+        start: run.map[start].start,
+        end: run.map[end - 1].end,
+        tokens: sourceTokens(projection, run, start, end),
+        elements: run.elements,
+        reason
+      };
+      const gap = current2 && !current2.reason && !reason ? inlineGap(projection, current2.end, part.start, current2.elements, part.elements) : null;
+      if (gap !== null) {
+        current2.tokens.push(...gap, ...part.tokens);
+        current2.end = part.end;
+        current2.elements = part.elements;
+      } else {
+        current2 = part;
+        candidates.push(current2);
+      }
+    }
+  }
+  return candidates.map((candidate) => parseInline(candidate, projection.raw)).filter((unit) => unit.text).map((unit, unitIndex) => ({ ...unit, unitIndex }));
+}
+function encodeText(text8) {
+  return text8.replace(/[&<>\\`*_~[\]#!+\-.()]/g, (char) => `&#${char.charCodeAt(0)};`).replace(/\n/g, "<br>");
+}
+function sourceBoundary(map, index2) {
+  return index2 <= 0 || index2 >= map.length || map[index2 - 1].end <= map[index2].start;
+}
+function paragraphTextEdits(before, after) {
+  const a = Array.from(before), b = Array.from(after);
+  let prefix = 0, suffix = 0;
+  while (prefix < a.length && prefix < b.length && a[prefix] === b[prefix]) prefix++;
+  while (suffix < a.length - prefix && suffix < b.length - prefix && a[a.length - suffix - 1] === b[b.length - suffix - 1]) suffix++;
+  const left = a.slice(prefix, a.length - suffix), right = b.slice(prefix, b.length - suffix);
+  const offset = a.slice(0, prefix).join("").length;
+  if (!left.length || !right.length) return [{ from: offset, to: offset + left.join("").length, after: right.join("") }];
+  const width = right.length + 1, cells = (left.length + 1) * width;
+  if (cells > 4e6) throw new Error("\u8FD9\u6B21\u6587\u5B57\u6539\u52A8\u8303\u56F4\u8FC7\u5927\uFF0C\u8BF7\u5206\u6B21\u4FEE\u6539\uFF0C\u4EE5\u4FBF\u4FDD\u7559\u6BB5\u5185\u683C\u5F0F\u3002");
+  const lengths = new Uint32Array(cells);
+  for (let i2 = left.length - 1; i2 >= 0; i2--) {
+    for (let j2 = right.length - 1; j2 >= 0; j2--) {
+      lengths[i2 * width + j2] = left[i2] === right[j2] ? lengths[(i2 + 1) * width + j2 + 1] + 1 : Math.max(lengths[(i2 + 1) * width + j2], lengths[i2 * width + j2 + 1]);
+    }
+  }
+  const edits = [];
+  let i = 0, j = 0, position = offset, edit = null;
+  while (i < left.length || j < right.length) {
+    if (i < left.length && j < right.length && left[i] === right[j]) {
+      if (edit) {
+        edits.push(edit);
+        edit = null;
+      }
+      position += left[i].length;
+      i++;
+      j++;
+      continue;
+    }
+    edit || (edit = { from: position, to: position, after: "" });
+    if (j < right.length && (i === left.length || lengths[i * width + j + 1] >= lengths[(i + 1) * width + j])) {
+      edit.after += right[j++];
+    } else {
+      position += left[i++].length;
+      edit.to = position;
+    }
+  }
+  if (edit) edits.push(edit);
+  return edits;
+}
+function prepareParagraphSourcePatch(projection, unit, textEdits) {
+  if (unit.reason) throw new Error(unit.reason);
+  const edits = [], insertions = [];
+  for (const { from, to, after: after2 } of textEdits) {
+    if (!sourceBoundary(unit.map, from) || !sourceBoundary(unit.map, to)) throw new Error("\u4FEE\u6539\u8FB9\u754C\u843D\u5728\u5B57\u7B26\u5B9E\u4F53\u5185\uFF0C\u4E0D\u80FD\u5B89\u5168\u4FDD\u5B58\u3002");
+    const anchor = from === to && from > 0 ? unit.map[from - 1] : unit.map[from];
+    if (!anchor) throw new Error("\u65E0\u6CD5\u786E\u5B9A\u65B0\u6587\u5B57\u5BF9\u5E94\u7684\u539F\u6587\u4F4D\u7F6E\u3002");
+    const anchorOffset = from === to && from > 0 ? anchor.end : anchor.start;
+    const encoded = encodeText(after2), splices = [];
+    for (const token3 of unit.map.slice(from, to)) {
+      const previous = splices.at(-1);
+      if (previous && token3.start <= previous.end) previous.end = Math.max(previous.end, token3.end);
+      else splices.push({ start: token3.start, end: token3.end, after: "" });
+    }
+    if (splices.length) splices[0].after = encoded;
+    else splices.push({ start: anchorOffset, end: anchorOffset, after: encoded });
+    edits.push(...splices);
+    insertions.push({ anchor, after: after2 });
+  }
+  const spanningBreak = new Set(insertions.filter((item2) => item2.after.includes("\n")).flatMap((item2) => item2.anchor.marks));
+  for (const marker of unit.markers) {
+    const retained = unit.map.some((token3, index2) => !textEdits.some((edit) => index2 >= edit.from && index2 < edit.to) && token3.marks.includes(marker) && /\S/.test(token3.char));
+    const inserted = insertions.some(({ anchor, after: after2 }) => /\S/.test(after2) && anchor.marks.includes(marker));
+    if (!retained && !inserted) {
+      edits.push(
+        { start: marker.openStart, end: marker.openEnd, after: "" },
+        { start: marker.closeStart, end: marker.closeEnd, after: "" }
+      );
+    } else if (spanningBreak.has(marker)) {
+      edits.push(
+        { start: marker.openStart, end: marker.openEnd, after: marker.styles.map((tag) => `<${tag}>`).join("") },
+        { start: marker.closeStart, end: marker.closeEnd, after: [...marker.styles].reverse().map((tag) => `</${tag}>`).join("") }
+      );
+    }
+  }
+  edits.sort((a, b) => a.start - b.start || a.end - b.end);
+  for (let index2 = 1; index2 < edits.length; index2++) {
+    if (edits[index2].start < edits[index2 - 1].end) throw new Error("\u884C\u5185\u683C\u5F0F\u7684\u539F\u6587\u4FEE\u6539\u8303\u56F4\u53D1\u751F\u91CD\u53E0\u3002");
+  }
+  const start = edits[0].start, end = edits.at(-1).end;
+  let after = "", cursor = start;
+  for (const edit of edits) {
+    after += projection.raw.slice(cursor, edit.start) + edit.after;
+    cursor = edit.end;
+  }
+  after += projection.raw.slice(cursor, end);
+  const patch = { start, end, after };
+  const rewritten = projection.raw.slice(0, start) + after + projection.raw.slice(end);
+  return { patch, rewritten, insertedFormats: insertions.map((item2) => item2.anchor.format) };
+}
+function checkParagraphFormatResult(beforeUnits, afterProjection, unit, replacement, textEdits, insertedFormats) {
+  const afterUnits = buildParagraphSourceUnits(afterProjection), expected = [];
+  for (const before of beforeUnits) {
+    if (before !== unit) {
+      expected.push({ text: before.text, reason: before.reason, formats: before.map.map((token3) => token3.format) });
+      continue;
+    }
+    const formats = [];
+    let cursor = 0;
+    for (const [index2, edit] of textEdits.entries()) {
+      formats.push(...unit.map.slice(cursor, edit.from).map((token3) => token3.format), ...Array(edit.after.length).fill(insertedFormats[index2]));
+      cursor = edit.to;
+    }
+    formats.push(...unit.map.slice(cursor).map((token3) => token3.format));
+    for (const match of replacement.matchAll(/[^\n]+/g)) {
+      const text8 = match[0].trim();
+      if (!text8) continue;
+      const start = match.index + match[0].length - match[0].trimStart().length;
+      expected.push({ text: text8, reason: "", formats: formats.slice(start, start + text8.length) });
+    }
+  }
+  if (afterProjection.fatalReason || afterUnits.length !== expected.length) return false;
+  return afterUnits.every((after, index2) => after.text === expected[index2].text && after.reason === expected[index2].reason && after.map.length === expected[index2].formats.length && after.map.every((token3, i) => token3.format === expected[index2].formats[i]));
+}
+
+// src/core/paragraphEditing.js
 init_textRewriteWriteback();
 init_textRewriteDom();
+
+// src/ui/paragraphEditDom.js
+init_textRewriteDom();
+function prepareParagraphDomEdit(container, changes) {
+  const doc = container.ownerDocument;
+  const records3 = changes.map((change) => {
+    const lines = change.after.split("\n"), added = [];
+    for (const line of lines.slice(1)) {
+      added.push({ node: doc.createElement("br"), text: null }, { node: doc.createTextNode(line), text: line });
+    }
+    return { change, first: lines[0], added, applied: false };
+  });
+  const assertCurrent = () => {
+    if (!rewriteDomStillMatches(container, changes) || records3.some((record) => record.applied || record.added.some((item2) => item2.node.parentNode))) {
+      throw new Error("\u6BB5\u843D\u663E\u793A\u5728\u62C6\u5206\u524D\u53D1\u751F\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u7F16\u8F91\u3002");
+    }
+  };
+  return {
+    assertCurrent,
+    apply() {
+      assertCurrent();
+      for (const record of records3) {
+        const { change, added } = record;
+        record.applied = true;
+        change.node.data = record.first;
+        if (added.length) {
+          const fragment = doc.createDocumentFragment();
+          for (const item2 of added) fragment.appendChild(item2.node);
+          change.parent.insertBefore(fragment, change.node.nextSibling);
+        }
+      }
+    },
+    rollback() {
+      for (const record of [...records3].reverse()) {
+        const { change, added } = record;
+        if (!record.applied || !container.isConnected || !container.contains(change.node) || change.node.parentNode !== change.parent || change.node.data !== record.first) continue;
+        let next = change.node.nextSibling;
+        const intact = added.every((item2) => {
+          const matches = next === item2.node && item2.node.parentNode === change.parent && (item2.text === null ? item2.node.localName === "br" && !item2.node.attributes.length && !item2.node.childNodes.length : item2.node.data === item2.text);
+          next = item2.node.nextSibling;
+          return matches;
+        });
+        if (!intact) continue;
+        for (const item2 of added) item2.node.remove();
+        change.node.data = change.original;
+        record.applied = false;
+      }
+    }
+  };
+}
+
+// src/core/paragraphEditing.js
 init_hostGeneration();
 init_storyMemoryTasks();
 init_storyMemoryArchive();
@@ -85329,8 +85681,7 @@ function rangeContainsHit(range3, hit) {
   return Number.isInteger(hit?.offset) && range3.covered.some((span) => span.node === hit.node && hit.offset >= 0 && hit.offset <= span.original.length && span.start + hit.offset >= range3.from && span.start + hit.offset <= range3.to);
 }
 function paragraphRange(target, unit, ranges = paragraphRanges(target)) {
-  const patch = prepareSourcePatch(unit, unit.text);
-  if (patch.reason) return patch;
+  if (unit.reason) return { reason: unit.reason };
   if (target.paragraphUnits.filter((other) => other.text === unit.text).length !== 1) {
     return { reason: "\u539F\u6587\u6709\u76F8\u540C\u6BB5\u843D\uFF0C\u6682\u65F6\u4E0D\u80FD\u552F\u4E00\u5B9A\u4F4D\uFF0C\u8BF7\u4F7F\u7528\u9152\u9986\u539F\u751F\u6574\u6761\u7F16\u8F91\u3002" };
   }
@@ -85382,23 +85733,7 @@ function captureParagraphSource(container) {
   if (target.reason || target.fields.some((field3) => !(field3.cache && field3.original == null) && field3.original !== projection.raw)) {
     throw new Error(target.reason || "\u6B63\u6587\u3001\u5F53\u524D\u56DE\u590D\u6216\u663E\u793A\u7F13\u5B58\u4E0D\u4E00\u81F4\uFF0C\u4E0D\u80FD\u5B89\u5168\u5C40\u90E8\u7F16\u8F91\u3002");
   }
-  const paragraphUnits = [];
-  for (const sourceRun of projection.runs) {
-    for (const match of sourceRun.text.matchAll(/[^\r\n]+/g)) {
-      const text8 = match[0].trim();
-      if (!text8) continue;
-      const local = match.index + match[0].length - match[0].trimStart().length;
-      const map = sourceRun.map.slice(local, local + text8.length);
-      const run = { ...sourceRun, text: text8, map, start: map[0].start, end: map.at(-1).end };
-      const reason = run.elements.some((item2) => isProtectedRewriteElement(
-        item2.tag,
-        item2.attributes,
-        [...projection.whitelist, "echo-tts"],
-        projection.exclusions
-      )) ? "\u539F\u6587\u4F4D\u4E8E\u53D7\u4FDD\u62A4\u7684\u5BB9\u5668\u5185\uFF0C\u8BF7\u4F7F\u7528\u9152\u9986\u539F\u751F\u6574\u6761\u7F16\u8F91\u3002" : "";
-      paragraphUnits.push({ text: text8, unitIndex: paragraphUnits.length, run, local: 0, reason });
-    }
-  }
+  const paragraphUnits = buildParagraphSourceUnits(projection);
   return Object.assign(target, {
     element: element4,
     paragraphUnits,
@@ -85440,37 +85775,22 @@ function paragraphEditStillMatches(target) {
     return false;
   }
 }
-function changedRange(before, after) {
-  const a = Array.from(before), b = Array.from(after);
-  let prefix = 0, suffix = 0;
-  while (prefix < a.length && prefix < b.length && a[prefix] === b[prefix]) prefix++;
-  while (suffix < a.length - prefix && suffix < b.length - prefix && a[a.length - suffix - 1] === b[b.length - suffix - 1]) suffix++;
-  return { prefix: a.slice(0, prefix).join("").length, suffix: a.slice(a.length - suffix).join("").length };
-}
 function makeEdit(target, replacement, remove) {
-  const whole = prepareSourcePatch(target.unit, remove ? "" : replacement);
-  if (whole.reason) throw new Error("\u4EC5\u652F\u6301\u666E\u901A\u6BB5\u843D\u6587\u5B57\u4FEE\u6539\uFF1B\u8BF7\u4E0D\u8981\u52A0\u5165\u6362\u884C\u3001Markdown \u6216 HTML \u683C\u5F0F\u3002");
-  if (whole.replacement === target.text) return null;
-  const { prefix, suffix } = changedRange(target.text, whole.replacement);
-  const local = whole.local + prefix, stop = whole.local + target.text.length - suffix;
-  const map = whole.run.map;
-  const start = map[local]?.start ?? map.at(-1).end;
-  const end = stop === local ? start : map[stop - 1].end;
-  if (local > 0 && map[local]?.start < map[local - 1].end || stop < map.length && stop > 0 && map[stop]?.start < map[stop - 1].end) throw new Error("\u4FEE\u6539\u8FB9\u754C\u843D\u5728\u5B57\u7B26\u5B9E\u4F53\u5185\uFF0C\u4E0D\u80FD\u5B89\u5168\u4FDD\u5B58\u3002");
-  const after = whole.replacement.slice(prefix, whole.replacement.length - suffix);
-  const patch = { ...whole, start, end, local, before: target.text.slice(prefix, target.text.length - suffix), replacement: after, after: after.replace(/&/g, "&amp;") };
-  const rewritten = target.projection.raw.slice(0, start) + patch.after + target.projection.raw.slice(end);
-  const leading = target.snapshot.text.length - target.snapshot.text.trimStart().length;
-  const from = leading + prefix, to = leading + target.text.length - suffix;
-  const covered = from === to ? [target.snapshot.spans.find((span) => span.start < from && span.end >= from) || target.snapshot.spans.find((span) => span.start === from)] : target.snapshot.spans.filter((span) => span.end > from && span.start < to);
-  if (covered.some((span) => !span) || !covered.length) throw new Error("\u663E\u793A\u4E2D\u7684\u4FEE\u6539\u4F4D\u7F6E\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94\u3002");
-  const changes = covered.map((span, index2) => ({
-    node: span.node,
-    parent: span.parent,
-    original: span.original,
-    after: span.original.slice(0, Math.max(0, from - span.start)) + (index2 === 0 ? after : "") + span.original.slice(Math.min(span.original.length, to - span.start))
-  }));
-  return { patch, rewritten, changes, remove };
+  const text8 = remove ? "" : String(replacement ?? "").replace(/\r\n?/g, "\n").trim();
+  if (text8 === target.text) return null;
+  const edits = paragraphTextEdits(target.text, text8);
+  const { patch, rewritten, insertedFormats } = prepareParagraphSourcePatch(target.projection, target.unit, edits);
+  const nextProjection = extractToolboxProjection(rewritten, JSON.parse(target.rules));
+  if (!checkParagraphFormatResult(target.paragraphUnits, nextProjection, target.unit, text8, edits, insertedFormats)) {
+    throw new Error("\u8FD9\u6B21\u4FEE\u6539\u4F1A\u6539\u53D8\u884C\u5185\u683C\u5F0F\u7684\u8FB9\u754C\u6216\u5176\u4ED6\u6BB5\u843D\uFF0C\u672A\u5199\u5165\u3002\u8BF7\u7F29\u5C0F\u4FEE\u6539\u8303\u56F4\uFF0C\u6216\u4F7F\u7528\u9152\u9986\u539F\u751F\u6574\u6761\u7F16\u8F91\u3002");
+  }
+  const plans = edits.map(({ from, to, after }) => {
+    const covered = from === to ? [target.snapshot.spans.find((span) => span.start < from && span.end >= from) || target.snapshot.spans.find((span) => span.start === from)] : target.snapshot.spans.filter((span) => span.end > from && span.start < to);
+    if (covered.some((span) => !span) || !covered.length) throw new Error("\u663E\u793A\u4E2D\u7684\u4FEE\u6539\u4F4D\u7F6E\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94\u3002");
+    return { patch: { replacement: after }, range: { from, to, covered } };
+  });
+  const changes = buildRewriteDomChanges(plans);
+  return { patch, rewritten, changes, dom: prepareParagraphDomEdit(target.container, changes), remove };
 }
 function paragraphDeletionLeavesEmpty(target) {
   const edit = makeEdit(target, "", true);
@@ -85490,7 +85810,7 @@ function commitParagraphEdit(target, replacement, { remove = false } = {}) {
     const blocked2 = paragraphEditBusyReason(target);
     if (blocked2) throw new Error(blocked2);
     const release = beginLocalTextRevision();
-    const { patch, rewritten, changes } = edit;
+    const { patch, rewritten, changes, dom } = edit;
     let tts, writes3 = [], mutated = false;
     try {
       await prepareArchiveSourceEdit(target.ctx);
@@ -85522,10 +85842,11 @@ function commitParagraphEdit(target, replacement, { remove = false } = {}) {
       }
       if (paragraphEditBusyReason(target) || !rewriteDomStillMatches(target.container, changes)) throw new Error("\u4FDD\u5B58\u524D\u804A\u5929\u6216\u663E\u793A\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u6BB5\u843D\u3002");
       tts.assertCurrent?.();
+      dom.assertCurrent();
       for (const write of writes3) if (write.object[write.key] !== write.original || own2(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\u3002");
       mutated = true;
       for (const write of writes3) write.object[write.key] = write.after;
-      applyRewriteDomChanges(changes);
+      dom.apply();
       tts.apply?.();
       noteArchiveChange(target.ctx, "local-paragraph-edit");
       const valid = () => !isHostGenerating() && rewriteTargetStillMatches(target, getContext(), rewritten) && writes3.every((write) => write.object[write.key] === write.after);
@@ -85543,7 +85864,7 @@ function commitParagraphEdit(target, replacement, { remove = false } = {}) {
           if (write.had) write.object[write.key] = write.original;
           else delete write.object[write.key];
         }
-        rollbackRewriteDomChanges(changes);
+        dom.rollback();
         try {
           tts?.rollback?.();
         } catch (restoreCause) {
@@ -85721,7 +86042,7 @@ function openEditor2(target) {
   const returnFocus = document.activeElement;
   const panel = document.createElement("section");
   panel.innerHTML = `<header class="t-paragraph-editor-header"><strong id="t-paragraph-editor-title"></strong><button type="button" class="t-btn" data-action="close">\u5173\u95ED</button></header>
-        <p class="t-paragraph-editor-hint">\u53EA\u4FEE\u6539\u70B9\u4E2D\u7684\u8FD9\u4E00\u6BB5\uFF0C\u6CBF\u7528\u5DF2\u6709\u65F6\u75D5\u3001\u603B\u7ED3\u4E0E\u89D2\u8272\u6F14\u53D8\uFF0C\u4E0D\u81EA\u52A8\u91CD\u65B0\u5206\u6790\u3002\u666E\u901A\u6587\u5B57\u6A21\u5F0F\uFF0C\u4E0D\u6DFB\u52A0\u6362\u884C\u6216\u683C\u5F0F\u6807\u7B7E\u3002</p>
+        <p class="t-paragraph-editor-hint">\u56DE\u8F66\u6362\u884C\uFF0C\u7A7A\u884C\u5206\u6BB5\uFF1B\u62C6\u5F00\u540E\u53EF\u5206\u522B\u53CC\u51FB\u7F16\u8F91\u3002\u4FDD\u7559\u5DF2\u6709\u6587\u5B57\u683C\u5F0F\uFF0C\u65B0\u8F93\u5165\u7684\u683C\u5F0F\u7B26\u53F7\u6309\u666E\u901A\u6587\u5B57\u4FDD\u5B58\u3002\u5DF2\u6709\u65F6\u75D5\u3001\u603B\u7ED3\u4E0E\u89D2\u8272\u6F14\u53D8\u6CBF\u7528\uFF0C\u4E0D\u81EA\u52A8\u91CD\u65B0\u5206\u6790\u3002</p>
         <textarea class="t-input t-paragraph-editor-input" rows="6" aria-label="\u6BB5\u843D\u5185\u5BB9" spellcheck="false"></textarea>
         <div class="t-paragraph-editor-confirm" hidden>
             <strong>\u786E\u8BA4\u5220\u9664\u4E0B\u9762\u8FD9\u4E00\u6BB5\uFF1F</strong><pre></pre><p data-empty-warning></p>
@@ -86283,8 +86604,8 @@ function refreshSettingsDrawer() {
   const root = document.getElementById("titania-settings-drawer");
   if (!root) return;
   root.querySelectorAll("[data-settings-parent]").forEach((section2) => {
-    const control = document.getElementById(section2.dataset.settingsParent);
-    section2.hidden = control?.checked !== true;
+    const control2 = document.getElementById(section2.dataset.settingsParent);
+    section2.hidden = control2?.checked !== true;
   });
   root.querySelectorAll("[data-settings-group]").forEach((group2) => {
     const count = group2.querySelectorAll("[data-settings-toggle]:checked").length;
@@ -86354,13 +86675,13 @@ function initChatBookSettings() {
     }]
   ];
   for (const [id3, checked, update] of controls) {
-    const control = document.getElementById(id3);
-    if (!control) continue;
-    control.checked = checked;
-    if (initializedControls.has(control)) continue;
-    initializedControls.add(control);
-    control.addEventListener("input", () => {
-      update(getExtData(), control.checked);
+    const control2 = document.getElementById(id3);
+    if (!control2) continue;
+    control2.checked = checked;
+    if (initializedControls.has(control2)) continue;
+    initializedControls.add(control2);
+    control2.addEventListener("input", () => {
+      update(getExtData(), control2.checked);
       saveExtData();
       refreshOutlineEntryButton();
       refreshReaderEntryButton();
@@ -87555,6 +87876,7 @@ ${hydration.error}`,
   }
   $("#cfg-outline-entry-enabled").prop("checked", extData.outline_entry.enabled === true);
   $("#cfg-float-edge-tuck").prop("checked", extData.appearance?.edge_tuck !== false);
+  $("#cfg-float-animation-enabled").prop("checked", extData.appearance?.animation_enabled !== false);
   $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
@@ -87571,6 +87893,14 @@ ${hydration.error}`,
     $("#cfg-blindbox-sound-volume").val(cfg.volume);
     $("#cfg-blindbox-sound-volume-label").text(describeUnlockVolume(cfg));
   })();
+  $("#cfg-float-animation-enabled").on("input", function() {
+    const enabled2 = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.appearance || typeof data.appearance !== "object") data.appearance = {};
+    data.appearance.animation_enabled = enabled2;
+    saveExtData();
+    refreshFloatingAnimation();
+  });
   $("#cfg-float-edge-tuck").on("input", function() {
     const enabled2 = $(this).prop("checked") === true;
     const data = getExtData();
