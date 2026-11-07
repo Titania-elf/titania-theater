@@ -129,6 +129,8 @@ var init_defaults = __esm({
         bg_opacity: 100,
         animation: "ripple",
         // 动画类型: ripple(脉冲波纹) | arc(电磁闪烁)
+        animation_enabled: true,
+        // 悬浮球动画总开关（生成动画与通知呼吸灯）
         size: 56,
         ui_font_scale: 100,
         ui_theme: "dark",
@@ -312,7 +314,7 @@ var init_defaults = __esm({
         // 不写进用户的聊天存档。开启后写入照常落盘（少数依赖变量跨次留存的预设才需要）。
         persist_variables: false
       },
-      // 主聊天正文双击编辑：电脑双击 / 手机双击共用，旧配置缺失时保留开启行为。
+      // 主聊天段落编辑：电脑双击 / 手机双点，通过文字坐标定位到原文段落。
       paragraph_edit: {
         enabled: true
       },
@@ -1642,8 +1644,8 @@ function createIllustrationTarget(result, fallbackId = "") {
   });
 }
 function resolveDisplayedFavoriteBranch(result, active5, archived = []) {
-  const matches = (round) => result?.generationId ? round?.generationId === result.generationId : String(round?.content || "").trim() === String(result?.content || "").trim();
-  const source2 = [active5, ...archived].find((branch) => branch?.rounds?.some(matches));
+  const matches2 = (round) => result?.generationId ? round?.generationId === result.generationId : String(round?.content || "").trim() === String(result?.content || "").trim();
+  const source2 = [active5, ...archived].find((branch) => branch?.rounds?.some(matches2));
   return source2 ? { ...active5, ...source2 } : { ...active5, branchKey: "", rounds: [] };
 }
 function requireText(value, label2, allowEmpty = false) {
@@ -1700,8 +1702,8 @@ async function validateIllustrationBlob(blob) {
   }
   illustrationExtension(blob.type);
   const bytes = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
-  const matches = (sequence, offset = 0) => sequence.every((byte, index2) => bytes[index2 + offset] === byte);
-  const valid = blob.type === "image/png" ? matches([137, 80, 78, 71, 13, 10, 26, 10]) : blob.type === "image/jpeg" ? matches([255, 216, 255]) : matches([82, 73, 70, 70]) && matches([87, 69, 66, 80], 8);
+  const matches2 = (sequence, offset = 0) => sequence.every((byte, index2) => bytes[index2 + offset] === byte);
+  const valid = blob.type === "image/png" ? matches2([137, 80, 78, 71, 13, 10, 26, 10]) : blob.type === "image/jpeg" ? matches2([255, 216, 255]) : matches2([82, 73, 70, 70]) && matches2([87, 69, 66, 80], 8);
   if (!valid) throw illustrationError("\u8FD4\u56DE\u7684\u6587\u4EF6\u4E0E\u56FE\u7247\u683C\u5F0F\u4E0D\u7B26\uFF0C\u8BF7\u68C0\u67E5\u751F\u56FE\u63A5\u53E3\u3002");
   return blob;
 }
@@ -10669,16 +10671,17 @@ textarea.t-input {\r
 }\r
 \r
 /* ===== \u52A0\u8F7D\u52A8\u753B\u6548\u679C ===== */\r
-/* \u6CE8\uFF1A\u901A\u7528\u52A0\u8F7D\u72B6\u6001\u4FDD\u6301\u53EF\u4EA4\u4E92\u4EE5\u652F\u6301\u4FA7\u8FB9\u83DC\u5355\uFF08\u65E0\u9700\u989D\u5916\u6837\u5F0F\uFF09 */\r
+/* \u6CE8\uFF1A\u901A\u7528\u52A0\u8F7D\u72B6\u6001\u4FDD\u6301\u53EF\u4EA4\u4E92\u4EE5\u652F\u6301\u4FA7\u8FB9\u83DC\u5355\uFF08\u65E0\u9700\u989D\u5916\u6837\u5F0F\uFF09\u3002\r
+   \u52A8\u753B\u5F00\u5173\u7528 :where \u9650\u5B9A\uFF0C\u4E0D\u63D0\u9AD8\u9009\u62E9\u5668\u4F18\u5148\u7EA7\uFF0C\u907F\u514D\u76D6\u8FC7\u4E0B\u65B9\u7684\u4E3B\u9898\u914D\u8272\u3002 */\r
 \r
 /* ===== \u52A8\u753B 1: \u8109\u51B2\u6CE2\u7EB9 (Pulse Ripple) ===== */\r
 \r
-#titania-float-btn.t-loading.t-anim-ripple {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-ripple {\r
     border-color: var(--t-border-color-rgba, var(--t-border-color, var(--t-color-accent)));\r
 }\r
 \r
-#titania-float-btn.t-loading.t-anim-ripple::before,\r
-#titania-float-btn.t-loading.t-anim-ripple::after {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-ripple::before,\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-ripple::after {\r
     content: "";\r
     position: absolute;\r
     width: 100%;\r
@@ -10689,17 +10692,17 @@ textarea.t-input {\r
     animation: t-ripple-1 1.5s ease-out infinite;\r
 }\r
 \r
-#titania-float-btn.t-loading.t-anim-ripple::after {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-ripple::after {\r
     animation: t-ripple-2 1.5s ease-out 0.5s infinite;\r
 }\r
 \r
 /* ===== \u52A8\u753B 2: \u7535\u78C1\u95EA\u70C1 (Arc Flash) ===== */\r
 \r
-#titania-float-btn.t-loading.t-anim-arc {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-arc {\r
     border-color: var(--t-border-color-rgba, var(--t-border-color, var(--t-color-decor)));\r
 }\r
 \r
-#titania-float-btn.t-loading.t-anim-arc::before {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-arc::before {\r
     content: "";\r
     position: absolute;\r
     width: 120%;\r
@@ -10712,7 +10715,7 @@ textarea.t-input {\r
     opacity: 0.8;\r
 }\r
 \r
-#titania-float-btn.t-loading.t-anim-arc::after {\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-loading.t-anim-arc::after {\r
     content: "";\r
     position: absolute;\r
     width: 130%;\r
@@ -10728,8 +10731,16 @@ textarea.t-input {\r
 /* ===== \u901A\u77E5\u547C\u5438\u706F ===== */\r
 \r
 #titania-float-btn.t-notify {\r
-    animation: t-notify-glow 2s infinite ease-in-out;\r
     border-color: var(--t-border-color-rgba, var(--t-border-color, var(--t-color-notify)));\r
+}\r
+\r
+#titania-float-btn:where(:not(.t-animation-disabled)).t-notify {\r
+    animation: t-notify-glow 2s infinite ease-in-out;\r
+}\r
+\r
+/* \u603B\u5F00\u5173\u5173\u95ED\u65F6\u4FDD\u7559\u72B6\u6001\u548C\u9759\u6001\u63D0\u793A\uFF0C\u53EA\u505C\u6B62\u7403\u4F53\u52A8\u6548\u3002 */\r
+#titania-float-btn.t-animation-disabled {\r
+    transition: none;\r
 }\r
 \r
 /* ===== \u8BA1\u65F6\u5668 ===== */\r
@@ -10815,6 +10826,9 @@ textarea.t-input {\r
    animation-name \u5355\u72EC\u8986\u76D6\uFF0C\u65F6\u957F\u4E0E\u7F13\u52A8\u4ECD\u6CBF\u7528\u539F\u7B80\u5199\u3002 */\r
 #titania-float-btn.t-studio-workspace:not([data-float-custom]).t-notify {\r
     border-color: var(--t-studio-gold);\r
+}\r
+\r
+#titania-float-btn.t-studio-workspace:not([data-float-custom]):where(:not(.t-animation-disabled)).t-notify {\r
     animation-name: t-notify-glow-studio;\r
 }\r
 \r
@@ -24432,17 +24446,18 @@ td[data-edit-field] .t-cell-editor {
 
 
 /* === 04-features/paragraph-editor.css === */
-/* Only while enabled: let our double tap win over browser double-tap zoom,\r
-   while preserving normal scrolling and pinch zoom. */\r
-.t-paragraph-edit-enabled #chat .mes_text p {\r
+/* The editor owns double-tap only while enabled; scrolling and pinch zoom remain native. */\r
+.t-paragraph-edit-enabled #chat .mes_text {\r
     touch-action: manipulation;\r
 }\r
 \r
 /* A separate editor portal: never replace or wrap already-rendered chat/TTS nodes. */\r
 .t-paragraph-editor {\r
     position: fixed;\r
-    right: 20px;\r
-    bottom: 20px;\r
+    top: 16px;\r
+    left: 16px;\r
+    right: auto;\r
+    bottom: auto;\r
     z-index: var(--t-z-popover);\r
     display: flex;\r
     flex-direction: column;\r
@@ -24461,6 +24476,15 @@ td[data-edit-field] .t-cell-editor {
 \r
 .t-paragraph-editor [hidden] {\r
     display: none;\r
+}\r
+\r
+.t-paragraph-editor > * {\r
+    flex-shrink: 0;\r
+    min-width: 0;\r
+}\r
+\r
+.t-paragraph-editor .t-btn {\r
+    min-height: 42px;\r
 }\r
 \r
 .t-paragraph-editor-header {\r
@@ -24494,6 +24518,7 @@ td[data-edit-field] .t-cell-editor {
     resize: vertical;\r
     line-height: 1.7;\r
     font-family: inherit;\r
+    font-size: max(16px, 1em);\r
 }\r
 \r
 .t-paragraph-editor-confirm {\r
@@ -24533,10 +24558,55 @@ td[data-edit-field] .t-cell-editor {
     flex: 1;\r
 }\r
 \r
+.t-paragraph-retained-media {\r
+    margin: 10px 0;\r
+    padding: 10px 12px;\r
+    border: 1px solid var(--t-color-border);\r
+    border-radius: var(--t-radius-container);\r
+    background: var(--t-color-surface-well);\r
+    color: var(--t-color-text);\r
+}\r
+\r
+.t-paragraph-retained-media > summary {\r
+    cursor: pointer;\r
+    font-size: .86em;\r
+    line-height: 1.6;\r
+}\r
+\r
+.t-paragraph-retained-media > p,\r
+.t-paragraph-retained-assets figcaption {\r
+    color: var(--t-color-text-soft);\r
+    font-size: .82em;\r
+    line-height: 1.6;\r
+    overflow-wrap: anywhere;\r
+}\r
+\r
+.t-paragraph-retained-assets {\r
+    display: grid;\r
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));\r
+    gap: 12px;\r
+    margin-bottom: 12px;\r
+}\r
+\r
+.t-paragraph-retained-assets figure {\r
+    margin: 0;\r
+    min-width: 0;\r
+}\r
+\r
+.t-paragraph-retained-assets img,\r
+.t-paragraph-retained-assets video {\r
+    display: block;\r
+    width: 100%;\r
+    max-height: 280px;\r
+    object-fit: contain;\r
+}\r
+\r
+.t-paragraph-retained-assets audio {\r
+    width: 100%;\r
+}\r
+\r
 @media (max-width: 600px) {\r
     .t-paragraph-editor {\r
-        right: 16px;\r
-        bottom: 16px;\r
         padding: 14px;\r
         max-height: calc(100dvh - 32px);\r
     }\r
@@ -28234,7 +28304,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 183670], "04-features/toolbox-settings.css": [183719, 186954], "04-features/main-window.css": [186998, 231891], "04-features/main-window-legacy.css": [231942, 255808], "04-features/script-picker.css": [255854, 262349], "04-features/wi-selector.css": [262393, 280219], "04-features/continuation.css": [280264, 304133], "04-features/queue.css": [304171, 310731], "04-features/content-editor.css": [310778, 313085], "04-features/illustration.css": [313130, 336165], "04-features/storyboard.css": [336208, 349630], "04-features/settings-drawer.css": [349678, 367912], "04-features/settings.css": [367953, 395979], "04-features/manager.css": [396019, 409317], "04-features/workshop.css": [409358, 432140], "04-features/favs.css": [432177, 472103], "04-features/debug.css": [472141, 488906], "04-features/story-outline.css": [488952, 523258], "04-features/outline-entry-menu.css": [523309, 530062], "04-features/rewrite.css": [530102, 581001], "04-features/paragraph-editor.css": [581050, 583678], "04-features/reader.css": [583717, 593076], "04-features/chat-book.css": [593118, 599659], "04-features/story-memory.css": [599704, 646991], "04-features/character-evolution.css": [647043, 681717], "04-features/story-memory-notifications.css": [681776, 683925], "04-features/story-timetrace.css": [683973, 698024], "04-features/tts.css": [698060, 734431], "04-features/confirm-dialog.css": [734478, 738476], "04-features/image-cropper.css": [738522, 742380], "04-features/st-embedded.css": [742424, 772928], "04-features/scene-advance.css": [772974, 795059], "04-features/theater-midnight.css": [795108, 820436] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 184248], "04-features/toolbox-settings.css": [184297, 187532], "04-features/main-window.css": [187576, 232469], "04-features/main-window-legacy.css": [232520, 256386], "04-features/script-picker.css": [256432, 262927], "04-features/wi-selector.css": [262971, 280797], "04-features/continuation.css": [280842, 304711], "04-features/queue.css": [304749, 311309], "04-features/content-editor.css": [311356, 313663], "04-features/illustration.css": [313708, 336743], "04-features/storyboard.css": [336786, 350208], "04-features/settings-drawer.css": [350256, 368490], "04-features/settings.css": [368531, 396557], "04-features/manager.css": [396597, 409895], "04-features/workshop.css": [409936, 432718], "04-features/favs.css": [432755, 472681], "04-features/debug.css": [472719, 489484], "04-features/story-outline.css": [489530, 523836], "04-features/outline-entry-menu.css": [523887, 530640], "04-features/rewrite.css": [530680, 581579], "04-features/paragraph-editor.css": [581628, 585411], "04-features/reader.css": [585450, 594809], "04-features/chat-book.css": [594851, 601392], "04-features/story-memory.css": [601437, 648724], "04-features/character-evolution.css": [648776, 683450], "04-features/story-memory-notifications.css": [683509, 685658], "04-features/story-timetrace.css": [685706, 699757], "04-features/tts.css": [699793, 736164], "04-features/confirm-dialog.css": [736211, 740209], "04-features/image-cropper.css": [740255, 744113], "04-features/st-embedded.css": [744157, 774661], "04-features/scene-advance.css": [774707, 796792], "04-features/theater-midnight.css": [796841, 822169] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -29691,7 +29761,7 @@ async function openWorldInfoSelector({ host: host4 = null, onClose, onSaved } = 
   const observer2 = new MutationObserver(() => {
     if (!layer.isConnected) close();
   });
-  const eventSource17 = origin.stCtx?.eventSource;
+  const eventSource18 = origin.stCtx?.eventSource;
   const chatChangedEvent = origin.stCtx?.eventTypes?.CHAT_CHANGED;
   const close = () => {
     if (closed) return;
@@ -29703,7 +29773,7 @@ async function openWorldInfoSelector({ host: host4 = null, onClose, onSaved } = 
     cancelLoad([]);
     document.removeEventListener("keydown", onKeydown, true);
     observer2.disconnect();
-    if (chatChangedEvent) eventSource17?.off?.(chatChangedEvent, onChatChanged);
+    if (chatChangedEvent) eventSource18?.off?.(chatChangedEvent, onChatChanged);
     $panel?.remove();
     layer.remove();
     if (activeSelector?.close === close) activeSelector = null;
@@ -29784,7 +29854,7 @@ async function openWorldInfoSelector({ host: host4 = null, onClose, onSaved } = 
   parent.appendChild(layer);
   document.addEventListener("keydown", onKeydown, true);
   observer2.observe(document.body, { childList: true, subtree: true });
-  if (chatChangedEvent) eventSource17?.on?.(chatChangedEvent, onChatChanged);
+  if (chatChangedEvent) eventSource18?.on?.(chatChangedEvent, onChatChanged);
   focus();
   const withTimeout2 = async (promise, timeoutMs, errorMsg) => {
     let timer4;
@@ -37940,9 +38010,9 @@ function reconcileCharacterGallery() {
     for (const [name, raw] of Object.entries(data.character_map || {})) {
       const src = safeGalleryImage(raw);
       if (!src) continue;
-      const matches = cards.filter((card) => card.name === name);
-      if (matches.length === 1) {
-        const card = matches[0];
+      const matches2 = cards.filter((card) => card.name === name);
+      if (matches2.length === 1) {
+        const card = matches2[0];
         (_a = gallery.entries)[_b = card.cardKey] || (_a[_b] = { name, avatar: card.avatar, label: "", snapshot: "" });
         (_c = gallery.entries[card.cardKey]).image || (_c.image = { src, x: 50, y: 50 });
       } else gallery.legacyImages[name] = src;
@@ -43004,12 +43074,12 @@ function reanchorBookBoundaries(boundaries, chat2) {
   const next = boundaries.flatMap((entry) => {
     if (entry.start === 0) return [{ ...entry, anchor: "" }];
     if (!entry.anchor) return entry.start < chat2.length ? [entry] : (removed++, []);
-    const matches = hashes.flatMap((hash, index2) => hash === entry.anchor ? [index2] : []);
-    if (matches.length !== 1) {
+    const matches2 = hashes.flatMap((hash, index2) => hash === entry.anchor ? [index2] : []);
+    if (matches2.length !== 1) {
       removed++;
       return [];
     }
-    return [{ ...entry, start: matches[0] }];
+    return [{ ...entry, start: matches2[0] }];
   });
   return { chapters: normalizeBookBoundaries(next, chat2.length), removed };
 }
@@ -43286,7 +43356,7 @@ function bookChapterHtml(draft2, chapter, ordinal2, messageHtml = (message) => m
     return `<section class="book-message${message.isUser ? " book-user" : ""}">${meta ? `<p class="book-meta">${bookEscape(meta)}</p>` : ""}${messageHtml(message)}</section>`;
   }).join("")}</section>`;
 }
-function buildBookEpub(draft2, chapters, { assets = [], coverPath = "", font = null, document: document2 = globalThis.document, id: id3 = globalThis.crypto?.randomUUID ? `urn:uuid:${globalThis.crypto.randomUUID()}` : `urn:titania:book:${Date.now()}-${Math.random().toString(36).slice(2)}`, modified = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z") } = {}) {
+function buildBookEpub(draft2, chapters, { assets = [], coverPath = "", font = null, document: document2 = globalThis.document, id: id3 = globalThis.crypto?.randomUUID ? `urn:uuid:${globalThis.crypto.randomUUID()}` : `urn:titania:book:${Date.now()}-${Math.random().toString(36).slice(2)}`, modified: modified2 = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z") } = {}) {
   if (!chapters.length) throw new Error("\u6CA1\u6709\u53EF\u5BFC\u51FA\u7684\u6B63\u6587\uFF0C\u8BF7\u8C03\u6574\u5185\u5BB9\u8303\u56F4\u6216\u63D0\u53D6\u89C4\u5219\u3002");
   const files = [{ name: "mimetype", data: "application/epub+zip" }, { name: "META-INF/container.xml", data: '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="EPUB/package.opf" media-type="application/oebps-package+xml" /></rootfiles></container>' }];
   const fontCss = font ? `@font-face { font-family: BookCustom; src: url("${font.path}"); font-weight: normal; font-style: normal; }
@@ -43311,7 +43381,7 @@ function buildBookEpub(draft2, chapters, { assets = [], coverPath = "", font = n
     items.push({ id: "font", href: font.path, type: font.type });
   }
   const coverItem = items.find((item2) => item2.properties === "cover-image");
-  files.push({ name: "EPUB/package.opf", data: `<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id" xml:lang="zh-CN"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="book-id">${bookEscape(id3)}</dc:identifier><dc:title>${bookEscape(draft2.title)}</dc:title><dc:language>zh-CN</dc:language>${draft2.author ? `<dc:creator>${bookEscape(draft2.author)}</dc:creator>` : ""}${draft2.description ? `<dc:description>${bookEscape(draft2.description)}</dc:description>` : ""}<meta property="dcterms:modified">${modified}</meta><meta property="rendition:layout">reflowable</meta>${coverItem ? `<meta name="cover" content="${coverItem.id}" />` : ""}</metadata><manifest>${items.map((item2) => `<item id="${item2.id}" href="${item2.href}" media-type="${item2.type}"${item2.properties ? ` properties="${item2.properties}"` : ""} />`).join("")}</manifest><spine toc="ncx"><itemref idref="cover" /><itemref idref="nav" />${chapters.map((_, i) => `<itemref idref="ch${i + 1}" />`).join("")}</spine><guide><reference type="cover" title="\u5C01\u9762" href="cover.xhtml" /><reference type="toc" title="\u76EE\u5F55" href="nav.xhtml" /></guide></package>` });
+  files.push({ name: "EPUB/package.opf", data: `<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id" xml:lang="zh-CN"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="book-id">${bookEscape(id3)}</dc:identifier><dc:title>${bookEscape(draft2.title)}</dc:title><dc:language>zh-CN</dc:language>${draft2.author ? `<dc:creator>${bookEscape(draft2.author)}</dc:creator>` : ""}${draft2.description ? `<dc:description>${bookEscape(draft2.description)}</dc:description>` : ""}<meta property="dcterms:modified">${modified2}</meta><meta property="rendition:layout">reflowable</meta>${coverItem ? `<meta name="cover" content="${coverItem.id}" />` : ""}</metadata><manifest>${items.map((item2) => `<item id="${item2.id}" href="${item2.href}" media-type="${item2.type}"${item2.properties ? ` properties="${item2.properties}"` : ""} />`).join("")}</manifest><spine toc="ncx"><itemref idref="cover" /><itemref idref="nav" />${chapters.map((_, i) => `<itemref idref="ch${i + 1}" />`).join("")}</spine><guide><reference type="cover" title="\u5C01\u9762" href="cover.xhtml" /><reference type="toc" title="\u76EE\u5F55" href="nav.xhtml" /></guide></package>` });
   return { files, blob: bookZip(files) };
 }
 var utf8, crcTable, BOOK_PALETTES, xhtml;
@@ -44802,7 +44872,7 @@ function openChatBookWindow() {
       window.removeEventListener("focus", detectChanges);
       document.removeEventListener("keydown", onKey);
       document.removeEventListener(TOOLBOX_EXTRACTION_CHANGED, refreshExtraction);
-      for (const [name, handler] of events) eventSource17?.removeListener?.(name, handler);
+      for (const [name, handler] of events) eventSource18?.removeListener?.(name, handler);
       if (active?.root === root) active = null;
       if (restoreFocus && previousFocus?.isConnected) previousFocus.focus();
     }
@@ -45038,13 +45108,13 @@ function openChatBookWindow() {
     rebuild();
     alert2("\u5DF2\u6309\u6700\u65B0\u5168\u5C40\u6B63\u6587\u89C4\u5219\u66F4\u65B0\u9884\u89C8\u3002");
   }
-  const host4 = globalThis.SillyTavern?.getContext?.(), eventSource17 = host4?.eventSource;
+  const host4 = globalThis.SillyTavern?.getContext?.(), eventSource18 = host4?.eventSource;
   const events = [];
   try {
     for (const key of ["CHAT_CHANGED", "MESSAGE_RECEIVED", "MESSAGE_EDITED", "MESSAGE_UPDATED", "MESSAGE_DELETED", "MESSAGE_SWIPED", "MESSAGE_SWIPE_DELETED"]) {
       const name = host4?.eventTypes?.[key];
-      if (!name || !eventSource17?.on || !eventSource17?.removeListener) continue;
-      eventSource17.on(name, detectChanges);
+      if (!name || !eventSource18?.on || !eventSource18?.removeListener) continue;
+      eventSource18.on(name, detectChanges);
       events.push([name, detectChanges]);
     }
     window.addEventListener("focus", detectChanges);
@@ -46103,10 +46173,10 @@ function parseClockTime(value, calendar = {}) {
   const match = /^(\d{1,6})[-年](\d{1,2})[-月](\d{1,4})(?:日)?(?:[ T·](\d{1,2}):(\d{2}))?$/.exec(text8);
   if (!match) throw new Error("\u6545\u4E8B\u65E5\u671F\u8BF7\u4F7F\u7528 \u5E74-\u6708-\u65E5 \u65F6:\u5206\uFF0C\u4F8B\u5982 2024-09-28 19:20\u3002");
   const [, y, m, d, h = "0", min = "0"] = match;
-  const point = { year: Number(y), month: Number(m), day: Number(d), hour: Number(h), minute: Number(min) };
-  const rule = normalizeClockCalendar(calendar), months = monthLengths(point.year, rule);
-  if (point.year < 1 || point.year > 99999 || point.month < 1 || point.month > months.length || point.day < 1 || point.day > months[point.month - 1] || point.hour > 23 || point.minute > 59) throw new Error("\u6545\u4E8B\u65E5\u671F\u8D85\u51FA\u5F53\u524D\u5386\u6CD5\u7684\u6709\u6548\u8303\u56F4\u3002");
-  return point;
+  const point2 = { year: Number(y), month: Number(m), day: Number(d), hour: Number(h), minute: Number(min) };
+  const rule = normalizeClockCalendar(calendar), months = monthLengths(point2.year, rule);
+  if (point2.year < 1 || point2.year > 99999 || point2.month < 1 || point2.month > months.length || point2.day < 1 || point2.day > months[point2.month - 1] || point2.hour > 23 || point2.minute > 59) throw new Error("\u6545\u4E8B\u65E5\u671F\u8D85\u51FA\u5F53\u524D\u5386\u6CD5\u7684\u6709\u6548\u8303\u56F4\u3002");
+  return point2;
 }
 function clockTime(value) {
   return `${pad(value.year, 4)}-${pad(value.month)}-${pad(value.day)} ${pad(value.hour)}:${pad(value.minute)}`;
@@ -46115,14 +46185,14 @@ function clockTimeLabel(value, calendar = {}) {
   const text8 = typeof value === "string" ? value : clockTime(value);
   return calendar.kind === "custom" ? `${calendar.era || calendar.name || "\u6545\u4E8B\u5386"} ${text8}` : text8;
 }
-function ordinal(point, calendar) {
+function ordinal(point2, calendar) {
   if (calendar.kind === "custom") {
     const months = calendar.month_lengths, yearDays = months.reduce((sum, days) => sum + days, 0);
-    return ((point.year - 1) * yearDays + months.slice(0, point.month - 1).reduce((sum, days) => sum + days, 0) + point.day - 1) * 1440 + point.hour * 60 + point.minute;
+    return ((point2.year - 1) * yearDays + months.slice(0, point2.month - 1).reduce((sum, days) => sum + days, 0) + point2.day - 1) * 1440 + point2.hour * 60 + point2.minute;
   }
   const date = /* @__PURE__ */ new Date(0);
-  date.setUTCFullYear(point.year, point.month - 1, point.day);
-  date.setUTCHours(point.hour, point.minute, 0, 0);
+  date.setUTCFullYear(point2.year, point2.month - 1, point2.day);
+  date.setUTCHours(point2.hour, point2.minute, 0, 0);
   return date.getTime() / 6e4;
 }
 function fromOrdinal(minutes, calendar) {
@@ -46139,7 +46209,7 @@ function fromOrdinal(minutes, calendar) {
   if (!Number.isFinite(date.getTime()) || date.getUTCFullYear() < 1 || date.getUTCFullYear() > 99999) throw new Error("\u65F6\u95F4\u63A8\u8FDB\u8D85\u51FA\u6545\u4E8B\u5386\u6CD5\u8303\u56F4\u3002");
   return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate(), hour: date.getUTCHours(), minute: date.getUTCMinutes() };
 }
-function advanceClock(point, elapsed = {}, calendar = {}) {
+function advanceClock(point2, elapsed = {}, calendar = {}) {
   if (!elapsed || typeof elapsed !== "object" || Array.isArray(elapsed)) throw new Error("\u5267\u60C5\u8017\u65F6\u683C\u5F0F\u65E0\u6548\u3002");
   if (Object.keys(elapsed).some((key) => !["months", "days", "minutes"].includes(key))) throw new Error("\u5267\u60C5\u8017\u65F6\u53EA\u80FD\u4F7F\u7528months\u3001days\u3001minutes\u3002");
   const rule = normalizeClockCalendar(calendar);
@@ -46148,9 +46218,9 @@ function advanceClock(point, elapsed = {}, calendar = {}) {
     if (!Number.isSafeInteger(number) || number < 0) throw new Error("\u5267\u60C5\u8017\u65F6\u987B\u4E3A\u975E\u8D1F\u6574\u6570\u3002");
     return number;
   });
-  const [months, days, minutes] = parts, count = monthLengths(point.year, rule).length;
-  const index2 = point.year * count + point.month - 1 + months;
-  const next = { ...point, year: Math.floor(index2 / count), month: index2 % count + 1 };
+  const [months, days, minutes] = parts, count = monthLengths(point2.year, rule).length;
+  const index2 = point2.year * count + point2.month - 1 + months;
+  const next = { ...point2, year: Math.floor(index2 / count), month: index2 % count + 1 };
   if (next.year > 99999) throw new Error("\u65F6\u95F4\u63A8\u8FDB\u8D85\u51FA\u6545\u4E8B\u5386\u6CD5\u8303\u56F4\u3002");
   next.day = Math.min(next.day, monthLengths(next.year, rule)[next.month - 1]);
   const total = ordinal(next, rule) + days * 1440 + minutes;
@@ -46161,10 +46231,10 @@ function clockMinutesBetween(from, to, calendar = {}) {
   const rule = normalizeClockCalendar(calendar);
   return ordinal(to, rule) - ordinal(from, rule);
 }
-function clockAt(point, at, calendar = {}) {
-  if (!at) return point;
+function clockAt(point2, at, calendar = {}) {
+  if (!at) return point2;
   const clock = /^(\d{1,2}):(\d{2})$/.exec(at);
-  return clock ? parseClockTime(`${clockTime(point).split(" ")[0]} ${pad(Number(clock[1]))}:${clock[2]}`, calendar) : parseClockTime(at, calendar);
+  return clock ? parseClockTime(`${clockTime(point2).split(" ")[0]} ${pad(Number(clock[1]))}:${clock[2]}`, calendar) : parseClockTime(at, calendar);
 }
 function storyElapsedLabel(minutes) {
   if (minutes < 0) return "\u65F6\u95F4\u5F85\u6821\u51C6";
@@ -46215,12 +46285,12 @@ function parseTimetraceNotes(raw) {
     for (const line of raw_note.split(/\r?\n/)) {
       const cleaned = cleanLine(line);
       if (!cleaned || /^#{1,6}\s/.test(cleaned) || /^(?:---+|\*\*\*+)$/.test(cleaned)) continue;
-      const matches = [...cleaned.matchAll(new RegExp(`(?:^|[\uFF1B;\uFF0C,|]\\s*|\\s+)(${fieldPattern})\\s*[:\uFF1A=]\\s*`, "gi"))];
-      if (matches.length) {
-        if (matches[0].index > 0) extras.push(cleaned.slice(0, matches[0].index).trim());
-        for (let i = 0; i < matches.length; i++) {
-          const match = matches[i], key = aliasMap.get(match[1].toLowerCase());
-          const value = cleaned.slice(match.index + match[0].length, matches[i + 1]?.index ?? cleaned.length).trim();
+      const matches2 = [...cleaned.matchAll(new RegExp(`(?:^|[\uFF1B;\uFF0C,|]\\s*|\\s+)(${fieldPattern})\\s*[:\uFF1A=]\\s*`, "gi"))];
+      if (matches2.length) {
+        if (matches2[0].index > 0) extras.push(cleaned.slice(0, matches2[0].index).trim());
+        for (let i = 0; i < matches2.length; i++) {
+          const match = matches2[i], key = aliasMap.get(match[1].toLowerCase());
+          const value = cleaned.slice(match.index + match[0].length, matches2[i + 1]?.index ?? cleaned.length).trim();
           fields4[key] = fields4[key] ? `${fields4[key]}\uFF1B${value}` : value;
           lastKey = key;
         }
@@ -46357,9 +46427,9 @@ function resolveTimetraceTime(expression, base, calendar = {}) {
       return { point: parseClockTime(`${date[1]}-${date[2]}-${date[3]} ${hour}:${String(minute).padStart(2, "0")}`, calendar), absolute: true, issue: "", precision: "" };
     }
     if (!base) return { point: null, absolute: false, issue: `\u300C${raw}\u300D\u6CA1\u6709\u5DF2\u77E5\u540C\u573A\u666F\u524D\u9A71\u65E5\u671F`, precision: "" };
-    let point = { ...base }, shifted = false;
+    let point2 = { ...base }, shifted = false;
     if (partialDate) {
-      point = parseClockTime(`${base.year}-${partialDate[1]}-${partialDate[2]} ${base.hour}:${String(base.minute).padStart(2, "0")}`, calendar);
+      point2 = parseClockTime(`${base.year}-${partialDate[1]}-${partialDate[2]} ${base.hour}:${String(base.minute).padStart(2, "0")}`, calendar);
       shifted = true;
     }
     const dayWord = text8.match(/次日|翌日|明日|明天|第二天|隔天|明早|明晨|翌晨|次晨|后天|当天|当日|同日|今天/);
@@ -46367,18 +46437,18 @@ function resolveTimetraceTime(expression, base, calendar = {}) {
     if (relative) {
       const duration = parseTimetraceDuration(relative[1], calendar);
       if (!duration.value) return { point: null, absolute: false, issue: duration.issue, precision: "" };
-      point = advanceClock(point, duration.value, calendar);
+      point2 = advanceClock(point2, duration.value, calendar);
       shifted = true;
     } else if (dayWord) {
-      point = advanceClock(point, { days: ["\u6B21\u65E5", "\u7FCC\u65E5", "\u660E\u65E5", "\u660E\u5929", "\u7B2C\u4E8C\u5929", "\u9694\u5929", "\u660E\u65E9", "\u660E\u6668", "\u7FCC\u6668", "\u6B21\u6668"].includes(dayWord[0]) ? 1 : dayWord[0] === "\u540E\u5929" ? 2 : 0 }, calendar);
+      point2 = advanceClock(point2, { days: ["\u6B21\u65E5", "\u7FCC\u65E5", "\u660E\u65E5", "\u660E\u5929", "\u7B2C\u4E8C\u5929", "\u9694\u5929", "\u660E\u65E9", "\u660E\u6668", "\u7FCC\u6668", "\u6B21\u6668"].includes(dayWord[0]) ? 1 : dayWord[0] === "\u540E\u5929" ? 2 : 0 }, calendar);
       shifted = true;
     }
     if (!shifted && /昨天|前天|上周|下周|上月|下月|明年|去年|过了|几天|数日|数天|稍后|之后|以后/.test(text8)) {
       return { point: null, absolute: false, issue: `\u65F6\u95F4\u8DF3\u8DC3\u300C${raw}\u300D\u672A\u80FD\u53EF\u9760\u5B9A\u4F4D\uFF0C\u4FDD\u7559\u5F85\u6838\u5BF9`, precision: "" };
     }
-    if (hour !== null) point = clockAt(point, `${hour}:${String(minute).padStart(2, "0")}`, calendar);
+    if (hour !== null) point2 = clockAt(point2, `${hour}:${String(minute).padStart(2, "0")}`, calendar);
     if (!shifted && hour === null) return { point: null, absolute: false, issue: `\u65E0\u6CD5\u5B9A\u4F4D\u65F6\u95F4\u8868\u8FBE\uFF1A${raw}`, precision: "" };
-    return { point, absolute: false, issue: "", precision: hour === null ? "\u6309\u660E\u786E\u8DE8\u5EA6\u627F\u63A5\u524D\u9A71\u65F6\u5206\uFF0C\u975E\u6B63\u6587\u7CBE\u786E\u65F6\u523B" : "\u65E5\u671F\u627F\u63A5\u5DF2\u77E5\u540C\u573A\u666F\u524D\u9A71" };
+    return { point: point2, absolute: false, issue: "", precision: hour === null ? "\u6309\u660E\u786E\u8DE8\u5EA6\u627F\u63A5\u524D\u9A71\u65F6\u5206\uFF0C\u975E\u6B63\u6587\u7CBE\u786E\u65F6\u523B" : "\u65E5\u671F\u627F\u63A5\u5DF2\u77E5\u540C\u573A\u666F\u524D\u9A71" };
   } catch (cause) {
     return { point: null, absolute: !!date, issue: cause.message, precision: "" };
   }
@@ -46768,9 +46838,9 @@ function stripTimetraceComments(raw) {
   return String(raw ?? "").replace(/<!--\s*ECHO_TIMETRACE(?:_NOTE)?\b[\s\S]*?(?:-->|$)/gi, "");
 }
 function findTimetraceComment(raw) {
-  const matches = [...String(raw ?? "").matchAll(/<!--\s*ECHO_TIMETRACE_NOTE\b\s*:?\s*([\s\S]*?)(-->|$)/gi)];
-  if (!matches.length) return { found: false, complete: false, text: "" };
-  return { found: true, complete: matches.every((match) => match[2] === "-->"), text: matches.map((match) => match[1].trim()).join("\n\n"), offset: matches[0].index };
+  const matches2 = [...String(raw ?? "").matchAll(/<!--\s*ECHO_TIMETRACE_NOTE\b\s*:?\s*([\s\S]*?)(-->|$)/gi)];
+  if (!matches2.length) return { found: false, complete: false, text: "" };
+  return { found: true, complete: matches2.every((match) => match[2] === "-->"), text: matches2.map((match) => match[1].trim()).join("\n\n"), offset: matches2[0].index };
 }
 function timetraceFingerprint(message) {
   const text8 = JSON.stringify([message?.name || "", message?.is_user === true, message?.swipe_id ?? 0, message?.mes || ""]);
@@ -47029,8 +47099,8 @@ function resolveNodes(definitions, calendar, { previous = null, narration = null
   const previousPoint = pointOf(previous, rule);
   if (previous && !previous.metadata_only) Object.assign(states.get("main"), { point: previousPoint, lastValid: previousPoint, ever: true, blocked: !previousPoint });
   if (narration && !narration.metadata_only && !timetraceClockExcluded(narration) && narration.frame !== "main" && states.has(narration.frame)) {
-    const point = pointOf(narration, rule);
-    Object.assign(states.get(narration.frame), { point, lastValid: point, ever: true, blocked: !point });
+    const point2 = pointOf(narration, rule);
+    Object.assign(states.get(narration.frame), { point: point2, lastValid: point2, ever: true, blocked: !point2 });
   }
   for (const unresolved of previousUnresolved || []) {
     if (unresolved.metadata_only || timetraceClockExcluded(unresolved)) continue;
@@ -47334,10 +47404,10 @@ function timetraceSnapshot(memory) {
   let initial_time = "", span_minutes = null;
   try {
     const initial = initialExpression ? resolveTimetraceTime(initialExpression, null, calendar || {}).point : null;
-    const point = initial || (main[0]?.valid ? pointOf(main[0], calendar || {}, false) : null);
-    if (point) initial_time = clockTime(point);
-    if (point && current2) {
-      const minutes = clockMinutesBetween(point, pointOf(current2, calendar || {}), calendar || {});
+    const point2 = initial || (main[0]?.valid ? pointOf(main[0], calendar || {}, false) : null);
+    if (point2) initial_time = clockTime(point2);
+    if (point2 && current2) {
+      const minutes = clockMinutesBetween(point2, pointOf(current2, calendar || {}), calendar || {});
       if (minutes >= 0) span_minutes = minutes;
     }
   } catch {
@@ -47839,13 +47909,13 @@ function registerArchiveValidator(key, valid) {
 }
 function noteArchiveChange(ctx2, trigger, kind = "sources") {
   if (!ctx2?.chatMetadata || !Array.isArray(ctx2.chat)) return;
-  const owner = captureArchiveContext(ctx2), observed = observers2.get(ctx2.chatMetadata);
-  if (fields2.some((field3) => observed?.get(field3)?.loading)) {
+  const owner = captureArchiveContext(ctx2), observed2 = observers2.get(ctx2.chatMetadata);
+  if (fields2.some((field3) => observed2?.get(field3)?.loading)) {
     evidence?.delete(kind);
     return;
   }
   if (kind === "sources" && trigger !== "verified-chat-file") {
-    const states = fields2.map((field3) => observed?.get(field3)).filter(Boolean);
+    const states = fields2.map((field3) => observed2?.get(field3)).filter(Boolean);
     const expected = Math.max(0, ...states.map((state) => state.expectedFloors));
     if (states.some((state) => state.pending && state.kind === "sources") || trigger !== host3.event_types?.MESSAGE_DELETED && ctx2.chat.length < expected) {
       evidence?.delete(kind);
@@ -47858,7 +47928,7 @@ function noteArchiveChange(ctx2, trigger, kind = "sources") {
     trigger,
     kind,
     signature: evidenceSources(ctx2.chat),
-    before: [observed?.file?.signature, observed?.checkpoint?.signature].filter(Boolean),
+    before: [observed2?.file?.signature, observed2?.checkpoint?.signature].filter(Boolean),
     ids: ctx2.chat.map((message) => [message?.extra?.titania_memory_id, message?.extra?.echo_timetrace_v3_id])
   });
 }
@@ -47943,9 +48013,9 @@ async function readChatFile(ctx2) {
   return requestJSON(url2, archiveTarget(ctx2));
 }
 function rememberChatFile(ctx2, saved) {
-  const observed = observers2.get(ctx2.chatMetadata);
-  if (!observed || !Array.isArray(saved) || !saved[0]?.chat_metadata) return;
-  observed.file = {
+  const observed2 = observers2.get(ctx2.chatMetadata);
+  if (!observed2 || !Array.isArray(saved) || !saved[0]?.chat_metadata) return;
+  observed2.file = {
     signature: evidenceSources(saved.slice(1)),
     archives: JSON.stringify(fields2.map((field3) => saved[0].chat_metadata[field3]))
   };
@@ -47966,7 +48036,7 @@ function sourcesUnconfirmed(ctx2) {
   return new Error("\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u5F53\u524D\u6B63\u6587\u4E0E\u5B8C\u6574\u804A\u5929\u6587\u4EF6\u4E0D\u4E00\u81F4\uFF0C\u5DF2\u6709\u6863\u6848\u4FDD\u7559\u3002");
 }
 function checkSaveSources(ctx2, saved, chat2, metadata, proposals) {
-  const observed = observers2.get(ctx2.chatMetadata), previous = observed?.file;
+  const observed2 = observers2.get(ctx2.chatMetadata), previous = observed2?.file;
   if (!Array.isArray(saved) || saved.length && !saved[0]?.chat_metadata) throw sourcesUnconfirmed(ctx2);
   if (!saved.length) {
     if (fields2.some((field3) => records(fieldState(ctx2, field3).snapshot)) || previous) throw sourcesUnconfirmed(ctx2);
@@ -57863,7 +57933,7 @@ function mountDeleteRulesEditor(container, rules = []) {
   const q = (selector) => container.querySelector(selector);
   const list = q("#t-delete-rules-list");
   const current2 = () => entries.find((entry) => entry.id === selectedId);
-  const matches = (entry) => {
+  const matches2 = (entry) => {
     const search = q("[data-delete-search]").value.trim().toLowerCase();
     const mode = q('[data-delete-filter="mode"]').value;
     const status3 = q('[data-delete-filter="status"]').value;
@@ -57879,7 +57949,7 @@ function mountDeleteRulesEditor(container, rules = []) {
     q("[data-delete-notice]").textContent = text8;
   };
   function renderList() {
-    const visible = entries.filter(matches);
+    const visible = entries.filter(matches2);
     const numbers = new Map(entries.map((entry, index2) => [entry.id, index2 + 1]));
     const tabStop = visible.find((entry) => entry.id === selectedId)?.id || visible[0]?.id;
     const scrollTop = list.scrollTop;
@@ -57916,7 +57986,7 @@ function mountDeleteRulesEditor(container, rules = []) {
     setView(container.dataset.deleteView);
   }
   function applyFilters() {
-    const visible = entries.filter(matches);
+    const visible = entries.filter(matches2);
     if (!visible.some((entry) => entry.id === selectedId)) selectedId = visible[0]?.id || null;
     renderList();
     renderEditor();
@@ -57940,7 +58010,7 @@ function mountDeleteRulesEditor(container, rules = []) {
     q("[data-delete-mode-hint]").textContent = modeHints[entry.rule.mode];
     q("[data-delete-editor-subtitle]").textContent = modeLabels[entry.rule.mode];
     renderList();
-    notice(matches(entry) ? "\u6709\u672A\u4FDD\u5B58\u7684\u89C4\u5219\u66F4\u6539\u3002" : "\u5F53\u524D\u89C4\u5219\u5DF2\u8D85\u51FA\u7B5B\u9009\u6761\u4EF6\uFF0C\u66F4\u6539\u4ECD\u4FDD\u7559\u3002");
+    notice(matches2(entry) ? "\u6709\u672A\u4FDD\u5B58\u7684\u89C4\u5219\u66F4\u6539\u3002" : "\u5F53\u524D\u89C4\u5219\u5DF2\u8D85\u51FA\u7B5B\u9009\u6761\u4EF6\uFF0C\u66F4\u6539\u4ECD\u4FDD\u7559\u3002");
   };
   const onInput = (event) => {
     if (event.target.hasAttribute("data-delete-search")) {
@@ -57991,7 +58061,7 @@ function mountDeleteRulesEditor(container, rules = []) {
   const onKeydown = (event) => {
     const button5 = event.target.closest(".t-delete-rule-item");
     if (!button5 || !["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
-    const visible = entries.filter(matches);
+    const visible = entries.filter(matches2);
     const index2 = visible.findIndex((entry) => entry.id === button5.dataset.deleteId);
     if (index2 < 0) return;
     event.preventDefault();
@@ -58190,17 +58260,17 @@ function locateRewriteRange(groups, projection, patch) {
   const run = patch.run;
   const anchor = run.text.trim();
   if (!anchor || projection.runs.filter((item2) => item2.text.trim() === anchor).length !== 1) return { reason: "\u91CD\u590D\u6BB5\u843D\u65E0\u6CD5\u786E\u5B9A\u663E\u793A\u987A\u5E8F\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
-  const matches = [];
+  const matches2 = [];
   for (const group3 of groups) {
     let cursor = 0;
     let start2;
     while ((start2 = group3.text.indexOf(anchor, cursor)) >= 0) {
-      matches.push({ group: group3, start: start2 });
+      matches2.push({ group: group3, start: start2 });
       cursor = start2 + anchor.length;
     }
   }
-  if (matches.length !== 1) return { reason: matches.length ? "\u663E\u793A\u4E2D\u5B58\u5728\u591A\u4E2A\u76F8\u540C\u6B63\u6587\uFF0C\u65E0\u6CD5\u552F\u4E00\u5B9A\u4F4D" : "\u5F53\u524D\u524D\u7AEF\u672A\u663E\u793A\u53EF\u5BF9\u5E94\u7684\u9759\u6001\u6B63\u6587\uFF08\u53EF\u80FD\u5728 iframe \u6216\u52A8\u6001\u7EC4\u4EF6\u4E2D\uFF09" };
-  const { group: group2, start } = matches[0];
+  if (matches2.length !== 1) return { reason: matches2.length ? "\u663E\u793A\u4E2D\u5B58\u5728\u591A\u4E2A\u76F8\u540C\u6B63\u6587\uFF0C\u65E0\u6CD5\u552F\u4E00\u5B9A\u4F4D" : "\u5F53\u524D\u524D\u7AEF\u672A\u663E\u793A\u53EF\u5BF9\u5E94\u7684\u9759\u6001\u6B63\u6587\uFF08\u53EF\u80FD\u5728 iframe \u6216\u52A8\u6001\u7EC4\u4EF6\u4E2D\uFF09" };
+  const { group: group2, start } = matches2[0];
   const leading = run.text.length - run.text.trimStart().length;
   const from = start + patch.local - leading;
   const to = from + patch.before.length;
@@ -59198,12 +59268,12 @@ function applyRewriteMarksToMessage(index2, marksInput) {
     const projection = extractToolboxProjection(message.mes ?? message.message ?? "", rules);
     const groups = collectRewriteTextGroups(container, projection.whitelist, projection.exclusions);
     for (const mark of normalizeRewriteMarks(marksInput)) {
-      const matches = projection.runs.flatMap((run) => {
+      const matches2 = projection.runs.flatMap((run) => {
         const local = run.text.indexOf(mark.after);
         return local >= 0 && run.text.indexOf(mark.after, local + 1) < 0 ? [{ run, local, before: mark.after }] : [];
       });
-      if (matches.length !== 1) continue;
-      const range3 = rangeForRewriteMatch(document, locateRewriteRange(groups, projection, matches[0]));
+      if (matches2.length !== 1) continue;
+      const range3 = rangeForRewriteMatch(document, locateRewriteRange(groups, projection, matches2[0]));
       if (range3) ranges.push(range3);
     }
   }
@@ -65342,21 +65412,21 @@ function layoutMemoryGraph(graph) {
   if (nodes.length > 4) for (let step = 0; step < 150; step++) {
     const forces = nodes.map((node3) => ({ x: (width / 2 - node3.x) * 8e-3, y: (height / 2 - node3.y) * 8e-3 }));
     for (let a = 0; a < nodes.length; a++) for (let b = a + 1; b < nodes.length; b++) {
-      const dx = nodes[b].x - nodes[a].x || 0.1, dy = nodes[b].y - nodes[a].y || 0.1, distance = Math.hypot(dx, dy);
-      const force = Math.min(14, 16e3 / (distance * distance)) + Math.max(0, 168 - distance) * 0.11;
-      forces[a].x -= dx / distance * force;
-      forces[a].y -= dy / distance * force;
-      forces[b].x += dx / distance * force;
-      forces[b].y += dy / distance * force;
+      const dx = nodes[b].x - nodes[a].x || 0.1, dy = nodes[b].y - nodes[a].y || 0.1, distance2 = Math.hypot(dx, dy);
+      const force = Math.min(14, 16e3 / (distance2 * distance2)) + Math.max(0, 168 - distance2) * 0.11;
+      forces[a].x -= dx / distance2 * force;
+      forces[a].y -= dy / distance2 * force;
+      forces[b].x += dx / distance2 * force;
+      forces[b].y += dy / distance2 * force;
     }
     for (const edge of [...graph.edges, ...graph.links]) {
       const a = nodes.findIndex((node3) => node3.id === edge.a), b = nodes.findIndex((node3) => node3.id === edge.b);
       if (a < 0 || b < 0 || a === b) continue;
-      const dx = nodes[b].x - nodes[a].x, dy = nodes[b].y - nodes[a].y, distance = Math.hypot(dx, dy) || 1, force = (distance - 245) * 0.012;
-      forces[a].x += dx / distance * force;
-      forces[a].y += dy / distance * force;
-      forces[b].x -= dx / distance * force;
-      forces[b].y -= dy / distance * force;
+      const dx = nodes[b].x - nodes[a].x, dy = nodes[b].y - nodes[a].y, distance2 = Math.hypot(dx, dy) || 1, force = (distance2 - 245) * 0.012;
+      forces[a].x += dx / distance2 * force;
+      forces[a].y += dy / distance2 * force;
+      forces[b].x -= dx / distance2 * force;
+      forces[b].y -= dy / distance2 * force;
     }
     nodes.forEach((node3, i) => {
       node3.x = Math.max(100, Math.min(width - 100, node3.x + forces[i].x));
@@ -65432,7 +65502,7 @@ function bindMemoryGraph(container, state = { x: 0, y: 0, scale: 1 }) {
     state.y = y - (y - state.y) * state.scale / old;
     apply();
   };
-  const point = (event) => {
+  const point2 = (event) => {
     const matrix = svg.getScreenCTM?.();
     if (!matrix) return null;
     const p = svg.createSVGPoint();
@@ -65448,7 +65518,7 @@ function bindMemoryGraph(container, state = { x: 0, y: 0, scale: 1 }) {
   };
   const down = (event) => {
     if (event.button !== 0 || event.target.closest("[data-node], [data-relation]")) return;
-    const p = point(event);
+    const p = point2(event);
     if (!p) return;
     pointers.set(event.pointerId, p);
     resetGesture();
@@ -65457,7 +65527,7 @@ function bindMemoryGraph(container, state = { x: 0, y: 0, scale: 1 }) {
   };
   const move = (event) => {
     if (!pointers.has(event.pointerId)) return;
-    const p = point(event);
+    const p = point2(event);
     if (!p) return;
     pointers.set(event.pointerId, p);
     const points = [...pointers.values()];
@@ -65476,7 +65546,7 @@ function bindMemoryGraph(container, state = { x: 0, y: 0, scale: 1 }) {
     if (!pointers.size) svg.classList.remove("is-dragging");
   };
   const wheel = (event) => {
-    const p = point(event);
+    const p = point2(event);
     if (!p) return;
     event.preventDefault();
     zoom(event.deltaY < 0 ? 1.1 : 1 / 1.1, p.x, p.y);
@@ -70837,24 +70907,37 @@ async function uploadAudio(hash, blob, signal) {
   if (!verified[path]) throw new Error("\u65E0\u6CD5\u786E\u8BA4\u97F3\u9891\u7F13\u5B58\u5DF2\u843D\u76D8\u3002");
   return path;
 }
-async function getTtsAudio(config2, voice, text8, ownerKey, signal, stillCurrent = () => true, force = false, onProgress = () => {
-}, instruction = "") {
-  const epoch4 = cacheEpoch;
+async function audioHash(config2, voice, text8, ownerKey, instruction) {
   const request = ttsSpeechRequest(config2, voice, text8, instruction);
   const identity4 = [ownerKey, config2.protocol, request.endpoint, config2.key, config2.model, voice, text8, config2.speed, "mp3"];
   if (request.body.instruction) identity4.push({ instruction: request.body.instruction });
-  const hash = await digest(JSON.stringify(identity4));
+  return digest(JSON.stringify(identity4));
+}
+async function readCachedAudio(hash, ownerKey, signal) {
+  const cached = index().find((row) => row.hash === hash && row.ownerKey === ownerKey && ownFile(row.path));
+  if (!cached) return null;
+  try {
+    return await readAudio(await fetch(cached.path, { headers: getRequestHeaders8(), signal }), signal);
+  } catch (error4) {
+    if (signal.aborted) throw error4;
+    return null;
+  }
+}
+async function getCachedTtsAudio(config2, voice, text8, ownerKey, signal, stillCurrent = () => true, instruction = "") {
+  const hash = await audioHash(config2, voice, text8, ownerKey, instruction);
+  if (signal.aborted || !stillCurrent()) throw new DOMException("\u914D\u97F3\u5DF2\u53D6\u6D88", "AbortError");
+  const blob = await readCachedAudio(hash, ownerKey, signal);
+  if (signal.aborted || !stillCurrent()) throw new DOMException("\u914D\u97F3\u5DF2\u53D6\u6D88", "AbortError");
+  return blob;
+}
+async function getTtsAudio(config2, voice, text8, ownerKey, signal, stillCurrent = () => true, force = false, onProgress = () => {
+}, instruction = "") {
+  const epoch4 = cacheEpoch;
+  const hash = await audioHash(config2, voice, text8, ownerKey, instruction);
   if (signal.aborted || !stillCurrent()) throw new DOMException("\u914D\u97F3\u5DF2\u53D6\u6D88", "AbortError");
   if (config2.cache_enabled && !force) {
-    const cached = index().find((row) => row.hash === hash && row.ownerKey === ownerKey && ownFile(row.path));
-    if (cached) {
-      try {
-        const response = await fetch(cached.path, { headers: getRequestHeaders8(), signal });
-        return await readAudio(response, signal);
-      } catch (error4) {
-        if (signal.aborted) throw error4;
-      }
-    }
+    const cached = await readCachedAudio(hash, ownerKey, signal);
+    if (cached) return cached;
   }
   const blob = await synthesize(config2, voice, text8, hash, signal, force, (message) => {
     if (!signal.aborted && stillCurrent()) onProgress(message);
@@ -70937,6 +71020,92 @@ var init_ttsAudio = __esm({
       saveExtData();
     };
     ownFile = (path) => /^\/?user\/files\/echo-tts-[a-f0-9]{64}\.mp3$/.test(path);
+  }
+});
+
+// src/core/ttsParagraphEdit.js
+function locate(projection, start, end) {
+  const matches2 = [];
+  for (const [runIndex, run] of projection.runs.entries()) {
+    const local = run.map.findIndex((item2) => item2.start === start);
+    const last = run.map.findLastIndex((item2) => item2.end === end);
+    if (local >= 0 && last >= local) matches2.push({ runIndex, local, start, end, quote: run.text.slice(local, last + 1) });
+  }
+  return matches2.length === 1 ? matches2[0] : null;
+}
+function migrateTtsParagraphSegments(segments, prior, before, after, patch) {
+  const oldText = before.raw.slice(patch.start, patch.end), newText = patch.after;
+  let prefix = 0, suffix = 0;
+  while (prefix < oldText.length && prefix < newText.length && oldText[prefix] === newText[prefix]) prefix++;
+  while (suffix < oldText.length - prefix && suffix < newText.length - prefix && oldText[oldText.length - 1 - suffix] === newText[newText.length - 1 - suffix]) suffix++;
+  const from = patch.start + prefix, to = patch.end - suffix, delta = newText.length - oldText.length;
+  const shift = (start, end) => end <= from ? { start, end } : start >= to ? { start: start + delta, end: end + delta } : null;
+  const aligned = prior && prior.runs.length === before.runs.length && prior.runs.every((run, index2) => run.text === before.runs[index2].text);
+  const ids2 = /* @__PURE__ */ new Map();
+  for (const segment of segments) if (segment?.id) ids2.set(segment.id, (ids2.get(segment.id) || 0) + 1);
+  const migrated = [], retained = [];
+  for (const segment of segments) {
+    const run = prior?.runs[segment?.runIndex], local = segment?.local, quote = segment?.quote;
+    const stop = local + (typeof quote === "string" ? quote.length : 0);
+    if (!aligned || !run || typeof segment?.id !== "string" || ids2.get(segment.id) !== 1 || typeof segment.speaker !== "string" || !Number.isInteger(local) || local < 0 || typeof quote !== "string" || !quote.trim() || quote.length > 6e3 || run.text.slice(local, stop) !== quote || run.map[local]?.start !== segment.start || run.map[stop - 1]?.end !== segment.end || typeof segment.text !== "string" || segment.text.length > 6e3) {
+      retained.push({ segment, reason: "\u539F\u914D\u97F3\u4F4D\u7F6E\u65E0\u6CD5\u6838\u9A8C" });
+      continue;
+    }
+    const actual = before.runs[segment.runIndex], start = actual.map[local].start, end = actual.map[stop - 1].end;
+    const range3 = shift(start, end), location2 = range3 && locate(after, range3.start, range3.end);
+    if (!location2 || location2.quote !== quote) {
+      retained.push({ segment, reason: !range3 ? "\u539F\u53F0\u8BCD\u5DF2\u4FEE\u6539\u6216\u5220\u9664" : "\u65B0\u6B63\u6587\u65E0\u6CD5\u552F\u4E00\u5B9A\u4F4D\u539F\u53F0\u8BCD" });
+      continue;
+    }
+    migrated.push({ ...segment, ...location2, source: `p${location2.runIndex + 1}` });
+  }
+  migrated.sort((a, b) => a.start - b.start);
+  const ambiguous = /* @__PURE__ */ new Set();
+  for (let i = 0; i < migrated.length; i++) for (let j = i + 1; j < migrated.length && migrated[j].start < migrated[i].end; j++) {
+    ambiguous.add(migrated[i]);
+    ambiguous.add(migrated[j]);
+  }
+  for (const segment of ambiguous) retained.push({ segment, reason: "\u539F\u914D\u97F3\u5B9A\u4F4D\u91CD\u53E0" });
+  const sourceMap = /* @__PURE__ */ new Map();
+  if (aligned) for (const [index2, run] of before.runs.entries()) {
+    if (!run.map.length) continue;
+    const range3 = shift(run.map[0].start, run.map.at(-1).end), location2 = range3 && locate(after, range3.start, range3.end);
+    if (location2?.local === 0 && location2.quote === run.text && location2.quote === after.runs[location2.runIndex].text) {
+      sourceMap.set(`p${index2 + 1}`, `p${location2.runIndex + 1}`);
+    }
+  }
+  return { segments: migrated.filter((segment) => !ambiguous.has(segment)), retained, sourceMap };
+}
+function retainTtsParagraphVariant(history, fingerprint3, variant, voices, config2 = {}) {
+  if (!variant) return;
+  const stamp = JSON.stringify(variant);
+  if (history.some((item2) => item2.fingerprint === fingerprint3 && JSON.stringify(item2.variant) === stamp)) return;
+  const audio2 = Object.fromEntries([
+    "protocol",
+    "endpoint",
+    "model",
+    "speed",
+    "performance_mode",
+    "breeze_performance_enabled",
+    "breeze_instruction_passthrough"
+  ].filter((key) => config2[key] !== void 0).map((key) => [key, config2[key]]));
+  history.push({ fingerprint: fingerprint3, variant: structuredClone(variant), voices: structuredClone(voices || []), audio: audio2 });
+}
+function ttsParagraphHistory(store) {
+  if (!store?.paragraph_edit) return [];
+  const rows = [...Array.isArray(store.paragraph_edit.history) ? store.paragraph_edit.history : []].reverse();
+  rows.push(...Object.entries(store.variants || {}).reverse().map(([fingerprint3, variant]) => ({ fingerprint: fingerprint3, variant })));
+  const seen = /* @__PURE__ */ new Set();
+  return rows.filter((item2) => {
+    if (!item2?.variant || typeof item2.variant !== "object") return false;
+    const stamp = JSON.stringify([item2.fingerprint, item2.variant]);
+    if (seen.has(stamp)) return false;
+    seen.add(stamp);
+    return true;
+  });
+}
+var init_ttsParagraphEdit = __esm({
+  "src/core/ttsParagraphEdit.js"() {
   }
 });
 
@@ -71051,19 +71220,19 @@ function locateSegment(groups, variantsByRun, projection, segment) {
   if (variantsByRun.some((items, index2) => index2 !== segment.runIndex && items.some((item2) => anchors.has(item2.text)))) {
     return { reason: "\u91CD\u590D\u6BB5\u843D\u65E0\u6CD5\u552F\u4E00\u5B9A\u4F4D" };
   }
-  const matches = [];
+  const matches2 = [];
   for (const variant2 of variants) {
     for (const [groupIndex2, group3] of groups.entries()) {
       let cursor = 0;
       let start2;
       while ((start2 = group3.text.indexOf(variant2.text, cursor)) >= 0) {
-        if (verifiedFormatting(group3, start2, variant2)) matches.push({ group: group3, groupIndex: groupIndex2, start: start2, variant: variant2 });
+        if (verifiedFormatting(group3, start2, variant2)) matches2.push({ group: group3, groupIndex: groupIndex2, start: start2, variant: variant2 });
         cursor = start2 + 1;
       }
     }
   }
-  if (matches.length !== 1) return { reason: matches.length ? "\u663E\u793A\u4E2D\u5B58\u5728\u591A\u4E2A\u76F8\u540C\u6B63\u6587" : "\u672A\u627E\u5230\u53EF\u6838\u9A8C\u7684\u9759\u6001\u6B63\u6587" };
-  const { group: group2, groupIndex, start, variant } = matches[0];
+  if (matches2.length !== 1) return { reason: matches2.length ? "\u663E\u793A\u4E2D\u5B58\u5728\u591A\u4E2A\u76F8\u540C\u6B63\u6587" : "\u672A\u627E\u5230\u53EF\u6838\u9A8C\u7684\u9759\u6001\u6B63\u6587" };
+  const { group: group2, groupIndex, start, variant } = matches2[0];
   const end = local + quote.length;
   if (variant.removed.has(local - 1) && variant.removed.has(local) || variant.removed.has(end - 1) && variant.removed.has(end)) return { reason: "\u7247\u6BB5\u8FB9\u754C\u843D\u5728\u683C\u5F0F\u6807\u8BB0\u5185" };
   const from = variant.offsets.findIndex((offset) => offset >= local);
@@ -71085,8 +71254,8 @@ function insertAtEnd(document2, match, controls) {
 function voiceFor(segment, voices) {
   const speaker = String(segment.speaker ?? "");
   const byId = voices.filter((voice2) => voice2?.id === speaker);
-  const matches = byId.length ? byId : voices.filter((voice2) => voice2?.name === speaker);
-  const voice = matches.length === 1 ? matches[0] : null;
+  const matches2 = byId.length ? byId : voices.filter((voice2) => voice2?.name === speaker);
+  const voice = matches2.length === 1 ? matches2[0] : null;
   return { name: String(voice?.name || speaker || "\u672A\u6307\u5B9A\u89D2\u8272"), configured: typeof voice?.voice === "string" && !!voice.voice.trim() };
 }
 function createTtsMessageView(callbacks = {}) {
@@ -71512,94 +71681,8 @@ var init_ttsMessageView = __esm({
 });
 
 // src/core/ttsLocalEdit.js
-function locateRange(projection, start, end) {
-  if (end <= start) return null;
-  const matches = [];
-  for (const [runIndex, run] of projection.runs.entries()) {
-    const local = run.map.findIndex((item2) => item2.start === start);
-    const last = run.map.findLastIndex((item2) => item2.end === end);
-    if (local >= 0 && last >= local) matches.push({ runIndex, local, start, end, quote: run.text.slice(local, last + 1) });
-  }
-  return matches.length === 1 ? matches[0] : null;
-}
-function migrateTtsLocalSegments(segments, prior, before, after, patch) {
-  if (prior.runs.length !== before.runs.length || prior.runs.some((run, index2) => run.text !== before.runs[index2].text)) throw unsafe();
-  const oldText = before.raw.slice(patch.start, patch.end), newText = patch.after;
-  let prefix = 0, suffix = 0;
-  while (prefix < oldText.length && prefix < newText.length && oldText[prefix] === newText[prefix]) prefix++;
-  while (suffix < oldText.length - prefix && suffix < newText.length - prefix && oldText[oldText.length - 1 - suffix] === newText[newText.length - 1 - suffix]) suffix++;
-  const from = patch.start + prefix, to = patch.end - suffix, delta = newText.length - oldText.length;
-  const changed = oldText !== newText, insertion = changed && from === to;
-  const ids2 = /* @__PURE__ */ new Set();
-  const positioned = segments.map((segment) => {
-    const run = prior.runs[segment.runIndex], actual = before.runs[segment.runIndex];
-    const local = segment.local, stop = local + (segment.quote?.length || 0);
-    if (!run || !Number.isInteger(local) || local < 0 || !segment.quote?.trim() || run.text.slice(local, stop) !== segment.quote || run.map[local]?.start !== segment.start || run.map[stop - 1]?.end !== segment.end || typeof segment.text !== "string" || segment.text.length > 6e3 || typeof segment.id !== "string" || ids2.has(segment.id)) throw unsafe();
-    ids2.add(segment.id);
-    return { segment, start: actual.map[local].start, end: actual.map[stop - 1].end };
-  });
-  const touched = changed ? positioned.filter((item2) => insertion ? item2.start <= from && item2.end >= from : item2.start < to && item2.end > from) : [];
-  const deleted = new Set(newText === "" ? touched.filter((item2) => from <= item2.start && to >= item2.end) : []);
-  const affected = touched.filter((item2) => !deleted.has(item2));
-  if (affected.length > 1 || affected.some((item2) => from < item2.start || to > item2.end)) throw unsafe();
-  const edited = affected[0];
-  const shift = (start, end, containsChange = false) => {
-    if (!changed || end <= from && !(insertion && containsChange)) return { start, end };
-    if (start >= to && !(insertion && containsChange)) return { start: start + delta, end: end + delta };
-    if (start <= from && end >= to) return { start, end: end + delta };
-    return null;
-  };
-  const changedIds = /* @__PURE__ */ new Set(), deletedIds = /* @__PURE__ */ new Set();
-  const migrated = [];
-  for (const item2 of positioned) {
-    const { segment } = item2;
-    if (deleted.has(item2)) {
-      deletedIds.add(segment.id);
-      continue;
-    }
-    const range3 = shift(item2.start, item2.end, item2 === edited);
-    if (!range3) throw unsafe();
-    if (range3.start === range3.end && item2 === edited) {
-      deletedIds.add(segment.id);
-      continue;
-    }
-    const location2 = locateRange(after, range3.start, range3.end);
-    if (!location2 || item2 !== edited && location2.quote !== segment.quote) throw unsafe();
-    if (!location2.quote.trim() && item2 === edited) {
-      deletedIds.add(segment.id);
-      continue;
-    }
-    if (!location2.quote.trim() || location2.quote.length > 6e3) throw unsafe();
-    const next = { ...segment, ...location2, source: `p${location2.runIndex + 1}` };
-    if (location2.quote !== segment.quote) {
-      next.text = location2.quote;
-      next.translations = [];
-      delete next.tts_text;
-      delete next.breeze_instruction;
-      delete next.breeze_speech;
-      changedIds.add(segment.id);
-    }
-    migrated.push(next);
-  }
-  migrated.sort((a, b) => a.start - b.start);
-  if (migrated.some((item2, index2) => index2 && item2.start < migrated[index2 - 1].end)) throw unsafe();
-  const sourceMap = /* @__PURE__ */ new Map(), coveredSources = /* @__PURE__ */ new Set();
-  for (const [index2, run] of before.runs.entries()) {
-    const start = run.map[0]?.start, end = run.map.at(-1)?.end;
-    if (start === void 0 || end === void 0) continue;
-    const range3 = shift(start, end, edited?.segment.runIndex === index2);
-    const location2 = range3 && locateRange(after, range3.start, range3.end);
-    if (!location2 || location2.local !== 0 || location2.quote !== after.runs[location2.runIndex].text) continue;
-    const source2 = `p${location2.runIndex + 1}`;
-    sourceMap.set(`p${index2 + 1}`, source2);
-    if (run.text === location2.quote || edited?.segment.runIndex === index2) coveredSources.add(source2);
-  }
-  return { segments: migrated, changedIds, deletedIds, sourceMap, coveredSources };
-}
-var unsafe;
 var init_ttsLocalEdit = __esm({
   "src/core/ttsLocalEdit.js"() {
-    unsafe = () => new Error("\u6B64\u6B21\u5C40\u90E8\u4FEE\u6539\u65E0\u6CD5\u552F\u4E00\u5BF9\u5E94\u5DF2\u6709\u914D\u97F3\u7247\u6BB5\u3002\u8BF7\u7F29\u5C0F\u4FEE\u6539\u8303\u56F4\uFF0C\u6216\u5148\u624B\u52A8\u91CD\u65B0\u8BC6\u522B\u914D\u97F3\uFF1B\u539F\u6309\u94AE\u672A\u79FB\u9664\u3002");
   }
 });
 
@@ -71617,8 +71700,8 @@ function hasFloor(view) {
 function voiceFor2(segment, voices = []) {
   const speaker = String(segment?.speaker ?? "");
   const byId = voices.filter((voice2) => voice2?.id === speaker);
-  const matches = byId.length ? byId : voices.filter((voice2) => voice2?.name === speaker);
-  const voice = matches.length === 1 ? matches[0] : null;
+  const matches2 = byId.length ? byId : voices.filter((voice2) => voice2?.name === speaker);
+  const voice = matches2.length === 1 ? matches2[0] : null;
   return { name: String(voice?.name || speaker || "\u672A\u6307\u5B9A\u89D2\u8272"), configured: typeof voice?.voice === "string" && !!voice.voice.trim() };
 }
 function diagnosticText(row) {
@@ -71692,7 +71775,8 @@ function createTtsDock(callbacks = {}) {
   const analyze = button5("t-tts-analyze", "\u672C\u697C\u8BC6\u522B", "\u8BC6\u522B\u672C\u697C\u7684\u89D2\u8272\u53F0\u8BCD");
   const playAll = button5("t-tts-play-all", "\u64AD\u653E\u672C\u697C", "\u64AD\u653E\u672C\u697C\u5DF2\u914D\u7F6E\u97F3\u8272\u7684\u53F0\u8BCD");
   const stop = button5("t-tts-stop", "\u505C\u6B62", "\u505C\u6B62\u89D2\u8272\u914D\u97F3");
-  for (const [element4, action] of [[analyze, "analyze"], [playAll, "playAll"], [stop, "stop"]]) {
+  const history = button5("t-tts-history", "\u4FDD\u7559\u7684\u65E7\u914D\u97F3", "\u67E5\u770B\u6BB5\u843D\u7F16\u8F91\u4FDD\u7559\u7684\u539F\u914D\u97F3\u3001\u8BD1\u6587\u4E0E\u97F3\u9891\u7F13\u5B58");
+  for (const [element4, action] of [[analyze, "analyze"], [playAll, "playAll"], [stop, "stop"], [history, "history"]]) {
     element4.dataset.ttsAction = action;
     actions.append(element4);
   }
@@ -71725,7 +71809,7 @@ function createTtsDock(callbacks = {}) {
   let operation = 0;
   let frame = null;
   let optionSignature = null;
-  let observed = [];
+  let observed2 = [];
   let gesture = null;
   let suppressClickUntil = 0;
   const disposers = [];
@@ -71799,6 +71883,8 @@ function createTtsDock(callbacks = {}) {
     analyze.disabled = !valid || !!floor2?.busy || !!view?.generating || typeof callbacks.analyze !== "function";
     playAll.disabled = !valid || !playable || typeof callbacks.playAll !== "function";
     stop.disabled = !valid || typeof callbacks.stop !== "function";
+    history.hidden = !floor2?.historyCount;
+    history.disabled = !valid || !!floor2?.busy || typeof callbacks.history !== "function";
     panel.setAttribute("aria-busy", String(!!floor2?.busy || !!view?.generating));
     syncOptions();
     const playback2 = { translating: "\u6B63\u5728\u7FFB\u8BD1", synthesizing: "\u6B63\u5728\u5408\u6210", playing: "\u6B63\u5728\u64AD\u653E", paused: "\u5DF2\u6682\u505C", error: "\u64AD\u653E\u5931\u8D25" }[view?.playbackState ?? floor2?.playbackState];
@@ -71905,7 +71991,7 @@ function createTtsDock(callbacks = {}) {
     }
     const sequence = ++operation;
     errorStatus = null;
-    if (action === "settings" || action === "menu") close(true);
+    if (action === "settings" || action === "menu" || action === "history") close(true);
     const args = action === "play" || action === "menu" ? [captured.index, captured.id] : action === "stop" || action === "settings" ? [] : [captured.index];
     const reportError2 = (error4) => {
       if (sequence !== operation || !currentTarget(captured)) return;
@@ -71937,9 +72023,9 @@ function createTtsDock(callbacks = {}) {
   const observer2 = typeof window2.ResizeObserver === "function" ? new window2.ResizeObserver(() => schedulePosition()) : null;
   function observeInputs() {
     const inputs = [document2.querySelector("#send_form #qr--bar"), document2.getElementById("send_textarea"), document2.getElementById("send_form")].filter(Boolean);
-    if (inputs.length === observed.length && inputs.every((input, i) => input === observed[i])) return;
+    if (inputs.length === observed2.length && inputs.every((input, i) => input === observed2[i])) return;
     observer2?.disconnect();
-    observed = inputs;
+    observed2 = inputs;
     for (const input of inputs) observer2?.observe(input);
   }
   function visibleRect(element4, viewport) {
@@ -72131,6 +72217,184 @@ var init_ttsDock = __esm({
   }
 });
 
+// src/ui/ttsHistoryView.js
+function createTtsHistoryView({ entries, fingerprint: fingerprint3, store, index: index2, valid, loadAudio, playAudio, onClose }) {
+  const document2 = globalThis.document, priorFocus = document2.activeElement;
+  const create = (tag, className, text8) => {
+    const element4 = document2.createElement(tag);
+    if (className) element4.className = className;
+    if (text8 !== void 0) element4.textContent = String(text8);
+    return element4;
+  };
+  const root = create("div", "t-overlay t-root t-tts-editor");
+  root.dataset.echoTtsUi = "";
+  const box = create("section", "t-box t-tts-editor-panel");
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.setAttribute("aria-label", "\u4FDD\u7559\u7684\u65E7\u914D\u97F3");
+  const title = create("h3", "", "\u4FDD\u7559\u7684\u65E7\u914D\u97F3\uFF08\u53EA\u8BFB\u6062\u590D\uFF09");
+  const hint = create("p", "t-tts-hint", "\u8FD9\u91CC\u662F\u539F\u53F0\u8BCD\u53CA\u5386\u53F2\u8BB0\u5F55\uFF0C\u4E0D\u4EE3\u8868\u65B0\u6B63\u6587\u3002\u53EF\u67E5\u770B\u5168\u90E8\u539F\u8BB0\u5F55\u3001\u590D\u5236\u6587\u672C\u3001\u5BFC\u51FA\u8BB0\u5F55\uFF0C\u6216\u64AD\u653E\uFF0F\u4E0B\u8F7D\u5DF2\u6709\u97F3\u9891\u3002\u4E0D\u4F1A\u81EA\u52A8\u91CD\u914D\u97F3\u3001\u7FFB\u8BD1\u6216\u7ED1\u5B9A\u5230\u65B0\u6BB5\u843D\u3002\u65E7\u7F13\u5B58\u53EF\u80FD\u5DF2\u6309\u5BB9\u91CF\u6DD8\u6C70\uFF1B\u672A\u5B58\u97F3\u8272\uFF0F\u670D\u52A1\u5FEB\u7167\u7684\u65E9\u671F\u8BB0\u5F55\u6309\u5F53\u524D\u914D\u7F6E\u67E5\u627E\uFF0C\u5BC6\u94A5\u53D8\u66F4\u6216\u7F13\u5B58\u7F3A\u5931\u65F6\u4E0D\u4F1A\u8BF7\u6C42\u5408\u6210\u3002");
+  const field3 = (label2, control) => {
+    const wrap = create("label", "t-tts-editor-field");
+    control.setAttribute("aria-label", label2);
+    wrap.append(create("span", "", label2), control);
+    return wrap;
+  };
+  const versions = create("select", "t-input"), segments = create("select", "t-input"), renditions = create("select", "t-input");
+  const details = create("textarea", "t-input");
+  details.rows = 9;
+  details.readOnly = true;
+  const source2 = create("textarea", "t-input");
+  source2.rows = 4;
+  source2.readOnly = true;
+  const status3 = create("p", "t-tts-status");
+  status3.setAttribute("role", "status");
+  const actions = create("div", "t-tts-editor-actions");
+  const urls = /* @__PURE__ */ new Set(), controller = new AbortController();
+  let closed = false, busy = false;
+  const option = (value, text8) => {
+    const node3 = create("option", "", text8);
+    node3.value = String(value);
+    return node3;
+  };
+  entries.forEach((entry, i) => versions.append(option(
+    i,
+    `${i + 1} \xB7 ${entry.fingerprint === fingerprint3 ? "\u5F53\u524D\u6765\u6E90\uFF0F\u540C\u6765\u6E90\u5386\u53F2" : "\u65E7\u6765\u6E90"} \xB7 ${entry.variant.mode || "\u672A\u77E5\u6A21\u5F0F"} \xB7 ${Array.isArray(entry.variant.segments) ? entry.variant.segments.length : 0}\u6BB5`
+  )));
+  const selection = () => {
+    const entry = entries[Number(versions.value)], segment = entry?.variant?.segments?.[Number(segments.value)];
+    const speech = renditions.value === "original" ? segment : segment?.translations?.[Number(renditions.value)];
+    return { entry, segment, speech };
+  };
+  const stillValid = () => !closed && valid();
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    controller.abort();
+    root.remove();
+    document2.removeEventListener("keydown", keydown, true);
+    for (const url2 of urls) URL.revokeObjectURL(url2);
+    onClose?.();
+    if (priorFocus?.isConnected) priorFocus.focus();
+  };
+  const keydown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      close();
+    } else if (event.key === "Tab") {
+      const controls = [...box.querySelectorAll("button:not(:disabled), select:not(:disabled), textarea")];
+      const first = controls[0], last = controls.at(-1);
+      if (event.shiftKey && document2.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document2.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+  };
+  const saveBlob = (blob, name) => {
+    const url2 = URL.createObjectURL(blob);
+    urls.add(url2);
+    const link = create("a", "t-tts-action-download", "\u6587\u4EF6\u5DF2\u51C6\u5907\u597D\uFF0C\u70B9\u51FB\u4E0B\u8F7D");
+    link.href = url2;
+    link.download = name;
+    status3.replaceChildren(link);
+    link.click();
+  };
+  const buttons = [];
+  const button5 = (text8, action) => {
+    const node3 = create("button", "t-btn", text8);
+    node3.type = "button";
+    node3.addEventListener("click", async () => {
+      if (busy || closed) return;
+      if (!stillValid()) {
+        status3.textContent = "\u804A\u5929\u3001\u56DE\u590D\u6216\u914D\u97F3\u8BB0\u5F55\u5DF2\u53D8\u5316\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u3002";
+        return;
+      }
+      busy = true;
+      syncButtons();
+      try {
+        await action();
+      } catch (error4) {
+        if (!closed) status3.textContent = error4.message || String(error4);
+      } finally {
+        busy = false;
+        if (!closed) syncButtons();
+      }
+    });
+    buttons.push(node3);
+    actions.append(node3);
+    return node3;
+  };
+  const play = button5("\u64AD\u653E\u5DF2\u6709\u97F3\u9891", async () => {
+    status3.textContent = "\u6B63\u5728\u8BFB\u53D6\u5DF2\u6709\u97F3\u9891\u7F13\u5B58\uFF0C\u4E0D\u4F1A\u5408\u6210\u2026";
+    await playAudio(selection(), controller.signal);
+    if (stillValid()) status3.textContent = "\u65E7\u914D\u97F3\u64AD\u653E\u7ED3\u675F\uFF1B\u672A\u7ED1\u5B9A\u65B0\u6B63\u6587\u3002";
+  });
+  const download = button5("\u4E0B\u8F7D\u5DF2\u6709\u97F3\u9891", async () => {
+    status3.textContent = "\u6B63\u5728\u8BFB\u53D6\u5DF2\u6709\u97F3\u9891\u7F13\u5B58\uFF0C\u4E0D\u4F1A\u5408\u6210\u2026";
+    const blob = await loadAudio(selection(), controller.signal);
+    if (stillValid()) saveBlob(blob, `echo-retained-${index2}-${versions.value}-${segments.value}.mp3`);
+  });
+  button5("\u5BFC\u51FA\u5168\u90E8\u539F\u8BB0\u5F55", () => saveBlob(new Blob([JSON.stringify(store, null, 2)], { type: "application/json" }), `echo-retained-${index2}.json`));
+  const closeButton = create("button", "t-btn", "\u5173\u95ED");
+  closeButton.type = "button";
+  closeButton.addEventListener("click", close);
+  actions.append(closeButton);
+  function syncButtons() {
+    for (const control of [versions, segments, renditions, ...buttons]) control.disabled = busy;
+    const { segment, speech } = selection();
+    play.disabled = download.disabled = busy || typeof segment?.speaker !== "string" || typeof speech?.text !== "string" || !speech.text.trim();
+  }
+  const showSegment = () => {
+    const { entry, segment } = selection();
+    details.value = JSON.stringify(segment ?? entry?.variant ?? {}, null, 2);
+    source2.value = typeof entry?.variant?.source === "string" ? entry.variant.source : "\u65E9\u671F\u8BB0\u5F55\u672A\u4FDD\u5B58\u539F\u6587\u5FEB\u7167\uFF1B\u914D\u97F3\u5B57\u6BB5\u4ECD\u53EF\u67E5\u770B\u53CA\u5BFC\u51FA\u3002";
+    renditions.replaceChildren(option("original", "\u539F\u8BED\u8A00\u6717\u8BFB\uFF0F\u8868\u6F14"));
+    if (Array.isArray(segment?.translations)) segment.translations.forEach((item2, i) => renditions.append(option(i, `\u4FDD\u7559\u8BD1\u6587 ${i + 1} \xB7 ${item2?.language || "\u672A\u77E5\u8BED\u8A00"}`)));
+    syncButtons();
+    status3.textContent = "";
+  };
+  const showVersion = () => {
+    const entry = entries[Number(versions.value)];
+    segments.replaceChildren();
+    if (Array.isArray(entry?.variant?.segments)) entry.variant.segments.forEach((segment, i) => segments.append(option(
+      i,
+      `${i + 1} \xB7 ${segment?.speaker || "\u672A\u77E5\u89D2\u8272"} \xB7 ${String(segment?.quote || segment?.text || "\u65E0\u53F0\u8BCD\u6587\u672C").slice(0, 90)}`
+    )));
+    showSegment();
+  };
+  versions.addEventListener("change", showVersion);
+  segments.addEventListener("change", showSegment);
+  renditions.addEventListener("change", syncButtons);
+  box.append(
+    title,
+    hint,
+    field3("\u914D\u97F3\u7248\u672C", versions),
+    field3("\u539F\u914D\u97F3\u7247\u6BB5", segments),
+    field3("\u7F13\u5B58\u97F3\u8F68", renditions),
+    field3("\u539F\u8BB0\u5F55\uFF08\u53EF\u590D\u5236\uFF1B\u542BID\u3001\u6717\u8BFB\u3001\u8868\u6F14\u3001\u8BD1\u6587\u7B49\u5B8C\u6574\u5B57\u6BB5\uFF09", details),
+    field3("\u8BE5\u7248\u672C\u539F\u6587\u5FEB\u7167", source2),
+    actions,
+    status3
+  );
+  root.append(box);
+  document2.body.append(root);
+  document2.addEventListener("keydown", keydown, true);
+  root.addEventListener("click", (event) => {
+    if (event.target === root) close();
+  });
+  showVersion();
+  versions.focus();
+  return { close };
+}
+var init_ttsHistoryView = __esm({
+  "src/ui/ttsHistoryView.js"() {
+  }
+});
+
 // src/core/tts.js
 import { eventSource as eventSource10, event_types as event_types10, setExtensionPrompt as setExtensionPrompt6, extension_prompt_types as extension_prompt_types6, extension_prompt_roles as extension_prompt_roles6, saveChatConditional as saveChatConditional4, getRequestHeaders as getRequestHeaders9 } from "../../../../script.js";
 function context4() {
@@ -72236,30 +72500,42 @@ function createRecord(target) {
   return record;
 }
 function recordFor(index2) {
+  if (paragraphEdits.has(context4()?.chat[index2])) throw new Error("\u672C\u697C\u6B63\u5728\u4FDD\u5B58\u539F\u6587\u6BB5\u843D\uFF0C\u8BF7\u4FDD\u5B58\u5B8C\u6210\u540E\u518D\u64CD\u4F5C\u914D\u97F3\u3002");
   const found = records2.get(index2);
   if (found && current(found.target)) return found;
   const record = createRecord(capture(index2));
   records2.set(index2, record);
   return record;
 }
-function prepareTtsLocalEdit(target, patch, rewritten) {
+function preserveParagraphHistory(prior, fingerprint3, target) {
+  if (!prior?.paragraph_edit) return {};
+  const history = [...Array.isArray(prior.paragraph_edit.history) ? prior.paragraph_edit.history : []];
+  retainTtsParagraphVariant(history, fingerprint3, prior.variants?.[fingerprint3], target.voices, target.cfg);
+  return { paragraph_edit: { ...prior.paragraph_edit, history } };
+}
+function prepareTtsParagraphEdit(target, patch, rewritten) {
   const noop = { writes: [], assertCurrent() {
   }, apply() {
   }, rollback() {
+  }, refresh() {
   } };
-  const index2 = target?.index, message = target?.message, originalRecord = records2.get(index2);
-  if (!originalRecord && !message?.extra?.[TTS_KEY]?.variants) return noop;
-  const captured = capture(index2, false), { ctx: ctx2, extraction, cfg } = captured;
-  const raw = target?.projection?.raw;
-  if (target?.ctx?.chat !== ctx2.chat || target.ctx.chatMetadata !== ctx2.chatMetadata || ctx2.chat[index2] !== message || typeof raw !== "string" || message.mes !== raw || typeof rewritten !== "string" || !Number.isInteger(patch?.start) || !Number.isInteger(patch?.end) || patch.start < 0 || patch.end < patch.start || patch.end > raw.length || typeof patch.after !== "string" || raw.slice(0, patch.start) + patch.after + raw.slice(patch.end) !== rewritten) {
-    throw new Error("\u5C40\u90E8\u4FEE\u6539\u7684\u804A\u5929\u6216\u6E90\u7801\u8303\u56F4\u5DF2\u53D8\u5316\uFF0C\u672A\u8FC1\u79FB\u914D\u97F3\u3002");
+  const index2 = target?.index, message = target?.message;
+  const originalRecord = records2.get(index2), extra = message?.extra, prior = extra?.[TTS_KEY];
+  if (!originalRecord && !prior) return noop;
+  const captured = capture(index2, false), { ctx: ctx2, extraction, cfg } = captured, raw = target?.projection?.raw;
+  if (target?.ctx?.chat !== ctx2.chat || target.ctx.chatMetadata !== ctx2.chatMetadata || target.ctx.chatId !== ctx2.chatId || ctx2.chat[index2] !== message || Number(target.swipe ?? 0) !== Number(captured.swipe ?? 0) || typeof raw !== "string" || message.mes !== raw || typeof rewritten !== "string" || !Number.isInteger(patch?.start) || !Number.isInteger(patch?.end) || patch.start < 0 || patch.end < patch.start || patch.end > raw.length || typeof patch.after !== "string" || raw.slice(0, patch.start) + patch.after + raw.slice(patch.end) !== rewritten) {
+    throw new Error("\u539F\u6587\u6BB5\u843D\u7684\u804A\u5929\u3001\u5F53\u524D\u56DE\u590D\u6216\u66FF\u6362\u8303\u56F4\u5DF2\u53D8\u5316\uFF0C\u672A\u8FC1\u79FB\u914D\u97F3\u3002");
   }
   if (rewritten === raw) return noop;
-  if (originalRecord && !current(originalRecord.target)) throw new Error("\u6B64\u697C\u914D\u97F3\u4E0E\u5F53\u524D\u6B63\u6587\u6216\u8BBE\u7F6E\u5C1A\u672A\u540C\u6B65\uFF0C\u8BF7\u7B49\u5F85\u540C\u6B65\u540E\u518D\u5C40\u90E8\u7F16\u8F91\u3002");
-  let sourceTarget = originalRecord?.target || captured;
-  const prior = message.extra?.[TTS_KEY], extra = message.extra;
-  let stored = prior?.variants?.[sourceTarget.fingerprint];
-  if (!originalRecord && stored?.mode !== cfg.mode) {
+  const sameFloor = (record) => record?.target.message === message && record.target.ctx.chat === ctx2.chat;
+  const idle = () => {
+    if (paragraphEdits.has(message) || generationBlocks(index2, ctx2) || pending3.has(index2) || originalRecord?.busy || [...savingRecords].some(sameFloor) || [...translationJobs.keys()].some(sameFloor) || [...editors].some((close) => sameFloor(editorOwners.get(close))) || [...downloadSegments].some((segment) => originalRecord?.segments.includes(segment)) || sameFloor(playback?.record)) {
+      throw new Error("\u672C\u697C\u914D\u97F3\u6B63\u5728\u8BC6\u522B\u3001\u7FFB\u8BD1\u3001\u4FDD\u5B58\u3001\u64AD\u653E\u6216\u6253\u5F00\u64CD\u4F5C\u9762\u677F\uFF0C\u8BF7\u5B8C\u6210\u6216\u5173\u95ED\u540E\u518D\u7F16\u8F91\u539F\u6587\uFF1B\u5176\u4ED6\u697C\u5C42\u4E0D\u53D7\u5F71\u54CD\u3002");
+    }
+  };
+  idle();
+  let sourceTarget = captured, stored = prior?.variants?.[captured.fingerprint];
+  if (stored?.mode !== cfg.mode) {
     for (const mode2 of ["analysis", "inline"]) {
       const modeConfig = { ...cfg, mode: mode2 }, source2 = ttsSourceIdentity(message, raw, extraction, modeConfig);
       const candidate = prior?.variants?.[source2.fingerprint];
@@ -72269,129 +72545,163 @@ function prepareTtsLocalEdit(target, patch, rewritten) {
       break;
     }
   }
-  const mode = sourceTarget.cfg.mode, cacheOnly = !originalRecord && mode !== cfg.mode;
-  const base = originalRecord || (stored?.mode === mode ? createRecord(sourceTarget) : null);
-  if (!base) return noop;
-  const saved = stored?.mode === mode ? cachedSegments(sourceTarget, base.projection) : null;
-  if (stored?.mode === mode && !saved) throw new Error("\u6B64\u697C\u5DF2\u4FDD\u5B58\u7684\u914D\u97F3\u4F4D\u7F6E\u65E0\u6CD5\u6838\u9A8C\uFF0C\u8BF7\u5148\u624B\u52A8\u91CD\u65B0\u8BC6\u522B\u914D\u97F3\uFF1B\u672A\u79FB\u9664\u539F\u6309\u94AE\u3002");
-  const sameFloor = (record) => record?.target.message === message && record.target.ctx.chat === ctx2.chat;
-  const idle = () => {
-    if (generationBlocks(index2, ctx2) || pending3.has(index2) || base.busy || [...savingRecords].some(sameFloor) || [...translationJobs.keys()].some(sameFloor) || [...editors].some((close) => sameFloor(editorOwners.get(close))) || [...downloadSegments].some((segment) => base.segments.includes(segment)) || sameFloor(playback?.record)) {
-      throw new Error("\u672C\u697C\u914D\u97F3\u6B63\u5728\u8BC6\u522B\u3001\u7FFB\u8BD1\u3001\u4FDD\u5B58\u3001\u64AD\u653E\u6216\u6253\u5F00\u64CD\u4F5C\u9762\u677F\uFF0C\u8BF7\u5B8C\u6210\u6216\u5173\u95ED\u540E\u518D\u5C40\u90E8\u7F16\u8F91\uFF1B\u5176\u4ED6\u697C\u5C42\u4E0D\u53D7\u5F71\u54CD\u3002");
+  const history = [...Array.isArray(prior?.paragraph_edit?.history) ? prior.paragraph_edit.history : []];
+  let live = null;
+  if (sameFloor(originalRecord) && originalRecord.target.swipe === captured.swipe) {
+    const liveVariant = {
+      mode: originalRecord.target.cfg.mode,
+      source: originalRecord.target.raw,
+      segments: originalRecord.segments,
+      performance_profile: ttsPromptProfile(originalRecord.target.cfg),
+      complete: originalRecord.complete,
+      completedSources: originalRecord.completedSources,
+      diagnostics: originalRecord.diagnostics,
+      status: originalRecord.status
+    };
+    retainTtsParagraphVariant(history, originalRecord.target.fingerprint, liveVariant, originalRecord.target.voices, originalRecord.target.cfg);
+    if (originalRecord.target.epoch === captured.epoch && originalRecord.target.signature === captured.signature && sameTextWithInlineImageSlots(originalRecord.target.raw, raw)) {
+      live = originalRecord;
+      sourceTarget = live.target;
+      const candidate = prior?.variants?.[sourceTarget.fingerprint];
+      stored = candidate?.mode === sourceTarget.cfg.mode ? candidate : void 0;
     }
-  };
-  idle();
-  const liveById = new Map(base.segments.map((segment) => [segment.id, segment]));
-  const allSegments = saved ? saved.map((segment) => liveById.get(segment.id) || segment) : [...base.segments];
-  for (const segment of base.segments) if (!allSegments.some((item2) => item2.id === segment.id)) allSegments.push(segment);
-  const before = sourceTarget.raw === raw ? base.projection : ttsSources(raw, extraction).projection;
-  const nextSources = ttsSources(rewritten, extraction);
-  const migration = migrateTtsLocalSegments(allSegments, base.projection, before, nextSources.projection, patch);
-  const priorCompleted = base.complete ? base.sources.map((source2) => source2.id) : base.completedSources;
-  const completedSources = [...new Set(priorCompleted.map((id3) => migration.sourceMap.get(id3)).filter((id3) => id3 && migration.coveredSources.has(id3)))];
-  const complete = nextSources.sources.every((source2) => completedSources.includes(source2.id));
-  const diagnostics = base.diagnostics.map((item2) => ({
+  }
+  if (stored) retainTtsParagraphVariant(history, sourceTarget.fingerprint, stored, sourceTarget.voices, sourceTarget.cfg);
+  const mode = sourceTarget.cfg.mode, before = ttsSources(raw, extraction), after = ttsSources(rewritten, extraction);
+  const sourceMatches = sameTextWithInlineImageSlots(sourceTarget.raw, raw);
+  const priorProjection = sourceMatches ? ttsSources(sourceTarget.raw, extraction).projection : null;
+  const liveById = new Map((live?.segments || []).map((segment) => [segment.id, segment]));
+  const segments = Array.isArray(stored?.segments) ? stored.segments.map((segment) => liveById.get(segment?.id) || segment) : [];
+  for (const segment of live?.segments || []) if (!segments.some((item2) => item2?.id === segment.id)) segments.push(segment);
+  const migration = migrateTtsParagraphSegments(segments, priorProjection, before.projection, after.projection, patch);
+  migration.segments = migration.segments.filter((segment) => {
+    try {
+      if (segment.tts_text !== void 0) validateTtsPerformance(segment.text, segment.tts_text);
+      if (segment.breeze_instruction !== void 0) validateBreezeInstruction(segment.breeze_instruction);
+      if (segment.breeze_speech !== void 0) validateBreezeSpeech(segment.text, segment.breeze_speech);
+      return true;
+    } catch {
+      migration.retained.push({ segment, reason: "\u539F\u8868\u6F14\u5B57\u6BB5\u65E0\u6CD5\u6838\u9A8C\uFF0C\u4FDD\u7559\u539F\u8BB0\u5F55" });
+      return false;
+    }
+  });
+  for (const segment of migration.segments.splice(300)) migration.retained.push({ segment, reason: "\u8D85\u8FC7\u5F53\u524D\u914D\u97F3\u7247\u6BB5\u4E0A\u9650" });
+  const priorSources = priorProjection?.runs.map((_, i) => `p${i + 1}`) || [];
+  const base = live || stored || {};
+  const priorComplete = live ? live.complete : Array.isArray(stored?.segments) && stored.complete !== false;
+  const completed = priorComplete ? priorSources : Array.isArray(base.completedSources) ? base.completedSources : [];
+  const uncertain = new Set(migration.retained.map((item2) => item2.segment?.id));
+  const uncertainSources = new Set(segments.filter((segment) => uncertain.has(segment?.id)).map((segment) => `p${segment?.runIndex + 1}`));
+  const unknownSource = [...uncertainSources].some((id3) => !priorSources.includes(id3));
+  const sameProfile = !stored || (stored.performance_profile || "fish") === ttsPromptProfile(cfg);
+  const completedSources = unknownSource || !sameProfile ? [] : [...new Set(completed.filter((id3) => !uncertainSources.has(id3)).map((id3) => migration.sourceMap.get(id3)).filter(Boolean))];
+  const complete = sameProfile && !after.projection.fatalReason && after.sources.every((source2) => completedSources.includes(source2.id));
+  const diagnostics = (Array.isArray(base.diagnostics) ? base.diagnostics : []).map((item2) => ({
     ...item2,
-    ...Array.isArray(item2.sources) ? { sources: [...new Set(item2.sources.map((id3) => migration.sourceMap.get(id3)).filter(Boolean))] } : {}
+    ...Array.isArray(item2?.sources) ? { sources: [...new Set(item2.sources.map((id3) => migration.sourceMap.get(id3)).filter(Boolean))] } : {}
   }));
-  const status3 = [
-    migration.deletedIds.size ? `\u5DF2\u5220\u9664${migration.deletedIds.size}\u6BB5\u914D\u97F3` : "",
-    migration.changedIds.size ? `\u5DF2\u540C\u6B65\u66F4\u65B0${migration.changedIds.size}\u6BB5\u53F0\u8BCD\uFF0C\u5E76\u6E05\u9664\u5176\u65E7\u8868\u6F14\u4E0E\u8BD1\u6587` : "",
-    "\u5176\u4F59\u914D\u97F3\u4E0E\u6309\u94AE\u5DF2\u539F\u4F4D\u4FDD\u7559",
-    !complete ? "\u5C1A\u672A\u914D\u97F3\u7684\u6539\u52A8\u8BF7\u624B\u52A8\u91CD\u65B0\u8BC6\u522B" : ""
-  ].filter(Boolean).join("\uFF1B");
+  const status3 = `\u539F\u6587\u6BB5\u843D\u5DF2\u7F16\u8F91\uFF1B${migration.segments.length}\u6BB5\u672A\u6539\u914D\u97F3\u5DF2\u8FC1\u79FB\uFF1B${migration.retained.length}\u6BB5\u65E7\u914D\u97F3\u672A\u7ED1\u5B9A\u65B0\u6B63\u6587\uFF0C\u53EF\u5728\u914D\u97F3\u9762\u677F\u7684\u300C\u4FDD\u7559\u7684\u65E7\u914D\u97F3\u300D\u67E5\u770B\u3001\u5BFC\u51FA\u6216\u8BFB\u53D6\u5DF2\u6709\u97F3\u9891\u7F13\u5B58${complete ? "" : "\uFF1B\u6539\u52A8\u533A\u57DF\u9700\u624B\u52A8\u91CD\u65B0\u8BC6\u522B"}`;
   const fingerprint3 = ttsFingerprint(JSON.stringify([captured.swipe ?? 0, rewritten, extraction]));
-  const playbackStates = { ...base.playbackStates };
-  for (const id3 of migration.deletedIds) delete playbackStates[id3];
-  for (const id3 of migration.changedIds) playbackStates[id3] = "idle";
-  const nextRecord = {
-    ...base,
-    target: { ...captured, raw: rewritten, fingerprint: fingerprint3 },
-    ...nextSources,
-    segments: migration.segments.filter((segment) => cfg.narration || segment.speaker !== "narrator"),
-    candidates: buildTtsCandidates(nextSources.projection, { narration: cfg.narration, voices: captured.voices }),
-    complete,
-    analyzed: complete,
-    completedSources,
-    diagnostics,
-    status: status3,
-    playbackStates
-  };
-  const variants = { ...prior?.variants || {}, [fingerprint3]: {
+  const variants = { ...prior?.variants || {} };
+  if (variants[fingerprint3]) retainTtsParagraphVariant(history, fingerprint3, variants[fingerprint3], captured.voices, cfg);
+  variants[fingerprint3] = {
     ...stored || {},
     mode,
     source: rewritten,
     segments: structuredClone(migration.segments),
-    performance_profile: stored?.performance_profile || ttsPromptProfile(cfg),
+    performance_profile: stored?.performance_profile || ttsPromptProfile(sourceTarget.cfg),
     complete,
     completedSources,
     diagnostics,
     status: status3
-  } };
-  const keys = Object.keys(variants);
-  while (keys.length > 20) delete variants[keys.shift()];
-  const nextStore = { ...prior || {}, version: 1, variants };
-  const object = extra && typeof extra === "object" ? extra : message;
-  const key = object === message ? "extra" : TTS_KEY;
+  };
+  const nextStore = {
+    ...prior || {},
+    version: prior?.version ?? 1,
+    variants,
+    paragraph_edit: { ...prior?.paragraph_edit || {}, version: 1, history }
+  };
+  const object = extra && typeof extra === "object" ? extra : message, key = object === message ? "extra" : TTS_KEY;
   const writes3 = [{
     object,
     key,
     original: object[key],
-    after: object === message ? { [TTS_KEY]: nextStore } : nextStore,
-    had: Object.hasOwn(object, key)
+    had: Object.hasOwn(object, key),
+    after: object === message ? { [TTS_KEY]: nextStore } : nextStore
   }];
-  const viewEdit = cacheOnly ? null : renderer?.prepareRebase?.(
-    target.container,
-    {
-      index: index2,
-      fingerprint: fingerprint3,
-      projection: nextRecord.projection,
-      segments: nextRecord.segments.filter((segment) => !segment.skipped),
-      voices: captured.voices,
-      playbackStates
-    },
-    { fingerprint: sourceTarget.fingerprint, deletedIds: migration.deletedIds, changedIds: migration.changedIds }
-  );
+  const playbackStates = Object.fromEntries(migration.segments.map((segment) => [segment.id, live?.playbackStates[segment.id] || "idle"]));
+  const nextRecord = {
+    target: { ...captured, raw: rewritten, fingerprint: fingerprint3 },
+    ...after,
+    candidates: buildTtsCandidates(after.projection, { narration: cfg.narration, voices: captured.voices }),
+    segments: migration.segments.filter((segment) => cfg.narration || segment.speaker !== "narrator"),
+    status: status3,
+    complete,
+    analyzed: complete,
+    completedSources,
+    diagnostics,
+    playbackStates,
+    busy: false
+  };
   const savedStamp = JSON.stringify(prior);
-  const recordStamp = () => JSON.stringify([
-    base.segments,
-    base.completedSources,
-    base.diagnostics,
-    base.status,
-    base.complete,
-    base.analyzed,
-    base.playbackStates
+  const recordStamp = () => originalRecord && JSON.stringify([
+    originalRecord.target.raw,
+    originalRecord.target.signature,
+    originalRecord.segments,
+    originalRecord.completedSources,
+    originalRecord.diagnostics,
+    originalRecord.status,
+    originalRecord.complete,
+    originalRecord.analyzed,
+    originalRecord.playbackStates
   ]);
-  const oldStamp = recordStamp();
-  let applied = false, rolledBack = false;
+  const oldStamp = recordStamp(), oldPreview = previewCache;
+  let nextPreview = oldPreview;
+  try {
+    const key2 = JSON.parse(oldPreview?.key);
+    if (key2[0] === ctx2.key && key2[1] === sourceTarget.fingerprint && migration.segments.some((segment) => segment.id === key2[2])) {
+      key2[1] = fingerprint3;
+      nextPreview = { ...oldPreview, key: JSON.stringify(key2) };
+    }
+  } catch {
+  }
+  const token3 = {}, install2 = mode === cfg.mode;
+  let applied = false, ended = false;
   const sameOwner = () => captured.epoch === epoch3 && sameContext(ctx2) && ctx2.chat[index2] === message && message.swipe_id === captured.swipe && captured.signature === settingSignature(ctx2) && JSON.stringify(extraction) === JSON.stringify(getToolboxExtraction(getExtData()));
+  const release = () => {
+    if (paragraphEdits.get(message) === token3) paragraphEdits.delete(message);
+  };
   return {
     writes: writes3,
     assertCurrent() {
-      if (applied || rolledBack || !sameOwner() || message.mes !== raw || message.extra !== extra || message.extra?.[TTS_KEY] !== prior || JSON.stringify(prior) !== savedStamp || message.extra?.display_text !== captured.display || message.swipes !== captured.swipes || message.swipe_info !== captured.swipeInfo || records2.get(index2) !== originalRecord || recordStamp() !== oldStamp) throw new Error("\u5C40\u90E8\u7F16\u8F91\u51C6\u5907\u671F\u95F4\u6B64\u697C\u914D\u97F3\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+      if (applied || ended || !sameOwner() || message.mes !== raw || message.extra !== extra || message.extra?.[TTS_KEY] !== prior || JSON.stringify(prior) !== savedStamp || message.extra?.display_text !== captured.display || message.swipes !== captured.swipes || message.swipe_info !== captured.swipeInfo || records2.get(index2) !== originalRecord || recordStamp() !== oldStamp) throw new Error("\u51C6\u5907\u671F\u95F4\u672C\u697C\u6B63\u6587\u6216\u914D\u97F3\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u8BD5\u3002");
       idle();
-      viewEdit?.assertCurrent();
     },
     apply() {
-      if (applied || rolledBack || !sameOwner() || message.mes !== rewritten || message.extra?.[TTS_KEY] !== nextStore || records2.get(index2) !== originalRecord || recordStamp() !== oldStamp) throw new Error("\u6B63\u6587\u4E0E\u914D\u97F3\u7684\u5C40\u90E8\u5199\u5165\u4E0D\u540C\u6B65\uFF0C\u672A\u66F4\u65B0\u6309\u94AE\u3002");
+      if (applied || ended || !sameOwner() || message.mes !== rewritten || message.extra?.[TTS_KEY] !== nextStore || records2.get(index2) !== originalRecord || recordStamp() !== oldStamp) throw new Error("\u539F\u6587\u4E0E\u914D\u97F3\u5199\u5165\u4E0D\u540C\u6B65\uFF0C\u8BF7\u91CD\u8BD5\u3002");
       idle();
       nextRecord.target = { ...nextRecord.target, swipes: message.swipes, swipeInfo: message.swipe_info, display: message.extra?.display_text };
-      viewEdit?.apply();
-      if (!cacheOnly) records2.set(index2, nextRecord);
+      paragraphEdits.set(message, token3);
+      if (install2) records2.set(index2, nextRecord);
+      else records2.delete(index2);
+      if (previewCache === oldPreview) previewCache = nextPreview;
       applied = true;
     },
     rollback() {
-      if (rolledBack) return;
-      rolledBack = true;
-      if (!sameOwner() || message.mes !== raw) return;
-      if (applied && !cacheOnly && records2.get(index2) !== nextRecord) return;
-      if (applied && !cacheOnly) {
-        if (playback?.record === nextRecord) stopTtsPlayback();
-        translationJobs.get(nextRecord)?.controller.abort();
-        if (originalRecord) records2.set(index2, originalRecord);
-        else records2.delete(index2);
-      }
-      viewEdit?.rollback();
+      if (ended) return;
+      ended = true;
+      release();
+      if (!applied || !sameOwner() || message.mes !== raw || records2.get(index2) !== (install2 ? nextRecord : void 0)) return;
+      if (originalRecord) records2.set(index2, originalRecord);
+      else records2.delete(index2);
+      if (previewCache === nextPreview) previewCache = oldPreview;
+    },
+    refresh() {
+      if (ended) return;
+      ended = true;
+      release();
+      if (!applied || !sameOwner() || !sameTextWithInlineImageSlots(message.mes, rewritten) || message.extra?.[TTS_KEY] !== nextStore) return;
+      refreshTtsFloor(index2);
     }
   };
 }
@@ -72399,6 +72709,35 @@ function refreshPrompt() {
   const ctx2 = context4(), cfg = config(), voices = voicesFor(ctx2);
   const prompt2 = ctx2?.enabled && cfg.mode === "inline" && voices.length ? ttsInlinePrompt(cfg, voices) : "";
   setExtensionPrompt6(TTS_PROMPT_KEY, prompt2, extension_prompt_types6.IN_CHAT, 0, false, extension_prompt_roles6.SYSTEM);
+}
+function ttsRecordView(r) {
+  return {
+    index: r.target.index,
+    fingerprint: r.target.fingerprint,
+    segments: r.segments.filter((s) => !s.skipped),
+    projection: r.projection,
+    voices: r.target.voices,
+    status: !r.complete && r.diagnostics.length && !r.status.includes("\u90E8\u5206\u5B8C\u6210") ? `\u8BC6\u522B\u90E8\u5206\u5B8C\u6210\uFF1B${r.status}` : r.status,
+    busy: r.busy,
+    diagnostics: r.diagnostics,
+    playbackStates: r.playbackStates
+  };
+}
+function refreshTtsFloor(index2) {
+  const ctx2 = context4();
+  for (const element4 of document.querySelectorAll("#chat .mes[mesid]")) {
+    if (Number(element4.getAttribute("mesid")) !== index2) continue;
+    if (!ctx2?.enabled || !allowed(ctx2.chat[index2], config()) || generationBlocks(index2, ctx2)) {
+      renderer?.clear(element4);
+      continue;
+    }
+    try {
+      renderer?.render(element4, ttsRecordView(recordFor(index2)));
+    } catch {
+      renderer?.clear(element4);
+    }
+  }
+  dock?.refresh();
 }
 function render(repairOnly = false) {
   if (!renderer) return;
@@ -72410,23 +72749,14 @@ function render(repairOnly = false) {
   }
   for (const element4 of document.querySelectorAll("#chat .mes[mesid]")) {
     const index2 = Number(element4.getAttribute("mesid"));
+    if (paragraphEdits.has(ctx2.chat[index2])) continue;
     if (!Number.isInteger(index2) || !allowed(ctx2.chat[index2], config()) || generationBlocks(index2, ctx2)) {
       renderer.clear(element4);
       continue;
     }
     try {
       const r = recordFor(index2);
-      const view = {
-        index: index2,
-        fingerprint: r.target.fingerprint,
-        segments: r.segments.filter((s) => !s.skipped),
-        projection: r.projection,
-        voices: r.target.voices,
-        status: !r.complete && r.diagnostics.length && !r.status.includes("\u90E8\u5206\u5B8C\u6210") ? `\u8BC6\u522B\u90E8\u5206\u5B8C\u6210\uFF1B${r.status}` : r.status,
-        busy: r.busy,
-        diagnostics: r.diagnostics,
-        playbackStates: r.playbackStates
-      };
+      const view = ttsRecordView(r);
       if (!repairOnly || renderer.needsRender?.(element4, view) !== false) renderer.render(element4, view);
     } catch {
       renderer.clear(element4);
@@ -72445,11 +72775,26 @@ function getTtsDockView(selectedIndex = null) {
     playbackState: "idle"
   };
   if (!ctx2?.enabled) return base;
-  base.floors = ctx2.chat.flatMap((message, index3) => allowed(message, cfg) && String(message.mes || "").trim() ? [{ index: index3, label: `\u7B2C ${index3} \u697C \xB7 ${message.name || (message.is_user ? "\u7528\u6237" : "\u89D2\u8272")}` }] : []).reverse();
+  const hasContent = (message) => String(message.mes || "").trim() || message.extra?.[TTS_KEY]?.paragraph_edit;
+  base.floors = ctx2.chat.flatMap((message, index3) => allowed(message, cfg) && hasContent(message) ? [{ index: index3, label: `\u7B2C ${index3} \u697C \xB7 ${message.name || (message.is_user ? "\u7528\u6237" : "\u89D2\u8272")}` }] : []).reverse();
   const valid = base.floors.some((floor2) => floor2.index === selectedIndex);
-  const index2 = valid ? selectedIndex : ctx2.chat.findLastIndex((message) => !message.is_user && allowed(message, cfg) && String(message.mes || "").trim());
+  const index2 = valid ? selectedIndex : ctx2.chat.findLastIndex((message) => !message.is_user && allowed(message, cfg) && hasContent(message));
   const chosen = index2 >= 0 ? index2 : base.floors[0]?.index;
   if (chosen === void 0) return base;
+  if (paragraphEdits.has(ctx2.chat[chosen])) {
+    base.floor = {
+      index: chosen,
+      fingerprint: records2.get(chosen)?.target.fingerprint || "paragraph-save",
+      status: "\u6B63\u5728\u4FDD\u5B58\u539F\u6587\u6BB5\u843D\uFF0C\u914D\u97F3\u8BB0\u5F55\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u7A0D\u5019\u2026",
+      busy: true,
+      segments: [],
+      voices: [],
+      diagnostics: [],
+      pending: [],
+      historyCount: 0
+    };
+    return base;
+  }
   const record = recordFor(chosen);
   const segments = record.segments.filter((segment) => !segment.skipped);
   const messageElement = [...document.querySelectorAll("#chat .mes[mesid]")].find((element4) => Number(element4.getAttribute("mesid")) === chosen);
@@ -72471,7 +72816,8 @@ function getTtsDockView(selectedIndex = null) {
     voices: record.target.voices,
     diagnostics: record.diagnostics,
     pending: pending4,
-    playbackStates: record.playbackStates
+    playbackStates: record.playbackStates,
+    historyCount: record.target.message.extra?.[TTS_KEY]?.paragraph_edit ? Object.keys(record.target.message.extra[TTS_KEY].variants || {}).length + (record.target.message.extra[TTS_KEY].paragraph_edit.history?.length || 0) : 0
   };
   if (playback?.record && current(playback.record.target)) base.playbackState = playback.blob ? audio?.paused ? "paused" : "playing" : playback.phase || "synthesizing";
   return base;
@@ -72508,6 +72854,7 @@ async function persistRecordNow(record, valid = () => true) {
   message.extra || (message.extra = {});
   const prior = message.extra[TTS_KEY];
   const variants = { ...prior?.variants || {}, [record.target.fingerprint]: {
+    ...prior?.variants?.[record.target.fingerprint] || {},
     mode: record.target.cfg.mode,
     source: record.target.raw,
     segments: structuredClone(record.segments),
@@ -72518,8 +72865,13 @@ async function persistRecordNow(record, valid = () => true) {
     status: record.status
   } };
   const keys = Object.keys(variants);
-  while (keys.length > 20) delete variants[keys.shift()];
-  const next = { version: 1, variants };
+  if (!prior?.paragraph_edit) while (keys.length > 20) delete variants[keys.shift()];
+  const next = {
+    ...prior || {},
+    version: prior?.version ?? 1,
+    variants,
+    ...preserveParagraphHistory(prior, record.target.fingerprint, record.target)
+  };
   message.extra[TTS_KEY] = next;
   savingRecords.add(record);
   try {
@@ -72865,7 +73217,7 @@ async function playBlob(blob, serial, settings) {
     };
     owner.finish = finish;
     const playing = () => {
-      if (!finished && playback === owner && serial === playSerial && owner.record) setPlaybackState(owner.record, owner.segmentId, "playing");
+      if (!finished && playback === owner && serial === playSerial && owner.record && owner.segmentId) setPlaybackState(owner.record, owner.segmentId, "playing");
     };
     element4.addEventListener?.("playing", playing);
     element4.onended = finish;
@@ -73058,6 +73410,66 @@ async function downloadSegment(record, segment, status3, externalSignal) {
     downloads.delete(controller);
     downloadSegments.delete(segment);
   }
+}
+function openTtsParagraphHistory(index2) {
+  const record = recordFor(index2), store = record.target.message.extra?.[TTS_KEY], entries = ttsParagraphHistory(store);
+  if (!entries.length) throw new Error("\u672C\u697C\u5C1A\u65E0\u6BB5\u843D\u7F16\u8F91\u4FDD\u7559\u8BB0\u5F55\u3002");
+  for (const close of editors) close();
+  const owner = {}, valid = () => current(record.target) && record.target.message.extra?.[TTS_KEY] === store;
+  const loadAudio = async ({ entry, segment, speech }, signal) => {
+    if (!valid() || !entries.includes(entry) || !Array.isArray(entry.variant.segments) || !entry.variant.segments.includes(segment) || speech !== segment && !(Array.isArray(segment?.translations) && segment.translations.includes(speech))) throw new Error("\u539F\u914D\u97F3\u8BB0\u5F55\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u3002");
+    const voices = Array.isArray(entry.voices) && entry.voices.length ? entry.voices : record.target.voices;
+    const voice = voices.find((item2) => item2?.id === segment.speaker);
+    if (!voice?.voice) throw new Error("\u6B64\u65E7\u8BB0\u5F55\u6CA1\u6709\u53EF\u7528\u97F3\u8272\u6620\u5C04\uFF1B\u539F\u8BB0\u5F55\u4ECD\u53EF\u590D\u5236\u6216\u5BFC\u51FA\u3002");
+    const cfg = normalizeTtsConfig({ ...record.target.cfg, ...entry.audio || {} });
+    const prepared = synthesisPayload(speech, cfg);
+    const original = { ...record, target: { ...record.target, fingerprint: entry.fingerprint, cfg } };
+    const key = speechIdentity(original, segment, voice, prepared).key;
+    const blob = previewCache?.key === key ? previewCache.blob : await getCachedTtsAudio(
+      cfg,
+      voice.voice,
+      prepared.text,
+      record.target.ctx.key,
+      signal,
+      valid,
+      prepared.instruction
+    );
+    if (signal.aborted || !valid()) throw new DOMException("\u65E7\u914D\u97F3\u8BFB\u53D6\u5DF2\u53D6\u6D88", "AbortError");
+    if (!blob) throw new Error("\u6CA1\u6709\u627E\u5230\u6B64\u539F\u53F0\u8BCD\u7684\u53EF\u7528\u97F3\u9891\u7F13\u5B58\uFF08\u53EF\u80FD\u672A\u7F13\u5B58\u3001\u5DF2\u6DD8\u6C70\u6216\u914D\u7F6E\uFF0F\u5BC6\u94A5\u5DF2\u53D8\u5316\uFF09\u3002\u672A\u8BF7\u6C42\u91CD\u65B0\u5408\u6210\uFF1B\u539F\u8BB0\u5F55\u4ECD\u53EF\u590D\u5236\u6216\u5BFC\u51FA\u3002");
+    return blob;
+  };
+  const playAudio = async (selection, signal) => {
+    stopTtsPlayback();
+    const serial = playSerial, controller = new AbortController();
+    const abort = () => controller.abort();
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
+    playback = { controller, record, historyOwner: owner, phase: "reading-cache" };
+    try {
+      const blob = await loadAudio(selection, controller.signal);
+      if (serial !== playSerial || !valid()) return;
+      playback.blob = blob;
+      await abortable3(playBlob(blob, serial, record.target.cfg), controller.signal);
+    } finally {
+      signal.removeEventListener("abort", abort);
+      if (serial === playSerial) stopTtsPlayback();
+    }
+  };
+  const view = createTtsHistoryView({
+    entries,
+    fingerprint: record.target.fingerprint,
+    store,
+    index: index2,
+    valid,
+    loadAudio,
+    playAudio,
+    onClose: () => {
+      editors.delete(view.close);
+      if (playback?.historyOwner === owner) stopTtsPlayback();
+    }
+  });
+  editors.add(view.close);
+  editorOwners.set(view.close, record);
 }
 function openSegmentActions(index2, id3) {
   const record = recordFor(index2), segment = record.segments.find((s) => s.id === id3);
@@ -73640,6 +74052,7 @@ function initTts() {
   dock = createTtsDock({
     getView: getTtsDockView,
     analyze: analyzeTtsMessage,
+    history: openTtsParagraphHistory,
     playAll: (index2) => {
       const record = recordFor(index2);
       return playSegments(index2, record.segments.filter((s) => !s.skipped && record.target.voices.some((v) => v.id === s.speaker && v.voice)).map((s) => s.id));
@@ -73717,7 +74130,7 @@ function initTts() {
   refreshPrompt();
   render();
 }
-var initialized5, generation, epoch3, renderer, dock, observer, refreshTimer, records2, pending3, downloads, downloadSegments, translationJobs, playback, playSerial, audio, previewCache, generationSnapshot, editors, editorOwners, savingRecords, config, sameContext, voicesFor, allowed, identities, nextIdentity, identity3, settingSignature;
+var initialized5, generation, epoch3, renderer, dock, observer, refreshTimer, records2, pending3, downloads, downloadSegments, translationJobs, playback, playSerial, audio, previewCache, generationSnapshot, editors, editorOwners, savingRecords, paragraphEdits, config, sameContext, voicesFor, allowed, identities, nextIdentity, identity3, settingSignature;
 var init_tts = __esm({
   "src/core/tts.js"() {
     init_storage();
@@ -73727,11 +74140,13 @@ var init_tts = __esm({
     init_ttsBreeze();
     init_ttsPerformance();
     init_ttsAudio();
+    init_ttsParagraphEdit();
     init_contentChangeEvents();
     init_textExtraction();
     init_ttsMessageView();
     init_ttsLocalEdit();
     init_ttsDock();
+    init_ttsHistoryView();
     init_dom();
     init_storyMemoryTasks();
     init_ttsTranslation();
@@ -73750,6 +74165,7 @@ var init_tts = __esm({
     editors = /* @__PURE__ */ new Set();
     editorOwners = /* @__PURE__ */ new WeakMap();
     savingRecords = /* @__PURE__ */ new Set();
+    paragraphEdits = /* @__PURE__ */ new WeakMap();
     config = () => normalizeTtsConfig(getExtData()[TTS_KEY]?.config);
     sameContext = (ctx2) => {
       const now = context4();
@@ -75422,18 +75838,18 @@ function openMenu(focusFirst = false) {
     touch = null;
     const item2 = event.target.closest?.("[data-feature]");
     if (event.touches.length !== 1 || !item2 || !$menu[0].contains(item2)) return;
-    const point = event.touches[0];
-    touch = { item: item2, id: point.identifier, x: point.clientX, y: point.clientY, scrollTop: $menu[0].scrollTop };
+    const point2 = event.touches[0];
+    touch = { item: item2, id: point2.identifier, x: point2.clientX, y: point2.clientY, scrollTop: $menu[0].scrollTop };
   }, { passive: true });
   $menu[0].addEventListener("touchmove", (event) => {
-    const point = [...event.touches].find((point2) => point2.identifier === touch?.id);
-    if (!point || event.touches.length !== 1 || Math.hypot(point.clientX - touch.x, point.clientY - touch.y) > 10) touch = null;
+    const point2 = [...event.touches].find((point3) => point3.identifier === touch?.id);
+    if (!point2 || event.touches.length !== 1 || Math.hypot(point2.clientX - touch.x, point2.clientY - touch.y) > 10) touch = null;
   }, { passive: true });
   $menu[0].addEventListener("touchend", (event) => {
     const tap = touch;
     touch = null;
-    const point = [...event.changedTouches].find((point2) => point2.identifier === tap?.id);
-    if (!tap || !point || event.touches.length || $menu[0].scrollTop !== tap.scrollTop || Math.hypot(point.clientX - tap.x, point.clientY - tap.y) > 10) return;
+    const point2 = [...event.changedTouches].find((point3) => point3.identifier === tap?.id);
+    if (!tap || !point2 || event.touches.length || $menu[0].scrollTop !== tap.scrollTop || Math.hypot(point2.clientX - tap.x, point2.clientY - tap.y) > 10) return;
     void selectFeature(tap.item, event);
   }, { passive: false });
   $menu[0].addEventListener("touchcancel", () => {
@@ -77410,6 +77826,8 @@ function openSettingsWindow() {
       type: tempApp.type,
       content: tempApp.content,
       animation: tempApp.animation || "ripple",
+      // 开关由扩展设置抽屉即时保存，保留当前值，不用开窗时的快照覆盖。
+      animation_enabled: d.appearance?.animation_enabled !== false,
       size: tempApp.size || 56,
       ui_font_scale: tempApp.ui_font_scale !== void 0 ? tempApp.ui_font_scale : 100,
       // ⚠ 本对象是**整体替换**（不是合并），所以每个要持久化的字段都必须
@@ -79926,9 +80344,9 @@ function getMainStoryboardTargets() {
   if (!origin) throw new Error("\u627E\u4E0D\u5230\u8FD9\u6BB5\u7EED\u5199\u7684\u6765\u6E90\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u5386\u53F2\u3002");
   const cardKey = view ? characterCardKeyFromAvatar(origin.characterAvatar) : getCharacterCardKey();
   const runtime = GlobalState.continuationRuntime?.chatId === origin.chatId ? GlobalState.continuationRuntime.byScript?.[result.scriptId] : null;
-  const matches = (round) => view ? round.roundKey === view.roundKey : result.generationId ? round.generationId === result.generationId : String(round.content || "").trim() === result.content.trim();
-  const branch = global?.branch || [runtime, ...runtime?.archivedBranches || []].find((item2) => item2?.rounds?.some(matches));
-  const anchorIndex = branch?.rounds?.findIndex(matches) ?? -1;
+  const matches2 = (round) => view ? round.roundKey === view.roundKey : result.generationId ? round.generationId === result.generationId : String(round.content || "").trim() === result.content.trim();
+  const branch = global?.branch || [runtime, ...runtime?.archivedBranches || []].find((item2) => item2?.rounds?.some(matches2));
+  const anchorIndex = branch?.rounds?.findIndex(matches2) ?? -1;
   const anchor = anchorIndex >= 0 ? { ...branch.rounds[anchorIndex] } : null;
   const branchKey = String(branch?.branchKey || "");
   const metadata = {
@@ -82220,6 +82638,9 @@ function refreshFloatingTuck() {
   saveFloatingPosition(btn, size);
   updateTimerPosition();
 }
+function refreshFloatingAnimation() {
+  $("#titania-float-btn").toggleClass("t-animation-disabled", getExtData()?.appearance?.animation_enabled === false);
+}
 function destroyFloatingButton() {
   $(document).off(".titaniaFloatDrag");
   $(window).off(".titaniaFloatPosition");
@@ -82324,6 +82745,7 @@ function createFloatingButton() {
   const btnText = app.content ?? "\u{1F3AD}";
   const btnContent = isImageDataUri ? `<img src="${app.content}">` : `<span style="position:relative; z-index:2;">${btnText}</span>`;
   const btn = $(`<div id="titania-float-btn" class="t-root" data-animation="${animationType}">${btnContent}</div>`);
+  btn.toggleClass("t-animation-disabled", app.animation_enabled === false);
   const timer4 = $(`<div id="titania-timer" class="t-root">0.0s</div>`);
   btn.css({
     "--t-size": `${size}px`,
@@ -85039,7 +85461,7 @@ init_continuationStore();
 init_favsStore();
 init_scriptStore();
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
-import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource16, event_types as event_types16 } from "../../../../script.js";
+import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSource17, event_types as event_types17 } from "../../../../script.js";
 
 // src/core/extensionUpdate.js
 init_defaults();
@@ -85273,14 +85695,404 @@ init_rewriteEntryButton();
 // src/ui/paragraphEditor.js
 init_dom();
 init_storage();
-import { eventSource as eventSource12, event_types as event_types12 } from "../../../../script.js";
+import { eventSource as eventSource13, event_types as event_types13 } from "../../../../script.js";
 
 // src/core/paragraphEditing.js
 init_storage();
 init_toolboxSettings();
-init_textRewritePatch();
-init_textRewriteWriteback();
-init_textRewriteDom();
+
+// src/core/paragraphRaw.js
+init_toolboxSettings();
+init_textExtraction();
+var INLINE = /* @__PURE__ */ new Set(["span", "q", "em", "strong", "i", "b", "u", "s", "del", "mark", "small", "sub", "sup", "echo-tts"]);
+var TAG = /<!--[\s\S]*?-->|<\/?([\p{L}_][\p{L}\p{N}_:-]*)(?:\s+(?:"[^"]*"|'[^']*'|[^<>"'])*)?\s*\/?>/gu;
+var UI = "button,input,textarea,select,img,svg,audio,video,[data-echo-tts-ui],[data-sttts-pic],[data-sttts-action],[data-sttts-owned],.t-paragraph-retained-media";
+var OMIT = 'script,style,iframe,pre,code,details,[hidden],[aria-hidden="true"]';
+var BLOCK2 = /* @__PURE__ */ new Set(["P", "DIV", "SECTION", "ARTICLE", "MAIN", "BLOCKQUOTE", "LI", "H1", "H2", "H3", "H4", "H5", "H6"]);
+var normalizeParagraph = (text8) => String(text8 ?? "").normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+var matches = (a, b) => !!a && !!b && (a === b || a.includes(b) || b.includes(a));
+function formattingGap(raw, exclusions, allowBreak = true) {
+  if (/\r?\n[\t ]*\r?\n/.test(raw)) return false;
+  let cursor = 0, breaks = 0;
+  for (const match of raw.matchAll(TAG)) {
+    if (raw.slice(cursor, match.index).trim() || !match[1]) return false;
+    const tag = match[1].toLowerCase();
+    if (tag === "br") {
+      if (!allowBreak || ++breaks > 1) return false;
+    } else if (!INLINE.has(tag) || isProtectedTextElement(tag, match[0], exclusions)) return false;
+    cursor = match.index + match[0].length;
+  }
+  return !raw.slice(cursor).trim();
+}
+function inlinePairs(raw) {
+  const stack = [], pairs = [];
+  for (const match of raw.matchAll(TAG)) {
+    if (!match[1]) continue;
+    const tag = match[1].toLowerCase(), start = match.index, end = start + match[0].length;
+    if (match[0].startsWith("</")) {
+      const index2 = stack.findLastIndex((open2) => open2.tag === tag);
+      if (index2 < 0) continue;
+      const open = stack[index2];
+      stack.length = index2;
+      if (INLINE.has(tag)) pairs.push({ tag, open, close: { start, end } });
+    } else if (!TEXT_VOID_TAGS.has(tag) && !/\/\s*>$/.test(match[0])) stack.push({ tag, start, end });
+  }
+  return pairs;
+}
+function rawParagraphs(raw, rules) {
+  const projection = extractToolboxProjection(raw, rules);
+  if (projection.fatalReason) throw new Error(projection.fatalReason);
+  const parts = [];
+  for (const run of projection.runs) {
+    if (!run.text.trim()) continue;
+    const previous = parts.at(-1);
+    if (previous && formattingGap(raw.slice(previous.end, run.start), projection.exclusions)) {
+      previous.end = run.end;
+      previous.visible += " " + run.text;
+    } else parts.push({ start: run.start, end: run.end, visible: run.text });
+  }
+  const pairs = inlinePairs(raw);
+  for (const part of parts) {
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const pair of pairs) {
+        if (isProtectedTextElement(pair.tag, raw.slice(pair.open.start, pair.open.end), projection.exclusions)) continue;
+        if (pair.open.end <= part.start && pair.close.start >= part.start && pair.close.end <= part.end && formattingGap(raw.slice(pair.open.end, part.start), projection.exclusions, false)) {
+          part.start = pair.open.start;
+          changed = true;
+        }
+        if (pair.open.start >= part.start && pair.open.start < part.end && pair.close.start >= part.end && formattingGap(raw.slice(part.end, pair.close.start), projection.exclusions, false)) {
+          part.end = pair.close.end;
+          changed = true;
+        }
+        if (pair.open.end <= part.start && pair.close.start >= part.end && formattingGap(raw.slice(pair.open.end, part.start), projection.exclusions, false) && formattingGap(raw.slice(part.end, pair.close.start), projection.exclusions, false)) {
+          part.start = pair.open.start;
+          part.end = pair.close.end;
+          changed = true;
+        }
+      }
+    }
+    part.text = raw.slice(part.start, part.end);
+    part.normalized = normalizeParagraph(part.visible);
+  }
+  return { projection, parts };
+}
+function displayedParagraphs(container, { exclusions = [] } = {}) {
+  const groups = [];
+  let group2 = { text: "", spans: [] };
+  const flush = () => {
+    if (group2.text.trim()) groups.push(group2);
+    group2 = { text: "", spans: [] };
+  };
+  const append = (text8, node3 = null) => {
+    group2.spans.push({ node: node3, parent: node3?.parentNode, start: group2.text.length, end: group2.text.length + text8.length, original: text8 });
+    group2.text += text8;
+  };
+  const visit = (parent) => {
+    for (const node3 of parent.childNodes) {
+      if (node3.nodeType === 3) {
+        append(node3.data, node3);
+        continue;
+      }
+      if (node3.nodeType !== 1) continue;
+      if (node3.matches(UI)) continue;
+      const attributes = Array.from(node3.attributes, (attribute) => `${attribute.name}="${attribute.value}"`).join(" ");
+      if (node3.matches(OMIT) || isProtectedTextElement(node3.tagName, attributes, exclusions)) {
+        flush();
+        continue;
+      }
+      if (node3.tagName === "BR") {
+        append("\n");
+        continue;
+      }
+      const style = node3.ownerDocument.defaultView?.getComputedStyle(node3);
+      if (style?.display === "none" || ["hidden", "collapse"].includes(style?.visibility)) continue;
+      const block = BLOCK2.has(node3.tagName) || ["block", "flex", "grid", "list-item"].includes(style?.display);
+      if (block) flush();
+      visit(node3);
+      if (block) flush();
+    }
+  };
+  visit(container);
+  flush();
+  const paragraphs = [];
+  for (const group3 of groups) {
+    const separators = [...group3.text.matchAll(/\n[\t ]*\n+/g)];
+    let from = 0;
+    for (const stop of [...separators.map((match) => ({ at: match.index, end: match.index + match[0].length })), { at: group3.text.length, end: group3.text.length }]) {
+      const text8 = group3.text.slice(from, stop.at);
+      const spans = group3.spans.filter((span) => span.node && span.end > from && span.start < stop.at).map((span) => ({ ...span, start: span.start - from, end: span.end - from }));
+      if (text8.trim() && spans.length) paragraphs.push({ text: text8, spans, normalized: normalizeParagraph(text8) });
+      from = stop.end;
+    }
+  }
+  return paragraphs;
+}
+function paragraphContainsHit(paragraph, hit) {
+  return Number.isInteger(hit?.offset) && paragraph.spans.some((span) => span.node === hit.node && hit.offset >= 0 && hit.offset <= span.original.length && span.start + hit.offset >= 0 && span.start + hit.offset <= paragraph.text.length);
+}
+function alignParagraph(dom, source2, selected) {
+  const n = dom.length, m = source2.length, pairs = /* @__PURE__ */ new Map();
+  if (!m || selected < 0) return null;
+  if (n * m <= 25e4) {
+    const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+    for (let i2 = n - 1; i2 >= 0; i2--) for (let j2 = m - 1; j2 >= 0; j2--) {
+      dp[i2][j2] = matches(dom[i2].normalized, source2[j2].normalized) ? dp[i2 + 1][j2 + 1] + 1 : Math.max(dp[i2 + 1][j2], dp[i2][j2 + 1]);
+    }
+    let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (matches(dom[i].normalized, source2[j].normalized)) {
+        pairs.set(i++, j++);
+      } else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+      else j++;
+    }
+  }
+  if (pairs.has(selected)) return { index: pairs.get(selected), inferred: dom[selected].normalized !== source2[pairs.get(selected)].normalized };
+  let before = selected - 1, after = selected + 1;
+  while (before >= 0 && !pairs.has(before)) before--;
+  while (after < n && !pairs.has(after)) after++;
+  const guess = before >= 0 ? pairs.get(before) + selected - before : after < n ? pairs.get(after) - (after - selected) : selected;
+  const consistent = before >= 0 && after < n ? pairs.get(after) - pairs.get(before) === after - before : before >= 0 || after < n;
+  if (guess >= 0 && guess < m && (consistent || n === m)) return { index: guess, inferred: true };
+  return null;
+}
+function relocateRawParagraph(parts, target) {
+  const matches2 = parts.map((part, index2) => ({ part, index: index2 })).filter((item2) => item2.part.text === target.text);
+  if (matches2.length === 1) return matches2[0].part;
+  const contextual = matches2.filter(({ index: index2 }) => (target.previous === null ? index2 === 0 : parts[index2 - 1]?.text === target.previous) && (target.next === null ? index2 === parts.length - 1 : parts[index2 + 1]?.text === target.next));
+  return contextual.length === 1 ? contextual[0].part : null;
+}
+
+// src/core/paragraphMedia.js
+var PARAGRAPH_MEDIA_KEY = "titania_paragraph_media";
+var own2 = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
+var ignoredExtra = /* @__PURE__ */ new Set([PARAGRAPH_MEDIA_KEY, "echo_tts", "titania_local_text_revision", "display_text"]);
+function paragraphAssetUrl(value, kind = "image") {
+  const text8 = String(value || "").trim();
+  if (!text8 || /[\u0000-\u001f]/.test(text8)) return "";
+  try {
+    const url2 = new URL(text8, globalThis.document?.baseURI || globalThis.location?.href || "http://localhost/");
+    if (["http:", "https:", "blob:"].includes(url2.protocol)) return url2.href;
+    if (url2.protocol === "data:" && new RegExp(`^data:${kind}/`, "i").test(text8)) return text8;
+  } catch {
+  }
+  return "";
+}
+function captureParagraphMedia(container, message) {
+  const assets = /* @__PURE__ */ new Map();
+  const add = (kind, value, title = "") => {
+    const url2 = paragraphAssetUrl(value, kind);
+    if (url2) assets.set(`${kind}:${url2}`, { kind, url: url2, title: String(title || "") });
+  };
+  for (const asset of message.extra?.[PARAGRAPH_MEDIA_KEY]?.assets || []) add(asset.kind, asset.url, asset.title);
+  const collect = (root) => {
+    for (const image of root?.querySelectorAll("img") || []) add("image", image.currentSrc || image.getAttribute("src"), image.alt);
+    for (const audio2 of root?.querySelectorAll("audio") || []) add("audio", audio2.currentSrc || audio2.getAttribute("src") || audio2.querySelector("source")?.getAttribute("src"), audio2.title);
+    for (const video of root?.querySelectorAll("video") || []) add("video", video.currentSrc || video.getAttribute("src") || video.querySelector("source")?.getAttribute("src"), video.title);
+  };
+  collect(container);
+  for (const value of [message.mes, message.extra?.display_text, message.swipe_info?.[message.swipe_id ?? 0]?.extra?.display_text]) {
+    if (typeof value !== "string") continue;
+    const template = document.createElement("template");
+    template.innerHTML = value;
+    collect(template.content);
+    for (const match of value.matchAll(/!\[([^\]\n]*)\]\(\s*(?:<([^>\n]+)>|([^\s)]+))(?:\s+["'][^\n]*?["'])?\s*\)/g)) add("image", match[2] || match[3], match[1]);
+  }
+  for (const media of Array.isArray(message.extra?.media) ? message.extra.media : []) {
+    if (["image", "audio", "video"].includes(media.type)) add(media.type, media.url, media.title);
+  }
+  for (const picture of Object.values(message.extra?.sttts_pics || {})) {
+    for (const version of picture?.versions || (picture?.url ? [picture] : [])) if (version) add("image", version.url, version.prompt || version.title);
+  }
+  return [...assets.values()];
+}
+function retainedStamp(message, swipe) {
+  const extras = [message.extra, message.swipe_info?.[swipe]?.extra];
+  return JSON.stringify(extras.map((extra) => Object.fromEntries(Object.entries(extra || {}).filter(([key]) => !ignoredExtra.has(key)))));
+}
+async function durableAsset(asset) {
+  if (!asset.url.startsWith("blob:")) return asset;
+  const response = await fetch(asset.url);
+  if (!response.ok) throw new Error("\u6709\u4E00\u4EFD\u4E34\u65F6\u5A92\u4F53\u5C1A\u672A\u4FDD\u5B58\uFF0C\u672A\u5237\u65B0\u6B63\u6587\uFF1B\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002");
+  const blob = await response.blob();
+  const url2 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("\u4E34\u65F6\u5A92\u4F53\u5907\u4EFD\u5931\u8D25\uFF0C\u672A\u5237\u65B0\u6B63\u6587\u3002"));
+    reader.readAsDataURL(blob);
+  });
+  if (!paragraphAssetUrl(url2, asset.kind)) throw new Error("\u4E34\u65F6\u5A92\u4F53\u7684\u7C7B\u578B\u65E0\u6CD5\u786E\u8BA4\uFF0C\u672A\u5237\u65B0\u6B63\u6587\u3002");
+  return { ...asset, url: url2 };
+}
+async function prepareParagraphMedia(target) {
+  const { message, swipe, container } = target;
+  const before = message.extra?.[PARAGRAPH_MEDIA_KEY];
+  const cacheValues = [message.extra?.display_text, message.swipe_info?.[swipe]?.extra?.display_text];
+  const stamp = retainedStamp(message, swipe);
+  const assets = /* @__PURE__ */ new Map();
+  const pending4 = new Map([...target.mediaAtOpen || [], ...captureParagraphMedia(container, message)].map((asset) => [`${asset.kind}:${asset.url}`, asset]));
+  for (const asset of pending4.values()) {
+    const durable = await durableAsset(asset);
+    assets.set(`${durable.kind}:${durable.url}`, durable);
+  }
+  const displays = [...before?.displays || []];
+  for (const value2 of cacheValues) {
+    if (typeof value2 === "string" && value2 !== target.projection.raw && !displays.some((item2) => item2.source === target.projection.raw && item2.text === value2)) {
+      displays.push({ source: target.projection.raw, text: value2 });
+    }
+  }
+  const value = { ...before || {}, version: 1, assets: [...assets.values()], displays };
+  return {
+    value,
+    needed: !!before || value.assets.length > 0 || displays.length > 0,
+    stillCurrent: () => message.extra?.[PARAGRAPH_MEDIA_KEY] === before && retainedStamp(message, swipe) === stamp && message.extra?.display_text === cacheValues[0] && message.swipe_info?.[swipe]?.extra?.display_text === cacheValues[1],
+    preserved: () => retainedStamp(message, swipe) === stamp,
+    savedMatches: (saved) => !!saved && retainedStamp(saved, swipe) === stamp,
+    assertCurrent() {
+      if (!this.stillCurrent()) throw new Error("\u672C\u697C\u7684\u914D\u56FE\u6216\u9644\u4EF6\u521A\u521A\u66F4\u65B0\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\uFF1B\u65B0\u5A92\u4F53\u6CA1\u6709\u88AB\u8986\u76D6\u3002");
+    }
+  };
+}
+function makeParagraphWrite(writes3, object, key, after) {
+  const existing = writes3.find((write) => write.object === object && write.key === key);
+  if (existing) existing.after = after;
+  else writes3.push({ object, key, original: object[key], after, had: own2(object, key) });
+}
+
+// src/ui/paragraphMessageView.js
+init_dom();
+import { eventSource as eventSource12, event_types as event_types12, updateMessageBlock } from "../../../../script.js";
+var initialized6 = false;
+var queued = false;
+var observed = null;
+var signatures = /* @__PURE__ */ new WeakMap();
+var getContext = () => globalThis.SillyTavern?.getContext?.();
+function mediaShelf(element4, message, index2) {
+  const data = message.extra?.[PARAGRAPH_MEDIA_KEY];
+  const signature2 = data;
+  const previous = element4.querySelector(".t-paragraph-retained-media");
+  if (signatures.get(element4) === signature2 && (previous || !data)) return;
+  signatures.set(element4, signature2);
+  const open = previous?.open === true;
+  previous?.remove();
+  if (!data || !(data.assets?.length || data.displays?.length)) return;
+  ensureFeatureCss("paragraph-editor.css");
+  const details = document.createElement("details");
+  details.className = "t-root t-paragraph-retained-media";
+  details.open = open;
+  const summary = document.createElement("summary");
+  summary.textContent = data.assets?.length ? `\u4FDD\u7559\u7684\u914D\u56FE\u4E0E\u5A92\u4F53\uFF08${data.assets.length}\uFF09` : "\u539F\u663E\u793A\u5FEB\u7167\u5907\u4EFD";
+  const note = document.createElement("p");
+  note.textContent = "\u6BB5\u843D\u4FEE\u6539\u524D\u4FDD\u7559\u7684\u5A92\u4F53\u3002\u539F\u914D\u56FE\u63D2\u4EF6\u6B63\u5E38\u6062\u590D\u65F6\u4ECD\u5728\u6B63\u6587\u663E\u793A\uFF1B\u539F\u6587\u5F15\u7528\u6539\u53D8\u7684\u56FE\u7247\u4E5F\u53EF\u5728\u8FD9\u91CC\u6253\u5F00\u3002";
+  const content = document.createElement("div");
+  content.className = "t-paragraph-retained-assets";
+  let populated = false;
+  const populate = () => {
+    if (populated || !details.open) return;
+    populated = true;
+    for (const asset of data.assets || []) {
+      if (!["image", "audio", "video"].includes(asset.kind)) continue;
+      const url2 = paragraphAssetUrl(asset.url, asset.kind);
+      if (!url2) continue;
+      const item2 = document.createElement("figure");
+      const media = document.createElement(asset.kind === "image" ? "img" : asset.kind);
+      media.src = url2;
+      if (asset.kind === "image") {
+        media.alt = asset.title || "\u4FDD\u7559\u7684\u914D\u56FE";
+        media.loading = "lazy";
+        const link = document.createElement("a");
+        link.href = url2;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.appendChild(media);
+        item2.appendChild(link);
+      } else {
+        media.controls = true;
+        media.preload = "none";
+        item2.appendChild(media);
+      }
+      if (asset.title) {
+        const caption = document.createElement("figcaption");
+        caption.textContent = asset.title;
+        item2.appendChild(caption);
+      }
+      content.appendChild(item2);
+    }
+  };
+  details.addEventListener("toggle", populate);
+  const download = document.createElement("button");
+  download.type = "button";
+  download.className = "t-btn";
+  download.textContent = "\u5BFC\u51FA\u5A92\u4F53\u4E0E\u539F\u663E\u793A\u5FEB\u7167";
+  download.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const url2 = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url2;
+    link.download = `paragraph-media-${index2}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url2), 1e3);
+  });
+  details.addEventListener("click", (event) => event.stopPropagation());
+  details.append(summary, note, content, download);
+  const body = element4.querySelector(".mes_text");
+  if (body) body.insertAdjacentElement("afterend", details);
+  else element4.appendChild(details);
+  populate();
+}
+function refreshShelves() {
+  const ctx2 = getContext();
+  for (const element4 of document.querySelectorAll("#chat .mes[mesid]")) {
+    const index2 = Number(element4.getAttribute("mesid")), message = ctx2?.chat?.[index2];
+    if (message) mediaShelf(element4, message, index2);
+  }
+}
+function initParagraphMediaView() {
+  const schedule4 = () => {
+    if (queued) return;
+    queued = true;
+    queueMicrotask(() => {
+      queued = false;
+      refreshShelves();
+    });
+  };
+  if (!initialized6) {
+    initialized6 = true;
+    for (const event of new Set([
+      event_types12.CHAT_CHANGED,
+      event_types12.CHARACTER_MESSAGE_RENDERED,
+      event_types12.USER_MESSAGE_RENDERED,
+      event_types12.MORE_MESSAGES_LOADED,
+      event_types12.MESSAGE_SWIPED
+    ].filter(Boolean))) eventSource12.on(event, schedule4);
+  }
+  const chat2 = document.getElementById("chat");
+  if (chat2 && observed?.chat !== chat2) {
+    observed?.observer.disconnect();
+    const observer2 = new MutationObserver((records3) => {
+      if (records3.some((record) => !record.target.closest?.(".t-paragraph-retained-media"))) schedule4();
+    });
+    observer2.observe(chat2, { childList: true, subtree: true });
+    observed = { chat: chat2, observer: observer2 };
+  }
+  schedule4();
+}
+async function refreshParagraphMessage(target) {
+  const ctx2 = getContext();
+  if (ctx2?.chat !== target.chat || ctx2.chatMetadata !== target.metadata || ctx2.chat[target.index] !== target.message || Number(target.message.swipe_id ?? 0) !== target.swipe) return;
+  updateMessageBlock(target.index, target.message);
+  const event = target.message.is_user ? event_types12.USER_MESSAGE_RENDERED : event_types12.CHARACTER_MESSAGE_RENDERED;
+  if (event) await eventSource12.emit(event, target.index);
+  const current2 = getContext();
+  if (current2?.chat === target.chat && current2.chat[target.index] === target.message && Number(target.message.swipe_id ?? 0) === target.swipe) {
+    const element4 = document.querySelector(`#chat .mes[mesid="${target.index}"]`);
+    if (element4) mediaShelf(element4, target.message, target.index);
+  }
+}
+
+// src/core/paragraphEditing.js
 init_hostGeneration();
 init_storyMemoryTasks();
 init_storyMemoryArchive();
@@ -85289,168 +86101,137 @@ init_storyTimetraceData();
 init_localTextRevisions();
 init_tts();
 var ARCHIVES = ["titania_story_memory", "echo_timetrace_v3", "titania_character_evolution"];
-var own2 = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
-var getContext = () => globalThis.SillyTavern?.getContext?.();
-var attrText = (element4) => Array.from(element4.attributes, (attr) => `${attr.name}="${attr.value}"`).join(" ");
-var ignoredControl = (element4) => element4.hasAttribute("data-echo-tts-ui");
-var foreignContent = 'a, button, input, textarea, select, iframe, audio, video, pre, code, table, ul, ol, details, [contenteditable="true"], .TH-render, .t-root';
-function paragraphText(paragraph, projection) {
-  const spans = [];
-  let text8 = "";
-  const visit = (parent) => {
-    for (const child of parent.childNodes) {
-      if (child.nodeType === 3) {
-        spans.push({ node: child, parent: child.parentNode, start: text8.length, end: text8.length + child.data.length, original: child.data });
-        text8 += child.data;
-      } else if (child.nodeType === 1) {
-        if (ignoredControl(child)) continue;
-        const style = child.ownerDocument.defaultView?.getComputedStyle(child);
-        if (child.matches(foreignContent) || child.shadowRoot || child.hidden || child.hasAttribute("inert") || child.getAttribute("aria-hidden") === "true" || style?.display === "none" || ["hidden", "collapse"].includes(style?.visibility) || /^(?:block|flex|grid|table|list-item|flow-root)$/.test(style?.display) || Object.keys(child).some((key) => /^(?:__vue|__react|_reactRoot)/.test(key)) || isProtectedRewriteElement(child.tagName, attrText(child), [...projection.whitelist, "echo-tts"], projection.exclusions)) {
-          throw new Error("\u8FD9\u6BB5\u5305\u542B\u683C\u5F0F\u7ED3\u6784\u6216\u4EA4\u4E92\u7EC4\u4EF6\uFF0C\u4E0D\u80FD\u5B89\u5168\u5C40\u90E8\u7F16\u8F91\uFF1B\u8BF7\u4F7F\u7528\u9152\u9986\u539F\u751F\u6574\u6761\u7F16\u8F91\u3002");
-        }
-        visit(child);
-      }
-    }
-  };
-  visit(paragraph);
-  return { text: text8, spans };
+var own3 = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
+var getContext2 = () => globalThis.SillyTavern?.getContext?.();
+var currentSwipe = (message) => Number(message.swipe_id ?? 0);
+function ownerMatches(target) {
+  const ctx2 = getContext2();
+  return archiveContextCurrent(target.ctx) && ctx2?.chat === target.chat && ctx2.chatMetadata === target.metadata && ctx2.chat[target.index] === target.message && currentSwipe(target.message) === target.swipe;
+}
+function livePart(target) {
+  if (!ownerMatches(target) || JSON.stringify(getToolboxExtraction(getExtData())) !== target.rules) return null;
+  const raw = String(target.message.mes ?? "");
+  if (raw === target.sourceAtOpen) return target.part;
+  try {
+    return relocateRawParagraph(rawParagraphs(raw, JSON.parse(target.rules)).parts, target);
+  } catch {
+    return null;
+  }
+}
+function paragraphEditStillMatches(target) {
+  return !!livePart(target);
 }
 function paragraphEditBusyReason(target = null) {
-  const ctx2 = getContext();
-  if (isHostGenerating() || ctx2?.swipe?.state?.() && ctx2.swipe.state() !== "none") return "\u9152\u9986\u6B63\u5728\u751F\u6210\u6216\u5207\u6362\u56DE\u590D\uFF0C\u8BF7\u5B8C\u6210\u540E\u518D\u7F16\u8F91\u3002";
+  const ctx2 = getContext2();
+  if (isHostGenerating() || ctx2?.swipe?.state?.() && ctx2.swipe.state() !== "none") return "\u9152\u9986\u6B63\u5728\u751F\u6210\u6216\u5207\u6362\u56DE\u590D\uFF0C\u8BF7\u5B8C\u6210\u540E\u518D\u4FDD\u5B58\u3002";
   if (getStoryMemoryTask()) return "\u6545\u4E8B\u8BB0\u5FC6\u3001\u65F6\u75D5\u6216\u89D2\u8272\u6F14\u53D8\u6B63\u5728\u5904\u7406\uFF0C\u8349\u7A3F\u4FDD\u7559\uFF0C\u7ED3\u675F\u540E\u53EF\u4FDD\u5B58\u3002";
   if (document.getElementById("curEditTextarea")) return "\u8BF7\u5148\u5173\u95ED\u9152\u9986\u539F\u751F\u6B63\u6587\u7F16\u8F91\u5668\u3002";
   if (target) {
-    if (!paragraphEditStillMatches(target)) return "\u804A\u5929\u3001\u56DE\u590D\u6216\u6BB5\u843D\u5DF2\u53D8\u5316\uFF0C\u4E0D\u80FD\u628A\u65E7\u8349\u7A3F\u5199\u56DE\u3002\u8BF7\u590D\u5236\u8349\u7A3F\u540E\u91CD\u65B0\u6253\u5F00\u3002";
+    if (!paragraphEditStillMatches(target)) return "\u804A\u5929\u3001\u56DE\u590D\u7248\u672C\u6216\u6B63\u5728\u7F16\u8F91\u7684\u539F\u6587\u5DF2\u6539\u53D8\uFF0C\u8BF7\u590D\u5236\u8349\u7A3F\u540E\u91CD\u65B0\u6253\u5F00\u3002";
     for (const field3 of ARCHIVES) if (archivePending(target.ctx, field3)) return archiveWarning(target.ctx, field3);
   }
   return "";
 }
-function captureParagraphEdit(paragraph) {
-  const rawCtx = getContext();
-  const container = paragraph?.closest("#chat .mes_text");
-  const element4 = container?.closest(".mes[mesid]");
-  const index2 = Number(element4?.getAttribute("mesid"));
-  if (!rawCtx?.chatId || !Array.isArray(rawCtx.chat) || !rawCtx.chatMetadata || !container || !element4 || paragraph.tagName !== "P" || !Number.isInteger(index2) || index2 < 0 || !rawCtx.chat[index2]) throw new Error("\u6CA1\u6709\u627E\u5230\u53EF\u7F16\u8F91\u7684\u804A\u5929\u6B63\u6587\u6BB5\u843D\u3002");
-  if (rawCtx.chat[index2].is_system || paragraph.closest(foreignContent)) throw new Error("\u7CFB\u7EDF\u6D88\u606F\u6216\u4EA4\u4E92\u533A\u57DF\u4E0D\u4F7F\u7528\u6BB5\u843D\u7F16\u8F91\u3002");
-  for (let parent = paragraph; parent && parent !== container; parent = parent.parentElement) {
-    const style = parent.ownerDocument.defaultView?.getComputedStyle(parent);
-    if (parent.hidden || parent.hasAttribute("inert") || parent.getAttribute("aria-hidden") === "true" || style?.display === "none" || ["hidden", "collapse"].includes(style?.visibility) || parent.shadowRoot || Object.keys(parent).some((key) => /^(?:__vue|__react|_reactRoot)/.test(key)) || isProtectedRewriteElement(parent.tagName, attrText(parent), ["echo-tts"], [])) throw new Error("\u8BE5\u6BB5\u843D\u4F4D\u4E8E\u53D7\u4FDD\u62A4\u7684\u663E\u793A\u7EC4\u4EF6\u4E2D\uFF0C\u4E0D\u80FD\u5B89\u5168\u5C40\u90E8\u7F16\u8F91\u3002");
+function captureParagraphEdit(hit, firstHit = null) {
+  const ctx2 = getContext2(), container = hit?.container, element4 = container?.closest("#chat .mes[mesid]");
+  const index2 = Number(element4?.getAttribute("mesid")), message = ctx2?.chat?.[index2];
+  if (!ctx2?.chatId || !ctx2.chatMetadata || !container?.isConnected || !element4 || !Number.isInteger(index2) || index2 < 0 || !message) {
+    throw new Error("\u6CA1\u6709\u627E\u5230\u5BF9\u5E94\u7684\u804A\u5929\u697C\u5C42\u3002");
   }
-  const selectionButton = element4.querySelector(".t-rewrite-inline-confirm");
-  if (selectionButton && selectionButton.ownerDocument.defaultView?.getComputedStyle(selectionButton).display !== "none") throw new Error("\u8BF7\u5148\u9000\u51FA\u9009\u53E5\u6539\u5199\uFF0C\u518D\u53CC\u51FB\u7F16\u8F91\u6BB5\u843D\u3002");
-  const ctx2 = captureArchiveContext(rawCtx), rules = getToolboxExtraction(getExtData());
-  const projection = extractToolboxProjection(String(ctx2.chat[index2].mes || ""), rules);
-  if (projection.fatalReason) throw new Error(projection.fatalReason);
-  const snapshot = paragraphText(paragraph, projection), text8 = snapshot.text.trim();
-  if (!text8) throw new Error("\u8FD9\u4E2A\u6BB5\u843D\u6CA1\u6709\u53EF\u7F16\u8F91\u7684\u6B63\u6587\u3002");
-  const matches = projection.runs.filter((run2) => run2.text.trim() === text8);
-  if (matches.length !== 1) throw new Error("\u6BB5\u843D\u542B\u6709\u590D\u6742\u683C\u5F0F\u3001\u91CD\u590D\u5185\u5BB9\uFF0C\u6216\u4E0D\u5728\u6B63\u6587\u63D0\u53D6\u8303\u56F4\u5185\uFF0C\u4E0D\u80FD\u552F\u4E00\u5BF9\u5E94\u539F\u6587\uFF1B\u8BF7\u4F7F\u7528\u539F\u751F\u6574\u6761\u7F16\u8F91\u3002");
-  const duplicates = Array.from(container.querySelectorAll("p")).filter((other) => {
-    try {
-      return paragraphText(other, projection).text.trim() === text8;
-    } catch {
-      return false;
-    }
-  });
-  if (duplicates.length !== 1) throw new Error("\u9875\u9762\u4E0A\u5B58\u5728\u76F8\u540C\u6BB5\u843D\uFF0C\u4E0D\u80FD\u786E\u5B9A\u8981\u4FEE\u6539\u54EA\u4E00\u5904\u539F\u6587\u3002");
-  const run = matches[0];
-  if (run.elements.some((item2) => isProtectedRewriteElement(item2.tag, item2.attributes, [...projection.whitelist, "echo-tts"], projection.exclusions))) {
-    throw new Error("\u539F\u6587\u6BB5\u843D\u4F4D\u4E8E\u53D7\u4FDD\u62A4\u7684\u5BB9\u5668\u5185\uFF0C\u4E0D\u80FD\u5B89\u5168\u5C40\u90E8\u7F16\u8F91\u3002");
+  if (message.is_system) throw new Error("\u7CFB\u7EDF\u6D88\u606F\u4E0D\u4F7F\u7528\u6BB5\u843D\u7F16\u8F91\u3002");
+  const rules = getToolboxExtraction(getExtData()), raw = String(message.mes ?? "");
+  const { projection, parts } = rawParagraphs(raw, rules);
+  const displayed = displayedParagraphs(container, projection);
+  const selected = displayed.findIndex((paragraph) => paragraphContainsHit(paragraph, hit));
+  if (selected < 0) throw new Error("\u8BF7\u53CC\u51FB\u6B63\u6587\u6587\u5B57\uFF0C\u907F\u5F00\u4EE3\u7801\u3001\u6309\u94AE\u548C\u5D4C\u5165\u9875\u9762\u3002");
+  if (firstHit && (firstHit.container !== container || !paragraphContainsHit(displayed[selected], firstHit))) return null;
+  const located = alignParagraph(displayed, parts, selected);
+  if (!located) throw new Error("\u5C1A\u4E0D\u80FD\u786E\u5B9A\u8FD9\u4E00\u5904\u663E\u793A\u5BF9\u5E94\u54EA\u4E2A\u539F\u59CB\u6BB5\u843D\u3002\u53EF\u4F7F\u7528\u9152\u9986\u539F\u751F\u6574\u6761\u7F16\u8F91\uFF1B\u6CA1\u6709\u4FEE\u6539\u6B63\u6587\u3002");
+  const part = parts[located.index], swipe = currentSwipe(message);
+  if (!Number.isInteger(swipe) || swipe < 0 || Array.isArray(message.swipes) && message.swipes.length && swipe >= message.swipes.length) {
+    throw new Error("\u5F53\u524D\u56DE\u590D\u7248\u672C\u7F16\u53F7\u65E0\u6548\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BE5\u56DE\u590D\u3002");
   }
-  const unit = { text: text8, unitIndex: 0, run, local: run.text.length - run.text.trimStart().length, reason: "" };
-  const checked = prepareSourcePatch(unit, text8);
-  if (checked.reason) throw new Error("\u8FD9\u6BB5\u542B\u6709\u4E0D\u652F\u6301\u5B89\u5168\u5199\u56DE\u7684\u683C\u5F0F\uFF0C\u8BF7\u4F7F\u7528\u539F\u751F\u6574\u6761\u7F16\u8F91\u3002");
-  const target = captureRewriteTarget(ctx2, index2, projection, container);
-  const swipeExtra = target.message.swipe_info?.[target.swipe]?.extra;
-  if (target.message.extra != null && (typeof target.message.extra !== "object" || Array.isArray(target.message.extra)) || swipeExtra != null && (typeof swipeExtra !== "object" || Array.isArray(swipeExtra))) throw new Error("\u6D88\u606F\u9644\u52A0\u6570\u636E\u683C\u5F0F\u5F02\u5E38\uFF0C\u4E0D\u80FD\u5B89\u5168\u4FDD\u5B58\u6BB5\u843D\u3002");
-  if (target.reason || target.fields.some((field3) => !(field3.cache && field3.original == null) && field3.original !== projection.raw)) {
-    throw new Error(target.reason || "\u6B63\u6587\u3001\u5F53\u524D\u56DE\u590D\u6216\u663E\u793A\u7F13\u5B58\u4E0D\u4E00\u81F4\uFF0C\u4E0D\u80FD\u5B89\u5168\u5C40\u90E8\u7F16\u8F91\u3002");
-  }
-  return Object.assign(target, {
-    paragraph,
-    element: element4,
-    unit,
-    text: text8,
-    snapshot,
+  return {
+    ctx: captureArchiveContext(ctx2),
+    chat: ctx2.chat,
+    metadata: ctx2.chatMetadata,
+    index: index2,
+    message,
+    swipe,
+    projection,
+    sourceAtOpen: raw,
+    part,
+    text: part.text,
+    inferred: located.inferred,
+    previous: parts[located.index - 1]?.text ?? null,
+    next: parts[located.index + 1]?.text ?? null,
     rules: JSON.stringify(rules),
-    paragraphParent: paragraph.parentNode,
-    paragraphNext: paragraph.nextSibling,
-    swipeRecord: target.message.swipe_info?.[target.swipe],
-    extraAtOpen: target.message.extra
-  });
+    container,
+    element: element4,
+    snapshot: displayed[selected],
+    mediaAtOpen: captureParagraphMedia(container, message)
+  };
 }
-function paragraphEditStillMatches(target) {
-  if (!archiveContextCurrent(target.ctx) || !rewriteTargetStillMatches(target, getContext()) || target.message.extra !== target.extraAtOpen || target.message.swipe_info?.[target.swipe] !== target.swipeRecord || !target.container.isConnected || target.element.querySelector(".mes_text") !== target.container || target.paragraph.parentNode !== target.paragraphParent || !target.container.contains(target.paragraph) || JSON.stringify(getToolboxExtraction(getExtData())) !== target.rules) return false;
-  try {
-    const current2 = paragraphText(target.paragraph, target.projection);
-    return current2.text === target.snapshot.text && current2.spans.length === target.snapshot.spans.length && current2.spans.every((span, i) => span.node === target.snapshot.spans[i].node && span.parent === target.snapshot.spans[i].parent && span.original === target.snapshot.spans[i].original);
-  } catch {
-    return false;
-  }
-}
-function changedRange(before, after) {
-  const a = Array.from(before), b = Array.from(after);
-  let prefix = 0, suffix = 0;
-  while (prefix < a.length && prefix < b.length && a[prefix] === b[prefix]) prefix++;
-  while (suffix < a.length - prefix && suffix < b.length - prefix && a[a.length - suffix - 1] === b[b.length - suffix - 1]) suffix++;
-  return { prefix: a.slice(0, prefix).join("").length, suffix: a.slice(a.length - suffix).join("").length };
-}
-function makeEdit(target, replacement, remove) {
-  const whole = prepareSourcePatch(target.unit, remove ? "" : replacement);
-  if (whole.reason) throw new Error("\u4EC5\u652F\u6301\u666E\u901A\u6BB5\u843D\u6587\u5B57\u4FEE\u6539\uFF1B\u8BF7\u4E0D\u8981\u52A0\u5165\u6362\u884C\u3001Markdown \u6216 HTML \u683C\u5F0F\u3002");
-  if (whole.replacement === target.text) return null;
-  const { prefix, suffix } = changedRange(target.text, whole.replacement);
-  const local = whole.local + prefix, stop = whole.local + target.text.length - suffix;
-  const map = whole.run.map;
-  const start = map[local]?.start ?? map.at(-1).end;
-  const end = stop === local ? start : map[stop - 1].end;
-  if (local > 0 && map[local]?.start < map[local - 1].end || stop < map.length && stop > 0 && map[stop]?.start < map[stop - 1].end) throw new Error("\u4FEE\u6539\u8FB9\u754C\u843D\u5728\u5B57\u7B26\u5B9E\u4F53\u5185\uFF0C\u4E0D\u80FD\u5B89\u5168\u4FDD\u5B58\u3002");
-  const after = whole.replacement.slice(prefix, whole.replacement.length - suffix);
-  const patch = { ...whole, start, end, local, before: target.text.slice(prefix, target.text.length - suffix), replacement: after, after: after.replace(/&/g, "&amp;") };
-  const rewritten = target.projection.raw.slice(0, start) + patch.after + target.projection.raw.slice(end);
-  const leading = target.snapshot.text.length - target.snapshot.text.trimStart().length;
-  const from = leading + prefix, to = leading + target.text.length - suffix;
-  const covered = from === to ? [target.snapshot.spans.find((span) => span.start < from && span.end >= from) || target.snapshot.spans.find((span) => span.start === from)] : target.snapshot.spans.filter((span) => span.end > from && span.start < to);
-  if (covered.some((span) => !span) || !covered.length) throw new Error("\u663E\u793A\u4E2D\u7684\u4FEE\u6539\u4F4D\u7F6E\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94\u3002");
-  const changes = remove ? [] : covered.map((span, index2) => ({
-    node: span.node,
-    parent: span.parent,
-    original: span.original,
-    after: span.original.slice(0, Math.max(0, from - span.start)) + (index2 === 0 ? after : "") + span.original.slice(Math.min(span.original.length, to - span.start))
-  }));
-  return { patch, rewritten, changes, remove };
+function prepareSourceEdit(target, replacement, remove) {
+  const part = livePart(target);
+  if (!part) throw new Error("\u6B63\u5728\u7F16\u8F91\u7684\u539F\u6587\u5DF2\u88AB\u5176\u4ED6\u64CD\u4F5C\u4FEE\u6539\uFF0C\u672A\u8986\u76D6\u65B0\u5185\u5BB9\u3002");
+  const raw = String(target.message.mes ?? "");
+  const text8 = remove ? "" : String(replacement ?? "").replace(/\r\n?/g, "\n");
+  if (text8 === part.text) return null;
+  const patch = { start: part.start, end: part.end, after: text8 };
+  return { patch, rewritten: raw.slice(0, part.start) + text8 + raw.slice(part.end), raw };
 }
 function paragraphDeletionLeavesEmpty(target) {
-  const edit = makeEdit(target, "", true);
+  const edit = prepareSourceEdit(target, "", true);
   return !!edit && !extractToolboxProjection(edit.rewritten, JSON.parse(target.rules)).text.trim();
 }
-function putWrite(writes3, object, key, after) {
-  const existing = writes3.find((write) => write.object === object && write.key === key);
-  if (existing) existing.after = after;
-  else writes3.push({ object, key, original: object[key], after, had: own2(object, key) });
+function saveTarget(target, raw) {
+  const { message, swipe } = target;
+  const extra = message.extra, swipeRecord = message.swipe_info?.[swipe], swipeExtra = swipeRecord?.extra;
+  if (extra != null && (typeof extra !== "object" || Array.isArray(extra)) || swipeExtra != null && (typeof swipeExtra !== "object" || Array.isArray(swipeExtra))) throw new Error("\u6D88\u606F\u9644\u52A0\u6570\u636E\u683C\u5F0F\u5F02\u5E38\uFF0C\u672A\u8986\u76D6\u5A92\u4F53\u6570\u636E\u3002");
+  const element4 = document.querySelector(`#chat .mes[mesid="${target.index}"]`);
+  return {
+    ...target,
+    projection: extractToolboxProjection(raw, JSON.parse(target.rules)),
+    container: element4?.querySelector(".mes_text") || target.container,
+    element: element4 || target.element,
+    extra,
+    extraAtOpen: extra,
+    swipeRecord,
+    swipeExtra,
+    swipes: message.swipes,
+    swipeInfo: message.swipe_info,
+    swipeText: message.swipes?.[swipe]
+  };
+}
+function preparedStillCurrent(target) {
+  return ownerMatches(target) && target.message.mes === target.projection.raw && target.message.extra === target.extra && target.message.swipes === target.swipes && target.message.swipe_info === target.swipeInfo && target.message.swipes?.[target.swipe] === target.swipeText && target.message.swipe_info?.[target.swipe] === target.swipeRecord && target.message.swipe_info?.[target.swipe]?.extra === target.swipeExtra;
 }
 function commitParagraphEdit(target, replacement, { remove = false } = {}) {
-  const edit = makeEdit(target, replacement, remove);
-  if (!edit) return Promise.resolve({ changed: false });
   const reason = paragraphEditBusyReason(target);
   if (reason) return Promise.reject(new Error(reason));
   return serializeStoryMemoryWrite(async () => {
     const blocked2 = paragraphEditBusyReason(target);
     if (blocked2) throw new Error(blocked2);
+    const edit = prepareSourceEdit(target, replacement, remove);
+    if (!edit) return { changed: false };
+    const fresh = saveTarget(target, edit.raw), { message, swipe } = fresh;
     const release = beginLocalTextRevision();
-    const { patch, rewritten, changes } = edit;
-    let tts, writes3 = [], mutated = false;
-    const nextSibling = target.paragraph.nextSibling;
+    let tts, media, writes3 = [], mutated = false;
     try {
-      await prepareArchiveSourceEdit(target.ctx);
-      if (paragraphEditBusyReason(target)) throw new Error("\u51C6\u5907\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u6BB5\u843D\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u3002");
-      tts = prepareTtsLocalEdit(target, patch, rewritten);
-      const beforeMessage = { ...target.message, mes: target.projection.raw }, afterMessage = { ...target.message, mes: rewritten };
-      const revision = prepareLocalTextRevision(target.message, {
-        ownerKey: localTextRevisionOwnerKey(target.ctx),
-        before: target.projection.raw,
-        after: rewritten,
+      await prepareArchiveSourceEdit(fresh.ctx);
+      if (!preparedStillCurrent(fresh)) throw new Error("\u51C6\u5907\u4FDD\u5B58\u671F\u95F4\u539F\u6587\u6216\u5A92\u4F53\u72B6\u6001\u53D8\u5316\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\u3002");
+      media = await prepareParagraphMedia(fresh);
+      if (!preparedStillCurrent(fresh)) throw new Error("\u51C6\u5907\u5A92\u4F53\u671F\u95F4\u56DE\u590D\u5DF2\u53D8\u5316\uFF0C\u672A\u8986\u76D6\u65B0\u5185\u5BB9\u3002");
+      tts = prepareTtsParagraphEdit(fresh, edit.patch, edit.rewritten);
+      const normalizedSwipes = Array.isArray(message.swipes) ? [...message.swipes] : message.swipes;
+      if (normalizedSwipes?.length) normalizedSwipes[swipe] = edit.raw;
+      const beforeMessage = { ...message, mes: edit.raw, swipes: normalizedSwipes };
+      const afterMessage = { ...message, mes: edit.rewritten };
+      const revision = prepareLocalTextRevision(beforeMessage, {
+        ownerKey: localTextRevisionOwnerKey(fresh.ctx),
+        before: edit.raw,
+        after: edit.rewritten,
         operation: remove ? "delete" : "edit",
         fingerprints: {
           memory: { before: memoryFloorFingerprint(beforeMessage), after: memoryFloorFingerprint(afterMessage) },
@@ -85458,91 +86239,247 @@ function commitParagraphEdit(target, replacement, { remove = false } = {}) {
         }
       });
       writes3 = [...tts.writes || []];
-      const extra = writes3.find((write) => write.object === target.message && write.key === "extra")?.after || target.message.extra || {};
-      if (!target.message.extra && !writes3.some((write) => write.object === target.message && write.key === "extra")) putWrite(writes3, target.message, "extra", extra);
-      putWrite(writes3, extra, LOCAL_TEXT_REVISION_KEY, revision);
-      for (const field3 of target.fields) if (!(field3.cache && field3.original == null)) putWrite(writes3, field3.object, field3.key, rewritten);
-      const swipeRecord = target.message.swipe_info?.[target.swipe];
-      if (swipeRecord) {
-        const swipeExtra = swipeRecord.extra || {};
-        if (!swipeRecord.extra) putWrite(writes3, swipeRecord, "extra", swipeExtra);
-        putWrite(writes3, swipeExtra, LOCAL_TEXT_REVISION_KEY, revision);
-        const voiceCache = writes3.find((write) => write.object === extra && write.key === "echo_tts");
-        if (voiceCache || extra.echo_tts) putWrite(writes3, swipeExtra, "echo_tts", voiceCache?.after || extra.echo_tts);
+      const extra = writes3.find((write) => write.object === message && write.key === "extra")?.after || message.extra || {};
+      if (!message.extra && !writes3.some((write) => write.object === message && write.key === "extra")) makeParagraphWrite(writes3, message, "extra", extra);
+      makeParagraphWrite(writes3, message, "mes", edit.rewritten);
+      if (own3(message, "message")) makeParagraphWrite(writes3, message, "message", edit.rewritten);
+      if (Array.isArray(message.swipes) && message.swipes.length) makeParagraphWrite(writes3, message.swipes, swipe, edit.rewritten);
+      makeParagraphWrite(writes3, extra, LOCAL_TEXT_REVISION_KEY, revision);
+      makeParagraphWrite(writes3, extra, "display_text", edit.rewritten);
+      if (media.needed) makeParagraphWrite(writes3, extra, PARAGRAPH_MEDIA_KEY, media.value);
+      if (fresh.swipeRecord) {
+        const swipeExtra = fresh.swipeExtra || {};
+        if (!fresh.swipeExtra) makeParagraphWrite(writes3, fresh.swipeRecord, "extra", swipeExtra);
+        makeParagraphWrite(writes3, swipeExtra, LOCAL_TEXT_REVISION_KEY, revision);
+        makeParagraphWrite(writes3, swipeExtra, "display_text", edit.rewritten);
+        if (media.needed) makeParagraphWrite(writes3, swipeExtra, PARAGRAPH_MEDIA_KEY, media.value);
+        const voice = writes3.find((write) => write.object === extra && write.key === "echo_tts");
+        if (voice || extra.echo_tts) makeParagraphWrite(writes3, swipeExtra, "echo_tts", voice?.after || extra.echo_tts);
       }
-      if (paragraphEditBusyReason(target) || !rewriteDomStillMatches(target.container, changes)) throw new Error("\u4FDD\u5B58\u524D\u804A\u5929\u6216\u663E\u793A\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u6BB5\u843D\u3002");
+      if (!preparedStillCurrent(fresh) || isHostGenerating()) throw new Error("\u4FDD\u5B58\u524D\u56DE\u590D\u5DF2\u53D8\u5316\uFF0C\u672A\u5199\u5165\u65E7\u8349\u7A3F\u3002");
+      media.assertCurrent();
       tts.assertCurrent?.();
-      for (const write of writes3) if (write.object[write.key] !== write.original || own2(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\u3002");
+      for (const write of writes3) if (write.object[write.key] !== write.original || own3(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\u3002");
       mutated = true;
       for (const write of writes3) write.object[write.key] = write.after;
-      if (remove) target.paragraph.remove();
-      else applyRewriteDomChanges(changes);
       tts.apply?.();
-      noteArchiveChange(target.ctx, "local-paragraph-edit");
-      const valid = () => !isHostGenerating() && rewriteTargetStillMatches(target, getContext(), rewritten) && writes3.every((write) => write.object[write.key] === write.after);
-      const saved = await saveArchiveSnapshot(target.ctx, {}, valid);
-      const savedMessage = saved?.[target.index + 1];
-      if (JSON.stringify(savedMessage?.extra?.[LOCAL_TEXT_REVISION_KEY]) !== JSON.stringify(revision) || JSON.stringify(savedMessage?.extra?.echo_tts) !== JSON.stringify(extra.echo_tts) || swipeRecord && (JSON.stringify(savedMessage?.swipe_info?.[target.swipe]?.extra?.[LOCAL_TEXT_REVISION_KEY]) !== JSON.stringify(revision) || JSON.stringify(savedMessage?.swipe_info?.[target.swipe]?.extra?.echo_tts) !== JSON.stringify(swipeRecord.extra.echo_tts))) {
-        throw new Error("\u6B63\u6587\u4FEE\u8BA2\u6216\u914D\u97F3\u6570\u636E\u672A\u5B8C\u6574\u4FDD\u5B58\uFF0C\u4E0D\u80FD\u786E\u8BA4\u672C\u6B21\u7F16\u8F91\u3002");
+      noteArchiveChange(fresh.ctx, "local-paragraph-edit");
+      const valid = () => ownerMatches(fresh) && !isHostGenerating() && message.mes === edit.rewritten && writes3.every((write) => write.object[write.key] === write.after) && media.preserved();
+      const saved = await saveArchiveSnapshot(fresh.ctx, {}, valid);
+      const savedMessage = saved?.[fresh.index + 1];
+      if (JSON.stringify(savedMessage?.extra?.[LOCAL_TEXT_REVISION_KEY]) !== JSON.stringify(revision) || JSON.stringify(savedMessage?.extra?.echo_tts) !== JSON.stringify(extra.echo_tts) || media.needed && JSON.stringify(savedMessage?.extra?.[PARAGRAPH_MEDIA_KEY]) !== JSON.stringify(media.value) || !media.savedMatches(savedMessage) || fresh.swipeRecord && (JSON.stringify(savedMessage?.swipe_info?.[swipe]?.extra?.echo_tts) !== JSON.stringify(fresh.swipeRecord.extra.echo_tts) || JSON.stringify(savedMessage?.swipe_info?.[swipe]?.extra?.[PARAGRAPH_MEDIA_KEY]) !== JSON.stringify(fresh.swipeRecord.extra[PARAGRAPH_MEDIA_KEY]))) {
+        throw new Error("\u6B63\u6587\u3001\u914D\u97F3\u6216\u914D\u56FE\u5907\u4EFD\u672A\u5B8C\u6574\u4FDD\u5B58\uFF0C\u4E0D\u80FD\u786E\u8BA4\u672C\u6B21\u4FEE\u6539\u3002");
       }
-      acknowledgeLocalTextRevision(target.ctx);
-      return { changed: true, removed: remove };
+      acknowledgeLocalTextRevision(fresh.ctx);
     } catch (cause) {
-      const ownExtra = writes3.find((write) => write.object === target.message && write.key === "extra")?.after || target.extraAtOpen;
-      if (mutated && archiveContextCurrent(target.ctx) && target.ctx.chat[target.index] === target.message && target.message.swipe_id === target.swipe && target.message.swipes === target.swipes && target.message.swipe_info === target.swipeInfo && (target.message.extra === target.extraAtOpen || target.message.extra === ownExtra) && writes3.every((write) => write.object[write.key] === write.after || write.object[write.key] === write.original)) {
+      const extraAfter = writes3.find((write) => write.object === message && write.key === "extra")?.after || fresh.extra;
+      const recover = mutated && ownerMatches(fresh) && message.swipes === fresh.swipes && message.swipe_info === fresh.swipeInfo && (message.extra === fresh.extra || message.extra === extraAfter) && writes3.every((write) => write.object[write.key] === write.after || write.object[write.key] === write.original);
+      if (recover) {
         for (const write of [...writes3].reverse()) if (write.object[write.key] === write.after) {
           if (write.had) write.object[write.key] = write.original;
           else delete write.object[write.key];
         }
-        if (remove && !target.paragraph.parentNode && target.paragraphParent.isConnected && (!nextSibling || nextSibling.parentNode === target.paragraphParent)) target.paragraphParent.insertBefore(target.paragraph, nextSibling);
-        rollbackRewriteDomChanges(changes);
-        try {
-          tts?.rollback?.();
-        } catch (restoreCause) {
-          console.warn("\u5C40\u90E8\u7F16\u8F91\u914D\u97F3\u72B6\u6001\u6062\u590D\u5931\u8D25", restoreCause);
+      }
+      try {
+        tts?.rollback?.();
+      } catch (error4) {
+        console.warn("\u6BB5\u843D\u7F16\u8F91\u914D\u97F3\u6062\u590D\u5931\u8D25", error4);
+      }
+      try {
+        if (recover) {
+          acknowledgeLocalTextRevision(fresh.ctx);
+          noteArchiveChange(fresh.ctx, "local-paragraph-edit-rollback");
+          try {
+            await saveArchiveSnapshot(fresh.ctx, {}, () => ownerMatches(fresh) && message.mes === edit.raw);
+          } catch (error4) {
+            throw new Error(`${cause.message || cause}\uFF1B\u6062\u590D\u4FDD\u5B58\u4E5F\u672A\u786E\u8BA4\uFF1A${error4.message || error4}`);
+          }
         }
-        acknowledgeLocalTextRevision(target.ctx);
-        noteArchiveChange(target.ctx, "local-paragraph-edit-rollback");
-        try {
-          await saveArchiveSnapshot(target.ctx, {}, () => rewriteTargetStillMatches(target, getContext()));
-        } catch (restoreCause) {
-          throw new Error(`${cause.message || cause}\uFF1B\u539F\u6587\u6062\u590D\u7684\u4FDD\u5B58\u4E5F\u672A\u80FD\u786E\u8BA4\uFF1A${restoreCause.message || restoreCause}`);
-        }
+      } finally {
+        release();
       }
       throw cause;
+    }
+    const warnings2 = [];
+    try {
+      await refreshParagraphMessage(fresh);
+    } catch (error4) {
+      warnings2.push(String(error4?.message || error4));
+    }
+    try {
+      await tts.refresh?.();
+    } catch (error4) {
+      warnings2.push(String(error4?.message || error4));
     } finally {
       release();
     }
+    return { changed: true, removed: remove, warning: warnings2.length ? `\u6B63\u6587\u548C\u5A92\u4F53\u5DF2\u4FDD\u5B58\uFF0C\u4F46\u672C\u697C\u663E\u793A\u6062\u590D\u672A\u5B8C\u6210\uFF1A${warnings2.join("\uFF1B")}\u3002\u53EF\u5237\u65B0\u9875\u9762\u6062\u590D\u3002` : "" };
   });
 }
 
 // src/ui/paragraphEditor.js
 init_storyMemoryTasks();
-var initialized6 = false;
+var initialized7 = false;
 var enabled = false;
 var active4 = null;
-var claimed = null;
-var touchStart = null;
+var press = null;
 var lastTap = null;
+var claimed = null;
 var lastTouchAt = -Infinity;
-var DOUBLE_TAP_MS = 350;
-var TAP_MAX_MS = 300;
+var DOUBLE_TAP_MS = 400;
+var TAP_MAX_MS = 320;
 var TAP_MOVE_PX = 12;
 var DOUBLE_TAP_PX = 32;
-var excludedTarget = 'a, button, input, textarea, select, iframe, audio, video, pre, code, [contenteditable="true"], [data-echo-tts-ui], .TH-render, .t-root';
-function openEditor2(target) {
+var excludedTarget = 'a, button, [role="button"], input, textarea, select, iframe, img, svg, canvas, audio, video, pre, code, details, summary, [contenteditable="true"], [contenteditable=""], [inert], [data-echo-tts-ui], [data-sttts-pic], [data-sttts-action], [data-sttts-owned], .t-root';
+var getContext3 = () => globalThis.SillyTavern?.getContext?.();
+function proseContainer(target) {
+  const element4 = target?.nodeType === 1 ? target : target?.parentElement;
+  if (!element4 || element4.closest(excludedTarget)) return null;
+  const container = element4.closest("#chat .mes_text");
+  return container?.isConnected ? container : null;
+}
+function textEdge(node3, last = false) {
+  if (!node3) return null;
+  if (node3.nodeType !== 3) {
+    const walker = node3.ownerDocument.createTreeWalker(node3, NodeFilter.SHOW_TEXT);
+    node3 = walker.nextNode();
+    if (last) {
+      let next;
+      while (next = walker.nextNode()) node3 = next;
+    }
+  }
+  return node3 ? { node: node3, offset: last ? node3.data.length : 0 } : null;
+}
+function caretCandidates(node3, offset) {
+  if (node3?.nodeType === 3) return [{ node: node3, offset }];
+  if (node3?.nodeType !== 1) return [];
+  return [textEdge(node3.childNodes[offset]), textEdge(node3.childNodes[offset - 1], true)].filter(Boolean);
+}
+function pointTouchesText(hit, x, y, tolerance) {
+  const { node: node3, offset } = hit;
+  if (!Number.isInteger(offset) || offset < 0 || offset > node3.data.length) return false;
+  const range3 = node3.ownerDocument.createRange();
+  for (let start of /* @__PURE__ */ new Set([offset - 1, offset])) {
+    if (start < 0 || start >= node3.data.length || /[\r\n]/.test(node3.data[start])) continue;
+    if (start > 0 && /[\uDC00-\uDFFF]/.test(node3.data[start]) && /[\uD800-\uDBFF]/.test(node3.data[start - 1])) start--;
+    const end = start + (node3.data.codePointAt(start) > 65535 ? 2 : 1);
+    range3.setStart(node3, start);
+    range3.setEnd(node3, end);
+    if ([...range3.getClientRects()].some((rect) => rect.width > 0 && rect.height > 0 && x >= rect.left - tolerance && x <= rect.right + tolerance && y >= rect.top - tolerance && y <= rect.bottom + tolerance)) return true;
+  }
+  return false;
+}
+function textHit(event, container) {
+  const doc = container.ownerDocument, x = event.clientX, y = event.clientY;
+  const candidates = [];
+  try {
+    const caret = doc.caretPositionFromPoint?.(x, y);
+    if (caret) candidates.push(...caretCandidates(caret.offsetNode, caret.offset));
+  } catch {
+  }
+  try {
+    const range3 = doc.caretRangeFromPoint?.(x, y);
+    if (range3) candidates.push(...caretCandidates(range3.startContainer, range3.startOffset));
+  } catch {
+  }
+  const tolerance = event.pointerType === "touch" ? 8 : 3;
+  for (const hit of candidates) {
+    if (container.contains(hit.node) && proseContainer(hit.node) === container && pointTouchesText(hit, x, y, tolerance)) return { ...hit, container };
+  }
+  return null;
+}
+function gestureOwner(container) {
+  const ctx2 = getContext3(), element4 = container.closest(".mes[mesid]");
+  const index2 = Number(element4?.getAttribute("mesid")), message = ctx2?.chat?.[index2];
+  if (!ctx2?.chatId || !Number.isInteger(index2) || index2 < 0 || !message || message.is_system) return null;
+  return {
+    container,
+    element: element4,
+    index: index2,
+    message,
+    raw: message.mes,
+    swipe: message.swipe_id,
+    chat: ctx2.chat,
+    metadata: ctx2.chatMetadata,
+    chatId: ctx2.chatId,
+    groupId: ctx2.groupId,
+    characterId: ctx2.characterId
+  };
+}
+function gestureStillCurrent(owner) {
+  const ctx2 = getContext3();
+  return owner && ctx2?.chat === owner.chat && ctx2.chatMetadata === owner.metadata && ctx2.chatId === owner.chatId && ctx2.groupId === owner.groupId && ctx2.characterId === owner.characterId && ctx2.chat[owner.index] === owner.message && owner.message.mes === owner.raw && owner.message.swipe_id === owner.swipe && owner.container.isConnected && Number(owner.element.getAttribute("mesid")) === owner.index && owner.element.querySelector(".mes_text") === owner.container;
+}
+function mountPanel(panel, target) {
   ensureFeatureCss("paragraph-editor.css");
-  const panel = document.createElement("section");
   panel.className = "t-root t-paragraph-editor";
   panel.setAttribute("role", "dialog");
   panel.setAttribute("aria-modal", "false");
   panel.setAttribute("aria-labelledby", "t-paragraph-editor-title");
-  panel.innerHTML = `<header class="t-paragraph-editor-header"><strong id="t-paragraph-editor-title"></strong><span>\u8F7B\u91CF\u7F16\u8F91</span></header>
-        <p class="t-paragraph-editor-hint">\u53EA\u4FEE\u6539\u672C\u6BB5\u539F\u6587\uFF0C\u6CBF\u7528\u5DF2\u6709\u65F6\u75D5\u3001\u603B\u7ED3\u4E0E\u89D2\u8272\u6F14\u53D8\uFF0C\u4E0D\u81EA\u52A8\u91CD\u65B0\u5206\u6790\u3002\u666E\u901A\u6587\u5B57\u6A21\u5F0F\uFF0C\u4E0D\u6DFB\u52A0\u6362\u884C\u6216\u683C\u5F0F\u6807\u7B7E\u3002</p>
-        <textarea class="t-input t-paragraph-editor-input" rows="6" aria-label="\u6BB5\u843D\u5185\u5BB9" spellcheck="false"></textarea>
+  const first = target.snapshot.spans[0], last = target.snapshot.spans.at(-1);
+  const anchorRange = target.container.ownerDocument.createRange();
+  anchorRange.setStart(first.node, Math.max(0, -first.start));
+  anchorRange.setEnd(last.node, Math.min(last.original.length, target.snapshot.text.length - last.start));
+  let anchor = anchorRange.getBoundingClientRect(), frame = null;
+  const position = () => {
+    if (!panel.isConnected) return;
+    if (target.container.isConnected && target.container.contains(first.node) && target.container.contains(last.node)) {
+      const current2 = anchorRange.getBoundingClientRect();
+      if (current2.width > 0 && current2.height > 0) anchor = current2;
+    }
+    const viewport = window.visualViewport;
+    const x = viewport?.offsetLeft || 0, y = viewport?.offsetTop || 0;
+    const height = viewport?.height || window.innerHeight, width = viewport?.width || window.innerWidth;
+    panel.style.maxHeight = `${Math.max(0, Math.min(680, height - 32))}px`;
+    panel.style.width = `${Math.min(560, Math.max(0, width - 32))}px`;
+    const bounds = panel.getBoundingClientRect();
+    const left = Math.max(x + 16, Math.min(anchor.left, x + width - bounds.width - 16));
+    const top = Math.max(y + 16, Math.min(anchor.top, y + height - bounds.height - 16));
+    panel.style.left = `${left}px`;
+    panel.style.top = `${top}px`;
+  };
+  const schedulePosition = (event) => {
+    if (event?.target instanceof Node && panel.contains(event.target)) return;
+    if (frame !== null) return;
+    frame = window.requestAnimationFrame(() => {
+      frame = null;
+      position();
+    });
+  };
+  panel.addEventListener("click", (event) => event.stopPropagation());
+  panel.addEventListener("keydown", (event) => {
+    event.stopPropagation();
+    if (!event.isComposing && event.key === "Enter" && (event.ctrlKey || event.metaKey || event.altKey)) event.preventDefault();
+  });
+  window.addEventListener("resize", schedulePosition);
+  window.addEventListener("scroll", schedulePosition, true);
+  window.visualViewport?.addEventListener("resize", schedulePosition);
+  window.visualViewport?.addEventListener("scroll", schedulePosition);
+  document.body.appendChild(panel);
+  position();
+  const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(schedulePosition) : null;
+  resizeObserver?.observe(panel);
+  resizeObserver?.observe(target.container);
+  return () => {
+    window.removeEventListener("resize", schedulePosition);
+    window.removeEventListener("scroll", schedulePosition, true);
+    window.visualViewport?.removeEventListener("resize", schedulePosition);
+    window.visualViewport?.removeEventListener("scroll", schedulePosition);
+    resizeObserver?.disconnect();
+    if (frame !== null) window.cancelAnimationFrame(frame);
+    panel.remove();
+  };
+}
+function openEditor2(target) {
+  const returnFocus = document.activeElement;
+  const panel = document.createElement("section");
+  panel.innerHTML = `<header class="t-paragraph-editor-header"><strong id="t-paragraph-editor-title"></strong><button type="button" class="t-btn" data-action="close">\u5173\u95ED</button></header>
+        <p class="t-paragraph-editor-hint">\u76F4\u63A5\u7F16\u8F91\u539F\u59CB\u6BB5\u843D\uFF0C\u652F\u6301 Markdown\u3001HTML \u548C\u6362\u884C\u3002\u4FDD\u5B58\u540E\u4EC5\u5237\u65B0\u672C\u697C\uFF1B\u5DF2\u6709\u914D\u97F3\u3001\u914D\u56FE\u53CA\u5206\u6790\u6570\u636E\u4FDD\u7559\uFF0C\u4E0D\u81EA\u52A8\u91CD\u65B0\u751F\u6210\u3002</p>
+        <p class="t-paragraph-editor-hint" data-location-note hidden>\u8FD9\u4E00\u6BB5\u6309\u987A\u5E8F\u4E0E\u524D\u540E\u6587\u5B9A\u4F4D\uFF0C\u8BF7\u5148\u786E\u8BA4\u6846\u4E2D\u7684\u539F\u6587\u662F\u4F60\u8981\u4FEE\u6539\u7684\u5185\u5BB9\u3002</p>
+        <textarea class="t-input t-paragraph-editor-input" rows="6" aria-label="\u539F\u59CB\u6BB5\u843D\uFF0C\u652F\u6301 Markdown \u548C HTML" spellcheck="false"></textarea>
         <div class="t-paragraph-editor-confirm" hidden>
             <strong>\u786E\u8BA4\u5220\u9664\u4E0B\u9762\u8FD9\u4E00\u6BB5\uFF1F</strong><pre></pre><p data-empty-warning></p>
-            <p>\u53EA\u5220\u9664\u6BB5\u843D\uFF0C\u4E0D\u5220\u9664\u804A\u5929\u697C\u5C42\u3002\u5DF2\u6709\u5206\u6790\u4FDD\u7559\uFF1B\u672C\u6BB5\u7684\u914D\u97F3\u63A7\u4EF6\u968F\u6BB5\u843D\u79FB\u9664\uFF0C\u5176\u4ED6\u6BB5\u843D\u4E0D\u91CD\u7ED8\u3002</p>
+            <p>\u53EA\u5220\u9664\u8FD9\u4E00\u6BB5\u539F\u6587\uFF0C\u4E0D\u5220\u9664\u804A\u5929\u697C\u5C42\u3002\u5DF2\u6709\u5206\u6790\u53CA\u5A92\u4F53\u8BB0\u5F55\u4FDD\u7559\uFF0C\u65E7\u914D\u97F3\u53EF\u4ECE\u914D\u97F3\u9762\u677F\u627E\u56DE\uFF1B\u4FDD\u5B58\u540E\u5237\u65B0\u672C\u697C\u3002</p>
         </div>
         <p class="t-paragraph-editor-status" role="status" aria-live="polite"></p>
         <div class="t-paragraph-editor-actions" data-edit-actions>
@@ -85559,7 +86496,8 @@ function openEditor2(target) {
   const input = panel.querySelector("textarea"), status3 = panel.querySelector('[role="status"]');
   const confirm2 = panel.querySelector(".t-paragraph-editor-confirm");
   const editActions = panel.querySelector("[data-edit-actions]"), deleteActions = panel.querySelector("[data-delete-actions]");
-  panel.querySelector("strong").textContent = `\u7B2C ${target.index} \u697C \xB7 \u7F16\u8F91\u6BB5\u843D`;
+  panel.querySelector("strong").textContent = `\u7B2C ${target.index} \u697C \xB7 \u7F16\u8F91\u539F\u59CB\u6BB5\u843D`;
+  panel.querySelector("[data-location-note]").hidden = !target.inferred;
   input.value = target.text;
   const session2 = { target, panel, saving: false, deleting: false, invalidated: false, error: "" };
   active4 = session2;
@@ -85567,7 +86505,7 @@ function openEditor2(target) {
     if (active4 !== session2) return;
     if (!session2.saving && !paragraphEditStillMatches(target)) session2.invalidated = true;
     const reason = session2.invalidated ? "\u804A\u5929\u3001\u56DE\u590D\u6216\u6BB5\u843D\u5DF2\u53D8\u5316\u3002\u8349\u7A3F\u4ECD\u53EF\u590D\u5236\uFF0C\u4F46\u4E0D\u4F1A\u5199\u5165\u65B0\u7684\u804A\u5929\u6216\u56DE\u590D\u3002" : paragraphEditBusyReason(target);
-    status3.textContent = session2.saving ? "\u6B63\u5728\u4FDD\u5B58\u6B63\u6587\u3001\u4FEE\u8BA2\u8BB0\u5F55\u4E0E\u914D\u97F3\u5B9A\u4F4D\u2026" : session2.error || reason || "\u4E0D\u4F1A\u91CD\u5EFA\u804A\u5929\u6C14\u6CE1\uFF1B\u672A\u4FEE\u6539\u6BB5\u843D\u7684\u914D\u97F3\u6309\u94AE\u4FDD\u6301\u539F\u4F4D\u3002";
+    status3.textContent = session2.saving ? "\u6B63\u5728\u4FDD\u5B58\u539F\u6587\u3001\u914D\u97F3\u53CA\u914D\u56FE\u6570\u636E\uFF0C\u518D\u6062\u590D\u672C\u697C\u663E\u793A\u2026" : session2.error || reason || "\u4FDD\u5B58\u540E\u4EC5\u5237\u65B0\u672C\u697C\u3002\u672A\u6539\u914D\u97F3\u7EE7\u7EED\u4F7F\u7528\uFF0C\u65E7\u914D\u97F3\u548C\u914D\u56FE\u4FDD\u7559\u53EF\u627E\u56DE\u3002";
     for (const button5 of panel.querySelectorAll("button")) {
       const editing = ["save", "delete", "confirm-delete"].includes(button5.dataset.action);
       button5.disabled = session2.saving || editing && !!reason;
@@ -85579,23 +86517,24 @@ function openEditor2(target) {
     if (!session2.saving) refresh();
   });
   observer2.observe(target.container, { childList: true, subtree: true, characterData: true });
+  const unmount = mountPanel(panel, target);
   const close = () => {
     if (session2.saving) return;
     observer2.disconnect();
     disposeTask();
-    for (const [event, listener] of listeners6) eventSource12.removeListener(event, listener);
-    panel.remove();
+    for (const [event, listener] of listeners6) eventSource13.removeListener(event, listener);
+    unmount();
     if (active4 === session2) active4 = null;
+    if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
   };
   const listeners6 = [];
-  for (const event of [event_types12.CHAT_CHANGED, event_types12.MESSAGE_SWIPED, event_types12.MESSAGE_DELETED, event_types12.MESSAGE_SWIPE_DELETED, event_types12.GENERATION_STARTED]) {
+  for (const event of [event_types13.CHAT_CHANGED, event_types13.MESSAGE_SWIPED, event_types13.MESSAGE_DELETED, event_types13.MESSAGE_SWIPE_DELETED, event_types13.GENERATION_STARTED]) {
     if (!event) continue;
     const listener = (...args) => {
-      if (event === event_types12.GENERATION_STARTED && args[2]) return;
-      session2.invalidated = true;
+      if (event === event_types13.GENERATION_STARTED && args[2]) return;
       refresh();
     };
-    eventSource12.on(event, listener);
+    eventSource13.on(event, listener);
     listeners6.push([event, listener]);
   }
   const setDeleting = (value) => {
@@ -85610,33 +86549,34 @@ function openEditor2(target) {
       confirm2.querySelector("[data-empty-warning]").textContent = paragraphDeletionLeavesEmpty(target) ? "\u5220\u9664\u540E\u8FD9\u6761\u6D88\u606F\u5C06\u6CA1\u6709\u53EF\u63D0\u53D6\u7684\u6B63\u6587\uFF0C\u4F46\u697C\u5C42\u4ECD\u7136\u4FDD\u7559\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u5220\u9664\u6574\u6761\u6D88\u606F\u3002" : "";
     }
     refresh();
-    if (!value) input.focus();
+    if (!value) input.focus({ preventScroll: true });
   };
   const save = async (remove) => {
     if (active4 !== session2 || session2.saving) return;
-    if (!remove && input.value.trim() === target.text) {
-      close();
-      return;
-    }
-    if (!remove && !input.value.trim()) {
-      setDeleting(true);
-      return;
-    }
-    const reason = session2.invalidated ? "\u7F16\u8F91\u76EE\u6807\u5DF2\u7ECF\u53D8\u5316\uFF0C\u8BF7\u590D\u5236\u8349\u7A3F\u540E\u91CD\u65B0\u6253\u5F00\u3002" : paragraphEditBusyReason(target);
-    if (reason) {
-      session2.error = reason;
-      refresh();
-      return;
-    }
-    session2.saving = true;
-    session2.error = "";
-    refresh();
     try {
+      if (!remove && input.value === target.text) {
+        close();
+        return;
+      }
+      if (!remove && !input.value.trim()) {
+        setDeleting(true);
+        return;
+      }
+      const reason = session2.invalidated ? "\u7F16\u8F91\u76EE\u6807\u5DF2\u7ECF\u53D8\u5316\uFF0C\u8BF7\u590D\u5236\u8349\u7A3F\u540E\u91CD\u65B0\u6253\u5F00\u3002" : paragraphEditBusyReason(target);
+      if (reason) {
+        session2.error = reason;
+        refresh();
+        return;
+      }
+      session2.saving = true;
+      session2.error = "";
+      refresh();
       const result = await commitParagraphEdit(target, input.value, { remove });
       session2.saving = false;
       const stillHere = !session2.invalidated;
       close();
-      if (result.changed && stillHere) globalThis.toastr?.success?.(remove ? "\u5DF2\u5220\u9664\u672C\u6BB5\uFF0C\u4FDD\u7559\u697C\u5C42\u548C\u5DF2\u6709\u5206\u6790\uFF0C\u5176\u4ED6\u6BB5\u843D\u4E0E\u914D\u97F3\u63A7\u4EF6\u672A\u91CD\u7ED8\u3002" : "\u6BB5\u843D\u5DF2\u4FDD\u5B58\uFF0C\u5DF2\u6709\u5206\u6790\u6CBF\u7528\uFF0C\u804A\u5929\u6C14\u6CE1\u672A\u91CD\u7ED8\u3002", "\u6BB5\u843D\u7F16\u8F91");
+      if (result.warning && stillHere) globalThis.toastr?.warning?.(result.warning, "\u6BB5\u843D\u7F16\u8F91", { escapeHtml: true });
+      else if (result.changed && stillHere) globalThis.toastr?.success?.(remove ? "\u539F\u59CB\u6BB5\u843D\u5DF2\u5220\u9664\uFF0C\u672C\u697C\u5DF2\u5237\u65B0\uFF1B\u5DF2\u6709\u5206\u6790\u3001\u914D\u97F3\u548C\u914D\u56FE\u8BB0\u5F55\u4FDD\u7559\u3002" : "\u539F\u59CB\u6BB5\u843D\u5DF2\u4FDD\u5B58\uFF0C\u672C\u697C\u5DF2\u5237\u65B0\uFF1B\u5DF2\u6709\u914D\u97F3\u548C\u914D\u56FE\u8BB0\u5F55\u4FDD\u7559\u3002", "\u6BB5\u843D\u7F16\u8F91");
     } catch (cause) {
       session2.saving = false;
       session2.error = String(cause?.message || cause);
@@ -85644,11 +86584,10 @@ function openEditor2(target) {
     }
   };
   panel.addEventListener("click", (event) => {
-    event.stopPropagation();
-    const action = event.target.closest("button[data-action]")?.dataset.action;
-    if (!action || session2.saving) return;
+    const button5 = event.target.closest("button[data-action]"), action = button5?.dataset.action;
+    if (!action || button5.disabled || session2.saving) return;
     try {
-      if (action === "cancel") close();
+      if (action === "close" || action === "cancel") close();
       else if (action === "back") setDeleting(false);
       else if (action === "delete") setDeleting(true);
       else if (action === "save") void save(false);
@@ -85659,7 +86598,6 @@ function openEditor2(target) {
     }
   });
   panel.addEventListener("keydown", (event) => {
-    event.stopPropagation();
     if (event.isComposing || event.keyCode === 229) return;
     if (event.key === "Escape") {
       event.preventDefault();
@@ -85670,20 +86608,46 @@ function openEditor2(target) {
     } else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       if (!session2.deleting) void save(false);
-    } else if (event.key === "Enter" && event.altKey) event.preventDefault();
+    }
   });
   input.addEventListener("input", () => {
     session2.error = "";
     refresh();
   });
-  document.body.appendChild(panel);
   refresh();
-  input.focus();
+  input.focus({ preventScroll: true });
   input.setSelectionRange(input.value.length, input.value.length);
 }
 function resetTaps() {
-  touchStart = null;
+  press = null;
   lastTap = null;
+}
+var modified = (event) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey;
+var distance = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+var point = (event) => ({ clientX: event.clientX, clientY: event.clientY });
+function consumeGesture(event) {
+  if (event.cancelable) event.preventDefault();
+  event.stopImmediatePropagation();
+  claimed = { ...point(event), at: Date.now(), touch: event.pointerType === "touch" };
+}
+function attemptEdit(event, hit, firstHit = null) {
+  try {
+    if (!hit || firstHit === false) throw new Error("\u6CA1\u6709\u5B9A\u4F4D\u5230\u70B9\u4E2D\u7684\u6B63\u6587\u3002\u8BF7\u76F4\u63A5\u53CC\u51FB\u6BB5\u843D\u6587\u5B57\uFF1B\u5F53\u524D\u6D4F\u89C8\u5668\u9700\u652F\u6301\u6587\u5B57\u5750\u6807\u5B9A\u4F4D\u3002");
+    const target = captureParagraphEdit(hit, firstHit);
+    if (!target) return false;
+    consumeGesture(event);
+    if (active4) {
+      active4.panel.querySelector("textarea:not([hidden]), button:not(:disabled)")?.focus({ preventScroll: true });
+      return true;
+    }
+    const selection = window.getSelection();
+    if (selection && hit.container.contains(selection.anchorNode) && hit.container.contains(selection.focusNode)) selection.removeAllRanges();
+    openEditor2(target);
+  } catch (cause) {
+    consumeGesture(event);
+    globalThis.toastr?.info?.(String(cause?.message || cause), "\u6BB5\u843D\u7F16\u8F91", { escapeHtml: true });
+  }
+  return true;
 }
 function refreshParagraphEditor() {
   enabled = getExtData().paragraph_edit?.enabled !== false;
@@ -85692,82 +86656,86 @@ function refreshParagraphEditor() {
   document.body.classList.toggle("t-paragraph-edit-enabled", enabled);
   if (enabled) ensureFeatureCss("paragraph-editor.css");
 }
-function editableParagraph(target) {
-  if (!(target instanceof Element) || target.closest(excludedTarget)) return null;
-  const paragraph = target.closest("#chat .mes_text p");
-  return paragraph?.isConnected ? paragraph : null;
-}
-function claimParagraph(event, paragraph, fromTouch = false) {
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  claimed = { paragraph, at: Date.now(), fromTouch };
-  if (active4) {
-    active4.panel.querySelector("textarea")?.focus();
-    return;
-  }
-  try {
-    openEditor2(captureParagraphEdit(paragraph));
-  } catch (cause) {
-    globalThis.toastr?.info?.(String(cause?.message || cause), "\u6BB5\u843D\u7F16\u8F91");
-  }
-}
 function initParagraphEditor() {
+  initParagraphMediaView();
   refreshParagraphEditor();
-  if (initialized6) return;
-  initialized6 = true;
-  const handle = (event) => {
-    if (!enabled || event.button !== 0 || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return;
-    const paragraph = editableParagraph(event.target);
-    if (!paragraph) return;
-    if (claimed?.paragraph === paragraph && Date.now() - claimed.at < 1200 && (claimed.fromTouch || event.type === "dblclick")) {
-      event.preventDefault();
+  if (initialized7) return;
+  initialized7 = true;
+  const desktop = (event) => {
+    if (claimed && Date.now() - claimed.at < 1e3 && distance(event, claimed) <= DOUBLE_TAP_PX && (claimed.touch || event.type === "dblclick")) {
+      if (event.cancelable) event.preventDefault();
       event.stopImmediatePropagation();
       return;
     }
-    if (Date.now() - lastTouchAt < 1200 || event.sourceCapabilities?.firesTouchEvents || event.pointerType === "touch") return;
+    if (!enabled || event.button !== 0 || modified(event) || Date.now() - lastTouchAt < 1200 || event.pointerType === "touch" || event.sourceCapabilities?.firesTouchEvents) return;
     if (event.type === "click" && event.detail !== 2) return;
-    claimParagraph(event, paragraph);
+    const container = proseContainer(event.target);
+    if (container && gestureOwner(container)) attemptEdit(event, textHit(event, container));
   };
-  document.addEventListener("click", handle, true);
-  document.addEventListener("dblclick", handle, true);
-  document.addEventListener("touchstart", (event) => {
-    if (!enabled) return;
+  window.addEventListener("click", desktop, true);
+  window.addEventListener("dblclick", desktop, true);
+  window.addEventListener("pointerdown", (event) => {
+    claimed = null;
+    if (event.pointerType !== "touch") {
+      resetTaps();
+      return;
+    }
     lastTouchAt = Date.now();
-    touchStart = null;
-    const paragraph = editableParagraph(event.target);
-    if (event.touches.length !== 1 || !paragraph || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) {
+    if (!enabled || event.isPrimary === false || event.button !== 0 || modified(event)) {
       resetTaps();
       return;
     }
-    const finger = event.touches[0];
-    touchStart = { paragraph, id: finger.identifier, x: finger.clientX, y: finger.clientY, at: lastTouchAt };
-  }, { capture: true, passive: true });
-  document.addEventListener("touchmove", (event) => {
-    if (!touchStart) return;
-    const finger = event.touches[0];
-    if (event.touches.length !== 1 || finger.identifier !== touchStart.id || Math.hypot(finger.clientX - touchStart.x, finger.clientY - touchStart.y) > TAP_MOVE_PX) resetTaps();
-  }, { capture: true, passive: true });
-  document.addEventListener("touchend", (event) => {
-    if (!enabled) return;
-    const now = Date.now(), start = touchStart;
-    lastTouchAt = now;
-    touchStart = null;
-    const finger = Array.from(event.changedTouches).find((touch) => touch.identifier === start?.id);
-    if (!start || !finger || event.touches.length || now - start.at > TAP_MAX_MS || Math.hypot(finger.clientX - start.x, finger.clientY - start.y) > TAP_MOVE_PX || editableParagraph(event.target) !== start.paragraph) {
+    const container = proseContainer(event.target), owner = container && gestureOwner(container);
+    if (!owner) {
       resetTaps();
       return;
     }
-    if (lastTap?.paragraph === start.paragraph && now - lastTap.at <= DOUBLE_TAP_MS && Math.hypot(finger.clientX - lastTap.x, finger.clientY - lastTap.y) <= DOUBLE_TAP_PX) {
-      lastTap = null;
-      claimParagraph(event, start.paragraph, true);
-    } else {
-      lastTap = { paragraph: start.paragraph, x: finger.clientX, y: finger.clientY, at: now };
+    if (lastTap && lastTap.owner.container === container && gestureStillCurrent(lastTap.owner) && lastTouchAt - lastTap.at <= DOUBLE_TAP_MS && distance(event, lastTap) <= DOUBLE_TAP_PX && event.cancelable) {
+      event.preventDefault();
     }
+    press = { ...point(event), id: event.pointerId, at: lastTouchAt, owner };
   }, { capture: true, passive: false });
-  document.addEventListener("touchcancel", resetTaps, { capture: true, passive: true });
-  document.addEventListener("contextmenu", resetTaps, true);
-  document.addEventListener("scroll", resetTaps, { capture: true, passive: true });
-  eventSource12.on(event_types12.CHAT_CHANGED, resetTaps);
+  window.addEventListener("pointermove", (event) => {
+    if (press?.id === event.pointerId && distance(event, press) > TAP_MOVE_PX) resetTaps();
+  }, { capture: true, passive: true });
+  window.addEventListener("pointerup", (event) => {
+    if (event.pointerType !== "touch") return;
+    const now = Date.now(), start = press;
+    lastTouchAt = now;
+    press = null;
+    if (!enabled || !start || start.id !== event.pointerId || event.isPrimary === false || modified(event) || now - start.at > TAP_MAX_MS || distance(event, start) > TAP_MOVE_PX || !gestureStillCurrent(start.owner)) {
+      resetTaps();
+      return;
+    }
+    const container = proseContainer(document.elementFromPoint(event.clientX, event.clientY));
+    if (container !== start.owner.container) {
+      resetTaps();
+      return;
+    }
+    const hit = textHit(event, container);
+    const previous = lastTap;
+    lastTap = null;
+    if (previous && previous.owner.container === container && gestureStillCurrent(previous.owner) && now - previous.at <= DOUBLE_TAP_MS && distance(event, previous) <= DOUBLE_TAP_PX && attemptEdit(event, hit, previous.hit || false)) return;
+    lastTap = { ...point(event), at: now, hit, owner: start.owner };
+  }, { capture: true, passive: false });
+  window.addEventListener("pointercancel", resetTaps, { capture: true, passive: true });
+  window.addEventListener("contextmenu", resetTaps, true);
+  window.addEventListener("scroll", resetTaps, { capture: true, passive: true });
+  window.addEventListener("blur", resetTaps);
+  document.addEventListener("visibilitychange", resetTaps);
+  for (const event of new Set([
+    event_types13.CHAT_CHANGED,
+    event_types13.MESSAGE_SWIPED,
+    event_types13.MESSAGE_DELETED,
+    event_types13.MESSAGE_UPDATED,
+    event_types13.MESSAGE_EDITED,
+    event_types13.MESSAGE_SWIPE_DELETED
+  ].filter(Boolean))) {
+    eventSource13.on(event, () => {
+      resetTaps();
+      claimed = null;
+    });
+  }
 }
 
 // src/ui/chatInjectButton.js
@@ -85775,7 +86743,7 @@ init_state();
 init_chatInjector();
 init_logger();
 init_studioTheme();
-import { eventSource as eventSource13, event_types as event_types13 } from "../../../../script.js";
+import { eventSource as eventSource14, event_types as event_types14 } from "../../../../script.js";
 var BTN_CLASS2 = "titania-inject-btn";
 var OVERLAY_ID2 = "t-chat-inject-overlay";
 var listenersBound5 = false;
@@ -85964,16 +86932,16 @@ function initChatInjectButton() {
     openInjectPickerWindow(mesid);
   });
   const rerenderEvents = [
-    event_types13.CHAT_CHANGED,
-    event_types13.CHARACTER_MESSAGE_RENDERED,
-    event_types13.USER_MESSAGE_RENDERED,
-    event_types13.MESSAGE_SWIPED,
-    event_types13.MESSAGE_DELETED,
-    event_types13.MORE_MESSAGES_LOADED
+    event_types14.CHAT_CHANGED,
+    event_types14.CHARACTER_MESSAGE_RENDERED,
+    event_types14.USER_MESSAGE_RENDERED,
+    event_types14.MESSAGE_SWIPED,
+    event_types14.MESSAGE_DELETED,
+    event_types14.MORE_MESSAGES_LOADED
   ];
   for (const eventName of rerenderEvents) {
     if (!eventName) continue;
-    eventSource13.on(eventName, () => scheduleRefreshButtons2(0));
+    eventSource14.on(eventName, () => scheduleRefreshButtons2(0));
   }
   scheduleRefreshButtons2(300);
   TitaniaLogger.info("\u5C0F\u5267\u573A\u6CE8\u5165\u5165\u53E3\u5DF2\u521D\u59CB\u5316");
@@ -85983,7 +86951,7 @@ function initChatInjectButton() {
 init_storage();
 init_chatInjector();
 init_logger();
-import { eventSource as eventSource14, event_types as event_types14 } from "../../../../script.js";
+import { eventSource as eventSource15, event_types as event_types15 } from "../../../../script.js";
 var BTN_CLASS3 = "titania-reader-btn";
 var listenersBound6 = false;
 var refreshQueued4 = false;
@@ -86047,17 +87015,17 @@ function initReaderEntryButton() {
   if (!listenersBound6) {
     listenersBound6 = true;
     const events = [
-      event_types14.CHAT_CHANGED,
-      event_types14.CHARACTER_MESSAGE_RENDERED,
-      event_types14.USER_MESSAGE_RENDERED,
-      event_types14.MESSAGE_UPDATED,
-      event_types14.MESSAGE_SWIPED,
-      event_types14.MESSAGE_DELETED,
-      event_types14.MORE_MESSAGES_LOADED,
-      event_types14.GENERATION_ENDED
+      event_types15.CHAT_CHANGED,
+      event_types15.CHARACTER_MESSAGE_RENDERED,
+      event_types15.USER_MESSAGE_RENDERED,
+      event_types15.MESSAGE_UPDATED,
+      event_types15.MESSAGE_SWIPED,
+      event_types15.MESSAGE_DELETED,
+      event_types15.MORE_MESSAGES_LOADED,
+      event_types15.GENERATION_ENDED
     ];
     for (const eventName of events) {
-      if (eventName) eventSource14.on(eventName, scheduleRefresh);
+      if (eventName) eventSource15.on(eventName, scheduleRefresh);
     }
   }
   refreshReaderEntryButton();
@@ -86224,7 +87192,7 @@ init_tts();
 // src/ui/storyMemoryNotifications.js
 init_storyMemory();
 init_dom();
-import { eventSource as eventSource15, event_types as event_types15 } from "../../../../script.js";
+import { eventSource as eventSource16, event_types as event_types16 } from "../../../../script.js";
 var TITLES = { summary: "\u6545\u4E8B\u603B\u7ED3", merge: "\u5C0F\u603B\u7ED3\u5F52\u5E76", stages: "\u5267\u60C5\u9636\u6BB5\u91CD\u6574", "time-refresh": "\u6458\u8981\u65F6\u95F4\u66F4\u65B0", evolution: "\u89D2\u8272\u6F14\u53D8\u5206\u6790", timetrace: "\u56DE\u58F0\u65F6\u75D5\u5206\u6790" };
 var PHASES2 = { preparing: "\u51C6\u5907\u4E2D", request: "\u5206\u6790\u4E2D", saving: "\u786E\u8BA4\u4FDD\u5B58\u4E2D", waiting: "\u7B49\u5F85\u804A\u5929\u751F\u6210\u7ED3\u675F\u540E\u4FDD\u5B58", queued: "\u7B49\u5F85\u4E0B\u4E00\u6279", merging: "\u5F52\u5E76\u4E2D", anchors: "\u626B\u63CF\u65F6\u95F4\u951A\u70B9", timeline: "\u5206\u6790\u4E2D" };
 var SETTLE_DELAY = 2e3;
@@ -86379,10 +87347,10 @@ function initStoryMemoryNotifications() {
     }, 0);
   }
   const unsubscribe = subscribeStoryMemory(refresh);
-  eventSource15.on(event_types15.CHAT_CHANGED, onChatChanged);
+  eventSource16.on(event_types16.CHAT_CHANGED, onChatChanged);
   dispose = () => {
     unsubscribe();
-    eventSource15.removeListener(event_types15.CHAT_CHANGED, onChatChanged);
+    eventSource16.removeListener(event_types16.CHAT_CHANGED, onChatChanged);
     clearTimeout(chatTimer);
     reset();
     dispose = null;
@@ -86525,8 +87493,8 @@ function initCoreFeatures(legacyConfigMissing = false) {
   applyUIFontScale(extData.appearance?.ui_font_scale);
   applyUITheme(extData.appearance?.ui_theme);
   initCharacterGalleryEvents();
-  eventSource16.on(event_types16.GENERATION_ENDED, onGenerationEnded2);
-  eventSource16.on(event_types16.CHAT_CHANGED, () => {
+  eventSource17.on(event_types17.GENERATION_ENDED, onGenerationEnded2);
+  eventSource17.on(event_types17.CHAT_CHANGED, () => {
     void restoreContinuationForCurrentChat().catch((error4) => console.error("Titania: \u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error4));
   });
   void restoreContinuationForCurrentChat().catch((error4) => console.error("Titania: \u521D\u59CB\u7EED\u5199\u5386\u53F2\u6062\u590D\u5931\u8D25", error4));
@@ -87343,6 +88311,7 @@ ${hydration.error}`,
   }
   $("#cfg-outline-entry-enabled").prop("checked", extData.outline_entry.enabled === true);
   $("#cfg-float-edge-tuck").prop("checked", extData.appearance?.edge_tuck !== false);
+  $("#cfg-float-animation-enabled").prop("checked", extData.appearance?.animation_enabled !== false);
   $("#cfg-outline-theater-enabled").prop("checked", extData.outline_entry.show_theater === true);
   $("#cfg-outline-actions-enabled").prop("checked", extData.outline_entry.show_outline_actions === true);
   $("#cfg-rewrite-entry-enabled").prop("checked", extData.rewrite_entry.enabled === true);
@@ -87359,6 +88328,14 @@ ${hydration.error}`,
     $("#cfg-blindbox-sound-volume").val(cfg.volume);
     $("#cfg-blindbox-sound-volume-label").text(describeUnlockVolume(cfg));
   })();
+  $("#cfg-float-animation-enabled").on("input", function() {
+    const enabled2 = $(this).prop("checked") === true;
+    const data = getExtData();
+    if (!data.appearance || typeof data.appearance !== "object") data.appearance = {};
+    data.appearance.animation_enabled = enabled2;
+    saveExtData();
+    refreshFloatingAnimation();
+  });
   $("#cfg-float-edge-tuck").on("input", function() {
     const enabled2 = $(this).prop("checked") === true;
     const data = getExtData();
@@ -87457,7 +88434,7 @@ ${hydration.error}`,
     data.paragraph_edit.enabled = enabled2;
     saveExtData();
     refreshParagraphEditor();
-    if (window.toastr) toastr.success(enabled2 ? "\u53CC\u51FB\u7F16\u8F91\u6BB5\u843D\u5DF2\u542F\u7528\uFF0C\u652F\u6301\u7535\u8111\u4E0E\u624B\u673A" : "\u53CC\u51FB\u7F16\u8F91\u6BB5\u843D\u5DF2\u5173\u95ED", "Titania Echo");
+    if (window.toastr) toastr.success(enabled2 ? "\u53CC\u51FB\u7F16\u8F91\u6BB5\u843D\u5DF2\u542F\u7528\uFF1A\u7535\u8111\u53CC\u51FB\u6587\u5B57\uFF0C\u624B\u673A\u540C\u6BB5\u5FEB\u901F\u70B9\u4E24\u4E0B" : "\u53CC\u51FB\u7F16\u8F91\u6BB5\u843D\u5DF2\u5173\u95ED", "Titania Echo");
   });
   $("#cfg-chat-inject-enabled").on("input", function() {
     const enabled2 = $(this).prop("checked") === true;

@@ -62,6 +62,13 @@
                         </label>
                         <div class="titania-settings-dependent" data-settings-parent="enable_echo_theater" hidden>
                             <label class="checkbox_label titania-switch-row">
+                                <input id="cfg-float-animation-enabled" type="checkbox" />
+                                <span class="titania-switch-text">
+                                    <span class="titania-switch-main">启用悬浮球动画</span>
+                                    <small>关闭后停止生成动画和通知呼吸灯，不影响计时与操作。</small>
+                                </span>
+                            </label>
+                            <label class="checkbox_label titania-switch-row">
                                 <input id="cfg-float-edge-tuck" type="checkbox" />
                                 <span class="titania-switch-text">
                                     <span class="titania-switch-main">悬浮球半隐藏</span>
@@ -160,8 +167,8 @@
                         <label class="checkbox_label titania-switch-row">
                             <input id="cfg-paragraph-edit-enabled" type="checkbox" data-settings-toggle />
                             <span class="titania-switch-text">
-                                <span class="titania-switch-main">启用双击编辑段落</span>
-                                <small>默认开启。电脑双击、手机快速连点两下主聊天正文段落，即可修改或删除本段；关闭后不再拦截双击。</small>
+                                <span class="titania-switch-main">双击编辑段落</span>
+                                <small>默认开启。电脑双击主聊天的段落文字，手机在同一段快速点两下，直接修改或删除本段。滑动、长按与配音按钮不触发编辑；关闭后恢复正文原有手势。</small>
                             </span>
                         </label>
                         <label class="checkbox_label titania-switch-row">
