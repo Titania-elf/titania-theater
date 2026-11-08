@@ -2260,10 +2260,10 @@ function buildFontStylesForShadowDOM() {
 }
 function renderToShadowDOMReal(container, html) {
   container.innerHTML = "";
-  const host7 = document.createElement("div");
-  host7.className = "t-shadow-host";
-  host7.style.cssText = "width:100%; min-height:100%;";
-  const shadow = host7.attachShadow({ mode: "open" });
+  const host8 = document.createElement("div");
+  host8.className = "t-shadow-host";
+  host8.style.cssText = "width:100%; min-height:100%;";
+  const shadow = host8.attachShadow({ mode: "open" });
   const isEditableNode = (node3) => {
     if (!(node3 instanceof HTMLElement)) return false;
     const tag = node3.tagName.toLowerCase();
@@ -2341,7 +2341,7 @@ function renderToShadowDOMReal(container, html) {
         </style>
     `;
   shadow.innerHTML = baseStyles + `<div class="t-shadow-content">${html}</div>`;
-  container.appendChild(host7);
+  container.appendChild(host8);
   return shadow;
 }
 function getChatHistory(limit, aiOnly = false) {
@@ -17078,16 +17078,19 @@ textarea.t-input {\r
     .t-storyboard-player .t-storyboard-icon-button:hover { border-color: currentColor; }\r
 }\r
 .t-storyboard-dialogue {\r
+    --t-storyboard-row-height: calc(var(--t-storyboard-reader-font, 18px) * var(--t-leading-prose));\r
+    --t-storyboard-dialogue-chrome: calc(2 * var(--t-gap-stack) + var(--t-gap-inline) + var(--t-text-caption) * var(--t-leading-ui) + 3px);\r
+    --t-storyboard-name-clearance: 0px;\r
     position: relative;\r
     display: flex;\r
     flex-direction: column;\r
     flex: 0 0 auto;\r
     gap: var(--t-gap-inline);\r
     width: min(960px, calc(100% - 2 * max(var(--t-gap-section), env(safe-area-inset-left), env(safe-area-inset-right))));\r
-    /* \u4FDD\u6301\u7D27\u51D1\u5916\u6846\uFF1B\u5B57\u53F7\u518D\u5927\u4E5F\u81F3\u5C11\u7559\u51FA\u5B8C\u6574\u4E00\u884C\uFF0C\u4F59\u6587\u7531\u64AD\u653E\u5668\u5206\u9875\u3002 */\r
-    height: max(120px, 17%);\r
-    max-height: 31%;\r
-    min-height: calc(var(--t-storyboard-reader-font, 18px) * var(--t-leading-prose) + 2 * var(--t-gap-stack) + var(--t-gap-inline) + var(--t-text-caption) * var(--t-leading-ui) + 3px);\r
+    /* \u4E09\u884C\u53EA\u662F\u7D27\u51D1\u8D77\u70B9\uFF0C\u4E0D\u662F\u5B57\u6570\u4E0A\u9650\uFF1B\u7A0D\u957F\u7684\u5B8C\u6574\u53E5\u5B50\u53EF\u6709\u9650\u589E\u9AD8\uFF0C\u4ECD\u4FDD\u7559\u753B\u9762\u3002 */\r
+    height: var(--t-storyboard-page-height, max(120px, 17%));\r
+    max-height: 44%;\r
+    min-height: min(calc(3 * var(--t-storyboard-row-height) + var(--t-storyboard-dialogue-chrome) + var(--t-storyboard-name-clearance)), max(40%, calc(var(--t-storyboard-row-height) + var(--t-storyboard-dialogue-chrome) + var(--t-storyboard-name-clearance))));\r
     margin: auto auto max(var(--t-gap-section), env(safe-area-inset-bottom));\r
     padding: var(--t-gap-stack) var(--t-pad-container);\r
     border: 1px solid color-mix(in srgb, var(--t-storyboard-chrome) 65%, transparent);\r
@@ -17102,8 +17105,8 @@ textarea.t-input {\r
 }\r
 /* \u59D3\u540D\u724C\u8DE8\u5728\u4E0A\u8FB9\u7F18\uFF0C\u4E0D\u518D\u4F5C\u4E3A\u6B63\u6587\u5E03\u5C40\u4E2D\u7684\u4E00\u6574\u884C\uFF1B\u65C1\u767D\u4E0D\u663E\u793A\uFF0C\u4E5F\u4E0D\u9884\u7559\u7A7A\u4F4D\u3002 */\r
 .t-storyboard-dialogue:has(> .t-storyboard-nameplate:not([hidden])) {\r
-    padding-top: calc(var(--t-gap-stack) + .85em);\r
-    min-height: calc(var(--t-storyboard-reader-font, 18px) * var(--t-leading-prose) + 2 * var(--t-gap-stack) + var(--t-gap-inline) + var(--t-text-caption) * var(--t-leading-ui) + .85em + 3px);\r
+    --t-storyboard-name-clearance: .85em;\r
+    padding-top: calc(var(--t-gap-stack) + var(--t-storyboard-name-clearance));\r
 }\r
 .t-storyboard-nameplate {\r
     position: absolute;\r
@@ -17180,7 +17183,7 @@ textarea.t-input {\r
 \r
 @media (max-width: 600px) {\r
     .t-storyboard-scene-title { font-size: var(--t-text-caption); }\r
-    .t-storyboard-dialogue { height: 29%; max-height: 32.5%; }\r
+    .t-storyboard-dialogue { height: var(--t-storyboard-page-height, 29%); max-height: 44%; }\r
     .t-storyboard-source select,\r
     .t-storyboard-reader-settings select { font-size: 16px; }\r
 }\r
@@ -17188,7 +17191,7 @@ textarea.t-input {\r
     /* \u6A2A\u5C4F\u5411\u5DE6\u5C55\u5F00\uFF0C\u907F\u514D\u7AD6\u6392\u83DC\u5355\u4E0E\u8F83\u77EE\u7684\u5BF9\u767D\u6846\u76F8\u4E92\u906E\u6321\u3002 */\r
     .t-storyboard-player-toolbar:has(.t-storyboard-menu-toggle[aria-expanded="true"]) .t-storyboard-scene-title { visibility: hidden; }\r
     .t-storyboard-player-controls { top: 0; right: calc(100% + var(--t-gap-inline)); flex-direction: row; }\r
-    .t-storyboard-dialogue { height: 37%; max-height: 37%; }\r
+    .t-storyboard-dialogue { height: var(--t-storyboard-page-height, 37%); max-height: 48%; }\r
 }\r
 @media (prefers-reduced-motion: reduce) {\r
     .t-storyboard-backdrop { transition: none; }\r
@@ -28670,7 +28673,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 184248], "04-features/toolbox-settings.css": [184297, 187532], "04-features/main-window.css": [187576, 232469], "04-features/main-window-legacy.css": [232520, 256386], "04-features/script-picker.css": [256432, 262927], "04-features/wi-selector.css": [262971, 280797], "04-features/continuation.css": [280842, 304711], "04-features/queue.css": [304749, 311309], "04-features/content-editor.css": [311356, 313663], "04-features/illustration.css": [313708, 336743], "04-features/storyboard.css": [336786, 350995], "04-features/settings-drawer.css": [351043, 369277], "04-features/settings.css": [369318, 397344], "04-features/manager.css": [397384, 410682], "04-features/workshop.css": [410723, 433505], "04-features/favs.css": [433542, 473468], "04-features/debug.css": [473506, 490271], "04-features/story-outline.css": [490317, 524623], "04-features/outline-entry-menu.css": [524674, 531427], "04-features/rewrite.css": [531467, 582366], "04-features/paragraph-editor.css": [582415, 586198], "04-features/reader.css": [586237, 595596], "04-features/chat-book.css": [595638, 602179], "04-features/story-memory.css": [602224, 649611], "04-features/retrieval.css": [649653, 659468], "04-features/character-evolution.css": [659520, 694194], "04-features/story-memory-notifications.css": [694253, 696402], "04-features/story-timetrace.css": [696450, 710501], "04-features/tts.css": [710537, 746908], "04-features/confirm-dialog.css": [746955, 750953], "04-features/image-cropper.css": [750999, 754857], "04-features/st-embedded.css": [754901, 785405], "04-features/scene-advance.css": [785451, 807536], "04-features/theater-midnight.css": [807585, 832913] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 184248], "04-features/toolbox-settings.css": [184297, 187532], "04-features/main-window.css": [187576, 232469], "04-features/main-window-legacy.css": [232520, 256386], "04-features/script-picker.css": [256432, 262927], "04-features/wi-selector.css": [262971, 280797], "04-features/continuation.css": [280842, 304711], "04-features/queue.css": [304749, 311309], "04-features/content-editor.css": [311356, 313663], "04-features/illustration.css": [313708, 336743], "04-features/storyboard.css": [336786, 351335], "04-features/settings-drawer.css": [351383, 369617], "04-features/settings.css": [369658, 397684], "04-features/manager.css": [397724, 411022], "04-features/workshop.css": [411063, 433845], "04-features/favs.css": [433882, 473808], "04-features/debug.css": [473846, 490611], "04-features/story-outline.css": [490657, 524963], "04-features/outline-entry-menu.css": [525014, 531767], "04-features/rewrite.css": [531807, 582706], "04-features/paragraph-editor.css": [582755, 586538], "04-features/reader.css": [586577, 595936], "04-features/chat-book.css": [595978, 602519], "04-features/story-memory.css": [602564, 649951], "04-features/retrieval.css": [649993, 659808], "04-features/character-evolution.css": [659860, 694534], "04-features/story-memory-notifications.css": [694593, 696742], "04-features/story-timetrace.css": [696790, 710841], "04-features/tts.css": [710877, 747248], "04-features/confirm-dialog.css": [747295, 751293], "04-features/image-cropper.css": [751339, 755197], "04-features/st-embedded.css": [755241, 785745], "04-features/scene-advance.css": [785791, 807876], "04-features/theater-midnight.css": [807925, 833253] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -30089,8 +30092,8 @@ function getSelectorContext() {
     return { charName: "Char", stCtx: null };
   }
 }
-async function openWorldInfoSelector({ host: host7 = null, onClose, onSaved } = {}) {
-  const parent = host7?.jquery ? host7[0] : host7 || document.body;
+async function openWorldInfoSelector({ host: host8 = null, onClose, onSaved } = {}) {
+  const parent = host8?.jquery ? host8[0] : host8 || document.body;
   const priorFocus = document.activeElement;
   if (activeSelector && (!activeSelector.layer.isConnected || activeSelector.parent !== parent)) activeSelector.close();
   if (activeSelector) {
@@ -31059,11 +31062,11 @@ function attribution(text9, start, end) {
   const names = new Set([before?.speaker, after?.speaker].filter((name) => typeof name === "string"));
   return { explicit: Boolean(before || after), speaker: names.size === 1 ? [...names][0] : null };
 }
-function sentenceEnd(text9, start, limit = text9.length) {
+function sentenceEnd(text9, start, limit = text9.length, wholeSentence = false) {
   const brackets = [];
   for (let index2 = start; index2 < limit; index2++) {
     const mark = text9[index2];
-    if (mark === "\n") return { end: index2, unsafe: brackets.length > 0 };
+    if (mark === "\n" && !wholeSentence) return { end: index2, unsafe: brackets.length > 0 };
     if (Object.hasOwn(BRACKETS, mark)) {
       brackets.push(BRACKETS[mark]);
       continue;
@@ -31078,13 +31081,24 @@ function sentenceEnd(text9, start, limit = text9.length) {
       index2 = end - 1;
       continue;
     }
-    if (/[。！？!?；;]/u.test(mark) || mark === "." && !/[\p{L}\p{N}]/u.test(text9[index2 + 1] || "")) {
+    if ((wholeSentence ? /[。！？!?]/u : /[。！？!?；;]/u).test(mark) || mark === "." && !/[\p{L}\p{N}]/u.test(text9[index2 + 1] || "")) {
       let end = index2 + 1;
       while (end < limit && /[。！？!?；;]/u.test(text9[end])) end++;
       return { end, unsafe: false };
     }
   }
   return { end: limit, unsafe: brackets.length > 0 };
+}
+function storyboardSentenceEndOffsets(text9) {
+  const ends = [];
+  let start = 0;
+  while (start < text9.length) {
+    let end = sentenceEnd(text9, start, text9.length, true).end;
+    while (end < text9.length && /[”’」』）)\]】\s]/u.test(text9[end])) end++;
+    ends.push(end);
+    start = end;
+  }
+  return ends;
 }
 function localFragments(unit) {
   const text9 = unit.text;
@@ -32918,9 +32932,9 @@ var init_legacyTheaterRequest = __esm({
 import * as openai from "../../../openai.js";
 async function buildTheaterRequest(conn, messages2, options2 = {}) {
   if (!Array.isArray(messages2)) throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4");
-  const host7 = structuredClone(openai.oai_settings);
-  const settings = conn.useSTConnection ? host7 : Object.fromEntries(
-    SHARED_SETTINGS.filter((key) => host7[key] !== void 0).map((key) => [key, host7[key]])
+  const host8 = structuredClone(openai.oai_settings);
+  const settings = conn.useSTConnection ? host8 : Object.fromEntries(
+    SHARED_SETTINGS.filter((key) => host8[key] !== void 0).map((key) => [key, host8[key]])
   );
   const model = options2.model || conn.model;
   const stream = options2.stream ?? conn.stream ?? true;
@@ -32930,8 +32944,8 @@ async function buildTheaterRequest(conn, messages2, options2 = {}) {
     settings.chat_completion_source = "openai";
     settings.custom_prompt_post_processing = "";
   }
-  settings.openai_max_tokens = options2.maxTokens ?? host7.openai_max_tokens ?? 2048;
-  settings.temp_openai = options2.temperature ?? host7.temp_openai ?? 0.7;
+  settings.openai_max_tokens = options2.maxTokens ?? host8.openai_max_tokens ?? 2048;
+  settings.temp_openai = options2.temperature ?? host8.temp_openai ?? 0.7;
   settings.stream_openai = stream;
   settings.n = 1;
   settings.function_calling = false;
@@ -35562,8 +35576,8 @@ function openCharacterProfileWindow(options2 = {}) {
     renderGroups();
   }
   function renderTabs(counts) {
-    const host7 = role("tabs");
-    host7.replaceChildren();
+    const host8 = role("tabs");
+    host8.replaceChildren();
     for (const group2 of GROUPS) {
       const active5 = group2.kind === activeKind;
       const tab = document.createElement("button");
@@ -35579,7 +35593,7 @@ function openCharacterProfileWindow(options2 = {}) {
       count.dataset.role = `count-${group2.kind}`;
       count.textContent = String(counts.get(group2.kind) || 0);
       tab.append(count);
-      host7.append(tab);
+      host8.append(tab);
     }
   }
   function buildGroup(group2, entries) {
@@ -35608,10 +35622,10 @@ function openCharacterProfileWindow(options2 = {}) {
       items.filter((entry) => profileKind(entry) === group3.kind).length
     ]));
     renderTabs(counts);
-    const host7 = role("list");
-    host7.replaceChildren();
+    const host8 = role("list");
+    host8.replaceChildren();
     const group2 = GROUPS.find((item2) => item2.kind === activeKind) || GROUPS[0];
-    host7.append(buildGroup(group2, items.filter((entry) => profileKind(entry) === group2.kind)));
+    host8.append(buildGroup(group2, items.filter((entry) => profileKind(entry) === group2.kind)));
   }
   function revealEntry(id3, kind) {
     activeKind = kind;
@@ -36481,44 +36495,81 @@ var init_storyboard = __esm({
 });
 
 // src/ui/storyboardPlayer.js
+function joinNarrationSegments(segments, original) {
+  const result = [];
+  for (const segment of segments) {
+    const previous = result.at(-1), end = segment.offset + segment.text.length;
+    const previousEnd = previous ? previous.offset + previous.text.length : 0;
+    const gap = previous ? original.slice(previousEnd, segment.offset) : "";
+    if (previous && previous.kind !== "dialogue" && segment.kind !== "dialogue" && segment.offset >= previousEnd && /^\s*$/u.test(gap) && !/\n\s*\n/u.test(gap)) {
+      previous.text = original.slice(previous.offset, end);
+      if (previous.kind !== segment.kind) previous.kind = "text";
+    } else result.push({ ...segment });
+  }
+  return result;
+}
+function sentenceEnds(text9, chars, offsets) {
+  const boundaries = storyboardSentenceEndOffsets(text9), allowed2 = new Set(boundaries);
+  const selected = sentenceSegmenter ? Array.from(sentenceSegmenter.segment(text9), (part) => part.index + part.segment.length).filter((offset) => allowed2.has(offset)) : boundaries;
+  const indices = new Map(offsets.map((offset, index2) => [offset, index2]));
+  const ends = selected.map((offset) => indices.get(offset)).filter((end) => Number.isInteger(end) && end > 0);
+  if (ends.at(-1) !== chars.length) ends.push(chars.length);
+  return ends;
+}
 function paginateText(segment, capacity, measure) {
   const chars = charactersOf(segment.text), offsets = [0], pages = [];
   for (const char of chars) offsets.push(offsets.at(-1) + char.length);
-  const fits = (start2, end) => {
+  const ends = sentenceEnds(segment.text, chars, offsets);
+  const measureRange = (start2, end) => {
     measure.textContent = chars.slice(start2, end).join("");
-    return measure.scrollHeight <= capacity.height;
+    return measure.scrollHeight;
   };
-  let start = 0;
+  const estimate = (height) => Math.max(24, Math.ceil(capacity.width / Math.max(1, capacity.fontSize / 4)) * Math.max(1, Math.ceil(height / capacity.rowHeight)));
+  const fittingEnd = (start2, height) => {
+    let low = start2 + 1, high = Math.min(chars.length, start2 + estimate(height)), best = start2;
+    if (measureRange(start2, high) <= height) return high;
+    high--;
+    while (low <= high) {
+      const middle = Math.floor((low + high) / 2);
+      if (measureRange(start2, middle) <= height) {
+        best = middle;
+        low = middle + 1;
+      } else high = middle - 1;
+    }
+    return best;
+  };
+  let start = 0, sentenceIndex = 0;
   while (start < chars.length) {
-    const estimate = Math.max(24, Math.ceil(capacity.width / Math.max(1, capacity.fontSize / 4)) * capacity.lines);
-    let low = start + 1, high = Math.min(chars.length, start + estimate), fitEnd = start;
-    if (fits(start, high)) fitEnd = high;
-    else {
-      high--;
-      while (low <= high) {
-        const middle = Math.floor((low + high) / 2);
-        if (fits(start, middle)) {
-          fitEnd = middle;
-          low = middle + 1;
-        } else high = middle - 1;
+    while (ends[sentenceIndex] <= start) sentenceIndex++;
+    const firstSentence = ends[sentenceIndex] || chars.length;
+    let height = capacity.height, completeFirst = false;
+    if (firstSentence - start <= estimate(capacity.maxHeight)) {
+      const needed2 = measureRange(start, firstSentence);
+      completeFirst = needed2 <= capacity.maxHeight;
+      if (needed2 > height) height = completeFirst ? Math.max(height, needed2) : capacity.maxHeight;
+    } else height = capacity.maxHeight;
+    let fitEnd = fittingEnd(start, height);
+    if (completeFirst) fitEnd = Math.max(fitEnd, firstSentence);
+    let end = 0;
+    for (let index2 = sentenceIndex; ends[index2] <= fitEnd; index2++) end = ends[index2];
+    if (!end) {
+      end = Math.max(start + 1, fitEnd);
+      const earliest = start + Math.max(1, Math.floor((end - start) * 0.8));
+      for (let cursor = earliest - 1; cursor < fitEnd; cursor++) {
+        if (/[，,、：:；;\s]/u.test(chars[cursor])) end = cursor + 1;
       }
+      while (end < fitEnd && /^[”’」』）)\]】]+$/u.test(chars[end])) end++;
     }
-    let end = Math.max(start + 1, fitEnd);
-    if (end < chars.length) {
-      let strong = 0, soft = 0;
-      const earliest = start + Math.max(1, Math.floor((end - start) * 0.5));
-      for (let cursor = earliest - 1; cursor < end; cursor++) {
-        if (/[。.!！？?；;\n]/.test(chars[cursor])) strong = cursor + 1;
-        else if (/[，,、：:\s]/.test(chars[cursor])) soft = cursor + 1;
-      }
-      end = strong || soft || end;
-      while (end < fitEnd && /^[”’」』）)\]】]+$/.test(chars[end])) end++;
-    }
+    const needed = measureRange(start, end);
     pages.push({
       ...segment,
       text: chars.slice(start, end).join(""),
       offset: segment.offset + offsets[start],
-      endOffset: segment.offset + offsets[end]
+      endOffset: segment.offset + offsets[end],
+      boxHeight: Math.min(capacity.maxBoxHeight, Math.max(
+        capacity.baseBoxHeight,
+        Math.ceil(needed + capacity.decorationHeight + 1)
+      ))
     });
     start = end;
   }
@@ -36583,7 +36634,7 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
                     <label>\u753B\u9762\u663E\u793A<select class="t-input" data-player-field="fit"><option value="auto">\u81EA\u9002\u5E94</option><option value="cover">\u94FA\u6EE1\u753B\u9762</option><option value="contain">\u5B8C\u6574\u753B\u9762</option></select></label>
                     <button type="button" class="t-btn" data-player-action="fullscreen">\u6D4F\u89C8\u5668\u5168\u5C4F</button>
                     <p class="t-storyboard-hint" data-player-role="fullscreen-status">\u6F14\u51FA\u5DF2\u94FA\u6EE1\u9875\u9762\u3002\u6D4F\u89C8\u5668\u5168\u5C4F\u4E3A\u53EF\u9009\u529F\u80FD\u3002</p>
-                    <p class="t-storyboard-hint">\u5BF9\u767D\u4E0E\u65C1\u767D\u5206\u5F00\u663E\u793A\uFF0C\u6587\u5B57\u6309\u5F53\u524D\u7A97\u53E3\u548C\u5B57\u53F7\u81EA\u52A8\u5206\u9875\uFF0C\u65E0\u9700\u6EDA\u52A8\u3002\u70B9\u51FB\u80CC\u666F\u6216\u5BF9\u767D\u63A8\u8FDB\uFF1B\u6253\u5B57\u65F6\u7B2C\u4E00\u6B21\u70B9\u51FB\u8865\u5168\u3002\u5DE6\u53F3\u65B9\u5411\u952E\u7FFB\u9875\uFF0C\u7A7A\u683C\u7EE7\u7EED\u3002\u6253\u5F00\u9605\u8BFB\u9762\u677F\u3001\u5207\u5230\u540E\u53F0\u6216\u79BB\u5F00\u7A97\u53E3\u90FD\u4F1A\u6682\u505C\u3002</p>
+                    <p class="t-storyboard-hint">\u5BF9\u767D\u4E0E\u65C1\u767D\u5206\u5F00\u663E\u793A\uFF0C\u76F8\u90BB\u65C1\u767D\u6309\u6574\u53E5\u7EC4\u7EC7\uFF0C\u4E0D\u8BBE\u4E09\u884C\u786C\u4E0A\u9650\u3002\u7565\u957F\u7684\u53E5\u5B50\u53EF\u9002\u5F53\u589E\u9AD8\u6587\u5B57\u6846\uFF1B\u771F\u6B63\u8D85\u957F\u65F6\u624D\u7EE7\u7EED\u5206\u9875\uFF0C\u6B63\u6587\u65E0\u9700\u6EDA\u52A8\u3002\u70B9\u51FB\u80CC\u666F\u6216\u5BF9\u767D\u63A8\u8FDB\uFF1B\u6253\u5B57\u65F6\u7B2C\u4E00\u6B21\u70B9\u51FB\u8865\u5168\u3002\u5DE6\u53F3\u65B9\u5411\u952E\u7FFB\u9875\uFF0C\u7A7A\u683C\u7EE7\u7EED\u3002\u6253\u5F00\u9605\u8BFB\u9762\u677F\u3001\u5207\u5230\u540E\u53F0\u6216\u79BB\u5F00\u7A97\u53E3\u90FD\u4F1A\u6682\u505C\u3002</p>
                 </div>
             </section>
         </div>`;
@@ -36665,21 +36716,33 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
     return (candidates.find(({ page }) => page.offset <= offset && offset < page.endOffset) || candidates.find(({ page }) => page.offset >= offset) || candidates.at(-1)).pageIndex;
   }
   function measureCapacities() {
-    const text9 = role("text"), speaker = role("speaker"), style = window.getComputedStyle(text9);
-    const font = parseFloat(style.fontSize) || fontSize, lineHeight = parseFloat(style.lineHeight) || font * 1.8;
+    const text9 = role("text"), speaker = role("speaker"), box = role("dialogue");
+    const footer = box.querySelector(".t-storyboard-page-footer"), style = window.getComputedStyle(text9);
+    const font = parseFloat(style.fontSize) || fontSize, rowHeight = parseFloat(style.lineHeight) || font * 1.8;
     const previousHidden = speaker.hidden, previousText = speaker.textContent, capacities = {};
+    const previousHeight = root.style.getPropertyValue("--t-storyboard-page-height");
+    root.style.removeProperty("--t-storyboard-page-height");
     try {
       for (const named of [false, true]) {
         speaker.textContent = named ? "\u59D3\u540D" : "";
         speaker.hidden = !named;
-        const width = text9.clientWidth, available = text9.clientHeight;
-        if (width <= 0 || available <= 0) return null;
-        const height = Math.min(available, lineHeight * 3);
+        const layout = window.getComputedStyle(box), px = (key) => parseFloat(layout[key]) || 0;
+        const width = box.clientWidth - px("paddingLeft") - px("paddingRight");
+        const decorationHeight = px("paddingTop") + px("paddingBottom") + px("borderTopWidth") + px("borderBottomWidth") + footer.offsetHeight + px("rowGap");
+        const baseBoxHeight = box.offsetHeight, height = baseBoxHeight - decorationHeight;
+        if (width <= 0 || height <= 0 || !root.clientHeight) return null;
+        const limit = parseFloat(layout.maxHeight);
+        const maximum = Number.isFinite(limit) ? layout.maxHeight.endsWith("%") ? role("experience").clientHeight * limit / 100 : limit : baseBoxHeight;
+        const maxBoxHeight = Math.max(baseBoxHeight, maximum);
         capacities[named ? "named" : "plain"] = {
           width,
           height,
+          rowHeight,
+          baseBoxHeight,
+          maxBoxHeight,
+          maxHeight: maxBoxHeight - decorationHeight,
+          decorationHeight,
           fontSize: font,
-          lines: Math.max(1, Math.floor((height + 0.5) / lineHeight)),
           fontFamily: style.fontFamily,
           fontWeight: style.fontWeight,
           fontStyle: style.fontStyle,
@@ -36693,6 +36756,7 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
     } finally {
       speaker.textContent = previousText;
       speaker.hidden = previousHidden;
+      if (previousHeight) root.style.setProperty("--t-storyboard-page-height", previousHeight);
     }
     return capacities;
   }
@@ -36894,6 +36958,8 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
     role("speaker").textContent = page?.kind === "dialogue" ? page.speaker || "" : "";
     role("speaker").title = role("speaker").textContent;
     role("speaker").hidden = !role("speaker").textContent;
+    if (page?.boxHeight) root.style.setProperty("--t-storyboard-page-height", `${page.boxHeight}px`);
+    else root.style.removeProperty("--t-storyboard-page-height");
     role("position").textContent = page ? `\u573A\u666F ${page.shotIndex + 1}/${doc.shots.length} \xB7 ${index2 + 1}/${pages.length} \u9875` : "";
     role("text").textContent = currentChars.slice(0, typed).join("");
     showImage(shot);
@@ -37147,7 +37213,11 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
       pendingPosition = previous || (doc ? readBookmarks()[bookmarkKey()] : null);
       for (const [shotIndex, shot] of (doc?.shots || []).entries()) {
         shot.beats.forEach((beat, beatIndex) => {
-          for (const segment of storyboardBeatSegments(doc, beat, unitMap)) {
+          const segments = joinNarrationSegments(
+            storyboardBeatSegments(doc, beat, unitMap),
+            storyboardBeatText(doc, beat, unitMap)
+          );
+          for (const segment of segments) {
             if (!segment.text) continue;
             readingSegments.push({
               ...segment,
@@ -37219,13 +37289,15 @@ function createStoryboardPlayer(container, { onExit, onPositionChange } = {}) {
     }
   };
 }
-var characterSegmenter, charactersOf, beatKey, CONTROL_ICONS, playerSequence;
+var characterSegmenter, charactersOf, sentenceSegmenter, beatKey, CONTROL_ICONS, playerSequence;
 var init_storyboardPlayer = __esm({
   "src/ui/storyboardPlayer.js"() {
     init_storyboardData();
+    init_storyboardReading();
     init_illustrationData();
     characterSegmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(void 0, { granularity: "grapheme" }) : null;
     charactersOf = (text9) => characterSegmenter ? Array.from(characterSegmenter.segment(text9), (item2) => item2.segment) : Array.from(text9);
+    sentenceSegmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(void 0, { granularity: "sentence" }) : null;
     beatKey = (page) => `${page.shotId}:${page.beatIndex}`;
     CONTROL_ICONS = Object.freeze({
       menu: '<path d="M7 8h10M7 12h10M7 16h10"/>',
@@ -37827,11 +37899,11 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0, options2 = {}
   function openProfiles(notice = "") {
     openCharacterProfileWindow({ notice, onClose: returnToWorkspace() });
   }
-  function showEmpty(host7, text9) {
+  function showEmpty(host8, text9) {
     const message = document.createElement("p");
     message.className = "t-illustration-empty";
     message.textContent = text9;
-    host7.replaceChildren(message);
+    host8.replaceChildren(message);
   }
   function selectTab(nextMode, focus = false) {
     if (disposed) return;
@@ -37843,7 +37915,7 @@ function openIllustrationWindow(targetOrTargets, initialIndex = 0, options2 = {}
       tab.setAttribute("aria-selected", String(selected));
       tab.tabIndex = selected ? 0 : -1;
     }
-    for (const [key, host7] of Object.entries(hosts)) host7.hidden = key !== mode;
+    for (const [key, host8] of Object.entries(hosts)) host8.hidden = key !== mode;
     root.classList.toggle("is-storyboard", mode === "storyboard");
     root.classList.remove("is-watching");
     help.close();
@@ -39314,8 +39386,8 @@ function node2(tag, className, text9) {
   return element4;
 }
 function openCharacterGalleryWindow(onSaved) {
-  const host7 = document.getElementById("t-favs-view");
-  if (!host7 || document.getElementById("t-img-mgr")) return;
+  const host8 = document.getElementById("t-favs-view");
+  if (!host8 || document.getElementById("t-img-mgr")) return;
   let { gallery, cards, favs } = reconcileCharacterGallery();
   gallery = structuredClone(gallery);
   favs = favs.map((fav) => ({ ...fav }));
@@ -39355,7 +39427,7 @@ function openCharacterGalleryWindow(onSaved) {
             </div>
             <input type="file" accept="image/*" class="is-hidden t-gallery-file">
         </section>`;
-  host7.append(root);
+  host8.append(root);
   applyStudioTheme(root.querySelector(".t-gallery-box"));
   const grid = root.querySelector(".t-gallery-grid");
   const detail = root.querySelector(".t-gallery-detail");
@@ -40630,8 +40702,8 @@ function collectImagesDeep(rootEl) {
   const imgs = [];
   try {
     rootEl.querySelectorAll?.("img")?.forEach((img) => imgs.push(img));
-    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host7) => {
-      const shadow = host7.shadowRoot;
+    rootEl.querySelectorAll?.(".t-shadow-host")?.forEach((host8) => {
+      const shadow = host8.shadowRoot;
       if (shadow) {
         shadow.querySelectorAll("img").forEach((img) => imgs.push(img));
       }
@@ -42110,8 +42182,8 @@ function openFavsWindow() {
   const getChainMetaNodes = () => {
     const container = document.getElementById("t-read-content");
     if (!container) return [];
-    const host7 = container.querySelector(".t-shadow-host");
-    const root = host7?.shadowRoot || container;
+    const host8 = container.querySelector(".t-shadow-host");
+    const root = host8?.shadowRoot || container;
     return Array.from(root.querySelectorAll("details.t-chain-meta"));
   };
   const syncToggleMetaButton = (expanded) => {
@@ -42917,10 +42989,10 @@ var init_toolboxSettingsLink = __esm({
 });
 
 // src/ui/shared/presetPromptProcessing.js
-function mountPresetPromptProcessing(host7, preset) {
-  if (!host7) return;
-  host7.replaceChildren();
-  host7.hidden = !preset;
+function mountPresetPromptProcessing(host8, preset) {
+  if (!host8) return;
+  host8.replaceChildren();
+  host8.hidden = !preset;
   if (!preset) return;
   const label2 = document.createElement("label");
   label2.className = "t-form-label";
@@ -42944,7 +43016,7 @@ function mountPresetPromptProcessing(host7, preset) {
   help.id = "t-prompt-post-processing-help";
   help.style.cssText = "margin-top:0.5em; font-size:0.85em; color:var(--t-color-text-muted); line-height:1.6;";
   help.textContent = "\u968F\u5F53\u524D\u9884\u8BBE\u4FDD\u5B58\uFF0C\u5BF9\u81EA\u5B9A\u4E49 API \u548C\u9152\u9986\u8FDE\u63A5\u5747\u751F\u6548\u3002Kemini \u9009\u62E9\u201C\u4E25\u683C\uFF08\u4E0D\u5E26\u5DE5\u5177\uFF09\u201D\uFF1B\u6696\u9633\u9009\u62E9\u201C\u4E0D\u5904\u7406\u201D\u3002\u6CBF\u7528\u8FDE\u63A5\u65F6\uFF0C\u81EA\u5B9A\u4E49 API \u4E0D\u5904\u7406\uFF0C\u9152\u9986\u8FDE\u63A5\u4F7F\u7528\u9152\u9986\u8BBE\u7F6E\u3002\u4E25\u683C\u6A21\u5F0F\u4F1A\u5408\u5E76\u6D88\u606F\u5E76\u8C03\u6574\u4E2D\u9014\u7684\u7CFB\u7EDF\u89D2\u8272\uFF0C\u4FDD\u7559\u6587\u672C\u3002";
-  host7.append(label2, select2, help);
+  host8.append(label2, select2, help);
 }
 var init_presetPromptProcessing = __esm({
   "src/ui/shared/presetPromptProcessing.js"() {
@@ -46020,11 +46092,11 @@ function openChatBookWindow() {
     rebuild();
     alert2("\u5DF2\u6309\u6700\u65B0\u5168\u5C40\u6B63\u6587\u89C4\u5219\u66F4\u65B0\u9884\u89C8\u3002");
   }
-  const host7 = globalThis.SillyTavern?.getContext?.(), eventSource25 = host7?.eventSource;
+  const host8 = globalThis.SillyTavern?.getContext?.(), eventSource25 = host8?.eventSource;
   const events = [];
   try {
     for (const key of ["CHAT_CHANGED", "MESSAGE_RECEIVED", "MESSAGE_EDITED", "MESSAGE_UPDATED", "MESSAGE_DELETED", "MESSAGE_SWIPED", "MESSAGE_SWIPE_DELETED"]) {
-      const name = host7?.eventTypes?.[key];
+      const name = host8?.eventTypes?.[key];
       if (!name || !eventSource25?.on || !eventSource25?.removeListener) continue;
       eventSource25.on(name, detectChanges);
       events.push([name, detectChanges]);
@@ -47028,17 +47100,24 @@ function subscribeStoryMemoryTask(listener) {
   listeners2.add(listener);
   return () => listeners2.delete(listener);
 }
-async function runStoryMemoryTask(kind, callback, owner = null) {
+function canRunStoryMemoryTask(kind, { parallelAnalysis = false } = {}) {
   if (isLocalTextRevisionActive()) return false;
-  if (owner && active2 === owner) return callback(owner);
-  if (active2) return false;
-  const task = { kind };
-  active2 = task;
+  for (const task of active2) {
+    if (!parallelAnalysis || !task.parallelAnalysis || !parallelKinds.has(kind) || !parallelKinds.has(task.kind) || task.kind === kind) return false;
+  }
+  return true;
+}
+async function runStoryMemoryTask(kind, callback, owner = null, options2 = {}) {
+  if (isLocalTextRevisionActive()) return false;
+  if (owner && active2.has(owner)) return callback(owner);
+  if (!canRunStoryMemoryTask(kind, options2)) return false;
+  const task = { kind, parallelAnalysis: options2.parallelAnalysis === true && parallelKinds.has(kind) };
+  active2.add(task);
   notify3();
   try {
     return await callback(task);
   } finally {
-    if (active2 === task) active2 = null;
+    active2.delete(task);
     notify3();
   }
 }
@@ -47048,11 +47127,12 @@ function serializeStoryMemoryWrite(callback) {
   writes2 = operation;
   return operation;
 }
-var active2, writes2, listeners2, notify3, getStoryMemoryTask;
+var active2, parallelKinds, writes2, listeners2, notify3, getStoryMemoryTask, isStoryMemoryTaskActive;
 var init_storyMemoryTasks = __esm({
   "src/core/storyMemoryTasks.js"() {
     init_localTextRevisions();
-    active2 = null;
+    active2 = /* @__PURE__ */ new Set();
+    parallelKinds = /* @__PURE__ */ new Set(["timetrace", "evolution"]);
     writes2 = Promise.resolve();
     listeners2 = /* @__PURE__ */ new Set();
     notify3 = () => {
@@ -47064,7 +47144,8 @@ var init_storyMemoryTasks = __esm({
         }
       }
     };
-    getStoryMemoryTask = () => active2;
+    getStoryMemoryTask = () => active2.values().next().value || null;
+    isStoryMemoryTaskActive = (owner) => active2.has(owner);
   }
 });
 
@@ -47722,10 +47803,11 @@ function newTimetrace() {
 function stripTimetraceComments(raw) {
   return String(raw ?? "").replace(/<!--\s*ECHO_TIMETRACE(?:_NOTE(?:_V\d+)?)?\b[\s\S]*?(?:-->|$)/gi, "");
 }
-function findTimetraceComment(raw) {
+function findTimetraceComment(raw, { latest = false } = {}) {
   const matches3 = [...String(raw ?? "").matchAll(/<!--\s*ECHO_TIMETRACE_NOTE_V4\b\s*:?\s*([\s\S]*?)(-->|$)/gi)];
   if (!matches3.length) return { found: false, complete: false, text: "" };
-  return { found: true, count: matches3.length, complete: matches3.every((match) => match[2] === "-->"), text: matches3.map((match) => match[1].trim()).join("\n\n"), offset: matches3[0].index };
+  const selected = latest ? matches3.slice(-1) : matches3;
+  return { found: true, count: selected.length, complete: selected.every((match) => match[2] === "-->"), text: selected.map((match) => match[1].trim()).join("\n\n"), offset: selected[0].index };
 }
 function timetraceFingerprint(message) {
   const text9 = JSON.stringify([message?.name || "", message?.is_user === true, message?.swipe_id ?? 0, message?.mes || ""]);
@@ -48432,7 +48514,8 @@ function composeTimetraceRules(memory, rawConfig = {}) {
 \u8FD9\u91CC\u586B\u5199\u672C\u697C\u65F6\u95F4\u7B14\u8BB0\uFF1B\u6CA1\u6709\u8BA1\u65F6\u5185\u5BB9\u65F6\u53EA\u5199\u201C${TIMETRACE_NO_TIMING}\u201D
 -->
 
-\u4E0D\u8981\u5728\u4E0D\u540C\u6BB5\u843D\u6216\u4E0D\u540C\u6D3B\u52A8\u540E\u5206\u522B\u8FFD\u52A0\u7B14\u8BB0\u3002`;
+\u4E0D\u8981\u5728\u4E0D\u540C\u6BB5\u843D\u6216\u4E0D\u540C\u6D3B\u52A8\u540E\u5206\u522B\u8FFD\u52A0\u7B14\u8BB0\u3002
+\u7EED\u5199\u4ECD\u5C5E\u4E8E\u540C\u4E00\u697C\uFF1A\u65B0\u7684\u7B14\u8BB0\u5E94\u8986\u76D6\u6574\u697C\u539F\u6709\u6B63\u6587\u4E0E\u65B0\u589E\u6B63\u6587\u7684\u6574\u4F53\u8D77\u6B62\u65F6\u95F4\uFF0C\u66FF\u4EE3\u8BE5\u697C\u524D\u4E00\u6761\u5DF2\u4FDD\u5B58\u7B14\u8BB0\uFF0C\u4E0D\u628A\u65E7\u6CE8\u91CA\u7684\u5185\u5BB9\u91CD\u590D\u6284\u5165\u65B0\u6CE8\u91CA\u3002`;
 }
 function composeTimetracePrompt(memory, rawConfig = {}, estimate = (text9) => Math.ceil(String(text9).length / 2), snapshot = null) {
   if (!memory?.enabled) return { text: "", context: "", rules: "" };
@@ -49087,9 +49170,10 @@ function checkSaveSources(ctx2, saved, chat2, metadata, proposals) {
   }
   rememberChatFile(ctx2, saved);
 }
-async function confirmArchiveSources(ctx2, field3, hasMatchingSource, { force = false } = {}) {
+async function confirmArchiveSources(ctx2, field3, hasMatchingSource, { force = false, generationValid = null } = {}) {
   const state = fieldState(ctx2, field3), signature3 = archiveSources(ctx2.chat), original = copy2(ctx2.chatMetadata[field3]);
-  if (!state.pending || state.kind === "baseline" || state.kind === "sources" && !hasMatchingSource || !force && state.checkedSignature === signature3) return false;
+  const witnessed = typeof generationValid === "function" && ctx2.chat.length >= state.expectedFloors && generationValid();
+  if (!state.pending || state.kind === "baseline" || state.kind === "sources" && !hasMatchingSource && !witnessed || !force && state.checkedSignature === signature3) return false;
   state.checkedSignature = signature3;
   try {
     const saved = await readChatFile(ctx2);
@@ -49101,6 +49185,15 @@ async function confirmArchiveSources(ctx2, field3, hasMatchingSource, { force = 
         notify4();
       }
       return false;
+    }
+    if (witnessed) {
+      if (!generationValid()) return false;
+      const changed = fields2.filter((key) => JSON.stringify(saved[0].chat_metadata[key]) !== JSON.stringify(ctx2.chatMetadata[key]));
+      if (changed.length) {
+        rememberPendingReason(state, "archive-version-mismatch", { fields: changed });
+        notify4();
+        return false;
+      }
     }
     rememberChatFile(ctx2, saved);
     state.expectedFloors = ctx2.chat.length;
@@ -49658,6 +49751,7 @@ var init_storyMemoryArchive = __esm({
 
 // src/core/storyTimetrace.js
 import { eventSource as eventSource3, event_types as event_types3, setExtensionPrompt, extension_prompt_types, extension_prompt_roles } from "../../../../script.js";
+import * as host4 from "../../../../script.js";
 function context() {
   const ctx2 = globalThis.SillyTavern?.getContext?.();
   if (!ctx2 || !Array.isArray(ctx2.chat) || !ctx2.chatMetadata || !ctx2.chatId) return null;
@@ -49740,15 +49834,16 @@ async function mutate(callback) {
     if (writing2 === operation) writing2 = null;
     notify5();
     drainQueue();
+    if (inlineRequested && !inlineRunning) queueInline();
   }
 }
-async function persist(ctx2, next) {
+async function persist(ctx2, next, valid = () => true) {
   if (!sameChat(ctx2)) throw new Error("\u804A\u5929\u5DF2\u5207\u6362\uFF0C\u65F6\u75D5\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
   const previous = ctx2.chatMetadata[TIMETRACE_KEY];
   next.commitId = timetraceId();
   ctx2.chatMetadata[TIMETRACE_KEY] = next;
   try {
-    await saveArchiveSnapshot(ctx2, { [TIMETRACE_KEY]: next.commitId });
+    await saveArchiveSnapshot(ctx2, { [TIMETRACE_KEY]: next.commitId }, valid);
   } catch (cause) {
     if (ctx2.chatMetadata[TIMETRACE_KEY] === next) {
       if (previous === void 0) delete ctx2.chatMetadata[TIMETRACE_KEY];
@@ -49774,9 +49869,20 @@ async function waitForGeneration(task) {
     generationWaiters.add(resolve);
   });
   updateProgress({ state: "running", phase: "waiting-generation", message: "\u7B14\u8BB0\u5DF2\u8FD4\u56DE\uFF0C\u7B49\u5F85\u672C\u8F6E\u6B63\u6587\u7ED3\u675F\u540E\u4FDD\u5B58\uFF1B\u4E0D\u4F1A\u91CD\u590D\u8BF7\u6C42\u3002" });
+  let checkTimer;
+  const checkIdle = () => {
+    syncIdleGeneration();
+    if (!generating) {
+      resume();
+      return;
+    }
+    checkTimer = setTimeout(checkIdle, INLINE_RECHECK_DELAY);
+  };
+  checkTimer = setTimeout(checkIdle, INLINE_RECHECK_DELAY);
   try {
     await abortable(stable, task.controller.signal);
   } finally {
+    clearTimeout(checkTimer);
     generationWaiters.delete(resume);
   }
   if (generating) await waitForGeneration(task);
@@ -49819,48 +49925,393 @@ async function commitNotes(ctx2, rows, raw, { kind = "api", diagnostics = null, 
     const batch = next.batches.find((item2) => !previousIds.has(item2.id));
     if (batch) batch.extractionScope = JSON.stringify(getTimetraceConfig().extraction);
     updateProgress({ phase: "saving" });
-    await persist(ctx2, next);
+    await persist(ctx2, next, valid);
     error = "";
     refreshInjection();
     return { result, accepted: accepted.length };
   });
 }
-async function reconcile(ctx2) {
+async function reconcile(ctx2, generationValid = null) {
   return mutate(async () => {
     if (!sameChat(ctx2)) return;
     let state = reconciledFor(ctx2);
     if (state.pending) {
       const preserved = memoryFor(ctx2).batches.some((batch) => (batch.sources || []).some((source2) => sourcesMatch([source2], ctx2, { allowLocalRevision: true })));
-      if (await confirmArchiveSources(ctx2, TIMETRACE_KEY, preserved)) state = reconciledFor(ctx2);
+      if (await confirmArchiveSources(ctx2, TIMETRACE_KEY, preserved, { generationValid })) state = reconciledFor(ctx2);
     }
     if (state.changed) await persist(ctx2, state.memory);
   });
 }
-async function ingestComments(ctx2, { allowFloor = null, ignore = false } = {}) {
-  if (ignore || !sameChat(ctx2) || !memoryFor(ctx2).enabled || memoryFor(ctx2).rollbackPaused || reconciledFor(ctx2).pending) return;
+function inlineFrame(ctx2, row) {
+  const frame = inlineFresh.get(row.index);
+  return frame && frame.epoch === epoch && sameChat(frame.ctx) && frame.ctx.key === ctx2.key && frame.message === ctx2.chat[row.index] && frame.fingerprint === row.fingerprint ? frame : null;
+}
+function sourceToken(message) {
+  return [
+    timetraceFingerprint(message),
+    !!message?.is_hidden,
+    !!message?.extra?.is_hidden,
+    !!message?.is_system && !message?.extra?.titania_memory_hidden,
+    message?.extra?.[TIMETRACE_ID_KEY] || "",
+    message?.extra?.titania_memory_id || ""
+  ];
+}
+function nativeInlineWitness(frame) {
+  if (!frame || frame.epoch !== epoch || !sameChat(frame.ctx) || frame.message !== frame.ctx.chat[frame.index] || timetraceFingerprint(frame.message) !== frame.fingerprint || inlineStopped.get(frame.message) === frame.fingerprint) return false;
+  const before = frame.before;
+  const prefix = frame.index >= before.sources.length ? before.sources.length : frame.index === before.sources.length - 1 && !before.lastIsUser ? frame.index : -1;
+  if (prefix < 0 || frame.ctx.chat.length <= frame.index) return false;
+  const samePrefix = before.sources.slice(0, prefix).every((token3, index2) => {
+    const current3 = sourceToken(frame.ctx.chat[index2]);
+    return token3.slice(0, 4).every((value, field3) => value === current3[field3]) && token3.slice(4).every((value, field3) => !value || value === current3[field3 + 4]);
+  });
+  const extraction = JSON.stringify(getTimetraceConfig().extraction);
+  return samePrefix && before.memory.batches.every((batch) => !batch.transport_incomplete && !batch.provenance_incomplete && (batch.extractionScope === void 0 || batch.extractionScope === extraction) && (batch.sources || []).every((source2) => source2.index < before.sources.length && (source2.index === prefix && prefix < before.sources.length || sourcesMatch([source2], frame.ctx, { allowLocalRevision: true }))));
+}
+function captureInlineFrame(ctx2, row) {
+  const before = generationTarget;
+  if (!before || !row || before.epoch !== epoch || stopped || ["quiet", "impersonate"].includes(generationType) || !sameChat(before.ctx) || before.key !== ctx2.key || row.index === before.index && row.fingerprint === before.fingerprint) return;
+  const frame = {
+    ctx: ctx2,
+    epoch,
+    index: row.index,
+    fingerprint: row.fingerprint,
+    message: ctx2.chat[row.index],
+    before,
+    type: generationType,
+    oldBody: row.index === before.index ? before.raw : ""
+  };
+  inlineFresh.set(row.index, frame);
+}
+function inlineRows(ctx2, allowFloor = null) {
+  const memory = memoryFor(ctx2), invalidated = memory.invalidatedFrom;
+  return pendingRows(memory, rowsFor(ctx2), ctx2).filter((row) => {
+    if (row.isUser || row.kind === "summary" || inlineStopped.get(ctx2.chat[row.index]) === row.fingerprint) return false;
+    const rejected = inlineRejected.get(row.index);
+    if (rejected?.message === ctx2.chat[row.index] && rejected.fingerprint === row.fingerprint && rejected.epoch === epoch) return false;
+    if (invalidated !== void 0 && row.index >= invalidated && row.index !== allowFloor && !inlineFrame(ctx2, row)) return false;
+    const note = findTimetraceComment(ctx2.chat[row.index].mes);
+    return note.found && !!note.text.trim();
+  });
+}
+function inlineRaw(ctx2, row) {
+  const raw = ctx2.chat[row.index].mes, frame = inlineFrame(ctx2, row);
+  if (frame?.type === "continue" && frame.oldBody && raw.startsWith(frame.oldBody)) {
+    const old = findTimetraceComment(frame.oldBody), latest = findTimetraceComment(frame.oldBody, { latest: true });
+    const inherited = frame.before.memory.batches.find((batch) => batch.raw_note === latest.text && (batch.sources || []).some((source2) => source2.index === row.index && source2.fingerprint === frame.before.fingerprint));
+    const suffix = raw.slice(frame.oldBody.length), note = findTimetraceComment(suffix);
+    if (inherited && old.complete && note.count === 1 && note.complete) return {
+      raw: suffix,
+      note,
+      invalid: !inherited.no_timing && note.text.trim() === TIMETRACE_NO_TIMING ? "\u7EED\u5199\u7B14\u8BB0\u5FC5\u987B\u8986\u76D6\u6574\u697C\uFF0C\u4E0D\u80FD\u5C06\u7EED\u5199\u524D\u5DF2\u4FDD\u5B58\u7684\u73B0\u5B9E\u8BA1\u65F6\u6539\u6210\u201C\u672C\u697C\u65E0\u8BA1\u65F6\u5185\u5BB9\u201D\u3002" : ""
+    };
+  }
+  return { raw, note: findTimetraceComment(raw) };
+}
+function savedInlineStatus(ctx2, result, previousEnd) {
+  const snapshot = timetraceSnapshot(memoryFor(ctx2)), node3 = result.nodes.find((item2) => !item2.metadata_only);
+  if (result.no_timing) return { clockStatus: "no-timing", message: "\u672C\u697C\u65E0\u9700\u8BA1\u65F6\uFF1B\u8BFB\u53D6\u72B6\u6001\u5DF2\u4FDD\u5B58\uFF0C\u4E3B\u7EBF\u65F6\u95F4\u4E0D\u63A8\u8FDB\u3002" };
+  if (node3 && !node3.valid) return { clockStatus: "unresolved", message: `\u7B14\u8BB0\u5DF2\u4FDD\u5B58\uFF0C\u65F6\u95F4\u4ECD\u5F85\u5B9A\u4F4D\u6216\u6709\u51B2\u7A81\uFF1A${[...node3.unresolved || [], node3.conflict].filter(Boolean).join("\uFF1B") || "\u7F3A\u5C11\u53EF\u8BA1\u7B97\u7684\u5B8C\u6574\u8D77\u6B62\u65F6\u95F4"}\u3002` };
+  if (node3?.frame === "parallel") return { clockStatus: "parallel", message: "\u5E76\u884C\u73B0\u5B9E\u6D3B\u52A8\u7B14\u8BB0\u5DF2\u4FDD\u5B58\uFF0C\u4E0D\u63A8\u8FDB\u4E3B\u7EBF\u65F6\u949F\u3002" };
+  const end = snapshot.current?.time_end || snapshot.current?.time || "";
+  return {
+    clockStatus: end && end !== previousEnd ? "updated" : "unchanged",
+    message: end && end !== previousEnd ? "\u968F\u6B63\u6587\u65F6\u95F4\u3001\u65F6\u8282\u4E0E\u5929\u6C14\u7B14\u8BB0\u5DF2\u4FDD\u5B58\uFF0C\u4E3B\u7EBF\u65F6\u95F4\u5DF2\u66F4\u65B0\u3002" : "\u968F\u6B63\u6587\u7B14\u8BB0\u5DF2\u4FDD\u5B58\uFF1B\u4E3B\u7EBF\u7ED3\u675F\u65F6\u95F4\u4E0E\u524D\u503C\u76F8\u540C\u3002"
+  };
+}
+async function ingestComments(ctx2, {
+  allowFloor = null,
+  ignore = false,
+  strict = false,
+  onSaved = null,
+  onRejected = null,
+  beforeGeneration = null,
+  excludeFloor = null
+} = {}) {
+  if (ignore || !sameChat(ctx2) || !memoryFor(ctx2).enabled || memoryFor(ctx2).rollbackPaused || reconciledFor(ctx2).pending) return 0;
   const capturedEpoch = epoch, capturedScope = scope(ctx2);
   const current3 = () => capturedEpoch === epoch && capturedScope === scope(ctx2) && sameChat(ctx2);
-  const readable = rowsFor(ctx2);
-  for (const row of pendingRows(memoryFor(ctx2), readable, ctx2)) {
-    if (!current3()) return;
-    if (row.isUser || row.kind === "summary") continue;
-    const invalidated = memoryFor(ctx2).invalidatedFrom;
-    if (invalidated !== void 0 && row.index >= invalidated && row.index !== allowFloor) continue;
-    const note = findTimetraceComment(ctx2.chat[row.index].mes);
-    if (!note.found || !note.text.trim()) continue;
+  let count = 0;
+  for (const row of inlineRows(ctx2, allowFloor)) {
+    if (!current3() || paused && strict || isHostGenerating() && !beforeGeneration?.()) return count;
+    if (row.index === excludeFloor) continue;
+    const candidate = inlineRaw(ctx2, row), message = ctx2.chat[row.index];
+    const valid = () => current3() && message === ctx2.chat[row.index] && timetraceFingerprint(message) === row.fingerprint && (!strict || !paused && !isLocalTextRevisionActive()) && (!beforeGeneration || beforeGeneration());
     try {
-      const saved = await commitNotes(ctx2, [row], ctx2.chat[row.index].mes, {
+      const previous = timetraceSnapshot(memoryFor(ctx2)).current;
+      const previousEnd = previous?.time_end || previous?.time || "";
+      const options2 = {
+        ...parserOptions(memoryFor(ctx2), row.index),
+        forceFloor: row.index,
+        diagnostics: candidate.note.complete ? null : { finish_reason: "length" }
+      };
+      try {
+        if (candidate.invalid) throw new Error(candidate.invalid);
+        parseTimetraceResponse(candidate.raw, [row], options2);
+      } catch (cause) {
+        throw Object.assign(new Error(cause.message || cause), { code: "TIMETRACE_INLINE_FORMAT" });
+      }
+      const saved = await commitNotes(ctx2, [row], candidate.raw, {
         kind: "inline",
         forceFloor: row.index,
-        valid: current3,
-        diagnostics: note.complete ? null : { finish_reason: "length" }
+        valid,
+        diagnostics: options2.diagnostics
       });
-      if (saved && current3() && warning.startsWith("\u968F\u6B63\u6587\u7B14\u8BB0\u6682\u672A\u4FDD\u5B58\uFF1A")) warning = "";
+      if (saved && current3()) {
+        count += saved.accepted;
+        inlineFresh.delete(row.index);
+        const status4 = savedInlineStatus(ctx2, saved.result, previousEnd);
+        onSaved?.(row, saved, status4);
+        if (warning.startsWith("\u968F\u6B63\u6587\u7B14\u8BB0\u6682\u672A\u4FDD\u5B58\uFF1A")) warning = "";
+      }
     } catch (cause) {
-      if (!current3()) return;
-      warning = `\u968F\u6B63\u6587\u7B14\u8BB0\u6682\u672A\u4FDD\u5B58\uFF1A${cause.message} \u53EF\u4F7F\u7528\u540E\u53F0\u8865\u5EFA\u8BFB\u53D6\u539F\u6587\u3002`;
+      if (!current3()) return count;
+      warning = `\u968F\u6B63\u6587\u7B14\u8BB0\u6682\u672A\u4FDD\u5B58\uFF1A${cause.message} ${cause.code === "TIMETRACE_INLINE_FORMAT" ? "\u8BF7\u68C0\u67E5\u8FD9\u6761\u7B14\u8BB0\uFF0C\u6216\u624B\u52A8\u8865\u5EFA\u672C\u697C\u3002" : "\u4F1A\u7B49\u5F85\u4FDD\u5B58\u72B6\u6001\u7A33\u5B9A\u540E\u91CD\u8BD5\uFF1B\u6765\u6E90\u6216\u7248\u672C\u51B2\u7A81\u8BF7\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\u6838\u5BF9\u3002"}`;
+      if (cause.code === "TIMETRACE_INLINE_FORMAT") {
+        inlineRejected.set(row.index, { message, fingerprint: row.fingerprint, epoch, reason: cause.message });
+        onRejected?.(row, cause);
+      } else if (strict) throw cause;
     }
   }
+  return count;
+}
+function ensureInlineProgress(ctx2, rows = []) {
+  if (job || starting) return null;
+  if (!progress || progress.origin !== "inline" || progress.epoch !== epoch || !["running", "retry"].includes(progress.state) || !progressContext || !sameChat(progressContext)) {
+    progressContext = ctx2;
+    progress = {
+      key: ctx2.key,
+      runId: ++progressSequence,
+      epoch,
+      origin: "inline",
+      state: "running",
+      phase: "inline-reading",
+      total: rows.length,
+      completed: 0,
+      batches: 0,
+      currentStart: rows[0]?.index ?? null,
+      currentEnd: rows.at(-1)?.index ?? null,
+      retryAt: 0,
+      retryAttempt: 0,
+      retryLimit: INLINE_SAVE_RETRIES,
+      clockStatus: "",
+      hadFailures: false,
+      message: "\u8BFB\u53D6\u968F\u6B63\u6587\u9690\u85CF\u7B14\u8BB0\uFF0C\u4FDD\u5B58\u540E\u624D\u786E\u8BA4\u5B8C\u6210\u3002"
+    };
+  } else progress.total = Math.max(progress.total, progress.completed + rows.length);
+  return progress;
+}
+function resetInlineQueue({ clearFrames = false } = {}) {
+  clearTimeout(inlineTimer);
+  inlineTimer = null;
+  inlineRequested = false;
+  inlineOwner = null;
+  if (progress?.origin === "inline" && ["running", "retry"].includes(progress.state)) {
+    Object.assign(progress, { state: "paused", retryAt: 0, message: "\u968F\u6B63\u6587\u5F85\u4FDD\u5B58\u5DE5\u4F5C\u5DF2\u505C\u6B62\uFF0C\u5DF2\u4FDD\u5B58\u7B14\u8BB0\u4FDD\u7559\u3002" });
+  }
+  inlineFailures = 0;
+  inlineFailedInput = "";
+  inlineRejected.clear();
+  if (clearFrames) {
+    inlineFresh.clear();
+    inlineStopped.clear();
+  }
+}
+function syncIdleGeneration() {
+  if (generating && generationTarget?.prepared && !isHostGenerating()) {
+    generating = false;
+    releaseGenerationWaiters();
+  }
+}
+function queueInline(ctx2 = context(), { delay = INLINE_SETTLE_DELAY, retry = false } = {}) {
+  if (!initialized2 || !ctx2 || !sameChat(ctx2) || getTimetraceConfig().mode !== "inline" || !memoryFor(ctx2).enabled) return;
+  if (!inlineOwner || !sameChat(inlineOwner)) {
+    inlineOwner = ctx2;
+    inlineFailures = 0;
+    inlineFailedInput = "";
+  }
+  if (retry) {
+    inlineFailures = 0;
+    inlineFailedInput = "";
+    inlineRejected.clear();
+  }
+  inlineRequested = true;
+  if (inlineWork || inlineTimer || paused || memoryFor(ctx2).rollbackPaused) return;
+  inlineTimer = setTimeout(() => {
+    inlineTimer = null;
+    void runInlineQueue().catch(report);
+  }, delay);
+}
+function inlineInput(ctx2, rows) {
+  const archive = archivePendingInfo(ctx2, TIMETRACE_KEY), memory = memoryFor(ctx2);
+  return JSON.stringify([
+    ctx2.key,
+    ctx2.archiveSession,
+    epoch,
+    scope(ctx2),
+    ctx2.chat.length,
+    memory.revision,
+    memory.commitId,
+    archive.code,
+    archive.message,
+    rows.map((row) => [row.index, row.fingerprint])
+  ]);
+}
+function waitInline(ctx2, phase, message) {
+  if (progress?.origin === "inline" && progressContext && sameChat(progressContext) && (progress.phase !== phase || progress.message !== message || progress.state !== "running")) {
+    updateProgress({ state: "running", phase, retryAt: 0, message });
+  }
+  clearTimeout(inlineTimer);
+  inlineTimer = setTimeout(() => {
+    inlineTimer = null;
+    void runInlineQueue().catch(report);
+  }, INLINE_RECHECK_DELAY);
+}
+async function processInlineQueue({ beforeGeneration = null, excludeFloor = null } = {}) {
+  const ctx2 = inlineOwner || context(), capturedEpoch = epoch;
+  if (!ctx2 || !sameChat(ctx2) || paused || !memoryFor(ctx2).enabled || memoryFor(ctx2).rollbackPaused || getTimetraceConfig().mode !== "inline") return;
+  if (!beforeGeneration) syncIdleGeneration();
+  if (isHostGenerating() && !beforeGeneration?.() || host4.isChatSaving || isLocalTextRevisionActive() || job || starting || writing2) {
+    waitInline(ctx2, "waiting-generation", "\u5B8C\u6574\u7B14\u8BB0\u4ECD\u5728\u5F85\u4FDD\u5B58\u961F\u5217\uFF0C\u7B49\u5F85\u6B63\u6587\u6216\u5F53\u524D\u5199\u5165\u7ED3\u675F\uFF1B\u4E0D\u91CD\u65B0\u8BF7\u6C42\u6A21\u578B\u3002");
+    return;
+  }
+  const rows = inlineRows(ctx2).filter((row) => row.index !== excludeFloor);
+  if (!rows.length) {
+    inlineRequested = false;
+    if (progress?.origin === "inline" && progress.state === "running" && progressContext && sameChat(progressContext)) {
+      updateProgress({
+        state: progress.completed && !progress.hadFailures ? "done" : progress.hadFailures ? "error" : "paused",
+        retryAt: 0,
+        message: progress.completed ? progress.message : inlineStatus(ctx2, memoryFor(ctx2), getTimetraceConfig(), rowsFor(ctx2), pendingRows(memoryFor(ctx2), rowsFor(ctx2), ctx2), timetraceSnapshot(memoryFor(ctx2))) || "\u672C\u8F6E\u6CA1\u6709\u53EF\u4FDD\u5B58\u7684\u5B8C\u6574\u968F\u6B63\u6587\u7B14\u8BB0\u3002"
+      });
+    }
+    return;
+  }
+  const input = inlineInput(ctx2, rows);
+  if (input === inlineFailedInput && !beforeGeneration) return;
+  ensureInlineProgress(ctx2, rows);
+  const archive = archivePendingInfo(ctx2, TIMETRACE_KEY);
+  if (archive.code === "loading") {
+    waitInline(ctx2, "waiting-source", archive.message);
+    return;
+  }
+  inlineRunning = true;
+  try {
+    const witness = [...inlineFresh.values()].find((frame) => nativeInlineWitness(frame));
+    await reconcile(ctx2, witness ? () => nativeInlineWitness(witness) : null);
+    if (!sameChat(ctx2) || capturedEpoch !== epoch || paused) return;
+    if (archivePending(ctx2, TIMETRACE_KEY)) {
+      inlineFailedInput = inlineInput(ctx2, rows);
+      warning = `\u968F\u6B63\u6587\u7B14\u8BB0\u6682\u672A\u4FDD\u5B58\uFF1A${archiveWarning(ctx2, TIMETRACE_KEY)}`;
+      updateProgress({ state: "paused", phase: "waiting-source", retryAt: 0, message: warning });
+      return;
+    }
+    await ingestComments(ctx2, {
+      strict: true,
+      beforeGeneration,
+      excludeFloor,
+      onSaved: (row, saved, status4) => {
+        inlineFailures = 0;
+        inlineFailedInput = "";
+        updateProgress({
+          state: "running",
+          phase: "inline-reading",
+          completed: progress.completed + saved.accepted,
+          batches: progress.batches + 1,
+          currentStart: row.index,
+          currentEnd: row.index,
+          analysis: saved.result.analysis,
+          clockStatus: progress.clockStatus === "unresolved" ? "unresolved" : status4.clockStatus,
+          message: status4.message
+        });
+      },
+      onRejected: (row, cause) => updateProgress({
+        hadFailures: true,
+        currentStart: row.index,
+        currentEnd: row.index,
+        message: `\u7B2C ${row.index} \u697C\u7B14\u8BB0\u672A\u4FDD\u5B58\uFF1A${cause.message}\u3002\u5176\u4ED6\u5B8C\u6574\u7B14\u8BB0\u4ECD\u72EC\u7ACB\u5904\u7406\u3002`
+      })
+    });
+    if (!sameChat(ctx2) || capturedEpoch !== epoch) return;
+    const remaining = inlineRows(ctx2).filter((row) => row.index !== excludeFloor);
+    inlineRequested = !!remaining.length;
+    if (remaining.length) waitInline(ctx2, "waiting-generation", "\u540E\u7EED\u5B8C\u6574\u7B14\u8BB0\u4ECD\u6392\u961F\uFF0C\u7B49\u5F85\u6B63\u6587\u548C\u4FDD\u5B58\u72B6\u6001\u7A33\u5B9A\u3002");
+    else {
+      const failures = [...inlineRejected.entries()].filter(([index2, item2]) => item2.epoch === epoch && item2.message === ctx2.chat[index2] && item2.fingerprint === timetraceFingerprint(ctx2.chat[index2])).map(([index2, item2]) => `\u7B2C ${index2} \u697C\uFF1A${item2.reason}`);
+      if (failures.length) warning = `\u968F\u6B63\u6587\u7B14\u8BB0\u672A\u5168\u90E8\u4FDD\u5B58\uFF1A${failures.join("\uFF1B")}\u3002`;
+      else if (warning.startsWith("\u968F\u6B63\u6587")) warning = "";
+      updateProgress({
+        state: progress.hadFailures ? "error" : "done",
+        phase: "done",
+        retryAt: 0,
+        message: progress.hadFailures ? `\u5DF2\u4FDD\u5B58 ${progress.completed} \u697C\uFF1B${failures.join("\uFF1B") || "\u53E6\u6709\u7B14\u8BB0\u5C1A\u672A\u4FDD\u5B58"}\u3002` : progress.message
+      });
+    }
+  } catch (cause) {
+    if (!sameChat(ctx2) || capturedEpoch !== epoch) return;
+    inlineFailures++;
+    warning = `\u968F\u6B63\u6587\u7B14\u8BB0\u6682\u672A\u4FDD\u5B58\uFF1A${cause.message}\u3002\u5DF2\u6709\u5B8C\u6574\u539F\u6587\u4FDD\u7559\uFF0C\u4E0D\u989D\u5916\u8BF7\u6C42\u5206\u6790\u6A21\u578B\u3002`;
+    if (inlineFailures <= INLINE_SAVE_RETRIES && !archivePending(ctx2, TIMETRACE_KEY)) {
+      const delay = INLINE_RECHECK_DELAY * 2 ** inlineFailures;
+      updateProgress({
+        state: "retry",
+        phase: "saving",
+        retryAttempt: inlineFailures,
+        retryAt: Date.now() + delay,
+        message: warning
+      });
+      clearTimeout(inlineTimer);
+      inlineTimer = setTimeout(() => {
+        inlineTimer = null;
+        void runInlineQueue().catch(report);
+      }, delay);
+    } else {
+      inlineFailedInput = inlineInput(ctx2, inlineRows(ctx2));
+      updateProgress({ state: "error", phase: "saving", retryAt: 0, message: `${warning} \u8BF7\u68C0\u67E5\u4FDD\u5B58\u72B6\u6001\u6216\u91CD\u65B0\u8FDB\u5165\u804A\u5929\uFF1B\u6062\u590D\u540E\u53EF\u70B9\u51FB\u201C\u6062\u590D\u201D\u91CD\u8BD5\u3002` });
+    }
+  } finally {
+    inlineRunning = false;
+    refreshInjection();
+    notify5();
+  }
+}
+function runInlineQueue(options2 = {}) {
+  if (inlineWork) return inlineWork;
+  const operation = Promise.resolve().then(() => processInlineQueue(options2)).finally(() => {
+    if (inlineWork === operation) inlineWork = null;
+  });
+  inlineWork = operation;
+  return operation;
+}
+async function flushInlineTimetraceBeforeGeneration(_chat, _contextSize, _abort, type) {
+  if (!["normal", "regenerate", "swipe", "continue"].includes(type || "normal")) return;
+  const target = generationTarget, ctx2 = context();
+  if (!target || !ctx2 || !sameChat(target.ctx) || target.prepared) return;
+  target.prepared = true;
+  if (getTimetraceConfig().mode !== "inline" || !memoryFor(ctx2).enabled || paused) return;
+  queueInline(ctx2);
+  clearTimeout(inlineTimer);
+  inlineTimer = null;
+  if (inlineWork) await inlineWork;
+  if (generationTarget !== target || !sameChat(ctx2)) return;
+  await runInlineQueue({
+    beforeGeneration: () => generationTarget === target && sameChat(ctx2) && !stopped,
+    excludeFloor: type === "swipe" ? ctx2.chat.length - 1 : null
+  });
+  if (generationTarget === target && sameChat(ctx2)) {
+    target.memory = cloneTimetrace(memoryFor(ctx2));
+    refreshInjection();
+  }
+}
+function guardedTimetracePrompt(ctx2, memory, config2, snapshot = null) {
+  if (!archivePending(ctx2, TIMETRACE_KEY)) return composeTimetracePrompt(memory, config2, estimateTokens, snapshot);
+  if (!memory.enabled || config2.mode !== "inline") return { text: "", context: "", rules: "" };
+  const rules = composeTimetraceRules(newTimetrace(), config2);
+  return { context: "", rules, text: `<\u6545\u4E8B\u65F6\u95F4>
+\u65E7\u65F6\u75D5\u6765\u6E90\u6B63\u5728\u6838\u5BF9\uFF0C\u4EE5\u4E0B\u4EC5\u4E3A\u672C\u697C\u8F93\u51FA\u89C4\u5219\uFF0C\u4E0D\u63D0\u4F9B\u65E7\u65F6\u949F\u6216\u65E7\u65E5\u671F\u3002\u4E0D\u628A\u7F3A\u53E3\u6309\u96F6\u8017\u65F6\u627F\u63A5\uFF0C\u4E0D\u91CD\u8BBE\u65E7\u6545\u4E8B\u8D77\u70B9\uFF1B\u4F9D\u636E\u4E0D\u8DB3\u65F6\u53EF\u5199\u5F85\u5B9A\u4F4D\u3002
+
+${rules}
+</\u6545\u4E8B\u65F6\u95F4>` };
 }
 function refreshInjection() {
   const ctx2 = context();
@@ -49868,8 +50319,15 @@ function refreshInjection() {
   try {
     if (ctx2) {
       const config2 = getTimetraceConfig(), memory = reconciledFor(ctx2, config2).memory;
-      if (memory.enabled && !archivePending(ctx2, TIMETRACE_KEY)) {
-        text9 = composeTimetracePrompt(memory, config2, estimateTokens).text;
+      if (memory.enabled) {
+        text9 = guardedTimetracePrompt(ctx2, memory, config2).text;
+        if (config2.mode === "inline" && generating && generationType === "continue" && generationTarget?.key === ctx2.key && !archivePending(ctx2, TIMETRACE_KEY)) {
+          const previous = generationTarget.memory.batches.find((batch) => (batch.sources || []).some((source2) => source2.index === generationTarget.index && source2.fingerprint === generationTarget.fingerprint));
+          const node3 = previous?.nodes?.find((item2) => item2.valid && item2.frame === "main");
+          text9 += `
+\u3010\u672C\u6B21\u7EED\u5199\u4ECD\u5C5E\u4E8E\u539F\u697C\u3011
+\u65B0\u9690\u85CF\u7B14\u8BB0\u5E94\u6982\u8FF0\u6574\u697C\uFF08\u5305\u62EC\u7EED\u5199\u524D\u5DF2\u6709\u6B63\u6587\uFF09\u7684\u6574\u4F53\u5F00\u59CB\u4E0E\u6700\u7EC8\u7ED3\u675F\uFF0C\u66FF\u4EE3\u65E7\u7B14\u8BB0\uFF0C\u4E0D\u4EC5\u63CF\u8FF0\u65B0\u589E\u7247\u6BB5\u3002${node3?.time ? `\u539F\u697C\u5DF2\u5B58\u6574\u4F53\u5F00\u59CB\u4E3A ${node3.time}\uFF0C\u7ED3\u675F\u4E3A ${node3.time_end || node3.time}\uFF1B\u8FD9\u662F\u5DF2\u4FDD\u5B58\u8D44\u6599\uFF0C\u7ED3\u5408\u6574\u697C\u6B63\u6587\u6838\u5BF9\u3002` : ""}`;
+        }
         depth = Math.min(config2.inject_depth, Math.max(0, ctx2.chat.filter((message) => !message.is_system).length - 1));
       }
     }
@@ -49880,11 +50338,12 @@ function refreshInjection() {
 }
 function getTimetraceRuntime() {
   return {
-    busy: starting || !!job || !!writing2,
+    busy: starting || !!job || !!writing2 || inlineRunning,
     saving: !!writing2,
     generating,
     paused,
-    queued: requested,
+    queued: requested || inlineRequested,
+    analysisBlocked: !canRunStoryMemoryTask("timetrace", taskOptions()),
     retryBlocked: !!failedScope,
     error,
     warning,
@@ -49922,8 +50381,7 @@ function getTimetraceView() {
     readError2 = cause.message;
   }
   const rows = ctx2 ? rowsFor(ctx2, config2) : [], pending5 = pendingRows(memory, rows, ctx2);
-  const snapshot = timetraceSnapshot(memory), prompt2 = composeTimetracePrompt(memory, config2, estimateTokens, snapshot);
-  if (archivePending(ctx2, TIMETRACE_KEY)) prompt2.text = "";
+  const snapshot = timetraceSnapshot(memory), prompt2 = guardedTimetracePrompt(ctx2, memory, config2, snapshot);
   const oldOnly = !!(ctx2?.chatMetadata.echo_timetrace_v3 || ctx2?.chatMetadata.echo_timetrace) && !ctx2.chatMetadata[TIMETRACE_KEY];
   return {
     available: !!ctx2,
@@ -49945,7 +50403,7 @@ function getTimetraceView() {
 }
 function drainQueue(delay = 600) {
   if (isLocalTextRevisionActive()) return;
-  if (!initialized2 || !requested || paused || generating || starting || job || writing2 || getStoryMemoryTask() || timer) return;
+  if (!initialized2 || !requested || paused || generating || starting || job || writing2 || inlineRunning || !canRunStoryMemoryTask("timetrace", taskOptions()) || timer) return;
   const ctx2 = context();
   if (!ctx2 || !memoryFor(ctx2).enabled || memoryFor(ctx2).rollbackPaused || archivePending(ctx2, TIMETRACE_KEY)) return;
   const rows = rowsFor(ctx2), pending5 = pendingRows(memoryFor(ctx2), rows, ctx2);
@@ -49982,6 +50440,7 @@ async function resumeTimetrace() {
   paused = false;
   failedScope = "";
   if (getTimetraceConfig().mode === "api") schedule(true);
+  else queueInline(ctx2, { retry: true });
   refreshInjection();
   notify5();
   return true;
@@ -49989,12 +50448,14 @@ async function resumeTimetrace() {
 function pauseTimetrace() {
   paused = true;
   requested = historyRequested = rebuildRequested = false;
+  resetInlineQueue();
   clearTimer();
   job?.controller.abort();
   updateProgress({ state: "paused", phase: "paused", retryAt: 0, message: "\u65F6\u75D5\u5DF2\u6682\u505C\uFF0C\u4FDD\u5B58\u7684\u65F6\u95F4\u4E0E\u5929\u6C14\u7B14\u8BB0\u4FDD\u7559\u3002" });
 }
 function refreshTimetraceAfterStoryMemoryUndo() {
   pauseTimetrace();
+  resetInlineQueue({ clearFrames: true });
   progress = progressContext = null;
   error = warning = "";
   refreshInjection();
@@ -50007,11 +50468,15 @@ function saveTimetraceConfig(patch) {
   epoch++;
   job?.controller.abort();
   clearTimer();
+  resetInlineQueue({ clearFrames: true });
   failedScope = "";
   refreshInjection();
   notify5();
   const ctx2 = context();
-  if (ctx2 && memoryFor(ctx2).enabled && next.mode === "api" && !paused) schedule();
+  if (ctx2 && memoryFor(ctx2).enabled && !paused) {
+    if (next.mode === "api") schedule();
+    else queueInline(ctx2, { retry: true });
+  }
 }
 async function setTimetraceEnabled(enabled2) {
   const ctx2 = context();
@@ -50020,6 +50485,7 @@ async function setTimetraceEnabled(enabled2) {
     epoch++;
     job?.controller.abort();
     clearTimer();
+    resetInlineQueue({ clearFrames: true });
     requested = historyRequested = rebuildRequested = false;
   }
   await mutate(async () => {
@@ -50035,9 +50501,11 @@ async function setTimetraceEnabled(enabled2) {
   refreshInjection();
   notify5();
   if (enabled2) {
-    await reconcile(ctx2);
-    await ingestComments(ctx2);
-    if (getTimetraceConfig().mode === "api") schedule(true);
+    if (getTimetraceConfig().mode === "api") {
+      await reconcile(ctx2);
+      await ingestComments(ctx2);
+      schedule(true);
+    } else queueInline(ctx2, { retry: true });
   }
 }
 function taskSourcesMatch(task) {
@@ -50175,7 +50643,7 @@ async function runTimetrace(options2 = {}) {
     rebuildRequested || (rebuildRequested = !!options2.rebuild);
   }
   if (paused || memoryFor(ctx2).rollbackPaused && !options2.history && !options2.rebuild) return false;
-  if (starting || job || generating || writing2) {
+  if (starting || job || generating || writing2 || inlineRunning) {
     requested = true;
     notify5();
     return false;
@@ -50193,7 +50661,7 @@ async function runTimetrace(options2 = {}) {
       starting = false;
       notify5();
     }
-  }, options2.taskOwner);
+  }, options2.taskOwner, taskOptions());
   if (!entered) requested = true;
   drainQueue();
   return result;
@@ -50316,7 +50784,7 @@ async function runTask2(ctx2, { history = false, rebuild = false, ingestOnly = f
 async function editTimetrace({ calendar, initialTime, nodeId, patch } = {}) {
   const ctx2 = context();
   if (!ctx2) throw new Error("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u804A\u5929\u3002");
-  if (generating || job || starting || writing2) throw new Error("\u8BF7\u6682\u505C\u65F6\u75D5\u5E76\u7B49\u5F85\u6B63\u6587\u751F\u6210\u548C\u4FDD\u5B58\u7ED3\u675F\u540E\u7F16\u8F91\u3002");
+  if (generating || job || starting || writing2 || inlineRunning || isHostGenerating()) throw new Error("\u8BF7\u6682\u505C\u65F6\u75D5\u5E76\u7B49\u5F85\u6B63\u6587\u751F\u6210\u548C\u4FDD\u5B58\u7ED3\u675F\u540E\u7F16\u8F91\u3002");
   await mutate(async () => {
     if (!sameChat(ctx2)) throw new Error("\u804A\u5929\u5DF2\u5207\u6362\u3002");
     const next = cloneTimetrace(memoryFor(ctx2));
@@ -50363,13 +50831,17 @@ async function editTimetrace({ calendar, initialTime, nodeId, patch } = {}) {
 function referenceChanged() {
   epoch++;
   clearTimer();
+  resetInlineQueue({ clearFrames: true });
   job?.controller.abort();
   failedScope = "";
   updateProgress({ state: "paused", retryAt: 0, message: "\u5206\u6790\u8D44\u6599\u5DF2\u6539\u53D8\uFF0C\u672A\u4FDD\u5B58\u7B14\u8BB0\u5DF2\u53D6\u6D88\u3002" });
   refreshInjection();
   notify5();
   const ctx2 = context();
-  if (ctx2 && memoryFor(ctx2).enabled && getTimetraceConfig().mode === "api" && !paused) schedule();
+  if (ctx2 && memoryFor(ctx2).enabled && !paused) {
+    if (getTimetraceConfig().mode === "api") schedule();
+    else queueInline(ctx2, { retry: true });
+  }
 }
 function initStoryTimetrace() {
   if (initialized2) return;
@@ -50390,34 +50862,62 @@ function initStoryTimetrace() {
       refreshInjection();
       return;
     }
+    const serial = ++generationSerial;
     generating = true;
     generationType = type || "";
     stopped = false;
     clearTimer();
+    clearTimeout(inlineTimer);
+    inlineTimer = null;
     if (writing2) await writing2.catch(report);
+    if (serial !== generationSerial) return;
     const ctx3 = context(), last = ctx3 ? rowsFor(ctx3).filter((row) => !row.isUser && row.kind !== "summary").at(-1) : null;
-    generationTarget = ctx3 ? { key: ctx3.key, index: last?.index ?? -1, fingerprint: last?.fingerprint || "" } : null;
+    generationTarget = ctx3 ? {
+      ctx: ctx3,
+      epoch,
+      key: ctx3.key,
+      index: last?.index ?? -1,
+      fingerprint: last?.fingerprint || "",
+      raw: last ? ctx3.chat[last.index].mes : "",
+      sources: ctx3.chat.map(sourceToken),
+      lastIsUser: !!ctx3.chat.at(-1)?.is_user,
+      memory: cloneTimetrace(memoryFor(ctx3)),
+      prepared: false
+    } : null;
     refreshInjection();
     notify5();
   });
   bind(event_types3.GENERATION_STOPPED, () => {
     stopped = true;
+    generationSerial++;
+    generating = false;
+    releaseGenerationWaiters();
+    const ctx3 = context(), row = ctx3 ? rowsFor(ctx3).filter((item2) => !item2.isUser && item2.kind !== "summary").at(-1) : null;
+    if (ctx3 && row && generationTarget?.key === ctx3.key && (row.index !== generationTarget.index || row.fingerprint !== generationTarget.fingerprint) && pendingRows(memoryFor(ctx3), [row], ctx3).length) {
+      inlineStopped.set(ctx3.chat[row.index], row.fingerprint);
+      inlineFresh.delete(row.index);
+    }
+    queueInline(ctx3);
+    notify5();
   });
   bind(event_types3.GENERATION_ENDED, async () => {
     generating = false;
     releaseGenerationWaiters();
     const ctx3 = context(), target = generationTarget;
-    generationTarget = null;
     textChanges.seed(ctx3);
     if (!ctx3 || !memoryFor(ctx3).enabled) return;
     if (!["quiet", "impersonate"].includes(generationType)) {
-      await reconcile(ctx3);
       const last = rowsFor(ctx3).filter((row) => !row.isUser && row.kind !== "summary").at(-1);
-      const fresh = target?.key === ctx3.key && last && (last.index !== target.index || last.fingerprint !== target.fingerprint);
-      if (!stopped) await ingestComments(ctx3, { allowFloor: fresh ? last.index : null });
-      if (getTimetraceConfig().mode === "api" && !paused) {
-        failedScope = "";
-        schedule(historyRequested);
+      captureInlineFrame(ctx3, last);
+      if (getTimetraceConfig().mode === "inline") queueInline(ctx3);
+      else {
+        await reconcile(ctx3);
+        const fresh = target?.key === ctx3.key && last && (last.index !== target.index || last.fingerprint !== target.fingerprint);
+        if (!stopped) await ingestComments(ctx3, { allowFloor: fresh ? last.index : null });
+        if (!paused) {
+          failedScope = "";
+          schedule(historyRequested);
+        }
       }
     }
     refreshInjection();
@@ -50426,8 +50926,10 @@ function initStoryTimetrace() {
   });
   bind(event_types3.CHAT_CHANGED, async () => {
     epoch++;
+    generationSerial++;
     job?.controller.abort();
     clearTimer();
+    resetInlineQueue({ clearFrames: true });
     releaseGenerationWaiters();
     requested = historyRequested = rebuildRequested = false;
     generating = false;
@@ -50440,11 +50942,14 @@ function initStoryTimetrace() {
     const ctx3 = context();
     textChanges.seed(ctx3);
     refreshInjection();
-    if (ctx3) {
-      await reconcile(ctx3);
-      await ingestComments(ctx3);
+    if (ctx3 && getTimetraceConfig().mode === "inline") queueInline(ctx3);
+    else {
+      if (ctx3) {
+        await reconcile(ctx3);
+        await ingestComments(ctx3);
+      }
+      if (ctx3 && sameChat(ctx3) && memoryFor(ctx3).enabled) schedule();
     }
-    if (ctx3 && sameChat(ctx3) && memoryFor(ctx3).enabled && getTimetraceConfig().mode === "api") schedule();
     refreshInjection();
     notify5();
   });
@@ -50465,11 +50970,19 @@ function initStoryTimetrace() {
     if (trigger === TITANIA_TEXT_PATCHED || settings) noteArchiveChange(ctx3, trigger, settings ? "settings" : "sources");
     if (settings) {
       epoch++;
+      resetInlineQueue({ clearFrames: true });
       job?.controller.abort();
     } else if (bodyEdit && job && !taskSourcesMatch(job)) job.controller.abort();
     failedScope = "";
+    if (getTimetraceConfig().mode === "inline") {
+      if (trigger === event_types3.MESSAGE_RECEIVED) captureInlineFrame(ctx3, rowsFor(ctx3).filter((row) => !row.isUser && row.kind !== "summary").at(-1));
+      queueInline(ctx3);
+      refreshInjection();
+      notify5();
+      return;
+    }
     if (generating) {
-      if (getTimetraceConfig().mode === "api") requested = true;
+      requested = true;
       return;
     }
     await reconcile(ctx3);
@@ -50478,7 +50991,7 @@ function initStoryTimetrace() {
     notify5();
     if (sameChat(ctx3) && memoryFor(ctx3).enabled && getTimetraceConfig().mode === "api" && !paused) schedule();
   };
-  for (const name of [TITANIA_TEXT_PATCHED, TOOLBOX_EXTRACTION_CHANGED, ...[
+  for (const name of [TITANIA_TEXT_PATCHED, TITANIA_MESSAGE_COMMITTED, TOOLBOX_EXTRACTION_CHANGED, ...[
     "MESSAGE_SENT",
     "MESSAGE_RECEIVED",
     "MESSAGE_EDITED",
@@ -50487,6 +51000,14 @@ function initStoryTimetrace() {
     "MESSAGE_SWIPED",
     "MESSAGE_SWIPE_DELETED"
   ].map((key) => event_types3[key])]) bind(name, () => changed(name));
+  bind(event_types3.CHARACTER_MESSAGE_RENDERED, (index2) => {
+    const ctx3 = context();
+    if (!ctx3 || getTimetraceConfig().mode !== "inline" || !memoryFor(ctx3).enabled) return;
+    const row = rowsFor(ctx3).find((item2) => item2.index === Number(index2));
+    captureInlineFrame(ctx3, row);
+    queueInline(ctx3);
+  });
+  for (const name of [event_types3.CHAT_LOADED, event_types3.MORE_MESSAGES_LOADED].filter(Boolean)) bind(name, () => queueInline());
   bind(event_types3.WORLDINFO_UPDATED, (name) => {
     const ctx3 = context();
     if (!ctx3 || !getTimetraceConfig().use_world_info) return;
@@ -50500,11 +51021,14 @@ function initStoryTimetrace() {
   const ctx2 = context();
   textChanges.seed(ctx2);
   refreshInjection();
-  if (ctx2 && memoryFor(ctx2).enabled) void reconcile(ctx2).then(() => ingestComments(ctx2)).then(() => {
-    if (sameChat(ctx2) && getTimetraceConfig().mode === "api") schedule();
-  }).catch(report);
+  if (ctx2 && memoryFor(ctx2).enabled) {
+    if (getTimetraceConfig().mode === "inline") queueInline(ctx2);
+    else void reconcile(ctx2).then(() => ingestComments(ctx2)).then(() => {
+      if (sameChat(ctx2) && getTimetraceConfig().mode === "api") schedule();
+    }).catch(report);
+  }
 }
-var TIMETRACE_PROMPT_KEY, listeners4, generationWaiters, textChanges, initialized2, generating, generationType, stopped, epoch, job, writing2, timer, starting, paused, requested, historyRequested, rebuildRequested, progress, progressContext, progressSequence, generationTarget, error, warning, failedScope, fallbackFor, sourcesMatch, pendingRows, updateProgress, clearTimer, releaseGenerationWaiters;
+var TIMETRACE_PROMPT_KEY, listeners4, generationWaiters, inlineRejected, inlineWork, generationSerial, textChanges, initialized2, generating, generationType, stopped, epoch, job, writing2, timer, starting, paused, requested, historyRequested, rebuildRequested, progress, progressContext, progressSequence, generationTarget, error, warning, failedScope, inlineTimer, inlineRequested, inlineRunning, inlineOwner, inlineFailures, inlineFailedInput, inlineFresh, inlineStopped, INLINE_SETTLE_DELAY, INLINE_RECHECK_DELAY, INLINE_SAVE_RETRIES, fallbackFor, sourcesMatch, pendingRows, updateProgress, clearTimer, releaseGenerationWaiters, taskOptions;
 var init_storyTimetrace = __esm({
   "src/core/storyTimetrace.js"() {
     init_storage();
@@ -50514,6 +51038,7 @@ var init_storyTimetrace = __esm({
     init_worldInfoSelectionEvents();
     init_toolboxSettings();
     init_contentChangeEvents();
+    init_hostGeneration();
     init_localTextRevisions();
     init_storyMemoryTasks();
     init_storyTimetraceData();
@@ -50522,6 +51047,9 @@ var init_storyTimetrace = __esm({
     TIMETRACE_PROMPT_KEY = "ECHO_TIMETRACE";
     listeners4 = /* @__PURE__ */ new Set();
     generationWaiters = /* @__PURE__ */ new Set();
+    inlineRejected = /* @__PURE__ */ new Map();
+    inlineWork = null;
+    generationSerial = 0;
     textChanges = createTextChangeObserver();
     initialized2 = false;
     generating = false;
@@ -50543,6 +51071,17 @@ var init_storyTimetrace = __esm({
     error = "";
     warning = "";
     failedScope = "";
+    inlineTimer = null;
+    inlineRequested = false;
+    inlineRunning = false;
+    inlineOwner = null;
+    inlineFailures = 0;
+    inlineFailedInput = "";
+    inlineFresh = /* @__PURE__ */ new Map();
+    inlineStopped = /* @__PURE__ */ new Map();
+    INLINE_SETTLE_DELAY = 350;
+    INLINE_RECHECK_DELAY = 700;
+    INLINE_SAVE_RETRIES = 2;
     fallbackFor = (ctx2) => timetraceFallbackRows(ctx2.chat, ctx2.chatMetadata.titania_story_memory);
     sourcesMatch = (rows, ctx2, { allowLocalRevision = false } = {}) => timetraceSourcesMatch(rows, ctx2.chat, fallbackFor(ctx2), { allowLocalRevision, ownerKey: localTextRevisionOwnerKey(ctx2) });
     pendingRows = (memory, rows, ctx2) => pendingTimetraceRows(memory, rows, ctx2?.chat, { ownerKey: localTextRevisionOwnerKey(ctx2) });
@@ -50558,6 +51097,7 @@ var init_storyTimetrace = __esm({
       for (const resolve of generationWaiters) resolve();
       generationWaiters.clear();
     };
+    taskOptions = () => ({ parallelAnalysis: getTimetraceConfig().mode === "api" });
     subscribeWorldInfoSelectionChanges(({ cardKey }) => {
       const ctx2 = context();
       if (ctx2 && getTimetraceConfig().use_world_info && getCharacterCardKey(ctx2) === cardKey) referenceChanged();
@@ -50567,10 +51107,14 @@ var init_storyTimetrace = __esm({
       refreshInjection();
       notify5();
       const ctx2 = context();
-      if (initialized2 && ctx2 && memoryFor(ctx2).enabled && getTimetraceConfig().mode === "api" && !paused) schedule();
+      if (initialized2 && ctx2 && memoryFor(ctx2).enabled && !paused) {
+        if (getTimetraceConfig().mode === "api") schedule();
+        else queueInline(ctx2);
+      }
     });
     subscribeStoryMemoryTask(() => {
-      if (!getStoryMemoryTask()) drainQueue();
+      if (canRunStoryMemoryTask("timetrace", taskOptions())) drainQueue();
+      if (inlineRequested) queueInline();
       notify5();
     });
   }
@@ -59399,17 +59943,17 @@ function rewriteTargetStillMatches(target, current3, expectedSource = target.pro
   const snapshot = sourceFields(target.message);
   return !snapshot.reason && snapshot.fields.length === target.fields.length && snapshot.fields.every((field3, i) => field3.object === target.fields[i].object && field3.key === target.fields[i].key && field3.original === (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : expectedSource));
 }
-async function persistRewriteTarget(target, rewritten, host7) {
-  if (!rewriteTargetStillMatches(target, host7.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+async function persistRewriteTarget(target, rewritten, host8) {
+  if (!rewriteTargetStillMatches(target, host8.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
   const ctx2 = target.ctx;
   const group2 = ctx2.groupId != null && ctx2.groupId !== "";
   const character = ctx2.characters?.[ctx2.characterId];
   if (!ctx2.chatId || !group2 && !character?.avatar) throw new Error("\u5F53\u524D\u804A\u5929\u65E0\u6CD5\u786E\u8BA4\u4FDD\u5B58\u7ED3\u679C");
-  await host7.save();
-  if (!rewriteTargetStillMatches(target, host7.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
-  const response = await host7.fetch(group2 ? "/api/chats/group/get" : "/api/chats/get", {
+  await host8.save();
+  if (!rewriteTargetStillMatches(target, host8.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+  const response = await host8.fetch(group2 ? "/api/chats/group/get" : "/api/chats/get", {
     method: "POST",
-    headers: host7.getHeaders(),
+    headers: host8.getHeaders(),
     cache: "no-store",
     body: JSON.stringify(group2 ? { id: ctx2.chatId } : { ch_name: character.name, file_name: ctx2.chatId, avatar_url: character.avatar })
   });
@@ -59419,7 +59963,7 @@ async function persistRewriteTarget(target, rewritten, host7) {
   const message = Array.isArray(saved) ? saved[target.index + offset] : null;
   const fields4 = message ? sourceFields(message) : { fields: [], reason: "\u672A\u627E\u5230\u4FDD\u5B58\u7684\u697C\u5C42" };
   if (fields4.reason || fields4.fields.length !== target.fields.length || fields4.fields.some((field3, i) => field3.key !== target.fields[i].key || field3.original !== (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : rewritten))) throw new Error("\u697C\u5C42\u8865\u4E01\u672A\u6210\u529F\u4FDD\u5B58");
-  if (!rewriteTargetStillMatches(target, host7.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
+  if (!rewriteTargetStillMatches(target, host8.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
 }
 async function commitRewritePatches(target, units, replacements, options2) {
   const mapped = mapRewriteUnits(target.projection, units);
@@ -63104,7 +63648,7 @@ function refreshInjection2() {
   setExtensionPrompt4(EVOLUTION_PROMPT_KEY, text9, extension_prompt_types4.IN_CHAT, depth, false, extension_prompt_roles4.SYSTEM);
 }
 function getEvolutionView() {
-  const ctx2 = context2(), host7 = globalThis.SillyTavern?.getContext?.();
+  const ctx2 = context2(), host8 = globalThis.SillyTavern?.getContext?.();
   const config2 = getEvolutionConfig();
   let memory = newEvolution(), readError2 = "";
   try {
@@ -63123,7 +63667,7 @@ function getEvolutionView() {
   const query = ctx2 ? recentContext(ctx2) : "";
   return {
     available: !!ctx2,
-    unsupported: ctx2 ? "" : host7?.groupId != null && host7.groupId !== "" ? "\u89D2\u8272\u6F14\u53D8\u6682\u4E0D\u652F\u6301\u7FA4\u804A\uFF0C\u8BF7\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002" : "\u8BF7\u5148\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002",
+    unsupported: ctx2 ? "" : host8?.groupId != null && host8.groupId !== "" ? "\u89D2\u8272\u6F14\u53D8\u6682\u4E0D\u652F\u6301\u7FA4\u804A\uFF0C\u8BF7\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002" : "\u8BF7\u5148\u6253\u5F00\u5355\u89D2\u8272\u804A\u5929\u3002",
     contextKey: ctx2?.key || "",
     characterName: ctx2?.character.name || "",
     baseline: memory.baseline ? frozenDescription(memory) : ctx2 ? baseline(ctx2) : "",
@@ -63138,7 +63682,7 @@ function getEvolutionView() {
     guidanceEnabled: memory.guidanceEnabled !== false,
     enabled: memory.enabled,
     auto: memory.auto,
-    busy: !!job2 || status === "saving" || generating3 || !!getStoryMemoryTask(),
+    busy: !!job2 || status === "saving" || generating3 || !canRunStoryMemoryTask("evolution", { parallelAnalysis: true }),
     status: status === "idle" && retryBlockedKey === ctx2?.key ? "error" : status === "idle" && analysisState === "normalized" ? analysisState : status,
     error: readError2 || archiveWarning(ctx2, EVOLUTION_KEY) || error2 || (retryBlockedKey === ctx2?.key ? "\u89D2\u8272\u6F14\u53D8\u91CD\u8BD5\u6B21\u6570\u5DF2\u7528\u5C3D\uFF0C\u672C\u6279\u672A\u4FDD\u5B58\uFF1B\u7B49\u5F85\u4E0B\u4E00\u6B21\u624B\u52A8\u6574\u6279\u5206\u6790\u3002" : ""),
     analysis: cloneEvolution(analysis),
@@ -63157,7 +63701,7 @@ function getEvolutionView() {
 function schedule2() {
   if (isLocalTextRevisionActive()) return;
   clearTimer2();
-  if (!initialized3 || generating3 || job2 || blocked || getStoryMemoryTask()) return;
+  if (!initialized3 || generating3 || job2 || blocked || !canRunStoryMemoryTask("evolution", { parallelAnalysis: true })) return;
   const ctx2 = context2();
   try {
     if (!ctx2 || retryBlockedKey === ctx2.key) return;
@@ -63172,7 +63716,38 @@ function schedule2() {
     report2(cause);
   }
 }
-function supportingContext(ctx2, batch) {
+function timeSupport(ctx2, batch) {
+  const timeline = ctx2.chatMetadata[TIMETRACE_KEY];
+  if (!timeline?.enabled || archivePending(ctx2, TIMETRACE_KEY)) return { time: null, evidence: [] };
+  const valid = reconcileTimetrace(
+    timeline,
+    ctx2.chat,
+    timetraceFallbackRows(ctx2.chat, ctx2.chatMetadata[MEMORY_KEY]),
+    extractionScope(),
+    { ownerKey: localTextRevisionOwnerKey(ctx2) }
+  ).memory;
+  const allNodes = timetraceNodes(valid);
+  const incomplete = allNodes.some((node3) => !node3.metadata_only && (!node3.clock_start || !node3.clock_end || ["pending", "conflict"].includes(node3.status)) && (node3.source_start ?? node3.floor) <= batch.end && (node3.source_end ?? node3.end_floor ?? node3.floor) >= batch.start);
+  const nodes = allNodes.filter((node3) => node3.frame === "main" && node3.clock_start && node3.clock_end && !["pending", "conflict"].includes(node3.status) && (node3.source_start ?? node3.floor) >= batch.start && (node3.source_end ?? node3.end_floor ?? node3.floor) <= batch.end);
+  return {
+    time: nodes.length && !incomplete ? {
+      start: nodes[0].time,
+      end: nodes.at(-1).time_end || nodes.at(-1).time,
+      basis: nodes.some((node3) => node3.basis === "inferred") ? "inferred" : "recorded"
+    } : null,
+    evidence: nodes.map((node3) => ({ id: node3.id, signature: JSON.stringify([
+      node3.raw_note,
+      node3.source_floors,
+      node3.time,
+      node3.time_end,
+      node3.clock_start,
+      node3.clock_end,
+      node3.basis,
+      node3.status
+    ]) }))
+  };
+}
+function supportingContext(ctx2, batch, time = timeSupport(ctx2, batch).time) {
   const memory = ctx2.chatMetadata[MEMORY_KEY];
   let segments = [], relationships = [];
   if (memory?.segments && firstInvalidSegment(memory, ctx2.chat, { ownerKey: localTextRevisionOwnerKey(ctx2) }) < 0 && firstIncompleteSegment(memory) < 0) {
@@ -63181,28 +63756,19 @@ function supportingContext(ctx2, batch) {
       relationships = (memory.relationships || []).filter((item2) => !item2.manual && (item2.sources || []).length && item2.sources.every((source2) => source2.end <= batch.end)).map((item2) => ({ title: item2.title, body: item2.body }));
     }
   }
-  let time = null;
-  const timeline = ctx2.chatMetadata[TIMETRACE_KEY];
-  if (timeline?.enabled) {
-    const valid = reconcileTimetrace(timeline, ctx2.chat, timetraceFallbackRows(ctx2.chat, memory), extractionScope(), { ownerKey: localTextRevisionOwnerKey(ctx2) }).memory;
-    const allNodes = timetraceNodes(valid);
-    const incomplete = allNodes.some((node3) => !node3.metadata_only && (!node3.clock_start || !node3.clock_end || ["pending", "conflict"].includes(node3.status)) && (node3.source_start ?? node3.floor) <= batch.end && (node3.source_end ?? node3.end_floor ?? node3.floor) >= batch.start);
-    const nodes = allNodes.filter((node3) => node3.frame === "main" && node3.clock_start && node3.clock_end && !["pending", "conflict"].includes(node3.status) && (node3.source_start ?? node3.floor) >= batch.start && (node3.source_end ?? node3.end_floor ?? node3.floor) <= batch.end);
-    if (nodes.length && !incomplete) time = {
-      start: nodes[0].time,
-      end: nodes.at(-1).time_end || nodes.at(-1).time,
-      basis: nodes.some((node3) => node3.basis === "inferred") ? "inferred" : "recorded"
-    };
-  }
   return { segments, relationships, time };
 }
 function sourceCurrent(task) {
-  if (!sameChat2(task.ctx) || baselineSignature(context2()) !== task.baseline || scope2() !== task.scope || reconciled(task.ctx).changed || archivePending(task.ctx, EVOLUTION_KEY) || !evolutionBatchMatches(task.batch, task.ctx.chat) || JSON.stringify(supportingContext(task.ctx, task.batch)) !== task.support) return false;
+  if (!sameChat2(task.ctx) || baselineSignature(context2()) !== task.baseline || scope2() !== task.scope || reconciled(task.ctx).changed || archivePending(task.ctx, EVOLUTION_KEY) || !evolutionBatchMatches(task.batch, task.ctx.chat) || JSON.stringify(supportingContext(task.ctx, task.batch, task.timeInput.time)) !== task.support) return false;
+  if (task.timeInput.time) {
+    const current3 = new Map(timeSupport(task.ctx, task.batch).evidence.map((item2) => [item2.id, item2.signature]));
+    if (task.timeInput.evidence.some((item2) => current3.get(item2.id) !== item2.signature)) return false;
+  }
   const latest = planEvolutionBatch(task.ctx.chat, memoryFor2(task.ctx), getEvolutionConfig(), extractToolboxText, true);
   return !!latest && latest.start === task.batch.start && latest.end === task.batch.end && JSON.stringify(latest.rows) === JSON.stringify(task.batch.rows) && JSON.stringify(latest.fingerprints) === JSON.stringify(task.batch.fingerprints);
 }
 function taskCurrent2(task) {
-  return job2 === task && getStoryMemoryTask() === task.owner && !task.controller.signal.aborted && epoch2 === task.epoch && !generating3 && sourceCurrent(task) && memoryFor2(task.ctx).revision === task.revision && memoryFor2(task.ctx).enabled;
+  return job2 === task && isStoryMemoryTaskActive(task.owner) && !task.controller.signal.aborted && epoch2 === task.epoch && !generating3 && sourceCurrent(task) && memoryFor2(task.ctx).revision === task.revision && memoryFor2(task.ctx).enabled;
 }
 function waitForEvolutionRetry(task, seconds) {
   return new Promise((resolve, reject) => {
@@ -63311,7 +63877,8 @@ async function runEvolution(force = true, { owner = null, signal = null } = {}) 
       const memory = memoryFor2(ctx2), config2 = getEvolutionConfig();
       const batch = planEvolutionBatch(ctx2.chat, memory, config2, extractToolboxText, force);
       if (!batch) return false;
-      const support = supportingContext(ctx2, batch);
+      const timeInput = timeSupport(ctx2, batch);
+      const support = supportingContext(ctx2, batch, timeInput.time);
       const progress2 = startProgress(ctx2, memory, batch, config2);
       task = {
         ctx: ctx2,
@@ -63322,6 +63889,7 @@ async function runEvolution(force = true, { owner = null, signal = null } = {}) 
         scope: scope2(),
         progress: progress2,
         support: JSON.stringify(support),
+        timeInput,
         controller,
         owner: slot
       };
@@ -63410,7 +63978,7 @@ ${row.text}`).join("\n\n")}` }];
       refreshInjection2();
       notify6();
     }
-  }, owner);
+  }, owner, { parallelAnalysis: true });
 }
 async function updateMemory(change, expectedContextKey = null) {
   const ctx2 = context2();
@@ -63693,7 +64261,7 @@ function initCharacterEvolution() {
     if (event_types8[name]) eventSource8.on(event_types8[name], () => textChanges2.seed(context2()));
   }
   subscribeStoryMemoryTask(() => {
-    if (!getStoryMemoryTask()) schedule2();
+    if (canRunStoryMemoryTask("evolution", { parallelAnalysis: true })) schedule2();
     notify6();
   });
   const ctx2 = context2();
@@ -64058,7 +64626,10 @@ function timetraceProgress(time) {
     retryLimit: p.retryLimit,
     retryInterval: time.config?.retry_interval_seconds,
     message: p.message,
-    analysisState: p.analysisState || p.analysis?.state || "complete"
+    analysisState: p.analysisState || p.analysis?.state || "complete",
+    origin: p.origin || "api",
+    clockStatus: p.clockStatus || "",
+    hadFailures: p.hadFailures === true
   } : null;
 }
 function getStoryMemoryActivity() {
@@ -65082,7 +65653,7 @@ async function runStoryMemoryTimetrace(options2 = {}) {
     const result = await runTimetrace({ ...options2, history: true, taskOwner });
     if (sameChat3(ctx2) && epoch4 === memoryEpoch && memoryFor3(ctx2).enabled) schedule3();
     return result;
-  });
+  }, null, { parallelAnalysis: getTimetraceConfig().mode === "api" });
 }
 async function refreshStoryMemoryTime(segmentId, retrying = null) {
   return runStoryMemoryTask("time-refresh", async (taskOwner) => {
@@ -65772,20 +66343,29 @@ function renderTimetraceCurrent(view2, compact2 = false, disabled = false) {
             ${compact2 ? '<button type="button" data-jump-tab="timetrace">\u67E5\u770B\u65F6\u95F4\u4E0E\u5929\u6C14\u8F74 \u2197</button>' : '<button type="button" data-action="time-edit-base" ' + (disabled ? "disabled" : "") + ">\u5386\u6CD5\u3001\u65F6\u533A\u4E0E\u5B63\u8282\u89C4\u5219</button>"}</div>
         ${narration && narration.id !== current3?.id && narration.frame === "parallel" ? `<p class="t-timetrace-narration">${escape3(TIMETRACE_FRAMES[narration.frame])}\uFF1A${escape3(narration.time_end || narration.time || narration.time_expression || "\u65F6\u95F4\u5F85\u5B9A\u4F4D")} \xB7 ${escape3(narration.location || "")}</p>` : ""}</section>`;
 }
-function renderTimetracePanel(view2, { query = "", searchOpen = false, filter = "all", expanded = /* @__PURE__ */ new Set(), focus = null, busy = false } = {}) {
+function renderTimetracePanel(view2, {
+  query = "",
+  searchOpen = false,
+  filter = "all",
+  expanded = /* @__PURE__ */ new Set(),
+  focus = null,
+  busy = false,
+  analysisBusy = busy
+} = {}) {
   const disabled = busy || view2.busy || view2.generating;
+  const analysisDisabled = analysisBusy || view2.busy || view2.generating || view2.analysisBlocked;
   const nodes = nodesInRange(view2.nodes, focus), scenes = timetraceSceneOptions(nodes);
   const scene = scenes.some(([key]) => key === filter) ? filter : "all", searchQuery = searchOpen ? query : "";
   const actions = `<div class="t-memory-card-actions"><button type="button" class="t-memory-action" data-action="time-toggle-search" aria-expanded="${searchOpen}" aria-controls="t-timetrace-search-panel">${searchOpen ? "\u6536\u8D77\u67E5\u627E" : "\u67E5\u627E"}</button>
         <button type="button" class="t-memory-action" data-action="time-edit-base" ${disabled ? "disabled" : ""}>\u5386\u6CD5\u4E0E\u8D77\u70B9</button>
         <button type="button" class="t-memory-action" data-action="${view2.paused ? "time-resume" : "time-pause"}" ${view2.saving || !view2.memory.enabled ? "disabled" : ""}>${view2.paused ? "\u6062\u590D\u81EA\u52A8\u5904\u7406" : "\u6682\u505C\u65F6\u75D5"}</button>
-        <button type="button" class="t-memory-action" data-action="time-rebuild" ${disabled || !view2.memory.enabled ? "disabled" : ""}>\u91CD\u5EFA\u5168\u90E8</button>
-        <button type="button" class="t-memory-action" data-action="time-run" ${disabled || !view2.memory.enabled ? "disabled" : ""}>\u8865\u5EFA\u5386\u53F2</button></div>`;
+        <button type="button" class="t-memory-action" data-action="time-rebuild" ${analysisDisabled || !view2.memory.enabled ? "disabled" : ""}>\u91CD\u5EFA\u5168\u90E8</button>
+        <button type="button" class="t-memory-action" data-action="time-run" ${analysisDisabled || !view2.memory.enabled ? "disabled" : ""}>\u8865\u5EFA\u5386\u53F2</button></div>`;
   return `<div class="t-memory-section-heading"><div><p class="t-memory-eyebrow">ECHO / TIME & SEASON</p><h2 tabindex="-1">\u56DE\u58F0\u65F6\u75D5</h2>
             <p class="t-memory-hint">${view2.coveredFloors || 0} / ${view2.totalFloors || 0} \u6761\u6765\u6E90\u5DF2\u8BFB\u53D6 \xB7 ${view2.pendingFloors || 0} \u6761\u5F85\u5206\u6790 \xB7 \u6700\u65B0\u7B14\u8BB0\u5728\u524D</p></div>${actions}</div>
         ${renderTimetraceCurrent(view2, false, disabled)}
         ${view2.error || view2.warning ? `<p class="t-timetrace-feedback" role="status">${escape3(view2.error || view2.warning)}</p>` : ""}
-        ${view2.queued && !view2.busy && !view2.retryBlocked ? '<p class="t-memory-hint">\u5F85\u5904\u7406\u4EFB\u52A1\u5DF2\u6392\u961F\uFF0C\u6B63\u6587\u5B8C\u6210\u6216\u5176\u4ED6\u5206\u6790\u4EFB\u52A1\u91CA\u653E\u540E\u7EE7\u7EED\u3002</p>' : ""}
+        ${view2.queued && !view2.busy && !view2.retryBlocked ? '<p class="t-memory-hint">\u5F85\u5904\u7406\u4EFB\u52A1\u7B49\u5F85\u6B63\u6587\u7A33\u5B9A\u6216\u4E92\u65A5\u4EFB\u52A1\u7ED3\u675F\uFF1B\u540E\u53F0\u65F6\u75D5\u53EF\u4E0E\u89D2\u8272\u6F14\u53D8\u540C\u65F6\u5206\u6790\u3002</p>' : ""}
         ${!view2.memory.enabled ? '<p class="t-memory-hint">\u5728\u9876\u680F\u300C\u8FD0\u884C\u8BBE\u7F6E \u2192 \u56DE\u58F0\u65F6\u75D5\u300D\u4E2D\u542F\u7528\u672C\u804A\u5929\u3002\u65B0\u7CFB\u7EDF\u4E0D\u517C\u5BB9\u65E7\u8BB0\u5F55\uFF0C\u8BF7\u91CD\u65B0\u8865\u5EFA\u3002</p>' : ""}
         ${focus ? `<p class="t-memory-hint">\u6B63\u5728\u67E5\u770B\u7B2C ${focus.start}\uFF5E${focus.end} \u697C\u7684\u65F6\u95F4\u4E0E\u5B63\u5019 <button type="button" class="t-memory-action" data-action="time-clear-focus">\u67E5\u770B\u5168\u90E8</button></p>` : ""}
         <div class="t-timetrace-toolbar" id="t-timetrace-search-panel" ${searchOpen ? "" : "hidden"}><label class="t-timetrace-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" class="t-input" data-role="time-search" value="${escape3(searchQuery)}" placeholder="\u65E5\u671F\u3001\u8282\u6C14\u3001\u5929\u6C14\u6216\u7B2C 12 \u697C" aria-label="\u67E5\u627E\u65F6\u8282\u7B14\u8BB0"></label><button type="button" class="t-memory-action" data-action="time-clear-search" ${searchQuery ? "" : "disabled"}>\u6E05\u9664</button></div>
@@ -65903,12 +66483,12 @@ function openStoryMemorySettingsWindow(options2 = {}) {
     return `${head}\u5F53\u524D\u5F85\u6574\u7406 ${backlog.floors} \u697C \u2248 ${formatTokens(backlog.tokens)} token\uFF0C\u6309\u6BCF\u6BB5 ${floors} \u697C\u7B97\u7EA6 ${segments} \u6BB5\u3002`;
   };
   function refreshPromptCatalogue() {
-    const host7 = root.querySelector('[data-role="prompt-catalogue"]');
-    if (!host7) return;
-    const open = new Set([...host7.querySelectorAll("details[open]")].map((item2) => item2.dataset.promptTemplate));
+    const host8 = root.querySelector('[data-role="prompt-catalogue"]');
+    if (!host8) return;
+    const open = new Set([...host8.querySelectorAll("details[open]")].map((item2) => item2.dataset.promptTemplate));
     const entries = storyMemoryPromptCatalogue(getTimetraceConfig().prompt);
     const part = (id3, kind, title, content) => `<div class="t-memory-prompt-heading"><strong>${title}</strong><button type="button" class="t-btn" data-action="copy-prompt" data-prompt-kind="${kind}">\u590D\u5236</button></div><pre class="t-memory-prompt-text" tabindex="0" data-prompt-part="${kind}" aria-label="${escape4(id3)} \xB7 ${title}">${escape4(content)}</pre>`;
-    host7.innerHTML = entries.map((entry) => `<details class="t-memory-prompt-template" data-prompt-template="${escape4(entry.id)}"${open.has(entry.id) ? " open" : ""}><summary>${escape4(entry.title)} <small>\xB7 ${escape4(entry.mode)}</small></summary><p class="t-memory-hint">${escape4(entry.description)}</p>${part(entry.id, "system", "\u7CFB\u7EDF\u63D0\u793A\u8BCD / \u89C4\u5219\u539F\u6587", entry.system)}${entry.user ? part(entry.id, "user", "\u52A8\u6001\u7528\u6237\u6D88\u606F\u9AA8\u67B6", entry.user) : ""}</details>`).join("");
+    host8.innerHTML = entries.map((entry) => `<details class="t-memory-prompt-template" data-prompt-template="${escape4(entry.id)}"${open.has(entry.id) ? " open" : ""}><summary>${escape4(entry.title)} <small>\xB7 ${escape4(entry.mode)}</small></summary><p class="t-memory-hint">${escape4(entry.description)}</p>${part(entry.id, "system", "\u7CFB\u7EDF\u63D0\u793A\u8BCD / \u89C4\u5219\u539F\u6587", entry.system)}${entry.user ? part(entry.id, "user", "\u52A8\u6001\u7528\u6237\u6D88\u606F\u9AA8\u67B6", entry.user) : ""}</details>`).join("");
   }
   function render2() {
     root.innerHTML = `<section class="t-box t-memory-settings-window" role="dialog" aria-modal="true" aria-labelledby="t-memory-settings-title">
@@ -68244,7 +68824,7 @@ ${item2.body || ""}`.includes(name)));
     if (tab === "evolution") return '<div data-role="evolution-mount"></div>';
     const memory = view2.memory;
     if (!view2.available) return '<div class="t-memory-empty"><i class="fa-solid fa-comments"></i><p>\u6253\u5F00\u4E00\u6BB5\u89D2\u8272\u804A\u5929\u540E\uFF0C\u5373\u53EF\u4E3A\u8FD9\u6BB5\u6545\u4E8B\u5EFA\u7ACB\u8BB0\u5FC6\u3002</p></div>';
-    if (tab === "timetrace") return `${editor?.kind.startsWith("time-") ? renderEditor() : ""}${renderTimetracePanel(view2.timetrace, { query: timeQuery, searchOpen: timeSearchOpen, filter: timeFilter, expanded: timeExpanded, focus: timeFocus, busy: view2.busy || localBusy })}`;
+    if (tab === "timetrace") return `${editor?.kind.startsWith("time-") ? renderEditor() : ""}${renderTimetracePanel(view2.timetrace, { query: timeQuery, searchOpen: timeSearchOpen, filter: timeFilter, expanded: timeExpanded, focus: timeFocus, busy: view2.busy || localBusy, analysisBusy: localBusy })}`;
     if (tab === "preview") return `${pageHeading("\u6CE8\u5165\u9884\u89C8", "\u67E5\u770B\u672C\u8F6E\u5C06\u63D0\u4F9B\u7ED9\u6A21\u578B\u7684\u6545\u4E8B\u8BB0\u5FC6\u3002")}<p class="t-memory-hint">\u4F30\u7B97\u7EA6 ${view2.injection.tokens} token\uFF08\u8BB0\u5FC6 ${view2.injection.memoryTokens} \xB7 \u6700\u8FD1\u5206\u6BB5 ${view2.injection.recentTokens}\uFF09\u3002</p>
             ${view2.injection.overBudget ? '<p class="t-memory-error">\u5386\u53F2\u8109\u7EDC\u548C\u9501\u5B9A\u6761\u76EE\u5DF2\u8D85\u8FC7\u76EE\u6807\u9884\u7B97\uFF0C\u8BF7\u7CBE\u7B80\u5185\u5BB9\u6216\u63D0\u9AD8\u9884\u7B97\u3002</p>' : ""}
             ${view2.injection.omitted.length ? `<p class="t-memory-error">\u672C\u8F6E\u9884\u7B97\u672A\u5BB9\u7EB3\uFF1A${escape7(view2.injection.omitted.join("\u3001"))}\u3002\u8FD9\u4E9B\u5185\u5BB9\u4ECD\u4FDD\u5B58\u5728\u8BB0\u5FC6\u91CC\uFF0C\u53EF\u63D0\u9AD8\u300C\u6BCF\u6B21\u6CE8\u5165\u7684\u8BB0\u5FC6\u6700\u591A\u5360\u591A\u5C11 token\u300D\uFF0C\u6216\u7CBE\u7B80\u8F83\u65E9\u7684\u6761\u76EE\u3002</p>` : ""}
@@ -68444,7 +69024,9 @@ ${item2.body || ""}`.includes(name)));
     const mutations = /* @__PURE__ */ new Set(["run", "save-edit", "lock", "undo", "undo-all", "stage-rebuild", "stage-merge", "stage-remove", "time-edit-base", "time-edit-node", "time-rebuild", "time-run", "time-refresh"]);
     body.querySelectorAll("[data-action]").forEach((element4) => {
       if (!mutations.has(element4.dataset.action)) return;
-      element4.disabled = view2.busy || view2.generating || localBusy || element4.dataset.action === "run" && (!view2.available || !view2.memory.enabled) || element4.dataset.action.startsWith("undo") && (!view2.undo?.available || view2.saving || view2.timetrace?.busy) || ["time-run", "time-rebuild"].includes(element4.dataset.action) && !view2.timetrace.memory.enabled;
+      const timeAnalysis = ["time-run", "time-rebuild"].includes(element4.dataset.action);
+      const busy = timeAnalysis ? view2.timetrace.busy || view2.timetrace.analysisBlocked : view2.busy;
+      element4.disabled = busy || view2.generating || localBusy || element4.dataset.action === "run" && (!view2.available || !view2.memory.enabled) || element4.dataset.action.startsWith("undo") && (!view2.undo?.available || view2.saving || view2.timetrace?.busy) || timeAnalysis && !view2.timetrace.memory.enabled;
     });
     renderSource();
     if (source2) return;
@@ -69165,7 +69747,7 @@ var init_retrievalData = __esm({
 });
 
 // src/core/retrievalSource.js
-import * as host4 from "../../../../script.js";
+import * as host5 from "../../../../script.js";
 import { extension_settings as extension_settings2 } from "../../../extensions.js";
 import { getCurrentUserHandle } from "../../../user.js";
 function address(ctx2) {
@@ -69186,7 +69768,7 @@ function address(ctx2) {
 }
 function captureRetrievalContext() {
   if (!bound) {
-    host4.eventSource.on(host4.event_types.CHAT_CHANGED, () => {
+    host5.eventSource.on(host5.event_types.CHAT_CHANGED, () => {
       loadToken++;
       observedIdentities = /* @__PURE__ */ new WeakMap();
     });
@@ -69240,7 +69822,7 @@ function retrievalBusyReason({ generationGuard } = {}) {
   const ctx2 = context4();
   const ownGeneration = typeof generationGuard === "function" && generationGuard() === true;
   if (!ownGeneration && (isHostGenerating() || ctx2?.swipe?.state?.() && ctx2.swipe.state() !== "none")) return "\u8BF7\u7B49\u5F85\u9152\u9986\u751F\u6210\u6216\u5019\u9009\u5207\u6362\u7ED3\u675F\u540E\u518D\u68C0\u7D22\u3002";
-  if (host4.isChatSaving || isLocalTextRevisionActive()) return "\u804A\u5929\u6B63\u5728\u4FDD\u5B58\u6216\u4FEE\u6539\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002";
+  if (host5.isChatSaving || isLocalTextRevisionActive()) return "\u804A\u5929\u6B63\u5728\u4FDD\u5B58\u6216\u4FEE\u6539\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002";
   if (document.getElementById("curEditTextarea") || document.querySelector(".t-paragraph-editor")) return "\u8BF7\u5148\u5B8C\u6210\u6216\u5173\u95ED\u6B63\u6587\u7F16\u8F91\u5668\u3002";
   return "";
 }
@@ -69259,7 +69841,7 @@ async function readFile(owner, signal, allowDuplicateIds = false) {
   try {
     const response = await fetch(owner.group ? "/api/chats/group/get" : "/api/chats/get", {
       method: "POST",
-      headers: host4.getRequestHeaders(),
+      headers: host5.getRequestHeaders(),
       cache: "no-store",
       signal: controller.signal,
       body: JSON.stringify(owner.target)
@@ -69301,7 +69883,7 @@ async function readRetrievalSource(owner, { signal, allowDuplicateIds = false, g
   if (signal?.aborted) throw new Error("\u4EFB\u52A1\u5DF2\u6682\u505C\u3002");
   assertRetrievalContext(owner);
   const rows = retrievalSourceRows(owner, saved.messages, { allowDuplicateIds });
-  if (signature3 !== retrievalSourceSignature(owner.scopeKey, rows) || signature3 !== retrievalSourceSignature(owner.scopeKey, retrievalSourceRows(owner, owner.chat, { allowDuplicateIds })) || host4.isChatSaving || isHostGenerating() && !generationAllowed() || isLocalTextRevisionActive() || generationGuard && !generationAllowed()) {
+  if (signature3 !== retrievalSourceSignature(owner.scopeKey, rows) || signature3 !== retrievalSourceSignature(owner.scopeKey, retrievalSourceRows(owner, owner.chat, { allowDuplicateIds })) || host5.isChatSaving || isHostGenerating() && !generationAllowed() || isLocalTextRevisionActive() || generationGuard && !generationAllowed()) {
     throw Object.assign(new Error("\u5F53\u524D\u6D88\u606F\u4E0E\u5DF2\u4FDD\u5B58\u804A\u5929\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u7B49\u5F85\u4FDD\u5B58\u5B8C\u6210\u540E\u66F4\u65B0\u7D22\u5F15\uFF1B\u6CA1\u6709\u8BFB\u53D6\u65E7\u6B63\u6587\u3002"), { code: "RETRIEVAL_SOURCE_PENDING" });
   }
   if (owner.metadata.integrity && saved.header?.chat_metadata?.integrity !== owner.metadata.integrity) {
@@ -69410,7 +69992,7 @@ async function locateRetrievalMessage(owner, result) {
     assertRetrievalContext(owner);
     const before = Number(document.querySelector("#chat .mes[mesid]")?.getAttribute("mesid"));
     if (!Number.isFinite(before) || before <= row.floor) break;
-    await host4.showMoreMessages();
+    await host5.showMoreMessages();
     assertRetrievalContext(owner);
     const after = Number(document.querySelector("#chat .mes[mesid]")?.getAttribute("mesid"));
     element4 = document.querySelector(`#chat .mes[mesid="${row.floor}"]`);
@@ -73602,7 +74184,7 @@ var init_retrievalRecall = __esm({
 });
 
 // src/core/retrievalModel.js
-import * as host5 from "../../../../script.js";
+import * as host6 from "../../../../script.js";
 function subscribeRetrievalModel(listener) {
   listeners8.add(listener);
   return () => listeners8.delete(listener);
@@ -74085,17 +74667,17 @@ function initRetrievalModel() {
     cache5.clear();
   };
   for (const name of [...new Set([
-    host5.event_types.CHAT_CHANGED,
-    host5.event_types.MESSAGE_SENT,
-    host5.event_types.MESSAGE_RECEIVED,
-    host5.event_types.MESSAGE_EDITED,
-    host5.event_types.MESSAGE_UPDATED,
-    host5.event_types.MESSAGE_DELETED,
-    host5.event_types.MESSAGE_SWIPED,
-    host5.event_types.MESSAGE_SWIPE_DELETED,
+    host6.event_types.CHAT_CHANGED,
+    host6.event_types.MESSAGE_SENT,
+    host6.event_types.MESSAGE_RECEIVED,
+    host6.event_types.MESSAGE_EDITED,
+    host6.event_types.MESSAGE_UPDATED,
+    host6.event_types.MESSAGE_DELETED,
+    host6.event_types.MESSAGE_SWIPED,
+    host6.event_types.MESSAGE_SWIPE_DELETED,
     TITANIA_TEXT_PATCHED,
     TITANIA_MESSAGE_COMMITTED
-  ].filter(Boolean))]) host5.eventSource.on(name, cancelAll);
+  ].filter(Boolean))]) host6.eventSource.on(name, cancelAll);
   document.addEventListener(TOOLBOX_EXTRACTION_CHANGED, cancelAll);
   document.addEventListener("input", (event) => {
     if (event.target?.id === "curEditTextarea" || event.target?.closest?.(".t-paragraph-editor")) cancelAll();
@@ -74107,7 +74689,7 @@ function initRetrievalModel() {
   subscribeRetrievalState((update) => {
     if (["cleared", "window-settings"].includes(update.state) || update.state === "committed" && update.mode !== "unchanged") cancelAll();
   });
-  host5.eventSource.on(host5.event_types.CHAT_CHANGED, () => statuses.clear());
+  host6.eventSource.on(host6.event_types.CHAT_CHANGED, () => statuses.clear());
   if (typeof BroadcastChannel === "function") {
     try {
       channel2 = new BroadcastChannel("titania-retrieval-model-v1");
@@ -74159,7 +74741,7 @@ ${message.content}`).join("\n\n"));
 });
 
 // src/core/retrievalInjection.js
-import * as host6 from "../../../../script.js";
+import * as host7 from "../../../../script.js";
 function planFeedback(plan) {
   return {
     selected: plan.messages.length,
@@ -74208,9 +74790,9 @@ function getRetrievalInjectionStatus(owner) {
 }
 function erasePrompt() {
   if (installed?.entry) installed.entry.value = "";
-  const entry = host6.extension_prompts?.[RETRIEVAL_PROMPT_KEY];
+  const entry = host7.extension_prompts?.[RETRIEVAL_PROMPT_KEY];
   if (entry) entry.value = "";
-  host6.setExtensionPrompt(RETRIEVAL_PROMPT_KEY, "", host6.extension_prompt_types.IN_CHAT, 0);
+  host7.setExtensionPrompt(RETRIEVAL_PROMPT_KEY, "", host7.extension_prompt_types.IN_CHAT, 0);
   installed = null;
 }
 function clearRetrievalInjection(owner, message = "\u5DF2\u64A4\u9500\u5F85\u7528\u53EC\u56DE\uFF1B\u5DF2\u7ECF\u53D1\u51FA\u7684\u751F\u6210\u8BF7\u6C42\u4E0D\u80FD\u64A4\u56DE\u3002") {
@@ -74222,7 +74804,7 @@ function clearRetrievalInjection(owner, message = "\u5DF2\u64A4\u9500\u5F85\u752
   pending3 = null;
   erasePrompt();
   run?.controller.abort();
-  if (stopNative) host6.stopGeneration?.();
+  if (stopNative) host7.stopGeneration?.();
   const cancelled2 = matches2(feedback, owner) && !feedback.finished && !["included", "skipped", "disabled"].includes(feedback.phase);
   if (owner) publish3(owner, message, null, cancelled2 ? { phase: "cancelled", waitingForDecision: false } : null);
 }
@@ -74319,7 +74901,7 @@ function waitForFailureChoice(run, cause) {
   });
 }
 function recordCurrent(record) {
-  return installed === record && requestCurrent(record.run) && !host6.isChatSaving && !isLocalTextRevisionActive() && !document.getElementById("curEditTextarea") && !document.querySelector(".t-paragraph-editor") && retrievalRecallProofCurrent(record.owner, record.proof);
+  return installed === record && requestCurrent(record.run) && !host7.isChatSaving && !isLocalTextRevisionActive() && !document.getElementById("curEditTextarea") && !document.querySelector(".t-paragraph-editor") && retrievalRecallProofCurrent(record.owner, record.proof);
 }
 function install2(run, verified) {
   const rows = retrievalSourceRows(run.owner);
@@ -74341,16 +74923,16 @@ function install2(run, verified) {
     }
     return valid;
   };
-  host6.setExtensionPrompt(
+  host7.setExtensionPrompt(
     RETRIEVAL_PROMPT_KEY,
     verified.payload,
-    host6.extension_prompt_types.IN_CHAT,
+    host7.extension_prompt_types.IN_CHAT,
     verified.injectDepth,
     false,
-    host6.extension_prompt_roles.SYSTEM,
+    host7.extension_prompt_roles.SYSTEM,
     filter
   );
-  record.entry = host6.extension_prompts?.[RETRIEVAL_PROMPT_KEY];
+  record.entry = host7.extension_prompts?.[RETRIEVAL_PROMPT_KEY];
   if (!record.entry || record.entry.value !== verified.payload) {
     erasePrompt();
     throw new Error("\u5BBF\u4E3B\u672A\u63D0\u4F9B\u53EF\u540C\u6B65\u64A4\u9500\u7684\u63D0\u793A\u8BCD\u5BF9\u8C61\uFF0C\u672C\u8F6E\u53EC\u56DE\u672A\u5B89\u88C5\u3002");
@@ -74417,29 +74999,53 @@ function removeOwnedBlock(slots, record) {
   return removed;
 }
 function stopUnconfirmedRequest(run, message) {
-  if (generation !== run || !run.requiresRecall || !retrievalContextCurrent(run.owner)) return;
+  if (generation !== run || !retrievalContextCurrent(run.owner)) return;
   erasePrompt();
   run.controller.abort();
   publish3(
     run.owner,
     `${message} \u672C\u6B21\u6B63\u6587\u5DF2\u505C\u6B62\uFF0C\u8BF7\u4FEE\u590D\u540E\u91CD\u65B0\u53D1\u8D77\uFF1B\u672A\u9759\u9ED8\u8DF3\u8FC7\u53EC\u56DE\u3002`,
     null,
-    { phase: "failed", finished: true, waitingForDecision: false }
+    { phase: "failed", finished: true, waitingForDecision: false, requestReady: false, responseStarted: run.responseStarted }
   );
-  host6.stopGeneration?.();
+  host7.stopGeneration?.();
 }
 async function observePrompt(data, dryRun, final) {
   const run = generation, record = run?.record;
-  if (dryRun || !run || !run.owner || !retrievalContextCurrent(run.owner) || !final && record?.observed) return;
+  if (dryRun || data?.dryRun || !run || !supported(run.type) || !run.owner || !retrievalContextCurrent(run.owner) || !final && record?.observed) return;
+  if (final && (!run.gateStarted || !run.gateFinished || !run.gatePassed || run.preparing)) {
+    stopUnconfirmedRequest(run, "\u672A\u786E\u8BA4\u672C\u8F6E\u53EC\u56DE\u7B49\u5F85\u5173\u5361\u5B8C\u6210\uFF0C\u5DF2\u62E6\u622A\u6B63\u6587\u53D1\u9001\u3002\u8BF7\u5237\u65B0\u9875\u9762\u540E\u91CD\u65B0\u53D1\u8D77\uFF1B\u82E5\u4ECD\u51FA\u73B0\uFF0C\u8BF7\u68C0\u67E5\u751F\u6210\u62E6\u622A\u5165\u53E3\u3002");
+    return;
+  }
   if (!record) {
-    if (!final || !run.gateFinished || !run.requiresRecall) return;
+    if (!final) return;
     try {
       const scope3 = await readRetrievalScope(run.owner.scopeKey);
-      if (generation !== run) return;
+      if (generation !== run || !retrievalContextCurrent(run.owner)) return;
       const settings = retrievalRecallSettings(scope3), proof = run.modelProof, model = retrievalModelSettings(scope3);
-      const authorized = settings.signature === run.permission?.signature && settings.revision === run.permission?.revision && settings.scopeEpoch === run.permission?.scopeEpoch && (run.userSkipped || !run.requiredAuto || proof && model.config.enabled && model.config.automatic && model.signature === proof.signature && model.revision === proof.revision && proof.indexSnapshot === JSON.stringify([scope3?.activeBuildId || null, scope3?.windowOptionsRevision || 0]));
-      if (!requestCurrent(run) || !authorized) stopUnconfirmedRequest(run, "\u65E0\u6CE8\u5165\u7ED3\u8BBA\u5728\u6700\u7EC8\u8BF7\u6C42\u6784\u9020\u524D\u5DF2\u5931\u6548\u3002");
-      else run.requestDataObserved = true;
+      const modelComplete = run.requiredAuto && proof?.automatic && run.lastModelReview?.perRequest && !run.lastModelReview.cacheHit && run.lastModelReview.state !== "fallback" && run.lastModelReview.calls > 0 && model.config.enabled && model.config.automatic && model.signature === proof.signature && model.revision === proof.revision && model.scopeEpoch === proof.scopeEpoch && proof.indexSnapshot === JSON.stringify([scope3?.activeBuildId || null, scope3?.windowOptionsRevision || 0]);
+      const decision = run.noRecallDecision;
+      const concluded = run.userSkipped ? decision === "user-skip" : !settings.config.enabled ? decision === "disabled" : !settings.config.automatic && !run.manualPlan ? decision === "automatic-disabled" : modelComplete && ["no-memory-needed", "no-evidence"].includes(decision);
+      const authorized = settings.signature === run.permission?.signature && settings.revision === run.permission?.revision && settings.scopeEpoch === run.permission?.scopeEpoch;
+      if (!requestCurrent(run) || !authorized || !concluded) {
+        stopUnconfirmedRequest(run, "\u672C\u8F6E\u672A\u53D6\u5F97\u6709\u6548\u7684\u65E0\u9700\u6CE8\u5165\u7ED3\u8BBA\uFF0C\u6216\u7ED3\u8BBA\u5728\u6700\u7EC8\u8BF7\u6C42\u6784\u9020\u524D\u5DF2\u5931\u6548\u3002");
+      } else {
+        run.requestDataObserved = true;
+        const messages2 = {
+          disabled: "\u672C\u8F6E\u672A\u542F\u7528\u53EC\u56DE\uFF0C\u6B63\u6587\u8BF7\u6C42\u5141\u8BB8\u7EE7\u7EED\u3002",
+          "automatic-disabled": "\u672C\u8F6E\u672A\u542F\u7528\u81EA\u52A8\u53EC\u56DE\uFF0C\u4E5F\u6CA1\u6709\u624B\u52A8\u9009\u5165\u539F\u6587\uFF0C\u6B63\u6587\u8BF7\u6C42\u5141\u8BB8\u7EE7\u7EED\u3002",
+          "no-memory-needed": "\u672C\u8F6E\u53EC\u56DE\u610F\u56FE\u5206\u6790\u5DF2\u5B8C\u6210\uFF0C\u65E0\u9700\u5386\u53F2\u8BB0\u5FC6\uFF1B\u5DF2\u6838\u5BF9\u7ED3\u8BBA\uFF0C\u6B63\u6587\u8BF7\u6C42\u5141\u8BB8\u7EE7\u7EED\u3002",
+          "no-evidence": "\u672C\u8F6E\u53EC\u56DE\u5206\u6790\u4E0E\u68C0\u7D22\u5DF2\u5B8C\u6210\uFF0C\u672A\u627E\u5230\u53EF\u6838\u9A8C\u5386\u53F2\uFF1B\u5DF2\u6838\u5BF9\u7ED3\u8BBA\uFF0C\u6B63\u6587\u8BF7\u6C42\u5141\u8BB8\u7EE7\u7EED\u3002",
+          "user-skip": "\u7528\u6237\u660E\u786E\u9009\u62E9\u672C\u6B21\u4E0D\u53EC\u56DE\u7EE7\u7EED\uFF1B\u5DF2\u6838\u5BF9\u672C\u6B21\u8DF3\u8FC7\u4ECD\u6709\u6548\uFF0C\u6B63\u6587\u8BF7\u6C42\u5141\u8BB8\u7EE7\u7EED\u3002"
+        };
+        publish3(run.owner, messages2[decision], null, {
+          phase: decision === "disabled" ? "disabled" : "skipped",
+          decision,
+          confirmStage: "request-data",
+          requestReady: true,
+          waitingForDecision: false
+        });
+      }
     } catch (cause) {
       stopUnconfirmedRequest(run, `\u6700\u7EC8\u8BF7\u6C42\u6838\u5BF9\u5931\u8D25\uFF1A${cause?.message || cause}`);
     }
@@ -74449,7 +75055,7 @@ async function observePrompt(data, dryRun, final) {
     const scope3 = await readRetrievalScope(run.owner.scopeKey);
     if (generation !== run || !retrievalContextCurrent(run.owner)) return;
     const settings = retrievalRecallSettings(scope3), model = retrievalModelSettings(scope3), plan = record.plan;
-    const authorized = settings.config.enabled && settings.signature === plan.configSignature && settings.revision === plan.configRevision && settings.scopeEpoch === plan.scopeEpoch && (!plan.automatic || settings.config.automatic) && (!plan.modelProof || model.config.enabled && (!plan.modelProof.automatic || model.config.automatic) && model.signature === plan.modelProof.signature && model.revision === plan.modelProof.revision && plan.modelProof.indexSnapshot === JSON.stringify([scope3?.activeBuildId || null, scope3?.windowOptionsRevision || 0]));
+    const authorized = settings.config.enabled && settings.signature === plan.configSignature && settings.revision === plan.configRevision && settings.scopeEpoch === plan.scopeEpoch && (!plan.automatic || settings.config.automatic && run.modelProof?.automatic && JSON.stringify(run.modelProof) === JSON.stringify(plan.modelProof) && run.lastModelReview?.perRequest && !run.lastModelReview.cacheHit && run.lastModelReview.state !== "fallback" && run.lastModelReview.calls > 0) && (!plan.modelProof || model.config.enabled && (!plan.modelProof.automatic || model.config.automatic) && model.signature === plan.modelProof.signature && model.revision === plan.modelProof.revision && model.scopeEpoch === plan.modelProof.scopeEpoch && plan.modelProof.indexSnapshot === JSON.stringify([scope3?.activeBuildId || null, scope3?.windowOptionsRevision || 0]));
     const slots = promptSlots(data, run.owner), present = slots.some((slot) => slot.get().includes(plan.payload));
     if (present && copiedIntoChat(record)) {
       record.observed = false;
@@ -74471,9 +75077,9 @@ async function observePrompt(data, dryRun, final) {
         run.owner,
         `\u5DF2\u786E\u8BA4\u672C\u8F6E\u63D0\u793A\u8BCD\u6784\u9020\u5305\u542B${plan.messages.length}\u697C\u539F\u6587\uFF0C\u4F30\u7B97${plan.estimatedTokens} Token\uFF0C\u6DF1\u5EA6${plan.injectDepth}\u3002`,
         plan,
-        { phase: "included", confirmStage: "request-data", ...planFeedback(plan), candidates: run.candidates ?? plan.stats?.candidates ?? 0 }
+        { phase: "included", confirmStage: "request-data", requestReady: true, ...planFeedback(plan), candidates: run.candidates ?? plan.stats?.candidates ?? 0 }
       );
-    } else if (final && ["prepared", "included", "unconfirmed"].includes(feedback?.phase)) {
+    } else if (final) {
       record.observed = false;
       publish3(run.owner, "\u5DF2\u51C6\u5907\u539F\u6587\uFF0C\u4F46\u672A\u5728\u672C\u8F6E\u6700\u7EC8\u6784\u9020\u5FEB\u7167\u4E2D\u786E\u8BA4\u5B8C\u6574\u6807\u7B7E\u5757\uFF0C\u53EF\u80FD\u88AB\u9884\u7B97\u3001\u9884\u8BBE\u6216\u683C\u5F0F\u8F6C\u6362\u7565\u8FC7\u3002", plan, { phase: "unconfirmed" });
       stopUnconfirmedRequest(run, "\u6700\u7EC8\u6B63\u6587\u8BF7\u6C42\u6CA1\u6709\u53EF\u786E\u8BA4\u7684\u5B8C\u6574\u53EC\u56DE\u5757\u3002");
@@ -74497,15 +75103,17 @@ async function prepareGenerationRecall(run, contextSize) {
   run.requiredAuto = config2.enabled && config2.automatic;
   run.requiresRecall = config2.enabled && (config2.automatic || Boolean(run.manualPlan));
   if (!config2.enabled) {
+    run.noRecallDecision = "disabled";
     erasePrompt();
-    publish3(run.owner, "\u5F53\u524D\u804A\u5929\u672A\u5F00\u542F\u53EC\u56DE\u6CE8\u5165\u3002", null, { phase: "disabled", waitingForDecision: false });
+    publish3(run.owner, "\u672C\u8F6E\u672A\u542F\u7528\u53EC\u56DE\u3002", null, { phase: "disabled", decision: "disabled", waitingForDecision: false });
     return;
   }
   let plan = run.manualPlan;
   if (!config2.automatic && !plan) {
+    run.noRecallDecision = "automatic-disabled";
     publish3(
       run.owner,
-      "\u81EA\u52A8\u53EC\u56DE\u672A\u5F00\u542F\uFF0C\u672C\u8F6E\u4E5F\u6CA1\u6709\u624B\u52A8\u6B66\u88C5\u7684\u539F\u6587\u3002",
+      "\u672C\u8F6E\u672A\u542F\u7528\u81EA\u52A8\u53EC\u56DE\uFF0C\u4E5F\u6CA1\u6709\u624B\u52A8\u9009\u5165\u7684\u539F\u6587\uFF1B\u672A\u8FD0\u884C\u53EC\u56DE\u5206\u6790\u3002",
       null,
       { phase: "skipped", decision: "automatic-disabled", waitingForDecision: false }
     );
@@ -74532,7 +75140,7 @@ async function prepareGenerationRecall(run, contextSize) {
     });
     run.lastModelReview = result.modelReview;
     run.modelProof = result.modelProof;
-    if (!result.modelProof || result.modelReview?.state === "fallback" || result.modelReview?.cacheHit) {
+    if (!result.modelProof?.automatic || !result.modelReview?.perRequest || !(result.modelReview.calls > 0) || result.modelReview.state === "fallback" || result.modelReview.cacheHit) {
       throw new Error("\u672C\u8F6E\u672A\u83B7\u5F97\u65B0\u7684\u5B8C\u6574\u610F\u56FE\u5206\u6790\uFF0C\u4E0D\u80FD\u7528\u672C\u5730\u56DE\u9000\u6216\u65E7\u7F13\u5B58\u653E\u884C\u6B63\u6587\u3002");
     }
     const manualIds = [];
@@ -74558,6 +75166,10 @@ async function prepareGenerationRecall(run, contextSize) {
     const selections = result.hits.filter((hit) => hit.modelSelection).slice(0, 48).map((hit) => ({ id: hit.id, priority: hit.modelSelection.priority }));
     run.candidates = new Set(result.hits.flatMap((hit) => (hit.rangeMembers || hit.messages || []).map((member) => member.id))).size;
     if (!selections.length) {
+      if (!["no-memory-needed", "no-evidence"].includes(result.modelReview.decision)) {
+        throw new Error("\u672C\u8F6E\u672A\u53D6\u5F97\u660E\u786E\u7684\u65E0\u9700\u6CE8\u5165\u7ED3\u8BBA\uFF0C\u4E0D\u80FD\u653E\u884C\u6B63\u6587\u3002");
+      }
+      run.noRecallDecision = result.modelReview.decision;
       publish3(run.owner, result.modelReview.reason, null, {
         phase: "skipped",
         selected: 0,
@@ -74603,11 +75215,12 @@ async function runGenerationGate(run, contextSize) {
       run.lastModelReview = null;
       run.modelProof = null;
       run.candidates = 0;
+      run.noRecallDecision = "";
       publish3(
         run.owner,
         "\u6B63\u6587\u8BF7\u6C42\u6B63\u5728\u7B49\u5F85\u672C\u8F6E\u53EC\u56DE\u5224\u65AD\u3002",
         null,
-        { phase: "preparing", waitingForDecision: false, modelCalls: 0, decision: "" }
+        { phase: "preparing", waitingForDecision: false, requestReady: false, modelCalls: 0, decision: "" }
       );
       try {
         await prepareGenerationRecall(run, contextSize);
@@ -74634,6 +75247,7 @@ async function runGenerationGate(run, contextSize) {
             { phase: "skipped", decision: "user-skip", waitingForDecision: false, selected: 0, tokens: 0, messages: [] }
           );
           run.userSkipped = true;
+          run.noRecallDecision = "user-skip";
           return true;
         }
         break;
@@ -74689,7 +75303,8 @@ async function interceptRetrievalGeneration(_chat, contextSize, abort, type) {
     }
     const proceed = await run.gatePromise;
     run.gateFinished = true;
-    if (!proceed || !requestCurrent(run)) abort(true);
+    run.gatePassed = Boolean(proceed && requestCurrent(run));
+    if (!run.gatePassed) abort(true);
   } catch (cause) {
     abort(true);
     if (generation === run) {
@@ -74704,11 +75319,21 @@ async function interceptRetrievalGeneration(_chat, contextSize, abort, type) {
     }
   }
 }
+function observeResponseStarted(text9) {
+  const run = generation;
+  if (!run || !supported(run.type) || run.responseStarted || !text9 || !retrievalContextCurrent(run.owner)) return;
+  run.responseStarted = true;
+  if (!run.gatePassed || !run.requestDataObserved || !matches2(feedback, run.owner) || feedback.turnId !== run.token || !["included", "skipped", "disabled"].includes(feedback.phase)) {
+    stopUnconfirmedRequest(run, "\u6B63\u6587\u5DF2\u5F00\u59CB\uFF0C\u4F46\u672A\u53D6\u5F97\u672C\u8F6E\u53EC\u56DE\u5B8C\u6210\u53CA\u653E\u884C\u786E\u8BA4\uFF0C\u5DF2\u505C\u6B62\u540E\u7EED\u751F\u6210\u3002");
+    return;
+  }
+  publish3(run.owner, feedback.message, run.record?.plan || null, { responseStarted: true, waitingForDecision: false });
+}
 function finishFeedback(run, stopped4 = false) {
   if (!run || !matches2(feedback, run.owner) || feedback.turnId !== run.token) return;
   const unfinished = ["preparing", "searching", "analysing", "selected", "prepared", "blocked"].includes(feedback.phase);
-  const phase = stopped4 && unfinished ? "cancelled" : feedback.phase === "prepared" ? "unconfirmed" : unfinished ? "skipped" : feedback.phase;
-  const message = phase === "included" ? `${stopped4 ? "\u53EC\u56DE\u5904\u7406\u5DF2\u505C\u6B62\uFF1B" : ""}\u672C\u8F6E\u6784\u9020\u5DF2\u786E\u8BA4\u5305\u542B${feedback.selected}\u697C\u539F\u6587\uFF0C\u4E34\u65F6\u6CE8\u5165\u5DF2\u6E05\u9664\u3002` : phase === "unconfirmed" ? "\u672C\u8F6E\u7ED3\u675F\uFF1A\u539F\u6587\u5DF2\u51C6\u5907\uFF0C\u4F46\u672A\u786E\u8BA4\u5B9E\u9645\u6784\u9020\u5305\u542B\u5B8C\u6574\u56DE\u58F0\u53EC\u56DE\u5757\u3002" : unfinished ? "\u672C\u8F6E\u53EC\u56DE\u6D41\u7A0B\u5DF2\u7ED3\u675F\u6216\u53D6\u6D88\uFF0C\u672A\u786E\u8BA4\u63D0\u793A\u8BCD\u6784\u9020\u4F7F\u7528\u539F\u6587\u3002" : feedback.message;
+  const phase = stopped4 && unfinished ? "cancelled" : unfinished ? "unconfirmed" : feedback.phase;
+  const message = phase === "included" ? `${stopped4 ? "\u53EC\u56DE\u5904\u7406\u5DF2\u505C\u6B62\uFF1B" : ""}\u672C\u8F6E\u6784\u9020\u5DF2\u786E\u8BA4\u5305\u542B${feedback.selected}\u697C\u539F\u6587\uFF0C\u4E34\u65F6\u6CE8\u5165\u5DF2\u6E05\u9664\u3002` : phase === "unconfirmed" ? "\u672C\u8F6E\u5DF2\u7ED3\u675F\uFF0C\u4F46\u672A\u53D6\u5F97\u53EC\u56DE\u5B8C\u6210\u4E0E\u6700\u7EC8\u6784\u9020\u7684\u6709\u6548\u786E\u8BA4\uFF1B\u4E0D\u80FD\u89C6\u4E3A\u65E0\u9700\u53EC\u56DE\u6216\u53EC\u56DE\u6210\u529F\u3002" : unfinished ? "\u672C\u8F6E\u53EC\u56DE\u6D41\u7A0B\u5DF2\u53D6\u6D88\uFF0C\u672A\u786E\u8BA4\u63D0\u793A\u8BCD\u6784\u9020\u4F7F\u7528\u539F\u6587\u3002" : feedback.message;
   publish3(run.owner, message, run.record?.plan || null, { phase, finished: true, waitingForDecision: false });
 }
 function initRetrievalInjection() {
@@ -74726,13 +75351,14 @@ function initRetrievalInjection() {
   } catch {
   }
   erasePrompt();
-  host6.eventSource.on(host6.event_types.GENERATION_STARTED, (type, options2, dryRun) => {
+  host7.eventSource.on(host7.event_types.GENERATION_STARTED, (type, options2, dryRun) => {
+    if (dryRun) return;
     finishFeedback(generation, true);
     generation?.controller.abort();
     erasePrompt();
     sequence++;
     generation = null;
-    if (dryRun || ["quiet", "impersonate"].includes(type) || options2?.signal?.aborted) return;
+    if (["quiet", "impersonate"].includes(type) || options2?.signal?.aborted) return;
     const run = {
       owner: null,
       type: type || "normal",
@@ -74743,10 +75369,13 @@ function initRetrievalInjection() {
       record: null,
       gateStarted: false,
       gateFinished: false,
+      gatePassed: false,
       requiredAuto: false,
       requiresRecall: false,
       userSkipped: false,
       requestDataObserved: false,
+      responseStarted: false,
+      noRecallDecision: "",
       gatePromise: null,
       failureChoice: null
     };
@@ -74766,7 +75395,9 @@ function initRetrievalInjection() {
           phase: supported(type) ? "preparing" : "skipped",
           finished: false,
           turnId: run.token,
-          waitingForDecision: false
+          waitingForDecision: false,
+          requestReady: false,
+          responseStarted: false
         }
       );
     } catch {
@@ -74776,39 +75407,40 @@ function initRetrievalInjection() {
       if (generation === run) clearRetrievalInjection(run.owner, "\u672C\u8F6E\u751F\u6210\u53D6\u6D88\uFF0C\u5F85\u7528\u53EC\u56DE\u5DF2\u64A4\u9500\u3002");
     }, { once: true });
   });
-  if (host6.event_types.CHAT_COMPLETION_PROMPT_READY) host6.eventSource.on(host6.event_types.CHAT_COMPLETION_PROMPT_READY, (data) => observePrompt(data, data?.dryRun, false));
-  if (host6.event_types.GENERATE_AFTER_DATA) host6.eventSource.on(host6.event_types.GENERATE_AFTER_DATA, (data, dryRun) => observePrompt(data, dryRun, true));
-  for (const name of [host6.event_types.GENERATION_ENDED, host6.event_types.GENERATION_STOPPED].filter(Boolean)) host6.eventSource.on(name, () => {
+  if (host7.event_types.CHAT_COMPLETION_PROMPT_READY) host7.eventSource.on(host7.event_types.CHAT_COMPLETION_PROMPT_READY, (data) => observePrompt(data, data?.dryRun, false));
+  if (host7.event_types.GENERATE_AFTER_DATA) host7.eventSource.on(host7.event_types.GENERATE_AFTER_DATA, (data, dryRun) => observePrompt(data, dryRun, true));
+  if (host7.event_types.STREAM_TOKEN_RECEIVED) host7.eventSource.on(host7.event_types.STREAM_TOKEN_RECEIVED, observeResponseStarted);
+  for (const name of [host7.event_types.GENERATION_ENDED, host7.event_types.GENERATION_STOPPED].filter(Boolean)) host7.eventSource.on(name, () => {
     const run = generation;
     run?.controller.abort();
     erasePrompt();
     if (run) pending3 = null;
-    finishFeedback(run, name === host6.event_types.GENERATION_STOPPED);
+    finishFeedback(run, name === host7.event_types.GENERATION_STOPPED);
     generation = null;
   });
-  host6.eventSource.on(host6.event_types.CHAT_CHANGED, () => {
+  host7.eventSource.on(host7.event_types.CHAT_CHANGED, () => {
     sequence++;
     clearRetrievalInjection();
     generation = null;
     status3 = feedback = null;
   });
   const changes = [...new Set([
-    host6.event_types.MESSAGE_SENT,
-    host6.event_types.MESSAGE_RECEIVED,
-    host6.event_types.MESSAGE_EDITED,
-    host6.event_types.MESSAGE_UPDATED,
-    host6.event_types.MESSAGE_DELETED,
-    host6.event_types.MESSAGE_SWIPED,
-    host6.event_types.MESSAGE_SWIPE_DELETED,
+    host7.event_types.MESSAGE_SENT,
+    host7.event_types.MESSAGE_RECEIVED,
+    host7.event_types.MESSAGE_EDITED,
+    host7.event_types.MESSAGE_UPDATED,
+    host7.event_types.MESSAGE_DELETED,
+    host7.event_types.MESSAGE_SWIPED,
+    host7.event_types.MESSAGE_SWIPE_DELETED,
     TITANIA_TEXT_PATCHED,
     TITANIA_MESSAGE_COMMITTED
   ].filter(Boolean))];
-  for (const name of changes) host6.eventSource.on(name, () => {
+  for (const name of changes) host7.eventSource.on(name, () => {
     if (generation && !generation.gateStarted && !installed) {
       if (pending3 && !retrievalRecallProofCurrent(
         pending3.owner,
         pending3.plan,
-        { allowAppend: name === host6.event_types.MESSAGE_SENT }
+        { allowAppend: name === host7.event_types.MESSAGE_SENT }
       )) pending3 = null;
       return;
     }
@@ -75063,14 +75695,19 @@ function openRetrievalWindow() {
     } else authorization = "\u524D\u7F6E\u81EA\u52A8\u53EC\u56DE\u5DF2\u5C31\u7EEA\uFF1A\u666E\u901A\u56DE\u590D\u3001\u91CD\u751F\u6210\u3001\u65B0 swipe\u3001\u7EED\u5199\u6BCF\u6B21\u5148\u8BF7\u6C42\u610F\u56FE\u6A21\u578B\uFF0C\u540E\u7EED\u590D\u6838\u6309\u9700\uFF1B\u6B63\u6587\u7B49\u5F85\u53EC\u56DE\u5B8C\u6210\u3002";
     const snapshot = update.feedback;
     let message = snapshot?.message || update.message || "";
-    if (snapshot?.phase === "blocked") message = `\u6B63\u6587\u5C1A\u672A\u53D1\u9001\uFF0C\u7B49\u5F85\u5904\u7406\u3002${message}`;
-    else if (["preparing", "analysing", "searching", "selected", "prepared"].includes(snapshot?.phase)) message = `\u6B63\u6587\u7B49\u5F85\u53EC\u56DE\u51C6\u5907\u3001\u610F\u56FE\u5206\u6790\u3001\u68C0\u7D22\u3001\u6838\u9A8C\u4E0E\u6CE8\u5165\u5B8C\u6210\u3002${message}`;
+    const waiting = ["preparing", "analysing", "searching", "selected", "prepared", "blocked"].includes(snapshot?.phase);
+    if (snapshot?.responseStarted && waiting) message = `\u6B63\u6587\u5DF2\u5F00\u59CB\uFF0C\u4F46\u672C\u8F6E\u53EC\u56DE\u672A\u786E\u8BA4\uFF1B\u4E0D\u80FD\u89C6\u4E3A\u53EC\u56DE\u5B8C\u6210\u3002${message}`;
+    else if (snapshot?.phase === "blocked") message = `\u6B63\u6587\u5C1A\u672A\u53D1\u9001\uFF0C\u7B49\u5F85\u5904\u7406\u3002${message}`;
+    else if (waiting) message = `\u6B63\u6587\u7B49\u5F85\u53EC\u56DE\u51C6\u5907\u3001\u610F\u56FE\u5206\u6790\u3001\u68C0\u7D22\u3001\u6838\u9A8C\u4E0E\u6CE8\u5165\u5B8C\u6210\u3002${message}`;
+    else if (snapshot?.phase === "disabled") message = "\u672C\u8F6E\u672A\u542F\u7528\u53EC\u56DE\uFF0C\u6CA1\u6709\u8FD0\u884C\u81EA\u52A8\u53EC\u56DE\u5206\u6790\u3002";
     else if (snapshot?.phase === "skipped") {
       const turn = snapshot.finished ? "\u4E0A\u8F6E" : "\u672C\u8F6E";
-      if (snapshot.decision === "no-memory-needed") message = `${turn}\u65E0\u9700\u5386\u53F2\u8BB0\u5FC6\uFF0C\u8FD9\u662F\u6B63\u5E38\u7ED3\u679C\u3002`;
-      else if (snapshot.decision === "no-evidence") message = `${turn}\u672A\u627E\u5230\u53EF\u6838\u9A8C\u5386\u53F2\uFF0C\u4E0D\u4EE3\u8868\u5386\u53F2\u4E0D\u5B58\u5728\u3002`;
+      if (snapshot.decision === "no-memory-needed") message = `${turn}\u53EC\u56DE\u610F\u56FE\u5206\u6790\u5DF2\u5B8C\u6210\uFF0C\u65E0\u9700\u5386\u53F2\u8BB0\u5FC6\uFF0C\u8FD9\u662F\u6B63\u5E38\u7ED3\u679C\u3002`;
+      else if (snapshot.decision === "no-evidence") message = `${turn}\u53EC\u56DE\u5206\u6790\u4E0E\u68C0\u7D22\u5DF2\u5B8C\u6210\uFF0C\u672A\u627E\u5230\u53EF\u6838\u9A8C\u5386\u53F2\uFF0C\u4E0D\u4EE3\u8868\u5386\u53F2\u4E0D\u5B58\u5728\u3002`;
       else if (snapshot.decision === "user-skip") message = `\u7528\u6237${turn}\u8DF3\u8FC7\u53EC\u56DE\u3002`;
+      else if (snapshot.decision === "automatic-disabled") message = `${turn}\u672A\u542F\u7528\u53EC\u56DE\uFF1A\u81EA\u52A8\u53EC\u56DE\u5173\u95ED\u4E14\u65E0\u624B\u52A8\u539F\u6587\uFF0C\u672A\u8FD0\u884C\u53EC\u56DE\u5206\u6790\u3002`;
     }
+    if (snapshot?.responseStarted && !snapshot.finished && snapshot.requestReady) message = `\u6B63\u6587\u751F\u6210\u4E2D\uFF0C\u53EC\u56DE\u7ED3\u8BBA\u4E0E\u653E\u884C\u6838\u9A8C\u5DF2\u5B8C\u6210\u3002${message}`;
     recallState.textContent = `${authorization} ${message}`;
   }
   function renderModelState(update = getRetrievalModelStatus(owner)) {
@@ -79801,12 +80438,12 @@ function createTtsDock(callbacks = {}) {
   }
   const anchorSelector = "#send_form, #send_textarea, #qr--bar";
   const layoutObserver = typeof window2.MutationObserver === "function" ? new window2.MutationObserver((mutations) => {
-    const host7 = document2.getElementById("send_form");
+    const host8 = document2.getElementById("send_form");
     const textarea = document2.getElementById("send_textarea");
-    const qr = host7?.querySelector("#qr--bar");
+    const qr = host8?.querySelector("#qr--bar");
     if (mutations.some((mutation) => {
       if (mutation.target === root || root.contains(mutation.target)) return false;
-      if (mutation.type === "attributes") return mutation.target.matches?.(anchorSelector) || host7 && mutation.target.contains(host7) || textarea && mutation.target.contains(textarea) || qr && mutation.target.contains(qr);
+      if (mutation.type === "attributes") return mutation.target.matches?.(anchorSelector) || host8 && mutation.target.contains(host8) || textarea && mutation.target.contains(textarea) || qr && mutation.target.contains(qr);
       return [...mutation.addedNodes, ...mutation.removedNodes].some((node3) => node3.nodeType === 1 && (node3.matches?.(anchorSelector) || node3.querySelector?.(anchorSelector)));
     })) schedulePosition();
   }) : null;
@@ -85083,8 +85720,8 @@ function openSettingsWindow() {
     if (isLocked && !canEditPlacement) return;
     document.getElementById("t-prompt-editor-modal")?.remove();
     const isDynamic = entry.type === "dynamic";
-    const host7 = document.createElement("div");
-    host7.id = "t-prompt-editor-modal";
+    const host8 = document.createElement("div");
+    host8.id = "t-prompt-editor-modal";
     const isolatedHostStyles = {
       position: "fixed",
       inset: "0",
@@ -85107,9 +85744,9 @@ function openSettingsWindow() {
       colorScheme: "dark"
     };
     for (const [property, value] of Object.entries(isolatedHostStyles)) {
-      host7.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
+      host8.style.setProperty(property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`), value, "important");
     }
-    const shadow = host7.attachShadow({ mode: "closed" });
+    const shadow = host8.attachShadow({ mode: "closed" });
     shadow.innerHTML = `
             <style>
                 :host {
@@ -85287,7 +85924,7 @@ function openSettingsWindow() {
     }
     const close = () => {
       if (modal.open) modal.close();
-      host7.remove();
+      host8.remove();
     };
     shadow.querySelector(".close").addEventListener("click", close);
     shadow.querySelector(".backdrop").addEventListener("click", (event) => {
@@ -85319,7 +85956,7 @@ function openSettingsWindow() {
       close();
       renderPromptManager();
     });
-    document.body.appendChild(host7);
+    document.body.appendChild(host8);
     modal.showModal();
     (isLocked ? positionSelect : nameInput).focus();
     if (isCreate) nameInput.select();
@@ -91304,8 +91941,8 @@ function renderGeneratedContent(content, scriptName = "\u573A\u666F", isStreamin
   window.dispatchEvent(new CustomEvent("titania:scene-rendered"));
 }
 function ensureShadowContentElement(container, initialContent = "") {
-  const host7 = container.querySelector(".t-shadow-host");
-  const existingShadow = host7 && host7.shadowRoot ? host7.shadowRoot : null;
+  const host8 = container.querySelector(".t-shadow-host");
+  const existingShadow = host8 && host8.shadowRoot ? host8.shadowRoot : null;
   const existingContentEl = existingShadow ? existingShadow.querySelector(".t-shadow-content") : null;
   if (existingContentEl) return existingContentEl;
   const shadow = renderToShadowDOMReal(container, initialContent || "");
@@ -94711,6 +95348,7 @@ init_directorInjection();
 init_storage();
 init_toolboxSettings();
 init_retrievalInjection();
+init_storyTimetrace();
 import { system_message_types as system_message_types2 } from "../../../system-messages.js";
 var CHAT_GENERATION_TYPES = /* @__PURE__ */ new Set(["normal", "regenerate", "swipe", "continue"]);
 function isPlainCharacterMessage(message) {
@@ -94761,6 +95399,11 @@ function interceptChatHistory(chat2, _contextSize, abort, type) {
 function initChatHistoryCleaning() {
   globalThis.titaniaCleanChatHistory = async (...args) => {
     if (interceptChatHistory(...args) === false) return;
+    try {
+      await flushInlineTimetraceBeforeGeneration(...args);
+    } catch (cause) {
+      console.warn("[Titania] Inline time note preparation failed:", cause);
+    }
     await interceptRetrievalGeneration(...args);
   };
 }
@@ -94778,22 +95421,46 @@ init_storyMemory();
 init_dom();
 import { eventSource as eventSource22, event_types as event_types21 } from "../../../../script.js";
 var TITLES = { summary: "\u6545\u4E8B\u603B\u7ED3", merge: "\u5C0F\u603B\u7ED3\u5F52\u5E76", stages: "\u5267\u60C5\u9636\u6BB5\u91CD\u6574", "time-refresh": "\u6458\u8981\u65F6\u95F4\u66F4\u65B0", evolution: "\u89D2\u8272\u6F14\u53D8\u5206\u6790", timetrace: "\u56DE\u58F0\u65F6\u75D5\u5206\u6790" };
-var PHASES2 = { preparing: "\u51C6\u5907\u4E2D", request: "\u5206\u6790\u4E2D", saving: "\u786E\u8BA4\u4FDD\u5B58\u4E2D", waiting: "\u7B49\u5F85\u804A\u5929\u751F\u6210\u7ED3\u675F\u540E\u4FDD\u5B58", queued: "\u7B49\u5F85\u4E0B\u4E00\u6279", merging: "\u5F52\u5E76\u4E2D", anchors: "\u626B\u63CF\u65F6\u95F4\u951A\u70B9", timeline: "\u5206\u6790\u4E2D" };
+var PHASES2 = {
+  preparing: "\u51C6\u5907\u4E2D",
+  request: "\u5206\u6790\u4E2D",
+  saving: "\u786E\u8BA4\u4FDD\u5B58\u4E2D",
+  waiting: "\u7B49\u5F85\u804A\u5929\u751F\u6210\u7ED3\u675F\u540E\u4FDD\u5B58",
+  "waiting-generation": "\u7B49\u5F85\u6B63\u6587\u5B8C\u6210\u540E\u4FDD\u5B58",
+  "waiting-source": "\u7B49\u5F85\u6765\u6E90\u4E0E\u4FDD\u5B58\u72B6\u6001\u6838\u5BF9",
+  "inline-reading": "\u8BFB\u53D6\u5DF2\u6709\u968F\u6B63\u6587\u7B14\u8BB0",
+  queued: "\u7B49\u5F85\u4E0B\u4E00\u6279",
+  merging: "\u5F52\u5E76\u4E2D",
+  anchors: "\u626B\u63CF\u65F6\u95F4\u951A\u70B9",
+  timeline: "\u5206\u6790\u4E2D"
+};
 var SETTLE_DELAY = 2e3;
 var DISPLAY_TIME = 8e3;
 var dispose = null;
 var sameIdentity5 = (a, b) => a === b || !!a && !!b && a.key === b.key && a.chat === b.chat && a.chatMetadata === b.chatMetadata;
 var running4 = (progress2) => progress2.state === "running" || progress2.state === "error" && !!progress2.retryAt;
-var titleFor = (progress2) => TITLES[progress2.kind] || "\u6545\u4E8B\u6574\u7406";
+var inlineTime = (progress2) => progress2.kind === "timetrace" && progress2.origin === "inline";
+var titleFor = (progress2) => inlineTime(progress2) ? "\u968F\u6B63\u6587\u65F6\u75D5\u7B14\u8BB0" : TITLES[progress2.kind] || "\u6545\u4E8B\u6574\u7406";
 function phaseFor(progress2) {
-  if (progress2.state === "done") return "\u5DF2\u4FDD\u5B58";
+  if (progress2.state === "done") {
+    if (inlineTime(progress2)) return {
+      updated: "\u5DF2\u4FDD\u5B58\uFF0C\u4E3B\u7EBF\u65F6\u95F4\u5DF2\u66F4\u65B0",
+      unchanged: "\u5DF2\u4FDD\u5B58\uFF0C\u4E3B\u7EBF\u65F6\u95F4\u672A\u53D8\u5316",
+      unresolved: "\u5DF2\u4FDD\u5B58\uFF0C\u65F6\u95F4\u5F85\u5B9A\u4F4D\u6216\u6709\u51B2\u7A81",
+      "no-timing": "\u5DF2\u4FDD\u5B58\uFF0C\u672C\u697C\u65E0\u9700\u8BA1\u65F6",
+      parallel: "\u5DF2\u4FDD\u5B58\uFF0C\u5E76\u884C\u6D3B\u52A8\u4E0D\u63A8\u8FDB\u4E3B\u7EBF"
+    }[progress2.clockStatus] || "\u5DF2\u4FDD\u5B58";
+    return "\u5DF2\u4FDD\u5B58";
+  }
   if (progress2.state === "paused") return "\u5DF2\u6682\u505C";
   if (progress2.state === "error") return progress2.retryAt ? progress2.retryWaitingForGeneration ? "\u7B49\u5F85\u804A\u5929\u751F\u6210\u7ED3\u675F\u540E\u91CD\u8BD5" : "\u7B49\u5F85\u81EA\u52A8\u91CD\u8BD5" : "\u672A\u5B8C\u6210\uFF0C\u8BF7\u5230\u6545\u4E8B\u8BB0\u5FC6\u4E2D\u91CD\u8BD5";
   return PHASES2[progress2.phase] || "\u5904\u7406\u4E2D";
 }
 function lineFor(progress2) {
   const range3 = Number.isInteger(progress2.currentStart) && Number.isInteger(progress2.currentEnd) ? ` \xB7 \u7B2C ${progress2.currentStart}\uFF5E${progress2.currentEnd} \u697C` : "";
-  return `${titleFor(progress2)} \xB7 ${phaseFor(progress2)}${range3}`;
+  const detail = inlineTime(progress2) && progress2.message ? `
+${progress2.message}` : "";
+  return `${titleFor(progress2)} \xB7 ${phaseFor(progress2)}${range3}${detail}`;
 }
 function initStoryMemoryNotifications() {
   if (dispose) return dispose;
@@ -94850,9 +95517,12 @@ function initStoryMemoryNotifications() {
     const active5 = tasks2.some(running4);
     const failed = tasks2.some((progress2) => progress2.state === "error");
     const done = !active5 && tasks2.every((progress2) => progress2.state === "done");
+    const onlyInline = tasks2.every(inlineTime), hasInline = tasks2.some(inlineTime);
+    const clockPending = tasks2.some((progress2) => inlineTime(progress2) && progress2.clockStatus === "unresolved");
+    node3.setAttribute("aria-label", onlyInline ? "\u968F\u6B63\u6587\u65F6\u75D5\u4FDD\u5B58\u901A\u77E5" : "\u5267\u60C5\u8D44\u6599\u6574\u7406\u901A\u77E5");
     node3.dataset.state = active5 ? failed ? "retry" : "running" : done ? "done" : failed ? "error" : "paused";
-    const title = active5 ? "\u540E\u53F0\u6574\u7406\u8FDB\u884C\u4E2D" : done ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u5DF2\u4FDD\u5B58" : failed ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u6709\u4EFB\u52A1\u672A\u5B8C\u6210" : "\u540E\u53F0\u6574\u7406\u5DF2\u6682\u505C";
-    const hint = active5 ? "\u5EFA\u8BAE\u6574\u7406\u5B8C\u6210\u540E\u518D\u53D1\u9001\uFF1B\u53EF\u4EE5\u7EE7\u7EED\u7F16\u8F91\u8F93\u5165\uFF0C\u4E0D\u4F1A\u62E6\u622A\u53D1\u9001\u3002" : done ? "\u4EE5\u4E0A\u4E3A\u672C\u8F6E\u5904\u7406\u7ED3\u679C\uFF0C\u4E0D\u4EE3\u8868\u6240\u6709\u6700\u65B0\u697C\u5C42\u90FD\u5DF2\u6574\u7406\u3002" : "\u5DF2\u4FDD\u5B58\u7684\u7ED3\u679C\u4FDD\u7559\uFF0C\u53EF\u4EE5\u7EE7\u7EED\u804A\u5929\uFF1B\u8BE6\u60C5\u89C1\u300C\u6545\u4E8B\u8BB0\u5FC6\u300D\u3002";
+    const title = onlyInline ? active5 ? "\u968F\u6B63\u6587\u65F6\u75D5\u5904\u7406\u4E2D" : done ? clockPending ? "\u968F\u6B63\u6587\u7B14\u8BB0\u5DF2\u4FDD\u5B58\uFF0C\u65F6\u95F4\u5F85\u6838\u5BF9" : "\u672C\u8F6E\u968F\u6B63\u6587\u65F6\u75D5\u5DF2\u4FDD\u5B58" : failed ? "\u968F\u6B63\u6587\u65F6\u75D5\u672A\u5168\u90E8\u4FDD\u5B58" : "\u968F\u6B63\u6587\u65F6\u75D5\u7B49\u5F85\u4E2D" : hasInline ? active5 ? "\u5267\u60C5\u8D44\u6599\u6574\u7406\u8FDB\u884C\u4E2D" : done ? "\u672C\u8F6E\u6574\u7406\u5DF2\u4FDD\u5B58" : failed ? "\u672C\u8F6E\u6574\u7406\u6709\u4EFB\u52A1\u672A\u5B8C\u6210" : "\u6574\u7406\u5DF2\u6682\u505C" : active5 ? "\u540E\u53F0\u6574\u7406\u8FDB\u884C\u4E2D" : done ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u5DF2\u4FDD\u5B58" : failed ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u6709\u4EFB\u52A1\u672A\u5B8C\u6210" : "\u540E\u53F0\u6574\u7406\u5DF2\u6682\u505C";
+    const hint = onlyInline ? active5 ? "\u7B49\u5F85\u6B63\u6587\u548C\u4FDD\u5B58\u72B6\u6001\u7A33\u5B9A\u540E\u5199\u5165\u5DF2\u6709\u7B14\u8BB0\uFF0C\u4E0D\u989D\u5916\u8C03\u7528\u5206\u6790\u6A21\u578B\u3002" : done ? "\u4FDD\u5B58\u5DF2\u7ECF\u56DE\u8BFB\u786E\u8BA4\uFF1B\u7B14\u8BB0\u4FDD\u5B58\u4E0E\u4E3B\u7EBF\u65F6\u95F4\u662F\u5426\u63A8\u8FDB\u662F\u4E24\u4EF6\u4E8B\uFF0C\u5177\u4F53\u539F\u56E0\u89C1\u4E0A\u65B9\u3002" : "\u5DF2\u4FDD\u5B58\u7B14\u8BB0\u4FDD\u7559\uFF1B\u672A\u5B8C\u6210\u7684\u6765\u6E90\u6216\u683C\u5F0F\u95EE\u9898\u8BF7\u5230\u300C\u56DE\u58F0\u65F6\u75D5\u300D\u67E5\u770B\u3002" : active5 ? "\u5EFA\u8BAE\u6574\u7406\u5B8C\u6210\u540E\u518D\u53D1\u9001\uFF1B\u53EF\u4EE5\u7EE7\u7EED\u7F16\u8F91\u8F93\u5165\uFF0C\u4E0D\u4F1A\u62E6\u622A\u53D1\u9001\u3002" : done ? "\u4EE5\u4E0A\u4E3A\u672C\u8F6E\u5904\u7406\u7ED3\u679C\uFF0C\u4E0D\u4EE3\u8868\u6240\u6709\u6700\u65B0\u697C\u5C42\u90FD\u5DF2\u6574\u7406\u3002" : "\u5DF2\u4FDD\u5B58\u7684\u7ED3\u679C\u4FDD\u7559\uFF0C\u53EF\u4EE5\u7EE7\u7EED\u804A\u5929\uFF1B\u8BE6\u60C5\u89C1\u300C\u6545\u4E8B\u8BB0\u5FC6\u300D\u3002";
     const text9 = (selector, value) => {
       const target = node3.querySelector(selector);
       if (target.textContent !== value) target.textContent = value;
@@ -94875,11 +95545,13 @@ function initStoryMemoryNotifications() {
     const failed = tasks2.some((progress2) => progress2.state === "error");
     const done = tasks2.every((progress2) => progress2.state === "done");
     const toast = globalThis.toastr || globalThis.window?.toastr;
-    const message = tasks2.map((progress2) => `${titleFor(progress2)}\uFF1A${phaseFor(progress2)}`).join("\uFF1B");
+    const onlyInline = tasks2.every(inlineTime), clockPending = tasks2.some((progress2) => inlineTime(progress2) && progress2.clockStatus === "unresolved");
+    const message = tasks2.map((progress2) => `${titleFor(progress2)}\uFF1A${phaseFor(progress2)}${inlineTime(progress2) && Number.isInteger(progress2.currentStart) ? `\uFF08\u7B2C ${progress2.currentStart} \u697C\uFF09` : ""}`).join("\uFF1B");
+    const title = onlyInline ? done ? clockPending ? "\u968F\u6B63\u6587\u7B14\u8BB0\u5DF2\u4FDD\u5B58\uFF0C\u65F6\u95F4\u5F85\u6838\u5BF9" : "\u968F\u6B63\u6587\u65F6\u75D5\u5DF2\u4FDD\u5B58" : failed ? "\u968F\u6B63\u6587\u7B14\u8BB0\u672A\u5168\u90E8\u4FDD\u5B58" : "\u968F\u6B63\u6587\u65F6\u75D5\u7B49\u5F85\u4E2D" : done ? "\u672C\u8F6E\u6574\u7406\u5DF2\u4FDD\u5B58" : failed ? "\u6574\u7406\u672A\u5168\u90E8\u5B8C\u6210" : "\u6574\u7406\u5DF2\u6682\u505C";
     toastApi = toast;
-    toastHandle = toast?.[done ? "success" : failed ? "warning" : "info"]?.(
+    toastHandle = toast?.[done ? clockPending ? "warning" : "success" : failed ? "warning" : "info"]?.(
       message,
-      done ? "\u672C\u8F6E\u540E\u53F0\u6574\u7406\u5DF2\u4FDD\u5B58" : failed ? "\u540E\u53F0\u6574\u7406\u672A\u5168\u90E8\u5B8C\u6210" : "\u540E\u53F0\u6574\u7406\u5DF2\u6682\u505C",
+      title,
       { timeOut: DISPLAY_TIME, escapeHtml: true }
     );
     hideTimer = setTimeout(() => {
@@ -94953,22 +95625,28 @@ var initialized11 = false;
 var MODES = { local: "\u672C\u5730\u68C0\u7D22", manual: "\u624B\u52A8\u9009\u5165", model: "\u6A21\u578B\u8F85\u52A9\u590D\u6838", "model-cache": "\u590D\u7528\u624B\u52A8\u68C0\u7D22\u5DF2\u6838\u9A8C\u8BED\u4E49\u7F13\u5B58", fallback: "\u624B\u52A8\u6A21\u578B\u672A\u5B8C\u6210\uFF0C\u6574\u4F53\u56DE\u9000\u672C\u5730\u68C0\u7D22" };
 function summary(snapshot) {
   const turn = snapshot.finished ? "\u4E0A\u8F6E" : "\u672C\u8F6E", count = snapshot.selected || 0;
-  if (snapshot.phase === "included") return `${turn}\u6784\u9020\u542B ${count} \u697C \xB7 \u2248${snapshot.tokens} Token`;
+  const generating4 = snapshot.responseStarted && !snapshot.finished ? "\u6B63\u6587\u751F\u6210 \xB7 " : "";
+  if (snapshot.responseStarted && ["preparing", "searching", "analysing", "selected", "prepared", "blocked"].includes(snapshot.phase)) {
+    return "\u6B63\u6587\u5DF2\u5F00\u59CB \xB7 \u672C\u8F6E\u53EC\u56DE\u672A\u786E\u8BA4";
+  }
+  if (snapshot.phase === "included") return `${generating4}${turn}\u5DF2\u5305\u542B ${count} \u697C\u539F\u6587 \xB7 \u2248${snapshot.tokens} Token`;
   if (snapshot.phase === "selected") return `\u9884\u7B97\u9009\u5165 ${count} \u697C \xB7 \u6B63\u6587\u7B49\u5F85\u6700\u7EC8\u6838\u9A8C`;
   if (snapshot.phase === "prepared") return `\u5DF2\u51C6\u5907 ${count} \u697C \xB7 \u6B63\u6587\u7B49\u5F85\u6CE8\u5165\u786E\u8BA4`;
   if (snapshot.phase === "armed") return `\u5F85\u7528 ${count} \u697C \xB7 \u4E0B\u4E00\u6B21\u6B63\u6587\u751F\u6210`;
   if (snapshot.phase === "searching") return "\u6B63\u6587\u7B49\u5F85 \xB7 \u672C\u8F6E\u6B63\u5728\u68C0\u7D22\u5386\u53F2";
   if (snapshot.phase === "analysing") return "\u6B63\u6587\u7B49\u5F85 \xB7 \u672C\u8F6E\u610F\u56FE\u5206\u6790 / \u5386\u53F2\u6838\u9A8C\u4E2D";
   if (snapshot.phase === "preparing") return "\u6B63\u6587\u7B49\u5F85 \xB7 \u672C\u8F6E\u53EC\u56DE\u51C6\u5907\u4E2D";
-  if (snapshot.phase === "blocked") return "\u6B63\u6587\u5C1A\u672A\u53D1\u9001\uFF0C\u7B49\u5F85\u5904\u7406";
-  if (snapshot.phase === "unconfirmed") return `${turn}\u672A\u786E\u8BA4\u5305\u542B\u539F\u6587`;
-  if (snapshot.phase === "failed") return `${turn}\u672A\u6CE8\u5165 \xB7 \u5904\u7406\u5931\u8D25`;
+  if (snapshot.phase === "blocked") return "\u6B63\u6587\u5C1A\u672A\u53D1\u9001 \xB7 \u53EC\u56DE\u5931\u8D25\uFF0C\u7B49\u5F85\u5904\u7406";
+  if (snapshot.phase === "unconfirmed") return `${turn}\u53EC\u56DE\u672A\u786E\u8BA4`;
+  if (snapshot.phase === "failed") return "\u6B63\u6587\u5DF2\u505C\u6B62 \xB7 \u53EC\u56DE\u5904\u7406\u6216\u653E\u884C\u6838\u9A8C\u5931\u8D25";
   if (snapshot.phase === "cancelled") return `${turn}\u8BF7\u6C42\u6216\u5F85\u7528\u53EC\u56DE\u5DF2\u53D6\u6D88`;
+  if (snapshot.phase === "disabled") return `${generating4}${turn}\u672A\u542F\u7528\u53EC\u56DE`;
   if (snapshot.phase === "skipped") {
-    if (snapshot.decision === "no-memory-needed") return `${turn}\u65E0\u9700\u5386\u53F2\u8BB0\u5FC6`;
-    if (snapshot.decision === "no-evidence") return `${turn}\u672A\u627E\u5230\u53EF\u6838\u9A8C\u5386\u53F2`;
-    if (snapshot.decision === "user-skip") return `\u7528\u6237${turn}\u8DF3\u8FC7\u53EC\u56DE`;
-    return `${turn}\u672A\u91C7\u7528\u539F\u6587`;
+    if (snapshot.decision === "no-memory-needed") return `${generating4}${turn}\u65E0\u9700\u5386\u53F2\u8BB0\u5FC6`;
+    if (snapshot.decision === "no-evidence") return `${generating4}${turn}\u672A\u627E\u5230\u53EF\u6838\u9A8C\u5386\u53F2`;
+    if (snapshot.decision === "user-skip") return `${generating4}\u7528\u6237${turn}\u8DF3\u8FC7\u53EC\u56DE`;
+    if (snapshot.decision === "automatic-disabled") return `${generating4}${turn}\u672A\u542F\u7528\u53EC\u56DE \xB7 \u81EA\u52A8\u5173\u95ED\u4E14\u65E0\u624B\u52A8\u539F\u6587`;
+    return `${generating4}${turn}\u672A\u91C7\u7528\u539F\u6587`;
   }
   return "\u5C1A\u65E0\u672C\u8F6E\u7ED3\u679C";
 }
@@ -95078,7 +95756,7 @@ function initRetrievalFeedback() {
       return;
     }
     const state = getRetrievalInjectionStatus(owner), snapshot = state.feedback, line = summary(snapshot);
-    if (!enabled2 && snapshot.phase !== "blocked") {
+    if (!enabled2 && !["blocked", "failed", "unconfirmed"].includes(snapshot.phase)) {
       remove();
       return;
     }
@@ -95091,7 +95769,7 @@ function initRetrievalFeedback() {
     }
     const text9 = node3.querySelector("[data-summary]");
     if (text9.textContent !== line) text9.textContent = line;
-    node3.querySelector("[data-icon]").textContent = snapshot.phase === "included" ? "\u2713" : ["blocked", "failed", "unconfirmed"].includes(snapshot.phase) ? "!" : "\u21BA";
+    node3.querySelector("[data-icon]").textContent = snapshot.phase === "included" || snapshot.requestReady && ["skipped", "disabled"].includes(snapshot.phase) ? "\u2713" : ["blocked", "failed", "unconfirmed"].includes(snapshot.phase) ? "!" : "\u21BA";
     node3.querySelector(".t-retrieval-feedback-toggle").title = "\u5C55\u5F00\u6216\u6536\u8D77\u53EC\u56DE\u8BE6\u60C5";
     node3.querySelector("[aria-expanded]").setAttribute("aria-expanded", String(open));
     node3.querySelector(".t-retrieval-feedback-details").hidden = !open;
@@ -95104,12 +95782,15 @@ function initRetrievalFeedback() {
       description.append(p);
     };
     paragraph(snapshot.message || "\u672C\u5730\u68C0\u7D22\u548C\u9884\u7B97\u9009\u5165\u4E0D\u7B49\u4E8E\u672C\u8F6E\u63D0\u793A\u8BCD\u5B9E\u9645\u5305\u542B\uFF0C\u751F\u6210\u65F6\u4F1A\u5206\u522B\u53CD\u9988\u3002");
+    if (snapshot.responseStarted) paragraph(snapshot.requestReady ? "\u5DF2\u89C2\u5BDF\u5230\u672C\u8F6E\u6B63\u6587\u5F00\u59CB\u51FA\u5B57\uFF1B\u53EC\u56DE\u7ED3\u8BBA\u4E0E\u653E\u884C\u6838\u9A8C\u6B64\u524D\u5DF2\u5B8C\u6210\uFF0C\u4E0D\u518D\u7B49\u5F85\u53EC\u56DE\u3002" : "\u5DF2\u89C2\u5BDF\u5230\u6B63\u6587\u51FA\u5B57\uFF0C\u4F46\u672A\u53D6\u5F97\u672C\u8F6E\u53EC\u56DE\u653E\u884C\u786E\u8BA4\uFF1B\u8FD9\u4E0D\u662F\u53EC\u56DE\u6210\u529F\uFF0C\u4E5F\u4E0D\u662F\u65E0\u9700\u53EC\u56DE\u3002");
+    if (snapshot.phase === "disabled") paragraph("\u672C\u8F6E\u672A\u5F00\u542F\u53EC\u56DE\u6CE8\u5165\uFF0C\u6CA1\u6709\u8FD0\u884C\u81EA\u52A8\u53EC\u56DE\u5206\u6790\u3002");
     if (snapshot.phase === "skipped") {
-      if (snapshot.decision === "no-memory-needed") paragraph("\u65E0\u9700\u5386\u53F2\u8BB0\u5FC6\u662F\u6B63\u5E38\u610F\u56FE\u5206\u6790\u7ED3\u679C\uFF0C\u4E0D\u662F\u5904\u7406\u5931\u8D25\u3002");
-      else if (snapshot.decision === "no-evidence") paragraph("\u672C\u8F6E\u672A\u627E\u5230\u53EF\u6838\u9A8C\u5386\u53F2\uFF0C\u4E0D\u4EE3\u8868\u5386\u53F2\u4E2D\u4E0D\u5B58\u5728\u76F8\u5173\u5185\u5BB9\u3002");
+      if (snapshot.decision === "no-memory-needed") paragraph("\u672C\u8F6E\u610F\u56FE\u5206\u6790\u5DF2\u5B8C\u6210\uFF0C\u7ED3\u8BBA\u662F\u65E0\u9700\u5386\u53F2\u8BB0\u5FC6\uFF1B\u8FD9\u662F\u6B63\u5E38\u7ED3\u679C\uFF0C\u4E0D\u662F\u5904\u7406\u5931\u8D25\u3002");
+      else if (snapshot.decision === "no-evidence") paragraph("\u672C\u8F6E\u53EC\u56DE\u5206\u6790\u4E0E\u68C0\u7D22\u5DF2\u5B8C\u6210\uFF0C\u672A\u627E\u5230\u53EF\u6838\u9A8C\u5386\u53F2\uFF1B\u4E0D\u4EE3\u8868\u5386\u53F2\u4E2D\u4E0D\u5B58\u5728\u76F8\u5173\u5185\u5BB9\u3002");
       else if (snapshot.decision === "user-skip") paragraph("\u7528\u6237\u672C\u6B21\u8DF3\u8FC7\u53EC\u56DE\uFF0C\u4EC5\u5728\u5F53\u524D\u539F\u6587\u672A\u53D8\u5316\u7684\u8FD9\u4E00\u6B21\u6B63\u6587\u8BF7\u6C42\u4E2D\u751F\u6548\u3002");
+      else if (snapshot.decision === "automatic-disabled") paragraph("\u81EA\u52A8\u53EC\u56DE\u5173\u95ED\uFF0C\u4E14\u672C\u8F6E\u6CA1\u6709\u624B\u52A8\u9009\u5165\u539F\u6587\uFF1B\u672A\u8FD0\u884C\u5206\u6790\uFF0C\u4E0D\u80FD\u5F53\u4F5C\u5206\u6790\u540E\u5224\u65AD\u65E0\u9700\u5386\u53F2\u3002");
     }
-    if (snapshot.phase !== "idle") {
+    if (snapshot.phase !== "idle" && snapshot.phase !== "disabled" && snapshot.decision !== "automatic-disabled") {
       paragraph(`${MODES[snapshot.mode] || "\u672C\u5730\u68C0\u7D22"}\uFF1B\u5019\u9009\u8303\u56F4\u8986\u76D6 ${snapshot.candidates || 0} \u697C\uFF0C\u8BA1\u5212\u9009\u5165 ${snapshot.selected || 0} \u697C\uFF0C\u4F30\u7B97 ${snapshot.tokens || 0}/${snapshot.budget || "\u2014"} Token\uFF0C\u6CE8\u5165\u6DF1\u5EA6 ${snapshot.depth || 0}\u3002`);
       if (snapshot.modelCalls || snapshot.mode === "model-cache") paragraph(`\u672C\u6B21\u53EC\u56DE\u7684\u6A21\u578B\u8BF7\u6C42\u5C1D\u8BD5\u6570\uFF1A${snapshot.modelCalls || 0}\uFF1B\u624B\u52A8\u6A21\u578B\u68C0\u7D22\u53EF\u590D\u7528\u4E25\u683C\u8BED\u4E49\u7F13\u5B58\uFF0C\u524D\u7F6E\u81EA\u52A8\u6A21\u5F0F\u4E0D\u4EE5\u7F13\u5B58\u8DF3\u8FC7\u65B0\u7684\u610F\u56FE\u5206\u6790\uFF1B\u8FD9\u4E0D\u662F\u5B9E\u9645\u8D39\u7528\u786E\u8BA4\u3002`);
       if (snapshot.modelReason) paragraph(`\u6A21\u578B\u8FC7\u7A0B\u8BF4\u660E\uFF08\u975E\u5267\u60C5\u4E8B\u5B9E\uFF09\uFF1A${snapshot.modelReason}`);
