@@ -74131,14 +74131,15 @@ function packet(source2, results, retained, aliases, config2, recallConfig, auto
   for (const result of [...results].reverse()) for (const hit of result.hits) {
     for (const member of hit.rangeMembers || hit.windowMembers || hit.messages || []) if (rowsById.has(member.id)) ids2.add(member.id);
   }
-  const candidates = /* @__PURE__ */ new Map(), values = [], rules = retrievalExtractionRules();
+  const candidates = /* @__PURE__ */ new Map(), values = [], rules = retrievalExtractionRules(), helperPacket = systemPrompt === RETRIEVAL_ASSIST_PROMPT;
   const recentStart = automatic ? Math.max(0, source2.rows.length - recallConfig.recentMessages) : source2.rows.length;
-  const prompts = () => [{ role: "system", content: systemPrompt }, { role: "user", content: JSON.stringify({
+  let scanned = 0, omitted = 0, minimumInputTokens = null;
+  const prompts = (entries = values) => [{ role: "system", content: systemPrompt }, { role: "user", content: JSON.stringify({
     ...context6,
     expansion: Math.min(config2.maxExpansion, Math.max(recallConfig.beforeMessages, recallConfig.afterMessages)),
-    candidates: values
+    candidates: entries,
+    ...helperPacket ? { omitted_candidates: omitted } : {}
   }) }];
-  let scanned = 0, omitted = 0;
   for (const id3 of ids2) {
     const row = rowsById.get(id3);
     if (!row || row.floor >= recentStart || excludedIds.has(row.id)) continue;
@@ -74158,6 +74159,10 @@ function packet(source2, results, retained, aliases, config2, recallConfig, auto
       role: message.is_user ? "user" : "character",
       content: text9
     };
+    if (helperPacket) {
+      const cost = messageCost(prompts([value]));
+      minimumInputTokens = minimumInputTokens === null ? cost : Math.min(minimumInputTokens, cost);
+    }
     values.push(value);
     if (messageCost(prompts()) > config2.inputLimit) {
       values.pop();
@@ -74166,7 +74171,26 @@ function packet(source2, results, retained, aliases, config2, recallConfig, auto
     }
     candidates.set(candidateId, { ...row, text: text9 });
   }
-  return { candidates, prompts: prompts(), omitted };
+  return {
+    candidates,
+    prompts: prompts(),
+    omitted,
+    values,
+    renderPrompts: prompts,
+    fixedInputTokens: helperPacket ? messageCost(prompts([])) : null,
+    minimumInputTokens
+  };
+}
+function assistanceRecentRows(source2, references) {
+  const seen = /* @__PURE__ */ new Set();
+  return references.map((reference) => {
+    const row = Number.isSafeInteger(reference?.floor) && reference.floor >= 0 ? source2.rows[reference.floor] : null;
+    if (!row || row.floor !== reference.floor || typeof reference.id !== "string" || row.id !== reference.id || row.fingerprint !== reference.fingerprint || seen.has(row.floor)) {
+      throw error4("\u8FD1\u671F\u4E0A\u4E0B\u6587\u5F15\u7528\u4E0E\u5DF2\u6838\u9A8C\u7684\u672C\u8F6E\u804A\u5929\u5FEB\u7167\u4E0D\u7B26\uFF0C\u672A\u7EE7\u7EED\u6A21\u578B\u8F85\u52A9\u3002");
+    }
+    seen.add(row.floor);
+    return row;
+  });
 }
 function outcomeFrom(review, candidates, questions) {
   const selected = review.selections.map((item2) => {
@@ -74240,11 +74264,20 @@ async function runRetrievalModel(owner, query, {
     queries: assistance?.queries ? [...assistance.queries] : [text9],
     omittedCandidates: 0,
     cacheHit: false,
-    ...assistance ? { localFirst: true, helperMode: assistance.purpose, decisionSource: "model" } : {}
+    ...assistance ? {
+      localFirst: true,
+      helperMode: assistance.purpose,
+      decisionSource: "model",
+      localConfidence: "uncertain",
+      localReasons: [...assistance.localReasons || []]
+    } : {}
   };
   const turnBudget = assistance ? callBudget || { calls: 0, allowance: RETRIEVAL_AUTOMATIC_CALL_LIMIT, inputTokens: 0, outputTokens: 0 } : null;
   try {
     check2();
+    if (turnBudget && ["calls", "allowance", "inputTokens", "outputTokens"].some((key2) => !Number.isSafeInteger(turnBudget[key2]) || turnBudget[key2] < 0)) {
+      throw error4("\u672C\u8F6E\u7D2F\u8BA1\u6A21\u578B\u9884\u7B97\u8BB0\u5F55\u65E0\u6548\uFF0C\u672A\u53D1\u9001\u6A21\u578B\u8BF7\u6C42\u3002", "RETRIEVAL_MODEL_BUDGET");
+    }
     const scope3 = await readRetrievalScope(owner.scopeKey);
     baseline2 = retrievalModelSettings(scope3);
     recall = retrievalRecallSettings(scope3);
@@ -74253,7 +74286,7 @@ async function runRetrievalModel(owner, query, {
     if (!config2.enabled || automatic && (!config2.automatic || !recall.config.enabled || !recall.config.automatic)) throw error4("\u672C\u804A\u5929\u5C1A\u672A\u6388\u6743\u672C\u6B21\u6A21\u578B\u53EC\u56DE\u3002", "RETRIEVAL_MODEL_REVOKED");
     if (assistance) {
       base = assistance.base;
-      if (!base || base.scopeKey !== owner.scopeKey || base.loadToken !== owner.loadToken || !["review", "expand"].includes(assistance.purpose) || typeof assistance.contextSignature !== "string" || assistance.indexSnapshot !== indexSnapshot || assistance.recallSignature !== recall.signature || typeof assistance.contextCurrent !== "function" || typeof assistance.respondingCharacter !== "string") {
+      if (!base || base.scopeKey !== owner.scopeKey || base.loadToken !== owner.loadToken || !["review", "expand"].includes(assistance.purpose) || typeof assistance.contextSignature !== "string" || assistance.indexSnapshot !== indexSnapshot || assistance.recallSignature !== recall.signature || typeof assistance.contextCurrent !== "function" || typeof assistance.respondingCharacter !== "string" || !Array.isArray(assistance.recentRefs) || assistance.recentRefs.length > 4) {
         throw error4("\u672C\u5730\u8F85\u52A9\u7684\u6765\u6E90\u6216\u4EFB\u52A1\u53C2\u6570\u65E0\u6548\u3002");
       }
       publish2(owner, assistance.purpose === "review" ? "\u672C\u5730\u5019\u9009\u5B58\u5728\u6B67\u4E49\uFF0C\u51C6\u5907\u4E00\u6B21\u5408\u5E76\u8BED\u4E49\u590D\u6838\u3002" : "\u672C\u5730\u7F3A\u5C11\u660E\u786E\u5019\u9009\uFF0C\u51C6\u5907\u4E00\u6B21\u8865\u5145\u68C0\u7D22\u65B9\u5411\u3002");
@@ -74280,7 +74313,10 @@ async function runRetrievalModel(owner, query, {
       if (!settings.config.enabled || automatic && !settings.config.automatic || settings.revision !== baseline2.revision || settings.signature !== baseline2.signature || settings.scopeEpoch !== baseline2.scopeEpoch || recallNow.signature !== recall.signature || recallNow.revision !== recall.revision || automatic && (!recallNow.config.enabled || !recallNow.config.automatic)) throw error4("\u53EC\u56DE\u6388\u6743\u3001\u9884\u7B97\u6216\u8EAB\u4EFD\u4E16\u4EE3\u5DF2\u53D8\u5316\u3002", "RETRIEVAL_MODEL_REVOKED");
       const auxiliary = readRetrievalAuxiliary(owner, saved, retrievalExtractionRules());
       if (saved.sourceSignature !== base.sourceSignature || retrievalRulesSignature() !== base.rulesSignature || auxiliary.sourceSnapshotToken !== base.sourceSnapshotToken) throw error4("\u6A21\u578B\u8C03\u7528\u671F\u95F4\u539F\u6587\u3001\u63D0\u53D6\u89C4\u5219\u6216\u8F85\u52A9\u5FEB\u7167\u5DF2\u53D8\u5316\uFF0C\u6574\u6B21\u7ED3\u679C\u4E0D\u91C7\u7528\u3002");
-      if (assistance && !assistance.contextCurrent(saved)) throw error4("\u672C\u8F6E\u8F93\u5165\u3001\u8BF7\u6C42\u7C7B\u578B\u6216\u5E94\u7B54\u89D2\u8272\u5DF2\u53D8\u5316\uFF0C\u672A\u7EE7\u7EED\u6A21\u578B\u8F85\u52A9\u3002");
+      if (assistance) {
+        if (!assistance.contextCurrent(saved)) throw error4("\u672C\u8F6E\u8F93\u5165\u3001\u8BF7\u6C42\u7C7B\u578B\u6216\u5E94\u7B54\u89D2\u8272\u5DF2\u53D8\u5316\uFF0C\u672A\u7EE7\u7EED\u6A21\u578B\u8F85\u52A9\u3002");
+        assistanceRecentRows(saved, assistance.recentRefs);
+      }
       const current3 = await resolveRetrievalModelConnection(config2);
       check2();
       if (current3.signature !== connection.signature) throw error4("\u5206\u6790API\u8FDE\u63A5\u6216\u6A21\u578B\u5DF2\u53D8\u5316\uFF0C\u6574\u6B21\u7ED3\u679C\u4E0D\u91C7\u7528\u3002", "RETRIEVAL_MODEL_REVOKED");
@@ -74395,7 +74431,7 @@ async function runRetrievalModel(owner, query, {
     if (perRequest && !owner.generationProjection && ["swipe", "continue"].includes(requestType) && last && !source2.messages[last.floor]?.is_user && last.id) excludedIds.add(last.id);
     try {
       if (assistance) {
-        const recent = [], rules = retrievalExtractionRules();
+        const recent = [], rules = retrievalExtractionRules(), questionKey = queryKey(text9);
         const context6 = {
           question: text9,
           request_type: requestType,
@@ -74403,36 +74439,60 @@ async function runRetrievalModel(owner, query, {
           responding_character: assistance.respondingCharacter,
           recent_context: recent,
           local_uncertainty: (assistance.localReasons || []).slice(0, 6).map((item2) => String(item2).slice(0, 200)),
-          searched_queries: ledger.queries,
-          note: "\u672C\u5730\u5DF2\u7ECF\u68C0\u7D22\uFF1B\u4E00\u6B21\u5B8C\u6210\u9009\u62E9\u6216\u63D0\u51FA\u8865\u641C\u65B9\u5411\uFF0C\u4E0D\u7F16\u9020\u672A\u63D0\u4F9B\u7684\u5386\u53F2\u3002"
+          // Queries are bounded hints, not evidence; the complete question is sent only once.
+          searched_query_hints: ledger.queries.filter((value) => queryKey(value) !== questionKey).slice(0, 3).map((value) => [...new Set(tokenize(value))].slice(0, 24).join(" ").slice(0, 240)),
+          note: "\u672C\u5730\u5DF2\u7ECF\u68C0\u7D22\uFF1B\u5B8C\u6574\u95EE\u9898\u53CA\u6D88\u606F\u4FDD\u7559\uFF0C\u67E5\u8BE2\u7EBF\u7D22\u4EC5\u4F5C\u63D0\u793A\u3002\u672A\u63D0\u4F9B\u7684\u5019\u9009\u4E0D\u4EE3\u8868\u4E0D\u5B58\u5728\uFF1B\u4E0D\u8DB3\u65F6\u8FD4\u56DEsearch\u6216none\u3002"
         };
-        const packetConfig = { ...config2, candidateMessages: Math.min(8, config2.candidateMessages) };
-        const emptyPacket = () => packet(source2, [], [], /* @__PURE__ */ new Map(), packetConfig, recall.config, true, context6, excludedIds, RETRIEVAL_ASSIST_PROMPT);
-        const rowsById = new Map(source2.rows.map((row) => [row.id, row]));
-        for (const id3 of [...assistance.recentIds || []].slice(-4).reverse()) {
-          const row = rowsById.get(id3);
-          if (!row) throw error4("\u8FD1\u671F\u4E0A\u4E0B\u6587\u8EAB\u4EFD\u5DF2\u53D8\u5316\uFF0C\u672A\u53D1\u9001\u8F85\u52A9\u8BF7\u6C42\u3002");
+        const availableInput = Math.max(0, Math.min(
+          config2.inputLimit,
+          config2.tokenBudget - turnBudget.inputTokens - turnBudget.outputTokens - config2.outputLimit
+        ));
+        const packetConfig = { ...config2, inputLimit: availableInput, candidateMessages: Math.min(8, config2.candidateMessages) };
+        const results = assistance.purpose === "review" ? assistance.results || [] : [], aliases = /* @__PURE__ */ new Map();
+        const assemble = () => packet(source2, results, [], aliases, packetConfig, recall.config, true, context6, excludedIds, RETRIEVAL_ASSIST_PROMPT);
+        let batch = assemble();
+        const protectedValues = batch.values.slice(0, Math.min(2, batch.candidates.size));
+        const protectedIds = protectedValues.map((value) => value.candidate_id);
+        ledger.packetBudget = {
+          inputLimit: config2.inputLimit,
+          availableInput,
+          outputReserve: config2.outputLimit,
+          fixedInput: batch.fixedInputTokens,
+          minimumFullInput: batch.minimumInputTokens,
+          protectedCandidates: protectedValues.length,
+          recentKept: 0,
+          recentDropped: assistance.recentRefs.length,
+          selectedCandidates: batch.candidates.size,
+          omittedCandidates: batch.omitted
+        };
+        if (batch.fixedInputTokens > availableInput) {
+          throw error4(`\u5B8C\u6574\u95EE\u9898\u548C\u56FA\u5B9A\u8BF4\u660E\u4F30\u7B97${batch.fixedInputTokens} Token\uFF0C\u8D85\u8FC7\u672C\u8F6E\u53EF\u7528\u5206\u6790\u8F93\u5165${availableInput} Token\uFF08\u5355\u6B21\u4E0A\u9650${config2.inputLimit}\uFF0C\u8F93\u51FA\u9884\u7559${config2.outputLimit}\uFF09\uFF1B\u5C1A\u672A\u6DFB\u52A0\u8FD1\u671F\u4E0A\u4E0B\u6587\u6216\u53D1\u9001\u6A21\u578B\u8BF7\u6C42\u3002\u8BF7\u8C03\u6574\u5206\u6790\u8F93\u5165/\u603B\u9884\u7B97\u6216\u672C\u6B21\u8DF3\u8FC7\uFF0C\u672A\u622A\u65AD\u8F93\u5165\u3002`, "RETRIEVAL_MODEL_BUDGET");
+        }
+        if (assistance.purpose === "review" && !batch.candidates.size) {
+          const need = batch.minimumInputTokens;
+          if (need === null) throw error4("\u7591\u96BE\u5019\u9009\u6CA1\u6709\u53EF\u6838\u9A8C\u7684\u5B8C\u6574\u6765\u6E90\uFF0C\u672A\u53D1\u9001\u6A21\u578B\u8BF7\u6C42\u3002", "RETRIEVAL_MODEL_SOURCE_UNAVAILABLE");
+          throw error4(`\u5B8C\u6574\u5019\u9009\u786E\u5B9E\u8D85\u51FA\u5206\u6790\u8F93\u5165\u9884\u7B97\uFF1A\u5355\u6B21\u4E0A\u9650${config2.inputLimit} Token\uFF0C\u672C\u8F6E\u53EF\u7528${availableInput} Token\uFF1B\u95EE\u9898\u4E0E\u56FA\u5B9A\u8BF4\u660E\u7EA6${batch.fixedInputTokens} Token\uFF0C\u52A0\u5165\u6700\u5C0F\u5B8C\u6574\u5019\u9009\u540E\u81F3\u5C11\u7EA6${need} Token\u3002\u8FD1\u671F\u4E0A\u4E0B\u6587\u5DF2\u9000\u52300\u6761\uFF0C\u672A\u53D1\u9001\u6A21\u578B\u8BF7\u6C42\uFF1B\u8BF7\u8C03\u6574\u8BE5\u8F93\u5165/\u603B\u9884\u7B97\u6216\u672C\u6B21\u8DF3\u8FC7\uFF0C\u672A\u622A\u65AD\u539F\u6587\u3002`, "RETRIEVAL_MODEL_BUDGET");
+        }
+        const recentRows = assistanceRecentRows(source2, assistance.recentRefs);
+        for (const row of [...recentRows].reverse()) {
           const message = source2.messages[row.floor], content = extractRetrievalText(message, rules);
           if (!content.trim()) continue;
           recent.unshift({ floor: row.floor, speaker: String(message.name || ""), role: message.is_user ? "user" : "character", content });
-          if (messageCost(emptyPacket().prompts) > config2.inputLimit) recent.shift();
+          if (messageCost(batch.renderPrompts(protectedValues)) > availableInput) recent.shift();
         }
-        const batch = packet(
-          source2,
-          assistance.purpose === "review" ? assistance.results || [] : [],
-          [],
-          /* @__PURE__ */ new Map(),
-          packetConfig,
-          recall.config,
-          true,
-          context6,
-          excludedIds,
-          RETRIEVAL_ASSIST_PROMPT
-        );
+        batch = assemble();
+        while (recent.length && protectedIds.some((id3) => !batch.candidates.has(id3))) {
+          recent.shift();
+          batch = assemble();
+        }
         ledger.omittedCandidates = batch.omitted;
-        if (assistance.purpose === "review" && !batch.candidates.size) {
-          throw error4("\u7591\u96BE\u5019\u9009\u65E0\u6CD5\u5B8C\u6574\u63D0\u4F9B\u7ED9\u5206\u6790\u6A21\u578B\uFF0C\u8BF7\u8C03\u6574\u9884\u7B97\u6216\u672C\u6B21\u8DF3\u8FC7\u3002", "RETRIEVAL_MODEL_BUDGET");
-        }
+        Object.assign(ledger.packetBudget, {
+          recentKept: recent.length,
+          recentDropped: recentRows.length - recent.length,
+          selectedCandidates: batch.candidates.size,
+          omittedCandidates: batch.omitted
+        });
+        if (protectedIds.some((id3) => !batch.candidates.has(id3))) throw error4("\u4FDD\u7559\u5019\u9009\u7684\u88C5\u5305\u7ED3\u679C\u53D1\u751F\u4E0D\u4E00\u81F4\uFF0C\u672A\u53D1\u9001\u6A21\u578B\u8BF7\u6C42\u3002");
         const response = await request(
           batch.prompts,
           (raw, diagnostics) => parseRetrievalAssistance(
@@ -74706,7 +74766,7 @@ function recentContext2(owner, source2, query, requestType, excludedIds) {
     return !(row === last && message.is_user && String(message.mes || "").trim() === query);
   }).slice(-4).flatMap((row) => {
     const content = extractRetrievalText(source2.messages[row.floor], rules);
-    return content.trim() ? [{ id: row.id, fingerprint: row.fingerprint, content }] : [];
+    return content.trim() ? [{ id: row.id, floor: row.floor, fingerprint: row.fingerprint, content }] : [];
   });
 }
 function contextSignature(owner, source2, query, requestType, excludedIds) {
@@ -74716,7 +74776,7 @@ function contextSignature(owner, source2, query, requestType, excludedIds) {
     requestType,
     retrievalRespondingSignature(owner),
     excludedIds,
-    recentContext2(owner, source2, query, requestType, excludedIds).map((row) => [row.id, row.fingerprint])
+    recentContext2(owner, source2, query, requestType, excludedIds).map((row) => [row.id, row.floor, row.fingerprint])
   ]);
 }
 function expectedExclusions(owner, source2, requestType) {
@@ -74883,7 +74943,7 @@ function diverseCandidates(rows, limit) {
 function assess(ranked, plan, config2) {
   const clear = ranked.filter((item2) => item2.clear && item2.relevant), top = clear[0];
   const competing = top && !/所有|哪些|分别|每次|两次|all|each/iu.test(plan.queries[0]?.text || "") && clear.slice(1).some((item2) => Math.abs(item2.floor - top.floor) > 8 && item2.score >= top.score * 0.85 && item2.matched.some((anchor) => anchor.kind !== "entity" && anchor.weight >= 0.75 && top.matched.some((other) => other.text === anchor.text)));
-  const semanticUncertainty = plan.semantic && ranked.some((item2) => item2.relevant) && (plan.history || plan.ambiguousReference || ranked.some((item2) => item2.matched.some((anchor) => anchor.kind !== "entity" && anchor.weight >= 1))) && !top?.matched.some((item2) => item2.kind === "quote");
+  const semanticUncertainty = !top && plan.semantic && ranked.some((item2) => item2.relevant) && (plan.history || plan.ambiguousReference || ranked.some((item2) => item2.matched.some((anchor) => anchor.kind !== "entity" && anchor.weight >= 1)));
   const uncertain = competing || semanticUncertainty || (plan.history || plan.ambiguousReference) && !clear.length;
   const reasons2 = [];
   if (competing) reasons2.push("\u591A\u4E2A\u8FDC\u5904\u5206\u6BB5\u547D\u4E2D\u4E86\u76F8\u540C\u7EBF\u7D22\uFF0C\u672C\u5730\u65E0\u6CD5\u786E\u8BA4\u6240\u6307\u7684\u662F\u54EA\u4E00\u6B21\u3002");
@@ -74992,7 +75052,7 @@ async function runLocalFirstRetrieval(owner, query, {
         indexSnapshot: session2.indexSnapshot,
         recallSignature: recall.signature,
         localReasons: assessment.reasons,
-        recentIds: plan.recent.map((row) => row.id),
+        recentRefs: plan.recent.map(({ id: id3, floor: floor2, fingerprint: fingerprint3 }) => ({ id: id3, floor: floor2, fingerprint: fingerprint3 })),
         queries: plan.queries.map((item2) => item2.text),
         results: candidates.length ? [{ ...base, hits: candidates.map(asHit) }] : []
       }
@@ -75113,7 +75173,7 @@ var init_retrievalLocal = __esm({
     init_retrievalRecallConfig();
     init_retrievalModelConfig();
     init_retrievalModel();
-    RETRIEVAL_LOCAL_VERSION = 1;
+    RETRIEVAL_LOCAL_VERSION = 2;
     STOP = new Set(tokenize("\u6211\u4EEC \u4F60\u4EEC \u4ED6\u4EEC \u5979\u4EEC \u8FD9\u4E2A \u90A3\u4E2A \u4EC0\u4E48 \u600E\u4E48 \u4E3A\u4EC0\u4E48 \u7136\u540E \u73B0\u5728 \u4ECA\u5929 \u5DF2\u7ECF \u8FD8\u662F \u53EF\u4EE5 \u77E5\u9053 \u5C31\u662F \u4E0D\u662F \u6CA1\u6709 \u4E0D\u8981 \u65F6\u5019 \u4E00\u4E0B \u7EE7\u7EED \u597D\u7684 \u4E8E\u662F \u81EA\u5DF1 \u611F\u89C9 \u4E00\u4E2A \u4E00\u8FB9 \u62FF\u8D77 \u653E\u4E0B \u8D70\u8FDB \u770B\u7740 \u8F6C\u8EAB \u70B9\u5934 \u8BF4\u9053 \u8BF4\u7740 \u770B\u5411 \u8BF7\u95EE \u5224\u65AD \u5386\u53F2 \u8BB0\u5FC6 \u672C\u8F6E \u89D2\u8272 \u56DE\u590D \u6B63\u6587 \u6839\u636E \u8FD1\u671F \u4E0A\u4E0B\u6587 the and you your are was were is it to of in on for with that this have has do does yes okay"));
     GLUE = /还记得|记不记得|为什么|怎么|什么|怎么样|我们|你们|他们|她们|这个|那个|那个人|那件事|这件事|一件事|以前|之前|当初|上次|那次|后来|现在|今天|已经|时候|一下|能不能|有没有|拿起|放下|走进|看着|转身|点头|说道|说着|看向|记得|请问|我的|你的|他的|她的|我|你|他|她|它|的|了|吗|呢|吧|把|将|在|是|和|与|又|还|再|也|就/gu;
     CUE_PHRASES = [
@@ -76108,7 +76168,16 @@ async function runGenerationGate(run, contextSize) {
           run.owner,
           "\u672C\u8F6E\u53EC\u56DE\u672A\u5B8C\u6574\u5B8C\u6210\uFF0C\u6B63\u6587\u7EE7\u7EED\u7B49\u5F85\u5904\u7406\u3002",
           null,
-          { modelCalls: report3.calls || 0, turnModelCalls: run.callBudget.calls, modelReason: String(cause.message || cause) }
+          {
+            modelCalls: report3.calls || 0,
+            turnModelCalls: run.callBudget.calls,
+            modelReason: String(cause.message || cause),
+            helperMode: report3.helperMode || "",
+            localReasons: clone6(report3.localReasons || []),
+            localConfidence: report3.localConfidence || "",
+            insufficient: true,
+            packetBudget: clone6(report3.packetBudget || null)
+          }
         );
         const action = await waitForFailureChoice(run, cause);
         if (action === "retry" && requestCurrent(run)) {
