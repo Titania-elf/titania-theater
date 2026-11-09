@@ -25874,6 +25874,9 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-retrieval-feedback-details p { margin: 6px 0; }
 .t-retrieval-feedback [data-sources] { display: flex; flex-wrap: wrap; gap: 6px; }
 .t-retrieval-feedback [data-feedback-error] { color: var(--t-memory-gold); }
+.t-retrieval-feedback [data-diagnostic-panel] { margin-top: 10px; }
+.t-retrieval-feedback [data-diagnostic-panel] > summary { cursor: pointer; color: var(--t-memory-text); }
+.t-retrieval-feedback [data-feedback-diagnostic] { max-width: 100%; margin: 8px 0; padding: 8px; white-space: pre-wrap; overflow-wrap: anywhere; font: .85em/1.5 monospace; color: var(--t-memory-muted); background: var(--t-memory-shell); border-radius: 5px; }
 @media (max-width: 600px) {
     .t-retrieval-window .t-memory-header { padding: 16px; }
     .t-retrieval-body { padding: 16px; }
@@ -28673,7 +28676,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 184248], "04-features/toolbox-settings.css": [184297, 187532], "04-features/main-window.css": [187576, 232469], "04-features/main-window-legacy.css": [232520, 256386], "04-features/script-picker.css": [256432, 262927], "04-features/wi-selector.css": [262971, 280797], "04-features/continuation.css": [280842, 304711], "04-features/queue.css": [304749, 311309], "04-features/content-editor.css": [311356, 313663], "04-features/illustration.css": [313708, 336743], "04-features/storyboard.css": [336786, 351335], "04-features/settings-drawer.css": [351383, 369617], "04-features/settings.css": [369658, 397684], "04-features/manager.css": [397724, 411022], "04-features/workshop.css": [411063, 433845], "04-features/favs.css": [433882, 473808], "04-features/debug.css": [473846, 490611], "04-features/story-outline.css": [490657, 524963], "04-features/outline-entry-menu.css": [525014, 531767], "04-features/rewrite.css": [531807, 582706], "04-features/paragraph-editor.css": [582755, 586538], "04-features/reader.css": [586577, 595936], "04-features/chat-book.css": [595978, 602519], "04-features/story-memory.css": [602564, 649951], "04-features/retrieval.css": [649993, 659808], "04-features/character-evolution.css": [659860, 694534], "04-features/story-memory-notifications.css": [694593, 696742], "04-features/story-timetrace.css": [696790, 710841], "04-features/tts.css": [710877, 747248], "04-features/confirm-dialog.css": [747295, 751293], "04-features/image-cropper.css": [751339, 755197], "04-features/st-embedded.css": [755241, 785745], "04-features/scene-advance.css": [785791, 807876], "04-features/theater-midnight.css": [807925, 833253] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 122692], "02-components/window.css": [122733, 125865], "02-components/panel.css": [125905, 129525], "02-components/settings-shell.css": [129574, 133972], "02-components/dialog.css": [134013, 139358], "02-components/button.css": [139399, 145899], "02-components/icon-button.css": [145945, 148425], "02-components/field.css": [148465, 151540], "02-components/choice-input.css": [151587, 152878], "02-components/radio-card.css": [152923, 155165], "02-components/studio-workspace.css": [155216, 170105], "02-components/_legacy.css": [170147, 173111], "03-layout/button-groups.css": [173155, 174576], "03-layout/utilities.css": [174616, 176427], "04-features/floating.css": [176468, 184248], "04-features/toolbox-settings.css": [184297, 187532], "04-features/main-window.css": [187576, 232469], "04-features/main-window-legacy.css": [232520, 256386], "04-features/script-picker.css": [256432, 262927], "04-features/wi-selector.css": [262971, 280797], "04-features/continuation.css": [280842, 304711], "04-features/queue.css": [304749, 311309], "04-features/content-editor.css": [311356, 313663], "04-features/illustration.css": [313708, 336743], "04-features/storyboard.css": [336786, 351335], "04-features/settings-drawer.css": [351383, 369617], "04-features/settings.css": [369658, 397684], "04-features/manager.css": [397724, 411022], "04-features/workshop.css": [411063, 433845], "04-features/favs.css": [433882, 473808], "04-features/debug.css": [473846, 490611], "04-features/story-outline.css": [490657, 524963], "04-features/outline-entry-menu.css": [525014, 531767], "04-features/rewrite.css": [531807, 582706], "04-features/paragraph-editor.css": [582755, 586538], "04-features/reader.css": [586577, 595936], "04-features/chat-book.css": [595978, 602519], "04-features/story-memory.css": [602564, 649951], "04-features/retrieval.css": [649993, 660241], "04-features/character-evolution.css": [660293, 694967], "04-features/story-memory-notifications.css": [695026, 697175], "04-features/story-timetrace.css": [697223, 711274], "04-features/tts.css": [711310, 747681], "04-features/confirm-dialog.css": [747728, 751726], "04-features/image-cropper.css": [751772, 755630], "04-features/st-embedded.css": [755674, 786178], "04-features/scene-advance.css": [786224, 808309], "04-features/theater-midnight.css": [808358, 833686] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -74742,6 +74745,81 @@ ${message.content}`).join("\n\n"));
 
 // src/core/retrievalInjection.js
 import * as host7 from "../../../../script.js";
+function diagnosticFlags(run) {
+  return {
+    sharedEntryReached: Boolean(run.sharedEntryReached),
+    gateEntryReached: Boolean(run.gateEntryReached),
+    gateStarted: run.gateStarted,
+    gateFinished: run.gateFinished,
+    gatePassed: run.gatePassed,
+    preparing: run.preparing,
+    aborted: run.controller.signal.aborted,
+    requestDataObserved: run.requestDataObserved,
+    responseStarted: run.responseStarted,
+    hasPromptRecord: Boolean(run.record),
+    waitingForDecision: Boolean(run.failureChoice)
+  };
+}
+function diagnosticStack() {
+  return String(new Error().stack || "").split("\n").slice(1, 11).map((line) => line.replace(/(?:https?:\/\/|file:\/\/\/)[^\s)]+/g, (location2) => {
+    try {
+      const suffix = location2.match(/:\d+(?::\d+)?$/)?.[0] || "";
+      const url2 = new URL(suffix ? location2.slice(0, -suffix.length) : location2);
+      const path = url2.protocol === "file:" ? url2.pathname.split("/").at(-1) : url2.pathname;
+      return path + suffix;
+    } catch {
+      return "[code location]";
+    }
+  }).slice(0, 400));
+}
+function noteGenerationDiagnostic(run, stage, details = {}, stack = false) {
+  try {
+    if (!run) return;
+    run.diagnostic || (run.diagnostic = { startedAt: diagnosticClock(), events: [], dropped: 0 });
+    const event = {
+      stage,
+      atMs: Math.max(0, Math.round(diagnosticClock() - run.diagnostic.startedAt)),
+      ...diagnosticFlags(run),
+      ...details
+    };
+    if (stack) event.stack = diagnosticStack();
+    run.diagnostic.events.push(event);
+    if (run.diagnostic.events.length > DIAGNOSTIC_LIMIT) {
+      run.diagnostic.events.shift();
+      run.diagnostic.dropped++;
+    }
+  } catch {
+  }
+}
+function generationDiagnostic(run) {
+  try {
+    if (!run?.diagnostic) return null;
+    return {
+      version: 1,
+      turnId: run.token,
+      type: diagnosticType(run.type),
+      elapsedMs: run.diagnostic.events.at(-1)?.atMs || 0,
+      ...diagnosticFlags(run),
+      droppedEvents: run.diagnostic.dropped,
+      events: clone6(run.diagnostic.events)
+    };
+  } catch {
+    return null;
+  }
+}
+function noteRetrievalInterceptorStage(stage, type) {
+  const run = generation;
+  if (!run || !supported(run.type) || ![
+    "shared-entry",
+    "cleaning-complete",
+    "cleaning-aborted",
+    "inline-time-start",
+    "inline-time-complete",
+    "inline-time-failed"
+  ].includes(stage)) return;
+  if (stage === "shared-entry") run.sharedEntryReached = true;
+  noteGenerationDiagnostic(run, stage, { interceptorType: diagnosticType(type), matchesType: run.type === (type || "normal") });
+}
 function planFeedback(plan) {
   return {
     selected: plan.messages.length,
@@ -74766,6 +74844,9 @@ function publish3(owner, message, preview = null, state = null) {
     feedback = { ...previous, ...state, scopeKey: owner?.scopeKey, loadToken: owner?.loadToken, message };
     delete feedback.reset;
   }
+  if (matches2(feedback, owner) && matches2(generation?.owner, owner) && feedback.turnId === generation.token) {
+    feedback.diagnostic = generationDiagnostic(generation);
+  }
   for (const listener of listeners9) {
     try {
       listener(getRetrievalInjectionStatus(owner));
@@ -74778,6 +74859,8 @@ function subscribeRetrievalInjection(listener) {
   return () => listeners9.delete(listener);
 }
 function getRetrievalInjectionStatus(owner) {
+  const visibleFeedback = matches2(feedback, owner) ? clone6(feedback) : { phase: "idle", finished: true, selected: 0, messages: [], stats: {} };
+  if (matches2(generation?.owner, owner) && visibleFeedback.turnId === generation.token) visibleFeedback.diagnostic = generationDiagnostic(generation);
   return {
     scopeKey: owner?.scopeKey,
     loadToken: owner?.loadToken,
@@ -74785,7 +74868,7 @@ function getRetrievalInjectionStatus(owner) {
     active: installed?.owner.scopeKey === owner?.scopeKey && installed.owner.loadToken === owner?.loadToken,
     message: matches2(status3, owner) ? status3.message : "\u53EC\u56DE\u6CE8\u5165\u9ED8\u8BA4\u5173\u95ED\uFF1B\u9884\u89C8\u4E0D\u4F1A\u4FEE\u6539\u804A\u5929\uFF0C\u4E5F\u4E0D\u4F1A\u8C03\u7528\u989D\u5916\u6A21\u578B\u3002",
     preview: matches2(status3, owner) && status3.preview ? clone6(status3.preview) : null,
-    feedback: matches2(feedback, owner) ? clone6(feedback) : { phase: "idle", finished: true, selected: 0, messages: [], stats: {} }
+    feedback: visibleFeedback
   };
 }
 function erasePrompt() {
@@ -74799,6 +74882,7 @@ function clearRetrievalInjection(owner, message = "\u5DF2\u64A4\u9500\u5F85\u752
   if (owner && !retrievalContextCurrent(owner)) return;
   if (owner && pending3 && (pending3.owner.scopeKey !== owner.scopeKey || pending3.owner.loadToken !== owner.loadToken)) return;
   const run = generation;
+  noteGenerationDiagnostic(run, "recall-invalidated");
   const stopNative = run?.requiresRecall && run.gateFinished && !run.requestDataObserved && retrievalContextCurrent(run.owner);
   sequence++;
   pending3 = null;
@@ -74871,6 +74955,7 @@ function waitForFailureChoice(run, cause) {
       if (run.failureChoice?.resolve !== complete2) return;
       run.failureChoice = null;
       signal.removeEventListener("abort", cancel);
+      noteGenerationDiagnostic(run, "failure-choice", { action });
       if (generation === run) publish3(
         run.owner,
         action === "retry" ? "\u91CD\u65B0\u8FDB\u884C\u672C\u8F6E\u53EC\u56DE\uFF0C\u6B63\u6587\u4ECD\u672A\u53D1\u9001\u3002" : action === "skip" ? "\u7528\u6237\u9009\u62E9\u4EC5\u672C\u6B21\u4E0D\u53EC\u56DE\u7EE7\u7EED\u3002" : "\u5DF2\u53D6\u6D88\u672C\u6B21\u6B63\u6587\u8BF7\u6C42\u3002",
@@ -74886,6 +74971,7 @@ function waitForFailureChoice(run, cause) {
       cancel();
       return;
     }
+    noteGenerationDiagnostic(run, "waiting-for-choice");
     publish3(
       run.owner,
       `\u6B63\u6587\u5C1A\u672A\u53D1\u9001\uFF0C\u53EC\u56DE\u5904\u7406\u5931\u8D25\uFF1A${cause?.message || cause}\u3002\u8BF7\u9009\u62E9\u91CD\u8BD5\u53EC\u56DE\u3001\u672C\u6B21\u4E0D\u53EC\u56DE\u7EE7\u7EED\u6216\u53D6\u6D88\u3002`,
@@ -75000,18 +75086,29 @@ function removeOwnedBlock(slots, record) {
 }
 function stopUnconfirmedRequest(run, message) {
   if (generation !== run || !retrievalContextCurrent(run.owner)) return;
+  noteGenerationDiagnostic(run, "request-blocked", {}, true);
   erasePrompt();
   run.controller.abort();
   publish3(
     run.owner,
-    `${message} \u672C\u6B21\u6B63\u6587\u5DF2\u505C\u6B62\uFF0C\u8BF7\u4FEE\u590D\u540E\u91CD\u65B0\u53D1\u8D77\uFF1B\u672A\u9759\u9ED8\u8DF3\u8FC7\u53EC\u56DE\u3002`,
+    `${message} \u672C\u6B21\u6B63\u6587\u5DF2\u505C\u6B62\uFF0C\u8BF7\u4FEE\u590D\u540E\u91CD\u65B0\u53D1\u8D77\uFF1B\u672A\u9759\u9ED8\u8DF3\u8FC7\u53EC\u56DE\u3002\u53EF\u5C55\u5F00\u53CD\u9988\u590D\u5236\u65F6\u5E8F\u8BCA\u65AD\u3002`,
     null,
     { phase: "failed", finished: true, waitingForDecision: false, requestReady: false, responseStarted: run.responseStarted }
   );
+  try {
+    console.warn("[Titania] Retrieval generation gate diagnostic:", generationDiagnostic(run));
+  } catch {
+  }
   host7.stopGeneration?.();
 }
 async function observePrompt(data, dryRun, final) {
   const run = generation, record = run?.record;
+  noteGenerationDiagnostic(
+    run,
+    final ? "request-data" : "prompt-ready",
+    { dryRun: Boolean(dryRun || data?.dryRun) },
+    final && !dryRun && !data?.dryRun
+  );
   if (dryRun || data?.dryRun || !run || !supported(run.type) || !run.owner || !retrievalContextCurrent(run.owner) || !final && record?.observed) return;
   if (final && (!run.gateStarted || !run.gateFinished || !run.gatePassed || run.preparing)) {
     stopUnconfirmedRequest(run, "\u672A\u786E\u8BA4\u672C\u8F6E\u53EC\u56DE\u7B49\u5F85\u5173\u5361\u5B8C\u6210\uFF0C\u5DF2\u62E6\u622A\u6B63\u6587\u53D1\u9001\u3002\u8BF7\u5237\u65B0\u9875\u9762\u540E\u91CD\u65B0\u53D1\u8D77\uFF1B\u82E5\u4ECD\u51FA\u73B0\uFF0C\u8BF7\u68C0\u67E5\u751F\u6210\u62E6\u622A\u5165\u53E3\u3002");
@@ -75031,6 +75128,7 @@ async function observePrompt(data, dryRun, final) {
         stopUnconfirmedRequest(run, "\u672C\u8F6E\u672A\u53D6\u5F97\u6709\u6548\u7684\u65E0\u9700\u6CE8\u5165\u7ED3\u8BBA\uFF0C\u6216\u7ED3\u8BBA\u5728\u6700\u7EC8\u8BF7\u6C42\u6784\u9020\u524D\u5DF2\u5931\u6548\u3002");
       } else {
         run.requestDataObserved = true;
+        noteGenerationDiagnostic(run, "request-confirmed", { decision });
         const messages2 = {
           disabled: "\u672C\u8F6E\u672A\u542F\u7528\u53EC\u56DE\uFF0C\u6B63\u6587\u8BF7\u6C42\u5141\u8BB8\u7EE7\u7EED\u3002",
           "automatic-disabled": "\u672C\u8F6E\u672A\u542F\u7528\u81EA\u52A8\u53EC\u56DE\uFF0C\u4E5F\u6CA1\u6709\u624B\u52A8\u9009\u5165\u539F\u6587\uFF0C\u6B63\u6587\u8BF7\u6C42\u5141\u8BB8\u7EE7\u7EED\u3002",
@@ -75073,6 +75171,7 @@ async function observePrompt(data, dryRun, final) {
     } else if (present && final) {
       record.observed = true;
       run.requestDataObserved = true;
+      noteGenerationDiagnostic(run, "request-confirmed", { decision: "included" });
       publish3(
         run.owner,
         `\u5DF2\u786E\u8BA4\u672C\u8F6E\u63D0\u793A\u8BCD\u6784\u9020\u5305\u542B${plan.messages.length}\u697C\u539F\u6587\uFF0C\u4F30\u7B97${plan.estimatedTokens} Token\uFF0C\u6DF1\u5EA6${plan.injectDepth}\u3002`,
@@ -75123,6 +75222,7 @@ async function prepareGenerationRecall(run, contextSize) {
     const model = await getRetrievalModelConfig(run.owner);
     if (!model.enabled || !model.automatic) throw new Error("\u9010\u8BF7\u6C42\u81EA\u52A8\u53EC\u56DE\u9700\u8981\u5355\u72EC\u5F00\u542F\u6A21\u578B\u8F85\u52A9\u4E0E\u81EA\u52A8\u6A21\u578B\u6388\u6743\uFF1B\u53EF\u6253\u5F00\u8BBE\u7F6E\uFF0C\u6216\u4EC5\u672C\u6B21\u4E0D\u53EC\u56DE\u7EE7\u7EED\u3002");
     run.usingModel = true;
+    noteGenerationDiagnostic(run, "model-start");
     const message = [...run.owner.chat].reverse().find((item2) => item2.is_user && !item2.is_system);
     const query = String(message?.mes || "").trim() || (run.type === "continue" ? "\u8BF7\u5224\u65AD\u7EE7\u7EED\u5F53\u524D\u89D2\u8272\u6B63\u6587\u9700\u8981\u54EA\u4E9B\u5386\u53F2\u8BB0\u5FC6\u3002" : "\u8BF7\u5224\u65AD\u6839\u636E\u8FD1\u671F\u4E0A\u4E0B\u6587\u751F\u6210\u672C\u8F6E\u89D2\u8272\u56DE\u590D\u9700\u8981\u54EA\u4E9B\u5386\u53F2\u8BB0\u5FC6\u3002");
     publish3(
@@ -75140,6 +75240,7 @@ async function prepareGenerationRecall(run, contextSize) {
     });
     run.lastModelReview = result.modelReview;
     run.modelProof = result.modelProof;
+    noteGenerationDiagnostic(run, "model-complete", { calls: result.modelReview?.calls || 0 });
     if (!result.modelProof?.automatic || !result.modelReview?.perRequest || !(result.modelReview.calls > 0) || result.modelReview.state === "fallback" || result.modelReview.cacheHit) {
       throw new Error("\u672C\u8F6E\u672A\u83B7\u5F97\u65B0\u7684\u5B8C\u6574\u610F\u56FE\u5206\u6790\uFF0C\u4E0D\u80FD\u7528\u672C\u5730\u56DE\u9000\u6216\u65E7\u7F13\u5B58\u653E\u884C\u6B63\u6587\u3002");
     }
@@ -75216,6 +75317,7 @@ async function runGenerationGate(run, contextSize) {
       run.modelProof = null;
       run.candidates = 0;
       run.noRecallDecision = "";
+      noteGenerationDiagnostic(run, "gate-attempt");
       publish3(
         run.owner,
         "\u6B63\u6587\u8BF7\u6C42\u6B63\u5728\u7B49\u5F85\u672C\u8F6E\u53EC\u56DE\u5224\u65AD\u3002",
@@ -75224,8 +75326,10 @@ async function runGenerationGate(run, contextSize) {
       );
       try {
         await prepareGenerationRecall(run, contextSize);
+        noteGenerationDiagnostic(run, "recall-complete");
         return requestCurrent(run);
       } catch (cause) {
+        noteGenerationDiagnostic(run, "recall-error");
         if (!requestCurrent(run)) break;
         erasePrompt();
         run.record = null;
@@ -75270,21 +75374,26 @@ async function runGenerationGate(run, contextSize) {
   }
 }
 async function interceptRetrievalGeneration(_chat, contextSize, abort, type) {
-  if (!supported(type)) return;
   const run = generation;
+  if (run) run.gateEntryReached = true;
+  noteGenerationDiagnostic(run, "gate-entry", { interceptorType: diagnosticType(type), matchesType: run?.type === (type || "normal") });
+  if (!supported(type)) return;
   if (!run || run.type !== (type || "normal") || run.controller.signal.aborted) {
+    noteGenerationDiagnostic(run, "gate-entry-rejected");
     abort(true);
     return;
   }
   try {
     if (!run.gatePromise) {
       if (run.owner && !retrievalContextCurrent(run.owner)) {
+        noteGenerationDiagnostic(run, "gate-owner-obsolete");
         abort(true);
         return;
       }
       try {
         run.owner = captureRetrievalContext();
       } catch {
+        noteGenerationDiagnostic(run, "gate-owner-unavailable");
         return;
       }
       run.gateStarted = true;
@@ -75299,13 +75408,16 @@ async function interceptRetrievalGeneration(_chat, contextSize, abort, type) {
       }
       run.manualPlan = matches2(pending3?.owner, run.owner) ? pending3.plan : null;
       pending3 = null;
+      noteGenerationDiagnostic(run, "gate-bound");
       run.gatePromise = runGenerationGate(run, contextSize);
-    }
+    } else noteGenerationDiagnostic(run, "gate-shared-wait");
     const proceed = await run.gatePromise;
     run.gateFinished = true;
     run.gatePassed = Boolean(proceed && requestCurrent(run));
+    noteGenerationDiagnostic(run, "gate-finished");
     if (!run.gatePassed) abort(true);
   } catch (cause) {
+    noteGenerationDiagnostic(run, "gate-exception");
     abort(true);
     if (generation === run) {
       erasePrompt();
@@ -75323,6 +75435,7 @@ function observeResponseStarted(text9) {
   const run = generation;
   if (!run || !supported(run.type) || run.responseStarted || !text9 || !retrievalContextCurrent(run.owner)) return;
   run.responseStarted = true;
+  noteGenerationDiagnostic(run, "response-started");
   if (!run.gatePassed || !run.requestDataObserved || !matches2(feedback, run.owner) || feedback.turnId !== run.token || !["included", "skipped", "disabled"].includes(feedback.phase)) {
     stopUnconfirmedRequest(run, "\u6B63\u6587\u5DF2\u5F00\u59CB\uFF0C\u4F46\u672A\u53D6\u5F97\u672C\u8F6E\u53EC\u56DE\u5B8C\u6210\u53CA\u653E\u884C\u786E\u8BA4\uFF0C\u5DF2\u505C\u6B62\u540E\u7EED\u751F\u6210\u3002");
     return;
@@ -75353,6 +75466,7 @@ function initRetrievalInjection() {
   erasePrompt();
   host7.eventSource.on(host7.event_types.GENERATION_STARTED, (type, options2, dryRun) => {
     if (dryRun) return;
+    noteGenerationDiagnostic(generation, "generation-superseded", { nextType: diagnosticType(type) }, true);
     finishFeedback(generation, true);
     generation?.controller.abort();
     erasePrompt();
@@ -75380,6 +75494,7 @@ function initRetrievalInjection() {
       failureChoice: null
     };
     generation = run;
+    noteGenerationDiagnostic(run, "generation-started", { nativeSignalProvided: Boolean(options2?.signal) }, true);
     try {
       run.owner = captureRetrievalContext();
       if (run.type === "regenerate" && !run.owner.chat.at(-1)?.is_user && run.owner.chat.length) {
@@ -75412,6 +75527,7 @@ function initRetrievalInjection() {
   if (host7.event_types.STREAM_TOKEN_RECEIVED) host7.eventSource.on(host7.event_types.STREAM_TOKEN_RECEIVED, observeResponseStarted);
   for (const name of [host7.event_types.GENERATION_ENDED, host7.event_types.GENERATION_STOPPED].filter(Boolean)) host7.eventSource.on(name, () => {
     const run = generation;
+    noteGenerationDiagnostic(run, name === host7.event_types.GENERATION_STOPPED ? "generation-stopped" : "generation-ended");
     run?.controller.abort();
     erasePrompt();
     if (run) pending3 = null;
@@ -75486,7 +75602,7 @@ function initRetrievalInjection() {
   } catch {
   }
 }
-var RETRIEVAL_PROMPT_KEY, initialized7, sequence, generation, pending3, installed, channel3, status3, feedback, listeners9, supported, clone6, matches2, currentGeneration, copiedIntoChat;
+var RETRIEVAL_PROMPT_KEY, initialized7, sequence, generation, pending3, installed, channel3, status3, feedback, listeners9, supported, clone6, matches2, DIAGNOSTIC_LIMIT, diagnosticType, diagnosticClock, currentGeneration, copiedIntoChat;
 var init_retrievalInjection = __esm({
   "src/core/retrievalInjection.js"() {
     init_toolboxSettings();
@@ -75513,6 +75629,9 @@ var init_retrievalInjection = __esm({
     supported = (type) => ["normal", "regenerate", "swipe", "continue"].includes(type || "normal");
     clone6 = (value) => JSON.parse(JSON.stringify(value));
     matches2 = (value, owner) => Boolean(value && owner && value.scopeKey === owner.scopeKey && value.loadToken === owner.loadToken);
+    DIAGNOSTIC_LIMIT = 48;
+    diagnosticType = (type) => ["normal", "regenerate", "swipe", "continue", "quiet", "impersonate"].includes(type || "normal") ? type || "normal" : "other";
+    diagnosticClock = () => globalThis.performance?.now?.() ?? Date.now();
     currentGeneration = (run) => Boolean(run && generation === run && !run.controller.signal.aborted && retrievalContextCurrent(run.owner));
     copiedIntoChat = (record) => record.owner.chat.some((message) => typeof message?.mes === "string" && message.mes.includes(record.plan.payload));
   }
@@ -95398,10 +95517,18 @@ function interceptChatHistory(chat2, _contextSize, abort, type) {
 }
 function initChatHistoryCleaning() {
   globalThis.titaniaCleanChatHistory = async (...args) => {
-    if (interceptChatHistory(...args) === false) return;
+    noteRetrievalInterceptorStage("shared-entry", args[3]);
+    if (interceptChatHistory(...args) === false) {
+      noteRetrievalInterceptorStage("cleaning-aborted", args[3]);
+      return;
+    }
+    noteRetrievalInterceptorStage("cleaning-complete", args[3]);
+    noteRetrievalInterceptorStage("inline-time-start", args[3]);
     try {
       await flushInlineTimetraceBeforeGeneration(...args);
+      noteRetrievalInterceptorStage("inline-time-complete", args[3]);
     } catch (cause) {
+      noteRetrievalInterceptorStage("inline-time-failed", args[3]);
       console.warn("[Titania] Inline time note preparation failed:", cause);
     }
     await interceptRetrievalGeneration(...args);
@@ -95679,11 +95806,35 @@ function initRetrievalFeedback() {
                 <div class="t-retrieval-feedback-failure" data-failure-panel hidden aria-label="\u5904\u7406\u6682\u505C\u7684\u6B63\u6587\u8BF7\u6C42">
                     <p data-failure-message></p><p>\u91CD\u8BD5\u4ECD\u6682\u505C\u7684\u8FD9\u4E00\u6B21\u8BF7\u6C42\uFF1B\u672C\u6B21\u8DF3\u8FC7\u4EC5\u5728\u5F53\u524D\u539F\u6587\u672A\u53D8\u5316\u65F6\u4E0D\u53EC\u56DE\u7EE7\u7EED\uFF1B\u53D6\u6D88\u4F1A\u53D6\u6D88\u8FD9\u4E00\u6B21\u8BF7\u6C42\u3002\u53EF\u6253\u5F00\u8BBE\u7F6E\u4FEE\u590D\u914D\u7F6E\uFF1B\u4FEE\u6539\u8BBE\u7F6E\u4F1A\u53D6\u6D88\u65E7\u8BF7\u6C42\uFF0C\u4FDD\u5B58\u540E\u8BF7\u91CD\u65B0\u53D1\u8D77\u3002</p>
                     <div class="t-retrieval-feedback-actions" data-failure-actions></div><p data-decision-notice role="status" aria-live="polite"></p></div>
-                <div id="t-retrieval-feedback-details" class="t-retrieval-feedback-details" hidden><div data-description></div><div data-sources></div><p data-feedback-error role="status"></p></div>`;
+                <div id="t-retrieval-feedback-details" class="t-retrieval-feedback-details" hidden><div data-description></div><div data-sources></div>
+                    <details data-diagnostic-panel hidden><summary>\u672C\u8F6E\u65F6\u5E8F\u8BCA\u65AD\uFF08\u4E0D\u542B\u804A\u5929\u5185\u5BB9\uFF09</summary>
+                        <p>\u4EC5\u5728\u672C\u9875\u5185\u5B58\u8BB0\u5F55\u5165\u53E3\u3001\u5173\u5361\u72B6\u6001\u548C\u4EE3\u7801\u8C03\u7528\u4F4D\u7F6E\uFF0C\u4E0D\u5199\u5165\u804A\u5929\uFF0C\u4E0D\u53D1\u9001\u8BCA\u65AD\u6216\u989D\u5916\u6A21\u578B\u8BF7\u6C42\u3002</p>
+                        <button type="button" class="t-retrieval-feedback-action" data-copy-diagnostic>\u590D\u5236\u65F6\u5E8F\u8BCA\u65AD</button>
+                        <pre data-feedback-diagnostic></pre></details><p data-feedback-error role="status"></p></div>`;
       element4.querySelector(".t-retrieval-feedback-toggle").addEventListener("click", () => {
         open = !open;
         element4.querySelector("[aria-expanded]").setAttribute("aria-expanded", String(open));
         element4.querySelector(".t-retrieval-feedback-details").hidden = !open;
+      });
+      element4.querySelector("[data-copy-diagnostic]").addEventListener("click", async (event) => {
+        const captured = owner, button5 = event.currentTarget;
+        const snapshot = getRetrievalInjectionStatus(captured).feedback, turnId = snapshot.turnId;
+        if (!current3(captured) || !snapshot.diagnostic) return;
+        const text9 = JSON.stringify(snapshot.diagnostic, null, 2);
+        button5.disabled = true;
+        let message;
+        try {
+          if (!window.navigator.clipboard?.writeText) throw new Error("\u526A\u8D34\u677F\u4E0D\u53EF\u7528\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9\u4E0B\u65B9\u8BCA\u65AD\u6587\u672C\u590D\u5236\u3002");
+          await window.navigator.clipboard.writeText(text9);
+          message = "\u65F6\u5E8F\u8BCA\u65AD\u5DF2\u590D\u5236\uFF1B\u672A\u5305\u542B\u804A\u5929\u6B63\u6587\u3001\u804A\u5929\u8EAB\u4EFD\u6216\u8FDE\u63A5\u5BC6\u94A5\u3002";
+        } catch {
+          message = "\u65E0\u6CD5\u5199\u5165\u526A\u8D34\u677F\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9\u4E0B\u65B9\u8BCA\u65AD\u6587\u672C\u590D\u5236\u3002";
+        } finally {
+          button5.disabled = false;
+          if (current3(captured) && element4 && getRetrievalInjectionStatus(captured).feedback.turnId === turnId) {
+            element4.querySelector("[data-feedback-error]").textContent = message;
+          }
+        }
       });
       element4.querySelector(".t-retrieval-feedback-settings").addEventListener("click", async (event) => {
         const captured = owner, button5 = event.currentTarget;
@@ -95774,6 +95925,11 @@ function initRetrievalFeedback() {
     node3.querySelector("[aria-expanded]").setAttribute("aria-expanded", String(open));
     node3.querySelector(".t-retrieval-feedback-details").hidden = !open;
     renderFailure(node3, snapshot);
+    const diagnosticPanel = node3.querySelector("[data-diagnostic-panel]");
+    diagnosticPanel.hidden = !snapshot.diagnostic;
+    const diagnosticText2 = snapshot.diagnostic ? JSON.stringify(snapshot.diagnostic, null, 2) : "";
+    const diagnosticOutput = node3.querySelector("[data-feedback-diagnostic]");
+    if (diagnosticOutput.textContent !== diagnosticText2) diagnosticOutput.textContent = diagnosticText2;
     const description = node3.querySelector("[data-description]");
     description.replaceChildren();
     const paragraph = (value) => {
