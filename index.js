@@ -26806,6 +26806,26 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-tts-controls .t-tts-play[aria-disabled="true"] { opacity: 0.65; }\r
 .t-tts-controls .t-tts-play[aria-disabled="true"]:hover { opacity: 0.85; }\r
 \r
+/* \u72EC\u7ACB\u60AC\u6D6E\u5C42\u53EA\u63A5\u6536\u5165\u53E3\u548C\u83DC\u5355\u7684\u4E8B\u4EF6\uFF0C\u804A\u5929\u533A\u53EA\u7528\u4E8E\u9650\u5236\u6D3B\u52A8\u8FB9\u754C\u3002 */\r
+.t-root.t-tts-floating-layer {\r
+    position: fixed;\r
+    top: 0;\r
+    left: 0;\r
+    right: auto;\r
+    bottom: auto;\r
+    width: 100vw;\r
+    height: 100vh;\r
+    height: 100dvh;\r
+    margin: 0;\r
+    padding: 0;\r
+    border: 0;\r
+    background: transparent;\r
+    overflow: visible;\r
+    pointer-events: none;\r
+    z-index: var(--t-z-float);\r
+}\r
+.t-root.t-tts-floating-layer::backdrop { background: transparent; pointer-events: none; }\r
+.t-root.t-tts-floating-layer[hidden] { display: none; }\r
 /* \u804A\u5929\u8FB9\u7F18\u7684\u65E0\u6587\u5B57\u6ED1\u6761\uFF1B\u5C55\u5F00\u9762\u677F\u4F7F\u7528\u4E2D\u6027\u3001\u4E0D\u900F\u660E\u8868\u9762\u3002 */\r
 .t-root.t-tts-dock {\r
     --t-tts-bg: var(--t-color-bg);\r
@@ -26827,6 +26847,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     font-size: calc(12px * var(--t-ui-font-scale, 1));\r
     line-height: 1.5;\r
     text-align: start;\r
+    pointer-events: auto;\r
 }\r
 \r
 .t-tts-dock button {\r
@@ -26878,7 +26899,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     touch-action: none;\r
     user-select: none;\r
 }\r
-.t-tts-dock .t-tts-dock-trigger::after,\r
+.t-tts-dock .t-tts-dock-grip,\r
 .t-tts-dock-snap-marker::after {\r
     content: '';\r
     position: absolute;\r
@@ -26893,8 +26914,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     pointer-events: none;\r
 }\r
 .t-tts-dock .t-tts-dock-trigger:hover:not(:disabled) { background: transparent; }\r
-.t-tts-dock[data-edge="top"] .t-tts-dock-trigger::after,\r
-.t-tts-dock[data-edge="bottom"] .t-tts-dock-trigger::after,\r
+.t-tts-dock[data-edge="top"] .t-tts-dock-grip,\r
+.t-tts-dock[data-edge="bottom"] .t-tts-dock-grip,\r
 .t-tts-dock-snap-marker[data-edge="top"]::after,\r
 .t-tts-dock-snap-marker[data-edge="bottom"]::after {\r
     top: calc(50% - 2px);\r
@@ -26904,13 +26925,13 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     width: auto;\r
     height: 4px;\r
 }\r
-.t-tts-dock .t-tts-dock-trigger:hover::after,\r
-.t-tts-dock .t-tts-dock-trigger:focus-visible::after,\r
-.t-tts-dock .t-tts-dock-trigger[aria-expanded="true"]::after,\r
-.t-tts-dock.is-dragging .t-tts-dock-trigger::after,\r
-.t-tts-dock.is-drag-ready .t-tts-dock-trigger::after { opacity: .82; transform: scaleX(1.5); }\r
-.t-tts-dock:is([data-edge="top"], [data-edge="bottom"]) .t-tts-dock-trigger:is(:hover, :focus-visible, [aria-expanded="true"])::after,\r
-.t-tts-dock:is([data-edge="top"], [data-edge="bottom"]):is(.is-dragging, .is-drag-ready) .t-tts-dock-trigger::after { transform: scaleY(1.5); }\r
+.t-tts-dock .t-tts-dock-trigger:hover .t-tts-dock-grip,\r
+.t-tts-dock .t-tts-dock-trigger:focus-visible .t-tts-dock-grip,\r
+.t-tts-dock .t-tts-dock-trigger[aria-expanded="true"] .t-tts-dock-grip,\r
+.t-tts-dock.is-dragging .t-tts-dock-grip,\r
+.t-tts-dock.is-drag-ready .t-tts-dock-grip { opacity: .82; transform: scaleX(1.5); }\r
+.t-tts-dock:is([data-edge="top"], [data-edge="bottom"]) .t-tts-dock-trigger:is(:hover, :focus-visible, [aria-expanded="true"]) .t-tts-dock-grip,\r
+.t-tts-dock:is([data-edge="top"], [data-edge="bottom"]):is(.is-dragging, .is-drag-ready) .t-tts-dock-grip { transform: scaleY(1.5); }\r
 .t-tts-dock.is-dragging .t-tts-dock-trigger { cursor: grabbing; }\r
 .t-tts-dock-snap-marker { position: fixed; z-index: var(--t-z-float); pointer-events: none; color: var(--t-color-accent); }\r
 .t-tts-dock-snap-marker::after { opacity: .25; }\r
@@ -26967,7 +26988,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-tts-dock-reason { margin: 5px 0 0; color: var(--t-tts-muted); font-size: 0.9em; }\r
 .t-tts-dock-pending-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }\r
 @media (prefers-reduced-motion: reduce) {\r
-    .t-tts-dock button, .t-tts-dock-trigger::after, .t-tts-dock-snap-marker::after { transition: none; }\r
+    .t-tts-dock button, .t-tts-dock-grip, .t-tts-dock-snap-marker::after { transition: none; }\r
 }\r
 \r
 .t-tts-status { color: var(--t-studio-muted); font-size: 0.87em; line-height: 1.65; overflow-wrap: anywhere; }\r
@@ -28690,7 +28711,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 187891], "04-features/main-window.css": [187935, 232828], "04-features/main-window-legacy.css": [232879, 256745], "04-features/script-picker.css": [256791, 263286], "04-features/wi-selector.css": [263330, 281156], "04-features/continuation.css": [281201, 305070], "04-features/queue.css": [305108, 311668], "04-features/content-editor.css": [311715, 314022], "04-features/illustration.css": [314067, 337102], "04-features/visual-selection.css": [337151, 339582], "04-features/storyboard.css": [339625, 356705], "04-features/echo-imaging.css": [356750, 371977], "04-features/settings-drawer.css": [372025, 390259], "04-features/settings.css": [390300, 418326], "04-features/manager.css": [418366, 431664], "04-features/workshop.css": [431705, 454487], "04-features/favs.css": [454524, 494450], "04-features/debug.css": [494488, 511253], "04-features/story-outline.css": [511299, 545605], "04-features/outline-entry-menu.css": [545656, 552409], "04-features/rewrite.css": [552449, 603348], "04-features/paragraph-editor.css": [603397, 607180], "04-features/reader.css": [607219, 616578], "04-features/chat-book.css": [616620, 623161], "04-features/story-memory.css": [623206, 670593], "04-features/retrieval.css": [670635, 682474], "04-features/character-evolution.css": [682526, 717200], "04-features/story-memory-notifications.css": [717259, 719408], "04-features/story-timetrace.css": [719456, 733606], "04-features/tts.css": [733642, 770710], "04-features/confirm-dialog.css": [770757, 774755], "04-features/image-cropper.css": [774801, 778659], "04-features/st-embedded.css": [778703, 809776], "04-features/scene-advance.css": [809822, 831907], "04-features/theater-midnight.css": [831956, 857284] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 187891], "04-features/main-window.css": [187935, 232828], "04-features/main-window-legacy.css": [232879, 256745], "04-features/script-picker.css": [256791, 263286], "04-features/wi-selector.css": [263330, 281156], "04-features/continuation.css": [281201, 305070], "04-features/queue.css": [305108, 311668], "04-features/content-editor.css": [311715, 314022], "04-features/illustration.css": [314067, 337102], "04-features/visual-selection.css": [337151, 339582], "04-features/storyboard.css": [339625, 356705], "04-features/echo-imaging.css": [356750, 371977], "04-features/settings-drawer.css": [372025, 390259], "04-features/settings.css": [390300, 418326], "04-features/manager.css": [418366, 431664], "04-features/workshop.css": [431705, 454487], "04-features/favs.css": [454524, 494450], "04-features/debug.css": [494488, 511253], "04-features/story-outline.css": [511299, 545605], "04-features/outline-entry-menu.css": [545656, 552409], "04-features/rewrite.css": [552449, 603348], "04-features/paragraph-editor.css": [603397, 607180], "04-features/reader.css": [607219, 616578], "04-features/chat-book.css": [616620, 623161], "04-features/story-memory.css": [623206, 670593], "04-features/retrieval.css": [670635, 682474], "04-features/character-evolution.css": [682526, 717200], "04-features/story-memory-notifications.css": [717259, 719408], "04-features/story-timetrace.css": [719456, 733606], "04-features/tts.css": [733642, 771236], "04-features/confirm-dialog.css": [771283, 775281], "04-features/image-cropper.css": [775327, 779185], "04-features/st-embedded.css": [779229, 810302], "04-features/scene-advance.css": [810348, 832433], "04-features/theater-midnight.css": [832482, 857810] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -83682,6 +83703,9 @@ function createTtsDock(callbacks = {}) {
   trigger.setAttribute("aria-expanded", "false");
   trigger.setAttribute("aria-haspopup", "dialog");
   trigger.setAttribute("aria-controls", "t-tts-dock-panel");
+  const grip = create2("span", "t-tts-dock-grip");
+  grip.setAttribute("aria-hidden", "true");
+  trigger.append(grip);
   const panel = create2("section", "t-tts-dock-panel");
   panel.id = "t-tts-dock-panel";
   panel.hidden = true;
@@ -83727,10 +83751,14 @@ function createTtsDock(callbacks = {}) {
   const snapMarker = create2("div", "t-tts-dock-snap-marker");
   snapMarker.hidden = true;
   snapMarker.setAttribute("aria-hidden", "true");
+  const floatingLayer = create2("div", "t-root t-tts-floating-layer");
+  floatingLayer.hidden = true;
+  let nativeLayer = typeof floatingLayer.showPopover === "function" && typeof floatingLayer.hidePopover === "function";
+  if (nativeLayer) floatingLayer.setAttribute("popover", "manual");
   const positionProbe = create2("div");
   positionProbe.className = "t-tts-position-probe";
   positionProbe.setAttribute("aria-hidden", "true");
-  positionProbe.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;visibility:hidden;pointer-events:none;margin:0;padding:0;border:0;";
+  positionProbe.style.cssText = "position:absolute;top:0;left:0;width:1px;height:1px;visibility:hidden;pointer-events:none;margin:0;padding:0;border:0;";
   mountDock();
   let destroyed = false;
   let expanded = false;
@@ -83763,13 +83791,35 @@ function createTtsDock(callbacks = {}) {
   const floorRows = () => (view2?.floors || []).filter((row) => Number.isInteger(row?.index) && row.index >= 0);
   const rows = (name) => Array.isArray(view2?.floor?.[name]) ? view2.floor[name] : [];
   function mountDock() {
-    const host8 = document2.getElementById("sheld") || document2.body;
-    const mode = host8 === document2.body ? "fixed" : "absolute";
+    const host8 = document2.documentElement;
+    if (floatingLayer.parentElement !== host8) host8.append(floatingLayer);
     for (const node4 of [positionProbe, snapMarker, root]) {
-      if (node4.parentElement !== host8) host8.append(node4);
-      if (node4.style.position !== mode) node4.style.position = mode;
+      if (node4.parentElement !== floatingLayer) floatingLayer.append(node4);
+      if (node4.style.position !== "absolute") node4.style.position = "absolute";
     }
-    root.dataset.positionMode = mode;
+    root.dataset.positionMode = nativeLayer ? "top-layer" : "floating";
+  }
+  function showLayer(show) {
+    if (show) {
+      floatingLayer.hidden = false;
+      if (nativeLayer) {
+        try {
+          if (!floatingLayer.matches(":popover-open")) floatingLayer.showPopover();
+        } catch {
+          floatingLayer.removeAttribute("popover");
+          nativeLayer = false;
+          root.dataset.positionMode = "floating";
+        }
+      }
+    } else {
+      if (nativeLayer) {
+        try {
+          if (floatingLayer.matches(":popover-open")) floatingLayer.hidePopover();
+        } catch {
+        }
+      }
+      floatingLayer.hidden = true;
+    }
   }
   function clearDetails() {
     for (const details of [diagnostics, pending5]) {
@@ -83822,6 +83872,7 @@ function createTtsDock(callbacks = {}) {
   }
   function render2() {
     root.hidden = !available(view2);
+    if (root.hidden) showLayer(false);
     if (!expanded) return;
     const valid = available(view2) && hasFloor(view2);
     const floor2 = view2?.floor;
@@ -83974,7 +84025,7 @@ function createTtsDock(callbacks = {}) {
   }
   const observer3 = typeof window2.ResizeObserver === "function" ? new window2.ResizeObserver(() => schedulePosition()) : null;
   function observeInputs() {
-    const inputs = [...document2.querySelectorAll(ANCHOR_SELECTOR)];
+    const inputs = [...document2.querySelectorAll(LAYOUT_SELECTOR)];
     if (inputs.length === observed2.length && inputs.every((input, i) => input === observed2[i])) return;
     observer3?.disconnect();
     observed2 = inputs;
@@ -84006,6 +84057,7 @@ function createTtsDock(callbacks = {}) {
     const chat2 = document2.getElementById("chat"), sheld = document2.getElementById("sheld");
     const form = document2.getElementById("send_form"), textarea = document2.getElementById("send_textarea");
     let host8 = chat2 || sheld;
+    if (!host8) return null;
     let hostRect = visibleRect(host8, viewport);
     if (chat2 && !hostRect && displayed(chat2)) {
       const rect2 = chat2.getBoundingClientRect();
@@ -84019,8 +84071,7 @@ function createTtsDock(callbacks = {}) {
     }
     if (host8 && !hostRect) return null;
     const inputRect = visibleRect(form, viewport) || visibleRect(textarea, viewport);
-    if (!host8 && (form || textarea) && !inputRect) return null;
-    const rect = hostRect || (inputRect ? { ...viewport, left: inputRect.left, right: inputRect.right } : viewport);
+    const rect = hostRect;
     const outerRect = visibleRect(sheld, viewport) || rect;
     const area = {
       left: Math.max(rect.left, outerRect.left, viewport.left + GUTTER),
@@ -84046,7 +84097,13 @@ function createTtsDock(callbacks = {}) {
     const header = visibleRect(document2.getElementById("sheldheader"), viewport);
     if (header && header.left < area.right && header.right > area.left && header.bottom > area.top && header.top <= area.top) area.top = header.bottom + GAP;
     if (area.right - area.left < TTS_DOCK_HANDLE_LONG + 4 || area.bottom - area.top < TTS_DOCK_HANDLE_LONG + 4) return null;
-    return { area, anchor: host8 === chat2 && chat2 ? "chat" : host8 === sheld && sheld ? "sheld" : inputRect ? "input" : "viewport" };
+    const covered = [...document2.querySelectorAll(MODAL_SELECTOR)].some((modal) => {
+      if (floatingLayer.contains(modal)) return false;
+      const overlay = visibleRect(modal, viewport);
+      return overlay && overlay.left < area.right && overlay.right > area.left && overlay.top < area.bottom && overlay.bottom > area.top;
+    });
+    if (covered) return { area, covered: true };
+    return { area, anchor: host8 === chat2 ? "chat" : "sheld" };
   }
   function position() {
     frame = null;
@@ -84055,6 +84112,7 @@ function createTtsDock(callbacks = {}) {
     observeInputs();
     if (root.hidden) {
       root.dataset.positionState = "inactive";
+      showLayer(false);
       snapMarker.hidden = true;
       return;
     }
@@ -84062,9 +84120,20 @@ function createTtsDock(callbacks = {}) {
     if (!bounds5) {
       root.dataset.positionState = "no-chat-space";
       root.style.visibility = "hidden";
+      showLayer(false);
       snapMarker.hidden = true;
       return;
     }
+    if (bounds5.covered) {
+      if (expanded) close();
+      cancelGesture();
+      root.dataset.positionState = "covered";
+      root.style.visibility = "hidden";
+      showLayer(false);
+      snapMarker.hidden = true;
+      return;
+    }
+    showLayer(true);
     const { area } = bounds5;
     root.dataset.anchor = bounds5.anchor;
     const dragging = gesture?.dragging === true;
@@ -84106,11 +84175,11 @@ function createTtsDock(callbacks = {}) {
   const layoutObserver = typeof window2.MutationObserver === "function" ? new window2.MutationObserver((mutations) => {
     if (mutations.some((mutation) => {
       if (mutation.target === root || root.contains(mutation.target) || mutation.target === snapMarker || mutation.target === positionProbe) return false;
-      if (mutation.type === "attributes") return mutation.target.matches?.(ANCHOR_SELECTOR) || observed2.some((node4) => mutation.target.contains?.(node4));
-      return [...mutation.addedNodes, ...mutation.removedNodes].some((node4) => node4.nodeType === 1 && (node4.matches?.(ANCHOR_SELECTOR) || node4.querySelector?.(ANCHOR_SELECTOR)));
+      if (mutation.type === "attributes") return mutation.target.matches?.(LAYOUT_SELECTOR) || observed2.some((node4) => mutation.target.contains?.(node4));
+      return [...mutation.addedNodes, ...mutation.removedNodes].some((node4) => node4.nodeType === 1 && (node4.matches?.(LAYOUT_SELECTOR) || node4.querySelector?.(LAYOUT_SELECTOR)));
     })) schedulePosition();
   }) : null;
-  layoutObserver?.observe(document2.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style", "hidden"] });
+  layoutObserver?.observe(document2.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style", "hidden", "open", "role", "aria-modal"] });
   const finishGesture = () => {
     clearTimeout(holdTimer);
     holdTimer = null;
@@ -84167,7 +84236,7 @@ function createTtsDock(callbacks = {}) {
     const tap = !gesture.moved && !gesture.cancelled && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) <= DRAG_THRESHOLD && window2.performance.now() - gesture.started < 500;
     if (drag) {
       const bounds5 = chatArea();
-      if (bounds5) {
+      if (bounds5 && !bounds5.covered) {
         dockPosition = nearestTtsDockPosition(bounds5.area, { x: event.clientX, y: event.clientY }, dockPosition);
         try {
           window2.localStorage.setItem(TTS_DOCK_POSITION_KEY, JSON.stringify(dockPosition));
@@ -84301,13 +84370,12 @@ function createTtsDock(callbacks = {}) {
       layoutObserver?.disconnect();
       if (frame !== null) window2.cancelAnimationFrame(frame);
       frame = null;
-      root.remove();
-      positionProbe.remove();
-      snapMarker.remove();
+      showLayer(false);
+      floatingLayer.remove();
     }
   };
 }
-var UI_ATTRIBUTE2, GUTTER, GAP, DRAG_THRESHOLD, TOUCH_HOLD_MS, ANCHOR_SELECTOR;
+var UI_ATTRIBUTE2, GUTTER, GAP, DRAG_THRESHOLD, TOUCH_HOLD_MS, ANCHOR_SELECTOR, MODAL_SELECTOR, LAYOUT_SELECTOR;
 var init_ttsDock = __esm({
   "src/ui/ttsDock.js"() {
     init_ttsDockGeometry();
@@ -84317,6 +84385,8 @@ var init_ttsDock = __esm({
     DRAG_THRESHOLD = 8;
     TOUCH_HOLD_MS = 320;
     ANCHOR_SELECTOR = "#chat, #sheld, #sheldheader, #form_sheld, #send_form, #send_textarea, #qr--bar, #t-retrieval-feedback";
+    MODAL_SELECTOR = '.t-overlay, dialog[open], [role="dialog"][aria-modal="true"]';
+    LAYOUT_SELECTOR = `${ANCHOR_SELECTOR}, ${MODAL_SELECTOR}`;
   }
 });
 
