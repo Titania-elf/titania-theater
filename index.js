@@ -72620,7 +72620,7 @@ function localHost(hostname) {
   return a === 127 || a === 10 || a === 192 && b === 168 || a === 172 && b >= 16 && b <= 31;
 }
 function endpointUrl(value, networkMode) {
-  const endpoint = text7(value, "API \u5B8C\u6574\u7AEF\u70B9", 4096);
+  const endpoint = text7(value, "API \u5730\u5740", 4096);
   if (!endpoint) return "";
   if (!/^https?:\/\//i.test(endpoint) || /[\u0000- \u007f\\?#]/.test(endpoint)) {
     invalid2("API \u5730\u5740\u5FC5\u987B\u662F\u5B8C\u6574 HTTP(S) \u7AEF\u70B9\uFF0C\u4E0D\u5F97\u542B\u67E5\u8BE2\u53C2\u6570\u3001\u7247\u6BB5\u3001\u7A7A\u767D\u6216\u53CD\u659C\u7EBF\u3002");
@@ -72640,6 +72640,15 @@ function endpointUrl(value, networkMode) {
     invalid2("\u8FDC\u7AEF API \u5FC5\u987B\u4F7F\u7528 HTTPS\uFF1B\u672C\u5730\u670D\u52A1\u8BF7\u660E\u786E\u9009\u62E9 local \u6A21\u5F0F\u3002");
   }
   if (networkMode === "local" && !local) invalid2("local \u6A21\u5F0F\u53EA\u63A5\u53D7\u660E\u786E\u7684\u56DE\u73AF\u3001\u79C1\u7F51\u6216 .local \u670D\u52A1\u5730\u5740\u3002");
+  return url2.href;
+}
+function inferenceEndpointUrl(value, networkMode, kind) {
+  const endpoint = endpointUrl(value, networkMode);
+  if (!endpoint) return "";
+  const url2 = new URL(endpoint);
+  const route = kind === "embedding" ? "embeddings" : "rerank";
+  if (url2.pathname === "/") url2.pathname = `/v1/${route}`;
+  else if (/\/v\d+\/?$/i.test(url2.pathname)) url2.pathname = `${url2.pathname.replace(/\/$/, "")}/${route}`;
   return url2.href;
 }
 function requestOptions(value, kind) {
@@ -72694,7 +72703,7 @@ function normalizeRetrievalApiProfile(input = {}, kind = input?.kind) {
   const model = text7(input.model ?? "", "\u6A21\u578B\u540D\u79F0", 256);
   const modelRevisionTag = text7(input.modelRevisionTag ?? "", "\u6A21\u578B\u7248\u672C\u6807\u7B7E", 128);
   if (/[\u0000-\u001f\u007f]/.test(model + modelRevisionTag)) invalid2("\u6A21\u578B\u540D\u79F0\u548C\u7248\u672C\u6807\u7B7E\u4E0D\u5F97\u542B\u63A7\u5236\u5B57\u7B26\u3002");
-  const endpoint = endpointUrl(input.endpoint ?? "", networkMode);
+  const endpoint = inferenceEndpointUrl(input.endpoint ?? "", networkMode, kind);
   const modelsEndpoint = endpointUrl(input.modelsEndpoint ?? "", networkMode);
   if (endpoint && modelsEndpoint && new URL(endpoint).origin !== new URL(modelsEndpoint).origin) {
     invalid2("\u6A21\u578B\u5217\u8868\u5730\u5740\u5FC5\u987B\u4E0E\u5F53\u524D API \u540C\u6E90\uFF0C\u4E0D\u80FD\u81EA\u52A8\u5C06\u5BC6\u94A5\u53D1\u9001\u5230\u53E6\u4E00\u670D\u52A1\u3002");
@@ -72727,7 +72736,7 @@ function retrievalModelsEndpoint(profile) {
 }
 function validateRetrievalApiProfile(profile) {
   const normalized = normalizeRetrievalApiProfile(profile);
-  if (!normalized.endpoint || !normalized.model) throw retrievalApiError("CONFIG_REQUIRED", "\u8BF7\u586B\u5199 API \u5B8C\u6574\u7AEF\u70B9\u548C\u6A21\u578B\u540D\u79F0\u3002");
+  if (!normalized.endpoint || !normalized.model) throw retrievalApiError("CONFIG_REQUIRED", "\u8BF7\u586B\u5199 API \u5730\u5740\u548C\u6A21\u578B\u540D\u79F0\u3002");
   return normalized;
 }
 function apiSignature(profile, kind) {
@@ -77094,7 +77103,8 @@ function profileForm(kind) {
         <div class="t-retrieval-config-grid">
             <label>\u914D\u7F6E\u540D\u79F0<input class="t-input" name="label" maxlength="128" autocomplete="off"></label>
             <label>\u63A5\u53E3\u683C\u5F0F<select class="t-input" name="adapter"><option value="${adapters2[kind]}">${adapters2[kind]}</option></select></label>
-            <label>\u5B8C\u6574 API \u7AEF\u70B9<input class="t-input" name="endpoint" type="url" autocomplete="off" maxlength="4096" placeholder="\u586B\u5199\u5B8C\u6574\u63A5\u53E3\u5730\u5740\uFF0C\u4E0D\u81EA\u52A8\u8865\u8DEF\u5F84" required></label>
+            <label>API \u5730\u5740<input class="t-input" name="endpoint" type="url" autocomplete="off" maxlength="4096" placeholder="\u53EF\u586B\u57FA\u7840\u5730\u5740\uFF08\u5982 https://api.example.com/v1\uFF09\u6216\u5B8C\u6574\u7AEF\u70B9" required>
+                <small class="t-retrieval-field-help">\u53EA\u586B\u57DF\u540D\u6216 /v1 \u7B49\u7248\u672C\u5730\u5740\u65F6\uFF0C\u81EA\u52A8\u8865\u5168 ${kind === "embedding" ? "/embeddings" : "/rerank"}\uFF1B\u5DF2\u586B\u5199\u7684\u5B8C\u6574\u7AEF\u70B9\u4FDD\u6301\u539F\u6837\u3002</small></label>
             <label>\u6A21\u578B<select class="t-input" name="model" data-model-list required><option value="">\u586B\u5199\u5730\u5740\u548C\u5BC6\u94A5\u540E\u81EA\u52A8\u83B7\u53D6</option></select>
                 <small class="t-retrieval-field-help" data-model-status role="status" aria-live="polite">\u81EA\u52A8\u8BFB\u53D6\u670D\u52A1\u7684\u6A21\u578B\u5217\u8868\uFF0C\u4E0D\u8C03\u7528\u6A21\u578B\u3001\u4E0D\u53D1\u9001\u804A\u5929\u3002</small>
                 <button class="t-memory-action" type="button" data-model-refresh>\u5237\u65B0\u6A21\u578B\u5217\u8868</button>
@@ -77127,7 +77137,7 @@ function mountRetrievalHybridSettings(container, owner = captureRetrievalContext
   const panel = document.createElement("details");
   panel.className = "t-retrieval-model-settings";
   panel.innerHTML = `<summary>\u6DF7\u5408\u68C0\u7D22 \xB7 API\u3001\u6388\u6743\u4E0E\u539F\u6587\u9884\u7B97</summary>
-        <p class="t-retrieval-note">\u4E24\u5957\u8FDE\u63A5\u5206\u522B\u586B\u5199\u5B8C\u6574\u5730\u5740\u3001\u5BC6\u94A5\uFF0C\u7136\u540E\u4ECE\u81EA\u52A8\u83B7\u53D6\u7684\u5217\u8868\u4E2D\u9009\u62E9\u6A21\u578B\uFF0C\u652F\u6301\u534F\u8BAE\u517C\u5BB9\u7684\u7B2C\u4E09\u65B9\u4E2D\u8F6C\u3002\u6D4F\u89C8\u5668\u76F4\u8FDE API\uFF0C\u5411\u91CF\u7D22\u5F15\u4FDD\u5B58\u5728\u672C\u5730\uFF1B\u65E0\u9700\u5B89\u88C5\u540E\u7AEF\u7EC4\u4EF6\uFF0C\u4E0D\u7EE7\u627F\u6B63\u6587\u6216\u5206\u6790\u8FDE\u63A5\u3002</p>
+        <p class="t-retrieval-note">\u4E24\u5957\u8FDE\u63A5\u5206\u522B\u586B\u5199 API \u5730\u5740\u3001\u5BC6\u94A5\uFF0C\u7136\u540E\u4ECE\u81EA\u52A8\u83B7\u53D6\u7684\u5217\u8868\u4E2D\u9009\u62E9\u6A21\u578B\uFF0C\u652F\u6301\u534F\u8BAE\u517C\u5BB9\u7684\u7B2C\u4E09\u65B9\u4E2D\u8F6C\u3002\u57FA\u7840\u5730\u5740\u6309 Embedding / Rerank \u7C7B\u578B\u81EA\u52A8\u8865\u5168\u8BF7\u6C42\u8DEF\u5F84\uFF0C\u4E5F\u53EF\u586B\u5199\u5B8C\u6574\u7AEF\u70B9\u3002\u6D4F\u89C8\u5668\u76F4\u8FDE API\uFF0C\u5411\u91CF\u7D22\u5F15\u4FDD\u5B58\u5728\u672C\u5730\uFF1B\u65E0\u9700\u5B89\u88C5\u540E\u7AEF\u7EC4\u4EF6\uFF0C\u4E0D\u7EE7\u627F\u6B63\u6587\u6216\u5206\u6790\u8FDE\u63A5\u3002</p>
         <p class="t-retrieval-note">\u76F4\u8FDE\u8981\u6C42\u670D\u52A1\u5141\u8BB8\u5F53\u524D\u9152\u9986\u6765\u6E90\u7684 CORS\uFF0C\u5E76\u53D7\u6DF7\u5408\u5185\u5BB9\u4E0E\u6D4F\u89C8\u5668\u672C\u5730\u7F51\u7EDC\u9650\u5236\u3002\u4E0D\u4F1A\u542F\u7528\u5168\u5C40\u4EE3\u7406\u3002\u914D\u7F6E\u3001\u5BC6\u94A5\u548C\u7D22\u5F15\u4FDD\u5B58\u5728\u5F53\u524D\u7528\u6237\u7684\u540C\u6E90\u6D4F\u89C8\u5668\u5B58\u50A8\uFF0C\u4E0D\u540C\u6B65\u804A\u5929\u6216\u5176\u4ED6\u8BBE\u5907\uFF0C\u4E5F\u4E0D\u662F\u52A0\u5BC6\u5BC6\u94A5\u5E93\u3002</p>
         ${profileForm("embedding")}${profileForm("rerank")}
         <details class="t-retrieval-recall-settings"><summary>\u539F\u6587\u6CE8\u5165\u4E0E\u4E24\u9879\u81EA\u52A8\u5916\u53D1\u6388\u6743</summary>
