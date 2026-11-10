@@ -83731,7 +83731,7 @@ function createTtsDock(callbacks = {}) {
   positionProbe.className = "t-tts-position-probe";
   positionProbe.setAttribute("aria-hidden", "true");
   positionProbe.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;visibility:hidden;pointer-events:none;margin:0;padding:0;border:0;";
-  document2.body.append(positionProbe, snapMarker, root);
+  mountDock();
   let destroyed = false;
   let expanded = false;
   let selectedIndex = null;
@@ -83762,6 +83762,15 @@ function createTtsDock(callbacks = {}) {
   const available = (current3) => !!current3?.enabled && Array.isArray(current3.floors) && current3.floors.length > 0;
   const floorRows = () => (view2?.floors || []).filter((row) => Number.isInteger(row?.index) && row.index >= 0);
   const rows = (name) => Array.isArray(view2?.floor?.[name]) ? view2.floor[name] : [];
+  function mountDock() {
+    const host8 = document2.getElementById("sheld") || document2.body;
+    const mode = host8 === document2.body ? "fixed" : "absolute";
+    for (const node4 of [positionProbe, snapMarker, root]) {
+      if (node4.parentElement !== host8) host8.append(node4);
+      if (node4.style.position !== mode) node4.style.position = mode;
+    }
+    root.dataset.positionMode = mode;
+  }
   function clearDetails() {
     for (const details of [diagnostics, pending5]) {
       details.element.open = false;
@@ -83971,12 +83980,16 @@ function createTtsDock(callbacks = {}) {
     observed2 = inputs;
     for (const input of inputs) observer3?.observe(input);
   }
-  function visibleRect(element4, viewport) {
+  function displayed(element4) {
     if (!element4?.isConnected) return null;
     for (let ancestor = element4; ancestor; ancestor = ancestor.parentElement) {
       const style = window2.getComputedStyle(ancestor);
-      if (ancestor.hidden || style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse") return null;
+      if (ancestor.hidden || style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse") return false;
     }
+    return true;
+  }
+  function visibleRect(element4, viewport) {
+    if (!displayed(element4)) return null;
     const rect = element4.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0 && rect.bottom > viewport.top && rect.top < viewport.bottom && rect.right > viewport.left && rect.left < viewport.right ? rect : null;
   }
@@ -83992,26 +84005,39 @@ function createTtsDock(callbacks = {}) {
     viewport.right = viewport.left + viewport.width;
     const chat2 = document2.getElementById("chat"), sheld = document2.getElementById("sheld");
     const form = document2.getElementById("send_form"), textarea = document2.getElementById("send_textarea");
-    const host8 = chat2 || sheld;
-    const hostRect = visibleRect(host8, viewport);
+    let host8 = chat2 || sheld;
+    let hostRect = visibleRect(host8, viewport);
+    if (chat2 && !hostRect && displayed(chat2)) {
+      const rect2 = chat2.getBoundingClientRect();
+      if (!(rect2.width > 0 && rect2.height > 0)) {
+        const outer = visibleRect(sheld, viewport);
+        if (outer) {
+          host8 = sheld;
+          hostRect = outer;
+        }
+      }
+    }
     if (host8 && !hostRect) return null;
     const inputRect = visibleRect(form, viewport) || visibleRect(textarea, viewport);
     if (!host8 && (form || textarea) && !inputRect) return null;
     const rect = hostRect || (inputRect ? { ...viewport, left: inputRect.left, right: inputRect.right } : viewport);
+    const outerRect = visibleRect(sheld, viewport) || rect;
     const area = {
-      left: Math.max(rect.left, viewport.left + GUTTER),
-      right: Math.min(rect.right, viewport.right - GUTTER),
-      top: Math.max(rect.top, viewport.top + GUTTER),
-      bottom: Math.min(rect.bottom, viewport.bottom - GUTTER)
+      left: Math.max(rect.left, outerRect.left, viewport.left + GUTTER),
+      right: Math.min(rect.right, outerRect.right, viewport.right - GUTTER),
+      top: Math.max(rect.top, outerRect.top, viewport.top + GUTTER),
+      bottom: Math.min(rect.bottom, outerRect.bottom, viewport.bottom - GUTTER)
     };
-    if (chat2 && hostRect) {
+    if (host8 === chat2 && hostRect) {
       const style = window2.getComputedStyle(chat2);
       const borders = (Number.parseFloat(style.borderLeftWidth) || 0) + (Number.parseFloat(style.borderRightWidth) || 0);
       const scale = chat2.offsetWidth > 0 ? hostRect.width / chat2.offsetWidth : 1;
       const scrollbar = Math.max(0, (chat2.offsetWidth - chat2.clientWidth - borders) * scale);
       area.right = Math.min(area.right, hostRect.right - Math.max(8, scrollbar));
     }
-    for (const selector of ["#form_sheld", "#send_form", "#send_textarea", "#send_form #qr--bar", "#t-retrieval-feedback"]) {
+    const exclusions = ["#send_form", "#send_textarea", "#send_form #qr--bar", "#t-retrieval-feedback"];
+    if (!inputRect) exclusions.unshift("#form_sheld");
+    for (const selector of exclusions) {
       const blocked2 = visibleRect(document2.querySelector(selector), viewport);
       if (blocked2 && blocked2.left < area.right && blocked2.right > area.left && blocked2.top < area.bottom && blocked2.bottom > area.top) {
         area.bottom = Math.min(area.bottom, blocked2.top - GAP);
@@ -84020,18 +84046,21 @@ function createTtsDock(callbacks = {}) {
     const header = visibleRect(document2.getElementById("sheldheader"), viewport);
     if (header && header.left < area.right && header.right > area.left && header.bottom > area.top && header.top <= area.top) area.top = header.bottom + GAP;
     if (area.right - area.left < TTS_DOCK_HANDLE_LONG + 4 || area.bottom - area.top < TTS_DOCK_HANDLE_LONG + 4) return null;
-    return { area, anchor: chat2 ? "chat" : sheld ? "sheld" : inputRect ? "input" : "viewport" };
+    return { area, anchor: host8 === chat2 && chat2 ? "chat" : host8 === sheld && sheld ? "sheld" : inputRect ? "input" : "viewport" };
   }
   function position() {
     frame = null;
     if (destroyed) return;
+    mountDock();
     observeInputs();
     if (root.hidden) {
+      root.dataset.positionState = "inactive";
       snapMarker.hidden = true;
       return;
     }
     const bounds5 = chatArea();
     if (!bounds5) {
+      root.dataset.positionState = "no-chat-space";
       root.style.visibility = "hidden";
       snapMarker.hidden = true;
       return;
@@ -84050,6 +84079,7 @@ function createTtsDock(callbacks = {}) {
     root.style.width = `${handle.width / scaleX}px`;
     root.style.height = `${handle.height / scaleY}px`;
     root.style.visibility = "visible";
+    root.dataset.positionState = "visible";
     root.classList.toggle("is-dragging", dragging);
     snapMarker.hidden = !dragging;
     if (dragging) {
@@ -84244,13 +84274,20 @@ function createTtsDock(callbacks = {}) {
     }
   });
   listen(window2, "resize", schedulePosition, { passive: true });
+  listen(window2, "orientationchange", schedulePosition, { passive: true });
+  listen(window2, "pageshow", schedulePosition, { passive: true });
   listen(window2, "scroll", schedulePosition, { capture: true, passive: true });
   listen(window2.visualViewport, "resize", schedulePosition, { passive: true });
   listen(window2.visualViewport, "scroll", schedulePosition, { passive: true });
   listen(window2, "blur", cancelGesture);
   listen(document2, "visibilitychange", () => {
     if (document2.hidden) cancelGesture();
+    else {
+      refresh();
+      schedulePosition();
+    }
   });
+  listen(document2.fonts, "loadingdone", schedulePosition);
   refresh();
   return {
     refresh,
