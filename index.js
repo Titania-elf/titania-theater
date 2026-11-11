@@ -249,8 +249,14 @@ var init_defaults = __esm({
         enabled: true,
         show_theater: true,
         show_outline_actions: true,
-        show_memory: true
+        show_memory: true,
         // 故事记忆入口包含回声时痕；旧配置缺失时按开启处理
+        show_retrieval: false
+        // 仅控制菜单中的回声召回入口，默认关闭
+      },
+      // 聊天召回状态栏的全局显示偏好；暂停请求的处理按钮仍然可用。
+      retrieval_feedback: {
+        enabled: false
       },
       // 小剧场注入聊天（挂在每条消息气泡的「…」菜单里）
       chat_inject: {
@@ -79652,6 +79658,9 @@ var init_retrievalHybridSettings = __esm({
 
 // src/ui/retrievalFeedback.js
 import { eventSource as eventSource15, event_types as event_types15 } from "../../../../script.js";
+function refreshRetrievalFeedback() {
+  refreshView();
+}
 function retrievalMetricsLines(snapshot) {
   const counts = snapshot.counts || {};
   const lines = [
@@ -79956,6 +79965,11 @@ function initRetrievalFeedback() {
       return;
     }
     const snapshot = feedback2(owner);
+    const showStatus = getExtData()?.retrieval_feedback?.enabled === true;
+    if (!showStatus && !waitingForDecision(snapshot)) {
+      remove();
+      return;
+    }
     if (!enabled2 && snapshot.phase === "idle") {
       remove();
       return;
@@ -79963,6 +79977,12 @@ function initRetrievalFeedback() {
     const node4 = ensureElement();
     if (!node4) return;
     node4.dataset.phase = snapshot.phase;
+    node4.querySelector(".t-retrieval-feedback-header").hidden = !showStatus;
+    node4.querySelector(".t-retrieval-feedback-details").hidden = !showStatus || !open;
+    if (!showStatus) {
+      renderFailure(node4, snapshot);
+      return;
+    }
     if (shownTurn !== snapshot.turnId) {
       shownTurn = snapshot.turnId;
       node4.querySelector("[data-feedback-error]").textContent = "";
@@ -80054,6 +80074,7 @@ function initRetrievalFeedback() {
       }
     }
   }
+  refreshView = render2;
   subscribeRetrievalInjection((update) => {
     if (!current3(owner)) {
       sequence2++;
@@ -80103,14 +80124,17 @@ function initRetrievalFeedback() {
   }
   void refresh();
 }
-var initialized8, PHASES2, MODES, countKeys, timingLabels, integer3, quantity, physicalCalls, code;
+var initialized8, refreshView, PHASES2, MODES, countKeys, timingLabels, integer3, quantity, physicalCalls, code;
 var init_retrievalFeedback = __esm({
   "src/ui/retrievalFeedback.js"() {
     init_dom();
     init_retrievalSource();
     init_retrievalInjection();
     init_retrieval();
+    init_storage();
     initialized8 = false;
+    refreshView = () => {
+    };
     PHASES2 = /* @__PURE__ */ new Set(["idle", "waiting", "retrieving", "reranking", "prepared", "included", "empty", "waiting-user", "cancelled", "failed", "armed", "disabled"]);
     MODES = { hybrid: "\u5411\u91CF + BM25 \u2192 Rerank", manual: "\u65E0\u6A21\u578B\u624B\u52A8 BM25" };
     countKeys = ["vectorHits", "bm25Hits", "duplicateHits", "merged", "skippedEvidence", "skippedBudget", "rerankDocuments", "rerankChars", "skippedSource"];
@@ -84397,15 +84421,15 @@ function createTtsDock(callbacks = {}) {
   const rows = (name) => Array.isArray(view2?.floor?.[name]) ? view2.floor[name] : [];
   function mountDock() {
     const bar = document2.getElementById("qr--bar");
-    if (!bar?.parentElement) {
+    for (const duplicate of document2.querySelectorAll(".t-tts-dock, #t-tts-dock-trigger")) {
+      if (duplicate !== root && duplicate !== trigger) duplicate.remove();
+    }
+    if (!view2?.enabled || !bar?.parentElement) {
       anchor = null;
       if (expanded) close();
       trigger.remove();
       root.remove();
       return false;
-    }
-    for (const duplicate of document2.querySelectorAll(".t-tts-dock, #t-tts-dock-trigger")) {
-      if (duplicate !== root && duplicate !== trigger) duplicate.remove();
     }
     anchor = bar;
     if (trigger.parentElement !== bar) bar.prepend(trigger);
@@ -84524,6 +84548,7 @@ function createTtsDock(callbacks = {}) {
     }
     view2 = next;
     renderedIdentity = nextIdentity2;
+    mountDock();
     render2();
     schedulePosition();
   }
@@ -84730,7 +84755,6 @@ function createTtsDock(callbacks = {}) {
     }
   });
   listen(document2.fonts, "loadingdone", schedulePosition);
-  mountDock();
   refresh();
   return {
     refresh,
@@ -86978,7 +87002,7 @@ function openTtsSettingsWindow() {
   enabled2.type = "checkbox";
   enabled2.name = "enabled";
   const enabledLabel = element3("label", "t-tts-enable");
-  enabledLabel.title = "\u4FDD\u5B58\u8BBE\u7F6E\u540E\uFF0C\u4EC5\u5BF9\u6253\u5F00\u7A97\u53E3\u65F6\u7684\u804A\u5929\u751F\u6548";
+  enabledLabel.title = "\u4FDD\u5B58\u8BBE\u7F6E\u540E\uFF0C\u4EC5\u5BF9\u6253\u5F00\u7A97\u53E3\u65F6\u7684\u804A\u5929\u751F\u6548\uFF1B\u5F00\u542F\u65F6\u663E\u793A QR \u680F\u4E2D\u7684\u300C\u56DE\u58F0TTS\u300D\u6309\u94AE";
   enabledLabel.append(element3("span", "", "\u5F53\u524D\u804A\u5929"), switchControl(enabled2));
   enabled2.setAttribute("aria-label", "\u5728\u5F53\u524D\u804A\u5929\u542F\u7528\u89D2\u8272\u914D\u97F3");
   const closeButton = iconButton("fa-xmark", "\u5173\u95ED\u89D2\u8272\u914D\u97F3\u8BBE\u7F6E\uFF0C\u653E\u5F03\u672A\u4FDD\u5B58\u7684\u8349\u7A3F", close);
@@ -86986,6 +87010,7 @@ function openTtsSettingsWindow() {
   const help = createHelpTip({ title: "\u89D2\u8272\u914D\u97F3", sections: [
     { heading: "\u8BBE\u7F6E\u7684\u4F5C\u7528\u8303\u56F4", lines: [
       "\u542F\u7528\u5F00\u5173\u53EA\u5C5E\u4E8E\u5F53\u524D\u804A\u5929\uFF1B\u97F3\u8272\u6620\u5C04\u4E0E\u89D2\u8272\u8BED\u8A00\u8986\u76D6\u5C5E\u4E8E\u5F53\u524D\u89D2\u8272\u6216\u7FA4\u7EC4\uFF1B\u8BED\u97F3\u8FDE\u63A5\u3001\u8BC6\u522B\u65B9\u6848\u3001\u9ED8\u8BA4\u914D\u97F3\u8BED\u8A00\u4E0E\u63D0\u793A\u8BCD\u4E3A\u5171\u7528\u914D\u7F6E\u3002",
+      "\u4FDD\u5B58\u540E\uFF0C\u5F53\u524D\u804A\u5929\u542F\u7528\u914D\u97F3\u65F6\u663E\u793A QR \u680F\u4E2D\u7684\u300C\u56DE\u58F0TTS\u300D\u6309\u94AE\uFF0C\u5173\u95ED\u914D\u97F3\u65F6\u9690\u85CF\u3002",
       "\u4FEE\u6539\u5148\u7559\u5728\u8349\u7A3F\u91CC\uFF0C\u5207\u6362\u6807\u7B7E\u548C\u89D2\u8272\u4E0D\u4F1A\u4E22\u5931\u3002\u70B9\u51FB\u4FDD\u5B58\u8BBE\u7F6E\u624D\u751F\u6548\uFF1B\u53D6\u6D88\u6216\u5173\u95ED\u653E\u5F03\u672A\u4FDD\u5B58\u4FEE\u6539\u3002\u5207\u6362\u804A\u5929\u540E\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u3002"
     ] },
     { heading: "\u8BD5\u542C\u4E0E\u8FDE\u63A5", lines: [
@@ -88342,7 +88367,7 @@ function openMenu(focusFirst = false) {
   const reading = [
     data?.chat_books?.enabled !== false ? item("book", "t-outline-entry-open-book", "outline", "\u804A\u5929\u6210\u4E66", "\u7F16\u6392\u7AE0\u8282\uFF0C\u5BFC\u51FA EPUB \u4E0E TXT", "is-outline") : "",
     data?.outline_entry?.show_memory !== false ? item("memory", "t-outline-entry-open-memory", "memory", "\u6545\u4E8B\u8BB0\u5FC6", "\u4EBA\u7269\u3001\u4F0F\u7B14\u4E0E\u6765\u65F6\u7684\u8DEF", "is-memory") : "",
-    item("retrieval", "t-outline-entry-open-retrieval", "memory", "\u957F\u671F\u8BB0\u5FC6\u53EC\u56DE", "\u624B\u52A8\u67E5\u627E\u5F53\u524D\u804A\u5929\u7684\u5386\u53F2\u539F\u6587", "is-memory")
+    data?.outline_entry?.show_retrieval === true ? item("retrieval", "t-outline-entry-open-retrieval", "memory", "\u56DE\u58F0\u53EC\u56DE", "\u624B\u52A8\u67E5\u627E\u5F53\u524D\u804A\u5929\u7684\u5386\u53F2\u539F\u6587", "is-memory") : ""
   ].join("");
   $("body").append(`<div id="${MENU_ID}" role="menu" aria-label="\u56DE\u58F0\u5DE5\u5177\u7BB1">
         <div class="t-outline-menu-heading" role="presentation"><span class="t-outline-menu-mark">${echoIcon("echo")}</span><div><strong>\u56DE\u58F0\u5DE5\u5177\u7BB1</strong><small>ECHO / CREATIVE SUITE</small></div></div>
@@ -99558,6 +99583,35 @@ function initChatBookSettings() {
   }
 }
 
+// src/ui/retrievalUiSettings.js
+init_storage();
+init_outlineEntryButton();
+init_retrievalFeedback();
+var initializedControls2 = /* @__PURE__ */ new WeakSet();
+function initRetrievalUiSettings() {
+  const data = getExtData();
+  const controls = [
+    ["cfg-retrieval-feedback-enabled", data.retrieval_feedback?.enabled === true, (current3, enabled2) => {
+      current3.retrieval_feedback = { ...current3.retrieval_feedback, enabled: enabled2 };
+    }, refreshRetrievalFeedback],
+    ["cfg-retrieval-entry-enabled", data.outline_entry?.show_retrieval === true, (current3, enabled2) => {
+      current3.outline_entry = { ...current3.outline_entry, show_retrieval: enabled2 };
+    }, refreshOutlineEntryButton]
+  ];
+  for (const [id4, checked, update, refresh] of controls) {
+    const control = document.getElementById(id4);
+    if (!control) continue;
+    control.checked = checked;
+    if (initializedControls2.has(control)) continue;
+    initializedControls2.add(control);
+    control.addEventListener("input", () => {
+      update(getExtData(), control.checked);
+      saveExtData();
+      refresh();
+    });
+  }
+}
+
 // src/entry.js
 init_sceneAdvanceBubble();
 init_unlockChime();
@@ -100807,6 +100861,7 @@ ${hydration.error}`,
   $("#cfg-memory-entry-enabled").prop("checked", extData.outline_entry.show_memory !== false);
   $("#cfg-chat-inject-enabled").prop("checked", extData.chat_inject.enabled === true);
   initChatBookSettings();
+  initRetrievalUiSettings();
   $("#cfg-floor-nav-enabled").prop("checked", extData.floor_nav?.enabled !== false);
   $("#cfg-preset-persist-vars").prop("checked", extData.preset_macros.persist_variables === true);
   (() => {
