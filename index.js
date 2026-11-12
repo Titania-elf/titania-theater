@@ -51970,27 +51970,83 @@ async function requestBody(input, init) {
   else text9 = await new Response(body).text();
   return { value: JSON.parse(text9), headers };
 }
+function staleFields(metadata, ledger) {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return [];
+  return fields.filter((field3) => {
+    const saved = ledger.get(field3);
+    return saved && token(metadata[field3]) !== token(saved.latest) && saved.previous.includes(token(metadata[field3]));
+  });
+}
+function mergeFields(metadata, ledger, stale, chat2) {
+  let changed = false;
+  for (const field3 of stale) {
+    const saved = ledger.get(field3);
+    if (saved.sourcesMatch && !saved.sourcesMatch(chat2)) continue;
+    if (saved.latest === void 0) delete metadata[field3];
+    else metadata[field3] = copy(saved.latest);
+    changed = true;
+  }
+  return changed;
+}
+async function readLegacySources(chatId, headers, signal) {
+  const controller = new AbortController(), abort = () => controller.abort();
+  if (signal?.aborted) abort();
+  signal?.addEventListener("abort", abort, { once: true });
+  const timeout = setTimeout(abort, 15e3);
+  try {
+    const readHeaders = new Headers(headers);
+    readHeaders.delete("Content-Encoding");
+    readHeaders.delete("Content-Length");
+    const response = await originalFetch("/api/chats/group/get", {
+      method: "POST",
+      headers: readHeaders,
+      body: JSON.stringify({ id: chatId }),
+      signal: controller.signal,
+      cache: "no-store"
+    });
+    if (!response.ok) throw new Error("\u65E0\u6CD5\u6838\u5BF9\u65E7\u7248\u7FA4\u804A\u6B63\u6587\uFF0C\u5DF2\u963B\u6B62\u8986\u76D6\u5176\u5DF2\u4FDD\u5B58\u6863\u6848\u3002");
+    const file = await response.json();
+    if (!Array.isArray(file)) throw new Error("\u65E7\u7248\u7FA4\u804A\u56DE\u8BFB\u683C\u5F0F\u65E0\u6548\uFF0C\u5DF2\u963B\u6B62\u8986\u76D6\u5176\u5DF2\u4FDD\u5B58\u6863\u6848\u3002");
+    return file[0]?.chat_metadata ? file.slice(1) : file;
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener("abort", abort);
+  }
+}
+async function mergeLegacyGroup(value, headers, signal) {
+  let changed = false;
+  const scope3 = scopeReader();
+  for (const ledger of ledgers.values()) {
+    if (ledger.scope !== scope3 || ledger.groupId !== String(value.id)) continue;
+    const metadata = String(value.chat_id) === ledger.chatId ? value.chat_metadata : value.past_metadata?.[ledger.chatId];
+    const stale = staleFields(metadata, ledger);
+    if (!stale.length) continue;
+    const chat2 = await readLegacySources(ledger.chatId, headers, signal);
+    if (scope3 !== scopeReader() || signal?.aborted) throw new Error("\u8D26\u6237\u6216\u4FDD\u5B58\u4EFB\u52A1\u5DF2\u53D8\u5316\uFF0C\u65E7\u7248\u7FA4\u804A\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+    changed = mergeFields(metadata, ledger, stale, chat2) || changed;
+  }
+  return changed;
+}
 function install() {
   if (originalFetch || typeof globalThis.fetch !== "function") return;
   originalFetch = globalThis.fetch.bind(globalThis);
   globalThis.fetch = async (input, init) => {
     const route = savePath(input, init);
-    if (!ledgers.size || !["/api/chats/save", "/api/chats/group/save"].includes(route)) return originalFetch(input, init);
+    if (!ledgers.size || !["/api/chats/save", "/api/chats/group/save", "/api/groups/edit"].includes(route)) return originalFetch(input, init);
+    const scope3 = scopeReader();
     await Promise.all([...pending]);
-    if (init?.signal?.aborted) throw new Error("\u804A\u5929\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+    const signal = init?.signal || input?.signal;
+    if (signal?.aborted || scope3 !== scopeReader()) throw new Error("\u8D26\u6237\u6216\u804A\u5929\u4FDD\u5B58\u4EFB\u52A1\u5DF2\u53D8\u5316\uFF0C\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
     const { value, headers } = await requestBody(input, init);
-    const ledger = ledgers.get(keyFor(scopeReader(), route.includes("/group/"), value.avatar_url, value.file_name || value.id));
-    const metadata = value.chat?.[0]?.chat_metadata;
-    if (!ledger || !metadata) return originalFetch(input, init);
-    let changed = false;
-    for (const field3 of fields) {
-      const saved = ledger.get(field3);
-      if (!saved || token(metadata[field3]) === token(saved.latest)) continue;
-      if (!saved.previous.includes(token(metadata[field3]))) continue;
-      if (saved.sourcesMatch && !saved.sourcesMatch(value.chat.slice(1))) continue;
-      if (saved.latest === void 0) delete metadata[field3];
-      else metadata[field3] = copy(saved.latest);
-      changed = true;
+    if (scope3 !== scopeReader()) throw new Error("\u8D26\u6237\u5DF2\u53D8\u5316\uFF0C\u65E7\u804A\u5929\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+    let changed;
+    if (route === "/api/groups/edit") {
+      changed = await mergeLegacyGroup(value, headers, signal);
+    } else {
+      const ledger = ledgers.get(keyFor(scope3, route.includes("/group/"), value.avatar_url, value.file_name || value.id));
+      const metadata = value.chat?.[0]?.chat_metadata;
+      if (!ledger || !metadata) return originalFetch(input, init);
+      changed = mergeFields(metadata, ledger, staleFields(metadata, ledger), value.chat.slice(1));
     }
     if (!changed) return originalFetch(input, init);
     if (headers.delete) {
@@ -52013,6 +52069,9 @@ function beginArchiveSave(ctx2, base, getScope) {
     ledger = /* @__PURE__ */ new Map();
     ledgers.set(key, ledger);
   }
+  ledger.scope = ctx2.archiveAccount || getScope();
+  ledger.groupId = group2 ? String(ctx2.groupId) : null;
+  ledger.chatId = String(ctx2.chatId);
   for (const field3 of fields) {
     let state = ledger.get(field3);
     if (!state) {
@@ -52178,6 +52237,51 @@ var init_analysisSourceEdits = __esm({
   }
 });
 
+// src/core/chatFileCompatibility.js
+async function normalizeChatFile(ctx2, file, requestJSON2) {
+  if (!isGroup(ctx2) || !Array.isArray(file) || object(file[0]?.chat_metadata) && typeof file[0]?.mes !== "string") return file;
+  const groups = await requestJSON2("/api/groups/all", {});
+  if (!Array.isArray(groups)) throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u7FA4\u804A\u5143\u6570\u636E\uFF0C\u672A\u4F7F\u7528\u5F53\u524D\u804A\u5929\u7F13\u5B58\u4EE3\u66FF\u3002");
+  const matches3 = groups.filter((group3) => String(group3?.id) === String(ctx2.groupId));
+  const group2 = matches3.length === 1 ? matches3[0] : null;
+  if (!group2 || String(group2.chat_id) !== String(ctx2.chatId) || !Array.isArray(group2.chats) || !group2.chats.some((id4) => String(id4) === String(ctx2.chatId))) {
+    throw new Error("\u7FA4\u7EC4\u6216\u5176\u5F53\u524D\u804A\u5929\u5DF2\u53D8\u5316\uFF0C\u65E7\u4EFB\u52A1\u5DF2\u505C\u6B62\uFF1B\u6CA1\u6709\u5207\u6362\u7FA4\u7EC4\u804A\u5929\u3002");
+  }
+  if (!own(group2, "chat_metadata") && !own(group2, "past_metadata")) {
+    if (!file.length) return file;
+    throw new Error("\u7FA4\u804A\u6587\u4EF6\u7F3A\u5C11\u9996\u884C\u5143\u6570\u636E\uFF0C\u4E14\u7FA4\u7EC4\u6CA1\u6709\u65E7\u7248\u5143\u6570\u636E\uFF0C\u672A\u731C\u6D4B\u6863\u6848\u6765\u6E90\u3002");
+  }
+  if (group2.chat_metadata != null && !object(group2.chat_metadata)) throw new Error("\u65E7\u7248\u7FA4\u804A\u5143\u6570\u636E\u683C\u5F0F\u5F02\u5E38\uFF0C\u672A\u8986\u76D6\u6863\u6848\u3002");
+  const normalized = [{ user_name: "unused", character_name: "unused", chat_metadata: copy2(group2.chat_metadata || {}) }, ...file];
+  legacyFiles.set(normalized, { group: copy2(group2), groupId: String(ctx2.groupId), chatId: String(ctx2.chatId) });
+  return normalized;
+}
+async function saveLegacyGroupMetadata(ctx2, baseline3, metadata, requestJSON2, current3) {
+  if (!current3()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u65E7\u7248\u7FA4\u804A\u5143\u6570\u636E\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+  const file = await normalizeChatFile(ctx2, [], requestJSON2);
+  const latest = legacyGroupChatFile(file);
+  if (!latest || latest.groupId !== baseline3.groupId || latest.chatId !== baseline3.chatId || JSON.stringify(file[0].chat_metadata) !== JSON.stringify(baseline3.group.chat_metadata || {})) {
+    throw new Error("\u65E7\u7248\u7FA4\u804A\u7684\u5DF2\u4FDD\u5B58\u5143\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u672A\u8986\u76D6\u5176\u4ED6\u64CD\u4F5C\uFF1B\u8BF7\u91CD\u65B0\u8F7D\u5165\u540E\u91CD\u8BD5\u3002");
+  }
+  if (!current3()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u65E7\u7248\u7FA4\u804A\u5143\u6570\u636E\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+  await requestJSON2("/api/groups/edit", { ...latest.group, chat_metadata: copy2(metadata) });
+}
+function publishLegacyGroupMetadata(ctx2) {
+  const group2 = ctx2?.groups?.find((value) => String(value?.id) === String(ctx2.groupId));
+  if (group2 && String(group2.chat_id) === String(ctx2.chatId)) group2.chat_metadata = copy2(ctx2.chatMetadata);
+}
+var legacyFiles, object, own, copy2, isGroup, legacyGroupChatFile;
+var init_chatFileCompatibility = __esm({
+  "src/core/chatFileCompatibility.js"() {
+    legacyFiles = /* @__PURE__ */ new WeakMap();
+    object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    own = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+    copy2 = (value) => JSON.parse(JSON.stringify(value));
+    isGroup = (ctx2) => ctx2?.groupId != null && ctx2.groupId !== "";
+    legacyGroupChatFile = (file) => legacyFiles.get(file);
+  }
+});
+
 // src/core/storyMemoryArchive.js
 var storyMemoryArchive_exports = {};
 __export(storyMemoryArchive_exports, {
@@ -52268,7 +52372,7 @@ function fieldState(ctx2, key) {
   }
   if (!state.has(key)) state.set(key, {
     reference: ctx2.chatMetadata[key],
-    snapshot: copy2(ctx2.chatMetadata[key]),
+    snapshot: copy3(ctx2.chatMetadata[key]),
     expectedFloors: Number(ctx2.chatMetadata[key]?.sourceChatLength) || 0,
     pending: false
   });
@@ -52288,7 +52392,7 @@ function restoreArchiveProposal(ctx2, key, proposal, previous) {
   if (previous === void 0) delete ctx2.chatMetadata[key];
   else ctx2.chatMetadata[key] = previous;
   state.reference = previous;
-  state.snapshot = copy2(previous);
+  state.snapshot = copy3(previous);
 }
 function observeArchive(ctx2, key, preparing = false) {
   if (!ctx2?.chatMetadata) return;
@@ -52297,7 +52401,7 @@ function observeArchive(ctx2, key, preparing = false) {
   try {
     if (validators.get(key)?.(value, ctx2) && ctx2.chat.length >= (Number(value.sourceChatLength) || state.expectedFloors)) {
       state.reference = value;
-      state.snapshot = copy2(value);
+      state.snapshot = copy3(value);
       state.expectedFloors = Number(value.sourceChatLength) || ctx2.chat.length;
     }
   } catch {
@@ -52588,7 +52692,7 @@ function nativeJSON(url2, body) {
 async function readChatFile(ctx2) {
   const group2 = ctx2.groupId != null && ctx2.groupId !== "";
   const url2 = group2 ? "/api/chats/group/get" : "/api/chats/get";
-  return requestJSON(url2, archiveTarget(ctx2));
+  return normalizeChatFile(ctx2, await requestJSON(url2, archiveTarget(ctx2)), requestJSON);
 }
 function rememberChatFile(ctx2, saved) {
   const observed2 = observers2.get(ctx2.chatMetadata);
@@ -52644,12 +52748,12 @@ function checkSaveSources(ctx2, saved, chat2, metadata, proposals) {
       const state = fieldState(ctx2, field3);
       if (records(stored) && !records(state.snapshot) && !state.confirmed) throw sourcesUnconfirmed(ctx2, "archive-header-missing", { field: field3 });
     } else if (stored === void 0) delete metadata[field3];
-    else metadata[field3] = copy2(stored);
+    else metadata[field3] = copy3(stored);
   }
   rememberChatFile(ctx2, saved);
 }
 async function confirmArchiveSources(ctx2, field3, hasMatchingSource, { force = false, generationValid = null } = {}) {
-  const state = fieldState(ctx2, field3), signature3 = archiveSources(ctx2.chat), original = copy2(ctx2.chatMetadata[field3]);
+  const state = fieldState(ctx2, field3), signature3 = archiveSources(ctx2.chat), original = copy3(ctx2.chatMetadata[field3]);
   const witnessed = typeof generationValid === "function" && ctx2.chat.length >= state.expectedFloors && generationValid();
   if (!state.pending || state.kind === "baseline" || state.kind === "sources" && !hasMatchingSource && !witnessed || !force && state.checkedSignature === signature3) return false;
   state.checkedSignature = signature3;
@@ -52723,7 +52827,7 @@ function openDatabase2() {
 }
 async function readRecovery(ctx2, field3) {
   const key = recoveryKey(ctx2, field3);
-  if (recoveryCache.has(key)) return copy2(recoveryCache.get(key));
+  if (recoveryCache.has(key)) return copy3(recoveryCache.get(key));
   const db = await openDatabase2();
   if (!db) return [];
   const value = await new Promise((resolve, reject) => {
@@ -52734,10 +52838,10 @@ async function readRecovery(ctx2, field3) {
     transaction.onabort = () => reject(transaction.error);
   });
   recoveryCache.set(key, value);
-  return copy2(value);
+  return copy3(value);
 }
 async function backupArchive(ctx2, field3, value, reason = "confirmed-save", detail = {}) {
-  const snapshot = copy2(value), floors = Math.max(Number(value?.sourceChatLength) || 0, detail.sourceFloors ?? ctx2.chat.length);
+  const snapshot = copy3(value), floors = Math.max(Number(value?.sourceChatLength) || 0, detail.sourceFloors ?? ctx2.chat.length);
   const key = recoveryKey(ctx2, field3), history = await readRecovery(ctx2, field3);
   const match = history.findIndex((entry2) => JSON.stringify(entry2.value) === JSON.stringify(snapshot));
   const previous = match >= 0 ? history[match] : null;
@@ -52746,13 +52850,13 @@ async function backupArchive(ctx2, field3, value, reason = "confirmed-save", det
   const entry = previous ? {
     ...previous,
     floors: Math.max(previous.floors, floors),
-    ...critical ? { reason, detail: copy2(detail) } : {}
+    ...critical ? { reason, detail: copy3(detail) } : {}
   } : {
     id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
     value: snapshot,
     floors,
     reason,
-    detail: copy2(detail),
+    detail: copy3(detail),
     at: Date.now()
   };
   const candidates = [entry, ...history.filter((_, index2) => index2 !== match)];
@@ -52838,7 +52942,7 @@ async function exportArchiveBackup(view2, field3, id4) {
     capturedAt: entry.at,
     sourceFloors: entry.floors,
     reason: entry.reason,
-    value: copy2(entry.value)
+    value: copy3(entry.value)
   };
 }
 function restoreArchiveBackup(view2, field3, id4) {
@@ -52869,12 +52973,12 @@ function restoreArchiveBackup(view2, field3, id4) {
     if (records(previous)) await backupArchive(ctx2, field3, previous, "before-manual-restore");
     if (!current3()) throw new Error("\u6062\u590D\u51C6\u5907\u671F\u95F4\u804A\u5929\u5DF2\u53D8\u5316\uFF0C\u672A\u8986\u76D6\u8BB0\u5F55\u3002");
     const state = fieldState(ctx2, field3), pendingBefore = state.pending, kindBefore = state.kind;
-    const restored = copy2(entry.value);
+    const restored = copy3(entry.value);
     restored.commitId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
     restored.revision = Math.max(Number(previous?.revision) || 0, Number(restored.revision) || 0) + 1;
     if (field3 === "titania_character_evolution") restored.auto = false;
     state.reference = previous;
-    state.snapshot = copy2(previous);
+    state.snapshot = copy3(previous);
     state.expectedFloors = ctx2.chat.length;
     state.pending = false;
     state.checkedSignature = null;
@@ -52941,13 +53045,13 @@ async function requestJSON(url2, body) {
 }
 async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { validateStored } = {}) {
   if (!archiveContextCurrent(ctx2) || !valid()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
-  const signature3 = archiveSources(ctx2.chat), metadata = copy2(ctx2.chatMetadata), chat2 = copy2(ctx2.chat);
+  const signature3 = archiveSources(ctx2.chat), metadata = copy3(ctx2.chatMetadata), chat2 = copy3(ctx2.chat);
   const proposals = {}, base = {};
   for (const key of fields2) {
     const state = fieldState(ctx2, key), proposed = ctx2.chatMetadata[key];
     if (JSON.stringify(proposed) !== JSON.stringify(state.snapshot) || Object.hasOwn(required, key)) {
       if (Object.hasOwn(required, key)) proposals[key] = proposed;
-      const previous = proposed === state.reference ? copy2(state.snapshot) : state.reference;
+      const previous = proposed === state.reference ? copy3(state.snapshot) : state.reference;
       if (previous === void 0) delete ctx2.chatMetadata[key];
       else ctx2.chatMetadata[key] = previous;
       state.restoredReference = previous;
@@ -52984,12 +53088,13 @@ async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { va
       }
     }
     const deadline = Date.now() + 15e3;
+    let stored;
     for (; ; ) {
       while (host3.isChatSaving) {
         if (Date.now() >= deadline || !sameSnapshot(ctx2, signature3, base)) throw new Error("\u804A\u5929\u4FDD\u5B58\u5C1A\u672A\u7ED3\u675F\uFF0C\u672C\u6B21\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
         await new Promise((resolve) => setTimeout(resolve, 25));
       }
-      const stored = await readChatFile(ctx2);
+      stored = await readChatFile(ctx2);
       if (!sameSnapshot(ctx2, signature3, base) || !valid() || Object.entries(proposals).some(([key, proposed]) => JSON.stringify(proposed) !== JSON.stringify(metadata[key]))) {
         throw new Error("\u4FDD\u5B58\u524D\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
       }
@@ -53001,17 +53106,25 @@ async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { va
       if (Date.now() >= deadline) throw new Error("\u804A\u5929\u4FDD\u5B58\u5C1A\u672A\u7ED3\u675F\uFF0C\u672C\u6B21\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
     }
     for (const key of Object.keys(metadata)) if (!fields2.includes(key)) delete metadata[key];
-    for (const [key, value] of Object.entries(copy2(ctx2.chatMetadata))) if (!fields2.includes(key)) metadata[key] = value;
+    for (const [key, value] of Object.entries(copy3(ctx2.chatMetadata))) if (!fields2.includes(key)) metadata[key] = value;
     const group2 = ctx2.groupId != null && ctx2.groupId !== "";
     const target = archiveTarget(ctx2);
     host3.cancelDebouncedChatSave?.();
     coordinated = beginArchiveSave(ctx2, base, () => accountKey(rawContext()));
+    const legacy = legacyGroupChatFile(stored);
     await requestJSON(group2 ? "/api/chats/group/save" : "/api/chats/save", {
       ...target,
-      chat: [{ user_name: "unused", character_name: "unused", chat_metadata: metadata }, ...chat2],
+      chat: legacy ? chat2 : [{ user_name: "unused", character_name: "unused", chat_metadata: metadata }, ...chat2],
       force: false
     });
-    const saved = await requestJSON(group2 ? "/api/chats/group/get" : "/api/chats/get", target);
+    if (legacy) {
+      const savedBody = await readChatFile(ctx2);
+      if (!legacyGroupChatFile(savedBody) || JSON.stringify(savedBody.slice(1)) !== JSON.stringify(chat2)) {
+        throw new Error("\u65E7\u7248\u7FA4\u804A\u6B63\u6587\u4FDD\u5B58\u5C1A\u672A\u5B8C\u6574\u786E\u8BA4\uFF0C\u672A\u8986\u76D6\u7FA4\u7EC4\u5143\u6570\u636E\uFF1B\u8BF7\u91CD\u65B0\u8F7D\u5165\u540E\u91CD\u8BD5\u3002");
+      }
+      await saveLegacyGroupMetadata(ctx2, legacy, metadata, requestJSON, () => sameSnapshot(ctx2, signature3, base) && valid());
+    }
+    const saved = await readChatFile(ctx2);
     if (Array.isArray(saved) && Object.hasOwn(required, "echo_timetrace_v4") && saved[0]?.chat_metadata?.echo_timetrace_v4?.commitId !== required.echo_timetrace_v4) {
       throw new Error("\u6545\u4E8B\u65F6\u95F4\u672A\u6210\u529F\u4FDD\u5B58\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u91CD\u8BD5\u3002");
     }
@@ -53041,14 +53154,15 @@ async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { va
       throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u6B63\u6587\u53D8\u5316\uFF0C\u5DF2\u53D6\u6D88\u66F4\u65B0\u5F53\u524D\u6863\u6848\u3002");
     }
     for (const key of fields2) {
-      const published = Object.hasOwn(proposals, key) ? proposals[key] : !records(ctx2.chatMetadata[key]) && records(metadata[key]) ? copy2(metadata[key]) : ctx2.chatMetadata[key];
+      const published = Object.hasOwn(proposals, key) ? proposals[key] : !records(ctx2.chatMetadata[key]) && records(metadata[key]) ? copy3(metadata[key]) : ctx2.chatMetadata[key];
       if (published === void 0) delete ctx2.chatMetadata[key];
       else ctx2.chatMetadata[key] = published;
       const state = fieldState(ctx2, key);
       state.reference = published;
-      state.snapshot = copy2(published);
+      state.snapshot = copy3(published);
       state.expectedFloors = chat2.length;
     }
+    if (legacy) publishLegacyGroupMetadata(rawContext());
     rememberChatFile(ctx2, saved);
     checkpoint(ctx2);
     for (const [key, proposed] of Object.entries(proposals)) {
@@ -53096,9 +53210,9 @@ async function recoverCurrentArchives(ctx2) {
       const authoritative = saved[0].chat_metadata[field3];
       if (records(authoritative)) {
         if (validator(authoritative, ctx2)) {
-          ctx2.chatMetadata[field3] = copy2(authoritative);
+          ctx2.chatMetadata[field3] = copy3(authoritative);
           state.reference = ctx2.chatMetadata[field3];
-          state.snapshot = copy2(authoritative);
+          state.snapshot = copy3(authoritative);
           state.expectedFloors = ctx2.chat.length;
           state.pending = false;
           state.detail = null;
@@ -53130,7 +53244,7 @@ async function recoverCurrentArchives(ctx2) {
         continue;
       }
       if (!validator(latest.value, ctx2)) continue;
-      const restored = copy2(latest.value);
+      const restored = copy3(latest.value);
       restored.commitId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       ctx2.chatMetadata[field3] = restored;
       checked.archives.set(field3, archiveVersion(restored));
@@ -53265,12 +53379,13 @@ function initArchiveSafety() {
   });
   changed();
 }
-var fields2, archiveLabels, observers2, validators, listeners3, recoveryCache, session, currentIdentity, evidence, initialized2, notifying, database, copy2, textRecord, records, identity, sourceFields, protectedBackup, backupId, archiveVersion;
+var fields2, archiveLabels, observers2, validators, listeners3, recoveryCache, session, currentIdentity, evidence, initialized2, notifying, database, copy3, textRecord, records, identity, sourceFields, protectedBackup, backupId, archiveVersion;
 var init_storyMemoryArchive = __esm({
   "src/core/storyMemoryArchive.js"() {
     init_storyMemoryTasks();
     init_storyMemorySaveGuard();
     init_analysisSourceEdits();
+    init_chatFileCompatibility();
     fields2 = ["titania_story_memory", "echo_timetrace_v4", "titania_character_evolution"];
     archiveLabels = { titania_story_memory: "\u6545\u4E8B\u8BB0\u5FC6", echo_timetrace_v4: "\u56DE\u58F0\u65F6\u75D5", titania_character_evolution: "\u89D2\u8272\u6F14\u53D8" };
     observers2 = /* @__PURE__ */ new WeakMap();
@@ -53283,7 +53398,7 @@ var init_storyMemoryArchive = __esm({
     initialized2 = false;
     notifying = false;
     database = null;
-    copy2 = (value) => value === void 0 ? void 0 : JSON.parse(JSON.stringify(value));
+    copy3 = (value) => value === void 0 ? void 0 : JSON.parse(JSON.stringify(value));
     textRecord = (value) => typeof value === "string" && value.trim() ? 1 : 0;
     records = (value) => (value?.segments?.length || 0) + (value?.batches?.length || 0) + (value?.anchorBatches?.length || 0) + (value?.items?.length || 0) + (value?.calendarOverride || value?.initialOverride ? 1 : 0) + (value?.relationships?.length || 0) + (value?.threads?.length || 0) + (value?.stages?.length || 0) + (value?.stageBoundaries?.length || 0) + textRecord(value?.recap) + textRecord(value?.scene) + textRecord(value?.document?.profile) + textRecord(value?.candidate?.profile) + (value?.manualEdits?.length || 0);
     identity = (ctx2) => ctx2.archiveKey || JSON.stringify([ctx2.groupId != null && ctx2.groupId !== "" ? `group:${ctx2.groupId}` : ctx2.characters?.[ctx2.characterId]?.avatar, ctx2.chatId]);
@@ -63486,15 +63601,15 @@ function chatKey(ctx2) {
 }
 function sourceFields2(message) {
   const fields5 = [];
-  for (const key of ["mes", "message"]) if (own(message, key)) fields5.push({ object: message, key, original: message[key] });
+  for (const key of ["mes", "message"]) if (own2(message, key)) fields5.push({ object: message, key, original: message[key] });
   const swipe = message.swipe_id;
   if (Array.isArray(message.swipes) && message.swipes.length) {
     const index2 = Number(swipe);
     if (swipe == null || !Number.isInteger(index2) || index2 < 0 || index2 >= message.swipes.length) return { fields: fields5, reason: "\u5F53\u524D swipe \u7F16\u53F7\u65E0\u6548" };
     fields5.push({ object: message.swipes, key: index2, original: message.swipes[index2] });
-    if (own(message.swipe_info?.[index2]?.extra, "display_text")) fields5.push({ object: message.swipe_info[index2].extra, key: "display_text", original: message.swipe_info[index2].extra.display_text, cache: true });
+    if (own2(message.swipe_info?.[index2]?.extra, "display_text")) fields5.push({ object: message.swipe_info[index2].extra, key: "display_text", original: message.swipe_info[index2].extra.display_text, cache: true });
   }
-  if (own(message.extra, "display_text")) fields5.push({ object: message.extra, key: "display_text", original: message.extra.display_text, cache: true });
+  if (own2(message.extra, "display_text")) fields5.push({ object: message.extra, key: "display_text", original: message.extra.display_text, cache: true });
   return { fields: fields5, reason: "" };
 }
 function captureRewriteTarget(ctx2, index2, projection, container) {
@@ -63538,7 +63653,7 @@ async function persistRewriteTarget(target, rewritten, host8) {
   });
   if (!response.ok) throw new Error("\u804A\u5929\u56DE\u8BFB\u5931\u8D25");
   const saved = await response.json();
-  const offset = Array.isArray(saved) && own(saved[0], "chat_metadata") ? 1 : 0;
+  const offset = Array.isArray(saved) && own2(saved[0], "chat_metadata") ? 1 : 0;
   const message = Array.isArray(saved) ? saved[target.index + offset] : null;
   const fields5 = message ? sourceFields2(message) : { fields: [], reason: "\u672A\u627E\u5230\u4FDD\u5B58\u7684\u697C\u5C42" };
   if (fields5.reason || fields5.fields.length !== target.fields.length || fields5.fields.some((field3, i) => field3.key !== target.fields[i].key || field3.original !== (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : rewritten))) throw new Error("\u697C\u5C42\u8865\u4E01\u672A\u6210\u529F\u4FDD\u5B58");
@@ -63601,7 +63716,7 @@ async function commitRewritePatches(target, units, replacements, options2) {
   const writes3 = target.fields.filter((field3) => !(field3.cache && field3.original == null)).map((field3) => ({ ...field3, after: rewritten, had: true }));
   const revision = prepareAnalysisTextRevision(target.ctx, target.message, rewritten, options2.action === "delete" ? "delete" : "edit");
   const previousExtra = target.message.extra;
-  const hadExtra = own(target.message, "extra");
+  const hadExtra = own2(target.message, "extra");
   if (!previousExtra || typeof previousExtra !== "object") target.message.extra = {};
   const metadata = target.message.extra;
   const metadataPatch = {
@@ -63609,13 +63724,13 @@ async function commitRewritePatches(target, units, replacements, options2) {
     [LOCAL_TEXT_REVISION_KEY]: revision
   };
   if (options2.action !== "delete") metadataPatch.titania_rewrite_marks = plans.map((plan) => ({ before: plan.entry.before, after: plan.entry.after }));
-  for (const [key, after] of Object.entries(metadataPatch)) writes3.push({ object: metadata, key, original: metadata[key], had: own(metadata, key), after });
+  for (const [key, after] of Object.entries(metadataPatch)) writes3.push({ object: metadata, key, original: metadata[key], had: own2(metadata, key), after });
   const swipeExtra = target.message.swipe_info?.[target.swipe]?.extra;
   if (swipeExtra && typeof swipeExtra === "object" && !Array.isArray(swipeExtra)) writes3.push({
     object: swipeExtra,
     key: LOCAL_TEXT_REVISION_KEY,
     original: swipeExtra[LOCAL_TEXT_REVISION_KEY],
-    had: own(swipeExtra, LOCAL_TEXT_REVISION_KEY),
+    had: own2(swipeExtra, LOCAL_TEXT_REVISION_KEY),
     after: revision
   });
   commitsInFlight.add(target.chat);
@@ -63662,14 +63777,14 @@ async function commitRewritePatches(target, units, replacements, options2) {
     commitsInFlight.delete(target.chat);
   }
 }
-var own, commitsInFlight;
+var own2, commitsInFlight;
 var init_textRewriteWriteback = __esm({
   "src/core/textRewriteWriteback.js"() {
     init_textRewritePatch();
     init_analysisSourceEdits();
     init_localTextRevisions();
     init_textRewriteDom();
-    own = (object5, key) => Object.prototype.hasOwnProperty.call(object5 || {}, key);
+    own2 = (object6, key) => Object.prototype.hasOwnProperty.call(object6 || {}, key);
     commitsInFlight = /* @__PURE__ */ new WeakSet();
   }
 });
@@ -73199,8 +73314,116 @@ var init_storyMemoryWindow = __esm({
   }
 });
 
+// src/core/ttsHash.js
+function ttsHash(value) {
+  const input = new TextEncoder().encode(value);
+  const bytes = new Uint8Array(Math.ceil((input.length + 9) / 64) * 64);
+  bytes.set(input);
+  bytes[input.length] = 128;
+  const data = new DataView(bytes.buffer);
+  data.setUint32(bytes.length - 8, Math.floor(input.length / 536870912));
+  data.setUint32(bytes.length - 4, input.length * 8 >>> 0);
+  const h = [1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225];
+  const w = new Uint32Array(64);
+  for (let offset = 0; offset < bytes.length; offset += 64) {
+    for (let i = 0; i < 16; i++) w[i] = data.getUint32(offset + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const x = w[i - 15], y = w[i - 2];
+      w[i] = w[i - 16] + (rotate(x, 7) ^ rotate(x, 18) ^ x >>> 3) + w[i - 7] + (rotate(y, 17) ^ rotate(y, 19) ^ y >>> 10);
+    }
+    let [a, b, c, d, e, f, g, j] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = j + (rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)) + (e & f ^ ~e & g) + K[i] + w[i] | 0;
+      const t2 = (rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)) + (a & b ^ a & c ^ b & c) | 0;
+      j = g;
+      g = f;
+      f = e;
+      e = d + t1 | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = t1 + t2 | 0;
+    }
+    [a, b, c, d, e, f, g, j].forEach((word, i) => {
+      h[i] = h[i] + word >>> 0;
+    });
+  }
+  return h.map((word) => word.toString(16).padStart(8, "0")).join("");
+}
+var K, rotate;
+var init_ttsHash = __esm({
+  "src/core/ttsHash.js"() {
+    K = [
+      1116352408,
+      1899447441,
+      3049323471,
+      3921009573,
+      961987163,
+      1508970993,
+      2453635748,
+      2870763221,
+      3624381080,
+      310598401,
+      607225278,
+      1426881987,
+      1925078388,
+      2162078206,
+      2614888103,
+      3248222580,
+      3835390401,
+      4022224774,
+      264347078,
+      604807628,
+      770255983,
+      1249150122,
+      1555081692,
+      1996064986,
+      2554220882,
+      2821834349,
+      2952996808,
+      3210313671,
+      3336571891,
+      3584528711,
+      113926993,
+      338241895,
+      666307205,
+      773529912,
+      1294757372,
+      1396182291,
+      1695183700,
+      1986661051,
+      2177026350,
+      2456956037,
+      2730485921,
+      2820302411,
+      3259730800,
+      3345764771,
+      3516065817,
+      3600352804,
+      4094571909,
+      275423344,
+      430227734,
+      506948616,
+      659060556,
+      883997877,
+      958139571,
+      1322822218,
+      1537002063,
+      1747873779,
+      1955562222,
+      2024104815,
+      2227730452,
+      2361852424,
+      2428436474,
+      2756734187,
+      3204031479,
+      3329325298
+    ];
+    rotate = (n, bits) => n >>> bits | n << 32 - bits;
+  }
+});
+
 // src/core/retrievalData.js
-import { sha256 } from "../../../../lib.js";
 function newRetrievalId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   if (globalThis.crypto?.getRandomValues) {
@@ -73212,7 +73435,7 @@ function newRetrievalId() {
 function retrievalMessageId(message) {
   const record = message?.extra?.[RETRIEVAL_ID_KEY];
   if (record == null) return "";
-  if (!object(record) || record.version !== 1 || !idValid(record.messageId)) {
+  if (!object2(record) || record.version !== 1 || !idValid(record.messageId)) {
     throw new Error("\u6D88\u606F\u7684\u53EC\u56DE\u8EAB\u4EFD\u683C\u5F0F\u6216\u7248\u672C\u4E0D\u53D7\u652F\u6301\uFF0C\u672A\u8986\u76D6\u5DF2\u6709\u6570\u636E\u3002");
   }
   return record.messageId;
@@ -73237,7 +73460,7 @@ function retrievalRows(messages2, { requireIds = true, allowDuplicateIds = false
   if (!Array.isArray(messages2)) throw new Error("\u804A\u5929\u6587\u4EF6\u4E0D\u662F\u6D88\u606F\u6570\u7EC4\u3002");
   const seen = /* @__PURE__ */ new Set();
   return messages2.map((message, floor2) => {
-    if (!object(message) || typeof message.mes !== "string") throw new Error(`\u7B2C ${floor2} \u697C\u4E0D\u662F\u6709\u6548\u7684\u804A\u5929\u6D88\u606F\u3002`);
+    if (!object2(message) || typeof message.mes !== "string") throw new Error(`\u7B2C ${floor2} \u697C\u4E0D\u662F\u6709\u6548\u7684\u804A\u5929\u6D88\u606F\u3002`);
     const id4 = retrievalMessageId(message);
     if (requireIds && !id4) throw new Error(`\u7B2C ${floor2} \u697C\u5C1A\u672A\u5EFA\u7ACB\u6D88\u606F\u8EAB\u4EFD\uFF0C\u8BF7\u5148\u66F4\u65B0\u7D22\u5F15\u3002`);
     if (id4 && seen.has(id4) && !allowDuplicateIds) throw Object.assign(new Error("\u804A\u5929\u4E2D\u5B58\u5728\u91CD\u590D\u53EC\u56DE\u8EAB\u4EFD\uFF0C\u8BF7\u5148\u66F4\u65B0\u7D22\u5F15\u6216\u660E\u786E\u4FEE\u590D\u51B2\u7A81\u8EAB\u4EFD\u3002"), { code: "RETRIEVAL_IDENTITY_AMBIGUOUS" });
@@ -73249,7 +73472,7 @@ function retrievalSourceSignature(scopeKey, rows) {
   return retrievalDigest([RETRIEVAL_SOURCE_VERSION, scopeKey, rows.map((row) => [row.id, row.fingerprint])]);
 }
 function extraObject(extra) {
-  if (extra != null && !object(extra)) throw new Error("\u6D88\u606F extra \u683C\u5F0F\u5F02\u5E38\uFF0C\u672A\u8986\u76D6\u5DF2\u6709\u5A92\u4F53\u6216\u9644\u52A0\u4FE1\u606F\u3002");
+  if (extra != null && !object2(extra)) throw new Error("\u6D88\u606F extra \u683C\u5F0F\u5F02\u5E38\uFF0C\u672A\u8986\u76D6\u5DF2\u6709\u5A92\u4F53\u6216\u9644\u52A0\u4FE1\u606F\u3002");
   return extra || {};
 }
 function writeIdentity(extra, id4) {
@@ -73266,7 +73489,7 @@ function planRetrievalIdentities(messages2, { identityHints = /* @__PURE__ */ ne
     const candidates = /* @__PURE__ */ new Set([retrievalMessageId(message)]);
     for (const info of message.swipe_info || []) {
       if (info == null) continue;
-      if (!object(info)) throw new Error(`\u7B2C ${floor2} \u697C\u7684\u5019\u9009\u8BB0\u5F55\u683C\u5F0F\u5F02\u5E38\u3002`);
+      if (!object2(info)) throw new Error(`\u7B2C ${floor2} \u697C\u7684\u5019\u9009\u8BB0\u5F55\u683C\u5F0F\u5F02\u5E38\u3002`);
       extraObject(info.extra);
       candidates.add(retrievalMessageId({ extra: info.extra }));
     }
@@ -73330,20 +73553,21 @@ function planRetrievalIdentities(messages2, { identityHints = /* @__PURE__ */ ne
 }
 function splitRetrievalChatFile(value, { allowDuplicateIds = false } = {}) {
   if (!Array.isArray(value)) throw new Error("\u672A\u80FD\u8BFB\u53D6\u5B8C\u6574\u804A\u5929\u6587\u4EF6\uFF1B\u8BF7\u7B49\u5F85\u9152\u9986\u4FDD\u5B58\u5E76\u91CD\u65B0\u6253\u5F00\u804A\u5929\u3002");
-  const hasHeader = value.length > 0 && object(value[0]?.chat_metadata) && typeof value[0]?.mes !== "string";
+  const hasHeader = value.length > 0 && object2(value[0]?.chat_metadata) && typeof value[0]?.mes !== "string";
   const messages2 = hasHeader ? value.slice(1) : value;
   retrievalRows(messages2, { requireIds: false, allowDuplicateIds });
   return { header: hasHeader ? value[0] : null, messages: messages2 };
 }
-var RETRIEVAL_ID_KEY, RETRIEVAL_SOURCE_VERSION, object, clone3, idValid, retrievalDigest;
+var RETRIEVAL_ID_KEY, RETRIEVAL_SOURCE_VERSION, object2, clone3, idValid, retrievalDigest;
 var init_retrievalData = __esm({
   "src/core/retrievalData.js"() {
+    init_ttsHash();
     RETRIEVAL_ID_KEY = "titania_retrieval";
     RETRIEVAL_SOURCE_VERSION = 1;
-    object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
     clone3 = (value) => JSON.parse(JSON.stringify(value));
     idValid = (value) => typeof value === "string" && /^[a-zA-Z0-9_-]{16,128}$/.test(value);
-    retrievalDigest = (value) => sha256(typeof value === "string" ? value : JSON.stringify(value));
+    retrievalDigest = (value) => ttsHash(typeof value === "string" ? value : JSON.stringify(value));
   }
 });
 
@@ -73737,17 +73961,24 @@ async function readFile(owner, signal, allowDuplicateIds = false) {
   signal?.addEventListener("abort", abort, { once: true });
   const timeout = setTimeout(abort, 2e4);
   try {
-    const response = await fetch(owner.group ? "/api/chats/group/get" : "/api/chats/get", {
-      method: "POST",
-      headers: host5.getRequestHeaders(),
-      cache: "no-store",
-      signal: controller.signal,
-      body: JSON.stringify(owner.target)
-    });
-    if (!response.ok) throw new Error(`\u8BFB\u53D6\u804A\u5929\u6587\u4EF6\u5931\u8D25\uFF08${response.status}\uFF09\uFF0C\u672A\u4F7F\u7528\u65E7\u7F13\u5B58\u3002`);
-    const value = await response.json();
+    const requestJSON2 = async (url2, body) => {
+      assertRetrievalContext(owner);
+      const response = await fetch(url2, {
+        method: "POST",
+        headers: host5.getRequestHeaders(),
+        cache: "no-store",
+        signal: controller.signal,
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) throw new Error(`\u8BFB\u53D6\u804A\u5929\u6587\u4EF6\u6216\u7FA4\u7EC4\u5143\u6570\u636E\u5931\u8D25\uFF08${response.status}\uFF09\uFF0C\u672A\u4F7F\u7528\u65E7\u7F13\u5B58\u3002`);
+      const value2 = await response.json();
+      assertRetrievalContext(owner);
+      return value2;
+    };
+    const value = await requestJSON2(owner.group ? "/api/chats/group/get" : "/api/chats/get", owner.target);
+    const file = await normalizeChatFile(owner.ctx, value, requestJSON2);
     assertRetrievalContext(owner);
-    return splitRetrievalChatFile(value, { allowDuplicateIds });
+    return splitRetrievalChatFile(file, { allowDuplicateIds });
   } finally {
     clearTimeout(timeout);
     signal?.removeEventListener("abort", abort);
@@ -73832,7 +74063,7 @@ function persistRetrievalIdentities(owner, source2, plan, { signal, verifyOwners
           writes3.push({
             message,
             key,
-            had: own2(message, key),
+            had: own3(message, key),
             before: message[key],
             after: planned[key],
             afterSignature: fullSignature(planned[key])
@@ -73918,7 +74149,7 @@ async function locateRetrievalMessage(owner, result) {
   }
   return row.floor;
 }
-var loadToken, bound2, observedIdentities, own2, context5, retrievalExtractionRules, retrievalRulesSignature, extractRetrievalText, fullSignature;
+var loadToken, bound2, observedIdentities, own3, context5, retrievalExtractionRules, retrievalRulesSignature, extractRetrievalText, fullSignature;
 var init_retrievalSource = __esm({
   "src/core/retrievalSource.js"() {
     init_defaults();
@@ -73927,10 +74158,11 @@ var init_retrievalSource = __esm({
     init_localTextRevisions();
     init_storyMemoryTasks();
     init_retrievalData();
+    init_chatFileCompatibility();
     loadToken = 0;
     bound2 = false;
     observedIdentities = /* @__PURE__ */ new WeakMap();
-    own2 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+    own3 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
     context5 = () => globalThis.SillyTavern?.getContext?.();
     retrievalExtractionRules = () => getToolboxExtraction(extension_settings2?.[extensionName] || {});
     retrievalRulesSignature = () => retrievalDigest(["toolbox-extraction-v1", retrievalExtractionRules()]);
@@ -74402,7 +74634,7 @@ function invalid2(message) {
   throw retrievalApiError("CONFIG_INVALID", message);
 }
 function requireObject(value, label2) {
-  if (!object2(value)) invalid2(`${label2}\u5FC5\u987B\u662F\u914D\u7F6E\u5BF9\u8C61\u3002`);
+  if (!object3(value)) invalid2(`${label2}\u5FC5\u987B\u662F\u914D\u7F6E\u5BF9\u8C61\u3002`);
 }
 function integer2(value, label2, min, max) {
   const number2 = typeof value === "string" && value.trim() ? Number(value) : value;
@@ -74624,12 +74856,12 @@ function retrievalHybridSignature(config2) {
   const normalized = normalizeRetrievalHybridConfig(config2);
   return retrievalDigest(["retrieval-hybrid-config-v1", normalized]);
 }
-var RETRIEVAL_HYBRID_VERSION, object2, adapters, defaults, bounds2, legacyFields, profileFields;
+var RETRIEVAL_HYBRID_VERSION, object3, adapters, defaults, bounds2, legacyFields, profileFields;
 var init_retrievalApiConfig = __esm({
   "src/core/retrievalApiConfig.js"() {
     init_retrievalData();
     RETRIEVAL_HYBRID_VERSION = 1;
-    object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
     adapters = { embedding: "openai-embeddings-v1", rerank: "rerank-index-score-v1" };
     defaults = Object.freeze({
       enabled: false,
@@ -75879,7 +76111,7 @@ async function inTransaction2(mode, run) {
 }
 function readRecord(record, userKey, id4) {
   if (!record) return null;
-  if (!object3(record) || record.userKey !== userKey || record.id !== id4 || !object3(record.profile)) {
+  if (!object4(record) || record.userKey !== userKey || record.id !== id4 || !object4(record.profile)) {
     throw retrievalApiError("STORAGE_INVALID", "API \u914D\u7F6E\u8BB0\u5F55\u7684\u7528\u6237\u6216\u8EAB\u4EFD\u4E0D\u4E00\u81F4\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u3002");
   }
   let profile;
@@ -75972,7 +76204,7 @@ async function saveRetrievalApiProfile(userKey, input, { expectedRevision = 0, c
   profileChanged(userKey, saved);
   return saved;
 }
-var DB_NAME3, DB_VERSION3, STORE, dbPromise3, profileChannel, profileListeners, object3, storageError2;
+var DB_NAME3, DB_VERSION3, STORE, dbPromise3, profileChannel, profileListeners, object4, storageError2;
 var init_retrievalApiProfiles = __esm({
   "src/core/retrievalApiProfiles.js"() {
     init_retrievalApiConfig();
@@ -75983,7 +76215,7 @@ var init_retrievalApiProfiles = __esm({
     dbPromise3 = null;
     profileChannel = null;
     profileListeners = /* @__PURE__ */ new Set();
-    object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
     storageError2 = () => retrievalApiError("STORAGE_UNAVAILABLE", "API \u914D\u7F6E\u7684\u6D4F\u89C8\u5668\u5B58\u50A8\u4E0D\u53EF\u7528\uFF0C\u8BF7\u68C0\u67E5 IndexedDB \u6743\u9650\u6216\u5173\u95ED\u963B\u585E\u5347\u7EA7\u7684\u9875\u9762\u3002");
   }
 });
@@ -76028,7 +76260,7 @@ function snapshotCandidates(candidates, query) {
   }
   const seen = /* @__PURE__ */ new Set();
   const snapshot = Array.from(candidates, (candidate) => {
-    if (!object4(candidate) || typeof candidate.candidateId !== "string" || !candidate.candidateId.trim() || candidate.candidateId.length > 256 || seen.has(candidate.candidateId)) {
+    if (!object5(candidate) || typeof candidate.candidateId !== "string" || !candidate.candidateId.trim() || candidate.candidateId.length > 256 || seen.has(candidate.candidateId)) {
       throw retrievalApiError("CONFIG_INVALID", "Rerank candidateId \u5FC5\u987B\u662F\u975E\u7A7A\u3001\u552F\u4E00\u4E14\u4E0D\u8D85\u8FC7 256 \u5B57\u7684\u6587\u672C\u3002");
     }
     seen.add(candidate.candidateId);
@@ -76100,11 +76332,11 @@ async function readBoundedJson(response, signal) {
   } catch (_error) {
     throw protocolError("API \u54CD\u5E94\u4E0D\u662F\u6709\u6548 JSON\uFF1B\u672A\u9644\u5E26\u4E0A\u6E38\u54CD\u5E94\u6B63\u6587\u3002");
   }
-  if (!object4(payload)) throw protocolError("API \u54CD\u5E94\u5FC5\u987B\u662F JSON \u5BF9\u8C61\u3002");
+  if (!object5(payload)) throw protocolError("API \u54CD\u5E94\u5FC5\u987B\u662F JSON \u5BF9\u8C61\u3002");
   return payload;
 }
 function usageFromResponse(payload) {
-  if (!object4(payload.usage)) return null;
+  if (!object5(payload.usage)) return null;
   const usage = {};
   const fields5 = ["prompt_tokens", "completion_tokens", "total_tokens", "input_tokens", "output_tokens", "embedding_tokens", "rerank_tokens"];
   const copyCounts = (source2, target, keys) => {
@@ -76114,7 +76346,7 @@ function usageFromResponse(payload) {
     }
   };
   copyCounts(payload.usage, usage, fields5);
-  if (object4(payload.usage.billed_units)) {
+  if (object5(payload.usage.billed_units)) {
     const units = {};
     copyCounts(payload.usage.billed_units, units, ["input_tokens", "output_tokens", "search_units", "classification_units"]);
     if (Object.keys(units).length) usage.billed_units = units;
@@ -76127,7 +76359,7 @@ function embeddingResult(payload, count, requestedDimension) {
   const seen = /* @__PURE__ */ new Set();
   let dimension = 0;
   for (const entry of payload.data) {
-    if (!object4(entry) || !Number.isSafeInteger(entry.index) || entry.index < 0 || entry.index >= count || seen.has(entry.index)) {
+    if (!object5(entry) || !Number.isSafeInteger(entry.index) || entry.index < 0 || entry.index >= count || seen.has(entry.index)) {
       throw protocolError("Embedding index \u5FC5\u987B\u662F\u5B8C\u6574\u3001\u552F\u4E00\u4E14\u5728\u8F93\u5165\u8303\u56F4\u5185\u7684\u6574\u6570\u3002");
     }
     const vector = entry.embedding;
@@ -76150,7 +76382,7 @@ function rerankResult(payload, candidates) {
   }
   const seen = /* @__PURE__ */ new Set();
   const ranked = payload.results.map((entry) => {
-    if (!object4(entry) || !Number.isSafeInteger(entry.index) || entry.index < 0 || entry.index >= candidates.length || seen.has(entry.index) || typeof entry.relevance_score !== "number" || !Number.isFinite(entry.relevance_score)) {
+    if (!object5(entry) || !Number.isSafeInteger(entry.index) || entry.index < 0 || entry.index >= candidates.length || seen.has(entry.index) || typeof entry.relevance_score !== "number" || !Number.isFinite(entry.relevance_score)) {
       throw protocolError("Rerank index/score \u5FC5\u987B\u8303\u56F4\u5408\u6CD5\u3001\u552F\u4E00\u4E14\u4E3A\u6709\u9650\u6570\u503C\u3002");
     }
     seen.add(entry.index);
@@ -76415,7 +76647,7 @@ async function fetchRetrievalApiModels(userKey, draft2, {
     }
   }
 }
-var MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, MAX_EMBEDDING_INPUTS, MAX_RERANK_INPUTS, MAX_DIMENSION, object4, safeCodes, protocolError, networkError;
+var MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, MAX_EMBEDDING_INPUTS, MAX_RERANK_INPUTS, MAX_DIMENSION, object5, safeCodes, protocolError, networkError;
 var init_retrievalApiClient = __esm({
   "src/core/retrievalApiClient.js"() {
     init_retrievalApiConfig();
@@ -76426,7 +76658,7 @@ var init_retrievalApiClient = __esm({
     MAX_EMBEDDING_INPUTS = 128;
     MAX_RERANK_INPUTS = 100;
     MAX_DIMENSION = 65536;
-    object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    object5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
     safeCodes = /* @__PURE__ */ new Set([
       "CONFIG_INVALID",
       "CONFIG_REQUIRED",
@@ -82091,115 +82323,6 @@ cue\u662F\u7B80\u77ED\u7684\u4E2D\u6587\u7EAF\u6587\u672C\uFF0C\u4E0D\u5E26\u65B
   }
 });
 
-// src/core/ttsHash.js
-function ttsHash(value) {
-  const input = new TextEncoder().encode(value);
-  const bytes = new Uint8Array(Math.ceil((input.length + 9) / 64) * 64);
-  bytes.set(input);
-  bytes[input.length] = 128;
-  const data = new DataView(bytes.buffer);
-  data.setUint32(bytes.length - 8, Math.floor(input.length / 536870912));
-  data.setUint32(bytes.length - 4, input.length * 8 >>> 0);
-  const h = [1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225];
-  const w = new Uint32Array(64);
-  for (let offset = 0; offset < bytes.length; offset += 64) {
-    for (let i = 0; i < 16; i++) w[i] = data.getUint32(offset + i * 4);
-    for (let i = 16; i < 64; i++) {
-      const x = w[i - 15], y = w[i - 2];
-      w[i] = w[i - 16] + (rotate(x, 7) ^ rotate(x, 18) ^ x >>> 3) + w[i - 7] + (rotate(y, 17) ^ rotate(y, 19) ^ y >>> 10);
-    }
-    let [a, b, c, d, e, f, g, j] = h;
-    for (let i = 0; i < 64; i++) {
-      const t1 = j + (rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)) + (e & f ^ ~e & g) + K[i] + w[i] | 0;
-      const t2 = (rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)) + (a & b ^ a & c ^ b & c) | 0;
-      j = g;
-      g = f;
-      f = e;
-      e = d + t1 | 0;
-      d = c;
-      c = b;
-      b = a;
-      a = t1 + t2 | 0;
-    }
-    [a, b, c, d, e, f, g, j].forEach((word, i) => {
-      h[i] = h[i] + word >>> 0;
-    });
-  }
-  return h.map((word) => word.toString(16).padStart(8, "0")).join("");
-}
-var K, rotate;
-var init_ttsHash = __esm({
-  "src/core/ttsHash.js"() {
-    K = [
-      1116352408,
-      1899447441,
-      3049323471,
-      3921009573,
-      961987163,
-      1508970993,
-      2453635748,
-      2870763221,
-      3624381080,
-      310598401,
-      607225278,
-      1426881987,
-      1925078388,
-      2162078206,
-      2614888103,
-      3248222580,
-      3835390401,
-      4022224774,
-      264347078,
-      604807628,
-      770255983,
-      1249150122,
-      1555081692,
-      1996064986,
-      2554220882,
-      2821834349,
-      2952996808,
-      3210313671,
-      3336571891,
-      3584528711,
-      113926993,
-      338241895,
-      666307205,
-      773529912,
-      1294757372,
-      1396182291,
-      1695183700,
-      1986661051,
-      2177026350,
-      2456956037,
-      2730485921,
-      2820302411,
-      3259730800,
-      3345764771,
-      3516065817,
-      3600352804,
-      4094571909,
-      275423344,
-      430227734,
-      506948616,
-      659060556,
-      883997877,
-      958139571,
-      1322822218,
-      1537002063,
-      1747873779,
-      1955562222,
-      2024104815,
-      2227730452,
-      2361852424,
-      2428436474,
-      2756734187,
-      3204031479,
-      3329325298
-    ];
-    rotate = (n, bits) => n >>> bits | n << 32 - bits;
-  }
-});
-
 // src/core/ttsTranslation.js
 function normalizeTtsLanguage(value, fallback = "original") {
   if (value === void 0 || value === null || value === "") return fallback;
@@ -83890,9 +84013,9 @@ function createTtsMessageView(callbacks = {}) {
     for (const message of records3.keys()) clear(message);
   }
   function bodyStamp(body) {
-    const copy3 = body.cloneNode(true);
-    copy3.querySelectorAll(`[${UI_ATTRIBUTE}]`).forEach((node4) => node4.remove());
-    return copy3.innerHTML;
+    const copy4 = body.cloneNode(true);
+    copy4.querySelectorAll(`[${UI_ATTRIBUTE}]`).forEach((node4) => node4.remove());
+    return copy4.innerHTML;
   }
   function needsRender(messageElement, view2) {
     const record = records3.get(messageElement);
@@ -85184,13 +85307,13 @@ function prepareTtsParagraphEdit(target, patch, rewritten) {
     variants,
     paragraph_edit: { ...prior?.paragraph_edit || {}, version: 1, history }
   };
-  const object5 = extra && typeof extra === "object" ? extra : message, key = object5 === message ? "extra" : TTS_KEY;
+  const object6 = extra && typeof extra === "object" ? extra : message, key = object6 === message ? "extra" : TTS_KEY;
   const writes3 = [{
-    object: object5,
+    object: object6,
     key,
-    original: object5[key],
-    had: Object.hasOwn(object5, key),
-    after: object5 === message ? { [TTS_KEY]: nextStore } : nextStore
+    original: object6[key],
+    had: Object.hasOwn(object6, key),
+    after: object6 === message ? { [TTS_KEY]: nextStore } : nextStore
   }];
   const playbackStates = Object.fromEntries(migration.segments.map((segment) => [segment.id, live?.playbackStates[segment.id] || "idle"]));
   const nextRecord = {
@@ -86134,8 +86257,8 @@ function openSegmentActions(index2, id4) {
     const glyph = document.createElement("i");
     glyph.className = `fa-solid fa-${icon}`;
     iconBox.append(glyph);
-    const copy3 = document.createElement("span");
-    copy3.className = "t-tts-action-item-copy";
+    const copy4 = document.createElement("span");
+    copy4.className = "t-tts-action-item-copy";
     const caption = document.createElement("strong");
     caption.textContent = label2;
     const detail = document.createElement("small");
@@ -86143,8 +86266,8 @@ function openSegmentActions(index2, id4) {
     const arrow = document.createElement("i");
     arrow.className = "fa-solid fa-chevron-right t-tts-action-item-arrow";
     arrow.setAttribute("aria-hidden", "true");
-    copy3.append(caption, detail);
-    b.append(iconBox, copy3, arrow);
+    copy4.append(caption, detail);
+    b.append(iconBox, copy4, arrow);
     b.addEventListener("click", async () => {
       if (disposed) return;
       try {
@@ -86738,10 +86861,10 @@ var init_tts = __esm({
     allowed = (message, cfg) => !!message && !message.is_system && !message.is_hidden && !message.extra?.is_hidden && (cfg.include_user || !message.is_user);
     identities = /* @__PURE__ */ new WeakMap();
     nextIdentity = 0;
-    identity3 = (object5) => {
-      if (!object5) return 0;
-      if (!identities.has(object5)) identities.set(object5, ++nextIdentity);
-      return identities.get(object5);
+    identity3 = (object6) => {
+      if (!object6) return 0;
+      if (!identities.has(object6)) identities.set(object6, ++nextIdentity);
+      return identities.get(object6);
     };
     settingSignature = (ctx2) => JSON.stringify([ctx2?.key, identity3(ctx2?.chat), identity3(ctx2?.chatMetadata), config(), voicesFor(ctx2), ctx2?.enabled]);
   }
@@ -98311,7 +98434,7 @@ import { eventSource as eventSource20 } from "../../../../script.js";
 
 // src/core/paragraphMedia.js
 var PARAGRAPH_MEDIA_KEY = "titania_paragraph_media";
-var own3 = (object5, key) => Object.prototype.hasOwnProperty.call(object5 || {}, key);
+var own4 = (object6, key) => Object.prototype.hasOwnProperty.call(object6 || {}, key);
 var ignoredExtra = /* @__PURE__ */ new Set([PARAGRAPH_MEDIA_KEY, "echo_tts", "titania_local_text_revision", "display_text"]);
 function paragraphAssetUrl(value, kind = "image") {
   const text9 = String(value || "").trim();
@@ -98399,10 +98522,10 @@ async function prepareParagraphMedia(target) {
     }
   };
 }
-function makeParagraphWrite(writes3, object5, key, after) {
-  const existing = writes3.find((write) => write.object === object5 && write.key === key);
+function makeParagraphWrite(writes3, object6, key, after) {
+  const existing = writes3.find((write) => write.object === object6 && write.key === key);
   if (existing) existing.after = after;
-  else writes3.push({ object: object5, key, original: object5[key], after, had: own3(object5, key) });
+  else writes3.push({ object: object6, key, original: object6[key], after, had: own4(object6, key) });
 }
 
 // src/ui/paragraphMessageView.js
@@ -98546,7 +98669,7 @@ init_storyTimetraceData();
 init_localTextRevisions();
 init_tts();
 var ARCHIVES = ["titania_story_memory", "echo_timetrace_v4", "titania_character_evolution"];
-var own4 = (object5, key) => Object.prototype.hasOwnProperty.call(object5 || {}, key);
+var own5 = (object6, key) => Object.prototype.hasOwnProperty.call(object6 || {}, key);
 var getContext2 = () => globalThis.SillyTavern?.getContext?.();
 var currentSwipe = (message) => Number(message.swipe_id ?? 0);
 function ownerMatches(target) {
@@ -98687,7 +98810,7 @@ function commitParagraphEdit(target, replacement, { remove = false } = {}) {
       const extra = writes3.find((write) => write.object === message && write.key === "extra")?.after || message.extra || {};
       if (!message.extra && !writes3.some((write) => write.object === message && write.key === "extra")) makeParagraphWrite(writes3, message, "extra", extra);
       makeParagraphWrite(writes3, message, "mes", edit.rewritten);
-      if (own4(message, "message")) makeParagraphWrite(writes3, message, "message", edit.rewritten);
+      if (own5(message, "message")) makeParagraphWrite(writes3, message, "message", edit.rewritten);
       if (Array.isArray(message.swipes) && message.swipes.length) makeParagraphWrite(writes3, message.swipes, swipe, edit.rewritten);
       makeParagraphWrite(writes3, extra, LOCAL_TEXT_REVISION_KEY, revision);
       makeParagraphWrite(writes3, extra, "display_text", edit.rewritten);
@@ -98704,7 +98827,7 @@ function commitParagraphEdit(target, replacement, { remove = false } = {}) {
       if (!preparedStillCurrent(fresh) || isHostGenerating()) throw new Error("\u4FDD\u5B58\u524D\u56DE\u590D\u5DF2\u53D8\u5316\uFF0C\u672A\u5199\u5165\u65E7\u8349\u7A3F\u3002");
       media.assertCurrent();
       tts.assertCurrent?.();
-      for (const write of writes3) if (write.object[write.key] !== write.original || own4(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\u3002");
+      for (const write of writes3) if (write.object[write.key] !== write.original || own5(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\u3002");
       mutated = true;
       for (const write of writes3) write.object[write.key] = write.after;
       tts.apply?.();
