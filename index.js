@@ -22,7 +22,7 @@ var init_defaults = __esm({
   "src/config/defaults.js"() {
     extensionName = "Titania_Theater_Echo";
     extensionFolderPath = `scripts/extensions/third-party/titania-theater`;
-    CURRENT_VERSION = "5.9.7";
+    CURRENT_VERSION = "5.9.8";
     LEGACY_KEYS = {
       CFG: "Titania_Config_v3",
       SCRIPTS: "Titania_UserScripts_v3",
@@ -249,8 +249,14 @@ var init_defaults = __esm({
         enabled: true,
         show_theater: true,
         show_outline_actions: true,
-        show_memory: true
+        show_memory: true,
         // 故事记忆入口包含回声时痕；旧配置缺失时按开启处理
+        show_retrieval: false
+        // 仅控制菜单中的回声召回入口，默认关闭
+      },
+      // 聊天召回状态栏的全局显示偏好；暂停请求的处理按钮仍然可用。
+      retrieval_feedback: {
+        enabled: false
       },
       // 小剧场注入聊天（挂在每条消息气泡的「…」菜单里）
       chat_inject: {
@@ -847,12 +853,20 @@ function readToolboxSettings(data = {}) {
     clean_chat_history: stored.clean_chat_history === true,
     features: Object.fromEntries(TOOLBOX_FEATURES.map(({ id: id4 }) => [id4, {
       api: String(stored.features?.[id4]?.api || defaultApiChoice(data, id4)),
+      stream: getToolboxStream(data, id4),
       ...stored.features?.[id4]?.models ? { models: { ...stored.features[id4].models } } : {}
     }]))
   };
 }
 function getToolboxApiChoice(data, feature) {
   return data?.toolbox_settings?.features?.[feature]?.api || (feature === "timetrace" && !data?.story_timetrace?.profile_id ? "memory" : "local");
+}
+function getToolboxStream(data, feature) {
+  const stream = data?.toolbox_settings?.features?.[feature]?.stream;
+  if (typeof stream === "boolean") return stream;
+  if (feature === "theater") return data?.config?.stream !== false;
+  if (feature === "rewrite") return data?.rewrite_entry?.stream_live !== false;
+  return false;
 }
 function getToolboxModelOverride(data, feature) {
   if (feature === "timetrace" && getToolboxApiChoice(data, feature) === "memory") return getToolboxModelOverride(data, "memory");
@@ -865,7 +879,7 @@ function mergeToolboxFeatureApis(original, draft2, current3) {
   const mergeValue = (before, edited, latest) => {
     if (edited === before) return latest;
     if (latest === before || latest === edited) return edited;
-    throw new Error("\u529F\u80FD\u7684 API \u65B9\u6848\u6216\u6A21\u578B\u5DF2\u5728\u5176\u4ED6\u7A97\u53E3\u4FEE\u6539\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u540E\u518D\u7F16\u8F91\u3002");
+    throw new Error("\u529F\u80FD\u7684 API \u65B9\u6848\u3001\u6A21\u578B\u6216\u6D41\u5F0F\u4F20\u8F93\u8BBE\u7F6E\u5DF2\u5728\u5176\u4ED6\u7A97\u53E3\u4FEE\u6539\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u540E\u518D\u7F16\u8F91\u3002");
   };
   for (const { id: id4 } of TOOLBOX_FEATURES) {
     const before = original[id4] || {}, edited = draft2[id4] || {}, latest = current3[id4] || {};
@@ -874,7 +888,11 @@ function mergeToolboxFeatureApis(original, draft2, current3) {
       const value = mergeValue(before.models?.[profile] || "", edited.models?.[profile] || "", latest.models?.[profile] || "");
       if (value) models[profile] = value;
     }
-    merged[id4] = { ...edited, api: mergeValue(before.api, edited.api, latest.api) };
+    merged[id4] = {
+      ...edited,
+      api: mergeValue(before.api, edited.api, latest.api),
+      stream: mergeValue(before.stream, edited.stream, latest.stream)
+    };
     if (Object.keys(models).length) merged[id4].models = models;
     else delete merged[id4].models;
   }
@@ -937,8 +955,7 @@ var init_toolboxSettings = __esm({
       { id: "outline", name: "\u5927\u7EB2\u4E0E\u5267\u60C5\u63A8\u8FDB" },
       { id: "rewrite", name: "\u6587\u672C\u6539\u5199\u4E0E\u5220\u9664" },
       { id: "memory", name: "\u6545\u4E8B\u8BB0\u5FC6" },
-      { id: "timetrace", name: "\u6545\u4E8B\u8BB0\u5FC6 \xB7 \u56DE\u58F0\u65F6\u75D5" },
-      { id: "reader", name: "\u65E7\u9605\u8BFB\u7D22\u5F15\uFF08\u517C\u5BB9\uFF09" }
+      { id: "timetrace", name: "\u6545\u4E8B\u8BB0\u5FC6 \xB7 \u56DE\u58F0\u65F6\u75D5" }
     ]);
     TOOLBOX_EXTRACTION_CHANGED = "titania:toolbox-extraction-changed";
     ANALYSIS_SCOPE_CHANGED = "titania:analysis-scope-changed";
@@ -4187,7 +4204,8 @@ ${STORYBOARD_POSITIVE_PROMPT_REQUIREMENTS}
 var VISUAL_ANALYSIS_RULES;
 var init_visualAnalysisPromptDefaults = __esm({
   "src/core/visualAnalysisPromptDefaults.js"() {
-    VISUAL_ANALYSIS_RULES = `<additional_guidelines>
+    VISUAL_ANALYSIS_RULES = `{{//\u6B64\u6761\u76EE\u6839\u636E@KAKAA\u7684\u5185\u5BB9\u4F18\u5316\u800C\u6765}}
+<additional_guidelines>
 
 ## \u8865\u5145\u6307\u5F15
 
@@ -4296,7 +4314,7 @@ var init_visualAnalysisPromptDefaults = __esm({
 var VISUAL_IMAGE_PROMPT_RULES;
 var init_visualImagePromptDefaults = __esm({
   "src/core/visualImagePromptDefaults.js"() {
-    VISUAL_IMAGE_PROMPT_RULES = `<comfyui_prompt_rules>
+    VISUAL_IMAGE_PROMPT_RULES = `<image_prompt_rules>
 # \u901A\u7528\u751F\u56FE\u63D0\u793A\u8BCD\u7F16\u5199\u89C4\u5219
 
 ## 1. \u6838\u5FC3\u76EE\u6807
@@ -4841,7 +4859,7 @@ Tag \u4E0D\u9700\u8981\u628A\u6240\u6709\u80FD\u60F3\u5230\u7684\u6807\u7B7E\u90
 **\u5355\u89D2\u8272\u4E5F\u9075\u5B88 Tag \u2192 NL\u3002**
 
 **\u591A\u89D2\u8272\u5219\u5728 NL \u4E2D\u5206\u522B\u5EFA\u7ACB\u89D2\u8272\uFF0C\u518D\u63CF\u8FF0\u89D2\u8272\u4E4B\u95F4\u7684\u52A8\u4F5C\u3001\u4E92\u52A8\u548C\u7A7A\u95F4\u5173\u7CFB\u3002**
-</comfyui_prompt_rules>
+</image_prompt_rules>
 `;
   }
 });
@@ -11408,11 +11426,13 @@ textarea.t-input {\r
 .t-toolbox-usage { display: grid; gap: 12px; }\r
 .t-toolbox-usage-row { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(0, 1.6fr); align-items: center; gap: 12px; font-size: 13px; }\r
 .t-toolbox-usage-row select { width: 100%; min-width: 0; }\r
+.t-toolbox-stream-toggle { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; cursor: pointer; }\r
+.t-toolbox-stream-toggle input { flex-shrink: 0; width: auto; margin: 0; accent-color: var(--t-studio-gold); }\r
 .t-toolbox-preview { padding: 14px; border: 1px solid var(--t-studio-line); border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 230px; overflow: auto; background: var(--t-studio-deep); font: inherit; font-size: 13px; }\r
 .t-toolbox-footer { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid var(--t-studio-line); }\r
 .t-toolbox-footer button { flex-shrink: 0; }\r
 .t-toolbox-status { color: var(--t-studio-muted); font-size: 12px; }\r
-.t-toolbox-window button:focus-visible, .t-toolbox-history-toggle input:focus-visible { outline: 2px solid var(--t-studio-gold); outline-offset: 2px; }\r
+.t-toolbox-window button:focus-visible, .t-toolbox-history-toggle input:focus-visible, .t-toolbox-stream-toggle input:focus-visible { outline: 2px solid var(--t-studio-gold); outline-offset: 2px; }\r
 .t-toolbox-window [hidden] { display: none; }\r
 @media (max-width: 600px) {\r
     .t-toolbox-window { width: calc(100vw - 16px); height: min(850px, 94dvh); }\r
@@ -17187,101 +17207,101 @@ textarea.t-input {\r
 
 
 /* === 04-features/visual-selection.css === */
-/* \u5355\u56FE\u548C\u89C6\u89C9\u5C0F\u8BF4\u5171\u7528\u7684\u89C4\u8303\u5316\u539F\u6587\u9009\u6BB5\u5668\u3002 */
-.t-root .t-visual-selection {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 0;
-    margin: 12px 0;
-}
-.t-root .t-visual-selection-toolbar {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    min-width: 0;
-}
-.t-root .t-visual-selection-toolbar > label {
-    flex: 1 1 130px;
-    min-width: 0;
-}
-.t-root .t-visual-selection-toolbar select {
-    width: 100%;
-    min-width: 0;
-}
-.t-root .t-visual-selection-hint {
-    margin: 0;
-    color: var(--t-color-text-secondary);
-    font-size: 0.9em;
-    line-height: 1.6;
-    overflow-wrap: anywhere;
-}
-.t-root .t-visual-selection-units {
-    max-height: min(360px, 40vh);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    border: 1px solid var(--t-color-border-faint);
-    border-radius: 10px;
-    background: var(--t-color-surface);
-}
-.t-root .t-visual-selection-unit {
-    display: grid;
-    grid-template-columns: 30px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    width: 100%;
-    min-height: 44px;
-    margin: 0;
-    padding: 12px 10px;
-    border: 0;
-    border-bottom: 1px solid var(--t-color-border-faint);
-    border-radius: 0;
-    color: var(--t-color-text-strong);
-    background: transparent;
-    font: inherit;
-    line-height: 1.7;
-    text-align: left;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    cursor: pointer;
-}
-.t-root .t-visual-selection-unit:last-child { border-bottom: 0; }
-.t-root .t-visual-selection-unit.is-selected {
-    background: var(--t-color-brand-soft);
-    box-shadow: inset 3px 0 0 var(--t-color-brand);
-}
-.t-root .t-visual-selection-unit:focus-visible {
-    outline: 2px solid var(--t-color-brand);
-    outline-offset: -3px;
-}
-.t-root .t-visual-selection-unit:disabled { cursor: default; }
-.t-root .t-visual-selection-number {
-    color: var(--t-color-text-secondary);
-    font-size: 0.85em;
-    font-variant-numeric: tabular-nums;
-}
-.t-root .t-visual-selection-excerpt {
-    max-height: 220px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    line-height: 1.75;
-}
-.t-root .t-visual-selection-request {
-    display: grid;
-    gap: 6px;
-    min-width: 0;
-}
-.t-root .t-visual-selection-request textarea {
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    resize: vertical;
-}
-.t-root .t-illustration-selection-panel > [data-selection-role="manual"] {
-    margin-top: 12px;
-}
+/* \u5355\u56FE\u548C\u89C6\u89C9\u5C0F\u8BF4\u5171\u7528\u7684\u89C4\u8303\u5316\u539F\u6587\u9009\u6BB5\u5668\u3002 */\r
+.t-root .t-visual-selection {\r
+    display: flex;\r
+    flex-direction: column;\r
+    gap: 10px;\r
+    min-width: 0;\r
+    margin: 12px 0;\r
+}\r
+.t-root .t-visual-selection-toolbar {\r
+    display: flex;\r
+    align-items: center;\r
+    flex-wrap: wrap;\r
+    gap: 8px 12px;\r
+    min-width: 0;\r
+}\r
+.t-root .t-visual-selection-toolbar > label {\r
+    flex: 1 1 130px;\r
+    min-width: 0;\r
+}\r
+.t-root .t-visual-selection-toolbar select {\r
+    width: 100%;\r
+    min-width: 0;\r
+}\r
+.t-root .t-visual-selection-hint {\r
+    margin: 0;\r
+    color: var(--t-color-text-secondary);\r
+    font-size: 0.9em;\r
+    line-height: 1.6;\r
+    overflow-wrap: anywhere;\r
+}\r
+.t-root .t-visual-selection-units {\r
+    max-height: min(360px, 40vh);\r
+    overflow-y: auto;\r
+    overscroll-behavior: contain;\r
+    border: 1px solid var(--t-color-border-faint);\r
+    border-radius: 10px;\r
+    background: var(--t-color-surface);\r
+}\r
+.t-root .t-visual-selection-unit {\r
+    display: grid;\r
+    grid-template-columns: 30px minmax(0, 1fr);\r
+    align-items: start;\r
+    gap: 10px;\r
+    width: 100%;\r
+    min-height: 44px;\r
+    margin: 0;\r
+    padding: 12px 10px;\r
+    border: 0;\r
+    border-bottom: 1px solid var(--t-color-border-faint);\r
+    border-radius: 0;\r
+    color: var(--t-color-text-strong);\r
+    background: transparent;\r
+    font: inherit;\r
+    line-height: 1.7;\r
+    text-align: left;\r
+    white-space: pre-wrap;\r
+    overflow-wrap: anywhere;\r
+    cursor: pointer;\r
+}\r
+.t-root .t-visual-selection-unit:last-child { border-bottom: 0; }\r
+.t-root .t-visual-selection-unit.is-selected {\r
+    background: var(--t-color-brand-soft);\r
+    box-shadow: inset 3px 0 0 var(--t-color-brand);\r
+}\r
+.t-root .t-visual-selection-unit:focus-visible {\r
+    outline: 2px solid var(--t-color-brand);\r
+    outline-offset: -3px;\r
+}\r
+.t-root .t-visual-selection-unit:disabled { cursor: default; }\r
+.t-root .t-visual-selection-number {\r
+    color: var(--t-color-text-secondary);\r
+    font-size: 0.85em;\r
+    font-variant-numeric: tabular-nums;\r
+}\r
+.t-root .t-visual-selection-excerpt {\r
+    max-height: 220px;\r
+    overflow-y: auto;\r
+    white-space: pre-wrap;\r
+    overflow-wrap: anywhere;\r
+    line-height: 1.75;\r
+}\r
+.t-root .t-visual-selection-request {\r
+    display: grid;\r
+    gap: 6px;\r
+    min-width: 0;\r
+}\r
+.t-root .t-visual-selection-request textarea {\r
+    width: 100%;\r
+    min-width: 0;\r
+    box-sizing: border-box;\r
+    resize: vertical;\r
+}\r
+.t-root .t-illustration-selection-panel > [data-selection-role="manual"] {\r
+    margin-top: 12px;\r
+}\r
 
 
 /* === 04-features/storyboard.css === */
@@ -17620,156 +17640,156 @@ textarea.t-input {\r
 
 
 /* === 04-features/echo-imaging.css === */
-/* \u56DE\u58F0\u6620\u50CF\uFF1A\u5355\u56FE\u4E0E\u89C6\u89C9\u5C0F\u8BF4\u5171\u7528\u5DE5\u4F5C\u533A\uFF1B\u539F\u59CB\u548C\u5348\u591C\u4E3B\u9898\u90FD\u4F7F\u7528\u73B0\u6709 token\u3002 */
-.t-root.t-echo-imaging {
-    font-size: calc(14px * var(--t-ui-font-scale, 1));
-    --t-echo-accent: var(--t-color-brand);
-    --t-echo-accent-soft: var(--t-color-brand-soft);
-    --t-echo-bg: var(--t-color-surface);
-    --t-echo-raised: var(--t-color-surface);
-    --t-echo-line: var(--t-color-border-faint);
-    --t-echo-muted: var(--t-color-text-secondary);
-    padding: max(var(--t-gap-section), env(safe-area-inset-top)) max(var(--t-gap-section), env(safe-area-inset-right)) max(var(--t-gap-section), env(safe-area-inset-bottom)) max(var(--t-gap-section), env(safe-area-inset-left));
-}
-.t-echo-imaging.t-studio-workspace { --t-echo-accent: var(--t-studio-gold); --t-echo-accent-soft: var(--t-studio-gold-soft); --t-echo-bg: var(--t-studio-bg); --t-echo-raised: var(--t-studio-raised); --t-echo-line: var(--t-studio-line); --t-echo-muted: var(--t-studio-muted); }
-.t-root.t-echo-imaging > .t-illustration-panel,
-.t-root.t-echo-imaging.is-storyboard > .t-illustration-panel { width: min(1504px, 100%); height: 100%; max-height: 100%; min-height: 0; background: var(--t-echo-bg); }
-.t-echo-imaging .t-panel-header { flex: 0 0 auto; padding: var(--t-gap-section) var(--t-pad-window); border-bottom: 1px solid var(--t-echo-line); }
-.t-echo-title { display: flex; gap: var(--t-gap-stack); align-items: center; min-width: 0; }
-.t-echo-imaging-icon { width: 30px; height: 30px; flex-shrink: 0; color: var(--t-echo-accent); }
-.t-root :is(.t-tools-icon,.t-tool-btn) .t-echo-imaging-icon { width: 20px; height: 20px; color: currentColor; }
-.t-echo-mode-bar { display: flex; align-items: center; gap: var(--t-gap-section); flex: 0 0 auto; padding: var(--t-gap-stack) var(--t-pad-window); border-bottom: 1px solid var(--t-echo-line); min-width: 0; }
-.t-echo-mode-bar .t-illustration-tabs { border: 1px solid var(--t-echo-line); border-radius: var(--t-radius-container); flex: 0 0 auto; overflow: hidden; }
-.t-echo-mode-bar .t-illustration-tab { flex: 0 0 auto; min-height: 38px; padding: var(--t-gap-stack) var(--t-gap-section); font-size: var(--t-text-body); border-bottom: 0; }
-.t-echo-navigation { flex: 1; min-width: 0; }
-.t-echo-steps { display: flex; justify-content: center; gap: var(--t-gap-stack); min-width: 0; }
-.t-echo-step { display: flex; align-items: center; gap: var(--t-gap-stack); padding: var(--t-gap-stack) var(--t-gap-section); border: 0; background: transparent; font: inherit; font-size: var(--t-text-caption); color: var(--t-echo-muted); cursor: pointer; white-space: nowrap; }
-.t-echo-step-number { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--t-color-brand-soft); }
-.t-echo-step.is-active { color: var(--t-echo-accent); }
-.t-echo-step.is-active .t-echo-step-number { background: var(--t-echo-accent); color: var(--t-color-surface); }
-.t-echo-step:focus-visible { outline: 2px solid var(--t-echo-accent); outline-offset: -2px; }
-.t-echo-workflow,.t-echo-stage { display: flex; flex: 1 1 auto; flex-direction: column; height: 100%; min-width: 0; min-height: 0; overflow: hidden; }
-.t-echo-stage-body { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; }
-.t-echo-stage-footer { display: flex; flex: 0 0 auto; gap: var(--t-gap-section); align-items: center; justify-content: space-between; min-height: 70px; padding: var(--t-gap-section) var(--t-pad-window); border-top: 1px solid var(--t-echo-line); background: var(--t-echo-raised); }
-.t-echo-stage-note { margin: 0; color: var(--t-echo-muted); font-size: var(--t-text-caption); line-height: var(--t-leading-prose); white-space: pre-wrap; }
-.t-echo-stage-actions { display: flex; gap: var(--t-gap-stack); align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-.t-echo-stage-actions .t-btn { min-height: 40px; }
-.t-echo-material { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: var(--t-gap-section); width: min(1120px, 100%); padding: var(--t-pad-window); margin: auto; }
-.t-echo-material-card { padding: var(--t-pad-window); border: 1px solid var(--t-echo-line); border-radius: var(--t-radius-window); background: var(--t-echo-raised); min-width: 0; }
-.t-echo-material-card > * + * { margin-top: var(--t-gap-section); }
-.t-echo-material-title { font-size: var(--t-text-title); margin: 0 0 var(--t-gap-section); color: var(--t-color-text-strong); }
-.t-echo-editor { display: grid; grid-template-columns: 225px minmax(0, 1fr) 300px; flex: 1 1 auto; min-width: 0; min-height: 0; overflow: hidden; }
-.t-echo-editor.is-nav-collapsed { grid-template-columns: minmax(0, 1fr) 310px; }
-.t-echo-editor.is-nav-collapsed .t-echo-scene-nav { display: none; }
-.t-echo-scene-nav { padding: var(--t-gap-section); border-right: 1px solid var(--t-echo-line); overflow: auto; background: var(--t-echo-raised); min-width: 0; }
-.t-echo-scene-cards { display: flex; flex-direction: column; gap: var(--t-gap-stack); }
-.t-echo-scene-card { width: 100%; text-align: left; padding: var(--t-gap-section); border: 1px solid transparent; border-radius: var(--t-radius-container); background: transparent; color: var(--t-color-text-strong); cursor: pointer; }
-.t-echo-scene-card.is-active { border-color: var(--t-echo-accent); background: var(--t-echo-accent-soft); }
-.t-echo-scene-card span { display: block; color: var(--t-echo-muted); margin-top: var(--t-gap-stack); font-size: var(--t-text-caption); }
-.t-echo-reader { min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
-.t-echo-reader-header { padding: var(--t-gap-section) var(--t-pad-window); border-bottom: 1px solid var(--t-echo-line); }
-.t-echo-reader-title { margin: 0; font-size: var(--t-text-title); line-height: var(--t-leading-ui); }
-.t-echo-reader-subtitle { color: var(--t-echo-muted); font-size: var(--t-text-caption); margin: var(--t-gap-stack) 0; }
-.t-echo-reader-tools { display: flex; gap: var(--t-gap-stack); }
-.t-echo-reader-tools .t-btn { font-size: var(--t-text-caption); padding: var(--t-gap-stack) var(--t-gap-section); }
-.t-echo-reading { min-width: 0; min-height: 0; flex: 1 1 auto; overflow: auto; padding: var(--t-gap-section) var(--t-pad-window); overscroll-behavior: contain; }
-.t-echo-original { font-size: var(--t-text-body); line-height: 2.1; white-space: pre-wrap; overflow-wrap: anywhere; }
-.t-echo-source-mark { color: inherit; background: var(--t-echo-accent-soft); border-radius: var(--t-radius-container); box-decoration-break: clone; padding: 3px 0; }
-.t-echo-inspector { min-width: 0; padding: var(--t-gap-section); background: var(--t-echo-raised); border-left: 1px solid var(--t-echo-line); overflow: auto; }
-.t-echo-inspector > * + * { margin-top: var(--t-gap-section); }
-.t-echo-inspector-toggle { display: none; }
-.t-echo-picker-host { min-width: 0; }
-.t-echo-imaging .t-echo-picker-host .t-visual-selection { margin: 0; }
-.t-echo-imaging .t-echo-picker-host .t-visual-selection-units { max-height: none; overflow: visible; border: 0; background: transparent; }
-.t-echo-imaging .t-echo-picker-host .t-visual-selection-unit { padding: var(--t-gap-section); border: 1px solid var(--t-echo-line); border-radius: var(--t-radius-container); margin-bottom: var(--t-gap-stack); line-height: 2; }
-.t-echo-imaging .t-echo-picker-host .t-visual-selection-unit.is-selected { background: var(--t-echo-accent-soft); border-color: var(--t-echo-accent); box-shadow: none; }
-.t-echo-imaging .t-echo-picker-host .t-visual-selection-hint { font-size: var(--t-text-caption); }
-.t-echo-imaging .t-echo-picker-host .t-visual-selection-request { display: none; }
-.t-echo-generation { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: var(--t-gap-section); padding: var(--t-pad-window); flex: 1; min-height: 0; }
-.t-echo-large-image { width: 100%; max-height: 100%; min-height: 180px; object-fit: contain; border-radius: var(--t-radius-window); background: var(--t-echo-raised); }
-.t-echo-image-stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; gap: var(--t-gap-stack); }
-.t-echo-image-placeholder { display: grid; place-items: center; flex: 1; padding: var(--t-pad-window); border: 1px dashed var(--t-echo-line); border-radius: var(--t-radius-window); color: var(--t-echo-muted); min-height: 200px; }
-.t-echo-image-controls { display: flex; gap: var(--t-gap-stack); flex-wrap: wrap; }
-.t-echo-image-controls .t-btn { font-size: var(--t-text-caption); }
-.t-echo-gallery { overflow: auto; min-width: 0; min-height: 0; }
-.t-echo-gallery .t-illustration-candidates { grid-template-columns: 1fr; }
-.t-echo-gallery .t-illustration-candidate img { height: 130px; }
-.t-echo-status-strip { display: flex; align-items: center; flex: 0 0 auto; gap: var(--t-gap-stack); border-bottom: 1px solid var(--t-echo-line); padding: var(--t-gap-stack) var(--t-pad-window); min-width: 0; font-size: var(--t-text-caption); }
-.t-echo-status { flex: 1; white-space: pre-wrap; margin: 0; min-width: 0; }
-.t-echo-overlay { position: absolute; inset: 0; z-index: 3; display: flex; justify-content: flex-end; background: var(--t-color-surface-recess-deep); }
-.t-echo-overlay-sheet { display: flex; flex-direction: column; width: min(640px, 100%); background: var(--t-echo-bg); border-left: 1px solid var(--t-echo-line); min-height: 0; overflow: hidden; }
-.t-echo-overlay-header { display: flex; align-items: center; justify-content: space-between; padding: var(--t-gap-section); border-bottom: 1px solid var(--t-echo-line); flex: 0 0 auto; }
-.t-echo-overlay-content { overflow: auto; padding: var(--t-gap-section); flex: 1; min-height: 0; }
-.t-echo-controls-root { border: 0; padding: 0; background: transparent; }
-.t-echo-controls-root > * + * { margin-top: var(--t-gap-section); }
-.t-echo-imaging .t-echo-shot-editor,.t-echo-imaging .t-echo-manual-editor { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; }
-.t-echo-imaging .t-echo-shot-editor > .t-echo-editor,.t-echo-imaging .t-echo-manual-editor > .t-echo-editor { margin: 0; height: 100%; }
-.t-echo-imaging .t-storyboard-panel { position: relative; }
-.t-echo-imaging .t-storyboard-embedded { position: relative; }
-.t-echo-imaging .t-echo-stage[data-echo-stage="2"] > .t-echo-stage-body { overflow: hidden; }
-.t-echo-imaging .t-echo-stage-body > :is([data-role="shot-editor"],[data-role="manual-editor"]) { display: flex; flex: 1 1 auto; flex-direction: column; height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
-.t-echo-imaging .t-echo-original,.t-echo-imaging .t-echo-picker-host { font-size: calc(16px * var(--t-ui-font-scale, 1)); }
-.t-echo-imaging .t-echo-workflow { position: relative; }
-.t-echo-imaging .t-echo-scene-nav > label { display: none; }
-.t-echo-imaging .t-echo-inspector .t-visual-selection-request { display: grid; gap: var(--t-gap-stack); }
-.t-echo-imaging .t-echo-inspector .t-visual-selection-request textarea { min-height: 100px; }
-.t-echo-imaging .t-echo-original { color: var(--t-color-text-strong); }
-.t-echo-imaging .t-echo-gallery .t-illustration-candidates { margin: var(--t-gap-stack) 0; }
-.t-echo-imaging .t-echo-inspector .t-illustration-summary { margin: 0 0 var(--t-gap-section); }
-.t-echo-imaging .t-echo-status-strip .t-illustration-connection { font-size: var(--t-text-caption); margin-left: auto; }
-.t-echo-imaging .t-echo-status-strip .t-illustration-connection .t-btn { padding: var(--t-gap-stack); font-size: var(--t-text-caption); }
-.t-echo-imaging .t-echo-status-strip .t-storyboard-error { padding: var(--t-gap-stack); margin: 0; }
-.t-echo-imaging .t-echo-material-card .t-echo-original { max-height: 380px; overflow: auto; font-size: var(--t-text-caption); }
-.t-echo-imaging .t-echo-more-actions { display: flex; gap: var(--t-gap-stack); }
-.t-echo-imaging .t-echo-overlay-content > .t-btn { margin: var(--t-gap-stack); }
-.t-echo-imaging .t-echo-scene-cards .t-echo-scene-card:focus-visible { outline: 2px solid var(--t-echo-accent); outline-offset: -2px; }
-.t-echo-imaging .t-echo-workflow [hidden] { display: none !important; } /* \u5BF9\u6297\u65E7\u7F16\u8F91\u5668\u53CA\u5BBF\u4E3B display:flex\uFF0C\u9636\u6BB5\u9690\u85CF\u540E\u4E0D\u63A5\u6536\u7126\u70B9\u3002 */
-/* \u89C2\u770B\u94FA\u6EE1\u9875\u9762\uFF0C\u9000\u51FA\u64AD\u653E\u5668\u540E\u7531 is-watching \u6062\u590D\u5236\u4F5C\u5E03\u5C40\u3002 */
-.t-root.t-echo-imaging.is-watching { padding: 0; }
-.t-root.t-echo-imaging.is-watching > .t-illustration-panel { width: 100%; height: 100%; max-height: 100%; border: 0; border-radius: 0; }
-.t-root.t-echo-imaging.is-watching > .t-illustration-panel > :is(.t-panel-header, .t-echo-mode-bar),
-.t-echo-imaging .t-storyboard-embedded.is-watching > .t-echo-status-strip { display: none; }
-.t-echo-imaging .t-storyboard-embedded.is-watching .t-echo-stage[data-echo-stage="4"] > .t-echo-stage-body { overflow: hidden; }
-@media (max-width: 1000px) and (min-width: 601px) {
-    .t-echo-editor { grid-template-columns: 185px minmax(0, 1fr) 255px; }
-    .t-echo-editor.is-nav-collapsed { grid-template-columns: minmax(0, 1fr) 280px; }
-    .t-echo-step { padding: var(--t-gap-stack); }
-    .t-echo-reader-header,.t-echo-reading { padding: var(--t-gap-section); }
-}
-@media (max-width: 600px) {
-    .t-root.t-echo-imaging { padding: 0; }
-    .t-root.t-echo-imaging > .t-illustration-panel { border: 0; border-radius: 0; }
-    .t-echo-imaging .t-panel-header { padding: var(--t-gap-stack) var(--t-gap-section); }
-    .t-echo-mode-bar { padding: 0; flex-direction: column; align-items: stretch; gap: 0; }
-    .t-echo-mode-bar .t-illustration-tabs { border: 0; border-radius: 0; border-bottom: 1px solid var(--t-echo-line); }
-    .t-echo-navigation { width: 100%; }
-    .t-echo-steps { justify-content: space-between; gap: 0; padding: var(--t-gap-stack); }
-    .t-echo-step { font-size: var(--t-text-caption); padding: var(--t-gap-stack) 3px; gap: 4px; }
-    .t-echo-step-number { width: 19px; height: 19px; font-size: var(--t-text-caption); }
-    .t-echo-material { display: flex; flex-direction: column; padding: var(--t-gap-section); margin: 0; }
-    .t-echo-material-card { padding: var(--t-gap-section); }
-    .t-echo-editor,.t-echo-editor.is-nav-collapsed { display: flex; flex-direction: column; position: relative; }
-    .t-echo-scene-nav { flex: 0 0 auto; max-height: 150px; border-right: 0; border-bottom: 1px solid var(--t-echo-line); padding: var(--t-gap-stack); }
-    .t-echo-scene-cards { flex-direction: row; overflow-x: auto; }
-    .t-echo-scene-card { width: 160px; flex: 0 0 auto; padding: var(--t-gap-stack); }
-    .t-echo-reader { flex: 1; }
-    .t-echo-reader-header { padding: var(--t-gap-section); }
-    .t-echo-reader-title { font-size: var(--t-text-subtitle); }
-    .t-echo-reading { padding: var(--t-gap-section); }
-    .t-echo-inspector { display: none; position: absolute; left: 0; right: 0; bottom: 42px; max-height: 75%; z-index: 2; border-top: 1px solid var(--t-echo-line); box-shadow: var(--t-shadow-dialog); }
-    .t-echo-editor.is-inspector-open .t-echo-inspector { display: block; }
-    .t-echo-inspector-toggle { display: block; flex: 0 0 auto; height: 42px; border-radius: 0; font-size: var(--t-text-caption); }
-    .t-echo-stage-footer { padding: var(--t-gap-stack) var(--t-gap-section); min-height: 64px; gap: var(--t-gap-stack); }
-    .t-echo-stage-note { font-size: var(--t-text-caption); max-width: 36%; }
-    .t-echo-stage-actions { gap: var(--t-gap-stack); flex-wrap: nowrap; }
-    .t-echo-stage-actions .t-btn { font-size: var(--t-text-caption); padding: var(--t-gap-stack); }
-    .t-echo-stage-actions .t-echo-secondary { display: none; }
-    .t-echo-generation { display: flex; flex-direction: column; padding: var(--t-gap-section); overflow: auto; }
-    .t-echo-image-stage { flex: 0 0 auto; }
-    .t-echo-large-image { max-height: 42vh; }
-    .t-echo-gallery { flex: 1; }
-    .t-echo-gallery .t-illustration-candidates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
+/* \u56DE\u58F0\u6620\u50CF\uFF1A\u5355\u56FE\u4E0E\u89C6\u89C9\u5C0F\u8BF4\u5171\u7528\u5DE5\u4F5C\u533A\uFF1B\u539F\u59CB\u548C\u5348\u591C\u4E3B\u9898\u90FD\u4F7F\u7528\u73B0\u6709 token\u3002 */\r
+.t-root.t-echo-imaging {\r
+    font-size: calc(14px * var(--t-ui-font-scale, 1));\r
+    --t-echo-accent: var(--t-color-brand);\r
+    --t-echo-accent-soft: var(--t-color-brand-soft);\r
+    --t-echo-bg: var(--t-color-surface);\r
+    --t-echo-raised: var(--t-color-surface);\r
+    --t-echo-line: var(--t-color-border-faint);\r
+    --t-echo-muted: var(--t-color-text-secondary);\r
+    padding: max(var(--t-gap-section), env(safe-area-inset-top)) max(var(--t-gap-section), env(safe-area-inset-right)) max(var(--t-gap-section), env(safe-area-inset-bottom)) max(var(--t-gap-section), env(safe-area-inset-left));\r
+}\r
+.t-echo-imaging.t-studio-workspace { --t-echo-accent: var(--t-studio-gold); --t-echo-accent-soft: var(--t-studio-gold-soft); --t-echo-bg: var(--t-studio-bg); --t-echo-raised: var(--t-studio-raised); --t-echo-line: var(--t-studio-line); --t-echo-muted: var(--t-studio-muted); }\r
+.t-root.t-echo-imaging > .t-illustration-panel,\r
+.t-root.t-echo-imaging.is-storyboard > .t-illustration-panel { width: min(1504px, 100%); height: 100%; max-height: 100%; min-height: 0; background: var(--t-echo-bg); }\r
+.t-echo-imaging .t-panel-header { flex: 0 0 auto; padding: var(--t-gap-section) var(--t-pad-window); border-bottom: 1px solid var(--t-echo-line); }\r
+.t-echo-title { display: flex; gap: var(--t-gap-stack); align-items: center; min-width: 0; }\r
+.t-echo-imaging-icon { width: 30px; height: 30px; flex-shrink: 0; color: var(--t-echo-accent); }\r
+.t-root :is(.t-tools-icon,.t-tool-btn) .t-echo-imaging-icon { width: 20px; height: 20px; color: currentColor; }\r
+.t-echo-mode-bar { display: flex; align-items: center; gap: var(--t-gap-section); flex: 0 0 auto; padding: var(--t-gap-stack) var(--t-pad-window); border-bottom: 1px solid var(--t-echo-line); min-width: 0; }\r
+.t-echo-mode-bar .t-illustration-tabs { border: 1px solid var(--t-echo-line); border-radius: var(--t-radius-container); flex: 0 0 auto; overflow: hidden; }\r
+.t-echo-mode-bar .t-illustration-tab { flex: 0 0 auto; min-height: 38px; padding: var(--t-gap-stack) var(--t-gap-section); font-size: var(--t-text-body); border-bottom: 0; }\r
+.t-echo-navigation { flex: 1; min-width: 0; }\r
+.t-echo-steps { display: flex; justify-content: center; gap: var(--t-gap-stack); min-width: 0; }\r
+.t-echo-step { display: flex; align-items: center; gap: var(--t-gap-stack); padding: var(--t-gap-stack) var(--t-gap-section); border: 0; background: transparent; font: inherit; font-size: var(--t-text-caption); color: var(--t-echo-muted); cursor: pointer; white-space: nowrap; }\r
+.t-echo-step-number { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--t-color-brand-soft); }\r
+.t-echo-step.is-active { color: var(--t-echo-accent); }\r
+.t-echo-step.is-active .t-echo-step-number { background: var(--t-echo-accent); color: var(--t-color-surface); }\r
+.t-echo-step:focus-visible { outline: 2px solid var(--t-echo-accent); outline-offset: -2px; }\r
+.t-echo-workflow,.t-echo-stage { display: flex; flex: 1 1 auto; flex-direction: column; height: 100%; min-width: 0; min-height: 0; overflow: hidden; }\r
+.t-echo-stage-body { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; }\r
+.t-echo-stage-footer { display: flex; flex: 0 0 auto; gap: var(--t-gap-section); align-items: center; justify-content: space-between; min-height: 70px; padding: var(--t-gap-section) var(--t-pad-window); border-top: 1px solid var(--t-echo-line); background: var(--t-echo-raised); }\r
+.t-echo-stage-note { margin: 0; color: var(--t-echo-muted); font-size: var(--t-text-caption); line-height: var(--t-leading-prose); white-space: pre-wrap; }\r
+.t-echo-stage-actions { display: flex; gap: var(--t-gap-stack); align-items: center; flex-wrap: wrap; justify-content: flex-end; }\r
+.t-echo-stage-actions .t-btn { min-height: 40px; }\r
+.t-echo-material { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: var(--t-gap-section); width: min(1120px, 100%); padding: var(--t-pad-window); margin: auto; }\r
+.t-echo-material-card { padding: var(--t-pad-window); border: 1px solid var(--t-echo-line); border-radius: var(--t-radius-window); background: var(--t-echo-raised); min-width: 0; }\r
+.t-echo-material-card > * + * { margin-top: var(--t-gap-section); }\r
+.t-echo-material-title { font-size: var(--t-text-title); margin: 0 0 var(--t-gap-section); color: var(--t-color-text-strong); }\r
+.t-echo-editor { display: grid; grid-template-columns: 225px minmax(0, 1fr) 300px; flex: 1 1 auto; min-width: 0; min-height: 0; overflow: hidden; }\r
+.t-echo-editor.is-nav-collapsed { grid-template-columns: minmax(0, 1fr) 310px; }\r
+.t-echo-editor.is-nav-collapsed .t-echo-scene-nav { display: none; }\r
+.t-echo-scene-nav { padding: var(--t-gap-section); border-right: 1px solid var(--t-echo-line); overflow: auto; background: var(--t-echo-raised); min-width: 0; }\r
+.t-echo-scene-cards { display: flex; flex-direction: column; gap: var(--t-gap-stack); }\r
+.t-echo-scene-card { width: 100%; text-align: left; padding: var(--t-gap-section); border: 1px solid transparent; border-radius: var(--t-radius-container); background: transparent; color: var(--t-color-text-strong); cursor: pointer; }\r
+.t-echo-scene-card.is-active { border-color: var(--t-echo-accent); background: var(--t-echo-accent-soft); }\r
+.t-echo-scene-card span { display: block; color: var(--t-echo-muted); margin-top: var(--t-gap-stack); font-size: var(--t-text-caption); }\r
+.t-echo-reader { min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }\r
+.t-echo-reader-header { padding: var(--t-gap-section) var(--t-pad-window); border-bottom: 1px solid var(--t-echo-line); }\r
+.t-echo-reader-title { margin: 0; font-size: var(--t-text-title); line-height: var(--t-leading-ui); }\r
+.t-echo-reader-subtitle { color: var(--t-echo-muted); font-size: var(--t-text-caption); margin: var(--t-gap-stack) 0; }\r
+.t-echo-reader-tools { display: flex; gap: var(--t-gap-stack); }\r
+.t-echo-reader-tools .t-btn { font-size: var(--t-text-caption); padding: var(--t-gap-stack) var(--t-gap-section); }\r
+.t-echo-reading { min-width: 0; min-height: 0; flex: 1 1 auto; overflow: auto; padding: var(--t-gap-section) var(--t-pad-window); overscroll-behavior: contain; }\r
+.t-echo-original { font-size: var(--t-text-body); line-height: 2.1; white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.t-echo-source-mark { color: inherit; background: var(--t-echo-accent-soft); border-radius: var(--t-radius-container); box-decoration-break: clone; padding: 3px 0; }\r
+.t-echo-inspector { min-width: 0; padding: var(--t-gap-section); background: var(--t-echo-raised); border-left: 1px solid var(--t-echo-line); overflow: auto; }\r
+.t-echo-inspector > * + * { margin-top: var(--t-gap-section); }\r
+.t-echo-inspector-toggle { display: none; }\r
+.t-echo-picker-host { min-width: 0; }\r
+.t-echo-imaging .t-echo-picker-host .t-visual-selection { margin: 0; }\r
+.t-echo-imaging .t-echo-picker-host .t-visual-selection-units { max-height: none; overflow: visible; border: 0; background: transparent; }\r
+.t-echo-imaging .t-echo-picker-host .t-visual-selection-unit { padding: var(--t-gap-section); border: 1px solid var(--t-echo-line); border-radius: var(--t-radius-container); margin-bottom: var(--t-gap-stack); line-height: 2; }\r
+.t-echo-imaging .t-echo-picker-host .t-visual-selection-unit.is-selected { background: var(--t-echo-accent-soft); border-color: var(--t-echo-accent); box-shadow: none; }\r
+.t-echo-imaging .t-echo-picker-host .t-visual-selection-hint { font-size: var(--t-text-caption); }\r
+.t-echo-imaging .t-echo-picker-host .t-visual-selection-request { display: none; }\r
+.t-echo-generation { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: var(--t-gap-section); padding: var(--t-pad-window); flex: 1; min-height: 0; }\r
+.t-echo-large-image { width: 100%; max-height: 100%; min-height: 180px; object-fit: contain; border-radius: var(--t-radius-window); background: var(--t-echo-raised); }\r
+.t-echo-image-stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; gap: var(--t-gap-stack); }\r
+.t-echo-image-placeholder { display: grid; place-items: center; flex: 1; padding: var(--t-pad-window); border: 1px dashed var(--t-echo-line); border-radius: var(--t-radius-window); color: var(--t-echo-muted); min-height: 200px; }\r
+.t-echo-image-controls { display: flex; gap: var(--t-gap-stack); flex-wrap: wrap; }\r
+.t-echo-image-controls .t-btn { font-size: var(--t-text-caption); }\r
+.t-echo-gallery { overflow: auto; min-width: 0; min-height: 0; }\r
+.t-echo-gallery .t-illustration-candidates { grid-template-columns: 1fr; }\r
+.t-echo-gallery .t-illustration-candidate img { height: 130px; }\r
+.t-echo-status-strip { display: flex; align-items: center; flex: 0 0 auto; gap: var(--t-gap-stack); border-bottom: 1px solid var(--t-echo-line); padding: var(--t-gap-stack) var(--t-pad-window); min-width: 0; font-size: var(--t-text-caption); }\r
+.t-echo-status { flex: 1; white-space: pre-wrap; margin: 0; min-width: 0; }\r
+.t-echo-overlay { position: absolute; inset: 0; z-index: 3; display: flex; justify-content: flex-end; background: var(--t-color-surface-recess-deep); }\r
+.t-echo-overlay-sheet { display: flex; flex-direction: column; width: min(640px, 100%); background: var(--t-echo-bg); border-left: 1px solid var(--t-echo-line); min-height: 0; overflow: hidden; }\r
+.t-echo-overlay-header { display: flex; align-items: center; justify-content: space-between; padding: var(--t-gap-section); border-bottom: 1px solid var(--t-echo-line); flex: 0 0 auto; }\r
+.t-echo-overlay-content { overflow: auto; padding: var(--t-gap-section); flex: 1; min-height: 0; }\r
+.t-echo-controls-root { border: 0; padding: 0; background: transparent; }\r
+.t-echo-controls-root > * + * { margin-top: var(--t-gap-section); }\r
+.t-echo-imaging .t-echo-shot-editor,.t-echo-imaging .t-echo-manual-editor { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; }\r
+.t-echo-imaging .t-echo-shot-editor > .t-echo-editor,.t-echo-imaging .t-echo-manual-editor > .t-echo-editor { margin: 0; height: 100%; }\r
+.t-echo-imaging .t-storyboard-panel { position: relative; }\r
+.t-echo-imaging .t-storyboard-embedded { position: relative; }\r
+.t-echo-imaging .t-echo-stage[data-echo-stage="2"] > .t-echo-stage-body { overflow: hidden; }\r
+.t-echo-imaging .t-echo-stage-body > :is([data-role="shot-editor"],[data-role="manual-editor"]) { display: flex; flex: 1 1 auto; flex-direction: column; height: 100%; min-height: 0; min-width: 0; overflow: hidden; }\r
+.t-echo-imaging .t-echo-original,.t-echo-imaging .t-echo-picker-host { font-size: calc(16px * var(--t-ui-font-scale, 1)); }\r
+.t-echo-imaging .t-echo-workflow { position: relative; }\r
+.t-echo-imaging .t-echo-scene-nav > label { display: none; }\r
+.t-echo-imaging .t-echo-inspector .t-visual-selection-request { display: grid; gap: var(--t-gap-stack); }\r
+.t-echo-imaging .t-echo-inspector .t-visual-selection-request textarea { min-height: 100px; }\r
+.t-echo-imaging .t-echo-original { color: var(--t-color-text-strong); }\r
+.t-echo-imaging .t-echo-gallery .t-illustration-candidates { margin: var(--t-gap-stack) 0; }\r
+.t-echo-imaging .t-echo-inspector .t-illustration-summary { margin: 0 0 var(--t-gap-section); }\r
+.t-echo-imaging .t-echo-status-strip .t-illustration-connection { font-size: var(--t-text-caption); margin-left: auto; }\r
+.t-echo-imaging .t-echo-status-strip .t-illustration-connection .t-btn { padding: var(--t-gap-stack); font-size: var(--t-text-caption); }\r
+.t-echo-imaging .t-echo-status-strip .t-storyboard-error { padding: var(--t-gap-stack); margin: 0; }\r
+.t-echo-imaging .t-echo-material-card .t-echo-original { max-height: 380px; overflow: auto; font-size: var(--t-text-caption); }\r
+.t-echo-imaging .t-echo-more-actions { display: flex; gap: var(--t-gap-stack); }\r
+.t-echo-imaging .t-echo-overlay-content > .t-btn { margin: var(--t-gap-stack); }\r
+.t-echo-imaging .t-echo-scene-cards .t-echo-scene-card:focus-visible { outline: 2px solid var(--t-echo-accent); outline-offset: -2px; }\r
+.t-echo-imaging .t-echo-workflow [hidden] { display: none !important; } /* \u5BF9\u6297\u65E7\u7F16\u8F91\u5668\u53CA\u5BBF\u4E3B display:flex\uFF0C\u9636\u6BB5\u9690\u85CF\u540E\u4E0D\u63A5\u6536\u7126\u70B9\u3002 */\r
+/* \u89C2\u770B\u94FA\u6EE1\u9875\u9762\uFF0C\u9000\u51FA\u64AD\u653E\u5668\u540E\u7531 is-watching \u6062\u590D\u5236\u4F5C\u5E03\u5C40\u3002 */\r
+.t-root.t-echo-imaging.is-watching { padding: 0; }\r
+.t-root.t-echo-imaging.is-watching > .t-illustration-panel { width: 100%; height: 100%; max-height: 100%; border: 0; border-radius: 0; }\r
+.t-root.t-echo-imaging.is-watching > .t-illustration-panel > :is(.t-panel-header, .t-echo-mode-bar),\r
+.t-echo-imaging .t-storyboard-embedded.is-watching > .t-echo-status-strip { display: none; }\r
+.t-echo-imaging .t-storyboard-embedded.is-watching .t-echo-stage[data-echo-stage="4"] > .t-echo-stage-body { overflow: hidden; }\r
+@media (max-width: 1000px) and (min-width: 601px) {\r
+    .t-echo-editor { grid-template-columns: 185px minmax(0, 1fr) 255px; }\r
+    .t-echo-editor.is-nav-collapsed { grid-template-columns: minmax(0, 1fr) 280px; }\r
+    .t-echo-step { padding: var(--t-gap-stack); }\r
+    .t-echo-reader-header,.t-echo-reading { padding: var(--t-gap-section); }\r
+}\r
+@media (max-width: 600px) {\r
+    .t-root.t-echo-imaging { padding: 0; }\r
+    .t-root.t-echo-imaging > .t-illustration-panel { border: 0; border-radius: 0; }\r
+    .t-echo-imaging .t-panel-header { padding: var(--t-gap-stack) var(--t-gap-section); }\r
+    .t-echo-mode-bar { padding: 0; flex-direction: column; align-items: stretch; gap: 0; }\r
+    .t-echo-mode-bar .t-illustration-tabs { border: 0; border-radius: 0; border-bottom: 1px solid var(--t-echo-line); }\r
+    .t-echo-navigation { width: 100%; }\r
+    .t-echo-steps { justify-content: space-between; gap: 0; padding: var(--t-gap-stack); }\r
+    .t-echo-step { font-size: var(--t-text-caption); padding: var(--t-gap-stack) 3px; gap: 4px; }\r
+    .t-echo-step-number { width: 19px; height: 19px; font-size: var(--t-text-caption); }\r
+    .t-echo-material { display: flex; flex-direction: column; padding: var(--t-gap-section); margin: 0; }\r
+    .t-echo-material-card { padding: var(--t-gap-section); }\r
+    .t-echo-editor,.t-echo-editor.is-nav-collapsed { display: flex; flex-direction: column; position: relative; }\r
+    .t-echo-scene-nav { flex: 0 0 auto; max-height: 150px; border-right: 0; border-bottom: 1px solid var(--t-echo-line); padding: var(--t-gap-stack); }\r
+    .t-echo-scene-cards { flex-direction: row; overflow-x: auto; }\r
+    .t-echo-scene-card { width: 160px; flex: 0 0 auto; padding: var(--t-gap-stack); }\r
+    .t-echo-reader { flex: 1; }\r
+    .t-echo-reader-header { padding: var(--t-gap-section); }\r
+    .t-echo-reader-title { font-size: var(--t-text-subtitle); }\r
+    .t-echo-reading { padding: var(--t-gap-section); }\r
+    .t-echo-inspector { display: none; position: absolute; left: 0; right: 0; bottom: 42px; max-height: 75%; z-index: 2; border-top: 1px solid var(--t-echo-line); box-shadow: var(--t-shadow-dialog); }\r
+    .t-echo-editor.is-inspector-open .t-echo-inspector { display: block; }\r
+    .t-echo-inspector-toggle { display: block; flex: 0 0 auto; height: 42px; border-radius: 0; font-size: var(--t-text-caption); }\r
+    .t-echo-stage-footer { padding: var(--t-gap-stack) var(--t-gap-section); min-height: 64px; gap: var(--t-gap-stack); }\r
+    .t-echo-stage-note { font-size: var(--t-text-caption); max-width: 36%; }\r
+    .t-echo-stage-actions { gap: var(--t-gap-stack); flex-wrap: nowrap; }\r
+    .t-echo-stage-actions .t-btn { font-size: var(--t-text-caption); padding: var(--t-gap-stack); }\r
+    .t-echo-stage-actions .t-echo-secondary { display: none; }\r
+    .t-echo-generation { display: flex; flex-direction: column; padding: var(--t-gap-section); overflow: auto; }\r
+    .t-echo-image-stage { flex: 0 0 auto; }\r
+    .t-echo-large-image { max-height: 42vh; }\r
+    .t-echo-gallery { flex: 1; }\r
+    .t-echo-gallery .t-illustration-candidates { grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
+}\r
 
 
 /* === 04-features/settings-drawer.css === */
@@ -26352,133 +26372,133 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 /* === 04-features/retrieval.css === */
-/* Independent retrieval view; reuse the toolbox's existing themed memory shell. */
-.t-retrieval-window {
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    width: min(900px, calc(100vw - 32px));
-    max-width: 900px;
-    height: min(840px, 90dvh);
-    max-height: 90dvh;
-    overflow: hidden;
-    background: var(--t-memory-shell);
-    color: var(--t-memory-text);
-    border: 1px solid var(--t-memory-border);
-    border-radius: 18px;
-}
-.t-retrieval-window .t-memory-header { gap: 12px; padding: 20px 24px; }
-.t-retrieval-window .t-memory-title { overflow: hidden; }
-.t-retrieval-window .t-memory-title strong { font-size: 1.25em; letter-spacing: .04em; }
-.t-retrieval-window .t-memory-title small { font-size: .78em; letter-spacing: 0; overflow-wrap: anywhere; }
-.t-retrieval-body { flex: 1; min-height: 0; padding: 20px 24px 28px; overflow-y: auto; overflow-wrap: anywhere; }
-.t-retrieval-intro { margin: 0 0 8px; line-height: 1.7; color: var(--t-memory-text); }
-.t-retrieval-note, .t-retrieval-state, .t-retrieval-help { color: var(--t-memory-muted); font-size: .9em; line-height: 1.7; }
-.t-retrieval-note { margin: 0 0 16px; }
-.t-retrieval-controls { display: flex; flex-wrap: wrap; gap: 8px; }
-.t-retrieval-auto { display: flex; gap: 10px; align-items: flex-start; margin: 18px 0 8px; cursor: pointer; }
-.t-retrieval-auto input { flex: 0 0 auto; margin-top: 5px; accent-color: var(--t-memory-gold); }
-.t-retrieval-auto span { min-width: 0; line-height: 1.6; }
-.t-retrieval-auto small { display: block; margin-top: 4px; color: var(--t-memory-muted); font-size: .85em; }
-.t-retrieval-permissions { margin: 16px 0 20px; padding: 16px; border: 1px solid var(--t-memory-border); border-radius: 12px; background: var(--t-memory-surface); }
-.t-retrieval-permissions h3 { margin: 0 0 12px; color: var(--t-memory-text); font-size: 1em; }
-.t-retrieval-permission-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.t-retrieval-permissions .t-retrieval-auto { margin: 0; }
-.t-retrieval-permissions > .t-retrieval-note { margin: 14px 0 0; }
-.t-retrieval-permission-status { margin: 8px 0 0; color: var(--t-memory-gold); font-size: .88em; line-height: 1.6; }
-.t-retrieval-settings-overlay { z-index: var(--t-z-dialog); }
-.t-retrieval-settings-window .t-retrieval-settings-content { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.t-retrieval-settings-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--t-memory-line); }
-.t-retrieval-settings-footer p { flex: 1 1 260px; margin: 0; color: var(--t-memory-muted); font-size: .85em; line-height: 1.6; }
-.t-retrieval-settings-footer .t-retrieval-controls { flex-shrink: 0; }
-.t-retrieval-state { padding: 12px 0; margin: 0; }
-.t-retrieval-recall-settings, .t-retrieval-model-settings, .t-retrieval-model-report { margin: 10px 0 18px; padding: 14px; border: 1px solid var(--t-memory-border); border-radius: 10px; background: var(--t-memory-surface); }
-.t-retrieval-recall-settings > summary, .t-retrieval-model-settings > summary, .t-retrieval-model-report > summary { cursor: pointer; color: var(--t-memory-text); }
-.t-retrieval-model-settings > .t-retrieval-note:first-of-type { margin-top: 14px; }
-.t-retrieval-model-settings h3 { margin: 18px 0 10px; font-size: 1em; color: var(--t-memory-text); }
-.t-retrieval-model-config + .t-retrieval-model-config { border-top: 1px solid var(--t-memory-line); padding-top: 6px; }
-.t-retrieval-model-config > details { margin: 12px 0; }
-.t-retrieval-model-config > details > summary { cursor: pointer; color: var(--t-memory-muted); }
-.t-retrieval-model-report p { color: var(--t-memory-muted); line-height: 1.7; font-size: .9em; }
-.t-retrieval-model-id { display: grid; gap: 7px; margin: 12px 0; color: var(--t-memory-muted); font-size: .91em; }
-.t-retrieval-model-id input, .t-retrieval-model-id select { min-width: 0; width: 100%; }
-.t-retrieval-model-config .t-retrieval-config-grid { margin-top: 14px; }
-.t-retrieval-config-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
-.t-retrieval-config-grid label { display: grid; align-content: start; gap: 6px; min-width: 0; font-size: .9em; color: var(--t-memory-muted); }
-.t-retrieval-config-grid input, .t-retrieval-config-grid select { width: 100%; min-width: 0; box-sizing: border-box; }
-/* The optional manual-model checkbox is an inline control, not a full-width field. */
-.t-retrieval-model-config [data-manual-model] { width: auto; margin: 0 6px 0 0; vertical-align: middle; accent-color: var(--t-memory-gold); }
-.t-retrieval-model-config input[name="manualModel"][hidden] { display: none; }
-.t-retrieval-field-help { font-size: inherit; line-height: 1.7; color: var(--t-memory-muted); overflow-wrap: anywhere; }
-.t-retrieval-settings-notes { display: grid; gap: 10px; margin: 14px 0; }
-.t-retrieval-settings-notes .t-retrieval-note { margin: 0; }
-.t-retrieval-settings-notes strong { color: var(--t-memory-text); font-weight: 600; }
-.t-retrieval-mode { display: flex; align-items: center; gap: 10px; }
-.t-retrieval-mode select { width: auto; min-width: 0; flex: 1; }
-.t-retrieval-search { display: grid; gap: 8px; margin: 12px 0; }
-.t-retrieval-search label { color: var(--t-memory-text); font-weight: 600; }
-.t-retrieval-search-row { display: flex; gap: 10px; align-items: stretch; }
-.t-retrieval-search-row input { flex: 1; min-width: 0; width: auto; }
-.t-retrieval-search-row button { flex-shrink: 0; }
-.t-retrieval-status { min-height: 1.7em; margin: 14px 0; color: var(--t-memory-gold); line-height: 1.7; }
-.t-retrieval-results { list-style: none; display: grid; gap: 14px; margin: 0; padding: 0; }
-.t-retrieval-result { border: 1px solid var(--t-memory-border); border-radius: 12px; padding: 16px; background: var(--t-memory-surface); }
-.t-retrieval-origin { display: block; margin-top: 7px; color: var(--t-memory-muted); }
-.t-retrieval-message + .t-retrieval-message { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--t-memory-line); }
-.t-retrieval-result-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.t-retrieval-result-heading strong { min-width: 0; overflow-wrap: anywhere; }
-.t-retrieval-result-heading button { flex-shrink: 0; }
-.t-retrieval-result p { white-space: pre-wrap; line-height: 1.8; margin: 12px 0; color: var(--t-memory-text); }
-.t-retrieval-result summary, .t-retrieval-help summary { cursor: pointer; color: var(--t-memory-muted); }
-.t-retrieval-result pre, .t-retrieval-recall-panel pre { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; font: inherit; line-height: 1.8; color: var(--t-memory-text); background: transparent; }
-.t-retrieval-recall-panel { margin: 20px 0; padding: 18px; border: 1px solid var(--t-memory-gold); border-radius: 14px; background: var(--t-memory-surface); }
-.t-retrieval-recall-panel h3 { margin: 0 0 10px; font-size: 1.02em; color: var(--t-memory-text); }
-.t-retrieval-recall-panel details > summary { cursor: pointer; color: var(--t-memory-muted); }
-.t-retrieval-choice { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--t-memory-line); }
-.t-retrieval-choice label { display: flex; align-items: center; gap: 8px; color: var(--t-memory-muted); font-size: .88em; }
-.t-retrieval-choice input { accent-color: var(--t-memory-gold); }
-.t-retrieval-help { margin-top: 22px; border-top: 1px solid var(--t-memory-line); padding-top: 14px; }
-.t-retrieval-window button:disabled { cursor: not-allowed; opacity: .5; }
-.t-retrieval-feedback { flex: 0 0 auto; box-sizing: border-box; width: 100%; min-width: 0; margin: 5px 0; padding: 5px 12px; border: 1px solid var(--t-memory-border); border-radius: 9px; background: var(--t-memory-surface); color: var(--t-memory-text); font-size: .85em; overflow-wrap: anywhere; }
-/* \u5BBF\u4E3B\u7684 display:flex \u53EF\u80FD\u8986\u76D6\u539F\u751F hidden\uFF0C\u4EC5\u5728\u672C\u53CD\u9988\u6761\u5185\u5F3A\u5236\u9690\u85CF\u3002 */
-.t-retrieval-feedback[hidden], .t-retrieval-feedback [hidden] { display: none !important; }
-.t-retrieval-feedback-header { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.t-retrieval-feedback-toggle { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; appearance: none; background: transparent; border: 0; padding: 5px 0; color: inherit; font: inherit; cursor: pointer; text-align: left; }
-.t-retrieval-feedback-toggle strong { flex: 0 0 auto; font-size: .96em; }
-.t-retrieval-feedback [data-summary] { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--t-memory-muted); }
-.t-retrieval-feedback[data-phase="included"] [data-summary] { color: var(--t-memory-teal); }
-.t-retrieval-feedback[data-phase="failed"] [data-summary], .t-retrieval-feedback[data-phase="waiting-user"] [data-summary] { color: var(--t-memory-gold); }
-.t-retrieval-feedback[data-phase="waiting-user"] [data-summary] { white-space: normal; overflow: visible; }
-.t-retrieval-feedback-settings, .t-retrieval-feedback-source, .t-retrieval-feedback-action { appearance: none; padding: 4px 8px; border: 1px solid var(--t-memory-border); border-radius: 6px; background: transparent; color: var(--t-memory-text); font: inherit; cursor: pointer; }
-.t-retrieval-feedback-failure { padding: 8px 0; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); line-height: 1.6; }
-.t-retrieval-feedback-failure p { margin: 6px 0; }
-.t-retrieval-feedback [data-failure-message], .t-retrieval-feedback [data-decision-notice] { color: var(--t-memory-gold); }
-.t-retrieval-feedback-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-.t-retrieval-feedback-action { padding: 6px 10px; }
-.t-retrieval-feedback button:focus-visible { outline: 2px solid var(--t-memory-gold); outline-offset: 2px; }
-.t-retrieval-feedback button:disabled { cursor: not-allowed; opacity: .5; }
-.t-retrieval-feedback-details { max-height: 230px; overflow-y: auto; padding: 6px 0; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); line-height: 1.7; }
-.t-retrieval-feedback-details p { margin: 6px 0; }
-.t-retrieval-feedback [data-sources] { display: flex; flex-wrap: wrap; gap: 6px; }
-.t-retrieval-feedback [data-feedback-error] { color: var(--t-memory-gold); }
-.t-retrieval-feedback [data-diagnostic-panel] { margin-top: 10px; }
-.t-retrieval-feedback [data-diagnostic-panel] > summary { cursor: pointer; color: var(--t-memory-text); }
-.t-retrieval-feedback [data-feedback-diagnostic], .t-retrieval-feedback [data-query] { max-width: 100%; margin: 8px 0; padding: 8px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; font: .85em/1.5 monospace; color: var(--t-memory-muted); background: var(--t-memory-shell); border-radius: 5px; }
-.t-retrieval-feedback [data-query-panel] { margin: 10px 0; }
-.t-retrieval-feedback [data-query-panel] > summary { cursor: pointer; color: var(--t-memory-text); }
-.t-retrieval-window :is(button, input, select, summary):focus-visible { outline: 2px solid var(--t-memory-gold); outline-offset: 2px; }
-@media (max-width: 600px) {
-    .t-retrieval-window .t-memory-header { padding: 16px; }
-    .t-retrieval-body { padding: 16px; }
-    .t-retrieval-permission-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-    .t-retrieval-settings-footer { padding: 12px 16px; }
-    .t-retrieval-config-grid { grid-template-columns: minmax(0, 1fr); }
-    .t-retrieval-search-row { flex-wrap: wrap; }
-    .t-retrieval-search-row input { flex-basis: 100%; }
-    .t-retrieval-search-row button { width: 100%; }
-    .t-retrieval-result { padding: 12px; }
-    .t-retrieval-result-heading { flex-wrap: wrap; }
-}
+/* Independent retrieval view; reuse the toolbox's existing themed memory shell. */\r
+.t-retrieval-window {\r
+    display: flex;\r
+    flex-direction: column;\r
+    box-sizing: border-box;\r
+    width: min(900px, calc(100vw - 32px));\r
+    max-width: 900px;\r
+    height: min(840px, 90dvh);\r
+    max-height: 90dvh;\r
+    overflow: hidden;\r
+    background: var(--t-memory-shell);\r
+    color: var(--t-memory-text);\r
+    border: 1px solid var(--t-memory-border);\r
+    border-radius: 18px;\r
+}\r
+.t-retrieval-window .t-memory-header { gap: 12px; padding: 20px 24px; }\r
+.t-retrieval-window .t-memory-title { overflow: hidden; }\r
+.t-retrieval-window .t-memory-title strong { font-size: 1.25em; letter-spacing: .04em; }\r
+.t-retrieval-window .t-memory-title small { font-size: .78em; letter-spacing: 0; overflow-wrap: anywhere; }\r
+.t-retrieval-body { flex: 1; min-height: 0; padding: 20px 24px 28px; overflow-y: auto; overflow-wrap: anywhere; }\r
+.t-retrieval-intro { margin: 0 0 8px; line-height: 1.7; color: var(--t-memory-text); }\r
+.t-retrieval-note, .t-retrieval-state, .t-retrieval-help { color: var(--t-memory-muted); font-size: .9em; line-height: 1.7; }\r
+.t-retrieval-note { margin: 0 0 16px; }\r
+.t-retrieval-controls { display: flex; flex-wrap: wrap; gap: 8px; }\r
+.t-retrieval-auto { display: flex; gap: 10px; align-items: flex-start; margin: 18px 0 8px; cursor: pointer; }\r
+.t-retrieval-auto input { flex: 0 0 auto; margin-top: 5px; accent-color: var(--t-memory-gold); }\r
+.t-retrieval-auto span { min-width: 0; line-height: 1.6; }\r
+.t-retrieval-auto small { display: block; margin-top: 4px; color: var(--t-memory-muted); font-size: .85em; }\r
+.t-retrieval-permissions { margin: 16px 0 20px; padding: 16px; border: 1px solid var(--t-memory-border); border-radius: 12px; background: var(--t-memory-surface); }\r
+.t-retrieval-permissions h3 { margin: 0 0 12px; color: var(--t-memory-text); font-size: 1em; }\r
+.t-retrieval-permission-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }\r
+.t-retrieval-permissions .t-retrieval-auto { margin: 0; }\r
+.t-retrieval-permissions > .t-retrieval-note { margin: 14px 0 0; }\r
+.t-retrieval-permission-status { margin: 8px 0 0; color: var(--t-memory-gold); font-size: .88em; line-height: 1.6; }\r
+.t-retrieval-settings-overlay { z-index: var(--t-z-dialog); }\r
+.t-retrieval-settings-window .t-retrieval-settings-content { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }\r
+.t-retrieval-settings-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--t-memory-line); }\r
+.t-retrieval-settings-footer p { flex: 1 1 260px; margin: 0; color: var(--t-memory-muted); font-size: .85em; line-height: 1.6; }\r
+.t-retrieval-settings-footer .t-retrieval-controls { flex-shrink: 0; }\r
+.t-retrieval-state { padding: 12px 0; margin: 0; }\r
+.t-retrieval-recall-settings, .t-retrieval-model-settings, .t-retrieval-model-report { margin: 10px 0 18px; padding: 14px; border: 1px solid var(--t-memory-border); border-radius: 10px; background: var(--t-memory-surface); }\r
+.t-retrieval-recall-settings > summary, .t-retrieval-model-settings > summary, .t-retrieval-model-report > summary { cursor: pointer; color: var(--t-memory-text); }\r
+.t-retrieval-model-settings > .t-retrieval-note:first-of-type { margin-top: 14px; }\r
+.t-retrieval-model-settings h3 { margin: 18px 0 10px; font-size: 1em; color: var(--t-memory-text); }\r
+.t-retrieval-model-config + .t-retrieval-model-config { border-top: 1px solid var(--t-memory-line); padding-top: 6px; }\r
+.t-retrieval-model-config > details { margin: 12px 0; }\r
+.t-retrieval-model-config > details > summary { cursor: pointer; color: var(--t-memory-muted); }\r
+.t-retrieval-model-report p { color: var(--t-memory-muted); line-height: 1.7; font-size: .9em; }\r
+.t-retrieval-model-id { display: grid; gap: 7px; margin: 12px 0; color: var(--t-memory-muted); font-size: .91em; }\r
+.t-retrieval-model-id input, .t-retrieval-model-id select { min-width: 0; width: 100%; }\r
+.t-retrieval-model-config .t-retrieval-config-grid { margin-top: 14px; }\r
+.t-retrieval-config-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }\r
+.t-retrieval-config-grid label { display: grid; align-content: start; gap: 6px; min-width: 0; font-size: .9em; color: var(--t-memory-muted); }\r
+.t-retrieval-config-grid input, .t-retrieval-config-grid select { width: 100%; min-width: 0; box-sizing: border-box; }\r
+/* The optional manual-model checkbox is an inline control, not a full-width field. */\r
+.t-retrieval-model-config [data-manual-model] { width: auto; margin: 0 6px 0 0; vertical-align: middle; accent-color: var(--t-memory-gold); }\r
+.t-retrieval-model-config input[name="manualModel"][hidden] { display: none; }\r
+.t-retrieval-field-help { font-size: inherit; line-height: 1.7; color: var(--t-memory-muted); overflow-wrap: anywhere; }\r
+.t-retrieval-settings-notes { display: grid; gap: 10px; margin: 14px 0; }\r
+.t-retrieval-settings-notes .t-retrieval-note { margin: 0; }\r
+.t-retrieval-settings-notes strong { color: var(--t-memory-text); font-weight: 600; }\r
+.t-retrieval-mode { display: flex; align-items: center; gap: 10px; }\r
+.t-retrieval-mode select { width: auto; min-width: 0; flex: 1; }\r
+.t-retrieval-search { display: grid; gap: 8px; margin: 12px 0; }\r
+.t-retrieval-search label { color: var(--t-memory-text); font-weight: 600; }\r
+.t-retrieval-search-row { display: flex; gap: 10px; align-items: stretch; }\r
+.t-retrieval-search-row input { flex: 1; min-width: 0; width: auto; }\r
+.t-retrieval-search-row button { flex-shrink: 0; }\r
+.t-retrieval-status { min-height: 1.7em; margin: 14px 0; color: var(--t-memory-gold); line-height: 1.7; }\r
+.t-retrieval-results { list-style: none; display: grid; gap: 14px; margin: 0; padding: 0; }\r
+.t-retrieval-result { border: 1px solid var(--t-memory-border); border-radius: 12px; padding: 16px; background: var(--t-memory-surface); }\r
+.t-retrieval-origin { display: block; margin-top: 7px; color: var(--t-memory-muted); }\r
+.t-retrieval-message + .t-retrieval-message { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--t-memory-line); }\r
+.t-retrieval-result-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }\r
+.t-retrieval-result-heading strong { min-width: 0; overflow-wrap: anywhere; }\r
+.t-retrieval-result-heading button { flex-shrink: 0; }\r
+.t-retrieval-result p { white-space: pre-wrap; line-height: 1.8; margin: 12px 0; color: var(--t-memory-text); }\r
+.t-retrieval-result summary, .t-retrieval-help summary { cursor: pointer; color: var(--t-memory-muted); }\r
+.t-retrieval-result pre, .t-retrieval-recall-panel pre { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; font: inherit; line-height: 1.8; color: var(--t-memory-text); background: transparent; }\r
+.t-retrieval-recall-panel { margin: 20px 0; padding: 18px; border: 1px solid var(--t-memory-gold); border-radius: 14px; background: var(--t-memory-surface); }\r
+.t-retrieval-recall-panel h3 { margin: 0 0 10px; font-size: 1.02em; color: var(--t-memory-text); }\r
+.t-retrieval-recall-panel details > summary { cursor: pointer; color: var(--t-memory-muted); }\r
+.t-retrieval-choice { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--t-memory-line); }\r
+.t-retrieval-choice label { display: flex; align-items: center; gap: 8px; color: var(--t-memory-muted); font-size: .88em; }\r
+.t-retrieval-choice input { accent-color: var(--t-memory-gold); }\r
+.t-retrieval-help { margin-top: 22px; border-top: 1px solid var(--t-memory-line); padding-top: 14px; }\r
+.t-retrieval-window button:disabled { cursor: not-allowed; opacity: .5; }\r
+.t-retrieval-feedback { flex: 0 0 auto; box-sizing: border-box; width: 100%; min-width: 0; margin: 5px 0; padding: 5px 12px; border: 1px solid var(--t-memory-border); border-radius: 9px; background: var(--t-memory-surface); color: var(--t-memory-text); font-size: .85em; overflow-wrap: anywhere; }\r
+/* \u5BBF\u4E3B\u7684 display:flex \u53EF\u80FD\u8986\u76D6\u539F\u751F hidden\uFF0C\u4EC5\u5728\u672C\u53CD\u9988\u6761\u5185\u5F3A\u5236\u9690\u85CF\u3002 */\r
+.t-retrieval-feedback[hidden], .t-retrieval-feedback [hidden] { display: none !important; }\r
+.t-retrieval-feedback-header { display: flex; align-items: center; gap: 8px; min-width: 0; }\r
+.t-retrieval-feedback-toggle { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; appearance: none; background: transparent; border: 0; padding: 5px 0; color: inherit; font: inherit; cursor: pointer; text-align: left; }\r
+.t-retrieval-feedback-toggle strong { flex: 0 0 auto; font-size: .96em; }\r
+.t-retrieval-feedback [data-summary] { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--t-memory-muted); }\r
+.t-retrieval-feedback[data-phase="included"] [data-summary] { color: var(--t-memory-teal); }\r
+.t-retrieval-feedback[data-phase="failed"] [data-summary], .t-retrieval-feedback[data-phase="waiting-user"] [data-summary] { color: var(--t-memory-gold); }\r
+.t-retrieval-feedback[data-phase="waiting-user"] [data-summary] { white-space: normal; overflow: visible; }\r
+.t-retrieval-feedback-settings, .t-retrieval-feedback-source, .t-retrieval-feedback-action { appearance: none; padding: 4px 8px; border: 1px solid var(--t-memory-border); border-radius: 6px; background: transparent; color: var(--t-memory-text); font: inherit; cursor: pointer; }\r
+.t-retrieval-feedback-failure { padding: 8px 0; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); line-height: 1.6; }\r
+.t-retrieval-feedback-failure p { margin: 6px 0; }\r
+.t-retrieval-feedback [data-failure-message], .t-retrieval-feedback [data-decision-notice] { color: var(--t-memory-gold); }\r
+.t-retrieval-feedback-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }\r
+.t-retrieval-feedback-action { padding: 6px 10px; }\r
+.t-retrieval-feedback button:focus-visible { outline: 2px solid var(--t-memory-gold); outline-offset: 2px; }\r
+.t-retrieval-feedback button:disabled { cursor: not-allowed; opacity: .5; }\r
+.t-retrieval-feedback-details { max-height: 230px; overflow-y: auto; padding: 6px 0; border-top: 1px solid var(--t-memory-line); color: var(--t-memory-muted); line-height: 1.7; }\r
+.t-retrieval-feedback-details p { margin: 6px 0; }\r
+.t-retrieval-feedback [data-sources] { display: flex; flex-wrap: wrap; gap: 6px; }\r
+.t-retrieval-feedback [data-feedback-error] { color: var(--t-memory-gold); }\r
+.t-retrieval-feedback [data-diagnostic-panel] { margin-top: 10px; }\r
+.t-retrieval-feedback [data-diagnostic-panel] > summary { cursor: pointer; color: var(--t-memory-text); }\r
+.t-retrieval-feedback [data-feedback-diagnostic], .t-retrieval-feedback [data-query] { max-width: 100%; margin: 8px 0; padding: 8px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; font: .85em/1.5 monospace; color: var(--t-memory-muted); background: var(--t-memory-shell); border-radius: 5px; }\r
+.t-retrieval-feedback [data-query-panel] { margin: 10px 0; }\r
+.t-retrieval-feedback [data-query-panel] > summary { cursor: pointer; color: var(--t-memory-text); }\r
+.t-retrieval-window :is(button, input, select, summary):focus-visible { outline: 2px solid var(--t-memory-gold); outline-offset: 2px; }\r
+@media (max-width: 600px) {\r
+    .t-retrieval-window .t-memory-header { padding: 16px; }\r
+    .t-retrieval-body { padding: 16px; }\r
+    .t-retrieval-permission-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }\r
+    .t-retrieval-settings-footer { padding: 12px 16px; }\r
+    .t-retrieval-config-grid { grid-template-columns: minmax(0, 1fr); }\r
+    .t-retrieval-search-row { flex-wrap: wrap; }\r
+    .t-retrieval-search-row input { flex-basis: 100%; }\r
+    .t-retrieval-search-row button { width: 100%; }\r
+    .t-retrieval-result { padding: 12px; }\r
+    .t-retrieval-result-heading { flex-wrap: wrap; }\r
+}\r
 
 
 /* === 04-features/character-evolution.css === */
@@ -28068,615 +28088,615 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 /* === 04-features/st-embedded.css === */
-/* css/04-features/st-embedded.css \u2014\u2014 \u6CE8\u5165 SillyTavern DOM \u7684\u5143\u7D20
-   ============================================================
-   \u4F9D ADR-02\uFF1A\u8FD9\u7C7B\u5143\u7D20\u8981\u4E0E ST \u7684\u539F\u751F\u89C2\u611F\u878D\u5408\uFF0C\u800C**\u4E0D\u662F**\u4E0E\u63D2\u4EF6 UI \u878D\u5408\u3002
-   \u5B83\u4EEC\u6545\u610F\u7EE7\u627F ST \u7684 .mes_button \u7B49\u6837\u5F0F\uFF0C\u53EA\u6539\u914D\u8272\uFF0C\u56E0\u6B64\u4E0D\u8FDB\u63D2\u4EF6\u7EC4\u4EF6\u4F53\u7CFB\uFF0C
-   \u4E5F\u4E0D\u52A0 .t-root\uFF08plan.md \xA78.2 \u660E\u786E\u6392\u9664\uFF09\u3002
-
-   \u5F53\u524D\u5185\u5BB9\u6765\u81EA\u6587\u672C\u6539\u5199\u529F\u80FD\u6CE8\u5165\u5230\u804A\u5929\u533A\u7684\u5143\u7D20\uFF1A
-   #chat .mes \u4E0B\u7684\u6539\u5199\u5FBD\u7AE0 / \u884C\u5185\u5DE5\u5177\u6761 / \u6539\u5199\u6807\u8BB0\uFF0C\u4EE5\u53CA #titania-rewrite-entry-btn\u3002
-   \u540E\u7EED\u82E5\u6709\u5176\u5B83\u6CE8\u5165 ST DOM \u7684\u6837\u5F0F\uFF08chatInjectButton \u7B49\uFF09\uFF0C\u4E5F\u5E94\u96C6\u4E2D\u5230\u672C\u6587\u4EF6\u3002
-
-   \u2500\u2500 token \u5316\uFF08\u6CE8\u5165\u6837\u5F0F\u89E3\u8026 4/4\uFF09\u2500\u2500
-   33 \u5904\u989C\u8272\u5B57\u9762\u91CF\u5DF2\u6362\u6210 token\u3002\u8FD9\u4E9B\u63A7\u4EF6\u867D\u6302\u5728 ST \u804A\u5929\u533A\uFF0C\u4F46\u81EA\u8EAB\u5E26\u6709
-   \u51B7\u73BB\u7483\u6697\u8272\u80CC\u666F\uFF0C\u6545\u6D88\u8D39 --t-glass-* \u89D2\u8272\u800C\u4E0D\u7EE7\u627F ST \u6B63\u6587\u8272\uFF1B\u540C\u65F6\u4E0D\u8FDB\u5165
-   \u63D2\u4EF6\u6309\u94AE\u7EC4\u4EF6\u4F53\u7CFB\u3002\u8FD9\u662F ADR-02 \u5728 token \u5C42\u9762\u7684\u8FB9\u754C\u3002
-   ============================================================ */
-
-#titania-rewrite-entry-btn { margin-left: 6px; }
-
-#titania-rewrite-entry-btn i { color: var(--t-color-accent); }
-
-#titania-rewrite-entry-btn:hover i { color: var(--t-color-text-strong); }
-
-#chat .mes .t-rewrite-auto-badge { position: absolute; right: 10px; top: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--t-glass-text); background: var(--t-glass-window); border: 1px solid var(--t-color-accent-border); border-radius: 999px; padding: 3px 8px; box-shadow: var(--t-shadow-md); background-image: var(--t-gradient-badge-flow); background-size: 220% 220%; animation: t-rewrite-badge-flow 1.4s linear infinite; }
-
-#chat .mes .t-rewrite-auto-badge i { color: var(--t-color-accent); animation: t-rewrite-badge-icon 0.95s ease-in-out infinite; }
-
-#chat .mes .t-rewrite-inline-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 8px; font-size: 12px; }
-
-#chat .mes .t-rewrite-inline-toolbar button { border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: var(--t-glass-window); color: var(--t-glass-text); padding: 3px 9px; line-height: 1.35; cursor: pointer; }
-
-#chat .mes .t-rewrite-inline-toolbar button:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
-
-#chat .mes .t-rewrite-inline-toolbar button.t-rewrite-inline-confirm { border-color: var(--t-color-success-border); color: var(--t-glass-text); }
-
-#chat .mes .t-rewrite-inline-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-#chat .mes .t-rewrite-inline-count { color: var(--t-glass-text-secondary); padding: 2px 4px; }
-
-#chat .mes .t-rewrite-inline-sentences { flex-basis: 100%; display: grid; gap: 6px; max-height: 260px; overflow: auto; }
-#chat .mes .t-rewrite-inline-sentences[hidden] { display: none; }
-#chat .mes .t-rewrite-sentence-row { display: flex; gap: 8px; text-align: left; white-space: normal; }
-#chat .mes .t-rewrite-sentence-row.selected { background: var(--t-color-success-soft); border-color: var(--t-color-success-border); }
-#chat .mes .t-rewrite-sentence-no { flex-shrink: 0; color: var(--t-glass-text-secondary); }
-
-::highlight(titania-rewrite-mark) { background-color: var(--t-color-success-soft); }
-::highlight(titania-rewrite-select) { background-color: var(--t-color-accent-soft); }
-::highlight(titania-rewrite-selected) { background-color: var(--t-color-success-soft); }
-
-::highlight(titania-retrieval-source) { background-color: var(--t-color-accent-border); text-decoration: underline; }
-
-#chat .mes.t-retrieval-source-pulse,
-#chat .mes .t-retrieval-source-pulse {
-    background-color: var(--t-color-accent-soft-strong);
-    outline: 2px solid var(--t-color-accent-border-strong);
-    outline-offset: 3px;
-    border-radius: 6px;
-    animation: t-retrieval-source-pulse 1s ease-in-out 3;
-}
-@media (prefers-reduced-motion: reduce) {
-    #chat .mes.t-retrieval-source-pulse,
-    #chat .mes .t-retrieval-source-pulse { animation: none; }
-}
-
-#chat .mes .t-rewrite-select-sentence { border-radius: 5px; padding: 0 2px; cursor: pointer; transition: background-color 0.16s ease, box-shadow 0.16s ease; }
-
-#chat .mes .t-rewrite-select-sentence:hover { background: var(--t-color-accent-soft); box-shadow: inset 0 0 0 1px var(--t-color-accent-border); }
-
-#chat .mes .t-rewrite-select-sentence.selected { background: var(--t-color-success-soft); box-shadow: inset 0 0 0 1px var(--t-color-success-border); }
-
-/* \u65E0\u611F\u5220\u9664\uFF1A\u547D\u4E2D\u53E5\u539F\u5730\u5220\u9664\u540E\uFF0C\u88AB\u91CD\u6E32\u67D3\u7684\u90A3\u4E00\u697C\u6B63\u6587\u505A\u4E00\u6B21\u5F88\u77ED\u7684\u6DE1\u5165\uFF0C
-   \u8BFB\u8D77\u6765\u50CF\u6D88\u606F\u81EA\u7136\u843D\u5B9A\uFF0C\u800C\u975E reloadCurrentChat \u7684\u6574\u5C4F\u95EA\u70C1\u3002\u590D\u7528 t-fade-in\uFF08R6\uFF09\u3002 */
-#chat .mes .mes_text.t-delete-settle { animation: t-fade-in 0.28s ease; }
-
-
-#chat .mes .t-rewrite-mark {
-    position: relative;
-    display: inline;
-    border-radius: 5px;
-    padding: 0 2px;
-    margin: 0;
-    border: 1px solid var(--t-color-success-border);
-    background: var(--t-gradient-success-fill);
-    box-shadow: var(--t-shadow-inset-hairline);
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    animation: t-rewrite-mark-fade-in 0.2s ease;
-}
-
-#chat .mes .t-rewrite-mark::before {
-    content: "\u21BB \u5DF2\u6539\u5199";
-    display: inline-block;
-    margin-right: 4px;
-    padding: 0 4px;
-    border-radius: 999px;
-    border: 1px solid var(--t-color-success-border);
-    background: var(--t-color-success-veil);
-    color: var(--t-glass-text);
-    font-size: 10px;
-    line-height: 1.45;
-    letter-spacing: 0.1px;
-    vertical-align: baseline;
-    white-space: nowrap;
-    opacity: 0.88;
-}
-
-#chat .mes .t-rewrite-mark:hover {
-    border-color: var(--t-color-success-border);
-    background: var(--t-color-success-soft);
-}
-
-/* ============================================================
-   \u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\uFF08sceneAdvanceBubble.js\uFF09
-   ------------------------------------------------------------
-   \u6A2A\u6761\u6302\u5728\u6700\u65B0\u4E00\u6761 AI \u56DE\u590D\u7684 .mes_text \u4E4B\u540E\uFF08\u6B63\u6587\u672B\u7AEF\u3001\u5144\u5F1F\u8282\u70B9\uFF09\uFF0C
-   \u70B9\u5F00\u540E**\u5C31\u5730\u5C55\u5F00**\u5185\u8054\u9762\u677F\uFF08\u9884\u89C8 / \u65B9\u6848 / \u8FDB\u5EA6 / \u5019\u9009 / \u64CD\u4F5C\u6761\uFF09\u3002
-   \u4E0E\u6539\u5199/\u6CE8\u5165\u6309\u94AE\u540C\u5C5E\u300C\u6CE8\u5165 ST DOM\u300D\u4E00\u7C7B\uFF0C\u81EA\u5E26\u73BB\u7483\u5E95\u800C\u4E0D\u7EE7\u627F\u6C14\u6CE1\u914D\u8272\u3002
-   ============================================================ */
-
-#chat .mes .tsa-strip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 8px;
-    padding: 5px 10px;
-    border: 1px solid var(--t-color-accent-border);
-    border-radius: var(--t-radius-sm);
-    background: var(--t-glass-window);
-    color: var(--t-glass-text);
-    font-size: 12px;
-    line-height: 1.4;
-    cursor: pointer;
-    user-select: none;
-    transition: border-color 0.16s ease, background-color 0.16s ease;
-}
-
-#chat .mes .tsa-strip:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
-
-#chat .mes .tsa-strip.is-open { border-color: var(--t-color-accent-border-hover); }
-
-#chat .mes .tsa-strip .tsa-strip-icon { color: var(--t-color-accent); }
-
-#chat .mes .tsa-strip .tsa-strip-title { font-weight: 700; }
-
-#chat .mes .tsa-strip .tsa-strip-progress { color: var(--t-glass-text-secondary); }
-
-/* \u7BAD\u5934\u9760\u53F3\u3001\u5C55\u5F00\u65F6\u7FFB\u8F6C */
-#chat .mes .tsa-strip .tsa-strip-arrow { margin-left: auto; color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }
-
-#chat .mes .tsa-strip.is-open .tsa-strip-arrow { transform: rotate(180deg); }
-
-/* \u5185\u8054\u9762\u677F\uFF1A\u63D2\u5728\u6A2A\u6761\u4E4B\u540E\uFF0C\u5360\u6EE1\u6D88\u606F\u5BBD\u5EA6\u3001\u968F\u6D88\u606F\u6D41\u6392\u7248\uFF08\u4E0D\u7528\u6D6E\u5C42\u5B9A\u4F4D\uFF09\u3002
-   \u9AD8\u5EA6\u5C01\u9876\u540E\u5185\u90E8\u6EDA\u52A8\uFF0C\u907F\u514D\u957F\u5927\u7EB2\u628A\u540E\u9762\u7684\u6D88\u606F\u63A8\u5F97\u592A\u8FDC\u3002 */
-#chat .mes .tsa-panel {
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-    max-height: min(60vh, 460px);
-    overflow: hidden;
-    background: var(--t-glass-window);
-    border: 1px solid var(--t-color-accent-border);
-    border-radius: var(--t-radius-md);
-    color: var(--t-glass-text);
-    font-size: 12px;
-    line-height: 1.5;
-}
-
-/* \u9884\u89C8 + \u65B9\u6848 + \u8FDB\u5EA6 + \u5019\u9009\u6574\u4F53\u6EDA\u52A8\uFF0C\u5E95\u90E8\u64CD\u4F5C\u6761\u5E38\u9A7B\u53EF\u89C1 */
-.tsa-panel .tsa-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 10px; }
-
-.tsa-panel .tsa-plan-row { padding: 0 0 6px; }
-
-.tsa-panel .tsa-plan-label { display: flex; align-items: center; gap: 6px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-plan-select { flex: 1; min-width: 0; padding: 3px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); font-size: 12px; }
-
-.tsa-panel .tsa-progress { padding: 0 0 8px; }
-
-.tsa-panel .tsa-progress-text { margin-bottom: 4px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-bar { height: 4px; border-radius: 999px; background: var(--t-glass-row-hover); overflow: hidden; }
-
-.tsa-panel .tsa-bar-fill { height: 100%; background: var(--t-color-accent); transition: width 0.2s ease; }
-
-/* \u6EDA\u52A8\u5DF2\u7531 .tsa-scroll \u627F\u62C5\uFF0C\u8FD9\u91CC\u53EA\u4F5C\u4E3A\u5019\u9009\u533A\u7684\u5BB9\u5668 */
-.tsa-panel .tsa-list { padding: 0; }
-
-.tsa-panel .tsa-empty { padding: 14px 6px; text-align: center; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-item { margin-bottom: 6px; padding: 7px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: transparent; cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease; }
-
-.tsa-panel .tsa-item:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
-
-.tsa-panel .tsa-item.used { border-color: var(--t-color-success-border); background: var(--t-color-success-soft); }
-
-.tsa-panel .tsa-item-head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
-
-.tsa-panel .tsa-item-no { color: var(--t-color-accent); font-weight: 700; }
-
-.tsa-panel .tsa-item-title { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.tsa-panel .tsa-item-used { flex-shrink: 0; padding: 0 5px; border-radius: 999px; border: 1px solid var(--t-color-success-border); font-size: 10px; }
-
-.tsa-panel .tsa-item-meta { margin-bottom: 3px; font-size: 11px; color: var(--t-glass-text-secondary); }
-
-/* \u300C\u627F\u63A5\uFF1A\u2026\u300D\u2014\u2014\u6A21\u578B\u6307\u8BA4\u5B83\u63A5\u4F4F\u4E86\u6700\u65B0\u4E00\u5C42\u56DE\u590D\u91CC\u7684\u54EA\u4E00\u62CD\u3002\u4E00\u884C\u622A\u65AD\uFF1A\u5B83\u662F\u81EA\u67E5\u7528\u7684\u8DEF\u6807\uFF0C\u4E0D\u662F\u6B63\u6587\u3002 */
-.tsa-panel .tsa-item-from { margin-bottom: 3px; font-size: 11px; color: var(--t-glass-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.tsa-panel .tsa-item-from i { margin-right: 3px; color: var(--t-color-accent); }
-
-/* \u5019\u9009\u6B63\u6587\u53EF\u80FD\u5F88\u957F\uFF1A\u9650\u9AD8\u6EDA\u52A8\uFF0C\u4FDD\u8BC1\u5361\u7247\u5217\u8868\u6574\u4F53\u4ECD\u53EF\u626B\u8BFB */
-.tsa-panel .tsa-item-text { max-height: 88px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
-
-.tsa-panel .tsa-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--t-color-accent-border); }
-
-.tsa-panel .tsa-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text); cursor: pointer; }
-
-.tsa-panel .tsa-chip:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
-
-.tsa-panel .tsa-generate { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: var(--t-color-accent-soft); color: var(--t-glass-text); cursor: pointer; }
-
-.tsa-panel .tsa-generate:hover:not(:disabled) { border-color: var(--t-color-accent-border-hover); }
-
-.tsa-panel .tsa-generate:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* \u2500\u2500 \u5927\u7EB2\u60C5\u8282\u9884\u89C8\uFF08\u539F\u300C\u5267\u60C5\u63A8\u8FDB\u300D\u7A97\u53E3\u7684\u9884\u89C8\u9762\u677F\uFF0C\u7A97\u53E3\u5220\u9664\u540E\u8FC1\u5230\u8FD9\u91CC\u4FDD\u7559\uFF09\u2500\u2500 */
-
-.tsa-panel .tsa-preview { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--t-color-accent-border); }
-
-/* \u6807\u9898\u884C\u517C\u4F5C\u6298\u53E0\u5F00\u5173\uFF1A\u6298\u53E0\u6001\u53EA\u5269\u8FD9\u4E00\u884C\uFF0C\u628A\u9762\u677F\u7A7A\u95F4\u8BA9\u7ED9\u5019\u9009\u5361\u7247 */
-.tsa-panel .tsa-preview-head { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; font-weight: 700; }
-
-.tsa-panel .tsa-preview-toggle { cursor: pointer; user-select: none; transition: color 0.16s ease; }
-
-.tsa-panel .tsa-preview-toggle:hover { color: var(--t-color-text-strong); }
-
-.tsa-panel .tsa-preview-head i { color: var(--t-color-accent); }
-
-.tsa-panel .tsa-preview-count { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-preview-arrow { color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }
-
-.tsa-panel .tsa-preview-toggle.is-open .tsa-preview-arrow { transform: rotate(180deg); }
-
-/* \u6298\u53E0\u6001\uFF1A\u6807\u9898\u884C\u4E0B\u65B9\u4E0D\u9700\u8981\u7559\u767D\u4E0E\u5206\u9694\u7EBF */
-.tsa-panel .tsa-preview--collapsed { margin-bottom: 6px; padding-bottom: 0; border-bottom: 0; }
-
-.tsa-panel .tsa-preview--collapsed .tsa-preview-head { margin-bottom: 0; }
-
-.tsa-panel .tsa-preview-item { display: flex; gap: 6px; margin-bottom: 4px; padding: 5px 7px; border: 1px solid transparent; border-radius: var(--t-radius-sm); cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease; }
-
-.tsa-panel .tsa-preview-item:hover { border-color: var(--t-color-accent-border); background: var(--t-glass-row-hover); }
-
-.tsa-panel .tsa-preview-item.expanded { border-color: var(--t-color-accent-border); background: var(--t-glass-row-hover); }
-
-.tsa-panel .tsa-preview-marker { flex-shrink: 0; width: 14px; text-align: center; }
-
-.tsa-panel .tsa-preview-main { flex: 1; min-width: 0; }
-
-.tsa-panel .tsa-preview-title { margin-bottom: 2px; font-weight: 700; }
-
-.tsa-panel .tsa-preview-plot { color: var(--t-glass-text-secondary); white-space: pre-wrap; word-break: break-word; }
-
-/* \u5C55\u5F00\u540E\u7684\u5B8C\u6574\u60C5\u8282\uFF1A\u63D0\u4EAE\u4E3A\u4E3B\u6587\u672C\u8272\uFF0C\u4E0E\u6536\u8D77\u6001\u7684\u6458\u8981\u533A\u5206 */
-.tsa-panel .tsa-preview-plot--full { color: var(--t-glass-text); }
-
-.tsa-panel .tsa-preview-foreshadow { margin-top: 3px; font-size: 11px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-preview-foreshadow i { color: var(--t-color-success-border); }
-
-/* \u5DF2\u63A8\u8FDB\u8FC7\uFF1A\u6DE1\u5316 + \u6253\u52FE\uFF1B\u5F53\u524D\u6761\u76EE\uFF1A\u9AD8\u4EAE\u5DE6\u8FB9\u6761\uFF1B\u540E\u7EED\u6761\u76EE\uFF1A\u5E38\u663E */
-.tsa-panel .tsa-preview-item.done { opacity: 0.55; }
-
-.tsa-panel .tsa-preview-item.done .tsa-preview-marker { color: var(--t-color-success-border); }
-
-.tsa-panel .tsa-preview-item.current { border-color: var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); }
-
-.tsa-panel .tsa-preview-item.current .tsa-preview-marker { color: var(--t-color-accent); }
-
-.tsa-panel .tsa-preview-item.todo .tsa-preview-marker { color: var(--t-glass-text-secondary); }
-
-/* \u2500\u2500 \u8FC7\u6E21\u884C\u7A0B\u5355\uFF08\u63A8\u8350\u5267\u60C5\u9875\u5185\u5D4C\u5757\uFF1A\u628A\u76F8\u90BB\u4E24\u6761\u5927\u7EB2\u4E4B\u95F4\u7684\u7A7A\u767D\u8865\u6210\u6709\u5E8F\u7684\u51E0\u6B65\uFF09\u2500\u2500
-   \u26A0 \u53EA\u7528\u8BED\u4E49 token\uFF08\u540C\u672C\u6587\u4EF6\u5176\u5B83\u9762\u677F\u5757\uFF09\uFF1A\u6DF1\u6D45\u4E3B\u9898\u9760 token \u91CD\u6620\u5C04\u81EA\u52A8\u8DDF\u968F\u3002 */
-
-.tsa-panel .tsa-transition { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--t-color-accent-border); }
-
-/* \u6807\u9898\u884C\u517C\u4F5C\u6298\u53E0\u5F00\u5173\uFF08\u540C .tsa-preview-head \u7684\u505A\u6CD5\uFF09\uFF1A\u672C\u6BB5\u8FD8\u6CA1\u6392\u65F6\u6574\u5757\u53EA\u5360\u4E00\u884C\u3002
-   \u884C\u8DDD\u6BD4\u5927\u7EB2\u9884\u89C8\u7D27\u4E00\u6863\u2014\u2014\u884C\u7A0B\u5355\u6700\u591A\u5341\u6B65\uFF0C\u6574\u5757\u8981\u80FD\u585E\u8FDB\u9762\u677F\u800C\u4E0D\u6324\u6389\u5019\u9009\u5361\u7247\u3002 */
-.tsa-panel .tsa-transition-head { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; font-weight: 700; }
-
-.tsa-panel .tsa-transition-toggle { cursor: pointer; user-select: none; transition: color 0.16s ease; }
-
-.tsa-panel .tsa-transition-toggle:hover { color: var(--t-color-text-strong); }
-
-.tsa-panel .tsa-transition-head i { color: var(--t-color-accent); }
-
-.tsa-panel .tsa-transition-gap { flex-shrink: 0; padding: 0 6px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; font-size: 11px; font-weight: 400; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-transition-arrow { margin-left: auto; color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }
-
-.tsa-panel .tsa-transition-toggle.is-open .tsa-transition-arrow { transform: rotate(180deg); }
-
-/* \u6B65\u6570\u5FBD\u6807\uFF1A\u7B49\u5BBD\u6570\u5B57\u2014\u2014\u300C1 / 4 \u6B65\u300D\u4F1A\u968F\u8FDB\u5EA6\u9010\u5B57\u53D8\u5316\uFF0C\u6BD4\u4F8B\u6570\u5B57\u4F1A\u8BA9\u6574\u884C\u5DE6\u53F3\u6296\u3002 */
-.tsa-panel .tsa-transition-badge { margin-left: auto; font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--t-glass-text-secondary); }
-
-/* \u300C\u672C\u6B65 \u8FDB\u884C\u4E2D\u300D\uFF1A\u6A21\u578B\u8BFB\u6700\u65B0\u6B63\u6587\u5F97\u51FA\u7684\u8BFB\u6570\uFF0C\u4E0D\u662F\u6743\u5A01\u8FDB\u5EA6\uFF08cursor \u4ECD\u7531\u73A9\u5BB6\u70B9\u9009\u51B3\u5B9A\uFF09\uFF0C
-   \u6240\u4EE5\u7528\u865A\u7EBF\u6846\u5F31\u5316\uFF0C\u522B\u4E0E\u6B65\u6570\u5FBD\u6807\u62A2\u773C\u3002\u6A21\u578B\u6CA1\u5224\u65AD\u51FA\u6765\u5C31\u4E0D\u753B\u3002 */
-.tsa-panel .tsa-transition-state { flex-shrink: 0; padding: 0 6px; border: 1px dashed var(--t-color-accent-border); border-radius: 999px; font-size: 10px; font-weight: 400; color: var(--t-glass-text-secondary); }
-
-/* \u4E0B\u5355\u8868\u5355\uFF08\u672C\u6BB5\u8FD8\u6CA1\u6392\u884C\u7A0B\u5355\u65F6\uFF09 */
-
-.tsa-panel .tsa-transition-form { display: flex; flex-direction: column; gap: 6px; }
-
-.tsa-panel .tsa-transition-brief { width: 100%; padding: 6px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); font-family: inherit; resize: vertical; }
-
-.tsa-panel .tsa-transition-form-row { display: flex; align-items: center; gap: 8px; }
-
-.tsa-panel .tsa-transition-count-label { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-transition-count { width: 56px; padding: 3px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); }
-
-.tsa-panel .tsa-transition-gen { margin-left: auto; }
-
-.tsa-panel .tsa-transition-hint { font-size: 11px; color: var(--t-glass-text-secondary); }
-
-/* \u6709\u5E8F\u6E05\u5355\uFF08\u5DF2\u6392\u884C\u7A0B\u5355\uFF09\u3002\u884C\u8DDD\u6BD4\u5927\u7EB2\u9884\u89C8\u66F4\u7D27\u51D1\uFF1A\u6700\u591A\u5341\u6B65\uFF0C\u6491\u4E0D\u8D77\u90A3\u4E48\u5927\u7684\u884C\u9AD8\u3002 */
-
-.tsa-panel .tsa-transition-purpose { margin-bottom: 5px; font-size: 11px; color: var(--t-glass-text-secondary); white-space: pre-wrap; word-break: break-word; }
-
-.tsa-panel .tsa-transition-list { margin: 0; padding: 0; list-style: none; }
-
-.tsa-panel .tsa-transition-step { display: flex; gap: 6px; margin-bottom: 3px; padding: 4px 7px; border: 1px solid transparent; border-radius: var(--t-radius-sm); cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease; }
-
-.tsa-panel .tsa-transition-step:hover { border-color: var(--t-color-accent-border); background: var(--t-glass-row-hover); }
-
-/* \u7F16\u8F91\u6001\u4E0D\u53EF\u70B9\uFF08\u70B9\u5B83\u6CA1\u6709\u5B9A\u4F4D\u8BED\u4E49\uFF09\uFF0C\u5149\u6807\u8981\u5982\u5B9E\u53CD\u6620 */
-.tsa-panel .tsa-transition-step.is-editing { cursor: default; }
-
-.tsa-panel .tsa-transition-marker { flex-shrink: 0; width: 14px; text-align: center; }
-
-.tsa-panel .tsa-transition-main { flex: 1; min-width: 0; }
-
-.tsa-panel .tsa-transition-title { margin-bottom: 2px; font-weight: 700; }
-
-.tsa-panel .tsa-transition-span { margin-left: 6px; padding: 0 5px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; font-size: 10px; font-weight: 400; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-transition-brief-text { color: var(--t-glass-text-secondary); white-space: pre-wrap; word-break: break-word; }
-
-/* \u5DF2\u8D70\u5B8C\uFF1A\u6DE1\u5316 + \u6253\u52FE\uFF1B\u5F53\u524D\u8FD9\u4E00\u6B65\uFF1A\u9AD8\u4EAE\u5DE6\u8FB9\u6761\uFF08\u4E0E\u5927\u7EB2\u9884\u89C8\u540C\u4E00\u5957\u8BED\u6C47\uFF09 */
-.tsa-panel .tsa-transition-step.done { opacity: 0.55; }
-
-.tsa-panel .tsa-transition-step.done .tsa-transition-marker { color: var(--t-color-success-border); }
-
-.tsa-panel .tsa-transition-step.current { border-color: var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); }
-
-.tsa-panel .tsa-transition-step.current .tsa-transition-marker { color: var(--t-color-accent); }
-
-.tsa-panel .tsa-transition-step.todo .tsa-transition-marker { color: var(--t-glass-text-secondary); }
-
-/* \u7EC8\u70B9\u884C\uFF1A\u865A\u7EBF\uFF1D\u8FD8\u6CA1\u8D70\u5230\uFF1B\u8D70\u5B8C\u6700\u540E\u4E00\u6B65\u5C31\u70B9\u4EAE\u6210\u5B9E\u7EBF\u5E76\u53EF\u70B9\uFF08\u8DE8\u6BB5\uFF09 */
-.tsa-panel .tsa-transition-final { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; padding: 4px 7px; border: 1px dashed var(--t-color-accent-border); border-radius: var(--t-radius-sm); color: var(--t-glass-text-secondary); cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease; }
-
-.tsa-panel .tsa-transition-final:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
-
-.tsa-panel .tsa-transition-final.is-ready { border-style: solid; border-color: var(--t-color-success-border); background: var(--t-color-success-soft); color: var(--t-glass-text); }
-
-/* \u7F16\u8F91\u6001 */
-
-.tsa-panel .tsa-transition-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-
-.tsa-panel .tsa-transition-edit-title,
-.tsa-panel .tsa-transition-edit-span,
-.tsa-panel .tsa-transition-edit-brief { width: 100%; padding: 3px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); font-family: inherit; resize: vertical; }
-
-.tsa-panel .tsa-transition-edit-title { font-weight: 700; }
-
-.tsa-panel .tsa-transition-edit-ops { display: flex; gap: 4px; }
-
-/* \u5E95\u90E8\u64CD\u4F5C\u6761\uFF1A\u6700\u540E\u4E00\u6761\u6E05\u5355\u884C\u81EA\u5DF1\u5E26 3px \u4E0B\u8FB9\u8DDD\uFF0C\u8FD9\u91CC\u53EA\u8865 2px \u51D1\u9F50\u5757\u5185\u7684 5px \u8282\u594F\u3002 */
-.tsa-panel .tsa-transition-ops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
-
-.tsa-panel .tsa-transition-edit-toggle.is-active { border-color: var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); }
-
-/* \u2500\u2500 \u8282\u594F\u628A\u63A7\uFF08\u5267\u60C5\u63A8\u8FDB\u9762\u677F\u7684\u7B2C\u4E8C\u6A21\u5F0F\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
-.tsa-panel .tsa-mode-tabs { display: flex; gap: 6px; padding: 8px 10px 0; }
-
-.tsa-panel .tsa-mode-tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text-secondary); cursor: pointer; font-size: 12px; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease; }
-
-.tsa-panel .tsa-mode-tab:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
-
-.tsa-panel .tsa-mode-tab.is-active { color: var(--t-glass-text); background: var(--t-color-accent-soft); border-color: var(--t-color-accent-border-hover); }
-
-.tsa-panel .tsa-mode-tab i { color: var(--t-color-accent); }
-
-.tsa-panel .tsa-pacing-diag { margin-bottom: 8px; padding: 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); }
-
-.tsa-panel .tsa-pacing-state { display: inline-block; padding: 1px 8px; margin-right: 6px; border-radius: 999px; border: 1px solid var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); color: var(--t-glass-text); font-weight: 700; }
-
-.tsa-panel .tsa-pacing-focus { display: inline-block; padding: 1px 7px; margin-right: 6px; border-radius: 999px; border: 1px solid var(--t-color-accent-border); font-size: 11px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-pacing-intensity { font-size: 11px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-pacing-assessment { margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
-
-.tsa-panel .tsa-pacing-input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 6px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); font: inherit; resize: vertical; }
-
-.tsa-panel .tsa-pacing-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-
-.tsa-panel .tsa-pacing-preset { padding: 3px 10px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text); cursor: pointer; font-size: 12px; }
-
-.tsa-panel .tsa-pacing-preset:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }
-
-.tsa-panel .tsa-pacing-adv { margin-bottom: 8px; font-size: 12px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-pacing-adv summary { cursor: pointer; user-select: none; }
-
-.tsa-panel .tsa-pacing-adv-fields { display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
-
-.tsa-panel .tsa-pacing-adv-fields label { display: inline-flex; align-items: center; gap: 5px; }
-
-.tsa-panel .tsa-pacing-adv-fields input, .tsa-panel .tsa-pacing-adv-fields select { width: 92px; padding: 2px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); }
-
-.tsa-panel .tsa-pacing-armed { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--t-color-success-border); border-radius: var(--t-radius-sm); background: var(--t-color-success-soft); font-size: 12px; }
-
-.tsa-panel .tsa-pacing-armed i { color: var(--t-color-success-border); }
-
-.tsa-panel .tsa-pacing-apply { background: var(--t-color-success-soft); border-color: var(--t-color-success-border); }
-
-/* \u2500\u2500 \u76F2\u76D2\u89E3\u9501\u754C\u9762\uFF08\u9636\u6BB5\u5316\u63ED\u6653\uFF0CsceneAdvanceBubble.js\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-   \u9636\u6BB5\uFF1D\u76F2\u76D2\u8282\u70B9\uFF1A\u5DF2\u901A\u5173\u7684\u63ED\u6653\u6807\u9898\uFF0B\u786C\u951A\uFF08\u63ED\u6653\u672C\u8EAB\u662F\u5956\u52B1\uFF09\u3001\u8FDB\u884C\u4E2D\u7684\u53EA\u7ED9\u8FDB\u5EA6\u70B9\u4E0E
-   "\u672A\u89E3\u9501"\u5360\u4F4D\u3001\u540E\u9762\u7684\u53EA\u7559\u4E00\u884C\u5C01\u5370\u3002\u672A\u89E3\u9501\u7684\u5185\u5BB9\u5728\u6570\u636E\u5C42\u5C31\u4E0D\u5B58\u5728\uFF0C\u8FD9\u91CC\u4E0D\u9700\u8981\u9690\u85CF\u903B\u8F91\u3002
-   \u26A0 \u53EA\u7528\u8BED\u4E49 token\uFF1A\u6DF1\u6D45\u4E3B\u9898\u9760 token \u91CD\u6620\u5C04\u81EA\u52A8\u8DDF\u968F\uFF0C\u5199\u5B57\u9762\u91CF\u4F1A\u53CC\u53CC\u5931\u914D\u3002 */
-
-.tsa-panel .tsa-bb { display: flex; flex-direction: column; gap: 8px; }
-
-.tsa-panel .tsa-bb-top { display: flex; align-items: center; gap: 6px; font-weight: 700; }
-
-.tsa-panel .tsa-bb-title i { color: var(--t-color-accent); }
-
-.tsa-panel .tsa-bb-state { font-size: 11px; font-weight: 600; color: var(--t-color-accent); }
-
-.tsa-panel .tsa-bb-stages-count { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-bb-dwell { font-size: 11px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-bb-empty { font-size: 11px; line-height: 1.5; color: var(--t-glass-text-muted); }
-
-/* \u5BFC\u6F14\u6D41\u6C34\uFF1A\u6BCF\u62CD\u4E00\u884C\u300C\u5224\u8FC7\u4E86\u4EC0\u4E48\u300D\u3002\u53EA\u9732\u6700\u8FD1 3 \u62CD\uFF0C\u8981\u7EC6\u7A76\u518D\u5C55\u5F00\u3002 */
-.tsa-panel .tsa-bb-flow { display: flex; flex-direction: column; gap: 4px; padding: 6px 7px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); }
-
-.tsa-panel .tsa-bb-flow-head { font-size: 11px; font-weight: 700; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-bb-flow-sub { margin-left: 5px; font-weight: 400; color: var(--t-glass-text-muted); }
-
-.tsa-panel .tsa-bb-flow-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
-
-.tsa-panel .tsa-bb-flow-row { display: flex; align-items: baseline; gap: 7px; font-size: 11px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-bb-flow-floor { flex-shrink: 0; width: 26px; color: var(--t-glass-text-muted); font-variant-numeric: tabular-nums; }
-
-.tsa-panel .tsa-bb-flow-time { flex-shrink: 0; color: var(--t-glass-text-muted); font-variant-numeric: tabular-nums; }
-
-.tsa-panel .tsa-bb-flow-what { flex: 1; min-width: 0; }
-
-.tsa-panel .tsa-bb-flow-refused { flex-shrink: 0; color: var(--t-color-warning); }
-
-.tsa-panel .tsa-bb-flow-row.is-failed .tsa-bb-flow-what { color: var(--t-color-danger); font-weight: 600; }
-
-.tsa-panel .tsa-bb-flow-toggle {
-    align-self: flex-start;
-    padding: 1px 6px;
-    border: 1px solid var(--t-color-accent-border);
-    border-radius: var(--t-radius-sm);
-    background: transparent;
-    color: var(--t-glass-text-secondary);
-    font-size: 11px;
-    cursor: pointer;
-}
-
-.tsa-panel .tsa-bb-flow-toggle:hover { border-color: var(--t-color-accent-border-hover); color: var(--t-glass-text); }
-
-/* \u9636\u6BB5\u5217\u8868 */
-.tsa-panel .tsa-bb-stages { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
-
-.tsa-panel .tsa-bb-stage { padding: 5px 7px; border: 1px solid transparent; border-radius: var(--t-radius-sm); }
-
-.tsa-panel .tsa-bb-stage-head { display: flex; align-items: center; gap: 6px; }
-
-.tsa-panel .tsa-bb-stage-mark { flex-shrink: 0; width: 14px; text-align: center; color: var(--t-glass-text-muted); }
-
-.tsa-panel .tsa-bb-stage-label { font-weight: 700; }
-
-.tsa-panel .tsa-bb-stage-title { overflow: hidden; color: var(--t-color-accent); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-
-.tsa-panel .tsa-bb-stage-count { margin-left: auto; font-size: 11px; color: var(--t-glass-text-secondary); }
-
-/* \u8FDB\u884C\u4E2D\uFF1A\u8FD9\u4E00\u6B65\u7684\u4E3B\u89D2\uFF0C\u7ED9\u5E95\u8272\u4E0E\u6696\u8272\u6807\u8BB0 */
-.tsa-panel .tsa-bb-stage.is-current { border-color: var(--t-color-accent-border); background: var(--t-color-accent-soft); }
-
-.tsa-panel .tsa-bb-stage.is-current .tsa-bb-stage-mark,
-.tsa-panel .tsa-bb-stage.is-current .tsa-bb-stage-count { color: var(--t-color-warning); }
-
-/* \u5DF2\u901A\u5173\uFF1A\u7EFF\u7CFB + \u53EF\u6298\u53E0\uFF08\u70B9\u8868\u5934\uFF09 */
-.tsa-panel .tsa-bb-stage.is-cleared { border-color: var(--t-color-success-border); background: var(--t-color-success-soft); }
-
-.tsa-panel .tsa-bb-stage.is-cleared .tsa-bb-stage-mark { color: var(--t-color-success); }
-
-.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head { cursor: pointer; user-select: none; }
-
-.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-body { display: none; margin-top: 6px; }
-
-.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head[aria-expanded="true"] + .tsa-bb-stage-body { display: block; }
-
-.tsa-panel .tsa-bb-stage-arrow { flex-shrink: 0; margin-left: 2px; color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }
-
-.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head[aria-expanded="true"] .tsa-bb-stage-arrow { transform: rotate(180deg); }
-
-/* \u8FD8\u6CA1\u5230\u7684\u9636\u6BB5\uFF1A\u538B\u6697\uFF0C\u4E0D\u53EF\u4EA4\u4E92\uFF0C\u53EA\u6709\u4E00\u884C */
-.tsa-panel .tsa-bb-stage.is-sealed { opacity: 0.5; }
-
-/* \u786C\u951A\uFF08\u4EC5\u901A\u5173\u540E\u63ED\u6653\uFF09\u4E0E"\u7B49\u786C\u951A\u843D\u5730"\u7684\u8BF4\u660E */
-.tsa-panel .tsa-bb-anchor { margin-bottom: 5px; font-size: 11px; color: var(--t-glass-text-secondary); }
-
-.tsa-panel .tsa-bb-anchor-tag { display: inline-block; margin-right: 6px; padding: 1px 5px; border: 1px solid var(--t-color-success-border); border-radius: 999px; color: var(--t-color-success); font-size: 10px; }
-
-.tsa-panel .tsa-bb-holding { margin-bottom: 5px; font-size: 11px; color: var(--t-color-warning); }
-
-/* \u4E8B\u4EF6\u884C */
-.tsa-panel .tsa-bb-events { margin: 0; padding: 0; list-style: none; }
-
-.tsa-panel .tsa-bb-ev { display: flex; gap: 7px; padding: 4px 2px; border-bottom: 1px solid var(--t-color-accent-border); }
-
-.tsa-panel .tsa-bb-ev:last-child { border-bottom: 0; }
-
-.tsa-panel .tsa-bb-ev-no { flex-shrink: 0; width: 18px; color: var(--t-glass-text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-
-.tsa-panel .tsa-bb-ev-main { flex: 1; min-width: 0; }
-
-.tsa-panel .tsa-bb-ev-text { color: var(--t-glass-text); white-space: pre-wrap; word-break: break-word; }
-
-.tsa-panel .tsa-bb-ev-recap { margin-top: 2px; color: var(--t-glass-text-secondary); font-size: 11px; }
-
-.tsa-panel .tsa-bb-ev-span { flex-shrink: 0; color: var(--t-glass-text-muted); font-size: 11px; }
-
-.tsa-panel .tsa-bb-ev-tag { margin-left: 5px; color: var(--t-glass-text-muted); font-size: 10px; }
-
-.tsa-panel .tsa-bb-ev.is-skipped .tsa-bb-ev-text { color: var(--t-glass-text-secondary); }
-
-/* \u672A\u89E3\u9501\uFF1A\u53EA\u6709\u4E00\u884C\u72B6\u6001 + \u4E00\u6761\u5FAE\u5149\u5360\u4F4D\uFF0C\u6CA1\u6709\u5185\u5BB9 */
-.tsa-panel .tsa-bb-ev-lock { color: var(--t-glass-text-muted); font-size: 11px; }
-
-.tsa-panel .tsa-bb-ev.is-target .tsa-bb-ev-lock { color: var(--t-color-warning); }
-
-.tsa-panel .tsa-bb-shimmer {
-    display: block;
-    height: 7px;
-    margin-top: 4px;
-    border-radius: 999px;
-    background-image: linear-gradient(90deg, transparent 0%, var(--t-glass-row-hover) 45%, var(--t-glass-row-hover) 55%, transparent 100%);
-    background-repeat: no-repeat;
-    background-size: 60% 100%;
-    animation: t-bb-shimmer-sweep 1.8s ease-in-out infinite;
-}
-
-/* \u521A\u89E3\u9501\uFF1A\u4ECE\u6A21\u7CCA\u5230\u6E05\u6670\u5730\u63ED\u6653\u51FA\u6765\uFF08\u53EA\u6302\u5728\u9996\u6B21\u770B\u5230\u7684\u6761\u76EE\u4E0A\uFF0C\u89C1 consumeUnlockMarks\uFF09 */
-.tsa-panel .tsa-bb-ev.is-fresh { animation: t-bb-reveal-in 0.32s ease-out both; }
-
-.tsa-panel .tsa-bb-stage.is-fresh { animation: t-bb-reveal-in 0.32s ease-out both; }
-
-/* \u9762\u677F\u5E95\u90E8\u7684\u56FE\u6807\u6309\u94AE\uFF08\u97F3\u91CF\u5FAA\u73AF\uFF09\u2014\u2014\u4E0E .tsa-generate \u540C\u4E00\u5957\u89C2\u611F\uFF0C\u4F46\u505A\u5706\u7684 */
-.tsa-panel .tsa-icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    padding: 0;
-    border: 1px solid var(--t-color-accent-border);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--t-glass-text-secondary);
-    cursor: pointer;
-    transition: border-color 0.16s ease, color 0.16s ease, background-color 0.16s ease;
-}
-
-.tsa-panel .tsa-icon-btn:hover { border-color: var(--t-color-accent-border-hover); color: var(--t-glass-text); background: var(--t-glass-row-hover); }
-
-/* \u6A2A\u6761\u4E0A\u7684"\u6709\u65B0\u89E3\u9501"\u63D0\u793A\u70B9\uFF08\u6253\u5F00\u9762\u677F\u505A\u5B8C\u63ED\u6653\u52A8\u753B\u540E\u7531 updateStrip \u6458\u6389\uFF09 */
-#chat .mes .tsa-strip.has-unlock { border-color: var(--t-color-success-border); }
-
-#chat .mes .tsa-strip .tsa-strip-unlock-dot {
-    width: 7px;
-    height: 7px;
-    margin-left: 6px;
-    border-radius: 999px;
-    background: var(--t-color-success);
-    animation: t-pulse-green 1.6s ease-in-out infinite;
-}
-
-/* \u5FC3\u8DF3\u62A5"\u672C\u62CD\u5224\u5B9A\u5F02\u5E38"\u65F6\u628A\u6A2A\u6761\u67D3\u7EA2\u2014\u2014\u8FD9\u662F"\u5BFC\u6F14\u574F\u4E86"\u552F\u4E00\u4E0D\u7528\u7FFB\u65E5\u5FD7\u5C31\u770B\u5F97\u89C1\u7684\u5730\u65B9 */
-#chat .mes .tsa-strip.is-failed { border-color: var(--t-color-danger-border); }
-
-#chat .mes .tsa-strip.is-failed .tsa-strip-progress { color: var(--t-color-danger); }
-
-/* \u51CF\u5C11\u52A8\u6001\u6548\u679C\uFF1A\u52A8\u753B\u662F\u70B9\u7F00\uFF0C\u5148\u628A\u72B6\u6001\u4FE1\u606F\u7559\u5728\u539F\u5730\uFF08\u672C\u4ED3\u5E93\u7B2C\u4E00\u4E2A reduced-motion \u515C\u5E95\uFF09 */
-@media (prefers-reduced-motion: reduce) {
-    .tsa-panel .tsa-bb-ev.is-fresh,
-    .tsa-panel .tsa-bb-stage.is-fresh,
-    .tsa-panel .tsa-bb-shimmer,
-    #chat .mes .tsa-strip .tsa-strip-unlock-dot { animation: none; }
-}
+/* css/04-features/st-embedded.css \u2014\u2014 \u6CE8\u5165 SillyTavern DOM \u7684\u5143\u7D20\r
+   ============================================================\r
+   \u4F9D ADR-02\uFF1A\u8FD9\u7C7B\u5143\u7D20\u8981\u4E0E ST \u7684\u539F\u751F\u89C2\u611F\u878D\u5408\uFF0C\u800C**\u4E0D\u662F**\u4E0E\u63D2\u4EF6 UI \u878D\u5408\u3002\r
+   \u5B83\u4EEC\u6545\u610F\u7EE7\u627F ST \u7684 .mes_button \u7B49\u6837\u5F0F\uFF0C\u53EA\u6539\u914D\u8272\uFF0C\u56E0\u6B64\u4E0D\u8FDB\u63D2\u4EF6\u7EC4\u4EF6\u4F53\u7CFB\uFF0C\r
+   \u4E5F\u4E0D\u52A0 .t-root\uFF08plan.md \xA78.2 \u660E\u786E\u6392\u9664\uFF09\u3002\r
+\r
+   \u5F53\u524D\u5185\u5BB9\u6765\u81EA\u6587\u672C\u6539\u5199\u529F\u80FD\u6CE8\u5165\u5230\u804A\u5929\u533A\u7684\u5143\u7D20\uFF1A\r
+   #chat .mes \u4E0B\u7684\u6539\u5199\u5FBD\u7AE0 / \u884C\u5185\u5DE5\u5177\u6761 / \u6539\u5199\u6807\u8BB0\uFF0C\u4EE5\u53CA #titania-rewrite-entry-btn\u3002\r
+   \u540E\u7EED\u82E5\u6709\u5176\u5B83\u6CE8\u5165 ST DOM \u7684\u6837\u5F0F\uFF08chatInjectButton \u7B49\uFF09\uFF0C\u4E5F\u5E94\u96C6\u4E2D\u5230\u672C\u6587\u4EF6\u3002\r
+\r
+   \u2500\u2500 token \u5316\uFF08\u6CE8\u5165\u6837\u5F0F\u89E3\u8026 4/4\uFF09\u2500\u2500\r
+   33 \u5904\u989C\u8272\u5B57\u9762\u91CF\u5DF2\u6362\u6210 token\u3002\u8FD9\u4E9B\u63A7\u4EF6\u867D\u6302\u5728 ST \u804A\u5929\u533A\uFF0C\u4F46\u81EA\u8EAB\u5E26\u6709\r
+   \u51B7\u73BB\u7483\u6697\u8272\u80CC\u666F\uFF0C\u6545\u6D88\u8D39 --t-glass-* \u89D2\u8272\u800C\u4E0D\u7EE7\u627F ST \u6B63\u6587\u8272\uFF1B\u540C\u65F6\u4E0D\u8FDB\u5165\r
+   \u63D2\u4EF6\u6309\u94AE\u7EC4\u4EF6\u4F53\u7CFB\u3002\u8FD9\u662F ADR-02 \u5728 token \u5C42\u9762\u7684\u8FB9\u754C\u3002\r
+   ============================================================ */\r
+\r
+#titania-rewrite-entry-btn { margin-left: 6px; }\r
+\r
+#titania-rewrite-entry-btn i { color: var(--t-color-accent); }\r
+\r
+#titania-rewrite-entry-btn:hover i { color: var(--t-color-text-strong); }\r
+\r
+#chat .mes .t-rewrite-auto-badge { position: absolute; right: 10px; top: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--t-glass-text); background: var(--t-glass-window); border: 1px solid var(--t-color-accent-border); border-radius: 999px; padding: 3px 8px; box-shadow: var(--t-shadow-md); background-image: var(--t-gradient-badge-flow); background-size: 220% 220%; animation: t-rewrite-badge-flow 1.4s linear infinite; }\r
+\r
+#chat .mes .t-rewrite-auto-badge i { color: var(--t-color-accent); animation: t-rewrite-badge-icon 0.95s ease-in-out infinite; }\r
+\r
+#chat .mes .t-rewrite-inline-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 8px; font-size: 12px; }\r
+\r
+#chat .mes .t-rewrite-inline-toolbar button { border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: var(--t-glass-window); color: var(--t-glass-text); padding: 3px 9px; line-height: 1.35; cursor: pointer; }\r
+\r
+#chat .mes .t-rewrite-inline-toolbar button:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }\r
+\r
+#chat .mes .t-rewrite-inline-toolbar button.t-rewrite-inline-confirm { border-color: var(--t-color-success-border); color: var(--t-glass-text); }\r
+\r
+#chat .mes .t-rewrite-inline-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }\r
+\r
+#chat .mes .t-rewrite-inline-count { color: var(--t-glass-text-secondary); padding: 2px 4px; }\r
+\r
+#chat .mes .t-rewrite-inline-sentences { flex-basis: 100%; display: grid; gap: 6px; max-height: 260px; overflow: auto; }\r
+#chat .mes .t-rewrite-inline-sentences[hidden] { display: none; }\r
+#chat .mes .t-rewrite-sentence-row { display: flex; gap: 8px; text-align: left; white-space: normal; }\r
+#chat .mes .t-rewrite-sentence-row.selected { background: var(--t-color-success-soft); border-color: var(--t-color-success-border); }\r
+#chat .mes .t-rewrite-sentence-no { flex-shrink: 0; color: var(--t-glass-text-secondary); }\r
+\r
+::highlight(titania-rewrite-mark) { background-color: var(--t-color-success-soft); }\r
+::highlight(titania-rewrite-select) { background-color: var(--t-color-accent-soft); }\r
+::highlight(titania-rewrite-selected) { background-color: var(--t-color-success-soft); }\r
+\r
+::highlight(titania-retrieval-source) { background-color: var(--t-color-accent-border); text-decoration: underline; }\r
+\r
+#chat .mes.t-retrieval-source-pulse,\r
+#chat .mes .t-retrieval-source-pulse {\r
+    background-color: var(--t-color-accent-soft-strong);\r
+    outline: 2px solid var(--t-color-accent-border-strong);\r
+    outline-offset: 3px;\r
+    border-radius: 6px;\r
+    animation: t-retrieval-source-pulse 1s ease-in-out 3;\r
+}\r
+@media (prefers-reduced-motion: reduce) {\r
+    #chat .mes.t-retrieval-source-pulse,\r
+    #chat .mes .t-retrieval-source-pulse { animation: none; }\r
+}\r
+\r
+#chat .mes .t-rewrite-select-sentence { border-radius: 5px; padding: 0 2px; cursor: pointer; transition: background-color 0.16s ease, box-shadow 0.16s ease; }\r
+\r
+#chat .mes .t-rewrite-select-sentence:hover { background: var(--t-color-accent-soft); box-shadow: inset 0 0 0 1px var(--t-color-accent-border); }\r
+\r
+#chat .mes .t-rewrite-select-sentence.selected { background: var(--t-color-success-soft); box-shadow: inset 0 0 0 1px var(--t-color-success-border); }\r
+\r
+/* \u65E0\u611F\u5220\u9664\uFF1A\u547D\u4E2D\u53E5\u539F\u5730\u5220\u9664\u540E\uFF0C\u88AB\u91CD\u6E32\u67D3\u7684\u90A3\u4E00\u697C\u6B63\u6587\u505A\u4E00\u6B21\u5F88\u77ED\u7684\u6DE1\u5165\uFF0C\r
+   \u8BFB\u8D77\u6765\u50CF\u6D88\u606F\u81EA\u7136\u843D\u5B9A\uFF0C\u800C\u975E reloadCurrentChat \u7684\u6574\u5C4F\u95EA\u70C1\u3002\u590D\u7528 t-fade-in\uFF08R6\uFF09\u3002 */\r
+#chat .mes .mes_text.t-delete-settle { animation: t-fade-in 0.28s ease; }\r
+\r
+\r
+#chat .mes .t-rewrite-mark {\r
+    position: relative;\r
+    display: inline;\r
+    border-radius: 5px;\r
+    padding: 0 2px;\r
+    margin: 0;\r
+    border: 1px solid var(--t-color-success-border);\r
+    background: var(--t-gradient-success-fill);\r
+    box-shadow: var(--t-shadow-inset-hairline);\r
+    transition: background-color 0.2s ease, border-color 0.2s ease;\r
+    animation: t-rewrite-mark-fade-in 0.2s ease;\r
+}\r
+\r
+#chat .mes .t-rewrite-mark::before {\r
+    content: "\u21BB \u5DF2\u6539\u5199";\r
+    display: inline-block;\r
+    margin-right: 4px;\r
+    padding: 0 4px;\r
+    border-radius: 999px;\r
+    border: 1px solid var(--t-color-success-border);\r
+    background: var(--t-color-success-veil);\r
+    color: var(--t-glass-text);\r
+    font-size: 10px;\r
+    line-height: 1.45;\r
+    letter-spacing: 0.1px;\r
+    vertical-align: baseline;\r
+    white-space: nowrap;\r
+    opacity: 0.88;\r
+}\r
+\r
+#chat .mes .t-rewrite-mark:hover {\r
+    border-color: var(--t-color-success-border);\r
+    background: var(--t-color-success-soft);\r
+}\r
+\r
+/* ============================================================\r
+   \u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\uFF08sceneAdvanceBubble.js\uFF09\r
+   ------------------------------------------------------------\r
+   \u6A2A\u6761\u6302\u5728\u6700\u65B0\u4E00\u6761 AI \u56DE\u590D\u7684 .mes_text \u4E4B\u540E\uFF08\u6B63\u6587\u672B\u7AEF\u3001\u5144\u5F1F\u8282\u70B9\uFF09\uFF0C\r
+   \u70B9\u5F00\u540E**\u5C31\u5730\u5C55\u5F00**\u5185\u8054\u9762\u677F\uFF08\u9884\u89C8 / \u65B9\u6848 / \u8FDB\u5EA6 / \u5019\u9009 / \u64CD\u4F5C\u6761\uFF09\u3002\r
+   \u4E0E\u6539\u5199/\u6CE8\u5165\u6309\u94AE\u540C\u5C5E\u300C\u6CE8\u5165 ST DOM\u300D\u4E00\u7C7B\uFF0C\u81EA\u5E26\u73BB\u7483\u5E95\u800C\u4E0D\u7EE7\u627F\u6C14\u6CE1\u914D\u8272\u3002\r
+   ============================================================ */\r
+\r
+#chat .mes .tsa-strip {\r
+    display: flex;\r
+    align-items: center;\r
+    gap: 6px;\r
+    margin-top: 8px;\r
+    padding: 5px 10px;\r
+    border: 1px solid var(--t-color-accent-border);\r
+    border-radius: var(--t-radius-sm);\r
+    background: var(--t-glass-window);\r
+    color: var(--t-glass-text);\r
+    font-size: 12px;\r
+    line-height: 1.4;\r
+    cursor: pointer;\r
+    user-select: none;\r
+    transition: border-color 0.16s ease, background-color 0.16s ease;\r
+}\r
+\r
+#chat .mes .tsa-strip:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }\r
+\r
+#chat .mes .tsa-strip.is-open { border-color: var(--t-color-accent-border-hover); }\r
+\r
+#chat .mes .tsa-strip .tsa-strip-icon { color: var(--t-color-accent); }\r
+\r
+#chat .mes .tsa-strip .tsa-strip-title { font-weight: 700; }\r
+\r
+#chat .mes .tsa-strip .tsa-strip-progress { color: var(--t-glass-text-secondary); }\r
+\r
+/* \u7BAD\u5934\u9760\u53F3\u3001\u5C55\u5F00\u65F6\u7FFB\u8F6C */\r
+#chat .mes .tsa-strip .tsa-strip-arrow { margin-left: auto; color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }\r
+\r
+#chat .mes .tsa-strip.is-open .tsa-strip-arrow { transform: rotate(180deg); }\r
+\r
+/* \u5185\u8054\u9762\u677F\uFF1A\u63D2\u5728\u6A2A\u6761\u4E4B\u540E\uFF0C\u5360\u6EE1\u6D88\u606F\u5BBD\u5EA6\u3001\u968F\u6D88\u606F\u6D41\u6392\u7248\uFF08\u4E0D\u7528\u6D6E\u5C42\u5B9A\u4F4D\uFF09\u3002\r
+   \u9AD8\u5EA6\u5C01\u9876\u540E\u5185\u90E8\u6EDA\u52A8\uFF0C\u907F\u514D\u957F\u5927\u7EB2\u628A\u540E\u9762\u7684\u6D88\u606F\u63A8\u5F97\u592A\u8FDC\u3002 */\r
+#chat .mes .tsa-panel {\r
+    display: flex;\r
+    flex-direction: column;\r
+    margin-top: 6px;\r
+    max-height: min(60vh, 460px);\r
+    overflow: hidden;\r
+    background: var(--t-glass-window);\r
+    border: 1px solid var(--t-color-accent-border);\r
+    border-radius: var(--t-radius-md);\r
+    color: var(--t-glass-text);\r
+    font-size: 12px;\r
+    line-height: 1.5;\r
+}\r
+\r
+/* \u9884\u89C8 + \u65B9\u6848 + \u8FDB\u5EA6 + \u5019\u9009\u6574\u4F53\u6EDA\u52A8\uFF0C\u5E95\u90E8\u64CD\u4F5C\u6761\u5E38\u9A7B\u53EF\u89C1 */\r
+.tsa-panel .tsa-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 10px; }\r
+\r
+.tsa-panel .tsa-plan-row { padding: 0 0 6px; }\r
+\r
+.tsa-panel .tsa-plan-label { display: flex; align-items: center; gap: 6px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-plan-select { flex: 1; min-width: 0; padding: 3px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); font-size: 12px; }\r
+\r
+.tsa-panel .tsa-progress { padding: 0 0 8px; }\r
+\r
+.tsa-panel .tsa-progress-text { margin-bottom: 4px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-bar { height: 4px; border-radius: 999px; background: var(--t-glass-row-hover); overflow: hidden; }\r
+\r
+.tsa-panel .tsa-bar-fill { height: 100%; background: var(--t-color-accent); transition: width 0.2s ease; }\r
+\r
+/* \u6EDA\u52A8\u5DF2\u7531 .tsa-scroll \u627F\u62C5\uFF0C\u8FD9\u91CC\u53EA\u4F5C\u4E3A\u5019\u9009\u533A\u7684\u5BB9\u5668 */\r
+.tsa-panel .tsa-list { padding: 0; }\r
+\r
+.tsa-panel .tsa-empty { padding: 14px 6px; text-align: center; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-item { margin-bottom: 6px; padding: 7px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: transparent; cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease; }\r
+\r
+.tsa-panel .tsa-item:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }\r
+\r
+.tsa-panel .tsa-item.used { border-color: var(--t-color-success-border); background: var(--t-color-success-soft); }\r
+\r
+.tsa-panel .tsa-item-head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }\r
+\r
+.tsa-panel .tsa-item-no { color: var(--t-color-accent); font-weight: 700; }\r
+\r
+.tsa-panel .tsa-item-title { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
+\r
+.tsa-panel .tsa-item-used { flex-shrink: 0; padding: 0 5px; border-radius: 999px; border: 1px solid var(--t-color-success-border); font-size: 10px; }\r
+\r
+.tsa-panel .tsa-item-meta { margin-bottom: 3px; font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+/* \u300C\u627F\u63A5\uFF1A\u2026\u300D\u2014\u2014\u6A21\u578B\u6307\u8BA4\u5B83\u63A5\u4F4F\u4E86\u6700\u65B0\u4E00\u5C42\u56DE\u590D\u91CC\u7684\u54EA\u4E00\u62CD\u3002\u4E00\u884C\u622A\u65AD\uFF1A\u5B83\u662F\u81EA\u67E5\u7528\u7684\u8DEF\u6807\uFF0C\u4E0D\u662F\u6B63\u6587\u3002 */\r
+.tsa-panel .tsa-item-from { margin-bottom: 3px; font-size: 11px; color: var(--t-glass-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
+\r
+.tsa-panel .tsa-item-from i { margin-right: 3px; color: var(--t-color-accent); }\r
+\r
+/* \u5019\u9009\u6B63\u6587\u53EF\u80FD\u5F88\u957F\uFF1A\u9650\u9AD8\u6EDA\u52A8\uFF0C\u4FDD\u8BC1\u5361\u7247\u5217\u8868\u6574\u4F53\u4ECD\u53EF\u626B\u8BFB */\r
+.tsa-panel .tsa-item-text { max-height: 88px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }\r
+\r
+.tsa-panel .tsa-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--t-color-accent-border); }\r
+\r
+.tsa-panel .tsa-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text); cursor: pointer; }\r
+\r
+.tsa-panel .tsa-chip:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }\r
+\r
+.tsa-panel .tsa-generate { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: var(--t-color-accent-soft); color: var(--t-glass-text); cursor: pointer; }\r
+\r
+.tsa-panel .tsa-generate:hover:not(:disabled) { border-color: var(--t-color-accent-border-hover); }\r
+\r
+.tsa-panel .tsa-generate:disabled { opacity: 0.5; cursor: not-allowed; }\r
+\r
+/* \u2500\u2500 \u5927\u7EB2\u60C5\u8282\u9884\u89C8\uFF08\u539F\u300C\u5267\u60C5\u63A8\u8FDB\u300D\u7A97\u53E3\u7684\u9884\u89C8\u9762\u677F\uFF0C\u7A97\u53E3\u5220\u9664\u540E\u8FC1\u5230\u8FD9\u91CC\u4FDD\u7559\uFF09\u2500\u2500 */\r
+\r
+.tsa-panel .tsa-preview { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--t-color-accent-border); }\r
+\r
+/* \u6807\u9898\u884C\u517C\u4F5C\u6298\u53E0\u5F00\u5173\uFF1A\u6298\u53E0\u6001\u53EA\u5269\u8FD9\u4E00\u884C\uFF0C\u628A\u9762\u677F\u7A7A\u95F4\u8BA9\u7ED9\u5019\u9009\u5361\u7247 */\r
+.tsa-panel .tsa-preview-head { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; font-weight: 700; }\r
+\r
+.tsa-panel .tsa-preview-toggle { cursor: pointer; user-select: none; transition: color 0.16s ease; }\r
+\r
+.tsa-panel .tsa-preview-toggle:hover { color: var(--t-color-text-strong); }\r
+\r
+.tsa-panel .tsa-preview-head i { color: var(--t-color-accent); }\r
+\r
+.tsa-panel .tsa-preview-count { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-preview-arrow { color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }\r
+\r
+.tsa-panel .tsa-preview-toggle.is-open .tsa-preview-arrow { transform: rotate(180deg); }\r
+\r
+/* \u6298\u53E0\u6001\uFF1A\u6807\u9898\u884C\u4E0B\u65B9\u4E0D\u9700\u8981\u7559\u767D\u4E0E\u5206\u9694\u7EBF */\r
+.tsa-panel .tsa-preview--collapsed { margin-bottom: 6px; padding-bottom: 0; border-bottom: 0; }\r
+\r
+.tsa-panel .tsa-preview--collapsed .tsa-preview-head { margin-bottom: 0; }\r
+\r
+.tsa-panel .tsa-preview-item { display: flex; gap: 6px; margin-bottom: 4px; padding: 5px 7px; border: 1px solid transparent; border-radius: var(--t-radius-sm); cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease; }\r
+\r
+.tsa-panel .tsa-preview-item:hover { border-color: var(--t-color-accent-border); background: var(--t-glass-row-hover); }\r
+\r
+.tsa-panel .tsa-preview-item.expanded { border-color: var(--t-color-accent-border); background: var(--t-glass-row-hover); }\r
+\r
+.tsa-panel .tsa-preview-marker { flex-shrink: 0; width: 14px; text-align: center; }\r
+\r
+.tsa-panel .tsa-preview-main { flex: 1; min-width: 0; }\r
+\r
+.tsa-panel .tsa-preview-title { margin-bottom: 2px; font-weight: 700; }\r
+\r
+.tsa-panel .tsa-preview-plot { color: var(--t-glass-text-secondary); white-space: pre-wrap; word-break: break-word; }\r
+\r
+/* \u5C55\u5F00\u540E\u7684\u5B8C\u6574\u60C5\u8282\uFF1A\u63D0\u4EAE\u4E3A\u4E3B\u6587\u672C\u8272\uFF0C\u4E0E\u6536\u8D77\u6001\u7684\u6458\u8981\u533A\u5206 */\r
+.tsa-panel .tsa-preview-plot--full { color: var(--t-glass-text); }\r
+\r
+.tsa-panel .tsa-preview-foreshadow { margin-top: 3px; font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-preview-foreshadow i { color: var(--t-color-success-border); }\r
+\r
+/* \u5DF2\u63A8\u8FDB\u8FC7\uFF1A\u6DE1\u5316 + \u6253\u52FE\uFF1B\u5F53\u524D\u6761\u76EE\uFF1A\u9AD8\u4EAE\u5DE6\u8FB9\u6761\uFF1B\u540E\u7EED\u6761\u76EE\uFF1A\u5E38\u663E */\r
+.tsa-panel .tsa-preview-item.done { opacity: 0.55; }\r
+\r
+.tsa-panel .tsa-preview-item.done .tsa-preview-marker { color: var(--t-color-success-border); }\r
+\r
+.tsa-panel .tsa-preview-item.current { border-color: var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); }\r
+\r
+.tsa-panel .tsa-preview-item.current .tsa-preview-marker { color: var(--t-color-accent); }\r
+\r
+.tsa-panel .tsa-preview-item.todo .tsa-preview-marker { color: var(--t-glass-text-secondary); }\r
+\r
+/* \u2500\u2500 \u8FC7\u6E21\u884C\u7A0B\u5355\uFF08\u63A8\u8350\u5267\u60C5\u9875\u5185\u5D4C\u5757\uFF1A\u628A\u76F8\u90BB\u4E24\u6761\u5927\u7EB2\u4E4B\u95F4\u7684\u7A7A\u767D\u8865\u6210\u6709\u5E8F\u7684\u51E0\u6B65\uFF09\u2500\u2500\r
+   \u26A0 \u53EA\u7528\u8BED\u4E49 token\uFF08\u540C\u672C\u6587\u4EF6\u5176\u5B83\u9762\u677F\u5757\uFF09\uFF1A\u6DF1\u6D45\u4E3B\u9898\u9760 token \u91CD\u6620\u5C04\u81EA\u52A8\u8DDF\u968F\u3002 */\r
+\r
+.tsa-panel .tsa-transition { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--t-color-accent-border); }\r
+\r
+/* \u6807\u9898\u884C\u517C\u4F5C\u6298\u53E0\u5F00\u5173\uFF08\u540C .tsa-preview-head \u7684\u505A\u6CD5\uFF09\uFF1A\u672C\u6BB5\u8FD8\u6CA1\u6392\u65F6\u6574\u5757\u53EA\u5360\u4E00\u884C\u3002\r
+   \u884C\u8DDD\u6BD4\u5927\u7EB2\u9884\u89C8\u7D27\u4E00\u6863\u2014\u2014\u884C\u7A0B\u5355\u6700\u591A\u5341\u6B65\uFF0C\u6574\u5757\u8981\u80FD\u585E\u8FDB\u9762\u677F\u800C\u4E0D\u6324\u6389\u5019\u9009\u5361\u7247\u3002 */\r
+.tsa-panel .tsa-transition-head { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; font-weight: 700; }\r
+\r
+.tsa-panel .tsa-transition-toggle { cursor: pointer; user-select: none; transition: color 0.16s ease; }\r
+\r
+.tsa-panel .tsa-transition-toggle:hover { color: var(--t-color-text-strong); }\r
+\r
+.tsa-panel .tsa-transition-head i { color: var(--t-color-accent); }\r
+\r
+.tsa-panel .tsa-transition-gap { flex-shrink: 0; padding: 0 6px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; font-size: 11px; font-weight: 400; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-transition-arrow { margin-left: auto; color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }\r
+\r
+.tsa-panel .tsa-transition-toggle.is-open .tsa-transition-arrow { transform: rotate(180deg); }\r
+\r
+/* \u6B65\u6570\u5FBD\u6807\uFF1A\u7B49\u5BBD\u6570\u5B57\u2014\u2014\u300C1 / 4 \u6B65\u300D\u4F1A\u968F\u8FDB\u5EA6\u9010\u5B57\u53D8\u5316\uFF0C\u6BD4\u4F8B\u6570\u5B57\u4F1A\u8BA9\u6574\u884C\u5DE6\u53F3\u6296\u3002 */\r
+.tsa-panel .tsa-transition-badge { margin-left: auto; font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--t-glass-text-secondary); }\r
+\r
+/* \u300C\u672C\u6B65 \u8FDB\u884C\u4E2D\u300D\uFF1A\u6A21\u578B\u8BFB\u6700\u65B0\u6B63\u6587\u5F97\u51FA\u7684\u8BFB\u6570\uFF0C\u4E0D\u662F\u6743\u5A01\u8FDB\u5EA6\uFF08cursor \u4ECD\u7531\u73A9\u5BB6\u70B9\u9009\u51B3\u5B9A\uFF09\uFF0C\r
+   \u6240\u4EE5\u7528\u865A\u7EBF\u6846\u5F31\u5316\uFF0C\u522B\u4E0E\u6B65\u6570\u5FBD\u6807\u62A2\u773C\u3002\u6A21\u578B\u6CA1\u5224\u65AD\u51FA\u6765\u5C31\u4E0D\u753B\u3002 */\r
+.tsa-panel .tsa-transition-state { flex-shrink: 0; padding: 0 6px; border: 1px dashed var(--t-color-accent-border); border-radius: 999px; font-size: 10px; font-weight: 400; color: var(--t-glass-text-secondary); }\r
+\r
+/* \u4E0B\u5355\u8868\u5355\uFF08\u672C\u6BB5\u8FD8\u6CA1\u6392\u884C\u7A0B\u5355\u65F6\uFF09 */\r
+\r
+.tsa-panel .tsa-transition-form { display: flex; flex-direction: column; gap: 6px; }\r
+\r
+.tsa-panel .tsa-transition-brief { width: 100%; padding: 6px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); font-family: inherit; resize: vertical; }\r
+\r
+.tsa-panel .tsa-transition-form-row { display: flex; align-items: center; gap: 8px; }\r
+\r
+.tsa-panel .tsa-transition-count-label { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-transition-count { width: 56px; padding: 3px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); }\r
+\r
+.tsa-panel .tsa-transition-gen { margin-left: auto; }\r
+\r
+.tsa-panel .tsa-transition-hint { font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+/* \u6709\u5E8F\u6E05\u5355\uFF08\u5DF2\u6392\u884C\u7A0B\u5355\uFF09\u3002\u884C\u8DDD\u6BD4\u5927\u7EB2\u9884\u89C8\u66F4\u7D27\u51D1\uFF1A\u6700\u591A\u5341\u6B65\uFF0C\u6491\u4E0D\u8D77\u90A3\u4E48\u5927\u7684\u884C\u9AD8\u3002 */\r
+\r
+.tsa-panel .tsa-transition-purpose { margin-bottom: 5px; font-size: 11px; color: var(--t-glass-text-secondary); white-space: pre-wrap; word-break: break-word; }\r
+\r
+.tsa-panel .tsa-transition-list { margin: 0; padding: 0; list-style: none; }\r
+\r
+.tsa-panel .tsa-transition-step { display: flex; gap: 6px; margin-bottom: 3px; padding: 4px 7px; border: 1px solid transparent; border-radius: var(--t-radius-sm); cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease; }\r
+\r
+.tsa-panel .tsa-transition-step:hover { border-color: var(--t-color-accent-border); background: var(--t-glass-row-hover); }\r
+\r
+/* \u7F16\u8F91\u6001\u4E0D\u53EF\u70B9\uFF08\u70B9\u5B83\u6CA1\u6709\u5B9A\u4F4D\u8BED\u4E49\uFF09\uFF0C\u5149\u6807\u8981\u5982\u5B9E\u53CD\u6620 */\r
+.tsa-panel .tsa-transition-step.is-editing { cursor: default; }\r
+\r
+.tsa-panel .tsa-transition-marker { flex-shrink: 0; width: 14px; text-align: center; }\r
+\r
+.tsa-panel .tsa-transition-main { flex: 1; min-width: 0; }\r
+\r
+.tsa-panel .tsa-transition-title { margin-bottom: 2px; font-weight: 700; }\r
+\r
+.tsa-panel .tsa-transition-span { margin-left: 6px; padding: 0 5px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; font-size: 10px; font-weight: 400; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-transition-brief-text { color: var(--t-glass-text-secondary); white-space: pre-wrap; word-break: break-word; }\r
+\r
+/* \u5DF2\u8D70\u5B8C\uFF1A\u6DE1\u5316 + \u6253\u52FE\uFF1B\u5F53\u524D\u8FD9\u4E00\u6B65\uFF1A\u9AD8\u4EAE\u5DE6\u8FB9\u6761\uFF08\u4E0E\u5927\u7EB2\u9884\u89C8\u540C\u4E00\u5957\u8BED\u6C47\uFF09 */\r
+.tsa-panel .tsa-transition-step.done { opacity: 0.55; }\r
+\r
+.tsa-panel .tsa-transition-step.done .tsa-transition-marker { color: var(--t-color-success-border); }\r
+\r
+.tsa-panel .tsa-transition-step.current { border-color: var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); }\r
+\r
+.tsa-panel .tsa-transition-step.current .tsa-transition-marker { color: var(--t-color-accent); }\r
+\r
+.tsa-panel .tsa-transition-step.todo .tsa-transition-marker { color: var(--t-glass-text-secondary); }\r
+\r
+/* \u7EC8\u70B9\u884C\uFF1A\u865A\u7EBF\uFF1D\u8FD8\u6CA1\u8D70\u5230\uFF1B\u8D70\u5B8C\u6700\u540E\u4E00\u6B65\u5C31\u70B9\u4EAE\u6210\u5B9E\u7EBF\u5E76\u53EF\u70B9\uFF08\u8DE8\u6BB5\uFF09 */\r
+.tsa-panel .tsa-transition-final { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; padding: 4px 7px; border: 1px dashed var(--t-color-accent-border); border-radius: var(--t-radius-sm); color: var(--t-glass-text-secondary); cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease; }\r
+\r
+.tsa-panel .tsa-transition-final:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }\r
+\r
+.tsa-panel .tsa-transition-final.is-ready { border-style: solid; border-color: var(--t-color-success-border); background: var(--t-color-success-soft); color: var(--t-glass-text); }\r
+\r
+/* \u7F16\u8F91\u6001 */\r
+\r
+.tsa-panel .tsa-transition-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }\r
+\r
+.tsa-panel .tsa-transition-edit-title,\r
+.tsa-panel .tsa-transition-edit-span,\r
+.tsa-panel .tsa-transition-edit-brief { width: 100%; padding: 3px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-field); color: var(--t-glass-text); font-family: inherit; resize: vertical; }\r
+\r
+.tsa-panel .tsa-transition-edit-title { font-weight: 700; }\r
+\r
+.tsa-panel .tsa-transition-edit-ops { display: flex; gap: 4px; }\r
+\r
+/* \u5E95\u90E8\u64CD\u4F5C\u6761\uFF1A\u6700\u540E\u4E00\u6761\u6E05\u5355\u884C\u81EA\u5DF1\u5E26 3px \u4E0B\u8FB9\u8DDD\uFF0C\u8FD9\u91CC\u53EA\u8865 2px \u51D1\u9F50\u5757\u5185\u7684 5px \u8282\u594F\u3002 */\r
+.tsa-panel .tsa-transition-ops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }\r
+\r
+.tsa-panel .tsa-transition-edit-toggle.is-active { border-color: var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); }\r
+\r
+/* \u2500\u2500 \u8282\u594F\u628A\u63A7\uFF08\u5267\u60C5\u63A8\u8FDB\u9762\u677F\u7684\u7B2C\u4E8C\u6A21\u5F0F\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\r
+.tsa-panel .tsa-mode-tabs { display: flex; gap: 6px; padding: 8px 10px 0; }\r
+\r
+.tsa-panel .tsa-mode-tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text-secondary); cursor: pointer; font-size: 12px; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease; }\r
+\r
+.tsa-panel .tsa-mode-tab:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }\r
+\r
+.tsa-panel .tsa-mode-tab.is-active { color: var(--t-glass-text); background: var(--t-color-accent-soft); border-color: var(--t-color-accent-border-hover); }\r
+\r
+.tsa-panel .tsa-mode-tab i { color: var(--t-color-accent); }\r
+\r
+.tsa-panel .tsa-pacing-diag { margin-bottom: 8px; padding: 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); }\r
+\r
+.tsa-panel .tsa-pacing-state { display: inline-block; padding: 1px 8px; margin-right: 6px; border-radius: 999px; border: 1px solid var(--t-color-accent-border-hover); background: var(--t-color-accent-soft); color: var(--t-glass-text); font-weight: 700; }\r
+\r
+.tsa-panel .tsa-pacing-focus { display: inline-block; padding: 1px 7px; margin-right: 6px; border-radius: 999px; border: 1px solid var(--t-color-accent-border); font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-pacing-intensity { font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-pacing-assessment { margin-top: 6px; white-space: pre-wrap; word-break: break-word; }\r
+\r
+.tsa-panel .tsa-pacing-input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 6px 8px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); font: inherit; resize: vertical; }\r
+\r
+.tsa-panel .tsa-pacing-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }\r
+\r
+.tsa-panel .tsa-pacing-preset { padding: 3px 10px; border: 1px solid var(--t-color-accent-border); border-radius: 999px; background: transparent; color: var(--t-glass-text); cursor: pointer; font-size: 12px; }\r
+\r
+.tsa-panel .tsa-pacing-preset:hover { border-color: var(--t-color-accent-border-hover); background: var(--t-glass-row-hover); }\r
+\r
+.tsa-panel .tsa-pacing-adv { margin-bottom: 8px; font-size: 12px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-pacing-adv summary { cursor: pointer; user-select: none; }\r
+\r
+.tsa-panel .tsa-pacing-adv-fields { display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap; }\r
+\r
+.tsa-panel .tsa-pacing-adv-fields label { display: inline-flex; align-items: center; gap: 5px; }\r
+\r
+.tsa-panel .tsa-pacing-adv-fields input, .tsa-panel .tsa-pacing-adv-fields select { width: 92px; padding: 2px 6px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); background: var(--t-glass-window); color: var(--t-glass-text); }\r
+\r
+.tsa-panel .tsa-pacing-armed { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--t-color-success-border); border-radius: var(--t-radius-sm); background: var(--t-color-success-soft); font-size: 12px; }\r
+\r
+.tsa-panel .tsa-pacing-armed i { color: var(--t-color-success-border); }\r
+\r
+.tsa-panel .tsa-pacing-apply { background: var(--t-color-success-soft); border-color: var(--t-color-success-border); }\r
+\r
+/* \u2500\u2500 \u76F2\u76D2\u89E3\u9501\u754C\u9762\uFF08\u9636\u6BB5\u5316\u63ED\u6653\uFF0CsceneAdvanceBubble.js\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r
+   \u9636\u6BB5\uFF1D\u76F2\u76D2\u8282\u70B9\uFF1A\u5DF2\u901A\u5173\u7684\u63ED\u6653\u6807\u9898\uFF0B\u786C\u951A\uFF08\u63ED\u6653\u672C\u8EAB\u662F\u5956\u52B1\uFF09\u3001\u8FDB\u884C\u4E2D\u7684\u53EA\u7ED9\u8FDB\u5EA6\u70B9\u4E0E\r
+   "\u672A\u89E3\u9501"\u5360\u4F4D\u3001\u540E\u9762\u7684\u53EA\u7559\u4E00\u884C\u5C01\u5370\u3002\u672A\u89E3\u9501\u7684\u5185\u5BB9\u5728\u6570\u636E\u5C42\u5C31\u4E0D\u5B58\u5728\uFF0C\u8FD9\u91CC\u4E0D\u9700\u8981\u9690\u85CF\u903B\u8F91\u3002\r
+   \u26A0 \u53EA\u7528\u8BED\u4E49 token\uFF1A\u6DF1\u6D45\u4E3B\u9898\u9760 token \u91CD\u6620\u5C04\u81EA\u52A8\u8DDF\u968F\uFF0C\u5199\u5B57\u9762\u91CF\u4F1A\u53CC\u53CC\u5931\u914D\u3002 */\r
+\r
+.tsa-panel .tsa-bb { display: flex; flex-direction: column; gap: 8px; }\r
+\r
+.tsa-panel .tsa-bb-top { display: flex; align-items: center; gap: 6px; font-weight: 700; }\r
+\r
+.tsa-panel .tsa-bb-title i { color: var(--t-color-accent); }\r
+\r
+.tsa-panel .tsa-bb-state { font-size: 11px; font-weight: 600; color: var(--t-color-accent); }\r
+\r
+.tsa-panel .tsa-bb-stages-count { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-bb-dwell { font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-bb-empty { font-size: 11px; line-height: 1.5; color: var(--t-glass-text-muted); }\r
+\r
+/* \u5BFC\u6F14\u6D41\u6C34\uFF1A\u6BCF\u62CD\u4E00\u884C\u300C\u5224\u8FC7\u4E86\u4EC0\u4E48\u300D\u3002\u53EA\u9732\u6700\u8FD1 3 \u62CD\uFF0C\u8981\u7EC6\u7A76\u518D\u5C55\u5F00\u3002 */\r
+.tsa-panel .tsa-bb-flow { display: flex; flex-direction: column; gap: 4px; padding: 6px 7px; border: 1px solid var(--t-color-accent-border); border-radius: var(--t-radius-sm); }\r
+\r
+.tsa-panel .tsa-bb-flow-head { font-size: 11px; font-weight: 700; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-bb-flow-sub { margin-left: 5px; font-weight: 400; color: var(--t-glass-text-muted); }\r
+\r
+.tsa-panel .tsa-bb-flow-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }\r
+\r
+.tsa-panel .tsa-bb-flow-row { display: flex; align-items: baseline; gap: 7px; font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-bb-flow-floor { flex-shrink: 0; width: 26px; color: var(--t-glass-text-muted); font-variant-numeric: tabular-nums; }\r
+\r
+.tsa-panel .tsa-bb-flow-time { flex-shrink: 0; color: var(--t-glass-text-muted); font-variant-numeric: tabular-nums; }\r
+\r
+.tsa-panel .tsa-bb-flow-what { flex: 1; min-width: 0; }\r
+\r
+.tsa-panel .tsa-bb-flow-refused { flex-shrink: 0; color: var(--t-color-warning); }\r
+\r
+.tsa-panel .tsa-bb-flow-row.is-failed .tsa-bb-flow-what { color: var(--t-color-danger); font-weight: 600; }\r
+\r
+.tsa-panel .tsa-bb-flow-toggle {\r
+    align-self: flex-start;\r
+    padding: 1px 6px;\r
+    border: 1px solid var(--t-color-accent-border);\r
+    border-radius: var(--t-radius-sm);\r
+    background: transparent;\r
+    color: var(--t-glass-text-secondary);\r
+    font-size: 11px;\r
+    cursor: pointer;\r
+}\r
+\r
+.tsa-panel .tsa-bb-flow-toggle:hover { border-color: var(--t-color-accent-border-hover); color: var(--t-glass-text); }\r
+\r
+/* \u9636\u6BB5\u5217\u8868 */\r
+.tsa-panel .tsa-bb-stages { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }\r
+\r
+.tsa-panel .tsa-bb-stage { padding: 5px 7px; border: 1px solid transparent; border-radius: var(--t-radius-sm); }\r
+\r
+.tsa-panel .tsa-bb-stage-head { display: flex; align-items: center; gap: 6px; }\r
+\r
+.tsa-panel .tsa-bb-stage-mark { flex-shrink: 0; width: 14px; text-align: center; color: var(--t-glass-text-muted); }\r
+\r
+.tsa-panel .tsa-bb-stage-label { font-weight: 700; }\r
+\r
+.tsa-panel .tsa-bb-stage-title { overflow: hidden; color: var(--t-color-accent); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }\r
+\r
+.tsa-panel .tsa-bb-stage-count { margin-left: auto; font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+/* \u8FDB\u884C\u4E2D\uFF1A\u8FD9\u4E00\u6B65\u7684\u4E3B\u89D2\uFF0C\u7ED9\u5E95\u8272\u4E0E\u6696\u8272\u6807\u8BB0 */\r
+.tsa-panel .tsa-bb-stage.is-current { border-color: var(--t-color-accent-border); background: var(--t-color-accent-soft); }\r
+\r
+.tsa-panel .tsa-bb-stage.is-current .tsa-bb-stage-mark,\r
+.tsa-panel .tsa-bb-stage.is-current .tsa-bb-stage-count { color: var(--t-color-warning); }\r
+\r
+/* \u5DF2\u901A\u5173\uFF1A\u7EFF\u7CFB + \u53EF\u6298\u53E0\uFF08\u70B9\u8868\u5934\uFF09 */\r
+.tsa-panel .tsa-bb-stage.is-cleared { border-color: var(--t-color-success-border); background: var(--t-color-success-soft); }\r
+\r
+.tsa-panel .tsa-bb-stage.is-cleared .tsa-bb-stage-mark { color: var(--t-color-success); }\r
+\r
+.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head { cursor: pointer; user-select: none; }\r
+\r
+.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-body { display: none; margin-top: 6px; }\r
+\r
+.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head[aria-expanded="true"] + .tsa-bb-stage-body { display: block; }\r
+\r
+.tsa-panel .tsa-bb-stage-arrow { flex-shrink: 0; margin-left: 2px; color: var(--t-glass-text-secondary); transition: transform 0.18s ease; }\r
+\r
+.tsa-panel .tsa-bb-stage.is-cleared > .tsa-bb-stage-head[aria-expanded="true"] .tsa-bb-stage-arrow { transform: rotate(180deg); }\r
+\r
+/* \u8FD8\u6CA1\u5230\u7684\u9636\u6BB5\uFF1A\u538B\u6697\uFF0C\u4E0D\u53EF\u4EA4\u4E92\uFF0C\u53EA\u6709\u4E00\u884C */\r
+.tsa-panel .tsa-bb-stage.is-sealed { opacity: 0.5; }\r
+\r
+/* \u786C\u951A\uFF08\u4EC5\u901A\u5173\u540E\u63ED\u6653\uFF09\u4E0E"\u7B49\u786C\u951A\u843D\u5730"\u7684\u8BF4\u660E */\r
+.tsa-panel .tsa-bb-anchor { margin-bottom: 5px; font-size: 11px; color: var(--t-glass-text-secondary); }\r
+\r
+.tsa-panel .tsa-bb-anchor-tag { display: inline-block; margin-right: 6px; padding: 1px 5px; border: 1px solid var(--t-color-success-border); border-radius: 999px; color: var(--t-color-success); font-size: 10px; }\r
+\r
+.tsa-panel .tsa-bb-holding { margin-bottom: 5px; font-size: 11px; color: var(--t-color-warning); }\r
+\r
+/* \u4E8B\u4EF6\u884C */\r
+.tsa-panel .tsa-bb-events { margin: 0; padding: 0; list-style: none; }\r
+\r
+.tsa-panel .tsa-bb-ev { display: flex; gap: 7px; padding: 4px 2px; border-bottom: 1px solid var(--t-color-accent-border); }\r
+\r
+.tsa-panel .tsa-bb-ev:last-child { border-bottom: 0; }\r
+\r
+.tsa-panel .tsa-bb-ev-no { flex-shrink: 0; width: 18px; color: var(--t-glass-text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }\r
+\r
+.tsa-panel .tsa-bb-ev-main { flex: 1; min-width: 0; }\r
+\r
+.tsa-panel .tsa-bb-ev-text { color: var(--t-glass-text); white-space: pre-wrap; word-break: break-word; }\r
+\r
+.tsa-panel .tsa-bb-ev-recap { margin-top: 2px; color: var(--t-glass-text-secondary); font-size: 11px; }\r
+\r
+.tsa-panel .tsa-bb-ev-span { flex-shrink: 0; color: var(--t-glass-text-muted); font-size: 11px; }\r
+\r
+.tsa-panel .tsa-bb-ev-tag { margin-left: 5px; color: var(--t-glass-text-muted); font-size: 10px; }\r
+\r
+.tsa-panel .tsa-bb-ev.is-skipped .tsa-bb-ev-text { color: var(--t-glass-text-secondary); }\r
+\r
+/* \u672A\u89E3\u9501\uFF1A\u53EA\u6709\u4E00\u884C\u72B6\u6001 + \u4E00\u6761\u5FAE\u5149\u5360\u4F4D\uFF0C\u6CA1\u6709\u5185\u5BB9 */\r
+.tsa-panel .tsa-bb-ev-lock { color: var(--t-glass-text-muted); font-size: 11px; }\r
+\r
+.tsa-panel .tsa-bb-ev.is-target .tsa-bb-ev-lock { color: var(--t-color-warning); }\r
+\r
+.tsa-panel .tsa-bb-shimmer {\r
+    display: block;\r
+    height: 7px;\r
+    margin-top: 4px;\r
+    border-radius: 999px;\r
+    background-image: linear-gradient(90deg, transparent 0%, var(--t-glass-row-hover) 45%, var(--t-glass-row-hover) 55%, transparent 100%);\r
+    background-repeat: no-repeat;\r
+    background-size: 60% 100%;\r
+    animation: t-bb-shimmer-sweep 1.8s ease-in-out infinite;\r
+}\r
+\r
+/* \u521A\u89E3\u9501\uFF1A\u4ECE\u6A21\u7CCA\u5230\u6E05\u6670\u5730\u63ED\u6653\u51FA\u6765\uFF08\u53EA\u6302\u5728\u9996\u6B21\u770B\u5230\u7684\u6761\u76EE\u4E0A\uFF0C\u89C1 consumeUnlockMarks\uFF09 */\r
+.tsa-panel .tsa-bb-ev.is-fresh { animation: t-bb-reveal-in 0.32s ease-out both; }\r
+\r
+.tsa-panel .tsa-bb-stage.is-fresh { animation: t-bb-reveal-in 0.32s ease-out both; }\r
+\r
+/* \u9762\u677F\u5E95\u90E8\u7684\u56FE\u6807\u6309\u94AE\uFF08\u97F3\u91CF\u5FAA\u73AF\uFF09\u2014\u2014\u4E0E .tsa-generate \u540C\u4E00\u5957\u89C2\u611F\uFF0C\u4F46\u505A\u5706\u7684 */\r
+.tsa-panel .tsa-icon-btn {\r
+    display: inline-flex;\r
+    align-items: center;\r
+    justify-content: center;\r
+    width: 26px;\r
+    height: 26px;\r
+    padding: 0;\r
+    border: 1px solid var(--t-color-accent-border);\r
+    border-radius: 999px;\r
+    background: transparent;\r
+    color: var(--t-glass-text-secondary);\r
+    cursor: pointer;\r
+    transition: border-color 0.16s ease, color 0.16s ease, background-color 0.16s ease;\r
+}\r
+\r
+.tsa-panel .tsa-icon-btn:hover { border-color: var(--t-color-accent-border-hover); color: var(--t-glass-text); background: var(--t-glass-row-hover); }\r
+\r
+/* \u6A2A\u6761\u4E0A\u7684"\u6709\u65B0\u89E3\u9501"\u63D0\u793A\u70B9\uFF08\u6253\u5F00\u9762\u677F\u505A\u5B8C\u63ED\u6653\u52A8\u753B\u540E\u7531 updateStrip \u6458\u6389\uFF09 */\r
+#chat .mes .tsa-strip.has-unlock { border-color: var(--t-color-success-border); }\r
+\r
+#chat .mes .tsa-strip .tsa-strip-unlock-dot {\r
+    width: 7px;\r
+    height: 7px;\r
+    margin-left: 6px;\r
+    border-radius: 999px;\r
+    background: var(--t-color-success);\r
+    animation: t-pulse-green 1.6s ease-in-out infinite;\r
+}\r
+\r
+/* \u5FC3\u8DF3\u62A5"\u672C\u62CD\u5224\u5B9A\u5F02\u5E38"\u65F6\u628A\u6A2A\u6761\u67D3\u7EA2\u2014\u2014\u8FD9\u662F"\u5BFC\u6F14\u574F\u4E86"\u552F\u4E00\u4E0D\u7528\u7FFB\u65E5\u5FD7\u5C31\u770B\u5F97\u89C1\u7684\u5730\u65B9 */\r
+#chat .mes .tsa-strip.is-failed { border-color: var(--t-color-danger-border); }\r
+\r
+#chat .mes .tsa-strip.is-failed .tsa-strip-progress { color: var(--t-color-danger); }\r
+\r
+/* \u51CF\u5C11\u52A8\u6001\u6548\u679C\uFF1A\u52A8\u753B\u662F\u70B9\u7F00\uFF0C\u5148\u628A\u72B6\u6001\u4FE1\u606F\u7559\u5728\u539F\u5730\uFF08\u672C\u4ED3\u5E93\u7B2C\u4E00\u4E2A reduced-motion \u515C\u5E95\uFF09 */\r
+@media (prefers-reduced-motion: reduce) {\r
+    .tsa-panel .tsa-bb-ev.is-fresh,\r
+    .tsa-panel .tsa-bb-stage.is-fresh,\r
+    .tsa-panel .tsa-bb-shimmer,\r
+    #chat .mes .tsa-strip .tsa-strip-unlock-dot { animation: none; }\r
+}\r
 
 
 /* === 04-features/scene-advance.css === */
@@ -29265,7 +29285,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 187891], "04-features/main-window.css": [187935, 232828], "04-features/main-window-legacy.css": [232879, 256745], "04-features/script-picker.css": [256791, 263286], "04-features/wi-selector.css": [263330, 281156], "04-features/continuation.css": [281201, 305070], "04-features/queue.css": [305108, 311668], "04-features/content-editor.css": [311715, 314022], "04-features/illustration.css": [314067, 337102], "04-features/visual-selection.css": [337151, 339582], "04-features/storyboard.css": [339625, 356705], "04-features/echo-imaging.css": [356750, 372529], "04-features/settings-drawer.css": [372577, 390811], "04-features/settings.css": [390852, 418878], "04-features/manager.css": [418918, 432216], "04-features/workshop.css": [432257, 455039], "04-features/favs.css": [455076, 495002], "04-features/debug.css": [495040, 511805], "04-features/story-outline.css": [511851, 546157], "04-features/outline-entry-menu.css": [546208, 552961], "04-features/rewrite.css": [553001, 603900], "04-features/paragraph-editor.css": [603949, 607732], "04-features/reader.css": [607771, 617130], "04-features/chat-book.css": [617172, 623713], "04-features/story-memory.css": [623758, 671145], "04-features/retrieval.css": [671187, 683026], "04-features/character-evolution.css": [683078, 717752], "04-features/story-memory-notifications.css": [717811, 719960], "04-features/story-timetrace.css": [720008, 734158], "04-features/tts.css": [734194, 769883], "04-features/confirm-dialog.css": [769930, 773928], "04-features/image-cropper.css": [773974, 777832], "04-features/st-embedded.css": [777876, 808949], "04-features/scene-advance.css": [808995, 831080], "04-features/theater-midnight.css": [831129, 856457] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 188176], "04-features/main-window.css": [188220, 233113], "04-features/main-window-legacy.css": [233164, 257030], "04-features/script-picker.css": [257076, 263571], "04-features/wi-selector.css": [263615, 281441], "04-features/continuation.css": [281486, 305355], "04-features/queue.css": [305393, 311953], "04-features/content-editor.css": [312e3, 314307], "04-features/illustration.css": [314352, 337387], "04-features/visual-selection.css": [337436, 339962], "04-features/storyboard.css": [340005, 357085], "04-features/echo-imaging.css": [357130, 373059], "04-features/settings-drawer.css": [373107, 391341], "04-features/settings.css": [391382, 419408], "04-features/manager.css": [419448, 432746], "04-features/workshop.css": [432787, 455569], "04-features/favs.css": [455606, 495532], "04-features/debug.css": [495570, 512335], "04-features/story-outline.css": [512381, 546687], "04-features/outline-entry-menu.css": [546738, 553491], "04-features/rewrite.css": [553531, 604430], "04-features/paragraph-editor.css": [604479, 608262], "04-features/reader.css": [608301, 617660], "04-features/chat-book.css": [617702, 624243], "04-features/story-memory.css": [624288, 671675], "04-features/retrieval.css": [671717, 683683], "04-features/character-evolution.css": [683735, 718409], "04-features/story-memory-notifications.css": [718468, 720617], "04-features/story-timetrace.css": [720665, 734815], "04-features/tts.css": [734851, 770540], "04-features/confirm-dialog.css": [770587, 774585], "04-features/image-cropper.css": [774631, 778489], "04-features/st-embedded.css": [778533, 810215], "04-features/scene-advance.css": [810261, 832346], "04-features/theater-midnight.css": [832395, 857723] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -34211,7 +34231,7 @@ function getToolboxConnection(feature) {
   const id4 = toolboxProfileId(data, feature);
   const model = getToolboxModelOverride(data, feature);
   const connection = id4 ? getConnectionByProfileId(id4, model || null) : getActiveConnection();
-  return connection && model ? { ...connection, model } : connection;
+  return connection ? { ...connection, ...model ? { model } : {}, stream: getToolboxStream(data, feature) } : connection;
 }
 function getConnectionByProfileId(profileId, modelOverride = null) {
   const data = getExtData();
@@ -34407,7 +34427,7 @@ async function selectIllustrationScene(request, options2 = {}) {
     maxTokens: 2048,
     // 选景是结构化任务，温度低于创作类请求以提高 JSON 合规率。
     temperature: 0.6,
-    stream: false
+    stream: conn.stream === true
   });
   let raw = await send(messages2);
   try {
@@ -35305,10 +35325,11 @@ function openToolboxSettingsWindow(initialTab = "api") {
                 ${renderApiConnectionEditorHTML({ ids, classes: { input: "t-input t-input--glass", select: "t-input t-input--glass", profileSelect: "t-input t-input--glass" }, flags: { showManualModelInput: true, showCopyProfile: true }, labels: { profile: "\u5168\u5C40\u9ED8\u8BA4 API \u65B9\u6848" } })}
                 <p class="t-toolbox-hint">\u5404\u529F\u80FD\u53EF\u5728\u4E0B\u65B9\u6216\u81EA\u5DF1\u7684\u8BBE\u7F6E\u9875\uFF0C\u9009\u62E9\u540C\u4E00\u65B9\u6848\u5185\u7684\u5176\u4ED6\u6A21\u578B\u3002\u529F\u80FD\u8BBE\u7F6E\u9875\u4E5F\u53EF\u83B7\u53D6\u6A21\u578B\u5217\u8868\u6216\u624B\u52A8\u586B\u5199\u6A21\u578B ID\u3002</p>
                 <h3>\u5404\u529F\u80FD\u4F7F\u7528\u7684\u8FDE\u63A5</h3><div class="t-toolbox-usage" data-toolbox-api-usage></div>
+                <p class="t-toolbox-hint">\u6D41\u5F0F\u4F20\u8F93\u5F00\u5173\u4EC5\u7528\u4E8E\u5BF9\u5E94\u529F\u80FD\u7684\u6A21\u578B\u8BF7\u6C42\uFF0C\u5171\u7528 API \u65B9\u6848\u65F6\u4E5F\u53EF\u72EC\u7ACB\u8BBE\u7F6E\u3002\u5173\u95ED\u540E\u7B49\u5F85\u5B8C\u6574\u54CD\u5E94\uFF1B\u89D2\u8272\u914D\u97F3\u7684\u5F00\u5173\u7528\u4E8E\u53F0\u8BCD\u8BC6\u522B\u4E0E\u7FFB\u8BD1\u3002</p>
             </section>
             <section role="tabpanel" id="t-toolbox-page-extraction" aria-labelledby="t-toolbox-tab-extraction" data-toolbox-page="extraction" hidden>
                 <h3>\u5168\u5C40\u6B63\u6587\u89C4\u5219</h3>
-                <p class="t-toolbox-hint">\u5C0F\u5267\u573A\u3001\u5927\u7EB2\u4E0E\u5267\u60C5\u63A8\u8FDB\u3001\u6587\u672C\u6539\u5199\u4E0E\u5220\u9664\u3001\u6545\u4E8B\u8BB0\u5FC6\u3001\u804A\u5929\u6210\u4E66\u53CA\u65E7\u9605\u8BFB\u7D22\u5F15\u7EDF\u4E00\u4F7F\u7528\u4EE5\u4E0B\u89C4\u5219\u3002</p>
+                <p class="t-toolbox-hint">\u5C0F\u5267\u573A\u3001\u5927\u7EB2\u4E0E\u5267\u60C5\u63A8\u8FDB\u3001\u6587\u672C\u6539\u5199\u4E0E\u5220\u9664\u3001\u6545\u4E8B\u8BB0\u5FC6\u53CA\u804A\u5929\u6210\u4E66\u7EDF\u4E00\u4F7F\u7528\u4EE5\u4E0B\u89C4\u5219\u3002</p>
                 <label class="t-toolbox-field" for="t-toolbox-whitelist"><span>\u6B63\u6587\u63D0\u53D6\u6807\u7B7E</span>
                     <input id="t-toolbox-whitelist" class="t-input t-input--glass" value="${escape(draft2.extraction.whitelist)}" placeholder="\u4F8B\u5982\uFF1A\u6B63\u6587, content, dialogue">
                     <small>\u586B\u5199\u6807\u7B7E\u540D\uFF0C\u7528\u4E2D\u82F1\u6587\u9017\u53F7\u5206\u9694\u3002\u672A\u627E\u5230\u6307\u5B9A\u6807\u7B7E\u65F6\u4E0D\u63D0\u53D6\uFF1B\u7559\u7A7A\u5219\u8BFB\u53D6\u5168\u6587\u6B63\u6587\uFF0C\u666E\u901A HTML \u4E0E\u81EA\u5B9A\u4E49\u6B63\u6587\u6807\u7B7E\u4E0D\u4F1A\u963B\u65AD\u63D0\u53D6\u3002\u586B\u5199 <code>&lt;!-- --&gt;</code>\uFF08\u4E5F\u53EF\u5199 <code>&lt;!--</code> \u6216 <code>!--</code>\uFF09\u53EF\u63D0\u53D6\u9690\u85CF\u6CE8\u91CA\u7684\u5185\u5BB9\uFF0C\u6309\u7EAF\u6587\u672C\u8BFB\u53D6\uFF0C\u4E0D\u89E3\u6790\u5176\u4E2D\u7684\u6807\u7B7E\u3002</small></label>
@@ -35368,7 +35389,11 @@ function openToolboxSettingsWindow(initialTab = "api") {
                     <option value="" ${model ? "" : "selected"}>\u8DDF\u968F\u65B9\u6848\u6A21\u578B${defaultModel ? `\uFF08${escape(defaultModel)}\uFF09` : ""}</option>
                     ${models.map((value) => `<option value="${escape(value)}" ${value === model ? "selected" : ""}>${escape(value)}</option>`).join("")}</select>
                     <button type="button" class="t-btn t-fetch-models-btn" data-toolbox-refresh-models="${id4}" title="\u5237\u65B0${escape(name)}\u5F53\u524D API \u65B9\u6848\u7684\u6A21\u578B\u5217\u8868" aria-label="\u5237\u65B0${escape(name)}\u5F53\u524D API \u65B9\u6848\u7684\u6A21\u578B\u5217\u8868" aria-busy="${Boolean(loading)}" ${loading || !modelListRequest(profile) ? "disabled" : ""}><i class="fa-solid fa-rotate${loading ? " fa-spin" : ""}" aria-hidden="true"></i><span>\u5237\u65B0</span></button></div></div>
-                <p class="t-toolbox-hint" role="status" data-toolbox-model-status="${id4}">${escape(message)}</p></div>`;
+                <p class="t-toolbox-hint" role="status" data-toolbox-model-status="${id4}">${escape(message)}</p>
+                <label class="t-toolbox-stream-toggle" for="t-toolbox-feature-stream-${id4}">
+                    <input type="checkbox" id="t-toolbox-feature-stream-${id4}" data-toolbox-stream="${id4}" aria-label="${escape(name)}\uFF1A\u542F\u7528\u6D41\u5F0F\u4F20\u8F93" ${draft2.features[id4].stream ? "checked" : ""}>
+                    <span>\u542F\u7528\u6D41\u5F0F\u4F20\u8F93</span>
+                </label></div>`;
     }).join("");
   };
   editor = createApiConnectionEditor({
@@ -35426,6 +35451,8 @@ function openToolboxSettingsWindow(initialTab = "api") {
   };
   root.addEventListener("change", (event) => {
     var _a;
+    const streamFeature = event.target.dataset.toolboxStream;
+    if (streamFeature) draft2.features[streamFeature].stream = event.target.checked;
     const feature = event.target.dataset.toolboxApi;
     if (feature) {
       draft2.features[feature].api = event.target.value;
@@ -38054,7 +38081,7 @@ ${previous.beats.slice(-3).map((beat) => storyboardBeatText(session2.document, b
     });
     const revision = session2.document?.revision || 0;
     const maxTokens = connection.useSTConnection ? void 0 : data.config?.max_tokens || 4096;
-    const raw = await sendChatRequestWithConnection(connection, messages2, { temperature: 0.2, maxTokens, stream: false, signal: tools.signal });
+    const raw = await sendChatRequestWithConnection(connection, messages2, { temperature: 0.2, maxTokens, stream: connection.stream === true, signal: tools.signal });
     tools.check();
     await tools.assertSource(source2);
     if ((session2.document?.revision || 0) !== revision) throw new Error("\u5236\u4F5C\u671F\u95F4\u6F14\u51FA\u7248\u672C\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u3002");
@@ -51963,35 +51990,140 @@ async function requestBody(input, init) {
   else text9 = await new Response(body).text();
   return { value: JSON.parse(text9), headers };
 }
+function staleFields(metadata, ledger) {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return [];
+  return fields.filter((field3) => {
+    const saved = ledger.get(field3);
+    return saved && token(metadata[field3]) !== token(saved.latest) && saved.previous.includes(token(metadata[field3]));
+  });
+}
+function mergeSourceMetadata(chat2, ledger, stale) {
+  if (!Array.isArray(chat2) || !ledger.sourceChat) return false;
+  let changed = false;
+  for (const field3 of stale) {
+    if (!ledger.get(field3)?.sourcesMatch?.(chat2)) continue;
+    const keys = field3 === "titania_story_memory" ? ["titania_memory_id", "titania_memory_hidden"] : field3 === "echo_timetrace_v4" ? ["echo_timetrace_v4_id"] : [];
+    for (let index2 = 0; index2 < ledger.sourceChat.length; index2++) {
+      const current3 = chat2[index2], saved = ledger.sourceChat[index2];
+      if (!current3 || !keys.length) continue;
+      const hidden = field3 === "titania_story_memory" && (current3.extra?.titania_memory_hidden || saved.extra?.titania_memory_hidden);
+      for (const key of keys) {
+        if (current3.extra?.[key] === saved.extra?.[key]) continue;
+        current3.extra || (current3.extra = {});
+        if (saved.extra?.[key] === void 0) delete current3.extra[key];
+        else current3.extra[key] = copy(saved.extra[key]);
+        changed = true;
+      }
+      if (hidden && current3.is_system !== saved.is_system) {
+        if (saved.is_system === void 0) delete current3.is_system;
+        else current3.is_system = saved.is_system;
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+function mergeFields(metadata, ledger, stale, chat2) {
+  let changed = false;
+  for (const field3 of stale) {
+    const saved = ledger.get(field3);
+    if (saved.sourcesMatch && !saved.sourcesMatch(chat2)) continue;
+    if (saved.latest === void 0) delete metadata[field3];
+    else metadata[field3] = copy(saved.latest);
+    changed = true;
+  }
+  if (changed) mergeSourceMetadata(chat2, ledger, stale);
+  return changed;
+}
+async function readLegacySources(chatId, headers, signal) {
+  const controller = new AbortController(), abort = () => controller.abort();
+  if (signal?.aborted) abort();
+  signal?.addEventListener("abort", abort, { once: true });
+  const timeout = setTimeout(abort, 15e3);
+  try {
+    const readHeaders = new Headers(headers);
+    readHeaders.delete("Content-Encoding");
+    readHeaders.delete("Content-Length");
+    const response = await originalFetch("/api/chats/group/get", {
+      method: "POST",
+      headers: readHeaders,
+      body: JSON.stringify({ id: chatId }),
+      signal: controller.signal,
+      cache: "no-store"
+    });
+    if (!response.ok) throw new Error("\u65E0\u6CD5\u6838\u5BF9\u65E7\u7248\u7FA4\u804A\u6B63\u6587\uFF0C\u5DF2\u963B\u6B62\u8986\u76D6\u5176\u5DF2\u4FDD\u5B58\u6863\u6848\u3002");
+    const file = await response.json();
+    if (!Array.isArray(file)) throw new Error("\u65E7\u7248\u7FA4\u804A\u56DE\u8BFB\u683C\u5F0F\u65E0\u6548\uFF0C\u5DF2\u963B\u6B62\u8986\u76D6\u5176\u5DF2\u4FDD\u5B58\u6863\u6848\u3002");
+    return file[0]?.chat_metadata ? file.slice(1) : file;
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener("abort", abort);
+  }
+}
+async function mergeLegacyGroup(value, headers, signal) {
+  let changed = false;
+  const scope3 = scopeReader();
+  for (const ledger of ledgers.values()) {
+    if (ledger.scope !== scope3 || ledger.groupId !== String(value.id)) continue;
+    const metadata = String(value.chat_id) === ledger.chatId ? value.chat_metadata : value.past_metadata?.[ledger.chatId];
+    const stale = staleFields(metadata, ledger);
+    if (!stale.length) continue;
+    const chat2 = await readLegacySources(ledger.chatId, headers, signal);
+    if (scope3 !== scopeReader() || signal?.aborted) throw new Error("\u8D26\u6237\u6216\u4FDD\u5B58\u4EFB\u52A1\u5DF2\u53D8\u5316\uFF0C\u65E7\u7248\u7FA4\u804A\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+    changed = mergeFields(metadata, ledger, stale, chat2) || changed;
+  }
+  return changed;
+}
 function install() {
   if (originalFetch || typeof globalThis.fetch !== "function") return;
   originalFetch = globalThis.fetch.bind(globalThis);
   globalThis.fetch = async (input, init) => {
     const route = savePath(input, init);
-    if (!ledgers.size || !["/api/chats/save", "/api/chats/group/save"].includes(route)) return originalFetch(input, init);
+    if (!["/api/chats/save", "/api/chats/group/save", "/api/groups/edit"].includes(route)) return originalFetch(input, init);
+    const send = async (nextInput = input, nextInit = init) => {
+      const response = await originalFetch(nextInput, nextInit);
+      let skipped = false;
+      try {
+        if (response.clone) skipped = !!(await response.clone().json())?.skipped;
+      } catch {
+      }
+      if (response.ok && !skipped) for (const listener of saveListeners) {
+        try {
+          listener();
+        } catch (cause) {
+          console.warn("\u804A\u5929\u4FDD\u5B58\u540E\u7684\u6863\u6848\u590D\u67E5\u5B89\u6392\u5931\u8D25", cause);
+        }
+      }
+      return response;
+    };
+    if (!ledgers.size) return send();
+    const scope3 = scopeReader();
     await Promise.all([...pending]);
-    if (init?.signal?.aborted) throw new Error("\u804A\u5929\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+    const signal = init?.signal || input?.signal;
+    if (signal?.aborted || scope3 !== scopeReader()) throw new Error("\u8D26\u6237\u6216\u804A\u5929\u4FDD\u5B58\u4EFB\u52A1\u5DF2\u53D8\u5316\uFF0C\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
     const { value, headers } = await requestBody(input, init);
-    const ledger = ledgers.get(keyFor(scopeReader(), route.includes("/group/"), value.avatar_url, value.file_name || value.id));
-    const metadata = value.chat?.[0]?.chat_metadata;
-    if (!ledger || !metadata) return originalFetch(input, init);
-    let changed = false;
-    for (const field3 of fields) {
-      const saved = ledger.get(field3);
-      if (!saved || token(metadata[field3]) === token(saved.latest)) continue;
-      if (!saved.previous.includes(token(metadata[field3]))) continue;
-      if (saved.sourcesMatch && !saved.sourcesMatch(value.chat.slice(1))) continue;
-      if (saved.latest === void 0) delete metadata[field3];
-      else metadata[field3] = copy(saved.latest);
-      changed = true;
+    if (scope3 !== scopeReader()) throw new Error("\u8D26\u6237\u5DF2\u53D8\u5316\uFF0C\u65E7\u804A\u5929\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+    let changed;
+    if (route === "/api/groups/edit") {
+      changed = await mergeLegacyGroup(value, headers, signal);
+    } else {
+      const ledger = ledgers.get(keyFor(scope3, route.includes("/group/"), value.avatar_url, value.file_name || value.id));
+      const metadata = value.chat?.[0]?.chat_metadata;
+      if (!ledger) return send();
+      changed = metadata ? mergeFields(metadata, ledger, staleFields(metadata, ledger), value.chat.slice(1)) : route === "/api/chats/group/save" && mergeSourceMetadata(value.chat, ledger, fields);
     }
-    if (!changed) return originalFetch(input, init);
+    if (!changed) return send();
     if (headers.delete) {
       headers.delete("Content-Encoding");
       headers.delete("Content-Length");
     } else for (const name of Object.keys(headers)) if (/^content-(encoding|length)$/i.test(name)) delete headers[name];
-    return originalFetch(input, { ...init, method: "POST", headers, body: JSON.stringify(value) });
+    return send(input, { ...init, method: "POST", headers, body: JSON.stringify(value) });
   };
+}
+function subscribeArchiveSaves(listener) {
+  saveListeners.add(listener);
+  install();
+  return () => saveListeners.delete(listener);
 }
 function archiveFetch(input, init) {
   return (originalFetch || globalThis.fetch.bind(globalThis))(input, init);
@@ -52006,6 +52138,9 @@ function beginArchiveSave(ctx2, base, getScope) {
     ledger = /* @__PURE__ */ new Map();
     ledgers.set(key, ledger);
   }
+  ledger.scope = ctx2.archiveAccount || getScope();
+  ledger.groupId = group2 ? String(ctx2.groupId) : null;
+  ledger.chatId = String(ctx2.chatId);
   for (const field3 of fields) {
     let state = ledger.get(field3);
     if (!state) {
@@ -52024,7 +52159,8 @@ function beginArchiveSave(ctx2, base, getScope) {
   });
   pending.add(barrier);
   return {
-    publish(proposals, sourcesMatch2 = null) {
+    publish(proposals, sourcesMatch2 = null, sourceChat = null) {
+      if (Array.isArray(sourceChat)) ledger.sourceChat = copy(sourceChat);
       for (const [field3, value] of Object.entries(proposals)) {
         const state = ledger.get(field3);
         state.previous = [.../* @__PURE__ */ new Set([token(state.latest), ...state.previous])].slice(0, 8);
@@ -52039,12 +52175,13 @@ function beginArchiveSave(ctx2, base, getScope) {
     }
   };
 }
-var fields, ledgers, pending, originalFetch, scopeReader, copy, token, keyFor;
+var fields, ledgers, pending, saveListeners, originalFetch, scopeReader, copy, token, keyFor;
 var init_storyMemorySaveGuard = __esm({
   "src/core/storyMemorySaveGuard.js"() {
     fields = ["titania_story_memory", "echo_timetrace_v4", "titania_character_evolution"];
     ledgers = /* @__PURE__ */ new Map();
     pending = /* @__PURE__ */ new Set();
+    saveListeners = /* @__PURE__ */ new Set();
     originalFetch = null;
     scopeReader = () => "session";
     copy = (value) => value === void 0 ? void 0 : JSON.parse(JSON.stringify(value));
@@ -52171,12 +52308,58 @@ var init_analysisSourceEdits = __esm({
   }
 });
 
+// src/core/chatFileCompatibility.js
+async function normalizeChatFile(ctx2, file, requestJSON2) {
+  if (!isGroup(ctx2) || !Array.isArray(file) || object(file[0]?.chat_metadata) && typeof file[0]?.mes !== "string") return file;
+  const groups = await requestJSON2("/api/groups/all", {});
+  if (!Array.isArray(groups)) throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u7FA4\u804A\u5143\u6570\u636E\uFF0C\u672A\u4F7F\u7528\u5F53\u524D\u804A\u5929\u7F13\u5B58\u4EE3\u66FF\u3002");
+  const matches3 = groups.filter((group3) => String(group3?.id) === String(ctx2.groupId));
+  const group2 = matches3.length === 1 ? matches3[0] : null;
+  if (!group2 || String(group2.chat_id) !== String(ctx2.chatId) || !Array.isArray(group2.chats) || !group2.chats.some((id4) => String(id4) === String(ctx2.chatId))) {
+    throw new Error("\u7FA4\u7EC4\u6216\u5176\u5F53\u524D\u804A\u5929\u5DF2\u53D8\u5316\uFF0C\u65E7\u4EFB\u52A1\u5DF2\u505C\u6B62\uFF1B\u6CA1\u6709\u5207\u6362\u7FA4\u7EC4\u804A\u5929\u3002");
+  }
+  if (!own(group2, "chat_metadata") && !own(group2, "past_metadata")) {
+    if (!file.length) return file;
+    throw new Error("\u7FA4\u804A\u6587\u4EF6\u7F3A\u5C11\u9996\u884C\u5143\u6570\u636E\uFF0C\u4E14\u7FA4\u7EC4\u6CA1\u6709\u65E7\u7248\u5143\u6570\u636E\uFF0C\u672A\u731C\u6D4B\u6863\u6848\u6765\u6E90\u3002");
+  }
+  if (group2.chat_metadata != null && !object(group2.chat_metadata)) throw new Error("\u65E7\u7248\u7FA4\u804A\u5143\u6570\u636E\u683C\u5F0F\u5F02\u5E38\uFF0C\u672A\u8986\u76D6\u6863\u6848\u3002");
+  const normalized = [{ user_name: "unused", character_name: "unused", chat_metadata: copy2(group2.chat_metadata || {}) }, ...file];
+  legacyFiles.set(normalized, { group: copy2(group2), groupId: String(ctx2.groupId), chatId: String(ctx2.chatId) });
+  return normalized;
+}
+async function saveLegacyGroupMetadata(ctx2, baseline3, metadata, requestJSON2, current3) {
+  if (!current3()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u65E7\u7248\u7FA4\u804A\u5143\u6570\u636E\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+  const file = await normalizeChatFile(ctx2, [], requestJSON2);
+  const latest = legacyGroupChatFile(file);
+  if (!latest || latest.groupId !== baseline3.groupId || latest.chatId !== baseline3.chatId || JSON.stringify(file[0].chat_metadata) !== JSON.stringify(baseline3.group.chat_metadata || {})) {
+    throw new Error("\u65E7\u7248\u7FA4\u804A\u7684\u5DF2\u4FDD\u5B58\u5143\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u672A\u8986\u76D6\u5176\u4ED6\u64CD\u4F5C\uFF1B\u8BF7\u91CD\u65B0\u8F7D\u5165\u540E\u91CD\u8BD5\u3002");
+  }
+  if (!current3()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u65E7\u7248\u7FA4\u804A\u5143\u6570\u636E\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
+  await requestJSON2("/api/groups/edit", { ...latest.group, chat_metadata: copy2(metadata) });
+}
+function publishLegacyGroupMetadata(ctx2) {
+  const group2 = ctx2?.groups?.find((value) => String(value?.id) === String(ctx2.groupId));
+  if (group2 && String(group2.chat_id) === String(ctx2.chatId)) group2.chat_metadata = copy2(ctx2.chatMetadata);
+}
+var legacyFiles, object, own, copy2, isGroup, legacyGroupChatFile;
+var init_chatFileCompatibility = __esm({
+  "src/core/chatFileCompatibility.js"() {
+    legacyFiles = /* @__PURE__ */ new WeakMap();
+    object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    own = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+    copy2 = (value) => JSON.parse(JSON.stringify(value));
+    isGroup = (ctx2) => ctx2?.groupId != null && ctx2.groupId !== "";
+    legacyGroupChatFile = (file) => legacyFiles.get(file);
+  }
+});
+
 // src/core/storyMemoryArchive.js
 var storyMemoryArchive_exports = {};
 __export(storyMemoryArchive_exports, {
   archiveContextCurrent: () => archiveContextCurrent,
   archivePending: () => archivePending,
   archivePendingInfo: () => archivePendingInfo,
+  archiveSaveInfo: () => archiveSaveInfo,
   archiveSources: () => archiveSources,
   archiveWarning: () => archiveWarning,
   backupArchive: () => backupArchive,
@@ -52196,30 +52379,28 @@ __export(storyMemoryArchive_exports, {
   subscribeArchiveSafety: () => subscribeArchiveSafety
 });
 import * as host3 from "../../../../script.js";
-function archiveSources(chat2) {
-  return JSON.stringify((chat2 || []).map((message) => [
+function sourceValues(message, strict) {
+  const values = [
     message?.name,
     message?.is_user === true,
     message?.mes,
     message?.swipe_id ?? 0,
-    !!message?.is_system,
+    strict ? !!message?.is_system : !!message?.is_system && !message?.extra?.titania_memory_hidden,
     !!message?.is_hidden,
-    !!message?.extra?.is_hidden,
+    !!message?.extra?.is_hidden
+  ];
+  if (strict) values.push(
     message?.extra?.titania_memory_id,
     message?.extra?.echo_timetrace_v4_id,
     message?.extra?.titania_memory_hidden
-  ]));
+  );
+  return values;
+}
+function archiveSources(chat2) {
+  return JSON.stringify((chat2 || []).map((message) => sourceValues(message, true)));
 }
 function evidenceSources(chat2) {
-  return JSON.stringify((chat2 || []).map((message) => [
-    message?.name,
-    message?.is_user === true,
-    message?.mes,
-    message?.swipe_id ?? 0,
-    !!message?.is_system && !message?.extra?.titania_memory_hidden,
-    !!message?.is_hidden,
-    !!message?.extra?.is_hidden
-  ]));
+  return JSON.stringify((chat2 || []).map((message) => sourceValues(message, false)));
 }
 function rawContext() {
   return globalThis.SillyTavern?.getContext?.();
@@ -52253,7 +52434,7 @@ function captureArchiveContext(ctx2) {
 }
 function archiveContextCurrent(ctx2) {
   const live = rawContext();
-  return !!live && !!ctx2 && observeIdentity(live) === ctx2.archiveSession && identity(live) === identity(ctx2) && live.chat === ctx2.chat && live.chatMetadata === ctx2.chatMetadata;
+  return !!live && !!ctx2 && observeIdentity(live) === ctx2.archiveSession && identity(live) === identity(ctx2) && live.chat === ctx2.chat && live.chatMetadata === ctx2.chatMetadata && (!ctx2.archiveAccount || accountKey(live) === ctx2.archiveAccount);
 }
 function fieldState(ctx2, key) {
   let state = observers2.get(ctx2.chatMetadata);
@@ -52263,7 +52444,7 @@ function fieldState(ctx2, key) {
   }
   if (!state.has(key)) state.set(key, {
     reference: ctx2.chatMetadata[key],
-    snapshot: copy2(ctx2.chatMetadata[key]),
+    snapshot: copy3(ctx2.chatMetadata[key]),
     expectedFloors: Number(ctx2.chatMetadata[key]?.sourceChatLength) || 0,
     pending: false
   });
@@ -52283,16 +52464,16 @@ function restoreArchiveProposal(ctx2, key, proposal, previous) {
   if (previous === void 0) delete ctx2.chatMetadata[key];
   else ctx2.chatMetadata[key] = previous;
   state.reference = previous;
-  state.snapshot = copy2(previous);
+  state.snapshot = copy3(previous);
 }
 function observeArchive(ctx2, key, preparing = false) {
   if (!ctx2?.chatMetadata) return;
   const state = fieldState(ctx2, key), value = ctx2.chatMetadata[key];
   if (preparing || state.loading || value === state.reference || !records(value)) return;
   try {
-    if (validators.get(key)?.(value, ctx2) && ctx2.chat.length >= (Number(value.sourceChatLength) || state.expectedFloors)) {
+    if (validators.get(key)?.(value, ctx2)) {
       state.reference = value;
-      state.snapshot = copy2(value);
+      state.snapshot = copy3(value);
       state.expectedFloors = Number(value.sourceChatLength) || ctx2.chat.length;
     }
   } catch {
@@ -52316,8 +52497,10 @@ function subscribeArchiveSafety(callback) {
   listeners3.add(callback);
   return () => listeners3.delete(callback);
 }
-function registerArchiveValidator(key, valid) {
+function registerArchiveValidator(key, valid, matchingSource = null) {
   validators.set(key, valid);
+  if (matchingSource) sourceMatchers.set(key, matchingSource);
+  else sourceMatchers.delete(key);
 }
 function noteArchiveChange(ctx2, trigger, kind = "sources") {
   if (!ctx2?.chatMetadata || !Array.isArray(ctx2.chat)) return;
@@ -52328,8 +52511,8 @@ function noteArchiveChange(ctx2, trigger, kind = "sources") {
   }
   if (kind === "sources" && trigger !== "verified-chat-file") {
     const states = fields2.map((field3) => observed2?.get(field3)).filter(Boolean);
-    const expected = Math.max(0, ...states.map((state) => state.expectedFloors));
-    if (states.some((state) => state.pending && state.kind === "sources") || trigger !== host3.event_types?.MESSAGE_DELETED && ctx2.chat.length < expected) {
+    const expected = observed2?.file?.floors || 0;
+    if (states.some((state) => state.pending && state.kind === "sources") || ctx2.chat.length < expected && (trigger !== host3.event_types?.MESSAGE_DELETED || (observed2?.checkpoint?.length || 0) < expected)) {
       evidence?.delete(kind);
       return;
     }
@@ -52351,9 +52534,8 @@ function currentEvidence(ctx2, kind) {
 function protectedArchive(ctx2, key, original, result, kind = "sources", detail = {}) {
   const state = fieldState(ctx2, key);
   if (state.loading) return { ...result, memory: original, changed: false, pending: true };
-  const incomplete = ctx2.chat.length < state.expectedFloors && !currentEvidence(ctx2, "sources");
-  if (incomplete) kind = "sources";
-  if (!result.changed && !incomplete) {
+  if (!result.changed) {
+    if (["archive-version-mismatch", "archive-header-missing", "record-invalid", "read-failed", "recovery-failed"].includes(state.pendingReason?.code) && state.pending) return { ...result, memory: original, changed: false, pending: true };
     if (state.pending) {
       state.pending = false;
       state.detail = null;
@@ -52372,10 +52554,9 @@ function protectedArchive(ctx2, key, original, result, kind = "sources", detail 
     return { ...result, pending: false };
   }
   if (!state.pending || state.kind !== kind || !state.pendingReason) {
-    rememberPendingReason(state, incomplete ? "incomplete-load" : kind === "settings" ? "settings-changed" : kind === "baseline" ? "baseline" : "source-change");
+    rememberPendingReason(state, kind === "settings" ? "settings-changed" : kind === "baseline" ? "baseline" : "source-change");
   }
   if (state.pending) {
-    if (state.kind !== kind) state.checkedSignature = null;
     state.kind = kind;
     state.detail = { trigger: "unconfirmed-source-change", chat: ctx2.chatId, floors: ctx2.chat.length, ...detail };
   }
@@ -52391,19 +52572,110 @@ function protectedArchive(ctx2, key, original, result, kind = "sources", detail 
 function rememberPendingReason(state, code2, detail = {}) {
   state.pendingReason = { ...detail, code: code2 };
 }
-function mismatchReason(ctx2, saved) {
-  if (Array.isArray(saved) && !saved.length) return { code: "file-empty", savedFloors: 0 };
-  if (!Array.isArray(saved) || !saved[0]?.chat_metadata) return { code: "file-invalid" };
-  const savedFloors = saved.length - 1;
-  return { code: savedFloors > ctx2.chat.length ? "incomplete-load" : "source-mismatch", savedFloors };
+function diagnosticValue(value, limit = 100) {
+  const text9 = value === void 0 ? "\u672A\u8BBE\u7F6E\uFF08undefined\uFF09" : JSON.stringify(value) ?? "\u65E0\u6CD5\u5E8F\u5217\u5316\u7684\u503C";
+  const clipped = text9.length > limit ? `${text9.slice(0, limit)}\u2026\uFF08\u5171 ${text9.length} \u5B57\u7B26\uFF09` : text9;
+  return clipped.replace(/[<>& ]/g, (character) => ({ "<": "\\u003C", ">": "\\u003E", "&": "\\u0026", " ": "\u2420" })[character]);
 }
-function changedArchiveFields(previous, current3) {
-  try {
-    const before = JSON.parse(previous), after = JSON.parse(current3);
-    return fields2.filter((_, index2) => JSON.stringify(before[index2]) !== JSON.stringify(after[index2]));
-  } catch {
-    return [];
+function valueDifference(current3, stored, currentLabel = "\u5F53\u524D") {
+  if (typeof current3 !== "string" || typeof stored !== "string") {
+    return `${currentLabel}=${diagnosticValue(current3)}\uFF0C\u6587\u4EF6=${diagnosticValue(stored)}`;
   }
+  let offset = 0;
+  while (offset < Math.min(current3.length, stored.length) && current3[offset] === stored[offset]) offset++;
+  const prefix = current3.slice(0, offset), line = prefix.split("\n").length, column = offset - prefix.lastIndexOf("\n");
+  const preview = (text9) => `${offset > 24 ? "\u2026" : ""}${diagnosticValue(text9.slice(Math.max(0, offset - 24), offset + 36))}${text9.length > offset + 36 ? "\u2026" : ""}`;
+  return `\u9996\u4E2A\u5DEE\u5F02\u5728\u7B2C ${line} \u884C\u7B2C ${column} \u5217\uFF08\u5B57\u7B26\u504F\u79FB ${offset}\uFF0C\u4ECE 0 \u5F00\u59CB\uFF09\uFF1B${currentLabel}\u957F\u5EA6=${current3.length}\uFF0C\u6587\u4EF6\u957F\u5EA6=${stored.length}\uFF1B\u5DEE\u5F02\u5B57\u7B26\uFF1A${currentLabel}=${diagnosticValue(current3[offset] ?? "\u3010\u6587\u672C\u7ED3\u675F\u3011")}\uFF0C\u6587\u4EF6=${diagnosticValue(stored[offset] ?? "\u3010\u6587\u672C\u7ED3\u675F\u3011")}\uFF1B\u9644\u8FD1\u539F\u6587\uFF1A${currentLabel}=${preview(current3)}\uFF0C\u6587\u4EF6=${preview(stored)}\uFF08\u2420 \u8868\u793A\u7A7A\u683C\uFF09`;
+}
+function sourceDifference(current3, stored, strict) {
+  const length = Math.min(current3.length, stored.length);
+  for (let index2 = 0; index2 < length; index2++) {
+    const location2 = `\u6D88\u606F\u7D22\u5F15 ${index2}\uFF08\u7B2C ${index2 + 1} \u6761\uFF09`;
+    if (index2 in current3 !== index2 in stored) return `${location2}\u7684\u6D88\u606F\u8BB0\u5F55\u7ED3\u6784\u4E0D\u540C\uFF1A\u4E00\u7AEF\u5B58\u5728\u7A7A\u69FD`;
+    const left = sourceValues(current3[index2], strict), right = sourceValues(stored[index2], strict);
+    for (let field3 = 0; field3 < left.length; field3++) {
+      if (JSON.stringify([left[field3]]) === JSON.stringify([right[field3]])) continue;
+      const [key, label2] = sourceFields[field3];
+      return `${location2}\uFF0C\u5B57\u6BB5 ${label2}\uFF08${key}\uFF09\uFF1A${valueDifference(left[field3], right[field3])}`;
+    }
+  }
+  if (current3.length !== stored.length) return `\u9996\u4E2A\u7F3A\u5931\u4F4D\u7F6E\uFF1A\u6D88\u606F\u7D22\u5F15 ${length}\uFF08\u7B2C ${length + 1} \u6761\uFF09\uFF0C${current3.length < stored.length ? "\u5F53\u524D\u804A\u5929\u7F3A\u5C11\u6587\u4EF6\u4E2D\u7684\u8FD9\u6761\u6D88\u606F" : "\u6587\u4EF6\u7F3A\u5C11\u5F53\u524D\u804A\u5929\u4E2D\u7684\u8FD9\u6761\u6D88\u606F"}`;
+  return "\u6D88\u606F\u6765\u6E90\u7B7E\u540D\u4E0D\u540C\uFF0C\u4F46\u672A\u5B9A\u4F4D\u5230\u5177\u4F53\u5B57\u6BB5\u5DEE\u5F02";
+}
+function mismatchReason(ctx2, saved, { strict = false, chat: chat2 = ctx2.chat } = {}) {
+  const currentFloors = chat2.length;
+  if (Array.isArray(saved) && !saved.length) return { code: "file-empty", currentFloors, savedFloors: 0 };
+  if (!Array.isArray(saved) || !saved[0]?.chat_metadata) return {
+    code: "file-invalid",
+    currentFloors,
+    difference: !Array.isArray(saved) ? `\u63A5\u53E3\u8FD4\u56DE\u503C\u4E0D\u662F\u6D88\u606F\u6570\u7EC4\uFF08\u7C7B\u578B=${saved === null ? "null" : typeof saved}\uFF09` : "\u6587\u4EF6\u7B2C 1 \u9879\u7F3A\u5C11\u6709\u6548\u7684 chat_metadata \u6863\u6848\u5934"
+  };
+  const stored = saved.slice(1), savedFloors = stored.length;
+  return {
+    code: savedFloors > currentFloors ? "incomplete-load" : "source-mismatch",
+    currentFloors,
+    savedFloors,
+    difference: sourceDifference(chat2, stored, strict)
+  };
+}
+function firstArchiveDifference(current3, stored, path, depth = 0) {
+  if (archiveVersion(current3) === archiveVersion(stored)) return null;
+  if (depth < 12 && Array.isArray(current3) && Array.isArray(stored)) {
+    for (let index2 = 0; index2 < Math.min(current3.length, stored.length); index2++) {
+      const difference = firstArchiveDifference(current3[index2], stored[index2], `${path}[${index2}]`, depth + 1);
+      if (difference) return difference;
+    }
+    return { path: `${path}.length`, current: current3.length, stored: stored.length };
+  }
+  if (depth < 12 && current3 && stored && typeof current3 === "object" && typeof stored === "object" && !Array.isArray(current3) && !Array.isArray(stored)) {
+    for (const key of /* @__PURE__ */ new Set([...Object.keys(current3), ...Object.keys(stored)])) {
+      const nextPath = /^[A-Za-z_$][\w$]*$/.test(key) ? `${path}.${key}` : `${path}[${diagnosticValue(key)}]`;
+      if (Object.hasOwn(current3, key) !== Object.hasOwn(stored, key)) {
+        return { path: nextPath, current: current3[key], stored: stored[key] };
+      }
+      const difference = firstArchiveDifference(current3[key], stored[key], nextPath, depth + 1);
+      if (difference) return difference;
+    }
+    return null;
+  }
+  return { path, current: current3, stored };
+}
+function archiveValueDifferences(current3, stored, keys, currentLabel = "\u5F53\u524D") {
+  const changed = [], differences = [];
+  for (let index2 = 0; index2 < keys.length; index2++) {
+    const difference = firstArchiveDifference(current3[index2], stored[index2], keys[index2]);
+    if (!difference) continue;
+    changed.push(keys[index2]);
+    differences.push(`${archiveLabels[keys[index2]] || keys[index2]}\u7684\u9996\u4E2A\u5DEE\u5F02\u5B57\u6BB5 ${difference.path}\uFF1A` + valueDifference(difference.current, difference.stored, currentLabel));
+  }
+  return { fields: changed, difference: differences.join("\uFF1B") };
+}
+function archiveMismatchDetail(currentSignature, storedSignature, keys = fields2, currentLabel = "\u5F53\u524D") {
+  try {
+    return archiveValueDifferences(JSON.parse(currentSignature), JSON.parse(storedSignature), keys, currentLabel);
+  } catch {
+    return { difference: "\u6863\u6848\u7B7E\u540D\u65E0\u6CD5\u89E3\u6790\uFF0C\u672A\u5B9A\u4F4D\u5230\u5177\u4F53\u5DEE\u5F02\u5B57\u6BB5" };
+  }
+}
+function metadataMismatchDetail(current3, stored, keys = fields2) {
+  return archiveValueDifferences(keys.map((key) => current3[key]), keys.map((key) => stored[key]), keys);
+}
+function integrityMismatchDetail(current3, stored) {
+  return { code: "integrity-mismatch", difference: `\u5B57\u6BB5 integrity\uFF1A${valueDifference(current3.integrity, stored.integrity)}` };
+}
+function mismatchSummary(code2, detail = {}) {
+  const subject = (detail.fields || (detail.field ? [detail.field] : [])).map((field3) => archiveLabels[field3]).filter(Boolean).join("\u3001") || "\u76F8\u5173\u6863\u6848";
+  const counts = Number.isInteger(detail.currentFloors) ? `\u5F53\u524D ${detail.currentFloors} \u6761\u6D88\u606F` + (Number.isInteger(detail.savedFloors) ? `\uFF0C\u6587\u4EF6 ${detail.savedFloors} \u6761` : "") : "";
+  const titles = {
+    "file-invalid": "\u804A\u5929\u6587\u4EF6\u7ED3\u6784\u5F02\u5E38",
+    "file-empty": "\u5DF2\u4FDD\u5B58\u804A\u5929\u6587\u4EF6\u4E3A\u7A7A",
+    "incomplete-load": "\u5F53\u524D\u804A\u5929\u6D88\u606F\u6570\u5C11\u4E8E\u5B8C\u6574\u6587\u4EF6",
+    "source-mismatch": "\u804A\u5929\u6D88\u606F\u6765\u6E90\u4E0D\u4E00\u81F4",
+    "archive-version-mismatch": `\u6863\u6848\u7248\u672C\u4E0D\u4E00\u81F4\uFF1A${subject}`,
+    "archive-header-missing": `\u5F53\u524D\u52A0\u8F7D\u7684${subject}\u7F3A\u5931\uFF0C\u4F46\u6587\u4EF6\u4E2D\u5DF2\u6709\u8BB0\u5F55`,
+    "integrity-mismatch": "\u804A\u5929\u5B8C\u6574\u6027\u6807\u8BB0\u4E0D\u4E00\u81F4"
+  };
+  return [titles[code2] || "\u804A\u5929\u6765\u6E90\u6838\u5BF9\u672A\u901A\u8FC7", counts, detail.difference].filter(Boolean).join("\uFF1B") + "\u3002";
 }
 function archivePendingInfo(ctx2, key) {
   if (!ctx2) return { blocked: false, code: "", message: "", noticeKey: "" };
@@ -52422,31 +52694,31 @@ function archivePendingInfo(ctx2, key) {
       break;
     }
     case "incomplete-load":
-      message = `\u804A\u5929\u5C1A\u672A\u52A0\u8F7D\u5B8C\u6574\uFF1A\u5F53\u524D\u6709 ${ctx2.chat.length} \u6761\u6D88\u606F\uFF0C\u5DF2\u6709\u6863\u6848\u6216\u5DF2\u4FDD\u5B58\u6587\u4EF6\u5BF9\u5E94\u81F3\u5C11 ${Math.max(state.expectedFloors, reason.savedFloors || 0)} \u6761\u3002\u8BF7\u7B49\u5F85\u52A0\u8F7D\u5B8C\u6210\uFF0C\u65E7\u8BB0\u5F55\u672A\u6E05\u7A7A\u3002`;
+      message = reason.difference ? `${mismatchSummary(code2, reason)}\u8BF7\u7B49\u5F85\u5B8C\u6574\u52A0\u8F7D\u540E\u91CD\u65B0\u6838\u5BF9\uFF0C\u65E7\u8BB0\u5F55\u672A\u6E05\u7A7A\u3002` : `\u804A\u5929\u5C1A\u672A\u52A0\u8F7D\u5B8C\u6574\uFF1A\u5F53\u524D\u6709 ${ctx2.chat.length} \u6761\u6D88\u606F\uFF0C\u5DF2\u6709\u6863\u6848\u6216\u5DF2\u4FDD\u5B58\u6587\u4EF6\u5BF9\u5E94\u81F3\u5C11 ${Math.max(state.expectedFloors, reason.savedFloors || 0)} \u6761\u3002\u8BF7\u7B49\u5F85\u52A0\u8F7D\u5B8C\u6210\uFF0C\u65E7\u8BB0\u5F55\u672A\u6E05\u7A7A\u3002`;
       break;
     case "read-failed":
-      message = `\u804A\u5929\u6587\u4EF6\u8BFB\u53D6\u5931\u8D25${error4}\uFF1A\u6682\u65F6\u65E0\u6CD5\u6838\u5BF9${label2}\u3002\u8BF7\u68C0\u67E5\u9152\u9986\u8FDE\u63A5\u540E\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\uFF0C\u5DF2\u6709\u8BB0\u5F55\u4FDD\u7559\u3002`;
+      message = `\u804A\u5929\u6587\u4EF6\u8BFB\u53D6\u5931\u8D25${error4}\uFF1A\u6682\u65F6\u65E0\u6CD5\u6838\u5BF9${label2}\uFF0C\u5DF2\u6709\u8BB0\u5F55\u4FDD\u7559\u3002\u5C06\u81EA\u52A8\u590D\u67E5\uFF0C\u4E5F\u53EF\u5728\u8FDE\u63A5\u6062\u590D\u540E\u91CD\u65B0\u8F7D\u5165\u5F53\u524D\u804A\u5929\u3002`;
       break;
     case "recovery-failed":
       message = `\u5171\u4EAB\u6863\u6848\u6062\u590D\u6838\u5BF9\u5931\u8D25${error4}\uFF1A${label2}\u6682\u7F13\u4F7F\u7528\uFF0C\u5DF2\u6709\u8BB0\u5F55\u4FDD\u7559\u3002\u8BF7\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\u91CD\u8BD5\u6838\u5BF9\u3002`;
       break;
     case "file-invalid":
-      message = `\u804A\u5929\u6587\u4EF6\u7ED3\u6784\u4E0D\u5B8C\u6574\uFF1A\u8BFB\u53D6\u7ED3\u679C\u7F3A\u5C11\u6709\u6548\u7684\u6B63\u6587\u6216\u6863\u6848\u5934\uFF0C\u65E0\u6CD5\u6838\u5BF9${label2}\u3002\u8BF7\u91CD\u65B0\u8F7D\u5165\u5F53\u524D\u804A\u5929\uFF0C\u672A\u8986\u76D6\u65E7\u8BB0\u5F55\u3002`;
+      message = `${mismatchSummary(code2, reason)}\u65E0\u6CD5\u6838\u5BF9${label2}\uFF0C\u8BF7\u91CD\u65B0\u8F7D\u5165\u5F53\u524D\u804A\u5929\uFF0C\u672A\u8986\u76D6\u65E7\u8BB0\u5F55\u3002`;
       break;
     case "file-empty":
-      message = `\u5DF2\u4FDD\u5B58\u804A\u5929\u6587\u4EF6\u4E3A\u7A7A\uFF0C\u4F46\u672C\u5730\u4ECD\u4FDD\u7559\u5DF2\u6709\u6863\u6848\uFF1A\u4E0D\u80FD\u636E\u6B64\u8986\u76D6${label2}\u3002\u8BF7\u786E\u8BA4\u5F53\u524D\u804A\u5929\u5E76\u91CD\u65B0\u8F7D\u5165\u3002`;
+      message = `${mismatchSummary(code2, reason)}\u672C\u5730\u4ECD\u4FDD\u7559\u5DF2\u6709${label2}\uFF0C\u8BF7\u786E\u8BA4\u5F53\u524D\u804A\u5929\u5E76\u91CD\u65B0\u8F7D\u5165\uFF0C\u4E0D\u80FD\u7528\u7A7A\u6587\u4EF6\u8986\u76D6\u3002`;
       break;
     case "archive-version-mismatch":
-      message = `\u6863\u6848\u7248\u672C\u4E0D\u4E00\u81F4\uFF1A\u804A\u5929\u6587\u4EF6\u4E2D\u7684${subject}\u4E0E\u5F53\u524D\u5DF2\u786E\u8BA4\u6216\u5DF2\u52A0\u8F7D\u7684\u7248\u672C\u4E0D\u540C\u3002${label2}\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\u6838\u5BF9\uFF0C\u4E0D\u7528\u65E7\u7248\u672C\u8986\u76D6\u3002`;
+      message = `${mismatchSummary(code2, reason)}${label2}\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\u6838\u5BF9\uFF0C\u4E0D\u7528\u65E7\u7248\u672C\u8986\u76D6\u3002`;
       break;
     case "archive-header-missing":
       message = `\u52A0\u8F7D\u7684\u6863\u6848\u7F3A\u5931\uFF1A\u5F53\u524D${subject}\u4E3A\u7A7A\u6216\u672A\u52A0\u8F7D\uFF0C\u4F46\u804A\u5929\u6587\u4EF6\u4E2D\u5DF2\u6709\u8BB0\u5F55\u3002\u8BF7\u7B49\u5F85\u5B8C\u6574\u52A0\u8F7D\u6216\u91CD\u65B0\u8FDB\u5165\u804A\u5929\uFF0C\u4E0D\u80FD\u7528\u7A7A\u6863\u6848\u8986\u76D6\u3002`;
       break;
     case "integrity-mismatch":
-      message = `\u804A\u5929\u5B8C\u6574\u6027\u6807\u8BB0\u4E0D\u4E00\u81F4\uFF1A\u5F53\u524D\u52A0\u8F7D\u5185\u5BB9\u4E0E\u4FDD\u5B58\u6587\u4EF6\u4E0D\u662F\u540C\u4E00\u4EFD\u5DF2\u786E\u8BA4\u72B6\u6001\u3002${label2}\u672A\u8986\u76D6\uFF0C\u8BF7\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\u3002`;
+      message = `${mismatchSummary(code2, reason)}${label2}\u672A\u8986\u76D6\uFF0C\u8BF7\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\u3002`;
       break;
     case "source-mismatch":
-      message = `\u6B63\u6587\u4E0E\u4FDD\u5B58\u6587\u4EF6\u4E0D\u4E00\u81F4\uFF1A\u5F53\u524D\u6709 ${ctx2.chat.length} \u6761\u6D88\u606F${Number.isInteger(reason.savedFloors) ? `\uFF0C\u6838\u5BF9\u65F6\u6587\u4EF6\u6709 ${reason.savedFloors} \u6761` : ""}\uFF0C\u4F46\u6B63\u6587\u3001\u91C7\u7528\u5019\u9009\u3001\u6765\u6E90\u6807\u8BC6\u6216\u6D88\u606F\u72B6\u6001\u672A\u5339\u914D\u3002\u8BF7\u7B49\u5F85\u4FDD\u5B58\u7ED3\u675F\u540E\u91CD\u65B0\u8F7D\u5165\uFF0C${label2}\u5DF2\u4FDD\u7559\u3002`;
+      message = `${mismatchSummary(code2, { currentFloors: ctx2.chat.length, ...reason })}\u6587\u4EF6\u540C\u6B65\u540E\u5C06\u81EA\u52A8\u590D\u67E5\uFF0C${label2}\u5DF2\u4FDD\u7559\u3002`;
       break;
     case "settings-changed":
       message = `\u8BFB\u53D6\u89C4\u5219\u5DF2\u6539\u53D8\uFF1A${label2}\u7684\u6B63\u6587\u63D0\u53D6\u89C4\u5219\u6216\u5206\u6790\u8303\u56F4\u4E0E\u5DF2\u6709\u8BB0\u5F55\u4E0D\u5339\u914D\u3002\u8BF7\u6838\u5BF9\u8BBE\u7F6E\u540E\u91CD\u65B0\u6838\u5BF9\u6216\u8865\u5EFA\u76F8\u5173\u8BB0\u5F55\uFF0C\u65E7\u6863\u6848\u4FDD\u7559\u3002`;
@@ -52458,13 +52730,13 @@ function archivePendingInfo(ctx2, key) {
       if (key === "titania_character_evolution" && state.kind === "baseline") message = "\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u51BB\u7ED3description\u7684\u5F15\u7528\u72B6\u6001\u5C1A\u672A\u786E\u8BA4\u3002\u65E7\u6863\u6848\u672A\u6E05\u7A7A\uFF1B\u73B0\u884C\u89D2\u8272\u5361\u5DF2\u4E0D\u53C2\u4E0E\u57FA\u7EBF\u6BD4\u8F83\u3002";
       else {
         const location2 = key === "titania_character_evolution" && state.detail?.firstInvalidBatch >= 0 ? `\u7B2C ${state.detail.firstInvalidBatch + 1} \u6279\u5206\u6790` : Number.isInteger(state.detail?.cut) && state.detail.cut >= 0 ? `\u7B2C ${state.detail.cut} \u697C\u53CA\u4E4B\u540E\u7684\u8BB0\u5F55` : "\u5DF2\u6709\u8BB0\u5F55";
-        message = `\u539F\u6587\u6765\u6E90\u53D8\u52A8\u672A\u786E\u8BA4\uFF1A${label2}\u7684${location2}\u4E0E\u5F53\u524D\u6B63\u6587\u6307\u7EB9\u3001\u91C7\u7528\u5019\u9009\u6216\u8303\u56F4\u4E0D\u5339\u914D\uFF0C\u5C1A\u65E0\u6709\u6548\u53D8\u52A8\u4F9D\u636E\u3002\u8BF7\u5B8C\u6210\u52A0\u8F7D\u6216\u91CD\u65B0\u8FDB\u5165\u804A\u5929\u6838\u5BF9\uFF0C\u65E7\u6863\u6848\u4FDD\u7559\u3002`;
+        message = `\u539F\u6587\u6765\u6E90\u53D8\u52A8\u672A\u786E\u8BA4\uFF1A${label2}\u7684${location2}\u4E0E\u5F53\u524D\u6B63\u6587\u6307\u7EB9\u3001\u91C7\u7528\u5019\u9009\u6216\u8303\u56F4\u4E0D\u5339\u914D\uFF0C\u9700\u8981\u590D\u6838\u3002\u6587\u4EF6\u540C\u6B65\u540E\u5C06\u81EA\u52A8\u590D\u67E5\uFF0C\u65E7\u6863\u6848\u4FDD\u7559\uFF1B\u786E\u8BA4\u540E\u53EF\u8865\u5EFA\u53D7\u5F71\u54CD\u7684\u8BB0\u5F55\u3002`;
       }
   }
   return { blocked: true, code: code2, message, noticeKey: code2 === "loading" ? "archive-loading" : message };
 }
 function archiveWarning(ctx2, key) {
-  return archivePendingInfo(ctx2, key).message;
+  return archivePendingInfo(ctx2, key).message || archiveSaveInfo(ctx2, key).message;
 }
 function archivePending(ctx2, key) {
   return !!ctx2 && !!(fieldState(ctx2, key).pending || fieldState(ctx2, key).loading);
@@ -52490,14 +52762,48 @@ function nativeJSON(url2, body) {
 async function readChatFile(ctx2) {
   const group2 = ctx2.groupId != null && ctx2.groupId !== "";
   const url2 = group2 ? "/api/chats/group/get" : "/api/chats/get";
-  return requestJSON(url2, archiveTarget(ctx2));
+  return normalizeChatFile(ctx2, await requestJSON(url2, archiveTarget(ctx2)), requestJSON);
+}
+async function readStableChatFile(ctx2, valid = () => true) {
+  const deadline = Date.now() + 15e3;
+  for (; ; ) {
+    if (!archiveContextCurrent(ctx2) || !valid()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u6838\u5BF9\u5DF2\u53D6\u6D88\u3002");
+    if (!host3.isChatSaving) {
+      const saved = await readChatFile(ctx2);
+      if (!archiveContextCurrent(ctx2) || !valid()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u6838\u5BF9\u5DF2\u53D6\u6D88\u3002");
+      if (!host3.isChatSaving) return saved;
+    }
+    if (Date.now() >= deadline) throw new Error("\u804A\u5929\u4FDD\u5B58\u5C1A\u672A\u7ED3\u675F\uFF0C\u8BF7\u7B49\u5F85\u4FDD\u5B58\u540E\u91CD\u8BD5\u3002");
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+}
+function saveWait(ctx2, code2, detail = {}) {
+  const observed2 = observers2.get(ctx2.chatMetadata);
+  observed2.saveWait = { ...detail, code: code2 };
+  scheduleArchiveRetry(ctx2);
+  notify4();
+}
+function archiveSaveInfo(ctx2, field3) {
+  const reason = ctx2?.chatMetadata && observers2.get(ctx2.chatMetadata)?.saveWait;
+  if (!reason || reason.fields?.length && !reason.fields.includes(field3)) return { pending: false, code: "", message: "" };
+  const message = ["source-mismatch", "incomplete-load"].includes(reason.code) ? `${mismatchSummary(reason.code, reason)}\u6863\u6848\u63D0\u4EA4\u7B49\u5F85\u6587\u4EF6\u540C\u6B65\uFF0C\u5C06\u81EA\u52A8\u590D\u67E5\uFF1B\u5DF2\u6709\u6709\u6548\u8BB0\u5F55\u4ECD\u53EF\u4F7F\u7528\u3002` : reason.code === "read-failed" ? `\u6682\u65F6\u65E0\u6CD5\u8BFB\u53D6\u804A\u5929\u6587\u4EF6${reason.error ? `\uFF08${reason.error}\uFF09` : ""}\uFF0C\u6863\u6848\u63D0\u4EA4\u5C06\u81EA\u52A8\u590D\u67E5\u3002` : `${mismatchSummary(reason.code, reason)}\u672C\u6B21\u6863\u6848\u63D0\u4EA4\u5DF2\u53D6\u6D88\uFF0C\u5DF2\u6709\u8BB0\u5F55\u4FDD\u7559\u3002`;
+  return { pending: true, ...reason, message };
+}
+function clearSaveWait(ctx2) {
+  const observed2 = observers2.get(ctx2.chatMetadata);
+  if (!observed2) return;
+  observed2.saveWait = null;
+  clearTimeout(observed2.retryTimer);
+  observed2.retryTimer = null;
+  observed2.retryAttempt = 0;
 }
 function rememberChatFile(ctx2, saved) {
   const observed2 = observers2.get(ctx2.chatMetadata);
   if (!observed2 || !Array.isArray(saved) || !saved[0]?.chat_metadata) return;
   observed2.file = {
     signature: evidenceSources(saved.slice(1)),
-    archives: JSON.stringify(fields2.map((field3) => saved[0].chat_metadata[field3]))
+    floors: saved.length - 1,
+    archives: archiveVersions(saved[0].chat_metadata)
   };
   for (const field3 of fields2) {
     const state = fieldState(ctx2, field3);
@@ -52505,16 +52811,8 @@ function rememberChatFile(ctx2, saved) {
   }
 }
 function sourcesUnconfirmed(ctx2, code2 = "source-mismatch", detail = {}) {
-  for (const field3 of fields2) {
-    const state = fieldState(ctx2, field3);
-    if (records(state.snapshot) || state.pending) {
-      state.pending = true;
-      state.kind = "sources";
-      rememberPendingReason(state, code2, detail);
-    }
-  }
-  notify4();
-  return new Error("\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u5F53\u524D\u6B63\u6587\u4E0E\u5B8C\u6574\u804A\u5929\u6587\u4EF6\u4E0D\u4E00\u81F4\uFF0C\u5DF2\u6709\u6863\u6848\u4FDD\u7559\u3002");
+  saveWait(ctx2, code2, detail);
+  return Object.assign(new Error(`\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A${mismatchSummary(code2, detail)}\u5DF2\u6709\u6863\u6848\u4FDD\u7559\u3002`), { archiveCheckCode: code2 });
 }
 function checkSaveSources(ctx2, saved, chat2, metadata, proposals) {
   const observed2 = observers2.get(ctx2.chatMetadata), previous = observed2?.file;
@@ -52528,16 +52826,19 @@ function checkSaveSources(ctx2, saved, chat2, metadata, proposals) {
   const unchanged = signature3 === evidenceSources(chat2);
   const appended = storedChat.length < chat2.length && signature3 === evidenceSources(chat2.slice(0, storedChat.length));
   const confirmedEdit = sourceChange?.before.includes(signature3);
-  const archives = JSON.stringify(fields2.map((field3) => saved[0].chat_metadata[field3]));
-  if (previous && previous.archives !== archives) {
-    sourcesUnconfirmed(ctx2, "archive-version-mismatch", { fields: changedArchiveFields(previous.archives, archives) });
-    throw new Error("\u6765\u6E90\u5F85\u6838\u5BF9\uFF1A\u804A\u5929\u6863\u6848\u7248\u672C\u5DF2\u53D8\u5316\uFF0C\u4FDD\u5B58\u5DF2\u53D6\u6D88\uFF0C\u8BF7\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\u3002");
+  const archives = archiveVersions(saved[0].chat_metadata), proposedFields = Object.keys(proposals);
+  const changed = previous ? archiveMismatchDetail(previous.archives, archives, fields2, "\u4E0A\u6B21\u5DF2\u786E\u8BA4\u7248\u672C") : {};
+  const conflicts = changed.fields?.filter((field3) => proposedFields.includes(field3)) || [];
+  if (conflicts.length) {
+    const detail = { ...changed, fields: conflicts };
+    const cause = sourcesUnconfirmed(ctx2, "archive-version-mismatch", detail);
+    throw new Error(`${cause.message}\u4FDD\u5B58\u5DF2\u53D6\u6D88\uFF0C\u8BF7\u91CD\u65B0\u8FDB\u5165\u5F53\u524D\u804A\u5929\u3002`);
   }
   if (!unchanged && !appended && !confirmedEdit || ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
     rememberChatFile(ctx2, saved);
-    const detail = mismatchReason(ctx2, saved);
     const integrityMismatch = ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity;
-    throw sourcesUnconfirmed(ctx2, integrityMismatch ? "integrity-mismatch" : detail.code, detail);
+    const detail = integrityMismatch ? integrityMismatchDetail(ctx2.chatMetadata, saved[0].chat_metadata) : mismatchReason(ctx2, saved, { chat: chat2 });
+    throw sourcesUnconfirmed(ctx2, detail.code, detail);
   }
   for (const field3 of fields2) {
     const stored = saved[0].chat_metadata[field3];
@@ -52545,31 +52846,39 @@ function checkSaveSources(ctx2, saved, chat2, metadata, proposals) {
       const state = fieldState(ctx2, field3);
       if (records(stored) && !records(state.snapshot) && !state.confirmed) throw sourcesUnconfirmed(ctx2, "archive-header-missing", { field: field3 });
     } else if (stored === void 0) delete metadata[field3];
-    else metadata[field3] = copy2(stored);
+    else metadata[field3] = copy3(stored);
   }
   rememberChatFile(ctx2, saved);
 }
 async function confirmArchiveSources(ctx2, field3, hasMatchingSource, { force = false, generationValid = null } = {}) {
-  const state = fieldState(ctx2, field3), signature3 = archiveSources(ctx2.chat), original = copy2(ctx2.chatMetadata[field3]);
-  const witnessed = typeof generationValid === "function" && ctx2.chat.length >= state.expectedFloors && generationValid();
-  if (!state.pending || state.kind === "baseline" || state.kind === "sources" && !hasMatchingSource && !witnessed || !force && state.checkedSignature === signature3) return false;
-  state.checkedSignature = signature3;
+  const state = fieldState(ctx2, field3), signature3 = archiveSources(ctx2.chat), original = copy3(ctx2.chatMetadata[field3]);
+  const witnessed = typeof generationValid === "function" && generationValid();
+  if (!state.pending || state.kind === "baseline" || state.kind === "sources" && !hasMatchingSource && !witnessed || !archiveContextCurrent(ctx2)) return false;
   try {
-    const saved = await readChatFile(ctx2);
-    if (!archiveContextCurrent(ctx2) || archiveSources(ctx2.chat) !== signature3 || !Array.isArray(saved) || !saved[0]?.chat_metadata || archiveSources(saved.slice(1)) !== signature3 || JSON.stringify(saved[0].chat_metadata[field3]) !== JSON.stringify(original) || ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
+    const observed2 = observers2.get(ctx2.chatMetadata), cached = observed2.verifiedRead;
+    const saved = !force && cached?.sources === signature3 && cached.archives === archiveVersions(ctx2.chatMetadata) ? cached.saved : await readStableChatFile(ctx2, () => archiveSources(ctx2.chat) === signature3);
+    if (!archiveContextCurrent(ctx2) || archiveSources(ctx2.chat) !== signature3 || !Array.isArray(saved) || !saved[0]?.chat_metadata || evidenceSources(saved.slice(1)) !== evidenceSources(ctx2.chat) || archiveVersion(saved[0].chat_metadata[field3]) !== archiveVersion(original) || ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
       if (archiveContextCurrent(ctx2) && archiveSources(ctx2.chat) === signature3) {
-        const detail = mismatchReason(ctx2, saved);
-        const code2 = ["file-invalid", "file-empty"].includes(detail.code) ? detail.code : ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity ? "integrity-mismatch" : archiveSources(saved.slice(1)) !== signature3 ? detail.code : "archive-version-mismatch";
-        rememberPendingReason(state, code2, { ...detail, field: field3 });
+        let detail = mismatchReason(ctx2, saved, { strict: true });
+        if (!["file-invalid", "file-empty"].includes(detail.code)) {
+          if (ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
+            detail = integrityMismatchDetail(ctx2.chatMetadata, saved[0].chat_metadata);
+          } else if (evidenceSources(saved.slice(1)) === evidenceSources(ctx2.chat)) {
+            detail = { code: "archive-version-mismatch", ...metadataMismatchDetail({ [field3]: original }, saved[0].chat_metadata, [field3]) };
+          }
+        }
+        if (["source-mismatch", "incomplete-load", "read-failed"].includes(detail.code)) saveWait(ctx2, detail.code, detail);
+        else rememberPendingReason(state, detail.code, { ...detail, field: field3 });
+        scheduleArchiveRetry(ctx2);
         notify4();
       }
       return false;
     }
     if (witnessed) {
       if (!generationValid()) return false;
-      const changed = fields2.filter((key) => JSON.stringify(saved[0].chat_metadata[key]) !== JSON.stringify(ctx2.chatMetadata[key]));
+      const changed = fields2.filter((key) => archiveVersion(saved[0].chat_metadata[key]) !== archiveVersion(ctx2.chatMetadata[key]));
       if (changed.length) {
-        rememberPendingReason(state, "archive-version-mismatch", { fields: changed });
+        rememberPendingReason(state, "archive-version-mismatch", metadataMismatchDetail(ctx2.chatMetadata, saved[0].chat_metadata, changed));
         notify4();
         return false;
       }
@@ -52577,12 +52886,11 @@ async function confirmArchiveSources(ctx2, field3, hasMatchingSource, { force = 
     rememberChatFile(ctx2, saved);
     state.expectedFloors = ctx2.chat.length;
     noteArchiveChange(ctx2, "verified-chat-file", state.kind);
+    clearSaveWait(ctx2);
     return true;
   } catch (cause) {
-    state.checkedSignature = null;
     if (archiveContextCurrent(ctx2) && archiveSources(ctx2.chat) === signature3) {
-      rememberPendingReason(state, "read-failed", { error: String(cause?.message || cause) });
-      notify4();
+      saveWait(ctx2, "read-failed", { error: String(cause?.message || cause) });
     }
     console.warn("\u804A\u5929\u6765\u6E90\u6682\u672A\u6838\u5BF9\uFF0C\u5DF2\u6709\u6863\u6848\u4FDD\u7559", { chat: ctx2.chatId, field: field3, message: cause.message });
     return false;
@@ -52618,7 +52926,7 @@ function openDatabase2() {
 }
 async function readRecovery(ctx2, field3) {
   const key = recoveryKey(ctx2, field3);
-  if (recoveryCache.has(key)) return copy2(recoveryCache.get(key));
+  if (recoveryCache.has(key)) return copy3(recoveryCache.get(key));
   const db = await openDatabase2();
   if (!db) return [];
   const value = await new Promise((resolve, reject) => {
@@ -52629,25 +52937,25 @@ async function readRecovery(ctx2, field3) {
     transaction.onabort = () => reject(transaction.error);
   });
   recoveryCache.set(key, value);
-  return copy2(value);
+  return copy3(value);
 }
 async function backupArchive(ctx2, field3, value, reason = "confirmed-save", detail = {}) {
-  const snapshot = copy2(value), floors = Math.max(Number(value?.sourceChatLength) || 0, detail.sourceFloors ?? ctx2.chat.length);
+  const snapshot = copy3(value), floors = Math.max(Number(value?.sourceChatLength) || 0, detail.sourceFloors ?? ctx2.chat.length);
   const key = recoveryKey(ctx2, field3), history = await readRecovery(ctx2, field3);
-  const match = history.findIndex((entry2) => JSON.stringify(entry2.value) === JSON.stringify(snapshot));
+  const match = history.findIndex((entry2) => archiveVersion(entry2.value) === archiveVersion(snapshot));
   const previous = match >= 0 ? history[match] : null;
   const critical = protectedBackup({ reason });
   if (match === 0 && previous.floors >= floors && (!critical || protectedBackup(previous))) return;
   const entry = previous ? {
     ...previous,
     floors: Math.max(previous.floors, floors),
-    ...critical ? { reason, detail: copy2(detail) } : {}
+    ...critical ? { reason, detail: copy3(detail) } : {}
   } : {
     id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
     value: snapshot,
     floors,
     reason,
-    detail: copy2(detail),
+    detail: copy3(detail),
     at: Date.now()
   };
   const candidates = [entry, ...history.filter((_, index2) => index2 !== match)];
@@ -52733,7 +53041,7 @@ async function exportArchiveBackup(view2, field3, id4) {
     capturedAt: entry.at,
     sourceFloors: entry.floors,
     reason: entry.reason,
-    value: copy2(entry.value)
+    value: copy3(entry.value)
   };
 }
 function restoreArchiveBackup(view2, field3, id4) {
@@ -52749,20 +53057,29 @@ function restoreArchiveBackup(view2, field3, id4) {
     if (blocked2) throw new Error(blocked2);
     const saved = await readChatFile(ctx2);
     if (!current3() || !Array.isArray(saved) || !saved[0]?.chat_metadata || archiveSources(saved.slice(1)) !== signature3 || archiveVersion(saved[0].chat_metadata[field3]) !== displayed.signature || ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
-      throw new Error("\u5F53\u524D\u804A\u5929\u4E0E\u5B8C\u6574\u78C1\u76D8\u6863\u6848\u4E0D\u4E00\u81F4\uFF0C\u672A\u6062\u590D\u6216\u8986\u76D6\u4EFB\u4F55\u8BB0\u5F55\u3002\u8BF7\u91CD\u65B0\u8FDB\u5165\u8BE5\u804A\u5929\u540E\u518D\u8BD5\u3002");
+      if (!current3()) throw new Error("\u6062\u590D\u51C6\u5907\u671F\u95F4\u804A\u5929\u6216\u6863\u6848\u5DF2\u53D8\u5316\uFF0C\u672A\u6062\u590D\u6216\u8986\u76D6\u4EFB\u4F55\u8BB0\u5F55\u3002\u8BF7\u5237\u65B0\u6062\u590D\u5217\u8868\u3002");
+      let detail = mismatchReason(ctx2, saved, { strict: true });
+      if (Array.isArray(saved) && saved[0]?.chat_metadata && archiveSources(saved.slice(1)) === signature3) {
+        if (archiveVersion(saved[0].chat_metadata[field3]) !== displayed.signature) {
+          const difference = firstArchiveDifference(previous, saved[0].chat_metadata[field3], field3);
+          detail = { code: "archive-version-mismatch", field: field3, difference: difference ? `\u9996\u4E2A\u5DEE\u5F02\u5B57\u6BB5 ${difference.path}\uFF1A${valueDifference(difference.current, difference.stored)}` : "" };
+        } else if (ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
+          detail = integrityMismatchDetail(ctx2.chatMetadata, saved[0].chat_metadata);
+        }
+      }
+      throw new Error(`\u6062\u590D\u524D\u6838\u5BF9\u672A\u901A\u8FC7\uFF1A${mismatchSummary(detail.code, detail)}\u672A\u6062\u590D\u6216\u8986\u76D6\u4EFB\u4F55\u8BB0\u5F55\u3002\u8BF7\u91CD\u65B0\u8FDB\u5165\u8BE5\u804A\u5929\u540E\u518D\u8BD5\u3002`);
     }
     if (records(previous)) await backupArchive(ctx2, field3, previous, "before-manual-restore");
     if (!current3()) throw new Error("\u6062\u590D\u51C6\u5907\u671F\u95F4\u804A\u5929\u5DF2\u53D8\u5316\uFF0C\u672A\u8986\u76D6\u8BB0\u5F55\u3002");
     const state = fieldState(ctx2, field3), pendingBefore = state.pending, kindBefore = state.kind;
-    const restored = copy2(entry.value);
+    const restored = copy3(entry.value);
     restored.commitId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
     restored.revision = Math.max(Number(previous?.revision) || 0, Number(restored.revision) || 0) + 1;
     if (field3 === "titania_character_evolution") restored.auto = false;
     state.reference = previous;
-    state.snapshot = copy2(previous);
+    state.snapshot = copy3(previous);
     state.expectedFloors = ctx2.chat.length;
     state.pending = false;
-    state.checkedSignature = null;
     rememberChatFile(ctx2, saved);
     ctx2.chatMetadata[field3] = restored;
     try {
@@ -52781,11 +53098,19 @@ function restoreArchiveBackup(view2, field3, id4) {
 async function prepareArchiveSourceEdit(ctx2) {
   if (!archiveContextCurrent(ctx2)) throw new Error("\u804A\u5929\u5DF2\u5207\u6362\uFF0C\u672A\u51C6\u5907\u6B63\u6587\u4FEE\u8BA2\u3002");
   for (const field3 of fields2) if (archivePending(ctx2, field3)) throw new Error(archiveWarning(ctx2, field3));
-  const signature3 = archiveSources(ctx2.chat), archives = JSON.stringify(fields2.map((field3) => ctx2.chatMetadata[field3]));
-  const saved = await readChatFile(ctx2);
-  if (!archiveContextCurrent(ctx2) || archiveSources(ctx2.chat) !== signature3 || JSON.stringify(fields2.map((field3) => ctx2.chatMetadata[field3])) !== archives) throw new Error("\u51C6\u5907\u4FEE\u8BA2\u65F6\u804A\u5929\u6216\u6863\u6848\u5DF2\u53D8\u5316\u3002");
-  if (!Array.isArray(saved) || saved.length && (!saved[0]?.chat_metadata || evidenceSources(saved.slice(1)) !== evidenceSources(ctx2.chat) || JSON.stringify(fields2.map((field3) => saved[0].chat_metadata[field3])) !== archives || ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) || !saved.length && fields2.some((field3) => records(ctx2.chatMetadata[field3]))) {
-    throw new Error("\u5F53\u524D\u6B63\u6587\u4E0E\u5B8C\u6574\u804A\u5929\u6587\u4EF6\u4E0D\u4E00\u81F4\uFF0C\u672A\u8986\u76D6\u539F\u6587\uFF1B\u8BF7\u7B49\u5F85\u4FDD\u5B58\u7ED3\u675F\u6216\u91CD\u65B0\u8FDB\u5165\u804A\u5929\u3002");
+  const signature3 = archiveSources(ctx2.chat), archives = archiveVersions(ctx2.chatMetadata);
+  const saved = await readStableChatFile(ctx2, () => archiveSources(ctx2.chat) === signature3);
+  if (!archiveContextCurrent(ctx2) || archiveSources(ctx2.chat) !== signature3 || archiveVersions(ctx2.chatMetadata) !== archives) throw new Error("\u51C6\u5907\u4FEE\u8BA2\u65F6\u804A\u5929\u6216\u6863\u6848\u5DF2\u53D8\u5316\u3002");
+  if (!Array.isArray(saved) || saved.length && (!saved[0]?.chat_metadata || evidenceSources(saved.slice(1)) !== evidenceSources(ctx2.chat) || archiveVersions(saved[0].chat_metadata) !== archives || ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) || !saved.length && fields2.some((field3) => records(ctx2.chatMetadata[field3]))) {
+    let detail = mismatchReason(ctx2, saved);
+    if (Array.isArray(saved) && saved[0]?.chat_metadata && evidenceSources(saved.slice(1)) === evidenceSources(ctx2.chat)) {
+      if (archiveVersions(saved[0].chat_metadata) !== archives) {
+        detail = { code: "archive-version-mismatch", ...archiveMismatchDetail(archives, archiveVersions(saved[0].chat_metadata)) };
+      } else if (ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
+        detail = integrityMismatchDetail(ctx2.chatMetadata, saved[0].chat_metadata);
+      }
+    }
+    throw new Error(`\u4FEE\u8BA2\u524D\u6838\u5BF9\u672A\u901A\u8FC7\uFF1A${mismatchSummary(detail.code, detail)}\u672A\u8986\u76D6\u539F\u6587\uFF1B\u8BF7\u7B49\u5F85\u4FDD\u5B58\u7ED3\u675F\u6216\u91CD\u65B0\u8FDB\u5165\u804A\u5929\u3002`);
   }
   rememberChatFile(ctx2, saved);
   checkpoint(ctx2);
@@ -52816,15 +53141,15 @@ async function requestJSON(url2, body) {
     clearTimeout(timeout);
   }
 }
-async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { validateStored } = {}) {
+async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { validateStored, recoveryTicket = null } = {}) {
   if (!archiveContextCurrent(ctx2) || !valid()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
-  const signature3 = archiveSources(ctx2.chat), metadata = copy2(ctx2.chatMetadata), chat2 = copy2(ctx2.chat);
+  const signature3 = archiveSources(ctx2.chat), metadata = copy3(ctx2.chatMetadata), chat2 = copy3(ctx2.chat);
   const proposals = {}, base = {};
   for (const key of fields2) {
     const state = fieldState(ctx2, key), proposed = ctx2.chatMetadata[key];
-    if (JSON.stringify(proposed) !== JSON.stringify(state.snapshot) || Object.hasOwn(required, key)) {
+    if (archiveVersion(proposed) !== archiveVersion(state.snapshot) || Object.hasOwn(required, key)) {
       if (Object.hasOwn(required, key)) proposals[key] = proposed;
-      const previous = proposed === state.reference ? copy2(state.snapshot) : state.reference;
+      const previous = proposed === state.reference ? copy3(state.snapshot) : state.reference;
       if (previous === void 0) delete ctx2.chatMetadata[key];
       else ctx2.chatMetadata[key] = previous;
       state.restoredReference = previous;
@@ -52833,15 +53158,10 @@ async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { va
   }
   let coordinated = null;
   try {
-    for (const key of fields2) {
+    for (const key of Object.keys(proposals)) {
       const state = fieldState(ctx2, key);
-      if (ctx2.chat.length < state.expectedFloors && !currentEvidence(ctx2, "sources")) {
-        if (!state.pending || !state.pendingReason) rememberPendingReason(state, "incomplete-load");
-        state.pending = true;
-        state.kind = "sources";
-        notify4();
-      }
-      if (state.pending && ctx2.chat.length >= state.expectedFloors && validators.get(key)?.(state.snapshot, ctx2)) state.pending = false;
+      if (state.loading && state.loading !== recoveryTicket) throw new Error(archiveWarning(ctx2, key));
+      if (state.pending && state.pendingReason?.code === "source-change" && validators.get(key)?.(state.snapshot, ctx2)) state.pending = false;
       if (state.pending && !currentEvidence(ctx2, state.kind)) throw new Error(archiveWarning(ctx2, key));
     }
     for (const [key, proposed] of Object.entries(proposals)) if (proposed) {
@@ -52861,58 +53181,99 @@ async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { va
       }
     }
     const deadline = Date.now() + 15e3;
+    let stored, retries = 0;
     for (; ; ) {
       while (host3.isChatSaving) {
         if (Date.now() >= deadline || !sameSnapshot(ctx2, signature3, base)) throw new Error("\u804A\u5929\u4FDD\u5B58\u5C1A\u672A\u7ED3\u675F\uFF0C\u672C\u6B21\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
         await new Promise((resolve) => setTimeout(resolve, 25));
       }
-      const stored = await readChatFile(ctx2);
-      if (!sameSnapshot(ctx2, signature3, base) || !valid() || Object.entries(proposals).some(([key, proposed]) => JSON.stringify(proposed) !== JSON.stringify(metadata[key]))) {
+      stored = await readChatFile(ctx2);
+      if (!sameSnapshot(ctx2, signature3, base) || !valid() || Object.entries(proposals).some(([key, proposed]) => archiveVersion(proposed) !== archiveVersion(metadata[key]))) {
         throw new Error("\u4FDD\u5B58\u524D\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
       }
       if (!host3.isChatSaving) {
-        checkSaveSources(ctx2, stored, chat2, metadata, proposals);
+        try {
+          checkSaveSources(ctx2, stored, chat2, metadata, proposals);
+        } catch (cause) {
+          const delays = [250, 750, 1500, 3e3];
+          if (cause.archiveCheckCode !== "source-mismatch" || retries >= delays.length || Date.now() >= deadline) throw cause;
+          await new Promise((resolve) => setTimeout(resolve, delays[retries++]));
+          continue;
+        }
         if (validateStored && validateStored(stored) !== true) throw new Error("\u5B8C\u6574\u804A\u5929\u6587\u4EF6\u5DF2\u88AB\u5176\u4ED6\u64CD\u4F5C\u4FEE\u6539\uFF0C\u672C\u6B21\u4FDD\u5B58\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u91CD\u65B0\u8F7D\u5165\u540E\u91CD\u8BD5\u3002");
+        clearSaveWait(ctx2);
         break;
       }
       if (Date.now() >= deadline) throw new Error("\u804A\u5929\u4FDD\u5B58\u5C1A\u672A\u7ED3\u675F\uFF0C\u672C\u6B21\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
     }
     for (const key of Object.keys(metadata)) if (!fields2.includes(key)) delete metadata[key];
-    for (const [key, value] of Object.entries(copy2(ctx2.chatMetadata))) if (!fields2.includes(key)) metadata[key] = value;
+    for (const [key, value] of Object.entries(copy3(ctx2.chatMetadata))) if (!fields2.includes(key)) metadata[key] = value;
     const group2 = ctx2.groupId != null && ctx2.groupId !== "";
     const target = archiveTarget(ctx2);
     host3.cancelDebouncedChatSave?.();
     coordinated = beginArchiveSave(ctx2, base, () => accountKey(rawContext()));
+    const legacy = legacyGroupChatFile(stored);
     await requestJSON(group2 ? "/api/chats/group/save" : "/api/chats/save", {
       ...target,
-      chat: [{ user_name: "unused", character_name: "unused", chat_metadata: metadata }, ...chat2],
+      chat: legacy ? chat2 : [{ user_name: "unused", character_name: "unused", chat_metadata: metadata }, ...chat2],
       force: false
     });
-    const saved = await requestJSON(group2 ? "/api/chats/group/get" : "/api/chats/get", target);
+    if (legacy) {
+      const savedBody = await readChatFile(ctx2);
+      if (!legacyGroupChatFile(savedBody) || JSON.stringify(savedBody.slice(1)) !== JSON.stringify(chat2)) {
+        throw new Error("\u65E7\u7248\u7FA4\u804A\u6B63\u6587\u4FDD\u5B58\u5C1A\u672A\u5B8C\u6574\u786E\u8BA4\uFF0C\u672A\u8986\u76D6\u7FA4\u7EC4\u5143\u6570\u636E\uFF1B\u8BF7\u91CD\u65B0\u8F7D\u5165\u540E\u91CD\u8BD5\u3002");
+      }
+      await saveLegacyGroupMetadata(ctx2, legacy, metadata, requestJSON, () => sameSnapshot(ctx2, signature3, base) && valid());
+    }
+    const saved = await readChatFile(ctx2);
     if (Array.isArray(saved) && Object.hasOwn(required, "echo_timetrace_v4") && saved[0]?.chat_metadata?.echo_timetrace_v4?.commitId !== required.echo_timetrace_v4) {
       throw new Error("\u6545\u4E8B\u65F6\u95F4\u672A\u6210\u529F\u4FDD\u5B58\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u91CD\u8BD5\u3002");
     }
-    if (!Array.isArray(saved) || Object.entries(required).some(([key, id4]) => saved[0]?.chat_metadata?.[key]?.commitId !== id4) || evidenceSources(saved.slice(1)) !== evidenceSources(chat2) || fields2.some((key) => JSON.stringify(saved[0]?.chat_metadata?.[key]) !== JSON.stringify(metadata[key]))) {
-      throw new Error("\u804A\u5929\u6863\u6848\u672A\u6210\u529F\u4FDD\u5B58\uFF0C\u6B63\u6587\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+    if (!Array.isArray(saved) || Object.entries(required).some(([key, id4]) => saved[0]?.chat_metadata?.[key]?.commitId !== id4) || evidenceSources(saved.slice(1)) !== evidenceSources(chat2) || fields2.some((key) => archiveVersion(saved[0]?.chat_metadata?.[key]) !== archiveVersion(metadata[key]))) {
+      let detail = mismatchReason(ctx2, saved, { chat: chat2 });
+      if (Array.isArray(saved) && saved[0]?.chat_metadata) {
+        const missingCommit = Object.entries(required).find(([key, id4]) => saved[0].chat_metadata[key]?.commitId !== id4);
+        if (missingCommit) {
+          const [key, id4] = missingCommit;
+          detail = {
+            code: "archive-version-mismatch",
+            field: key,
+            difference: `\u5B57\u6BB5 ${key}.commitId\uFF1A${valueDifference(id4, saved[0].chat_metadata[key]?.commitId)}`
+          };
+        } else if (evidenceSources(saved.slice(1)) === evidenceSources(chat2)) {
+          detail = { code: "archive-version-mismatch", ...metadataMismatchDetail(metadata, saved[0].chat_metadata) };
+        }
+      }
+      throw new Error(`\u4FDD\u5B58\u540E\u56DE\u8BFB\u6838\u5BF9\u672A\u901A\u8FC7\uFF1A${mismatchSummary(detail.code, detail)}\u6B63\u6587\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u91CD\u8BD5\u3002`);
     }
     const confirmed = Object.fromEntries(fields2.map((key) => [key, metadata[key]]));
     for (const key of Object.keys(proposals)) fieldState(ctx2, key).confirmed = true;
     const sourceSignature = evidenceSources(chat2);
-    coordinated.publish(confirmed, (sourceChat) => Array.isArray(sourceChat) && sourceChat.length >= chat2.length && evidenceSources(sourceChat.slice(0, chat2.length)) === sourceSignature);
+    coordinated.publish(confirmed, (sourceChat) => Array.isArray(sourceChat) && sourceChat.length >= chat2.length && evidenceSources(sourceChat.slice(0, chat2.length)) === sourceSignature, chat2);
     if (!archiveContextCurrent(ctx2)) throw new Error("\u804A\u5929\u5DF2\u5207\u6362\uFF0C\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u6B63\u6587\u53D8\u5316\uFF0C\u5DF2\u53D6\u6D88\u66F4\u65B0\u5F53\u524D\u6863\u6848\u3002");
-    if (!sameSnapshot(ctx2, signature3, base) || Object.entries(proposals).some(([key, proposed]) => JSON.stringify(proposed) !== JSON.stringify(metadata[key]))) {
+    if (!sameSnapshot(ctx2, signature3, base) || Object.entries(proposals).some(([key, proposed]) => archiveVersion(proposed) !== archiveVersion(metadata[key]))) {
       throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u6B63\u6587\u53D8\u5316\uFF0C\u5DF2\u53D6\u6D88\u66F4\u65B0\u5F53\u524D\u6863\u6848\u3002");
     }
     for (const key of fields2) {
-      const published = Object.hasOwn(proposals, key) ? proposals[key] : !records(ctx2.chatMetadata[key]) && records(metadata[key]) ? copy2(metadata[key]) : ctx2.chatMetadata[key];
+      const published = Object.hasOwn(proposals, key) ? proposals[key] : archiveVersion(ctx2.chatMetadata[key]) === archiveVersion(metadata[key]) ? ctx2.chatMetadata[key] : copy3(metadata[key]);
       if (published === void 0) delete ctx2.chatMetadata[key];
       else ctx2.chatMetadata[key] = published;
       const state = fieldState(ctx2, key);
       state.reference = published;
-      state.snapshot = copy2(published);
+      state.snapshot = copy3(published);
       state.expectedFloors = chat2.length;
+      try {
+        if (!state.loading && validators.get(key)?.(published, ctx2)) {
+          state.pending = false;
+          state.pendingReason = null;
+          state.detail = null;
+        }
+      } catch {
+      }
     }
+    if (legacy) publishLegacyGroupMetadata(rawContext());
     rememberChatFile(ctx2, saved);
+    clearSaveWait(ctx2);
     checkpoint(ctx2);
     for (const [key, proposed] of Object.entries(proposals)) {
       try {
@@ -52926,45 +53287,56 @@ async function saveArchiveSnapshot(ctx2, required = {}, valid = () => true, { va
     coordinated?.release();
   }
 }
-async function recoverCurrentArchives(ctx2) {
-  const checked = { sources: archiveSources(ctx2.chat), archives: /* @__PURE__ */ new Map() };
+async function recoverCurrentArchives(ctx2, recoveryTicket) {
+  const checked = { sources: archiveSources(ctx2.chat), archives: /* @__PURE__ */ new Map(), reconcile: [] };
+  const observed2 = observers2.get(ctx2.chatMetadata), versions = archiveVersions(ctx2.chatMetadata);
+  const current3 = () => archiveContextCurrent(ctx2) && archiveSources(ctx2.chat) === checked.sources && archiveVersions(ctx2.chatMetadata) === versions;
+  const saved = await readStableChatFile(ctx2, current3);
+  const full = Array.isArray(saved) && !!saved[0]?.chat_metadata && evidenceSources(saved.slice(1)) === evidenceSources(ctx2.chat) && (!ctx2.chatMetadata.integrity || ctx2.chatMetadata.integrity === saved[0].chat_metadata.integrity);
+  const reason = full ? null : ctx2.chatMetadata.integrity && saved?.[0]?.chat_metadata && ctx2.chatMetadata.integrity !== saved[0].chat_metadata.integrity ? integrityMismatchDetail(ctx2.chatMetadata, saved[0].chat_metadata) : mismatchReason(ctx2, saved);
+  if (!full) saveWait(ctx2, reason.code, reason);
+  else {
+    clearSaveWait(ctx2);
+    observed2.verifiedRead = { sources: checked.sources, archives: versions, saved };
+  }
+  checkpoint(ctx2);
+  if (!observed2.file || !Object.keys(ctx2.chatMetadata).some((field3) => fields2.includes(field3))) rememberChatFile(ctx2, saved);
   for (const [field3, validator] of validators) {
     if (!archiveContextCurrent(ctx2)) return;
     const value = ctx2.chatMetadata[field3];
     observeArchive(ctx2, field3);
-    const history = await readRecovery(ctx2, field3);
+    const state = fieldState(ctx2, field3);
+    let history;
+    try {
+      history = await readRecovery(ctx2, field3);
+    } catch (cause) {
+      console.warn("\u804A\u5929\u6863\u6848\u6062\u590D\u5907\u4EFD\u8BFB\u53D6\u5931\u8D25\uFF0C\u5DF2\u6709\u8BB0\u5F55\u4FDD\u7559", { field: field3, message: cause.message });
+      history = [];
+    }
     if (!archiveContextCurrent(ctx2)) return;
     const latest = history[0];
-    const state = fieldState(ctx2, field3);
-    if (latest && JSON.stringify(latest.value) === JSON.stringify(value)) {
+    if (latest && archiveVersion(latest.value) === archiveVersion(value)) {
       state.expectedFloors = Math.max(state.expectedFloors, latest.floors);
     }
-    if (!records(value) && records(latest?.value)) state.expectedFloors = latest.floors;
-    if (!records(value) && (value === void 0 || records(latest?.value) || state.pending) && ctx2.chat.length >= (latest?.floors || 0)) {
-      const signature3 = archiveSources(ctx2.chat), saved = await readChatFile(ctx2);
-      if (!archiveContextCurrent(ctx2) || archiveSources(ctx2.chat) !== signature3) return;
-      if (!Array.isArray(saved) || !saved[0]?.chat_metadata || archiveSources(saved.slice(1)) !== signature3) {
-        if (records(saved?.[0]?.chat_metadata?.[field3]) || records(latest?.value)) {
-          rememberChatFile(ctx2, saved);
-          state.expectedFloors = Math.max(state.expectedFloors, ctx2.chat.length + 1, saved?.length - 1 || 0);
+    const authoritative = saved?.[0]?.chat_metadata?.[field3];
+    if (!records(value) && (value === void 0 || records(latest?.value) || state.pending || records(authoritative))) {
+      if (!full) {
+        if (records(authoritative) || records(latest?.value)) {
           state.pending = true;
           state.kind = "sources";
-          const detail = mismatchReason(ctx2, saved);
-          rememberPendingReason(state, detail.code, detail);
-          notify4();
+          rememberPendingReason(state, reason.code, reason);
         }
         continue;
       }
-      rememberChatFile(ctx2, saved);
-      const authoritative = saved[0].chat_metadata[field3];
       if (records(authoritative)) {
         if (validator(authoritative, ctx2)) {
-          ctx2.chatMetadata[field3] = copy2(authoritative);
+          ctx2.chatMetadata[field3] = copy3(authoritative);
           state.reference = ctx2.chatMetadata[field3];
-          state.snapshot = copy2(authoritative);
+          state.snapshot = copy3(authoritative);
           state.expectedFloors = ctx2.chat.length;
           state.pending = false;
           state.detail = null;
+          state.pendingReason = null;
           checkpoint(ctx2);
           checked.archives.set(field3, archiveVersion(authoritative));
           try {
@@ -52986,61 +53358,60 @@ async function recoverCurrentArchives(ctx2) {
           state.expectedFloors = ctx2.chat.length;
           state.pending = false;
           state.detail = null;
+          state.pendingReason = null;
           checked.archives.set(field3, archiveVersion(value));
           checkpoint(ctx2);
           notify4();
         }
         continue;
       }
-      if (!validator(latest.value, ctx2)) continue;
-      const restored = copy2(latest.value);
+      if (ctx2.chat.length < latest.floors || !validator(latest.value, ctx2)) {
+        state.pending = true;
+        state.kind = "sources";
+        rememberPendingReason(state, "record-invalid");
+        continue;
+      }
+      const restored = copy3(latest.value);
       restored.commitId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       ctx2.chatMetadata[field3] = restored;
+      state.pending = false;
       checked.archives.set(field3, archiveVersion(restored));
-      await saveArchiveSnapshot(ctx2, { [field3]: restored.commitId });
+      await saveArchiveSnapshot(ctx2, { [field3]: restored.commitId }, () => archiveContextCurrent(ctx2), { recoveryTicket });
       console.warn("\u5DF2\u6062\u590D\u5F53\u524D\u804A\u5929\u7684\u6709\u6548\u8BB0\u5FC6\u6863\u6848", { chat: ctx2.chatId, field: field3, backupAt: latest.at });
       notify4();
-    } else if (records(value) && ctx2.chat.length >= state.expectedFloors && validator(value, ctx2)) {
-      const signature3 = archiveSources(ctx2.chat);
-      let saved;
-      try {
-        saved = await readChatFile(ctx2);
-      } catch (cause) {
+    } else if (records(value)) {
+      if (saved?.[0]?.chat_metadata && archiveVersion(authoritative) !== archiveVersion(value)) {
         state.pending = true;
         state.kind = "sources";
-        rememberPendingReason(state, "read-failed", { error: String(cause?.message || cause) });
-        notify4();
-        console.warn("\u804A\u5929\u5B8C\u6574\u6027\u6682\u672A\u786E\u8BA4\uFF0C\u5DF2\u6709\u6863\u6848\u4FDD\u7559", { chat: ctx2.chatId, field: field3, message: cause.message });
-        continue;
-      }
-      if (!archiveContextCurrent(ctx2) || archiveSources(ctx2.chat) !== signature3) return;
-      if (saved?.[0]?.chat_metadata && JSON.stringify(saved[0].chat_metadata[field3]) !== JSON.stringify(value)) {
-        state.pending = true;
-        state.kind = "sources";
-        rememberPendingReason(state, "archive-version-mismatch", { field: field3 });
+        rememberPendingReason(state, "archive-version-mismatch", metadataMismatchDetail({ [field3]: value }, saved[0].chat_metadata, [field3]));
         notify4();
         continue;
       }
-      rememberChatFile(ctx2, saved);
-      if (!Array.isArray(saved) || !saved[0]?.chat_metadata || evidenceSources(saved.slice(1)) !== evidenceSources(ctx2.chat)) {
-        state.expectedFloors = Array.isArray(saved) ? Math.max(ctx2.chat.length + 1, saved.length - 1) : ctx2.chat.length + 1;
+      if (!validator(value, ctx2)) {
         state.pending = true;
-        state.kind = "sources";
-        const detail = mismatchReason(ctx2, saved);
-        rememberPendingReason(state, detail.code, detail);
-        notify4();
+        state.kind = state.kind === "settings" ? "settings" : "sources";
+        rememberPendingReason(state, reason?.code === "incomplete-load" ? "incomplete-load" : state.kind === "settings" ? "settings-changed" : "source-change", reason || {});
+        if (full && sourceMatchers.get(field3)?.(value, ctx2)) checked.reconcile.push({ field: field3, kind: state.kind, version: archiveVersion(value) });
         continue;
       }
+      state.pending = false;
+      state.pendingReason = null;
+      state.detail = null;
+      if (!full) continue;
       checkpoint(ctx2);
       const sourceFloors = ctx2.chat.length;
       checked.archives.set(field3, archiveVersion(value));
-      await backupArchive(ctx2, field3, value, "validated-load");
-      state.expectedFloors = sourceFloors;
-      if (state.pending && state.kind === "sources") {
-        state.pending = false;
-        notify4();
+      try {
+        await backupArchive(ctx2, field3, value, "validated-load");
+      } catch (cause) {
+        console.warn("\u5DF2\u6838\u5BF9\u804A\u5929\u6863\u6848\uFF0C\u6062\u590D\u5907\u4EFD\u66F4\u65B0\u5931\u8D25", { field: field3, message: cause.message });
       }
+      state.expectedFloors = sourceFloors;
     }
+  }
+  if (full) {
+    if (!fields2.some((field3) => fieldState(ctx2, field3).pendingReason?.code === "archive-version-mismatch")) rememberChatFile(ctx2, saved);
+    observed2.verifiedRead = { sources: archiveSources(ctx2.chat), archives: archiveVersions(ctx2.chatMetadata), saved };
   }
   return checked;
 }
@@ -53061,32 +53432,67 @@ function notifyArchiveCheckComplete(ctx2, checked) {
     console.warn("\u6863\u6848\u6838\u5BF9\u5B8C\u6210\u901A\u77E5\u5931\u8D25", cause);
   }
 }
+function scheduleArchiveRetry(ctx2) {
+  const observed2 = observers2.get(ctx2.chatMetadata), delays = [250, 750, 1500, 3e3];
+  if (!observed2 || observed2.retryTimer || !archiveContextCurrent(ctx2)) return;
+  const attempt2 = observed2.retryAttempt || 0;
+  if (attempt2 >= delays.length) return;
+  observed2.retryAttempt = attempt2 + 1;
+  observed2.retryTimer = setTimeout(() => {
+    observed2.retryTimer = null;
+    if (archiveContextCurrent(ctx2)) queueArchiveRecovery(ctx2, "save-retry");
+  }, delays[attempt2]);
+  observed2.retryTimer?.unref?.();
+}
 function queueArchiveRecovery(ctx2, trigger = "initialization") {
-  const ticket = { trigger, phase: "queued" };
+  const observed2 = fieldState(ctx2, fields2[0]) && observers2.get(ctx2.chatMetadata);
+  const requestKey = archiveVersion([ctx2.archiveSession, archiveSources(ctx2.chat), archiveVersions(ctx2.chatMetadata)]);
+  if (observed2.recovery?.session === ctx2.archiveSession) {
+    if (observed2.recovery.requestKey !== requestKey) observed2.recovery.rerun = true;
+    return;
+  }
+  if (observed2.recovered === requestKey && !observed2.saveWait && !fields2.some((field3) => fieldState(ctx2, field3).pending)) return;
+  const ticket = { trigger, phase: "queued", session: ctx2.archiveSession, requestKey };
+  observed2.recovery = ticket;
+  const firstLoad = observed2.loadedSession !== ctx2.archiveSession;
   for (const field3 of fields2) {
     const state = fieldState(ctx2, field3);
-    state.checkedSignature = null;
-    state.loading = ticket;
+    if (firstLoad) state.loading = ticket;
   }
   void serializeStoryMemoryWrite(async () => {
     ticket.phase = "checking";
     notify4();
     let checked;
     try {
-      if (archiveContextCurrent(ctx2)) checked = await recoverCurrentArchives(ctx2);
+      if (archiveContextCurrent(ctx2)) checked = await recoverCurrentArchives(ctx2, ticket);
     } catch (cause) {
+      if (!archiveContextCurrent(ctx2)) return;
+      saveWait(ctx2, "read-failed", { error: String(cause?.message || cause) });
       for (const field3 of fields2) {
         const state = fieldState(ctx2, field3);
-        state.pending = true;
-        state.kind = "sources";
-        rememberPendingReason(state, "recovery-failed", { error: String(cause?.message || cause) });
+        if (!records(state.snapshot)) {
+          state.pending = true;
+          state.kind = "sources";
+          rememberPendingReason(state, "read-failed", { error: String(cause?.message || cause) });
+        }
       }
       console.warn("\u8BB0\u5FC6\u6062\u590D\u6838\u5BF9\u5931\u8D25\uFF0C\u5DF2\u6709\u6863\u6848\u4FDD\u7559\uFF0C\u540E\u53F0\u5206\u6790\u6682\u7F13", cause);
     } finally {
-      const latest = fields2.every((field3) => fieldState(ctx2, field3).loading === ticket);
+      const latest = observed2.recovery === ticket && archiveContextCurrent(ctx2);
       for (const field3 of fields2) {
         const state = fieldState(ctx2, field3);
         if (state.loading === ticket) state.loading = null;
+      }
+      if (observed2.recovery === ticket) observed2.recovery = null;
+      if (latest) {
+        observed2.loadedSession = ctx2.archiveSession;
+        if (checked) observed2.recovered = archiveVersion([ctx2.archiveSession, archiveSources(ctx2.chat), archiveVersions(ctx2.chatMetadata)]);
+        if (ticket.rerun || !checked) scheduleArchiveRetry(ctx2);
+        if (checked && archiveSources(ctx2.chat) === checked.sources) for (const item2 of checked.reconcile) {
+          if (archiveVersion(ctx2.chatMetadata[item2.field]) !== item2.version) continue;
+          noteArchiveChange(ctx2, "verified-chat-file", item2.kind);
+          fieldState(ctx2, item2.field).pending = false;
+        }
       }
       notify4();
       if (latest) notifyArchiveCheckComplete(ctx2, checked);
@@ -53098,6 +53504,15 @@ function initArchiveSafety() {
   if (initialized2) return;
   initialized2 = true;
   initAnalysisSourceEdits();
+  subscribeArchiveSaves(() => {
+    const raw = rawContext();
+    if (!raw?.chatMetadata || !raw.chatId || !Array.isArray(raw.chat)) return;
+    const observed2 = observers2.get(raw.chatMetadata);
+    if (observed2?.saveWait || fields2.some((field3) => observed2?.get(field3)?.pending)) {
+      observed2.retryAttempt = 0;
+      queueArchiveRecovery(captureArchiveContext(raw), "host-save");
+    }
+  });
   const events = host3.event_types || {};
   const changed = (trigger = "initialization") => {
     session++;
@@ -53128,16 +53543,18 @@ function initArchiveSafety() {
   });
   changed();
 }
-var fields2, archiveLabels, observers2, validators, listeners3, recoveryCache, session, currentIdentity, evidence, initialized2, notifying, database, copy2, textRecord, records, identity, protectedBackup, backupId, archiveVersion;
+var fields2, archiveLabels, observers2, validators, sourceMatchers, listeners3, recoveryCache, session, currentIdentity, evidence, initialized2, notifying, database, copy3, archiveVersion, archiveVersions, textRecord, records, identity, sourceFields, protectedBackup, backupId;
 var init_storyMemoryArchive = __esm({
   "src/core/storyMemoryArchive.js"() {
     init_storyMemoryTasks();
     init_storyMemorySaveGuard();
     init_analysisSourceEdits();
+    init_chatFileCompatibility();
     fields2 = ["titania_story_memory", "echo_timetrace_v4", "titania_character_evolution"];
     archiveLabels = { titania_story_memory: "\u6545\u4E8B\u8BB0\u5FC6", echo_timetrace_v4: "\u56DE\u58F0\u65F6\u75D5", titania_character_evolution: "\u89D2\u8272\u6F14\u53D8" };
     observers2 = /* @__PURE__ */ new WeakMap();
     validators = /* @__PURE__ */ new Map();
+    sourceMatchers = /* @__PURE__ */ new Map();
     listeners3 = /* @__PURE__ */ new Set();
     recoveryCache = /* @__PURE__ */ new Map();
     session = 0;
@@ -53146,13 +53563,26 @@ var init_storyMemoryArchive = __esm({
     initialized2 = false;
     notifying = false;
     database = null;
-    copy2 = (value) => value === void 0 ? void 0 : JSON.parse(JSON.stringify(value));
+    copy3 = (value) => value === void 0 ? void 0 : JSON.parse(JSON.stringify(value));
+    archiveVersion = (value) => JSON.stringify(value, (_key, item2) => item2 && typeof item2 === "object" && !Array.isArray(item2) ? Object.fromEntries(Object.keys(item2).sort().map((key) => [key, item2[key]])) : item2) ?? "undefined";
+    archiveVersions = (metadata) => archiveVersion(fields2.map((field3) => metadata[field3]));
     textRecord = (value) => typeof value === "string" && value.trim() ? 1 : 0;
     records = (value) => (value?.segments?.length || 0) + (value?.batches?.length || 0) + (value?.anchorBatches?.length || 0) + (value?.items?.length || 0) + (value?.calendarOverride || value?.initialOverride ? 1 : 0) + (value?.relationships?.length || 0) + (value?.threads?.length || 0) + (value?.stages?.length || 0) + (value?.stageBoundaries?.length || 0) + textRecord(value?.recap) + textRecord(value?.scene) + textRecord(value?.document?.profile) + textRecord(value?.candidate?.profile) + (value?.manualEdits?.length || 0);
     identity = (ctx2) => ctx2.archiveKey || JSON.stringify([ctx2.groupId != null && ctx2.groupId !== "" ? `group:${ctx2.groupId}` : ctx2.characters?.[ctx2.characterId]?.avatar, ctx2.chatId]);
+    sourceFields = [
+      ["name", "\u53D1\u8A00\u8005"],
+      ["is_user", "\u7528\u6237\u6D88\u606F\u6807\u8BB0"],
+      ["mes", "\u539F\u59CB\u6D88\u606F\u5168\u6587"],
+      ["swipe_id", "\u91C7\u7528\u5019\u9009\u7F16\u53F7"],
+      ["is_system", "\u7CFB\u7EDF\u6D88\u606F\u6807\u8BB0"],
+      ["is_hidden", "\u9690\u85CF\u6807\u8BB0"],
+      ["extra.is_hidden", "\u9644\u52A0\u9690\u85CF\u6807\u8BB0"],
+      ["extra.titania_memory_id", "\u6545\u4E8B\u8BB0\u5FC6\u6765\u6E90 ID"],
+      ["extra.echo_timetrace_v4_id", "\u65F6\u75D5\u6765\u6E90 ID"],
+      ["extra.titania_memory_hidden", "\u6545\u4E8B\u8BB0\u5FC6\u9690\u85CF\u6807\u8BB0"]
+    ];
     protectedBackup = (entry) => ["before-rollback", "before-manual-restore"].includes(entry?.reason);
     backupId = (entry) => entry.id || JSON.stringify([entry.at, entry.reason, entry.value?.commitId]);
-    archiveVersion = (value) => JSON.stringify(value) ?? "undefined";
   }
 });
 
@@ -53183,6 +53613,7 @@ function getTimetraceConfig() {
   const profile = toolboxProfileId(data, "timetrace");
   if (profile !== null) config2.profile_id = profile;
   config2.model_override = getToolboxModelOverride(data, "timetrace");
+  config2.stream = getToolboxStream(data, "timetrace");
   config2.extraction = getToolboxExtraction(data);
   return config2;
 }
@@ -53790,6 +54221,15 @@ function getTimetraceView() {
   }
   const rows = ctx2 ? rowsFor(ctx2, config2) : [], pending5 = pendingRows(memory, rows, ctx2);
   const snapshot = timetraceSnapshot(memory), prompt2 = guardedTimetracePrompt(ctx2, memory, config2, snapshot);
+  const sourceState = ctx2 && archivePendingInfo(ctx2, TIMETRACE_KEY);
+  const validMemory = sourceState?.blocked && ["source-change", "incomplete-load"].includes(sourceState.code) ? reconcileTimetrace(
+    memory,
+    ctx2.chat,
+    fallbackFor(ctx2),
+    JSON.stringify(config2.extraction),
+    { ownerKey: localTextRevisionOwnerKey(ctx2) }
+  ).memory : null;
+  const validNodes = validMemory ? timetraceSnapshot(validMemory).nodes : null;
   const noTimingRecords = timetraceNoTimingBatches(memory).map((batch) => ({
     id: batch.id,
     floor: batch.sources[0].index,
@@ -53808,6 +54248,8 @@ function getTimetraceView() {
     config: config2,
     ...snapshot,
     noTimingRecords,
+    validMemory,
+    validNodes,
     totalFloors: rows.length,
     pendingFloors: pending5.length,
     coveredFloors: rows.length - pending5.length,
@@ -54017,7 +54459,7 @@ async function analyseBatch(task, connection, config2, world, rows) {
       raw = await abortable(Promise.resolve().then(() => {
         if (controller.signal.aborted) throw new Error("\u65F6\u75D5\u8BF7\u6C42\u5DF2\u53D6\u6D88\u3002");
         return sendChatRequestWithConnection(connection, requestMessages(config2, world, memoryFor(task.ctx), rows), {
-          stream: false,
+          stream: config2.stream,
           maxTokens: config2.max_output_tokens,
           temperature: 0.2,
           signal: controller.signal,
@@ -54532,7 +54974,11 @@ var init_storyTimetrace = __esm({
       const ctx2 = context2();
       if (ctx2 && getTimetraceConfig().use_world_info && getCharacterCardKey(ctx2) === cardKey) referenceChanged();
     });
-    registerArchiveValidator(TIMETRACE_KEY, (value, ctx2) => value?.version === 4 && Array.isArray(value.batches) && !reconcileTimetrace(value, ctx2.chat, fallbackFor(ctx2), JSON.stringify(getTimetraceConfig().extraction), { ownerKey: localTextRevisionOwnerKey(ctx2) }).changed);
+    registerArchiveValidator(
+      TIMETRACE_KEY,
+      (value, ctx2) => value?.version === 4 && Array.isArray(value.batches) && !reconcileTimetrace(value, ctx2.chat, fallbackFor(ctx2), JSON.stringify(getTimetraceConfig().extraction), { ownerKey: localTextRevisionOwnerKey(ctx2) }).changed,
+      (value, ctx2) => value?.version === 4 && Array.isArray(value.batches) && value.batches.some((batch) => (batch.sources || []).some((source2) => sourcesMatch([source2], ctx2, { allowLocalRevision: true })))
+    );
     subscribeArchiveSafety(() => {
       refreshInjection();
       notify5();
@@ -58662,9 +59108,10 @@ async function sendOutlineRequest(messages2, options2 = {}) {
   if (!conn) throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u9009\u62E9 API \u65B9\u6848");
   const model = toolboxProfileId(getExtData(), "outline") !== null ? String(conn.model || "").trim() : requestModel || String(conn.model || "").trim();
   if (!conn.useSTConnection && !model) throw new Error("\u8BF7\u5148\u9009\u62E9\u6A21\u578B");
-  return sendChatRequestWithConnection({ ...conn, stream: options2.stream === true }, messages2, {
+  const stream = getToolboxStream(getExtData(), "outline");
+  return sendChatRequestWithConnection({ ...conn, stream }, messages2, {
     model,
-    stream: options2.stream === true,
+    stream,
     maxTokens: Number(options2.maxTokens) || 2048,
     temperature: Number.isFinite(options2.temperature) ? options2.temperature : 0.7,
     signal: options2.signal,
@@ -61206,8 +61653,7 @@ async function generatePacingAssessment() {
     const params = getOutlineGenParams().pacing;
     const raw = await sendOutlineRequest(buildPacingPrompt(ctx2), {
       temperature: params.temperature,
-      maxTokens: params.maxTokens,
-      stream: false
+      maxTokens: params.maxTokens
     });
     assertSceneHistoryUnchanged(historySession, historySignature);
     return parsePacingResponse(raw);
@@ -61664,7 +62110,6 @@ async function runBlindboxGeneration(plan) {
     if (currentBlindboxChatKey() !== chatKey2) throw new Error("\u804A\u5929\u5DF2\u5207\u6362\uFF0C\u8BF7\u91CD\u65B0\u751F\u6210\u76F2\u76D2\u3002");
     const messages2 = buildBlindboxPrompt(ctx2, opening2, bb);
     const raw = await sendOutlineRequest(messages2, {
-      stream: false,
       temperature: params.temperature,
       maxTokens: params.maxTokens,
       signal
@@ -61794,7 +62239,6 @@ async function runDirectorTurn(trigger = null, { force = false } = {}) {
     raw = await sendOutlineRequest(buildDirectorMessages(ctx2, before, clockText), {
       temperature: params.temperature,
       maxTokens: params.maxTokens,
-      stream: false,
       signal: controller.signal
     });
   } catch {
@@ -63335,22 +63779,22 @@ var init_textRewriteDom = __esm({
 function chatKey(ctx2) {
   return JSON.stringify([ctx2?.chatId, ctx2?.groupId, ctx2?.characters?.[ctx2?.characterId]?.avatar]);
 }
-function sourceFields(message) {
+function sourceFields2(message) {
   const fields5 = [];
-  for (const key of ["mes", "message"]) if (own(message, key)) fields5.push({ object: message, key, original: message[key] });
+  for (const key of ["mes", "message"]) if (own2(message, key)) fields5.push({ object: message, key, original: message[key] });
   const swipe = message.swipe_id;
   if (Array.isArray(message.swipes) && message.swipes.length) {
     const index2 = Number(swipe);
     if (swipe == null || !Number.isInteger(index2) || index2 < 0 || index2 >= message.swipes.length) return { fields: fields5, reason: "\u5F53\u524D swipe \u7F16\u53F7\u65E0\u6548" };
     fields5.push({ object: message.swipes, key: index2, original: message.swipes[index2] });
-    if (own(message.swipe_info?.[index2]?.extra, "display_text")) fields5.push({ object: message.swipe_info[index2].extra, key: "display_text", original: message.swipe_info[index2].extra.display_text, cache: true });
+    if (own2(message.swipe_info?.[index2]?.extra, "display_text")) fields5.push({ object: message.swipe_info[index2].extra, key: "display_text", original: message.swipe_info[index2].extra.display_text, cache: true });
   }
-  if (own(message.extra, "display_text")) fields5.push({ object: message.extra, key: "display_text", original: message.extra.display_text, cache: true });
+  if (own2(message.extra, "display_text")) fields5.push({ object: message.extra, key: "display_text", original: message.extra.display_text, cache: true });
   return { fields: fields5, reason: "" };
 }
 function captureRewriteTarget(ctx2, index2, projection, container) {
   const message = ctx2.chat[index2];
-  const snapshot = sourceFields(message);
+  const snapshot = sourceFields2(message);
   return {
     ctx: ctx2,
     key: chatKey(ctx2),
@@ -63370,7 +63814,7 @@ function captureRewriteTarget(ctx2, index2, projection, container) {
 }
 function rewriteTargetStillMatches(target, current3, expectedSource = target.projection.raw) {
   if (!current3 || current3.chat !== target.chat || current3.chatMetadata !== target.metadata || chatKey(current3) !== target.key || current3.chat[target.index] !== target.message || target.message.swipe_id !== target.swipe || target.message.swipes !== target.swipes || target.message.swipe_info !== target.swipeInfo) return false;
-  const snapshot = sourceFields(target.message);
+  const snapshot = sourceFields2(target.message);
   return !snapshot.reason && snapshot.fields.length === target.fields.length && snapshot.fields.every((field3, i) => field3.object === target.fields[i].object && field3.key === target.fields[i].key && field3.original === (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : expectedSource));
 }
 async function persistRewriteTarget(target, rewritten, host8) {
@@ -63389,9 +63833,9 @@ async function persistRewriteTarget(target, rewritten, host8) {
   });
   if (!response.ok) throw new Error("\u804A\u5929\u56DE\u8BFB\u5931\u8D25");
   const saved = await response.json();
-  const offset = Array.isArray(saved) && own(saved[0], "chat_metadata") ? 1 : 0;
+  const offset = Array.isArray(saved) && own2(saved[0], "chat_metadata") ? 1 : 0;
   const message = Array.isArray(saved) ? saved[target.index + offset] : null;
-  const fields5 = message ? sourceFields(message) : { fields: [], reason: "\u672A\u627E\u5230\u4FDD\u5B58\u7684\u697C\u5C42" };
+  const fields5 = message ? sourceFields2(message) : { fields: [], reason: "\u672A\u627E\u5230\u4FDD\u5B58\u7684\u697C\u5C42" };
   if (fields5.reason || fields5.fields.length !== target.fields.length || fields5.fields.some((field3, i) => field3.key !== target.fields[i].key || field3.original !== (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : rewritten))) throw new Error("\u697C\u5C42\u8865\u4E01\u672A\u6210\u529F\u4FDD\u5B58");
   if (JSON.stringify(message?.extra?.[LOCAL_TEXT_REVISION_KEY]) !== JSON.stringify(target.message.extra?.[LOCAL_TEXT_REVISION_KEY])) {
     throw new Error("\u6B63\u6587\u4FEE\u8BA2\u7684\u5206\u6790\u6CBF\u7528\u8BB0\u5F55\u672A\u5B8C\u6574\u4FDD\u5B58");
@@ -63452,7 +63896,7 @@ async function commitRewritePatches(target, units, replacements, options2) {
   const writes3 = target.fields.filter((field3) => !(field3.cache && field3.original == null)).map((field3) => ({ ...field3, after: rewritten, had: true }));
   const revision = prepareAnalysisTextRevision(target.ctx, target.message, rewritten, options2.action === "delete" ? "delete" : "edit");
   const previousExtra = target.message.extra;
-  const hadExtra = own(target.message, "extra");
+  const hadExtra = own2(target.message, "extra");
   if (!previousExtra || typeof previousExtra !== "object") target.message.extra = {};
   const metadata = target.message.extra;
   const metadataPatch = {
@@ -63460,13 +63904,13 @@ async function commitRewritePatches(target, units, replacements, options2) {
     [LOCAL_TEXT_REVISION_KEY]: revision
   };
   if (options2.action !== "delete") metadataPatch.titania_rewrite_marks = plans.map((plan) => ({ before: plan.entry.before, after: plan.entry.after }));
-  for (const [key, after] of Object.entries(metadataPatch)) writes3.push({ object: metadata, key, original: metadata[key], had: own(metadata, key), after });
+  for (const [key, after] of Object.entries(metadataPatch)) writes3.push({ object: metadata, key, original: metadata[key], had: own2(metadata, key), after });
   const swipeExtra = target.message.swipe_info?.[target.swipe]?.extra;
   if (swipeExtra && typeof swipeExtra === "object" && !Array.isArray(swipeExtra)) writes3.push({
     object: swipeExtra,
     key: LOCAL_TEXT_REVISION_KEY,
     original: swipeExtra[LOCAL_TEXT_REVISION_KEY],
-    had: own(swipeExtra, LOCAL_TEXT_REVISION_KEY),
+    had: own2(swipeExtra, LOCAL_TEXT_REVISION_KEY),
     after: revision
   });
   commitsInFlight.add(target.chat);
@@ -63513,14 +63957,14 @@ async function commitRewritePatches(target, units, replacements, options2) {
     commitsInFlight.delete(target.chat);
   }
 }
-var own, commitsInFlight;
+var own2, commitsInFlight;
 var init_textRewriteWriteback = __esm({
   "src/core/textRewriteWriteback.js"() {
     init_textRewritePatch();
     init_analysisSourceEdits();
     init_localTextRevisions();
     init_textRewriteDom();
-    own = (object5, key) => Object.prototype.hasOwnProperty.call(object5 || {}, key);
+    own2 = (object6, key) => Object.prototype.hasOwnProperty.call(object6 || {}, key);
     commitsInFlight = /* @__PURE__ */ new WeakSet();
   }
 });
@@ -64540,7 +64984,7 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
   }
   const maxTokens = estimateMaxTokens(request);
   const $btn = $(buttonSelector);
-  const streamLive = data.stream_live === true;
+  const streamLive = getToolboxStream(getExtData(), "rewrite");
   let success = false;
   $btn.prop("disabled", true);
   updateAbortBtnState(true);
@@ -64571,22 +65015,25 @@ async function executeRewriteRequest({ data, latest, evaluated, request, rewrite
       const fixMessages = buildFixJsonMessages(raw, request);
       raw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
         connection,
+        stream: streamLive,
         temperature: REWRITE_FIX_TEMPERATURE,
         signal: abortController.signal
       });
-      pushLiveResponseHistory({ source: source2, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: raw });
+      pushLiveResponseHistory({ source: source2, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: streamLive, text: raw });
+      setRawResponse(raw);
       parsed = normalizeRewriteResponseShape(parseRewriteJson(raw), request);
     }
     let valid = validateRewriteResponse(parsed, request);
     if (!valid.ok) {
       const fixMessages = buildFixJsonMessages(raw, request);
-      setRawMeta("\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08\u975E\u6D41\u5F0F\uFF09");
+      setRawMeta(`\u5B9E\u65F6\u54CD\u5E94\uFF1A\u4FEE\u590D\u8BF7\u6C42\uFF08${streamLive ? "\u6D41\u5F0F" : "\u975E\u6D41\u5F0F"}\uFF09`);
       const fixedRaw = await requestRewriteWithOptions(apiUrl, apiKey, model, fixMessages, maxTokens, {
         connection,
+        stream: streamLive,
         temperature: REWRITE_FIX_TEMPERATURE,
         signal: abortController.signal
       });
-      pushLiveResponseHistory({ source: source2, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: false, text: fixedRaw });
+      pushLiveResponseHistory({ source: source2, phase: "\u4FEE\u590D\u8BF7\u6C42", model, stream: streamLive, text: fixedRaw });
       setRawResponse(fixedRaw);
       parsed = normalizeRewriteResponseShape(parseRewriteJson(fixedRaw), request);
       valid = validateRewriteResponse(parsed, request);
@@ -64948,7 +65395,6 @@ function persistSettingsPanelState() {
     getSelectedRewritePromptState()
   );
   prev.split_mode = String($overlay.find("input[name='t-rewrite-settings-split-mode']:checked").val() || "sentence");
-  prev.stream_live = $overlay.find("#t-rewrite-settings-stream-live").prop("checked") === true;
   prev.rewrite.active_scheme_id = activeSchemeId;
   prev.rewrite.selected_sentence_enabled = $overlay.find("#t-rewrite-settings-selected-sentence-enabled").prop("checked") === true;
   prev.rewrite.prompt_system = rulePromptParsed.prompt_system;
@@ -64973,7 +65419,7 @@ function refreshRuntimeStateView() {
   $overlay.find("#t-rewrite-runtime-split").text(data.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50");
   $overlay.find("#t-rewrite-runtime-scheme").text(scheme ? scheme.name : "\u65E0\u65B9\u6848");
   $overlay.find("#t-rewrite-rule-count").text(String(categories.length));
-  $overlay.find("#t-rewrite-runtime-stream").text(data.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F");
+  $overlay.find("#t-rewrite-runtime-stream").text(getToolboxStream(globalData, "rewrite") ? "\u5F00\u542F" : "\u5173\u95ED");
   $overlay.find("#t-rewrite-runtime-delete-count").text(String((data.deletion.rules || []).length));
 }
 function renderMatchResult(result, sourceText = "") {
@@ -65395,9 +65841,7 @@ function openSettingsPanel() {
 
                         <div class="t-form-group">
                             <label class="t-form-label">\u8BF7\u6C42\u884C\u4E3A</label>
-                            <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
-                                <label><input id="t-rewrite-settings-stream-live" type="checkbox" ${rewriteData.stream_live === false ? "" : "checked"}> \u542F\u7528\u6D41\u5F0F\u5E76\u663E\u793A\u5B9E\u65F6\u54CD\u5E94\uFF08\u4EC5\u6539\u5199\uFF09</label>
-                            </div>
+                            <p class="t-conn-hint">\u6D41\u5F0F\u4F20\u8F93\u5728\u5DE5\u5177\u7BB1\u8BBE\u7F6E\u7684\u300C\u6587\u672C\u6539\u5199\u4E0E\u5220\u9664\u300D\u8FDE\u63A5\u4E2D\u914D\u7F6E\uFF0C\u5F00\u542F\u540E\u663E\u793A\u5B9E\u65F6\u6539\u5199\u54CD\u5E94\u3002</p>
                             <div class="t-rewrite-debug-row t-rewrite-debug-row-block">
                                 <label><input id="t-rewrite-settings-selected-sentence-enabled" type="checkbox" ${rewriteData.rewrite.selected_sentence_enabled === false ? "" : "checked"}> \u542F\u7528\u697C\u5C42\u5185\u9009\u53E5\u6539\u5199</label>
                             </div>
@@ -65516,7 +65960,7 @@ function openPanel() {
                             <div>\u5207\u5206\u6A21\u5F0F\uFF1A<b id="t-rewrite-runtime-split">${rewriteData.split_mode === "paragraph" ? "\u6309\u6BB5\u843D" : "\u6309\u53E5\u5B50"}</b></div>
                             <div>\u5F53\u524D\u65B9\u6848\uFF1A<b id="t-rewrite-runtime-scheme">${scheme ? escapeHtml5(scheme.name) : "\u65E0\u65B9\u6848"}</b></div>
                             <div>\u5206\u7C7B\u6570\u91CF\uFF1A<b id="t-rewrite-rule-count">${categories.length}</b></div>
-                            <div>\u6D41\u5F0F\u663E\u793A\uFF1A<b id="t-rewrite-runtime-stream">${rewriteData.stream_live === false ? "\u5173\u95ED" : "\u5F00\u542F"}</b></div>
+                            <div>\u6D41\u5F0F\u663E\u793A\uFF1A<b id="t-rewrite-runtime-stream">${getToolboxStream(getExtData(), "rewrite") ? "\u5F00\u542F" : "\u5173\u95ED"}</b></div>
                             <div>\u5220\u9664\u89C4\u5219\uFF1A<b id="t-rewrite-runtime-delete-count">${(rewriteData.deletion.rules || []).length}</b></div>
                             <div>\u6B63\u6587\u63D0\u53D6\u4E0E\u6392\u9664\uFF1A<b>\u5DE5\u5177\u7BB1\u5168\u5C40\u89C4\u5219</b></div>
                         </div>
@@ -66862,6 +67306,7 @@ function getEvolutionConfig() {
   const profile = toolboxProfileId(data, "memory");
   config2.profile_id = profile !== null ? profile : String(data.story_memory?.profile_id || "");
   config2.model_override = getToolboxModelOverride(data, "memory");
+  config2.stream = getToolboxStream(data, "memory");
   config2.extraction = getToolboxExtraction(data);
   return config2;
 }
@@ -67256,7 +67701,7 @@ async function requestEvolutionResult(task, connection, messages2, config2) {
       const raw = await abortable2(Promise.resolve().then(() => {
         if (!taskCurrent2(task) || controller.signal.aborted) throw new Error("\u89D2\u8272\u6F14\u53D8\u5206\u6790\u5DF2\u53D6\u6D88\u3002");
         return sendChatRequestWithConnection(connection, messages2, {
-          stream: false,
+          stream: config2.stream,
           maxTokens: config2.max_output_tokens,
           temperature: 0.2,
           signal: controller.signal,
@@ -67770,7 +68215,15 @@ var init_characterEvolution = __esm({
     progressSequence2 = 0;
     BASELINE_SIGNATURE_FORMAT = "frozen-description-v1";
     descriptionSignature = (text9) => memoryFloorFingerprint({ mes: text9 });
-    registerArchiveValidator(EVOLUTION_KEY, (value, ctx2) => value?.version === 3 && Array.isArray(value.items) && Array.isArray(value.batches) && !(ctx2.groupId != null && ctx2.groupId !== "") && (!value.characterAvatar || value.characterAvatar === ctx2.characters?.[ctx2.characterId]?.avatar) && (!value.document || validateEvolutionDocument(value.document)) && !reconcileEvolution(value, ctx2.chat, extractionScope(), { ownerKey: localTextRevisionOwnerKey(ctx2) }).changed);
+    registerArchiveValidator(
+      EVOLUTION_KEY,
+      (value, ctx2) => value?.version === 3 && Array.isArray(value.items) && Array.isArray(value.batches) && !(ctx2.groupId != null && ctx2.groupId !== "") && (!value.characterAvatar || value.characterAvatar === ctx2.characters?.[ctx2.characterId]?.avatar) && (!value.document || validateEvolutionDocument(value.document)) && !reconcileEvolution(value, ctx2.chat, extractionScope(), { ownerKey: localTextRevisionOwnerKey(ctx2) }).changed,
+      (value, ctx2) => value?.version === 3 && Array.isArray(value.items) && Array.isArray(value.batches) && !(ctx2.groupId != null && ctx2.groupId !== "") && (!value.characterAvatar || value.characterAvatar === ctx2.characters?.[ctx2.characterId]?.avatar) && (!value.document || validateEvolutionDocument(value.document)) && value.batches.some((batch) => evolutionBatchMatches(
+        batch,
+        ctx2.chat,
+        { allowLocalRevision: true, ownerKey: localTextRevisionOwnerKey(ctx2) }
+      ))
+    );
     subscribeArchiveSafety(() => {
       refreshInjection2();
       notify6();
@@ -67953,19 +68406,22 @@ function timeView() {
 function summaryTimeState(ctx2, prepared = null, rows = null) {
   if (!ctx2 || !sameChat3(ctx2)) return { ready: false, memory: null, nodes: [], message: "\u804A\u5929\u5DF2\u5207\u6362\uFF0C\u672A\u8BFB\u53D6\u5176\u4ED6\u804A\u5929\u7684\u65F6\u95F4\u3002" };
   const view2 = prepared || timeView();
-  const archive = archivePendingInfo(ctx2, TIMETRACE_KEY), blocked2 = archive.blocked;
+  const archive = archivePendingInfo(ctx2, TIMETRACE_KEY);
+  const usePrefix = archive.blocked && !!view2.validMemory;
+  const blocked2 = archive.blocked && !usePrefix;
+  const memory = usePrefix ? view2.validMemory : view2.memory, timeline = usePrefix ? view2.validNodes : view2.nodes;
   let nodes = [];
   try {
-    if (!blocked2) nodes = memoryTimeRecords(view2.memory, view2.nodes);
+    if (!blocked2) nodes = memoryTimeRecords(memory, timeline);
   } catch {
   }
-  const coverage = memoryTimeCoverage(view2.memory, rows || [], blocked2 ? [] : view2.nodes);
+  const coverage = memoryTimeCoverage(memory, rows || [], blocked2 ? [] : timeline);
   const message = blocked2 ? `${archive.message} \u6545\u4E8B\u8BB0\u5FC6\u603B\u7ED3\u6682\u7F13\u3002` : !coverage.hasRecords && view2.error ? `\u65F6\u75D5\u8BB0\u5F55\u6682\u4E0D\u53EF\u7528\uFF1A${view2.error}\u3002\u8BF7\u5148\u786E\u8BA4\u5E76\u4FDD\u5B58\u65F6\u95F4\u8F74\uFF0C\u518D\u5F00\u542F\u603B\u7ED3\u3002` : !coverage.hasRecords ? "\u8BF7\u5148\u5728\u300C\u56DE\u58F0\u65F6\u75D5\u300D\u4FDD\u5B58\u73B0\u5B9E\u65F6\u95F4\u7B14\u8BB0\u6216\u5DF2\u8BFB\u53D6\u3001\u65E0\u9700\u8BA1\u65F6\u7684\u6279\u6B21\u72B6\u6001\uFF0C\u518D\u5F00\u542F\u6545\u4E8B\u8BB0\u5FC6\u603B\u7ED3\uFF1B\u4EC5\u5F00\u542F\u65F6\u95F4\u5F00\u5173\u6216\u7A7A\u6863\u6848\u4E0D\u7B97\u8BB0\u5F55\u3002" : !coverage.complete ? `\u7B2C ${coverage.missingFloors.join("\u3001")} \u697C\u5C1A\u65E0\u6709\u6548\u65F6\u75D5\u8986\u76D6\u3002\u8BF7\u5148\u8865\u5EFA\u8FD9\u6BB5\u65F6\u95F4\u8F74\uFF0C\u518D\u8FDB\u884C\u603B\u7ED3\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u63A8\u7B97\u6216\u8865\u5145\u65F6\u95F4\u3002` : "";
   return {
     ready: !blocked2 && coverage.hasRecords && coverage.complete,
-    memory: view2.memory,
+    memory,
     nodes,
-    timelineNodes: blocked2 ? [] : view2.nodes,
+    timelineNodes: blocked2 ? [] : timeline,
     coverage,
     message,
     noticeKey: blocked2 ? `timetrace:${archive.noticeKey}` : message
@@ -67991,7 +68447,7 @@ function blockSummaryForTime(ctx2, state, explicit = false) {
   return false;
 }
 function timeSignature(ctx2, start, end) {
-  const state = summaryTimeState(ctx2);
+  const state = summaryTimeState(ctx2, null, Number.isInteger(start) && Number.isInteger(end) ? summaryRows(ctx2, start, end) : null);
   return state.ready ? memoryTimeSignature(state.memory, start, end, state.timelineNodes) : "";
 }
 function withStageTimeBindings(memory, state) {
@@ -68346,6 +68802,7 @@ function getStoryMemoryConfig() {
   const profile = toolboxProfileId(data, "memory");
   if (profile !== null) config2.profile_id = profile;
   config2.model_override = getToolboxModelOverride(data, "memory");
+  config2.stream = getToolboxStream(data, "memory");
   config2.text_extraction = getToolboxExtraction(data);
   return config2;
 }
@@ -68844,7 +69301,7 @@ async function mergeSegmentsTask(ctx2, owner, retrying, taskOwner) {
   try {
     const diagnostics = {};
     const raw = await requestMemory(conn, buildMergeMessages(group2), {
-      stream: false,
+      stream: config2.stream,
       maxTokens: config2.max_output_tokens,
       temperature: 0.2,
       signal: controller.signal,
@@ -69025,7 +69482,7 @@ async function runStoryMemorySummary(force, retrying, taskOwner) {
       return false;
     }
     const raw = await requestMemory(conn, buildMessages2(ctx2, memory, batch), {
-      stream: false,
+      stream: config2.stream,
       maxTokens: config2.max_output_tokens,
       temperature: 0.2,
       signal: controller.signal,
@@ -69160,7 +69617,7 @@ ${historicalTimeContext(ctx2, segment.start, segment.end)}
 
 [\u5BF9\u5E94\u539F\u6B63\u6587${config2.skip_user_messages ? "\uFF0C\u5DF2\u6392\u9664\u7528\u6237\u697C\u5C42" : ""}]
 ${original || "\u539F\u6B63\u6587\u7F3A\u5931\uFF0C\u4EC5\u6309\u5DF2\u6709\u6458\u8981\u6838\u5BF9\u65F6\u95F4\uFF0C\u4E0D\u8865\u5145\u4E8B\u4EF6\u3002"}` }
-      ], { stream: false, maxTokens: getStoryMemoryConfig().max_output_tokens, temperature: 0.2, signal: controller.signal, allowEmptyKey: true, respectRequestLimits: true, diagnostics });
+      ], { stream: config2.stream, maxTokens: config2.max_output_tokens, temperature: 0.2, signal: controller.signal, allowEmptyKey: true, respectRequestLimits: true, diagnostics });
       if (job3 !== task || !operationCurrent(operation) || generationActive) return false;
       const { value: result, report: report3 } = readAnalysisObject(raw, "\u6458\u8981\u65F6\u95F4\u66F4\u65B0", { diagnostics });
       if (report3.reportedIncomplete) throw new Error("\u65F6\u95F4\u66F4\u65B0\u54CD\u5E94\u672A\u5B8C\u6574\u7ED3\u675F\uFF0C\u539F\u6458\u8981\u4FDD\u7559\u3002");
@@ -69501,7 +69958,7 @@ ${historicalTimeContext(ctx2, from, to)}
 [\u53EF\u8BFB\u53D6\u7684\u539F\u6587${config2.skip_user_messages ? "\uFF0C\u5DF2\u6392\u9664\u7528\u6237\u697C\u5C42" : ""}]
 ${sectionRows.map((row) => `[#${row.index}]
 ${row.text}`).join("\n\n")}` }
-            ], { stream: false, maxTokens: config2.max_output_tokens, temperature: 0.2, signal: controller.signal, allowEmptyKey: true, respectRequestLimits: true, diagnostics });
+            ], { stream: config2.stream, maxTokens: config2.max_output_tokens, temperature: 0.2, signal: controller.signal, allowEmptyKey: true, respectRequestLimits: true, diagnostics });
           } finally {
             clearTimeout(timeout);
           }
@@ -69715,7 +70172,15 @@ var init_storyMemory = __esm({
       notify7();
     });
     timeNotices = /* @__PURE__ */ new WeakMap();
-    registerArchiveValidator(MEMORY_KEY, (value, ctx2) => value?.version === 1 && Array.isArray(value.segments) && Array.isArray(value.relationships) && Array.isArray(value.threads) && firstInvalidSegment(value, ctx2.chat, { ownerKey: localTextRevisionOwnerKey(ctx2) }) < 0);
+    registerArchiveValidator(
+      MEMORY_KEY,
+      (value, ctx2) => value?.version === 1 && Array.isArray(value.segments) && Array.isArray(value.relationships) && Array.isArray(value.threads) && firstInvalidSegment(value, ctx2.chat, { ownerKey: localTextRevisionOwnerKey(ctx2) }) < 0,
+      (value, ctx2) => value?.version === 1 && Array.isArray(value.segments) && Array.isArray(value.relationships) && Array.isArray(value.threads) && value.segments.some((segment) => (segment.sources || []).some((source2) => ctx2.chat[source2.index] && ctx2.chat[source2.index].extra?.[MEMORY_ID_KEY] === source2.id && memoryFloorMatches(
+        ctx2.chat[source2.index],
+        source2.fingerprint,
+        { allowLocalRevision: true, ownerKey: localTextRevisionOwnerKey(ctx2) }
+      )))
+    );
     subscribeArchiveSafety(() => {
       refreshInjection3();
       notify7();
@@ -73050,8 +73515,116 @@ var init_storyMemoryWindow = __esm({
   }
 });
 
+// src/core/ttsHash.js
+function ttsHash(value) {
+  const input = new TextEncoder().encode(value);
+  const bytes = new Uint8Array(Math.ceil((input.length + 9) / 64) * 64);
+  bytes.set(input);
+  bytes[input.length] = 128;
+  const data = new DataView(bytes.buffer);
+  data.setUint32(bytes.length - 8, Math.floor(input.length / 536870912));
+  data.setUint32(bytes.length - 4, input.length * 8 >>> 0);
+  const h = [1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225];
+  const w = new Uint32Array(64);
+  for (let offset = 0; offset < bytes.length; offset += 64) {
+    for (let i = 0; i < 16; i++) w[i] = data.getUint32(offset + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const x = w[i - 15], y = w[i - 2];
+      w[i] = w[i - 16] + (rotate(x, 7) ^ rotate(x, 18) ^ x >>> 3) + w[i - 7] + (rotate(y, 17) ^ rotate(y, 19) ^ y >>> 10);
+    }
+    let [a, b, c, d, e, f, g, j] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = j + (rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)) + (e & f ^ ~e & g) + K[i] + w[i] | 0;
+      const t2 = (rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)) + (a & b ^ a & c ^ b & c) | 0;
+      j = g;
+      g = f;
+      f = e;
+      e = d + t1 | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = t1 + t2 | 0;
+    }
+    [a, b, c, d, e, f, g, j].forEach((word, i) => {
+      h[i] = h[i] + word >>> 0;
+    });
+  }
+  return h.map((word) => word.toString(16).padStart(8, "0")).join("");
+}
+var K, rotate;
+var init_ttsHash = __esm({
+  "src/core/ttsHash.js"() {
+    K = [
+      1116352408,
+      1899447441,
+      3049323471,
+      3921009573,
+      961987163,
+      1508970993,
+      2453635748,
+      2870763221,
+      3624381080,
+      310598401,
+      607225278,
+      1426881987,
+      1925078388,
+      2162078206,
+      2614888103,
+      3248222580,
+      3835390401,
+      4022224774,
+      264347078,
+      604807628,
+      770255983,
+      1249150122,
+      1555081692,
+      1996064986,
+      2554220882,
+      2821834349,
+      2952996808,
+      3210313671,
+      3336571891,
+      3584528711,
+      113926993,
+      338241895,
+      666307205,
+      773529912,
+      1294757372,
+      1396182291,
+      1695183700,
+      1986661051,
+      2177026350,
+      2456956037,
+      2730485921,
+      2820302411,
+      3259730800,
+      3345764771,
+      3516065817,
+      3600352804,
+      4094571909,
+      275423344,
+      430227734,
+      506948616,
+      659060556,
+      883997877,
+      958139571,
+      1322822218,
+      1537002063,
+      1747873779,
+      1955562222,
+      2024104815,
+      2227730452,
+      2361852424,
+      2428436474,
+      2756734187,
+      3204031479,
+      3329325298
+    ];
+    rotate = (n, bits) => n >>> bits | n << 32 - bits;
+  }
+});
+
 // src/core/retrievalData.js
-import { sha256 } from "../../../../lib.js";
 function newRetrievalId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   if (globalThis.crypto?.getRandomValues) {
@@ -73063,7 +73636,7 @@ function newRetrievalId() {
 function retrievalMessageId(message) {
   const record = message?.extra?.[RETRIEVAL_ID_KEY];
   if (record == null) return "";
-  if (!object(record) || record.version !== 1 || !idValid(record.messageId)) {
+  if (!object2(record) || record.version !== 1 || !idValid(record.messageId)) {
     throw new Error("\u6D88\u606F\u7684\u53EC\u56DE\u8EAB\u4EFD\u683C\u5F0F\u6216\u7248\u672C\u4E0D\u53D7\u652F\u6301\uFF0C\u672A\u8986\u76D6\u5DF2\u6709\u6570\u636E\u3002");
   }
   return record.messageId;
@@ -73088,7 +73661,7 @@ function retrievalRows(messages2, { requireIds = true, allowDuplicateIds = false
   if (!Array.isArray(messages2)) throw new Error("\u804A\u5929\u6587\u4EF6\u4E0D\u662F\u6D88\u606F\u6570\u7EC4\u3002");
   const seen = /* @__PURE__ */ new Set();
   return messages2.map((message, floor2) => {
-    if (!object(message) || typeof message.mes !== "string") throw new Error(`\u7B2C ${floor2} \u697C\u4E0D\u662F\u6709\u6548\u7684\u804A\u5929\u6D88\u606F\u3002`);
+    if (!object2(message) || typeof message.mes !== "string") throw new Error(`\u7B2C ${floor2} \u697C\u4E0D\u662F\u6709\u6548\u7684\u804A\u5929\u6D88\u606F\u3002`);
     const id4 = retrievalMessageId(message);
     if (requireIds && !id4) throw new Error(`\u7B2C ${floor2} \u697C\u5C1A\u672A\u5EFA\u7ACB\u6D88\u606F\u8EAB\u4EFD\uFF0C\u8BF7\u5148\u66F4\u65B0\u7D22\u5F15\u3002`);
     if (id4 && seen.has(id4) && !allowDuplicateIds) throw Object.assign(new Error("\u804A\u5929\u4E2D\u5B58\u5728\u91CD\u590D\u53EC\u56DE\u8EAB\u4EFD\uFF0C\u8BF7\u5148\u66F4\u65B0\u7D22\u5F15\u6216\u660E\u786E\u4FEE\u590D\u51B2\u7A81\u8EAB\u4EFD\u3002"), { code: "RETRIEVAL_IDENTITY_AMBIGUOUS" });
@@ -73100,7 +73673,7 @@ function retrievalSourceSignature(scopeKey, rows) {
   return retrievalDigest([RETRIEVAL_SOURCE_VERSION, scopeKey, rows.map((row) => [row.id, row.fingerprint])]);
 }
 function extraObject(extra) {
-  if (extra != null && !object(extra)) throw new Error("\u6D88\u606F extra \u683C\u5F0F\u5F02\u5E38\uFF0C\u672A\u8986\u76D6\u5DF2\u6709\u5A92\u4F53\u6216\u9644\u52A0\u4FE1\u606F\u3002");
+  if (extra != null && !object2(extra)) throw new Error("\u6D88\u606F extra \u683C\u5F0F\u5F02\u5E38\uFF0C\u672A\u8986\u76D6\u5DF2\u6709\u5A92\u4F53\u6216\u9644\u52A0\u4FE1\u606F\u3002");
   return extra || {};
 }
 function writeIdentity(extra, id4) {
@@ -73117,7 +73690,7 @@ function planRetrievalIdentities(messages2, { identityHints = /* @__PURE__ */ ne
     const candidates = /* @__PURE__ */ new Set([retrievalMessageId(message)]);
     for (const info of message.swipe_info || []) {
       if (info == null) continue;
-      if (!object(info)) throw new Error(`\u7B2C ${floor2} \u697C\u7684\u5019\u9009\u8BB0\u5F55\u683C\u5F0F\u5F02\u5E38\u3002`);
+      if (!object2(info)) throw new Error(`\u7B2C ${floor2} \u697C\u7684\u5019\u9009\u8BB0\u5F55\u683C\u5F0F\u5F02\u5E38\u3002`);
       extraObject(info.extra);
       candidates.add(retrievalMessageId({ extra: info.extra }));
     }
@@ -73181,20 +73754,21 @@ function planRetrievalIdentities(messages2, { identityHints = /* @__PURE__ */ ne
 }
 function splitRetrievalChatFile(value, { allowDuplicateIds = false } = {}) {
   if (!Array.isArray(value)) throw new Error("\u672A\u80FD\u8BFB\u53D6\u5B8C\u6574\u804A\u5929\u6587\u4EF6\uFF1B\u8BF7\u7B49\u5F85\u9152\u9986\u4FDD\u5B58\u5E76\u91CD\u65B0\u6253\u5F00\u804A\u5929\u3002");
-  const hasHeader = value.length > 0 && object(value[0]?.chat_metadata) && typeof value[0]?.mes !== "string";
+  const hasHeader = value.length > 0 && object2(value[0]?.chat_metadata) && typeof value[0]?.mes !== "string";
   const messages2 = hasHeader ? value.slice(1) : value;
   retrievalRows(messages2, { requireIds: false, allowDuplicateIds });
   return { header: hasHeader ? value[0] : null, messages: messages2 };
 }
-var RETRIEVAL_ID_KEY, RETRIEVAL_SOURCE_VERSION, object, clone3, idValid, retrievalDigest;
+var RETRIEVAL_ID_KEY, RETRIEVAL_SOURCE_VERSION, object2, clone3, idValid, retrievalDigest;
 var init_retrievalData = __esm({
   "src/core/retrievalData.js"() {
+    init_ttsHash();
     RETRIEVAL_ID_KEY = "titania_retrieval";
     RETRIEVAL_SOURCE_VERSION = 1;
-    object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
     clone3 = (value) => JSON.parse(JSON.stringify(value));
     idValid = (value) => typeof value === "string" && /^[a-zA-Z0-9_-]{16,128}$/.test(value);
-    retrievalDigest = (value) => sha256(typeof value === "string" ? value : JSON.stringify(value));
+    retrievalDigest = (value) => ttsHash(typeof value === "string" ? value : JSON.stringify(value));
   }
 });
 
@@ -73588,17 +74162,24 @@ async function readFile(owner, signal, allowDuplicateIds = false) {
   signal?.addEventListener("abort", abort, { once: true });
   const timeout = setTimeout(abort, 2e4);
   try {
-    const response = await fetch(owner.group ? "/api/chats/group/get" : "/api/chats/get", {
-      method: "POST",
-      headers: host5.getRequestHeaders(),
-      cache: "no-store",
-      signal: controller.signal,
-      body: JSON.stringify(owner.target)
-    });
-    if (!response.ok) throw new Error(`\u8BFB\u53D6\u804A\u5929\u6587\u4EF6\u5931\u8D25\uFF08${response.status}\uFF09\uFF0C\u672A\u4F7F\u7528\u65E7\u7F13\u5B58\u3002`);
-    const value = await response.json();
+    const requestJSON2 = async (url2, body) => {
+      assertRetrievalContext(owner);
+      const response = await fetch(url2, {
+        method: "POST",
+        headers: host5.getRequestHeaders(),
+        cache: "no-store",
+        signal: controller.signal,
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) throw new Error(`\u8BFB\u53D6\u804A\u5929\u6587\u4EF6\u6216\u7FA4\u7EC4\u5143\u6570\u636E\u5931\u8D25\uFF08${response.status}\uFF09\uFF0C\u672A\u4F7F\u7528\u65E7\u7F13\u5B58\u3002`);
+      const value2 = await response.json();
+      assertRetrievalContext(owner);
+      return value2;
+    };
+    const value = await requestJSON2(owner.group ? "/api/chats/group/get" : "/api/chats/get", owner.target);
+    const file = await normalizeChatFile(owner.ctx, value, requestJSON2);
     assertRetrievalContext(owner);
-    return splitRetrievalChatFile(value, { allowDuplicateIds });
+    return splitRetrievalChatFile(file, { allowDuplicateIds });
   } finally {
     clearTimeout(timeout);
     signal?.removeEventListener("abort", abort);
@@ -73683,7 +74264,7 @@ function persistRetrievalIdentities(owner, source2, plan, { signal, verifyOwners
           writes3.push({
             message,
             key,
-            had: own2(message, key),
+            had: own3(message, key),
             before: message[key],
             after: planned[key],
             afterSignature: fullSignature(planned[key])
@@ -73769,7 +74350,7 @@ async function locateRetrievalMessage(owner, result) {
   }
   return row.floor;
 }
-var loadToken, bound2, observedIdentities, own2, context5, retrievalExtractionRules, retrievalRulesSignature, extractRetrievalText, fullSignature;
+var loadToken, bound2, observedIdentities, own3, context5, retrievalExtractionRules, retrievalRulesSignature, extractRetrievalText, fullSignature;
 var init_retrievalSource = __esm({
   "src/core/retrievalSource.js"() {
     init_defaults();
@@ -73778,10 +74359,11 @@ var init_retrievalSource = __esm({
     init_localTextRevisions();
     init_storyMemoryTasks();
     init_retrievalData();
+    init_chatFileCompatibility();
     loadToken = 0;
     bound2 = false;
     observedIdentities = /* @__PURE__ */ new WeakMap();
-    own2 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+    own3 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
     context5 = () => globalThis.SillyTavern?.getContext?.();
     retrievalExtractionRules = () => getToolboxExtraction(extension_settings2?.[extensionName] || {});
     retrievalRulesSignature = () => retrievalDigest(["toolbox-extraction-v1", retrievalExtractionRules()]);
@@ -74253,7 +74835,7 @@ function invalid2(message) {
   throw retrievalApiError("CONFIG_INVALID", message);
 }
 function requireObject(value, label2) {
-  if (!object2(value)) invalid2(`${label2}\u5FC5\u987B\u662F\u914D\u7F6E\u5BF9\u8C61\u3002`);
+  if (!object3(value)) invalid2(`${label2}\u5FC5\u987B\u662F\u914D\u7F6E\u5BF9\u8C61\u3002`);
 }
 function integer2(value, label2, min, max) {
   const number2 = typeof value === "string" && value.trim() ? Number(value) : value;
@@ -74475,12 +75057,12 @@ function retrievalHybridSignature(config2) {
   const normalized = normalizeRetrievalHybridConfig(config2);
   return retrievalDigest(["retrieval-hybrid-config-v1", normalized]);
 }
-var RETRIEVAL_HYBRID_VERSION, object2, adapters, defaults, bounds2, legacyFields, profileFields;
+var RETRIEVAL_HYBRID_VERSION, object3, adapters, defaults, bounds2, legacyFields, profileFields;
 var init_retrievalApiConfig = __esm({
   "src/core/retrievalApiConfig.js"() {
     init_retrievalData();
     RETRIEVAL_HYBRID_VERSION = 1;
-    object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
     adapters = { embedding: "openai-embeddings-v1", rerank: "rerank-index-score-v1" };
     defaults = Object.freeze({
       enabled: false,
@@ -75730,7 +76312,7 @@ async function inTransaction2(mode, run) {
 }
 function readRecord(record, userKey, id4) {
   if (!record) return null;
-  if (!object3(record) || record.userKey !== userKey || record.id !== id4 || !object3(record.profile)) {
+  if (!object4(record) || record.userKey !== userKey || record.id !== id4 || !object4(record.profile)) {
     throw retrievalApiError("STORAGE_INVALID", "API \u914D\u7F6E\u8BB0\u5F55\u7684\u7528\u6237\u6216\u8EAB\u4EFD\u4E0D\u4E00\u81F4\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u3002");
   }
   let profile;
@@ -75823,7 +76405,7 @@ async function saveRetrievalApiProfile(userKey, input, { expectedRevision = 0, c
   profileChanged(userKey, saved);
   return saved;
 }
-var DB_NAME3, DB_VERSION3, STORE, dbPromise3, profileChannel, profileListeners, object3, storageError2;
+var DB_NAME3, DB_VERSION3, STORE, dbPromise3, profileChannel, profileListeners, object4, storageError2;
 var init_retrievalApiProfiles = __esm({
   "src/core/retrievalApiProfiles.js"() {
     init_retrievalApiConfig();
@@ -75834,7 +76416,7 @@ var init_retrievalApiProfiles = __esm({
     dbPromise3 = null;
     profileChannel = null;
     profileListeners = /* @__PURE__ */ new Set();
-    object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
     storageError2 = () => retrievalApiError("STORAGE_UNAVAILABLE", "API \u914D\u7F6E\u7684\u6D4F\u89C8\u5668\u5B58\u50A8\u4E0D\u53EF\u7528\uFF0C\u8BF7\u68C0\u67E5 IndexedDB \u6743\u9650\u6216\u5173\u95ED\u963B\u585E\u5347\u7EA7\u7684\u9875\u9762\u3002");
   }
 });
@@ -75879,7 +76461,7 @@ function snapshotCandidates(candidates, query) {
   }
   const seen = /* @__PURE__ */ new Set();
   const snapshot = Array.from(candidates, (candidate) => {
-    if (!object4(candidate) || typeof candidate.candidateId !== "string" || !candidate.candidateId.trim() || candidate.candidateId.length > 256 || seen.has(candidate.candidateId)) {
+    if (!object5(candidate) || typeof candidate.candidateId !== "string" || !candidate.candidateId.trim() || candidate.candidateId.length > 256 || seen.has(candidate.candidateId)) {
       throw retrievalApiError("CONFIG_INVALID", "Rerank candidateId \u5FC5\u987B\u662F\u975E\u7A7A\u3001\u552F\u4E00\u4E14\u4E0D\u8D85\u8FC7 256 \u5B57\u7684\u6587\u672C\u3002");
     }
     seen.add(candidate.candidateId);
@@ -75951,11 +76533,11 @@ async function readBoundedJson(response, signal) {
   } catch (_error) {
     throw protocolError("API \u54CD\u5E94\u4E0D\u662F\u6709\u6548 JSON\uFF1B\u672A\u9644\u5E26\u4E0A\u6E38\u54CD\u5E94\u6B63\u6587\u3002");
   }
-  if (!object4(payload)) throw protocolError("API \u54CD\u5E94\u5FC5\u987B\u662F JSON \u5BF9\u8C61\u3002");
+  if (!object5(payload)) throw protocolError("API \u54CD\u5E94\u5FC5\u987B\u662F JSON \u5BF9\u8C61\u3002");
   return payload;
 }
 function usageFromResponse(payload) {
-  if (!object4(payload.usage)) return null;
+  if (!object5(payload.usage)) return null;
   const usage = {};
   const fields5 = ["prompt_tokens", "completion_tokens", "total_tokens", "input_tokens", "output_tokens", "embedding_tokens", "rerank_tokens"];
   const copyCounts = (source2, target, keys) => {
@@ -75965,7 +76547,7 @@ function usageFromResponse(payload) {
     }
   };
   copyCounts(payload.usage, usage, fields5);
-  if (object4(payload.usage.billed_units)) {
+  if (object5(payload.usage.billed_units)) {
     const units = {};
     copyCounts(payload.usage.billed_units, units, ["input_tokens", "output_tokens", "search_units", "classification_units"]);
     if (Object.keys(units).length) usage.billed_units = units;
@@ -75978,7 +76560,7 @@ function embeddingResult(payload, count, requestedDimension) {
   const seen = /* @__PURE__ */ new Set();
   let dimension = 0;
   for (const entry of payload.data) {
-    if (!object4(entry) || !Number.isSafeInteger(entry.index) || entry.index < 0 || entry.index >= count || seen.has(entry.index)) {
+    if (!object5(entry) || !Number.isSafeInteger(entry.index) || entry.index < 0 || entry.index >= count || seen.has(entry.index)) {
       throw protocolError("Embedding index \u5FC5\u987B\u662F\u5B8C\u6574\u3001\u552F\u4E00\u4E14\u5728\u8F93\u5165\u8303\u56F4\u5185\u7684\u6574\u6570\u3002");
     }
     const vector = entry.embedding;
@@ -76001,7 +76583,7 @@ function rerankResult(payload, candidates) {
   }
   const seen = /* @__PURE__ */ new Set();
   const ranked = payload.results.map((entry) => {
-    if (!object4(entry) || !Number.isSafeInteger(entry.index) || entry.index < 0 || entry.index >= candidates.length || seen.has(entry.index) || typeof entry.relevance_score !== "number" || !Number.isFinite(entry.relevance_score)) {
+    if (!object5(entry) || !Number.isSafeInteger(entry.index) || entry.index < 0 || entry.index >= candidates.length || seen.has(entry.index) || typeof entry.relevance_score !== "number" || !Number.isFinite(entry.relevance_score)) {
       throw protocolError("Rerank index/score \u5FC5\u987B\u8303\u56F4\u5408\u6CD5\u3001\u552F\u4E00\u4E14\u4E3A\u6709\u9650\u6570\u503C\u3002");
     }
     seen.add(entry.index);
@@ -76266,7 +76848,7 @@ async function fetchRetrievalApiModels(userKey, draft2, {
     }
   }
 }
-var MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, MAX_EMBEDDING_INPUTS, MAX_RERANK_INPUTS, MAX_DIMENSION, object4, safeCodes, protocolError, networkError;
+var MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, MAX_EMBEDDING_INPUTS, MAX_RERANK_INPUTS, MAX_DIMENSION, object5, safeCodes, protocolError, networkError;
 var init_retrievalApiClient = __esm({
   "src/core/retrievalApiClient.js"() {
     init_retrievalApiConfig();
@@ -76277,7 +76859,7 @@ var init_retrievalApiClient = __esm({
     MAX_EMBEDDING_INPUTS = 128;
     MAX_RERANK_INPUTS = 100;
     MAX_DIMENSION = 65536;
-    object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    object5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
     safeCodes = /* @__PURE__ */ new Set([
       "CONFIG_INVALID",
       "CONFIG_REQUIRED",
@@ -79509,6 +80091,9 @@ var init_retrievalHybridSettings = __esm({
 
 // src/ui/retrievalFeedback.js
 import { eventSource as eventSource15, event_types as event_types15 } from "../../../../script.js";
+function refreshRetrievalFeedback() {
+  refreshView();
+}
 function retrievalMetricsLines(snapshot) {
   const counts = snapshot.counts || {};
   const lines = [
@@ -79813,6 +80398,11 @@ function initRetrievalFeedback() {
       return;
     }
     const snapshot = feedback2(owner);
+    const showStatus = getExtData()?.retrieval_feedback?.enabled === true;
+    if (!showStatus && !waitingForDecision(snapshot)) {
+      remove();
+      return;
+    }
     if (!enabled2 && snapshot.phase === "idle") {
       remove();
       return;
@@ -79820,6 +80410,12 @@ function initRetrievalFeedback() {
     const node4 = ensureElement();
     if (!node4) return;
     node4.dataset.phase = snapshot.phase;
+    node4.querySelector(".t-retrieval-feedback-header").hidden = !showStatus;
+    node4.querySelector(".t-retrieval-feedback-details").hidden = !showStatus || !open;
+    if (!showStatus) {
+      renderFailure(node4, snapshot);
+      return;
+    }
     if (shownTurn !== snapshot.turnId) {
       shownTurn = snapshot.turnId;
       node4.querySelector("[data-feedback-error]").textContent = "";
@@ -79911,6 +80507,7 @@ function initRetrievalFeedback() {
       }
     }
   }
+  refreshView = render2;
   subscribeRetrievalInjection((update) => {
     if (!current3(owner)) {
       sequence2++;
@@ -79960,14 +80557,17 @@ function initRetrievalFeedback() {
   }
   void refresh();
 }
-var initialized8, PHASES2, MODES, countKeys, timingLabels, integer3, quantity, physicalCalls, code;
+var initialized8, refreshView, PHASES2, MODES, countKeys, timingLabels, integer3, quantity, physicalCalls, code;
 var init_retrievalFeedback = __esm({
   "src/ui/retrievalFeedback.js"() {
     init_dom();
     init_retrievalSource();
     init_retrievalInjection();
     init_retrieval();
+    init_storage();
     initialized8 = false;
+    refreshView = () => {
+    };
     PHASES2 = /* @__PURE__ */ new Set(["idle", "waiting", "retrieving", "reranking", "prepared", "included", "empty", "waiting-user", "cancelled", "failed", "armed", "disabled"]);
     MODES = { hybrid: "\u5411\u91CF + BM25 \u2192 Rerank", manual: "\u65E0\u6A21\u578B\u624B\u52A8 BM25" };
     countKeys = ["vectorHits", "bm25Hits", "duplicateHits", "merged", "skippedEvidence", "skippedBudget", "rerankDocuments", "rerankChars", "skippedSource"];
@@ -81924,115 +82524,6 @@ cue\u662F\u7B80\u77ED\u7684\u4E2D\u6587\u7EAF\u6587\u672C\uFF0C\u4E0D\u5E26\u65B
   }
 });
 
-// src/core/ttsHash.js
-function ttsHash(value) {
-  const input = new TextEncoder().encode(value);
-  const bytes = new Uint8Array(Math.ceil((input.length + 9) / 64) * 64);
-  bytes.set(input);
-  bytes[input.length] = 128;
-  const data = new DataView(bytes.buffer);
-  data.setUint32(bytes.length - 8, Math.floor(input.length / 536870912));
-  data.setUint32(bytes.length - 4, input.length * 8 >>> 0);
-  const h = [1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225];
-  const w = new Uint32Array(64);
-  for (let offset = 0; offset < bytes.length; offset += 64) {
-    for (let i = 0; i < 16; i++) w[i] = data.getUint32(offset + i * 4);
-    for (let i = 16; i < 64; i++) {
-      const x = w[i - 15], y = w[i - 2];
-      w[i] = w[i - 16] + (rotate(x, 7) ^ rotate(x, 18) ^ x >>> 3) + w[i - 7] + (rotate(y, 17) ^ rotate(y, 19) ^ y >>> 10);
-    }
-    let [a, b, c, d, e, f, g, j] = h;
-    for (let i = 0; i < 64; i++) {
-      const t1 = j + (rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)) + (e & f ^ ~e & g) + K[i] + w[i] | 0;
-      const t2 = (rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)) + (a & b ^ a & c ^ b & c) | 0;
-      j = g;
-      g = f;
-      f = e;
-      e = d + t1 | 0;
-      d = c;
-      c = b;
-      b = a;
-      a = t1 + t2 | 0;
-    }
-    [a, b, c, d, e, f, g, j].forEach((word, i) => {
-      h[i] = h[i] + word >>> 0;
-    });
-  }
-  return h.map((word) => word.toString(16).padStart(8, "0")).join("");
-}
-var K, rotate;
-var init_ttsHash = __esm({
-  "src/core/ttsHash.js"() {
-    K = [
-      1116352408,
-      1899447441,
-      3049323471,
-      3921009573,
-      961987163,
-      1508970993,
-      2453635748,
-      2870763221,
-      3624381080,
-      310598401,
-      607225278,
-      1426881987,
-      1925078388,
-      2162078206,
-      2614888103,
-      3248222580,
-      3835390401,
-      4022224774,
-      264347078,
-      604807628,
-      770255983,
-      1249150122,
-      1555081692,
-      1996064986,
-      2554220882,
-      2821834349,
-      2952996808,
-      3210313671,
-      3336571891,
-      3584528711,
-      113926993,
-      338241895,
-      666307205,
-      773529912,
-      1294757372,
-      1396182291,
-      1695183700,
-      1986661051,
-      2177026350,
-      2456956037,
-      2730485921,
-      2820302411,
-      3259730800,
-      3345764771,
-      3516065817,
-      3600352804,
-      4094571909,
-      275423344,
-      430227734,
-      506948616,
-      659060556,
-      883997877,
-      958139571,
-      1322822218,
-      1537002063,
-      1747873779,
-      1955562222,
-      2024104815,
-      2227730452,
-      2361852424,
-      2428436474,
-      2756734187,
-      3204031479,
-      3329325298
-    ];
-    rotate = (n, bits) => n >>> bits | n << 32 - bits;
-  }
-});
-
 // src/core/ttsTranslation.js
 function normalizeTtsLanguage(value, fallback = "original") {
   if (value === void 0 || value === null || value === "") return fallback;
@@ -82707,9 +83198,9 @@ function ttsAnalysisBatches(sources, config2, candidates = []) {
   if (batch.length) batches.push(batch);
   return batches;
 }
-function ttsAnalysisRequestOptions(config2) {
+function ttsAnalysisRequestOptions(config2, stream = false) {
   return {
-    stream: false,
+    stream: stream === true,
     ...config2.max_output_tokens > 0 ? { maxTokens: config2.max_output_tokens } : { omitMaxTokens: true },
     temperature: 0.1,
     respectRequestLimits: true,
@@ -83723,9 +84214,9 @@ function createTtsMessageView(callbacks = {}) {
     for (const message of records3.keys()) clear(message);
   }
   function bodyStamp(body) {
-    const copy3 = body.cloneNode(true);
-    copy3.querySelectorAll(`[${UI_ATTRIBUTE}]`).forEach((node4) => node4.remove());
-    return copy3.innerHTML;
+    const copy4 = body.cloneNode(true);
+    copy4.querySelectorAll(`[${UI_ATTRIBUTE}]`).forEach((node4) => node4.remove());
+    return copy4.innerHTML;
   }
   function needsRender(messageElement, view2) {
     const record = records3.get(messageElement);
@@ -84254,15 +84745,15 @@ function createTtsDock(callbacks = {}) {
   const rows = (name) => Array.isArray(view2?.floor?.[name]) ? view2.floor[name] : [];
   function mountDock() {
     const bar = document2.getElementById("qr--bar");
-    if (!bar?.parentElement) {
+    for (const duplicate of document2.querySelectorAll(".t-tts-dock, #t-tts-dock-trigger")) {
+      if (duplicate !== root && duplicate !== trigger) duplicate.remove();
+    }
+    if (!view2?.enabled || !bar?.parentElement) {
       anchor = null;
       if (expanded) close();
       trigger.remove();
       root.remove();
       return false;
-    }
-    for (const duplicate of document2.querySelectorAll(".t-tts-dock, #t-tts-dock-trigger")) {
-      if (duplicate !== root && duplicate !== trigger) duplicate.remove();
     }
     anchor = bar;
     if (trigger.parentElement !== bar) bar.prepend(trigger);
@@ -84381,6 +84872,7 @@ function createTtsDock(callbacks = {}) {
     }
     view2 = next;
     renderedIdentity = nextIdentity2;
+    mountDock();
     render2();
     schedulePosition();
   }
@@ -84587,7 +85079,6 @@ function createTtsDock(callbacks = {}) {
     }
   });
   listen(document2.fonts, "loadingdone", schedulePosition);
-  mountDock();
   refresh();
   return {
     refresh,
@@ -85017,13 +85508,13 @@ function prepareTtsParagraphEdit(target, patch, rewritten) {
     variants,
     paragraph_edit: { ...prior?.paragraph_edit || {}, version: 1, history }
   };
-  const object5 = extra && typeof extra === "object" ? extra : message, key = object5 === message ? "extra" : TTS_KEY;
+  const object6 = extra && typeof extra === "object" ? extra : message, key = object6 === message ? "extra" : TTS_KEY;
   const writes3 = [{
-    object: object5,
+    object: object6,
     key,
-    original: object5[key],
-    had: Object.hasOwn(object5, key),
-    after: object5 === message ? { [TTS_KEY]: nextStore } : nextStore
+    original: object6[key],
+    had: Object.hasOwn(object6, key),
+    after: object6 === message ? { [TTS_KEY]: nextStore } : nextStore
   }];
   const playbackStates = Object.fromEntries(migration.segments.map((segment) => [segment.id, live?.playbackStates[segment.id] || "idle"]));
   const nextRecord = {
@@ -85338,7 +85829,7 @@ async function analyzeTtsMessage(index2) {
     try {
       for (const [batchIndex, batch] of batches.entries()) {
         if (!current2(target)) throw new Error("\u6B63\u6587\u3001\u804A\u5929\u6216\u8BBE\u7F6E\u5DF2\u53D8\u5316\uFF0C\u5DF2\u4E22\u5F03\u8BC6\u522B\u7ED3\u679C\u3002");
-        const diagnostics = {}, request = ttsAnalysisRequestOptions(target.cfg);
+        const diagnostics = {}, request = ttsAnalysisRequestOptions(target.cfg, conn.stream);
         const included = new Set(batch.map((s) => s.id));
         const candidates = ttsCandidatesForSources(record.candidates, batch);
         record.status = integrated ? "\u6B63\u5728\u6574\u697C\u8054\u5408\u914D\u97F3\u5904\u7406\uFF08\u4EC5\u4E00\u6B21\u8BF7\u6C42\uFF09\u2026" : `\u6B63\u5728\u8BC6\u522B\u7B2C${batchIndex + 1}/${batches.length}\u6279\u2026`;
@@ -85475,7 +85966,7 @@ async function requestTtsTranslation(record, items, signal, stillCurrent, onProg
     const response = await abortable3(sendChatRequestWithConnection(
       conn,
       ttsFloorTranslationMessages(items, cfg, record.sources),
-      { ...ttsAnalysisRequestOptions(cfg), temperature: 0.2, diagnostics, signal: controller.signal }
+      { ...ttsAnalysisRequestOptions(cfg, conn.stream), temperature: 0.2, diagnostics, signal: controller.signal }
     ), controller.signal);
     if (!valid()) throw new Error("\u804A\u5929\u3001\u6B63\u6587\u3001\u914D\u97F3\u8BBE\u7F6E\u6216\u8BC6\u522B\u8FDE\u63A5\u5DF2\u53D8\u5316\uFF0C\u5DF2\u4E22\u5F03\u65E7\u8BD1\u6587\u3002");
     if (diagnostics.finish_reason && !["stop", "end_turn", "stop_sequence", "STOP"].includes(diagnostics.finish_reason)) {
@@ -85967,8 +86458,8 @@ function openSegmentActions(index2, id4) {
     const glyph = document.createElement("i");
     glyph.className = `fa-solid fa-${icon}`;
     iconBox.append(glyph);
-    const copy3 = document.createElement("span");
-    copy3.className = "t-tts-action-item-copy";
+    const copy4 = document.createElement("span");
+    copy4.className = "t-tts-action-item-copy";
     const caption = document.createElement("strong");
     caption.textContent = label2;
     const detail = document.createElement("small");
@@ -85976,8 +86467,8 @@ function openSegmentActions(index2, id4) {
     const arrow = document.createElement("i");
     arrow.className = "fa-solid fa-chevron-right t-tts-action-item-arrow";
     arrow.setAttribute("aria-hidden", "true");
-    copy3.append(caption, detail);
-    b.append(iconBox, copy3, arrow);
+    copy4.append(caption, detail);
+    b.append(iconBox, copy4, arrow);
     b.addEventListener("click", async () => {
       if (disposed) return;
       try {
@@ -86386,14 +86877,14 @@ function ttsPromptPreview(mode, rawConfig, voices) {
   const candidates = buildTtsCandidates(projection, { narration: cfg.narration, voices });
   const integrated = ttsTranslationEnabled(cfg, voices);
   const batches = integrated ? [sources] : ttsAnalysisBatches(sources, cfg, candidates);
-  const request = ttsAnalysisRequestOptions(cfg);
+  const request = ttsAnalysisRequestOptions(cfg, getToolboxStream(getExtData(), "tts"));
   return JSON.stringify({
     output_limit: cfg.max_output_tokens > 0 ? cfg.max_output_tokens : "\u4E0D\u4E3B\u52A8\u6307\u5B9A\uFF08\u5BBF\u4E3B/\u4F9B\u5E94\u5546\u9650\u5236\u4ECD\u9002\u7528\uFF09",
     timeout_seconds: integrated ? cfg.translation_timeout_seconds : cfg.analysis_timeout_seconds,
     batch_count: batches.length,
     preparation: integrated ? "\u6574\u697C\u4E00\u6B21\u5B8C\u6210\u8BC6\u522B\u3001\u8BED\u6C14\u4E0E\u7FFB\u8BD1\uFF1B\u4E0D\u81EA\u52A8\u62C6\u6279\u6216\u7EED\u8BF7\u6C42" : "\u4FDD\u6301\u539F\u6587\u7684\u5E38\u89C4\u8BC6\u522B",
     first_batch: {
-      stream: false,
+      stream: request.stream,
       ...request.maxTokens ? { max_tokens: request.maxTokens } : {},
       temperature: request.temperature,
       messages: ttsAnalysisMessages(cfg, voices, batches[0] || [], ttsCandidatesForSources(candidates, batches[0] || []))
@@ -86571,10 +87062,10 @@ var init_tts = __esm({
     allowed = (message, cfg) => !!message && !message.is_system && !message.is_hidden && !message.extra?.is_hidden && (cfg.include_user || !message.is_user);
     identities = /* @__PURE__ */ new WeakMap();
     nextIdentity = 0;
-    identity3 = (object5) => {
-      if (!object5) return 0;
-      if (!identities.has(object5)) identities.set(object5, ++nextIdentity);
-      return identities.get(object5);
+    identity3 = (object6) => {
+      if (!object6) return 0;
+      if (!identities.has(object6)) identities.set(object6, ++nextIdentity);
+      return identities.get(object6);
     };
     settingSignature = (ctx2) => JSON.stringify([ctx2?.key, identity3(ctx2?.chat), identity3(ctx2?.chatMetadata), config(), voicesFor(ctx2), ctx2?.enabled]);
   }
@@ -86835,7 +87326,7 @@ function openTtsSettingsWindow() {
   enabled2.type = "checkbox";
   enabled2.name = "enabled";
   const enabledLabel = element3("label", "t-tts-enable");
-  enabledLabel.title = "\u4FDD\u5B58\u8BBE\u7F6E\u540E\uFF0C\u4EC5\u5BF9\u6253\u5F00\u7A97\u53E3\u65F6\u7684\u804A\u5929\u751F\u6548";
+  enabledLabel.title = "\u4FDD\u5B58\u8BBE\u7F6E\u540E\uFF0C\u4EC5\u5BF9\u6253\u5F00\u7A97\u53E3\u65F6\u7684\u804A\u5929\u751F\u6548\uFF1B\u5F00\u542F\u65F6\u663E\u793A QR \u680F\u4E2D\u7684\u300C\u56DE\u58F0TTS\u300D\u6309\u94AE";
   enabledLabel.append(element3("span", "", "\u5F53\u524D\u804A\u5929"), switchControl(enabled2));
   enabled2.setAttribute("aria-label", "\u5728\u5F53\u524D\u804A\u5929\u542F\u7528\u89D2\u8272\u914D\u97F3");
   const closeButton = iconButton("fa-xmark", "\u5173\u95ED\u89D2\u8272\u914D\u97F3\u8BBE\u7F6E\uFF0C\u653E\u5F03\u672A\u4FDD\u5B58\u7684\u8349\u7A3F", close);
@@ -86843,6 +87334,7 @@ function openTtsSettingsWindow() {
   const help = createHelpTip({ title: "\u89D2\u8272\u914D\u97F3", sections: [
     { heading: "\u8BBE\u7F6E\u7684\u4F5C\u7528\u8303\u56F4", lines: [
       "\u542F\u7528\u5F00\u5173\u53EA\u5C5E\u4E8E\u5F53\u524D\u804A\u5929\uFF1B\u97F3\u8272\u6620\u5C04\u4E0E\u89D2\u8272\u8BED\u8A00\u8986\u76D6\u5C5E\u4E8E\u5F53\u524D\u89D2\u8272\u6216\u7FA4\u7EC4\uFF1B\u8BED\u97F3\u8FDE\u63A5\u3001\u8BC6\u522B\u65B9\u6848\u3001\u9ED8\u8BA4\u914D\u97F3\u8BED\u8A00\u4E0E\u63D0\u793A\u8BCD\u4E3A\u5171\u7528\u914D\u7F6E\u3002",
+      "\u4FDD\u5B58\u540E\uFF0C\u5F53\u524D\u804A\u5929\u542F\u7528\u914D\u97F3\u65F6\u663E\u793A QR \u680F\u4E2D\u7684\u300C\u56DE\u58F0TTS\u300D\u6309\u94AE\uFF0C\u5173\u95ED\u914D\u97F3\u65F6\u9690\u85CF\u3002",
       "\u4FEE\u6539\u5148\u7559\u5728\u8349\u7A3F\u91CC\uFF0C\u5207\u6362\u6807\u7B7E\u548C\u89D2\u8272\u4E0D\u4F1A\u4E22\u5931\u3002\u70B9\u51FB\u4FDD\u5B58\u8BBE\u7F6E\u624D\u751F\u6548\uFF1B\u53D6\u6D88\u6216\u5173\u95ED\u653E\u5F03\u672A\u4FDD\u5B58\u4FEE\u6539\u3002\u5207\u6362\u804A\u5929\u540E\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u3002"
     ] },
     { heading: "\u8BD5\u542C\u4E0E\u8FDE\u63A5", lines: [
@@ -88199,7 +88691,7 @@ function openMenu(focusFirst = false) {
   const reading = [
     data?.chat_books?.enabled !== false ? item("book", "t-outline-entry-open-book", "outline", "\u804A\u5929\u6210\u4E66", "\u7F16\u6392\u7AE0\u8282\uFF0C\u5BFC\u51FA EPUB \u4E0E TXT", "is-outline") : "",
     data?.outline_entry?.show_memory !== false ? item("memory", "t-outline-entry-open-memory", "memory", "\u6545\u4E8B\u8BB0\u5FC6", "\u4EBA\u7269\u3001\u4F0F\u7B14\u4E0E\u6765\u65F6\u7684\u8DEF", "is-memory") : "",
-    item("retrieval", "t-outline-entry-open-retrieval", "memory", "\u957F\u671F\u8BB0\u5FC6\u53EC\u56DE", "\u624B\u52A8\u67E5\u627E\u5F53\u524D\u804A\u5929\u7684\u5386\u53F2\u539F\u6587", "is-memory")
+    data?.outline_entry?.show_retrieval === true ? item("retrieval", "t-outline-entry-open-retrieval", "memory", "\u56DE\u58F0\u53EC\u56DE", "\u624B\u52A8\u67E5\u627E\u5F53\u524D\u804A\u5929\u7684\u5386\u53F2\u539F\u6587", "is-memory") : ""
   ].join("");
   $("body").append(`<div id="${MENU_ID}" role="menu" aria-label="\u56DE\u58F0\u5DE5\u5177\u7BB1">
         <div class="t-outline-menu-heading" role="presentation"><span class="t-outline-menu-mark">${echoIcon("echo")}</span><div><strong>\u56DE\u58F0\u5DE5\u5177\u7BB1</strong><small>ECHO / CREATIVE SUITE</small></div></div>
@@ -88859,7 +89351,7 @@ function openSettingsWindow() {
                 <!-- Tab 3: \u8FDE\u63A5 -->
                 <div id="page-connection" class="t-set-page">
                     <div id="t-theater-api-selector"></div>
-                    <div class="t-form-group"><label><input id="cfg-stream" type="checkbox" ${cfg.stream !== false ? "checked" : ""}> \u542F\u7528\u6D41\u5F0F\u8F93\u51FA</label></div>
+                    <p class="t-conn-hint">\u6D41\u5F0F\u4F20\u8F93\u5728\u5DE5\u5177\u7BB1\u8BBE\u7F6E\u7684\u300C\u56DE\u58F0\u5C0F\u5267\u573A\u300D\u8FDE\u63A5\u4E2D\u914D\u7F6E\u3002</p>
                     <div class="t-form-group"><label class="t-form-label" for="cfg-max-tokens">\u8F93\u51FA Token \u4E0A\u9650</label>
                         <input id="cfg-max-tokens" type="number" class="t-input" min="256" max="32768" step="256" value="${cfg.max_tokens || 4096}">
                         <p class="t-conn-hint">\u63A7\u5236\u5C0F\u5267\u573A\u4E0E\u89C6\u89C9\u5C0F\u8BF4\u5236\u4F5C\u7684\u81EA\u5B9A\u4E49 API \u5355\u6B21\u8F93\u51FA\uFF1B\u9152\u9986\u4E3B\u8FDE\u63A5\u6CBF\u7528\u9152\u9986\u8BBE\u7F6E\u3002</p></div>
@@ -90230,7 +90722,6 @@ function openSettingsWindow() {
     const finalCfg = {
       generation_mode: cfg.generation_mode || "narrative",
       history_limit: parseInt($("#cfg-history").val()) || 10,
-      stream: $("#cfg-stream").is(":checked"),
       output_exclusions: outputExclusions,
       max_tokens: parseInt($("#cfg-max-tokens").val()) || 4096,
       auto_generate: $("#cfg-auto").is(":checked"),
@@ -96606,7 +97097,7 @@ async function handleGenerate(forceScriptId = null, silent = false, generationOv
   }
   const ctx2 = await getContextData();
   const $floatBtn = $("#titania-float-btn");
-  const useStream = cfg.stream !== false;
+  const useStream = conn.stream;
   if (!GlobalState.skipWorldBookCheck) {
     if (!ctx2.worldInfo || ctx2.worldInfo.trim() === "" || ctx2.worldInfo.trim() === "[World Info / Lore]\n\n") {
       const confirmMsg = "\u4E16\u754C\u4E66\u5DF2\u9009\u4E2D\u7684\u6761\u76EE\u4E3A 0\uFF0C\u662F\u5426\u7EE7\u7EED\u751F\u6210\uFF1F";
@@ -97317,7 +97808,7 @@ function cancelQueueGeneration() {
 async function performContinuation(script, ctx2, cfg, finalUrl, finalKey, finalModel, autoContinueCfg, silent, useSTConnection = false, userInstruction = "", continuationType = "auto", autoLocate = false, initialInstruction = "") {
   const $floatBtn = $("#titania-float-btn");
   const generationId = `generation_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const useStream = cfg.stream !== false;
+  const useStream = getToolboxStream(getExtData(), "theater");
   const signal = GlobalState.abortController?.signal;
   const outputExclusions = normalizeTheaterOutputExclusions(cfg.output_exclusions ?? "");
   const continuationSource = continuationType === "user" ? "user_continuation" : "auto_continuation";
@@ -97853,6 +98344,7 @@ var init_api = __esm({
   "src/core/api.js"() {
     init_storage();
     init_theaterOutputCleaning();
+    init_toolboxSettings();
     init_defaults();
     init_state();
     init_logger();
@@ -98143,7 +98635,7 @@ import { eventSource as eventSource20 } from "../../../../script.js";
 
 // src/core/paragraphMedia.js
 var PARAGRAPH_MEDIA_KEY = "titania_paragraph_media";
-var own3 = (object5, key) => Object.prototype.hasOwnProperty.call(object5 || {}, key);
+var own4 = (object6, key) => Object.prototype.hasOwnProperty.call(object6 || {}, key);
 var ignoredExtra = /* @__PURE__ */ new Set([PARAGRAPH_MEDIA_KEY, "echo_tts", "titania_local_text_revision", "display_text"]);
 function paragraphAssetUrl(value, kind = "image") {
   const text9 = String(value || "").trim();
@@ -98231,10 +98723,10 @@ async function prepareParagraphMedia(target) {
     }
   };
 }
-function makeParagraphWrite(writes3, object5, key, after) {
-  const existing = writes3.find((write) => write.object === object5 && write.key === key);
+function makeParagraphWrite(writes3, object6, key, after) {
+  const existing = writes3.find((write) => write.object === object6 && write.key === key);
   if (existing) existing.after = after;
-  else writes3.push({ object: object5, key, original: object5[key], after, had: own3(object5, key) });
+  else writes3.push({ object: object6, key, original: object6[key], after, had: own4(object6, key) });
 }
 
 // src/ui/paragraphMessageView.js
@@ -98378,7 +98870,7 @@ init_storyTimetraceData();
 init_localTextRevisions();
 init_tts();
 var ARCHIVES = ["titania_story_memory", "echo_timetrace_v4", "titania_character_evolution"];
-var own4 = (object5, key) => Object.prototype.hasOwnProperty.call(object5 || {}, key);
+var own5 = (object6, key) => Object.prototype.hasOwnProperty.call(object6 || {}, key);
 var getContext2 = () => globalThis.SillyTavern?.getContext?.();
 var currentSwipe = (message) => Number(message.swipe_id ?? 0);
 function ownerMatches(target) {
@@ -98519,7 +99011,7 @@ function commitParagraphEdit(target, replacement, { remove = false } = {}) {
       const extra = writes3.find((write) => write.object === message && write.key === "extra")?.after || message.extra || {};
       if (!message.extra && !writes3.some((write) => write.object === message && write.key === "extra")) makeParagraphWrite(writes3, message, "extra", extra);
       makeParagraphWrite(writes3, message, "mes", edit.rewritten);
-      if (own4(message, "message")) makeParagraphWrite(writes3, message, "message", edit.rewritten);
+      if (own5(message, "message")) makeParagraphWrite(writes3, message, "message", edit.rewritten);
       if (Array.isArray(message.swipes) && message.swipes.length) makeParagraphWrite(writes3, message.swipes, swipe, edit.rewritten);
       makeParagraphWrite(writes3, extra, LOCAL_TEXT_REVISION_KEY, revision);
       makeParagraphWrite(writes3, extra, "display_text", edit.rewritten);
@@ -98536,7 +99028,7 @@ function commitParagraphEdit(target, replacement, { remove = false } = {}) {
       if (!preparedStillCurrent(fresh) || isHostGenerating()) throw new Error("\u4FDD\u5B58\u524D\u56DE\u590D\u5DF2\u53D8\u5316\uFF0C\u672A\u5199\u5165\u65E7\u8349\u7A3F\u3002");
       media.assertCurrent();
       tts.assertCurrent?.();
-      for (const write of writes3) if (write.object[write.key] !== write.original || own4(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\u3002");
+      for (const write of writes3) if (write.object[write.key] !== write.original || own5(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\u3002");
       mutated = true;
       for (const write of writes3) write.object[write.key] = write.after;
       tts.apply?.();
@@ -99411,6 +99903,35 @@ function initChatBookSettings() {
       saveExtData();
       refreshOutlineEntryButton();
       refreshReaderEntryButton();
+    });
+  }
+}
+
+// src/ui/retrievalUiSettings.js
+init_storage();
+init_outlineEntryButton();
+init_retrievalFeedback();
+var initializedControls2 = /* @__PURE__ */ new WeakSet();
+function initRetrievalUiSettings() {
+  const data = getExtData();
+  const controls = [
+    ["cfg-retrieval-feedback-enabled", data.retrieval_feedback?.enabled === true, (current3, enabled2) => {
+      current3.retrieval_feedback = { ...current3.retrieval_feedback, enabled: enabled2 };
+    }, refreshRetrievalFeedback],
+    ["cfg-retrieval-entry-enabled", data.outline_entry?.show_retrieval === true, (current3, enabled2) => {
+      current3.outline_entry = { ...current3.outline_entry, show_retrieval: enabled2 };
+    }, refreshOutlineEntryButton]
+  ];
+  for (const [id4, checked, update, refresh] of controls) {
+    const control = document.getElementById(id4);
+    if (!control) continue;
+    control.checked = checked;
+    if (initializedControls2.has(control)) continue;
+    initializedControls2.add(control);
+    control.addEventListener("input", () => {
+      update(getExtData(), control.checked);
+      saveExtData();
+      refresh();
     });
   }
 }
@@ -100664,6 +101185,7 @@ ${hydration.error}`,
   $("#cfg-memory-entry-enabled").prop("checked", extData.outline_entry.show_memory !== false);
   $("#cfg-chat-inject-enabled").prop("checked", extData.chat_inject.enabled === true);
   initChatBookSettings();
+  initRetrievalUiSettings();
   $("#cfg-floor-nav-enabled").prop("checked", extData.floor_nav?.enabled !== false);
   $("#cfg-preset-persist-vars").prop("checked", extData.preset_macros.persist_variables === true);
   (() => {
