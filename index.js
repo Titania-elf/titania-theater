@@ -75924,10 +75924,10 @@ function retrievalMessageLocator(message) {
   }
   return { id: "", identityKind: "missing" };
 }
-function retrievalGenerationSourceSignature(scopeKey2, messages2) {
+function retrievalGenerationSourceSignature(scopeKey, messages2) {
   return retrievalDigest([
     "retrieval-generation-source-v1",
-    scopeKey2,
+    scopeKey,
     messages2.map((message) => [retrievalMessageId(message), retrievalMessageFingerprint(message)])
   ]);
 }
@@ -75959,8 +75959,8 @@ function retrievalRows(messages2, { requireIds = true, allowDuplicateIds = false
     return { id: id4, identityKind, floor: floor2, fingerprint: retrievalMessageFingerprint(message) };
   });
 }
-function retrievalSourceSignature(scopeKey2, rows) {
-  return retrievalDigest([RETRIEVAL_SOURCE_VERSION, scopeKey2, rows.map((row) => [
+function retrievalSourceSignature(scopeKey, rows) {
+  return retrievalDigest([RETRIEVAL_SOURCE_VERSION, scopeKey, rows.map((row) => [
     row.id,
     row.identityKind || (row.id ? "retrieval" : "missing"),
     row.fingerprint
@@ -77193,7 +77193,7 @@ function frequency(text10) {
 function sourceSpans(units) {
   return units.flatMap((unit) => unit.paragraphReference ? unit.paragraphReference.spans.map(([start, end]) => ({ start, end })) : []);
 }
-async function makeRetrievalChunks(source2, rules, { scopeKey: scopeKey2, extractionSignature, config: config2, signal, previous = [] }) {
+async function makeRetrievalChunks(source2, rules, { scopeKey, extractionSignature, config: config2, signal, previous = [] }) {
   const chunks = [], texts = /* @__PURE__ */ new Map(), evidence2 = /* @__PURE__ */ new Map(), prior = new Map(previous.map((chunk) => [chunk.chunkId, chunk]));
   const chunkerSignature = retrievalDigest([RETRIEVAL_CHUNKER_VERSION, config2.chunkTargetChars, config2.chunkMaxChars, 0]);
   for (const row of source2.rows) {
@@ -77209,7 +77209,7 @@ async function makeRetrievalChunks(source2, rules, { scopeKey: scopeKey2, extrac
       }).join("\n\n");
       const refs = members.map(retrievalEvidenceReference), contentHash = retrievalDigest(text10);
       const chunkId = `c_${retrievalDigest([
-        scopeKey2,
+        scopeKey,
         row.id,
         row.fingerprint,
         extractionSignature,
@@ -77222,7 +77222,7 @@ async function makeRetrievalChunks(source2, rules, { scopeKey: scopeKey2, extrac
       const terms = old?.contentHash === contentHash && old.tokenizerVersion === RETRIEVAL_TOKENIZER_VERSION ? { terms: clone6(old.terms), termCount: old.termCount } : frequency(text10);
       chunks.push({
         chunkId,
-        scopeKey: scopeKey2,
+        scopeKey,
         messageId: row.id,
         floor: row.floor,
         sourceFingerprint: row.fingerprint,
@@ -77676,6 +77676,7 @@ function retrievalFactDocumentRecord(document2, order, vector) {
     corpusKind,
     factDocumentVersion,
     chunkId,
+    scopeKey,
     factId,
     floor: floor2,
     sourceFingerprint,
@@ -77833,8 +77834,8 @@ function requireString(value, label2) {
 function requireCount(value, label2) {
   if (!Number.isSafeInteger(value) || value < 0) throw storageError(`${label2}\u5FC5\u987B\u662F\u975E\u8D1F\u6574\u6570`);
 }
-function requireKeys(scopeKey2, buildId) {
-  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
+function requireKeys(scopeKey, buildId) {
+  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
   requireString(buildId, "\u6784\u5EFA\u6807\u8BC6");
 }
 function increment(value, label2) {
@@ -77842,10 +77843,10 @@ function increment(value, label2) {
   if (value === Number.MAX_SAFE_INTEGER) throw storageError(`${label2}\u5DF2\u8D85\u51FA\u5B89\u5168\u8303\u56F4`);
   return value + 1;
 }
-function scopeRecord(scopeKey2, stored) {
+function scopeRecord(scopeKey, stored) {
   const now = Date.now();
   return {
-    scopeKey: scopeKey2,
+    scopeKey,
     activeBuildId: null,
     pendingBuildId: null,
     previousBuildId: null,
@@ -77882,8 +77883,8 @@ function scopeRecord(scopeKey2, stored) {
     hybridOptionsRevision: stored?.hybridOptionsRevision || 0
   };
 }
-function scopeRange(scopeKey2) {
-  return IDBKeyRange.bound([scopeKey2], [scopeKey2, []]);
+function scopeRange(scopeKey) {
+  return IDBKeyRange.bound([scopeKey], [scopeKey, []]);
 }
 function openDatabase3() {
   if (dbPromise2) return dbPromise2;
@@ -78020,8 +78021,8 @@ function createBuildId() {
   const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
-function readScope(transaction, read, scopeKey2, callback) {
-  read(transaction.objectStore(SCOPES).get(scopeKey2), (stored) => callback(scopeRecord(scopeKey2, stored), stored));
+function readScope(transaction, read, scopeKey, callback) {
+  read(transaction.objectStore(SCOPES).get(scopeKey), (stored) => callback(scopeRecord(scopeKey, stored), stored));
 }
 function copyLease(lease) {
   if (lease == null) return null;
@@ -78112,7 +78113,7 @@ function copyHybridFactDocument(document2, dimension) {
     corpusKind,
     factDocumentVersion,
     chunkId,
-    scopeKey: scopeKey2,
+    scopeKey,
     factId,
     floor: floor2,
     sourceFingerprint,
@@ -78129,7 +78130,7 @@ function copyHybridFactDocument(document2, dimension) {
   if (corpusKind !== RETRIEVAL_FACT_CORPUS || factDocumentVersion !== RETRIEVAL_FACT_DOCUMENT_VERSION || chunkerVersion !== RETRIEVAL_FACT_POLICY_SIGNATURE) throw hybridError("\u4E8B\u5B9E\u6587\u6863\u7248\u672C\u4E0D\u6B63\u786E");
   for (const [value, label2] of [
     [chunkId, "\u4E8B\u5B9E\u6587\u6863\u6807\u8BC6"],
-    [scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF"],
+    [scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF"],
     [factId, "\u4E8B\u5B9E\u8EAB\u4EFD"],
     [tokenizerVersion, "\u5206\u8BCD\u7248\u672C"]
   ]) requireString(value, label2);
@@ -78228,7 +78229,7 @@ function copyHybridChunk(chunk, dimension) {
   if (chunk.corpusKind !== void 0) return copyHybridFactDocument(chunk, dimension);
   const {
     chunkId,
-    scopeKey: scopeKey2,
+    scopeKey,
     messageId,
     floor: floor2,
     sourceFingerprint,
@@ -78242,7 +78243,7 @@ function copyHybridChunk(chunk, dimension) {
     charCount,
     termCount
   } = chunk;
-  for (const [value, label2] of [[chunkId, "\u68C0\u7D22\u5757\u6807\u8BC6"], [scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF"], [messageId, "\u6D88\u606F\u8EAB\u4EFD"], [tokenizerVersion, "\u5206\u8BCD\u7248\u672C"]]) requireString(value, label2);
+  for (const [value, label2] of [[chunkId, "\u68C0\u7D22\u5757\u6807\u8BC6"], [scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF"], [messageId, "\u6D88\u606F\u8EAB\u4EFD"], [tokenizerVersion, "\u5206\u8BCD\u7248\u672C"]]) requireString(value, label2);
   for (const [value, label2] of [[sourceFingerprint, "\u6765\u6E90\u6307\u7EB9"], [extractionSignature, "\u63D0\u53D6\u89C4\u5219"], [chunkerVersion, "\u5207\u7247\u89C4\u5219"], [contentHash, "\u5185\u5BB9\u6458\u8981"]]) requireHash(value, label2);
   for (const [value, label2] of [[floor2, "\u697C\u53F7"], [ordinal2, "\u697C\u5185\u5757\u5E8F\u53F7"], [order, "\u6E05\u5355\u5E8F\u53F7"], [charCount, "\u5B57\u7B26\u6570"]]) requireCount(value, label2);
   if (!charCount || typeof retrievalOnlyFragment !== "boolean" || !Array.isArray(chunk.evidenceRefs) || !chunk.evidenceRefs.length) throw hybridError("\u68C0\u7D22\u5757\u5B57\u7B26\u6570\u3001\u5B50\u7247\u6807\u8BB0\u6216\u8BC1\u636E\u5F15\u7528\u4E0D\u6B63\u786E");
@@ -78285,7 +78286,7 @@ function copyHybridChunk(chunk, dimension) {
     return { start: span.start, end: span.end };
   });
   const expectedId = `c_${retrievalDigest([
-    scopeKey2,
+    scopeKey,
     messageId,
     sourceFingerprint,
     extractionSignature,
@@ -78297,7 +78298,7 @@ function copyHybridChunk(chunk, dimension) {
   if (chunkId !== expectedId) throw hybridError("\u68C0\u7D22\u5757\u6807\u8BC6\u4E0E\u6765\u6E90\u6620\u5C04\u4E0D\u4E00\u81F4");
   return {
     chunkId,
-    scopeKey: scopeKey2,
+    scopeKey,
     messageId,
     floor: floor2,
     sourceFingerprint,
@@ -78317,9 +78318,9 @@ function copyHybridChunk(chunk, dimension) {
     vector: copyHybridVector(chunk.vector, dimension)
   };
 }
-function readScopeHybridBuild(transaction, read, scopeKey2, buildId, callback) {
-  readScope(transaction, read, scopeKey2, (scope3) => {
-    read(transaction.objectStore(HYBRID_BUILDS).get([scopeKey2, buildId]), (build) => callback(scope3, build || null));
+function readScopeHybridBuild(transaction, read, scopeKey, buildId, callback) {
+  readScope(transaction, read, scopeKey, (scope3) => {
+    read(transaction.objectStore(HYBRID_BUILDS).get([scopeKey, buildId]), (build) => callback(scope3, build || null));
   });
 }
 function requireHybridBuild(scope3, build) {
@@ -78378,31 +78379,31 @@ function requireHybridCollection(chunks, build, complete) {
   const manifest = facts ? retrievalFactManifest(chunks) : retrievalChunkManifest(chunks);
   if (complete && manifest !== build.manifestHash) throw hybridError("\u5B8C\u6574\u6DF7\u5408\u6E05\u5355\u6458\u8981\u4E0D\u4E00\u81F4\uFF0C\u672A\u6FC0\u6D3B\u4EFB\u4F55\u534A\u4EFD\u7D22\u5F15");
 }
-async function readRetrievalScope(scopeKey2) {
-  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function readRetrievalScope(scopeKey) {
+  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
   return inTransaction([SCOPES], "readonly", (transaction, read, result) => {
-    readScope(transaction, read, scopeKey2, (scope3, stored) => result(stored ? scope3 : null));
+    readScope(transaction, read, scopeKey, (scope3, stored) => result(stored ? scope3 : null));
   });
 }
-async function readRetrievalHybridBuild(scopeKey2, buildId) {
-  requireKeys(scopeKey2, buildId);
+async function readRetrievalHybridBuild(scopeKey, buildId) {
+  requireKeys(scopeKey, buildId);
   return inTransaction([HYBRID_BUILDS], "readonly", (transaction, read, result) => {
-    read(transaction.objectStore(HYBRID_BUILDS).get([scopeKey2, buildId]), (build) => result(build || null));
+    read(transaction.objectStore(HYBRID_BUILDS).get([scopeKey, buildId]), (build) => result(build || null));
   });
 }
-async function readRetrievalHybridChunks(scopeKey2, buildId) {
-  requireKeys(scopeKey2, buildId);
+async function readRetrievalHybridChunks(scopeKey, buildId) {
+  requireKeys(scopeKey, buildId);
   return inTransaction([HYBRID_CHUNKS], "readonly", (transaction, read, result) => {
-    read(transaction.objectStore(HYBRID_CHUNKS).index("byBuild").getAll([scopeKey2, buildId]), (chunks) => {
+    read(transaction.objectStore(HYBRID_CHUNKS).index("byBuild").getAll([scopeKey, buildId]), (chunks) => {
       result(chunks.map((chunk) => ({ ...copyHybridChunk(chunk), buildId })).sort((a, b) => a.order - b.order));
     });
   });
 }
-async function beginRetrievalHybridBuild(scopeKey2, descriptor, lease) {
-  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function beginRetrievalHybridBuild(scopeKey, descriptor, lease) {
+  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
   const target = copyHybridDescriptor(descriptor), ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS], "readwrite", (transaction, read, result) => {
-    readScope(transaction, read, scopeKey2, (scope3) => {
+    readScope(transaction, read, scopeKey, (scope3) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridConfiguration(scope3, target);
       const store = transaction.objectStore(HYBRID_BUILDS);
@@ -78412,7 +78413,7 @@ async function beginRetrievalHybridBuild(scopeKey2, descriptor, lease) {
         if (previous && previous.status !== "ready") store.put({ ...previous, status: "stale", updatedAt: now });
         const build = {
           ...target,
-          scopeKey: scopeKey2,
+          scopeKey,
           buildId,
           engine: "hybrid",
           scopeEpoch: scope3.scopeEpoch,
@@ -78433,7 +78434,7 @@ async function beginRetrievalHybridBuild(scopeKey2, descriptor, lease) {
         create2(null);
         return;
       }
-      read(store.get([scopeKey2, scope3.hybridPendingBuildId]), (pending5) => {
+      read(store.get([scopeKey, scope3.hybridPendingBuildId]), (pending5) => {
         if (scope3.lease.automatic && pending5?.errorCode && (target.corpusKind !== RETRIEVAL_FACT_CORPUS || isRetrievalFactBuild(pending5)) && !["CANCELLED", "SOURCE_CHANGED", "SCOPE_CHANGED"].includes(pending5.errorCode) && !canResumeRetrievalSourceWait(pending5) && !canResumeRetrievalSourceEditHold(pending5)) {
           throw hybridError("\u5F85\u6784\u5EFA\u4EFB\u52A1\u6709\u672A\u786E\u8BA4\u5916\u53D1\u6216\u4E0D\u53EF\u81EA\u52A8\u91CD\u8BD5\u7684\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u6062\u590D", "INDEX_MANUAL_RESUME_REQUIRED");
         }
@@ -78445,16 +78446,16 @@ async function beginRetrievalHybridBuild(scopeKey2, descriptor, lease) {
     });
   });
 }
-async function appendRetrievalHybridBatch(scopeKey2, buildId, expectedCursor, records3, nextCursor, { dimension, vectorSpaceSignature: vectorSpaceSignature2 }, lease) {
-  requireKeys(scopeKey2, buildId);
+async function appendRetrievalHybridBatch(scopeKey, buildId, expectedCursor, records3, nextCursor, { dimension, vectorSpaceSignature: vectorSpaceSignature2 }, lease) {
+  requireKeys(scopeKey, buildId);
   requireCount(expectedCursor, "\u9884\u671F\u6DF7\u5408\u6E38\u6807");
   requireCount(nextCursor, "\u4E0B\u4E00\u6DF7\u5408\u6E38\u6807");
   if (!Array.isArray(records3) || nextCursor <= expectedCursor || records3.length !== nextCursor - expectedCursor) throw hybridError("\u6DF7\u5408\u6279\u6B21\u5FC5\u987B\u5B8C\u6574\u8986\u76D6\u6E38\u6807\u533A\u95F4");
   const batch = records3.map((record, index2) => copyHybridChunk({ ...record, order: record?.order ?? expectedCursor + index2 }, dimension));
-  if (batch.some((record, index2) => record.order !== expectedCursor + index2 || record.scopeKey !== scopeKey2) || new Set(batch.map((record) => record.chunkId)).size !== batch.length) throw hybridError("\u6DF7\u5408\u6279\u6B21\u987A\u5E8F\u3001\u4F5C\u7528\u57DF\u6216\u552F\u4E00\u6027\u4E0D\u6B63\u786E");
+  if (batch.some((record, index2) => record.order !== expectedCursor + index2 || record.scopeKey !== scopeKey) || new Set(batch.map((record) => record.chunkId)).size !== batch.length) throw hybridError("\u6DF7\u5408\u6279\u6B21\u987A\u5E8F\u3001\u4F5C\u7528\u57DF\u6216\u552F\u4E00\u6027\u4E0D\u6B63\u786E");
   const ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS, HYBRID_CHUNKS], "readwrite", (transaction, read, result) => {
-    readScopeHybridBuild(transaction, read, scopeKey2, buildId, (scope3, build) => {
+    readScopeHybridBuild(transaction, read, scopeKey, buildId, (scope3, build) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridBuild(scope3, build);
       requireHybridConfiguration(scope3, build);
@@ -78469,7 +78470,7 @@ async function appendRetrievalHybridBatch(scopeKey2, buildId, expectedCursor, re
       const store = transaction.objectStore(HYBRID_CHUNKS);
       let remaining = batch.length;
       for (const record of batch) {
-        read(store.get([scopeKey2, buildId, record.chunkId]), (existing) => {
+        read(store.get([scopeKey, buildId, record.chunkId]), (existing) => {
           if (repeated) {
             if (!existing || JSON.stringify(copyHybridChunk(existing, dimension)) !== JSON.stringify(record)) {
               throw hybridError("\u91CD\u590D\u6216\u672A\u77E5\u63D0\u4EA4\u7684\u6279\u6B21\u8BB0\u5F55\u4E0D\u4E00\u81F4\uFF0C\u4E0D\u80FD\u5F53\u4F5C\u6210\u529F", "INDEX_BATCH_CONFLICT");
@@ -78503,18 +78504,18 @@ async function appendRetrievalHybridBatch(scopeKey2, buildId, expectedCursor, re
     });
   });
 }
-async function activateRetrievalHybridBuild(scopeKey2, buildId, {
+async function activateRetrievalHybridBuild(scopeKey, buildId, {
   sourceSignature,
   manifestHash,
   embeddingSignature,
   factsSignature,
   factsArchiveSignature
 }, lease) {
-  requireKeys(scopeKey2, buildId);
+  requireKeys(scopeKey, buildId);
   for (const [value, label2] of [[sourceSignature, "\u6765\u6E90\u7B7E\u540D"], [manifestHash, "\u6E05\u5355\u6458\u8981"], [embeddingSignature, "Embedding \u7B7E\u540D"]]) requireHash(value, label2);
   const ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS, HYBRID_CHUNKS], "readwrite", (transaction, read, result) => {
-    readScopeHybridBuild(transaction, read, scopeKey2, buildId, (scope3, build) => {
+    readScopeHybridBuild(transaction, read, scopeKey, buildId, (scope3, build) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridBuild(scope3, build);
       requireHybridConfiguration(scope3, build);
@@ -78525,7 +78526,7 @@ async function activateRetrievalHybridBuild(scopeKey2, buildId, {
       }
       if (build.cursor !== build.total) throw hybridError("\u6DF7\u5408\u6784\u5EFA\u672A\u5B8C\u6210\uFF0C\u4E0D\u80FD\u6FC0\u6D3B");
       requireHybridSpace(embeddingSignature, build.dimension, build.vectorSpaceSignature, build.total === 0);
-      read(transaction.objectStore(HYBRID_CHUNKS).index("byBuild").getAll([scopeKey2, buildId]), (stored) => {
+      read(transaction.objectStore(HYBRID_CHUNKS).index("byBuild").getAll([scopeKey, buildId]), (stored) => {
         const chunks = stored.map((chunk) => copyHybridChunk(chunk, build.dimension)).sort((a, b) => a.order - b.order);
         requireHybridCollection(chunks, build, true);
         requireLease(scope3, ticket, "hybrid");
@@ -78547,13 +78548,13 @@ async function activateRetrievalHybridBuild(scopeKey2, buildId, {
     });
   });
 }
-async function observeRetrievalFactBuild(scopeKey2, buildId, { manifestHash, factContentSignature }, lease) {
-  requireKeys(scopeKey2, buildId);
+async function observeRetrievalFactBuild(scopeKey, buildId, { manifestHash, factContentSignature }, lease) {
+  requireKeys(scopeKey, buildId);
   requireHash(manifestHash, "\u89C2\u5BDF\u6E05\u5355");
   requireHash(factContentSignature, "\u4E8B\u5B9E\u5185\u5BB9\u89C2\u5BDF");
   const ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS], "readwrite", (transaction, read, result) => {
-    readScopeHybridBuild(transaction, read, scopeKey2, buildId, (scope3, build) => {
+    readScopeHybridBuild(transaction, read, scopeKey, buildId, (scope3, build) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridBuild(scope3, build);
       if (scope3.lease.automatic && (!scope3.hybridOptions.autoMaintain || scope3.hybridOptions.maintenanceConsentSignature !== retrievalMaintenanceSignatureFromEmbedding(build.embeddingSignature))) {
@@ -78628,11 +78629,11 @@ function copyHybridProgress(progress2) {
     }
   };
 }
-async function pauseRetrievalHybridBuild(scopeKey2, buildId, message = "", lease, code2 = "PAUSED", progress2) {
-  requireKeys(scopeKey2, buildId);
+async function pauseRetrievalHybridBuild(scopeKey, buildId, message = "", lease, code2 = "PAUSED", progress2) {
+  requireKeys(scopeKey, buildId);
   const error4 = String(message ?? ""), errorCode = copyHybridFailureCode(code2), checkpoint2 = copyHybridProgress(progress2), ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS], "readwrite", (transaction, read, result) => {
-    readScopeHybridBuild(transaction, read, scopeKey2, buildId, (scope3, build) => {
+    readScopeHybridBuild(transaction, read, scopeKey, buildId, (scope3, build) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridPending(scope3, build, buildId);
       if (checkpoint2 && (checkpoint2.dispatchCheckpoint.expectedCursor !== build.cursor || checkpoint2.dispatchCheckpoint.nextCursor > build.total)) throw hybridError("\u6682\u505C\u6279\u6B21\u4E0E\u5F53\u524D\u6E38\u6807\u4E0D\u4E00\u81F4", "INDEX_CURSOR_CHANGED");
@@ -78642,11 +78643,11 @@ async function pauseRetrievalHybridBuild(scopeKey2, buildId, message = "", lease
     });
   });
 }
-async function setRetrievalHybridConfig(scopeKey2, values, { expectedRevision } = {}) {
-  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function setRetrievalHybridConfig(scopeKey, values, { expectedRevision } = {}) {
+  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
   const hybridOptions = normalizeRetrievalHybridConfig(values);
   return inTransaction([SCOPES], "readwrite", (transaction, read, result) => {
-    readScope(transaction, read, scopeKey2, (scope3) => {
+    readScope(transaction, read, scopeKey, (scope3) => {
       if (expectedRevision !== void 0 && expectedRevision !== scope3.hybridOptionsRevision) {
         throw Object.assign(new Error("\u6DF7\u5408\u68C0\u7D22\u8BBE\u7F6E\u5DF2\u88AB\u53E6\u4E00\u4E2A\u7A97\u53E3\u4FEE\u6539\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u3002"), { code: "CONFIG_CHANGED" });
       }
@@ -78661,19 +78662,19 @@ async function setRetrievalHybridConfig(scopeKey2, values, { expectedRevision } 
     });
   });
 }
-async function claimRetrievalLease(scopeKey2, ownerId, { ttlMs = DEFAULT_LEASE_MS, automatic = false, engine = "legacy" } = {}) {
-  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function claimRetrievalLease(scopeKey, ownerId, { ttlMs = DEFAULT_LEASE_MS, automatic = false, engine = "legacy" } = {}) {
+  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
   requireString(ownerId, "\u4EFB\u52A1\u6240\u6709\u8005");
   leaseExpiry(ttlMs);
   if (typeof automatic !== "boolean") throw storageError("\u81EA\u52A8\u4EFB\u52A1\u6807\u8BB0\u5FC5\u987B\u662F\u5E03\u5C14\u503C");
   if (engine !== "legacy" && engine !== "hybrid") throw storageError("\u4EFB\u52A1\u5F15\u64CE\u5FC5\u987B\u662F legacy \u6216 hybrid");
   return inTransaction([SCOPES], "readwrite", (transaction, read, result) => {
-    readScope(transaction, read, scopeKey2, (scope3) => {
+    readScope(transaction, read, scopeKey, (scope3) => {
       if (scope3.lease?.expiresAt > Date.now()) throw leaseError("\u672C\u804A\u5929\u5DF2\u6709\u672A\u7ED3\u675F\u7684\u7D22\u5F15\u4EFB\u52A1", "RETRIEVAL_BUSY");
       if (automatic && !automaticLeaseAllowed(scope3, engine)) {
         throw leaseError("\u672C\u804A\u5929\u5C1A\u672A\u6388\u6743\u6B64\u5F15\u64CE\u81EA\u52A8\u7EF4\u62A4\u7D22\u5F15", "RETRIEVAL_BUSY");
       }
-      const lease = { scopeKey: scopeKey2, ownerId, token: createBuildId(), expiresAt: leaseExpiry(ttlMs), automatic, engine, scopeEpoch: scope3.scopeEpoch };
+      const lease = { scopeKey, ownerId, token: createBuildId(), expiresAt: leaseExpiry(ttlMs), automatic, engine, scopeEpoch: scope3.scopeEpoch };
       transaction.objectStore(SCOPES).put({ ...scope3, leaseRequired: true, lease, updatedAt: Date.now() });
       result(lease);
     });
@@ -78701,13 +78702,13 @@ async function releaseRetrievalLease(lease) {
     });
   });
 }
-async function clearRetrievalScope(scopeKey2, lease) {
-  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function clearRetrievalScope(scopeKey, lease) {
+  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
   const ticket = copyLease(lease);
   return inTransaction([SCOPES, BUILDS, DOCUMENTS, WINDOWS, CHANGES, HYBRID_BUILDS, HYBRID_CHUNKS], "readwrite", (transaction, read) => {
-    readScope(transaction, read, scopeKey2, (scope3) => {
+    readScope(transaction, read, scopeKey, (scope3) => {
       requireLease(scope3, ticket);
-      const range3 = scopeRange(scopeKey2);
+      const range3 = scopeRange(scopeKey);
       transaction.objectStore(DOCUMENTS).delete(range3);
       transaction.objectStore(WINDOWS).delete(range3);
       transaction.objectStore(BUILDS).delete(range3);
@@ -78715,7 +78716,7 @@ async function clearRetrievalScope(scopeKey2, lease) {
       transaction.objectStore(HYBRID_BUILDS).delete(range3);
       transaction.objectStore(HYBRID_CHUNKS).delete(range3);
       transaction.objectStore(SCOPES).put({
-        ...scopeRecord(scopeKey2),
+        ...scopeRecord(scopeKey),
         scopeEpoch: increment(scope3.scopeEpoch, "\u8EAB\u4EFD\u4E16\u4EE3"),
         leaseRequired: scope3.leaseRequired,
         lease: scope3.lease,
@@ -80027,7 +80028,7 @@ function chunkRecord(chunk, order, vector) {
   if (chunk.corpusKind === RETRIEVAL_FACT_CORPUS) return retrievalFactDocumentRecord(chunk, order, vector);
   const {
     chunkId,
-    scopeKey: scopeKey2,
+    scopeKey,
     messageId,
     floor: floor2,
     sourceFingerprint,
@@ -80046,7 +80047,7 @@ function chunkRecord(chunk, order, vector) {
   } = chunk;
   return {
     chunkId,
-    scopeKey: scopeKey2,
+    scopeKey,
     messageId,
     floor: floor2,
     sourceFingerprint,
@@ -80774,7 +80775,7 @@ function mergeRetrievalChunkHits(vectorHits, bm25Hits, chunkTable) {
 }
 async function collectRetrievalSourceCandidates(hits, query, materialize, limit, {
   signal,
-  scopeKey: scopeKey2,
+  scopeKey,
   eligible = async () => true
 } = {}) {
   if (!limit || !hits.length) return [];
@@ -80790,7 +80791,7 @@ async function collectRetrievalSourceCandidates(hits, query, materialize, limit,
       const key = retrievalEvidenceKey(unit), previous = candidates.get(key);
       if (previous && previous.sourceRank <= rank) continue;
       candidates.set(key, {
-        candidateId: `s_${retrievalDigest([scopeKey2, retrievalEvidenceReference(unit)])}`,
+        candidateId: `s_${retrievalDigest([scopeKey, retrievalEvidenceReference(unit)])}`,
         corpusKind: "source",
         from: ["source-bm25"],
         sourceRank: rank,
@@ -81129,11 +81130,11 @@ function subscribeRetrievalState(listener) {
   listeners6.add(listener);
   return () => listeners6.delete(listener);
 }
-function cancelRetrievalTask(scopeKey2, { automaticOnly = false } = {}) {
-  const task = running2.get(scopeKey2);
+function cancelRetrievalTask(scopeKey, { automaticOnly = false } = {}) {
+  const task = running2.get(scopeKey);
   if (task && (!automaticOnly || task.automatic)) task.controller.abort();
   if (!automaticOnly) {
-    for (const query of queries) if (query.owner.scopeKey === scopeKey2) query.controller.abort();
+    for (const query of queries) if (query.owner.scopeKey === scopeKey) query.controller.abort();
   }
 }
 async function getRetrievalHybridSettings(owner) {
@@ -81706,7 +81707,7 @@ var init_retrieval = __esm({
       for (const task of running2.values()) task.controller.abort();
       for (const task of queries) task.controller.abort();
     });
-    isRetrievalRunning = (scopeKey2) => running2.has(scopeKey2);
+    isRetrievalRunning = (scopeKey) => running2.has(scopeKey);
   }
 });
 
@@ -82121,7 +82122,7 @@ var init_retrievalMaintenance = __esm({
       state.owner.scopeKey,
       retrievalSourceRows(state.owner, state.owner.chat, { allowDuplicateIds: true })
     )}:${retrievalRulesSignature()}:${retrievalFactsObservationSignature(state.owner)}`;
-    getRetrievalMaintenanceStatus = (scopeKey2) => runtime?.owner.scopeKey === scopeKey2 ? view(runtime) : null;
+    getRetrievalMaintenanceStatus = (scopeKey) => runtime?.owner.scopeKey === scopeKey ? view(runtime) : null;
   }
 });
 
