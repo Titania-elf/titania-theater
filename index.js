@@ -28841,23 +28841,6 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .tsa-panel .tsa-itinerary .current .tsa-mini-dot { border-color: var(--t-studio-gold); }\r
 .tsa-panel .tsa-itinerary .current .tsa-mini-dot::after { content: ""; width: 3px; height: 3px; border-radius: 50%; background: var(--t-studio-gold); }\r
 .tsa-panel .tsa-itinerary p { color: var(--t-studio-muted); font-size: 11px; line-height: 1.8; margin: 14px 0; }\r
-.tsa-panel .tsa-scene-track { display: flex; position: relative; overflow-x: auto; overflow-y: hidden; margin: 0 20px; padding: 14px 0 8px; border-top: 1px solid var(--t-studio-line); scrollbar-width: none; }\r
-/* \u4EC5\u9690\u85CF\u5206\u5E55\u6A2A\u5411\u6EDA\u52A8\u6761\uFF0C\u4FDD\u7559\u89E6\u6478\u3001\u6EDA\u8F6E\u548C\u952E\u76D8\u6EDA\u52A8\u3002 */\r
-#t-scene-advance-panel .tsa-scene-track::-webkit-scrollbar { display: none; }\r
-.tsa-panel .tsa-track-stop { display: flex; flex-direction: column; align-items: center; position: relative; flex: 1 0 88px; min-width: 0; gap: 0; padding: 0 8px 8px; border: 0; background: transparent; color: var(--t-studio-faint); }\r
-.tsa-panel .tsa-track-stop span { font: 11px/16px Georgia, serif; letter-spacing: 1px; }\r
-.tsa-panel .tsa-track-stop i { width: 5px; height: 5px; margin: 7px 0; border: 1px solid var(--t-studio-faint); border-radius: 50%; background: var(--t-studio-bg); z-index: 1; }\r
-.tsa-panel .tsa-track-stop:not(:last-child)::after { content: ""; position: absolute; left: 50%; top: 25px; width: 100%; height: 1px; background: var(--t-studio-line); }\r
-.tsa-panel .tsa-track-stop b { font-weight: 400; font-size: 10px; max-width: 112px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\r
-.tsa-panel .tsa-track-stop.is-done { color: var(--t-studio-teal); }\r
-.tsa-panel .tsa-track-stop.is-done i { background: var(--t-studio-teal); border-color: var(--t-studio-teal); }\r
-.tsa-panel .tsa-track-stop.is-current { color: var(--t-studio-gold); }\r
-.tsa-panel .tsa-track-stop.is-current i { background: var(--t-studio-gold); border-color: var(--t-studio-gold); box-shadow: 0 0 0 3px var(--t-studio-gold-soft); }\r
-.tsa-panel .tsa-track-stop[aria-expanded="true"] b { text-decoration: underline; text-underline-offset: 4px; }\r
-.tsa-panel .tsa-track-detail { margin: 5px 20px 18px; padding: 14px; border: 1px solid var(--t-studio-gold-border); border-radius: 6px; background: var(--t-studio-gold-soft); }\r
-.tsa-panel .tsa-track-detail small { margin-left: 10px; color: var(--t-studio-muted); font-size: 10px; }\r
-.tsa-panel .tsa-track-detail p { margin: 9px 0 0; color: var(--t-studio-muted); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }\r
-.tsa-panel .tsa-track-detail .tsa-track-foreshadow { color: var(--t-studio-teal); }\r
 .tsa-panel .tsa-candidates { padding: 17px 20px 20px; border-top: 1px solid var(--t-studio-line); background: linear-gradient(transparent, var(--t-studio-deep)); }\r
 .tsa-panel .tsa-candidate-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px; }\r
 .tsa-panel .tsa-candidate-heading .tsa-eyebrow { font-size: 8px; color: var(--t-studio-faint); }\r
@@ -28933,16 +28916,48 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .tsa-panel .tsa-bb-ev-text { font-size: 12px; line-height: 1.9; }\r
 .tsa-panel .tsa-bb-stage-count { white-space: nowrap; }\r
 \r
-/* \u5206\u5E55\u6761\u79FB\u5230\u9876\u90E8\uFF1A\u771F\u5B9E\u8FDB\u5EA6\u4E0E\u6B63\u5728\u6D4F\u89C8\u7684\u5E55\u5206\u5F00\u6807\u8BB0\uFF0C\u4E0D\u518D\u70B9\u51FB\u5C55\u5F00\u3002 */\r
-.tsa-panel .tsa-scene-track-wrap { padding: 12px 20px 0; min-width: 0; }\r
-.tsa-panel .tsa-track-caption { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 10px; color: var(--t-studio-muted); }\r
-.tsa-panel .tsa-scene-track-wrap .tsa-scene-track { margin: 0; padding: 10px 0 6px; border-top: 0; border-bottom: 1px solid var(--t-studio-line); }\r
-.tsa-panel .tsa-track-stop b { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.5; }\r
-.tsa-panel .tsa-track-stop small { min-height: 12px; margin-top: 4px; font-size: 8px; line-height: 1.5; }\r
-.tsa-panel .tsa-track-stop.is-current small { color: var(--t-studio-gold); }\r
-.tsa-panel .tsa-track-stop.is-viewed:not(.is-current) span { text-decoration: underline; text-underline-offset: 4px; }\r
-.tsa-panel .tsa-track-stop.is-viewed:not(.is-current) i { border-color: var(--t-studio-teal); border-style: dashed; border-radius: 2px; }\r
-.tsa-panel .tsa-track-stop.is-viewed:not(.is-current) small { color: var(--t-studio-teal); }\r
+/* \u884C\u7A0B\u5165\u53E3\u4E0E\u5361\u7247\u5171\u7528\u539F\u4F4D\u89C6\u7A97\uFF1B\u88C1\u5207\u52A8\u753B\u4E0D\u53D6\u6D88\u5185\u5C42\u8282\u70B9\u7684\u6A2A\u5411\u6EDA\u52A8\u3002 */\r
+.tsa-panel .tsa-itinerary { position: relative; height: 330px; padding-left: 0; overflow: hidden; isolation: isolate; }\r
+.tsa-panel .tsa-itinerary-overview { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; padding: 0 0 0 18px; }\r
+.tsa-panel .tsa-itinerary-nodes { flex: 1; min-width: 0; min-height: 0; overflow: auto; scrollbar-width: none; }\r
+.tsa-panel .tsa-itinerary-node { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-width: 0; min-height: 36px; padding: 4px 0; text-align: left; border: 0; border-radius: 4px; background: transparent; color: inherit; font-size: 11px; }\r
+.tsa-panel .tsa-itinerary-node:hover { background: var(--t-studio-gold-soft); }\r
+.tsa-panel .tsa-itinerary-node > span:last-child { min-width: 0; overflow-wrap: anywhere; }\r
+.tsa-panel .tsa-mini-dot .fa-solid { font-size: 7px; }\r
+.tsa-panel .tsa-itinerary-hint { flex-shrink: 0; font-size: 9px; color: var(--t-studio-faint); }\r
+.tsa-panel .tsa-itinerary-create { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; min-height: 0; padding: 14px 0 4px; border: 0; border-radius: 0; background: transparent; text-align: left; color: var(--t-studio-muted); font-size: 11px; line-height: 1.85; }\r
+.tsa-panel .tsa-itinerary-create-link { display: flex; align-items: center; gap: 8px; color: var(--t-studio-gold); }\r
+.tsa-panel .tsa-itinerary .tsa-itinerary-notice { flex-shrink: 0; margin: 0; font-size: 10px; }\r
+.tsa-panel .tsa-itinerary-card { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--t-studio-bg); transform: translateX(103%); transition: transform .32s cubic-bezier(.22,.8,.22,1); }\r
+.tsa-panel .tsa-itinerary-card[hidden] { display: none; }\r
+.tsa-panel .tsa-itinerary.is-card-open .tsa-itinerary-card { transform: translateX(0); }\r
+.tsa-panel .tsa-itinerary-content { flex: 1; min-width: 0; min-height: 0; overflow: auto; padding: 10px 12px; scrollbar-width: thin; scrollbar-color: var(--t-studio-gold-border) transparent; }\r
+.tsa-panel .tsa-itinerary-content:focus { outline: none; }\r
+.tsa-panel .tsa-itinerary-node-meta { color: var(--t-studio-gold-muted); font-size: 9px; }\r
+.tsa-panel .tsa-itinerary-node-title { font-size: 18px; font-weight: 400; line-height: 1.55; letter-spacing: 1px; margin: 5px 0 8px; overflow-wrap: anywhere; }\r
+.tsa-panel .tsa-itinerary-content .tsa-itinerary-node-span { color: var(--t-studio-gold-muted); font-size: 10px; margin: 0 0 7px; }\r
+.tsa-panel .tsa-itinerary-content .tsa-itinerary-node-text { font-size: 12px; line-height: 1.9; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.tsa-panel .tsa-itinerary-content .tsa-itinerary-node-state { color: var(--t-studio-teal); font-size: 10px; margin: 10px 0 0; }\r
+.tsa-panel .tsa-itinerary-content .tsa-itinerary-gap { margin: 0 0 10px; font-size: 10px; color: var(--t-studio-gold-muted); }\r
+.tsa-panel .tsa-itinerary-field { display: block; font-size: 11px; margin-bottom: 6px; color: var(--t-studio-muted); }\r
+.tsa-panel .tsa-itinerary-content input, .tsa-panel .tsa-itinerary-content textarea { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; margin: 0; padding: 7px 8px; border: 1px solid var(--t-studio-line); border-radius: 5px; background: var(--t-studio-deep); color: var(--t-studio-text); font-size: 12px; line-height: 1.7; }\r
+.tsa-panel .tsa-itinerary-content textarea { resize: vertical; }\r
+.tsa-panel .tsa-itinerary-count { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 11px; }\r
+.tsa-panel .tsa-itinerary-count input { width: 55px; }\r
+.tsa-panel .tsa-itinerary-actions { flex-shrink: 0; min-width: 0; max-height: 45%; overflow-y: auto; padding: 8px 10px; border-top: 1px solid var(--t-studio-line); background: var(--t-studio-deep); }\r
+.tsa-panel .tsa-itinerary-primary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }\r
+.tsa-panel .tsa-itinerary-primary button { min-height: 30px; padding: 6px 8px; font-size: 10px; }\r
+.tsa-panel .tsa-itinerary-back { display: inline-flex; align-items: center; gap: 6px; color: var(--t-studio-gold); border: 0; background: transparent; }\r
+.tsa-panel .tsa-itinerary-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; min-width: 0; margin-top: 5px; overflow-x: auto; scrollbar-width: none; }\r
+.tsa-panel .tsa-itinerary-tools button { min-height: 28px; padding: 4px 6px; border: 0; border-radius: 4px; background: transparent; color: var(--t-studio-muted); font-size: 10px; }\r
+.tsa-panel .tsa-itinerary-tools button:hover:not(:disabled) { background: var(--t-studio-gold-soft); color: var(--t-studio-gold); }\r
+.tsa-panel .tsa-itinerary-edit-row { display: grid; gap: 6px; min-width: 0; margin-bottom: 13px; padding-left: 7px; border-left: 2px solid transparent; }\r
+.tsa-panel .tsa-itinerary-edit-row.is-selected { border-left-color: var(--t-studio-gold); }\r
+.tsa-panel .tsa-itinerary-edit-row label { display: grid; gap: 4px; font-size: 10px; color: var(--t-studio-gold-muted); }\r
+#t-scene-advance-panel .tsa-itinerary-nodes::-webkit-scrollbar,\r
+#t-scene-advance-panel .tsa-itinerary-tools::-webkit-scrollbar { display: none; }\r
+\r
+/* \u5927\u7EB2\u4EC5\u5728\u5F53\u524D\u60C5\u8282\u533A\u5DE6\u53F3\u6ED1\u52A8\u6D4F\u89C8\uFF1B\u5B9E\u9645\u8FDB\u5EA6\u4E0E\u6D4F\u89C8\u4F4D\u7F6E\u4ECD\u5206\u522B\u6807\u6CE8\u3002 */\r
 .tsa-panel .tsa-scene-browser { touch-action: pan-y; cursor: grab; user-select: none; }\r
 .tsa-panel .tsa-current-scene.tsa-scene-browser:focus-visible { outline: 2px solid var(--t-studio-gold); outline-offset: 4px; }\r
 .tsa-panel.tsa-is-swiping .tsa-scene-browser { cursor: grabbing; }\r
@@ -28953,6 +28968,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .tsa-panel .tsa-pacing-updated { color: var(--t-studio-teal); font-size: 8px; }\r
 .tsa-panel .tsa-combine-toggle { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; font-size: 11px; color: var(--t-studio-muted); cursor: pointer; }\r
 .tsa-panel .tsa-combine-toggle input { appearance: none; position: relative; width: 32px; height: 18px; padding: 0; margin: 0; border: 1px solid var(--t-studio-line); border-radius: 20px; background: var(--t-studio-deep); cursor: pointer; flex-shrink: 0; }\r
+/* \u9690\u85CF\u9152\u9986 input[type="checkbox"]::before \u7ED8\u5236\u7684\u5BF9\u52FE\uFF0C\u5F00\u5173\u4EC5\u4FDD\u7559\u6ED1\u5757\u3002 */\r
+#t-scene-advance-panel #tsa-combine-pacing::before { content: none; display: none; }\r
 .tsa-panel .tsa-combine-toggle input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--t-studio-muted); }\r
 .tsa-panel .tsa-combine-toggle input:checked { border-color: var(--t-studio-gold); background: var(--t-studio-gold-soft); }\r
 .tsa-panel .tsa-combine-toggle input:checked::after { left: 17px; background: var(--t-studio-gold); }\r
@@ -28973,18 +28990,19 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .tsa-panel .tsa-scene-heading h3 { font-size: 23px; }\r
     .tsa-panel .tsa-scene-number { font-size: 39px; }\r
     .tsa-panel .tsa-projection { width: 128px; top: 20px; opacity: .26; }\r
-    .tsa-panel .tsa-itinerary { margin-top: 17px; padding: 14px 0 0; border-left: 0; border-top: 1px solid var(--t-studio-line); }\r
+    .tsa-panel .tsa-itinerary { height: 300px; margin-top: 17px; padding: 0; border-left: 0; border-top: 1px solid var(--t-studio-line); }\r
+    .tsa-panel .tsa-itinerary-overview { padding: 14px 0 0; }\r
+    .tsa-panel .tsa-itinerary .tsa-itinerary-nodes li { flex: 0 0 105px; }\r
+    .tsa-panel .tsa-itinerary .tsa-itinerary-node { display: block; padding: 8px 0; }\r
+    .tsa-panel .tsa-itinerary .tsa-itinerary-nodes li:not(:last-child)::before { top: 13px; }\r
+    .tsa-panel .tsa-itinerary-content input, .tsa-panel .tsa-itinerary-content textarea { font-size: 16px; }\r
     .tsa-panel .tsa-itinerary ol { display: flex; gap: 8px; }\r
     .tsa-panel .tsa-itinerary li { flex: 1; display: block; min-width: 0; font-size: 10px; }\r
     .tsa-panel .tsa-itinerary li:not(:last-child)::before { top: 5px; left: 5px; right: -10px; bottom: auto; width: auto; height: 1px; }\r
     .tsa-panel .tsa-mini-dot { margin: 0 0 8px; }\r
     .tsa-panel .tsa-itinerary li small { display: block; margin: 3px 0 0; }\r
     .tsa-panel .tsa-itinerary .tsa-text-button { margin-top: 0; }\r
-    .tsa-panel .tsa-scene-track { margin-inline: 15px; }\r
-    .tsa-panel .tsa-scene-track-wrap { padding-inline: 15px; }\r
     .tsa-panel .tsa-pacing-auto, .tsa-panel .tsa-pacing-auto-note { margin-inline: 16px; }\r
-    .tsa-panel .tsa-track-stop { flex-basis: 76px; padding-inline: 5px; }\r
-    .tsa-panel .tsa-track-stop b { max-width: 76px; font-size: 9px; }\r
     .tsa-panel .tsa-candidates { padding: 17px 15px; }\r
     .tsa-panel .tsa-candidate-heading h3 { font-size: 17px; letter-spacing: 1px; }\r
     .tsa-panel .tsa-list { grid-template-columns: 1fr; }\r
@@ -29020,7 +29038,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     #chat .mes .tsa-panel { max-height: 78vh; }\r
 }\r
 @media (prefers-reduced-motion: reduce) {\r
-    #chat .mes .tsa-strip, .tsa-panel .tsa-item, .tsa-panel .tsa-mode-tab { transition: none; }\r
+    #chat .mes .tsa-strip, .tsa-panel .tsa-item, .tsa-panel .tsa-mode-tab, .tsa-panel .tsa-itinerary-card { transition: none; }\r
 }\r
 
 
@@ -29379,7 +29397,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 189061], "04-features/main-window.css": [189105, 233998], "04-features/main-window-legacy.css": [234049, 257915], "04-features/script-picker.css": [257961, 264456], "04-features/wi-selector.css": [264500, 282326], "04-features/continuation.css": [282371, 306240], "04-features/queue.css": [306278, 312838], "04-features/content-editor.css": [312885, 315192], "04-features/illustration.css": [315237, 338272], "04-features/visual-selection.css": [338321, 340847], "04-features/storyboard.css": [340890, 357970], "04-features/echo-imaging.css": [358015, 373944], "04-features/settings-drawer.css": [373992, 392226], "04-features/settings.css": [392267, 420293], "04-features/manager.css": [420333, 433631], "04-features/workshop.css": [433672, 456454], "04-features/favs.css": [456491, 496484], "04-features/debug.css": [496522, 513287], "04-features/story-outline.css": [513333, 547639], "04-features/outline-entry-menu.css": [547690, 554443], "04-features/rewrite.css": [554483, 605382], "04-features/paragraph-editor.css": [605431, 609214], "04-features/reader.css": [609253, 618612], "04-features/chat-book.css": [618654, 625195], "04-features/story-memory.css": [625240, 672627], "04-features/retrieval.css": [672669, 684635], "04-features/character-evolution.css": [684687, 719361], "04-features/story-memory-notifications.css": [719420, 721569], "04-features/story-timetrace.css": [721617, 739749], "04-features/tts.css": [739785, 775474], "04-features/confirm-dialog.css": [775521, 779519], "04-features/image-cropper.css": [779565, 783423], "04-features/st-embedded.css": [783467, 815149], "04-features/scene-advance.css": [815195, 840800], "04-features/theater-midnight.css": [840849, 866177] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 189061], "04-features/main-window.css": [189105, 233998], "04-features/main-window-legacy.css": [234049, 257915], "04-features/script-picker.css": [257961, 264456], "04-features/wi-selector.css": [264500, 282326], "04-features/continuation.css": [282371, 306240], "04-features/queue.css": [306278, 312838], "04-features/content-editor.css": [312885, 315192], "04-features/illustration.css": [315237, 338272], "04-features/visual-selection.css": [338321, 340847], "04-features/storyboard.css": [340890, 357970], "04-features/echo-imaging.css": [358015, 373944], "04-features/settings-drawer.css": [373992, 392226], "04-features/settings.css": [392267, 420293], "04-features/manager.css": [420333, 433631], "04-features/workshop.css": [433672, 456454], "04-features/favs.css": [456491, 496484], "04-features/debug.css": [496522, 513287], "04-features/story-outline.css": [513333, 547639], "04-features/outline-entry-menu.css": [547690, 554443], "04-features/rewrite.css": [554483, 605382], "04-features/paragraph-editor.css": [605431, 609214], "04-features/reader.css": [609253, 618612], "04-features/chat-book.css": [618654, 625195], "04-features/story-memory.css": [625240, 672627], "04-features/retrieval.css": [672669, 684635], "04-features/character-evolution.css": [684687, 719361], "04-features/story-memory-notifications.css": [719420, 721569], "04-features/story-timetrace.css": [721617, 739749], "04-features/tts.css": [739785, 775474], "04-features/confirm-dialog.css": [775521, 779519], "04-features/image-cropper.css": [779565, 783423], "04-features/st-embedded.css": [783467, 815149], "04-features/scene-advance.css": [815195, 843191], "04-features/theater-midnight.css": [843240, 868568] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -36670,6 +36688,206 @@ var init_illustrationSettingsWindow = __esm({
   }
 });
 
+// src/ui/shared/echoImagingWorkspace.js
+function echoImagingIcon() {
+  return `<svg class="t-echo-imaging-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M18 5H7a3 3 0 0 0-3 3v17a3 3 0 0 0 3 3h17a3 3 0 0 0 3-3v-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="m8 23 5-6 4 4 3-3 4 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="10.5" cy="11.5" r="2" stroke="currentColor" stroke-width="1.6"/>
+        <path d="m17.5 14.5 8.6-10.1a2 2 0 0 1 3 2.6l-8.7 10-4.1 1.2 1.2-3.7Z" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="m24.5 6.2 3 2.6m-10 5.7 2.9 2.5" stroke="currentColor" stroke-width="1.5"/>
+    </svg>`;
+}
+function setNavigationLabel(button5, text10, iconName, iconAfter = false) {
+  let parts = navigationLabels.get(button5);
+  if (!parts) {
+    const icon = create("i");
+    icon.setAttribute("aria-hidden", "true");
+    const label2 = create("span", "t-navigation-label");
+    parts = { icon, label: label2, after: iconAfter };
+    navigationLabels.set(button5, parts);
+  }
+  if (parts.icon.parentNode !== button5 || parts.label.parentNode !== button5) {
+    button5.replaceChildren(parts.after ? parts.label : parts.icon, document.createTextNode(" "), parts.after ? parts.icon : parts.label);
+  }
+  if (iconName) parts.icon.className = `fa-solid fa-${iconName}`;
+  parts.label.textContent = text10;
+  return button5;
+}
+function createEchoWorkflow(container, { mode = "illustration", navigationHost, onNavigate, onStepChange } = {}) {
+  ensureFeatureCss("echo-imaging.css");
+  const root = create("div", "t-echo-workflow");
+  const navigation = create("nav", "t-echo-steps");
+  navigation.setAttribute("aria-label", mode === "storyboard" ? "\u89C6\u89C9\u5C0F\u8BF4\u5236\u4F5C\u8FDB\u5EA6" : "\u5355\u5F20\u914D\u56FE\u8FDB\u5EA6");
+  const labels = mode === "storyboard" ? ["\u9009\u62E9\u7D20\u6750", "\u68C0\u67E5\u5206\u955C", "\u751F\u6210\u753B\u9762", "\u5168\u5C4F\u89C2\u770B"] : ["\u9009\u62E9\u7D20\u6750", "\u786E\u5B9A\u753B\u9762", "\u751F\u6210\u56FE\u7247", "\u67E5\u770B\u7ED3\u679C"];
+  const stages = {};
+  let step = 1, active6 = true;
+  labels.forEach((label2, index2) => {
+    const button5 = create("button", "t-echo-step");
+    button5.type = "button";
+    button5.dataset.echoStep = String(index2 + 1);
+    const number2 = create("span", "t-echo-step-number", String(index2 + 1));
+    button5.append(number2, create("span", "", label2));
+    navigation.append(button5);
+    const stage = create("section", "t-echo-stage");
+    stage.dataset.echoStage = String(index2 + 1);
+    const body = create("div", "t-echo-stage-body");
+    const footer = create("footer", "t-echo-stage-footer");
+    const note2 = create("p", "t-echo-stage-note");
+    const actions = create("div", "t-echo-stage-actions");
+    footer.append(note2, actions);
+    stage.append(body, footer);
+    root.append(stage);
+    stages[index2 + 1] = { root: stage, body, footer, note: note2, actions };
+  });
+  (navigationHost || container).append(navigation);
+  container.append(root);
+  const events = new AbortController();
+  navigation.addEventListener("click", (event) => {
+    const button5 = event.target.closest("[data-echo-step]");
+    if (!button5 || button5.disabled) return;
+    const next = Number(button5.dataset.echoStep);
+    if (onNavigate) onNavigate(next);
+    else setStep(next);
+  }, { signal: events.signal });
+  function setStep(value) {
+    const next = Math.min(4, Math.max(1, Number(value) || 1));
+    step = next;
+    for (const [key, stage] of Object.entries(stages)) stage.root.hidden = Number(key) !== next;
+    navigation.querySelectorAll("[data-echo-step]").forEach((button5) => {
+      const current3 = Number(button5.dataset.echoStep);
+      button5.setAttribute("aria-current", current3 === next ? "step" : "false");
+      button5.classList.toggle("is-active", current3 === next);
+      button5.classList.toggle("is-complete", current3 < next);
+    });
+    root.dataset.step = String(next);
+    onStepChange?.(next);
+  }
+  setStep(1);
+  return {
+    root,
+    navigation,
+    stages,
+    setStep,
+    getStep: () => step,
+    setAvailable(available) {
+      navigation.querySelectorAll("[data-echo-step]").forEach((button5) => {
+        button5.disabled = available[Number(button5.dataset.echoStep)] === false;
+      });
+    },
+    setActive(value) {
+      active6 = Boolean(value);
+      navigation.hidden = !active6;
+    },
+    destroy() {
+      events.abort();
+      navigation.remove();
+      root.remove();
+    }
+  };
+}
+function createEchoEditorLayout(container) {
+  const root = create("section", "t-echo-editor");
+  const nav = create("aside", "t-echo-scene-nav");
+  const reader = create("article", "t-echo-reader");
+  const heading = create("header", "t-echo-reader-header");
+  const title = create("h2", "t-echo-reader-title", "\u786E\u5B9A\u753B\u9762");
+  const subtitle = create("p", "t-echo-reader-subtitle", "\u539F\u6587\u53EA\u8BFB \xB7 \u53D6\u666F\u53EA\u51B3\u5B9A\u753B\u54EA\u4E00\u523B");
+  const tools = create("div", "t-echo-reader-tools");
+  const original = create("button", "t-btn", "\u67E5\u770B\u539F\u6587");
+  const edit = create("button", "t-btn", "\u8C03\u6574\u53D6\u666F");
+  original.type = edit.type = "button";
+  tools.append(original, edit);
+  heading.append(title, subtitle, tools);
+  const reading = create("div", "t-echo-reading");
+  const autoText = create("div", "t-echo-original");
+  const picker = create("div", "t-echo-picker-host");
+  reading.append(autoText, picker);
+  reader.append(heading, reading);
+  const inspector = create("aside", "t-echo-inspector");
+  const toggle = create("button", "t-btn t-echo-inspector-toggle");
+  toggle.type = "button";
+  setNavigationLabel(toggle, "\u753B\u9762\u8981\u6C42\u4E0E\u63D0\u793A\u8BCD", "chevron-up", true);
+  const setInspectorOpen = (open) => {
+    root.classList.toggle("is-inspector-open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    setNavigationLabel(toggle, "\u753B\u9762\u8981\u6C42\u4E0E\u63D0\u793A\u8BCD", open ? "chevron-down" : "chevron-up");
+  };
+  root.append(nav, reader, inspector, toggle);
+  container.append(root);
+  setInspectorOpen(false);
+  toggle.addEventListener("click", () => setInspectorOpen(!root.classList.contains("is-inspector-open")));
+  const cards = create("div", "t-echo-scene-cards");
+  nav.append(cards);
+  return {
+    root,
+    nav,
+    reader,
+    title,
+    subtitle,
+    tools,
+    original,
+    edit,
+    reading,
+    autoText,
+    picker,
+    inspector,
+    cards,
+    setCollapsed(value) {
+      root.classList.toggle("is-nav-collapsed", Boolean(value));
+    },
+    showPicker(value) {
+      picker.hidden = !value;
+      autoText.hidden = Boolean(value);
+    },
+    closeInspector() {
+      setInspectorOpen(false);
+    }
+  };
+}
+function renderEchoOriginal(container, text10, excerpt = "") {
+  const original = String(text10 || "");
+  const selection = String(excerpt || "");
+  const start = selection ? original.indexOf(selection) : -1;
+  const fragment = document.createDocumentFragment();
+  if (start >= 0 && original.indexOf(selection, start + 1) < 0) {
+    fragment.append(document.createTextNode(original.slice(0, start)));
+    const mark = create("mark", "t-echo-source-mark", selection);
+    fragment.append(mark, document.createTextNode(original.slice(start + selection.length)));
+  } else fragment.append(document.createTextNode(original || "\u6682\u65E0\u53EF\u7528\u6B63\u6587\u3002"));
+  container.replaceChildren(fragment);
+}
+function echoAction(text10, callback, className = "t-btn", parent, iconName = "", iconAfter = false) {
+  const button5 = create("button", className);
+  if (iconName) setNavigationLabel(button5, text10, iconName, iconAfter);
+  else button5.textContent = text10;
+  button5.type = "button";
+  if (callback) button5.addEventListener("click", callback);
+  parent?.append(button5);
+  return button5;
+}
+function cachedEditorQueries(root, attributes) {
+  const cache5 = /* @__PURE__ */ new Map();
+  for (const attribute of attributes) {
+    root.querySelectorAll(`[${attribute}]`).forEach((node4) => cache5.set(`${attribute}:${node4.getAttribute(attribute)}`, node4));
+  }
+  return (attribute) => (name) => cache5.get(`${attribute}:${name}`);
+}
+var ECHO_IMAGING_TITLE, create, navigationLabels;
+var init_echoImagingWorkspace = __esm({
+  "src/ui/shared/echoImagingWorkspace.js"() {
+    init_dom();
+    ECHO_IMAGING_TITLE = "\u56DE\u58F0\u6620\u50CF";
+    create = (tag, className = "", text10) => {
+      const node4 = document.createElement(tag);
+      node4.className = className;
+      if (text10 !== void 0) node4.textContent = text10;
+      return node4;
+    };
+    navigationLabels = /* @__PURE__ */ new WeakMap();
+  }
+});
+
 // src/ui/characterProfileWindow.js
 function notifyProfilesChanged() {
   window.dispatchEvent(new CustomEvent("titania:character-profiles-changed"));
@@ -36884,7 +37102,7 @@ function openCharacterProfileWindow(options2 = {}) {
     expand.className = "t-profile-expand";
     expand.setAttribute("aria-expanded", String(open));
     expand.title = open ? "\u6536\u8D77" : "\u5C55\u5F00\u7F16\u8F91";
-    expand.textContent = `${open ? "\u25BE" : "\u25B8"} ${entry.name || "\u672A\u547D\u540D\u89D2\u8272"}`;
+    setNavigationLabel(expand, entry.name || "\u672A\u547D\u540D\u89D2\u8272", open ? "chevron-up" : "chevron-down");
     expand.addEventListener("click", () => toggleExpanded(entry.id));
     const toggle = document.createElement("button");
     toggle.type = "button";
@@ -36902,7 +37120,7 @@ function openCharacterProfileWindow(options2 = {}) {
     card.append(meta);
     const syncSummary = () => {
       meta.textContent = tileMeta(entry);
-      expand.textContent = `${expandedIds.has(entry.id) ? "\u25BE" : "\u25B8"} ${entry.name || "\u672A\u547D\u540D\u89D2\u8272"}`;
+      setNavigationLabel(expand, entry.name || "\u672A\u547D\u540D\u89D2\u8272", expandedIds.has(entry.id) ? "chevron-up" : "chevron-down");
     };
     if (open) card.append(buildTileBody(entry, syncSummary));
     card.addEventListener("click", (event) => {
@@ -37137,6 +37355,7 @@ var init_characterProfileWindow = __esm({
     init_floatingWindow();
     init_helpPopover();
     init_studioTheme();
+    init_echoImagingWorkspace();
     PROFILE_HELP = [
       {
         heading: "\u5E72\u4EC0\u4E48\u7528\u7684",
@@ -37368,182 +37587,6 @@ var init_illustrationReferences = __esm({
     init_storyboardStore();
     init_favsStore();
     FAVORITE_SCAN_CONCURRENCY = 8;
-  }
-});
-
-// src/ui/shared/echoImagingWorkspace.js
-function echoImagingIcon() {
-  return `<svg class="t-echo-imaging-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        <path d="M18 5H7a3 3 0 0 0-3 3v17a3 3 0 0 0 3 3h17a3 3 0 0 0 3-3v-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="m8 23 5-6 4 4 3-3 4 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="10.5" cy="11.5" r="2" stroke="currentColor" stroke-width="1.6"/>
-        <path d="m17.5 14.5 8.6-10.1a2 2 0 0 1 3 2.6l-8.7 10-4.1 1.2 1.2-3.7Z" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-        <path d="m24.5 6.2 3 2.6m-10 5.7 2.9 2.5" stroke="currentColor" stroke-width="1.5"/>
-    </svg>`;
-}
-function createEchoWorkflow(container, { mode = "illustration", navigationHost, onNavigate, onStepChange } = {}) {
-  ensureFeatureCss("echo-imaging.css");
-  const root = create("div", "t-echo-workflow");
-  const navigation = create("nav", "t-echo-steps");
-  navigation.setAttribute("aria-label", mode === "storyboard" ? "\u89C6\u89C9\u5C0F\u8BF4\u5236\u4F5C\u8FDB\u5EA6" : "\u5355\u5F20\u914D\u56FE\u8FDB\u5EA6");
-  const labels = mode === "storyboard" ? ["\u9009\u62E9\u7D20\u6750", "\u68C0\u67E5\u5206\u955C", "\u751F\u6210\u753B\u9762", "\u5168\u5C4F\u89C2\u770B"] : ["\u9009\u62E9\u7D20\u6750", "\u786E\u5B9A\u753B\u9762", "\u751F\u6210\u56FE\u7247", "\u67E5\u770B\u7ED3\u679C"];
-  const stages = {};
-  let step = 1, active6 = true;
-  labels.forEach((label2, index2) => {
-    const button5 = create("button", "t-echo-step");
-    button5.type = "button";
-    button5.dataset.echoStep = String(index2 + 1);
-    const number2 = create("span", "t-echo-step-number", String(index2 + 1));
-    button5.append(number2, create("span", "", label2));
-    navigation.append(button5);
-    const stage = create("section", "t-echo-stage");
-    stage.dataset.echoStage = String(index2 + 1);
-    const body = create("div", "t-echo-stage-body");
-    const footer = create("footer", "t-echo-stage-footer");
-    const note2 = create("p", "t-echo-stage-note");
-    const actions = create("div", "t-echo-stage-actions");
-    footer.append(note2, actions);
-    stage.append(body, footer);
-    root.append(stage);
-    stages[index2 + 1] = { root: stage, body, footer, note: note2, actions };
-  });
-  (navigationHost || container).append(navigation);
-  container.append(root);
-  const events = new AbortController();
-  navigation.addEventListener("click", (event) => {
-    const button5 = event.target.closest("[data-echo-step]");
-    if (!button5 || button5.disabled) return;
-    const next = Number(button5.dataset.echoStep);
-    if (onNavigate) onNavigate(next);
-    else setStep(next);
-  }, { signal: events.signal });
-  function setStep(value) {
-    const next = Math.min(4, Math.max(1, Number(value) || 1));
-    step = next;
-    for (const [key, stage] of Object.entries(stages)) stage.root.hidden = Number(key) !== next;
-    navigation.querySelectorAll("[data-echo-step]").forEach((button5) => {
-      const current3 = Number(button5.dataset.echoStep);
-      button5.setAttribute("aria-current", current3 === next ? "step" : "false");
-      button5.classList.toggle("is-active", current3 === next);
-      button5.classList.toggle("is-complete", current3 < next);
-    });
-    root.dataset.step = String(next);
-    onStepChange?.(next);
-  }
-  setStep(1);
-  return {
-    root,
-    navigation,
-    stages,
-    setStep,
-    getStep: () => step,
-    setAvailable(available) {
-      navigation.querySelectorAll("[data-echo-step]").forEach((button5) => {
-        button5.disabled = available[Number(button5.dataset.echoStep)] === false;
-      });
-    },
-    setActive(value) {
-      active6 = Boolean(value);
-      navigation.hidden = !active6;
-    },
-    destroy() {
-      events.abort();
-      navigation.remove();
-      root.remove();
-    }
-  };
-}
-function createEchoEditorLayout(container) {
-  const root = create("section", "t-echo-editor");
-  const nav = create("aside", "t-echo-scene-nav");
-  const reader = create("article", "t-echo-reader");
-  const heading = create("header", "t-echo-reader-header");
-  const title = create("h2", "t-echo-reader-title", "\u786E\u5B9A\u753B\u9762");
-  const subtitle = create("p", "t-echo-reader-subtitle", "\u539F\u6587\u53EA\u8BFB \xB7 \u53D6\u666F\u53EA\u51B3\u5B9A\u753B\u54EA\u4E00\u523B");
-  const tools = create("div", "t-echo-reader-tools");
-  const original = create("button", "t-btn", "\u67E5\u770B\u539F\u6587");
-  const edit = create("button", "t-btn", "\u8C03\u6574\u53D6\u666F");
-  original.type = edit.type = "button";
-  tools.append(original, edit);
-  heading.append(title, subtitle, tools);
-  const reading = create("div", "t-echo-reading");
-  const autoText = create("div", "t-echo-original");
-  const picker = create("div", "t-echo-picker-host");
-  reading.append(autoText, picker);
-  reader.append(heading, reading);
-  const inspector = create("aside", "t-echo-inspector");
-  const toggle = create("button", "t-btn t-echo-inspector-toggle", "\u753B\u9762\u8981\u6C42\u4E0E\u63D0\u793A\u8BCD \u2191");
-  toggle.type = "button";
-  root.append(nav, reader, inspector, toggle);
-  container.append(root);
-  toggle.setAttribute("aria-expanded", "false");
-  toggle.addEventListener("click", () => toggle.setAttribute("aria-expanded", String(root.classList.toggle("is-inspector-open"))));
-  const cards = create("div", "t-echo-scene-cards");
-  nav.append(cards);
-  return {
-    root,
-    nav,
-    reader,
-    title,
-    subtitle,
-    tools,
-    original,
-    edit,
-    reading,
-    autoText,
-    picker,
-    inspector,
-    cards,
-    setCollapsed(value) {
-      root.classList.toggle("is-nav-collapsed", Boolean(value));
-    },
-    showPicker(value) {
-      picker.hidden = !value;
-      autoText.hidden = Boolean(value);
-    },
-    closeInspector() {
-      root.classList.remove("is-inspector-open");
-      toggle.setAttribute("aria-expanded", "false");
-    }
-  };
-}
-function renderEchoOriginal(container, text10, excerpt = "") {
-  const original = String(text10 || "");
-  const selection = String(excerpt || "");
-  const start = selection ? original.indexOf(selection) : -1;
-  const fragment = document.createDocumentFragment();
-  if (start >= 0 && original.indexOf(selection, start + 1) < 0) {
-    fragment.append(document.createTextNode(original.slice(0, start)));
-    const mark = create("mark", "t-echo-source-mark", selection);
-    fragment.append(mark, document.createTextNode(original.slice(start + selection.length)));
-  } else fragment.append(document.createTextNode(original || "\u6682\u65E0\u53EF\u7528\u6B63\u6587\u3002"));
-  container.replaceChildren(fragment);
-}
-function echoAction(text10, callback, className = "t-btn", parent) {
-  const button5 = create("button", className, text10);
-  button5.type = "button";
-  if (callback) button5.addEventListener("click", callback);
-  parent?.append(button5);
-  return button5;
-}
-function cachedEditorQueries(root, attributes) {
-  const cache5 = /* @__PURE__ */ new Map();
-  for (const attribute of attributes) {
-    root.querySelectorAll(`[${attribute}]`).forEach((node4) => cache5.set(`${attribute}:${node4.getAttribute(attribute)}`, node4));
-  }
-  return (attribute) => (name) => cache5.get(`${attribute}:${name}`);
-}
-var ECHO_IMAGING_TITLE, create;
-var init_echoImagingWorkspace = __esm({
-  "src/ui/shared/echoImagingWorkspace.js"() {
-    init_dom();
-    ECHO_IMAGING_TITLE = "\u56DE\u58F0\u6620\u50CF";
-    create = (tag, className = "", text10) => {
-      const node4 = document.createElement(tag);
-      node4.className = className;
-      if (text10 !== void 0) node4.textContent = text10;
-      return node4;
-    };
   }
 });
 
@@ -40336,10 +40379,10 @@ function createStoryboardPanel(container, targetOrTargets, initialIndex = 0, { o
   echoAction("\u5BF9\u767D\u4E0E\u65C1\u767D", openOverlay, "t-btn", more);
   echoAction("\u66F4\u591A\u64CD\u4F5C", openOverlay, "t-btn", more);
   workflow.stages[2].actions.append(more);
-  const planButton = echoAction("\u81EA\u52A8\u89C4\u5212\u5206\u955C \u2192", () => void preparePlan(), "t-btn primary", workflow.stages[1].actions);
-  const confirmButton = echoAction("\u786E\u8BA4\u5206\u955C\uFF0C\u53BB\u751F\u6210 \u2192", () => navigate(3), "t-btn primary", workflow.stages[2].actions);
-  echoAction("\u2190 \u7D20\u6750", () => navigate(1), "t-btn t-echo-secondary", workflow.stages[2].actions);
-  echoAction("\u2190 \u5206\u955C", () => navigate(2), "t-btn t-echo-secondary", workflow.stages[3].actions);
+  const planButton = echoAction("\u81EA\u52A8\u89C4\u5212\u5206\u955C", () => void preparePlan(), "t-btn primary", workflow.stages[1].actions, "arrow-right", true);
+  const confirmButton = echoAction("\u786E\u8BA4\u5206\u955C\uFF0C\u53BB\u751F\u6210", () => navigate(3), "t-btn primary", workflow.stages[2].actions, "arrow-right", true);
+  echoAction("\u7D20\u6750", () => navigate(1), "t-btn t-echo-secondary", workflow.stages[2].actions, "arrow-left");
+  echoAction("\u5206\u955C", () => navigate(2), "t-btn t-echo-secondary", workflow.stages[3].actions, "arrow-left");
   workflow.stages[2].actions.append(confirmButton);
   workflow.stages[3].actions.append(action("primary"), action("watch"));
   echoAction("\u8FD4\u56DE\u539F\u6587", () => action("original").click(), "t-btn t-echo-secondary", workflow.stages[1].actions);
@@ -40407,7 +40450,7 @@ function createStoryboardPanel(container, targetOrTargets, initialIndex = 0, { o
     role("manual-editor").hidden = !manual;
     role("shot-editor").hidden = !doc?.shots.length || manual && (manualEditor.isDirty() || production.unprepared);
     emptyEditor.hidden = manual || Boolean(doc?.shots.length);
-    planButton.textContent = manual ? "\u6253\u5F00\u539F\u6587\u9009\u6BB5 \u2192" : doc?.shots.length ? "\u68C0\u67E5\u5DF2\u4FDD\u5B58\u5206\u955C \u2192" : "\u81EA\u52A8\u89C4\u5212\u5206\u955C \u2192";
+    setNavigationLabel(planButton, manual ? "\u6253\u5F00\u539F\u6587\u9009\u6BB5" : doc?.shots.length ? "\u68C0\u67E5\u5DF2\u4FDD\u5B58\u5206\u955C" : "\u81EA\u52A8\u89C4\u5212\u5206\u955C");
     planButton.disabled = busy || !session2 || different();
     visualRequestInput.disabled = busy;
     confirmButton.disabled = busy || !doc?.shots.length || production.unprepared || shotEditor.isDirty() || manual && manualEditor.isDirty() || session2?.hasPendingSave || changed();
@@ -41353,7 +41396,7 @@ function createIllustrationPanel(container, targets, initialIndex = 0, { onOpenP
   }
   generation3[3].controls.append(role("preview"), role("pending"));
   editorLayout.inspector.append(action("prepare"));
-  workflow.stages[2].actions.append(action("generate"));
+  workflow.stages[2].actions.append(setNavigationLabel(action("generate"), "\u751F\u6210\u56FE\u7247", "arrow-right", true));
   editorLayout.inspector.append(role("selection-panel"), role("draft"), action("alternate"));
   const statusStrip = document.createElement("div");
   statusStrip.className = "t-echo-status-strip";
@@ -41361,10 +41404,10 @@ function createIllustrationPanel(container, targets, initialIndex = 0, { onOpenP
   statusStrip.append(role("status"), action("cancel"), action("save"), role("connection").parentElement);
   root.prepend(statusStrip);
   const prepareAgain = echoAction("\u4E3A\u5F53\u524D\u753B\u9762\u51C6\u5907\u63D0\u793A\u8BCD", () => action("prepare").click(), "t-btn", editorLayout.inspector);
-  const materialAction = echoAction("\u8BA9 AI \u9009\u4E00\u4E2A\u753B\u9762 \u2192", () => {
+  const materialAction = echoAction("\u8BA9 AI \u9009\u4E00\u4E2A\u753B\u9762", () => {
     if (session2?.workspace?.selectionMode === "manual") navigateSingle(2);
     else action("prepare").click();
-  }, "t-btn primary", workflow.stages[1].actions);
+  }, "t-btn primary", workflow.stages[1].actions, "arrow-right", true);
   const generateAgain = echoAction("\u751F\u6210\u8FD9\u5F20\u56FE", () => {
     action("generate").click();
   }, "t-btn primary", workflow.stages[3].actions);
@@ -41376,14 +41419,14 @@ function createIllustrationPanel(container, targets, initialIndex = 0, { onOpenP
     });
   }, "t-btn t-echo-secondary", workflow.stages[2].actions);
   saveDraftButton.dataset.echoSaveDraft = "true";
-  echoAction("\u67E5\u770B\u7ED3\u679C\u4E0E\u56FE\u5E93 \u2192", () => navigateSingle(4), "t-btn", workflow.stages[3].actions);
+  echoAction("\u67E5\u770B\u7ED3\u679C\u4E0E\u56FE\u5E93", () => navigateSingle(4), "t-btn", workflow.stages[3].actions, "arrow-right", true);
   echoAction("\u518D\u751F\u6210\u8FD9\u5F20\u56FE", () => {
     navigateSingle(3);
     action("generate").click();
   }, "t-btn", workflow.stages[4].actions);
-  echoAction("\u2190 \u7D20\u6750", () => navigateSingle(1), "t-btn t-echo-secondary", workflow.stages[2].actions);
-  echoAction("\u2190 \u753B\u9762", () => navigateSingle(2), "t-btn t-echo-secondary", workflow.stages[3].actions);
-  echoAction("\u2190 \u53D6\u666F", () => navigateSingle(2), "t-btn t-echo-secondary", workflow.stages[4].actions);
+  echoAction("\u7D20\u6750", () => navigateSingle(1), "t-btn t-echo-secondary", workflow.stages[2].actions, "arrow-left");
+  echoAction("\u753B\u9762", () => navigateSingle(2), "t-btn t-echo-secondary", workflow.stages[3].actions, "arrow-left");
+  echoAction("\u53D6\u666F", () => navigateSingle(2), "t-btn t-echo-secondary", workflow.stages[4].actions, "arrow-left");
   workflow.stages[2].actions.append(saveDraftButton, action("generate"));
   role("gallery").classList.add("t-echo-gallery");
   let focusedImageId = null, singleStepInitialized = false;
@@ -41411,7 +41454,7 @@ function createIllustrationPanel(container, targets, initialIndex = 0, { onOpenP
   });
   const selectionModeField = selectionPanel.getModeControl();
   settingsCard.prepend(selectionModeField.closest("label"));
-  echoAction("\u2190 \u4FDD\u7559\u753B\u9762\uFF0C\u7EE7\u7EED\u68C0\u67E5", () => navigateSingle(2), "t-btn t-echo-secondary", workflow.stages[1].actions);
+  echoAction("\u4FDD\u7559\u753B\u9762\uFF0C\u7EE7\u7EED\u68C0\u67E5", () => navigateSingle(2), "t-btn t-echo-secondary", workflow.stages[1].actions, "arrow-left");
   const oldBody = root.querySelector(".t-illustration-body");
   oldBody.hidden = true;
   function navigateSingle(next) {
@@ -41440,7 +41483,7 @@ function createIllustrationPanel(container, targets, initialIndex = 0, { onOpenP
     if (step === 3 || step === 4) generation3[step].gallery.append(role("gallery"));
     prepareAgain.textContent = session2.workspace?.selectionMode === "manual" ? "\u4E3A\u9009\u6BB5\u51C6\u5907\u63D0\u793A\u8BCD" : "\u91CD\u65B0\u51C6\u5907\u753B\u9762";
     prepareAgain.disabled = action("prepare").disabled;
-    materialAction.textContent = session2.workspace?.selectionMode === "manual" ? "\u6253\u5F00\u539F\u6587\u9009\u6BB5 \u2192" : "\u8BA9 AI \u9009\u4E00\u4E2A\u753B\u9762 \u2192";
+    setNavigationLabel(materialAction, session2.workspace?.selectionMode === "manual" ? "\u6253\u5F00\u539F\u6587\u9009\u6BB5" : "\u8BA9 AI \u9009\u4E00\u4E2A\u753B\u9762");
     materialAction.disabled = session2.workspace?.selectionMode === "manual" ? isBusy() || !session2.selectionSource : action("prepare").disabled;
     generateAgain.disabled = action("generate").disabled;
     saveDraftButton.disabled = isBusy() || !session2.record || Boolean(session2.pending);
@@ -41480,7 +41523,7 @@ function createIllustrationPanel(container, targets, initialIndex = 0, { onOpenP
     role("auto-text").hidden = manual;
     action("prepare").textContent = manual ? "\u51C6\u5907\u7ED8\u753B\u63D0\u793A\u8BCD" : "\u5206\u6790\u753B\u9762";
     action("alternate").textContent = manual ? "\u91CD\u65B0\u9009\u62E9" : "\u6362\u4E2A\u753B\u9762";
-    action("generate").textContent = "\u751F\u6210\u8FD9\u5F20\u56FE \u2192";
+    setNavigationLabel(action("generate"), "\u751F\u6210\u8FD9\u5F20\u56FE", "arrow-right", true);
     selectionPanel.setDirty(session2?.workspaceDirty);
   }
   function invalidateManualDrafts() {
@@ -43182,7 +43225,7 @@ function openCharacterGalleryWindow(onSaved) {
       detail.append(node3("div", "t-gallery-empty", "\u9009\u62E9\u4E00\u5F20\u89D2\u8272\u5361\u67E5\u770B\u8BE6\u60C5"));
       return;
     }
-    detail.append(button5("\u2039 \u8FD4\u56DE\u56FE\u9274", () => root.querySelector(".t-gallery-box").classList.remove("has-detail"), "t-btn t-gallery-back"));
+    detail.append(setNavigationLabel(button5("", () => root.querySelector(".t-gallery-box").classList.remove("has-detail"), "t-btn t-gallery-back"), "\u8FD4\u56DE\u56FE\u9274", "arrow-left"));
     detail.append(node3("h2", "t-gallery-detail-title", displayLabel(entry)));
     detail.append(node3("p", "t-gallery-muted", entry.kind === "pending" ? "\u8FD9\u4E9B\u65E7\u6536\u85CF\u7F3A\u5C11\u53EF\u786E\u8BA4\u7684\u89D2\u8272\u5361\u8EAB\u4EFD\uFF0C\u8BF7\u6839\u636E\u5404\u6761\u6536\u85CF\u7684\u539F\u5C01\u9762\uFF0C\u9009\u62E9\u540E\u6307\u5B9A\u5F52\u5C5E\u3002" : entry.kind === "legacy" ? "\u65E7\u56FE\u9274\u6309\u89D2\u8272\u540D\u4FDD\u5B58\u4E86\u8FD9\u5F20\u56FE\u7247\uFF0C\u8BF7\u6307\u5B9A\u5E94\u7528\u5230\u54EA\u5F20\u89D2\u8272\u5361\u3002" : entry.kind === "group" ? "\u7FA4\u804A\u5C01\u9762\u72EC\u7ACB\u4FDD\u5B58\u3002" : entry.avatar || "\u89D2\u8272\u5361\u5DF2\u627E\u4E0D\u5230"));
     const previews = node3("div", "t-gallery-previews");
@@ -43329,6 +43372,7 @@ var init_characterGalleryWindow = __esm({
     init_characterGallery();
     init_characterGalleryData();
     init_studioTheme();
+    init_echoImagingWorkspace();
   }
 });
 
@@ -44039,7 +44083,7 @@ function buildChainSegmentsHtml(chainItems) {
                         <span class="t-chain-meta-line"></span>
                         <span class="t-chain-meta-chip">
                             <span class="t-chain-meta-name">${escapeHtmlText2(chipLabel)}</span>
-                            <span class="t-chain-meta-caret">\u25BC</span>
+                            <i class="fa-solid fa-chevron-down t-chain-meta-caret" aria-hidden="true"></i>
                         </span>
                         <span class="t-chain-meta-line"></span>
                     </summary>
@@ -45909,6 +45953,14 @@ var init_favsWindow = __esm({
     CHAIN_SEGMENT_STYLE_ID = "t-chain-segment-style";
     CHAIN_SEGMENT_STYLES = `
 <style data-t-style="${CHAIN_SEGMENT_STYLE_ID}">
+/* Shadow DOM \u590D\u7528\u5BBF\u4E3B\u5B57\u4F53\uFF1B\u72EC\u7ACB\u9605\u8BFB\u9875\u4E5F\u4ECE\u539F\u9152\u9986\u5730\u5740\u52A0\u8F7D\u540C\u4E00\u4EFD\u5B57\u4F53\u3002 */
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    src: url("${new URL("/webfonts/fa-solid-900.woff2", window.location.href).href}") format("woff2");
+    font-style: normal;
+    font-weight: 900;
+    font-display: block;
+}
 .t-chain-segment { display: block; margin: 0; padding: 0; }
 .t-chain-segment .t-chain-meta { display: block; margin: 0; padding: 0; }
 .t-chain-segment .t-chain-meta > summary {
@@ -45950,11 +46002,15 @@ var init_favsWindow = __esm({
     background: rgba(191, 161, 95, 0.18);
 }
 .t-chain-segment .t-chain-meta-caret {
+    font-family: "Font Awesome 6 Free" !important;
+    font-style: normal !important;
+    font-weight: 900 !important;
     font-size: 9px !important;
     line-height: 1 !important;
     opacity: 0.7;
     transition: transform 0.2s ease;
 }
+.t-chain-segment .t-chain-meta-caret::before { content: "\\f078"; }
 .t-chain-segment .t-chain-meta[open] .t-chain-meta-caret { transform: rotate(180deg); }
 .t-chain-segment .t-chain-meta-panel {
     margin: 0 18px 12px;
@@ -57180,6 +57236,53 @@ function isEnabled2() {
 function escapeHtmlText3(str3) {
   return String(str3 || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
+function transitionContext(state) {
+  return {
+    epoch: pacingUiEpoch,
+    key: JSON.stringify([
+      pacingUiEpoch,
+      state.sourcePlanId,
+      state.planId,
+      state.transitionGap?.fromIndex,
+      state.transitionGap?.toIndex
+    ]),
+    revision: JSON.stringify([state.transition?.generatedAt, state.transition?.brief, state.transition?.events])
+  };
+}
+function sameTransitionContext(context7, state) {
+  const current3 = transitionContext(state);
+  return !!context7 && context7.key === current3.key && context7.revision === current3.revision;
+}
+function syncTransitionContext(state) {
+  const current3 = transitionContext(state);
+  if (transitionRenderedContext && !sameTransitionContext(transitionRenderedContext, state)) {
+    transitionOpen = false;
+    transitionViewedIndex = -1;
+    transitionViewContext = null;
+    transitionViewSerial++;
+    transitionRequestSerial++;
+    transitionGenerating = false;
+    if (transitionEditContext && !sameTransitionContext(transitionEditContext, state)) {
+      transitionEditing = false;
+      transitionEditDraft = null;
+      transitionEditContext = null;
+    }
+  }
+  transitionRenderedContext = current3;
+}
+async function loadTransitionTarget(expected = transitionViewContext || transitionRenderedContext) {
+  const api = await loadApi();
+  const state = api.getSceneAdvanceState();
+  if (!sameTransitionContext(expected, state)) {
+    if (window.toastr) toastr.info("\u804A\u5929\u3001\u6765\u6E90\u6216\u884C\u7A0B\u5DF2\u53D8\u5316\uFF0C\u8BF7\u5728\u5F53\u524D\u884C\u7A0B\u4E2D\u91CD\u65B0\u64CD\u4F5C", "\u5E55\u95F4\u884C\u7A0B");
+    await refreshPanel();
+    return null;
+  }
+  return { api, state, context: transitionContext(state) };
+}
+function transitionFontIcon(name) {
+  return `<i class="fa-solid fa-${name}" aria-hidden="true"></i>`;
+}
 function resolveViewedSceneIndex(state) {
   const items = Array.isArray(state.items) ? state.items : [];
   if (state.mode === "free" || items.length === 0) return -1;
@@ -57438,49 +57541,17 @@ function buildCurrentScene(state) {
   if (!current3) return "";
   const isCurrent = index2 === actualIndex;
   const heading = isCurrent ? state.reachedEnding ? "FINAL SCENE / \u5267\u672C\u5DF2\u6536\u675F" : "NOW PLAYING / \u5F53\u524D\u60C5\u8282" : index2 > actualIndex ? "COMING UP / \u540E\u7EED\u5927\u7EB2" : "PREVIOUS SCENE / \u524D\u6587\u5927\u7EB2";
-  const events = state.transition?.events || [];
-  const cursor = Math.min(state.transition?.cursor || 0, events.length);
-  const start = Math.max(0, Math.min(cursor - 1, events.length - 3));
-  const steps = events.slice(start, start + 3).map((step, offset) => {
-    const i = start + offset;
-    const status4 = i < cursor ? "done" : i === cursor ? "current" : "todo";
-    return `<li class="${status4}"><span class="tsa-mini-dot" aria-hidden="true">${status4 === "done" ? "\u2713" : ""}</span><span>${escapeHtmlText3(step.title || `\u7B2C ${i + 1} \u6B65`)}<small>${status4 === "done" ? "\u5DF2\u5B8C\u6210" : status4 === "current" ? "\u5F53\u524D\u6B65\u9AA4" : "\u5F85\u63A8\u8FDB"}</small></span></li>`;
-  }).join("");
-  const itinerary = state.canTransition ? `<aside class="tsa-itinerary">
-        <div class="tsa-itinerary-heading"><span>\u5E55\u95F4\u884C\u7A0B</span><small>${events.length ? `${cursor} / ${events.length} \u6B65` : "\u5C1A\u672A\u7F16\u6392"}</small></div>
-        ${events.length ? `<ol>${steps}</ol>` : "<p>\u628A\u76F8\u90BB\u4E24\u5E55\u4E4B\u95F4\u7684\u7A7A\u6863\uFF0C\u6392\u6210\u51E0\u6B65\u81EA\u7136\u7684\u8FC7\u6E21\u3002</p>"}
-        ${state.progressNotice ? `<p role="status">${escapeHtmlText3(state.progressNotice)}</p>` : ""}
-        <button type="button" class="tsa-text-button tsa-transition-toggle" aria-expanded="${transitionOpen}">${transitionOpen ? "\u6536\u8D77\u884C\u7A0B" : events.length ? "\u7BA1\u7406\u884C\u7A0B" : "\u7F16\u6392\u884C\u7A0B"}${echoIcon("arrow")}</button>
-    </aside>` : "";
+  const itinerary = buildItineraryRegion(state);
   return `<div class="tsa-scene-overview ${state.canTransition ? "has-itinerary" : ""}">
-        <div class="tsa-current-scene tsa-scene-browser" tabindex="0" role="group" aria-label="\u5927\u7EB2\u5185\u5BB9\uFF0C\u5DE6\u53F3\u6ED1\u52A8\u6D4F\u89C8\uFF0C\u952E\u76D8\u5DE6\u53F3\u952E\u53EF\u8F85\u52A9\u67E5\u770B"><div class="tsa-scene-copy">
+        <div class="tsa-current-scene tsa-scene-browser" tabindex="0" role="group" aria-label="\u5F53\u524D\u60C5\u8282\uFF0C\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u524D\u540E\u5927\u7EB2\uFF0C\u952E\u76D8\u5DE6\u53F3\u952E\u53EF\u8F85\u52A9\u67E5\u770B"><div class="tsa-scene-copy">
             <div class="tsa-eyebrow">${heading}</div>
             <div class="tsa-scene-heading"><span class="tsa-scene-number">${String(index2 + 1).padStart(2, "0")}</span><h3>${escapeHtmlText3(current3.title || "\u672A\u547D\u540D\u60C5\u8282")}</h3></div>
             ${current3.time ? `<div class="tsa-scene-time">${escapeHtmlText3(current3.time)}</div>` : ""}
             <p class="tsa-scene-full-plot">${escapeHtmlText3(current3.plot || "(\u7A7A)")}</p>
             ${current3.foreshadowing ? `<p class="tsa-scene-foreshadow"><span>\u4F0F\u7B14\uFF1A</span>${escapeHtmlText3(current3.foreshadowing)}</p>` : ""}
-            <div class="tsa-scene-browse-hint"><span>${String(index2 + 1).padStart(2, "0")} / ${state.items.length} \xB7 ${isCurrent ? "\u5B9E\u9645\u5F53\u524D\u5E55" : `\u4EC5\u6D4F\u89C8\uFF0C\u5B9E\u9645\u505C\u5728\u7B2C ${actualIndex + 1} \u5E55`}</span><span>\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u5927\u7EB2</span></div>
+            <div class="tsa-scene-browse-hint"><span>${String(index2 + 1).padStart(2, "0")} / ${state.items.length} \xB7 ${isCurrent ? "\u5B9E\u9645\u5F53\u524D\u5E55" : `\u4EC5\u6D4F\u89C8\uFF0C\u5B9E\u9645\u505C\u5728\u7B2C ${actualIndex + 1} \u5E55`}</span><span>\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u524D\u540E\u5927\u7EB2</span></div>
         </div>${projectionArt()}</div>${itinerary}
     </div>`;
-}
-function buildSceneTrack(state) {
-  if (!state.items.length) return "";
-  const current3 = state.progress.itemIndex;
-  const viewed = resolveViewedSceneIndex(state);
-  const stops = state.items.map((item2, index2) => `<div role="listitem" class="tsa-track-stop ${index2 < current3 || index2 === current3 && state.reachedEnding ? "is-done" : ""} ${index2 === current3 ? "is-current" : ""} ${index2 === viewed ? "is-viewed" : ""}" data-track-idx="${index2}" ${index2 === current3 ? 'aria-current="step"' : ""}>
-        <span>${String(index2 + 1).padStart(2, "0")}</span><i aria-hidden="true"></i><b>${escapeHtmlText3(item2.title || `\u7B2C ${index2 + 1} \u5E55`)}</b><small>${index2 === current3 ? "\u5B9E\u9645\u5F53\u524D" : index2 === viewed ? "\u6B63\u5728\u6D4F\u89C8" : ""}</small>
-    </div>`).join("");
-  return `<div class="tsa-scene-track-wrap"><div class="tsa-track-caption"><span>\u5927\u7EB2\u5206\u5E55</span><span>\u5B9E\u9645\u5F53\u524D\uFF1A\u7B2C ${current3 + 1} \u5E55${viewed !== current3 ? ` \xB7 \u6D4F\u89C8\u7B2C ${viewed + 1} \u5E55` : ""}</span></div><div class="tsa-scene-track tsa-scene-browser" role="list" aria-label="\u5927\u7EB2\u5206\u5E55\u8FDB\u5EA6\uFF0C\u5DE6\u53F3\u6ED1\u52A8\u6D4F\u89C8">${stops}</div></div>`;
-}
-function restoreSceneTrack(panel, left) {
-  const track = panel.querySelector(".tsa-scene-track");
-  if (!track) return;
-  if (Number.isFinite(left)) {
-    track.scrollLeft = left;
-    return;
-  }
-  const viewed = track.querySelector(".is-viewed") || track.querySelector(".is-current");
-  if (viewed) track.scrollLeft = viewed.offsetLeft - track.offsetLeft - (track.clientWidth - viewed.offsetWidth) / 2;
 }
 function buildCandidatesHtml(state) {
   if (state.candidates.length === 0) {
@@ -57508,91 +57579,62 @@ function candidateMetaLine(c, state) {
   const total = state?.transition?.events?.length || 0;
   return `\u884C\u7A0B\u65B9\u5411\uFF1A\u7B2C ${itemNo} \u6761 \xB7 \u6B63\u6587\u5DF2\u786E\u8BA4 ${c.stepIndex} / ${total} \u6B65`;
 }
-function buildTransitionHtml(state) {
-  if (!state.hasPlan || !state.canTransition) return "";
-  const gap = state.transitionGap;
-  const gapLabel = `\u7B2C ${gap.fromIndex + 1} \u2192 ${gap.toIndex + 1} \u6761`;
-  const t = state.transition;
-  if (!t) {
-    const form = transitionOpen ? `
-            <div class="tsa-transition-form">
-                <textarea class="tsa-transition-brief" id="tsa-transition-brief" rows="2"
-                    placeholder="\u8FD9\u4E00\u6BB5\u5927\u6982\u600E\u4E48\u8D70\uFF1F\uFF08\u4F8B\uFF1A\u4E24\u4EBA\u4ECE\u51B7\u6218\u5230\u91CD\u65B0\u642D\u8BDD\uFF0C\u4E2D\u95F4\u9694\u7740\u4E00\u6B21\u610F\u5916\uFF09">${escapeHtmlText3(transitionDraft)}</textarea>
-                <div class="tsa-transition-form-row">
-                    <label class="tsa-transition-count-label">\u4E8B\u4EF6\u6570
-                        <input type="number" class="tsa-transition-count" id="tsa-transition-count" min="1" max="10" step="1" value="${transitionCount}">
-                    </label>
-                    <button type="button" class="tsa-generate tsa-transition-gen" id="tsa-transition-gen" ${transitionGenerating ? "disabled" : ""}>
-                        <i class="fa-solid ${transitionGenerating ? "fa-spinner fa-spin" : "fa-diagram-project"}"></i> ${transitionGenerating ? "\u751F\u6210\u4E2D..." : "\u751F\u6210\u884C\u7A0B\u5355"}
-                    </button>
-                </div>
-                <div class="tsa-transition-hint">\u628A\u300C${escapeHtmlText3(gap.fromTitle || "\u5F53\u524D\u6761")}\u300D\u5230\u300C${escapeHtmlText3(gap.toTitle || "\u4E0B\u4E00\u6761")}\u300D\u4E4B\u95F4\u7684\u7A7A\u6863\u6392\u6210\u51E0\u6B65\uFF0C\u5267\u60C5\u63A8\u8FDB\u5C31\u4F1A\u6CBF\u7740\u5B83\u4EEC\u8D70\uFF0C\u800C\u4E0D\u662F\u4E00\u6B65\u8DE8\u8FC7\u53BB\u3002</div>
-            </div>` : "";
-    return `
-            <div class="tsa-transition ${transitionOpen ? "is-open" : ""}">
-                <div class="tsa-transition-head tsa-transition-toggle ${transitionOpen ? "is-open" : ""}" role="button" tabindex="0" aria-expanded="${transitionOpen}" title="\u5C55\u5F00/\u6536\u8D77\u8FC7\u6E21\u884C\u7A0B\u5355">
-                    <i class="fa-solid fa-diagram-project"></i> \u8FC7\u6E21\u884C\u7A0B\u5355
-                    <span class="tsa-transition-gap">${escapeHtmlText3(gapLabel)}</span>
-                    <i class="fa-solid fa-chevron-down tsa-transition-arrow"></i>
-                </div>
-                ${form}
-            </div>`;
-  }
-  const shown = transitionEditing && Array.isArray(transitionEditDraft) ? transitionEditDraft : t.events;
-  const total = shown.length;
-  const doneCount = Math.min(t.cursor, total);
-  const rows = shown.map((e, i) => {
-    const cls = i < t.cursor ? "done" : i === t.cursor ? "current" : "todo";
-    const marker = cls === "done" ? '<i class="fa-solid fa-check"></i>' : cls === "current" ? '<i class="fa-solid fa-location-dot"></i>' : '<i class="fa-regular fa-circle"></i>';
-    if (transitionEditing) {
-      return `
-            <li class="tsa-transition-step ${cls} is-editing">
-                <span class="tsa-transition-marker">${marker}</span>
-                <div class="tsa-transition-edit">
-                    <input class="tsa-transition-edit-title" data-step-idx="${i}" data-field="title" value="${escapeHtmlText3(e.title)}" placeholder="\u6807\u9898" maxlength="40">
-                    <input class="tsa-transition-edit-span" data-step-idx="${i}" data-field="span" value="${escapeHtmlText3(e.span)}" placeholder="\u8FC7\u7A0B / \u6761\u4EF6\uFF08\u5982 \u51E0\u6B21\u5B9E\u9645\u63A5\u89E6\u540E\uFF09" maxlength="60">
-                    <textarea class="tsa-transition-edit-brief" data-step-idx="${i}" data-field="brief" rows="2" placeholder="\u8FD9\u4E00\u6B65\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u5BFC\u81F4\u4E86\u4EC0\u4E48">${escapeHtmlText3(e.brief)}</textarea>
-                    <div class="tsa-transition-edit-ops">
-                        <button type="button" class="tsa-icon-btn tsa-transition-up" data-step-idx="${i}" title="\u4E0A\u79FB" ${i === 0 ? "disabled" : ""}><i class="fa-solid fa-arrow-up"></i></button>
-                        <button type="button" class="tsa-icon-btn tsa-transition-down" data-step-idx="${i}" title="\u4E0B\u79FB" ${i === total - 1 ? "disabled" : ""}><i class="fa-solid fa-arrow-down"></i></button>
-                        <button type="button" class="tsa-icon-btn tsa-transition-del" data-step-idx="${i}" title="\u5220\u9664\u8FD9\u4E00\u6B65"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </div>
-            </li>`;
-    }
-    return `
-            <li class="tsa-transition-step ${cls}" data-step-idx="${i}" role="button" tabindex="0" title="\u628A\u8FD9\u4E00\u6B65\u8BBE\u4E3A\u5F53\u524D\uFF08\u4E0D\u4F1A\u5199\u5165\u8F93\u5165\u6846\uFF09">
-                <span class="tsa-transition-marker">${marker}</span>
-                <div class="tsa-transition-main">
-                    <div class="tsa-transition-title">${escapeHtmlText3(e.title || `\u7B2C ${i + 1} \u6B65`)}${e.span ? `<span class="tsa-transition-span">${escapeHtmlText3(e.span)}</span>` : ""}</div>
-                    <div class="tsa-transition-brief-text">${escapeHtmlText3(e.brief)}</div>
-                </div>
-            </li>`;
+function buildItineraryRegion(state, animate = false) {
+  if (!state.canTransition) return "";
+  const events = state.transition?.events || [];
+  const cursor = Math.min(state.transition?.cursor || 0, events.length);
+  const nodes = events.map((step, index2) => {
+    const status4 = index2 < cursor ? "done" : index2 === cursor ? "current" : "todo";
+    const label2 = status4 === "done" ? "\u5DF2\u5B8C\u6210" : status4 === "current" ? "\u5F53\u524D\u6B65\u9AA4" : "\u5F85\u63A8\u8FDB";
+    return `<li class="${status4}"><button type="button" class="tsa-itinerary-node" data-browse-step-idx="${index2}" aria-controls="tsa-itinerary-card" aria-expanded="${transitionOpen && transitionViewedIndex === index2}" title="\u67E5\u770B\u8FD9\u4E00\u6B65\uFF0C\u4E0D\u6539\u53D8\u5B9E\u9645\u8FDB\u5EA6"><span class="tsa-mini-dot" aria-hidden="true">${status4 === "done" ? transitionFontIcon("check") : ""}</span><span>${escapeHtmlText3(step.title || `\u7B2C ${index2 + 1} \u6B65`)}<small>${label2}</small></span></button></li>`;
   }).join("");
-  const left = total - doneCount;
-  const finalRow = `
-        <li class="tsa-transition-final ${state.transitionDone ? "is-ready" : ""}" data-action="cross-gap" role="button" tabindex="0"
-            title="${state.transitionDone ? "\u8DE8\u5230\u4E0B\u4E00\u4E2A\u9636\u6BB5" : `\u8FD8\u6709 ${left} \u6B65\u6CA1\u8D70\uFF1B\u70B9\u5B83\u4F1A\u8DF3\u8FC7\u5269\u4E0B\u51E0\u6B65\u76F4\u63A5\u8DE8\u6BB5`}">
-            <i class="fa-solid fa-flag-checkered"></i> \u8FDB\u5165\u300C${escapeHtmlText3(gap.toTitle || `\u7B2C ${gap.toIndex + 1} \u6761`)}\u300D
-        </li>`;
-  const ops = transitionEditing ? `<button type="button" class="tsa-chip tsa-transition-add" id="tsa-transition-add"><i class="fa-solid fa-plus"></i> \u6DFB\u52A0\u4E00\u6761</button>
-           <button type="button" class="tsa-chip tsa-transition-edit-toggle is-active" id="tsa-transition-edit-toggle"><i class="fa-solid fa-check"></i> \u5B8C\u6210\u7F16\u8F91</button>` : `<button type="button" class="tsa-chip tsa-transition-edit-toggle" id="tsa-transition-edit-toggle"><i class="fa-solid fa-pen"></i> \u7F16\u8F91</button>
-           <button type="button" class="tsa-chip tsa-transition-regen" id="tsa-transition-regen" ${transitionGenerating ? "disabled" : ""}><i class="fa-solid fa-rotate"></i> \u91CD\u65B0\u751F\u6210</button>
-           <button type="button" class="tsa-chip tsa-transition-drop" id="tsa-transition-drop"><i class="fa-solid fa-trash"></i> \u5220\u9664</button>`;
-  return `
-        <div class="tsa-transition is-open has-list">
-            <div class="tsa-transition-head">
-                <i class="fa-solid fa-diagram-project"></i> \u8FC7\u6E21\u884C\u7A0B\u5355
-                <span class="tsa-transition-gap">${escapeHtmlText3(gapLabel)}</span>
-                <span class="tsa-transition-badge">${doneCount} / ${total} \u6B65</span>
-                ${state.stepState ? `<span class="tsa-transition-state" title="\u6A21\u578B\u8BFB\u6700\u65B0\u4E00\u5C42\u56DE\u590D\u5F97\u51FA\u7684\u300C\u5F53\u524D\u8FD9\u4E00\u6B65\u6F14\u5230\u54EA\u4E86\u300D\uFF0C\u4EE3\u8868\u5B83\u8FD9\u4E00\u6279\u5019\u9009\u662F\u4ECE\u54EA\u513F\u5F80\u4E0B\u63A5\u7684">\u672C\u6B65 ${escapeHtmlText3(state.stepState)}</span>` : ""}
-            </div>
-            ${t.brief ? `<div class="tsa-transition-purpose">\u7528\u610F\uFF1A${escapeHtmlText3(t.brief)}</div>` : ""}
-            <ol class="tsa-transition-list">${rows}${finalRow}</ol>
-            <div class="tsa-transition-ops">${ops}</div>
-        </div>`;
+  return `<aside class="tsa-itinerary ${transitionOpen && !animate ? "is-card-open" : ""}">
+        <div class="tsa-itinerary-overview" ${transitionOpen ? "inert" : ""}>
+            <div class="tsa-itinerary-heading"><span>\u5E55\u95F4\u884C\u7A0B</span><small>${events.length ? `${cursor} / ${events.length} \u6B65` : "\u5C1A\u672A\u7F16\u6392"}</small></div>
+            ${events.length ? `<ol class="tsa-itinerary-nodes">${nodes}</ol><div class="tsa-itinerary-hint">\u70B9\u51FB\u8282\u70B9\u67E5\u770B\u5BF9\u5E94\u5185\u5BB9</div>` : `<button type="button" class="tsa-itinerary-create" aria-controls="tsa-itinerary-card" aria-expanded="${transitionOpen}"><span>\u628A\u76F8\u90BB\u4E24\u5E55\u4E4B\u95F4\u7684\u7A7A\u6863\uFF0C\u6392\u6210\u51E0\u6B65\u81EA\u7136\u7684\u8FC7\u6E21\u3002</span><span class="tsa-itinerary-create-link">\u7F16\u6392\u884C\u7A0B ${transitionFontIcon("arrow-right")}</span></button>`}
+            ${state.progressNotice ? `<p class="tsa-itinerary-notice" role="status">${escapeHtmlText3(state.progressNotice)}</p>` : ""}
+        </div>
+        <section id="tsa-itinerary-card" class="tsa-itinerary-card" role="region" aria-label="${transitionEditing ? "\u7F16\u8F91\u884C\u7A0B" : events.length ? "\u8282\u70B9\u5185\u5BB9" : "\u7F16\u6392\u884C\u7A0B"}" ${transitionOpen ? "" : "hidden inert"}>${buildTransitionHtml(state)}</section>
+    </aside>`;
+}
+function buildTransitionHtml(state) {
+  const t = state.transition;
+  const busy = transitionGenerating ? "disabled" : "";
+  const back = `<button type="button" class="tsa-itinerary-back" title="\u8FD4\u56DE\u884C\u7A0B\u8282\u70B9\u5217\u8868">${transitionFontIcon("arrow-left")} \u8FD4\u56DE</button>`;
+  if (!t) {
+    return `<div class="tsa-itinerary-content" tabindex="-1">
+            <p class="tsa-itinerary-gap">${escapeHtmlText3(state.transitionGap.fromTitle)} \xB7 ${escapeHtmlText3(state.transitionGap.toTitle)}</p>
+            <label class="tsa-itinerary-field" for="tsa-transition-brief">\u8FD9\u4E00\u6BB5\u5927\u6982\u600E\u4E48\u8D70\uFF1F</label>
+            <textarea class="tsa-transition-brief" id="tsa-transition-brief" rows="3" placeholder="\u4F8B\u5982\uFF1A\u4ECE\u51B7\u6218\u5230\u91CD\u65B0\u642D\u8BDD\uFF0C\u4E2D\u95F4\u9694\u7740\u4E00\u6B21\u610F\u5916" ${busy}>${escapeHtmlText3(transitionDraft)}</textarea>
+            <label class="tsa-itinerary-count">\u4E8B\u4EF6\u6570<input type="number" class="tsa-transition-count" id="tsa-transition-count" min="1" max="10" step="1" value="${transitionCount}" ${busy}></label>
+        </div><div class="tsa-itinerary-actions"><div class="tsa-itinerary-primary">${back}<button type="button" class="tsa-generate" id="tsa-transition-gen" ${busy}>${transitionFontIcon(transitionGenerating ? "spinner fa-spin" : "diagram-project")} ${transitionGenerating ? "\u751F\u6210\u4E2D..." : "\u751F\u6210\u884C\u7A0B\u5355"}</button></div></div>`;
+  }
+  if (transitionEditing && Array.isArray(transitionEditDraft)) {
+    const total = transitionEditDraft.length;
+    transitionEditTarget = Math.max(0, Math.min(transitionEditTarget, total - 1));
+    const rows = transitionEditDraft.map((step2, index3) => `<div class="tsa-itinerary-edit-row ${index3 === transitionEditTarget ? "is-selected" : ""}" data-edit-step-idx="${index3}">
+            <label>\u8282\u70B9 ${index3 + 1}<input class="tsa-transition-edit-title" data-step-idx="${index3}" data-field="title" value="${escapeHtmlText3(step2.title)}" placeholder="\u6807\u9898" maxlength="40"></label>
+            <input class="tsa-transition-edit-span" data-step-idx="${index3}" data-field="span" value="${escapeHtmlText3(step2.span)}" placeholder="\u8FC7\u7A0B / \u6761\u4EF6" aria-label="\u8282\u70B9 ${index3 + 1} \u7684\u8FC7\u7A0B\u6216\u6761\u4EF6" maxlength="60">
+            <textarea class="tsa-transition-edit-brief" data-step-idx="${index3}" data-field="brief" rows="3" placeholder="\u8FD9\u4E00\u6B65\u53D1\u751F\u4E86\u4EC0\u4E48\u3001\u5BFC\u81F4\u4E86\u4EC0\u4E48" aria-label="\u8282\u70B9 ${index3 + 1} \u7684\u5185\u5BB9">${escapeHtmlText3(step2.brief)}</textarea>
+        </div>`).join("");
+    return `<div class="tsa-itinerary-content" tabindex="-1">${rows || "<p>\u6682\u65E0\u8282\u70B9\uFF0C\u53EF\u70B9\u51FB\u5E95\u90E8\u6DFB\u52A0\u3002</p>"}</div>
+            <div class="tsa-itinerary-actions"><div class="tsa-itinerary-primary">${back}<button type="button" class="tsa-generate" id="tsa-transition-edit-toggle">\u4FDD\u5B58\u7F16\u8F91</button></div>
+            <div class="tsa-itinerary-tools"><button type="button" class="tsa-transition-up" id="tsa-transition-up" title="\u4E0A\u79FB\u6240\u9009\u8282\u70B9" aria-label="\u4E0A\u79FB\u6240\u9009\u8282\u70B9" ${transitionEditTarget === 0 || !total ? "disabled" : ""}>${transitionFontIcon("arrow-up")}</button><button type="button" class="tsa-transition-down" id="tsa-transition-down" title="\u4E0B\u79FB\u6240\u9009\u8282\u70B9" aria-label="\u4E0B\u79FB\u6240\u9009\u8282\u70B9" ${transitionEditTarget >= total - 1 ? "disabled" : ""}>${transitionFontIcon("arrow-down")}</button><button type="button" class="tsa-transition-del" id="tsa-transition-del" title="\u5220\u9664\u6240\u9009\u8282\u70B9" aria-label="\u5220\u9664\u6240\u9009\u8282\u70B9" ${!total ? "disabled" : ""}>${transitionFontIcon("trash")}</button><button type="button" id="tsa-transition-add">${transitionFontIcon("plus")} \u6DFB\u52A0</button></div></div>`;
+  }
+  const index2 = Math.max(0, Math.min(transitionViewedIndex, t.events.length - 1));
+  const step = t.events[index2];
+  if (!step) return "";
+  const status4 = index2 < t.cursor ? "\u5DF2\u5B8C\u6210" : index2 === t.cursor ? "\u5F53\u524D\u6B65\u9AA4" : "\u5F85\u63A8\u8FDB";
+  const canNext = index2 === t.cursor && t.cursor + 1 < t.events.length;
+  const primary = index2 !== t.cursor && !state.transitionDone ? `<button type="button" class="tsa-generate" id="tsa-transition-locate" ${busy} title="\u624B\u52A8\u5B9A\u4F4D\uFF0C\u4E0D\u8BA4\u8BC1\u6B63\u6587\u5DF2\u7ECF\u53D1\u751F">\u8BBE\u4E3A\u5F53\u524D\u8282\u70B9</button>` : canNext ? `<button type="button" class="tsa-generate" id="tsa-transition-next" ${busy} title="\u624B\u52A8\u5B9A\u4F4D\u5230\u4E0B\u4E00\u8282\u70B9\uFF0C\u4E0D\u8BA4\u8BC1\u6B63\u6587\u5DF2\u7ECF\u53D1\u751F">\u8FDB\u5165\u4E0B\u4E00\u8282\u70B9</button>` : "";
+  return `<div class="tsa-itinerary-content" tabindex="-1"><div class="tsa-itinerary-node-meta">\u8282\u70B9 ${String(index2 + 1).padStart(2, "0")} \xB7 ${status4}</div><h4 class="tsa-itinerary-node-title">${escapeHtmlText3(step.title || `\u7B2C ${index2 + 1} \u6B65`)}</h4>
+        ${step.span ? `<p class="tsa-itinerary-node-span">${escapeHtmlText3(step.span)}</p>` : ""}<p class="tsa-itinerary-node-text">${escapeHtmlText3(step.brief)}</p>
+        ${index2 === t.cursor && state.stepState ? `<p class="tsa-itinerary-node-state">\u672C\u6B65 ${escapeHtmlText3(state.stepState)}</p>` : ""}</div>
+        <div class="tsa-itinerary-actions"><div class="tsa-itinerary-primary">${back}${primary}</div>
+        <div class="tsa-itinerary-tools"><button type="button" id="tsa-transition-edit-toggle" ${busy}>\u7F16\u8F91</button><button type="button" id="tsa-transition-regen" ${busy}>${transitionGenerating ? "\u751F\u6210\u4E2D..." : "\u91CD\u7F16"}</button><button type="button" id="tsa-transition-drop" ${busy}>\u5220\u9664</button><button type="button" class="tsa-transition-final" ${busy} title="${state.transitionDone ? "\u8FDB\u5165\u4E0B\u4E00\u5E55" : "\u8DF3\u8FC7\u5269\u4F59\u8282\u70B9\uFF0C\u8FDB\u5165\u4E0B\u4E00\u5E55\u524D\u9700\u8981\u786E\u8BA4"}">\u8FDB\u5165\u4E0B\u4E00\u5E55 ${transitionFontIcon("arrow-right")}</button></div></div>`;
 }
 function buildPanelHtml(state) {
+  syncTransitionContext(state);
   const bbInfo = getActiveBlindboxInfo();
   if (bbInfo) {
     return `<div id="${PANEL_ID}" class="tsa-panel tsa-studio is-blindbox">${buildBlindboxBody(bbInfo)}</div>`;
@@ -57761,9 +57803,7 @@ function buildRecommendBody(state) {
   const busy = generating3 || pacingAnalyzing;
   return `
         <div class="tsa-scroll">
-            ${buildSceneTrack(state)}
             ${buildCurrentScene(state)}
-            ${transitionOpen ? buildTransitionHtml(state) : ""}
             <section class="tsa-candidates"><div class="tsa-candidate-heading"><div><div class="tsa-eyebrow">POSSIBLE TAKES</div><h3>\u63A5\u4E0B\u6765\uFF0C\u6545\u4E8B\u5982\u4F55\u53D1\u751F</h3></div><span class="tsa-candidate-count">${String(state.candidates.length).padStart(2, "0")}<small>\u4E2A\u5019\u9009</small></span></div>
             <div class="tsa-list" id="tsa-list">${buildCandidatesHtml(state)}</div></section>
         </div>
@@ -57845,14 +57885,20 @@ async function refreshPanel() {
   }
   if (epoch4 !== pacingUiEpoch || !$panel[0].isConnected) return;
   const scrollTop = $panel.find(".tsa-scroll").scrollTop() || 0;
-  const trackLeft = $panel.find(".tsa-scene-track")[0]?.scrollLeft;
-  const previousScene = $panel.find(".tsa-track-stop.is-viewed").attr("data-track-idx");
+  const itineraryContext = transitionRenderedContext;
+  const nodes = $panel[0].querySelector(".tsa-itinerary-nodes");
+  const content = $panel[0].querySelector(".tsa-itinerary-content");
+  const itineraryScroll = { left: nodes?.scrollLeft || 0, top: nodes?.scrollTop || 0, content: content?.scrollTop || 0 };
   const focused = document.activeElement;
+  const selection = typeof focused?.selectionStart === "number" ? [focused.selectionStart, focused.selectionEnd] : null;
   let focusSelector = "";
   if ($panel[0].contains(focused)) {
     if (focused.id) focusSelector = "#" + CSS.escape(focused.id);
     else if (focused.classList.contains("tsa-current-scene")) focusSelector = ".tsa-current-scene";
-    else for (const key of ["data-track-idx", "data-candidate-index", "data-mode"]) {
+    else if (focused.classList.contains("tsa-itinerary-content")) focusSelector = ".tsa-itinerary-content";
+    else if (focused.hasAttribute("data-step-idx") && focused.hasAttribute("data-field")) {
+      focusSelector = `[data-step-idx="${CSS.escape(focused.dataset.stepIdx)}"][data-field="${CSS.escape(focused.dataset.field)}"]`;
+    } else for (const key of ["data-candidate-index", "data-mode", "data-browse-step-idx"]) {
       if (focused.hasAttribute(key)) {
         focusSelector = `[${key}="${CSS.escape(focused.getAttribute(key))}"]`;
         break;
@@ -57862,14 +57908,37 @@ async function refreshPanel() {
   const $next = $(buildPanelHtml(state));
   $panel.attr("class", $next.attr("class")).html($next.html());
   $panel.find(".tsa-scroll").scrollTop(scrollTop);
-  const nextScene = $panel.find(".tsa-track-stop.is-viewed").attr("data-track-idx");
-  restoreSceneTrack($panel[0], previousScene === nextScene ? trackLeft : void 0);
-  if (focusSelector) $panel[0].querySelector(focusSelector)?.focus({ preventScroll: true });
+  if (sameTransitionContext(itineraryContext, state)) {
+    const nextNodes = $panel[0].querySelector(".tsa-itinerary-nodes");
+    if (nextNodes) {
+      nextNodes.scrollLeft = itineraryScroll.left;
+      nextNodes.scrollTop = itineraryScroll.top;
+    }
+    const nextContent = $panel[0].querySelector(".tsa-itinerary-content");
+    if (nextContent) nextContent.scrollTop = itineraryScroll.content;
+  }
+  if (focusSelector) {
+    const nextFocus = $panel[0].querySelector(focusSelector);
+    if (nextFocus && !nextFocus.closest("[hidden], [inert]")) {
+      nextFocus.focus({ preventScroll: true });
+      if (selection && typeof nextFocus.setSelectionRange === "function") {
+        try {
+          nextFocus.setSelectionRange(...selection);
+        } catch {
+        }
+      }
+    } else if (!transitionOpen) focusItineraryNode($panel[0]);
+    else $panel[0].querySelector(".tsa-itinerary-content")?.focus({ preventScroll: true });
+  }
   syncStripProgress(progressFromState(state));
 }
 function destroyPanel() {
   if (transitionEditing) void commitTransitionEditDraft();
   transitionOpen = false;
+  transitionViewedIndex = -1;
+  transitionViewContext = null;
+  transitionRenderedContext = null;
+  transitionViewSerial++;
   transitionEditing = false;
   $(`#${PANEL_ID}`).remove();
   expandedForMesid = null;
@@ -57940,77 +58009,172 @@ async function onPickCandidate(index2) {
   }
   await refreshPanel();
 }
+function focusItineraryNode(panel, index2 = transitionViewedIndex) {
+  const target = panel?.querySelector(`[data-browse-step-idx="${index2}"]`) || panel?.querySelector(".tsa-itinerary-create, .tsa-itinerary-node");
+  target?.focus({ preventScroll: true });
+}
+async function onBrowseTransition(index2 = -1) {
+  const serial = ++transitionViewSerial;
+  const target = await loadTransitionTarget(transitionRenderedContext);
+  if (!target || serial !== transitionViewSerial || !target.state.canTransition) return;
+  if (index2 >= 0 && !target.state.transition?.events[index2]) return;
+  const panel = document.getElementById(PANEL_ID);
+  const previous = panel?.querySelector(".tsa-itinerary");
+  if (!previous) return;
+  const previousNodes = previous.querySelector(".tsa-itinerary-nodes");
+  const position = { left: previousNodes?.scrollLeft || 0, top: previousNodes?.scrollTop || 0 };
+  transitionViewedIndex = index2;
+  transitionViewContext = target.context;
+  transitionOpen = true;
+  const next = $(buildItineraryRegion(target.state, true))[0];
+  previous.replaceWith(next);
+  const nodes = next.querySelector(".tsa-itinerary-nodes");
+  if (nodes) {
+    nodes.scrollLeft = position.left;
+    nodes.scrollTop = position.top;
+  }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (serial !== transitionViewSerial || !transitionOpen || !next.isConnected) return;
+    next.classList.add("is-card-open");
+    next.querySelector(".tsa-itinerary-content")?.focus({ preventScroll: true });
+  }));
+}
+async function closeTransitionCard({ save = true } = {}) {
+  const serial = transitionViewSerial;
+  const wasEditing = transitionEditing;
+  if (save && transitionEditing && !await commitTransitionEditDraft()) return false;
+  if (serial !== transitionViewSerial) return false;
+  transitionOpen = false;
+  const closedSerial = ++transitionViewSerial;
+  const panel = document.getElementById(PANEL_ID);
+  const region = panel?.querySelector(".tsa-itinerary");
+  const card = region?.querySelector(".tsa-itinerary-card");
+  region?.classList.remove("is-card-open");
+  if (card) card.inert = true;
+  const overview = region?.querySelector(".tsa-itinerary-overview");
+  if (overview) overview.inert = false;
+  overview?.querySelectorAll("[aria-expanded]").forEach((node4) => node4.setAttribute("aria-expanded", "false"));
+  focusItineraryNode(panel);
+  const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 360;
+  setTimeout(() => {
+    if (closedSerial === transitionViewSerial && !transitionOpen && card?.isConnected) {
+      card.hidden = true;
+      if (wasEditing) void refreshPanel();
+    }
+  }, duration);
+  return true;
+}
 async function commitTransitionEditDraft() {
   const draft2 = transitionEditDraft;
+  const context7 = transitionEditContext;
   transitionEditing = false;
   transitionEditDraft = null;
-  if (!Array.isArray(draft2)) return;
+  transitionEditContext = null;
+  if (!Array.isArray(draft2)) return true;
   try {
-    const api = await loadApi();
-    const state = api.getSceneAdvanceState();
-    if (state.planId) api.saveSceneTransitionEvents(state.planId, draft2);
+    const target = await loadTransitionTarget(context7);
+    if (!target) return false;
+    target.api.saveSceneTransitionEvents(target.state.planId, draft2);
+    return true;
   } catch (e) {
     TitaniaLogger.warn("\u8FC7\u6E21\u884C\u7A0B\u5355\u843D\u76D8\u5931\u8D25", e?.message || String(e));
+    if (context7?.epoch === pacingUiEpoch && transitionRenderedContext?.key === context7.key && transitionRenderedContext?.revision === context7.revision && !transitionEditDraft) {
+      transitionEditing = true;
+      transitionEditDraft = draft2;
+      transitionEditContext = context7;
+    }
+    if (window.toastr) toastr.warning("\u884C\u7A0B\u7F16\u8F91\u4FDD\u5B58\u5931\u8D25\uFF0C\u8BF7\u91CD\u65B0\u67E5\u770B\u5F53\u524D\u884C\u7A0B", "\u5E55\u95F4\u884C\u7A0B");
+    return false;
   }
 }
 async function onGenerateTransition(regen = false) {
   if (transitionGenerating) return;
-  const api = await loadApi();
-  const state = api.getSceneAdvanceState();
-  let brief;
-  let count;
-  if (regen && state.transition) {
-    brief = state.transition.brief;
-    count = state.transition.events.length || EVENT_COUNT_DEFAULT;
-  } else {
-    brief = String($("#tsa-transition-brief").val() ?? transitionDraft).trim();
-    count = clampEventCount($("#tsa-transition-count").val() ?? transitionCount);
-  }
+  const cardSerial = transitionViewSerial;
+  const target = await loadTransitionTarget();
+  if (!target || transitionGenerating) return;
+  const { api, state, context: context7 } = target;
+  const request = ++transitionRequestSerial;
+  const brief = regen && state.transition ? state.transition.brief : transitionDraft.trim();
+  const count = regen && state.transition ? state.transition.events.length || EVENT_COUNT_DEFAULT : clampEventCount(transitionCount);
   transitionDraft = brief;
   transitionCount = count;
   transitionGenerating = true;
   await refreshPanel();
+  let saved;
   try {
-    await api.generateSceneTransition({ brief, count });
+    if (request !== transitionRequestSerial || !sameTransitionContext(context7, api.getSceneAdvanceState())) return;
+    saved = await api.generateSceneTransition({
+      brief,
+      count,
+      assertCurrent: () => {
+        if (request !== transitionRequestSerial || context7.key !== transitionContext(api.getSceneAdvanceState()).key) {
+          throw new Error("\u5E55\u95F4\u884C\u7A0B\u8BF7\u6C42\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u4F7F\u7528\u5F53\u524D\u804A\u5929\u548C\u65B9\u6848\u91CD\u65B0\u64CD\u4F5C\u3002");
+        }
+      },
+      onApplied: (result) => {
+        if (!result || request !== transitionRequestSerial || context7.key !== transitionContext(api.getSceneAdvanceState()).key) return;
+        transitionGenerating = false;
+        if (cardSerial === transitionViewSerial) {
+          transitionOpen = false;
+          transitionViewSerial++;
+        }
+        void refreshPanel();
+      }
+    });
   } catch (e) {
     TitaniaLogger.error("\u8FC7\u6E21\u884C\u7A0B\u5355\u751F\u6210\u5931\u8D25", e);
   } finally {
-    transitionGenerating = false;
-    const after = api.getSceneAdvanceState();
-    if (after.transition && after.transition.events.length > 0) transitionOpen = false;
-    await refreshPanel();
+    if (request === transitionRequestSerial && context7.key === transitionContext(api.getSceneAdvanceState()).key) {
+      transitionGenerating = false;
+      if (saved && cardSerial === transitionViewSerial) {
+        transitionOpen = false;
+        transitionViewSerial++;
+      }
+      await refreshPanel();
+    }
   }
 }
-async function onPickStep(stepIndex) {
-  await commitTransitionEditDraft();
-  const api = await loadApi();
-  const state = api.getSceneAdvanceState();
-  if (!state.planId || !state.transition) return;
-  if (state.transition.cursor === stepIndex) return;
-  api.clearSceneCandidates(state.planId);
-  api.setSceneStep(state.planId, stepIndex);
+async function onPickStep(stepIndex, next = false) {
+  const serial = transitionViewSerial;
+  const target = await loadTransitionTarget();
+  if (!target || !target.state.transition) return;
+  const { api, state } = target;
+  if (next) {
+    if (transitionViewedIndex !== state.transition.cursor) return;
+    stepIndex = state.transition.cursor + 1;
+  }
+  if (!Number.isInteger(stepIndex) || stepIndex < 0 || stepIndex >= state.transition.events.length) return;
+  if (state.transition.cursor !== stepIndex) {
+    api.clearSceneCandidates(state.planId);
+    api.setSceneStep(state.planId, stepIndex);
+  }
+  if (serial === transitionViewSerial) await closeTransitionCard({ save: false });
   await refreshPanel();
 }
 async function onCrossGap() {
-  await commitTransitionEditDraft();
-  const api = await loadApi();
-  const state = api.getSceneAdvanceState();
-  if (!state.planId) return;
+  const target = await loadTransitionTarget();
+  if (!target) return;
+  const { api, state, context: context7 } = target;
   const left = state.transition && !state.transitionDone ? state.transition.events.length - state.transition.cursor : 0;
   if (left > 0 && !window.confirm(`\u8FD8\u6709 ${left} \u6B65\u8FC7\u6E21\u6CA1\u8D70\uFF0C\u786E\u5B9A\u8DF3\u8FC7\u5B83\u4EEC\u3001\u76F4\u63A5\u8FDB\u5165\u4E0B\u4E00\u6761\u5927\u7EB2\uFF1F`)) return;
+  if (!sameTransitionContext(context7, api.getSceneAdvanceState())) return;
   api.clearSceneCandidates(state.planId);
   api.crossSceneGap(state.planId);
+  transitionOpen = false;
+  transitionViewSerial++;
   await refreshPanel();
 }
 async function onToggleTransitionEdit() {
   if (transitionEditing) {
-    await commitTransitionEditDraft();
+    if (!await commitTransitionEditDraft()) return;
+    await closeTransitionCard({ save: false });
   } else {
-    const api = await loadApi();
-    const state = api.getSceneAdvanceState();
-    if (!state.transition) return;
+    const target = await loadTransitionTarget();
+    if (!target?.state.transition) return;
     transitionEditing = true;
-    transitionEditDraft = state.transition.events.map((e) => ({ ...e }));
+    transitionEditContext = target.context;
+    transitionEditDraft = target.state.transition.events.map((e) => ({ ...e }));
+    transitionEditTarget = Math.max(0, transitionViewedIndex);
   }
   await refreshPanel();
 }
@@ -58027,12 +58191,16 @@ function swapAt(list, a, b) {
   return next;
 }
 async function onDropTransition() {
-  const api = await loadApi();
-  const state = api.getSceneAdvanceState();
-  if (!state.planId) return;
+  const target = await loadTransitionTarget();
+  if (!target) return;
+  const { api, state, context: context7 } = target;
   if (!window.confirm("\u5220\u9664\u8FD9\u4E00\u6BB5\u7684\u8FC7\u6E21\u884C\u7A0B\u5355\uFF1F\u5267\u60C5\u63A8\u8FDB\u5C06\u9000\u56DE\u6309\u5927\u7EB2\u6761\u76EE\u76F4\u63A5\u63A8\u8FDB\u3002")) return;
+  if (!sameTransitionContext(context7, api.getSceneAdvanceState())) return;
   transitionEditing = false;
   transitionEditDraft = null;
+  transitionEditContext = null;
+  transitionOpen = false;
+  transitionViewSerial++;
   api.clearSceneTransition(state.planId);
   await refreshPanel();
 }
@@ -58067,6 +58235,8 @@ function invalidatePacingUiRequests() {
   pacingUiEpoch++;
   pacingRequestSerial++;
   pacingDraftRevision++;
+  transitionRequestSerial++;
+  transitionGenerating = false;
   generating3 = false;
   pacingAnalyzing = false;
   pacingResultUnread = false;
@@ -58153,7 +58323,7 @@ function bindSceneBrowseGestures(panel) {
     return previous;
   };
   panel.addEventListener("pointerdown", (event) => {
-    const target = event.target.closest(".tsa-scene-browser");
+    const target = event.target.closest(".tsa-current-scene.tsa-scene-browser");
     if (!target || !panel.contains(target) || event.isPrimary === false || event.button !== 0) return;
     if (event.target.closest("button, input, select, textarea, a, label")) return;
     gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, epoch: pacingUiEpoch };
@@ -58203,10 +58373,7 @@ async function togglePanel(strip, mesid) {
 function insertPanel(strip, html) {
   strip.insertAdjacentHTML("afterend", html);
   const panel = document.getElementById(PANEL_ID);
-  if (panel) {
-    bindPanelNode(panel);
-    restoreSceneTrack(panel);
-  }
+  if (panel) bindPanelNode(panel);
   return panel;
 }
 function bindPanelNode(panel) {
@@ -58236,11 +58403,11 @@ function bindPanelNode(panel) {
   });
   $panel.on("change", "#tsa-plan-select", async function() {
     const nextPlan = String($(this).val() || "");
+    const previousEpoch = pacingUiEpoch;
+    if (!await commitTransitionEditDraft() || previousEpoch !== pacingUiEpoch || !panel.isConnected) return;
     invalidatePacingUiRequests();
     const epoch4 = pacingUiEpoch;
     clearPacingDirective();
-    await commitTransitionEditDraft();
-    if (epoch4 !== pacingUiEpoch || !panel.isConnected) return;
     const api = await loadApi();
     if (epoch4 !== pacingUiEpoch || !panel.isConnected) return;
     api.switchSceneSourcePlan(nextPlan);
@@ -58267,11 +58434,13 @@ function bindPanelNode(panel) {
     savePacingConfig({ auto_apply: this.checked });
   });
   $panel.on("click", "#tsa-generate", () => onGenerate());
-  $panel.on("click", ".tsa-transition-toggle", async function() {
-    if (transitionOpen && transitionEditing) await commitTransitionEditDraft();
-    transitionOpen = !transitionOpen;
-    await refreshPanel();
+  $panel.on("click", ".tsa-itinerary-create", () => onBrowseTransition());
+  $panel.on("click", ".tsa-itinerary-node", function() {
+    return onBrowseTransition(Number(this.dataset.browseStepIdx));
   });
+  $panel.on("click", ".tsa-itinerary-back", () => closeTransitionCard());
+  $panel.on("click", "#tsa-transition-locate", () => onPickStep(transitionViewedIndex));
+  $panel.on("click", "#tsa-transition-next", () => onPickStep(transitionViewedIndex, true));
   $panel.on("input", "#tsa-transition-brief", function() {
     transitionDraft = String($(this).val() || "");
   });
@@ -58281,24 +58450,38 @@ function bindPanelNode(panel) {
   $panel.on("click", "#tsa-transition-gen", () => onGenerateTransition(false));
   $panel.on("click", "#tsa-transition-regen", () => onGenerateTransition(true));
   $panel.on("click", "#tsa-transition-drop", () => onDropTransition());
-  $panel.on("click", ".tsa-transition-step:not(.is-editing)", function() {
-    return onPickStep(Number($(this).data("step-idx")));
-  });
   $panel.on("click", ".tsa-transition-final", () => onCrossGap());
   $panel.on("click", "#tsa-transition-edit-toggle", () => onToggleTransitionEdit());
-  $panel.on("click", ".tsa-transition-up", function() {
-    const i = Number($(this).data("step-idx"));
-    return mutateTransitionDraft((list) => i > 0 ? swapAt(list, i, i - 1) : list);
+  $panel.on("click", ".tsa-transition-up", () => mutateTransitionDraft((list) => {
+    const i = transitionEditTarget;
+    if (i <= 0) return list;
+    transitionEditTarget = i - 1;
+    return swapAt(list, i, i - 1);
+  }));
+  $panel.on("click", ".tsa-transition-down", () => mutateTransitionDraft((list) => {
+    const i = transitionEditTarget;
+    if (i < 0 || i >= list.length - 1) return list;
+    transitionEditTarget = i + 1;
+    return swapAt(list, i, i + 1);
+  }));
+  $panel.on("click", ".tsa-transition-del", () => mutateTransitionDraft((list) => {
+    const i = transitionEditTarget;
+    transitionEditTarget = Math.max(0, Math.min(i, list.length - 2));
+    return list.filter((_, idx) => idx !== i);
+  }));
+  $panel.on("click", "#tsa-transition-add", () => mutateTransitionDraft((list) => {
+    transitionEditTarget = list.length;
+    return [...list, { title: "", span: "", brief: "" }];
+  }));
+  $panel.on("focusin", ".tsa-itinerary-edit-row input, .tsa-itinerary-edit-row textarea", function() {
+    transitionEditTarget = Number(this.dataset.stepIdx);
+    const total = transitionEditDraft?.length || 0;
+    $panel.find(".tsa-itinerary-edit-row").removeClass("is-selected");
+    $(this).closest(".tsa-itinerary-edit-row").addClass("is-selected");
+    $panel.find("#tsa-transition-up").prop("disabled", transitionEditTarget === 0 || !total);
+    $panel.find("#tsa-transition-down").prop("disabled", transitionEditTarget >= total - 1);
+    $panel.find("#tsa-transition-del").prop("disabled", !total);
   });
-  $panel.on("click", ".tsa-transition-down", function() {
-    const i = Number($(this).data("step-idx"));
-    return mutateTransitionDraft((list) => i >= 0 && i < list.length - 1 ? swapAt(list, i, i + 1) : list);
-  });
-  $panel.on("click", ".tsa-transition-del", function() {
-    const i = Number($(this).data("step-idx"));
-    return mutateTransitionDraft((list) => list.filter((_, idx) => idx !== i));
-  });
-  $panel.on("click", "#tsa-transition-add", () => mutateTransitionDraft((list) => [...list, { title: "", span: "", brief: "" }]));
   $panel.on("input", ".tsa-transition-edit-title, .tsa-transition-edit-span, .tsa-transition-edit-brief", function() {
     if (!Array.isArray(transitionEditDraft)) return;
     const i = Number($(this).data("step-idx"));
@@ -58343,6 +58526,10 @@ function bindPanelNode(panel) {
   $panel.on("click", ".tsa-mode-tab", async function() {
     const next = String($(this).data("mode") || "recommend") === "pacing" ? "pacing" : "recommend";
     if (next === panelMode) return;
+    const epoch4 = pacingUiEpoch;
+    if (!await commitTransitionEditDraft() || epoch4 !== pacingUiEpoch || !panel.isConnected) return;
+    transitionOpen = false;
+    transitionViewSerial++;
     panelMode = next;
     if (next === "pacing") pacingResultUnread = false;
     await refreshPanel();
@@ -58381,8 +58568,12 @@ function initSceneAdvanceBubble() {
   listenersBound2 = true;
   $(document).on("keydown.tsceneadvance", (event) => {
     if (event.key === "Escape" && !document.getElementById("titania-outline-entry-menu") && document.getElementById(PANEL_ID)) {
-      destroyPanel();
-      getStrip()?.focus();
+      event.preventDefault();
+      if (transitionOpen) void closeTransitionCard();
+      else {
+        destroyPanel();
+        getStrip()?.focus();
+      }
     }
   });
   const rerenderEvents = [
@@ -58410,7 +58601,7 @@ function initSceneAdvanceBubble() {
   scheduleRefreshStrips(300);
   TitaniaLogger.info("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u5DF2\u521D\u59CB\u5316");
 }
-var STRIP_CLASS, PANEL_ID, PLANS_KEY, ACTIVE_PLAN_KEY, listenersBound2, refreshQueued, apiPromise, expandedForMesid, generating3, opening, restoring, viewedSceneIndex, viewedSceneSource, viewedSceneProgress, sceneBrowseBusy, pacingUiEpoch, pacingRequestSerial, pacingDraftRevision, pacingResultUnread, bbStageOpenIdx, bbFlowOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, transitionOpen, transitionDraft, transitionCount, transitionEditing, transitionEditDraft, transitionGenerating, PACING_PRESETS, BB_STAGE_LABELS, bbStageLabel;
+var STRIP_CLASS, PANEL_ID, PLANS_KEY, ACTIVE_PLAN_KEY, listenersBound2, refreshQueued, apiPromise, expandedForMesid, generating3, opening, restoring, viewedSceneIndex, viewedSceneSource, viewedSceneProgress, sceneBrowseBusy, pacingUiEpoch, pacingRequestSerial, pacingDraftRevision, pacingResultUnread, bbStageOpenIdx, bbFlowOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, transitionOpen, transitionViewedIndex, transitionViewContext, transitionRenderedContext, transitionViewSerial, transitionRequestSerial, transitionEditContext, transitionEditTarget, transitionDraft, transitionCount, transitionEditing, transitionEditDraft, transitionGenerating, PACING_PRESETS, BB_STAGE_LABELS, bbStageLabel;
 var init_sceneAdvanceBubble = __esm({
   "src/ui/sceneAdvanceBubble.js"() {
     init_storage();
@@ -58451,6 +58642,13 @@ var init_sceneAdvanceBubble = __esm({
     pacingDraft = "";
     pacingAnalyzing = false;
     transitionOpen = false;
+    transitionViewedIndex = -1;
+    transitionViewContext = null;
+    transitionRenderedContext = null;
+    transitionViewSerial = 0;
+    transitionRequestSerial = 0;
+    transitionEditContext = null;
+    transitionEditTarget = 0;
     transitionDraft = "";
     transitionCount = EVENT_COUNT_DEFAULT;
     transitionEditing = false;
@@ -63599,7 +63797,14 @@ async function generateTransitionItinerary(opts = {}) {
   }
   const brief = String(opts?.brief || "").trim();
   const count = clampEventCount(opts?.count);
+  const signature3 = scenePlanSignature(plan);
+  let applied = false;
   let saved = null;
+  const assertCurrent = () => {
+    if (applied) throw new Error("\u8FD9\u4EFD\u884C\u7A0B\u7ED3\u679C\u5DF2\u5E94\u7528\uFF0C\u8BF7\u4F7F\u7528\u5F53\u524D\u884C\u7A0B\u3002");
+    if (typeof opts.assertCurrent === "function") opts.assertCurrent();
+    assertScenePlanUnchanged(plan, signature3);
+  };
   try {
     const params = getOutlineGenParams().scenes;
     await runGenerationFlow({
@@ -63614,10 +63819,14 @@ async function generateTransitionItinerary(opts = {}) {
       timeoutSec: params.timeoutSec,
       // 同剧情推进：永远取最新一条角色回复，绕开「选择聊天记录参考来源」对话框。
       resolveOpening: getRollingOpeningText,
+      assertCurrent,
       buildMessages: (ctx2) => buildTransitionPrompt(ctx2, fromIndex, brief, count),
       parse: (raw) => parseTransitionResponse(raw, { fromIndex, brief, eventCount: count }),
-      apply: (parsed) => {
+      apply: (parsed, assertResultCurrent) => {
+        assertResultCurrent();
         saved = setPlanTransition(plan.id, parsed);
+        applied = true;
+        if (typeof opts.onApplied === "function") opts.onApplied(saved);
       },
       reparseLabel: "\u91CD\u65B0\u89E3\u6790\u5E76\u5E94\u7528",
       successMessage: () => `\u5DF2\u6392\u597D ${saved ? saved.events.length : 0} \u6761\u8FC7\u6E21\u4E8B\u4EF6`
@@ -63627,6 +63836,7 @@ async function generateTransitionItinerary(opts = {}) {
   } finally {
     stopResponseTimer();
   }
+  return saved;
 }
 function renderRows() {
   const $tbody = $("#t-outline-tbody");
@@ -75714,10 +75924,10 @@ function retrievalMessageLocator(message) {
   }
   return { id: "", identityKind: "missing" };
 }
-function retrievalGenerationSourceSignature(scopeKey, messages2) {
+function retrievalGenerationSourceSignature(scopeKey2, messages2) {
   return retrievalDigest([
     "retrieval-generation-source-v1",
-    scopeKey,
+    scopeKey2,
     messages2.map((message) => [retrievalMessageId(message), retrievalMessageFingerprint(message)])
   ]);
 }
@@ -75749,8 +75959,8 @@ function retrievalRows(messages2, { requireIds = true, allowDuplicateIds = false
     return { id: id4, identityKind, floor: floor2, fingerprint: retrievalMessageFingerprint(message) };
   });
 }
-function retrievalSourceSignature(scopeKey, rows) {
-  return retrievalDigest([RETRIEVAL_SOURCE_VERSION, scopeKey, rows.map((row) => [
+function retrievalSourceSignature(scopeKey2, rows) {
+  return retrievalDigest([RETRIEVAL_SOURCE_VERSION, scopeKey2, rows.map((row) => [
     row.id,
     row.identityKind || (row.id ? "retrieval" : "missing"),
     row.fingerprint
@@ -76983,7 +77193,7 @@ function frequency(text10) {
 function sourceSpans(units) {
   return units.flatMap((unit) => unit.paragraphReference ? unit.paragraphReference.spans.map(([start, end]) => ({ start, end })) : []);
 }
-async function makeRetrievalChunks(source2, rules, { scopeKey, extractionSignature, config: config2, signal, previous = [] }) {
+async function makeRetrievalChunks(source2, rules, { scopeKey: scopeKey2, extractionSignature, config: config2, signal, previous = [] }) {
   const chunks = [], texts = /* @__PURE__ */ new Map(), evidence2 = /* @__PURE__ */ new Map(), prior = new Map(previous.map((chunk) => [chunk.chunkId, chunk]));
   const chunkerSignature = retrievalDigest([RETRIEVAL_CHUNKER_VERSION, config2.chunkTargetChars, config2.chunkMaxChars, 0]);
   for (const row of source2.rows) {
@@ -76999,7 +77209,7 @@ async function makeRetrievalChunks(source2, rules, { scopeKey, extractionSignatu
       }).join("\n\n");
       const refs = members.map(retrievalEvidenceReference), contentHash = retrievalDigest(text10);
       const chunkId = `c_${retrievalDigest([
-        scopeKey,
+        scopeKey2,
         row.id,
         row.fingerprint,
         extractionSignature,
@@ -77012,7 +77222,7 @@ async function makeRetrievalChunks(source2, rules, { scopeKey, extractionSignatu
       const terms = old?.contentHash === contentHash && old.tokenizerVersion === RETRIEVAL_TOKENIZER_VERSION ? { terms: clone6(old.terms), termCount: old.termCount } : frequency(text10);
       chunks.push({
         chunkId,
-        scopeKey,
+        scopeKey: scopeKey2,
         messageId: row.id,
         floor: row.floor,
         sourceFingerprint: row.fingerprint,
@@ -77484,6 +77694,7 @@ function retrievalFactDocumentRecord(document2, order, vector) {
     corpusKind,
     factDocumentVersion,
     chunkId,
+    scopeKey,
     factId,
     floor: floor2,
     sourceFingerprint,
@@ -77622,8 +77833,8 @@ function requireString(value, label2) {
 function requireCount(value, label2) {
   if (!Number.isSafeInteger(value) || value < 0) throw storageError(`${label2}\u5FC5\u987B\u662F\u975E\u8D1F\u6574\u6570`);
 }
-function requireKeys(scopeKey, buildId) {
-  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
+function requireKeys(scopeKey2, buildId) {
+  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
   requireString(buildId, "\u6784\u5EFA\u6807\u8BC6");
 }
 function increment(value, label2) {
@@ -77631,10 +77842,10 @@ function increment(value, label2) {
   if (value === Number.MAX_SAFE_INTEGER) throw storageError(`${label2}\u5DF2\u8D85\u51FA\u5B89\u5168\u8303\u56F4`);
   return value + 1;
 }
-function scopeRecord(scopeKey, stored) {
+function scopeRecord(scopeKey2, stored) {
   const now = Date.now();
   return {
-    scopeKey,
+    scopeKey: scopeKey2,
     activeBuildId: null,
     pendingBuildId: null,
     previousBuildId: null,
@@ -77671,8 +77882,8 @@ function scopeRecord(scopeKey, stored) {
     hybridOptionsRevision: stored?.hybridOptionsRevision || 0
   };
 }
-function scopeRange(scopeKey) {
-  return IDBKeyRange.bound([scopeKey], [scopeKey, []]);
+function scopeRange(scopeKey2) {
+  return IDBKeyRange.bound([scopeKey2], [scopeKey2, []]);
 }
 function openDatabase3() {
   if (dbPromise2) return dbPromise2;
@@ -77809,8 +78020,8 @@ function createBuildId() {
   const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
-function readScope(transaction, read, scopeKey, callback) {
-  read(transaction.objectStore(SCOPES).get(scopeKey), (stored) => callback(scopeRecord(scopeKey, stored), stored));
+function readScope(transaction, read, scopeKey2, callback) {
+  read(transaction.objectStore(SCOPES).get(scopeKey2), (stored) => callback(scopeRecord(scopeKey2, stored), stored));
 }
 function copyLease(lease) {
   if (lease == null) return null;
@@ -77901,7 +78112,7 @@ function copyHybridFactDocument(document2, dimension) {
     corpusKind,
     factDocumentVersion,
     chunkId,
-    scopeKey,
+    scopeKey: scopeKey2,
     factId,
     floor: floor2,
     sourceFingerprint,
@@ -77918,7 +78129,7 @@ function copyHybridFactDocument(document2, dimension) {
   if (corpusKind !== RETRIEVAL_FACT_CORPUS || factDocumentVersion !== RETRIEVAL_FACT_DOCUMENT_VERSION || chunkerVersion !== RETRIEVAL_FACT_POLICY_SIGNATURE) throw hybridError("\u4E8B\u5B9E\u6587\u6863\u7248\u672C\u4E0D\u6B63\u786E");
   for (const [value, label2] of [
     [chunkId, "\u4E8B\u5B9E\u6587\u6863\u6807\u8BC6"],
-    [scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF"],
+    [scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF"],
     [factId, "\u4E8B\u5B9E\u8EAB\u4EFD"],
     [tokenizerVersion, "\u5206\u8BCD\u7248\u672C"]
   ]) requireString(value, label2);
@@ -78017,7 +78228,7 @@ function copyHybridChunk(chunk, dimension) {
   if (chunk.corpusKind !== void 0) return copyHybridFactDocument(chunk, dimension);
   const {
     chunkId,
-    scopeKey,
+    scopeKey: scopeKey2,
     messageId,
     floor: floor2,
     sourceFingerprint,
@@ -78031,7 +78242,7 @@ function copyHybridChunk(chunk, dimension) {
     charCount,
     termCount
   } = chunk;
-  for (const [value, label2] of [[chunkId, "\u68C0\u7D22\u5757\u6807\u8BC6"], [scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF"], [messageId, "\u6D88\u606F\u8EAB\u4EFD"], [tokenizerVersion, "\u5206\u8BCD\u7248\u672C"]]) requireString(value, label2);
+  for (const [value, label2] of [[chunkId, "\u68C0\u7D22\u5757\u6807\u8BC6"], [scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF"], [messageId, "\u6D88\u606F\u8EAB\u4EFD"], [tokenizerVersion, "\u5206\u8BCD\u7248\u672C"]]) requireString(value, label2);
   for (const [value, label2] of [[sourceFingerprint, "\u6765\u6E90\u6307\u7EB9"], [extractionSignature, "\u63D0\u53D6\u89C4\u5219"], [chunkerVersion, "\u5207\u7247\u89C4\u5219"], [contentHash, "\u5185\u5BB9\u6458\u8981"]]) requireHash(value, label2);
   for (const [value, label2] of [[floor2, "\u697C\u53F7"], [ordinal2, "\u697C\u5185\u5757\u5E8F\u53F7"], [order, "\u6E05\u5355\u5E8F\u53F7"], [charCount, "\u5B57\u7B26\u6570"]]) requireCount(value, label2);
   if (!charCount || typeof retrievalOnlyFragment !== "boolean" || !Array.isArray(chunk.evidenceRefs) || !chunk.evidenceRefs.length) throw hybridError("\u68C0\u7D22\u5757\u5B57\u7B26\u6570\u3001\u5B50\u7247\u6807\u8BB0\u6216\u8BC1\u636E\u5F15\u7528\u4E0D\u6B63\u786E");
@@ -78074,7 +78285,7 @@ function copyHybridChunk(chunk, dimension) {
     return { start: span.start, end: span.end };
   });
   const expectedId = `c_${retrievalDigest([
-    scopeKey,
+    scopeKey2,
     messageId,
     sourceFingerprint,
     extractionSignature,
@@ -78086,7 +78297,7 @@ function copyHybridChunk(chunk, dimension) {
   if (chunkId !== expectedId) throw hybridError("\u68C0\u7D22\u5757\u6807\u8BC6\u4E0E\u6765\u6E90\u6620\u5C04\u4E0D\u4E00\u81F4");
   return {
     chunkId,
-    scopeKey,
+    scopeKey: scopeKey2,
     messageId,
     floor: floor2,
     sourceFingerprint,
@@ -78106,9 +78317,9 @@ function copyHybridChunk(chunk, dimension) {
     vector: copyHybridVector(chunk.vector, dimension)
   };
 }
-function readScopeHybridBuild(transaction, read, scopeKey, buildId, callback) {
-  readScope(transaction, read, scopeKey, (scope3) => {
-    read(transaction.objectStore(HYBRID_BUILDS).get([scopeKey, buildId]), (build) => callback(scope3, build || null));
+function readScopeHybridBuild(transaction, read, scopeKey2, buildId, callback) {
+  readScope(transaction, read, scopeKey2, (scope3) => {
+    read(transaction.objectStore(HYBRID_BUILDS).get([scopeKey2, buildId]), (build) => callback(scope3, build || null));
   });
 }
 function requireHybridBuild(scope3, build) {
@@ -78167,31 +78378,31 @@ function requireHybridCollection(chunks, build, complete) {
   const manifest = facts ? retrievalFactManifest(chunks) : retrievalChunkManifest(chunks);
   if (complete && manifest !== build.manifestHash) throw hybridError("\u5B8C\u6574\u6DF7\u5408\u6E05\u5355\u6458\u8981\u4E0D\u4E00\u81F4\uFF0C\u672A\u6FC0\u6D3B\u4EFB\u4F55\u534A\u4EFD\u7D22\u5F15");
 }
-async function readRetrievalScope(scopeKey) {
-  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function readRetrievalScope(scopeKey2) {
+  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
   return inTransaction([SCOPES], "readonly", (transaction, read, result) => {
-    readScope(transaction, read, scopeKey, (scope3, stored) => result(stored ? scope3 : null));
+    readScope(transaction, read, scopeKey2, (scope3, stored) => result(stored ? scope3 : null));
   });
 }
-async function readRetrievalHybridBuild(scopeKey, buildId) {
-  requireKeys(scopeKey, buildId);
+async function readRetrievalHybridBuild(scopeKey2, buildId) {
+  requireKeys(scopeKey2, buildId);
   return inTransaction([HYBRID_BUILDS], "readonly", (transaction, read, result) => {
-    read(transaction.objectStore(HYBRID_BUILDS).get([scopeKey, buildId]), (build) => result(build || null));
+    read(transaction.objectStore(HYBRID_BUILDS).get([scopeKey2, buildId]), (build) => result(build || null));
   });
 }
-async function readRetrievalHybridChunks(scopeKey, buildId) {
-  requireKeys(scopeKey, buildId);
+async function readRetrievalHybridChunks(scopeKey2, buildId) {
+  requireKeys(scopeKey2, buildId);
   return inTransaction([HYBRID_CHUNKS], "readonly", (transaction, read, result) => {
-    read(transaction.objectStore(HYBRID_CHUNKS).index("byBuild").getAll([scopeKey, buildId]), (chunks) => {
+    read(transaction.objectStore(HYBRID_CHUNKS).index("byBuild").getAll([scopeKey2, buildId]), (chunks) => {
       result(chunks.map((chunk) => ({ ...copyHybridChunk(chunk), buildId })).sort((a, b) => a.order - b.order));
     });
   });
 }
-async function beginRetrievalHybridBuild(scopeKey, descriptor, lease) {
-  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function beginRetrievalHybridBuild(scopeKey2, descriptor, lease) {
+  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
   const target = copyHybridDescriptor(descriptor), ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS], "readwrite", (transaction, read, result) => {
-    readScope(transaction, read, scopeKey, (scope3) => {
+    readScope(transaction, read, scopeKey2, (scope3) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridConfiguration(scope3, target);
       const store = transaction.objectStore(HYBRID_BUILDS);
@@ -78201,7 +78412,7 @@ async function beginRetrievalHybridBuild(scopeKey, descriptor, lease) {
         if (previous && previous.status !== "ready") store.put({ ...previous, status: "stale", updatedAt: now });
         const build = {
           ...target,
-          scopeKey,
+          scopeKey: scopeKey2,
           buildId,
           engine: "hybrid",
           scopeEpoch: scope3.scopeEpoch,
@@ -78222,7 +78433,7 @@ async function beginRetrievalHybridBuild(scopeKey, descriptor, lease) {
         create2(null);
         return;
       }
-      read(store.get([scopeKey, scope3.hybridPendingBuildId]), (pending5) => {
+      read(store.get([scopeKey2, scope3.hybridPendingBuildId]), (pending5) => {
         if (scope3.lease.automatic && pending5?.errorCode && (target.corpusKind !== RETRIEVAL_FACT_CORPUS || isRetrievalFactBuild(pending5)) && !["CANCELLED", "SOURCE_CHANGED", "SCOPE_CHANGED"].includes(pending5.errorCode) && !canResumeRetrievalSourceWait(pending5) && !canResumeRetrievalSourceEditHold(pending5)) {
           throw hybridError("\u5F85\u6784\u5EFA\u4EFB\u52A1\u6709\u672A\u786E\u8BA4\u5916\u53D1\u6216\u4E0D\u53EF\u81EA\u52A8\u91CD\u8BD5\u7684\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u6062\u590D", "INDEX_MANUAL_RESUME_REQUIRED");
         }
@@ -78234,16 +78445,16 @@ async function beginRetrievalHybridBuild(scopeKey, descriptor, lease) {
     });
   });
 }
-async function appendRetrievalHybridBatch(scopeKey, buildId, expectedCursor, records3, nextCursor, { dimension, vectorSpaceSignature: vectorSpaceSignature2 }, lease) {
-  requireKeys(scopeKey, buildId);
+async function appendRetrievalHybridBatch(scopeKey2, buildId, expectedCursor, records3, nextCursor, { dimension, vectorSpaceSignature: vectorSpaceSignature2 }, lease) {
+  requireKeys(scopeKey2, buildId);
   requireCount(expectedCursor, "\u9884\u671F\u6DF7\u5408\u6E38\u6807");
   requireCount(nextCursor, "\u4E0B\u4E00\u6DF7\u5408\u6E38\u6807");
   if (!Array.isArray(records3) || nextCursor <= expectedCursor || records3.length !== nextCursor - expectedCursor) throw hybridError("\u6DF7\u5408\u6279\u6B21\u5FC5\u987B\u5B8C\u6574\u8986\u76D6\u6E38\u6807\u533A\u95F4");
   const batch = records3.map((record, index2) => copyHybridChunk({ ...record, order: record?.order ?? expectedCursor + index2 }, dimension));
-  if (batch.some((record, index2) => record.order !== expectedCursor + index2 || record.scopeKey !== scopeKey) || new Set(batch.map((record) => record.chunkId)).size !== batch.length) throw hybridError("\u6DF7\u5408\u6279\u6B21\u987A\u5E8F\u3001\u4F5C\u7528\u57DF\u6216\u552F\u4E00\u6027\u4E0D\u6B63\u786E");
+  if (batch.some((record, index2) => record.order !== expectedCursor + index2 || record.scopeKey !== scopeKey2) || new Set(batch.map((record) => record.chunkId)).size !== batch.length) throw hybridError("\u6DF7\u5408\u6279\u6B21\u987A\u5E8F\u3001\u4F5C\u7528\u57DF\u6216\u552F\u4E00\u6027\u4E0D\u6B63\u786E");
   const ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS, HYBRID_CHUNKS], "readwrite", (transaction, read, result) => {
-    readScopeHybridBuild(transaction, read, scopeKey, buildId, (scope3, build) => {
+    readScopeHybridBuild(transaction, read, scopeKey2, buildId, (scope3, build) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridBuild(scope3, build);
       requireHybridConfiguration(scope3, build);
@@ -78258,7 +78469,7 @@ async function appendRetrievalHybridBatch(scopeKey, buildId, expectedCursor, rec
       const store = transaction.objectStore(HYBRID_CHUNKS);
       let remaining = batch.length;
       for (const record of batch) {
-        read(store.get([scopeKey, buildId, record.chunkId]), (existing) => {
+        read(store.get([scopeKey2, buildId, record.chunkId]), (existing) => {
           if (repeated) {
             if (!existing || JSON.stringify(copyHybridChunk(existing, dimension)) !== JSON.stringify(record)) {
               throw hybridError("\u91CD\u590D\u6216\u672A\u77E5\u63D0\u4EA4\u7684\u6279\u6B21\u8BB0\u5F55\u4E0D\u4E00\u81F4\uFF0C\u4E0D\u80FD\u5F53\u4F5C\u6210\u529F", "INDEX_BATCH_CONFLICT");
@@ -78292,18 +78503,18 @@ async function appendRetrievalHybridBatch(scopeKey, buildId, expectedCursor, rec
     });
   });
 }
-async function activateRetrievalHybridBuild(scopeKey, buildId, {
+async function activateRetrievalHybridBuild(scopeKey2, buildId, {
   sourceSignature,
   manifestHash,
   embeddingSignature,
   factsSignature,
   factsArchiveSignature
 }, lease) {
-  requireKeys(scopeKey, buildId);
+  requireKeys(scopeKey2, buildId);
   for (const [value, label2] of [[sourceSignature, "\u6765\u6E90\u7B7E\u540D"], [manifestHash, "\u6E05\u5355\u6458\u8981"], [embeddingSignature, "Embedding \u7B7E\u540D"]]) requireHash(value, label2);
   const ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS, HYBRID_CHUNKS], "readwrite", (transaction, read, result) => {
-    readScopeHybridBuild(transaction, read, scopeKey, buildId, (scope3, build) => {
+    readScopeHybridBuild(transaction, read, scopeKey2, buildId, (scope3, build) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridBuild(scope3, build);
       requireHybridConfiguration(scope3, build);
@@ -78314,7 +78525,7 @@ async function activateRetrievalHybridBuild(scopeKey, buildId, {
       }
       if (build.cursor !== build.total) throw hybridError("\u6DF7\u5408\u6784\u5EFA\u672A\u5B8C\u6210\uFF0C\u4E0D\u80FD\u6FC0\u6D3B");
       requireHybridSpace(embeddingSignature, build.dimension, build.vectorSpaceSignature, build.total === 0);
-      read(transaction.objectStore(HYBRID_CHUNKS).index("byBuild").getAll([scopeKey, buildId]), (stored) => {
+      read(transaction.objectStore(HYBRID_CHUNKS).index("byBuild").getAll([scopeKey2, buildId]), (stored) => {
         const chunks = stored.map((chunk) => copyHybridChunk(chunk, build.dimension)).sort((a, b) => a.order - b.order);
         requireHybridCollection(chunks, build, true);
         requireLease(scope3, ticket, "hybrid");
@@ -78336,13 +78547,13 @@ async function activateRetrievalHybridBuild(scopeKey, buildId, {
     });
   });
 }
-async function observeRetrievalFactBuild(scopeKey, buildId, { manifestHash, factContentSignature }, lease) {
-  requireKeys(scopeKey, buildId);
+async function observeRetrievalFactBuild(scopeKey2, buildId, { manifestHash, factContentSignature }, lease) {
+  requireKeys(scopeKey2, buildId);
   requireHash(manifestHash, "\u89C2\u5BDF\u6E05\u5355");
   requireHash(factContentSignature, "\u4E8B\u5B9E\u5185\u5BB9\u89C2\u5BDF");
   const ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS], "readwrite", (transaction, read, result) => {
-    readScopeHybridBuild(transaction, read, scopeKey, buildId, (scope3, build) => {
+    readScopeHybridBuild(transaction, read, scopeKey2, buildId, (scope3, build) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridBuild(scope3, build);
       if (scope3.lease.automatic && (!scope3.hybridOptions.autoMaintain || scope3.hybridOptions.maintenanceConsentSignature !== retrievalMaintenanceSignatureFromEmbedding(build.embeddingSignature))) {
@@ -78417,11 +78628,11 @@ function copyHybridProgress(progress2) {
     }
   };
 }
-async function pauseRetrievalHybridBuild(scopeKey, buildId, message = "", lease, code2 = "PAUSED", progress2) {
-  requireKeys(scopeKey, buildId);
+async function pauseRetrievalHybridBuild(scopeKey2, buildId, message = "", lease, code2 = "PAUSED", progress2) {
+  requireKeys(scopeKey2, buildId);
   const error4 = String(message ?? ""), errorCode = copyHybridFailureCode(code2), checkpoint2 = copyHybridProgress(progress2), ticket = copyLease(lease);
   return inTransaction([SCOPES, HYBRID_BUILDS], "readwrite", (transaction, read, result) => {
-    readScopeHybridBuild(transaction, read, scopeKey, buildId, (scope3, build) => {
+    readScopeHybridBuild(transaction, read, scopeKey2, buildId, (scope3, build) => {
       requireLease(scope3, ticket, "hybrid");
       requireHybridPending(scope3, build, buildId);
       if (checkpoint2 && (checkpoint2.dispatchCheckpoint.expectedCursor !== build.cursor || checkpoint2.dispatchCheckpoint.nextCursor > build.total)) throw hybridError("\u6682\u505C\u6279\u6B21\u4E0E\u5F53\u524D\u6E38\u6807\u4E0D\u4E00\u81F4", "INDEX_CURSOR_CHANGED");
@@ -78431,11 +78642,11 @@ async function pauseRetrievalHybridBuild(scopeKey, buildId, message = "", lease,
     });
   });
 }
-async function setRetrievalHybridConfig(scopeKey, values, { expectedRevision } = {}) {
-  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function setRetrievalHybridConfig(scopeKey2, values, { expectedRevision } = {}) {
+  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
   const hybridOptions = normalizeRetrievalHybridConfig(values);
   return inTransaction([SCOPES], "readwrite", (transaction, read, result) => {
-    readScope(transaction, read, scopeKey, (scope3) => {
+    readScope(transaction, read, scopeKey2, (scope3) => {
       if (expectedRevision !== void 0 && expectedRevision !== scope3.hybridOptionsRevision) {
         throw Object.assign(new Error("\u6DF7\u5408\u68C0\u7D22\u8BBE\u7F6E\u5DF2\u88AB\u53E6\u4E00\u4E2A\u7A97\u53E3\u4FEE\u6539\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BBE\u7F6E\u3002"), { code: "CONFIG_CHANGED" });
       }
@@ -78450,19 +78661,19 @@ async function setRetrievalHybridConfig(scopeKey, values, { expectedRevision } =
     });
   });
 }
-async function claimRetrievalLease(scopeKey, ownerId, { ttlMs = DEFAULT_LEASE_MS, automatic = false, engine = "legacy" } = {}) {
-  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function claimRetrievalLease(scopeKey2, ownerId, { ttlMs = DEFAULT_LEASE_MS, automatic = false, engine = "legacy" } = {}) {
+  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
   requireString(ownerId, "\u4EFB\u52A1\u6240\u6709\u8005");
   leaseExpiry(ttlMs);
   if (typeof automatic !== "boolean") throw storageError("\u81EA\u52A8\u4EFB\u52A1\u6807\u8BB0\u5FC5\u987B\u662F\u5E03\u5C14\u503C");
   if (engine !== "legacy" && engine !== "hybrid") throw storageError("\u4EFB\u52A1\u5F15\u64CE\u5FC5\u987B\u662F legacy \u6216 hybrid");
   return inTransaction([SCOPES], "readwrite", (transaction, read, result) => {
-    readScope(transaction, read, scopeKey, (scope3) => {
+    readScope(transaction, read, scopeKey2, (scope3) => {
       if (scope3.lease?.expiresAt > Date.now()) throw leaseError("\u672C\u804A\u5929\u5DF2\u6709\u672A\u7ED3\u675F\u7684\u7D22\u5F15\u4EFB\u52A1", "RETRIEVAL_BUSY");
       if (automatic && !automaticLeaseAllowed(scope3, engine)) {
         throw leaseError("\u672C\u804A\u5929\u5C1A\u672A\u6388\u6743\u6B64\u5F15\u64CE\u81EA\u52A8\u7EF4\u62A4\u7D22\u5F15", "RETRIEVAL_BUSY");
       }
-      const lease = { scopeKey, ownerId, token: createBuildId(), expiresAt: leaseExpiry(ttlMs), automatic, engine, scopeEpoch: scope3.scopeEpoch };
+      const lease = { scopeKey: scopeKey2, ownerId, token: createBuildId(), expiresAt: leaseExpiry(ttlMs), automatic, engine, scopeEpoch: scope3.scopeEpoch };
       transaction.objectStore(SCOPES).put({ ...scope3, leaseRequired: true, lease, updatedAt: Date.now() });
       result(lease);
     });
@@ -78490,13 +78701,13 @@ async function releaseRetrievalLease(lease) {
     });
   });
 }
-async function clearRetrievalScope(scopeKey, lease) {
-  requireString(scopeKey, "\u804A\u5929\u4F5C\u7528\u57DF");
+async function clearRetrievalScope(scopeKey2, lease) {
+  requireString(scopeKey2, "\u804A\u5929\u4F5C\u7528\u57DF");
   const ticket = copyLease(lease);
   return inTransaction([SCOPES, BUILDS, DOCUMENTS, WINDOWS, CHANGES, HYBRID_BUILDS, HYBRID_CHUNKS], "readwrite", (transaction, read) => {
-    readScope(transaction, read, scopeKey, (scope3) => {
+    readScope(transaction, read, scopeKey2, (scope3) => {
       requireLease(scope3, ticket);
-      const range3 = scopeRange(scopeKey);
+      const range3 = scopeRange(scopeKey2);
       transaction.objectStore(DOCUMENTS).delete(range3);
       transaction.objectStore(WINDOWS).delete(range3);
       transaction.objectStore(BUILDS).delete(range3);
@@ -78504,7 +78715,7 @@ async function clearRetrievalScope(scopeKey, lease) {
       transaction.objectStore(HYBRID_BUILDS).delete(range3);
       transaction.objectStore(HYBRID_CHUNKS).delete(range3);
       transaction.objectStore(SCOPES).put({
-        ...scopeRecord(scopeKey),
+        ...scopeRecord(scopeKey2),
         scopeEpoch: increment(scope3.scopeEpoch, "\u8EAB\u4EFD\u4E16\u4EE3"),
         leaseRequired: scope3.leaseRequired,
         lease: scope3.lease,
@@ -79816,7 +80027,7 @@ function chunkRecord(chunk, order, vector) {
   if (chunk.corpusKind === RETRIEVAL_FACT_CORPUS) return retrievalFactDocumentRecord(chunk, order, vector);
   const {
     chunkId,
-    scopeKey,
+    scopeKey: scopeKey2,
     messageId,
     floor: floor2,
     sourceFingerprint,
@@ -79835,7 +80046,7 @@ function chunkRecord(chunk, order, vector) {
   } = chunk;
   return {
     chunkId,
-    scopeKey,
+    scopeKey: scopeKey2,
     messageId,
     floor: floor2,
     sourceFingerprint,
@@ -80563,7 +80774,7 @@ function mergeRetrievalChunkHits(vectorHits, bm25Hits, chunkTable) {
 }
 async function collectRetrievalSourceCandidates(hits, query, materialize, limit, {
   signal,
-  scopeKey,
+  scopeKey: scopeKey2,
   eligible = async () => true
 } = {}) {
   if (!limit || !hits.length) return [];
@@ -80579,7 +80790,7 @@ async function collectRetrievalSourceCandidates(hits, query, materialize, limit,
       const key = retrievalEvidenceKey(unit), previous = candidates.get(key);
       if (previous && previous.sourceRank <= rank) continue;
       candidates.set(key, {
-        candidateId: `s_${retrievalDigest([scopeKey, retrievalEvidenceReference(unit)])}`,
+        candidateId: `s_${retrievalDigest([scopeKey2, retrievalEvidenceReference(unit)])}`,
         corpusKind: "source",
         from: ["source-bm25"],
         sourceRank: rank,
@@ -80918,11 +81129,11 @@ function subscribeRetrievalState(listener) {
   listeners6.add(listener);
   return () => listeners6.delete(listener);
 }
-function cancelRetrievalTask(scopeKey, { automaticOnly = false } = {}) {
-  const task = running2.get(scopeKey);
+function cancelRetrievalTask(scopeKey2, { automaticOnly = false } = {}) {
+  const task = running2.get(scopeKey2);
   if (task && (!automaticOnly || task.automatic)) task.controller.abort();
   if (!automaticOnly) {
-    for (const query of queries) if (query.owner.scopeKey === scopeKey) query.controller.abort();
+    for (const query of queries) if (query.owner.scopeKey === scopeKey2) query.controller.abort();
   }
 }
 async function getRetrievalHybridSettings(owner) {
@@ -81495,7 +81706,7 @@ var init_retrieval = __esm({
       for (const task of running2.values()) task.controller.abort();
       for (const task of queries) task.controller.abort();
     });
-    isRetrievalRunning = (scopeKey) => running2.has(scopeKey);
+    isRetrievalRunning = (scopeKey2) => running2.has(scopeKey2);
   }
 });
 
@@ -81910,7 +82121,7 @@ var init_retrievalMaintenance = __esm({
       state.owner.scopeKey,
       retrievalSourceRows(state.owner, state.owner.chat, { allowDuplicateIds: true })
     )}:${retrievalRulesSignature()}:${retrievalFactsObservationSignature(state.owner)}`;
-    getRetrievalMaintenanceStatus = (scopeKey) => runtime?.owner.scopeKey === scopeKey ? view(runtime) : null;
+    getRetrievalMaintenanceStatus = (scopeKey2) => runtime?.owner.scopeKey === scopeKey2 ? view(runtime) : null;
   }
 });
 
